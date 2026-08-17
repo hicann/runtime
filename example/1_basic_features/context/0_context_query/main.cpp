@@ -27,8 +27,8 @@ public:
         }
     }
 
-    ContextGuard(const ContextGuard &) = delete;
-    ContextGuard &operator=(const ContextGuard &) = delete;
+    ContextGuard(const ContextGuard&) = delete;
+    ContextGuard& operator=(const ContextGuard&) = delete;
 
     aclError Destroy()
     {
@@ -79,7 +79,7 @@ int32_t RunContextQuerySample()
     INFO_LOG("[SUCCESS] Context query sample completed successfully");
     return 0;
 }
-}  // namespace
+} // namespace
 
 int32_t main()
 {

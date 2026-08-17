@@ -8,7 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
- /*
+/*
  * Below is the operator used for computing the addition of two matrices.
  * This operator allows users to configure the tiling information with placeholders.
  */
@@ -16,9 +16,9 @@
 #include "kernel_operator.h"
 
 namespace {
-    constexpr int32_t USE_CORE_NUM = 8;                                   // num of core used                            
-    constexpr int32_t BUFFER_NUM = 2;                                     // tensor num for each queue
-}
+constexpr int32_t USE_CORE_NUM = 8; // num of core used
+constexpr int32_t BUFFER_NUM = 2;   // tensor num for each queue
+} // namespace
 
 class KernelAdd {
 public:
@@ -31,9 +31,9 @@ public:
             return;
         }
         this->tileLength = this->blockLength / tileNum / BUFFER_NUM;
-        xGm.SetGlobalBuffer((__gm__ half *)x + this->blockLength * AscendC::GetBlockIdx(), this->blockLength);
-        yGm.SetGlobalBuffer((__gm__ half *)y + this->blockLength * AscendC::GetBlockIdx(), this->blockLength);
-        zGm.SetGlobalBuffer((__gm__ half *)z + this->blockLength * AscendC::GetBlockIdx(), this->blockLength);
+        xGm.SetGlobalBuffer((__gm__ half*)x + this->blockLength * AscendC::GetBlockIdx(), this->blockLength);
+        yGm.SetGlobalBuffer((__gm__ half*)y + this->blockLength * AscendC::GetBlockIdx(), this->blockLength);
+        zGm.SetGlobalBuffer((__gm__ half*)z + this->blockLength * AscendC::GetBlockIdx(), this->blockLength);
         pipe.InitBuffer(inQueueX, BUFFER_NUM, this->tileLength * sizeof(half));
         pipe.InitBuffer(inQueueY, BUFFER_NUM, this->tileLength * sizeof(half));
         pipe.InitBuffer(outQueueZ, BUFFER_NUM, this->tileLength * sizeof(half));
@@ -88,7 +88,8 @@ private:
     uint32_t tileLength;
 };
 
-extern "C" __global__ __aicore__ void add_custom(GM_ADDR x, GM_ADDR y, GM_ADDR z, __gm__ int32_t* tilingLength, __gm__ int32_t* tilingNum)
+extern "C" __global__ __aicore__ void add_custom(
+    GM_ADDR x, GM_ADDR y, GM_ADDR z, __gm__ int32_t* tilingLength, __gm__ int32_t* tilingNum)
 {
     KernelAdd op;
     uint32_t tileLength = *tilingLength;

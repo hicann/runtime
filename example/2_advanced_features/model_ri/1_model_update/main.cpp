@@ -7,7 +7,7 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
- 
+
 #include <vector>
 #include <iostream>
 #include "utils.h"
@@ -22,16 +22,16 @@ using namespace std;
 int main()
 {
     int deviceId = 0;
-    void *selfDevice = nullptr;
-    void *otherDevice = nullptr;
-    void *outDevice = nullptr;
-    void *outTmpDevice = nullptr;
-    aclTensor *self = nullptr;
-    aclTensor *other = nullptr;
-    aclScalar *alpha = nullptr;
-    aclScalar *updateAlpha = nullptr;
-    aclTensor *out = nullptr;
-    aclTensor *outTmp = nullptr;
+    void* selfDevice = nullptr;
+    void* otherDevice = nullptr;
+    void* outDevice = nullptr;
+    void* outTmpDevice = nullptr;
+    aclTensor* self = nullptr;
+    aclTensor* other = nullptr;
+    aclScalar* alpha = nullptr;
+    aclScalar* updateAlpha = nullptr;
+    aclTensor* out = nullptr;
+    aclTensor* outTmp = nullptr;
     vector<float> selfHostData = {1, 2, 3, 4, 5, 6, 7, 8};
     vector<float> otherHostData = {2, 2, 2, 2, 2, 2, 2, 2};
     vector<float> outHostData = {0, 0, 0, 0, 0, 0, 0, 0};
@@ -42,9 +42,9 @@ int main()
     uint64_t firstAddWorkspaceSize = 0;
     uint64_t secondAddWorkspaceSize = 0;
     uint64_t updateAddWorkspaceSize = 0;
-    aclOpExecutor *firstAddExecutor;
-    aclOpExecutor *secondAddExecutor;
-    aclOpExecutor *updateAddExecutor;
+    aclOpExecutor* firstAddExecutor;
+    aclOpExecutor* secondAddExecutor;
+    aclOpExecutor* updateAddExecutor;
     aclrtContext context;
     const int loopCount = 2;
     int64_t size = ModelUtils::GetShapeSize(shape) * sizeof(float);
@@ -59,23 +59,23 @@ int main()
     updateAlpha = aclCreateScalar(&updateAlphaValue, aclDataType::ACL_FLOAT);
     ModelUtils::CreateAclTensor(shape, &outDevice, aclDataType::ACL_FLOAT, &out);
     ModelUtils::CreateAclTensor(shape, &outTmpDevice, aclDataType::ACL_FLOAT, &outTmp);
-    
+
     // 该算子计算outTmp = self + other * alpha
     aclnnAddGetWorkspaceSize(self, other, alpha, outTmp, &firstAddWorkspaceSize, &firstAddExecutor);
-    void *firstAddWorkspaceAddr = nullptr;
+    void* firstAddWorkspaceAddr = nullptr;
     if (firstAddWorkspaceSize > 0) {
         CHECK_ERROR(aclrtMalloc(&firstAddWorkspaceAddr, firstAddWorkspaceSize, ACL_MEM_MALLOC_HUGE_FIRST));
     }
 
     // 该算子计算outTmp = outTmp + other * alpha
     aclnnAddGetWorkspaceSize(outTmp, other, alpha, out, &secondAddWorkspaceSize, &secondAddExecutor);
-    void *secondAddWorkspaceAddr = nullptr;
+    void* secondAddWorkspaceAddr = nullptr;
     if (secondAddWorkspaceSize > 0) {
         CHECK_ERROR(aclrtMalloc(&secondAddWorkspaceAddr, secondAddWorkspaceSize, ACL_MEM_MALLOC_HUGE_FIRST));
     }
     // 该算子计算outTmp = outTmp + other * updateAlpha
     aclnnAddGetWorkspaceSize(outTmp, other, updateAlpha, out, &updateAddWorkspaceSize, &updateAddExecutor);
-    void *updateAddWorkspaceAddr = nullptr;
+    void* updateAddWorkspaceAddr = nullptr;
     if (updateAddWorkspaceSize > 0) {
         CHECK_ERROR(aclrtMalloc(&updateAddWorkspaceAddr, updateAddWorkspaceSize, ACL_MEM_MALLOC_HUGE_FIRST));
     }

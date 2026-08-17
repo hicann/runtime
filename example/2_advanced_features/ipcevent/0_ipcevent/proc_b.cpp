@@ -23,7 +23,8 @@
 #define EVENT_HANDLE_FILE "./event_handle.bin"
 #define DONE_FILE "./consumer_done.flag"
 
-int32_t main() {
+int32_t main()
+{
     CHECK_ERROR(aclInit(nullptr));
 
     int32_t deviceId = 0;
@@ -66,7 +67,7 @@ int32_t main() {
 
     // 5. 模拟消费者自身的工作
     INFO_LOG("Process B: doing some work...");
-    usleep(2000000);  // 2秒
+    usleep(2000000); // 2秒
 
     // 6. 记录事件，通知生产者
     CHECK_ERROR(aclrtRecordEvent(ipcEvent, stream));

@@ -26,10 +26,10 @@ int main()
     std::vector<float> firstTensor = {10.0F, 20.0F};
     std::vector<float> secondTensor = {30.0F, 40.0F};
     std::vector<float> thirdTensor = {50.0F, 60.0F};
-    acltdtDataset *firstDataset = nullptr;
-    acltdtDataset *secondDataset = nullptr;
-    acltdtDataset *thirdDataset = nullptr;
-    acltdtChannelHandle *channel = nullptr;
+    acltdtDataset* firstDataset = nullptr;
+    acltdtDataset* secondDataset = nullptr;
+    acltdtDataset* thirdDataset = nullptr;
+    acltdtChannelHandle* channel = nullptr;
     bool aclInitialized = false;
     bool deviceSet = false;
 
@@ -41,9 +41,8 @@ int main()
 
         channel = acltdtCreateChannelWithCapacity(deviceId, "capacity_tdt_channel", kChannelCapacity);
         if (channel == nullptr) {
-            WARN_LOG(
-                "acltdtCreateChannelWithCapacity returned nullptr: the current runtime likely does not enable "
-                "capacity-limited TDT channels on this product/build");
+            WARN_LOG("acltdtCreateChannelWithCapacity returned nullptr: the current runtime likely does not enable "
+                     "capacity-limited TDT channels on this product/build");
             return 0;
         }
 
@@ -60,7 +59,7 @@ int main()
             return -1;
         }
 
-        acltdtDataItem *firstItem = acltdtGetDataItem(firstDataset, 0);
+        acltdtDataItem* firstItem = acltdtGetDataItem(firstDataset, 0);
         if (!tdt::CheckNotNull(firstItem, "acltdtGetDataItem")) {
             return -1;
         }
@@ -70,9 +69,7 @@ int main()
         aclError sliceRet = acltdtGetSliceInfoFromItem(firstItem, &sliceNum, &sliceId);
         INFO_LOG(
             "Slice info ret=%d, sliceNum=%zu, sliceId=%zu, tensorType=%d, datasetName=%s",
-            static_cast<int32_t>(sliceRet),
-            sliceNum,
-            sliceId,
+            static_cast<int32_t>(sliceRet), sliceNum, sliceId,
             static_cast<int32_t>(acltdtGetTensorTypeFromItem(firstItem)),
             acltdtGetDatasetName(firstDataset) == nullptr ? "<null>" : acltdtGetDatasetName(firstDataset));
 
@@ -93,9 +90,7 @@ int main()
             INFO_LOG(
                 "Second send reached capacity pressure immediately: ret=%d, queried channel size=%zu, "
                 "configured capacity=%zu",
-                static_cast<int32_t>(secondSendRet),
-                channelSize,
-                kChannelCapacity);
+                static_cast<int32_t>(secondSendRet), channelSize, kChannelCapacity);
         } else {
             ERROR_LOG(
                 "Operation failed: acltdtSendTensor(channel, secondDataset, 0) returned error code %d",
@@ -109,17 +104,21 @@ int main()
     if (channel != nullptr) {
         const aclError cleanRet = acltdtCleanChannel(channel);
         if (cleanRet != ACL_SUCCESS) {
-            ERROR_LOG("Operation failed: acltdtCleanChannel(channel) returned error code %d", static_cast<int32_t>(cleanRet));
+            ERROR_LOG(
+                "Operation failed: acltdtCleanChannel(channel) returned error code %d", static_cast<int32_t>(cleanRet));
             finalResult = -1;
         }
         const aclError stopRet = acltdtStopChannel(channel);
         if (stopRet != ACL_SUCCESS) {
-            ERROR_LOG("Operation failed: acltdtStopChannel(channel) returned error code %d", static_cast<int32_t>(stopRet));
+            ERROR_LOG(
+                "Operation failed: acltdtStopChannel(channel) returned error code %d", static_cast<int32_t>(stopRet));
             finalResult = -1;
         }
         const aclError destroyRet = acltdtDestroyChannel(channel);
         if (destroyRet != ACL_SUCCESS) {
-            ERROR_LOG("Operation failed: acltdtDestroyChannel(channel) returned error code %d", static_cast<int32_t>(destroyRet));
+            ERROR_LOG(
+                "Operation failed: acltdtDestroyChannel(channel) returned error code %d",
+                static_cast<int32_t>(destroyRet));
             finalResult = -1;
         }
     }

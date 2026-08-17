@@ -13,7 +13,7 @@
 #include "utils.h"
 
 namespace {
-void UpdateFinalResultOnError(const char *apiName, aclError ret, int32_t &finalResult)
+void UpdateFinalResultOnError(const char* apiName, aclError ret, int32_t& finalResult)
 {
     if (ret == ACL_SUCCESS) {
         return;
@@ -35,7 +35,7 @@ int main()
     aclrtStream executeStream = nullptr;
     aclrtLabel labels[labelCount] = {nullptr, nullptr};
     aclrtLabelList labelList = nullptr;
-    uint32_t *branchIndexDevice = nullptr;
+    uint32_t* branchIndexDevice = nullptr;
     aclmdlRI modelRI = nullptr;
 
     bool aclInitialized = false;
@@ -82,16 +82,12 @@ int main()
 
         // Prepare the branch index on device memory.
         CHECK_ERROR(
-            aclrtMalloc(reinterpret_cast<void **>(&branchIndexDevice), sizeof(branchIndex), ACL_MEM_MALLOC_HUGE_FIRST));
+            aclrtMalloc(reinterpret_cast<void**>(&branchIndexDevice), sizeof(branchIndex), ACL_MEM_MALLOC_HUGE_FIRST));
         branchIndexAllocated = true;
         INFO_LOG("Allocated device memory for branch index.");
 
         CHECK_ERROR(aclrtMemcpy(
-            branchIndexDevice,
-            sizeof(branchIndex),
-            &branchIndex,
-            sizeof(branchIndex),
-            ACL_MEMCPY_HOST_TO_DEVICE));
+            branchIndexDevice, sizeof(branchIndex), &branchIndex, sizeof(branchIndex), ACL_MEMCPY_HOST_TO_DEVICE));
         INFO_LOG("Copied branch index %u from host to device.", branchIndex);
 
         // Create labels and organize them as a label list.

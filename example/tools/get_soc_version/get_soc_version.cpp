@@ -16,7 +16,7 @@ int main()
 {
     // aclrtGetSocName returns the same SOC_VERSION string required by sample builds.
     // It does not require aclInit, so this helper stays small and fast for shell use.
-    const char *socName = aclrtGetSocName();
+    const char* socName = aclrtGetSocName();
     if ((socName == nullptr) || (socName[0] == '\0')) {
         std::cerr << "[ERROR]: Failed to get SOC_VERSION by aclrtGetSocName." << std::endl;
         return 1;

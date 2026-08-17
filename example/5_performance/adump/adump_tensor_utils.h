@@ -16,12 +16,12 @@
 #include "runtime_init_utils.h"
 
 namespace adump {
-inline int InitRuntime(int32_t deviceId, aclrtStream *stream, const char *configPath = nullptr)
+inline int InitRuntime(int32_t deviceId, aclrtStream* stream, const char* configPath = nullptr)
 {
     return static_cast<int>(runtime::InitRuntimeAndCreateStream(deviceId, stream, configPath));
 }
 
-inline int64_t GetShapeSize(const std::vector<int64_t> &shape)
+inline int64_t GetShapeSize(const std::vector<int64_t>& shape)
 {
     int64_t shapeSize = 1;
     for (const int64_t dim : shape) {
@@ -31,8 +31,9 @@ inline int64_t GetShapeSize(const std::vector<int64_t> &shape)
 }
 
 template <typename T>
-int CreateAclTensor(const std::vector<T> &hostData, const std::vector<int64_t> &shape, void **deviceAddr,
-    aclDataType dataType, aclTensor **tensor)
+int CreateAclTensor(
+    const std::vector<T>& hostData, const std::vector<int64_t>& shape, void** deviceAddr, aclDataType dataType,
+    aclTensor** tensor)
 {
     const size_t size = static_cast<size_t>(GetShapeSize(shape)) * sizeof(T);
     aclError ret = aclrtMalloc(deviceAddr, size, ACL_MEM_MALLOC_HUGE_FIRST);
@@ -49,18 +50,19 @@ int CreateAclTensor(const std::vector<T> &hostData, const std::vector<int64_t> &
         strides[static_cast<size_t>(i)] = shape[static_cast<size_t>(i + 1)] * strides[static_cast<size_t>(i + 1)];
     }
 
-    *tensor = aclCreateTensor(shape.data(), shape.size(), dataType, strides.data(), 0, aclFormat::ACL_FORMAT_ND,
-        shape.data(), shape.size(), *deviceAddr);
+    *tensor = aclCreateTensor(
+        shape.data(), shape.size(), dataType, strides.data(), 0, aclFormat::ACL_FORMAT_ND, shape.data(), shape.size(),
+        *deviceAddr);
     if (*tensor == nullptr) {
         return -1;
     }
     return ACL_SUCCESS;
 }
 
-inline void DestroyTensorResources(aclTensor *self, aclTensor *other, aclScalar *alpha, aclTensor *out)
+inline void DestroyTensorResources(aclTensor* self, aclTensor* other, aclScalar* alpha, aclTensor* out)
 {
-    aclTensor *tensorList[] = {self, other, out};
-    for (aclTensor *tensor : tensorList) {
+    aclTensor* tensorList[] = {self, other, out};
+    for (aclTensor* tensor : tensorList) {
         if (tensor != nullptr) {
             aclDestroyTensor(tensor);
         }

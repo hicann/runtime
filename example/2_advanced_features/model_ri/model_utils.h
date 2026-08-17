@@ -19,12 +19,11 @@
 #include "aclnnop/aclnn_add.h"
 
 namespace ModelUtils {
-    int64_t GetShapeSize(const std::vector<int64_t> &shape);
+int64_t GetShapeSize(const std::vector<int64_t>& shape);
 
-    int CreateAclTensor(const std::vector<int64_t> &shape, void **deviceAddr, aclDataType dataType,
-        aclTensor **tensor);
-    
-    void PrintArray(const std::vector<float>& data);
-}
+int CreateAclTensor(const std::vector<int64_t>& shape, void** deviceAddr, aclDataType dataType, aclTensor** tensor);
+
+void PrintArray(const std::vector<float>& data);
+} // namespace ModelUtils
 
 #endif

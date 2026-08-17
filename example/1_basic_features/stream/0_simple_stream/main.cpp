@@ -24,7 +24,7 @@ int main()
     int32_t deviceId = 0;
     uint32_t blockDim = 1;
     uint32_t num = 0;
-    uint32_t *numDevice = nullptr;
+    uint32_t* numDevice = nullptr;
     size_t size = sizeof(uint32_t);
     aclrtStream stream = nullptr;
     aclrtStreamStatus streamStatus;
@@ -54,7 +54,7 @@ int main()
     CHECK_ERROR(aclrtSynchronizeStream(stream));
     CHECK_ERROR(aclrtMemcpy(&num, size, numDevice, size, ACL_MEMCPY_DEVICE_TO_HOST));
     INFO_LOG("After assigning the task through the created stream, the current result is: %d.", num);
-    
+
     INFO_LOG("Begin 3000 task.");
     // 循环下发任务并检查下发状态
     for (int i = 0; i < count; i++) {

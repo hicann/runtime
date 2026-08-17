@@ -13,7 +13,6 @@
  * using two independent streams (i.e., Stream A and Stream B).
  */
 
-
 #include "acl/acl.h"
 #include "utils.h"
 #include "mem_utils.h"
@@ -23,7 +22,8 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-int ThreadWait(aclrtStream stream, int32_t deviceId, void* devPtr, uint64_t valueCompare, const char* filePath){
+int ThreadWait(aclrtStream stream, int32_t deviceId, void* devPtr, uint64_t valueCompare, const char* filePath)
+{
     // Wait for the data in the specified memory to meet the condition
     aclrtSetDevice(deviceId);
 
@@ -42,7 +42,8 @@ int ThreadWait(aclrtStream stream, int32_t deviceId, void* devPtr, uint64_t valu
     return 0;
 }
 
-int ThreadWrite(aclrtStream stream, int32_t deviceId, void* devPtr, uint64_t valueWrite, const char* filePath){
+int ThreadWrite(aclrtStream stream, int32_t deviceId, void* devPtr, uint64_t valueWrite, const char* filePath)
+{
     // The writing thread writes a flag to check whether the waiting thread is blocked before the writing thread starts
     int32_t writeFlag = 123;
     memory::WriteFileEx(filePath, &writeFlag, sizeof(writeFlag));
@@ -67,7 +68,7 @@ int32_t main()
 
     // Allocate memory on the device
     uint64_t size = 1 * 1024 * 1024;
-    void *devPtrA;
+    void* devPtrA;
     CHECK_ERROR(aclrtMalloc(&devPtrA, size, ACL_MEM_MALLOC_HUGE_FIRST));
     INFO_LOG("Allocate memory on the device successfully");
 

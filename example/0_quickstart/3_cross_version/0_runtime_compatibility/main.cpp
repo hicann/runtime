@@ -16,7 +16,7 @@
 #include "utils.h"
 
 namespace {
-const char *CannAttrToString(aclCannAttr attr)
+const char* CannAttrToString(aclCannAttr attr)
 {
     switch (attr) {
         case ACL_CANN_ATTR_INF_NAN:
@@ -45,7 +45,7 @@ int QueryCannVersion()
 
 int QueryCannAttributes()
 {
-    const aclCannAttr *attrList = nullptr;
+    const aclCannAttr* attrList = nullptr;
     size_t attrCount = 0;
     CHECK_ERROR(aclGetCannAttributeList(&attrList, &attrCount));
     INFO_LOG("CANN attribute count: %zu", attrCount);
@@ -61,7 +61,7 @@ int QueryCannAttributes()
 
 int QueryCompatibilityAndCapability(int32_t deviceId)
 {
-    const char *socName = aclrtGetSocName();
+    const char* socName = aclrtGetSocName();
     if (socName == nullptr || std::strlen(socName) == 0U) {
         WARN_LOG("aclrtGetSocName returned empty soc name. Skip architecture compatibility check.");
     } else {
@@ -75,7 +75,7 @@ int QueryCompatibilityAndCapability(int32_t deviceId)
     INFO_LOG("Device capability ACL_FEATURE_TSCPU_TASK_UPDATE_SUPPORT_AIC_AIV: %d", capability);
     return 0;
 }
-}  // namespace
+} // namespace
 
 int32_t main()
 {
@@ -94,7 +94,8 @@ int32_t main()
 
     aclError cleanupRet = aclrtResetDeviceForce(deviceId);
     if (cleanupRet != ACL_SUCCESS) {
-        ERROR_LOG("Operation failed: aclrtResetDeviceForce(deviceId) returned error code %d",
+        ERROR_LOG(
+            "Operation failed: aclrtResetDeviceForce(deviceId) returned error code %d",
             static_cast<int32_t>(cleanupRet));
         ret = ret == 0 ? -1 : ret;
     }

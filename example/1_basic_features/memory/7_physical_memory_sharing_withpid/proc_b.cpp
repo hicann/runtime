@@ -39,7 +39,8 @@ int32_t main()
     uint64_t shareableHandle = 0ULL;
     aclrtDrvMemHandle handle = nullptr;
     memory::ReadFile("file/handle.bin", "file/handle.bin.done", &shareableHandle, sizeof(shareableHandle));
-    INFO_LOG("Process B: get a shareable handle successfully, shareable handle = %d", static_cast<int32_t>(shareableHandle));
+    INFO_LOG(
+        "Process B: get a shareable handle successfully, shareable handle = %d", static_cast<int32_t>(shareableHandle));
 
     CHECK_ERROR(aclrtMemImportFromShareableHandle(shareableHandle, deviceId, &handle));
 
@@ -54,10 +55,12 @@ int32_t main()
 
     size_t granularity = 0UL;
     CHECK_ERROR(aclrtMemGetAllocationGranularity(&prop, ACL_RT_MEM_ALLOC_GRANULARITY_MINIMUM, &granularity));
-    INFO_LOG("Process B: get memory allocation granularity successfully, granularity = %d", static_cast<int32_t>(granularity));
+    INFO_LOG(
+        "Process B: get memory allocation granularity successfully, granularity = %d",
+        static_cast<int32_t>(granularity));
 
     // Reserve virtual memory
-    void *virPtr = nullptr;
+    void* virPtr = nullptr;
     CHECK_ERROR(aclrtReserveMemAddress(&virPtr, granularity, 0, nullptr, 0));
     INFO_LOG("Process B: reserve virtual memory successfully");
 
@@ -74,7 +77,7 @@ int32_t main()
     INFO_LOG("Process B: set memory access permissions successfully");
 
     // Copy memory from device to host
-    int *hostPtrA;
+    int* hostPtrA;
     CHECK_ERROR(aclrtMallocHost(reinterpret_cast<void**>(&hostPtrA), granularity));
     CHECK_ERROR(aclrtMemcpy(hostPtrA, granularity, virPtr, granularity, ACL_MEMCPY_DEVICE_TO_HOST));
     INFO_LOG("Process B: copy memory from device address %p to host address %p", virPtr, hostPtrA);

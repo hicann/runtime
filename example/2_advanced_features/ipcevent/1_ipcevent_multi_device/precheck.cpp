@@ -36,8 +36,8 @@ int main(int argc, char* argv[])
 
     INFO_LOG("Available device count: %u, required device count: %d", deviceCount, requiredDeviceCount);
     if (deviceCount < static_cast<uint32_t>(requiredDeviceCount)) {
-        INFO_LOG("[SKIP] Need at least %d devices, but only %u device(s) are available.", requiredDeviceCount,
-                 deviceCount);
+        INFO_LOG(
+            "[SKIP] Need at least %d devices, but only %u device(s) are available.", requiredDeviceCount, deviceCount);
         return 2;
     }
     return 0;

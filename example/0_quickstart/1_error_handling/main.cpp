@@ -15,15 +15,9 @@
 #include "utils.h"
 
 namespace {
-const char *SafeString(const char *message)
-{
-    return message != nullptr ? message : "<null>";
-}
+const char* SafeString(const char* message) { return message != nullptr ? message : "<null>"; }
 
-const char *RunModeToString(aclrtRunMode runMode)
-{
-    return runMode == ACL_HOST ? "ACL_HOST" : "ACL_DEVICE";
-}
+const char* RunModeToString(aclrtRunMode runMode) { return runMode == ACL_HOST ? "ACL_HOST" : "ACL_DEVICE"; }
 
 void PrintVerboseErrorInfo(int32_t deviceId)
 {
@@ -34,20 +28,19 @@ void PrintVerboseErrorInfo(int32_t deviceId)
         return;
     }
 
-    INFO_LOG("Verbose error info: errorType=%d, tryRepair=%u, hasDetail=%u",
-        static_cast<int32_t>(errorInfo.errorType),
-        static_cast<uint32_t>(errorInfo.tryRepair),
-        static_cast<uint32_t>(errorInfo.hasDetail));
+    INFO_LOG(
+        "Verbose error info: errorType=%d, tryRepair=%u, hasDetail=%u", static_cast<int32_t>(errorInfo.errorType),
+        static_cast<uint32_t>(errorInfo.tryRepair), static_cast<uint32_t>(errorInfo.hasDetail));
 }
 } // namespace
 
-#define CHECK_ACL_RETURN(call) \
-    do { \
-        aclError ret = (call); \
-        if (ret != ACL_SUCCESS) { \
+#define CHECK_ACL_RETURN(call)                                                \
+    do {                                                                      \
+        aclError ret = (call);                                                \
+        if (ret != ACL_SUCCESS) {                                             \
             ERROR_LOG("%s failed: ret=%d", #call, static_cast<int32_t>(ret)); \
-            return -1; \
-        } \
+            return -1;                                                        \
+        }                                                                     \
     } while (0)
 
 int main()
@@ -72,22 +65,19 @@ int main()
     } else {
         aclError peekError = aclrtPeekAtLastError(ACL_RT_THREAD_LEVEL);
         aclError lastError = aclrtGetLastError(ACL_RT_THREAD_LEVEL);
-        const char *recentErrMsg = aclGetRecentErrMsg();
-        ERROR_LOG("Diagnostics: ret=%d, peekErr=%d, lastErr=%d, recentErrMsg=%s",
-            static_cast<int32_t>(expectedRet),
-            static_cast<int32_t>(peekError),
-            static_cast<int32_t>(lastError),
-            SafeString(recentErrMsg));
+        const char* recentErrMsg = aclGetRecentErrMsg();
+        ERROR_LOG(
+            "Diagnostics: ret=%d, peekErr=%d, lastErr=%d, recentErrMsg=%s", static_cast<int32_t>(expectedRet),
+            static_cast<int32_t>(peekError), static_cast<int32_t>(lastError), SafeString(recentErrMsg));
         PrintVerboseErrorInfo(deviceId);
 
         // Read the diagnostics again to show the consumed state.
         aclError clearedPeek = aclrtPeekAtLastError(ACL_RT_THREAD_LEVEL);
         aclError clearedLast = aclrtGetLastError(ACL_RT_THREAD_LEVEL);
-        const char *clearedErrMsg = aclGetRecentErrMsg();
-        INFO_LOG("After diagnostics are consumed once: peekErr=%d, lastErr=%d, recentErrMsg=%s",
-            static_cast<int32_t>(clearedPeek),
-            static_cast<int32_t>(clearedLast),
-            SafeString(clearedErrMsg));
+        const char* clearedErrMsg = aclGetRecentErrMsg();
+        INFO_LOG(
+            "After diagnostics are consumed once: peekErr=%d, lastErr=%d, recentErrMsg=%s",
+            static_cast<int32_t>(clearedPeek), static_cast<int32_t>(clearedLast), SafeString(clearedErrMsg));
     }
 
     // Release ACL resources.

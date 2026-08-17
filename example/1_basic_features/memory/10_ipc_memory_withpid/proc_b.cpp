@@ -43,7 +43,7 @@ int32_t main()
     INFO_LOG("Process B: get the shareable memory identifier successfully, shareable identifier = %s", memName);
 
     // Return a device memory pointer accessible to Process B
-    void *devPtr = nullptr;
+    void* devPtr = nullptr;
     uint64_t size = 1 * 1024 * 1024;
     CHECK_ERROR(aclrtIpcMemImportByKey(&devPtr, memName, 0));
 

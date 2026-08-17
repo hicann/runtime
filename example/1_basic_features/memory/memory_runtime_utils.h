@@ -14,7 +14,7 @@
 #include "runtime_init_utils.h"
 
 namespace memory {
-inline int InitDeviceAndCreateStream(int32_t deviceId, aclrtStream *stream)
+inline int InitDeviceAndCreateStream(int32_t deviceId, aclrtStream* stream)
 {
     return static_cast<int>(runtime::InitRuntimeAndCreateStream(deviceId, stream));
 }

@@ -17,24 +17,24 @@
 #include "acl/acl.h"
 
 namespace CallBackSpace {
-    class CallBackSample {
-        public:
-            CallBackSample();
-            virtual ~CallBackSample();
-            int Init();
-            int Callback();
-            int Destroy();
-            static void ThreadFunc(void *arg);
-            static void HostFuncThreadFunc(void *arg);
-            static void CallBackFunc(void *arg);
-            static void CallBackBeforeLaunchFunc(void *arg);
-            static void HostFunc(void *arg);
+class CallBackSample {
+public:
+    CallBackSample();
+    virtual ~CallBackSample();
+    int Init();
+    int Callback();
+    int Destroy();
+    static void ThreadFunc(void* arg);
+    static void HostFuncThreadFunc(void* arg);
+    static void CallBackFunc(void* arg);
+    static void CallBackBeforeLaunchFunc(void* arg);
+    static void HostFunc(void* arg);
 
-        public:
-            static int32_t deviceId_;
-            static aclrtContext context_;
-            static aclrtStream stream_;
-    };
-}
+public:
+    static int32_t deviceId_;
+    static aclrtContext context_;
+    static aclrtStream stream_;
+};
+} // namespace CallBackSpace
 
 #endif

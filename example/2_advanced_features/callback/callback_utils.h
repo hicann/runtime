@@ -15,8 +15,8 @@
 #include <string>
 
 namespace CallbackUtils {
-    bool IsLoopFlag(void *arg);
-    std::string GetThreadId(std::thread::id tid);
-}
+bool IsLoopFlag(void* arg);
+std::string GetThreadId(std::thread::id tid);
+} // namespace CallbackUtils
 
 #endif

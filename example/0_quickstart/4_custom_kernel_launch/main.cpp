@@ -16,10 +16,10 @@
 #include "acl/acl.h"
 #include "vector_add_kernel.h"
 
-#define CHECK_ERROR(ret)                                       \
-    if ((ret) != ACL_SUCCESS) {                                \
+#define CHECK_ERROR(ret)                                                             \
+    if ((ret) != ACL_SUCCESS) {                                                      \
         printf("Error at line %d, ret = %d\n", __LINE__, static_cast<int32_t>(ret)); \
-        return -1;                                             \
+        return -1;                                                                   \
     }
 
 namespace {

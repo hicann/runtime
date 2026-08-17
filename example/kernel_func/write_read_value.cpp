@@ -8,7 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
- /*
+/*
  * Using the Ascend kernel to write the value at devPtrA and read the value at devPtrB
  */
 
@@ -22,7 +22,7 @@ extern "C" __global__ __aicore__ void DeviceWrite(__gm__ int* devPtr, int value)
     AscendC::printf("Source data: %d\n", value);
 }
 
-void WriteDo(uint32_t blockDim, void *stream, int* devPtr, int value)
+void WriteDo(uint32_t blockDim, void* stream, int* devPtr, int value)
 {
     DeviceWrite<<<blockDim, nullptr, stream>>>(devPtr, value);
 }
@@ -34,7 +34,4 @@ extern "C" __global__ __aicore__ void DeviceRead(__gm__ int* devPtr)
     AscendC::printf("Destination data: %d\n", value);
 }
 
-void ReadDo(uint32_t blockDim, void *stream, int* devPtr)
-{
-    DeviceRead<<<blockDim, nullptr, stream>>>(devPtr);
-}
+void ReadDo(uint32_t blockDim, void* stream, int* devPtr) { DeviceRead<<<blockDim, nullptr, stream>>>(devPtr); }

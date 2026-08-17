@@ -9,7 +9,7 @@
  */
 
 /*
- * This sample demonstrates Inter-Process Communication (IPC) notify for 
+ * This sample demonstrates Inter-Process Communication (IPC) notify for
  * task synchronization across multiple devices and processes.
  * This sample does not enable whitelist verification.
  */
@@ -42,14 +42,16 @@ int32_t main()
 
         // Allocate memory on the device
         uint64_t size = 1 * 1024 * 1024;
-        int *devPtr = nullptr;
+        int* devPtr = nullptr;
         CHECK_ERROR(aclrtMalloc((void**)&devPtr, size, ACL_MEM_MALLOC_HUGE_FIRST));
 
         // Export a shareable identifier for IPC memory sharing
         char memName[256] = "name";
         size_t lenName = 65;
         CHECK_ERROR(aclrtIpcMemGetExportKey(devPtr, size, memName, lenName, 1));
-        INFO_LOG("Process A: get a shareable identifier for IPC memory sharing successfully, shareable identifier = %s", memName);
+        INFO_LOG(
+            "Process A: get a shareable identifier for IPC memory sharing successfully, shareable identifier = %s",
+            memName);
 
         // Transfer the shareable identifier to Process B by writing it to the file
         memory::WriteFile("file/memName.bin", "file/memName.bin.done", memName, strlen(memName));
@@ -62,7 +64,9 @@ int32_t main()
         char notifyName[256] = "name";
         uint64_t flag = 2;
         CHECK_ERROR(aclrtNotifyGetExportKey(notify, notifyName, lenName, flag));
-        INFO_LOG("Process A: get a shareable identifier for IPC notify sharing successfully, shareable identifier = %s", notifyName);
+        INFO_LOG(
+            "Process A: get a shareable identifier for IPC notify sharing successfully, shareable identifier = %s",
+            notifyName);
 
         // Transfer the shareable identifier to Process B by writing it to the file
         memory::WriteFile("file/notifyName.bin", "file/notifyName.bin.done", notifyName, strlen(notifyName));

@@ -16,17 +16,14 @@ using namespace std;
 
 // 核函数，让x自增1
 namespace {
-    void CallBackFunc(void *arg)
-    {
-        INFO_LOG("Hostfunc callback!!!");
-    }
-}
+void CallBackFunc(void* arg) { INFO_LOG("Hostfunc callback!!!"); }
+} // namespace
 int main()
 {
     // 初始化
     int32_t deviceId = 0;
     uint32_t num = 0;
-    uint32_t *numDevice = nullptr;
+    uint32_t* numDevice = nullptr;
     size_t size = sizeof(uint32_t);
     uint32_t blockDim = 1;
     aclrtStream stream = nullptr;
@@ -35,7 +32,7 @@ int main()
     CHECK_ERROR(aclrtSetDevice(deviceId));
     CHECK_ERROR(aclrtCreateContext(&context, deviceId));
     // 默认流下发任务,默认流随着context创建而创建，给函数传入空即使用默认流
-    CHECK_ERROR(aclrtMalloc((void **)&numDevice, size, ACL_MEM_MALLOC_HUGE_FIRST));
+    CHECK_ERROR(aclrtMalloc((void**)&numDevice, size, ACL_MEM_MALLOC_HUGE_FIRST));
     CHECK_ERROR(aclrtMemcpy(numDevice, size, &num, size, ACL_MEMCPY_HOST_TO_DEVICE));
     CHECK_ERROR(aclrtCreateStream(&stream));
     // 默认为遇错继续执行，调用该函数设置为遇错即停，当一个任务执行遇到错误，后续任务将不进行

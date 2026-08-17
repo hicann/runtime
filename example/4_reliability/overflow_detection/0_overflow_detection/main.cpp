@@ -17,14 +17,14 @@
 namespace {
 constexpr size_t kOverflowStatusBufferSize = 64;
 
-uint32_t ReadOverflowFlag(const uint8_t *statusBuffer)
+uint32_t ReadOverflowFlag(const uint8_t* statusBuffer)
 {
     uint32_t overflowFlag = 0;
-    std::copy_n(statusBuffer, sizeof(overflowFlag), reinterpret_cast<unsigned char *>(&overflowFlag));
+    std::copy_n(statusBuffer, sizeof(overflowFlag), reinterpret_cast<unsigned char*>(&overflowFlag));
     return overflowFlag;
 }
 
-const char *OverflowModeToString(aclrtFloatOverflowMode mode)
+const char* OverflowModeToString(aclrtFloatOverflowMode mode)
 {
     switch (mode) {
         case ACL_RT_OVERFLOW_MODE_SATURATION:
@@ -38,17 +38,14 @@ const char *OverflowModeToString(aclrtFloatOverflowMode mode)
     }
 }
 
-int32_t HandleOptionalOverflowRet(const char *apiName, aclError ret, const char *reason)
+int32_t HandleOptionalOverflowRet(const char* apiName, aclError ret, const char* reason)
 {
     if (ret == ACL_SUCCESS) {
         return 0;
     }
     if (ret == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
         WARN_LOG(
-            "%s is unavailable in the current environment (ret=%d): %s",
-            apiName,
-            static_cast<int32_t>(ret),
-            reason);
+            "%s is unavailable in the current environment (ret=%d): %s", apiName, static_cast<int32_t>(ret), reason);
         return 1;
     }
     ERROR_LOG("Operation failed: %s returned error code %d", apiName, static_cast<int32_t>(ret));
@@ -61,7 +58,7 @@ int main()
     const int32_t deviceId = 0;
     aclrtContext context = nullptr;
     aclrtStream stream = nullptr;
-    uint8_t *statusDevice = nullptr;
+    uint8_t* statusDevice = nullptr;
     aclrtFloatOverflowMode originalMode = ACL_RT_OVERFLOW_MODE_UNDEF;
     aclrtFloatOverflowMode currentMode = ACL_RT_OVERFLOW_MODE_UNDEF;
     bool aclInitialized = false;
@@ -82,8 +79,7 @@ int main()
         contextCreated = true;
 
         const int32_t getModeStatus = HandleOptionalOverflowRet(
-            "aclrtGetDeviceSatMode(&originalMode)",
-            aclrtGetDeviceSatMode(&originalMode),
+            "aclrtGetDeviceSatMode(&originalMode)", aclrtGetDeviceSatMode(&originalMode),
             "the current device/runtime does not expose device saturation mode");
         if (getModeStatus < 0) {
             return -1;
@@ -96,7 +92,8 @@ int main()
         const int32_t setModeStatus = HandleOptionalOverflowRet(
             "aclrtSetDeviceSatMode(ACL_RT_OVERFLOW_MODE_SATURATION)",
             aclrtSetDeviceSatMode(ACL_RT_OVERFLOW_MODE_SATURATION),
-            "stream overflow detection requires saturation mode and is only supported on specific products/runtime builds");
+            "stream overflow detection requires saturation mode and is only supported on specific products/runtime "
+            "builds");
         if (setModeStatus < 0) {
             return -1;
         }
@@ -108,16 +105,14 @@ int main()
 
         CHECK_ERROR(aclrtGetDeviceSatMode(&currentMode));
         INFO_LOG(
-            "Device saturation mode switched from %s to %s.",
-            OverflowModeToString(originalMode),
+            "Device saturation mode switched from %s to %s.", OverflowModeToString(originalMode),
             OverflowModeToString(currentMode));
 
         CHECK_ERROR(aclrtCreateStream(&stream));
         streamCreated = true;
 
         const int32_t setOverflowSwitchStatus = HandleOptionalOverflowRet(
-            "aclrtSetStreamOverflowSwitch(stream, 1)",
-            aclrtSetStreamOverflowSwitch(stream, 1),
+            "aclrtSetStreamOverflowSwitch(stream, 1)", aclrtSetStreamOverflowSwitch(stream, 1),
             "the current environment does not expose stream-level overflow detection even in saturation mode");
         if (setOverflowSwitchStatus < 0) {
             return -1;
@@ -132,10 +127,8 @@ int main()
         CHECK_ERROR(aclrtGetStreamOverflowSwitch(stream, &queriedSwitch));
         INFO_LOG("Overflow switch=%u", queriedSwitch);
 
-        CHECK_ERROR(aclrtMalloc(
-            reinterpret_cast<void **>(&statusDevice),
-            kOverflowStatusBufferSize,
-            ACL_MEM_MALLOC_HUGE_FIRST));
+        CHECK_ERROR(
+            aclrtMalloc(reinterpret_cast<void**>(&statusDevice), kOverflowStatusBufferSize, ACL_MEM_MALLOC_HUGE_FIRST));
         statusAllocated = true;
 
         uint8_t statusHost[kOverflowStatusBufferSize] = {};
@@ -144,11 +137,7 @@ int main()
         CHECK_ERROR(aclrtGetOverflowStatus(statusDevice, kOverflowStatusBufferSize, stream));
         CHECK_ERROR(aclrtSynchronizeStream(stream));
         CHECK_ERROR(aclrtMemcpy(
-            statusHost,
-            sizeof(statusHost),
-            statusDevice,
-            kOverflowStatusBufferSize,
-            ACL_MEMCPY_DEVICE_TO_HOST));
+            statusHost, sizeof(statusHost), statusDevice, kOverflowStatusBufferSize, ACL_MEMCPY_DEVICE_TO_HOST));
         overflowFlag = ReadOverflowFlag(statusHost);
         INFO_LOG("Overflow status before reset=%u", overflowFlag);
 
@@ -160,11 +149,7 @@ int main()
         CHECK_ERROR(aclrtGetOverflowStatus(statusDevice, kOverflowStatusBufferSize, stream));
         CHECK_ERROR(aclrtSynchronizeStream(stream));
         CHECK_ERROR(aclrtMemcpy(
-            statusHost,
-            sizeof(statusHost),
-            statusDevice,
-            kOverflowStatusBufferSize,
-            ACL_MEMCPY_DEVICE_TO_HOST));
+            statusHost, sizeof(statusHost), statusDevice, kOverflowStatusBufferSize, ACL_MEMCPY_DEVICE_TO_HOST));
         overflowFlag = ReadOverflowFlag(statusHost);
         INFO_LOG("Overflow status after reset=%u", overflowFlag);
         return 0;
@@ -173,7 +158,8 @@ int main()
     if (statusAllocated) {
         const aclError freeRet = aclrtFree(statusDevice);
         if (freeRet != ACL_SUCCESS) {
-            ERROR_LOG("Operation failed: aclrtFree(statusDevice) returned error code %d", static_cast<int32_t>(freeRet));
+            ERROR_LOG(
+                "Operation failed: aclrtFree(statusDevice) returned error code %d", static_cast<int32_t>(freeRet));
             finalResult = -1;
         }
     }

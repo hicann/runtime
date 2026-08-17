@@ -23,7 +23,7 @@ int main()
     int32_t deviceId = 0;
     uint32_t blockDim = 1;
     uint32_t num = 0;
-    uint32_t *numDevice = nullptr;
+    uint32_t* numDevice = nullptr;
     size_t size = sizeof(uint32_t);
     uint64_t time = 0;
     float useTime = 0;
@@ -43,7 +43,7 @@ int main()
     CHECK_ERROR(aclrtCreateEvent(&endEvent));
 
     // 先做一个短时任务查看耗时
-    CHECK_ERROR(aclrtMalloc((void **)&numDevice, size, ACL_MEM_MALLOC_HUGE_FIRST));
+    CHECK_ERROR(aclrtMalloc((void**)&numDevice, size, ACL_MEM_MALLOC_HUGE_FIRST));
     CHECK_ERROR(aclrtMemcpy(numDevice, size, &num, size, ACL_MEMCPY_HOST_TO_DEVICE));
     INFO_LOG("Begin a short task.");
     // 做任务前记录一次，做任务后再记录一次，相差时间则为任务耗时。
@@ -62,10 +62,10 @@ int main()
     INFO_LOG("End event timestamp: %ld.", time);
     CHECK_ERROR(aclrtEventElapsedTime(&useTime, startEvent, endEvent));
     INFO_LOG("The short task consume time %f ms.", useTime);
-    CHECK_ERROR(aclrtFree(numDevice));// 释放短任务分配的内存
+    CHECK_ERROR(aclrtFree(numDevice)); // 释放短任务分配的内存
 
     // 再做一个长耗时任务查看耗时
-    CHECK_ERROR(aclrtMalloc((void **)&numDevice, size, ACL_MEM_MALLOC_HUGE_FIRST));
+    CHECK_ERROR(aclrtMalloc((void**)&numDevice, size, ACL_MEM_MALLOC_HUGE_FIRST));
     CHECK_ERROR(aclrtMemcpy(numDevice, size, &num, size, ACL_MEMCPY_HOST_TO_DEVICE));
     INFO_LOG("Begin a long task.");
     CHECK_ERROR(aclrtRecordEvent(startEvent, stream));

@@ -14,7 +14,7 @@
 #include "acl/acl.h"
 
 namespace runtime {
-inline aclError InitRuntimeAndCreateStream(int32_t deviceId, aclrtStream *stream, const char *configPath = nullptr)
+inline aclError InitRuntimeAndCreateStream(int32_t deviceId, aclrtStream* stream, const char* configPath = nullptr)
 {
     aclError ret = aclInit(configPath);
     if (ret != ACL_SUCCESS) {

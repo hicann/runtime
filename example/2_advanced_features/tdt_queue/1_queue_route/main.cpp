@@ -15,7 +15,7 @@
 #include "utils.h"
 
 namespace {
-constexpr size_t kQueueNamePtrSize = sizeof(const char *);
+constexpr size_t kQueueNamePtrSize = sizeof(const char*);
 
 struct QueueRouteSample {
     static constexpr int32_t kDeviceId = 0;
@@ -29,19 +29,19 @@ struct QueueRouteSample {
     bool dstQueueCreated = false;
     bool routeAdded = false;
     bool bindAttempted = false;
-    acltdtQueueRoute *route = nullptr;
-    acltdtQueueRouteList *bindList = nullptr;
-    acltdtQueueRouteQueryInfo *queryInfo = nullptr;
-    acltdtQueueRouteList *queryList = nullptr;
+    acltdtQueueRoute* route = nullptr;
+    acltdtQueueRouteList* bindList = nullptr;
+    acltdtQueueRouteQueryInfo* queryInfo = nullptr;
+    acltdtQueueRouteList* queryList = nullptr;
 };
 
-aclError CreateQueueWithAttr(const char *name, uint32_t depth, uint32_t *qid)
+aclError CreateQueueWithAttr(const char* name, uint32_t depth, uint32_t* qid)
 {
     if (qid == nullptr) {
         return ACL_ERROR_INVALID_PARAM;
     }
 
-    acltdtQueueAttr *attr = acltdtCreateQueueAttr();
+    acltdtQueueAttr* attr = acltdtCreateQueueAttr();
     if (attr == nullptr) {
         return ACL_ERROR_INVALID_PARAM;
     }
@@ -49,7 +49,7 @@ aclError CreateQueueWithAttr(const char *name, uint32_t depth, uint32_t *qid)
     aclError ret = acltdtSetQueueAttr(attr, ACL_TDT_QUEUE_DEPTH_UINT32, sizeof(depth), &depth);
     if ((ret == ACL_SUCCESS) && (name != nullptr)) {
         // ACL_TDT_QUEUE_NAME_PTR expects a pointer-sized payload that points to the queue name.
-        const char *namePtr = name;
+        const char* namePtr = name;
         ret = acltdtSetQueueAttr(attr, ACL_TDT_QUEUE_NAME_PTR, kQueueNamePtrSize, &namePtr);
     }
     if (ret == ACL_SUCCESS) {
@@ -60,7 +60,7 @@ aclError CreateQueueWithAttr(const char *name, uint32_t depth, uint32_t *qid)
     return ret;
 }
 
-aclError CreateQueue(const char *name, uint32_t depth, uint32_t *qid)
+aclError CreateQueue(const char* name, uint32_t depth, uint32_t* qid)
 {
     aclError ret = CreateQueueWithAttr(name, depth, qid);
     if ((ret != ACL_ERROR_INVALID_PARAM) || (name == nullptr)) {
@@ -75,7 +75,7 @@ aclError CreateQueue(const char *name, uint32_t depth, uint32_t *qid)
     return CreateQueueWithAttr(nullptr, depth, qid);
 }
 
-int32_t CreateQueues(QueueRouteSample &sample)
+int32_t CreateQueues(QueueRouteSample& sample)
 {
     aclError ret = CreateQueue("route_src_queue", QueueRouteSample::kQueueDepth, &sample.srcQid);
     if (ret != ACL_SUCCESS) {
@@ -99,7 +99,7 @@ int32_t CreateQueues(QueueRouteSample &sample)
     return 0;
 }
 
-int32_t BindQueueRoute(QueueRouteSample &sample)
+int32_t BindQueueRoute(QueueRouteSample& sample)
 {
     sample.route = acltdtCreateQueueRoute(sample.srcQid, sample.dstQid);
     if (!tdt::CheckNotNull(sample.route, "acltdtCreateQueueRoute")) {
@@ -117,7 +117,7 @@ int32_t BindQueueRoute(QueueRouteSample &sample)
     return 0;
 }
 
-int32_t PrepareRouteQuery(QueueRouteSample &sample)
+int32_t PrepareRouteQuery(QueueRouteSample& sample)
 {
     sample.queryInfo = acltdtCreateQueueRouteQueryInfo();
     if (!tdt::CheckNotNull(sample.queryInfo, "acltdtCreateQueueRouteQueryInfo")) {
@@ -125,21 +125,12 @@ int32_t PrepareRouteQuery(QueueRouteSample &sample)
     }
 
     acltdtQueueRouteQueryMode mode = ACL_TDT_QUEUE_ROUTE_QUERY_SRC_AND_DST;
+    CHECK_ERROR(
+        acltdtSetQueueRouteQueryInfo(sample.queryInfo, ACL_TDT_QUEUE_ROUTE_QUERY_MODE_ENUM, sizeof(mode), &mode));
     CHECK_ERROR(acltdtSetQueueRouteQueryInfo(
-        sample.queryInfo,
-        ACL_TDT_QUEUE_ROUTE_QUERY_MODE_ENUM,
-        sizeof(mode),
-        &mode));
+        sample.queryInfo, ACL_TDT_QUEUE_ROUTE_QUERY_SRC_ID_UINT32, sizeof(sample.srcQid), &sample.srcQid));
     CHECK_ERROR(acltdtSetQueueRouteQueryInfo(
-        sample.queryInfo,
-        ACL_TDT_QUEUE_ROUTE_QUERY_SRC_ID_UINT32,
-        sizeof(sample.srcQid),
-        &sample.srcQid));
-    CHECK_ERROR(acltdtSetQueueRouteQueryInfo(
-        sample.queryInfo,
-        ACL_TDT_QUEUE_ROUTE_QUERY_DST_ID_UINT32,
-        sizeof(sample.dstQid),
-        &sample.dstQid));
+        sample.queryInfo, ACL_TDT_QUEUE_ROUTE_QUERY_DST_ID_UINT32, sizeof(sample.dstQid), &sample.dstQid));
 
     sample.queryList = acltdtCreateQueueRouteList();
     if (!tdt::CheckNotNull(sample.queryList, "acltdtCreateQueueRouteList(query)")) {
@@ -150,11 +141,8 @@ int32_t PrepareRouteQuery(QueueRouteSample &sample)
 }
 
 aclError GetQueueRouteParamValue(
-    acltdtQueueRoute *route,
-    decltype(ACL_TDT_QUEUE_ROUTE_SRC_UINT32) paramType,
-    const char *apiName,
-    size_t valueSize,
-    void *value)
+    acltdtQueueRoute* route, decltype(ACL_TDT_QUEUE_ROUTE_SRC_UINT32) paramType, const char* apiName, size_t valueSize,
+    void* value)
 {
     size_t paramSize = 0;
     const aclError ret = acltdtGetQueueRouteParam(route, paramType, valueSize, &paramSize, value);
@@ -164,7 +152,7 @@ aclError GetQueueRouteParamValue(
     return ret;
 }
 
-int32_t LogQueriedRoute(const QueueRouteSample &sample)
+int32_t LogQueriedRoute(const QueueRouteSample& sample)
 {
     const size_t routeNum = acltdtGetQueueRouteNum(sample.queryList);
     INFO_LOG("Queried route count: %zu", routeNum);
@@ -172,7 +160,7 @@ int32_t LogQueriedRoute(const QueueRouteSample &sample)
         return 0;
     }
 
-    acltdtQueueRoute *routeView = acltdtCreateQueueRoute(sample.srcQid, sample.dstQid);
+    acltdtQueueRoute* routeView = acltdtCreateQueueRoute(sample.srcQid, sample.dstQid);
     if (!tdt::CheckNotNull(routeView, "routeView")) {
         return -1;
     }
@@ -190,26 +178,20 @@ int32_t LogQueriedRoute(const QueueRouteSample &sample)
     uint32_t queriedDst = 0;
     int32_t queriedStatus = 0;
     if (GetQueueRouteParamValue(
-            routeView,
-            ACL_TDT_QUEUE_ROUTE_SRC_UINT32,
+            routeView, ACL_TDT_QUEUE_ROUTE_SRC_UINT32,
             "acltdtGetQueueRouteParam(routeView, ACL_TDT_QUEUE_ROUTE_SRC_UINT32, sizeof(queriedSrc), &paramSize, "
             "&queriedSrc)",
-            sizeof(queriedSrc),
-            &queriedSrc) != ACL_SUCCESS ||
+            sizeof(queriedSrc), &queriedSrc) != ACL_SUCCESS ||
         GetQueueRouteParamValue(
-            routeView,
-            ACL_TDT_QUEUE_ROUTE_DST_UINT32,
+            routeView, ACL_TDT_QUEUE_ROUTE_DST_UINT32,
             "acltdtGetQueueRouteParam(routeView, ACL_TDT_QUEUE_ROUTE_DST_UINT32, sizeof(queriedDst), &paramSize, "
             "&queriedDst)",
-            sizeof(queriedDst),
-            &queriedDst) != ACL_SUCCESS ||
+            sizeof(queriedDst), &queriedDst) != ACL_SUCCESS ||
         GetQueueRouteParamValue(
-            routeView,
-            ACL_TDT_QUEUE_ROUTE_STATUS_INT32,
+            routeView, ACL_TDT_QUEUE_ROUTE_STATUS_INT32,
             "acltdtGetQueueRouteParam(routeView, ACL_TDT_QUEUE_ROUTE_STATUS_INT32, sizeof(queriedStatus), "
             "&paramSize, &queriedStatus)",
-            sizeof(queriedStatus),
-            &queriedStatus) != ACL_SUCCESS) {
+            sizeof(queriedStatus), &queriedStatus) != ACL_SUCCESS) {
         (void)acltdtDestroyQueueRoute(routeView);
         return -1;
     }
@@ -219,7 +201,7 @@ int32_t LogQueriedRoute(const QueueRouteSample &sample)
     return 0;
 }
 
-int32_t RunSample(QueueRouteSample &sample)
+int32_t RunSample(QueueRouteSample& sample)
 {
     CHECK_ERROR(aclInit(nullptr));
     sample.aclInitialized = true;
@@ -238,62 +220,49 @@ int32_t RunSample(QueueRouteSample &sample)
     return LogQueriedRoute(sample);
 }
 
-void CleanupRouteResources(QueueRouteSample &sample, int32_t &finalResult)
+void CleanupRouteResources(QueueRouteSample& sample, int32_t& finalResult)
 {
     if (sample.bindAttempted && sample.routeAdded && (sample.bindList != nullptr)) {
         tdt::UpdateFinalResultOnError(
-            "acltdtUnbindQueueRoutes(sample.bindList)",
-            acltdtUnbindQueueRoutes(sample.bindList),
-            finalResult);
+            "acltdtUnbindQueueRoutes(sample.bindList)", acltdtUnbindQueueRoutes(sample.bindList), finalResult);
     }
     if (sample.queryList != nullptr) {
         tdt::UpdateFinalResultOnError(
-            "acltdtDestroyQueueRouteList(sample.queryList)",
-            acltdtDestroyQueueRouteList(sample.queryList),
+            "acltdtDestroyQueueRouteList(sample.queryList)", acltdtDestroyQueueRouteList(sample.queryList),
             finalResult);
     }
     if (sample.queryInfo != nullptr) {
         tdt::UpdateFinalResultOnError(
-            "acltdtDestroyQueueRouteQueryInfo(sample.queryInfo)",
-            acltdtDestroyQueueRouteQueryInfo(sample.queryInfo),
+            "acltdtDestroyQueueRouteQueryInfo(sample.queryInfo)", acltdtDestroyQueueRouteQueryInfo(sample.queryInfo),
             finalResult);
     }
     if (sample.bindList != nullptr) {
         tdt::UpdateFinalResultOnError(
-            "acltdtDestroyQueueRouteList(sample.bindList)",
-            acltdtDestroyQueueRouteList(sample.bindList),
-            finalResult);
+            "acltdtDestroyQueueRouteList(sample.bindList)", acltdtDestroyQueueRouteList(sample.bindList), finalResult);
     }
     if (sample.route != nullptr) {
         tdt::UpdateFinalResultOnError(
-            "acltdtDestroyQueueRoute(sample.route)",
-            acltdtDestroyQueueRoute(sample.route),
-            finalResult);
+            "acltdtDestroyQueueRoute(sample.route)", acltdtDestroyQueueRoute(sample.route), finalResult);
     }
 }
 
-void CleanupQueues(QueueRouteSample &sample, int32_t &finalResult)
+void CleanupQueues(QueueRouteSample& sample, int32_t& finalResult)
 {
     if (sample.dstQueueCreated) {
         tdt::UpdateFinalResultOnError(
-            "acltdtDestroyQueue(sample.dstQid)",
-            acltdtDestroyQueue(sample.dstQid),
-            finalResult);
+            "acltdtDestroyQueue(sample.dstQid)", acltdtDestroyQueue(sample.dstQid), finalResult);
     }
     if (sample.srcQueueCreated) {
         tdt::UpdateFinalResultOnError(
-            "acltdtDestroyQueue(sample.srcQid)",
-            acltdtDestroyQueue(sample.srcQid),
-            finalResult);
+            "acltdtDestroyQueue(sample.srcQid)", acltdtDestroyQueue(sample.srcQid), finalResult);
     }
 }
 
-void CleanupAclRuntime(int32_t &finalResult, const QueueRouteSample &sample)
+void CleanupAclRuntime(int32_t& finalResult, const QueueRouteSample& sample)
 {
     if (sample.deviceSet) {
         tdt::UpdateFinalResultOnError(
-            "aclrtResetDeviceForce(QueueRouteSample::kDeviceId)",
-            aclrtResetDeviceForce(QueueRouteSample::kDeviceId),
+            "aclrtResetDeviceForce(QueueRouteSample::kDeviceId)", aclrtResetDeviceForce(QueueRouteSample::kDeviceId),
             finalResult);
     }
     if (sample.aclInitialized) {
@@ -301,7 +270,7 @@ void CleanupAclRuntime(int32_t &finalResult, const QueueRouteSample &sample)
     }
 }
 
-void CleanupSample(QueueRouteSample &sample, int32_t &finalResult)
+void CleanupSample(QueueRouteSample& sample, int32_t& finalResult)
 {
     CleanupRouteResources(sample, finalResult);
     CleanupQueues(sample, finalResult);

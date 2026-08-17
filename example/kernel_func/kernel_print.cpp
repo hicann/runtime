@@ -8,20 +8,13 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
- /*
+/*
  * Using the Ascend kernel to print the data
  */
 
 #include "kernel_operator.h"
 #include "kernel_ops.h"
 
-extern "C" __global__ __aicore__ void KernelPrint()
-{
-    AscendC::printf("Hello World\n");
-}
+extern "C" __global__ __aicore__ void KernelPrint() { AscendC::printf("Hello World\n"); }
 
-void PrintDo(uint32_t blockDim, void *stream)
-{
-    KernelPrint<<<blockDim, nullptr, stream>>>();
-}
-
+void PrintDo(uint32_t blockDim, void* stream) { KernelPrint<<<blockDim, nullptr, stream>>>(); }

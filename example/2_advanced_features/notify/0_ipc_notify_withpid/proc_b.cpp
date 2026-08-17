@@ -9,7 +9,7 @@
  */
 
 /*
- * This sample demonstrates Inter-Process Communication (IPC) notify for 
+ * This sample demonstrates Inter-Process Communication (IPC) notify for
  * task synchronization across multiple devices and processes.
  * This sample enables process whitelist verification.
  */
@@ -44,10 +44,12 @@ int32_t main()
         // Get the shareable key from the file
         char memName[256] = "name";
         memory::ReadFile("file/memName.bin", "file/memName.bin.done", memName, sizeof(memName));
-        INFO_LOG("Process B: get the shareable identifier for IPC memory sharing successfully, shareable identifier = %s", memName);
+        INFO_LOG(
+            "Process B: get the shareable identifier for IPC memory sharing successfully, shareable identifier = %s",
+            memName);
 
         // Return a device memory pointer accessible to Process B
-        void *devPtr = nullptr;
+        void* devPtr = nullptr;
         uint64_t size = 1 * 1024 * 1024;
         CHECK_ERROR(aclrtIpcMemImportByKey(&devPtr, memName, 0));
 
@@ -58,11 +60,13 @@ int32_t main()
 
         // Write Process B's pid to the file
         memory::WriteFile("file/pid.bin", "file/pid.bin.done", &pid, sizeof(pid));
-      
+
         // Get the shareable key from the file
         char notifyName[256] = "name";
         memory::ReadFile("file/notifyName.bin", "file/notifyName.bin.done", notifyName, sizeof(notifyName));
-        INFO_LOG("Process B: get the shareable identifier for IPC notify sharing successfully, shareable identifier = %s", notifyName);
+        INFO_LOG(
+            "Process B: get the shareable identifier for IPC notify sharing successfully, shareable identifier = %s",
+            notifyName);
 
         // Get key information and return the notify accessible to Process B
         aclrtNotify notify = nullptr;
@@ -84,7 +88,7 @@ int32_t main()
         // Release notify and memory resources
         CHECK_ERROR(aclrtSynchronizeStream(stream));
         CHECK_ERROR(aclrtIpcMemClose(memName));
-        CHECK_ERROR(aclrtDestroyNotify(notify));     
+        CHECK_ERROR(aclrtDestroyNotify(notify));
     } else {
         ERROR_LOG("The target devices do not support data interaction");
     }

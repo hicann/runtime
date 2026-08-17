@@ -14,10 +14,7 @@
 #include "utils.h"
 
 namespace {
-const char *RunModeToString(aclrtRunMode runMode)
-{
-    return runMode == ACL_HOST ? "ACL_HOST" : "ACL_DEVICE";
-}
+const char* RunModeToString(aclrtRunMode runMode) { return runMode == ACL_HOST ? "ACL_HOST" : "ACL_DEVICE"; }
 
 aclError PrintCannVersionInfo()
 {
@@ -58,12 +55,12 @@ int main()
     float originalValue = 1.625f;
     aclFloat16 fp16Value = aclFloatToFloat16(originalValue);
     float restoredValue = aclFloat16ToFloat(fp16Value);
-    INFO_LOG("Float conversion: %.6f -> 0x%04x -> %.6f", originalValue, static_cast<unsigned int>(fp16Value),
-        restoredValue);
+    INFO_LOG(
+        "Float conversion: %.6f -> 0x%04x -> %.6f", originalValue, static_cast<unsigned int>(fp16Value), restoredValue);
 
-    INFO_LOG("Data type size: ACL_FLOAT=%zu, ACL_FLOAT16=%zu, ACL_INT64=%zu",
-        aclDataTypeSize(aclDataType::ACL_FLOAT), aclDataTypeSize(aclDataType::ACL_FLOAT16),
-        aclDataTypeSize(aclDataType::ACL_INT64));
+    INFO_LOG(
+        "Data type size: ACL_FLOAT=%zu, ACL_FLOAT16=%zu, ACL_INT64=%zu", aclDataTypeSize(aclDataType::ACL_FLOAT),
+        aclDataTypeSize(aclDataType::ACL_FLOAT16), aclDataTypeSize(aclDataType::ACL_INT64));
 
     // Finalize ACL after all queries finish.
     CHECK_ERROR(aclFinalize());

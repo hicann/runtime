@@ -20,7 +20,7 @@
 
 namespace {
 // 自定义函数，实现从用户内存中读取订阅数据的函数
-void getModelInfo(void *data, uint32_t len)
+void getModelInfo(void* data, uint32_t len)
 {
     uint32_t opNumber = 0;
     uint32_t dataLen = 0;
@@ -51,7 +51,7 @@ void getModelInfo(void *data, uint32_t len)
 }
 
 // 自定义函数，实现从管道中读取数据到用户内存的函数
-void *profDataRead(void *fd)
+void* profDataRead(void* fd)
 {
     // 设置每次从管道中读取的算子信息个数
     uint64_t N = 10;
@@ -60,8 +60,9 @@ void *profDataRead(void *fd)
     aclprofGetOpDescSize(&bufferSize);
     // 计算存储算子信息的内存的大小，并且申请内存
     uint64_t readbufLen = bufferSize * N;
-    char *readbuf = new char[readbufLen];
-    // 从管道中读取数据到申请的内存中，读取到的实际数据大小dataLen可能小于bufferSize * N，如果管道中没有数据，默认会阻塞直到读取到数据为止
+    char* readbuf = new char[readbufLen];
+    // 从管道中读取数据到申请的内存中，读取到的实际数据大小dataLen可能小于bufferSize *
+    // N，如果管道中没有数据，默认会阻塞直到读取到数据为止
     ssize_t dataLen = read(*(int*)fd, readbuf, readbufLen);
     // 读取数据到readbuf成功
     while (dataLen > 0) {
@@ -73,18 +74,18 @@ void *profDataRead(void *fd)
         memset_s(readbuf, readbufLen, 0, readbufLen);
         dataLen = read(*(int*)fd, readbuf, readbufLen);
     }
-    delete []readbuf;
+    delete[] readbuf;
     return nullptr;
 }
-}
+} // namespace
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
     INFO_LOG("-------- Start -------- \n");
     // 调用aclInit初始化
     aclInit(nullptr);
     // 申请运行管理资源
-    uint32_t deviceIdList[1] = {0};  // 根据实际环境的DeviceID配置
+    uint32_t deviceIdList[1] = {0}; // 根据实际环境的DeviceID配置
     aclrtSetDevice(deviceIdList[0]);
     aclrtStream stream = nullptr;
     aclrtCreateStream(&stream);
@@ -101,7 +102,7 @@ int main(int argc, char *argv[])
     // 读管道指针指向subFd[0]，写管道指针指向subFd[1]
     CHECK_ERROR(pipe(subFd));
     // 创建模型订阅的配置并且进行模型订阅
-    aclprofSubscribeConfig *config = aclprofCreateSubscribeConfig(1, ACL_AICORE_NONE, &subFd[1]);
+    aclprofSubscribeConfig* config = aclprofCreateSubscribeConfig(1, ACL_AICORE_NONE, &subFd[1]);
     // 模型订阅需要传入模型的modelId
     aclprofModelSubscribe(modelId, config);
 

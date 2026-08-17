@@ -12,12 +12,11 @@
 #include "utils.h"
 #include "acl/acl.h"
 
-static bool CheckResult(const std::vector<int32_t> &actual, const std::vector<int32_t> &expected)
+static bool CheckResult(const std::vector<int32_t>& actual, const std::vector<int32_t>& expected)
 {
     for (size_t i = 0; i < actual.size(); ++i) {
         if (actual[i] != expected[i]) {
-            ERROR_LOG("Check result failed at index %zu: actual=%d, expected=%d",
-                      i, actual[i], expected[i]);
+            ERROR_LOG("Check result failed at index %zu: actual=%d, expected=%d", i, actual[i], expected[i]);
             return false;
         }
     }
@@ -42,8 +41,8 @@ static int Scenario1StreamRecordGraphWaitExternal()
     aclrtEvent event;
     CHECK_ERROR(aclrtCreateEventExWithFlag(&event, ACL_EVENT_SYNC));
 
-    void *srcDevice = nullptr;
-    void *dstDevice = nullptr;
+    void* srcDevice = nullptr;
+    void* dstDevice = nullptr;
     CHECK_ERROR(aclrtMalloc(&srcDevice, size, ACL_MEM_MALLOC_HUGE_FIRST));
     CHECK_ERROR(aclrtMalloc(&dstDevice, size, ACL_MEM_MALLOC_HUGE_FIRST));
 
@@ -91,8 +90,8 @@ static int Scenario2GraphRecordExternalStreamWait()
     aclrtEvent event;
     CHECK_ERROR(aclrtCreateEventExWithFlag(&event, ACL_EVENT_SYNC));
 
-    void *srcDevice = nullptr;
-    void *dstDevice = nullptr;
+    void* srcDevice = nullptr;
+    void* dstDevice = nullptr;
     CHECK_ERROR(aclrtMalloc(&srcDevice, size, ACL_MEM_MALLOC_HUGE_FIRST));
     CHECK_ERROR(aclrtMalloc(&dstDevice, size, ACL_MEM_MALLOC_HUGE_FIRST));
 
@@ -141,9 +140,9 @@ static int Scenario3Graph1RecordGraph2WaitExternal()
     aclrtEvent event;
     CHECK_ERROR(aclrtCreateEventExWithFlag(&event, ACL_EVENT_SYNC));
 
-    void *srcDevice = nullptr;
-    void *midDevice = nullptr;
-    void *dstDevice = nullptr;
+    void* srcDevice = nullptr;
+    void* midDevice = nullptr;
+    void* dstDevice = nullptr;
     CHECK_ERROR(aclrtMalloc(&srcDevice, size, ACL_MEM_MALLOC_HUGE_FIRST));
     CHECK_ERROR(aclrtMalloc(&midDevice, size, ACL_MEM_MALLOC_HUGE_FIRST));
     CHECK_ERROR(aclrtMalloc(&dstDevice, size, ACL_MEM_MALLOC_HUGE_FIRST));

@@ -15,10 +15,11 @@
 #include "acl/acl.h"
 #include "acl/acl_prof.h"
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[])
+{
     INFO_LOG("-------- Start --------");
     // 初始化
-    uint32_t deviceIdList[1] = {0};  // 根据实际环境的DeviceID配置
+    uint32_t deviceIdList[1] = {0}; // 根据实际环境的DeviceID配置
     aclrtStream stream = nullptr;
     // 申请运行时资源
     aclInit(nullptr);
@@ -32,14 +33,16 @@ int main(int argc, char *argv[]) {
     INFO_LOG("profiling init done");
     // 进行profiling配置
     // 创建配置结构体
-    aclprofConfig *config = aclprofCreateConfig(deviceIdList, 1, ACL_AICORE_ARITHMETIC_UTILIZATION, 
-        nullptr, ACL_PROF_ACL_API | ACL_PROF_TASK_TIME | ACL_PROF_AICORE_METRICS | ACL_PROF_AICPU | ACL_PROF_L2CACHE | ACL_PROF_HCCL_TRACE | ACL_PROF_MSPROFTX | ACL_PROF_RUNTIME_API);
+    aclprofConfig* config = aclprofCreateConfig(
+        deviceIdList, 1, ACL_AICORE_ARITHMETIC_UTILIZATION, nullptr,
+        ACL_PROF_ACL_API | ACL_PROF_TASK_TIME | ACL_PROF_AICORE_METRICS | ACL_PROF_AICPU | ACL_PROF_L2CACHE |
+            ACL_PROF_HCCL_TRACE | ACL_PROF_MSPROFTX | ACL_PROF_RUNTIME_API);
     std::string memFreq = "15";
     aclError ret = aclprofSetConfig(ACL_PROF_SYS_HARDWARE_MEM_FREQ, memFreq.c_str(), memFreq.length());
     if (ret != ACL_SUCCESS) {
         ERROR_LOG("profiling set config error: %d", ret);
         return -1;
-    } 
+    }
     INFO_LOG("profiling set config done");
 
     aclprofStart(config);

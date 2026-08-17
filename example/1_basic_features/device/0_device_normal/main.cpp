@@ -15,70 +15,73 @@
 #include "utils.h"
 
 namespace {
-    int Init(int32_t deviceId, aclrtStream* stream) 
-    {
-        CHECK_ERROR(aclInit(nullptr));
-        CHECK_ERROR(aclrtSetDevice(deviceId));
-        CHECK_ERROR(aclrtCreateStream(stream));
-        return 0;
+int Init(int32_t deviceId, aclrtStream* stream)
+{
+    CHECK_ERROR(aclInit(nullptr));
+    CHECK_ERROR(aclrtSetDevice(deviceId));
+    CHECK_ERROR(aclrtCreateStream(stream));
+    return 0;
+}
+
+int64_t GetShapeSize(const std::vector<int64_t>& shape)
+{
+    int64_t shape_size = 1;
+    for (auto i : shape) {
+        shape_size *= i;
+    }
+    return shape_size;
+}
+
+template <typename T>
+int CreateAclTensor(
+    const std::vector<T>& hostData, const std::vector<int64_t>& shape, void** deviceAddr, aclDataType dataType,
+    aclTensor** tensor)
+{
+    auto size = GetShapeSize(shape) * sizeof(T);
+
+    // Allocate memory on the device
+    CHECK_ERROR(aclrtMalloc(deviceAddr, size, ACL_MEM_MALLOC_HUGE_FIRST));
+
+    // Copy memory from host to device synchronously
+    CHECK_ERROR(aclrtMemcpy(*deviceAddr, size, hostData.data(), size, ACL_MEMCPY_HOST_TO_DEVICE));
+
+    // Calculate the strides
+    std::vector<int64_t> strides(shape.size(), 1);
+    for (int64_t i = shape.size() - 2; i >= 0; i--) {
+        strides[i] = shape[i + 1] * strides[i + 1];
     }
 
-    int64_t GetShapeSize(const std::vector<int64_t> &shape)
-    {
-        int64_t shape_size = 1;
-        for (auto i : shape) {
-            shape_size *= i;
-        }
-        return shape_size;
-    }
+    // Create the tensor
+    *tensor = aclCreateTensor(
+        shape.data(), shape.size(), dataType, strides.data(), 0, aclFormat::ACL_FORMAT_ND, shape.data(), shape.size(),
+        *deviceAddr);
+    return 0;
+}
 
-    template <typename T>
-    int CreateAclTensor(const std::vector<T> &hostData, const std::vector<int64_t> &shape, void **deviceAddr, 
-        aclDataType dataType, aclTensor **tensor)
-    {
-        auto size = GetShapeSize(shape) * sizeof(T);
+void DestroyTensorResources(aclTensor* self, aclTensor* other, aclScalar* alpha, aclTensor* out)
+{
+    aclDestroyTensor(self);
+    aclDestroyTensor(other);
+    aclDestroyScalar(alpha);
+    aclDestroyTensor(out);
+}
 
-        // Allocate memory on the device
-        CHECK_ERROR(aclrtMalloc(deviceAddr, size, ACL_MEM_MALLOC_HUGE_FIRST));
+int GetAndPrintResult(void* outDeviceAddr, const std::vector<int64_t>& outShape)
+{
+    auto size = GetShapeSize(outShape);
+    std::vector<float> resultData(size, 0);
+    CHECK_ERROR(aclrtMemcpy(
+        resultData.data(), resultData.size() * sizeof(resultData[0]), outDeviceAddr, size * sizeof(float),
+        ACL_MEMCPY_DEVICE_TO_HOST));
 
-        // Copy memory from host to device synchronously
-        CHECK_ERROR(aclrtMemcpy(*deviceAddr, size, hostData.data(), size, ACL_MEMCPY_HOST_TO_DEVICE));
-
-        // Calculate the strides
-        std::vector<int64_t> strides(shape.size(), 1);
-        for (int64_t i = shape.size() - 2; i >= 0; i--) {
-            strides[i] = shape[i + 1] * strides[i + 1];
-        }
-
-        // Create the tensor
-        *tensor = aclCreateTensor(shape.data(), shape.size(), dataType, strides.data(), 0, aclFormat::ACL_FORMAT_ND,
-            shape.data(), shape.size(), *deviceAddr);
-        return 0;
-    }
-
-    void DestroyTensorResources(aclTensor *self, aclTensor *other, aclScalar *alpha, aclTensor *out)
-    {
-        aclDestroyTensor(self);
-        aclDestroyTensor(other);
-        aclDestroyScalar(alpha);
-        aclDestroyTensor(out);
-    }
-
-    int GetAndPrintResult(void *outDeviceAddr, const std::vector<int64_t> &outShape)
-    {
-        auto size = GetShapeSize(outShape);
-        std::vector<float> resultData(size, 0);
-        CHECK_ERROR(aclrtMemcpy(resultData.data(), resultData.size() * sizeof(resultData[0]), outDeviceAddr, 
-            size * sizeof(float), ACL_MEMCPY_DEVICE_TO_HOST));
-
-        for (int64_t i = 0; i < size; i++) {
+    for (int64_t i = 0; i < size; i++) {
         INFO_LOG("result[%ld] is: %f", i, resultData[i]);
-        }
-        return 0;
     }
+    return 0;
+}
 } // namespace
 
-int32_t main(int argc, char const *argv[])
+int32_t main(int argc, char const* argv[])
 {
     INFO_LOG("Start to run device_normal sample.");
     int32_t deviceId = 0;
@@ -88,7 +91,7 @@ int32_t main(int argc, char const *argv[])
     std::vector<int64_t> selfShape{4, 2}, otherShape{4, 2}, outShape{4, 2};
     void *selfDeviceAddr = nullptr, *otherDeviceAddr = nullptr, *outDeviceAddr = nullptr;
     aclTensor *self = nullptr, *other = nullptr, *out = nullptr;
-    aclScalar *alpha = nullptr;
+    aclScalar* alpha = nullptr;
     std::vector<float> selfHostData = {0, 1, 2, 3, 4, 5, 6, 7};
     std::vector<float> otherHostData = {1, 1, 1, 2, 2, 2, 3, 3};
     std::vector<float> outHostData = {0, 0, 0, 0, 0, 0, 0, 0};
@@ -99,21 +102,21 @@ int32_t main(int argc, char const *argv[])
 
     alpha = aclCreateScalar(&alphaValue, aclDataType::ACL_FLOAT);
     if (alpha == nullptr) {
-      ERROR_LOG("Create alpha Scalar failed.");
-      return -1;
+        ERROR_LOG("Create alpha Scalar failed.");
+        return -1;
     }
 
     CHECK_ERROR(CreateAclTensor(outHostData, outShape, &outDeviceAddr, aclDataType::ACL_FLOAT, &out));
 
     // Call the CANN operator library API
     uint64_t workspaceSize = 0;
-    aclOpExecutor *executor;
+    aclOpExecutor* executor;
     CHECK_ERROR(aclnnAddGetWorkspaceSize(self, other, alpha, out, &workspaceSize, &executor));
 
     // Allocate device memory based on the calculation results
-    void *workspaceAddr = nullptr;
+    void* workspaceAddr = nullptr;
     if (workspaceSize > 0lu) {
-      CHECK_ERROR(aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST));
+        CHECK_ERROR(aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST));
     }
     // Call the Add operator
     CHECK_ERROR(aclnnAdd(workspaceAddr, workspaceSize, executor, stream));
@@ -133,7 +136,7 @@ int32_t main(int argc, char const *argv[])
     CHECK_ERROR(aclrtFree(otherDeviceAddr));
     CHECK_ERROR(aclrtFree(outDeviceAddr));
     if (workspaceSize > 0lu) {
-      CHECK_ERROR(aclrtFree(workspaceAddr));
+        CHECK_ERROR(aclrtFree(workspaceAddr));
     }
     CHECK_ERROR(aclrtDestroyStream(stream));
     CHECK_ERROR(aclrtResetDeviceForce(deviceId));

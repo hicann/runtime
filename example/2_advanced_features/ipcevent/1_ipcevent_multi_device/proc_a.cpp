@@ -25,7 +25,8 @@
 #define MAX_CONSUMER_NUM 8
 
 // 等待所有消费者完成（通过检查每个消费者创建的完成标志文件）
-int WaitForConsumers(int expectedCount) {
+int WaitForConsumers(int expectedCount)
+{
     char flagFile[64];
     int completed = 0;
     int timeoutSec = 30;
@@ -53,7 +54,8 @@ int WaitForConsumers(int expectedCount) {
     }
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char* argv[])
+{
     if (argc != 2) {
         ERROR_LOG("Usage: %s <number_of_consumers>", argv[0]);
         return -1;

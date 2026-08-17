@@ -72,7 +72,7 @@ int32_t main(int argc, char* argv[])
     aclrtMemFabricHandle shareableHandle = {};
     aclrtDrvMemHandle handle = nullptr;
     socklen_t server_len = sizeof(server_addr);
-    int recv_len = 
+    int recv_len =
         recvfrom(sockfd, &shareableHandle, sizeof(shareableHandle), 0, (struct sockaddr*)&server_addr, &server_len);
     if (recv_len < 0) {
         close(sockfd);
@@ -80,8 +80,8 @@ int32_t main(int argc, char* argv[])
     }
 
     // Import shareable handle from server
-    CHECK_ERROR(aclrtMemImportFromShareableHandleV2(&shareableHandle, ACL_MEM_SHARE_HANDLE_TYPE_FABRIC, 
-                ACL_RT_IPC_MEM_EXPORT_FLAG_DEFAULT, &handle));
+    CHECK_ERROR(aclrtMemImportFromShareableHandleV2(
+        &shareableHandle, ACL_MEM_SHARE_HANDLE_TYPE_FABRIC, ACL_RT_IPC_MEM_EXPORT_FLAG_DEFAULT, &handle));
     INFO_LOG("Client: import shareable handle successfully");
 
     const size_t data_size = 1024 * sizeof(float);

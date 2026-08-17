@@ -1,5 +1,5 @@
 /**
-* Copyright (c) 2026 Huawei Technologies Co., Ltd.
+ * Copyright (c) 2026 Huawei Technologies Co., Ltd.
  * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
  * CANN Open Software License Agreement Version 2.0 (the "License").
  * Please refer to the License for details. You may not use this file except in compliance with the License.
@@ -37,8 +37,9 @@ int64_t GetShapeSize(const std::vector<int64_t>& shape)
 }
 
 template <typename T>
-int CreateAclTensor(const std::vector<T>& hostData, const std::vector<int64_t>& shape, void** deviceAddr,
-                    aclDataType dataType, aclTensor** tensor)
+int CreateAclTensor(
+    const std::vector<T>& hostData, const std::vector<int64_t>& shape, void** deviceAddr, aclDataType dataType,
+    aclTensor** tensor)
 {
     auto size = GetShapeSize(shape) * sizeof(T);
     ACL_CALL(aclrtMalloc(deviceAddr, size, ACL_MEM_MALLOC_HUGE_FIRST));
@@ -50,8 +51,9 @@ int CreateAclTensor(const std::vector<T>& hostData, const std::vector<int64_t>& 
     }
 
     // 调用aclCreateTensor接口创建aclTensor
-    *tensor = aclCreateTensor(shape.data(), shape.size(), dataType, strides.data(), 0, aclFormat::ACL_FORMAT_ND,
-                              shape.data(), shape.size(), *deviceAddr);
+    *tensor = aclCreateTensor(
+        shape.data(), shape.size(), dataType, strides.data(), 0, aclFormat::ACL_FORMAT_ND, shape.data(), shape.size(),
+        *deviceAddr);
     return 0;
 }
 
@@ -96,9 +98,12 @@ int DoAclAdd(aclrtContext context, aclrtStream stream)
     ACL_CALL(aclrtSynchronizeStream(stream));
     auto size = GetShapeSize(outShape);
     std::vector<float> resultData(size, 0);
-    ACL_CALL(aclrtMemcpy(resultData.data(), resultData.size() * sizeof(resultData[0]), outDeviceAddr,
-                         size * sizeof(float), ACL_MEMCPY_DEVICE_TO_HOST));
-    for (int64_t i = 0; i < size; i++) { LOG_PRINT("result[%ld] is: %f\n", i, resultData[i]); }
+    ACL_CALL(aclrtMemcpy(
+        resultData.data(), resultData.size() * sizeof(resultData[0]), outDeviceAddr, size * sizeof(float),
+        ACL_MEMCPY_DEVICE_TO_HOST));
+    for (int64_t i = 0; i < size; i++) {
+        LOG_PRINT("result[%ld] is: %f\n", i, resultData[i]);
+    }
     aclDestroyTensor(self);
     aclDestroyTensor(other);
     aclDestroyScalar(alpha);
@@ -129,18 +134,12 @@ static int TestMstxWithDomain()
     return ACL_SUCCESS;
 }
 
-void MstxDomainInit()
-{
-    domainRange = mstxDomainCreateA(g_domainRangeName.c_str());
-}
+void MstxDomainInit() { domainRange = mstxDomainCreateA(g_domainRangeName.c_str()); }
 
-void MstxDomainDeInit()
-{
-    mstxDomainDestroy(domainRange);
-}
-}
+void MstxDomainDeInit() { mstxDomainDestroy(domainRange); }
+} // namespace
 
-int main(int argc, const char **argv)
+int main(int argc, const char** argv)
 {
     int32_t deviceId = 0;
     int ret = Init(deviceId, &context, &stream);

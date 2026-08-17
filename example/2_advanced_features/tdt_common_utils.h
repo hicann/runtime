@@ -18,7 +18,7 @@
 #include "utils.h"
 
 namespace tdt {
-inline bool CheckNotNull(const void *ptr, const char *name)
+inline bool CheckNotNull(const void* ptr, const char* name)
 {
     if (ptr == nullptr) {
         ERROR_LOG("%s is nullptr", name);
@@ -27,21 +27,17 @@ inline bool CheckNotNull(const void *ptr, const char *name)
     return true;
 }
 
-inline acltdtDataset *CreateFloatDataset(std::vector<float> &values)
+inline acltdtDataset* CreateFloatDataset(std::vector<float>& values)
 {
     int64_t dims[] = {1, static_cast<int64_t>(values.size())};
-    acltdtDataItem *item = acltdtCreateDataItem(
-        ACL_TENSOR_DATA_TENSOR,
-        dims,
-        sizeof(dims) / sizeof(dims[0]),
-        ACL_FLOAT,
-        values.data(),
+    acltdtDataItem* item = acltdtCreateDataItem(
+        ACL_TENSOR_DATA_TENSOR, dims, sizeof(dims) / sizeof(dims[0]), ACL_FLOAT, values.data(),
         values.size() * sizeof(float));
     if (item == nullptr) {
         return nullptr;
     }
 
-    acltdtDataset *dataset = acltdtCreateDataset();
+    acltdtDataset* dataset = acltdtCreateDataset();
     if (dataset == nullptr) {
         (void)acltdtDestroyDataItem(item);
         return nullptr;
@@ -55,7 +51,7 @@ inline acltdtDataset *CreateFloatDataset(std::vector<float> &values)
     return dataset;
 }
 
-inline void DestroyDatasetAndItems(acltdtDataset *dataset)
+inline void DestroyDatasetAndItems(acltdtDataset* dataset)
 {
     if (dataset == nullptr) {
         return;
@@ -63,7 +59,7 @@ inline void DestroyDatasetAndItems(acltdtDataset *dataset)
 
     const size_t datasetSize = acltdtGetDatasetSize(dataset);
     for (size_t i = 0; i < datasetSize; ++i) {
-        acltdtDataItem *item = acltdtGetDataItem(dataset, i);
+        acltdtDataItem* item = acltdtGetDataItem(dataset, i);
         if (item != nullptr) {
             (void)acltdtDestroyDataItem(item);
         }
@@ -71,7 +67,7 @@ inline void DestroyDatasetAndItems(acltdtDataset *dataset)
     (void)acltdtDestroyDataset(dataset);
 }
 
-inline void DestroyDataset(acltdtDataset *dataset)
+inline void DestroyDataset(acltdtDataset* dataset)
 {
     if (dataset == nullptr) {
         return;
@@ -79,7 +75,7 @@ inline void DestroyDataset(acltdtDataset *dataset)
     (void)acltdtDestroyDataset(dataset);
 }
 
-inline void UpdateFinalResultOnError(const char *apiName, aclError ret, int32_t &finalResult)
+inline void UpdateFinalResultOnError(const char* apiName, aclError ret, int32_t& finalResult)
 {
     if (ret == ACL_SUCCESS) {
         return;

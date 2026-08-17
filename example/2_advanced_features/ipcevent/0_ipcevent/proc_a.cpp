@@ -24,7 +24,8 @@
 #define EVENT_HANDLE_FILE "./event_handle.bin"
 #define DONE_FILE "./consumer_done.flag"
 
-int main() {
+int main()
+{
     CHECK_ERROR(aclInit(nullptr));
 
     int32_t deviceId = 0;

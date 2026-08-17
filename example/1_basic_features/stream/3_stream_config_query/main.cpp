@@ -21,7 +21,7 @@ constexpr int32_t kDeviceId = 0;
 constexpr uint32_t kStreamFlags = 0;
 constexpr uint32_t kStreamPriority = 0;
 
-int CheckAcl(aclError ret, const char *expr)
+int CheckAcl(aclError ret, const char* expr)
 {
     if (ret != ACL_SUCCESS) {
         fprintf(stderr, "[ERROR]  Operation failed: %s returned error code %d\n", expr, static_cast<int32_t>(ret));
@@ -31,10 +31,10 @@ int CheckAcl(aclError ret, const char *expr)
     return 0;
 }
 
-using CreateStreamConfigHandleFunc = aclrtStreamConfigHandle *(*)();
-using DestroyStreamConfigHandleFunc = aclError (*)(aclrtStreamConfigHandle *);
-using SetStreamConfigOptFunc = aclError (*)(aclrtStreamConfigHandle *, aclrtStreamConfigAttr, const void *, size_t);
-using CreateStreamV2Func = aclError (*)(aclrtStream *, const aclrtStreamConfigHandle *);
+using CreateStreamConfigHandleFunc = aclrtStreamConfigHandle* (*)();
+using DestroyStreamConfigHandleFunc = aclError (*)(aclrtStreamConfigHandle*);
+using SetStreamConfigOptFunc = aclError (*)(aclrtStreamConfigHandle*, aclrtStreamConfigAttr, const void*, size_t);
+using CreateStreamV2Func = aclError (*)(aclrtStream*, const aclrtStreamConfigHandle*);
 
 struct StreamConfigApi {
     CreateStreamConfigHandleFunc createConfigHandle;
@@ -45,10 +45,7 @@ struct StreamConfigApi {
 
 class StreamConfigHandleGuard {
 public:
-    StreamConfigHandleGuard(const StreamConfigApi &api, aclrtStreamConfigHandle *handle)
-        : api_(api), handle_(handle)
-    {
-    }
+    StreamConfigHandleGuard(const StreamConfigApi& api, aclrtStreamConfigHandle* handle) : api_(api), handle_(handle) {}
 
     ~StreamConfigHandleGuard()
     {
@@ -57,8 +54,8 @@ public:
         }
     }
 
-    StreamConfigHandleGuard(const StreamConfigHandleGuard &) = delete;
-    StreamConfigHandleGuard &operator=(const StreamConfigHandleGuard &) = delete;
+    StreamConfigHandleGuard(const StreamConfigHandleGuard&) = delete;
+    StreamConfigHandleGuard& operator=(const StreamConfigHandleGuard&) = delete;
 
     aclError Destroy()
     {
@@ -74,8 +71,8 @@ public:
     }
 
 private:
-    const StreamConfigApi &api_;
-    aclrtStreamConfigHandle *handle_;
+    const StreamConfigApi& api_;
+    aclrtStreamConfigHandle* handle_;
 };
 
 class StreamGuard {
@@ -89,8 +86,8 @@ public:
         }
     }
 
-    StreamGuard(const StreamGuard &) = delete;
-    StreamGuard &operator=(const StreamGuard &) = delete;
+    StreamGuard(const StreamGuard&) = delete;
+    StreamGuard& operator=(const StreamGuard&) = delete;
 
     aclError Destroy()
     {
@@ -110,7 +107,7 @@ private:
 };
 
 template <typename Func>
-bool LoadSymbol(void *handle, const char *name, Func *func)
+bool LoadSymbol(void* handle, const char* name, Func* func)
 {
     *func = reinterpret_cast<Func>(dlsym(handle, name));
     if (*func == nullptr) {
@@ -120,7 +117,7 @@ bool LoadSymbol(void *handle, const char *name, Func *func)
     return true;
 }
 
-bool LoadStreamConfigApi(StreamConfigApi *api)
+bool LoadStreamConfigApi(StreamConfigApi* api)
 {
     bool ok = true;
     ok = LoadSymbol(RTLD_DEFAULT, "aclrtCreateStreamConfigHandle", &api->createConfigHandle) && ok;
@@ -130,14 +127,16 @@ bool LoadStreamConfigApi(StreamConfigApi *api)
     return ok;
 }
 
-int SetStreamConfigOptions(const StreamConfigApi &api, aclrtStreamConfigHandle *configHandle)
+int SetStreamConfigOptions(const StreamConfigApi& api, aclrtStreamConfigHandle* configHandle)
 {
-    if (CheckAcl(api.setConfigOpt(configHandle, ACL_RT_STREAM_FLAG, &kStreamFlags, sizeof(kStreamFlags)),
-        "aclrtSetStreamConfigOpt(ACL_RT_STREAM_FLAG)") != 0) {
+    if (CheckAcl(
+            api.setConfigOpt(configHandle, ACL_RT_STREAM_FLAG, &kStreamFlags, sizeof(kStreamFlags)),
+            "aclrtSetStreamConfigOpt(ACL_RT_STREAM_FLAG)") != 0) {
         return -1;
     }
-    if (CheckAcl(api.setConfigOpt(configHandle, ACL_RT_STREAM_PRIORITY, &kStreamPriority, sizeof(kStreamPriority)),
-        "aclrtSetStreamConfigOpt(ACL_RT_STREAM_PRIORITY)") != 0) {
+    if (CheckAcl(
+            api.setConfigOpt(configHandle, ACL_RT_STREAM_PRIORITY, &kStreamPriority, sizeof(kStreamPriority)),
+            "aclrtSetStreamConfigOpt(ACL_RT_STREAM_PRIORITY)") != 0) {
         return -1;
     }
     INFO_LOG("Set stream config flags=%u priority=%u", kStreamFlags, kStreamPriority);
@@ -170,11 +169,12 @@ int RunStreamConfigQuerySample()
 {
     StreamConfigApi api = {};
     if (!LoadStreamConfigApi(&api)) {
-        INFO_LOG("[SKIP] Stream config query sample skipped because the current Runtime library does not export all stream config APIs.");
+        INFO_LOG("[SKIP] Stream config query sample skipped because the current Runtime library does not export all "
+                 "stream config APIs.");
         return 0;
     }
 
-    aclrtStreamConfigHandle *configHandle = api.createConfigHandle();
+    aclrtStreamConfigHandle* configHandle = api.createConfigHandle();
     if (configHandle == nullptr) {
         INFO_LOG("[SKIP] Stream config query sample skipped because aclrtCreateStreamConfigHandle returned nullptr.");
         return 0;
@@ -209,7 +209,7 @@ int RunStreamConfigQuerySample()
     INFO_LOG("[SUCCESS] Stream config query sample completed successfully");
     return 0;
 }
-}  // namespace
+} // namespace
 
 int32_t main()
 {

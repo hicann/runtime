@@ -13,7 +13,6 @@
  * using two independent processes (i.e., Process A and Process B) on a single device.
  */
 
-
 #include "acl/acl.h"
 #include "kernel_func/kernel_ops.h"
 #include "utils.h"
@@ -39,7 +38,9 @@ int32_t main()
 
     size_t granularity = 0UL;
     CHECK_ERROR(aclrtMemGetAllocationGranularity(&prop, ACL_RT_MEM_ALLOC_GRANULARITY_MINIMUM, &granularity));
-    INFO_LOG("Process A: get memory allocation granularity successfully, granularity = %d", static_cast<int32_t>(granularity));
+    INFO_LOG(
+        "Process A: get memory allocation granularity successfully, granularity = %d",
+        static_cast<int32_t>(granularity));
 
     // Start allocating physical memory based on memory allocation granularity
     size_t alignedSize = ((dataSize + granularity - 1U) / granularity) * granularity;
@@ -50,7 +51,7 @@ int32_t main()
     INFO_LOG("Process A: allocate physical memory successfully");
 
     // Reserve virtual memory
-    void *virPtr;
+    void* virPtr;
     CHECK_ERROR(aclrtReserveMemAddress(&virPtr, granularity, 0, nullptr, 0));
     INFO_LOG("Process A: reserve virtual memory successfully");
 
@@ -69,13 +70,15 @@ int32_t main()
     // Write the value to the virtual memory
     constexpr uint32_t blockDim = 1;
     int writeValue = 123;
-    WriteDo(blockDim, stream, (int *)virPtr, writeValue);
+    WriteDo(blockDim, stream, (int*)virPtr, writeValue);
     INFO_LOG("Write the data %d to the virtual address %p", writeValue, virPtr);
 
     // Export a shareable handle
     uint64_t shareableHandle = 0ULL;
     CHECK_ERROR(aclrtMemExportToShareableHandle(handle, ACL_MEM_HANDLE_TYPE_NONE, 1, &shareableHandle));
-    INFO_LOG("Process A: export a shareable handle successfully, shareable handle = %d", static_cast<int32_t>(shareableHandle));
+    INFO_LOG(
+        "Process A: export a shareable handle successfully, shareable handle = %d",
+        static_cast<int32_t>(shareableHandle));
 
     // Transfer the shareable handle to Process B by writing it to the file
     memory::WriteFile("file/handle.bin", "file/handle.bin.done", &shareableHandle, sizeof(shareableHandle));

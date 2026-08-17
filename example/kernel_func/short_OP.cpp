@@ -16,13 +16,8 @@ extern "C" __global__ __aicore__ void ShortOPf(__gm__ uint32_t* x)
     int idx = block_idx;
     x[idx] *= 2;
 #if __NPU_ARCH__ == 3510
-    dcci(reinterpret_cast<__gm__ int64_t*>(x),
-        cache_line_t::ENTIRE_DATA_CACHE,
-        dcci_dst_t::CACHELINE_OUT);
+    dcci(reinterpret_cast<__gm__ int64_t*>(x), cache_line_t::ENTIRE_DATA_CACHE, dcci_dst_t::CACHELINE_OUT);
 #endif
 }
 
-void ShortOP(uint32_t blockDim, void *stream, uint32_t* x)
-{
-    ShortOPf<<<blockDim, nullptr, stream>>>(x);
-}
+void ShortOP(uint32_t blockDim, void* stream, uint32_t* x) { ShortOPf<<<blockDim, nullptr, stream>>>(x); }

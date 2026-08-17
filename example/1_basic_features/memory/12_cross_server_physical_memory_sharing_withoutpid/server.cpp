@@ -85,8 +85,8 @@ int32_t main(int argc, char* argv[])
     // Export a shareable handle
     aclrtMemFabricHandle shareableHandle = {};
     aclrtMemSharedHandleType shareType = ACL_MEM_SHARE_HANDLE_TYPE_FABRIC;
-    CHECK_ERROR(aclrtMemExportToShareableHandleV2(handle, ACL_RT_IPC_MEM_EXPORT_FLAG_DISABLE_PID_VALIDATION, 
-                shareType, &shareableHandle));
+    CHECK_ERROR(aclrtMemExportToShareableHandleV2(
+        handle, ACL_RT_IPC_MEM_EXPORT_FLAG_DISABLE_PID_VALIDATION, shareType, &shareableHandle));
     INFO_LOG("Server: export shareable handle successfully");
 
     // Transfer the shareable handle to client by UDP
@@ -143,7 +143,7 @@ int32_t main(int argc, char* argv[])
     close(sockfd);
     INFO_LOG("Server: ipc close successfully");
 
-     // Release memory resources
+    // Release memory resources
     CHECK_ERROR(aclrtUnmapMem(virPtr));
     CHECK_ERROR(aclrtReleaseMemAddress(virPtr));
     CHECK_ERROR(aclrtFreePhysical(handle));

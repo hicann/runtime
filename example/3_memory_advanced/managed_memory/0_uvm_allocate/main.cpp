@@ -9,8 +9,8 @@
  */
 
 /*
- * This example leverages the Unified Virtual Memory (UVM) mechanism to allocate memory 
- * for kernel inputs and outputs via UVM allocation APIs, thereby eliminating the need 
+ * This example leverages the Unified Virtual Memory (UVM) mechanism to allocate memory
+ * for kernel inputs and outputs via UVM allocation APIs, thereby eliminating the need
  * for explicit data transfers during parameter passing and result write-back.
  */
 
@@ -23,9 +23,9 @@
 
 namespace {
 struct KernelBuffers {
-    uint8_t *xPtr = nullptr;
-    uint8_t *yPtr = nullptr;
-    uint8_t *zPtr = nullptr;
+    uint8_t* xPtr = nullptr;
+    uint8_t* yPtr = nullptr;
+    uint8_t* zPtr = nullptr;
 };
 
 struct RuntimeResources {
@@ -38,7 +38,7 @@ struct RuntimeResources {
     bool binLoaded = false;
 };
 
-void UpdateFinalResultOnError(const char *apiName, aclError ret, int32_t &finalResult)
+void UpdateFinalResultOnError(const char* apiName, aclError ret, int32_t& finalResult)
 {
     if (ret == ACL_SUCCESS) {
         return;
@@ -47,7 +47,7 @@ void UpdateFinalResultOnError(const char *apiName, aclError ret, int32_t &finalR
     finalResult = -1;
 }
 
-int32_t InitializeRuntime(RuntimeResources *runtime)
+int32_t InitializeRuntime(RuntimeResources* runtime)
 {
     // Initialize ACL and create a stream on device 0.
     CHECK_ERROR(aclInit(nullptr));
@@ -59,16 +59,19 @@ int32_t InitializeRuntime(RuntimeResources *runtime)
     return 0;
 }
 
-int32_t AllocateKernelBuffers(size_t inputByteSize, size_t outputByteSize, KernelBuffers *buffers)
+int32_t AllocateKernelBuffers(size_t inputByteSize, size_t outputByteSize, KernelBuffers* buffers)
 {
     // Allocate uvm memory for kernel inputs and output.
-    CHECK_ERROR(aclrtMemAllocManaged(reinterpret_cast<void **>(&buffers->xPtr), inputByteSize, ACL_RT_MEM_ATTACH_GLOBAL));
-    CHECK_ERROR(aclrtMemAllocManaged(reinterpret_cast<void **>(&buffers->yPtr), inputByteSize, ACL_RT_MEM_ATTACH_GLOBAL));
-    CHECK_ERROR(aclrtMemAllocManaged(reinterpret_cast<void **>(&buffers->zPtr), outputByteSize, ACL_RT_MEM_ATTACH_GLOBAL));
+    CHECK_ERROR(
+        aclrtMemAllocManaged(reinterpret_cast<void**>(&buffers->xPtr), inputByteSize, ACL_RT_MEM_ATTACH_GLOBAL));
+    CHECK_ERROR(
+        aclrtMemAllocManaged(reinterpret_cast<void**>(&buffers->yPtr), inputByteSize, ACL_RT_MEM_ATTACH_GLOBAL));
+    CHECK_ERROR(
+        aclrtMemAllocManaged(reinterpret_cast<void**>(&buffers->zPtr), outputByteSize, ACL_RT_MEM_ATTACH_GLOBAL));
     return 0;
 }
 
-int32_t PrepareInputData(size_t inputByteSize, const KernelBuffers &buffers)
+int32_t PrepareInputData(size_t inputByteSize, const KernelBuffers& buffers)
 {
     // Load generated input files.
     size_t xFileSize = inputByteSize;
@@ -87,27 +90,23 @@ int32_t PrepareInputData(size_t inputByteSize, const KernelBuffers &buffers)
     return 0;
 }
 
-int32_t AppendCommonKernelArgs(aclrtArgsHandle argsHandle, uint8_t *xPtr, uint8_t *yPtr, uint8_t *zPtr)
+int32_t AppendCommonKernelArgs(aclrtArgsHandle argsHandle, uint8_t* xPtr, uint8_t* yPtr, uint8_t* zPtr)
 {
     aclrtParamHandle paramHandle1 = nullptr;
     aclrtParamHandle paramHandle2 = nullptr;
     aclrtParamHandle paramHandle3 = nullptr;
-    CHECK_ERROR(aclrtKernelArgsAppend(argsHandle, reinterpret_cast<void **>(&xPtr), sizeof(uintptr_t), &paramHandle1));
-    CHECK_ERROR(aclrtKernelArgsAppend(argsHandle, reinterpret_cast<void **>(&yPtr), sizeof(uintptr_t), &paramHandle2));
-    CHECK_ERROR(aclrtKernelArgsAppend(argsHandle, reinterpret_cast<void **>(&zPtr), sizeof(uintptr_t), &paramHandle3));
+    CHECK_ERROR(aclrtKernelArgsAppend(argsHandle, reinterpret_cast<void**>(&xPtr), sizeof(uintptr_t), &paramHandle1));
+    CHECK_ERROR(aclrtKernelArgsAppend(argsHandle, reinterpret_cast<void**>(&yPtr), sizeof(uintptr_t), &paramHandle2));
+    CHECK_ERROR(aclrtKernelArgsAppend(argsHandle, reinterpret_cast<void**>(&zPtr), sizeof(uintptr_t), &paramHandle3));
     return 0;
 }
 
 int32_t BuildKernelArgs(
-    uint8_t *xPtr,
-    uint8_t *yPtr,
-    uint8_t *zPtr,
-    RuntimeResources *runtime,
-    aclrtFuncHandle *funcHandle,
-    aclrtArgsHandle *argsHandle)
+    uint8_t* xPtr, uint8_t* yPtr, uint8_t* zPtr, RuntimeResources* runtime, aclrtFuncHandle* funcHandle,
+    aclrtArgsHandle* argsHandle)
 {
     // Load the selected kernel binary and build the launch argument list.
-    const char *filePath = "./out/fatbin/ascendc_kernels_simple/ascendc_kernels_simple.o";
+    const char* filePath = "./out/fatbin/ascendc_kernels_simple/ascendc_kernels_simple.o";
 
     CHECK_ERROR(aclrtBinaryLoadFromFile(filePath, nullptr, &runtime->binHandle));
     runtime->binLoaded = true;
@@ -123,11 +122,7 @@ int32_t BuildKernelArgs(
 }
 
 int32_t LaunchKernelAndWriteOutput(
-    aclrtFuncHandle funcHandle,
-    aclrtArgsHandle argsHandle,
-    uint32_t blockDim,
-    aclrtStream stream,
-    uint8_t *zPtr,
+    aclrtFuncHandle funcHandle, aclrtArgsHandle argsHandle, uint32_t blockDim, aclrtStream stream, uint8_t* zPtr,
     size_t outputByteSize)
 {
     // Launch the kernel, synchronize the stream, and write output for verification.
@@ -140,7 +135,7 @@ int32_t LaunchKernelAndWriteOutput(
     return 0;
 }
 
-void ReleaseKernelResources(RuntimeResources &runtime, KernelBuffers &buffers, int32_t &finalResult)
+void ReleaseKernelResources(RuntimeResources& runtime, KernelBuffers& buffers, int32_t& finalResult)
 {
     if (runtime.binLoaded) {
         UpdateFinalResultOnError(
@@ -191,12 +186,11 @@ int32_t RunKernelLaunchSample()
         if (PrepareInputData(inputByteSize, buffers) != 0) {
             return -1;
         }
-        if (BuildKernelArgs(
-            buffers.xPtr, buffers.yPtr, buffers.zPtr, &runtime, &funcHandle, &argsHandle) != 0) {
+        if (BuildKernelArgs(buffers.xPtr, buffers.yPtr, buffers.zPtr, &runtime, &funcHandle, &argsHandle) != 0) {
             return -1;
         }
         if (LaunchKernelAndWriteOutput(
-            funcHandle, argsHandle, blockDim, runtime.stream, buffers.zPtr, outputByteSize) != 0) {
+                funcHandle, argsHandle, blockDim, runtime.stream, buffers.zPtr, outputByteSize) != 0) {
             return -1;
         }
         return 0;
@@ -211,7 +205,4 @@ int32_t RunKernelLaunchSample()
 }
 } // namespace
 
-int32_t main(int32_t argc, char *argv[])
-{
-    return RunKernelLaunchSample();
-}
+int32_t main(int32_t argc, char* argv[]) { return RunKernelLaunchSample(); }

@@ -75,7 +75,7 @@ int main()
 
     // 申请存放随机数状态 counter 的device内存 （要求 16Byte)
     void* counterAddr = NULL;
-    CHECK_ERROR(aclrtMalloc((void**)&counterAddr, 16, ACL_MEM_MALLOC_HUGE_FIRST));    
+    CHECK_ERROR(aclrtMalloc((void**)&counterAddr, 16, ACL_MEM_MALLOC_HUGE_FIRST));
 
     printf("Gen normal distribution random num, data type: float \n");
     float mean = 3.0;

@@ -26,12 +26,12 @@
 
 namespace {
 struct KernelBuffers {
-    uint8_t *xHost = nullptr;
-    uint8_t *yHost = nullptr;
-    uint8_t *zHost = nullptr;
-    uint8_t *xDevice = nullptr;
-    uint8_t *yDevice = nullptr;
-    uint8_t *zDevice = nullptr;
+    uint8_t* xHost = nullptr;
+    uint8_t* yHost = nullptr;
+    uint8_t* zHost = nullptr;
+    uint8_t* xDevice = nullptr;
+    uint8_t* yDevice = nullptr;
+    uint8_t* zDevice = nullptr;
 };
 
 struct RuntimeResources {
@@ -44,7 +44,7 @@ struct RuntimeResources {
     bool binLoaded = false;
 };
 
-void UpdateFinalResultOnError(const char *apiName, aclError ret, int32_t &finalResult)
+void UpdateFinalResultOnError(const char* apiName, aclError ret, int32_t& finalResult)
 {
     if (ret == ACL_SUCCESS) {
         return;
@@ -53,7 +53,7 @@ void UpdateFinalResultOnError(const char *apiName, aclError ret, int32_t &finalR
     finalResult = -1;
 }
 
-int32_t InitializeRuntime(RuntimeResources *runtime)
+int32_t InitializeRuntime(RuntimeResources* runtime)
 {
     // Initialize ACL and create a stream on device 0.
     CHECK_ERROR(aclInit(nullptr));
@@ -65,19 +65,19 @@ int32_t InitializeRuntime(RuntimeResources *runtime)
     return 0;
 }
 
-int32_t AllocateKernelBuffers(size_t inputByteSize, size_t outputByteSize, KernelBuffers *buffers)
+int32_t AllocateKernelBuffers(size_t inputByteSize, size_t outputByteSize, KernelBuffers* buffers)
 {
     // Allocate host and device buffers for kernel inputs and output.
-    CHECK_ERROR(aclrtMallocHost(reinterpret_cast<void **>(&buffers->xHost), inputByteSize));
-    CHECK_ERROR(aclrtMallocHost(reinterpret_cast<void **>(&buffers->yHost), inputByteSize));
-    CHECK_ERROR(aclrtMallocHost(reinterpret_cast<void **>(&buffers->zHost), outputByteSize));
-    CHECK_ERROR(aclrtMalloc(reinterpret_cast<void **>(&buffers->xDevice), inputByteSize, ACL_MEM_MALLOC_HUGE_FIRST));
-    CHECK_ERROR(aclrtMalloc(reinterpret_cast<void **>(&buffers->yDevice), inputByteSize, ACL_MEM_MALLOC_HUGE_FIRST));
-    CHECK_ERROR(aclrtMalloc(reinterpret_cast<void **>(&buffers->zDevice), outputByteSize, ACL_MEM_MALLOC_HUGE_FIRST));
+    CHECK_ERROR(aclrtMallocHost(reinterpret_cast<void**>(&buffers->xHost), inputByteSize));
+    CHECK_ERROR(aclrtMallocHost(reinterpret_cast<void**>(&buffers->yHost), inputByteSize));
+    CHECK_ERROR(aclrtMallocHost(reinterpret_cast<void**>(&buffers->zHost), outputByteSize));
+    CHECK_ERROR(aclrtMalloc(reinterpret_cast<void**>(&buffers->xDevice), inputByteSize, ACL_MEM_MALLOC_HUGE_FIRST));
+    CHECK_ERROR(aclrtMalloc(reinterpret_cast<void**>(&buffers->yDevice), inputByteSize, ACL_MEM_MALLOC_HUGE_FIRST));
+    CHECK_ERROR(aclrtMalloc(reinterpret_cast<void**>(&buffers->zDevice), outputByteSize, ACL_MEM_MALLOC_HUGE_FIRST));
     return 0;
 }
 
-int32_t PrepareInputData(size_t inputByteSize, const KernelBuffers &buffers)
+int32_t PrepareInputData(size_t inputByteSize, const KernelBuffers& buffers)
 {
     // Load generated input files and copy them to device memory.
     size_t xFileSize = inputByteSize;
@@ -98,14 +98,17 @@ int32_t PrepareInputData(size_t inputByteSize, const KernelBuffers &buffers)
     return 0;
 }
 
-int32_t AppendCommonKernelArgs(aclrtArgsHandle argsHandle, uint8_t *xDevice, uint8_t *yDevice, uint8_t *zDevice)
+int32_t AppendCommonKernelArgs(aclrtArgsHandle argsHandle, uint8_t* xDevice, uint8_t* yDevice, uint8_t* zDevice)
 {
     aclrtParamHandle paramHandle1 = nullptr;
     aclrtParamHandle paramHandle2 = nullptr;
     aclrtParamHandle paramHandle3 = nullptr;
-    CHECK_ERROR(aclrtKernelArgsAppend(argsHandle, reinterpret_cast<void **>(&xDevice), sizeof(uintptr_t), &paramHandle1));
-    CHECK_ERROR(aclrtKernelArgsAppend(argsHandle, reinterpret_cast<void **>(&yDevice), sizeof(uintptr_t), &paramHandle2));
-    CHECK_ERROR(aclrtKernelArgsAppend(argsHandle, reinterpret_cast<void **>(&zDevice), sizeof(uintptr_t), &paramHandle3));
+    CHECK_ERROR(
+        aclrtKernelArgsAppend(argsHandle, reinterpret_cast<void**>(&xDevice), sizeof(uintptr_t), &paramHandle1));
+    CHECK_ERROR(
+        aclrtKernelArgsAppend(argsHandle, reinterpret_cast<void**>(&yDevice), sizeof(uintptr_t), &paramHandle2));
+    CHECK_ERROR(
+        aclrtKernelArgsAppend(argsHandle, reinterpret_cast<void**>(&zDevice), sizeof(uintptr_t), &paramHandle3));
     return 0;
 }
 
@@ -114,17 +117,17 @@ int32_t ConfigurePlaceholderArgs(aclrtArgsHandle argsHandle)
     constexpr int32_t TOTAL_LENGTH = 8 * 2048;
     constexpr int32_t TILE_NUM = 8;
 
-    int32_t *lengthHost = nullptr;
-    int32_t *numHost = nullptr;
+    int32_t* lengthHost = nullptr;
+    int32_t* numHost = nullptr;
     aclrtParamHandle paramHandle4 = nullptr;
     aclrtParamHandle paramHandle5 = nullptr;
 
     CHECK_ERROR(aclrtKernelArgsAppendPlaceHolder(argsHandle, &paramHandle4));
     CHECK_ERROR(aclrtKernelArgsAppendPlaceHolder(argsHandle, &paramHandle5));
     CHECK_ERROR(aclrtKernelArgsGetPlaceHolderBuffer(
-        argsHandle, paramHandle4, sizeof(TOTAL_LENGTH), reinterpret_cast<void **>(&lengthHost)));
+        argsHandle, paramHandle4, sizeof(TOTAL_LENGTH), reinterpret_cast<void**>(&lengthHost)));
     CHECK_ERROR(aclrtKernelArgsGetPlaceHolderBuffer(
-        argsHandle, paramHandle5, sizeof(TILE_NUM), reinterpret_cast<void **>(&numHost)));
+        argsHandle, paramHandle5, sizeof(TILE_NUM), reinterpret_cast<void**>(&numHost)));
 
     *lengthHost = TOTAL_LENGTH;
     *numHost = TILE_NUM;
@@ -132,19 +135,13 @@ int32_t ConfigurePlaceholderArgs(aclrtArgsHandle argsHandle)
 }
 
 int32_t BuildKernelArgs(
-    const std::string &mode,
-    uint8_t *xDevice,
-    uint8_t *yDevice,
-    uint8_t *zDevice,
-    RuntimeResources *runtime,
-    aclrtFuncHandle *funcHandle,
-    aclrtArgsHandle *argsHandle)
+    const std::string& mode, uint8_t* xDevice, uint8_t* yDevice, uint8_t* zDevice, RuntimeResources* runtime,
+    aclrtFuncHandle* funcHandle, aclrtArgsHandle* argsHandle)
 {
     // Load the selected kernel binary and build the launch argument list.
     const bool isPlaceholder = (mode == "placeholder");
-    const char *filePath = isPlaceholder
-        ? "./out/fatbin/ascendc_kernels_placeholder/ascendc_kernels_placeholder.o"
-        : "./out/fatbin/ascendc_kernels_simple/ascendc_kernels_simple.o";
+    const char* filePath = isPlaceholder ? "./out/fatbin/ascendc_kernels_placeholder/ascendc_kernels_placeholder.o" :
+                                           "./out/fatbin/ascendc_kernels_simple/ascendc_kernels_simple.o";
 
     CHECK_ERROR(aclrtBinaryLoadFromFile(filePath, nullptr, &runtime->binHandle));
     runtime->binLoaded = true;
@@ -163,13 +160,8 @@ int32_t BuildKernelArgs(
 }
 
 int32_t LaunchKernelAndWriteOutput(
-    aclrtFuncHandle funcHandle,
-    aclrtArgsHandle argsHandle,
-    uint32_t blockDim,
-    aclrtStream stream,
-    uint8_t *zDevice,
-    uint8_t *zHost,
-    size_t outputByteSize)
+    aclrtFuncHandle funcHandle, aclrtArgsHandle argsHandle, uint32_t blockDim, aclrtStream stream, uint8_t* zDevice,
+    uint8_t* zHost, size_t outputByteSize)
 {
     // Launch the kernel, synchronize the stream, and write output for verification.
     CHECK_ERROR(aclrtLaunchKernelWithConfig(funcHandle, blockDim, stream, nullptr, argsHandle, nullptr));
@@ -182,7 +174,7 @@ int32_t LaunchKernelAndWriteOutput(
     return 0;
 }
 
-void ReleaseKernelResources(RuntimeResources &runtime, KernelBuffers &buffers, int32_t &finalResult)
+void ReleaseKernelResources(RuntimeResources& runtime, KernelBuffers& buffers, int32_t& finalResult)
 {
     if (runtime.binLoaded) {
         UpdateFinalResultOnError(
@@ -219,7 +211,7 @@ void ReleaseKernelResources(RuntimeResources &runtime, KernelBuffers &buffers, i
     }
 }
 
-int32_t RunKernelLaunchSample(const std::string &mode)
+int32_t RunKernelLaunchSample(const std::string& mode)
 {
     const uint32_t blockDim = 8;
     const size_t inputByteSize = 8 * 2048 * sizeof(uint16_t);
@@ -243,11 +235,12 @@ int32_t RunKernelLaunchSample(const std::string &mode)
             return -1;
         }
         if (BuildKernelArgs(
-            mode, buffers.xDevice, buffers.yDevice, buffers.zDevice, &runtime, &funcHandle, &argsHandle) != 0) {
+                mode, buffers.xDevice, buffers.yDevice, buffers.zDevice, &runtime, &funcHandle, &argsHandle) != 0) {
             return -1;
         }
         if (LaunchKernelAndWriteOutput(
-            funcHandle, argsHandle, blockDim, runtime.stream, buffers.zDevice, buffers.zHost, outputByteSize) != 0) {
+                funcHandle, argsHandle, blockDim, runtime.stream, buffers.zDevice, buffers.zHost, outputByteSize) !=
+            0) {
             return -1;
         }
         INFO_LOG("Kernel launch sample runs in %s mode.", mode.c_str());
@@ -263,7 +256,7 @@ int32_t RunKernelLaunchSample(const std::string &mode)
 }
 } // namespace
 
-int32_t main(int32_t argc, char *argv[])
+int32_t main(int32_t argc, char* argv[])
 {
     const std::string mode = (argc > 1) ? argv[1] : "simple";
     if (mode != "simple" && mode != "placeholder") {

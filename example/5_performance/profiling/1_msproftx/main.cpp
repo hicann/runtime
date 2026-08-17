@@ -16,9 +16,9 @@
 #include "acl/acl_prof.h"
 
 namespace {
-void *CreateStampWithMessage(const std::string &message)
+void* CreateStampWithMessage(const std::string& message)
 {
-    void *stamp = aclprofCreateStamp();
+    void* stamp = aclprofCreateStamp();
     if (stamp == nullptr) {
         ERROR_LOG("aclprofCreateStamp failed for message %s", message.c_str());
         return nullptr;
@@ -26,15 +26,15 @@ void *CreateStampWithMessage(const std::string &message)
 
     aclError ret = aclprofSetStampTraceMessage(stamp, message.c_str(), static_cast<uint32_t>(message.length()));
     if (ret != ACL_SUCCESS) {
-        ERROR_LOG("aclprofSetStampTraceMessage(%s) failed with error code %d",
-            message.c_str(), static_cast<int32_t>(ret));
+        ERROR_LOG(
+            "aclprofSetStampTraceMessage(%s) failed with error code %d", message.c_str(), static_cast<int32_t>(ret));
         aclprofDestroyStamp(stamp);
         return nullptr;
     }
     return stamp;
 }
 
-bool CheckPtr(const void *ptr, const char *name)
+bool CheckPtr(const void* ptr, const char* name)
 {
     if (ptr == nullptr) {
         ERROR_LOG("%s is nullptr", name);
@@ -44,14 +44,14 @@ bool CheckPtr(const void *ptr, const char *name)
 }
 
 struct StampSet {
-    void *loadMark = nullptr;
-    void *outerRangePush = nullptr;
-    void *innerRangePush = nullptr;
-    void *preprocessRange = nullptr;
-    void *execMark = nullptr;
+    void* loadMark = nullptr;
+    void* outerRangePush = nullptr;
+    void* innerRangePush = nullptr;
+    void* preprocessRange = nullptr;
+    void* execMark = nullptr;
 };
 
-int32_t CreateStampSet(StampSet *stampSet)
+int32_t CreateStampSet(StampSet* stampSet)
 {
     stampSet->loadMark = CreateStampWithMessage("model_load_mark");
     stampSet->outerRangePush = CreateStampWithMessage("forward_pass_push");
@@ -77,7 +77,7 @@ int32_t CreateStampSet(StampSet *stampSet)
     return 0;
 }
 
-void DestroyStampSet(const StampSet &stampSet)
+void DestroyStampSet(const StampSet& stampSet)
 {
     aclprofDestroyStamp(stampSet.loadMark);
     aclprofDestroyStamp(stampSet.outerRangePush);
@@ -88,7 +88,7 @@ void DestroyStampSet(const StampSet &stampSet)
 
 int32_t RunTraceFlow(aclrtStream stream)
 {
-    aclprofStepInfo *stepInfo = aclprofCreateStepInfo();
+    aclprofStepInfo* stepInfo = aclprofCreateStepInfo();
     if (!CheckPtr(stepInfo, "aclprofCreateStepInfo")) {
         return -1;
     }
@@ -141,11 +141,8 @@ int32_t RunMsproftxSample()
     const std::string aclProfPath = "./output";
     CHECK_ERROR(aclprofInit(aclProfPath.c_str(), aclProfPath.length()));
 
-    aclprofConfig *config = aclprofCreateConfig(
-        deviceIdList,
-        1,
-        ACL_AICORE_ARITHMETIC_UTILIZATION,
-        nullptr,
+    aclprofConfig* config = aclprofCreateConfig(
+        deviceIdList, 1, ACL_AICORE_ARITHMETIC_UTILIZATION, nullptr,
         ACL_PROF_ACL_API | ACL_PROF_TASK_TIME | ACL_PROF_MSPROFTX);
     if (!CheckPtr(config, "aclprofCreateConfig")) {
         return -1;
@@ -170,7 +167,7 @@ int32_t RunMsproftxSample()
 }
 } // namespace
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
     (void)argc;
     (void)argv;

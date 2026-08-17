@@ -9,7 +9,7 @@
  */
 
 /*
- * This sample demonstrates Inter-Process Communication (IPC) notify for 
+ * This sample demonstrates Inter-Process Communication (IPC) notify for
  * task synchronization across multiple devices and processes.
  * This sample does not enable whitelist verification.
  */
@@ -24,7 +24,7 @@
 #include "memory_runtime_utils.h"
 
 namespace {
-int CheckAndEnablePeerAccess(int32_t deviceId, int32_t peerDeviceId, bool *isSupported)
+int CheckAndEnablePeerAccess(int32_t deviceId, int32_t peerDeviceId, bool* isSupported)
 {
     int32_t canAccessPeer = 0;
     aclError ret = aclrtDeviceCanAccessPeer(&canAccessPeer, deviceId, peerDeviceId);
@@ -61,17 +61,21 @@ int32_t main()
         // Get the shareable identifier from the file
         char memName[256] = "name";
         memory::ReadFile("file/memName.bin", "file/memName.bin.done", memName, sizeof(memName));
-        INFO_LOG("Process B: get the shareable identifier for IPC memory sharing successfully, shareable identifier = %s", memName);
+        INFO_LOG(
+            "Process B: get the shareable identifier for IPC memory sharing successfully, shareable identifier = %s",
+            memName);
 
         // Get identifier information and return a device memory pointer accessible to Process B
-        void *devPtr = nullptr;
+        void* devPtr = nullptr;
         uint64_t size = 1 * 1024 * 1024;
         CHECK_ERROR(aclrtIpcMemImportByKey(&devPtr, memName, 0));
-      
+
         // Get the shareable identifier from the file
         char notifyName[256] = "name";
         memory::ReadFile("file/notifyName.bin", "file/notifyName.bin.done", notifyName, sizeof(notifyName));
-        INFO_LOG("Process B: get the shareable identifier for IPC notify sharing successfully, shareable identifier = %s", notifyName);
+        INFO_LOG(
+            "Process B: get the shareable identifier for IPC notify sharing successfully, shareable identifier = %s",
+            notifyName);
 
         // Return the notify accessible to Process B
         aclrtNotify notify = nullptr;
@@ -93,7 +97,7 @@ int32_t main()
         // Release notify and memory resources
         CHECK_ERROR(aclrtSynchronizeStream(stream));
         CHECK_ERROR(aclrtIpcMemClose(memName));
-        CHECK_ERROR(aclrtDestroyNotify(notify));     
+        CHECK_ERROR(aclrtDestroyNotify(notify));
     } else {
         ERROR_LOG("The target devices do not support data interaction");
     }

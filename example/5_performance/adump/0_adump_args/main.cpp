@@ -18,17 +18,17 @@
 using namespace std;
 
 namespace {
-    void LogDumpPath(acldumpType dumpType, const char *fallbackPath)
-    {
-        const char *dumpPath = acldumpGetPath(dumpType);
-        if (dumpPath != nullptr) {
-            INFO_LOG("acldumpGetPath returned dump path: %s", dumpPath);
-            return;
-        }
-        WARN_LOG("acldumpGetPath returned null, fallback dump path is %s", fallbackPath);
+void LogDumpPath(acldumpType dumpType, const char* fallbackPath)
+{
+    const char* dumpPath = acldumpGetPath(dumpType);
+    if (dumpPath != nullptr) {
+        INFO_LOG("acldumpGetPath returned dump path: %s", dumpPath);
+        return;
     }
-
+    WARN_LOG("acldumpGetPath returned null, fallback dump path is %s", fallbackPath);
 }
+
+} // namespace
 
 int main()
 {
@@ -51,13 +51,13 @@ int main()
     std::vector<int64_t> selfShape{4, 2};
     std::vector<int64_t> otherShape{4, 2};
     std::vector<int64_t> outShape{4, 2};
-    void *selfDeviceAddr = nullptr;
-    void *otherDeviceAddr = nullptr;
-    void *outDeviceAddr = nullptr;
-    aclTensor *self = nullptr;
-    aclTensor *other = nullptr;
-    aclScalar *alpha = nullptr;
-    aclTensor *out = nullptr;
+    void* selfDeviceAddr = nullptr;
+    void* otherDeviceAddr = nullptr;
+    void* outDeviceAddr = nullptr;
+    aclTensor* self = nullptr;
+    aclTensor* other = nullptr;
+    aclScalar* alpha = nullptr;
+    aclTensor* out = nullptr;
     std::vector<float> selfHostData = {0, 1, 2, 3, 4, 5, 6, 7};
     std::vector<float> otherHostData = {1, 1, 1, 2, 2, 2, 3, 3};
     std::vector<float> outHostData = {0, 0, 0, 0, 0, 0, 0, 0};
@@ -77,11 +77,11 @@ int main()
 
     // 3. Call the CANN operator library API(Custom Implementation)
     uint64_t workspaceSize = 0;
-    aclOpExecutor *executor;
+    aclOpExecutor* executor;
     CHECK_ERROR(aclnnAddGetWorkspaceSize(self, other, alpha, out, &workspaceSize, &executor));
 
     // Allocate device memory based on the calculation results
-    void *workspaceAddr = nullptr;
+    void* workspaceAddr = nullptr;
     if (workspaceSize > 0lu) {
         CHECK_ERROR(aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST));
     }
@@ -94,11 +94,12 @@ int main()
     // 5. Obtain the execution result of the operator and copy the result from the device memory to the host
     auto size = adump::GetShapeSize(outShape);
     std::vector<float> resultData(size, 0);
-    CHECK_ERROR(aclrtMemcpy(resultData.data(), resultData.size() * sizeof(resultData[0]), outDeviceAddr,
-        size * sizeof(float), ACL_MEMCPY_DEVICE_TO_HOST));
+    CHECK_ERROR(aclrtMemcpy(
+        resultData.data(), resultData.size() * sizeof(resultData[0]), outDeviceAddr, size * sizeof(float),
+        ACL_MEMCPY_DEVICE_TO_HOST));
 
     for (int64_t i = 0; i < size; i++) {
-      INFO_LOG("result[%ld] is: %f", i, resultData[i]);
+        INFO_LOG("result[%ld] is: %f", i, resultData[i]);
     }
 
     // 6. Release the resources(Custom Destruction)
@@ -109,7 +110,7 @@ int main()
     CHECK_ERROR(aclrtFree(otherDeviceAddr));
     CHECK_ERROR(aclrtFree(outDeviceAddr));
     if (workspaceSize > 0lu) {
-      CHECK_ERROR(aclrtFree(workspaceAddr));
+        CHECK_ERROR(aclrtFree(workspaceAddr));
     }
     // 7. AsendCL Destroy
     // Disable Dump Args Function
@@ -118,7 +119,9 @@ int main()
     CHECK_ERROR(aclrtDestroyStream(stream));
     CHECK_ERROR(aclrtResetDeviceForce(deviceId));
     CHECK_ERROR(aclFinalize());
-    INFO_LOG("Run the device_normal sample successfully. "
-        "please make sure dump data has been in path: %s", dumpPath);
+    INFO_LOG(
+        "Run the device_normal sample successfully. "
+        "please make sure dump data has been in path: %s",
+        dumpPath);
     return 0;
 }

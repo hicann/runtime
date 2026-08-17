@@ -27,8 +27,8 @@ int32_t main()
 
     // Allocate memory on the device
     uint64_t size = 1 * 1024 * 1024;
-    int *devPtrA;
-    int *devPtrB;
+    int* devPtrA;
+    int* devPtrB;
     CHECK_ERROR(aclrtMalloc((void**)&devPtrA, size, ACL_MEM_MALLOC_HUGE_FIRST));
     INFO_LOG("Allocate memory on the device memory %p successfully", devPtrA);
 

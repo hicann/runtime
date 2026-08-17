@@ -14,23 +14,22 @@
 #include "utils.h"
 #include "acl/acl.h"
 namespace ExceptionCallBackSpace {
-    class ExceptionCallBackSample {
-        public:
-            ExceptionCallBackSample();
-            virtual ~ExceptionCallBackSample();
-            int Init();
-            int Callback();
-            int Destroy();
-            static void ThreadFunc(void *arg);
-            static void CallBackFunc(void *arg);
-            static void ExceptionCallBackFunc(aclrtExceptionInfo *exceptionInfo);
+class ExceptionCallBackSample {
+public:
+    ExceptionCallBackSample();
+    virtual ~ExceptionCallBackSample();
+    int Init();
+    int Callback();
+    int Destroy();
+    static void ThreadFunc(void* arg);
+    static void CallBackFunc(void* arg);
+    static void ExceptionCallBackFunc(aclrtExceptionInfo* exceptionInfo);
 
-        public:
-            static int32_t deviceId_;
-            static aclrtContext context_;
-            static aclrtStream stream_;
-    };
-}
-
+public:
+    static int32_t deviceId_;
+    static aclrtContext context_;
+    static aclrtStream stream_;
+};
+} // namespace ExceptionCallBackSpace
 
 #endif

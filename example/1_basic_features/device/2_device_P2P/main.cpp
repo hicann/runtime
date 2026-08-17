@@ -16,7 +16,7 @@
 
 constexpr uint32_t UINT8_DATA_LEN = 256;
 
-int32_t main(int argc, const char *argv[])
+int32_t main(int argc, const char* argv[])
 {
     INFO_LOG("Start to run device_P2P sample.");
     CHECK_ERROR(aclInit(NULL));
@@ -62,7 +62,7 @@ int32_t main(int argc, const char *argv[])
         CHECK_ERROR(aclrtMallocHost(&host, memSize));
         CHECK_ERROR(aclrtMemset(host, memSize, 0, memSize));
 
-        char *char_ptr = (char *)host;
+        char* char_ptr = (char*)host;
         CHECK_ERROR(aclrtMemcpy(host, memSize, dev1, memSize, ACL_MEMCPY_DEVICE_TO_HOST));
         INFO_LOG("Device 1 to host memcpy success.");
 

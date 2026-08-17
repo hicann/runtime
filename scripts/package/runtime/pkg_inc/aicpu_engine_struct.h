@@ -18,4 +18,4 @@
  */
 #include "aicpu/aicpu_engine_struct.h"
 
-#endif  // AICPU_ENGINE_STRUCT_COMPAT_H
+#endif // AICPU_ENGINE_STRUCT_COMPAT_H

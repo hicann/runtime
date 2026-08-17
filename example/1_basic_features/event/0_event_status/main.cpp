@@ -21,7 +21,7 @@ int main()
     int32_t deviceId = 0;
     uint32_t blockDim = 1;
     uint32_t num = 0;
-    uint32_t *numDevice = nullptr;
+    uint32_t* numDevice = nullptr;
     size_t size = sizeof(uint32_t);
     aclrtContext context;
     aclrtStream stream = nullptr;
@@ -33,17 +33,17 @@ int main()
     CHECK_ERROR(aclrtSetDevice(deviceId));
     CHECK_ERROR(aclrtCreateContext(&context, deviceId));
     CHECK_ERROR(aclrtCreateStream(&stream));
-    
+
     // 默认为遇错继续执行，调用该函数设置为遇错即停，当一个任务执行遇到错误，后续任务将不进行。
     CHECK_ERROR(aclrtSetStreamFailureMode(stream, ACL_STOP_ON_FAILURE));
     CHECK_ERROR(aclrtCreateEvent(&event));
-    
+
     // 查询创建后的event状态
     CHECK_ERROR(aclrtQueryEventStatus(event, &eventStatus));
     INFO_LOG("After create event, current event status is %d.", eventStatus);
-    
+
     // 开始做长任务
-    CHECK_ERROR(aclrtMalloc((void **)&numDevice, size, ACL_MEM_MALLOC_HUGE_FIRST));
+    CHECK_ERROR(aclrtMalloc((void**)&numDevice, size, ACL_MEM_MALLOC_HUGE_FIRST));
     CHECK_ERROR(aclrtMemcpy(numDevice, size, &num, size, ACL_MEMCPY_HOST_TO_DEVICE));
     INFO_LOG("Applied resource successfully, begin assigning task.");
     INFO_LOG("Begin a long task.");
@@ -54,7 +54,7 @@ int main()
     CHECK_ERROR(aclrtQueryEventStatus(event, &eventStatus));
     INFO_LOG("0 is incompleted, 1 is completed.");
     INFO_LOG("After record but before synchronize, current event status is %d.", eventStatus);
-    
+
     // 查询同步后的event状态
     CHECK_ERROR(aclrtSynchronizeEvent(event));
     CHECK_ERROR(aclrtQueryEventStatus(event, &eventStatus));

@@ -23,10 +23,7 @@ int32_t CallBackSpace::CallBackSample::deviceId_ = 0;
 
 CallBackSpace::CallBackSample::CallBackSample() = default;
 
-CallBackSpace::CallBackSample::~CallBackSample()
-{
-    (void)Destroy();
-}
+CallBackSpace::CallBackSample::~CallBackSample() { (void)Destroy(); }
 
 int CallBackSpace::CallBackSample::Init()
 {
@@ -38,7 +35,7 @@ int CallBackSpace::CallBackSample::Init()
     return 0;
 }
 
-void CallBackSpace::CallBackSample::ThreadFunc(void *arg)
+void CallBackSpace::CallBackSample::ThreadFunc(void* arg)
 {
     const int waitTime = 100;
     aclError ret = aclrtSetCurrentContext(context_);
@@ -52,7 +49,7 @@ void CallBackSpace::CallBackSample::ThreadFunc(void *arg)
     INFO_LOG("Report callback thread exit");
 }
 
-void CallBackSpace::CallBackSample::HostFuncThreadFunc(void *arg)
+void CallBackSpace::CallBackSample::HostFuncThreadFunc(void* arg)
 {
     const int waitTime = 100;
     aclError ret = aclrtSetCurrentContext(context_);
@@ -66,30 +63,30 @@ void CallBackSpace::CallBackSample::HostFuncThreadFunc(void *arg)
     INFO_LOG("Hostfunc processing thread exit");
 }
 
-void CallBackSpace::CallBackSample::CallBackBeforeLaunchFunc(void *arg)
+void CallBackSpace::CallBackSample::CallBackBeforeLaunchFunc(void* arg)
 {
     thread::id tid = std::this_thread::get_id();
     string tidStr = CallbackUtils::GetThreadId(tid);
     INFO_LOG("Report callback thread id is %s", tidStr.c_str());
-    int *data = static_cast<int*>(arg);
+    int* data = static_cast<int*>(arg);
     INFO_LOG("This callback before task, result: user data is: %d.", *data);
 }
 
-void CallBackSpace::CallBackSample::CallBackFunc(void *arg)
+void CallBackSpace::CallBackSample::CallBackFunc(void* arg)
 {
     thread::id tid = std::this_thread::get_id();
     string tidStr = CallbackUtils::GetThreadId(tid);
     INFO_LOG("Report callback thread id is %s", tidStr.c_str());
-    int *data = static_cast<int*>(arg);
+    int* data = static_cast<int*>(arg);
     INFO_LOG("This callback after task and loop five times, result: user data is: %d.", *data);
 }
 
-void CallBackSpace::CallBackSample::HostFunc(void *arg)
+void CallBackSpace::CallBackSample::HostFunc(void* arg)
 {
     thread::id tid = std::this_thread::get_id();
     string tidStr = CallbackUtils::GetThreadId(tid);
     INFO_LOG("Hostfunc callback thread id is %s", tidStr.c_str());
-    int *data = static_cast<int*>(arg);
+    int* data = static_cast<int*>(arg);
     INFO_LOG("Hostfunc executed in subscribed thread, user data is: %d.", *data);
 }
 
@@ -100,9 +97,9 @@ int CallBackSpace::CallBackSample::Callback()
     bool isReportLoop = true;
     bool isHostFuncLoop = true;
     const size_t size = sizeof(uint32_t);
-    uint32_t *numDevice = nullptr;
+    uint32_t* numDevice = nullptr;
     const int count = 5;
-    CHECK_ERROR(aclrtMalloc((void **)&numDevice, size, ACL_MEM_MALLOC_HUGE_FIRST));
+    CHECK_ERROR(aclrtMalloc((void**)&numDevice, size, ACL_MEM_MALLOC_HUGE_FIRST));
     CHECK_ERROR(aclrtMemcpy(numDevice, size, &num, size, ACL_MEMCPY_HOST_TO_DEVICE));
 
     thread reportThread(ThreadFunc, &isReportLoop);
@@ -115,7 +112,7 @@ int CallBackSpace::CallBackSample::Callback()
     INFO_LOG("The created report thread id is %s", reportThreadId.c_str());
     INFO_LOG("The created hostfunc thread id is %s", hostFuncThreadId.c_str());
 
-    int *userData = new int(520);
+    int* userData = new int(520);
     uint64_t reportTidInt = std::stoull(reportThreadId);
     uint64_t hostFuncTidInt = std::stoull(hostFuncThreadId);
     CHECK_ERROR(aclrtSubscribeReport(reportTidInt, stream_));

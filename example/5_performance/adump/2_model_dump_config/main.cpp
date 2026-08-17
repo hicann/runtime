@@ -20,14 +20,14 @@ using namespace std;
 int main()
 {
     const int32_t deviceId = 0;
-    const char *dumpCfgPath = "./acl.json";
+    const char* dumpCfgPath = "./acl.json";
     aclrtStream stream = nullptr;
 
     CHECK_ERROR(adump::InitRuntime(deviceId, &stream));
     CHECK_ERROR(aclmdlInitDump());
     CHECK_ERROR(aclmdlSetDump(dumpCfgPath));
 
-    const char *dumpPath = acldumpGetPath(DATA_DUMP);
+    const char* dumpPath = acldumpGetPath(DATA_DUMP);
     if (dumpPath != nullptr) {
         INFO_LOG("Configured model dump path is: %s", dumpPath);
     } else {
@@ -40,14 +40,14 @@ int main()
     std::vector<float> outHostData = {0, 0, 0, 0, 0, 0, 0, 0};
     float alphaValue = 1.0f;
 
-    void *selfDeviceAddr = nullptr;
-    void *otherDeviceAddr = nullptr;
-    void *outDeviceAddr = nullptr;
-    void *workspaceAddr = nullptr;
-    aclTensor *self = nullptr;
-    aclTensor *other = nullptr;
-    aclTensor *out = nullptr;
-    aclScalar *alpha = nullptr;
+    void* selfDeviceAddr = nullptr;
+    void* otherDeviceAddr = nullptr;
+    void* outDeviceAddr = nullptr;
+    void* workspaceAddr = nullptr;
+    aclTensor* self = nullptr;
+    aclTensor* other = nullptr;
+    aclTensor* out = nullptr;
+    aclScalar* alpha = nullptr;
 
     CHECK_ERROR(adump::CreateAclTensor(selfHostData, shape, &selfDeviceAddr, aclDataType::ACL_FLOAT, &self));
     CHECK_ERROR(adump::CreateAclTensor(otherHostData, shape, &otherDeviceAddr, aclDataType::ACL_FLOAT, &other));
@@ -60,7 +60,7 @@ int main()
     }
 
     uint64_t workspaceSize = 0;
-    aclOpExecutor *executor = nullptr;
+    aclOpExecutor* executor = nullptr;
     CHECK_ERROR(aclnnAddGetWorkspaceSize(self, other, alpha, out, &workspaceSize, &executor));
     if (workspaceSize > 0UL) {
         CHECK_ERROR(aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST));
@@ -69,8 +69,9 @@ int main()
     CHECK_ERROR(aclrtSynchronizeStream(stream));
 
     std::vector<float> resultData(adump::GetShapeSize(shape), 0.0f);
-    CHECK_ERROR(aclrtMemcpy(resultData.data(), resultData.size() * sizeof(float), outDeviceAddr,
-        resultData.size() * sizeof(float), ACL_MEMCPY_DEVICE_TO_HOST));
+    CHECK_ERROR(aclrtMemcpy(
+        resultData.data(), resultData.size() * sizeof(float), outDeviceAddr, resultData.size() * sizeof(float),
+        ACL_MEMCPY_DEVICE_TO_HOST));
     for (int64_t i = 0; i < static_cast<int64_t>(resultData.size()); ++i) {
         INFO_LOG("result[%ld] is: %f", i, resultData[i]);
     }

@@ -16,7 +16,7 @@
 #include "utils.h"
 
 namespace {
-int DumpDataset(const acltdtDataset *dataset)
+int DumpDataset(const acltdtDataset* dataset)
 {
     const size_t datasetSize = acltdtGetDatasetSize(dataset);
     INFO_LOG("Dataset size: %zu", datasetSize);
@@ -24,7 +24,7 @@ int DumpDataset(const acltdtDataset *dataset)
         return 0;
     }
 
-    acltdtDataItem *item = acltdtGetDataItem(dataset, 0);
+    acltdtDataItem* item = acltdtGetDataItem(dataset, 0);
     if (item == nullptr) {
         ERROR_LOG("acltdtGetDataItem returned nullptr");
         return -1;
@@ -36,15 +36,12 @@ int DumpDataset(const acltdtDataset *dataset)
         CHECK_ERROR(acltdtGetDimsFromItem(item, dims.data(), dimNum));
     }
 
-    float *tensorData = static_cast<float *>(acltdtGetDataAddrFromItem(item));
+    float* tensorData = static_cast<float*>(acltdtGetDataAddrFromItem(item));
     INFO_LOG(
         "Tensor type=%d, data type=%d, bytes=%zu, dims=(%lld, %lld), firstValue=%.3f",
-        static_cast<int32_t>(acltdtGetTensorTypeFromItem(item)),
-        static_cast<int32_t>(acltdtGetDataTypeFromItem(item)),
-        acltdtGetDataSizeFromItem(item),
-        static_cast<long long>(dimNum > 0 ? dims[0] : 0),
-        static_cast<long long>(dimNum > 1 ? dims[1] : 0),
-        tensorData == nullptr ? 0.0F : tensorData[0]);
+        static_cast<int32_t>(acltdtGetTensorTypeFromItem(item)), static_cast<int32_t>(acltdtGetDataTypeFromItem(item)),
+        acltdtGetDataSizeFromItem(item), static_cast<long long>(dimNum > 0 ? dims[0] : 0),
+        static_cast<long long>(dimNum > 1 ? dims[1] : 0), tensorData == nullptr ? 0.0F : tensorData[0]);
     return 0;
 }
 
@@ -56,9 +53,9 @@ int main()
     constexpr size_t kChannelCapacity = 2;
     constexpr int32_t kTimeoutMs = 1000;
     std::vector<float> hostTensor = {1.0F, 2.0F, 3.0F, 4.0F};
-    acltdtDataset *sendDataset = nullptr;
-    acltdtDataset *recvDataset = nullptr;
-    acltdtChannelHandle *channel = nullptr;
+    acltdtDataset* sendDataset = nullptr;
+    acltdtDataset* recvDataset = nullptr;
+    acltdtChannelHandle* channel = nullptr;
     bool aclInitialized = false;
     bool deviceSet = false;
 
@@ -70,9 +67,8 @@ int main()
 
         channel = acltdtCreateChannelWithCapacity(deviceId, "simple_tdt_channel", kChannelCapacity);
         if (channel == nullptr) {
-            WARN_LOG(
-                "acltdtCreateChannelWithCapacity returned nullptr: this sample needs a queue-backed TDT channel "
-                "so it can send and receive within one host process");
+            WARN_LOG("acltdtCreateChannelWithCapacity returned nullptr: this sample needs a queue-backed TDT channel "
+                     "so it can send and receive within one host process");
             return 0;
         }
 
@@ -120,8 +116,7 @@ int main()
     if (deviceSet) {
         tdt::UpdateFinalResultOnError(
             "aclrtResetDeviceForce(static_cast<int32_t>(deviceId))",
-            aclrtResetDeviceForce(static_cast<int32_t>(deviceId)),
-            finalResult);
+            aclrtResetDeviceForce(static_cast<int32_t>(deviceId)), finalResult);
     }
     if (aclInitialized) {
         tdt::UpdateFinalResultOnError("aclFinalize()", aclFinalize(), finalResult);

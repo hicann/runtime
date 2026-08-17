@@ -7,66 +7,13 @@ repos:
         files: \.(c|h|cpp|hpp|cc|hh|cxx|hxx)$
         exclude: |
           (?x)^(
-            docs
-            | example
-            | include/external/acl/(?:
+            include/external/acl/(?:
               acl_prof
               | acl_rt
               | acl_rt_allocator
               | acl_tdt
               | acl_tdt_queue
-            )\.h
-            | include(?:
-              /(?!
-                (?:
-                  external
-                  | driver
-                  | tsd_client
-                  | dfx/base/err_msg.h
-                )(?:/|$)
-              )
-              | $
-            )
-            | pkg_inc(?:
-              /(?!
-                (?:
-                  aicpu_sched
-                  | base/err_mgr.h
-                  | driver
-                  | mmpa
-                  | queue_schedule
-                  | runtime
-                  | tsd
-                )(?:/|$)
-              )
-              | $
-            )
-            | scripts
-            | src/(
-              dfx/adump(?!(?:/adcore)(?:/|$))
-              | dfx/log
-              | dfx/trace/(?:atrace|common|cpu_detect|inc)
-            )(/|$)
-            | stub
-            | tests(?:
-              /(?!
-                (?:
-                  cmodel_test
-                  | depends/mmpa
-                  | depends/runtime
-                  | depends/tdt
-                  | ut/acl
-                  | ut/aicpu_sched
-                  | ut/error_manager
-                  | ut/mmpa
-                  | ut/queue_schedule
-                  | ut/runtime
-                  | ut/tsd
-                )(?:/|$)
-                | depends/acl_stub\.h$
-              )
-              | $
-            )
+            )\.h$
           )
         args:
           - "--style=file"

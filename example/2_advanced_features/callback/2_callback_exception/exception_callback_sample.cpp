@@ -23,20 +23,16 @@ aclrtStream ExceptionCallBackSpace::ExceptionCallBackSample::stream_ = nullptr;
 int32_t ExceptionCallBackSpace::ExceptionCallBackSample::deviceId_ = 0;
 
 namespace {
-const char *SafeString(const char *message)
-{
-    return message != nullptr ? message : "<null>";
-}
+const char* SafeString(const char* message) { return message != nullptr ? message : "<null>"; }
 
-void LogRuntimeErrorState(int32_t deviceId, const char *stage)
+void LogRuntimeErrorState(int32_t deviceId, const char* stage)
 {
     aclrtErrorInfo errorInfo = {};
     aclError verboseRet = aclrtGetErrorVerbose(deviceId, &errorInfo);
     if (verboseRet == ACL_SUCCESS) {
-        INFO_LOG("%s verbose error info: errorType=%d, tryRepair=%u, hasDetail=%u",
-            stage,
-            static_cast<int32_t>(errorInfo.errorType),
-            static_cast<uint32_t>(errorInfo.tryRepair),
+        INFO_LOG(
+            "%s verbose error info: errorType=%d, tryRepair=%u, hasDetail=%u", stage,
+            static_cast<int32_t>(errorInfo.errorType), static_cast<uint32_t>(errorInfo.tryRepair),
             static_cast<uint32_t>(errorInfo.hasDetail));
     } else {
         WARN_LOG("%s aclrtGetErrorVerbose failed with error code %d", stage, static_cast<int32_t>(verboseRet));
@@ -44,21 +40,16 @@ void LogRuntimeErrorState(int32_t deviceId, const char *stage)
 
     aclError peekError = aclrtPeekAtLastError(ACL_RT_THREAD_LEVEL);
     aclError lastError = aclrtGetLastError(ACL_RT_THREAD_LEVEL);
-    const char *recentErrMsg = aclGetRecentErrMsg();
-    ERROR_LOG("%s runtime diagnostics: peekErr=%d, lastErr=%d, recentErrMsg=%s",
-        stage,
-        static_cast<int32_t>(peekError),
-        static_cast<int32_t>(lastError),
-        SafeString(recentErrMsg));
+    const char* recentErrMsg = aclGetRecentErrMsg();
+    ERROR_LOG(
+        "%s runtime diagnostics: peekErr=%d, lastErr=%d, recentErrMsg=%s", stage, static_cast<int32_t>(peekError),
+        static_cast<int32_t>(lastError), SafeString(recentErrMsg));
 }
 } // namespace
 
 ExceptionCallBackSpace::ExceptionCallBackSample::ExceptionCallBackSample() = default;
 
-ExceptionCallBackSpace::ExceptionCallBackSample::~ExceptionCallBackSample()
-{
-    (void)Destroy();
-}
+ExceptionCallBackSpace::ExceptionCallBackSample::~ExceptionCallBackSample() { (void)Destroy(); }
 
 int ExceptionCallBackSpace::ExceptionCallBackSample::Init()
 {
@@ -70,7 +61,7 @@ int ExceptionCallBackSpace::ExceptionCallBackSample::Init()
     return 0;
 }
 
-void ExceptionCallBackSpace::ExceptionCallBackSample::ThreadFunc(void *arg)
+void ExceptionCallBackSpace::ExceptionCallBackSample::ThreadFunc(void* arg)
 {
     const int waitTime = 100;
     aclrtSetCurrentContext(context_);
@@ -80,13 +71,13 @@ void ExceptionCallBackSpace::ExceptionCallBackSample::ThreadFunc(void *arg)
     INFO_LOG("Thread exit");
 }
 
-void ExceptionCallBackSpace::ExceptionCallBackSample::CallBackFunc(void *arg)
+void ExceptionCallBackSpace::ExceptionCallBackSample::CallBackFunc(void* arg)
 {
-    int *data = static_cast<int*>(arg);
+    int* data = static_cast<int*>(arg);
     INFO_LOG("After error still callback, the userdata is: %d.", *data);
 }
 
-void ExceptionCallBackSpace::ExceptionCallBackSample::ExceptionCallBackFunc(aclrtExceptionInfo *exceptionInfo)
+void ExceptionCallBackSpace::ExceptionCallBackSample::ExceptionCallBackFunc(aclrtExceptionInfo* exceptionInfo)
 {
     INFO_LOG("Exception occurred, callback function.");
     uint32_t errorMsg = aclrtGetTaskIdFromExceptionInfo(exceptionInfo);
@@ -100,16 +91,16 @@ void ExceptionCallBackSpace::ExceptionCallBackSample::ExceptionCallBackFunc(aclr
     errorMsg = aclrtGetErrorCodeFromExceptionInfo(exceptionInfo);
     INFO_LOG("The error code id is %u.", errorMsg);
 
-    void *devArgsPtr = nullptr;
+    void* devArgsPtr = nullptr;
     uint32_t devArgsLen = 0;
     aclError argsRet = aclrtGetArgsFromExceptionInfo(exceptionInfo, &devArgsPtr, &devArgsLen);
-    INFO_LOG("Exception args query ret=%d, devArgsPtr=%p, devArgsLen=%u",
-        static_cast<int32_t>(argsRet), devArgsPtr, devArgsLen);
+    INFO_LOG(
+        "Exception args query ret=%d, devArgsPtr=%p, devArgsLen=%u", static_cast<int32_t>(argsRet), devArgsPtr,
+        devArgsLen);
 
     aclrtFuncHandle funcHandle = nullptr;
     aclError funcRet = aclrtGetFuncHandleFromExceptionInfo(exceptionInfo, &funcHandle);
-    INFO_LOG("Exception func handle query ret=%d, funcHandle=%p",
-        static_cast<int32_t>(funcRet), funcHandle);
+    INFO_LOG("Exception func handle query ret=%d, funcHandle=%p", static_cast<int32_t>(funcRet), funcHandle);
 }
 
 int ExceptionCallBackSpace::ExceptionCallBackSample::Callback()
@@ -118,16 +109,16 @@ int ExceptionCallBackSpace::ExceptionCallBackSample::Callback()
     const int blockDim = 1;
     bool isLoop = true;
     const size_t size = sizeof(uint32_t);
-    uint32_t *numDevice = nullptr;
+    uint32_t* numDevice = nullptr;
     uint32_t taskId = 0;
-    CHECK_ERROR(aclrtMalloc((void **)&numDevice, size, ACL_MEM_MALLOC_HUGE_FIRST));
+    CHECK_ERROR(aclrtMalloc((void**)&numDevice, size, ACL_MEM_MALLOC_HUGE_FIRST));
     CHECK_ERROR(aclrtMemcpy(numDevice, size, &num, size, ACL_MEMCPY_HOST_TO_DEVICE));
 
     thread td(ThreadFunc, &isLoop);
     thread::id tid = td.get_id();
     ostringstream oss;
     oss << tid;
-    int *userData = new int(520);
+    int* userData = new int(520);
     uint64_t tidInt = std::stoull(oss.str());
     CHECK_ERROR(aclrtSubscribeReport(tidInt, stream_));
     CHECK_ERROR(aclrtSetExceptionInfoCallback(ExceptionCallBackFunc));

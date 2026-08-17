@@ -18,12 +18,12 @@ int main()
 {
     const int32_t deviceId = 0;
     const char queueName[] = "simple_queue";
-    const char *queueNamePtr = queueName;
-    constexpr size_t kQueueNamePtrSize = sizeof(const char *);
+    const char* queueNamePtr = queueName;
+    constexpr size_t kQueueNamePtrSize = sizeof(const char*);
     const uint32_t depth = 4;
 
     uint32_t qid = 0;
-    acltdtQueueAttr *attr = nullptr;
+    acltdtQueueAttr* attr = nullptr;
     bool aclInitialized = false;
     bool deviceSet = false;
     bool queueCreated = false;
@@ -42,11 +42,12 @@ int main()
         CHECK_ERROR(acltdtSetQueueAttr(attr, ACL_TDT_QUEUE_NAME_PTR, kQueueNamePtrSize, &queueNamePtr));
         CHECK_ERROR(acltdtSetQueueAttr(attr, ACL_TDT_QUEUE_DEPTH_UINT32, sizeof(depth), &depth));
 
-        const char *queriedName = nullptr;
+        const char* queriedName = nullptr;
         uint32_t queriedDepth = 0;
         size_t realLen = 0;
         CHECK_ERROR(acltdtGetQueueAttr(attr, ACL_TDT_QUEUE_NAME_PTR, kQueueNamePtrSize, &realLen, &queriedName));
-        CHECK_ERROR(acltdtGetQueueAttr(attr, ACL_TDT_QUEUE_DEPTH_UINT32, sizeof(queriedDepth), &realLen, &queriedDepth));
+        CHECK_ERROR(
+            acltdtGetQueueAttr(attr, ACL_TDT_QUEUE_DEPTH_UINT32, sizeof(queriedDepth), &realLen, &queriedDepth));
         INFO_LOG("QueueAttr name=%s, depth=%u", queriedName == nullptr ? "<null>" : queriedName, queriedDepth);
 
         CHECK_ERROR(acltdtCreateQueue(attr, &qid));

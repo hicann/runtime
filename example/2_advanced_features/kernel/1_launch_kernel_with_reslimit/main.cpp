@@ -18,7 +18,7 @@
 #include "utils.h"
 
 namespace {
-void UpdateFinalResultOnError(const char *apiName, aclError ret, int32_t &finalResult)
+void UpdateFinalResultOnError(const char* apiName, aclError ret, int32_t& finalResult)
 {
     if (ret == ACL_SUCCESS) {
         return;

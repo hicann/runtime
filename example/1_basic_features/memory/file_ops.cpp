@@ -7,7 +7,7 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
- 
+
 #include "utils.h"
 #include "mem_utils.h"
 #include <cstdio>
@@ -17,7 +17,7 @@
 #include <sys/stat.h>
 
 namespace {
-bool WriteBufferToFile(int fd, const void *data, size_t size)
+bool WriteBufferToFile(int fd, const void* data, size_t size)
 {
     const ssize_t writeSize = write(fd, data, size);
     if (writeSize == static_cast<ssize_t>(size)) {
@@ -27,7 +27,7 @@ bool WriteBufferToFile(int fd, const void *data, size_t size)
     return false;
 }
 
-bool ReadBufferFromFile(int fd, void *data, size_t size)
+bool ReadBufferFromFile(int fd, void* data, size_t size)
 {
     const ssize_t readSize = read(fd, data, size);
     if (readSize == static_cast<ssize_t>(size)) {
@@ -39,7 +39,8 @@ bool ReadBufferFromFile(int fd, void *data, size_t size)
 } // namespace
 
 namespace memory {
-void WriteFile(const char* filePath, const char* doneFile, void* data, size_t size) {
+void WriteFile(const char* filePath, const char* doneFile, void* data, size_t size)
+{
     INFO_LOG("Start writing to %s", filePath);
 
     int fd = open(filePath, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
@@ -66,7 +67,8 @@ void WriteFile(const char* filePath, const char* doneFile, void* data, size_t si
 } // namespace memory
 
 namespace memory {
-void ReadFile(const char* filePath, const char* doneFile, void* data, size_t bufferSize) {
+void ReadFile(const char* filePath, const char* doneFile, void* data, size_t bufferSize)
+{
     INFO_LOG("Start reading from %s", filePath);
     constexpr uint32_t waitTime = 1000000;
     int attempts = 0;
@@ -82,7 +84,7 @@ void ReadFile(const char* filePath, const char* doneFile, void* data, size_t buf
             attempts++;
             WARN_LOG("Data writing not yet complete");
             if (attempts >= attemptsMax) {
-                ERROR_LOG("Open file %s failed", doneFile); 
+                ERROR_LOG("Open file %s failed", doneFile);
                 return;
             }
             (void)usleep(waitTime);
@@ -91,7 +93,7 @@ void ReadFile(const char* filePath, const char* doneFile, void* data, size_t buf
 
     // Read data from the target file
     int fd = open(filePath, O_RDONLY);
-    if (fd == -1){
+    if (fd == -1) {
         ERROR_LOG("Open file %s failed", filePath);
         return;
     }
@@ -104,9 +106,9 @@ void ReadFile(const char* filePath, const char* doneFile, void* data, size_t buf
     }
     size_t fileSize = static_cast<size_t>(fileStat.st_size);
     if (fileSize > bufferSize) {
-    ERROR_LOG("File size %zu exceeds buffer size %zu", fileSize, bufferSize);
-    (void)close(fd);
-    return;
+        ERROR_LOG("File size %zu exceeds buffer size %zu", fileSize, bufferSize);
+        (void)close(fd);
+        return;
     }
 
     if (!ReadBufferFromFile(fd, data, fileSize)) {

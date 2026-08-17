@@ -14,13 +14,13 @@
 #include "kernel_func/kernel_ops.h"
 
 namespace {
-void StreamStateCallback(aclrtStream stream, aclrtStreamState state, void *args)
+void StreamStateCallback(aclrtStream stream, aclrtStreamState state, void* args)
 {
-    const char *sampleName = args == nullptr ? "stream_failure_mode" : static_cast<const char *>(args);
+    const char* sampleName = args == nullptr ? "stream_failure_mode" : static_cast<const char*>(args);
     INFO_LOG("Stream state callback from %s: stream=%p state=%d", sampleName, stream, static_cast<int32_t>(state));
 }
 
-void LogOptionalResult(const char *apiName, aclError ret)
+void LogOptionalResult(const char* apiName, aclError ret)
 {
     if (ret == ACL_SUCCESS) {
         INFO_LOG("%s returned %d.", apiName, static_cast<int32_t>(ret));
@@ -34,28 +34,29 @@ void LogAbortSyncResult(aclError ret)
     if (ret == ACL_SUCCESS) {
         INFO_LOG("aclrtSynchronizeStream(after abort) returned %d.", static_cast<int32_t>(ret));
     } else {
-        INFO_LOG("aclrtSynchronizeStream(after abort) returned %d after stream abort, which is expected.",
-                 static_cast<int32_t>(ret));
+        INFO_LOG(
+            "aclrtSynchronizeStream(after abort) returned %d after stream abort, which is expected.",
+            static_cast<int32_t>(ret));
     }
 }
 
-void FreeOptionalBuffer(uint32_t *buffer, const char *name)
+void FreeOptionalBuffer(uint32_t* buffer, const char* name)
 {
     if (buffer != nullptr) {
         LogOptionalResult(name, aclrtFree(buffer));
     }
 }
 
-void DestroyOptionalStream(aclrtStream stream, const char *name)
+void DestroyOptionalStream(aclrtStream stream, const char* name)
 {
     if (stream != nullptr) {
         LogOptionalResult(name, aclrtDestroyStreamForce(stream));
     }
 }
 
-bool PrepareScratchBuffer(uint32_t **scratch, size_t size, const char *demoName)
+bool PrepareScratchBuffer(uint32_t** scratch, size_t size, const char* demoName)
 {
-    aclError ret = aclrtMalloc(reinterpret_cast<void **>(scratch), size, ACL_MEM_MALLOC_HUGE_FIRST);
+    aclError ret = aclrtMalloc(reinterpret_cast<void**>(scratch), size, ACL_MEM_MALLOC_HUGE_FIRST);
     if (ret != ACL_SUCCESS) {
         WARN_LOG("Skip %s demo: aclrtMalloc returned %d.", demoName, static_cast<int32_t>(ret));
         return false;
@@ -77,7 +78,7 @@ void DemonstrateStreamStop()
     constexpr size_t kScratchSize = sizeof(uint32_t);
     constexpr uint32_t kBlockDim = 1;
     aclrtStream stopStream = nullptr;
-    uint32_t *stopScratch = nullptr;
+    uint32_t* stopScratch = nullptr;
 
     aclError ret = aclrtCreateStreamWithConfig(&stopStream, 0, ACL_STREAM_DEVICE_USE_ONLY);
     if (ret != ACL_SUCCESS) {
@@ -103,7 +104,7 @@ void DemonstrateStreamAbort()
     constexpr size_t kScratchSize = sizeof(uint32_t);
     constexpr uint32_t kBlockDim = 1;
     aclrtStream abortStream = nullptr;
-    uint32_t *abortScratch = nullptr;
+    uint32_t* abortScratch = nullptr;
 
     aclError ret = aclrtCreateStream(&abortStream);
     if (ret != ACL_SUCCESS) {
@@ -138,7 +139,7 @@ int main()
     const int32_t deviceId = 0;
     const uint32_t blockDim = 1;
     uint32_t num = 0;
-    uint32_t *numDevice = nullptr;
+    uint32_t* numDevice = nullptr;
     const size_t size = sizeof(uint32_t);
     aclrtStream stream = nullptr;
     aclrtContext context = nullptr;
@@ -150,7 +151,7 @@ int main()
     CHECK_ERROR(aclrtSetDevice(deviceId));
     CHECK_ERROR(aclrtCreateContext(&context, deviceId));
     CHECK_ERROR(aclrtCreateStream(&stream));
-    CHECK_ERROR(aclrtMalloc(reinterpret_cast<void **>(&numDevice), size, ACL_MEM_MALLOC_HUGE_FIRST));
+    CHECK_ERROR(aclrtMalloc(reinterpret_cast<void**>(&numDevice), size, ACL_MEM_MALLOC_HUGE_FIRST));
     CHECK_ERROR(aclrtMemcpy(numDevice, size, &num, size, ACL_MEMCPY_HOST_TO_DEVICE));
 
     INFO_LOG("Assigning task without failure mode.");

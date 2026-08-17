@@ -8,7 +8,6 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-
 #include <vector>
 #include <iostream>
 #include "utils.h"
@@ -24,17 +23,17 @@ using namespace std;
 int main()
 {
     int deviceId = 0;
-    void *selfDevice = nullptr;
-    void *otherDevice = nullptr;
-    void *outDevice = nullptr;
-    void *outTmpDevice = nullptr;
-    void *selfHost = nullptr;
-    void *otherHost = nullptr;
-    aclTensor *self = nullptr;
-    aclTensor *other = nullptr;
-    aclScalar *alpha = nullptr;
-    aclTensor *out = nullptr;
-    aclTensor *outTmp = nullptr;
+    void* selfDevice = nullptr;
+    void* otherDevice = nullptr;
+    void* outDevice = nullptr;
+    void* outTmpDevice = nullptr;
+    void* selfHost = nullptr;
+    void* otherHost = nullptr;
+    aclTensor* self = nullptr;
+    aclTensor* other = nullptr;
+    aclScalar* alpha = nullptr;
+    aclTensor* out = nullptr;
+    aclTensor* outTmp = nullptr;
     vector<float> selfHostData = {1, 2, 3, 4, 5, 6, 7, 8};
     vector<float> otherHostData = {2, 2, 2, 2, 2, 2, 2, 2};
     vector<float> outHostData = {0, 0, 0, 0, 0, 0, 0, 0};
@@ -43,11 +42,11 @@ int main()
     float alphaValue = 1.1f;
     uint64_t addWorkspaceSize = 0;
     uint64_t mulWorkspaceSize = 0;
-    aclOpExecutor *addExecutor;
-    aclOpExecutor *mulExecutor;
+    aclOpExecutor* addExecutor;
+    aclOpExecutor* mulExecutor;
     aclrtContext context;
     const int loopCount = 4;
-    int64_t size =  ModelUtils::GetShapeSize(shape) * sizeof(float);
+    int64_t size = ModelUtils::GetShapeSize(shape) * sizeof(float);
 
     CHECK_ERROR(aclInit(NULL));
     CHECK_ERROR(aclrtSetDevice(deviceId));
@@ -58,16 +57,16 @@ int main()
     alpha = aclCreateScalar(&alphaValue, aclDataType::ACL_FLOAT);
     ModelUtils::CreateAclTensor(shape, &outDevice, aclDataType::ACL_FLOAT, &out);
     ModelUtils::CreateAclTensor(shape, &outTmpDevice, aclDataType::ACL_FLOAT, &outTmp);
-    
+
     // 创建workspace来执行算子，不同算子的workspace可能不同，该处计算outTmp = self + other * alpha
     aclnnAddGetWorkspaceSize(self, other, alpha, outTmp, &addWorkspaceSize, &addExecutor);
-    void *addWorkspaceAddr = nullptr;
+    void* addWorkspaceAddr = nullptr;
     if (addWorkspaceSize > 0) {
         CHECK_ERROR(aclrtMalloc(&addWorkspaceAddr, addWorkspaceSize, ACL_MEM_MALLOC_HUGE_FIRST));
     }
     // 该算子计算out = outTmp * other，outTmp是上一个add算子的输出。
     aclnnMulGetWorkspaceSize(outTmp, other, out, &mulWorkspaceSize, &mulExecutor);
-    void *mulWorkspaceAddr = nullptr;
+    void* mulWorkspaceAddr = nullptr;
     if (mulWorkspaceSize > 0) {
         CHECK_ERROR(aclrtMalloc(&mulWorkspaceAddr, mulWorkspaceSize, ACL_MEM_MALLOC_HUGE_FIRST));
     }
@@ -77,7 +76,7 @@ int main()
     CHECK_ERROR(aclrtCreateStream(&stream));
     CHECK_ERROR(aclrtMallocHost(&selfHost, size));
     CHECK_ERROR(aclrtMemcpy(selfHost, size, selfHostData.data(), size, ACL_MEMCPY_HOST_TO_HOST));
-    
+
     // 标志着model的开始直到end。此处设置的mode为ACL_MODEL_RI_CAPTURE_MODE_GLOBAL，禁止执行非安全的函数
     // 该model执行了将内存从host复制到device侧，然后调用了一个add算子和一个mul算子
     CHECK_ERROR(aclmdlRICaptureBegin(stream, ACL_MODEL_RI_CAPTURE_MODE_GLOBAL));
@@ -96,9 +95,9 @@ int main()
     // 标志model创建结束，且保存为modelRI,后续调用可以通过modelRI进行
     CHECK_ERROR(aclmdlRICaptureEnd(stream, &modelRI));
     // 打印信息可以在日志中查找
-    const char *jsonPath = "./modelRI.json";
+    const char* jsonPath = "./modelRI.json";
     CHECK_ERROR(aclmdlRIDebugJsonPrint(modelRI, jsonPath, 0));
-    
+
     // 循环执行刚才创建的modelRI
     for (int i = 0; i < loopCount; i++) {
         INFO_LOG("execute model, loop count: %d.", i + 1);

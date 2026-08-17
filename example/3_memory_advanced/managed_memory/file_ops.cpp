@@ -17,7 +17,7 @@
 #include "utils.h"
 
 namespace kernel {
-bool ReadFile(const std::string &filePath, size_t &fileSize, void *buffer, size_t bufferSize)
+bool ReadFile(const std::string& filePath, size_t& fileSize, void* buffer, size_t bufferSize)
 {
     // Read data from the target file
     struct stat sBuf;
@@ -38,7 +38,7 @@ bool ReadFile(const std::string &filePath, size_t &fileSize, void *buffer, size_
         return false;
     }
 
-    std::filebuf *buf = file.rdbuf();
+    std::filebuf* buf = file.rdbuf();
     size_t size = buf->pubseekoff(0, std::ios::end, std::ios::in);
     if (size == 0U) {
         ERROR_LOG("file size is 0");
@@ -51,16 +51,15 @@ bool ReadFile(const std::string &filePath, size_t &fileSize, void *buffer, size_
         return false;
     }
     buf->pubseekpos(0, std::ios::in);
-    (void)buf->sgetn(static_cast<char *>(buffer), static_cast<std::streamsize>(size));
+    (void)buf->sgetn(static_cast<char*>(buffer), static_cast<std::streamsize>(size));
     fileSize = size;
     file.close();
     return true;
 }
 } // namespace kernel
 
-
 namespace kernel {
-bool WriteFile(const std::string &filePath, const void *buffer, size_t size)
+bool WriteFile(const std::string& filePath, const void* buffer, size_t size)
 {
     // Write data to the target file
     if (buffer == nullptr) {

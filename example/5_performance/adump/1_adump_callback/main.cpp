@@ -24,70 +24,72 @@
 using namespace std;
 
 namespace {
-    std::mutex gCallbackMutex;
-    std::map<std::string, int32_t> gChunkCountByFile;
-    int32_t gTotalChunkCount = 0;
-    int64_t gTotalBytes = 0;
+std::mutex gCallbackMutex;
+std::map<std::string, int32_t> gChunkCountByFile;
+int32_t gTotalChunkCount = 0;
+int64_t gTotalBytes = 0;
 
-    void LogDumpPath(acldumpType dumpType, const char *fallbackPath)
-    {
-        const char *dumpPath = acldumpGetPath(dumpType);
-        if (dumpPath != nullptr) {
-            INFO_LOG("acldumpGetPath returned dump path: %s", dumpPath);
-            return;
-        }
-        WARN_LOG("acldumpGetPath returned null, fallback dump path is %s", fallbackPath);
+void LogDumpPath(acldumpType dumpType, const char* fallbackPath)
+{
+    const char* dumpPath = acldumpGetPath(dumpType);
+    if (dumpPath != nullptr) {
+        INFO_LOG("acldumpGetPath returned dump path: %s", dumpPath);
+        return;
     }
+    WARN_LOG("acldumpGetPath returned null, fallback dump path is %s", fallbackPath);
+}
 
-    std::string BuildChunkPreview(const acldumpChunk *data)
-    {
-        const uint32_t previewLen = std::min<uint32_t>(data->bufLen, 16U);
-        std::ostringstream preview;
-        preview << std::hex << std::setfill('0');
-        for (uint32_t i = 0; i < previewLen; ++i) {
-            if (i != 0) {
-                preview << " ";
-            }
-            preview << std::setw(2) << static_cast<uint32_t>(data->dataBuf[i]);
+std::string BuildChunkPreview(const acldumpChunk* data)
+{
+    const uint32_t previewLen = std::min<uint32_t>(data->bufLen, 16U);
+    std::ostringstream preview;
+    preview << std::hex << std::setfill('0');
+    for (uint32_t i = 0; i < previewLen; ++i) {
+        if (i != 0) {
+            preview << " ";
         }
-        if (data->bufLen > previewLen) {
-            preview << " ...";
-        }
-        return preview.str();
+        preview << std::setw(2) << static_cast<uint32_t>(data->dataBuf[i]);
     }
-
-    void PrintCallbackSummary()
-    {
-        std::lock_guard<std::mutex> lock(gCallbackMutex);
-        INFO_LOG("Dump callback summary: total chunks=%d, total bytes=%ld, total files=%d",
-            gTotalChunkCount, gTotalBytes, static_cast<int32_t>(gChunkCountByFile.size()));
-        for (const auto &entry : gChunkCountByFile) {
-            INFO_LOG("  file=%s, chunks=%d", entry.first.c_str(), entry.second);
-        }
+    if (data->bufLen > previewLen) {
+        preview << " ...";
     }
+    return preview.str();
+}
 
-    int32_t DumpTensorCallback(const acldumpChunk *data, int32_t len)
-    {
-        if (data == nullptr) {
-            ERROR_LOG("Callback data is null!");
-            return -1;
-        }
-        if ((sizeof(acldumpChunk) + data->bufLen) != len) {
-            ERROR_LOG("Callback data is invalid. bufLen: %d, callback len: %d", data->bufLen, len);
-            return -1;
-        }
-        const std::string preview = BuildChunkPreview(data);
-        {
-            std::lock_guard<std::mutex> lock(gCallbackMutex);
-            ++gTotalChunkCount;
-            gTotalBytes += data->bufLen;
-            ++gChunkCountByFile[data->fileName];
-        }
-        INFO_LOG("Receive dump tensor data success. file=%s, bufLen=%u, isLastChunk=%u, offset=%ld, flag=%d, preview=%s",
-            data->fileName, data->bufLen, data->isLastChunk, data->offset, data->flag, preview.c_str());
-        return 0;
+void PrintCallbackSummary()
+{
+    std::lock_guard<std::mutex> lock(gCallbackMutex);
+    INFO_LOG(
+        "Dump callback summary: total chunks=%d, total bytes=%ld, total files=%d", gTotalChunkCount, gTotalBytes,
+        static_cast<int32_t>(gChunkCountByFile.size()));
+    for (const auto& entry : gChunkCountByFile) {
+        INFO_LOG("  file=%s, chunks=%d", entry.first.c_str(), entry.second);
     }
 }
+
+int32_t DumpTensorCallback(const acldumpChunk* data, int32_t len)
+{
+    if (data == nullptr) {
+        ERROR_LOG("Callback data is null!");
+        return -1;
+    }
+    if ((sizeof(acldumpChunk) + data->bufLen) != len) {
+        ERROR_LOG("Callback data is invalid. bufLen: %d, callback len: %d", data->bufLen, len);
+        return -1;
+    }
+    const std::string preview = BuildChunkPreview(data);
+    {
+        std::lock_guard<std::mutex> lock(gCallbackMutex);
+        ++gTotalChunkCount;
+        gTotalBytes += data->bufLen;
+        ++gChunkCountByFile[data->fileName];
+    }
+    INFO_LOG(
+        "Receive dump tensor data success. file=%s, bufLen=%u, isLastChunk=%u, offset=%ld, flag=%d, preview=%s",
+        data->fileName, data->bufLen, data->isLastChunk, data->offset, data->flag, preview.c_str());
+    return 0;
+}
+} // namespace
 
 int main()
 {
@@ -107,13 +109,13 @@ int main()
     std::vector<int64_t> selfShape{4, 2};
     std::vector<int64_t> otherShape{4, 2};
     std::vector<int64_t> outShape{4, 2};
-    void *selfDeviceAddr = nullptr;
-    void *otherDeviceAddr = nullptr;
-    void *outDeviceAddr = nullptr;
-    aclTensor *self = nullptr;
-    aclTensor *out = nullptr;
-    aclTensor *other = nullptr;
-    aclScalar *alpha = nullptr;
+    void* selfDeviceAddr = nullptr;
+    void* otherDeviceAddr = nullptr;
+    void* outDeviceAddr = nullptr;
+    aclTensor* self = nullptr;
+    aclTensor* out = nullptr;
+    aclTensor* other = nullptr;
+    aclScalar* alpha = nullptr;
     std::vector<float> selfHostData = {0, 1, 2, 3, 4, 5, 6, 7};
     std::vector<float> outHostData = {0, 0, 0, 0, 0, 0, 0, 0};
     std::vector<float> otherHostData = {1, 1, 1, 2, 2, 2, 3, 3};
@@ -134,11 +136,11 @@ int main()
     INFO_LOG("Get workspace size...");
     // 3. Call the CANN operator library API(Custom Implementation)
     uint64_t workspaceSize = 0;
-    aclOpExecutor *executor;
+    aclOpExecutor* executor;
     CHECK_ERROR(aclnnAddGetWorkspaceSize(self, other, alpha, out, &workspaceSize, &executor));
 
     // Allocate device memory based on the calculation results.
-    void *workspaceAddr = nullptr;
+    void* workspaceAddr = nullptr;
     if (workspaceSize > 0lu) {
         CHECK_ERROR(aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST));
     }
@@ -152,11 +154,12 @@ int main()
     // 5. Obtain the execution result of the operator and copy the result from the device memory to the host
     auto size = adump::GetShapeSize(outShape);
     std::vector<float> resultData(size, 0);
-    CHECK_ERROR(aclrtMemcpy(resultData.data(), resultData.size() * sizeof(resultData[0]), outDeviceAddr,
-        size * sizeof(float), ACL_MEMCPY_DEVICE_TO_HOST));
+    CHECK_ERROR(aclrtMemcpy(
+        resultData.data(), resultData.size() * sizeof(resultData[0]), outDeviceAddr, size * sizeof(float),
+        ACL_MEMCPY_DEVICE_TO_HOST));
 
     for (int64_t i = 0; i < size; i++) {
-      INFO_LOG("result[%ld] is: %f ", i, resultData[i]);
+        INFO_LOG("result[%ld] is: %f ", i, resultData[i]);
     }
     PrintCallbackSummary();
 
@@ -168,7 +171,7 @@ int main()
     CHECK_ERROR(aclrtFree(outDeviceAddr));
     CHECK_ERROR(aclrtFree(otherDeviceAddr));
     if (workspaceSize > 0lu) {
-      CHECK_ERROR(aclrtFree(workspaceAddr));
+        CHECK_ERROR(aclrtFree(workspaceAddr));
     }
     // 7. AsendCL Destroy.
     // Unregister callback for dump tensor data.

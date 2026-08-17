@@ -16,7 +16,8 @@
 #include <unistd.h>
 
 namespace memory {
-void WriteFileEx(const char* file, void* data, size_t size) {
+void WriteFileEx(const char* file, void* data, size_t size)
+{
     INFO_LOG("Start writing to %s", file);
 
     int fd = open(file, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
@@ -39,19 +40,20 @@ void WriteFileEx(const char* file, void* data, size_t size) {
 } // namespace memory
 
 namespace memory {
-void ReadFileEx(const char* file, void* data, size_t size) {
+void ReadFileEx(const char* file, void* data, size_t size)
+{
     INFO_LOG("Start reading from %s", file);
 
     // Read data from the target file
     int fd = open(file, O_RDONLY);
-    if (fd == -1){
+    if (fd == -1) {
         ERROR_LOG("Open file %s failed", file);
         (void)close(fd);
         return;
     }
 
     ssize_t readSize = read(fd, data, size);
-    if (readSize != static_cast<ssize_t>(size)){
+    if (readSize != static_cast<ssize_t>(size)) {
         ERROR_LOG("Partial read");
         (void)close(fd);
         return;

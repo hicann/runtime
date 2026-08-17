@@ -14,7 +14,7 @@
 #include <cstddef>
 
 namespace kernel {
-    bool ReadFile(const std::string &filePath, size_t &fileSize, void *buffer, size_t bufferSize);
-    bool WriteFile(const std::string &filePath, const void *buffer, size_t size);
-}
+bool ReadFile(const std::string& filePath, size_t& fileSize, void* buffer, size_t bufferSize);
+bool WriteFile(const std::string& filePath, const void* buffer, size_t size);
+} // namespace kernel
 #endif

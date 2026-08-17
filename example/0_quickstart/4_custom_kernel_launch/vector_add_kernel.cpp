@@ -23,9 +23,7 @@ extern "C" __global__ __aicore__ void VectorAddKernel(
     // A5 编译时，生成器会在 kernel tail 中追加 dci()。关闭自动 DCCI 后，scalar store 产生的脏数据
     // 尚未回写到 GM 就被 dci() 失效，导致输出全为 0，因此需要显式调用 dcci() 将数据回写到 GM。
 #if __NPU_ARCH__ == 3510
-    dcci(reinterpret_cast<__gm__ int64_t*>(dst),
-        cache_line_t::ENTIRE_DATA_CACHE,
-        dcci_dst_t::CACHELINE_OUT);
+    dcci(reinterpret_cast<__gm__ int64_t*>(dst), cache_line_t::ENTIRE_DATA_CACHE, dcci_dst_t::CACHELINE_OUT);
 #endif
 }
 

@@ -23,7 +23,8 @@
 
 #define EVENT_HANDLE_FILE "./event_handle.bin"
 
-int main(int argc, char* argv[]) {
+int main(int argc, char* argv[])
+{
     if (argc != 3) {
         ERROR_LOG("Usage: %s <device_id> <consumer_id>", argv[0]);
         return -1;
@@ -71,7 +72,7 @@ int main(int argc, char* argv[]) {
 
     // 5. 模拟消费者自身的工作
     INFO_LOG("Consumer %d: doing some work...", consumerId);
-    usleep(1000000);  // 1秒
+    usleep(1000000); // 1秒
 
     // 6. 记录事件，通知其他等待者（这里主要是为了演示，实际已无等待者）
     CHECK_ERROR(aclrtRecordEvent(ipcEvent, stream));

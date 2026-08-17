@@ -13,19 +13,19 @@
 #include "callback_utils.h"
 
 namespace CallbackUtils {
-    bool IsLoopFlag(void *arg)
-    {
-        if (*(static_cast<bool *>(arg))) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-    std::string GetThreadId(std::thread::id tid)
-    {
-        std::ostringstream oss;
-        oss << tid;
-        std::string tidStr = oss.str();
-        return tidStr;
+bool IsLoopFlag(void* arg)
+{
+    if (*(static_cast<bool*>(arg))) {
+        return true;
+    } else {
+        return false;
     }
 }
+std::string GetThreadId(std::thread::id tid)
+{
+    std::ostringstream oss;
+    oss << tid;
+    std::string tidStr = oss.str();
+    return tidStr;
+}
+} // namespace CallbackUtils

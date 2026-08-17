@@ -26,8 +26,8 @@ int32_t main()
 
     // Allocate memory on the host
     uint64_t size = 1 * 1024 * 1024;
-    int *hostPtrA;
-    int *hostPtrB;
+    int* hostPtrA;
+    int* hostPtrB;
     CHECK_ERROR(aclrtMallocHost((void**)&hostPtrA, size));
     INFO_LOG("Allocate memory on the host memory %p successfully", hostPtrA);
 

@@ -16,11 +16,11 @@ extern "C" __global__ __aicore__ void LongOPf(__gm__ uint32_t* x)
 {
     float temp = 0.0f;
     int idx = block_idx;
-    //复杂的浮点运算来模拟长时间任务
+    // 复杂的浮点运算来模拟长时间任务
     for (int i = 0; i < 10000; i++) {
         temp += 0.00002f;
         temp *= 0.02f;
-        for (int j = 0; j < 25000; j++){
+        for (int j = 0; j < 25000; j++) {
             temp = temp * temp - 0.000002f;
             temp = temp + (temp * 0.05f);
             temp = temp * temp + 0.00001f;
@@ -28,15 +28,10 @@ extern "C" __global__ __aicore__ void LongOPf(__gm__ uint32_t* x)
         }
         temp -= 0.00003f * temp;
     }
-    x[idx] += temp > 0.0f ? 1:0;
+    x[idx] += temp > 0.0f ? 1 : 0;
 #if __NPU_ARCH__ == 3510
-    dcci(reinterpret_cast<__gm__ int64_t*>(x),
-        cache_line_t::ENTIRE_DATA_CACHE,
-        dcci_dst_t::CACHELINE_OUT);
+    dcci(reinterpret_cast<__gm__ int64_t*>(x), cache_line_t::ENTIRE_DATA_CACHE, dcci_dst_t::CACHELINE_OUT);
 #endif
 }
 
-void LongOP(uint32_t blockDim, void *stream, uint32_t* x)
-{
-    LongOPf<<<blockDim, nullptr, stream>>>(x);
-}
+void LongOP(uint32_t blockDim, void* stream, uint32_t* x) { LongOPf<<<blockDim, nullptr, stream>>>(x); }
