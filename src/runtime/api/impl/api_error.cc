@@ -3419,6 +3419,9 @@ rtError_t ApiErrorDecorator::DeviceReset(const int32_t devId, const bool isForce
         static_cast<uint32_t>(error));
 
     error = impl_->DeviceReset(realDeviceId, isForceReset);
+    COND_RETURN_AND_MSG_OUTER(
+        error == RT_ERROR_CONTEXT_DEL, error, ErrorCode::EE1018, "Resetting the device",
+        "The device has not been set or has already been reset");
     ERROR_RETURN(error, "Device reset failed, device_id=%d.", devId);
     return error;
 }
