@@ -25,6 +25,7 @@
 #include "model_execute_task.h"
 #include "stub_task.hpp"
 #include "capture_model_utils.hpp"
+#include "capture_model.hpp"
 
 namespace cce {
 namespace runtime {
@@ -36,23 +37,24 @@ bool IsSdmaMteErrorCode(const int32_t errCode)
            (errCode == TS_ERROR_SDMA_DDRC_ERROR) || (errCode == AICPU_HCCL_OP_SDMA_LINK_FAILED);
 }
 
-void ReleaseExternalWaitRetainedResources(TaskInfo* taskInfo)
+void ReleaseExternalEventsRes(TaskInfo* taskInfo)
 {
     if (taskInfo == nullptr) {
         return;
     }
-    auto* resources = taskInfo->u.notifywaitTask.externalWaitRetainedResources;
+    auto* resources = taskInfo->u.notifywaitTask.externalEventsRes;
     if (resources == nullptr) {
         return;
     }
     for (const auto& resource : *resources) {
         if ((resource.event != nullptr) && (resource.eventId != INVALID_EVENT_ID) && (resource.eventAddr != 0ULL)) {
-            resource.event->EventIdCountSub(resource.eventId);
+            Event* event = resource.event;
+            TryToFreeEventIdAndDestroyEvent(&event, resource.eventId, false);
         }
     }
     resources->clear();
     delete resources;
-    taskInfo->u.notifywaitTask.externalWaitRetainedResources = nullptr;
+    taskInfo->u.notifywaitTask.externalEventsRes = nullptr;
 }
 } // namespace
 
@@ -319,7 +321,7 @@ rtError_t NotifyWaitTaskInit(
     notifyWaitTask->timestamp = 0ULL;
     notifyWaitTask->isEndGraphNotify = false;
     notifyWaitTask->captureModel = nullptr;
-    notifyWaitTask->externalWaitRetainedResources = nullptr;
+    notifyWaitTask->externalEventsRes = nullptr;
     notifyWaitTask->isCountNotify = isCountNotify;
     if (isCountNotify) {
         if (inNotify == nullptr) {
@@ -333,7 +335,27 @@ rtError_t NotifyWaitTaskInit(
     return RT_ERROR_NONE;
 }
 
-void NotifyWaitTaskUnInit(TaskInfo* taskInfo) { ReleaseExternalWaitRetainedResources(taskInfo); }
+rtError_t AttachExternalEventsRes(TaskInfo* taskInfo, Model* captureModel)
+{
+    CaptureModel* const captureMdl = dynamic_cast<CaptureModel*>(captureModel);
+    std::vector<EventResource>* const externalEvents =
+        (captureMdl == nullptr) ? nullptr : captureMdl->GetCurReplayExternalEventsRes();
+    if ((externalEvents == nullptr) || externalEvents->empty()) {
+        return RT_ERROR_NONE;
+    }
+
+    auto* const eventsRes = new (std::nothrow) std::vector<EventResource>();
+    if (eventsRes == nullptr) {
+        return RT_ERROR_MEMORY_ALLOCATION;
+    }
+    // 将capture model本轮replay持有的events及其释放责任转移给endGraph notify wait任务，在任务结束时释放Events引用。
+    // 转移后captureMdl->GetCurReplayExternalEventsRes关联的资源列表变为空vector。
+    eventsRes->swap(*externalEvents);
+    taskInfo->u.notifywaitTask.externalEventsRes = eventsRes;
+    return RT_ERROR_NONE;
+}
+
+void NotifyWaitTaskUnInit(TaskInfo* taskInfo) { ReleaseExternalEventsRes(taskInfo); }
 
 static void MapNotifyErrorCodeForFastRecovery(TaskInfo* taskInfo, const uint32_t devId)
 {
@@ -412,7 +434,7 @@ void DoCompleteSuccessForNotifyWaitTask(TaskInfo* taskInfo, const uint32_t devId
     }
 
     if ((taskInfo->u.notifywaitTask.isEndGraphNotify) && (taskInfo->u.notifywaitTask.captureModel != nullptr)) {
-        ReleaseExternalWaitRetainedResources(taskInfo);
+        ReleaseExternalEventsRes(taskInfo);
         taskInfo->stream->Device_()->DeleteEndGraphNotifyInfo(
             taskInfo->stream->Id_(), taskInfo->u.notifywaitTask.captureModel, taskInfo->pos, taskInfo->errorCode);
     }

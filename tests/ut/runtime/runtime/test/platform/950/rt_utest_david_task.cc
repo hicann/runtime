@@ -85,6 +85,15 @@
 using namespace testing;
 using namespace cce::runtime;
 
+using NothrowNewFunc = void* (*)(size_t, const std::nothrow_t&);
+
+static void* NothrowNewFail(size_t size, const std::nothrow_t& tag)
+{
+    UNUSED(size);
+    UNUSED(tag);
+    return nullptr;
+}
+
 namespace {
 rtError_t MemCopySyncCopyStub(
     Driver* drv, void* dst, uint64_t destMax, const void* src, uint64_t size, rtMemcpyKind_t kind)
@@ -295,6 +304,8 @@ TEST_F(TaskTestDavid, NtyWaitSubmitFailureReleasesExternalWaitRetainedOwner)
     Notify* notifyObj = rt_ut::UnwrapOrNull<Notify>(notify);
     ASSERT_NE(notifyObj, nullptr);
     Event event(stream_->Device_(), RT_EVENT_DEFAULT, nullptr);
+    CaptureModel captureModel;
+    captureModel.context_ = stream_->Context_();
     uint8_t eventStatus = 1U;
     const int32_t eventId = 7;
     ASSERT_EQ(event.TrySwitchToSoftwareMode(), RT_ERROR_NONE);
@@ -305,13 +316,34 @@ TEST_F(TaskTestDavid, NtyWaitSubmitFailureReleasesExternalWaitRetainedOwner)
     event.EventIdCountAdd(eventId);
     std::vector<EventResource> retainedResources;
     retainedResources.push_back({&event, reinterpret_cast<uint64_t>(&eventStatus), eventId});
+    captureModel.curReplayExternalEventsRes_ = &retainedResources;
     MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER(DavidSendTask).stubs().will(returnValue(RT_ERROR_DRV_ERR));
 
-    EXPECT_EQ(NtyWait(notifyObj, stream_, 0U, true, nullptr, &retainedResources), RT_ERROR_DRV_ERR);
+    EXPECT_EQ(NtyWait(notifyObj, stream_, 0U, true, &captureModel), RT_ERROR_DRV_ERR);
 
     EXPECT_TRUE(retainedResources.empty());
     EXPECT_EQ(event.idMap_.find(eventId), event.idMap_.end());
+    EXPECT_EQ(rtNotifyDestroy(notify), RT_ERROR_NONE);
+}
+
+TEST_F(TaskTestDavid, NtyWaitOwnerAllocationFailureKeepsReplayResources)
+{
+    rtNotify_t notify = nullptr;
+    ASSERT_EQ(rtNotifyCreate(0, &notify), RT_ERROR_NONE);
+    Notify* notifyObj = rt_ut::UnwrapOrNull<Notify>(notify);
+    ASSERT_NE(notifyObj, nullptr);
+    CaptureModel captureModel;
+    captureModel.context_ = stream_->Context_();
+    std::vector<EventResource> retainedResources;
+    retainedResources.push_back({nullptr, 0U, INVALID_EVENT_ID});
+    captureModel.curReplayExternalEventsRes_ = &retainedResources;
+    MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(static_cast<NothrowNewFunc>(&operator new)).expects(once()).will(invoke(NothrowNewFail));
+
+    EXPECT_EQ(NtyWait(notifyObj, stream_, 0U, true, &captureModel), RT_ERROR_MEMORY_ALLOCATION);
+
+    EXPECT_EQ(retainedResources.size(), 1U);
     EXPECT_EQ(rtNotifyDestroy(notify), RT_ERROR_NONE);
 }
 

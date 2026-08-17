@@ -17,6 +17,7 @@
 #include "notify.hpp"
 #include "capture_model.hpp"
 #include "common_task.h"
+#include "event_task.h"
 #include "memcpy_c.hpp"
 #include "task.hpp"
 
@@ -485,7 +486,8 @@ void ReleaseRetainedEventResources(std::vector<EventResource>* resources)
     COND_PROC(resources == nullptr, return;);
     for (const auto& resource : *resources) {
         if ((resource.event != nullptr) && (resource.eventId != INVALID_EVENT_ID) && (resource.eventAddr != 0U)) {
-            resource.event->EventIdCountSub(resource.eventId);
+            Event* event = resource.event;
+            TryToFreeEventIdAndDestroyEvent(&event, resource.eventId, false);
         }
     }
     resources->clear();
@@ -500,7 +502,7 @@ void RollbackExternalEventRefreshInfo(ExternalEventRefreshInfo* refreshInfo)
         }
     }
     refreshInfo->preparedRecords.clear();
-    ReleaseRetainedEventResources(&refreshInfo->retainedWaitResources);
+    ReleaseRetainedEventResources(&refreshInfo->retainedEventResources);
     refreshInfo->hostRefresh.reset();
 }
 
@@ -546,7 +548,9 @@ void CommitExternalEventRecords(ExternalEventRefreshInfo* refreshInfo)
 {
     COND_PROC(refreshInfo == nullptr, return;);
     for (const auto& record : refreshInfo->preparedRecords) {
-        if (record.event != nullptr) {
+        if ((record.event != nullptr) && (record.eventAddr != 0U) && (record.eventId != INVALID_EVENT_ID)) {
+            record.event->EventIdCountAdd(record.eventId);
+            refreshInfo->retainedEventResources.push_back(record);
             CommitPreparedExternalRecordToEvent(record.event, record.eventAddr, record.eventId);
         }
     }

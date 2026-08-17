@@ -45,12 +45,10 @@ rtError_t CaptureModel::SetNotifyBeforeExecute(Stream* const exeStm, CaptureMode
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
-rtError_t CaptureModel::SetNotifyAfterExecute(
-    Stream* const exeStm, CaptureModel* const captureMdl, ExternalEventRefreshInfo* refreshInfo)
+rtError_t CaptureModel::SetNotifyAfterExecute(Stream* const exeStm, CaptureModel* const captureMdl)
 {
     UNUSED(exeStm);
     UNUSED(captureMdl);
-    UNUSED(refreshInfo);
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 

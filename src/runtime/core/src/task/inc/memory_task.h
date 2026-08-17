@@ -62,6 +62,7 @@ rtError_t UpdateTaskD2HSubmit(const TaskInfo* const updateTask, void* sqeAddr, S
 rtError_t UpdateTaskH2DSubmit(TaskInfo* const updateTask, Stream* const stm, void* sqeDeviceAddr);
 
 rtError_t MemWriteValueTaskInit(TaskInfo* taskInfo, const void* const devAddr, const uint64_t value);
+void MemWriteTaskUnInit(TaskInfo* taskInfo);
 rtError_t GetWriteValueTaskParams(const TaskInfo* const taskInfo, rtTaskParams* const params);
 rtError_t UpdateWriteValueTaskParams(TaskInfo* const taskInfo, rtTaskParams* const params);
 

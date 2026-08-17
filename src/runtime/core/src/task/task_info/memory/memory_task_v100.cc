@@ -724,19 +724,17 @@ void DoCompleteSuccessForMemWaitValueTask(TaskInfo* taskInfo, const uint32_t dev
 {
     MemWaitValueTaskInfo* memWaitValueTask = &taskInfo->u.memWaitValueTask;
     Stream* const stream = taskInfo->stream;
+    if (memWaitValueTask->ownedEventId != INVALID_EVENT_ID) {
+        DoCompleteSuccess(taskInfo, devId);
+        return;
+    }
+
     if (memWaitValueTask->event == nullptr) {
         DoCompleteSuccess(taskInfo, devId);
         return;
     }
 
     Event* event = memWaitValueTask->event;
-    // retainedEventId字段有值时代表当前task持有一个event id引用，任务结束对应的id计数-1即可。
-    if (memWaitValueTask->retainedEventId != INVALID_EVENT_ID) {
-        event->EventIdCountSub(memWaitValueTask->retainedEventId);
-        memWaitValueTask->retainedEventId = INVALID_EVENT_ID;
-        return;
-    }
-
     const int32_t eventId = event->EventId_();
     RT_LOG(
         RT_LOG_INFO,
@@ -944,7 +942,7 @@ static bool MemoryTaskRegister()
         .toCommandFunc = nullptr,
         .toSqeFunc = &ConstructSqeForMemWriteValueTask,
         .doCompleteSuccFunc = &DoCompleteSuccess,
-        .taskUnInitFunc = nullptr,
+        .taskUnInitFunc = &MemWriteTaskUnInit,
         .waitAsyncCpCompleteFunc = nullptr,
         .printErrorInfoFunc = &PrintErrorInfoCommon,
         .setResultFunc = &SetResultCommon,

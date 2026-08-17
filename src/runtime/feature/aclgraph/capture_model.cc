@@ -162,8 +162,7 @@ rtError_t CaptureModel::SetNotifyBeforeExecute(Stream* const exeStm, CaptureMode
     }
     return error;
 }
-rtError_t CaptureModel::SetNotifyAfterExecute(
-    Stream* const exeStm, CaptureModel* const captureMdl, ExternalEventRefreshInfo* refreshInfo)
+rtError_t CaptureModel::SetNotifyAfterExecute(Stream* const exeStm, CaptureModel* const captureMdl)
 {
     rtError_t error = RT_ERROR_NONE;
     auto& addStreams = captureMdl->GetAddStreamMap();
@@ -187,9 +186,7 @@ rtError_t CaptureModel::SetNotifyAfterExecute(
                 (error != RT_ERROR_NONE), error,
                 "Notify record failed, exe stream_id=%d, notify_id=%d, add stream_id=%d, retCode=%#x.", exeStm->Id_(),
                 notify->GetNotifyId(), streamObj.first->Id_(), error);
-            std::vector<EventResource>* retainedResources =
-                (refreshInfo == nullptr) ? nullptr : &refreshInfo->retainedWaitResources;
-            error = NtyWait(notify, streamObj.first, MAX_UINT32_NUM, true, this, retainedResources);
+            error = NtyWait(notify, streamObj.first, MAX_UINT32_NUM, true, this);
             COND_RETURN_ERROR(
                 (error != RT_ERROR_NONE), error,
                 "Notify wait failed, exe stream_id=%d, notify_id=%d, add stream_id=%d, retCode=%#x.", exeStm->Id_(),
@@ -361,6 +358,7 @@ rtError_t CaptureModel::PreModelExecute(Stream* const stm, ExternalEventRefreshI
             Id_(), static_cast<uint32_t>(error));
         return error;
     }
+    CommitExternalEventRecords(refreshInfo);
     return RT_ERROR_NONE;
 }
 
@@ -368,6 +366,8 @@ rtError_t CaptureModel::ExecuteModel(
     Stream* const stm, int32_t timeout, const uint8_t executeMode, ExternalEventRefreshInfo* refreshInfo)
 {
     ReportCacheTrackData();
+    curReplayExternalEventsRes_ = &refreshInfo->retainedEventResources;
+    ScopeGuard clearRetainedResources([this]() { curReplayExternalEventsRes_ = nullptr; });
     rtError_t error =
         (executeMode == RT_MODEL_CAPTURE_EXECUTE_DEFAULT) ? Model::Execute(stm, timeout) : Model::ExecuteAsync(stm);
     if (error != RT_ERROR_NONE) {
@@ -382,9 +382,8 @@ rtError_t CaptureModel::ExecuteModel(
 
 rtError_t CaptureModel::PostModelExecute(Stream* const stm, ExternalEventRefreshInfo* refreshInfo)
 {
-    CommitExternalEventRecords(refreshInfo);
-
-    rtError_t error = SetNotifyAfterExecute(stm, this, refreshInfo);
+    UNUSED(refreshInfo);
+    rtError_t error = SetNotifyAfterExecute(stm, this);
     COND_RETURN_ERROR(
         error != RT_ERROR_NONE, error, "Set notify after model execute failed, stream_id=%d, model_id=%u, retCode=%#x.",
         stm->Id_(), Id_(), static_cast<uint32_t>(error));
@@ -667,6 +666,9 @@ rtError_t CaptureModel::PrepareExternalRecordsForReplay(ExternalEventRefreshInfo
         error = FillExternalRecordRefreshEntry(recordEntry, record.eventAddr);
         ERROR_RETURN_MSG_INNER(
             error, "Fill external record refresh entry failed, model_id=%u, retCode=%#x.", Id_(), error);
+        RT_LOG(
+            RT_LOG_INFO, "Prepare external record, model_id=%u, index=%zu, event_id=%d, event_addr=0x%" PRIx64 ".",
+            Id_(), i, record.eventId, record.eventAddr);
         refreshInfo->preparedRecords.push_back(record);
     }
     rollbackGuard.ReleaseGuard();
@@ -692,8 +694,11 @@ rtError_t CaptureModel::PrepareExternalWaitsForReplay(ExternalEventRefreshInfo* 
             RtPtrToValue(refreshInfo->hostRefresh.get()) + externalEventRefreshLayout_.waitOffset +
             i * EXTERNAL_WAIT_REFRESH_ENTRY_SIZE);
         *waitEntry = eventAddr;
+        RT_LOG(
+            RT_LOG_INFO, "Prepare external wait, model_id=%u, index=%zu, event_id=%d, event_addr=0x%" PRIx64 ".", Id_(),
+            i, resource.eventId, eventAddr);
         if (resource.event != nullptr) {
-            refreshInfo->retainedWaitResources.push_back(resource);
+            refreshInfo->retainedEventResources.push_back(resource);
         }
     }
     rollbackGuard.ReleaseGuard();
@@ -703,8 +708,6 @@ rtError_t CaptureModel::PrepareExternalWaitsForReplay(ExternalEventRefreshInfo* 
 rtError_t CaptureModel::PrepareExternalEventRefreshInfo(ExternalEventRefreshInfo* refreshInfo)
 {
     NULL_PTR_RETURN_MSG(refreshInfo, RT_ERROR_INVALID_VALUE);
-    // Prepare阶段失败时只回收本轮已暂存资源：record event id、retained wait资源和host refresh buffer。
-    RollbackExternalEventRefreshInfo(refreshInfo);
     if (externalEventRefreshLayout_.totalSize == 0U) {
         return RT_ERROR_NONE;
     }

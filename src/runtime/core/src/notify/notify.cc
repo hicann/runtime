@@ -25,7 +25,6 @@
 #include "notify_task.h"
 #include "common_task.h"
 #include "event_task.h"
-#include <memory>
 
 namespace cce {
 namespace runtime {
@@ -337,8 +336,7 @@ ERROR_RECYCLE_WAIT:
 }
 
 rtError_t Notify::Wait(
-    Stream* const streamIn, const uint32_t timeOut, const bool isEndGraphNotify, Model* const captureModel,
-    std::vector<EventResource>* externalWaitRetainedResources)
+    Stream* const streamIn, const uint32_t timeOut, const bool isEndGraphNotify, Model* const captureModel)
 {
     if ((notifyid_ >> RT_NOTIFY_REVISED_OFFSET) > 0U) {
         return RevisedWait(streamIn, timeOut);
@@ -347,7 +345,6 @@ rtError_t Notify::Wait(
     Device* const dev = streamIn->Device_();
     TaskInfo submitTask = {};
     rtError_t errorReason;
-    std::unique_ptr<std::vector<EventResource>> retainedOwner;
     TaskInfo* waitTask = streamIn->AllocTask(&submitTask, TS_TASK_TYPE_NOTIFY_WAIT, errorReason);
     NULL_PTR_RETURN_MSG(waitTask, errorReason);
     std::function<void()> const errRecycle = [&dev, &waitTask]() { (void)dev->GetTaskFactory()->Recycle(waitTask); };
@@ -360,15 +357,10 @@ rtError_t Notify::Wait(
 
     waitTask->u.notifywaitTask.isEndGraphNotify = isEndGraphNotify;
     waitTask->u.notifywaitTask.captureModel = captureModel;
-    if ((externalWaitRetainedResources != nullptr) && (!externalWaitRetainedResources->empty())) {
-        retainedOwner.reset(new (std::nothrow) std::vector<EventResource>(*externalWaitRetainedResources));
-        if (retainedOwner == nullptr) {
-            error = RT_ERROR_MEMORY_ALLOCATION;
-            return error;
-        }
-        waitTask->u.notifywaitTask.externalWaitRetainedResources = retainedOwner.release();
-        externalWaitRetainedResources->clear();
-    }
+    error = AttachExternalEventsRes(waitTask, captureModel);
+    ERROR_RETURN(
+        error, "Failed to attach external events resources to graph end notify wait, stream_id=%d, retCode=%#x.",
+        streamIn->Id_(), static_cast<uint32_t>(error));
 
     error = dev->SubmitTask(waitTask);
     if (error != RT_ERROR_NONE) {

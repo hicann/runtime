@@ -12,7 +12,6 @@
 #include "base.hpp"
 #include "runtime_intf.hpp"
 #include "task_info.hpp"
-#include <vector>
 
 namespace cce {
 namespace runtime {
@@ -21,7 +20,6 @@ class Device;
 class Stream;
 class Model;
 class Notify;
-struct EventResource;
 
 void RecycleThreadDoForStarsV2(Device* deviceInfo);
 
@@ -47,7 +45,7 @@ rtError_t MdlUnBindTaskSubmit(Model* const mdl, Stream* const streamIn, const bo
 
 rtError_t NtyWait(
     Notify* const inNotify, Stream* const streamIn, const uint32_t timeOut, const bool isEndGraphNotify = false,
-    Model* const captureModel = nullptr, std::vector<EventResource>* externalWaitRetainedResources = nullptr);
+    Model* const captureModel = nullptr);
 
 rtError_t ModelSerialSchedPostProc(Stream* const stm, Notify* const notify, Model* const model);
 

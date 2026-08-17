@@ -52,7 +52,10 @@ DavidEvent::~DavidEvent() noexcept
 
 bool DavidEvent::TryFreeEventIdAndCheckCanBeDelete(const int32_t id, bool isNeedDestroy)
 {
-    UNUSED(id);
+    if (!IsHardwareMode()) {
+        return Event::TryFreeEventIdAndCheckCanBeDelete(id, isNeedDestroy);
+    }
+
     const std::lock_guard<std::mutex> lock(taskMapMutex_);
     if (isNeedDestroy) { // call from EventDestroy
         SetIsNeedDestroy(isNeedDestroy_.Value() || isNeedDestroy);

@@ -68,8 +68,8 @@ struct ExternalEventRefreshInfo {
     std::shared_ptr<uint8_t[]> hostRefresh{nullptr};
     // 本轮external record预分配但尚未发布到event的资源。
     std::vector<EventResource> preparedRecords;
-    // 本轮external wait持有的producer资源，交给endGraph notify或异常owner释放。
-    std::vector<EventResource> retainedWaitResources;
+    // 本轮external record和wait资源，挂靠到endGraph notify释放。
+    std::vector<EventResource> retainedEventResources;
 };
 
 class CaptureModel : public Model {
@@ -83,9 +83,7 @@ public:
     rtError_t TearDown() override;
     rtError_t AddStreamToCaptureModel(Stream* const stm);
     rtError_t SetNotifyBeforeExecute(Stream* const exeStm, CaptureModel* const captureMdl);
-    // 设置模型执行后的notify同步，必要时把本轮external wait资源转交给notify wait任务释放。
-    rtError_t SetNotifyAfterExecute(
-        Stream* const exeStm, CaptureModel* const captureMdl, ExternalEventRefreshInfo* refreshInfo = nullptr);
+    rtError_t SetNotifyAfterExecute(Stream* const exeStm, CaptureModel* const captureMdl);
     bool IsAddStream(const Stream* stm) const;
 
     void EnterCaptureNotify(const int32_t singleOperStmId, const int32_t captureStmId);
@@ -227,6 +225,8 @@ public:
 
     void SetSoftwareSqEnable(void) { isSoftwareSqEnable_ = true; }
 
+    std::vector<EventResource>* GetCurReplayExternalEventsRes() const { return curReplayExternalEventsRes_; }
+
     bool IsCaptureModelRunning(void) const { return (refCount_ != 0U); }
 
     bool ModelSqOperTryLock(void) { return sqBindMutex_.try_lock(); }
@@ -358,6 +358,8 @@ private:
     void* externalEventRefreshDeviceBase_{nullptr};
     // capture end生成的host模板，replay时复制后仅刷新动态字段。
     std::shared_ptr<uint8_t[]> externalEventRefreshHostTemplate_{nullptr};
+    // 每次replay的Event资源owner在execute期间由此中转，并由主endGraph notify接管。
+    std::vector<EventResource>* curReplayExternalEventsRes_{nullptr};
     std::map<Stream*, std::vector<Stream*>> addStreamMap_; // key为add进来的stream，value为隐式创建的stream
     std::vector<Notify*> addStreamNotifyList_;
     std::vector<Notify*> executeNotifyList_;

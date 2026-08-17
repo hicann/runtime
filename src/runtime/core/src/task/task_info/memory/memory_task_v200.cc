@@ -243,7 +243,7 @@ static bool MemoryTaskRegister()
         .toCommandFunc = nullptr,
         .toSqeFunc = nullptr,
         .doCompleteSuccFunc = &DoCompleteSuccess,
-        .taskUnInitFunc = nullptr,
+        .taskUnInitFunc = &MemWriteTaskUnInit,
         .waitAsyncCpCompleteFunc = nullptr,
         .printErrorInfoFunc = &PrintErrorInfoCommon,
         .setResultFunc = nullptr,

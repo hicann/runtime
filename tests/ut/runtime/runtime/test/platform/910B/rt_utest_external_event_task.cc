@@ -22,10 +22,12 @@
 #include "event.hpp"
 #include "memcpy_c.hpp"
 #include "notify.hpp"
+#include "raw_device.hpp"
 #include "stars.hpp"
 #include "stream.hpp"
 #include "task.hpp"
 #include "common_task.h"
+#include "event_task.h"
 #include "memory_task.h"
 #include "task_info_v100.h"
 #include "rt_unwrap.h"
@@ -37,6 +39,15 @@ using namespace testing;
 using namespace cce::runtime;
 
 namespace {
+using NothrowNewFunc = void* (*)(size_t, const std::nothrow_t&);
+
+void* NothrowNewFail(size_t size, const std::nothrow_t& tag)
+{
+    UNUSED(size);
+    UNUSED(tag);
+    return nullptr;
+}
+
 void EnableSoftwareRecord(Event* event, uint8_t* recordValue, int32_t eventId)
 {
     ASSERT_EQ(event->TrySwitchToSoftwareMode(), RT_ERROR_NONE);
@@ -141,6 +152,7 @@ TEST_F(ExternalEventTaskTest910B, ExternalRecordLaunchCommitPublishesSoftwareRes
     CaptureModel* model = UnwrapCaptureModel(modelHandle);
     ASSERT_NE(eventObj, nullptr);
     ASSERT_NE(model, nullptr);
+    EXPECT_EQ(model->GetCurReplayExternalEventsRes(), nullptr);
     ExternalEventRefreshInfo launch;
     ASSERT_EQ(model->PrepareExternalEventRefreshInfo(&launch), RT_ERROR_NONE);
     ASSERT_EQ(launch.preparedRecords.size(), 1U);
@@ -149,8 +161,11 @@ TEST_F(ExternalEventTaskTest910B, ExternalRecordLaunchCommitPublishesSoftwareRes
 
     EXPECT_NE(eventObj->GetEventAddr(), nullptr);
     EXPECT_NE(eventObj->EventId_(), INVALID_EVENT_ID);
+    EXPECT_EQ(launch.retainedEventResources.size(), 1U);
+    EXPECT_EQ(eventObj->idMap_[eventObj->EventId_()], 1U);
     EXPECT_TRUE(eventObj->HasRecord());
     EXPECT_FALSE(eventObj->HasReset());
+    RollbackExternalEventRefreshInfo(&launch);
     EXPECT_EQ(rtModelDestroy(modelHandle), RT_ERROR_NONE);
     EXPECT_EQ(rtEventDestroy(event), RT_ERROR_NONE);
     EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
@@ -182,7 +197,7 @@ TEST_F(ExternalEventTaskTest910B, ExternalWaitLaunchRetainsRecordedProducerOnly)
     auto* waitEntries = RtPtrToPtr<uint64_t*>(launch.hostRefresh.get() + model->externalEventRefreshLayout_.waitOffset);
     EXPECT_EQ(waitEntries[0], RtPtrToValue(&recordValue));
     EXPECT_EQ(waitEntries[1], 0U);
-    EXPECT_EQ(launch.retainedWaitResources.size(), 1U);
+    EXPECT_EQ(launch.retainedEventResources.size(), 1U);
     RollbackExternalEventRefreshInfo(&launch);
     EXPECT_EQ(rtModelDestroy(modelHandle), RT_ERROR_NONE);
     EXPECT_EQ(rtEventDestroy(recordedEvent), RT_ERROR_NONE);
@@ -211,6 +226,8 @@ TEST_F(ExternalEventTaskTest910B, NormalRecordSoftwareEventUsesMemWriteValueTask
     ASSERT_NE(eventObj->GetEventAddr(), nullptr);
     EXPECT_EQ(recordTask->u.memWriteValueTask.value, 1U);
     EXPECT_EQ(recordTask->u.memWriteValueTask.awSize, RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT);
+    EXPECT_EQ(recordTask->u.memWriteValueTask.ownedEventId, eventObj->EventId_());
+    EXPECT_EQ(eventObj->idMap_[eventObj->EventId_()], 1U);
 
     EXPECT_EQ(rtEventDestroy(event), RT_ERROR_NONE);
     EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
@@ -238,36 +255,67 @@ TEST_F(ExternalEventTaskTest910B, NormalWaitSoftwareEventUsesMemWaitValueTask)
     EXPECT_EQ(waitTask->u.memWaitValueTask.devAddr, RtPtrToValue(eventObj->GetEventAddr()));
     EXPECT_EQ(waitTask->u.memWaitValueTask.value, 1U);
     EXPECT_EQ(waitTask->u.memWaitValueTask.awSize, RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT);
-    EXPECT_EQ(waitTask->u.memWaitValueTask.retainedEventId, 7);
+    EXPECT_EQ(waitTask->u.memWaitValueTask.ownedEventId, 7);
+    EXPECT_EQ(eventObj->idMap_[7], 1U);
 
     EXPECT_EQ(rtEventDestroy(event), RT_ERROR_NONE);
     EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
 }
 
-TEST_F(ExternalEventTaskTest910B, ExternalWaitCompleteClearsRetainedEventIdBeforeUninit)
+TEST_F(ExternalEventTaskTest910B, ExternalWaitUninitReleasesOwnedEventId)
 {
     TaskInfo taskInfo = {};
     rtStream_t stream = nullptr;
     Event event(nullptr, 0, nullptr);
-    constexpr int32_t retainedEventId = 65537;
+    constexpr int32_t ownedEventId = 65537;
     ASSERT_EQ(rtStreamCreate(&stream, 0), RT_ERROR_NONE);
     Stream* streamObj = rt_ut::UnwrapOrNull<Stream>(stream);
     ASSERT_NE(streamObj, nullptr);
 
     event.device_ = streamObj->Device_();
-    event.EventIdCountAdd(retainedEventId);
-    event.PublishSoftwareRecordResource(nullptr, retainedEventId);
+    event.EventIdCountAdd(ownedEventId);
+    event.PublishSoftwareRecordResource(nullptr, ownedEventId);
     InitByStream(&taskInfo, streamObj);
     taskInfo.type = TS_TASK_TYPE_MEM_WAIT_VALUE;
     taskInfo.u.memWaitValueTask.event = &event;
-    taskInfo.u.memWaitValueTask.retainedEventId = retainedEventId;
-
+    taskInfo.u.memWaitValueTask.ownedEventId = ownedEventId;
     DoCompleteSuccessForMemWaitValueTask(&taskInfo, streamObj->Device_()->Id_());
 
-    EXPECT_EQ(taskInfo.u.memWaitValueTask.retainedEventId, INVALID_EVENT_ID);
+    EXPECT_EQ(taskInfo.u.memWaitValueTask.ownedEventId, ownedEventId);
+    EXPECT_EQ(event.idMap_[ownedEventId], 1U);
     MemWaitTaskUnInit(&taskInfo);
+    EXPECT_EQ(taskInfo.u.memWaitValueTask.ownedEventId, INVALID_EVENT_ID);
+    EXPECT_TRUE(event.idMap_.empty());
     event.device_ = nullptr;
     EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
+}
+
+TEST_F(ExternalEventTaskTest910B, MemWriteRegistrationReleasesPendingDestroyOnUninit)
+{
+    rtEvent_t eventHandle = nullptr;
+    ASSERT_EQ(rtEventCreate(&eventHandle), RT_ERROR_NONE);
+    Event* event = rt_ut::UnwrapOrNull<Event>(eventHandle);
+    ASSERT_NE(event, nullptr);
+    ASSERT_EQ(event->TrySwitchToSoftwareMode(), RT_ERROR_NONE);
+    constexpr int32_t eventId = 41;
+    event->PublishSoftwareRecordResource(nullptr, eventId);
+    event->EventIdCountAdd(eventId);
+    Event* owner = event;
+    TryToFreeEventIdAndDestroyEvent(&owner, eventId, true);
+    ASSERT_EQ(owner, event);
+    TaskInfo task = {};
+    task.type = TS_TASK_TYPE_MEM_WRITE_VALUE;
+    task.u.memWriteValueTask.event = event;
+    task.u.memWriteValueTask.ownedEventId = eventId;
+    auto uninit = g_taskFuncArrays[CHIP_910_B_93].taskUnInitFunc[task.type];
+    ASSERT_EQ(uninit, &MemWriteTaskUnInit);
+    RawDevice* device = static_cast<RawDevice*>(event->Device_());
+    DoCompleteSuccess(&task, 0U);
+    EXPECT_EQ(event->idMap_[eventId], 1U);
+    uninit(&task);
+    EXPECT_EQ(task.u.memWriteValueTask.event, nullptr);
+    EXPECT_EQ(task.u.memWriteValueTask.ownedEventId, INVALID_EVENT_ID);
+    EXPECT_EQ(device->events_.find(event), device->events_.end());
 }
 
 TEST_F(ExternalEventTaskTest910B, NormalResetSoftwareEventUsesMemWriteValueTask)
@@ -334,6 +382,29 @@ TEST_F(ExternalEventTaskTest910B, PublishSoftwareRecordResourceLifetime)
     eventObj->SetEventAddr(nullptr);
     eventObj->SetEventId(INVALID_EVENT_ID);
     EXPECT_EQ(rtEventDestroy(event), RT_ERROR_NONE);
+}
+
+TEST_F(ExternalEventTaskTest910B, CompleteReleaseFreesOldSoftwareGenerationOnly)
+{
+    rtEvent_t eventHandle = nullptr;
+    uint8_t oldRecordValue = 1U;
+    uint8_t currentRecordValue = 1U;
+    ASSERT_EQ(rtEventCreateExWithFlag(&eventHandle, RT_EVENT_DEFAULT), RT_ERROR_NONE);
+    Event* event = rt_ut::UnwrapOrNull<Event>(eventHandle);
+    ASSERT_NE(event, nullptr);
+    ASSERT_EQ(event->TrySwitchToSoftwareMode(), RT_ERROR_NONE);
+    event->PublishSoftwareRecordResource(&oldRecordValue, 7);
+    event->EventIdCountAdd(7);
+    event->PublishSoftwareRecordResource(&currentRecordValue, 8);
+    MOCKER_CPP_VIRTUAL(event->Device_(), &Device::FreeExpandingPoolEvent).expects(once()).with(eq(7));
+    Event* owner = event;
+    TryToFreeEventIdAndDestroyEvent(&owner, 7, false);
+    EXPECT_EQ(event->idMap_.find(7), event->idMap_.end());
+    EXPECT_EQ(event->GetEventAddr(), &currentRecordValue);
+    EXPECT_EQ(event->EventId_(), 8);
+    event->SetEventAddr(nullptr);
+    event->SetEventId(INVALID_EVENT_ID);
+    EXPECT_EQ(rtEventDestroy(eventHandle), RT_ERROR_NONE);
 }
 
 TEST_F(ExternalEventTaskTest910B, PublishSoftwareRecordResourceFreesStaleEvent)
@@ -421,6 +492,7 @@ TEST_F(ExternalEventTaskTest910B, SoftwareEventWaitSubmitFailureRecyclesTask)
     MOCKER_CPP_VIRTUAL(streamObj->Device_(), &Device::SubmitTask).stubs().will(returnValue(RT_ERROR_DRV_ERR));
 
     EXPECT_NE(eventObj->Wait(streamObj, static_cast<uint32_t>(-1)), RT_ERROR_NONE);
+    EXPECT_TRUE(eventObj->idMap_.empty());
 
     eventObj->SetEventAddr(nullptr);
     eventObj->SetEventId(INVALID_EVENT_ID);
@@ -428,7 +500,7 @@ TEST_F(ExternalEventTaskTest910B, SoftwareEventWaitSubmitFailureRecyclesTask)
     EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
 }
 
-TEST_F(ExternalEventTaskTest910B, NotifyWaitTakesExternalWaitRetainedOwner)
+TEST_F(ExternalEventTaskTest910B, NotifyWaitOwnerAllocationFailureKeepsReplayResources)
 {
     rtStream_t stream = nullptr;
     ASSERT_EQ(rtStreamCreate(&stream, 0), RT_ERROR_NONE);
@@ -436,13 +508,16 @@ TEST_F(ExternalEventTaskTest910B, NotifyWaitTakesExternalWaitRetainedOwner)
     ASSERT_NE(streamObj, nullptr);
     Notify notify(0, 0U);
     notify.notifyid_ = 0U;
+    CaptureModel captureModel;
+    captureModel.context_ = streamObj->Context_();
     std::vector<EventResource> retainedResources;
     retainedResources.push_back({nullptr, 0U, INVALID_EVENT_ID});
-    MOCKER_CPP_VIRTUAL(streamObj->Device_(), &Device::SubmitTask).stubs().will(returnValue(RT_ERROR_NONE));
+    captureModel.curReplayExternalEventsRes_ = &retainedResources;
+    MOCKER(static_cast<NothrowNewFunc>(&operator new)).expects(once()).will(invoke(NothrowNewFail));
 
-    EXPECT_EQ(notify.Wait(streamObj, 0U, true, nullptr, &retainedResources), RT_ERROR_NONE);
+    EXPECT_EQ(notify.Wait(streamObj, 0U, true, &captureModel), RT_ERROR_MEMORY_ALLOCATION);
 
-    EXPECT_TRUE(retainedResources.empty());
+    EXPECT_EQ(retainedResources.size(), 1U);
     EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
 }
 
@@ -455,15 +530,18 @@ TEST_F(ExternalEventTaskTest910B, NotifyWaitSubmitFailureReleasesExternalWaitRet
     Notify notify(0, 0U);
     notify.notifyid_ = 0U;
     Event event(streamObj->Device_(), RT_EVENT_DEFAULT, nullptr);
+    CaptureModel captureModel;
+    captureModel.context_ = streamObj->Context_();
     uint8_t eventStatus = 1U;
     const int32_t eventId = 7;
     EnableSoftwareRecord(&event, &eventStatus, eventId);
     event.EventIdCountAdd(eventId);
     std::vector<EventResource> retainedResources;
     retainedResources.push_back({&event, reinterpret_cast<uint64_t>(&eventStatus), eventId});
+    captureModel.curReplayExternalEventsRes_ = &retainedResources;
     MOCKER_CPP_VIRTUAL(streamObj->Device_(), &Device::SubmitTask).stubs().will(returnValue(RT_ERROR_DRV_ERR));
 
-    EXPECT_EQ(notify.Wait(streamObj, 0U, true, nullptr, &retainedResources), RT_ERROR_DRV_ERR);
+    EXPECT_EQ(notify.Wait(streamObj, 0U, true, &captureModel), RT_ERROR_DRV_ERR);
 
     EXPECT_TRUE(retainedResources.empty());
     EXPECT_EQ(event.idMap_.find(eventId), event.idMap_.end());

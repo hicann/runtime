@@ -11,7 +11,6 @@
 #define __CCE_RUNTIME_NOTIFY_HPP__
 
 #include <string>
-#include <vector>
 #include "context.hpp"
 #include "device.hpp"
 #include "runtime_handle_guard.h"
@@ -25,8 +24,6 @@ namespace runtime {
 constexpr uint32_t RT_NOTIFY_REVISED_OFFSET = 15U;
 class Context;
 class Device;
-struct EventResource;
-
 class Notify : public NoCopy {
 public:
     Notify(const uint32_t devId, const uint32_t taskSchId);
@@ -40,7 +37,7 @@ public:
     rtError_t ReAllocId() const;
     rtError_t Wait(
         Stream* const streamIn, const uint32_t timeOut, const bool isEndGraphNotify = false,
-        Model* const captureModel = nullptr, std::vector<EventResource>* externalWaitRetainedResources = nullptr);
+        Model* const captureModel = nullptr);
     rtError_t Reset(Stream* const streamIn) const;
     rtError_t CreateIpcNotify(char_t* const ipcNotifyName, const uint32_t len);
     rtError_t OpenIpcNotify(const char_t* const ipcNotifyName, uint32_t flag);

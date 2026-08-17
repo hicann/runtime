@@ -19,14 +19,13 @@
 #include "profiler_c.hpp"
 #include "rt_log.h"
 #include "ctrl_sq.hpp"
-#include <memory>
 
 namespace cce {
 namespace runtime {
 
 rtError_t NtyWait(
     Notify* const inNotify, Stream* const streamIn, const uint32_t timeOut, const bool isEndGraphNotify,
-    Model* const captureModel, std::vector<EventResource>* externalWaitRetainedResources)
+    Model* const captureModel)
 {
     TaskInfo* waitTask = nullptr;
     rtError_t error = CheckTaskCanSend(streamIn);
@@ -49,17 +48,10 @@ rtError_t NtyWait(
     ERROR_RETURN(
         error, "Failed to initialize notify wait task, stream_id=%d, retCode=%#x", streamIn->Id_(),
         static_cast<uint32_t>(error));
-    std::unique_ptr<std::vector<EventResource>> retainedOwner;
-    if ((externalWaitRetainedResources != nullptr) && (!externalWaitRetainedResources->empty())) {
-        retainedOwner.reset(new (std::nothrow) std::vector<EventResource>(*externalWaitRetainedResources));
-        if (retainedOwner == nullptr) {
-            ERROR_RETURN(
-                RT_ERROR_MEMORY_ALLOCATION, "Failed to allocate external wait retained owner, stream_id=%d.",
-                streamIn->Id_());
-        }
-        waitTask->u.notifywaitTask.externalWaitRetainedResources = retainedOwner.release();
-        externalWaitRetainedResources->clear();
-    }
+    error = AttachExternalEventsRes(waitTask, captureModel);
+    ERROR_RETURN(
+        error, "Failed to attach external events resources to graph end notify wait, stream_id=%d, retCode=%#x.",
+        streamIn->Id_(), static_cast<uint32_t>(error));
     RT_LOG(RT_LOG_INFO, "stream_id=%d notify_id=%u.", streamIn->Id_(), inNotify->GetNotifyId());
     waitTask->stmArgPos = static_cast<DavidStream*>(dstStm)->GetArgPos();
     waitTask->u.notifywaitTask.isEndGraphNotify = isEndGraphNotify;

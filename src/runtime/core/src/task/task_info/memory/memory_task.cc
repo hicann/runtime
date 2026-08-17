@@ -19,6 +19,7 @@
 #include "inner_thread_local.hpp"
 #include "model_update_task.h"
 #include "event.hpp"
+#include "event_task.h"
 #include "kernel_utils.hpp"
 #include "stream_jetty_handler.h"
 #include "capture_model_utils.hpp"
@@ -282,10 +283,22 @@ rtError_t MemWriteValueTaskInit(TaskInfo* taskInfo, const void* const devAddr, c
 {
     TaskCommonInfoInit(taskInfo);
     MemWriteValueTaskInfo* memWriteValueTask = &taskInfo->u.memWriteValueTask;
+    memWriteValueTask->event = nullptr;
+    memWriteValueTask->ownedEventId = INVALID_EVENT_ID;
     memWriteValueTask->devAddr = RtPtrToValue(devAddr);
     memWriteValueTask->value = value;
 
     return RT_ERROR_NONE;
+}
+
+void MemWriteTaskUnInit(TaskInfo* taskInfo)
+{
+    MemWriteValueTaskInfo* memWriteValueTask = &taskInfo->u.memWriteValueTask;
+    const int32_t eventId = memWriteValueTask->ownedEventId;
+    memWriteValueTask->ownedEventId = INVALID_EVENT_ID;
+    if ((memWriteValueTask->event != nullptr) && (eventId != INVALID_EVENT_ID)) {
+        TryToFreeEventIdAndDestroyEvent(&memWriteValueTask->event, eventId, false);
+    }
 }
 
 #endif
@@ -306,11 +319,10 @@ void MemWaitTaskUnInit(TaskInfo* taskInfo)
 
     memWaitValueTask->profDisableStatusAddr = 0UL;
 
-    if (memWaitValueTask->retainedEventId != INVALID_EVENT_ID) {
-        COND_PROC(
-            memWaitValueTask->event != nullptr,
-            memWaitValueTask->event->EventIdCountSub(memWaitValueTask->retainedEventId));
-        memWaitValueTask->retainedEventId = INVALID_EVENT_ID;
+    const int32_t eventId = memWaitValueTask->ownedEventId;
+    memWaitValueTask->ownedEventId = INVALID_EVENT_ID;
+    if ((memWaitValueTask->event != nullptr) && (eventId != INVALID_EVENT_ID)) {
+        TryToFreeEventIdAndDestroyEvent(&memWaitValueTask->event, eventId, false);
     }
 
     memWaitValueTask->funCallMemSize2 = 0UL;
@@ -400,7 +412,7 @@ rtError_t MemWaitValueTaskInit(TaskInfo* taskInfo, const void* const devAddr, co
     memWaitValueTask->funcCallSvmMem2 = nullptr;
     memWaitValueTask->writeValueAddr = nullptr;
     memWaitValueTask->funCallMemSize2 = 0ULL;
-    memWaitValueTask->retainedEventId = INVALID_EVENT_ID;
+    memWaitValueTask->ownedEventId = INVALID_EVENT_ID;
     memWaitValueTask->awSize = RT_STARS_WRITE_VALUE_SIZE_TYPE_64BIT;
     rtError_t ret = AllocFuncCallMemForMemWaitTask(taskInfo);
     ERROR_RETURN(ret, "Alloc func call svm failed, retCode=%#x.", ret);

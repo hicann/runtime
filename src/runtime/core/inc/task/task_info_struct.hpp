@@ -353,8 +353,8 @@ struct NotifyWaitTaskInfo {
     bool isEndGraphNotify;
     Model* captureModel;
     CountNotifyWaitInfo cntNtfyInfo;
-    // endGraph notify执行完成后释放external wait保留的producer事件资源
-    std::vector<EventResource>* externalWaitRetainedResources;
+    // endGraph notify执行完成后释放external record和wait事件资源
+    std::vector<EventResource>* externalEventsRes;
 };
 
 struct LabelSetTaskInfo {
@@ -473,6 +473,8 @@ struct MemWriteValueTaskInfo {
     uint64_t value;
     uint16_t curIndex;
     uint16_t awSize;
+    // 当前任务持有的Software Event ID
+    int32_t ownedEventId;
 };
 
 struct SqeUpdateTaskInfo {

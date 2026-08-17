@@ -52,6 +52,15 @@ using namespace testing;
 using namespace cce::runtime;
 extern int64_t g_device_driver_version_stub;
 static rtChipType_t g_chipType;
+
+static rtError_t CheckRecordOwnerThenFail(TaskInfo* task, Stream*)
+{
+    DavidEvent* event = static_cast<DavidEvent*>(task->u.memWriteValueTask.event);
+    EXPECT_EQ(task->u.memWriteValueTask.ownedEventId, event->EventId_());
+    EXPECT_EQ(event->idMap_[event->EventId_()], 1U);
+    return RT_ERROR_DRV_ERR;
+}
+
 static drvError_t stubDavidGetDeviceInfo(uint32_t devId, int32_t moduleType, int32_t infoType, int64_t* value)
 {
     if (value) {
@@ -753,6 +762,29 @@ TEST_F(EventTestDavid, TestDavidUpdateAndTryToDestroyEvent1)
     DavidUpdateAndTryToDestroyEvent(&task, &evtTmp, DavidTaskMapType::TASK_MAP_TYPE_WAIT_MAP);
 }
 
+TEST_F(EventTestDavid, HardwareAndSoftwareDestroyUseIsolatedOwnership)
+{
+    TaskInfo hardwareTask = {};
+    InitByStream(&hardwareTask, stream_);
+    DavidEvent hardwareEvent(device_, RT_EVENT_DEFAULT, nullptr, false);
+    ASSERT_EQ(DavidEventRecordTaskInit(&hardwareTask, &hardwareEvent, hardwareEvent.EventId_()), RT_ERROR_NONE);
+    hardwareEvent.InsertRecordResetToMap(&hardwareTask);
+    hardwareEvent.idMap_[7] = 1U;
+
+    EXPECT_FALSE(hardwareEvent.TryFreeEventIdAndCheckCanBeDelete(hardwareEvent.EventId_(), true));
+    EXPECT_TRUE(hardwareEvent.DavidUpdateRecordMapAndDestroyEvent(&hardwareTask));
+    hardwareEvent.idMap_.clear();
+
+    DavidEvent softwareEvent(device_, RT_EVENT_DEFAULT, nullptr, false);
+    softwareEvent.SoftwareModeEnable();
+    softwareEvent.EventIdCountAdd(7);
+    softwareEvent.InsertRecordResetToMap(&hardwareTask);
+    EXPECT_FALSE(softwareEvent.TryFreeEventIdAndCheckCanBeDelete(7, true));
+    EXPECT_TRUE(softwareEvent.TryFreeEventIdAndCheckCanBeDelete(7, false));
+    EXPECT_FALSE(softwareEvent.IsEventTaskEmpty());
+    softwareEvent.DeleteRecordResetFromMap(&hardwareTask);
+}
+
 TEST_F(EventTestDavid, event_recordnull)
 {
     rtError_t error;
@@ -925,18 +957,24 @@ TEST_F(EventTestDavid, EvtRecordSoftwareMode1)
 
     rtEventCreate(&event);
     DavidEvent* evt = static_cast<DavidEvent*>(rt_ut::UnwrapOrNull<Event>(event));
+    evt->SoftwareModeEnable();
     rtStreamCreate(&stream, 0);
     Stream* stm = rt_ut::UnwrapOrNull<Stream>(stream);
-
+    TaskInfo task = {};
+    TaskInfo* taskOut = &task;
     MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
-    TaskInfo* fakeTask = new TaskInfo();
-    MOCKER(DavidSendTask).stubs().will(returnValue(RT_ERROR_DRV_ERR));
+    MOCKER(AllocTaskInfoForCapture)
+        .stubs()
+        .with(outBoundP(&taskOut), mockcpp::any(), mockcpp::any(), mockcpp::any())
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER(DavidSendTask).stubs().will(invoke(CheckRecordOwnerThenFail));
+
     rtError_t error = EvtRecordSoftwareMode(evt, stm);
     EXPECT_NE(error, RT_ERROR_NONE);
-
+    EXPECT_EQ(task.u.memWriteValueTask.ownedEventId, INVALID_EVENT_ID);
+    EXPECT_TRUE(evt->idMap_.empty());
     rtEventDestroy(event);
     rtStreamDestroy(stream);
-    delete fakeTask;
 }
 
 TEST_F(EventTestDavid, EvtRecordSoftwareMode2)
@@ -960,12 +998,13 @@ TEST_F(EventTestDavid, EvtWaitSoftwareMode1)
 
     rtEventCreate(&event);
     DavidEvent* evt = static_cast<DavidEvent*>(rt_ut::UnwrapOrNull<Event>(event));
+    evt->SoftwareModeEnable();
     rtStreamCreate(&stream, 0);
     Stream* stm = rt_ut::UnwrapOrNull<Stream>(stream);
 
     MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
     void* eventAddr = malloc(RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT);
-    evt->SetEventAddr(eventAddr);
+    evt->PublishSoftwareRecordResource(eventAddr, 7);
 
     TaskInfo task1 = {};
     TaskInfo* tmpTask = &task1;
@@ -979,6 +1018,8 @@ TEST_F(EventTestDavid, EvtWaitSoftwareMode1)
 
     error = EvtWaitSoftwareMode(evt, stm);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    TaskUnInitProc(&task1);
+    EXPECT_TRUE(evt->idMap_.empty());
 
     free(eventAddr);
     rtEventDestroy(event);
@@ -1105,12 +1146,13 @@ TEST_F(EventTestDavid, EvtWaitSoftwareMode7)
 
     rtEventCreate(&event);
     DavidEvent* evt = static_cast<DavidEvent*>(rt_ut::UnwrapOrNull<Event>(event));
+    evt->SoftwareModeEnable();
     rtStreamCreate(&stream, 0);
     Stream* stm = rt_ut::UnwrapOrNull<Stream>(stream);
 
     MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
     void* eventAddr = malloc(RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT);
-    evt->SetEventAddr(eventAddr);
+    evt->PublishSoftwareRecordResource(eventAddr, 7);
 
     TaskInfo task1 = {};
     TaskInfo* tmpTask = &task1;
@@ -1123,7 +1165,10 @@ TEST_F(EventTestDavid, EvtWaitSoftwareMode7)
 
     error = EvtWaitSoftwareMode(evt, stm);
     EXPECT_NE(error, RT_ERROR_NONE);
-
+    EXPECT_EQ(task1.u.memWaitValueTask.ownedEventId, INVALID_EVENT_ID);
+    EXPECT_TRUE(evt->idMap_.empty());
+    evt->SetEventAddr(nullptr);
+    evt->SetEventId(INVALID_EVENT_ID);
     free(eventAddr);
     rtEventDestroy(event);
     rtStreamDestroy(stream);
@@ -1137,12 +1182,13 @@ TEST_F(EventTestDavid, EvtWaitSoftwareMode8)
 
     rtEventCreate(&event);
     DavidEvent* evt = static_cast<DavidEvent*>(rt_ut::UnwrapOrNull<Event>(event));
+    evt->SoftwareModeEnable();
     rtStreamCreate(&stream, 0);
     Stream* stm = rt_ut::UnwrapOrNull<Stream>(stream);
 
     MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
     void* eventAddr = malloc(RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT);
-    evt->SetEventAddr(eventAddr);
+    evt->PublishSoftwareRecordResource(eventAddr, 7);
 
     TaskInfo task1 = {};
     TaskInfo* tmpTask = &task1;
@@ -1156,7 +1202,13 @@ TEST_F(EventTestDavid, EvtWaitSoftwareMode8)
 
     error = EvtWaitSoftwareMode(evt, stm);
     EXPECT_NE(error, RT_ERROR_NONE);
+    EXPECT_EQ(task1.u.memWaitValueTask.ownedEventId, 7);
+    EXPECT_EQ(evt->idMap_[7], 1U);
+    TaskUnInitProc(&task1);
 
+    EXPECT_TRUE(evt->idMap_.empty());
+    evt->SetEventAddr(nullptr);
+    evt->SetEventId(INVALID_EVENT_ID);
     free(eventAddr);
     rtEventDestroy(event);
     rtStreamDestroy(stream);

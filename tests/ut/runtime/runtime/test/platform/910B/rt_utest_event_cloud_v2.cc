@@ -135,20 +135,21 @@ TEST(EventNotifyWaitTaskTest, NotifyWaitTaskUnInitClearsExternalWaitRetainedOwne
     TaskInfo task = {};
     auto* resources = new std::vector<EventResource>;
     resources->push_back({nullptr, 0U, INVALID_EVENT_ID});
-    task.u.notifywaitTask.externalWaitRetainedResources = resources;
+    task.u.notifywaitTask.externalEventsRes = resources;
 
     NotifyWaitTaskUnInit(&task);
 
-    EXPECT_EQ(task.u.notifywaitTask.externalWaitRetainedResources, nullptr);
-    NotifyWaitTaskUnInit(&task);
+    EXPECT_EQ(task.u.notifywaitTask.externalEventsRes, nullptr);
 }
 
-TEST_F(EventTest910B, NotifyWaitTaskUnInitReleasesRetainedEventWithoutFreeingCurrentId)
+TEST_F(EventTest910B, NotifyWaitCompletionReleasesRetainedEventsAndUninitIsIdempotent)
 {
+    rtStream_t stream = nullptr;
+    ASSERT_EQ(rtStreamCreate(&stream, 0), RT_ERROR_NONE);
     Event event(device_, RT_EVENT_DEFAULT, nullptr);
-    event.isNewMode_ = true;
-    event.isIdAllocFromDrv_ = true;
-    event.SetEventId(1004);
+    event.SoftwareModeEnable();
+    event.PublishSoftwareRecordResource(RtValueToPtr<void*>(0x12340000U), 1004);
+    event.EventIdCountAdd(1004);
     event.EventIdCountAdd(1004);
     event.SetRecord(true);
     event.SetHasReset(false);
@@ -156,12 +157,21 @@ TEST_F(EventTest910B, NotifyWaitTaskUnInitReleasesRetainedEventWithoutFreeingCur
     TaskInfo task = {};
     auto* resources = new std::vector<EventResource>;
     resources->push_back({&event, 0x12340000U, 1004});
-    task.u.notifywaitTask.externalWaitRetainedResources = resources;
+    resources->push_back({&event, 0x12340000U, 1004});
+    task.u.notifywaitTask.externalEventsRes = resources;
+    task.u.notifywaitTask.isEndGraphNotify = true;
+    CaptureModel captureModel;
+    captureModel.context_ = rt_ut::UnwrapOrNull<Stream>(stream)->Context_();
+    task.u.notifywaitTask.captureModel = &captureModel;
+    task.stream = rt_ut::UnwrapOrNull<Stream>(stream);
 
-    NotifyWaitTaskUnInit(&task);
+    DoCompleteSuccessForNotifyWaitTask(&task, device_->Id_());
 
-    EXPECT_EQ(task.u.notifywaitTask.externalWaitRetainedResources, nullptr);
+    EXPECT_EQ(task.u.notifywaitTask.externalEventsRes, nullptr);
     EXPECT_EQ(event.EventId_(), 1004);
+    EXPECT_TRUE(event.idMap_.empty());
+    NotifyWaitTaskUnInit(&task);
+    EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
 }
 
 TEST_F(EventTest910B, NotifyWaitTaskUnInitSkipsRetainedEventWhenLaunchEventAddrIsZero)
@@ -175,11 +185,11 @@ TEST_F(EventTest910B, NotifyWaitTaskUnInitSkipsRetainedEventWhenLaunchEventAddrI
     TaskInfo task = {};
     auto* resources = new std::vector<EventResource>;
     resources->push_back({&event, 0U, 1004});
-    task.u.notifywaitTask.externalWaitRetainedResources = resources;
+    task.u.notifywaitTask.externalEventsRes = resources;
 
     NotifyWaitTaskUnInit(&task);
 
-    EXPECT_EQ(task.u.notifywaitTask.externalWaitRetainedResources, nullptr);
+    EXPECT_EQ(task.u.notifywaitTask.externalEventsRes, nullptr);
     EXPECT_EQ(event.EventId_(), 1004);
 }
 

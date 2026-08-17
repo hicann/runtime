@@ -91,9 +91,9 @@ rtError_t MdlUnBindTaskSubmit(Model* const mdl, Stream* const streamIn, const bo
 
 rtError_t NtyWait(
     Notify* const inNotify, Stream* const streamIn, const uint32_t timeOut, const bool isEndGraphNotify,
-    Model* const captureModel, std::vector<EventResource>* externalWaitRetainedResources)
+    Model* const captureModel)
 {
-    return inNotify->Wait(streamIn, timeOut, isEndGraphNotify, captureModel, externalWaitRetainedResources);
+    return inNotify->Wait(streamIn, timeOut, isEndGraphNotify, captureModel);
 }
 
 rtError_t ModelSerialSchedPostProc(Stream* const stm, Notify* const notify, Model* const model)

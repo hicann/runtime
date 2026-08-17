@@ -89,6 +89,11 @@ rtError_t EvtRecordSoftwareMode(Event* const evt, Stream* const stm)
     MemWriteValueTaskInfo* memWriteValueTask = &tsk->u.memWriteValueTask;
     memWriteValueTask->event = davidEvt;
     memWriteValueTask->awSize = RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT;
+    if (tsk->type == TS_TASK_TYPE_MEM_WRITE_VALUE) {
+        tsk->needPostProc = true; // starsv2使用此属性判断任务结束后是否需要走uninit流程
+        davidEvt->EventIdCountAdd(newEventId);
+        memWriteValueTask->ownedEventId = newEventId;
+    }
 
     tsk->stmArgPos = (static_cast<DavidStream*>(dstStm))->GetArgPos();
     error = DavidSendTask(tsk, dstStm);
@@ -232,6 +237,12 @@ rtError_t EvtWaitSoftwareMode(Event* const evt, Stream* const stm)
     MemWaitValueTaskInfo* memWaitValueTask = &tsk->u.memWaitValueTask;
     memWaitValueTask->event = davidEvt;
     memWaitValueTask->awSize = RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT;
+    if (tsk->type == TS_TASK_TYPE_MEM_WAIT_VALUE) {
+        tsk->needPostProc = true; // starsv2使用此属性判断任务结束后是否需要走uninit流程
+        const int32_t eventId = davidEvt->EventId_();
+        davidEvt->EventIdCountAdd(eventId);
+        memWaitValueTask->ownedEventId = eventId;
+    }
 
     tsk->stmArgPos = (static_cast<DavidStream*>(dstStm))->GetArgPos();
     error = DavidSendTask(tsk, dstStm);

@@ -48,7 +48,7 @@ static rtError_t SubmitMemWaitValueTask(Event* const event, Stream* const stm, c
     if (!captureWait) {
         const int32_t eventId = event->EventId_();
         event->EventIdCountAdd(eventId);
-        memWaitValueTask->retainedEventId = eventId;
+        memWaitValueTask->ownedEventId = eventId;
     }
     error = dev->SubmitTask(tsk);
     ERROR_RETURN_MSG_INNER(error, "Failed to submit mem wait task, retCode=%#x.", static_cast<uint32_t>(error));
@@ -81,6 +81,10 @@ rtError_t Event::RecordSoftwareEvent(Stream* const stm)
     MemWriteValueTaskInfo* memWriteValueTask = &tsk->u.memWriteValueTask;
     memWriteValueTask->event = this;
     memWriteValueTask->awSize = RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT;
+    if (tsk->type == TS_TASK_TYPE_MEM_WRITE_VALUE) {
+        EventIdCountAdd(newEventId);
+        memWriteValueTask->ownedEventId = newEventId;
+    }
     error = dev->SubmitTask(tsk);
     ERROR_RETURN_MSG_INNER(error, "Failed to submit capture task, retCode=%#x.", static_cast<uint32_t>(error));
     tskErrRecycle.ReleaseGuard();

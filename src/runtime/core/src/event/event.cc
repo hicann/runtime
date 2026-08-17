@@ -214,7 +214,9 @@ bool Event::TryFreeEventIdAndCheckCanBeDelete(const int32_t id, bool isNeedDestr
         RT_LOG_INFO, "device_id=%u, event_id=%d, map_count=%d, isNewMode=%d, isIdFromDrv=%d, newestId=%d",
         device_->Id_(), id, idMap_[id], isNewMode_, isIdAllocFromDrv_, eventId_);
     if (idMap_[id] == 0) { // delete
-        if (isIdAllocFromDrv_ && (isNewMode_ || eventId_ != id)) {
+        if ((!IsHardwareMode()) && eventId_ != id) {
+            device_->FreeExpandingPoolEvent(id);
+        } else if (isIdAllocFromDrv_ && (isNewMode_ || eventId_ != id)) {
             if (device_->IsSupportEventPool()) {
                 device_->PushNextPoolFreeEventId(id);
                 RT_LOG(RT_LOG_INFO, "pool push recycle event_id=%d.", id);
