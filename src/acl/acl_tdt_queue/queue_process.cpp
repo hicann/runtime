@@ -428,7 +428,7 @@ aclError QueueProcessor::QueryAllocGroup()
     ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtMemGrpQuery(&input, &output), rtMemGrpQuery);
     grpNum = output.resultNum;
     if ((grpNum == 0U) || (output.groupsOfProc == nullptr)) {
-        ACL_LOG_ERROR("[Check] grpNum is zero or groupsOfProc is nullptr, grpNum is %zu", grpNum);
+        ACL_LOG_ERROR("[Check] grpNum is 0 or groupsOfProc is nullptr, grpNum is %zu", grpNum);
         return ACL_ERROR_FAILURE;
     }
     for (size_t num = 0U; num < grpNum; num++) {

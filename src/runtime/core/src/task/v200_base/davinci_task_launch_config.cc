@@ -84,14 +84,14 @@ static rtError_t CheckLaunchCfg(const LaunchTaskCfgInfo_t* const launchTaskCfg)
     if (((groupDim != 0U) && (groupBlockDim == 0U)) || ((groupDim == 0U) && (groupBlockDim != 0U))) {
         RT_LOG_OUTER_MSG_WITH_FUNC_DESC(
             ErrorCode::EE1017, "Checking the parameter configuration before kernel delivery", "groupDim",
-            "groupDim and groupBlockDim must both be zero or both non-zero");
+            "groupDim and groupBlockDim must both be 0 or both non-zero");
         return RT_ERROR_INVALID_VALUE;
     }
 
     if ((blockDim == 0) && (groupDim == 0)) {
         RT_LOG_OUTER_MSG_WITH_FUNC_DESC(
             ErrorCode::EE1017, "Checking the parameter configuration before kernel delivery", "blockDim",
-            "blockDim and groupDim cannot both be zero");
+            "blockDim and groupDim cannot both be 0");
         return RT_ERROR_INVALID_VALUE;
     }
 

@@ -420,7 +420,7 @@ rtError_t IpcEvent::IpcEventWait(Stream* const stm)
     IpcVaLock();
     if (ipcHandleVa_->deviceMemRef[ipcHandleVa_->currentIndex] == 0U) {
         IpcVaUnLock();
-        RT_LOG(RT_LOG_INFO, "currentIndex is zero, record finished or wait first, return success.");
+        RT_LOG(RT_LOG_INFO, "currentIndex is 0, record finished or wait first, return success.");
         return error;
     }
     ipcHandleVa_->deviceMemRef[ipcHandleVa_->currentIndex]++;
@@ -541,7 +541,7 @@ bool IpcEvent::TryFreeEventIdAndCheckCanBeDelete(const int32_t id, bool isNeedDe
         ipcHandleVa_->deviceMemRef[curIndex]--;
     } else {
         RT_LOG(
-            RT_LOG_ERROR, "device_id=%u, event_id=%u, current_id=%u, count already is zero", device_->Id_(), curIndex,
+            RT_LOG_ERROR, "device_id=%u, event_id=%u, current_id=%u, count already is 0", device_->Id_(), curIndex,
             ipcHandleVa_->currentIndex);
     }
     if (ipcHandleVa_->deviceMemRef[curIndex] == 0U) {

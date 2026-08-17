@@ -147,6 +147,7 @@
 - 日志内容中不得硬编码函数名，不得出现英文拼写错误。
 - 热路径不得引入高频日志。
 - 项目内错误日志宏必须使用正确，例如 `COND_RETURN_ERROR_MSG_INNER`、`RecordErrorLog` 等。
+- 日志和错误信息中表示数值的英文单词应统一使用阿拉伯数字：独立单词 `zero` 替换为 `0`（如 `count is zero` → `count is 0`、`greater than zero` → `greater than 0`）；连字符复合词（`zero-size`、`non-zero`、`divide-by-zero`、`zero-copy`）和技术术语（`zero copy`）不替换。
 
 ### 规则 24：修改公共接口时必须同步满足兼容性要求
 

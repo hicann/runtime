@@ -84,7 +84,7 @@ rtError_t IpcEvent::IpcEventWaitStarsV2(Stream* const stm)
     IpcVaLock();
     if (ipcHandleVa_->deviceMemRef[ipcHandleVa_->currentIndex] == 0U) {
         IpcVaUnLock();
-        RT_LOG(RT_LOG_INFO, "currentIndex is zero, record finished or wait first, return success.");
+        RT_LOG(RT_LOG_INFO, "currentIndex is 0, record finished or wait first, return success.");
         return RT_ERROR_NONE;
     }
     ipcHandleVa_->deviceMemRef[ipcHandleVa_->currentIndex]++;

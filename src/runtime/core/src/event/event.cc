@@ -133,7 +133,7 @@ void Event::EventIdCountSub(const int32_t id, bool isFreeId)
         if (idMap_[id] > 0U) {
             idMap_[id]--;
         } else {
-            RT_LOG(RT_LOG_ERROR, "event_id=%d, count already is zero", id);
+            RT_LOG(RT_LOG_ERROR, "event_id=%d, count already is 0", id);
         }
         if (idMap_[id] == 0U) {
             if (!IsHardwareMode()) {
@@ -206,7 +206,7 @@ bool Event::TryFreeEventIdAndCheckCanBeDelete(const int32_t id, bool isNeedDestr
     if (idMap_[id] > 0U) { // do complete success call
         idMap_[id]--;
     } else {
-        RT_LOG(RT_LOG_ERROR, "device_id=%u, event_id=%d, count already is zero", device_->Id_(), id);
+        RT_LOG(RT_LOG_ERROR, "device_id=%u, event_id=%d, count already is 0", device_->Id_(), id);
     }
     RT_LOG(
         RT_LOG_INFO, "device_id=%u, event_id=%d, map_count=%d, isNewMode=%d, isIdFromDrv=%d, newestId=%d",

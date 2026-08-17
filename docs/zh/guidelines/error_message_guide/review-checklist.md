@@ -116,6 +116,17 @@ COND_RETURN_AND_MSG_OUTER(!trueStream->IsModelStream(), RT_ERROR_STREAM_MODEL,
 
 > 注意：`COND_RETURN_AND_MSG_OUTER` 展开为 `RT_LOG_OUTER_MSG_IMPL`（不自动添加 `__func__`），因此此处手动传入 `__func__` 是正确的，与 3.1 的 WITH_FUNC 重复问题不同。
 
+### 3.4 日志中数值词汇未统一
+
+日志和错误信息字符串中，独立单词 `zero` 应替换为 `0`，连字符复合词（`zero-size`、`non-zero`、`divide-by-zero`、`zero-copy`）和技术术语（`zero copy`）不替换。
+
+```text
+// ✗ count is zero, greater than zero
+// ✓ count is 0, greater than 0
+// ✓ zero-size memcpy（连字符复合词不替换）
+// ✓ zero copy task（技术术语不替换）
+```
+
 ## 4. 源文件索引
 
 | 文件 | 作用 |

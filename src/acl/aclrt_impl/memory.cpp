@@ -359,7 +359,7 @@ aclError aclrtMallocInnerWithCfg(
                  "cfg->attrs must not be null when cfg->numAttrs is not 0"}));
         return ACL_ERROR_INVALID_PARAM;
     }
-    // size must be greater than zero
+    // size must be greater than 0
     ACL_REQUIRES_POSITIVE_REPORT(size);
 
     ACL_REQUIRES_RTS_OK(
@@ -491,7 +491,7 @@ aclError aclrtHostRegisterImpl(void* ptr, uint64_t size, aclrtHostRegisterType t
     ACL_LOG_DEBUG("start to execute aclrtHostRegister");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(ptr);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(devPtr);
-    // size must be greater than zero
+    // size must be greater than 0
     ACL_REQUIRES_POSITIVE_REPORT(size);
     ACL_REQUIRES_RTS_OK(rtsHostRegister(ptr, size, static_cast<rtHostRegisterType>(type), devPtr));
     return ACL_SUCCESS;
@@ -580,7 +580,7 @@ aclError aclrtMallocHostImpl(void** hostPtr, size_t size)
     ACL_ADD_APPLY_TOTAL_COUNT(acl::ACL_STATISTICS_MALLOC_FREE_HOST);
     ACL_LOG_DEBUG("start to execute aclrtMallocHost, size = %zu", size);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(hostPtr);
-    // size must be greater than zero
+    // size must be greater than 0
     ACL_REQUIRES_POSITIVE_REPORT(size);
     ACL_REQUIRES_RTS_OK(rtMallocHost(hostPtr, size, acl::APP_MODE_ID_U16));
     ACL_ADD_APPLY_SUCCESS_COUNT(acl::ACL_STATISTICS_MALLOC_FREE_HOST);
@@ -651,7 +651,7 @@ aclError aclrtMemcpyImpl(void* dst, size_t destMax, const void* src, size_t coun
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtMemcpy);
     if (count == 0UL) {
-        ACL_LOG_INFO("count is zero, no memory copy will be performed");
+        ACL_LOG_INFO("count is 0, no memory copy will be performed");
         return ACL_SUCCESS;
     }
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(dst);
@@ -686,7 +686,7 @@ aclError aclrtMemcpyAsyncImpl(
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtMemcpyAsync);
     if (count == 0UL) {
-        ACL_LOG_INFO("count is zero, no memory copy async will be performed");
+        ACL_LOG_INFO("count is 0, no memory copy async will be performed");
         return ACL_SUCCESS;
     }
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(dst);
@@ -1668,7 +1668,7 @@ aclError aclrtAllocBufImpl(aclrtMbuf* buf, size_t size)
     ACL_PROFILING_REG(acl::AclProfType::AclrtAllocBuf);
     ACL_LOG_INFO("start to execute aclrtAllocBuf, size is [%zu]", size);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(buf);
-    // size must be greater than zero
+    // size must be greater than 0
     ACL_REQUIRES_POSITIVE_REPORT(size);
     ACL_REQUIRES_RTS_OK(rtMbufAlloc(buf, size));
     return ACL_SUCCESS;
@@ -1719,7 +1719,7 @@ static aclError ValidateMemcpyBatchParams(
     for (size_t idx = 0UL; idx < numAttrs; idx++) {
         for (uint32_t i = 0U; i < rsvMaxSize; i++) {
             if (attrs[idx].rsv[i] != 0U) {
-                ACL_LOG_ERROR("rsv field of attrs[%zu] must be zero", idx);
+                ACL_LOG_ERROR("rsv field of attrs[%zu] must be 0", idx);
                 const std::string rsvVal = std::to_string(attrs[idx].rsv[i]);
                 acl::AclErrorLogManager::ReportInputError(
                     acl::INVALID_VALUE_MSG, std::vector<const char*>({"func", "value", "param", "expect"}),
@@ -2456,10 +2456,10 @@ aclError aclrtMemMapSelectedLinkImpl(void* virPtrDst, size_t size, void* virPtrS
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(virPtrDst);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(virPtrSrc);
     if (size == 0UL) {
-        ACL_LOG_ERROR("size is [%zu], size must be greater than zero", size);
+        ACL_LOG_ERROR("size is [%zu], size must be greater than 0", size);
         acl::AclErrorLogManager::ReportInputError(
             acl::INVALID_PARAM_MSG, std::vector<const char*>({"param", "value", "reason"}),
-            std::vector<const char*>({"size", std::to_string(size).c_str(), "size must be greater than zero"}));
+            std::vector<const char*>({"size", std::to_string(size).c_str(), "size must be greater than 0"}));
         return ACL_ERROR_INVALID_PARAM;
     }
     if (linkIdx > ACL_RT_MEM_LINK_IDX_1) {

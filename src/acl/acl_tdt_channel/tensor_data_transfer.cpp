@@ -723,7 +723,7 @@ aclError acltdtReceiveTensorV2(const acltdtChannelHandle* handle, acltdtDataset*
     }
     ACL_LOG_INFO("peek queue [%u] success, bufLen is %zu", handle->qid, bufLen);
     if (bufLen == 0) {
-        ACL_LOG_INNER_ERROR("[Check][bufLen]peek queue len cannot be zero");
+        ACL_LOG_INNER_ERROR("[Check][bufLen]peek queue len cannot be 0");
         return ACL_ERROR_FAILURE;
     }
     void* hostPtr = nullptr;

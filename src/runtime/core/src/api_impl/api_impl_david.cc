@@ -2001,7 +2001,7 @@ static rtError_t L2BufferErrProc(const uint32_t deviceId, rtErrorInfo* const err
         errorInfo->tryRepair = 1U;
     } else {
         errorInfo->tryRepair = 0U;
-        RT_LOG(RT_LOG_INFO, "Resume cnt is not zero, recovery may have been triggered.");
+        RT_LOG(RT_LOG_INFO, "Resume cnt is not 0, recovery may have been triggered.");
     }
     return error;
 }
@@ -2016,7 +2016,7 @@ static void AicoreErrorProc(const Device* const dev, rtErrorInfo* const errorInf
         errorInfo->tryRepair = 1U;
     } else {
         errorInfo->tryRepair = 0U;
-        RT_LOG(RT_LOG_INFO, "Aicore recover cnt is not zero or other fault event exists, recoverCnt=%u.", recoverCnt);
+        RT_LOG(RT_LOG_INFO, "Aicore recover cnt is not 0 or other fault event exists, recoverCnt=%u.", recoverCnt);
     }
 
     return;

@@ -324,7 +324,7 @@ aclError aclrtMemUceRepairImpl(int32_t deviceId, aclrtMemUceInfo* memUceInfoArra
         arraySize > RT_MAX_RECORD_PA_NUM_PER_DEV, arraySize, "must be less than or equal to 128",
         ACL_ERROR_INVALID_PARAM);
 
-    // reserved value check, should be fill with zero
+    // reserved value check, should be filled with 0
     size_t reservedZeroValue[UCE_INFO_RESERVED_SIZE] = {0};
     for (size_t i = 0; i < arraySize; ++i) {
         if (memcmp(memUceInfoArray[i].reserved, reservedZeroValue, UCE_INFO_RESERVED_SIZE)) {

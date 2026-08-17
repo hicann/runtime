@@ -8235,7 +8235,7 @@ rtError_t ApiImpl::MemMallocPhysical(rtMemHandle* handle, size_t size, rtMallocP
     cfgVal.moduleId = static_cast<uint16_t>(APP);
     cfgVal.deviceId = curCtx->Device_()->Id_();
     uint32_t pgType = 0UL;
-    constexpr uint64_t flags = 0ULL; // drv flag, must be zero.
+    constexpr uint64_t flags = 0ULL; // drv flag, must be 0.
 
     if (static_cast<uint64_t>(policy) ==
         static_cast<uint64_t>(RT_MEM_MALLOC_HUGE_ONLY | RT_MEM_TYPE_HIGH_BAND_WIDTH)) { // ACL_HBM_MEM_HUGE

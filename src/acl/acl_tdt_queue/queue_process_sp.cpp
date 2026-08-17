@@ -200,7 +200,7 @@ aclError QueueProcessorSp::acltdtAllocBuf(const size_t size, const uint32_t type
             std::vector<const char*>(
                 {__func__, acl::GetAllocBufTypeDesc(static_cast<acltdtAllocBufType>(type)), "type",
                  "[ACL_TDT_NORMAL_MEM, ACL_TDT_DVPP_MEM]"}));
-        ACL_LOG_ERROR("[Check][Param]param type must be equal to zero currently");
+        ACL_LOG_ERROR("[Check][Param]param type must be equal to 0 currently");
         return ACL_ERROR_INVALID_PARAM;
     }
     ACL_REQUIRES_OK(QueryAllocGroup());

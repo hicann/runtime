@@ -651,29 +651,29 @@ public:
         }                                                                  \
     } while (false)
 
-#define ACL_REQUIRES_POSITIVE_REPORT(val)                                                                         \
-    do {                                                                                                          \
-        if ((val) <= 0) {                                                                                         \
-            ACL_LOG_ERROR("[Check][%s]param must be positive.", #val);                                            \
-            const std::string valStr = std::to_string(val);                                                       \
-            std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__);               \
-            acl::AclErrorLogManager::ReportInputError(                                                            \
-                acl::INVALID_VALUE_MSG, std::vector<const char*>({"func", "value", "param", "expect"}),           \
-                std::vector<const char*>({funcName.c_str(), valStr.c_str(), #val, "must be greater than zero"})); \
-            return ACL_ERROR_INVALID_PARAM;                                                                       \
-        }                                                                                                         \
+#define ACL_REQUIRES_POSITIVE_REPORT(val)                                                                      \
+    do {                                                                                                       \
+        if ((val) <= 0) {                                                                                      \
+            ACL_LOG_ERROR("[Check][%s]param must be positive.", #val);                                         \
+            const std::string valStr = std::to_string(val);                                                    \
+            std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__);            \
+            acl::AclErrorLogManager::ReportInputError(                                                         \
+                acl::INVALID_VALUE_MSG, std::vector<const char*>({"func", "value", "param", "expect"}),        \
+                std::vector<const char*>({funcName.c_str(), valStr.c_str(), #val, "must be greater than 0"})); \
+            return ACL_ERROR_INVALID_PARAM;                                                                    \
+        }                                                                                                      \
     } while (false)
 
-#define ACL_REQUIRES_POSITIVE_REPORT_WITH_FUNC_DESC(val, funcDesc)                                          \
-    do {                                                                                                    \
-        if ((val) <= 0) {                                                                                   \
-            ACL_LOG_ERROR("[Check][%s]param must be positive.", #val);                                      \
-            const std::string valStr = std::to_string(val);                                                 \
-            acl::AclErrorLogManager::ReportInputError(                                                      \
-                acl::INVALID_VALUE_MSG, std::vector<const char*>({"func", "value", "param", "expect"}),     \
-                std::vector<const char*>({(funcDesc), valStr.c_str(), #val, "must be greater than zero"})); \
-            return ACL_ERROR_INVALID_PARAM;                                                                 \
-        }                                                                                                   \
+#define ACL_REQUIRES_POSITIVE_REPORT_WITH_FUNC_DESC(val, funcDesc)                                       \
+    do {                                                                                                 \
+        if ((val) <= 0) {                                                                                \
+            ACL_LOG_ERROR("[Check][%s]param must be positive.", #val);                                   \
+            const std::string valStr = std::to_string(val);                                              \
+            acl::AclErrorLogManager::ReportInputError(                                                   \
+                acl::INVALID_VALUE_MSG, std::vector<const char*>({"func", "value", "param", "expect"}),  \
+                std::vector<const char*>({(funcDesc), valStr.c_str(), #val, "must be greater than 0"})); \
+            return ACL_ERROR_INVALID_PARAM;                                                              \
+        }                                                                                                \
     } while (false)
 
 #define ACL_REQUIRES_POSITIVE(val)                                     \

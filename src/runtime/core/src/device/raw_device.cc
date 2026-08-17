@@ -461,7 +461,7 @@ rtError_t RawDevice::RegisterDcacheLockOp(Program*& dcacheLockOpProgram)
     const std::vector<char>& dcacheLockMixOpData = rtInstance->GetDcacheLockMixOpData();
     if (dcacheLockMixOpData.size() == 0) {
         // 对于在device侧发生SetDevice的逻辑时候，device侧并没有算子.o文件
-        RT_LOG(RT_LOG_WARNING, "dcacheLockMixOpData size is zero, so not enable dcache");
+        RT_LOG(RT_LOG_WARNING, "dcacheLockMixOpData size is 0, so not enable dcache");
         return RT_ERROR_NONE;
     }
 

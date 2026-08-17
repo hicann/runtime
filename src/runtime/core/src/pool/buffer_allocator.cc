@@ -155,7 +155,7 @@ int32_t BufferAllocator::AllocIdWithoutRetry(const bool isLogError)
 void* BufferAllocator::GetItemById(const int32_t id, const bool isLogError) const
 {
     if ((pool_ == nullptr) || (id < 0)) {
-        RtLogErrorLevelControl(isLogError, "pool is nullptr or id less than zero, now id=%d, pool=%p.", id, pool_);
+        RtLogErrorLevelControl(isLogError, "pool is nullptr or id less than 0, now id=%d, pool=%p.", id, pool_);
         return nullptr;
     }
 

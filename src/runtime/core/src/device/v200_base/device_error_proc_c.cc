@@ -136,7 +136,7 @@ static const std::map<uint64_t, std::string> g_davidErrorMapInfo = {
      "The address of instruction is illegal when the AIcore reads instructions from GM."
      "Possible cause: The application unloads the operator binary in advance or stack corruption occurs."},
     {SU_CCU_CALL_DEPTH_OVRFLW_T0, "The number of nesting times of call the function is greater than CTRL[5:2]."},
-    {SU_CCU_DIV0_T0, "divide by zero."},
+    {SU_CCU_DIV0_T0, "divide by 0."},
     {SU_CCU_ILLEGAL_INSTR_T0, "The scalar instruction is abnormal. Possible cause: "
                               "The parameter violates the instruction constraints, the binary version does not match, "
                               "or the instructinon is overwirtten."},

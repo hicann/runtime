@@ -341,7 +341,7 @@ const std::map<uint64_t, std::string> DeviceErrorProc::errorMapInfo_ = {
     {BIU_L2_READ_OOB, "Bus read access error. You are advised to check the L2 code."},
     {BIU_L2_WRITE_OOB, "Bus write access error. You are advised to check the L2 code."},
     {CCU_CALL_DEPTH_OVRFLW, "The depth of nested function call is greater than CTRL[5:2]."},
-    {CCU_DIV0, "Division by zero error."},
+    {CCU_DIV0, "Division by 0 error."},
     {CCU_ILLEGAL_INSTR, "Illegal instruction, which is usually caused by unaligned UUB addresses."},
     {CCU_LOOP_CNT_ERR, "The loop count of the hardware loop instruction is 0."
                        " Possible cause: The compiler optimization is incorrect or the instruction is overwritten."},

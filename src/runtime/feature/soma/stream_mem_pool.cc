@@ -504,17 +504,18 @@ rtError_t SegmentManager::SetAttribute(rtMemPoolAttr attr, const void* value)
         case rtMemPoolAttrReservedMemHigh:
             reset = *static_cast<const uint64_t*>(value);
             COND_RETURN_ERROR(
-                reset != 0, RT_ERROR_POOL_PROP_INVALID, "Set attribute reservedMemHigh only accept zero, value=%ul",
+                reset != 0, RT_ERROR_POOL_PROP_INVALID, "Set attribute reservedMemHigh only accept 0, value=%" PRIu64,
                 reset);
             maxReservedSize_ = 0U;
-            RT_LOG(RT_LOG_DEBUG, "Reset reservedMemHigh to zero successfully.");
+            RT_LOG(RT_LOG_DEBUG, "Reset reservedMemHigh to 0 successfully.");
             break;
         case rtMemPoolAttrUsedMemHigh:
             reset = *static_cast<const uint64_t*>(value);
             COND_RETURN_ERROR(
-                reset != 0, RT_ERROR_POOL_PROP_INVALID, "Set attribute usedMemHigh only accept zero, value=%ul", reset);
+                reset != 0, RT_ERROR_POOL_PROP_INVALID, "Set attribute usedMemHigh only accept 0, value=%" PRIu64,
+                reset);
             maxBusySize_ = 0U;
-            RT_LOG(RT_LOG_DEBUG, "Reset usedMemHigh to zero successfully.");
+            RT_LOG(RT_LOG_DEBUG, "Reset usedMemHigh to 0 successfully.");
             break;
         default:
             RT_LOG(RT_LOG_ERROR, "Invalid attribute.");

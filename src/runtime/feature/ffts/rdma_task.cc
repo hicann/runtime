@@ -275,7 +275,7 @@ void PrintDfxInfoForRdmaPiValueModifyTask(const TaskInfo* taskInfo, const uint32
             }
             const auto& rdmaPiValueModifyInfo = taskPtr->u.rdmaPiValueModifyInfo;
             if (rdmaPiValueModifyInfo.rdmaSubContextCount == 0) {
-                RT_LOG(RT_LOG_WARNING, "rdmaSubContextCount is zero.");
+                RT_LOG(RT_LOG_WARNING, "rdmaSubContextCount is 0.");
                 continue;
             }
 
