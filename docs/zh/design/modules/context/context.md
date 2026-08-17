@@ -239,7 +239,7 @@ Runtime按Device/TS维护默认Context。`aclrtSetDevice()`创建或复用对应
 **关键代码**：
 
 ```cpp
-// 文件位置：src/runtime/core/src/api_impl/api_impl.cc
+// 文件位置：src/runtime/api/impl/api_impl.cc
 rtError_t ApiImpl::SetDevice(const int32_t devId)
 {
     Runtime * const rt = Runtime::Instance();
@@ -297,7 +297,7 @@ flowchart TD
 **关键代码**：
 
 ```cpp
-// 文件位置：src/runtime/core/src/api_impl/api_impl.cc
+// 文件位置：src/runtime/api/impl/api_impl.cc
 rtError_t ApiImpl::ContextCreate(Context ** const inCtx, const int32_t devId)
 {
     rtError_t error = NewContext(static_cast<uint32_t>(devId), tsId, inCtx);
@@ -973,9 +973,9 @@ classDiagram
 | RTS C API | `src/runtime/api/api_c_context.cc` | Context RTS转调入口 |
 | Device C API | `src/runtime/api/api_c_device.cc` | Device设置与复位的Runtime实现，以及默认Context生命周期联动 |
 | API抽象 | `src/runtime/api/api.hpp` | Context相关虚接口定义 |
-| ApiError | `src/runtime/core/src/api_impl/api_error.cc` | Context API参数校验、空指针校验和资源绑定关系校验 |
+| ApiError | `src/runtime/api/impl/api_error.cc` | Context API参数校验、空指针校验和资源绑定关系校验 |
 | Profiling装饰器 | `src/runtime/core/src/profiler/api_profile_decorator.cc`、`src/runtime/core/src/profiler/api_profile_log_decorator.cc` | Context API Profiling记录 |
-| ApiImpl | `src/runtime/core/src/api_impl/api_impl.cc` | Context创建、销毁、线程绑定实现 |
+| ApiImpl | `src/runtime/api/impl/api_impl.cc` | Context创建、销毁、线程绑定实现 |
 | Runtime | `src/runtime/core/inc/runtime.hpp`、`src/runtime/core/src/runtime.cc` | 默认Context retain/release、当前Context解析、内部访问上下文 |
 | Context头文件 | `src/runtime/core/inc/context/context.hpp` | Context类、状态机、访问模式、校验宏、核心方法声明 |
 | Context实现 | `src/runtime/core/src/context/context.cc` | Context生命周期、资源管理、状态迁移、线程绑定引用、同步和错误状态 |
@@ -993,4 +993,4 @@ classDiagram
 
 ---
 
-_本模块文档基于 `src/runtime/core/src/context/`、`src/runtime/core/src/runtime.cc`、`src/runtime/core/src/api_impl/api_impl.cc`、`src/runtime/core/src/common/inner_thread_local.cpp`及Context相关API源码分析整理。_
+_本模块文档基于 `src/runtime/core/src/context/`、`src/runtime/core/src/runtime.cc`、`src/runtime/api/impl/api_impl.cc`、`src/runtime/core/src/common/inner_thread_local.cpp`及Context相关API源码分析整理。_

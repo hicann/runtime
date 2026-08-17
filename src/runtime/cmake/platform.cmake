@@ -41,7 +41,7 @@ set(RUNTIME_INC_DIR_COMMON_PLATFORM
     ${RUNTIME_DIR}/src/runtime/core/inc/task
     ${RUNTIME_DIR}/src/runtime/core/inc/utils
     ${RUNTIME_DIR}/src/runtime/api
-    ${RUNTIME_CORE_DIR}/src/api_impl
+    ${RUNTIME_API_DIR}/impl
     ${RUNTIME_CORE_DIR}/src/engine
     ${RUNTIME_CORE_DIR}/src/engine/hwts
     ${RUNTIME_CORE_DIR}/src/engine/stars

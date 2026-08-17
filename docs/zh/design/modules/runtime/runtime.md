@@ -477,7 +477,7 @@ Kernel Launch API
 | `src/runtime/core/src/plugin_manage/v200/plugin_old_arch.cc` | v200 插件构造和析构入口 |
 | `src/runtime/core/src/runtime_v100/runtime_adapt.cc` | v100 平台 Runtime 析构和适配逻辑 |
 | `src/runtime/core/src/runtime_v200/runtime_adapt.cc` | v200 平台 Runtime 析构和适配逻辑 |
-| `src/runtime/core/src/api_impl/api_impl.cc` | Runtime API 主要内部实现，广泛调用 `Runtime::Instance()` |
+| `src/runtime/api/impl/api_impl.cc` | Runtime API 主要内部实现，广泛调用 `Runtime::Instance()` |
 | `src/runtime/core/src/device/device.cc` | Device 管理逻辑 |
 | `src/runtime/core/src/event/event.cc` | Event 管理逻辑 |
 | `src/runtime/core/src/launch/` | 各类任务 Launch 实现 |

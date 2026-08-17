@@ -169,11 +169,11 @@ set(libruntime_callback_files
 )
 
 set(libruntime_src_files_optional
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_error_standard_soc.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_impl_standard_soc.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_impl_soma.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_error_uvm.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_impl_uvm.cc
+    ${RUNTIME_API_DIR}/impl/api_error_standard_soc.cc
+    ${RUNTIME_API_DIR}/impl/api_impl_standard_soc.cc
+    ${RUNTIME_API_DIR}/impl/api_impl_soma.cc
+    ${RUNTIME_API_DIR}/impl/api_error_uvm.cc
+    ${RUNTIME_API_DIR}/impl/api_impl_uvm.cc
     ${RUNTIME_CORE_DIR}/src/context/context_standard_soc.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/context_standard_soc_aclgraph.cc
     ${RUNTIME_FEATURE_DIR}/ffts/context_ffts_standard_soc.cc
@@ -261,7 +261,7 @@ set_source_files_properties(${libruntime_api_aclrt_impl_src_files}
 #------------------------- runtime v100 -------------------------
 set(xpu_tprt_api_file
     ${RUNTIME_FEATURE_DIR}/xpu/api_error_xpu.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/v100/api_impl_v100_xpu.cc
+    ${RUNTIME_API_DIR}/impl/v100/api_impl_v100_xpu.cc
     ${RUNTIME_FEATURE_DIR}/xpu/api_decorator_xpu.cc
 )
 
@@ -291,20 +291,20 @@ set(libruntime_v100_src_files
     ${RUNTIME_CORE_ENUM_DESC_SRC_FILES}
     ${RUNTIME_OPTIONAL_ENUM_DESC_SRC_FILES}
     ${RUNTIME_CORE_DIR}/src/common/inner_thread_local.cpp
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_decorator.cc
+    ${RUNTIME_API_DIR}/impl/api_decorator.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/api_decorator_aclgraph.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_impl.cc
+    ${RUNTIME_API_DIR}/impl/api_impl.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/v100/api_impl_aclgraph.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/v100/api_impl_capture_event.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_impl_mbuf.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_impl_event.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_error.cc
+    ${RUNTIME_API_DIR}/impl/api_impl_mbuf.cc
+    ${RUNTIME_API_DIR}/impl/api_impl_event.cc
+    ${RUNTIME_API_DIR}/impl/api_error.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/api_error_aclgraph.cc
     ${RUNTIME_CORE_DIR}/src/uvm/uvm_callback.cc
 
     # for V100
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_impl_creator.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/v100/api_impl_creator_c.cc
+    ${RUNTIME_API_DIR}/impl/api_impl_creator.cc
+    ${RUNTIME_API_DIR}/impl/v100/api_impl_creator_c.cc
     ${RUNTIME_CORE_DIR}/src/device/ctrl_sq.cc
     ${RUNTIME_CORE_DIR}/src/device/ctrl_msg.cc
     ${RUNTIME_CORE_DIR}/src/device/device.cc
@@ -456,7 +456,7 @@ set(RUNTIME_INC_DIR_OPEN
     ${RUNTIME_DIR}/src/runtime/core/inc/task
     ${RUNTIME_DIR}/src/runtime/core/inc/utils
     ${RUNTIME_DIR}/src/runtime/api
-    ${RUNTIME_CORE_DIR}/src/api_impl
+    ${RUNTIME_API_DIR}/impl
     ${RUNTIME_CORE_DIR}/src/engine
     ${RUNTIME_CORE_DIR}/src/engine/hwts
     ${RUNTIME_CORE_DIR}/src/engine/stars

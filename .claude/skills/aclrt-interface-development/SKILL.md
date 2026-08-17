@@ -252,11 +252,11 @@ description: 用于 Runtime 场景下新增 aclrt 接口开发，覆盖需求澄
 | 7 | `src/runtime/api/api_c_xxx.cc` | RT C 层接口实现 |
 | 8 | `src/runtime/api/api_c_tiny_stub.cc` | Tiny stub 实现 |
 | 9 | `src/runtime/api/api.hpp` | Api 基类接口声明 |
-| 10 | `src/runtime/core/src/api_impl/api_impl.hpp` | ApiImpl 接口声明 |
-| 11 | `src/runtime/core/src/api_impl/api_decorator.hpp` | ApiDecorator 接口声明 |
-| 12 | `src/runtime/core/src/api_impl/api_decorator.cc` | ApiDecorator 接口实现 |
-| 13 | `src/runtime/core/src/api_impl/api_error.hpp` | ApiErrorDecorator 接口声明 |
-| 14 | `src/runtime/core/src/api_impl/api_error.cc` | ApiErrorDecorator 参数校验实现 |
+| 10 | `src/runtime/api/impl/api_impl.hpp` | ApiImpl 接口声明 |
+| 11 | `src/runtime/api/impl/api_decorator.hpp` | ApiDecorator 接口声明 |
+| 12 | `src/runtime/api/impl/api_decorator.cc` | ApiDecorator 接口实现 |
+| 13 | `src/runtime/api/impl/api_error.hpp` | ApiErrorDecorator 接口声明 |
+| 14 | `src/runtime/api/impl/api_error.cc` | ApiErrorDecorator 参数校验实现 |
 | 15 | `src/runtime/core/src/profiler/api_profile_decorator.hpp` | ApiProfileDecorator 接口声明 |
 | 16 | `src/runtime/core/src/profiler/api_profile_decorator.cc` | ApiProfileDecorator 接口实现 |
 | 17 | `src/runtime/inc/common/profiler_struct.hpp` | Profiler 枚举常量定义 |

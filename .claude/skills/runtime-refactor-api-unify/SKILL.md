@@ -110,8 +110,8 @@ rtXxx(...)
 
 ### 步骤 5：调用点改造（ApiImpl 层）
 
-- `src/api_impl/api_impl.cc`（基类）：改为调用统一全局函数
-- `src/api_impl/api_impl_david.cc`（David）：仅保留已有差异的 override，改为调用同名统一全局函数
+- `src/runtime/api/impl/api_impl.cc`（基类）：改为调用统一全局函数
+- `src/runtime/api/impl/api_impl_david.cc`（David）：仅保留已有差异的 override，改为调用同名统一全局函数
 
 继承关系约束：
 - 若重构前 David 继承基类实现（未 override） -> 重构后必须保持继承，不新增 override
@@ -209,7 +209,7 @@ timeout 120s bash tests/build_ut.sh --ut runtime --target runtime_ut -- --gtest_
 rg "ForStars|ForDavid" src/runtime/core/src src/runtime/core/inc_c
 
 # 检查残留的 curCtx->Xxx 调用
-rg "curCtx->(<接口名1>|<接口名2>)" src/runtime/core/src/api_impl
+rg "curCtx->(<接口名1>|<接口名2>)" src/runtime/api/impl
 
 # 检查 Context 中是否残留目标接口声明/实现
 rg -n "Context::(<接口名1>|<接口名2>)" src/runtime/core/inc/context/context.hpp src/runtime/core/src/context/context.cc

@@ -55,7 +55,7 @@ runtime/
 ├── api/                    # API 接口层
 │   ├── api.hpp             # Runtime API 定义
 │   ├── api_c_*.cc          # C 语言接口实现
-│   └── api_impl/           # API 版本实现
+│   └── impl/               # API 内部实现
 ├── core/
 │   ├── inc/                # 内部头文件
 │   └── src/                # 核心实现
@@ -71,8 +71,7 @@ runtime/
 │       ├── profiler/       # Profiler 性能分析
 │       ├── launch/         # Kernel Launch
 │       ├── notify/         # Notify 通知
-│       ├── dfx/            # DFX 功能
-│       └── api_impl/       # API 实现
+│       └── dfx/            # DFX 功能
 ├── driver/                 # 驱动适配层
 │   ├── v100/               # v100 版本驱动
 │   ├── v200/               # v200 版本驱动

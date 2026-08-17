@@ -50,9 +50,9 @@ set(runtimeut_src_task_list
 )
 
 set(libruntime_src_files_include_for_arch5162
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_error_tiny_stub.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_stub.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/v100/api_impl_v100.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_error_tiny_stub.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_stub.cc
+    ${TOP_DIR}/src/runtime/api/impl/v100/api_impl_v100.cc
     ${TOP_DIR}/src/runtime/core/src/context/context_tiny_stub.cc
     ${TOP_DIR}/src/runtime/core/src/dfx/printf_tiny_stub.cc
     ${TOP_DIR}/src/runtime/core/src/event/ipc_event_tiny_stub.cc
@@ -91,15 +91,15 @@ set(runtimeut_src_api_list
 )
 
 set(runtimeut_src_api_impl_list
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_decorator.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_decorator_tiny_stub.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_error.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_creator.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_mbuf.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_stub.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_arch5162.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/v100/api_impl_creator_c.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_decorator.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_decorator_tiny_stub.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_error.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_creator.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_mbuf.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_stub.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_arch5162.cc
+    ${TOP_DIR}/src/runtime/api/impl/v100/api_impl_creator_c.cc
 )
 
 set(runtimeut_src_common_list
@@ -415,7 +415,7 @@ set(RUNTIME_TEST_INC_DIR_COMMON
     ${TOP_DIR}/src/runtime/core/inc/engine/hwts
     ${TOP_DIR}/src/runtime/core/inc/dqs
     ${TOP_DIR}/src/runtime/api
-    ${TOP_DIR}/src/runtime/core/src/api_impl
+    ${TOP_DIR}/src/runtime/api/impl
     ${TOP_DIR}/src/runtime/core/src/engine
     ${TOP_DIR}/src/runtime/core/src/engine/hwts
     ${TOP_DIR}/src/runtime/core/src/engine/stars

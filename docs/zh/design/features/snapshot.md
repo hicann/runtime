@@ -197,7 +197,7 @@ flowchart TD
 - **线程同步**：等待所有注册的后台线程进入阻塞状态，确保状态一致性
 - **错误处理**：若当前状态非 RUNNING 或等待超时，则返回错误码
 
-关键文件位置：`src/runtime/core/src/api_impl/api_impl.cc`
+关键文件位置：`src/runtime/api/impl/api_impl.cc`
 
 #### 进程备份流程
 
@@ -218,7 +218,7 @@ flowchart TD
 - **后处理阶段**：触发 BACKUP_POST 回调，将进程状态切换为 BACKED_UP
 
 关键文件位置：
-- `src/runtime/core/src/api_impl/api_impl.cc`
+- `src/runtime/api/impl/api_impl.cc`
 - `src/runtime/feature/snapshot/snapshot_process_helper.cc`
 
 #### 进程恢复流程
@@ -244,7 +244,7 @@ flowchart TD
 - **后处理阶段**：触发 RESTORE_POST 回调，将进程状态切换为 LOCKED
 
 关键文件位置：
-- `src/runtime/core/src/api_impl/api_impl.cc`
+- `src/runtime/api/impl/api_impl.cc`
 - `src/runtime/feature/snapshot/snapshot_process_helper.cc`
 
 ### 4.2 核心组件详解
@@ -375,7 +375,7 @@ DeviceSnapshot --> TaskHandlers
 | IDeviceSnapshotOps | 设备快照操作抽象接口 | `core/inc/common/idevice_snapshot_ops.hpp` |
 | DeviceSnapshot | 设备内存备份/恢复实现 | `feature/snapshot/device_snapshot.hpp` |
 | SnapShotProcessHelper | 备份恢复辅助函数 | `feature/snapshot/snapshot_process_helper.hpp` |
-| ApiImpl | API 实现与流程协调 | `core/src/api_impl/api_impl.cc` |
+| ApiImpl | API 实现与流程协调 | `api/impl/api_impl.cc` |
 | TaskHandlers | 任务类型处理器 | `feature/snapshot/device_snapshot.hpp` |
 
 ### 4.4 核心数据结构
@@ -576,7 +576,7 @@ API 层通过 `GLOBAL_STATE_WAIT_IF_LOCKED()` 宏实现阻塞：
 | API 头文件 | `pkg_inc/runtime/rts/rts_snapshot.h` | 对外接口定义、状态枚举 |
 | ACL 实现 | `src/acl/aclrt_impl/snapshot.cpp` | ACL 层接口封装 |
 | Runtime API | `src/runtime/api/api_c_snapshot.cc` | C API 实现 |
-| API 实现 | `src/runtime/core/src/api_impl/api_impl.cc` | SnapShotProcess 接口实现 |
+| API 实现 | `src/runtime/api/impl/api_impl.cc` | SnapShotProcess 接口实现 |
 | 状态管理 | `src/runtime/core/inc/common/global_state_manager.hpp` | GlobalStateManager 类定义 |
 | 状态管理实现 | `src/runtime/core/src/common/global_state_manager.cc` | 进程状态管理实现 |
 | 回调管理 | `src/runtime/feature/snapshot/snapshot_callback_manager.hpp` | SnapshotCallbackManager 类定义 |

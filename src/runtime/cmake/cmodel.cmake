@@ -322,11 +322,11 @@ set(libruntime_cmodel_callback_files
 
 #------------------------- exclude these files in tiny(ascend031) ---------------------
 set(libruntime_cmodel_src_files_optional
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_error_standard_soc.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_impl_standard_soc.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_impl_soma.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_error_uvm.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_impl_uvm.cc
+    ${RUNTIME_API_DIR}/impl/api_error_standard_soc.cc
+    ${RUNTIME_API_DIR}/impl/api_impl_standard_soc.cc
+    ${RUNTIME_API_DIR}/impl/api_impl_soma.cc
+    ${RUNTIME_API_DIR}/impl/api_error_uvm.cc
+    ${RUNTIME_API_DIR}/impl/api_impl_uvm.cc
     ${RUNTIME_CORE_DIR}/src/context/context_standard_soc.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/context_standard_soc_aclgraph.cc
     ${RUNTIME_FEATURE_DIR}/ffts/context_ffts_standard_soc.cc
@@ -371,7 +371,7 @@ set(libruntime_cmodel_api_src_files
 
 set(xpu_tprt_api_file
     ${RUNTIME_FEATURE_DIR}/xpu/api_error_xpu.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/v100/api_impl_v100.cc
+    ${RUNTIME_API_DIR}/impl/v100/api_impl_v100.cc
     ${RUNTIME_CORE_DIR}/src/launch/xpu_aicpu_c_stub.cc
     ${RUNTIME_FEATURE_DIR}/xpu/api_decorator_xpu.cc
 )
@@ -382,20 +382,20 @@ set(libruntime_cmodel_src_files
     ${RUNTIME_CORE_DIR}/src/common/inner_thread_local.cpp
     ${RUNTIME_DIR}/src/runtime/api/api.cc
     ${RUNTIME_DIR}/src/runtime/api/api_global_err.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_decorator.cc
+    ${RUNTIME_API_DIR}/impl/api_decorator.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/api_decorator_aclgraph.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_error.cc
+    ${RUNTIME_API_DIR}/impl/api_error.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/api_error_aclgraph.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_impl.cc
+    ${RUNTIME_API_DIR}/impl/api_impl.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/v100/api_impl_aclgraph.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/v100/api_impl_capture_event.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_impl_mbuf.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_impl_event.cc
+    ${RUNTIME_API_DIR}/impl/api_impl_mbuf.cc
+    ${RUNTIME_API_DIR}/impl/api_impl_event.cc
     ${RUNTIME_CORE_DIR}/src/uvm/uvm_callback.cc
 
     # for V100
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_impl_creator.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/v100/api_impl_creator_c.cc
+    ${RUNTIME_API_DIR}/impl/api_impl_creator.cc
+    ${RUNTIME_API_DIR}/impl/v100/api_impl_creator_c.cc
     ${RUNTIME_CORE_DIR}/src/device/ctrl_msg.cc
     ${RUNTIME_CORE_DIR}/src/device/ctrl_sq.cc
     ${RUNTIME_DIR}/src/runtime/driver/v100/
@@ -509,22 +509,22 @@ set(libruntime_cmodel_v200_src_files
     ${RUNTIME_OPTIONAL_ENUM_DESC_SRC_FILES}
     ${RUNTIME_CORE_DIR}/src/common/inner_thread_local.cpp
     ${RUNTIME_DIR}/src/runtime/api/api.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_decorator.cc
+    ${RUNTIME_API_DIR}/impl/api_decorator.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/api_decorator_aclgraph.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_error.cc
+    ${RUNTIME_API_DIR}/impl/api_error.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/api_error_aclgraph.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_impl.cc
+    ${RUNTIME_API_DIR}/impl/api_impl.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/v100/api_impl_aclgraph.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/v100/api_impl_capture_event.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_impl_mbuf.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_impl_event.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_impl_david.cc
+    ${RUNTIME_API_DIR}/impl/api_impl_mbuf.cc
+    ${RUNTIME_API_DIR}/impl/api_impl_event.cc
+    ${RUNTIME_API_DIR}/impl/api_impl_david.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/v200/api_impl_david_capture_event.cc
     ${RUNTIME_CORE_DIR}/src/uvm/uvm_callback.cc
 
     # for V200
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_impl_creator.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/v200/api_impl_creator_c.cc
+    ${RUNTIME_API_DIR}/impl/api_impl_creator.cc
+    ${RUNTIME_API_DIR}/impl/v200/api_impl_creator_c.cc
 
     ${RUNTIME_CORE_DIR}/src/context/context.cc
     ${RUNTIME_CORE_DIR}/src/device/device.cc
@@ -651,7 +651,7 @@ set(libruntime_cmodel_v200_src_files
     ${RUNTIME_CORE_DIR}/src/plugin_manage/v200/plugin_old_arch.cc
     ${RUNTIME_CORE_DIR}/src/plugin_manage/runtime_keeper.cc
     ${common_src_files_cmodel}
-    ${RUNTIME_CORE_DIR}/src/api_impl/v201/api_impl_v200_adapt.cc
+    ${RUNTIME_API_DIR}/impl/v201/api_impl_v200_adapt.cc
     ${xpu_tprt_api_file}
     ${libruntime_cmodel_src_files_optional}
     ${libruntime_cmodel_api_src_files_cmodel}
@@ -693,7 +693,7 @@ set(RUNTIME_CMODEL_INC_DIR_COMMON
     ${RUNTIME_DIR}/src/runtime/core/inc/task
     ${RUNTIME_DIR}/src/runtime/core/inc/utils
     ${RUNTIME_DIR}/src/runtime/api
-    ${RUNTIME_CORE_DIR}/src/api_impl
+    ${RUNTIME_API_DIR}/impl
     ${RUNTIME_CORE_DIR}/src/engine
     ${RUNTIME_CORE_DIR}/src/engine/hwts
     ${RUNTIME_CORE_DIR}/src/engine/stars

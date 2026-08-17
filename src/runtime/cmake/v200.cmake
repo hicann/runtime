@@ -12,7 +12,7 @@ include(${RUNTIME_DIR}/pkg_inc/runtime/runtime/runtime_headers.cmake)
 
 set(xpu_tprt_api_file
     ${RUNTIME_FEATURE_DIR}/xpu/api_error_xpu.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/v100/api_impl_v100.cc
+    ${RUNTIME_API_DIR}/impl/v100/api_impl_v100.cc
     ${RUNTIME_FEATURE_DIR}/xpu/api_decorator_xpu.cc
 )
 
@@ -34,7 +34,7 @@ set(xpu_tprt_src_file
     ${RUNTIME_FEATURE_DIR}/xpu/program_plat.cc
     ${RUNTIME_FEATURE_DIR}/xpu/api_impl_xpu_v200.cc
     ${RUNTIME_CORE_DIR}/src/kernel/json_parse.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/v200/api_impl_v200.cc
+    ${RUNTIME_API_DIR}/impl/v200/api_impl_v200.cc
 )
 
 set(david_series_common_task_src_file
@@ -208,11 +208,11 @@ set(libruntime_v200_callback_files
 
 #------------------------- exclude these files in tiny(ascend031) ---------------------
 set(libruntime_v200_src_files_exclude_for_tiny
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_error_standard_soc.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_impl_standard_soc.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_impl_soma.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_error_uvm.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_impl_uvm.cc
+    ${RUNTIME_API_DIR}/impl/api_error_standard_soc.cc
+    ${RUNTIME_API_DIR}/impl/api_impl_standard_soc.cc
+    ${RUNTIME_API_DIR}/impl/api_impl_soma.cc
+    ${RUNTIME_API_DIR}/impl/api_error_uvm.cc
+    ${RUNTIME_API_DIR}/impl/api_impl_uvm.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/v200/api_impl_david_capture_event.cc
     ${RUNTIME_CORE_DIR}/src/context/context_standard_soc.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/context_standard_soc_aclgraph.cc
@@ -248,17 +248,17 @@ set(libruntime_v200_v201_common_src_files
     ${RUNTIME_CORE_ENUM_DESC_SRC_FILES}
     ${RUNTIME_OPTIONAL_ENUM_DESC_SRC_FILES}
     ${RUNTIME_CORE_DIR}/src/common/inner_thread_local.cpp
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_decorator.cc
+    ${RUNTIME_API_DIR}/impl/api_decorator.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/api_decorator_aclgraph.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_error.cc
+    ${RUNTIME_API_DIR}/impl/api_error.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/api_error_aclgraph.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_impl_david.cc
+    ${RUNTIME_API_DIR}/impl/api_impl_david.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/v200/api_impl_david_capture_event.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_impl.cc
+    ${RUNTIME_API_DIR}/impl/api_impl.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/v100/api_impl_aclgraph.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/v100/api_impl_capture_event.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_impl_mbuf.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_impl_event.cc
+    ${RUNTIME_API_DIR}/impl/api_impl_mbuf.cc
+    ${RUNTIME_API_DIR}/impl/api_impl_event.cc
     ${RUNTIME_CORE_DIR}/src/uvm/uvm_callback.cc
     ${RUNTIME_CORE_DIR}/src/context/context.cc
     ${RUNTIME_CORE_DIR}/src/device/device.cc
@@ -377,8 +377,8 @@ set(libruntime_v200_src_files
     ${libruntime_v200_v201_common_src_files}
 
     # for v200
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_impl_creator.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/v200/api_impl_creator_c.cc
+    ${RUNTIME_API_DIR}/impl/api_impl_creator.cc
+    ${RUNTIME_API_DIR}/impl/v200/api_impl_creator_c.cc
     ${RUNTIME_DIR}/src/runtime/driver/v200/npu_driver.cc
     ${RUNTIME_CORE_DIR}/src/runtime_v200/runtime_adapt.cc
     ${RUNTIME_CORE_DIR}/src/device/dev_simt_stack_checker.cc
@@ -404,10 +404,10 @@ set(libruntime_v201_src_files
 
     # for v201
     ${RUNTIME_CORE_DIR}/src/runtime_v100/runtime_adapt.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_impl_creator.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/v201/api_impl_creator_c.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/v201/api_impl_v201.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/v201/api_impl_v200_adapt.cc
+    ${RUNTIME_API_DIR}/impl/api_impl_creator.cc
+    ${RUNTIME_API_DIR}/impl/v201/api_impl_creator_c.cc
+    ${RUNTIME_API_DIR}/impl/v201/api_impl_v201.cc
+    ${RUNTIME_API_DIR}/impl/v201/api_impl_v200_adapt.cc
     ${RUNTIME_CORE_DIR}/src/common/ioctl/v201/ioctl_utils.cc
     ${RUNTIME_CORE_DIR}/src/device/v201/dev_simt_stack_checker.cc
     ${RUNTIME_DIR}/src/runtime/driver/v201/npu_driver.cc
@@ -474,7 +474,7 @@ set(RUNTIME_INC_DIR_COMMON_V200
     ${RUNTIME_DIR}/src/runtime/core/inc/task
     ${RUNTIME_DIR}/src/runtime/core/inc/utils
     ${RUNTIME_DIR}/src/runtime/api
-    ${RUNTIME_CORE_DIR}/src/api_impl
+    ${RUNTIME_API_DIR}/impl
     ${RUNTIME_CORE_DIR}/src/engine
     ${RUNTIME_CORE_DIR}/src/engine/hwts
     ${RUNTIME_CORE_DIR}/src/engine/stars

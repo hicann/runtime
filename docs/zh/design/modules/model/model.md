@@ -1134,7 +1134,7 @@ Model 模块按照功能划分为核心容器、任务管理、接口层、辅�
 | 适配层 | 适配职责 | 代码位置 | 服务对象 |
 |----------|----------|----------|----------|
 | **ACL 接口封装** | ACL → RT 接口映射 | `src/acl/aclrt_impl/model_ri.cpp` | 用户调用 aclmdlRI 接口 |
-| **API 装饰器** | API 错误处理装饰 | `src/runtime/core/src/api_impl/api_decorator.cc`| ApiImpl 调用链 |
+| **API 装饰器** | API 错误处理装饰 | `src/runtime/api/impl/api_decorator.cc`| ApiImpl 调用链 |
 
 
 ### 5 关键文件路径索引

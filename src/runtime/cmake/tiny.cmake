@@ -159,10 +159,10 @@ set(libruntime_callback_files
 )
 
 set(libruntime_src_files_include_for_tiny
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_error_tiny_stub.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_impl_stub.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_impl_tiny.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/v100/api_impl_v100.cc
+    ${RUNTIME_API_DIR}/impl/api_error_tiny_stub.cc
+    ${RUNTIME_API_DIR}/impl/api_impl_stub.cc
+    ${RUNTIME_API_DIR}/impl/api_impl_tiny.cc
+    ${RUNTIME_API_DIR}/impl/v100/api_impl_v100.cc
     ${RUNTIME_CORE_DIR}/src/context/context_tiny_stub.cc
     ${RUNTIME_FEATURE_DIR}/ffts/context_ffts_tiny_stub.cc
     ${RUNTIME_CORE_DIR}/src/dfx/printf_tiny_stub.cc
@@ -189,7 +189,7 @@ set(libruntime_src_files_include_for_tiny
     ${RUNTIME_FEATURE_DIR}/aclgraph/tiny/context_tiny_stub_aclgraph.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/tiny/event_capture_tiny_stub.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/tiny/capture_adapt_tiny_stub.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_decorator_tiny_stub.cc
+    ${RUNTIME_API_DIR}/impl/api_decorator_tiny_stub.cc
     ${RUNTIME_FEATURE_DIR}/model/tiny/model_aclgraph_tiny_stub.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/tiny/stream_capture_tiny_stub.cc
     ${RUNTIME_FEATURE_DIR}/jetty/jetty_stub.cc
@@ -214,10 +214,10 @@ set(libruntime_common_src_files
     ${RUNTIME_CORE_ENUM_DESC_SRC_FILES}
     ${RUNTIME_CORE_DIR}/src/common/inner_thread_local.cpp
     ${RUNTIME_DIR}/src/runtime/api/api.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_decorator.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_error.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_impl.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_impl_mbuf.cc
+    ${RUNTIME_API_DIR}/impl/api_decorator.cc
+    ${RUNTIME_API_DIR}/impl/api_error.cc
+    ${RUNTIME_API_DIR}/impl/api_impl.cc
+    ${RUNTIME_API_DIR}/impl/api_impl_mbuf.cc
     ${RUNTIME_CORE_DIR}/src/launch/cond_stars.cc
     ${RUNTIME_CORE_DIR}/src/launch/label_common.cc
     ${RUNTIME_CORE_DIR}/src/launch/label_stars.cc
@@ -226,8 +226,8 @@ set(libruntime_common_src_files
     ${RUNTIME_CORE_DIR}/src/uvm/uvm_callback.cc
 
     # for V100
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_impl_creator.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/v100/api_impl_creator_c.cc
+    ${RUNTIME_API_DIR}/impl/api_impl_creator.cc
+    ${RUNTIME_API_DIR}/impl/v100/api_impl_creator_c.cc
     ${RUNTIME_CORE_DIR}/src/device/ctrl_msg.cc
     ${RUNTIME_CORE_DIR}/src/device/ctrl_sq.cc
 
@@ -359,17 +359,17 @@ set_source_files_properties(${libruntime_aclrt_impl_src_files}
 set(libruntime_v100_src_files
     ${RUNTIME_CORE_ENUM_DESC_SRC_FILES}
     ${RUNTIME_CORE_DIR}/src/common/inner_thread_local.cpp
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_decorator.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_impl.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_error.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_impl_creator.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_impl_mbuf.cc
+    ${RUNTIME_API_DIR}/impl/api_decorator.cc
+    ${RUNTIME_API_DIR}/impl/api_impl.cc
+    ${RUNTIME_API_DIR}/impl/api_error.cc
+    ${RUNTIME_API_DIR}/impl/api_impl_creator.cc
+    ${RUNTIME_API_DIR}/impl/api_impl_mbuf.cc
     ${RUNTIME_CORE_DIR}/src/dfx/kernel_dfx_info.cc
     ${RUNTIME_CORE_DIR}/src/dfx/parse_kernel_dfx_info.cc
     ${RUNTIME_CORE_DIR}/src/uvm/uvm_callback.cc
 
     # for V100
-    ${RUNTIME_CORE_DIR}/src/api_impl/v100/api_impl_creator_c.cc
+    ${RUNTIME_API_DIR}/impl/v100/api_impl_creator_c.cc
 
     ${RUNTIME_CORE_DIR}/src/device/device.cc
     ${RUNTIME_CORE_DIR}/src/device/raw_device.cc
@@ -501,7 +501,7 @@ set(RUNTIME_INC_DIR_TINY
     ${RUNTIME_DIR}/src/runtime/core/inc/task
     ${RUNTIME_DIR}/src/runtime/core/inc/utils
     ${RUNTIME_DIR}/src/runtime/api
-    ${RUNTIME_CORE_DIR}/src/api_impl
+    ${RUNTIME_API_DIR}/impl
     ${RUNTIME_CORE_DIR}/src/engine
     ${RUNTIME_CORE_DIR}/src/engine/hwts
     ${RUNTIME_CORE_DIR}/src/engine/stars

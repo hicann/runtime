@@ -70,15 +70,15 @@ set(libruntime_api_src_files
 )
 
 set(libruntime_api_impl_src_files
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_decorator.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_decorator_tiny_stub.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_error.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_impl.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_impl_creator.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_impl_mbuf.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_impl_stub.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_impl_arch5162.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/v100/api_impl_creator_c.cc
+    ${RUNTIME_API_DIR}/impl/api_decorator.cc
+    ${RUNTIME_API_DIR}/impl/api_decorator_tiny_stub.cc
+    ${RUNTIME_API_DIR}/impl/api_error.cc
+    ${RUNTIME_API_DIR}/impl/api_impl.cc
+    ${RUNTIME_API_DIR}/impl/api_impl_creator.cc
+    ${RUNTIME_API_DIR}/impl/api_impl_mbuf.cc
+    ${RUNTIME_API_DIR}/impl/api_impl_stub.cc
+    ${RUNTIME_API_DIR}/impl/api_impl_arch5162.cc
+    ${RUNTIME_API_DIR}/impl/v100/api_impl_creator_c.cc
 )
 
 set(common_src_files
@@ -174,8 +174,8 @@ set(runtime_src_aclgraph_list
 )
 
 set(libruntime_src_files_include_for_arch5162
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_error_tiny_stub.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/v100/api_impl_v100.cc
+    ${RUNTIME_API_DIR}/impl/api_error_tiny_stub.cc
+    ${RUNTIME_API_DIR}/impl/v100/api_impl_v100.cc
     ${RUNTIME_CORE_DIR}/src/context/context_tiny_stub.cc
     ${RUNTIME_CORE_DIR}/src/dfx/printf_tiny_stub.cc
     ${RUNTIME_CORE_DIR}/src/event/ipc_event_tiny_stub.cc
@@ -321,7 +321,7 @@ set(RUNTIME_INC_DIR_ARCH5162
     ${RUNTIME_DIR}/src/runtime/core/inc/task
     ${RUNTIME_DIR}/src/runtime/core/inc/utils
     ${RUNTIME_DIR}/src/runtime/api
-    ${RUNTIME_CORE_DIR}/src/api_impl
+    ${RUNTIME_API_DIR}/impl
     ${RUNTIME_CORE_DIR}/src/engine
     ${RUNTIME_CORE_DIR}/src/engine/hwts
     ${RUNTIME_CORE_DIR}/src/engine/stars

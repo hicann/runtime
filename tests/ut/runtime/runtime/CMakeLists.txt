@@ -368,16 +368,16 @@ set(runtimeut_src_tiny_exclude_list
     ${TOP_DIR}/src/runtime/api/api_c_snapshot.cc
     ${TOP_DIR}/src/runtime/api/api_c_uvm.cc
     ${TOP_DIR}/src/runtime/api/api_c_kernel.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_error_standard_soc.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_error_standard_soc.cc
     ${TOP_DIR}/src/runtime/feature/xpu/api_decorator_xpu.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_standard_soc.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_soma.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_event.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_david.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_standard_soc.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_soma.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_event.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_david.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/v200/api_impl_david_capture_event.cc
     ${TOP_DIR}/src/runtime/feature/xpu/api_error_xpu.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_error_uvm.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_uvm.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_error_uvm.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_uvm.cc
     ${TOP_DIR}/src/runtime/core/src/context/context_standard_soc.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/api_decorator_aclgraph.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/api_error_aclgraph.cc
@@ -447,12 +447,12 @@ set(runtimeut_src_tiny_exclude_list
 set(runtimeut_src_tiny_include_list
     ${TOP_DIR}/src/runtime/api/api_c_stub.cc
     ${TOP_DIR}/src/runtime/api/api_c_tiny.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_error_tiny_stub.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_stub.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_tiny.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_decorator_tiny_stub.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_error_tiny_stub.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_stub.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_tiny.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_decorator_tiny_stub.cc
     ${TOP_DIR}/src/runtime/core/src/dfx/fast_recover.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/v100/api_impl_v100.cc
+    ${TOP_DIR}/src/runtime/api/impl/v100/api_impl_v100.cc
     ${TOP_DIR}/src/runtime/core/src/context/context_tiny_stub.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/tiny/context_tiny_stub_aclgraph.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/tiny/capture_adapt_tiny_stub.cc
@@ -553,20 +553,20 @@ set(runtimeut_src_list
     ${runtimeut_src_callback_list}
     ${TOP_DIR}/src/runtime/api/api.cc
     ${TOP_DIR}/src/runtime/feature/xpu/api_decorator_xpu.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_decorator.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/v100/api_impl_v100.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_mbuf.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_standard_soc.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_soma.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_event.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_decorator.cc
+    ${TOP_DIR}/src/runtime/api/impl/v100/api_impl_v100.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_mbuf.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_standard_soc.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_soma.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_event.cc
     ${TOP_DIR}/src/runtime/feature/xpu/api_error_xpu.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_error.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_error_standard_soc.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_creator.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/v100/api_impl_creator_c.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_error_uvm.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_uvm.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_error.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_error_standard_soc.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_creator.cc
+    ${TOP_DIR}/src/runtime/api/impl/v100/api_impl_creator_c.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_error_uvm.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_uvm.cc
     ${TOP_DIR}/src/runtime/core/src/uvm/uvm_callback.cc
     ${TOP_DIR}/src/runtime/core/src/context/context.cc
     ${TOP_DIR}/src/runtime/core/src/context/context_standard_soc.cc
@@ -688,24 +688,24 @@ set(runtimeut_david_src_list
     ${runtime_xpu_src}
     ${TOP_DIR}/src/runtime/api/api.cc
     ${TOP_DIR}/src/runtime/feature/xpu/api_decorator_xpu.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_decorator.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_mbuf.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_event.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_david.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_decorator.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_mbuf.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_event.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_david.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/v200/api_impl_david_capture_event.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_creator.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/v200/api_impl_creator_c.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_standard_soc.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_soma.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_creator.cc
+    ${TOP_DIR}/src/runtime/api/impl/v200/api_impl_creator_c.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_standard_soc.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_soma.cc
     ${TOP_DIR}/src/runtime/feature/xpu/api_error_xpu.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_error.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_error_standard_soc.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/v200/api_impl_v200.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_error.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_error_standard_soc.cc
+    ${TOP_DIR}/src/runtime/api/impl/v200/api_impl_v200.cc
     ${TOP_DIR}/src/runtime/feature/xpu/api_impl_xpu_v200.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/v100/api_impl_v100.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_error_uvm.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_uvm.cc
+    ${TOP_DIR}/src/runtime/api/impl/v100/api_impl_v100.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_error_uvm.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_uvm.cc
     ${TOP_DIR}/src/runtime/core/src/uvm/uvm_callback.cc
     ${TOP_DIR}/src/runtime/core/src/context/context.cc
     ${TOP_DIR}/src/runtime/core/src/context/context_standard_soc.cc
@@ -1407,7 +1407,7 @@ set(RUNTIME_TEST_INC_DIR_COMMON
     ${TOP_DIR}/src/runtime/core/inc/engine/hwts
     ${TOP_DIR}/src/runtime/core/inc/dqs
     ${TOP_DIR}/src/runtime/api
-    ${TOP_DIR}/src/runtime/core/src/api_impl
+    ${TOP_DIR}/src/runtime/api/impl
     ${TOP_DIR}/src/runtime/core/src/engine
     ${TOP_DIR}/src/runtime/core/src/engine/hwts
     ${TOP_DIR}/src/runtime/core/src/engine/stars
@@ -1564,7 +1564,7 @@ set(runtimeut_v201_src_task_list
     ${TOP_DIR}/src/runtime/feature/dqs/dqs_task.cc
     ${TOP_DIR}/src/runtime/feature/dqs/dqs_c.cc
     ${TOP_DIR}/src/runtime/feature/dqs/model_serial_sched_task.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/v201/api_impl_v200_adapt.cc
+    ${TOP_DIR}/src/runtime/api/impl/v201/api_impl_v200_adapt.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/event/notify_task_v201.cc
     ${TOP_DIR}/src/runtime/core/src/task/v201/memory_corruption_checker.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/cmo/cmo_task_v201.cc
@@ -1588,24 +1588,24 @@ set(runtimeut_v201_src_list
     ${runtime_xpu_src}
     ${TOP_DIR}/src/runtime/api/api.cc
     ${TOP_DIR}/src/runtime/feature/xpu/api_decorator_xpu.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_decorator.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_mbuf.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_event.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_david.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_decorator.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_mbuf.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_event.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_david.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/v200/api_impl_david_capture_event.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_creator.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/v100/api_impl_v100.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/v201/api_impl_v201.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/v201/api_impl_v200_adapt.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/v201/api_impl_creator_c.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_standard_soc.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_soma.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_creator.cc
+    ${TOP_DIR}/src/runtime/api/impl/v100/api_impl_v100.cc
+    ${TOP_DIR}/src/runtime/api/impl/v201/api_impl_v201.cc
+    ${TOP_DIR}/src/runtime/api/impl/v201/api_impl_v200_adapt.cc
+    ${TOP_DIR}/src/runtime/api/impl/v201/api_impl_creator_c.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_standard_soc.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_soma.cc
     ${TOP_DIR}/src/runtime/feature/xpu/api_error_xpu.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_error.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_error_standard_soc.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_error_uvm.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_uvm.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_error.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_error_standard_soc.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_error_uvm.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_uvm.cc
     ${TOP_DIR}/src/runtime/core/src/uvm/uvm_callback.cc
     ${TOP_DIR}/src/runtime/core/src/context/context.cc
     ${TOP_DIR}/src/runtime/core/src/context/context_standard_soc.cc
@@ -1767,7 +1767,7 @@ set(RUNTIME_V201_INC_DIR
     ${TOP_DIR}/src/runtime/core/inc/sqe/v201
     ${TOP_DIR}/src/runtime/core/inc/cond_isa/v201
     ${TOP_DIR}/src/runtime/feature/dqs
-    ${TOP_DIR}/src/runtime/core/src/api_impl/v201
+    ${TOP_DIR}/src/runtime/api/impl/v201
     ${TOP_DIR}/src/runtime/feature/dqs
     ${TOP_DIR}/src/runtime/core/src/common/ioctl/v201
 )

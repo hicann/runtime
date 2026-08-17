@@ -250,16 +250,16 @@ set(runtimeut_910b_src_list
     ${runtimeut_src_ttlv_list}
     ${runtimeut_src_callback_list}
     ${TOP_DIR}/src/runtime/api/api.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_decorator.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_mbuf.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_standard_soc.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_soma.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_event.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_error.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_error_standard_soc.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_error_uvm.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_uvm.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_decorator.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_mbuf.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_standard_soc.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_soma.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_event.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_error.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_error_standard_soc.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_error_uvm.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_uvm.cc
     ${TOP_DIR}/src/runtime/core/src/uvm/uvm_callback.cc
     ${TOP_DIR}/src/runtime/core/src/context/context.cc
     ${TOP_DIR}/src/runtime/core/src/context/context_standard_soc.cc
@@ -355,15 +355,15 @@ set(runtimeut_910b_src_list
     ${TOP_DIR}/src/runtime/core/src/engine/hwts/direct_hwts_engine.cc
     ${TOP_DIR}/src/runtime/core/src/engine/engine_factory.cc
     ${TOP_DIR}/src/runtime/core/src/engine/hwts/shm_cq.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_creator.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/v100/api_impl_creator_c.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_creator.cc
+    ${TOP_DIR}/src/runtime/api/impl/v100/api_impl_creator_c.cc
     ${runtimeut_src_common_list}
     ${runtimeut_platform_list}
     ${TOP_DIR}/src/runtime/feature/xpu/api_decorator_xpu.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/v100/api_impl_v100_xpu.cc
+    ${TOP_DIR}/src/runtime/api/impl/v100/api_impl_v100_xpu.cc
     ${TOP_DIR}/src/runtime/feature/xpu/api_error_xpu.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_creator.cc
- 	${TOP_DIR}/src/runtime/core/src/api_impl/v100/api_impl_creator_c.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_creator.cc
+ 	${TOP_DIR}/src/runtime/api/impl/v100/api_impl_creator_c.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/json_parse.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/program_common.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/kernel_utils.cc
@@ -486,7 +486,7 @@ set(RUNTIME_TEST_INC_DIR_COMMON
     ${TOP_DIR}/src/runtime/core/inc/engine/hwts
     ${TOP_DIR}/src/runtime/core/inc/dqs
     ${TOP_DIR}/src/runtime/api
-    ${TOP_DIR}/src/runtime/core/src/api_impl
+    ${TOP_DIR}/src/runtime/api/impl
     ${TOP_DIR}/src/runtime/core/src/engine
     ${TOP_DIR}/src/runtime/core/src/engine/hwts
     ${TOP_DIR}/src/runtime/core/src/engine/stars
