@@ -3986,7 +3986,7 @@ ACL_FUNC_VISIBILITY aclError aclrtDeviceGetUuid(int32_t deviceId, aclrtUuid* uui
  * @ingroup AscendCL
  * @brief device limit type
  */
-typedef enum tagAclrtDeviceLimit {
+typedef enum aclrtDeviceLimit {
     ACL_RT_DEV_LIMIT_SIMT_STACK_SIZE = 0,
     ACL_RT_DEV_LIMIT_SIMT_DVG_WARP_STACK_SIZE = 1,
     ACL_RT_DEV_LIMIT_SIMD_STACK_SIZE = 2,
