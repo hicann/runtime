@@ -253,8 +253,6 @@ uint32_t GetRingbufferElementNum();
 
 void RegErrorProcFunc(rtChipType_t chipType, uint64_t errorType, DeviceErrorProc::StarsErrorInfoProc func);
 const std::map<uint64_t, DeviceErrorProc::StarsErrorInfoProc>& GetErrorProcFuncMap(rtChipType_t chipType);
-void RegDavidErrorMapInfo(rtChipType_t chipType, const std::map<uint64_t, std::string>* errorMap);
-const std::map<uint64_t, std::string>* GetDavidErrorMapInfo(rtChipType_t chipType);
 uint16_t GetMteErrWaitCount();
 std::string FormatRasFaultDesc(const uint32_t eventId, const std::string& eventName);
 RasEventMatch QueryRasFaultEvents(const Device* const dev, uint64_t deviceTimeMs, uint64_t windowAfterMs);

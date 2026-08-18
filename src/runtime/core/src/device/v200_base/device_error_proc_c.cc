@@ -9,6 +9,7 @@
  */
 
 #include <array>
+#include <unordered_map>
 #include "device_error_proc_c.hpp"
 #include "error_message_manage.hpp"
 #include "task_david.hpp"
@@ -38,9 +39,12 @@ enum RtAixSubErrorType : std::uint8_t {
     SUB_ERROR_TYPE_RESERVE    /* NA */
 };
 
-static const std::map<uint64_t, std::string> g_davidErrorMapInfo = {
+static const std::unordered_map<uint64_t, std::string> g_davidErrorMapInfo = {
     // RINGBUFFER_CUBE_ERROR_0_OFFSET
-    {CUBE_INVLD_INPUT, "the data read back from L0a and L0b  is INF or NAN."},
+    {CUBE_ERR_L0A_RDWR_CFLT, "Software's L0A Ping/Pong memory allocation scheme has problem."},
+    {CUBE_ERR_L0B_RDWR_CFLT, "Software's L0B Ping/Pong memory allocation scheme has problem."},
+    {CUBE_ERR_L0C_RDWR_CFLT, "Software's L0C Ping/Pong memory allocation scheme has problem."},
+    {CUBE_INVLD_INPUT, "the data read back from L0a and L0b are INF or NAN."},
     {CUBE_L0A_WRAP_AROUND, "The address for CUBE to operate L0A is out of bounds."},
     {CUBE_L0B_WRAP_AROUND, "The address for CUBE to operate L0B is out of bounds."},
     {CUBE_L0C_WRAP_AROUND, "The address for CUBE to operate L0C is out of bounds."},
@@ -50,20 +54,41 @@ static const std::map<uint64_t, std::string> g_davidErrorMapInfo = {
     {CUBE_ILLEGAL_INSTR, "The CUBE instruction is abnormal. "
                          "Possible cause: The parameter violates the instruction constraints, the binary version does "
                          "not match, or the instruction is overwritten"},
-    {CUBE_ERR_HSET_CNT_OVF, "A overflow error occurs in the CUBE HSET counter."},
-    {CUBE_ERR_HSET_CNT_UNF, "A underflow error occurs in the CUBE HSET counter."},
+    {CUBE_ERR_HSET_CNT_OVF, "An overflow error occurs in the CUBE HSET counter."},
+    {CUBE_ERR_HSET_CNT_UNF, "An underflow error occurs in the CUBE HSET counter."},
     {CUBE_ERR_PBUF_WRAP_AROUND, "The address for CUBE to operate FIXP buffer is out of bounds."},
     {CUBE_ERR_PARITY_ERR, "Parity error for the Cube parity ERR register."},
     {CUBE_ERR_SF_ECC_MB_ERR, "A multi-bit ECC error occurs when CUBE reads MX buffer. See the RAS alarm handling."},
+    {CUBE_ERR_L0ASF_WRAP_AROUND, "CUBE L0A memory read write conflict."},
+    {CUBE_ERR_L0BSF_WRAP_AROUND, "CUBE L0B memory read write conflict."},
+    // CUBE_ERROR_T0_1
+    {CUBE_INSTR_UNDEF, "The operation code is illegal."},
+    {CUBE_INSTR_ILL_CFG, "The instruction configuration of CUBE is illegal."},
+    {CUBE_INSTR_ADDR_MISALIGN, "The CUBE instruction address misalign."},
+    {CUBE_FM_ADDR_OVERFLOW, "Feature map(conv/wino) of left matrix(matmul) exceeds L1."},
+    {CUBE_NONBRANCH_BIAS_OVERFLOW, "Non-brc bias addr exceeds L1."},
+    {CUBE_ELW_ADDR_OVERFLOW, "Elw addr exceeds L1."},
+    {CUBE_KERNEL_ADDR_OVERFLOW, "Kernel(conv/wino) or right matrix(matmul) exceeds L1."},
+    {CUBE_FB_ADDR_OVERFLOW, "Fixp parameter buffer addr exceeds 6k."},
+    {CUBE_BT_ADDR_OVERFLOW, "Bias table addr exceeds L1."},
+    {CUBE_RESULT_ADDR_OVERFLOW, "Cube result addr exceeds L1."},
 
     // RINGBUFFER_MTE_ERROR_OFFSET
     {MTE_NDDMA_CACHE_ECC, "A multi-bit ECC error occurs when MTE reads NDDMA cache. See the RAS alarm handling."},
     {MTE_NDDMA_REG_BUF_ECC,
      "A multi-bit ECC error occurs when MTE reads NDDMA request buffer. See the RAS alarm handling."},
-    {MTE_L1_ECC, "A multi-bit ECC error occurs when MTE2 and MTE3 reads L1. See the RAS alarm handling."},
+    {MTE_L1_ECC, "A multi-bit ECC error occurs when MTE2 and MTE3 read L1. See the RAS alarm handling."},
     {MTE_CFG_REG_PARITY, "A parity error occurs when AICore reads the CFG register. See the RAS alarm handling"},
+    {MTE_L0A_RDWR_CFLT, "CUBE L0A memory read write conflict."},
+    {MTE_L0B_RDWR_CFLT, "CUBE L0B memory read write conflict."},
+    {MTE_OFFSET_MISALIGN, "MTE gather/scatter dma instruction offset misalign."},
+    {MTE_XGAMMA_LINE_SEQ_WRON,
+     "In the xgamma operation, the first line is not loaded before computation begins;"
+     "moreover, there is no end-of-line marker to signal the completion of the current image before proceeding to"
+     " the next image."},
     {MTE_READ_OVERFLOW, "The address of the MTE 2D instruction to read L1 is out of bounds."},
     {MTE_WRITE_OVERFLOW, "The address of the MTE 2D instruction to write L1/L0A/L0B is out of bounds."},
+    {MTE_BIF_CFG_REG_PARITY, "BIF configuration parity error."},
     {MTE_INSTR_ILLEGAL_CFG, "The MTE instruction is abnormal. "
                             "Possible cause: The parameter violates the instruction constraints, the binary version "
                             "does not match, or the instruction is overwritten"},
@@ -71,7 +96,15 @@ static const std::map<uint64_t, std::string> g_davidErrorMapInfo = {
     {MTE_INSTR_ADDR_MISALIGN, "The MTE non-atomic instruction address is not aligned."},
     {MTE_GDMA_READ_OVERFLOW, "The address for MTE2 to read UB and MTE3 to read L1/UB is out of bounds."},
     {MTE_GDMA_WRITE_OVERFLOW, "The address for MTE2 to write UB and MTE3 to write L1/UB is out of bounds."},
+    {MTE_GDMA_ILLEGAL_BURST_NUM, "The burst number value of the MOV instruction is abnormal."},
+    {MTE_GDMA_ILLEGAL_BURST_LEN, "The burst length value of the MOV instruction is abnormal."},
+    {MTE_AIPP_ILLEGAL_PARAM, "AIPP decompression instruction configuration error."},
+    {MTE_ERR_UNZIP, "UNZIP decompression instruction configuration error."},
+    {MTE_XGAMMA_LB0_ECC, "MTE XGAMMA LB0 multi-bit ECC error."},
+    {MTE_XGAMMA_LB1_ECC, "MTE XGAMMA LB1 multi-bit ECC error."},
+    {MTE_ERR_WAIPP, "WAIPP instruction configuration error."},
     {MTE_STB_ECC, "A multi-bit ECC error occurs when MTE reads STB buffer. See the RAS alarm handling."},
+    {MTE_AIPP_ECC, "MTE AIPP multi-bit ECC error."},
     {MTE_TAGMGR_BUF_ECC, "A multi-bit ECC error occurs when MTE reads tagmgr buffer. See the RAS alarm handling."},
     {MTE_UB_ECC, "A multi-bit ECC error occurs when MTE reads UB. See the RAS alarm handling."},
     {MTE_ROB_ECC, "A multi-bit ECC error occurs when MTE reads ROB buffer. See the RAS alarm handling."},
@@ -83,6 +116,16 @@ static const std::map<uint64_t, std::string> g_davidErrorMapInfo = {
     {L1_L0B_RDWR_CFLT, "The address for MTE to write L0B conflicts with that for CUBE to read L0B."},
     {L1_READ_2D_OVERFLOW, "The address of the LOAD2D instruction to read L1 is out of bounds."},
     {L1_WRITE_2D_OVERFLOW, "The address of the LOAD2D instruction to write L0A/L0B is out of bounds."},
+    {L1_DWS_PAD_CONF_ERR, "DEPTHWISE PADDING illegal configuration."},
+    {L1_DWS_FMAP_H_ILLEGAL, "DEPTHWISE FMAP illegal configuration."},
+    {L1_WINO_L0B_WRITE_OVERFLOW, "WINOB write overflow."},
+    {L1_WINO_L0B_READ_OVERFLOW, "WINOB read overflow."},
+    {L1_WINO_L0A_WRITE_OVERFLOW, "WINOA write overflow."},
+    {L1_WINO_L0A_READ_OVERFLOW, "WINOA read overflow."},
+    {L1_WINO_ILLEGAL_V_COV_PAD_CTL, "WINO V padding value is invalid."},
+    {L1_WINO_ILLEGAL_H_COV_PAD_CTL, "WINO H padding value is invalid."},
+    {L1_ILLEGAL_W_SIZE, "WINOA FMAP width + PADDING value is less than 4."},
+    {L1_ILLEGAL_H_SIZE, "WINOA FMAP height + PADDING value is less than 4."},
     {L1_ILLEGAL_CHN_SIZE, "The value of L1H*L1W*channel size of the LOAD3DV2 instruction is greater "
                           "than the size of L1, or the channel size is not aligned."},
     {L1_ILLEGAL_K_M_EXT_STEP,
@@ -93,12 +136,16 @@ static const std::map<uint64_t, std::string> g_davidErrorMapInfo = {
                                "the k start pos is not an integral multiple of the number of 32-byte data elements "
                                "corresponding to the data type, "
                                "or the m start pos is not an integral multiple of 16."},
+    {L1_ILLEGAL_SCHN_CFG, "Small channel mode configuration error."},
+    {L1_ILLEGAL_SMALLK_CFG, "LOAD3D small k configuration error."},
     {L1_ILLEGAL_FM_SIZE, "The width or height of the feature map of the LOAD3D instruction is greater than 0X8000, "
                          "or the area of the feature map is greater than the size of the L1 memory."},
+    {L1_ILLEGAL_L1_3D_SIZE, "LOAD3DV2 L1 3D size is invalid."},
     {L1_ILLEGAL_STRIDE, "The stride_w or stride_h of the LOAD3D instruction is 0."},
     {L1_PADDING_CFG, "The padding configuration of the LOAD3D instruction is invalid."},
     {L1_READ_3D_OVERFLOW, "The address for the LOAD3D instruction to read L1 is out of bounds."},
     {L1_WRITE_3D_OVERFLOW, "The address for the LOAD3D instruction to write L0A/L0B is out of bounds."},
+    {L1_BAS_RADDR_OBOUND, "The initial address specified for the LOAD3D instruction is out of the L1 3D size range."},
     {L1_F1WPOS_LARGER_FSIZE, "The position of the first window of LOAD3D exceeds the left or upper padding boundary, "
                              "or exceeds the right or lower padding boundary of the feature map(without padding)."},
     {L1_FMAP_LESS_KERNEL, "The width of the LOAD3D filter is greater than the width of the "
@@ -108,18 +155,19 @@ static const std::map<uint64_t, std::string> g_davidErrorMapInfo = {
     {L1_FPOS_LARGER_FSIZE, "The LOAD3D K position is out of the filter range."},
 
     // RINGBUFFER_L1_ERROR_1_OFFSET
+    {L1_ERR_FIFO_PARITY, "L1/FIXP fifo parity."},
     {FIXP_BIU_RDWR_RESP, "The address for fixpipe to write GM is invalid"},
     {FIXP_STB_ECC_ERR, "A multi-bit ECC error occurs when fixpipe reads STB buffer. See the RAS alarm handling"},
     {FIXP_FBUF_WR_OVERFLOW, "The address for fixpipe to write FBUF is out of bounds."},
     {FIXP_FBUF_RD_OVERFLOW, "The address for fixpipe to read FBUF is out of bounds."},
-    {FIXP_OUT_WR_OVERFLOW, "A overflow error occurs when the FIXP write."},
+    {FIXP_OUT_WR_OVERFLOW, "An overflow error occurs when the FIXP write."},
     {FIXP_L1_WR_OVERFLOW, "The address for fixpipe to write L1 is out of bounds."},
     {FIXP_L1_RD_OVERFLOW, "The address for fixpipe to read L1 is out of bounds."},
     {FIXP_L0C_RD_OVERFLOW, "The address for fixpipe to read L0C is out of bounds."},
     {FIXP_ILLEGAL_CFG, "The fixpipe instruction parameter is invalid."},
     {FIXP_ADDR_MISAL, "The address for fixpipe to read L0C, read/write L1, and read/write FBUF is not aligned."},
     {FIXP_L0C_ECC_ERR, "A multi-bit ECC error occurs when fixpipe reads L0C. See the RAS alarm handling."},
-    {FIXP_L0C_RDWR_CFLT, "The address for fixpipe to read L0C confilicts with that for CUBE to write L0C."},
+    {FIXP_L0C_RDWR_CFLT, "The address for fixpipe to read L0C conflicts with that for CUBE to write L0C."},
     {FIXP_WRITE_UB_OVFLW, "The address for fixpipe to write UB is out of bounds."},
     {L1_UB_WR_OVFLW, "The address for MTE to move from L1 to UB is out of bounds."},
     {L1_WAITSET_ERR, "The configuration of HWATI/HSET is invalid."},
@@ -128,8 +176,10 @@ static const std::map<uint64_t, std::string> g_davidErrorMapInfo = {
     {L1_GDMA_WRITE_OVERFLOW, "The address for the MTE instruction to write the L0A/L0B bias table is out of bounds."},
     {L1_INSTR_ILLEGAL_CFG, "The MTE instruction is abnormal. Possible cause: "
                            "The parameter violates the instruction constraints, the binary version does not match, or "
-                           "the instructinon is overwirtten."},
+                           "the instruction is overwritten."},
     {L1_INSTR_ADDR_MISALIGN, "The MTE instruction address is not aligned."},
+    {L1_SC_CFG_PARITY, "L1 SC configuration registers parity error."},
+    {L1_FIXP_BT_NAN_INF, "MTE1 biasbuf path conversion NaN/Inf error."},
 
     // RINGBUFFER_SU_ERROR_OFFSET
     {SU_IFU_BUS_ERR_T0,
@@ -139,7 +189,7 @@ static const std::map<uint64_t, std::string> g_davidErrorMapInfo = {
     {SU_CCU_DIV0_T0, "divide by 0."},
     {SU_CCU_ILLEGAL_INSTR_T0, "The scalar instruction is abnormal. Possible cause: "
                               "The parameter violates the instruction constraints, the binary version does not match, "
-                              "or the instructinon is overwirtten."},
+                              "or the instruction is overwritten."},
     {SU_CCU_NEG_SQRT_T0, "The number of roots is negative. "},
     {SU_CCU_UB_ECC_T0, "A multi-bit ECC error occurs when scalar accesses UB. See the RAS alarm handling."},
     {SU_CCU_INF_NAN_T0, "The input of the floating-point instruction run by the CCU is nan/inf."},
@@ -150,7 +200,7 @@ static const std::map<uint64_t, std::string> g_davidErrorMapInfo = {
     {SU_CCU_DC_DATA_ECC_T0,
      "A multi-bit ECC error occurs when scalar accesses dcache data. See the RAS alarm handling."},
     {SU_CCU_DC_TAG_ECC_T0, "A multi-bit ECC error occurs when scalar accesses dcache tag. See the RAS alarm handling."},
-    {SU_CCU_DIV0_FP_T0, "A error occurs in the FP32 DIV0."},
+    {SU_CCU_DIV0_FP_T0, "An error occurs in the FP32 DIV0."},
     {SU_CCU_NEG_SQRT_FP_T0, "The input of the FP SQRT calculation unit is a negative number."},
     {SU_CCU_ERR_PARITY_ERR_T0, "A parity error occurs when SU reads FIFO. See the RAS alarm handling."},
     {SU_CCU_SEQ_ERR_T0, "The SEQ command sequence is incorrect."},
@@ -161,17 +211,36 @@ static const std::map<uint64_t, std::string> g_davidErrorMapInfo = {
     {SU_CCU_SAFETY_CRC_ERR_T0, "MTE CRC error."},
     {SU_CCU_LSU_ATOMIC_ERR_T0, "The scalar atomic instruction accesses the GM that is modified by scalar "
                                "but is not written back."},
-    {SU_CCU_CC_SET_OVFL_ERR_T0, "The accumulated value of the inter-core communication flag coutner "
+    {SU_CCU_CC_SET_OVFL_ERR_T0, "The accumulated value of the inter-core communication flag counter "
                                 "exceeds the maximum value 15."},
     {SU_SAFETY_1BIT_ECC_OVFLW_ERR_T0, "Overflow error when the number of 1-bit ECC errors exceeds the preset value."},
     {SU_CCU_DC_SSBUF_ECC_T0, "A multi-bit ECC error occurs when scalar reads SS buffer. See the RAS alarm handling."},
+    {SU_IFU_BUS_PTY_ERR, "The parity code attached to the read data returned from BIF to IFU is inconsistent with the"
+                         " parity code calculated by IFU, triggering a parity check error."},
+    {SU_BMU_ERR, "An exception occurred in the buf_allocate or buf_free instructions related to BMU."},
+    {SU_HSCB_BUS_ERR, "SU initiates access to the HSCB path, and the HSCB bus returns an error response."},
+    {SU_GET_NEXT_TASK_ERR, "In a task program, there is an extra get_ntxt_task_hscb instruction."},
     {SU_HIT_TRAP_ERR_T0, "The trap instruction reports an error."},
     {WARN_AS_EXCEPTION_T0,
      "A 1-bit ECC err occurs 15 times or a multi-hit event occurs in IFU during AICore execution. "
      "See the RAS alarm handling."},
 
-    // sc error
+    // SC_ERROR_T0_0
+    {SC_CNT_SW_BUS_ERR, "During a slow context switch, SC encounters a bus error while transferring data."},
+    {SC_REG_PARITY_ERR, "A parity error occurred in the CFG register inside SC."},
+    {SC_SLOW_CSW_ROB_ECC_ERR, "During a slow CSW in SC, the ROB RAM from the SU's IFU is reused for reading,"
+                              "resulting in 2 2-bit ECC error."},
     {SC_BUS_RESP_TIMEOUT_ERR, "The bus is busy, and the response times out."},
+
+    // SU_ERROR_T0_1
+    {SU_IC_ECC_REPEAT_ERR, "ECC errors frequently occur at the same address within the same bank of the IC,"
+                           " and the count reaches 0xFF, triggering an exception."},
+    {SU_IC_ECC_OTHER_ERR, "Subsequent ECC errors occur at a different bank and address compared to the first ECC error,"
+                          " and the count reaches 0xFF, triggering an exception."},
+    {SU_DC_ECC_REPEAT_ERR, "For the DC, frequent ECC errors occur at the same bank and address,"
+                           " and the count reaches 0xFF, triggering an exception."},
+    {SU_DC_ECC_OTHER_ERR, "For the DC, subsequent ECC errors occur at a bank and address different from the first ECC"
+                          " error, and the count reaches 0xFF, triggering an exception."},
 
     // RINGBUFFER_VEC_ERROR_OFFSET
     {VEC_ERR_UB_ARB_DATA_EXCP_MTE_T0, "Data from the MTE is abnormal."},
@@ -180,29 +249,38 @@ static const std::map<uint64_t, std::string> g_davidErrorMapInfo = {
     {VEC_ERR_INSTR_TIMEOUT_T0, "VEC VF execution timeout. Check the configuration of Runtime"},
     {VEC_ERR_SU_PLD_UNDEF_T0, "The non-VF instruction is abnormal. Possible cause: "
                               "The parameter violates the instruction constraints, the binary version does not match, "
-                              "or the instructinon is overwirtten."},
+                              "or the instruction is overwritten."},
     {VEC_ERR_SU_PLD_ILL_CFG_T0, "The parameter of the non-VF instruction is invalid."},
     {VEC_ERR_PC_OVERFLOW_T0,
-     "PC is greater than 48 bits. Possible cause: the compiler bug or the instructoin is overwirtten."},
+     "PC is greater than 48 bits. Possible cause: the compiler bug or the instruction is overwritten."},
     {VEC_ERR_INSTR_UNDEF_T0, "The instruction in VEC VF is abnormal. Possible cause: "
                              "The parameter violates the instruction constraints, the binary version does not match, "
-                             "or the instructinon is overwirtten."},
+                             "or the instruction is overwritten."},
     {VEC_INSTR_ILLEGAL_CFG_T0, "The parameter of the VEC VF instruction is invalid."},
-    {VEC_ERR_HWLP_STACK_OVFL_T0, "The number of nested VLOOP exceeds the hardware limit, which may be a complier bug."},
+    {VEC_ERR_HWLP_STACK_OVFL_T0, "The number of nested VLOOP exceeds the hardware limit, which may be a compiler bug."},
     {VEC_ERR_HWLP_INSTR_NUM_MISMATCH_T0, "For the nested VLOOP, the number of instructions in the inner loop "
-                                         "is greater than that in the outer loop, which may be a complier bug."},
+                                         "is greater than that in the outer loop, which may be a compiler bug."},
     {VEC_ERR_BIU_RESP_ERR_T0, "SIMT accesses an invalid GM address or the cross-device memory access times out."},
     {VEC_ERR_PB_ECC_MBERR_T0,
      "A multi-bit ECC error occurs when VEC accesses parameter buffer. See the RAS alarm handling."},
     {VEC_ERR_IDATA_INF_NAN_T0, "The input data of the instruction operation is INF/NAN."},
     {VEC_ERR_DIV_BY_ZERO_T0, "Divide-by-zero error occurs for the VEC instruction."},
-    {VEC_ERR_VALU_NEG_LN_T0, "The input data of the VALU lN operation is a negative number."},
-    {VEC_ERR_VALU_NEG_SQRT_T0, "The input data of the VALU squart operation is a negative number."},
+    {VEC_ERR_VALU_NEG_LN_T0, "The input data of the VALU ln operation is a negative number."},
+    {VEC_ERR_VALU_NEG_SQRT_T0, "The input data of the VALU sqrt operation is a negative number."},
     {VEC_ERR_UB_ADDR_OVERFLOW_T0, "The address for VEC to access UB is not aligned."},
     {VEC_UB_WRAP_AROUND, "The address for VEC to access UB is out of bounds."},
     {VEC_ERR_UB_ECC_MBERR_T0, "A multi-bit ECC error occurs when VEC accesses UB. See the RAS alarm handling."},
     {VEC_ERR_VMS_UNSORT_T0, "The input data of the sorting instruction is not correctly sorted."},
     {VEC_ERR_CSW_DATA_T0, "Exception when accessing the internal SRAM during context switch (multi-bit ECC)."},
+    {VEC_ERR_SC_CFG_PARITY_T0, "SC Interface configuration register parity check error occurred."},
+    {VEC_ERR_UB_SB_ECC_REPEAT_ERR_T0, "The number of single-bit ECC errors at the same address on UB has exceeded"
+                                      " the hard failure threshold."},
+    {VEC_ERR_UB_SB_ECC_OTHER_ERR_T0, "The number of single-bit ECC errors at different addresses on UB has"
+                                     " exceeded the hard failure threshold."},
+    {VEC_ERR_IC_ECC_REPEAT_ERR_T0, "The number of single-bit ECC errors at the same address on ICACHE has"
+                                   " exceeded the hard failure threshold."},
+    {VEC_ERR_IC_ECC_OTHER_ERR_T0, "The number of single-bit ECC errors at different addresses on ICACHE has"
+                                  " exceeded the hard failure threshold."},
     // RINGBUFFER_VEC_ERROR_1_OFFSET
     {VEC_ERR_UNEXP_JOIN_T0,
      "When the VEC executes a SIMT task, some warps end with \"join\" and some warps end with \"end\"."},
@@ -211,8 +289,8 @@ static const std::map<uint64_t, std::string> g_davidErrorMapInfo = {
                                     "The local variable is too large or there are too many local variables."},
     {VEC_ERR_GM_ADDR_OVFL_T0, "The address for VEC to read GM is out of bounds(exceeding 48 bits)."},
     {VEC_ERR_DVG_STACK_OVFL_T0, "VEC SIMT DVG stack overflows, which may be caused by too many conditional branches "
-                                "or too manay nested loops."},
-    {VEC_ERR_DVG_STACK_UNDFL_T0, "VEC SIMT push and pop operations do not mathc, which may be a compiler bug."},
+                                "or too many nested loops."},
+    {VEC_ERR_DVG_STACK_UNDFL_T0, "VEC SIMT push and pop operations do not match, which may be a compiler bug."},
     {VEC_ERR_BHU_ECC_MBERR_T0, "A multi-bit ECC error occurs when VEC SIMT accesses BHU. See the RAS alarm handling."},
     {VEC_ERR_MROB_ECC_MBERR_T0,
      "A multi-bit ECC error occurs when VEC SIMT accesses MROB. See the RAS alarm handling."},
@@ -223,16 +301,38 @@ static const std::map<uint64_t, std::string> g_davidErrorMapInfo = {
     {VEC_ERR_VTH_ID_ECC_MBERR_T0,
      "A multi-bit ECC error occurs when VEC SIMT accesses thread ID register. See the RAS alarm handling."},
     {VEC_ERR_MRF_ECC_MBERR_T0,
-     "A multi-bit ECC error occurs when VEC SIMT accesses reagister table. See the RAS alarm handling."},
+     "A multi-bit ECC error occurs when VEC SIMT accesses register table. See the RAS alarm handling."},
     {VEC_ERR_DVG_ECC_MBERR_T0,
      "A multi-bit ECC error occurs when VEC SIMT accesses DVG stack. See the RAS alarm handling."},
 };
 
+const std::unordered_map<uint64_t, std::string>* GetDavidErrorMapInfo() { return &g_davidErrorMapInfo; }
+
 uint32_t GetRingbufferElementNum() { return RINGBUFFER_LEN_DAVID; }
 
+static const DavidErrorBitMask* g_davidErrorBitMaskByChip[CHIP_END] = {};
+
+void RegDavidErrorBitMask(rtChipType_t chipType, const DavidErrorBitMask* mask)
+{
+    if (chipType < CHIP_BEGIN || chipType >= CHIP_END) {
+        RT_LOG(RT_LOG_ERROR, "Invalid chipType = %d, valid range: [%d, %d).", chipType, CHIP_BEGIN, CHIP_END);
+        return;
+    }
+    g_davidErrorBitMaskByChip[chipType] = mask;
+}
+
+const DavidErrorBitMask* GetDavidErrorBitMask(rtChipType_t chipType)
+{
+    if (chipType < CHIP_BEGIN || chipType >= CHIP_END) {
+        RT_LOG(RT_LOG_ERROR, "Invalid chipType = %d, valid range: [%d, %d).", chipType, CHIP_BEGIN, CHIP_END);
+        return nullptr;
+    }
+    return g_davidErrorBitMaskByChip[chipType];
+}
+
 static void ProcessDavidStarsCoreErrorOneMapInfo(
-    const std::map<uint64_t, std::string>& errorMap, uint32_t* const cnt, uint64_t err, std::string& errorString,
-    std::string& errorCode, uint32_t offset)
+    const std::unordered_map<uint64_t, std::string>& errorMap, uint32_t* const cnt, uint64_t err,
+    std::string& errorString, std::string& errorCode, uint32_t offset)
 {
     if (err == 0ULL) {
         return;
@@ -264,24 +364,32 @@ static void ProcessDavidStarsCoreErrorOneMapInfo(
 void ProcessDavidStarsCoreErrorMapInfo(
     const DavidOneCoreErrorInfo* const info, std::string& errorString, std::string& errorCode, rtChipType_t chipType)
 {
-    const auto* errorMap = GetDavidErrorMapInfo(chipType);
-    if (errorMap == nullptr) {
-        RT_LOG(RT_LOG_ERROR, "Failed to get david error map for chipType = %d.", chipType);
-        return;
-    }
+    const auto* errorMap = GetDavidErrorMapInfo();
+    const auto* bitMask = GetDavidErrorBitMask(chipType);
+    // bitMask == nullptr means no filtering (all bits valid)
+    uint64_t cubeMask = (bitMask != nullptr) ? bitMask->cubeMask : ~0ULL;
+    uint64_t mteMask = (bitMask != nullptr) ? bitMask->mteMask : ~0ULL;
+    uint64_t l1Mask = (bitMask != nullptr) ? bitMask->l1Mask : ~0ULL;
+    uint64_t scMask = (bitMask != nullptr) ? bitMask->scMask : ~0ULL;
+    uint64_t suMask = (bitMask != nullptr) ? bitMask->suMask : ~0ULL;
+    uint64_t vecMask = (bitMask != nullptr) ? bitMask->vecMask : ~0ULL;
+
     uint32_t cnt = 0U;
     ProcessDavidStarsCoreErrorOneMapInfo(
-        *errorMap, &cnt, info->scError, errorString, errorCode, RINGBUFFER_SC_ERROR_OFFSET);
+        *errorMap, &cnt, info->scError & scMask, errorString, errorCode, RINGBUFFER_SC_ERROR_OFFSET);
     ProcessDavidStarsCoreErrorOneMapInfo(
-        *errorMap, &cnt, info->suError, errorString, errorCode, static_cast<uint32_t>(RINGBUFFER_SU_ERROR_OFFSET));
+        *errorMap, &cnt, info->suError & suMask, errorString, errorCode,
+        static_cast<uint32_t>(RINGBUFFER_SU_ERROR_OFFSET));
     ProcessDavidStarsCoreErrorOneMapInfo(
-        *errorMap, &cnt, info->mteError[0], errorString, errorCode, RINGBUFFER_MTE_ERROR_OFFSET);
+        *errorMap, &cnt, info->mteError[0] & mteMask, errorString, errorCode, RINGBUFFER_MTE_ERROR_OFFSET);
     ProcessDavidStarsCoreErrorOneMapInfo(
-        *errorMap, &cnt, info->vecError, errorString, errorCode, static_cast<uint32_t>(RINGBUFFER_VEC_ERROR_OFFSET));
+        *errorMap, &cnt, info->vecError & vecMask, errorString, errorCode,
+        static_cast<uint32_t>(RINGBUFFER_VEC_ERROR_OFFSET));
     ProcessDavidStarsCoreErrorOneMapInfo(
-        *errorMap, &cnt, info->cubeError, errorString, errorCode, RINGBUFFER_CUBE_ERROR_OFFSET);
+        *errorMap, &cnt, info->cubeError & cubeMask, errorString, errorCode, RINGBUFFER_CUBE_ERROR_OFFSET);
     ProcessDavidStarsCoreErrorOneMapInfo(
-        *errorMap, &cnt, info->l1Error, errorString, errorCode, static_cast<uint32_t>(RINGBUFFER_L1_ERROR_OFFSET));
+        *errorMap, &cnt, info->l1Error & l1Mask, errorString, errorCode,
+        static_cast<uint32_t>(RINGBUFFER_L1_ERROR_OFFSET));
 
     if (cnt != 0U) { // at least one error bit exists.
         return;
@@ -906,14 +1014,24 @@ rtError_t ProcRingBufferTaskDavid(
     return stm->Synchronize();
 }
 
+// david bit mask: hardcoded from original g_davidErrorMapInfo bit positions.
+// low32 = T0_0 register, high32 = T0_1 register (0 if no T0_1).
+static const DavidErrorBitMask g_davidErrorBitMask = {
+    0x000000000001FFF0ULL, // cube: T0_0 bits 4-16, no T0_1
+    0x00000000F407C60FULL, // mte:  T0_0 bits 0-3,9-10,14-18,26,28-31, no T0_1
+    0x001FFFFE79E9C00FULL, // l1:   T0_0 bits 0-3,14-16,19,21-24,27-30; T0_1 bits 1-20
+    0x0000000000000008ULL, // sc:   T0_0 bit 3, no T0_1
+    0x00000000C07FFFFFULL, // su:   T0_0 bits 0-22,30-31, no T0_1
+    0x00001FFF01FFFFC7ULL, // vec:  T0_0 bits 0-2,6-24; T0_1 bits 0-12
+};
+
 static bool RegisterDavidErrorMap()
 {
     const auto& chips = GetDavidChips();
     for (const auto chip : chips) {
-        if (chip == CHIP_CLOUD_V5) {
-            continue;
+        if (chip != CHIP_CLOUD_V5) {
+            RegDavidErrorBitMask(chip, &g_davidErrorBitMask);
         }
-        RegDavidErrorMapInfo(chip, &g_davidErrorMapInfo);
     }
     return true;
 }

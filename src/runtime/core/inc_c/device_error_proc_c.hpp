@@ -10,6 +10,7 @@
 #ifndef __CCE_RUNTIME_DEVICE_ERROR_PROC_C_HPP__
 #define __CCE_RUNTIME_DEVICE_ERROR_PROC_C_HPP__
 
+#include <unordered_map>
 #include "device/device_error_proc.hpp"
 
 namespace cce {
@@ -268,6 +269,22 @@ void LogFusionKernelErrorInfo(const StarsDeviceErrorInfo* const info, uint64_t e
 rtError_t ProcessFusionKernelErrorCommon(
     const StarsDeviceErrorInfo* const info, const uint64_t errorNumber, const Device* const dev,
     const DeviceErrorProc* const insPtr, DeviceErrorProc::StarsErrorInfoProc coreErrorProc);
+
+// Per-chip bit mask for each error register field (uint64_t).
+// Low 32 bits correspond to T0_0 register, high 32 bits to T0_1 register.
+// A set bit means the error position is valid for this chip.
+struct DavidErrorBitMask {
+    uint64_t cubeMask;
+    uint64_t mteMask;
+    uint64_t l1Mask;
+    uint64_t scMask;
+    uint64_t suMask;
+    uint64_t vecMask;
+};
+
+void RegDavidErrorBitMask(rtChipType_t chipType, const DavidErrorBitMask* mask);
+const DavidErrorBitMask* GetDavidErrorBitMask(rtChipType_t chipType);
+const std::unordered_map<uint64_t, std::string>* GetDavidErrorMapInfo();
 } // namespace runtime
 } // namespace cce
 

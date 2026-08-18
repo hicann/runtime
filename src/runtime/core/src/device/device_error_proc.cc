@@ -49,26 +49,6 @@ const std::map<uint64_t, DeviceErrorProc::StarsErrorInfoProc>& GetErrorProcFuncM
     return g_errorProcFuncMap[chipType];
 }
 
-static const std::map<uint64_t, std::string>* g_davidErrorMapByChip[CHIP_END] = {};
-
-void RegDavidErrorMapInfo(rtChipType_t chipType, const std::map<uint64_t, std::string>* errorMap)
-{
-    if (chipType < CHIP_BEGIN || chipType >= CHIP_END) {
-        RT_LOG(RT_LOG_ERROR, "Invalid chipType = %d, valid range: [%d, %d).", chipType, CHIP_BEGIN, CHIP_END);
-        return;
-    }
-    g_davidErrorMapByChip[chipType] = errorMap;
-}
-
-const std::map<uint64_t, std::string>* GetDavidErrorMapInfo(rtChipType_t chipType)
-{
-    if (chipType < CHIP_BEGIN || chipType >= CHIP_END) {
-        RT_LOG(RT_LOG_ERROR, "Invalid chipType = %d, valid range: [%d, %d).", chipType, CHIP_BEGIN, CHIP_END);
-        return nullptr;
-    }
-    return g_davidErrorMapByChip[chipType];
-}
-
 const std::map<uint64_t, DeviceErrorProc::ErrorInfoProc> DeviceErrorProc::funcMap_ = {
     {AICORE_ERROR, &DeviceErrorProc::ProcessCoreErrorInfo},
     {AIVECTOR_ERROR, &DeviceErrorProc::ProcessCoreErrorInfo},

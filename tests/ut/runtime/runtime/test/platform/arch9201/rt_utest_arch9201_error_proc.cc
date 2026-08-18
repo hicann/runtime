@@ -36,8 +36,24 @@ const std::vector<uint64_t> ARCH9201_ERROR_TYPES = {
 };
 
 const std::vector<uint64_t> ARCH9201_REPRESENTATIVE_ERRORS = {
-    CUBE_INVLD_INPUT,   MTE_NDDMA_CACHE_ECC,     VEC_ERR_BIU_RESP_ERR_T0, SU_IFU_BUS_ERR_T0,
-    FIXP_BIU_RDWR_RESP, SC_BUS_RESP_TIMEOUT_ERR, L1_L0A_RDWR_CFLT,
+    CUBE_INVLD_INPUT,
+    MTE_NDDMA_CACHE_ECC,
+    VEC_ERR_BIU_RESP_ERR_T0,
+    SU_IFU_BUS_ERR_T0,
+    FIXP_BIU_RDWR_RESP,
+    SC_BUS_RESP_TIMEOUT_ERR,
+    L1_L0A_RDWR_CFLT,
+    // arch9201-only entries now accessible via unified map
+    CUBE_ERR_L0A_RDWR_CFLT,
+    CUBE_INSTR_UNDEF,
+    MTE_L0A_RDWR_CFLT,
+    MTE_OFFSET_MISALIGN,
+    L1_DWS_PAD_CONF_ERR,
+    L1_ERR_FIFO_PARITY,
+    SC_CNT_SW_BUS_ERR,
+    SU_IFU_BUS_PTY_ERR,
+    SU_IC_ECC_REPEAT_ERR,
+    VEC_ERR_SC_CFG_PARITY_T0,
 };
 
 // 初始化 ringbuffer（带 elementSize），返回首个 element 起始地址
@@ -116,7 +132,7 @@ protected:
 TEST_F(Arch9201ErrorProcTest, ErrorMapRegistrationAndBitLookup)
 {
     // --- 错误映射表与处理函数注册验证 ---
-    const auto* errorMap = GetDavidErrorMapInfo(CHIP_CLOUD_V5);
+    const auto* errorMap = GetDavidErrorMapInfo();
     ASSERT_NE(errorMap, nullptr);
     EXPECT_FALSE(errorMap->empty());
     for (const auto errCode : ARCH9201_REPRESENTATIVE_ERRORS) {
@@ -131,16 +147,31 @@ TEST_F(Arch9201ErrorProcTest, ErrorMapRegistrationAndBitLookup)
         EXPECT_NE(funcMap.find(errType), funcMap.end()) << "missing error type: " << errType;
     }
 
-    // arch9201 与 david 注册表各自独立且 AICORE 处理函数不同
-    const auto* davidMap = GetDavidErrorMapInfo(CHIP_DAVID);
+    // arch9201 与 david 共享统一 error map，但 AICORE 处理函数不同
+    const auto* davidMap = GetDavidErrorMapInfo();
     ASSERT_NE(davidMap, nullptr);
     EXPECT_FALSE(davidMap->empty());
+    EXPECT_EQ(davidMap, errorMap); // unified map is shared
     const auto& davidFuncMap = GetErrorProcFuncMap(CHIP_DAVID);
     auto davidIt = davidFuncMap.find(AICORE_ERROR);
     auto arch9201It = funcMap.find(AICORE_ERROR);
     ASSERT_NE(davidIt, davidFuncMap.end());
     ASSERT_NE(arch9201It, funcMap.end());
     EXPECT_NE(davidIt->second, arch9201It->second);
+
+    // david 和 arch9201 各自有独立的 bit mask
+    const auto* davidBitMask = GetDavidErrorBitMask(CHIP_DAVID);
+    ASSERT_NE(davidBitMask, nullptr);
+    const auto* arch9201BitMask = GetDavidErrorBitMask(CHIP_CLOUD_V5);
+    ASSERT_NE(arch9201BitMask, nullptr);
+    // arch9201 独有的 CUBE_ERR_L0A_RDWR_CFLT(bit0) 在 david mask 中为0，arch9201 mask 中为1
+    uint32_t cubeBit0 = (1U << static_cast<uint32_t>(CUBE_ERR_L0A_RDWR_CFLT - RINGBUFFER_CUBE_ERROR_OFFSET));
+    EXPECT_EQ(static_cast<uint32_t>(davidBitMask->cubeMask) & cubeBit0, 0U);
+    EXPECT_NE(static_cast<uint32_t>(arch9201BitMask->cubeMask) & cubeBit0, 0U);
+    // david 独有的 SU_CCU_CALL_DEPTH_OVRFLW_T0(bit1) 在 arch9201 mask 中为0，david mask 中为1
+    uint32_t suBit1 = (1U << static_cast<uint32_t>(SU_CCU_CALL_DEPTH_OVRFLW_T0 - RINGBUFFER_SU_ERROR_OFFSET));
+    EXPECT_NE(static_cast<uint32_t>(davidBitMask->suMask) & suBit1, 0U);
+    EXPECT_EQ(static_cast<uint32_t>(arch9201BitMask->suMask) & suBit1, 0U);
 
     // --- ProcessDavidStarsCoreErrorMapInfo 错误 bit 查询 ---
     auto checkBit = [](uint64_t DavidOneCoreErrorInfo::*field, uint64_t errCode, uint64_t offset) {
