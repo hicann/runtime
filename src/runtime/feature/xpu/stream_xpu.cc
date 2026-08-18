@@ -375,10 +375,10 @@ rtError_t XpuStream::GetFinishedTaskIdBySqHead(uint16_t& sqHead, uint32_t& finis
     }
 
     uint16_t finishedPos = (sqHead + rtsqDepth - 1) % rtsqDepth;
-    TaskInfo* latestRecyleTask =
+    TaskInfo* latestRecycleTask =
         (dynamic_cast<TaskResManageDavid*>(taskResMang_))->GetTaskInfo(static_cast<uint32_t>(finishedPos));
-    if (unlikely(latestRecyleTask != nullptr)) {
-        endTaskId = latestRecyleTask->taskSn;
+    if (unlikely(latestRecycleTask != nullptr)) {
+        endTaskId = latestRecycleTask->taskSn;
     } else {
         RT_LOG(
             RT_LOG_WARNING, "Failed to get task info at finishedPos, stream_id=%d, finishedPos=%u.", streamId_,

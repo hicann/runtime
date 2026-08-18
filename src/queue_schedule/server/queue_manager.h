@@ -204,7 +204,7 @@ private:
     bool isTriggeredByAsyncMemDequeue_;
     bool isTriggeredByAsyncMemEnqueue_;
     bool ayncMemBuffEventQInitialized_;
-    bool initiallizedExtra_;
+    bool initializedExtra_;
 };
 } // namespace bqs
 #endif // QUEUE_MANAGER_H

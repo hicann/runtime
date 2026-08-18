@@ -1377,7 +1377,7 @@ protected:
     }
 };
 
-TEST_F(DavidTaskRecycleTest, RefreshForceRecyleFlag_GetSqEnableFailed)
+TEST_F(DavidTaskRecycleTest, RefreshForceRecycleFlag_GetSqEnableFailed)
 {
     rtError_t error;
     Device* dev = nullptr;
@@ -1411,7 +1411,7 @@ TEST_F(DavidTaskRecycleTest, RefreshForceRecyleFlag_GetSqEnableFailed)
     ((Runtime*)Runtime::Instance())->DeviceRelease(dev);
 }
 
-TEST_F(DavidTaskRecycleTest, RefreshForceRecyleFlag_GetSqEnableFailed2)
+TEST_F(DavidTaskRecycleTest, RefreshForceRecycleFlag_GetSqEnableFailed2)
 {
     rtError_t error;
     Device* dev = nullptr;
@@ -1498,7 +1498,7 @@ TEST_F(DavidTaskRecycleTest, test_stream_already_force_recycled)
     ((Runtime*)Runtime::Instance())->DeviceRelease(dev);
 }
 
-TEST_F(DavidTaskRecycleTest, RefreshForceRecyleFlag_SqHeadEqualsSqTail)
+TEST_F(DavidTaskRecycleTest, RefreshForceRecycleFlag_SqHeadEqualsSqTail)
 {
     rtError_t error;
     Device* dev = nullptr;
@@ -1671,7 +1671,7 @@ TEST_F(DavidTaskRecycleTest, TryReclaimToTask_EarlyBreak)
     ((Runtime*)Runtime::Instance())->DeviceRelease(device);
 }
 
-TEST_F(DavidTaskRecycleTest, RefreshForceRecyleFlag_ShouldSubmitRecycleTask_WhenSqDisabled)
+TEST_F(DavidTaskRecycleTest, RefreshForceRecycleFlag_ShouldSubmitRecycleTask_WhenSqDisabled)
 {
     Device* dev = ((Runtime*)Runtime::Instance())->DeviceRetain(0, 0);
     ASSERT_NE(dev, nullptr);

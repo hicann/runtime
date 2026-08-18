@@ -272,7 +272,7 @@ TEST_F(BQS_QUEUE_MANAGER_UTest, Clear_MbufForF2nfNull)
 TEST_F(BQS_QUEUE_MANAGER_UTest, EnqueueRelationEventExtraSuccess2)
 {
     MOCKER(&QueueManager::EnqueueRelationEventToQ).stubs().will(returnValue(0));
-    instance.initiallizedExtra_ = false;
+    instance.initializedExtra_ = false;
     instance.stopped_ = true;
     bqs::BqsStatus ret = instance.EnqueueRelationEventExtra();
     EXPECT_EQ(ret, 0);

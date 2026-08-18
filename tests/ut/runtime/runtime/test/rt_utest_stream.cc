@@ -2737,10 +2737,10 @@ TEST_F(StreamTest, public_queue)
 
     Stream stream(device, 0);
     uint16_t delTaskPos;
-    uint16_t endRecylePos = 10;
+    uint16_t endRecyclePos = 10;
     TaskInfo workTask = {};
     stream.finishTaskId_ = 10;
-    EXPECT_EQ(stream.StarsGetPublicTaskHead(&workTask, true, endRecylePos, &delTaskPos), RT_ERROR_STREAM_EMPTY);
+    EXPECT_EQ(stream.StarsGetPublicTaskHead(&workTask, true, endRecyclePos, &delTaskPos), RT_ERROR_STREAM_EMPTY);
 
     ((Runtime*)Runtime::Instance())->DeviceRelease(device);
 }

@@ -314,7 +314,7 @@ void ProcCqReportException(
     }
 }
 
-static void SaveCurrCtxForRecyleThread(Device* const dev, uint32_t streamId)
+static void SaveCurrCtxForRecycleThread(Device* const dev, uint32_t streamId)
 {
     Stream* stm = nullptr;
     (void)dev->GetStreamSqCqManage()->GetStreamById(streamId, &stm);
@@ -353,7 +353,7 @@ rtError_t ProcReport(
             cnt, idx, streamId, pos, syncPos, static_cast<uint32_t>(report.sqeType), report.sqHead, targetTaskSn,
             reportTaskSn, report.errorCode, report.errorType);
 
-        SaveCurrCtxForRecyleThread(dev, streamId);
+        SaveCurrCtxForRecycleThread(dev, streamId);
         if (static_cast<uint8_t>(report.errorType & RT_STARS_EXIST_ERROR) != 0U) {
             hasCqeReportErr = true;
         }

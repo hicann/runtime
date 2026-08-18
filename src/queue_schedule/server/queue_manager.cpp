@@ -58,7 +58,7 @@ QueueManager::QueueManager()
       isTriggeredByAsyncMemDequeue_(false),
       isTriggeredByAsyncMemEnqueue_(false),
       ayncMemBuffEventQInitialized_(false),
-      initiallizedExtra_(false)
+      initializedExtra_(false)
 {}
 
 QueueManager::~QueueManager() { Clear(); }
@@ -385,8 +385,8 @@ void QueueManager::NotifyInitSuccess(const uint32_t index)
         initialized_ = true;
         cv_.notify_all();
         BQS_LOG_INFO("Queue schedule init success.");
-    } else if (!initiallizedExtra_ && (index == 1U)) {
-        initiallizedExtra_ = true;
+    } else if (!initializedExtra_ && (index == 1U)) {
+        initializedExtra_ = true;
         cv_.notify_all();
         BQS_LOG_INFO("Queue schedule extra init success.");
     }
@@ -418,7 +418,7 @@ BqsStatus QueueManager::EnqueueRelationEventExtra()
     {
         // wait for work thread halEschedWaitEvent execute
         std::unique_lock<std::mutex> equeueRelationEventLock(mutex_);
-        while ((!initiallizedExtra_) && (!stopped_)) {
+        while ((!initializedExtra_) && (!stopped_)) {
             BQS_LOG_INFO("Relation msg enqueue wait for init success.");
             cv_.wait(equeueRelationEventLock);
             std::this_thread::sleep_for(std::chrono::milliseconds(1));

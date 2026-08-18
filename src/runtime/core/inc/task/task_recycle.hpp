@@ -34,7 +34,6 @@ rtError_t StarsResumeRtsq(const rtCqReport_t* logicCq, const TaskInfo* const tas
 rtError_t RecycleTaskBySqHead(Stream* const stm);
 rtError_t AdjustRecycleTaskID(const Stream* const stm, const uint32_t endTaskId, const uint16_t recyclePos);
 rtError_t RecycleTaskBySqHeadForRecycleThread(Stream* const stm);
-rtError_t RefreshForceRecyleFlagAndSendMaintainceTask(Stream* const stm);
 
 // ===================== 对外API =================================================================//
 TaskInfo* GetTaskInfo(const Device* const dev, uint32_t streamId, uint32_t pos, bool posIsSqHead = false);
