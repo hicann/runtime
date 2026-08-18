@@ -2583,9 +2583,6 @@ rtError_t ApiImpl::HostRegisterV2(void* ptr, uint64_t size, uint32_t flag)
     const uint32_t deviceId = dev->Id_();
 
     rtError_t error = RT_ERROR_NONE;
-    const bool isPinned = ((flag & RT_MEM_HOST_REGISTER_PINNED) != 0U);
-    const bool isMapped =
-        ((flag & (RT_MEM_HOST_REGISTER_MAPPED | RT_MEM_HOST_REGISTER_IOMEMORY | RT_MEM_HOST_REGISTER_READONLY)) != 0U);
     const bool supportDrvPinReg = dev->IsSupportPinRegister();
 
     void* devPtr = nullptr;
@@ -2595,6 +2592,10 @@ rtError_t ApiImpl::HostRegisterV2(void* ptr, uint64_t size, uint32_t flag)
         error = dev->Driver_()->HostRegister(ptr, size, flag, devPtrAddr, deviceId);
         COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
     } else {
+        const bool isPinned = ((flag & RT_MEM_HOST_REGISTER_PINNED) != 0U);
+        const bool isMapped =
+            ((flag & (RT_MEM_HOST_REGISTER_MAPPED | RT_MEM_HOST_REGISTER_IOMEMORY | RT_MEM_HOST_REGISTER_READONLY)) !=
+             0U);
         // Check range once driver not support pin register
         error = CheckMemoryRangeRegistered(ptr, size);
         COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
@@ -2624,7 +2625,6 @@ rtError_t ApiImpl::HostUnregister(void* ptr)
     const bool isMapped = IsMappedMemoryBase(ptr);
     const bool isPinned = IsPinnedMemoryBase(ptr);
     const bool supportDrvPinReg = dev->IsSupportPinRegister();
-
     if (supportDrvPinReg) {
         error = dev->Driver_()->HostUnregister(ptr, deviceId, supportDrvPinReg);
         COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
