@@ -56,6 +56,7 @@ set(COMMON_C_INCLUDES
     ${RUNTIME_DIR}/pkg_inc/runtime/runtime
     ${RUNTIME_DIR}/pkg_inc/runtime
     ${RUNTIME_DIR}/src/inc/tdt
+    ${RUNTIME_DIR}/src/inc/aicpu_sched
     ${RUNTIME_DIR}/src/inc/
     ${RUNTIME_DIR}/include
     ${RUNTIME_DIR}/pkg_inc/driver
