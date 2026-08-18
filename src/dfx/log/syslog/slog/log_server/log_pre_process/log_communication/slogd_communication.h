@@ -18,17 +18,16 @@ extern "C" {
 
 #define SLOG_FILE_NUM 2
 #define MAX_USERNAME_LEN 16
-LogStatus SlogdCommunicationInit(void);
+LogStatus SlogdCommunicationInit(int32_t devId);
 void SlogdCommunicationExit(void);
 
-LogStatus SlogdRmtServerInit(void);
-int32_t SlogdRmtServerCreate(int32_t devId, uint32_t *fileNum);
-int32_t SlogdRmtServerRecv(uint32_t fileNum, char *buf, uint32_t bufLen, int32_t *logType);
+LogStatus SlogdRmtServerInit(int32_t devId);
+int32_t SlogdRmtServerRecv(uint32_t fileNum, char* buf, uint32_t bufLen, int32_t* logType);
 void SlogdRmtServerClose(int32_t devId, uint32_t fileNum);
 void SlogdRmtServerExit(void);
+uint32_t SlogdRmtServerGetFileNum(void);
 
 #ifdef __cplusplus
 }
 #endif
 #endif
-

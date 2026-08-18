@@ -14,7 +14,7 @@ set(logServerHeaders
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../../common/driver
     ${CMAKE_CURRENT_SOURCE_DIR}/../../
     ${CMAKE_CURRENT_SOURCE_DIR}/../session_mgr
-    ${RUNTIME_DIR}/inc/driver
+    ${RUNTIME_DIR}/pkg_inc/driver
 )
 
 set(logServerSrcList
@@ -47,6 +47,11 @@ target_compile_options(log_server PRIVATE
 
 target_compile_definitions(log_server PRIVATE
     OS_TYPE=0
+    $<$<STREQUAL:${PRODUCT},ascend950>:HDC_PROFILING_SUPPORT>
+    $<$<STREQUAL:${PRODUCT},ascend950esl>:HDC_PROFILING_SUPPORT>
+    $<$<STREQUAL:${PRODUCT},ascend350>:HDC_PROFILING_SUPPORT>
+    $<$<STREQUAL:${PRODUCT},ascend910_96>:HDC_PROFILING_SUPPORT>
+    $<$<STREQUAL:${PRODUCT},ascend910_96esl>:HDC_PROFILING_SUPPORT>
 )
 
 target_link_libraries(log_server PRIVATE

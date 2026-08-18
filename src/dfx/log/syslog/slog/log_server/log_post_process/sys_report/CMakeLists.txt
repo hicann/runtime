@@ -16,10 +16,9 @@ set(libsysDeviceSrcFiles
 )
 
 set(libsysDeviceDir
-    ${RUNTIME_DIR}/inc/driver
-    ${RUNTIME_DIR}/abl/libc_sec/include
+    ${LIBC_SEC_HEADER}
+    ${RUNTIME_DIR}/pkg_inc/driver
     ${TOOLAHCIN_LOG_DIR}/utils
-    ${TOOLAHCIN_LOG_DIR}/shared
     ${TOOLAHCIN_LOG_DIR}/syslog/common
     ${TOOLAHCIN_LOG_DIR}/syslog/common/driver
     ${TOOLAHCIN_LOG_DIR}/syslog/common/config
@@ -30,7 +29,7 @@ set(libsysDeviceDir
     ${TOOLAHCIN_LOG_DIR}/syslog/slog/log_server/log_mgr/file_mgr
     ${TOOLAHCIN_LOG_DIR}/syslog/slog/log_server/log_mgr/buffer_mgr
     ${TOOLAHCIN_LOG_DIR}/syslog/slog/log_server/log_pre_process
-    ${RUNTIME_DIR}/runtime/src/dfx/adump/external
+    ${RUNTIME_DIR}/src/dfx/adump/external
     ${CMAKE_CURRENT_SOURCE_DIR}/../app_report
     ${CMAKE_CURRENT_SOURCE_DIR}/../session_mgr
 )

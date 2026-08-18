@@ -8,8 +8,8 @@ set(stackcoreSrcList
 
 set(stackcoreHeaders
     ${CMAKE_CURRENT_SOURCE_DIR}
-    ${RUNTIME_DIR}/abl/libc_sec/include
-    ${TOOLAHCIN_LOG_DIR}/../../include/log/stackcore
+    ${LIBC_SEC_HEADER}
+    ${TOOLAHCIN_LOG_DIR}/inc/stackcore
 )
 
 add_library(stackcore SHARED
@@ -49,8 +49,9 @@ target_link_options(stackcore PRIVATE
 )
 
 target_compile_definitions(stackcore PRIVATE
-    $<$<STREQUAL:${PRODUCT},ascend910_95>:LOG_CORETRACE>
-    $<$<STREQUAL:${PRODUCT},ascend910_95esl>:LOG_CORETRACE>
+    $<$<STREQUAL:${PRODUCT},ascend950>:LOG_CORETRACE>
+    $<$<STREQUAL:${PRODUCT},ascend950esl>:LOG_CORETRACE>
+    $<$<STREQUAL:${PRODUCT},ascend350>:LOG_CORETRACE>
     _GNU_SOURCE
 )
 

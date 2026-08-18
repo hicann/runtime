@@ -17,35 +17,31 @@ class LogGetFile : public AdxComponent {
 public:
     ~LogGetFile() override {}
     int32_t Init() override;
-    const std::string GetInfo() override
-    {
-        return "TransferFile";
-    }
-    ComponentType GetType() override
-    {
-        return ComponentType::COMPONENT_GETD_FILE;
-    }
-    int32_t Process(const CommHandle &handle, const std::shared_ptr<MsgProto> &proto) override;
+    const std::string GetInfo() override { return "TransferFile"; }
+    ComponentType GetType() override { return ComponentType::COMPONENT_GETD_FILE; }
+    int32_t Process(const CommHandle& handle, const std::shared_ptr<MsgProto>& proto) override;
     int32_t UnInit() override;
+
 private:
-    int32_t TransferProcess(const CommHandle &handle, const std::string &logType,
-                            const std::string &src, const std::string &des) const;
-    int32_t TransferFile(const CommHandle &handle, const std::string &logType,
-                         const std::string &filePath, int32_t pid) const;
-    int32_t ExportModuleInfo(const std::string &logType, int32_t pid) const;
-    int32_t GetFileList(const std::string &path, std::vector<std::string> &list, int32_t pid);
-    int32_t GetPathPrefix(const std::string &tmpFilePath, std::string &matchStr, int32_t pid) const;
-    bool IsValidMessageFile(std::string &messagesFilePath) const;
-    int32_t CopyFileToUserDir(std::string &messagesFilePath, int32_t pid) const;
-    bool IsIntDigital(const std::string &digital) const;
-    bool IsValidLogType(const std::string &logType) const;
-    bool IsValidTmpFilePath(const std::string &tmpFilePath, std::string &matchStr, int32_t pid) const;
+    int32_t TransferProcess(
+        const CommHandle& handle, const std::string& logType, const std::string& src, const std::string& des) const;
+    int32_t TransferFile(
+        const CommHandle& handle, const std::string& logType, const std::string& filePath, int32_t pid) const;
+    int32_t ExportModuleInfo(const std::string& logType, int32_t pid) const;
+    int32_t GetFileList(const std::string& logType, std::vector<std::string>& list, int32_t pid) const;
+    int32_t GetPathPrefix(const std::string& tmpFilePath, std::string& matchStr, int32_t pid) const;
+    bool IsValidMessageFile(std::string& messagesFilePath) const;
+    int32_t CopyFileToUserDir(std::string& messagesFilePath, int32_t pid) const;
+    bool IsIntDigital(const std::string& digital) const;
+    std::string GetScriptDumpDevicePath(const std::string& logType) const;
+    bool IsValidTmpFilePath(const std::string& tmpFilePath, std::string& matchStr, int32_t pid) const;
     int32_t GetMappingPid(int32_t pid) const;
-    void ClearTmpDir(std::string &logType, int32_t pid);
+    void ClearTmpDir(std::string& logType, int32_t pid) const;
+
 private:
     int32_t mappingNum_;
     using intMap = std::map<int32_t, int32_t>;
     static intMap g_numToPid;
 };
-}
+} // namespace Adx
 #endif

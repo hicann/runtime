@@ -63,6 +63,7 @@ target_include_directories(platform PRIVATE
         ${RUNTIME_DIR}/pkg_inc
         ${RUNTIME_DIR}/include/external
         ${RUNTIME_DIR}/src/dfx/error_manager
+        ${RUNTIME_DIR}/src/dfx/log/inc/toolchain
         ${RUNTIME_DIR}/include/dfx/base
         $<INSTALL_INTERFACE:include>
         $<INSTALL_INTERFACE:include/platform>
@@ -89,6 +90,7 @@ target_include_directories(platform_static PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
         ${CMAKE_CURRENT_LIST_DIR}/inc
         ${RUNTIME_DIR}/src/dfx/error_manager
+        ${RUNTIME_DIR}/src/dfx/log/inc/toolchain
         ${RUNTIME_DIR}/include/dfx/base
         ${RUNTIME_DIR}/include/external
         $<INSTALL_INTERFACE:include>

@@ -22,13 +22,7 @@
 #define INLINE inline
 #endif
 
-enum CmdType {
-    CONFIG_GET,
-    CONFIG_SET,
-    REPORT,
-    REPORT_PERMANENT,
-    INVALID_CMD
-};
+enum CmdType { CONFIG_GET, CONFIG_SET, REPORT, REPORT_PERMANENT, INVALID_CMD };
 
 enum ConfigType {
     LOG_LEVEL = 0,
@@ -47,7 +41,7 @@ enum ReportType {
     REPORT_TYPE,
 };
 
-#define MAX_VALUE_STR_LEN 64
+#define MAX_VALUE_STR_LEN 4096
 #define MIN_USER_ARG_LEN 2
 
 typedef struct {
@@ -60,7 +54,7 @@ typedef struct {
     int32_t dockerFlag;
     int32_t printMode;
     int32_t selfLogLevel;
-    char value[MAX_VALUE_STR_LEN];
+    char value[MAX_VALUE_STR_LEN + 64];
 } ArgInfo;
 
 struct MsnReq {
@@ -90,31 +84,26 @@ typedef struct {
     uint32_t deviceAppDirNum;
     uint32_t faultEventDirNum;
     uint32_t bboxDirNum;
+    char outputFileName[MAX_VALUE_STR_LEN];
 } FileAgeingParam;
 
-#define MAX_ICACHE_CHECK_RANGE (128U * 1024U)   // 128M
+#define MAX_ICACHE_CHECK_RANGE (128U * 1024U) // 128M
 #define DISABLE_CORE 0
 #define ENABLE_CORE 1
 #define RESTORE_CORE 2
 
-enum {
-    CORE_ID0 = 0,
-    CORE_ID1,
-    CORE_ID2,
-    CORE_ID3,
-    CORE_ID_MAX
-};
+enum { CORE_ID0 = 0, CORE_ID1, CORE_ID2, CORE_ID3, CORE_ID_MAX };
 
 // define by TS
 typedef struct {
-    uint8_t coreSwitch;  // 0: disable 1:enable 2:restore
+    uint8_t coreSwitch; // 0: disable 1:enable 2:restore
     uint8_t configNum;
     uint8_t coreId[CORE_ID_MAX];
     uint8_t resv[14];
 } DfxCoreSetMask;
 // define by TS
 typedef struct {
-    uint32_t value;  // 通用log dfx配置值
+    uint32_t value; // 通用log dfx配置值
     uint8_t resv[16];
 } DfxCommon;
 

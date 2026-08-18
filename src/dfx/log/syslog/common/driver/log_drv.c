@@ -18,10 +18,7 @@
 #define HDC_RECV_MAX_LEN 524288 // 512KB buffer space
 #define DATA_LAST_PACKET 1
 
-enum LogPackageType {
-    LOG_LITTLE_PACKAGE = 0xB0,
-    LOG_BIG_PACKAGE
-};
+enum LogPackageType { LOG_LITTLE_PACKAGE = 0xB0, LOG_BIG_PACKAGE };
 
 typedef struct {
     unsigned int dataLen;
@@ -31,75 +28,78 @@ typedef struct {
 } DataPacket;
 
 typedef struct {
-    const char *buf;
+    const char* buf;
     size_t bufLen;
     size_t maxSendLen;
 } DataSendMsg;
 
-#define FREE_HDC_MSG_BUF(ptr) do {                    \
-    if ((ptr) != NULL) {                                \
-        (void)LogdrvHdcFreeMsg((struct drvHdcMsg *)(ptr)); \
-        (ptr) = NULL;                                   \
-    }                                                 \
-} while (0)
+#define FREE_HDC_MSG_BUF(ptr)                                 \
+    do {                                                      \
+        if ((ptr) != NULL) {                                  \
+            (void)LogdrvHdcFreeMsg((struct drvHdcMsg*)(ptr)); \
+            (ptr) = NULL;                                     \
+        }                                                     \
+    } while (0)
 
-
-int DrvSessionRelease(HDC_SESSION session)
+int32_t DrvSessionRelease(HDC_SESSION session)
 {
     ONE_ACT_WARN_LOG(session == NULL, return -1, "[input] session is null.");
 
     hdcError_t drvErr = LogdrvHdcSessionClose(session);
-    ONE_ACT_ERR_LOG(drvErr != DRV_ERROR_NONE, return -1, "close session failed, drvErr=%d, strerr=%s.",
-                    (int32_t)drvErr, strerror(ToolGetErrorCode()));
+    ONE_ACT_ERR_LOG(
+        drvErr != DRV_ERROR_NONE, return -1, "close session failed, drvErr=%d, strerr=%s.", (int32_t)drvErr,
+        strerror(ToolGetErrorCode()));
 
     return 0;
 }
 
-int DrvDevIdGetBySession(HDC_SESSION session, int attr, int *value)
+int32_t DrvDevIdGetBySession(HDC_SESSION session, int32_t attr, int32_t* value)
 {
     ONE_ACT_NO_LOG((session == NULL) || (value == NULL), return -1);
 
     int temp = 0;
 
     hdcError_t drvErr = LogdrvHdcGetSessionAttr(session, attr, &temp);
-    ONE_ACT_WARN_LOG(drvErr != DRV_ERROR_NONE, return -1, "can not get session attr, drvErr=%d, strerr=%s.",
-                    (int32_t)drvErr, strerror(ToolGetErrorCode()));
+    ONE_ACT_WARN_LOG(
+        drvErr != DRV_ERROR_NONE, return -1, "can not get session attr, drvErr=%d, strerr=%s.", (int32_t)drvErr,
+        strerror(ToolGetErrorCode()));
 
     *value = temp;
     return 0;
 }
 
 /**
-* @brief DrvCapacityInit: get capacity by hdc alloc
-* @param [out]segment: capacity size
-* @return: 0: success, -1: failed
-*/
-static int DrvCapacityInit(size_t *segment)
+ * @brief DrvCapacityInit: get capacity by hdc alloc
+ * @param [out]segment: capacity size
+ * @return: 0: success, -1: failed
+ */
+static int DrvCapacityInit(size_t* segment)
 {
     ONE_ACT_NO_LOG(segment == NULL, return -1);
 
-    struct drvHdcCapacity capacity = { HDC_CHAN_TYPE_MAX, 0 };
+    struct drvHdcCapacity capacity = {HDC_CHAN_TYPE_MAX, 0};
 
     hdcError_t drvErr = LogdrvHdcGetCapacity(&capacity);
     ONE_ACT_ERR_LOG(drvErr != DRV_ERROR_NONE, return -1, "alloc HDC capacity failed, drvErr=%d", (int32_t)drvErr);
-    ONE_ACT_WARN_LOG((capacity.maxSegment == 0) || (capacity.maxSegment > HDC_RECV_MAX_LEN), return -1,
-                     "HDC capacity invalid, size=%u.", capacity.maxSegment);
+    ONE_ACT_WARN_LOG(
+        (capacity.maxSegment == 0) || (capacity.maxSegment > HDC_RECV_MAX_LEN), return -1,
+        "HDC capacity invalid, size=%u.", capacity.maxSegment);
 
     *segment = capacity.maxSegment;
     return 0;
 }
 
 /**
-* @brief DrvPackageWrite: subcontract and send msg to peer end
-* @param [in]session: connection session
-* @param [in]sendMsg: send msg info
-* @param [in]packet: packet buffer
-* @return: 0: success, -1: failed
-*/
-static int DrvPackageWrite(HDC_SESSION session, DataSendMsg sendMsg, DataPacket *packet)
+ * @brief DrvPackageWrite: subcontract and send msg to peer end
+ * @param [in]session: connection session
+ * @param [in]sendMsg: send msg info
+ * @param [in]packet: packet buffer
+ * @return: 0: success, -1: failed
+ */
+static int DrvPackageWrite(HDC_SESSION session, DataSendMsg sendMsg, DataPacket* packet)
 {
     hdcError_t drvErr;
-    struct drvHdcMsg *msg = NULL;
+    struct drvHdcMsg* msg = NULL;
     uint32_t reservedLen = (uint32_t)sendMsg.bufLen;
 
     packet->isLast = (~DATA_LAST_PACKET);
@@ -124,19 +124,18 @@ static int DrvPackageWrite(HDC_SESSION session, DataSendMsg sendMsg, DataPacket 
         ONE_ACT_ERR_LOG(ret != EOK, goto WRITE_ERROR, "memory copy failed, strerr=%s.", strerror(ToolGetErrorCode()));
 
         // add buffer to hdc message descriptor
-        drvErr = LogdrvHdcAddMsgBuffer(msg, (char *)packet, (int32_t)(sizeof(DataPacket) + packet->dataLen));
-        ONE_ACT_ERR_LOG(drvErr != DRV_ERROR_NONE, goto WRITE_ERROR,
-                        "add buffer to HDC msg failed, drvErr=%d.", (int32_t)drvErr);
+        drvErr = LogdrvHdcAddMsgBuffer(msg, (char*)packet, (int32_t)(sizeof(DataPacket) + packet->dataLen));
+        ONE_ACT_ERR_LOG(
+            drvErr != DRV_ERROR_NONE, goto WRITE_ERROR, "add buffer to HDC msg failed, drvErr=%d.", (int32_t)drvErr);
 
         // send hdc message
         drvErr = LogdrvHdcSend(session, msg, 0, 0);
-        ONE_ACT_ERR_LOG(drvErr != DRV_ERROR_NONE, goto WRITE_ERROR,
-                        "HDC send failed, drvErr=%d.", (int32_t)drvErr);
+        ONE_ACT_ERR_LOG(drvErr != DRV_ERROR_NONE, goto WRITE_ERROR, "HDC send failed, drvErr=%d.", (int32_t)drvErr);
 
         // reuse message descriptor
         drvErr = LogdrvHdcReuseMsg(msg);
-        ONE_ACT_ERR_LOG(drvErr != DRV_ERROR_NONE, goto WRITE_ERROR,
-                        "reuse HDC msg failed, drvErr=%d.", (int32_t)drvErr);
+        ONE_ACT_ERR_LOG(
+            drvErr != DRV_ERROR_NONE, goto WRITE_ERROR, "reuse HDC msg failed, drvErr=%d.", (int32_t)drvErr);
 
         reservedLen -= packet->dataLen;
     } while ((reservedLen > 0) && (drvErr == DRV_ERROR_NONE));
@@ -149,12 +148,12 @@ WRITE_ERROR:
     return -1;
 }
 
-int DrvBufWrite(HDC_SESSION session, const char *buf, size_t bufLen)
+int32_t DrvBufWrite(HDC_SESSION session, const char* buf, size_t bufLen)
 {
     ONE_ACT_NO_LOG((session == NULL) || (buf == NULL) || (bufLen == 0), return -1);
 
     size_t packetSize = 0;
-    DataSendMsg sendMsg = { 0 };
+    DataSendMsg sendMsg = {0};
 
     // calloc capacity
     int ret = DrvCapacityInit(&packetSize);
@@ -163,10 +162,10 @@ int DrvBufWrite(HDC_SESSION session, const char *buf, size_t bufLen)
         packetSize = bufLen + sizeof(DataPacket) + 1U;
     }
 
-    DataPacket *packet = (DataPacket *)calloc(1, packetSize * sizeof(char));
+    DataPacket* packet = (DataPacket*)calloc(1, packetSize * sizeof(char));
     // cppcheck-suppress *
-    ONE_ACT_ERR_LOG(packet == NULL, return -1, "calloc %zu size failed, strerr=%s.",
-                    packetSize, strerror(ToolGetErrorCode()));
+    ONE_ACT_ERR_LOG(
+        packet == NULL, return -1, "calloc %zu size failed, strerr=%s.", packetSize, strerror(ToolGetErrorCode()));
 
     // write buffer to hdc
     sendMsg.buf = buf;
@@ -176,4 +175,24 @@ int DrvBufWrite(HDC_SESSION session, const char *buf, size_t bufLen)
 
     XFREE(packet);
     return ret;
+}
+
+int32_t DrvGetDeviceId(uint32_t* devNum, uint32_t* devIdArray, uint32_t idArraySize)
+{
+    ONE_ACT_ERR_LOG(devNum == NULL, return LOG_FAILURE, "input device number pointer is null.");
+    ONE_ACT_ERR_LOG(devIdArray == NULL, return LOG_FAILURE, "input device id array pointer is null.");
+
+    drvError_t drvErr = halGetDevNumEx(0, devNum);
+    if ((drvErr != DRV_ERROR_NONE) || (*devNum > idArraySize)) {
+        SELF_LOG_ERROR(
+            "get device num failed, result=%d, device_number=%u, device id array size=%u.", (int32_t)drvErr, *devNum,
+            idArraySize);
+        return LOG_FAILURE;
+    }
+    drvErr = halGetDevIDsEx(0, devIdArray, idArraySize);
+    if (drvErr != DRV_ERROR_NONE) {
+        SELF_LOG_ERROR("get device id array failed, result=%d.", (int32_t)drvErr);
+        return LOG_FAILURE;
+    }
+    return LOG_SUCCESS;
 }

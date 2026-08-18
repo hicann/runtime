@@ -22,11 +22,11 @@
 #include "log_pm_sig.h"
 #include "slogd_recv_core.h"
 
-static int32_t SlogdPreProcessInit(void)
+static int32_t SlogdPreProcessInit(int32_t devId)
 {
     int32_t ret = SlogdReceiveInit();
     ONE_ACT_ERR_LOG(ret != LOG_SUCCESS, return LOG_FAILURE, "init distribute failed, ret=%d.", ret);
-    ret = SlogdCommunicationInit();
+    ret = SlogdCommunicationInit(devId);
     ONE_ACT_ERR_LOG(ret != LOG_SUCCESS, return LOG_FAILURE, "init communication failed, ret=%d.", ret);
     return LOG_SUCCESS;
 }
@@ -74,6 +74,25 @@ STATIC LogStatus SlogdLogClassifyInit(int32_t devId, bool isDocker)
     ONE_ACT_ERR_LOG(ret != LOG_SUCCESS, return LOG_FAILURE, "firmware log init failed, ret=%d.", ret);
     return LOG_SUCCESS;
 }
+// 初始化app log相关线程
+STATIC LogStatus SlogdPoolingInit(int32_t devId)
+{
+    // init buffer to record app message
+    LogStatus ret = SlogdApplogInit(devId);
+    ONE_ACT_ERR_LOG(ret != LOG_SUCCESS, return LOG_FAILURE, "app log init failed, ret=%d.", ret);
+
+    // init flush
+    ret = SlogdFlushPoolingInit();
+    TWO_ACT_ERR_LOG(
+        ret != LOG_SUCCESS, ReleaseResource(), return LOG_FAILURE, "init flush failed and quit slogd process.");
+
+    // init preprocess
+    ret = SlogdPreProcessInit(devId);
+    TWO_ACT_ERR_LOG(
+        ret != LOG_SUCCESS, ReleaseResource(), return LOG_FAILURE, "init preprocess failed and quit slogd process.");
+
+    return LOG_SUCCESS;
+}
 
 LogStatus LogServiceInit(int32_t devId, int32_t level, bool isDocker)
 {
@@ -83,45 +102,40 @@ LogStatus LogServiceInit(int32_t devId, int32_t level, bool isDocker)
 
     // 2. init level
     LogStatus ret = SlogdLevelInit(devId, level, isDocker);
-    TWO_ACT_ERR_LOG(ret != LOG_SUCCESS, ReleaseResource(),
-        return LOG_FAILURE, "init level failed and quit slogd process.");
+    TWO_ACT_ERR_LOG(
+        ret != LOG_SUCCESS, ReleaseResource(), return LOG_FAILURE, "init level failed and quit slogd process.");
 
+    // init app log in pooling
     if (SlogdIsDevicePooling()) {
-        SELF_LOG_INFO("no need to init log service in pooling device.");
+        SELF_LOG_INFO("init app log service in pooling device.");
+        ret = SlogdPoolingInit(devId);
+        TWO_ACT_ERR_LOG(
+            ret != LOG_SUCCESS, ReleaseResource(), return LOG_FAILURE, "init app log failed and quit slogd process.");
         return LOG_SUCCESS;
     }
+
     // 3. init buffer to record message
     ret = SlogdLogClassifyInit(devId, isDocker);
-    TWO_ACT_ERR_LOG(ret != LOG_SUCCESS, ReleaseResource(),
-        return LOG_FAILURE, "init log classify failed and quit slogd process.");
+    TWO_ACT_ERR_LOG(
+        ret != LOG_SUCCESS, ReleaseResource(), return LOG_FAILURE, "init log classify failed and quit slogd process.");
 
     // 4. init flush
     ret = SlogdFlushInit();
-    TWO_ACT_ERR_LOG(ret != LOG_SUCCESS, ReleaseResource(),
-        return LOG_FAILURE, "init flush failed and quit slogd process.");
+    TWO_ACT_ERR_LOG(
+        ret != LOG_SUCCESS, ReleaseResource(), return LOG_FAILURE, "init flush failed and quit slogd process.");
 
     // 5. init preprocess
-    ret = SlogdPreProcessInit();
-    TWO_ACT_ERR_LOG(ret != LOG_SUCCESS, ReleaseResource(),
-        return LOG_FAILURE, "init preprocess failed and quit slogd process.");
+    ret = SlogdPreProcessInit(devId);
+    TWO_ACT_ERR_LOG(
+        ret != LOG_SUCCESS, ReleaseResource(), return LOG_FAILURE, "init preprocess failed and quit slogd process.");
 
     return LOG_SUCCESS;
 }
 
 void LogServiceProcess(int32_t devId)
 {
-    if (SlogdIsDevicePooling()) {
-        SELF_LOG_INFO("no need to receive message in pooling device.");
-        while (LogGetSigNo() == 0) {
-            (void)ToolSleep(TOOL_ONE_THOUSAND); // no need to receive in pooling device.
-        }
-    } else {
-        SELF_LOG_INFO("start to recv message.");
-        SlogdMessageRecv(devId);
-    }
+    SELF_LOG_INFO("start to recv message.");
+    SlogdMessageRecv(devId);
 }
 
-void LogServiceExit(void)
-{
-    ReleaseResource();
-}
+void LogServiceExit(void) { ReleaseResource(); }

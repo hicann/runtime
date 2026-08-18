@@ -17,7 +17,8 @@
 extern "C" {
 #endif // __cplusplus
 
-LogStatus SoftwareCompressFile(const char *file);
+LogStatus SoftwareCompressFile(const char* file);
+LogStatus SoftwareCompressBuffer(const char* source, uint32_t sourceLen, char** dest, uint32_t* destLen);
 
 #ifdef __cplusplus
 }

@@ -10,21 +10,18 @@
 #ifndef CONFIG_COMMON_H
 #define CONFIG_COMMON_H
 
-#include <stdint.h>
-#include "msnpureport_common.h"
-
-#define RESULT_BUFFER_LEN   1024U
+#define RESULT_BUFFER_LEN 1024U
 
 // Error code
-#define CONFIG_OK                  0
-#define CONFIG_ERROR               (-1)
-#define CONFIG_INVALID_PARAM       (-2)
-#define CONFIG_MUTEX_ERROR         (-3)
-#define CONFIG_MEM_WRITE_FAILED    (-4)
-#define CONFIG_MALLOC_FAILED       (-5)
-#define CONFIG_BUFFER_NOT_ENOUGH   (-6)
+#define CONFIG_OK 0
+#define CONFIG_ERROR (-1)
+#define CONFIG_INVALID_PARAM (-2)
+#define CONFIG_MUTEX_ERROR (-3)
+#define CONFIG_MEM_WRITE_FAILED (-4)
+#define CONFIG_MALLOC_FAILED (-5)
+#define CONFIG_BUFFER_NOT_ENOUGH (-6)
 #define CONFIG_LOG_MSGQUEUE_FAILED (-7)
 
-#define SET_SUCCESS_MSG             "Configuration successfully set"
+#define SET_SUCCESS_MSG "Configuration successfully set"
 
 #endif

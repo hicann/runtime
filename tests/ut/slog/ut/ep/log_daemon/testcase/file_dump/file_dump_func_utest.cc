@@ -22,9 +22,9 @@ extern "C" {
 #include "log_cmd.h"
 #include "log_drv.h"
 
-HdclogErr LogCmdRespSettingResult(HDC_SESSION session, const char *errMsg, size_t errLen);
-bool IsContainsStr(const char *str, const char *subStr);
-HdclogErr ParseDeviceLogCmd(HDC_SESSION session, const LogDataMsg *msg);
+HdclogErr LogCmdRespSettingResult(HDC_SESSION session, const char* errMsg, size_t errLen);
+bool IsContainsStr(const char* str, const char* subStr);
+HdclogErr ParseDeviceLogCmd(HDC_SESSION session, const LogDataMsg* msg);
 bool JudgeIfComputePowerGroup(HDC_SESSION session, int32_t vfId);
 HdclogErr PreProcessBeforeParseCmd(HDC_SESSION session);
 }
@@ -41,8 +41,7 @@ using namespace Adx;
 
 #include "self_log_stub.h"
 
-class EP_FILE_DUMP_FUNC_UTEST : public testing::Test
-{
+class EP_FILE_DUMP_FUNC_UTEST : public testing::Test {
 protected:
     virtual void SetUp()
     {
@@ -73,7 +72,7 @@ protected:
 };
 
 namespace Adx {
-int32_t CreateProcess(const char *fileName, const mmArgvEnv *env, mmProcess *id);
+int32_t CreateProcess(const char* fileName, const mmArgvEnv* env, mmProcess* id, int pipefd[2]);
 }
 
 namespace {
@@ -86,11 +85,11 @@ int32_t AdxCreateProcessCaptureStub(IdeString command)
     return SYS_OK;
 }
 
-int32_t LogCmdSendLogMsgCoverageStub(LogCmdMsg *rcvMsg, const char *msg, uint16_t devId)
+int32_t LogCmdSendLogMsgCoverageStub(LogCmdMsg* rcvMsg, const char* msg, uint16_t devId)
 {
     (void)msg;
     (void)devId;
-    const char *response = LEVEL_SETTING_SUCCESS;
+    const char* response = LEVEL_SETTING_SUCCESS;
     if (g_logCmdResponseMode == 1) {
         response = "[event]\nenable";
     } else if (g_logCmdResponseMode == 2) {
@@ -100,27 +99,27 @@ int32_t LogCmdSendLogMsgCoverageStub(LogCmdMsg *rcvMsg, const char *msg, uint16_
     return CONFIG_OK;
 }
 
-int32_t LogIdeContainerCoverageStub(HDC_SESSION session, int32_t *runEnv)
+int32_t LogIdeContainerCoverageStub(HDC_SESSION session, int32_t* runEnv)
 {
     (void)session;
     *runEnv = 2;
     return SYS_OK;
 }
 
-std::shared_ptr<MsgProto> MakeFileRequest(MsgType type, const char *logType)
+std::shared_ptr<MsgProto> MakeFileRequest(MsgType type, const char* logType)
 {
     size_t dataLen = (logType == nullptr) ? 0U : strlen(logType) + 1U;
-    MsgProto *proto = static_cast<MsgProto *>(calloc(1, sizeof(MsgProto) + dataLen));
+    MsgProto* proto = static_cast<MsgProto*>(calloc(1, sizeof(MsgProto) + dataLen));
     if (proto == nullptr) {
         return nullptr;
     }
     proto->msgType = type;
     if (logType != nullptr) {
-        (void)strcpy_s(reinterpret_cast<char *>(proto->data), dataLen, logType);
+        (void)strcpy_s(reinterpret_cast<char*>(proto->data), dataLen, logType);
     }
     return std::shared_ptr<MsgProto>(proto, free);
 }
-}
+} // namespace
 
 TEST_F(EP_FILE_DUMP_FUNC_UTEST, ComponentLifecycle)
 {
@@ -140,7 +139,7 @@ TEST_F(EP_FILE_DUMP_FUNC_UTEST, HdclogValidatesAndPreprocessesCommands)
     EXPECT_EQ(HDCLOG_SUCCESSED, PreProcessBeforeParseCmd(reinterpret_cast<HDC_SESSION>(1)));
 
     size_t size = sizeof(LogDataMsg) + 8U;
-    LogDataMsg *message = static_cast<LogDataMsg *>(calloc(1, size));
+    LogDataMsg* message = static_cast<LogDataMsg*>(calloc(1, size));
     ASSERT_NE(nullptr, message);
     message->sliceLen = 0;
     EXPECT_EQ(HDCLOG_INIT_FAILED, ParseDeviceLogCmd(reinterpret_cast<HDC_SESSION>(1), message));
@@ -154,11 +153,11 @@ TEST_F(EP_FILE_DUMP_FUNC_UTEST, HdclogParsesResponsesAndProcessesRequest)
 {
     MOCKER(LogCmdSendLogMsg).stubs().will(invoke(LogCmdSendLogMsgCoverageStub));
     size_t size = sizeof(LogDataMsg) + 32U;
-    LogDataMsg *message = static_cast<LogDataMsg *>(calloc(1, size));
+    LogDataMsg* message = static_cast<LogDataMsg*>(calloc(1, size));
     ASSERT_NE(nullptr, message);
     message->sliceLen = 16U;
     message->devId = 0;
-    (void)strcpy_s(reinterpret_cast<char *>(message->data), 32U, "SetLogLevel(0)");
+    (void)strcpy_s(reinterpret_cast<char*>(message->data), 32U, "SetLogLevel(0)");
 
     g_logCmdResponseMode = 0;
     EXPECT_EQ(HDCLOG_SUCCESSED, ParseDeviceLogCmd(reinterpret_cast<HDC_SESSION>(1), message));
@@ -176,8 +175,7 @@ TEST_F(EP_FILE_DUMP_FUNC_UTEST, HdclogParsesResponsesAndProcessesRequest)
     g_logCmdResponseMode = 0;
     EXPECT_EQ(HDCLOG_SUCCESSED, IdeDeviceLogProcess(&handle, message, static_cast<uint32_t>(size)));
     handle.session = 0U;
-    EXPECT_EQ(HDCLOG_IDE_GET_EVN_OR_VFID_FAILED,
-              IdeDeviceLogProcess(&handle, message, static_cast<uint32_t>(size)));
+    EXPECT_EQ(HDCLOG_IDE_GET_EVN_OR_VFID_FAILED, IdeDeviceLogProcess(&handle, message, static_cast<uint32_t>(size)));
     free(message);
     ResetErrLog();
 }
@@ -185,8 +183,8 @@ TEST_F(EP_FILE_DUMP_FUNC_UTEST, HdclogParsesResponsesAndProcessesRequest)
 TEST_F(EP_FILE_DUMP_FUNC_UTEST, HdclogReportsResponseFailure)
 {
     MOCKER(AdxSendMsgByHandle).stubs().will(returnValue(SYS_ERROR));
-    EXPECT_EQ(HDCLOG_WRITE_FAILED,
-              LogCmdRespSettingResult(reinterpret_cast<HDC_SESSION>(1), "failed", strlen("failed")));
+    EXPECT_EQ(
+        HDCLOG_WRITE_FAILED, LogCmdRespSettingResult(reinterpret_cast<HDC_SESSION>(1), "failed", strlen("failed")));
     ResetErrLog();
 }
 
@@ -270,16 +268,15 @@ TEST_F(EP_FILE_DUMP_FUNC_UTEST, LogGetFileValidatesPathsAndMessageNames)
 {
     LogGetFile getFile;
     ASSERT_EQ(SYS_OK, getFile.Init());
-    EXPECT_TRUE(getFile.IsValidLogType("dvpp"));
-    EXPECT_FALSE(getFile.IsValidLogType("unknown"));
+    EXPECT_EQ("module_info", getFile.GetScriptDumpDevicePath("dvpp"));
+    EXPECT_TRUE(getFile.GetScriptDumpDevicePath("unknown").empty());
 
     std::string match;
     EXPECT_EQ(SYS_OK, getFile.GetPathPrefix("/var/log/npu/slog/device.log.42.tmp", match, 42));
     EXPECT_EQ("/var/log/npu/slog/", match);
 
     match.clear();
-    EXPECT_TRUE(getFile.IsValidTmpFilePath(
-        "/home/HwHiAiUser/ide_daemon/module_info/42/report.log", match, 42));
+    EXPECT_TRUE(getFile.IsValidTmpFilePath("/home/HwHiAiUser/ide_daemon/module_info/42/report.log", match, 42));
     EXPECT_EQ("/home/HwHiAiUser/ide_daemon/module_info/42", match);
 
     LogGetFile::g_numToPid[17] = 42;
@@ -317,18 +314,18 @@ TEST_F(EP_FILE_DUMP_FUNC_UTEST, LogGetFileTransfersKnownPathsAndRejectsInvalidPa
     handle.type = COMM_HDC;
     handle.session = 1U;
 
-    EXPECT_EQ(SYS_OK, getFile.TransferFile(handle, "event_sched",
-        "/sys/devices/virtual/devdrv_manager/davinci_manager/node/event.log", 42));
+    EXPECT_EQ(
+        SYS_OK, getFile.TransferFile(
+                    handle, "event_sched", "/sys/devices/virtual/devdrv_manager/davinci_manager/node/event.log", 42));
     LogGetFile::g_numToPid[17] = 42;
-    EXPECT_EQ(SYS_OK, getFile.TransferFile(handle, "message",
-        "/var/log/ide_daemon/message/17/messages", 42));
+    EXPECT_EQ(SYS_OK, getFile.TransferFile(handle, "message", "/var/log/ide_daemon/message/17/messages", 42));
     EXPECT_EQ(SYS_ERROR, getFile.TransferFile(handle, "event_sched", "/tmp/not-a-device-path", 42));
     EXPECT_EQ(SYS_ERROR, getFile.TransferFile(handle, "slog", PATH_ROOT "/missing.log", 42));
     ResetErrLog();
 
     std::string match;
-    EXPECT_EQ(SYS_OK, getFile.GetPathPrefix(
-        "/sys/devices/virtual/devdrv_manager/davinci_manager/node/event.log", match, 42));
+    EXPECT_EQ(
+        SYS_OK, getFile.GetPathPrefix("/sys/devices/virtual/devdrv_manager/davinci_manager/node/event.log", match, 42));
     match.clear();
     EXPECT_EQ(SYS_OK, getFile.GetPathPrefix("/var/log/ide_daemon/message/17/messages", match, 42));
     match.clear();

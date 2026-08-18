@@ -18,8 +18,11 @@
 #include "slogd_dev_mgr.h"
 #include "slogd_shm_mgr.h"
 #include "slogd_firmware_level.h"
-#include "slogd_dynamic_level.h"
 #include "share_mem.h"
+
+#ifdef APP_LOG_REPORT
+#include "slogd_dynamic_level.h"
+#endif
 
 /**
  * @brief ConstructEvent: constuct global level
@@ -33,7 +36,7 @@
  *       null: 0101x000
  *    invalid: 0110x000
  */
-STATIC char ConstructGlobal(char tmp, int32_t *level)
+STATIC char ConstructGlobal(char tmp, int32_t* level)
 {
     ONE_ACT_NO_LOG(level == NULL, return tmp);
     ONE_ACT_NO_LOG(tmp < 0, return tmp);
@@ -53,7 +56,7 @@ STATIC char ConstructGlobal(char tmp, int32_t *level)
  *     enable: 0xxx1000
  *    disable: 0xxx0100
  */
-STATIC char ConstructEvent(char tmp, char *level)
+STATIC char ConstructEvent(char tmp, char* level)
 {
     ONE_ACT_NO_LOG(level == NULL, return tmp);
     ONE_ACT_NO_LOG(tmp < 0, return tmp);
@@ -77,7 +80,7 @@ STATIC char ConstructEvent(char tmp, char *level)
  *       null: 0101x000
  *    invalid: 0110x000
  */
-STATIC char ConstructDebug(char tmp, int32_t *level)
+STATIC char ConstructDebug(char tmp, int32_t* level)
 {
     ONE_ACT_NO_LOG(level == NULL, return tmp);
     ONE_ACT_NO_LOG(tmp < 0, return tmp);
@@ -101,7 +104,7 @@ STATIC char ConstructDebug(char tmp, int32_t *level)
  *       null: x0000101
  *    invalid: x0000110
  */
-STATIC char ConstructRun(char tmp, int32_t *level)
+STATIC char ConstructRun(char tmp, int32_t* level)
 {
     ONE_ACT_NO_LOG(level == NULL, return tmp);
     ONE_ACT_NO_LOG(tmp < 0, return tmp);
@@ -126,7 +129,7 @@ STATIC char ConstructRun(char tmp, int32_t *level)
  *       null: 01010xxx/0xxx0101
  *    invalid: 01100xxx/0xxx0110
  */
-STATIC char ConstructModule(char tmp, int32_t *levell, int32_t *levelr)
+STATIC char ConstructModule(char tmp, int32_t* levell, int32_t* levelr)
 {
     char retChar = tmp;
     ONE_ACT_NO_LOG(retChar < 0, return retChar);
@@ -161,7 +164,7 @@ STATIC char ConstructModule(char tmp, int32_t *levell, int32_t *levelr)
  *          ARGV_NULL: str is null;
  *          INPUT_INVALID: strLen is invalid;
  */
-STATIC LogRt ConstructLevelStr(char *str, size_t strLen)
+STATIC LogRt ConstructLevelStr(char* str, size_t strLen)
 {
     ONE_ACT_NO_LOG(str == NULL, return ARGV_NULL);
     ONE_ACT_NO_LOG((strLen == 0) || (strLen > LEVEL_ARR_LEN), return INPUT_INVALID);
@@ -173,27 +176,27 @@ STATIC LogRt ConstructLevelStr(char *str, size_t strLen)
 
     level = ConstructEvent(level, &event);
     level = ConstructGlobal(level, &global);
-    int32_t ret = strncpy_s(str, strLen - 1U, (const char *)&level, 1U);
-    ONE_ACT_ERR_LOG(ret != EOK, return STR_COPY_FAILED,
-                    "copy failed, ret=%d, strerr=%s.", ret, strerror(ToolGetErrorCode()));
+    int32_t ret = strncpy_s(str, strLen - 1U, (const char*)&level, 1U);
+    ONE_ACT_ERR_LOG(
+        ret != EOK, return STR_COPY_FAILED, "copy failed, ret=%d, strerr=%s.", ret, strerror(ToolGetErrorCode()));
     // debug_level + run_level
     level = '\0';
     int32_t debugLevel = SlogdGetGlobalLevel(DEBUG_LOG_MASK);
     int32_t runLevel = SlogdGetGlobalLevel(RUN_LOG_MASK);
     level = ConstructDebug(level, &debugLevel);
     level = ConstructRun(level, &runLevel);
-    ret = strncat_s(str, strLen - 1U, (const char *)&level, 1U);
-    ONE_ACT_ERR_LOG(ret != EOK, return STR_COPY_FAILED,
-                    "copy failed, ret=%d, strerr=%s.", ret, strerror(ToolGetErrorCode()));
+    ret = strncat_s(str, strLen - 1U, (const char*)&level, 1U);
+    ONE_ACT_ERR_LOG(
+        ret != EOK, return STR_COPY_FAILED, "copy failed, ret=%d, strerr=%s.", ret, strerror(ToolGetErrorCode()));
     // module
     for (int32_t i = 0; i < INVALID_MODULE_ID; i++) {
         level = '\0';
         int32_t levell = SlogdGetModuleLevel(i, DEBUG_LOG_MASK);
         int32_t levelr = SlogdGetModuleLevel(i, RUN_LOG_MASK);
         level = ConstructModule(level, &levell, &levelr);
-        ret = strncat_s(str, strLen - 1U, (const char *)&level, 1U);
-        ONE_ACT_ERR_LOG(ret != EOK, return STR_COPY_FAILED,
-                        "copy failed, ret=%d, strerr=%s.", ret, strerror(ToolGetErrorCode()));
+        ret = strncat_s(str, strLen - 1U, (const char*)&level, 1U);
+        ONE_ACT_ERR_LOG(
+            ret != EOK, return STR_COPY_FAILED, "copy failed, ret=%d, strerr=%s.", ret, strerror(ToolGetErrorCode()));
     }
     return SUCCESS;
 }
@@ -207,13 +210,13 @@ STATIC LogRt ConstructLevelStr(char *str, size_t strLen)
  *          ARGV_NULL: str is null;
  *          INPUT_INVALID: strLen is invalid;
  */
-STATIC LogRt ConstructModuleStr(char *str, size_t strLen)
+STATIC LogRt ConstructModuleStr(char* str, size_t strLen)
 {
     ONE_ACT_NO_LOG(str == NULL, return ARGV_NULL);
     ONE_ACT_NO_LOG((strLen == 0) || (strLen > MODULE_ARR_LEN), return INPUT_INVALID);
 
     size_t len = 0;
-    const ModuleInfo *moduleInfos = GetModuleInfos();
+    const ModuleInfo* moduleInfos = GetModuleInfos();
     ONE_ACT_NO_LOG(moduleInfos == NULL, return ARGV_NULL);
     for (int32_t i = 0; i < INVALID_MODULE_ID; i++) {
         int32_t ret = sprintf_s(str + len, strLen - 1U, "%s;", moduleInfos[i].moduleName);
@@ -236,7 +239,7 @@ STATIC LogRt ConstructModuleStr(char *str, size_t strLen)
  */
 STATIC int32_t UpdateNotifyFile(void)
 {
-    char notifyFile[WORKSPACE_PATH_MAX_LENGTH + 1U] = { 0 };
+    char notifyFile[WORKSPACE_PATH_MAX_LENGTH + 1U] = {0};
     size_t len = strlen(LogGetWorkspacePath()) + strlen(LEVEL_NOTIFY_FILE) + 1;
     int32_t res = sprintf_s(notifyFile, WORKSPACE_PATH_MAX_LENGTH, "%s/%s", LogGetWorkspacePath(), LEVEL_NOTIFY_FILE);
     if ((unsigned int)res != (unsigned int)len) {
@@ -244,13 +247,13 @@ STATIC int32_t UpdateNotifyFile(void)
         return SYS_ERROR;
     }
 
-    int32_t fd = ToolOpen((const char *)notifyFile, O_CREAT | O_WRONLY);
+    int32_t fd = ToolOpen((const char*)notifyFile, O_CREAT | O_WRONLY);
     if (fd < 0) {
         SELF_LOG_ERROR("open notify file failed, strerr=%s, file=%s.", strerror(ToolGetErrorCode()), notifyFile);
         return SYS_ERROR;
     }
 
-    res = ToolChmod((const char *)notifyFile, (int)SyncGroupToOther(S_IRUSR | S_IWUSR | S_IRGRP)); // 0640
+    res = ToolChmod((const char*)notifyFile, (int)SyncGroupToOther(S_IRUSR | S_IWUSR | S_IRGRP)); // 0640
     if (res != 0) {
         SELF_LOG_ERROR("chmod %s failed , strerr=%s.", notifyFile, strerror(ToolGetErrorCode()));
         LOG_CLOSE_FD(fd);
@@ -259,8 +262,8 @@ STATIC int32_t UpdateNotifyFile(void)
 
     res = ToolWrite(fd, LEVEL_NOTIFY_FILE, LogStrlen(LEVEL_NOTIFY_FILE));
     if ((res < 0) || (res != (int32_t)strlen(LEVEL_NOTIFY_FILE))) {
-        SELF_LOG_ERROR("write notify file failed, res=%d, strerr=%s, file=%s.",
-                       res, strerror(ToolGetErrorCode()), notifyFile);
+        SELF_LOG_ERROR(
+            "write notify file failed, res=%d, strerr=%s, file=%s.", res, strerror(ToolGetErrorCode()), notifyFile);
         LOG_CLOSE_FD(fd);
         return SYS_ERROR;
     }
@@ -276,7 +279,7 @@ STATIC int32_t UpdateNotifyFile(void)
  */
 int32_t UpdateLevelToShMem(void)
 {
-    char *levelStr = (char *)LogMalloc(LEVEL_ARR_LEN);
+    char* levelStr = (char*)LogMalloc(LEVEL_ARR_LEN);
     if (levelStr == NULL) {
         SELF_LOG_ERROR("malloc failed, strerr=%s.", strerror(ToolGetErrorCode()));
         return SYS_ERROR;
@@ -315,7 +318,7 @@ int32_t UpdateLevelToShMem(void)
  */
 int InitModuleArrToShMem(void)
 {
-    char *moduleStr = (char *)LogMalloc(MODULE_ARR_LEN);
+    char* moduleStr = (char*)LogMalloc(MODULE_ARR_LEN);
     if (moduleStr == NULL) {
         SELF_LOG_ERROR("malloc failed, strerr=%s.", strerror(ToolGetErrorCode()));
         return SYS_ERROR;
@@ -349,15 +352,16 @@ int InitModuleArrToShMem(void)
  * @param [in] maxBound: max value
  * @return: LogRt SUCCESS/others
  */
-STATIC LogRt ConvertLevelStrToNum(const char *confName, const char *valStr, int *val, const int minBound,
-    const int maxBound)
+STATIC LogRt
+ConvertLevelStrToNum(const char* confName, const char* valStr, int* val, const int minBound, const int maxBound)
 {
     ONE_ACT_NO_LOG((valStr == NULL) || (val == NULL), return FAILED);
     int64_t res = -1;
     LogStatus ret = LogStrToInt(valStr, &res);
     ONE_ACT_ERR_LOG(ret != LOG_SUCCESS, return FAILED, "config value of %s is not a numeric string", confName);
-    ONE_ACT_ERR_LOG((res > INT_MAX) || (res < minBound) || (res > maxBound), return FAILED,
-        "config value of %s is out of range", confName);
+    ONE_ACT_ERR_LOG(
+        (res > INT_MAX) || (res < minBound) || (res > maxBound), return FAILED, "config value of %s is out of range",
+        confName);
     *val = (int32_t)res;
     return SUCCESS;
 }
@@ -371,15 +375,16 @@ STATIC LogRt ConvertLevelStrToNum(const char *confName, const char *valStr, int 
  * @param [in] enableValue: enable value
  * @return: LogRt SUCCESS/others
  */
-STATIC LogRt ConvertEnableStrToNum(const char *confName, const char *valStr, int *val, const int disableValue,
-    const int enableValue)
+STATIC LogRt
+ConvertEnableStrToNum(const char* confName, const char* valStr, int* val, const int disableValue, const int enableValue)
 {
     ONE_ACT_NO_LOG((valStr == NULL) || (val == NULL), return FAILED);
     int64_t res = -1;
     LogStatus ret = LogStrToInt(valStr, &res);
     ONE_ACT_ERR_LOG(ret != LOG_SUCCESS, return FAILED, "config value of %s is not a numeric string", confName);
-    ONE_ACT_ERR_LOG((res > INT_MAX) || ((res != disableValue) && (res != enableValue)),
-        return FAILED, "config value of %s is out of range", confName);
+    ONE_ACT_ERR_LOG(
+        (res > INT_MAX) || ((res != disableValue) && (res != enableValue)), return FAILED,
+        "config value of %s is out of range", confName);
     *val = (int32_t)res;
     return SUCCESS;
 }
@@ -390,20 +395,22 @@ STATIC LogRt ConvertEnableStrToNum(const char *confName, const char *valStr, int
  * @param [in]      : nameLen       length of confName
  * @param [in]      : mask          global level mask
  */
-STATIC void SlogdUpdateGlobalLogLevel(const char *confName, uint32_t nameLen)
+STATIC void SlogdUpdateGlobalLogLevel(const char* confName, uint32_t nameLen)
 {
     ONE_ACT_WARN_LOG(confName == NULL, return, "[input] config name is null.");
-    ONE_ACT_WARN_LOG(nameLen > CONF_NAME_MAX_LEN, return,
-                     "[input] config name length is invalid, length=%u, max_length=%d.",
-                     nameLen, CONF_NAME_MAX_LEN);
-    char val[CONF_VALUE_MAX_LEN + 1] = { 0 };
+    ONE_ACT_WARN_LOG(
+        nameLen > CONF_NAME_MAX_LEN, return, "[input] config name length is invalid, length=%u, max_length=%d.",
+        nameLen, CONF_NAME_MAX_LEN);
+    char val[CONF_VALUE_MAX_LEN + 1] = {0};
     int32_t level = SlogdGetGlobalLevel(SLOGD_GLOBAL_TYPE_MASK);
     LogRt ret = LogConfListGetValue(confName, nameLen, val, CONF_VALUE_MAX_LEN);
-    ONE_ACT_WARN_LOG(ret != SUCCESS, return, "can not get config item, config_name=%s, ret=%d, use default=%d",
-        confName, (int32_t)ret, level);
+    ONE_ACT_WARN_LOG(
+        ret != SUCCESS, return, "can not get config item, config_name=%s, ret=%d, use default=%d", confName,
+        (int32_t)ret, level);
     ret = ConvertLevelStrToNum(confName, val, &level, LOG_MIN_LEVEL, LOG_MAX_LEVEL);
-    ONE_ACT_WARN_LOG(ret != SUCCESS, return, "can not get allowed value, config_name=%s, ret=%d, use default=%d.",
-        confName, (int32_t)ret, SlogdGetGlobalLevel(SLOGD_GLOBAL_TYPE_MASK));
+    ONE_ACT_WARN_LOG(
+        ret != SUCCESS, return, "can not get allowed value, config_name=%s, ret=%d, use default=%d.", confName,
+        (int32_t)ret, SlogdGetGlobalLevel(SLOGD_GLOBAL_TYPE_MASK));
     SELF_LOG_INFO("%s = %s.", confName, GetBasicLevelNameById(level));
     SlogdSetGlobalLevel(level, SLOGD_GLOBAL_TYPE_MASK);
 }
@@ -415,13 +422,14 @@ STATIC void SlogdUpdateEventLogLevel(void)
 {
     // get value of enableEvent
     int32_t level = SlogdGetEventLevel();
-    char val[CONF_VALUE_MAX_LEN + 1] = { 0 };
+    char val[CONF_VALUE_MAX_LEN + 1] = {0};
     LogRt ret = LogConfListGetValue(ENABLEEVENT_KEY, LogStrlen(ENABLEEVENT_KEY), val, CONF_VALUE_MAX_LEN);
-    ONE_ACT_WARN_LOG(ret != SUCCESS, return,
-        "can not get config item, config_name=%s, ret=%d, use default=%d, 0:disable, 1:enable.", ENABLEEVENT_KEY,
-        (int32_t)ret, level);
+    ONE_ACT_WARN_LOG(
+        ret != SUCCESS, return, "can not get config item, config_name=%s, ret=%d, use default=%d, 0:disable, 1:enable.",
+        ENABLEEVENT_KEY, (int32_t)ret, level);
     ret = ConvertEnableStrToNum(ENABLEEVENT_KEY, val, &level, EVENT_DISABLE_VALUE, EVENT_ENABLE_VALUE);
-    ONE_ACT_WARN_LOG(ret != SUCCESS, return,
+    ONE_ACT_WARN_LOG(
+        ret != SUCCESS, return,
         "can not get allowed value, config_name=%s, ret=%d, use default=%d, 0:disable, 1:enable.", ENABLEEVENT_KEY,
         (int32_t)ret, SlogdGetEventLevel());
     SELF_LOG_INFO("event level = %d, 0:disable, 1:enable.", level);
@@ -437,26 +445,26 @@ STATIC void SlogdUpdateModuleLogLevel(void)
     for (int32_t moduleId = 0; moduleId < INVALID_MODULE_ID; ++moduleId) {
         (void)SlogdSetModuleLevel(moduleId, level, SLOGD_GLOBAL_TYPE_MASK);
     }
-    const ModuleInfo *moduleInfo = GetModuleInfos();
-    char val[CONF_VALUE_MAX_LEN + 1] = { 0 };
+    const ModuleInfo* moduleInfo = GetModuleInfos();
+    char val[CONF_VALUE_MAX_LEN + 1] = {0};
     for (; (moduleInfo != NULL) && (moduleInfo->moduleName != NULL); moduleInfo++) {
         (void)memset_s(val, CONF_VALUE_MAX_LEN + 1, 0, CONF_VALUE_MAX_LEN + 1);
-        LogRt ret = LogConfListGetValue(moduleInfo->moduleName, LogStrlen(moduleInfo->moduleName),
-            val, CONF_VALUE_MAX_LEN);
+        LogRt ret =
+            LogConfListGetValue(moduleInfo->moduleName, LogStrlen(moduleInfo->moduleName), val, CONF_VALUE_MAX_LEN);
         if (ret != SUCCESS) {
-            SELF_LOG_INFO("no config_name=%s in config file, result=%d, use default_config_value=%s",
-                          moduleInfo->moduleName, (int32_t)ret,
-                          GetBasicLevelNameById(SlogdGetModuleLevel(moduleInfo->moduleId, DEBUG_LOG_MASK)));
+            SELF_LOG_INFO(
+                "no config_name=%s in config file, result=%d, use default_config_value=%s", moduleInfo->moduleName,
+                (int32_t)ret, GetBasicLevelNameById(SlogdGetModuleLevel(moduleInfo->moduleId, DEBUG_LOG_MASK)));
             continue;
         }
 
         int64_t moduleLevel = -1;
-        if ((LogStrToInt(val, &moduleLevel) == LOG_SUCCESS) &&
-            (moduleLevel >= LOG_MIN_LEVEL) && (moduleLevel <= LOG_MAX_LEVEL)) {
-            SELF_LOG_INFO("module level changed, module=%s, origin=%s, current=%s.",
-                          GetModuleNameById(moduleInfo->moduleId),
-                          GetBasicLevelNameById(SlogdGetModuleLevel(moduleInfo->moduleId, DEBUG_LOG_MASK)),
-                          GetBasicLevelNameById((int32_t)moduleLevel));
+        if ((LogStrToInt(val, &moduleLevel) == LOG_SUCCESS) && (moduleLevel >= LOG_MIN_LEVEL) &&
+            (moduleLevel <= LOG_MAX_LEVEL)) {
+            SELF_LOG_INFO(
+                "module level changed, module=%s, origin=%s, current=%s.", GetModuleNameById(moduleInfo->moduleId),
+                GetBasicLevelNameById(SlogdGetModuleLevel(moduleInfo->moduleId, DEBUG_LOG_MASK)),
+                GetBasicLevelNameById((int32_t)moduleLevel));
             (void)SlogdSetModuleLevel(moduleInfo->moduleId, (int32_t)moduleLevel, SLOGD_GLOBAL_TYPE_MASK);
         }
     }
@@ -492,7 +500,7 @@ void HandleLogLevelChange(bool setDlogFlag)
 
 LogStatus SlogdLevelInit(int32_t devId, int32_t level, bool isDocker)
 {
-    if (level != 0) {   // not equal to zero denotes level cmd in slogd arv is set
+    if (level != 0) { // not equal to zero denotes level cmd in slogd arv is set
         SlogdSetGlobalLevel(level, SLOGD_GLOBAL_TYPE_MASK);
     }
 
@@ -503,8 +511,9 @@ LogStatus SlogdLevelInit(int32_t devId, int32_t level, bool isDocker)
     // create thread to dynamic set log level, only support for pf slogd
     ONE_ACT_NO_LOG((devId == -1) && (isDocker == false), SlogdInitDynamicSetLevel());
 #else
-    TWO_ACT_ERR_LOG(InitModuleArrToShMem() != SYS_OK, SlogdShmExit(), return LOG_FAILURE,
-                    "init module arr to shmem failed, quit slogd process.");
+    TWO_ACT_ERR_LOG(
+        InitModuleArrToShMem() != SYS_OK, SlogdShmExit(), return LOG_FAILURE,
+        "init module arr to shmem failed, quit slogd process.");
     // if not in docker, set dlog level
     HandleLogLevelChange(!isDocker);
 #endif
@@ -512,7 +521,4 @@ LogStatus SlogdLevelInit(int32_t devId, int32_t level, bool isDocker)
     return LOG_SUCCESS;
 }
 
-void SlogdLevelExit(void)
-{
-    SlogdShmExit();
-}
+void SlogdLevelExit(void) { SlogdShmExit(); }

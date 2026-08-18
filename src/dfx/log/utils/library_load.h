@@ -10,13 +10,12 @@
 
 #ifndef LIBRARY_LOAD_H
 #define LIBRARY_LOAD_H
-
 #include "dlfcn.h"
 #include "log_system_api.h"
 #include "log_error_code.h"
 
 typedef struct {
-    const char *symbol;
+    const char* symbol;
     ArgPtr handle;
 } SymbolInfo;
 
@@ -24,10 +23,10 @@ typedef struct {
 extern "C" {
 #endif // __cplusplus
 
-ArgPtr LoadRuntimeDll(const char *dllName);
+ArgPtr LoadRuntimeDll(const char* dllName);
 int32_t UnloadRuntimeDll(ArgPtr handle);
-int32_t LoadDllFunc(ArgPtr handle, SymbolInfo *symbolInfos, uint32_t symbolNum);
-void *LoadDllFuncSingle(ArgPtr handle, const char *symbol);
+int32_t LoadDllFunc(ArgPtr handle, SymbolInfo* symbolInfos, uint32_t symbolNum);
+void* LoadDllFuncSingle(ArgPtr handle, const char* symbol);
 
 #ifdef __cplusplus
 }

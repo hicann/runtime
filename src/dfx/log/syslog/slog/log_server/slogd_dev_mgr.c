@@ -38,7 +38,7 @@ void SlogdInitDeviceId(void)
 
 bool SlogdIsDevicePooling(void)
 {
-    return (g_devType == HAL_PRODUCT_TYPE_POD);
+    return false; // pooling type is deprecated
 }
 
 uint32_t GetHostDeviceID(uint32_t deviceId)
@@ -99,4 +99,3 @@ uint32_t GetDeviceSideDeviceId(uint32_t hostDevId)
     }
     return hostDevId;
 }
-

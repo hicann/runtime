@@ -16,14 +16,10 @@
 extern "C" {
 #endif
 
-#define HBM_AML_MAGIC_NUM                  0xA1A1A1A1U
-#define HBM_AML_VERSION                    0x1000U
-#define MAX_NUM_OF_ADDR                    128U
-typedef enum AmlHbmOperate {
-    OPERATE_SET_ADDR = 0,
-    OPERATE_RUN,
-    OPERATE_RUN_FREE
-} AmlHbmOperate;
+#define HBM_AML_MAGIC_NUM 0xA1A1A1A1U
+#define HBM_AML_VERSION 0x1000U
+#define MAX_NUM_OF_ADDR 128U
+typedef enum AmlHbmOperate { OPERATE_SET_ADDR = 0, OPERATE_RUN, OPERATE_RUN_FREE } AmlHbmOperate;
 
 typedef struct AmlHbmAddrInfo {
     uint64_t startAddr;
@@ -39,9 +35,11 @@ typedef struct AmlHbmDetectInfo {
     uint8_t reserve[16]; // reserve 16 bytes
 } AmlHbmDetectInfo;
 
+typedef int32_t (*ServerCreateHbmDetect)(ComponentType, AdxComponentInit, AdxComponentProcess, AdxComponentUnInit);
+int32_t HbmDetectServerInit(ServerCreateHbmDetect serverCreate);
 int32_t HbmDetectInit(void);
 int32_t HbmDetectDestroy(void);
-int32_t HbmDetectProcess(const CommHandle *handle, const void *value, uint32_t len);
+int32_t HbmDetectProcess(const CommHandle* handle, const void* value, uint32_t len);
 #ifdef __cplusplus
 }
 #endif

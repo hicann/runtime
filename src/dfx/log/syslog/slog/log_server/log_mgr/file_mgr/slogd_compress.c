@@ -14,28 +14,25 @@
 #include "log_compress/log_compress.h"
 #include "log_file_info.h"
 #include "log_file_util.h"
-#include "iam.h"
 #include "log_pm.h"
 #include "log_pm_sig.h"
 #include "log_print.h"
-#include "log_iam_pub.h"
+#include "iam.h"
 
 STATIC enum IAMResourceStatus g_slogdCompressResStatus = IAM_RESOURCE_WAITING;
 
-static INLINE bool SlogdCompressServiceIsValid(void)
-{
-    return (g_slogdCompressResStatus == IAM_RESOURCE_READY);
-}
+#if defined(HARDWARE_ZIP)
+static INLINE bool SlogdCompressServiceIsValid(void) { return (g_slogdCompressResStatus == IAM_RESOURCE_READY); }
+#endif
 
-STATIC INLINE void SlogdSetCompressStatus(enum IAMResourceStatus status)
-{
-    g_slogdCompressResStatus = status;
-}
+STATIC INLINE void SlogdSetCompressStatus(enum IAMResourceStatus status) { g_slogdCompressResStatus = status; }
 
 #if defined(HARDWARE_ZIP)
 
-#define SLOGD_IAM_RES_FILE_NUM     1
-#define SLOGD_IAM_RES_TIMEOUT      (-1)
+#include "log_iam_pub.h"
+
+#define SLOGD_IAM_RES_FILE_NUM 1
+#define SLOGD_IAM_RES_TIMEOUT (-1)
 
 bool SlogdCompressIsValid(void)
 {
@@ -46,7 +43,7 @@ bool SlogdCompressIsValid(void)
     return ((LogPmGetSystemStatus() != SLEEP) && SlogdCompressServiceIsValid());
 }
 
-LogStatus SlogdCompress(const char *source, uint32_t sourceLen, char **dest, uint32_t *destLen)
+LogStatus SlogdCompress(const char* source, uint32_t sourceLen, char** dest, uint32_t* destLen)
 {
     if (SlogdCompressIsValid()) {
         return LogCompressBuffer(source, sourceLen, dest, destLen);
@@ -60,15 +57,16 @@ LogStatus SlogdCompress(const char *source, uint32_t sourceLen, char **dest, uin
  * @param[in]       : listNum       resource list number
  * @return          : NULL
  */
-STATIC void SlogdKmsResStatusCb(struct IAMVirtualResourceStatus *resList, const int32_t listNum)
+STATIC void SlogdKmsResStatusCb(struct IAMVirtualResourceStatus* resList, const int32_t listNum)
 {
-    ONE_ACT_ERR_LOG((resList == NULL) || (listNum == 0), return,
-                    "kms resource status cb input null, pid = %d.", ToolGetPid());
+    ONE_ACT_ERR_LOG(
+        (resList == NULL) || (listNum == 0), return, "kms resource status cb input null, pid = %d.", ToolGetPid());
     for (int32_t i = 0; i < listNum; i++) {
         if (strcmp(KMS_IAM_SERVICE_PATH, resList[i].IAMResName) == 0) {
             SlogdSetCompressStatus(resList[i].status);
-            SELF_LOG_INFO("kms resource status update finished, status = %d, pid = %d.",
-                          (int32_t)resList[i].status, ToolGetPid());
+            SELF_LOG_INFO(
+                "kms resource status update finished, status = %d, pid = %d.", (int32_t)resList[i].status,
+                ToolGetPid());
         }
     }
 }
@@ -79,16 +77,15 @@ STATIC void SlogdKmsResStatusCb(struct IAMVirtualResourceStatus *resList, const 
  */
 LogStatus SlogdCompressInit(void)
 {
-    struct IAMVirtualResourceStatus virtualResStatus = { KMS_IAM_SERVICE_PATH, IAM_RESOURCE_WAITING };
+    struct IAMVirtualResourceStatus virtualResStatus = {KMS_IAM_SERVICE_PATH, IAM_RESOURCE_WAITING};
     struct IAMResourceSubscribeConfig iamResSubConfig = {
-        &virtualResStatus, SLOGD_IAM_RES_FILE_NUM, SLOGD_IAM_RES_TIMEOUT
-    };
+        &virtualResStatus, SLOGD_IAM_RES_FILE_NUM, SLOGD_IAM_RES_TIMEOUT};
     int32_t ret = IAMRegResStatusChangeCb(SlogdKmsResStatusCb, iamResSubConfig);
     if (ret == 0) {
         SELF_LOG_INFO("kms resource register success, pid = %d.", ToolGetPid());
     } else {
-        SELF_LOG_ERROR("kms resource register failed, ret = %d, errno = %d, pid = %d.",
-                       ret, ToolGetErrorCode(), ToolGetPid());
+        SELF_LOG_ERROR(
+            "kms resource register failed, ret = %d, errno = %d, pid = %d.", ret, ToolGetErrorCode(), ToolGetPid());
         return LOG_FAILURE;
     }
     return LOG_SUCCESS;
@@ -96,23 +93,20 @@ LogStatus SlogdCompressInit(void)
 
 void SlogdCompressExit(void)
 {
-    int32_t ret = IAMUnregAssignedResStatusChangeCb((char *)KMS_IAM_SERVICE_PATH);
+    int32_t ret = IAMUnregAssignedResStatusChangeCb((char*)KMS_IAM_SERVICE_PATH);
     if (ret == 0) {
         SELF_LOG_INFO("kms resource unregister success, pid = %d.", ToolGetPid());
     } else {
-        SELF_LOG_ERROR("kms resource unregister failed, ret = %d, errno = %d, pid = %d.",
-                       ret, ToolGetErrorCode(), ToolGetPid());
+        SELF_LOG_ERROR(
+            "kms resource unregister failed, ret = %d, errno = %d, pid = %d.", ret, ToolGetErrorCode(), ToolGetPid());
     }
 }
 
 #else
 
-bool SlogdCompressIsValid(void)
-{
-    return true;
-}
+bool SlogdCompressIsValid(void) { return true; }
 
-LogStatus SlogdCompress(const char *source, uint32_t sourceLen, char **dest, uint32_t *destLen)
+LogStatus SlogdCompress(const char* source, uint32_t sourceLen, char** dest, uint32_t* destLen)
 {
     return LogCompressBuffer(source, sourceLen, dest, destLen);
 }
@@ -127,29 +121,17 @@ LogStatus SlogdCompressInit(void)
     return LOG_SUCCESS;
 }
 
-void SlogdCompressExit(void)
-{
-    return;
-}
+void SlogdCompressExit(void) { return; }
 #endif // HARDWARE_ZIP
 
 #else
-LogStatus SlogdCompressInit(void)
-{
-    return LOG_SUCCESS;
-}
+LogStatus SlogdCompressInit(void) { return LOG_SUCCESS; }
 
-void SlogdCompressExit(void)
-{
-    return;
-}
+void SlogdCompressExit(void) { return; }
 
-bool SlogdCompressIsValid(void)
-{
-    return true;
-}
+bool SlogdCompressIsValid(void) { return true; }
 
-LogStatus SlogdCompress(const char *source, uint32_t sourceLen, char **dest, uint32_t *destLen)
+LogStatus SlogdCompress(const char* source, uint32_t sourceLen, char** dest, uint32_t* destLen)
 {
     (void)source;
     (void)sourceLen;

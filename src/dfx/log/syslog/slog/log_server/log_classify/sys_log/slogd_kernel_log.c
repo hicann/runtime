@@ -15,28 +15,28 @@
 #include "log_print.h"
 
 #ifndef KERNEL_LOG_PATH
-#define KERNEL_LOG_PATH                 "/dev/kmsg"
+#define KERNEL_LOG_PATH "/dev/kmsg"
 #endif
-#define SLOGD_KERNEL_LOG_TIMESTAMP_LEN  128U
-#define SLOGD_KERNEL_LOG_RECV_BUFSIZE   1024U
-#define BASE_HEX        16
-#define BASE_DECIMAL    10U
-#define INDEX_UNIT      4U
-#define POSITION_UNIT   2
-#define UNIT_US_TO_S    1000000U
-#define UNIT_US_TO_MS   1000
+#define SLOGD_KERNEL_LOG_TIMESTAMP_LEN 128U
+#define SLOGD_KERNEL_LOG_RECV_BUFSIZE 4096U
+#define BASE_HEX 16
+#define BASE_DECIMAL 10U
+#define INDEX_UNIT 4U
+#define POSITION_UNIT 2
+#define UNIT_US_TO_S 1000000U
+#define UNIT_US_TO_MS 1000
 // syslog levels highest to lowest priority
-#define SKLOG_EMERG     0 // system is unusable
-#define SKLOG_ALERT     1 // action must be taken immediately
-#define SKLOG_CRIT      2 // critical conditions
-#define SKLOG_ERROR     3 // error conditions
-#define SKLOG_WARNING   4 // warning conditions
-#define SKLOG_NOTICE    5 // normal but significant condition
-#define SKLOG_INFO      6 // informational
-#define SKLOG_DEBUG     7 // debug-level messages
-#define SKLOG_PRIMASK   0x07U // mask to extract priority part (internal)
+#define SKLOG_EMERG 0       // system is unusable
+#define SKLOG_ALERT 1       // action must be taken immediately
+#define SKLOG_CRIT 2        // critical conditions
+#define SKLOG_ERROR 3       // error conditions
+#define SKLOG_WARNING 4     // warning conditions
+#define SKLOG_NOTICE 5      // normal but significant condition
+#define SKLOG_INFO 6        // informational
+#define SKLOG_DEBUG 7       // debug-level messages
+#define SKLOG_PRIMASK 0x07U // mask to extract priority part (internal)
 
-STATIC SlogdKernelLogMgr g_kernelLogMgr = { INVALID, {0}, NULL, NULL};
+STATIC SlogdKernelLogMgr g_kernelLogMgr = {INVALID, {0}, NULL, NULL};
 
 STATIC bool SlogdKernelLogIsNeedInit(void)
 {
@@ -52,10 +52,7 @@ STATIC bool SlogdKernelLogIsNeedInit(void)
  * @param[in]   : c         input character
  * @return      : 1(is digit), 0(not digit)
  */
-STATIC INLINE int32_t SlogdKernelLogIsDigit(char c)
-{
-    return ((c >= '0') && (c <= '9')) ? 1 : 0;
-}
+STATIC INLINE int32_t SlogdKernelLogIsDigit(char c) { return ((c >= '0') && (c <= '9')) ? 1 : 0; }
 
 STATIC char SlogdKernelLogGetChValue(char ch)
 {
@@ -74,11 +71,11 @@ STATIC char SlogdKernelLogGetChValue(char ch)
     return (char)offset;
 }
 
-STATIC void SlogdKernelLogDecodeMsg(char *msg, uint32_t length)
+STATIC void SlogdKernelLogDecodeMsg(char* msg, uint32_t length)
 {
     int32_t idx = 0;
     char ch = '\0';
-    const char *ptr = msg;
+    const char* ptr = msg;
     uint32_t len = 0;
     while ((*ptr != '\0') && (len <= length)) {
         if ((*ptr == '\\') && (*(ptr + 1) == 'x')) {
@@ -107,12 +104,12 @@ STATIC void SlogdKernelLogDecodeMsg(char *msg, uint32_t length)
  * @param[out]  : heapBuf   pointer to msg copy
  * @return      : LOG_SUCCESS success, LOG_FAILURE failure
  */
-STATIC LogStatus SlogdKernelLogCheckParam(const char *msg, uint32_t length, char **heapBuf)
+STATIC LogStatus SlogdKernelLogCheckParam(const char* msg, uint32_t length, char** heapBuf)
 {
     ONE_ACT_WARN_LOG(msg == NULL, return LOG_FAILURE, "[input] message_buffer is null.");
     ONE_ACT_WARN_LOG(heapBuf == NULL, return LOG_FAILURE, "[input] heap buffer array is null.");
 
-    *heapBuf = (char *)LogMalloc(length);
+    *heapBuf = (char*)LogMalloc(length);
     ONE_ACT_ERR_LOG(*heapBuf == NULL, return LOG_FAILURE, "malloc failed, strerr=%s.", strerror(ToolGetErrorCode()));
 
     int32_t ret = memcpy_s(*heapBuf, length, msg, length);
@@ -130,18 +127,18 @@ STATIC LogStatus SlogdKernelLogCheckParam(const char *msg, uint32_t length, char
  * @param[in]   : length    length of input kernel msg
  * @return      : LOG_SUCCESS success, LOG_FAILURE failure
  */
-STATIC LogStatus SlogdKernelLogProcessBuf(char *msg, uint32_t length)
+STATIC LogStatus SlogdKernelLogProcessBuf(char* msg, uint32_t length)
 {
     uint64_t timestamp = 0;
     uint16_t level = 0;
     int32_t value = 0;
-    char *heapBuf = NULL;
+    char* heapBuf = NULL;
 
     if (SlogdKernelLogCheckParam(msg, length, &heapBuf) == LOG_FAILURE) {
         return LOG_FAILURE;
     }
 
-    char *buf = heapBuf;
+    char* buf = heapBuf;
     for (; (*buf != '\0') && (SlogdKernelLogIsDigit(*buf) != 0); buf++) {
         value = *buf - '0';
         if (level > (((uint16_t)USHRT_MAX - (uint16_t)value) / BASE_DECIMAL)) {
@@ -176,7 +173,8 @@ STATIC LogStatus SlogdKernelLogProcessBuf(char *msg, uint32_t length)
     buf++;
 
     SlogdKernelLogDecodeMsg(buf, length);
-    int32_t ret = sprintf_s(msg, length, "<%hu>[%lu.%06lu] %s", level, timestamp / UNIT_US_TO_S, timestamp % UNIT_US_TO_S, buf);
+    int32_t ret =
+        sprintf_s(msg, length, "<%hu>[%lu.%06lu] %s", level, timestamp / UNIT_US_TO_S, timestamp % UNIT_US_TO_S, buf);
     if (ret == -1) {
         SELF_LOG_ERROR("sprintf_s failed, result=%d, strerr=%s.", ret, strerror(ToolGetErrorCode()));
         XFREE(heapBuf);
@@ -192,26 +190,26 @@ STATIC LogStatus SlogdKernelLogProcessBuf(char *msg, uint32_t length)
  * @param[in]   : bufLen        length of timeBuffer
  * @return      : none
  */
-STATIC void SlogdKernelLogGetLocalTime(char *timeBuffer, size_t bufLen)
+STATIC void SlogdKernelLogGetLocalTime(char* timeBuffer, size_t bufLen)
 {
-    ToolTimeval currentTimeval = { 0 };
-    struct tm timeInfo = { 0 };
+    ToolTimeval currentTimeval = {0};
+    struct tm timeInfo = {0};
     ONE_ACT_WARN_LOG((ToolGetTimeOfDay(&currentTimeval, NULL)) != SYS_OK, return, "can not get time of day.");
 
     const time_t sec = currentTimeval.tvSec;
     ONE_ACT_WARN_LOG((ToolLocalTimeR(&sec, &timeInfo)) != SYS_OK, return, "can not get local time.");
 
-    int err = snprintf_s(timeBuffer, bufLen, bufLen - 1U, "%04d-%02d-%02d-%02d:%02d:%02d.%03ld.%03ld",
-                          timeInfo.tm_year, timeInfo.tm_mon, timeInfo.tm_mday,
-                          timeInfo.tm_hour, timeInfo.tm_min, timeInfo.tm_sec,
-                          (currentTimeval.tvUsec / UNIT_US_TO_MS), (currentTimeval.tvUsec % UNIT_US_TO_MS));
+    int err = snprintf_s(
+        timeBuffer, bufLen, bufLen - 1U, "%04d-%02d-%02d-%02d:%02d:%02d.%03ld.%03ld", timeInfo.tm_year, timeInfo.tm_mon,
+        timeInfo.tm_mday, timeInfo.tm_hour, timeInfo.tm_min, timeInfo.tm_sec, (currentTimeval.tvUsec / UNIT_US_TO_MS),
+        (currentTimeval.tvUsec % UNIT_US_TO_MS));
     if (err == -1) {
         SELF_LOG_ERROR("snprintf_s failed, strerr=%s.", strerror(ToolGetErrorCode()));
         return;
     }
 }
 
-STATIC void SlogdKernelLogWrite(uint64_t priority, const char *msg)
+STATIC void SlogdKernelLogWrite(uint64_t priority, const char* msg)
 {
     LogInfo msgInfo = {0};
     msgInfo.processType = SYSTEM;
@@ -247,12 +245,13 @@ STATIC void SlogdKernelLogWrite(uint64_t priority, const char *msg)
     }
 
     // construct base info
-    char timer[SLOGD_KERNEL_LOG_TIMESTAMP_LEN] = { 0 };
+    char timer[SLOGD_KERNEL_LOG_TIMESTAMP_LEN] = {0};
     SlogdKernelLogGetLocalTime(timer, SLOGD_KERNEL_LOG_TIMESTAMP_LEN);
     char buffer[SLOGD_KERNEL_LOG_RECV_BUFSIZE] = {0};
-    int32_t err = snprintf_s(buffer, SLOGD_KERNEL_LOG_RECV_BUFSIZE, SLOGD_KERNEL_LOG_RECV_BUFSIZE - 1U, "[%s] %s(%u,%s):%s [%s:%d]%s",
-        GetLevelNameById(msgInfo.level), GetModuleNameById(msgInfo.moduleId), msgInfo.pid, "slogd", timer,
-        __FILE__, __LINE__, msg);
+    int32_t err = snprintf_s(
+        buffer, SLOGD_KERNEL_LOG_RECV_BUFSIZE, SLOGD_KERNEL_LOG_RECV_BUFSIZE - 1U, "[%s] %s(%u,%s):%s [%s:%d]%s",
+        GetLevelNameById(msgInfo.level), GetModuleNameById(msgInfo.moduleId), msgInfo.pid, "slogd", timer, __FILE__,
+        __LINE__, msg);
     if (err == -1) {
         SELF_LOG_ERROR("snprintf_s failed, msg=%s, strerr=%s.", msg, strerror(ToolGetErrorCode()));
         return;
@@ -264,14 +263,14 @@ STATIC void SlogdKernelLogWrite(uint64_t priority, const char *msg)
     }
 }
 
-STATIC void SlogdKernelLogParse(const char *start)
+STATIC void SlogdKernelLogParse(const char* start)
 {
     uint64_t priority = DLOG_INFO;
     char endChar = '\0';
-    char *ptrEndChar = &endChar;
+    char* ptrEndChar = &endChar;
     ONE_ACT_ERR_LOG(start == NULL, return, "[input] start is null.");
 
-    const char *pos = start;
+    const char* pos = start;
     if (*pos == '<') {
         pos++;
         if ((pos != NULL) && (*pos != '\0')) {
@@ -292,7 +291,7 @@ STATIC void SlogdKernelLogParse(const char *start)
     }
 }
 
-STATIC void SlogdKernelLogReceive(void *args)
+STATIC void SlogdKernelLogReceive(void* args)
 {
     (void)args;
     errno_t err = memset_s(g_kernelLogMgr.recvBuf, SLOGD_KERNEL_LOG_RECV_BUFSIZE, 0, SLOGD_KERNEL_LOG_RECV_BUFSIZE);
@@ -313,7 +312,9 @@ STATIC void SlogdKernelLogReceive(void *args)
     }
     ret = (int32_t)read(g_kernelLogMgr.fd, g_kernelLogMgr.recvBuf, SLOGD_KERNEL_LOG_RECV_BUFSIZE - 1U);
     if (ret == -1) {
-        SELF_LOG_ERROR("read file(%s) failed, result=%d, strerr=%s.", KERNEL_LOG_PATH, ret, strerror(ToolGetErrorCode()));
+        // Because O_NONBLOCK mode and file is public, result of -1 is ok, the read operation will be performed again
+        SELF_LOG_WARN(
+            "read file(%s) failed, result=%d, strerr=%s.", KERNEL_LOG_PATH, ret, strerror(ToolGetErrorCode()));
         return;
     }
     if (ret == 0) {
@@ -332,8 +333,9 @@ LogStatus SlogdKernelLogInit(SysLogWriteFunc func)
     }
     SELF_LOG_INFO("init kernel log.");
     g_kernelLogMgr.fd = open(KERNEL_LOG_PATH, O_RDONLY | O_NONBLOCK, 0);
-    ONE_ACT_ERR_LOG(g_kernelLogMgr.fd == INVALID, return LOG_FAILURE,
-        "open file failed, file=%s, strerr=%s.", KERNEL_LOG_PATH, strerror(ToolGetErrorCode()))
+    ONE_ACT_ERR_LOG(
+        g_kernelLogMgr.fd == INVALID, return LOG_FAILURE, "open file failed, file=%s, strerr=%s.", KERNEL_LOG_PATH,
+        strerror(ToolGetErrorCode()))
 
     off_t ret = lseek(g_kernelLogMgr.fd, 0, SEEK_END);
     if (ret == INVALID) {
@@ -344,14 +346,15 @@ LogStatus SlogdKernelLogInit(SysLogWriteFunc func)
     g_kernelLogMgr.pollFd.fd = g_kernelLogMgr.fd;
     g_kernelLogMgr.pollFd.events = POLLIN;
 
-    g_kernelLogMgr.recvBuf = (char *)LogMalloc(SLOGD_KERNEL_LOG_RECV_BUFSIZE);
-    ONE_ACT_ERR_LOG(g_kernelLogMgr.recvBuf == NULL, return LOG_FAILURE,
-        "malloc failed, strerr=%s.", strerror(ToolGetErrorCode()))
+    g_kernelLogMgr.recvBuf = (char*)LogMalloc(SLOGD_KERNEL_LOG_RECV_BUFSIZE);
+    ONE_ACT_ERR_LOG(
+        g_kernelLogMgr.recvBuf == NULL, return LOG_FAILURE, "malloc failed, strerr=%s.", strerror(ToolGetErrorCode()))
     g_kernelLogMgr.write = func;
 
     LogReceiveNode recvNode = {SYS_LOG_PRIORITY, SlogdKernelLogReceive};
     int32_t result = SlogdComReceiveRegister(&recvNode);
-    ONE_ACT_ERR_LOG(result != LOG_SUCCESS, return LOG_FAILURE, "kernel log register receive node failed, ret=%d.", result);
+    ONE_ACT_ERR_LOG(
+        result != LOG_SUCCESS, return LOG_FAILURE, "kernel log register receive node failed, ret=%d.", result);
     return LOG_SUCCESS;
 }
 

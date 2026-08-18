@@ -15,11 +15,6 @@
 extern "C" {
 #endif
 
-#if (OS_TYPE_DEF == LINUX)
-void BboxStartMainThread(void);
-void BboxStopMainThread(void);
-#endif
-
 #ifdef __cplusplus
 }
 #endif

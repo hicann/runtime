@@ -14,7 +14,7 @@
 #include "log_pm_sig.h"
 
 struct LogRecFuncNode {
-    void (*receive)(void *);
+    void (*receive)(void*);
 };
 
 typedef struct {
@@ -22,7 +22,7 @@ typedef struct {
         LogDistributeNode distributeNode[LOG_PRIORITY_TYPE_NUM];
     } distributeMgr;
     struct {
-        int32_t devNum;
+        uint32_t devNum;
         DevThread devThread[MAX_DEV_NUM];
         struct LogRecFuncNode devNode[LOG_PRIORITY_TYPE_NUM];
         bool isThreadExit;
@@ -36,13 +36,14 @@ typedef struct {
 } ReceiveMgr;
 
 // 优先级由LogPriority确定，不同类型线程优先级一致
-STATIC ReceiveMgr g_receiveMgr = { 0 };
+STATIC ReceiveMgr g_receiveMgr = {0};
 
-void SlogdWriteToBuffer(const char *msg, uint32_t msgLen, const LogInfo *info)
+void SlogdWriteToBuffer(const char* msg, uint32_t msgLen, const LogInfo* info)
 {
     ONE_ACT_WARN_LOG((msg == NULL) || (info == NULL), return, "[input] null message or null info");
-    ONE_ACT_WARN_LOG((info->type < DEBUG_LOG) || (info->type >= LOG_TYPE_NUM),
-                     return, "[input] wrong log type=%d", (int32_t)info->type);
+    ONE_ACT_WARN_LOG(
+        (info->type < DEBUG_LOG) || (info->type >= LOG_TYPE_NUM), return, "[input] wrong log type=%d",
+        (int32_t)info->type);
 
     for (int32_t i = 0; i < (int32_t)LOG_PRIORITY_TYPE_NUM; i++) {
         if (g_receiveMgr.distributeMgr.distributeNode[i].checkLogType == NULL) {
@@ -57,15 +58,15 @@ void SlogdWriteToBuffer(const char *msg, uint32_t msgLen, const LogInfo *info)
     }
 }
 
-static void *SlogdDevReceiveProc(void *args)
+static void* SlogdDevReceiveProc(void* args)
 {
-    ONE_ACT_ERR_LOG(args == NULL, return (void *)NULL, "args is NULL.");
-    int32_t devId = *(int32_t *)args;
-    char threadName[THREAD_NAME_MAX_LEN] = { 0 };
+    ONE_ACT_ERR_LOG(args == NULL, return (void*)NULL, "args is NULL.");
+    int32_t devId = *(int32_t*)args;
+    char threadName[THREAD_NAME_MAX_LEN] = {0};
     int32_t ret = sprintf_s(threadName, THREAD_NAME_MAX_LEN, "LogRecvDev%d", devId);
     if (ret == -1) {
         SELF_LOG_ERROR("generate receive thread name for device %d failed.", devId);
-        return (void *)NULL;
+        return (void*)NULL;
     }
     if (ToolSetThreadName(threadName) != SYS_OK) {
         SELF_LOG_WARN("can not set thread_name(%s).", threadName);
@@ -80,23 +81,24 @@ static void *SlogdDevReceiveProc(void *args)
     }
 
     SELF_LOG_ERROR("Thread(%s) quit, signal=%d", threadName, LogGetSigNo());
-    return (void *)NULL;
+    return (void*)NULL;
 }
 
-static void *SlogdComReceiveProc(void *args)
+static void* SlogdComReceiveProc(void* args)
 {
     ONE_ACT_ERR_LOG(args == NULL, return NULL, "args is NULL.");
-    int32_t priority = *(int32_t *)args;
-    ONE_ACT_ERR_LOG((priority < 0) || (priority >= (int32_t)LOG_PRIORITY_TYPE_NUM), return NULL, "priority %d is invalid.", priority);
-    char threadName[THREAD_NAME_MAX_LEN] = { 0 };
+    int32_t priority = *(int32_t*)args;
+    ONE_ACT_ERR_LOG(
+        (priority < 0) || (priority >= (int32_t)LOG_PRIORITY_TYPE_NUM), return NULL, "priority %d is invalid.",
+        priority);
+    char threadName[THREAD_NAME_MAX_LEN] = {0};
     int32_t ret = sprintf_s(threadName, THREAD_NAME_MAX_LEN, "LogRecvCom%d", priority);
     if (ret == -1) {
         SELF_LOG_ERROR("generate common thread name for priority %d failed.", priority);
         return NULL;
     }
 
-    NO_ACT_WARN_LOG(ToolSetThreadName(threadName) != SYS_OK,
-        "can not set thread_name(%s).", threadName);
+    NO_ACT_WARN_LOG(ToolSetThreadName(threadName) != SYS_OK, "can not set thread_name(%s).", threadName);
 
     while (!g_receiveMgr.comThreadMgr.isThreadExit && LogGetSigNo() == 0) {
         if (g_receiveMgr.comThreadMgr.comNode[priority].receive != NULL) {
@@ -112,9 +114,10 @@ static int32_t SlogdCreateDevThread(void)
 {
     g_receiveMgr.devThreadMgr.isThreadExit = false;
     for (int32_t i = 0; i < (int32_t)LOG_PRIORITY_TYPE_NUM; i++) {
-        if (g_receiveMgr.devThreadMgr.devNode[i].receive != NULL) {     // devNode 有log注册才创建device线程
-            return SlogdThreadMgrCreateDeviceThread(g_receiveMgr.devThreadMgr.devThread, MAX_DEV_NUM,
-                &g_receiveMgr.devThreadMgr.devNum, SlogdDevReceiveProc);
+        if (g_receiveMgr.devThreadMgr.devNode[i].receive != NULL) { // devNode 有log注册才创建device线程
+            return SlogdThreadMgrCreateDeviceThread(
+                g_receiveMgr.devThreadMgr.devThread, MAX_DEV_NUM, &g_receiveMgr.devThreadMgr.devNum,
+                SlogdDevReceiveProc);
         }
     }
     return LOG_SUCCESS;
@@ -134,8 +137,8 @@ int32_t SlogdReceiveInit(void)
     g_receiveMgr.comThreadMgr.isThreadExit = false;
     for (int32_t i = 0; i < (int32_t)LOG_PRIORITY_TYPE_NUM; i++) {
         g_receiveMgr.comThreadMgr.priority[i] = i;
-        if (g_receiveMgr.comThreadMgr.comNode[i].receive != NULL) {     // 有日志注册才创建common线程
-            g_receiveMgr.comThreadMgr.comThread[i].threadInfo.pulArg = (void *)&g_receiveMgr.comThreadMgr.priority[i];
+        if (g_receiveMgr.comThreadMgr.comNode[i].receive != NULL) { // 有日志注册才创建common线程
+            g_receiveMgr.comThreadMgr.comThread[i].threadInfo.pulArg = (void*)&g_receiveMgr.comThreadMgr.priority[i];
             (void)SlogdThreadMgrCreateCommonThread(&g_receiveMgr.comThreadMgr.comThread[i], SlogdComReceiveProc);
         }
     }
@@ -147,10 +150,11 @@ int32_t SlogdReceiveInit(void)
  * @param[in]   : node          struct LogDistributeNode pointer
  * @return      : LOG_SUCCESS   success; LOG_FAILURE failure
  */
-int32_t SlogdDistributeRegister(const LogDistributeNode *node)
+int32_t SlogdDistributeRegister(const LogDistributeNode* node)
 {
     ONE_ACT_ERR_LOG(node == NULL, return LOG_FAILURE, "node pointer is NULL.");
-    ONE_ACT_ERR_LOG((node->checkLogType == NULL) || (node->write == NULL), return LOG_FAILURE,
+    ONE_ACT_ERR_LOG(
+        (node->checkLogType == NULL) || (node->write == NULL), return LOG_FAILURE,
         "checkLogType or write function pointer is NULL.");
     g_receiveMgr.distributeMgr.distributeNode[(int32_t)node->priority].checkLogType = node->checkLogType;
     g_receiveMgr.distributeMgr.distributeNode[(int32_t)node->priority].write = node->write;
@@ -162,7 +166,7 @@ int32_t SlogdDistributeRegister(const LogDistributeNode *node)
  * @param[in]   : node          struct LogReceiveNode pointer
  * @return      : LOG_SUCCESS   success; LOG_FAILURE failure
  */
-int32_t SlogdDevReceiveRegister(const LogReceiveNode *node)
+int32_t SlogdDevReceiveRegister(const LogReceiveNode* node)
 {
     ONE_ACT_ERR_LOG(node == NULL, return LOG_FAILURE, "node pointer is NULL.");
     ONE_ACT_ERR_LOG(node->receive == NULL, return LOG_FAILURE, "receive function pointer is NULL.");
@@ -175,7 +179,7 @@ int32_t SlogdDevReceiveRegister(const LogReceiveNode *node)
  * @param[in]   : node          struct LogReceiveNode pointer
  * @return      : LOG_SUCCESS   success; LOG_FAILURE failure
  */
-int32_t SlogdComReceiveRegister(const LogReceiveNode *node)
+int32_t SlogdComReceiveRegister(const LogReceiveNode* node)
 {
     ONE_ACT_ERR_LOG(node == NULL, return LOG_FAILURE, "node pointer is NULL.");
     ONE_ACT_ERR_LOG(node->receive == NULL, return LOG_FAILURE, "receive function pointer is NULL.");
@@ -192,8 +196,9 @@ void SlogdReceiveExit(void)
     // join 线程
     g_receiveMgr.devThreadMgr.isThreadExit = true;
     g_receiveMgr.comThreadMgr.isThreadExit = true;
-    ThreadManage threadManage = { LOG_PRIORITY_TYPE_NUM, g_receiveMgr.comThreadMgr.comThread,
-        g_receiveMgr.devThreadMgr.devNum, g_receiveMgr.devThreadMgr.devThread };
+    ThreadManage threadManage = {
+        LOG_PRIORITY_TYPE_NUM, g_receiveMgr.comThreadMgr.comThread, g_receiveMgr.devThreadMgr.devNum,
+        g_receiveMgr.devThreadMgr.devThread};
     SlogdThreadMgrExit(&threadManage);
 
     // clean register

@@ -18,20 +18,19 @@ namespace Adx {
 static const std::string INSERT_MSG = "###[HDC_MSG]_DEVICE_FRAMEWORK_START_###";
 static const std::string DELETE_MSG = "###[HDC_MSG]_DEVICE_FRAMEWORK_END_###";
 
-int32_t LogHdc::Init()
-{
-    return SYS_OK;
-}
+int32_t LogHdc::Init() { return SYS_OK; }
 
-int32_t LogHdc::Process(const CommHandle &handle, const SharedPtr<MsgProto> &proto)
+int32_t LogHdc::Process(const CommHandle& handle, const SharedPtr<MsgProto>& proto)
 {
     AdxCommHandle adxHandle = const_cast<AdxCommHandle>(&handle);
-    TWO_ACT_ERR_LOG(proto->msgType != MsgType::MSG_DATA, AdxDestroyCommHandle(adxHandle),
-        return SYS_OK, "receive non data message");
-    TWO_ACT_ERR_LOG(handle.session == ADX_OPT_INVALID_HANDLE, AdxDestroyCommHandle(adxHandle),
-        return SYS_ERROR, "handle or handle.session invalid");
-    LogNotifyMsg *msg = reinterpret_cast<LogNotifyMsg *>(proto->data);
-    std::string actionType((IdeString)msg->data);
+    TWO_ACT_ERR_LOG(
+        proto->msgType != MsgType::MSG_DATA, AdxDestroyCommHandle(adxHandle), return SYS_OK,
+        "receive non data message");
+    TWO_ACT_ERR_LOG(
+        handle.session == ADX_OPT_INVALID_HANDLE, AdxDestroyCommHandle(adxHandle), return SYS_ERROR,
+        "handle or handle.session invalid");
+    LogNotifyMsg* msg = reinterpret_cast<LogNotifyMsg*>(proto->data);
+    std::string actionType(msg->data);
 
     int32_t devId = 0;
     int32_t err = IdeGetDevIdBySession(reinterpret_cast<HDC_SESSION>(handle.session), &devId);
@@ -53,18 +52,20 @@ int32_t LogHdc::Process(const CommHandle &handle, const SharedPtr<MsgProto> &pro
     // update session-devId-pid data struct
     if (actionType == INSERT_MSG) {
         SELF_LOG_INFO("insert log session, pid %d devid %d", pid, devId);
-        ONE_ACT_ERR_LOG(InsertSessionNode(handle.session, pid, devId) != SYS_OK, return SYS_ERROR,
+        ONE_ACT_ERR_LOG(
+            InsertSessionNode(handle.session, pid, devId) != SYS_OK, return SYS_ERROR,
             "insert log session node failed");
     } else if (actionType == DELETE_MSG) {
         SELF_LOG_INFO("delete log session, pid %d devid %d", pid, devId);
         int32_t flag = SYS_OK;
-        SessionNode *node = GetSessionNode(pid, devId);
-        if (node == NULL) {
+        SessionNode* node = GetSessionNode(pid, devId);
+        if (node == nullptr) {
             ONE_ACT_WARN_LOG(!IsSessionNodeListNull(), flag = SYS_ERROR, "get session node failed");
         } else {
             node->timeout = msg->timeout;
-            ONE_ACT_ERR_LOG(DeleteSessionNode(node->session, pid, devId) != SYS_OK,
-                flag = SYS_ERROR, "delete log session node failed");
+            ONE_ACT_ERR_LOG(
+                DeleteSessionNode(node->session, pid, devId) != SYS_OK, flag = SYS_ERROR,
+                "delete log session node failed");
         }
         AdxDestroyCommHandle(adxHandle);
         return flag;
@@ -76,8 +77,5 @@ int32_t LogHdc::Process(const CommHandle &handle, const SharedPtr<MsgProto> &pro
     return SYS_OK;
 }
 
-int32_t LogHdc::UnInit()
-{
-    return SYS_OK;
-}
-}
+int32_t LogHdc::UnInit() { return SYS_OK; }
+} // namespace Adx

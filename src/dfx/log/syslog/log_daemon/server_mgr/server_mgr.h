@@ -16,14 +16,14 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-#define SERVER_LONG_LINK      0
+#define SERVER_LONG_LINK 0
 #define SERVER_LONG_LINK_STOP 1
-#define SERVER_SHORT_LINK     2
-#define SERVER_LINK_TYPE_MAX  3
-#define ENV_ALL               0
-#define ENV_NON_DOCKER        1 // 1 & 3
-#define ENV_TYPE_MAX          2
-#define SERVER_MSG_SIZE       128
+#define SERVER_SHORT_LINK 2
+#define SERVER_LINK_TYPE_MAX 3
+#define ENV_ALL 0
+#define ENV_NON_DOCKER 1 // 1 & 3
+#define ENV_TYPE_MAX 2
+#define SERVER_MSG_SIZE 128
 
 int32_t ServerMgrInit(void);
 void ServerMgrExit(void);
@@ -36,11 +36,13 @@ struct ServerMgr;
 typedef struct ServerMgr* ServerHandle;
 typedef int32_t (*ServerStart)(ServerHandle handle);
 typedef void (*ServerStop)(void);
+typedef int32_t (*ServerSend)(ServerHandle, const char*, uint32_t);
+typedef int32_t (*ServerRecv)(ServerHandle, char**, uint32_t*, uint32_t);
 
-typedef struct ServerMgr{
-    bool init; // init is used only once; true: be used; false: free
-    bool processFlag; // true: running process exists; false: no running process
-    bool monitorRunFlag; // true: running status; false: stopped status
+typedef struct ServerMgr {
+    bool init;             // init is used only once; true: be used; false: free
+    bool processFlag;      // true: running process exists; false: no running process
+    bool monitorRunFlag;   // true: running status; false: stopped status
     ToolThread monitorTid; // tid of session monitor
     AdxCommConHandle handle;
     uint32_t maxNum;
@@ -49,6 +51,8 @@ typedef struct ServerMgr{
     int32_t runEnv;
     ServerStart start;
     ServerStop stop;
+    ServerSend send;
+    ServerRecv recv;
     ToolMutex lock;
 } ServerMgr;
 
@@ -57,7 +61,7 @@ typedef struct {
     uint32_t magic;
     uint32_t version;
     int32_t retCode;
-    uint8_t reserve[116];  // reserve 124 bytes
+    uint8_t reserve[116];         // reserve 124 bytes
     char retMsg[SERVER_MSG_SIZE]; // msg length 128 bytes
 } ServerResultInfo;
 
@@ -67,14 +71,14 @@ typedef struct {
     int32_t runEnv;
 } ServerAttr;
 
-int32_t ServerCreate(ComponentType type, ServerStart start, ServerStop stop, ServerAttr *attr);
-int32_t ServerCreateEx(ComponentType type, ServerComponentInit init, ServerComponentProcess process,
-    ServerComponentUnInit uninit);
+int32_t ServerCreate(ComponentType type, ServerStart start, ServerStop stop, ServerAttr* attr);
+int32_t ServerCreateEx(
+    ComponentType type, ServerComponentInit init, ServerComponentProcess process, ServerComponentUnInit uninit);
 void ServerRelease(ComponentType type);
 int32_t ServersStart(void);
-int32_t ServerSyncFile(ServerHandle handle, const char *srcFileName, const char *dstFileName);
-int32_t ServerSendMsg(ServerHandle handle, const char *msg, uint32_t msgLen);
-int32_t ServerRecvMsg(ServerHandle handle, char **msg, uint32_t *msgLen, uint32_t timeout);
+int32_t ServerSyncFile(ServerHandle handle, const char* srcFileName, const char* dstFileName);
+int32_t ServerSendMsg(ServerHandle handle, const char* msg, uint32_t msgLen);
+int32_t ServerRecvMsg(ServerHandle handle, char** msg, uint32_t* msgLen, uint32_t timeout);
 
 #ifdef __cplusplus
 }

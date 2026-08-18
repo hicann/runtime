@@ -22,17 +22,16 @@
 using namespace std;
 using namespace testing;
 
-static LogStatus SlogdSyslogMgrInit(StLogFileList *fileList)
+static LogStatus SlogdSyslogAndAppMgrInit(StLogFileList* fileList)
 {
-    LogStatus ret = LogAgentInitDeviceOs(fileList);
+    LogStatus ret = SlogdSyslogMgrInit(fileList);
     if (ret != LOG_SUCCESS) {
         return ret;
     }
     return LogAgentInitDeviceApplication(fileList);
 }
 
-class EP_SLOGD_FILE_MGR_LOG_FUNC_UTEST : public testing::Test
-{
+class EP_SLOGD_FILE_MGR_LOG_FUNC_UTEST : public testing::Test {
 protected:
     virtual void SetUp()
     {
@@ -61,7 +60,7 @@ protected:
     }
 
 public:
-    int DlogCmdGetIntRet(const char *path, const char*cmd)
+    int DlogCmdGetIntRet(const char* path, const char* cmd)
     {
         char resultFile[200] = {0};
         sprintf(resultFile, "%s/EP_SLOGD_FUNC_STEST_cmd_result.txt", path);
@@ -71,7 +70,7 @@ public:
         system(cmdToFile);
 
         char buf[100] = {0};
-        FILE *fp = fopen(resultFile, "r");
+        FILE* fp = fopen(resultFile, "r");
         if (fp == NULL) {
             return 0;
         }
@@ -83,7 +82,7 @@ public:
         return atoi(buf);
     }
 
-    int DlogCheckDir(const char *path, const char *str)
+    int DlogCheckDir(const char* path, const char* str)
     {
         if (access(path, F_OK) != 0) {
             return 0;
@@ -99,14 +98,14 @@ public:
 TEST_F(EP_SLOGD_FILE_MGR_LOG_FUNC_UTEST, LogAgentGetFileListForModuleOs)
 {
     // 创建文件列表
-    char cmd[1024] = { 0 };
+    char cmd[1024] = {0};
     for (int32_t i = 0; i < 5; i++) {
         memset_s(cmd, 1024, 0, 1024);
         snprintf_s(cmd, 1024, 1023, "test > %s/device-os_202312190876%d.log", PATH_ROOT, i);
         system(cmd);
     }
     // 获取最新文件
-    StSubLogFileList subInfo = { 0 };
+    StSubLogFileList subInfo = {0};
     subInfo.maxFileSize = 1U * 1024U * 1024U;
     subInfo.totalMaxFileSize = 10U * 1024U * 1024U;
     snprintf_s(subInfo.filePath, MAX_FILEPATH_LEN + 1U, MAX_FILEPATH_LEN, "%s", PATH_ROOT);
@@ -118,14 +117,14 @@ TEST_F(EP_SLOGD_FILE_MGR_LOG_FUNC_UTEST, LogAgentGetFileListForModuleOs)
 TEST_F(EP_SLOGD_FILE_MGR_LOG_FUNC_UTEST, LogAgentGetFileListForModuleApp)
 {
     // 创建文件列表
-    char cmd[1024] = { 0 };
+    char cmd[1024] = {0};
     for (int32_t i = 0; i < 5; i++) {
         memset_s(cmd, 1024, 0, 1024);
         snprintf_s(cmd, 1024, 1023, "test > %s/device-os_202312190876%d.log", PATH_ROOT, i);
         system(cmd);
     }
     // 获取最新文件
-    StSubLogFileList subInfo = { 0 };
+    StSubLogFileList subInfo = {0};
     subInfo.maxFileSize = 1U * 1024U * 1024U;
     subInfo.totalMaxFileSize = 10U * 1024U * 1024U;
     snprintf_s(subInfo.filePath, MAX_FILEPATH_LEN + 1U, MAX_FILEPATH_LEN, "%s", PATH_ROOT);
@@ -136,7 +135,7 @@ TEST_F(EP_SLOGD_FILE_MGR_LOG_FUNC_UTEST, LogAgentGetFileListForModuleApp)
 
 TEST_F(EP_SLOGD_FILE_MGR_LOG_FUNC_UTEST, LogAgentInitMaxFileNumHelper)
 {
-    StSubLogFileList subInfo = { 0 };
+    StSubLogFileList subInfo = {0};
     subInfo.maxFileSize = 1U * 1024U * 1024U;
     subInfo.totalMaxFileSize = 10U * 1024U * 1024U;
     snprintf_s(subInfo.fileHead, MAX_NAME_HEAD_LEN + 1U, MAX_NAME_HEAD_LEN, "device-os_");
@@ -152,16 +151,19 @@ TEST_F(EP_SLOGD_FILE_MGR_LOG_FUNC_UTEST, SlogdSyslogMgrInit)
     SlogdConfigMgrInit();
     // 创建文件列表
     system("mkdir -p /tmp/ep_slogd_utest_6cEd5299d8d9Be97/var/log/npu/slog/run/device-os");
-    char cmd[1024] = { 0 };
+    char cmd[1024] = {0};
     for (int32_t i = 0; i < 5; i++) {
         memset_s(cmd, 1024, 0, 1024);
-        snprintf_s(cmd, 1024, 1023, "test > /tmp/ep_slogd_utest_6cEd5299d8d9Be97/var/log/npu/slog/run/device-os/device-os_202312190876%d.log", i);
+        snprintf_s(
+            cmd, 1024, 1023,
+            "test > /tmp/ep_slogd_utest_6cEd5299d8d9Be97/var/log/npu/slog/run/device-os/device-os_202312190876%d.log",
+            i);
         system(cmd);
     }
-    StLogFileList fileList = { 0 };
+    StLogFileList fileList = {0};
     snprintf_truncated_s(fileList.aucFilePath, MAX_FILEDIR_LEN + 1U, "%s", LOG_FILE_PATH);
     LogAgentGetCfg(&fileList);
-    EXPECT_EQ(LOG_SUCCESS, SlogdSyslogMgrInit(&fileList));
+    EXPECT_EQ(LOG_SUCCESS, SlogdSyslogAndAppMgrInit(&fileList));
 
     // check fileList info
     EXPECT_EQ(2, fileList.maxOsFileNum);
@@ -181,12 +183,13 @@ TEST_F(EP_SLOGD_FILE_MGR_LOG_FUNC_UTEST, SlogdSyslogMgrInit)
     EXPECT_EQ(SECURITY_FILE_SIZE, fileList.sortDeviceOsLogList[1].maxFileSize);
     EXPECT_EQ(1048576, fileList.sortDeviceOsLogList[2].totalMaxFileSize);
     EXPECT_EQ(1048576, fileList.sortDeviceOsLogList[2].maxFileSize);
-    char deviceOsLogPath[MAX_FILEPATH_LEN + 1U] = { 0 };
-    const char* sortDirName[(int32_t)LOG_TYPE_NUM] = { DEBUG_DIR_NAME, SECURITY_DIR_NAME, RUN_DIR_NAME };
+    char deviceOsLogPath[MAX_FILEPATH_LEN + 1U] = {0};
+    const char* sortDirName[(int32_t)LOG_TYPE_NUM] = {DEBUG_DIR_NAME, SECURITY_DIR_NAME, RUN_DIR_NAME};
     for (int32_t i = 0; i < (int32_t)LOG_TYPE_NUM; i++) {
         memset_s(deviceOsLogPath, MAX_FILEPATH_LEN + 1U, 0, MAX_FILEPATH_LEN + 1U);
-        snprintf_s(deviceOsLogPath, MAX_FILEPATH_LEN + 1U, MAX_FILEPATH_LEN, "%s%s%s%s%s",
-                   fileList.aucFilePath, FILE_SEPARATOR, sortDirName[i], FILE_SEPARATOR, DEVICE_OS_HEAD);
+        snprintf_s(
+            deviceOsLogPath, MAX_FILEPATH_LEN + 1U, MAX_FILEPATH_LEN, "%s%s%s%s%s", fileList.aucFilePath,
+            FILE_SEPARATOR, sortDirName[i], FILE_SEPARATOR, DEVICE_OS_HEAD);
         EXPECT_STREQ("device-os_", fileList.sortDeviceOsLogList[i].fileHead);
         EXPECT_STREQ(deviceOsLogPath, fileList.sortDeviceOsLogList[i].filePath);
     }
@@ -197,7 +200,7 @@ TEST_F(EP_SLOGD_FILE_MGR_LOG_FUNC_UTEST, SlogdSyslogMgrInit)
     SlogdConfigMgrExit();
 }
 
-static int32_t OsFileFilter(const ToolDirent *dir)
+static int32_t OsFileFilter(const ToolDirent* dir)
 {
     ONE_ACT_NO_LOG(dir == NULL, return FILTER_NOK);
     if (LogStrStartsWith(dir->d_name, "device-os")) {
@@ -208,24 +211,26 @@ static int32_t OsFileFilter(const ToolDirent *dir)
 
 TEST_F(EP_SLOGD_FILE_MGR_LOG_FUNC_UTEST, LogAgentWriteDeviceOsLogWithoutFile)
 {
-    StSubLogFileList subInfo = { 0 };
+    StSubLogFileList subInfo = {0};
     subInfo.maxFileSize = 1U * 1024U * 1024U;
     subInfo.totalMaxFileSize = 10U * 1024U * 1024U;
-    snprintf_s(subInfo.filePath, MAX_FILEPATH_LEN + 1U, MAX_FILEPATH_LEN, "/tmp/ep_slogd_utest_6cEd5299d8d9Be97/var/log/npu/slog/debug/device-os");
+    snprintf_s(
+        subInfo.filePath, MAX_FILEPATH_LEN + 1U, MAX_FILEPATH_LEN,
+        "/tmp/ep_slogd_utest_6cEd5299d8d9Be97/var/log/npu/slog/debug/device-os");
     snprintf_s(subInfo.fileHead, MAX_NAME_HEAD_LEN + 1U, MAX_NAME_HEAD_LEN, "device-os_");
     char msg[1024] = "test write to deviceos log";
     system("mkdir -p /tmp/ep_slogd_utest_6cEd5299d8d9Be97/var/log/npu/slog/");
     EXPECT_EQ(OK, LogAgentWriteDeviceOsLog(DEBUG_LOG, &subInfo, msg, 1024));
 
     // check file msg
-    ToolDirent **nameList = NULL;
+    ToolDirent** nameList = NULL;
     int32_t totalNum = ToolScandir(subInfo.filePath, &nameList, OsFileFilter, alphasort);
     EXPECT_EQ(1, totalNum);
-    char path[1024] = { 0 };
+    char path[1024] = {0};
     snprintf_s(path, 1024, 1023, "%s/%s", subInfo.filePath, nameList[0]->d_name);
     ToolScandirFree(nameList, totalNum);
-    FILE *fp = fopen(path, "r");
-    char msgOut[1024] = { 0 };
+    FILE* fp = fopen(path, "r");
+    char msgOut[1024] = {0};
     fread(msgOut, 1, 1024, fp);
     fclose(fp);
     EXPECT_STREQ(msg, msgOut);
@@ -233,10 +238,12 @@ TEST_F(EP_SLOGD_FILE_MGR_LOG_FUNC_UTEST, LogAgentWriteDeviceOsLogWithoutFile)
 
 TEST_F(EP_SLOGD_FILE_MGR_LOG_FUNC_UTEST, LogAgentWriteDeviceOsLog)
 {
-    StSubLogFileList subInfo = { 0 };
+    StSubLogFileList subInfo = {0};
     subInfo.maxFileSize = 1U * 1024U * 1024U;
     subInfo.totalMaxFileSize = 10U * 1024U * 1024U;
-    snprintf_s(subInfo.filePath, MAX_FILEPATH_LEN + 1U, MAX_FILEPATH_LEN, "/tmp/ep_slogd_utest_6cEd5299d8d9Be97/var/log/npu/slog/debug/device-os");
+    snprintf_s(
+        subInfo.filePath, MAX_FILEPATH_LEN + 1U, MAX_FILEPATH_LEN,
+        "/tmp/ep_slogd_utest_6cEd5299d8d9Be97/var/log/npu/slog/debug/device-os");
     snprintf_s(subInfo.fileHead, MAX_NAME_HEAD_LEN + 1U, MAX_NAME_HEAD_LEN, "device-os_");
     snprintf_s(subInfo.fileName, MAX_FILENAME_LEN + 1U, MAX_FILENAME_LEN, "device-os_202312190876.log");
     char msg[1024] = "test write to deviceos log";
@@ -244,10 +251,10 @@ TEST_F(EP_SLOGD_FILE_MGR_LOG_FUNC_UTEST, LogAgentWriteDeviceOsLog)
     EXPECT_EQ(OK, LogAgentWriteDeviceOsLog(DEBUG_LOG, &subInfo, msg, 1024));
 
     // check file msg
-    char path[1024] = { 0 };
+    char path[1024] = {0};
     snprintf_s(path, 1024, 1023, "%s/%s", subInfo.filePath, subInfo.fileName);
-    FILE *fp = fopen(path, "r");
-    char msgOut[1024] = { 0 };
+    FILE* fp = fopen(path, "r");
+    char msgOut[1024] = {0};
     fread(msgOut, 1, 1024, fp);
     fclose(fp);
     EXPECT_STREQ(msg, msgOut);
@@ -258,8 +265,8 @@ TEST_F(EP_SLOGD_FILE_MGR_LOG_FUNC_UTEST, LogAgentWriteDeviceOsLogAging)
     system("cp " CONF_PATH " " SLOG_CONF_FILE_PATH);
     SlogdConfigMgrInit();
     system("mkdir -p /tmp/ep_slogd_utest_6cEd5299d8d9Be97/var/log/npu/slog");
-    StLogFileList *fileList = GetGlobalLogFileList();
-    EXPECT_EQ(LOG_SUCCESS, SlogdSyslogMgrInit(fileList));
+    StLogFileList* fileList = GetGlobalLogFileList();
+    EXPECT_EQ(LOG_SUCCESS, SlogdSyslogAndAppMgrInit(fileList));
 
     // write to file
     char msg[1024] = "test write to os log, test write to os log, test write to os log, \
@@ -271,9 +278,10 @@ TEST_F(EP_SLOGD_FILE_MGR_LOG_FUNC_UTEST, LogAgentWriteDeviceOsLogAging)
         EXPECT_EQ(OK, LogAgentWriteDeviceOsLog(DEBUG_LOG, &fileList->sortDeviceOsLogList[DEBUG_LOG], msg, strlen(msg)));
     }
 
-    ToolDirent **nameList = NULL;
-    char path[1024] = { 0 };
-    int32_t totalNum = ToolScandir(fileList->sortDeviceOsLogList[DEBUG_LOG].filePath, &nameList, OsFileFilter, alphasort);
+    ToolDirent** nameList = NULL;
+    char path[1024] = {0};
+    int32_t totalNum =
+        ToolScandir(fileList->sortDeviceOsLogList[DEBUG_LOG].filePath, &nameList, OsFileFilter, alphasort);
     EXPECT_EQ(2, totalNum);
     ToolScandirFree(nameList, totalNum);
 
@@ -287,8 +295,8 @@ TEST_F(EP_SLOGD_FILE_MGR_LOG_FUNC_UTEST, LogAgentWriteDeviceOsLogAgingWithOriFil
     SlogdConfigMgrInit();
     system("mkdir -p /tmp/ep_slogd_utest_6cEd5299d8d9Be97/var/log/npu/slog/debug/device-os");
     system("> /tmp/ep_slogd_utest_6cEd5299d8d9Be97/var/log/npu/slog/debug/device-os/device-os_201212192434133.log");
-    StLogFileList *fileList = GetGlobalLogFileList();
-    EXPECT_EQ(LOG_SUCCESS, SlogdSyslogMgrInit(fileList));
+    StLogFileList* fileList = GetGlobalLogFileList();
+    EXPECT_EQ(LOG_SUCCESS, SlogdSyslogAndAppMgrInit(fileList));
 
     // write to file
     char msg[1024] = "test write to os log, test write to os log, test write to os log, \
@@ -300,17 +308,21 @@ TEST_F(EP_SLOGD_FILE_MGR_LOG_FUNC_UTEST, LogAgentWriteDeviceOsLogAgingWithOriFil
         EXPECT_EQ(OK, LogAgentWriteDeviceOsLog(DEBUG_LOG, &fileList->sortDeviceOsLogList[DEBUG_LOG], msg, strlen(msg)));
     }
 
-    ToolDirent **nameList = NULL;
-    char path[1024] = { 0 };
-    int32_t totalNum = ToolScandir(fileList->sortDeviceOsLogList[DEBUG_LOG].filePath, &nameList, OsFileFilter, alphasort);
+    ToolDirent** nameList = NULL;
+    char path[1024] = {0};
+    int32_t totalNum =
+        ToolScandir(fileList->sortDeviceOsLogList[DEBUG_LOG].filePath, &nameList, OsFileFilter, alphasort);
     EXPECT_EQ(2, totalNum);
     ToolScandirFree(nameList, totalNum);
-    EXPECT_EQ(SYS_ERROR, ToolAccess("/tmp/ep_slogd_utest_6cEd5299d8d9Be97/var/log/npu/slog/debug/device-os/device-os_201212192434133.log"));
+    EXPECT_EQ(
+        SYS_ERROR,
+        ToolAccess(
+            "/tmp/ep_slogd_utest_6cEd5299d8d9Be97/var/log/npu/slog/debug/device-os/device-os_201212192434133.log"));
     LogAgentCleanUpDevice(fileList);
     SlogdConfigMgrExit();
 }
 
-static int32_t DeviceFileFilter(const ToolDirent *dir)
+static int32_t DeviceFileFilter(const ToolDirent* dir)
 {
     ONE_ACT_NO_LOG(dir == NULL, return FILTER_NOK);
     if (LogStrStartsWith(dir->d_name, "device-0")) {
@@ -323,24 +335,24 @@ TEST_F(EP_SLOGD_FILE_MGR_LOG_FUNC_UTEST, LogAgentInitDeviceWithoutFile)
 {
     system("cp " CONF_PATH " " SLOG_CONF_FILE_PATH);
     SlogdConfigMgrInit();
-    StLogFileList logList = { 0 };
+    StLogFileList logList = {0};
     LogAgentGetCfg(&logList);
     EXPECT_EQ(OK, LogAgentInitDevice(&logList, MAX_DEV_NUM));
-    char cmd[1024] = { 0 };
+    char cmd[1024] = {0};
     snprintf_s(cmd, 1024, 1023, "mkdir -p %s", logList.deviceLogList[DEBUG_LOG]->filePath);
     system(cmd);
     char msg[1024] = "test write to device log";
-    DeviceWriteLogInfo logInfo = { strlen(msg), 0, DEBUG_LOG, LP };
+    DeviceWriteLogInfo logInfo = {strlen(msg), 0, DEBUG_LOG, LP};
     EXPECT_EQ(OK, LogAgentWriteDeviceLog(&logList, msg, &logInfo));
     // check file msg
-    ToolDirent **nameList = NULL;
+    ToolDirent** nameList = NULL;
     int32_t totalNum = ToolScandir(logList.deviceLogList[DEBUG_LOG]->filePath, &nameList, DeviceFileFilter, alphasort);
     EXPECT_EQ(1, totalNum);
-    char path[1024] = { 0 };
+    char path[1024] = {0};
     snprintf_s(path, 1024, 1023, "%s/%s", logList.deviceLogList[DEBUG_LOG]->filePath, nameList[0]->d_name);
     ToolScandirFree(nameList, totalNum);
-    FILE *fp = fopen(path, "r");
-    char msgOut[1024] = { 0 };
+    FILE* fp = fopen(path, "r");
+    char msgOut[1024] = {0};
     fread(msgOut, 1, 1024, fp);
     fclose(fp);
     EXPECT_STREQ(msg, msgOut);
@@ -353,19 +365,19 @@ TEST_F(EP_SLOGD_FILE_MGR_LOG_FUNC_UTEST, LogAgentInitDevice)
 {
     system("cp " CONF_PATH " " SLOG_CONF_FILE_PATH);
     SlogdConfigMgrInit();
-    StLogFileList logList = { 0 };
+    StLogFileList logList = {0};
     LogAgentGetCfg(&logList);
     system("mkdir -p /tmp/ep_slogd_utest_6cEd5299d8d9Be97/var/log/npu/slog/debug/device-0");
     system("> /tmp/ep_slogd_utest_6cEd5299d8d9Be97/var/log/npu/slog/debug/device-0/device-0_2023121902341.log");
     EXPECT_EQ(OK, LogAgentInitDevice(&logList, MAX_DEV_NUM));
     char msg[1024] = "test write to device log";
-    DeviceWriteLogInfo logInfo = { strlen(msg), 0, DEBUG_LOG, LP };
+    DeviceWriteLogInfo logInfo = {strlen(msg), 0, DEBUG_LOG, LP};
     EXPECT_EQ(OK, LogAgentWriteDeviceLog(&logList, msg, &logInfo));
     // check file msg
-    char path[1024] = { 0 };
+    char path[1024] = {0};
     snprintf_s(path, 1024, 1023, "%s/device-0_2023121902341.log", logList.deviceLogList[DEBUG_LOG]->filePath);
-    FILE *fp = fopen(path, "r");
-    char msgOut[1024] = { 0 };
+    FILE* fp = fopen(path, "r");
+    char msgOut[1024] = {0};
     fread(msgOut, 1, 1024, fp);
     fclose(fp);
     EXPECT_STREQ(msg, msgOut);
@@ -374,18 +386,17 @@ TEST_F(EP_SLOGD_FILE_MGR_LOG_FUNC_UTEST, LogAgentInitDevice)
     SlogdConfigMgrExit();
 }
 
-static int32_t AppLogDirFilter(const ToolDirent *dir)
+static int32_t AppLogDirFilter(const ToolDirent* dir)
 {
     ONE_ACT_NO_LOG(dir == NULL, return FILTER_NOK);
-    if ((dir->d_type == DT_DIR) &&
-        ((LogStrStartsWith(dir->d_name, DEVICE_APP_HEAD) != false) ||
-         (LogStrStartsWith(dir->d_name, AOS_CORE_DEVICE_APP_HEAD) != false))) {
+    if ((dir->d_type == DT_DIR) && ((LogStrStartsWith(dir->d_name, DEVICE_APP_HEAD) != false) ||
+                                    (LogStrStartsWith(dir->d_name, AOS_CORE_DEVICE_APP_HEAD) != false))) {
         return FILTER_OK;
     }
     return FILTER_NOK;
 }
 
-static int32_t AppFileFilter(const ToolDirent *dir)
+static int32_t AppFileFilter(const ToolDirent* dir)
 {
     ONE_ACT_NO_LOG(dir == NULL, return FILTER_NOK);
     if (LogStrStartsWith(dir->d_name, "device-app")) {
@@ -400,13 +411,13 @@ TEST_F(EP_SLOGD_FILE_MGR_LOG_FUNC_UTEST, LogAgentWriteDeviceApplicationLogWithOu
     SlogdConfigMgrInit();
     system("mkdir -p /tmp/ep_slogd_utest_6cEd5299d8d9Be97/var/log/npu/slog");
     char msg[1024] = "test write to device app log";
-    LogInfo info = { DEBUG_LOG, APPLICATION, 0, 0, AICPU, 0, 3 };
-    StLogFileList *fileList = GetGlobalLogFileList();
-    EXPECT_EQ(LOG_SUCCESS, SlogdSyslogMgrInit(fileList));
+    LogInfo info = {DEBUG_LOG, APPLICATION, 0, 0, AICPU, 0, 3};
+    StLogFileList* fileList = GetGlobalLogFileList();
+    EXPECT_EQ(LOG_SUCCESS, SlogdSyslogAndAppMgrInit(fileList));
     EXPECT_EQ(OK, LogAgentWriteDeviceApplicationLog(msg, strlen(msg), &info, fileList));
 
-    ToolDirent **nameList = NULL;
-    char path[1024] = { 0 };
+    ToolDirent** nameList = NULL;
+    char path[1024] = {0};
     snprintf_s(path, 1024, 1023, "%s/debug/", fileList->aucFilePath);
     int32_t totalNum = ToolScandir(path, &nameList, AppLogDirFilter, alphasort);
     EXPECT_EQ(1, totalNum);
@@ -414,15 +425,15 @@ TEST_F(EP_SLOGD_FILE_MGR_LOG_FUNC_UTEST, LogAgentWriteDeviceApplicationLogWithOu
     ToolScandirFree(nameList, totalNum);
 
     // check file msg
-    ToolDirent **nameList1 = NULL;
+    ToolDirent** nameList1 = NULL;
     totalNum = ToolScandir(path, &nameList1, AppFileFilter, alphasort);
     EXPECT_EQ(1, totalNum);
     strncat_s(path, 1024, "/", strlen("/"));
     strncat_s(path, 1024, nameList1[0]->d_name, strlen(nameList1[0]->d_name));
     ToolScandirFree(nameList1, totalNum);
 
-    FILE *fp = fopen(path, "r");
-    char msgOut[1024] = { 0 };
+    FILE* fp = fopen(path, "r");
+    char msgOut[1024] = {0};
     fread(msgOut, 1, 1024, fp);
     fclose(fp);
     EXPECT_STREQ(msg + 1, msgOut);
@@ -437,13 +448,14 @@ TEST_F(EP_SLOGD_FILE_MGR_LOG_FUNC_UTEST, LogAgentWriteDeviceApplicationLog)
     system("mkdir -p /tmp/ep_slogd_utest_6cEd5299d8d9Be97/var/log/npu/slog/debug/device-app-0/");
     system("> /tmp/ep_slogd_utest_6cEd5299d8d9Be97/var/log/npu/slog/debug/device-app-0/device-app-0_2023121902342.log");
     char msg[1024] = "test write to device app log";
-    LogInfo info = { DEBUG_LOG, APPLICATION, 0, 0, AICPU, 0, 3 };
-    StLogFileList *fileList = GetGlobalLogFileList();
-    EXPECT_EQ(LOG_SUCCESS, SlogdSyslogMgrInit(fileList));
+    LogInfo info = {DEBUG_LOG, APPLICATION, 0, 0, AICPU, 0, 3};
+    StLogFileList* fileList = GetGlobalLogFileList();
+    EXPECT_EQ(LOG_SUCCESS, SlogdSyslogAndAppMgrInit(fileList));
     EXPECT_EQ(OK, LogAgentWriteDeviceApplicationLog(msg, strlen(msg), &info, fileList));
 
-    FILE *fp = fopen("/tmp/ep_slogd_utest_6cEd5299d8d9Be97/var/log/npu/slog/debug/device-app-0/device-app-0_2023121902342.log", "r");
-    char msgOut[1024] = { 0 };
+    FILE* fp = fopen(
+        "/tmp/ep_slogd_utest_6cEd5299d8d9Be97/var/log/npu/slog/debug/device-app-0/device-app-0_2023121902342.log", "r");
+    char msgOut[1024] = {0};
     fread(msgOut, 1, 1024, fp);
     fclose(fp);
     EXPECT_STREQ(msg + 1, msgOut);
@@ -458,13 +470,14 @@ TEST_F(EP_SLOGD_FILE_MGR_LOG_FUNC_UTEST, LogAgentWriteDeviceApplicationLogWith)
     system("mkdir -p /tmp/ep_slogd_utest_6cEd5299d8d9Be97/var/log/npu/slog/debug/device-app-0/");
     system("> /tmp/ep_slogd_utest_6cEd5299d8d9Be97/var/log/npu/slog/debug/device-app-0/device-app-0_2023121902342.log");
     char msg[1024] = "[ERROR]test write to device app log";
-    LogInfo info = { DEBUG_LOG, APPLICATION, 0, 0, AICPU, 0, 3 };
-    StLogFileList *fileList = GetGlobalLogFileList();
-    EXPECT_EQ(LOG_SUCCESS, SlogdSyslogMgrInit(fileList));
+    LogInfo info = {DEBUG_LOG, APPLICATION, 0, 0, AICPU, 0, 3};
+    StLogFileList* fileList = GetGlobalLogFileList();
+    EXPECT_EQ(LOG_SUCCESS, SlogdSyslogAndAppMgrInit(fileList));
     EXPECT_EQ(OK, LogAgentWriteDeviceApplicationLog(msg, strlen(msg), &info, fileList));
 
-    FILE *fp = fopen("/tmp/ep_slogd_utest_6cEd5299d8d9Be97/var/log/npu/slog/debug/device-app-0/device-app-0_2023121902342.log", "r");
-    char msgOut[1024] = { 0 };
+    FILE* fp = fopen(
+        "/tmp/ep_slogd_utest_6cEd5299d8d9Be97/var/log/npu/slog/debug/device-app-0/device-app-0_2023121902342.log", "r");
+    char msgOut[1024] = {0};
     fread(msgOut, 1, 1024, fp);
     fclose(fp);
     EXPECT_STREQ(msg, msgOut);
@@ -472,7 +485,7 @@ TEST_F(EP_SLOGD_FILE_MGR_LOG_FUNC_UTEST, LogAgentWriteDeviceApplicationLogWith)
     SlogdConfigMgrExit();
 }
 
-static int32_t EventFileFilter(const ToolDirent *dir)
+static int32_t EventFileFilter(const ToolDirent* dir)
 {
     ONE_ACT_NO_LOG(dir == NULL, return FILTER_NOK);
     if (LogStrStartsWith(dir->d_name, "event_")) {
@@ -487,23 +500,23 @@ TEST_F(EP_SLOGD_FILE_MGR_LOG_FUNC_UTEST, LogAgentWriteEventLogWithoutFile)
     SlogdConfigMgrInit();
     system("mkdir -p /tmp/ep_slogd_utest_6cEd5299d8d9Be97/var/log/npu/slog");
     char msg[1024] = "test write to event log";
-    StLogFileList *fileList = GetGlobalLogFileList();
-    (void)memset_s((void *)fileList, sizeof(StLogFileList), 0, sizeof(StLogFileList));
+    StLogFileList* fileList = GetGlobalLogFileList();
+    (void)memset_s((void*)fileList, sizeof(StLogFileList), 0, sizeof(StLogFileList));
     snprintf_truncated_s(fileList->aucFilePath, MAX_FILEDIR_LEN + 1U, "%s", LOG_FILE_PATH);
     LogAgentGetCfg(fileList);
-    EXPECT_EQ(LOG_SUCCESS, SlogdSyslogMgrInit(fileList));
+    EXPECT_EQ(LOG_SUCCESS, SlogdSyslogAndAppMgrInit(fileList));
     EXPECT_EQ(LOG_SUCCESS, SlogdEventMgrInit(fileList));
     EXPECT_EQ(OK, LogAgentWriteEventLog(&fileList->eventLogList, msg, strlen(msg)));
 
-    ToolDirent **nameList = NULL;
-    char path[1024] = { 0 };
+    ToolDirent** nameList = NULL;
+    char path[1024] = {0};
     int32_t totalNum = ToolScandir(fileList->eventLogList.filePath, &nameList, EventFileFilter, alphasort);
     EXPECT_EQ(1, totalNum);
     snprintf_s(path, 1024, 1023, "%s/%s", fileList->eventLogList.filePath, nameList[0]->d_name);
     ToolScandirFree(nameList, totalNum);
 
-    FILE *fp = fopen(path, "r");
-    char msgOut[1024] = { 0 };
+    FILE* fp = fopen(path, "r");
+    char msgOut[1024] = {0};
     fread(msgOut, 1, 1024, fp);
     fclose(fp);
     EXPECT_STREQ(msg, msgOut);
@@ -518,16 +531,16 @@ TEST_F(EP_SLOGD_FILE_MGR_LOG_FUNC_UTEST, LogAgentWriteEventLog)
     system("mkdir -p /tmp/ep_slogd_utest_6cEd5299d8d9Be97/var/log/npu/slog/run/event/");
     system("> /tmp/ep_slogd_utest_6cEd5299d8d9Be97/var/log/npu/slog/run/event/event_201212192434133.log");
     char msg[1024] = "test write to event log";
-    StLogFileList *fileList = GetGlobalLogFileList();
-    (void)memset_s((void *)fileList, sizeof(StLogFileList), 0, sizeof(StLogFileList));
+    StLogFileList* fileList = GetGlobalLogFileList();
+    (void)memset_s((void*)fileList, sizeof(StLogFileList), 0, sizeof(StLogFileList));
     snprintf_truncated_s(fileList->aucFilePath, MAX_FILEDIR_LEN + 1U, "%s", LOG_FILE_PATH);
     LogAgentGetCfg(fileList);
-    EXPECT_EQ(LOG_SUCCESS, SlogdSyslogMgrInit(fileList));
+    EXPECT_EQ(LOG_SUCCESS, SlogdSyslogAndAppMgrInit(fileList));
     EXPECT_EQ(LOG_SUCCESS, SlogdEventMgrInit(fileList));
     EXPECT_EQ(OK, LogAgentWriteEventLog(&fileList->eventLogList, msg, strlen(msg)));
 
-    FILE *fp = fopen("/tmp/ep_slogd_utest_6cEd5299d8d9Be97/var/log/npu/slog/run/event/event_201212192434133.log", "r");
-    char msgOut[1024] = { 0 };
+    FILE* fp = fopen("/tmp/ep_slogd_utest_6cEd5299d8d9Be97/var/log/npu/slog/run/event/event_201212192434133.log", "r");
+    char msgOut[1024] = {0};
     fread(msgOut, 1, 1024, fp);
     fclose(fp);
     EXPECT_STREQ(msg, msgOut);
@@ -535,9 +548,9 @@ TEST_F(EP_SLOGD_FILE_MGR_LOG_FUNC_UTEST, LogAgentWriteEventLog)
     SlogdConfigMgrExit();
 }
 
-static void CheckFileMode(char *path, char *fileName, mode_t mode)
+static void CheckFileMode(char* path, char* fileName, mode_t mode)
 {
-    char file[1024] = { 0 };
+    char file[1024] = {0};
     snprintf_s(file, 1024, 1023, "%s/%s", path, fileName);
     struct stat buf;
     stat(file, &buf);
@@ -549,8 +562,8 @@ TEST_F(EP_SLOGD_FILE_MGR_LOG_FUNC_UTEST, LogAgentWriteEventLogAging)
     system("cp " CONF_PATH " " SLOG_CONF_FILE_PATH);
     SlogdConfigMgrInit();
     system("mkdir -p /tmp/ep_slogd_utest_6cEd5299d8d9Be97/var/log/npu/slog");
-    StLogFileList *fileList = GetGlobalLogFileList();
-    EXPECT_EQ(LOG_SUCCESS, SlogdSyslogMgrInit(fileList));
+    StLogFileList* fileList = GetGlobalLogFileList();
+    EXPECT_EQ(LOG_SUCCESS, SlogdSyslogAndAppMgrInit(fileList));
     EXPECT_EQ(LOG_SUCCESS, SlogdEventMgrInit(fileList));
 
     // write to file
@@ -563,11 +576,11 @@ TEST_F(EP_SLOGD_FILE_MGR_LOG_FUNC_UTEST, LogAgentWriteEventLogAging)
         EXPECT_EQ(OK, LogAgentWriteEventLog(&fileList->eventLogList, msg, strlen(msg)));
     }
 
-    ToolDirent **nameList = NULL;
-    char path[1024] = { 0 };
+    ToolDirent** nameList = NULL;
+    char path[1024] = {0};
     int32_t totalNum = ToolScandir(fileList->eventLogList.filePath, &nameList, EventFileFilter, alphasort);
     EXPECT_EQ(2, totalNum);
-    CheckFileMode(fileList->eventLogList.filePath, nameList[0]->d_name, S_IRUSR | S_IRGRP); // 440
+    CheckFileMode(fileList->eventLogList.filePath, nameList[0]->d_name, S_IRUSR | S_IRGRP);           // 440
     CheckFileMode(fileList->eventLogList.filePath, nameList[1]->d_name, S_IRUSR | S_IWUSR | S_IRGRP); // 640
     ToolScandirFree(nameList, totalNum);
     LogAgentCleanUpDevice(fileList);
@@ -580,8 +593,8 @@ TEST_F(EP_SLOGD_FILE_MGR_LOG_FUNC_UTEST, LogAgentWriteEventLogAgingWithOriFile)
     SlogdConfigMgrInit();
     system("mkdir -p /tmp/ep_slogd_utest_6cEd5299d8d9Be97/var/log/npu/slog/run/event/");
     system("> /tmp/ep_slogd_utest_6cEd5299d8d9Be97/var/log/npu/slog/run/event/event_201212192434133.log");
-    StLogFileList *fileList = GetGlobalLogFileList();
-    EXPECT_EQ(LOG_SUCCESS, SlogdSyslogMgrInit(fileList));
+    StLogFileList* fileList = GetGlobalLogFileList();
+    EXPECT_EQ(LOG_SUCCESS, SlogdSyslogAndAppMgrInit(fileList));
     EXPECT_EQ(LOG_SUCCESS, SlogdEventMgrInit(fileList));
 
     // write to file
@@ -594,15 +607,17 @@ TEST_F(EP_SLOGD_FILE_MGR_LOG_FUNC_UTEST, LogAgentWriteEventLogAgingWithOriFile)
         EXPECT_EQ(OK, LogAgentWriteEventLog(&fileList->eventLogList, msg, strlen(msg)));
     }
 
-    ToolDirent **nameList = NULL;
-    char path[1024] = { 0 };
+    ToolDirent** nameList = NULL;
+    char path[1024] = {0};
     int32_t totalNum = ToolScandir(fileList->eventLogList.filePath, &nameList, EventFileFilter, alphasort);
     EXPECT_EQ(2, totalNum);
-    CheckFileMode(fileList->eventLogList.filePath, nameList[0]->d_name, S_IRUSR | S_IRGRP); // 440
+    CheckFileMode(fileList->eventLogList.filePath, nameList[0]->d_name, S_IRUSR | S_IRGRP);           // 440
     CheckFileMode(fileList->eventLogList.filePath, nameList[1]->d_name, S_IRUSR | S_IWUSR | S_IRGRP); // 640
     ToolScandirFree(nameList, totalNum);
 
-    EXPECT_EQ(SYS_ERROR, ToolAccess("/tmp/ep_slogd_utest_6cEd5299d8d9Be97/var/log/npu/slog/run/event/event_201212192434133.log"));
+    EXPECT_EQ(
+        SYS_ERROR,
+        ToolAccess("/tmp/ep_slogd_utest_6cEd5299d8d9Be97/var/log/npu/slog/run/event/event_201212192434133.log"));
     LogAgentCleanUpDevice(fileList);
     SlogdConfigMgrExit();
 }
@@ -614,11 +629,11 @@ TEST_F(EP_SLOGD_FILE_MGR_LOG_FUNC_UTEST, LogAgentWriteDeviceOsLogAgingWithConf)
     system("sed -i 's/DeviceOsNdebugMaxFileNum *= *.*/DeviceOsNdebugMaxFileNum=1/g' " SLOG_CONF_FILE_PATH);
     SlogdConfigMgrInit();
     system("mkdir -p /tmp/ep_slogd_utest_6cEd5299d8d9Be97/var/log/npu/slog");
-    StLogFileList *fileList = GetGlobalLogFileList();
-    (void)memset_s((void *)fileList, sizeof(StLogFileList), 0, sizeof(StLogFileList));
+    StLogFileList* fileList = GetGlobalLogFileList();
+    (void)memset_s((void*)fileList, sizeof(StLogFileList), 0, sizeof(StLogFileList));
     snprintf_truncated_s(fileList->aucFilePath, MAX_FILEDIR_LEN + 1U, "%s", LOG_FILE_PATH);
     LogAgentGetCfg(fileList);
-    EXPECT_EQ(LOG_SUCCESS, SlogdSyslogMgrInit(fileList));
+    EXPECT_EQ(LOG_SUCCESS, SlogdSyslogAndAppMgrInit(fileList));
 
     // write to file
     char msg[1024] = "test write to os log, test write to os log, test write to os log, \
@@ -630,11 +645,13 @@ TEST_F(EP_SLOGD_FILE_MGR_LOG_FUNC_UTEST, LogAgentWriteDeviceOsLogAgingWithConf)
         EXPECT_EQ(OK, LogAgentWriteDeviceOsLog(DEBUG_LOG, &fileList->sortDeviceOsLogList[DEBUG_LOG], msg, strlen(msg)));
     }
 
-    ToolDirent **nameList = NULL;
-    char path[1024] = { 0 };
-    int32_t totalNum = ToolScandir(fileList->sortDeviceOsLogList[DEBUG_LOG].filePath, &nameList, OsFileFilter, alphasort);
+    ToolDirent** nameList = NULL;
+    char path[1024] = {0};
+    int32_t totalNum =
+        ToolScandir(fileList->sortDeviceOsLogList[DEBUG_LOG].filePath, &nameList, OsFileFilter, alphasort);
     EXPECT_EQ(1, totalNum);
-    CheckFileMode(fileList->sortDeviceOsLogList[DEBUG_LOG].filePath, nameList[0]->d_name, S_IRUSR | S_IWUSR | S_IRGRP); // 640
+    CheckFileMode(
+        fileList->sortDeviceOsLogList[DEBUG_LOG].filePath, nameList[0]->d_name, S_IRUSR | S_IWUSR | S_IRGRP); // 640
     ToolScandirFree(nameList, totalNum);
     LogAgentCleanUpDevice(fileList);
     SlogdConfigMgrExit();
@@ -648,11 +665,11 @@ TEST_F(EP_SLOGD_FILE_MGR_LOG_FUNC_UTEST, LogAgentWriteDeviceOsLogAgingWithOriFil
     SlogdConfigMgrInit();
     system("mkdir -p /tmp/ep_slogd_utest_6cEd5299d8d9Be97/var/log/npu/slog/debug/device-os");
     system("> /tmp/ep_slogd_utest_6cEd5299d8d9Be97/var/log/npu/slog/debug/device-os/device-os_201212192434133.log");
-    StLogFileList *fileList = GetGlobalLogFileList();
-    (void)memset_s((void *)fileList, sizeof(StLogFileList), 0, sizeof(StLogFileList));
+    StLogFileList* fileList = GetGlobalLogFileList();
+    (void)memset_s((void*)fileList, sizeof(StLogFileList), 0, sizeof(StLogFileList));
     snprintf_truncated_s(fileList->aucFilePath, MAX_FILEDIR_LEN + 1U, "%s", LOG_FILE_PATH);
     LogAgentGetCfg(fileList);
-    EXPECT_EQ(LOG_SUCCESS, SlogdSyslogMgrInit(fileList));
+    EXPECT_EQ(LOG_SUCCESS, SlogdSyslogAndAppMgrInit(fileList));
 
     // write to file
     char msg[1024] = "test write to os log, test write to os log, test write to os log, \
@@ -664,13 +681,18 @@ TEST_F(EP_SLOGD_FILE_MGR_LOG_FUNC_UTEST, LogAgentWriteDeviceOsLogAgingWithOriFil
         EXPECT_EQ(OK, LogAgentWriteDeviceOsLog(DEBUG_LOG, &fileList->sortDeviceOsLogList[DEBUG_LOG], msg, strlen(msg)));
     }
 
-    ToolDirent **nameList = NULL;
-    char path[1024] = { 0 };
-    int32_t totalNum = ToolScandir(fileList->sortDeviceOsLogList[DEBUG_LOG].filePath, &nameList, OsFileFilter, alphasort);
+    ToolDirent** nameList = NULL;
+    char path[1024] = {0};
+    int32_t totalNum =
+        ToolScandir(fileList->sortDeviceOsLogList[DEBUG_LOG].filePath, &nameList, OsFileFilter, alphasort);
     EXPECT_EQ(1, totalNum);
-    CheckFileMode(fileList->sortDeviceOsLogList[DEBUG_LOG].filePath, nameList[0]->d_name, S_IRUSR | S_IWUSR | S_IRGRP); // 640
+    CheckFileMode(
+        fileList->sortDeviceOsLogList[DEBUG_LOG].filePath, nameList[0]->d_name, S_IRUSR | S_IWUSR | S_IRGRP); // 640
     ToolScandirFree(nameList, totalNum);
-    EXPECT_EQ(SYS_ERROR, ToolAccess("/tmp/ep_slogd_utest_6cEd5299d8d9Be97/var/log/npu/slog/debug/device-os/device-os_201212192434133.log"));
+    EXPECT_EQ(
+        SYS_ERROR,
+        ToolAccess(
+            "/tmp/ep_slogd_utest_6cEd5299d8d9Be97/var/log/npu/slog/debug/device-os/device-os_201212192434133.log"));
     LogAgentCleanUpDevice(fileList);
     SlogdConfigMgrExit();
 }
@@ -680,11 +702,11 @@ TEST_F(EP_SLOGD_FILE_MGR_LOG_FUNC_UTEST, LogAgentWriteSecurityLogAging)
     system("cp " CONF_PATH " " SLOG_CONF_FILE_PATH);
     SlogdConfigMgrInit();
     system("mkdir -p /tmp/ep_slogd_utest_6cEd5299d8d9Be97/var/log/npu/slog");
-    StLogFileList *fileList = GetGlobalLogFileList();
-    (void)memset_s((void *)fileList, sizeof(StLogFileList), 0, sizeof(StLogFileList));
+    StLogFileList* fileList = GetGlobalLogFileList();
+    (void)memset_s((void*)fileList, sizeof(StLogFileList), 0, sizeof(StLogFileList));
     snprintf_truncated_s(fileList->aucFilePath, MAX_FILEDIR_LEN + 1U, "%s", LOG_FILE_PATH);
     LogAgentGetCfg(fileList);
-    EXPECT_EQ(LOG_SUCCESS, SlogdSyslogMgrInit(fileList));
+    EXPECT_EQ(LOG_SUCCESS, SlogdSyslogAndAppMgrInit(fileList));
 
     // write to file
     char msg[1024] = "test write to os log, test write to os log, test write to os log, \
@@ -693,15 +715,18 @@ TEST_F(EP_SLOGD_FILE_MGR_LOG_FUNC_UTEST, LogAgentWriteSecurityLogAging)
                       test write to os log, test write to os log, test write to os log, \
                       test write to os log, test write to os log, test write to os log.";
     for (int32_t i = 0; i < 10240; i++) {
-        EXPECT_EQ(OK, LogAgentWriteDeviceOsLog(SECURITY_LOG, &fileList->sortDeviceOsLogList[SECURITY_LOG], msg, strlen(msg)));
+        EXPECT_EQ(
+            OK, LogAgentWriteDeviceOsLog(SECURITY_LOG, &fileList->sortDeviceOsLogList[SECURITY_LOG], msg, strlen(msg)));
     }
 
-    ToolDirent **nameList = NULL;
-    char path[1024] = { 0 };
-    int32_t totalNum = ToolScandir(fileList->sortDeviceOsLogList[SECURITY_LOG].filePath, &nameList, OsFileFilter, alphasort);
+    ToolDirent** nameList = NULL;
+    char path[1024] = {0};
+    int32_t totalNum =
+        ToolScandir(fileList->sortDeviceOsLogList[SECURITY_LOG].filePath, &nameList, OsFileFilter, alphasort);
     EXPECT_EQ(2, totalNum);
     CheckFileMode(fileList->sortDeviceOsLogList[SECURITY_LOG].filePath, nameList[0]->d_name, S_IRUSR | S_IRGRP); // 440
-    CheckFileMode(fileList->sortDeviceOsLogList[SECURITY_LOG].filePath, nameList[1]->d_name, S_IRUSR | S_IWUSR | S_IRGRP); // 640
+    CheckFileMode(
+        fileList->sortDeviceOsLogList[SECURITY_LOG].filePath, nameList[1]->d_name, S_IRUSR | S_IWUSR | S_IRGRP); // 640
     ToolScandirFree(nameList, totalNum);
     LogAgentCleanUpDevice(fileList);
     SlogdConfigMgrExit();
@@ -711,28 +736,28 @@ TEST_F(EP_SLOGD_FILE_MGR_LOG_FUNC_UTEST, LogAgentWriteDeviceApplicationLogWithOu
 {
     system("cp " CONF_PATH " " SLOG_CONF_FILE_PATH);
     SlogdConfigMgrInit();
-    StLogFileList *fileList = GetGlobalLogFileList();
-    (void)memset_s((void *)fileList, sizeof(StLogFileList), 0, sizeof(StLogFileList));
+    StLogFileList* fileList = GetGlobalLogFileList();
+    (void)memset_s((void*)fileList, sizeof(StLogFileList), 0, sizeof(StLogFileList));
     snprintf_truncated_s(fileList->aucFilePath, MAX_FILEDIR_LEN + 1U, "%s", LOG_FILE_PATH);
     LogAgentGetCfg(fileList);
-    EXPECT_EQ(LOG_SUCCESS, SlogdSyslogMgrInit(fileList));
+    EXPECT_EQ(LOG_SUCCESS, SlogdSyslogAndAppMgrInit(fileList));
     system("mkdir -p /tmp/ep_slogd_utest_6cEd5299d8d9Be97/var/log/npu/slog");
     char msg[1024] = "test write to device app log, test write to device app log, test write to device app log, \
                       test write to device app log, test write to device app log, test write to device app log, \
                       test write to device app log, test write to device app log, test write to device app log, \
                       test write to device app log, test write to device app log, test write to device app log, \
                       test write to device app log, test write to device app log, test write to device app log.";
-    LogInfo info = { DEBUG_LOG, APPLICATION, 0, 0, AICPU, 0, 3 };
+    LogInfo info = {DEBUG_LOG, APPLICATION, 0, 0, AICPU, 0, 3};
     for (int32_t i = 0; i < 10240; i++) {
         EXPECT_EQ(OK, LogAgentWriteDeviceApplicationLog(msg, strlen(msg), &info, fileList));
     }
 
-    ToolDirent **nameList = NULL;
-    char path[1024] = { 0 };
+    ToolDirent** nameList = NULL;
+    char path[1024] = {0};
     snprintf_s(path, 1024, 1023, "%s/debug/device-app-0/", fileList->aucFilePath);
     int32_t totalNum = ToolScandir(path, &nameList, AppFileFilter, alphasort);
     EXPECT_EQ(2, totalNum);
-    CheckFileMode(path, nameList[0]->d_name, S_IRUSR | S_IRGRP); // 440
+    CheckFileMode(path, nameList[0]->d_name, S_IRUSR | S_IRGRP);           // 440
     CheckFileMode(path, nameList[1]->d_name, S_IRUSR | S_IWUSR | S_IRGRP); // 640
     ToolScandirFree(nameList, totalNum);
     LogAgentCleanUpDevice(fileList);
@@ -743,11 +768,11 @@ TEST_F(EP_SLOGD_FILE_MGR_LOG_FUNC_UTEST, LogAgentWriteDeviceApplicationLogAging)
 {
     system("cp " CONF_PATH " " SLOG_CONF_FILE_PATH);
     SlogdConfigMgrInit();
-    StLogFileList *fileList = GetGlobalLogFileList();
-    (void)memset_s((void *)fileList, sizeof(StLogFileList), 0, sizeof(StLogFileList));
+    StLogFileList* fileList = GetGlobalLogFileList();
+    (void)memset_s((void*)fileList, sizeof(StLogFileList), 0, sizeof(StLogFileList));
     snprintf_truncated_s(fileList->aucFilePath, MAX_FILEDIR_LEN + 1U, "%s", LOG_FILE_PATH);
     LogAgentGetCfg(fileList);
-    EXPECT_EQ(LOG_SUCCESS, SlogdSyslogMgrInit(fileList));
+    EXPECT_EQ(LOG_SUCCESS, SlogdSyslogAndAppMgrInit(fileList));
     system("mkdir -p /tmp/ep_slogd_utest_6cEd5299d8d9Be97/var/log/npu/slog/debug/device-app-0/");
     system("> /tmp/ep_slogd_utest_6cEd5299d8d9Be97/var/log/npu/slog/debug/device-app-0/device-app-0_2023121902342.log");
     char msg[1024] = "test write to device app log, test write to device app log, test write to device app log, \
@@ -755,20 +780,23 @@ TEST_F(EP_SLOGD_FILE_MGR_LOG_FUNC_UTEST, LogAgentWriteDeviceApplicationLogAging)
                       test write to device app log, test write to device app log, test write to device app log, \
                       test write to device app log, test write to device app log, test write to device app log, \
                       test write to device app log, test write to device app log, test write to device app log.";
-    LogInfo info = { DEBUG_LOG, APPLICATION, 0, 0, AICPU, 0, 3 };
+    LogInfo info = {DEBUG_LOG, APPLICATION, 0, 0, AICPU, 0, 3};
     for (int32_t i = 0; i < 10240; i++) {
         EXPECT_EQ(OK, LogAgentWriteDeviceApplicationLog(msg, strlen(msg), &info, fileList));
     }
 
-    ToolDirent **nameList = NULL;
-    char path[1024] = { 0 };
+    ToolDirent** nameList = NULL;
+    char path[1024] = {0};
     snprintf_s(path, 1024, 1023, "%s/debug/device-app-0/", fileList->aucFilePath);
     int32_t totalNum = ToolScandir(path, &nameList, AppFileFilter, alphasort);
     EXPECT_EQ(2, totalNum);
-    CheckFileMode(path, nameList[0]->d_name, S_IRUSR | S_IRGRP); // 440
+    CheckFileMode(path, nameList[0]->d_name, S_IRUSR | S_IRGRP);           // 440
     CheckFileMode(path, nameList[1]->d_name, S_IRUSR | S_IWUSR | S_IRGRP); // 640
     ToolScandirFree(nameList, totalNum);
-    EXPECT_EQ(SYS_ERROR, ToolAccess("/tmp/ep_slogd_utest_6cEd5299d8d9Be97/var/log/npu/slog/debug/device-app-0/device-app-0_2023121902342.log"));
+    EXPECT_EQ(
+        SYS_ERROR,
+        ToolAccess(
+            "/tmp/ep_slogd_utest_6cEd5299d8d9Be97/var/log/npu/slog/debug/device-app-0/device-app-0_2023121902342.log"));
     LogAgentCleanUpDevice(fileList);
     SlogdConfigMgrExit();
 }
@@ -779,24 +807,24 @@ TEST_F(EP_SLOGD_FILE_MGR_LOG_FUNC_UTEST, LogAgentWriteDeviceApplicationLogWithOu
     system("sed -i 's/DeviceAppMaxFileNum *= *.*/DeviceAppMaxFileNum=1/g' " SLOG_CONF_FILE_PATH);
     system("sed -i 's/DeviceAppMaxFileNum *= *.*/DeviceAppMaxFileNum=1/g' " SLOG_CONF_FILE_PATH);
     SlogdConfigMgrInit();
-    StLogFileList *fileList = GetGlobalLogFileList();
-    (void)memset_s((void *)fileList, sizeof(StLogFileList), 0, sizeof(StLogFileList));
+    StLogFileList* fileList = GetGlobalLogFileList();
+    (void)memset_s((void*)fileList, sizeof(StLogFileList), 0, sizeof(StLogFileList));
     snprintf_truncated_s(fileList->aucFilePath, MAX_FILEDIR_LEN + 1U, "%s", LOG_FILE_PATH);
     LogAgentGetCfg(fileList);
-    EXPECT_EQ(LOG_SUCCESS, SlogdSyslogMgrInit(fileList));
+    EXPECT_EQ(LOG_SUCCESS, SlogdSyslogAndAppMgrInit(fileList));
     system("mkdir -p /tmp/ep_slogd_utest_6cEd5299d8d9Be97/var/log/npu/slog");
     char msg[1024] = "test write to device app log, test write to device app log, test write to device app log, \
                       test write to device app log, test write to device app log, test write to device app log, \
                       test write to device app log, test write to device app log, test write to device app log, \
                       test write to device app log, test write to device app log, test write to device app log, \
                       test write to device app log, test write to device app log, test write to device app log.";
-    LogInfo info = { DEBUG_LOG, APPLICATION, 0, 0, AICPU, 0, 3 };
+    LogInfo info = {DEBUG_LOG, APPLICATION, 0, 0, AICPU, 0, 3};
     for (int32_t i = 0; i < 10240; i++) {
         EXPECT_EQ(OK, LogAgentWriteDeviceApplicationLog(msg, strlen(msg), &info, fileList));
     }
 
-    ToolDirent **nameList = NULL;
-    char path[1024] = { 0 };
+    ToolDirent** nameList = NULL;
+    char path[1024] = {0};
     snprintf_s(path, 1024, 1023, "%s/debug/device-app-0/", fileList->aucFilePath);
     int32_t totalNum = ToolScandir(path, &nameList, AppFileFilter, alphasort);
     EXPECT_EQ(1, totalNum);
@@ -812,11 +840,11 @@ TEST_F(EP_SLOGD_FILE_MGR_LOG_FUNC_UTEST, LogAgentWriteDeviceApplicationLogAgingW
     system("sed -i 's/DeviceAppMaxFileNum *= *.*/DeviceAppMaxFileNum=1/g' " SLOG_CONF_FILE_PATH);
     system("sed -i 's/DeviceAppMaxFileNum *= *.*/DeviceAppMaxFileNum=1/g' " SLOG_CONF_FILE_PATH);
     SlogdConfigMgrInit();
-    StLogFileList *fileList = GetGlobalLogFileList();
-    (void)memset_s((void *)fileList, sizeof(StLogFileList), 0, sizeof(StLogFileList));
+    StLogFileList* fileList = GetGlobalLogFileList();
+    (void)memset_s((void*)fileList, sizeof(StLogFileList), 0, sizeof(StLogFileList));
     snprintf_truncated_s(fileList->aucFilePath, MAX_FILEDIR_LEN + 1U, "%s", LOG_FILE_PATH);
     LogAgentGetCfg(fileList);
-    EXPECT_EQ(LOG_SUCCESS, SlogdSyslogMgrInit(fileList));
+    EXPECT_EQ(LOG_SUCCESS, SlogdSyslogAndAppMgrInit(fileList));
     system("mkdir -p /tmp/ep_slogd_utest_6cEd5299d8d9Be97/var/log/npu/slog/debug/device-app-0/");
     system("> /tmp/ep_slogd_utest_6cEd5299d8d9Be97/var/log/npu/slog/debug/device-app-0/device-app-0_2023121902342.log");
     char msg[1024] = "test write to device app log, test write to device app log, test write to device app log, \
@@ -824,19 +852,22 @@ TEST_F(EP_SLOGD_FILE_MGR_LOG_FUNC_UTEST, LogAgentWriteDeviceApplicationLogAgingW
                       test write to device app log, test write to device app log, test write to device app log, \
                       test write to device app log, test write to device app log, test write to device app log, \
                       test write to device app log, test write to device app log, test write to device app log.";
-    LogInfo info = { DEBUG_LOG, APPLICATION, 0, 0, AICPU, 0, 3 };
+    LogInfo info = {DEBUG_LOG, APPLICATION, 0, 0, AICPU, 0, 3};
     for (int32_t i = 0; i < 10240; i++) {
         EXPECT_EQ(OK, LogAgentWriteDeviceApplicationLog(msg, strlen(msg), &info, fileList));
     }
 
-    ToolDirent **nameList = NULL;
-    char path[1024] = { 0 };
+    ToolDirent** nameList = NULL;
+    char path[1024] = {0};
     snprintf_s(path, 1024, 1023, "%s/debug/device-app-0/", fileList->aucFilePath);
     int32_t totalNum = ToolScandir(path, &nameList, AppFileFilter, alphasort);
     EXPECT_EQ(1, totalNum);
     CheckFileMode(path, nameList[0]->d_name, S_IRUSR | S_IWUSR | S_IRGRP); // 640
     ToolScandirFree(nameList, totalNum);
-    EXPECT_EQ(SYS_ERROR, ToolAccess("/tmp/ep_slogd_utest_6cEd5299d8d9Be97/var/log/npu/slog/debug/device-app-0/device-app-0_2023121902342.log"));
+    EXPECT_EQ(
+        SYS_ERROR,
+        ToolAccess(
+            "/tmp/ep_slogd_utest_6cEd5299d8d9Be97/var/log/npu/slog/debug/device-app-0/device-app-0_2023121902342.log"));
     LogAgentCleanUpDevice(fileList);
     SlogdConfigMgrExit();
 }

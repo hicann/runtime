@@ -27,18 +27,17 @@ set(libhdclogDeviceSrcFiles
 )
 
 set(libhdclogDeviceDir
-    ${RUNTIME_DIR}/inc/driver
-    ${RUNTIME_DIR}/abl/libc_sec/include
+    ${LIBC_SEC_HEADER}
+    ${RUNTIME_DIR}/pkg_inc/driver
     ${TOOLAHCIN_LOG_DIR}/utils
-    ${TOOLAHCIN_LOG_DIR}/shared
+    ${TOOLAHCIN_LOG_DIR}/inc/msnpureport
     ${TOOLAHCIN_LOG_DIR}/syslog/common
     ${TOOLAHCIN_LOG_DIR}/syslog/common/driver
     ${TOOLAHCIN_LOG_DIR}/syslog/common/config
     ${TOOLAHCIN_LOG_DIR}/syslog/log_daemon/config_cmd
     ${TOOLAHCIN_LOG_DIR}/syslog/log_daemon/server_mgr
-    ${TOOLAHCIN_LOG_DIR}/syslog/msnpureport
-    ${RUNTIME_DIR}/runtime/src/dfx/adump/external
-    ${RUNTIME_DIR}/ace/csruntime/inc/tsch
+    ${RUNTIME_DIR}/src/dfx/adump/external
+    ${RUNTIME_DIR}/src/runtime/core/inc
 )
 
 ###################################################################
@@ -51,8 +50,11 @@ target_include_directories(hdclog_device PRIVATE
 target_compile_definitions(hdclog_device PRIVATE
     $<$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>:OS_TYPE_DEF=1>
     $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>>:OS_TYPE_DEF=0>
-    $<$<STREQUAL:${PRODUCT},ascend910_95>:CONFIG_EXPAND>
-    $<$<STREQUAL:${PRODUCT},ascend910_95esl>:CONFIG_EXPAND>
+    $<$<STREQUAL:${PRODUCT},ascend950>:CONFIG_EXPAND>
+    $<$<STREQUAL:${PRODUCT},ascend950esl>:CONFIG_EXPAND>
+    $<$<STREQUAL:${PRODUCT},ascend350>:CONFIG_EXPAND>
+    $<$<STREQUAL:${PRODUCT},ascend910_96>:CONFIG_EXPAND>
+    $<$<STREQUAL:${PRODUCT},ascend910_96esl>:CONFIG_EXPAND>
 )
 
 target_compile_options(hdclog_device PRIVATE

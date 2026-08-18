@@ -29,11 +29,7 @@ typedef enum {
     LOG_PRIORITY_TYPE_NUM
 } LogPriority;
 
-typedef enum {
-    COMMON_THREAD_TYPE = 0,
-    DEVICE_THREAD_TYPE,
-    THREAD_TYPE_NUM
-} ThreadType;
+typedef enum { COMMON_THREAD_TYPE = 0, DEVICE_THREAD_TYPE, THREAD_TYPE_NUM } ThreadType;
 
 typedef struct {
     ToolUserBlock threadInfo;
@@ -41,22 +37,22 @@ typedef struct {
 } ComThread;
 
 typedef struct {
-    int32_t deviceId;
+    uint32_t deviceId;
     ToolUserBlock threadInfo;
     ToolThread tid;
 } DevThread;
 
 typedef struct {
     int32_t comThreadNum;
-    ComThread *comThread;
-    int32_t devNum;
-    DevThread *devThread;
+    ComThread* comThread;
+    uint32_t devNum;
+    DevThread* devThread;
 } ThreadManage;
 
-int32_t SlogdThreadMgrCreateCommonThread(ComThread *comThread, ToolProcFunc procFunc);
-int32_t SlogdThreadMgrCreateDeviceThread(DevThread *deviceThreadArr, int32_t arrLen, int32_t *devNum,
-    ToolProcFunc procFunc);
-void SlogdThreadMgrExit(ThreadManage *threadManage);
+int32_t SlogdThreadMgrCreateCommonThread(ComThread* comThread, ToolProcFunc procFunc);
+int32_t SlogdThreadMgrCreateDeviceThread(
+    DevThread* deviceThreadArr, uint32_t arrLen, uint32_t* devNum, ToolProcFunc procFunc);
+void SlogdThreadMgrExit(ThreadManage* threadManage);
 
 #ifdef __cplusplus
 }

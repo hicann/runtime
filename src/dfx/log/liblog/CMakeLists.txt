@@ -15,8 +15,18 @@ get_filename_component(TOOLAHCIN_LOG_DIR "${CMAKE_CURRENT_SOURCE_DIR}/.." ABSOLU
 
 add_subdirectory(slog)
 
-if(PRODUCT)
-if(${PRODUCT} STREQUAL "pegasus")
+### INTERNAL START ###
+# MDC Ascend series product support
+if (PRODUCT)
+if ((${PRODUCT} STREQUAL "ascend610") OR 
+    (${PRODUCT} STREQUAL "ascend610Lite") OR 
+    (${PRODUCT} STREQUAL "ascend610Liteesl") OR 
+    (${PRODUCT} STREQUAL "as31xm1") OR 
+    (${PRODUCT} STREQUAL "mc32dm11a") OR 
+    (${PRODUCT} STREQUAL "mc32dm11aesl") OR 
+    (${PRODUCT} STREQUAL "mc62cm12a") OR 
+    (${PRODUCT} STREQUAL "mc62cm12aesl"))
     add_subdirectory(mergeslog)
 endif ()
 endif ()
+### INTERNAL END ###

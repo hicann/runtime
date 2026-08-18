@@ -13,48 +13,46 @@
 #include <sys/stat.h>
 #include "securec.h"
 #include <sys/klog.h>
+#include <unistd.h>
 #include "log_pm_sig.h"
 extern "C" {
-    #include "log_common.h"
-    #include "slog.h"
-    #include "operate_loglevel.h"
-    #include "klogd.h"
-    #include "log_path_mgr.h"
-    #include "slogd_utest_stub.h"
-    #include "dlog_console.h"
+#include "log_common.h"
+#include "slog.h"
+#include "operate_loglevel.h"
+#include "klogd.h"
+#include "log_path_mgr.h"
+#include "slogd_utest_stub.h"
+#include "dlog_console.h"
 
-    int KlogdLltMain(int argc, char **argv);
-    INT32 ToolGetErrorCode();
-    LogRt LogConfListInit(const char *file);
-    LogRt LogConfListGetValue(const char *confName, uint32_t nameLen, char *confValue, uint32_t valueLen);
-    extern int ReadKernelLog(char *bufP, size_t len);
-    void OpenKernelLog(void);
-    void KLogdSetLogLevel(int lvl);
-    void CloseKernelLog(void);
-    void ParseArgv(int argc, const char **argv);
-    void ProcKernelLog(void);
-    void KLogToSLog(unsigned int priority, const char *msg);
-    void ParseKernelLog(const char *start);
-    int ProcessBuf(char *msg, unsigned int length);
-    void DecodeMsg(char *msg, unsigned int length);
-    char GetChValue(char ch);
-    int IsDigit(char c);
-    int CheckProessBufParm(const char *msg, unsigned int length, char **heapBuf);
+int KlogdLltMain(int argc, char** argv);
+INT32 ToolGetErrorCode();
+LogRt LogConfListInit(const char* file);
+LogRt LogConfListGetValue(const char* confName, uint32_t nameLen, char* confValue, uint32_t valueLen);
+extern int ReadKernelLog(char* bufP, size_t len);
+void OpenKernelLog(void);
+void KLogdSetLogLevel(int lvl);
+void CloseKernelLog(void);
+void ParseArgv(int argc, const char** argv);
+void ProcKernelLog(void);
+void KLogToSLog(unsigned int priority, const char* msg);
+void ParseKernelLog(const char* start);
+int ProcessBuf(char* msg, unsigned int length);
+void DecodeMsg(char* msg, unsigned int length);
+char GetChValue(char ch);
+int IsDigit(char c);
+int CheckProessBufParm(const char* msg, unsigned int length, char** heapBuf);
 }
 #include <getopt.h>
 
-class SlogdSklogd : public testing::Test
-{
+class SlogdSklogd : public testing::Test {
 public:
     void SetUp();
     void TearDown();
 };
 
-void SlogdSklogd::SetUp()
-{}
+void SlogdSklogd::SetUp() {}
 
-void SlogdSklogd::TearDown()
-{}
+void SlogdSklogd::TearDown() {}
 
 TEST_F(SlogdSklogd, IsDigit)
 {
@@ -75,7 +73,7 @@ TEST_F(SlogdSklogd, GetChValue)
 TEST_F(SlogdSklogd, CheckProessBufParm)
 {
     const char msg[] = "x";
-    char *buf = nullptr;
+    char* buf = nullptr;
     EXPECT_EQ(0, CheckProessBufParm(msg, sizeof(msg), &buf));
     ASSERT_NE(nullptr, buf);
     EXPECT_STREQ(msg, buf);
@@ -85,7 +83,7 @@ TEST_F(SlogdSklogd, CheckProessBufParm)
 TEST_F(SlogdSklogd, CheckProessBufParmNULL)
 {
     const char msg[] = "x";
-    char *buf = nullptr;
+    char* buf = nullptr;
     EXPECT_EQ(-1, CheckProessBufParm(msg, 0, &buf));
 
     EXPECT_EQ(-1, CheckProessBufParm(NULL, 0, NULL));
@@ -95,8 +93,8 @@ TEST_F(SlogdSklogd, ProcessBuf)
 {
     EXPECT_EQ(-1, ProcessBuf(NULL, 0));
 
-    char *msg = "12,1,8269165240,-;h";
-    char *buf = (char *)malloc(COMMON_BUFSIZE);
+    char* msg = "12,1,8269165240,-;h";
+    char* buf = (char*)malloc(COMMON_BUFSIZE);
     strncpy_s(buf, strlen(msg) + 1, msg, strlen(msg) + 1);
     EXPECT_EQ(0, ProcessBuf(buf, strlen(buf) + 1));
 
@@ -115,18 +113,18 @@ TEST_F(SlogdSklogd, ProcessBufMaxLong)
 {
     EXPECT_EQ(-1, ProcessBuf(NULL, 0));
 
-    char *msg = "12,1,9999999999999999999999999999999999999999999999,-;test msg";
-    char *msgok = "6,1864,797350183989,-;this is test msg";
-    char *buf = (char*)malloc(strlen(msg) + 1);
-    char *bufok = (char*)malloc(strlen(msgok) + 1);
+    char* msg = "12,1,9999999999999999999999999999999999999999999999,-;test msg";
+    char* msgok = "6,1864,797350183989,-;this is test msg";
+    char* buf = (char*)malloc(strlen(msg) + 1);
+    char* bufok = (char*)malloc(strlen(msgok) + 1);
 
     strncpy_s(buf, strlen(msg) + 1, msg, strlen(msg) + 1);
     EXPECT_EQ(-1, ProcessBuf(buf, strlen(buf) + 1));
     free(buf);
     GlobalMockObject::reset();
 
-    char *msgLevelErr = "65536,1,8269165240,-;h";
-    char *bufLevelErr = (char*)malloc(strlen(msgLevelErr) + 1);
+    char* msgLevelErr = "65536,1,8269165240,-;h";
+    char* bufLevelErr = (char*)malloc(strlen(msgLevelErr) + 1);
     strncpy_s(bufLevelErr, strlen(msgLevelErr) + 1, msgLevelErr, strlen(msgLevelErr) + 1);
     EXPECT_EQ(-1, ProcessBuf(bufLevelErr, strlen(bufLevelErr) + 1));
     free(bufLevelErr);
@@ -153,6 +151,10 @@ TEST_F(SlogdSklogd, KlogdLltMain1)
     char op;
     char* pc = &op;
     LogRecordSigNo(1);
+    // KlogdLltMain 在 g_argvOpt.n == 0 时会走 LogSetDaemonize -> daemon()，
+    // daemon() fork 后父进程以 _exit() 结束，绕过 atexit，导致 gcov 无法写出
+    // .gcda（本 target 的覆盖率数据会整批丢失）。此处打桩使其不真正分叉。
+    MOCKER(daemon).stubs().will(returnValue(0));
     MOCKER(JustStartAProcess).stubs().will(returnValue(-1));
     EXPECT_EQ(1, KlogdLltMain(0, &pc));
     GlobalMockObject::reset();
@@ -164,6 +166,10 @@ TEST_F(SlogdSklogd, KlogdLltMain2)
     char op;
     char* pc = &op;
     LogRecordSigNo(1);
+    // KlogdLltMain 在 g_argvOpt.n == 0 时会走 LogSetDaemonize -> daemon()，
+    // daemon() fork 后父进程以 _exit() 结束，绕过 atexit，导致 gcov 无法写出
+    // .gcda（本 target 的覆盖率数据会整批丢失）。此处打桩使其不真正分叉。
+    MOCKER(daemon).stubs().will(returnValue(0));
     MOCKER(JustStartAProcess).stubs().will(returnValue(0));
     EXPECT_EQ(1, KlogdLltMain(0, &pc));
     GlobalMockObject::reset();
@@ -175,6 +181,10 @@ TEST_F(SlogdSklogd, KlogdLltMain3)
     char op;
     char* pc = &op;
     LogRecordSigNo(1);
+    // KlogdLltMain 在 g_argvOpt.n == 0 时会走 LogSetDaemonize -> daemon()，
+    // daemon() fork 后父进程以 _exit() 结束，绕过 atexit，导致 gcov 无法写出
+    // .gcda（本 target 的覆盖率数据会整批丢失）。此处打桩使其不真正分叉。
+    MOCKER(daemon).stubs().will(returnValue(0));
     MOCKER(JustStartAProcess).stubs().will(returnValue(0));
     EXPECT_EQ(1, KlogdLltMain(0, &pc));
     GlobalMockObject::reset();
@@ -186,6 +196,10 @@ TEST_F(SlogdSklogd, KlogdLltMain4)
     char op;
     char* pc = &op;
     LogRecordSigNo(1);
+    // KlogdLltMain 在 g_argvOpt.n == 0 时会走 LogSetDaemonize -> daemon()，
+    // daemon() fork 后父进程以 _exit() 结束，绕过 atexit，导致 gcov 无法写出
+    // .gcda（本 target 的覆盖率数据会整批丢失）。此处打桩使其不真正分叉。
+    MOCKER(daemon).stubs().will(returnValue(0));
     MOCKER(JustStartAProcess).stubs().will(returnValue(0));
     MOCKER(StrcatDir).stubs().will(returnValue(SYS_OK + 1));
     EXPECT_EQ(1, KlogdLltMain(0, &pc));

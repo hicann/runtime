@@ -14,7 +14,7 @@
 #include "slogd_recv_msg.h"
 #include "slogd_recv_core.h"
 
-STATIC uint32_t SlogdStrToUint(const char *str, char **endPtr)
+STATIC uint32_t SlogdStrToUint(const char* str, char** endPtr)
 {
     errno = 0;
     uint64_t ret = strtoul(str, endPtr, BASE_NUM);
@@ -31,11 +31,11 @@ STATIC uint32_t SlogdStrToUint(const char *str, char **endPtr)
     return (UINT_MAX);
 }
 
-STATIC void SlogdParseMsgTag(char **input, LogInfo *info)
+STATIC void SlogdParseMsgTag(char** input, LogInfo* info)
 {
     ONE_ACT_NO_LOG((input == NULL) || (*input == NULL) || (info == NULL), return);
-    char *p = *input;
-    const char *start = NULL;
+    char* p = *input;
+    const char* start = NULL;
     if (*p == '[') {
         start = p + 1;
         uint32_t pt = SlogdStrToUint(start, &p);
@@ -68,10 +68,10 @@ STATIC void SlogdParseMsgTag(char **input, LogInfo *info)
     }
 }
 
-STATIC bool SlogdCheckMsgHead(const char *input, uint32_t len)
+STATIC bool SlogdCheckMsgHead(const char* input, uint32_t len)
 {
     ONE_ACT_NO_LOG((len < LOGHEAD_LEN), return false);
-    LogHead head ;
+    LogHead head;
     int32_t ret = memcpy_s(&head, LOGHEAD_LEN, input, LOGHEAD_LEN);
     if (ret != EOK) {
         SELF_LOG_ERROR("memcpy failed, strerr=%s.", strerror(ToolGetErrorCode()));
@@ -85,7 +85,7 @@ STATIC bool SlogdCheckMsgHead(const char *input, uint32_t len)
     }
 }
 
-STATIC void SlogdParseMsgHead(char **input, LogInfo *info)
+STATIC void SlogdParseMsgHead(char** input, LogInfo* info)
 {
     LogHead head;
     int32_t ret = memcpy_s(&head, LOGHEAD_LEN, *input, LOGHEAD_LEN);
@@ -103,23 +103,26 @@ STATIC void SlogdParseMsgHead(char **input, LogInfo *info)
     *input += LOGHEAD_LEN;
 }
 
-STATIC void SlogdParseMsg(char **input, uint32_t len, LogInfo *info)
+STATIC void SlogdParseMsg(char** input, uint32_t len, LogInfo* info)
 {
     ONE_ACT_NO_LOG((input == NULL) || (*input == NULL) || (info == NULL), return);
 
-    if (SlogdCheckMsgHead((const char *)*input, len)) {
+    if (SlogdCheckMsgHead((const char*)*input, len)) {
         SlogdParseMsgHead(input, info);
     } else {
         SlogdParseMsgTag(input, info);
     }
+    if (info->type == SECURITY_LOG) {
+        info->processType = SYSTEM;
+    }
 }
 
 /**
-* @brief ProcSyslogBuf: proc syslog buf with space or endline
-* @param [in]recvBuf: receive syslog buf
-* @param [in]pSize: receive syslog buf size
-* @return: SYS_OK/SYS_ERROR
-*/
+ * @brief ProcSyslogBuf: proc syslog buf with space or endline
+ * @param [in]recvBuf: receive syslog buf
+ * @param [in]pSize: receive syslog buf size
+ * @return: SYS_OK/SYS_ERROR
+ */
 int32_t ProcSyslogBuf(const char* recvBuf, int32_t* size)
 {
     if ((recvBuf == NULL) || (size == NULL)) {
@@ -147,15 +150,15 @@ int32_t ProcSyslogBuf(const char* recvBuf, int32_t* size)
     return SYS_OK;
 }
 
-void ProcEscapeThenLog(char *tmpbuf, int32_t len, LogType type)
+void ProcEscapeThenLog(char* tmpbuf, int32_t len, LogType type)
 {
     ONE_ACT_ERR_LOG(tmpbuf == NULL, return, "[input] temp buffer is null.");
-    char *p = tmpbuf;
-    const char *endBuf = tmpbuf + len;
-    char *parseBuf = SlogdGetParseBuf();
+    char* p = tmpbuf;
+    const char* endBuf = tmpbuf + len;
+    char* parseBuf = SlogdGetParseBuf();
     while (endBuf > p) {
-        char *q = parseBuf;
-        LogInfo info = { DEBUG_LOG, APPLICATION, 0, 0, 0, 0, 0 };
+        char* q = parseBuf;
+        LogInfo info = {DEBUG_LOG, APPLICATION, 0, 0, 0, 0, 0};
         info.type = type;
         SlogdParseMsg(&p, (uint32_t)len, &info);
         char c = *p;

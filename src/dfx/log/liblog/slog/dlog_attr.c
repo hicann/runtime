@@ -19,11 +19,12 @@
 extern "C" {
 #endif // __cplusplus
 
-#define DLOG_ENV_MODE_UNI   "1"
-#define DLOG_ENV_MODE_SEP   "2"
+#define DLOG_ENV_MODE_UNI "1"
+#define DLOG_ENV_MODE_SEP "2"
+#define PRODUCT_TYPE_QT 99
 
 #define DRV_HAL_LIBRARY_NAME "libascend_hal.so"
-typedef drvError_t (*DRV_HAL_GET_DEVICE_INFO)(uint32_t, int32_t, int32_t, int64_t *);
+typedef drvError_t (*DRV_HAL_GET_DEVICE_INFO)(uint32_t, int32_t, int32_t, int64_t*);
 typedef struct LogSystemAttr {
     int32_t serverType;
     int32_t pid;
@@ -38,17 +39,11 @@ typedef struct DlogAttr {
     LogAttr userAttr;
 } DlogAttr;
 
-STATIC DlogAttr g_dlogAttr = { TOOL_MUTEX_INITIALIZER, { -1, 0, AOS_GEA, 0, 0 }, { APPLICATION, 0, 0, 0, "" } };
+STATIC DlogAttr g_dlogAttr = {TOOL_MUTEX_INITIALIZER, {-1, 0, AOS_GEA, 0, 0}, {APPLICATION, 0, 0, 0, ""}};
 
-static inline void DlogAttrWriteLock(void)
-{
-    LOCK_WARN_LOG(&g_dlogAttr.rwlock);
-}
+static inline void DlogAttrWriteLock(void) { LOCK_WARN_LOG(&g_dlogAttr.rwlock); }
 
-static inline void DlogAttrUnlock(void)
-{
-    UNLOCK_WARN_LOG(&g_dlogAttr.rwlock);
-}
+static inline void DlogAttrUnlock(void) { UNLOCK_WARN_LOG(&g_dlogAttr.rwlock); }
 
 /**
  * @brief       : init aos type
@@ -56,7 +51,7 @@ static inline void DlogAttrUnlock(void)
  */
 STATIC INLINE void DlogInitAosType(void)
 {
-    const char *aosEnv = NULL;
+    const char* aosEnv = NULL;
     MM_SYS_GET_ENV(MM_ENV_AOS_TYPE, (aosEnv));
     if ((aosEnv != NULL) && (strcmp(aosEnv, "AOS_SEA") == 0)) {
         g_dlogAttr.systemAttr.aosType = AOS_SEA;
@@ -74,13 +69,13 @@ STATIC void DlogInitServerType(void)
 {
 #ifdef _LOG_UT_
 #define INFO_TYPE_PRODUCT_TYPE 100
-    void *soHandle = dlopen(DRV_HAL_LIBRARY_NAME, RTLD_LAZY);
+    void* soHandle = dlopen(DRV_HAL_LIBRARY_NAME, RTLD_LAZY);
     if (soHandle == NULL) {
         SELF_LOG_WARN("cannot load hal driver library.");
         return;
     }
 
-    void *funcSymbol = dlsym(soHandle, "halGetDeviceInfo");
+    void* funcSymbol = dlsym(soHandle, "halGetDeviceInfo");
     if (funcSymbol == NULL) {
         SELF_LOG_WARN("cannot load hal driver library.");
         return;
@@ -106,7 +101,7 @@ STATIC void DlogInitServerType(void)
 
 bool DlogIsPoolingDevice(void)
 {
-    return (g_dlogAttr.systemAttr.serverType == 0);
+    return (g_dlogAttr.systemAttr.serverType == PRODUCT_TYPE_QT); // return true; for qingtian
 }
 
 STATIC void DlogInitUserGroupId(void)
@@ -114,39 +109,21 @@ STATIC void DlogInitUserGroupId(void)
     (void)ToolGetUserGroupId(&g_dlogAttr.systemAttr.uid, &g_dlogAttr.systemAttr.gid);
 }
 
-uint32_t DlogGetUid(void)
-{
-    return g_dlogAttr.systemAttr.uid;
-}
+uint32_t DlogGetUid(void) { return g_dlogAttr.systemAttr.uid; }
 
-uint32_t DlogGetGid(void)
-{
-    return g_dlogAttr.systemAttr.gid;
-}
+uint32_t DlogGetGid(void) { return g_dlogAttr.systemAttr.gid; }
 
 /**
  * @brief       : check aoscore or not by env
  * @return      : true: aoscore; false: other
  */
-bool DlogIsAosCore(void)
-{
-    return (g_dlogAttr.systemAttr.aosType == AOS_SEA);
-}
+bool DlogIsAosCore(void) { return (g_dlogAttr.systemAttr.aosType == AOS_SEA); }
 
-AosType DlogGetAosType(void)
-{
-    return g_dlogAttr.systemAttr.aosType;
-}
+AosType DlogGetAosType(void) { return g_dlogAttr.systemAttr.aosType; }
 
-int32_t DlogGetCurrPid(void)
-{
-    return g_dlogAttr.systemAttr.pid;
-}
+int32_t DlogGetCurrPid(void) { return g_dlogAttr.systemAttr.pid; }
 
-void DlogSetCurrPid(void)
-{
-    g_dlogAttr.systemAttr.pid = ToolGetPid();
-}
+void DlogSetCurrPid(void) { g_dlogAttr.systemAttr.pid = ToolGetPid(); }
 
 bool DlogCheckCurrPid(void)
 {
@@ -173,34 +150,25 @@ STATIC INLINE bool DlogIsAlog(void)
  * @brief       : get process type
  * @return      : SYSTEM/APPLICATION
  */
-ProcessType DlogGetProcessType(void)
-{
-    return g_dlogAttr.userAttr.type;
-}
+ProcessType DlogGetProcessType(void) { return g_dlogAttr.userAttr.type; }
 
 /**
  * @brief       : check log type is system log or not
  * @return      : true: system log; false: other
  */
-bool DlogCheckAttrSystem(void)
-{
-    return (g_dlogAttr.userAttr.type == SYSTEM);
-}
+bool DlogCheckAttrSystem(void) { return (g_dlogAttr.userAttr.type == SYSTEM); }
 
 /**
  * @brief       : get device id attr
  * @return      : device id
  */
-uint32_t DlogGetAttrDeviceId(void)
-{
-    return g_dlogAttr.userAttr.deviceId;
-}
+uint32_t DlogGetAttrDeviceId(void) { return g_dlogAttr.userAttr.deviceId; }
 
 /**
  * @brief       : get user attr
  * @return      : user attr
  */
-void DlogGetUserAttr(LogAttr *attr)
+void DlogGetUserAttr(LogAttr* attr)
 {
     if (attr != NULL) {
         *attr = g_dlogAttr.userAttr;
@@ -211,16 +179,9 @@ void DlogGetUserAttr(LogAttr *attr)
  * @brief       : get host pid(set by user)
  * @return      : host pid
  */
-uint32_t DlogGetHostPid(void)
-{
-    return g_dlogAttr.userAttr.pid;
-}
+uint32_t DlogGetHostPid(void) { return g_dlogAttr.userAttr.pid; }
 
-
-STATIC INLINE bool DlogCheckMode(uint32_t mode)
-{
-    return ((mode == LOG_SAVE_MODE_UNI) || (mode == LOG_SAVE_MODE_SEP));
-}
+STATIC INLINE bool DlogCheckMode(uint32_t mode) { return ((mode == LOG_SAVE_MODE_UNI) || (mode == LOG_SAVE_MODE_SEP)); }
 
 STATIC void DlogSetHostPid(uint32_t pid)
 {
@@ -229,7 +190,7 @@ STATIC void DlogSetHostPid(uint32_t pid)
         return;
     }
 
-    const char *env = NULL;
+    const char* env = NULL;
     MM_SYS_GET_ENV(MM_ENV_ASCEND_HOSTPID, (env));
     if (env != NULL) {
         uint32_t tmpL = 0;
@@ -249,14 +210,14 @@ STATIC void DlogSetMode(uint32_t mode)
         return;
     }
 
-    const char *env = NULL;
+    const char* env = NULL;
     MM_SYS_GET_ENV(MM_ENV_ASCEND_LOG_SAVE_MODE, (env));
     if (env != NULL) {
         if (strcmp(env, DLOG_ENV_MODE_UNI) == 0) {
             g_dlogAttr.userAttr.mode = LOG_SAVE_MODE_UNI;
             SELF_LOG_INFO("set mode(unify) by env ASCEND_LOG_SAVE_MODE.");
             return;
-        } 
+        }
         if (strcmp(env, DLOG_ENV_MODE_SEP) == 0) {
             g_dlogAttr.userAttr.mode = LOG_SAVE_MODE_SEP;
             SELF_LOG_INFO("set mode(separate) by env ASCEND_LOG_SAVE_MODE.");
@@ -271,7 +232,7 @@ STATIC void DlogSetMode(uint32_t mode)
  * @param [in]  : logAttr       user attr
  * @return      : NA
  */
-void DlogSetUserAttr(const LogAttr *logAttr)
+void DlogSetUserAttr(const LogAttr* logAttr)
 {
     LogAttr initAttr;
     (void)memset_s(&(initAttr), sizeof(initAttr), DLOG_ATTR_INIT_VALUE, sizeof(initAttr));
@@ -289,9 +250,9 @@ void DlogSetUserAttr(const LogAttr *logAttr)
         DlogSetMode(logAttr->mode);
     }
 
-    SELF_LOG_INFO("set log attr, type(%d), deviceId(%u), host pid(%u), save mode(%u).",
-                  (int32_t)g_dlogAttr.userAttr.type, g_dlogAttr.userAttr.deviceId,
-                  g_dlogAttr.userAttr.pid, g_dlogAttr.userAttr.mode);
+    SELF_LOG_INFO(
+        "set log attr, type(%d), deviceId(%u), host pid(%u), save mode(%u).", (int32_t)g_dlogAttr.userAttr.type,
+        g_dlogAttr.userAttr.deviceId, g_dlogAttr.userAttr.pid, g_dlogAttr.userAttr.mode);
     DlogAttrUnlock();
 }
 

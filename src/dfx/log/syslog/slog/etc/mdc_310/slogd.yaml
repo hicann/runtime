@@ -10,7 +10,8 @@
 slogdmgr:
   bin_path: "/var/slogd"
   depends: [ ]
-  env: [ ]
+  env:
+    MALLOC_MMAP_THRESHOLD_: "131072"
   uid: 1000
   arguments: [-n]
   priority: 0

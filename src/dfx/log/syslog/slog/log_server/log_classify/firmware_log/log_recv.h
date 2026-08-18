@@ -21,7 +21,7 @@
 #include "slogd_buffer.h"
 #include "log_session_manage.h"
 
-#define WRITE_INTERVAL          1
+#define WRITE_INTERVAL 1
 #define ONE_HUNDRED_MILLISECOND 100
 #define TWO_HUNDRED_MILLISECOND 200
 
@@ -29,9 +29,9 @@
 extern "C" {
 #endif
 
-void SlogdFirmwareLogReceive(void *args);
-int32_t SlogdFirmwareLogFlush(void *args, uint32_t len, bool flushFlag);
-void SlogdFirmwareLogGet(SessionItem *handle, void *buffer, uint32_t bufferLen, int32_t devId);
+void SlogdFirmwareLogReceive(void* args);
+int32_t SlogdFirmwareLogFlush(void* args, uint32_t len, bool flushFlag);
+void SlogdFirmwareLogGet(SessionItem* handle, void* buffer, uint32_t bufferLen, uint32_t devId);
 LogStatus SlogdFirmwareLogResInit(void);
 void SlogdFirmwareLogResExit(void);
 

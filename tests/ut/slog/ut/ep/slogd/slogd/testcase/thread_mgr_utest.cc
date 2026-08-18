@@ -13,15 +13,11 @@
 #include "slogd_thread_mgr.h"
 #include "ascend_hal.h"
 #include "self_log_stub.h"
-
-extern "C" {
-int32_t log_get_device_id(int32_t *devices, int32_t *devNum, int32_t len);
-}
+#include "log_drv.h"
 
 static ThreadManage g_threadManage;
 
-class SLOGD_THREAD_MGR_UTEST : public testing::Test
-{
+class SLOGD_THREAD_MGR_UTEST : public testing::Test {
 protected:
     virtual void SetUp()
     {
@@ -34,30 +30,38 @@ protected:
         system("echo [DBG][TEST][`date +%Y-%m-%d-%H-%M-%S`] End test case");
         GlobalMockObject::verify();
     }
-
 };
 
-static void *TestProcess(void *args)
+static void* TestProcess(void* args) { return (void*)NULL; }
+
+// 回收本用例创建的真实设备线程，避免线程泄漏影响后续用例
+static void JoinDevThreads(DevThread* devThread, uint32_t devNum)
 {
-    return (void *)NULL;
+    g_threadManage.comThreadNum = 0;
+    g_threadManage.comThread = NULL;
+    g_threadManage.devNum = devNum;
+    g_threadManage.devThread = devThread;
+    SlogdThreadMgrExit(&g_threadManage);
 }
 
 TEST_F(SLOGD_THREAD_MGR_UTEST, SlogdThreadMgrCreateDeviceThread)
 {
-    int32_t devNum = 0;
+    uint32_t devNum = 0;
     DevThread devThread[1] = {0};
     EXPECT_EQ(LOG_FAILURE, SlogdThreadMgrCreateDeviceThread(devThread, 1, &devNum, NULL));
     EXPECT_EQ(LOG_SUCCESS, SlogdThreadMgrCreateDeviceThread(devThread, 1, &devNum, TestProcess));
-    MOCKER(log_get_device_id).stubs().will(returnValue(LOG_FAILURE));
+    JoinDevThreads(devThread, devNum);
+    MOCKER(DrvGetDeviceId).stubs().will(returnValue((int32_t)LOG_FAILURE));
     EXPECT_EQ(LOG_FAILURE, SlogdThreadMgrCreateDeviceThread(devThread, 1, &devNum, TestProcess));
 }
 
 TEST_F(SLOGD_THREAD_MGR_UTEST, SlogdThreadMgrCreateDeviceThreadGetDevIdFailed)
 {
-    int32_t devNum = 0;
+    uint32_t devNum = 0;
     DevThread devThread[1] = {0};
     EXPECT_EQ(LOG_FAILURE, SlogdThreadMgrCreateDeviceThread(devThread, 1, &devNum, NULL));
     EXPECT_EQ(LOG_SUCCESS, SlogdThreadMgrCreateDeviceThread(devThread, 1, &devNum, TestProcess));
-    MOCKER(log_get_device_id).stubs().will(returnValue(LOG_FAILURE));
+    JoinDevThreads(devThread, devNum);
+    MOCKER(DrvGetDeviceId).stubs().will(returnValue((int32_t)LOG_FAILURE));
     EXPECT_EQ(LOG_FAILURE, SlogdThreadMgrCreateDeviceThread(devThread, 1, &devNum, TestProcess));
 }

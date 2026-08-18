@@ -11,13 +11,12 @@
 #include "log_file_utils.h"
 #include <cctype>
 #include "log_print.h"
-#include "file_dump_os_type.h"
 #include "log_process_util.h"
 namespace Adx {
 
-constexpr char OS_SPLIT_CHAR                 = '/';
-const std::string OS_SPLIT_STR               = "/";
-constexpr uint32_t DEFAULT_PATH_MODE         = 0700;
+constexpr char OS_SPLIT_CHAR = '/';
+const std::string OS_SPLIT_STR = "/";
+constexpr mmMode_t DEFAULT_PATH_MODE = 0700;
 #define MAX_RECURSION_DEPTH 6
 
 /**
@@ -26,7 +25,7 @@ constexpr uint32_t DEFAULT_PATH_MODE         = 0700;
  * @param [in]  : des    new file
  * @return      : zero  success; others  failed
  */
-IdeErrorT LogFileUtils::CopyFileAndRename(const std::string &src, const std::string &des)
+IdeErrorT LogFileUtils::CopyFileAndRename(const std::string& src, const std::string& des)
 {
     if (src.empty() || des.empty()) {
         return IDE_DAEMON_INVALID_PATH_ERROR;
@@ -43,7 +42,7 @@ IdeErrorT LogFileUtils::CopyFileAndRename(const std::string &src, const std::str
     return IDE_DAEMON_NONE_ERROR;
 }
 
-std::string LogFileUtils::ReplaceAll(std::string &base, const std::string &src, const std::string &dst)
+std::string LogFileUtils::ReplaceAll(std::string& base, const std::string& src, const std::string& dst)
 {
     size_t pos = 0;
     std::string targetStr = dst;
@@ -62,7 +61,7 @@ std::string LogFileUtils::ReplaceAll(std::string &base, const std::string &src, 
  *                >0   a>b
  *                <0   a<b
  */
-static int32_t AlphaSort(const mmDirent **a, const mmDirent **b)
+static int32_t AlphaSort(const mmDirent** a, const mmDirent** b)
 {
     // if first arg is null, return 'a' is greater than 'b'
     ONE_ACT_ERR_LOG(a == nullptr, return 1, "Invalid ptr parameter");
@@ -83,13 +82,14 @@ static int32_t AlphaSort(const mmDirent **a, const mmDirent **b)
  * @param [in]  : recursiveDepth     recursive depth
  * @return      : EOK  SUCCESS; other  FAILED
  */
-bool LogFileUtils::GetDirFileList(const std::string &path, std::vector<std::string> &list, const FileFilterFn fileter,
-    const std::string &fileNamePrefix, int32_t recursiveDepth)
+bool LogFileUtils::GetDirFileList(
+    const std::string& path, std::vector<std::string>& list, const FileFilterFn fileter,
+    const std::string& fileNamePrefix, int32_t recursiveDepth)
 {
-    mmDirent **fileList = nullptr;
+    mmDirent** fileList = nullptr;
     int32_t foundNum = mmScandir(path.c_str(), &fileList, fileter, AlphaSort);
-    ONE_ACT_ERR_LOG(foundNum < 0, return false,
-        "Scandir %s failed, errno=%s", path.c_str(), strerror(ToolGetErrorCode()));
+    ONE_ACT_ERR_LOG(
+        foundNum < 0, return false, "Scandir %s failed, errno=%s", path.c_str(), strerror(ToolGetErrorCode()));
     ONE_ACT_ERR_LOG(fileList == nullptr, return false, "Scandir failed, get null file list");
 
     for (int32_t i = 0; i < foundNum; i++) {
@@ -108,7 +108,8 @@ bool LogFileUtils::GetDirFileList(const std::string &path, std::vector<std::stri
                 std::string subFilePath = path + OS_SPLIT_STR + fileList[i]->d_name + OS_SPLIT_STR;
                 GetDirFileList(subFilePath, list, nullptr, fileNamePrefix, recursiveDepth - 1);
             }
-        } else if (fileList[i]->d_type == isFile &&
+        } else if (
+            fileList[i]->d_type == isFile &&
             (fileNamePrefix.empty() || Adx::LogFileUtils::StartsWith(filename, fileNamePrefix)) &&
             !Adx::LogFileUtils::EndsWith(filename, "tmp")) {
             list.push_back(path + fileList[i]->d_name); // input base path ends with slash
@@ -118,14 +119,11 @@ bool LogFileUtils::GetDirFileList(const std::string &path, std::vector<std::stri
     return true;
 }
 
-bool LogFileUtils::StartsWith(const std::string &s, const std::string &sub)
-{
-    return s.find(sub) == 0;
-}
+bool LogFileUtils::StartsWith(const std::string& s, const std::string& sub) { return s.find(sub) == 0; }
 
-bool LogFileUtils::EndsWith(const std::string &s, const std::string &sub)
+bool LogFileUtils::EndsWith(const std::string& s, const std::string& sub)
 {
-    return s.rfind(sub) == (s.length()-sub.length());
+    return s.rfind(sub) == (s.length() - sub.length());
 }
 
 /**
@@ -134,7 +132,7 @@ bool LogFileUtils::EndsWith(const std::string &s, const std::string &sub)
  * @param [out] : resolved_path    return path
  * @return      : SYS_OK  succ; SYS_ERROR  failed
  */
-int32_t LogFileUtils::FilePathIsReal(const std::string &filePath, std::string &resultPath)
+int32_t LogFileUtils::FilePathIsReal(const std::string& filePath, std::string& resultPath)
 {
     if (filePath.empty()) {
         return SYS_ERROR;
@@ -157,7 +155,7 @@ int32_t LogFileUtils::FilePathIsReal(const std::string &filePath, std::string &r
  * @param [in]  : path_len        the max length of resolved_path buffer
  * @return      : SYS_OK  succ; SYS_ERROR  failed
  */
-int32_t LogFileUtils::FileNameIsReal(const std::string &file, std::string &resultPath)
+int32_t LogFileUtils::FileNameIsReal(const std::string& file, std::string& resultPath)
 {
     int32_t ret = 0;
     if (file.empty()) {
@@ -184,7 +182,7 @@ int32_t LogFileUtils::FileNameIsReal(const std::string &file, std::string &resul
  * @return      : IDE_DAEMON_NONE_ERROR            Dump start Success
  *                IDE_DAEMON_INVALID_PATH_ERROR    Invalid path
  */
-IdeErrorT LogFileUtils::GetFileName(const std::string &path, std::string &name)
+IdeErrorT LogFileUtils::GetFileName(const std::string& path, std::string& name)
 {
     size_t pos = path.find_last_of(OS_SPLIT_CHAR);
     if (pos != std::string::npos) {
@@ -204,7 +202,7 @@ IdeErrorT LogFileUtils::GetFileName(const std::string &path, std::string &name)
  * @return      : true    the path is a directory
  *                false   the path is not a directory
  */
-bool LogFileUtils::IsDirectory(const std::string &path)
+bool LogFileUtils::IsDirectory(const std::string& path)
 {
     if (path.empty()) {
         SELF_LOG_ERROR("invalid parameter");
@@ -226,7 +224,7 @@ bool LogFileUtils::IsDirectory(const std::string &path)
  *                IDE_DAEMON_INVALID_PATH_ERROR   Invalid path
  *                IDE_DAEMON_MKDIR_ERROR          Mkdir failed
  */
-IdeErrorT LogFileUtils::CreateDir(const std::string &path)
+IdeErrorT LogFileUtils::CreateDir(const std::string& path)
 {
     std::string curr = path;
     IdeErrorT ret = IDE_DAEMON_UNKNOW_ERROR;
@@ -247,7 +245,7 @@ IdeErrorT LogFileUtils::CreateDir(const std::string &path)
     }
 
     if (!IsFileExist(path)) {
-        if (mmMkdir(path.c_str(), (mmMode_t)DEFAULT_PATH_MODE) != EN_OK && errno != EEXIST) {
+        if (mmMkdir(path.c_str(), DEFAULT_PATH_MODE) != EN_OK && errno != EEXIST) {
             SELF_LOG_ERROR("mkdir %s failed, errorstr: %s", path.c_str(), strerror(ToolGetErrorCode()));
             return IDE_DAEMON_MKDIR_ERROR;
         }
@@ -263,7 +261,7 @@ IdeErrorT LogFileUtils::CreateDir(const std::string &path)
  * @return      : IDE_DAEMON_NONE_ERROR           Dump start Success
  *                IDE_DAEMON_INVALID_PATH_ERROR   Invalid path
  */
-std::string LogFileUtils::GetFileDir(const std::string &path)
+std::string LogFileUtils::GetFileDir(const std::string& path)
 {
     std::string dir;
     size_t pos = path.find_last_of(OS_SPLIT_CHAR);
@@ -284,7 +282,7 @@ std::string LogFileUtils::GetFileDir(const std::string &path)
  * @return      : true     can be read
  *                false    can't be read
  */
-bool LogFileUtils::IsAccessible(const std::string &path)
+bool LogFileUtils::IsAccessible(const std::string& path)
 {
     if (path.empty()) {
         return false;
@@ -304,7 +302,7 @@ bool LogFileUtils::IsAccessible(const std::string &path)
  * @return      : true    directory exists
  *                false   directory not exist
  */
-bool LogFileUtils::IsDirExist(const std::string &path)
+bool LogFileUtils::IsDirExist(const std::string& path)
 {
     if (path.empty()) {
         return false;
@@ -324,7 +322,7 @@ bool LogFileUtils::IsDirExist(const std::string &path)
  * @return      : true     file exists
  *                false    file not exist
  */
-bool LogFileUtils::IsFileExist(const std::string &path)
+bool LogFileUtils::IsFileExist(const std::string& path)
 {
     if (path.empty()) {
         return false;
@@ -336,14 +334,14 @@ bool LogFileUtils::IsFileExist(const std::string &path)
 
     return false;
 }
-int32_t LogFileUtils::RemoveDir(std::string &dirName, int32_t depth)
+int32_t LogFileUtils::RemoveDir(std::string& dirName, int32_t depth)
 {
     if (depth > MAX_RECURSION_DEPTH) {
         SELF_LOG_ERROR("dir levels is greater than %d", MAX_RECURSION_DEPTH);
         return SYS_ERROR;
     }
-    DIR *dir = nullptr;
-    struct dirent *entry;
+    DIR* dir = nullptr;
+    struct dirent* entry;
     struct stat statBuf;
     if ((dir = opendir(dirName.c_str())) == nullptr) {
         SELF_LOG_ERROR("open dir %s failed, strerr: %s", dirName.c_str(), strerror(errno));
@@ -381,4 +379,4 @@ int32_t LogFileUtils::RemoveDir(std::string &dirName, int32_t depth)
     return ret;
 }
 
-}
+} // namespace Adx

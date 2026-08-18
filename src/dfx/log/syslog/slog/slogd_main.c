@@ -15,6 +15,7 @@
 #include "log_pm.h"
 #include "slogd_service.h"
 #include "log_print.h"
+#include "slogd_bbox_server.h"
 #include "slogd_trace_server.h"
 
 STATIC INLINE void SlogdSignalInit(void)
@@ -37,8 +38,8 @@ STATIC LogStatus SlogdServiceInit(int32_t devId, int32_t level, bool isDocker)
 
     // 3. start process monitor if not in docker
     ret = LogPmStart(SLOGD_MONITOR_FLAG, isDocker);
-    TWO_ACT_ERR_LOG(ret != LOG_SUCCESS, LogServiceExit(),
-        return LOG_FAILURE, "log monitor start failed and quit slogd process.");
+    TWO_ACT_ERR_LOG(
+        ret != LOG_SUCCESS, LogServiceExit(), return LOG_FAILURE, "log monitor start failed and quit slogd process.");
     return LOG_SUCCESS;
 }
 
@@ -63,17 +64,18 @@ STATIC void SlogdServiceExit(void)
  * @param [in]  : char *argv[]      cmdline param
  * @return      : ==0: sucess; !=0: failures
  */
-int32_t MAIN(int32_t argc, char **argv)
+int32_t MAIN(int32_t argc, char** argv)
 {
     SELF_LOG_INFO("slogd process init");
     // 1. init and parse args, -1 denotes pf, 32 to 63 denotes vf
-    struct SlogdOptions opt = { 0, 0, -1, false };
+    struct SlogdOptions opt = {0, 0, -1, false};
     LogStatus ret = SlogdInitArgs(argc, argv, &opt);
     ONE_ACT_NO_LOG(ret != LOG_SUCCESS, return LOG_FAILURE);
 
     // 2. service init
     ret = SlogdServiceInit(opt.v, opt.l, opt.d);
     ONE_ACT_NO_LOG(ret != LOG_SUCCESS, return LOG_FAILURE);
+    LogBboxServiceInit(opt.v, opt.d);
     LogTraceServiceInit(opt.v);
 
     // 3. service process
@@ -81,6 +83,7 @@ int32_t MAIN(int32_t argc, char **argv)
     if (ret != LOG_SUCCESS) {
         SELF_LOG_ERROR("slogd process init trace service failed, ret = %d", ret);
         LogTraceServiceExit();
+        LogBboxServiceExit();
         SlogdServiceExit();
         return LOG_FAILURE;
     }
@@ -92,7 +95,8 @@ int32_t MAIN(int32_t argc, char **argv)
     // call printself log before free source, or it will write to default path
     SELF_LOG_ERROR("slogd process quit, signal=%d.", LogGetSigNo());
     LogTraceServiceExit();
+    LogBboxServiceExit();
     SlogdServiceExit();
-    
+
     return LOG_SUCCESS;
 }

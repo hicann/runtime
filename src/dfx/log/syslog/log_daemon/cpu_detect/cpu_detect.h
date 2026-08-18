@@ -12,6 +12,7 @@
 #define CPU_DETECT_H
 
 #include "detect_errcode.h"
+#include "server_mgr.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -31,19 +32,20 @@ typedef struct CpuDetectInfo {
     uint32_t cmdType;
     int32_t deviceId;
     uint32_t timeout;
-    uint8_t reserve[492];  // reserve 492 bytes
+    uint8_t reserve[492]; // reserve 492 bytes
 } CpuDetectInfo;
 
 // total 512 byte
 typedef struct CpuDetectResultInfo {
     uint32_t magic;
     uint32_t version;
-    uint8_t reserve[244];  // reserve 244 bytes
+    uint8_t reserve[244];             // reserve 244 bytes
     int32_t retCode;
-    char retMsg[CPU_DETECT_MSG_SIZE];  // msg length 256 bytes
+    char retMsg[CPU_DETECT_MSG_SIZE]; // msg length 256 bytes
 } CpuDetectResultInfo;
 
-int32_t CpuDetectServerInit(void);
+typedef int32_t (*ServerCreateCpuDetect)(ComponentType, ServerStart, ServerStop, ServerAttr*);
+int32_t CpuDetectServerInit(ServerCreateCpuDetect serverCreate);
 void CpuDetectServerExit(void);
 
 #ifdef __cplusplus

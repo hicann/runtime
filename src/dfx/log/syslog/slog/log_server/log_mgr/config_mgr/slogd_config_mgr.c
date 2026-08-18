@@ -18,26 +18,26 @@
 #include "slogd_buffer.h"
 #include "log_compress/log_compress.h"
 
-#define DEVICE_MAX_FILE_NUM_STR             "DeviceMaxFileNum"
-#define DEVICE_OS_MAX_FILE_NUM_STR          "DeviceOsMaxFileNum"
-#define DEVICE_NDEBUG_MAX_FILE_NUM_STR      "DeviceOsNdebugMaxFileNum"
-#define DEVICE_APP_MAX_FILE_NUM_STR         "DeviceAppMaxFileNum"
-#define DEVICE_MAX_FILE_SIZE_STR            "DeviceMaxFileSize"
-#define DEVICE_OS_MAX_FILE_SIZE_STR         "DeviceOsMaxFileSize"
-#define DEVICE_NDEBUG_MAX_FILE_SIZE_STR     "DeviceOsNdebugMaxFileSize"
-#define DEVICE_APP_MAX_FILE_SIZE_STR        "DeviceAppMaxFileSize"
-#define WRITE_LIMIT_SWITCH                  "WriteLimitSwitch"
+#define DEVICE_MAX_FILE_NUM_STR "DeviceMaxFileNum"
+#define DEVICE_OS_MAX_FILE_NUM_STR "DeviceOsMaxFileNum"
+#define DEVICE_NDEBUG_MAX_FILE_NUM_STR "DeviceOsNdebugMaxFileNum"
+#define DEVICE_APP_MAX_FILE_NUM_STR "DeviceAppMaxFileNum"
+#define DEVICE_MAX_FILE_SIZE_STR "DeviceMaxFileSize"
+#define DEVICE_OS_MAX_FILE_SIZE_STR "DeviceOsMaxFileSize"
+#define DEVICE_NDEBUG_MAX_FILE_SIZE_STR "DeviceOsNdebugMaxFileSize"
+#define DEVICE_APP_MAX_FILE_SIZE_STR "DeviceAppMaxFileSize"
+#define WRITE_LIMIT_SWITCH "WriteLimitSwitch"
 
-#define EP_MIN_BUFF_SIZE                    (2U * 1024U * 1024U)
-#define DEFAULT_LOG_BUF_SIZE                (256U * 1024U) // 256KB
-#define EVENT_LOG_BUF_SIZE                  DEFAULT_LOG_BUF_SIZE
-#define FIRM_LOG_BUF_SIZE                   ONE_MEGABYTE
-#define MIN_LOG_BUF_SIZE                    (64U * 1024U) // 64KB
-#define MAX_LOG_BUF_SIZE                    (1024U * 1024U) // 1024KB
-#define MIN_RESERVE_DEVICE_APP_DIR_NUMS     1
-#define MAX_RESERVE_DEVICE_APP_DIR_NUMS     96
-#define WRITE_LIMIT_SWITCH_ON               1U
-#define WRITE_LIMIT_SWITCH_OFF              0U
+#define EP_MIN_BUFF_SIZE (2U * 1024U * 1024U)
+#define DEFAULT_LOG_BUF_SIZE (256U * 1024U) // 256KB
+#define EVENT_LOG_BUF_SIZE DEFAULT_LOG_BUF_SIZE
+#define FIRM_LOG_BUF_SIZE ONE_MEGABYTE
+#define MIN_LOG_BUF_SIZE (64U * 1024U)   // 64KB
+#define MAX_LOG_BUF_SIZE (1024U * 1024U) // 1024KB
+#define MIN_RESERVE_DEVICE_APP_DIR_NUMS 1
+#define MAX_RESERVE_DEVICE_APP_DIR_NUMS 96
+#define WRITE_LIMIT_SWITCH_ON 1U
+#define WRITE_LIMIT_SWITCH_OFF 0U
 #ifdef APP_LOG_REPORT
 #define DEFAULT_RESERVE_DEVICE_APP_DIR_NUMS 24
 #else
@@ -63,12 +63,12 @@ typedef struct {
 STATIC ConfigMgr g_configMgr;
 
 /**
-* @brief : get global level from config list
-* @return: void
-*/
+ * @brief : get global level from config list
+ * @return: void
+ */
 STATIC void SlogdConfigMgrSetGlobalLevel(void)
 {
-    char val[CONF_VALUE_MAX_LEN + 1] = { 0 };
+    char val[CONF_VALUE_MAX_LEN + 1] = {0};
     LogRt ret = LogConfListGetValue(GLOBALLEVEL_KEY, LogStrlen(GLOBALLEVEL_KEY), val, CONF_VALUE_MAX_LEN);
     if (ret == SUCCESS) {
         int64_t tmpL = -1;
@@ -76,12 +76,14 @@ STATIC void SlogdConfigMgrSetGlobalLevel(void)
             SlogdSetGlobalLevel((int32_t)tmpL, SLOGD_GLOBAL_TYPE_MASK);
             SELF_LOG_INFO("get global level succeed, level=%s.", GetBasicLevelNameById((int32_t)tmpL));
         } else {
-            SELF_LOG_WARN("global level is invalid, use default=%s.",
-                          GetBasicLevelNameById(SlogdGetGlobalLevel(SLOGD_GLOBAL_TYPE_MASK)));
+            SELF_LOG_WARN(
+                "global level is invalid, use default=%s.",
+                GetBasicLevelNameById(SlogdGetGlobalLevel(SLOGD_GLOBAL_TYPE_MASK)));
         }
     } else {
-        SELF_LOG_WARN("can not get global level, use default=%s.",
-                      GetBasicLevelNameById(SlogdGetGlobalLevel(SLOGD_GLOBAL_TYPE_MASK)));
+        SELF_LOG_WARN(
+            "can not get global level, use default=%s.",
+            GetBasicLevelNameById(SlogdGetGlobalLevel(SLOGD_GLOBAL_TYPE_MASK)));
     }
 }
 
@@ -115,19 +117,18 @@ static void SlogdConfigMgrGetLogConfig(void)
     g_configMgr.logConfig[RUN_SYS_LOG_TYPE].maxFileNum =
         LogConfListGetDigit(DEVICE_NDEBUG_MAX_FILE_NUM_STR, MIN_FILE_NUM, MAX_FILE_NUM, DEFAULT_MAX_NDEBUG_FILE_NUM);
 
-    g_configMgr.logConfig[RUN_SYS_LOG_TYPE].maxFileSize =
-        LogConfListGetDigit(DEVICE_NDEBUG_MAX_FILE_SIZE_STR, MIN_FILE_SIZE,
-        MAX_FILE_SIZE, DEFAULT_MAX_NDEBUG_FILE_SIZE);
+    g_configMgr.logConfig[RUN_SYS_LOG_TYPE].maxFileSize = LogConfListGetDigit(
+        DEVICE_NDEBUG_MAX_FILE_SIZE_STR, MIN_FILE_SIZE, MAX_FILE_SIZE, DEFAULT_MAX_NDEBUG_FILE_SIZE);
 }
 
 #endif
 
 /**
-* @brief        : calculate current type log total file size without active file
-* @param [in]   : fileSize      log file max size
-* @param [in]   : fileNum       file number
-* @return       : total file size without active file
-*/
+ * @brief        : calculate current type log total file size without active file
+ * @param [in]   : fileSize      log file max size
+ * @param [in]   : fileNum       file number
+ * @return       : total file size without active file
+ */
 STATIC uint32_t SlogdConfigMgrCalTotalFileSize(uint32_t fileSize, uint32_t fileNum)
 {
     if (fileNum <= 0) {
@@ -140,7 +141,7 @@ STATIC void SlogdConfigMgrGetSpaceList(void)
 {
     uint32_t eventTotalMaxFileSize = 0U;
     uint32_t eventMaxFileSize = 0U;
-    LogConfClass *confClass = LogConfGetClass(EVENT_LOG_TYPE);
+    LogConfClass* confClass = LogConfGetClass(EVENT_LOG_TYPE);
     if (confClass != NULL) {
         eventTotalMaxFileSize = confClass->outputRule.totalSize - confClass->outputRule.fileSize;
         eventMaxFileSize = confClass->outputRule.fileSize;
@@ -151,13 +152,11 @@ STATIC void SlogdConfigMgrGetSpaceList(void)
     }
 
     uint32_t runDevOsTotalMaxFileSize = SlogdConfigMgrCalTotalFileSize(
-        g_configMgr.logConfig[RUN_SYS_LOG_TYPE].maxFileSize,
-        g_configMgr.logConfig[RUN_SYS_LOG_TYPE].maxFileNum);
+        g_configMgr.logConfig[RUN_SYS_LOG_TYPE].maxFileSize, g_configMgr.logConfig[RUN_SYS_LOG_TYPE].maxFileNum);
     uint32_t runDevOsFileSize = g_configMgr.logConfig[RUN_SYS_LOG_TYPE].maxFileSize;
 
-    uint32_t runDevAppTotalMaxFileSize =  SlogdConfigMgrCalTotalFileSize(
-        g_configMgr.logConfig[RUN_APP_LOG_TYPE].maxFileSize,
-        g_configMgr.logConfig[RUN_APP_LOG_TYPE].maxFileNum);
+    uint32_t runDevAppTotalMaxFileSize = SlogdConfigMgrCalTotalFileSize(
+        g_configMgr.logConfig[RUN_APP_LOG_TYPE].maxFileSize, g_configMgr.logConfig[RUN_APP_LOG_TYPE].maxFileNum);
     uint32_t runDevAppMaxFileSize = g_configMgr.logConfig[RUN_APP_LOG_TYPE].maxFileSize;
 
     uint32_t securityTotalMaxFileSize = SlogdConfigMgrCalTotalFileSize(SECURITY_FILE_SIZE, SECURITY_FILE_NUM);
@@ -165,22 +164,21 @@ STATIC void SlogdConfigMgrGetSpaceList(void)
 
     g_configMgr.spaceRecordList[SECURITY_LOG] = securityTotalMaxFileSize + securityMaxFileSize;
 
-    g_configMgr.spaceRecordList[RUN_LOG] = eventTotalMaxFileSize + eventMaxFileSize +
-        runDevOsTotalMaxFileSize + runDevOsFileSize +
-        runDevAppTotalMaxFileSize + runDevAppMaxFileSize;
+    g_configMgr.spaceRecordList[RUN_LOG] = eventTotalMaxFileSize + eventMaxFileSize + runDevOsTotalMaxFileSize +
+                                           runDevOsFileSize + runDevAppTotalMaxFileSize + runDevAppMaxFileSize;
 }
 
 STATIC void SlogdConfigMgrGetLimitConfig(void)
 {
-    char val[CONF_VALUE_MAX_LEN + 1] = { 0 };
+    char val[CONF_VALUE_MAX_LEN + 1] = {0};
     LogRt ret = LogConfListGetValue(WRITE_LIMIT_SWITCH, LogStrlen(WRITE_LIMIT_SWITCH), val, CONF_VALUE_MAX_LEN);
     if (ret != SUCCESS) {
         NO_ACT_WARN_LOG(ret != CONF_VALUE_NULL, "the limit switch is disabled, result=%d.", (int32_t)ret);
         g_configMgr.writeLimitSwitch = false;
         return;
     }
-    uint32_t switchConfig = LogConfGetDigit(WRITE_LIMIT_SWITCH, val, WRITE_LIMIT_SWITCH_OFF, WRITE_LIMIT_SWITCH_ON,
-        WRITE_LIMIT_SWITCH_ON);
+    uint32_t switchConfig =
+        LogConfGetDigit(WRITE_LIMIT_SWITCH, val, WRITE_LIMIT_SWITCH_OFF, WRITE_LIMIT_SWITCH_ON, WRITE_LIMIT_SWITCH_ON);
     if (switchConfig != WRITE_LIMIT_SWITCH_ON) {
         g_configMgr.writeLimitSwitch = false;
         return;
@@ -190,9 +188,9 @@ STATIC void SlogdConfigMgrGetLimitConfig(void)
 }
 
 /**
-* @brief : get config from config list
-* @return: void
-*/
+ * @brief : get config from config list
+ * @return: void
+ */
 static void SlogdConfigMgrParseLogConfig(void)
 {
     SlogdConfigMgrGetLogConfig();
@@ -200,17 +198,15 @@ static void SlogdConfigMgrParseLogConfig(void)
 
     g_configMgr.logConfig[DEBUG_APP_LOG_TYPE].maxFileNum =
         LogConfListGetDigit(DEVICE_APP_MAX_FILE_NUM_STR, MIN_FILE_NUM, MAX_FILE_NUM, DEFAULT_MAX_APP_FILE_NUM);
-    g_configMgr.logConfig[RUN_APP_LOG_TYPE].maxFileNum =
-        g_configMgr.logConfig[DEBUG_APP_LOG_TYPE].maxFileNum;
+    g_configMgr.logConfig[RUN_APP_LOG_TYPE].maxFileNum = g_configMgr.logConfig[DEBUG_APP_LOG_TYPE].maxFileNum;
 
-    g_configMgr.logConfig[DEBUG_APP_LOG_TYPE].maxFileSize =
-        LogConfListGetDigit(DEVICE_APP_MAX_FILE_SIZE_STR, HOST_APP_FILE_MIN_SIZE,
-        HOST_APP_FILE_MAX_SIZE, DEFAULT_MAX_APP_FILE_SIZE);
-    g_configMgr.logConfig[RUN_APP_LOG_TYPE].maxFileSize =
-        g_configMgr.logConfig[DEBUG_APP_LOG_TYPE].maxFileSize;
+    g_configMgr.logConfig[DEBUG_APP_LOG_TYPE].maxFileSize = LogConfListGetDigit(
+        DEVICE_APP_MAX_FILE_SIZE_STR, HOST_APP_FILE_MIN_SIZE, HOST_APP_FILE_MAX_SIZE, DEFAULT_MAX_APP_FILE_SIZE);
+    g_configMgr.logConfig[RUN_APP_LOG_TYPE].maxFileSize = g_configMgr.logConfig[DEBUG_APP_LOG_TYPE].maxFileSize;
 
-    g_configMgr.logConfig[DEBUG_APP_LOG_TYPE].dirNum = (int32_t)LogConfListGetDigit(RESERVE_DEVICE_APP_DIR_NUMS,
-        MIN_RESERVE_DEVICE_APP_DIR_NUMS, MAX_RESERVE_DEVICE_APP_DIR_NUMS, DEFAULT_RESERVE_DEVICE_APP_DIR_NUMS);
+    g_configMgr.logConfig[DEBUG_APP_LOG_TYPE].dirNum = (int32_t)LogConfListGetDigit(
+        RESERVE_DEVICE_APP_DIR_NUMS, MIN_RESERVE_DEVICE_APP_DIR_NUMS, MAX_RESERVE_DEVICE_APP_DIR_NUMS,
+        DEFAULT_RESERVE_DEVICE_APP_DIR_NUMS);
     g_configMgr.logConfig[RUN_APP_LOG_TYPE].dirNum = g_configMgr.logConfig[DEBUG_APP_LOG_TYPE].dirNum;
 
     // preferentially read storage mode from the configuration, currently, macro isolation is used first.
@@ -225,15 +221,15 @@ static void SlogdConfigMgrParseLogConfig(void)
 #else
     g_configMgr.logConfig[RUN_APP_LOG_TYPE].storageMode = STORAGE_RULE_COMMON;
 #endif
-    g_configMgr.logConfig[SEC_APP_LOG_TYPE].storageMode = STORAGE_RULE_FILTER_PID;
+    g_configMgr.logConfig[SEC_APP_LOG_TYPE].storageMode = STORAGE_RULE_COMMON;
 
 #ifndef STATIC_BUFFER
-    g_configMgr.sysLogBufSize = LogConfListGetDigit(SYS_LOG_BUF_SIZE_STR, MIN_LOG_BUF_SIZE, MAX_LOG_BUF_SIZE,
-        DEFAULT_LOG_BUF_SIZE);
+    g_configMgr.sysLogBufSize =
+        LogConfListGetDigit(SYS_LOG_BUF_SIZE_STR, MIN_LOG_BUF_SIZE, MAX_LOG_BUF_SIZE, DEFAULT_LOG_BUF_SIZE);
 #endif
 
-    g_configMgr.appLogBufSize = LogConfListGetDigit(APP_LOG_BUF_SIZE_STR, MIN_LOG_BUF_SIZE, MAX_LOG_BUF_SIZE,
-        DEFAULT_LOG_BUF_SIZE);
+    g_configMgr.appLogBufSize =
+        LogConfListGetDigit(APP_LOG_BUF_SIZE_STR, MIN_LOG_BUF_SIZE, MAX_LOG_BUF_SIZE, DEFAULT_LOG_BUF_SIZE);
 
     g_configMgr.logConfig[SEC_SYS_LOG_TYPE].maxFileNum = SECURITY_FILE_NUM;
     g_configMgr.logConfig[SEC_SYS_LOG_TYPE].maxFileSize = SECURITY_FILE_SIZE;
@@ -242,14 +238,14 @@ static void SlogdConfigMgrParseLogConfig(void)
 }
 
 /**
-* @brief : get root log directory from config list
-* @return: void
-*/
+ * @brief : get root log directory from config list
+ * @return: void
+ */
 STATIC void SlogdConfigMgrGetFileDir(void)
 {
     char val[CONF_VALUE_MAX_LEN + 1] = {0};
-    LogRt logRt = LogConfListGetValue(LOG_AGENT_FILE_DIR_STR, LogStrlen(LOG_AGENT_FILE_DIR_STR), val,
-                                      CONF_VALUE_MAX_LEN);
+    LogRt logRt =
+        LogConfListGetValue(LOG_AGENT_FILE_DIR_STR, LogStrlen(LOG_AGENT_FILE_DIR_STR), val, CONF_VALUE_MAX_LEN);
     if (logRt == SUCCESS) {
         (void)snprintf_truncated_s(g_configMgr.aucFilePath, MAX_FILEDIR_LEN + 1U, "%s", val);
     } else {
@@ -259,9 +255,9 @@ STATIC void SlogdConfigMgrGetFileDir(void)
 }
 
 /**
-* @brief : init config manager
-* @return: void
-*/
+ * @brief : init config manager
+ * @return: void
+ */
 void SlogdConfigMgrInit(void)
 {
     if (LogConfInit() != SYS_OK) {
@@ -286,7 +282,7 @@ void SlogdConfigMgrInit(void)
  * @param [in\out]logList: StLogFileList struct pointer
  * @return: LOG_SUCCESS  success; others  failure
  */
-int32_t SlogdConfigMgrGetList(StLogFileList *logList)
+int32_t SlogdConfigMgrGetList(StLogFileList* logList)
 {
     ONE_ACT_WARN_LOG(logList == NULL, return LOG_INVALID_PTR, "[input] log file list info is null.");
 
@@ -306,10 +302,7 @@ int32_t SlogdConfigMgrGetList(StLogFileList *logList)
     return LOG_SUCCESS;
 }
 
-int32_t SlogdConfigMgrGetDeviceAppDirNums(void)
-{
-    return g_configMgr.logConfig[DEBUG_APP_LOG_TYPE].dirNum;
-}
+int32_t SlogdConfigMgrGetDeviceAppDirNums(void) { return g_configMgr.logConfig[DEBUG_APP_LOG_TYPE].dirNum; }
 
 #ifdef STATIC_BUFFER
 
@@ -379,10 +372,7 @@ int32_t SlogdConfigMgrGetStorageMode(int32_t buffType)
     return g_configMgr.logConfig[buffType].storageMode;
 }
 
-bool SlogdConfigMgrGetWriteFileLimit(void)
-{
-    return g_configMgr.writeLimitSwitch;
-}
+bool SlogdConfigMgrGetWriteFileLimit(void) { return g_configMgr.writeLimitSwitch; }
 
 uint32_t SlogdConfigMgrGetTypeSpace(int32_t type)
 {

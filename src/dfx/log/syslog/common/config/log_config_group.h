@@ -14,14 +14,15 @@
 #include <stdint.h>
 #include "log_config_common.h"
 #include "slog.h"
+#include "log_config.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define FULL_RATIO          100
-#define GROUP_MAP_SIZE      (INVALID_MODULE_ID + 1)
-#define GROUP_NAME_MAX_LEN  127
+#define FULL_RATIO 100
+#define GROUP_MAP_SIZE (INVALID_MODULE_ID + 1)
+#define GROUP_NAME_MAX_LEN 127
 #define SLOG_AGENT_FILE_DIR 255
 
 #define SLOG_DEFAULT_GROUP_NAME "device-os"
@@ -30,9 +31,7 @@ extern "C" {
 #define DEFAULT_FILE_DIR "/home/mdc/var/log/"
 
 // slog module type
-typedef enum {
-    SLOGD, ALOG, PLOG, LOGDAEMON, MODULE_MAX
-} SymbolEnum;
+typedef enum { SLOGD, ALOG, PLOG, LOGDAEMON, MODULE_MAX } SymbolEnum;
 
 typedef struct {
     int isInit;
@@ -57,18 +56,16 @@ typedef struct {
 
 typedef struct {
     int symbolE;
-    const char *target[(int32_t)MODULE_MAX];
+    const char* target[(int32_t)MODULE_MAX];
     int tNum;
 } BlockSymbolInfo;
 
-void LogConfGroupInit(const char *file);
-const GeneralGroupInfo *LogConfGroupGetInfo(void);
+void LogConfGroupInit(const char* file);
+const GeneralGroupInfo* LogConfGroupGetInfo(void);
 bool LogConfGroupGetSwitch(void);
 void LogConfGroupSetSwitch(bool enabled);
-
 
 #ifdef __cplusplus
 }
 #endif
 #endif
-

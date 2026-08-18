@@ -23,3 +23,6 @@ log-daemon:
   is_auto_boot: true
   node_type: 0x608
   heart_beat: true
+  lowpower_last_kill: true
+  numa_policy: "preferred"
+  numa_node_name: ["iodie_local_node"]

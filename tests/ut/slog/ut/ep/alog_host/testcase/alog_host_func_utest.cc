@@ -29,17 +29,16 @@ using namespace testing;
 #include "plog_to_dlog.h"
 
 extern "C" {
-    void DllMain(void);
-    void DlogFree(void);
-    int32_t ProcessLogInit(void);
-    int32_t ProcessLogFree(void);
-    void PlogDriverLog(int32_t moduleId, int32_t level, const char *fmt, ...);
-    extern bool g_dlogLevelChanged;
-    extern int32_t g_plogSyncMode;
+void DllMain(void);
+void DlogFree(void);
+int32_t ProcessLogInit(void);
+int32_t ProcessLogFree(void);
+void PlogDriverLog(int32_t moduleId, int32_t level, const char* fmt, ...);
+extern bool g_dlogLevelChanged;
+extern int32_t g_plogSyncMode;
 }
 
-class EP_ALOG_HOST_FUNC_UTEST : public testing::Test
-{
+class EP_ALOG_HOST_FUNC_UTEST : public testing::Test {
 protected:
     virtual void SetUp()
     {
@@ -88,11 +87,9 @@ public:
         DlogFree();
     }
 
-    bool DlogCheckPrint()
-    {
-    }
+    bool DlogCheckPrint() {}
 
-    int DlogCmdGetIntRet(const char *path, const char*cmd)
+    int DlogCmdGetIntRet(const char* path, const char* cmd)
     {
         char resultFile[200] = {0};
         sprintf(resultFile, "%s/EP_ALOG_HOST_FUNC_STEST_cmd_result.txt", path);
@@ -101,7 +98,7 @@ public:
         sprintf(cmdToFile, "%s > %s", cmd, resultFile);
         system(cmdToFile);
         char buf[100] = {0};
-        FILE *fp = fopen(resultFile, "r");
+        FILE* fp = fopen(resultFile, "r");
         if (fp == NULL) {
             return 0;
         }
@@ -113,7 +110,7 @@ public:
         return atoi(buf);
     }
 
-    int32_t DlogCheckHostPrintNum(const char *path, const char *dir)
+    int32_t DlogCheckHostPrintNum(const char* path, const char* dir)
     {
         char plogPath[200] = {0};
         sprintf(plogPath, "%s/%s/plog", path, dir);
@@ -136,7 +133,7 @@ public:
         return ret;
     }
 
-    bool DlogCheckDevicePrintNum(const char *path, int32_t devId, const char *dir, int32_t num)
+    bool DlogCheckDevicePrintNum(const char* path, int32_t devId, const char* dir, int32_t num)
     {
         char devLogPath[200] = {0};
         sprintf(devLogPath, "%s/%s/device-%d", path, dir, devId);
@@ -165,9 +162,7 @@ public:
         return true;
     }
 
-    bool DlogCheckFileValue()
-    {
-    }
+    bool DlogCheckFileValue() {}
 };
 
 // host日志落盘
@@ -229,13 +224,21 @@ TEST_F(EP_ALOG_HOST_FUNC_UTEST, DlogPrint_HostLogInterface_Stdout)
     // 初始化
     DlogConstructor();
     // 打印 DLOG_ERROR | STDOUT_LOG_MASK
-    DlogRecord(SLOG | STDOUT_LOG_MASK, DLOG_ERROR, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_stdout, error_level.");
+    DlogRecord(
+        SLOG | STDOUT_LOG_MASK, DLOG_ERROR,
+        "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_stdout, error_level.");
     // 打印 DLOG_WARN | STDOUT_LOG_MASK
-    DlogRecord(SLOG | STDOUT_LOG_MASK, DLOG_WARN, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_stdout, warn_level.");
+    DlogRecord(
+        SLOG | STDOUT_LOG_MASK, DLOG_WARN,
+        "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_stdout, warn_level.");
     // 打印 DLOG_INFO | STDOUT_LOG_MASK
-    DlogRecord(SLOG | STDOUT_LOG_MASK, DLOG_INFO, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_stdout, info_level.");
+    DlogRecord(
+        SLOG | STDOUT_LOG_MASK, DLOG_INFO,
+        "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_stdout, info_level.");
     // 打印 DLOG_DEBUG | STDOUT_LOG_MASK
-    DlogRecord(SLOG | STDOUT_LOG_MASK, DLOG_DEBUG, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_stdout, debug_level.");
+    DlogRecord(
+        SLOG | STDOUT_LOG_MASK, DLOG_DEBUG,
+        "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_stdout, debug_level.");
 
     // 释放
     DlogDestructor();
@@ -253,28 +256,42 @@ TEST_F(EP_ALOG_HOST_FUNC_UTEST, DlogPrint_HostLogInterface)
     DlogConstructor();
 
     // 打印 DLOG_ERROR | DEBUG_LOG_MASK
-    DlogRecord(SLOG | DEBUG_LOG_MASK, DLOG_ERROR, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_debug, error_level.");
+    DlogRecord(
+        SLOG | DEBUG_LOG_MASK, DLOG_ERROR,
+        "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_debug, error_level.");
 
     // 打印 DLOG_WARN | DEBUG_LOG_MASK
-    DlogRecord(SLOG | DEBUG_LOG_MASK, DLOG_WARN, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_debug, warn_level.");
+    DlogRecord(
+        SLOG | DEBUG_LOG_MASK, DLOG_WARN,
+        "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_debug, warn_level.");
 
     // 打印 DLOG_INFO | DEBUG_LOG_MASK
-    DlogRecord(SLOG | DEBUG_LOG_MASK, DLOG_INFO, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_debug, info_level.");
+    DlogRecord(
+        SLOG | DEBUG_LOG_MASK, DLOG_INFO,
+        "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_debug, info_level.");
 
     // 打印 DLOG_DEBUG | DEBUG_LOG_MASK
-    DlogRecord(SLOG | DEBUG_LOG_MASK, DLOG_DEBUG, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_debug, debug_level.");
+    DlogRecord(
+        SLOG | DEBUG_LOG_MASK, DLOG_DEBUG,
+        "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_debug, debug_level.");
 
     // 打印 DLOG_ERROR | RUN_LOG_MASK
-    DlogRecord(SLOG | RUN_LOG_MASK, DLOG_ERROR, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_run, error_level.");
+    DlogRecord(
+        SLOG | RUN_LOG_MASK, DLOG_ERROR,
+        "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_run, error_level.");
 
     // 打印 DLOG_WARN | RUN_LOG_MASK
-    DlogRecord(SLOG | RUN_LOG_MASK, DLOG_WARN, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_run, warn_level.");
+    DlogRecord(
+        SLOG | RUN_LOG_MASK, DLOG_WARN, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_run, warn_level.");
 
     // 打印 DLOG_INFO | RUN_LOG_MASK
-    DlogRecord(SLOG | RUN_LOG_MASK, DLOG_INFO, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_run, info_level.");
+    DlogRecord(
+        SLOG | RUN_LOG_MASK, DLOG_INFO, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_run, info_level.");
 
     // 打印 DLOG_DEBUG | RUN_LOG_MASK
-    DlogRecord(SLOG | RUN_LOG_MASK, DLOG_DEBUG, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_run, debug_level.");
+    DlogRecord(
+        SLOG | RUN_LOG_MASK, DLOG_DEBUG,
+        "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_run, debug_level.");
 
     // 释放
     DlogDestructor();
@@ -293,28 +310,41 @@ TEST_F(EP_ALOG_HOST_FUNC_UTEST, DlogPrint_HostLogForC)
     DlogConstructor();
 
     // 打印 DLOG_ERROR | DEBUG_LOG_MASK
-    DlogForC(SLOG | DEBUG_LOG_MASK, DLOG_ERROR, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint] test for mask_debug, error_level.");
+    DlogForC(
+        SLOG | DEBUG_LOG_MASK, DLOG_ERROR, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint] test for mask_debug, error_level.");
 
     // 打印 DLOG_WARN | DEBUG_LOG_MASK
-    DlogForC(SLOG | DEBUG_LOG_MASK, DLOG_WARN, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_debug, warn_level.");
+    DlogForC(
+        SLOG | DEBUG_LOG_MASK, DLOG_WARN,
+        "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_debug, warn_level.");
 
     // 打印 DLOG_INFO | DEBUG_LOG_MASK
-    DlogForC(SLOG | DEBUG_LOG_MASK, DLOG_INFO, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_debug, info_level.");
+    DlogForC(
+        SLOG | DEBUG_LOG_MASK, DLOG_INFO,
+        "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_debug, info_level.");
 
     // 打印 DLOG_DEBUG | DEBUG_LOG_MASK
-    DlogForC(SLOG | DEBUG_LOG_MASK, DLOG_DEBUG, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_debug, debug_level.");
+    DlogForC(
+        SLOG | DEBUG_LOG_MASK, DLOG_DEBUG,
+        "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_debug, debug_level.");
 
     // 打印 DLOG_ERROR | RUN_LOG_MASK
-    DlogForC(SLOG | RUN_LOG_MASK, DLOG_ERROR, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_run, error_level.");
+    DlogForC(
+        SLOG | RUN_LOG_MASK, DLOG_ERROR,
+        "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_run, error_level.");
 
     // 打印 DLOG_WARN | RUN_LOG_MASK
-    DlogForC(SLOG | RUN_LOG_MASK, DLOG_WARN, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_run, warn_level.");
+    DlogForC(
+        SLOG | RUN_LOG_MASK, DLOG_WARN, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_run, warn_level.");
 
     // 打印 DLOG_INFO | RUN_LOG_MASK
-    DlogForC(SLOG | RUN_LOG_MASK, DLOG_INFO, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_run, info_level.");
+    DlogForC(
+        SLOG | RUN_LOG_MASK, DLOG_INFO, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_run, info_level.");
 
     // 打印 DLOG_DEBUG | RUN_LOG_MASK
-    DlogForC(SLOG | RUN_LOG_MASK, DLOG_DEBUG, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_run, debug_level.");
+    DlogForC(
+        SLOG | RUN_LOG_MASK, DLOG_DEBUG,
+        "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_run, debug_level.");
 
     // 释放
     DlogDestructor();
@@ -333,28 +363,41 @@ TEST_F(EP_ALOG_HOST_FUNC_UTEST, DlogPrint_HostLogForCInterface)
     DlogConstructor();
 
     // 打印 DLOG_ERROR | DEBUG_LOG_MASK
-    DlogRecordForC(SLOG | DEBUG_LOG_MASK, DLOG_ERROR, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint] test for mask_debug, error_level.");
+    DlogRecordForC(
+        SLOG | DEBUG_LOG_MASK, DLOG_ERROR, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint] test for mask_debug, error_level.");
 
     // 打印 DLOG_WARN | DEBUG_LOG_MASK
-    DlogRecordForC(SLOG | DEBUG_LOG_MASK, DLOG_WARN, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_debug, warn_level.");
+    DlogRecordForC(
+        SLOG | DEBUG_LOG_MASK, DLOG_WARN,
+        "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_debug, warn_level.");
 
     // 打印 DLOG_INFO | DEBUG_LOG_MASK
-    DlogRecordForC(SLOG | DEBUG_LOG_MASK, DLOG_INFO, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_debug, info_level.");
+    DlogRecordForC(
+        SLOG | DEBUG_LOG_MASK, DLOG_INFO,
+        "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_debug, info_level.");
 
     // 打印 DLOG_DEBUG | DEBUG_LOG_MASK
-    DlogRecordForC(SLOG | DEBUG_LOG_MASK, DLOG_DEBUG, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_debug, debug_level.");
+    DlogRecordForC(
+        SLOG | DEBUG_LOG_MASK, DLOG_DEBUG,
+        "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_debug, debug_level.");
 
     // 打印 DLOG_ERROR | RUN_LOG_MASK
-    DlogRecordForC(SLOG | RUN_LOG_MASK, DLOG_ERROR, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_run, error_level.");
+    DlogRecordForC(
+        SLOG | RUN_LOG_MASK, DLOG_ERROR,
+        "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_run, error_level.");
 
     // 打印 DLOG_WARN | RUN_LOG_MASK
-    DlogRecordForC(SLOG | RUN_LOG_MASK, DLOG_WARN, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_run, warn_level.");
+    DlogRecordForC(
+        SLOG | RUN_LOG_MASK, DLOG_WARN, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_run, warn_level.");
 
     // 打印 DLOG_INFO | RUN_LOG_MASK
-    DlogRecordForC(SLOG | RUN_LOG_MASK, DLOG_INFO, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_run, info_level.");
+    DlogRecordForC(
+        SLOG | RUN_LOG_MASK, DLOG_INFO, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_run, info_level.");
 
     // 打印 DLOG_DEBUG | RUN_LOG_MASK
-    DlogRecordForC(SLOG | RUN_LOG_MASK, DLOG_DEBUG, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_run, debug_level.");
+    DlogRecordForC(
+        SLOG | RUN_LOG_MASK, DLOG_DEBUG,
+        "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_run, debug_level.");
 
     // 释放
     DlogDestructor();
@@ -373,28 +416,41 @@ TEST_F(EP_ALOG_HOST_FUNC_UTEST, DlogPrint_HostLog_DlogFlush)
     DlogConstructor();
 
     // 打印 DLOG_ERROR | DEBUG_LOG_MASK
-    DlogForC(SLOG | DEBUG_LOG_MASK, DLOG_ERROR, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint] test for mask_debug, error_level.");
+    DlogForC(
+        SLOG | DEBUG_LOG_MASK, DLOG_ERROR, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint] test for mask_debug, error_level.");
 
     // 打印 DLOG_WARN | DEBUG_LOG_MASK
-    DlogForC(SLOG | DEBUG_LOG_MASK, DLOG_WARN, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_debug, warn_level.");
+    DlogForC(
+        SLOG | DEBUG_LOG_MASK, DLOG_WARN,
+        "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_debug, warn_level.");
 
     // 打印 DLOG_INFO | DEBUG_LOG_MASK
-    DlogForC(SLOG | DEBUG_LOG_MASK, DLOG_INFO, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_debug, info_level.");
+    DlogForC(
+        SLOG | DEBUG_LOG_MASK, DLOG_INFO,
+        "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_debug, info_level.");
 
     // 打印 DLOG_DEBUG | DEBUG_LOG_MASK
-    DlogForC(SLOG | DEBUG_LOG_MASK, DLOG_DEBUG, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_debug, debug_level.");
+    DlogForC(
+        SLOG | DEBUG_LOG_MASK, DLOG_DEBUG,
+        "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_debug, debug_level.");
 
     // 打印 DLOG_ERROR | RUN_LOG_MASK
-    DlogForC(SLOG | RUN_LOG_MASK, DLOG_ERROR, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_run, error_level.");
+    DlogForC(
+        SLOG | RUN_LOG_MASK, DLOG_ERROR,
+        "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_run, error_level.");
 
     // 打印 DLOG_WARN | RUN_LOG_MASK
-    DlogForC(SLOG | RUN_LOG_MASK, DLOG_WARN, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_run, warn_level.");
+    DlogForC(
+        SLOG | RUN_LOG_MASK, DLOG_WARN, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_run, warn_level.");
 
     // 打印 DLOG_INFO | RUN_LOG_MASK
-    DlogForC(SLOG | RUN_LOG_MASK, DLOG_INFO, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_run, info_level.");
+    DlogForC(
+        SLOG | RUN_LOG_MASK, DLOG_INFO, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_run, info_level.");
 
     // 打印 DLOG_DEBUG | RUN_LOG_MASK
-    DlogForC(SLOG | RUN_LOG_MASK, DLOG_DEBUG, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_run, debug_level.");
+    DlogForC(
+        SLOG | RUN_LOG_MASK, DLOG_DEBUG,
+        "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_run, debug_level.");
 
     DlogFlush();
 
@@ -415,17 +471,30 @@ TEST_F(EP_ALOG_HOST_FUNC_UTEST, DlogPrint_HostLog_WorkPath)
     DlogConstructor();
 
     // 向debug目录下打印日志
-    dlog_error(SLOG | DEBUG_LOG_MASK, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog_WorkPath] test for mask_debug, error_level.");
-    dlog_warn(SLOG | DEBUG_LOG_MASK, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog_WorkPath] test for mask_debug, warn_level.");
-    dlog_info(SLOG | DEBUG_LOG_MASK, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog_WorkPath] test for mask_debug, info_level.");
-    dlog_debug(SLOG | DEBUG_LOG_MASK, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog_WorkPath] test for mask_debug, debug_level.");
+    dlog_error(
+        SLOG | DEBUG_LOG_MASK,
+        "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog_WorkPath] test for mask_debug, error_level.");
+    dlog_warn(
+        SLOG | DEBUG_LOG_MASK,
+        "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog_WorkPath] test for mask_debug, warn_level.");
+    dlog_info(
+        SLOG | DEBUG_LOG_MASK,
+        "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog_WorkPath] test for mask_debug, info_level.");
+    dlog_debug(
+        SLOG | DEBUG_LOG_MASK,
+        "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog_WorkPath] test for mask_debug, debug_level.");
 
     // 向run目录下打印日志
-    dlog_error(SLOG | RUN_LOG_MASK, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog_WorkPath] test for mask_run, error_level.");
-    dlog_warn(SLOG | RUN_LOG_MASK, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog_WorkPath] test for mask_run, warn_level.");
-    dlog_info(SLOG | RUN_LOG_MASK, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog_WorkPath] test for mask_run, info_level.");
-    dlog_debug(SLOG | RUN_LOG_MASK, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog_WorkPath] test for mask_run, debug_level.");
-    dlog_event(SLOG | RUN_LOG_MASK, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog_WorkPath] test for mask_run, debug_event.");
+    dlog_error(
+        SLOG | RUN_LOG_MASK, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog_WorkPath] test for mask_run, error_level.");
+    dlog_warn(
+        SLOG | RUN_LOG_MASK, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog_WorkPath] test for mask_run, warn_level.");
+    dlog_info(
+        SLOG | RUN_LOG_MASK, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog_WorkPath] test for mask_run, info_level.");
+    dlog_debug(
+        SLOG | RUN_LOG_MASK, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog_WorkPath] test for mask_run, debug_level.");
+    dlog_event(
+        SLOG | RUN_LOG_MASK, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog_WorkPath] test for mask_run, debug_event.");
 
     // 释放
     DlogDestructor();
@@ -435,7 +504,6 @@ TEST_F(EP_ALOG_HOST_FUNC_UTEST, DlogPrint_HostLog_WorkPath)
     unsetenv("ASCEND_GLOBAL_LOG_LEVEL");
     unsetenv("ASCEND_WORK_PATH");
 }
-
 
 // host日志落盘——ASCEND_WORK_PATH & ASCEND_PROCESS_LOG_PATH
 TEST_F(EP_ALOG_HOST_FUNC_UTEST, DlogPrint_HostLog_ProcessLogPath_WorkPath)
@@ -447,18 +515,35 @@ TEST_F(EP_ALOG_HOST_FUNC_UTEST, DlogPrint_HostLog_ProcessLogPath_WorkPath)
     DlogConstructor();
 
     // 向debug目录下打印日志
-    dlog_error(SLOG | DEBUG_LOG_MASK, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog_ProcessLogPath_WorkPath] test for mask_debug, error_level.");
-    dlog_warn(SLOG | DEBUG_LOG_MASK, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog_ProcessLogPath_WorkPath] test for mask_debug, warn_level.");
-    dlog_info(SLOG | DEBUG_LOG_MASK, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog_ProcessLogPath_WorkPath] test for mask_debug, info_level.");
-    dlog_debug(SLOG | DEBUG_LOG_MASK, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog_ProcessLogPath_WorkPath] test for mask_debug, debug_level.");
+    dlog_error(
+        SLOG | DEBUG_LOG_MASK,
+        "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog_ProcessLogPath_WorkPath] test for mask_debug, error_level.");
+    dlog_warn(
+        SLOG | DEBUG_LOG_MASK,
+        "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog_ProcessLogPath_WorkPath] test for mask_debug, warn_level.");
+    dlog_info(
+        SLOG | DEBUG_LOG_MASK,
+        "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog_ProcessLogPath_WorkPath] test for mask_debug, info_level.");
+    dlog_debug(
+        SLOG | DEBUG_LOG_MASK,
+        "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog_ProcessLogPath_WorkPath] test for mask_debug, debug_level.");
 
     // 向run目录下打印日志
-    dlog_error(SLOG | RUN_LOG_MASK, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog_ProcessLogPath_WorkPath] test for mask_run, error_level.");
-    dlog_warn(SLOG | RUN_LOG_MASK, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog_ProcessLogPath_WorkPath] test for mask_run, warn_level.");
-    dlog_info(SLOG | RUN_LOG_MASK, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog_ProcessLogPath_WorkPath] test for mask_run, info_level.");
-    dlog_debug(SLOG | RUN_LOG_MASK, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog_ProcessLogPath_WorkPath] test for mask_run, debug_level.");
-    dlog_event(SLOG | RUN_LOG_MASK, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog_ProcessLogPath_WorkPath] test for mask_run, debug_event.");
-
+    dlog_error(
+        SLOG | RUN_LOG_MASK,
+        "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog_ProcessLogPath_WorkPath] test for mask_run, error_level.");
+    dlog_warn(
+        SLOG | RUN_LOG_MASK,
+        "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog_ProcessLogPath_WorkPath] test for mask_run, warn_level.");
+    dlog_info(
+        SLOG | RUN_LOG_MASK,
+        "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog_ProcessLogPath_WorkPath] test for mask_run, info_level.");
+    dlog_debug(
+        SLOG | RUN_LOG_MASK,
+        "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog_ProcessLogPath_WorkPath] test for mask_run, debug_level.");
+    dlog_event(
+        SLOG | RUN_LOG_MASK,
+        "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog_ProcessLogPath_WorkPath] test for mask_run, debug_event.");
 
     // 释放
     DlogDestructor();
@@ -482,7 +567,6 @@ TEST_F(EP_ALOG_HOST_FUNC_UTEST, DlogPrint_DeviceLog)
     setenv("ASCEND_LOG_DEVICE_FLUSH_TIMEOUT", "1000", 1);
     DlogConstructor();
 
-
     int32_t devId = 0;
     MOCKER(DrvBufRead).expects(exactly(2)).will(invoke(readEndMsg));
     EXPECT_EQ(SYS_OK, DlogReportStart(devId, 0));
@@ -499,6 +583,18 @@ TEST_F(EP_ALOG_HOST_FUNC_UTEST, DlogPrint_DeviceLog)
     unsetenv("ASCEND_LOG_DEVICE_FLUSH_TIMEOUT");
 }
 
+// 老化阈值 DEFAULT_MAX_HOST_FILE_SIZE 为 20MB 且无环境变量可调，
+// 按每行约百余字节需十几万行才会触发轮转。UT 只需验证老化逻辑，
+// 故调小 maxFileSize，使千行级别即可触发，避免单个用例耗时数分钟。
+static void PlogShrinkHostMaxFileSize(uint32_t maxFileSize)
+{
+    PlogFileMgrInfo* fileList = PlogGetFileMgrInfo();
+    ASSERT_NE(nullptr, fileList);
+    for (int32_t i = (int32_t)DEBUG_LOG; i < (int32_t)LOG_TYPE_NUM; i++) {
+        fileList->hostLogList[i].maxFileSize = maxFileSize;
+    }
+}
+
 // plog日志老化
 TEST_F(EP_ALOG_HOST_FUNC_UTEST, DlogAge_HostFile)
 {
@@ -507,14 +603,17 @@ TEST_F(EP_ALOG_HOST_FUNC_UTEST, DlogAge_HostFile)
     setenv("ASCEND_PROCESS_LOG_PATH", PATH_ROOT, 1);
     setenv("ASCEND_HOST_LOG_FILE_NUM", "1", 1);
     DlogConstructor();
+    PlogShrinkHostMaxFileSize(4096U);
 
     // 打印 DLOG_ERROR | DEBUG_LOG_MASK
-    for (int i = 0; i < 10000000; i++) {
-        dlog_error(SLOG | DEBUG_LOG_MASK, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_debug, error_level.");
+    for (int i = 0; i < 1000; i++) {
+        dlog_error(
+            SLOG | DEBUG_LOG_MASK, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_debug, error_level.");
     }
     // 释放
     DlogDestructor();
-    EXPECT_LT(DlogCheckHostPrintNum(PATH_ROOT, "debug"), 10000000);
+    // 老化生效时旧文件被删除，剩余行数应少于打印总数
+    EXPECT_LT(DlogCheckHostPrintNum(PATH_ROOT, "debug"), 1000);
     unsetenv("ASCEND_GLOBAL_LOG_LEVEL");
     unsetenv("ASCEND_PROCESS_LOG_PATH");
     unsetenv("ASCEND_HOST_LOG_FILE_NUM");
@@ -527,15 +626,18 @@ TEST_F(EP_ALOG_HOST_FUNC_UTEST, DlogAge_HostFileFailed)
     setenv("ASCEND_PROCESS_LOG_PATH", PATH_ROOT, 1);
     setenv("ASCEND_HOST_LOG_FILE_NUM", "1", 1);
     DlogConstructor();
+    PlogShrinkHostMaxFileSize(4096U);
     MOCKER(ToolUnlink).stubs().will(returnValue(-1));
 
     // 打印 DLOG_ERROR | DEBUG_LOG_MASK
-    for (int i = 0; i < 10000000; i++) {
-        dlog_error(SLOG | DEBUG_LOG_MASK, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_debug, error_level.");
+    for (int i = 0; i < 1000; i++) {
+        dlog_error(
+            SLOG | DEBUG_LOG_MASK, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_debug, error_level.");
     }
     // 释放
     DlogDestructor();
-    EXPECT_EQ(DlogCheckHostPrintNum(PATH_ROOT, "debug"), 10000000);
+    // 删除文件失败时老化不生效，所有行数应全部保留
+    EXPECT_EQ(DlogCheckHostPrintNum(PATH_ROOT, "debug"), 1000);
     unsetenv("ASCEND_GLOBAL_LOG_LEVEL");
     unsetenv("ASCEND_PROCESS_LOG_PATH");
     unsetenv("ASCEND_HOST_LOG_FILE_NUM");
@@ -637,8 +739,8 @@ TEST_F(EP_ALOG_HOST_FUNC_UTEST, dlog_setlevel_ByIntf)
 
 TEST_F(EP_ALOG_HOST_FUNC_UTEST, PlogWriteDeviceLogNull)
 {
-    char msg[1024] = { 0 };
-    PlogDeviceLogInfo info = { 0 };
+    char msg[1024] = {0};
+    PlogDeviceLogInfo info = {0};
     EXPECT_EQ(LOG_SUCCESS, PlogFileMgrInit());
     EXPECT_EQ(LOG_SUCCESS, PlogWriteDeviceLog(msg, &info));
     PlogFileMgrExit();
@@ -670,7 +772,7 @@ TEST_F(EP_ALOG_HOST_FUNC_UTEST, DlogWriteDeviceLog)
     unsetenv("ASCEND_PROCESS_LOG_PATH");
 }
 
-static int32_t GetLogLossNum(char *msg)
+static int32_t GetLogLossNum(char* msg)
 {
     char resultFile[200] = {0};
     sprintf(resultFile, "%s/LogLossResult.txt", PATH_ROOT);
@@ -678,7 +780,7 @@ static int32_t GetLogLossNum(char *msg)
     sprintf(cmd, "cat %s/LogFile.txt | grep -a \"%s\" | awk '{print $(NF-4)}' > %s", PATH_ROOT, msg, resultFile);
     system(cmd);
     char buf[MSG_LENGTH] = {0};
-    FILE *fp = fopen(resultFile, "r");
+    FILE* fp = fopen(resultFile, "r");
     if (fp == NULL) {
         return false;
     }
@@ -689,7 +791,7 @@ static int32_t GetLogLossNum(char *msg)
     }
     return num;
 }
- 
+
 // host日志触发缓冲区满
 TEST_F(EP_ALOG_HOST_FUNC_UTEST, DlogPrint_HostLogBuffFull)
 {
@@ -697,19 +799,25 @@ TEST_F(EP_ALOG_HOST_FUNC_UTEST, DlogPrint_HostLogBuffFull)
     setenv("ASCEND_GLOBAL_LOG_LEVEL", "3", 1);
     setenv("ASCEND_PROCESS_LOG_PATH", PATH_ROOT, 1);
     DlogConstructor();
- 
+
     int32_t num = 6000;
     for (int i = 0; i < num; i++) {
-        dlog_error(SLOG | DEBUG_LOG_MASK, "[EP_ALOG_HOST_FUNC_STEST][DlogPrint_HostLogBuffFull] test for mask_debug, error_level[%d].", i);
+        dlog_error(
+            SLOG | DEBUG_LOG_MASK,
+            "[EP_ALOG_HOST_FUNC_STEST][DlogPrint_HostLogBuffFull] test for mask_debug, error_level[%d].", i);
     }
     for (int i = 0; i < num; i++) {
-        dlog_info(SLOG | RUN_LOG_MASK, "[EP_ALOG_HOST_FUNC_STEST][DlogPrint_HostLogBuffFull] test for mask_run, info_level[%d].", i);
+        dlog_info(
+            SLOG | RUN_LOG_MASK,
+            "[EP_ALOG_HOST_FUNC_STEST][DlogPrint_HostLogBuffFull] test for mask_run, info_level[%d].", i);
     }
- 
+
     for (int i = 0; i < num; i++) {
-        dlog_info(SLOG | SECURITY_LOG_MASK, "[EP_ALOG_HOST_FUNC_STEST][DlogPrint_HostLogBuffFull] test for mask_security, info_level[%d].", i);
+        dlog_info(
+            SLOG | SECURITY_LOG_MASK,
+            "[EP_ALOG_HOST_FUNC_STEST][DlogPrint_HostLogBuffFull] test for mask_security, info_level[%d].", i);
     }
- 
+
     // 释放
     DlogDestructor();
     int32_t debugLoss = GetLogLossNum("debug log loss num");
@@ -735,19 +843,25 @@ TEST_F(EP_ALOG_HOST_FUNC_UTEST, DlogPrint_HostLogBuffFullSyncEnv)
     setenv("ASCEND_LOG_SYNC_SAVE", "1", 1);
     setenv("ASCEND_PROCESS_LOG_PATH", PATH_ROOT, 1);
     DlogConstructor();
- 
+
     int32_t num = 6000;
     for (int i = 0; i < num; i++) {
-        dlog_error(SLOG | DEBUG_LOG_MASK, "[EP_ALOG_HOST_FUNC_STEST][DlogPrint_HostLogBuffFull] test for mask_debug, error_level[%d].", i);
+        dlog_error(
+            SLOG | DEBUG_LOG_MASK,
+            "[EP_ALOG_HOST_FUNC_STEST][DlogPrint_HostLogBuffFull] test for mask_debug, error_level[%d].", i);
     }
     for (int i = 0; i < num; i++) {
-        dlog_info(SLOG | RUN_LOG_MASK, "[EP_ALOG_HOST_FUNC_STEST][DlogPrint_HostLogBuffFull] test for mask_run, info_level[%d].", i);
+        dlog_info(
+            SLOG | RUN_LOG_MASK,
+            "[EP_ALOG_HOST_FUNC_STEST][DlogPrint_HostLogBuffFull] test for mask_run, info_level[%d].", i);
     }
- 
+
     for (int i = 0; i < num; i++) {
-        dlog_info(SLOG | SECURITY_LOG_MASK, "[EP_ALOG_HOST_FUNC_STEST][DlogPrint_HostLogBuffFull] test for mask_security, info_level[%d].", i);
+        dlog_info(
+            SLOG | SECURITY_LOG_MASK,
+            "[EP_ALOG_HOST_FUNC_STEST][DlogPrint_HostLogBuffFull] test for mask_security, info_level[%d].", i);
     }
- 
+
     // 释放
     DlogDestructor();
     int32_t debugLoss = GetLogLossNum("debug log loss num");
@@ -774,28 +888,42 @@ TEST_F(EP_ALOG_HOST_FUNC_UTEST, AlogPrint_HostLogInterface)
     DlogConstructor();
 
     // 打印 DLOG_ERROR | DEBUG_LOG_MASK
-    AlogRecord(SLOG, DLOG_TYPE_DEBUG, DLOG_ERROR, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_debug, error_level.");
+    AlogRecord(
+        SLOG, DLOG_TYPE_DEBUG, DLOG_ERROR,
+        "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_debug, error_level.");
 
     // 打印 DLOG_WARN | DEBUG_LOG_MASK
-    AlogRecord(SLOG, DLOG_TYPE_DEBUG, DLOG_WARN, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_debug, warn_level.");
+    AlogRecord(
+        SLOG, DLOG_TYPE_DEBUG, DLOG_WARN,
+        "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_debug, warn_level.");
 
     // 打印 DLOG_INFO | DEBUG_LOG_MASK
-    AlogRecord(SLOG, DLOG_TYPE_DEBUG, DLOG_INFO, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_debug, info_level.");
+    AlogRecord(
+        SLOG, DLOG_TYPE_DEBUG, DLOG_INFO,
+        "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_debug, info_level.");
 
     // 打印 DLOG_DEBUG | DEBUG_LOG_MASK
-    AlogRecord(SLOG, DLOG_TYPE_DEBUG, DLOG_DEBUG, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_debug, debug_level.");
+    AlogRecord(
+        SLOG, DLOG_TYPE_DEBUG, DLOG_DEBUG,
+        "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_debug, debug_level.");
 
     // 打印 DLOG_ERROR | RUN_LOG_MASK
-    AlogRecord(SLOG, DLOG_TYPE_RUN, DLOG_ERROR, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_run, error_level.");
+    AlogRecord(
+        SLOG, DLOG_TYPE_RUN, DLOG_ERROR,
+        "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_run, error_level.");
 
     // 打印 DLOG_WARN | RUN_LOG_MASK
-    AlogRecord(SLOG, DLOG_TYPE_RUN, DLOG_WARN, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_run, warn_level.");
+    AlogRecord(
+        SLOG, DLOG_TYPE_RUN, DLOG_WARN, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_run, warn_level.");
 
     // 打印 DLOG_INFO | RUN_LOG_MASK
-    AlogRecord(SLOG, DLOG_TYPE_RUN, DLOG_INFO, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_run, info_level.");
+    AlogRecord(
+        SLOG, DLOG_TYPE_RUN, DLOG_INFO, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_run, info_level.");
 
     // 打印 DLOG_DEBUG | RUN_LOG_MASK
-    AlogRecord(SLOG, DLOG_TYPE_RUN, DLOG_DEBUG, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_run, debug_level.");
+    AlogRecord(
+        SLOG, DLOG_TYPE_RUN, DLOG_DEBUG,
+        "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_run, debug_level.");
 
     // 释放
     DlogDestructor();
@@ -813,7 +941,7 @@ TEST_F(EP_ALOG_HOST_FUNC_UTEST, AlogCheckDebugLogLevelInterface)
     setenv("ASCEND_PROCESS_LOG_PATH", PATH_ROOT, 1);
     DlogConstructor();
 
-    for (uint32_t i = 0; i < INVLID_MOUDLE_ID + 1; i++) {   // invalid module id use global level
+    for (uint32_t i = 0; i < INVLID_MOUDLE_ID + 1; i++) { // invalid module id use global level
         EXPECT_EQ(1, AlogCheckDebugLevel(i, DLOG_DEBUG));
         EXPECT_EQ(1, AlogCheckDebugLevel(i, DLOG_INFO));
         EXPECT_EQ(1, AlogCheckDebugLevel(i, DLOG_WARN));
@@ -952,7 +1080,7 @@ TEST_F(EP_ALOG_HOST_FUNC_UTEST, AlogCheckDebugLogLevelInterface)
     unsetenv("ASCEND_PROCESS_LOG_PATH");
 }
 
-static void CallAcllogVaList(int32_t moduleId, int32_t level, const char *fmt, ...)
+static void CallAcllogVaList(int32_t moduleId, int32_t level, const char* fmt, ...)
 {
     va_list list;
     va_start(list, fmt);
@@ -1121,57 +1249,71 @@ TEST_F(EP_ALOG_HOST_FUNC_UTEST, DlogPrint_HostLogWithUnifiedSwitch)
     DlogConstructor();
     DlogReportInitialize();
     DlogReportStart(0, 0);
- 
+
     // 打印 DLOG_ERROR | DEBUG_LOG_MASK
     Dlog(SLOG | DEBUG_LOG_MASK, DLOG_ERROR, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint] test for mask_debug, error_level.");
     dlog_error(SLOG | DEBUG_LOG_MASK, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_debug, error_level.");
- 
+
     // 打印 DLOG_WARN | DEBUG_LOG_MASK
     dlog_warn(SLOG | DEBUG_LOG_MASK, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_debug, warn_level.");
- 
+
     // 打印 DLOG_INFO | DEBUG_LOG_MASK
     dlog_info(SLOG | DEBUG_LOG_MASK, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_debug, info_level.");
- 
+
     // 打印 DLOG_DEBUG | DEBUG_LOG_MASK
     dlog_debug(SLOG | DEBUG_LOG_MASK, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_debug, debug_level.");
- 
+
     // 打印 DLOG_ERROR | RUN_LOG_MASK
     dlog_error(SLOG | RUN_LOG_MASK, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_run, error_level.");
- 
+
     // 打印 DLOG_WARN | RUN_LOG_MASK
     dlog_warn(SLOG | RUN_LOG_MASK, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_run, warn_level.");
- 
+
     // 打印 DLOG_INFO | RUN_LOG_MASK
     dlog_info(SLOG | RUN_LOG_MASK, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_run, info_level.");
- 
+
     // 打印 DLOG_DEBUG | RUN_LOG_MASK
     dlog_debug(SLOG | RUN_LOG_MASK, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_run, debug_level.");
 
     EXPECT_EQ(1, AlogCheckDebugLevel(SLOG, DLOG_ERROR));
     // 打印 DLOG_ERROR | DEBUG_LOG_MASK
-    AlogRecord(SLOG, DLOG_TYPE_DEBUG, DLOG_ERROR, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_debug, error_level.");
+    AlogRecord(
+        SLOG, DLOG_TYPE_DEBUG, DLOG_ERROR,
+        "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_debug, error_level.");
 
     // 打印 DLOG_WARN | DEBUG_LOG_MASK
-    AlogRecord(SLOG, DLOG_TYPE_DEBUG, DLOG_WARN, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_debug, warn_level.");
+    AlogRecord(
+        SLOG, DLOG_TYPE_DEBUG, DLOG_WARN,
+        "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_debug, warn_level.");
 
     // 打印 DLOG_INFO | DEBUG_LOG_MASK
-    AlogRecord(SLOG, DLOG_TYPE_DEBUG, DLOG_INFO, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_debug, info_level.");
+    AlogRecord(
+        SLOG, DLOG_TYPE_DEBUG, DLOG_INFO,
+        "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_debug, info_level.");
 
     // 打印 DLOG_DEBUG | DEBUG_LOG_MASK
-    AlogRecord(SLOG, DLOG_TYPE_DEBUG, DLOG_DEBUG, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_debug, debug_level.");
+    AlogRecord(
+        SLOG, DLOG_TYPE_DEBUG, DLOG_DEBUG,
+        "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_debug, debug_level.");
 
     // 打印 DLOG_ERROR | RUN_LOG_MASK
-    AlogRecord(SLOG, DLOG_TYPE_RUN, DLOG_ERROR, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_run, error_level.");
+    AlogRecord(
+        SLOG, DLOG_TYPE_RUN, DLOG_ERROR,
+        "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_run, error_level.");
 
     // 打印 DLOG_WARN | RUN_LOG_MASK
-    AlogRecord(SLOG, DLOG_TYPE_RUN, DLOG_WARN, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_run, warn_level.");
+    AlogRecord(
+        SLOG, DLOG_TYPE_RUN, DLOG_WARN, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_run, warn_level.");
 
     // 打印 DLOG_INFO | RUN_LOG_MASK
-    AlogRecord(SLOG, DLOG_TYPE_RUN, DLOG_INFO, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_run, info_level.");
+    AlogRecord(
+        SLOG, DLOG_TYPE_RUN, DLOG_INFO, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_run, info_level.");
 
     // 打印 DLOG_DEBUG | RUN_LOG_MASK
-    AlogRecord(SLOG, DLOG_TYPE_RUN, DLOG_DEBUG, "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_run, debug_level.");
- 
+    AlogRecord(
+        SLOG, DLOG_TYPE_RUN, DLOG_DEBUG,
+        "[EP_ALOG_HOST_FUNC_UTEST][DlogPrint_HostLog] test for mask_run, debug_level.");
+
     DlogReportStop(0);
     DlogReportFinalize();
     // 释放

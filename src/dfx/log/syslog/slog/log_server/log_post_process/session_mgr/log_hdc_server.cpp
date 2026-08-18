@@ -15,21 +15,40 @@
 #include "adx_component_api_c.h"
 using namespace Adx;
 
-int32_t LogHdcServerInit(const struct LogServerInitInfo *info)
+int32_t LogHdcServerInit(const struct LogServerInitInfo* info)
 {
     int32_t err = SYS_ERROR;
-    std::unique_ptr<AdxComponent> cpn(new(std::nothrow)LogHdc());
+    std::unique_ptr<AdxComponent> cpn(new (std::nothrow) LogHdc());
     ONE_ACT_ERR_LOG(cpn == nullptr, return err, "init component error");
     err = AdxRegisterComponentFunc(HDC_SERVICE_TYPE_LOG, cpn);
     ONE_ACT_ERR_LOG(err != SYS_OK, return err, "register component func error");
-    err = AdxRegisterService(static_cast<int32_t>(HDC_SERVICE_TYPE_LOG),
-        ComponentType::COMPONENT_SYS_GET, SysGetInit, SysGetProcess, SysGetDestroy);
+#ifdef HDC_PROFILING_SUPPORT
+    err = AdxRegisterService(
+        static_cast<int32_t>(HDC_SERVICE_TYPE_PROFILING), ComponentType::COMPONENT_SYS_GET, SysGetInit, SysGetProcess,
+        SysGetDestroy);
+#else
+    err = AdxRegisterService(
+        static_cast<int32_t>(HDC_SERVICE_TYPE_LOG), ComponentType::COMPONENT_SYS_GET, SysGetInit, SysGetProcess,
+        SysGetDestroy);
+#endif
     ONE_ACT_ERR_LOG(err != SYS_OK, return err, "register sys get component func C error");
-    err = AdxRegisterService(static_cast<int32_t>(HDC_SERVICE_TYPE_LOG),
-        ComponentType::COMPONENT_SYS_REPORT, SysReportInit, SysReportProcess, SysReportDestroy);
+#ifdef HDC_PROFILING_SUPPORT
+    err = AdxRegisterService(
+        static_cast<int32_t>(HDC_SERVICE_TYPE_PROFILING), ComponentType::COMPONENT_SYS_REPORT, SysReportInit,
+        SysReportProcess, SysReportDestroy);
+#else
+    err = AdxRegisterService(
+        static_cast<int32_t>(HDC_SERVICE_TYPE_LOG), ComponentType::COMPONENT_SYS_REPORT, SysReportInit,
+        SysReportProcess, SysReportDestroy);
+#endif
     ONE_ACT_ERR_LOG(err != SYS_OK, return err, "register sys report component func C error");
     ServerInitInfo serverInfo{static_cast<int32_t>(HDC_SERVICE_TYPE_LOG), info->mode, info->deviceId};
     err = AdxComponentServerStartup(serverInfo);
     ONE_ACT_ERR_LOG(err != SYS_OK, return err, "startup component server error");
+#ifdef HDC_PROFILING_SUPPORT
+    ServerInitInfo newserverInfo{static_cast<int32_t>(HDC_SERVICE_TYPE_PROFILING), info->mode, info->deviceId};
+    err = AdxComponentServerStartup(newserverInfo);
+    ONE_ACT_ERR_LOG(err != SYS_OK, return err, "startup component server error");
+#endif
     return err;
 }

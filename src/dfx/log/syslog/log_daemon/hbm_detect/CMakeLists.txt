@@ -20,26 +20,31 @@ set(libhbmDeviceSrcFiles
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../utils/log_file_util.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../utils/log_system_api.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../utils/log_print_syslog.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../utils/log_common.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../server_mgr/server_mgr.c
 )
 
 set(libhbmDeviceDir
-    ${RUNTIME_DIR}/inc/driver
-    ${RUNTIME_DIR}/abl/libc_sec/include
+    ${LIBC_SEC_HEADER}
+    ${RUNTIME_DIR}/pkg_inc/driver
     ${TOOLAHCIN_LOG_DIR}/utils
-    ${TOOLAHCIN_LOG_DIR}/shared
     ${TOOLAHCIN_LOG_DIR}/syslog/common
     ${TOOLAHCIN_LOG_DIR}/syslog/common/driver
     ${TOOLAHCIN_LOG_DIR}/syslog/common/config
     ${TOOLAHCIN_LOG_DIR}/syslog/log_daemon/hbm_detect
-    ${RUNTIME_DIR}/runtime/src/dfx/adump/external
+    ${TOOLAHCIN_LOG_DIR}/syslog/log_daemon/server_mgr
+    ${RUNTIME_DIR}/src/dfx/adump/external
 )
 
 ###################################################################
-add_library(hbm_detect STATIC
+add_library(hbm_detect SHARED
     ${libhbmDeviceSrcFiles})
 
 target_include_directories(hbm_detect PRIVATE
-    ${libhbmDeviceDir})
+    ${libhbmDeviceDir}
+    ../include
+    ../server_mgr
+)
 
 target_compile_definitions(hbm_detect PRIVATE
     $<$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>:OS_TYPE_DEF=1>
@@ -54,7 +59,7 @@ target_compile_options(hbm_detect PRIVATE
     -Wshadow
     -Wundef
     -Werror
-    -fPIE
+    -fPIC
     -fstack-protector-strong
     -fno-common
     -fsigned-char
@@ -74,7 +79,9 @@ target_link_libraries(hbm_detect PRIVATE
     $<BUILD_INTERFACE:mmpa_headers>
     $<BUILD_INTERFACE:adump_headers>
     $<BUILD_INTERFACE:slog_headers>
+    $<BUILD_INTERFACE:adcore_headers>
     c_sec
+    adcore
 )
 
 set_target_properties(hbm_detect
@@ -82,6 +89,9 @@ set_target_properties(hbm_detect
     OUTPUT_NAME hbm_detect
 )
 
+install(TARGETS hbm_detect OPTIONAL
+    LIBRARY DESTINATION ${INSTALL_LIBRARY_DIR}
+)
 ###################################################################
 set(INSTALL_BASE_DIR "")
 set(INSTALL_INCLUDE_DIR include)
@@ -90,11 +100,3 @@ set(INSTALL_RUNTIME_DIR bin)
 set(INSTALL_CONFIG_DIR  lib/cmake)
 
 include(CMakePackageConfigHelpers)
-
-if (PRODUCT)
-if ((${PRODUCT} STREQUAL "ascend310") OR ${PRODUCT} STREQUAL "ascend310B" OR ${PRODUCT} STREQUAL "ascend310Besl" OR (${PRODUCT} STREQUAL "ascend910") OR (${PRODUCT} STREQUAL "ascend310p") OR (${PRODUCT} STREQUAL "helper310p"))
-install(TARGETS hbm_detect
-    ARCHIVE DESTINATION ${INSTALL_LIBRARY_DIR} OPTIONAL
-)
-endif ()
-endif ()

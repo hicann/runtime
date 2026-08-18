@@ -22,21 +22,16 @@
 extern "C" {
 #endif
 
-#define NO_APP_DATA_MAX_COUNT 60   // log buf node will be released when count come to it
-#define MAX_WRITE_WAIT_TIME 3 // log report to host wait max 3 time
+#define NO_APP_DATA_MAX_COUNT 60 // log buf node will be released when count come to it
+#define MAX_WRITE_WAIT_TIME 3    // log report to host wait max 3 time
 
-typedef enum {
-    SLOGD_INIT,
-    SLOGD_RUNNING,
-    SLOGD_EXIT,
-    SLOGD_INVALID
-} SlogdStatus;
+typedef enum { SLOGD_INIT, SLOGD_RUNNING, SLOGD_EXIT, SLOGD_INVALID } SlogdStatus;
 
 typedef struct {
     ThreadType type;
     LogPriority priority;
-    int32_t (*flush)(void *, uint32_t, bool);
-    void (*get)(SessionItem *, void*, uint32_t, int32_t);
+    int32_t (*flush)(void*, uint32_t, bool);
+    void (*get)(SessionItem*, void*, uint32_t, uint32_t);
 } LogFlushNode;
 
 void SlogdSetStatus(SlogdStatus status);
@@ -44,13 +39,14 @@ SlogdStatus SlogdGetStatus(void);
 bool SlogdFlushIsThreadExit(void);
 
 LogStatus SlogdFlushInit(void);
+LogStatus SlogdFlushPoolingInit(void);
 void SlogdFlushExit(void);
 void SlogdFlushToFile(bool flushFlag);
-void SlogdFlushGet(SessionItem *handle);
+void SlogdFlushGet(SessionItem* handle);
 StLogFileList* GetGlobalLogFileList(void);
 toolMode SyncGroupToOther(toolMode perm);
 
-int32_t SlogdFlushRegister(const LogFlushNode *flushNode);
+int32_t SlogdFlushRegister(const LogFlushNode* flushNode);
 
 #ifdef __cplusplus
 }

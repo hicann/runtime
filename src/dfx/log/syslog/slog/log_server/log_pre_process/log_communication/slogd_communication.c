@@ -12,8 +12,7 @@
 #include "slogd_recv_msg.h"
 #include "log_print.h"
 
-
-LogStatus SlogdCommunicationInit(void)
+LogStatus SlogdCommunicationInit(int32_t devId)
 {
     LogStatus ret = SlogdInitGlobals();
     if (ret != LOG_SUCCESS) {
@@ -21,7 +20,7 @@ LogStatus SlogdCommunicationInit(void)
     }
 
     // init communication server
-    ret = SlogdRmtServerInit();
+    ret = SlogdRmtServerInit(devId);
     if (ret != LOG_SUCCESS) {
         return LOG_FAILURE;
     }

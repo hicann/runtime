@@ -21,9 +21,9 @@ extern "C" {
 
 LogStatus SlogdSyslogInit(int32_t devId, bool isDocker);
 void SlogdSyslogExit(void);
+LogStatus SlogdSyslogMgrInit(StLogFileList* logList);
 
 #ifdef __cplusplus
 }
 #endif
 #endif
-

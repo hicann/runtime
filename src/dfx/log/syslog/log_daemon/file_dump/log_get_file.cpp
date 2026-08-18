@@ -17,34 +17,35 @@
 #include "adcore_api.h"
 #include "log_process_util.h"
 #include "msnpureport_filedump.h"
+#include "log_system_api.h"
 
 namespace Adx {
 static std::mutex g_pidMtx;
 using stringMap = std::map<std::string, std::string>;
-static const stringMap TYPE_TO_PATH({{"slog",        "/var/log/npu/slog/"},
-                                     {"stackcore",   "/var/log/npu/coredump/"},
-                                     {"bbox",        "/var/log/npu/hisi_logs/"},
-                                     {"message",     "/var/log/"},
-                                     {"event_sched", "/sys/devices/virtual/devdrv_manager/davinci_manager/node/"}
-                                    });
+static const stringMap TYPE_TO_PATH(
+    {{"slog", "/var/log/npu/slog/"},
+     {"stackcore", "/var/log/npu/coredump/"},
+     {"bbox", "/var/log/npu/hisi_logs/"},
+     {"message", "/var/log/"},
+     {"event_sched", "/sys/devices/virtual/devdrv_manager/davinci_manager/node/"}});
 
-static const std::string MESSAGE_LOG                        = "message";
-static const std::string EVENT_LOG                          = "event_sched";
-static const std::string MODULE_INFO_LOG                    = "module_info";
-static const std::string MODULE_INFO_USER_PATH              = "/home/HwHiAiUser/ide_daemon/";
-static const std::string DEVICE_MESSAGE_USER_PATH           = "/var/log/ide_daemon/";
-static const std::string DEVICE_COLLECT_SCRIPT              = "/var/log_daemon_collect.sh";
-static const std::string CONTAINER_NO_SUPPORT_MESSAGE       = "MESSAGE_CONTAINER_NO_SUPPORT";
-static const std::string SEND_END_MSG                       = "game_over";
-static const std::string ONE_SPACE                          = " ";
-static const std::string COMMAND_SUDO                       = "sudo ";
-static constexpr int32_t MESSAGES_MAX_NUM                   = 99;
-static constexpr int32_t NON_DOCKER                         = 1;
-static constexpr int32_t VM_NON_DOCKER                      = 3;
-static constexpr int32_t MAX_FOLDER_DEPTH                   = 6;
-static constexpr int32_t MAX_PARALLEL_NUM                   = 16;
-static constexpr int32_t SCRIPT_COLLECT_MODE                = 1;
-static constexpr int32_t SCRIPT_CLEAR_MODE                  = 2;
+static const std::string MESSAGE_LOG = "message";
+static const std::string EVENT_LOG = "event_sched";
+static const std::string MODULE_INFO_USER_PATH = "/home/HwHiAiUser/ide_daemon/";
+static const std::string DEVICE_MESSAGE_USER_PATH = "/var/log/ide_daemon/";
+static const std::string DEVICE_COLLECT_SCRIPT = "/var/log_daemon_collect.sh";
+static const std::string CONTAINER_NO_SUPPORT_MESSAGE = "MESSAGE_CONTAINER_NO_SUPPORT";
+static const std::string SEND_END_MSG = "game_over";
+static const std::string ONE_SPACE = " ";
+static const std::string COMMAND_SUDO = "sudo ";
+static constexpr int32_t MESSAGES_MAX_NUM = 99;
+static constexpr int32_t NON_DOCKER = 1;
+static constexpr int32_t VM_NON_DOCKER = 3;
+static constexpr int32_t MAX_FOLDER_DEPTH = 6;
+static constexpr int32_t MAX_PARALLEL_NUM = 16;
+static constexpr int32_t SCRIPT_COLLECT_MODE = 1;
+static constexpr int32_t SCRIPT_CLEAR_MODE = 2;
+static constexpr int32_t TEN_MILLISECOND = 10;
 LogGetFile::intMap LogGetFile::g_numToPid;
 int32_t LogGetFile::Init()
 {
@@ -55,17 +56,16 @@ int32_t LogGetFile::Init()
 int32_t LogGetFile::GetMappingPid(int32_t pid) const
 {
     std::lock_guard<std::mutex> lck(g_pidMtx);
-    auto it = std::find_if(g_numToPid.begin(), g_numToPid.end(), [pid](std::pair<int32_t, int32_t> p) {
-        return p.second == pid;
-    });
+    auto it = std::find_if(
+        g_numToPid.begin(), g_numToPid.end(), [pid](std::pair<int32_t, int32_t> p) { return p.second == pid; });
     if (it != g_numToPid.end()) {
         return it->first;
     }
     return MAX_PARALLEL_NUM + MAX_PARALLEL_NUM;
 }
 
-int32_t LogGetFile::TransferProcess(const CommHandle &handle, const std::string &logType,
-                                    const std::string &src, const std::string &des) const
+int32_t LogGetFile::TransferProcess(
+    const CommHandle& handle, const std::string& logType, const std::string& src, const std::string& des) const
 {
     int32_t ret = SYS_ERROR;
     // send file to host id(0)
@@ -77,8 +77,8 @@ int32_t LogGetFile::TransferProcess(const CommHandle &handle, const std::string 
     return ret;
 }
 
-int32_t LogGetFile::TransferFile(const CommHandle &handle, const std::string &logType,
-                                 const std::string &filePath, int32_t pid) const
+int32_t LogGetFile::TransferFile(
+    const CommHandle& handle, const std::string& logType, const std::string& filePath, int32_t pid) const
 {
     std::string tmpSuffix;
     std::string tmpFilePath;
@@ -102,8 +102,8 @@ int32_t LogGetFile::TransferFile(const CommHandle &handle, const std::string &lo
             break;
         }
         // remove .tmp and prefixPath
-        std::string truncatedPath = tmpFilePath.substr(matchStr.length(),
-            tmpFilePath.length() - tmpSuffix.length() - matchStr.length());
+        std::string truncatedPath =
+            tmpFilePath.substr(matchStr.length(), tmpFilePath.length() - tmpSuffix.length() - matchStr.length());
         int32_t err = TransferProcess(handle, logType, tmpFilePath, truncatedPath);
         if (err != SYS_OK) {
             SELF_LOG_ERROR(" Send file name or file content failed, path is %s", truncatedPath.c_str());
@@ -118,27 +118,40 @@ int32_t LogGetFile::TransferFile(const CommHandle &handle, const std::string &lo
     return result;
 }
 
-int32_t LogGetFile::ExportModuleInfo(const std::string &logType, int32_t pid) const
+int32_t LogGetFile::ExportModuleInfo(const std::string& logType, int32_t pid) const
 {
+    int32_t err = SYS_ERROR;
     for (const auto& info : MSNPUREPORT_FILE_DUMP_INFO) {
         if (logType.compare(info.label) != 0) {
             continue;
         }
+        err = SYS_OK;
         if (!LogFileUtils::IsFileExist(info.deviceScriptPath)) {
             SELF_LOG_INFO("Executable %s script %s is not exist", info.label, info.deviceScriptPath);
             return SYS_INVALID_PARAM;
         }
         SELF_LOG_INFO("Popen %s script: %s", info.label, info.deviceScriptPath);
-        std::string shellCommand = COMMAND_SUDO + info.deviceScriptPath + ONE_SPACE + std::to_string(pid);
+        std::string shellCommand;
+        if (info.isRoot) {
+            shellCommand = COMMAND_SUDO + info.deviceScriptPath + ONE_SPACE + std::to_string(pid);
+        } else {
+            shellCommand = info.deviceScriptPath + ONE_SPACE + std::to_string(pid);
+        }
+        if (info.scriptArgs != nullptr && info.scriptArgs[0] != '\0') {
+            shellCommand += ONE_SPACE + std::string(info.scriptArgs);
+        }
         int32_t ret = AdxCreateProcess(shellCommand.c_str());
         ONE_ACT_ERR_LOG(ret != SYS_OK, return SYS_ERROR, "AdxCreateProcess script failed");
-        return SYS_OK;
+        SELF_LOG_INFO("Script %s executed successfully", info.deviceScriptPath);
     }
-    SELF_LOG_ERROR("Find type %s in info list failed", logType.c_str());
-    return SYS_ERROR;
+    if (err != SYS_OK) {
+        SELF_LOG_ERROR("Find type %s in info list failed", logType.c_str());
+        return err;
+    }
+    return err;
 }
 
-int32_t LogGetFile::Process(const CommHandle &handle, const std::shared_ptr<MsgProto> &proto)
+int32_t LogGetFile::Process(const CommHandle& handle, const std::shared_ptr<MsgProto>& proto)
 {
     ONE_ACT_ERR_LOG(proto->msgType != MsgType::MSG_DATA, return SYS_OK, "receive non data message");
 
@@ -150,11 +163,12 @@ int32_t LogGetFile::Process(const CommHandle &handle, const std::shared_ptr<MsgP
     }
     if (runEnv != NON_DOCKER && runEnv != VM_NON_DOCKER) {
         SELF_LOG_WARN("Prohibit container get device file, runEnv=%d.", runEnv);
-        (void)AdxSendMsgByHandle(&handle, IDE_FILE_GETD_REQ, CONTAINER_NO_SUPPORT_MESSAGE.c_str(),
+        (void)AdxSendMsgByHandle(
+            &handle, IDE_FILE_GETD_REQ, CONTAINER_NO_SUPPORT_MESSAGE.c_str(),
             CONTAINER_NO_SUPPORT_MESSAGE.length() + 1);
         return SYS_OK;
     }
-    std::string logType((IdeString)proto->data);
+    std::string logType(reinterpret_cast<IdeString>(proto->data));
     std::vector<std::string> list;
     int32_t pid = 0;
     err = LogIdeGetPidBySession(reinterpret_cast<HDC_SESSION>(handle.session), &pid);
@@ -195,50 +209,48 @@ int32_t LogGetFile::Process(const CommHandle &handle, const std::shared_ptr<MsgP
         if (err != SYS_OK) {
             SELF_LOG_WARN("Transfer file %s result is %d", it.c_str(), err);
         }
+        (void)ToolSleep(TEN_MILLISECOND);
     }
     ClearTmpDir(logType, pid);
 
     err = AdxSendMsgByHandle(&handle, IDE_FILE_GETD_REQ, SEND_END_MSG.c_str(), SEND_END_MSG.length() + 1);
-    ONE_ACT_ERR_LOG(err != SYS_OK, return SYS_ERROR,
-            "send end msg failed");
+    ONE_ACT_ERR_LOG(err != SYS_OK, return SYS_ERROR, "send end msg failed");
 
     SELF_LOG_INFO("transfer %s file finished", logType.c_str());
     return SYS_OK;
 }
 
-void LogGetFile::ClearTmpDir(std::string &logType, int32_t pid)
+void LogGetFile::ClearTmpDir(std::string& logType, int32_t pid) const
 {
     int32_t ret = 0;
     std::string path;
     if (logType == MESSAGE_LOG) {
-        std::string shellCommand = COMMAND_SUDO + DEVICE_COLLECT_SCRIPT + ONE_SPACE + std::to_string(SCRIPT_CLEAR_MODE)
-            + ONE_SPACE + std::to_string(GetMappingPid(pid));
+        std::string shellCommand = COMMAND_SUDO + DEVICE_COLLECT_SCRIPT + ONE_SPACE +
+                                   std::to_string(SCRIPT_CLEAR_MODE) + ONE_SPACE + std::to_string(GetMappingPid(pid));
         ret = AdxCreateProcess(shellCommand.c_str());
         NO_ACT_ERR_LOG(ret != SYS_OK, "AdxCreateProcess clear script failed, %s", shellCommand.c_str());
     }
-    if (IsValidLogType(logType)) {
-        path = MODULE_INFO_USER_PATH + MODULE_INFO_LOG + "/" + std::to_string(pid);
+    std::string tmpDirName = GetScriptDumpDevicePath(logType);
+    if (tmpDirName.empty() == false) {
+        path = MODULE_INFO_USER_PATH + tmpDirName + "/" + std::to_string(pid);
         ret = LogFileUtils::RemoveDir(path, 0);
         NO_ACT_ERR_LOG(ret != 0, "remove dir %s failed", path.c_str());
     }
 }
 
-int32_t LogGetFile::UnInit()
-{
-    return SYS_OK;
-}
+int32_t LogGetFile::UnInit() { return SYS_OK; }
 
-bool LogGetFile::IsValidLogType(const std::string &logType) const
+std::string LogGetFile::GetScriptDumpDevicePath(const std::string& logType) const
 {
     for (const auto& info : MSNPUREPORT_FILE_DUMP_INFO) {
         if (logType.compare(info.label) == 0) {
-            return true;
+            return info.deviceFilePath;
         }
     }
-    return false;
+    return "";
 }
 
-int32_t LogGetFile::GetFileList(const std::string &logType, std::vector<std::string> &list, int32_t pid)
+int32_t LogGetFile::GetFileList(const std::string& logType, std::vector<std::string>& list, int32_t pid) const
 {
     if (logType.empty()) {
         SELF_LOG_ERROR("logType is empty");
@@ -248,8 +260,8 @@ int32_t LogGetFile::GetFileList(const std::string &logType, std::vector<std::str
     std::string fileNamePrefix;
     int32_t recursiveDepth = MAX_FOLDER_DEPTH;
 
-    bool isScriptLogType = IsValidLogType(logType);
-    if (!isScriptLogType) {
+    std::string tmpDirName = GetScriptDumpDevicePath(logType);
+    if (tmpDirName.empty()) {
         auto pathMap = TYPE_TO_PATH.find(logType);
         if (pathMap == TYPE_TO_PATH.end()) {
             SELF_LOG_ERROR("Invalid log type, %s", logType.c_str());
@@ -257,13 +269,13 @@ int32_t LogGetFile::GetFileList(const std::string &logType, std::vector<std::str
         }
         basePath = pathMap->second;
     } else {
-        basePath = MODULE_INFO_USER_PATH + MODULE_INFO_LOG;
+        basePath = MODULE_INFO_USER_PATH + tmpDirName;
     }
 
     if (logType == MESSAGE_LOG) {
         fileNamePrefix = "messages";
         recursiveDepth = 0;
-    } else if (isScriptLogType) {
+    } else if (!tmpDirName.empty()) {
         basePath = basePath + "/" + std::to_string(pid);
         int32_t ret = ExportModuleInfo(logType, pid);
         if (ret != SYS_OK) {
@@ -272,6 +284,7 @@ int32_t LogGetFile::GetFileList(const std::string &logType, std::vector<std::str
         if (!LogFileUtils::IsDirExist(basePath)) {
             return SYS_OK;
         }
+        basePath += "/";
     }
 
     if (LogFileUtils::GetDirFileList(basePath, list, nullptr, fileNamePrefix, recursiveDepth) == false) {
@@ -281,14 +294,14 @@ int32_t LogGetFile::GetFileList(const std::string &logType, std::vector<std::str
     return SYS_OK;
 }
 
-int32_t LogGetFile::GetPathPrefix(const std::string &tmpFilePath, std::string &matchStr, int32_t pid) const
+int32_t LogGetFile::GetPathPrefix(const std::string& tmpFilePath, std::string& matchStr, int32_t pid) const
 {
     if (IsValidTmpFilePath(tmpFilePath, matchStr, pid)) {
         return SYS_OK;
     }
 
     std::string::size_type idx;
-    for (auto it: TYPE_TO_PATH) {
+    for (auto it : TYPE_TO_PATH) {
         if (it.first == "message") {
             continue;
         }
@@ -310,20 +323,20 @@ int32_t LogGetFile::GetPathPrefix(const std::string &tmpFilePath, std::string &m
     return SYS_ERROR;
 }
 
-bool LogGetFile::IsValidTmpFilePath(const std::string &tmpFilePath, std::string &matchStr, int32_t pid) const
+bool LogGetFile::IsValidTmpFilePath(const std::string& tmpFilePath, std::string& matchStr, int32_t pid) const
 {
     std::string::size_type idx;
     for (const auto& info : MSNPUREPORT_FILE_DUMP_INFO) {
-        idx = tmpFilePath.find(MODULE_INFO_USER_PATH + info.hostFilePath + "/" + std::to_string(pid));
+        idx = tmpFilePath.find(MODULE_INFO_USER_PATH + info.deviceFilePath + "/" + std::to_string(pid));
         if (idx != std::string::npos) {
-            matchStr = MODULE_INFO_USER_PATH + info.hostFilePath + "/" + std::to_string(pid);
+            matchStr = MODULE_INFO_USER_PATH + info.deviceFilePath + "/" + std::to_string(pid);
             return true;
         }
     }
     return false;
 }
 
-bool LogGetFile::IsIntDigital(const std::string &digital) const
+bool LogGetFile::IsIntDigital(const std::string& digital) const
 {
     if (digital.empty()) {
         return false;
@@ -338,7 +351,7 @@ bool LogGetFile::IsIntDigital(const std::string &digital) const
     return true;
 }
 
-bool LogGetFile::IsValidMessageFile(std::string &messagesFilePath) const
+bool LogGetFile::IsValidMessageFile(std::string& messagesFilePath) const
 {
     std::string::size_type idx = messagesFilePath.rfind(".");
     if (idx != std::string::npos) {
@@ -354,7 +367,7 @@ bool LogGetFile::IsValidMessageFile(std::string &messagesFilePath) const
                 SELF_LOG_WARN("exceed messages max num, %d, skip", agingNum);
                 return false;
             }
-        } catch (std::exception &e) {
+        } catch (std::exception& e) {
             SELF_LOG_ERROR("message file name %s is invalid, %s, skip", messagesFilePath.c_str(), e.what());
             return false;
         }
@@ -362,19 +375,23 @@ bool LogGetFile::IsValidMessageFile(std::string &messagesFilePath) const
     return true;
 }
 
-int32_t LogGetFile::CopyFileToUserDir(std::string &messagesFilePath, int32_t pid) const
+int32_t LogGetFile::CopyFileToUserDir(std::string& messagesFilePath, int32_t pid) const
 {
     std::string messagesFileName;
-    ONE_ACT_ERR_LOG(LogFileUtils::GetFileName(messagesFilePath, messagesFileName) != SYS_OK,
-        return SYS_ERROR, "get file name failed");
+    ONE_ACT_ERR_LOG(
+        LogFileUtils::GetFileName(messagesFilePath, messagesFileName) != SYS_OK, return SYS_ERROR,
+        "get file name failed");
     std::string messagesNewPath = DEVICE_MESSAGE_USER_PATH + "message/" + std::to_string(GetMappingPid(pid)) + "/";
     std::string messagesNewFile = messagesNewPath + messagesFileName;
 
-    std::string shellCommand = COMMAND_SUDO + DEVICE_COLLECT_SCRIPT + ONE_SPACE + std::to_string(SCRIPT_COLLECT_MODE)
-        + ONE_SPACE + std::to_string(GetMappingPid(pid));
+    std::string shellCommand = COMMAND_SUDO + DEVICE_COLLECT_SCRIPT + ONE_SPACE + std::to_string(SCRIPT_COLLECT_MODE) +
+                               ONE_SPACE + std::to_string(GetMappingPid(pid));
+    // execute script to collect /var/log/messages
+    SELF_LOG_INFO("Starting script %s", DEVICE_COLLECT_SCRIPT.c_str());
     int32_t ret = AdxCreateProcess(shellCommand.c_str());
-    ONE_ACT_ERR_LOG(ret != SYS_OK, return SYS_ERROR, "AdxCreateProcess collect script failed, %s",
-        shellCommand.c_str());
+    ONE_ACT_ERR_LOG(
+        ret != SYS_OK, return SYS_ERROR, "AdxCreateProcess collect script failed, %s", shellCommand.c_str());
+    SELF_LOG_INFO("Script %s executed successfully", DEVICE_COLLECT_SCRIPT.c_str());
 
     if (!LogFileUtils::IsFileExist(messagesNewFile)) {
         SELF_LOG_ERROR("copy message file failed, %s", messagesNewFile.c_str());
@@ -385,4 +402,4 @@ int32_t LogGetFile::CopyFileToUserDir(std::string &messagesFilePath, int32_t pid
     messagesFilePath = messagesNewFile;
     return SYS_OK;
 }
-}
+} // namespace Adx

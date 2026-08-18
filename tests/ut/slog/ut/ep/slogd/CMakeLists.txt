@@ -14,6 +14,7 @@ set(libSlogdSrc
     ${LOG_SOURCE_PATH}/syslog/slog/slogd_main.c
     ${LOG_SOURCE_PATH}/syslog/slog/slogd_argv.c
     ${LOG_SOURCE_PATH}/syslog/slog/trace_server/slogd_trace_server.c
+    ${LOG_SOURCE_PATH}/syslog/slog/bbox_server/slogd_bbox_server.c
     ${LOG_SOURCE_PATH}/syslog/slog/log_server/slogd_service.c
     ${LOG_SOURCE_PATH}/syslog/slog/log_server/slogd_dev_mgr.c
     ${LOG_SOURCE_PATH}/syslog/slog/log_server/slogd_thread_mgr.c
@@ -86,6 +87,7 @@ set(libSlogdSrc
     ${UT_SOURCE_PATH}/stub/self_log_stub.c
     ${UT_SOURCE_PATH}/stub/ascend_hal_stub.c
     ${CMAKE_CURRENT_SOURCE_DIR}/slogd/stub/trace_server_stub.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/slogd/stub/bbox_server_stub.c
 )
 
 set(testSrc
@@ -142,6 +144,7 @@ set(libSlogdInc
     ${LOG_SOURCE_PATH}/syslog/slog/log_server/log_post_process/sys_get
     ${LOG_SOURCE_PATH}/syslog/slog/log_server/log_post_process/session_mgr
     ${LOG_SOURCE_PATH}/syslog/slog/trace_server
+    ${LOG_SOURCE_PATH}/syslog/slog/bbox_server
     ${LOG_SOURCE_PATH}/syslog/common
     ${LOG_SOURCE_PATH}/syslog/common/pm
     ${LOG_SOURCE_PATH}/syslog/common/config

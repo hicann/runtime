@@ -29,18 +29,18 @@
 #include "slog.h"
 #endif
 
-#define WRITE_FILE_LABEL_MAX_SIZE  1024
+#define WRITE_FILE_LABEL_MAX_SIZE 1024
 
 static unsigned int g_openPrintNum = 0;
 static unsigned int g_writeBPrintNum = 0;
 static unsigned int g_rootMkPrintNum = 0;
 static unsigned int g_subMkPrintNum = 0;
 static unsigned int g_chmodFPrintNum = 0;
-static char g_logRootPath[MAX_FILEDIR_LEN + 1U] = { 0 };
+static char g_logRootPath[MAX_FILEDIR_LEN + 1U] = {0};
 
-static const char * const SORT_DIR_NAME[(int32_t)LOG_TYPE_NUM] = { DEBUG_DIR_NAME, SECURITY_DIR_NAME, RUN_DIR_NAME };
+static const char* const SORT_DIR_NAME[(int32_t)LOG_TYPE_NUM] = {DEBUG_DIR_NAME, SECURITY_DIR_NAME, RUN_DIR_NAME};
 #ifdef GROUP_LOG
-STATIC int g_chId2ModIdMapping[LOG_CHANNEL_TYPE_MAX] = { 0 };
+STATIC int g_chId2ModIdMapping[LOG_CHANNEL_TYPE_MAX] = {0};
 
 void InitChId2ModIdMapping(void)
 {
@@ -57,6 +57,7 @@ void InitChId2ModIdMapping(void)
     g_chId2ModIdMapping[LOG_CHANNEL_TYPE_SIS_BIST] = SIS;
     g_chId2ModIdMapping[LOG_CHANNEL_TYPE_HSM] = HSM;
     g_chId2ModIdMapping[LOG_CHANNEL_TYPE_RTC] = RTC;
+    g_chId2ModIdMapping[LOG_CHANNEL_TYPE_DQS] = DQS;
 }
 
 STATIC int GetModuleIdByChannel(short chnId)
@@ -68,14 +69,14 @@ STATIC int GetModuleIdByChannel(short chnId)
 }
 #endif
 
-STATIC bool IsPathValidbyLog(const char *ppath, size_t pathLen)
+STATIC bool IsPathValidbyLog(const char* ppath, size_t pathLen)
 {
     ONE_ACT_WARN_LOG(ppath == NULL, return false, "[input] file realpath is null.");
     bool isValid = false;
-    const char *suffixList[] = {".log", ".log.gz", NULL};
+    const char* suffixList[] = {".log", ".log.gz", NULL};
     uint32_t i = 0;
     for (; suffixList[i] != NULL; i++) {
-        const char *suffix = suffixList[i];
+        const char* suffix = suffixList[i];
         ONE_ACT_NO_LOG((pathLen == 0) || (pathLen < strlen(suffix)), continue);
         size_t len = pathLen - strlen(suffix);
         if (strcmp(&ppath[len], suffixList[i]) == 0) {
@@ -87,10 +88,10 @@ STATIC bool IsPathValidbyLog(const char *ppath, size_t pathLen)
 }
 
 /**
-* @brief LogFilter: filter the log file
-* @return: if input file is a log file (*.log.gz or *.log)
-*/
-STATIC int LogFilter(const ToolDirent *dir)
+ * @brief LogFilter: filter the log file
+ * @return: if input file is a log file (*.log.gz or *.log)
+ */
+STATIC int LogFilter(const ToolDirent* dir)
 {
     if (dir == NULL) {
         return 0;
@@ -103,26 +104,26 @@ STATIC int LogFilter(const ToolDirent *dir)
     }
 }
 
-STATIC uint32_t GetLocalTimeHelper(size_t bufLen, char *timeBuffer)
+STATIC uint32_t GetLocalTimeHelper(size_t bufLen, char* timeBuffer)
 {
     if (timeBuffer == NULL) {
         SELF_LOG_WARN("[input] time buffer is null.");
         return NOK;
     }
-    struct timespec currentTimeval = { 0, 0 };
+    struct timespec currentTimeval = {0, 0};
     static bool isTimeInit = false;
     static clockid_t clockId = LOG_CLOCK_ID_DEFAULT;
-    ONE_ACT_ERR_LOG(LogGetTime(&currentTimeval, &isTimeInit, &clockId) != LOG_SUCCESS, return NOK,
-                    "get log time failed.");
-    struct tm timeInfo = { 0 };
+    ONE_ACT_ERR_LOG(
+        LogGetTime(&currentTimeval, &isTimeInit, &clockId) != LOG_SUCCESS, return NOK, "get log time failed.");
+    struct tm timeInfo = {0};
     if (ToolLocalTimeR((&currentTimeval.tv_sec), &timeInfo) != SYS_OK) {
         SELF_LOG_ERROR("get local time failed, strerr=%s.", strerror(ToolGetErrorCode()));
         return NOK;
     }
 
-    int ret = snprintf_s(timeBuffer, bufLen, bufLen - 1U, "%04d%02d%02d%02d%02d%02d%03ld",
-                         timeInfo.tm_year, timeInfo.tm_mon, timeInfo.tm_mday, timeInfo.tm_hour,
-                         timeInfo.tm_min, timeInfo.tm_sec, currentTimeval.tv_nsec / MS_TO_NS);
+    int ret = snprintf_s(
+        timeBuffer, bufLen, bufLen - 1U, "%04d%02d%02d%02d%02d%02d%03ld", timeInfo.tm_year, timeInfo.tm_mon,
+        timeInfo.tm_mday, timeInfo.tm_hour, timeInfo.tm_min, timeInfo.tm_sec, currentTimeval.tv_nsec / MS_TO_NS);
     if (ret == -1) {
         SELF_LOG_ERROR("snprintf_s time buffer failed, result=%d, strerr=%s.", ret, strerror(ToolGetErrorCode()));
         return NOK;
@@ -131,10 +132,10 @@ STATIC uint32_t GetLocalTimeHelper(size_t bufLen, char *timeBuffer)
     return OK;
 }
 
-STATIC uint32_t LogGetFileSize(const char *fileName, uint32_t fileLen)
+STATIC uint32_t LogGetFileSize(const char* fileName, uint32_t fileLen)
 {
     (void)fileLen;
-    ToolStat statbuff = { 0 };
+    ToolStat statbuff = {0};
     if (ToolStatGet(fileName, &statbuff) == SYS_OK) {
         return (uint32_t)statbuff.st_size;
     }
@@ -147,14 +148,14 @@ STATIC uint32_t LogGetFileSize(const char *fileName, uint32_t fileLen)
  * @param [in]  : size          specified size to left
  * @return: void
  */
-static void LogAgentRemoveDir(StSubLogFileList *logList, uint32_t size)
+static void LogAgentRemoveDir(StSubLogFileList* logList, uint32_t size)
 {
     if ((logList->dirNum == 0) || (logList->dirTotalSize < size)) {
         return;
     }
     uint32_t curDirSize = 0;
     for (int32_t i = 0; i < logList->dirNum; i++) {
-        LogDirList *dir = (LogDirList *)(logList->dirList + i);
+        LogDirList* dir = (LogDirList*)(logList->dirList + i);
         if (dir->dirSize == 0) {
             continue;
         }
@@ -167,14 +168,15 @@ static void LogAgentRemoveDir(StSubLogFileList *logList, uint32_t size)
             SELF_LOG_ERROR("remove dir failed, dir=%s, strerr=%s", dir->dirName, strerror(ToolGetErrorCode()));
             continue;
         }
+
         (void)memset_s(dir, sizeof(LogDirList), 0, sizeof(LogDirList));
         logList->dirTotalSize -= dir->dirSize;
         continue;
     }
 }
 
-static void LogAgentAgingFile(bool *isRemove, uint32_t *fileSize, const char *aucFileName, uint32_t *fileNum,
-    StSubLogFileList *pstSubInfo)
+static void LogAgentAgingFile(
+    bool* isRemove, uint32_t* fileSize, const char* aucFileName, uint32_t* fileNum, StSubLogFileList* pstSubInfo)
 {
     uint32_t size = LogGetFileSize(aucFileName, MAX_FULLPATH_LEN);
     if (!(*isRemove)) {
@@ -193,23 +195,25 @@ static void LogAgentAgingFile(bool *isRemove, uint32_t *fileSize, const char *au
         return;
     }
     int32_t ret = ToolChmod(aucFileName, LOG_FILE_ARCHIVE_MODE);
-    NO_ACT_WARN_LOG((ret != 0) && (ToolGetErrorCode() != ENOENT), "can not chmod file, file=%s, strerr=%s.",
-                    aucFileName, strerror(ToolGetErrorCode()));
+    NO_ACT_WARN_LOG(
+        (ret != 0) && (ToolGetErrorCode() != ENOENT), "can not chmod file, file=%s, strerr=%s.", aucFileName,
+        strerror(ToolGetErrorCode()));
 }
 
-static void LogAgentHandleCompressFile(char *aucFileName, uint32_t len)
+static void LogAgentHandleCompressFile(char* aucFileName, uint32_t len)
 {
     if (LogCompressCheckUnzipSuffix(aucFileName)) {
         if (LogCompressFile(aucFileName) == LOG_SUCCESS) {
-            NO_ACT_WARN_LOG(LogCompressAddSuffix(aucFileName, len) != LOG_SUCCESS,
-                "can not add suffix for file(%s)", aucFileName);
+            NO_ACT_WARN_LOG(
+                LogCompressAddSuffix(aucFileName, len) != LOG_SUCCESS, "can not add suffix for file(%s)", aucFileName);
         }
         return;
     }
     if (LogCompressCheckActiveFile(aucFileName)) {
         if (LogCompressFileRotate(aucFileName) == LOG_SUCCESS) {
-            NO_ACT_WARN_LOG(LogCompressGetRotatePath(aucFileName, len) != LOG_SUCCESS,
-                "can not get rotate path for file(%s)", aucFileName);
+            NO_ACT_WARN_LOG(
+                LogCompressGetRotatePath(aucFileName, len) != LOG_SUCCESS, "can not get rotate path for file(%s)",
+                aucFileName);
         }
     }
 }
@@ -222,10 +226,9 @@ static void LogAgentHandleCompressFile(char *aucFileName, uint32_t len)
 * @param [in] totalNum: file num in directory
 * @return: OK: succeed; NOK: failed
 */
-STATIC int32_t LogAgentGetCurrentFileList(StSubLogFileList *pstSubInfo,
-                                          ToolDirent **namelist, int32_t toatalNum)
+STATIC int32_t LogAgentGetCurrentFileList(StSubLogFileList* pstSubInfo, ToolDirent** namelist, int32_t toatalNum)
 {
-    char aucFileName[MAX_FULLPATH_LEN + 1U] = { 0 };
+    char aucFileName[MAX_FULLPATH_LEN + 1U] = {0};
     size_t fileHeadLen = strnlen(pstSubInfo->fileHead, MAX_NAME_HEAD_LEN);
     uint32_t fileSize = 0U;
     uint32_t fileNum = 0;
@@ -236,8 +239,9 @@ STATIC int32_t LogAgentGetCurrentFileList(StSubLogFileList *pstSubInfo,
         int32_t ret = strncmp(namelist[i]->d_name, pstSubInfo->fileHead, fileHeadLen);
         ONE_ACT_NO_LOG(ret != 0, continue);
         (void)memset_s(aucFileName, MAX_FULLPATH_LEN + 1U, 0, MAX_FULLPATH_LEN + 1U);
-        ret = snprintf_s(aucFileName, MAX_FULLPATH_LEN + 1U, MAX_FULLPATH_LEN,
-                         "%s%s%s", pstSubInfo->filePath, FILE_SEPARATOR, namelist[i]->d_name);
+        ret = snprintf_s(
+            aucFileName, MAX_FULLPATH_LEN + 1U, MAX_FULLPATH_LEN, "%s%s%s", pstSubInfo->filePath, FILE_SEPARATOR,
+            namelist[i]->d_name);
         ONE_ACT_ERR_LOG(ret == -1, continue, "snprintf file name failed, strerr=%s.", strerror(ToolGetErrorCode()));
         // active file transfer to rotate file when compress open
         if (LogCompressSwitch()) {
@@ -245,8 +249,8 @@ STATIC int32_t LogAgentGetCurrentFileList(StSubLogFileList *pstSubInfo,
         } else if ((fileNum == 0) && (pstSubInfo->devWriteFileFlag == 0)) { // 初始化阶段，不预留活跃文件空间和数量
             // add newest file to current fileName and skip, keep at least one log file
             errno_t err = strcpy_s(pstSubInfo->fileName, MAX_FILENAME_LEN + 1U, namelist[i]->d_name);
-            ONE_ACT_ERR_LOG(err != EOK, continue, "strcpy_s failed, res=%d, strerr=%s.",
-                err, strerror(ToolGetErrorCode()));
+            ONE_ACT_ERR_LOG(
+                err != EOK, continue, "strcpy_s failed, res=%d, strerr=%s.", err, strerror(ToolGetErrorCode()));
             fileNum++;
             continue;
         } else {
@@ -266,50 +270,52 @@ STATIC int32_t LogAgentGetCurrentFileList(StSubLogFileList *pstSubInfo,
 }
 
 /**
-* @brief LogAgentGetFileListForModule: get file list in specified directory
-* @param [in/out] pstSubInfo: strut to store file list
-* @param [in] dir: directory to be scanned
-* @return: OK: succeed; NOK: failed
-*/
-uint32_t LogAgentGetFileListForModule(StSubLogFileList *pstSubInfo, const char *dir)
+ * @brief LogAgentGetFileListForModule: get file list in specified directory
+ * @param [in/out] pstSubInfo: strut to store file list
+ * @param [in] dir: directory to be scanned
+ * @return: OK: succeed; NOK: failed
+ */
+uint32_t LogAgentGetFileListForModule(StSubLogFileList* pstSubInfo, const char* dir)
 {
-    ToolDirent **namelist = NULL;
+    ToolDirent** namelist = NULL;
     ONE_ACT_WARN_LOG(pstSubInfo == NULL, return NOK, "[input] log file list info is null.");
     ONE_ACT_WARN_LOG(dir == NULL, return NOK, "[input] log directory is null.");
 
     // check if sub-dir for host&device exist, if not then return immediately
-    int32_t ret = ToolAccess((const char *)pstSubInfo->filePath);
+    int32_t ret = ToolAccess((const char*)pstSubInfo->filePath);
     ONE_ACT_NO_LOG(ret != SYS_OK, return OK);
 
     // get file lists
-    int32_t toatalNum = ToolScandir((const char *)pstSubInfo->filePath, &namelist, LogFilter, alphasort);
+    int32_t toatalNum = ToolScandir((const char*)pstSubInfo->filePath, &namelist, LogFilter, alphasort);
 
-    ONE_ACT_ERR_LOG(toatalNum < 0, return NOK, "scandir %s failed, result=%d, strerr=%s.",
-                    dir, toatalNum, strerror(ToolGetErrorCode()));
+    ONE_ACT_ERR_LOG(
+        toatalNum < 0, return NOK, "scandir %s failed, result=%d, strerr=%s.", dir, toatalNum,
+        strerror(ToolGetErrorCode()));
     ONE_ACT_NO_LOG(namelist == NULL, return OK);
     ret = LogAgentGetCurrentFileList(pstSubInfo, namelist, toatalNum);
     ToolScandirFree(namelist, toatalNum);
-    ONE_ACT_ERR_LOG(ret != OK, return NOK, "get current file list failed, dir = %s, module = %s.",
-                    pstSubInfo->filePath, pstSubInfo->fileHead);
+    ONE_ACT_ERR_LOG(
+        ret != OK, return NOK, "get current file list failed, dir = %s, module = %s.", pstSubInfo->filePath,
+        pstSubInfo->fileHead);
     return OK;
 }
 
 /**
-* @brief LogAgentCreateNewFileName: get new log file name with timestamp
-* @param [in/out] pstSubInfo: strut to store new file name
-* @return: OK: succeed; NOK: failed
-*/
-uint32_t LogAgentCreateNewFileName(StSubLogFileList *pstSubInfo)
+ * @brief LogAgentCreateNewFileName: get new log file name with timestamp
+ * @param [in/out] pstSubInfo: strut to store new file name
+ * @return: OK: succeed; NOK: failed
+ */
+uint32_t LogAgentCreateNewFileName(StSubLogFileList* pstSubInfo)
 {
     ONE_ACT_WARN_LOG(pstSubInfo == NULL, return NOK, "[input] log file list info is null.");
-    char aucTime[TIME_STR_SIZE + 1] = { 0 };
+    char aucTime[TIME_STR_SIZE + 1] = {0};
     if (GetLocalTimeHelper(TIME_STR_SIZE, aucTime) != OK) {
         return NOK;
     }
     (void)memset_s(pstSubInfo->fileName, MAX_FILENAME_LEN + 1U, 0, MAX_FILENAME_LEN + 1U);
     const char* suffix = LogCompressSwitch() ? LOG_ACTIVE_FILE_GZ_SUFFIX : LOG_FILE_SUFFIX;
-    int32_t err = snprintf_s(pstSubInfo->fileName, MAX_FILENAME_LEN + 1U, MAX_FILENAME_LEN, "%s%s%s",
-                             pstSubInfo->fileHead, aucTime, suffix);
+    int32_t err = snprintf_s(
+        pstSubInfo->fileName, MAX_FILENAME_LEN + 1U, MAX_FILENAME_LEN, "%s%s%s", pstSubInfo->fileHead, aucTime, suffix);
     if (err == -1) {
         SELF_LOG_ERROR("snprintf_s filename failed, result=%d, strerr=%s.", err, strerror(ToolGetErrorCode()));
         return NOK;
@@ -319,11 +325,11 @@ uint32_t LogAgentCreateNewFileName(StSubLogFileList *pstSubInfo)
 }
 
 /**
-* @brief LogAgentRemoveFile: remove log file with given filename
-* @param [in] filename: file name which will be deleted
-* @return: OK: succeed; NOK: failed
-*/
-unsigned int LogAgentRemoveFile(const char *filename)
+ * @brief LogAgentRemoveFile: remove log file with given filename
+ * @param [in] filename: file name which will be deleted
+ * @return: OK: succeed; NOK: failed
+ */
+unsigned int LogAgentRemoveFile(const char* filename)
 {
     if (filename == NULL) {
         SELF_LOG_WARN("[input] filename is null.");
@@ -349,22 +355,22 @@ unsigned int LogAgentRemoveFile(const char *filename)
 }
 
 /**
-* @brief GetFileOfSize: get current writing files' size.
-*                       if file size exceed limitation, change file mode to read only
-*                       if specified file is removed, create new log file
-* @param [in] logList: log file list
-* @param [in] pstLogData: log data
-* @param [in] pFileName: filename with full path
-* @param [in] filesize: current log file size
-* @return: OK: succeed; NOK: failed
-*/
-STATIC int32_t GetFileOfSize(StSubLogFileList *pstSubInfo, const StLogDataBlock *pstLogData,
-                             const char *pFileName, off_t *filesize)
+ * @brief GetFileOfSize: get current writing files' size.
+ *                       if file size exceed limitation, change file mode to read only
+ *                       if specified file is removed, create new log file
+ * @param [in] logList: log file list
+ * @param [in] pstLogData: log data
+ * @param [in] pFileName: filename with full path
+ * @param [in] filesize: current log file size
+ * @return: OK: succeed; NOK: failed
+ */
+STATIC int32_t
+GetFileOfSize(StSubLogFileList* pstSubInfo, const StLogDataBlock* pstLogData, const char* pFileName, off_t* filesize)
 {
-    ToolStat statbuff = { 0 };
-    FILE *fp = NULL;
+    ToolStat statbuff = {0};
+    FILE* fp = NULL;
 
-    char *ppath = (char *)LogMalloc(TOOL_MAX_PATH + 1);
+    char* ppath = (char*)LogMalloc(TOOL_MAX_PATH + 1);
     if (ppath == NULL) {
         SELF_LOG_ERROR("malloc failed, strerr=%s.", strerror(ToolGetErrorCode()));
         return MALLOC_FAILED;
@@ -400,15 +406,15 @@ STATIC int32_t GetFileOfSize(StSubLogFileList *pstSubInfo, const StLogDataBlock 
 }
 
 /**
-* @brief LogAgentGetFileName: get current writing log file's full path(contains filename)
-* @param [in] pstSubInfo: log file list
-* @param [in] pstLogData: log data
-* @param [in/out] pFileName: file name to be gotten. contains full file path
-* @param [in] ucMaxLen: max length of full log file path(contains filename)
-* @return: OK: succeed; NOK: failed
-*/
-STATIC uint32_t LogAgentGetFileName(StSubLogFileList *pstSubInfo, const StLogDataBlock *pstLogData,
-                                    char *pFileName, size_t ucMaxLen)
+ * @brief LogAgentGetFileName: get current writing log file's full path(contains filename)
+ * @param [in] pstSubInfo: log file list
+ * @param [in] pstLogData: log data
+ * @param [in/out] pFileName: file name to be gotten. contains full file path
+ * @param [in] ucMaxLen: max length of full log file path(contains filename)
+ * @return: OK: succeed; NOK: failed
+ */
+STATIC uint32_t
+LogAgentGetFileName(StSubLogFileList* pstSubInfo, const StLogDataBlock* pstLogData, char* pFileName, size_t ucMaxLen)
 {
     ONE_ACT_WARN_LOG(pstSubInfo == NULL, return NOK, "[input] log file list is null.");
     ONE_ACT_WARN_LOG(pstLogData == NULL, return NOK, "[input] log data is null.");
@@ -430,8 +436,8 @@ STATIC uint32_t LogAgentGetFileName(StSubLogFileList *pstSubInfo, const StLogDat
 
     off_t filesize = 0;
     int32_t err = GetFileOfSize(pstSubInfo, pstLogData, pFileName, &filesize);
-    ONE_ACT_ERR_LOG((err != OK) || (filesize < 0), return NOK,
-        "get file size failed, file=%s, result=%d.", pFileName, err);
+    ONE_ACT_ERR_LOG(
+        (err != OK) || (filesize < 0), return NOK, "get file size failed, file=%s, result=%d.", pFileName, err);
     pstSubInfo->devWriteFileFlag = 1;
 
     // modify for compress switch, restart with new logfile
@@ -449,8 +455,9 @@ STATIC uint32_t LogAgentGetFileName(StSubLogFileList *pstSubInfo, const StLogDat
         // if sum of file size > totalSize, delete oldest file
         ret = LogAgentGetFileListForModule(pstSubInfo, pstSubInfo->filePath);
         if (ret != OK) {
-            SELF_LOG_ERROR("get %s log file list failed, directory=%s, result=%u",
-                           pstSubInfo->fileHead, pstSubInfo->filePath, ret);
+            SELF_LOG_ERROR(
+                "get %s log file list failed, directory=%s, result=%u", pstSubInfo->fileHead, pstSubInfo->filePath,
+                ret);
             return NOK;
         }
         (void)LogAgentCreateNewFileName(pstSubInfo);
@@ -459,101 +466,110 @@ STATIC uint32_t LogAgentGetFileName(StSubLogFileList *pstSubInfo, const StLogDat
     return FilePathSplice(pstSubInfo, pFileName, ucMaxLen);
 }
 
-STATIC unsigned int LogAgentMkdir(const char *logPath)
+STATIC unsigned int LogAgentMkdir(const char* logPath)
 {
     ONE_ACT_NO_LOG(logPath == NULL, return NOK);
 
-    int32_t ret = ToolAccess((const char *)logPath);
+    int32_t ret = ToolAccess((const char*)logPath);
     ONE_ACT_NO_LOG(ret == SYS_OK, return OK);
-    LogRt err = LogMkdirRecur((const char *)g_logRootPath);
+    LogRt err = LogMkdirRecur((const char*)g_logRootPath);
     if (err != SUCCESS) {
-        SELF_LOG_ERROR_N(&g_rootMkPrintNum, GENERAL_PRINT_NUM,
-                         "mkdir %s failed, strerr=%s, log_err=%d, print once every %u times.",
-                         g_logRootPath, strerror(ToolGetErrorCode()), (int32_t)err, GENERAL_PRINT_NUM);
+        SELF_LOG_ERROR_N(
+            &g_rootMkPrintNum, GENERAL_PRINT_NUM, "mkdir %s failed, strerr=%s, log_err=%d, print once every %u times.",
+            g_logRootPath, strerror(ToolGetErrorCode()), (int32_t)err, GENERAL_PRINT_NUM);
         return NOK;
     }
     // create log path
     // judge if sub-logdir is exist(for debug/run/security), if not, create one
-    char sortPath[MAX_FILEDIR_LEN + 1U] = { 0 };
+    char sortPath[MAX_FILEDIR_LEN + 1U] = {0};
     for (int32_t idx = (int32_t)DEBUG_LOG; idx < (int32_t)LOG_TYPE_NUM; idx++) {
         (void)memset_s(sortPath, MAX_FILEDIR_LEN + 1U, 0, MAX_FILEDIR_LEN + 1U);
         ret = snprintf_s(sortPath, MAX_FILEDIR_LEN + 1U, MAX_FILEDIR_LEN, "%s/%s", g_logRootPath, SORT_DIR_NAME[idx]);
         ONE_ACT_ERR_LOG(ret == -1, return NOK, "snprintf_s failed, err=%s.", strerror(ToolGetErrorCode()));
-        err = LogMkdir((const char *)sortPath);
+        err = LogMkdir((const char*)sortPath);
         if (err != SUCCESS) {
-            SELF_LOG_ERROR_N(&g_subMkPrintNum, GENERAL_PRINT_NUM,
-                             "mkdir %s failed, strerr=%s, log_err=%d, print once every %u times.",
-                             sortPath, strerror(ToolGetErrorCode()), (int32_t)err, GENERAL_PRINT_NUM);
+            SELF_LOG_ERROR_N(
+                &g_subMkPrintNum, GENERAL_PRINT_NUM,
+                "mkdir %s failed, strerr=%s, log_err=%d, print once every %u times.", sortPath,
+                strerror(ToolGetErrorCode()), (int32_t)err, GENERAL_PRINT_NUM);
             return NOK;
         }
     }
     err = LogMkdir(logPath);
     if (err != SUCCESS) {
-        SELF_LOG_ERROR_N(&g_subMkPrintNum, GENERAL_PRINT_NUM,
-                         "mkdir %s failed, strerr=%s, log_err=%d, print once every %u times.",
-                         logPath, strerror(ToolGetErrorCode()), (int32_t)err, GENERAL_PRINT_NUM);
+        SELF_LOG_ERROR_N(
+            &g_subMkPrintNum, GENERAL_PRINT_NUM, "mkdir %s failed, strerr=%s, log_err=%d, print once every %u times.",
+            logPath, strerror(ToolGetErrorCode()), (int32_t)err, GENERAL_PRINT_NUM);
         return NOK;
     }
     return OK;
 }
 
 /**
-* @brief : write log to unzip file
-* @param [in] pstSubInfo: log file list
-* @param [in] pstLogData: log data to be written
-* @param [in] aucFileName: filename with full path
-* @param [in] aucFileNameLen: max file path length
-* @return: OK: succeed; NOK: failed
-*/
-STATIC uint32_t LogAgentWriteDataToFile(StSubLogFileList *pstSubInfo, const StLogDataBlock *pstLogData,
-                                        char *const aucFileName, size_t aucFileNameLen)
+ * @brief : write log to unzip file
+ * @param [in] pstSubInfo: log file list
+ * @param [in] pstLogData: log data to be written
+ * @return: OK: succeed; NOK: failed
+ */
+STATIC uint32_t LogAgentWriteDataToFile(StSubLogFileList* pstSubInfo, const StLogDataBlock* pstLogData)
 {
     ONE_ACT_WARN_LOG(pstSubInfo == NULL, return NOK, "[input] log file list is null.");
     ONE_ACT_WARN_LOG(pstLogData == NULL, return NOK, "[input] log data is null.");
-    ONE_ACT_WARN_LOG(aucFileName == NULL, return NOK, "[input] log filename is null.");
-    ONE_ACT_WARN_LOG(((aucFileNameLen == 0) || (aucFileNameLen > (MAX_FULLPATH_LEN + 1U))),
-                     return NOK, "[input] log filename length is invalid, length=%zu", aucFileNameLen);
-    const VOID *dataBuf = pstLogData->paucData;
-    uint32_t ulRet = LogAgentGetFileName(pstSubInfo, pstLogData, aucFileName, MAX_FULLPATH_LEN);
+
+    char logFileName[MAX_FULLPATH_LEN + 1U] = {0};
+    uint32_t ulRet = LogAgentGetFileName(pstSubInfo, pstLogData, logFileName, MAX_FULLPATH_LEN);
     if (ulRet != OK) {
         SELF_LOG_ERROR("get filename failed, result=%u.", ulRet);
         return NOK;
     }
 
-    int32_t fd = ToolOpenWithMode(aucFileName, (uint32_t)O_CREAT | (uint32_t)O_WRONLY | (uint32_t)O_APPEND,
-        LOG_FILE_RDWR_MODE);
+    int32_t fd =
+        ToolOpenWithMode(logFileName, (uint32_t)O_CREAT | (uint32_t)O_WRONLY | (uint32_t)O_APPEND, LOG_FILE_RDWR_MODE);
     if (fd < 0) {
-        SELF_LOG_ERROR_N(&g_openPrintNum, GENERAL_PRINT_NUM,
-                         "open file failed with mode, file=%s, strerr=%s, print once every %u times.",
-                         aucFileName, strerror(ToolGetErrorCode()), GENERAL_PRINT_NUM);
+        SELF_LOG_ERROR_N(
+            &g_openPrintNum, GENERAL_PRINT_NUM,
+            "open file failed with mode, file=%s, strerr=%s, print once every %u times.", logFileName,
+            strerror(ToolGetErrorCode()), GENERAL_PRINT_NUM);
         return NOK;
     }
 
-    int32_t ret = ToolWrite(fd, dataBuf, pstLogData->ulDataLen);
+    // change file mode if it was masked by umask
+    int32_t ret = ToolChmod((const char*)logFileName, (INT32)LOG_FILE_RDWR_MODE);
+    if (ret != OK) {
+        SELF_LOG_ERROR_N(
+            &g_chmodFPrintNum, GENERAL_PRINT_NUM,
+            "change log file mode failed, ret=%d, strerr=%s, file=%s, print once every %u times.", ret,
+            strerror(ToolGetErrorCode()), logFileName, GENERAL_PRINT_NUM);
+    }
+
+    const VOID* dataBuf = pstLogData->paucData;
+    ret = ToolWrite(fd, dataBuf, pstLogData->ulDataLen);
     if ((ret < 0) || ((uint32_t)ret != pstLogData->ulDataLen)) {
         LOG_CLOSE_FD(fd);
-        SELF_LOG_ERROR_N(&g_writeBPrintNum, GENERAL_PRINT_NUM,
-                         "write to file failed, file=%s, data_length=%u, write_length=%d, strerr=%s," \
-                         " print once every %u time.",
-                         aucFileName, pstLogData->ulDataLen, ret, strerror(ToolGetErrorCode()), GENERAL_PRINT_NUM);
+        SELF_LOG_ERROR_N(
+            &g_writeBPrintNum, GENERAL_PRINT_NUM,
+            "write to file failed, file=%s, data_length=%u, write_length=%d, strerr=%s,"
+            " print once every %u time.",
+            logFileName, pstLogData->ulDataLen, ret, strerror(ToolGetErrorCode()), GENERAL_PRINT_NUM);
         return NOK;
     }
-    int32_t err = ToolFChownPath(fd);
-    if (err != SYS_OK) {
-        SELF_LOG_ERROR("change file owner failed, file=%s, log_err=%u, strerr=%s.",
-                       aucFileName, (uint32_t)err, strerror(ToolGetErrorCode()));
+    ret = ToolFChownPath(fd);
+    if (ret != SYS_OK) {
+        SELF_LOG_ERROR(
+            "change file owner failed, file=%s, log_err=%d, strerr=%s.", logFileName, ret,
+            strerror(ToolGetErrorCode()));
     }
     LOG_CLOSE_FD(fd);
     return OK;
 }
 
 /**
-* @brief splice log type and check whether current log data writing is limited
-* @param [in] subList: log file list
-* @param [in] dataLen: log data length
-* @return: true: write log data; false: discard log data
-*/
-STATIC bool LogAgentWriteLimitCheck(StSubLogFileList *subList, uint32_t dataLen)
+ * @brief splice log type and check whether current log data writing is limited
+ * @param [in] subList: log file list
+ * @param [in] dataLen: log data length
+ * @return: true: write log data; false: discard log data
+ */
+STATIC bool LogAgentWriteLimitCheck(StSubLogFileList* subList, uint32_t dataLen)
 {
     char* buffer = strdup(subList->filePath);
     ONE_ACT_ERR_LOG(buffer == NULL, return false, "strdup file path failed, discard current log data.");
@@ -570,8 +586,8 @@ STATIC bool LogAgentWriteLimitCheck(StSubLogFileList *subList, uint32_t dataLen)
         return false;
     }
 
-    char label[WRITE_FILE_LABEL_MAX_SIZE] = { 0 };
-    char *lastValue = lastSlash + 1;
+    char label[WRITE_FILE_LABEL_MAX_SIZE] = {0};
+    char* lastValue = lastSlash + 1;
     if (strcmp(lastValue, DEBUG_DIR_NAME) == 0) {
         if (sprintf_s(label, WRITE_FILE_LABEL_MAX_SIZE, "%s/%s", lastValue, subList->fileHead) == -1) {
             XFREE(buffer);
@@ -606,12 +622,12 @@ STATIC bool LogAgentWriteLimitCheck(StSubLogFileList *subList, uint32_t dataLen)
 }
 
 /**
-* @brief LogAgentWriteFile: write log to file
-* @param [in] subList: log file list
-* @param [in] logData: log data
-* @return: OK: succeed; NOK: failed
-*/
-unsigned int LogAgentWriteFile(StSubLogFileList *subList, StLogDataBlock *logData)
+ * @brief LogAgentWriteFile: write log to file
+ * @param [in] subList: log file list
+ * @param [in] logData: log data
+ * @return: OK: succeed; NOK: failed
+ */
+unsigned int LogAgentWriteFile(StSubLogFileList* subList, StLogDataBlock* logData)
 {
     ONE_ACT_NO_LOG(subList == NULL, return NOK);
     ONE_ACT_NO_LOG((logData == NULL) || (logData->paucData == NULL) || (logData->ulDataLen == 0), return OK);
@@ -620,10 +636,10 @@ unsigned int LogAgentWriteFile(StSubLogFileList *subList, StLogDataBlock *logDat
         return NOK;
     }
 
-    char *zippedBuf = NULL;
+    char* zippedBuf = NULL;
     if (LogCompressSwitch()) {
         uint32_t zippedBufLen = 0;
-        int32_t res  = SlogdCompress(logData->paucData, logData->ulDataLen, &zippedBuf, &zippedBufLen);
+        int32_t res = SlogdCompress(logData->paucData, logData->ulDataLen, &zippedBuf, &zippedBufLen);
         if (res == LOG_SERVICE_NOT_READY) {
             return NOK;
         }
@@ -640,26 +656,20 @@ unsigned int LogAgentWriteFile(StSubLogFileList *subList, StLogDataBlock *logDat
         return OK;
     }
 
-    char logFileName[MAX_FULLPATH_LEN + 1U] = { 0 };
-    uint32_t ret = LogAgentWriteDataToFile(subList, logData, logFileName, sizeof(logFileName));
+    uint32_t ret = LogAgentWriteDataToFile(subList, logData);
     XFREE(zippedBuf);
-    // change file mode if it was masked by umask
-    if (ToolChmod((const char *)logFileName, (INT32)LOG_FILE_RDWR_MODE) != OK) {
-        SELF_LOG_ERROR_N(&g_chmodFPrintNum, GENERAL_PRINT_NUM,
-                         "change log file mode failed, file=%s, print once every %u times.",
-                         logFileName, GENERAL_PRINT_NUM);
-    }
+
     return ret;
 }
 
 /**
-* @brief LogAgentInitMaxFileNumHelper: initialize struct for log file path and log name list
-* @param [in] pstSubInfo: log file list
-* @param [in] logPath: log sub directory path
-* @param [in] length: logPath length
-* @return: OK: succeed; NOK: failed
-*/
-unsigned int LogAgentInitMaxFileNumHelper(StSubLogFileList *pstSubInfo, const char *logPath, int length)
+ * @brief LogAgentInitMaxFileNumHelper: initialize struct for log file path and log name list
+ * @param [in] pstSubInfo: log file list
+ * @param [in] logPath: log sub directory path
+ * @param [in] length: logPath length
+ * @return: OK: succeed; NOK: failed
+ */
+unsigned int LogAgentInitMaxFileNumHelper(StSubLogFileList* pstSubInfo, const char* logPath, int length)
 {
     ONE_ACT_WARN_LOG(pstSubInfo == NULL, return NOK, "[input] log file list info is null.");
     ONE_ACT_WARN_LOG(logPath == NULL, return NOK, "[input] log filepath is null.");
@@ -669,21 +679,21 @@ unsigned int LogAgentInitMaxFileNumHelper(StSubLogFileList *pstSubInfo, const ch
     if (err == -1) {
         SELF_LOG_ERROR("snprintf_s file path failed, result=%d, strerr=%s.", err, strerror(ToolGetErrorCode()));
     }
-    (void)memset_s((void *)pstSubInfo->fileName, MAX_FILENAME_LEN + 1U, 0, MAX_FILENAME_LEN + 1U);
+    (void)memset_s((void*)pstSubInfo->fileName, MAX_FILENAME_LEN + 1U, 0, MAX_FILENAME_LEN + 1U);
     return OK;
 }
 
 /**
-* @brief FilePathSplice: concat log directory path with log filename
-* @param [in] pstSubInfo: log file list
-* @param [in] pFileName: filename with full path
-* @param [in] ucMaxLen: max file path length
-* @return: OK: succeed; NOK: failed
-*/
-unsigned int FilePathSplice(const StSubLogFileList *pstSubInfo, char *pFileName, size_t ucMaxLen)
+ * @brief FilePathSplice: concat log directory path with log filename
+ * @param [in] pstSubInfo: log file list
+ * @param [in] pFileName: filename with full path
+ * @param [in] ucMaxLen: max file path length
+ * @return: OK: succeed; NOK: failed
+ */
+unsigned int FilePathSplice(const StSubLogFileList* pstSubInfo, char* pFileName, size_t ucMaxLen)
 {
-    int ret = snprintf_s(pFileName, ucMaxLen + 1U, ucMaxLen, "%s%s%s",
-                         pstSubInfo->filePath, FILE_SEPARATOR, pstSubInfo->fileName);
+    int ret = snprintf_s(
+        pFileName, ucMaxLen + 1U, ucMaxLen, "%s%s%s", pstSubInfo->filePath, FILE_SEPARATOR, pstSubInfo->fileName);
     if (ret == -1) {
         SELF_LOG_ERROR("snprintf_s filename failed, strerr=%s.", strerror(ToolGetErrorCode()));
         return NOK;
@@ -691,31 +701,12 @@ unsigned int FilePathSplice(const StSubLogFileList *pstSubInfo, char *pFileName,
     return OK;
 }
 
-STATIC uint32_t LogAgentGetDeviceOsFileList(StLogFileList *logList)
-{
-    if (logList == NULL) {
-        SELF_LOG_WARN("[input] log file info is null.");
-        return NOK;
-    }
-
-    for (int32_t i = 0; i < (int32_t)LOG_TYPE_NUM; i++) {
-        StSubLogFileList *list = &(logList->sortDeviceOsLogList[i]);
-        uint32_t ret = LogAgentGetFileListForModule(list, list->filePath);
-        if (ret != OK) {
-            SELF_LOG_ERROR("get device os log file list failed, directory=%s, result=%u", logList->aucFilePath, ret);
-            return NOK;
-        }
-    }
-
-    return OK;
-}
-
 /**
-* @brief        : calculate current type log total file size without active file
-* @param [in]   : fileSize      log file max size
-* @param [in]   : fileNum       file number
-* @return       : total file size without active file
-*/
+ * @brief        : calculate current type log total file size without active file
+ * @param [in]   : fileSize      log file max size
+ * @param [in]   : fileNum       file number
+ * @return       : total file size without active file
+ */
 uint32_t LogCalTotalFileSize(uint32_t fileSize, int32_t fileNum)
 {
     if (fileNum <= 0) {
@@ -724,106 +715,23 @@ uint32_t LogCalTotalFileSize(uint32_t fileSize, int32_t fileNum)
     return fileSize * ((uint32_t)fileNum - 1U);
 }
 
-STATIC uint32_t LogAgentInitDeviceOsMaxFileNum(StLogFileList *logList)
-{
-    char deviceOsLogPath[MAX_FILEPATH_LEN + 1U] = { 0 };
-    ONE_ACT_WARN_LOG(logList == NULL, return NOK, "[input] log file list is null.");
-    for (int32_t i = 0; i < (int32_t)LOG_TYPE_NUM; i++) {
-        StSubLogFileList* list = &(logList->sortDeviceOsLogList[i]);
-        ONE_ACT_WARN_LOG(list == NULL, return NOK, "[input] list is null.");
-        if (i == (int32_t)DEBUG_LOG) {
-            list->totalMaxFileSize = LogCalTotalFileSize(logList->ulMaxOsFileSize, logList->maxOsFileNum);
-            list->maxFileSize = logList->ulMaxOsFileSize;
-        } else if (i == (int32_t)SECURITY_LOG) {
-            list->totalMaxFileSize = SECURITY_FILE_SIZE * (SECURITY_FILE_NUM - 1U);
-            list->maxFileSize = SECURITY_FILE_SIZE;
-        } else {
-            list->totalMaxFileSize = LogCalTotalFileSize(logList->ulMaxNdebugFileSize, logList->maxNdebugFileNum);
-            list->maxFileSize = logList->ulMaxNdebugFileSize;
-        }
-        int err = snprintf_s(list->fileHead, MAX_NAME_HEAD_LEN + 1U, MAX_NAME_HEAD_LEN, "%s_", DEVICE_OS_HEAD);
-        ONE_ACT_ERR_LOG(err == -1, return NOK, "get device os header failed, result=%d, strerr=%s.", \
-                        err, strerror(ToolGetErrorCode()));
-        (void)memset_s(deviceOsLogPath, MAX_FILEPATH_LEN + 1U, 0, MAX_FILEPATH_LEN + 1U);
-        err = snprintf_s(deviceOsLogPath, MAX_FILEPATH_LEN + 1U, MAX_FILEPATH_LEN, "%s%s%s%s%s",
-                         logList->aucFilePath, FILE_SEPARATOR, SORT_DIR_NAME[i], FILE_SEPARATOR, DEVICE_OS_HEAD);
-        ONE_ACT_ERR_LOG(err == -1, return NOK, "get device os log dir path failed, result=%d, strerr=%s.",
-                        err, strerror(ToolGetErrorCode()));
-        unsigned int ret = LogAgentInitMaxFileNumHelper(list, deviceOsLogPath, MAX_FILEPATH_LEN);
-        ONE_ACT_ERR_LOG(ret != OK, return NOK, "init max device os filename list failed, result=%u.", ret);
-        (void)ToolMutexInit(&list->lock);
-    }
-
-    return OK;
-}
-
-STATIC uint32_t LogAgentInitDeviceOsWriteLimit(StLogFileList *logList)
-{
-    ONE_ACT_WARN_LOG(logList == NULL, return NOK, "[input] log file list is null.");
-    if (!SlogdConfigMgrGetWriteFileLimit()) {
-        return OK;
-    }
-    for (int32_t i = 0; i < (int32_t)LOG_TYPE_NUM; i++) {
-        StSubLogFileList* list = &(logList->sortDeviceOsLogList[i]);
-        ONE_ACT_WARN_LOG(list == NULL, return NOK, "[input] list is null.");
-        uint32_t typeSize = SlogdConfigMgrGetTypeSpace(i);
-        if (typeSize == 0) {
-            continue;
-        }
-        if (WriteFileLimitInit(&list->limit, i, typeSize, list->totalMaxFileSize + list->maxFileSize) != LOG_SUCCESS) {
-            SELF_LOG_ERROR("create device os write file limit param list failed.");
-            return NOK;
-        }
-    }
-    return OK;
-}
-
-LogStatus LogAgentInitDeviceOs(StLogFileList *logList)
-{
-    ONE_ACT_WARN_LOG(logList == NULL, return LOG_FAILURE, "[input] log file list info is null.");
-    (void)memset_s(logList, sizeof(StLogFileList), 0x00, sizeof(StLogFileList));
-    int32_t ret = snprintf_truncated_s(logList->aucFilePath, MAX_FILEDIR_LEN + 1U, "%s", LOG_FILE_PATH);
-    ONE_ACT_ERR_LOG(ret < 0, return LOG_FAILURE, "snprintf_truncated_s failed.");
-
-    if (LogAgentGetCfg(logList) != LOG_SUCCESS) {
-        SELF_LOG_ERROR("init device os config failed.");
-        return LOG_FAILURE;
-    }
-    if (LogAgentInitDeviceOsMaxFileNum(logList) != OK) {
-        SELF_LOG_ERROR("init device os file list failed.");
-        return LOG_FAILURE;
-    }
-    if (LogAgentGetDeviceOsFileList(logList) != OK) {
-        SELF_LOG_ERROR("get current device os file list failed.");
-        return LOG_FAILURE;
-    }
-    if (LogAgentInitDeviceOsWriteLimit(logList) != OK) {
-        SELF_LOG_ERROR("init device os file list write limit failed.");
-        return LOG_FAILURE;
-    }
-    if (LogAgentInitDevice(logList, MAX_DEV_NUM) != OK) {
-        SELF_LOG_ERROR("get current device file list failed.");
-        return LOG_FAILURE;
-    }
-    return LOG_SUCCESS;
-}
-
-uint32_t LogAgentWriteDeviceOsLog(int32_t logType, StSubLogFileList *subLogList, char *msg, unsigned int len)
+uint32_t LogAgentWriteDeviceOsLog(int32_t logType, StSubLogFileList* subLogList, char* msg, unsigned int len)
 {
     ONE_ACT_WARN_LOG(msg == NULL, return NOK, "[input] device log buff is null.");
     ONE_ACT_WARN_LOG(len == 0, return NOK, "[input] device log buff size is 0.");
     ONE_ACT_WARN_LOG(subLogList == NULL, return NOK, "[input] log file list is null.");
-    StLogDataBlock stLogData = { 0 };
+    StLogDataBlock stLogData = {0};
     stLogData.ucDeviceID = 0;
     stLogData.ulDataLen = len;
-    stLogData.paucData = (char *)msg;
-    ONE_ACT_WARN_LOG((logType < (int32_t)DEBUG_LOG) || (logType >= (int32_t)LOG_TYPE_NUM),
-                     return NOK, "[input] wrong log type %d", logType);
+    stLogData.paucData = (char*)msg;
+    ONE_ACT_WARN_LOG(
+        (logType < (int32_t)DEBUG_LOG) || (logType >= (int32_t)LOG_TYPE_NUM), return NOK, "[input] wrong log type %d",
+        logType);
     unsigned int ret = LogAgentWriteFile(subLogList, &stLogData);
     return ret;
 }
 
-void LogAgentCleanUpDevice(StLogFileList *logList)
+void LogAgentCleanUpDevice(StLogFileList* logList)
 {
     if (logList == NULL) {
         return;
@@ -831,25 +739,27 @@ void LogAgentCleanUpDevice(StLogFileList *logList)
 
     for (unsigned int iType = 0; iType < (unsigned int)LOG_TYPE_NUM; iType++) {
         XFREE(logList->deviceLogList[iType]);
+        XFREE(logList->sortDeviceOsLogList[iType].dirList);
         XFREE(logList->sortDeviceAppLogList[iType].dirList);
     }
 }
 
-STATIC uint32_t LogAgentGetDeviceFileList(StLogFileList *logList)
+STATIC uint32_t LogAgentGetDeviceFileList(StLogFileList* logList)
 {
     if (logList == NULL) {
         SELF_LOG_WARN("[input] log file list is null.");
         return NOK;
     }
 
-    StSubLogFileList *list = NULL;
+    StSubLogFileList* list = NULL;
     for (uint32_t iType = 0; iType < (uint32_t)LOG_TYPE_NUM; iType++) {
-        for (unsigned char idx = 0; idx < logList->ucDeviceNum; idx++) {
+        for (uint32_t idx = 0; idx < logList->ucDeviceNum; idx++) {
             list = &(logList->deviceLogList[iType][idx]);
             uint32_t ret = LogAgentGetFileListForModule(list, list->filePath);
             if (ret != OK) {
-                SELF_LOG_ERROR("get device log file list failed, directory=%s, device_id=%d, result=%u.",
-                               list->filePath, idx, ret);
+                SELF_LOG_ERROR(
+                    "get device log file list failed, directory=%s, device_id=%u, result=%u.", list->filePath, idx,
+                    ret);
                 return NOK;
             }
         }
@@ -857,7 +767,7 @@ STATIC uint32_t LogAgentGetDeviceFileList(StLogFileList *logList)
     return OK;
 }
 
-unsigned int LogAgentInitDeviceMaxFileNum(StLogFileList *logList)
+unsigned int LogAgentInitDeviceMaxFileNum(StLogFileList* logList)
 {
     ONE_ACT_WARN_LOG(logList == NULL, return NOK, "[input] log file list info is null.");
 
@@ -869,19 +779,20 @@ unsigned int LogAgentInitDeviceMaxFileNum(StLogFileList *logList)
 
             list->totalMaxFileSize = LogCalTotalFileSize(logList->ulMaxFileSize, logList->maxFileNum);
             list->maxFileSize = logList->ulMaxFileSize;
-            int32_t err = snprintf_s(list->fileHead, MAX_NAME_HEAD_LEN + 1U, MAX_NAME_HEAD_LEN,
-                                     "%s%u_", DEVICE_HEAD, GetHostDeviceID(idx));
+            int32_t err = snprintf_s(
+                list->fileHead, MAX_NAME_HEAD_LEN + 1U, MAX_NAME_HEAD_LEN, "%s%u_", DEVICE_HEAD, GetHostDeviceID(idx));
 
-            ONE_ACT_ERR_LOG(err == -1, return NOK, "get device header failed, result=%d, strerr=%s.",
-                            err, strerror(ToolGetErrorCode()));
-            char deviceLogPath[MAX_FILEPATH_LEN + 1U] = { 0 };
+            ONE_ACT_ERR_LOG(
+                err == -1, return NOK, "get device header failed, result=%d, strerr=%s.", err,
+                strerror(ToolGetErrorCode()));
+            char deviceLogPath[MAX_FILEPATH_LEN + 1U] = {0};
             // device log must be debug type
-            err = snprintf_s(deviceLogPath, MAX_FILEPATH_LEN + 1U, MAX_FILEPATH_LEN, "%s%s%s%s%s%u",
-                             logList->aucFilePath, FILE_SEPARATOR, SORT_DIR_NAME[iType],
-                             FILE_SEPARATOR, DEVICE_HEAD, GetHostDeviceID(idx));
-            ONE_ACT_ERR_LOG(err == -1, return NOK,
-                            "get device log dir path failed, device_id=%u, result=%d, strerr=%s.",
-                            idx, err, strerror(ToolGetErrorCode()));
+            err = snprintf_s(
+                deviceLogPath, MAX_FILEPATH_LEN + 1U, MAX_FILEPATH_LEN, "%s%s%s%s%s%u", logList->aucFilePath,
+                FILE_SEPARATOR, SORT_DIR_NAME[iType], FILE_SEPARATOR, DEVICE_HEAD, GetHostDeviceID(idx));
+            ONE_ACT_ERR_LOG(
+                err == -1, return NOK, "get device log dir path failed, device_id=%u, result=%d, strerr=%s.", idx, err,
+                strerror(ToolGetErrorCode()));
             uint32_t ret = LogAgentInitMaxFileNumHelper(list, deviceLogPath, MAX_FILEPATH_LEN);
             ONE_ACT_ERR_LOG(ret != OK, return NOK, "init max device filename list failed, result=%u.", ret);
         }
@@ -889,7 +800,7 @@ unsigned int LogAgentInitDeviceMaxFileNum(StLogFileList *logList)
     return OK;
 }
 
-STATIC uint32_t LogAgentInitDeviceWriteLimit(StLogFileList *logList)
+STATIC uint32_t LogAgentInitDeviceWriteLimit(StLogFileList* logList)
 {
     ONE_ACT_WARN_LOG(logList == NULL, return NOK, "[input] log file list info is null.");
     if (!SlogdConfigMgrGetWriteFileLimit()) {
@@ -903,7 +814,8 @@ STATIC uint32_t LogAgentInitDeviceWriteLimit(StLogFileList *logList)
         for (uint32_t idx = 0; idx < logList->ucDeviceNum; idx++) {
             StSubLogFileList* list = &(logList->deviceLogList[iType][idx]);
             ONE_ACT_WARN_LOG(list == NULL, return NOK, "[input] list is null.");
-            if (WriteFileLimitInit(&list->limit, iType, typeSize, list->totalMaxFileSize + list->maxFileSize) != LOG_SUCCESS) {
+            if (WriteFileLimitInit(&list->limit, iType, typeSize, list->totalMaxFileSize + list->maxFileSize) !=
+                LOG_SUCCESS) {
                 SELF_LOG_ERROR("create device write file limit param list failed.");
                 return NOK;
             }
@@ -913,45 +825,44 @@ STATIC uint32_t LogAgentInitDeviceWriteLimit(StLogFileList *logList)
     return OK;
 }
 
-unsigned int LogAgentInitDevice(StLogFileList *logList, unsigned char deviceNum)
+int32_t LogAgentInitDevice(StLogFileList* logList, uint32_t deviceNum)
 {
-    ONE_ACT_WARN_LOG(logList == NULL, return NOK, "[input] log file list is null.");
+    ONE_ACT_WARN_LOG(logList == NULL, return LOG_INVALID_PARAM, "[input] log file list is null.");
+    ONE_ACT_WARN_LOG(
+        deviceNum == 0, return LOG_INVALID_PARAM, "device number is invalid, device_number=%u.", deviceNum);
     logList->ucDeviceNum = deviceNum;
-
     size_t len = sizeof(StSubLogFileList) * deviceNum;
-    ONE_ACT_WARN_LOG(len == 0, return NOK, "device number is invalid, device_number=%u.", deviceNum);
 
-    unsigned int iType = 0;
-    for (; iType < (unsigned int)LOG_TYPE_NUM; iType++) {
+    for (uint32_t iType = 0; iType < (uint32_t)LOG_TYPE_NUM; iType++) {
         // multi devices and os init
-        logList->deviceLogList[iType] = (StSubLogFileList *)LogMalloc(len);
+        logList->deviceLogList[iType] = (StSubLogFileList*)LogMalloc(len);
         if (logList->deviceLogList[iType] == NULL) {
             SELF_LOG_ERROR("malloc failed, strerr=%s.", strerror(ToolGetErrorCode()));
-            return NOK;
+            return LOG_FAILURE;
         }
     }
     // init log file list
     if (LogAgentInitDeviceMaxFileNum(logList) != OK) {
         SELF_LOG_ERROR("init device file list failed.");
-        return NOK;
+        return LOG_FAILURE;
     }
     // get log dir files
     if (LogAgentGetDeviceFileList(logList) != OK) {
         SELF_LOG_ERROR("get current device file list failed.");
-        return NOK;
+        return LOG_FAILURE;
     }
     // init log file list write limit
     if (LogAgentInitDeviceWriteLimit(logList) != OK) {
         SELF_LOG_ERROR("init device file list write limit failed.");
-        return NOK;
+        return LOG_FAILURE;
     }
-    return OK;
+    return LOG_SUCCESS;
 }
 
 #ifdef GROUP_LOG
-uint32_t LogAgentWriteDeviceLog(const StLogFileList *logList, char *msg, const DeviceWriteLogInfo *info)
+uint32_t LogAgentWriteDeviceLog(const StLogFileList* logList, char* msg, const DeviceWriteLogInfo* info)
 {
-    StLogDataBlock stLogData = { 0 };
+    StLogDataBlock stLogData = {0};
     ONE_ACT_WARN_LOG(logList == NULL, return NOK, "[input] log file list info is null.");
     ONE_ACT_WARN_LOG(msg == NULL, return NOK, "[input] log message is null.");
     ONE_ACT_WARN_LOG(info == NULL, return NOK, "[input] info is null.");
@@ -963,7 +874,7 @@ uint32_t LogAgentWriteDeviceLog(const StLogFileList *logList, char *msg, const D
     stLogData.ucDeviceID = deviceId;
     stLogData.ulDataLen = info->len;
     stLogData.paucData = msg;
-    StSubLogFileList *subList = NULL;
+    StSubLogFileList* subList = NULL;
     if (LogConfGroupGetSwitch() == false) {
         uint32_t deviceNum = logList->ucDeviceNum;
         if (deviceId > deviceNum) {
@@ -973,13 +884,12 @@ uint32_t LogAgentWriteDeviceLog(const StLogFileList *logList, char *msg, const D
         subList = &(logList->deviceLogList[info->logType][deviceId]);
     } else {
         int32_t moduleId = GetModuleIdByChannel(info->moduleId);
-        ONE_ACT_WARN_LOG(moduleId < 0, return NOK, \
-                        "chn %u mismatch moduleId, log abandon.", info->moduleId);
+        ONE_ACT_WARN_LOG(moduleId < 0, return NOK, "chn %u mismatch moduleId, log abandon.", info->moduleId);
         int32_t groupId = GetGroupIdByModuleId(moduleId);
         ONE_ACT_ERR_LOG(groupId < 0, return NOK, "[input] illegal module id %u.", info->moduleId);
-        GroupInfo *group = GetGroupInfoById(groupId);
-        ONE_ACT_ERR_LOG((group == NULL) || (group->deviceLogList == NULL),
-            return NOK, "can't find target group[%d].", groupId);
+        GroupInfo* group = GetGroupInfoById(groupId);
+        ONE_ACT_ERR_LOG(
+            (group == NULL) || (group->deviceLogList == NULL), return NOK, "can't find target group[%d].", groupId);
         uint32_t deviceNum = group->deviceNum;
         if (info->deviceId > deviceNum) {
             SELF_LOG_WARN("[input] wrong device_id=%u, device_number=%u.", info->deviceId, deviceNum);
@@ -990,16 +900,15 @@ uint32_t LogAgentWriteDeviceLog(const StLogFileList *logList, char *msg, const D
     return LogAgentWriteFile(subList, &stLogData);
 }
 #else
-uint32_t LogAgentWriteDeviceLog(const StLogFileList *logList, char *msg, const DeviceWriteLogInfo *info)
+uint32_t LogAgentWriteDeviceLog(const StLogFileList* logList, char* msg, const DeviceWriteLogInfo* info)
 {
-    StLogDataBlock stLogData = { 0 };
+    StLogDataBlock stLogData = {0};
     ONE_ACT_WARN_LOG(logList == NULL, return NOK, "[input] log file list info is null.");
     ONE_ACT_WARN_LOG(msg == NULL, return NOK, "[input] log message is null.");
     ONE_ACT_WARN_LOG(info == NULL, return NOK, "[input] info is null.");
 
     if (info->deviceId > logList->ucDeviceNum) {
-        SELF_LOG_WARN("[input] wrong device_id=%u, device_number=%u.",
-                      info->deviceId, logList->ucDeviceNum);
+        SELF_LOG_WARN("[input] wrong device_id=%u, device_number=%u.", info->deviceId, logList->ucDeviceNum);
         return NOK;
     }
 
@@ -1022,7 +931,7 @@ uint32_t LogAgentWriteDeviceLog(const StLogFileList *logList, char *msg, const D
 }
 #endif
 
-STATIC unsigned int LogAgentGetDeviceAppFileList(StSubLogFileList *subFileList)
+STATIC unsigned int LogAgentGetDeviceAppFileList(StSubLogFileList* subFileList)
 {
     if (subFileList == NULL) {
         SELF_LOG_WARN("[input] log file info is null.");
@@ -1036,8 +945,8 @@ STATIC unsigned int LogAgentGetDeviceAppFileList(StSubLogFileList *subFileList)
     return OK;
 }
 
-STATIC unsigned int LogAgentInitDeviceApp(const StLogFileList *logList, StSubLogFileList *subFileList,
-                                          const LogInfo* logInfo)
+STATIC unsigned int LogAgentInitDeviceApp(
+    const StLogFileList* logList, StSubLogFileList* subFileList, const LogInfo* logInfo)
 {
     ONE_ACT_WARN_LOG(logList == NULL, return NOK, "[input] log file list is null.");
     ONE_ACT_WARN_LOG(subFileList == NULL, return NOK, "[input] sub log file list is null.");
@@ -1046,23 +955,25 @@ STATIC unsigned int LogAgentInitDeviceApp(const StLogFileList *logList, StSubLog
     subFileList->totalMaxFileSize = LogCalTotalFileSize(logList->ulMaxAppFileSize, logList->maxAppFileNum);
     subFileList->maxFileSize = logList->ulMaxAppFileSize;
     int ret;
-    char appName[MAX_FILEPATH_LEN + 1U] = { 0 };
+    char appName[MAX_FILEPATH_LEN + 1U] = {0};
     if (logInfo->aosType == 0) {
         ret = snprintf_s(appName, MAX_FILEPATH_LEN + 1U, MAX_FILEPATH_LEN, "%s-%u", DEVICE_APP_HEAD, pid);
     } else {
         ret = snprintf_s(appName, MAX_FILEPATH_LEN + 1U, MAX_FILEPATH_LEN, "%s-%u", AOS_CORE_DEVICE_APP_HEAD, pid);
     }
-    ONE_ACT_ERR_LOG(ret == -1, return NOK, "get app name failed, result=%d, strerr=%s.", \
-                    ret, strerror(ToolGetErrorCode()));
-    ret = snprintf_s(subFileList->fileHead, MAX_NAME_HEAD_LEN + 1U, MAX_NAME_HEAD_LEN,
-                     "%s_", appName);
-    ONE_ACT_ERR_LOG(ret == -1, return NOK, "get device app header failed, result=%d, strerr=%s.", \
-                    ret, strerror(ToolGetErrorCode()));
-    char deviceAppLogPath[MAX_FILEPATH_LEN + 1U] = { 0 };
-    ret = snprintf_s(deviceAppLogPath, MAX_FILEPATH_LEN + 1U, MAX_FILEPATH_LEN, "%s%s%s%s%s", logList->aucFilePath,
-                     FILE_SEPARATOR, SORT_DIR_NAME[logInfo->type], FILE_SEPARATOR, appName);
-    ONE_ACT_ERR_LOG(ret == -1, return NOK, "get device app log dir path failed, pid=%u, result=%d, strerr=%s.",
-                    pid, ret, strerror(ToolGetErrorCode()));
+    ONE_ACT_ERR_LOG(
+        ret == -1, return NOK, "get app name failed, result=%d, strerr=%s.", ret, strerror(ToolGetErrorCode()));
+    ret = snprintf_s(subFileList->fileHead, MAX_NAME_HEAD_LEN + 1U, MAX_NAME_HEAD_LEN, "%s_", appName);
+    ONE_ACT_ERR_LOG(
+        ret == -1, return NOK, "get device app header failed, result=%d, strerr=%s.", ret,
+        strerror(ToolGetErrorCode()));
+    char deviceAppLogPath[MAX_FILEPATH_LEN + 1U] = {0};
+    ret = snprintf_s(
+        deviceAppLogPath, MAX_FILEPATH_LEN + 1U, MAX_FILEPATH_LEN, "%s%s%s%s%s", logList->aucFilePath, FILE_SEPARATOR,
+        SORT_DIR_NAME[logInfo->type], FILE_SEPARATOR, appName);
+    ONE_ACT_ERR_LOG(
+        ret == -1, return NOK, "get device app log dir path failed, pid=%u, result=%d, strerr=%s.", pid, ret,
+        strerror(ToolGetErrorCode()));
     unsigned int res = LogAgentInitMaxFileNumHelper(subFileList, deviceAppLogPath, MAX_FILEPATH_LEN);
     ONE_ACT_ERR_LOG(res != OK, return NOK, "init max device app filename list failed, result=%u.", res);
     if (LogAgentGetDeviceAppFileList(subFileList) != OK) {
@@ -1072,7 +983,7 @@ STATIC unsigned int LogAgentInitDeviceApp(const StLogFileList *logList, StSubLog
     return OK;
 }
 
-STATIC int32_t AppLogPidDirFilter(const ToolDirent *dir)
+int32_t AppLogPidDirFilter(const ToolDirent* dir)
 {
     ONE_ACT_NO_LOG(dir == NULL, return FILTER_NOK);
     if ((dir->d_type == (uint8_t)DT_DIR) && (LogStrStartsWith(dir->d_name, DEVICE_APP_DIR_NAME) == false) &&
@@ -1083,7 +994,7 @@ STATIC int32_t AppLogPidDirFilter(const ToolDirent *dir)
     return FILTER_NOK;
 }
 
-static void LogAgentAddLogDirList(const char *path, LogDirList *dirList, const char *dir)
+static void LogAgentAddLogDirList(const char* path, LogDirList* dirList, const char* dir)
 {
     int32_t ret = snprintf_s(dirList->dirName, MAX_FULLPATH_LEN + 1U, MAX_FULLPATH_LEN, "%s/%s", path, dir);
     if (ret == -1) {
@@ -1093,26 +1004,26 @@ static void LogAgentAddLogDirList(const char *path, LogDirList *dirList, const c
     dirList->dirSize = LogGetDirSize(dirList->dirName, 0);
 }
 
-static uint32_t LogAgentSortDirList(const char *path, LogDirList *dir, ToolDirent **namelist, int32_t totalNum)
+static uint32_t LogAgentSortDirList(const char* path, LogDirList* dir, ToolDirent** namelist, int32_t totalNum)
 {
     int32_t start = 0;
-    LogDirList *curDir = NULL;
+    LogDirList* curDir = NULL;
     uint32_t totalSize = 0;
     while (start < totalNum) {
         // find the newest directory
         int32_t point = start;
         for (int32_t i = start; i < totalNum; i++) {
-            const ToolDirent *cur = namelist[point];
-            const ToolDirent *new = namelist[i];
+            const ToolDirent* cur = namelist[point];
+            const ToolDirent* new = namelist[i];
             point = (SlogdApplogSortFileFunc(path, &cur, &new) == 0) ? i : point;
         }
         if (point != start) {
             // switch the newest item to [start]
-            ToolDirent *temp = namelist[point];
+            ToolDirent* temp = namelist[point];
             namelist[point] = namelist[start];
             namelist[start] = temp;
         }
-        curDir = (LogDirList *)(dir + start);
+        curDir = (LogDirList*)(dir + start);
         LogAgentAddLogDirList(path, curDir, namelist[start]->d_name);
         totalSize += curDir->dirSize;
         start++;
@@ -1120,46 +1031,41 @@ static uint32_t LogAgentSortDirList(const char *path, LogDirList *dir, ToolDiren
     return totalSize;
 }
 
-static int32_t LogAgentInitDeviceAppDir(StLogFileList *logList, int32_t type)
+int32_t LogAgentGetDirList(StSubLogFileList* list, const char* scanPath, ToolFilter filterFunc)
 {
-    char path[MAX_FILEPATH_LEN + 1U] = { 0 };
-    int32_t ret = snprintf_s(path, MAX_FILEPATH_LEN + 1U, MAX_FILEPATH_LEN, "%s%s%s", logList->aucFilePath,
-                             FILE_SEPARATOR, SORT_DIR_NAME[type]);
-    if (ret == -1) {
-        SELF_LOG_ERROR("get device app log dir[%d] path failed, result=%d, strerr=%s.",
-                       type, ret, strerror(ToolGetErrorCode()));
-        return LOG_FAILURE;
-    }
     // check if sub-dir exist, if not then return immediately
-    ONE_ACT_NO_LOG(ToolAccess(path) != SYS_OK, return LOG_SUCCESS);
-    ToolDirent **namelist = NULL;
-    int32_t totalNum = ToolScandir(path, &namelist, AppLogPidDirFilter, NULL);
-    ONE_ACT_ERR_LOG((totalNum < 0) || ((totalNum > 0) && (namelist == NULL)), return LOG_FAILURE,
-        "scan directory failed, result=%d, strerr=%s.", totalNum, strerror(ToolGetErrorCode()));
-    ONE_ACT_INFO_LOG(totalNum == 0, return LOG_SUCCESS, "no device app log dir[%d] found.", type);
+    ONE_ACT_NO_LOG(ToolAccess(scanPath) != SYS_OK, return LOG_SUCCESS);
 
-    LogDirList *dir = (LogDirList *)LogMalloc((size_t)totalNum * sizeof(LogDirList));
+    ToolDirent** namelist = NULL;
+    int32_t totalNum = ToolScandir(scanPath, &namelist, filterFunc, NULL);
+    ONE_ACT_ERR_LOG(
+        (totalNum < 0) || ((totalNum > 0) && (namelist == NULL)), return LOG_FAILURE,
+        "scan directory failed, result=%d, strerr=%s.", totalNum, strerror(ToolGetErrorCode()));
+    ONE_ACT_INFO_LOG(totalNum == 0, return LOG_SUCCESS, "no dir[%s] found.", scanPath);
+
+    LogDirList* dir = (LogDirList*)LogMalloc((size_t)totalNum * sizeof(LogDirList));
     if (dir == NULL) {
-        SELF_LOG_ERROR("malloc failed for app log list[%d], strerr=%s.", type, strerror(ToolGetErrorCode()));
+        SELF_LOG_ERROR("malloc failed for dir list, path=%s, strerr=%s.", scanPath, strerror(ToolGetErrorCode()));
         ToolScandirFree(namelist, totalNum);
         return LOG_FAILURE;
     }
-    StSubLogFileList *list = &(logList->sortDeviceAppLogList[type]);
-    list->dirTotalSize = LogAgentSortDirList(path, dir, namelist, totalNum);
+
+    list->dirTotalSize = LogAgentSortDirList(scanPath, dir, namelist, totalNum);
     list->dirList = dir;
     list->dirNum = totalNum;
     ToolScandirFree(namelist, totalNum);
     return LOG_SUCCESS;
 }
 
-LogStatus LogAgentInitDeviceApplication(StLogFileList *logList)
+LogStatus LogAgentInitDeviceApplication(StLogFileList* logList)
 {
     ONE_ACT_WARN_LOG(logList == NULL, return LOG_FAILURE, "[input] log file list is null.");
     for (int32_t i = 0; i < (int32_t)LOG_TYPE_NUM; i++) {
-        if (SlogdConfigMgrGetStorageMode(DEBUG_APP_LOG_TYPE + i) != STORAGE_RULE_COMMON) {
+        if ((i == (int32_t)SECURITY_LOG) ||
+            (SlogdConfigMgrGetStorageMode(DEBUG_APP_LOG_TYPE + i) != STORAGE_RULE_COMMON)) {
             continue;
         }
-        StSubLogFileList *list = &(logList->sortDeviceAppLogList[i]);
+        StSubLogFileList* list = &(logList->sortDeviceAppLogList[i]);
         list->totalMaxFileSize = LogCalTotalFileSize(logList->ulMaxAppFileSize, logList->maxAppFileNum);
         list->maxFileSize = logList->ulMaxAppFileSize;
         int32_t ret = snprintf_s(list->fileHead, MAX_NAME_HEAD_LEN + 1U, MAX_NAME_HEAD_LEN, "%s_", DEVICE_APP_HEAD);
@@ -1168,22 +1074,34 @@ LogStatus LogAgentInitDeviceApplication(StLogFileList *logList)
             return LOG_FAILURE;
         }
         (void)memset_s(list->filePath, MAX_FILEPATH_LEN + 1U, 0, MAX_FILEPATH_LEN + 1U);
-        ret = snprintf_s(list->filePath, MAX_FILEPATH_LEN + 1U, MAX_FILEPATH_LEN, "%s%s%s%s%s", logList->aucFilePath,
-                         FILE_SEPARATOR, SORT_DIR_NAME[i], FILE_SEPARATOR, DEVICE_APP_DIR_NAME);
+        ret = snprintf_s(
+            list->filePath, MAX_FILEPATH_LEN + 1U, MAX_FILEPATH_LEN, "%s%s%s%s%s", logList->aucFilePath, FILE_SEPARATOR,
+            SORT_DIR_NAME[i], FILE_SEPARATOR, DEVICE_APP_DIR_NAME);
         if (ret == -1) {
-            SELF_LOG_ERROR("get device app log dir[%d] path failed, result=%d, strerr=%s.",
-                           i, ret, strerror(ToolGetErrorCode()));
+            SELF_LOG_ERROR(
+                "get device app log dir[%d] path failed, result=%d, strerr=%s.", i, ret, strerror(ToolGetErrorCode()));
             return LOG_FAILURE;
         }
-        ret = LogAgentInitDeviceAppDir(logList, i);
+        char scanPath[MAX_FILEPATH_LEN + 1U] = {0};
+        ret = snprintf_s(
+            scanPath, MAX_FILEPATH_LEN + 1U, MAX_FILEPATH_LEN, "%s%s%s", logList->aucFilePath, FILE_SEPARATOR,
+            SORT_DIR_NAME[i]);
+        ONE_ACT_ERR_LOG(
+            ret == -1, return LOG_FAILURE, "get device app log scan path failed, type=%d, result=%d, strerr=%s.", i,
+            ret, strerror(ToolGetErrorCode()))
+
+        ret = LogAgentGetDirList(list, scanPath, AppLogPidDirFilter);
+
         NO_ACT_WARN_LOG(ret != LOG_SUCCESS, "can not init device app log dir, result=%d.", ret);
         uint32_t err = LogAgentGetFileListForModule(list, list->filePath);
-        ONE_ACT_ERR_LOG(err != OK, return LOG_FAILURE, "get device app log file list failed, directory=%s, result=%u",
+        ONE_ACT_ERR_LOG(
+            err != OK, return LOG_FAILURE, "get device app log file list failed, directory=%s, result=%u",
             logList->aucFilePath, err);
         uint32_t typeSize = SlogdConfigMgrGetTypeSpace(i);
         if (SlogdConfigMgrGetWriteFileLimit() && (typeSize != 0)) {
             LogAgentRemoveDir(list, list->totalMaxFileSize);
-            if (WriteFileLimitInit(&list->limit, i, typeSize, list->totalMaxFileSize + list->maxFileSize) != LOG_SUCCESS) {
+            if (WriteFileLimitInit(&list->limit, i, typeSize, list->totalMaxFileSize + list->maxFileSize) !=
+                LOG_SUCCESS) {
                 SELF_LOG_ERROR("create device app write file limit param list failed.");
                 return LOG_FAILURE;
             }
@@ -1193,17 +1111,17 @@ LogStatus LogAgentInitDeviceApplication(StLogFileList *logList)
     return LOG_SUCCESS;
 }
 
-uint32_t LogAgentWriteDeviceApplicationLog(char *msg, unsigned int len, const LogInfo* logInfo,
-                                           StLogFileList *logList)
+uint32_t LogAgentWriteDeviceApplicationLog(char* msg, unsigned int len, const LogInfo* logInfo, StLogFileList* logList)
 {
     ONE_ACT_WARN_LOG((msg == NULL) || (len == 0), return NOK, "[input] device app log buff is null or len=%u.", len);
     ONE_ACT_WARN_LOG(logInfo == NULL, return NOK, "[input] device app log info is null.");
-    ONE_ACT_WARN_LOG(logInfo->processType != APPLICATION, return NOK, "[input] wrong device app log type=%d.",
-                     (int)logInfo->processType);
+    ONE_ACT_WARN_LOG(
+        logInfo->processType != APPLICATION, return NOK, "[input] wrong device app log type=%d.",
+        (int)logInfo->processType);
     ONE_ACT_WARN_LOG(logList == NULL, return NOK, "[input] config file info is null.");
-    ONE_ACT_WARN_LOG(logInfo->type >= LOG_TYPE_NUM, return NOK,
-                     "[input] wrong device app log type=%d.", (int)logInfo->type);
-    StLogDataBlock stLogData = { 0 };
+    ONE_ACT_WARN_LOG(
+        logInfo->type >= LOG_TYPE_NUM, return NOK, "[input] wrong device app log type=%d.", (int)logInfo->type);
+    StLogDataBlock stLogData = {0};
     stLogData.ucDeviceID = 0;
     // parameter [msg] is app log string, such as "0[DEBUG] this is a message." or "[DEBUG] this is a message."
     // at host, number 0-3 is processed into logType(debug, security, run, operation)
@@ -1224,7 +1142,7 @@ uint32_t LogAgentWriteDeviceApplicationLog(char *msg, unsigned int len, const Lo
         ret = LogAgentWriteFile(subFileList, &stLogData);
         (void)ToolMutexUnLock(&subFileList->lock);
     } else {
-        StSubLogFileList subFileList = { 0 };
+        StSubLogFileList subFileList = {0};
         (void)memset_s(&subFileList, sizeof(StSubLogFileList), 0, sizeof(StSubLogFileList));
         ret = LogAgentInitDeviceApp(logList, &subFileList, logInfo);
         ONE_ACT_ERR_LOG(ret != OK, return NOK, "get current device app file list failed.");
@@ -1234,12 +1152,12 @@ uint32_t LogAgentWriteDeviceApplicationLog(char *msg, unsigned int len, const Lo
     return ret;
 }
 
-uint32_t LogAgentWriteEventLog(StSubLogFileList *subLogList, char *msg, uint32_t len)
+uint32_t LogAgentWriteEventLog(StSubLogFileList* subLogList, char* msg, uint32_t len)
 {
     ONE_ACT_WARN_LOG(msg == NULL, return NOK, "[input] device log buff is null.");
     ONE_ACT_WARN_LOG(len == 0, return NOK, "[input] device log buff size is 0.");
     ONE_ACT_WARN_LOG(subLogList == NULL, return NOK, "[input] log file list is null.");
-    StLogDataBlock stLogData = { 0 };
+    StLogDataBlock stLogData = {0};
     stLogData.ucDeviceID = 0;
     stLogData.ulDataLen = len;
     stLogData.paucData = msg;
@@ -1248,7 +1166,7 @@ uint32_t LogAgentWriteEventLog(StSubLogFileList *subLogList, char *msg, uint32_t
     return ret;
 }
 
-int32_t LogAgentGetCfg(StLogFileList *logList)
+int32_t LogAgentGetCfg(StLogFileList* logList)
 {
     if (logList == NULL) {
         SELF_LOG_WARN("[input] log file list info is null.");
@@ -1267,14 +1185,14 @@ int32_t LogAgentGetCfg(StLogFileList *logList)
     return LOG_SUCCESS;
 }
 
-void LogFileMgrStorage(StSubLogFileList *subLogList)
+void LogFileMgrStorage(StSubLogFileList* subLogList)
 {
     ONE_ACT_WARN_LOG(subLogList == NULL, return, "[input] sub log list is null.");
 
     if ((LogStrlen(subLogList->fileName) == 0U) || (subLogList->storage.curTime < subLogList->storage.period)) {
         return;
     }
-    char logFileName[TOOL_MAX_PATH] = { 0 };
+    char logFileName[TOOL_MAX_PATH] = {0};
     uint32_t ret = FilePathSplice(subLogList, logFileName, (size_t)TOOL_MAX_PATH - 1U);
     ONE_ACT_ERR_LOG(ret != OK, return, "get file name failed, stroage period failed.");
     if (LogCompressSwitch() && LogCompressCheckActiveFile(logFileName)) {
@@ -1285,13 +1203,14 @@ void LogFileMgrStorage(StSubLogFileList *subLogList)
     subLogList->storage.curTime = 0;
     // if reach to aging, delete oldest file
     ret = LogAgentGetFileListForModule(subLogList, subLogList->filePath);
-    NO_ACT_ERR_LOG(ret != OK, "get %s log file list failed, directory=%s, result=%u",
-                   subLogList->fileHead, subLogList->filePath, ret);
+    NO_ACT_ERR_LOG(
+        ret != OK, "get %s log file list failed, directory=%s, result=%u", subLogList->fileHead, subLogList->filePath,
+        ret);
     (void)memset_s(subLogList->fileName, MAX_FILENAME_LEN + 1U, 0, MAX_FILENAME_LEN + 1U);
     return;
 }
 
-void LogFileMgrInitClass(StSubLogFileList* list, LogConfClass *confClass)
+void LogFileMgrInitClass(StSubLogFileList* list, LogConfClass* confClass)
 {
     list->maxFileSize = confClass->outputRule.fileSize;
     list->totalMaxFileSize = confClass->outputRule.totalSize - confClass->outputRule.fileSize;

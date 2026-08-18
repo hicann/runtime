@@ -12,10 +12,9 @@
 #include "hdclog_device_init.h"
 #include "log_file_dump_c.h"
 #include "msn_config.h"
-#include "hbm_detect.h"
-#include "cpu_detect.h"
 #include "log_print.h"
 #include "adx_component_api_c.h"
+#include "lib_load.h"
 #include "file_monitor_core.h"
 
 int32_t LogDaemonServersInit(void)
@@ -26,14 +25,12 @@ int32_t LogDaemonServersInit(void)
     ONE_ACT_ERR_LOG(ret != LOG_SUCCESS, return ret, "register file dump component error");
     ret = FileMonitorInit();
     ONE_ACT_ERR_LOG(ret != LOG_SUCCESS, return ret, "register file monitor component error");
-    ret = CpuDetectServerInit();
-    ONE_ACT_ERR_LOG(ret != LOG_SUCCESS, return ret, "register cpu detect component error");
     ret = ServerCreateEx(COMPONENT_LOG_LEVEL, HdclogDeviceInit, IdeDeviceLogProcess, HdclogDeviceDestroy);
     ONE_ACT_ERR_LOG(ret != LOG_SUCCESS, return ret, "register log level component error");
     ret = ServerCreateEx(COMPONENT_MSNPUREPORT, MsnCmdInit, MsnCmdProcess, MsnCmdDestory);
     ONE_ACT_ERR_LOG(ret != LOG_SUCCESS, return ret, "register msnpureport component error");
-    ret = ServerCreateEx(COMPONENT_HBM_DETECT, HbmDetectInit, HbmDetectProcess, HbmDetectDestroy);
-    ONE_ACT_ERR_LOG(ret != LOG_SUCCESS, return ret, "register hbm detect component error");
+    ret = ServerCreateEx(COMPONENT_DETECT_LIB_LOAD, LibLoadServerInit, LibLoadServerProcess, LibLoadServerDestroy);
+    ONE_ACT_ERR_LOG(ret != LOG_SUCCESS, return ret, "register lib load component error");
     ret = ServersStart();
     ONE_ACT_ERR_LOG(ret != LOG_SUCCESS, return ret, "startup component server error");
     return ret;
@@ -42,7 +39,6 @@ int32_t LogDaemonServersInit(void)
 void LogDaemonServersExit(void)
 {
     ServerMgrExit();
-	FileDumpExit();
+    FileDumpExit();
     FileMonitorExit();
-    CpuDetectServerExit();
 }

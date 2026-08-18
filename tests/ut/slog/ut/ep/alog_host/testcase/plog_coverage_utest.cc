@@ -42,7 +42,7 @@ using namespace testing;
 /* g_platform is file-static in plog_drv.c (STATIC is empty under _LOG_UT_),
  * exposed here so each test can reset the platform-info cache. */
 extern "C" {
-    extern uint32_t g_platform;
+extern uint32_t g_platform;
 }
 
 /* ──────────────────────────────────────────────────────────────────────── *
@@ -79,15 +79,16 @@ protected:
     }
 };
 
-static int CountFilesInDir(const char *dir)
+static int CountFilesInDir(const char* dir)
 {
     char cmd[300] = {0};
     char resFile[300] = {0};
     (void)snprintf_s(resFile, sizeof(resFile), sizeof(resFile) - 1U, "%s/cov_count.txt", PATH_ROOT);
     (void)snprintf_s(cmd, sizeof(cmd), sizeof(cmd) - 1U, "ls -lR %s 2>/dev/null | grep -c '^-'", dir);
-    (void)snprintf_s(cmd, sizeof(cmd), sizeof(cmd) - 1U, "ls -lR %s 2>/dev/null | grep '^-' | wc -l > %s", dir, resFile);
+    (void)snprintf_s(
+        cmd, sizeof(cmd), sizeof(cmd) - 1U, "ls -lR %s 2>/dev/null | grep '^-' | wc -l > %s", dir, resFile);
     (void)system(cmd);
-    FILE *fp = fopen(resFile, "r");
+    FILE* fp = fopen(resFile, "r");
     if (fp == NULL) {
         return 0;
     }
@@ -144,10 +145,10 @@ TEST_F(PlogFileMgrCovUtest, WriteHostLog_InvalidParams)
 TEST_F(PlogFileMgrCovUtest, WriteHostLog_FileRotation)
 {
     ASSERT_EQ(LOG_SUCCESS, PlogFileMgrInit());
-    PlogFileMgrInfo *fl = PlogGetFileMgrInfo();
+    PlogFileMgrInfo* fl = PlogGetFileMgrInfo();
     ASSERT_NE(nullptr, fl);
     // shrink limits so rotation triggers immediately
-    fl->hostLogList[DEBUG_LOG].maxFileSize = 4;   // 4 bytes
+    fl->hostLogList[DEBUG_LOG].maxFileSize = 4; // 4 bytes
     fl->hostLogList[DEBUG_LOG].maxFileNum = 2;
 
     char msg[4] = "AB";
@@ -166,7 +167,7 @@ TEST_F(PlogFileMgrCovUtest, WriteHostLog_FileRotation)
 TEST_F(PlogFileMgrCovUtest, WriteHostLog_FopenFailPath)
 {
     ASSERT_EQ(LOG_SUCCESS, PlogFileMgrInit());
-    PlogFileMgrInfo *fl = PlogGetFileMgrInfo();
+    PlogFileMgrInfo* fl = PlogGetFileMgrInfo();
     ASSERT_NE(nullptr, fl);
     // maxFileSize smaller than payload so rotation triggers even when the
     // stat-read fopen fails (filesize stays 0).
@@ -190,7 +191,7 @@ TEST_F(PlogFileMgrCovUtest, WriteDeviceLog_SuccessAndInvalid)
 {
     char msg[64] = "device log line";
     ASSERT_EQ(nullptr, PlogGetFileMgrInfo());
-    EXPECT_EQ(LOG_FAILURE, PlogWriteDeviceLog(msg, NULL)); // null info before init
+    EXPECT_EQ(LOG_FAILURE, PlogWriteDeviceLog(msg, NULL));      // null info before init
     PlogDeviceLogInfo badInfo = {0};
     EXPECT_EQ(LOG_FAILURE, PlogWriteDeviceLog(NULL, &badInfo)); // null msg before init
 
@@ -203,12 +204,12 @@ TEST_F(PlogFileMgrCovUtest, WriteDeviceLog_SuccessAndInvalid)
     EXPECT_EQ(LOG_SUCCESS, PlogWriteDeviceLog(msg, &info));
 
     // invalid params after init
-    EXPECT_EQ(LOG_FAILURE, PlogWriteDeviceLog(NULL, &info));     // null msg
-    EXPECT_EQ(LOG_FAILURE, PlogWriteDeviceLog(msg, NULL));       // null info
+    EXPECT_EQ(LOG_FAILURE, PlogWriteDeviceLog(NULL, &info)); // null msg
+    EXPECT_EQ(LOG_FAILURE, PlogWriteDeviceLog(msg, NULL));   // null info
     info.slogFlag = 1;
-    EXPECT_EQ(LOG_FAILURE, PlogWriteDeviceLog(msg, &info));      // slogFlag==1
+    EXPECT_EQ(LOG_FAILURE, PlogWriteDeviceLog(msg, &info));  // slogFlag==1
     info.slogFlag = 0;
-    info.deviceId = (uint32_t)MAX_DEV_NUM + 1U; // deviceId > deviceNum
+    info.deviceId = (uint32_t)MAX_DEV_NUM + 1U;              // deviceId > deviceNum
     EXPECT_EQ(LOG_FAILURE, PlogWriteDeviceLog(msg, &info));
     info.deviceId = 0;
     info.logType = LOG_TYPE_NUM; // out of range -> defaults to DEBUG_LOG, success
@@ -221,7 +222,7 @@ TEST_F(PlogFileMgrCovUtest, WriteDeviceLog_SuccessAndInvalid)
 /* TC: PlogGetHostFileNum env parsing via ASCEND_HOST_LOG_FILE_NUM. */
 TEST_F(PlogFileMgrCovUtest, FileMgrInit_HostLogFileNumEnv)
 {
-    const char *envName = "ASCEND_HOST_LOG_FILE_NUM";
+    const char* envName = "ASCEND_HOST_LOG_FILE_NUM";
     // valid value
     setenv(envName, "5", 1);
     ASSERT_EQ(LOG_SUCCESS, PlogFileMgrInit());
@@ -251,7 +252,7 @@ TEST_F(PlogFileMgrCovUtest, FileMgrInit_WorkPathFallback)
     unsetenv("ASCEND_PROCESS_LOG_PATH");
     setenv("ASCEND_WORK_PATH", PATH_ROOT, 1);
     ASSERT_EQ(LOG_SUCCESS, PlogFileMgrInit());
-    PlogFileMgrInfo *fl = PlogGetFileMgrInfo();
+    PlogFileMgrInfo* fl = PlogGetFileMgrInfo();
     ASSERT_NE(nullptr, fl);
     EXPECT_NE(nullptr, strstr(fl->rootPath, "log"));
     // restore for subsequent tests
@@ -265,7 +266,7 @@ TEST_F(PlogFileMgrCovUtest, FileMgrInit_DefaultHomePath)
     unsetenv("ASCEND_PROCESS_LOG_PATH");
     unsetenv("ASCEND_WORK_PATH");
     ASSERT_EQ(LOG_SUCCESS, PlogFileMgrInit());
-    PlogFileMgrInfo *fl = PlogGetFileMgrInfo();
+    PlogFileMgrInfo* fl = PlogGetFileMgrInfo();
     ASSERT_NE(nullptr, fl);
     EXPECT_NE(nullptr, strstr(fl->rootPath, "ascend"));
     setenv("ASCEND_PROCESS_LOG_PATH", PATH_ROOT, 1);
@@ -283,9 +284,9 @@ TEST_F(PlogFileMgrCovUtest, FileMgrExit_NullListSafe)
 TEST_F(PlogFileMgrCovUtest, WriteDeviceLog_DeviceLogListNull)
 {
     ASSERT_EQ(LOG_SUCCESS, PlogFileMgrInit());
-    PlogFileMgrInfo *fl = PlogGetFileMgrInfo();
+    PlogFileMgrInfo* fl = PlogGetFileMgrInfo();
     ASSERT_NE(nullptr, fl);
-    PlogFileList *saved = fl->deviceLogList[DEBUG_LOG];
+    PlogFileList* saved = fl->deviceLogList[DEBUG_LOG];
     fl->deviceLogList[DEBUG_LOG] = NULL; // force the null-list branch
     PlogDeviceLogInfo info = {0};
     info.len = 4;
@@ -300,11 +301,11 @@ TEST_F(PlogFileMgrCovUtest, WriteDeviceLog_DeviceLogListNull)
 TEST_F(PlogFileMgrCovUtest, ReinitForChild_DeviceLogListNull)
 {
     ASSERT_EQ(LOG_SUCCESS, PlogFileMgrInit());
-    PlogFileMgrInfo *fl = PlogGetFileMgrInfo();
+    PlogFileMgrInfo* fl = PlogGetFileMgrInfo();
     ASSERT_NE(nullptr, fl);
-    PlogFileList *saved = fl->deviceLogList[SECURITY_LOG];
+    PlogFileList* saved = fl->deviceLogList[SECURITY_LOG];
     fl->deviceLogList[SECURITY_LOG] = NULL;
-    PlogReinitFileHeadsForChild(); // covers the NULL `continue` branch
+    PlogReinitFileHeadsForChild();           // covers the NULL `continue` branch
     fl->deviceLogList[SECURITY_LOG] = saved; // restore for clean Exit
 }
 
@@ -313,9 +314,10 @@ TEST_F(PlogFileMgrCovUtest, ReinitForChild_DeviceLogListNull)
 TEST_F(PlogFileMgrCovUtest, WriteHostLog_ChownFail)
 {
     ASSERT_EQ(LOG_SUCCESS, PlogFileMgrInit());
-    // DlogGetUid/Gid feed fchown; a non-zero foreign uid makes fchown fail.
-    MOCKER(DlogGetUid).stubs().will(returnValue((uint32_t)99999));
-    MOCKER(DlogGetGid).stubs().will(returnValue((uint32_t)99999));
+    // 直接让 fchown 失败即可覆盖该分支。
+    // 不可改为打桩 DlogGetUid/DlogGetGid：其返回值还被 socket 路径的
+    // getpwuid 使用，伪造 uid 会使该路径反复重试，导致用例挂死。
+    MOCKER(fchown).stubs().will(returnValue(-1));
     char msg[16] = "chown fail test";
     EXPECT_EQ(LOG_SUCCESS, PlogWriteHostLog(DEBUG_LOG, msg, (uint32_t)strlen(msg)));
     ResetErrLog();
@@ -350,10 +352,7 @@ protected:
         system("mkdir -p " PATH_ROOT);
     }
 
-    static void TearDownTestCase()
-    {
-        system("rm -rf " PATH_ROOT);
-    }
+    static void TearDownTestCase() { system("rm -rf " PATH_ROOT); }
 };
 
 /* --- DrvClientCreate / DrvClientRelease --- */
@@ -364,10 +363,7 @@ TEST_F(PlogDrvCovUtest, DrvClientCreate_Success)
     EXPECT_NE(nullptr, client);
 }
 
-TEST_F(PlogDrvCovUtest, DrvClientCreate_NullClient)
-{
-    EXPECT_EQ(-1, DrvClientCreate(NULL, 0));
-}
+TEST_F(PlogDrvCovUtest, DrvClientCreate_NullClient) { EXPECT_EQ(-1, DrvClientCreate(NULL, 0)); }
 
 TEST_F(PlogDrvCovUtest, DrvClientCreate_CreateFailed)
 {
@@ -413,9 +409,9 @@ TEST_F(PlogDrvCovUtest, DrvSessionInit_InvalidParams)
 {
     HDC_CLIENT client = (HDC_CLIENT)1;
     HDC_SESSION session = NULL;
-    EXPECT_EQ(-1, DrvSessionInit(NULL, &session, 0));     // null client
-    EXPECT_EQ(-1, DrvSessionInit(client, NULL, 0));       // null session
-    EXPECT_EQ(-1, DrvSessionInit(client, &session, -1));  // devId < 0
+    EXPECT_EQ(-1, DrvSessionInit(NULL, &session, 0));                  // null client
+    EXPECT_EQ(-1, DrvSessionInit(client, NULL, 0));                    // null session
+    EXPECT_EQ(-1, DrvSessionInit(client, &session, -1));               // devId < 0
     EXPECT_EQ(-1, DrvSessionInit(client, &session, HOST_MAX_DEV_NUM)); // devId >= max
 }
 
@@ -445,10 +441,7 @@ TEST_F(PlogDrvCovUtest, DrvSessionRelease_NullAndSuccessAndFail)
 }
 
 /* --- DrvGetPlatformInfo --- */
-TEST_F(PlogDrvCovUtest, DrvGetPlatformInfo_NullInfo)
-{
-    EXPECT_EQ(-1, DrvGetPlatformInfo(NULL));
-}
+TEST_F(PlogDrvCovUtest, DrvGetPlatformInfo_NullInfo) { EXPECT_EQ(-1, DrvGetPlatformInfo(NULL)); }
 
 TEST_F(PlogDrvCovUtest, DrvGetPlatformInfo_FetchAndCache)
 {
@@ -469,7 +462,7 @@ TEST_F(PlogDrvCovUtest, DrvGetPlatformInfo_GetFailed)
     EXPECT_EQ(-1, DrvGetPlatformInfo(&info));
 }
 
-static drvError_t PlatInfoInvalidStub(uint32_t *info)
+static drvError_t PlatInfoInvalidStub(uint32_t* info)
 {
     if (info != NULL) {
         *info = 999; // neither DEVICE_SIDE nor HOST_SIDE
@@ -500,7 +493,7 @@ TEST_F(PlogDrvCovUtest, DrvGetDevNum_SuccessAndFail)
 TEST_F(PlogDrvCovUtest, DrvBufWrite_SinglePacket)
 {
     HDC_SESSION session = (HDC_SESSION)1;
-    const char *buf = "hello plog";
+    const char* buf = "hello plog";
     EXPECT_EQ(0, DrvBufWrite(session, buf, strlen(buf)));
 }
 
@@ -526,7 +519,7 @@ TEST_F(PlogDrvCovUtest, DrvBufWrite_CapacityFailed)
     EXPECT_EQ(-1, DrvBufWrite(session, "x", 1));
 }
 
-static drvError_t CapInvalidStub(struct drvHdcCapacity *capacity)
+static drvError_t CapInvalidStub(struct drvHdcCapacity* capacity)
 {
     if (capacity != NULL) {
         capacity->maxSegment = 0; // invalid
@@ -576,21 +569,21 @@ struct CovRecvPkt {
 };
 static struct CovRecvPkt g_covPkt;
 
-static drvError_t GetMsgBufSingle(struct drvHdcMsg *msg, int idx, char **pBuf, int *pLen)
+static drvError_t GetMsgBufSingle(struct drvHdcMsg* msg, int idx, char** pBuf, int* pLen)
 {
     (void)msg;
     (void)idx;
-    *pBuf = (char *)&g_covPkt;
+    *pBuf = (char*)&g_covPkt;
     *pLen = (int)sizeof(g_covPkt);
     return DRV_ERROR_NONE;
 }
 
 static int g_covMultiCall = 0;
-static drvError_t GetMsgBufMulti(struct drvHdcMsg *msg, int idx, char **pBuf, int *pLen)
+static drvError_t GetMsgBufMulti(struct drvHdcMsg* msg, int idx, char** pBuf, int* pLen)
 {
     (void)msg;
     (void)idx;
-    *pBuf = (char *)&g_covPkt;
+    *pBuf = (char*)&g_covPkt;
     *pLen = (int)sizeof(g_covPkt);
     if (g_covMultiCall == 0) {
         g_covPkt.hdr.isLast = (char)(~DATA_LAST_PACKET);
@@ -601,7 +594,7 @@ static drvError_t GetMsgBufMulti(struct drvHdcMsg *msg, int idx, char **pBuf, in
     return DRV_ERROR_NONE;
 }
 
-static void PrepCovPkt(const char *data, unsigned int dataLen, char isLast)
+static void PrepCovPkt(const char* data, unsigned int dataLen, char isLast)
 {
     (void)memset_s(&g_covPkt, sizeof(g_covPkt), 0, sizeof(g_covPkt));
     g_covPkt.hdr.dataLen = dataLen;
@@ -615,7 +608,7 @@ static void PrepCovPkt(const char *data, unsigned int dataLen, char isLast)
 TEST_F(PlogDrvCovUtest, DrvBufRead_InvalidParams)
 {
     HDC_SESSION session = (HDC_SESSION)1;
-    char *buf = NULL;
+    char* buf = NULL;
     unsigned int len = 0;
     EXPECT_EQ(LOG_INVALID_PARAM, DrvBufRead(NULL, 0, &buf, &len, 1));
     EXPECT_EQ(LOG_INVALID_PARAM, DrvBufRead(session, 0, NULL, &len, 1));
@@ -630,7 +623,7 @@ TEST_F(PlogDrvCovUtest, DrvBufRead_SuccessSinglePacket)
     MOCKER(halHdcRecv).stubs().will(returnValue((drvError_t)DRV_ERROR_NONE));
     MOCKER(drvHdcGetMsgBuffer).stubs().will(invoke(GetMsgBufSingle));
     HDC_SESSION session = (HDC_SESSION)1;
-    char *buf = NULL;
+    char* buf = NULL;
     unsigned int len = 0;
     EXPECT_EQ(LOG_SUCCESS, DrvBufRead(session, 0, &buf, &len, 100));
     EXPECT_EQ(4U, len);
@@ -644,7 +637,7 @@ TEST_F(PlogDrvCovUtest, DrvBufRead_SuccessMultiPacket)
     MOCKER(halHdcRecv).stubs().will(returnValue((drvError_t)DRV_ERROR_NONE));
     MOCKER(drvHdcGetMsgBuffer).stubs().will(invoke(GetMsgBufMulti));
     HDC_SESSION session = (HDC_SESSION)1;
-    char *buf = NULL;
+    char* buf = NULL;
     unsigned int len = 0;
     EXPECT_EQ(LOG_SUCCESS, DrvBufRead(session, 0, &buf, &len, 100));
     EXPECT_EQ(8U, len); // two 4-byte packets
@@ -655,7 +648,7 @@ TEST_F(PlogDrvCovUtest, DrvBufRead_AllocMsgFailed)
 {
     MOCKER(drvHdcAllocMsg).stubs().will(returnValue((drvError_t)DRV_ERROR_NO_RESOURCES));
     HDC_SESSION session = (HDC_SESSION)1;
-    char *buf = NULL;
+    char* buf = NULL;
     unsigned int len = 0;
     EXPECT_NE(LOG_SUCCESS, DrvBufRead(session, 0, &buf, &len, 100));
 }
@@ -663,11 +656,12 @@ TEST_F(PlogDrvCovUtest, DrvBufRead_AllocMsgFailed)
 TEST_F(PlogDrvCovUtest, DrvBufRead_RecvErrorMapping)
 {
     HDC_SESSION session = (HDC_SESSION)1;
-    char *buf = NULL;
+    char* buf = NULL;
     unsigned int len = 0;
     // chain: each DrvBufRead triggers exactly one Recv call (errors goto
     // READ_ERROR immediately, so the recv loop runs once per call).
-    MOCKER(halHdcRecv).stubs()
+    MOCKER(halHdcRecv)
+        .stubs()
         .will(returnValue((drvError_t)DRV_ERROR_SOCKET_CLOSE))
         .then(returnValue((drvError_t)DRV_ERROR_NON_BLOCK))
         .then(returnValue((drvError_t)DRV_ERROR_WAIT_TIMEOUT))
@@ -683,7 +677,7 @@ TEST_F(PlogDrvCovUtest, DrvBufRead_GetMsgBufferFailed)
     MOCKER(halHdcRecv).stubs().will(returnValue((drvError_t)DRV_ERROR_NONE));
     MOCKER(drvHdcGetMsgBuffer).stubs().will(returnValue((drvError_t)DRV_ERROR_INNER_ERR));
     HDC_SESSION session = (HDC_SESSION)1;
-    char *buf = NULL;
+    char* buf = NULL;
     unsigned int len = 0;
     EXPECT_EQ(LOG_FAILURE, DrvBufRead(session, 0, &buf, &len, 100));
 }
@@ -695,7 +689,7 @@ TEST_F(PlogDrvCovUtest, DrvBufRead_GetMsgBufferNullBuf)
     MOCKER(halHdcRecv).stubs().will(returnValue((drvError_t)DRV_ERROR_NONE));
     MOCKER(drvHdcGetMsgBuffer).stubs().will(returnValue((drvError_t)DRV_ERROR_NONE));
     HDC_SESSION session = (HDC_SESSION)1;
-    char *buf = NULL;
+    char* buf = NULL;
     unsigned int len = 0;
     EXPECT_EQ(LOG_SUCCESS, DrvBufRead(session, 0, &buf, &len, 100));
 }
@@ -707,7 +701,7 @@ TEST_F(PlogDrvCovUtest, DrvBufRead_ReuseFailed)
     MOCKER(drvHdcGetMsgBuffer).stubs().will(invoke(GetMsgBufSingle));
     MOCKER(drvHdcReuseMsg).stubs().will(returnValue((drvError_t)DRV_ERROR_INNER_ERR));
     HDC_SESSION session = (HDC_SESSION)1;
-    char *buf = NULL;
+    char* buf = NULL;
     unsigned int len = 0;
     EXPECT_EQ(LOG_FAILURE, DrvBufRead(session, 0, &buf, &len, 100));
 }

@@ -79,6 +79,9 @@ set(logDaemonSrc
     # cpu-detect
     ${CMAKE_CURRENT_SOURCE_DIR}/testcase/cpu_detect/cpu_detect_utest.cc
     ${LOG_SOURCE_PATH}/syslog/log_daemon/cpu_detect/cpu_detect.c
+    # lib-load
+    ${CMAKE_CURRENT_SOURCE_DIR}/testcase/lib_load/lib_load_utest.cc
+    ${LOG_SOURCE_PATH}/syslog/log_daemon/lib_load/lib_load.c
     # event process
     ${CMAKE_CURRENT_SOURCE_DIR}/testcase/event_process/event_process_func_utest.cc
     # file monitor

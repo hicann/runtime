@@ -32,9 +32,9 @@
 
 using namespace std;
 
-static LogStatus SlogdSyslogMgrInitCov(StLogFileList *fileList)
+static LogStatus SlogdSyslogMgrInitCov(StLogFileList* fileList)
 {
-    LogStatus ret = LogAgentInitDeviceOs(fileList);
+    LogStatus ret = SlogdSyslogMgrInit(fileList);
     if (ret != LOG_SUCCESS) {
         return ret;
     }
@@ -43,7 +43,7 @@ static LogStatus SlogdSyslogMgrInitCov(StLogFileList *fileList)
 
 // Stub that makes ToolStatGet succeed but report a huge file size, to exercise the
 // filesize-overflow guard in GetFileOfSize.
-static INT32 StatGetHugeStub(const CHAR *path, ToolStat *buffer)
+static INT32 StatGetHugeStub(const CHAR* path, ToolStat* buffer)
 {
     (void)path;
     if (buffer != NULL) {
@@ -52,8 +52,7 @@ static INT32 StatGetHugeStub(const CHAR *path, ToolStat *buffer)
     return SYS_OK;
 }
 
-class EP_SLOGD_LOG_TO_FILE_COV_UTEST : public testing::Test
-{
+class EP_SLOGD_LOG_TO_FILE_COV_UTEST : public testing::Test {
 protected:
     virtual void SetUp()
     {
@@ -86,8 +85,8 @@ protected:
 // ------------------------- log_to_file.c: null/guard paths -------------------------
 TEST_F(EP_SLOGD_LOG_TO_FILE_COV_UTEST, LogAgentNullInputGuards)
 {
-    // LogAgentInitDeviceOs / InitDeviceApplication / CleanUpDevice NULL guards
-    EXPECT_EQ(LOG_FAILURE, LogAgentInitDeviceOs(NULL));
+    // SlogdSyslogMgrInit / InitDeviceApplication / CleanUpDevice NULL guards
+    EXPECT_EQ(LOG_FAILURE, SlogdSyslogMgrInit(NULL));
     EXPECT_EQ(LOG_FAILURE, LogAgentInitDeviceApplication(NULL));
     LogAgentCleanUpDevice(NULL);
 
@@ -95,27 +94,27 @@ TEST_F(EP_SLOGD_LOG_TO_FILE_COV_UTEST, LogAgentNullInputGuards)
     StSubLogFileList sub;
     (void)memset_s(&sub, sizeof(sub), 0, sizeof(sub));
     char m[] = "x";
-    EXPECT_EQ(NOK, LogAgentWriteDeviceOsLog(DEBUG_LOG, NULL, NULL, 0));   // msg NULL
-    EXPECT_EQ(NOK, LogAgentWriteDeviceOsLog(DEBUG_LOG, &sub, NULL, 10));  // msg NULL
-    EXPECT_EQ(NOK, LogAgentWriteDeviceOsLog(DEBUG_LOG, &sub, m, 0));      // len 0
-    EXPECT_EQ(NOK, LogAgentWriteDeviceOsLog(DEBUG_LOG, NULL, m, 1));      // subLogList NULL
-    EXPECT_EQ(NOK, LogAgentWriteDeviceOsLog(-1, &sub, m, 1));             // wrong logType
-    EXPECT_EQ(NOK, LogAgentWriteDeviceOsLog(LOG_TYPE_NUM, &sub, m, 1));   // wrong logType
+    EXPECT_EQ(NOK, LogAgentWriteDeviceOsLog(DEBUG_LOG, NULL, NULL, 0));  // msg NULL
+    EXPECT_EQ(NOK, LogAgentWriteDeviceOsLog(DEBUG_LOG, &sub, NULL, 10)); // msg NULL
+    EXPECT_EQ(NOK, LogAgentWriteDeviceOsLog(DEBUG_LOG, &sub, m, 0));     // len 0
+    EXPECT_EQ(NOK, LogAgentWriteDeviceOsLog(DEBUG_LOG, NULL, m, 1));     // subLogList NULL
+    EXPECT_EQ(NOK, LogAgentWriteDeviceOsLog(-1, &sub, m, 1));            // wrong logType
+    EXPECT_EQ(NOK, LogAgentWriteDeviceOsLog(LOG_TYPE_NUM, &sub, m, 1));  // wrong logType
 
     // LogAgentWriteEventLog input guards: (subLogList, msg, len)
-    EXPECT_EQ(NOK, LogAgentWriteEventLog(NULL, NULL, 1));  // msg NULL
-    EXPECT_EQ(NOK, LogAgentWriteEventLog(NULL, m, 0));     // len 0
-    EXPECT_EQ(NOK, LogAgentWriteEventLog(NULL, m, 1));     // subLogList NULL
+    EXPECT_EQ(NOK, LogAgentWriteEventLog(NULL, NULL, 1)); // msg NULL
+    EXPECT_EQ(NOK, LogAgentWriteEventLog(NULL, m, 0));    // len 0
+    EXPECT_EQ(NOK, LogAgentWriteEventLog(NULL, m, 1));    // subLogList NULL
 
     // LogAgentWriteDeviceApplicationLog input guards: (msg, len, logInfo, logList)
-    EXPECT_EQ(NOK, LogAgentWriteDeviceApplicationLog(NULL, 1, NULL, NULL));  // msg NULL
-    EXPECT_EQ(NOK, LogAgentWriteDeviceApplicationLog(m, 1, NULL, NULL));     // logInfo NULL
+    EXPECT_EQ(NOK, LogAgentWriteDeviceApplicationLog(NULL, 1, NULL, NULL)); // msg NULL
+    EXPECT_EQ(NOK, LogAgentWriteDeviceApplicationLog(m, 1, NULL, NULL));    // logInfo NULL
     LogInfo info;
     (void)memset_s(&info, sizeof(info), 0, sizeof(info));
     info.processType = SYSTEM;
-    EXPECT_EQ(NOK, LogAgentWriteDeviceApplicationLog(m, 1, &info, NULL));   // processType != APPLICATION
+    EXPECT_EQ(NOK, LogAgentWriteDeviceApplicationLog(m, 1, &info, NULL)); // processType != APPLICATION
     info.processType = APPLICATION;
-    EXPECT_EQ(NOK, LogAgentWriteDeviceApplicationLog(m, 1, &info, NULL));   // logList NULL
+    EXPECT_EQ(NOK, LogAgentWriteDeviceApplicationLog(m, 1, &info, NULL)); // logList NULL
     StLogFileList logList;
     (void)memset_s(&logList, sizeof(logList), 0, sizeof(logList));
     info.type = (LogType)LOG_TYPE_NUM;
@@ -176,14 +175,14 @@ TEST_F(EP_SLOGD_LOG_TO_FILE_COV_UTEST, LogAgentWriteDeviceApplicationLogCommonMo
     system("mkdir -p " LOG_FILE_PATH);
 
     MOCKER(SlogdConfigMgrGetStorageMode).stubs().will(returnValue((int32_t)STORAGE_RULE_COMMON));
-    StLogFileList *fileList = GetGlobalLogFileList();
-    (void)memset_s((void *)fileList, sizeof(StLogFileList), 0, sizeof(StLogFileList));
+    StLogFileList* fileList = GetGlobalLogFileList();
+    (void)memset_s((void*)fileList, sizeof(StLogFileList), 0, sizeof(StLogFileList));
     (void)snprintf_truncated_s(fileList->aucFilePath, MAX_FILEDIR_LEN + 1U, "%s", LOG_FILE_PATH);
     EXPECT_EQ(LOG_SUCCESS, LogAgentGetCfg(fileList));
     EXPECT_EQ(LOG_SUCCESS, LogAgentInitDeviceApplication(fileList));
 
     char msg[1024] = "test app log common branch";
-    LogInfo info = { DEBUG_LOG, APPLICATION, 0, 0, AICPU, 0, 3 };
+    LogInfo info = {DEBUG_LOG, APPLICATION, 0, 0, AICPU, 0, 3};
     EXPECT_EQ(OK, LogAgentWriteDeviceApplicationLog(msg, (unsigned int)strlen(msg), &info, fileList));
     GlobalMockObject::verify();
 
@@ -197,14 +196,14 @@ TEST_F(EP_SLOGD_LOG_TO_FILE_COV_UTEST, LogAgentWriteDeviceApplicationLogAosCore)
 {
     system("cp " CONF_PATH " " SLOG_CONF_FILE_PATH);
     SlogdConfigMgrInit();
-    StLogFileList *fileList = GetGlobalLogFileList();
-    (void)memset_s((void *)fileList, sizeof(StLogFileList), 0, sizeof(StLogFileList));
+    StLogFileList* fileList = GetGlobalLogFileList();
+    (void)memset_s((void*)fileList, sizeof(StLogFileList), 0, sizeof(StLogFileList));
     (void)snprintf_truncated_s(fileList->aucFilePath, MAX_FILEDIR_LEN + 1U, "%s", LOG_FILE_PATH);
     EXPECT_EQ(LOG_SUCCESS, LogAgentGetCfg(fileList));
     system("mkdir -p " LOG_FILE_PATH "/debug/aos-core-app-0");
     char msg[1024] = "test aos core app log";
     // aosType=1 -> AOS_CORE_DEVICE_APP_HEAD branch; default storage mode is FILTER_PID (else branch)
-    LogInfo info = { DEBUG_LOG, APPLICATION, 0, 0, AICPU, 1, 3 };
+    LogInfo info = {DEBUG_LOG, APPLICATION, 0, 0, AICPU, 1, 3};
     EXPECT_EQ(OK, LogAgentWriteDeviceApplicationLog(msg, (unsigned int)strlen(msg), &info, fileList));
     SlogdConfigMgrExit();
     ResetErrLog();
@@ -222,25 +221,28 @@ TEST_F(EP_SLOGD_LOG_TO_FILE_COV_UTEST, LogAgentWriteFileLimitOn)
     SlogdConfigMgrInit();
     EXPECT_TRUE(SlogdConfigMgrGetWriteFileLimit());
     system("mkdir -p " LOG_FILE_PATH);
-    StLogFileList *fileList = GetGlobalLogFileList();
-    (void)memset_s((void *)fileList, sizeof(StLogFileList), 0, sizeof(StLogFileList));
+    StLogFileList* fileList = GetGlobalLogFileList();
+    (void)memset_s((void*)fileList, sizeof(StLogFileList), 0, sizeof(StLogFileList));
     (void)snprintf_truncated_s(fileList->aucFilePath, MAX_FILEDIR_LEN + 1U, "%s", LOG_FILE_PATH);
     EXPECT_EQ(LOG_SUCCESS, LogAgentGetCfg(fileList));
     EXPECT_EQ(LOG_SUCCESS, SlogdSyslogMgrInitCov(fileList));
 
     char msg[1024] = "test write limit os log";
     // debug os: typeSize==0 -> limit stays NULL -> WriteFileLimitCheck(NULL)=true
-    EXPECT_EQ(OK, LogAgentWriteDeviceOsLog(DEBUG_LOG, &fileList->sortDeviceOsLogList[DEBUG_LOG], msg,
-                                           (unsigned int)strlen(msg)));
+    EXPECT_EQ(
+        OK,
+        LogAgentWriteDeviceOsLog(DEBUG_LOG, &fileList->sortDeviceOsLogList[DEBUG_LOG], msg, (unsigned int)strlen(msg)));
     // security os: limit initialized -> real WriteFileLimitCheck passes
-    EXPECT_EQ(OK, LogAgentWriteDeviceOsLog(SECURITY_LOG, &fileList->sortDeviceOsLogList[SECURITY_LOG], msg,
-                                           (unsigned int)strlen(msg)));
+    EXPECT_EQ(
+        OK, LogAgentWriteDeviceOsLog(
+                SECURITY_LOG, &fileList->sortDeviceOsLogList[SECURITY_LOG], msg, (unsigned int)strlen(msg)));
     // force the limit-rejected branch: mark current period as already limited
-    WriteFileLimit *lim = fileList->sortDeviceOsLogList[SECURITY_LOG].limit;
+    WriteFileLimit* lim = fileList->sortDeviceOsLogList[SECURITY_LOG].limit;
     ASSERT_TRUE(lim != NULL);
     lim->periodConfig[lim->periodIndex].isLimit = true;
-    EXPECT_EQ(OK, LogAgentWriteDeviceOsLog(SECURITY_LOG, &fileList->sortDeviceOsLogList[SECURITY_LOG], msg,
-                                           (unsigned int)strlen(msg)));
+    EXPECT_EQ(
+        OK, LogAgentWriteDeviceOsLog(
+                SECURITY_LOG, &fileList->sortDeviceOsLogList[SECURITY_LOG], msg, (unsigned int)strlen(msg)));
 
     LogAgentCleanUpDevice(fileList);
     SlogdConfigMgrExit();
@@ -263,7 +265,8 @@ TEST_F(EP_SLOGD_LOG_TO_FILE_COV_UTEST, LogAgentWriteLimitCheckBranches)
     // 1) filePath with trailing '/' -> trims trailing slash in LogAgentWriteLimitCheck
     StSubLogFileList subSlash;
     (void)memset_s(&subSlash, sizeof(subSlash), 0, sizeof(subSlash));
-    (void)snprintf_s(subSlash.filePath, MAX_FILEPATH_LEN + 1U, MAX_FILEPATH_LEN, "%s", LOG_FILE_PATH "/debug/device-os/");
+    (void)snprintf_s(
+        subSlash.filePath, MAX_FILEPATH_LEN + 1U, MAX_FILEPATH_LEN, "%s", LOG_FILE_PATH "/debug/device-os/");
     (void)snprintf_s(subSlash.fileHead, MAX_NAME_HEAD_LEN + 1U, MAX_NAME_HEAD_LEN, "%s", "device-os_");
     subSlash.maxFileSize = 1U * 1024U * 1024U;
     subSlash.totalMaxFileSize = 10U * 1024U * 1024U;
@@ -291,18 +294,18 @@ TEST_F(EP_SLOGD_LOG_TO_FILE_COV_UTEST, LogAgentWriteDeviceLogErrorPaths)
 
     char msg[64] = "data";
     // deviceLogList not allocated yet -> deviceLogList[num] == NULL path
-    DeviceWriteLogInfo info = { (unsigned int)strlen(msg), 0, DEBUG_LOG, LP };
+    DeviceWriteLogInfo info = {(unsigned int)strlen(msg), 0, DEBUG_LOG, LP};
     EXPECT_EQ(NOK, LogAgentWriteDeviceLog(&logList, msg, &info));
     ResetErrLog();
 
     // allocate device list, then wrong device id (> ucDeviceNum)
     EXPECT_EQ(OK, LogAgentInitDevice(&logList, MAX_DEV_NUM));
-    DeviceWriteLogInfo badDev = { (unsigned int)strlen(msg), 100, DEBUG_LOG, LP };
+    DeviceWriteLogInfo badDev = {(unsigned int)strlen(msg), 100, DEBUG_LOG, LP};
     EXPECT_EQ(NOK, LogAgentWriteDeviceLog(&logList, msg, &badDev));
     ResetErrLog();
 
     // logType >= LOG_TYPE_NUM is reset to DEBUG_LOG, then a normal write happens
-    DeviceWriteLogInfo badType = { (unsigned int)strlen(msg), 0, (LogType)LOG_TYPE_NUM, LP };
+    DeviceWriteLogInfo badType = {(unsigned int)strlen(msg), 0, (LogType)LOG_TYPE_NUM, LP};
     EXPECT_EQ(OK, LogAgentWriteDeviceLog(&logList, msg, &badType));
 
     LogAgentCleanUpDevice(&logList);
@@ -358,12 +361,12 @@ TEST_F(EP_SLOGD_LOG_TO_FILE_COV_UTEST, GetFileOfSizeInvalidRealpath)
 // ------------------------- log_to_file.c: LogAgentRemoveFile warn paths -------------------------
 TEST_F(EP_SLOGD_LOG_TO_FILE_COV_UTEST, LogAgentRemoveFileChmodWarn)
 {
-    const char *tmpFile = PATH_ROOT "/tmp_chmod_fail.log";
-    FILE *fp = fopen(tmpFile, "w");
+    const char* tmpFile = PATH_ROOT "/tmp_chmod_fail.log";
+    FILE* fp = fopen(tmpFile, "w");
     ASSERT_TRUE(fp != NULL);
     (void)fwrite("x", 1, 1, fp);
     (void)fclose(fp);
-    errno = EACCES; // ensure ToolGetErrorCode() != ENOENT so the warn branch is taken
+    errno = EACCES;                             // ensure ToolGetErrorCode() != ENOENT so the warn branch is taken
     MOCKER(ToolChmod).stubs().will(returnValue((INT32)(-1)));
     EXPECT_EQ(OK, LogAgentRemoveFile(tmpFile)); // unlink still succeeds
     GlobalMockObject::verify();
@@ -372,8 +375,8 @@ TEST_F(EP_SLOGD_LOG_TO_FILE_COV_UTEST, LogAgentRemoveFileChmodWarn)
 
 TEST_F(EP_SLOGD_LOG_TO_FILE_COV_UTEST, LogAgentRemoveFileUnlinkWarn)
 {
-    const char *tmpFile = PATH_ROOT "/tmp_unlink_fail.log";
-    FILE *fp = fopen(tmpFile, "w");
+    const char* tmpFile = PATH_ROOT "/tmp_unlink_fail.log";
+    FILE* fp = fopen(tmpFile, "w");
     ASSERT_TRUE(fp != NULL);
     (void)fwrite("x", 1, 1, fp);
     (void)fclose(fp);
@@ -387,7 +390,7 @@ TEST_F(EP_SLOGD_LOG_TO_FILE_COV_UTEST, LogAgentRemoveFileUnlinkWarn)
 }
 
 // ------------------------- log_to_file.c: LogAgentWriteDataToFile error paths -------------------------
-static void PrepOsSubList(StSubLogFileList &sub)
+static void PrepOsSubList(StSubLogFileList& sub)
 {
     (void)memset_s(&sub, sizeof(sub), 0, sizeof(sub));
     (void)snprintf_s(sub.filePath, MAX_FILEPATH_LEN + 1U, MAX_FILEPATH_LEN, "%s", LOG_FILE_PATH "/debug/device-os");
@@ -440,7 +443,7 @@ TEST_F(EP_SLOGD_LOG_TO_FILE_COV_UTEST, GetFileOfSizeMallocFail)
     // a non-empty fileName is required so LogAgentGetFileName reaches GetFileOfSize (which calls LogMalloc)
     (void)snprintf_s(sub.fileName, MAX_FILENAME_LEN + 1U, MAX_FILENAME_LEN, "%s", "device-os_202312190876.log");
     char msg[64] = "malloc fail test";
-    MOCKER(LogMalloc).stubs().will(returnValue((void *)NULL));
+    MOCKER(LogMalloc).stubs().will(returnValue((void*)NULL));
     EXPECT_EQ(NOK, LogAgentWriteDeviceOsLog(DEBUG_LOG, &sub, msg, (unsigned int)strlen(msg)));
     GlobalMockObject::verify();
     ResetErrLog();
@@ -537,7 +540,7 @@ TEST_F(EP_SLOGD_LOG_TO_FILE_COV_UTEST, LogAgentInitDeviceOsWriteLimitFail)
     (void)memset_s(&logList, sizeof(logList), 0, sizeof(logList));
     EXPECT_EQ(LOG_SUCCESS, LogAgentGetCfg(&logList));
     MOCKER(WriteFileLimitInit).stubs().will(returnValue((LogStatus)LOG_FAILURE));
-    EXPECT_EQ(LOG_FAILURE, LogAgentInitDeviceOs(&logList));
+    EXPECT_EQ(LOG_FAILURE, SlogdSyslogMgrInit(&logList));
     GlobalMockObject::verify();
     LogAgentCleanUpDevice(&logList);
     SlogdConfigMgrExit();
@@ -555,7 +558,8 @@ TEST_F(EP_SLOGD_LOG_TO_FILE_COV_UTEST, LogAgentInitDeviceWriteLimitFail)
     (void)memset_s(&logList, sizeof(logList), 0, sizeof(logList));
     EXPECT_EQ(LOG_SUCCESS, LogAgentGetCfg(&logList));
     MOCKER(WriteFileLimitInit).stubs().will(returnValue((LogStatus)LOG_FAILURE));
-    EXPECT_EQ(NOK, LogAgentInitDevice(&logList, MAX_DEV_NUM));
+    // 返回类型由 unsigned int 改为 int32_t，失败值随之由 NOK(1) 变为 LOG_FAILURE(-1)
+    EXPECT_EQ(LOG_FAILURE, LogAgentInitDevice(&logList, MAX_DEV_NUM));
     GlobalMockObject::verify();
     LogAgentCleanUpDevice(&logList);
     SlogdConfigMgrExit();
@@ -573,7 +577,7 @@ TEST_F(EP_SLOGD_LOG_TO_FILE_COV_UTEST, LogQueueEdgeCases)
     EXPECT_EQ(QUEUE_IS_NULL, LogQueueNULL(&q));
     EXPECT_EQ(SUCCESS, LogQueueFull(&q));
 
-    LogNode *out = NULL;
+    LogNode* out = NULL;
     EXPECT_EQ(ARGV_NULL, LogQueueDequeue(NULL, &out));
     EXPECT_EQ(ARGV_NULL, LogQueueDequeue(&q, NULL));
     EXPECT_EQ(QUEUE_IS_NULL, LogQueueDequeue(&q, &out));
@@ -586,9 +590,9 @@ TEST_F(EP_SLOGD_LOG_TO_FILE_COV_UTEST, LogQueueEdgeCases)
     EXPECT_EQ(ARGV_NULL, LogQueueEnqueue(&q, &zeroNode));
 
     // fill queue up to MAX_QUEUE_COUNT
-    LogNode *nodes[MAX_QUEUE_COUNT];
+    LogNode* nodes[MAX_QUEUE_COUNT];
     for (int i = 0; i < MAX_QUEUE_COUNT; i++) {
-        nodes[i] = (LogNode *)calloc(1, sizeof(LogNode));
+        nodes[i] = (LogNode*)calloc(1, sizeof(LogNode));
         ASSERT_TRUE(nodes[i] != NULL);
         nodes[i]->uiNodeDataLen = 10;
         nodes[i]->stNodeData = calloc(1, 10);
@@ -601,13 +605,13 @@ TEST_F(EP_SLOGD_LOG_TO_FILE_COV_UTEST, LogQueueEdgeCases)
     EXPECT_EQ(QUEUE_IS_FULL, LogQueueEnqueue(&q, &extra));
 
     // dequeue until count==1, then the last dequeue exercises the count==1 branch (re-init)
-    LogNode *d = NULL;
+    LogNode* d = NULL;
     EXPECT_EQ(SUCCESS, LogQueueDequeue(&q, &d));
     for (int i = 0; i < MAX_QUEUE_COUNT - 2; i++) {
-        LogNode *dd = NULL;
+        LogNode* dd = NULL;
         EXPECT_EQ(SUCCESS, LogQueueDequeue(&q, &dd));
     }
-    LogNode *last = NULL;
+    LogNode* last = NULL;
     EXPECT_EQ(SUCCESS, LogQueueDequeue(&q, &last));
     EXPECT_EQ(0U, q.uiCount);
     EXPECT_EQ(QUEUE_IS_NULL, LogQueueDequeue(&q, &out));
@@ -619,9 +623,9 @@ TEST_F(EP_SLOGD_LOG_TO_FILE_COV_UTEST, LogQueueEdgeCases)
 
     // XFreeLogNode guards + normal free
     XFreeLogNode(NULL);
-    LogNode *nullN = NULL;
+    LogNode* nullN = NULL;
     XFreeLogNode(&nullN);
-    LogNode *real = (LogNode *)calloc(1, sizeof(LogNode));
+    LogNode* real = (LogNode*)calloc(1, sizeof(LogNode));
     real->stNodeData = calloc(1, 8);
     real->uiNodeDataLen = 8;
     XFreeLogNode(&real);
@@ -632,7 +636,7 @@ TEST_F(EP_SLOGD_LOG_TO_FILE_COV_UTEST, LogQueueEdgeCases)
     EXPECT_EQ(ARGV_NULL, LogQueueFree(&q, NULL));
     // fill again and free whole queue via XFreeLogNode
     for (int i = 0; i < 3; i++) {
-        LogNode *nn = (LogNode *)calloc(1, sizeof(LogNode));
+        LogNode* nn = (LogNode*)calloc(1, sizeof(LogNode));
         nn->uiNodeDataLen = 5;
         nn->stNodeData = calloc(1, 5);
         (void)LogQueueEnqueue(&q, nn);

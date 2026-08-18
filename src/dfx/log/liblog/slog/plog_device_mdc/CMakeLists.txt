@@ -43,7 +43,6 @@ set(libslogHeaderDir
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 11)
 
-############################# libalog.so #################################################################
 add_library(slog
     SHARED
         ${libslogSrcFiles})
@@ -108,8 +107,27 @@ target_link_libraries(slog
         -lrt
         c_sec
     PUBLIC
-        $<BUILD_INTERFACE:slog_headers>
+        slog_headers
 )
+
+if (SLOG_NAME)
+if (${SLOG_NAME} STREQUAL "alog")
+set_target_properties(slog
+    PROPERTIES
+    OUTPUT_NAME ascendalog
+)
+else ()
+set_target_properties(slog
+    PROPERTIES
+    OUTPUT_NAME slog
+)
+endif ()
+else ()
+set_target_properties(slog
+    PROPERTIES
+    OUTPUT_NAME slog
+)
+endif ()
 
 ############################# libalog.so #################################################################
 add_library(alog
@@ -159,7 +177,6 @@ target_link_options(alog
     PRIVATE
         -Wl,-z,relro,-z,now,-z,noexecstack
         -Wl,--gc-sections
-        $<$<CONFIG:Release>:-s>
 )
 
 target_link_directories(alog
@@ -177,7 +194,7 @@ target_link_libraries(alog
         -lrt
         c_sec
     PUBLIC
-        $<BUILD_INTERFACE:slog_headers>
+        slog_headers
 )
 
 set_target_properties(alog
@@ -187,11 +204,11 @@ set_target_properties(alog
 )
 
 ############################# install ####################################################################
-install(TARGETS alog
+install(TARGETS slog alog
     LIBRARY DESTINATION ${INSTALL_LIBRARY_DIR} OPTIONAL
 )
 
-install(TARGETS alog
+install(TARGETS slog alog
     LIBRARY DESTINATION ${INSTALL_LIBRARY_DIR}/${CMAKE_SYSTEM_PROCESSOR} OPTIONAL
 )
 
@@ -258,7 +275,7 @@ target_link_libraries(unified_slog
         -lrt
         c_sec
     PUBLIC
-        $<BUILD_INTERFACE:slog_headers>
+        slog_headers
 )
 
 set_target_properties(unified_slog
@@ -268,11 +285,11 @@ set_target_properties(unified_slog
 )
 
 install(TARGETS unified_slog
-    LIBRARY DESTINATION ${INSTALL_LIBRARY_DIR} OPTIONAL
+    LIBRARY DESTINATION ${INSTALL_LIBRARY_DIR}/syslib OPTIONAL
 )
 
 install(TARGETS unified_slog
-    LIBRARY DESTINATION ${INSTALL_LIBRARY_DIR}/${CMAKE_SYSTEM_PROCESSOR} OPTIONAL
+    LIBRARY DESTINATION ${INSTALL_LIBRARY_DIR}/${CMAKE_SYSTEM_PROCESSOR}/syslib OPTIONAL
 )
 
 ################################# libunified_npu_log.so(runtime) ##########################################
@@ -340,7 +357,7 @@ target_link_libraries(unified_dlog
         -lrt
         c_sec
     PUBLIC
-        $<BUILD_INTERFACE:slog_headers>
+        slog_headers
 )
 
 set_target_properties(unified_dlog
@@ -356,3 +373,4 @@ install(TARGETS unified_dlog
 install(TARGETS unified_dlog
     LIBRARY DESTINATION ${INSTALL_LIBRARY_DIR}/${CMAKE_SYSTEM_PROCESSOR} OPTIONAL
 )
+### INTERNAL END ###

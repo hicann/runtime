@@ -35,6 +35,7 @@ target_include_directories(error_manager PRIVATE
 target_link_libraries(error_manager PRIVATE
         $<BUILD_INTERFACE:intf_pub>
         $<BUILD_INTERFACE:c_sec_headers>
+        $<BUILD_INTERFACE:slog_headers>
         static_mmpa
         -Wl,--no-as-needed
         c_sec

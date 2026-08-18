@@ -7,11 +7,13 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
- 
+
 #include "file_bbox_monitor.h"
 #include "file_monitor_common.h"
 #include "ascend_hal.h"
 #include "log_print.h"
+#include "log_drv.h"
+#include "log_platform.h"
 
 #ifndef BBOX_DIR_MONITOR
 #define BBOX_DIR_MONITOR "/var/log/npu/hisi_logs/"
@@ -25,10 +27,10 @@
 typedef struct BboxFileSyncArg {
     char watchPath[MAX_FULLPATH_LEN];
     char fileName[MAX_FILENAME_LEN];
-    struct BboxFileSyncArg *next;
+    struct BboxFileSyncArg* next;
 } BboxFileSyncArg;
 
-static FileMonitor g_bboxMonitor = { 0 };
+static FileMonitor g_bboxMonitor = {0};
 
 int32_t BboxMonitorInit(FileMonitorSyncFunc func)
 {
@@ -46,17 +48,17 @@ void BboxMonitorExit(void)
     g_bboxMonitor.eventMonitor.fileSyncFunc = NULL;
 }
 
-static void BboxNotifySyncFile(const char *watchPath, const char *fileName, int32_t depth)
+static void BboxNotifySyncFile(const char* watchPath, const char* fileName, int32_t depth)
 {
-    char srcPath[MAX_FULLPATH_LEN] = { 0 };
-    char dstPath[MAX_FULLPATH_LEN] = { 0 };
+    char srcPath[MAX_FULLPATH_LEN] = {0};
+    char dstPath[MAX_FULLPATH_LEN] = {0};
     int32_t ret = 0;
     ret = sprintf_s(srcPath, MAX_FULLPATH_LEN, "%s%s%s", BBOX_DIR_MONITOR, watchPath, fileName);
     ONE_ACT_ERR_LOG(ret == -1, return, "sprintf_s failed, get notify src path failed.");
     ret = sprintf_s(dstPath, MAX_FULLPATH_LEN, "%s/%s%s", BBOX_HOST_FILE_PATH, watchPath, fileName);
     ONE_ACT_ERR_LOG(ret == -1, return, "sprintf_s failed, get notify dst path failed.");
     int32_t tmpDepth = depth;
-    ToolStat fileStat = { 0 };
+    ToolStat fileStat = {0};
     if ((ToolStatGet(srcPath, &fileStat) == LOG_SUCCESS) && (!S_ISDIR(fileStat.st_mode))) {
         tmpDepth = 0;
     }
@@ -68,11 +70,11 @@ static void BboxNotifySyncFile(const char *watchPath, const char *fileName, int3
     NO_ACT_ERR_LOG(ret != LOG_SUCCESS, "sync file failed, ret = %d.", ret);
 }
 
-static void BboxArgDelete(BboxFileSyncArg *arg, void **list)
+static void BboxArgDelete(BboxFileSyncArg* arg, void** list)
 {
-    BboxFileSyncArg *node = (BboxFileSyncArg *)*list;
-    BboxFileSyncArg *pre = NULL;
-    BboxFileSyncArg *head = node;
+    BboxFileSyncArg* node = (BboxFileSyncArg*)*list;
+    BboxFileSyncArg* pre = NULL;
+    BboxFileSyncArg* head = node;
 
     while (node != NULL) {
         if (arg == node) {
@@ -81,7 +83,7 @@ static void BboxArgDelete(BboxFileSyncArg *arg, void **list)
             } else {
                 pre->next = node->next;
             }
-            BboxFileSyncArg *tmp = node->next;
+            BboxFileSyncArg* tmp = node->next;
             XFREE(node);
             node = tmp;
             break;
@@ -90,25 +92,25 @@ static void BboxArgDelete(BboxFileSyncArg *arg, void **list)
             node = node->next;
         }
     }
-    *list = (void *)head;
+    *list = (void*)head;
 }
 
-static void BboxArgAddToList(BboxFileSyncArg *node, void **list)
+static void BboxArgAddToList(BboxFileSyncArg* node, void** list)
 {
     if ((*list) == NULL) {
-        *list = (void *)node;
+        *list = (void*)node;
         return;
     }
-    BboxFileSyncArg *tmp = (BboxFileSyncArg *)*list;
+    BboxFileSyncArg* tmp = (BboxFileSyncArg*)*list;
     while (tmp->next != NULL) {
         tmp = tmp->next;
     }
     tmp->next = node;
 }
 
-static void BboxFileSyncProc(void *arg)
+static void BboxFileSyncProc(void* arg)
 {
-    BboxFileSyncArg *syncArg = (BboxFileSyncArg *)arg;
+    BboxFileSyncArg* syncArg = (BboxFileSyncArg*)arg;
     BboxNotifySyncFile(syncArg->watchPath, syncArg->fileName, MAX_FOLDER_DEPTH);
     BboxNotifySyncFile(syncArg->watchPath, BBOX_HISTORY_FILE_NAME, 0);
     (void)ToolMutexLock(&g_bboxMonitor.argListLock);
@@ -116,7 +118,7 @@ static void BboxFileSyncProc(void *arg)
     (void)ToolMutexUnLock(&g_bboxMonitor.argListLock);
 }
 
-static void BboxNotifyCreateEvent(struct inotify_event *event)
+static void BboxNotifyCreateEvent(struct inotify_event* event)
 {
     ONE_ACT_NO_LOG(g_bboxMonitor.eventMonitor.fileSyncFunc == NULL, return);
     int32_t i = 0;
@@ -126,9 +128,9 @@ static void BboxNotifyCreateEvent(struct inotify_event *event)
         }
     }
     ONE_ACT_ERR_LOG(i == MAX_DEV_NUM, return, "no wd is matched.");
-    BboxFileSyncArg *arg = (BboxFileSyncArg *)LogMalloc(sizeof(BboxFileSyncArg));
-    ONE_ACT_ERR_LOG(arg == NULL, return, "malloc for bbox file sync arg failed, strerr = %s.",
-        strerror(ToolGetErrorCode()));
+    BboxFileSyncArg* arg = (BboxFileSyncArg*)LogMalloc(sizeof(BboxFileSyncArg));
+    ONE_ACT_ERR_LOG(
+        arg == NULL, return, "malloc for bbox file sync arg failed, strerr = %s.", strerror(ToolGetErrorCode()));
     int32_t ret = 0;
     ret = sprintf_s(arg->watchPath, MAX_FULLPATH_LEN, "%s", g_bboxMonitor.eventMonitor.notifyMonitor.event[i].fileName);
     TWO_ACT_ERR_LOG(ret == -1, XFREE(arg), return, "sprintf failed, get watch path failed.");
@@ -138,7 +140,7 @@ static void BboxNotifyCreateEvent(struct inotify_event *event)
         XFREE(arg);
         return;
     }
-    EventAttr attr = { DELAY_TIME_EVENT, BBOX_SYNC_INTERVAL };
+    EventAttr attr = {DELAY_TIME_EVENT, BBOX_SYNC_INTERVAL};
     EventHandle handle = EventAdd(BboxFileSyncProc, arg, &attr);
     TWO_ACT_ERR_LOG(handle == NULL, XFREE(arg), return, "add bbox file sync event failed.");
     (void)ToolMutexLock(&g_bboxMonitor.argListLock);
@@ -146,9 +148,9 @@ static void BboxNotifyCreateEvent(struct inotify_event *event)
     (void)ToolMutexUnLock(&g_bboxMonitor.argListLock);
 }
 
-static int32_t BboxMonitorAddWd(const char *fileName, int32_t fd, int32_t *wd)
+static int32_t BboxMonitorAddWd(const char* fileName, int32_t fd, int32_t* wd)
 {
-    char filePath[MAX_FULLPATH_LEN] = { 0 };
+    char filePath[MAX_FULLPATH_LEN] = {0};
     int32_t ret = sprintf_s(filePath, MAX_FULLPATH_LEN, "%s%s", BBOX_DIR_MONITOR, fileName);
     if (ret == -1) {
         SELF_LOG_ERROR("sprintf_s for file path failed, fileName = %s.", fileName);
@@ -157,10 +159,10 @@ static int32_t BboxMonitorAddWd(const char *fileName, int32_t fd, int32_t *wd)
     return FileMonitorAddWatch(filePath, fd, wd, IN_CREATE);
 }
 
-static void BboxMonitorRead(void)
+STATIC void BboxMonitorRead(void)
 {
     errno = 0;
-    char buffer[FILE_MONITOR_EVENT_BUF_LEN] = { 0 };
+    char buffer[FILE_MONITOR_EVENT_BUF_LEN] = {0};
     int32_t len = ToolRead(g_bboxMonitor.eventMonitor.notifyMonitor.fd, buffer, FILE_MONITOR_EVENT_BUF_LEN);
     if ((len < 0) && ((errno == EINTR) || (errno == EAGAIN))) {
         return;
@@ -168,50 +170,54 @@ static void BboxMonitorRead(void)
     ONE_ACT_ERR_LOG(len < 0, return, "read error, strerror = %s.", strerror(ToolGetErrorCode()));
     uint32_t i = 0;
     while (i < (uint32_t)len) {
-        struct inotify_event *event = (struct inotify_event *)&buffer[i];
+        struct inotify_event* event = (struct inotify_event*)&buffer[i];
         i += FILE_MONITOR_EVENT_SIZE + event->len;
         if (event->len == 0) {
             continue;
         }
-        if (event->mask & IN_CREATE) {
+        if ((event->mask & IN_CREATE) != 0) {
             BboxNotifyCreateEvent(event);
             continue;
         }
     }
 }
 
-static void BboxNotifyEventProc(void *arg)
+static void BboxNotifyEventProc(void* arg)
 {
     (void)arg;
-    char filePath[MAX_FULLPATH_LEN] = { 0 };
-    char dstPath[MAX_FULLPATH_LEN] = { 0 };
+    char filePath[MAX_FULLPATH_LEN] = {0};
+    char dstPath[MAX_FULLPATH_LEN] = {0};
     for (int32_t i = 0; i < MAX_MONITOR_EVENT; i++) {
         if ((strlen(g_bboxMonitor.eventMonitor.notifyMonitor.event[i].fileName) != 0) &&
             (g_bboxMonitor.eventMonitor.notifyMonitor.event[i].wd == 0)) {
             (void)memset_s(filePath, MAX_FULLPATH_LEN, 0, MAX_FULLPATH_LEN);
-            int32_t ret = sprintf_s(filePath, MAX_FULLPATH_LEN, "%s%s", BBOX_DIR_MONITOR,
+            int32_t ret = sprintf_s(
+                filePath, MAX_FULLPATH_LEN, "%s%s", BBOX_DIR_MONITOR,
                 g_bboxMonitor.eventMonitor.notifyMonitor.event[i].fileName);
             if (ret == -1) {
-                SELF_LOG_ERROR("sprintf_s for file path failed, fileName = %s.",
+                SELF_LOG_ERROR(
+                    "sprintf_s for file path failed, fileName = %s.",
                     g_bboxMonitor.eventMonitor.notifyMonitor.event[i].fileName);
                 continue;
             }
-            ret = FileMonitorAddWatch(filePath, g_bboxMonitor.eventMonitor.notifyMonitor.fd,
+            ret = FileMonitorAddWatch(
+                filePath, g_bboxMonitor.eventMonitor.notifyMonitor.fd,
                 &g_bboxMonitor.eventMonitor.notifyMonitor.event[i].wd, IN_CREATE);
             if (ret != LOG_SUCCESS) {
                 continue;
             }
             (void)memset_s(dstPath, MAX_FULLPATH_LEN, 0, MAX_FULLPATH_LEN);
-            ret = sprintf_s(dstPath, MAX_FULLPATH_LEN, "%s/%s", BBOX_HOST_FILE_PATH,
+            ret = sprintf_s(
+                dstPath, MAX_FULLPATH_LEN, "%s/%s", BBOX_HOST_FILE_PATH,
                 g_bboxMonitor.eventMonitor.notifyMonitor.event[i].fileName);
             if (ret == -1) {
-                SELF_LOG_ERROR("sprintf_s for dst path failed, fileName = %s.",
+                SELF_LOG_ERROR(
+                    "sprintf_s for dst path failed, fileName = %s.",
                     g_bboxMonitor.eventMonitor.notifyMonitor.event[i].fileName);
                 continue;
             }
             LogStrTrimEnd(dstPath, MAX_FULLPATH_LEN);
-            ret = FileMonitorSyncFileList(filePath, dstPath, g_bboxMonitor.eventMonitor.fileSyncFunc,
-                MAX_FOLDER_DEPTH);
+            ret = FileMonitorSyncFileList(filePath, dstPath, g_bboxMonitor.eventMonitor.fileSyncFunc, MAX_FOLDER_DEPTH);
             if (ret != LOG_SUCCESS) {
                 SELF_LOG_ERROR("sync file failed, file path = %s, ret = %d.", BBOX_DIR_MONITOR, ret);
             }
@@ -231,30 +237,11 @@ static uint32_t BboxMonitorGetHostDeviceID(uint32_t deviceId)
     return hostDeviceId;
 }
 
-static int32_t BboxMonitorGetDevNumIDs(uint32_t *deviceNum, uint32_t *deviceIdArray)
-{
-    int32_t devNum = 0;
-    int32_t devId[MAX_DEV_NUM] = { 0 };
-    int32_t ret = log_get_device_id(devId, &devNum, MAX_DEV_NUM);
-    if ((ret != LOG_SUCCESS) || (devNum > MAX_DEV_NUM) || (devNum < 0)) {
-        SELF_LOG_ERROR("get device id failed, result=%d, device_number=%d.", ret, devNum);
-        return LOG_FAILURE;
-    }
-    *deviceNum = (uint32_t)devNum;
-    int32_t idx = 0;
-    for (; idx < devNum; idx++) {
-        if ((devId[idx] >= 0) && (devId[idx] < MAX_DEV_NUM)) {
-            deviceIdArray[idx] = (uint32_t)devId[idx];
-        }
-    }
-    return LOG_SUCCESS;
-}
-
 static int32_t BboxMonitorAdd(void)
 {
-    uint32_t deviceIdArray[MAX_DEV_NUM] = { 0 }; // device-side device id array
+    uint32_t deviceIdArray[MAX_DEV_NUM] = {0}; // device-side device id array
     uint32_t devNum = 0;
-    int32_t ret = BboxMonitorGetDevNumIDs(&devNum, deviceIdArray);
+    int32_t ret = DrvGetDeviceId(&devNum, deviceIdArray, MAX_DEV_NUM);
     if (ret != LOG_SUCCESS) {
         SELF_LOG_ERROR("get device id failed.");
         return LOG_FAILURE;
@@ -266,19 +253,21 @@ static int32_t BboxMonitorAdd(void)
         return LOG_FAILURE;
     }
     for (uint32_t i = 0; i < devNum; i++) {
-        ret = sprintf_s(g_bboxMonitor.eventMonitor.notifyMonitor.event[i].fileName, MAX_FULLPATH_LEN, "%s%u/",
-            BBOX_DIR_HEAD, BboxMonitorGetHostDeviceID(deviceIdArray[i]));
+        ret = sprintf_s(
+            g_bboxMonitor.eventMonitor.notifyMonitor.event[i].fileName, MAX_FULLPATH_LEN, "%s%u/", BBOX_DIR_HEAD,
+            BboxMonitorGetHostDeviceID(deviceIdArray[i]));
         if (ret == -1) {
             SELF_LOG_ERROR("sprintf_s for file name failed, add watch to device[%u] failed.", deviceIdArray[i]);
             continue;
         }
-        BboxMonitorAddWd(g_bboxMonitor.eventMonitor.notifyMonitor.event[i].fileName,
-            g_bboxMonitor.eventMonitor.notifyMonitor.fd, &g_bboxMonitor.eventMonitor.notifyMonitor.event[i].wd);
+        (void)BboxMonitorAddWd(
+            g_bboxMonitor.eventMonitor.notifyMonitor.event[i].fileName, g_bboxMonitor.eventMonitor.notifyMonitor.fd,
+            &g_bboxMonitor.eventMonitor.notifyMonitor.event[i].wd);
     }
     return LOG_SUCCESS;
 }
 
-static void BboxRmNotifyMonitor(void)
+STATIC void BboxRmNotifyMonitor(void)
 {
     if (g_bboxMonitor.eventMonitor.notifyMonitor.eventHandle == NULL) {
         SELF_LOG_WARN("no notify monitor is need to stop.");
@@ -289,12 +278,12 @@ static void BboxRmNotifyMonitor(void)
     g_bboxMonitor.eventMonitor.notifyMonitor.eventHandle = NULL;
     for (int32_t i = 0; i < MAX_DEV_NUM; i++) {
         if (g_bboxMonitor.eventMonitor.notifyMonitor.event[i].wd != 0) {
-            inotify_rm_watch(g_bboxMonitor.eventMonitor.notifyMonitor.fd,
-                g_bboxMonitor.eventMonitor.notifyMonitor.event[i].wd);
+            (void)inotify_rm_watch(
+                g_bboxMonitor.eventMonitor.notifyMonitor.fd, g_bboxMonitor.eventMonitor.notifyMonitor.event[i].wd);
             g_bboxMonitor.eventMonitor.notifyMonitor.event[i].wd = 0;
         }
     }
-    ToolClose(g_bboxMonitor.eventMonitor.notifyMonitor.fd);
+    (void)ToolClose(g_bboxMonitor.eventMonitor.notifyMonitor.fd);
     g_bboxMonitor.eventMonitor.notifyMonitor.fd = 0;
 }
 
@@ -306,10 +295,10 @@ int32_t BboxMonitorStart(void)
         return LOG_FAILURE;
     }
     // send existing files in the current path.
-    ret = FileMonitorSyncFileList(BBOX_DIR_MONITOR, BBOX_HOST_FILE_PATH, g_bboxMonitor.eventMonitor.fileSyncFunc,
-        MAX_FOLDER_DEPTH);
+    ret = FileMonitorSyncFileList(
+        BBOX_DIR_MONITOR, BBOX_HOST_FILE_PATH, g_bboxMonitor.eventMonitor.fileSyncFunc, MAX_FOLDER_DEPTH);
     NO_ACT_ERR_LOG(ret != LOG_SUCCESS, "sync file failed, file path = %s, ret = %d.", BBOX_DIR_MONITOR, ret);
-    EventAttr attr = { LOOP_TIME_EVENT, BBOX_NOTIFY_INTERVAL };
+    EventAttr attr = {LOOP_TIME_EVENT, BBOX_NOTIFY_INTERVAL};
     EventHandle handle = EventAdd(BboxNotifyEventProc, NULL, &attr);
     TWO_ACT_ERR_LOG(handle == NULL, BboxRmNotifyMonitor(), return LOG_FAILURE, "add bbox file notify event failed.");
     g_bboxMonitor.eventMonitor.notifyMonitor.eventHandle = handle;
@@ -319,8 +308,8 @@ int32_t BboxMonitorStart(void)
 static void BboxDeleteArgList(void)
 {
     (void)ToolMutexLock(&g_bboxMonitor.argListLock);
-    BboxFileSyncArg *node = (BboxFileSyncArg *)g_bboxMonitor.argList;
-    BboxFileSyncArg *next = NULL;
+    BboxFileSyncArg* node = (BboxFileSyncArg*)g_bboxMonitor.argList;
+    BboxFileSyncArg* next = NULL;
 
     while (node != NULL) {
         next = node->next;

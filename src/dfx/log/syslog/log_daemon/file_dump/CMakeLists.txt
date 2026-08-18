@@ -17,11 +17,10 @@ set(fileDumpSrcList
 )
 
 set(fileDumpHeaderDir
-    ${RUNTIME_DIR}/runtime/src/dfx/adump/inc/adump
-    ${RUNTIME_DIR}/runtime/src/dfx/adump/external
+    ${RUNTIME_DIR}/src/dfx/adump/inc/adump
+    ${RUNTIME_DIR}/src/dfx/adump/external
     ${TOOLAHCIN_LOG_DIR}/utils
-    ${TOOLAHCIN_LOG_DIR}/shared
-    ${TOOLAHCIN_LOG_DIR}/../../include/log/msnpureport
+    ${TOOLAHCIN_LOG_DIR}/inc/msnpureport
 )
 
 add_library(file_dump STATIC
@@ -67,8 +66,6 @@ target_link_libraries(file_dump PRIVATE
     $<$<STREQUAL:${PRODUCT_SIDE},device>:slog>
     adcore
     hdclog_device
-    hbm_detect
-    cpu_detect_server
     -Wl,--as-needed
 )
 

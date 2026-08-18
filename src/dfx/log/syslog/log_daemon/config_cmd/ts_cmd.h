@@ -11,13 +11,13 @@
 #ifndef TS_CMD_H
 #define TS_CMD_H
 
-#include "config_common.h"
+#include "msnpureport_common.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-void TsCmdGetConfig(char *resultBuf, uint32_t bufLen, uint16_t devId);
-int32_t TsCmdSetConfig(const struct MsnReq *req, uint16_t devId, char *resultBuf, uint32_t bufLen);
+void TsCmdGetConfig(char* resultBuf, uint32_t bufLen, uint16_t devId);
+int32_t TsCmdSetConfig(const struct MsnReq* req, uint16_t devId, char* resultBuf, uint32_t bufLen);
 #ifdef __cplusplus
 }
 #endif

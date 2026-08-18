@@ -13,42 +13,39 @@
 #include "ascend_hal.h"
 #include "log_level_parse.h"
 #include "log_print.h"
+#include "log_drv.h"
 
 #ifdef OS_SLOG
 
 #include <sys/ioctl.h>
-#define LEVEL_CONFIG_BUF_SIZE   56U
-#define MODULE_ID_NUM           64U
-#define SET_CONFIG_RES_SIZE     12U
+#define LEVEL_CONFIG_BUF_SIZE 56U
+#define MODULE_ID_NUM 64U
+#define SET_CONFIG_RES_SIZE 12U
 
-struct SlogSetConfig{
+struct SlogSetConfig {
     uint32_t level;
     uint32_t levelMagic;
     uint32_t res[SET_CONFIG_RES_SIZE];
 };
 
-struct SlogConfigMsg{
+struct SlogConfigMsg {
     uint32_t modId;
     uint32_t configSize;
     char configBuf[LEVEL_CONFIG_BUF_SIZE];
 };
 
-struct SlogDevBufInfo{
+struct SlogDevBufInfo {
     uint32_t bufNum;
     uint32_t modId[MODULE_ID_NUM];
 };
 
-enum SlogIoctlCmd{
-	IOCTL_USER_READ_INF = 1,
-	IOCTL_USER_WRITE_CFG = 2,
-	IOCTL_USER_READ_CFG = 3
-};
+enum SlogIoctlCmd { IOCTL_USER_READ_INF = 1, IOCTL_USER_WRITE_CFG = 2, IOCTL_USER_READ_CFG = 3 };
 
-#define PROC_SLOG_LEVEL_PATH    "/proc/slog/loglevel"
-#define SLOG_IOC_MAGIC           'S'
-#define SLOG_IOC_RINF             _IOR(SLOG_IOC_MAGIC, IOCTL_USER_READ_INF, struct SlogDevBufInfo)
-#define SLOG_IOC_RCFG             _IOR(SLOG_IOC_MAGIC, IOCTL_USER_READ_CFG, struct SlogConfigMsg)
-#define SLOG_IOC_WCFG             _IOW(SLOG_IOC_MAGIC, IOCTL_USER_WRITE_CFG, struct SlogConfigMsg)
+#define PROC_SLOG_LEVEL_PATH "/proc/slog/loglevel"
+#define SLOG_IOC_MAGIC 'S'
+#define SLOG_IOC_RINF _IOR(SLOG_IOC_MAGIC, IOCTL_USER_READ_INF, struct SlogDevBufInfo)
+#define SLOG_IOC_RCFG _IOR(SLOG_IOC_MAGIC, IOCTL_USER_READ_CFG, struct SlogConfigMsg)
+#define SLOG_IOC_WCFG _IOW(SLOG_IOC_MAGIC, IOCTL_USER_WRITE_CFG, struct SlogConfigMsg)
 
 LogRt SetDlogLevel(int32_t devId)
 {
@@ -123,6 +120,9 @@ STATIC int32_t GetLevelByChnl(int32_t devId, int32_t channelType)
         case LOG_CHANNEL_TYPE_RTC:
             level = SlogdGetModuleLevelByDevId(devId, RTC, DEBUG_LOG_MASK);
             break;
+        case LOG_CHANNEL_TYPE_DQS:
+            level = SlogdGetModuleLevelByDevId(devId, DQS, DEBUG_LOG_MASK);
+            break;
         default:
             level = SlogdGetGlobalLevel(SLOGD_GLOBAL_TYPE_MASK);
             break;
@@ -139,29 +139,30 @@ STATIC int32_t GetLevelByChnl(int32_t devId, int32_t channelType)
  */
 LogRt SetDlogLevel(int32_t devId)
 {
-    int32_t deviceId[LOG_DEVICE_ID_MAX] = { 0 };
-    int32_t deviceChnlType[LOG_CHANNEL_NUM_MAX] = { 0 };
-    int32_t deviceNum = 0;
+    uint32_t deviceId[LOG_DEVICE_ID_MAX] = {0};
+    int32_t deviceChnlType[LOG_CHANNEL_NUM_MAX] = {0};
+    uint32_t deviceNum = 0;
     int32_t channelTypeNum = 0;
- 
-    int32_t ret = log_get_device_id(deviceId, &deviceNum, LOG_DEVICE_ID_MAX);
-    if ((ret != SYS_OK) || (deviceNum > LOG_DEVICE_ID_MAX)) {
-        SELF_LOG_ERROR("get device id failed, result=%d, device_number=%d, max_device_id=%d.",
-                       ret, deviceNum, LOG_DEVICE_ID_MAX);
+
+    int32_t ret = DrvGetDeviceId(&deviceNum, deviceId, LOG_DEVICE_ID_MAX);
+    if (ret != LOG_SUCCESS) {
+        SELF_LOG_ERROR(
+            "get device id failed, result=%d, device_number=%u, max_device_id=%d.", ret, deviceNum, LOG_DEVICE_ID_MAX);
         return GET_DEVICE_ID_ERR;
     }
 
     LogRt res = SUCCESS;
-    for (int32_t i = 0; i < deviceNum; i++) {
+    for (uint32_t i = 0; i < deviceNum; i++) {
         // -1 means iterate all device
-        if ((deviceId[i] != devId) && (devId != -1)) {
+        if (((int32_t)deviceId[i] != devId) && (devId != -1)) {
             continue;
         }
-        ret = log_get_channel_type(deviceId[i], deviceChnlType, &channelTypeNum, LOG_CHANNEL_NUM_MAX);
+        ret = log_get_channel_type((int32_t)deviceId[i], deviceChnlType, &channelTypeNum, LOG_CHANNEL_NUM_MAX);
         if ((ret != SYS_OK) || (channelTypeNum > LOG_CHANNEL_NUM_MAX)) {
-            SELF_LOG_ERROR("get device channel type failed, result=%d, device_id=%d, " \
-                           "channel_type_number=%d, max_channel_number=%d.",
-                           ret, deviceId[i], channelTypeNum, LOG_CHANNEL_NUM_MAX);
+            SELF_LOG_ERROR(
+                "get device channel type failed, result=%d, device_id=%u, "
+                "channel_type_number=%d, max_channel_number=%d.",
+                ret, deviceId[i], channelTypeNum, LOG_CHANNEL_NUM_MAX);
             res = SET_LEVEL_ERR;
             continue;
         }
@@ -170,15 +171,18 @@ LogRt SetDlogLevel(int32_t devId)
                 continue;
             }
             // get level by channel type
-            int32_t level = GetLevelByChnl(deviceId[i], deviceChnlType[j]);
+            int32_t level = GetLevelByChnl((int32_t)deviceId[i], deviceChnlType[j]);
             // level is unsigned value
             if (level > LOG_MAX_LEVEL) {
                 level = SlogdGetGlobalLevel(SLOGD_GLOBAL_TYPE_MASK);
             }
-            ret = log_set_level(deviceId[i], deviceChnlType[j], (unsigned int)level);
+            // log set level
+            ret = log_set_dfx_param(
+                deviceId[i], (uint32_t)deviceChnlType[j], (uint32_t)LOG_SET_LEVEL, &level, (uint32_t)sizeof(level));
             if (ret != SYS_OK) {
-                SELF_LOG_ERROR("set device level failed, result=%d, device_id=%d, channel_type=%d, level=%s.",
-                               ret, deviceId[i], deviceChnlType[j], GetBasicLevelNameById(level));
+                SELF_LOG_ERROR(
+                    "set device level failed, result=%d, device_id=%u, channel_type=%d, level=%s.", ret, deviceId[i],
+                    deviceChnlType[j], GetBasicLevelNameById(level));
                 res = SET_LEVEL_ERR;
             }
         }

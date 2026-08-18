@@ -20,17 +20,16 @@
 #include <stdarg.h>
 #include "log_types.h"
 
-static inline const char *DlogGetFileName(const char *filePath) {
-    const char *result = filePath;
-    for (size_t i = 0; filePath[i] != '\0'; i++) {
-        if (filePath[i] == '/') {
-            result = &filePath[i + 1U];
-        }
-    }
-    return result;
-}
+#if defined(CPU_CYCLE_NO_SUPPORT)
+#define DLOG_FILE_NAME __FILE__
+#elif defined(__FILE_NAME__)
+#define DLOG_FILE_NAME __FILE_NAME__
+#elif defined(__GNUC__) || defined(__clang__)
+#define DLOG_FILE_NAME (__builtin_strrchr("/" __FILE__, '/') + 1)
+#else
+#define DLOG_FILE_NAME (strrchr("/" __FILE__, '/') + 1)
+#endif
 
-#define DLOG_FILE_NAME (DlogGetFileName(__FILE__))
 #define __FILENAME__ DLOG_FILE_NAME
 
 #ifdef __cplusplus
@@ -45,7 +44,7 @@ extern "C" {
  * @param [out]     enableEvent    1: enable; 0: disable
  * @return          module level   0: debug, 1: info, 2: warning, 3: error, 4: null output
  */
-LOG_FUNC_VISIBILITY int32_t dlog_getlevel(int32_t moduleId, int32_t *enableEvent);
+LOG_FUNC_VISIBILITY int32_t dlog_getlevel(int32_t moduleId, int32_t* enableEvent);
 
 /**
  * @brief           set module loglevel and enableEvent
@@ -79,7 +78,7 @@ LOG_FUNC_VISIBILITY int32_t DlogSetAttr(LogAttr logAttrInfo);
  * @param[in]       list          variable list of log content
  * @return          NA
  */
-LOG_FUNC_VISIBILITY void DlogVaList(int32_t moduleId, int32_t level, const char *fmt, va_list list);
+LOG_FUNC_VISIBILITY void DlogVaList(int32_t moduleId, int32_t level, const char* fmt, va_list list);
 
 /**
  * @brief           flush log buffer to file
@@ -93,8 +92,8 @@ LOG_FUNC_VISIBILITY void DlogFlush(void);
  * @param [in]      fmt           log content
  * @return          NA
  */
-#define dlog_error(moduleId, fmt, ...)                                          \
-    do {                                                                          \
+#define dlog_error(moduleId, fmt, ...)                                                            \
+    do {                                                                                          \
         DlogRecord(moduleId, DLOG_ERROR, "[%s:%d]" fmt, DLOG_FILE_NAME, __LINE__, ##__VA_ARGS__); \
     } while (0)
 
@@ -105,11 +104,11 @@ LOG_FUNC_VISIBILITY void DlogFlush(void);
  * @param [in]      fmt           log content
  * @return          NA
  */
-#define dlog_warn(moduleId, fmt, ...)                                               \
-    do {                                                                              \
-        if (CheckLogLevel(moduleId, DLOG_WARN) == 1) {                                   \
-            DlogRecord(moduleId, DLOG_WARN, "[%s:%d]" fmt, DLOG_FILE_NAME, __LINE__, ##__VA_ARGS__);  \
-        }                                                                               \
+#define dlog_warn(moduleId, fmt, ...)                                                                \
+    do {                                                                                             \
+        if (CheckLogLevel(moduleId, DLOG_WARN) == 1) {                                               \
+            DlogRecord(moduleId, DLOG_WARN, "[%s:%d]" fmt, DLOG_FILE_NAME, __LINE__, ##__VA_ARGS__); \
+        }                                                                                            \
     } while (0)
 
 /**
@@ -119,11 +118,11 @@ LOG_FUNC_VISIBILITY void DlogFlush(void);
  * @param [in]      fmt           log content
  * @return          NA
  */
-#define dlog_info(moduleId, fmt, ...)                                               \
-    do {                                                                              \
-        if (CheckLogLevel(moduleId, DLOG_INFO) == 1) {                                   \
-            DlogRecord(moduleId, DLOG_INFO, "[%s:%d]" fmt, DLOG_FILE_NAME, __LINE__, ##__VA_ARGS__);  \
-        }                                                                               \
+#define dlog_info(moduleId, fmt, ...)                                                                \
+    do {                                                                                             \
+        if (CheckLogLevel(moduleId, DLOG_INFO) == 1) {                                               \
+            DlogRecord(moduleId, DLOG_INFO, "[%s:%d]" fmt, DLOG_FILE_NAME, __LINE__, ##__VA_ARGS__); \
+        }                                                                                            \
     } while (0)
 
 /**
@@ -133,11 +132,11 @@ LOG_FUNC_VISIBILITY void DlogFlush(void);
  * @param [in]      fmt           log content
  * @return          NA
  */
-#define dlog_debug(moduleId, fmt, ...)                                              \
-    do {                                                                              \
-        if (CheckLogLevel(moduleId, DLOG_DEBUG) == 1) {                                  \
+#define dlog_debug(moduleId, fmt, ...)                                                                \
+    do {                                                                                              \
+        if (CheckLogLevel(moduleId, DLOG_DEBUG) == 1) {                                               \
             DlogRecord(moduleId, DLOG_DEBUG, "[%s:%d]" fmt, DLOG_FILE_NAME, __LINE__, ##__VA_ARGS__); \
-        }                                                                               \
+        }                                                                                             \
     } while (0)
 
 /**
@@ -148,11 +147,11 @@ LOG_FUNC_VISIBILITY void DlogFlush(void);
  * @param [in]      fmt           log content
  * @return          NA
  */
-#define Dlog(moduleId, level, fmt, ...)                                                 \
-    do {                                                                                  \
-        if (CheckLogLevel(moduleId, level) == 1) {                                           \
-            DlogRecord(moduleId, level, "[%s:%d]" fmt, DLOG_FILE_NAME, __LINE__, ##__VA_ARGS__);   \
-        }                                                                                  \
+#define Dlog(moduleId, level, fmt, ...)                                                          \
+    do {                                                                                         \
+        if (CheckLogLevel(moduleId, level) == 1) {                                               \
+            DlogRecord(moduleId, level, "[%s:%d]" fmt, DLOG_FILE_NAME, __LINE__, ##__VA_ARGS__); \
+        }                                                                                        \
     } while (0)
 
 /**
@@ -164,11 +163,11 @@ LOG_FUNC_VISIBILITY void DlogFlush(void);
  * @param [in]      fmt           log content
  * @return          NA
  */
-#define DlogSub(moduleId, submodule, level, fmt, ...)                                                   \
-    do {                                                                                                  \
-        if (CheckLogLevel(moduleId, level) == 1) {                                                           \
-            DlogRecord(moduleId, level, "[%s:%d][%s]" fmt, DLOG_FILE_NAME, __LINE__, submodule, ##__VA_ARGS__);    \
-        }                                                                                                   \
+#define DlogSub(moduleId, submodule, level, fmt, ...)                                                           \
+    do {                                                                                                        \
+        if (CheckLogLevel(moduleId, level) == 1) {                                                              \
+            DlogRecord(moduleId, level, "[%s:%d][%s]" fmt, DLOG_FILE_NAME, __LINE__, submodule, ##__VA_ARGS__); \
+        }                                                                                                       \
     } while (0)
 
 /**
@@ -178,7 +177,7 @@ LOG_FUNC_VISIBILITY void DlogFlush(void);
  * @param [in]      fmt        log content
  * @return:         NA
  */
-LOG_FUNC_VISIBILITY void DlogRecord(int32_t moduleId, int32_t level, const char *fmt, ...) __attribute((weak));
+LOG_FUNC_VISIBILITY void DlogRecord(int32_t moduleId, int32_t level, const char* fmt, ...) __attribute((weak));
 
 #ifdef __cplusplus
 #ifndef LOG_CPP

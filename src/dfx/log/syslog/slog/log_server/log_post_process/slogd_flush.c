@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "slogd_flush.h"
+#include <malloc.h>
 #include "slog.h"
 #include "log_pm_sig.h"
 #include "log_system_api.h"
@@ -15,15 +16,16 @@
 #include "log_pm.h"
 #include "slogd_compress.h"
 #include "slogd_eventlog.h"
+#include "slogd_syslog.h"
 
-#define FLUSH_BUFFER_SIZE (1024 * 1024)     // 1M
+#define FLUSH_BUFFER_SIZE (1024 * 1024) // 1M
 
 STATIC StLogFileList g_fileList;
 STATIC SlogdStatus g_slogdStatus = SLOGD_RUNNING;
 
 typedef struct {
-    int32_t (*flush)(void *, uint32_t, bool);
-    void (*get)(SessionItem *, void*, uint32_t, int32_t);
+    int32_t (*flush)(void*, uint32_t, bool);
+    void (*get)(SessionItem*, void*, uint32_t, uint32_t);
 } FlushNode;
 
 typedef struct {
@@ -33,7 +35,7 @@ typedef struct {
         bool isThreadExit;
     } commonMgr;
     struct {
-        int32_t devNum;
+        uint32_t devNum;
         bool isRegister;
         DevThread devThread[MAX_DEV_NUM];
         FlushNode devNode[LOG_PRIORITY_TYPE_NUM];
@@ -41,13 +43,13 @@ typedef struct {
     } devThreadMgr;
 } FlushMgr;
 
-STATIC FlushMgr g_flushMgr = { 0 };
+STATIC FlushMgr g_flushMgr = {0};
 
 #ifdef STATIC_BUFFER
 #include "log_session_manage.h"
 static bool SlogdFlushCheckInvalid(void)
 {
-    SessionItem item = { NULL, SESSION_CONTINUES_EXPORT };
+    SessionItem item = {NULL, SESSION_CONTINUES_EXPORT};
     if (SessionMgrGetSession(&item) == LOG_SUCCESS) {
         return true;
     } else {
@@ -55,19 +57,16 @@ static bool SlogdFlushCheckInvalid(void)
     }
 }
 #else
-static bool SlogdFlushCheckInvalid(void)
-{
-    return true;
-}
+static bool SlogdFlushCheckInvalid(void) { return true; }
 #endif
 
 STATIC int32_t GetPermissionForAllUserFlag(void)
 {
     int32_t flag = 0;
 
-    char val[CONF_VALUE_MAX_LEN + 1] = { 0 };
+    char val[CONF_VALUE_MAX_LEN + 1] = {0};
     LogRt ret = LogConfListGetValue(PERMISSION_FOR_ALL, LogStrlen(PERMISSION_FOR_ALL), val, CONF_VALUE_MAX_LEN);
-    if ((ret == SUCCESS) && LogStrCheckNaturalNum((const char *)val)) {
+    if ((ret == SUCCESS) && LogStrCheckNaturalNum((const char*)val)) {
         int64_t tmpL = -1;
         if (LogStrToInt(val, &tmpL) == LOG_SUCCESS) {
             flag = (tmpL == 1) ? 1 : 0;
@@ -98,22 +97,13 @@ toolMode SyncGroupToOther(toolMode perm)
  * @brief        : set slogd status
  * @param [in]   : status      current slogd status
  */
-void SlogdSetStatus(SlogdStatus status)
-{
-    g_slogdStatus = status;
-}
+void SlogdSetStatus(SlogdStatus status) { g_slogdStatus = status; }
 
-SlogdStatus SlogdGetStatus(void)
-{
-    return g_slogdStatus;
-}
+SlogdStatus SlogdGetStatus(void) { return g_slogdStatus; }
 
-StLogFileList *GetGlobalLogFileList(void)
-{
-    return &g_fileList;
-}
+StLogFileList* GetGlobalLogFileList(void) { return &g_fileList; }
 
-static void SlogdFlushProcess(void *buffer, uint32_t bufSize, bool flushFlag)
+static void SlogdFlushProcess(void* buffer, uint32_t bufSize, bool flushFlag)
 {
     if (!SlogdCompressIsValid()) {
         return;
@@ -128,7 +118,7 @@ static void SlogdFlushProcess(void *buffer, uint32_t bufSize, bool flushFlag)
 void SlogdFlushToFile(bool flushFlag)
 {
     uint32_t bufSize = FLUSH_BUFFER_SIZE;
-    void *buffer = LogMalloc(bufSize);
+    void* buffer = LogMalloc(bufSize);
     if (buffer == NULL) {
         SELF_LOG_ERROR("malloc failed, strerr = %s", strerror(ToolGetErrorCode()));
     }
@@ -137,10 +127,10 @@ void SlogdFlushToFile(bool flushFlag)
     return;
 }
 
-void SlogdFlushGet(SessionItem *handle)
+void SlogdFlushGet(SessionItem* handle)
 {
     uint32_t bufferLen = FLUSH_BUFFER_SIZE;
-    void *buffer = LogMalloc(bufferLen);
+    void* buffer = LogMalloc(bufferLen);
     if (buffer == NULL) {
         SELF_LOG_ERROR("malloc failed, strerr = %s", strerror(ToolGetErrorCode()));
     }
@@ -153,11 +143,11 @@ void SlogdFlushGet(SessionItem *handle)
     }
 
     // device get
-    for (int32_t i = 0; i < g_flushMgr.devThreadMgr.devNum; i++) {
+    for (uint32_t i = 0; i < g_flushMgr.devThreadMgr.devNum; i++) {
         for (int32_t j = 0; j < (int32_t)LOG_PRIORITY_TYPE_NUM; j++) {
             if (g_flushMgr.devThreadMgr.devNode[j].get != NULL) {
-                g_flushMgr.devThreadMgr.devNode[j].get(handle, buffer, bufferLen,
-                                                       g_flushMgr.devThreadMgr.devThread[i].deviceId);
+                g_flushMgr.devThreadMgr.devNode[j].get(
+                    handle, buffer, bufferLen, g_flushMgr.devThreadMgr.devThread[i].deviceId);
             }
         }
     }
@@ -165,46 +155,53 @@ void SlogdFlushGet(SessionItem *handle)
     LogFree(buffer);
 }
 
-STATIC void *SlogdFlushCommonProcess(void *args)
+STATIC void* SlogdFlushCommonProcess(void* args)
 {
     (void)(args);
     static uint32_t printNum = 0;
     NO_ACT_WARN_LOG(ToolSetThreadName("LogFlushCommon") != SYS_OK, "can not set thread name(LogFlushCommon).");
 
     uint32_t bufSize = 1 * 1024 * 1024;
-    void *buffer = LogMalloc(bufSize);
+    void* buffer = LogMalloc(bufSize);
     if (buffer == NULL) {
         SELF_LOG_ERROR("malloc failed, strerr = %s", strerror(ToolGetErrorCode()));
     }
+    static uint32_t passTime = 0;
+    const uint32_t trimPeriod = 60U; // malloc trim every 60s
     while (!g_flushMgr.commonMgr.isThreadExit) {
         if (buffer == NULL) {
             buffer = LogMalloc(bufSize);
             if (buffer == NULL) {
-                SELF_LOG_ERROR_N(&printNum, GENERAL_PRINT_NUM,
-                                 "malloc for data flush failed, strerr=%s, print once every %u times.",
-                                 strerror(ToolGetErrorCode()), GENERAL_PRINT_NUM);
+                SELF_LOG_ERROR_N(
+                    &printNum, GENERAL_PRINT_NUM, "malloc for data flush failed, strerr=%s, print once every %u times.",
+                    strerror(ToolGetErrorCode()), GENERAL_PRINT_NUM);
                 (void)ToolSleep(ONE_SECOND);
                 continue;
             }
         }
         SlogdFlushProcess(buffer, bufSize, false);
-        (void)ToolSleep(ONE_SECOND);    // EP 场景需测试 sleep 时间合理性
+        (void)ToolSleep(ONE_SECOND); // EP 场景需测试 sleep 时间合理性
+        passTime++;
+        if (passTime == trimPeriod) {
+            (void)malloc_trim(0);
+            passTime = 0;
+        }
     }
     // force to flush when thread is to exit
     SlogdFlushProcess(buffer, bufSize, true);
     SELF_LOG_ERROR("Thread(flushCommonLog) quit, signal=%d.", LogGetSigNo());
     XFREE(buffer);
-    return (void *)NULL;
+    return (void*)NULL;
 }
 
-STATIC void *SlogdFlushDeviceProcess(void *args)
+STATIC void* SlogdFlushDeviceProcess(void* args)
 {
-    ONE_ACT_ERR_LOG(args == NULL, return (void *)NULL, "args is NULL.");
-    int32_t devId = *(int32_t *)args;
-    char threadName[THREAD_NAME_MAX_LEN] = { 0 };
+    ONE_ACT_ERR_LOG(args == NULL, return (void*)NULL, "args is NULL.");
+    int32_t devId = *(int32_t*)args;
+    char threadName[THREAD_NAME_MAX_LEN] = {0};
     int32_t ret = 0;
     ret = sprintf_s(threadName, THREAD_NAME_MAX_LEN, "LogFlushDev%d", devId);
-    ONE_ACT_ERR_LOG(ret == -1, return (void *)NULL, "generate flush thread name for device %d failed.", devId);
+    ONE_ACT_ERR_LOG(ret == -1, return (void*)NULL, "generate flush thread name for device %d failed.", devId);
     if (ToolSetThreadName(threadName) != SYS_OK) {
         SELF_LOG_WARN("can not set thread_name(%s).", threadName);
     }
@@ -228,7 +225,7 @@ STATIC void *SlogdFlushDeviceProcess(void *args)
     }
 
     SELF_LOG_ERROR("Thread(%s) quit, signal=%d", threadName, LogGetSigNo());
-    return (void *)NULL;
+    return (void*)NULL;
 }
 
 /**
@@ -244,8 +241,8 @@ STATIC LogStatus SlogdFlushCreateThread(void)
     }
     g_flushMgr.devThreadMgr.isThreadExit = false;
     if (g_flushMgr.devThreadMgr.isRegister) {
-        ret = SlogdThreadMgrCreateDeviceThread(g_flushMgr.devThreadMgr.devThread, MAX_DEV_NUM,
-            &g_flushMgr.devThreadMgr.devNum, SlogdFlushDeviceProcess);
+        ret = SlogdThreadMgrCreateDeviceThread(
+            g_flushMgr.devThreadMgr.devThread, MAX_DEV_NUM, &g_flushMgr.devThreadMgr.devNum, SlogdFlushDeviceProcess);
         ONE_ACT_ERR_LOG(ret != LOG_SUCCESS, return LOG_FAILURE, "create device thread failed.");
         return LOG_SUCCESS;
     }
@@ -258,16 +255,30 @@ STATIC void SlogdFlushThreadExit(void)
 {
     g_flushMgr.commonMgr.isThreadExit = true;
     g_flushMgr.devThreadMgr.isThreadExit = true;
-    ThreadManage threadManage = { 1, &g_flushMgr.commonMgr.comThread, g_flushMgr.devThreadMgr.devNum,
-        g_flushMgr.devThreadMgr.devThread };
+    ThreadManage threadManage = {
+        1, &g_flushMgr.commonMgr.comThread, g_flushMgr.devThreadMgr.devNum, g_flushMgr.devThreadMgr.devThread};
     SlogdThreadMgrExit(&threadManage);
 }
 
 LogStatus SlogdFlushInit(void)
 {
-    LogStatus ret = LogAgentInitDeviceOs(&g_fileList);
+    (void)memset_s((void*)&g_fileList, sizeof(StLogFileList), 0, sizeof(StLogFileList));
+    int32_t err = snprintf_truncated_s(g_fileList.aucFilePath, MAX_FILEDIR_LEN + 1U, "%s", LOG_FILE_PATH);
+    ONE_ACT_ERR_LOG(err < 0, return LOG_FAILURE, "snprintf_truncated_s failed, ret=%d.", err);
+
+    if (LogAgentGetCfg(&g_fileList) != LOG_SUCCESS) {
+        SELF_LOG_ERROR("init device os config failed.");
+        return LOG_FAILURE;
+    }
+
+    LogStatus ret = SlogdSyslogMgrInit(&g_fileList);
     if (ret != LOG_SUCCESS) {
         SELF_LOG_ERROR("init log file info failed, result=%d, strerr=%s.", ret, strerror(ToolGetErrorCode()));
+        return LOG_FAILURE;
+    }
+
+    if (LogAgentInitDevice(&g_fileList, MAX_DEV_NUM) != LOG_SUCCESS) {
+        SELF_LOG_ERROR("get current device file list failed.");
         return LOG_FAILURE;
     }
 
@@ -299,11 +310,44 @@ LogStatus SlogdFlushInit(void)
 
     return LOG_SUCCESS;
 }
+LogStatus SlogdFlushPoolingInit(void)
+{
+    (void)memset_s((void*)&g_fileList, sizeof(StLogFileList), 0, sizeof(StLogFileList));
+    int32_t err = snprintf_truncated_s(g_fileList.aucFilePath, MAX_FILEDIR_LEN + 1U, "%s", LOG_FILE_PATH);
+    ONE_ACT_ERR_LOG(err < 0, return LOG_FAILURE, "snprintf_truncated_s failed, ret=%d.", err);
+
+    if (LogAgentGetCfg(&g_fileList) != LOG_SUCCESS) {
+        SELF_LOG_ERROR("init device os config failed.");
+        return LOG_FAILURE;
+    }
+
+    LogStatus ret = LogAgentInitDeviceApplication(&g_fileList);
+    if (ret != LOG_SUCCESS) {
+        SELF_LOG_ERROR("init app log file info failed, result=%d.", ret);
+        return LOG_FAILURE;
+    }
+
+    // create thread to flush log
+    ret = SlogdFlushCreateThread();
+    if (ret != LOG_SUCCESS) {
+        SELF_LOG_ERROR("create flush thread failed, ret=%d, strerr=%s.", ret, strerror(ToolGetErrorCode()));
+        return LOG_FAILURE;
+    }
+
+    ret = SlogdCompressInit();
+    if (ret != LOG_SUCCESS) {
+        SELF_LOG_ERROR("init compress resource failed, ret=%d.", ret);
+        SlogdFlushThreadExit();
+        return LOG_FAILURE;
+    }
+
+    return LOG_SUCCESS;
+}
 
 void SlogdFlushExit(void)
 {
     SlogdFlushThreadExit();
-    for (int32_t i = 0 ; i < (int32_t)LOG_TYPE_NUM; ++i) {
+    for (int32_t i = 0; i < (int32_t)LOG_TYPE_NUM; ++i) {
         WriteFileLimitUnInit(&g_fileList.sortDeviceOsLogList[i].limit);
         WriteFileLimitUnInit(&g_fileList.sortDeviceAppLogList[i].limit);
         for (uint32_t j = 0; j < g_fileList.ucDeviceNum; j++) {
@@ -326,7 +370,7 @@ void SlogdFlushExit(void)
  * @param[in]   : node          struct LogFlushNode pointer
  * @return      : LOG_SUCCESS   success; LOG_FAILURE failure
  */
-int32_t SlogdFlushRegister(const LogFlushNode *flushNode)
+int32_t SlogdFlushRegister(const LogFlushNode* flushNode)
 {
     if (flushNode == NULL) {
         SELF_LOG_ERROR("flush node pointer is NULL.");

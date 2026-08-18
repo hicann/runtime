@@ -19,17 +19,16 @@
 using namespace std;
 using namespace testing;
 
-static LogStatus SlogdSyslogMgrInit(StLogFileList *fileList)
+static LogStatus SlogdSyslogAndAppMgrInit(StLogFileList* fileList)
 {
-    LogStatus ret = LogAgentInitDeviceOs(fileList);
+    LogStatus ret = SlogdSyslogMgrInit(fileList);
     if (ret != LOG_SUCCESS) {
         return ret;
     }
     return LogAgentInitDeviceApplication(fileList);
 }
 
-class EP_SLOGD_FILE_MGR_LOG_EXCP_UTEST : public testing::Test
-{
+class EP_SLOGD_FILE_MGR_LOG_EXCP_UTEST : public testing::Test {
 protected:
     virtual void SetUp()
     {
@@ -57,7 +56,7 @@ protected:
     }
 
 public:
-    int DlogCmdGetIntRet(const char *path, const char*cmd)
+    int DlogCmdGetIntRet(const char* path, const char* cmd)
     {
         char resultFile[200] = {0};
         sprintf(resultFile, "%s/EP_SLOGD_EXCP_STEST_cmd_result.txt", path);
@@ -67,7 +66,7 @@ public:
         system(cmdToFile);
 
         char buf[100] = {0};
-        FILE *fp = fopen(resultFile, "r");
+        FILE* fp = fopen(resultFile, "r");
         if (fp == NULL) {
             return 0;
         }
@@ -79,7 +78,7 @@ public:
         return atoi(buf);
     }
 
-    int DlogCheckDir(const char *path, const char *str)
+    int DlogCheckDir(const char* path, const char* str)
     {
         if (access(path, F_OK) != 0) {
             return 0;
@@ -92,13 +91,13 @@ public:
     }
 };
 
-static void *MallocStub(size_t size)
+static void* MallocStub(size_t size)
 {
     if (size == 0) {
         return NULL;
     }
 
-    void *buffer = malloc(size);
+    void* buffer = malloc(size);
     if (buffer == NULL) {
         return NULL;
     }
@@ -115,10 +114,11 @@ TEST_F(EP_SLOGD_FILE_MGR_LOG_EXCP_UTEST, LogAgentInitDeviceMallocFailed)
 {
     system("cp " CONF_PATH " " SLOG_CONF_FILE_PATH);
     SlogdConfigMgrInit();
-    StLogFileList logList = { 0 };
+    StLogFileList logList = {0};
     LogAgentGetCfg(&logList);
-    MOCKER(LogMalloc).stubs().will(invoke(MallocStub)).then(invoke(MallocStub)).then(returnValue((void *)NULL));
-    EXPECT_EQ(NOK, LogAgentInitDevice(&logList, MAX_DEV_NUM));
+    MOCKER(LogMalloc).stubs().will(invoke(MallocStub)).then(invoke(MallocStub)).then(returnValue((void*)NULL));
+    // 返回类型由 unsigned int 改为 int32_t，失败值随之由 NOK(1) 变为 LOG_FAILURE(-1)
+    EXPECT_EQ(LOG_FAILURE, LogAgentInitDevice(&logList, MAX_DEV_NUM));
     EXPECT_EQ(1, GetErrLogNum());
     LogAgentCleanUpDevice(&logList);
     SlogdConfigMgrExit();
@@ -136,11 +136,11 @@ TEST_F(EP_SLOGD_FILE_MGR_LOG_EXCP_UTEST, LogAgentInitDeviceOsMallocFailed)
     system("cp " CONF_PATH " " SLOG_CONF_FILE_PATH);
     system("mkdir -p " LOG_FILE_PATH "/security/device-app-100");
     SlogdConfigMgrInit();
-    MOCKER(LogMalloc).stubs().will(returnValue((void *)NULL));
-    StLogFileList logList = { 0 };
+    MOCKER(LogMalloc).stubs().will(returnValue((void*)NULL));
+    StLogFileList logList = {0};
     snprintf_truncated_s(logList.aucFilePath, MAX_FILEDIR_LEN + 1U, "%s", LOG_FILE_PATH);
     LogAgentGetCfg(&logList);
-    EXPECT_EQ(LOG_FAILURE, SlogdSyslogMgrInit(&logList));
+    EXPECT_EQ(LOG_FAILURE, SlogdSyslogAndAppMgrInit(&logList));
     EXPECT_EQ(2, GetErrLogNum());
     LogAgentCleanUpDevice(&logList);
     SlogdConfigMgrExit();
@@ -154,7 +154,7 @@ TEST_F(EP_SLOGD_FILE_MGR_LOG_EXCP_UTEST, LogRemoveDirFailed)
     GlobalMockObject::verify();
 
     system("mkdir -p " PATH_ROOT);
-    MOCKER(opendir).stubs().will(returnValue((DIR *)NULL));
+    MOCKER(opendir).stubs().will(returnValue((DIR*)NULL));
     EXPECT_EQ(LOG_FAILURE, LogRemoveDir(PATH_ROOT, 0));
     GlobalMockObject::verify();
 
@@ -184,7 +184,7 @@ TEST_F(EP_SLOGD_FILE_MGR_LOG_EXCP_UTEST, LogFileTellFailed)
 {
     EXPECT_EQ(-1, LogFileTell(NULL));
     system("cp " CONF_PATH " " SLOG_CONF_FILE_PATH);
-    FILE *fp = fopen(SLOG_CONF_FILE_PATH, "r");
+    FILE* fp = fopen(SLOG_CONF_FILE_PATH, "r");
     fclose(fp);
     EXPECT_EQ(-1, LogFileTell(fp));
 }
@@ -209,7 +209,7 @@ TEST_F(EP_SLOGD_FILE_MGR_LOG_EXCP_UTEST, LogGetDirSizeFailed)
     system("mkdir -p " PATH_ROOT "/testDir");
     system("mkdir -p " PATH_ROOT "/testDirNull");
     system("echo test > " PATH_ROOT "/testDir/test.log");
-    MOCKER(opendir).stubs().will(returnValue((DIR *)NULL));
+    MOCKER(opendir).stubs().will(returnValue((DIR*)NULL));
     EXPECT_EQ(0, LogGetDirSize(PATH_ROOT, 0));
     GlobalMockObject::verify();
 }

@@ -8,7 +8,6 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-
 #include "slogd_applog_core.h"
 #include "slogd_appnum_watch.h"
 #include "slogd_applog_report.h"
@@ -17,10 +16,7 @@
 #include "slogd_flush.h"
 #include "slogd_config_mgr.h"
 
-STATIC bool SlogdApplogCheckLogType(const LogInfo *info)
-{
-    return info->processType == APPLICATION;
-}
+STATIC bool SlogdApplogCheckLogType(const LogInfo* info) { return info->processType == APPLICATION; }
 
 static int32_t SlogdApplogResInit(void)
 {
@@ -51,12 +47,12 @@ static void SlogdApplogResExit(void)
 
 #ifdef APP_LOG_WATCH
 
-STATIC int32_t SlogdApplogWirte(const char *msg, uint32_t msgLen, const LogInfo *info)
+STATIC int32_t SlogdApplogWirte(const char* msg, uint32_t msgLen, const LogInfo* info)
 {
     return SlogdFlushToAppBuf(msg, msgLen, info);
 }
 
-STATIC int32_t SlogdApplogFlush(void *buffer, uint32_t bufferLen, bool flushFlag)
+STATIC int32_t SlogdApplogFlush(void* buffer, uint32_t bufferLen, bool flushFlag)
 {
     (void)flushFlag;
     ONE_ACT_ERR_LOG(buffer == NULL, return LOG_FAILURE, "input buffer is NULL.");
@@ -64,12 +60,12 @@ STATIC int32_t SlogdApplogFlush(void *buffer, uint32_t bufferLen, bool flushFlag
 }
 
 #elif defined APP_LOG_REPORT
-STATIC int32_t SlogdApplogWirte(const char *msg, uint32_t msgLen, const LogInfo *info)
+STATIC int32_t SlogdApplogWirte(const char* msg, uint32_t msgLen, const LogInfo* info)
 {
     return SlogdAppLogFlushToBufByReport(msg, msgLen, info);
 }
 
-STATIC int32_t SlogdApplogFlush(void *buffer, uint32_t bufferLen, bool flushFlag)
+STATIC int32_t SlogdApplogFlush(void* buffer, uint32_t bufferLen, bool flushFlag)
 {
     (void)buffer;
     (void)bufferLen;
@@ -96,7 +92,11 @@ static int32_t SlogdApplogRegister(void)
 LogStatus SlogdApplogInit(int32_t devId)
 {
     // debug/run/sec等的app子目录的老化线程
-    CreateAppLogWatchThread();
+    if ((SlogdConfigMgrGetStorageMode(DEBUG_APP_LOG_TYPE) == STORAGE_RULE_FILTER_PID) ||
+        (SlogdConfigMgrGetStorageMode(SEC_APP_LOG_TYPE) == STORAGE_RULE_FILTER_PID) ||
+        (SlogdConfigMgrGetStorageMode(RUN_APP_LOG_TYPE) == STORAGE_RULE_FILTER_PID)) {
+        CreateAppLogWatchThread();
+    }
 
     // resource init
     if (SlogdApplogResInit() != LOG_SUCCESS) {

@@ -56,9 +56,13 @@ target_link_libraries(ascendlogcollector PRIVATE
     $<BUILD_INTERFACE:intf_pub>
     $<BUILD_INTERFACE:slog_headers>
     $<$<STREQUAL:${PRODUCT},as31xm1>:iam>
+    $<$<STREQUAL:${PRODUCT},mc32dm11a>:iam>
+    $<$<STREQUAL:${PRODUCT},mc32dm11aesl>:iam>
     $<$<STREQUAL:${PRODUCT},ascend610>:iam>
     $<$<STREQUAL:${PRODUCT},ascend610Lite>:iam>
     $<$<STREQUAL:${PRODUCT},ascend610Liteesl>:iam>
+    $<$<STREQUAL:${PRODUCT},mc62cm12a>:iam>
+    $<$<STREQUAL:${PRODUCT},mc62cm12aesl>:iam>
     dl
     rt
     c_sec
@@ -70,7 +74,6 @@ set_target_properties(ascendlogcollector
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/
 )
 
-###################################################################
 set(INSTALL_BASE_DIR "")
 set(INSTALL_INCLUDE_DIR include)
 set(INSTALL_LIBRARY_DIR lib)

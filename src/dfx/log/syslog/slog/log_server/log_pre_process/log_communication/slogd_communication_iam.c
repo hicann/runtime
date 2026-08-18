@@ -19,11 +19,12 @@
 #include "slogd_collect_log.h"
 #include "log_level_parse.h"
 #include "slogd_flush.h"
+#include "iam.h"
 
 #define MAX_BUFNODE_NUM 16384
 #define MAX_PATH_NAME_LEN (CFG_LOGAGENT_PATH_MAX_LENGTH)
 #define MAX_APP_FILEPATH_LEN (CFG_LOGAGENT_PATH_MAX_LENGTH + MAX_FILENAME_LEN)
-#define IAM_TIME_OUT   80       // timeout for read/write/ioctl/close except open
+#define IAM_TIME_OUT 80 // timeout for read/write/ioctl/close except open
 
 STATIC ToolMutex g_listMutex = PTHREAD_MUTEX_INITIALIZER;
 STATIC unsigned int g_bufListNodeNum = 0;
@@ -32,24 +33,24 @@ typedef struct BufList {
     LogHead logHead;
     char buf[MSG_LENGTH];
     unsigned int len;
-    struct BufList *next;
+    struct BufList* next;
 } BufList;
 
-STATIC BufList *g_bufHead = NULL;
-STATIC BufList *g_bufTail = NULL;
+STATIC BufList* g_bufHead = NULL;
+STATIC BufList* g_bufTail = NULL;
 
-STATIC void SyncOsLogToDisk(const StSubLogFileList *pstSubInfo)
+STATIC void SyncOsLogToDisk(const StSubLogFileList* pstSubInfo)
 {
     ONE_ACT_NO_LOG(pstSubInfo == NULL, return);
     ONE_ACT_NO_LOG(LogStrlen(pstSubInfo->fileName) == 0, return);
 
-    char fileName[MAX_FULLPATH_LEN + 1U] = { 0 };
+    char fileName[MAX_FULLPATH_LEN + 1U] = {0};
     unsigned int ret = FilePathSplice(pstSubInfo, fileName, MAX_FULLPATH_LEN);
     ONE_ACT_NO_LOG(ret != OK, return);
     FsyncLogToDisk(fileName);
 }
 
-STATIC int AppLogFlushFilter(const ToolDirent *dir)
+STATIC int AppLogFlushFilter(const ToolDirent* dir)
 {
     ONE_ACT_NO_LOG(dir == NULL, return FILTER_NOK);
     if (LogStrStartsWith(dir->d_name, DEVICE_APP_HEAD) != false) {
@@ -61,30 +62,32 @@ STATIC int AppLogFlushFilter(const ToolDirent *dir)
 STATIC void SyncAppLogToDisk(const char* path, int appPid)
 {
     ONE_ACT_NO_LOG(path == NULL, return);
-    char appLogPath[MAX_PATH_NAME_LEN + 1U] = { 0 };
-    char appLogFileName[MAX_APP_FILEPATH_LEN + 1U] = { 0 };
-    const char* sortDirName[LOG_TYPE_NUM] = { DEBUG_DIR_NAME, SECURITY_DIR_NAME, RUN_DIR_NAME };
+    char appLogPath[MAX_PATH_NAME_LEN + 1U] = {0};
+    char appLogFileName[MAX_APP_FILEPATH_LEN + 1U] = {0};
+    const char* sortDirName[LOG_TYPE_NUM] = {DEBUG_DIR_NAME, SECURITY_DIR_NAME, RUN_DIR_NAME};
     int logType = DEBUG_LOG;
     for (; logType < (int)LOG_TYPE_NUM; logType++) {
         (void)memset_s(appLogPath, MAX_PATH_NAME_LEN + 1U, 0, MAX_PATH_NAME_LEN + 1U);
         (void)memset_s(appLogFileName, MAX_APP_FILEPATH_LEN + 1U, 0, MAX_APP_FILEPATH_LEN + 1U);
-        int ret = snprintf_s(appLogPath, MAX_PATH_NAME_LEN + 1U, MAX_PATH_NAME_LEN, "%s%s%s%s%s-%d", path,
-                             FILE_SEPARATOR, sortDirName[logType], FILE_SEPARATOR, DEVICE_APP_HEAD, appPid);
+        int ret = snprintf_s(
+            appLogPath, MAX_PATH_NAME_LEN + 1U, MAX_PATH_NAME_LEN, "%s%s%s%s%s-%d", path, FILE_SEPARATOR,
+            sortDirName[logType], FILE_SEPARATOR, DEVICE_APP_HEAD, appPid);
         if (ret == -1) {
-            SELF_LOG_INFO("get applog path failed, pid=%d, result=%d, strerr=%s.",
-                appPid, ret, strerror(ToolGetErrorCode()));
+            SELF_LOG_INFO(
+                "get applog path failed, pid=%d, result=%d, strerr=%s.", appPid, ret, strerror(ToolGetErrorCode()));
             continue;
         }
         if (ToolAccess(appLogPath) != SYS_OK) {
             continue;
         }
-        ToolDirent **namelist = NULL;
-        int toatalNum = ToolScandir((const char *)appLogPath, &namelist, AppLogFlushFilter, alphasort);
+        ToolDirent** namelist = NULL;
+        int toatalNum = ToolScandir((const char*)appLogPath, &namelist, AppLogFlushFilter, alphasort);
         if ((toatalNum <= 0) || (namelist == NULL)) {
             continue;
         }
-        ret = snprintf_s(appLogFileName, MAX_APP_FILEPATH_LEN + 1U, MAX_APP_FILEPATH_LEN, "%s/%s",
-                         appLogPath, namelist[toatalNum - 1]->d_name);
+        ret = snprintf_s(
+            appLogFileName, MAX_APP_FILEPATH_LEN + 1U, MAX_APP_FILEPATH_LEN, "%s/%s", appLogPath,
+            namelist[toatalNum - 1]->d_name);
         if (ret == -1) {
             ToolScandirFree(namelist, toatalNum);
             SELF_LOG_INFO("can not snprintf, strerr=%s.", strerror(ToolGetErrorCode()));
@@ -98,7 +101,7 @@ STATIC void SyncAppLogToDisk(const char* path, int appPid)
 
 STATIC void SyncAllToDisk(int appPid)
 {
-    const StLogFileList *fileList = GetGlobalLogFileList();
+    const StLogFileList* fileList = GetGlobalLogFileList();
     if (fileList == NULL) {
         return;
     }
@@ -111,7 +114,7 @@ STATIC void SyncAllToDisk(int appPid)
     }
 }
 
-STATIC int32_t IamRead(char *recvBuf, uint32_t recvBufLen, int *logType)
+STATIC int32_t IamRead(char* recvBuf, uint32_t recvBufLen, int* logType)
 {
     int readLength;
     if ((recvBuf == NULL) || (recvBufLen == 0) || (logType == NULL)) {
@@ -125,14 +128,14 @@ STATIC int32_t IamRead(char *recvBuf, uint32_t recvBufLen, int *logType)
         return SYS_INVALID_PARAM;
     }
 
-    BufList *curHeadBuf = g_bufHead;
+    BufList* curHeadBuf = g_bufHead;
     if (recvBufLen < (curHeadBuf->len + LOGHEAD_LEN)) {
         SELF_LOG_WARN("list buffer length(%u), input length(%u), canot copy", curHeadBuf->len, recvBufLen);
         UNLOCK_WARN_LOG(&g_listMutex);
         return SYS_ERROR;
     }
 
-    int32_t ret = memcpy_s(recvBuf, recvBufLen, (char *)&curHeadBuf->logHead, LOGHEAD_LEN);
+    int32_t ret = memcpy_s(recvBuf, recvBufLen, (char*)&curHeadBuf->logHead, LOGHEAD_LEN);
     if (ret != EOK) {
         SELF_LOG_ERROR("memcpy failed, strerr=%s.", strerror(ToolGetErrorCode()));
         UNLOCK_WARN_LOG(&g_listMutex);
@@ -195,7 +198,7 @@ STATIC LogStatus SlogdCheckLogLevel(LogHead msgRes)
     return LOG_FAILURE;
 }
 
-STATIC LogStatus SlogdCheckLog(const RingBufferCtrl *ringBufferCtrl, LogHead msgRes)
+STATIC LogStatus SlogdCheckLog(const RingBufferCtrl* ringBufferCtrl, LogHead msgRes)
 {
     // secondary verification of log level
     if ((ringBufferCtrl->levelFilter == LEVEL_FILTER_OPEN) && (SlogdCheckLogLevel(msgRes) != LOG_SUCCESS)) {
@@ -205,7 +208,7 @@ STATIC LogStatus SlogdCheckLog(const RingBufferCtrl *ringBufferCtrl, LogHead msg
 }
 
 // log Iam ops, include read, write, ioctl, open and close
-STATIC ssize_t LogIamOpsRead(struct IAMMgrFile *file, char *buf, size_t len, loff_t *pos)
+STATIC ssize_t LogIamOpsRead(struct IAMMgrFile* file, char* buf, size_t len, loff_t* pos)
 {
     (void)file;
     (void)buf;
@@ -214,9 +217,9 @@ STATIC ssize_t LogIamOpsRead(struct IAMMgrFile *file, char *buf, size_t len, lof
     return SYS_OK;
 }
 
-STATIC void LogAddToBufList(const char *tmpBuf, LogHead msgRes)
+STATIC void LogAddToBufList(const char* tmpBuf, LogHead msgRes)
 {
-    BufList *bufList = (BufList *)LogMalloc(sizeof(BufList));
+    BufList* bufList = (BufList*)LogMalloc(sizeof(BufList));
     if (bufList == NULL) {
         SELF_LOG_ERROR("malloc failed, strerr=%s.", strerror(ToolGetErrorCode()));
         return;
@@ -247,10 +250,10 @@ STATIC void LogAddToBufList(const char *tmpBuf, LogHead msgRes)
 }
 
 /*
-* @brief: log write callback
-* @return: len: SUCCEED; SYS_ERROR: failed and log control; others: failed
-*/
-STATIC ssize_t LogIamOpsWrite(struct IAMMgrFile *file, const char *buf, size_t len, loff_t *pos)
+ * @brief: log write callback
+ * @return: len: SUCCEED; SYS_ERROR: failed and log control; others: failed
+ */
+STATIC ssize_t LogIamOpsWrite(struct IAMMgrFile* file, const char* buf, size_t len, loff_t* pos)
 {
     ONE_ACT_NO_LOG(len > SSIZE_MAX, return SYS_ERROR);
     (void)file;
@@ -258,7 +261,7 @@ STATIC ssize_t LogIamOpsWrite(struct IAMMgrFile *file, const char *buf, size_t l
     if (buf == NULL) {
         return SYS_OK;
     }
-    const RingBufferCtrl *ringBufferCtrl = (const RingBufferCtrl *)buf;
+    const RingBufferCtrl* ringBufferCtrl = (const RingBufferCtrl*)buf;
     ReadContext readContext;
     LogBufReStart(ringBufferCtrl, &readContext);
     int32_t readRes = 0;
@@ -286,10 +289,10 @@ STATIC ssize_t LogIamOpsWrite(struct IAMMgrFile *file, const char *buf, size_t l
     return (ssize_t)len;
 }
 
-STATIC int LogIamOpsIoctlGetLevel(LogLevelConfInfo *levelConfInfo)
+STATIC int LogIamOpsIoctlGetLevel(LogLevelConfInfo* levelConfInfo)
 {
     LogRt ret;
-    char configValue[CONF_VALUE_MAX_LEN + 1] = { 0 };
+    char configValue[CONF_VALUE_MAX_LEN + 1] = {0};
     ONE_ACT_WARN_LOG(levelConfInfo == NULL, return SYS_ERROR, "levelConfInfo invalid.");
     // global level or event value
     if (strcmp(levelConfInfo->configName, GLOBALLEVEL_KEY) == 0) {
@@ -297,21 +300,21 @@ STATIC int LogIamOpsIoctlGetLevel(LogLevelConfInfo *levelConfInfo)
         levelConfInfo->configValue[1] = SlogdGetEventLevel();
     }
     if (strcmp(levelConfInfo->configName, IOCTL_MODULE_NAME) == 0) {
-        const ModuleInfo *moduleInfo = GetModuleInfos();
+        const ModuleInfo* moduleInfo = GetModuleInfos();
         for (; moduleInfo->moduleName != NULL; moduleInfo++) {
             if ((moduleInfo->moduleId < 0) || (moduleInfo->moduleId >= INVALID_MODULE_ID)) {
                 continue;
             }
             (void)memset_s(configValue, sizeof(configValue), 0, sizeof(configValue));
             levelConfInfo->configValue[moduleInfo->moduleId] = LOG_MAX_LEVEL + 1;
-            ret = LogConfListGetValue(moduleInfo->moduleName, LogStrlen(moduleInfo->moduleName),
-                                      configValue, CONF_VALUE_MAX_LEN);
+            ret = LogConfListGetValue(
+                moduleInfo->moduleName, LogStrlen(moduleInfo->moduleName), configValue, CONF_VALUE_MAX_LEN);
             if (ret != SUCCESS) {
                 continue;
             }
             int64_t value = -1;
-            if ((LogStrToInt(configValue, &value) == LOG_SUCCESS) &&
-                (value >= LOG_MIN_LEVEL) && (value <= LOG_MAX_LEVEL)) {
+            if ((LogStrToInt(configValue, &value) == LOG_SUCCESS) && (value >= LOG_MIN_LEVEL) &&
+                (value <= LOG_MAX_LEVEL)) {
                 levelConfInfo->configValue[moduleInfo->moduleId] = (int32_t)value;
             }
         }
@@ -319,57 +322,53 @@ STATIC int LogIamOpsIoctlGetLevel(LogLevelConfInfo *levelConfInfo)
     return SYS_OK;
 }
 
-STATIC int LogIamOpsIoctl(struct IAMMgrFile *file, unsigned cmd, struct IAMIoctlArg *arg)
+STATIC int LogIamOpsIoctl(struct IAMMgrFile* file, unsigned cmd, struct IAMIoctlArg* arg)
 {
     (void)file;
     int ret = SYS_OK;
     switch (cmd) {
-        case IAM_CMD_FLUSH_LOG:
-            {
-                const FlushInfo *flushInfo = (FlushInfo *)(arg->argData);
-                ONE_ACT_WARN_LOG(flushInfo == NULL, return SYS_ERROR, "flushInfo invalid.");
-                if (SlogdGetStatus() != SLOGD_EXIT) {
-                    SlogdFlushToFile(false);
-                } else {
-                    SELF_LOG_INFO("slogd is about to exit, stop callback to flush log data.");
-                }
-                SyncAllToDisk(flushInfo->appPid);
-                break;
+        case IAM_CMD_FLUSH_LOG: {
+            const FlushInfo* flushInfo = (FlushInfo*)(arg->argData);
+            ONE_ACT_WARN_LOG(flushInfo == NULL, return SYS_ERROR, "flushInfo invalid.");
+            if (SlogdGetStatus() != SLOGD_EXIT) {
+                SlogdFlushToFile(false);
+            } else {
+                SELF_LOG_INFO("slogd is about to exit, stop callback to flush log data.");
             }
-        case IAM_CMD_GET_LEVEL:
-            {
-                LogLevelConfInfo *levelConfInfo = (LogLevelConfInfo *)(arg->argData);
-                ret = LogIamOpsIoctlGetLevel(levelConfInfo);
-                break;
-            }
-        case IAM_CMD_COLLECT_LOG:
-            {
-                const char *path = (const char *)arg->argData;
-                uint32_t len = (uint32_t)arg->size;
-                ONE_ACT_NO_LOG(!SlogdCheckCollectValid(path, len), return SYS_ERROR);
-                SlogdCollectNotify(path, len);
-                break;
-            }
-        case IAM_CMD_COLLECT_LOG_PATTERN:
-            {
-                LogConfigInfo *configInfo = (LogConfigInfo *)(arg->argData);
-                ONE_ACT_ERR_LOG(configInfo == NULL, return SYS_ERROR, "collect pattern invalid.");
-                ret = SlogdGetLogPatterns(configInfo);
-                break;
-            }
+            SyncAllToDisk(flushInfo->appPid);
+            break;
+        }
+        case IAM_CMD_GET_LEVEL: {
+            LogLevelConfInfo* levelConfInfo = (LogLevelConfInfo*)(arg->argData);
+            ret = LogIamOpsIoctlGetLevel(levelConfInfo);
+            break;
+        }
+        case IAM_CMD_COLLECT_LOG: {
+            const char* path = (const char*)arg->argData;
+            uint32_t len = (uint32_t)arg->size;
+            ONE_ACT_NO_LOG(!SlogdCheckCollectValid(path, len), return SYS_ERROR);
+            SlogdCollectNotify(path, len);
+            break;
+        }
+        case IAM_CMD_COLLECT_LOG_PATTERN: {
+            LogConfigInfo* configInfo = (LogConfigInfo*)(arg->argData);
+            ONE_ACT_ERR_LOG(configInfo == NULL, return SYS_ERROR, "collect pattern invalid.");
+            ret = SlogdGetLogPatterns(configInfo);
+            break;
+        }
         default:
             break;
     }
     return ret;
 }
 
-STATIC int LogIamOpsOpen(struct IAMMgrFile *file)
+STATIC int LogIamOpsOpen(struct IAMMgrFile* file)
 {
     (void)file;
     return SYS_OK;
 }
 
-STATIC int LogIamOpsClose(struct IAMMgrFile *file)
+STATIC int LogIamOpsClose(struct IAMMgrFile* file)
 {
     (void)file;
     return SYS_OK;
@@ -383,7 +382,7 @@ STATIC struct IAMFileOps g_logIamOps = {
     .close = LogIamOpsClose,
 };
 
-STATIC int32_t RegisterIamService(const char *serviceName, uint32_t serviceNameLen, const struct IAMFileOps *ops)
+STATIC int32_t RegisterIamService(const char* serviceName, uint32_t serviceNameLen, const struct IAMFileOps* ops)
 {
     int retry = 0;
     int ret = SYS_ERROR;
@@ -416,10 +415,12 @@ STATIC LogStatus RegisterIamTotalService(void)
 
 /**
  * @brief       : init for communication server
+ * @param[in]   : devId   device id (unused in iam mode)
  * @return      : LOG_SUCCESS: success; LOG_FAILURE: failure
  */
-LogStatus SlogdRmtServerInit(void)
+LogStatus SlogdRmtServerInit(int32_t devId)
 {
+    (void)devId;
     // create thread to collect newest log
     SlogdStartCollectThread();
     // register callback to iam
@@ -437,19 +438,9 @@ void SlogdRmtServerExit(void)
 }
 
 /**
- * @brief       : it doesn't work when iam
- */
-int32_t SlogdRmtServerCreate(int32_t devId, uint32_t *fileNum)
-{
-    (void)devId;
-    *fileNum = 1;
-    return SYS_OK;
-}
-
-/**
  * @brief       : read messages by iam
  */
-int32_t SlogdRmtServerRecv(uint32_t fileNum, char *buf, uint32_t bufLen, int32_t *logType)
+int32_t SlogdRmtServerRecv(uint32_t fileNum, char* buf, uint32_t bufLen, int32_t* logType)
 {
     (void)fileNum;
     return IamRead(buf, bufLen, logType);
@@ -463,3 +454,5 @@ void SlogdRmtServerClose(int32_t devId, uint32_t fileNum)
     (void)devId;
     (void)fileNum;
 }
+
+uint32_t SlogdRmtServerGetFileNum(void) { return 1; }

@@ -18,19 +18,30 @@
 #define TYPE_3 (1U << 3U)
 #define TYPE_4 (1U << 4U)
 #define TYPE_5 (1U << 5U)
-
+#define TYPE_6 (1U << 6U)
+#define TYPE_7 (1U << 7U)
+#define TYPE_8 (1U << 8U)
+#define TYPE_9 (1U << 9U)
 typedef struct {
-    const char *label;             // component-specific label
-    const char *hostFilePath;      // path of file storage at host
-    const char *deviceScriptPath;  // path of file move script at device
-    uint32_t timeout;              // max script execution time; unit: ms
-    uint32_t type;                 // bitmap
+    const char* label;            // component-specific label
+    const char* hostFilePath;     // path of file storage at host
+    const char* deviceFilePath;   // path of file storage at device
+    const char* deviceScriptPath; // path of file move script at device
+    const char* scriptArgs;       // extra arguments passed after pid (NULL if none)
+    uint32_t timeout;             // max script execution time; unit: ms
+    uint32_t type;                // bitmap
+    bool isRoot;
 } MsnpureportFileDumpTable;
 
 // prohibit repeat label
 const MsnpureportFileDumpTable MSNPUREPORT_FILE_DUMP_INFO[] = {
-    {"dvpp", "module_info", "/var/dvpp_proc_collect.sh", 10000, (TYPE_1 | TYPE_5)},
-    {"hal",  "module_info", "/var/hal_proc_collect.sh",  40000, (TYPE_1 | TYPE_5)},
-    {"tee",  "module_info", "/var/tee_log_collect.sh",   12000, (TYPE_1 | TYPE_5)}
+    {"dvpp", "system_info", "module_info", "/var/dvpp_proc_collect.sh", NULL, 10000, (TYPE_1 | TYPE_5), true},
+    {"hal", "system_info", "module_info", "/var/hal_proc_collect.sh", NULL, 40000, (TYPE_1 | TYPE_5), true},
+    {"hal", "system_info", "module_info", "/var/hal_proc_collect_normal.sh", NULL, 40000, (TYPE_1 | TYPE_5), false},
+    {"tee", "system_info", "module_info", "/var/tee_log_collect.sh", NULL, 12000, (TYPE_1 | TYPE_5), true},
+    {"ub", "ub_info", "ub_info", "/var/ub_info_collect.sh", NULL, 100000, (TYPE_6), true},
+    {"ao_self", "ao_info", "ao_info", "/var/ao_info_collect.sh", "7", 305000, (TYPE_7), true},
+    {"ao_cnt", "ao_info", "ao_info", "/var/ao_info_collect.sh", "8", 605000, (TYPE_8), true},
+    {"ao_uart", "ao_info", "ao_info", "/var/ao_info_collect.sh", "9", 305000, (TYPE_9), true},
 };
 #endif

@@ -26,12 +26,12 @@ struct Options {
     int l;
 };
 
-STATIC void ParseLogdaemonArgv(int argc, char * const *argv, struct Options *opt)
+STATIC void ParseLogdaemonArgv(int argc, char* const* argv, struct Options* opt)
 {
     ONE_ACT_NO_LOG(argv == NULL, return);
     ONE_ACT_NO_LOG(opt == NULL, return);
     int opts = getopt(argc, argv, "nh:");
-    while (opts != -1) {  // no use in multi-thread
+    while (opts != -1) { // no use in multi-thread
         switch (opts) {
             case 'n':
                 opt->n = 1;
@@ -47,17 +47,15 @@ STATIC void ParseLogdaemonArgv(int argc, char * const *argv, struct Options *opt
 #ifdef EP_MODE
 #include "sys_monitor_frame.h"
 #include "log_daemon_server.h"
-STATIC void InitFileServer(void)
+
+STATIC int32_t InitFileServer(void)
 {
-    if (LogDaemonServersInit() != LOG_SUCCESS) {
-        SELF_LOG_ERROR("init log daemon server failed");
-    }
+    int32_t ret = LogDaemonServersInit();
+    ONE_ACT_ERR_LOG(ret != LOG_SUCCESS, return LOG_FAILURE, "init log daemon server failed, ret=%d", ret);
+    return LOG_SUCCESS;
 }
 
-STATIC void ExitFileServer(void)
-{
-    LogDaemonServersExit();
-}
+STATIC void ExitFileServer(void) { LogDaemonServersExit(); }
 
 STATIC void StartSysmonitorThread(void)
 {
@@ -70,18 +68,16 @@ STATIC void StartSysmonitorThread(void)
     }
 }
 
-STATIC void ExitSysmonitorThread(void)
-{
-    SysmonitorExit();
-}
+STATIC void ExitSysmonitorThread(void) { SysmonitorExit(); }
 #elif defined LOG_COREDUMP
-STATIC void InitFileServer(void)
+STATIC int32_t InitFileServer(void)
 {
     int32_t ret = EventThreadCreate();
-    ONE_ACT_ERR_LOG(ret != LOG_SUCCESS, return, "create event thread failed, ret = %d.", ret);
+    ONE_ACT_ERR_LOG(ret != LOG_SUCCESS, return LOG_FAILURE, "create event thread failed, ret = %d.", ret);
 
     ret = StackcoreMonitorInit(NULL);
-    ONE_ACT_ERR_LOG(ret != LOG_SUCCESS, return, "init stackcore monitor failed, ret = %d.", ret);
+    ONE_ACT_ERR_LOG(ret != LOG_SUCCESS, return LOG_FAILURE, "init stackcore monitor failed, ret = %d.", ret);
+    return LOG_SUCCESS;
 }
 
 STATIC void ExitFileServer(void)
@@ -91,42 +87,24 @@ STATIC void ExitFileServer(void)
     return;
 }
 
-STATIC void StartSysmonitorThread(void)
-{
-    return;
-}
+STATIC void StartSysmonitorThread(void) { return; }
 
-STATIC void ExitSysmonitorThread(void)
-{
-    return;
-}
+STATIC void ExitSysmonitorThread(void) { return; }
 
 #else
-STATIC void InitFileServer(void)
-{
-    return;
-}
+STATIC int32_t InitFileServer(void) { return LOG_SUCCESS; }
 
-STATIC void ExitFileServer(void)
-{
-    return;
-}
+STATIC void ExitFileServer(void) { return; }
 
-STATIC void StartSysmonitorThread(void)
-{
-    return;
-}
+STATIC void StartSysmonitorThread(void) { return; }
 
-STATIC void ExitSysmonitorThread(void)
-{
-    return;
-}
+STATIC void ExitSysmonitorThread(void) { return; }
 #endif
 
 /**
-* @brief    : log-daemon init config file path and self log path
-* @return   : LOG_SUCCESS: succeed; LOG_FAILURE: failed
-*/
+ * @brief    : log-daemon init config file path and self log path
+ * @return   : LOG_SUCCESS: succeed; LOG_FAILURE: failed
+ */
 STATIC void LogDaemonConfigInit(void)
 {
     if (LogConfInit() != LOG_SUCCESS) {
@@ -151,11 +129,11 @@ STATIC void MainUninit(void)
     LogPmStop();
 }
 
-STATIC int MainInit(int argc, char * const *argv)
+STATIC int MainInit(int argc, char* const* argv)
 {
     int nochdir = 1;
     int noclose = 1;
-    struct Options opt = { 0, 0 };
+    struct Options opt = {0, 0};
 
     // Set up signal handlers (so that they interrupt read())
     LogSignalRecord(SIGTERM);
@@ -186,27 +164,26 @@ STATIC int MainInit(int argc, char * const *argv)
 
 STATIC void ReleaseResource(void)
 {
-    // Stop bbox main thread here.
-    BboxStopMainThread();
     LogDaemonConfigExit();
     LogPmStop();
     ExitSysmonitorThread();
 }
 
 #ifndef __IDE_UT
-int32_t main(int32_t argc, char **argv)
+int32_t main(int32_t argc, char** argv)
 #else
-int32_t LogDaemonTest(int32_t argc, char **argv)
+int32_t LogDaemonTest(int32_t argc, char** argv)
 #endif
 {
     SELF_LOG_INFO("log-daemon process init...");
     ONE_ACT_NO_LOG(MainInit(argc, argv) != LOG_SUCCESS, return LOG_FAILURE);
 
-    // Start bbox main thread here.
-    BboxStartMainThread();
-
     // init server to export file
-    InitFileServer();
+    if (InitFileServer() != LOG_SUCCESS) {
+        SELF_LOG_ERROR("log-daemon process quit due to init server failure...");
+        ReleaseResource();
+        return LOG_FAILURE;
+    }
 
     // start sys resourse monitor thread
     StartSysmonitorThread();

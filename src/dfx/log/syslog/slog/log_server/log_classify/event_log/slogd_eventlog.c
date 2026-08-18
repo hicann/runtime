@@ -17,19 +17,19 @@
 #include "ascend_hal.h"
 #include "log_config_block.h"
 
-#define SLOGD_EVENT_DEFAULT_DEVID           0
-#define SLOGD_EVENT_RECV_MAX_LEN            4096U // 4kb
-#define SLOGD_EVENT_RECV_TIMEOUT            1000 // 1 second
+#define SLOGD_EVENT_DEFAULT_DEVID 0
+#define SLOGD_EVENT_RECV_MAX_LEN 4096U // 4kb
+#define SLOGD_EVENT_RECV_TIMEOUT 1000  // 1 second
 typedef struct {
     struct pollfd pollFd;
-    char *recvBuf;
+    char* recvBuf;
 } SlogdEventLogMgr;
 
 STATIC uint32_t g_writeEventFilePrintNum = 0;
 STATIC SlogdEventLogMgr g_eventMgr = {0};
 
 #ifdef EP_MODE
-STATIC bool SlogdEventlogCheckLogType(const LogInfo *info)
+STATIC bool SlogdEventlogCheckLogType(const LogInfo* info)
 {
     if ((info->processType == SYSTEM) && (info->level == DLOG_EVENT)) {
         return true;
@@ -38,7 +38,7 @@ STATIC bool SlogdEventlogCheckLogType(const LogInfo *info)
 }
 
 #else
-STATIC bool SlogdEventlogCheckLogType(const LogInfo *info)
+STATIC bool SlogdEventlogCheckLogType(const LogInfo* info)
 {
     if (info->level == DLOG_EVENT) {
         return true;
@@ -47,30 +47,29 @@ STATIC bool SlogdEventlogCheckLogType(const LogInfo *info)
 }
 #endif
 
-
 #ifdef STATIC_BUFFER
 #include "log_session_manage.h"
-STATIC void SlogdEventlogGet(SessionItem *handle, void *buffer, uint32_t bufferLen, int32_t devId)
+STATIC void SlogdEventlogGet(SessionItem* handle, void* buffer, uint32_t bufferLen, uint32_t devId)
 {
     ONE_ACT_ERR_LOG(buffer == NULL, return, "buffer is NULL");
     (void)devId;
     int32_t readLen = 0;
     int32_t ret = 0;
     char fileName[MAX_FILENAME_LEN] = {0};
-    void *bufHandle = SlogdBufferHandleOpen(EVENT_LOG_TYPE, NULL, LOG_BUFFER_READ_MODE, 0);
+    void* bufHandle = SlogdBufferHandleOpen(EVENT_LOG_TYPE, NULL, LOG_BUFFER_READ_MODE, 0);
     while (true) {
-        readLen = SlogdBufferRead(bufHandle, (char *)buffer, bufferLen);
-        if (readLen == 0) {
+        readLen = SlogdBufferRead(bufHandle, (char*)buffer, bufferLen);
+        if (readLen <= 0) {
             break;
         }
-        SlogdMsgData *msgData = (SlogdMsgData *)buffer;
+        SlogdMsgData* msgData = (SlogdMsgData*)buffer;
         ret = snprintf_s(fileName, MAX_FILENAME_LEN, MAX_FILENAME_LEN - 1, "run/event/event_%s.log", msgData->timeStr);
         ONE_ACT_ERR_LOG(ret == -1, continue, "snprintf_s for event log failed, timestamp:%s", msgData->timeStr);
 
         SELF_LOG_INFO("send file:%s, readLen:%d", fileName, readLen);
         ret = SessionMgrSendMsg(handle, fileName, (uint32_t)strlen(fileName));
         ONE_ACT_ERR_LOG(ret != LOG_SUCCESS, continue, "send file name failed, fileName:%s.", fileName);
-        ret = SessionMgrSendMsg(handle, msgData->data, readLen);
+        ret = SessionMgrSendMsg(handle, msgData->data, (uint32_t)readLen);
         ONE_ACT_ERR_LOG(ret != LOG_SUCCESS, continue, "send file content failed, fileName:%s.", fileName);
         (void)memset_s(fileName, MAX_FILENAME_LEN, 0, MAX_FILENAME_LEN);
     }
@@ -82,13 +81,13 @@ STATIC void SlogdEventlogGet(SessionItem *handle, void *buffer, uint32_t bufferL
  * @param[in]   : handle        buffer handle
  * @param[in]   : fileList      target file list
  */
-STATIC void SlogdWriteEventLog(void *handle, char *buffer, uint32_t bufferLen)
+STATIC void SlogdWriteEventLog(void* handle, char* buffer, uint32_t bufferLen)
 {
-    SessionItem item = { NULL, SESSION_CONTINUES_EXPORT };
+    SessionItem item = {NULL, SESSION_CONTINUES_EXPORT};
     if (SessionMgrGetSession(&item) != LOG_SUCCESS) {
         return;
     }
-    LogReportMsg *msg = (LogReportMsg *)buffer;
+    LogReportMsg* msg = (LogReportMsg*)buffer;
     msg->magic = LOG_REPORT_MAGIC;
     msg->logType = EVENT_LOG_TYPE;
     int32_t retry = 0;
@@ -98,23 +97,25 @@ STATIC void SlogdWriteEventLog(void *handle, char *buffer, uint32_t bufferLen)
         if (dataLen == 0) {
             return;
         }
-        if ((dataLen < 0) || ((uint32_t)dataLen > bufferLen - LOG_SIZEOF(LogReportMsg))) {
+        if ((dataLen < 0) || (bufferLen < LOG_SIZEOF(LogReportMsg)) ||
+            ((uint32_t)dataLen > bufferLen - LOG_SIZEOF(LogReportMsg))) {
             SELF_LOG_ERROR("read log from ring buffer failed, write buffer log failed, ret = %d.", dataLen);
             return;
         }
         msg->bufLen = (uint32_t)dataLen;
-        int32_t ret = SessionMgrSendMsg(&item, buffer, dataLen + LOG_SIZEOF(LogReportMsg));
+        int32_t ret = SessionMgrSendMsg(&item, buffer, (uint32_t)dataLen + LOG_SIZEOF(LogReportMsg));
         if (ret != LOG_SUCCESS) {
-            SELF_LOG_ERROR_N(&g_writeEventFilePrintNum, GENERAL_PRINT_NUM,
-                             "send event log to host failed, result=%d, strerr=%s, print once every %u times.",
-                             ret, strerror(ToolGetErrorCode()), GENERAL_PRINT_NUM);
+            SELF_LOG_ERROR_N(
+                &g_writeEventFilePrintNum, GENERAL_PRINT_NUM,
+                "send event log to host failed, result=%d, strerr=%s, print once every %u times.", ret,
+                strerror(ToolGetErrorCode()), GENERAL_PRINT_NUM);
         }
         retry++;
     }
 }
 #else
 
-STATIC void SlogdEventlogGet(SessionItem *handle, void *buffer, uint32_t bufferLen, int32_t devId)
+STATIC void SlogdEventlogGet(SessionItem* handle, void* buffer, uint32_t bufferLen, uint32_t devId)
 {
     (void)handle;
     (void)buffer;
@@ -127,7 +128,7 @@ STATIC void SlogdEventlogGet(SessionItem *handle, void *buffer, uint32_t bufferL
  * @param[in]   : handle        buffer handle
  * @param[in]   : fileList      target file list
  */
-STATIC void SlogdWriteEventLog(void *handle, char *buffer, uint32_t bufferLen)
+STATIC void SlogdWriteEventLog(void* handle, char* buffer, uint32_t bufferLen)
 {
     (void)memset_s(buffer, bufferLen, 0, bufferLen);
     int32_t dataLen = SlogdBufferRead(handle, buffer, bufferLen);
@@ -138,15 +139,16 @@ STATIC void SlogdWriteEventLog(void *handle, char *buffer, uint32_t bufferLen)
         SELF_LOG_ERROR("read log from ring buffer failed, write buffer log failed, ret = %d.", dataLen);
         return;
     }
-    StLogFileList *fileList = GetGlobalLogFileList();
-    StSubLogFileList *eventFileList = &(fileList->eventLogList);
+    StLogFileList* fileList = GetGlobalLogFileList();
+    StSubLogFileList* eventFileList = &(fileList->eventLogList);
     (void)ToolMutexLock(&eventFileList->lock);
     uint32_t ret = LogAgentWriteEventLog(eventFileList, buffer, LogStrlen(buffer));
     (void)ToolMutexUnLock(&eventFileList->lock);
     if (ret != OK) {
-        SELF_LOG_ERROR_N(&g_writeEventFilePrintNum, GENERAL_PRINT_NUM,
-                         "write event log failed, result=%u, strerr=%s, print once every %u times.",
-                         ret, strerror(ToolGetErrorCode()), GENERAL_PRINT_NUM);
+        SELF_LOG_ERROR_N(
+            &g_writeEventFilePrintNum, GENERAL_PRINT_NUM,
+            "write event log failed, result=%u, strerr=%s, print once every %u times.", ret,
+            strerror(ToolGetErrorCode()), GENERAL_PRINT_NUM);
     }
 }
 
@@ -158,15 +160,15 @@ STATIC void SlogdWriteEventLog(void *handle, char *buffer, uint32_t bufferLen)
  * @param[in]   : msgLen        log length
  * @return      : LOG_SUCCESS  save to buffer success; LOG_FAILURE failure
  */
-STATIC int32_t SlogdEventlogWrite(const char *msg, uint32_t msgLen, const LogInfo *info)
+STATIC int32_t SlogdEventlogWrite(const char* msg, uint32_t msgLen, const LogInfo* info)
 {
     (void)(info);
     ONE_ACT_ERR_LOG(msg == NULL, return LOG_FAILURE, "flush event log to buffer failed, input msg is null.")
 
-    void *handle = SlogdBufferHandleOpen(EVENT_LOG_TYPE, NULL, LOG_BUFFER_WRITE_MODE, 0);
+    void* handle = SlogdBufferHandleOpen(EVENT_LOG_TYPE, NULL, LOG_BUFFER_WRITE_MODE, 0);
     if (SlogdBufferCheckFull(handle, msgLen)) {
         uint32_t bufSize = SlogdBufferGetBufSize(EVENT_LOG_TYPE);
-        char *buffer = (char *)LogMalloc((size_t)bufSize + 1U);
+        char* buffer = (char*)LogMalloc((size_t)bufSize + 1U);
         if (buffer == NULL) {
             SELF_LOG_ERROR("malloc failed, strerror = %s.", strerror(ToolGetErrorCode()));
             SlogdBufferReset(handle);
@@ -181,33 +183,34 @@ STATIC int32_t SlogdEventlogWrite(const char *msg, uint32_t msgLen, const LogInf
     return LOG_SUCCESS;
 }
 
-STATIC int32_t SlogdEventlogFlush(void *buffer, uint32_t bufferLen, bool flushFlag)
+STATIC int32_t SlogdEventlogFlush(void* buffer, uint32_t bufferLen, bool flushFlag)
 {
     (void)flushFlag;
-    StLogFileList *logList = GetGlobalLogFileList();
+    StLogFileList* logList = GetGlobalLogFileList();
     ONE_ACT_WARN_LOG(logList == NULL, return LOG_FAILURE, "loglist is null.");
     if (logList->eventLogList.storage.period != 0) {
         logList->eventLogList.storage.curTime++;
         LogFileMgrStorage(&logList->eventLogList);
     }
-    void *handle = SlogdBufferHandleOpen(EVENT_LOG_TYPE, NULL, LOG_BUFFER_WRITE_MODE, 0);
+    void* handle = SlogdBufferHandleOpen(EVENT_LOG_TYPE, NULL, LOG_BUFFER_WRITE_MODE, 0);
     if (SlogdBufferCheckEmpty(handle)) {
         SlogdBufferHandleClose(&handle);
         return LOG_SUCCESS;
     }
-    SlogdWriteEventLog(handle, (char *)buffer, bufferLen);
+    SlogdWriteEventLog(handle, (char*)buffer, bufferLen);
     SlogdBufferHandleClose(&handle);
     return LOG_SUCCESS;
 }
 
 #ifdef DRV_EVENT_LOG
-STATIC void SlogdEventlogReceive(void *args)
+STATIC void SlogdEventlogReceive(void* args)
 {
     (void)args;
     (void)memset_s(g_eventMgr.recvBuf, SLOGD_EVENT_RECV_MAX_LEN, 0, SLOGD_EVENT_RECV_MAX_LEN);
 
     uint32_t len = SLOGD_EVENT_RECV_MAX_LEN;
-    int32_t ret = log_read_by_type(SLOGD_EVENT_DEFAULT_DEVID, g_eventMgr.recvBuf, &len, SLOGD_EVENT_RECV_TIMEOUT, LOG_CHANNEL_TYPE_EVENT);
+    int32_t ret = log_read_by_type(
+        SLOGD_EVENT_DEFAULT_DEVID, g_eventMgr.recvBuf, &len, SLOGD_EVENT_RECV_TIMEOUT, LOG_CHANNEL_TYPE_EVENT);
     if (ret == (int32_t)LOG_NOT_READY) {
         ;
     } else if (ret != (int32_t)LOG_OK) {
@@ -229,7 +232,7 @@ STATIC int32_t SlogdEventlogRegister(void)
     ONE_ACT_ERR_LOG(ret != LOG_SUCCESS, return LOG_FAILURE, "event log register distribute node failed, ret=%d.", ret);
 
 #ifdef DRV_EVENT_LOG
-    g_eventMgr.recvBuf = (char *)LogMalloc(SLOGD_EVENT_RECV_MAX_LEN);
+    g_eventMgr.recvBuf = (char*)LogMalloc(SLOGD_EVENT_RECV_MAX_LEN);
     if (g_eventMgr.recvBuf == NULL) {
         SELF_LOG_ERROR("malloc failed, strerr=%s.", strerror(ToolGetErrorCode()));
         return LOG_FAILURE;
@@ -281,13 +284,14 @@ STATIC LogStatus LogAgentInitEventMaxFileNum(StSubLogFileList* list, const char*
     }
     if ((LogStrlen(list->fileHead) == 0) &&
         (snprintf_s(list->fileHead, MAX_NAME_HEAD_LEN + 1U, MAX_NAME_HEAD_LEN, "%s_", EVENT_HEAD) == -1)) {
-            SELF_LOG_ERROR("get event header failed, strerr=%s.", strerror(ToolGetErrorCode()));
-            return LOG_FAILURE;
+        SELF_LOG_ERROR("get event header failed, strerr=%s.", strerror(ToolGetErrorCode()));
+        return LOG_FAILURE;
     }
 
-    char eventLogPath[MAX_FILEPATH_LEN + 1U] = { 0 };
-    int32_t err = snprintf_s(eventLogPath, MAX_FILEPATH_LEN + 1U, MAX_FILEPATH_LEN, "%s%s%s%s%s", filePath,
-        FILE_SEPARATOR, RUN_DIR_NAME, FILE_SEPARATOR, EVENT_HEAD);
+    char eventLogPath[MAX_FILEPATH_LEN + 1U] = {0};
+    int32_t err = snprintf_s(
+        eventLogPath, MAX_FILEPATH_LEN + 1U, MAX_FILEPATH_LEN, "%s%s%s%s%s", filePath, FILE_SEPARATOR, RUN_DIR_NAME,
+        FILE_SEPARATOR, EVENT_HEAD);
     if (err == -1) {
         SELF_LOG_ERROR("get event log dir path failed, strerr=%s.", strerror(ToolGetErrorCode()));
         return LOG_FAILURE;
@@ -300,7 +304,7 @@ STATIC LogStatus LogAgentInitEventMaxFileNum(StSubLogFileList* list, const char*
     return LOG_SUCCESS;
 }
 
-STATIC LogStatus LogAgentInitEventWriteLimit(StSubLogFileList *logList)
+STATIC LogStatus LogAgentInitEventWriteLimit(StSubLogFileList* logList)
 {
     ONE_ACT_WARN_LOG(logList == NULL, return LOG_FAILURE, "[input] log file list info is null.");
     if (!SlogdConfigMgrGetWriteFileLimit()) {
@@ -309,8 +313,9 @@ STATIC LogStatus LogAgentInitEventWriteLimit(StSubLogFileList *logList)
 
     uint32_t typeSize = SlogdConfigMgrGetTypeSpace(RUN_LOG);
     ONE_ACT_ERR_LOG(typeSize == 0U, return LOG_FAILURE, "get run type total space failed.");
-    if (WriteFileLimitInit(&logList->limit, (int32_t)RUN_LOG, typeSize,
-        logList->totalMaxFileSize + logList->maxFileSize) != LOG_SUCCESS) {
+    if (WriteFileLimitInit(
+            &logList->limit, (int32_t)RUN_LOG, typeSize, logList->totalMaxFileSize + logList->maxFileSize) !=
+        LOG_SUCCESS) {
         SELF_LOG_ERROR("create event write file limit param list failed.");
         return LOG_FAILURE;
     }
@@ -318,10 +323,10 @@ STATIC LogStatus LogAgentInitEventWriteLimit(StSubLogFileList *logList)
     return LOG_SUCCESS;
 }
 
-LogStatus SlogdEventMgrInit(StLogFileList *logList)
+LogStatus SlogdEventMgrInit(StLogFileList* logList)
 {
     ONE_ACT_WARN_LOG(logList == NULL, return LOG_FAILURE, "[input] log file list info is null.");
-    LogConfClass *confClass = LogConfGetClass(EVENT_LOG_TYPE);
+    LogConfClass* confClass = LogConfGetClass(EVENT_LOG_TYPE);
     ONE_ACT_ERR_LOG(confClass == NULL, return LOG_FAILURE, "get event class failed.");
 
     StSubLogFileList* list = &(logList->eventLogList);

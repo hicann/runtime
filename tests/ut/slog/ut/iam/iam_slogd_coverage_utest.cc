@@ -42,18 +42,14 @@ int32_t IamSlogdStubGetFsyncCount(void);
 
 class IamSlogdCoverageUtest : public testing::Test {
 protected:
-    void SetUp() override
-    {
-        IamSlogdStubReset();
-    }
+    void SetUp() override { IamSlogdStubReset(); }
 };
 
 TEST_F(IamSlogdCoverageUtest, HandlesRemoteServerLifecycleAndEmptyQueue)
 {
-    EXPECT_EQ(LOG_SUCCESS, SlogdRmtServerInit());
+    EXPECT_EQ(LOG_SUCCESS, SlogdRmtServerInit(0));
 
-    uint32_t fileNum = 0;
-    EXPECT_EQ(SYS_OK, SlogdRmtServerCreate(0, &fileNum));
+    const uint32_t fileNum = SlogdRmtServerGetFileNum();
     EXPECT_EQ(1U, fileNum);
 
     char buffer[64] = {};

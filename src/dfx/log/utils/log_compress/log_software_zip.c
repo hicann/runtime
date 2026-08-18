@@ -28,9 +28,9 @@ STATIC INLINE LogStatus GzCloseFile(gzFile gz)
     return LOG_SUCCESS;
 }
 
-STATIC LogStatus GzCompress(FILE *in, gzFile out)
+STATIC LogStatus GzCompress(FILE* in, gzFile out)
 {
-    char *buf = (char *)LogMalloc(GZIP_BUFLEN);
+    char* buf = (char*)LogMalloc(GZIP_BUFLEN);
     if (buf == NULL) {
         SELF_LOG_ERROR("malloc failed, strerr=%s.", strerror(ToolGetErrorCode()));
         return LOG_FAILURE;
@@ -54,13 +54,13 @@ STATIC LogStatus GzCompress(FILE *in, gzFile out)
     return LOG_SUCCESS;
 }
 
-LogStatus SoftwareCompressFile(const char *file)
+LogStatus SoftwareCompressFile(const char* file)
 {
     ONE_ACT_ERR_LOG(file == NULL, return LOG_FAILURE, "[input] file is invalid.");
 
     size_t length = strlen(file);
     if ((length == 0) || (length >= MAX_FILEPATH_LEN) || (length + strlen(GZIP_SUFFIX)) >= GZIP_MAX_NAME_LEN) {
-        SELF_LOG_ERROR("filename too long: %u.", length);
+        SELF_LOG_ERROR("filename too long: %zu.", length);
         return LOG_FAILURE;
     }
 
@@ -71,9 +71,8 @@ LogStatus SoftwareCompressFile(const char *file)
         return LOG_FAILURE;
     }
 
-    FILE *in = fopen(file, "rb");
-    ONE_ACT_WARN_LOG(in == NULL, return LOG_FAILURE,
-                     "open %s failed, strerr=%s.", file, strerror(ToolGetErrorCode()));
+    FILE* in = fopen(file, "rb");
+    ONE_ACT_WARN_LOG(in == NULL, return LOG_FAILURE, "open %s failed, strerr=%s.", file, strerror(ToolGetErrorCode()));
 
     gzFile out = gzopen(outfile, "wb");
     if (out == NULL) {
@@ -86,14 +85,61 @@ LogStatus SoftwareCompressFile(const char *file)
     (void)fclose(in);
     (void)GzCloseFile(out);
     if (err != LOG_SUCCESS) {
-        NO_ACT_ERR_LOG(ToolUnlink(outfile) != LOG_SUCCESS, "can not unlink file, file=%s, strerr=%s.",
-                       outfile, strerror(ToolGetErrorCode()));
+        NO_ACT_ERR_LOG(
+            ToolUnlink(outfile) != LOG_SUCCESS, "can not unlink file, file=%s, strerr=%s.", outfile,
+            strerror(ToolGetErrorCode()));
         return LOG_FAILURE;
     } else {
-        NO_ACT_WARN_LOG(ToolUnlink(file) != LOG_SUCCESS, "can not unlink file, file=%s, strerr=%s.",
-                        file, strerror(ToolGetErrorCode()));
+        NO_ACT_WARN_LOG(
+            ToolUnlink(file) != LOG_SUCCESS, "can not unlink file, file=%s, strerr=%s.", file,
+            strerror(ToolGetErrorCode()));
         return LOG_SUCCESS;
     }
+}
+
+/**
+ * @brief           : compress source buffer to gzip format dest buffer
+ * @param [in]      : source       origin buffer
+ * @param [in]      : sourceLen    origin buffer length
+ * @param [out]     : dest         2nd ptr point to output buffer (caller must XFREE)
+ * @param [out]     : destLen      ptr point to output buffer length
+ * @return          : LOG_SUCCESS: succeed; others: failed;
+ */
+LogStatus SoftwareCompressBuffer(const char* source, uint32_t sourceLen, char** dest, uint32_t* destLen)
+{
+    if ((source == NULL) || (dest == NULL) || (destLen == NULL) || (sourceLen == 0)) {
+        return LOG_INVALID_PARAM;
+    }
+    /* gzip 格式压缩: windowBits = 15 + 16 = 31 */
+    uLong bound = compressBound((uLong)sourceLen) + 18U; /* 18 = gzip header/trailer margin */
+    *dest = (char*)LogMalloc((size_t)bound);
+    if (*dest == NULL) {
+        SELF_LOG_ERROR("malloc for compress dest failed, size=%lu.", bound);
+        return LOG_FAILURE;
+    }
+    z_stream stream;
+    (void)memset_s(&stream, sizeof(stream), 0, sizeof(stream));
+    int ret = deflateInit2(&stream, Z_DEFAULT_COMPRESSION, Z_DEFLATED, 15 + 16, MAX_MEM_LEVEL, Z_DEFAULT_STRATEGY);
+    if (ret != Z_OK) {
+        SELF_LOG_ERROR("deflateInit2 failed, ret=%d.", ret);
+        XFREE(*dest);
+        return LOG_FAILURE;
+    }
+    stream.next_in = (Bytef*)source;
+    stream.avail_in = (uInt)sourceLen;
+    stream.next_out = (Bytef*)(*dest);
+    stream.avail_out = (uInt)bound;
+    ret = deflate(&stream, Z_FINISH);
+    if (ret != Z_STREAM_END) {
+        SELF_LOG_ERROR("deflate failed, ret=%d.", ret);
+        (void)deflateEnd(&stream);
+        XFREE(*dest);
+        *dest = NULL;
+        return LOG_FAILURE;
+    }
+    *destLen = (uint32_t)stream.total_out;
+    (void)deflateEnd(&stream);
+    return LOG_SUCCESS;
 }
 
 #endif

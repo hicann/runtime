@@ -14,19 +14,20 @@
 #include "driver_api.h"
 #include "log_print.h"
 #include "task_scheduler_error.h"
+#include "config_common.h"
 
-#define CONFIG_ITEM_NUM     5U
+#define CONFIG_ITEM_NUM 5U
 #define CONFIG_INFO_BUF_LEN 64U
 
-#define DRV_NOT_READY              "Driver api wait timeout"
-#define DRV_ERROR                  "Set config failed, check slogdlog for more information"
-#define TS_NOT_SUPPORT             "This chip platform does not support"
-#define TS_CORE_ID_INVALID         "The specified core id is invalid"
-#define TS_CORE_ID_PF_DOWN         "The specified core is pg down core and does not support the operation"
-#define TS_NOT_SUPPORT_CORE        "This chip platform not support core mask"
-#define TS_NOT_SUPPORT_AIV_CORE    "This chip platform not support aiv core"
-#define TS_CORE_NOT_IN_POOL        "The specified core maybe not in pool"
-#define TS_POOLING_STATUS_FAIL     "The specified core need pooling status"
+#define DRV_NOT_READY "Driver api wait timeout"
+#define DRV_ERROR "Set config failed, check slogdlog for more information"
+#define TS_NOT_SUPPORT "This chip platform does not support"
+#define TS_CORE_ID_INVALID "The specified core id is invalid"
+#define TS_CORE_ID_PF_DOWN "The specified core is pg down core and does not support the operation"
+#define TS_NOT_SUPPORT_CORE "This chip platform not support core mask"
+#define TS_NOT_SUPPORT_AIV_CORE "This chip platform not support aiv core"
+#define TS_CORE_NOT_IN_POOL "The specified core maybe not in pool"
+#define TS_POOLING_STATUS_FAIL "The specified core need pooling status"
 
 // Synchronize with TS
 enum CmdKey {
@@ -39,7 +40,7 @@ enum CmdKey {
     LOG_CMD_SET_RESERVED,
 };
 
-static const char *g_tsErrorMsgMap[] = {
+static const char* g_tsErrorMsgMap[] = {
     [TS_ERROR_FEATURE_NOT_SUPPORT] = TS_NOT_SUPPORT,
     [TS_LOG_DEAMON_RESET_ACC_SWITCH_INVALID] = DRV_ERROR,
     [TS_LOG_DEAMON_CORE_SWITCH_INVALID] = DRV_ERROR,
@@ -58,14 +59,11 @@ static const uint32_t CMD_MAP_TO_KEY[INVALID_TYPE] = {
     [ACCELERATOR_RECOVER] = LOG_CMD_SET_RECOVER_ACC,
     [AIC_SWITCH] = LOG_CMD_SET_COREID_AIC_SWITCH,
     [AIV_SWITCH] = LOG_CMD_SET_COREID_AIV_SWITCH,
-    [SINGLE_COMMIT] = LOG_CMD_SET_SINGLE_COMMIT
-};
+    [SINGLE_COMMIT] = LOG_CMD_SET_SINGLE_COMMIT};
 
-static const char *g_cmdMapToStr[LOG_CMD_SET_RESERVED] = {
-    [LOG_CMD_SET_ICACHE_OFFSET] = "icache check range",
-    [LOG_CMD_SET_RECOVER_ACC] = "accelerator recover switch",
-    [LOG_CMD_SET_COREID_AIC_SWITCH] = "aic core switch",
-    [LOG_CMD_SET_COREID_AIV_SWITCH] = "aiv core switch",
+static const char* g_cmdMapToStr[LOG_CMD_SET_RESERVED] = {
+    [LOG_CMD_SET_ICACHE_OFFSET] = "icache check range",  [LOG_CMD_SET_RECOVER_ACC] = "accelerator recover switch",
+    [LOG_CMD_SET_COREID_AIC_SWITCH] = "aic core switch", [LOG_CMD_SET_COREID_AIV_SWITCH] = "aiv core switch",
     [LOG_CMD_SET_SINGLE_COMMIT] = "single commit mode",
 };
 
@@ -84,46 +82,51 @@ typedef struct {
 
 // define by TS
 typedef struct {
-    uint32_t key;           // log dfx sub_cmd
-    ts_error_t retVal;      // 出参，ts返回给工具的返回值
-    union {                 // 20 bytes
-        DfxCoreGetMask  getMask;
-        DfxCoreSetMask  setMask;
-        DfxCommon       common;
+    uint32_t key;      // log dfx sub_cmd
+    ts_error_t retVal; // 出参，ts返回给工具的返回值
+    union {            // 20 bytes
+        DfxCoreGetMask getMask;
+        DfxCoreSetMask setMask;
+        DfxCommon common;
     };
 } LogCmdInfo;
 
-static int32_t HandleGetValue(char *value, uint32_t valueLen, const LogCmdInfo *cmdInfo)
+static int32_t HandleGetValue(char* value, uint32_t valueLen, const LogCmdInfo* cmdInfo)
 {
-    ONE_ACT_ERR_LOG(cmdInfo->retVal != TS_SUCCESS, return CONFIG_ERROR,
-        "get value of key %u failed, TS return:%d", cmdInfo->key, cmdInfo->retVal);
+    ONE_ACT_ERR_LOG(
+        cmdInfo->retVal != TS_SUCCESS, return CONFIG_ERROR, "get value of key %u failed, TS return:%d", cmdInfo->key,
+        cmdInfo->retVal);
     int32_t ret = 0;
-    const char *resultStrMap[] = {[0] = "Disable", [1] = "Enable"};
+    const char* resultStrMap[] = {[0] = "Disable", [1] = "Enable"};
     switch (cmdInfo->key) {
         case LOG_CMD_SET_ICACHE_OFFSET:
             ret = sprintf_s(value, valueLen, "Icache check Range:%u,", cmdInfo->common.value);
             break;
         case LOG_CMD_SET_RECOVER_ACC:
-            ONE_ACT_ERR_LOG((cmdInfo->common.value != 0) && (cmdInfo->common.value != 1), return CONFIG_ERROR,
+            ONE_ACT_ERR_LOG(
+                (cmdInfo->common.value != 0) && (cmdInfo->common.value != 1), return CONFIG_ERROR,
                 "get accelerator recover mode invalid, value:%u", cmdInfo->common.value);
             ret = sprintf_s(value, valueLen, "Accelerator Recover:%s,", resultStrMap[cmdInfo->common.value]);
             break;
         case LOG_CMD_SET_COREID_AIC_SWITCH:
-            ret = sprintf_s(value, valueLen, "Aic Coremask:0x%x%x%x%x,", cmdInfo->getMask.bitmap3,
-                cmdInfo->getMask.bitmap2, cmdInfo->getMask.bitmap1, cmdInfo->getMask.bitmap0);
+            ret = sprintf_s(
+                value, valueLen, "Aic Coremask:0x%x%08x%08x%08x,", cmdInfo->getMask.bitmap3, cmdInfo->getMask.bitmap2,
+                cmdInfo->getMask.bitmap1, cmdInfo->getMask.bitmap0);
             break;
         case LOG_CMD_SET_COREID_AIV_SWITCH:
-            ret = sprintf_s(value, valueLen, "Aiv Coremask:0x%x%x%x%x,", cmdInfo->getMask.bitmap3,
-                cmdInfo->getMask.bitmap2, cmdInfo->getMask.bitmap1, cmdInfo->getMask.bitmap0);
+            ret = sprintf_s(
+                value, valueLen, "Aiv Coremask:0x%x%08x%08x%08x,", cmdInfo->getMask.bitmap3, cmdInfo->getMask.bitmap2,
+                cmdInfo->getMask.bitmap1, cmdInfo->getMask.bitmap0);
             break;
         case LOG_CMD_SET_SINGLE_COMMIT:
-            ONE_ACT_ERR_LOG((cmdInfo->common.value != 0) && (cmdInfo->common.value != 1), return CONFIG_ERROR,
+            ONE_ACT_ERR_LOG(
+                (cmdInfo->common.value != 0) && (cmdInfo->common.value != 1), return CONFIG_ERROR,
                 "get single commit mode invalid, value:%u", cmdInfo->common.value);
             ret = sprintf_s(value, valueLen, "Aic Singlecommit:%s,", resultStrMap[cmdInfo->common.value]);
             break;
         default:
             SELF_LOG_ERROR("invalid cmd %u", cmdInfo->key);
-            return CONFIG_ERROR;    // clean code
+            return CONFIG_ERROR; // clean code
     }
     if (ret == -1) {
         SELF_LOG_ERROR("sprintf_s for cmd %u failed, strerr:%s", cmdInfo->key, strerror(errno));
@@ -132,7 +135,7 @@ static int32_t HandleGetValue(char *value, uint32_t valueLen, const LogCmdInfo *
     return CONFIG_OK;
 }
 
-static int32_t HandleSetValue(const struct MsnReq *req, LogCmdInfo *cmdInfo)
+static int32_t HandleSetValue(const struct MsnReq* req, LogCmdInfo* cmdInfo)
 {
     switch (req->subCmd) {
         case ICACHE_RANGE:
@@ -144,10 +147,11 @@ static int32_t HandleSetValue(const struct MsnReq *req, LogCmdInfo *cmdInfo)
         case AIC_SWITCH:
         case AIV_SWITCH:
             cmdInfo->setMask = *(DfxCoreSetMask*)req->value;
-            SELF_LOG_INFO("set core mask, cmd:%u, coreSwitch:%hhu, num:%hhu, core id:%hhu, %hhu, %hhu, %hhu",
-                req->subCmd, cmdInfo->setMask.coreSwitch, cmdInfo->setMask.configNum,
-                cmdInfo->setMask.coreId[CORE_ID0], cmdInfo->setMask.coreId[CORE_ID1],
-                cmdInfo->setMask.coreId[CORE_ID2], cmdInfo->setMask.coreId[CORE_ID3]);
+            SELF_LOG_INFO(
+                "set core mask, cmd:%u, coreSwitch:%hhu, num:%hhu, core id:%hhu, %hhu, %hhu, %hhu", req->subCmd,
+                cmdInfo->setMask.coreSwitch, cmdInfo->setMask.configNum, cmdInfo->setMask.coreId[CORE_ID0],
+                cmdInfo->setMask.coreId[CORE_ID1], cmdInfo->setMask.coreId[CORE_ID2],
+                cmdInfo->setMask.coreId[CORE_ID3]);
             break;
         default:
             break;
@@ -175,16 +179,17 @@ union CoreMask {
     uint64_t value;
 };
 
-static int32_t HandleGetValue(char *value, uint32_t valueLen, const LogCmdInfo *cmdInfo)
+static int32_t HandleGetValue(char* value, uint32_t valueLen, const LogCmdInfo* cmdInfo)
 {
     int32_t ret = 0;
-    const char *resultStrMap[] = {[0] = "Disable", [1] = "Enable"};
+    const char* resultStrMap[] = {[0] = "Disable", [1] = "Enable"};
     switch (cmdInfo->key) {
         case LOG_CMD_SET_ICACHE_OFFSET:
             ret = sprintf_s(value, valueLen, "Icache check Range:%lu,", cmdInfo->value);
             break;
         case LOG_CMD_SET_RECOVER_ACC:
-            ONE_ACT_ERR_LOG((cmdInfo->value != 0) && (cmdInfo->value != 1), return CONFIG_ERROR,
+            ONE_ACT_ERR_LOG(
+                (cmdInfo->value != 0) && (cmdInfo->value != 1), return CONFIG_ERROR,
                 "get accelerator recover mode invalid, value:%lu", cmdInfo->value);
             ret = sprintf_s(value, valueLen, "Accelerator Recover:%s,", resultStrMap[cmdInfo->value]);
             break;
@@ -195,13 +200,14 @@ static int32_t HandleGetValue(char *value, uint32_t valueLen, const LogCmdInfo *
             ret = sprintf_s(value, valueLen, "Aiv Coremask:0x%lx,", cmdInfo->value);
             break;
         case LOG_CMD_SET_SINGLE_COMMIT:
-            ONE_ACT_ERR_LOG((cmdInfo->value != 0) && (cmdInfo->value != 1), return CONFIG_ERROR,
+            ONE_ACT_ERR_LOG(
+                (cmdInfo->value != 0) && (cmdInfo->value != 1), return CONFIG_ERROR,
                 "get single commit mode invalid, value:%lu", cmdInfo->value);
             ret = sprintf_s(value, valueLen, "Aic Singlecommit:%s,", resultStrMap[cmdInfo->value]);
             break;
         default:
             SELF_LOG_ERROR("invalid cmd %u", cmdInfo->key);
-            return CONFIG_ERROR;    // clean code
+            return CONFIG_ERROR; // clean code
     }
     if (ret == -1) {
         SELF_LOG_ERROR("sprintf_s for cmd %u failed, strerr:%s", cmdInfo->key, strerror(errno));
@@ -210,7 +216,7 @@ static int32_t HandleGetValue(char *value, uint32_t valueLen, const LogCmdInfo *
     return CONFIG_OK;
 }
 
-static int32_t HandleSetValue(const struct MsnReq *req, LogCmdInfo *cmdInfo)
+static int32_t HandleSetValue(const struct MsnReq* req, LogCmdInfo* cmdInfo)
 {
     switch (req->subCmd) {
         case ICACHE_RANGE: {
@@ -223,7 +229,7 @@ static int32_t HandleSetValue(const struct MsnReq *req, LogCmdInfo *cmdInfo)
             break;
         }
         case ACCELERATOR_RECOVER:
-        case SINGLE_COMMIT:{
+        case SINGLE_COMMIT: {
             const DfxCommon* common = (const DfxCommon*)req->value;
             if (common->value != 0 && common->value != 1) {
                 SELF_LOG_ERROR("key %u value check failed, value:%u", cmdInfo->key, common->value);
@@ -234,10 +240,10 @@ static int32_t HandleSetValue(const struct MsnReq *req, LogCmdInfo *cmdInfo)
         }
         case AIC_SWITCH:
         case AIV_SWITCH: {
-            const DfxCoreSetMask *setMask = (const DfxCoreSetMask*)req->value;
-            union CoreMask coreMask = {.coreId={[0 ... 3]=0xFF}, .reserve={0}, .operation=0};
+            const DfxCoreSetMask* setMask = (const DfxCoreSetMask*)req->value;
+            union CoreMask coreMask = {.coreId = {[0 ... 3] = 0xFF}, .reserve = {0}, .operation = 0};
             if (setMask->coreSwitch == RESTORE_CORE) {
-                coreMask = (union CoreMask){.coreId={0}, .reserve={0}, .operation=1};
+                coreMask = (union CoreMask){.coreId = {0}, .reserve = {0}, .operation = 1};
             } else {
                 coreMask.operation = setMask->coreSwitch;
                 for (int32_t i = 0; i < setMask->configNum; ++i) {
@@ -261,7 +267,7 @@ static int32_t HandleSetValue(const struct MsnReq *req, LogCmdInfo *cmdInfo)
  * @param [in] value: result string pointer
  * @return: CONFIG_OK: succeed; others: failed
  */
-STATIC int32_t SaveToResult(char *resultBuf, uint32_t bufLen, const char *value)
+STATIC int32_t SaveToResult(char* resultBuf, uint32_t bufLen, const char* value)
 {
     if (strlen(resultBuf) + strlen(value) + 1 > bufLen) {
         SELF_LOG_ERROR("resultBuf not enough");
@@ -275,7 +281,7 @@ STATIC int32_t SaveToResult(char *resultBuf, uint32_t bufLen, const char *value)
     return CONFIG_OK;
 }
 
-void TsCmdGetConfig(char *resultBuf, uint32_t bufLen, uint16_t devId)
+void TsCmdGetConfig(char* resultBuf, uint32_t bufLen, uint16_t devId)
 {
     LogCmdInfo cmdInfo = {0};
     int32_t ret = 0;
@@ -297,14 +303,13 @@ void TsCmdGetConfig(char *resultBuf, uint32_t bufLen, uint16_t devId)
     }
 }
 
-STATIC void HandleErrorCode(int32_t drvRet, ts_error_t tsRet, const char **result)
+STATIC void HandleErrorCode(int32_t drvRet, ts_error_t tsRet, const char** result)
 {
     switch (drvRet) {
         case LOG_OK:
             if (tsRet == TS_SUCCESS) {
                 break;
-            } else if ((tsRet >= TS_ERROR_FEATURE_NOT_SUPPORT) &&
-                       (tsRet <= TS_LOG_DEAMON_CORE_POOLING_STATUS_FAIL)) {
+            } else if ((tsRet >= TS_ERROR_FEATURE_NOT_SUPPORT) && (tsRet <= TS_LOG_DEAMON_CORE_POOLING_STATUS_FAIL)) {
                 *result = g_tsErrorMsgMap[tsRet];
             } else {
                 *result = DRV_ERROR;
@@ -327,11 +332,12 @@ STATIC void HandleErrorCode(int32_t drvRet, ts_error_t tsRet, const char **resul
     }
 }
 
-int32_t TsCmdSetConfig(const struct MsnReq *req, uint16_t devId, char *resultBuf, uint32_t bufLen)
+int32_t TsCmdSetConfig(const struct MsnReq* req, uint16_t devId, char* resultBuf, uint32_t bufLen)
 {
     ONE_ACT_ERR_LOG(req == NULL, return CONFIG_INVALID_PARAM, "req is NULL");
-    ONE_ACT_ERR_LOG(req->valueLen != sizeof(DfxCommon), return CONFIG_INVALID_PARAM,
-        "valueLen:%u check failed, expect:%zu.", req->valueLen, sizeof(DfxCommon));
+    ONE_ACT_ERR_LOG(
+        req->valueLen != sizeof(DfxCommon), return CONFIG_INVALID_PARAM, "valueLen:%u check failed, expect:%zu.",
+        req->valueLen, sizeof(DfxCommon));
     ONE_ACT_ERR_LOG(resultBuf == NULL, return CONFIG_INVALID_PARAM, "resultBuf is NULL");
 
     LogCmdInfo cmdInfo = {0};
@@ -345,18 +351,17 @@ int32_t TsCmdSetConfig(const struct MsnReq *req, uint16_t devId, char *resultBuf
 #ifdef CONFIG_EXPAND
     int32_t drvRet = ret;
     ts_error_t tsRet = cmdInfo.retVal;
-#else   // OBP
+#else // OBP
     int32_t drvRet = ret > DRV_ERROR_RESERVED ? LOG_OK : ret;
-    ts_error_t tsRet = ret > (int32_t)DRV_ERROR_RESERVED ?
-        (ts_error_t)(ret - (int32_t)DRV_ERROR_RESERVED) : TS_SUCCESS;
+    ts_error_t tsRet = ret > (int32_t)DRV_ERROR_RESERVED ? (ts_error_t)(ret - (int32_t)DRV_ERROR_RESERVED) : TS_SUCCESS;
 #endif
-    const char *result = SET_SUCCESS_MSG;
+    const char* result = SET_SUCCESS_MSG;
     HandleErrorCode(drvRet, tsRet, &result);
     if (strcmp(result, TS_NOT_SUPPORT) == 0) {
         (void)sprintf_s(resultBuf, bufLen, "%s set %s", result, g_cmdMapToStr[req->subCmd]);
     } else {
         (void)strcpy_s(resultBuf, bufLen, result);
     }
-
-    return ret;
+    ONE_ACT_ERR_LOG(tsRet != TS_SUCCESS, return CONFIG_ERROR, "tsRet is error, tsRet=%d", (int32_t)tsRet);
+    return drvRet;
 }

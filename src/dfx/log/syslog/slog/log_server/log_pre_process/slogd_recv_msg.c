@@ -25,27 +25,23 @@ struct Globals {
 };
 
 #define TWO_HUNDRED_MILLISECOND 200 // 200ms
-STATIC struct Globals *g_globalsPtr = NULL;
+STATIC struct Globals* g_globalsPtr = NULL;
 
-#define SET_GLOBALS_PTR(x) do {                                  \
-    (*(struct Globals **)&g_globalsPtr) = (struct Globals *)(x); \
-    ToolMemBarrier();                                            \
-} while (0)
+#define SET_GLOBALS_PTR(x)                                         \
+    do {                                                           \
+        (*(struct Globals**)&g_globalsPtr) = (struct Globals*)(x); \
+        ToolMemBarrier();                                          \
+    } while (0)
 
-#define FREE_GLOBALS_PTR()  do { \
-    free(g_globalsPtr);          \
-    g_globalsPtr = NULL;         \
-} while (0)
+#define FREE_GLOBALS_PTR()   \
+    do {                     \
+        free(g_globalsPtr);  \
+        g_globalsPtr = NULL; \
+    } while (0)
 
-char *SlogdGetRecvBuf(void)
-{
-    return g_globalsPtr->recvBuf;
-}
+char* SlogdGetRecvBuf(void) { return g_globalsPtr->recvBuf; }
 
-char *SlogdGetParseBuf(void)
-{
-    return g_globalsPtr->parseBuf;
-}
+char* SlogdGetParseBuf(void) { return g_globalsPtr->parseBuf; }
 
 /**
  * @brief       : init g_globalsPtr
@@ -53,7 +49,7 @@ char *SlogdGetParseBuf(void)
  */
 LogStatus SlogdInitGlobals(void)
 {
-    void *ptr = LogMalloc(sizeof(*g_globalsPtr));
+    void* ptr = LogMalloc(sizeof(*g_globalsPtr));
     if (ptr == NULL) {
         SELF_LOG_ERROR("malloc failed, strerr=%s.", strerror(ToolGetErrorCode()));
         return LOG_FAILURE;
@@ -76,11 +72,9 @@ void SlogdFreeGlobals(void)
 
 void SlogdMessageRecv(int32_t devId)
 {
-    uint32_t fileNum = 0;
-    int32_t ret = SlogdRmtServerCreate(devId, &fileNum);
-    ONE_ACT_ERR_LOG(ret == SYS_ERROR, return, "create communication server failed, quit slogd process...");
+    uint32_t fileNum = SlogdRmtServerGetFileNum();
     SELF_LOG_INFO("fileNum is : %u", fileNum);
-    char *recvBuf = SlogdGetRecvBuf();
+    char* recvBuf = SlogdGetRecvBuf();
     int32_t logType = DEBUG_LOG;
     while (LogGetSigNo() == 0) {
         (void)memset_s(recvBuf, MAX_READ - 1U, 0, MAX_READ - 1U);

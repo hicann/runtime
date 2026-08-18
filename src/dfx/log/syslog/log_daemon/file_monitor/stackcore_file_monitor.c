@@ -15,10 +15,12 @@
 
 #define FILTER_OK 1
 #define FILTER_NOK 0
+#define CORETRACE_NAME_PREFIX "coretrace."
+#define STACKCORE_NAME_PREFIX "stackcore."
 #ifdef LOG_CORETRACE
-#define DUMPFILE_NAME_PREFIX "coretrace."
+#define DUMPFILE_NAME_PREFIX CORETRACE_NAME_PREFIX
 #else
-#define DUMPFILE_NAME_PREFIX "stackcore."
+#define DUMPFILE_NAME_PREFIX STACKCORE_NAME_PREFIX
 #endif
 #define STACKCORE_HOST_FILE_PATH "stackcore"
 #define MAX_RESERVE_FILE_NUMS 50
@@ -33,29 +35,29 @@
 
 static int32_t g_curDirIndex = 0;
 static ToolMutex g_curDirIndexLock = TOOL_MUTEX_INITIALIZER;
-static char **g_stackcorePath = NULL;
+static char** g_stackcorePath = NULL;
 static int32_t g_dirNum = 0;
 
 typedef struct StackcoreFileSyncArg {
     char fileName[MAX_FILENAME_LEN];
     int32_t dirIndex;
-    struct StackcoreFileSyncArg *next;
+    struct StackcoreFileSyncArg* next;
 } StackcoreFileSyncArg;
 
 typedef struct StackcoreFileMonitor {
-    StackcoreFileSyncArg *argList;
+    StackcoreFileSyncArg* argList;
     ToolMutex argListLock;
     MonitorEvent eventMonitor;
 } StackcoreFileMonitor;
 
-static StackcoreFileMonitor g_stackcoreMonitor = { 0 };
+static StackcoreFileMonitor g_stackcoreMonitor = {0};
 
 /* *
  * @brief         : check coredump dir if existed or not, if not, make dir
  * @param [in]    : path     path of coredump dir
  * @return        : LOG_SUCCESS success; LOG_FAILURE failed
  */
-static int32_t CheckCoreDirIfExist(const char *path)
+static int32_t CheckCoreDirIfExist(const char* path)
 {
     if (access(path, F_OK) != 0) {
         // The input path can only be CORE_DEFAULT_PATH, and need not to be verified
@@ -74,18 +76,19 @@ static int32_t CheckCoreDirIfExist(const char *path)
  * @param [in]dir: file struct which include the path and filename
  * @return       : FILTER_NOK/FILTER_OK
  */
-static int32_t StackCoreFilter(const ToolDirent *dir)
+static int32_t StackCoreFilter(const ToolDirent* dir)
 {
     int32_t ret = 0;
 
     ONE_ACT_NO_LOG(dir == NULL, return FILTER_NOK);
     if ((LogStrStartsWith(dir->d_name, DUMPFILE_NAME_PREFIX) == true)) {
-        char srcFileName[MAX_FILEPATH_LEN] = { 0 };
-        ret = snprintf_s(srcFileName, MAX_FILEPATH_LEN, MAX_FILEPATH_LEN - 1U, "%s%s%s", CORE_DEFAULT_PATH,
+        char srcFileName[MAX_FILEPATH_LEN] = {0};
+        ret = snprintf_s(
+            srcFileName, MAX_FILEPATH_LEN, MAX_FILEPATH_LEN - 1U, "%s%s%s", CORE_DEFAULT_PATH,
             g_stackcorePath[g_curDirIndex], dir->d_name);
         ONE_ACT_ERR_LOG(ret == -1, return FILTER_NOK, "snprintf_s failed, strerr=%s", strerror(ToolGetErrorCode()));
 
-        ToolStat statbuff = { 0 };
+        ToolStat statbuff = {0};
         if (ToolStatGet(srcFileName, &statbuff) == 0) {
             // filesize must be over 0
             if (statbuff.st_size == 0) {
@@ -111,33 +114,35 @@ static int32_t StackCoreFilter(const ToolDirent *dir)
  * @return     : TRUE(1) a's timestamp newer than b
  * FALSE(0) a's timestamp older than b
  */
-static int32_t SortByCreatetime(const ToolDirent **a, const ToolDirent **b)
+static int32_t SortByCreatetime(const ToolDirent** a, const ToolDirent** b)
 {
     int32_t ret = 0;
-    ToolStat aStatbuff = { 0 };
-    ToolStat bStatbuff = { 0 };
-    char aSrcFileName[MAX_FULLPATH_LEN] = { 0 };
-    char bSrcFileName[MAX_FULLPATH_LEN] = { 0 };
+    ToolStat aStatbuff = {0};
+    ToolStat bStatbuff = {0};
+    char aSrcFileName[MAX_FULLPATH_LEN] = {0};
+    char bSrcFileName[MAX_FULLPATH_LEN] = {0};
 
     if ((a == NULL) || ((*a) == NULL) || (b == NULL) || ((*b) == NULL)) {
         return 1;
     }
 
-    ret = snprintf_s(aSrcFileName, MAX_FULLPATH_LEN, MAX_FULLPATH_LEN - 1U, "%s%s%s", CORE_DEFAULT_PATH,
+    ret = snprintf_s(
+        aSrcFileName, MAX_FULLPATH_LEN, MAX_FULLPATH_LEN - 1U, "%s%s%s", CORE_DEFAULT_PATH,
         g_stackcorePath[g_curDirIndex], (*a)->d_name);
     ONE_ACT_ERR_LOG(ret == -1, return 1, "snprintf_s A file failed, strerr=%s", strerror(ToolGetErrorCode()));
 
-    ret = snprintf_s(bSrcFileName, MAX_FULLPATH_LEN, MAX_FULLPATH_LEN - 1U, "%s%s%s", CORE_DEFAULT_PATH,
+    ret = snprintf_s(
+        bSrcFileName, MAX_FULLPATH_LEN, MAX_FULLPATH_LEN - 1U, "%s%s%s", CORE_DEFAULT_PATH,
         g_stackcorePath[g_curDirIndex], (*b)->d_name);
     ONE_ACT_ERR_LOG(ret == -1, return 1, "snprintf_s B file failed, strerr=%s", strerror(ToolGetErrorCode()));
 
     ret = ToolStatGet(aSrcFileName, &aStatbuff);
-    ONE_ACT_ERR_LOG(ret != LOG_SUCCESS, return 1, "get status of A file failed, strerr=%s",
-        strerror(ToolGetErrorCode()));
+    ONE_ACT_ERR_LOG(
+        ret != LOG_SUCCESS, return 1, "get status of A file failed, strerr=%s", strerror(ToolGetErrorCode()));
 
     ret = ToolStatGet(bSrcFileName, &bStatbuff);
-    ONE_ACT_ERR_LOG(ret != LOG_SUCCESS, return 1, "get status of B file failed, strerr=%s",
-        strerror(ToolGetErrorCode()));
+    ONE_ACT_ERR_LOG(
+        ret != LOG_SUCCESS, return 1, "get status of B file failed, strerr=%s", strerror(ToolGetErrorCode()));
 
     // file create time compare
     if (aStatbuff.st_ctime > bStatbuff.st_ctime) {
@@ -147,23 +152,43 @@ static int32_t SortByCreatetime(const ToolDirent **a, const ToolDirent **b)
     }
 }
 
+static bool StackCoreClearStackcoreFile(const char* name, const char* path)
+{
+#ifndef LOG_CORETRACE
+    (void)name;
+    (void)path;
+    return true;
+#else
+    if (strncmp(name, STACKCORE_NAME_PREFIX, strlen(STACKCORE_NAME_PREFIX)) != 0) {
+        return false;
+    }
+    if (ToolUnlink(path) != 0) {
+        SELF_LOG_WARN("clear stackcore file, unlink file[%s] failed.", path);
+        return false;
+    }
+    return true;
+#endif
+}
+
 /* *
  * @brief        : scandir filter func
  * @param [in]   : dir   file struct which include the path and filename
  * @return       : FILTER_OK success; FILTER_NOK failed
  */
-static int32_t StackCoreDirFilter(const ToolDirent *dir)
+static int32_t StackCoreDirFilter(const ToolDirent* dir)
 {
-    int32_t ret = 0;
-
     ONE_ACT_NO_LOG(dir == NULL, return FILTER_NOK);
+    char srcPathName[MAX_FILEPATH_LEN] = {0};
+    int32_t ret =
+        snprintf_s(srcPathName, MAX_FILEPATH_LEN, MAX_FILEPATH_LEN - 1U, "%s%s", CORE_DEFAULT_PATH, dir->d_name);
+    ONE_ACT_ERR_LOG(ret == -1, return FILTER_NOK, "snprintf_s failed, strerr=%s", strerror(ToolGetErrorCode()));
     if (dir->d_type == (uint8_t)DT_DIR && strcmp(dir->d_name, "..") != 0) {
-        char srcPathName[MAX_FILEPATH_LEN] = { 0 };
-        ret = snprintf_s(srcPathName, MAX_FILEPATH_LEN, MAX_FILEPATH_LEN - 1U, "%s%s", CORE_DEFAULT_PATH, dir->d_name);
-        ONE_ACT_ERR_LOG(ret == -1, return FILTER_NOK, "snprintf_s failed, strerr=%s", strerror(ToolGetErrorCode()));
-
         if (access(srcPathName, (uint32_t)R_OK | (uint32_t)W_OK | (uint32_t)X_OK) == 0) {
             return FILTER_OK;
+        }
+    } else if (dir->d_type == DT_REG) {
+        if (StackCoreClearStackcoreFile(dir->d_name, srcPathName)) {
+            SELF_LOG_INFO("clear stackcore file %s successfully.", srcPathName);
         }
     }
     return FILTER_NOK;
@@ -177,34 +202,35 @@ static int32_t InitStackCoreDir(void)
 {
     int32_t i = 0;
     int32_t ret = 0;
-    ToolDirent **namelist = NULL;
-    char srcDirName[MAX_FILEPATH_LEN] = { 0 };
+    ToolDirent** namelist = NULL;
+    char srcDirName[MAX_FILEPATH_LEN] = {0};
     int32_t stackcorePathNum = 0;
 
     ONE_ACT_NO_LOG(CheckCoreDirIfExist(CORE_DEFAULT_PATH) != LOG_SUCCESS, return LOG_FAILURE);
 
     // get filepath list
-    int32_t totalNum = ToolScandir((const char *)CORE_DEFAULT_PATH, &namelist, StackCoreDirFilter, NULL);
+    int32_t totalNum = ToolScandir((const char*)CORE_DEFAULT_PATH, &namelist, StackCoreDirFilter, NULL);
     if ((totalNum <= 0) || ((totalNum > 0) && (namelist == NULL)) || (totalNum > MAX_MONITOR_EVENT)) {
-        SELF_LOG_ERROR("scan directory failed, directory=%s, result=%d, strerr=%s.", CORE_DEFAULT_PATH, totalNum,
+        SELF_LOG_ERROR(
+            "scan directory failed, directory=%s, result=%d, strerr=%s.", CORE_DEFAULT_PATH, totalNum,
             strerror(ToolGetErrorCode()));
         return LOG_FAILURE;
     }
 
-    g_stackcorePath = (char **)LogMalloc((size_t)totalNum * sizeof(char *));
+    g_stackcorePath = (char**)LogMalloc((size_t)totalNum * sizeof(char*));
     if (g_stackcorePath == NULL) {
         ToolScandirFree(namelist, totalNum);
-        SELF_LOG_ERROR("malloc failed, size=%zu, strerr=%s.", (size_t)totalNum * sizeof(char *),
-            strerror(ToolGetErrorCode()));
+        SELF_LOG_ERROR(
+            "malloc failed, size=%zu, strerr=%s.", (size_t)totalNum * sizeof(char*), strerror(ToolGetErrorCode()));
         return LOG_FAILURE;
     }
 
     for (i = 0; i < totalNum; ++i) {
-        g_stackcorePath[i] = (char *)LogMalloc(MAX_FILEPATH_LEN * sizeof(char));
+        g_stackcorePath[i] = (char*)LogMalloc(MAX_FILEPATH_LEN * sizeof(char));
         if (g_stackcorePath[i] == NULL) {
             ToolScandirFree(namelist, totalNum);
-            SELF_LOG_ERROR("malloc failed, size=%zu, strerr=%s.", MAX_FILEPATH_LEN * sizeof(char),
-                strerror(ToolGetErrorCode()));
+            SELF_LOG_ERROR(
+                "malloc failed, size=%zu, strerr=%s.", MAX_FILEPATH_LEN * sizeof(char), strerror(ToolGetErrorCode()));
 
             // Release the memory that has been applied
             ToolPathListFree(g_stackcorePath, i);
@@ -218,7 +244,8 @@ static int32_t InitStackCoreDir(void)
 
         (void)memset_s(srcDirName, MAX_FILEPATH_LEN, 0, MAX_FILEPATH_LEN);
         ret = snprintf_s(srcDirName, MAX_FILEPATH_LEN, MAX_FILEPATH_LEN - 1U, "%s/", namelist[i]->d_name);
-        ONE_ACT_ERR_LOG(ret == -1, continue, "snprintf_s filename failed, result=%d, strerr=%s.", ret,
+        ONE_ACT_ERR_LOG(
+            ret == -1, continue, "snprintf_s filename failed, result=%d, strerr=%s.", ret,
             strerror(ToolGetErrorCode()));
 
         ret = strncpy_s(g_stackcorePath[stackcorePathNum], MAX_FILEPATH_LEN, srcDirName, strlen(srcDirName));
@@ -230,19 +257,13 @@ static int32_t InitStackCoreDir(void)
 }
 
 #ifdef LOG_CORETRACE
-static int32_t StackcoreMonitorScanStart(void)
-{
-    return LOG_SUCCESS;
-}
+static int32_t StackcoreMonitorScanStart(void) { return LOG_SUCCESS; }
 
-static void StackcoreMonitorScanStop(void)
-{
-    return;
-}
+static void StackcoreMonitorScanStop(void) { return; }
 #else
-static void RemoveStackCoreFile(const char *srcFileName)
+static void RemoveStackCoreFile(const char* srcFileName)
 {
-    ONE_ACT_NO_LOG(srcFileName == NULL, return );
+    ONE_ACT_NO_LOG(srcFileName == NULL, return);
     int32_t ret;
     int32_t retryCnt = 0;
     const int32_t retryMax = 3;
@@ -255,7 +276,8 @@ static void RemoveStackCoreFile(const char *srcFileName)
     } while (retryCnt != retryMax);
 
     if (ret != LOG_SUCCESS) {
-        SELF_LOG_ERROR("remove source file failed, source_file=%s, result=%d, strerr=%s.", srcFileName, ret,
+        SELF_LOG_ERROR(
+            "remove source file failed, source_file=%s, result=%d, strerr=%s.", srcFileName, ret,
             strerror(ToolGetErrorCode()));
     } else {
         SELF_LOG_INFO("remove source file succeed, source_file=%s.", srcFileName);
@@ -271,9 +293,9 @@ static void Scan(const int32_t dirIndex)
 {
     int32_t i = 0;
     int32_t ret = 0;
-    ToolDirent **namelist = NULL;
-    char srcFileName[MAX_FULLPATH_LEN] = { 0 }; // include filepath and filename
-    char path[MAX_FILEPATH_LEN] = { 0 };        // only the filepath
+    ToolDirent** namelist = NULL;
+    char srcFileName[MAX_FULLPATH_LEN] = {0}; // include filepath and filename
+    char path[MAX_FILEPATH_LEN] = {0};        // only the filepath
 
     ret = sprintf_s(path, MAX_FILEPATH_LEN, "%s%s", CORE_DEFAULT_PATH, g_stackcorePath[dirIndex]);
     if (ret == -1) {
@@ -287,8 +309,8 @@ static void Scan(const int32_t dirIndex)
     int32_t totalNum = ToolScandir(path, &namelist, StackCoreFilter, SortByCreatetime);
     (void)ToolMutexUnLock(&g_curDirIndexLock);
     if ((totalNum < 0) || (totalNum > 0 && namelist == NULL)) {
-        SELF_LOG_ERROR("scan directory failed, directory=%s, result=%d, strerr=%s.", path, totalNum,
-            strerror(ToolGetErrorCode()));
+        SELF_LOG_ERROR(
+            "scan directory failed, directory=%s, result=%d, strerr=%s.", path, totalNum, strerror(ToolGetErrorCode()));
         return;
     }
 
@@ -300,7 +322,8 @@ static void Scan(const int32_t dirIndex)
         ONE_ACT_WARN_LOG(namelist[i] == NULL, continue, "namelist[%d] is invalid.", i);
         (void)memset_s(srcFileName, MAX_FULLPATH_LEN, 0, MAX_FULLPATH_LEN);
         ret = snprintf_s(srcFileName, MAX_FULLPATH_LEN, MAX_FULLPATH_LEN - 1U, "%s%s", path, namelist[i]->d_name);
-        ONE_ACT_ERR_LOG(ret == -1, continue, "snprintf_s filename failed, result=%d, strerr=%s.", ret,
+        ONE_ACT_ERR_LOG(
+            ret == -1, continue, "snprintf_s filename failed, result=%d, strerr=%s.", ret,
             strerror(ToolGetErrorCode()));
 
         // check file can access or not
@@ -319,7 +342,7 @@ static void Scan(const int32_t dirIndex)
  * @param [in]arg: currently no use
  * @return       : LOG_SUCCESS success; LOG_FAILURE failed
  */
-static void StackcoreScanEventProc(void *arg)
+static void StackcoreScanEventProc(void* arg)
 {
     (void)arg;
 
@@ -336,7 +359,7 @@ static void StackcoreScanEventProc(void *arg)
  */
 static int32_t StackcoreMonitorScanStart(void)
 {
-    EventAttr attr = { LOOP_TIME_EVENT, STACKCORE_SCAN_INTERVAL };
+    EventAttr attr = {LOOP_TIME_EVENT, STACKCORE_SCAN_INTERVAL};
     EventHandle handle = EventAdd(StackcoreScanEventProc, NULL, &attr);
     if (handle == NULL) {
         SELF_LOG_ERROR("add stackcore scan event failed.");
@@ -372,17 +395,18 @@ static void StackcoreMonitorScanStop(void)
  * @param [in]fileName: file name of the stackcore file
  * @return            : LOG_SUCCESS success; LOG_FAILURE failed
  */
-static void StackcoreSyncSingleFile(const int32_t dirIndex, const char *fileName)
+static void StackcoreSyncSingleFile(const int32_t dirIndex, const char* fileName)
 {
-    char srcPath[MAX_FULLPATH_LEN] = { 0 };
-    char dstPath[MAX_FULLPATH_LEN] = { 0 };
+    char srcPath[MAX_FULLPATH_LEN] = {0};
+    char dstPath[MAX_FULLPATH_LEN] = {0};
     int32_t ret = 0;
 
     ret = sprintf_s(srcPath, MAX_FULLPATH_LEN, "%s%s%s", CORE_DEFAULT_PATH, g_stackcorePath[dirIndex], fileName);
     ONE_ACT_ERR_LOG(ret == -1, return, "sprintf_s failed, get notify src path failed.");
 
     // the format of the host path: stackcore/dev-os-{id}
-    ret = sprintf_s(dstPath, MAX_FULLPATH_LEN, "%s/%s/%s%s", STACKCORE_HOST_FILE_PATH, FileMonitorGetMasterIdStr(),
+    ret = sprintf_s(
+        dstPath, MAX_FULLPATH_LEN, "%s/%s/%s%s", STACKCORE_HOST_FILE_PATH, FileMonitorGetMasterIdStr(),
         g_stackcorePath[dirIndex], fileName);
     ONE_ACT_ERR_LOG(ret == -1, return, "sprintf_s failed, get notify dst path failed.");
 
@@ -400,9 +424,9 @@ static int32_t StackcoreSyncSubDirExistFile(const int32_t dirIndex)
 {
     int32_t i = 0;
     int32_t ret = 0;
-    ToolDirent **namelist = NULL;
-    char srcFileName[MAX_FULLPATH_LEN] = { 0 }; // include filepath and filename
-    char path[MAX_FILEPATH_LEN] = { 0 };        // only the filepath
+    ToolDirent** namelist = NULL;
+    char srcFileName[MAX_FULLPATH_LEN] = {0}; // include filepath and filename
+    char path[MAX_FILEPATH_LEN] = {0};        // only the filepath
 
     ret = sprintf_s(path, MAX_FILEPATH_LEN, "%s%s", CORE_DEFAULT_PATH, g_stackcorePath[dirIndex]);
     if (ret == -1) {
@@ -416,8 +440,8 @@ static int32_t StackcoreSyncSubDirExistFile(const int32_t dirIndex)
     int32_t totalNum = ToolScandir(path, &namelist, StackCoreFilter, SortByCreatetime);
     (void)ToolMutexUnLock(&g_curDirIndexLock);
     if ((totalNum < 0) || (totalNum > 0 && namelist == NULL)) {
-        SELF_LOG_ERROR("scan directory failed, directory=%s, result=%d, strerr=%s.", path, totalNum,
-            strerror(ToolGetErrorCode()));
+        SELF_LOG_ERROR(
+            "scan directory failed, directory=%s, result=%d, strerr=%s.", path, totalNum, strerror(ToolGetErrorCode()));
         return LOG_FAILURE;
     }
 
@@ -425,7 +449,8 @@ static int32_t StackcoreSyncSubDirExistFile(const int32_t dirIndex)
         ONE_ACT_WARN_LOG(namelist[i] == NULL, continue, "namelist[%d] is invalid.", i);
         (void)memset_s(srcFileName, MAX_FULLPATH_LEN, 0, MAX_FULLPATH_LEN);
         ret = snprintf_s(srcFileName, MAX_FULLPATH_LEN, MAX_FULLPATH_LEN - 1U, "%s%s", path, namelist[i]->d_name);
-        ONE_ACT_ERR_LOG(ret == -1, continue, "snprintf_s filename failed, result=%d, strerr=%s.", ret,
+        ONE_ACT_ERR_LOG(
+            ret == -1, continue, "snprintf_s filename failed, result=%d, strerr=%s.", ret,
             strerror(ToolGetErrorCode()));
 
         // check file can access or not
@@ -460,11 +485,11 @@ static void StackcoreSyncAllExistFile(void)
  * @param [in]list : the arg list of the stackcore file inotify event
  * @return         : -
  */
-static void StackcoreArgDelete(StackcoreFileSyncArg *arg, StackcoreFileSyncArg **list)
+static void StackcoreArgDelete(StackcoreFileSyncArg* arg, StackcoreFileSyncArg** list)
 {
-    StackcoreFileSyncArg *node = *list;
-    StackcoreFileSyncArg *pre = NULL;
-    StackcoreFileSyncArg *head = node;
+    StackcoreFileSyncArg* node = *list;
+    StackcoreFileSyncArg* pre = NULL;
+    StackcoreFileSyncArg* head = node;
 
     while (node != NULL) {
         if (arg == node) {
@@ -473,7 +498,7 @@ static void StackcoreArgDelete(StackcoreFileSyncArg *arg, StackcoreFileSyncArg *
             } else {
                 pre->next = node->next;
             }
-            StackcoreFileSyncArg *tmp = node->next;
+            StackcoreFileSyncArg* tmp = node->next;
             XFREE(node);
             node = tmp;
             break;
@@ -491,13 +516,13 @@ static void StackcoreArgDelete(StackcoreFileSyncArg *arg, StackcoreFileSyncArg *
  * @param [in]list : the arg list of the stackcore file inotify event
  * @return         : -
  */
-static void StackcoreArgAddToList(StackcoreFileSyncArg *node, StackcoreFileSyncArg **list)
+static void StackcoreArgAddToList(StackcoreFileSyncArg* node, StackcoreFileSyncArg** list)
 {
     if ((*list) == NULL) {
         *list = node;
         return;
     }
-    StackcoreFileSyncArg *tmp = *list;
+    StackcoreFileSyncArg* tmp = *list;
     while (tmp->next != NULL) {
         tmp = tmp->next;
     }
@@ -512,8 +537,8 @@ static void StackcoreArgAddToList(StackcoreFileSyncArg *node, StackcoreFileSyncA
 static void StackcoreDeleteArgList(void)
 {
     (void)ToolMutexLock(&g_stackcoreMonitor.argListLock);
-    StackcoreFileSyncArg *node = g_stackcoreMonitor.argList;
-    StackcoreFileSyncArg *next = NULL;
+    StackcoreFileSyncArg* node = g_stackcoreMonitor.argList;
+    StackcoreFileSyncArg* next = NULL;
 
     while (node != NULL) {
         next = node->next;
@@ -529,9 +554,9 @@ static void StackcoreDeleteArgList(void)
  * @param [in]arg  : the inotify_event parameter, include the newly created file name
  * @return         : LOG_SUCCESS success; LOG_FAILURE failed
  */
-static void StackcoreFileSyncProc(void *arg)
+static void StackcoreFileSyncProc(void* arg)
 {
-    StackcoreFileSyncArg *syncArg = (StackcoreFileSyncArg *)arg;
+    StackcoreFileSyncArg* syncArg = (StackcoreFileSyncArg*)arg;
 
     // Upload the newly created stackcore file
     StackcoreSyncSingleFile(syncArg->dirIndex, syncArg->fileName);
@@ -546,7 +571,7 @@ static void StackcoreFileSyncProc(void *arg)
  * @param [in]event: notify parameters, include the newly created file name
  * @return         : LOG_SUCCESS success; LOG_FAILURE failed
  */
-static void StackcoreNotifyCreateEvent(struct inotify_event *event)
+static void StackcoreNotifyCreateEvent(struct inotify_event* event)
 {
     int32_t i = 0;
 
@@ -560,9 +585,9 @@ static void StackcoreNotifyCreateEvent(struct inotify_event *event)
 
     ONE_ACT_ERR_LOG(i == MAX_MONITOR_EVENT, return, "no wd is matched.");
 
-    StackcoreFileSyncArg *arg = (StackcoreFileSyncArg *)LogMalloc(sizeof(StackcoreFileSyncArg));
-    ONE_ACT_ERR_LOG(arg == NULL, return, "malloc for bbox file sync arg failed, strerr = %s.",
-        strerror(ToolGetErrorCode()));
+    StackcoreFileSyncArg* arg = (StackcoreFileSyncArg*)LogMalloc(sizeof(StackcoreFileSyncArg));
+    ONE_ACT_ERR_LOG(
+        arg == NULL, return, "malloc for bbox file sync arg failed, strerr = %s.", strerror(ToolGetErrorCode()));
 
     errno_t err = EOK;
     err = strcpy_s(arg->fileName, MAX_FILENAME_LEN, event->name);
@@ -571,8 +596,8 @@ static void StackcoreNotifyCreateEvent(struct inotify_event *event)
     arg->dirIndex = i;
 
     // this event handle will be released immediately after trigger and no need to be saved.
-    EventAttr attr = { DELAY_TIME_EVENT, STACKCORE_DELAY_TIME };
-    EventHandle handle = EventAdd(StackcoreFileSyncProc, (void *)arg, &attr);
+    EventAttr attr = {DELAY_TIME_EVENT, STACKCORE_DELAY_TIME};
+    EventHandle handle = EventAdd(StackcoreFileSyncProc, (void*)arg, &attr);
     if (handle == NULL) {
         SELF_LOG_ERROR("add stackcore file sync event failed.");
 
@@ -586,13 +611,12 @@ static void StackcoreNotifyCreateEvent(struct inotify_event *event)
     (void)ToolMutexUnLock(&g_stackcoreMonitor.argListLock);
 }
 
-
 /* *
  * @brief          : process the stackcore file creation event
  * @param [in]arg  : currently no use
  * @return         : -
  */
-static void StackcoreNotifyEventProc(void *arg)
+static void StackcoreNotifyEventProc(void* arg)
 {
     (void)arg;
     char buffer[FILE_MONITOR_EVENT_BUF_LEN];
@@ -604,7 +628,7 @@ static void StackcoreNotifyEventProc(void *arg)
 
     uint32_t i = 0;
     while (i < (uint32_t)len) {
-        struct inotify_event *event = (struct inotify_event *)&buffer[i];
+        struct inotify_event* event = (struct inotify_event*)&buffer[i];
         i += (uint32_t)FILE_MONITOR_EVENT_SIZE + event->len;
         if (event->len == 0) {
             continue;
@@ -625,7 +649,8 @@ static void StackcoreStopNotifyMonitor(const int32_t num)
 {
     for (int32_t i = 0; i < num; ++i) {
         if (g_stackcoreMonitor.eventMonitor.notifyMonitor.event[i].wd != 0) {
-            (void)inotify_rm_watch(g_stackcoreMonitor.eventMonitor.notifyMonitor.fd,
+            (void)inotify_rm_watch(
+                g_stackcoreMonitor.eventMonitor.notifyMonitor.fd,
                 g_stackcoreMonitor.eventMonitor.notifyMonitor.event[i].wd);
             g_stackcoreMonitor.eventMonitor.notifyMonitor.event[i].wd = 0;
         }
@@ -708,7 +733,8 @@ int32_t StackcoreMonitorStart(void)
     }
 
     for (int32_t i = 0; i < g_dirNum; ++i) {
-        ret = sprintf_s(g_stackcoreMonitor.eventMonitor.notifyMonitor.event[i].fileName, MAX_FULLPATH_LEN, "%s%s/",
+        ret = sprintf_s(
+            g_stackcoreMonitor.eventMonitor.notifyMonitor.event[i].fileName, MAX_FULLPATH_LEN, "%s%s/",
             CORE_DEFAULT_PATH, g_stackcorePath[i]);
         if (ret == -1) {
             SELF_LOG_ERROR("sprintf_s for file name failed, add watch %d failed.", i);
@@ -723,7 +749,8 @@ int32_t StackcoreMonitorStart(void)
             return LOG_FAILURE;
         }
 
-        tmpWd = inotify_add_watch(g_stackcoreMonitor.eventMonitor.notifyMonitor.fd,
+        tmpWd = inotify_add_watch(
+            g_stackcoreMonitor.eventMonitor.notifyMonitor.fd,
             g_stackcoreMonitor.eventMonitor.notifyMonitor.event[i].fileName, IN_CREATE);
         if (tmpWd < 0) {
             SELF_LOG_ERROR("notify add watch %d failed, filePath = %s, tmpWd = %d.", i, g_stackcorePath[i], tmpWd);
@@ -734,7 +761,7 @@ int32_t StackcoreMonitorStart(void)
         g_stackcoreMonitor.eventMonitor.notifyMonitor.event[i].wd = tmpWd;
     }
 
-    EventAttr attr = { LOOP_TIME_EVENT, STACKCORE_NOTIFY_INTERVAL };
+    EventAttr attr = {LOOP_TIME_EVENT, STACKCORE_NOTIFY_INTERVAL};
     EventHandle handle = EventAdd(StackcoreNotifyEventProc, NULL, &attr);
     if (handle == NULL) {
         SELF_LOG_ERROR("add stackcore notify event failed.");

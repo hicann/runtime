@@ -10,7 +10,8 @@
 slogdmgr:
   bin_path: "/var/slogd"
   depends: [ ]
-  env: [ ]
+  env:
+    MALLOC_MMAP_THRESHOLD_: "131072"
   uid: 1000
   arguments: [-n]
   priority: 0
@@ -23,3 +24,6 @@ slogdmgr:
   is_auto_boot: true
   node_type: 0x607
   heart_beat: true
+  lowpower_last_kill: true
+  numa_policy: "preferred"
+  numa_node_name: ["iodie_local_node"]

@@ -16,27 +16,27 @@
 #include "log_file_info.h"
 #include "log_common.h"
 
-#define MONITOR_FD_FILE_PATH        "/proc/sys/fs/file-nr"
-#define MONITOR_FD_ALARM_VALUE      90U         // 90%
-#define MONITOR_FD_RESUME_VALUE     80U         // 80%
-#define MONITOR_FD_MONITOR_PERIOD   10000U      // 10 seconds
-#define MONITOR_FD_STAT_PERIOD      3600000U    // 1 hour
-#define MONITOR_FD_SILENCE_PERIOD   60000U      // 1 minute
-#define MONITOR_FD_ALARM_MAX        9U
-#define MONITOR_FD_ZERO             0U
-#define MONITOR_FD_NAME_MAX         64U
-#define MONITOR_FD_DECIMAL          10
-#define MONITOR_FD_TOP_NUM          3U
-#define MONITOR_FD_PID_LENGTH       20U
+#define MONITOR_FD_FILE_PATH "/proc/sys/fs/file-nr"
+#define MONITOR_FD_ALARM_VALUE 90U       // 90%
+#define MONITOR_FD_RESUME_VALUE 80U      // 80%
+#define MONITOR_FD_MONITOR_PERIOD 10000U // 10 seconds
+#define MONITOR_FD_STAT_PERIOD 3600000U  // 1 hour
+#define MONITOR_FD_SILENCE_PERIOD 60000U // 1 minute
+#define MONITOR_FD_ALARM_MAX 9U
+#define MONITOR_FD_ZERO 0U
+#define MONITOR_FD_NAME_MAX 64U
+#define MONITOR_FD_DECIMAL 10
+#define MONITOR_FD_TOP_NUM 3U
+#define MONITOR_FD_PID_LENGTH 20U
 
 typedef struct FdInfo {
     uint64_t cnt;
     uint64_t maxFdNum;
 } FdInfo;
 
-STATIC struct FdInfo g_fdInfo = { 0 };
+STATIC struct FdInfo g_fdInfo = {0};
 STATIC SysmonitorInfo* g_sysmonitorFdInfo = NULL;
-STATIC MonitorStatInfo g_fdStatInfo = { MONITOR_ONE_HUNDRED_FLOAT, 0.0, 0.0, 0, 0, 0 };
+STATIC MonitorStatInfo g_fdStatInfo = {MONITOR_ONE_HUNDRED_FLOAT, 0.0, 0.0, 0, 0, 0};
 STATIC float g_fdTotalUsage = 0.0;
 STATIC uint32_t g_fdMonitorTime = 0;
 
@@ -44,12 +44,12 @@ STATIC int32_t SysmonitorFdGetInfo(void)
 {
     int32_t fd = ToolOpenWithMode(MONITOR_FD_FILE_PATH, O_RDONLY, LOG_FILE_ARCHIVE_MODE);
     if (fd < 0) {
-        MONITOR_LOGE("open file with mode failed, file=%s, strerr=%s.",
-            MONITOR_FD_FILE_PATH, strerror(ToolGetErrorCode()));
+        MONITOR_LOGE(
+            "open file with mode failed, file=%s, strerr=%s.", MONITOR_FD_FILE_PATH, strerror(ToolGetErrorCode()));
         return LOG_FAILURE;
     }
 
-    char cntBuf[MONITOR_FD_NAME_MAX] = { 0 };
+    char cntBuf[MONITOR_FD_NAME_MAX] = {0};
     int32_t ret = ToolRead(fd, cntBuf, MONITOR_FD_NAME_MAX);
     if (ret <= 0) {
         MONITOR_LOGE("read file failed, file=%s, strerr=%s.", MONITOR_FD_FILE_PATH, strerror(ToolGetErrorCode()));
@@ -113,7 +113,7 @@ STATIC void SysmonitorFdRecordUsage(float usage)
     g_fdStatInfo.avgUsage = g_fdTotalUsage / (float)g_fdMonitorTime;
 }
 
-STATIC int32_t SysmonitorFdGetMinIndexOfArray(int32_t *array, uint32_t size)
+STATIC int32_t SysmonitorFdGetMinIndexOfArray(int32_t* array, uint32_t size)
 {
     int32_t min = array[0];
     int32_t index = 0;
@@ -133,7 +133,7 @@ STATIC int32_t SysmonitorFdGetMinIndexOfArray(int32_t *array, uint32_t size)
  * @param [in]  : num       checked number
  * @return      : true  number in array; false  number not in array
  */
-STATIC bool SysmonitorFdIsNumInArray(const uint32_t *array, uint32_t size, uint32_t num)
+STATIC bool SysmonitorFdIsNumInArray(const uint32_t* array, uint32_t size, uint32_t num)
 {
     for (uint32_t i = 0; i < size; i++) {
         if (array[i] == num) {
@@ -149,9 +149,9 @@ STATIC bool SysmonitorFdIsNumInArray(const uint32_t *array, uint32_t size, uint3
  * @param [in]  : num      pid used number array
  * @param [in]  : size     array size
  */
-STATIC void SysmonitorFdPrintTopMessage(const char (*pid)[MONITOR_FD_PID_LENGTH], const int32_t *num, uint32_t size)
+STATIC void SysmonitorFdPrintTopMessage(const char (*pid)[MONITOR_FD_PID_LENGTH], const int32_t* num, uint32_t size)
 {
-    uint32_t usedNum[MONITOR_FD_TOP_NUM] = { 0 };
+    uint32_t usedNum[MONITOR_FD_TOP_NUM] = {0};
     for (uint32_t i = 0; i < size; ++i) {
         int32_t max = 0;
         for (uint32_t j = 0; j < size; ++j) {
@@ -170,15 +170,15 @@ STATIC void SysmonitorFdPrintTopMessage(const char (*pid)[MONITOR_FD_PID_LENGTH]
  * @param [in]  : result     record executing result
  * @param [in]  : size       size of result
  */
-STATIC void SysmonitorFdProcessTopResult(FILE *fp, char *result, size_t size)
+STATIC void SysmonitorFdProcessTopResult(FILE* fp, char* result, int32_t size)
 {
-    char pidTop[MONITOR_FD_TOP_NUM][MONITOR_FD_PID_LENGTH] = { 0 };
-    int32_t numTop[MONITOR_FD_TOP_NUM] = { 0 };
-    char pidCurrent[MONITOR_FD_PID_LENGTH] = { 0 };
+    char pidTop[MONITOR_FD_TOP_NUM][MONITOR_FD_PID_LENGTH] = {0};
+    int32_t numTop[MONITOR_FD_TOP_NUM] = {0};
+    char pidCurrent[MONITOR_FD_PID_LENGTH] = {0};
     int32_t numCurrent = 0;
     while (fgets(result, size, fp) != NULL) {
-        char *ptr = NULL;
-        char *pid = strtok_s(result, "\t", &ptr);
+        char* ptr = NULL;
+        char* pid = strtok_s(result, "\t", &ptr);
         if (pid == NULL) {
             MONITOR_LOGE("strtok_s fd used times failed");
             return;
@@ -216,11 +216,11 @@ STATIC void SysmonitorFdProcessTopResult(FILE *fp, char *result, size_t size)
 
 STATIC void SysmonitorFdProcessTopThree(void)
 {
-    const char command[] = { "/usr/sbin/lsof" };
-    FILE *fp = popen(command, "r");
+    const char command[] = {"/usr/sbin/lsof"};
+    FILE* fp = popen(command, "r");
     ONE_ACT_ERR_LOG(fp == NULL, return, "print top three process failed, strerr=%s", strerror(ToolGetErrorCode()));
 
-    char *result = (char *)LogMalloc(MONITOR_MESSAGE_MAX_SIZE);
+    char* result = (char*)LogMalloc(MONITOR_MESSAGE_MAX_SIZE);
     if (result == NULL) {
         MONITOR_LOGE("malloc result failed, strerr=%s", strerror(ToolGetErrorCode()));
         pclose(fp);
@@ -228,7 +228,7 @@ STATIC void SysmonitorFdProcessTopThree(void)
     }
 
     MONITOR_RUN("sysmonitor fd process top three");
-    SysmonitorFdProcessTopResult(fp, result, MONITOR_MESSAGE_MAX_SIZE);
+    SysmonitorFdProcessTopResult(fp, result, (int32_t)MONITOR_MESSAGE_MAX_SIZE);
 
     pclose(fp);
     LogFree(result);
@@ -243,12 +243,13 @@ STATIC void SysmonitorFdProcessAlarm(float usage)
 STATIC void SysmonitorFdProcessStat(void)
 {
     const char statHead[] = {"fd usage stat:"};
-    char *statInfo = (char *)LogMalloc(MONITOR_MESSAGE_MAX_SIZE);
+    char* statInfo = (char*)LogMalloc(MONITOR_MESSAGE_MAX_SIZE);
     ONE_ACT_ERR_LOG(statInfo == NULL, return, "malloc stat info failed, strerr=%s", strerror(ToolGetErrorCode()));
-    int32_t ret = sprintf_s(statInfo, MONITOR_MESSAGE_MAX_SIZE,
-        "%s minUsage=%4.1f%%, maxUsage=%4.1f%%, avgUsage=%4.1f%%, alarmNum=%u, resumeNum=%u, duration=%ums",
-        statHead, g_fdStatInfo.minUsage, g_fdStatInfo.maxUsage, g_fdStatInfo.avgUsage,
-        g_fdStatInfo.alarmNum, g_fdStatInfo.resumeNum, g_fdStatInfo.duration * g_sysmonitorFdInfo->monitorPeriod);
+    int32_t ret = sprintf_s(
+        statInfo, MONITOR_MESSAGE_MAX_SIZE,
+        "%s minUsage=%4.1f%%, maxUsage=%4.1f%%, avgUsage=%4.1f%%, alarmNum=%u, resumeNum=%u, duration=%ums", statHead,
+        g_fdStatInfo.minUsage, g_fdStatInfo.maxUsage, g_fdStatInfo.avgUsage, g_fdStatInfo.alarmNum,
+        g_fdStatInfo.resumeNum, g_fdStatInfo.duration * g_sysmonitorFdInfo->monitorPeriod);
     if (ret == -1) {
         MONITOR_LOGE("sprintf_s stat info failed");
         LogFree(statInfo);
@@ -293,7 +294,7 @@ STATIC void SysmonitorFdProcessUsage(float usage)
 
     if ((g_sysmonitorFdInfo->silenceCount >= 0) &&
         (((uint32_t)g_sysmonitorFdInfo->silenceCount * g_sysmonitorFdInfo->monitorPeriod) >=
-        g_sysmonitorFdInfo->silencePeriod)) {
+         g_sysmonitorFdInfo->silencePeriod)) {
         g_sysmonitorFdInfo->silenceCount = MONITOR_SILENCE_DISABLE;
     }
 
@@ -320,7 +321,7 @@ STATIC void SysmonitorFd(void)
 
     // 2.calculate file handle usage
     float usage = SysmonitorFdGetUsage();
-    
+
     // 3.disposal file handle information
     SysmonitorFdProcessUsage(usage);
 }
@@ -337,7 +338,7 @@ void SysmonitorResInitFd(SysmonitorInfo* info)
     info->alarmMaxCount = MONITOR_FD_ALARM_MAX;
     info->silenceCount = MONITOR_SILENCE_DISABLE;
     info->silencePeriod = MONITOR_FD_SILENCE_PERIOD;
-    info->thresholdFlag= false;
+    info->thresholdFlag = false;
     info->monitorFunc = SysmonitorFd;
     g_sysmonitorFdInfo = info;
 }

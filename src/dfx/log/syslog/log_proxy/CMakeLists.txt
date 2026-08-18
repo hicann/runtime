@@ -17,7 +17,7 @@ set(logProxySrcFiles
 
 set(logProxyHeaderDir
     ${CMAKE_CURRENT_SOURCE_DIR}
-    ${RUNTIME_DIR}/abl/libc_sec/include
+    ${LIBC_SEC_HEADER}
     ${CMAKE_CURRENT_SOURCE_DIR}/../../utils
     ${CMAKE_CURRENT_SOURCE_DIR}/../../shared
     ${CMAKE_CURRENT_SOURCE_DIR}/../../utils/log_buffer
@@ -63,7 +63,6 @@ set_target_properties(log_proxy
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/
 )
 
-###################################################################
 set(INSTALL_BASE_DIR "")
 set(INSTALL_INCLUDE_DIR include)
 set(INSTALL_LIBRARY_DIR lib)

@@ -10,44 +10,45 @@
 #include "cpu_detect.h"
 #include "log_print.h"
 #include "detect_errcode.h"
-#include "server_mgr.h"
 #include "log_common.h"
 #include "dlfcn.h"
 
-#define CPU_DETECT_REPLY_MSG_SUCCESS           "cpu detect success"
-#define CPU_DETECT_REPLY_MSG_FAILURE           "cpu detect failed"
-#define CPU_DETECT_REPLY_MSG_INVALID_MESSAGE   "cpu detect failed, invalid message struct"
-#define CPU_DETECT_REPLY_MSG_TESTCASE_FAIL     "cpu detect failed, testcase run failed"
-#define CPU_DETECT_REPLY_MSG_FW_FAIL           "cpu detect failed, execution framework run failed"
+#define CPU_DETECT_REPLY_MSG_SUCCESS "cpu detect success"
+#define CPU_DETECT_REPLY_MSG_FAILURE "cpu detect failed"
+#define CPU_DETECT_REPLY_MSG_INVALID_MESSAGE "cpu detect failed, invalid message struct"
+#define CPU_DETECT_REPLY_MSG_TESTCASE_FAIL "cpu detect failed, testcase run failed"
+#define CPU_DETECT_REPLY_MSG_FW_FAIL "cpu detect failed, execution framework run failed"
 
-#define CPU_DETECT_SO_PATH              "libcpu_detect.so"
-#define CPU_DETECT_RECV_TIME            1000
-#define CPU_DETECT_TESTCASE_FAIL        100
+#define CPU_DETECT_SO_PATH "libcpu_detect.so"
+#define CPU_DETECT_RECV_TIME 1000
+#define CPU_DETECT_TESTCASE_FAIL 100
 
 typedef int32_t (*CpuDetectStartFunc)(uint32_t timeout);
 typedef void (*CpuDetectStopFunc)(void);
 
 typedef struct {
-    void *dlHandle;
+    void* dlHandle;
     CpuDetectStartFunc cpuDetectStart;
     CpuDetectStopFunc cpuDetectStop;
 } CpuDetectMgr;
 
 STATIC CpuDetectMgr g_cpuDetectMgr = {0};
 
-STATIC int32_t CpuDetectServerReplyMsg(const ServerHandle handle, int32_t replyCode, const char *msg)
+STATIC int32_t CpuDetectServerReplyMsg(const ServerHandle handle, int32_t replyCode, const char* msg)
 {
     CpuDetectResultInfo retInfo = {0};
     retInfo.magic = CPU_DETECT_MAGIC_NUM;
     retInfo.version = CPU_DETECT_VERSION;
     retInfo.retCode = replyCode;
     errno_t err = memcpy_s(retInfo.retMsg, CPU_DETECT_MSG_SIZE, msg, strlen(msg));
-    ONE_ACT_ERR_LOG(err != EOK, return DETECT_FAILURE, "reply message to host failed, ret=%d, replyCode=%d,  message=%s",
+    ONE_ACT_ERR_LOG(
+        err != EOK, return DETECT_FAILURE, "reply message to host failed, ret=%d, replyCode=%d,  message=%s",
         (int32_t)err, replyCode, msg);
 
-    int32_t ret = ServerSendMsg(handle, (const char *)&retInfo, sizeof(retInfo));
-    ONE_ACT_ERR_LOG(ret != 0, return DETECT_FAILURE, "reply message to host failed, ret=%d, replyCode=%d,  message=%s",
-        ret, replyCode, msg);
+    int32_t ret = handle->send(handle, (const char*)&retInfo, sizeof(retInfo));
+    ONE_ACT_ERR_LOG(
+        ret != 0, return DETECT_FAILURE, "reply message to host failed, ret=%d, replyCode=%d,  message=%s", ret,
+        replyCode, msg);
 
     return DETECT_SUCCESS;
 }
@@ -59,7 +60,7 @@ STATIC void CpuDetectServerStop(void)
     }
 }
 
-STATIC int32_t CpuDetectServerCheckMsg(const CpuDetectInfo *msg)
+STATIC int32_t CpuDetectServerCheckMsg(const CpuDetectInfo* msg)
 {
     ONE_ACT_ERR_LOG(msg == NULL, return DETECT_FAILURE, "invalid message: null.");
     ONE_ACT_ERR_LOG(msg->magic != CPU_DETECT_MAGIC_NUM, return DETECT_FAILURE, "invalid message magic: %u", msg->magic);
@@ -67,7 +68,7 @@ STATIC int32_t CpuDetectServerCheckMsg(const CpuDetectInfo *msg)
     return DETECT_SUCCESS;
 }
 
-STATIC int32_t CpuDetectServerProcess(const ServerHandle handle, const CpuDetectInfo *msg)
+STATIC int32_t CpuDetectServerProcess(const ServerHandle handle, const CpuDetectInfo* msg)
 {
     int32_t err = CpuDetectServerCheckMsg(msg);
     if (err != DETECT_SUCCESS) {
@@ -92,7 +93,7 @@ STATIC int32_t CpuDetectServerProcess(const ServerHandle handle, const CpuDetect
         return DETECT_SUCCESS;
     } else {
         SELF_LOG_ERROR("cpu detect run failed with %d", ret);
-        CpuDetectServerReplyMsg(handle, DETECT_FAILURE, CPU_DETECT_REPLY_MSG_FW_FAIL); 
+        CpuDetectServerReplyMsg(handle, DETECT_FAILURE, CPU_DETECT_REPLY_MSG_FW_FAIL);
         return DETECT_FAILURE;
     }
 }
@@ -106,10 +107,11 @@ STATIC int32_t CpuDetectServerStart(const ServerHandle handle)
     }
 
     uint32_t msgLength = (uint32_t)sizeof(CpuDetectInfo);
-    CpuDetectInfo *msg = (CpuDetectInfo *)LogMalloc(msgLength);
-    ONE_ACT_ERR_LOG(msg == NULL, return LOG_FAILURE,
-        "malloc for receive message buffer failed, strerr=%s.", strerror(ToolGetErrorCode()));
-    int32_t err = ServerRecvMsg(handle, (char **)&msg, &msgLength, CPU_DETECT_RECV_TIME);
+    CpuDetectInfo* msg = (CpuDetectInfo*)LogMalloc(msgLength);
+    ONE_ACT_ERR_LOG(
+        msg == NULL, return LOG_FAILURE, "malloc for receive message buffer failed, strerr=%s.",
+        strerror(ToolGetErrorCode()));
+    int32_t err = handle->recv(handle, (char**)&msg, &msgLength, CPU_DETECT_RECV_TIME);
     if ((err != 0) || (msgLength != (uint32_t)sizeof(CpuDetectInfo))) {
         SELF_LOG_ERROR("cpu detect recv failed with %d.", err);
         free(msg);
@@ -149,8 +151,9 @@ STATIC int32_t CpuDetectServerInitHandle(void)
     return DETECT_SUCCESS;
 }
 
-int32_t CpuDetectServerInit(void)
+int32_t CpuDetectServerInit(ServerCreateCpuDetect serverCreate)
 {
+    SELF_LOG_INFO("the cpu_detect server init");
     int32_t ret = CpuDetectServerInitHandle();
     if (ret != DETECT_SUCCESS) {
         SELF_LOG_ERROR("cpu detect init handle failed.");
@@ -161,7 +164,7 @@ int32_t CpuDetectServerInit(void)
     attr.num = 1;
     attr.linkType = SERVER_LONG_LINK_STOP;
     attr.runEnv = ENV_NON_DOCKER;
-    int32_t err = ServerCreate(COMPONENT_CPU_DETECT, CpuDetectServerStart, CpuDetectServerStop, &attr);
+    int32_t err = serverCreate(COMPONENT_CPU_DETECT, CpuDetectServerStart, CpuDetectServerStop, &attr);
     if (err != 0) {
         CpuDetectServerDestroyHandle();
         return DETECT_FAILURE;

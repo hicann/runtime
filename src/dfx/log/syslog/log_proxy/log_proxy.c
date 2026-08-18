@@ -13,14 +13,15 @@
 #include "string.h"
 #include "log_print.h"
 #include "log_iam_pub.h"
+#include "iam.h"
 
-#define DLOG_IAM_RES_FILE_NUM   1
-#define DLOG_IAM_RES_TIMEOUT    (-1)
-STATIC RingBufferStat *g_logProxBuf;
+#define DLOG_IAM_RES_FILE_NUM 1
+#define DLOG_IAM_RES_TIMEOUT (-1)
+STATIC RingBufferStat* g_logProxBuf;
 STATIC int32_t g_iamFd = INVALID;
 STATIC enum IAMResourceStatus g_iamResStatus = IAM_RESOURCE_WAITING;
 
-STATIC LogStatus LogProxyIamOpenServiceFd(int32_t *fd)
+STATIC LogStatus LogProxyIamOpenServiceFd(int32_t* fd)
 {
     if (*fd != INVALID) {
         (void)close(*fd);
@@ -34,14 +35,15 @@ STATIC LogStatus LogProxyIamOpenServiceFd(int32_t *fd)
     return (*fd == INVALID) ? LOG_FAILURE : LOG_SUCCESS;
 }
 
-STATIC bool LogProxyIamResStatusIsChange(struct IAMVirtualResourceStatus *resList, int32_t listNum)
+STATIC bool LogProxyIamResStatusIsChange(struct IAMVirtualResourceStatus* resList, int32_t listNum)
 {
     for (int32_t i = 0; i < listNum; i++) {
         if (strcmp(LOGOUT_IAM_SERVICE_PATH, resList[i].IAMResName) == 0) {
             if (g_iamResStatus != resList[i].status) {
                 g_iamResStatus = resList[i].status;
-                SELF_LOG_INFO("iam resource status update finished, status = %d, pid = %d.",
-                              (int32_t)g_iamResStatus, (int32_t)getpid());
+                SELF_LOG_INFO(
+                    "iam resource status update finished, status = %d, pid = %d.", (int32_t)g_iamResStatus,
+                    (int32_t)getpid());
                 return true;
             } else {
                 return false;
@@ -56,17 +58,16 @@ STATIC bool LogProxyIamResStatusIsChange(struct IAMVirtualResourceStatus *resLis
  * @param[in]       : resList       resource list with status
  * @param[in]       : listNum       resource list number
  */
-STATIC void LogProxyIamResStatusCb(struct IAMVirtualResourceStatus *resList, const int32_t listNum)
+STATIC void LogProxyIamResStatusCb(struct IAMVirtualResourceStatus* resList, const int32_t listNum)
 {
-    ONE_ACT_ERR_LOG((resList == NULL) || (listNum <= 0), return,
-                    "iam resource status cb input null, pid = %d.", (int32_t)getpid());
+    ONE_ACT_ERR_LOG(
+        (resList == NULL) || (listNum <= 0), return, "iam resource status cb input null, pid = %d.", (int32_t)getpid());
     if (LogProxyIamResStatusIsChange(resList, listNum)) {
         if (g_iamResStatus == IAM_RESOURCE_READY) {
             if (LogProxyIamOpenServiceFd(&g_iamFd) == LOG_SUCCESS) {
                 SELF_LOG_INFO("log_proxy open iam service success, pid = %d.", (int32_t)getpid());
             } else {
-                SELF_LOG_ERROR("log_proxy open iam service failed, pid = %d, errno = %d.",
-                               (int32_t)getpid(), errno);
+                SELF_LOG_ERROR("log_proxy open iam service failed, pid = %d, errno = %d.", (int32_t)getpid(), errno);
             }
         } else {
             SELF_LOG_INFO("fd is invalid, g_iamResStatus = %d, pid = %d.", (int32_t)g_iamResStatus, (int32_t)getpid());
@@ -80,16 +81,14 @@ STATIC LogStatus InitIam(void)
 {
     ONE_ACT_INFO_LOG(g_iamFd >= 0, return SYS_OK, "iam service is already open.");
     ONE_ACT_ERR_LOG(IAMResMgrReady() != SYS_OK, return LOG_FAILURE, "iam service not ready.");
-    struct IAMVirtualResourceStatus virtualResStatus = { LOGOUT_IAM_SERVICE_PATH, IAM_RESOURCE_WAITING };
+    struct IAMVirtualResourceStatus virtualResStatus = {LOGOUT_IAM_SERVICE_PATH, IAM_RESOURCE_WAITING};
     struct IAMResourceSubscribeConfig iamResSubConfig = {
-        &virtualResStatus, DLOG_IAM_RES_FILE_NUM, DLOG_IAM_RES_TIMEOUT
-    };
+        &virtualResStatus, DLOG_IAM_RES_FILE_NUM, DLOG_IAM_RES_TIMEOUT};
     int32_t ret = IAMRegResStatusChangeCb(LogProxyIamResStatusCb, iamResSubConfig);
     if (ret == 0) {
         SELF_LOG_INFO("iam resource register success, pid = %d.", (int32_t)getpid());
     } else {
-        SELF_LOG_ERROR("iam resource register failed, ret = %d, errno = %d, pid = %d.",
-                       ret, errno, (int32_t)getpid());
+        SELF_LOG_ERROR("iam resource register failed, ret = %d, errno = %d, pid = %d.", ret, errno, (int32_t)getpid());
         NO_ACT_ERR_LOG(IAMRetrieveService() != SYS_OK, "iam retrieve service failed.");
         return LOG_FAILURE;
     }
@@ -102,12 +101,12 @@ STATIC void DeInitIam(void)
         (void)close(g_iamFd);
         g_iamFd = INVALID;
     }
-    int32_t ret = IAMUnregAssignedResStatusChangeCb((char *)LOGOUT_IAM_SERVICE_PATH);
+    int32_t ret = IAMUnregAssignedResStatusChangeCb((char*)LOGOUT_IAM_SERVICE_PATH);
     if (ret == 0) {
         SELF_LOG_INFO("iam resource unregister success, pid = %d.", (int32_t)getpid());
     } else {
-        SELF_LOG_ERROR("iam resource unregister failed, ret = %d, errno = %d, pid = %d.",
-                       ret, errno, (int32_t)getpid());
+        SELF_LOG_ERROR(
+            "iam resource unregister failed, ret = %d, errno = %d, pid = %d.", ret, errno, (int32_t)getpid());
     }
     NO_ACT_ERR_LOG(IAMRetrieveService() != SYS_OK, "iam retrieve service failed.");
     return;
@@ -138,10 +137,10 @@ STATIC void FlushIamLog(int32_t himemFd)
 
 STATIC int32_t HimemRead(int32_t himemFd)
 {
-    g_logProxBuf = (RingBufferStat *)LogMalloc(sizeof(RingBufferStat));
+    g_logProxBuf = (RingBufferStat*)LogMalloc(sizeof(RingBufferStat));
     ONE_ACT_ERR_LOG(g_logProxBuf == NULL, return SYS_ERROR, "mallocRingBufferStatf failed. errno :%d", errno);
     g_logProxBuf->logBufSize = DEF_SIZE;
-    g_logProxBuf->ringBufferCtrl = (RingBufferCtrl *)LogMalloc(g_logProxBuf->logBufSize);
+    g_logProxBuf->ringBufferCtrl = (RingBufferCtrl*)LogMalloc(g_logProxBuf->logBufSize);
     if (g_logProxBuf->ringBufferCtrl == NULL) {
         XFREE(g_logProxBuf);
         return SYS_ERROR;
@@ -160,7 +159,7 @@ STATIC int32_t HimemRead(int32_t himemFd)
     return SYS_OK;
 }
 
-int32_t MAIN(int argc, char **argv)
+int32_t MAIN(int argc, char** argv)
 {
     (void)argc;
     (void)argv;

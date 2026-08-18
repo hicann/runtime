@@ -16,6 +16,7 @@
 #include "log_error_code.h"
 #include "log_system_api.h"
 #include "log_common.h"
+#include "log_config.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -24,20 +25,19 @@ extern "C" {
 typedef struct TagConfList {
     char confName[CONF_NAME_MAX_LEN + 1];
     char confValue[CONF_VALUE_MAX_LEN + 1];
-    struct TagConfList *next;
+    struct TagConfList* next;
 } ConfList;
 
-typedef int32_t (*LogListFindFunc)(const Buff *, ArgPtr, bool);
+typedef int32_t (*LogListFindFunc)(const Buff*, ArgPtr, bool);
 int32_t LogConfListTraverse(const LogListFindFunc func, ArgPtr arg, bool isNewStyle);
-LogRt LogConfListGetValue(const char *confName, uint32_t nameLen, char *confValue, uint32_t valueLen);
-uint32_t LogConfListGetDigit(const char *confName, uint32_t minValue, uint32_t maxValue, uint32_t defaultValue);
-LogRt LogConfListUpdate(const char *file);
+LogRt LogConfListGetValue(const char* confName, uint32_t nameLen, char* confValue, uint32_t valueLen);
+uint32_t LogConfListGetDigit(const char* confName, uint32_t minValue, uint32_t maxValue, uint32_t defaultValue);
+LogRt LogConfListUpdate(const char* file);
 
-LogRt LogConfListInit(const char *file);
+LogRt LogConfListInit(const char* file);
 void LogConfListFree(void);
 
 #ifdef __cplusplus
 }
 #endif
 #endif
-

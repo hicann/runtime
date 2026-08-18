@@ -26,8 +26,8 @@ set(sklogdSrcFiles
     ${CMAKE_CURRENT_SOURCE_DIR}/../../utils/log_print_syslog.c)
 
 set(sklogdHeaderDir
-    ${RUNTIME_DIR}/abl/libc_sec/include
-    ${RUNTIME_DIR}/inc/driver
+    ${LIBC_SEC_HEADER}
+    ${RUNTIME_DIR}/pkg_inc/driver
     ${CMAKE_CURRENT_SOURCE_DIR}/../../utils
     ${CMAKE_CURRENT_SOURCE_DIR}/../../shared
     ${TOOLAHCIN_LOG_DIR}/syslog/common

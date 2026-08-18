@@ -21,18 +21,18 @@
 #include "adcore_api.h"
 
 // global zone
-STATIC SessionNode *g_sessionPidDevIdList = NULL;
-STATIC SessionNode *g_sessionPidDevIdDeletedList = NULL;
+STATIC SessionNode* g_sessionPidDevIdList = NULL;
+STATIC SessionNode* g_sessionPidDevIdDeletedList = NULL;
 STATIC AdxCommHandle g_continuousExportSession = NULL;
 STATIC uint32_t g_singleExportCounter = 0U;
 STATIC ToolMutex g_sessionMutex = TOOL_MUTEX_INITIALIZER;
 STATIC ToolMutex g_singleMutex = TOOL_MUTEX_INITIALIZER;
 STATIC ToolMutex g_continuousMutex = TOOL_MUTEX_INITIALIZER;
-#define MAX_SINGLE_EXPORT_SESSION       16U
-#define SESSION_ERROR_WAIT_TIMEOUT      16
-#define SESSION_RETRY_TIME              3
-#define ACK_LEN                         64
-#define ACK_TIMEOUT                     1000
+#define MAX_SINGLE_EXPORT_SESSION 16U
+#define SESSION_ERROR_WAIT_TIMEOUT 16
+#define SESSION_RETRY_TIME 3
+#define ACK_LEN 64
+#define ACK_TIMEOUT 1000
 
 LogRt InitSessionList(void)
 {
@@ -47,8 +47,8 @@ LogRt InitSessionList(void)
 void FreeSessionList(void)
 {
     LOCK_WARN_LOG(&g_sessionMutex);
-    SessionNode *tmp = g_sessionPidDevIdList;
-    SessionNode *node = NULL;
+    SessionNode* tmp = g_sessionPidDevIdList;
+    SessionNode* node = NULL;
     while (tmp != NULL) {
         node = tmp;
         tmp = tmp->next;
@@ -67,7 +67,7 @@ void FreeSessionList(void)
     return;
 }
 
-void PushDeletedSessionNode(SessionNode *node)
+void PushDeletedSessionNode(SessionNode* node)
 {
     ONE_ACT_NO_LOG(node == NULL, return);
 
@@ -79,7 +79,7 @@ void PushDeletedSessionNode(SessionNode *node)
     }
     if (node->next != NULL) {
         // if node is list, insert to global list tail
-        SessionNode *tmp = g_sessionPidDevIdDeletedList;
+        SessionNode* tmp = g_sessionPidDevIdDeletedList;
         while (tmp->next != NULL) {
             tmp = tmp->next;
         }
@@ -99,7 +99,7 @@ SessionNode* PopDeletedSessionNode(void)
         UNLOCK_WARN_LOG(&g_sessionMutex);
         return NULL;
     }
-    SessionNode *tmp = g_sessionPidDevIdDeletedList;
+    SessionNode* tmp = g_sessionPidDevIdDeletedList;
     if (tmp != NULL) {
         g_sessionPidDevIdDeletedList = NULL;
     }
@@ -109,26 +109,26 @@ SessionNode* PopDeletedSessionNode(void)
 
 LogRt DeleteSessionNode(uintptr_t session, int32_t pid, int32_t devId)
 {
-    ONE_ACT_ERR_LOG((devId < 0) || (devId >= GLOBAL_MAX_DEV_NUM), return ARGV_NULL,
-                    "invalid device id for deletion: %d", devId);
+    ONE_ACT_ERR_LOG(
+        (devId < 0) || (devId >= GLOBAL_MAX_DEV_NUM), return ARGV_NULL, "invalid device id for deletion: %d", devId);
     LOCK_WARN_LOG(&g_sessionMutex);
     if (g_sessionPidDevIdList == NULL) {
         UNLOCK_WARN_LOG(&g_sessionMutex);
         return ARGV_NULL;
     }
-    SessionNode *deletedNode = NULL;
-    SessionNode *tmp = g_sessionPidDevIdList;
+    SessionNode* deletedNode = NULL;
+    SessionNode* tmp = g_sessionPidDevIdList;
     if ((tmp->pid == pid) && (tmp->devId == devId) && (tmp->session == session)) {
         g_sessionPidDevIdList = tmp->next;
         tmp->next = NULL;
         deletedNode = tmp;
     } else {
-        while ((tmp->next != NULL) && ((tmp->next->pid != pid) ||
-            (tmp->next->devId != devId) || (tmp->next->session != session))) {
+        while ((tmp->next != NULL) &&
+               ((tmp->next->pid != pid) || (tmp->next->devId != devId) || (tmp->next->session != session))) {
             tmp = tmp->next;
         }
-        if ((tmp->next != NULL) && (tmp->next->pid == pid) &&
-            (tmp->next->devId == devId) && (tmp->next->session == session)) {
+        if ((tmp->next != NULL) && (tmp->next->pid == pid) && (tmp->next->devId == devId) &&
+            (tmp->next->session == session)) {
             deletedNode = tmp->next;
             tmp->next = deletedNode->next;
             deletedNode->next = NULL;
@@ -143,9 +143,9 @@ void HandleInvalidSessionNode(void)
 {
     int32_t ret;
     int32_t value;
-    SessionNode *tmp = NULL;
+    SessionNode* tmp = NULL;
     LOCK_WARN_LOG(&g_sessionMutex);
-    SessionNode *node = g_sessionPidDevIdList;
+    SessionNode* node = g_sessionPidDevIdList;
     // get the first valid session node
     while (node != NULL) {
         if (DrvDevIdGetBySession((HDC_SESSION)node->session, (int32_t)HDC_SESSION_ATTR_VFID, &value) != 0) {
@@ -176,9 +176,9 @@ void HandleInvalidSessionNode(void)
     return;
 }
 
-int32_t SendDataToSessionNode(uint32_t pid, uint32_t devId, const char *buf, size_t bufLen)
+int32_t SendDataToSessionNode(uint32_t pid, uint32_t devId, const char* buf, size_t bufLen)
 {
-    SessionNode *node = GetDeletedSessionNode(pid, devId);
+    SessionNode* node = GetDeletedSessionNode(pid, devId);
     if (node == NULL) {
         node = GetSessionNode(pid, devId);
         ONE_ACT_WARN_LOG(node == NULL, return ARGV_NULL, "can not get session info");
@@ -192,7 +192,7 @@ int32_t SendDataToSessionNode(uint32_t pid, uint32_t devId, const char *buf, siz
  * @brief       : send hdc end buf to client to close session
  * @param [in]  : node          session info
  */
-STATIC void DevLogReportEnd(SessionNode *node)
+STATIC void DevLogReportEnd(SessionNode* node)
 {
     int32_t ret;
     // log info's device id is host side
@@ -200,8 +200,8 @@ STATIC void DevLogReportEnd(SessionNode *node)
     uint32_t hostDevId = GetHostDeviceID((uint32_t)node->devId);
 
     ret = DrvBufWrite((HDC_SESSION)node->session, HDC_END_BUF, sizeof(HDC_END_BUF));
-    NO_ACT_ERR_LOG(ret != LOG_SUCCESS, "write end buf to hdc failed, ret=%d, pid=%d, devId=%u.",
-                   ret, node->pid, hostDevId);
+    NO_ACT_ERR_LOG(
+        ret != LOG_SUCCESS, "write end buf to hdc failed, ret=%d, pid=%d, devId=%u.", ret, node->pid, hostDevId);
 
     ret = DrvSessionRelease((HDC_SESSION)node->session);
     NO_ACT_ERR_LOG(ret != LOG_SUCCESS, "release session failed, ret=%d, pid=%d, devId=%u.", ret, node->pid, hostDevId);
@@ -215,10 +215,10 @@ STATIC void DevLogReportEnd(SessionNode *node)
  */
 void HandleDeletedSessionNode(LogSeverSendDataFunc func)
 {
-    SessionNode *pre = NULL;
+    SessionNode* pre = NULL;
     // pop all session nodes which will be deleted
-    SessionNode *sessionNode = PopDeletedSessionNode();
-    SessionNode *head = sessionNode;
+    SessionNode* sessionNode = PopDeletedSessionNode();
+    SessionNode* head = sessionNode;
     while (sessionNode != NULL) {
         // traverse each node
         sessionNode->timeout -= ONE_SECOND;
@@ -228,7 +228,7 @@ void HandleDeletedSessionNode(LogSeverSendDataFunc func)
         if (sessionNode->timeout <= 0) {
             // session node is timeout, the timeout value is notified by client (libalog.so)
             // delete node from list
-            SessionNode *tmp = sessionNode->next;
+            SessionNode* tmp = sessionNode->next;
             if (pre == NULL) {
                 head = sessionNode->next;
             } else {
@@ -250,9 +250,9 @@ void HandleDeletedSessionNode(LogSeverSendDataFunc func)
 
 LogRt InsertSessionNode(uintptr_t session, int32_t pid, int32_t devId)
 {
-    ONE_ACT_ERR_LOG((devId < 0) || (devId >= GLOBAL_MAX_DEV_NUM), return ARGV_NULL,
-                    "invalid device id for insertion: %d", devId);
-    SessionNode *sessionNode = (SessionNode *)malloc(sizeof(SessionNode));
+    ONE_ACT_ERR_LOG(
+        (devId < 0) || (devId >= GLOBAL_MAX_DEV_NUM), return ARGV_NULL, "invalid device id for insertion: %d", devId);
+    SessionNode* sessionNode = (SessionNode*)malloc(sizeof(SessionNode));
     if (sessionNode == NULL) {
         SELF_LOG_ERROR("malloc failed, strerr=%s.", strerror(ToolGetErrorCode()));
         return MALLOC_FAILED;
@@ -268,11 +268,11 @@ LogRt InsertSessionNode(uintptr_t session, int32_t pid, int32_t devId)
     return SUCCESS;
 }
 
-static SessionNode* GetSessionNodeByList(uint32_t pid, uint32_t devId, SessionNode *list)
+static SessionNode* GetSessionNodeByList(uint32_t pid, uint32_t devId, SessionNode* list)
 {
     ONE_ACT_WARN_LOG(list == NULL, return NULL, "session node list is null.");
 
-    SessionNode *tmp = list;
+    SessionNode* tmp = list;
     while (tmp != NULL) {
         if ((tmp->pid == (int32_t)pid) && (tmp->devId == (int32_t)devId)) {
             return tmp;
@@ -287,7 +287,7 @@ SessionNode* GetSessionNode(uint32_t pid, uint32_t devId)
     ONE_ACT_ERR_LOG(devId >= GLOBAL_MAX_DEV_NUM, return NULL, "invalid device id for node searching: %u", devId);
 
     LOCK_WARN_LOG(&g_sessionMutex);
-    SessionNode *tmp = GetSessionNodeByList(pid, devId, g_sessionPidDevIdList);
+    SessionNode* tmp = GetSessionNodeByList(pid, devId, g_sessionPidDevIdList);
     UNLOCK_WARN_LOG(&g_sessionMutex);
     return tmp;
 }
@@ -297,15 +297,12 @@ SessionNode* GetDeletedSessionNode(uint32_t pid, uint32_t devId)
     ONE_ACT_ERR_LOG(devId >= GLOBAL_MAX_DEV_NUM, return NULL, "invalid device id for node searching: %u", devId);
 
     LOCK_WARN_LOG(&g_sessionMutex);
-    SessionNode *tmp = GetSessionNodeByList(pid, devId, g_sessionPidDevIdDeletedList);
+    SessionNode* tmp = GetSessionNodeByList(pid, devId, g_sessionPidDevIdDeletedList);
     UNLOCK_WARN_LOG(&g_sessionMutex);
     return tmp;
 }
 
-bool IsSessionNodeListNull(void)
-{
-    return g_sessionPidDevIdList == NULL;
-}
+bool IsSessionNodeListNull(void) { return g_sessionPidDevIdList == NULL; }
 
 /**
  * @brief       : add to single export session manager counter
@@ -346,7 +343,7 @@ STATIC int32_t SessionMgrSingleExpDeleteSession(void)
  * @param [in]  : session     continuous export session
  * @return      : LOG_SUCCESS: success; others: fail
  */
-STATIC int32_t SessionMgrContExpAddSession(void *session)
+STATIC int32_t SessionMgrContExpAddSession(void* session)
 {
     LOCK_WARN_LOG(&g_continuousMutex);
     if (g_continuousExportSession != NULL) {
@@ -380,7 +377,7 @@ STATIC void SessionMgrContExpDeleteSession(void)
  * @brief       : check if session of continuous export recorder is valid
  * @return      : true: valid; false: invalid
  */
-STATIC int32_t SessionMgrContExpGetSession(SessionItem *item)
+STATIC int32_t SessionMgrContExpGetSession(SessionItem* item)
 {
     LOCK_WARN_LOG(&g_continuousMutex);
     if (g_continuousExportSession == NULL) {
@@ -407,7 +404,7 @@ STATIC int32_t SessionMgrContExpGetSession(SessionItem *item)
  * @param [in]  : item     struct of session handle and session type
  * @return      : LOG_SUCCESS: success; others: fail
  */
-int32_t SessionMgrAddSession(const SessionItem *item)
+int32_t SessionMgrAddSession(const SessionItem* item)
 {
     ONE_ACT_ERR_LOG(item == NULL, return LOG_FAILURE, "add session failed, item is null.");
     ONE_ACT_ERR_LOG(item->session == NULL, return LOG_FAILURE, "add session failed, session is null.");
@@ -426,7 +423,7 @@ int32_t SessionMgrAddSession(const SessionItem *item)
  * @param [in]  : item     struct of session handle and session type
  * @return      : LOG_SUCCESS: success; others: fail
  */
-int32_t SessionMgrGetSession(SessionItem *item)
+int32_t SessionMgrGetSession(SessionItem* item)
 {
     ONE_ACT_ERR_LOG(item == NULL, return LOG_FAILURE, "check session valid failed, item is null.");
     if (item->type == SESSION_CONTINUES_EXPORT) {
@@ -436,14 +433,12 @@ int32_t SessionMgrGetSession(SessionItem *item)
     return LOG_FAILURE;
 }
 
-static void SessionMgrGetRespond(const SessionItem *handle)
+static void SessionMgrGetRespond(const SessionItem* handle)
 {
     uint32_t bufLen = ACK_LEN;
-    char *buffer = (char *)LogMalloc(bufLen);
-    int32_t ret = AdxRecvMsg((AdxCommHandle)handle->session, (char **)&buffer, &bufLen, ACK_TIMEOUT);
-    if (ret != IDE_DAEMON_OK) {
-        SELF_LOG_ERROR("get ack failed, ret:%d.", ret);
-    }
+    char* buffer = (char*)LogMalloc(bufLen);
+    int32_t ret = AdxRecvMsg((AdxCommHandle)handle->session, (char**)&buffer, &bufLen, ACK_TIMEOUT);
+    NO_ACT_WARN_LOG(ret != IDE_DAEMON_OK, "ack not received, ret:%d.", ret);
     XFREE(buffer);
 }
 
@@ -454,9 +449,9 @@ static void SessionMgrGetRespond(const SessionItem *handle)
  * @param [in]  : len      length of data
  * @return      : LOG_SUCCESS: success; others: fail
  */
-int32_t SessionMgrSendMsg(const SessionItem *handle, const char *data, uint32_t len)
+int32_t SessionMgrSendMsg(const SessionItem* handle, const char* data, uint32_t len)
 {
-    const SessionItem *item = (const SessionItem *)handle;
+    const SessionItem* item = (const SessionItem*)handle;
     if (item == NULL) {
         SELF_LOG_ERROR("send message failed, invalid session item.");
         return LOG_FAILURE;
@@ -474,14 +469,14 @@ int32_t SessionMgrSendMsg(const SessionItem *handle, const char *data, uint32_t 
     int32_t ret = 0;
     int32_t tryTimes = SESSION_RETRY_TIME;
     if (handle->type == SESSION_CONTINUES_EXPORT) {
-            LOCK_WARN_LOG(&g_continuousMutex);
+        LOCK_WARN_LOG(&g_continuousMutex);
     }
     do {
         ret = AdxSendMsg(comm, data, len);
         tryTimes--;
     } while ((ret == SESSION_ERROR_WAIT_TIMEOUT) && (tryTimes > 0));
     if (handle->type == SESSION_CONTINUES_EXPORT) {
-            UNLOCK_WARN_LOG(&g_continuousMutex);
+        UNLOCK_WARN_LOG(&g_continuousMutex);
     }
     if (ret != LOG_SUCCESS) {
         SELF_LOG_ERROR("send message failed, ret: %d.", ret);
@@ -502,7 +497,7 @@ int32_t SessionMgrSendMsg(const SessionItem *handle, const char *data, uint32_t 
  * @param [in]  : item     struct of session handle and session type
  * @return      : LOG_SUCCESS: success; others: fail
  */
-int32_t SessionMgrDeleteSession(const SessionItem *item)
+int32_t SessionMgrDeleteSession(const SessionItem* item)
 {
     ONE_ACT_ERR_LOG(item == NULL, return LOG_FAILURE, "get session failed, item is null.");
     if (item->type == SESSION_SINGLE_EXPORT) {

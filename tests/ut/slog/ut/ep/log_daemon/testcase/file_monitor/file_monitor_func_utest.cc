@@ -26,14 +26,13 @@ using namespace std;
 using namespace testing;
 
 extern "C" {
-    extern ServerMgr g_serverMgr[NR_COMPONENTS];
-    int32_t FileMonitorStart(ServerHandle handle);
-    int32_t FileMonitorStop(void);
-    int32_t ServerProcess(const CommHandle* handle, const void* msg, uint32_t len);
+extern ServerMgr g_serverMgr[NR_COMPONENTS];
+int32_t FileMonitorStart(ServerHandle handle);
+int32_t FileMonitorStop(void);
+int32_t ServerProcess(const CommHandle* handle, const void* msg, uint32_t len);
 }
 
-class EP_FILE_MONITOR_FUNC_UTEST : public testing::Test
-{
+class EP_FILE_MONITOR_FUNC_UTEST : public testing::Test {
 protected:
     virtual void SetUp()
     {
@@ -62,9 +61,9 @@ protected:
     }
 };
 
-static int32_t ServerRecvMsgStub(ServerHandle handle, char **data, uint32_t *len, uint32_t timeout)
+static int32_t ServerRecvMsgStub(ServerHandle handle, char** data, uint32_t* len, uint32_t timeout)
 {
-    char *str = "dev-os-0";
+    char* str = "dev-os-0";
     (void)memcpy_s(*data, *len, str, strlen(str));
     *len = strlen(str) + 1;
     return 0;
@@ -74,7 +73,7 @@ static void AddStackcoreFile(void)
 {
     system("mkdir -p " PATH_ROOT "/coredump/udf");
     system("mkdir -p " CORE_DEFAULT_PATH "udf");
-    char cmd[1024] = { 0 };
+    char cmd[1024] = {0};
     for (int i = 0; i < 100; i++) {
         (void)memset_s(cmd, 1024, 0, 1024);
         (void)sprintf_s(cmd, 1024, "echo 'test' > %s/coredump/stackcore.slogd.11.%d", PATH_ROOT, i);
@@ -92,13 +91,13 @@ static void AddStackcoreFile(void)
     system("mv " PATH_ROOT "/coredump/* " CORE_DEFAULT_PATH);
 }
 
-static void GetFileList(std::string &filePath, std::vector<std::string> &fileList)
+static void GetFileList(std::string& filePath, std::vector<std::string>& fileList)
 {
     DIR* dir = opendir(filePath.c_str());
     if (dir == NULL) {
         return;
     }
-    struct dirent *entry;
+    struct dirent* entry;
     while ((entry = readdir(dir)) != nullptr) {
         if (entry->d_type == DT_DIR || strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
             continue;
@@ -108,7 +107,7 @@ static void GetFileList(std::string &filePath, std::vector<std::string> &fileLis
     closedir(dir);
 }
 
-static int32_t ToolCondTimedWaitStub(ToolCond *cond, ToolMutex *mutex, UINT32 milliSecond)
+static int32_t ToolCondTimedWaitStub(ToolCond* cond, ToolMutex* mutex, UINT32 milliSecond)
 {
     usleep(1);
     return 0;
@@ -122,7 +121,7 @@ TEST_F(EP_FILE_MONITOR_FUNC_UTEST, StackcoreMonitorAging)
     MOCKER(ServerSyncFile).stubs().will(returnValue(0));
     EXPECT_EQ(LOG_SUCCESS, FileMonitorInit());
     sleep(1);
-    ServerHandle handle = (ServerMgr *)LogMalloc(sizeof(ServerMgr));
+    ServerHandle handle = (ServerMgr*)LogMalloc(sizeof(ServerMgr));
     MOCKER(ServerRecvMsg).stubs().will(invoke(ServerRecvMsgStub));
     EXPECT_EQ(LOG_SUCCESS, FileMonitorStart(handle));
     sleep(1);
@@ -136,7 +135,7 @@ TEST_F(EP_FILE_MONITOR_FUNC_UTEST, StackcoreMonitorAging)
     EXPECT_EQ(50, fileList.size());
     fileList.clear();
     path.clear();
-    char *sub = "udf";
+    char* sub = "udf";
     path = CORE_DEFAULT_PATH + std::string(sub);
     GetFileList(path, fileList);
     EXPECT_EQ(50, fileList.size());
@@ -149,10 +148,10 @@ TEST_F(EP_FILE_MONITOR_FUNC_UTEST, StackcoreMonitorAgingRemoveFailed)
     MOCKER(ToolCondTimedWait).stubs().will(invoke(ToolCondTimedWaitStub));
     MOCKER(ServerSyncFile).expects(exactly(200)).will(returnValue(0));
     MOCKER(ServerSyncFile).stubs().will(returnValue(0));
-    MOCKER(static_cast<int(*)(const char*)>(remove)).stubs().will(returnValue(-1));
+    MOCKER(static_cast<int (*)(const char*)>(remove)).stubs().will(returnValue(-1));
     EXPECT_EQ(LOG_SUCCESS, FileMonitorInit());
     sleep(1);
-    ServerHandle handle = (ServerMgr *)LogMalloc(sizeof(ServerMgr));
+    ServerHandle handle = (ServerMgr*)LogMalloc(sizeof(ServerMgr));
     MOCKER(ServerRecvMsg).stubs().will(invoke(ServerRecvMsgStub));
     EXPECT_EQ(LOG_SUCCESS, FileMonitorStart(handle));
     sleep(1);
@@ -162,7 +161,7 @@ TEST_F(EP_FILE_MONITOR_FUNC_UTEST, StackcoreMonitorAgingRemoveFailed)
     free(handle);
 }
 
-static int32_t ServerSyncFileStub(ServerHandle handle, const char *srcFileName, const char *dstFileName)
+static int32_t ServerSyncFileStub(ServerHandle handle, const char* srcFileName, const char* dstFileName)
 {
     printf("send file: %s\n", srcFileName);
     return 0;
@@ -192,11 +191,11 @@ TEST_F(EP_FILE_MONITOR_FUNC_UTEST, FileMonitor)
 
     MOCKER(ToolCondTimedWait).stubs().will(invoke(ToolCondTimedWaitStub));
     MOCKER(ServerSyncFile).expects(exactly(17)).will(invoke(ServerSyncFileStub));
-    char *rootPath = SLOG_PATH;
+    char* rootPath = SLOG_PATH;
     MOCKER(LogGetRootPath).stubs().will(returnValue(rootPath));
     EXPECT_EQ(LOG_SUCCESS, FileMonitorInit());
     sleep(1);
-    ServerHandle handle = (ServerMgr *)LogMalloc(sizeof(ServerMgr));
+    ServerHandle handle = (ServerMgr*)LogMalloc(sizeof(ServerMgr));
     MOCKER(ServerRecvMsg).stubs().will(invoke(ServerRecvMsgStub));
     EXPECT_EQ(LOG_SUCCESS, FileMonitorStart(handle));
 
@@ -223,9 +222,9 @@ TEST_F(EP_FILE_MONITOR_FUNC_UTEST, FileMonitor)
     free(handle);
 }
 
-static void *MallocStub(size_t len)
+static void* MallocStub(size_t len)
 {
-    void *buf = malloc(len);
+    void* buf = malloc(len);
     memset_s(buf, len, 0, len);
     return buf;
 }
@@ -243,11 +242,11 @@ TEST_F(EP_FILE_MONITOR_FUNC_UTEST, FileMonitorMallocFailed)
     MOCKER(ServerSyncFile).expects(exactly(2)).will(returnValue(0));
     EXPECT_EQ(LOG_SUCCESS, FileMonitorInit());
     sleep(1);
-    ServerHandle handle = (ServerMgr *)LogMalloc(sizeof(ServerMgr));
+    ServerHandle handle = (ServerMgr*)LogMalloc(sizeof(ServerMgr));
     MOCKER(ServerRecvMsg).stubs().will(invoke(ServerRecvMsgStub));
     EXPECT_EQ(LOG_SUCCESS, FileMonitorStart(handle));
     sleep(1);
-    MOCKER(LogMalloc).stubs().will(returnValue((void *)nullptr));
+    MOCKER(LogMalloc).stubs().will(returnValue((void*)nullptr));
     system("echo test > " CORE_DEFAULT_PATH "stackcore.slogd.6.1344565645");
     system("echo test > " CORE_DEFAULT_PATH "udf/stackcore.udf.6.1432545633");
     system("chmod 440 " CORE_DEFAULT_PATH "stackcore.slogd.6.1344565645");
@@ -271,7 +270,7 @@ TEST_F(EP_FILE_MONITOR_FUNC_UTEST, FileMonitorStartTwice)
     MOCKER(ServerSyncFile).expects(exactly(2)).will(returnValue(0));
     EXPECT_EQ(LOG_SUCCESS, FileMonitorInit());
     sleep(1);
-    ServerHandle handle = (ServerMgr *)LogMalloc(sizeof(ServerMgr));
+    ServerHandle handle = (ServerMgr*)LogMalloc(sizeof(ServerMgr));
     MOCKER(ServerRecvMsg).stubs().will(invoke(ServerRecvMsgStub));
     EXPECT_EQ(LOG_SUCCESS, FileMonitorStart(handle));
     EXPECT_EQ(LOG_FAILURE, FileMonitorStart(handle));
@@ -305,9 +304,11 @@ TEST_F(EP_FILE_MONITOR_FUNC_UTEST, FileMonitorGetDevFailed)
     MOCKER(halGetDevNumEx).stubs().will(returnValue(1));
     EXPECT_EQ(LOG_SUCCESS, FileMonitorInit());
     sleep(1);
-    ServerHandle handle = (ServerMgr *)LogMalloc(sizeof(ServerMgr));
+    ServerHandle handle = (ServerMgr*)LogMalloc(sizeof(ServerMgr));
     MOCKER(ServerRecvMsg).stubs().will(invoke(ServerRecvMsgStub));
-    EXPECT_EQ(LOG_SUCCESS, FileMonitorStart(handle));
+    // sync 后取设备 id 改走 DrvGetDeviceId/halGetDevNumEx，
+    // halGetDevNumEx 返回非 DRV_ERROR_NONE 会使 bbox monitor 启动失败并向上传导
+    EXPECT_EQ(LOG_FAILURE, FileMonitorStart(handle));
     sleep(1);
     system("mkdir -p " BBOX_DIR_MONITOR "device-0/bbox");
     system("echo test > " BBOX_DIR_MONITOR "device-0/bbox/test2.log");
@@ -326,7 +327,7 @@ TEST_F(EP_FILE_MONITOR_FUNC_UTEST, FileMonitorNotifyFailed)
     MOCKER(inotify_init1).stubs().will(returnValue(-1));
     EXPECT_EQ(LOG_SUCCESS, FileMonitorInit());
     sleep(1);
-    ServerHandle handle = (ServerMgr *)LogMalloc(sizeof(ServerMgr));
+    ServerHandle handle = (ServerMgr*)LogMalloc(sizeof(ServerMgr));
     MOCKER(ServerRecvMsg).stubs().will(invoke(ServerRecvMsgStub));
     EXPECT_EQ(LOG_FAILURE, FileMonitorStart(handle));
     sleep(1);
@@ -345,7 +346,7 @@ TEST_F(EP_FILE_MONITOR_FUNC_UTEST, FileMonitorInitNoFile)
     system("mkdir -p " CORE_DEFAULT_PATH "udf");
     EXPECT_EQ(LOG_SUCCESS, FileMonitorInit());
     sleep(1);
-    ServerHandle handle = (ServerMgr *)LogMalloc(sizeof(ServerMgr));
+    ServerHandle handle = (ServerMgr*)LogMalloc(sizeof(ServerMgr));
     MOCKER(ServerRecvMsg).stubs().will(invoke(ServerRecvMsgStub));
     MOCKER(ServerSyncFile).stubs().will(returnValue(0));
     EXPECT_EQ(LOG_SUCCESS, FileMonitorStart(handle));
@@ -367,7 +368,7 @@ TEST_F(EP_FILE_MONITOR_FUNC_UTEST, FileMonitorInitFileNoPermission)
     system("chmod 440 " CORE_DEFAULT_PATH "stackcore.slogd.11.1290318907");
     EXPECT_EQ(LOG_SUCCESS, FileMonitorInit());
     sleep(1);
-    ServerHandle handle = (ServerMgr *)LogMalloc(sizeof(ServerMgr));
+    ServerHandle handle = (ServerMgr*)LogMalloc(sizeof(ServerMgr));
     MOCKER(ServerRecvMsg).stubs().will(invoke(ServerRecvMsgStub));
     MOCKER(ServerSyncFile).stubs().will(returnValue(0));
     EXPECT_EQ(LOG_SUCCESS, FileMonitorStart(handle));
@@ -387,7 +388,7 @@ TEST_F(EP_FILE_MONITOR_FUNC_UTEST, FileMonitorInitTwoFile)
     system("mkdir -p " BBOX_DIR_MONITOR);
     EXPECT_EQ(LOG_SUCCESS, FileMonitorInit());
     sleep(1);
-    ServerHandle handle = (ServerMgr *)LogMalloc(sizeof(ServerMgr));
+    ServerHandle handle = (ServerMgr*)LogMalloc(sizeof(ServerMgr));
     MOCKER(ServerRecvMsg).stubs().will(invoke(ServerRecvMsgStub));
     MOCKER(ServerSyncFile).stubs().will(returnValue(0));
     EXPECT_EQ(LOG_SUCCESS, FileMonitorStart(handle));
@@ -419,7 +420,7 @@ static void FileMonitorTestFailed(void)
 {
     FileMonitorInit();
     sleep(1);
-    ServerHandle handle = (ServerMgr *)LogMalloc(sizeof(ServerMgr));
+    ServerHandle handle = (ServerMgr*)LogMalloc(sizeof(ServerMgr));
     MOCKER(ServerRecvMsg).stubs().will(invoke(ServerRecvMsgStub));
     FileMonitorStart(handle);
     sleep(1);
@@ -434,7 +435,7 @@ static void FileMonitorTestFailed(void)
 
 TEST_F(EP_FILE_MONITOR_FUNC_UTEST, FileMonitorSprintfFailed)
 {
-    for(int32_t i = 0; i < 10; i++) {
+    for (int32_t i = 0; i < 10; i++) {
         system("rm -rf " BBOX_DIR_MONITOR);
         ResetErrLog();
         system("mkdir -p " BBOX_DIR_MONITOR);
@@ -460,7 +461,7 @@ TEST_F(EP_FILE_MONITOR_FUNC_UTEST, FileMonitorSprintfFailed)
 
 TEST_F(EP_FILE_MONITOR_FUNC_UTEST, FileMonitorStrcpyFailed)
 {
-    for(int32_t i = 0; i < 2; i++) {
+    for (int32_t i = 0; i < 2; i++) {
         system("rm -rf " BBOX_DIR_MONITOR);
         ResetErrLog();
         system("mkdir -p " BBOX_DIR_MONITOR);
@@ -486,7 +487,7 @@ TEST_F(EP_FILE_MONITOR_FUNC_UTEST, FileMonitorStrcpyFailed)
 
 TEST_F(EP_FILE_MONITOR_FUNC_UTEST, FileMonitorCommon)
 {
-    char *str = FileMonitorGetMasterIdStr();
+    char* str = FileMonitorGetMasterIdStr();
     EXPECT_EQ(LOG_FAILURE, FileMonitorAddWatch(nullptr, 0, nullptr, 0));
     system("mkdir -p " BBOX_DIR_MONITOR);
     int32_t wd = 0;
@@ -494,9 +495,9 @@ TEST_F(EP_FILE_MONITOR_FUNC_UTEST, FileMonitorCommon)
     EXPECT_EQ(LOG_FAILURE, FileMonitorAddWatch(BBOX_DIR_MONITOR, 0, &wd, 0));
 }
 
-static int32_t ServerRecvMsgFailed(ServerHandle handle, char **data, uint32_t *len, uint32_t timeout)
+static int32_t ServerRecvMsgFailed(ServerHandle handle, char** data, uint32_t* len, uint32_t timeout)
 {
-    char *str = "device-0";
+    char* str = "device-0";
     (void)memcpy_s(*data, *len, str, strlen(str));
     *len = strlen(str) + 1;
     return 0;
@@ -506,7 +507,7 @@ TEST_F(EP_FILE_MONITOR_FUNC_UTEST, FileMonitorStartFailed)
 {
     EXPECT_EQ(LOG_FAILURE, FileMonitorStart(nullptr));
     MOCKER(ServerRecvMsg).stubs().will(returnValue(-1));
-    ServerHandle handle = (ServerMgr *)LogMalloc(sizeof(ServerMgr));
+    ServerHandle handle = (ServerMgr*)LogMalloc(sizeof(ServerMgr));
     EXPECT_EQ(LOG_FAILURE, FileMonitorStart(handle));
 
     GlobalMockObject::verify();
@@ -520,30 +521,31 @@ TEST_F(EP_FILE_MONITOR_FUNC_UTEST, FileMonitorStartFailed)
     free(handle);
 }
 
-static int32_t SyncFunc(const char *srcFileName, const char *dstFileName)
-{
-    return 0;
-}
+static int32_t SyncFunc(const char* srcFileName, const char* dstFileName) { return 0; }
 
 TEST_F(EP_FILE_MONITOR_FUNC_UTEST, FileMonitorStackcoreInitFailed)
 {
-    MOCKER(LogMalloc).stubs().will(returnValue((void *)nullptr));
+    MOCKER(LogMalloc).stubs().will(returnValue((void*)nullptr));
     EXPECT_EQ(LOG_FAILURE, StackcoreMonitorInit(SyncFunc));
     StackcoreMonitorExit();
     GlobalMockObject::verify();
 
-    MOCKER(LogMalloc).stubs().will(invoke(MallocStub)).then(returnValue((void *)nullptr));
+    MOCKER(LogMalloc).stubs().will(invoke(MallocStub)).then(returnValue((void*)nullptr));
     EXPECT_EQ(LOG_FAILURE, StackcoreMonitorInit(SyncFunc));
     StackcoreMonitorExit();
     GlobalMockObject::verify();
 
-    MOCKER(LogMalloc).stubs().will(invoke(MallocStub)).then(invoke(MallocStub)).then(returnValue((void *)nullptr));
+    MOCKER(LogMalloc).stubs().will(invoke(MallocStub)).then(invoke(MallocStub)).then(returnValue((void*)nullptr));
     EXPECT_EQ(LOG_FAILURE, StackcoreMonitorInit(SyncFunc));
     StackcoreMonitorExit();
     GlobalMockObject::verify();
 
-    MOCKER(LogMalloc).stubs().will(invoke(MallocStub)).then(invoke(MallocStub))
-        .then(invoke(MallocStub)).then(returnValue((void *)nullptr));
+    MOCKER(LogMalloc)
+        .stubs()
+        .will(invoke(MallocStub))
+        .then(invoke(MallocStub))
+        .then(invoke(MallocStub))
+        .then(returnValue((void*)nullptr));
     EXPECT_EQ(LOG_FAILURE, StackcoreMonitorInit(SyncFunc));
     StackcoreMonitorExit();
     GlobalMockObject::verify();
@@ -586,7 +588,7 @@ TEST_F(EP_FILE_MONITOR_FUNC_UTEST, FileMonitorStackcoreFailed)
     system("mkdir -p " CORE_DEFAULT_PATH "udf");
     EXPECT_EQ(LOG_SUCCESS, StackcoreMonitorInit(SyncFunc));
     EXPECT_EQ(LOG_SUCCESS, StackcoreMonitorStart());
-    MOCKER(LogMalloc).stubs().will(returnValue((void *)nullptr));
+    MOCKER(LogMalloc).stubs().will(returnValue((void*)nullptr));
     system("echo test > " CORE_DEFAULT_PATH "stackcore.slogd.11.1290318907");
     system("echo test > " CORE_DEFAULT_PATH "udf/stackcore.udf.11.1290318907");
     system("chmod 440 " CORE_DEFAULT_PATH "stackcore.slogd.11.1290318907");
@@ -613,7 +615,7 @@ TEST_F(EP_FILE_MONITOR_FUNC_UTEST, FileMonitorStackcoreStartFailed)
     GlobalMockObject::verify();
 
     EXPECT_EQ(LOG_SUCCESS, StackcoreMonitorInit(SyncFunc));
-    MOCKER(LogMalloc).stubs().will(returnValue((void *)nullptr));
+    MOCKER(LogMalloc).stubs().will(returnValue((void*)nullptr));
     EXPECT_EQ(LOG_FAILURE, StackcoreMonitorStart());
     StackcoreMonitorStop();
     StackcoreMonitorExit();
@@ -631,14 +633,12 @@ TEST_F(EP_FILE_MONITOR_FUNC_UTEST, FileMonitorSlogdlogStartFailed)
 {
     EXPECT_EQ(LOG_FAILURE, SlogdlogMonitorInit(NULL));
     EXPECT_EQ(LOG_SUCCESS, SlogdlogMonitorInit(SyncFunc));
-    MOCKER(EventAdd).stubs()
-        .will(repeat((EventHandle)0x12345, 3))
-        .then(returnValue((EventHandle)NULL));
+    MOCKER(EventAdd).stubs().will(repeat((EventHandle)0x12345, 3)).then(returnValue((EventHandle)NULL));
     EXPECT_EQ(LOG_SUCCESS, SlogdlogMonitorStart());
     MOCKER(EventDelete).stubs().will(returnValue(LOG_FAILURE));
-    SlogdlogMonitorStop();                              // EventDelete failed
-    EXPECT_EQ(LOG_FAILURE, SlogdlogMonitorStart());     // SlogdlogMonitorScanStart failed
-    EXPECT_EQ(LOG_FAILURE, SlogdlogMonitorStart());     // SlogdlogMonitorNotifyStart failed
+    SlogdlogMonitorStop();                          // EventDelete failed
+    EXPECT_EQ(LOG_FAILURE, SlogdlogMonitorStart()); // SlogdlogMonitorScanStart failed
+    EXPECT_EQ(LOG_FAILURE, SlogdlogMonitorStart()); // SlogdlogMonitorNotifyStart failed
     GlobalMockObject::verify();
     MOCKER(inotify_init1).stubs().will(returnValue(-1));
     EXPECT_EQ(LOG_FAILURE, SlogdlogMonitorStart());
@@ -654,10 +654,7 @@ TEST_F(EP_FILE_MONITOR_FUNC_UTEST, FileMonitorDeviceAppStartFailed)
     DeviceAppMonitorExit();
 }
 
-static int32_t FileMonitorSync(const char *srcFileName, const char *dstFileName)
-{
-    return 0;
-}
+static int32_t FileMonitorSync(const char* srcFileName, const char* dstFileName) { return 0; }
 
 TEST_F(EP_FILE_MONITOR_FUNC_UTEST, FileMonitorSyncFileListFailed)
 {

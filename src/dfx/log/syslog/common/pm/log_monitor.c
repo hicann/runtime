@@ -16,7 +16,7 @@
 #include "log_pm.h"
 
 #ifdef SCRIPT_MONITOR
-#include "ascend_hal.h"
+#include "appmon_lib.h"
 #include "log_path_mgr.h"
 #include "start_single_process.h"
 #include "log_file_info.h"
@@ -29,7 +29,10 @@
 #define NUM_MONITOR_PROC 3
 #define NUM_INIT_APPMOND 3
 #define NUM_REGISTER_APPMOND 15
-#define LOG_MONITOR_DEFAULT_THREAD_ATTR { 0, 0, 0, 0, 0, 1, 128 * 1024 }
+#define LOG_MONITOR_DEFAULT_THREAD_ATTR \
+    {                                   \
+        0, 0, 0, 0, 0, 1, 128 * 1024    \
+    }
 
 #define SLOGD_DAEMON_SCRIPT "/var/slogd_daemon_monitor.sh"
 #define SKLOGD_DAEMON_SCRIPT "/var/sklogd_daemon_monitor.sh"
@@ -48,27 +51,20 @@ struct LogMonitorMgr {
     client_info_t clnt;
 };
 
-STATIC struct LogMonitorMgr g_logMonitorMgr = { 0 };
+STATIC struct LogMonitorMgr g_logMonitorMgr = {0};
 STATIC unsigned int g_flag = 0;
-STATIC char g_logMonitorPidFile[WORKSPACE_PATH_MAX_LENGTH] = { 0 };
+STATIC char g_logMonitorPidFile[WORKSPACE_PATH_MAX_LENGTH] = {0};
 
-STATIC void LogMonitorSetStatus(enum LOG_MONITOR_STATUS status)
-{
-    g_logMonitorMgr.status = status;
-}
+STATIC void LogMonitorSetStatus(enum LOG_MONITOR_STATUS status) { g_logMonitorMgr.status = status; }
 
 STATIC bool LogMonitorIsRun(void)
 {
-    return (g_logMonitorMgr.status == LOG_MONITOR_RUNNING ||
-            g_logMonitorMgr.status == LOG_MONITOR_HEARTBEAT);
+    return (g_logMonitorMgr.status == LOG_MONITOR_RUNNING || g_logMonitorMgr.status == LOG_MONITOR_HEARTBEAT);
 }
 
-STATIC bool LogMonitorIsInit(void)
-{
-    return (g_logMonitorMgr.status == LOG_MONITOR_INIT);
-}
+STATIC bool LogMonitorIsInit(void) { return (g_logMonitorMgr.status == LOG_MONITOR_INIT); }
 
-STATIC bool GetLogDaemonScript(char *logDaemonScript, uint32_t len)
+STATIC bool GetLogDaemonScript(char* logDaemonScript, uint32_t len)
 {
     if (logDaemonScript == NULL) {
         return false;
@@ -116,7 +112,7 @@ STATIC bool AppMonInit(void)
  * @param [in]  : script         register script, it will be execute when process exit
  * @return      : true success; false failure
  */
-STATIC bool AppMonRegister(const char *script)
+STATIC bool AppMonRegister(const char* script)
 {
     int32_t retryTime = 0;
     int32_t ret = 0;
@@ -140,7 +136,7 @@ STATIC bool AppMonRegister(const char *script)
 
 STATIC int32_t LogMonitorRegister(void)
 {
-    char logDaemonScript[CONF_FILE_MAX_LINE] = { 0 };
+    char logDaemonScript[CONF_FILE_MAX_LINE] = {0};
     if (!GetLogDaemonScript(logDaemonScript, CONF_FILE_MAX_LINE)) {
         SELF_LOG_ERROR("get log daemon script failed");
         return SYS_ERROR;
@@ -168,7 +164,7 @@ STATIC int32_t LogMonitorRegister(void)
  * @param [in]args: arg list
  * @return: NULL
  */
-STATIC void *LogMonitorThread(const ArgPtr args)
+STATIC void* LogMonitorThread(const ArgPtr args)
 {
     (void)args;
     NO_ACT_WARN_LOG(ToolSetThreadName("LogMonitor") != SYS_OK, "can not set thread_name(LogMonitor).");
@@ -176,7 +172,7 @@ STATIC void *LogMonitorThread(const ArgPtr args)
     int32_t count = 0;
     int32_t countFailed = 0;
 
-    char logDaemonScript[CONF_FILE_MAX_LINE] = { 0 };
+    char logDaemonScript[CONF_FILE_MAX_LINE] = {0};
     if (!GetLogDaemonScript(logDaemonScript, CONF_FILE_MAX_LINE)) {
         return NULL;
     }
@@ -186,8 +182,8 @@ STATIC void *LogMonitorThread(const ArgPtr args)
         ret = appmon_client_heartbeat(&g_logMonitorMgr.clnt);
         if (ret != 0) {
             countFailed += 1;
-            SELF_LOG_ERROR("appmon client(%u) send heartbeat failed for %d time(s), result=%d.",
-                           g_flag, countFailed, ret);
+            SELF_LOG_ERROR(
+                "appmon client(%u) send heartbeat failed for %d time(s), result=%d.", g_flag, countFailed, ret);
             (void)ToolSleep(MONITOR_HEARTBEAT_WAIT_TIME);
             continue;
         }
@@ -213,7 +209,7 @@ STATIC void LogMonitorInit(void)
     SELF_LOG_INFO("log monitor init with %u.", g_flag);
     ToolUserBlock funcBlock;
     funcBlock.procFunc = LogMonitorThread;
-    funcBlock.pulArg = (void *)NULL;
+    funcBlock.pulArg = (void*)NULL;
     ToolThreadAttr threadAttr = LOG_MONITOR_DEFAULT_THREAD_ATTR;
     int ret = ToolCreateTaskWithThreadAttr(&g_logMonitorMgr.tid, &funcBlock, &threadAttr);
     if (ret != SYS_OK) {
@@ -252,7 +248,7 @@ STATIC int32_t CheckProcessExist(void)
 STATIC int32_t LogMonitorProcessExist(void)
 {
     // check if LogGetWorkspacePath() exist or not
-    char pidFile[CONF_NAME_MAX_LEN + 1] = { 0 };
+    char pidFile[CONF_NAME_MAX_LEN + 1] = {0};
     int32_t ret = 0;
     if (g_flag == SLOGD_MONITOR_FLAG) {
         ret = strcpy_s(pidFile, CONF_NAME_MAX_LEN, SLOGD_PID_FILE);
@@ -301,8 +297,9 @@ void LogMonitorStop(void)
     LogMonitorExit();
     return;
 }
-#elif defined (IAM_MONITOR)
+#elif defined(IAM_MONITOR)
 #include "log_iam_pub.h"
+#include "iam.h"
 
 STATIC int IamReady(void)
 {
@@ -356,8 +353,5 @@ LogStatus LogMonitorStart(uint32_t flagLog)
  * @brief       : log process monitor stop
  * @return      : NA
  */
-void LogMonitorStop(void)
-{
-    return;
-}
+void LogMonitorStop(void) { return; }
 #endif
