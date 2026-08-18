@@ -1656,6 +1656,9 @@ void InputParser::ParamsSwitchValid(const struct MsprofCmdInfo& cmdInfo, int32_t
             params_->taskTime = cmdInfo.args[opt];
             SetTaskTimeSwitch(cmdInfo.args[opt]);
             break;
+        case ARGS_AICORE_SHAPE:
+            params_->aicoreShape = cmdInfo.args[opt];
+            break;
         case ARGS_TASK_TRACE:
             params_->taskTrace = cmdInfo.args[opt];
             SetTaskTimeSwitch(cmdInfo.args[opt]);
@@ -2008,6 +2011,10 @@ ArgsManager::ArgsManager()
          "The possible parameters are " +
              task_trace_ranges,
          ON},
+        {"aicore-shape",
+         "Collect AI Core operator shape data. This option takes effect only when task-time is l0. "
+         "The possible values are 'on' and 'off', and the default value is off.",
+         OFF},
         {"task-trace",
          "Show task profiling data, the default value is on."
          "The possible parameters are " +

@@ -1721,6 +1721,7 @@ void ProfAclMgr::ProfDataTypeConfigHandle(SHARED_PTR_ALIA<analysis::dvvp::messag
     UpdateDataTypeConfigByProfLevel(params);
     UpdateDataTypeConfigByGeApi(params);
     UpdateDataTypeConfigBySwitches(params);
+    UpdateDataTypeConfigByAicoreShape(params);
 
     MSPROF_EVENT("ProfDataTypeConfigHandle dataTypeConfig:0x%llx", dataTypeConfig_);
 }
@@ -1816,6 +1817,16 @@ void ProfAclMgr::UpdateDataTypeConfigByProfLevel(const SHARED_PTR_ALIA<analysis:
     }
     if (params->prof_level == MSVP_LEVEL_L0) {
         dataTypeConfig_ |= PROF_TASK_TIME | PROF_TRAINING_TRACE;
+    }
+}
+
+void ProfAclMgr::UpdateDataTypeConfigByAicoreShape(const SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params)
+{
+    const uint64_t upperLevelMask = PROF_TASK_TIME_L1 | PROF_TASK_TIME_L2 | PROF_TASK_TIME_L3;
+    const bool isStrictLevel0 =
+        (dataTypeConfig_ & PROF_TASK_TIME) != 0ULL && (dataTypeConfig_ & upperLevelMask) == 0ULL;
+    if (params->taskTime == MSVP_PROF_L0 && isStrictLevel0 && params->aicoreShape == MSVP_PROF_ON) {
+        dataTypeConfig_ |= PROF_AICORE_SHAPE;
     }
 }
 

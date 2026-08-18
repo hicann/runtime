@@ -40,7 +40,8 @@ public:
         static ProfModuleReprotMgr mgr;
         return mgr;
     }
-    void DoCallbackHandle(ProfCommandHandle callback);
+    void DoCallbackHandle(uint32_t moduleId, ProfCommandHandle callback, ProfCommand command);
+    ProfCommand BuildModuleCommand(uint32_t moduleId, const ProfCommand& sourceCommand) const;
     int32_t ModuleRegisterCallback(uint32_t moduleId, ProfCommandHandle callback);
     int32_t ModuleReportInit();
     int32_t ModuleReportStart(const uint32_t devIdList[], uint32_t devNums, uint64_t profSwitch, uint64_t profSwitchHi);
@@ -57,7 +58,7 @@ private:
     void ProcessDeviceList(ProfCommand& command, const uint32_t devIdList[], uint32_t devNums) const;
 
     std::mutex regCallback_;
-    ProfCommand command_;
+    ProfCommand command_{};
     std::map<uint32_t, std::set<ProfCommandHandle>> moduleCallbacks_;
     bool finalizeGuard_;
 };

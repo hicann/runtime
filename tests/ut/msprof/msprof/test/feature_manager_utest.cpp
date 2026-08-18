@@ -20,21 +20,19 @@ using namespace analysis::dvvp::common::error;
 
 class FeatureManagerTest : public testing::Test {
 protected:
-    void SetUp() override {
-        FeatureManager::instance()->Uninit();
-    }
+    void SetUp() override { FeatureManager::instance()->Uninit(); }
 
-    void TearDown() override {
-        FeatureManager::instance()->Uninit();
-    }
+    void TearDown() override { FeatureManager::instance()->Uninit(); }
 };
 
-TEST_F(FeatureManagerTest, InitWillReturnSuccessWhenInitFirstTime) {
+TEST_F(FeatureManagerTest, InitWillReturnSuccessWhenInitFirstTime)
+{
     int32_t ret = FeatureManager::instance()->Init();
     EXPECT_EQ(ret, PROFILING_SUCCESS);
 }
 
-TEST_F(FeatureManagerTest, InitWillReturnSuccessWhenInitRepeated) {
+TEST_F(FeatureManagerTest, InitWillReturnSuccessWhenInitRepeated)
+{
     int32_t ret1 = FeatureManager::instance()->Init();
     EXPECT_EQ(ret1, PROFILING_SUCCESS);
 
@@ -42,23 +40,30 @@ TEST_F(FeatureManagerTest, InitWillReturnSuccessWhenInitRepeated) {
     EXPECT_EQ(ret2, PROFILING_SUCCESS);
 }
 
-TEST_F(FeatureManagerTest, GetIncompatibleFeaturesWillReturnV1FeaturesWhenIsV2False) {
+TEST_F(FeatureManagerTest, GetIncompatibleFeaturesWillReturnV1FeaturesWhenIsV2False)
+{
     ASSERT_EQ(FeatureManager::instance()->Init(), PROFILING_SUCCESS);
 
     size_t featureSize = 0;
     FeatureRecord* features = FeatureManager::instance()->GetIncompatibleFeatures(&featureSize, false);
 
     ASSERT_NE(features, nullptr);
-    EXPECT_EQ(featureSize, 1); // V1默认只有ATTR特性
+    EXPECT_EQ(featureSize, 2);
     EXPECT_STREQ(features[0].featureName, "ATTR");
     EXPECT_STREQ(features[0].info.compatibility, "1");
     EXPECT_STREQ(features[0].info.featureVersion, "2");
     EXPECT_STREQ(features[0].info.affectedComponent, "all");
     EXPECT_STREQ(features[0].info.affectedComponentVersion, "all");
     EXPECT_STREQ(features[0].info.infoLog, "It not support feature: ATTR!");
+    EXPECT_STREQ(features[1].featureName, "AICORE_SHAPE");
+    EXPECT_STREQ(features[1].info.compatibility, "1");
+    EXPECT_STREQ(features[1].info.featureVersion, "1");
+    EXPECT_STREQ(features[1].info.affectedComponent, "all");
+    EXPECT_STREQ(features[1].info.affectedComponentVersion, "all");
 }
 
-TEST_F(FeatureManagerTest, GetIncompatibleFeaturesWillReturnV2FeaturesWhenIsV2TrueAndPlatformIsV410) {
+TEST_F(FeatureManagerTest, GetIncompatibleFeaturesWillReturnV2FeaturesWhenIsV2TrueAndPlatformIsV410)
+{
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
         .stubs()
         .will(returnValue(PlatformType::CHIP_V4_1_0));
@@ -69,7 +74,7 @@ TEST_F(FeatureManagerTest, GetIncompatibleFeaturesWillReturnV2FeaturesWhenIsV2Tr
     FeatureRecord* features = FeatureManager::instance()->GetIncompatibleFeatures(&featureSize, true);
 
     ASSERT_NE(features, nullptr);
-    EXPECT_EQ(featureSize, 2);
+    EXPECT_EQ(featureSize, 3);
 
     EXPECT_STREQ(features[0].featureName, "ATTR");
     EXPECT_STREQ(features[0].info.compatibility, "1");
@@ -77,11 +82,15 @@ TEST_F(FeatureManagerTest, GetIncompatibleFeaturesWillReturnV2FeaturesWhenIsV2Tr
     EXPECT_STREQ(features[1].featureName, "MemoryAccess");
     EXPECT_STREQ(features[1].info.compatibility, "1");
     EXPECT_STREQ(features[1].info.infoLog, "It not support feature: MEMORY_ACCESS!");
+    EXPECT_STREQ(features[2].featureName, "AICORE_SHAPE");
+    EXPECT_STREQ(features[2].info.compatibility, "1");
+    EXPECT_STREQ(features[2].info.featureVersion, "1");
 
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType).reset();
 }
 
-TEST_F(FeatureManagerTest, GetIncompatibleFeaturesWillReturnV1FeaturesWhenIsV2TrueButPlatformIsUnknown) {
+TEST_F(FeatureManagerTest, GetIncompatibleFeaturesWillReturnV1FeaturesWhenIsV2TrueButPlatformIsUnknown)
+{
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
         .stubs()
         .will(returnValue(PlatformType::MINI_TYPE));
@@ -92,13 +101,16 @@ TEST_F(FeatureManagerTest, GetIncompatibleFeaturesWillReturnV1FeaturesWhenIsV2Tr
     FeatureRecord* features = FeatureManager::instance()->GetIncompatibleFeatures(&featureSize, true);
 
     ASSERT_NE(features, nullptr);
-    EXPECT_EQ(featureSize, 1);
+    EXPECT_EQ(featureSize, 2);
     EXPECT_STREQ(features[0].featureName, "ATTR");
+    EXPECT_STREQ(features[1].featureName, "AICORE_SHAPE");
+    EXPECT_STREQ(features[1].info.featureVersion, "1");
 
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType).reset();
 }
 
-TEST_F(FeatureManagerTest, GetIncompatibleFeaturesWillReturnNullptrWhenFeaturesSizeIsNull) {
+TEST_F(FeatureManagerTest, GetIncompatibleFeaturesWillReturnNullptrWhenFeaturesSizeIsNull)
+{
     ASSERT_EQ(FeatureManager::instance()->Init(), PROFILING_SUCCESS);
 
     FeatureRecord* features = FeatureManager::instance()->GetIncompatibleFeatures(nullptr, true);
@@ -106,7 +118,8 @@ TEST_F(FeatureManagerTest, GetIncompatibleFeaturesWillReturnNullptrWhenFeaturesS
     EXPECT_EQ(features, nullptr);
 }
 
-TEST_F(FeatureManagerTest, UninitWillReturnSuccessWhenUninitAfterInit) {
+TEST_F(FeatureManagerTest, UninitWillReturnSuccessWhenUninitAfterInit)
+{
     ASSERT_EQ(FeatureManager::instance()->Init(), PROFILING_SUCCESS);
 
     FeatureManager::instance()->Uninit();

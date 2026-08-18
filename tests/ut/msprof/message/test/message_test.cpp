@@ -16,15 +16,14 @@
 using namespace analysis::dvvp::message;
 
 ///////////////////////////////////////////////////////////////////
-class MESSAGE_MESSAGE_STATUSINFO_TEST: public testing::Test {
+class MESSAGE_MESSAGE_STATUSINFO_TEST : public testing::Test {
 protected:
-    virtual void SetUp() {
-    }
-    virtual void TearDown() {
-    }
+    virtual void SetUp() {}
+    virtual void TearDown() {}
 };
 
-TEST_F(MESSAGE_MESSAGE_STATUSINFO_TEST, ToObject) {
+TEST_F(MESSAGE_MESSAGE_STATUSINFO_TEST, ToObject)
+{
     GlobalMockObject::verify();
 
     std::string info = "this is test";
@@ -38,7 +37,8 @@ TEST_F(MESSAGE_MESSAGE_STATUSINFO_TEST, ToObject) {
     EXPECT_NE(std::string::npos, object.ToString().find("\"dev_id\":\"1\""));
 }
 
-TEST_F(MESSAGE_MESSAGE_STATUSINFO_TEST, FromObject) {
+TEST_F(MESSAGE_MESSAGE_STATUSINFO_TEST, FromObject)
+{
     GlobalMockObject::verify();
 
     std::string info = "this is test";
@@ -54,7 +54,8 @@ TEST_F(MESSAGE_MESSAGE_STATUSINFO_TEST, FromObject) {
     EXPECT_EQ(status.status, status1.status);
 }
 
-TEST_F(MESSAGE_MESSAGE_STATUSINFO_TEST, ToString) {
+TEST_F(MESSAGE_MESSAGE_STATUSINFO_TEST, ToString)
+{
     GlobalMockObject::verify();
 
     std::string info = "this is test";
@@ -65,7 +66,8 @@ TEST_F(MESSAGE_MESSAGE_STATUSINFO_TEST, ToString) {
     EXPECT_NE(std::string::npos, status.ToString().find("\"dev_id\":\"1\""));
 }
 
-TEST_F(MESSAGE_MESSAGE_STATUSINFO_TEST, FromString) {
+TEST_F(MESSAGE_MESSAGE_STATUSINFO_TEST, FromString)
+{
     GlobalMockObject::verify();
 
     std::string info = "this is test";
@@ -77,15 +79,14 @@ TEST_F(MESSAGE_MESSAGE_STATUSINFO_TEST, FromString) {
 }
 
 ///////////////////////////////////////////////////////////////////
-class MESSAGE_MESSAGE_STATUS_TEST: public testing::Test {
+class MESSAGE_MESSAGE_STATUS_TEST : public testing::Test {
 protected:
-    virtual void SetUp() {
-    }
-    virtual void TearDown() {
-    }
+    virtual void SetUp() {}
+    virtual void TearDown() {}
 };
 
-TEST_F(MESSAGE_MESSAGE_STATUS_TEST, ToObject) {
+TEST_F(MESSAGE_MESSAGE_STATUS_TEST, ToObject)
+{
     GlobalMockObject::verify();
 
     std::string info = "this is test";
@@ -103,7 +104,8 @@ TEST_F(MESSAGE_MESSAGE_STATUS_TEST, ToObject) {
     EXPECT_NE(std::string::npos, object.ToString().find("\"dev_id\":\"1\""));
 }
 
-TEST_F(MESSAGE_MESSAGE_STATUS_TEST, FromObject) {
+TEST_F(MESSAGE_MESSAGE_STATUS_TEST, FromObject)
+{
     GlobalMockObject::verify();
 
     std::string info = "this is test";
@@ -121,7 +123,8 @@ TEST_F(MESSAGE_MESSAGE_STATUS_TEST, FromObject) {
     EXPECT_EQ(status.status, status1.status);
 }
 
-TEST_F(MESSAGE_MESSAGE_STATUS_TEST, ToString) {
+TEST_F(MESSAGE_MESSAGE_STATUS_TEST, ToString)
+{
     GlobalMockObject::verify();
 
     std::string info = "this is test";
@@ -135,7 +138,8 @@ TEST_F(MESSAGE_MESSAGE_STATUS_TEST, ToString) {
     EXPECT_NE(std::string::npos, status.ToString().find("\"dev_id\":\"1\""));
 }
 
-TEST_F(MESSAGE_MESSAGE_STATUS_TEST, FromString) {
+TEST_F(MESSAGE_MESSAGE_STATUS_TEST, FromString)
+{
     GlobalMockObject::verify();
 
     std::string info = "this is test";
@@ -151,19 +155,18 @@ TEST_F(MESSAGE_MESSAGE_STATUS_TEST, FromString) {
 }
 
 ///////////////////////////////////////////////////////////////////
-class MESSAGE_MESSAGE_PROFILEPARAMS_TEST: public testing::Test {
+class MESSAGE_MESSAGE_PROFILEPARAMS_TEST : public testing::Test {
 protected:
-    virtual void SetUp() {
-    }
-    virtual void TearDown() {
-    }
+    virtual void SetUp() {}
+    virtual void TearDown() {}
 };
 
-
-TEST_F(MESSAGE_MESSAGE_PROFILEPARAMS_TEST, FromObject) {
+TEST_F(MESSAGE_MESSAGE_PROFILEPARAMS_TEST, FromObject)
+{
     GlobalMockObject::verify();
 
     ProfileParams params;
+    params.aicoreShape = "on";
 
     NanoJson::Json object;
     params.ToObject(object);
@@ -186,17 +189,50 @@ TEST_F(MESSAGE_MESSAGE_PROFILEPARAMS_TEST, FromObject) {
     EXPECT_EQ(params1.hccsInterval, params.hccsInterval);
     EXPECT_EQ(params1.pcieInterval, params.pcieInterval);
     EXPECT_EQ(params1.dvpp_sampling_interval, params.dvpp_sampling_interval);
+    EXPECT_EQ(params1.aicoreShape, params.aicoreShape);
 }
 
-TEST_F(MESSAGE_MESSAGE_PROFILEPARAMS_TEST, DISABLED_ToString) {
+TEST_F(MESSAGE_MESSAGE_PROFILEPARAMS_TEST, DISABLED_ToString)
+{
     GlobalMockObject::verify();
 
     ProfileParams params;
-    std::string str = "{\"hostAllPidMemProfiling\":\"off\",\"hcclTrace\":\"\",\"runtimeApi\":\"off\",\"aicore_sampling_interval\":10,\"qosProfiling\":\"\",\"dvpp_sampling_interval\":20,\"aicpuTrace\":\"\",\"aiv_sampling_interval\":10,\"ccuInstr\":\"off\",\"host_mem_profiling\":\"off\",\"host_osrt_profiling\":\"off\",\"hostProfiling\":false,\"io_sampling_interval\":10,\"host_network_profiling\":\"off\",\"nicProfiling\":\"off\",\"ts_cpu_hot_function\":\"\",\"instrProfilingFreq\":1000,\"ai_core_profiling_metrics\":\"\",\"dvpp_profiling\":\"off\",\"ubProfiling\":\"off\",\"interconnection_sampling_interval\":20,\"l2CacheTaskProfilingEvents\":\"\",\"sys_sampling_interval\":100,\"cpu_sampling_interval\":20,\"ai_core_profiling_mode\":\"\",\"devices\":\"\",\"runtimeTrace\":\"\",\"app_parameters\":\"\",\"host_cpu_profiling\":\"off\",\"interconnection_profiling\":\"off\",\"pcieProfiling\":\"\",\"npuEvents\":\"\",\"ts_memcpy\":\"\",\"memServiceflow\":\"\",\"sys_profiling\":\"off\",\"ai_core_status\":\"\",\"profiling_options\":\"\",\"pcSampling\":\"off\",\"roceProfiling\":\"off\",\"aiCtrlCpuProfiling\":\"off\",\"tsCpuProfiling\":\"off\",\"pureCpu\":\"off\",\"hardware_mem_sampling_interval\":20000,\"io_profiling\":\"off\",\"cpu_profiling\":\"off\",\"instrProfiling\":\"\",\"host_sys\":\"\",\"app_dir\":\"\",\"memProfiling\":\"off\",\"ts_cpu_profiling_events\":\"\",\"hostSysUsage\":\"\",\"storageLimit\":\"\",\"ai_core_profiling\":\"\",\"app_env\":\"\",\"hscb\":\"off\",\"result_dir\":\"\",\"profiling_mode\":\"\",\"llc_interval\":20,\"jobInfo\":\"\",\"hwts_log1\":\"\",\"pid_sampling_interval\":100,\"aiv_profiling_metrics\":\"\",\"aiv_profiling_events\":\"\",\"aiv_profiling_mode\":\"\",\"hardware_mem\":\"off\",\"msprof\":\"off\",\"taskTrace\":\"on\",\"msprof_llc_profiling\":\"\",\"prof_level\":\"off\",\"ts_keypoint\":\"\",\"job_id\":\"\",\"app_location\":\"\",\"app\":\"\",\"ai_core_lpm\":\"off\",\"ubInterval\":20,\"aiv_profiling\":\"\",\"hbmProfiling\":\"\",\"ts_task_track\":\"\",\"ai_core_metrics\":\"\",\"ts_fw_training\":\"\",\"ts_cpu_usage\":\"\",\"taskTime\":\"on\",\"ts_timeline\":\"\",\"stars_acsq_task\":\"\",\"ai_vector_status\":\"\",\"fwkSchedule\":\"off\",\"sysLp\":\"off\",\"taskTsfw\":\"off\",\"hwts_log\":\"\",\"l2CacheTaskProfiling\":\"\",\"profiling_period\":-1,\"ai_core_profiling_events\":\"\",\"hccsProfiling\":\"off\",\"hccsInterval\":20,\"ai_ctrl_cpu_profiling_events\":\"\",\"nicInterval\":10,\"taskBlock\":\"\",\"aiv_metrics\":\"\",\"pcieInterval\":20,\"isCancel\":false,\"roceInterval\":10,\"pid_profiling\":\"off\",\"llc_profiling\":\"\",\"opType\":\"\",\"llc_profiling_events\":\"\",\"durationTime\":\"\",\"taskMemory\":\"off\",\"memInterval\":20,\"ddr_profiling\":\"\",\"ddr_interval\":20,\"msprofBinPid\":-1,\"ddr_master_id\":0,\"hbm_profiling_events\":\"\",\"hbmInterval\":20,\"ddr_profiling_events\":\"\",\"host_sys_pid\":-1,\"host_disk_profiling\":\"off\",\"msproftx\":\"off\",\"host_disk_freq\":50,\"sysLpFreq\":10000,\"aicScale\":\"all\",\"profMode\":\"\",\"delayTime\":\"\",\"qosEvents\":\"\",\"hostProfilingSamplingInterval\":20,\"acl\":\"\",\"hostAllPidCpuProfiling\":\"off\"}";
+    std::string str =
+        "{\"hostAllPidMemProfiling\":\"off\",\"hcclTrace\":\"\",\"runtimeApi\":\"off\",\"aicore_sampling_interval\":10,"
+        "\"qosProfiling\":\"\",\"dvpp_sampling_interval\":20,\"aicpuTrace\":\"\",\"aiv_sampling_interval\":10,"
+        "\"ccuInstr\":\"off\",\"host_mem_profiling\":\"off\",\"host_osrt_profiling\":\"off\",\"hostProfiling\":false,"
+        "\"io_sampling_interval\":10,\"host_network_profiling\":\"off\",\"nicProfiling\":\"off\",\"ts_cpu_hot_"
+        "function\":\"\",\"instrProfilingFreq\":1000,\"ai_core_profiling_metrics\":\"\",\"dvpp_profiling\":\"off\","
+        "\"ubProfiling\":\"off\",\"interconnection_sampling_interval\":20,\"l2CacheTaskProfilingEvents\":\"\",\"sys_"
+        "sampling_interval\":100,\"cpu_sampling_interval\":20,\"ai_core_profiling_mode\":\"\",\"devices\":\"\","
+        "\"runtimeTrace\":\"\",\"app_parameters\":\"\",\"host_cpu_profiling\":\"off\",\"interconnection_profiling\":"
+        "\"off\",\"pcieProfiling\":\"\",\"npuEvents\":\"\",\"ts_memcpy\":\"\",\"memServiceflow\":\"\",\"sys_"
+        "profiling\":\"off\",\"ai_core_status\":\"\",\"profiling_options\":\"\",\"pcSampling\":\"off\","
+        "\"roceProfiling\":\"off\",\"aiCtrlCpuProfiling\":\"off\",\"tsCpuProfiling\":\"off\",\"pureCpu\":\"off\","
+        "\"hardware_mem_sampling_interval\":20000,\"io_profiling\":\"off\",\"cpu_profiling\":\"off\","
+        "\"instrProfiling\":\"\",\"host_sys\":\"\",\"app_dir\":\"\",\"memProfiling\":\"off\",\"ts_cpu_profiling_"
+        "events\":\"\",\"hostSysUsage\":\"\",\"storageLimit\":\"\",\"ai_core_profiling\":\"\",\"app_env\":\"\","
+        "\"hscb\":\"off\",\"result_dir\":\"\",\"profiling_mode\":\"\",\"llc_interval\":20,\"jobInfo\":\"\",\"hwts_"
+        "log1\":\"\",\"pid_sampling_interval\":100,\"aiv_profiling_metrics\":\"\",\"aiv_profiling_events\":\"\",\"aiv_"
+        "profiling_mode\":\"\",\"hardware_mem\":\"off\",\"msprof\":\"off\",\"taskTrace\":\"on\",\"msprof_llc_"
+        "profiling\":\"\",\"prof_level\":\"off\",\"ts_keypoint\":\"\",\"job_id\":\"\",\"app_location\":\"\",\"app\":"
+        "\"\",\"ai_core_lpm\":\"off\",\"ubInterval\":20,\"aiv_profiling\":\"\",\"hbmProfiling\":\"\",\"ts_task_track\":"
+        "\"\",\"ai_core_metrics\":\"\",\"ts_fw_training\":\"\",\"ts_cpu_usage\":\"\",\"taskTime\":\"on\",\"ts_"
+        "timeline\":\"\",\"stars_acsq_task\":\"\",\"ai_vector_status\":\"\",\"fwkSchedule\":\"off\",\"sysLp\":\"off\","
+        "\"taskTsfw\":\"off\",\"hwts_log\":\"\",\"l2CacheTaskProfiling\":\"\",\"profiling_period\":-1,\"ai_core_"
+        "profiling_events\":\"\",\"hccsProfiling\":\"off\",\"hccsInterval\":20,\"ai_ctrl_cpu_profiling_events\":\"\","
+        "\"nicInterval\":10,\"taskBlock\":\"\",\"aiv_metrics\":\"\",\"pcieInterval\":20,\"isCancel\":false,"
+        "\"roceInterval\":10,\"pid_profiling\":\"off\",\"llc_profiling\":\"\",\"opType\":\"\",\"llc_profiling_events\":"
+        "\"\",\"durationTime\":\"\",\"taskMemory\":\"off\",\"memInterval\":20,\"ddr_profiling\":\"\",\"ddr_interval\":"
+        "20,\"msprofBinPid\":-1,\"ddr_master_id\":0,\"hbm_profiling_events\":\"\",\"hbmInterval\":20,\"ddr_profiling_"
+        "events\":\"\",\"host_sys_pid\":-1,\"host_disk_profiling\":\"off\",\"msproftx\":\"off\",\"host_disk_freq\":50,"
+        "\"sysLpFreq\":10000,\"aicScale\":\"all\",\"profMode\":\"\",\"delayTime\":\"\",\"qosEvents\":\"\","
+        "\"hostProfilingSamplingInterval\":20,\"acl\":\"\",\"hostAllPidCpuProfiling\":\"off\"}";
     EXPECT_STREQ(str.c_str(), params.ToString().c_str());
 }
 
-TEST_F(MESSAGE_MESSAGE_PROFILEPARAMS_TEST, FromString) {
+TEST_F(MESSAGE_MESSAGE_PROFILEPARAMS_TEST, FromString)
+{
     GlobalMockObject::verify();
 
     ProfileParams params;
@@ -207,7 +243,8 @@ TEST_F(MESSAGE_MESSAGE_PROFILEPARAMS_TEST, FromString) {
     EXPECT_TRUE(params1.FromString(params.ToString()));
 }
 
-TEST_F(MESSAGE_MESSAGE_PROFILEPARAMS_TEST, NtsMetricsSerialization) {
+TEST_F(MESSAGE_MESSAGE_PROFILEPARAMS_TEST, NtsMetricsSerialization)
+{
     GlobalMockObject::verify();
 
     ProfileParams params;
@@ -225,15 +262,14 @@ TEST_F(MESSAGE_MESSAGE_PROFILEPARAMS_TEST, NtsMetricsSerialization) {
 }
 
 ///////////////////////////////////////////////////////////////////
-class MESSAGE_MESSAGE_JOBCONTEXT_TEST: public testing::Test {
+class MESSAGE_MESSAGE_JOBCONTEXT_TEST : public testing::Test {
 protected:
-    virtual void SetUp() {
-    }
-    virtual void TearDown() {
-    }
+    virtual void SetUp() {}
+    virtual void TearDown() {}
 };
 
-TEST_F(MESSAGE_MESSAGE_JOBCONTEXT_TEST, ToObject) {
+TEST_F(MESSAGE_MESSAGE_JOBCONTEXT_TEST, ToObject)
+{
     GlobalMockObject::verify();
 
     JobContext ctx;
@@ -252,7 +288,8 @@ TEST_F(MESSAGE_MESSAGE_JOBCONTEXT_TEST, ToObject) {
     EXPECT_NE(std::string::npos, object.ToString().find("\"result_dir\":\"\""));
 }
 
-TEST_F(MESSAGE_MESSAGE_JOBCONTEXT_TEST, ToString) {
+TEST_F(MESSAGE_MESSAGE_JOBCONTEXT_TEST, ToString)
+{
     GlobalMockObject::verify();
 
     JobContext ctx;
@@ -268,7 +305,8 @@ TEST_F(MESSAGE_MESSAGE_JOBCONTEXT_TEST, ToString) {
     EXPECT_NE(std::string::npos, ctx.ToString().find("\"result_dir\":\"\""));
 }
 
-TEST_F(MESSAGE_MESSAGE_JOBCONTEXT_TEST, FromString) {
+TEST_F(MESSAGE_MESSAGE_JOBCONTEXT_TEST, FromString)
+{
     GlobalMockObject::verify();
 
     JobContext ctx;

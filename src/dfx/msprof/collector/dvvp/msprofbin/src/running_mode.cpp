@@ -1531,7 +1531,8 @@ AppMode::AppMode(std::string preCheckParams, SHARED_PTR_ALIA<ProfileParams> para
         ARGS_OPTYPE,
         ARGS_EXPORT_TYPE,
         ARGS_MSTX_DOMAIN_INCLUDE,
-        ARGS_MSTX_DOMAIN_EXCLUDE};
+        ARGS_MSTX_DOMAIN_EXCLUDE,
+        ARGS_AICORE_SHAPE};
 }
 
 int32_t RunningMode::HandleProfilingParams() const

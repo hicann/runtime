@@ -354,6 +354,7 @@ private:
     void UpdateDataTypeConfigByMetrics(const SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params);
     void UpdateDataTypeConfigByTimelineTrace(const SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params);
     void UpdateDataTypeConfigByProfLevel(const SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params);
+    void UpdateDataTypeConfigByAicoreShape(const SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params);
     void UpdateDataTypeConfigByGeApi(const SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params);
     void UpdateDataTypeConfigBySwitches(const SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params);
     void UpdateDataTypeConfigBySwitch(const std::string& sw, const uint64_t dataTypeConfig);

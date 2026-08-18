@@ -81,42 +81,39 @@ extern "C" {
 extern int ProfAclDrvGetDevNum();
 }
 
-class MSPROF_ACL_CORE_STEST: public testing::Test {
+class MSPROF_ACL_CORE_STEST : public testing::Test {
 public:
-    void RegisterTryPop() {
+    void RegisterTryPop()
+    {
         ProfImplSetApiBufPop(apiTryPop);
         ProfImplSetCompactBufPop(compactTryPop);
         ProfImplSetAdditionalBufPop(additionalTryPop);
         ProfImplIfReportBufEmpty(ifReportBufEmpty);
     }
+
 protected:
-    virtual void SetUp() {
-        MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::IsInited)
-            .stubs()
-            .will(returnValue(true));
-    }
+    virtual void SetUp() { MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::IsInited).stubs().will(returnValue(true)); }
     virtual void TearDown() {}
 };
 
-TEST_F(MSPROF_ACL_CORE_STEST, acl_app) {
+TEST_F(MSPROF_ACL_CORE_STEST, acl_app)
+{
     GlobalMockObject::verify();
     std::string envsV("{\"result_dir\":\"\", \"devices\":\"1\", \"job_id\":\"1\"}");
     std::string selfPath = "/home";
-    MOCKER(&analysis::dvvp::common::utils::Utils::GetSelfPath)
-        .stubs()
-        .will(returnValue(selfPath));
-    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::CallbackInitPrecheck)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
-    MOCKER_CPP(&analysis::dvvp::common::validation::ParamValidation::CheckStorageLimit,
-        bool(ParamValidation::*)(SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams>, const std::string &) const)
+    MOCKER(&analysis::dvvp::common::utils::Utils::GetSelfPath).stubs().will(returnValue(selfPath));
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::CallbackInitPrecheck).stubs().will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(
+        &analysis::dvvp::common::validation::ParamValidation::CheckStorageLimit,
+        bool(ParamValidation::*)(SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams>, const std::string&) const)
         .stubs()
         .will(returnValue(false));
 
     EXPECT_EQ(MSPROF_ERROR_CONFIG_INVALID, Msprofiler::Api::ProfAclMgr::instance()->MsprofInitAclEnv(envsV));
 }
 
-TEST_F(MSPROF_ACL_CORE_STEST, MsprofAclJsonParamConstruct) {
+TEST_F(MSPROF_ACL_CORE_STEST, MsprofAclJsonParamConstruct)
+{
     GlobalMockObject::verify();
     NanoJson::Json inputCfgPb;
     Msprofiler::Api::ProfAclMgr profAclMgr;
@@ -143,17 +140,14 @@ TEST_F(MSPROF_ACL_CORE_STEST, MsprofAclJsonParamConstruct) {
         .then(returnValue(PlatformType::MINI_V3_TYPE));
     EXPECT_EQ(MSPROF_ERROR_NONE, profAclMgr.MsprofAclJsonParamConstruct(inputCfgPb));
     configManger->Uninit();
-    MOCKER(readlink)
-        .stubs()
-        .will(returnValue(-1));
+    MOCKER(readlink).stubs().will(returnValue(-1));
     EXPECT_EQ(MSPROF_ERROR_NONE, profAclMgr.MsprofAclJsonParamConstruct(inputCfgPb));
 }
 
-TEST_F(MSPROF_ACL_CORE_STEST, acl_ge_api) {
+TEST_F(MSPROF_ACL_CORE_STEST, acl_ge_api)
+{
     GlobalMockObject::verify();
-    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::GetDevicesNotify)
-        .stubs()
-        .will(returnValue(true));
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::GetDevicesNotify).stubs().will(returnValue(true));
 
     RegisterTryPop();
     std::string result = "/tmp/acl_api_stest_new";
@@ -167,13 +161,15 @@ TEST_F(MSPROF_ACL_CORE_STEST, acl_ge_api) {
     config.aicoreMetrics = PROF_AICORE_PIPE_UTILIZATION;
     config.dataTypeConfig = 0x7d7f001f;
 
-    ge::aclgrphProfConfig *aclConfig = ge::aclgrphProfCreateConfig(
-        config.devIdList, config.devNums, (ge::ProfilingAicoreMetrics)config.aicoreMetrics, nullptr, config.dataTypeConfig);
+    ge::aclgrphProfConfig* aclConfig = ge::aclgrphProfCreateConfig(
+        config.devIdList, config.devNums, (ge::ProfilingAicoreMetrics)config.aicoreMetrics, nullptr,
+        config.dataTypeConfig);
     EXPECT_EQ(nullptr, aclConfig);
 
     config.devNums = 1;
-    aclConfig = ge::aclgrphProfCreateConfig(config.devIdList, config.devNums, (ge::ProfilingAicoreMetrics)config.aicoreMetrics,
-        nullptr, config.dataTypeConfig);
+    aclConfig = ge::aclgrphProfCreateConfig(
+        config.devIdList, config.devNums, (ge::ProfilingAicoreMetrics)config.aicoreMetrics, nullptr,
+        config.dataTypeConfig);
 
     EXPECT_NE(nullptr, aclConfig);
 
@@ -183,23 +179,24 @@ TEST_F(MSPROF_ACL_CORE_STEST, acl_ge_api) {
     MsprofHashData hData = {0};
     std::string hashData = "profiling_st_data";
     hData.dataLen = hashData.size();
-    hData.data = const_cast<unsigned char *>((const unsigned char *)hashData.c_str());
+    hData.data = const_cast<unsigned char*>((const unsigned char*)hashData.c_str());
     hData.hashId = 0;
-    MsprofReportData(MSPROF_MODULE_DATA_PREPROCESS, MSPROF_REPORTER_HASH, (void *)&hData, sizeof(hData));
+    MsprofReportData(MSPROF_MODULE_DATA_PREPROCESS, MSPROF_REPORTER_HASH, (void*)&hData, sizeof(hData));
     EXPECT_NE(0, hData.hashId);
     hData.hashId = 0;
-    MsprofReportData(MSPROF_MODULE_DATA_PREPROCESS, MSPROF_REPORTER_HASH, (void *)&hData, 0);
+    MsprofReportData(MSPROF_MODULE_DATA_PREPROCESS, MSPROF_REPORTER_HASH, (void*)&hData, 0);
     EXPECT_EQ(0, hData.hashId);
     hData.dataLen = 0;
-    MsprofReportData(MSPROF_MODULE_DATA_PREPROCESS, MSPROF_REPORTER_HASH, (void *)&hData, sizeof(hData));
+    MsprofReportData(MSPROF_MODULE_DATA_PREPROCESS, MSPROF_REPORTER_HASH, (void*)&hData, sizeof(hData));
 
     ReporterData data = {0};
     data.tag[0] = 't';
     data.deviceId = 0;
     std::string reportData = "profiling_st_data";
     data.dataLen = reportData.size();
-    data.data = const_cast<unsigned char *>((const unsigned char *)reportData.c_str());
-    Analysis::Dvvp::ProfilerCommon::ProfReportData(MSPROF_MODULE_DATA_PREPROCESS, MSPROF_REPORTER_REPORT, (void *)&data, sizeof(data));
+    data.data = const_cast<unsigned char*>((const unsigned char*)reportData.c_str());
+    Analysis::Dvvp::ProfilerCommon::ProfReportData(
+        MSPROF_MODULE_DATA_PREPROCESS, MSPROF_REPORTER_REPORT, (void*)&data, sizeof(data));
     Analysis::Dvvp::ProfilerCommon::ProfReportData(MSPROF_MODULE_DATA_PREPROCESS, MSPROF_REPORTER_UNINIT, nullptr, 0);
     Msprof::Engine::MsprofReporter::reporters_[MSPROF_MODULE_DATA_PREPROCESS].ForceFlush();
 
@@ -213,7 +210,8 @@ TEST_F(MSPROF_ACL_CORE_STEST, acl_ge_api) {
     analysis::dvvp::common::utils::Utils::RemoveDir(result);
 }
 
-TEST_F(MSPROF_ACL_CORE_STEST, aclgrphProfInit_failed) {
+TEST_F(MSPROF_ACL_CORE_STEST, aclgrphProfInit_failed)
+{
     GlobalMockObject::verify();
 
     MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::ProfInitPrecheck)
@@ -237,7 +235,8 @@ TEST_F(MSPROF_ACL_CORE_STEST, aclgrphProfInit_failed) {
     EXPECT_EQ(ge::FAILED, ge::aclgrphProfInit(result.c_str(), result.size()));
 }
 
-TEST_F(MSPROF_ACL_CORE_STEST, AddToUploaderGetUploaderFailed) {
+TEST_F(MSPROF_ACL_CORE_STEST, AddToUploaderGetUploaderFailed)
+{
     GlobalMockObject::verify();
     std::shared_ptr<Msprof::Engine::UploaderDumper> dumper(new Msprof::Engine::UploaderDumper("Framework"));
     HDC_SESSION session = (HDC_SESSION)0x12345678;
@@ -247,35 +246,27 @@ TEST_F(MSPROF_ACL_CORE_STEST, AddToUploaderGetUploaderFailed) {
     hwts->fileName = "hwts.data.null";
     hwts->extraInfo = "0.0";
 
-    MOCKER_CPP(&analysis::dvvp::transport::UploaderMgr::UploadData,
-        int(analysis::dvvp::transport::UploaderMgr::*)(const std::string &, const void *, uint32_t))
+    MOCKER_CPP(
+        &analysis::dvvp::transport::UploaderMgr::UploadData,
+        int(analysis::dvvp::transport::UploaderMgr::*)(const std::string&, const void*, uint32_t))
         .stubs()
         .will(returnValue(PROFILING_FAILED));
 
     dumper->AddToUploader(hwts);
-    MOCKER_CPP(&analysis::dvvp::transport::UploaderMgr::GetUploader)
-        .stubs()
-        .with(any(), outBound(uploader));
+    MOCKER_CPP(&analysis::dvvp::transport::UploaderMgr::GetUploader).stubs().with(any(), outBound(uploader));
     dumper->AddToUploader(hwts);
     EXPECT_EQ(hwts->chunkModule, 1);
 }
 
-int32_t runtimeSuccessFunction(int32_t logicId, int32_t devIdId) {
-    return 0;
-}
+int32_t runtimeSuccessFunction(int32_t logicId, int32_t devIdId) { return 0; }
 
-void * dlsymSuccessStub(void *handle, const char *symbol) {
-    return (void *)runtimeSuccessFunction;
-}
+void* dlsymSuccessStub(void* handle, const char* symbol) { return (void*)runtimeSuccessFunction; }
 
-TEST_F(MSPROF_ACL_CORE_STEST, acl_prof_api) {
+TEST_F(MSPROF_ACL_CORE_STEST, acl_prof_api)
+{
     GlobalMockObject::verify();
-    MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::Init)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
-    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::GetDevicesNotify)
-        .stubs()
-        .will(returnValue(true));
+    MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::Init).stubs().will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::GetDevicesNotify).stubs().will(returnValue(true));
 
     std::string result = "/tmp/acl_prof_api_stest_new";
     analysis::dvvp::common::utils::Utils::RemoveDir(result);
@@ -288,11 +279,11 @@ TEST_F(MSPROF_ACL_CORE_STEST, acl_prof_api) {
     config.aicoreMetrics = PROF_AICORE_ARITHMETIC_UTILIZATION;
     config.dataTypeConfig = 0x7d7f001f;
 
-    aclprofConfig *aclConfig = aclprofCreateConfig(
+    aclprofConfig* aclConfig = aclprofCreateConfig(
         config.devIdList, config.devNums, (aclprofAicoreMetrics)config.aicoreMetrics, nullptr, config.dataTypeConfig);
-    aclprofConfig *zeroConfig = aclprofCreateConfig(
+    aclprofConfig* zeroConfig = aclprofCreateConfig(
         config.devIdList, config.devNums, (aclprofAicoreMetrics)config.aicoreMetrics, nullptr, config.dataTypeConfig);
-    aclprofConfig *invalidConfig = aclprofCreateConfig(
+    aclprofConfig* invalidConfig = aclprofCreateConfig(
         config.devIdList, config.devNums, (aclprofAicoreMetrics)config.aicoreMetrics, nullptr, 0xffffffff);
     memset(zeroConfig, 0, sizeof(ProfConfig));
 
@@ -309,8 +300,9 @@ TEST_F(MSPROF_ACL_CORE_STEST, acl_prof_api) {
     data.deviceId = 0;
     std::string reportData = "profiling_st_data";
     data.dataLen = reportData.size();
-    data.data = const_cast<unsigned char *>((const unsigned char *)reportData.c_str());
-    Analysis::Dvvp::ProfilerCommon::ProfReportData(MSPROF_MODULE_DATA_PREPROCESS, MSPROF_REPORTER_REPORT, (void *)&data, sizeof(data));
+    data.data = const_cast<unsigned char*>((const unsigned char*)reportData.c_str());
+    Analysis::Dvvp::ProfilerCommon::ProfReportData(
+        MSPROF_MODULE_DATA_PREPROCESS, MSPROF_REPORTER_REPORT, (void*)&data, sizeof(data));
     uint32_t dataMaxLen = 0;
     int ret = Msprof::Engine::MsprofReporter::reporters_[MSPROF_MODULE_DATA_PREPROCESS].GetDataMaxLen(&dataMaxLen, 1);
     EXPECT_EQ(PROFILING_FAILED, ret);
@@ -328,8 +320,9 @@ TEST_F(MSPROF_ACL_CORE_STEST, acl_prof_api) {
     data.deviceId = 0;
     reportData = "profiling_st_data";
     data.dataLen = reportData.size();
-    data.data = const_cast<unsigned char *>((const unsigned char *)reportData.c_str());
-    Analysis::Dvvp::ProfilerCommon::ProfReportData(MSPROF_MODULE_MSPROF, MSPROF_REPORTER_REPORT, (void *)&data, sizeof(data));
+    data.data = const_cast<unsigned char*>((const unsigned char*)reportData.c_str());
+    Analysis::Dvvp::ProfilerCommon::ProfReportData(
+        MSPROF_MODULE_MSPROF, MSPROF_REPORTER_REPORT, (void*)&data, sizeof(data));
     dataMaxLen = 0;
     ret = Msprof::Engine::MsprofReporter::reporters_[MSPROF_MODULE_MSPROF].GetDataMaxLen(&dataMaxLen, 1);
     EXPECT_EQ(PROFILING_FAILED, ret);
@@ -343,7 +336,7 @@ TEST_F(MSPROF_ACL_CORE_STEST, acl_prof_api) {
 
     EXPECT_EQ(ACL_ERROR_INVALID_PARAM, aclprofStop(nullptr));
     EXPECT_EQ(ACL_ERROR_INVALID_PARAM, aclprofStop(zeroConfig));
-    EXPECT_EQ( 0, aclprofStop(aclConfig));
+    EXPECT_EQ(0, aclprofStop(aclConfig));
 
     EXPECT_EQ(MSPROF_ERROR_NONE, aclprofFinalize());
 
@@ -365,14 +358,16 @@ TEST_F(MSPROF_ACL_CORE_STEST, acl_prof_api) {
     configStub.devIdList[0] = 0;
     configStub.aicoreMetrics = PROF_AICORE_ARITHMETIC_UTILIZATION;
     configStub.dataTypeConfig = 0x0000001f;
-    aclprofConfig *aclConfigStub = aclprofCreateConfig(configStub.devIdList, configStub.devNums,
-        (aclprofAicoreMetrics)configStub.aicoreMetrics, nullptr, configStub.dataTypeConfig);
+    aclprofConfig* aclConfigStub = aclprofCreateConfig(
+        configStub.devIdList, configStub.devNums, (aclprofAicoreMetrics)configStub.aicoreMetrics, nullptr,
+        configStub.dataTypeConfig);
     EXPECT_EQ(nullptr, aclConfigStub);
 
     GlobalMockObject::verify();
 }
 
-TEST_F(MSPROF_ACL_CORE_STEST, acl_ge_api_success) {
+TEST_F(MSPROF_ACL_CORE_STEST, acl_ge_api_success)
+{
     GlobalMockObject::verify();
     MOCKER_CPP(&ProfRtAPI::ExtendPlugin::ProfGetVisibleDeviceIdByLogicDeviceId)
         .stubs()
@@ -384,8 +379,9 @@ TEST_F(MSPROF_ACL_CORE_STEST, acl_ge_api_success) {
     config.aicoreMetrics = PROF_AICORE_ARITHMETIC_UTILIZATION;
     config.dataTypeConfig = 0x7d7f001f;
 
-    ge::aclgrphProfConfig *aclConfig = ge::aclgrphProfCreateConfig(config.devIdList, config.devNums,
-        (ge::ProfilingAicoreMetrics)config.aicoreMetrics,nullptr, config.dataTypeConfig);
+    ge::aclgrphProfConfig* aclConfig = ge::aclgrphProfCreateConfig(
+        config.devIdList, config.devNums, (ge::ProfilingAicoreMetrics)config.aicoreMetrics, nullptr,
+        config.dataTypeConfig);
     EXPECT_NE(nullptr, aclConfig);
 
     EXPECT_EQ(ge::SUCCESS, ge::aclgrphProfDestroyConfig(aclConfig));
@@ -393,7 +389,8 @@ TEST_F(MSPROF_ACL_CORE_STEST, acl_ge_api_success) {
     ProfAclMgr::instance()->mode_ = WORK_MODE_OFF;
 }
 
-TEST_F(MSPROF_ACL_CORE_STEST, acl_api_success) {
+TEST_F(MSPROF_ACL_CORE_STEST, acl_api_success)
+{
     GlobalMockObject::verify();
     MOCKER_CPP(&ProfRtAPI::ExtendPlugin::ProfGetVisibleDeviceIdByLogicDeviceId)
         .stubs()
@@ -405,7 +402,7 @@ TEST_F(MSPROF_ACL_CORE_STEST, acl_api_success) {
     config.aicoreMetrics = PROF_AICORE_ARITHMETIC_UTILIZATION;
     config.dataTypeConfig = 0x7d7f001f;
 
-    aclprofConfig *aclConfig = aclprofCreateConfig(
+    aclprofConfig* aclConfig = aclprofCreateConfig(
         config.devIdList, config.devNums, (aclprofAicoreMetrics)config.aicoreMetrics, nullptr, config.dataTypeConfig);
     EXPECT_NE(nullptr, aclConfig);
 
@@ -420,23 +417,19 @@ int32_t DoHostHandleStub()
     g_doHostHandle++;
     return PROFILING_SUCCESS;
 }
-TEST_F(MSPROF_ACL_CORE_STEST, MsprofHostHandle) {
+TEST_F(MSPROF_ACL_CORE_STEST, MsprofHostHandle)
+{
     GlobalMockObject::verify();
     using namespace Msprofiler::Api;
-    MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::PlatformIsHelperHostSide)
-        .stubs()
-        .will(returnValue(true));
-    MOCKER_CPP(&ProfAclMgr::IsCmdMode)
-        .stubs()
-        .will(returnValue(true));
-    MOCKER_CPP(&ProfAclMgr::DoHostHandle)
-        .stubs()
-        .will(invoke(DoHostHandleStub));
+    MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::PlatformIsHelperHostSide).stubs().will(returnValue(true));
+    MOCKER_CPP(&ProfAclMgr::IsCmdMode).stubs().will(returnValue(true));
+    MOCKER_CPP(&ProfAclMgr::DoHostHandle).stubs().will(invoke(DoHostHandleStub));
     ProfAclMgr::instance()->MsprofHostHandle();
     EXPECT_EQ(g_doHostHandle, 1);
 }
 
-TEST_F(MSPROF_ACL_CORE_STEST, acl_prof_init_failed) {
+TEST_F(MSPROF_ACL_CORE_STEST, acl_prof_init_failed)
+{
     GlobalMockObject::verify();
 
     MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::ProfInitPrecheck)
@@ -460,7 +453,8 @@ TEST_F(MSPROF_ACL_CORE_STEST, acl_prof_init_failed) {
     EXPECT_EQ(ACL_ERROR_PROFILING_FAILURE, aclprofInit(result.c_str(), result.size()));
 }
 
-TEST_F(MSPROF_ACL_CORE_STEST, MsprofResultPathAdapter) {
+TEST_F(MSPROF_ACL_CORE_STEST, MsprofResultPathAdapter)
+{
     GlobalMockObject::verify();
 
     MOCKER(analysis::dvvp::common::utils::Utils::IsDirAccessible)
@@ -491,7 +485,8 @@ TEST_F(MSPROF_ACL_CORE_STEST, MsprofResultPathAdapter) {
 
 int aclApiSubscribeCount = 0;
 
-int mmWriteStub(int fd, void *buf, unsigned int bufLen) {
+int mmWriteStub(int fd, void* buf, unsigned int bufLen)
+{
     using namespace Analysis::Dvvp::Analyze;
     MSPROF_LOGI("mmWriteStub, bufLen: %u", bufLen);
     aclApiSubscribeCount++;
@@ -535,11 +530,12 @@ int mmWriteStub(int fd, void *buf, unsigned int bufLen) {
     aclprofGetOpEnd(buf, bufLen, 0);
     aclprofGetOpDuration(buf, bufLen, 0);
     aclprofGetModelId(buf, bufLen, 0);
-    //aclprofGetGraphId(buf, bufLen, 0);
+    // aclprofGetGraphId(buf, bufLen, 0);
     return bufLen;
 }
 
-TEST_F(MSPROF_ACL_CORE_STEST, get_op_xxx) {
+TEST_F(MSPROF_ACL_CORE_STEST, get_op_xxx)
+{
     ProfOpDesc data;
     data.modelId = 0;
     data.flag = ACL_SUBSCRIBE_OP_THREAD;
@@ -553,17 +549,14 @@ TEST_F(MSPROF_ACL_CORE_STEST, get_op_xxx) {
     EXPECT_EQ(nullptr, OpDescParser::GetOpAttriValue(nullptr, sizeof(data), 0, ACL_SUBSCRIBE_ATTRI_THREADID));
 }
 
-TEST_F(MSPROF_ACL_CORE_STEST, acl_api_subscribe) {
+TEST_F(MSPROF_ACL_CORE_STEST, acl_api_subscribe)
+{
     GlobalMockObject::verify();
 
     Analysis::Dvvp::Common::Config::ConfigManager::instance()->Init();
 
-    MOCKER(mmWrite)
-        .stubs()
-        .will(invoke(mmWriteStub));
-    MOCKER(mmClose)
-        .stubs()
-        .will(returnValue(EN_OK));
+    MOCKER(mmWrite).stubs().will(invoke(mmWriteStub));
+    MOCKER(mmClose).stubs().will(returnValue(EN_OK));
 
     using namespace Msprofiler::Api;
 
@@ -571,7 +564,7 @@ TEST_F(MSPROF_ACL_CORE_STEST, acl_api_subscribe) {
     ProfSubscribeConfig config;
     config.timeInfo = true;
     config.aicoreMetrics = PROF_AICORE_NONE;
-    config.fd = static_cast<void *>(&fd);
+    config.fd = static_cast<void*>(&fd);
 
     EXPECT_EQ(nullptr, aclprofCreateSubscribeConfig(0, (aclprofAicoreMetrics)config.aicoreMetrics, nullptr));
     auto profSubconfig = aclprofCreateSubscribeConfig(1, (aclprofAicoreMetrics)config.aicoreMetrics, config.fd);
@@ -579,7 +572,6 @@ TEST_F(MSPROF_ACL_CORE_STEST, acl_api_subscribe) {
     EXPECT_NE(nullptr, profSubconfig);
 
     EXPECT_EQ(ACL_ERROR_INVALID_MODEL_ID, aclprofModelSubscribe(1, nullptr));
-
 
     EXPECT_EQ(ACL_SUCCESS, ProfAclMgr::instance()->Init());
     Msprofiler::AclApi::ProfRegisterTransport(Msprofiler::AclApi::CreateParserTransport);
@@ -592,24 +584,31 @@ TEST_F(MSPROF_ACL_CORE_STEST, acl_api_subscribe) {
     cfg.metrics = static_cast<uint32_t>(config.aicoreMetrics);
     cfg.fd = reinterpret_cast<uintptr_t>(config.fd);
     cfg.cacheFlag = config.timeInfo;
-    EXPECT_EQ(ACL_SUCCESS, Analysis::Dvvp::ProfilerCommon::ProfConfigStart(
-        static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_SUBSCRIBE), static_cast<const void *>(&cfg),
-        sizeof(cfg)));
+    EXPECT_EQ(
+        ACL_SUCCESS, Analysis::Dvvp::ProfilerCommon::ProfConfigStart(
+                         static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_SUBSCRIBE),
+                         static_cast<const void*>(&cfg), sizeof(cfg)));
 
     SHARED_PTR_ALIA<analysis::dvvp::proto::FileChunkReq> geIdMap(new analysis::dvvp::proto::FileChunkReq());
     struct MsprofGeProfIdMapData idMapData;
     geIdMap->set_filename("Framework");
     geIdMap->set_tag("id_map_info");
-    std::string geOriData0((char *)&idMapData, sizeof(idMapData));
+    std::string geOriData0((char*)&idMapData, sizeof(idMapData));
     geIdMap->set_chunk(geOriData0);
     geIdMap->set_chunksizeinbytes(sizeof(idMapData));
     std::string data0 = analysis::dvvp::message::EncodeMessage(geIdMap);
     analysis::dvvp::transport::UploaderMgr::instance()->UploadData(
-        "0", static_cast<const void *>(data0.c_str()), data0.size());
+        "0", static_cast<const void*>(data0.c_str()), data0.size());
 
     std::string data;
 
-    std::string geTaskDescChunk = "{\"block_dims\": 1,   \"cur_iter_num\": 0,   \"input\": [     {       \"data_type\": \"int32\",       \"format\": \"ND\",       \"idx\": 0,       \"shape\": []     },     {       \"data_type\": \"int32\",       \"format\": \"ND\",       \"idx\": 1,       \"shape\": []     }   ],   \"model_id\": 1,   \"model_name\": \"ge_default_20210220001434_1\",   \"op_name\": \"OpName\",   \"op_type\": \"OpType\",   \"output\": [     {       \"data_type\": \"int32\",       \"format\": \"ND\",       \"idx\": 0,       \"shape\": []     }   ],   \"shape_type\": \"static\",   \"stream_id\": 100,   \"task_id\": 30,   \"task_type\": \"AI_CORE\" },";
+    std::string geTaskDescChunk =
+        "{\"block_dims\": 1,   \"cur_iter_num\": 0,   \"input\": [     {       \"data_type\": \"int32\",       "
+        "\"format\": \"ND\",       \"idx\": 0,       \"shape\": []     },     {       \"data_type\": \"int32\",       "
+        "\"format\": \"ND\",       \"idx\": 1,       \"shape\": []     }   ],   \"model_id\": 1,   \"model_name\": "
+        "\"ge_default_20210220001434_1\",   \"op_name\": \"OpName\",   \"op_type\": \"OpType\",   \"output\": [     {  "
+        "     \"data_type\": \"int32\",       \"format\": \"ND\",       \"idx\": 0,       \"shape\": []     }   ],   "
+        "\"shape_type\": \"static\",   \"stream_id\": 100,   \"task_id\": 30,   \"task_type\": \"AI_CORE\" },";
     SHARED_PTR_ALIA<analysis::dvvp::proto::FileChunkReq> geTaskDesc(new analysis::dvvp::proto::FileChunkReq());
     geTaskDesc->set_filename("Framework");
     geTaskDesc->set_chunk(geTaskDescChunk);
@@ -617,7 +616,7 @@ TEST_F(MSPROF_ACL_CORE_STEST, acl_api_subscribe) {
     geTaskDesc->set_tag("task_desc_info");
     data = analysis::dvvp::message::EncodeMessage(geTaskDesc);
     analysis::dvvp::transport::UploaderMgr::instance()->UploadData(
-        "0", static_cast<const void *>(data.c_str()), data.size());
+        "0", static_cast<const void*>(data.c_str()), data.size());
 
     using namespace Analysis::Dvvp::Analyze;
     TsProfileTimeline tsChunk;
@@ -629,35 +628,35 @@ TEST_F(MSPROF_ACL_CORE_STEST, acl_api_subscribe) {
     tsChunk.timestamp = 10000;
     SHARED_PTR_ALIA<analysis::dvvp::proto::FileChunkReq> tsTimeline(new analysis::dvvp::proto::FileChunkReq());
     tsTimeline->set_filename("ts_track.data");
-    tsTimeline->set_chunk(reinterpret_cast<char *>(&tsChunk), tsChunk.head.bufSize);
+    tsTimeline->set_chunk(reinterpret_cast<char*>(&tsChunk), tsChunk.head.bufSize);
     tsTimeline->set_chunksizeinbytes(tsChunk.head.bufSize);
     data = analysis::dvvp::message::EncodeMessage(tsTimeline);
     analysis::dvvp::transport::UploaderMgr::instance()->UploadData(
-        "0", static_cast<const void *>(data.c_str()), data.size());
+        "0", static_cast<const void*>(data.c_str()), data.size());
 
     tsChunk.taskState = TS_TIMELINE_AICORE_START_TASK_STATE;
     tsChunk.timestamp = 20000;
-    tsTimeline->set_chunk(reinterpret_cast<char *>(&tsChunk), tsChunk.head.bufSize);
+    tsTimeline->set_chunk(reinterpret_cast<char*>(&tsChunk), tsChunk.head.bufSize);
     tsTimeline->set_chunksizeinbytes(tsChunk.head.bufSize);
     data = analysis::dvvp::message::EncodeMessage(tsTimeline);
     analysis::dvvp::transport::UploaderMgr::instance()->UploadData(
-        "0", static_cast<const void *>(data.c_str()), data.size());
+        "0", static_cast<const void*>(data.c_str()), data.size());
 
     tsChunk.taskState = TS_TIMELINE_AICORE_END_TASK_STATE;
     tsChunk.timestamp = 30000;
-    tsTimeline->set_chunk(reinterpret_cast<char *>(&tsChunk), tsChunk.head.bufSize);
+    tsTimeline->set_chunk(reinterpret_cast<char*>(&tsChunk), tsChunk.head.bufSize);
     tsTimeline->set_chunksizeinbytes(tsChunk.head.bufSize);
     data = analysis::dvvp::message::EncodeMessage(tsTimeline);
     analysis::dvvp::transport::UploaderMgr::instance()->UploadData(
-        "0", static_cast<const void *>(data.c_str()), data.size());
+        "0", static_cast<const void*>(data.c_str()), data.size());
 
     tsChunk.taskState = TS_TIMELINE_END_TASK_STATE;
     tsChunk.timestamp = 40000;
-    tsTimeline->set_chunk(reinterpret_cast<char *>(&tsChunk), tsChunk.head.bufSize);
+    tsTimeline->set_chunk(reinterpret_cast<char*>(&tsChunk), tsChunk.head.bufSize);
     tsTimeline->set_chunksizeinbytes(tsChunk.head.bufSize);
     data = analysis::dvvp::message::EncodeMessage(tsTimeline);
     analysis::dvvp::transport::UploaderMgr::instance()->UploadData(
-        "0", static_cast<const void *>(data.c_str()), data.size());
+        "0", static_cast<const void*>(data.c_str()), data.size());
 
     HwtsProfileType01 hwtsChunk;
     hwtsChunk.taskId = 30;
@@ -666,19 +665,19 @@ TEST_F(MSPROF_ACL_CORE_STEST, acl_api_subscribe) {
     hwtsChunk.syscnt = 1000000;
     SHARED_PTR_ALIA<analysis::dvvp::proto::FileChunkReq> hwts(new analysis::dvvp::proto::FileChunkReq());
     hwts->set_filename("hwts.data");
-    hwts->set_chunk(reinterpret_cast<char *>(&hwtsChunk), sizeof(HwtsProfileType01));
+    hwts->set_chunk(reinterpret_cast<char*>(&hwtsChunk), sizeof(HwtsProfileType01));
     hwts->set_chunksizeinbytes(sizeof(HwtsProfileType01));
     data = analysis::dvvp::message::EncodeMessage(hwts);
     analysis::dvvp::transport::UploaderMgr::instance()->UploadData(
-        "0", static_cast<const void *>(data.c_str()), data.size());
+        "0", static_cast<const void*>(data.c_str()), data.size());
 
     hwtsChunk.cntRes0Type = HWTS_TASK_END_TYPE;
     hwtsChunk.syscnt = 2000000;
-    hwts->set_chunk(reinterpret_cast<char *>(&hwtsChunk), sizeof(HwtsProfileType01));
+    hwts->set_chunk(reinterpret_cast<char*>(&hwtsChunk), sizeof(HwtsProfileType01));
     hwts->set_chunksizeinbytes(sizeof(HwtsProfileType01));
     data = analysis::dvvp::message::EncodeMessage(hwts);
     analysis::dvvp::transport::UploaderMgr::instance()->UploadData(
-        "0", static_cast<const void *>(data.c_str()), data.size());
+        "0", static_cast<const void*>(data.c_str()), data.size());
 
     // ffts
     StarsCxtLog fftsCxtLog;
@@ -691,52 +690,55 @@ TEST_F(MSPROF_ACL_CORE_STEST, acl_api_subscribe) {
     fftsCxtLog.threadId = 400;
     SHARED_PTR_ALIA<analysis::dvvp::proto::FileChunkReq> ffts(new analysis::dvvp::proto::FileChunkReq());
     ffts->set_filename("stars_soc.data");
-    ffts->set_chunk(reinterpret_cast<char *>(&fftsCxtLog), sizeof(fftsCxtLog));
+    ffts->set_chunk(reinterpret_cast<char*>(&fftsCxtLog), sizeof(fftsCxtLog));
     ffts->set_chunksizeinbytes(sizeof(fftsCxtLog));
     data = analysis::dvvp::message::EncodeMessage(ffts);
-    analysis::dvvp::transport::UploaderMgr::instance()->UploadData("0", static_cast<const void *>(data.c_str()), data.size());
+    analysis::dvvp::transport::UploaderMgr::instance()->UploadData(
+        "0", static_cast<const void*>(data.c_str()), data.size());
     fftsCxtLog.head.logType = FFTS_SUBTASK_THREAD_END_FUNC_TYPE;
     fftsCxtLog.sysCountLow = 2000;
     fftsCxtLog.sysCountHigh = 0;
-    ffts->set_chunk(reinterpret_cast<char *>(&fftsCxtLog), sizeof(fftsCxtLog));
+    ffts->set_chunk(reinterpret_cast<char*>(&fftsCxtLog), sizeof(fftsCxtLog));
     data = analysis::dvvp::message::EncodeMessage(ffts);
-    analysis::dvvp::transport::UploaderMgr::instance()->UploadData("0", static_cast<const void *>(data.c_str()), data.size());
+    analysis::dvvp::transport::UploaderMgr::instance()->UploadData(
+        "0", static_cast<const void*>(data.c_str()), data.size());
 
     StarsAcsqLog fftsAcsqLog;
     fftsAcsqLog.head.logType = ACSQ_TASK_START_FUNC_TYPE;
     fftsAcsqLog.streamId = 1;
     fftsAcsqLog.taskId = 2;
     fftsAcsqLog.sysCountLow = 10000;
-    ffts->set_chunk(reinterpret_cast<char *>(&fftsAcsqLog), sizeof(fftsAcsqLog));
+    ffts->set_chunk(reinterpret_cast<char*>(&fftsAcsqLog), sizeof(fftsAcsqLog));
     data = analysis::dvvp::message::EncodeMessage(ffts);
-    analysis::dvvp::transport::UploaderMgr::instance()->UploadData("0", static_cast<const void *>(data.c_str()), data.size());
+    analysis::dvvp::transport::UploaderMgr::instance()->UploadData(
+        "0", static_cast<const void*>(data.c_str()), data.size());
     fftsAcsqLog.head.logType = ACSQ_TASK_END_FUNC_TYPE;
     fftsAcsqLog.sysCountLow = 20000;
-    ffts->set_chunk(reinterpret_cast<char *>(&fftsAcsqLog), sizeof(fftsAcsqLog));
+    ffts->set_chunk(reinterpret_cast<char*>(&fftsAcsqLog), sizeof(fftsAcsqLog));
     data = analysis::dvvp::message::EncodeMessage(ffts);
-    analysis::dvvp::transport::UploaderMgr::instance()->UploadData("0", static_cast<const void *>(data.c_str()), data.size());
-    EXPECT_EQ(PROFILING_FAILED, analysis::dvvp::transport::UploaderMgr::instance()->UploadData("20",
-        static_cast<const void *>(data.c_str()), data.size()));
+    analysis::dvvp::transport::UploaderMgr::instance()->UploadData(
+        "0", static_cast<const void*>(data.c_str()), data.size());
+    EXPECT_EQ(
+        PROFILING_FAILED, analysis::dvvp::transport::UploaderMgr::instance()->UploadData(
+                              "20", static_cast<const void*>(data.c_str()), data.size()));
 
-    EXPECT_EQ(ACL_SUCCESS, Analysis::Dvvp::ProfilerCommon::ProfConfigStop(
-        static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_SUBSCRIBE), static_cast<const void *>(&cfg),
-        sizeof(cfg)));
+    EXPECT_EQ(
+        ACL_SUCCESS, Analysis::Dvvp::ProfilerCommon::ProfConfigStop(
+                         static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_SUBSCRIBE),
+                         static_cast<const void*>(&cfg), sizeof(cfg)));
     EXPECT_EQ(ACL_SUCCESS, ProfAclMgr::instance()->UnInit());
     aclprofDestroySubscribeConfig(profSubconfig);
     ConfigManager::instance()->Uninit();
 }
 
-TEST_F(MSPROF_ACL_CORE_STEST, acl_api_subscribe_step_parse) {
+TEST_F(MSPROF_ACL_CORE_STEST, acl_api_subscribe_step_parse)
+{
     GlobalMockObject::verify();
 
     Analysis::Dvvp::Common::Config::ConfigManager::instance()->Init();
 
-    MOCKER(mmWrite)
-        .stubs()
-        .will(invoke(mmWriteStub));
-    MOCKER(mmClose)
-        .stubs()
-        .will(returnValue(EN_OK));
+    MOCKER(mmWrite).stubs().will(invoke(mmWriteStub));
+    MOCKER(mmClose).stubs().will(returnValue(EN_OK));
 
     using namespace Msprofiler::Api;
 
@@ -744,7 +746,7 @@ TEST_F(MSPROF_ACL_CORE_STEST, acl_api_subscribe_step_parse) {
     ProfSubscribeConfig config;
     config.timeInfo = true;
     config.aicoreMetrics = PROF_AICORE_NONE;
-    config.fd = static_cast<void *>(&fd);
+    config.fd = static_cast<void*>(&fd);
 
     EXPECT_EQ(nullptr, aclprofCreateSubscribeConfig(0, (aclprofAicoreMetrics)config.aicoreMetrics, nullptr));
     auto profSubconfig = aclprofCreateSubscribeConfig(1, (aclprofAicoreMetrics)config.aicoreMetrics, config.fd);
@@ -752,7 +754,6 @@ TEST_F(MSPROF_ACL_CORE_STEST, acl_api_subscribe_step_parse) {
     EXPECT_NE(nullptr, profSubconfig);
 
     EXPECT_EQ(ACL_ERROR_INVALID_MODEL_ID, aclprofModelSubscribe(1, nullptr));
-
 
     EXPECT_EQ(ACL_SUCCESS, ProfAclMgr::instance()->Init());
     struct MsprofConfig cfg;
@@ -763,13 +764,20 @@ TEST_F(MSPROF_ACL_CORE_STEST, acl_api_subscribe_step_parse) {
     cfg.metrics = static_cast<uint32_t>(config.aicoreMetrics);
     cfg.fd = reinterpret_cast<uintptr_t>(config.fd);
     cfg.cacheFlag = config.timeInfo;
-    EXPECT_EQ(ACL_SUCCESS, Analysis::Dvvp::ProfilerCommon::ProfConfigStart(
-        static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_SUBSCRIBE), static_cast<const void *>(&cfg),
-        sizeof(cfg)));
+    EXPECT_EQ(
+        ACL_SUCCESS, Analysis::Dvvp::ProfilerCommon::ProfConfigStart(
+                         static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_SUBSCRIBE),
+                         static_cast<const void*>(&cfg), sizeof(cfg)));
 
     std::string data;
 
-    std::string geTaskDescChunk = "{\"block_dims\": 1,   \"cur_iter_num\": 0,   \"input\": [     {       \"data_type\": \"int32\",       \"format\": \"ND\",       \"idx\": 0,       \"shape\": []     },     {       \"data_type\": \"int32\",       \"format\": \"ND\",       \"idx\": 1,       \"shape\": []     }   ],   \"model_id\": 1,   \"model_name\": \"ge_default_20210220001434_1\",   \"op_name\": \"OpName\",   \"op_type\": \"OpType\",   \"output\": [     {       \"data_type\": \"int32\",       \"format\": \"ND\",       \"idx\": 0,       \"shape\": []     }   ],   \"shape_type\": \"static\",   \"stream_id\": 100,   \"task_id\": 30,   \"task_type\": \"AI_CORE\" },";
+    std::string geTaskDescChunk =
+        "{\"block_dims\": 1,   \"cur_iter_num\": 0,   \"input\": [     {       \"data_type\": \"int32\",       "
+        "\"format\": \"ND\",       \"idx\": 0,       \"shape\": []     },     {       \"data_type\": \"int32\",       "
+        "\"format\": \"ND\",       \"idx\": 1,       \"shape\": []     }   ],   \"model_id\": 1,   \"model_name\": "
+        "\"ge_default_20210220001434_1\",   \"op_name\": \"OpName\",   \"op_type\": \"OpType\",   \"output\": [     {  "
+        "     \"data_type\": \"int32\",       \"format\": \"ND\",       \"idx\": 0,       \"shape\": []     }   ],   "
+        "\"shape_type\": \"static\",   \"stream_id\": 100,   \"task_id\": 30,   \"task_type\": \"AI_CORE\" },";
     SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> geTaskDesc(new analysis::dvvp::ProfileFileChunk());
     geTaskDesc->fileName = "Framework.task_desc_info";
     geTaskDesc->chunk = geTaskDescChunk;
@@ -785,18 +793,18 @@ TEST_F(MSPROF_ACL_CORE_STEST, acl_api_subscribe_step_parse) {
     hwtsChunk.syscnt = 1000000;
     SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> hwts(new analysis::dvvp::ProfileFileChunk());
     hwts->fileName = "hwts.data";
-    hwts->chunk.append(reinterpret_cast<char *>(&hwtsChunk), sizeof(HwtsProfileType01));
+    hwts->chunk.append(reinterpret_cast<char*>(&hwtsChunk), sizeof(HwtsProfileType01));
     hwts->chunkSize = sizeof(HwtsProfileType01);
     analysis::dvvp::transport::UploaderMgr::instance()->UploadData("0", hwts);
 
     hwtsChunk.cntRes0Type = HWTS_TASK_END_TYPE;
     hwtsChunk.syscnt = 2000000;
     hwts->chunk.clear();
-    hwts->chunk.append(reinterpret_cast<char *>(&hwtsChunk), sizeof(HwtsProfileType01));
+    hwts->chunk.append(reinterpret_cast<char*>(&hwtsChunk), sizeof(HwtsProfileType01));
     hwts->chunkSize = sizeof(HwtsProfileType01) - 10;
     analysis::dvvp::transport::UploaderMgr::instance()->UploadData("0", hwts);
     hwts->chunk.clear();
-    hwts->chunk.append(reinterpret_cast<char *>(&hwtsChunk) + sizeof(HwtsProfileType01) - 10, 10);
+    hwts->chunk.append(reinterpret_cast<char*>(&hwtsChunk) + sizeof(HwtsProfileType01) - 10, 10);
     hwts->chunkSize = 10;
     analysis::dvvp::transport::UploaderMgr::instance()->UploadData("0", hwts);
 
@@ -810,7 +818,7 @@ TEST_F(MSPROF_ACL_CORE_STEST, acl_api_subscribe_step_parse) {
     tsKpChunk.timestamp = 1000000;
     SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> tsKpTimeline(new analysis::dvvp::ProfileFileChunk());
     tsKpTimeline->fileName = "ts_track.data";
-    tsKpTimeline->chunk.append(reinterpret_cast<char *>(&tsKpChunk), tsKpChunk.head.bufSize);
+    tsKpTimeline->chunk.append(reinterpret_cast<char*>(&tsKpChunk), tsKpChunk.head.bufSize);
     tsKpTimeline->chunkSize = tsKpChunk.head.bufSize;
     analysis::dvvp::transport::UploaderMgr::instance()->UploadData("0", tsKpTimeline);
 
@@ -824,74 +832,72 @@ TEST_F(MSPROF_ACL_CORE_STEST, acl_api_subscribe_step_parse) {
     tsChunk.timestamp = 1000001;
     SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> tsTimeline(new analysis::dvvp::ProfileFileChunk());
     tsTimeline->fileName = "ts_track.data";
-    tsTimeline->chunk.append(reinterpret_cast<char *>(&tsChunk));
+    tsTimeline->chunk.append(reinterpret_cast<char*>(&tsChunk));
     tsTimeline->chunkSize = tsChunk.head.bufSize;
     analysis::dvvp::transport::UploaderMgr::instance()->UploadData("0", tsTimeline);
 
     tsChunk.taskState = TS_TIMELINE_AICORE_START_TASK_STATE;
     tsChunk.timestamp = 1000002;
     tsTimeline->chunk.clear();
-    tsTimeline->chunk.append(reinterpret_cast<char *>(&tsChunk));
+    tsTimeline->chunk.append(reinterpret_cast<char*>(&tsChunk));
     tsTimeline->chunkSize = tsChunk.head.bufSize;
     analysis::dvvp::transport::UploaderMgr::instance()->UploadData("0", tsTimeline);
 
     tsChunk.taskState = TS_TIMELINE_AICORE_END_TASK_STATE;
     tsChunk.timestamp = 1000003;
     tsTimeline->chunk.clear();
-    tsTimeline->chunk.append(reinterpret_cast<char *>(&tsChunk));
+    tsTimeline->chunk.append(reinterpret_cast<char*>(&tsChunk));
     tsTimeline->chunkSize = tsChunk.head.bufSize;
     analysis::dvvp::transport::UploaderMgr::instance()->UploadData("0", tsTimeline);
 
     tsChunk.taskState = TS_TIMELINE_END_TASK_STATE;
     tsChunk.timestamp = 1000004;
     tsTimeline->chunk.clear();
-    tsTimeline->chunk.append(reinterpret_cast<char *>(&tsChunk), tsChunk.head.bufSize - 10);
+    tsTimeline->chunk.append(reinterpret_cast<char*>(&tsChunk), tsChunk.head.bufSize - 10);
     tsTimeline->chunkSize = tsChunk.head.bufSize - 10;
     analysis::dvvp::transport::UploaderMgr::instance()->UploadData("0", tsTimeline);
     tsTimeline->chunk.clear();
-    tsTimeline->chunk.append(reinterpret_cast<char *>(&tsChunk) + tsChunk.head.bufSize - 10, 10);
+    tsTimeline->chunk.append(reinterpret_cast<char*>(&tsChunk) + tsChunk.head.bufSize - 10, 10);
     tsTimeline->chunkSize = 10;
     analysis::dvvp::transport::UploaderMgr::instance()->UploadData("0", tsTimeline);
 
     tsKpChunk.tagId = TS_KEYPOINT_END_TASK_STATE;
     tsKpChunk.timestamp = 5000000;
     tsKpTimeline->chunk.clear();
-    tsKpTimeline->chunk.append(reinterpret_cast<char *>(&tsKpChunk), tsKpChunk.head.bufSize);
+    tsKpTimeline->chunk.append(reinterpret_cast<char*>(&tsKpChunk), tsKpChunk.head.bufSize);
     tsKpTimeline->chunkSize = tsKpChunk.head.bufSize;
     analysis::dvvp::transport::UploaderMgr::instance()->UploadData("0", tsKpTimeline);
 
     tsKpTimeline->chunk.clear();
-    tsKpTimeline->chunk.append(reinterpret_cast<char *>(&tsKpChunk) + tsKpChunk.head.bufSize - 10, 10);
+    tsKpTimeline->chunk.append(reinterpret_cast<char*>(&tsKpChunk) + tsKpChunk.head.bufSize - 10, 10);
     tsKpTimeline->chunkSize = 10;
     analysis::dvvp::transport::UploaderMgr::instance()->UploadData("0", tsKpTimeline);
 
-    EXPECT_EQ(ACL_SUCCESS, Analysis::Dvvp::ProfilerCommon::ProfConfigStop(
-        static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_SUBSCRIBE), static_cast<const void *>(&cfg),
-        sizeof(cfg)));
+    EXPECT_EQ(
+        ACL_SUCCESS, Analysis::Dvvp::ProfilerCommon::ProfConfigStop(
+                         static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_SUBSCRIBE),
+                         static_cast<const void*>(&cfg), sizeof(cfg)));
     EXPECT_EQ(ACL_SUCCESS, ProfAclMgr::instance()->UnInit());
     aclprofDestroySubscribeConfig(profSubconfig);
     ConfigManager::instance()->Uninit();
 }
 
-TEST_F(MSPROF_ACL_CORE_STEST, new_struct_subscribe) {
+TEST_F(MSPROF_ACL_CORE_STEST, new_struct_subscribe)
+{
     using namespace Msprofiler::Api;
     using namespace Analysis::Dvvp::Analyze;
     GlobalMockObject::verify();
     ConfigManager::instance()->Init();
     ConfigManager::instance()->configMap_["frq"] = std::to_string(100000);
-    MOCKER(mmWrite)
-        .stubs()
-        .will(invoke(mmWriteStub));
-    MOCKER(mmClose)
-        .stubs()
-        .will(returnValue(EN_OK));
+    MOCKER(mmWrite).stubs().will(invoke(mmWriteStub));
+    MOCKER(mmClose).stubs().will(returnValue(EN_OK));
 
     // Subscribe
     int fd = 1;
     struct ProfSubscribeConfig config;
     config.timeInfo = true;
     config.aicoreMetrics = PROF_AICORE_NONE;
-    config.fd = static_cast<void *>(&fd);
+    config.fd = static_cast<void*>(&fd);
     auto profSubconfig = aclprofCreateSubscribeConfig(1, (aclprofAicoreMetrics)config.aicoreMetrics, config.fd);
     EXPECT_EQ(ACL_SUCCESS, ProfAclMgr::instance()->Init());
     struct MsprofConfig cfg;
@@ -902,9 +908,10 @@ TEST_F(MSPROF_ACL_CORE_STEST, new_struct_subscribe) {
     cfg.metrics = static_cast<uint32_t>(config.aicoreMetrics);
     cfg.fd = reinterpret_cast<uintptr_t>(config.fd);
     cfg.cacheFlag = config.timeInfo;
-    EXPECT_EQ(ACL_SUCCESS, Analysis::Dvvp::ProfilerCommon::ProfConfigStart(
-        static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_SUBSCRIBE), static_cast<const void *>(&cfg),
-        sizeof(cfg)));
+    EXPECT_EQ(
+        ACL_SUCCESS, Analysis::Dvvp::ProfilerCommon::ProfConfigStart(
+                         static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_SUBSCRIBE),
+                         static_cast<const void*>(&cfg), sizeof(cfg)));
 
     struct MsprofConfig cfg2;
     cfg2.devNums = 1;
@@ -914,9 +921,10 @@ TEST_F(MSPROF_ACL_CORE_STEST, new_struct_subscribe) {
     cfg2.metrics = static_cast<uint32_t>(config.aicoreMetrics);
     cfg2.fd = reinterpret_cast<uintptr_t>(config.fd);
     cfg2.cacheFlag = config.timeInfo;
-    EXPECT_EQ(ACL_SUCCESS, Analysis::Dvvp::ProfilerCommon::ProfConfigStart(
-        static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_SUBSCRIBE), static_cast<const void *>(&cfg2),
-        sizeof(cfg2)));
+    EXPECT_EQ(
+        ACL_SUCCESS, Analysis::Dvvp::ProfilerCommon::ProfConfigStart(
+                         static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_SUBSCRIBE),
+                         static_cast<const void*>(&cfg2), sizeof(cfg2)));
 
     std::string data;
     std::shared_ptr<Analyzer> analyzer(new Analyzer(nullptr));
@@ -934,7 +942,7 @@ TEST_F(MSPROF_ACL_CORE_STEST, new_struct_subscribe) {
     geUnAgingTaskDescChunk.beginTime = 40;
     geUnAgingTaskDescChunk.endTime = 60;
     geUnAgingTaskDescChunk.threadId = 1;
-    std::string geUnAgingOriData((char *)&geUnAgingTaskDescChunk, sizeof(geUnAgingTaskDescChunk));
+    std::string geUnAgingOriData((char*)&geUnAgingTaskDescChunk, sizeof(geUnAgingTaskDescChunk));
     SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> geUnAgingTaskDesc(new analysis::dvvp::ProfileFileChunk());
     geUnAgingTaskDesc->fileName = "unaging.api_event";
     geUnAgingTaskDesc->chunk = geUnAgingOriData;
@@ -944,7 +952,7 @@ TEST_F(MSPROF_ACL_CORE_STEST, new_struct_subscribe) {
     // ge api aging
     struct MsprofApi geAgingTaskDescChunk;
     geAgingTaskDescChunk.type = MSPROF_REPORT_NODE_LAUNCH_TYPE;
-    std::string geAgingOriData((char *)&geAgingTaskDescChunk, sizeof(geAgingTaskDescChunk));
+    std::string geAgingOriData((char*)&geAgingTaskDescChunk, sizeof(geAgingTaskDescChunk));
     SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> geAgingTaskDesc(new analysis::dvvp::ProfileFileChunk());
     geAgingTaskDesc->fileName = "aging.api_event";
     geAgingTaskDesc->chunk = geAgingOriData;
@@ -960,7 +968,7 @@ TEST_F(MSPROF_ACL_CORE_STEST, new_struct_subscribe) {
     geTaskDescChunk.data.nodeBasicInfo = nodeData;
     geTaskDescChunk.threadId = 1;
     geTaskDescChunk.timeStamp = 60;
-    std::string geOriData((char *)&geTaskDescChunk, sizeof(geTaskDescChunk));
+    std::string geOriData((char*)&geTaskDescChunk, sizeof(geTaskDescChunk));
     SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> geTaskDesc(new analysis::dvvp::ProfileFileChunk());
     geTaskDesc->fileName = "unaging.compact.node_basic_info";
     geTaskDesc->extraInfo = "0.0";
@@ -971,7 +979,7 @@ TEST_F(MSPROF_ACL_CORE_STEST, new_struct_subscribe) {
     struct MsprofGraphIdInfo graphData;
     struct MsprofAdditionalInfo geAddChunk;
     geAddChunk.level = MSPROF_REPORT_MODEL_LEVEL;
-    std::string geAddData((char *)&geAddChunk, sizeof(geAddChunk));
+    std::string geAddData((char*)&geAddChunk, sizeof(geAddChunk));
     SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> geAddDesc(new analysis::dvvp::ProfileFileChunk());
     geAddDesc->fileName = "Additional.graph_id_map";
     geAddDesc->extraInfo = "0.0";
@@ -983,7 +991,7 @@ TEST_F(MSPROF_ACL_CORE_STEST, new_struct_subscribe) {
     struct MsprofAdditionalInfo geAddContextChunk;
     geAddContextChunk.level = MSPROF_REPORT_NODE_LEVEL;
     geAddContextChunk.type = MSPROF_REPORT_NODE_CONTEXT_ID_INFO_TYPE;
-    std::string geAddContextData((char *)&geAddContextChunk, sizeof(geAddContextChunk));
+    std::string geAddContextData((char*)&geAddContextChunk, sizeof(geAddContextChunk));
     SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> geContextDesc(new analysis::dvvp::ProfileFileChunk());
     geContextDesc->fileName = "Additional.context_id_info";
     geContextDesc->extraInfo = "0.0";
@@ -998,7 +1006,7 @@ TEST_F(MSPROF_ACL_CORE_STEST, new_struct_subscribe) {
     geUnAgingEventChunk.threadId = 1;
     geUnAgingEventChunk.itemId = 1;
     geUnAgingEventChunk.timeStamp = 10;
-    std::string geUnAgingStartOriData((char *)&geUnAgingEventChunk, sizeof(geUnAgingEventChunk));
+    std::string geUnAgingStartOriData((char*)&geUnAgingEventChunk, sizeof(geUnAgingEventChunk));
     SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> geModelLoad(new analysis::dvvp::ProfileFileChunk());
     geModelLoad->fileName = "unaging.api_event.null";
     geModelLoad->chunk = geUnAgingStartOriData;
@@ -1006,7 +1014,7 @@ TEST_F(MSPROF_ACL_CORE_STEST, new_struct_subscribe) {
     analyzer->OnOptimizeData(geModelLoad);
 
     geUnAgingEventChunk.timeStamp = 100;
-    std::string geUnAgingEndOriData((char *)&geUnAgingEventChunk, sizeof(geUnAgingEventChunk));
+    std::string geUnAgingEndOriData((char*)&geUnAgingEventChunk, sizeof(geUnAgingEventChunk));
     geModelLoad->fileName = "unaging.api_event.null";
     geModelLoad->chunk = geUnAgingEndOriData;
     geModelLoad->chunkSize = sizeof(geUnAgingEventChunk);
@@ -1021,7 +1029,7 @@ TEST_F(MSPROF_ACL_CORE_STEST, new_struct_subscribe) {
     rtDataChunk.level = MSPROF_REPORT_RUNTIME_LEVEL;
     rtDataChunk.timeStamp = 50;
     rtDataChunk.threadId = 1;
-    std::string rtData((char *)&rtDataChunk, sizeof(rtDataChunk));
+    std::string rtData((char*)&rtDataChunk, sizeof(rtDataChunk));
     SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> rtTaskDesc(new analysis::dvvp::ProfileFileChunk());
     rtTaskDesc->fileName = "unaging.compact.task_track";
     rtTaskDesc->extraInfo = "0.0";
@@ -1038,7 +1046,7 @@ TEST_F(MSPROF_ACL_CORE_STEST, new_struct_subscribe) {
     rtDataAgingChunk.level = MSPROF_REPORT_RUNTIME_LEVEL;
     rtDataAgingChunk.timeStamp = 60;
     rtDataAgingChunk.threadId = 1;
-    std::string rtAgingData((char *)&rtDataAgingChunk, sizeof(rtDataChunk));
+    std::string rtAgingData((char*)&rtDataAgingChunk, sizeof(rtDataChunk));
     SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> rtAgingTaskDesc(new analysis::dvvp::ProfileFileChunk());
     rtAgingTaskDesc->fileName = "aging.compact.task_track";
     rtAgingTaskDesc->extraInfo = "0.0";
@@ -1055,14 +1063,14 @@ TEST_F(MSPROF_ACL_CORE_STEST, new_struct_subscribe) {
     SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> hwts(new analysis::dvvp::ProfileFileChunk());
     hwts->fileName = "hwts.data.null";
     hwts->chunk.clear();
-    hwts->chunk.append(reinterpret_cast<char *>(&hwtsChunk), sizeof(HwtsProfileType01));
+    hwts->chunk.append(reinterpret_cast<char*>(&hwtsChunk), sizeof(HwtsProfileType01));
     hwts->chunkSize = sizeof(HwtsProfileType01);
     analyzer->OnOptimizeData(hwts);
 
     hwtsChunk.cntRes0Type = HWTS_TASK_END_TYPE;
     hwtsChunk.syscnt = 20000; // 200end
     hwts->chunk.clear();
-    hwts->chunk.append(reinterpret_cast<char *>(&hwtsChunk), sizeof(HwtsProfileType01));
+    hwts->chunk.append(reinterpret_cast<char*>(&hwtsChunk), sizeof(HwtsProfileType01));
     hwts->chunkSize = sizeof(HwtsProfileType01);
     analyzer->OnOptimizeData(hwts);
 
@@ -1077,14 +1085,14 @@ TEST_F(MSPROF_ACL_CORE_STEST, new_struct_subscribe) {
     fftsCxtLog.threadId = 400;
     SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> ffts(new analysis::dvvp::ProfileFileChunk());
     ffts->fileName = "stars_soc.data.null";
-    ffts->chunk.append(reinterpret_cast<char *>(&fftsCxtLog), sizeof(fftsCxtLog));
+    ffts->chunk.append(reinterpret_cast<char*>(&fftsCxtLog), sizeof(fftsCxtLog));
     ffts->chunkSize = sizeof(fftsCxtLog);
     analyzer->OnOptimizeData(ffts);
     fftsCxtLog.head.logType = FFTS_SUBTASK_THREAD_END_FUNC_TYPE;
     fftsCxtLog.sysCountLow = 2000;
     fftsCxtLog.sysCountHigh = 0;
     ffts->chunk.clear();
-    ffts->chunk.append(reinterpret_cast<char *>(&fftsCxtLog), sizeof(fftsCxtLog));
+    ffts->chunk.append(reinterpret_cast<char*>(&fftsCxtLog), sizeof(fftsCxtLog));
     analyzer->OnOptimizeData(ffts);
 
     StarsAcsqLog fftsAcsqLog;
@@ -1093,12 +1101,12 @@ TEST_F(MSPROF_ACL_CORE_STEST, new_struct_subscribe) {
     fftsAcsqLog.taskId = 1;
     fftsAcsqLog.sysCountLow = 10000;
     ffts->chunk.clear();
-    ffts->chunk.append(reinterpret_cast<char *>(&fftsAcsqLog), sizeof(fftsAcsqLog));
+    ffts->chunk.append(reinterpret_cast<char*>(&fftsAcsqLog), sizeof(fftsAcsqLog));
     analyzer->OnOptimizeData(ffts);
     fftsAcsqLog.head.logType = ACSQ_TASK_END_FUNC_TYPE;
     fftsAcsqLog.sysCountLow = 20000;
     ffts->chunk.clear();
-    ffts->chunk.append(reinterpret_cast<char *>(&fftsAcsqLog), sizeof(fftsAcsqLog));
+    ffts->chunk.append(reinterpret_cast<char*>(&fftsAcsqLog), sizeof(fftsAcsqLog));
     analyzer->OnOptimizeData(ffts);
 
     // check
@@ -1130,36 +1138,35 @@ TEST_F(MSPROF_ACL_CORE_STEST, new_struct_subscribe) {
     EXPECT_EQ(0, analyzer->geOpInfo_.size());
 
     // UnSubscribe
-    EXPECT_EQ(ACL_SUCCESS, Analysis::Dvvp::ProfilerCommon::ProfConfigStop(
-        static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_SUBSCRIBE), static_cast<const void *>(&cfg),
-        sizeof(cfg)));
-    EXPECT_EQ(ACL_SUCCESS, Analysis::Dvvp::ProfilerCommon::ProfConfigStop(
-        static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_SUBSCRIBE), static_cast<const void *>(&cfg2),
-        sizeof(cfg2)));
+    EXPECT_EQ(
+        ACL_SUCCESS, Analysis::Dvvp::ProfilerCommon::ProfConfigStop(
+                         static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_SUBSCRIBE),
+                         static_cast<const void*>(&cfg), sizeof(cfg)));
+    EXPECT_EQ(
+        ACL_SUCCESS, Analysis::Dvvp::ProfilerCommon::ProfConfigStop(
+                         static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_SUBSCRIBE),
+                         static_cast<const void*>(&cfg2), sizeof(cfg2)));
     EXPECT_EQ(ACL_SUCCESS, aclprofDestroySubscribeConfig(profSubconfig));
     EXPECT_EQ(ACL_SUCCESS, ProfAclMgr::instance()->UnInit());
     ConfigManager::instance()->Uninit();
 }
 
-TEST_F(MSPROF_ACL_CORE_STEST, new_struct_subscribe_hostlate_rt) {
+TEST_F(MSPROF_ACL_CORE_STEST, new_struct_subscribe_hostlate_rt)
+{
     using namespace Msprofiler::Api;
     using namespace Analysis::Dvvp::Analyze;
     GlobalMockObject::verify();
     ConfigManager::instance()->Init();
     ConfigManager::instance()->configMap_["frq"] = std::to_string(100000);
-    MOCKER(mmWrite)
-        .stubs()
-        .will(invoke(mmWriteStub));
-    MOCKER(mmClose)
-        .stubs()
-        .will(returnValue(EN_OK));
+    MOCKER(mmWrite).stubs().will(invoke(mmWriteStub));
+    MOCKER(mmClose).stubs().will(returnValue(EN_OK));
 
     // Subscribe
     int fd = 1;
     struct ProfSubscribeConfig config;
     config.timeInfo = true;
     config.aicoreMetrics = PROF_AICORE_NONE;
-    config.fd = static_cast<void *>(&fd);
+    config.fd = static_cast<void*>(&fd);
     auto profSubconfig = aclprofCreateSubscribeConfig(1, (aclprofAicoreMetrics)config.aicoreMetrics, config.fd);
     EXPECT_EQ(ACL_SUCCESS, ProfAclMgr::instance()->Init());
     struct MsprofConfig cfg;
@@ -1170,9 +1177,10 @@ TEST_F(MSPROF_ACL_CORE_STEST, new_struct_subscribe_hostlate_rt) {
     cfg.metrics = static_cast<uint32_t>(config.aicoreMetrics);
     cfg.fd = reinterpret_cast<uintptr_t>(config.fd);
     cfg.cacheFlag = config.timeInfo;
-    EXPECT_EQ(ACL_SUCCESS, Analysis::Dvvp::ProfilerCommon::ProfConfigStart(
-        static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_SUBSCRIBE), static_cast<const void *>(&cfg),
-        sizeof(cfg)));
+    EXPECT_EQ(
+        ACL_SUCCESS, Analysis::Dvvp::ProfilerCommon::ProfConfigStart(
+                         static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_SUBSCRIBE),
+                         static_cast<const void*>(&cfg), sizeof(cfg)));
 
     std::string data;
     std::shared_ptr<Analyzer> analyzer(new Analyzer(nullptr));
@@ -1197,14 +1205,14 @@ TEST_F(MSPROF_ACL_CORE_STEST, new_struct_subscribe_hostlate_rt) {
     SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> hwts(new analysis::dvvp::ProfileFileChunk());
     hwts->fileName = "hwts.data.null";
     hwts->chunk.clear();
-    hwts->chunk.append(reinterpret_cast<char *>(&hwtsChunk), sizeof(HwtsProfileType01));
+    hwts->chunk.append(reinterpret_cast<char*>(&hwtsChunk), sizeof(HwtsProfileType01));
     hwts->chunkSize = sizeof(HwtsProfileType01);
     analyzer->OnOptimizeData(hwts);
 
     hwtsChunk.cntRes0Type = HWTS_TASK_END_TYPE;
     hwtsChunk.syscnt = 20000; // 200end
     hwts->chunk.clear();
-    hwts->chunk.append(reinterpret_cast<char *>(&hwtsChunk), sizeof(HwtsProfileType01));
+    hwts->chunk.append(reinterpret_cast<char*>(&hwtsChunk), sizeof(HwtsProfileType01));
     hwts->chunkSize = sizeof(HwtsProfileType01);
     analyzer->OnOptimizeData(hwts);
 
@@ -1214,10 +1222,10 @@ TEST_F(MSPROF_ACL_CORE_STEST, new_struct_subscribe_hostlate_rt) {
     geUnAgingTaskDescChunk.beginTime = 40;
     geUnAgingTaskDescChunk.endTime = 60;
     geUnAgingTaskDescChunk.threadId = 1;
-    std::string geUnAgingOriData((char *)&geUnAgingTaskDescChunk, sizeof(geUnAgingTaskDescChunk));
+    std::string geUnAgingOriData((char*)&geUnAgingTaskDescChunk, sizeof(geUnAgingTaskDescChunk));
     SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> geUnAgingTaskDesc(new analysis::dvvp::ProfileFileChunk());
     geUnAgingTaskDesc->fileName = "unaging.api_event.null";
-    geUnAgingTaskDesc->chunk =  geUnAgingOriData;
+    geUnAgingTaskDesc->chunk = geUnAgingOriData;
     geUnAgingTaskDesc->chunkSize = sizeof(geUnAgingTaskDescChunk);
     analyzer->OnOptimizeData(geUnAgingTaskDesc);
 
@@ -1230,7 +1238,7 @@ TEST_F(MSPROF_ACL_CORE_STEST, new_struct_subscribe_hostlate_rt) {
     geTaskDescChunk.data.nodeBasicInfo = nodeData;
     geTaskDescChunk.threadId = 1;
     geTaskDescChunk.timeStamp = 60;
-    std::string geOriData((char *)&geTaskDescChunk, sizeof(geTaskDescChunk));
+    std::string geOriData((char*)&geTaskDescChunk, sizeof(geTaskDescChunk));
     SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> geTaskDesc(new analysis::dvvp::ProfileFileChunk());
     geTaskDesc->fileName = "unaging.compact.node_basic_info";
     geTaskDesc->extraInfo = "0.0";
@@ -1245,7 +1253,7 @@ TEST_F(MSPROF_ACL_CORE_STEST, new_struct_subscribe_hostlate_rt) {
     geUnAgingEventChunk.threadId = 1;
     geUnAgingEventChunk.itemId = 1;
     geUnAgingEventChunk.timeStamp = 10;
-    std::string geUnAgingStartOriData((char *)&geUnAgingEventChunk, sizeof(geUnAgingEventChunk));
+    std::string geUnAgingStartOriData((char*)&geUnAgingEventChunk, sizeof(geUnAgingEventChunk));
     SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> geModelLoad(new analysis::dvvp::ProfileFileChunk());
     geModelLoad->fileName = "unaging.api_event.null";
     geModelLoad->chunk = geUnAgingStartOriData;
@@ -1253,7 +1261,7 @@ TEST_F(MSPROF_ACL_CORE_STEST, new_struct_subscribe_hostlate_rt) {
     analyzer->OnOptimizeData(geModelLoad);
 
     geUnAgingEventChunk.timeStamp = 100;
-    std::string geUnAgingEndOriData((char *)&geUnAgingEventChunk, sizeof(geUnAgingEventChunk));
+    std::string geUnAgingEndOriData((char*)&geUnAgingEventChunk, sizeof(geUnAgingEventChunk));
     geModelLoad->fileName = "unaging.api_event.null";
     geModelLoad->chunk = geUnAgingEndOriData;
     geModelLoad->chunkSize = sizeof(geUnAgingEventChunk);
@@ -1268,7 +1276,7 @@ TEST_F(MSPROF_ACL_CORE_STEST, new_struct_subscribe_hostlate_rt) {
     rtDataChunk.level = MSPROF_REPORT_RUNTIME_LEVEL;
     rtDataChunk.timeStamp = 50;
     rtDataChunk.threadId = 1;
-    std::string rtData((char *)&rtDataChunk, sizeof(rtDataChunk));
+    std::string rtData((char*)&rtDataChunk, sizeof(rtDataChunk));
     SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> rtTaskDesc(new analysis::dvvp::ProfileFileChunk());
     rtTaskDesc->fileName = "unaging.compact.task_track";
     rtTaskDesc->extraInfo = "0.0";
@@ -1288,33 +1296,31 @@ TEST_F(MSPROF_ACL_CORE_STEST, new_struct_subscribe_hostlate_rt) {
     EXPECT_EQ(0, analyzer->tsTmpOpInfo_.size());
 
     // UnSubscribe
-    EXPECT_EQ(ACL_SUCCESS, Analysis::Dvvp::ProfilerCommon::ProfConfigStop(
-        static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_SUBSCRIBE), static_cast<const void *>(&cfg),
-        sizeof(cfg)));
+    EXPECT_EQ(
+        ACL_SUCCESS, Analysis::Dvvp::ProfilerCommon::ProfConfigStop(
+                         static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_SUBSCRIBE),
+                         static_cast<const void*>(&cfg), sizeof(cfg)));
     EXPECT_EQ(ACL_SUCCESS, aclprofDestroySubscribeConfig(profSubconfig));
     EXPECT_EQ(ACL_SUCCESS, ProfAclMgr::instance()->UnInit());
     ConfigManager::instance()->Uninit();
 }
 
-TEST_F(MSPROF_ACL_CORE_STEST, new_struct_subscribe_hostlate_ge) {
+TEST_F(MSPROF_ACL_CORE_STEST, new_struct_subscribe_hostlate_ge)
+{
     using namespace Msprofiler::Api;
     using namespace Analysis::Dvvp::Analyze;
     GlobalMockObject::verify();
     ConfigManager::instance()->Init();
     ConfigManager::instance()->configMap_["frq"] = std::to_string(100000);
-    MOCKER(mmWrite)
-        .stubs()
-        .will(invoke(mmWriteStub));
-    MOCKER(mmClose)
-        .stubs()
-        .will(returnValue(EN_OK));
+    MOCKER(mmWrite).stubs().will(invoke(mmWriteStub));
+    MOCKER(mmClose).stubs().will(returnValue(EN_OK));
 
     // Subscribe
     int fd = 1;
     struct ProfSubscribeConfig config;
     config.timeInfo = true;
     config.aicoreMetrics = PROF_AICORE_NONE;
-    config.fd = static_cast<void *>(&fd);
+    config.fd = static_cast<void*>(&fd);
     auto profSubconfig = aclprofCreateSubscribeConfig(1, (aclprofAicoreMetrics)config.aicoreMetrics, config.fd);
     EXPECT_EQ(ACL_SUCCESS, ProfAclMgr::instance()->Init());
     struct MsprofConfig cfg;
@@ -1325,9 +1331,10 @@ TEST_F(MSPROF_ACL_CORE_STEST, new_struct_subscribe_hostlate_ge) {
     cfg.metrics = static_cast<uint32_t>(config.aicoreMetrics);
     cfg.fd = reinterpret_cast<uintptr_t>(config.fd);
     cfg.cacheFlag = config.timeInfo;
-    EXPECT_EQ(ACL_SUCCESS, Analysis::Dvvp::ProfilerCommon::ProfConfigStart(
-        static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_SUBSCRIBE), static_cast<const void *>(&cfg),
-        sizeof(cfg)));
+    EXPECT_EQ(
+        ACL_SUCCESS, Analysis::Dvvp::ProfilerCommon::ProfConfigStart(
+                         static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_SUBSCRIBE),
+                         static_cast<const void*>(&cfg), sizeof(cfg)));
 
     std::string data;
     std::shared_ptr<Analyzer> analyzer(new Analyzer(nullptr));
@@ -1350,14 +1357,14 @@ TEST_F(MSPROF_ACL_CORE_STEST, new_struct_subscribe_hostlate_ge) {
     SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> hwts(new analysis::dvvp::ProfileFileChunk());
     hwts->fileName = "hwts.data.null";
     hwts->chunk.clear();
-    hwts->chunk.append(reinterpret_cast<char *>(&hwtsChunk), sizeof(HwtsProfileType01));
+    hwts->chunk.append(reinterpret_cast<char*>(&hwtsChunk), sizeof(HwtsProfileType01));
     hwts->chunkSize = sizeof(HwtsProfileType01);
     analyzer->OnOptimizeData(hwts);
 
     hwtsChunk.cntRes0Type = HWTS_TASK_END_TYPE;
     hwtsChunk.syscnt = 20000; // 200end
     hwts->chunk.clear();
-    hwts->chunk.append(reinterpret_cast<char *>(&hwtsChunk), sizeof(HwtsProfileType01));
+    hwts->chunk.append(reinterpret_cast<char*>(&hwtsChunk), sizeof(HwtsProfileType01));
     hwts->chunkSize = sizeof(HwtsProfileType01);
     analyzer->OnOptimizeData(hwts);
 
@@ -1370,7 +1377,7 @@ TEST_F(MSPROF_ACL_CORE_STEST, new_struct_subscribe_hostlate_ge) {
     rtDataChunk.level = MSPROF_REPORT_RUNTIME_LEVEL;
     rtDataChunk.timeStamp = 50;
     rtDataChunk.threadId = 1;
-    std::string rtData((char *)&rtDataChunk, sizeof(rtDataChunk));
+    std::string rtData((char*)&rtDataChunk, sizeof(rtDataChunk));
     SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> rtTaskDesc(new analysis::dvvp::ProfileFileChunk());
     rtTaskDesc->fileName = "unaging.compact.task_track";
     rtTaskDesc->extraInfo = "0.0";
@@ -1390,7 +1397,7 @@ TEST_F(MSPROF_ACL_CORE_STEST, new_struct_subscribe_hostlate_ge) {
     geUnAgingTaskDescChunk.beginTime = 40;
     geUnAgingTaskDescChunk.endTime = 60;
     geUnAgingTaskDescChunk.threadId = 1;
-    std::string geUnAgingOriData((char *)&geUnAgingTaskDescChunk, sizeof(geUnAgingTaskDescChunk));
+    std::string geUnAgingOriData((char*)&geUnAgingTaskDescChunk, sizeof(geUnAgingTaskDescChunk));
     SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> geUnAgingTaskDesc(new analysis::dvvp::ProfileFileChunk());
     geUnAgingTaskDesc->fileName = "unaging.api_event.null";
     geUnAgingTaskDesc->chunk = geUnAgingOriData;
@@ -1406,7 +1413,7 @@ TEST_F(MSPROF_ACL_CORE_STEST, new_struct_subscribe_hostlate_ge) {
     geTaskDescChunk.data.nodeBasicInfo = nodeData;
     geTaskDescChunk.threadId = 1;
     geTaskDescChunk.timeStamp = 60;
-    std::string geOriData((char *)&geTaskDescChunk, sizeof(geTaskDescChunk));
+    std::string geOriData((char*)&geTaskDescChunk, sizeof(geTaskDescChunk));
     SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> geTaskDesc(new analysis::dvvp::ProfileFileChunk());
     geTaskDesc->fileName = "unaging.compact.node_basic_info";
     geTaskDesc->extraInfo = "0.0";
@@ -1421,7 +1428,7 @@ TEST_F(MSPROF_ACL_CORE_STEST, new_struct_subscribe_hostlate_ge) {
     geUnAgingEventChunk.threadId = 1;
     geUnAgingEventChunk.itemId = 1;
     geUnAgingEventChunk.timeStamp = 10;
-    std::string geUnAgingStartOriData((char *)&geUnAgingEventChunk, sizeof(geUnAgingEventChunk));
+    std::string geUnAgingStartOriData((char*)&geUnAgingEventChunk, sizeof(geUnAgingEventChunk));
     SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> geModelLoad(new analysis::dvvp::ProfileFileChunk());
     geModelLoad->fileName = "unaging.api_event.null";
     geModelLoad->chunk = geUnAgingStartOriData;
@@ -1429,7 +1436,7 @@ TEST_F(MSPROF_ACL_CORE_STEST, new_struct_subscribe_hostlate_ge) {
     analyzer->OnOptimizeData(geModelLoad);
 
     geUnAgingEventChunk.timeStamp = 100;
-    std::string geUnAgingEndOriData((char *)&geUnAgingEventChunk, sizeof(geUnAgingEventChunk));
+    std::string geUnAgingEndOriData((char*)&geUnAgingEventChunk, sizeof(geUnAgingEventChunk));
     geModelLoad->fileName = "unaging.api_event.null";
     geModelLoad->chunk = geUnAgingEndOriData;
     geModelLoad->chunkSize = sizeof(geUnAgingEventChunk);
@@ -1447,28 +1454,24 @@ TEST_F(MSPROF_ACL_CORE_STEST, new_struct_subscribe_hostlate_ge) {
     EXPECT_EQ(0, analyzer->tsTmpOpInfo_.size());
 
     // UnSubscribe
-    EXPECT_EQ(ACL_SUCCESS, Analysis::Dvvp::ProfilerCommon::ProfConfigStop(
-        static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_SUBSCRIBE), static_cast<const void *>(&cfg),
-        sizeof(cfg)));
+    EXPECT_EQ(
+        ACL_SUCCESS, Analysis::Dvvp::ProfilerCommon::ProfConfigStop(
+                         static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_SUBSCRIBE),
+                         static_cast<const void*>(&cfg), sizeof(cfg)));
     EXPECT_EQ(ACL_SUCCESS, aclprofDestroySubscribeConfig(profSubconfig));
     EXPECT_EQ(ACL_SUCCESS, ProfAclMgr::instance()->UnInit());
     ConfigManager::instance()->Uninit();
 }
 
-TEST_F(MSPROF_ACL_CORE_STEST, ge_api_subscribe) {
+TEST_F(MSPROF_ACL_CORE_STEST, ge_api_subscribe)
+{
     GlobalMockObject::verify();
 
     Analysis::Dvvp::Common::Config::ConfigManager::instance()->Init();
 
-    MOCKER(mmWrite)
-        .stubs()
-        .will(invoke(mmWriteStub));
-    MOCKER(mmClose)
-        .stubs()
-        .will(returnValue(EN_OK));
-    MOCKER_CPP(&Analysis::Dvvp::ProfilerCommon::ProfGetDeviceIdByGeModelIdx)
-        .stubs()
-        .will(returnValue(ACL_SUCCESS));
+    MOCKER(mmWrite).stubs().will(invoke(mmWriteStub));
+    MOCKER(mmClose).stubs().will(returnValue(EN_OK));
+    MOCKER_CPP(&Analysis::Dvvp::ProfilerCommon::ProfGetDeviceIdByGeModelIdx).stubs().will(returnValue(ACL_SUCCESS));
 
     using namespace Msprofiler::Api;
 
@@ -1476,7 +1479,7 @@ TEST_F(MSPROF_ACL_CORE_STEST, ge_api_subscribe) {
     ProfSubscribeConfig config;
     config.timeInfo = true;
     config.aicoreMetrics = PROF_AICORE_NONE;
-    config.fd = static_cast<void *>(&fd);
+    config.fd = static_cast<void*>(&fd);
 
     EXPECT_EQ(nullptr, aclprofCreateSubscribeConfig(0, (aclprofAicoreMetrics)config.aicoreMetrics, nullptr));
     EXPECT_EQ(nullptr, aclprofCreateSubscribeConfig(0, (aclprofAicoreMetrics)config.aicoreMetrics, nullptr));
@@ -1493,43 +1496,37 @@ TEST_F(MSPROF_ACL_CORE_STEST, ge_api_subscribe) {
     aclprofDestroySubscribeConfig(profSubconfig);
 }
 
-TEST_F(MSPROF_ACL_CORE_STEST, acl_json) {
+TEST_F(MSPROF_ACL_CORE_STEST, acl_json)
+{
     GlobalMockObject::verify();
-    MOCKER_CPP(&analysis::dvvp::transport::FileSlice::WriteCtrlDataToFile)
-            .stubs()
-            .will(returnValue(PROFILING_SUCCESS));
-    MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::Init)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
-    MOCKER(analysis::dvvp::common::utils::Utils::GetFileSize)
-        .stubs()
-        .will(returnValue(100000000)); // 100MB
+    MOCKER_CPP(&analysis::dvvp::transport::FileSlice::WriteCtrlDataToFile).stubs().will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::Init).stubs().will(returnValue(PROFILING_SUCCESS));
+    MOCKER(analysis::dvvp::common::utils::Utils::GetFileSize).stubs().will(returnValue(100000000)); // 100MB
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
         .stubs()
         .will(returnValue(Analysis::Dvvp::Common::Config::PlatformType::DC_TYPE));
     Platform::instance()->Uninit();
     Platform::instance()->Init();
     std::string aclJson("{\"switch\": \"on\", \"storage_limit\": \"500MB\"}");
-    auto data = (void *)(const_cast<char *>(aclJson.c_str()));
-    EXPECT_EQ(MSPROF_ERROR_NONE, Analysis::Dvvp::ProfilerCommon::ProfInit(MSPROF_CTRL_INIT_ACL_JSON, data, aclJson.size()));
+    auto data = (void*)(const_cast<char*>(aclJson.c_str()));
+    EXPECT_EQ(
+        MSPROF_ERROR_NONE, Analysis::Dvvp::ProfilerCommon::ProfInit(MSPROF_CTRL_INIT_ACL_JSON, data, aclJson.size()));
 
     aclJson = "{\"switch\": \"on\", \"l2\": \"on\"}";
-    data = (void *)(const_cast<char *>(aclJson.c_str()));
-    EXPECT_EQ(MSPROF_ERROR_NONE, Analysis::Dvvp::ProfilerCommon::ProfInit(MSPROF_CTRL_INIT_ACL_JSON, data, aclJson.size()));
+    data = (void*)(const_cast<char*>(aclJson.c_str()));
+    EXPECT_EQ(
+        MSPROF_ERROR_NONE, Analysis::Dvvp::ProfilerCommon::ProfInit(MSPROF_CTRL_INIT_ACL_JSON, data, aclJson.size()));
     Analysis::Dvvp::ProfilerCommon::ProfNotifySetDevice(0, 0, true);
     Analysis::Dvvp::ProfilerCommon::ProfNotifySetDevice(0, 0, false);
     Analysis::Dvvp::ProfilerCommon::ProfNotifySetDevice(0, 0, false);
     EXPECT_EQ(MSPROF_ERROR_NONE, Analysis::Dvvp::ProfilerCommon::ProfFinalize());
 }
 
-TEST_F(MSPROF_ACL_CORE_STEST, ge_option) {
+TEST_F(MSPROF_ACL_CORE_STEST, ge_option)
+{
     GlobalMockObject::verify();
-    MOCKER_CPP(&analysis::dvvp::transport::FileSlice::WriteCtrlDataToFile)
-            .stubs()
-            .will(returnValue(PROFILING_SUCCESS));
-    MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::Init)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&analysis::dvvp::transport::FileSlice::WriteCtrlDataToFile).stubs().will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::Init).stubs().will(returnValue(PROFILING_SUCCESS));
 
     std::string result = "/tmp/profiler_st_ge_option_normal";
     analysis::dvvp::common::utils::Utils::RemoveDir(result);
@@ -1550,7 +1547,7 @@ TEST_F(MSPROF_ACL_CORE_STEST, ge_option) {
     for (size_t i = 0; i < geOption.size(); i++) {
         options.options[i] = geOption.at(i);
     }
-    auto jsonData = (void *)&options;
+    auto jsonData = (void*)&options;
 
     EXPECT_EQ(MSPROF_ERROR_NONE, MsprofInit(MSPROF_CTRL_INIT_GE_OPTIONS, jsonData, sizeof(options)));
     MsprofNotifySetDevice(0, 0, true);
@@ -1558,29 +1555,31 @@ TEST_F(MSPROF_ACL_CORE_STEST, ge_option) {
     analysis::dvvp::common::utils::Utils::RemoveDir(result);
 }
 
-TEST_F(MSPROF_ACL_CORE_STEST, ge_option_profInit) {
+TEST_F(MSPROF_ACL_CORE_STEST, ge_option_profInit)
+{
     GlobalMockObject::verify();
     using namespace Msprofiler::Api;
 
-    MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::Init)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
-    MOCKER(analysis::dvvp::common::utils::Utils::GetFileSize)
-        .stubs()
-        .will(returnValue(100000000));
+    MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::Init).stubs().will(returnValue(PROFILING_SUCCESS));
+    MOCKER(analysis::dvvp::common::utils::Utils::GetFileSize).stubs().will(returnValue(100000000));
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
         .stubs()
         .will(returnValue(Analysis::Dvvp::Common::Config::PlatformType::DC_TYPE));
 
-    std::string ge_json = "{\"aicpu\": \"on\",\"l2\": \"on\",\"aiv_metrics\": \"ArithmeticUtilization\",\"aiv-mode\": \"sampling-based\"}";
+    std::string ge_json = "{\"aicpu\": \"on\",\"l2\": \"on\",\"aiv_metrics\": \"ArithmeticUtilization\",\"aiv-mode\": "
+                          "\"sampling-based\"}";
     struct MsprofGeOptions options;
     strcpy(options.jobId, "123");
     strcpy(options.options, ge_json.c_str());
-    EXPECT_EQ(MSPROF_ERROR_CONFIG_INVALID, Analysis::Dvvp::ProfilerCommon::ProfInit(MSPROF_CTRL_INIT_GE_OPTIONS, (void *)&options, sizeof(options)));
+    EXPECT_EQ(
+        MSPROF_ERROR_CONFIG_INVALID,
+        Analysis::Dvvp::ProfilerCommon::ProfInit(MSPROF_CTRL_INIT_GE_OPTIONS, (void*)&options, sizeof(options)));
     ge_json = "{\"aicpu\": \"abc\",\"l2\": \"on\"}";
     strcpy(options.jobId, "123");
     strcpy(options.options, ge_json.c_str());
-    EXPECT_EQ(MSPROF_ERROR_CONFIG_INVALID, Analysis::Dvvp::ProfilerCommon::ProfInit(MSPROF_CTRL_INIT_GE_OPTIONS, (void *)&options, sizeof(options)));
+    EXPECT_EQ(
+        MSPROF_ERROR_CONFIG_INVALID,
+        Analysis::Dvvp::ProfilerCommon::ProfInit(MSPROF_CTRL_INIT_GE_OPTIONS, (void*)&options, sizeof(options)));
 }
 
 TEST_F(MSPROF_ACL_CORE_STEST, dynamic_profInit)
@@ -1588,53 +1587,50 @@ TEST_F(MSPROF_ACL_CORE_STEST, dynamic_profInit)
     GlobalMockObject::verify();
     using namespace Msprofiler::Api;
 
-    MOCKER(&DynProfMgr::IsDynStarted)
-        .stubs()
-        .will(returnValue(false))
-        .then(returnValue(true));
-    MOCKER(&DynProfMgr::StartDynProf)
-        .stubs()
-        .will(returnValue(PROFILING_FAILED));
-    MOCKER(analysis::dvvp::common::utils::Utils::IsDynProfMode)
-        .stubs()
-        .will(returnValue(true));
-    MOCKER(analysis::dvvp::common::utils::Utils::HandleEnvString)
-        .stubs()
-        .will(returnValue(std::string("")));
+    MOCKER(&DynProfMgr::IsDynStarted).stubs().will(returnValue(false)).then(returnValue(true));
+    MOCKER(&DynProfMgr::StartDynProf).stubs().will(returnValue(PROFILING_FAILED));
+    MOCKER(analysis::dvvp::common::utils::Utils::IsDynProfMode).stubs().will(returnValue(true));
+    MOCKER(analysis::dvvp::common::utils::Utils::HandleEnvString).stubs().will(returnValue(std::string("")));
     EXPECT_EQ(PROFILING_FAILED, Analysis::Dvvp::ProfilerCommon::ProfInit(MSPROF_CTRL_INIT_DYNA, nullptr, 0));
     EXPECT_EQ(MSPROF_ERROR_NONE, Analysis::Dvvp::ProfilerCommon::ProfInit(MSPROF_CTRL_INIT_DYNA, nullptr, 0));
 }
 
-TEST_F(MSPROF_ACL_CORE_STEST, ge_option_ParamAdaper) {
+TEST_F(MSPROF_ACL_CORE_STEST, ge_option_ParamAdaper)
+{
     GlobalMockObject::verify();
     using namespace Msprofiler::Api;
 
     EXPECT_EQ(3, ProfAclMgr::instance()->MsprofInitGeOptions(nullptr, 2));
-    MOCKER_CPP(&ProfAclMgr::CallbackInitPrecheck)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&ProfAclMgr::CallbackInitPrecheck).stubs().will(returnValue(PROFILING_SUCCESS));
 
     struct MsprofGeOptions options;
     std::string result = "/tmp/profiler_st_ge_option";
     analysis::dvvp::common::utils::Utils::RemoveDir(result);
     analysis::dvvp::common::utils::Utils::CreateDir(result);
-    EXPECT_EQ(MSPROF_ERROR_CONFIG_INVALID, ProfAclMgr::instance()->MsprofInitGeOptions((void *)&options, sizeof(options)));
-    std::string ge_json = "{\"output\": \"/tmp/MsprofInitGeOptions\",\"aic_metrics\": \"Custom:0x500,0x502,0x504,0x506,0x508,0x50a,0xc,0xd\",\"aicpu\": \"on\",\"l2\": \"on\"}";
+    EXPECT_EQ(
+        MSPROF_ERROR_CONFIG_INVALID, ProfAclMgr::instance()->MsprofInitGeOptions((void*)&options, sizeof(options)));
+    std::string ge_json = "{\"output\": \"/tmp/MsprofInitGeOptions\",\"aic_metrics\": "
+                          "\"Custom:0x500,0x502,0x504,0x506,0x508,0x50a,0xc,0xd\",\"aicpu\": \"on\",\"l2\": \"on\"}";
     strcpy(options.jobId, "123");
     strcpy(options.options, ge_json.c_str());
-    EXPECT_EQ(MSPROF_ERROR_NONE, ProfAclMgr::instance()->MsprofInitGeOptions((void *)&options, sizeof(options)));
-    ge_json = "{\"output\": \"/tmp/MsprofInitGeOptions\",\"aic_metrics\": \"Custom:0x500,0x502,0x504,0x506,0x508,0x50a,0xc,0xss\",\"aicpu\": \"on\",\"l2\": \"on\"}";
+    EXPECT_EQ(MSPROF_ERROR_NONE, ProfAclMgr::instance()->MsprofInitGeOptions((void*)&options, sizeof(options)));
+    ge_json = "{\"output\": \"/tmp/MsprofInitGeOptions\",\"aic_metrics\": "
+              "\"Custom:0x500,0x502,0x504,0x506,0x508,0x50a,0xc,0xss\",\"aicpu\": \"on\",\"l2\": \"on\"}";
     strcpy(options.jobId, "123");
     strcpy(options.options, ge_json.c_str());
-    EXPECT_EQ(MSPROF_ERROR_CONFIG_INVALID, ProfAclMgr::instance()->MsprofInitGeOptions((void *)&options, sizeof(options)));
-    ge_json = "{\"output\": \"/tmp/MsprofInitGeOptions\",\"aic_metrics\": \"Custom;0x5\",\"aicpu\": \"on\",\"l2\": \"on\"}";
+    EXPECT_EQ(
+        MSPROF_ERROR_CONFIG_INVALID, ProfAclMgr::instance()->MsprofInitGeOptions((void*)&options, sizeof(options)));
+    ge_json =
+        "{\"output\": \"/tmp/MsprofInitGeOptions\",\"aic_metrics\": \"Custom;0x5\",\"aicpu\": \"on\",\"l2\": \"on\"}";
     strcpy(options.jobId, "123");
     strcpy(options.options, ge_json.c_str());
-    EXPECT_EQ(MSPROF_ERROR_CONFIG_INVALID, ProfAclMgr::instance()->MsprofInitGeOptions((void *)&options, sizeof(options)));
+    EXPECT_EQ(
+        MSPROF_ERROR_CONFIG_INVALID, ProfAclMgr::instance()->MsprofInitGeOptions((void*)&options, sizeof(options)));
     analysis::dvvp::common::utils::Utils::RemoveDir(result);
 }
 
-TEST_F(MSPROF_ACL_CORE_STEST, MsprofInitHelper) {
+TEST_F(MSPROF_ACL_CORE_STEST, MsprofInitHelper)
+{
     GlobalMockObject::verify();
 
     using namespace Msprofiler::Api;
@@ -1648,7 +1644,8 @@ TEST_F(MSPROF_ACL_CORE_STEST, MsprofInitHelper) {
     std::string result = "/tmp/MsprofInitHelper";
     analysis::dvvp::common::utils::Utils::RemoveDir(result);
     analysis::dvvp::common::utils::Utils::CreateDir(result);
-    EXPECT_EQ(0, ProfAclMgr::instance()->MsprofInitHelper((void *)&commandHandleParams, sizeof(MsprofCommandHandleParams)));
+    EXPECT_EQ(
+        0, ProfAclMgr::instance()->MsprofInitHelper((void*)&commandHandleParams, sizeof(MsprofCommandHandleParams)));
     commandHandleParams.pathLen = result.size();
     strncpy(commandHandleParams.path, result.c_str(), 1024);
     commandHandleParams.storageLimit = 250;
@@ -1657,23 +1654,23 @@ TEST_F(MSPROF_ACL_CORE_STEST, MsprofInitHelper) {
     std::string jsonParams = params->ToString();
     commandHandleParams.profDataLen = jsonParams.size();
     strncpy(commandHandleParams.profData, jsonParams.c_str(), 4096);
-    EXPECT_EQ(0, ProfAclMgr::instance()->MsprofInitHelper((void *)&commandHandleParams, sizeof(MsprofCommandHandleParams)));
+    EXPECT_EQ(
+        0, ProfAclMgr::instance()->MsprofInitHelper((void*)&commandHandleParams, sizeof(MsprofCommandHandleParams)));
 
-    MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::PlatformIsHelperHostSide)
-        .stubs()
-        .will(returnValue(true));
-    EXPECT_EQ(MSPROF_ERROR_NONE, MsprofInit(MSPROF_CTRL_INIT_HELPER, (void *)&commandHandleParams, sizeof(MsprofCommandHandleParams)));
+    MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::PlatformIsHelperHostSide).stubs().will(returnValue(true));
+    EXPECT_EQ(
+        MSPROF_ERROR_NONE,
+        MsprofInit(MSPROF_CTRL_INIT_HELPER, (void*)&commandHandleParams, sizeof(MsprofCommandHandleParams)));
     analysis::dvvp::common::utils::Utils::RemoveDir(result);
 }
 
-TEST_F(MSPROF_ACL_CORE_STEST, MsprofInitPureCpu) {
+TEST_F(MSPROF_ACL_CORE_STEST, MsprofInitPureCpu)
+{
     GlobalMockObject::verify();
 
     using namespace Msprofiler::Api;
     EXPECT_EQ(3, ProfAclMgr::instance()->MsprofInitPureCpu(nullptr, 0));
-    MOCKER(mmGetEnv)
-        .stubs()
-        .will(returnValue(EN_ERR));
+    MOCKER(mmGetEnv).stubs().will(returnValue(EN_ERR));
     MOCKER_CPP(&ProfAclMgr::CallbackInitPrecheck)
         .stubs()
         .will(returnValue(PROFILING_FAILED))
@@ -1683,42 +1680,54 @@ TEST_F(MSPROF_ACL_CORE_STEST, MsprofInitPureCpu) {
     std::string result = "/tmp/MsprofInitPureCpu";
     analysis::dvvp::common::utils::Utils::RemoveDir(result);
     analysis::dvvp::common::utils::Utils::CreateDir(result);
-    EXPECT_EQ(0, ProfAclMgr::instance()->MsprofInitPureCpu((void *)&commandHandleParams, sizeof(MsprofCommandHandleParams)));
+    EXPECT_EQ(
+        0, ProfAclMgr::instance()->MsprofInitPureCpu((void*)&commandHandleParams, sizeof(MsprofCommandHandleParams)));
     commandHandleParams.pathLen = result.size();
     strncpy(commandHandleParams.path, result.c_str(), 1024);
     commandHandleParams.storageLimit = 250;
     std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams());
-    params->FromString("{\"result_dir\":\"/tmp/MsprofInitPureCpu/PROF_0001_XXX\", \"devices\":\"1\", \"job_id\":\"1\", \"taskTime\":\"on\"}");
+    params->FromString("{\"result_dir\":\"/tmp/MsprofInitPureCpu/PROF_0001_XXX\", \"devices\":\"1\", \"job_id\":\"1\", "
+                       "\"taskTime\":\"on\"}");
     std::string jsonParams = params->ToString();
     commandHandleParams.profDataLen = jsonParams.size();
     strncpy(commandHandleParams.profData, jsonParams.c_str(), 4096);
-    EXPECT_EQ(0, ProfAclMgr::instance()->MsprofInitPureCpu((void *)&commandHandleParams, sizeof(MsprofCommandHandleParams)));
+    EXPECT_EQ(
+        0, ProfAclMgr::instance()->MsprofInitPureCpu((void*)&commandHandleParams, sizeof(MsprofCommandHandleParams)));
 
-    MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::PlatformIsHelperHostSide)
-        .stubs()
-        .will(returnValue(true));
-    MOCKER_CPP(&analysis::dvvp::common::validation::ParamValidation::CheckStorageLimit,
-        bool(ParamValidation::*)(SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams>, const std::string &) const)
+    MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::PlatformIsHelperHostSide).stubs().will(returnValue(true));
+    MOCKER_CPP(
+        &analysis::dvvp::common::validation::ParamValidation::CheckStorageLimit,
+        bool(ParamValidation::*)(SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams>, const std::string&) const)
         .stubs()
         .will(returnValue(false))
         .then(returnValue(true));
-    EXPECT_EQ(MSPROF_ERROR_CONFIG_INVALID, MsprofInit(MSPROF_CTRL_INIT_PURE_CPU, (void *)&commandHandleParams, sizeof(MsprofCommandHandleParams)));
+    EXPECT_EQ(
+        MSPROF_ERROR_CONFIG_INVALID,
+        MsprofInit(MSPROF_CTRL_INIT_PURE_CPU, (void*)&commandHandleParams, sizeof(MsprofCommandHandleParams)));
     MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::MsprofResultPathAdapter)
         .stubs()
         .will(returnValue(PROFILING_FAILED))
         .then(returnValue(PROFILING_SUCCESS));
-    EXPECT_EQ(MSPROF_ERROR_CONFIG_INVALID, MsprofInit(MSPROF_CTRL_INIT_PURE_CPU, (void *)&commandHandleParams, sizeof(MsprofCommandHandleParams)));
+    EXPECT_EQ(
+        MSPROF_ERROR_CONFIG_INVALID,
+        MsprofInit(MSPROF_CTRL_INIT_PURE_CPU, (void*)&commandHandleParams, sizeof(MsprofCommandHandleParams)));
     MOCKER(Analysis::Dvvp::ProfilerCommon::CommandHandleProfInit)
         .stubs()
         .will(returnValue(PROFILING_FAILED))
         .then(returnValue(PROFILING_SUCCESS));
-    EXPECT_EQ(MSPROF_ERROR, MsprofInit(MSPROF_CTRL_INIT_PURE_CPU, (void *)&commandHandleParams, sizeof(MsprofCommandHandleParams)));
+    EXPECT_EQ(
+        MSPROF_ERROR,
+        MsprofInit(MSPROF_CTRL_INIT_PURE_CPU, (void*)&commandHandleParams, sizeof(MsprofCommandHandleParams)));
     MOCKER(Analysis::Dvvp::ProfilerCommon::CommandHandleProfStart)
         .stubs()
         .will(returnValue(PROFILING_FAILED))
         .then(returnValue(PROFILING_SUCCESS));
-    EXPECT_EQ(MSPROF_ERROR, MsprofInit(MSPROF_CTRL_INIT_PURE_CPU, (void *)&commandHandleParams, sizeof(MsprofCommandHandleParams)));
-    EXPECT_EQ(MSPROF_ERROR_NONE, MsprofInit(MSPROF_CTRL_INIT_PURE_CPU, (void *)&commandHandleParams, sizeof(MsprofCommandHandleParams)));
+    EXPECT_EQ(
+        MSPROF_ERROR,
+        MsprofInit(MSPROF_CTRL_INIT_PURE_CPU, (void*)&commandHandleParams, sizeof(MsprofCommandHandleParams)));
+    EXPECT_EQ(
+        MSPROF_ERROR_NONE,
+        MsprofInit(MSPROF_CTRL_INIT_PURE_CPU, (void*)&commandHandleParams, sizeof(MsprofCommandHandleParams)));
     analysis::dvvp::common::utils::Utils::RemoveDir(result);
     ProfAclMgr::instance()->MsprofFinalizeHandle();
 
@@ -1736,24 +1745,19 @@ TEST_F(MSPROF_ACL_CORE_STEST, MsprofInitPureCpu) {
     commandParams.storageLimit = 250;
     commandParams.profDataLen = jsonParams.size();
     strncpy_s(commandParams.profData, PARAM_LEN_MAX + 1, jsonParams.c_str(), PARAM_LEN_MAX);
-    EXPECT_EQ(MSPROF_ERROR_NONE, MsprofInit(MSPROF_CTRL_INIT_PURE_CPU, (void *)&commandParams, sizeof(commandParams)));
+    EXPECT_EQ(MSPROF_ERROR_NONE, MsprofInit(MSPROF_CTRL_INIT_PURE_CPU, (void*)&commandParams, sizeof(commandParams)));
 }
 
-TEST_F(MSPROF_ACL_CORE_STEST, init_env) {
+TEST_F(MSPROF_ACL_CORE_STEST, init_env)
+{
     GlobalMockObject::verify();
 
-    MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::Init)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
-    MOCKER(analysis::dvvp::common::utils::Utils::GetFileSize)
-        .stubs()
-        .will(returnValue(100000000)); // 100MB
+    MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::Init).stubs().will(returnValue(PROFILING_SUCCESS));
+    MOCKER(analysis::dvvp::common::utils::Utils::GetFileSize).stubs().will(returnValue(100000000)); // 100MB
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
         .stubs()
         .will(returnValue(Analysis::Dvvp::Common::Config::PlatformType::DC_TYPE));
-    MOCKER(analysis::dvvp::common::utils::Utils::IsDynProfMode)
-        .stubs()
-        .will(returnValue(false));
+    MOCKER(analysis::dvvp::common::utils::Utils::IsDynProfMode).stubs().will(returnValue(false));
 
     std::string result = "/tmp/profiler_st_init_env";
     analysis::dvvp::common::utils::Utils::RemoveDir(result);
@@ -1791,12 +1795,11 @@ TEST_F(MSPROF_ACL_CORE_STEST, init_env) {
     analysis::dvvp::common::utils::Utils::RemoveDir(result);
 }
 
-TEST_F(MSPROF_ACL_CORE_STEST, mode_protect) {
+TEST_F(MSPROF_ACL_CORE_STEST, mode_protect)
+{
     GlobalMockObject::verify();
 
-    MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::Init)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::Init).stubs().will(returnValue(PROFILING_SUCCESS));
 
     using namespace Msprofiler::Api;
     ProfAclMgr::instance()->mode_ = WORK_MODE_OFF;
@@ -1839,10 +1842,10 @@ TEST_F(MSPROF_ACL_CORE_STEST, mode_protect) {
     EXPECT_EQ(false, ProfAclMgr::instance()->IsModeOff());
 }
 
-TEST_F(MSPROF_ACL_CORE_STEST, MsprofHostSysHandle) {
+TEST_F(MSPROF_ACL_CORE_STEST, MsprofHostSysHandle)
+{
     using namespace Msprofiler::Api;
-    std::shared_ptr<analysis::dvvp::message::ProfileParams> params(
-        new analysis::dvvp::message::ProfileParams());
+    std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams());
     params->host_osrt_profiling = "on";
     ProfAclMgr::instance()->params_ = params;
     ProfAclMgr::instance()->mode_ = WORK_MODE_CMD;
@@ -1851,7 +1854,8 @@ TEST_F(MSPROF_ACL_CORE_STEST, MsprofHostSysHandle) {
     EXPECT_EQ(PROFILING_SUCCESS, ProfAclMgr::instance()->MsprofFinalizeHandle());
 }
 
-TEST_F(MSPROF_ACL_CORE_STEST, DoHostHandle) {
+TEST_F(MSPROF_ACL_CORE_STEST, DoHostHandle)
+{
     GlobalMockObject::verify();
     using namespace Msprofiler::Api;
     MOCKER_CPP(&ProfAclMgr::MsprofSetDeviceImpl)
@@ -1864,8 +1868,7 @@ TEST_F(MSPROF_ACL_CORE_STEST, DoHostHandle) {
         .will(returnValue(PROFILING_FAILED))
         .then(returnValue(PROFILING_SUCCESS));
 
-    std::shared_ptr<analysis::dvvp::message::ProfileParams> params(
-        new analysis::dvvp::message::ProfileParams());
+    std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams());
     params->msproftx = "on";
     ProfAclMgr::instance()->params_ = params;
 
@@ -1878,7 +1881,8 @@ TEST_F(MSPROF_ACL_CORE_STEST, DoHostHandle) {
     EXPECT_EQ(PROFILING_SUCCESS, ret);
 }
 
-TEST_F(MSPROF_ACL_CORE_STEST, FinalizeHandle_CheckFalseMode) {
+TEST_F(MSPROF_ACL_CORE_STEST, FinalizeHandle_CheckFalseMode)
+{
     using namespace Msprofiler::Api;
     ProfAclMgr::instance()->mode_ = WORK_MODE_OFF;
 
@@ -1886,7 +1890,8 @@ TEST_F(MSPROF_ACL_CORE_STEST, FinalizeHandle_CheckFalseMode) {
     EXPECT_EQ(MSPROF_ERROR_NONE, ret);
 }
 
-TEST_F(MSPROF_ACL_CORE_STEST, FinalizeHandle_CheckTrueMode) {
+TEST_F(MSPROF_ACL_CORE_STEST, FinalizeHandle_CheckTrueMode)
+{
     using namespace Msprofiler::Api;
     ProfAclMgr::instance()->mode_ = WORK_MODE_CMD;
 
@@ -1894,27 +1899,21 @@ TEST_F(MSPROF_ACL_CORE_STEST, FinalizeHandle_CheckTrueMode) {
     EXPECT_EQ(MSPROF_ERROR_NONE, ret);
 }
 
-TEST_F(MSPROF_ACL_CORE_STEST, GEFinalizeHandle_CheckRet) {
+TEST_F(MSPROF_ACL_CORE_STEST, GEFinalizeHandle_CheckRet)
+{
     using namespace Msprofiler::Api;
-    MOCKER_CPP(&ProfAclMgr::GetRunningDevices)
-        .stubs();
+    MOCKER_CPP(&ProfAclMgr::GetRunningDevices).stubs();
 
-    MOCKER_CPP(&Msprof::Engine::FlushAllModule)
-        .stubs();
+    MOCKER_CPP(&Msprof::Engine::FlushAllModule).stubs();
     Analysis::Dvvp::ProfilerCommon::ProfFinalize();
 }
 
-void GetRunningDeviceStub(Msprofiler::Api::ProfAclMgr *This, std::vector<uint32_t> &devIds)
-{
-    devIds.push_back(0);
-}
+void GetRunningDeviceStub(Msprofiler::Api::ProfAclMgr* This, std::vector<uint32_t>& devIds) { devIds.push_back(0); }
 
 TEST_F(MSPROF_ACL_CORE_STEST, ProcessHelperHostConfig)
 {
     GlobalMockObject::verify();
-    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::GetRunningDevices)
-        .stubs()
-        .will(invoke(GetRunningDeviceStub));
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::GetRunningDevices).stubs().will(invoke(GetRunningDeviceStub));
 
     MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::ProfStartAscendProfHalTask)
         .stubs()
@@ -1936,35 +1935,47 @@ TEST_F(MSPROF_ACL_CORE_STEST, ProcessHelperHostConfig)
     config.deviceId = 0U;
     config.type = 0U;
     // test not prof init
-    EXPECT_EQ(PROFILING_SUCCESS, Msprofiler::Api::ProfAclMgr::instance()->ProcessHelperHostConfig((const char *)&config, sizeof(config)));
+    EXPECT_EQ(
+        PROFILING_SUCCESS,
+        Msprofiler::Api::ProfAclMgr::instance()->ProcessHelperHostConfig((const char*)&config, sizeof(config)));
     // test param invalid
-    EXPECT_EQ(MSPROF_ERROR_CONFIG_INVALID, Msprofiler::Api::ProfAclMgr::instance()->ProcessHelperHostConfig(nullptr, sizeof(config)));
+    EXPECT_EQ(
+        MSPROF_ERROR_CONFIG_INVALID,
+        Msprofiler::Api::ProfAclMgr::instance()->ProcessHelperHostConfig(nullptr, sizeof(config)));
     // MsprofResetDeviceHandle failed
-    EXPECT_EQ(MSPROF_ERROR, Msprofiler::Api::ProfAclMgr::instance()->ProcessHelperHostConfig((const char *)&config, sizeof(config)));
+    EXPECT_EQ(
+        MSPROF_ERROR,
+        Msprofiler::Api::ProfAclMgr::instance()->ProcessHelperHostConfig((const char*)&config, sizeof(config)));
     // ProfStartAscendProfHalTask failed
-    EXPECT_EQ(PROFILING_FAILED, Msprofiler::Api::ProfAclMgr::instance()->ProcessHelperHostConfig((const char *)&config, sizeof(config)));
+    EXPECT_EQ(
+        PROFILING_FAILED,
+        Msprofiler::Api::ProfAclMgr::instance()->ProcessHelperHostConfig((const char*)&config, sizeof(config)));
     // start helper server and reset device
-    EXPECT_EQ(PROFILING_SUCCESS, Msprofiler::Api::ProfAclMgr::instance()->ProcessHelperHostConfig((const char *)&config, sizeof(config)));
+    EXPECT_EQ(
+        PROFILING_SUCCESS,
+        Msprofiler::Api::ProfAclMgr::instance()->ProcessHelperHostConfig((const char*)&config, sizeof(config)));
     // start helper server
     config.type = 2U;
     config.value = 1U;
-    EXPECT_EQ(PROFILING_SUCCESS, Msprofiler::Api::ProfAclMgr::instance()->ProcessHelperHostConfig((const char *)&config, sizeof(config)));
+    EXPECT_EQ(
+        PROFILING_SUCCESS,
+        Msprofiler::Api::ProfAclMgr::instance()->ProcessHelperHostConfig((const char*)&config, sizeof(config)));
     // reset device
     config.type = 1U;
     config.value = 1U;
-    EXPECT_EQ(PROFILING_SUCCESS, Msprofiler::Api::ProfAclMgr::instance()->ProcessHelperHostConfig((const char *)&config, sizeof(config)));
+    EXPECT_EQ(
+        PROFILING_SUCCESS,
+        Msprofiler::Api::ProfAclMgr::instance()->ProcessHelperHostConfig((const char*)&config, sizeof(config)));
 }
 
-class MSPROF_API_SUBSCRIBE_STEST: public testing::Test {
+class MSPROF_API_SUBSCRIBE_STEST : public testing::Test {
 protected:
-    virtual void SetUp() {
-    }
-    virtual void TearDown() {
-
-    }
+    virtual void SetUp() {}
+    virtual void TearDown() {}
 };
 
-TEST_F(MSPROF_API_SUBSCRIBE_STEST, AnalyzerTs_Parse_Repeat_Keypoint) {
+TEST_F(MSPROF_API_SUBSCRIBE_STEST, AnalyzerTs_Parse_Repeat_Keypoint)
+{
     using namespace Analysis::Dvvp::Analyze;
     std::shared_ptr<AnalyzerTs> analyzerTs(new AnalyzerTs());
     analyzerTs->Parse(nullptr);
@@ -1980,7 +1991,7 @@ TEST_F(MSPROF_API_SUBSCRIBE_STEST, AnalyzerTs_Parse_Repeat_Keypoint) {
     tsChunk1.timestamp = 1000000;
     SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> tsKeypoint1(new analysis::dvvp::ProfileFileChunk());
     tsKeypoint1->fileName = "ts_track.data.null";
-    tsKeypoint1->chunk.append(reinterpret_cast<char *>(&tsChunk1), tsChunk1.head.bufSize);
+    tsKeypoint1->chunk.append(reinterpret_cast<char*>(&tsChunk1), tsChunk1.head.bufSize);
     tsKeypoint1->chunkSize = tsChunk1.head.bufSize;
     analyzerTs->Parse(tsKeypoint1);
     // keypoint end
@@ -1995,7 +2006,7 @@ TEST_F(MSPROF_API_SUBSCRIBE_STEST, AnalyzerTs_Parse_Repeat_Keypoint) {
     tsChunk2.timestamp = 2000000;
     SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> tsKeypoint2(new analysis::dvvp::ProfileFileChunk());
     tsKeypoint2->fileName = "ts_track.data.null";
-    tsKeypoint2->chunk.append(reinterpret_cast<char *>(&tsChunk2), tsChunk2.head.bufSize);
+    tsKeypoint2->chunk.append(reinterpret_cast<char*>(&tsChunk2), tsChunk2.head.bufSize);
     tsKeypoint2->chunkSize = tsChunk2.head.bufSize;
     analyzerTs->Parse(tsKeypoint2);
     // keypoint start error
@@ -2010,7 +2021,7 @@ TEST_F(MSPROF_API_SUBSCRIBE_STEST, AnalyzerTs_Parse_Repeat_Keypoint) {
     tsChunk3.timestamp = 3000000;
     SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> tsKeypoint3(new analysis::dvvp::ProfileFileChunk());
     tsKeypoint3->fileName = "ts_track.data.null";
-    tsKeypoint3->chunk.append(reinterpret_cast<char *>(&tsChunk3), tsChunk3.head.bufSize);
+    tsKeypoint3->chunk.append(reinterpret_cast<char*>(&tsChunk3), tsChunk3.head.bufSize);
     tsKeypoint3->chunkSize = tsChunk3.head.bufSize;
     analyzerTs->Parse(tsKeypoint3);
     // keypoint end error
@@ -2025,7 +2036,7 @@ TEST_F(MSPROF_API_SUBSCRIBE_STEST, AnalyzerTs_Parse_Repeat_Keypoint) {
     tsChunk4.timestamp = 4000000;
     SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> tsKeypoint4(new analysis::dvvp::ProfileFileChunk());
     tsKeypoint4->fileName = "ts_track.data.null";
-    tsKeypoint4->chunk.append(reinterpret_cast<char *>(&tsChunk4), tsChunk4.head.bufSize);
+    tsKeypoint4->chunk.append(reinterpret_cast<char*>(&tsChunk4), tsChunk4.head.bufSize);
     tsKeypoint4->chunkSize = tsChunk4.head.bufSize;
     analyzerTs->Parse(tsKeypoint4);
     // keypoint timestamp zero error
@@ -2040,14 +2051,13 @@ TEST_F(MSPROF_API_SUBSCRIBE_STEST, AnalyzerTs_Parse_Repeat_Keypoint) {
     tsChunk5.timestamp = 0;
     SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> tsKeypoint5(new analysis::dvvp::ProfileFileChunk());
     tsKeypoint5->fileName = "ts_track.data.null";
-    tsKeypoint5->chunk.append(reinterpret_cast<char *>(&tsChunk5), tsChunk5.head.bufSize);
+    tsKeypoint5->chunk.append(reinterpret_cast<char*>(&tsChunk5), tsChunk5.head.bufSize);
     tsKeypoint5->chunkSize = tsChunk5.head.bufSize;
     analyzerTs->Parse(tsKeypoint5);
     // check
     EXPECT_EQ(1, analyzerTs->keypointOpInfo_.size());
 
-    MOCKER_CPP(&Analysis::Dvvp::Analyze::Analyzer::ConstructAndUploadData)
-        .stubs();
+    MOCKER_CPP(&Analysis::Dvvp::Analyze::Analyzer::ConstructAndUploadData).stubs();
     std::shared_ptr<Analyzer> analyzer(new Analyzer(nullptr));
     analyzer->profileMode_ = PROFILE_MODE_STEP_TRACE;
     analyzer->analyzerTs_ = analyzerTs;
@@ -2070,7 +2080,8 @@ TEST_F(MSPROF_API_SUBSCRIBE_STEST, AnalyzerTs_Parse_Repeat_Keypoint) {
     EXPECT_EQ(0, analyzer->analyzerTs_->keypointOpInfo_.size());
 }
 
-TEST_F(MSPROF_API_SUBSCRIBE_STEST, AnalyzerGe_MultiFftsNode) {
+TEST_F(MSPROF_API_SUBSCRIBE_STEST, AnalyzerGe_MultiFftsNode)
+{
     GlobalMockObject::verify();
 
     std::shared_ptr<AnalyzerGe> analyzerGe(new AnalyzerGe());
@@ -2079,20 +2090,19 @@ TEST_F(MSPROF_API_SUBSCRIBE_STEST, AnalyzerGe_MultiFftsNode) {
 
     MsprofCompactInfo GeData;
     std::string FFTSTYPE = "FFTS_PLUS";
-    MOCKER_CPP(&HashData::GetHashInfo)
-        .stubs()
-        .will(returnValue(FFTSTYPE));
+    MOCKER_CPP(&HashData::GetHashInfo).stubs().will(returnValue(FFTSTYPE));
     analyzerGe->HandleNodeBasicInfo((CONST_CHAR_PTR)(&GeData), false);
     analyzerGe->HandleNodeBasicInfo((CONST_CHAR_PTR)(&GeData), false); // second time
     EXPECT_EQ(0, analyzerGe->geNodeInfo_.size());
 }
 
-TEST_F(MSPROF_API_SUBSCRIBE_STEST, AnalyzerGe_Parse) {
+TEST_F(MSPROF_API_SUBSCRIBE_STEST, AnalyzerGe_Parse)
+{
     std::shared_ptr<Analysis::Dvvp::Analyze::AnalyzerGe> analyzerGe(new Analysis::Dvvp::Analyze::AnalyzerGe());
     analyzerGe->Parse(nullptr);
 
     struct MsprofGeProfTaskData geTaskDescChunk;
-    std::string geOriData((char *)&geTaskDescChunk, sizeof(geTaskDescChunk));
+    std::string geOriData((char*)&geTaskDescChunk, sizeof(geTaskDescChunk));
     SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> geTaskDesc(new analysis::dvvp::ProfileFileChunk());
     geTaskDesc->fileName = "Framework.task_desc_info_xxx";
     geTaskDesc->extraInfo = "0.0";
@@ -2106,7 +2116,7 @@ TEST_F(MSPROF_API_SUBSCRIBE_STEST, AnalyzerGe_Parse) {
     EXPECT_EQ(sizeof(geTaskDescChunk), analyzerGe->totalBytes_);
 
     struct MsprofGeProfIdMapData geIdMapData;
-    std::string geOriData2((char *)&geIdMapData, sizeof(geIdMapData));
+    std::string geOriData2((char*)&geIdMapData, sizeof(geIdMapData));
     geTaskDesc->fileName = "Framework.id_map_info";
     geTaskDesc->chunk = geOriData2;
     geTaskDesc->chunkSize = sizeof(geIdMapData);
@@ -2116,7 +2126,8 @@ TEST_F(MSPROF_API_SUBSCRIBE_STEST, AnalyzerGe_Parse) {
     analyzerGe->Parse(geTaskDesc);
 }
 
-TEST_F(MSPROF_API_SUBSCRIBE_STEST, AnalyzerGe_ParseOpName) {
+TEST_F(MSPROF_API_SUBSCRIBE_STEST, AnalyzerGe_ParseOpName)
+{
     std::shared_ptr<Analysis::Dvvp::Analyze::AnalyzerGe> analyzerGe(new Analysis::Dvvp::Analyze::AnalyzerGe());
     struct MsprofGeProfTaskData geProfTaskData;
     memset(&geProfTaskData, 0, sizeof(MsprofGeProfTaskData));
@@ -2125,7 +2136,8 @@ TEST_F(MSPROF_API_SUBSCRIBE_STEST, AnalyzerGe_ParseOpName) {
     analyzerGe->ParseOpName(geProfTaskData, opInfo);
 }
 
-TEST_F(MSPROF_API_SUBSCRIBE_STEST, AnalyzerGe_ParseOpType) {
+TEST_F(MSPROF_API_SUBSCRIBE_STEST, AnalyzerGe_ParseOpType)
+{
     std::shared_ptr<Analysis::Dvvp::Analyze::AnalyzerGe> analyzerGe(new Analysis::Dvvp::Analyze::AnalyzerGe());
     struct MsprofGeProfTaskData geProfTaskData;
     memset(&geProfTaskData, 0, sizeof(MsprofGeProfTaskData));
@@ -2134,26 +2146,28 @@ TEST_F(MSPROF_API_SUBSCRIBE_STEST, AnalyzerGe_ParseOpType) {
     analyzerGe->ParseOpType(geProfTaskData, opInfo);
 }
 
-TEST_F(MSPROF_API_SUBSCRIBE_STEST, Analyzer_UploadAppOpStepTrace) {
+TEST_F(MSPROF_API_SUBSCRIBE_STEST, Analyzer_UploadAppOpStepTrace)
+{
     GlobalMockObject::verify();
     SHARED_PTR_ALIA<PipeTransport> pipeTransport = std::make_shared<PipeTransport>();
     SHARED_PTR_ALIA<Uploader> pipeUploader = std::make_shared<Uploader>(pipeTransport);
     pipeUploader->Init(100000);
     Analysis::Dvvp::Analyze::Analyzer analyzer(pipeUploader);
     analyzer.profileMode_ = PROFILE_MODE_STEP_TRACE;
-    analyzer.analyzerGe_->opInfos_ =
-        {{ "0-0", AnalyzerGe::GeOpInfo() }, { "0-100", AnalyzerGe::GeOpInfo() }, { "1-100", AnalyzerGe::GeOpInfo() }};
+    analyzer.analyzerGe_->opInfos_ = {
+        {"0-0", AnalyzerGe::GeOpInfo()}, {"0-100", AnalyzerGe::GeOpInfo()}, {"1-100", AnalyzerGe::GeOpInfo()}};
 
-    std::multimap<std::string, OpTime> opTimes;                                // key0Res, key1Res
-    opTimes.insert({ "0", OpTime{0,   1, 1, 0, 0, 0, ACL_SUBSCRIBE_OP, 0 }});
-    opTimes.insert({ "0", OpTime{100, 1, 1, 0, 0, 0, ACL_SUBSCRIBE_OP, 0 }});  // true,    true
-    opTimes.insert({ "0", OpTime{200, 1, 1, 0, 0, 0, ACL_SUBSCRIBE_OP, 0 }});  // true,    false
-    opTimes.insert({ "1", OpTime{100, 1, 1, 0, 0, 0, ACL_SUBSCRIBE_OP, 0 }});  // false,   true
+    std::multimap<std::string, OpTime> opTimes;                             // key0Res, key1Res
+    opTimes.insert({"0", OpTime{0, 1, 1, 0, 0, 0, ACL_SUBSCRIBE_OP, 0}});
+    opTimes.insert({"0", OpTime{100, 1, 1, 0, 0, 0, ACL_SUBSCRIBE_OP, 0}}); // true,    true
+    opTimes.insert({"0", OpTime{200, 1, 1, 0, 0, 0, ACL_SUBSCRIBE_OP, 0}}); // true,    false
+    opTimes.insert({"1", OpTime{100, 1, 1, 0, 0, 0, ACL_SUBSCRIBE_OP, 0}}); // false,   true
     analyzer.UploadAppOp(opTimes);
     EXPECT_EQ(1, opTimes.size());
 }
 
-TEST_F(MSPROF_API_SUBSCRIBE_STEST, Analyzer_UploadAppOpStaticShape) {
+TEST_F(MSPROF_API_SUBSCRIBE_STEST, Analyzer_UploadAppOpStaticShape)
+{
     GlobalMockObject::verify();
     SHARED_PTR_ALIA<PipeTransport> pipeTransport = std::make_shared<PipeTransport>();
     SHARED_PTR_ALIA<Uploader> pipeUploader = std::make_shared<Uploader>(pipeTransport);
@@ -2161,115 +2175,91 @@ TEST_F(MSPROF_API_SUBSCRIBE_STEST, Analyzer_UploadAppOpStaticShape) {
     Analysis::Dvvp::Analyze::Analyzer analyzer(pipeUploader);
     analyzer.profileMode_ = PROFILE_MODE_STATIC_SHAPE;
     analyzer.analyzerGe_->isAllStaticShape_ = false;
-    analyzer.analyzerGe_->opInfos_ = {{ "0-0", AnalyzerGe::GeOpInfo() }};
-    analyzer.analyzerGe_->steamState_ =
-        {{ 100 , StreamInfo{ 0, 0, KNOWN_SHAPE_STREAM }}, { 200 , StreamInfo{ 0, 0, UNKNOWN_SHAPE_STREAM }}};
+    analyzer.analyzerGe_->opInfos_ = {{"0-0", AnalyzerGe::GeOpInfo()}};
+    analyzer.analyzerGe_->steamState_ = {
+        {100, StreamInfo{0, 0, KNOWN_SHAPE_STREAM}}, {200, StreamInfo{0, 0, UNKNOWN_SHAPE_STREAM}}};
 
     std::multimap<std::string, OpTime> opTimes;
-    opTimes.insert({ "0", OpTime{0, 1, 1, 0, 0, 0, ACL_SUBSCRIBE_OP, 0 }});
-    opTimes.insert({ "0", OpTime{0, 1, 1, 0, 0, 0, ACL_SUBSCRIBE_OP, 200 }});
-    opTimes.insert({ "0", OpTime{0, 1, 1, 0, 0, 0, ACL_SUBSCRIBE_OP, 100 }});
-    opTimes.insert({ "1", OpTime{0, 1, 1, 0, 0, 0, ACL_SUBSCRIBE_OP, 100 }});
+    opTimes.insert({"0", OpTime{0, 1, 1, 0, 0, 0, ACL_SUBSCRIBE_OP, 0}});
+    opTimes.insert({"0", OpTime{0, 1, 1, 0, 0, 0, ACL_SUBSCRIBE_OP, 200}});
+    opTimes.insert({"0", OpTime{0, 1, 1, 0, 0, 0, ACL_SUBSCRIBE_OP, 100}});
+    opTimes.insert({"1", OpTime{0, 1, 1, 0, 0, 0, ACL_SUBSCRIBE_OP, 100}});
 
     analyzer.UploadAppOp(opTimes);
     EXPECT_EQ(2, opTimes.size());
 }
 
-TEST_F(MSPROF_API_SUBSCRIBE_STEST, Analyzer_UploadAppOpSingleOp) {
+TEST_F(MSPROF_API_SUBSCRIBE_STEST, Analyzer_UploadAppOpSingleOp)
+{
     GlobalMockObject::verify();
     SHARED_PTR_ALIA<PipeTransport> pipeTransport = std::make_shared<PipeTransport>();
     SHARED_PTR_ALIA<Uploader> pipeUploader = std::make_shared<Uploader>(pipeTransport);
     pipeUploader->Init(100000);
     Analysis::Dvvp::Analyze::Analyzer analyzer(pipeUploader);
     analyzer.profileMode_ = PROFILE_MODE_SINGLE_OP;
-    analyzer.analyzerGe_->opInfos_ = {{ "0-0", AnalyzerGe::GeOpInfo() }};
+    analyzer.analyzerGe_->opInfos_ = {{"0-0", AnalyzerGe::GeOpInfo()}};
 
     std::multimap<std::string, OpTime> opTimes;
-    opTimes.insert({ "0", OpTime{0, 1, 1, 0, 0, 0, ACL_SUBSCRIBE_OP, 0 }});
-    opTimes.insert({ "1", OpTime{0, 1, 1, 0, 0, 0, ACL_SUBSCRIBE_OP, 0 }});
+    opTimes.insert({"0", OpTime{0, 1, 1, 0, 0, 0, ACL_SUBSCRIBE_OP, 0}});
+    opTimes.insert({"1", OpTime{0, 1, 1, 0, 0, 0, ACL_SUBSCRIBE_OP, 0}});
 
     analyzer.UploadAppOp(opTimes);
     EXPECT_EQ(1, opTimes.size());
 }
 
-class COMMANDHANDLE_STEST: public testing::Test {
+class COMMANDHANDLE_STEST : public testing::Test {
 protected:
-    virtual void SetUp() {
-    }
-    virtual void TearDown() {
-    }
+    virtual void SetUp() {}
+    virtual void TearDown() {}
 };
 
-TEST_F(COMMANDHANDLE_STEST, commandHandle_api) {
+TEST_F(COMMANDHANDLE_STEST, commandHandle_api)
+{
     GlobalMockObject::verify();
 
-    //EXPECT_EQ(ACL_SUCCESS, CommandHandleProfInit());
-    std::string retStr(4099,'a');
+    // EXPECT_EQ(ACL_SUCCESS, CommandHandleProfInit());
+    std::string retStr(4099, 'a');
     std::string zeroStr = "{}";
     MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::GetParamJsonStr)
         .stubs()
         .will(returnValue(retStr))
         .then(returnValue(zeroStr));
-    MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::PlatformIsHelperHostSide)
-        .stubs()
-        .will(returnValue(false));
+    MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::PlatformIsHelperHostSide).stubs().will(returnValue(false));
     uint32_t devList[] = {0, 1};
     uint32_t devNums = 2;
 }
 
-TEST_F(MSPROF_ACL_CORE_STEST, AclProf_API_TEST) {
+TEST_F(MSPROF_ACL_CORE_STEST, AclProf_API_TEST)
+{
     using namespace Analysis::Dvvp::Analyze;
 
-    MOCKER_CPP(&OpDescParser::GetModelId)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&OpDescParser::GetModelId).stubs().will(returnValue(PROFILING_SUCCESS));
 
-    MOCKER_CPP(&OpDescParser::GetOpDescSize)
-        .stubs();
+    MOCKER_CPP(&OpDescParser::GetOpDescSize).stubs();
 
-    MOCKER_CPP(&OpDescParser::GetOpNum)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&OpDescParser::GetOpNum).stubs().will(returnValue(PROFILING_SUCCESS));
 
-    MOCKER_CPP(&OpDescParser::GetOpTypeLen)
-        .stubs()
-        .will(returnValue(ACL_SUCCESS));
+    MOCKER_CPP(&OpDescParser::GetOpTypeLen).stubs().will(returnValue(ACL_SUCCESS));
 
-    MOCKER_CPP(&OpDescParser::GetOpType)
-        .stubs()
-        .will(returnValue(ACL_SUCCESS));
+    MOCKER_CPP(&OpDescParser::GetOpType).stubs().will(returnValue(ACL_SUCCESS));
 
-    MOCKER_CPP(&OpDescParser::GetOpNameLen)
-        .stubs()
-        .will(returnValue(ACL_SUCCESS));
+    MOCKER_CPP(&OpDescParser::GetOpNameLen).stubs().will(returnValue(ACL_SUCCESS));
 
-    MOCKER_CPP(&OpDescParser::GetOpName)
-        .stubs()
-        .will(returnValue(ACL_SUCCESS));
+    MOCKER_CPP(&OpDescParser::GetOpName).stubs().will(returnValue(ACL_SUCCESS));
 
-    MOCKER_CPP(&OpDescParser::GetOpStart)
-        .stubs()
-        .will(returnValue(0u));
+    MOCKER_CPP(&OpDescParser::GetOpStart).stubs().will(returnValue(0u));
 
-    MOCKER_CPP(&OpDescParser::GetOpEnd)
-        .stubs()
-        .will(returnValue(0u));
+    MOCKER_CPP(&OpDescParser::GetOpEnd).stubs().will(returnValue(0u));
 
-    MOCKER_CPP(&OpDescParser::GetOpDuration)
-        .stubs()
-        .will(returnValue(0u));
+    MOCKER_CPP(&OpDescParser::GetOpDuration).stubs().will(returnValue(0u));
 
-    MOCKER_CPP(&OpDescParser::GetModelId)
-        .stubs()
-        .will(returnValue(ACL_SUCCESS));
+    MOCKER_CPP(&OpDescParser::GetModelId).stubs().will(returnValue(ACL_SUCCESS));
 
-    MOCKER_CPP(&OpDescParser::GetOpFlag)
-        .stubs()
-        .will(returnValue(0u));
+    MOCKER_CPP(&OpDescParser::GetOpFlag).stubs().will(returnValue(0u));
 
     size_t opDescSize = 0;
     aclprofGetModelId(nullptr, 0, 0);
-    //aclprofGetGraphId(nullptr, 0, 0);
+    // aclprofGetGraphId(nullptr, 0, 0);
     aclprofGetOpDescSize(nullptr);
     aclprofGetOpDescSize(&opDescSize);
     EXPECT_EQ(ACL_SUCCESS, aclprofGetOpNum(nullptr, 0, nullptr));
@@ -2287,8 +2277,8 @@ TEST_F(MSPROF_ACL_CORE_STEST, AclProf_API_TEST) {
     aclprofGetOpDuration(nullptr, 0, 0);
 }
 
-
-TEST_F(MSPROF_ACL_CORE_STEST, MsprofTx_API_TEST) {
+TEST_F(MSPROF_ACL_CORE_STEST, MsprofTx_API_TEST)
+{
     using namespace Msprof::MsprofTx;
     Msprof::MsprofTx::MsprofStampInstance pstamp;
 
@@ -2296,44 +2286,25 @@ TEST_F(MSPROF_ACL_CORE_STEST, MsprofTx_API_TEST) {
         .stubs()
         .will(returnValue(static_cast<Msprof::MsprofTx::ACL_PROF_STAMP_PTR>(nullptr)));
 
-    MOCKER_CPP(&MsprofTxManager::DestroyStamp)
-        .stubs();
+    MOCKER_CPP(&MsprofTxManager::DestroyStamp).stubs();
 
-    MOCKER_CPP(&MsprofTxManager::SetCategoryName)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&MsprofTxManager::SetCategoryName).stubs().will(returnValue(PROFILING_SUCCESS));
 
-    MOCKER_CPP(&MsprofTxManager::SetStampCategory)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&MsprofTxManager::SetStampCategory).stubs().will(returnValue(PROFILING_SUCCESS));
 
-    MOCKER_CPP(&MsprofTxManager::SetStampPayload)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&MsprofTxManager::SetStampPayload).stubs().will(returnValue(PROFILING_SUCCESS));
 
-    MOCKER_CPP(&MsprofTxManager::SetStampTraceMessage)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&MsprofTxManager::SetStampTraceMessage).stubs().will(returnValue(PROFILING_SUCCESS));
 
-    MOCKER_CPP(&MsprofTxManager::Mark)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&MsprofTxManager::Mark).stubs().will(returnValue(PROFILING_SUCCESS));
 
-    MOCKER_CPP(&MsprofTxManager::Push)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&MsprofTxManager::Push).stubs().will(returnValue(PROFILING_SUCCESS));
 
-    MOCKER_CPP(&MsprofTxManager::Pop)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&MsprofTxManager::Pop).stubs().will(returnValue(PROFILING_SUCCESS));
 
-    MOCKER_CPP(&MsprofTxManager::RangeStart)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&MsprofTxManager::RangeStart).stubs().will(returnValue(PROFILING_SUCCESS));
 
-    MOCKER_CPP(&MsprofTxManager::RangeStop)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&MsprofTxManager::RangeStop).stubs().will(returnValue(PROFILING_SUCCESS));
 
     EXPECT_EQ(nullptr, aclprofCreateStamp());
     aclprofDestroyStamp(nullptr);
@@ -2349,9 +2320,7 @@ TEST_F(MSPROF_ACL_CORE_STEST, MsprofTx_API_TEST) {
     EXPECT_EQ(PROFILING_SUCCESS, aclprofRangeStart(&pstamp, &rangeId));
     EXPECT_EQ(PROFILING_SUCCESS, aclprofRangeStop(0));
 
-    MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::PlatformIsHelperHostSide)
-        .stubs()
-        .will(returnValue(true));
+    MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::PlatformIsHelperHostSide).stubs().will(returnValue(true));
     EXPECT_EQ(nullptr, aclprofCreateStamp());
     aclprofDestroyStamp(nullptr);
     aclprofDestroyStamp(&pstamp);
@@ -2366,8 +2335,9 @@ TEST_F(MSPROF_ACL_CORE_STEST, MsprofTx_API_TEST) {
     EXPECT_EQ(ACL_ERROR_FEATURE_UNSUPPORTED, aclprofRangeStop(0));
 }
 
-TEST_F(MSPROF_ACL_CORE_STEST, AclProfSetpInfo_API_TEST) {
-    struct aclprofStepInfo *pStepInfo = aclprofCreateStepInfo();
+TEST_F(MSPROF_ACL_CORE_STEST, AclProfSetpInfo_API_TEST)
+{
+    struct aclprofStepInfo* pStepInfo = aclprofCreateStepInfo();
     aclprofStepTag stepTag = ACL_STEP_START;
     EXPECT_EQ(ACL_ERROR_INVALID_PARAM, aclprofGetStepTimestamp(nullptr, stepTag, nullptr));
     EXPECT_EQ(ACL_SUCCESS, aclprofGetStepTimestamp(pStepInfo, stepTag, nullptr));
@@ -2375,54 +2345,53 @@ TEST_F(MSPROF_ACL_CORE_STEST, AclProfSetpInfo_API_TEST) {
     aclprofDestroyStepInfo(pStepInfo);
 }
 
-TEST_F(MSPROF_ACL_CORE_STEST, RangeStop) {
+TEST_F(MSPROF_ACL_CORE_STEST, RangeStop)
+{
     GlobalMockObject::verify();
     Msprof::MsprofTx::MsprofTxManager::instance()->isInit_ = true;
     Msprof::MsprofTx::MsprofTxManager::instance()->stampPool_ = std::make_shared<ProfStampPool>();
-    MsprofStampInstance *ptr = nullptr;
+    MsprofStampInstance* ptr = nullptr;
     MOCKER_CPP(&ProfStampPool::GetStampById).stubs().will(returnValue(ptr));
     EXPECT_EQ(PROFILING_FAILED, Msprof::MsprofTx::MsprofTxManager::instance()->RangeStop(1));
     Msprof::MsprofTx::MsprofTxManager::instance()->isInit_ = false;
 }
 
-TEST_F(MSPROF_ACL_CORE_STEST, SetStampTraceMessage) {
+TEST_F(MSPROF_ACL_CORE_STEST, SetStampTraceMessage)
+{
     GlobalMockObject::verify();
-    Msprof::MsprofTx::MsprofStampInstance *ptr = (Msprof::MsprofTx::MsprofStampInstance *)0x1;
+    Msprof::MsprofTx::MsprofStampInstance* ptr = (Msprof::MsprofTx::MsprofStampInstance*)0x1;
     EXPECT_EQ(PROFILING_FAILED, Msprof::MsprofTx::MsprofTxManager::instance()->SetStampTraceMessage(ptr, nullptr, 256));
 }
 
-int32_t MsprofAdditionalBufPushCallbackStub(uint32_t aging, const VOID_PTR data, uint32_t len)
-{
-    return 0;
-}
+int32_t MsprofAdditionalBufPushCallbackStub(uint32_t aging, const VOID_PTR data, uint32_t len) { return 0; }
 
-TEST_F(MSPROF_ACL_CORE_STEST, ReportStampData) {
+TEST_F(MSPROF_ACL_CORE_STEST, ReportStampData)
+{
     GlobalMockObject::verify();
     std::shared_ptr<Msprof::MsprofTx::MsprofTxManager> manager;
     MSVP_MAKE_SHARED0(manager, Msprof::MsprofTx::MsprofTxManager, break);
     // init reporter_
     manager->RegisterReporterCallback(MsprofAdditionalBufPushCallbackStub);
     struct MsprofStampInstance instance;
-    struct MsprofTxInfo reportData = {0, 0, 0, { 0 }};
+    struct MsprofTxInfo reportData = {0, 0, 0, {0}};
 
     MOCKER_CPP(&Msprof::MsprofTx::MsprofTxReporter::Report)
         .stubs()
         .will(returnValue(PROFILING_FAILED))
         .then(returnValue(PROFILING_SUCCESS));
-    MOCKER(mmGetTid)
-        .stubs()
-        .will(returnValue(10));
+    MOCKER(mmGetTid).stubs().will(returnValue(10));
 
     instance.txInfo = reportData;
 
-    int ret = manager->ReportStampData((MsprofStampInstance *)&instance);
+    int ret = manager->ReportStampData((MsprofStampInstance*)&instance);
     EXPECT_EQ(PROFILING_FAILED, ret);
     // report success
-    ret = manager->ReportStampData((MsprofStampInstance *)&instance);
+    ret = manager->ReportStampData((MsprofStampInstance*)&instance);
     EXPECT_EQ(PROFILING_SUCCESS, ret);
 }
 
-TEST_F(MSPROF_ACL_CORE_STEST, aclprofSetConfig_not_support) {
+TEST_F(MSPROF_ACL_CORE_STEST, aclprofSetConfig_not_support)
+{
     EXPECT_EQ(ACL_ERROR_INVALID_PARAM, aclprofSetConfig(ACL_PROF_ARGS_MIN, nullptr, 0));
     EXPECT_EQ(ACL_ERROR_INVALID_PARAM, aclprofSetConfig(ACL_PROF_ARGS_MAX, nullptr, 0));
 }
@@ -2431,67 +2400,72 @@ TEST_F(MSPROF_ACL_CORE_UTEST, ProfSetConfigWillReturnUnintializeWhenInitParmasFa
 {
     std::string config("50");
     Msprofiler::Api::ProfAclMgr::instance()->mode_ = Msprofiler::Api::WORK_MODE_OFF;
-    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::InitParams)
-        .stubs()
-        .will(returnValue(ACL_ERROR_PROFILING_FAILURE));
-    EXPECT_EQ(ACL_ERROR_UNINITIALIZE, Msprofiler::AclApi::ProfSetConfig(ACL_PROF_DVPP_FREQ,
-        config.c_str(), config.size()));
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::InitParams).stubs().will(returnValue(ACL_ERROR_PROFILING_FAILURE));
+    EXPECT_EQ(
+        ACL_ERROR_UNINITIALIZE, Msprofiler::AclApi::ProfSetConfig(ACL_PROF_DVPP_FREQ, config.c_str(), config.size()));
 }
 
 TEST_F(MSPROF_ACL_CORE_UTEST, ProfSetConfigWillReturnUnintializeWhenPlatformInitFail)
 {
     std::string config("50");
     Msprofiler::Api::ProfAclMgr::instance()->mode_ = Msprofiler::Api::WORK_MODE_OFF;
-    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::InitParams)
-        .stubs()
-        .will(returnValue(ACL_SUCCESS));
-    MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::Init)
-        .stubs()
-        .will(returnValue(PROFILING_FAILED));
-    EXPECT_EQ(ACL_ERROR_UNINITIALIZE, Msprofiler::AclApi::ProfSetConfig(ACL_PROF_DVPP_FREQ,
-        config.c_str(), config.size()));
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::InitParams).stubs().will(returnValue(ACL_SUCCESS));
+    MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::Init).stubs().will(returnValue(PROFILING_FAILED));
+    EXPECT_EQ(
+        ACL_ERROR_UNINITIALIZE, Msprofiler::AclApi::ProfSetConfig(ACL_PROF_DVPP_FREQ, config.c_str(), config.size()));
 }
 
-TEST_F(MSPROF_ACL_CORE_STEST, IsValidProfConfig) {
-    uint32_t deviceIdList[2]={0, 0};
+TEST_F(MSPROF_ACL_CORE_STEST, IsValidProfConfig)
+{
+    uint32_t deviceIdList[2] = {0, 0};
     uint32_t deviceNums = 2;
     aclprofAicoreMetrics aicoreMetrics;
-    aclprofAicoreEvents *aicoreEvents = nullptr;
+    aclprofAicoreEvents* aicoreEvents = nullptr;
     uint64_t dataTypeConfig;
     EXPECT_EQ(nullptr, aclprofCreateConfig(deviceIdList, deviceNums, aicoreMetrics, aicoreEvents, dataTypeConfig));
 }
 
-TEST_F(MSPROF_ACL_CORE_STEST, IsValidProfConfig1) {
-    uint32_t deviceIdList[2]={5, 0};
+TEST_F(MSPROF_ACL_CORE_STEST, IsValidProfConfig1)
+{
+    uint32_t deviceIdList[2] = {5, 0};
     uint32_t deviceNums = 2;
     aclprofAicoreMetrics aicoreMetrics;
-    aclprofAicoreEvents *aicoreEvents = nullptr;
+    aclprofAicoreEvents* aicoreEvents = nullptr;
     uint64_t dataTypeConfig;
     MOCKER(ProfAclDrvGetDevNum).stubs().will(returnValue(2));
     EXPECT_EQ(nullptr, aclprofCreateConfig(deviceIdList, deviceNums, aicoreMetrics, aicoreEvents, dataTypeConfig));
 }
 
-TEST_F(MSPROF_ACL_CORE_STEST, IsProfConfigValid) {
+TEST_F(MSPROF_ACL_CORE_STEST, IsProfConfigValid)
+{
     ProfConfig config;
     config.devNums = 5;
     config.devIdList[0] = 0;
     config.aicoreMetrics = PROF_AICORE_ARITHMETIC_UTILIZATION;
     config.dataTypeConfig = 0x7d7f001f;
     MOCKER(ProfAclDrvGetDevNum).stubs().will(returnValue(2));
-    EXPECT_EQ(nullptr, ge::aclgrphProfCreateConfig(config.devIdList, config.devNums, (ge::ProfilingAicoreMetrics)config.aicoreMetrics, nullptr, 0xffffffff));
+    EXPECT_EQ(
+        nullptr,
+        ge::aclgrphProfCreateConfig(
+            config.devIdList, config.devNums, (ge::ProfilingAicoreMetrics)config.aicoreMetrics, nullptr, 0xffffffff));
 }
 
-TEST_F(MSPROF_ACL_CORE_STEST, IsProfConfigValid1) {
+TEST_F(MSPROF_ACL_CORE_STEST, IsProfConfigValid1)
+{
     ProfConfig config;
     config.devNums = 1;
     config.devIdList[0] = 5;
     config.aicoreMetrics = PROF_AICORE_ARITHMETIC_UTILIZATION;
     config.dataTypeConfig = 0x7d7f001f;
     MOCKER(ProfAclDrvGetDevNum).stubs().will(returnValue(2));
-    EXPECT_EQ(nullptr, ge::aclgrphProfCreateConfig(config.devIdList, config.devNums, (ge::ProfilingAicoreMetrics)config.aicoreMetrics, nullptr, 0xffffffff));
+    EXPECT_EQ(
+        nullptr,
+        ge::aclgrphProfCreateConfig(
+            config.devIdList, config.devNums, (ge::ProfilingAicoreMetrics)config.aicoreMetrics, nullptr, 0xffffffff));
 }
 
-TEST_F(MSPROF_ACL_CORE_STEST, ProfStop) {
+TEST_F(MSPROF_ACL_CORE_STEST, ProfStop)
+{
     ProfConfig config;
     config.devNums = 1;
     config.devIdList[0] = 0;
@@ -2499,15 +2473,17 @@ TEST_F(MSPROF_ACL_CORE_STEST, ProfStop) {
     config.dataTypeConfig = 0x0080;
     // MOCKER(preCheckProfConfig).stubs().will(returnValue(0));
     MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::ProfStopPrecheck).stubs().will(returnValue(0));
-    MOCKER((int (Msprofiler::Api::ProfAclMgr::*)(const uint32_t devId, uint64_t &dataTypeConfig))&Msprofiler::Api::ProfAclMgr::ProfAclGetDataTypeConfig).stubs().will(returnValue(0));
+    MOCKER(
+        (int(Msprofiler::Api::ProfAclMgr::*)(const uint32_t devId, uint64_t& dataTypeConfig)) &
+        Msprofiler::Api::ProfAclMgr::ProfAclGetDataTypeConfig)
+        .stubs()
+        .will(returnValue(0));
     EXPECT_EQ(ACL_ERROR_INVALID_PROFILING_CONFIG, Msprofiler::AclApi::ProfStop(ACL_API_TYPE, &config));
 }
 
 TEST_F(MSPROF_ACL_CORE_STEST, ProfNotifySetDeviceForDynProf)
 {
-    MOCKER(&DynProfMgr::SaveDevicesInfo)
-        .stubs()
-        .will(ignoreReturnValue());
+    MOCKER(&DynProfMgr::SaveDevicesInfo).stubs().will(ignoreReturnValue());
     MOCKER(Analysis::Dvvp::ProfilerCommon::CommandHandleProfInit)
         .stubs()
         .will(returnValue(PROFILING_FAILED))
@@ -2516,8 +2492,8 @@ TEST_F(MSPROF_ACL_CORE_STEST, ProfNotifySetDeviceForDynProf)
     EXPECT_EQ(MSPROF_ERROR_NONE, Analysis::Dvvp::ProfilerCommon::ProfNotifySetDeviceForDynProf(0, 0, 0));
 }
 
-
-TEST_F(MSPROF_ACL_CORE_STEST, MsprofResultDirAdapter) {
+TEST_F(MSPROF_ACL_CORE_STEST, MsprofResultDirAdapter)
+{
     GlobalMockObject::verify();
     Msprofiler::Api::ProfAclMgr profAclMgr;
     std::string dir = "";
@@ -2539,7 +2515,8 @@ TEST_F(MSPROF_ACL_CORE_STEST, MsprofResultDirAdapter) {
     EXPECT_EQ(result_path, profAclMgr.MsprofResultDirAdapter(dir));
 }
 
-TEST_F(MSPROF_ACL_CORE_STEST, MsprofGeOptionsParamConstruct) {
+TEST_F(MSPROF_ACL_CORE_STEST, MsprofGeOptionsParamConstruct)
+{
     GlobalMockObject::verify();
     Msprofiler::Api::ProfAclMgr profAclMgr;
     NanoJson::Json inputCfgPbo;
@@ -2567,8 +2544,9 @@ TEST_F(MSPROF_ACL_CORE_STEST, MsprofGeOptionsParamConstruct) {
         .will(returnValue(PlatformType::CHIP_V4_1_0));
     EXPECT_EQ(MSPROF_ERROR_NONE, profAclMgr.MsprofGeOptionsParamConstruct("hello", inputCfgPbo));
     configManger->Uninit();
-    MOCKER_CPP(&analysis::dvvp::common::validation::ParamValidation::CheckStorageLimit,
-        bool(ParamValidation::*)(SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams>, const std::string &) const)
+    MOCKER_CPP(
+        &analysis::dvvp::common::validation::ParamValidation::CheckStorageLimit,
+        bool(ParamValidation::*)(SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams>, const std::string&) const)
         .stubs()
         .will(returnValue(false))
         .then(returnValue(true));
@@ -2576,7 +2554,8 @@ TEST_F(MSPROF_ACL_CORE_STEST, MsprofGeOptionsParamConstruct) {
     EXPECT_EQ(MSPROF_ERROR_NONE, profAclMgr.MsprofGeOptionsParamConstruct("hello", inputCfgPbo));
 }
 
-TEST_F(MSPROF_ACL_CORE_STEST, SendBuffer) {
+TEST_F(MSPROF_ACL_CORE_STEST, SendBuffer)
+{
     GlobalMockObject::verify();
     std::shared_ptr<FILETransport> trans(new FILETransport("/tmp", "200MB"));
     std::shared_ptr<PerfCount> perfCount(new PerfCount("test"));
@@ -2587,29 +2566,28 @@ TEST_F(MSPROF_ACL_CORE_STEST, SendBuffer) {
     EXPECT_EQ(0, trans->SendBuffer(buff.c_str(), buff.size()));
 }
 
-TEST_F(MSPROF_ACL_CORE_STEST, ProfAclGetId) {
+TEST_F(MSPROF_ACL_CORE_STEST, ProfAclGetId)
+{
     GlobalMockObject::verify();
     void* data = (void*)0x12345678;
     EXPECT_EQ(ACL_ERROR_INVALID_PARAM, ProfAclGetId(ACL_API_TYPE, data, 0, 0));
 }
 
-TEST_F(MSPROF_ACL_CORE_STEST, ProfAclGetOpTime) {
+TEST_F(MSPROF_ACL_CORE_STEST, ProfAclGetOpTime)
+{
     GlobalMockObject::verify();
     void* data = (void*)0x12345678;
-    MOCKER_CPP(&Analysis::Dvvp::Analyze::OpDescParser::CheckData)
-        .stubs()
-        .will(returnValue(ACL_SUCCESS));
+    MOCKER_CPP(&Analysis::Dvvp::Analyze::OpDescParser::CheckData).stubs().will(returnValue(ACL_SUCCESS));
     EXPECT_EQ(MSPROF_ERROR_NONE, ProfAclGetOpTime(ACL_OP_START, data, 0, 0));
     EXPECT_EQ(MSPROF_ERROR_NONE, ProfAclGetOpTime(ACL_OP_END, data, 0, 0));
     EXPECT_EQ(MSPROF_ERROR_NONE, ProfAclGetOpTime(ACL_OP_DURATION, data, 0, 0));
 }
 
-TEST_F(MSPROF_ACL_CORE_STEST, PROFAPICOMMON) {
+TEST_F(MSPROF_ACL_CORE_STEST, PROFAPICOMMON)
+{
     GlobalMockObject::verify();
     void* data = (void*)0x12345678;
-    MOCKER_CPP(&Analysis::Dvvp::Analyze::OpDescParser::CheckData)
-        .stubs()
-        .will(returnValue(ACL_SUCCESS));
+    MOCKER_CPP(&Analysis::Dvvp::Analyze::OpDescParser::CheckData).stubs().will(returnValue(ACL_SUCCESS));
 
     uint32_t opNum = 0;
     EXPECT_EQ(ACL_SUCCESS, aclprofGetOpNum(data, 0, &opNum));
@@ -2629,17 +2607,16 @@ TEST_F(MSPROF_ACL_CORE_STEST, PROFAPICOMMON) {
     EXPECT_EQ(ACL_ERROR_INVALID_PARAM, aclprofGetOpName(data, 0, 0, &opName, opNameLen));
 }
 
-TEST_F(MSPROF_ACL_CORE_STEST, ProfGetOpExecutionTime) {
+TEST_F(MSPROF_ACL_CORE_STEST, ProfGetOpExecutionTime)
+{
     GlobalMockObject::verify();
     void* data = (void*)0x12345678;
-    MOCKER_CPP(&Analysis::Dvvp::Analyze::OpDescParser::CheckData)
-        .stubs()
-        .will(returnValue(ACL_SUCCESS));
+    MOCKER_CPP(&Analysis::Dvvp::Analyze::OpDescParser::CheckData).stubs().will(returnValue(ACL_SUCCESS));
     EXPECT_EQ(ACL_SUCCESS, Msprofiler::Api::ProfGetOpExecutionTime(data, 0, 0));
 }
 
-extern "C" int32_t ProfImplReportRegTypeInfo(uint16_t level, uint32_t type, const std::string &typeName);
-extern "C" uint64_t ProfImplReportGetHashId(const std::string &info);
+extern "C" int32_t ProfImplReportRegTypeInfo(uint16_t level, uint32_t type, const std::string& typeName);
+extern "C" uint64_t ProfImplReportGetHashId(const std::string& info);
 extern "C" bool ProfImplHostFreqIsEnable();
 
 TEST_F(MSPROF_ACL_CORE_STEST, ProfImplReportRegTypeInfo)
@@ -2660,10 +2637,7 @@ TEST_F(MSPROF_ACL_CORE_STEST, ProfImplHostFreqIsEnable)
 {
     EXPECT_EQ(false, ProfImplHostFreqIsEnable());
     int64_t outFreq = 1000;
-    MOCKER(halGetDeviceInfo)
-        .stubs()
-        .with(any(), any(), any(), outBoundP(&outFreq))
-        .will(returnValue(DRV_ERROR_NONE));
+    MOCKER(halGetDeviceInfo).stubs().with(any(), any(), any(), outBoundP(&outFreq)).will(returnValue(DRV_ERROR_NONE));
     Platform::instance()->Uninit();
     Platform::instance()->Init();
     EXPECT_EQ(true, ProfImplHostFreqIsEnable());
@@ -2688,42 +2662,29 @@ TEST_F(MSPROF_ACL_CORE_STEST, StopReporters)
     EXPECT_EQ(0, Dvvp::Collect::Report::ProfReporterMgr::GetInstance().StopReporters());
 }
 
-TEST_F(MSPROF_ACL_CORE_STEST, ProfAclStartMultiDevice) {
+TEST_F(MSPROF_ACL_CORE_STEST, ProfAclStartMultiDevice)
+{
     GlobalMockObject::verify();
 
     Analysis::Dvvp::Common::Config::ConfigManager::instance()->Init();
 
-    MOCKER_CPP(&analysis::dvvp::host::ProfManager::IdeCloudProfileProcess)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&analysis::dvvp::host::ProfManager::IdeCloudProfileProcess).stubs().will(returnValue(PROFILING_SUCCESS));
 
-    MOCKER_CPP(&analysis::dvvp::host::ProfManager::CheckIfDevicesOnline)
-        .stubs()
-        .will(returnValue(true));
+    MOCKER_CPP(&analysis::dvvp::host::ProfManager::CheckIfDevicesOnline).stubs().will(returnValue(true));
 
-    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::DoHostHandle)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::DoHostHandle).stubs().will(returnValue(PROFILING_SUCCESS));
 
-    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::ProfStartAscendProfHalTask)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::ProfStartAscendProfHalTask).stubs().will(returnValue(PROFILING_SUCCESS));
 
     MOCKER_CPP(&Analysis::Dvvp::Host::Adapter::ProfParamsAdapter::StartReqTrfToInnerParam)
         .stubs()
         .will(returnValue(PROFILING_SUCCESS));
 
-    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::StartDeviceTask)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::StartDeviceTask).stubs().will(returnValue(PROFILING_SUCCESS));
 
-    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::WaitAllDeviceResponse)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::WaitAllDeviceResponse).stubs().will(returnValue(PROFILING_SUCCESS));
 
-    MOCKER_CPP(&ProfAclMgr::StartUploaderDumper)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&ProfAclMgr::StartUploaderDumper).stubs().will(returnValue(PROFILING_SUCCESS));
 
     using namespace Msprofiler::Api;
 
@@ -2736,53 +2697,51 @@ TEST_F(MSPROF_ACL_CORE_STEST, ProfAclStartMultiDevice) {
     EXPECT_EQ(ACL_SUCCESS, ProfAclMgr::instance()->Init());
     std::string profResultPath("tmp");
     EXPECT_EQ(ACL_SUCCESS, ProfAclMgr::instance()->ProfAclInit(profResultPath));
-    EXPECT_EQ(ACL_SUCCESS, ProfConfigStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &config, sizeof(config)));
+    EXPECT_EQ(
+        ACL_SUCCESS,
+        ProfConfigStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &config, sizeof(config)));
     std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams());
     ProfAclMgr::ProfAclTaskInfo taskInfo = {1, config.profSwitch, params};
     ProfAclMgr::instance()->devTasks_[0] = taskInfo;
     ProfAclMgr::instance()->devTasks_[64] = taskInfo;
     ProfAclMgr::instance()->devTasks_[64].params->isCancel = false;
-    EXPECT_EQ(ACL_ERROR_PROF_ALREADY_RUN, ProfConfigStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &config, sizeof(config)));
+    EXPECT_EQ(
+        ACL_ERROR_PROF_ALREADY_RUN,
+        ProfConfigStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &config, sizeof(config)));
     config.devNums = 2;
     config.devIdList[0] = 1;
     config.devIdList[1] = DEFAULT_HOST_ID;
-    EXPECT_EQ(ACL_SUCCESS, ProfConfigStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &config, sizeof(config)));
+    EXPECT_EQ(
+        ACL_SUCCESS,
+        ProfConfigStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &config, sizeof(config)));
     ProfAclMgr::instance()->devTasks_[1] = taskInfo;
     taskInfo.count = 2;
-    EXPECT_EQ(ACL_SUCCESS, ProfConfigStop(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &config, sizeof(config)));
+    EXPECT_EQ(
+        ACL_SUCCESS,
+        ProfConfigStop(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &config, sizeof(config)));
     config.devNums = 2;
     config.devIdList[0] = 0;
     config.devIdList[1] = DEFAULT_HOST_ID;
-    EXPECT_EQ(ACL_SUCCESS, ProfConfigStop(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &config, sizeof(config)));
+    EXPECT_EQ(
+        ACL_SUCCESS,
+        ProfConfigStop(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &config, sizeof(config)));
     EXPECT_EQ(true, ProfAclMgr::instance()->devTasks_.empty());
 
     // milan
     GlobalMockObject::verify();
     Analysis::Dvvp::Common::Config::ConfigManager::instance()->Init();
-    MOCKER_CPP(&analysis::dvvp::host::ProfManager::IdeCloudProfileProcess)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
-    MOCKER_CPP(&analysis::dvvp::host::ProfManager::CheckIfDevicesOnline)
-        .stubs()
-        .will(returnValue(true));
-    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::ProfStartAscendProfHalTask)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&analysis::dvvp::host::ProfManager::IdeCloudProfileProcess).stubs().will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&analysis::dvvp::host::ProfManager::CheckIfDevicesOnline).stubs().will(returnValue(true));
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::ProfStartAscendProfHalTask).stubs().will(returnValue(PROFILING_SUCCESS));
     MOCKER_CPP(&Analysis::Dvvp::Host::Adapter::ProfParamsAdapter::StartReqTrfToInnerParam)
         .stubs()
         .will(returnValue(PROFILING_SUCCESS));
-    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::StartDeviceTask)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
-    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::WaitAllDeviceResponse)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::StartDeviceTask).stubs().will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::WaitAllDeviceResponse).stubs().will(returnValue(PROFILING_SUCCESS));
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
         .stubs()
         .will(returnValue(PlatformType::CHIP_V4_1_0));
-    MOCKER_CPP(&ProfAclMgr::StartUploaderDumper)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&ProfAclMgr::StartUploaderDumper).stubs().will(returnValue(PROFILING_SUCCESS));
     Platform::instance()->Uninit();
     Platform::instance()->Init();
     config.devNums = 2;
@@ -2791,13 +2750,17 @@ TEST_F(MSPROF_ACL_CORE_STEST, ProfAclStartMultiDevice) {
     config.metrics = PROF_AICORE_NONE;
     config.profSwitch = 0x40000000000008ffULL;
     EXPECT_EQ(ACL_SUCCESS, ProfAclMgr::instance()->Init());
-    EXPECT_EQ(ACL_SUCCESS, ProfConfigStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &config, sizeof(config)));
+    EXPECT_EQ(
+        ACL_SUCCESS,
+        ProfConfigStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &config, sizeof(config)));
     std::shared_ptr<analysis::dvvp::message::ProfileParams> paramMilan(new analysis::dvvp::message::ProfileParams());
     ProfAclMgr::ProfAclTaskInfo taskInfoMilan = {1, config.profSwitch, paramMilan};
     ProfAclMgr::instance()->devTasks_[0] = taskInfoMilan;
     taskInfoMilan.count = 1;
     ProfAclMgr::instance()->devTasks_[64] = taskInfoMilan;
-    EXPECT_EQ(ACL_SUCCESS, ProfConfigStop(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &config, sizeof(config)));
+    EXPECT_EQ(
+        ACL_SUCCESS,
+        ProfConfigStop(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &config, sizeof(config)));
     EXPECT_EQ(true, ProfAclMgr::instance()->devTasks_.empty());
 
     ProfAicoreMetrics nullType;
@@ -2808,42 +2771,34 @@ TEST_F(MSPROF_ACL_CORE_STEST, ProfAclStartMultiDevice) {
     config.metrics = nullType;
     config.profSwitch = 0x40000000000008ffULL;
     EXPECT_EQ(ACL_SUCCESS, ProfAclMgr::instance()->Init());
-    EXPECT_EQ(ACL_SUCCESS, ProfConfigStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &config, sizeof(config)));
+    EXPECT_EQ(
+        ACL_SUCCESS,
+        ProfConfigStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &config, sizeof(config)));
     taskInfoMilan = {1, config.profSwitch, paramMilan};
     ProfAclMgr::instance()->devTasks_[0] = taskInfoMilan;
     taskInfoMilan.count = 1;
     ProfAclMgr::instance()->devTasks_[64] = taskInfoMilan;
-    EXPECT_EQ(ACL_SUCCESS, ProfConfigStop(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &config, sizeof(config)));
+    EXPECT_EQ(
+        ACL_SUCCESS,
+        ProfConfigStop(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &config, sizeof(config)));
     EXPECT_EQ(true, ProfAclMgr::instance()->devTasks_.empty());
 
     // 1951 mdc
 #ifndef BUILD_PROFILING_OPEN_PROJECT
     GlobalMockObject::verify();
     Analysis::Dvvp::Common::Config::ConfigManager::instance()->Init();
-    MOCKER_CPP(&analysis::dvvp::host::ProfManager::IdeCloudProfileProcess)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
-    MOCKER_CPP(&analysis::dvvp::host::ProfManager::CheckIfDevicesOnline)
-        .stubs()
-        .will(returnValue(true));
-    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::ProfStartAscendProfHalTask)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&analysis::dvvp::host::ProfManager::IdeCloudProfileProcess).stubs().will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&analysis::dvvp::host::ProfManager::CheckIfDevicesOnline).stubs().will(returnValue(true));
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::ProfStartAscendProfHalTask).stubs().will(returnValue(PROFILING_SUCCESS));
     MOCKER_CPP(&Analysis::Dvvp::Host::Adapter::ProfParamsAdapter::StartReqTrfToInnerParam)
         .stubs()
         .will(returnValue(PROFILING_SUCCESS));
-    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::StartDeviceTask)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
-    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::WaitAllDeviceResponse)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::StartDeviceTask).stubs().will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::WaitAllDeviceResponse).stubs().will(returnValue(PROFILING_SUCCESS));
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
         .stubs()
         .will(returnValue(PlatformType::MDC_TYPE));
-    MOCKER_CPP(&ProfAclMgr::StartUploaderDumper)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&ProfAclMgr::StartUploaderDumper).stubs().will(returnValue(PROFILING_SUCCESS));
     Platform::instance()->Uninit();
     Platform::instance()->Init();
     config.devNums = 2;
@@ -2852,45 +2807,38 @@ TEST_F(MSPROF_ACL_CORE_STEST, ProfAclStartMultiDevice) {
     config.metrics = PROF_AICORE_L2_CACHE;
     config.profSwitch = 0x40000000000008ffULL;
     EXPECT_EQ(ACL_SUCCESS, ProfAclMgr::instance()->Init());
-    EXPECT_EQ(ACL_SUCCESS, ProfConfigStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &config, sizeof(config)));
+    EXPECT_EQ(
+        ACL_SUCCESS,
+        ProfConfigStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &config, sizeof(config)));
     std::shared_ptr<analysis::dvvp::message::ProfileParams> paramMdc(new analysis::dvvp::message::ProfileParams());
     ProfAclMgr::ProfAclTaskInfo taskInfoMdc = {1, config.profSwitch, paramMdc};
     ProfAclMgr::instance()->devTasks_[0] = taskInfoMdc;
     taskInfoMdc.count = 1;
     ProfAclMgr::instance()->devTasks_[64] = taskInfoMdc;
-    EXPECT_EQ(ACL_SUCCESS, ProfConfigStop(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &config, sizeof(config)));
+    EXPECT_EQ(
+        ACL_SUCCESS,
+        ProfConfigStop(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &config, sizeof(config)));
     EXPECT_EQ(true, ProfAclMgr::instance()->devTasks_.empty());
 #endif
 }
 
 #ifndef BUILD_PROFILING_OPEN_PROJECT
-TEST_F(MSPROF_ACL_CORE_STEST, ProfAclStartMdcMiniV3) {
+TEST_F(MSPROF_ACL_CORE_STEST, ProfAclStartMdcMiniV3)
+{
     GlobalMockObject::verify();
     Analysis::Dvvp::Common::Config::ConfigManager::instance()->Init();
-    MOCKER_CPP(&analysis::dvvp::host::ProfManager::IdeCloudProfileProcess)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
-    MOCKER_CPP(&analysis::dvvp::host::ProfManager::CheckIfDevicesOnline)
-        .stubs()
-        .will(returnValue(true));
-    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::ProfStartAscendProfHalTask)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&analysis::dvvp::host::ProfManager::IdeCloudProfileProcess).stubs().will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&analysis::dvvp::host::ProfManager::CheckIfDevicesOnline).stubs().will(returnValue(true));
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::ProfStartAscendProfHalTask).stubs().will(returnValue(PROFILING_SUCCESS));
     MOCKER_CPP(&Analysis::Dvvp::Host::Adapter::ProfParamsAdapter::StartReqTrfToInnerParam)
         .stubs()
         .will(returnValue(PROFILING_SUCCESS));
-    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::StartDeviceTask)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
-    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::WaitAllDeviceResponse)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::StartDeviceTask).stubs().will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::WaitAllDeviceResponse).stubs().will(returnValue(PROFILING_SUCCESS));
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
         .stubs()
         .will(returnValue(PlatformType::CHIP_MDC_MINI_V3));
-    MOCKER_CPP(&ProfAclMgr::StartUploaderDumper)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&ProfAclMgr::StartUploaderDumper).stubs().will(returnValue(PROFILING_SUCCESS));
 
     using namespace Msprofiler::Api;
     Platform::instance()->Uninit();
@@ -2903,42 +2851,53 @@ TEST_F(MSPROF_ACL_CORE_STEST, ProfAclStartMdcMiniV3) {
     config.profSwitch = 0x40000000000008f7ULL;
     ProfAclMgr::instance()->mode_ = WORK_MODE_API_CTRL;
     EXPECT_EQ(ACL_SUCCESS, ProfAclMgr::instance()->Init());
-    EXPECT_EQ(ACL_SUCCESS, ProfConfigStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &config, sizeof(config)));
-    std::shared_ptr<analysis::dvvp::message::ProfileParams> paramMdcMiniV3(new analysis::dvvp::message::ProfileParams());
+    EXPECT_EQ(
+        ACL_SUCCESS,
+        ProfConfigStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &config, sizeof(config)));
+    std::shared_ptr<analysis::dvvp::message::ProfileParams> paramMdcMiniV3(
+        new analysis::dvvp::message::ProfileParams());
     ProfAclMgr::ProfAclTaskInfo taskInfoMdcMiniV3 = {1, config.profSwitch, paramMdcMiniV3};
     ProfAclMgr::instance()->devTasks_[0] = taskInfoMdcMiniV3;
     taskInfoMdcMiniV3.count = 1;
     ProfAclMgr::instance()->devTasks_[64] = taskInfoMdcMiniV3;
-    EXPECT_EQ(ACL_SUCCESS, ProfConfigStop(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &config, sizeof(config)));
+    EXPECT_EQ(
+        ACL_SUCCESS,
+        ProfConfigStop(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &config, sizeof(config)));
     EXPECT_EQ(true, ProfAclMgr::instance()->devTasks_.empty());
 
     EXPECT_EQ(ACL_SUCCESS, ProfAclMgr::instance()->Init());
-    EXPECT_EQ(ACL_SUCCESS, ProfConfigStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &config, sizeof(config)));
+    EXPECT_EQ(
+        ACL_SUCCESS,
+        ProfConfigStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &config, sizeof(config)));
     taskInfoMdcMiniV3 = {1, config.profSwitch, paramMdcMiniV3};
     ProfAclMgr::instance()->devTasks_[0] = taskInfoMdcMiniV3;
     taskInfoMdcMiniV3.count = 1;
     ProfAclMgr::instance()->devTasks_[64] = taskInfoMdcMiniV3;
-    EXPECT_EQ(ACL_SUCCESS, ProfConfigStop(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &config, sizeof(config)));
+    EXPECT_EQ(
+        ACL_SUCCESS,
+        ProfConfigStop(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &config, sizeof(config)));
     EXPECT_EQ(true, ProfAclMgr::instance()->devTasks_.empty());
 
     // test aicpu switch
     config.profSwitch = PROF_AICPU_TRACE;
     EXPECT_EQ(ACL_SUCCESS, ProfAclMgr::instance()->Init());
-    EXPECT_EQ(ACL_ERROR_PROFILING_FAILURE, ProfConfigStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &config, sizeof(config)));
+    EXPECT_EQ(
+        ACL_ERROR_PROFILING_FAILURE,
+        ProfConfigStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &config, sizeof(config)));
 }
 #endif
 
-TEST_F(MSPROF_ACL_CORE_STEST, OtherTest) {
+TEST_F(MSPROF_ACL_CORE_STEST, OtherTest)
+{
     GlobalMockObject::verify();
-    MOCKER_CPP(&Msprof::Engine::MsprofReporter::SendData)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&Msprof::Engine::MsprofReporter::SendData).stubs().will(returnValue(PROFILING_SUCCESS));
     Msprof::Engine::MsprofReporter::InitReporters();
     Msprof::Engine::FlushModule();
-    EXPECT_EQ(PROFILING_SUCCESS,  Msprof::Engine::SendAiCpuData(nullptr));
+    EXPECT_EQ(PROFILING_SUCCESS, Msprof::Engine::SendAiCpuData(nullptr));
 }
 
-TEST_F(MSPROF_ACL_CORE_STEST, ProfStartAscendProfHalTask_Helper) {
+TEST_F(MSPROF_ACL_CORE_STEST, ProfStartAscendProfHalTask_Helper)
+{
     GlobalMockObject::verify();
     using namespace Msprofiler::Api;
     ProfConfig config;
@@ -2949,34 +2908,33 @@ TEST_F(MSPROF_ACL_CORE_STEST, ProfStartAscendProfHalTask_Helper) {
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
         .stubs()
         .will(returnValue(Analysis::Dvvp::Common::Config::PlatformType::CHIP_V4_1_0));
-    MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::PlatformIsNeedHelperServer)
-        .stubs()
-        .will(returnValue(true));
-    MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::PlatformIsHelperHostSide)
-        .stubs()
-        .will(returnValue(true));
+    MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::PlatformIsNeedHelperServer).stubs().will(returnValue(true));
+    MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::PlatformIsHelperHostSide).stubs().will(returnValue(true));
     MOCKER_CPP(&ProfAPI::ProfHalPlugin::ProfHalInit)
         .stubs()
         .will(returnValue(PROFILING_FAILED))
         .then(returnValue(PROFILING_SUCCESS));
-    EXPECT_EQ(PROFILING_FAILED, ProfAclMgr::instance()->ProfStartAscendProfHalTask(config.dataTypeConfig, config.devNums, config.devIdList));
-    EXPECT_EQ(PROFILING_SUCCESS, ProfAclMgr::instance()->ProfStartAscendProfHalTask(config.dataTypeConfig, config.devNums, config.devIdList));
+    EXPECT_EQ(
+        PROFILING_FAILED,
+        ProfAclMgr::instance()->ProfStartAscendProfHalTask(config.dataTypeConfig, config.devNums, config.devIdList));
+    EXPECT_EQ(
+        PROFILING_SUCCESS,
+        ProfAclMgr::instance()->ProfStartAscendProfHalTask(config.dataTypeConfig, config.devNums, config.devIdList));
 }
 
-TEST_F(MSPROF_ACL_CORE_STEST, CommandHandleFinalizeGuard_Base) {
+TEST_F(MSPROF_ACL_CORE_STEST, CommandHandleFinalizeGuard_Base)
+{
     Analysis::Dvvp::ProfilerCommon::CommandHandleFinalizeGuard();
     EXPECT_EQ(true, ProfModuleReprotMgr::GetInstance().finalizeGuard_);
-    ProfModuleReprotMgr::GetInstance().finalizeGuard_= false;
+    ProfModuleReprotMgr::GetInstance().finalizeGuard_ = false;
 }
 
-TEST_F(MSPROF_ACL_CORE_STEST, MsprofStart_PureCpu) {
+TEST_F(MSPROF_ACL_CORE_STEST, MsprofStart_PureCpu)
+{
     GlobalMockObject::verify();
     using namespace Msprofiler::Api;
 
-    MOCKER_CPP(&ProfAclMgr::IsModeOff)
-        .stubs()
-        .will(returnValue(false))
-        .then(returnValue(true));
+    MOCKER_CPP(&ProfAclMgr::IsModeOff).stubs().will(returnValue(false)).then(returnValue(true));
     MOCKER_CPP(&ProfAclMgr::MsprofInitPureCpu)
         .stubs()
         .will(returnValue(static_cast<int32_t>(MSPROF_ERROR)))
@@ -2993,10 +2951,8 @@ TEST_F(MSPROF_ACL_CORE_STEST, MsprofStart_PureCpu) {
         .stubs()
         .will(returnValue(static_cast<int32_t>(ACL_ERROR)))
         .then(returnValue(static_cast<int32_t>(ACL_SUCCESS)));
-    MOCKER_CPP(&ProfAclMgr::MsprofTxHandle)
-        .stubs();
-    MOCKER_CPP(&ProfAclMgr::MsprofHostHandle)
-        .stubs();
+    MOCKER_CPP(&ProfAclMgr::MsprofTxHandle).stubs();
+    MOCKER_CPP(&ProfAclMgr::MsprofHostHandle).stubs();
 
     struct MsprofConfig cfg;
     cfg.devNums = 1;
@@ -3007,31 +2963,32 @@ TEST_F(MSPROF_ACL_CORE_STEST, MsprofStart_PureCpu) {
     (void)strcpy_s(cfg.sampleConfig, MAX_SAMPLE_CONFIG_LEN, "test");
     // invalid input
     EXPECT_EQ(MSPROF_ERROR, MsprofStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_PURE_CPU), &cfg, 1));
-    EXPECT_EQ(MSPROF_ERROR, MsprofStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_PURE_CPU), nullptr, sizeof(cfg)));
+    EXPECT_EQ(
+        MSPROF_ERROR, MsprofStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_PURE_CPU), nullptr, sizeof(cfg)));
     EXPECT_EQ(MSPROF_ERROR, MsprofStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_DYNAMIC), &cfg, sizeof(cfg)));
     // IsModeOff
-    EXPECT_EQ(MSPROF_ERROR_NONE, MsprofStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_PURE_CPU), &cfg, sizeof(cfg)));
+    EXPECT_EQ(
+        MSPROF_ERROR_NONE, MsprofStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_PURE_CPU), &cfg, sizeof(cfg)));
     // MsprofInitPureCpu
-    EXPECT_EQ(MSPROF_ERROR, MsprofStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_PURE_CPU), &cfg, sizeof(cfg)));
+    EXPECT_EQ(
+        MSPROF_ERROR, MsprofStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_PURE_CPU), &cfg, sizeof(cfg)));
     // StartUploaderDumper
-    EXPECT_EQ(MSPROF_ERROR, MsprofStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_PURE_CPU), &cfg, sizeof(cfg)));
+    EXPECT_EQ(
+        MSPROF_ERROR, MsprofStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_PURE_CPU), &cfg, sizeof(cfg)));
     // CommandHandleProfInit
-    EXPECT_EQ(MSPROF_ERROR, MsprofStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_PURE_CPU), &cfg, sizeof(cfg)));
+    EXPECT_EQ(
+        MSPROF_ERROR, MsprofStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_PURE_CPU), &cfg, sizeof(cfg)));
     // CommandHandleProfStart
-    EXPECT_EQ(MSPROF_ERROR, MsprofStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_PURE_CPU), &cfg, sizeof(cfg)));
+    EXPECT_EQ(
+        MSPROF_ERROR, MsprofStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_PURE_CPU), &cfg, sizeof(cfg)));
 
-    EXPECT_EQ(MSPROF_ERROR_NONE, MsprofStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_PURE_CPU), &cfg, sizeof(cfg)));
+    EXPECT_EQ(
+        MSPROF_ERROR_NONE, MsprofStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_PURE_CPU), &cfg, sizeof(cfg)));
     EXPECT_EQ(0, ProfAclMgr::instance()->devTasks_.size());
 
     GlobalMockObject::verify();
-    MOCKER_CPP(&ProfAclMgr::IsModeOff)
-        .stubs()
-        .will(returnValue(true))
-        .then(returnValue(false));
-    MOCKER_CPP(&ProfAclMgr::IsCmdMode)
-        .stubs()
-        .will(returnValue(false))
-        .then(returnValue(true));
+    MOCKER_CPP(&ProfAclMgr::IsModeOff).stubs().will(returnValue(true)).then(returnValue(false));
+    MOCKER_CPP(&ProfAclMgr::IsCmdMode).stubs().will(returnValue(false)).then(returnValue(true));
     MOCKER_CPP(&Analysis::Dvvp::ProfilerCommon::CommandHandleProfStop)
         .stubs()
         .will(returnValue(static_cast<int32_t>(ACL_ERROR)))
@@ -3044,10 +3001,8 @@ TEST_F(MSPROF_ACL_CORE_STEST, MsprofStart_PureCpu) {
         .stubs()
         .will(returnValue(PROFILING_FAILED))
         .then(returnValue(PROFILING_SUCCESS));
-    MOCKER_CPP(&ProfAclMgr::MsprofTxHandle)
-        .stubs();
-    MOCKER_CPP(&ProfAclMgr::MsprofHostHandle)
-        .stubs();
+    MOCKER_CPP(&ProfAclMgr::MsprofTxHandle).stubs();
+    MOCKER_CPP(&ProfAclMgr::MsprofHostHandle).stubs();
 
     std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams());
     ProfAclMgr::ProfAclTaskInfo taskInfo = {1, 0, params};
@@ -3056,12 +3011,15 @@ TEST_F(MSPROF_ACL_CORE_STEST, MsprofStart_PureCpu) {
 
     // invalid input
     EXPECT_EQ(MSPROF_ERROR, MsprofStop(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_PURE_CPU), &cfg, 1));
-    EXPECT_EQ(MSPROF_ERROR, MsprofStop(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_PURE_CPU), nullptr, sizeof(cfg)));
+    EXPECT_EQ(
+        MSPROF_ERROR, MsprofStop(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_PURE_CPU), nullptr, sizeof(cfg)));
     EXPECT_EQ(MSPROF_ERROR, MsprofStop(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_DYNAMIC), &cfg, sizeof(cfg)));
     // IsModeOff
-    EXPECT_EQ(MSPROF_ERROR_NONE, MsprofStop(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_PURE_CPU), &cfg, sizeof(cfg)));
+    EXPECT_EQ(
+        MSPROF_ERROR_NONE, MsprofStop(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_PURE_CPU), &cfg, sizeof(cfg)));
     // IsCmdMode
-    EXPECT_EQ(MSPROF_ERROR_NONE, MsprofStop(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_PURE_CPU), &cfg, sizeof(cfg)));
+    EXPECT_EQ(
+        MSPROF_ERROR_NONE, MsprofStop(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_PURE_CPU), &cfg, sizeof(cfg)));
     // CommandHandleProfStop
     EXPECT_EQ(MSPROF_ERROR, MsprofStop(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_PURE_CPU), &cfg, sizeof(cfg)));
     // CommandHandleProfFinalize
@@ -3069,12 +3027,14 @@ TEST_F(MSPROF_ACL_CORE_STEST, MsprofStart_PureCpu) {
     // IdeCloudProfileProcess
     EXPECT_EQ(MSPROF_ERROR, MsprofStop(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_PURE_CPU), &cfg, sizeof(cfg)));
 
-    EXPECT_EQ(MSPROF_ERROR_NONE, MsprofStop(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_PURE_CPU), &cfg, sizeof(cfg)));
+    EXPECT_EQ(
+        MSPROF_ERROR_NONE, MsprofStop(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_PURE_CPU), &cfg, sizeof(cfg)));
     ProfAclMgr::instance()->UnInit();
     EXPECT_EQ(0, ProfAclMgr::instance()->devTasks_.size());
 }
 
-TEST_F(MSPROF_ACL_CORE_STEST, MsprofStart_Common) {
+TEST_F(MSPROF_ACL_CORE_STEST, MsprofStart_Common)
+{
     GlobalMockObject::verify();
     using namespace Msprofiler::Api;
 
@@ -3098,10 +3058,8 @@ TEST_F(MSPROF_ACL_CORE_STEST, MsprofStart_Common) {
         .stubs()
         .will(returnValue(static_cast<int32_t>(ACL_ERROR)))
         .then(returnValue(static_cast<int32_t>(ACL_SUCCESS)));
-    MOCKER_CPP(&ProfAclMgr::MsprofTxHandle)
-        .stubs();
-    MOCKER_CPP(&ProfAclMgr::MsprofHostHandle)
-        .stubs();
+    MOCKER_CPP(&ProfAclMgr::MsprofTxHandle).stubs();
+    MOCKER_CPP(&ProfAclMgr::MsprofHostHandle).stubs();
 
     struct MsprofConfig cfg;
     cfg.devNums = 1;
@@ -3110,26 +3068,34 @@ TEST_F(MSPROF_ACL_CORE_STEST, MsprofStart_Common) {
     cfg.profSwitch = 0x7d7f001f;
 
     // CheckIfDevicesOnline
-    EXPECT_EQ(MSPROF_ERROR, MsprofStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_COMMAND_LINE), &cfg, sizeof(cfg)));
+    EXPECT_EQ(
+        MSPROF_ERROR, MsprofStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_COMMAND_LINE), &cfg, sizeof(cfg)));
     // StartUploaderDumper
-    EXPECT_EQ(MSPROF_ERROR, MsprofStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_COMMAND_LINE), &cfg, sizeof(cfg)));
+    EXPECT_EQ(
+        MSPROF_ERROR, MsprofStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_COMMAND_LINE), &cfg, sizeof(cfg)));
     // MsprofDeviceHandle
-    EXPECT_EQ(MSPROF_ERROR_NONE, MsprofStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_COMMAND_LINE), &cfg, sizeof(cfg)));
+    EXPECT_EQ(
+        MSPROF_ERROR_NONE,
+        MsprofStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_COMMAND_LINE), &cfg, sizeof(cfg)));
     // CommandHandleProfInit
-    EXPECT_EQ(MSPROF_ERROR, MsprofStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_COMMAND_LINE), &cfg, sizeof(cfg)));
+    EXPECT_EQ(
+        MSPROF_ERROR, MsprofStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_COMMAND_LINE), &cfg, sizeof(cfg)));
     // CommandHandleProfStart
-    EXPECT_EQ(MSPROF_ERROR, MsprofStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_COMMAND_LINE), &cfg, sizeof(cfg)));
+    EXPECT_EQ(
+        MSPROF_ERROR, MsprofStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_COMMAND_LINE), &cfg, sizeof(cfg)));
 
-    EXPECT_EQ(MSPROF_ERROR_NONE, MsprofStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_COMMAND_LINE), &cfg, sizeof(cfg)));
-    EXPECT_EQ(MSPROF_ERROR_NONE, MsprofStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_JSON), &cfg, sizeof(cfg)));
-    EXPECT_EQ(MSPROF_ERROR_NONE, MsprofStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_GE_OPTION), &cfg, sizeof(cfg)));
+    EXPECT_EQ(
+        MSPROF_ERROR_NONE,
+        MsprofStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_COMMAND_LINE), &cfg, sizeof(cfg)));
+    EXPECT_EQ(
+        MSPROF_ERROR_NONE, MsprofStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_JSON), &cfg, sizeof(cfg)));
+    EXPECT_EQ(
+        MSPROF_ERROR_NONE,
+        MsprofStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_GE_OPTION), &cfg, sizeof(cfg)));
     EXPECT_EQ(0, ProfAclMgr::instance()->devTasks_.size());
 
     GlobalMockObject::verify();
-    MOCKER_CPP(&ProfAclMgr::IsModeOff)
-        .stubs()
-        .will(returnValue(true))
-        .then(returnValue(false));
+    MOCKER_CPP(&ProfAclMgr::IsModeOff).stubs().will(returnValue(true)).then(returnValue(false));
     MOCKER_CPP(&Analysis::Dvvp::ProfilerCommon::CommandHandleProfStop)
         .stubs()
         .will(returnValue(static_cast<int32_t>(ACL_ERROR)))
@@ -3138,33 +3104,38 @@ TEST_F(MSPROF_ACL_CORE_STEST, MsprofStart_Common) {
         .stubs()
         .will(returnValue(PROFILING_FAILED))
         .then(returnValue(PROFILING_SUCCESS));
-    MOCKER_CPP(&ProfAclMgr::MsprofTxHandle)
-        .stubs();
-    MOCKER_CPP(&ProfAclMgr::MsprofHostHandle)
-        .stubs();
+    MOCKER_CPP(&ProfAclMgr::MsprofTxHandle).stubs();
+    MOCKER_CPP(&ProfAclMgr::MsprofHostHandle).stubs();
 
     // IsModeOff
-    EXPECT_EQ(ACL_SUCCESS, MsprofStop(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_COMMAND_LINE), &cfg, sizeof(cfg)));
+    EXPECT_EQ(
+        ACL_SUCCESS, MsprofStop(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_COMMAND_LINE), &cfg, sizeof(cfg)));
     // CommandHandleProfStop
-    EXPECT_EQ(ACL_ERROR, MsprofStop(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_COMMAND_LINE), &cfg, sizeof(cfg)));
+    EXPECT_EQ(
+        ACL_ERROR, MsprofStop(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_COMMAND_LINE), &cfg, sizeof(cfg)));
     // devTasks_ not find
-    EXPECT_EQ(ACL_SUCCESS, MsprofStop(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_COMMAND_LINE), &cfg, sizeof(cfg)));
+    EXPECT_EQ(
+        ACL_SUCCESS, MsprofStop(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_COMMAND_LINE), &cfg, sizeof(cfg)));
 
     std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams());
     ProfAclMgr::ProfAclTaskInfo taskInfo = {1, 0, params};
     ProfAclMgr::instance()->devTasks_[0] = taskInfo;
     EXPECT_EQ(1, ProfAclMgr::instance()->devTasks_.size());
     // IdeCloudProfileProcess
-    EXPECT_EQ(ACL_ERROR_PROFILING_FAILURE, MsprofStop(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_COMMAND_LINE), &cfg, sizeof(cfg)));
+    EXPECT_EQ(
+        ACL_ERROR_PROFILING_FAILURE,
+        MsprofStop(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_COMMAND_LINE), &cfg, sizeof(cfg)));
 
-    EXPECT_EQ(ACL_SUCCESS, MsprofStop(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_COMMAND_LINE), &cfg, sizeof(cfg)));
+    EXPECT_EQ(
+        ACL_SUCCESS, MsprofStop(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_COMMAND_LINE), &cfg, sizeof(cfg)));
     EXPECT_EQ(ACL_SUCCESS, MsprofStop(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_JSON), &cfg, sizeof(cfg)));
     EXPECT_EQ(ACL_SUCCESS, MsprofStop(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_GE_OPTION), &cfg, sizeof(cfg)));
     ProfAclMgr::instance()->UnInit();
     EXPECT_EQ(0, ProfAclMgr::instance()->devTasks_.size());
 }
 
-TEST_F(MSPROF_ACL_CORE_STEST, MsprofStart_AclApi) {
+TEST_F(MSPROF_ACL_CORE_STEST, MsprofStart_AclApi)
+{
     GlobalMockObject::verify();
     using namespace Msprofiler::Api;
 
@@ -3180,9 +3151,7 @@ TEST_F(MSPROF_ACL_CORE_STEST, MsprofStart_AclApi) {
         .stubs()
         .will(returnValue(PROFILING_FAILED))
         .then(returnValue(PROFILING_SUCCESS));
-    MOCKER_CPP(&analysis::dvvp::host::ProfManager::CheckIfDevicesOnline)
-        .stubs()
-        .will(returnValue(true));
+    MOCKER_CPP(&analysis::dvvp::host::ProfManager::CheckIfDevicesOnline).stubs().will(returnValue(true));
     MOCKER_CPP(&ProfAclMgr::MsprofDeviceHandle)
         .stubs()
         .will(returnValue(PROFILING_FAILED))
@@ -3191,9 +3160,7 @@ TEST_F(MSPROF_ACL_CORE_STEST, MsprofStart_AclApi) {
         .stubs()
         .will(returnValue(PROFILING_FAILED))
         .then(returnValue(PROFILING_SUCCESS));
-    MOCKER_CPP(&ProfAclMgr::MsprofTxApiHandle)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&ProfAclMgr::MsprofTxApiHandle).stubs().will(returnValue(PROFILING_SUCCESS));
     MOCKER_CPP(&ProfAclMgr::StartUploaderDumper)
         .stubs()
         .will(returnValue(PROFILING_FAILED))
@@ -3210,14 +3177,10 @@ TEST_F(MSPROF_ACL_CORE_STEST, MsprofStart_AclApi) {
         .stubs()
         .will(returnValue(static_cast<int32_t>(ACL_ERROR_PROFILING_FAILURE)))
         .then(returnValue(static_cast<int32_t>(ACL_SUCCESS)));
-    MOCKER_CPP(&ProfAclMgr::WaitDeviceResponse)
-        .stubs();
-    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::ProfStartAscendProfHalTask)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&ProfAclMgr::WaitDeviceResponse).stubs();
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::ProfStartAscendProfHalTask).stubs().will(returnValue(PROFILING_SUCCESS));
 
-    std::shared_ptr<analysis::dvvp::message::ProfileParams> params(
-        new analysis::dvvp::message::ProfileParams());
+    std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams());
     ProfAclMgr::instance()->params_ = params;
     struct MsprofConfig cfg;
     cfg.devNums = 1;
@@ -3225,23 +3188,33 @@ TEST_F(MSPROF_ACL_CORE_STEST, MsprofStart_AclApi) {
     cfg.metrics = PROF_AICORE_ARITHMETIC_UTILIZATION;
     cfg.profSwitch = 0x7d7f001f;
     // PlatformIsHelperHostSide
-    EXPECT_EQ(ACL_ERROR_FEATURE_UNSUPPORTED, MsprofStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &cfg, sizeof(cfg)));
+    EXPECT_EQ(
+        ACL_ERROR_FEATURE_UNSUPPORTED,
+        MsprofStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &cfg, sizeof(cfg)));
     // ProfStartPrecheck
-    EXPECT_EQ(ACL_ERROR_PROF_NOT_RUN, MsprofStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &cfg, sizeof(cfg)));
+    EXPECT_EQ(
+        ACL_ERROR_PROF_NOT_RUN,
+        MsprofStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &cfg, sizeof(cfg)));
     // CheckDataTypeSupport
-    EXPECT_EQ(ACL_ERROR_PROFILING_FAILURE, MsprofStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &cfg, sizeof(cfg)));
+    EXPECT_EQ(
+        ACL_ERROR_PROFILING_FAILURE,
+        MsprofStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &cfg, sizeof(cfg)));
     // StartReqTrfToInnerParam
-    EXPECT_EQ(ACL_ERROR_PROFILING_FAILURE, MsprofStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &cfg, sizeof(cfg)));
+    EXPECT_EQ(
+        ACL_ERROR_PROFILING_FAILURE,
+        MsprofStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &cfg, sizeof(cfg)));
     // StartUploaderDumper
     EXPECT_EQ(MSPROF_ERROR, MsprofStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &cfg, sizeof(cfg)));
     // StartDeviceTask
-    EXPECT_EQ(MSPROF_ERROR_NONE, MsprofStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &cfg, sizeof(cfg)));
+    EXPECT_EQ(
+        MSPROF_ERROR_NONE, MsprofStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &cfg, sizeof(cfg)));
     // CommandHandleProfInit
     EXPECT_EQ(MSPROF_ERROR, MsprofStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &cfg, sizeof(cfg)));
     // CommandHandleProfStart
     EXPECT_EQ(MSPROF_ERROR, MsprofStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &cfg, sizeof(cfg)));
 
-    EXPECT_EQ(MSPROF_ERROR_NONE, MsprofStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &cfg, sizeof(cfg)));
+    EXPECT_EQ(
+        MSPROF_ERROR_NONE, MsprofStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &cfg, sizeof(cfg)));
     std::shared_ptr<analysis::dvvp::message::ProfileParams> params2(new analysis::dvvp::message::ProfileParams());
     ProfAclMgr::ProfAclTaskInfo taskInfo = {1, 0x7d7f001f, params2};
     ProfAclMgr::instance()->devTasks_[0] = taskInfo;
@@ -3256,10 +3229,7 @@ TEST_F(MSPROF_ACL_CORE_STEST, MsprofStart_AclApi) {
         .stubs()
         .will(returnValue(static_cast<int32_t>(ACL_ERROR_PROF_NOT_RUN)))
         .then(returnValue(static_cast<int32_t>(ACL_SUCCESS)));
-    MOCKER_CPP(&ProfAclMgr::IsModeOff)
-        .stubs()
-        .will(returnValue(true))
-        .then(returnValue(false));
+    MOCKER_CPP(&ProfAclMgr::IsModeOff).stubs().will(returnValue(true)).then(returnValue(false));
     MOCKER_CPP(&Analysis::Dvvp::ProfilerCommon::CommandHandleProfStop)
         .stubs()
         .will(returnValue(static_cast<int32_t>(ACL_ERROR)))
@@ -3270,18 +3240,26 @@ TEST_F(MSPROF_ACL_CORE_STEST, MsprofStart_AclApi) {
         .then(returnValue(PROFILING_SUCCESS));
 
     // PlatformIsHelperHostSide
-    EXPECT_EQ(ACL_ERROR_FEATURE_UNSUPPORTED, MsprofStop(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &cfg, sizeof(cfg)));
+    EXPECT_EQ(
+        ACL_ERROR_FEATURE_UNSUPPORTED,
+        MsprofStop(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &cfg, sizeof(cfg)));
     // ProfStopPrecheck
-    EXPECT_EQ(ACL_ERROR_PROF_NOT_RUN, MsprofStop(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &cfg, sizeof(cfg)));
+    EXPECT_EQ(
+        ACL_ERROR_PROF_NOT_RUN,
+        MsprofStop(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &cfg, sizeof(cfg)));
     // IsModeOff
     EXPECT_EQ(ACL_SUCCESS, MsprofStop(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &cfg, sizeof(cfg)));
     // CommandHandleProfStop
     EXPECT_EQ(ACL_ERROR, MsprofStop(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &cfg, sizeof(cfg)));
     // IdeCloudProfileProcess
-    EXPECT_EQ(ACL_ERROR_PROFILING_FAILURE, MsprofStop(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &cfg, sizeof(cfg)));
+    EXPECT_EQ(
+        ACL_ERROR_PROFILING_FAILURE,
+        MsprofStop(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &cfg, sizeof(cfg)));
     // dataTypeConfig != config->profSwitch
     cfg.profSwitch = 0x7d7f0000;
-    EXPECT_EQ(ACL_ERROR_INVALID_PROFILING_CONFIG, MsprofStop(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &cfg, sizeof(cfg)));
+    EXPECT_EQ(
+        ACL_ERROR_INVALID_PROFILING_CONFIG,
+        MsprofStop(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &cfg, sizeof(cfg)));
     cfg.profSwitch = 0x7d7f001f;
 
     EXPECT_EQ(ACL_SUCCESS, MsprofStop(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &cfg, sizeof(cfg)));
@@ -3291,7 +3269,8 @@ TEST_F(MSPROF_ACL_CORE_STEST, MsprofStart_AclApi) {
     ProfAclMgr::instance()->UnInit();
 }
 
-TEST_F(MSPROF_ACL_CORE_STEST, MsprofStart_AclSubscribe) {
+TEST_F(MSPROF_ACL_CORE_STEST, MsprofStart_AclSubscribe)
+{
     GlobalMockObject::verify();
     using namespace Msprofiler::Api;
 
@@ -3307,10 +3286,7 @@ TEST_F(MSPROF_ACL_CORE_STEST, MsprofStart_AclSubscribe) {
         .stubs()
         .will(returnValue(static_cast<int32_t>(ACL_ERROR_INVALID_PARAM)))
         .then(returnValue(static_cast<int32_t>(ACL_SUCCESS)));
-    MOCKER_CPP(&HashData::Init)
-        .stubs()
-        .will(returnValue(PROFILING_FAILED))
-        .then(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&HashData::Init).stubs().will(returnValue(PROFILING_FAILED)).then(returnValue(PROFILING_SUCCESS));
     MOCKER_CPP(&ProfAclMgr::StartDeviceSubscribeTask)
         .stubs()
         .will(returnValue(static_cast<int32_t>(ACL_ERROR_PROFILING_FAILURE)))
@@ -3335,21 +3311,36 @@ TEST_F(MSPROF_ACL_CORE_STEST, MsprofStart_AclSubscribe) {
     cfg.fd = reinterpret_cast<uintptr_t>(&fdTmp);
     cfg.cacheFlag = 1;
     // PlatformIsHelperHostSide
-    EXPECT_EQ(ACL_ERROR_FEATURE_UNSUPPORTED, MsprofStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_SUBSCRIBE), &cfg, sizeof(cfg)));
+    EXPECT_EQ(
+        ACL_ERROR_FEATURE_UNSUPPORTED,
+        MsprofStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_SUBSCRIBE), &cfg, sizeof(cfg)));
     // ProfSubscribePrecheck
-    EXPECT_EQ(ACL_ERROR_PROF_API_CONFLICT, MsprofStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_SUBSCRIBE), &cfg, sizeof(cfg)));
+    EXPECT_EQ(
+        ACL_ERROR_PROF_API_CONFLICT,
+        MsprofStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_SUBSCRIBE), &cfg, sizeof(cfg)));
     // CheckSubscribeConfig
-    EXPECT_EQ(ACL_ERROR_INVALID_PARAM, MsprofStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_SUBSCRIBE), &cfg, sizeof(cfg)));
+    EXPECT_EQ(
+        ACL_ERROR_INVALID_PARAM,
+        MsprofStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_SUBSCRIBE), &cfg, sizeof(cfg)));
     // HashData::Init
-    EXPECT_EQ(ACL_ERROR_PROFILING_FAILURE, MsprofStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_SUBSCRIBE), &cfg, sizeof(cfg)));
+    EXPECT_EQ(
+        ACL_ERROR_PROFILING_FAILURE,
+        MsprofStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_SUBSCRIBE), &cfg, sizeof(cfg)));
     // StartDeviceSubscribeTask
-    EXPECT_EQ(ACL_ERROR_PROFILING_FAILURE, MsprofStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_SUBSCRIBE), &cfg, sizeof(cfg)));
+    EXPECT_EQ(
+        ACL_ERROR_PROFILING_FAILURE,
+        MsprofStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_SUBSCRIBE), &cfg, sizeof(cfg)));
     // StartUploaderDumper
-    EXPECT_EQ(ACL_ERROR_PROFILING_FAILURE, MsprofStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_SUBSCRIBE), &cfg, sizeof(cfg)));
+    EXPECT_EQ(
+        ACL_ERROR_PROFILING_FAILURE,
+        MsprofStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_SUBSCRIBE), &cfg, sizeof(cfg)));
     // CommandHandleProfStart
-    EXPECT_EQ(ACL_ERROR_PROFILING_FAILURE, MsprofStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_SUBSCRIBE), &cfg, sizeof(cfg)));
+    EXPECT_EQ(
+        ACL_ERROR_PROFILING_FAILURE,
+        MsprofStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_SUBSCRIBE), &cfg, sizeof(cfg)));
 
-    EXPECT_EQ(ACL_SUCCESS, MsprofStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_SUBSCRIBE), &cfg, sizeof(cfg)));
+    EXPECT_EQ(
+        ACL_SUCCESS, MsprofStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_SUBSCRIBE), &cfg, sizeof(cfg)));
     EXPECT_EQ(0, ProfAclMgr::instance()->subscribeInfos_.size());
     EXPECT_EQ(0, ProfAclMgr::instance()->devTasks_.size());
 
@@ -3366,15 +3357,12 @@ TEST_F(MSPROF_ACL_CORE_STEST, MsprofStart_AclSubscribe) {
         .stubs()
         .will(returnValue(false))
         .then(returnValue(false))
-        .then(returnValue(true)); 
+        .then(returnValue(true));
     MOCKER_CPP(&Analysis::Dvvp::ProfilerCommon::CommandHandleProfStop)
         .stubs()
         .will(returnValue(static_cast<int32_t>(ACL_ERROR_PROFILING_FAILURE)));
-    MOCKER_CPP(&analysis::dvvp::host::ProfManager::IdeCloudProfileProcess)
-        .stubs()
-        .will(returnValue(PROFILING_FAILED));
-    MOCKER_CPP(&ProfAclMgr::CloseSubscribeFdIfHostId)
-        .stubs();
+    MOCKER_CPP(&analysis::dvvp::host::ProfManager::IdeCloudProfileProcess).stubs().will(returnValue(PROFILING_FAILED));
+    MOCKER_CPP(&ProfAclMgr::CloseSubscribeFdIfHostId).stubs();
 
     std::shared_ptr<analysis::dvvp::message::ProfileParams> params = nullptr;
     MSVP_MAKE_SHARED0(params, analysis::dvvp::message::ProfileParams, printf("Failed to make_shared for params"));
@@ -3383,20 +3371,29 @@ TEST_F(MSPROF_ACL_CORE_STEST, MsprofStart_AclSubscribe) {
     EXPECT_EQ(1, ProfAclMgr::instance()->devTasks_.size());
 
     // PlatformIsHelperHostSide
-    EXPECT_EQ(ACL_ERROR_FEATURE_UNSUPPORTED, MsprofStop(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_SUBSCRIBE), &cfg, sizeof(cfg)));
+    EXPECT_EQ(
+        ACL_ERROR_FEATURE_UNSUPPORTED,
+        MsprofStop(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_SUBSCRIBE), &cfg, sizeof(cfg)));
     // ProfSubscribePrecheck
-    EXPECT_EQ(ACL_ERROR_PROF_ALREADY_RUN, MsprofStop(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_SUBSCRIBE), &cfg, sizeof(cfg)));
+    EXPECT_EQ(
+        ACL_ERROR_PROF_ALREADY_RUN,
+        MsprofStop(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_SUBSCRIBE), &cfg, sizeof(cfg)));
     // IsModelSubscribed
-    EXPECT_EQ(ACL_ERROR_INVALID_MODEL_ID, MsprofStop(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_SUBSCRIBE), &cfg, sizeof(cfg)));
+    EXPECT_EQ(
+        ACL_ERROR_INVALID_MODEL_ID,
+        MsprofStop(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_SUBSCRIBE), &cfg, sizeof(cfg)));
     // IsModelSubscribed
     cfg.modelId = std::numeric_limits<uint32_t>::max();
-    EXPECT_EQ(ACL_ERROR_PROFILING_FAILURE, MsprofStop(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_SUBSCRIBE), &cfg, sizeof(cfg)));
+    EXPECT_EQ(
+        ACL_ERROR_PROFILING_FAILURE,
+        MsprofStop(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_SUBSCRIBE), &cfg, sizeof(cfg)));
     cfg.modelId = 0;
     UploaderMgr::instance()->DelAllUploader();
     ProfAclMgr::instance()->UnInit();
 }
 
-TEST_F(MSPROF_ACL_CORE_STEST, Msprof_aclprofGetSupportedFeatures) {
+TEST_F(MSPROF_ACL_CORE_STEST, Msprof_aclprofGetSupportedFeatures)
+{
     int32_t ret = aclprofGetSupportedFeatures(nullptr, nullptr);
     EXPECT_EQ(ACL_ERROR_INVALID_PARAM, ret);
 
@@ -3404,7 +3401,7 @@ TEST_F(MSPROF_ACL_CORE_STEST, Msprof_aclprofGetSupportedFeatures) {
     void* dataPtr = nullptr;
     ret = aclprofGetSupportedFeatures(&size, &dataPtr);
     EXPECT_EQ(ACL_SUCCESS, ret);
-    EXPECT_EQ(size, 1);
+    EXPECT_EQ(size, 2);
     EXPECT_NE(dataPtr, nullptr);
     if (dataPtr != nullptr) {
         FeatureRecord* features = static_cast<FeatureRecord*>(dataPtr);
@@ -3414,16 +3411,19 @@ TEST_F(MSPROF_ACL_CORE_STEST, Msprof_aclprofGetSupportedFeatures) {
         EXPECT_EQ(std::string(features->info.affectedComponent), "all");
         EXPECT_EQ(std::string(features->info.affectedComponentVersion), "all");
         EXPECT_EQ(std::string(features->info.infoLog), "It not support feature: ATTR!");
+        EXPECT_EQ(std::string(features[1].featureName), "AICORE_SHAPE");
+        EXPECT_EQ(std::string(features[1].info.compatibility), "1");
+        EXPECT_EQ(std::string(features[1].info.featureVersion), "1");
     }
 
     ret = aclprofGetSupportedFeatures(&size, &dataPtr);
     EXPECT_EQ(ACL_ERROR_INVALID_PARAM, ret);
-    EXPECT_EQ(size, 1);
+    EXPECT_EQ(size, 2);
     EXPECT_NE(dataPtr, nullptr);
 
     void* dataPtr2 = nullptr;
     ret = aclprofGetSupportedFeatures(&size, &dataPtr2);
     EXPECT_EQ(ACL_SUCCESS, ret);
-    EXPECT_EQ(size, 1);
+    EXPECT_EQ(size, 2);
     EXPECT_NE(dataPtr, nullptr);
 }

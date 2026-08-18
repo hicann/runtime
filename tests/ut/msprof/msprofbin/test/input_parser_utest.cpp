@@ -22,16 +22,13 @@ using namespace Analysis::Dvvp::Common::Config;
 using namespace Collector::Dvvp::DynProf;
 using namespace Analysis::Dvvp::Common::Platform;
 
-constexpr int MSPROF_DAEMON_ERROR       = -1;
-constexpr int MSPROF_DAEMON_OK          = 0;
+constexpr int MSPROF_DAEMON_ERROR = -1;
+constexpr int MSPROF_DAEMON_OK = 0;
 
 class INPUT_PARSER_UTEST : public testing::Test {
 protected:
     virtual void SetUp() {}
-    virtual void TearDown()
-    {
-        GlobalMockObject::verify();
-    }
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 #ifndef BUILD_PROFILING_OPEN_PROJECT
@@ -41,48 +38,42 @@ static void SetPlatformTypeForTest(PlatformType platformType)
 }
 #endif // BUILD_PROFILING_OPEN_PROJECT
 
-TEST_F(INPUT_PARSER_UTEST, ProcessOptions) {
+TEST_F(INPUT_PARSER_UTEST, ProcessOptions)
+{
     GlobalMockObject::verify();
     InputParser parser = InputParser();
-    struct MsprofCmdInfo cmdInfo = { {nullptr} };
+    struct MsprofCmdInfo cmdInfo = {{nullptr}};
     // invalid options
     EXPECT_EQ(PROFILING_FAILED, parser.ProcessOptions(-1, cmdInfo));
 
     char* resArgs = "on";
-    MOCKER(mmGetOptArg)
-        .stubs()
-        .will(returnValue(resArgs));
-    MOCKER_CPP(&InputParser::MsprofHostCheckValid)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
-    MOCKER_CPP(&InputParser::MsprofCmdCheckValid)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
-    MOCKER_CPP(&InputParser::MsprofSwitchCheckValid)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
-    MOCKER_CPP(&InputParser::MsprofFreqCheckValid)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER(mmGetOptArg).stubs().will(returnValue(resArgs));
+    MOCKER_CPP(&InputParser::MsprofHostCheckValid).stubs().will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&InputParser::MsprofCmdCheckValid).stubs().will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&InputParser::MsprofSwitchCheckValid).stubs().will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&InputParser::MsprofFreqCheckValid).stubs().will(returnValue(PROFILING_SUCCESS));
 
     EXPECT_EQ(PROFILING_SUCCESS, parser.ProcessOptions(ARGS_OUTPUT, cmdInfo));
     EXPECT_EQ(PROFILING_SUCCESS, parser.ProcessOptions(ARGS_ASCENDCL, cmdInfo));
+    EXPECT_EQ(PROFILING_SUCCESS, parser.ProcessOptions(ARGS_AICORE_SHAPE, cmdInfo));
     EXPECT_EQ(PROFILING_SUCCESS, parser.ProcessOptions(ARGS_AIC_FREQ, cmdInfo));
     EXPECT_EQ(PROFILING_SUCCESS, parser.ProcessOptions(ARGS_HOST_SYS, cmdInfo));
     EXPECT_EQ(PROFILING_FAILED, parser.ProcessOptions(100, cmdInfo));
 }
 
-TEST_F(INPUT_PARSER_UTEST, SplitApplicationArgv) {
+TEST_F(INPUT_PARSER_UTEST, SplitApplicationArgv)
+{
     GlobalMockObject::verify();
     InputParser parser = InputParser();
     int32_t argc = 4;
-    const char *argv[] = {"msprof", "--output=./", "app", "arg1"};
+    const char* argv[] = {"msprof", "--output=./", "app", "arg1"};
     int32_t argCount = 1;
     parser.SplitApplicationArgv(argc, argv, argCount);
     EXPECT_EQ(2, argCount);
 }
 
-TEST_F(INPUT_PARSER_UTEST, HandleApp) {
+TEST_F(INPUT_PARSER_UTEST, HandleApp)
+{
     GlobalMockObject::verify();
     InputParser parser = InputParser();
     parser.params_->application.emplace_back("app");
@@ -94,10 +85,11 @@ TEST_F(INPUT_PARSER_UTEST, HandleApp) {
     EXPECT_TRUE(parser.params_->app.compare("test") == 0);
 }
 
-TEST_F(INPUT_PARSER_UTEST, CheckSysCpu) {
+TEST_F(INPUT_PARSER_UTEST, CheckSysCpu)
+{
     GlobalMockObject::verify();
     InputParser parser = InputParser();
-    struct MsprofCmdInfo cmdInfo = { {nullptr} };
+    struct MsprofCmdInfo cmdInfo = {{nullptr}};
     MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::RunSocSide)
         .stubs()
         .will(returnValue(false))
@@ -112,14 +104,12 @@ TEST_F(INPUT_PARSER_UTEST, CheckSysCpu) {
     EXPECT_EQ(MSPROF_DAEMON_OK, parser.CheckSysCpu());
 }
 
-
-TEST_F(INPUT_PARSER_UTEST, MsprofHostCheckValid) {
+TEST_F(INPUT_PARSER_UTEST, MsprofHostCheckValid)
+{
     GlobalMockObject::verify();
-    MOCKER(analysis::dvvp::common::utils::Utils::ExecCmd)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER(analysis::dvvp::common::utils::Utils::ExecCmd).stubs().will(returnValue(PROFILING_SUCCESS));
     InputParser parser = InputParser();
-    struct MsprofCmdInfo cmdInfo = { {nullptr} };
+    struct MsprofCmdInfo cmdInfo = {{nullptr}};
     // invalid options
     EXPECT_EQ(PROFILING_FAILED, parser.MsprofHostCheckValid(cmdInfo, 999));
 
@@ -155,12 +145,10 @@ TEST_F(INPUT_PARSER_UTEST, MsprofHostCheckValid) {
     EXPECT_EQ(PROFILING_FAILED, parser.MsprofHostCheckValid(cmdInfo, ARGS_HOST_SYS_USAGE));
 }
 
-
-TEST_F(INPUT_PARSER_UTEST, CheckHostSysCmdOutIsExist) {
+TEST_F(INPUT_PARSER_UTEST, CheckHostSysCmdOutIsExist)
+{
     GlobalMockObject::verify();
-    MOCKER(analysis::dvvp::common::utils::Utils::ExecCmd)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER(analysis::dvvp::common::utils::Utils::ExecCmd).stubs().will(returnValue(PROFILING_SUCCESS));
     InputParser parser = InputParser();
     std::string tempFile = "./CheckHostSysCmdOutIsExist";
     std::ofstream file(tempFile);
@@ -172,7 +160,8 @@ TEST_F(INPUT_PARSER_UTEST, CheckHostSysCmdOutIsExist) {
     EXPECT_EQ(PROFILING_FAILED, parser.CheckHostSysCmdOutIsExist(tempFile, toolName, tmpProcess));
 }
 
-TEST_F(INPUT_PARSER_UTEST, CheckHostOutString) {
+TEST_F(INPUT_PARSER_UTEST, CheckHostOutString)
+{
     GlobalMockObject::verify();
     InputParser parser = InputParser();
     std::string tmpStr = "";
@@ -184,7 +173,8 @@ TEST_F(INPUT_PARSER_UTEST, CheckHostOutString) {
     EXPECT_EQ(PROFILING_SUCCESS, parser.CheckHostOutString(tmpStr, toolName));
 }
 
-TEST_F(INPUT_PARSER_UTEST, UninitCheckHostSysCmd) {
+TEST_F(INPUT_PARSER_UTEST, UninitCheckHostSysCmd)
+{
     GlobalMockObject::verify();
 
     MOCKER(analysis::dvvp::common::utils::Utils::ExecCmd)
@@ -210,10 +200,11 @@ TEST_F(INPUT_PARSER_UTEST, UninitCheckHostSysCmd) {
     EXPECT_EQ(PROFILING_SUCCESS, parser.UninitCheckHostSysCmd(checkProcess));
 }
 
-TEST_F(INPUT_PARSER_UTEST, CheckOutputValid) {
+TEST_F(INPUT_PARSER_UTEST, CheckOutputValid)
+{
     GlobalMockObject::verify();
     InputParser parser = InputParser();
-    struct MsprofCmdInfo cmdInfo = { {nullptr} };
+    struct MsprofCmdInfo cmdInfo = {{nullptr}};
 
     EXPECT_EQ(PROFILING_FAILED, parser.CheckOutputValid(cmdInfo));
     cmdInfo.args[ARGS_OUTPUT] = "";
@@ -222,10 +213,11 @@ TEST_F(INPUT_PARSER_UTEST, CheckOutputValid) {
     EXPECT_EQ(PROFILING_SUCCESS, parser.CheckOutputValid(cmdInfo));
 }
 
-TEST_F(INPUT_PARSER_UTEST, CheckStorageLimitValid) {
+TEST_F(INPUT_PARSER_UTEST, CheckStorageLimitValid)
+{
     GlobalMockObject::verify();
     InputParser parser = InputParser();
-    struct MsprofCmdInfo cmdInfo = { {nullptr} };
+    struct MsprofCmdInfo cmdInfo = {{nullptr}};
 
     EXPECT_EQ(PROFILING_SUCCESS, parser.CheckStorageLimitValid(cmdInfo));
     cmdInfo.args[ARGS_STORAGE_LIMIT] = "";
@@ -236,7 +228,8 @@ TEST_F(INPUT_PARSER_UTEST, CheckStorageLimitValid) {
     EXPECT_EQ(PROFILING_FAILED, parser.CheckStorageLimitValid(cmdInfo));
 }
 
-TEST_F(INPUT_PARSER_UTEST, GetAppParam) {
+TEST_F(INPUT_PARSER_UTEST, GetAppParam)
+{
     GlobalMockObject::verify();
     InputParser parser = InputParser();
     std::remove("./GetAppParam");
@@ -248,21 +241,18 @@ TEST_F(INPUT_PARSER_UTEST, GetAppParam) {
     file << "command not found" << std::endl;
     file.close();
     EXPECT_EQ(PROFILING_SUCCESS, parser.GetAppParam("./GetAppParam a"));
-    MOCKER_CPP(&analysis::dvvp::common::utils::Utils::SplitPath)
-        .stubs()
-        .will(returnValue(PROFILING_FAILED));
+    MOCKER_CPP(&analysis::dvvp::common::utils::Utils::SplitPath).stubs().will(returnValue(PROFILING_FAILED));
     EXPECT_EQ(PROFILING_FAILED, parser.GetAppParam("./GetAppParam a"));
 }
 
-TEST_F(INPUT_PARSER_UTEST, CheckAppValid) {
+TEST_F(INPUT_PARSER_UTEST, CheckAppValid)
+{
     GlobalMockObject::verify();
     InputParser parser = InputParser();
-    struct MsprofCmdInfo cmdInfo = { {nullptr} };
+    struct MsprofCmdInfo cmdInfo = {{nullptr}};
     std::remove("./CheckAppValid");
     EXPECT_EQ(PROFILING_FAILED, parser.CheckAppValid(cmdInfo));
-    MOCKER_CPP(&Analysis::Dvvp::Msprof::InputParser::GetAppParam)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&Analysis::Dvvp::Msprof::InputParser::GetAppParam).stubs().will(returnValue(PROFILING_SUCCESS));
     cmdInfo.args[ARGS_APPLICATION] = "bash";
     EXPECT_EQ(PROFILING_SUCCESS, parser.CheckAppValid(cmdInfo));
     cmdInfo.args[ARGS_APPLICATION] = "";
@@ -275,19 +265,82 @@ TEST_F(INPUT_PARSER_UTEST, CheckAppValid) {
     file << "command not found" << std::endl;
     file.close();
     EXPECT_EQ(PROFILING_SUCCESS, parser.CheckAppValid(cmdInfo));
-    MOCKER_CPP(&analysis::dvvp::common::utils::Utils::SplitPath)
-        .stubs()
-        .will(returnValue(PROFILING_FAILED));
+    MOCKER_CPP(&analysis::dvvp::common::utils::Utils::SplitPath).stubs().will(returnValue(PROFILING_FAILED));
     EXPECT_EQ(PROFILING_FAILED, parser.CheckAppValid(cmdInfo));
     std::remove("./CheckAppValid");
-    cmdInfo.args[ARGS_APPLICATION] = "./libs/xaclfk/xaclfk -m /home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_L1_fp16_32768_1_32768_1_32768_1_TF_32768_b41d37.om -o /home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/out_ID2940_WideDeep_L1_fp16_32768_1_32768_1_32768_1_TF_32768_b41d37 -i /home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_00_ad_advertiser_input_0,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_01_ad_id_input_1,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_02_ad_views_log_01scaled_input_2,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_03_doc_ad_category_id_input_3,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_04_doc_ad_days_since_published_log_01scaled_input_4,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_05_doc_ad_entity_id_input_5,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_06_doc_ad_publisher_id_input_6,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_07_doc_ad_source_id_input_7,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_08_doc_ad_topic_id_input_8,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_09_doc_event_category_id_input_9,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_10_doc_event_days_since_published_log_01scaled_input_10,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_11_doc_event_doc_ad_sim_categories_log_01scaled_input_11,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_12_doc_event_doc_ad_sim_entities_log_01scaled_input_12,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_13_doc_event_doc_ad_sim_topics_log_01scaled_input_13,xrunfk//home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_14_doc_event_entity_id_input_14,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_15_doc_event_hour_log_01scaled_input_15,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_16_doc_event_id_input_16,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_17_doc_event_publisher_id_input_17,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_18_doc_event_source_id_input_18,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_19_doc_event_topic_id_input_19,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_20_doc_id_input_20,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_21_doc_views_log_01scaled_input_21,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_22_event_country_input_22,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_23_event_country_state_input_23,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_24_event_geo_location_input_24,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_25_event_hour_input_25,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_26_event_platform_input_26,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_27_event_weekend_input_27,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_28_pop_ad_id_conf_input_28,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_29_pop_ad_id_log_01scaled_input_29,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_30_pop_advertiser_id_conf_input_30,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_31_pop_advertiser_id_log_01scaled_input_31,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_32_pop_campain_id_conf_multipl_log_01scaled_input_32,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_33_pop_campain_id_log_01scaled_input_33,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_34_pop_category_id_conf_input_34,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_35_pop_category_id_log_01scaled_input_35,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_36_pop_document_id_conf_input_36,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_37_pop_document_id_log_01scaled_input_37,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_38_pop_entity_id_conf_input_38,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_39_pop_entity_id_log_01scaled_input_39,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_40_pop_publisher_id_conf_input_40,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_41_pop_publisher_id_log_01scaled_input_41,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_42_pop_source_id_conf_input_42,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_43_pop_source_id_log_01scaled_input_43,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_44_pop_topic_id_conf_input_44,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_45_pop_topic_id_log_01scaled_input_45,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_46_traffic_source_input_46,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_47_user_doc_ad_sim_categories_conf_input_47,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_48_user_doc_ad_sim_categories_log_01scaled_input_48,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_49_user_doc_ad_sim_entities_log_01scaled_input_49,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_50_user_doc_ad_sim_topics_conf_input_50,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_51_user_doc_ad_sim_topics_log_01scaled_input_51,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_52_user_has_already_viewed_doc_input_52,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_53_user_views_log_01scaled_input_53 -n 0 -l 800";
+    cmdInfo.args[ARGS_APPLICATION] =
+        "./libs/xaclfk/xaclfk -m "
+        "/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/"
+        "ID2940_WideDeep_L1_fp16_32768_1_32768_1_32768_1_TF_32768_b41d37.om -o "
+        "/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/"
+        "out_ID2940_WideDeep_L1_fp16_32768_1_32768_1_32768_1_TF_32768_b41d37 -i "
+        "/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_00_ad_advertiser_input_0,/home/"
+        "swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_01_ad_id_input_1,/home/swx1026645/xrunfk/"
+        "testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_02_ad_views_log_01scaled_input_2,/home/swx1026645/xrunfk/"
+        "testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_03_doc_ad_category_id_input_3,/home/swx1026645/xrunfk/"
+        "testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_04_doc_ad_days_since_published_log_01scaled_input_4,/home/"
+        "swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_05_doc_ad_entity_id_input_5,/home/"
+        "swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_06_doc_ad_publisher_id_input_6,/home/"
+        "swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_07_doc_ad_source_id_input_7,/home/"
+        "swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_08_doc_ad_topic_id_input_8,/home/"
+        "swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_09_doc_event_category_id_input_9,/home/"
+        "swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/"
+        "ID2940_WideDeep_10_doc_event_days_since_published_log_01scaled_input_10,/home/swx1026645/xrunfk/testcase/"
+        "model_tf/ID2940_WideDeep/ID2940_WideDeep_11_doc_event_doc_ad_sim_categories_log_01scaled_input_11,/home/"
+        "swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/"
+        "ID2940_WideDeep_12_doc_event_doc_ad_sim_entities_log_01scaled_input_12,/home/swx1026645/xrunfk/testcase/"
+        "model_tf/ID2940_WideDeep/ID2940_WideDeep_13_doc_event_doc_ad_sim_topics_log_01scaled_input_13,xrunfk//home/"
+        "swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_14_doc_event_entity_id_input_14,/home/"
+        "swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_15_doc_event_hour_log_01scaled_input_15,/"
+        "home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_16_doc_event_id_input_16,/home/"
+        "swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_17_doc_event_publisher_id_input_17,/home/"
+        "swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_18_doc_event_source_id_input_18,/home/"
+        "swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_19_doc_event_topic_id_input_19,/home/"
+        "swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_20_doc_id_input_20,/home/swx1026645/"
+        "xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_21_doc_views_log_01scaled_input_21,/home/swx1026645/"
+        "xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_22_event_country_input_22,/home/swx1026645/xrunfk/"
+        "testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_23_event_country_state_input_23,/home/swx1026645/xrunfk/"
+        "testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_24_event_geo_location_input_24,/home/swx1026645/xrunfk/"
+        "testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_25_event_hour_input_25,/home/swx1026645/xrunfk/testcase/"
+        "model_tf/ID2940_WideDeep/ID2940_WideDeep_26_event_platform_input_26,/home/swx1026645/xrunfk/testcase/model_tf/"
+        "ID2940_WideDeep/ID2940_WideDeep_27_event_weekend_input_27,/home/swx1026645/xrunfk/testcase/model_tf/"
+        "ID2940_WideDeep/ID2940_WideDeep_28_pop_ad_id_conf_input_28,/home/swx1026645/xrunfk/testcase/model_tf/"
+        "ID2940_WideDeep/ID2940_WideDeep_29_pop_ad_id_log_01scaled_input_29,/home/swx1026645/xrunfk/testcase/model_tf/"
+        "ID2940_WideDeep/ID2940_WideDeep_30_pop_advertiser_id_conf_input_30,/home/swx1026645/xrunfk/testcase/model_tf/"
+        "ID2940_WideDeep/ID2940_WideDeep_31_pop_advertiser_id_log_01scaled_input_31,/home/swx1026645/xrunfk/testcase/"
+        "model_tf/ID2940_WideDeep/ID2940_WideDeep_32_pop_campain_id_conf_multipl_log_01scaled_input_32,/home/"
+        "swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_33_pop_campain_id_log_01scaled_input_33,/"
+        "home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_34_pop_category_id_conf_input_34,/"
+        "home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/"
+        "ID2940_WideDeep_35_pop_category_id_log_01scaled_input_35,/home/swx1026645/xrunfk/testcase/model_tf/"
+        "ID2940_WideDeep/ID2940_WideDeep_36_pop_document_id_conf_input_36,/home/swx1026645/xrunfk/testcase/model_tf/"
+        "ID2940_WideDeep/ID2940_WideDeep_37_pop_document_id_log_01scaled_input_37,/home/swx1026645/xrunfk/testcase/"
+        "model_tf/ID2940_WideDeep/ID2940_WideDeep_38_pop_entity_id_conf_input_38,/home/swx1026645/xrunfk/testcase/"
+        "model_tf/ID2940_WideDeep/ID2940_WideDeep_39_pop_entity_id_log_01scaled_input_39,/home/swx1026645/xrunfk/"
+        "testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_40_pop_publisher_id_conf_input_40,/home/swx1026645/xrunfk/"
+        "testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_41_pop_publisher_id_log_01scaled_input_41,/home/swx1026645/"
+        "xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_42_pop_source_id_conf_input_42,/home/swx1026645/"
+        "xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_43_pop_source_id_log_01scaled_input_43,/home/"
+        "swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_44_pop_topic_id_conf_input_44,/home/"
+        "swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_45_pop_topic_id_log_01scaled_input_45,/"
+        "home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_46_traffic_source_input_46,/home/"
+        "swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/"
+        "ID2940_WideDeep_47_user_doc_ad_sim_categories_conf_input_47,/home/swx1026645/xrunfk/testcase/model_tf/"
+        "ID2940_WideDeep/ID2940_WideDeep_48_user_doc_ad_sim_categories_log_01scaled_input_48,/home/swx1026645/xrunfk/"
+        "testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_49_user_doc_ad_sim_entities_log_01scaled_input_49,/home/"
+        "swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_50_user_doc_ad_sim_topics_conf_input_50,/"
+        "home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/"
+        "ID2940_WideDeep_51_user_doc_ad_sim_topics_log_01scaled_input_51,/home/swx1026645/xrunfk/testcase/model_tf/"
+        "ID2940_WideDeep/ID2940_WideDeep_52_user_has_already_viewed_doc_input_52,/home/swx1026645/xrunfk/testcase/"
+        "model_tf/ID2940_WideDeep/ID2940_WideDeep_53_user_views_log_01scaled_input_53 -n 0 -l 800";
     EXPECT_EQ(PROFILING_FAILED, parser.CheckAppValid(cmdInfo));
 }
 
-TEST_F(INPUT_PARSER_UTEST, CheckEnvironmentValid) {
+TEST_F(INPUT_PARSER_UTEST, CheckEnvironmentValid)
+{
     GlobalMockObject::verify();
     InputParser parser = InputParser();
-    struct MsprofCmdInfo cmdInfo = { {nullptr} };
+    struct MsprofCmdInfo cmdInfo = {{nullptr}};
 
     EXPECT_EQ(PROFILING_FAILED, parser.CheckEnvironmentValid(cmdInfo));
     cmdInfo.args[ARGS_ENVIRONMENT] = "";
@@ -297,19 +350,20 @@ TEST_F(INPUT_PARSER_UTEST, CheckEnvironmentValid) {
     EXPECT_EQ(PROFILING_SUCCESS, parser.CheckEnvironmentValid(cmdInfo));
 }
 
-TEST_F(INPUT_PARSER_UTEST, CheckPythonPathValid) {
+TEST_F(INPUT_PARSER_UTEST, CheckPythonPathValid)
+{
     GlobalMockObject::verify();
     InputParser parser = InputParser();
-    struct MsprofCmdInfo cmdInfo = { {nullptr} };
+    struct MsprofCmdInfo cmdInfo = {{nullptr}};
 
     EXPECT_EQ(PROFILING_FAILED, parser.CheckPythonPathValid(cmdInfo));
     cmdInfo.args[ARGS_PYTHON_PATH] = "";
 
     EXPECT_EQ(PROFILING_FAILED, parser.CheckPythonPathValid(cmdInfo));
-    
+
     parser.params_->pythonPath.clear();
     std::string tests = std::string(1025, 'c');
-    char* test = const_cast<char*>(tests.c_str()); 
+    char* test = const_cast<char*>(tests.c_str());
     cmdInfo.args[ARGS_PYTHON_PATH] = test;
     EXPECT_EQ(PROFILING_FAILED, parser.CheckPythonPathValid(cmdInfo));
 
@@ -318,7 +372,7 @@ TEST_F(INPUT_PARSER_UTEST, CheckPythonPathValid) {
 
     cmdInfo.args[ARGS_PYTHON_PATH] = "testpython";
     EXPECT_EQ(PROFILING_FAILED, parser.CheckPythonPathValid(cmdInfo));
-    
+
     Utils::CreateDir("TestPython");
     MOCKER(mmAccess2).stubs().will(returnValue(-1)).then(returnValue(0));
     cmdInfo.args[ARGS_PYTHON_PATH] = "TestPython";
@@ -333,21 +387,22 @@ TEST_F(INPUT_PARSER_UTEST, CheckPythonPathValid) {
     remove("testpython");
 }
 
-TEST_F(INPUT_PARSER_UTEST, ParamsCheck) {
+TEST_F(INPUT_PARSER_UTEST, ParamsCheck)
+{
     GlobalMockObject::verify();
     InputParser parser = InputParser();
     auto pp = parser.params_;
     parser.params_.reset();
     EXPECT_EQ(PROFILING_FAILED, parser.ParamsCheck());
     parser.params_ = pp;
-    parser.params_->app_dir="./test";
-    parser.params_->result_dir="./profiling_data";
+    parser.params_->app_dir = "./test";
+    parser.params_->result_dir = "./profiling_data";
     EXPECT_EQ(PROFILING_SUCCESS, parser.ParamsCheck());
-    parser.params_->result_dir="";
+    parser.params_->result_dir = "";
     EXPECT_EQ(PROFILING_SUCCESS, parser.ParamsCheck());
     EXPECT_EQ(parser.params_->app_dir, parser.params_->result_dir);
 
-    parser.params_->result_dir="";
+    parser.params_->result_dir = "";
     std::string work_path = "/tmp/ascend_work_path/";
     std::string profiling_path = "profiling_data";
     std::string result_path = work_path + profiling_path;
@@ -376,7 +431,7 @@ TEST_F(INPUT_PARSER_UTEST, ASCEND_WORK_PATH)
 {
     std::string resultDir("/tmp/test/profiling");
     setenv("ASCEND_WORK_PATH", resultDir.c_str(), 1);
-    char *argv[] = {"msprof", "--aicpu=on", "python3", "test.py", nullptr};
+    char* argv[] = {"msprof", "--aicpu=on", "python3", "test.py", nullptr};
     optind = 1;
     InputParser parser = InputParser();
     auto params = parser.MsprofGetOpts(4, (const char**)argv);
@@ -386,7 +441,7 @@ TEST_F(INPUT_PARSER_UTEST, ASCEND_WORK_PATH)
 
 TEST_F(INPUT_PARSER_UTEST, DefaultOutput)
 {
-    char *argv[] = {"msprof", "--aicpu=on", "python3", "test.py", nullptr};
+    char* argv[] = {"msprof", "--aicpu=on", "python3", "test.py", nullptr};
     optind = 1;
     InputParser parser = InputParser();
     auto params = parser.MsprofGetOpts(4, (const char**)argv);
@@ -394,7 +449,8 @@ TEST_F(INPUT_PARSER_UTEST, DefaultOutput)
     EXPECT_EQ(true, params->result_dir == result);
 }
 
-TEST_F(INPUT_PARSER_UTEST, SetHostSysParam) {
+TEST_F(INPUT_PARSER_UTEST, SetHostSysParam)
+{
     GlobalMockObject::verify();
     InputParser parser = InputParser();
     parser.SetHostSysParam("123");
@@ -402,7 +458,8 @@ TEST_F(INPUT_PARSER_UTEST, SetHostSysParam) {
     EXPECT_EQ(parser.params_->host_osrt_profiling, "on");
 }
 
-TEST_F(INPUT_PARSER_UTEST, CheckHostSysValid) {
+TEST_F(INPUT_PARSER_UTEST, CheckHostSysValid)
+{
     GlobalMockObject::verify();
 
     MOCKER_CPP(&analysis::dvvp::common::validation::ParamValidation::CheckHostSysOptionsIsValid)
@@ -415,14 +472,15 @@ TEST_F(INPUT_PARSER_UTEST, CheckHostSysValid) {
         .will(returnValue(PROFILING_SUCCESS));
 
     InputParser parser = InputParser();
-    struct MsprofCmdInfo cmdInfo = { {nullptr} };
+    struct MsprofCmdInfo cmdInfo = {{nullptr}};
     cmdInfo.args[ARGS_HOST_SYS] = "osrt,disk";
     parser.params_->result_dir = "./input_parser_utest";
     EXPECT_EQ(PROFILING_FAILED, parser.CheckHostSysValid(cmdInfo));
     EXPECT_EQ(PROFILING_SUCCESS, parser.CheckHostSysValid(cmdInfo));
 }
 
-TEST_F(INPUT_PARSER_UTEST, CheckHostSysUsageValid) {
+TEST_F(INPUT_PARSER_UTEST, CheckHostSysUsageValid)
+{
     GlobalMockObject::verify();
 
     MOCKER_CPP(&analysis::dvvp::common::validation::ParamValidation::CheckHostSysUsageOptionsIsValid)
@@ -431,22 +489,24 @@ TEST_F(INPUT_PARSER_UTEST, CheckHostSysUsageValid) {
         .then(returnValue(true));
 
     InputParser parser = InputParser();
-    struct MsprofCmdInfo cmdInfo = { {nullptr} };
+    struct MsprofCmdInfo cmdInfo = {{nullptr}};
     cmdInfo.args[ARGS_HOST_SYS_USAGE] = "cpu,mem";
     EXPECT_EQ(PROFILING_FAILED, parser.CheckHostSysUsageValid(cmdInfo));
     EXPECT_EQ(PROFILING_SUCCESS, parser.CheckHostSysUsageValid(cmdInfo));
 }
 
-TEST_F(INPUT_PARSER_UTEST, CheckBaseOrder) {
+TEST_F(INPUT_PARSER_UTEST, CheckBaseOrder)
+{
     EXPECT_EQ(ARGS_INSTR_PROFILING, LONG_OPTIONS[ARGS_INSTR_PROFILING].val);
     EXPECT_EQ(ARGS_INSTR_PROFILING_FREQ, LONG_OPTIONS[ARGS_INSTR_PROFILING_FREQ].val);
 }
 
-TEST_F(INPUT_PARSER_UTEST, CheckBaseInfo) {
+TEST_F(INPUT_PARSER_UTEST, CheckBaseInfo)
+{
     GlobalMockObject::verify();
     InputParser parser = InputParser();
 
-    struct MsprofCmdInfo cmdInfo = { {nullptr} };
+    struct MsprofCmdInfo cmdInfo = {{nullptr}};
     auto configManger = Analysis::Dvvp::Common::Config::ConfigManager::instance();
     Platform::instance()->Init();
 
@@ -523,7 +583,7 @@ TEST_F(INPUT_PARSER_UTEST, CheckBaseInfo) {
     EXPECT_EQ(PROFILING_FAILED, parser.CheckCmdScaleIsValid(cmdInfo));
     parser.params_->opType.clear();
     std::string opType(257, 't');
-    cmdInfo.args[ARGS_OPTYPE] = const_cast<char *>(opType.c_str());
+    cmdInfo.args[ARGS_OPTYPE] = const_cast<char*>(opType.c_str());
     EXPECT_EQ(PROFILING_FAILED, parser.CheckCmdScaleIsValid(cmdInfo));
     parser.params_->opType.clear();
     cmdInfo.args[ARGS_OPTYPE] = "Index,MatMul";
@@ -590,6 +650,14 @@ TEST_F(INPUT_PARSER_UTEST, CheckBaseInfo) {
     EXPECT_EQ(PROFILING_FAILED, parser.CheckArgOnOff(cmdInfo, ARGS_TASK_TIME));
     cmdInfo.args[ARGS_TASK_TIME] = "l1";
     EXPECT_EQ(PROFILING_SUCCESS, parser.CheckArgOnOff(cmdInfo, ARGS_TASK_TIME));
+    cmdInfo.args[ARGS_AICORE_SHAPE] = "on";
+    EXPECT_EQ(PROFILING_SUCCESS, parser.CheckArgOnOff(cmdInfo, ARGS_AICORE_SHAPE));
+    parser.ParamsSwitchValid(cmdInfo, ARGS_AICORE_SHAPE);
+    EXPECT_EQ(parser.params_->aicoreShape, "on");
+    cmdInfo.args[ARGS_AICORE_SHAPE] = "off";
+    EXPECT_EQ(PROFILING_SUCCESS, parser.CheckArgOnOff(cmdInfo, ARGS_AICORE_SHAPE));
+    cmdInfo.args[ARGS_AICORE_SHAPE] = "invalid";
+    EXPECT_EQ(PROFILING_FAILED, parser.CheckArgOnOff(cmdInfo, ARGS_AICORE_SHAPE));
     cmdInfo.args[ARGS_GE_API] = "fwk";
     EXPECT_EQ(PROFILING_FAILED, parser.CheckArgOnOff(cmdInfo, ARGS_GE_API));
     cmdInfo.args[ARGS_GE_API] = "off";
@@ -602,14 +670,14 @@ TEST_F(INPUT_PARSER_UTEST, CheckBaseInfo) {
     EXPECT_EQ(PROFILING_FAILED, parser.CheckArgOnOff(cmdInfo, ARGS_ASCENDCL));
 
     // check arg range
-    EXPECT_EQ(PROFILING_FAILED, parser.CheckArgRange(cmdInfo,ARGS_INTERCONNECTION_PROFILING, 1, 100));
+    EXPECT_EQ(PROFILING_FAILED, parser.CheckArgRange(cmdInfo, ARGS_INTERCONNECTION_PROFILING, 1, 100));
 
     cmdInfo.args[ARGS_INTERCONNECTION_PROFILING] = "A";
-    EXPECT_EQ(PROFILING_FAILED, parser.CheckArgRange(cmdInfo,ARGS_INTERCONNECTION_PROFILING, 1, 100));
+    EXPECT_EQ(PROFILING_FAILED, parser.CheckArgRange(cmdInfo, ARGS_INTERCONNECTION_PROFILING, 1, 100));
     cmdInfo.args[ARGS_INTERCONNECTION_PROFILING] = "111";
-    EXPECT_EQ(PROFILING_FAILED, parser.CheckArgRange(cmdInfo,ARGS_INTERCONNECTION_PROFILING, 1, 100));
+    EXPECT_EQ(PROFILING_FAILED, parser.CheckArgRange(cmdInfo, ARGS_INTERCONNECTION_PROFILING, 1, 100));
     cmdInfo.args[ARGS_INTERCONNECTION_PROFILING] = "1";
-    EXPECT_EQ(PROFILING_SUCCESS, parser.CheckArgRange(cmdInfo,ARGS_INTERCONNECTION_PROFILING, 1, 100));
+    EXPECT_EQ(PROFILING_SUCCESS, parser.CheckArgRange(cmdInfo, ARGS_INTERCONNECTION_PROFILING, 1, 100));
 
     // check args is number
     EXPECT_EQ(PROFILING_FAILED, parser.CheckArgsIsNumber(cmdInfo, ARGS_EXPORT_ITERATION_ID));
@@ -689,14 +757,15 @@ TEST_F(INPUT_PARSER_UTEST, CheckBaseInfo) {
 }
 
 #ifndef BUILD_PROFILING_OPEN_PROJECT
-TEST_F(INPUT_PARSER_UTEST, CheckAiCoreMetricsValidModena) {
+TEST_F(INPUT_PARSER_UTEST, CheckAiCoreMetricsValidModena)
+{
     GlobalMockObject::verify();
     SetPlatformTypeForTest(PlatformType::CHIP_5162A);
     Platform::instance()->Uninit();
     Platform::instance()->Init();
 
     InputParser parser = InputParser();
-    struct MsprofCmdInfo cmdInfo = { {nullptr} };
+    struct MsprofCmdInfo cmdInfo = {{nullptr}};
 
     cmdInfo.args[ARGS_AIC_METRICS] = "PipeUtilization";
     EXPECT_EQ(PROFILING_SUCCESS, parser.CheckAiCoreMetricsValid(cmdInfo, ARGS_AIC_METRICS));
@@ -722,19 +791,18 @@ TEST_F(INPUT_PARSER_UTEST, CheckAiCoreMetricsValidModena) {
 }
 #endif // BUILD_PROFILING_OPEN_PROJECT
 
-TEST_F(INPUT_PARSER_UTEST, PreCheckPlatform) {
+TEST_F(INPUT_PARSER_UTEST, PreCheckPlatform)
+{
     InputParser parser = InputParser();
-    struct MsprofCmdInfo cmdInfo = { {nullptr} };
-    const char * argv[] = {"aiv-me"};
+    struct MsprofCmdInfo cmdInfo = {{nullptr}};
+    const char* argv[] = {"aiv-me"};
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
         .stubs()
         .will(returnValue(Analysis::Dvvp::Common::Config::PlatformType::END_TYPE))
         .then(returnValue(Analysis::Dvvp::Common::Config::PlatformType::DC_TYPE))
         .then(returnValue(Analysis::Dvvp::Common::Config::PlatformType::CHIP_V4_1_0));
     EXPECT_EQ(PROFILING_FAILED, parser.PreCheckPlatform(ARGS_AIV, argv));
-    MOCKER(mmGetOptInd)
-        .stubs()
-        .will(returnValue(1));
+    MOCKER(mmGetOptInd).stubs().will(returnValue(1));
     MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::RunSocSide)
         .stubs()
         .will(returnValue(false))
@@ -745,9 +813,10 @@ TEST_F(INPUT_PARSER_UTEST, PreCheckPlatform) {
     EXPECT_EQ(PROFILING_FAILED, parser.PreCheckPlatform(ARGS_HOST_SYS_PID, argv));
 }
 
-TEST_F(INPUT_PARSER_UTEST, MsprofCmdCheckValid) {
+TEST_F(INPUT_PARSER_UTEST, MsprofCmdCheckValid)
+{
     InputParser parser = InputParser();
-    struct MsprofCmdInfo cmdInfo = { {nullptr} };
+    struct MsprofCmdInfo cmdInfo = {{nullptr}};
     cmdInfo.args[ARGS_AIV_MODE] = "sample-baseddddd";
     cmdInfo.args[ARGS_AIC_METRICS] = "PipeUtilization";
     cmdInfo.args[ARGS_TASK_BLOCK] = "aa";
@@ -759,9 +828,7 @@ TEST_F(INPUT_PARSER_UTEST, MsprofCmdCheckValid) {
     cmdInfo.args[ARGS_DELAY_PROF] = "1";
     cmdInfo.args[ARGS_DURATION_PROF] = "1";
     cmdInfo.args[ARGS_NPU_EVENTS] = "";
-    MOCKER(mmGetOptInd)
-        .stubs()
-        .will(returnValue(1));
+    MOCKER(mmGetOptInd).stubs().will(returnValue(1));
     parser.MsprofCmdCheckValid(cmdInfo, ARGS_AIV_MODE);
     parser.MsprofCmdCheckValid(cmdInfo, ARGS_AIC_METRICS);
     parser.MsprofCmdCheckValid(cmdInfo, ARGS_TASK_BLOCK);
@@ -782,9 +849,10 @@ TEST_F(INPUT_PARSER_UTEST, MsprofCmdCheckValid) {
     EXPECT_EQ(MSPROF_DAEMON_OK, parser.MsprofCmdCheckValid(cmdInfo, ARGS_MEM_SERVICEFLOW));
 }
 
-TEST_F(INPUT_PARSER_UTEST, MsprofFreqCheckValid) {
+TEST_F(INPUT_PARSER_UTEST, MsprofFreqCheckValid)
+{
     InputParser parser = InputParser();
-    struct MsprofCmdInfo cmdInfo = { {nullptr} };
+    struct MsprofCmdInfo cmdInfo = {{nullptr}};
     EXPECT_EQ(PROFILING_FAILED, parser.MsprofFreqCheckValid(cmdInfo, 100));
     cmdInfo.args[ARGS_SYS_PERIOD] = "100";
     cmdInfo.args[ARGS_SYS_SAMPLING_FREQ] = "1";
@@ -816,7 +884,7 @@ TEST_F(INPUT_PARSER_UTEST, MsprofFreqCheckValid) {
     EXPECT_EQ(PROFILING_SUCCESS, parser.MsprofFreqCheckValid(cmdInfo, ARGS_INSTR_PROFILING_FREQ));
     EXPECT_EQ(PROFILING_SUCCESS, parser.MsprofFreqCheckValid(cmdInfo, ARGS_HOST_SYS_USAGE_FREQ));
     // useless test
-    MOCKER_CPP(&Platform::CheckIfSupport, bool (Platform::*)(const PlatformFeature) const)
+    MOCKER_CPP(&Platform::CheckIfSupport, bool(Platform::*)(const PlatformFeature) const)
         .stubs()
         .will(returnValue(true));
     EXPECT_EQ(PROFILING_SUCCESS, parser.MsprofFreqCheckValid(cmdInfo, ARGS_INSTR_PROFILING_FREQ));
@@ -845,15 +913,11 @@ TEST_F(INPUT_PARSER_UTEST, MsprofFreqCheckValid) {
 
 TEST_F(INPUT_PARSER_UTEST, CheckDynProfValid)
 {
-    struct MsprofCmdInfo cmdInfo = { {nullptr} };
+    struct MsprofCmdInfo cmdInfo = {{nullptr}};
     cmdInfo.args[ARGS_DYNAMIC_PROF] = "on";
 
-    MOCKER_CPP(&DynProfCliMgr::SetKeyPid)
-        .stubs()
-        .will(ignoreReturnValue());
-    MOCKER_CPP(&DynProfCliMgr::EnableDynProfCli)
-        .stubs()
-        .will(ignoreReturnValue());
+    MOCKER_CPP(&DynProfCliMgr::SetKeyPid).stubs().will(ignoreReturnValue());
+    MOCKER_CPP(&DynProfCliMgr::EnableDynProfCli).stubs().will(ignoreReturnValue());
 
     InputParser parser = InputParser();
     parser.params_->app = "";
@@ -906,36 +970,30 @@ TEST_F(INPUT_PARSER_UTEST, AddAicMetricsArgs)
 }
 #endif
 
-TEST_F(INPUT_PARSER_UTEST, PreCheckPlatform_Miniv3) {
+TEST_F(INPUT_PARSER_UTEST, PreCheckPlatform_Miniv3)
+{
     InputParser parser = InputParser();
-    struct MsprofCmdInfo cmdInfo = { {nullptr} };
-    const char * argv[] = {"instr-profiling"};
+    struct MsprofCmdInfo cmdInfo = {{nullptr}};
+    const char* argv[] = {"instr-profiling"};
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
         .stubs()
         .will(returnValue(Analysis::Dvvp::Common::Config::PlatformType::MINI_V3_TYPE));
-    MOCKER(mmGetOptInd)
-        .stubs()
-        .will(returnValue(1));
-    MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::RunSocSide)
-        .stubs()
-        .will(returnValue(true));
+    MOCKER(mmGetOptInd).stubs().will(returnValue(1));
+    MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::RunSocSide).stubs().will(returnValue(true));
     EXPECT_EQ(PROFILING_FAILED, parser.PreCheckPlatform(ARGS_INSTR_PROFILING, argv));
     EXPECT_EQ(PROFILING_FAILED, parser.PreCheckPlatform(ARGS_INSTR_PROFILING_FREQ, argv));
 }
 
 #ifndef BUILD_PROFILING_OPEN_PROJECT
-TEST_F(INPUT_PARSER_UTEST, PreCheckPlatform_MdcLiteV2) {
+TEST_F(INPUT_PARSER_UTEST, PreCheckPlatform_MdcLiteV2)
+{
     InputParser parser = InputParser();
-    const char * argv[] = {"msprof", "--aiv=on"};
+    const char* argv[] = {"msprof", "--aiv=on"};
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
         .stubs()
         .will(returnValue(Analysis::Dvvp::Common::Config::PlatformType::CHIP_MDC_LITE_V2));
-    MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::RunSocSide)
-        .stubs()
-        .will(returnValue(false));
-    MOCKER(mmGetOptInd)
-        .stubs()
-        .will(returnValue(2));
+    MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::RunSocSide).stubs().will(returnValue(false));
+    MOCKER(mmGetOptInd).stubs().will(returnValue(2));
 
     EXPECT_EQ(PROFILING_FAILED, parser.PreCheckPlatform(ARGS_AIV, argv));
     EXPECT_EQ(PROFILING_FAILED, parser.PreCheckPlatform(ARGS_AIV_FREQ, argv));
@@ -946,13 +1004,15 @@ TEST_F(INPUT_PARSER_UTEST, PreCheckPlatform_MdcLiteV2) {
     EXPECT_EQ(PROFILING_SUCCESS, parser.PreCheckPlatform(ARGS_SYS_LOW_POWER, argv));
 }
 
-TEST_F(INPUT_PARSER_UTEST, AddStarsArgsMdcLiteV2) {
+TEST_F(INPUT_PARSER_UTEST, AddStarsArgsMdcLiteV2)
+{
     GlobalMockObject::verify();
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
         .stubs()
         .will(returnValue(Analysis::Dvvp::Common::Config::PlatformType::CHIP_MDC_LITE_V2));
-    MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::CheckIfSupport,
-        bool (Analysis::Dvvp::Common::Platform::Platform::*)(const PlatformFeature) const)
+    MOCKER_CPP(
+        &Analysis::Dvvp::Common::Platform::Platform::CheckIfSupport,
+        bool(Analysis::Dvvp::Common::Platform::Platform::*)(const PlatformFeature) const)
         .stubs()
         .will(returnValue(false));
 
@@ -963,8 +1023,9 @@ TEST_F(INPUT_PARSER_UTEST, AddStarsArgsMdcLiteV2) {
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
         .stubs()
         .will(returnValue(Analysis::Dvvp::Common::Config::PlatformType::CHIP_MDC_LITE_V2));
-    MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::CheckIfSupport,
-        bool (Analysis::Dvvp::Common::Platform::Platform::*)(const PlatformFeature) const)
+    MOCKER_CPP(
+        &Analysis::Dvvp::Common::Platform::Platform::CheckIfSupport,
+        bool(Analysis::Dvvp::Common::Platform::Platform::*)(const PlatformFeature) const)
         .stubs()
         .will(returnValue(true));
 
@@ -975,7 +1036,8 @@ TEST_F(INPUT_PARSER_UTEST, AddStarsArgsMdcLiteV2) {
 }
 #endif // BUILD_PROFILING_OPEN_PROJECT
 
-TEST_F(INPUT_PARSER_UTEST, PreCheckSwitch310P) {
+TEST_F(INPUT_PARSER_UTEST, PreCheckSwitch310P)
+{
     InputParser parser = InputParser();
     int32_t argc = 4;
     const char* argv[argc];
@@ -990,12 +1052,8 @@ TEST_F(INPUT_PARSER_UTEST, PreCheckSwitch310P) {
     Platform::instance()->Uninit();
     Platform::instance()->Init();
     MOCKER(mmGetOptInd).stubs().will(returnValue(1));
-    MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::RunSocSide)
-        .stubs()
-        .will(returnValue(false));
-    MOCKER(mmGetOptLong)
-        .stubs()
-        .will(returnValue(MSPROF_DAEMON_ERROR));
+    MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::RunSocSide).stubs().will(returnValue(false));
+    MOCKER(mmGetOptLong).stubs().will(returnValue(MSPROF_DAEMON_ERROR));
 
     EXPECT_EQ(PROFILING_SUCCESS, parser.PreCheckPlatform(ARGS_DYNAMIC_PROF, (const char**)argv));
     EXPECT_EQ(PROFILING_SUCCESS, parser.PreCheckPlatform(ARGS_DYNAMIC_PROF_PID, (const char**)argv));
@@ -1004,9 +1062,7 @@ TEST_F(INPUT_PARSER_UTEST, PreCheckSwitch310P) {
 
     EXPECT_NE(nullptr, parser.MsprofGetOpts(3, (const char**)argv));
 
-    MOCKER_CPP(&InputParser::CheckDynProfValid)
-        .stubs()
-        .will(returnValue(MSPROF_DAEMON_ERROR));
+    MOCKER_CPP(&InputParser::CheckDynProfValid).stubs().will(returnValue(MSPROF_DAEMON_ERROR));
     EXPECT_EQ(nullptr, parser.MsprofGetOpts(3, (const char**)argv));
 }
 
@@ -1015,21 +1071,37 @@ TEST_F(INPUT_PARSER_UTEST, PreCheckSwitch310P) {
  * 函数功能	检测参数配置是否发生错位
  * 注意事项 谨慎修改，确保67位是invalid，并且67之前参数填充满，保证67的前后参数与input_parser.h顺序一致
  */
-TEST_F(INPUT_PARSER_UTEST, PreCheckParamOffset) {
+TEST_F(INPUT_PARSER_UTEST, PreCheckParamOffset)
+{
     EXPECT_EQ(67, ARGS_INVALID);
-    EXPECT_EQ(68, ARGS_EXPORT_ITERATION_ID);
-    EXPECT_EQ(69, ARGS_EXPORT_MODEL_ID);
-    EXPECT_STREQ("sys-lp-freq", LONG_OPTIONS[ARGS_SYS_LOW_POWER_FREQ].name);
+    EXPECT_EQ(68, ARGS_SYS_LOW_POWER_FREQ);
+    EXPECT_EQ(69, ARGS_EXPORT_ITERATION_ID);
+    EXPECT_EQ(70, ARGS_EXPORT_MODEL_ID);
     EXPECT_STREQ("invalid", LONG_OPTIONS[ARGS_INVALID].name);
+    EXPECT_STREQ("sys-lp-freq", LONG_OPTIONS[ARGS_SYS_LOW_POWER_FREQ].name);
     EXPECT_STREQ("iteration-id", LONG_OPTIONS[ARGS_EXPORT_ITERATION_ID].name);
     EXPECT_STREQ("model-id", LONG_OPTIONS[ARGS_EXPORT_MODEL_ID].name);
+    EXPECT_STREQ("aicore-shape", LONG_OPTIONS[ARGS_AICORE_SHAPE].name);
 }
 
-TEST_F(INPUT_PARSER_UTEST, CheckCmdScaleIsValidComprehensive) {
-    InputParser parser = InputParser();
-    struct MsprofCmdInfo cmdInfo = { {nullptr} };
+TEST_F(INPUT_PARSER_UTEST, PrintHelpShowsAicoreShape)
+{
+    testing::internal::CaptureStdout();
+    ArgsManager argsManager;
+    argsManager.PrintHelp();
+    const std::string help = testing::internal::GetCapturedStdout();
 
-    MOCKER_CPP(&Platform::CheckIfSupport, bool (Platform::*)(const PlatformFeature) const)
+    EXPECT_NE(std::string::npos, help.find("--aicore-shape"));
+    EXPECT_NE(std::string::npos, help.find("takes effect only when task-time is l0"));
+    EXPECT_NE(std::string::npos, help.find("default value is off"));
+}
+
+TEST_F(INPUT_PARSER_UTEST, CheckCmdScaleIsValidComprehensive)
+{
+    InputParser parser = InputParser();
+    struct MsprofCmdInfo cmdInfo = {{nullptr}};
+
+    MOCKER_CPP(&Platform::CheckIfSupport, bool(Platform::*)(const PlatformFeature) const)
         .stubs()
         .will(returnValue(false))
         .then(returnValue(true));
@@ -1057,13 +1129,13 @@ TEST_F(INPUT_PARSER_UTEST, CheckCmdScaleIsValidComprehensive) {
 
     parser.params_->opType.clear();
     std::string criticalOpType(256, 't');
-    cmdInfo.args[ARGS_OPTYPE] = const_cast<char *>(criticalOpType.c_str());
+    cmdInfo.args[ARGS_OPTYPE] = const_cast<char*>(criticalOpType.c_str());
     EXPECT_EQ(PROFILING_SUCCESS, parser.CheckCmdScaleIsValid(cmdInfo));
     EXPECT_EQ(criticalOpType, parser.params_->opType);
 
     parser.params_->opType.clear();
     std::string overflowOpType(257, 't');
-    cmdInfo.args[ARGS_OPTYPE] = const_cast<char *>(overflowOpType.c_str());
+    cmdInfo.args[ARGS_OPTYPE] = const_cast<char*>(overflowOpType.c_str());
     EXPECT_EQ(PROFILING_FAILED, parser.CheckCmdScaleIsValid(cmdInfo));
 
     parser.params_->opType.clear();

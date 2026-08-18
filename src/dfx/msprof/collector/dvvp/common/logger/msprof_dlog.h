@@ -13,6 +13,7 @@
 #include <sys/syscall.h>
 #include <unistd.h>
 #include <cstring>
+#include "log_types.h"
 #include "slog.h"
 
 #if (defined(linux) || defined(__linux__))
@@ -106,6 +107,8 @@ inline const char* ProfGetModuleName(uint32_t moduleId)
             return "GE";        // Fmk
         case 48:
             return "ASCENDCL";  // AscendCL
+        case HSS:
+            return "ACLNN";
         default:
             return "UNKNOWN";
     }

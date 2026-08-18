@@ -170,6 +170,7 @@ struct ProfileParams : public BaseInfo {
     std::string mstxDomainExclude;
     std::string taskTrace;
     std::string taskTime;
+    std::string aicoreShape;
     std::string taskMemory;
     std::string prof_level;
     std::string geApi;
@@ -276,6 +277,7 @@ struct ProfileParams : public BaseInfo {
           mstxDomainExclude(""),
           taskTrace("on"),
           taskTime("on"),
+          aicoreShape("off"),
           taskMemory("off"),
           prof_level("off"),
           geApi("off"),
@@ -391,6 +393,7 @@ struct ProfileParams : public BaseInfo {
         SET_VALUE(object, mstxDomainExclude);
         SET_VALUE(object, taskTrace);
         SET_VALUE(object, taskTime);
+        SET_VALUE(object, aicoreShape);
         SET_VALUE(object, taskMemory);
         SET_VALUE(object, prof_level);
         SET_VALUE(object, geApi);
@@ -690,6 +693,7 @@ private:
         FROM_STRING_VALUE(object, mstxDomainExclude);
         FROM_STRING_VALUE(object, taskTrace);
         FROM_STRING_VALUE(object, taskTime);
+        FROM_STRING_VALUE(object, aicoreShape);
         FROM_STRING_VALUE(object, taskMemory);
         FROM_STRING_VALUE(object, prof_level);
         FROM_STRING_VALUE(object, geApi);

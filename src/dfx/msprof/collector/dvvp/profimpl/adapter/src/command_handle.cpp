@@ -64,17 +64,21 @@ void ProfModuleReprotMgr::ProfSetFinalizeGuard() { finalizeGuard_ = true; }
 
 int32_t ProfModuleReprotMgr::ProfSetProCommand(ProfCommand& command)
 {
-    std::unique_lock<std::mutex> lock(regCallback_, std::defer_lock);
-    lock.lock();
+    std::map<uint32_t, std::set<ProfCommandHandle>> callbackSnapshot;
+    {
+        std::lock_guard<std::mutex> lock(regCallback_);
+        callbackSnapshot = moduleCallbacks_;
+        // Keep the original command for callbacks registered after profiling starts.
+        command_ = command;
+    }
     std::vector<uint32_t> origOrder;
     std::for_each(
-        moduleCallbacks_.cbegin(), moduleCallbacks_.cend(),
+        callbackSnapshot.cbegin(), callbackSnapshot.cend(),
         [&origOrder](const std::pair<uint32_t, std::set<ProfCommandHandle>>& kv) {
             if (kv.first != RUNTIME && kv.first != ASCENDCL && kv.first != GE) {
                 origOrder.push_back(kv.first);
             }
         });
-    lock.unlock();
     std::vector<uint32_t> callbackOrder;
     if (command.type == PROF_COMMANDHANDLE_TYPE_INIT || command.type == PROF_COMMANDHANDLE_TYPE_START ||
         command.type == PROF_COMMANDHANDLE_TYPE_MODEL_SUBSCRIBE) {
@@ -86,31 +90,44 @@ int32_t ProfModuleReprotMgr::ProfSetProCommand(ProfCommand& command)
     }
     callbackOrder.insert(callbackOrder.cend(), origOrder.cbegin(), origOrder.cend());
     for (const auto& k : callbackOrder) {
-        lock.lock();
-        auto it = moduleCallbacks_.find(k);
-        if (it == moduleCallbacks_.cend() || it->second.empty() ||
+        auto it = callbackSnapshot.find(k);
+        if (it == callbackSnapshot.cend() || it->second.empty() ||
             !JsonParser::instance()->GetJsonModuleProfSwitch(k)) {
-            lock.unlock();
             continue;
         }
-        lock.unlock();
         if (finalizeGuard_ && k != RUNTIME) {
             continue;
         }
+        ProfCommand moduleCommand = BuildModuleCommand(k, command);
         MSPROF_LOGI(
             "call %s(%u) callback, type:%s(%u), switch:0x%016" PRIx64 ", switchHi:0x%016" PRIx64
             ", model:%u, devNums:%u, dev:%u, cache: %u, finalizeGuard: %u",
-            ProfGetModuleName(k), k, ProfGetCommandTypeName(command.type), command.type, command.profSwitch,
+            ProfGetModuleName(k), k, ProfGetCommandTypeName(command.type), command.type, moduleCommand.profSwitch,
             command.profSwitchHi, command.modelId, command.devNums, command.devIdList[0], command.cacheFlag,
             finalizeGuard_);
         for (auto& handle : it->second) {
             handle(
-                static_cast<uint32_t>(PROF_CTRL_SWITCH), Utils::ReinterpretCast<VOID, ProfCommand>(&command),
+                static_cast<uint32_t>(PROF_CTRL_SWITCH), Utils::ReinterpretCast<VOID, ProfCommand>(&moduleCommand),
                 sizeof(ProfCommand));
         }
     }
-    command_ = command;
     return ACL_SUCCESS;
+}
+
+ProfCommand ProfModuleReprotMgr::BuildModuleCommand(uint32_t moduleId, const ProfCommand& sourceCommand) const
+{
+    ProfCommand moduleCommand = sourceCommand;
+    const bool requestShape = (sourceCommand.profSwitch & PROF_AICORE_SHAPE_MASK) != 0ULL;
+    const uint64_t upperLevelMask = PROF_TASK_TIME_L1_MASK | PROF_TASK_TIME_L2_MASK | PROF_TASK_TIME_L3_MASK;
+    const bool isStrictLevel0 =
+        (sourceCommand.profSwitch & PROF_TASK_TIME_MASK) != 0ULL && (sourceCommand.profSwitch & upperLevelMask) == 0ULL;
+
+    // AICORE_SHAPE is an internal request bit and must never be sent to component callbacks.
+    moduleCommand.profSwitch &= ~PROF_AICORE_SHAPE_MASK;
+    if (requestShape && isStrictLevel0 && (moduleId == GE || moduleId == HSS)) {
+        moduleCommand.profSwitch |= PROF_TASK_TIME_L1_MASK;
+    }
+    return moduleCommand;
 }
 
 int32_t ProfModuleReprotMgr::SetCommandHandleProf(ProfCommand& command) const
@@ -156,37 +173,40 @@ int32_t ProfModuleReprotMgr::ModuleRegisterCallback(uint32_t moduleId, ProfComma
         return PROFILING_SUCCESS;
     }
     moduleCallbacks_[moduleId].insert(callback);
-    if (command_.type != PROF_COMMANDHANDLE_TYPE_MAX) {
-        auto callbackBind = std::bind(&ProfModuleReprotMgr::DoCallbackHandle, this, callback);
+    ProfCommand command = command_;
+    lock.unlock();
+    if (command.type != PROF_COMMANDHANDLE_TYPE_MAX) {
+        auto callbackBind = std::bind(&ProfModuleReprotMgr::DoCallbackHandle, this, moduleId, callback, command);
         std::thread callbackThread(callbackBind);
         callbackThread.detach();
     }
     return ACL_SUCCESS;
 }
 
-void ProfModuleReprotMgr::DoCallbackHandle(ProfCommandHandle callback)
+void ProfModuleReprotMgr::DoCallbackHandle(uint32_t moduleId, ProfCommandHandle callback, ProfCommand command)
 {
+    ProfCommand moduleCommand = BuildModuleCommand(moduleId, command);
     ProfCommand commandInit;
-    switch (command_.type) {
+    switch (moduleCommand.type) {
         case PROF_COMMANDHANDLE_TYPE_INIT:
             callback(
-                static_cast<uint32_t>(PROF_CTRL_SWITCH), Utils::ReinterpretCast<VOID_PTR, ProfCommand>(&command_),
-                sizeof(command_));
+                static_cast<uint32_t>(PROF_CTRL_SWITCH), Utils::ReinterpretCast<VOID_PTR, ProfCommand>(&moduleCommand),
+                sizeof(moduleCommand));
             break;
         case PROF_COMMANDHANDLE_TYPE_START:
-            commandInit = command_;
+            commandInit = moduleCommand;
             commandInit.type = PROF_COMMANDHANDLE_TYPE_INIT;
             callback(
                 static_cast<uint32_t>(PROF_CTRL_SWITCH), Utils::ReinterpretCast<VOID_PTR, ProfCommand>(&commandInit),
                 sizeof(commandInit));
             callback(
-                static_cast<uint32_t>(PROF_CTRL_SWITCH), Utils::ReinterpretCast<VOID_PTR, ProfCommand>(&command_),
-                sizeof(command_));
+                static_cast<uint32_t>(PROF_CTRL_SWITCH), Utils::ReinterpretCast<VOID_PTR, ProfCommand>(&moduleCommand),
+                sizeof(moduleCommand));
             break;
         case PROF_COMMANDHANDLE_TYPE_MODEL_SUBSCRIBE:
             callback(
-                static_cast<uint32_t>(PROF_CTRL_SWITCH), Utils::ReinterpretCast<VOID_PTR, ProfCommand>(&command_),
-                sizeof(command_));
+                static_cast<uint32_t>(PROF_CTRL_SWITCH), Utils::ReinterpretCast<VOID_PTR, ProfCommand>(&moduleCommand),
+                sizeof(moduleCommand));
             break;
         default:
             MSPROF_LOGD("Register callback success, waiting for the operation."); // regist, stop, finalize, unsubscribe
