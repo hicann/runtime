@@ -589,7 +589,7 @@ TEST_F(StarsTaskTest, WaitEndgraphError)
     ToConstructSqe(&task, &sqe);
     uint32_t errorcode = 10;
 
-    rtLogicCqReport_t wait_cqe = {};
+    rtCqReport_t wait_cqe = {};
     wait_cqe.errorType = 1U;
     wait_cqe.errorCode = 0U;
 
@@ -600,7 +600,7 @@ TEST_F(StarsTaskTest, WaitEndgraphError)
     execTask.stream = stream;
     ModelExecuteTaskInit(&execTask, model, 0, 0);
 
-    rtLogicCqReport_t cqe = {};
+    rtCqReport_t cqe = {};
     cqe.errorType = 1U;
     SetStarsResult(&execTask, cqe);
 
@@ -640,7 +640,7 @@ TEST_F(StarsTaskTest, DoCompleteStarsError)
     ToConstructSqe(&task, &sqe);
     uint32_t errorcode = 10;
 
-    rtLogicCqReport_t wait_cqe = {};
+    rtCqReport_t wait_cqe = {};
     wait_cqe.errorType = 1U;
     wait_cqe.errorCode = 1U;
 
@@ -662,7 +662,7 @@ TEST_F(StarsTaskTest, DoCompleteStarsError)
     TaskInfo execTask = {};
     execTask.stream = stream;
     ModelExecuteTaskInit(&execTask, model, 0, 0);
-    rtLogicCqReport_t cqe = {};
+    rtCqReport_t cqe = {};
     cqe.errorType = 1U;
     SetStarsResult(&execTask, cqe);
 
@@ -702,7 +702,7 @@ TEST_F(StarsTaskTest, DoCompleteStarsError2)
     ToConstructSqe(&task, &sqe);
     uint32_t errorcode = 10;
 
-    rtLogicCqReport_t wait_cqe = {};
+    rtCqReport_t wait_cqe = {};
     wait_cqe.errorType = 1U;
     wait_cqe.errorCode = 2U;
 
@@ -712,7 +712,7 @@ TEST_F(StarsTaskTest, DoCompleteStarsError2)
     TaskInfo execTask = {};
     execTask.stream = stream;
     ModelExecuteTaskInit(&execTask, model, 0, 0);
-    rtLogicCqReport_t cqe = {};
+    rtCqReport_t cqe = {};
     cqe.errorType = 1U;
     SetStarsResult(&execTask, cqe);
 
@@ -752,7 +752,7 @@ TEST_F(StarsTaskTest, DoCompleteStarsError3)
     ToConstructSqe(&task, &sqe);
     uint32_t errorcode = 10;
 
-    rtLogicCqReport_t wait_cqe = {};
+    rtCqReport_t wait_cqe = {};
     wait_cqe.errorType = 1U;
     wait_cqe.errorCode = 3U;
 
@@ -762,7 +762,7 @@ TEST_F(StarsTaskTest, DoCompleteStarsError3)
     TaskInfo execTask = {};
     execTask.stream = stream;
     ModelExecuteTaskInit(&execTask, model, 0, 0);
-    rtLogicCqReport_t cqe = {};
+    rtCqReport_t cqe = {};
     cqe.errorType = 1U;
     SetStarsResult(&execTask, cqe);
 
@@ -833,7 +833,7 @@ TEST_F(StarsTaskTest, SetStarsEventWaitTask)
     execTask.errorCode = 1U;
     execTask.type = TS_TASK_TYPE_STREAM_WAIT_EVENT;
 
-    rtLogicCqReport_t wait_cqe = {};
+    rtCqReport_t wait_cqe = {};
     wait_cqe.errorCode = 3U;
 
     SetStarsResult(&execTask, wait_cqe);
@@ -944,7 +944,7 @@ TEST_F(StarsTaskTest, DataDumpLoadInfoTask)
     SetResult(&task, (const uint32_t*)&errorcode, 1);
     DoCompleteSuccess(&task, 0);
 
-    rtLogicCqReport_t cqe = {};
+    rtCqReport_t cqe = {};
     cqe.errorType = 1U;
     SetStarsResult(&task, cqe);
 }
@@ -1108,7 +1108,7 @@ TEST_F(StarsTaskTest, EventResetTask_DoCompleteSuccess)
     SetResult(&task, (const uint32_t*)&errorcode, 1);
     Complete(&task, 0);
 
-    rtLogicCqReport_t cqe = {};
+    rtCqReport_t cqe = {};
     cqe.errorType = 1U;
     SetStarsResult(&task, cqe);
 }
@@ -1365,7 +1365,7 @@ TEST_F(StarsTaskTest, StarsVersionTask)
     EXPECT_EQ(sqe->pre_p, 1U);
     EXPECT_EQ(sqe->task_type, TS_TASK_TYPE_GET_STARS_VERSION);
 
-    rtLogicCqReport_t logicCq = {0};
+    rtCqReport_t logicCq = {0};
     logicCq.errorCode = 16;
     logicCq.sqeType = 3;
 

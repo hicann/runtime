@@ -61,7 +61,7 @@ static const char_t* GetDavidSqeDescByType(const uint8_t sqeType)
 }
 
 static void PrintTaskErrorMsg(
-    const uint16_t streamId, const uint16_t pos, rtLogicCqReport_t& logicCq, const TaskInfo* const reportTask,
+    const uint16_t streamId, const uint16_t pos, rtCqReport_t& logicCq, const TaskInfo* const reportTask,
     std::string& errMsg)
 {
     const uint32_t reportTaskSn =
@@ -96,7 +96,7 @@ static bool IsNeedMoveMultipleSteps(tsTaskType_t type)
            (type == TS_TASK_TYPE_FUSION_KERNEL) || (type == TS_TASK_TYPE_IPC_WAIT);
 }
 
-static rtError_t PollingSqDisable(const rtLogicCqReport_t* logicCq, Stream* const failStm)
+static rtError_t PollingSqDisable(const rtCqReport_t* logicCq, Stream* const failStm)
 {
     rtError_t error = RT_ERROR_NONE;
     Device* const dev = failStm->Device_();
@@ -152,7 +152,7 @@ static rtError_t PollingSqDisable(const rtLogicCqReport_t* logicCq, Stream* cons
     return RT_ERROR_NONE;
 }
 
-rtError_t StarsResumeRtsq(const rtLogicCqReport_t* logicCq, const TaskInfo* const taskInfo)
+rtError_t StarsResumeRtsq(const rtCqReport_t* logicCq, const TaskInfo* const taskInfo)
 {
     uint32_t offset = 1U; // skip the error sqe
     uint32_t head = 0U;
@@ -225,7 +225,7 @@ rtError_t StarsResumeRtsq(const rtLogicCqReport_t* logicCq, const TaskInfo* cons
     return RT_ERROR_NONE;
 }
 
-static bool ProcReportIsException(const rtLogicCqReport_t& logicCq)
+static bool ProcReportIsException(const rtCqReport_t& logicCq)
 {
     if (static_cast<uint8_t>(logicCq.errorType & RT_STARS_EXIST_ERROR) == 0U) {
         return false;
@@ -276,7 +276,7 @@ static void ClearcMulTaskCqeNum(const uint8_t mulTaskCqeNum, TaskInfo* const rep
 }
 
 void ProcCqReportException(
-    Device* const dev, rtLogicCqReport_t& logicCq, TaskInfo* reportTask, uint16_t streamId, TaskInfo** outFaultTaskPtr)
+    Device* const dev, rtCqReport_t& logicCq, TaskInfo* reportTask, uint16_t streamId, TaskInfo** outFaultTaskPtr)
 {
     if (Runtime::Instance()->IsRuntimeExiting()) {
         RT_LOG(RT_LOG_WARNING, "Runtime is exiting, skip cqe processing.");
@@ -328,16 +328,16 @@ static void SaveCurrCtxForRecyleThread(Device* const dev, uint32_t streamId)
 
 // ================================================== 对外出口区 ======================================== //
 rtError_t ProcReport(
-    Device* const dev, uint32_t streamId, const uint32_t syncPos, const uint32_t cnt,
-    rtLogicCqReport_t* const logicReport, bool& isFinished, bool& hasCqeReportErr)
+    Device* const dev, uint32_t streamId, const uint32_t syncPos, const uint32_t cnt, rtCqReport_t* const logicReport,
+    bool& isFinished, bool& hasCqeReportErr)
 {
     bool isResumeRtsq = true;
     TaskInfo* reclaimTask = nullptr;
-    rtLogicCqReport_t reclaimCqReport = {};
+    rtCqReport_t reclaimCqReport = {};
     uint32_t targetTaskSn = 0xFFFFFFFFU; /* invalid value */
     for (uint32_t idx = 0U; idx < cnt; ++idx) {
         isResumeRtsq = true;
-        rtLogicCqReport_t& report = logicReport[idx];
+        rtCqReport_t& report = logicReport[idx];
         if (syncPos != UINT32_MAX) {
             TaskInfo* targetTask = GetTaskInfo(dev, streamId, syncPos);
             if (targetTask != nullptr) {
@@ -372,7 +372,7 @@ rtError_t ProcReport(
         RT_LOG(RT_LOG_INFO, "taskType=%u.", reportTask->type);
         if ((reportTask->type == TS_TASK_TYPE_MULTIPLE_TASK) && (GetSendDavidSqeNum(reportTask) > 1U)) {
             if (CompleteProcMultipleTaskReport(reportTask, report)) {
-                rtLogicCqReport_t cqReport = report;
+                rtCqReport_t cqReport = report;
                 GetMultipleTaskCqeErrorInfo(reportTask, cqReport.sqeType, cqReport.errorType, cqReport.errorCode);
                 ProcLogicCqReport(dev, cqReport, reportTask);
                 reclaimCqReport = cqReport;
@@ -403,7 +403,7 @@ rtError_t ProcReport(
     return RT_ERROR_NONE;
 }
 
-static void StarsCqeReceive(const Device* const dev, const rtLogicCqReport_t& logicCq, TaskInfo* const runTask)
+static void StarsCqeReceive(const Device* const dev, const rtCqReport_t& logicCq, TaskInfo* const runTask)
 {
     runTask->pkgStat[RT_PACKAGE_TYPE_TASK_REPORT].receivePackage++;
     SetStarsResult(runTask, logicCq);
@@ -417,7 +417,7 @@ static void StarsCqeReceive(const Device* const dev, const rtLogicCqReport_t& lo
     runTask->stream->SetNeedRecvCqeFlag(false);
 }
 
-void ProcLogicCqReport(Device* const dev, rtLogicCqReport_t& logicCq, TaskInfo* reportTask)
+void ProcLogicCqReport(Device* const dev, rtCqReport_t& logicCq, TaskInfo* reportTask)
 {
     if (unlikely(reportTask == nullptr)) {
         RT_LOG(RT_LOG_WARNING, "task is null, sq_id=%hu, sq_head=%hu.", logicCq.sqId, logicCq.sqHead);
@@ -451,7 +451,7 @@ void ProcLogicCqReport(Device* const dev, rtLogicCqReport_t& logicCq, TaskInfo* 
     return;
 }
 
-bool CompleteProcMultipleTaskReport(TaskInfo* const workTask, const rtLogicCqReport_t& report)
+bool CompleteProcMultipleTaskReport(TaskInfo* const workTask, const rtCqReport_t& report)
 {
     TaskInfo* const reportTask = workTask;
     const uint8_t mulTaskCqeNum = GetMultipleTaskCqeNum(reportTask);

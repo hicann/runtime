@@ -70,7 +70,7 @@ std::mutex g_sqCqInfoMutex;
 SqCqStubInfo g_sqCqInfo[MAX_DEVICE_NUM][MAX_SQCQ_NUM] = {0};
 
 std::mutex g_logicCqReportMutex;
-std::queue<rtLogicCqReport_t> g_logicCqReport[MAX_DEVICE_NUM][MAX_SQCQ_NUM]; // One cqe at a time
+std::queue<rtCqReport_t> g_logicCqReport[MAX_DEVICE_NUM][MAX_SQCQ_NUM]; // One cqe at a time
 
 DVresult drvMemSmmuQuery(DVdevice device, UINT32* SSID) { return DRV_ERROR_NONE; }
 
@@ -212,7 +212,7 @@ rtHostFuncCqReport_t g_CqReportMsg[MAX_DEVICE_NUM];
 rtHostFuncSqCommand_t g_SqSendMsg[MAX_DEVICE_NUM];
 
 rtLogicReport_t logicReport;
-rtLogicCqReport_t logicCqReport;
+rtCqReport_t logicCqReport;
 rtShmQuery_t vCqShmInfo[1024] = {0};
 std::map<uint32_t, uint32_t> logicCqStreamId;
 std::mutex logicMutex;
@@ -426,7 +426,7 @@ drvError_t halSqCqAllocate(uint32_t devId, struct halSqCqInputInfo* in, struct h
                 logicCqStreamId[out->cqId] = in->info[0];
             }
             std::lock_guard<std::mutex> lock1(g_logicCqReportMutex);
-            std::queue<rtLogicCqReport_t> tmp;
+            std::queue<rtCqReport_t> tmp;
             tmp.swap(g_logicCqReport[devId][out->cqId]);
             break;
         }
@@ -466,7 +466,7 @@ drvError_t halSqCqFree(uint32_t devId, struct halSqCqFreeInfo* in)
                 logicCqStreamId.erase(in->sqId);
             }
             std::lock_guard<std::mutex> lock1(g_logicCqReportMutex);
-            std::queue<rtLogicCqReport_t> tmp;
+            std::queue<rtCqReport_t> tmp;
             tmp.swap(g_logicCqReport[devId][in->cqId]);
             break;
         }
@@ -552,7 +552,7 @@ drvError_t StubHalSqTaskSendNormalType(uint32_t devId, struct halTaskSendInfo* i
     g_sqCqInfo[devId][sqId].streamId = streamId;
     g_sqCqInfo[devId][sqId].taskId = taskId;
     std::lock_guard<std::mutex> lock1(g_logicCqReportMutex);
-    rtLogicCqReport_t reportInfo;
+    rtCqReport_t reportInfo;
     reportInfo.streamId = streamId;
     reportInfo.taskId = taskId;
     reportInfo.sqId = sqId;
@@ -1156,7 +1156,7 @@ drvError_t halCqReportRecv(uint32_t devId, struct halReportRecvInfo* info)
         return DRV_ERROR_NONE;
     }
     uint32_t minCnt = std::min(info->cqe_num, (uint32_t)(g_logicCqReport[devId][sqId].size()));
-    rtLogicCqReport_t* report = (rtLogicCqReport_t*)(info->cqe_addr);
+    rtCqReport_t* report = (rtCqReport_t*)(info->cqe_addr);
     for (uint32_t i = 0; i < minCnt; ++i) {
         report[i] = g_logicCqReport[devId][sqId].front();
         g_logicCqReport[devId][sqId].pop();

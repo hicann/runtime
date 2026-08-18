@@ -1887,7 +1887,7 @@ TEST_F(TaskTestV201, SetTimeoutConfigWithUsUnit)
 TEST_F(TaskTestV201, ProcReportIsDvppErrorAndRetryTest)
 {
     TaskInfo task = {};
-    rtLogicCqReport_t report;
+    rtCqReport_t report;
     report.sqeType = static_cast<uint16_t>(RT_DAVID_SQE_TYPE_VPC);
     report.errorType = static_cast<uint16_t>(RT_STARS_CQE_ERR_TYPE_TASK_TIMEOUT);
 
@@ -1952,7 +1952,7 @@ TEST_F(TaskTestV201, Test_PrintErrorInfoForModelSerialSchedTask)
 TEST_F(TaskTestV201, Test_StarsSetResultForModelSerialSchedTask)
 {
     TaskInfo task = {};
-    rtLogicCqReport_t logicCq = {};
+    rtCqReport_t logicCq = {};
 
     task.type = TS_TASK_TYPE_DQS_ENQUEUE;
     logicCq.errorCode = TS_ERROR_TASK_TIMEOUT;

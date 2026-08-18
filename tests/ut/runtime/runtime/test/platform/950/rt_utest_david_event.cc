@@ -411,7 +411,7 @@ TEST_F(EventTestDavid, TestToConstructDavidEventWaitTask)
 TEST_F(EventTestDavid, TestSetStarsResultForDavidEventRecordTask)
 {
     TaskInfo task = {};
-    rtLogicCqReport_t report = {0};
+    rtCqReport_t report = {0};
     report.errorCode = TS_ERROR_END_OF_SEQUENCE;
     report.errorType = RT_STARS_EXIST_ERROR;
     SetStarsResultForDavidEventRecordTask(&task, report);

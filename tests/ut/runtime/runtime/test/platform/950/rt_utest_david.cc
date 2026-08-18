@@ -131,12 +131,12 @@ bool DlogRecordContains(const std::string& keyword);
         (static_cast<uint32_t>(ARCH_C220)), (static_cast<uint32_t>(CHIP_NO_DEVICE)), \
         (static_cast<uint32_t>(RT_VER_NA)))
 
-rtLogicCqReport_t g_cqReport1;
+rtCqReport_t g_cqReport1;
 static rtError_t Sub_LogicCqReportV2(
     NpuDriver* drv, const LogicCqWaitInfo& waitInfo, uint8_t* report, uint32_t reportCnt, uint32_t& realCnt)
 {
     realCnt = 1;
-    rtLogicCqReport_t* reportPtr = reinterpret_cast<rtLogicCqReport_t*>(report);
+    rtCqReport_t* reportPtr = reinterpret_cast<rtCqReport_t*>(report);
     g_cqReport1.taskId = 1U;
     *reportPtr = g_cqReport1;
 
@@ -985,7 +985,7 @@ TEST_F(DavidTaskTest, construct_davidsqe_for_debug_register_for_stream)
     TaskSqeInfo sqeInfo = {0ULL, 0ULL};
     ToConstructDavidSqe(&task, static_cast<void*>(&sqe), sqeInfo);
     EXPECT_EQ(sqe.phSqe.taskType, TS_TASK_TYPE_DEBUG_REGISTER_FOR_STREAM);
-    rtLogicCqReport_t cqe = {};
+    rtCqReport_t cqe = {};
     cqe.errorType = 1U;
     cqe.errorCode = 0x808U;
     SetStarsResult(&task, cqe);
@@ -2259,7 +2259,7 @@ TEST_F(DavidTaskTest, CCU_SET_RESULT)
     info.argSize = RT_CCU_SQE_ARGS_LEN;
     (void)CcuLaunchTaskInit(&task, &info);
 
-    rtLogicCqReport_t cqe = {0};
+    rtCqReport_t cqe = {0};
     cqe.errorType = 1U;
     SetStarsResult(&task, cqe);
     cqe.errorCode = 0x101U;
@@ -2685,7 +2685,7 @@ TEST_F(DavidTaskTest, base_task_ubdma_doorbell_DoCompleteSuccess)
     InitByStream(&task, stream);
     UbDbSendTaskInit(&task, &dbInfo, 0);
 
-    rtLogicCqReport_t cqe = {};
+    rtCqReport_t cqe = {};
     cqe.errorType = 1U;
     SetStarsResult(&task, cqe);
     Complete(&task, 0);
@@ -4097,7 +4097,7 @@ TEST_F(DavidTaskTest, base_task_ubdma_direct_DoCompleteSuccess)
     InitByStream(&task, stream);
     UbDirectSendTaskInit(&task, &wqeInfo);
 
-    rtLogicCqReport_t cqe = {};
+    rtCqReport_t cqe = {};
     cqe.errorType = 2U;
     SetStarsResult(&task, cqe);
     Complete(&task, 0);
@@ -4465,7 +4465,7 @@ TEST_F(DavidTaskTest1, construct_davidsqe_for_fusion_kernel_launch_1)
     MOCKER(TaskFailCallBack).stubs().will(invoke(TaskFailCallBackStubfunc));
     MOCKER_CPP(&H2DCopyMgr::H2DMemCopyWaitFinish).stubs().will(returnValue(RT_ERROR_NONE));
 
-    rtLogicCqReport_t cqe = {};
+    rtCqReport_t cqe = {};
     cqe.errorType = 1U;
     cqe.errorCode = 1U;
 
@@ -5090,7 +5090,7 @@ TEST_F(DavidTaskTest2, set_stars_result_for_fusion_kernel_task)
     InitByStream(&kernTask, stream_);
     FusionKernelTaskInit(&kernTask);
 
-    rtLogicCqReport_t cqe = {};
+    rtCqReport_t cqe = {};
     cqe.errorType = 1U;
     cqe.errorCode = 0x404U;
     SetStarsResult(&kernTask, cqe);
@@ -5107,7 +5107,7 @@ TEST_F(DavidTaskTest2, set_stars_result_for_aicpu_task_on_end_of_seq)
     InitByStream(&kernTask, stream_);
     AicpuTaskInit(&kernTask, 1U, 0U);
 
-    rtLogicCqReport_t cqe = {};
+    rtCqReport_t cqe = {};
     cqe.errorType = 1U;
     cqe.errorCode = 0x60004U;
     SetStarsResult(&kernTask, cqe);
@@ -6082,7 +6082,7 @@ TEST_F(DavidTaskTest, SetStarsResultForFusionKernelTask_aicore_exception)
     InitByStream(&taskInfo, stream_);
     taskInfo.errorCode = 0U;
 
-    rtLogicCqReport_t logicCq = {};
+    rtCqReport_t logicCq = {};
     logicCq.errorType = 0x01U;
     logicCq.errorCode = 0x00000400U;
 
@@ -6098,7 +6098,7 @@ TEST_F(DavidTaskTest, SetStarsResultForFusionKernelTask_aicpu_exception)
     InitByStream(&taskInfo, stream_);
     taskInfo.errorCode = 0U;
 
-    rtLogicCqReport_t logicCq = {};
+    rtCqReport_t logicCq = {};
     logicCq.errorType = 0x01U;
     logicCq.errorCode = 0x00000044U;
 
@@ -6114,7 +6114,7 @@ TEST_F(DavidTaskTest, SetStarsResultForFusionKernelTask_ccu_exception)
     InitByStream(&taskInfo, stream_);
     taskInfo.errorCode = 0U;
 
-    rtLogicCqReport_t logicCq = {};
+    rtCqReport_t logicCq = {};
     logicCq.errorType = 0x01U;
     logicCq.errorCode = 0x00044000U;
 
@@ -6130,7 +6130,7 @@ TEST_F(DavidTaskTest, SetStarsResultForFusionKernelTask_no_matching_subsys)
     InitByStream(&taskInfo, stream_);
     taskInfo.errorCode = 0U;
 
-    rtLogicCqReport_t logicCq = {};
+    rtCqReport_t logicCq = {};
     logicCq.errorType = 0x01U;
     logicCq.errorCode = 0U;
 
@@ -6146,7 +6146,7 @@ TEST_F(DavidTaskTest, SetStarsResultForFusionKernelTask_timeout)
     InitByStream(&taskInfo, stream_);
     taskInfo.errorCode = 0U;
 
-    rtLogicCqReport_t logicCq = {};
+    rtCqReport_t logicCq = {};
     logicCq.errorType = 0x04U;
     logicCq.errorCode = 0x00000400U;
 

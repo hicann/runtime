@@ -1402,7 +1402,7 @@ TEST_F(TaskTestDavid, proc_cq_report_exception_timeout)
 {
     TaskInfo reportTask = {};
     InitByStream(&reportTask, stream_);
-    rtLogicCqReport_t report = {0};
+    rtCqReport_t report = {0};
     report.sqeType = RT_STARS_SQE_TYPE_PLACE_HOLDER;
     report.errorType = RT_STARS_CQE_ERR_TYPE_SW_STATUS;
     report.errorCode = TS_ERROR_TASK_TIMEOUT;
@@ -1423,7 +1423,7 @@ TEST_F(TaskTestDavid, SetStarsResultForDavinciTask)
     InitByStream(&task, stream_);
     task.type = TS_TASK_TYPE_KERNEL_AIVEC;
     task.errorCode = 0;
-    rtLogicCqReport_t logicCq;
+    rtCqReport_t logicCq;
     logicCq.errorType = RT_STARS_EXIST_ERROR;
     logicCq.errorCode = AE_STATUS_SILENT_FAULT;
     StarsV2SetStarsResultForDavinciTask(&task, logicCq);
@@ -1446,7 +1446,7 @@ TEST_F(TaskTestDavid, SetStarsResultForHcclUbDdrcDavinciTask)
     TaskInfo taskInfo = {};
     taskInfo.type = TS_TASK_TYPE_KERNEL_AICPU;
     taskInfo.stream = stream;
-    rtLogicCqReport_t logicCq = {};
+    rtCqReport_t logicCq = {};
     logicCq.errorCode = AE_STATUS_TASK_ABORT;
     StarsV2SetStarsResultForDavinciTask(&taskInfo, logicCq);
 
@@ -1497,7 +1497,7 @@ TEST_F(TaskTestDavid, SetStarsResultForHcclUbPoisonDavinciTask)
     TaskInfo taskInfo = {};
     taskInfo.type = TS_TASK_TYPE_KERNEL_AICPU;
     taskInfo.stream = stream;
-    rtLogicCqReport_t logicCq = {};
+    rtCqReport_t logicCq = {};
     taskInfo.stream->Device_()->SetDeviceRas(false);
     logicCq.errorCode = static_cast<uint32_t>(AICPU_HCCL_OP_UB_POISON_FAILED) << RT_AICPU_ERROR_CODE_BIT_MOVE;
     faultEventFlag = 7;
@@ -1521,7 +1521,7 @@ TEST_F(TaskTestDavid, SetStarsResultForHcclLinkDavinciTask)
     TaskInfo taskInfo = {};
     taskInfo.type = TS_TASK_TYPE_KERNEL_AICPU;
     taskInfo.stream = stream;
-    rtLogicCqReport_t logicCq = {};
+    rtCqReport_t logicCq = {};
     taskInfo.stream->Device_()->SetDeviceRas(false);
     logicCq.errorCode = static_cast<uint32_t>(AICPU_HCCL_OP_UB_LINK_FAILED) << RT_AICPU_ERROR_CODE_BIT_MOVE;
     faultEventFlag = 0;

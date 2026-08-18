@@ -186,7 +186,7 @@ const char_t* TaskIdDesc() { return "task_id"; }
 
 const char_t* TaskIdCamelbackNaming() { return "taskId"; }
 
-void PrintStarsCqeInfo(const rtLogicCqReport_t& cqe, const uint32_t devId, const uint32_t cqId)
+void PrintStarsCqeInfo(const rtCqReport_t& cqe, const uint32_t devId, const uint32_t cqId)
 {
     RT_LOG(
         RT_LOG_DEBUG, "device_id=%u,stream_id=%hu,task_id=%hu,cq_id=%u,sqe_type=%hhu", devId, cqe.streamId, cqe.taskId,

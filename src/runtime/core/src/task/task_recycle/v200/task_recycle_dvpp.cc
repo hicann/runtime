@@ -40,7 +40,7 @@ namespace runtime {
 // =================================================== static 函数区 ======================================== //
 
 static inline void InvokeCallBack(
-    const Device* const dev, const rtLogicCqReport_t& report, rtDvppGrpCallback callBackFunc, uint32_t streamId)
+    const Device* const dev, const rtCqReport_t& report, rtDvppGrpCallback callBackFunc, uint32_t streamId)
 {
     uint32_t userDeviceId = 0U;
     const rtError_t error = Runtime::Instance()->GetUserDevIdByDeviceId(dev->Id_(), &userDeviceId);
@@ -61,7 +61,7 @@ static inline void InvokeCallBack(
 }
 
 static inline void InvokeCallBack(
-    const Device* const dev, const rtLogicCqReport_t& report, rtDvppGrpCallback callBackFunc, uint8_t sqeType,
+    const Device* const dev, const rtCqReport_t& report, rtDvppGrpCallback callBackFunc, uint8_t sqeType,
     uint8_t cqeErrorCode, uint32_t streamId)
 {
     uint32_t userDeviceId = 0U;
@@ -83,7 +83,7 @@ static inline void InvokeCallBack(
 }
 
 static rtError_t ReportLogicCq(
-    Device* const dev, uint32_t streamId, rtLogicCqReport_t& report, rtDvppGrpCallback callBackFunc)
+    Device* const dev, uint32_t streamId, rtCqReport_t& report, rtDvppGrpCallback callBackFunc)
 {
     TaskInfo* reportTask = GetTaskInfo(dev, streamId, static_cast<uint32_t>(report.sqHead));
     if (unlikely(reportTask == nullptr)) {
@@ -127,7 +127,7 @@ static rtError_t ReportLogicCq(
 // =================================================== static 函数区 ======================================== //
 
 // ================================================== 对外出口区 ======================================== //
-bool ProcReportIsDvppErrorAndRetry(const rtLogicCqReport_t& report, TaskInfo* const reportTask)
+bool ProcReportIsDvppErrorAndRetry(const rtCqReport_t& report, TaskInfo* const reportTask)
 {
     if (!IsNeedRetryTask(static_cast<uint16_t>(report.sqeType))) {
         return false;
@@ -171,7 +171,7 @@ bool ProcReportIsDvppErrorAndRetry(const rtLogicCqReport_t& report, TaskInfo* co
 rtError_t DvppWaitGroup(
     const Device* const dev, const DvppGrp* grp, rtDvppGrpCallback callBackFunc, const int32_t timeout)
 {
-    rtLogicCqReport_t report = {};
+    rtCqReport_t report = {};
     Driver* const devDrv = dev->Driver_();
     uint32_t cnt = 0U;
     const uint32_t logicCqId = grp->getLogicCqId();
@@ -185,7 +185,7 @@ rtError_t DvppWaitGroup(
     waitInfo.streamId = UINT32_MAX;
     waitInfo.taskId = UINT32_MAX;
 
-    rtError_t error = devDrv->LogicCqReportV2(waitInfo, RtPtrToPtr<uint8_t*, rtLogicCqReport_t*>(&report), 1U, cnt);
+    rtError_t error = devDrv->LogicCqReportV2(waitInfo, RtPtrToPtr<uint8_t*, rtCqReport_t*>(&report), 1U, cnt);
     RT_LOG(RT_LOG_DEBUG, "Logic cq=%u, timeout=%dms, ret=%#x, cnt=%u.", logicCqId, timeout, error, cnt);
 
     if (error != RT_ERROR_NONE) {

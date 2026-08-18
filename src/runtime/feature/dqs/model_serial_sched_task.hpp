@@ -35,7 +35,7 @@ void PrintErrorInfoForModelSerialSchedPreProcTask(TaskInfo* taskInfo, const uint
 void PrintErrorInfoForModelSerialSchedNotifyWaitTask(TaskInfo* taskInfo, const uint32_t devId);
 void PrintErrorInfoForModelSerialSchedPostProcTask(TaskInfo* taskInfo, const uint32_t devId);
 
-void StarsSetResultForModelSerialSchedTask(TaskInfo* taskInfo, const rtLogicCqReport_t& logicCq);
+void StarsSetResultForModelSerialSchedTask(TaskInfo* taskInfo, const rtCqReport_t& logicCq);
 rtError_t LaunchModelSerialSchedTaskByType(
     Stream* const stm, const tsTaskType_t type, ModelSerialSchedTaskParam* param);
 } // namespace runtime

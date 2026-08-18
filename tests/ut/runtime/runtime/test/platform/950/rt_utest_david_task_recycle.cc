@@ -365,12 +365,12 @@ TEST_F(DavidTaskRecycleTest, SyncTaskRecycleBySqHeadV2)
     rtStreamDestroy(stream);
     ((Runtime*)Runtime::Instance())->DeviceRelease(device);
 }
-rtLogicCqReport_t g_cqReport;
+rtCqReport_t g_cqReport;
 rtError_t Sub_LogicCqReportV2(
     NpuDriver* drv, const LogicCqWaitInfo& waitInfo, uint8_t* report, uint32_t reportCnt, uint32_t& realCnt)
 {
     realCnt = 1;
-    rtLogicCqReport_t* reportPtr = reinterpret_cast<rtLogicCqReport_t*>(report);
+    rtCqReport_t* reportPtr = reinterpret_cast<rtCqReport_t*>(report);
     *reportPtr = g_cqReport;
 
     return RT_ERROR_NONE;
@@ -534,7 +534,7 @@ TEST_F(DavidTaskRecycleTest, ProcLogicCqReport)
     TaskInfo taskInfo = {0};
     taskInfo.stream = rt_ut::UnwrapOrNull<Stream>(stream);
     rt_ut::UnwrapOrNull<Stream>(stream)->SetSyncRemainTime(1);
-    rtLogicCqReport_t report = {0};
+    rtCqReport_t report = {0};
     report.errorType = RT_STARS_EXIST_ERROR;
     device->SetHasTaskError(true);
     rt_ut::UnwrapOrNull<Stream>(stream)->SetFailureMode(STOP_ON_FAILURE);
@@ -772,7 +772,7 @@ TEST_F(DavidTaskRecycleTest, ProcReport)
     Device* device = ((Runtime*)Runtime::Instance())->DeviceRetain(0, 0);
     TaskInfo* reportTask = nullptr;
     MOCKER(GetTaskInfo).stubs().will(returnValue(reportTask));
-    rtLogicCqReport_t report = {0};
+    rtCqReport_t report = {0};
     bool isFinished = false;
     bool hasCqeReportErr = false;
     uint32_t pos = ProcReport(device, 0U, 65535, 1, &report, isFinished, hasCqeReportErr);
@@ -790,7 +790,7 @@ TEST_F(DavidTaskRecycleTest, ProcReportWithTaskMultiple)
     MOCKER(ProcLogicCqReport).stubs();
     MOCKER(CompleteProcMultipleTaskReport).stubs().will(returnValue(true));
     MOCKER(StarsResumeRtsq).stubs().will(returnValue(RT_ERROR_NONE));
-    rtLogicCqReport_t report = {0};
+    rtCqReport_t report = {0};
     bool isFinished = false;
     bool hasCqeReportErr = false;
     uint32_t pos = ProcReport(device, 0U, 65535, 1, &report, isFinished, hasCqeReportErr);
@@ -807,7 +807,7 @@ TEST_F(DavidTaskRecycleTest, ProcCqReportException)
 {
     Device* device = ((Runtime*)Runtime::Instance())->DeviceRetain(0, 0);
     TaskInfo reportTask = {};
-    rtLogicCqReport_t report = {0};
+    rtCqReport_t report = {0};
     report.sqeType = TS_TASK_TYPE_KERNEL_AICORE;
     report.errorType = RT_STARS_CQE_ERR_TYPE_EXCEPTION;
     report.errorCode = TS_ERROR_AICORE_OVERFLOW;
@@ -832,7 +832,7 @@ TEST_F(DavidTaskRecycleTest, ProcCqReportException_Abnormal)
     Device* device = ((Runtime*)Runtime::Instance())->DeviceRetain(0, 0);
     ((Runtime*)Runtime::Instance())->SetRuntimeExiting(true);
     TaskInfo reportTask = {};
-    rtLogicCqReport_t report = {0};
+    rtCqReport_t report = {0};
     report.sqeType = TS_TASK_TYPE_KERNEL_AICORE;
     report.errorType = RT_STARS_CQE_ERR_TYPE_EXCEPTION;
     report.errorCode = TS_ERROR_AICORE_OVERFLOW;
@@ -861,7 +861,7 @@ TEST_F(DavidTaskRecycleTest, StarsResumeRtsq_01)
     MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::EnableSq).stubs().will(returnValue(RT_ERROR_NONE));
 
     TaskInfo reportTask = {};
-    rtLogicCqReport_t report = {0};
+    rtCqReport_t report = {0};
     reportTask.type = TS_TASK_TYPE_FUSION_KERNEL;
     reportTask.stream = stream;
     report.sqeType = RT_DAVID_SQE_TYPE_NOTIFY_WAIT;
@@ -894,7 +894,7 @@ TEST_F(DavidTaskRecycleTest, StarsResumeRtsq_02)
     MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::EnableSq).stubs().will(returnValue(RT_ERROR_NONE));
 
     TaskInfo reportTask = {};
-    rtLogicCqReport_t report = {0};
+    rtCqReport_t report = {0};
     reportTask.type = TS_TASK_TYPE_FUSION_KERNEL;
     reportTask.stream = stream;
     report.sqeType = RT_DAVID_SQE_TYPE_NOTIFY_WAIT;
@@ -1046,7 +1046,7 @@ TEST_F(DavidTaskRecycleTest, CCUTask)
     taskInfo.stream = stream;
     taskInfo.type = TS_TASK_TYPE_CCU_LAUNCH;
 
-    rtLogicCqReport_t wait_cqe = {};
+    rtCqReport_t wait_cqe = {};
     wait_cqe.errorType = RT_STARS_EXIST_ERROR | STARS_CCU_EXIST_ERROR;
     wait_cqe.errorCode = 1U;
 
@@ -1074,7 +1074,7 @@ TEST_F(DavidTaskRecycleTest, CCUTaskHBMError)
     taskInfo.stream = stream;
     taskInfo.type = TS_TASK_TYPE_CCU_LAUNCH;
 
-    rtLogicCqReport_t wait_cqe = {};
+    rtCqReport_t wait_cqe = {};
     wait_cqe.errorType = RT_STARS_EXIST_ERROR | STARS_CCU_EXIST_ERROR;
     wait_cqe.errorCode = 1U;
 
@@ -1112,7 +1112,7 @@ TEST_F(DavidTaskRecycleTest, FusionTaskAbort)
     taskInfo.stream = stream;
     taskInfo.type = TS_TASK_TYPE_FUSION_KERNEL;
 
-    rtLogicCqReport_t wait_cqe = {};
+    rtCqReport_t wait_cqe = {};
     wait_cqe.errorType = RT_STARS_EXIST_ERROR | STARS_CCU_EXIST_ERROR;
     wait_cqe.errorCode = 1U;
     taskInfo.mte_error = TS_ERROR_AICORE_MTE_ERROR;

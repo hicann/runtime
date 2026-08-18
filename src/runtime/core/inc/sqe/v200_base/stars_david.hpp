@@ -537,7 +537,7 @@ void SetCommonCmoParameters(SqeType* sqe, TaskInfo* const taskInfo)
 const char_t* GetNotifySubType(const uint16_t subType);
 void InitWriteValueSqe(RtDavidStarsWriteValueSqe* const writeValueSqe, const rtWriteValueInfo_t* const writeValueInfo);
 void AicpuMsgVersionTaskInit(TaskInfo* taskInfo);
-void SetStarsResultCommonForDavid(TaskInfo* taskInfo, const rtLogicCqReport_t& logicCq);
+void SetStarsResultCommonForDavid(TaskInfo* taskInfo, const rtCqReport_t& logicCq);
 
 rtError_t GetLaunchConfigAttr(rtLaunchAttribute_t* attr, LaunchTaskCfgInfo_t* launchTaskCfg);
 rtError_t GetLaunchConfigInfo(const rtLaunchConfig_t* const launchConfig, LaunchTaskCfgInfo_t* launchTaskCfg);
@@ -553,8 +553,8 @@ void DavidUpdateAndTryToDestroyEvent(TaskInfo* taskInfo, Event** eventPtr, David
 void DoCompleteSuccessForDavidEventRecordTask(TaskInfo* const taskInfo, const uint32_t devId);
 void DoCompleteSuccessForDavidEventWaitTask(TaskInfo* const taskInfo, const uint32_t devId);
 void DoCompleteSuccessForDavidEventResetTask(TaskInfo* const taskInfo, const uint32_t devId);
-void SetStarsResultForDavidEventRecordTask(TaskInfo* const taskInfo, const rtLogicCqReport_t& logicCq);
-void StarsV2SetStarsResultForDavinciTask(TaskInfo* taskInfo, const rtLogicCqReport_t& logicCq);
+void SetStarsResultForDavidEventRecordTask(TaskInfo* const taskInfo, const rtCqReport_t& logicCq);
+void StarsV2SetStarsResultForDavinciTask(TaskInfo* taskInfo, const rtCqReport_t& logicCq);
 void ConstructDavidAicAivSqeForDavinciTask(TaskInfo* const taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo);
 void StarsV2DavinciTaskUnInit(TaskInfo* taskInfo);
 void StarsV2DoCompleteSuccessForDavinciTask(TaskInfo* taskInfo, const uint32_t devId);
@@ -583,7 +583,7 @@ void StarsV2DoCompleteSuccessForMemcpyAsyncTask(TaskInfo* const taskInfo, const 
 rtError_t UbDbSendTaskInit(TaskInfo* taskInfo, const rtUbDbInfo_t* dbInfo, const uint16_t source);
 void PrintErrorInfoForUbDbSendTask(TaskInfo* taskInfo, const uint32_t devId);
 void DoCompleteSuccessForUbDmaDbModeTask(TaskInfo* taskInfo, const uint32_t devId);
-void SetResultForUbDmaTask(TaskInfo* taskInfo, const rtLogicCqReport_t& logicCq);
+void SetResultForUbDmaTask(TaskInfo* taskInfo, const rtCqReport_t& logicCq);
 void UbDirectSendTaskInit(TaskInfo* taskInfo, rtUbWqeInfo_t* wqeInfo);
 void PrintErrorInfoForUbDirectSendTask(TaskInfo* taskInfo, const uint32_t devId);
 void DoCompleteSuccessForUbDmaDirectWqeModeTask(TaskInfo* taskInfo, const uint32_t devId);

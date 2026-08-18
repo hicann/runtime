@@ -41,7 +41,7 @@ rtError_t ConvertAsyncDma2D(
     const uint64_t srcPitch, const uint64_t width, const uint64_t height, const uint64_t fixedSize);
 rtError_t ConvertAsyncDmaBatch(TaskInfo* const taskInfo, AsyncDmaBatchInfo& batchInfo);
 void ToCommandBodyForMemcpyAsyncTask(TaskInfo* const taskInfo, rtCommand_t* const command);
-void SetStarsResultForMemcpyAsyncTask(TaskInfo* const taskInfo, const rtLogicCqReport_t& logicCq);
+void SetStarsResultForMemcpyAsyncTask(TaskInfo* const taskInfo, const rtCqReport_t& logicCq);
 void PrintErrorInfoForMemcpyAsyncTask(TaskInfo* const taskInfo, const uint32_t devId);
 bool GetModuleIdByMemcpyAddr(Driver const* const driver, void* memcpyAddr, uint32_t* moduleId);
 void PrintModuleIdProc(Driver const* const driver, char_t* const errStr, void* src, void* dst, int32_t& countNum);

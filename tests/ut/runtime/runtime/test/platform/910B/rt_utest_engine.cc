@@ -541,7 +541,7 @@ TEST_F(EngineTest, StarsCqeReceive_01)
     std::unique_ptr<StarsEngine> engine = std::make_unique<StarsEngine>(device_);
     ((Runtime*)Runtime::Instance())->excptCallBack_ = ut_callback;
 
-    rtLogicCqReport_t cqe = {0};
+    rtCqReport_t cqe = {0};
     cqe.errorCode = 0x41;
     engine->StarsCqeReceive(cqe, &task);
     EXPECT_NE(task.isCqeNeedConcern, true);
@@ -556,7 +556,7 @@ TEST_F(EngineTest, StarsCqeReceive_05)
     std::unique_ptr<StarsEngine> engine = std::make_unique<StarsEngine>(device_);
     ((Runtime*)Runtime::Instance())->excptCallBack_ = ut_callback;
 
-    rtLogicCqReport_t cqe = {0};
+    rtCqReport_t cqe = {0};
     cqe.errorCode = 0x41;
     engine->StarsCqeReceive(cqe, &task);
     EXPECT_NE(task.isCqeNeedConcern, true);
@@ -570,7 +570,7 @@ TEST_F(EngineTest, StarsCqeReceive_04)
     uint32_t payload = 1;
     std::unique_ptr<StarsEngine> engine = std::make_unique<StarsEngine>(device_);
 
-    rtLogicCqReport_t cqe = {0};
+    rtCqReport_t cqe = {0};
     cqe.errorType = 0x41; // warning bit and error bit
     engine->StarsCqeReceive(cqe, &task);
     EXPECT_EQ(task.stream->GetNeedRecvCqeFlag(), false);
@@ -585,7 +585,7 @@ TEST_F(EngineTest, StarsCqeReceive_02)
     std::unique_ptr<StarsEngine> engine = std::make_unique<StarsEngine>(device_);
     ((Runtime*)Runtime::Instance())->excptCallBack_ = ut_callback;
 
-    rtLogicCqReport_t cqe = {0};
+    rtCqReport_t cqe = {0};
     task.id = 1;
     engine->StarsCqeReceive(cqe, &task);
     EXPECT_EQ(task.stream->GetNeedRecvCqeFlag(), false);
@@ -600,7 +600,7 @@ TEST_F(EngineTest, StarsCqeReceive_03)
     std::unique_ptr<StarsEngine> engine = std::make_unique<StarsEngine>(device_);
     ((Runtime*)Runtime::Instance())->excptCallBack_ = ut_callback;
 
-    rtLogicCqReport_t cqe = {0};
+    rtCqReport_t cqe = {0};
     task.id = 1;
     engine->StarsCqeReceive(cqe, &task);
     EXPECT_EQ(task.stream->GetNeedRecvCqeFlag(), false);
@@ -619,7 +619,7 @@ TEST_F(EngineTest, StarsCqeReceive_06)
     std::unique_ptr<StarsEngine> engine = std::make_unique<StarsEngine>(device_);
     ((Runtime*)Runtime::Instance())->excptCallBack_ = ut_callback;
 
-    rtLogicCqReport_t cqe = {0};
+    rtCqReport_t cqe = {0};
     task.id = 1;
     engine->StarsCqeReceive(cqe, &task);
     EXPECT_EQ(task.stream->GetNeedRecvCqeFlag(), false);
@@ -780,7 +780,7 @@ void DvppGrpCallback(rtDvppGrpRptInfo_t* report) { UNUSED(report); }
 TEST_F(EngineTest, StarsReportLogicCq_01)
 {
     std::unique_ptr<StarsEngine> engine = std::make_unique<StarsEngine>(device_);
-    rtLogicCqReport_t cqe = {0};
+    rtCqReport_t cqe = {0};
     engine->StarsReportLogicCq(cqe, DvppGrpCallback, 0xFFU, 0);
     uint16_t streamId = (cqe.streamId & 0x7FFFU);
     uint16_t taskId = cqe.taskId;

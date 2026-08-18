@@ -45,10 +45,10 @@ public:
         bool isForce = false) override;
 
     void ProcReport(
-        const uint32_t taskId, const bool isStreamSync, const uint32_t cnt, rtLogicCqReport_t* const logicReport,
+        const uint32_t taskId, const bool isStreamSync, const uint32_t cnt, rtCqReport_t* const logicReport,
         bool& isFinished, uint32_t cqId);
 
-    void ProcLogicCqReport(const rtLogicCqReport_t& logicCq, const bool isStreamSync, TaskInfo* reportTask);
+    void ProcLogicCqReport(const rtCqReport_t& logicCq, const bool isStreamSync, TaskInfo* reportTask);
     void ClearMulTaskCqeNum(const uint8_t mulTaskCqeNum, TaskInfo* const repTask) const;
 
     rtError_t DvppWaitGroup(
@@ -106,32 +106,31 @@ private:
 
     rtError_t SubmitSend(TaskInfo* const workTask, uint32_t* const flipTaskId) override;
 
-    rtError_t StarsResumeRtsq(const rtLogicCqReport_t& logicCq, const uint16_t taskType, Stream* const failStm) const;
+    rtError_t StarsResumeRtsq(const rtCqReport_t& logicCq, const uint16_t taskType, Stream* const failStm) const;
 
-    void StarsCqeReceive(const rtLogicCqReport_t& logicCq, TaskInfo* const runTask) const;
+    void StarsCqeReceive(const rtCqReport_t& logicCq, TaskInfo* const runTask) const;
 
-    bool ProcReportIsVpcErrorAndRetry(const rtLogicCqReport_t& report);
+    bool ProcReportIsVpcErrorAndRetry(const rtCqReport_t& report);
 
-    bool ProcReportIsException(const rtLogicCqReport_t& logicCq, TaskInfo* reportTask = nullptr) const;
+    bool ProcReportIsException(const rtCqReport_t& logicCq, TaskInfo* reportTask = nullptr) const;
 
     rtError_t MultipleTaskReportLogicCq(
-        TaskInfo* const workTask, const rtLogicCqReport_t& report, rtDvppGrpCallback callBackFunc);
+        TaskInfo* const workTask, const rtCqReport_t& report, rtDvppGrpCallback callBackFunc);
 
-    rtError_t CommonTaskReportLogicCq(const rtLogicCqReport_t& report, rtDvppGrpCallback callBackFunc);
+    rtError_t CommonTaskReportLogicCq(const rtCqReport_t& report, rtDvppGrpCallback callBackFunc);
 
-    rtError_t ReportLogicCq(const rtLogicCqReport_t& report, rtDvppGrpCallback callBackFunc);
+    rtError_t ReportLogicCq(const rtCqReport_t& report, rtDvppGrpCallback callBackFunc);
 
-    void StarsReportLogicCq(const rtLogicCqReport_t& report, rtDvppGrpCallback callBackFunc);
+    void StarsReportLogicCq(const rtCqReport_t& report, rtDvppGrpCallback callBackFunc);
 
     void StarsReportLogicCq(
-        const rtLogicCqReport_t& report, rtDvppGrpCallback callBackFunc, uint8_t sqeType, uint8_t cqeErrorCode);
+        const rtCqReport_t& report, rtDvppGrpCallback callBackFunc, uint8_t sqeType, uint8_t cqeErrorCode);
 
     void ProcCommonLogicCqReport(
-        const rtLogicCqReport_t& report, const uint32_t taskId, const bool isStreamSync, bool& isFinished);
+        const rtCqReport_t& report, const uint32_t taskId, const bool isStreamSync, bool& isFinished);
 
-    bool CompleteProcMultipleTaskReport(TaskInfo* const workTask, const rtLogicCqReport_t& report) const;
-    bool ProcMultipleTaskLogicCqReport(
-        TaskInfo* const workTask, const rtLogicCqReport_t& report, const bool isStreamSync);
+    bool CompleteProcMultipleTaskReport(TaskInfo* const workTask, const rtCqReport_t& report) const;
+    bool ProcMultipleTaskLogicCqReport(TaskInfo* const workTask, const rtCqReport_t& report, const bool isStreamSync);
     static const std::vector<std::string> StarsCqeErrorDesc_;
 
     void MonitoringRun();

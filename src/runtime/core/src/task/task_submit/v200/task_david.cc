@@ -710,7 +710,7 @@ const char_t* TaskIdDesc() { return "task_pos"; }
 
 const char_t* TaskIdCamelbackNaming() { return "taskPos"; }
 
-void PrintStarsCqeInfo(const rtLogicCqReport_t& cqe, const uint32_t devId, const uint32_t cqId)
+void PrintStarsCqeInfo(const rtCqReport_t& cqe, const uint32_t devId, const uint32_t cqId)
 {
     RT_LOG(
         RT_LOG_DEBUG, "device_id=%u,sq_id=%hu,sq_head=%hu,cq_id=%u,sqe_type=%hhu", devId, cqe.sqId, cqe.sqHead, cqId,

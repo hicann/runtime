@@ -82,7 +82,7 @@ void DoCompleteSuccForModelToAicpuTask(TaskInfo* taskInfo, const uint32_t devId)
     }
 }
 
-void SetStarsResultForModelToAicpuTask(TaskInfo* taskInfo, const rtLogicCqReport_t& logicCq)
+void SetStarsResultForModelToAicpuTask(TaskInfo* taskInfo, const rtCqReport_t& logicCq)
 {
     if ((logicCq.errorType & RT_STARS_EXIST_ERROR) != 0U) {
         uint32_t aicpuErrMap[] = {TS_ERROR_AICPU_MODEL_RSP_ERR, TS_ERROR_AICPU_MODEL_RSP_ERR, TS_ERROR_AICPU_TIMEOUT,

@@ -556,7 +556,7 @@ TEST_F(TinyStubTest, ffts_task_stub)
     PushBackErrInfoForFftsPlusTask(nullptr, nullptr, 0);
     FftsPlusTaskUnInit(nullptr);
     PrintErrorInfoForFftsPlusTask(nullptr, 0);
-    rtLogicCqReport_t logicCq;
+    rtCqReport_t logicCq;
     SetStarsResultForFftsPlusTask(nullptr, logicCq);
     ConstructSqeForFftsPlusTask(nullptr, nullptr);
     ConstructSqeForRdmaDbSendTask(nullptr, nullptr);

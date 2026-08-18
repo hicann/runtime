@@ -35,11 +35,11 @@ void ToCommandBodyForDebugUnRegisterTask(TaskInfo* taskInfo, rtCommand_t* const 
 void ToCommandBodyForDebugRegisterForStreamTask(TaskInfo* taskInfo, rtCommand_t* const command);
 void ToCmdBodyForDebugUnRegisterForStreamTask(TaskInfo* taskInfo, rtCommand_t* const command);
 
-void SetStarsResultForDataDumpLoadInfoTask(TaskInfo* taskInfo, const rtLogicCqReport_t& logicCq);
+void SetStarsResultForDataDumpLoadInfoTask(TaskInfo* taskInfo, const rtCqReport_t& logicCq);
 
 rtError_t AicpuInfoLoadTaskInit(TaskInfo* taskInfo, const void* const aicpuInfo, const uint32_t len);
 void ToCommandBodyForAicpuInfoLoadTask(TaskInfo* taskInfo, rtCommand_t* const command);
-void SetStarsResultForAicpuInfoLoadTask(TaskInfo* taskInfo, const rtLogicCqReport_t& logicCq);
+void SetStarsResultForAicpuInfoLoadTask(TaskInfo* taskInfo, const rtCqReport_t& logicCq);
 
 rtError_t NopTaskInit(TaskInfo* taskInfo);
 void ToCommandForNopTask(TaskInfo* const taskInfo, rtCommand_t* const command);

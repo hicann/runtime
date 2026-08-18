@@ -467,7 +467,7 @@ TEST_F(TaskTest, SetStarsResult_ModelExecuteTask_Timeout)
     InitByStream(&task, rt_ut::UnwrapOrNull<Stream>(stream));
     ModelExecuteTaskInit(&task, NULL, 0, 1);
 
-    rtLogicCqReport_t logicCq = {};
+    rtCqReport_t logicCq = {};
     logicCq.errorType = 0x4U;
     logicCq.errorCode = 0;
 
@@ -1033,7 +1033,7 @@ TEST_F(TaskTest, base_aicpu_info_load_task)
 
     rtStarsSqe_t sqe;
     ToConstructSqe(&task, &sqe);
-    rtLogicCqReport_t cqe;
+    rtCqReport_t cqe;
     cqe.errorType = 1;
     cqe.errorCode = 1;
     SetStarsResult(&task, cqe);
@@ -1123,7 +1123,7 @@ TEST_F(TaskTest, stars_aicpu_sqe)
     task.u.aicpuTaskInfo.comm.kernelFlag = RT_KERNEL_DEVICE_FIRST;
     ToConstructSqe(&task, &command);
     EXPECT_EQ(sqe->topic_type, TOPIC_TYPE_DEVICE_AICPU_FIRST);
-    rtLogicCqReport_t cqe;
+    rtCqReport_t cqe;
     cqe.errorType = 1;
     cqe.errorCode = 1;
     SetStarsResult(&task, cqe);
@@ -1143,7 +1143,7 @@ TEST_F(TaskTest, stars_eventrecord_sqe)
     ToConstructSqe(&task, &sqe);
     Complete(&task, 0);
 
-    rtLogicCqReport_t cqe;
+    rtCqReport_t cqe;
     cqe.errorType = 1;
     cqe.errorCode = 2;
     SetStarsResult(&task, cqe);
@@ -1194,7 +1194,7 @@ TEST_F(TaskTest, stars_memcpy_async_sqe_d2d)
     ToConstructSqe(&task, &sqe);
     MemcpyAsyncTaskInitV3(&task, RT_MEMCPY_HOST_TO_DEVICE_EX, src, dst, count, 0, NULL);
 
-    rtLogicCqReport_t cqe = {};
+    rtCqReport_t cqe = {};
     Complete(&task, 0);
     PrintErrorInfo(&task, 0);
     SetStarsResult(&task, cqe);
@@ -1222,7 +1222,7 @@ TEST_F(TaskTest, stars_memcpy_async_sqe_d2d_error)
     MemcpyAsyncTaskInitV3(&task, kind, src, dst, count, 0, NULL);
     ToConstructSqe(&task, &sqe);
 
-    rtLogicCqReport_t cqe = {};
+    rtCqReport_t cqe = {};
     cqe.errorType = 1U;
     Complete(&task, 0);
     PrintErrorInfo(&task, 0);
@@ -1246,7 +1246,7 @@ TEST_F(TaskTest, stars_dsa_update_sqe_d2h_error)
     MemcpyAsyncD2HTaskInit(&task, src, count, 2U, 3U);
     EXPECT_EQ(task.type, TS_TASK_TYPE_MEMCPY);
     ToConstructSqe(&task, &sqe);
-    rtLogicCqReport_t cqe = {};
+    rtCqReport_t cqe = {};
     cqe.errorType = 1U;
     Complete(&task, 0);
 
@@ -1279,7 +1279,7 @@ TEST_F(TaskTest, stars_dsa_update_sqe_d2h_error_not_dsa)
     EXPECT_EQ(task.type, TS_TASK_TYPE_MEMCPY);
     ToConstructSqe(&task, &sqe);
 
-    rtLogicCqReport_t cqe = {};
+    rtCqReport_t cqe = {};
     cqe.errorType = 1U;
     Complete(&task, 0);
 
@@ -2374,7 +2374,7 @@ TEST_F(TaskTest, FftsPlusTaskProcessErr)
 
     rtStarsSqe_t sqe[3] = {};
     ToConstructSqe(&fftsPlusTask, &sqe[0]);
-    rtLogicCqReport_t cqe;
+    rtCqReport_t cqe;
     cqe.errorType = 1;
     cqe.errorCode = 1;
     SetStarsResult(&fftsPlusTask, cqe);
@@ -2412,7 +2412,7 @@ TEST_F(TaskTest, FftsPlusTaskProcessErr1)
 
     rtStarsSqe_t sqe[3] = {};
     ToConstructSqe(&fftsPlusTask, &sqe[0]);
-    rtLogicCqReport_t cqe;
+    rtCqReport_t cqe;
     cqe.errorType = 1;
     cqe.errorCode = 1;
     SetStarsResult(&fftsPlusTask, cqe);
@@ -2455,7 +2455,7 @@ TEST_F(TaskTest, FftsPlusTaskProcessErr2)
 
     rtStarsSqe_t sqe[3] = {};
     ToConstructSqe(&fftsPlusTask, &sqe[0]);
-    rtLogicCqReport_t cqe;
+    rtCqReport_t cqe;
     cqe.errorType = 1;
     cqe.errorCode = 1;
     SetStarsResult(&fftsPlusTask, cqe);
@@ -2498,7 +2498,7 @@ TEST_F(TaskTest, FftsPlusTaskProcessErr3)
 
     rtStarsSqe_t sqe[3] = {};
     ToConstructSqe(&fftsPlusTask, &sqe[0]);
-    rtLogicCqReport_t cqe;
+    rtCqReport_t cqe;
     cqe.errorType = 1;
     cqe.errorCode = 1;
     SetStarsResult(&fftsPlusTask, cqe);
@@ -2541,7 +2541,7 @@ TEST_F(TaskTest, FftsPlusTaskProcessErr5)
 
     rtStarsSqe_t sqe[3] = {};
     ToConstructSqe(&fftsPlusTask, &sqe[0]);
-    rtLogicCqReport_t cqe;
+    rtCqReport_t cqe;
     cqe.errorType = 1;
     cqe.errorCode = 1;
     SetStarsResult(&fftsPlusTask, cqe);
@@ -3757,7 +3757,7 @@ TEST_F(TaskTest, stars_memcpy_async_miniv3)
     EXPECT_EQ(error, RT_ERROR_NONE);
     ToConstructSqe(&task, &sqe);
 
-    rtLogicCqReport_t cqe = {};
+    rtCqReport_t cqe = {};
     cqe.errorType = 1U;
     Complete(&task, 0);
     PrintErrorInfo(&task, 0);
@@ -3804,7 +3804,7 @@ TEST_F(TaskTest, stars_memcpy_async_miniv3_offline)
     EXPECT_EQ(error, RT_ERROR_NONE);
     ToConstructSqe(&task, &sqe);
 
-    rtLogicCqReport_t cqe = {};
+    rtCqReport_t cqe = {};
     cqe.errorType = 1U;
     Complete(&task, 0);
     PrintErrorInfo(&task, 0);
@@ -3865,7 +3865,7 @@ TEST_F(TaskTest, SetStarsResultForDavinciTask)
     InitByStream(&task, stream_);
     task.type = TS_TASK_TYPE_KERNEL_AICPU;
     task.errorCode = 0;
-    rtLogicCqReport_t logicCq;
+    rtCqReport_t logicCq;
     logicCq.errorType = RT_STARS_EXIST_ERROR;
     logicCq.errorCode = AE_STATUS_TASK_ABORT;
     SetStarsResultForDavinciTask(&task, logicCq);

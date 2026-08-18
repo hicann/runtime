@@ -67,7 +67,7 @@ void DavidEventRecordTaskUnInit(TaskInfo* const taskInfo)
     eventRecordTaskInfo->event = nullptr;
 }
 
-void SetStarsResultForDavidEventRecordTask(TaskInfo* const taskInfo, const rtLogicCqReport_t& logicCq)
+void SetStarsResultForDavidEventRecordTask(TaskInfo* const taskInfo, const rtCqReport_t& logicCq)
 {
     DavidEventRecordTaskInfo* eventRecordTaskInfo = &(taskInfo->u.davidEventRecordTaskInfo);
     if ((logicCq.errorType & RT_STARS_EXIST_ERROR) == 0U) {

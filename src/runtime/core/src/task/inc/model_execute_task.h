@@ -21,7 +21,7 @@ void ToCommandBodyForModelExecuteTask(TaskInfo* const taskInfo, rtCommand_t* con
 void ModelExecuteTaskUnInit(TaskInfo* const taskInfo);
 void DoCompleteSuccessForModelExecuteTask(TaskInfo* const taskInfo, const uint32_t devId);
 void PrintErrorInfoForModelExecuteTask(TaskInfo* const taskInfo, const uint32_t devId);
-void SetStarsResultForModelExecuteTask(TaskInfo* const taskInfo, const rtLogicCqReport_t& logicCq);
+void SetStarsResultForModelExecuteTask(TaskInfo* const taskInfo, const rtCqReport_t& logicCq);
 TaskInfo* GetRealReportFaultTaskForModelExecuteTask(TaskInfo* const taskInfo);
 void PrintErrorModelExecuteTaskFuncCall(TaskInfo* const task);
 rtError_t AllocFuncCallMemForModelExecuteTask(TaskInfo* const taskInfo, rtStarsModelExeFuncCallPara_t& funcCallPara);

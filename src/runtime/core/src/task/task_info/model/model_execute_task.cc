@@ -64,7 +64,7 @@ rtError_t ModelExecuteTaskInit(
     return PrepareSqeInfoForModelExecuteTask(taskInfo);
 }
 
-void SetStarsResultForModelExecuteTask(TaskInfo* const taskInfo, const rtLogicCqReport_t& logicCq)
+void SetStarsResultForModelExecuteTask(TaskInfo* const taskInfo, const rtCqReport_t& logicCq)
 {
     ModelExecuteTaskInfo* modelExecuteTaskInfo = &(taskInfo->u.modelExecuteTaskInfo);
 

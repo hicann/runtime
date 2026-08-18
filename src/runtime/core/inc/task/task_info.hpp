@@ -181,7 +181,7 @@ void TaskFailCallBack(
     const Device* const dev, bool isNeedTransTaskId = false);
 void TaskUnInitProc(TaskInfo* taskInfo);
 void SetResult(TaskInfo* taskInfo, const void* const data, const uint32_t dataSize);
-void SetStarsResult(TaskInfo* taskInfo, const rtLogicCqReport_t& logicCq);
+void SetStarsResult(TaskInfo* taskInfo, const rtCqReport_t& logicCq);
 rtError_t WaitAsyncCopyComplete(TaskInfo* taskInfo);
 
 void UpdateFlipNum(TaskInfo* taskInfo, const bool isDisableThread);
@@ -257,7 +257,7 @@ uint32_t GetTaskId(const TaskInfo* const taskInfo);
 int32_t GetTaskIdBitWidth();
 const char_t* TaskIdDesc();
 const char_t* TaskIdCamelbackNaming();
-void PrintStarsCqeInfo(const rtLogicCqReport_t& cqe, const uint32_t devId, const uint32_t cqId);
+void PrintStarsCqeInfo(const rtCqReport_t& cqe, const uint32_t devId, const uint32_t cqId);
 void GetBinAndKernelNameExceptionArgs(const Kernel* const kernel, rtExceptionArgsInfo_t* argsInfo);
 void GetKernelExceptionDfxInfo(
     const Kernel* const kernel, const rtArgsSizeInfo_t* const sizeInfo, void* const args, const uint32_t argsSize,

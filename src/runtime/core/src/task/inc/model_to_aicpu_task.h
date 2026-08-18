@@ -21,7 +21,7 @@ rtError_t ModelToAicpuTaskInit(
 void ToCmdBodyForModelToAicpuTask(TaskInfo* taskInfo, rtCommand_t* const command);
 void DoCompleteSuccForModelToAicpuTask(TaskInfo* taskInfo, const uint32_t devId);
 void PrintErrorInfoForModelToAicpuTask(TaskInfo* taskInfo, const uint32_t devId);
-void SetStarsResultForModelToAicpuTask(TaskInfo* taskInfo, const rtLogicCqReport_t& logicCq);
+void SetStarsResultForModelToAicpuTask(TaskInfo* taskInfo, const rtCqReport_t& logicCq);
 } // namespace runtime
 } // namespace cce
 #endif // RUNTIME_MODEL_TO_AICPU_TASK_H

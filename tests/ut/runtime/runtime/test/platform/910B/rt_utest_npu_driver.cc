@@ -2233,7 +2233,7 @@ TEST_F(CloudV2NpuDriverTest, driver_logic_cq_v2)
 
     MOCKER(halCqReportRecv).stubs().will(returnValue(DRV_ERROR_WAIT_TIMEOUT));
     LogicCqWaitInfo input = {};
-    rtLogicCqReport_t logic = {};
+    rtCqReport_t logic = {};
     // drv error
     EXPECT_EQ(rawDrv.LogicCqReportV2(input, reinterpret_cast<uint8_t*>(&logic), 1, count), RT_ERROR_REPORT_TIMEOUT);
 

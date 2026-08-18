@@ -218,7 +218,7 @@ void PrintSqe(const rtStarsSqe_t* const sqe, const char* desc)
     }
 }
 
-void SetStarsResult(TaskInfo* taskInfo, const rtLogicCqReport_t& logicCq)
+void SetStarsResult(TaskInfo* taskInfo, const rtCqReport_t& logicCq)
 {
     if (taskInfo->type >= TS_TASK_TYPE_RESERVED) {
         return;
@@ -375,7 +375,7 @@ void InitByStream(TaskInfo* const taskInfo, Stream* stream)
     taskInfo->serial = false;
 }
 
-void SetStarsResultCommon(TaskInfo* taskInfo, const rtLogicCqReport_t& logicCq)
+void SetStarsResultCommon(TaskInfo* taskInfo, const rtCqReport_t& logicCq)
 {
     if ((logicCq.errorType & RT_STARS_EXIST_ERROR) != 0U) {
         if (logicCq.errorCode != TS_SUCCESS) {

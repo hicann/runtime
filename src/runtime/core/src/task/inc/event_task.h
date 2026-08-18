@@ -19,7 +19,7 @@ namespace runtime {
 rtError_t EventRecordTaskInit(
     TaskInfo* const taskInfo, Event* const eventPtr, const bool isNotifyRecordFlag, const int32_t newEventId);
 void EventRecordTaskUnInit(TaskInfo* const taskInfo);
-void SetStarsResultForEventRecordTask(TaskInfo* const taskInfo, const rtLogicCqReport_t& logicCq);
+void SetStarsResultForEventRecordTask(TaskInfo* const taskInfo, const rtCqReport_t& logicCq);
 void ToCommandBodyForEventRecordTask(TaskInfo* const taskInfo, rtCommand_t* const command);
 void DoCompleteSuccessForEventRecordTask(TaskInfo* const taskInfo, const uint32_t devId);
 void TaskTriggerEvent(TaskInfo* const taskInfo);
@@ -41,7 +41,7 @@ rtError_t EventWaitTaskInit(
 void ToCommandBodyForEventWaitTask(TaskInfo* const taskInfo, rtCommand_t* const command);
 void DoCompleteSuccessForEventWaitTask(TaskInfo* const taskInfo, const uint32_t devId);
 void PrintErrorInfoForEventWaitTask(TaskInfo* const taskInfo, const uint32_t devId);
-void SetStarsResultForEventWaitTask(TaskInfo* taskInfo, const rtLogicCqReport_t& logicCq);
+void SetStarsResultForEventWaitTask(TaskInfo* taskInfo, const rtCqReport_t& logicCq);
 
 rtError_t GetEventRecordTaskParams(const TaskInfo* const taskInfo, rtTaskParams* const params);
 rtError_t GetEventWaitTaskParams(const TaskInfo* const taskInfo, rtTaskParams* const params);

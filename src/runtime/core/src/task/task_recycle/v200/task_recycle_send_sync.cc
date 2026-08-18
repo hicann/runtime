@@ -119,7 +119,7 @@ static rtError_t SyncTaskProcCqReport(
     const uint32_t streamId = static_cast<uint32_t>(stm->Id_());
     Driver* const devDrv = dev->Driver_();
     uint32_t cnt = 0U;
-    rtLogicCqReport_t logicReport = {};
+    rtCqReport_t logicReport = {};
     int32_t irqWait = RT_REPORT_TIMEOUT_TIME; // default 5000ms
     if (unlikely(remainTime > 0)) {
         irqWait = remainTime >= RT_REPORT_TIMEOUT_TIME ? RT_REPORT_TIMEOUT_TIME : remainTime;

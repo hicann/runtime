@@ -38,12 +38,12 @@
 
 using namespace testing;
 using namespace cce::runtime;
-rtLogicCqReport_t g_cqReport1;
+rtCqReport_t g_cqReport1;
 static rtError_t Sub_LogicCqReportV2(
     NpuDriver* drv, const LogicCqWaitInfo& waitInfo, uint8_t* report, uint32_t reportCnt, uint32_t& realCnt)
 {
     realCnt = 1;
-    rtLogicCqReport_t* reportPtr = reinterpret_cast<rtLogicCqReport_t*>(report);
+    rtCqReport_t* reportPtr = reinterpret_cast<rtCqReport_t*>(report);
     g_cqReport1.taskId = 1U;
     *reportPtr = g_cqReport1;
     return RT_ERROR_NONE;
@@ -415,7 +415,7 @@ TEST_F(Arch9201TaskTest, construct_arch9201sqe_for_fusion_kernel_launch_1)
     MOCKER(TaskFailCallBack).stubs().will(invoke(TaskFailCallBackStubfunc));
     MOCKER_CPP(&H2DCopyMgr::H2DMemCopyWaitFinish).stubs().will(returnValue(RT_ERROR_NONE));
 
-    rtLogicCqReport_t cqe = {};
+    rtCqReport_t cqe = {};
     cqe.errorType = 1U;
     cqe.errorCode = 1U;
 

@@ -91,7 +91,7 @@ void EventRecordTaskUnInit(TaskInfo* const taskInfo)
     }
 }
 
-void SetStarsResultForEventRecordTask(TaskInfo* const taskInfo, const rtLogicCqReport_t& logicCq)
+void SetStarsResultForEventRecordTask(TaskInfo* const taskInfo, const rtCqReport_t& logicCq)
 {
     EventRecordTaskInfo* eventRecordTaskInfo = &(taskInfo->u.eventRecordTaskInfo);
 
@@ -473,7 +473,7 @@ void PrintErrorInfoForEventWaitTask(TaskInfo* const taskInfo, const uint32_t dev
     }
 }
 
-void SetStarsResultForEventWaitTask(TaskInfo* taskInfo, const rtLogicCqReport_t& logicCq)
+void SetStarsResultForEventWaitTask(TaskInfo* taskInfo, const rtCqReport_t& logicCq)
 {
     taskInfo->errorCode = logicCq.errorCode;
 }

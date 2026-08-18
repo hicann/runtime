@@ -19,7 +19,7 @@ namespace runtime {
 void CcuLaunchTaskInit(TaskInfo* taskInfo, rtCcuTaskInfo_t* const ccuInfo);
 void PrintErrorInfoForCcuLaunchTask(TaskInfo* taskInfo, const uint32_t devId);
 void DoCompleteSuccessForCcuLaunchTask(TaskInfo* taskInfo, const uint32_t devId);
-void SetResultForCcuLaunchTask(TaskInfo* taskInfo, const rtLogicCqReport_t& logicCq);
+void SetResultForCcuLaunchTask(TaskInfo* taskInfo, const rtCqReport_t& logicCq);
 void TaskFailCallBackForFusionKernelTask(
     const TaskInfo* const taskInfo, const uint32_t deviceId, const StarsDeviceErrorInfo* const info,
     rtFusionExType_t fusionDetailType);

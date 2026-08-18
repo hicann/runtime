@@ -204,7 +204,7 @@ void PrintErrorInfoForModelSerialSchedPostProcTask(TaskInfo* taskInfo, const uin
         modelTask->groupId, modelTask->exeSqId);
 }
 
-void StarsSetResultForModelSerialSchedTask(TaskInfo* taskInfo, const rtLogicCqReport_t& logicCq)
+void StarsSetResultForModelSerialSchedTask(TaskInfo* taskInfo, const rtCqReport_t& logicCq)
 {
     if ((taskInfo->type != TS_TASK_TYPE_MODEL_SERIAL_SCHED_PREPROC) &&
         (taskInfo->type != TS_TASK_TYPE_MODEL_SERIAL_SCHED_POSTPROC)) {

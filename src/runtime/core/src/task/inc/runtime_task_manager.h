@@ -41,7 +41,7 @@ struct TaskSqeInfo {
 Stream* GetReportStream(Stream* stream);
 void PrintErrorSqe(const rtStarsSqe_t* const sqe, const char_t* desc);
 uint64_t CombineTo64Bit(uint32_t high, uint32_t low);
-void SetStarsResultCommon(TaskInfo* taskInfo, const rtLogicCqReport_t& logicCq);
+void SetStarsResultCommon(TaskInfo* taskInfo, const rtCqReport_t& logicCq);
 void SetResultCommon(TaskInfo* taskInfo, const void* const data, const uint32_t dataSize);
 void DoCompleteSuccess(TaskInfo* taskInfo, const uint32_t devId);
 void PrintErrorInfoCommon(TaskInfo* taskInfo, const uint32_t devId);
@@ -53,7 +53,7 @@ using PfnTaskSetResult = void (*)(TaskInfo* taskInfo, const void* const data, co
 using PfnDoCompleteSucc = void (*)(TaskInfo* taskInfo, const uint32_t devId);
 using PfnTaskUnInit = void (*)(TaskInfo* taskInfo);
 using PfnPrintErrorInfo = void (*)(TaskInfo* taskInfo, const uint32_t devId);
-using PfnTaskSetStarsResult = void (*)(TaskInfo* taskInfo, const rtLogicCqReport_t& logicCq);
+using PfnTaskSetStarsResult = void (*)(TaskInfo* taskInfo, const rtCqReport_t& logicCq);
 
 struct TaskFuncArrays {
     PfnTaskToCmd toCommandFunc[TS_TASK_TYPE_RESERVED];

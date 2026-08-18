@@ -79,7 +79,7 @@ void DoCompleteSuccessForCcuLaunchTask(TaskInfo* taskInfo, const uint32_t devId)
         stream->Id_(), taskInfo->id, ccuLaunchTsk->dieId, ccuLaunchTsk->missionId, stream->GetSqId());
 }
 
-void SetResultForCcuLaunchTask(TaskInfo* taskInfo, const rtLogicCqReport_t& logicCq)
+void SetResultForCcuLaunchTask(TaskInfo* taskInfo, const rtCqReport_t& logicCq)
 {
     if ((logicCq.errorType & RT_STARS_EXIST_ERROR) != 0U) {
         if ((logicCq.errorCode & STARS_CCU_EXIST_ERROR) != 0U) {

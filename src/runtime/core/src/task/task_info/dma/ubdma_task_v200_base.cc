@@ -115,7 +115,7 @@ void DoCompleteSuccessForUbDmaDbModeTask(TaskInfo* taskInfo, const uint32_t devI
 }
 #endif
 
-void SetResultForUbDmaTask(TaskInfo* taskInfo, const rtLogicCqReport_t& logicCq)
+void SetResultForUbDmaTask(TaskInfo* taskInfo, const rtCqReport_t& logicCq)
 {
     if ((logicCq.errorType & RT_STARS_EXIST_ERROR) != 0U) {
         static uint32_t errMap[TS_STARS_ERROR_MAX_INDEX] = {

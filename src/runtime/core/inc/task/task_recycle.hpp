@@ -16,21 +16,21 @@ namespace cce {
 namespace runtime {
 
 // ====================不对recycle外部使用，用于recycle内部多个文件之间调用=========================//
-bool CompleteProcMultipleTaskReport(TaskInfo* const workTask, const rtLogicCqReport_t& report);
-void ProcLogicCqReport(Device* const dev, rtLogicCqReport_t& logicCq, TaskInfo* reportTask);
+bool CompleteProcMultipleTaskReport(TaskInfo* const workTask, const rtCqReport_t& report);
+void ProcLogicCqReport(Device* const dev, rtCqReport_t& logicCq, TaskInfo* reportTask);
 rtError_t FinishedTaskReclaim(
     const Stream* const stm, const bool limited, const uint16_t curPos, const uint16_t tarPos);
 rtError_t GetDrvSqHead(const Stream* const stm, uint16_t& sqHead, bool needLog = true);
-bool ProcReportIsDvppErrorAndRetry(const rtLogicCqReport_t& report, TaskInfo* const reportTask);
+bool ProcReportIsDvppErrorAndRetry(const rtCqReport_t& report, TaskInfo* const reportTask);
 void TryReclaimToTask(TaskInfo* workTask);
 rtError_t ProcReport(
-    Device* const dev, uint32_t streamId, const uint32_t syncPos, const uint32_t cnt,
-    rtLogicCqReport_t* const logicReport, bool& isFinished, bool& hasCqeReportErr);
+    Device* const dev, uint32_t streamId, const uint32_t syncPos, const uint32_t cnt, rtCqReport_t* const logicReport,
+    bool& isFinished, bool& hasCqeReportErr);
 void ProcCqReportException(
-    Device* const dev, rtLogicCqReport_t& logicCq, TaskInfo* reportTask, uint16_t streamId,
+    Device* const dev, rtCqReport_t& logicCq, TaskInfo* reportTask, uint16_t streamId,
     TaskInfo** outFaultTaskPtr = nullptr);
 // 处理完异常CQE后rt侧拉起sq
-rtError_t StarsResumeRtsq(const rtLogicCqReport_t* logicCq, const TaskInfo* const taskInfo);
+rtError_t StarsResumeRtsq(const rtCqReport_t* logicCq, const TaskInfo* const taskInfo);
 rtError_t RecycleTaskBySqHead(Stream* const stm);
 rtError_t AdjustRecycleTaskID(const Stream* const stm, const uint32_t endTaskId, const uint16_t recyclePos);
 rtError_t RecycleTaskBySqHeadForRecycleThread(Stream* const stm);

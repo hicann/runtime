@@ -249,7 +249,7 @@ bool StarsEngine::CheckMonitorThreadAlive()
     return false;
 }
 
-void StarsEngine::StarsCqeReceive(const rtLogicCqReport_t& logicCq, TaskInfo* const runTask) const
+void StarsEngine::StarsCqeReceive(const rtCqReport_t& logicCq, TaskInfo* const runTask) const
 {
     runTask->pkgStat[RT_PACKAGE_TYPE_TASK_REPORT].receivePackage++;
     SetStarsResult(runTask, logicCq);
@@ -676,7 +676,7 @@ rtError_t StarsEngine::ProcLogicCqUntilEmpty(const Stream* const stm, uint32_t& 
 
     while (true) {
         uint32_t cnt = 0U;
-        rtLogicCqReport_t reportInfo[RT_MILAN_MAX_QUERY_CQE_NUM] = {};
+        rtCqReport_t reportInfo[RT_MILAN_MAX_QUERY_CQE_NUM] = {};
 
         const rtError_t error = devDrv->LogicCqReportV2(waitInfo, RtPtrToPtr<uint8_t*>(reportInfo), allocCnt, cnt);
         const rtError_t ret = ReportHeartBreakProcV2();
@@ -698,7 +698,7 @@ rtError_t StarsEngine::ProcLogicCqUntilEmpty(const Stream* const stm, uint32_t& 
         times++;
 
         for (uint32_t idx = 0U; idx < cnt; ++idx) {
-            rtLogicCqReport_t& report = reportInfo[idx];
+            rtCqReport_t& report = reportInfo[idx];
             taskId = report.taskId;
             const uint8_t sqeType = report.sqeType;
             AtraceParams param = {GetDevice()->Id_(), static_cast<uint32_t>(report.streamId), report.taskId,
@@ -998,7 +998,7 @@ rtError_t StarsEngine::RecycleTaskBySqHead(Stream* const stm, uint32_t& finishTa
 
 // check if vpc error and retry
 // if vpc cqe and need retry return true
-bool StarsEngine::ProcReportIsVpcErrorAndRetry(const rtLogicCqReport_t& report)
+bool StarsEngine::ProcReportIsVpcErrorAndRetry(const rtCqReport_t& report)
 {
     if (report.sqeType != static_cast<uint8_t>(RT_STARS_SQE_TYPE_VPC)) {
         return false;
@@ -1030,7 +1030,7 @@ bool StarsEngine::ProcReportIsVpcErrorAndRetry(const rtLogicCqReport_t& report)
 }
 
 void StarsEngine::ProcCommonLogicCqReport(
-    const rtLogicCqReport_t& report, const uint32_t taskId, const bool isStreamSync, bool& isFinished)
+    const rtCqReport_t& report, const uint32_t taskId, const bool isStreamSync, bool& isFinished)
 {
     if (ProcReportIsVpcErrorAndRetry(report)) {
         return;
@@ -1043,7 +1043,7 @@ void StarsEngine::ProcCommonLogicCqReport(
     return;
 }
 
-bool StarsEngine::CompleteProcMultipleTaskReport(TaskInfo* const workTask, const rtLogicCqReport_t& report) const
+bool StarsEngine::CompleteProcMultipleTaskReport(TaskInfo* const workTask, const rtCqReport_t& report) const
 {
     TaskInfo* const reportTask = workTask;
     const uint8_t mulTaskCqeNum = GetMultipleTaskCqeNum(reportTask);
@@ -1076,25 +1076,25 @@ bool StarsEngine::CompleteProcMultipleTaskReport(TaskInfo* const workTask, const
 }
 
 bool StarsEngine::ProcMultipleTaskLogicCqReport(
-    TaskInfo* const workTask, const rtLogicCqReport_t& report, const bool isStreamSync)
+    TaskInfo* const workTask, const rtCqReport_t& report, const bool isStreamSync)
 {
     TaskInfo* const reportTask = workTask;
     if (!CompleteProcMultipleTaskReport(workTask, report)) {
         return false;
     }
 
-    rtLogicCqReport_t cqReport = report;
+    rtCqReport_t cqReport = report;
     GetMultipleTaskCqeErrorInfo(reportTask, cqReport.sqeType, cqReport.errorType, cqReport.errorCode);
     ProcLogicCqReport(cqReport, isStreamSync, workTask);
     return true;
 }
 
 void StarsEngine::ProcReport(
-    const uint32_t taskId, const bool isStreamSync, const uint32_t cnt, rtLogicCqReport_t* const logicReport,
+    const uint32_t taskId, const bool isStreamSync, const uint32_t cnt, rtCqReport_t* const logicReport,
     bool& isFinished, uint32_t cqId)
 {
     for (uint32_t idx = 0U; idx < cnt; ++idx) {
-        rtLogicCqReport_t& report = logicReport[idx];
+        rtCqReport_t& report = logicReport[idx];
         const uint32_t taskIdCur = report.taskId;
         const uint8_t sqeType = report.sqeType;
         AtraceParams param = {GetDevice()->Id_(), static_cast<uint32_t>(report.streamId), report.taskId,
@@ -1231,11 +1231,11 @@ rtError_t StarsEngine::SyncTask(
         (devDrv == nullptr), RT_ERROR_NONE, "Driver is nullptr. device_id=%u, stream_id=%u.", dev->Id_(), streamId);
 
     rtError_t status = RT_ERROR_NONE;
-    rtLogicCqReport_t reportInfo = {};
+    rtCqReport_t reportInfo = {};
     while (!isFinished) {
         constexpr uint32_t allocCnt = 1U;
         uint32_t cnt = 0U;
-        rtLogicCqReport_t* logicReport = &reportInfo;
+        rtCqReport_t* logicReport = &reportInfo;
         int32_t irqWait = waitTimeout; // default
         uint32_t loopCnt = 0;
 
@@ -1396,7 +1396,7 @@ rtError_t StarsEngine::SubmitSend(TaskInfo* const workTask, uint32_t* const flip
 }
 
 rtError_t StarsEngine::StarsResumeRtsq(
-    const rtLogicCqReport_t& logicCq, const uint16_t taskType, Stream* const failStm) const
+    const rtCqReport_t& logicCq, const uint16_t taskType, Stream* const failStm) const
 {
     uint32_t offset = 1U; // skip the error sqe
     uint32_t head = 0U;
@@ -1525,7 +1525,7 @@ rtError_t StarsEngine::StarsResumeRtsq(
     return RT_ERROR_NONE;
 }
 
-bool StarsEngine::ProcReportIsException(const rtLogicCqReport_t& logicCq, TaskInfo* reportTask) const
+bool StarsEngine::ProcReportIsException(const rtCqReport_t& logicCq, TaskInfo* reportTask) const
 {
     if ((logicCq.errorType & RT_STARS_EXIST_ERROR) == 0U) {
         return false;
@@ -1591,7 +1591,7 @@ void StarsEngine::ClearMulTaskCqeNum(const uint8_t mulTaskCqeNum, TaskInfo* cons
     }
 }
 
-void StarsEngine::ProcLogicCqReport(const rtLogicCqReport_t& logicCq, const bool isStreamSync, TaskInfo* reportTask)
+void StarsEngine::ProcLogicCqReport(const rtCqReport_t& logicCq, const bool isStreamSync, TaskInfo* reportTask)
 {
     UNUSED(isStreamSync);
     const uint16_t streamId = (logicCq.streamId & 0x7FFFU); // bit15 is the flag of sync task
@@ -1699,7 +1699,7 @@ void StarsEngine::ProcLogicCqReport(const rtLogicCqReport_t& logicCq, const bool
     return;
 }
 
-void StarsEngine::StarsReportLogicCq(const rtLogicCqReport_t& report, rtDvppGrpCallback callBackFunc)
+void StarsEngine::StarsReportLogicCq(const rtCqReport_t& report, rtDvppGrpCallback callBackFunc)
 {
     Device* dev = GetDevice();
     uint32_t realDeviceId = 0U;
@@ -1724,7 +1724,7 @@ void StarsEngine::StarsReportLogicCq(const rtLogicCqReport_t& report, rtDvppGrpC
 }
 
 void StarsEngine::StarsReportLogicCq(
-    const rtLogicCqReport_t& report, rtDvppGrpCallback callBackFunc, uint8_t sqeType, uint8_t cqeErrorCode)
+    const rtCqReport_t& report, rtDvppGrpCallback callBackFunc, uint8_t sqeType, uint8_t cqeErrorCode)
 {
     Device* dev = GetDevice();
     uint32_t realDeviceId = 0U;
@@ -1751,7 +1751,7 @@ void StarsEngine::StarsReportLogicCq(
 
 // waitgroup get result
 rtError_t StarsEngine::MultipleTaskReportLogicCq(
-    TaskInfo* const workTask, const rtLogicCqReport_t& report, rtDvppGrpCallback callBackFunc)
+    TaskInfo* const workTask, const rtCqReport_t& report, rtDvppGrpCallback callBackFunc)
 {
     if (!CompleteProcMultipleTaskReport(workTask, report)) {
         RT_LOG(
@@ -1768,7 +1768,7 @@ rtError_t StarsEngine::MultipleTaskReportLogicCq(
     return RT_ERROR_NONE;
 }
 
-rtError_t StarsEngine::CommonTaskReportLogicCq(const rtLogicCqReport_t& report, rtDvppGrpCallback callBackFunc)
+rtError_t StarsEngine::CommonTaskReportLogicCq(const rtCqReport_t& report, rtDvppGrpCallback callBackFunc)
 {
     // check if vpc error and retry
     if (ProcReportIsVpcErrorAndRetry(report)) {
@@ -1781,7 +1781,7 @@ rtError_t StarsEngine::CommonTaskReportLogicCq(const rtLogicCqReport_t& report, 
     return RT_ERROR_NONE;
 }
 
-rtError_t StarsEngine::ReportLogicCq(const rtLogicCqReport_t& report, rtDvppGrpCallback callBackFunc)
+rtError_t StarsEngine::ReportLogicCq(const rtCqReport_t& report, rtDvppGrpCallback callBackFunc)
 {
     TaskInfo* const reportTask =
         GetDevice()->GetTaskFactory()->GetTask(static_cast<int32_t>(report.streamId), report.taskId);
@@ -1805,7 +1805,7 @@ rtError_t StarsEngine::ReportLogicCq(const rtLogicCqReport_t& report, rtDvppGrpC
 rtError_t StarsEngine::DvppWaitGroup(DvppGrp* grp, rtDvppGrpCallback callBackFunc, int32_t timeout)
 {
     Device* dev = GetDevice();
-    rtLogicCqReport_t report = {};
+    rtCqReport_t report = {};
     Driver* const devDrv = dev->Driver_();
     uint32_t cnt = 0U;
     const uint32_t logicCqid = grp->getLogicCqId();

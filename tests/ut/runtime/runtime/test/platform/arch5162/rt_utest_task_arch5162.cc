@@ -202,7 +202,7 @@ TEST_F(Arch5162TaskTest, SetStarsResultForDavinciTask_aicpu)
     task.stream = stream;
     task.type = TS_TASK_TYPE_KERNEL_AICPU;
     task.errorCode = 0;
-    rtLogicCqReport_t logicCq;
+    rtCqReport_t logicCq;
     logicCq.errorType = RT_STARS_EXIST_ERROR;
     logicCq.errorCode = AE_STATUS_TASK_ABORT;
     SetStarsResultForDavinciTask(&task, logicCq);
@@ -223,7 +223,7 @@ TEST_F(Arch5162TaskTest, SetStarsResultForDavinciTask_aicore)
     task.stream = stream;
     task.type = TS_TASK_TYPE_KERNEL_AIVEC;
     task.errorCode = 0;
-    rtLogicCqReport_t logicCq;
+    rtCqReport_t logicCq;
     logicCq.errorType = RT_STARS_EXIST_ERROR;
     logicCq.errorCode = AE_STATUS_TASK_ABORT;
     SetStarsResultForDavinciTask(&task, logicCq);

@@ -127,7 +127,7 @@ static void ConstructSqeForStarsVersionTask(TaskInfo* const taskInfo, rtStarsSqe
         sqe->type, sqe->pre_p, sqe->rt_streamID, stm->Id_(), sqe->task_id, sqe->task_type);
 }
 
-void SetStarsResultForStarsVersionTask(TaskInfo* taskInfo, const rtLogicCqReport_t& logicCq)
+void SetStarsResultForStarsVersionTask(TaskInfo* taskInfo, const rtCqReport_t& logicCq)
 {
     taskInfo->errorCode = logicCq.errorCode;
     RT_LOG(

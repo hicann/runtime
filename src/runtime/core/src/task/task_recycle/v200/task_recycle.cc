@@ -60,7 +60,7 @@ void ProcLogicCqUntilEmpty(const Stream* const stm)
 
     while (true) {
         uint32_t cnt = 0U;
-        rtLogicCqReport_t reportInfo[RT_MILAN_MAX_QUERY_CQE_NUM] = {};
+        rtCqReport_t reportInfo[RT_MILAN_MAX_QUERY_CQE_NUM] = {};
 
         rtError_t error = ((RawDevice*)(dev))->Engine_()->ReportHeartBreakProcV2();
         COND_PROC_RETURN_ERROR_MSG_CALL(
@@ -68,7 +68,7 @@ void ProcLogicCqUntilEmpty(const Stream* const stm)
             RT_LOG_INNER_DETAIL_MSG(RT_DRV_INNER_ERROR, {"device_id"}, {std::to_string(dev->Id_())});
             , "Device %u loses the heartbeat.", dev->Id_());
 
-        error = devDrv->LogicCqReportV2(waitInfo, RtPtrToPtr<uint8_t*, rtLogicCqReport_t*>(reportInfo), allocCnt, cnt);
+        error = devDrv->LogicCqReportV2(waitInfo, RtPtrToPtr<uint8_t*, rtCqReport_t*>(reportInfo), allocCnt, cnt);
         if (unlikely(((error != RT_ERROR_NONE) && (error != RT_ERROR_SOCKET_CLOSE)) || (cnt == 0U))) {
             RT_LOG(
                 RT_LOG_INFO, "Task Wait: stream_id=%d, logicCqId=%u, retCode=%#x.", streamId, logicCqId,

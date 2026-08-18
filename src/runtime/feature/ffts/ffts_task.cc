@@ -1044,7 +1044,7 @@ void PushBackErrInfoForFftsPlusTask(TaskInfo* taskInfo, const void* errInfo, uin
     taskInfo->u.fftsPlusTask.errInfo->push_back(taskErrInfo);
 }
 
-void SetStarsResultForFftsPlusTask(TaskInfo* taskInfo, const rtLogicCqReport_t& logicCq)
+void SetStarsResultForFftsPlusTask(TaskInfo* taskInfo, const rtCqReport_t& logicCq)
 {
     if ((logicCq.errorType & RT_STARS_EXIST_ERROR) != 0U) {
         uint32_t errMap[] = {TS_ERROR_FFTSPLUS_TASK_EXCEPTION, TS_ERROR_FFTSPLUS_TASK_TRAP,

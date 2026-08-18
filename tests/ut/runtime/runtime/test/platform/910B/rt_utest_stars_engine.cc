@@ -749,7 +749,7 @@ TEST_F(CloudV2StarsEngineTest, ProcLogicCqReport)
     rtError_t error = RT_ERROR_NONE;
     uint32_t taskId = 0;
 
-    rtLogicCqReport_t logicCq = {0};
+    rtCqReport_t logicCq = {0};
     logicCq.errorType = (RT_STARS_EXIST_ERROR | RT_STARS_EXIST_WARNING);
     TaskInfo* const workTask = device_->GetTaskFactory()->Alloc(stream_, TS_TASK_TYPE_MODEL_EXECUTE, error);
     ModelExecuteTaskInit(workTask, nullptr, 0, 0);
@@ -802,7 +802,7 @@ TEST_F(CloudV2StarsEngineTest, ProcLogicCqReport_with_async_recycle_thread)
     uint32_t taskId = 0;
 
     device_->SetIsChipSupportRecycleThread(true);
-    rtLogicCqReport_t logicCq = {0};
+    rtCqReport_t logicCq = {0};
     logicCq.errorType = (RT_STARS_EXIST_ERROR | RT_STARS_EXIST_WARNING);
     cce::runtime::Model model;
     TaskInfo* reportTask = stream_->taskResMang_->AllocTaskInfoByTaskResId(stream_, 0, 0, TS_TASK_TYPE_MODEL_EXECUTE);
@@ -858,7 +858,7 @@ TEST_F(CloudV2StarsEngineTest, ProcLogicCqReport_with_limit_flag)
 
     device_->SetIsChipSupportRecycleThread(false);
     stream_->SetLimitFlag(true);
-    rtLogicCqReport_t logicCq = {0};
+    rtCqReport_t logicCq = {0};
     logicCq.errorType = (RT_STARS_EXIST_ERROR | RT_STARS_EXIST_WARNING);
     cce::runtime::Model model;
     TaskInfo* reportTask = stream_->taskResMang_->AllocTaskInfoByTaskResId(stream_, 0, 0, TS_TASK_TYPE_MODEL_EXECUTE);
@@ -993,7 +993,7 @@ TEST_F(CloudV2StarsEngineTest, RecycleEventRecordTask)
 
     ((StarsEngine*)engine_)->AddTaskToStream(workTask, sendSqeNum);
 
-    rtLogicCqReport_t logicCq = {};
+    rtCqReport_t logicCq = {};
     logicCq.streamId = stream_->Id_();
     logicCq.taskId = workTask->id;
     logicCq.errorType = 0x80U;
@@ -1032,7 +1032,7 @@ TEST_F(CloudV2StarsEngineTest, RecycleEventRecordTask_01)
 
     ((StarsEngine*)engine_)->AddTaskToStream(workTask, sendSqeNum);
 
-    rtLogicCqReport_t logicCq = {};
+    rtCqReport_t logicCq = {};
     logicCq.streamId = stream_->Id_();
     logicCq.taskId = workTask->id;
     logicCq.errorType = 0x80U;
@@ -1078,7 +1078,7 @@ TEST_F(CloudV2StarsEngineTest, SyncTaskCheckResult)
     ((StarsEngine*)engine_)->SyncTaskCheckResult(RT_ERROR_STREAM_SYNC_TIMEOUT, stream_, workTask->id);
     EXPECT_EQ(true, workTask->isCqeNeedConcern == false);
 
-    rtLogicCqReport_t logicCq = {};
+    rtCqReport_t logicCq = {};
     logicCq.streamId = stream_->Id_();
     logicCq.taskId = workTask->id;
     logicCq.errorType = 0x80U;
@@ -1096,7 +1096,7 @@ TEST_F(CloudV2StarsEngineTest, ProcReportIsVpcErrorAndRetry)
 {
     bool rt;
     StarsEngine* engine = (StarsEngine*)engine_;
-    rtLogicCqReport_t cqReport = {};
+    rtCqReport_t cqReport = {};
 
     // not vpc task
     cqReport.sqeType = 0;
@@ -1237,7 +1237,7 @@ TEST_F(CloudV2StarsEngineTest, MultipleTaskReportLogicCq_01)
     IncMultipleTaskCqeNum(tsk);
     tsk->u.davinciMultiTaskInfo.hasUnderstudyTask = true;
     uint16_t stream_id = stream_->Id_();
-    rtLogicCqReport_t cqe = {0};
+    rtCqReport_t cqe = {0};
     cqe.streamId = stream_id;
     cqe.taskId = tsk->id;
     cqe.sqeType = RT_STARS_SQE_TYPE_JPEGD;
@@ -1266,7 +1266,7 @@ TEST_F(CloudV2StarsEngineTest, ProcMultipleTaskLogicCqReport_02)
     IncMultipleTaskCqeNum(&mulTipleTask);
     mulTipleTask.u.davinciMultiTaskInfo.hasUnderstudyTask = true;
 
-    rtLogicCqReport_t cqe = {0};
+    rtCqReport_t cqe = {0};
     cqe.streamId = 1;
     cqe.taskId = 1;
     cqe.sqeType = RT_STARS_SQE_TYPE_JPEGD;
@@ -1295,7 +1295,7 @@ TEST_F(CloudV2StarsEngineTest, ProcMultipleTaskLogicCqReport_03)
 
     StarsEngine engine(device_);
 
-    rtLogicCqReport_t cqe = {0};
+    rtCqReport_t cqe = {0};
     cqe.streamId = 1;
     cqe.taskId = 1;
     cqe.sqeType = RT_STARS_SQE_TYPE_AICPU;
@@ -1348,7 +1348,7 @@ TEST_F(CloudV2StarsEngineTest, CompleteProcMultipleTaskReport_01)
     mulTipleTask.u.davinciMultiTaskInfo.hasUnderstudyTask = true;
     StarsEngine engine(device_);
 
-    rtLogicCqReport_t cqe = {0};
+    rtCqReport_t cqe = {0};
     cqe.streamId = 1U;
     cqe.taskId = 1U;
     cqe.sqeType = RT_STARS_SQE_TYPE_AICPU;
@@ -1377,7 +1377,7 @@ TEST_F(CloudV2StarsEngineTest, ProcLogicCqUntilEmpty_OneLogicReport)
 {
     Stream* const stm = stream_;
     StarsEngine engine(device_);
-    rtLogicCqReport_t report[RT_MILAN_MAX_QUERY_CQE_NUM] = {};
+    rtCqReport_t report[RT_MILAN_MAX_QUERY_CQE_NUM] = {};
     uint8_t* reportInfo = reinterpret_cast<uint8_t*>(report);
     uint32_t cnt = 1U;
 
@@ -1405,7 +1405,7 @@ TEST_F(CloudV2StarsEngineTest, ProcLogicCqUntilEmpty_MutiTaskReport)
 {
     Stream* const stm = stream_;
     StarsEngine engine(device_);
-    rtLogicCqReport_t report[RT_MILAN_MAX_QUERY_CQE_NUM] = {};
+    rtCqReport_t report[RT_MILAN_MAX_QUERY_CQE_NUM] = {};
     uint8_t* reportInfo = reinterpret_cast<uint8_t*>(report);
     uint32_t cnt = 1U;
 
@@ -1458,8 +1458,8 @@ TEST_F(CloudV2StarsEngineTest, ProcReport_test)
     Stream* const stm = stream_;
     StarsEngine engine(device_);
 
-    rtLogicCqReport_t logicReport[RT_MILAN_MAX_QUERY_CQE_NUM] = {};
-    rtLogicCqReport_t& report = logicReport[0];
+    rtCqReport_t logicReport[RT_MILAN_MAX_QUERY_CQE_NUM] = {};
+    rtCqReport_t& report = logicReport[0];
     report.taskId = 1U;
 
     TaskInfo task = {};
@@ -1484,7 +1484,7 @@ TEST_F(CloudV2StarsEngineTest, CommonTaskReportLogicCq_test)
 {
     Stream* const stm = stream_;
     StarsEngine engine(device_);
-    rtLogicCqReport_t report;
+    rtCqReport_t report;
 
     MOCKER_CPP(&StarsEngine::ProcReportIsVpcErrorAndRetry).stubs().will(returnValue(true));
 
@@ -1502,7 +1502,7 @@ TEST_F(CloudV2StarsEngineTest, ReportLogicCq_test)
 {
     Stream* const stm = stream_;
     StarsEngine engine(device_);
-    rtLogicCqReport_t report;
+    rtCqReport_t report;
 
     TaskInfo task = {};
     task.type = TS_TASK_TYPE_MULTIPLE_TASK;
@@ -1534,7 +1534,7 @@ TEST_F(CloudV2StarsEngineTest, DvppWaitGroup_test)
     Stream* stream = new Stream(device, 0);
     StarsEngine engine(device);
 
-    rtLogicCqReport_t report[RT_MILAN_MAX_QUERY_CQE_NUM] = {};
+    rtCqReport_t report[RT_MILAN_MAX_QUERY_CQE_NUM] = {};
     uint8_t* reportInfo = reinterpret_cast<uint8_t*>(report);
     uint32_t cnt = 0U;
     MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::LogicCqReportV2)
@@ -1593,7 +1593,7 @@ TEST_F(CloudV2StarsEngineTest, StarsResumeRtsq_RT_STARS_EXIST_ERROR)
     uint32_t taskId = 0U;
     RawDevice* device = new RawDevice(0);
     StarsEngine engine(device);
-    rtLogicCqReport_t logicCq = {0};
+    rtCqReport_t logicCq = {0};
     logicCq.errorType = 0;
     logicCq.taskId = taskId;
     logicCq.streamId = stream_->Id_();
@@ -1629,7 +1629,7 @@ TEST_F(CloudV2StarsEngineTest, StarsResumeRtsq_01)
         .will(returnValue(RT_ERROR_NONE));
 
     TaskInfo reportTask = {};
-    rtLogicCqReport_t report = {0};
+    rtCqReport_t report = {0};
     reportTask.type = TS_TASK_TYPE_FUSION_KERNEL;
     reportTask.stream = stream;
     report.sqeType = RT_DAVID_SQE_TYPE_NOTIFY_WAIT;

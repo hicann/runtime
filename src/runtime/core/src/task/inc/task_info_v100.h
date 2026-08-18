@@ -48,7 +48,7 @@ void ConstructSqeForNopTask(TaskInfo* const taskInfo, rtStarsSqe_t* const comman
 
 void ConstructSqeForNotifyRecordTask(TaskInfo* taskInfo, rtStarsSqe_t* const command);
 
-void SetStarsResultForDavinciTask(TaskInfo* taskInfo, const rtLogicCqReport_t& logicCq);
+void SetStarsResultForDavinciTask(TaskInfo* taskInfo, const rtCqReport_t& logicCq);
 void DoCompleteSuccessForDavinciTask(TaskInfo* taskInfo, const uint32_t devId);
 void DavinciTaskUnInit(TaskInfo* taskInfo);
 void FillFftsMixSqeForDavinciTask(
@@ -69,7 +69,7 @@ void ConstructSqeForDavinciMultipleTask(TaskInfo* const taskInfo, rtStarsSqe_t* 
 
 void ConstructSqeForRdmaDbSendTask(TaskInfo* taskInfo, rtStarsSqe_t* const command);
 
-void SetStarsResultForStarsVersionTask(TaskInfo* taskInfo, const rtLogicCqReport_t& logicCq);
+void SetStarsResultForStarsVersionTask(TaskInfo* taskInfo, const rtCqReport_t& logicCq);
 void DoCompleteSuccessForStarsVersionTask(TaskInfo* taskInfo, const uint32_t devId);
 
 void ConstructSqeForCallbackLaunchTask(TaskInfo* taskInfo, rtStarsSqe_t* const command);

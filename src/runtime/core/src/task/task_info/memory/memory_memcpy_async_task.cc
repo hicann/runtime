@@ -724,7 +724,7 @@ void ToCommandBodyForMemcpyAsyncTask(TaskInfo* const taskInfo, rtCommand_t* cons
     RT_LOG(RT_LOG_INFO, "command d2dOffsetFlag=%u", command->u.memcpyTask.d2dOffsetFlag);
 }
 
-void SetStarsResultForMemcpyAsyncTask(TaskInfo* const taskInfo, const rtLogicCqReport_t& logicCq)
+void SetStarsResultForMemcpyAsyncTask(TaskInfo* const taskInfo, const rtCqReport_t& logicCq)
 {
     if ((logicCq.errorType & RT_STARS_EXIST_ERROR) != 0U) {
         if ((logicCq.errorType & CQE_ERROR_MAP_TIMEOUT) != 0U) {

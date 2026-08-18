@@ -34,7 +34,7 @@ void PrintErrorInfoForFftsPlusTask(TaskInfo* taskInfo, const uint32_t devId)
     UNUSED(devId);
 }
 
-void SetStarsResultForFftsPlusTask(TaskInfo* taskInfo, const rtLogicCqReport_t& logicCq)
+void SetStarsResultForFftsPlusTask(TaskInfo* taskInfo, const rtCqReport_t& logicCq)
 {
     UNUSED(taskInfo);
     UNUSED(logicCq);

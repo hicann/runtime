@@ -271,7 +271,7 @@ rtHostFuncCqReport_t g_CqReportMsg[MAX_DEVICE_NUM];
 rtHostFuncSqCommand_t g_SqSendMsg[MAX_DEVICE_NUM];
 
 rtLogicReport_t logicReport;
-rtLogicCqReport_t logicCqReport;
+rtCqReport_t logicCqReport;
 rtShmQuery_t vCqShmInfo[1024] = {0};
 std::map<uint32_t, uint32_t> logicCqStreamId;
 std::mutex logicMutex;
@@ -487,7 +487,7 @@ drvError_t halSqCqAllocate(uint32_t devId, struct halSqCqInputInfo* in, struct h
             }
         }
         if (Runtime::Instance()->GetChipType() == CHIP_DAVID) {
-            memset(&logicCqReport, 0, sizeof(rtLogicCqReport_t));
+            memset(&logicCqReport, 0, sizeof(rtCqReport_t));
         } else {
             memset(&logicReport, 0, sizeof(rtLogicReport_t));
         }
@@ -506,7 +506,7 @@ drvError_t halSqCqFree(uint32_t devId, struct halSqCqFreeInfo* in)
     g_sqcqIdBitmap.FreeId(in->sqId);
     if (in->type == DRV_SHM_TYPE) {
         if (Runtime::Instance()->GetChipType() == CHIP_DAVID) {
-            memset(&logicCqReport, 0, sizeof(rtLogicCqReport_t));
+            memset(&logicCqReport, 0, sizeof(rtCqReport_t));
         } else {
             memset(&logicReport, 0, sizeof(rtLogicReport_t));
         }

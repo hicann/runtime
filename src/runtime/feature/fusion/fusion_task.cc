@@ -433,7 +433,7 @@ void PrintErrorInfoForFusionKernelTask(TaskInfo* taskInfo, const uint32_t devId)
         (ret != RT_ERROR_NONE) ? "(no result)" : "args print end");
 }
 
-void SetStarsResultForFusionKernelTask(TaskInfo* taskInfo, const rtLogicCqReport_t& logicCq)
+void SetStarsResultForFusionKernelTask(TaskInfo* taskInfo, const rtCqReport_t& logicCq)
 {
     if ((logicCq.errorType & RT_STARS_EXIST_ERROR) != 0U) {
         static uint32_t errMap[TS_STARS_ERROR_MAX_INDEX] = {

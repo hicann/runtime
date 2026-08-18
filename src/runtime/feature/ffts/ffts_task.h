@@ -29,7 +29,7 @@ void GetExceptionArgsForFftsPlus(
     rtExceptionArgsInfo_t* argsInfo);
 void PrintErrorInfoForFftsPlusTask(TaskInfo* taskInfo, const uint32_t devId);
 void PushBackErrInfoForFftsPlusTask(TaskInfo* taskInfo, const void* errInfo, uint32_t len);
-void SetStarsResultForFftsPlusTask(TaskInfo* taskInfo, const rtLogicCqReport_t& logicCq);
+void SetStarsResultForFftsPlusTask(TaskInfo* taskInfo, const rtCqReport_t& logicCq);
 } // namespace runtime
 } // namespace cce
 #endif // RUNTIME_FFTS_TASK_H

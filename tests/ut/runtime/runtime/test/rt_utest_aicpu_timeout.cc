@@ -313,7 +313,7 @@ TEST_F(AicpuTimeoutTest, StarsMonitorAicpuTimeoutUnsupportedInOfflineMode)
 
 TEST_F(AicpuTimeoutTest, CqeMarksStopOnlyForManagedAicpuTimeout)
 {
-    rtLogicCqReport_t logicCq = {};
+    rtCqReport_t logicCq = {};
     logicCq.errorType = static_cast<uint8_t>(RT_STARS_CQE_ERR_TYPE_TASK_TIMEOUT);
     TaskInfo task = {};
     task.type = TS_TASK_TYPE_KERNEL_AICPU;
@@ -338,7 +338,7 @@ TEST_F(AicpuTimeoutTest, FaultTaskRawErrorMarksStop)
     faultTask.type = TS_TASK_TYPE_KERNEL_AICPU;
     faultTask.errorCode = AICPU_TIMEOUT_RAW_ERRCODE;
 
-    AicpuTimeoutManager::UpdateAicpuTimeoutStateOnCqeReport(&device_, rtLogicCqReport_t{}, nullptr, &faultTask);
+    AicpuTimeoutManager::UpdateAicpuTimeoutStateOnCqeReport(&device_, rtCqReport_t{}, nullptr, &faultTask);
 
     EXPECT_TRUE(device_.GetAicpuProcessStopPendingStatus());
 }

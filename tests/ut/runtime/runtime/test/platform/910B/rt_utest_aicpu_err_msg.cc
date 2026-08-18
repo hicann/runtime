@@ -70,7 +70,7 @@ TEST_F(CloudV2AicpuErrMsgTest, SetStarsResultForDavinciTask)
     TaskInfo taskInfo = {};
     taskInfo.type = TS_TASK_TYPE_KERNEL_AICPU;
     taskInfo.stream = stream;
-    rtLogicCqReport_t logicCq = {};
+    rtCqReport_t logicCq = {};
     logicCq.errorCode = AICPU_HCCL_OP_RETRY_FAILED;
     SetStarsResultForDavinciTask(&taskInfo, logicCq);
     EXPECT_EQ(taskInfo.errorCode, TS_ERROR_AICPU_HCCL_OP_RETRY_FAILED);

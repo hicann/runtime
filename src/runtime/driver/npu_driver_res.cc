@@ -1826,7 +1826,7 @@ rtError_t NpuDriver::LogicCqAllocateV2(
     allocInput.type = DRV_LOGIC_TYPE;
     allocInput.tsId = tsId;
     allocInput.sqeSize = 0U;
-    allocInput.cqeSize = static_cast<uint32_t>(sizeof(rtLogicCqReport_t));
+    allocInput.cqeSize = static_cast<uint32_t>(sizeof(rtCqReport_t));
     allocInput.sqeDepth = 0U;
     if (GetDevProperties().cqeDepth == static_cast<uint32_t>(CqeDepth::CQE_DEPTH_DVPP_GRP)) {
         // 16384U = 64(task num of each stream) * 256(stream num of dvpp grp)
@@ -2341,7 +2341,7 @@ rtError_t NpuDriver::LogicCqReportV2(
     RT_LOG(RT_LOG_DEBUG, "logic_cq real cnt=%u", realCnt);
     for (uint32_t i = 0U; i < realCnt; i++) {
         if (rtInstance->ChipIsHaveStars()) {
-            const rtLogicCqReport_t& cqe = (RtPtrToPtr<rtLogicCqReport_t*>(report))[i];
+            const rtCqReport_t& cqe = (RtPtrToPtr<rtCqReport_t*>(report))[i];
             PrintStarsCqeInfo(cqe, waitInfo.devId, repRecvInfo.cqId);
         } else {
             const RtLogicCqReportMsg& cqe = (RtPtrToPtr<RtLogicCqReportMsg*>(report))[i];

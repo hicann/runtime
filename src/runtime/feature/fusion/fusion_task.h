@@ -23,7 +23,7 @@ std::string BuildFusionKernelTaskName(FusionTaskInfo* fusionTaskInfo);
 void DoCompleteSuccessForFusionKernelTask(TaskInfo* taskInfo, const uint32_t devId);
 void FusionKernelTaskUnInit(TaskInfo* taskInfo);
 void PrintErrorInfoForFusionKernelTask(TaskInfo* taskInfo, const uint32_t devId);
-void SetStarsResultForFusionKernelTask(TaskInfo* taskInfo, const rtLogicCqReport_t& logicCq);
+void SetStarsResultForFusionKernelTask(TaskInfo* taskInfo, const rtCqReport_t& logicCq);
 
 void ConstructAicpuSubSqeBase(
     TaskInfo* const taskInfo, rtDavidSqe_t* const davidSqe, uint32_t& sqeIndex, uint32_t aicpuIndex, uint32_t taskIdx,

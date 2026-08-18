@@ -81,7 +81,7 @@ void ToCommandBodyForDataDumpLoadInfoTask(TaskInfo* taskInfo, rtCommand_t* const
     command->u.dataDumpLoadInfoTask.length = taskInfo->u.dataDumpLoadInfoTask.length;
 }
 
-void SetStarsResultForDataDumpLoadInfoTask(TaskInfo* taskInfo, const rtLogicCqReport_t& logicCq)
+void SetStarsResultForDataDumpLoadInfoTask(TaskInfo* taskInfo, const rtCqReport_t& logicCq)
 {
     if ((logicCq.errorType & RT_STARS_EXIST_ERROR) != 0U) {
         Stream* const reportStream = GetReportStream(taskInfo->stream);
@@ -251,7 +251,7 @@ void ToCommandBodyForAicpuInfoLoadTask(TaskInfo* taskInfo, rtCommand_t* const co
     command->u.aicpuInfoLoadTask.length = taskInfo->u.aicpuInfoLoadTask.length;
 }
 
-void SetStarsResultForAicpuInfoLoadTask(TaskInfo* taskInfo, const rtLogicCqReport_t& logicCq)
+void SetStarsResultForAicpuInfoLoadTask(TaskInfo* taskInfo, const rtCqReport_t& logicCq)
 {
     if ((logicCq.errorType & RT_STARS_EXIST_ERROR) != 0U) {
         Stream* const reportStream = GetReportStream(taskInfo->stream);

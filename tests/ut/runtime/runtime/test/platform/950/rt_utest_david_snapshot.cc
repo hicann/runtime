@@ -99,12 +99,12 @@ static void MockRingBufferRestoreSuccess(NpuDriver* drv)
     MOCKER(ProcRingBufferTaskDavid).stubs().will(returnValue(RT_ERROR_NONE));
 }
 
-rtLogicCqReport_t g_cqReport1_snapshot;
+rtCqReport_t g_cqReport1_snapshot;
 static rtError_t Sub_LogicCqReportV2(
     NpuDriver* drv, const LogicCqWaitInfo& waitInfo, uint8_t* report, uint32_t reportCnt, uint32_t& realCnt)
 {
     realCnt = 1;
-    rtLogicCqReport_t* reportPtr = reinterpret_cast<rtLogicCqReport_t*>(report);
+    rtCqReport_t* reportPtr = reinterpret_cast<rtCqReport_t*>(report);
     g_cqReport1_snapshot.taskId = 1U;
     *reportPtr = g_cqReport1_snapshot;
 

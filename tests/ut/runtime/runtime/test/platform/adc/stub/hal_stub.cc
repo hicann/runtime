@@ -201,7 +201,7 @@ rtHostFuncCqReport_t g_CqReportMsg[MAX_DEVICE_NUM];
 rtHostFuncSqCommand_t g_SqSendMsg[MAX_DEVICE_NUM];
 
 rtLogicReport_t logicReport;
-rtLogicCqReport_t logicCqReport;
+rtCqReport_t logicCqReport;
 rtShmQuery_t vCqShmInfo[1024] = {0};
 std::map<uint32_t, uint32_t> logicCqStreamId;
 std::mutex logicMutex;

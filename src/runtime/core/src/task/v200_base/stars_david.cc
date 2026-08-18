@@ -137,7 +137,7 @@ void ConstructDavidSqeForHeadCommon(const TaskInfo* taskInfo, rtDavidSqe_t* cons
     sqe->commonSqe.sqeHeader.taskId = taskInfo->taskSn;
 }
 
-void SetStarsResultCommonForDavid(TaskInfo* taskInfo, const rtLogicCqReport_t& logicCq)
+void SetStarsResultCommonForDavid(TaskInfo* taskInfo, const rtCqReport_t& logicCq)
 {
     if ((logicCq.errorType & RT_STARS_EXIST_ERROR) != 0U) {
         if (logicCq.errorCode != TS_SUCCESS) {

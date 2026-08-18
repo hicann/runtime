@@ -519,7 +519,7 @@ void DavinciTaskUnInit(TaskInfo* taskInfo)
     }
 }
 
-void SetStarsResultForDavinciTask(TaskInfo* taskInfo, const rtLogicCqReport_t& logicCq)
+void SetStarsResultForDavinciTask(TaskInfo* taskInfo, const rtCqReport_t& logicCq)
 {
     if ((taskInfo->type == TS_TASK_TYPE_KERNEL_AICPU) && (logicCq.errorCode == AE_STATUS_TASK_ABORT)) {
         return;

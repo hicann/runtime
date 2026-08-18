@@ -187,7 +187,7 @@ void StarsV2DavinciTaskUnInit(TaskInfo* taskInfo)
     }
 }
 
-static void MapAicpuErrorCodeForFastRecovery(TaskInfo* taskInfo, const rtLogicCqReport_t& logicCq)
+static void MapAicpuErrorCodeForFastRecovery(TaskInfo* taskInfo, const rtCqReport_t& logicCq)
 {
     taskInfo->errorCode = TS_ERROR_AICPU_EXCEPTION;
     Stream* const stream = taskInfo->stream;
@@ -229,7 +229,7 @@ static void MapAicpuErrorCodeForFastRecovery(TaskInfo* taskInfo, const rtLogicCq
     }
 }
 
-static void SetStarsResultByErrorType(TaskInfo* taskInfo, const rtLogicCqReport_t& logicCq)
+static void SetStarsResultByErrorType(TaskInfo* taskInfo, const rtCqReport_t& logicCq)
 {
     if ((logicCq.errorType & RT_STARS_EXIST_ERROR) == 0U) {
         return;
@@ -270,7 +270,7 @@ static void SetStarsResultByErrorType(TaskInfo* taskInfo, const rtLogicCqReport_
     }
 }
 
-void StarsV2SetStarsResultForDavinciTask(TaskInfo* taskInfo, const rtLogicCqReport_t& logicCq)
+void StarsV2SetStarsResultForDavinciTask(TaskInfo* taskInfo, const rtCqReport_t& logicCq)
 {
     if (taskInfo->type == TS_TASK_TYPE_KERNEL_AICPU) {
         RT_LOG(RT_LOG_DEBUG, "AI CPU Kernel task happen error, retCode=%#x.", logicCq.errorCode);

@@ -32,7 +32,7 @@ public:
     static uint16_t GetAicpuDefaultKernelCredit(const Device* const dev);
 
     static void UpdateAicpuTimeoutStateOnCqeReport(
-        Device* const dev, const rtLogicCqReport_t& logicCq, const TaskInfo* const reportTask,
+        Device* const dev, const rtCqReport_t& logicCq, const TaskInfo* const reportTask,
         const TaskInfo* const faultTaskPtr);
 
     static void CheckAndStopAicpuProcess(Device* const dev);

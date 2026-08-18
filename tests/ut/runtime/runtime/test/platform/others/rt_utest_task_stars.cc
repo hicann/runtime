@@ -129,7 +129,7 @@ TEST_F(StarsTaskTest, DoCompleteStarsError_david)
     ToConstructSqe(&task, &sqe);
     uint32_t errorcode = 10;
 
-    rtLogicCqReport_t wait_cqe = {};
+    rtCqReport_t wait_cqe = {};
     wait_cqe.errorType = 1U;
     wait_cqe.errorCode = 1U;
 
@@ -153,7 +153,7 @@ TEST_F(StarsTaskTest, DoCompleteStarsError_david)
     TaskInfo execTask = {};
     execTask.stream = stream;
     ModelExecuteTaskInit(&execTask, model, 0, 0);
-    rtLogicCqReport_t cqe = {};
+    rtCqReport_t cqe = {};
     cqe.errorType = 1U;
     SetStarsResult(&execTask, cqe);
 
