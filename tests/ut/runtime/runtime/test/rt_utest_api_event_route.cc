@@ -27,6 +27,48 @@ using namespace testing;
 namespace {
 class ApiEventRouteStub : public ApiEvent {
 public:
+    rtError_t GetEventID(Event* const evt, uint32_t* const evtId) override
+    {
+        UNUSED(evt);
+        UNUSED(evtId);
+        return RT_ERROR_FEATURE_NOT_SUPPORT;
+    }
+
+    rtError_t EventQuery(Event* const evt) override
+    {
+        UNUSED(evt);
+        return RT_ERROR_FEATURE_NOT_SUPPORT;
+    }
+
+    rtError_t EventQueryStatus(Event* const evt, rtEventStatus_t* const status) override
+    {
+        UNUSED(evt);
+        UNUSED(status);
+        return RT_ERROR_FEATURE_NOT_SUPPORT;
+    }
+
+    rtError_t EventQueryWaitStatus(Event* const evt, rtEventWaitStatus_t* const status) override
+    {
+        UNUSED(evt);
+        UNUSED(status);
+        return RT_ERROR_FEATURE_NOT_SUPPORT;
+    }
+
+    rtError_t EventElapsedTime(float32_t* const retTime, Event* const startEvt, Event* const endEvt) override
+    {
+        UNUSED(retTime);
+        UNUSED(startEvt);
+        UNUSED(endEvt);
+        return RT_ERROR_FEATURE_NOT_SUPPORT;
+    }
+
+    rtError_t EventGetTimeStamp(uint64_t* const retTime, Event* const evt) override
+    {
+        UNUSED(retTime);
+        UNUSED(evt);
+        return RT_ERROR_FEATURE_NOT_SUPPORT;
+    }
+
     rtError_t IpcOpenEventHandle(rtIpcEventHandle_t* handle, IpcEvent** const event) override
     {
         isOpenCalled_ = true;

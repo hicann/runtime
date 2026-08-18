@@ -262,6 +262,7 @@ set(libruntime_v200_v201_common_src_files
     ${RUNTIME_FEATURE_DIR}/aclgraph/v100/api_impl_capture_event.cc
     ${RUNTIME_API_DIR}/impl/api_impl_mbuf.cc
     ${RUNTIME_API_DIR}/impl/api_impl_event.cc
+    ${RUNTIME_API_DIR}/impl/api_impl_event_common.cc
     ${RUNTIME_CORE_DIR}/src/uvm/uvm_callback.cc
     ${RUNTIME_CORE_DIR}/src/context/context.cc
     ${RUNTIME_CORE_DIR}/src/device/device.cc

@@ -70,6 +70,53 @@ void* NothrowNewFailForApiEvent(size_t size, const std::nothrow_t& tag)
     UNUSED(tag);
     return nullptr;
 }
+
+class ApiEventTestEvent : public Event {
+public:
+    ApiEventTestEvent() : Event(nullptr, RT_EVENT_DEFAULT, nullptr) {}
+
+    rtError_t Query() override
+    {
+        isQueryCalled = true;
+        return RT_ERROR_NONE;
+    }
+
+    rtError_t QueryEventStatus(rtEventStatus_t* const status) override
+    {
+        UNUSED(status);
+        isQueryStatusCalled = true;
+        return RT_ERROR_NONE;
+    }
+
+    rtError_t QueryEventWaitStatus(const bool disableThread, bool& waitFlag) override
+    {
+        UNUSED(disableThread);
+        isQueryWaitStatusCalled = true;
+        waitFlag = true;
+        return RT_ERROR_NONE;
+    }
+
+    rtError_t ElapsedTime(float32_t* const timeInterval, Event* const base) override
+    {
+        UNUSED(timeInterval);
+        UNUSED(base);
+        isElapsedTimeCalled = true;
+        return RT_ERROR_NONE;
+    }
+
+    rtError_t GetTimeStamp(uint64_t* const recTimestamp) override
+    {
+        UNUSED(recTimestamp);
+        isGetTimeStampCalled = true;
+        return RT_ERROR_NONE;
+    }
+
+    bool isQueryCalled = false;
+    bool isQueryStatusCalled = false;
+    bool isQueryWaitStatusCalled = false;
+    bool isElapsedTimeCalled = false;
+    bool isGetTimeStampCalled = false;
+};
 } // namespace
 
 extern bool g_init_platform_info_flag;
@@ -1939,6 +1986,58 @@ TEST_F(ApiImplTest, rtSetDeviceWithFlags_04)
     rtError_t error;
     error = rtSetDeviceWithFlags(100, 2);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+}
+
+TEST_F(ApiImplTest, api_event_query_invalid_parameter)
+{
+    ApiImplEvent impl;
+    Event event(nullptr, RT_EVENT_DEFAULT, nullptr);
+    uint32_t eventId = 0U;
+    rtEventStatus_t eventStatus = RT_EVENT_INIT;
+    rtEventWaitStatus_t waitStatus = EVENT_STATUS_NOT_READY;
+    float32_t elapsedTime = 0.0F;
+    uint64_t timeStamp = 0U;
+
+    EXPECT_EQ(impl.GetEventID(nullptr, &eventId), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(impl.GetEventID(&event, nullptr), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(impl.EventQuery(nullptr), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(impl.EventQueryStatus(nullptr, &eventStatus), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(impl.EventQueryStatus(&event, nullptr), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(impl.EventQueryWaitStatus(nullptr, &waitStatus), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(impl.EventQueryWaitStatus(&event, nullptr), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(impl.EventElapsedTime(nullptr, &event, &event), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(impl.EventElapsedTime(&elapsedTime, nullptr, &event), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(impl.EventElapsedTime(&elapsedTime, &event, nullptr), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(impl.EventGetTimeStamp(nullptr, &event), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(impl.EventGetTimeStamp(&timeStamp, nullptr), RT_ERROR_INVALID_VALUE);
+}
+
+TEST_F(ApiImplTest, api_event_query_success)
+{
+    ApiImplEvent impl;
+    ApiEventTestEvent startEvent;
+    ApiEventTestEvent endEvent;
+    startEvent.SetEventId(7);
+    uint32_t eventId = 0U;
+    rtEventStatus_t eventStatus = RT_EVENT_RECORDED;
+    rtEventWaitStatus_t waitStatus = EVENT_STATUS_NOT_READY;
+    float32_t elapsedTime = 0.0F;
+    uint64_t timeStamp = 0U;
+
+    EXPECT_EQ(impl.GetEventID(&startEvent, &eventId), RT_ERROR_NONE);
+    EXPECT_EQ(eventId, 7U);
+    EXPECT_EQ(impl.EventQuery(&startEvent), RT_ERROR_NONE);
+    EXPECT_EQ(impl.EventQueryStatus(&startEvent, &eventStatus), RT_ERROR_NONE);
+    EXPECT_EQ(eventStatus, RT_EVENT_INIT);
+    EXPECT_EQ(impl.EventQueryWaitStatus(&startEvent, &waitStatus), RT_ERROR_NONE);
+    EXPECT_EQ(waitStatus, EVENT_STATUS_COMPLETE);
+    EXPECT_EQ(impl.EventElapsedTime(&elapsedTime, &startEvent, &endEvent), RT_ERROR_NONE);
+    EXPECT_EQ(impl.EventGetTimeStamp(&timeStamp, &startEvent), RT_ERROR_NONE);
+    EXPECT_TRUE(startEvent.isQueryCalled);
+    EXPECT_TRUE(startEvent.isQueryStatusCalled);
+    EXPECT_TRUE(startEvent.isQueryWaitStatusCalled);
+    EXPECT_TRUE(endEvent.isElapsedTimeCalled);
+    EXPECT_TRUE(startEvent.isGetTimeStampCalled);
 }
 
 TEST_F(ApiImplTest, ipc_open_event_handle_invalid_parameter)

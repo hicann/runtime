@@ -19,6 +19,12 @@ namespace runtime {
 
 class ApiImplEvent : public ApiEvent {
 public:
+    rtError_t GetEventID(Event* const evt, uint32_t* const evtId) override;
+    rtError_t EventQuery(Event* const evt) override;
+    rtError_t EventQueryStatus(Event* const evt, rtEventStatus_t* const status) override;
+    rtError_t EventQueryWaitStatus(Event* const evt, rtEventWaitStatus_t* const status) override;
+    rtError_t EventElapsedTime(float32_t* const retTime, Event* const startEvt, Event* const endEvt) override;
+    rtError_t EventGetTimeStamp(uint64_t* const retTime, Event* const evt) override;
     rtError_t IpcOpenEventHandle(rtIpcEventHandle_t* handle, IpcEvent** const event) override;
     rtError_t IpcGetEventHandle(IpcEvent* const evt, rtIpcEventHandle_t* handle) override;
 };
