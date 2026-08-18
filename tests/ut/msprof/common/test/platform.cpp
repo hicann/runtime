@@ -841,7 +841,7 @@ TEST_F(COMMON_PLATFORM_TEST, DavidPlatformTest) {
 
     pmuType = "Memory";
     EXPECT_EQ(PROFILING_SUCCESS, platform->GetAicoreEvents(pmuType, aicEvent));
-    EXPECT_EQ("0x400,0x401,0x56f,0x571,0x570,0x572,0x707,0x709", aicEvent);
+    EXPECT_EQ("0x422,0x423,0x56f,0x571,0x570,0x572,0x707,0x709", aicEvent);
 
     pmuType = "MemoryL0";
     EXPECT_EQ(PROFILING_SUCCESS, platform->GetAicoreEvents(pmuType, aicEvent));
@@ -941,7 +941,7 @@ TEST_F(COMMON_PLATFORM_TEST, DavidV121PlatformTest) {
 
     pmuType = "Memory";
     EXPECT_EQ(PROFILING_SUCCESS, platform->GetAicoreEvents(pmuType, aicEvent));
-    EXPECT_EQ("0x400,0x401,0x56f,0x571,0x570,0x572,0x707,0x709", aicEvent);
+    EXPECT_EQ("0x422,0x423,0x56f,0x571,0x570,0x572,0x707,0x709", aicEvent);
 
     pmuType = "MemoryL0";
     EXPECT_EQ(PROFILING_SUCCESS, platform->GetAicoreEvents(pmuType, aicEvent));

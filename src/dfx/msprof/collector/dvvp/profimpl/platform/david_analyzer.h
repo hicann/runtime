@@ -33,7 +33,7 @@ private:
     {
         BaseAnalyzer::aicPmuMap_["PipeUtilization"] = {"0x501", "0x301", "0x1",  "0x701", "0x202",
                                                        "0x203", "0x34",  "0x35", "0x714"};
-        BaseAnalyzer::aicPmuMap_["Memory"] = {"0x400", "0x401", "0x56f", "0x571", "0x570", "0x572", "0x707", "0x709"};
+        BaseAnalyzer::aicPmuMap_["Memory"] = {"0x422", "0x423", "0x56f", "0x571", "0x570", "0x572", "0x707", "0x709"};
         BaseAnalyzer::aicPmuMap_["MemoryL0"] = {"0x304", "0x703", "0x306", "0x705", "0x712", "0x30a", "0x308"};
         BaseAnalyzer::aicPmuMap_["MemoryUB"] = {"0x3", "0x5", "0x70c", "0x206", "0x204", "0x571", "0x572"};
         BaseAnalyzer::aicPmuMap_["ArithmeticUtilization"] = {"0x323", "0x324"};
@@ -101,12 +101,12 @@ private:
     }
     void AdaptDavidMemFuncMap()
     {
-        BaseAnalyzer::pmuFuncMap_["0x400"] = {
+        BaseAnalyzer::pmuFuncMap_["0x422"] = {
             "main_mem_read_bw(GB/s)",
             &pmuCalculator_->CalculateWithFreq,
             PmuCalculationType::WITH_FREQ,
             {PIPE_TWO_THREE, SCALAR_EIGHT}};
-        BaseAnalyzer::pmuFuncMap_["0x401"] = {
+        BaseAnalyzer::pmuFuncMap_["0x423"] = {
             "main_mem_write_bw(GB/s)",
             &pmuCalculator_->CalculateWithFreq,
             PmuCalculationType::WITH_FREQ,
