@@ -133,7 +133,10 @@ rtError_t AicpuTimeoutManager::TryCloseAicpuMonitor(Device* const dev)
         return ret;
     }
     if (!isSupported) {
-        RT_LOG(RT_LOG_INFO, "CLOSE_AICPU_MONITOR unsupported, keep AI CPU self-monitor, deviceId=%u", devId);
+        RT_LOG(
+            RT_LOG_INFO,
+            "The CloseAicpuMonitor kernel is not supported. AI CPU self-monitoring remains enabled, deviceId=%u.",
+            devId);
         return RT_ERROR_NONE;
     }
 

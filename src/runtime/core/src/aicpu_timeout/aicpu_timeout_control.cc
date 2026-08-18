@@ -91,8 +91,10 @@ rtError_t AicpuTimeoutControl::CloseAicpuMonitor(const Device* const dev, bool& 
     }
 
     if (result.retCode != 0U) {
-        RT_LOG(RT_LOG_ERROR, "CloseAicpuMonitor rejected by AI CPU, deviceId=%u, retCode=%u", devId, result.retCode);
-        return RT_ERROR_INVALID_VALUE;
+        RT_LOG_CALL_MSG(
+            ERR_MODULE_AICPU, "Failed to close the AI CPU timeout monitor on device ID %u. The result code is %u.",
+            devId, result.retCode);
+        return RT_ERROR_AICPU_INTERNAL_ERROR;
     }
 
     closed = true;

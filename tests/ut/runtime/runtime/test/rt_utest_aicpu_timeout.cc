@@ -633,7 +633,7 @@ TEST_F(AicpuTimeoutTest, CloseMonitorRequiresDeviceToWriteSuccess)
     g_allocResults = {{RT_ERROR_NONE, configBuffer_.data()}};
     bool closed = true;
 
-    EXPECT_EQ(AicpuTimeoutControl::CloseAicpuMonitor(&device_, closed), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(AicpuTimeoutControl::CloseAicpuMonitor(&device_, closed), RT_ERROR_AICPU_INTERNAL_ERROR);
     EXPECT_FALSE(closed);
     EXPECT_EQ(g_freeCount, 1U);
 }
