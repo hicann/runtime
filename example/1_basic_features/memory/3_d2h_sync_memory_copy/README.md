@@ -44,6 +44,7 @@ bash run.sh
     - 调用 `aclrtResetDeviceForce` 接口强制复位当前运算的 Device，回收 Device 上的资源。
 - Stream 管理
     - 调用 `aclrtCreateStream` 接口创建 Stream。
+    - 调用 `aclrtSynchronizeStream` 接口阻塞等待 Stream 上任务完成，确保内核写操作在 D2H 拷贝前完成。
     - 调用 `aclrtDestroyStreamForce` 接口强制销毁 Stream，丢弃所有任务。
 - 内存管理
     - 调用 `aclrtMallocHost` 接口申请 Host 上的内存。

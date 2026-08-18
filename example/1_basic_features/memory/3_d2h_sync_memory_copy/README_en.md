@@ -46,6 +46,7 @@ The key functionality points and their corresponding APIs in this sample are as 
     - Call `aclrtResetDeviceForce` to forcibly reset the current Device and reclaim Device resources.
 - Stream Management
     - Call `aclrtCreateStream` to create a Stream.
+    - Call `aclrtSynchronizeStream` to block and wait for tasks on the Stream to complete, ensuring the kernel write is finished before D2H copy.
     - Call `aclrtDestroyStreamForce` to forcibly destroy a Stream and discard all tasks.
 - Memory Management
     - Call `aclrtMallocHost` to allocate memory on the Host.

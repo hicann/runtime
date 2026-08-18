@@ -41,6 +41,11 @@ int32_t main()
     WriteDo(blockDim, stream, devPtrB, writeValue);
     INFO_LOG("Write the data %d to the virtual memory %p", writeValue, devPtrB);
 
+    // Synchronize the stream to ensure the kernel write is complete before memcpy.
+    // aclrtMemcpy does not perform implicit stream synchronization, so without this
+    // the D2H copy may race with the async kernel write and read stale (zero) data.
+    CHECK_ERROR(aclrtSynchronizeStream(stream));
+
     // Copy memory from address devPtrB to address hostPtrA synchronously
     CHECK_ERROR(aclrtMemcpy(hostPtrA, size, devPtrB, size, ACL_MEMCPY_DEVICE_TO_HOST));
     INFO_LOG("Copy memory from memory %p to memory %p", devPtrB, hostPtrA);
