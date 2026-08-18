@@ -27,7 +27,8 @@ rtError_t ApiImpl::StreamBeginCapture(Stream* const stm, const rtStreamCaptureMo
 {
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(stm, curCtx, RT_ERROR_STREAM_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        stm, curCtx, RT_ERROR_STREAM_CONTEXT, "Starting capturing tasks delivered to a stream");
     COND_RETURN_AND_MSG_OUTER(
         stm->Model_() != nullptr, RT_ERROR_STREAM_MODEL, ErrorCode::EE1017, "Stream begin capture", "stream",
         "Stream " + std::to_string(stm->Id_()) + " is already bound to model " + std::to_string(stm->Model_()->Id_()));
@@ -51,7 +52,8 @@ rtError_t ApiImpl::StreamEndCapture(Stream* const stm, Model** const captureMdl)
     }
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(stm, curCtx, RT_ERROR_STREAM_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        stm, curCtx, RT_ERROR_STREAM_CONTEXT, "Ending the capture of a stream");
     COND_RETURN_AND_MSG_OUTER(
         stm->Model_() != nullptr, RT_ERROR_STREAM_MODEL, ErrorCode::EE1017, "Stream end capture", "stream",
         "Stream " + std::to_string(stm->Id_()) + " is already bound to model " + std::to_string(stm->Model_()->Id_()));
@@ -77,7 +79,8 @@ rtError_t ApiImpl::StreamBeginTaskUpdate(Stream* const stm, TaskGroup* handle)
 {
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(stm, curCtx, RT_ERROR_STREAM_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        stm, curCtx, RT_ERROR_STREAM_CONTEXT, "Marking the start of the task to be updated");
     return curCtx->StreamBeginTaskUpdate(stm, handle);
 }
 
@@ -85,7 +88,8 @@ rtError_t ApiImpl::StreamEndTaskUpdate(Stream* const stm)
 {
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(stm, curCtx, RT_ERROR_STREAM_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        stm, curCtx, RT_ERROR_STREAM_CONTEXT, "Marking the end of the task to be updated");
     return curCtx->StreamEndTaskUpdate(stm);
 }
 
@@ -118,7 +122,8 @@ rtError_t ApiImpl::ModelGetNodes(const Model* const mdl, uint32_t* const num)
 {
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_MODEL(mdl, curCtx, RT_ERROR_MODEL_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_MODEL_WITH_FUNC_DESC(
+        mdl, curCtx, RT_ERROR_MODEL_CONTEXT, "Obtaining model node information");
 
     return curCtx->ModelGetNodes(mdl, num);
 }
@@ -127,7 +132,8 @@ rtError_t ApiImpl::ModelDebugDotPrint(const Model* const mdl)
 {
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_MODEL(mdl, curCtx, RT_ERROR_MODEL_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_MODEL_WITH_FUNC_DESC(
+        mdl, curCtx, RT_ERROR_MODEL_CONTEXT, "Exporting the model running instance information in DOT format");
 
     return curCtx->ModelDebugDotPrint(mdl);
 }
@@ -136,7 +142,8 @@ rtError_t ApiImpl::ModelDebugJsonPrint(const Model* const mdl, const char* path,
 {
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_MODEL(mdl, curCtx, RT_ERROR_MODEL_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_MODEL_WITH_FUNC_DESC(
+        mdl, curCtx, RT_ERROR_MODEL_CONTEXT, "Exporting the model running instance information in JSON format");
 
     return curCtx->ModelDebugJsonPrint(mdl, path, flags);
 }
@@ -145,11 +152,13 @@ rtError_t ApiImpl::StreamAddToModel(Stream* const stm, Model* const captureMdl)
 {
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(stm, curCtx, RT_ERROR_STREAM_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        stm, curCtx, RT_ERROR_STREAM_CONTEXT, "Binding a model running instance to a stream");
     COND_RETURN_AND_MSG_OUTER(
         stm->Model_() != nullptr, RT_ERROR_STREAM_MODEL, ErrorCode::EE1017, "rtStreamAddToModel", "stream",
         "Stream " + std::to_string(stm->Id_()) + " is already bound to model " + std::to_string(stm->Model_()->Id_()));
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_MODEL(captureMdl, curCtx, RT_ERROR_MODEL_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_MODEL_WITH_FUNC_DESC(
+        captureMdl, curCtx, RT_ERROR_MODEL_CONTEXT, "Binding a model running instance to a stream");
     COND_RETURN_AND_MSG_OUTER(
         (stm == curCtx->DefaultStream_()), RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1017, "rtStreamAddToModel",
         "stream", RtFmtMsg("The default stream (stream_id=%d) cannot be used in the ACL Graph", stm->Id_()));
@@ -170,7 +179,8 @@ rtError_t ApiImpl::StreamBeginTaskGrp(Stream* const stm)
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
 
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(stm, curCtx, RT_ERROR_STREAM_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        stm, curCtx, RT_ERROR_STREAM_CONTEXT, "Marking the start of a task group");
     return curCtx->StreamBeginTaskGrp(stm);
 }
 
@@ -179,7 +189,8 @@ rtError_t ApiImpl::StreamEndTaskGrp(Stream* const stm, TaskGroup** const handle)
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
 
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(stm, curCtx, RT_ERROR_STREAM_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        stm, curCtx, RT_ERROR_STREAM_CONTEXT, "Marking the end of a task group");
     return curCtx->StreamEndTaskGrp(stm, handle);
 }
 
@@ -193,7 +204,8 @@ rtError_t ApiImpl::ModelCondHandleCreate(
         "modelRI", RtFmtMsg("ModelRI (model_id=%d) is not in the capture stage", mdl->Id_()));
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_MODEL(mdl, curCtx, RT_ERROR_MODEL_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_MODEL_WITH_FUNC_DESC(
+        mdl, curCtx, RT_ERROR_MODEL_CONTEXT, "Conditional handle creation");
     rtError_t error = CheckCaptureModelSupportCondOp(curCtx->Device_());
     COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
 
@@ -233,7 +245,8 @@ rtError_t ApiImpl::StreamAddCondTaskParasCheck(rtCondTaskParams params, Stream* 
 
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(stm, curCtx, RT_ERROR_STREAM_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        stm, curCtx, RT_ERROR_STREAM_CONTEXT, "Verifying the parameters required by a conditional task");
     COND_RETURN_AND_MSG_OUTER(
         !stm->IsCapturing(), RT_ERROR_STREAM_NOT_CAPTURED, ErrorCode::EE1018, "rtStreamAddCondTask",
         RtFmtMsg("Stream (stream_id=%d) must be in the capture stage before adding a condition task", stm->Id_()));

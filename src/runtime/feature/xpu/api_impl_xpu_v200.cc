@@ -30,7 +30,8 @@ rtError_t ApiImplDavid::XpuProfilingCommandHandle(uint32_t type, void* data, uin
     NULL_PTR_RETURN_MSG(data, RT_ERROR_INVALID_VALUE);
 
     if (len != sizeof(rtProfCommandHandle_t)) {
-        RT_LOG_OUTER_MSG_INVALID_PARAM(len, sizeof(rtProfCommandHandle_t));
+        RT_LOG_OUTER_MSG_INVALID_PARAM_WITH_DESC(
+            "Processing the profiling control command", len, sizeof(rtProfCommandHandle_t));
         return RT_ERROR_INVALID_VALUE;
     }
 

@@ -17,9 +17,11 @@ namespace cce {
 namespace runtime {
 rtError_t ApiErrorDecorator::SetXpuDevice(const rtXpuDevType devType, const uint32_t devId)
 {
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(
-        devType != RT_DEV_TYPE_DPU, RT_ERROR_INVALID_VALUE, devType, "RT_DEV_TYPE_DPU(0)");
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(devId != 0U, RT_ERROR_DEVICE_ID, devId, "0");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+        devType != RT_DEV_TYPE_DPU, RT_ERROR_INVALID_VALUE, "Setting the extended device to be used", devType,
+        "RT_DEV_TYPE_DPU(0)");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+        devId != 0U, RT_ERROR_DEVICE_ID, "Setting the extended device to be used", devId, "0");
     const bool isHaveDevice = Runtime::Instance()->HaveDevice();
     uint32_t runMode = RT_RUN_MODE_RESERVED;
     (void)drvGetPlatformInfo(&runMode);
@@ -36,9 +38,11 @@ rtError_t ApiErrorDecorator::SetXpuDevice(const rtXpuDevType devType, const uint
 
 rtError_t ApiErrorDecorator::ResetXpuDevice(const rtXpuDevType devType, const uint32_t devId)
 {
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(
-        devType != RT_DEV_TYPE_DPU, RT_ERROR_INVALID_VALUE, devType, "RT_DEV_TYPE_DPU(0)");
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(devId != 0U, RT_ERROR_DEVICE_ID, devId, "0");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+        devType != RT_DEV_TYPE_DPU, RT_ERROR_INVALID_VALUE, "Resetting the extended device", devType,
+        "RT_DEV_TYPE_DPU(0)");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+        devId != 0U, RT_ERROR_DEVICE_ID, "Resetting the extended device", devId, "0");
     return impl_->ResetXpuDevice(devType, devId);
 }
 

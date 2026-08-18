@@ -146,8 +146,8 @@ rtError_t BinaryLoader::ParseLoadOptions()
             const rtError_t ret = SetCpuBinInfo(loadOptions_->options[idx].value);
             ERROR_RETURN(ret, "set cpu bin info failed! ret=%#x", ret);
         } else {
-            RT_LOG_OUTER_MSG_WITH_FUNC(
-                ErrorCode::EE1003,
+            RT_LOG_OUTER_MSG_WITH_FUNC_DESC(
+                ErrorCode::EE1003, "Parsing the loading options of the operator binary data",
                 (optionId == RT_LOAD_BINARY_OPT_MAX) ? "LOAD_BINARY_OPT_MAX(4)" :
                                                        RtFmtMsg("UNKNOWN(%d)", static_cast<int32_t>(optionId)),
                 "optionId",
@@ -204,7 +204,8 @@ rtError_t BinaryLoader::SetCpuBinInfo(const rtLoadBinaryOptionValue_t& option)
             break;
         default:
             // mode range only support [0, 1, 2]
-            RT_LOG_OUTER_MSG_INVALID_PARAM(mode, "[0, 2]");
+            RT_LOG_OUTER_MSG_INVALID_PARAM_WITH_DESC(
+                "Setting the binary loading information of an AI CPU operator", mode, "[0, 2]");
             return RT_ERROR_INVALID_VALUE;
     }
 

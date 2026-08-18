@@ -187,7 +187,8 @@ rtError_t ApiImpl::StreamTaskClean(Stream* const stm)
 {
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(stm, curCtx, RT_ERROR_STREAM_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        stm, curCtx, RT_ERROR_STREAM_CONTEXT, "Clearing tasks in a stream");
     return stm->StreamTaskClean();
 }
 
@@ -218,7 +219,8 @@ rtError_t ApiImpl::FftsPlusTaskLaunch(
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     Stream* const curStm = (stm == nullptr) ? curCtx->DefaultStream_() : stm;
     NULL_STREAM_PTR_RETURN_MSG(curStm);
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(curStm, curCtx, RT_ERROR_STREAM_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        curStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Function Flow Task Scheduler (FFTS) Plus task delivery");
 
     return curCtx->FftsPlusTaskLaunch(fftsPlusTaskInfo, curStm, flag);
 }
@@ -234,7 +236,8 @@ rtError_t ApiImpl::RDMASend(const uint32_t sqIndex, const uint32_t wqeIndex, Str
         NULL_STREAM_PTR_RETURN_MSG(curStm);
     }
 
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(curStm, curCtx, RT_ERROR_STREAM_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        curStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Delivering an RDMA Send task");
 
     return curCtx->RDMASend(sqIndex, wqeIndex, curStm);
 }
@@ -250,7 +253,8 @@ rtError_t ApiImpl::RdmaDbSend(const uint32_t dbIndex, const uint64_t dbInfo, Str
         NULL_STREAM_PTR_RETURN_MSG(curStm);
     }
 
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(curStm, curCtx, RT_ERROR_STREAM_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        curStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Delivering an RDMA Doorbell task");
 
     return curCtx->RdmaDbSend(dbIndex, dbInfo, curStm);
 }
@@ -431,7 +435,9 @@ rtError_t ApiImpl::MemsetD32Async(
             curStm = curCtx->DefaultStream_();
             NULL_STREAM_PTR_RETURN_MSG(curStm);
         }
-        COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(curStm, curCtx, RT_ERROR_STREAM_CONTEXT);
+        COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+            curStm, curCtx, RT_ERROR_STREAM_CONTEXT,
+            "Setting the memory content to a specified 32-bit unsigned integer value asynchronously");
         return MemsetD32OnDevice(dst, destMax, value, count, curStm, true, attr.location.id);
     }
 }
@@ -441,7 +447,7 @@ rtError_t ApiImpl::SetGroup(const int32_t groupId)
     const rtChipType_t chipType = Runtime::Instance()->GetChipType();
     if (!IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_DEVICE_GROUP)) {
         RT_LOG(RT_LOG_ERROR, "Device groups are not supported on chipType=%d", chipType);
-        RT_LOG_OUTER_MSG_WITH_FUNC_DESC(ErrorCode::EE1005, "Specifying the group used for the current operation");
+        RT_LOG_OUTER_MSG_WITH_FUNC_DESC(ErrorCode::EE1005, "specifying the group used for the current operation");
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
     Context* const curCtx = CurrentContext();
@@ -455,7 +461,7 @@ rtError_t ApiImpl::GetGroupCount(uint32_t* const cnt)
     const rtChipType_t chipType = Runtime::Instance()->GetChipType();
     if (!IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_DEVICE_GROUP)) {
         RT_LOG(RT_LOG_ERROR, "Device groups are not supported on chipType=%d", chipType);
-        RT_LOG_OUTER_MSG_WITH_FUNC_DESC(ErrorCode::EE1005, "Obtaining the number of available computing power groups");
+        RT_LOG_OUTER_MSG_WITH_FUNC_DESC(ErrorCode::EE1005, "obtaining the number of available computing power groups");
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
     Context* const curCtx = CurrentContext();
@@ -470,7 +476,7 @@ rtError_t ApiImpl::GetGroupInfo(const int32_t groupId, rtGroupInfo_t* const grou
     if (!IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_DEVICE_GROUP)) {
         RT_LOG(RT_LOG_ERROR, "Device groups are not supported on chipType=%d", chipType);
         RT_LOG_OUTER_MSG_WITH_FUNC_DESC(
-            ErrorCode::EE1005, "Querying the computing power information of a specified group");
+            ErrorCode::EE1005, "querying the computing power information of a specified group");
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
     Context* const curCtx = CurrentContext();
@@ -710,7 +716,7 @@ rtError_t ApiImpl::IpcCloseMemory(const void* const ptr)
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
 
     if (!curCtx->Device_()->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_IPC_MEMORY)) {
-        RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1005);
+        RT_LOG_OUTER_MSG_WITH_FUNC_DESC(ErrorCode::EE1005, "closing the IPC shared memory");
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
 
@@ -745,7 +751,7 @@ rtError_t ApiImpl::IpcCloseMemoryByName(const char_t* const name)
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
 
     if (!curCtx->Device_()->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_IPC_MEMORY)) {
-        RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1005);
+        RT_LOG_OUTER_MSG_WITH_FUNC_DESC(ErrorCode::EE1005, "closing the IPC shared memory");
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
 
@@ -825,7 +831,8 @@ rtError_t ApiImpl::DeviceL2CacheFlush()
 rtError_t ApiImpl::FlushCache(const uint64_t base, const size_t len)
 {
     RT_LOG(RT_LOG_INFO, "flush cache base=%" PRIu64 ", len=%zu.", base, len);
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(base == 0U, RT_ERROR_INVALID_VALUE, base, "not equal to 0");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+        base == 0U, RT_ERROR_INVALID_VALUE, "Cache update", base, "not equal to 0");
 
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
@@ -838,7 +845,8 @@ rtError_t ApiImpl::FlushCache(const uint64_t base, const size_t len)
 rtError_t ApiImpl::InvalidCache(const uint64_t base, const size_t len)
 {
     RT_LOG(RT_LOG_INFO, "invalid cache base=%" PRIu64 ", len=%zu.", base, len);
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(base == 0U, RT_ERROR_INVALID_VALUE, base, "not equal to 0");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+        base == 0U, RT_ERROR_INVALID_VALUE, "Invalidating cache data", base, "not equal to 0");
 
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);

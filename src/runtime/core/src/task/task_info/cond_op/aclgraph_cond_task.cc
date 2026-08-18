@@ -258,23 +258,23 @@ rtError_t CheckCondTaskParamsSize(rtCondTaskParams params)
         RT_LOG_DEBUG, "condition type=%s, condition size=%u", CondTaskTypeToString(params.type).c_str(), params.size);
     switch (params.type) {
         case RT_COND_TASK_TYPE_IF:
-            COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(
+            COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
                 (params.size != RT_COND_NUMBER_ONE) && (params.size != RT_COND_NUMBER_TWO), RT_ERROR_INVALID_VALUE,
-                "Check conditional task parameters", params.size, "1 or 2");
+                "Verifying the number of parameters of a conditional task", params.size, "1 or 2");
             return RT_ERROR_NONE;
         case RT_COND_TASK_TYPE_WHILE:
-            COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(
-                params.size != RT_COND_NUMBER_ONE, RT_ERROR_INVALID_VALUE, "Check conditional task parameters",
-                params.size, "1");
+            COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+                params.size != RT_COND_NUMBER_ONE, RT_ERROR_INVALID_VALUE,
+                "Verifying the number of parameters of a conditional task", params.size, "1");
             return RT_ERROR_NONE;
         case RT_COND_TASK_TYPE_SWITCH:
-            COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(
-                params.size == RT_COND_NUMBER_ZERO, RT_ERROR_INVALID_VALUE, "Check conditional task parameters",
-                params.size, "greater than 0");
+            COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+                params.size == RT_COND_NUMBER_ZERO, RT_ERROR_INVALID_VALUE,
+                "Verifying the number of parameters of a conditional task", params.size, "greater than 0");
             return RT_ERROR_NONE;
         default:
-            COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(
-                true, RT_ERROR_INVALID_VALUE, "Check conditional task parameters", params.type,
+            COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+                true, RT_ERROR_INVALID_VALUE, "Verifying the number of parameters of a conditional task", params.type,
                 "[0, " + std::to_string(RT_COND_TASK_TYPE_SWITCH) + "]");
     }
 }

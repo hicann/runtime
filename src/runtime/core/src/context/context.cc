@@ -152,16 +152,19 @@ rtError_t CheckMemoryParam(const rtDebugMemoryParam_t* const param)
 
 rtError_t CheckCoreParam(const uint32_t coreType, const uint32_t coreId)
 {
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(
-        (coreType != 0 && coreType != 1), RT_ERROR_INVALID_VALUE, coreType,
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+        (coreType != 0 && coreType != 1), RT_ERROR_INVALID_VALUE,
+        "Verifying the validity of the compute core type and stack type", coreType,
         "[0, " + std::to_string(RT_CORE_TYPE_AIV) + "]");
     if (coreType == 0) {
-        COND_RETURN_AND_MSG_OUTER_WITH_PARAM(
-            (coreId >= RT_AICORE_NUM_25), RT_ERROR_INVALID_VALUE, coreId,
+        COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+            (coreId >= RT_AICORE_NUM_25), RT_ERROR_INVALID_VALUE,
+            "Verifying the validity of the compute core type and stack type", coreId,
             "[0, " + std::to_string(RT_AICORE_NUM_25) + ")");
     } else {
-        COND_RETURN_AND_MSG_OUTER_WITH_PARAM(
-            (coreId >= RT_AIVECTOR_NUM_50), RT_ERROR_INVALID_VALUE, coreId,
+        COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+            (coreId >= RT_AIVECTOR_NUM_50), RT_ERROR_INVALID_VALUE,
+            "Verifying the validity of the compute core type and stack type", coreId,
             "[0, " + std::to_string(RT_AIVECTOR_NUM_50) + ")");
     }
     return RT_ERROR_NONE;
@@ -2365,7 +2368,7 @@ rtError_t Context::StartOnlineProf(Stream* const stm, const uint32_t sampleNum)
     rtError_t freeErr;
     const void* deviceMem = nullptr;
 
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
         (sampleNum == 0U) || (sampleNum > MAX_ONLINEPROF_NUM), RT_ERROR_INVALID_VALUE, "Delivering a profiling request",
         sampleNum, "(0, " + std::to_string(MAX_ONLINEPROF_NUM) + "]");
     if ((stm->Device_())->DevGetOnlineProfStart()) {
@@ -2446,7 +2449,7 @@ FREE_MEM:
 rtError_t Context::GetOnlineProfData(
     const Stream* const stm, rtProfDataInfo_t* const pProfData, const uint32_t profDataNum) const
 {
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
         (profDataNum == 0U) || (profDataNum > MAX_ONLINEPROF_NUM), RT_ERROR_INVALID_VALUE,
         "Obtaining online profile data from a specified stream", profDataNum,
         "(0, " + std::to_string(MAX_ONLINEPROF_NUM) + "]");

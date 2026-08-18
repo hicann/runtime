@@ -25,9 +25,9 @@ static constexpr pfnNanoTaskToSqe g_BufToFunc[MAX_TASK][RT_TASK_TYPE_MAX] = {
 rtError_t ConstructSqeByTaskInput(const rtTaskInput_t* const taskInput, uint32_t* taskLen)
 {
     const rtTaskBuffType_t taskBufferType = taskInput->compilerInfo.bufType;
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
         (taskBufferType >= MAX_TASK) || (taskBufferType < HWTS_STATIC_TASK_DESC), RT_ERROR_INVALID_VALUE,
-        TaskBuffTypeToString(taskBufferType), "taskBufferType",
+        "Constructing task delivery parameters", TaskBuffTypeToString(taskBufferType), "taskBufferType",
         "HWTS_STATIC_TASK_DESC(0), HWTS_DYNAMIC_TASK_DESC(1) or PARAM_TASK_INFO_DESC(2)");
 
     const rtTaskType_t type = taskInput->compilerInfo.taskType;

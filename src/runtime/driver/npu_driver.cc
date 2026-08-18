@@ -588,7 +588,7 @@ rtError_t NpuDriver::OpenIpcMem(const char_t* const name, uint64_t* const vptr, 
 rtError_t NpuDriver::GetPhyDevIdByIpcMemName(const char* name, uint32_t* const phyDevId)
 {
     COND_RETURN_AND_MSG_OUTER(
-        &halShmemInfoGet == nullptr, RT_ERROR_DRV_NOT_SUPPORT, ErrorCode::EE1015, "GetPhyDevIdByIpcMemName",
+        &halShmemInfoGet == nullptr, RT_ERROR_DRV_NOT_SUPPORT, ErrorCode::EE1015, "Obtaining the physical device ID",
         "The driver interface halShmemInfoGet does not exist.");
     struct ShmemGetInfo info {};
     const drvError_t drvRet = halShmemInfoGet(name, &info);

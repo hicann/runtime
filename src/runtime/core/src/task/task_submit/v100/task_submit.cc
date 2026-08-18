@@ -141,7 +141,7 @@ rtError_t LoadArgsInfo(TaskInfo* submitTask, Stream* stm, uint16_t taskResId)
 rtError_t AllocTaskAndSendDc(TaskInfo* submitTask, Stream* stm, uint32_t* const flipTaskId)
 {
     COND_RETURN_AND_MSG_OUTER(
-        ((stm->Flags() & RT_STREAM_CP_PROCESS_USE) != 0U), RT_ERROR_STREAM_INVALID, ErrorCode::EE1006, __func__,
+        ((stm->Flags() & RT_STREAM_CP_PROCESS_USE) != 0U), RT_ERROR_STREAM_INVALID, ErrorCode::EE1006, "Sending a task",
         "Stream flags value " + std::to_string(stm->Flags()),
         RtFmtMsg(
             "Stream (stream_id=%d) with the flag RT_STREAM_CP_PROCESS_USE(0x800U) cannot be used for kernel launch",

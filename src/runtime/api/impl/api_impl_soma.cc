@@ -72,7 +72,8 @@ rtError_t ApiImplSoma::MemPoolMallocAsync(
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
         stm, RT_ERROR_STREAM_NULL, "Allocating memory of a specified size from the memory pool");
     Context* const curCtx = Runtime::Instance()->CurrentContext();
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(stm, curCtx, RT_ERROR_STREAM_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        stm, curCtx, RT_ERROR_STREAM_CONTEXT, "Allocating memory of a specified size from the memory pool");
 
     const int32_t streamId = stm->Id_();
     RT_LOG(RT_LOG_DEBUG, "Memory allocation stream_id=%d.", streamId);
@@ -115,7 +116,8 @@ rtError_t ApiImplSoma::MemPoolFreeAsync(void* const ptr, Stream* const stm)
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
         stm, RT_ERROR_STREAM_NULL, "Asynchronously releasing memory in the memory pool");
     Context* const curCtx = Runtime::Instance()->CurrentContext();
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(stm, curCtx, RT_ERROR_STREAM_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        stm, curCtx, RT_ERROR_STREAM_CONTEXT, "Asynchronously releasing memory in the memory pool");
 
     RT_LOG(RT_LOG_DEBUG, "Free memory ptr=%#" PRIx64 ", stream_id=%d.", RtPtrToValue(ptr), stm->Id_());
 
@@ -203,7 +205,8 @@ rtError_t ApiImplSoma::SomaAicpuLaunchValidation(
         argsInfo, RT_ERROR_INVALID_VALUE, "Checking the validity of kernel function startup parameters");
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
         argsInfo->args, RT_ERROR_INVALID_VALUE, "Checking the validity of kernel function startup parameters");
-    ZERO_RETURN_AND_MSG_OUTER(argsInfo->argsSize);
+    ZERO_RETURN_AND_MSG_OUTER_WITH_FUNC_DESC(
+        argsInfo->argsSize, "Checking the validity of kernel function startup parameters");
 
     COND_RETURN_AND_MSG_OUTER(
         ((stm->Flags() & RT_STREAM_CP_PROCESS_USE) != 0U), RT_ERROR_STREAM_INVALID, ErrorCode::EE1006,

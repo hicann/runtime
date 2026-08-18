@@ -73,19 +73,25 @@ static rtError_t CheckCoreParam(const uint32_t stackType, const uint32_t coreTyp
         RT_LOG(RT_LOG_WARNING, "stackType=%u and coreType=%u is not supported.", stackType, coreType);
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(
-        ((stackType > RT_STACK_TYPE_SIMT)), RT_ERROR_INVALID_VALUE, stackType,
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+        ((stackType > RT_STACK_TYPE_SIMT)), RT_ERROR_INVALID_VALUE,
+        "Verifying the validity of the compute core type and stack type", stackType,
         "[0, " + std::to_string(RT_STACK_TYPE_SIMT) + "]");
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(
-        ((coreType > RT_CORE_TYPE_AIV)), RT_ERROR_INVALID_VALUE, coreType,
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+        ((coreType > RT_CORE_TYPE_AIV)), RT_ERROR_INVALID_VALUE,
+        "Verifying the validity of the compute core type and stack type", coreType,
         "[0, " + std::to_string(RT_CORE_TYPE_AIV) + "]");
 
     if (coreType == RT_CORE_TYPE_AIC) {
-        COND_RETURN_AND_MSG_OUTER_WITH_PARAM(
-            (coreId >= AIC_NUM_V100), RT_ERROR_INVALID_VALUE, coreId, "[0, " + std::to_string(AIC_NUM_V100) + ")");
+        COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+            (coreId >= AIC_NUM_V100), RT_ERROR_INVALID_VALUE,
+            "Verifying the validity of the compute core type and stack type", coreId,
+            "[0, " + std::to_string(AIC_NUM_V100) + ")");
     } else {
-        COND_RETURN_AND_MSG_OUTER_WITH_PARAM(
-            (coreId >= AIV_NUM_V100), RT_ERROR_INVALID_VALUE, coreId, "[0, " + std::to_string(AIV_NUM_V100) + ")");
+        COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+            (coreId >= AIV_NUM_V100), RT_ERROR_INVALID_VALUE,
+            "Verifying the validity of the compute core type and stack type", coreId,
+            "[0, " + std::to_string(AIV_NUM_V100) + ")");
     }
     return RT_ERROR_NONE;
 }

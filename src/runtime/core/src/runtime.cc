@@ -2735,7 +2735,7 @@ rtError_t Runtime::GetPrimaryCtxState(const int32_t devId, uint32_t* flags, int3
 {
     *flags = 0U; // 0 means SCHED_AUTO;
     *active = 0;
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
         (static_cast<uint32_t>(devId) >= RT_MAX_DEV_NUM || devId < 0), RT_ERROR_DEVICE_ID,
         "Obtaining the status of the default context", devId, "[0, " + std::to_string(RT_MAX_DEV_NUM) + ")");
 
@@ -2910,8 +2910,9 @@ rtError_t Runtime::ReleasePrimaryContextSlot(
 rtError_t Runtime::PrimaryContextRelease(const uint32_t devId, const bool isForceReset)
 {
     bool ret = false;
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(
-        devId >= RT_MAX_DEV_NUM, RT_ERROR_DEVICE_ID, devId, "[0, " + std::to_string(RT_MAX_DEV_NUM) + ")");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+        devId >= RT_MAX_DEV_NUM, RT_ERROR_DEVICE_ID, "Releasing the main context of the device", devId,
+        "[0, " + std::to_string(RT_MAX_DEV_NUM) + ")");
     COND_RETURN_ERROR_MSG_INNER(
         (tsNum_ == 0U) || (tsNum_ > RT_MAX_TS_NUM), RT_ERROR_CONTEXT_DEL,
         "PrimaryContextRelease failed because value %u for tsNum is invalid, valid range is [1, %u].", tsNum_,
@@ -5980,8 +5981,9 @@ rtError_t Runtime::SubscribeCallback(const uint64_t threadId, Stream* stm, void*
 
 rtError_t Runtime::SetSimdPrintFifoSize(uint32_t val)
 {
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(
-        (val < SIMD_MIN_FIFO_PRINTF_SIZE || val > MAX_FIFO_PRINTF_SIZE), RT_ERROR_INVALID_VALUE, val,
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+        (val < SIMD_MIN_FIFO_PRINTF_SIZE || val > MAX_FIFO_PRINTF_SIZE), RT_ERROR_INVALID_VALUE,
+        "Setting the size of the printf space for the AI Core in SIMD scenarios", val,
         "[" + std::to_string(SIMD_MIN_FIFO_PRINTF_SIZE) + ", " + std::to_string(MAX_FIFO_PRINTF_SIZE) + "]");
     uint32_t assignVal = (val + PRINTF_FIFO_ASSIGN - 1U) / PRINTF_FIFO_ASSIGN * PRINTF_FIFO_ASSIGN;
     printblockLen_ = assignVal;
@@ -5991,8 +5993,9 @@ rtError_t Runtime::SetSimdPrintFifoSize(uint32_t val)
 
 rtError_t Runtime::SetSimtPrintFifoSize(uint32_t val)
 {
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(
-        (val < SIMT_MIN_FIFO_PRINTF_SIZE || val > MAX_FIFO_PRINTF_SIZE), RT_ERROR_INVALID_VALUE, val,
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+        (val < SIMT_MIN_FIFO_PRINTF_SIZE || val > MAX_FIFO_PRINTF_SIZE), RT_ERROR_INVALID_VALUE,
+        "Setting the size of the printf space for the AI Core in SIMT scenarios", val,
         "[" + std::to_string(SIMT_MIN_FIFO_PRINTF_SIZE) + ", " + std::to_string(MAX_FIFO_PRINTF_SIZE) + "]");
     uint32_t assignVal = (val + PRINTF_FIFO_ASSIGN - 1U) / PRINTF_FIFO_ASSIGN * PRINTF_FIFO_ASSIGN;
     simtPrintLen_ = assignVal;

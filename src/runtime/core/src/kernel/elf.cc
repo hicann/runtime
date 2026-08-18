@@ -1819,7 +1819,8 @@ rtError_t GetFunctionMetaInfo(
     }
 
     if (length != metaInfo[0].second) {
-        RT_LOG_OUTER_MSG_INVALID_PARAM(length, metaInfo[0].second);
+        RT_LOG_OUTER_MSG_INVALID_PARAM_WITH_DESC(
+            "Obtaining the kernel function metadata from the operator binary data", length, metaInfo[0].second);
         return RT_ERROR_INVALID_VALUE;
     }
     const errno_t ret = memcpy_s(data, length, metaInfo[0].first, metaInfo[0].second);

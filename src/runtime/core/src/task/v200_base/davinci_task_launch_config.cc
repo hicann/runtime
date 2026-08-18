@@ -37,7 +37,9 @@ rtError_t GetLaunchConfigAttr(rtLaunchAttribute_t* attr, LaunchTaskCfgInfo_t* la
             break;
         case RT_LAUNCH_ATTRIBUTE_SCHEMMODE:
             if (attr->value.schemMode >= RT_SCHEM_MODE_END) {
-                RT_LOG_OUTER_MSG_INVALID_PARAM(attr->value.schemMode, "[0, " + std::to_string(RT_SCHEM_MODE_END) + ")");
+                RT_LOG_OUTER_MSG_INVALID_PARAM_WITH_DESC(
+                    "Obtaining the configuration attributes of kernel launch", attr->value.schemMode,
+                    "[0, " + std::to_string(RT_SCHEM_MODE_END) + ")");
                 error = RT_ERROR_INVALID_VALUE;
             } else {
                 launchTaskCfg->schemMode = attr->value.schemMode;
@@ -50,9 +52,10 @@ rtError_t GetLaunchConfigAttr(rtLaunchAttribute_t* attr, LaunchTaskCfgInfo_t* la
             launchTaskCfg->dumpflag = attr->value.dumpflag;
             break;
         default:
-            RT_LOG_OUTER_MSG_INVALID_PARAM(
-                attr->id, "[" + std::to_string(RT_LAUNCH_ATTRIBUTE_BLOCKDIM) + ", " +
-                              std::to_string(RT_LAUNCH_ATTRIBUTE_MAX) + ")");
+            RT_LOG_OUTER_MSG_INVALID_PARAM_WITH_DESC(
+                "Obtaining the configuration attributes of kernel launch", attr->id,
+                "[" + std::to_string(RT_LAUNCH_ATTRIBUTE_BLOCKDIM) + ", " + std::to_string(RT_LAUNCH_ATTRIBUTE_MAX) +
+                    ")");
             error = RT_ERROR_INVALID_VALUE;
             break;
     }

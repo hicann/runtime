@@ -107,7 +107,8 @@ rtError_t XpuArgManage::H2DArgCopy(const StarsArgLoaderResult* const result, voi
             ss << std::hex << "dest=0x" << RtPtrToValue(result->kerArgs) << ", src=0x" << RtPtrToValue(args) << std::dec
                << ", destMax=" << size << ", count=" << size << ".";
             RT_LOG_OUTER_MSG_IMPL(
-                ErrorCode::EE1020, __func__, "memcpy_s", retStr.c_str(), strerror(ret), ss.str().c_str());
+                ErrorCode::EE1020, "Copying kernel arguments from host to device", "memcpy_s", retStr.c_str(),
+                strerror(ret), ss.str().c_str());
             return RT_ERROR_DRV_MEMORY;
         }
     }

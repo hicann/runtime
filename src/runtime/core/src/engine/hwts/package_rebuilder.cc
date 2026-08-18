@@ -139,9 +139,9 @@ bool PackageRebuilder::PackageReportReceive(
                 "%s failed. Reason: Standard function memcpy_s failed. [Errno %d] %s. "
                 "SOP=%hu, MOP=%hu, EOP=%hu, packType=%hu, stream_id=%hu, task_id=%hu, "
                 "payLoad=0x%x, sq_id=%hu, phase=%hu, sq_head=%hu, copySize=%zu(bytes), targetSize=%zu(bytes).",
-                __func__, ret, strerror(ret), report->SOP, report->MOP, report->EOP, report->packageType, streamId,
-                report->taskID, report->payLoad, report->SQ_id, report->phase, report->SQ_head,
-                pkgBuf->len * sizeof(uint32_t), pkgLen);
+                "Resetting rebuilder report memory", ret, strerror(ret), report->SOP, report->MOP, report->EOP,
+                report->packageType, streamId, report->taskID, report->payLoad, report->SQ_id, report->phase,
+                report->SQ_head, pkgBuf->len * sizeof(uint32_t), pkgLen);
         }
 
         free(pkgBuf);

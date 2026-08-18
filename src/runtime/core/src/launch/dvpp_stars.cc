@@ -57,8 +57,9 @@ rtError_t StarsLaunch(const void* const sqe, const uint32_t sqeLen, Stream* cons
     const int32_t streamId = stm->Id_();
     uint32_t taskId;
 
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(
-        sqeLen != sizeof(rtStarsCommonSqe_t), RT_ERROR_INVALID_VALUE, sqeLen, sizeof(rtStarsCommonSqe_t));
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+        sqeLen != sizeof(rtStarsCommonSqe_t), RT_ERROR_INVALID_VALUE, "Delivering tasks to a specified stream", sqeLen,
+        sizeof(rtStarsCommonSqe_t));
     Device* const dev = stm->Device_();
     NULL_PTR_RETURN_MSG(dev, RT_ERROR_DEVICE_NULL);
     TaskInfo taskSubmit = {};

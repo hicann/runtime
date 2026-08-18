@@ -19,8 +19,9 @@ rtError_t ApiErrorDecorator::MemManagedAdvise(
 {
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
         ptr, RT_ERROR_INVALID_VALUE, "Managing the policy attributes of the unified virtual memory (UVM)");
-    ZERO_RETURN_AND_MSG_OUTER(size);
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(
+    ZERO_RETURN_AND_MSG_OUTER_WITH_FUNC_DESC(
+        size, "Managing the policy attributes of the unified virtual memory (UVM)");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
         advise > rtMemAdviseUnSetAccessedBy, RT_ERROR_INVALID_VALUE,
         "Managing the policy attributes of the unified virtual memory (UVM)", advise,
         "[0, " + std::to_string(rtMemAdviseUnSetAccessedBy) + "]");
@@ -28,7 +29,7 @@ rtError_t ApiErrorDecorator::MemManagedAdvise(
         int32_t numDev = 0;
         const rtError_t ret = impl_->GetDeviceCount(&numDev);
         ERROR_RETURN(ret, "Get device count failed.");
-        COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(
+        COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
             (location.id > (numDev - 1)) || (location.id < 0), RT_ERROR_INVALID_VALUE,
             "Managing the policy attributes of the unified virtual memory (UVM)", location.id,
             "[0, " + std::to_string(numDev - 1) + "]");
@@ -47,8 +48,8 @@ rtError_t ApiErrorDecorator::MemManagedGetAttr(
         data, RT_ERROR_INVALID_VALUE, "Querying a policy attribute value of the UVM of a specified size");
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
         ptr, RT_ERROR_INVALID_VALUE, "Querying a policy attribute value of the UVM of a specified size");
-    ZERO_RETURN_AND_MSG_OUTER(size);
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(
+    ZERO_RETURN_AND_MSG_OUTER_WITH_FUNC_DESC(size, "Querying a policy attribute value of the UVM of a specified size");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
         (attribute < rtMemRangeAttributeReadMostly) || (attribute > rtMemRangeAttributeLastPrefetchLocationId),
         RT_ERROR_INVALID_VALUE, "Querying a policy attribute value of the UVM of a specified size", attribute,
         "[" + std::to_string(rtMemRangeAttributeReadMostly) + ", " +
@@ -72,10 +73,11 @@ rtError_t ApiErrorDecorator::MemManagedGetAttrs(
         attributes, RT_ERROR_INVALID_VALUE, "Querying multiple policy attribute values of the UVM of a specified size");
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
         ptr, RT_ERROR_INVALID_VALUE, "Querying multiple policy attribute values of the UVM of a specified size");
-    ZERO_RETURN_AND_MSG_OUTER(size);
+    ZERO_RETURN_AND_MSG_OUTER_WITH_FUNC_DESC(
+        size, "Querying multiple policy attribute values of the UVM of a specified size");
 
     for (size_t i = 0U; i < numAttributes; i++) {
-        COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(
+        COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
             (attributes[i] < rtMemRangeAttributeReadMostly) ||
                 (attributes[i] > rtMemRangeAttributeLastPrefetchLocationId),
             RT_ERROR_INVALID_VALUE, "Querying multiple policy attribute values of the UVM of a specified size",
@@ -95,8 +97,8 @@ rtError_t ApiErrorDecorator::MemManagedPrefetchAsync(
 {
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
         ptr, RT_ERROR_INVALID_VALUE, "Managing the prefetching of the unified virtual memory (UVM)");
-    ZERO_RETURN_AND_MSG_OUTER(size);
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(
+    ZERO_RETURN_AND_MSG_OUTER_WITH_FUNC_DESC(size, "Managing the prefetching of the unified virtual memory (UVM)");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
         (flags != 0), RT_ERROR_INVALID_VALUE, "Managing the prefetching of the unified virtual memory (UVM)", flags,
         "equal to 0");
     Stream* curStm = Runtime::Instance()->GetCurStream(stream);
@@ -106,7 +108,7 @@ rtError_t ApiErrorDecorator::MemManagedPrefetchAsync(
         int32_t numDev = 0;
         const rtError_t ret = impl_->GetDeviceCount(&numDev);
         ERROR_RETURN_MSG_CALL(ERR_MODULE_DRV, ret, "Get device cnt failed, retCode=%#x", static_cast<uint32_t>(ret));
-        COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(
+        COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
             (location.id > (numDev - 1)) || (location.id < 0), RT_ERROR_INVALID_VALUE,
             "Managing the prefetching of the unified virtual memory (UVM)", location.id,
             "[0, " + std::to_string(numDev - 1) + "]");
@@ -132,19 +134,21 @@ rtError_t ApiErrorDecorator::MemManagedPrefetchBatchAsync(
         prefetchLocs, RT_ERROR_INVALID_VALUE, "Managing the batch prefetching of the unified virtual memory (UVM)");
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
         prefetchLocIdxs, RT_ERROR_INVALID_VALUE, "Managing the batch prefetching of the unified virtual memory (UVM)");
-    ZERO_RETURN_AND_MSG_OUTER(count);
-    ZERO_RETURN_AND_MSG_OUTER(numPrefetchLocs);
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(
+    ZERO_RETURN_AND_MSG_OUTER_WITH_FUNC_DESC(
+        count, "Managing the batch prefetching of the unified virtual memory (UVM)");
+    ZERO_RETURN_AND_MSG_OUTER_WITH_FUNC_DESC(
+        numPrefetchLocs, "Managing the batch prefetching of the unified virtual memory (UVM)");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
         (flags != 0), RT_ERROR_INVALID_VALUE, "Managing the batch prefetching of the unified virtual memory (UVM)",
         flags, "equal to 0");
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
         (numPrefetchLocs > count), RT_ERROR_INVALID_VALUE,
         "Managing the batch prefetching of the unified virtual memory (UVM)", numPrefetchLocs,
         "less than or equal to count");
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
         (prefetchLocIdxs[0] != 0), RT_ERROR_INVALID_VALUE,
         "Managing the batch prefetching of the unified virtual memory (UVM)", prefetchLocIdxs[0], "equal to 0");
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
         (prefetchLocIdxs[0] >= count), RT_ERROR_INVALID_VALUE,
         "Managing the batch prefetching of the unified virtual memory (UVM)", prefetchLocIdxs[0], "less than count");
 
@@ -181,7 +185,7 @@ rtError_t ApiErrorDecorator::MemManagedPrefetchBatchAsync(
             const rtError_t ret = impl_->GetDeviceCount(&numDev);
             ERROR_RETURN_MSG_CALL(
                 ERR_MODULE_DRV, ret, "Get device cnt failed, retCode=%#x", static_cast<uint32_t>(ret));
-            COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(
+            COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
                 (prefetchLocs[idx].id > (numDev - 1)) || (prefetchLocs[idx].id < 0), RT_ERROR_INVALID_VALUE,
                 "Managing the batch prefetching of the unified virtual memory (UVM)", prefetchLocs[idx].id,
                 "[0, " + std::to_string(numDev - 1) + "]");

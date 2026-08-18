@@ -70,9 +70,9 @@ const std::map<rtRandomNumFuncType, std::set<rtRandomNumDataType>> FUNCTYPE_DATA
 static inline rtError_t GetRandomNumDataSize(rtRandomNumDataType dataType, size_t& dataSize)
 {
     const auto iter = RANDOM_DATATYPE_SIZE_MAP.find(dataType);
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME(
-        iter == RANDOM_DATATYPE_SIZE_MAP.end(), RT_ERROR_INVALID_VALUE, RandomNumDataTypeToString(dataType), "dataType",
-        "[0, " + std::to_string(RT_RANDOM_NUM_DATATYPE_MAX) + ")");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
+        iter == RANDOM_DATATYPE_SIZE_MAP.end(), RT_ERROR_INVALID_VALUE, "Obtaining the size of random number data",
+        RandomNumDataTypeToString(dataType), "dataType", "[0, " + std::to_string(RT_RANDOM_NUM_DATATYPE_MAX) + ")");
 
     dataSize = iter->second;
 
@@ -83,12 +83,14 @@ static rtError_t CheckRandomParam(const rtRandomParaInfo_t& paramInfo, const std
 {
     UNUSED(paramName);
     // 0: value, 1: addr
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
         (paramInfo.isAddr != RANDOM_VALUE_FLAG) && (paramInfo.isAddr != RANDOM_ADDR_FLAG), RT_ERROR_INVALID_VALUE,
-        paramInfo.isAddr, std::to_string(RANDOM_VALUE_FLAG) + " or " + std::to_string(RANDOM_ADDR_FLAG));
+        "Verifying the parameters for generating a random number", paramInfo.isAddr,
+        std::to_string(RANDOM_VALUE_FLAG) + " or " + std::to_string(RANDOM_ADDR_FLAG));
 
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(
-        (paramInfo.size == 0U) || (paramInfo.size > dataSize), RT_ERROR_INVALID_VALUE, paramInfo.size,
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+        (paramInfo.size == 0U) || (paramInfo.size > dataSize), RT_ERROR_INVALID_VALUE,
+        "Verifying the parameters for generating a random number", paramInfo.size,
         "[1, " + std::to_string(dataSize) + "]");
 
     return RT_ERROR_NONE;
@@ -347,10 +349,11 @@ static rtError_t SetRandomSqeDiffInfo(
             break;
         default:
             error = RT_ERROR_INVALID_VALUE;
-            RT_LOG_OUTER_MSG_INVALID_PARAM(
-                taskInfo->randomNumFuncParaInfo.funcType, "[" +
-                                                              std::to_string(RT_RANDOM_NUM_FUNC_TYPE_DROPOUT_BITMASK) +
-                                                              ", " + std::to_string(RT_RANDOM_NUM_FUNC_TYPE_MAX) + ")");
+            RT_LOG_OUTER_MSG_INVALID_PARAM_WITH_DESC(
+                "Setting task parameters based on the random number distribution type",
+                taskInfo->randomNumFuncParaInfo.funcType,
+                "[" + std::to_string(RT_RANDOM_NUM_FUNC_TYPE_DROPOUT_BITMASK) + ", " +
+                    std::to_string(RT_RANDOM_NUM_FUNC_TYPE_MAX) + ")");
             break;
     }
 
@@ -392,19 +395,22 @@ ERROR_FREE:
 static inline rtError_t CheckDataTypeByFuncType(rtRandomNumDataType dataType, rtRandomNumFuncType funcType)
 {
     const auto iter = FUNCTYPE_DATATYPE_MAP.find(funcType);
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME(
-        iter == FUNCTYPE_DATATYPE_MAP.end(), RT_ERROR_INVALID_VALUE, RandomNumFuncTypeToString(funcType), "funcType",
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
+        iter == FUNCTYPE_DATATYPE_MAP.end(), RT_ERROR_INVALID_VALUE,
+        "Verifying the validity of the random number generation type", RandomNumFuncTypeToString(funcType), "funcType",
         "[0, " + std::to_string(RT_RANDOM_NUM_FUNC_TYPE_MAX) + ")");
 
     const auto strMapIter = FUNCTYPE_DATATYPE_STR_MAP.find(funcType);
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME(
-        strMapIter == FUNCTYPE_DATATYPE_STR_MAP.end(), RT_ERROR_INVALID_VALUE, RandomNumFuncTypeToString(funcType),
-        "funcType", "[0, " + std::to_string(RT_RANDOM_NUM_FUNC_TYPE_MAX) + ")");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
+        strMapIter == FUNCTYPE_DATATYPE_STR_MAP.end(), RT_ERROR_INVALID_VALUE,
+        "Verifying the validity of the random number generation type", RandomNumFuncTypeToString(funcType), "funcType",
+        "[0, " + std::to_string(RT_RANDOM_NUM_FUNC_TYPE_MAX) + ")");
 
     auto sets = iter->second;
     std::string dataStr = strMapIter->second;
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME(
-        sets.count(dataType) == 0U, RT_ERROR_INVALID_VALUE, RandomNumDataTypeToString(dataType), "dataType",
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
+        sets.count(dataType) == 0U, RT_ERROR_INVALID_VALUE,
+        "Verifying the validity of the random number generation type", RandomNumDataTypeToString(dataType), "dataType",
         dataStr.c_str());
 
     return RT_ERROR_NONE;

@@ -122,12 +122,6 @@
         return RET_CODE;                                     \
     }
 
-#define NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(PTR, RET_CODE, FUNC_DESC)   \
-    if (unlikely((PTR) == nullptr)) {                                        \
-        RT_LOG_OUTER_MSG_WITH_FUNC_DESC(ErrorCode::EE1004, FUNC_DESC, #PTR); \
-        return RET_CODE;                                                     \
-    }
-
 #define ZERO_RETURN_MSG(PARAM) \
     COND_RETURN_CALL_MSG_(CALL, (PARAM) == 0U, RT_ERROR_INVALID_VALUE, "Check param failed, " #PARAM " can not be 0.");
 
@@ -141,13 +135,6 @@
         return RTERRCODE;                                                 \
     }
 
-// EE1003错误码专用，带语义化函数描述
-#define COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(COND, RTERRCODE, FUNC_DESC, param, ...)              \
-    if (unlikely(COND)) {                                                                              \
-        RT_LOG_OUTER_MSG_WITH_FUNC_DESC(ErrorCode::EE1003, FUNC_DESC, (param), #param, ##__VA_ARGS__); \
-        return RTERRCODE;                                                                              \
-    }
-
 // EE1003错误码使用，value与参数名分开传入
 // value: ToString(var)等可读值表达式（运行时求值）
 // paramName: 参数名字字符串字面量（如"level"、"flag"）
@@ -155,13 +142,6 @@
     if (unlikely((COND))) {                                                                 \
         RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1003, (value), (paramName), ##__VA_ARGS__); \
         return (RTERRCODE);                                                                 \
-    }
-
-// EE1003错误码使用，带语义化函数描述，value与参数名分开传入
-#define COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_DESC(COND, RTERRCODE, FUNC_DESC, value, paramName, ...)     \
-    if (unlikely((COND))) {                                                                                   \
-        RT_LOG_OUTER_MSG_WITH_FUNC_DESC(ErrorCode::EE1003, (FUNC_DESC), (value), (paramName), ##__VA_ARGS__); \
-        return (RTERRCODE);                                                                                   \
     }
 
 // 除EE1003、EE1001之外的其他外部错误码使用
@@ -252,14 +232,6 @@
         }                                                              \
     } while (false)
 
-// EE1016 capture mode检查使用（传递自定义函数名语义化描述）
-#define CHECK_CAPTURE_MODE_SUPPORT_AND_RETURN_WITH_DESC(ctx, funcDesc) \
-    do {                                                               \
-        if (!cce::runtime::CheckCaptureModeSupport((ctx), funcDesc)) { \
-            return RT_ERROR_STREAM_CAPTURE_MODE_NOT_SUPPORT;           \
-        }                                                              \
-    } while (false)
-
 #define NULL_PTR_PROC_RETURN_ERROR_MSG_CALL(MODULE_TYPE, PTR, ERR, PROC)                    \
     if (unlikely((PTR) == nullptr)) {                                                       \
         PROC RT_LOG_CALL_MSG(MODULE_TYPE, "Check param failed, " #PTR " can not be null."); \
@@ -341,6 +313,75 @@
 #define RT_LOG_INNER_DETAIL_MSG (ErrorMessageUtils::RuntimeErrorMessage)
 
 #define NULL_STREAM_PTR_RETURN_MSG(STREAM) NULL_PTR_RETURN_MSG((STREAM), RT_ERROR_STREAM_NULL)
+
+// 语义化描述宏
+// 用于上报EE1010错误码, label归属关系校验, 带语义化函数描述
+#define COND_RETURN_AND_MSG_INVALID_CONTEXT_LABEL_WITH_FUNC_DESC(lbl, curCtx, rtErrCode, funcDesc)        \
+    if ((lbl)->Context_() != (curCtx)) {                                                                  \
+        std::string extendInfo =                                                                          \
+            RtFmtMsg("label_id=%u, label_ctx=%p, cur_ctx=%p", (lbl)->Id_(), (lbl)->Context_(), (curCtx)); \
+        RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1010, funcDesc, "label", extendInfo);                          \
+        return (rtErrCode);                                                                               \
+    }
+
+// 用于上报EE1010错误码, model的归属关系校验, 带语义化函数描述
+#define COND_RETURN_AND_MSG_INVALID_CONTEXT_MODEL_WITH_FUNC_DESC(mdl, curCtx, rtErrCode, funcDesc)        \
+    if ((mdl)->Context_() != (curCtx)) {                                                                  \
+        std::string extendInfo =                                                                          \
+            RtFmtMsg("model_id=%u, model_ctx=%p, cur_ctx=%p", (mdl)->Id_(), (mdl)->Context_(), (curCtx)); \
+        RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1010, funcDesc, "model", extendInfo);                          \
+        return (rtErrCode);                                                                               \
+    }
+
+// EE1010 错误码使用，stream的归属关系校验, 带语义化函数描述
+#define COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(stm, curCtx, rtErrCode, funcDesc)         \
+    if ((stm)->Context_() != (curCtx)) {                                                                    \
+        std::string extendInfo =                                                                            \
+            RtFmtMsg("stream_id=%u, stream_ctx=%p, cur_ctx=%p", (stm)->Id_(), (stm)->Context_(), (curCtx)); \
+        RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1010, funcDesc, "stream", extendInfo);                           \
+        return (rtErrCode);                                                                                 \
+    }
+
+// EE1003错误码使用，带语义化函数描述
+#define COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(COND, RTERRCODE, FUNC_DESC, value, paramName, ...) \
+    if (unlikely((COND))) {                                                                                        \
+        RT_LOG_OUTER_MSG_WITH_FUNC_DESC(ErrorCode::EE1003, (FUNC_DESC), (value), (paramName), ##__VA_ARGS__);      \
+        return (RTERRCODE);                                                                                        \
+    }
+
+// EE1003错误码专用，带语义化函数描述
+#define COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(COND, RTERRCODE, funDesc, param, ...)     \
+    if (unlikely(COND)) {                                                                            \
+        RT_LOG_OUTER_MSG_WITH_FUNC_DESC(ErrorCode::EE1003, (funDesc), param, #param, ##__VA_ARGS__); \
+        return RTERRCODE;                                                                            \
+    }
+
+// EE1003错误码专用，判断参数是否为0， 带语义化函数描述
+#define ZERO_RETURN_AND_MSG_OUTER_WITH_FUNC_DESC(PARAM, funcDesc) \
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(           \
+        (PARAM) == 0U, RT_ERROR_INVALID_VALUE, (funcDesc), PARAM, "not equal to 0")
+
+// EE1017错误码专用，带语义化函数描述
+#define COND_RETURN_AND_MSG_RESERVED_PARAM_WITH_FUNC_DESC(COND, RTERRCODE, param, reason, funDesc) \
+    if (unlikely(COND)) {                                                                          \
+        RT_LOG_OUTER_MSG_WITH_FUNC_DESC(ErrorCode::EE1017, (funDesc), (param), (reason));          \
+        return RTERRCODE;                                                                          \
+    }
+
+// EE1004错误码专用，带语义化函数描述
+#define NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(PTR, RET_CODE, funDesc)   \
+    if (unlikely((PTR) == nullptr)) {                                      \
+        RT_LOG_OUTER_MSG_WITH_FUNC_DESC(ErrorCode::EE1004, funDesc, #PTR); \
+        return RET_CODE;                                                   \
+    }
+
+// EE1016 capture mode检查使用，带语义化函数描述
+#define CHECK_CAPTURE_MODE_SUPPORT_AND_RETURN_WITH_FUNC_DESC(ctx, funcDesc) \
+    do {                                                                    \
+        if (!cce::runtime::CheckCaptureModeSupport((ctx), funcDesc)) {      \
+            return RT_ERROR_STREAM_CAPTURE_MODE_NOT_SUPPORT;                \
+        }                                                                   \
+    } while (false)
 
 namespace cce {
 namespace runtime {

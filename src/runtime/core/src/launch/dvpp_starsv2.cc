@@ -60,8 +60,9 @@ rtError_t StarsLaunchDvppRRProcess(Stream* const stm)
 
 rtError_t StarsLaunch(const void* const sqe, const uint32_t sqeLen, Stream* const stm, const uint32_t flag)
 {
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(
-        sqeLen != sizeof(rtStarsCommonSqe_t), RT_ERROR_INVALID_VALUE, sqeLen, sizeof(rtStarsCommonSqe_t));
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+        sqeLen != sizeof(rtStarsCommonSqe_t), RT_ERROR_INVALID_VALUE, "Delivering tasks to a specified stream", sqeLen,
+        sizeof(rtStarsCommonSqe_t));
 
     const int32_t streamId = stm->Id_();
     TaskInfo* starsTask = nullptr;

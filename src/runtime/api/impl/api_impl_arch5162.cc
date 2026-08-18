@@ -17,8 +17,10 @@ namespace runtime {
 rtError_t ApiImpl::FlushCache(const uint64_t base, const size_t len)
 {
     RT_LOG(RT_LOG_INFO, "flush cache base=%" PRIu64 ", len=%zu.", base, len);
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(base == 0U, RT_ERROR_INVALID_VALUE, base, "not equal to 0");
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(len == 0U, RT_ERROR_INVALID_VALUE, len, "not equal to 0");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+        base == 0U, RT_ERROR_INVALID_VALUE, "Cache update", base, "not equal to 0");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+        len == 0U, RT_ERROR_INVALID_VALUE, "Cache update", len, "not equal to 0");
 
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
@@ -31,8 +33,10 @@ rtError_t ApiImpl::FlushCache(const uint64_t base, const size_t len)
 rtError_t ApiImpl::InvalidCache(const uint64_t base, const size_t len)
 {
     RT_LOG(RT_LOG_INFO, "invalid cache base=%" PRIu64 ", len=%zu.", base, len);
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(base == 0U, RT_ERROR_INVALID_VALUE, base, "not equal to 0");
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(len == 0U, RT_ERROR_INVALID_VALUE, len, "not equal to 0");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+        base == 0U, RT_ERROR_INVALID_VALUE, "Invalidating cache data", base, "not equal to 0");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+        len == 0U, RT_ERROR_INVALID_VALUE, "Invalidating cache data", len, "not equal to 0");
 
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);

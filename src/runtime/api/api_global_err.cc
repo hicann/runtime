@@ -42,8 +42,8 @@ rtError_t RtCheckDeviceIdListValid(const uint32_t* const devIdList, const uint32
         static_cast<uint32_t>(ret));
     for (uint32_t i = 0U; i < devCnt; i++) {
         const uint32_t devId = *(devIdList + i);
-        COND_RETURN_AND_MSG_OUTER_WITH_PARAM(
-            devId >= static_cast<uint32_t>(npuDrvDevCnt), RT_ERROR_INVALID_VALUE, devId,
+        COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+            devId >= static_cast<uint32_t>(npuDrvDevCnt), RT_ERROR_INVALID_VALUE, "Device ID verification", devId,
             "[0, " + std::to_string(npuDrvDevCnt) + ")");
     }
     return RT_ERROR_NONE;
@@ -59,8 +59,8 @@ rtError_t RtCheckDeviceIdValid(const uint32_t deviceId)
     COND_RETURN_ERROR(
         error != RT_ERROR_NONE, ACL_ERROR_RT_INTERNAL_ERROR, "Failed to get device info count, retCode=%#x.",
         static_cast<uint32_t>(error));
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(
-        deviceId >= static_cast<uint32_t>(npuDevCnt), RT_ERROR_INVALID_VALUE, deviceId,
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+        deviceId >= static_cast<uint32_t>(npuDevCnt), RT_ERROR_INVALID_VALUE, "Device ID verification", deviceId,
         "[0, " + std::to_string(npuDevCnt) + ")");
     return RT_ERROR_NONE;
 }

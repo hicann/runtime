@@ -371,7 +371,8 @@ aclError JsonParser::GetEventModeFromFile(const char_t* const fileName, uint8_t&
         ACL_LOG_ERROR("event_mode value [%s] in json is not a valid integer.", eventModeStr.c_str());
         acl::AclErrorLogManager::ReportInputError(
             acl::INVALID_PARAM_REASON_MSG, std::vector<const char*>({"func", "value", "param", "reason"}),
-            std::vector<const char*>({__func__, eventModeStr.c_str(), "event_mode", "value must be 0 or 1"}));
+            std::vector<const char*>(
+                {"Getting event mode", eventModeStr.c_str(), "event_mode", "value must be 0 or 1"}));
         return ACL_ERROR_INVALID_PARAM;
     }
 
@@ -450,7 +451,8 @@ aclError JsonParser::GetPrintFifoSizeByType(
         acl::AclErrorLogManager::ReportInputError(
             acl::INVALID_PARAM_REASON_MSG, std::vector<const char*>({"func", "value", "param", "reason"}),
             std::vector<const char*>(
-                {__func__, fifoSizeStr.c_str(), "fifoSize", "value must be a positive integer in acl.json"}));
+                {"Getting print fifo size", fifoSizeStr.c_str(), "fifoSize",
+                 "value must be a positive integer in acl.json"}));
         ACL_LOG_ERROR("fifoSize %s in acl.json is not a positive integer.", fifoSizeStr.c_str());
         return ACL_ERROR_INVALID_PARAM;
     }

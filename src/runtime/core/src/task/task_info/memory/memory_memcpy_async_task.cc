@@ -54,7 +54,8 @@ rtError_t AllocCpyTmpMem(TaskInfo* const taskInfo, uint32_t& cpyType, const void
             ss << std::hex << "dest=0x" << RtPtrToValue(memcpyAsyncTaskInfo->srcPtr) << ", src=0x" << RtPtrToValue(src)
                << std::dec << ", destMax=" << sizeof(size) << ", count=" << sizeof(size) << ".";
             RT_LOG_OUTER_MSG_IMPL(
-                ErrorCode::EE1020, __func__, "memcpy_s", std::to_string(rc).c_str(), strerror(rc), ss.str().c_str());
+                ErrorCode::EE1020, "Preparing temporary memory for asynchronous memory copy", "memcpy_s",
+                std::to_string(rc).c_str(), strerror(rc), ss.str().c_str());
             return RT_ERROR_SEC_HANDLE;
         }
         src = (void*)memcpyAsyncTaskInfo->srcPtr;
@@ -118,13 +119,14 @@ rtError_t AllocCpyTmpMem(
             if (stream->Device_()->IsAddrFlatDev()) {
                 COND_PROC_RETURN_AND_MSG_OUTER(rc != EOK, RT_ERROR_SEC_HANDLE, ErrorCode::EE1020,
                                                (void)driver->HostMemFree(memcpyAsyncTaskInfo->srcPtr);
-                                               memcpyAsyncTaskInfo->srcPtr = nullptr, __func__, "memcpy_s",
+                                               memcpyAsyncTaskInfo->srcPtr = nullptr,
+                                               "Preparing temporary memory for asynchronous memory copy", "memcpy_s",
                                                std::to_string(rc), strerror(rc), ss.str().c_str());
             } else {
                 COND_PROC_RETURN_AND_MSG_OUTER(
                     rc != EOK, RT_ERROR_SEC_HANDLE, ErrorCode::EE1020, free(memcpyAsyncTaskInfo->srcPtr);
-                    memcpyAsyncTaskInfo->srcPtr = nullptr, __func__, "memcpy_s", std::to_string(rc), strerror(rc),
-                    ss.str().c_str());
+                    memcpyAsyncTaskInfo->srcPtr = nullptr, "Preparing temporary memory for asynchronous memory copy",
+                    "memcpy_s", std::to_string(rc), strerror(rc), ss.str().c_str());
             }
         }
 
@@ -233,7 +235,8 @@ rtError_t AllocCpyTmpMemFor3588(
             ss << std::hex << "dest=0x" << RtPtrToValue(memcpyAsyncTaskInfo->srcPtr) << ", src=0x" << RtPtrToValue(src)
                << std::dec << ", destMax=" << size << ", count=" << size << ".";
             RT_LOG_OUTER_MSG_IMPL(
-                ErrorCode::EE1020, __func__, "memcpy_s", std::to_string(rc).c_str(), strerror(rc), ss.str().c_str());
+                ErrorCode::EE1020, "Preparing temporary memory for asynchronous memory copy", "memcpy_s",
+                std::to_string(rc).c_str(), strerror(rc), ss.str().c_str());
             return RT_ERROR_SEC_HANDLE;
         }
         src = (void*)memcpyAsyncTaskInfo->srcPtr;

@@ -79,7 +79,8 @@ rtError_t ApiImplDavid::KernelLaunch(
         curStm = curCtx->DefaultStream_();
         NULL_PTR_RETURN_MSG(curStm, RT_ERROR_STREAM_NULL);
     }
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(curStm, curCtx, RT_ERROR_STREAM_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        curStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Starting the compute task of the corresponding operator");
 
     if ((cfgInfo != nullptr) && ((cfgInfo->dumpflag & RT_KERNEL_DUMPFLAG) != 0U)) {
         ERROR_RETURN_MSG_INNER(
@@ -109,7 +110,8 @@ rtError_t ApiImplDavid::KernelLaunchWithHandle(
         curStm = curCtx->DefaultStream_();
         NULL_PTR_RETURN_MSG(curStm, RT_ERROR_STREAM_NULL);
     }
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(curStm, curCtx, RT_ERROR_STREAM_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        curStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Starting the compute task of the corresponding operator");
 
     TaskCfg taskCfg = {};
     (void)ConvertTaskCfgInfoToTaskCfg(taskCfg, cfgInfo);
@@ -129,7 +131,8 @@ rtError_t ApiImplDavid::LaunchKernel(
         curStm = curCtx->DefaultStream_();
         NULL_PTR_RETURN_MSG(curStm, RT_ERROR_STREAM_NULL);
     }
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(curStm, curCtx, RT_ERROR_STREAM_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        curStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Starting the compute task of the corresponding operator");
     if (!kernel->Program_()->IsDeviceSoAndNameValid(curCtx->Device_()->Id_())) {
         RT_LOG(RT_LOG_WARNING, "kernel is invalid, device_id=%d", curCtx->Device_()->Id_());
         return RT_ERROR_KERNEL_INVALID;
@@ -245,7 +248,8 @@ rtError_t ApiImplDavid::KernelLaunchEx(
         curStm = curCtx->DefaultStream_();
         NULL_PTR_RETURN_MSG(curStm, RT_ERROR_STREAM_NULL);
     }
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(curStm, curCtx, RT_ERROR_STREAM_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        curStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Starting the compute task of the corresponding operator");
 
     Runtime* const rtInstance = Runtime::Instance();
     COND_RETURN_ERROR(rtInstance == nullptr, RT_ERROR_INSTANCE_NULL, "Runtime instance is null.");
@@ -275,7 +279,8 @@ rtError_t ApiImplDavid::CpuKernelLaunch(
         curStm = curCtx->DefaultStream_();
         NULL_PTR_RETURN_MSG(curStm, RT_ERROR_STREAM_NULL);
     }
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(curStm, curCtx, RT_ERROR_STREAM_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        curStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Starting the compute task of an AI CPU operator");
 
     Runtime* const rtInstance = Runtime::Instance();
     COND_RETURN_ERROR_MSG_INNER(rtInstance == nullptr, RT_ERROR_INSTANCE_NULL, "Runtime instance is null.");
@@ -303,7 +308,8 @@ rtError_t ApiImplDavid::CpuKernelLaunchExWithArgs(
         curStm = curCtx->DefaultStream_();
         NULL_PTR_RETURN_MSG(curStm, RT_ERROR_STREAM_NULL);
     }
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(curStm, curCtx, RT_ERROR_STREAM_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        curStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Starting the compute task of an AI CPU operator");
 
     Runtime* const rtInstance = Runtime::Instance();
     COND_RETURN_ERROR_MSG_INNER(rtInstance == nullptr, RT_ERROR_INSTANCE_NULL, "Runtime instance is null.");
@@ -323,7 +329,8 @@ rtError_t ApiImplDavid::FusionLaunch(void* const fusionInfo, Stream* const stm, 
         curStm = curCtx->DefaultStream_();
         NULL_PTR_RETURN_MSG(curStm, RT_ERROR_STREAM_NULL);
     }
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(curStm, curCtx, RT_ERROR_STREAM_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        curStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Fused operator task delivery");
     return LaunchFusionKernel(curStm, fusionInfo, argsInfo);
 }
 
@@ -337,7 +344,8 @@ rtError_t ApiImplDavid::CCULaunch(rtCcuTaskInfo_t* taskInfo, Stream* const stm)
         curStm = curCtx->DefaultStream_();
         NULL_PTR_RETURN_MSG(curStm, RT_ERROR_STREAM_NULL);
     }
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(curStm, curCtx, RT_ERROR_STREAM_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        curStm, curCtx, RT_ERROR_STREAM_CONTEXT, "CCU task delivery");
     return StreamCCULaunch(curStm, taskInfo);
 }
 
@@ -390,7 +398,8 @@ rtError_t ApiImplDavid::CmoTaskLaunch(const rtCmoTaskInfo_t* const taskInfo, Str
         curStm = curCtx->DefaultStream_();
         NULL_PTR_RETURN_MSG(curStm, RT_ERROR_STREAM_NULL);
     }
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(curStm, curCtx, RT_ERROR_STREAM_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        curStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Operating the cache memory on the device");
     return cce::runtime::CmoTaskLaunch(taskInfo, curStm, flag);
 }
 
@@ -409,7 +418,9 @@ rtError_t ApiImplDavid::CmoAddrTaskLaunch(
         curStm = curCtx->DefaultStream_();
         NULL_PTR_RETURN_MSG(curStm, RT_ERROR_STREAM_NULL);
     }
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(curStm, curCtx, RT_ERROR_STREAM_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        curStm, curCtx, RT_ERROR_STREAM_CONTEXT,
+        "Using the memory descriptor to operate the cache memory on the device");
 
     return CmoAddrTaskLaunchForDavid(static_cast<rtDavidCmoAddrInfo*>(cmoAddrInfo), cmoOpCode, curStm);
 }
@@ -485,7 +496,8 @@ rtError_t ApiImplDavid::EventRecord(Event* const evt, Stream* const stm, const u
         "(for example, via aclrtCreateEventExWithFlag or rtEventCreateExWithFlag) or "
         "eventFlag is RT_EVENT_DEFAULT, isNewMode=%d, eventFlag=%#" PRIx64 ", isModelStream=%d.",
         evt->IsNewMode(), evt->GetEventFlag(), curStm->IsModelStream());
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(curStm, curCtx, RT_ERROR_STREAM_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        curStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Event recording");
     if (flag == RT_EVENT_RECORD_EXTERNAL) {
         COND_RETURN_AND_MSG_OUTER(
             (!curStm->IsCapturing()), RT_ERROR_STREAM_NOT_CAPTURED, ErrorCode::EE1016, "Event recording",
@@ -541,7 +553,7 @@ rtError_t ApiImplDavid::EventReset(Event* const evt, Stream* const stm)
     if ((evt->GetEventFlag() == RT_EVENT_DEFAULT) && evt->IsHardwareMode() && !curStm->IsModelStream()) {
         return RT_ERROR_NONE;
     }
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(curStm, curCtx, RT_ERROR_STREAM_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(curStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Event reset");
     if (evt->IsCapturing()) {
         COND_RETURN_ERROR_MSG_INNER(
             !StreamFlagIsSupportCapture(curStm->Flags()), RT_ERROR_STREAM_INVALID,
@@ -606,8 +618,8 @@ rtError_t ApiImplDavid::LaunchKernelByArgsWithType(
         }
         default:
             error = RT_ERROR_INVALID_VALUE;
-            RT_LOG_OUTER_MSG_INVALID_PARAM(
-                argsWithType->type,
+            RT_LOG_OUTER_MSG_INVALID_PARAM_WITH_DESC(
+                "Operator task delivery", argsWithType->type,
                 "[" + std::to_string(RT_ARGS_NON_CPU_EX) + ", " + std::to_string(RT_ARGS_MAX) + ")");
             break;
     }
@@ -628,7 +640,8 @@ rtError_t ApiImplDavid::StreamWaitEvent(
         supFlag, RT_ERROR_FEATURE_NOT_SUPPORT,
         "Not support current mode bind stream, mode=%d, flag=%" PRIu64 ", isModel=%d.", evt->IsNewMode(),
         evt->GetEventFlag(), curStm->IsModelStream());
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(curStm, curCtx, RT_ERROR_STREAM_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        curStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Triggering stream event waiting");
     if (flag == RT_EVENT_WAIT_EXTERNAL) {
         COND_RETURN_AND_MSG_OUTER(
             (!curStm->IsCapturing()), RT_ERROR_STREAM_NOT_CAPTURED, ErrorCode::EE1016, "Triggering event waiting",
@@ -760,7 +773,8 @@ rtError_t ApiImplDavid::MemCopy2DAsync(
         curStm = curCtx->DefaultStream_();
         NULL_PTR_RETURN_MSG(curStm, RT_ERROR_STREAM_NULL);
     }
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(curStm, curCtx, RT_ERROR_STREAM_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        curStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Asynchronous 2D memory copy");
 
     while (remainSize > 0UL) {
         if (kind == RT_MEMCPY_DEVICE_TO_DEVICE) {
@@ -907,7 +921,8 @@ rtError_t ApiImplDavid::MemcpyAsync(
         curStm = curCtx->DefaultStream_();
         NULL_PTR_RETURN_MSG(curStm, RT_ERROR_STREAM_NULL);
     }
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(curStm, curCtx, RT_ERROR_STREAM_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        curStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Asynchronous memory copy");
 
     uint32_t transType = UINT32_MAX;
     rtError_t error = RT_ERROR_NONE;
@@ -952,7 +967,8 @@ rtError_t ApiImplDavid::ReduceAsync(
         curStm = curCtx->DefaultStream_();
         NULL_PTR_RETURN_MSG(curStm, RT_ERROR_STREAM_NULL);
     }
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(curStm, curCtx, RT_ERROR_STREAM_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        curStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Asynchronously performing the Reduce operation");
     return cce::runtime::ReduceAsync(dst, src, cnt, kind, type, curStm, cfgInfo);
 }
 
@@ -961,8 +977,8 @@ rtError_t ApiImplDavid::ModelExit(Model* const mdl, Stream* const stm)
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
 
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(stm, curCtx, RT_ERROR_STREAM_CONTEXT);
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_MODEL(mdl, curCtx, RT_ERROR_MODEL_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(stm, curCtx, RT_ERROR_STREAM_CONTEXT, "Model exiting");
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_MODEL_WITH_FUNC_DESC(mdl, curCtx, RT_ERROR_MODEL_CONTEXT, "Model exiting");
     const uint32_t modelExitNum = mdl->ModelExitNum_();
     COND_RETURN_AND_MSG_OUTER(
         modelExitNum >= 1U, RT_ERROR_MODEL_EXIT, ErrorCode::EE1011, "Model exiting", modelExitNum, "modelExitNum",
@@ -992,7 +1008,8 @@ rtError_t ApiImplDavid::MemsetAsync(
         curStm = curCtx->DefaultStream_();
         NULL_PTR_RETURN_MSG(curStm, RT_ERROR_STREAM_NULL);
     }
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(curStm, curCtx, RT_ERROR_STREAM_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        curStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Asynchronously setting the memory content to a specified value");
 
     RT_LOG(
         RT_LOG_DEBUG, "fillVal=%u, fillCount=%" PRIu64 ", destMax=%" PRIu64 ", stream_id=%d.", val, cnt, destMax,
@@ -1008,9 +1025,9 @@ rtError_t ApiImplDavid::CntNotifyCreate(const int32_t deviceId, CountNotify** co
     COND_RETURN_ERROR(dev == nullptr, RT_ERROR_INVALID_VALUE, "device is NULL.");
 
     const uint32_t mc2FeatureFlag = dev->GetDevProperties().mc2FeatureFlag;
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
         ((mc2FeatureFlag == 0U) && (flag == RT_NOTIFY_FLAG_DOWNLOAD_TO_DEV)), RT_ERROR_INVALID_VALUE,
-        NotifyFlagToString(flag), "flag", "RT_NOTIFY_FLAG_DEFAULT(0)");
+        "CntNotify creation", NotifyFlagToString(flag), "flag", "RT_NOTIFY_FLAG_DEFAULT(0)");
 
     *retCntNotify = new (std::nothrow) CountNotify(static_cast<uint32_t>(deviceId), dev->DevGetTsId());
     COND_RETURN_AND_MSG_OUTER(
@@ -1040,7 +1057,8 @@ rtError_t ApiImplDavid::CntNotifyRecord(
 
     Stream* targetStm = (stm == nullptr) ? curCtx->DefaultStream_() : stm;
     NULL_STREAM_PTR_RETURN_MSG(targetStm);
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(targetStm, curCtx, RT_ERROR_STREAM_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        targetStm, curCtx, RT_ERROR_STREAM_CONTEXT, "CntNotify recording");
 
     const uint32_t countNotifyId = inCntNotify->GetCntNotifyId();
     const rtError_t error = inCntNotify->Record(targetStm, info);
@@ -1062,7 +1080,8 @@ rtError_t ApiImplDavid::CntNotifyReset(CountNotify* const inCntNotify, Stream* c
 
     Stream* targetStm = (stm == nullptr) ? curCtx->DefaultStream_() : stm;
     NULL_STREAM_PTR_RETURN_MSG(targetStm);
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(targetStm, curCtx, RT_ERROR_STREAM_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        targetStm, curCtx, RT_ERROR_STREAM_CONTEXT, "CntNotify reset");
 
     rtCntNtyRecordInfo_t info = {RECORD_STORE_MODE, 0U};
     const uint32_t countNotifyId = inCntNotify->GetCntNotifyId();
@@ -1085,7 +1104,8 @@ rtError_t ApiImplDavid::CntNotifyWaitWithTimeout(
 
     Stream* targetStm = (stm == nullptr) ? curCtx->DefaultStream_() : stm;
     NULL_STREAM_PTR_RETURN_MSG(targetStm);
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(targetStm, curCtx, RT_ERROR_STREAM_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        targetStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Waiting for CntNotify");
 
     const rtError_t error = inCntNotify->Wait(targetStm, info);
     const uint32_t notifyId = inCntNotify->GetCntNotifyId();
@@ -1113,7 +1133,7 @@ rtError_t ApiImplDavid::GetCntNotifyAddress(
     COND_RETURN_ERROR(dev == nullptr, RT_ERROR_INVALID_VALUE, "device is NULL.");
     if (!dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_AICPUSD_LATER_PROCEDURE)) {
         // Driver now only support NOTIFY_CNT_ST_SLICE for count notify
-        COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(
+        COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
             (regType != NOTIFY_CNT_ST_SLICE), RT_ERROR_INVALID_VALUE,
             "Obtaining the on-device address of a CntNotify object", regType, std::to_string(NOTIFY_CNT_ST_SLICE));
     } else {
@@ -1140,7 +1160,8 @@ rtError_t ApiImplDavid::NotifyWait(Notify* const inNotify, Stream* const stm, co
         NULL_PTR_RETURN_MSG(curStm, RT_ERROR_STREAM_NULL);
     }
 
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(curStm, curCtx, RT_ERROR_STREAM_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        curStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Waiting for a Notify");
     COND_RETURN_AND_MSG_OUTER(
         inNotify->CheckIpcNotifyDevId() != RT_ERROR_NONE, RT_ERROR_INVALID_VALUE, ErrorCode::EE1012,
         "Waiting for a Notify", curCtx->Device_()->Id_(), "current deviceId",
@@ -1167,7 +1188,8 @@ rtError_t ApiImplDavid::NotifyRecord(Notify* const inNotify, Stream* const stm)
         curStm = curCtx->DefaultStream_();
         NULL_PTR_RETURN_MSG(curStm, RT_ERROR_STREAM_NULL);
     }
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(curStm, curCtx, RT_ERROR_STREAM_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        curStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Notify recording");
 
     const uint32_t notifyId = inNotify->GetNotifyId();
     const rtError_t error = NtyRecord(inNotify, curStm);
@@ -1212,7 +1234,8 @@ rtError_t ApiImplDavid::DebugRegister(
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
 
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_MODEL(mdl, curCtx, RT_ERROR_MODEL_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_MODEL_WITH_FUNC_DESC(
+        mdl, curCtx, RT_ERROR_MODEL_CONTEXT, "Registering a debugging callback for a stream");
     return ModelDebugRegister(mdl, flag, addr, streamId, taskId, curCtx->DefaultStream_());
 }
 
@@ -1221,7 +1244,8 @@ rtError_t ApiImplDavid::DebugUnRegister(Model* const mdl)
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
 
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_MODEL(mdl, curCtx, RT_ERROR_MODEL_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_MODEL_WITH_FUNC_DESC(
+        mdl, curCtx, RT_ERROR_MODEL_CONTEXT, "Registering a debugging callback for a model");
     return ModelDebugUnRegister(mdl, curCtx->DefaultStream_());
 }
 
@@ -1231,7 +1255,8 @@ rtError_t ApiImplDavid::DebugRegisterForStream(
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
 
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(stm, curCtx, RT_ERROR_STREAM_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        stm, curCtx, RT_ERROR_STREAM_CONTEXT, "Registering a debugging callback for a stream");
     return StreamDebugRegister(stm, flag, addr, streamId, taskId);
 }
 
@@ -1240,7 +1265,8 @@ rtError_t ApiImplDavid::DebugUnRegisterForStream(Stream* const stm)
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
 
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(stm, curCtx, RT_ERROR_STREAM_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        stm, curCtx, RT_ERROR_STREAM_CONTEXT, "Deregistering the debugging callback of a stream");
     return StreamDebugUnRegister(stm);
 }
 
@@ -1271,7 +1297,8 @@ rtError_t ApiImplDavid::NpuClearFloatStatus(const uint32_t checkMode, Stream* co
     NULL_STREAM_PTR_RETURN_MSG(stm);
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(stm, curCtx, RT_ERROR_STREAM_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        stm, curCtx, RT_ERROR_STREAM_CONTEXT, "Clearing the Float exception status flag of the NPU");
     return StreamNpuClearFloatStatus(checkMode, stm, false);
 }
 
@@ -1282,7 +1309,8 @@ rtError_t ApiImplDavid::NpuGetFloatStatus(
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     Stream* const targetStm = (stm == nullptr) ? curCtx->DefaultStream_() : stm;
     NULL_STREAM_PTR_RETURN_MSG(targetStm);
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(targetStm, curCtx, RT_ERROR_STREAM_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        targetStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Obtaining the Float exception status of the NPU");
     return StreamNpuGetFloatStatus(outputAddrPtr, outputSize, checkMode, targetStm, false);
 }
 
@@ -1291,7 +1319,8 @@ rtError_t ApiImplDavid::NpuClearFloatDebugStatus(const uint32_t checkMode, Strea
     NULL_STREAM_PTR_RETURN_MSG(stm);
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(stm, curCtx, RT_ERROR_STREAM_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        stm, curCtx, RT_ERROR_STREAM_CONTEXT, "Clearing the Float debugging status flag of the NPU");
     return StreamNpuClearFloatStatus(checkMode, stm, true);
 }
 
@@ -1301,7 +1330,8 @@ rtError_t ApiImplDavid::NpuGetFloatDebugStatus(
     NULL_STREAM_PTR_RETURN_MSG(stm);
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(stm, curCtx, RT_ERROR_STREAM_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        stm, curCtx, RT_ERROR_STREAM_CONTEXT, "Obtaining the Float exception debugging status of the NPU");
     return StreamNpuGetFloatStatus(outputAddrPtr, outputSize, checkMode, stm, true);
 }
 
@@ -1318,7 +1348,9 @@ rtError_t ApiImplDavid::GetDeviceSatStatus(void* const outputAddrPtr, const uint
         curStm = curCtx->DefaultStream_();
         NULL_PTR_RETURN_MSG(curStm, RT_ERROR_STREAM_NULL);
     }
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(curStm, curCtx, RT_ERROR_STREAM_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        curStm, curCtx, RT_ERROR_STREAM_CONTEXT,
+        "Obtaining the overflow status of tasks in all streams on the current device");
 
     error = StreamGetSatStatus(outputSize, curStm);
     COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error);
@@ -1340,7 +1372,8 @@ rtError_t ApiImplDavid::SetStreamOverflowSwitch(Stream* const stm, const uint32_
 
     Stream* const targetStm = (stm == nullptr) ? curCtx->DefaultStream_() : stm;
     NULL_STREAM_PTR_RETURN_MSG(targetStm);
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(targetStm, curCtx, RT_ERROR_STREAM_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        targetStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Setting the stream overflow/underflow detection switch");
     return SetOverflowSwitchOnStream(targetStm, flags);
 }
 
@@ -1351,7 +1384,8 @@ rtError_t ApiImplDavid::SetStreamTag(Stream* const stm, const uint32_t geOpTag)
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     Stream* const targetStm = (stm == nullptr) ? curCtx->DefaultStream_() : stm;
     NULL_STREAM_PTR_RETURN_MSG(targetStm);
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(targetStm, curCtx, RT_ERROR_STREAM_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        targetStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Setting the stream tag");
     return SetTagOnStream(targetStm, geOpTag);
 }
 
@@ -1365,7 +1399,8 @@ rtError_t ApiImplDavid::UbDbSend(rtUbDbInfo_t* const dbInfo, Stream* const stm)
         NULL_STREAM_PTR_RETURN_MSG(curStm);
     }
 
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(curStm, curCtx, RT_ERROR_STREAM_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        curStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Delivering a UB doorbell task");
     return StreamUbDbSend(dbInfo, curStm, static_cast<uint16_t>(UbDmaSqeSource::RT_UBDMA_SOURCE_API));
 }
 
@@ -1379,7 +1414,8 @@ rtError_t ApiImplDavid::UbDirectSend(rtUbWqeInfo_t* const wqeInfo, Stream* const
         NULL_STREAM_PTR_RETURN_MSG(curStm);
     }
 
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(curStm, curCtx, RT_ERROR_STREAM_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        curStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Delivering a UB Direct task");
     COND_RETURN_ERROR_MSG_INNER(
         curStm->GetBindFlag(), RT_ERROR_STREAM_INVALID, "UbDirectSend not support model stream, stream_id=%d.",
         curStm->Id_());
@@ -1402,7 +1438,8 @@ rtError_t ApiImplDavid::NopTask(Stream* const stm)
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     NULL_STREAM_PTR_RETURN_MSG(stm);
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(stm, curCtx, RT_ERROR_STREAM_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        stm, curCtx, RT_ERROR_STREAM_CONTEXT, "Executing a No-Operation (NOP) task");
 
     return StreamNopTask(stm);
 }
@@ -1552,7 +1589,8 @@ rtError_t ApiImplDavid::CallbackLaunch(
         curStm = curCtx->DefaultStream_();
         NULL_STREAM_PTR_RETURN_MSG(curStm);
     }
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(curStm, curCtx, RT_ERROR_STREAM_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        curStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Delivering an on-host callback function task in a stream");
     COND_RETURN_ERROR_MSG_INNER(
         !curStm->IsHostFuncCbReg(), RT_ERROR_STREAM_NO_CB_REG,
         "The stream used by this user's callback function is not registered to any thread, retCode=%#x",
@@ -1570,7 +1608,8 @@ rtError_t ApiImplDavid::ModelAbort(Model* const mdl)
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(mdl, RT_ERROR_MODEL_NULL, "Aborting the model running instance");
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_MODEL(mdl, curCtx, RT_ERROR_MODEL_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_MODEL_WITH_FUNC_DESC(
+        mdl, curCtx, RT_ERROR_MODEL_CONTEXT, "Aborting the model running instance");
     return MdlAbort(mdl);
 }
 
@@ -1580,8 +1619,10 @@ rtError_t ApiImplDavid::ModelEndGraph(Model* const mdl, Stream* const stm, const
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
 
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(stm, curCtx, RT_ERROR_STREAM_CONTEXT);
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_MODEL(mdl, curCtx, RT_ERROR_MODEL_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        stm, curCtx, RT_ERROR_STREAM_CONTEXT, "Delivering the EndGraph flag to the stream of a model");
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_MODEL_WITH_FUNC_DESC(
+        mdl, curCtx, RT_ERROR_MODEL_CONTEXT, "Delivering the EndGraph flag to the stream of a model");
 
     if ((flags & RT_KERNEL_DUMPFLAG) != 0U) {
         ERROR_RETURN_MSG_INNER(
@@ -1600,7 +1641,8 @@ rtError_t ApiImplDavid::StreamSwitchEx(
         SwitchDataTypeToString(dataType).c_str());
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(stm, curCtx, RT_ERROR_STREAM_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        stm, curCtx, RT_ERROR_STREAM_CONTEXT, "Switching between streams based on conditions");
     COND_RETURN_AND_MSG_OUTER(
         !stm->IsModelStream(), RT_ERROR_STREAM_MODEL, ErrorCode::EE1011,
         "Switching between streams based on conditions", 0, "stm->modelNum",
@@ -1616,8 +1658,8 @@ rtError_t ApiImplDavid::LabelSet(Label* const lbl, Stream* const stm)
 {
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_LABEL(lbl, curCtx, RT_ERROR_LABEL_CONTEXT);
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(stm, curCtx, RT_ERROR_STREAM_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_LABEL_WITH_FUNC_DESC(lbl, curCtx, RT_ERROR_LABEL_CONTEXT, "Label setting");
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(stm, curCtx, RT_ERROR_STREAM_CONTEXT, "Label setting");
     return CondLabelSet(lbl, stm);
 }
 
@@ -1634,7 +1676,8 @@ rtError_t ApiImplDavid::ProfilerTrace(const uint64_t id, const bool notifyFlag, 
         curStm = curCtx->DefaultStream_();
         NULL_STREAM_PTR_RETURN_MSG(curStm);
     }
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(curStm, curCtx, RT_ERROR_STREAM_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        curStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Delivering a profiling task with tracepoint");
     return RT_ERROR_NONE;
 }
 
@@ -1647,7 +1690,8 @@ rtError_t ApiImplDavid::ProfilerTraceEx(const uint64_t id, const uint64_t modelI
         stm = curCtx->DefaultStream_();
         NULL_PTR_RETURN_MSG(stm, RT_ERROR_STREAM_NULL);
     }
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(stm, curCtx, RT_ERROR_STREAM_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        stm, curCtx, RT_ERROR_STREAM_CONTEXT, "Delivering a profiling task with tracepoint");
     return ProfTraceEx(id, modelId, tagId, stm, curCtx);
 }
 
@@ -1661,7 +1705,8 @@ rtError_t ApiImplDavid::WriteValue(rtWriteValueInfo_t* const info, Stream* const
         curStm = curCtx->DefaultStream_();
         NULL_PTR_RETURN_MSG(curStm, RT_ERROR_STREAM_NULL);
     }
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(curStm, curCtx, RT_ERROR_STREAM_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        curStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Writing data to the specified memory");
 
     return StreamWriteValue(info, curStm);
 }
@@ -1676,7 +1721,8 @@ rtError_t ApiImplDavid::WriteValuePtr(void* const writeValueInfo, Stream* const 
         curStm = curCtx->DefaultStream_();
         NULL_PTR_RETURN_MSG(curStm, RT_ERROR_STREAM_NULL);
     }
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(curStm, curCtx, RT_ERROR_STREAM_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        curStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Writing data to the specified memory");
     return StreamWriteValuePtr(static_cast<rtWriteValueInfo_t*>(writeValueInfo), curStm, pointedAddr);
 }
 
@@ -1692,7 +1738,8 @@ rtError_t ApiImplDavid::StarsTaskLaunch(
         curStm = curCtx->DefaultStream_();
         NULL_PTR_RETURN_MSG(curStm, RT_ERROR_STREAM_NULL);
     }
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(curStm, curCtx, RT_ERROR_STREAM_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        curStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Delivering a Stars task to the device for execution");
     COND_RETURN_WARN(
         curStm->IsCapturing(), RT_ERROR_FEATURE_NOT_SUPPORT, "stars task cannot be delivered in capture mode.");
     return StarsLaunch(sqe, sqeLen, curStm, flag);
@@ -1711,7 +1758,8 @@ rtError_t ApiImplDavid::LaunchDvppTask(const void* sqe, uint32_t sqeLen, Stream*
     NULL_STREAM_PTR_RETURN_MSG(curStm);
 
     // Verify that the stream belongs to the current context
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(curStm, curCtx, RT_ERROR_STREAM_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        curStm, curCtx, RT_ERROR_STREAM_CONTEXT, "DVPP task delivery");
 
     bool isCmdListNotFree = false;
     rtError_t error = GetIsCmdListNotFreeValByDvppCfg(cfg, isCmdListNotFree);
@@ -1769,7 +1817,8 @@ rtError_t ApiImplDavid::MultipleTaskInfoLaunch(
         curStm = curCtx->DefaultStream_();
         NULL_PTR_RETURN_MSG(curStm, RT_ERROR_STREAM_NULL);
     }
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(curStm, curCtx, RT_ERROR_STREAM_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        curStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Delivering a DVPP Multiple task");
     COND_RETURN_WARN(
         curStm->IsCapturing(), RT_ERROR_FEATURE_NOT_SUPPORT, "DVPP tasks cannot be delivered in capture mode.");
     return LaunchMultipleTaskInfo(taskInfo, curStm, flag);
@@ -1795,15 +1844,15 @@ static rtError_t SetLimitSizeByType(const rtLimitType_t type, const uint32_t val
             rt->SetSimtDvgWarpStkSize(alignVal);
             break;
         default:
-            RT_LOG_OUTER_MSG_WITH_FUNC(
-                ErrorCode::EE1003, LimitTypeToString(type), "type",
+            RT_LOG_OUTER_MSG_WITH_FUNC_DESC(
+                ErrorCode::EE1003, "Setting the SIMT stack size", LimitTypeToString(type), "type",
                 LimitTypeToString(RT_LIMIT_TYPE_SIMT_STACK_SIZE) + " or " +
                     LimitTypeToString(RT_LIMIT_TYPE_SIMT_DVG_WARP_STACK_SIZE));
             return RT_ERROR_DEVICE_LIMIT;
     }
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(
-        (rt->GetSimtWarpStkSize() == 0) && (rt->GetSimtDvgWarpStkSize() == 0), RT_ERROR_INVALID_VALUE, 0,
-        "non-zero stack size");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+        (rt->GetSimtWarpStkSize() == 0) && (rt->GetSimtDvgWarpStkSize() == 0), RT_ERROR_INVALID_VALUE,
+        "Setting the SIMT stack size", 0, "non-zero stack size");
     return RT_ERROR_NONE;
 }
 
@@ -1898,7 +1947,8 @@ rtError_t ApiImplDavid::StreamAbort(Stream* const stm)
     Stream* curStm = (stm == nullptr) ? curCtx->DefaultStream_() : stm;
     NULL_STREAM_PTR_RETURN_MSG(curStm);
 
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(curStm, curCtx, RT_ERROR_STREAM_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        curStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Aborting tasks in a stream");
     COND_RETURN_AND_MSG_OUTER(
         ((curStm->Flags() & RT_STREAM_PERSISTENT) != 0U), RT_ERROR_STREAM_INVALID, ErrorCode::EE1006, "Stream aborting",
         "Aborting persistent stream",
@@ -1910,7 +1960,8 @@ rtError_t ApiImplDavid::StreamStop(Stream* const stm)
 {
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(stm, curCtx, RT_ERROR_STREAM_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        stm, curCtx, RT_ERROR_STREAM_CONTEXT, "Stopping the running tasks in a stream");
     COND_RETURN_ERROR_MSG_INNER(
         stm->GetBindFlag(), RT_ERROR_STREAM_INVALID, "StreamStop not support model stream, stream_id=%d.", stm->Id_());
     return stm->StreamStop();
@@ -1928,7 +1979,8 @@ rtError_t ApiImplDavid::StreamTaskClean(Stream* const stm)
 {
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(stm, curCtx, RT_ERROR_STREAM_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        stm, curCtx, RT_ERROR_STREAM_CONTEXT, "Clearing tasks in a stream");
     return stm->StreamTaskClean();
 }
 
@@ -1938,9 +1990,10 @@ rtError_t ApiImplDavid::LabelGotoEx(Label* const lbl, Stream* const stm)
 {
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(stm, curCtx, RT_ERROR_STREAM_CONTEXT);
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_LABEL(lbl, curCtx, RT_ERROR_LABEL_CONTEXT);
-    RT_LOG_OUTER_MSG_WITH_FUNC_DESC(ErrorCode::EE1005, "Label redirection");
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        stm, curCtx, RT_ERROR_STREAM_CONTEXT, "Label redirection");
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_LABEL_WITH_FUNC_DESC(lbl, curCtx, RT_ERROR_LABEL_CONTEXT, "Label redirection");
+    RT_LOG_OUTER_MSG_WITH_FUNC_DESC(ErrorCode::EE1005, "label redirection");
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
@@ -1968,7 +2021,8 @@ rtError_t ApiImplDavid::GetMemUceInfo(const uint32_t deviceId, rtMemUceInfo* mem
         ss << std::hex << "dest=0x" << RtPtrToValue(memUceInfo->repairAddr) << ", src=0x"
            << RtPtrToValue(memUceArray->repairAddrArray) << std::dec << ", destMax=" << sizeof(memUceInfo->repairAddr)
            << ", count=" << sizeof(memUceArray->repairAddrArray) << ".";
-        RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1020, __func__, "memcpy_s", retStr.c_str(), strerror(ret), ss.str().c_str());
+        RT_LOG_OUTER_MSG_IMPL(
+            ErrorCode::EE1020, "Getting memory uce info", "memcpy_s", retStr.c_str(), strerror(ret), ss.str().c_str());
         return RT_ERROR_INVALID_VALUE;
     }
 
@@ -2204,7 +2258,8 @@ rtError_t ApiImplDavid::LaunchHostFunc(Stream* const stm, const rtCallback_t cal
         curStm = curCtx->DefaultStream_();
         NULL_STREAM_PTR_RETURN_MSG(curStm);
     }
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(curStm, curCtx, RT_ERROR_STREAM_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        curStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Adding a host callback function to the stream task queue");
     Runtime* const rtInstance = Runtime::Instance();
     Device* const dev = curCtx->Device_();
     NULL_PTR_RETURN_MSG(dev, RT_ERROR_INVALID_VALUE);
@@ -2237,7 +2292,8 @@ rtError_t ApiImplDavid::MemWriteValue(
         NULL_STREAM_PTR_RETURN_MSG(curStm);
     }
 
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(curStm, curCtx, RT_ERROR_STREAM_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        curStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Writing data to the specified memory");
 
     return cce::runtime::MemWriteValue(devAddr, value, flag, curStm);
 }
@@ -2254,7 +2310,9 @@ rtError_t ApiImplDavid::MemWaitValue(
         NULL_STREAM_PTR_RETURN_MSG(curStm);
     }
 
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(curStm, curCtx, RT_ERROR_STREAM_CONTEXT);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        curStm, curCtx, RT_ERROR_STREAM_CONTEXT,
+        "Unblocking the data in the specified memory when the data meets certain conditions");
 
     return cce::runtime::MemWaitValue(devAddr, value, flag, curStm);
 }

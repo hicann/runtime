@@ -357,21 +357,23 @@ static rtError_t DqsSchedConfigCheck(const rtDqsSchedCfg_t* const cfg)
 {
     // type check
     const uint8_t type = cfg->type;
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
         (type != RT_DQS_SCHED_TYPE_DSS) && (type != RT_DQS_SCHED_TYPE_NN) && (type != RT_DQS_SCHED_TYPE_VPC),
-        RT_ERROR_INVALID_VALUE, type, "[1, 3]");
+        RT_ERROR_INVALID_VALUE, "Verifying the validity of the task scheduling configuration", type, "[1, 3]");
 
     // inputQueueNum check
     const uint8_t inQueNum = cfg->inputQueueNum;
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(
-        (inQueNum <= 0U) || (inQueNum > RT_DQS_MAX_INPUT_QUEUE_NUM), RT_ERROR_INVALID_VALUE, inQueNum,
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+        (inQueNum <= 0U) || (inQueNum > RT_DQS_MAX_INPUT_QUEUE_NUM), RT_ERROR_INVALID_VALUE,
+        "Verifying the validity of the task scheduling configuration", inQueNum,
         "(0, " + std::to_string(RT_DQS_MAX_INPUT_QUEUE_NUM) + "]");
 
     // outputQueueNum check
     const uint8_t outQueNum = cfg->outputQueueNum;
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
         (type != RT_DQS_SCHED_TYPE_DSS) && ((outQueNum <= 0U) || (outQueNum > RT_DQS_MAX_OUTPUT_QUEUE_NUM)),
-        RT_ERROR_INVALID_VALUE, outQueNum, "(0, " + std::to_string(RT_DQS_MAX_OUTPUT_QUEUE_NUM) + "]");
+        RT_ERROR_INVALID_VALUE, "Verifying the validity of the task scheduling configuration", outQueNum,
+        "(0, " + std::to_string(RT_DQS_MAX_OUTPUT_QUEUE_NUM) + "]");
 
     return RT_ERROR_NONE;
 }
@@ -379,18 +381,19 @@ static rtError_t DqsSchedConfigCheck(const rtDqsSchedCfg_t* const cfg)
 static rtError_t DqsZeroCopyTaskCfgCheck(const rtDqsZeroCopyCfg_t* const cfg)
 {
     const rtDqsZeroCopyType copyType = cfg->copyType;
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
         (copyType != RT_DQS_ZERO_COPY_INPUT) && (copyType != RT_DQS_ZERO_COPY_OUTPUT), RT_ERROR_INVALID_VALUE,
         "Checking the configuration validity of the DQS zero-copy task", copyType, "[0, 1]");
 
     const rtDqsZeroCopyAddrOrderType copyOrderType = cfg->cpyAddrOrder;
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
         (copyOrderType != RT_DQS_ZERO_COPY_ADDR_ORDER_LOW32_FIRST) &&
             (copyOrderType != RT_DQS_ZERO_COPY_ADDR_ORDER_HIGH32_FIRST),
         RT_ERROR_INVALID_VALUE, "Checking the configuration validity of the DQS zero-copy task", copyOrderType,
         "[0, 1]");
 
-    ZERO_RETURN_AND_MSG_OUTER(cfg->count)
+    ZERO_RETURN_AND_MSG_OUTER_WITH_FUNC_DESC(
+        cfg->count, "Checking the configuration validity of the DQS zero-copy task")
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
         cfg->dest, RT_ERROR_INVALID_VALUE, "Checking the configuration validity of the DQS zero-copy task");
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
@@ -403,21 +406,25 @@ static rtError_t DqsAdspcTaskCfgCheck(const rtDqsAdspcTaskCfg_t* const cfg)
 {
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
         cfg, RT_ERROR_INVALID_VALUE, "Checking the configuration validity of the DQS cross-chip solver (ADSPC) task.");
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
         cfg->cqeSize != ADSPC_CQE_SIZE, RT_ERROR_INVALID_VALUE,
         "Checking the configuration validity of the DQS cross-chip solver (ADSPC) task.", cfg->cqeSize,
         std::to_string(ADSPC_CQE_SIZE));
 
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
         cfg->cqDepth != ADSPC_CQ_DEPTH, RT_ERROR_INVALID_VALUE,
         "Checking the configuration validity of the DQS cross-chip solver (ADSPC) task.", cfg->cqDepth,
         std::to_string(ADSPC_CQ_DEPTH));
 
-    ZERO_RETURN_AND_MSG_OUTER(cfg->cqeBaseAddr);
-    ZERO_RETURN_AND_MSG_OUTER(cfg->cqeCopyAddr);
+    ZERO_RETURN_AND_MSG_OUTER_WITH_FUNC_DESC(
+        cfg->cqeBaseAddr, "Checking the configuration validity of the DQS cross-chip solver (ADSPC) task.");
+    ZERO_RETURN_AND_MSG_OUTER_WITH_FUNC_DESC(
+        cfg->cqeCopyAddr, "Checking the configuration validity of the DQS cross-chip solver (ADSPC) task.");
 
-    ZERO_RETURN_AND_MSG_OUTER(cfg->cqHeadRegAddr);
-    ZERO_RETURN_AND_MSG_OUTER(cfg->cqTailRegAddr);
+    ZERO_RETURN_AND_MSG_OUTER_WITH_FUNC_DESC(
+        cfg->cqHeadRegAddr, "Checking the configuration validity of the DQS cross-chip solver (ADSPC) task.");
+    ZERO_RETURN_AND_MSG_OUTER_WITH_FUNC_DESC(
+        cfg->cqTailRegAddr, "Checking the configuration validity of the DQS cross-chip solver (ADSPC) task.");
 
     return RT_ERROR_NONE;
 }

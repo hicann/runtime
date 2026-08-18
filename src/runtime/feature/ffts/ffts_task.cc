@@ -131,8 +131,8 @@ rtError_t CheckFftsPlusDsaContext(const void* const descBuf, const uint64_t desc
         const auto* const context = RtPtrToPtr<const rtFftsPlusComCtx_t*, const uint8_t*>(
             contextBuf + (static_cast<uint64_t>(i) * CONTEXT_LEN));
         COND_RETURN_AND_MSG_OUTER(
-            context->contextType == RT_CTX_TYPE_DSA, RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1006, __func__,
-            "random number generation subtask");
+            context->contextType == RT_CTX_TYPE_DSA, RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1006,
+            "Checking the FFTS Plus task context", "random number generation subtask");
     }
     return RT_ERROR_NONE;
 }

@@ -122,7 +122,8 @@ rtError_t UbArgManage::H2DArgCopy(const StarsArgLoaderResult* const result, void
             ss << std::hex << "dest=0x" << RtPtrToValue(dest) + offset << ", src=0x" << RtPtrToValue(src) + offset
                << std::dec << ", destMax=" << curSize << ", count=" << curSize << ".";
             RT_LOG_OUTER_MSG_IMPL(
-                ErrorCode::EE1020, __func__, "memcpy_s", retStr.c_str(), strerror(ret), ss.str().c_str());
+                ErrorCode::EE1020, "Copying kernel arguments from host to device", "memcpy_s", retStr.c_str(),
+                strerror(ret), ss.str().c_str());
             return RT_ERROR_DRV_ERR;
         }
         offset += curSize;

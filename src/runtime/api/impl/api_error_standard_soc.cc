@@ -45,9 +45,10 @@ rtError_t ApiErrorDecorator::CntNotifyCreate(
         static_cast<uint32_t>(deviceId), reinterpret_cast<uint32_t*>(&realDeviceId));
     COND_RETURN_ERROR(
         error != RT_ERROR_NONE, error, "Failed to convert the user device ID %d to driver device ID.", deviceId);
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
         !((flag == RT_NOTIFY_FLAG_DEFAULT) || (flag == RT_NOTIFY_FLAG_DOWNLOAD_TO_DEV)), RT_ERROR_INVALID_VALUE,
-        NotifyFlagToString(flag), "flag", "RT_NOTIFY_FLAG_DEFAULT(0) or RT_NOTIFY_FLAG_DOWNLOAD_TO_DEV(1)");
+        "CntNotify creation", NotifyFlagToString(flag), "flag",
+        "RT_NOTIFY_FLAG_DEFAULT(0) or RT_NOTIFY_FLAG_DOWNLOAD_TO_DEV(1)");
     return impl_->CntNotifyCreate(realDeviceId, retCntNotify, flag);
 }
 
@@ -62,9 +63,9 @@ rtError_t ApiErrorDecorator::CntNotifyRecord(
 {
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(inCntNotify, RT_ERROR_INVALID_VALUE, "CntNotify recording");
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(info, RT_ERROR_INVALID_VALUE, "CntNotify recording");
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
         ((info->mode >= RECORD_MODE_MAX) || (info->mode == RECORD_INVALID_MODE)), RT_ERROR_INVALID_VALUE,
-        RecordModeToString(info->mode), "info->mode",
+        "CntNotify recording", RecordModeToString(info->mode), "info->mode",
         "RECORD_STORE_MODE(0), RECORD_ADD_MODE(1), RECORD_WRITE_BIT_MODE(2) or RECORD_CLEAR_BIT_MODE(4)");
     const rtError_t error = impl_->CntNotifyRecord(inCntNotify, stm, info);
     ERROR_RETURN(error, "count notify record failed.");
@@ -76,9 +77,9 @@ rtError_t ApiErrorDecorator::CntNotifyWaitWithTimeout(
 {
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(inCntNotify, RT_ERROR_INVALID_VALUE, "Waiting for CntNotify");
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(info, RT_ERROR_INVALID_VALUE, "Waiting for CntNotify");
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME(
-        (info->mode >= WAIT_MODE_MAX), RT_ERROR_INVALID_VALUE, WaitModeToString(info->mode), "info->mode",
-        "[0, " + std::to_string(WAIT_MODE_MAX) + ")");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
+        (info->mode >= WAIT_MODE_MAX), RT_ERROR_INVALID_VALUE, "Waiting for CntNotify", WaitModeToString(info->mode),
+        "info->mode", "[0, " + std::to_string(WAIT_MODE_MAX) + ")");
     const rtError_t error = impl_->CntNotifyWaitWithTimeout(inCntNotify, stm, info);
     ERROR_RETURN(error, "count notify record failed.");
     return error;
@@ -114,11 +115,11 @@ rtError_t ApiErrorDecorator::GetCntNotifyId(CountNotify* const inCntNotify, uint
 rtError_t ApiErrorDecorator::WriteValue(rtWriteValueInfo_t* const info, Stream* const stm)
 {
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(info, RT_ERROR_INVALID_VALUE, "Writing data to the specified memory");
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
         ((static_cast<uint32_t>(info->size) >= WRITE_VALUE_SIZE_TYPE_BUFF) ||
          (info->size == WRITE_VALUE_SIZE_TYPE_INVALID)),
-        RT_ERROR_INVALID_VALUE, WriteValueSizeTypeToString(info->size), "info->size",
-        "[1, " + std::to_string(WRITE_VALUE_SIZE_TYPE_BUFF) + ")");
+        RT_ERROR_INVALID_VALUE, "Writing data to the specified memory", WriteValueSizeTypeToString(info->size),
+        "info->size", "[1, " + std::to_string(WRITE_VALUE_SIZE_TYPE_BUFF) + ")");
     const uint64_t temp = 0ULL;
     const uint64_t info_size = static_cast<uint64_t>(info->size) - 1;
     COND_RETURN_AND_MSG_OUTER(
@@ -132,14 +133,14 @@ rtError_t ApiErrorDecorator::CCULaunch(rtCcuTaskInfo_t* taskInfo, Stream* const 
 {
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(taskInfo, RT_ERROR_INVALID_VALUE, "CCU task delivery");
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(taskInfo->args, RT_ERROR_INVALID_VALUE, "CCU task delivery");
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
         (taskInfo->instCnt == RT_CCU_INST_CNT_INVALID), RT_ERROR_INVALID_VALUE, "CCU task delivery", taskInfo->instCnt,
         "not equal to 0");
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
         (taskInfo->instStartId >= RT_CCU_INST_START_MAX), RT_ERROR_INVALID_VALUE, "CCU task delivery",
         taskInfo->instStartId, "[0, " + std::to_string(RT_CCU_INST_START_MAX) + ")");
     // 1 or 13 to sqe ccu size
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
         (taskInfo->argSize != RT_CCU_SQE_ARGS_LEN) && (taskInfo->argSize != RT_CCU_SQE_ARGS_LEN_32B),
         RT_ERROR_INVALID_VALUE, "CCU task delivery", taskInfo->argSize,
         std::to_string(RT_CCU_SQE_ARGS_LEN) + " or " + std::to_string(RT_CCU_SQE_ARGS_LEN_32B));
@@ -149,9 +150,9 @@ rtError_t ApiErrorDecorator::CCULaunch(rtCcuTaskInfo_t* taskInfo, Stream* const 
 rtError_t ApiErrorDecorator::UbDevQueryInfo(rtUbDevQueryCmd cmd, void* devInfo)
 {
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(devInfo, RT_ERROR_INVALID_VALUE, "Obtaining UB device information");
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME(
-        static_cast<uint32_t>(cmd) >= QUERY_TYPE_BUFF, RT_ERROR_INVALID_VALUE, UbDevQueryCmdToString(cmd), "cmd",
-        "[0, " + std::to_string(QUERY_TYPE_BUFF) + ")");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
+        static_cast<uint32_t>(cmd) >= QUERY_TYPE_BUFF, RT_ERROR_INVALID_VALUE, "Obtaining UB device information",
+        UbDevQueryCmdToString(cmd), "cmd", "[0, " + std::to_string(QUERY_TYPE_BUFF) + ")");
     return impl_->UbDevQueryInfo(cmd, devInfo);
 }
 
@@ -169,11 +170,13 @@ rtError_t ApiErrorDecorator::GetDevResAddress(const rtDevResInfo* const resInfo,
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
         addrInfo->resAddress, RT_ERROR_INVALID_VALUE,
         "Obtaining the virtual address based on the device resource information mapping");
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
         (resInfo->resType >= RT_RES_TYPE_MAX) || (resInfo->resType < 0), RT_ERROR_INVALID_VALUE,
+        "Obtaining the virtual address based on the device resource information mapping",
         DevResTypeToString(resInfo->resType), "resInfo->resType", "[0, " + std::to_string(RT_RES_TYPE_MAX) + ")");
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
         (resInfo->procType >= RT_PROCESS_CPTYPE_MAX) || (resInfo->procType < 0), RT_ERROR_INVALID_VALUE,
+        "Obtaining the virtual address based on the device resource information mapping",
         DevResProcTypeToString(resInfo->procType), "resInfo->procType",
         "[0, " + std::to_string(RT_PROCESS_CPTYPE_MAX) + ")");
     return impl_->GetDevResAddress(resInfo, addrInfo);
@@ -183,12 +186,13 @@ rtError_t ApiErrorDecorator::ReleaseDevResAddress(rtDevResInfo* const resInfo)
 {
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
         resInfo, RT_ERROR_INVALID_VALUE, "Unmapping the virtual address of the device");
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
         static_cast<uint32_t>(resInfo->resType) >= RT_RES_TYPE_MAX, RT_ERROR_INVALID_VALUE,
-        DevResTypeToString(resInfo->resType), "resInfo->resType", "[0, " + std::to_string(RT_RES_TYPE_MAX) + ")");
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME(
+        "Unmapping the virtual address of the device", DevResTypeToString(resInfo->resType), "resInfo->resType",
+        "[0, " + std::to_string(RT_RES_TYPE_MAX) + ")");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
         static_cast<uint32_t>(resInfo->procType) >= RT_PROCESS_CPTYPE_MAX, RT_ERROR_INVALID_VALUE,
-        DevResProcTypeToString(resInfo->procType), "resInfo->procType",
+        "Unmapping the virtual address of the device", DevResProcTypeToString(resInfo->procType), "resInfo->procType",
         "[0, " + std::to_string(RT_PROCESS_CPTYPE_MAX) + ")");
     return impl_->ReleaseDevResAddress(resInfo);
 }
@@ -196,7 +200,7 @@ rtError_t ApiErrorDecorator::ReleaseDevResAddress(rtDevResInfo* const resInfo)
 rtError_t ApiErrorDecorator::UbDbSend(rtUbDbInfo_t* const dbInfo, Stream* const stm)
 {
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(dbInfo, RT_ERROR_INVALID_VALUE, "Delivering a UB doorbell task");
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
         (dbInfo->dbNum != UB_DOORBELL_NUM_MIN) && (dbInfo->dbNum != UB_DOORBELL_NUM_MAX), RT_ERROR_INVALID_VALUE,
         "Delivering a UB doorbell task", dbInfo->dbNum, "1 or 2");
     if (dbInfo->dbNum == UB_DOORBELL_NUM_MAX) {
@@ -230,11 +234,12 @@ static rtError_t CheckArgsForFusionKernel(const rtFusionArgsEx_t* const argsInfo
 {
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
         argsInfo, RT_ERROR_INVALID_VALUE, "Checking the validity of fusion kernel startup parameters");
-    ZERO_RETURN_AND_MSG_OUTER(argsInfo->argsSize);
+    ZERO_RETURN_AND_MSG_OUTER_WITH_FUNC_DESC(
+        argsInfo->argsSize, "Checking the validity of fusion kernel startup parameters");
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
         argsInfo->args, RT_ERROR_INVALID_VALUE, "Checking the validity of fusion kernel startup parameters");
     const uint8_t aicpuTaskNum = argsInfo->aicpuNum;
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
         aicpuTaskNum > FUSION_SUB_TASK_MAX_CPU_NUM, RT_ERROR_INVALID_VALUE,
         "Checking the validity of fusion kernel startup parameters", aicpuTaskNum,
         "[0, " + std::to_string(FUSION_SUB_TASK_MAX_CPU_NUM) + "]");
@@ -422,7 +427,8 @@ rtError_t ApiErrorDecorator::FftsPlusTaskLaunch(
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
         fftsPlusTaskInfo->fftsPlusSqe, RT_ERROR_INVALID_VALUE,
         "Function Flow Task Scheduler (FFTS) Plus task delivery");
-    ZERO_RETURN_AND_MSG_OUTER(fftsPlusTaskInfo->fftsPlusSqe->readyContextNum);
+    ZERO_RETURN_AND_MSG_OUTER_WITH_FUNC_DESC(
+        fftsPlusTaskInfo->fftsPlusSqe->readyContextNum, "Function Flow Task Scheduler (FFTS) Plus task delivery");
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
         fftsPlusTaskInfo->descBuf, RT_ERROR_INVALID_VALUE, "Function Flow Task Scheduler (FFTS) Plus task delivery");
     const rtFftsPlusSqe_t* const sqe = fftsPlusTaskInfo->fftsPlusSqe;
@@ -465,7 +471,7 @@ rtError_t ApiErrorDecorator::MemGetInfoByDeviceId(
     NULL_PTR_RETURN_MSG(npuDrv, RT_ERROR_DRV_NULL);
     error = npuDrv->GetDeviceCount(&cnt);
     ERROR_RETURN(error, "Get device info failed, get device count failed, retCode=%#x", static_cast<uint32_t>(error));
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
         realDeviceId >= static_cast<uint32_t>(cnt), RT_ERROR_INVALID_VALUE, "Obtaining memory information by device ID",
         realDeviceId, "[0, " + std::to_string(cnt) + ")");
 
@@ -490,10 +496,11 @@ rtError_t ApiErrorDecorator::MemsetD32(
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
         dst, RT_ERROR_INVALID_VALUE,
         "Setting the memory content to a specified 32-bit unsigned integer value synchronously");
-    ZERO_RETURN_AND_MSG_OUTER(count);
+    ZERO_RETURN_AND_MSG_OUTER_WITH_FUNC_DESC(
+        count, "Setting the memory content to a specified 32-bit unsigned integer value synchronously");
 
     const uint64_t requiredBytes = static_cast<uint64_t>(count) * sizeof(uint32_t);
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
         requiredBytes > destMax, RT_ERROR_INVALID_VALUE,
         "Setting the memory content to a specified 32-bit unsigned integer value synchronously", requiredBytes,
         "required bytes exceed destMax=" + std::to_string(destMax));
@@ -509,10 +516,11 @@ rtError_t ApiErrorDecorator::MemsetD32Async(
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
         dst, RT_ERROR_INVALID_VALUE,
         "Setting the memory content to a specified 32-bit unsigned integer value asynchronously");
-    ZERO_RETURN_AND_MSG_OUTER(count);
+    ZERO_RETURN_AND_MSG_OUTER_WITH_FUNC_DESC(
+        count, "Setting the memory content to a specified 32-bit unsigned integer value asynchronously");
 
     const uint64_t requiredBytes = count * sizeof(uint32_t);
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
         requiredBytes > destMax, RT_ERROR_INVALID_VALUE,
         "Setting the memory content to a specified 32-bit unsigned integer value asynchronously", requiredBytes,
         "required bytes exceed destMax=" + std::to_string(destMax));
@@ -526,9 +534,9 @@ rtError_t ApiErrorDecorator::MemsetD32Async(
 
 rtError_t ApiErrorDecorator::EventWorkModeSet(uint8_t mode)
 {
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
         mode > static_cast<uint8_t>(CaptureEventModeType::HARDWARE_MODE), RT_ERROR_INVALID_VALUE,
-        CaptureEventModeToString(mode), "mode",
+        "Setting the event working mode", CaptureEventModeToString(mode), "mode",
         "[0, " + std::to_string(static_cast<uint8_t>(CaptureEventModeType::HARDWARE_MODE)) + "]");
     return impl_->EventWorkModeSet(mode);
 }
