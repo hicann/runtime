@@ -36,7 +36,7 @@ if ((${PRODUCT} STREQUAL "ascend610") OR
     (${PRODUCT} STREQUAL "mc32dm11aesl") OR 
     (${PRODUCT} STREQUAL "mc62cm12a") OR
     (${PRODUCT} STREQUAL "mc62cm12aesl") OR
-    ((${PRODUCT} STREQUAL "pegasus") AND (${PRODUCT_SIDE} STREQUAL "host")))
+    ((${PRODUCT} STREQUAL "pegasus") AND (${PRODUCT_SIDE} STREQUAL "device")))
     set(liblog_type "device_mdc")
 endif ()
 endif ()
