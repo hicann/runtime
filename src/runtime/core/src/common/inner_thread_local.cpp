@@ -77,6 +77,11 @@ bool NeedThreadRef(const Context* const ctx, const bool internalAccess)
 }
 } // namespace
 
+InnerThreadLocalContainer::ContextThreadExitGuard::~ContextThreadExitGuard()
+{
+    InnerThreadLocalContainer::ReleaseContextThreadBinding();
+}
+
 uint32_t InnerThreadLocalContainer::GetLastTaskId(void) { return lastTaskId_; }
 void InnerThreadLocalContainer::SetLastTaskId(const uint32_t inLastTaskId) { lastTaskId_ = inLastTaskId; }
 
@@ -104,6 +109,27 @@ void InnerThreadLocalContainer::ClearDeletedContextBinding(Context* const delete
     }
 }
 
+void InnerThreadLocalContainer::InitContextExitGuard()
+{
+    static thread_local ContextThreadExitGuard guard;
+    (void)guard;
+}
+
+void InnerThreadLocalContainer::ReleaseContextThreadBinding()
+{
+    Context* const oldCtx = curCtx_;
+    const bool oldNeedThreadRef = NeedThreadRef(oldCtx, curCtxInternalAccess_);
+
+    curCtx_ = nullptr;
+    curRef_ = nullptr;
+    device_ = nullptr;
+
+    if (oldNeedThreadRef) {
+        (void)oldCtx->ContextThreadUnbind();
+        (void)oldCtx->TryDeleteIfNeeded();
+    }
+}
+
 void InnerThreadLocalContainer::RefreshDevice()
 {
     Context* const boundCtx = GetBoundContext(curCtx_, curRef_);
@@ -121,6 +147,9 @@ void InnerThreadLocalContainer::SetCurCtx(Context* const inCurCtx, bool internal
         GetEffectiveContextInternalAccess(inCurCtx, newCurCtxInternalAccess, curRef_, curRefInternalAccess_);
     const bool oldNeedThreadRef = NeedThreadRef(oldCtx, oldInternalAccess);
     const bool newNeedThreadRef = NeedThreadRef(newCtx, newInternalAccess);
+    if (newNeedThreadRef) {
+        InitContextExitGuard();
+    }
     const bool oldCtxDeleted = UpdateThreadBinding(oldCtx, oldNeedThreadRef, newCtx, newNeedThreadRef);
     curCtx_ = inCurCtx;
     curCtxInternalAccess_ = ((curCtx_ != nullptr) ? internalAccess : false);
