@@ -129,7 +129,7 @@ TEST_F(RegisterManagerPlatformUtest, Test_CreateRegisterBothV2AndV4)
     registerManagerV2.CreateRegister();
     auto regV2 = registerManagerV2.GetRegister();
     EXPECT_NE(regV2, nullptr);
-    
+
     uint32_t v4type = static_cast<uint32_t>(PlatformType::CHIP_CLOUD_V4);
     MOCKER_CPP(&Adx::AdumpDsmi::DrvGetPlatformType).stubs().with(outBound(v4type)).will(returnValue(true));
     RegisterManager registerManagerV4 = RegisterManager();
@@ -164,13 +164,13 @@ TEST_F(RegisterManagerPlatformUtest, Test_CreateRegisterAllUnsupportedTypes)
     RegisterManager registerManager = RegisterManager();
     registerManager.CreateRegister();
     EXPECT_EQ(registerManager.GetRegister(), nullptr);
-    
+
     unsupportedType = 2;
     MOCKER_CPP(&Adx::AdumpDsmi::DrvGetPlatformType).stubs().with(outBound(unsupportedType)).will(returnValue(true));
     RegisterManager registerManager2 = RegisterManager();
     registerManager2.CreateRegister();
     EXPECT_EQ(registerManager2.GetRegister(), nullptr);
-    
+
     unsupportedType = 3;
     MOCKER_CPP(&Adx::AdumpDsmi::DrvGetPlatformType).stubs().with(outBound(unsupportedType)).will(returnValue(true));
     RegisterManager registerManager3 = RegisterManager();

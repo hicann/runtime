@@ -45,35 +45,26 @@ struct SymbolSpec {
     uint32_t nameOffset;
 };
 
-uint16_t Swap16(uint16_t value)
-{
-    return __builtin_bswap16(value);
-}
+uint16_t Swap16(uint16_t value) { return __builtin_bswap16(value); }
 
-uint32_t Swap32(uint32_t value)
-{
-    return __builtin_bswap32(value);
-}
+uint32_t Swap32(uint32_t value) { return __builtin_bswap32(value); }
 
-uint64_t Swap64(uint64_t value)
-{
-    return __builtin_bswap64(value);
-}
+uint64_t Swap64(uint64_t value) { return __builtin_bswap64(value); }
 
 template <typename T>
-void SwapField(T &field)
+void SwapField(T& field)
 {
     field = static_cast<T>(Swap64(static_cast<uint64_t>(field)));
 }
 
 template <>
-void SwapField<uint32_t>(uint32_t &field)
+void SwapField<uint32_t>(uint32_t& field)
 {
     field = Swap32(field);
 }
 
 template <>
-void SwapField<uint16_t>(uint16_t &field)
+void SwapField<uint16_t>(uint16_t& field)
 {
     field = Swap16(field);
 }
@@ -86,14 +77,14 @@ size_t Align(size_t value, size_t alignment)
     return (value + alignment - 1U) / alignment * alignment;
 }
 
-void ResizeForWrite(std::vector<char> &data, size_t offset, size_t len)
+void ResizeForWrite(std::vector<char>& data, size_t offset, size_t len)
 {
     if (data.size() < offset + len) {
         data.resize(offset + len, 0);
     }
 }
 
-void NormalizeForBigEndian(Elf64_Ehdr &ehdr)
+void NormalizeForBigEndian(Elf64_Ehdr& ehdr)
 {
     SwapField(ehdr.e_type);
     SwapField(ehdr.e_machine);
@@ -110,7 +101,7 @@ void NormalizeForBigEndian(Elf64_Ehdr &ehdr)
     SwapField(ehdr.e_shstrndx);
 }
 
-void NormalizeForBigEndian(Elf64_Shdr &shdr)
+void NormalizeForBigEndian(Elf64_Shdr& shdr)
 {
     SwapField(shdr.sh_name);
     SwapField(shdr.sh_type);
@@ -124,7 +115,7 @@ void NormalizeForBigEndian(Elf64_Shdr &shdr)
     SwapField(shdr.sh_entsize);
 }
 
-void NormalizeForBigEndian(Elf64_Sym &sym)
+void NormalizeForBigEndian(Elf64_Sym& sym)
 {
     sym.st_name = Swap32(sym.st_name);
     sym.st_shndx = Swap16(sym.st_shndx);
@@ -133,7 +124,7 @@ void NormalizeForBigEndian(Elf64_Sym &sym)
 }
 
 template <typename T>
-bool WriteStruct(std::vector<char> &data, size_t offset, T value, bool bigEndian)
+bool WriteStruct(std::vector<char>& data, size_t offset, T value, bool bigEndian)
 {
     if (bigEndian) {
         NormalizeForBigEndian(value);
@@ -146,7 +137,7 @@ bool WriteStruct(std::vector<char> &data, size_t offset, T value, bool bigEndian
     return true;
 }
 
-bool WriteBytes(std::vector<char> &data, size_t offset, const void *src, size_t len)
+bool WriteBytes(std::vector<char>& data, size_t offset, const void* src, size_t len)
 {
     ResizeForWrite(data, offset, len);
     const errno_t ret = memcpy_s(data.data() + offset, data.size() - offset, src, len);
@@ -156,13 +147,13 @@ bool WriteBytes(std::vector<char> &data, size_t offset, const void *src, size_t 
     return true;
 }
 
-void BuildSymbolTable(const std::vector<SymbolSpec> &symbols, std::string &strtab, std::vector<Elf64_Sym> &elfSymbols)
+void BuildSymbolTable(const std::vector<SymbolSpec>& symbols, std::string& strtab, std::vector<Elf64_Sym>& elfSymbols)
 {
     strtab.assign(1U, '\0');
     elfSymbols.clear();
     Elf64_Sym nullSym = {};
     elfSymbols.push_back(nullSym);
-    for (const SymbolSpec &spec : symbols) {
+    for (const SymbolSpec& spec : symbols) {
         Elf64_Sym sym = {};
         const uint32_t offset = static_cast<uint32_t>(strtab.size());
         strtab.append(spec.name);
@@ -177,7 +168,7 @@ void BuildSymbolTable(const std::vector<SymbolSpec> &symbols, std::string &strta
     }
 }
 
-void FillElfHeader(Elf64_Ehdr &ehdr, bool bigEndian, size_t shoff, uint16_t sectionNum)
+void FillElfHeader(Elf64_Ehdr& ehdr, bool bigEndian, size_t shoff, uint16_t sectionNum)
 {
     ehdr = {};
     ehdr.e_ident[EI_MAG0] = ELFMAG0;
@@ -197,9 +188,9 @@ void FillElfHeader(Elf64_Ehdr &ehdr, bool bigEndian, size_t shoff, uint16_t sect
     ehdr.e_shstrndx = SHN_UNDEF;
 }
 
-void FillSections(std::vector<Elf64_Shdr> &sections, bool includeSymtab, bool invalidSymEntSize,
-    bool invalidStrtabType, size_t textOffset, size_t textSize, size_t symtabOffset, size_t symtabSize,
-    size_t strtabOffset, size_t strtabSize)
+void FillSections(
+    std::vector<Elf64_Shdr>& sections, bool includeSymtab, bool invalidSymEntSize, bool invalidStrtabType,
+    size_t textOffset, size_t textSize, size_t symtabOffset, size_t symtabSize, size_t strtabOffset, size_t strtabSize)
 {
     sections[1].sh_type = SHT_PROGBITS;
     sections[1].sh_flags = SHF_ALLOC | SHF_EXECINSTR;
@@ -221,7 +212,8 @@ void FillSections(std::vector<Elf64_Shdr> &sections, bool includeSymtab, bool in
     sections[3].sh_addralign = 1U;
 }
 
-std::string MakeElf(const std::vector<SymbolSpec> &symbols, bool bigEndian = false, bool includeSymtab = true,
+std::string MakeElf(
+    const std::vector<SymbolSpec>& symbols, bool bigEndian = false, bool includeSymtab = true,
     bool invalidSymEntSize = false, bool invalidStrtabType = false)
 {
     std::string strtab;
@@ -237,8 +229,9 @@ std::string MakeElf(const std::vector<SymbolSpec> &symbols, bool bigEndian = fal
     const uint16_t sectionNum = includeSymtab ? 4U : 2U;
 
     std::vector<Elf64_Shdr> sections(sectionNum);
-    FillSections(sections, includeSymtab, invalidSymEntSize, invalidStrtabType, textOffset, textSize, symtabOffset,
-        symtabSize, strtabOffset, strtabSize);
+    FillSections(
+        sections, includeSymtab, invalidSymEntSize, invalidStrtabType, textOffset, textSize, symtabOffset, symtabSize,
+        strtabOffset, strtabSize);
 
     Elf64_Ehdr ehdr = {};
     FillElfHeader(ehdr, bigEndian, shoff, sectionNum);
@@ -294,7 +287,7 @@ rtExceptionErrRegInfo_t MakeCore(uint32_t coreId, rtCoreType_t coreType, uint64_
     return core;
 }
 
-int32_t MockGetBinDataFromHandle(rtBinHandle binHandle, std::string &binData, uint32_t &binSize)
+int32_t MockGetBinDataFromHandle(rtBinHandle binHandle, std::string& binData, uint32_t& binSize)
 {
     (void)binHandle;
     binData = g_mockElf;
@@ -302,11 +295,11 @@ int32_t MockGetBinDataFromHandle(rtBinHandle binHandle, std::string &binData, ui
     return ADUMP_SUCCESS;
 }
 
-rtError_t RtsBinaryGetDevAddressSuccess(const rtBinHandle binHandle, void **bin, uint32_t *binSize)
+rtError_t RtsBinaryGetDevAddressSuccess(const rtBinHandle binHandle, void** bin, uint32_t* binSize)
 {
     (void)binHandle;
     if (bin != nullptr) {
-        *bin = reinterpret_cast<void *>(static_cast<uintptr_t>(0x1000U));
+        *bin = reinterpret_cast<void*>(static_cast<uintptr_t>(0x1000U));
     }
     if (binSize != nullptr) {
         *binSize = 0x800U;
@@ -314,7 +307,7 @@ rtError_t RtsBinaryGetDevAddressSuccess(const rtBinHandle binHandle, void **bin,
     return RT_ERROR_NONE;
 }
 
-rtError_t RtsBinaryGetDevAddressNullAddr(const rtBinHandle binHandle, void **bin, uint32_t *binSize)
+rtError_t RtsBinaryGetDevAddressNullAddr(const rtBinHandle binHandle, void** bin, uint32_t* binSize)
 {
     (void)binHandle;
     if (bin != nullptr) {
@@ -326,11 +319,11 @@ rtError_t RtsBinaryGetDevAddressNullAddr(const rtBinHandle binHandle, void **bin
     return RT_ERROR_NONE;
 }
 
-void InitAicoreException(rtExceptionInfo &exception, rtBinHandle binHandle, const std::string &kernelName)
+void InitAicoreException(rtExceptionInfo& exception, rtBinHandle binHandle, const std::string& kernelName)
 {
     exception = {};
     exception.expandInfo.type = RT_EXCEPTION_AICORE;
-    rtExceptionKernelInfo_t &kernelInfo = exception.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo;
+    rtExceptionKernelInfo_t& kernelInfo = exception.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo;
     kernelInfo.bin = binHandle;
     kernelInfo.kernelName = kernelName.c_str();
     kernelInfo.kernelNameSize = static_cast<uint32_t>(kernelName.size());
@@ -386,8 +379,9 @@ TEST_F(KernelSymbolLocatorUTest, InitFromBinBufferParsesAndNormalizesLittleEndia
     EXPECT_TRUE(locator.initialized_);
     EXPECT_EQ(6U, locator.kernelSymbols_.symbols.size());
 
-    const auto it = std::find_if(locator.kernelSymbols_.symbols.begin(), locator.kernelSymbols_.symbols.end(),
-        [](const KernelSymbol &symbol) { return symbol.name == "zero_size_func"; });
+    const auto it = std::find_if(
+        locator.kernelSymbols_.symbols.begin(), locator.kernelSymbols_.symbols.end(),
+        [](const KernelSymbol& symbol) { return symbol.name == "zero_size_func"; });
     ASSERT_NE(locator.kernelSymbols_.symbols.end(), it);
     EXPECT_EQ(0x40ULL, it->size);
 }
@@ -408,9 +402,7 @@ TEST_F(KernelSymbolLocatorUTest, InitFromBinHandleUsesCacheAndRejectsNullHandle)
 
     g_mockElf = MakeElf(ValidSymbols());
     rtBinHandle handle = reinterpret_cast<rtBinHandle>(0x1234);
-    MOCKER_CPP(&ExceptionInfoCommon::GetBinDataFromHandle)
-        .stubs()
-        .will(invoke(MockGetBinDataFromHandle));
+    MOCKER_CPP(&ExceptionInfoCommon::GetBinDataFromHandle).stubs().will(invoke(MockGetBinDataFromHandle));
 
     ASSERT_EQ(ADUMP_SUCCESS, locator.InitFromBinHandle(handle));
     KernelSymbolLocator cachedLocator;
@@ -422,13 +414,13 @@ TEST_F(KernelSymbolLocatorUTest, InitFromBinHandleUsesCacheAndRejectsNullHandle)
 TEST_F(KernelSymbolLocatorUTest, GetKernelDeviceAddrUsesRtsDevAddress)
 {
     rtBinHandle handle = reinterpret_cast<rtBinHandle>(0x1234);
-    void *devAddr = nullptr;
+    void* devAddr = nullptr;
     MOCKER(rtsBinaryGetDevAddress).expects(once()).will(invoke(RtsBinaryGetDevAddressSuccess));
     EXPECT_EQ(ADUMP_SUCCESS, ExceptionInfoCommon::GetKernelDeviceAddr(handle, devAddr));
-    EXPECT_EQ(reinterpret_cast<void *>(static_cast<uintptr_t>(0x1000U)), devAddr);
+    EXPECT_EQ(reinterpret_cast<void*>(static_cast<uintptr_t>(0x1000U)), devAddr);
     GlobalMockObject::verify();
 
-    devAddr = reinterpret_cast<void *>(static_cast<uintptr_t>(0x2000U));
+    devAddr = reinterpret_cast<void*>(static_cast<uintptr_t>(0x2000U));
     MOCKER(rtsBinaryGetDevAddress).expects(once()).will(invoke(RtsBinaryGetDevAddressNullAddr));
     EXPECT_EQ(ADUMP_FAILED, ExceptionInfoCommon::GetKernelDeviceAddr(handle, devAddr));
     EXPECT_EQ(nullptr, devAddr);
@@ -465,8 +457,7 @@ TEST_F(KernelSymbolLocatorUTest, LocateAndPrintRejectsInvalidStateAndInputs)
 
     rtExceptionErrRegInfo_t core = MakeCore(1U, RT_CORE_TYPE_AIC, 0x1000ULL, 0x1010ULL);
     ExceptionRegInfo singleCoreRegInfo{1U, &core};
-    EXPECT_EQ(ADUMP_FAILED,
-        locator.LocateErrorSymbolsForCore(2U, RT_CORE_TYPE_AIC, singleCoreRegInfo, singleLocation));
+    EXPECT_EQ(ADUMP_FAILED, locator.LocateErrorSymbolsForCore(2U, RT_CORE_TYPE_AIC, singleCoreRegInfo, singleLocation));
 }
 
 TEST_F(KernelSymbolLocatorUTest, LocateAndPrintCoversMatchedNoMatchedAndLowFixedPcBranches)
@@ -549,9 +540,7 @@ TEST_F(KernelSymbolLocatorUTest, DumpErrorSymbolsCoversFailureAndSuccessPaths)
     GlobalMockObject::verify();
 
     g_mockElf = MakeElf(ValidSymbols());
-    MOCKER_CPP(&ExceptionInfoCommon::GetBinDataFromHandle)
-        .stubs()
-        .will(invoke(MockGetBinDataFromHandle));
+    MOCKER_CPP(&ExceptionInfoCommon::GetBinDataFromHandle).stubs().will(invoke(MockGetBinDataFromHandle));
     uint32_t v2Type = static_cast<uint32_t>(PlatformType::CHIP_CLOUD_V2);
     MOCKER_CPP(&Adx::AdumpDsmi::DrvGetPlatformType).stubs().with(outBound(v2Type)).will(returnValue(true));
     KernelSymbolLocator::DumpErrorSymbols(exception, regInfo, dumpPath);

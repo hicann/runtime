@@ -52,10 +52,7 @@ bool ReadStruct(const char* elf, size_t elfSize, size_t offset, T& out)
 
 bool IsAddOverflow(size_t lhs, size_t rhs) { return lhs > std::numeric_limits<size_t>::max() - rhs; }
 
-bool IsAddOverflow64(uint64_t lhs, uint64_t rhs)
-{
-    return lhs > std::numeric_limits<uint64_t>::max() - rhs;
-}
+bool IsAddOverflow64(uint64_t lhs, uint64_t rhs) { return lhs > std::numeric_limits<uint64_t>::max() - rhs; }
 
 bool GetSymbolOffsetRange(const std::vector<KernelSymbol>& symbols, uint64_t& minOffset, uint64_t& maxEnd)
 {
@@ -100,7 +97,8 @@ void LogKernelSymbolSummary(
     uint64_t minOffset = 0;
     uint64_t maxEnd = 0;
     const bool hasRange = GetSymbolOffsetRange(symbols.symbols, minOffset, maxEnd);
-    IDE_LOGI("Parse kernel symbols success. parsedSymbolCount=%zu, normalizedSymbolCount=%zu, "
+    IDE_LOGI(
+        "Parse kernel symbols success. parsedSymbolCount=%zu, normalizedSymbolCount=%zu, "
         "hasSymbolRange=%u, minSymbolOffset=0x%lx, maxSymbolEnd=0x%lx, symbolTotal=%zu, accepted=%zu, "
         "nonFunc=%zu, invalidSection=%zu, invalidName=%zu.",
         parsedSymbolCount, symbols.symbols.size(), static_cast<uint32_t>(hasRange), minOffset, maxEnd,
@@ -324,7 +322,8 @@ bool BuildKernelSymbol(
     outSymbol.bind = ELF64_ST_BIND(sym.st_info);
     outSymbol.visibility = ELF64_ST_VISIBILITY(sym.st_other);
     outSymbol.name.assign(strStart, strEnd - strStart);
-    IDE_LOGD("Parse kernel symbol, name=%s, offset=0x%lx, size=0x%lx, sectionEnd=0x%lx, "
+    IDE_LOGD(
+        "Parse kernel symbol, name=%s, offset=0x%lx, size=0x%lx, sectionEnd=0x%lx, "
         "sectionIndex=%u, bind=%u, visibility=%u.",
         outSymbol.name.c_str(), outSymbol.offset, outSymbol.size, outSymbol.sectionEnd,
         static_cast<uint32_t>(outSymbol.sectionIndex), static_cast<uint32_t>(outSymbol.bind),
@@ -448,10 +447,11 @@ bool ParseSymbolTables(
             continue;
         }
         validSymbolTableCount++;
-        if (!ParseFunctionSymbols(elf, elfSize, symtabShdr, *strtabShdr, shouldSwap, shdrs, parsedSymbols,
-            filterStats)) {
-            IDE_LOGW("ParseElfSymbols failed, invalid ELF symbols, symOffset=%lu, symSize=%lu.",
-                symtabShdr.sh_offset, symtabShdr.sh_size);
+        if (!ParseFunctionSymbols(
+                elf, elfSize, symtabShdr, *strtabShdr, shouldSwap, shdrs, parsedSymbols, filterStats)) {
+            IDE_LOGW(
+                "ParseElfSymbols failed, invalid ELF symbols, symOffset=%lu, symSize=%lu.", symtabShdr.sh_offset,
+                symtabShdr.sh_size);
             return false;
         }
     }
@@ -512,13 +512,14 @@ void PrintSummaryGroup(size_t index, const SummaryGroup& g)
     } else {
         symbolOss << "unknown";
     }
-    const std::string sourceStr = g.src.ok
-        ? (g.src.srcFile + ":" + std::to_string(g.src.srcLine) + ":" + std::to_string(g.src.srcColumn))
-        : "unknown";
-    IDE_LOGE("[Dump][Exception][Symbolize] Group[%zu] oFile=%s fixedPCOffset=0x%lx symbol=%s "
+    const std::string sourceStr =
+        g.src.ok ? (g.src.srcFile + ":" + std::to_string(g.src.srcLine) + ":" + std::to_string(g.src.srcColumn)) :
+                   "unknown";
+    IDE_LOGE(
+        "[Dump][Exception][Symbolize] Group[%zu] oFile=%s fixedPCOffset=0x%lx symbol=%s "
         "source=%s cores=[%s]",
-        index, g.oFilePath.empty() ? "unknown" : g.oFilePath.c_str(), g.fixedPCOffset,
-        symbolOss.str().c_str(), sourceStr.c_str(), coresOss.str().c_str());
+        index, g.oFilePath.empty() ? "unknown" : g.oFilePath.c_str(), g.fixedPCOffset, symbolOss.str().c_str(),
+        sourceStr.c_str(), coresOss.str().c_str());
 }
 } // namespace
 
@@ -542,22 +543,20 @@ void KernelSymbolLocator::ResetState()
     oFilePath_.clear();
 }
 
-void KernelSymbolLocator::SetOFilePath(const std::string& oFilePath)
-{
-    oFilePath_ = oFilePath;
-}
+void KernelSymbolLocator::SetOFilePath(const std::string& oFilePath) { oFilePath_ = oFilePath; }
 
 void KernelSymbolLocator::UpdateStartPCFromDeviceAddr(rtBinHandle binHandle)
 {
     void* devAddr = nullptr;
     int32_t ret = ExceptionInfoCommon::GetKernelDeviceAddr(binHandle, devAddr);
-    IDE_CTRL_VALUE_WARN(ret == ADUMP_SUCCESS && devAddr != nullptr, return,
+    IDE_CTRL_VALUE_WARN(
+        ret == ADUMP_SUCCESS && devAddr != nullptr, return,
         "Get kernel device address failed, skip updating startPC, binHandle=%p.", binHandle);
 
     kernelDeviceStartPC_ = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(devAddr));
     hasKernelDeviceStartPC_ = true;
-    IDE_LOGI("Update kernel startPC from device address, binHandle=%p, startPC=0x%lx.", binHandle,
-        kernelDeviceStartPC_);
+    IDE_LOGI(
+        "Update kernel startPC from device address, binHandle=%p, startPC=0x%lx.", binHandle, kernelDeviceStartPC_);
 }
 
 int32_t KernelSymbolLocator::InitFromBinHandle(rtBinHandle binHandle)
@@ -605,33 +604,40 @@ int32_t KernelSymbolLocator::InitFromBinBuffer(const std::string& binData)
 int32_t KernelSymbolLocator::ParseElfSymbols(const char* elf, size_t elfSize, KernelSymbolSet& outSymbols)
 {
     Elf64_Ehdr ehdr = {};
-    IDE_CTRL_VALUE_WARN(ReadElfHeader(elf, elfSize, ehdr), return ADUMP_FAILED,
+    IDE_CTRL_VALUE_WARN(
+        ReadElfHeader(elf, elfSize, ehdr), return ADUMP_FAILED,
         "ParseElfSymbols failed, invalid ELF header, elfSize=%zu.", elfSize);
 
     const bool shouldSwap = ShouldSwapElfBytes(ehdr);
     std::vector<Elf64_Shdr> shdrs;
-    IDE_CTRL_VALUE_WARN(ReadSectionHeaders(elf, elfSize, ehdr, shouldSwap, shdrs), return ADUMP_FAILED,
+    IDE_CTRL_VALUE_WARN(
+        ReadSectionHeaders(elf, elfSize, ehdr, shouldSwap, shdrs), return ADUMP_FAILED,
         "ParseElfSymbols failed, invalid ELF section headers, shoff=%lu, shnum=%u.", ehdr.e_shoff, ehdr.e_shnum);
 
     std::vector<KernelSymbol> parsedSymbols;
     SymbolFilterStats filterStats;
     size_t symbolTableCount = 0;
     size_t validSymbolTableCount = 0;
-    IDE_CTRL_VALUE_WARN(ParseSymbolTables(elf, elfSize, shdrs, shouldSwap, parsedSymbols, filterStats,
-        symbolTableCount, validSymbolTableCount), return ADUMP_FAILED, "ParseElfSymbols failed.");
+    IDE_CTRL_VALUE_WARN(
+        ParseSymbolTables(
+            elf, elfSize, shdrs, shouldSwap, parsedSymbols, filterStats, symbolTableCount, validSymbolTableCount),
+        return ADUMP_FAILED, "ParseElfSymbols failed.");
 
-    IDE_CTRL_VALUE_WARN(symbolTableCount != 0, return ADUMP_FAILED,
+    IDE_CTRL_VALUE_WARN(
+        symbolTableCount != 0, return ADUMP_FAILED,
         "ParseElfSymbols failed, no SHT_SYMTAB or SHT_DYNSYM section found.");
-    IDE_CTRL_VALUE_WARN(validSymbolTableCount != 0, return ADUMP_FAILED,
+    IDE_CTRL_VALUE_WARN(
+        validSymbolTableCount != 0, return ADUMP_FAILED,
         "ParseElfSymbols failed, no valid symbol table found, symbolTableCount=%zu.", symbolTableCount);
 
     std::vector<KernelSymbol> normalizedSymbols;
     NormalizeFunctionSymbols(parsedSymbols, normalizedSymbols);
-    IDE_CTRL_VALUE_WARN(!normalizedSymbols.empty(), return ADUMP_FAILED,
+    IDE_CTRL_VALUE_WARN(
+        !normalizedSymbols.empty(), return ADUMP_FAILED,
         "ParseElfSymbols failed, empty function symbols, validSymbolTableCount=%zu, symbolTotal=%zu, "
         "accepted=%zu, nonFunc=%zu, invalidSection=%zu, invalidName=%zu.",
-        validSymbolTableCount, filterStats.total, filterStats.accepted, filterStats.nonFunc,
-        filterStats.invalidSection, filterStats.invalidName);
+        validSymbolTableCount, filterStats.total, filterStats.accepted, filterStats.nonFunc, filterStats.invalidSection,
+        filterStats.invalidName);
 
     outSymbols.symbols.swap(normalizedSymbols);
     LogKernelSymbolSummary(outSymbols, parsedSymbols.size(), filterStats);
@@ -658,16 +664,20 @@ void KernelSymbolLocator::PrintErrorForCore(rtExceptionErrRegInfo_t coreInfo, Er
     outLocation.skipped = false;
 
     uint32_t coreType = static_cast<uint32_t>(coreInfo.coreType);
-    IDE_LOGE("[Dump][Exception] Error register information. coreId=%u, coreType=%u, %s",
-        coreInfo.coreId, coreType, GetErrorRegisters(coreInfo).c_str());
+    IDE_LOGE(
+        "[Dump][Exception] Error register information. coreId=%u, coreType=%u, %s", coreInfo.coreId, coreType,
+        GetErrorRegisters(coreInfo).c_str());
     uint64_t fixedCurrentPC = FixPcByErrorRegs(coreInfo);
     uint64_t fixedStartPC = coreInfo.startPC;
     if (GetCorrectedStartPC(coreInfo, fixedStartPC)) {
-        IDE_LOGI("Correct startPC by kernel address. coreId=%u, coreType=%u, originalStartPC=0x%lx, "
-            "fixedStartPC=0x%lx.", coreInfo.coreId, coreType, coreInfo.startPC, fixedStartPC);
+        IDE_LOGI(
+            "Correct startPC by kernel address. coreId=%u, coreType=%u, originalStartPC=0x%lx, "
+            "fixedStartPC=0x%lx.",
+            coreInfo.coreId, coreType, coreInfo.startPC, fixedStartPC);
     }
     if (fixedCurrentPC < fixedStartPC) {
-        IDE_LOGE("coreId=%u, coreType=%u, fixedCurrentPC=0x%lx < fixedStartPC=0x%lx, "
+        IDE_LOGE(
+            "coreId=%u, coreType=%u, fixedCurrentPC=0x%lx < fixedStartPC=0x%lx, "
             "originalCurrentPC=0x%lx, originalStartPC=0x%lx, skip lookup symbol.",
             coreInfo.coreId, coreType, fixedCurrentPC, fixedStartPC, coreInfo.currentPC, coreInfo.startPC);
         outLocation.skipped = true;
@@ -676,18 +686,18 @@ void KernelSymbolLocator::PrintErrorForCore(rtExceptionErrRegInfo_t coreInfo, Er
 
     const uint64_t fixedPCOffset = fixedCurrentPC - fixedStartPC;
     outLocation.fixedPCOffset = fixedPCOffset;
-    IDE_LOGE("[Dump][Exception] Error PC information. coreId=%u, coreType=%u, originalStartPC=0x%lx, "
+    IDE_LOGE(
+        "[Dump][Exception] Error PC information. coreId=%u, coreType=%u, originalStartPC=0x%lx, "
         "fixedStartPC=0x%lx, originalCurrentPC=0x%lx, fixedCurrentPC=0x%lx, fixedPCOffset=0x%lx.",
-        coreInfo.coreId, coreType, coreInfo.startPC, fixedStartPC, coreInfo.currentPC, fixedCurrentPC,
-        fixedPCOffset);
+        coreInfo.coreId, coreType, coreInfo.startPC, fixedStartPC, coreInfo.currentPC, fixedCurrentPC, fixedPCOffset);
 
     // 源码解析不在此逐核进行：偏移已回填 outLocation.fixedPCOffset，由 SymbolizeCollectedLocations
     // 收齐所有核后对同一 .o 一次性批量 symbolize，避免每核各起一个 llvm-symbolizer 进程放大超时。
     MatchSymbolForCore(coreInfo, fixedPCOffset, outLocation);
 }
 
-void KernelSymbolLocator::MatchSymbolForCore(const rtExceptionErrRegInfo_t& coreInfo, uint64_t fixedPCOffset,
-    ErrorLocation& outLocation)
+void KernelSymbolLocator::MatchSymbolForCore(
+    const rtExceptionErrRegInfo_t& coreInfo, uint64_t fixedPCOffset, ErrorLocation& outLocation)
 {
     const uint32_t coreType = static_cast<uint32_t>(coreInfo.coreType);
     const KernelSymbol* matchedSymbol = FindBestMatchedSymbol(kernelSymbols_.symbols, fixedPCOffset);
@@ -695,19 +705,21 @@ void KernelSymbolLocator::MatchSymbolForCore(const rtExceptionErrRegInfo_t& core
         outLocation.hasSymbol = true;
         outLocation.symbolName = matchedSymbol->name;
         outLocation.symbolOffset = fixedPCOffset - matchedSymbol->offset;
-        IDE_LOGE("[Dump][Exception] Error symbol information. coreId=%u, coreType=%u, "
-            "symbol=%s+0x%lx.", coreInfo.coreId, coreType, matchedSymbol->name.c_str(),
-            outLocation.symbolOffset);
+        IDE_LOGE(
+            "[Dump][Exception] Error symbol information. coreId=%u, coreType=%u, "
+            "symbol=%s+0x%lx.",
+            coreInfo.coreId, coreType, matchedSymbol->name.c_str(), outLocation.symbolOffset);
         return;
     }
 
     uint64_t minSymbolOffset = 0;
     uint64_t maxSymbolEnd = 0;
     const bool hasSymbolRange = GetSymbolOffsetRange(kernelSymbols_.symbols, minSymbolOffset, maxSymbolEnd);
-    IDE_LOGE("[Dump][Exception] Not found error symbol information. coreId=%u, coreType=%u, "
+    IDE_LOGE(
+        "[Dump][Exception] Not found error symbol information. coreId=%u, coreType=%u, "
         "symbolCount=%zu, hasSymbolRange=%u, minSymbolOffset=0x%lx, maxSymbolEnd=0x%lx.",
-        coreInfo.coreId, coreType, kernelSymbols_.symbols.size(),
-        static_cast<uint32_t>(hasSymbolRange), minSymbolOffset, maxSymbolEnd);
+        coreInfo.coreId, coreType, kernelSymbols_.symbols.size(), static_cast<uint32_t>(hasSymbolRange),
+        minSymbolOffset, maxSymbolEnd);
 }
 
 void KernelSymbolLocator::SymbolizeCollectedLocations(std::vector<ErrorLocation>& locations) const
@@ -730,8 +742,9 @@ void KernelSymbolLocator::SymbolizeCollectedLocations(std::vector<ErrorLocation>
     // 同一 .o 的全部偏移由一个 llvm-symbolizer 进程一次解析，最坏耗时收敛为单次超时。
     std::vector<SymbolizeResult> results;
     if (!KernelSourceSymbolizer::Symbolize(oFilePath_, offsets, results)) {
-        IDE_LOGW("Symbolize kernel source failed for all cores, oFile=%s, offsetCount=%zu.",
-            oFilePath_.c_str(), offsets.size());
+        IDE_LOGW(
+            "Symbolize kernel source failed for all cores, oFile=%s, offsetCount=%zu.", oFilePath_.c_str(),
+            offsets.size());
         return;
     }
     for (size_t k = 0; k < idxMap.size() && k < results.size(); ++k) {
@@ -739,8 +752,8 @@ void KernelSymbolLocator::SymbolizeCollectedLocations(std::vector<ErrorLocation>
     }
 }
 
-int32_t KernelSymbolLocator::LocateErrorSymbols(const ExceptionRegInfo& exceptionRegInfo,
-    std::vector<ErrorLocation>& outLocations)
+int32_t KernelSymbolLocator::LocateErrorSymbols(
+    const ExceptionRegInfo& exceptionRegInfo, std::vector<ErrorLocation>& outLocations)
 {
     IDE_CTRL_VALUE_WARN(initialized_, return ADUMP_FAILED, "KernelSymbolLocator not initialized.");
 
@@ -763,8 +776,9 @@ int32_t KernelSymbolLocator::LocateErrorSymbolsForCore(
 {
     IDE_CTRL_VALUE_WARN(initialized_, return ADUMP_FAILED, "KernelSymbolLocator not initialized.");
 
-    IDE_CTRL_VALUE_WARN(exceptionRegInfo.errRegInfo != nullptr && exceptionRegInfo.coreNum != 0,
-        return ADUMP_FAILED, "Exception register info is null or core num is zero.");
+    IDE_CTRL_VALUE_WARN(
+        exceptionRegInfo.errRegInfo != nullptr && exceptionRegInfo.coreNum != 0, return ADUMP_FAILED,
+        "Exception register info is null or core num is zero.");
 
     const rtExceptionErrRegInfo_t* coreInfo = nullptr;
     for (uint32_t i = 0; i < exceptionRegInfo.coreNum; i++) {
@@ -775,8 +789,9 @@ int32_t KernelSymbolLocator::LocateErrorSymbolsForCore(
         }
     }
 
-    IDE_CTRL_VALUE_WARN(coreInfo != nullptr, return ADUMP_FAILED,
-        "Core exception register info is not found, coreId=%u, coreType=%u.", coreId, coreType);
+    IDE_CTRL_VALUE_WARN(
+        coreInfo != nullptr, return ADUMP_FAILED, "Core exception register info is not found, coreId=%u, coreType=%u.",
+        coreId, coreType);
 
     // 先定位偏移与符号，再对该核偏移做一次 symbolize（单核路径每个 .o 本就是一次进程调用）。
     PrintErrorForCore(*coreInfo, outLocation);
@@ -793,8 +808,8 @@ void KernelSymbolLocator::PrintClassificationSummary(const std::vector<ErrorLoca
     }
     // 按 (oFilePath, fixedPCOffset) 聚类：同一 .o 同一偏移的多核归为一组。
     const std::vector<SummaryGroup> groups = BuildSummaryGroups(locations);
-    IDE_LOGE("[Dump][Exception][Symbolize] classification summary. cores=%zu, groups=%zu.",
-        locations.size(), groups.size());
+    IDE_LOGE(
+        "[Dump][Exception][Symbolize] classification summary. cores=%zu, groups=%zu.", locations.size(), groups.size());
     for (size_t i = 0; i < groups.size(); ++i) {
         PrintSummaryGroup(i, groups[i]);
     }
@@ -831,8 +846,8 @@ std::string KernelSymbolLocator::ResolveOFilePath(const std::string& hostOPath)
     return "";
 }
 
-void KernelSymbolLocator::DumpErrorSymbols(const rtExceptionInfo& exception, ExceptionRegInfo& exceptionRegInfo,
-    const std::string& dumpPath)
+void KernelSymbolLocator::DumpErrorSymbols(
+    const rtExceptionInfo& exception, ExceptionRegInfo& exceptionRegInfo, const std::string& dumpPath)
 {
     rtExceptionArgsInfo_t exceptionArgsInfo{};
     int32_t ret = ExceptionInfoCommon::GetExceptionInfo(exception, exceptionArgsInfo);

@@ -102,7 +102,6 @@ TEST_F(KernelPcFixerUTest, CloudV2MixedModuleReturnsFirstModulePcAndShortRegiste
     regs = EmptyRegs();
     regs[RT_V100_AIC_ERR_0] = 1U << 9U;
     EXPECT_EQ(TEST_PC, fixer.FixPc(TEST_PC, regs.data(), RT_V100_CUBE_ERR_0));
-
 }
 
 TEST_F(KernelPcFixerUTest, CloudV2SameModuleAcrossErrorRegistersFixesPc)
@@ -322,7 +321,7 @@ TEST_F(KernelPcFixerUTest, FactoryCreatesSupportedFixersAndRejectsUnsupported)
 {
     uint32_t v2Type = static_cast<uint32_t>(PlatformType::CHIP_CLOUD_V2);
     MOCKER_CPP(&Adx::AdumpDsmi::DrvGetPlatformType).stubs().with(outBound(v2Type)).will(returnValue(true));
-    EXPECT_NE(nullptr, dynamic_cast<CloudV2PcFixer *>(PcFixerFactory::GetInstance()));
+    EXPECT_NE(nullptr, dynamic_cast<CloudV2PcFixer*>(PcFixerFactory::GetInstance()));
     EXPECT_NE(nullptr, PcFixerFactory::GetInstance());
 
     GlobalMockObject::verify();
@@ -331,7 +330,7 @@ TEST_F(KernelPcFixerUTest, FactoryCreatesSupportedFixersAndRejectsUnsupported)
 
     uint32_t v4Type = static_cast<uint32_t>(PlatformType::CHIP_CLOUD_V4);
     MOCKER_CPP(&Adx::AdumpDsmi::DrvGetPlatformType).stubs().with(outBound(v4Type)).will(returnValue(true));
-    EXPECT_NE(nullptr, dynamic_cast<CloudV4PcFixer *>(PcFixerFactory::GetInstance()));
+    EXPECT_NE(nullptr, dynamic_cast<CloudV4PcFixer*>(PcFixerFactory::GetInstance()));
 
     GlobalMockObject::verify();
     PcFixerFactory::instance_.reset();
@@ -339,7 +338,7 @@ TEST_F(KernelPcFixerUTest, FactoryCreatesSupportedFixersAndRejectsUnsupported)
 
     uint32_t v5Type = static_cast<uint32_t>(PlatformType::CHIP_CLOUD_V5);
     MOCKER_CPP(&Adx::AdumpDsmi::DrvGetPlatformType).stubs().with(outBound(v5Type)).will(returnValue(true));
-    EXPECT_NE(nullptr, dynamic_cast<CloudV5PcFixer *>(PcFixerFactory::GetInstance()));
+    EXPECT_NE(nullptr, dynamic_cast<CloudV5PcFixer*>(PcFixerFactory::GetInstance()));
 
     GlobalMockObject::verify();
     PcFixerFactory::instance_.reset();
