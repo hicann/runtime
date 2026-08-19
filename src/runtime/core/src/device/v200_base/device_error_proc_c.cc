@@ -367,12 +367,12 @@ void ProcessDavidStarsCoreErrorMapInfo(
     const auto* errorMap = GetDavidErrorMapInfo();
     const auto* bitMask = GetDavidErrorBitMask(chipType);
     // bitMask == nullptr means no filtering (all bits valid)
-    uint64_t cubeMask = (bitMask != nullptr) ? bitMask->cubeMask : ~0ULL;
-    uint64_t mteMask = (bitMask != nullptr) ? bitMask->mteMask : ~0ULL;
-    uint64_t l1Mask = (bitMask != nullptr) ? bitMask->l1Mask : ~0ULL;
-    uint64_t scMask = (bitMask != nullptr) ? bitMask->scMask : ~0ULL;
-    uint64_t suMask = (bitMask != nullptr) ? bitMask->suMask : ~0ULL;
-    uint64_t vecMask = (bitMask != nullptr) ? bitMask->vecMask : ~0ULL;
+    const uint64_t cubeMask = (bitMask != nullptr) ? bitMask->cubeMask : ~0ULL;
+    const uint64_t mteMask = (bitMask != nullptr) ? bitMask->mteMask : ~0ULL;
+    const uint64_t l1Mask = (bitMask != nullptr) ? bitMask->l1Mask : ~0ULL;
+    const uint64_t scMask = (bitMask != nullptr) ? bitMask->scMask : ~0ULL;
+    const uint64_t suMask = (bitMask != nullptr) ? bitMask->suMask : ~0ULL;
+    const uint64_t vecMask = (bitMask != nullptr) ? bitMask->vecMask : ~0ULL;
 
     uint32_t cnt = 0U;
     ProcessDavidStarsCoreErrorOneMapInfo(
