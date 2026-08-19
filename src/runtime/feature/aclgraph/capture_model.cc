@@ -186,7 +186,8 @@ rtError_t CaptureModel::SetNotifyAfterExecute(Stream* const exeStm, CaptureModel
                 (error != RT_ERROR_NONE), error,
                 "Notify record failed, exe stream_id=%d, notify_id=%d, add stream_id=%d, retCode=%#x.", exeStm->Id_(),
                 notify->GetNotifyId(), streamObj.first->Id_(), error);
-            error = NtyWait(notify, streamObj.first, MAX_UINT32_NUM, true, this);
+            // added-stream is currently only used in hccl scenarios.
+            error = NtyWait(notify, streamObj.first, MAX_UINT32_NUM);
             COND_RETURN_ERROR(
                 (error != RT_ERROR_NONE), error,
                 "Notify wait failed, exe stream_id=%d, notify_id=%d, add stream_id=%d, retCode=%#x.", exeStm->Id_(),
