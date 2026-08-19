@@ -20,15 +20,7 @@
 #include <stdarg.h>
 #include "log_types.h"
 
-#if defined(CPU_CYCLE_NO_SUPPORT)
 #define DLOG_FILE_NAME __FILE__
-#elif defined(__FILE_NAME__)
-#define DLOG_FILE_NAME __FILE_NAME__
-#elif defined(__GNUC__) || defined(__clang__)
-#define DLOG_FILE_NAME (__builtin_strrchr("/" __FILE__, '/') + 1)
-#else
-#define DLOG_FILE_NAME (strrchr("/" __FILE__, '/') + 1)
-#endif
 
 #define __FILENAME__ DLOG_FILE_NAME
 
