@@ -3071,3 +3071,62 @@ TEST_F(StreamTest, StreamSqCqManageAllocLogicCqNoResource)
 
     delete device;
 }
+
+TEST_F(StreamTest, PackingTaskGroup_UnsupportedTaskType_ReturnsNotSupport)
+{
+    rtStream_t stream = nullptr;
+    ASSERT_EQ(rtStreamCreate(&stream, 0), RT_ERROR_NONE);
+    Stream* const stm = rt_ut::UnwrapOrNull<Stream>(stream);
+    ASSERT_NE(stm, nullptr);
+    auto taskGroup = std::make_unique<TaskGroup>();
+    stm->UpdateCurrentTaskGroup(taskGroup);
+
+    TaskInfo task = {};
+    task.type = TS_TASK_TYPE_MEMCPY;
+    task.typeName = "TS_TASK_TYPE_MEMCPY";
+
+    EXPECT_EQ(stm->PackingTaskGroup(&task, 0U), RT_ERROR_TASK_NOT_SUPPORT);
+
+    stm->ResetTaskGroup();
+    EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
+}
+
+TEST_F(StreamTest, PackingTaskGroup_StreamActiveTask_Skipped)
+{
+    rtStream_t stream = nullptr;
+    ASSERT_EQ(rtStreamCreate(&stream, 0), RT_ERROR_NONE);
+    Stream* const stm = rt_ut::UnwrapOrNull<Stream>(stream);
+    ASSERT_NE(stm, nullptr);
+    auto taskGroup = std::make_unique<TaskGroup>();
+    stm->UpdateCurrentTaskGroup(taskGroup);
+
+    TaskInfo task = {};
+    task.type = TS_TASK_TYPE_STREAM_ACTIVE;
+    task.typeName = "TS_TASK_TYPE_STREAM_ACTIVE";
+
+    EXPECT_EQ(stm->PackingTaskGroup(&task, 0U), RT_ERROR_NONE);
+
+    stm->ResetTaskGroup();
+    EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
+}
+
+TEST_F(StreamTest, AllocTask_UnsupportedTaskTypeInUpdateMode_ReturnsNotSupport)
+{
+    rtStream_t stream = nullptr;
+    ASSERT_EQ(rtStreamCreate(&stream, 0), RT_ERROR_NONE);
+    Stream* const stm = rt_ut::UnwrapOrNull<Stream>(stream);
+    ASSERT_NE(stm, nullptr);
+    auto taskGroup = std::make_unique<TaskGroup>();
+    stm->UpdateCurrentTaskGroup(taskGroup);
+    ASSERT_EQ(stm->UpdateTaskGroupStatus(StreamTaskGroupStatus::UPDATE), RT_ERROR_NONE);
+
+    TaskInfo task = {};
+    rtError_t errorReason = RT_ERROR_NONE;
+    TaskInfo* result = stm->AllocTask(&task, TS_TASK_TYPE_MEMCPY, errorReason, 1U, UpdateTaskFlag::NOT_SUPPORT);
+    EXPECT_EQ(errorReason, RT_ERROR_TASK_NOT_SUPPORT);
+    EXPECT_EQ(result, nullptr);
+
+    stm->ResetTaskGroup();
+    ASSERT_EQ(stm->UpdateTaskGroupStatus(StreamTaskGroupStatus::NONE), RT_ERROR_NONE);
+    EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
+}

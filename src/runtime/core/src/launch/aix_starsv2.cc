@@ -285,32 +285,20 @@ static rtError_t CheckUpdateDavidTaskInfo(
         return RT_ERROR_STREAM_MODEL;
     }
 
-    COND_RETURN_AND_MSG_OUTER(
-        updateTask->u.aicTaskInfo.kernel->GetMixType() != kernel->GetMixType(), RT_ERROR_KERNEL_TYPE, ErrorCode::EE1012,
-        "Updating the captured kernel task", KernelMixTypeToString(kernel->GetMixType()), "MixType of kernel",
-        RtFmtMsg(
-            "MixType of the new kernel must be equal to MixType %s of the kernel in the original task. task_id=%hu, "
-            "stream_id=%d",
-            KernelMixTypeToString(updateTask->u.aicTaskInfo.kernel->GetMixType()).c_str(), updateTask->id,
-            updateTask->stream->Id_()));
-    COND_RETURN_AND_MSG_OUTER(
-        updateTask->u.aicTaskInfo.kernel->GetFuncType() != kernel->GetFuncType(), RT_ERROR_KERNEL_TYPE,
-        ErrorCode::EE1012, "Updating the captured kernel task", KernelFuncTypeToString(kernel->GetFuncType()),
-        "FuncType of kernel",
-        RtFmtMsg(
-            "FuncType of the new kernel must be equal to FuncType %s of the kernel in the original task. task_id=%hu, "
-            "stream_id=%d",
-            KernelFuncTypeToString(updateTask->u.aicTaskInfo.kernel->GetFuncType()).c_str(), updateTask->id,
-            updateTask->stream->Id_()));
-    COND_RETURN_AND_MSG_OUTER(
-        updateTask->u.aicTaskInfo.kernel->GetKernelAttrType() != kernel->GetKernelAttrType(), RT_ERROR_KERNEL_TYPE,
-        ErrorCode::EE1012, "Updating the captured kernel task", KernelAttrTypeToString(kernel->GetKernelAttrType()),
-        "KernelAttrType of kernel",
-        RtFmtMsg(
-            "KernelAttrType of the new kernel must be equal to KernelAttrType %s of the kernel in the original task. "
-            "task_id=%hu, stream_id=%d",
-            KernelAttrTypeToString(updateTask->u.aicTaskInfo.kernel->GetKernelAttrType()).c_str(), updateTask->id,
-            updateTask->stream->Id_()));
+    if ((updateTask->u.aicTaskInfo.kernel->GetMixType() != kernel->GetMixType()) ||
+        (updateTask->u.aicTaskInfo.kernel->GetFuncType() != kernel->GetFuncType()) ||
+        (updateTask->u.aicTaskInfo.kernel->GetKernelAttrType() != kernel->GetKernelAttrType())) {
+        RT_LOG_INNER_MSG(
+            RT_LOG_ERROR,
+            "check kernel type failed, stream_id=%d, task_id=%hu, "
+            "old mixType=%u, funcType=%u, kernelAttrType=%s, "
+            "new mixType=%u, funcType=%u, kernelAttrType=%s.",
+            updateTask->stream->Id_(), updateTask->id, updateTask->u.aicTaskInfo.kernel->GetMixType(),
+            updateTask->u.aicTaskInfo.kernel->GetFuncType(),
+            KernelAttrTypeToString(updateTask->u.aicTaskInfo.kernel->GetKernelAttrType()).c_str(), kernel->GetMixType(),
+            kernel->GetFuncType(), KernelAttrTypeToString(kernel->GetKernelAttrType()).c_str());
+        return RT_ERROR_KERNEL_TYPE;
+    }
 
     return RT_ERROR_NONE;
 }
@@ -365,8 +353,8 @@ rtError_t StreamLaunchKernelV1(
 
     if (kernelTask->isUpdateSinkSqe == 1U) { // 此处失败，仅本次任务不更新，但继续保留老任务
         error = CheckUpdateDavidTaskInfo(kernelTask, registeredKernel, stm);
-        ERROR_RETURN(
-            error, "Failed to check update task info, stream_id=%d, kernelAttrType=%s, retCode=%#x.", stm->Id_(),
+        ERROR_RETURN_MSG_INNER(
+            error, "stream_id=%d, kernelAttrType=%s, retCode=%#x.", stm->Id_(),
             KernelAttrTypeToString(kernelAttrType).c_str(), static_cast<uint32_t>(error));
     } else {
         SaveTaskCommonInfo(kernelTask, dstStm, pos);
@@ -484,7 +472,7 @@ rtError_t StreamLaunchKernelWithHandle(
 
     if (kernelTask->isUpdateSinkSqe == 1U) {
         error = CheckUpdateDavidTaskInfo(kernelTask, registeredKernel, stm);
-        ERROR_RETURN(
+        ERROR_RETURN_MSG_INNER(
             error, "Failed to check update task info, stream_id=%d, retCode=%#x.", stm->Id_(),
             static_cast<uint32_t>(error));
     } else {
@@ -609,7 +597,7 @@ rtError_t StreamLaunchKernelV2(
         error, "Failed to allocate task, stream_id=%d, retCode=%#x.", stm->Id_(), static_cast<uint32_t>(error));
     if (kernelTask->isUpdateSinkSqe == 1U) {
         error = CheckUpdateDavidTaskInfo(kernelTask, kernel, stm);
-        ERROR_RETURN(
+        ERROR_RETURN_MSG_INNER(
             error, "Failed to check update task info, stream_id=%d, kernelAttrType=%s, retCode=%#x.", stm->Id_(),
             KernelAttrTypeToString(kernelAttrType).c_str(), static_cast<uint32_t>(error));
     } else {

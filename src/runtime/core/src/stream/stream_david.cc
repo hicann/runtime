@@ -788,8 +788,8 @@ rtError_t DavidStream::StarsAddTaskToStream(TaskInfo* const tsk, const uint32_t 
         }
     } else {
         const rtError_t ret = PackingTaskGroup(tsk, static_cast<uint16_t>(streamId_));
-        COND_PROC_RETURN_ERROR(ret != RT_ERROR_NONE, ret, SetTaskGroupErrCode(ret);
-                               , "Failed to pack task group, stream_id=%d, task_id=%hu.", streamId_, tsk->id);
+        ERROR_PROC_RETURN_MSG_INNER(ret, SetTaskGroupErrCode(ret);
+                                    , "Failed to pack task group, stream_id=%d, task_id=%hu.", streamId_, tsk->id);
         if ((this->Model_() != nullptr) && (tsk->type != TS_TASK_TYPE_MODEL_MAINTAINCE)) {
             this->Model_()->SetKernelTaskId(tsk->taskSn, GetExposedStreamId());
         }

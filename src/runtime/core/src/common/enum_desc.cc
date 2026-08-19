@@ -12,8 +12,6 @@
 #include "mem_type.hpp"
 #include "task_enum_desc.hpp"
 #include "securec.h"
-#include "elf.hpp"
-#include "runtime.hpp"
 
 namespace cce {
 namespace runtime {
@@ -261,50 +259,6 @@ std::string ConditionToString(const rtCondition_t condition)
             return "LESS_OR_EQUAL(5)";
         default:
             return RtFmtMsg("UNKNOWN(%d)", static_cast<int32_t>(condition));
-    }
-}
-
-std::string KernelFuncTypeToString(const uint32_t funcType)
-{
-    switch (funcType) {
-        case KERNEL_FUNCTION_TYPE_INVALID:
-            return "KERNEL_FUNCTION_TYPE_INVALID(0)";
-        case KERNEL_FUNCTION_TYPE_AICORE:
-            return "KERNEL_FUNCTION_TYPE_AICORE(1)";
-        case KERNEL_FUNCTION_TYPE_AIC:
-            return "KERNEL_FUNCTION_TYPE_AIC(2)";
-        case KERNEL_FUNCTION_TYPE_AIV:
-            return "KERNEL_FUNCTION_TYPE_AIV(3)";
-        case KERNEL_FUNCTION_TYPE_MIX_AIC_MAIN:
-            return "KERNEL_FUNCTION_TYPE_MIX_AIC_MAIN(4)";
-        case KERNEL_FUNCTION_TYPE_MIX_AIV_MAIN:
-            return "KERNEL_FUNCTION_TYPE_MIX_AIV_MAIN(5)";
-        case KERNEL_FUNCTION_TYPE_AIC_ROLLBACK:
-            return "KERNEL_FUNCTION_TYPE_AIC_ROLLBACK(6)";
-        case KERNEL_FUNCTION_TYPE_AIV_ROLLBACK:
-            return "KERNEL_FUNCTION_TYPE_AIV_ROLLBACK(7)";
-        case KERNEL_FUNCTION_TYPE_MAX:
-            return "KERNEL_FUNCTION_TYPE_MAX(8)";
-        default:
-            return RtFmtMsg("UNKNOWN(%d)", static_cast<int32_t>(funcType));
-    }
-}
-
-std::string KernelMixTypeToString(const uint8_t mixType)
-{
-    switch (mixType) {
-        case NO_MIX:
-            return "NO_MIX(0)";
-        case MIX_AIC:
-            return "MIX_AIC(1)";
-        case MIX_AIV:
-            return "MIX_AIV(2)";
-        case MIX_AIC_AIV_MAIN_AIC:
-            return "MIX_AIC_AIV_MAIN_AIC(3)";
-        case MIX_AIC_AIV_MAIN_AIV:
-            return "MIX_AIC_AIV_MAIN_AIV(4)";
-        default:
-            return RtFmtMsg("UNKNOWN(%d)", static_cast<int32_t>(mixType));
     }
 }
 

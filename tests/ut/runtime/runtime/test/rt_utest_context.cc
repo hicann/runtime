@@ -5889,3 +5889,52 @@ TEST_F(ContextTest, StreamEndTaskGrpReportsInvalidatedCapture)
     EXPECT_EQ(rtStreamDestroy(captureStream), RT_ERROR_NONE);
     EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
 }
+
+TEST_F(ContextTest, StreamEndTaskUpdate_UnupdatedTasks_ReturnsTaskGrpUpdateError)
+{
+    rtStream_t stream = nullptr;
+    ASSERT_EQ(rtStreamCreate(&stream, 0), RT_ERROR_NONE);
+    Stream* const stm = rt_ut::UnwrapOrNull<Stream>(stream);
+    ASSERT_NE(stm, nullptr);
+    Context* const ctx = stm->Context_();
+    ASSERT_NE(ctx, nullptr);
+
+    ASSERT_EQ(stm->UpdateTaskGroupStatus(StreamTaskGroupStatus::UPDATE), RT_ERROR_NONE);
+    std::unique_ptr<TaskGroup> taskGroup(new TaskGroup);
+    taskGroup->taskIds.emplace_back(0U, 0U);
+    taskGroup->taskIds.emplace_back(0U, 1U);
+    taskGroup->isUpdate = true;
+    taskGroup->updateTaskIndex = 1U;
+    stm->updateTaskGroup_ = taskGroup.get();
+
+    EXPECT_EQ(ctx->StreamEndTaskUpdate(stm), RT_ERROR_STREAM_TASKGRP_UPDATE);
+    EXPECT_EQ(stm->GetTaskGroupStatus(), StreamTaskGroupStatus::NONE);
+
+    stm->updateTaskGroup_ = nullptr;
+    ASSERT_EQ(stm->UpdateTaskGroupStatus(StreamTaskGroupStatus::NONE), RT_ERROR_NONE);
+    EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
+}
+
+TEST_F(ContextTest, StreamEndTaskUpdate_AllTasksUpdated_ReturnsSuccess)
+{
+    rtStream_t stream = nullptr;
+    ASSERT_EQ(rtStreamCreate(&stream, 0), RT_ERROR_NONE);
+    Stream* const stm = rt_ut::UnwrapOrNull<Stream>(stream);
+    ASSERT_NE(stm, nullptr);
+    Context* const ctx = stm->Context_();
+    ASSERT_NE(ctx, nullptr);
+
+    ASSERT_EQ(stm->UpdateTaskGroupStatus(StreamTaskGroupStatus::UPDATE), RT_ERROR_NONE);
+    std::unique_ptr<TaskGroup> taskGroup(new TaskGroup);
+    taskGroup->taskIds.emplace_back(0U, 0U);
+    taskGroup->isUpdate = true;
+    taskGroup->updateTaskIndex = 1U;
+    stm->updateTaskGroup_ = taskGroup.get();
+
+    EXPECT_EQ(ctx->StreamEndTaskUpdate(stm), RT_ERROR_NONE);
+    EXPECT_EQ(stm->GetTaskGroupStatus(), StreamTaskGroupStatus::NONE);
+
+    stm->updateTaskGroup_ = nullptr;
+    ASSERT_EQ(stm->UpdateTaskGroupStatus(StreamTaskGroupStatus::NONE), RT_ERROR_NONE);
+    EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
+}

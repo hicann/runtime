@@ -365,9 +365,7 @@ rtError_t AllocTaskInfoForCapture(
             error = stm->UpdateTask(taskInfo);
             return error;
         } else {
-            RT_LOG_OUTER_MSG_IMPL(
-                ErrorCode::EE1006, "Updating the task group", "The current task type",
-                "Only tasks running on Cube Core or Vector Core support task group update");
+            RT_LOG(RT_LOG_ERROR, "Unsupported task type for task update.");
             return RT_ERROR_TASK_NOT_SUPPORT;
         }
     }
