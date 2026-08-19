@@ -406,28 +406,6 @@ bool Context::ModelIsExistInContext(const Model* mdl)
     return flag;
 }
 
-rtError_t Context::ForEachModel(const std::function<rtError_t(Model* mdl)>& visitor, const bool exitWhenError)
-{
-    rtError_t firstError = RT_ERROR_NONE;
-    SpinLockGuard guard(modelLock_);
-    for (Model* mdl : models_) {
-        if (mdl == nullptr) {
-            continue;
-        }
-        const rtError_t error = visitor(mdl);
-        if (error == RT_ERROR_NONE) {
-            continue;
-        }
-        if (exitWhenError) {
-            return error;
-        }
-        if (firstError == RT_ERROR_NONE) {
-            firstError = error;
-        }
-    }
-    return firstError;
-}
-
 bool Context::CheckCanFreeModulePool(uint32_t poolIdx)
 {
     const uint32_t baseId = moduleAllocator_->AccumulatePoolCount(poolIdx);

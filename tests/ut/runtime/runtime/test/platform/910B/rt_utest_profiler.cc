@@ -32,6 +32,8 @@
 #include "logger.hpp"
 #include "toolchain/prof_api.h"
 #include "thread_local_container.hpp"
+#include "inner_thread_local.hpp"
+#include "profiling_agent.hpp"
 #include "onlineprof.hpp"
 #include "../../data/elf.h"
 
@@ -105,6 +107,19 @@ void SetProfilerOff()
 {
     rtDeviceReset(0);
     SetEnvVarOff();
+}
+
+static Context* GetPrimaryContextForProfiler(int32_t& devId)
+{
+    rtError_t error = rtGetDevice(&devId);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    RefObject<Context*>* refObject = (RefObject<Context*>*)((Runtime*)Runtime::Instance())->PrimaryContextRetain(devId);
+    return refObject->GetVal();
+}
+
+static void ReleasePrimaryContextForProfiler(int32_t devId)
+{
+    (void)((Runtime*)Runtime::Instance())->PrimaryContextRelease(devId);
 }
 
 typedef enum {
@@ -3301,4 +3316,86 @@ TEST_F(ProfilerTest, ProfileLogDecoratorModelApiTest)
     EXPECT_EQ(error, RT_ERROR_NONE);
     profiler->SetProfLogEnable(false);
     delete apiImpl_;
+}
+
+// ==================== RuntimeProfilerStop 覆盖 ====================
+
+// RuntimeProfilerStop: curCtx 为 nullptr → 跳过 model 遍历，直接 UnInit
+TEST_F(ProfilerTest, RuntimeProfilerStop_NullContext)
+{
+    Runtime* rt = ((Runtime*)Runtime::Instance());
+    profiler = rt->profiler_;
+    ASSERT_NE(profiler, nullptr);
+
+    InnerThreadLocalContainer::SetCurCtx(nullptr);
+
+    MOCKER_CPP(&ProfilingAgent::UnInit).stubs().will(returnValue(RT_ERROR_NONE));
+    profiler->RuntimeProfilerStop();
+    GlobalMockObject::verify();
+}
+
+// RuntimeProfilerStop: ctx 含 capture model → 调用 ResetTrackDataReportFlag
+TEST_F(ProfilerTest, RuntimeProfilerStop_WithCaptureModel)
+{
+    Runtime* rt = ((Runtime*)Runtime::Instance());
+    profiler = rt->profiler_;
+    ASSERT_NE(profiler, nullptr);
+
+    int32_t devId = 0;
+    Context* ctx = GetPrimaryContextForProfiler(devId);
+    ASSERT_NE(ctx, nullptr);
+
+    CaptureModel* captureMdl = new CaptureModel();
+    captureMdl->context_ = ctx;
+    captureMdl->modelType_ = ModelType::RT_MODEL_CAPTURE_MODEL;
+    captureMdl->trackDataReportFlag_ = true;
+    ctx->models_.push_back(captureMdl);
+
+    MOCKER_CPP(&ProfilingAgent::UnInit).stubs().will(returnValue(RT_ERROR_NONE));
+    profiler->RuntimeProfilerStop();
+
+    EXPECT_FALSE(captureMdl->trackDataReportFlag_);
+
+    ctx->models_.remove(captureMdl);
+    delete captureMdl;
+    ReleasePrimaryContextForProfiler(devId);
+    GlobalMockObject::verify();
+}
+
+// RuntimeProfilerStop: ctx 含非 capture model → 不调 ResetTrackDataReportFlag
+TEST_F(ProfilerTest, RuntimeProfilerStop_WithNormalModel)
+{
+    Runtime* rt = ((Runtime*)Runtime::Instance());
+    profiler = rt->profiler_;
+    ASSERT_NE(profiler, nullptr);
+
+    int32_t devId = 0;
+    Context* ctx = GetPrimaryContextForProfiler(devId);
+    ASSERT_NE(ctx, nullptr);
+
+    Model* normalMdl = new Model(ModelType::RT_MODEL_NORMAL);
+    normalMdl->context_ = ctx;
+    ctx->models_.push_back(normalMdl);
+
+    MOCKER_CPP(&ProfilingAgent::UnInit).stubs().will(returnValue(RT_ERROR_NONE));
+    profiler->RuntimeProfilerStop();
+
+    ctx->models_.remove(normalMdl);
+    delete normalMdl;
+    ReleasePrimaryContextForProfiler(devId);
+    GlobalMockObject::verify();
+}
+
+// RuntimeProfilerStop: UnInit 失败 → COND_RETURN_VOID 提前返回
+TEST_F(ProfilerTest, RuntimeProfilerStop_UnInitFailed)
+{
+    Runtime* rt = ((Runtime*)Runtime::Instance());
+    profiler = rt->profiler_;
+    ASSERT_NE(profiler, nullptr);
+
+    InnerThreadLocalContainer::SetCurCtx(nullptr);
+
+    MOCKER_CPP(&ProfilingAgent::UnInit).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    profiler->RuntimeProfilerStop();
+    GlobalMockObject::verify();
 }

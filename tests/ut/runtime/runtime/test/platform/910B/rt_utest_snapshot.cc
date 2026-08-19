@@ -469,3 +469,118 @@ TEST_F(SnapshotTest, SnapShotProcessRestore_Success)
     rtError_t error = SnapShotProcessRestore();
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
+
+// ==================== ModelBackup 分支覆盖 ====================
+
+// ModelBackup: AICPU executor 类型 → 返回 RT_ERROR_FEATURE_NOT_SUPPORT
+TEST_F(SnapshotTest, ModelBackup_AicpuExecutorNotSupported)
+{
+    rtContext_t ctx;
+    rtError_t error = rtsCtxGetCurrent(&ctx);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    Context* curCtx = static_cast<Context*>(ctx);
+
+    CaptureModel* mdl = new CaptureModel();
+    mdl->context_ = curCtx;
+    mdl->executorFlag_ = EXECUTOR_AICPU;
+    mdl->modelType_ = ModelType::RT_MODEL_CAPTURE_MODEL;
+    curCtx->models_.push_back(mdl);
+
+    error = ModelBackup(0);
+    EXPECT_EQ(error, RT_ERROR_FEATURE_NOT_SUPPORT);
+
+    curCtx->models_.remove(mdl);
+    delete mdl;
+}
+
+// ModelBackup: model 未完成加载 → 返回 RT_ERROR_SNAPSHOT_BACKUP_FAILED
+TEST_F(SnapshotTest, ModelBackup_ModelNotComplete)
+{
+    rtContext_t ctx;
+    rtError_t error = rtsCtxGetCurrent(&ctx);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    Context* curCtx = static_cast<Context*>(ctx);
+
+    CaptureModel* mdl = new CaptureModel();
+    mdl->context_ = curCtx;
+    mdl->executorFlag_ = EXECUTOR_TS;
+    mdl->modelType_ = ModelType::RT_MODEL_CAPTURE_MODEL;
+    mdl->isModelComplete_ = false;
+    curCtx->models_.push_back(mdl);
+
+    error = ModelBackup(0);
+    EXPECT_EQ(error, RT_ERROR_SNAPSHOT_BACKUP_FAILED);
+
+    curCtx->models_.remove(mdl);
+    delete mdl;
+}
+
+// ModelBackup: SinkSqTasksBackup 失败 → 返回错误
+TEST_F(SnapshotTest, ModelBackup_SinkSqTasksBackupFailed)
+{
+    rtContext_t ctx;
+    rtError_t error = rtsCtxGetCurrent(&ctx);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    Context* curCtx = static_cast<Context*>(ctx);
+
+    CaptureModel* mdl = new CaptureModel();
+    mdl->context_ = curCtx;
+    mdl->executorFlag_ = EXECUTOR_TS;
+    mdl->modelType_ = ModelType::RT_MODEL_CAPTURE_MODEL;
+    mdl->isModelComplete_ = true;
+    curCtx->models_.push_back(mdl);
+
+    MOCKER_CPP(&CaptureModel::SinkSqTasksBackup).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    error = ModelBackup(0);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+
+    curCtx->models_.remove(mdl);
+    delete mdl;
+    GlobalMockObject::verify();
+}
+
+// ==================== ModelRestore 分支覆盖 ====================
+
+// ModelRestore: AICPU executor 类型 → 返回 RT_ERROR_FEATURE_NOT_SUPPORT
+TEST_F(SnapshotTest, ModelRestore_AicpuExecutorNotSupported)
+{
+    rtContext_t ctx;
+    rtError_t error = rtsCtxGetCurrent(&ctx);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    Context* curCtx = static_cast<Context*>(ctx);
+
+    CaptureModel* mdl = new CaptureModel();
+    mdl->context_ = curCtx;
+    mdl->executorFlag_ = EXECUTOR_AICPU;
+    mdl->modelType_ = ModelType::RT_MODEL_CAPTURE_MODEL;
+    curCtx->models_.push_back(mdl);
+
+    error = ModelRestore(0);
+    EXPECT_EQ(error, RT_ERROR_FEATURE_NOT_SUPPORT);
+
+    curCtx->models_.remove(mdl);
+    delete mdl;
+}
+
+// ModelRestore: ReBuild 失败 → 返回错误
+TEST_F(SnapshotTest, ModelRestore_ReBuildFailed)
+{
+    rtContext_t ctx;
+    rtError_t error = rtsCtxGetCurrent(&ctx);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    Context* curCtx = static_cast<Context*>(ctx);
+
+    CaptureModel* mdl = new CaptureModel();
+    mdl->context_ = curCtx;
+    mdl->executorFlag_ = EXECUTOR_TS;
+    mdl->modelType_ = ModelType::RT_MODEL_CAPTURE_MODEL;
+    curCtx->models_.push_back(mdl);
+
+    MOCKER_CPP(&CaptureModel::ReBuild).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    error = ModelRestore(0);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+
+    curCtx->models_.remove(mdl);
+    delete mdl;
+    GlobalMockObject::verify();
+}

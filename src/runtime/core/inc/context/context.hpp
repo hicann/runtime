@@ -458,14 +458,9 @@ public:
     void CaptureModeExit(Stream* const stm);
     bool IsCaptureModeSupport(void) const;
 
-    /**
-     * @brief 在持 modelLock_ 的前提下遍历 models_，对每个非空 model 调用 visitor。
-     * @param visitor 访问闭包，返回 RT_ERROR_NONE 表示继续，非 0 表示出错。
-     * @param exitWhenError true: 遇 visitor 返回非 0 立即返回该错误；false: 记录首个错误并继续遍历。
-     * @return 首个非 0 错误，全部成功返回 RT_ERROR_NONE。
-     * @note 锁的加/解由本函数负责；闭包内不得再操作 modelLock_ 或修改 models_。
-     */
-    rtError_t ForEachModel(const std::function<rtError_t(Model* mdl)>& visitor, const bool exitWhenError);
+    const std::list<Model*>& GetModelList() const { return models_; }
+
+    SpinLock& GetModelLock() { return modelLock_; }
     rtError_t SetMemcpyDesc(
         rtMemcpyDesc_t desc, const void* const srcAddr, const void* const dstAddr, const size_t count);
 
