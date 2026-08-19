@@ -178,7 +178,7 @@ aclError aclrtCreateEventWithFlag(aclrtEvent *event, uint32_t flag)
 
 <!-- end id22 -->
 
-- 若flag参数值**不包含**ACL\_EVENT\_SYNC宏，则不支持在以下API中使用本接口创建的Event：[aclrtResetEvent](#aclrtResetEvent)、[aclrtStreamWaitEvent](#aclrtStreamWaitEvent)、[aclrtQueryEventWaitStatus](#aclrtQueryEventWaitStatus)。若flag参数值**包含**ACL\_EVENT\_SYNC宏或者flag设置为ACL\_EVENT\_EXTERNAL时，则创建出来的Event数量受限。
+- 若flag参数值**不包含**ACL\_EVENT\_SYNC宏，则不支持在以下API中使用本接口创建的Event：[aclrtResetEvent](#aclrtResetEvent)、[aclrtStreamWaitEvent](#aclrtStreamWaitEvent)。若flag参数值**包含**ACL\_EVENT\_SYNC宏或者flag设置为ACL\_EVENT\_EXTERNAL时，则创建出来的Event数量受限。
 不同型号的硬件支持的Event数量不同。
   <!-- npu="950,A3,910b,310b" id26 -->
   - 对于以下产品型号，单个Device支持的Event最大数为65536：
