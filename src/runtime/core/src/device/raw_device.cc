@@ -1094,21 +1094,6 @@ rtError_t RawDevice::Start()
         stmFlag =
             RT_STREAM_PRIMARY_FIRST_DEFAULT | RT_STREAM_PRIMARY_DEFAULT | RT_STREAM_FAST_LAUNCH | RT_STREAM_FAST_SYNC;
     }
-    primaryStream_ = StreamFactory::CreateStream(this, 0U, stmFlag);
-    COND_PROC_RETURN_AND_MSG_OUTER(
-        primaryStream_ == nullptr, RT_ERROR_STREAM_NEW, ErrorCode::EE1013, static_cast<void>(FreeSimtStackPhyBase()),
-        sizeof(Stream), "new");
-    error = primaryStream_->Setup();
-    if (error != RT_ERROR_NONE) {
-        DeleteStream(primaryStream_);
-        static_cast<void>(FreeSimtStackPhyBase());
-        RT_LOG_INNER_MSG(RT_LOG_ERROR, "The primary stream setup failed.");
-        return error;
-    }
-
-    RT_LOG(
-        RT_LOG_INFO, "new primary Stream ok, Runtime_alloc_size %zu(bytes), stream_id=%d.", sizeof(Stream),
-        primaryStream_->Id_());
 
     if (IsStarsPlatform()) {
         error = AllocStackPhyBase();
@@ -1117,6 +1102,16 @@ rtError_t RawDevice::Start()
         error = AllocCustomerStackPhyBase();
         ERROR_GOTO(error, ERROR_FREE, "alloc customer stack phy failed, retCode=%#x.", static_cast<uint32_t>(error));
     }
+
+    primaryStream_ = StreamFactory::CreateStream(this, 0U, stmFlag);
+    COND_GOTO_MSG_OUTER(
+        primaryStream_ == nullptr, ERROR_FREE, error, RT_ERROR_STREAM_NEW, ErrorCode::EE1013, sizeof(Stream), "new");
+    error = primaryStream_->Setup();
+    ERROR_GOTO_MSG_INNER(error, ERROR_FREE, "The primary stream setup failed.");
+
+    RT_LOG(
+        RT_LOG_INFO, "new primary Stream ok, Runtime_alloc_size %zu(bytes), stream_id=%d.", sizeof(Stream),
+        primaryStream_->Id_());
 
     error = engine_->Start();
     ERROR_GOTO_MSG_INNER(error, ERROR_FREE, "Start runtime engine failed, retCode=%#x.", static_cast<uint32_t>(error));
