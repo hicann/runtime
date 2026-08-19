@@ -639,8 +639,7 @@ aclError aclrtHostRegister(T *ptr, uint64_t size, uint32_t flag)
 ### 产品支持情况
 
 <!-- npu="950" id708 -->
-- Ascend 950PR：支持
-- Ascend 950DT：不支持
+- Ascend 950PR/Ascend 950DT：支持
 <!-- end id708 -->
 <!-- npu="A3" id709 -->
 - Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
@@ -676,7 +675,7 @@ aclError aclrtHostRegister(T *ptr, uint64_t size, uint32_t flag)
 | size | 输入 | 内存大小，单位Byte。 |
 | type | 输入 | 内存注册类型。类型定义请参见[aclrtHostRegisterType](25-02_Enumerations.md#aclrtHostRegisterType)。 |
 | devPtr | 输出 | Host内存映射成的Device可访问的内存地址。<br>该地址仅支持在Device上访问，例如作为核函数的参数，供Device的AI Core访问。若涉及Host侧的内存处理，需使用原始Host内存地址。 |
-| flag | 输入 | 内存注册类型。<br>取值为如下宏，支持配置单个宏，也支持配置多个宏位或（例如ACL_HOST_REG_MAPPED \| ACL_HOST_REG_PINNED）。<br><br>  - ACL_HOST_REG_MAPPED：将Host内存映射注册为Device可访问的内存地址，再配合调用[aclrtHostGetDevicePointer](11-02_host_memory_management.md#aclrtHostGetDevicePointer)接口获取映射后的Device内存地址。<br>  - ACL_HOST_REG_IOMEMORY：将Host上第三方PCIe设备的IO space(寄存器、缓存)映射注册为Device可访问，包括读写。<br>  - ACL_HOST_REG_READONLY：Host内存映射注册为Device只读。预留选项，当前不支持。<br>  - ACL_HOST_REG_PINNED：将Host非锁页内存注册为锁页内存。Host非锁页内存可通过C/C++标准库函数（如malloc、calloc、new）或默认的mmap系统调用等方式申请。<br><br><br>宏定义如下：<br>#define ACL_HOST_REG_MAPPED 0x2UL<br>#define ACL_HOST_REG_IOMEMORY 0x4UL<br>#define ACL_HOST_REG_READONLY 0x8UL<br>#define ACL_HOST_REG_PINNED 0X10000000UL |
+| flag | 输入 | 内存注册类型。<br>取值为如下宏，支持配置单个宏，也支持配置多个宏位或（例如ACL_HOST_REG_MAPPED \| ACL_HOST_REG_PINNED）。<br><br>  - ACL_HOST_REG_MAPPED：将Host内存映射注册为Device可访问的内存地址，再配合调用[aclrtHostGetDevicePointer](11-02_host_memory_management.md#aclrtHostGetDevicePointer)接口获取映射后的Device内存地址。<br>  - ACL_HOST_REG_IOMEMORY：将Host上第三方PCIe设备的IO space(寄存器、缓存)映射注册为Device可访问，包括读写。<br>  - ACL_HOST_REG_READONLY：Host内存映射注册为Device只读。预留选项，当前不支持。<br>  - ACL_HOST_REG_PINNED：将Host非锁页内存注册为锁页内存。Host非锁页内存可通过C/C++标准库函数（如malloc、calloc、new）或默认的mmap系统调用等方式申请。该宏仅适用于Host非锁页内存；若传入Host锁页内存，接口将返回错误。<br><br><br>宏定义如下：<br>#define ACL_HOST_REG_MAPPED 0x2UL<br>#define ACL_HOST_REG_IOMEMORY 0x4UL<br>#define ACL_HOST_REG_READONLY 0x8UL<br>#define ACL_HOST_REG_PINNED 0X10000000UL |
 
 ### 返回值说明
 
@@ -698,8 +697,7 @@ aclError aclrtHostGetDevicePointer(T *pHost, T **pDevice, uint32_t flag)
 ### 产品支持情况
 
 <!-- npu="950" id169 -->
-- Ascend 950PR：支持
-- Ascend 950DT：不支持
+- Ascend 950PR/Ascend 950DT：支持
 <!-- end id169 -->
 <!-- npu="A3" id170 -->
 - Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
@@ -755,8 +753,7 @@ aclError aclrtHostUnregister(T *ptr)
 ### 产品支持情况
 
 <!-- npu="950" id848 -->
-- Ascend 950PR：支持
-- Ascend 950DT：不支持
+- Ascend 950PR/Ascend 950DT：支持
 <!-- end id848 -->
 <!-- npu="A3" id849 -->
 - Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
@@ -771,7 +768,7 @@ aclError aclrtHostUnregister(T *ptr)
 - Atlas 推理系列产品：不支持
 <!-- end id852 -->
 <!-- npu="910" id853 -->
-- Atlas 训练系列产品：支持
+- Atlas 训练系列产品：不支持
 <!-- end id853 -->
 <!-- npu="IPV350" id854 -->
 - IPV350：不支持

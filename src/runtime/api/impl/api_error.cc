@@ -1994,12 +1994,13 @@ rtError_t ApiErrorDecorator::HostRegister(void* ptr, uint64_t size, rtHostRegist
         ptr, RT_ERROR_INVALID_VALUE, "Registering the host memory as device-accessible memory");
     ZERO_RETURN_AND_MSG_OUTER_WITH_FUNC_DESC(size, "Registering the host memory as device-accessible memory");
     constexpr uint32_t validFlags = RT_HOST_REGISTER_IOMEMORY | RT_HOST_REGISTER_READONLY;
-    if ((static_cast<uint32_t>(type) & (~validFlags)) != 0U) {
-        RT_LOG(
-            RT_LOG_WARNING, "Current type=%u is not supported. Valid flags are combinations of [%u, %u] or 0", type,
-            RT_HOST_REGISTER_IOMEMORY, RT_HOST_REGISTER_READONLY);
-        return RT_ERROR_FEATURE_NOT_SUPPORT;
-    }
+    const bool isValidFlag = ((static_cast<uint32_t>(type) & (~validFlags)) == 0U);
+    COND_RETURN_AND_MSG_OUTER(
+        !isValidFlag, RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1011, "Host memory address registration",
+        static_cast<uint32_t>(type), "type",
+        "Valid values are ACL_HOST_REGISTER_MAPPED(0), ACL_HOST_REGISTER_IOMEMORY(0x04), "
+        "and ACL_HOST_REGISTER_READONLY(0x08). Multiple flags can be combined using bitwise-OR('|')");
+
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
         devPtr, RT_ERROR_INVALID_VALUE, "Registering the host memory as device-accessible memory");
 
