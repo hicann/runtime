@@ -68,7 +68,11 @@ void TsAicpuMsgInfoAdapter::GetAicpuDataDumpInfo(AicpuDataDumpInfo& info)
     return;
 }
 
-bool TsAicpuMsgInfoAdapter::IsOpMappingDumpTaskInfoVaild(const AicpuOpMappingDumpTaskInfo& info) const { return true; }
+bool TsAicpuMsgInfoAdapter::IsOpMappingDumpTaskInfoVaild(const AicpuOpMappingDumpTaskInfo& info) const
+{
+    (void)info;
+    return true;
+}
 
 void TsAicpuMsgInfoAdapter::GetAicpuDumpTaskInfo(
     AicpuOpMappingDumpTaskInfo& opmappingInfo, AicpuDumpTaskInfo& dumpTaskInfo)

@@ -224,8 +224,8 @@ public:
     void ClearBaseDumpData();
     bool IsSupportKfcDump();
     const std::string& GetDumpPath() { return dumpPath_; }
-    const uint32_t GetDeviceId() { return deviceId_; }
-    const int32_t GetHostPid() { return hostPid_; }
+    uint32_t GetDeviceId() { return deviceId_; }
+    int32_t GetHostPid() { return hostPid_; }
     const std::string& GetOpName() { return opName_; }
     void GetKfcDumpInfo(std::shared_ptr<KfcDumpInfo> dumpInfo);
     StatusCode Dump(
