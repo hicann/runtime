@@ -3472,7 +3472,7 @@ rtError_t Stream::StarsAddTaskToStream(TaskInfo* const tsk, const uint32_t sendS
                 ", task_id=" + std::to_string(tsk->id) + ", posTail=" + std::to_string(posTail) +
                 ", sendSqeNum=" + std::to_string(sendSqeNum) + ", rtsqDepth=" + std::to_string(rtsqDepth));
         const rtError_t ret = PackingTaskGroup(tsk, static_cast<uint16_t>(streamId_));
-        COND_PROC_RETURN_ERROR_MSG_INNER(
+        COND_PROC_RETURN_ERROR(
             ret != RT_ERROR_NONE, ret, SetTaskGroupErrCode(ret), "Pack task group failed, stream_id=%d, task_id=%hu.",
             streamId_, tsk->id);
         taskPersistentTail_.Set(newPosTail);
@@ -4772,7 +4772,12 @@ TaskInfo* Stream::AllocTask(
             errorReason = UpdateTask(&updateTask);
             return updateTask;
         } else if (flag != UpdateTaskFlag::NOT_SUPPORT_AND_SKIP) {
-            RT_LOG(RT_LOG_ERROR, "Unsupported task type for task update.");
+            RT_LOG_OUTER_MSG_IMPL(
+                ErrorCode::EE1006, "Updating the task group",
+                RtFmtMsg(
+                    "Task type %s(%u)", GetTaskDescByType(static_cast<uint32_t>(taskType)),
+                    static_cast<uint32_t>(taskType)),
+                "Only tasks running on Cube Core or Vector Core support task group update");
             errorReason = RT_ERROR_TASK_NOT_SUPPORT;
             return updateTask;
         } else {
@@ -5254,7 +5259,12 @@ rtError_t Stream::PackingTaskGroup(const TaskInfo* const task, const uint16_t st
         return RT_ERROR_NONE;
     }
     if (!TaskTypeIsSupportTaskGroup(task)) {
-        RT_LOG(RT_LOG_ERROR, "Unsupported task type %d(%s) in task group.", task->type, task->typeName);
+        RT_LOG_OUTER_MSG_IMPL(
+            ErrorCode::EE1006, "Adding the task to the task group",
+            RtFmtMsg(
+                "Task type %s(%u)", GetTaskDescByType(static_cast<uint32_t>(task->type)),
+                static_cast<uint32_t>(task->type)),
+            "Only tasks running on Cube Core or Vector Core can be added to a task group");
         return RT_ERROR_TASK_NOT_SUPPORT;
     }
     taskGroup_->taskIds.emplace_back(streamId, task->id);

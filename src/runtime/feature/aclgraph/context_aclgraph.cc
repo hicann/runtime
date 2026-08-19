@@ -888,10 +888,14 @@ rtError_t Context::StreamEndTaskUpdate(Stream* const stm) const
     (void)stm->UpdateTaskGroupStatus(StreamTaskGroupStatus::NONE);
 
     const size_t taskIndex = updateTaskGroup->updateTaskIndex;
-    COND_PROC_RETURN_ERROR_MSG_INNER(
-        taskIndex != updateTaskGroup->taskIds.size(), RT_ERROR_STREAM_TASKGRP_UPDATE, stm->ResetUpdateTaskGroup();
-        , "Update tasks failed, stream_id=%d, total=%zu, success=%zu, failed=%zu.", stm->Id_(),
-        updateTaskGroup->taskIds.size(), taskIndex, (updateTaskGroup->taskIds.size() - taskIndex));
+    COND_PROC_RETURN_AND_MSG_OUTER(taskIndex != updateTaskGroup->taskIds.size(), RT_ERROR_STREAM_TASKGRP_UPDATE,
+                                   ErrorCode::EE1017, stm->ResetUpdateTaskGroup();
+                                   , "Marking the end of the task to be updated",
+                                   RtFmtMsg("stream (stream_id=%d)", stm->Id_()),
+                                   RtFmtMsg(
+                                       "The task group under this stream contains unupdated tasks. "
+                                       "total_num=%zu, matched_num=%zu",
+                                       updateTaskGroup->taskIds.size(), taskIndex));
 
     stm->ResetUpdateTaskGroup();
     RT_LOG(
