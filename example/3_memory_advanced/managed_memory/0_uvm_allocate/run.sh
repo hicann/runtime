@@ -88,7 +88,17 @@ fi
 python3 scripts/gen_data.py
 
 export LD_LIBRARY_PATH="${SCRIPT_DIR}/out/lib:${SCRIPT_DIR}/out/lib64:${ASCEND_INSTALL_PATH}/lib64:${LD_LIBRARY_PATH:-}"
-"${SCRIPT_DIR}/out/bin/ascendc_kernels_bbit" "${RUN_MODE}"
+
+SAMPLE_LOG="${SCRIPT_DIR}/output_msg.txt"
+if ! "${SCRIPT_DIR}/out/bin/ascendc_kernels_bbit" "${RUN_MODE}" | tee "${SAMPLE_LOG}"; then
+    echo "[FAILURE] Run the uvm_allocate sample failed."
+    exit 1
+fi
+
+if grep -q '\[SKIP\]' "${SAMPLE_LOG}"; then
+    echo "[SUCCESS] uvm_allocate sample skipped because the current SOC does not support UVM."
+    exit 0
+fi
 
 md5sum output/*.bin
 python3 scripts/verify_result.py output/output_z.bin output/golden.bin

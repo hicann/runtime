@@ -14,6 +14,8 @@
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
+> 说明：样例会在运行时检查当前 SOC 是否支持 UVM。在不支持 UVM 的产品（如 Ascend 910 系列产品）上，`aclrtMemAllocManaged` 返回 `ACL_ERROR_RT_FEATURE_NOT_SUPPORT (207000)`，样例打印 `[SKIP]` 提示并以退出码 0 正常结束；`run.sh` 识别到 `[SKIP]` 后会跳过后续结果校验，同样正常结束。
+
 
 ## 编译运行
 
@@ -78,4 +80,11 @@ Building...
 ... output/golden.bin
 error ratio: 0.0000, tolerance: 0.0010
 [SUCCESS] result correct
+```
+
+在不支持 UVM 的产品上运行时，输出示例：
+
+```text
+[INFO]  [SKIP] uvm_allocate sample skipped: the current SOC (Ascend910A) does not support UVM, aclrtMemAllocManaged returned error code 207000.
+[SUCCESS] uvm_allocate sample skipped because the current SOC does not support UVM.
 ```

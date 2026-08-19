@@ -14,6 +14,8 @@ This sample supports the following products:
 | Atlas A3 training series products/Atlas A3 inference series products | Yes |
 | Atlas A2 training series products/Atlas A2 inference series products | Yes |
 
+> Note: The sample checks at runtime whether the current SOC supports UVM. On products without UVM support (such as the Ascend 910 series), `aclrtMemAllocManaged` returns `ACL_ERROR_RT_FEATURE_NOT_SUPPORT (207000)`. In this case, the sample prints a `[SKIP]` message and exits normally with code 0; after detecting `[SKIP]`, `run.sh` skips the subsequent result verification and also exits normally.
+
 ## Build and Run
 
 1. Download sample code to environment with CANN software installed, switch to sample directory.
@@ -80,4 +82,11 @@ Building...
 ... output/golden.bin
 error ratio: 0.0000, tolerance: 0.0010
 [SUCCESS] result correct
+```
+
+Example output on a product that does not support UVM:
+
+```text
+[INFO]  [SKIP] uvm_allocate sample skipped: the current SOC (Ascend910A) does not support UVM, aclrtMemAllocManaged returned error code 207000.
+[SUCCESS] uvm_allocate sample skipped because the current SOC does not support UVM.
 ```

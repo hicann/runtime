@@ -22,6 +22,8 @@
 #include "kernel_utils.h"
 
 namespace {
+constexpr int32_t kSampleSkipped = 1;
+
 struct KernelBuffers {
     uint8_t* xPtr = nullptr;
     uint8_t* yPtr = nullptr;
@@ -62,8 +64,22 @@ int32_t InitializeRuntime(RuntimeResources* runtime)
 int32_t AllocateKernelBuffers(size_t inputByteSize, size_t outputByteSize, KernelBuffers* buffers)
 {
     // Allocate uvm memory for kernel inputs and output.
-    CHECK_ERROR(
-        aclrtMemAllocManaged(reinterpret_cast<void**>(&buffers->xPtr), inputByteSize, ACL_RT_MEM_ATTACH_GLOBAL));
+    // Runtime SOC check: products without UVM support (for example the Ascend 910 series) fail
+    // aclrtMemAllocManaged with ACL_ERROR_RT_FEATURE_NOT_SUPPORT; skip gracefully in that case.
+    const aclError allocRet =
+        aclrtMemAllocManaged(reinterpret_cast<void**>(&buffers->xPtr), inputByteSize, ACL_RT_MEM_ATTACH_GLOBAL);
+    if (allocRet == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
+        const char* socName = aclrtGetSocName();
+        INFO_LOG(
+            "[SKIP] uvm_allocate sample skipped: the current SOC (%s) does not support UVM, "
+            "aclrtMemAllocManaged returned error code %d.",
+            (socName != nullptr) ? socName : "unknown", static_cast<int32_t>(allocRet));
+        return kSampleSkipped;
+    }
+    if (allocRet != ACL_SUCCESS) {
+        ERROR_LOG("Operation failed: aclrtMemAllocManaged returned error code %d", static_cast<int32_t>(allocRet));
+        return -1;
+    }
     CHECK_ERROR(
         aclrtMemAllocManaged(reinterpret_cast<void**>(&buffers->yPtr), inputByteSize, ACL_RT_MEM_ATTACH_GLOBAL));
     CHECK_ERROR(
@@ -180,8 +196,10 @@ int32_t RunKernelLaunchSample()
         if (InitializeRuntime(&runtime) != 0) {
             return -1;
         }
-        if (AllocateKernelBuffers(inputByteSize, outputByteSize, &buffers) != 0) {
-            return -1;
+        const int32_t allocResult = AllocateKernelBuffers(inputByteSize, outputByteSize, &buffers);
+        if (allocResult != 0) {
+            // -1 on failure, kSampleSkipped when the current SOC does not support UVM.
+            return allocResult;
         }
         if (PrepareInputData(inputByteSize, buffers) != 0) {
             return -1;
@@ -198,6 +216,10 @@ int32_t RunKernelLaunchSample()
 
     int32_t finalResult = result;
     ReleaseKernelResources(runtime, buffers, finalResult);
+    if (finalResult == kSampleSkipped) {
+        // Skipping on an SOC without UVM support is not a sample failure; exit gracefully with 0.
+        return 0;
+    }
     if (finalResult == 0) {
         INFO_LOG("Run the uvm_allocate sample successfully.");
     }
