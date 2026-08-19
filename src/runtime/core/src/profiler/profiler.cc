@@ -569,15 +569,15 @@ void Profiler::RuntimeProfilerStop(void) const
     const Runtime* const rtInstance = Runtime::Instance();
     Context* curCtx = rtInstance->CurrentContext();
     if (curCtx != nullptr) {
-        SpinLock& modelLock = curCtx->GetModelLock();
-        modelLock.Lock();
-        for (auto it : curCtx->GetModelList()) {
-            if (it != nullptr && it->GetModelType() == RT_MODEL_CAPTURE_MODEL) {
-                CaptureModel* captureMdl = dynamic_cast<CaptureModel*>(it);
-                captureMdl->ResetTrackDataReportFlag();
-            }
-        }
-        modelLock.Unlock();
+        (void)curCtx->ForEachModel(
+            [](Model* mdl) -> rtError_t {
+                if (mdl->GetModelType() == RT_MODEL_CAPTURE_MODEL) {
+                    CaptureModel* captureMdl = dynamic_cast<CaptureModel*>(mdl);
+                    captureMdl->ResetTrackDataReportFlag();
+                }
+                return RT_ERROR_NONE;
+            },
+            false);
     }
 
     const auto ret = ProfilingAgent::Instance().UnInit();

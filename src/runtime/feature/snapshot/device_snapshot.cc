@@ -104,14 +104,12 @@ rtError_t DeviceSnapshot::OpMemoryBackup(void)
         if (!ContextManage::IsActiveContextOnDevice(ctx, static_cast<int32_t>(devId))) {
             continue;
         }
-        SpinLock& modelLock = ctx->GetModelLock();
-        modelLock.Lock();
-        for (Model* model : ctx->GetModelList()) {
-            if (model != nullptr) {
+        (void)ctx->ForEachModel(
+            [this](Model* model) -> rtError_t {
                 GetOpTotalMemoryInfo(model);
-            }
-        }
-        modelLock.Unlock();
+                return RT_ERROR_NONE;
+            },
+            false);
     }
     const size_t opTotalHostMemSize = GetOpTotalHostMemSize();
     if (opTotalHostMemSize == 0U) {

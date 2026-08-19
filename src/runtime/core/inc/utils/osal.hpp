@@ -143,6 +143,19 @@ private:
     Atomic<uint32_t> atomicLock_;
 };
 
+class SpinLockGuard {
+public:
+    explicit SpinLockGuard(SpinLock& lock) : lock_(lock) { lock_.Lock(); }
+    ~SpinLockGuard() { lock_.Unlock(); }
+    SpinLockGuard(const SpinLockGuard&) = delete;
+    SpinLockGuard& operator=(const SpinLockGuard&) = delete;
+    SpinLockGuard(SpinLockGuard&&) = delete;
+    SpinLockGuard& operator=(SpinLockGuard&&) = delete;
+
+private:
+    SpinLock& lock_;
+};
+
 // The running body of a thread.
 class ThreadRunnable {
 public:

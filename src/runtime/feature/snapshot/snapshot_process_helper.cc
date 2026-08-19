@@ -167,16 +167,12 @@ rtError_t SnapShotAclGraphRestore(Device* const dev)
         if (!ContextManage::IsActiveContextOnDevice(ctx, static_cast<int32_t>(deviceId))) {
             continue;
         }
-        SpinLock& modelLock = ctx->GetModelLock();
-        modelLock.Lock();
-        for (Model* mdl : ctx->GetModelList()) {
-            err = RestoreSoftwareSqCaptureModel(dev, drv, tsId, mdl);
-            if (err != RT_ERROR_NONE) {
-                modelLock.Unlock();
-                return err;
-            }
+        err = ctx->ForEachModel(
+            [&dev, &drv, &tsId](Model* mdl) -> rtError_t { return RestoreSoftwareSqCaptureModel(dev, drv, tsId, mdl); },
+            true);
+        if (err != RT_ERROR_NONE) {
+            return err;
         }
-        modelLock.Unlock();
     }
 
     err = dev->RestoreSqCqPool();
@@ -203,33 +199,28 @@ rtError_t ModelBackup(const int32_t devId)
         if (!ContextManage::IsActiveContextOnDevice(ctx, devId)) {
             continue;
         }
-        SpinLock& mdlLock = ctx->GetModelLock();
-        mdlLock.Lock();
-        for (Model* mdl : ctx->GetModelList()) {
-            if (mdl == nullptr) {
-                continue;
-            }
-            if (mdl->GetModelExecutorType() != EXECUTOR_TS) {
-                mdlLock.Unlock();
-                COND_RETURN_WARN(
-                    true, RT_ERROR_FEATURE_NOT_SUPPORT,
-                    "Snapshots cannot be created for models with the AICPU execution type.");
-            }
-            if (IsSoftwareSqCaptureModel(mdl) || mdl->IsAutoSplitSq()) {
-                continue;
-            }
-            if (!mdl->IsModelLoadComplete()) {
-                mdlLock.Unlock();
-                COND_RETURN_ERROR(
-                    true, RT_ERROR_SNAPSHOT_BACKUP_FAILED, "The model is not complete, model_id=%u.", mdl->Id_());
-            }
-            const rtError_t ret = mdl->SinkSqTasksBackup();
-            if (ret != RT_ERROR_NONE) {
-                mdlLock.Unlock();
+        const rtError_t mdlErr = ctx->ForEachModel(
+            [devId](Model* mdl) -> rtError_t {
+                if (mdl->GetModelExecutorType() != EXECUTOR_TS) {
+                    COND_RETURN_WARN(
+                        true, RT_ERROR_FEATURE_NOT_SUPPORT,
+                        "Snapshots cannot be created for models with the AICPU execution type.");
+                }
+                if (IsSoftwareSqCaptureModel(mdl) || mdl->IsAutoSplitSq()) {
+                    return RT_ERROR_NONE;
+                }
+                if (!mdl->IsModelLoadComplete()) {
+                    COND_RETURN_ERROR(
+                        true, RT_ERROR_SNAPSHOT_BACKUP_FAILED, "The model is not complete, model_id=%u.", mdl->Id_());
+                }
+                const rtError_t ret = mdl->SinkSqTasksBackup();
                 ERROR_RETURN(ret, "Backup model tasks failed, ret=%#x, devId=%d.", static_cast<uint32_t>(ret), devId);
-            }
+                return RT_ERROR_NONE;
+            },
+            true);
+        if (mdlErr != RT_ERROR_NONE) {
+            return mdlErr;
         }
-        mdlLock.Unlock();
     }
 
     const rtError_t ret = SinkTaskMemoryBackup(devId);
@@ -246,27 +237,23 @@ rtError_t ModelRestore(const int32_t devId)
         if (!ContextManage::IsActiveContextOnDevice(ctx, devId)) {
             continue;
         }
-        SpinLock& modelLock = ctx->GetModelLock();
-        modelLock.Lock();
-        for (Model* mdl : ctx->GetModelList()) {
-            if (mdl == nullptr) {
-                continue;
-            }
-            if (mdl->GetModelExecutorType() != EXECUTOR_TS) {
-                modelLock.Unlock();
-                COND_RETURN_WARN(
-                    true, RT_ERROR_FEATURE_NOT_SUPPORT, "Models with the AICPU executor type cannot be restored.");
-            }
-            if (IsSoftwareSqCaptureModel(mdl) || mdl->IsAutoSplitSq()) {
-                continue;
-            }
-            const rtError_t ret = mdl->ReBuild();
-            if (ret != RT_ERROR_NONE) {
-                modelLock.Unlock();
+        const rtError_t mdlErr = ctx->ForEachModel(
+            [devId](Model* mdl) -> rtError_t {
+                if (mdl->GetModelExecutorType() != EXECUTOR_TS) {
+                    COND_RETURN_WARN(
+                        true, RT_ERROR_FEATURE_NOT_SUPPORT, "Models with the AICPU executor type cannot be restored.");
+                }
+                if (IsSoftwareSqCaptureModel(mdl) || mdl->IsAutoSplitSq()) {
+                    return RT_ERROR_NONE;
+                }
+                const rtError_t ret = mdl->ReBuild();
                 ERROR_RETURN(ret, "Rebuild model failed, ret=%#x, devId=%d.", static_cast<uint32_t>(ret), devId);
-            }
+                return RT_ERROR_NONE;
+            },
+            true);
+        if (mdlErr != RT_ERROR_NONE) {
+            return mdlErr;
         }
-        modelLock.Unlock();
     }
     return RT_ERROR_NONE;
 }
