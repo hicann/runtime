@@ -193,7 +193,7 @@ sudo timedatectl set-timezone Asia/Shanghai
 
 **异常现象**
 
-用户未设置日志打印环境变量（`export ASCEND_SLOG_PRINT_TO_STDOUT=1`），但是在屏幕上仍有日志显示。
+用户未设置日志打印环境变量（`export ASCEND_LOG_PRINT_TO_STDOUT=1`），但是在屏幕上仍有日志显示。
 
 **可能原因**
 

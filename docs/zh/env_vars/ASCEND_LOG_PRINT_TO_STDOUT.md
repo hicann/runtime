@@ -1,4 +1,4 @@
-# ASCEND\_SLOG\_PRINT\_TO\_STDOUT
+# ASCEND\_LOG\_PRINT\_TO\_STDOUT
 
 ## 功能描述
 
@@ -12,13 +12,13 @@
 
 > [!NOTE]说明
 >
->- 通过执行**echo $ASCEND\_SLOG\_PRINT\_TO\_STDOUT**命令可以查看环境变量设置的值。
+>- 通过执行**echo $ASCEND\_LOG\_PRINT\_TO\_STDOUT**命令可以查看环境变量设置的值。
 >- 若环境变量未配置/配置为非法值/配置为空，表示采用日志默认输出方式。
 
 ## 配置示例
 
 ```sh
-export ASCEND_SLOG_PRINT_TO_STDOUT=1
+export ASCEND_LOG_PRINT_TO_STDOUT=1
 ```
 
 ## 使用约束

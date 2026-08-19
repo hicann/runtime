@@ -173,7 +173,7 @@ echo -e "\n=== 分析完成 ==="
 ```bash
 # 设置日志级别（环境变量方式）
 export ASCEND_GLOBAL_LOG_LEVEL=0  # DEBUG级别，输出最详细日志
-export ASCEND_SLOG_PRINT_TO_STDOUT=1  # 输出到标准输出
+export ASCEND_LOG_PRINT_TO_STDOUT=1  # 输出到标准输出
 
 # 或在代码中设置
 aclError error = aclInit(nullptr);

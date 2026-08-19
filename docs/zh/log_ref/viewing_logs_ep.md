@@ -61,7 +61,7 @@
 - **设置Device侧应用类日志回传延时**：Ascend EP标准形态下，Device侧的slogd进程会将Device侧应用类日志自动回传到Host侧，使用户在Host侧可以直接查看Device侧的应用类日志。在业务进程退出前，系统有2000ms的默认延时将Device侧应用类日志回传到Host侧，超时后业务进程退出。未回传到Host侧的日志直接在Device侧落盘。可以通过环境变量ASCEND\_LOG\_DEVICE\_FLUSH\_TIMEOUT设置更高的Device侧应用类日志回传到Host侧的延时时间。
 - **设置应用类日志目录（plog和device-id）下存储每个进程日志文件的数量**：`plog`和`device-id`日志目录下能够存储的单个进程回传的日志文件数量，默认为10个，该数量可以通过环境变量ASCEND\_HOST\_LOG\_FILE\_NUM进行设置。
 - **指定日志拥塞处理方式**：在日志拥塞或IO访问性能差的情况下，为保证业务性能不劣化，系统可能会丢失日志。为便于问题定位，用户可通过ASCEND\_LOG\_SYNC\_SAVE配置在日志拥塞或IO访问性能差的情况下，不丢失日志。
-- **设置日志展示方式**：日志的默认输出方式为将日志保存在log文件中，如果需要打印日志，可以配置环境变量ASCEND\_SLOG\_PRINT\_TO\_STDOUT。开启日志打印功能后，也可以在启动应用进程时，通过输出重定向方式将日志保存到指定文件中。例如：./main \> log.txt
+- **设置日志展示方式**：日志的默认输出方式为将日志保存在log文件中，如果需要打印日志，可以配置环境变量ASCEND\_LOG\_PRINT\_TO\_STDOUT。开启日志打印功能后，也可以在启动应用进程时，通过输出重定向方式将日志保存到指定文件中。例如：./main \> log.txt
 
 注：如上环境变量详细信息请参考[《环境变量参考》](https://hiascend.com/document/redirect/CannCommunityEnvRef)。
 
