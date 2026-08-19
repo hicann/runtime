@@ -177,6 +177,7 @@ aclError aclrtCreateEventWithFlag(aclrtEvent *event, uint32_t flag)
   <!-- end id24 -->
 
 <!-- end id22 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/07_event_management_res.md#id26 -->
 
 - 若flag参数值**不包含**ACL\_EVENT\_SYNC宏，则不支持在以下API中使用本接口创建的Event：[aclrtResetEvent](#aclrtResetEvent)、[aclrtStreamWaitEvent](#aclrtStreamWaitEvent)。若flag参数值**包含**ACL\_EVENT\_SYNC宏或者flag设置为ACL\_EVENT\_EXTERNAL时，则创建出来的Event数量受限。
 不同型号的硬件支持的Event数量不同。
@@ -292,6 +293,7 @@ aclError aclrtCreateEventExWithFlag(aclrtEvent *event, uint32_t flag)
   <!-- npu="910" id39 -->
   - 对于Atlas 训练系列产品，单个Device支持的Event最大数为65535。
   <!-- end id39 -->
+  <!-- @ref: runtime/res/docs/zh/api_ref/07_event_management_res.md#id25 -->
 
 <br>
 <br>

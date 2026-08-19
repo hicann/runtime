@@ -1098,6 +1098,7 @@ aclError aclrtAllocatorSetGetAddrFromBlockFuncToDesc(aclrtAllocatorDesc allocato
 <!-- npu="IPV350" id1456 -->
 - IPV350：不支持
 <!-- end id1456 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/25-03_Operation_APIs_res.md#id50 -->
 
 ### 功能说明
 

@@ -945,7 +945,7 @@ aclError aclrtGetStreamAttribute(aclrtStream stream, aclrtStreamAttr stmAttrType
 返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 <!-- npu="950,A3,910b,910,310p,310b" id18 -->
-## 约束说明
+### 约束说明
 
 <!-- npu="950,A3,910b" id19 -->
 对于Ascend 950PR/Ascend 950DT、Atlas A3 训练系列产品/Atlas A3 推理系列产品、Atlas A2 训练系列产品/Atlas A2 推理系列产品，支持指定默认Stream（即stream参数传入NULL）。

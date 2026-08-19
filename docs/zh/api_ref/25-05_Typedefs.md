@@ -26,7 +26,6 @@ typedef 类型数据。
 - [aclrtParamHandle](#aclrtParamHandle)
 - [aclrtStream](#aclrtStream)
 - [aclrtTaskGrp](#aclrtTaskGrp)
-- [aclrtUpdateTaskAttrVal](#aclrtUpdateTaskAttrVal)
 - [acltdtBuf](#acltdtBuf)
 
 <br>
@@ -250,24 +249,6 @@ typedef void *aclrtStream;
 ```c
 typedef void *aclrtTaskGrp;
 ```
-
-<br>
-
-<a id="aclrtUpdateTaskAttrVal"></a>
-
-## aclrtUpdateTaskAttrVal
-
-```c
-typedef union { 
-    aclrtRandomTaskUpdateAttr randomTaskAttr; 
-    aclrtAicAivTaskUpdateAttr aicAivTaskAttr; 
-} aclrtUpdateTaskAttrVal;
-```
-
-| 成员名称 | 说明 |
-| --- | --- |
-| randomTaskAttr | 随机数生成任务。类型定义请参见[aclrtRandomTaskUpdateAttr](25-04_Structs.md#aclrtRandomTaskUpdateAttr)。<br>不同型号对该任务支持的情况不同：<br>Atlas A3 训练系列产品/Atlas A3 推理系列产品支持随机数生成任务<br>Atlas A2 训练系列产品/Atlas A2 推理系列产品支持随机数生成任务 |
-| aicAivTaskAttr | 在Cube\Vector计算单元上执行的计算任务。类型定义请参见[aclrtAicAivTaskUpdateAttr](25-04_Structs.md#aclrtAicAivTaskUpdateAttr)。 |
 
 <br>
 

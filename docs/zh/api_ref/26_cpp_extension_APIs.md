@@ -194,6 +194,8 @@ aclError aclrtSynchronizeEvent(aclrtEvent event, int32_t timeout)
 
 返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
+<!-- @ref: runtime/res/docs/zh/api_ref/26_cpp_extension_APIs_res.md#id29 -->
+
 <br>
 <br>
 <br>
@@ -357,6 +359,10 @@ aclError aclrtSetOpExecuteTimeOut(uint64_t timeout, uint64_t *actualTimeout)
 ### 返回值说明
 
 返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
+
+### 约束说明
+
+约束与C接口[aclrtSetOpExecuteTimeOutV2](12_execution_control.md#aclrtSetOpExecuteTimeOutV2)保持一致。
 
 <br>
 <br>

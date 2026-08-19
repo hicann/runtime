@@ -71,11 +71,11 @@ aclError aclrtMallocHost(void **hostPtr, size_t size)
 <!-- npu="310p,310b" id8 -->
 - 针对Ascend RC形态、Control CPU开放形态，Host与Device是合一的，所以申请Host内存也等同于申请Device内存。此外，申请内存时，按普通页申请。如果需要64字节对齐的首地址，用户需自行处理对齐问题。
 <!-- end id8 -->
-    <!-- npu="310p,310b" id9 -->
+<!-- npu="310p,310b" id9 -->
 - 针对Ascend RC形态、Control CPU开放形态，若用户使用本接口申请大块内存并自行划分、管理内存时，每段内存需同时满足以下需求，其中，len表示某段内存的大小，ALIGN\_UP\[len,k\]表示向上按k字节对齐：\(\(len-1\)/k+1\)\*k：
     - 内存大小向上对齐成32整数倍+32字节（m=ALIGN\_UP\[len,32\]+32字节）；
     - 内存起始地址需满足64字节对齐（ALIGN\_UP\[m,64\]）。
-    <!-- end id9 -->
+<!-- end id9 -->
 
 <br>
 <br>

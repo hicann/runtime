@@ -77,6 +77,7 @@ aclError aclrtCreateNotify(aclrtNotify *notify, uint64_t flag)
 <!-- npu="910,310p" id4 -->
 - 对于Atlas 推理系列产品、Atlas 训练系列产品，单个Device支持的Notify最大数为1024。
 <!-- end id4 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/08_notify_management_res.md#id12 -->
 
 <br>
 <br>

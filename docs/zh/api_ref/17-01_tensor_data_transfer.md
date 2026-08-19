@@ -158,13 +158,11 @@ aclError acltdtSendTensor(const acltdtChannelHandle *handle, const acltdtDataset
 
 ### 功能说明
 
+发送预处理好的数据。
+
 <!-- npu="950,A3,910b,910,310p,310b" id2 -->
 从Host向Device发送预处理好的数据。
 <!-- end id2 -->
-<!-- npu="IPV350" id3 -->
-发送预处理好的数据。
-<!-- end id3 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/17-01_tensor_data_transfer_res.md#id10 -->
 
 ### 参数说明
 
@@ -217,13 +215,11 @@ aclError acltdtReceiveTensor(const acltdtChannelHandle *handle, acltdtDataset *d
 
 ### 功能说明
 
+接受数据。
+
 <!-- npu="950,A3,910b,910,310p,310b" id4 -->
 在Host接收Device发过来的数据。
 <!-- end id4 -->
-<!-- npu="IPV350" id5 -->
-接收数据。
-<!-- end id5 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/17-01_tensor_data_transfer_res.md#id11 -->
 
 ### 参数说明
 

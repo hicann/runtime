@@ -98,6 +98,7 @@ aclError aclrtMalloc(void **devPtr, size_t size, aclrtMemMallocPolicy policy)
 
 ### 约束说明
 
+<!-- @ref: runtime/res/docs/zh/api_ref/11-01_device_memory_malloc_and_free_res.md#id14 -->
 - 本接口分配的内存不会对内容初始化，建议在使用内存前先调用[aclrtMemset](11-03_memory_copy_and_set.md#aclrtMemset)接口先初始化内存，清除内存中的随机数。
 - 本接口内部不会进行隐式的Device同步或流同步，如果申请内存成功或申请内存失败会立刻返回结果。
 - policy处仅支持配置单个枚举项，不支持配置多个枚举项位或。
@@ -140,7 +141,7 @@ aclError aclrtMalloc(void **devPtr, size_t size, aclrtMemMallocPolicy policy)
     <!-- end id12 -->
 
     <!-- npu="IPV350" id20 -->
-    - 内存大小向上对齐成32整数倍+32字节（m=ALIGN\_UP\[len,32\]+32字节）。
+    - 对于IPV350，内存大小向上对齐成32整数倍+32字节（m=ALIGN\_UP\[len,32\]+32字节）。
     <!-- end id20 -->
     <!-- @ref: runtime/res/docs/zh/api_ref/11-01_device_memory_malloc_and_free_res.md#id13 -->
     - 内存起始地址需满足64字节对齐（ALIGN\_UP\[m,64\]）。
@@ -229,8 +230,8 @@ aclError aclrtMallocAlign32(void **devPtr, size_t size, aclrtMemMallocPolicy pol
 
 ### 约束说明
 
+<!-- @ref: runtime/res/docs/zh/api_ref/11-01_device_memory_malloc_and_free_res.md#id20 -->
 - 本接口分配的内存不会对内容进行初始化。
-
 - 本接口内部不会进行隐式的Device同步或流同步。如果申请内存成功或申请内存失败会立刻返回结果。
 - policy处仅支持配置单个枚举项，不支持配置多个枚举项位或。
 
@@ -272,7 +273,7 @@ aclError aclrtMallocAlign32(void **devPtr, size_t size, aclrtMemMallocPolicy pol
     <!-- end id30 -->
 
     <!-- npu="IPV350" id33 -->
-    - 内存大小向上对齐成32整数倍+32字节（m=ALIGN\_UP\[len,32\]+32字节）。
+    - 对于IPV350，内存大小向上对齐成32整数倍+32字节（m=ALIGN\_UP\[len,32\]+32字节）。
     <!-- end id33 -->
     <!-- @ref: runtime/res/docs/zh/api_ref/11-01_device_memory_malloc_and_free_res.md#id15 -->
     - 内存起始地址需满足64字节对齐（ALIGN\_UP\[m,64\]）。

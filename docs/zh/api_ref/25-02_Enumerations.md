@@ -38,6 +38,7 @@ enum 类型数据。
 - [aclrtCondition](#aclrtCondition)
 - [aclrtDevAttr](#aclrtDevAttr)
 - [aclrtDevFeatureType](#aclrtDevFeatureType)
+- [aclrtDeviceLimit](#aclrtDeviceLimit)
 - [aclrtDeviceStatus](#aclrtDeviceStatus)
 - [aclrtDevResLimitType](#aclrtDevResLimitType)
 - [aclrtEngineType](#aclrtEngineType)
@@ -1440,7 +1441,7 @@ typedef enum {
     <!-- end id56 -->
 <!-- end id50 -->
 <!-- npu="IPV350" id57 -->
-- 当前不支持设置ACL\_FUNC\_ATTR\_KERNEL\_RATIO属性。
+- 对于IPV350，当前不支持设置ACL\_FUNC\_ATTR\_KERNEL\_RATIO属性。
 <!-- end id57 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/25-02_Enumerations_res.md#id5 -->
 - 当属性设置为ACL\_FUNC\_ATTR\_KERNEL\_SCHED\_MODE时，取值如下：
@@ -1666,12 +1667,8 @@ typedef enum aclrtMemAttr {
 <!-- end id59 -->
 
 <!-- npu="IPV350" id60 -->
-其它型号当前不支持HUGE1G相关选项。
+对于IPV350，当前不支持HUGE1G、P2P相关选项。
 <!-- end id60 -->
-
-<!-- npu="IPV350" id61 -->
-当前不支持P2P相关选项。
-<!-- end id61 -->
 
 <!-- @ref: runtime/res/docs/zh/api_ref/25-02_Enumerations_res.md#id6 -->
 
@@ -1796,7 +1793,7 @@ typedef enum aclrtMemMallocPolicy {
     <!-- end id63 -->
 
     <!-- npu="IPV350" id64 -->
-    当前版本不支持该选项。
+    对于IPV350，当前版本不支持该选项。
     <!-- end id64 -->
     <!-- @ref: runtime/res/docs/zh/api_ref/25-02_Enumerations_res.md#id7 -->
 
@@ -1815,7 +1812,7 @@ typedef enum aclrtMemMallocPolicy {
     <!-- end id66 -->
 
     <!-- npu="IPV350" id67 -->
-    当前版本不支持该选项。
+    对于IPV350，当前版本不支持该选项。
     <!-- end id67 -->
 
     <!-- @ref: runtime/res/docs/zh/api_ref/25-02_Enumerations_res.md#id8 -->
@@ -1833,7 +1830,7 @@ typedef enum aclrtMemMallocPolicy {
     <!-- end id69 -->
 
     <!-- npu="IPV350" id70 -->
-    当前版本不支持该选项。
+    对于IPV350，当前版本不支持该选项。
     <!-- end id70 -->
     <!-- @ref: runtime/res/docs/zh/api_ref/25-02_Enumerations_res.md#id9 -->
 
@@ -1850,7 +1847,7 @@ typedef enum aclrtMemMallocPolicy {
     <!-- end id71 -->
 
     <!-- npu="IPV350" id72 -->
-    当前版本不支持该选项。
+    对于IPV350，当前版本不支持该选项。
     <!-- end id72 -->
     <!-- @ref: runtime/res/docs/zh/api_ref/25-02_Enumerations_res.md#id10 -->
 
@@ -1867,7 +1864,7 @@ typedef enum aclrtMemMallocPolicy {
     <!-- end id73 -->
 
     <!-- npu="IPV350" id74 -->
-    当前版本不支持该选项。
+    对于IPV350，当前版本不支持该选项。
     <!-- end id74 -->
     <!-- @ref: runtime/res/docs/zh/api_ref/25-02_Enumerations_res.md#id11 -->
 
@@ -1880,7 +1877,7 @@ typedef enum aclrtMemMallocPolicy {
     <!-- end id75 -->
 
     <!-- npu="IPV350" id76 -->
-    若配置ACL\_MEM\_TYPE\_LOW\_BAND\_WIDTH，则系统内部会默认采取ACL\_MEM\_MALLOC\_HUGE\_FIRST，优先申请大页。
+    对于IPV350，若配置ACL\_MEM\_TYPE\_LOW\_BAND\_WIDTH，则系统内部会默认采取ACL\_MEM\_MALLOC\_HUGE\_FIRST，优先申请大页。
     <!-- end id76 -->
     <!-- @ref: runtime/res/docs/zh/api_ref/25-02_Enumerations_res.md#id12 -->
 
@@ -1893,7 +1890,7 @@ typedef enum aclrtMemMallocPolicy {
     <!-- end id77 -->
 
     <!-- npu="IPV350" id78 -->
-    若配置ACL\_MEM\_TYPE\_HIGH\_BAND\_WIDTH，则系统内部会默认采取ACL\_MEM\_MALLOC\_HUGE\_FIRST，优先申请大页。
+    对于IPV350，若配置ACL\_MEM\_TYPE\_HIGH\_BAND\_WIDTH，则系统内部会默认采取ACL\_MEM\_MALLOC\_HUGE\_FIRST，优先申请大页。
     <!-- end id78 -->
     <!-- @ref: runtime/res/docs/zh/api_ref/25-02_Enumerations_res.md#id13 -->
 
@@ -2434,9 +2431,7 @@ typedef enum aclrtDeviceLimit {
 ```
 
 <!-- npu="950" id106 -->
-对于Ascend 950PR/Ascend 950DT，以上选项都支持。
-
-`ACL_RT_DEV_LIMIT_SIMT_STACK_SIZE`和`ACL_RT_DEV_LIMIT_SIMT_DVG_WARP_STACK_SIZE`不能同时设置为0，否则接口返回`ACL_ERROR_RT_PARAM_INVALID`。
+对于Ascend 950PR/Ascend 950DT，以上选项都支持。`ACL_RT_DEV_LIMIT_SIMT_STACK_SIZE`和`ACL_RT_DEV_LIMIT_SIMT_DVG_WARP_STACK_SIZE`不能同时设置为0，否则接口返回`ACL_ERROR_RT_PARAM_INVALID`。
 <!-- end id106 -->
 
 <!-- npu="A3,910b" id107 -->
