@@ -333,15 +333,15 @@ inline const char* GetRunModeDesc(aclrtRunMode mode)
 
 inline const char* GetCaptureModeDesc(aclmdlRICaptureMode mode)
 {
-    static const std::unordered_map<aclmdlRICaptureMode, const char*> captureModeDescMap = {
-        {ACL_MODEL_RI_CAPTURE_MODE_GLOBAL, "MODEL_RI_CAPTURE_MODE_GLOBAL(0)"},
-        {ACL_MODEL_RI_CAPTURE_MODE_THREAD_LOCAL, "MODEL_RI_CAPTURE_MODE_THREAD_LOCAL(1)"},
-        {ACL_MODEL_RI_CAPTURE_MODE_RELAXED, "MODEL_RI_CAPTURE_MODE_RELAXED(2)"},
-    };
-
-    auto it = captureModeDescMap.find(mode);
-    if (it != captureModeDescMap.end()) {
-        return it->second;
+    switch (mode) {
+        case ACL_MODEL_RI_CAPTURE_MODE_GLOBAL:
+            return "MODEL_RI_CAPTURE_MODE_GLOBAL(0)";
+        case ACL_MODEL_RI_CAPTURE_MODE_THREAD_LOCAL:
+            return "MODEL_RI_CAPTURE_MODE_THREAD_LOCAL(1)";
+        case ACL_MODEL_RI_CAPTURE_MODE_RELAXED:
+            return "MODEL_RI_CAPTURE_MODE_RELAXED(2)";
+        default:
+            break;
     }
     static thread_local char enumBuf[32];
     (void)snprintf_s(enumBuf, sizeof(enumBuf), sizeof(enumBuf) - 1, "UNKNOWN(%d)", static_cast<int32_t>(mode));
