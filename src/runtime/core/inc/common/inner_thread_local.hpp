@@ -55,14 +55,7 @@ public:
     static const Stream* GetCurrentResLimitStream();
 
 private:
-    class ContextThreadExitGuard {
-    public:
-        ~ContextThreadExitGuard();
-    };
-
     static void ClearDeletedContextBinding(Context* const deletedCtx);
-    static void InitContextExitGuard();
-    static void ReleaseContextThreadBinding();
     static void RefreshDevice();
 
     static __THREAD_LOCAL__ uint32_t lastTaskId_;
