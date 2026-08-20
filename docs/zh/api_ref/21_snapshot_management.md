@@ -40,9 +40,6 @@ aclError aclrtSnapShotProcessLock(int pid, void* reserve)
 <!-- npu="910" id1644 -->
 - Atlas 训练系列产品：不支持
 <!-- end id1644 -->
-<!-- npu="IPV350" id1645 -->
-- IPV350：不支持
-<!-- end id1645 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/21_snapshot_management_res.md#id1 -->
 
 ### 功能说明
@@ -97,9 +94,6 @@ aclError aclrtSnapShotProcessBackup(int pid, aclrtSnapShotBackupArgs *args)
 <!-- npu="910" id1385 -->
 - Atlas 训练系列产品：不支持
 <!-- end id1385 -->
-<!-- npu="IPV350" id1386 -->
-- IPV350：不支持
-<!-- end id1386 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/21_snapshot_management_res.md#id2 -->
 
 ### 功能说明
@@ -154,9 +148,6 @@ aclError aclrtSnapShotProcessRestore(int pid, aclrtSnapShotRestoreArgs *args)
 <!-- npu="910" id3135 -->
 - Atlas 训练系列产品：不支持
 <!-- end id3135 -->
-<!-- npu="IPV350" id3136 -->
-- IPV350：不支持
-<!-- end id3136 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/21_snapshot_management_res.md#id3 -->
 
 ### 功能说明
@@ -215,9 +206,6 @@ aclError aclrtSnapShotProcessUnlock(int pid, void* reserve)
 <!-- npu="910" id2827 -->
 - Atlas 训练系列产品：不支持
 <!-- end id2827 -->
-<!-- npu="IPV350" id2828 -->
-- IPV350：不支持
-<!-- end id2828 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/21_snapshot_management_res.md#id4 -->
 
 ### 功能说明
@@ -272,9 +260,6 @@ aclError aclrtSnapShotCallbackRegister(aclrtSnapShotStage stage, aclrtSnapShotCa
 <!-- npu="910" id2771 -->
 - Atlas 训练系列产品：不支持
 <!-- end id2771 -->
-<!-- npu="IPV350" id2772 -->
-- IPV350：不支持
-<!-- end id2772 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/21_snapshot_management_res.md#id5 -->
 
 ### 功能说明
@@ -328,9 +313,6 @@ aclError aclrtSnapShotCallbackUnregister(aclrtSnapShotStage stage, aclrtSnapShot
 <!-- npu="910" id1777 -->
 - Atlas 训练系列产品：不支持
 <!-- end id1777 -->
-<!-- npu="IPV350" id1778 -->
-- IPV350：不支持
-<!-- end id1778 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/21_snapshot_management_res.md#id6 -->
 
 ### 功能说明

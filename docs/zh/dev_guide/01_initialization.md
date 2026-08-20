@@ -7,7 +7,7 @@
 -   **设置日志**：提供日志记录的初始化，确保系统的运行状态可以被实时检查与调试。
 -   **资源管理初始化**：为后续的内存管理、任务调度、内存分配等功能提供资源准备。
 
-以下是初始化及指定计算设备的代码示例，不可以直接拷贝编译运行，仅供参考。完整样例代码请参见[Link](https://gitcode.com/cann/runtime/tree/master/example/1_basic_features/device/0_device_normal)。
+以下是初始化及指定计算设备的代码示例，不可以直接拷贝编译运行，仅供参考。完整样例代码请参见[Link](https://gitcode.com/cann/runtime/tree/9.2.0-beta.2/example/1_basic_features/device/0_device_normal)。
 
 ```
 // 初始化

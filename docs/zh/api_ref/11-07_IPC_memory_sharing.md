@@ -37,9 +37,6 @@ aclError aclrtIpcMemGetExportKey(void *devPtr, size_t size, char *key, size_t le
 <!-- npu="910" id1280 -->
 - Atlas 训练系列产品：支持
 <!-- end id1280 -->
-<!-- npu="IPV350" id1281 -->
-- IPV350：不支持
-<!-- end id1281 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-07_IPC_memory_sharing_res.md#id1 -->
 
 ### 功能说明
@@ -131,9 +128,6 @@ aclError aclrtIpcMemSetImportPid(const char *key, int32_t *pid, size_t num)
 <!-- npu="910" id1196 -->
 - Atlas 训练系列产品：支持
 <!-- end id1196 -->
-<!-- npu="IPV350" id1197 -->
-- IPV350：不支持
-<!-- end id1197 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-07_IPC_memory_sharing_res.md#id2 -->
 
 ### 功能说明
@@ -186,9 +180,6 @@ aclError aclrtIpcMemImportPidInterServer(const char *key, aclrtServerPid *server
 <!-- npu="910" id524 -->
 - Atlas 训练系列产品：不支持
 <!-- end id524 -->
-<!-- npu="IPV350" id525 -->
-- IPV350：不支持
-<!-- end id525 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-07_IPC_memory_sharing_res.md#id3 -->
 
 ### 功能说明
@@ -243,9 +234,6 @@ aclError aclrtIpcMemImportByKey(void **devPtr, const char *key, uint64_t flags)
 <!-- npu="910" id573 -->
 - Atlas 训练系列产品：支持
 <!-- end id573 -->
-<!-- npu="IPV350" id574 -->
-- IPV350：不支持
-<!-- end id574 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-07_IPC_memory_sharing_res.md#id4 -->
 
 ### 功能说明
@@ -298,9 +286,6 @@ aclError aclrtIpcMemSetAttr(const char *key, aclrtIpcMemAttrType type, uint64_t 
 <!-- npu="910" id426 -->
 - Atlas 训练系列产品：不支持
 <!-- end id426 -->
-<!-- npu="IPV350" id427 -->
-- IPV350：不支持
-<!-- end id427 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-07_IPC_memory_sharing_res.md#id5 -->
 
 ### 功能说明
@@ -355,9 +340,6 @@ aclError aclrtIpcMemClose(const char *key)
 <!-- npu="910" id1308 -->
 - Atlas 训练系列产品：支持
 <!-- end id1308 -->
-<!-- npu="IPV350" id1309 -->
-- IPV350：不支持
-<!-- end id1309 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-07_IPC_memory_sharing_res.md#id6 -->
 
 ### 功能说明

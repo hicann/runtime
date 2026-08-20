@@ -19,7 +19,7 @@ Runtime中的Stream均为非阻塞式Stream，默认Stream不会跟显式创建�
 
 调用aclrtCreateStream创建Stream，得到的aclrtStream对象作为后续的内存异步复制、Stream同步、Kernel执行等接口的Stream入参。显式创建的Stream需要调用aclrtDestroyStream接口显式销毁。销毁Stream时，如果Stream上有未完成的任务，则会等待任务完成后再销毁Stream。
 
-以下是创建Stream并在Stream上下发计算任务的代码示例，不可以直接拷贝编译运行，仅供参考。完整样例代码请参见[Link](https://gitcode.com/cann/runtime/blob/master/example/1_basic_features/stream/0_simple_stream)。
+以下是创建Stream并在Stream上下发计算任务的代码示例，不可以直接拷贝编译运行，仅供参考。完整样例代码请参见[Link](https://gitcode.com/cann/runtime/tree/9.2.0-beta.2/example/1_basic_features/stream/0_simple_stream)。
 
 ```
 // 显式创建一个Stream
@@ -129,7 +129,7 @@ CANN为CPU和NPU之间的异步协作提供了灵活的方式。用户可以使�
 
 回调函数不能直接或者间接调用CANN Runtime API，否则可能会导致错误或死锁。
 
-以下是在Stream上插入一个Host回调任务的代码示例，不可以直接拷贝编译运行，仅供参考。完整样例代码请参见[Link](https://gitcode.com/cann/runtime/tree/master/example/2_advanced_features/callback/1_callback_hostfunc)。
+以下是在Stream上插入一个Host回调任务的代码示例，不可以直接拷贝编译运行，仅供参考。完整样例代码请参见[Link](https://gitcode.com/cann/runtime/tree/9.2.0-beta.2/example/2_advanced_features/callback/1_callback_hostfunc)。
 
 ```
 // Host回调任务

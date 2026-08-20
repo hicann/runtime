@@ -32,9 +32,6 @@ aclError aclprofGetStepTimestamp(aclprofStepInfo* stepInfo, aclprofStepTag tag, 
 <!-- npu="910" id2400 -->
 - Atlas 训练系列产品：支持
 <!-- end id2400 -->
-<!-- npu="IPV350" id2401 -->
-- IPV350：不支持
-<!-- end id2401 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/19-04_setting_Iteration_time_in_pytorch_scenarios_res.md#id1 -->
 
 ### 功能说明

@@ -48,9 +48,6 @@ const char *aclGetRecentErrMsg()
 <!-- npu="910" id118 -->
 - Atlas 训练系列产品：支持
 <!-- end id118 -->
-<!-- npu="IPV350" id119 -->
-- IPV350：不支持
-<!-- end id119 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/13_exception_handling_res.md#id1 -->
 
 ### 功能说明
@@ -105,9 +102,6 @@ aclError aclrtSetExceptionInfoCallback(aclrtExceptionInfoCallback callback)
 <!-- npu="910" id1882 -->
 - Atlas 训练系列产品：支持
 <!-- end id1882 -->
-<!-- npu="IPV350" id1883 -->
-- IPV350：不支持
-<!-- end id1883 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/13_exception_handling_res.md#id2 -->
 
 ### 功能说明
@@ -240,9 +234,6 @@ aclError aclrtExceptionInfoCallbackRegister(aclrtExceptionInfoCallback callback)
 <!-- npu="910" id41 -->
 - Atlas 训练系列产品：支持
 <!-- end id41 -->
-<!-- npu="IPV350" id42 -->
-- IPV350：不支持
-<!-- end id42 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/13_exception_handling_res.md#id16 -->
 
 ### 功能说明
@@ -381,9 +372,6 @@ aclError aclrtExceptionInfoCallbackUnregister(aclrtExceptionInfoCallback callbac
 <!-- npu="910" id48 -->
 - Atlas 训练系列产品：支持
 <!-- end id48 -->
-<!-- npu="IPV350" id49 -->
-- IPV350：不支持
-<!-- end id49 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/13_exception_handling_res.md#id17 -->
 
 ### 功能说明
@@ -472,9 +460,6 @@ uint32_t aclrtGetTaskIdFromExceptionInfo(const aclrtExceptionInfo *info)
 <!-- npu="910" id2533 -->
 - Atlas 训练系列产品：支持
 <!-- end id2533 -->
-<!-- npu="IPV350" id2534 -->
-- IPV350：不支持
-<!-- end id2534 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/13_exception_handling_res.md#id3 -->
 
 ### 功能说明
@@ -523,9 +508,6 @@ uint32_t aclrtGetStreamIdFromExceptionInfo(const aclrtExceptionInfo *info)
 <!-- npu="910" id3121 -->
 - Atlas 训练系列产品：支持
 <!-- end id3121 -->
-<!-- npu="IPV350" id3122 -->
-- IPV350：不支持
-<!-- end id3122 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/13_exception_handling_res.md#id4 -->
 
 ### 功能说明
@@ -574,9 +556,6 @@ uint32_t aclrtGetThreadIdFromExceptionInfo(const aclrtExceptionInfo *info)
 <!-- npu="910" id2022 -->
 - Atlas 训练系列产品：支持
 <!-- end id2022 -->
-<!-- npu="IPV350" id2023 -->
-- IPV350：不支持
-<!-- end id2023 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/13_exception_handling_res.md#id5 -->
 
 ### 功能说明
@@ -625,9 +604,6 @@ uint32_t aclrtGetDeviceIdFromExceptionInfo(const aclrtExceptionInfo *info)
 <!-- npu="910" id762 -->
 - Atlas 训练系列产品：支持
 <!-- end id762 -->
-<!-- npu="IPV350" id763 -->
-- IPV350：不支持
-<!-- end id763 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/13_exception_handling_res.md#id6 -->
 
 ### 功能说明
@@ -676,9 +652,6 @@ uint32_t aclrtGetErrorCodeFromExceptionInfo(const aclrtExceptionInfo *info)
 <!-- npu="910" id1049 -->
 - Atlas 训练系列产品：支持
 <!-- end id1049 -->
-<!-- npu="IPV350" id1050 -->
-- IPV350：不支持
-<!-- end id1050 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/13_exception_handling_res.md#id7 -->
 
 ### 功能说明
@@ -727,9 +700,6 @@ aclError aclrtPeekAtLastError(aclrtLastErrLevel level)
 <!-- npu="910" id1840 -->
 - Atlas 训练系列产品：支持
 <!-- end id1840 -->
-<!-- npu="IPV350" id1841 -->
-- IPV350：支持
-<!-- end id1841 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/13_exception_handling_res.md#id8 -->
 
 ### 功能说明
@@ -778,9 +748,6 @@ aclError aclrtGetLastError(aclrtLastErrLevel level)
 <!-- npu="910" id909 -->
 - Atlas 训练系列产品：支持
 <!-- end id909 -->
-<!-- npu="IPV350" id910 -->
-- IPV350：支持
-<!-- end id910 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/13_exception_handling_res.md#id9 -->
 
 ### 功能说明
@@ -831,9 +798,6 @@ aclError aclrtGetMemUceInfo(int32_t deviceId, aclrtMemUceInfo *memUceInfoArray, 
 <!-- npu="910" id6 -->
 - Atlas 训练系列产品：不支持
 <!-- end id6 -->
-<!-- npu="IPV350" id7 -->
-- IPV350：不支持
-<!-- end id7 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/13_exception_handling_res.md#id11 -->
 
 ### 功能说明
@@ -887,9 +851,6 @@ aclError aclrtMemUceRepair(int32_t deviceId, aclrtMemUceInfo *memUceInfoArray, s
 <!-- npu="910" id13 -->
 - Atlas 训练系列产品：不支持
 <!-- end id13 -->
-<!-- npu="IPV350" id14 -->
-- IPV350：不支持
-<!-- end id14 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/13_exception_handling_res.md#id12 -->
 
 ### 功能说明
@@ -942,9 +903,6 @@ aclError aclrtDeviceTaskAbort(int32_t deviceId, uint32_t timeout)
 <!-- npu="910" id20 -->
 - Atlas 训练系列产品：不支持
 <!-- end id20 -->
-<!-- npu="IPV350" id21 -->
-- IPV350：不支持
-<!-- end id21 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/13_exception_handling_res.md#id13 -->
 
 ### 功能说明
@@ -996,9 +954,6 @@ aclError aclrtGetErrorVerbose(int32_t deviceId, aclrtErrorInfo *errorInfo);
 <!-- npu="910" id27 -->
 - Atlas 训练系列产品：不支持
 <!-- end id27 -->
-<!-- npu="IPV350" id28 -->
-- IPV350：不支持
-<!-- end id28 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/13_exception_handling_res.md#id14 -->
 
 ### 功能说明
@@ -1055,9 +1010,6 @@ aclError aclrtRepairError(int32_t deviceId, const aclrtErrorInfo *errorInfo)
 <!-- npu="910" id34 -->
 - Atlas 训练系列产品：不支持
 <!-- end id34 -->
-<!-- npu="IPV350" id35 -->
-- IPV350：不支持
-<!-- end id35 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/13_exception_handling_res.md#id15 -->
 
 ### 功能说明
@@ -1107,9 +1059,6 @@ aclError aclrtSetDeviceTaskAbortCallback(const char *regName, aclrtDeviceTaskAbo
 <!-- npu="910" id384 -->
 - Atlas 训练系列产品：不支持
 <!-- end id384 -->
-<!-- npu="IPV350" id385 -->
-- IPV350：不支持
-<!-- end id385 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/13_exception_handling_res.md#id10 -->
 
 ### 功能说明

@@ -19,7 +19,7 @@ Event也支持**多个任务等待同一个事件（多等一）**，例如strea
 
 ## Event的创建与销毁
 
-以下是创建两个Event并销毁的代码示例，该示例仅用于说明Event使用方法，不可以直接拷贝编译运行。完整样例代码请参见[Link](https://gitcode.com/cann/runtime/blob/master/example/1_basic_features/event/1_event_timestamp)。
+以下是创建两个Event并销毁的代码示例，该示例仅用于说明Event使用方法，不可以直接拷贝编译运行。完整样例代码请参见[Link](https://gitcode.com/cann/runtime/tree/9.2.0-beta.2/example/1_basic_features/event/1_event_timestamp)。
 
 ```
 aclrtEvent startEvent;
@@ -88,7 +88,7 @@ aclrtDestroyEvent(event);
 
 ## 记录Event时间戳
 
-在[Event的创建与销毁](#event的创建与销毁)章节中创建的Event可用于统计Stream上计算任务的耗时，代码示例如下。该示例仅用于说明Event使用方法，不可以直接拷贝编译运行。完整样例代码请参见[Link](https://gitcode.com/cann/runtime/blob/master/example/1_basic_features/event/1_event_timestamp)。
+在[Event的创建与销毁](#event的创建与销毁)章节中创建的Event可用于统计Stream上计算任务的耗时，代码示例如下。该示例仅用于说明Event使用方法，不可以直接拷贝编译运行。完整样例代码请参见[Link](https://gitcode.com/cann/runtime/tree/9.2.0-beta.2/example/1_basic_features/event/1_event_timestamp)。
 
 ```
 uint64_t time = 0;

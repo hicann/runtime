@@ -43,9 +43,6 @@ aclError aclrtMalloc(void **devPtr, size_t size, aclrtMemMallocPolicy policy)
 <!-- npu="910" id734 -->
 - Atlas 训练系列产品：支持
 <!-- end id734 -->
-<!-- npu="IPV350" id735 -->
-- IPV350：支持
-<!-- end id735 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-01_device_memory_malloc_and_free_res.md#id1 -->
 
 ### 功能说明
@@ -78,10 +75,6 @@ aclError aclrtMalloc(void **devPtr, size_t size, aclrtMemMallocPolicy policy)
     <!-- end id8 -->
 <!-- end id3 -->
 
-<!-- npu="IPV350" id9 -->
-对于IPV350，本接口分配的内存，会进行字节对齐，会对用户申请的size向上对齐成32字节整数倍后再多加32字节。但对于内存申请粒度为1G的大页内存，为节省大页内存，本接口会对用户申请的size仅向上对齐成32字节整数倍，不会再增加32字节。
-<!-- end id9 -->
-
 <!-- @ref: runtime/res/docs/zh/api_ref/11-01_device_memory_malloc_and_free_res.md#id11 -->
 
 ### 参数说明
@@ -102,10 +95,6 @@ aclError aclrtMalloc(void **devPtr, size_t size, aclrtMemMallocPolicy policy)
 - 本接口内部不会进行隐式的Device同步或流同步，如果申请内存成功或申请内存失败会立刻返回结果。
 - policy处仅支持配置单个枚举项，不支持配置多个枚举项位或。
   
-  <!-- npu="IPV350" id11 -->
-  但对于IPV350，policy处支持配置单个枚举项，也支持配置多个枚举项位或。位或时，支持这三项（ACL\_MEM\_MALLOC\_HUGE\_FIRST、ACL\_MEM\_MALLOC\_HUGE\_ONLY、ACL\_MEM\_MALLOC\_NORMAL\_ONLY）与这两项（ACL\_MEM\_TYPE\_LOW\_BAND\_WIDTH、ACL\_MEM\_TYPE\_HIGH\_BAND\_WIDTH）组合，**例如**：ACL\_MEM\_MALLOC\_HUGE\_FIRST | ACL\_MEM\_TYPE\_HIGH\_BAND\_WIDTH
-  <!-- end id11 -->
-
 - 针对ACL\_MEM\_MALLOC\_HUGE\_FIRST\_P2P、ACL\_MEM\_MALLOC\_HUGE\_ONLY\_P2P内存分配规则，建议使用aclrtMallocWithCfg接口，否则可能存在性能问题或无法申请到内存。
 - 频繁调用aclrtMalloc接口申请内存、调用[aclrtFree](#aclrtFree)接口释放内存，会损耗性能，建议用户提前做内存预先分配或二次管理，避免频繁申请/释放内存。
 - 若用户需申请大块内存并自行划分、管理内存时，每段内存需同时满足以下需求，其中，len表示某段内存的大小，ALIGN\_UP\[len,k\]表示向上按k字节对齐：\(\(len-1\)/k+1\)\*k：
@@ -139,9 +128,6 @@ aclError aclrtMalloc(void **devPtr, size_t size, aclrtMemMallocPolicy policy)
         <!-- end id14 -->
     <!-- end id12 -->
 
-    <!-- npu="IPV350" id20 -->
-    - 内存大小向上对齐成32整数倍+32字节（m=ALIGN\_UP\[len,32\]+32字节）。
-    <!-- end id20 -->
     <!-- @ref: runtime/res/docs/zh/api_ref/11-01_device_memory_malloc_and_free_res.md#id13 -->
     - 内存起始地址需满足64字节对齐（ALIGN\_UP\[m,64\]）。
 
@@ -177,9 +163,6 @@ aclError aclrtMallocAlign32(void **devPtr, size_t size, aclrtMemMallocPolicy pol
 <!-- npu="910" id1791 -->
 - Atlas 训练系列产品：支持
 <!-- end id1791 -->
-<!-- npu="IPV350" id1792 -->
-- IPV350：支持
-<!-- end id1792 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-01_device_memory_malloc_and_free_res.md#id2 -->
 
 ### 功能说明
@@ -210,9 +193,6 @@ aclError aclrtMallocAlign32(void **devPtr, size_t size, aclrtMemMallocPolicy pol
 <!-- end id27 -->
 <!-- end id22 -->
 
-<!-- npu="IPV350" id6792 -->
-对于IPV350，与aclrtMalloc接口相比，本接口只会对用户申请的size向上对齐成32字节整数倍，不会再多加32字节。
-<!-- end id6792 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-01_device_memory_malloc_and_free_res.md#id12 -->
 
 ### 参数说明
@@ -233,10 +213,6 @@ aclError aclrtMallocAlign32(void **devPtr, size_t size, aclrtMemMallocPolicy pol
 
 - 本接口内部不会进行隐式的Device同步或流同步。如果申请内存成功或申请内存失败会立刻返回结果。
 - policy处仅支持配置单个枚举项，不支持配置多个枚举项位或。
-
-  <!-- npu="IPV350" id29 -->
-  但对于IPV350，policy处支持配置单个枚举项，也支持配置多个枚举项位或。位或时，支持这三项（ACL\_MEM\_MALLOC\_HUGE\_FIRST、ACL\_MEM\_MALLOC\_HUGE\_ONLY、ACL\_MEM\_MALLOC\_NORMAL\_ONLY）与这两项（ACL\_MEM\_TYPE\_LOW\_BAND\_WIDTH、ACL\_MEM\_TYPE\_HIGH\_BAND\_WIDTH）组合，**例如**：ACL\_MEM\_MALLOC\_HUGE\_FIRST | ACL\_MEM\_TYPE\_HIGH\_BAND\_WIDTH
-  <!-- end id29 -->
 
 - 针对ACL_MEM_MALLOC_HUGE_FIRST_P2P、ACL_MEM_MALLOC_HUGE_ONLY_P2P内存分配规则，建议使用aclrtMallocWithCfg接口，否则可能存在性能问题或无法申请到内存。
 - 频繁调用aclrtMallocAlign32接口申请内存、调用[aclrtFree](11-01_device_memory_malloc_and_free.md#aclrtFree)接口释放内存，会损耗性能，建议用户提前做内存预先分配或二次管理，避免频繁申请/释放内存。
@@ -271,9 +247,6 @@ aclError aclrtMallocAlign32(void **devPtr, size_t size, aclrtMemMallocPolicy pol
         <!-- end id32 -->
     <!-- end id30 -->
 
-    <!-- npu="IPV350" id33 -->
-    - 内存大小向上对齐成32整数倍+32字节（m=ALIGN\_UP\[len,32\]+32字节）。
-    <!-- end id33 -->
     <!-- @ref: runtime/res/docs/zh/api_ref/11-01_device_memory_malloc_and_free_res.md#id15 -->
     - 内存起始地址需满足64字节对齐（ALIGN\_UP\[m,64\]）。
 
@@ -309,9 +282,6 @@ aclError aclrtMallocCached(void **devPtr, size_t size, aclrtMemMallocPolicy poli
 <!-- npu="910" id321 -->
 - Atlas 训练系列产品：支持
 <!-- end id321 -->
-<!-- npu="IPV350" id322 -->
-- IPV350：不支持
-<!-- end id322 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-01_device_memory_malloc_and_free_res.md#id3 -->
 
 ### 功能说明
@@ -368,9 +338,6 @@ aclError aclrtMemFlush(void *devPtr, size_t size)
 <!-- npu="910" id2099 -->
 - Atlas 训练系列产品：支持
 <!-- end id2099 -->
-<!-- npu="IPV350" id2100 -->
-- IPV350：不支持
-<!-- end id2100 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-01_device_memory_malloc_and_free_res.md#id16 -->
 
 ### 功能说明
@@ -422,9 +389,6 @@ aclError aclrtMemInvalidate(void *devPtr, size_t size)
 <!-- npu="910" id2036 -->
 - Atlas 训练系列产品：支持
 <!-- end id2036 -->
-<!-- npu="IPV350" id2037 -->
-- IPV350：不支持
-<!-- end id2037 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-01_device_memory_malloc_and_free_res.md#id17 -->
 
 ### 功能说明
@@ -476,9 +440,6 @@ aclError aclrtMallocWithCfg(void **devPtr, size_t size, aclrtMemMallocPolicy pol
 <!-- npu="910" id594 -->
 - Atlas 训练系列产品：支持
 <!-- end id594 -->
-<!-- npu="IPV350" id595 -->
-- IPV350：不支持
-<!-- end id595 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-01_device_memory_malloc_and_free_res.md#id4 -->
 
 ### 功能说明
@@ -543,9 +504,6 @@ aclError aclrtMallocForTaskScheduler(void **devPtr, size_t size, aclrtMemMallocP
 <!-- npu="910" id2386 -->
 - Atlas 训练系列产品：支持
 <!-- end id2386 -->
-<!-- npu="IPV350" id2387 -->
-- IPV350：不支持
-<!-- end id2387 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-01_device_memory_malloc_and_free_res.md#id5 -->
 
 ### 功能说明
@@ -599,9 +557,6 @@ aclError aclrtFree(void *devPtr)
 <!-- npu="910" id328 -->
 - Atlas 训练系列产品：支持
 <!-- end id328 -->
-<!-- npu="IPV350" id329 -->
-- IPV350：支持
-<!-- end id329 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-01_device_memory_malloc_and_free_res.md#id6 -->
 
 ### 功能说明
@@ -656,9 +611,6 @@ aclError aclrtFreeWithDevSync(void *devPtr)
 <!-- npu="910" id1105 -->
 - Atlas 训练系列产品：支持
 <!-- end id1105 -->
-<!-- npu="IPV350" id1106 -->
-- IPV350：不支持
-<!-- end id1106 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-01_device_memory_malloc_and_free_res.md#id7 -->
 
 ### 功能说明
@@ -709,9 +661,6 @@ aclError aclrtGetMemInfo(aclrtMemAttr attr, size_t *free, size_t *total)
 <!-- npu="910" id468 -->
 - Atlas 训练系列产品：支持
 <!-- end id468 -->
-<!-- npu="IPV350" id469 -->
-- IPV350：支持
-<!-- end id469 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-01_device_memory_malloc_and_free_res.md#id8 -->
 
 ### 功能说明
@@ -767,9 +716,6 @@ aclError aclrtGetMemUsageInfo(int32_t deviceId, aclrtMemUsageInfo *memUsageInfo,
 <!-- npu="910" id90 -->
 - Atlas 训练系列产品：支持
 <!-- end id90 -->
-<!-- npu="IPV350" id91 -->
-- IPV350：不支持
-<!-- end id91 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-01_device_memory_malloc_and_free_res.md#id9 -->
 
 ### 功能说明
@@ -821,9 +767,6 @@ aclError aclrtCheckMemType(void** addrList, uint32_t size, uint32_t memType, uin
 <!-- npu="910" id2673 -->
 - Atlas 训练系列产品：支持
 <!-- end id2673 -->
-<!-- npu="IPV350" id2674 -->
-- IPV350：不支持
-<!-- end id2674 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-01_device_memory_malloc_and_free_res.md#id10 -->
 
 ### 功能说明

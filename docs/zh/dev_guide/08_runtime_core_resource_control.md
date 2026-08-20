@@ -12,7 +12,7 @@
 
 ## Device粒度的核资源限制
 
-以下是关键步骤的代码示例，不可以直接拷贝编译运行，仅供参考。完整样例代码，请参见[Link](https://gitcode.com/cann/runtime/tree/master/example/2_advanced_features/kernel/1_launch_kernel_with_reslimit)。
+以下是关键步骤的代码示例，不可以直接拷贝编译运行，仅供参考。完整样例代码，请参见[Link](https://gitcode.com/cann/runtime/tree/9.2.0-beta.2/example/2_advanced_features/kernel/1_launch_kernel_with_reslimit)。
 
 ```
 ......

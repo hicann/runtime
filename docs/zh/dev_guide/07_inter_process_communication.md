@@ -12,7 +12,7 @@
 
 ![](figures/进程间共享内存.png)
 
-以下为A、B进程之间共享内存的示例代码，不可以直接拷贝编译运行，仅供参考。完整样例代码请参见[Link](https://gitcode.com/cann/runtime/tree/master/example/1_basic_features/memory/11_ipc_memory_withoutpid)。
+以下为A、B进程之间共享内存的示例代码，不可以直接拷贝编译运行，仅供参考。完整样例代码请参见[Link](https://gitcode.com/cann/runtime/tree/9.2.0-beta.2/example/1_basic_features/memory/11_ipc_memory_withoutpid)。
 
 1.  在A进程中分配内存，生成共享key：
 
@@ -124,7 +124,7 @@
 
 ## 进程间共享Notify
 
-进程之间通过共享Notify，可以实现进程间的通知。此处以A进程创建Notify，共享给B进程为例，说明两个进程间任务同步的示例代码，不可以直接拷贝编译运行，仅供参考。完整样例代码请参见[Link](https://gitcode.com/cann/runtime/tree/master/example/2_advanced_features/notify/1_ipc_notify_withoutpid)。
+进程之间通过共享Notify，可以实现进程间的通知。此处以A进程创建Notify，共享给B进程为例，说明两个进程间任务同步的示例代码，不可以直接拷贝编译运行，仅供参考。完整样例代码请参见[Link](https://gitcode.com/cann/runtime/tree/9.2.0-beta.2/example/2_advanced_features/notify/1_ipc_notify_withoutpid)。
 
 注意：创建端会分配Notify硬件资源，因此只能由创建端硬件进行Wait。为此共享Notify有使用约束，只能在创建端调aclrtNotifyWait进行Wait，不能在共享端Wait。
 
@@ -187,7 +187,7 @@
 
 除IPC Mem共享内存外，Runtime还提供了另外一套内存管理和内存共享接口。VMM（Virtual Memory Management）这套接口提供更灵活的功能，支持虚拟地址申请、物理内存申请和跨进程物理内存共享，还支持虚拟地址与物理内存之间的映射操作。
 
-此处以A、B进程为例，说明一个Device上、两个进程间的物理内存共享的示例代码，不可以直接拷贝编译运行，仅供参考，完整样例代码请参见[Link](https://gitcode.com/cann/runtime/tree/master/example/1_basic_features/memory/8_physical_memory_sharing_withoutpid)。
+此处以A、B进程为例，说明一个Device上、两个进程间的物理内存共享的示例代码，不可以直接拷贝编译运行，仅供参考，完整样例代码请参见[Link](https://gitcode.com/cann/runtime/tree/9.2.0-beta.2/example/1_basic_features/memory/8_physical_memory_sharing_withoutpid)。
 
 若A、B进程使用不同的Device，还需配合使用aclrtDeviceEnablePeerAccess接口开启跨Device的数据交互，详细描述请参见[跨Device的数据交互](05_multi_device_programming.md#跨device的数据交互)。
 

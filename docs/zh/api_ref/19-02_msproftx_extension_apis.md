@@ -50,9 +50,6 @@ void *aclprofCreateStamp()
 <!-- npu="910" id958 -->
 - Atlas 训练系列产品：支持
 <!-- end id958 -->
-<!-- npu="IPV350" id959 -->
-- IPV350：不支持
-<!-- end id959 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/19-02_msproftx_extension_apis_res.md#id1 -->
 
 ### 功能说明
@@ -100,9 +97,6 @@ aclError aclprofSetStampTraceMessage(void *stamp, const char *msg, uint32_t msgL
 <!-- npu="910" id1028 -->
 - Atlas 训练系列产品：支持
 <!-- end id1028 -->
-<!-- npu="IPV350" id1029 -->
-- IPV350：不支持
-<!-- end id1029 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/19-02_msproftx_extension_apis_res.md#id2 -->
 
 ### 功能说明
@@ -157,9 +151,6 @@ aclError aclprofMark(void *stamp)
 <!-- npu="910" id2575 -->
 - Atlas 训练系列产品：支持
 <!-- end id2575 -->
-<!-- npu="IPV350" id2576 -->
-- IPV350：不支持
-<!-- end id2576 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/19-02_msproftx_extension_apis_res.md#id3 -->
 ### 功能说明
 
@@ -213,9 +204,6 @@ aclError aclprofMarkEx(const char *msg, size_t msgLen, aclrtStream stream)
 <!-- npu="910" id2939 -->
 - Atlas 训练系列产品：支持
 <!-- end id2939 -->
-<!-- npu="IPV350" id2940 -->
-- IPV350：不支持
-<!-- end id2940 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/19-02_msproftx_extension_apis_res.md#id4 -->
 ### 功能说明
 
@@ -267,9 +255,6 @@ aclError aclprofPush(void *stamp)
 <!-- npu="910" id1763 -->
 - Atlas 训练系列产品：支持
 <!-- end id1763 -->
-<!-- npu="IPV350" id1764 -->
-- IPV350：不支持
-<!-- end id1764 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/19-02_msproftx_extension_apis_res.md#id5 -->
 
 ### 功能说明
@@ -326,9 +311,6 @@ aclError aclprofPop()
 <!-- npu="910" id272 -->
 - Atlas 训练系列产品：支持
 <!-- end id272 -->
-<!-- npu="IPV350" id273 -->
-- IPV350：不支持
-<!-- end id273 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/19-02_msproftx_extension_apis_res.md#id6 -->
 
 ### 功能说明
@@ -379,9 +361,6 @@ aclError aclprofRangeStart(void *stamp, uint32_t *rangeId)
 <!-- npu="910" id2995 -->
 - Atlas 训练系列产品：支持
 <!-- end id2995 -->
-<!-- npu="IPV350" id2996 -->
-- IPV350：不支持
-<!-- end id2996 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/19-02_msproftx_extension_apis_res.md#id7 -->
 ### 功能说明
 
@@ -438,9 +417,6 @@ aclError aclprofRangeStop(uint32_t rangeId)
 <!-- npu="910" id2561 -->
 - Atlas 训练系列产品：支持
 <!-- end id2561 -->
-<!-- npu="IPV350" id2562 -->
-- IPV350：不支持
-<!-- end id2562 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/19-02_msproftx_extension_apis_res.md#id8 -->
 
 ### 功能说明
@@ -497,9 +473,6 @@ aclError aclprofRangePushEx(aclprofEventAttributes *attr)
 <!-- npu="910" id664 -->
 - Atlas 训练系列产品：支持
 <!-- end id664 -->
-<!-- npu="IPV350" id665 -->
-- IPV350：不支持
-<!-- end id665 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/19-02_msproftx_extension_apis_res.md#id9 -->
 
 ### 功能说明
@@ -554,9 +527,6 @@ aclError aclprofRangePop()
 <!-- npu="910" id2162 -->
 - Atlas 训练系列产品：支持
 <!-- end id2162 -->
-<!-- npu="IPV350" id2163 -->
-- IPV350：不支持
-<!-- end id2163 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/19-02_msproftx_extension_apis_res.md#id10 -->
 
 ### 功能说明
@@ -605,9 +575,6 @@ void aclprofDestroyStamp(void *stamp)
 <!-- npu="910" id1287 -->
 - Atlas 训练系列产品：支持
 <!-- end id1287 -->
-<!-- npu="IPV350" id1288 -->
-- IPV350：不支持
-<!-- end id1288 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/19-02_msproftx_extension_apis_res.md#id11 -->
 
 ### 功能说明
@@ -656,9 +623,6 @@ uint64_t aclprofStr2Id(const char *message)
 <!-- npu="910" id3457 -->
 - Atlas 训练系列产品：支持
 <!-- end id3457 -->
-<!-- npu="IPV350" id3458 -->
-- IPV350：不支持
-<!-- end id3458 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/19-02_msproftx_extension_apis_res.md#id12 -->
 ### 功能说明
 

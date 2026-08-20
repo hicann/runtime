@@ -70,9 +70,6 @@ aclError aclrtSetDevice(int32_t deviceId)
 <!-- npu="910" id300 -->
 - Atlas 训练系列产品：支持
 <!-- end id300 -->
-<!-- npu="IPV350" id301 -->
-- IPV350：支持
-<!-- end id301 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/04_device_management_res.md#id1 -->
 
 ### 功能说明
@@ -96,10 +93,6 @@ aclError aclrtSetDevice(int32_t deviceId)
 返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 ### 约束说明
-
-<!-- npu="IPV350" id2 -->
-IPV350上不支持默认Context和默认Stream。
-<!-- end id2 -->
 
 调用aclrtSetDevice接口指定运算的Device后，若不使用Device上的资源时，可调用[aclrtResetDevice](#aclrtResetDevice)或[aclrtResetDeviceForce](#aclrtResetDeviceForce)接口及时释放本进程使用的Device资源（若不调用Reset接口，进程退出时也会释放本进程使用的Device资源）：
 
@@ -143,9 +136,6 @@ aclError aclrtResetDevice(int32_t deviceId)
 <!-- npu="910" id293 -->
 - Atlas 训练系列产品：支持
 <!-- end id293 -->
-<!-- npu="IPV350" id294 -->
-- IPV350：支持
-<!-- end id294 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/04_device_management_res.md#id2 -->
 
 ### 功能说明
@@ -167,10 +157,6 @@ aclrtResetDevice接口内部涉及引用计数的实现，建议aclrtResetDevice
 返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 ### 约束说明
-
-<!-- npu="IPV350" id3 -->
-IPV350上不支持默认Context和默认Stream。
-<!-- end id3 -->
 
 若要复位的Device上存在显式创建的Context、Stream、Event，在复位前，建议遵循如下接口调用顺序，否则可能会导致业务异常。
 
@@ -208,9 +194,6 @@ aclError aclrtResetDeviceForce(int32_t deviceId)
 <!-- npu="910" id1854 -->
 - Atlas 训练系列产品：支持
 <!-- end id1854 -->
-<!-- npu="IPV350" id1855 -->
-- IPV350：支持
-<!-- end id1855 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/04_device_management_res.md#id3 -->
 
 ### 功能说明
@@ -238,10 +221,6 @@ aclrtSetDevice(1) -> aclrtSetDevice(1) -> aclrtResetDeviceForce(1)
 返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 ### 约束说明
-
-<!-- npu="IPV350" id4 -->
-- IPV350上不支持默认Context和默认Stream。
-<!-- end id4 -->
 
 - 多线程场景下，针对同一个Device，如果每个线程中都调用[aclrtSetDevice](#aclrtSetDevice)接口、aclrtResetDeviceForce接口，如下所示，线程2中的aclrtResetDeviceForce接口会返回报错，因为线程1中aclrtResetDeviceForce接口已经释放了Device 1的资源：
 
@@ -307,9 +286,6 @@ aclError aclrtGetDevice(int32_t *deviceId)
 <!-- npu="910" id3247 -->
 - Atlas 训练系列产品：支持
 <!-- end id3247 -->
-<!-- npu="IPV350" id3248 -->
-- IPV350：支持
-<!-- end id3248 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/04_device_management_res.md#id4 -->
 
 ### 功能说明
@@ -362,9 +338,6 @@ aclError aclrtGetRunMode(aclrtRunMode *runMode)
 <!-- npu="910" id601 -->
 - Atlas 训练系列产品：支持
 <!-- end id601 -->
-<!-- npu="IPV350" id602 -->
-- IPV350：支持
-<!-- end id602 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/04_device_management_res.md#id5 -->
 
 ### 功能说明
@@ -413,9 +386,6 @@ aclError aclrtSetTsDevice(aclrtTsId tsId)
 <!-- npu="910" id3051 -->
 - Atlas 训练系列产品：支持
 <!-- end id3051 -->
-<!-- npu="IPV350" id3052 -->
-- IPV350：不支持
-<!-- end id3052 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/04_device_management_res.md#id6 -->
 
 ### 功能说明
@@ -474,9 +444,6 @@ aclError aclrtGetDeviceCount(uint32_t *count)
 <!-- npu="910" id1658 -->
 - Atlas 训练系列产品：支持
 <!-- end id1658 -->
-<!-- npu="IPV350" id1659 -->
-- IPV350：支持
-<!-- end id1659 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/04_device_management_res.md#id7 -->
 
 ### 功能说明
@@ -525,9 +492,6 @@ aclError aclrtGetDeviceUtilizationRate(int32_t deviceId, aclrtUtilizationInfo *u
 <!-- npu="910" id398 -->
 - Atlas 训练系列产品：支持
 <!-- end id398 -->
-<!-- npu="IPV350" id399 -->
-- IPV350：不支持
-<!-- end id399 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/04_device_management_res.md#id8 -->
 
 ### 功能说明
@@ -586,9 +550,6 @@ aclError aclrtQueryDeviceStatus(int32_t deviceId, aclrtDeviceStatus *deviceStatu
 <!-- npu="910" id1742 -->
 - Atlas 训练系列产品：支持
 <!-- end id1742 -->
-<!-- npu="IPV350" id1743 -->
-- IPV350：不支持
-<!-- end id1743 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/04_device_management_res.md#id9 -->
 
 ### 功能说明
@@ -638,9 +599,6 @@ const char *aclrtGetSocName()
 <!-- npu="910" id2645 -->
 - Atlas 训练系列产品：支持
 <!-- end id2645 -->
-<!-- npu="IPV350" id2646 -->
-- IPV350：不支持
-<!-- end id2646 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/04_device_management_res.md#id10 -->
 
 ### 功能说明
@@ -689,9 +647,6 @@ aclError aclrtSetDeviceSatMode(aclrtFloatOverflowMode mode)
 <!-- npu="910" id3009 -->
 - Atlas 训练系列产品：支持
 <!-- end id3009 -->
-<!-- npu="IPV350" id3010 -->
-- IPV350：不支持
-<!-- end id3010 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/04_device_management_res.md#id11 -->
 
 ### 功能说明
@@ -742,9 +697,6 @@ aclError aclrtGetDeviceSatMode(aclrtFloatOverflowMode *mode)
 <!-- npu="910" id1056 -->
 - Atlas 训练系列产品：支持
 <!-- end id1056 -->
-<!-- npu="IPV350" id1057 -->
-- IPV350：不支持
-<!-- end id1057 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/04_device_management_res.md#id12 -->
 
 ### 功能说明
@@ -793,9 +745,6 @@ aclError aclrtDeviceCanAccessPeer(int32_t *canAccessPeer, int32_t deviceId, int3
 <!-- npu="910" id2498 -->
 - Atlas 训练系列产品：支持
 <!-- end id2498 -->
-<!-- npu="IPV350" id2499 -->
-- IPV350：不支持
-<!-- end id2499 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/04_device_management_res.md#id13 -->
 
 ### 功能说明
@@ -856,9 +805,6 @@ aclError aclrtDeviceEnablePeerAccess(int32_t peerDeviceId, uint32_t flags)
 <!-- npu="910" id2274 -->
 - Atlas 训练系列产品：支持
 <!-- end id2274 -->
-<!-- npu="IPV350" id2275 -->
-- IPV350：不支持
-<!-- end id2275 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/04_device_management_res.md#id14 -->
 
 ### 功能说明
@@ -918,9 +864,6 @@ aclError aclrtDeviceDisablePeerAccess(int32_t peerDeviceId)
 <!-- npu="910" id2967 -->
 - Atlas 训练系列产品：支持
 <!-- end id2967 -->
-<!-- npu="IPV350" id2968 -->
-- IPV350：不支持
-<!-- end id2968 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/04_device_management_res.md#id15 -->
 
 ### 功能说明
@@ -977,9 +920,6 @@ aclError aclrtDevicePeerAccessStatus(int32_t deviceId, int32_t peerDeviceId, int
 <!-- npu="910" id2960 -->
 - Atlas 训练系列产品：支持
 <!-- end id2960 -->
-<!-- npu="IPV350" id2961 -->
-- IPV350：不支持
-<!-- end id2961 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/04_device_management_res.md#id16 -->
 
 ### 功能说明
@@ -1034,9 +974,6 @@ aclError aclrtGetOverflowStatus(void *outputAddr, size_t outputSize, aclrtStream
 <!-- npu="910" id1140 -->
 - Atlas 训练系列产品：支持
 <!-- end id1140 -->
-<!-- npu="IPV350" id1141 -->
-- IPV350：不支持
-<!-- end id1141 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/04_device_management_res.md#id17 -->
 
 ### 功能说明
@@ -1093,9 +1030,6 @@ aclError aclrtResetOverflowStatus(aclrtStream stream)
 <!-- npu="910" id2281 -->
 - Atlas 训练系列产品：支持
 <!-- end id2281 -->
-<!-- npu="IPV350" id2282 -->
-- IPV350：不支持
-<!-- end id2282 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/04_device_management_res.md#id18 -->
 
 ### 功能说明
@@ -1150,9 +1084,6 @@ aclError aclrtSynchronizeDevice(void)
 <!-- npu="910" id1273 -->
 - Atlas 训练系列产品：支持
 <!-- end id1273 -->
-<!-- npu="IPV350" id1274 -->
-- IPV350：不支持
-<!-- end id1274 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/04_device_management_res.md#id19 -->
 
 ### 功能说明
@@ -1199,9 +1130,6 @@ aclError aclrtSynchronizeDeviceWithTimeout(int32_t timeout)
 <!-- npu="910" id2372 -->
 - Atlas 训练系列产品：支持
 <!-- end id2372 -->
-<!-- npu="IPV350" id2373 -->
-- IPV350：不支持
-<!-- end id2373 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/04_device_management_res.md#id20 -->
 
 ### 功能说明
@@ -1252,9 +1180,6 @@ aclError aclrtGetDeviceInfo(uint32_t deviceId, aclrtDevAttr attr, int64_t *value
 <!-- npu="910" id3037 -->
 - Atlas 训练系列产品：支持
 <!-- end id3037 -->
-<!-- npu="IPV350" id3038 -->
-- IPV350：不支持
-<!-- end id3038 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/04_device_management_res.md#id21 -->
 
 ### 功能说明
@@ -1305,9 +1230,6 @@ aclError aclrtDeviceGetStreamPriorityRange(int32_t *leastPriority, int32_t *grea
 <!-- npu="910" id1994 -->
 - Atlas 训练系列产品：支持
 <!-- end id1994 -->
-<!-- npu="IPV350" id1995 -->
-- IPV350：不支持
-<!-- end id1995 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/04_device_management_res.md#id22 -->
 
 ### 功能说明
@@ -1357,9 +1279,6 @@ aclError aclrtGetDeviceCapability(int32_t deviceId, aclrtDevFeatureType devFeatu
 <!-- npu="910" id1084 -->
 - Atlas 训练系列产品：支持
 <!-- end id1084 -->
-<!-- npu="IPV350" id1085 -->
-- IPV350：不支持
-<!-- end id1085 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/04_device_management_res.md#id23 -->
 
 ### 功能说明
@@ -1410,9 +1329,6 @@ aclError aclrtGetDevicesTopo(uint32_t deviceId, uint32_t otherDeviceId, uint64_t
 <!-- npu="910" id818 -->
 - Atlas 训练系列产品：支持
 <!-- end id818 -->
-<!-- npu="IPV350" id819 -->
-- IPV350：不支持
-<!-- end id819 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/04_device_management_res.md#id24 -->
 
 ### 功能说明
@@ -1467,9 +1383,6 @@ aclError aclrtRegDeviceStateCallback(const char *regName, aclrtDeviceStateCallba
 <!-- npu="910" id2638 -->
 - Atlas 训练系列产品：支持
 <!-- end id2638 -->
-<!-- npu="IPV350" id2639 -->
-- IPV350：不支持
-<!-- end id2639 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/04_device_management_res.md#id25 -->
 
 ### 功能说明
@@ -1522,9 +1435,6 @@ aclError aclrtGetLogicDevIdByUserDevId(const int32_t userDevid, int32_t *const l
 <!-- npu="910" id461 -->
 - Atlas 训练系列产品：支持
 <!-- end id461 -->
-<!-- npu="IPV350" id462 -->
-- IPV350：不支持
-<!-- end id462 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/04_device_management_res.md#id26 -->
 
 ### 功能说明
@@ -1584,9 +1494,6 @@ aclError aclrtGetUserDevIdByLogicDevId(const int32_t logicDevId, int32_t *const 
 <!-- npu="910" id1707 -->
 - Atlas 训练系列产品：支持
 <!-- end id1707 -->
-<!-- npu="IPV350" id1708 -->
-- IPV350：不支持
-<!-- end id1708 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/04_device_management_res.md#id27 -->
 
 ### 功能说明
@@ -1646,9 +1553,6 @@ aclError aclrtGetLogicDevIdByPhyDevId(const int32_t phyDevId, int32_t *const log
 <!-- npu="910" id1301 -->
 - Atlas 训练系列产品：支持
 <!-- end id1301 -->
-<!-- npu="IPV350" id1302 -->
-- IPV350：不支持
-<!-- end id1302 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/04_device_management_res.md#id28 -->
 
 ### 功能说明
@@ -1710,9 +1614,6 @@ aclError aclrtGetPhyDevIdByLogicDevId(const int32_t logicDevId, int32_t *const p
 <!-- npu="910" id2260 -->
 - Atlas 训练系列产品：支持
 <!-- end id2260 -->
-<!-- npu="IPV350" id2261 -->
-- IPV350：不支持
-<!-- end id2261 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/04_device_management_res.md#id29 -->
 
 ### 功能说明
@@ -1774,9 +1675,6 @@ aclError aclrtGetUserDevIdByPhyDevId(const int32_t phyDevId, int32_t *const user
 <!-- npu="910" id3331 -->
 - Atlas 训练系列产品：支持
 <!-- end id3331 -->
-<!-- npu="IPV350" id3332 -->
-- IPV350：不支持
-<!-- end id3332 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/04_device_management_res.md#id30 -->
 
 ### 功能说明
@@ -1836,9 +1734,6 @@ aclError aclrtGetPhyDevIdByUserDevId(const int32_t userDevId, int32_t *const phy
 <!-- npu="910" id580 -->
 - Atlas 训练系列产品：支持
 <!-- end id580 -->
-<!-- npu="IPV350" id581 -->
-- IPV350：不支持
-<!-- end id581 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/04_device_management_res.md#id31 -->
 
 ### 功能说明
@@ -1898,9 +1793,6 @@ aclError aclrtDeviceGetUuid(int32_t deviceId, aclrtUuid *uuid)
 <!-- npu="910" id2659 -->
 - Atlas 训练系列产品：不支持
 <!-- end id2659 -->
-<!-- npu="IPV350" id2660 -->
-- IPV350：不支持
-<!-- end id2660 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/04_device_management_res.md#id32 -->
 
 ### 功能说明
@@ -1950,9 +1842,6 @@ aclError aclrtDeviceGetPCIBusId(int32_t deviceId, char *pciBusId, int32_t len)
 <!-- npu="910" id3338 -->
 - Atlas 训练系列产品：不支持
 <!-- end id3338 -->
-<!-- npu="IPV350" id3339 -->
-- IPV350：不支持
-<!-- end id3339 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/04_device_management_res.md#id36 -->
 
 ### 功能说明
@@ -2008,9 +1897,6 @@ aclError aclrtDeviceGetByPCIBusId(const char *pciBusId, int32_t *deviceId)
 <!-- npu="910" id3345 -->
 - Atlas 训练系列产品：不支持
 <!-- end id3345 -->
-<!-- npu="IPV350" id3346 -->
-- IPV350：不支持
-<!-- end id3346 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/04_device_management_res.md#id37 -->
 
 ### 功能说明
@@ -2064,9 +1950,6 @@ aclError aclrtDeviceGetBareTgid(int32_t *pid)
 <!-- npu="910" id860 -->
 - Atlas 训练系列产品：支持
 <!-- end id860 -->
-<!-- npu="IPV350" id861 -->
-- IPV350：不支持
-<!-- end id861 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/04_device_management_res.md#id33 -->
 
 ### 功能说明
@@ -2117,9 +2000,6 @@ aclError aclrtDeviceGetHostAtomicCapabilities(uint32_t* capabilities, const aclr
 <!-- npu="910" id2267 -->
 - Atlas 训练系列产品：支持
 <!-- end id2267 -->
-<!-- npu="IPV350" id2268 -->
-- IPV350：不支持
-<!-- end id2268 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/04_device_management_res.md#id34 -->
 
 ### 功能说明
@@ -2171,9 +2051,6 @@ aclError aclrtDeviceGetP2PAtomicCapabilities(uint32_t* capabilities, const aclrt
 <!-- npu="910" id1973 -->
 - Atlas 训练系列产品：支持
 <!-- end id1973 -->
-<!-- npu="IPV350" id1974 -->
-- IPV350：不支持
-<!-- end id1974 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/04_device_management_res.md#id35 -->
 
 ### 功能说明
@@ -2222,9 +2099,6 @@ aclError aclrtDeviceSetLimit(aclrtDeviceLimit limit, size_t value)
 <!-- npu="910" id3268 -->
 - Atlas 训练系列产品：不支持
 <!-- end id3268 -->
-<!-- npu="IPV350" id3269 -->
-- IPV350：不支持
-<!-- end id3269 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/04_device_management_res.md#id38 -->
 
 ### 功能说明
@@ -2286,9 +2160,6 @@ aclError aclrtDeviceGetLimit(aclrtDeviceLimit limit, size_t *value)
 <!-- npu="910" id3274 -->
 - Atlas 训练系列产品：不支持
 <!-- end id3274 -->
-<!-- npu="IPV350" id3275 -->
-- IPV350：不支持
-<!-- end id3275 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/04_device_management_res.md#id39 -->
 
 ### 功能说明

@@ -41,9 +41,6 @@ aclError aclmdlInitDump()
 <!-- npu="910" id2113 -->
 - Atlas 训练系列产品：支持
 <!-- end id2113 -->
-<!-- npu="IPV350" id2114 -->
-- IPV350：不支持
-<!-- end id2114 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/18_dump_configuration_res.md#id1 -->
 
 ### 功能说明
@@ -120,9 +117,6 @@ aclError aclmdlSetDump(const char *dumpCfgPath)
 <!-- npu="910" id559 -->
 - Atlas 训练系列产品：支持
 <!-- end id559 -->
-<!-- npu="IPV350" id560 -->
-- IPV350：不支持
-<!-- end id560 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/18_dump_configuration_res.md#id2 -->
 
 ### 功能说明
@@ -423,9 +417,6 @@ aclError acldumpRegCallback(int32_t (* const messageCallback)(const acldumpChunk
 <!-- npu="910" id1546 -->
 - Atlas 训练系列产品：支持
 <!-- end id1546 -->
-<!-- npu="IPV350" id1547 -->
-- IPV350：不支持
-<!-- end id1547 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/18_dump_configuration_res.md#id3 -->
 
 ### 功能说明
@@ -511,9 +502,6 @@ void acldumpUnregCallback()
 <!-- npu="910" id440 -->
 - Atlas 训练系列产品：支持
 <!-- end id440 -->
-<!-- npu="IPV350" id441 -->
-- IPV350：不支持
-<!-- end id441 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/18_dump_configuration_res.md#id4 -->
 
 ### 功能说明
@@ -570,9 +558,6 @@ const char* acldumpGetPath(acldumpType dumpType)
 <!-- npu="910" id2855 -->
 - Atlas 训练系列产品：不支持
 <!-- end id2855 -->
-<!-- npu="IPV350" id2856 -->
-- IPV350：不支持
-<!-- end id2856 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/18_dump_configuration_res.md#id5 -->
 
 ### 功能说明
@@ -623,9 +608,6 @@ aclError aclmdlFinalizeDump()
 <!-- npu="910" id1861 -->
 - Atlas 训练系列产品：支持
 <!-- end id1861 -->
-<!-- npu="IPV350" id1862 -->
-- IPV350：不支持
-<!-- end id1862 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/18_dump_configuration_res.md#id6 -->
 
 ### 功能说明
@@ -697,9 +679,6 @@ aclError aclopStartDumpArgs(uint32_t dumpType, const char *path)
 <!-- npu="910" id3401 -->
 - Atlas 训练系列产品：支持
 <!-- end id3401 -->
-<!-- npu="IPV350" id3402 -->
-- IPV350：不支持
-<!-- end id3402 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/18_dump_configuration_res.md#id7 -->
 
 ### 功能说明
@@ -757,9 +736,6 @@ aclError aclopStopDumpArgs(uint32_t dumpType)
 <!-- npu="910" id1595 -->
 - Atlas 训练系列产品：支持
 <!-- end id1595 -->
-<!-- npu="IPV350" id1596 -->
-- IPV350：不支持
-<!-- end id1596 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/18_dump_configuration_res.md#id8 -->
 
 ### 功能说明
@@ -816,9 +792,6 @@ aclError acldumpGetExceptionInfoPath(char *path, size_t maxLen)
 <!-- npu="910" id9006 -->
 - Atlas 训练系列产品：支持
 <!-- end id9006 -->
-<!-- npu="IPV350" id9007 -->
-- IPV350：不支持
-<!-- end id9007 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/18_dump_configuration_res.md#id9 -->
 
 ### 功能说明
@@ -875,9 +848,6 @@ aclError acldumpSaveExceptionInfo(const char *fileName, const char *userTag, con
 <!-- npu="910" id9013 -->
 - Atlas 训练系列产品：支持
 <!-- end id9013 -->
-<!-- npu="IPV350" id9014 -->
-- IPV350：不支持
-<!-- end id9014 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/18_dump_configuration_res.md#id10 -->
 
 ### 功能说明

@@ -133,9 +133,6 @@ aclError aclrtBinaryLoadFromFile(const char* binPath, aclrtBinaryLoadOptions *op
 <!-- npu="910" id3002 -->
 - Atlas 训练系列产品：支持
 <!-- end id3002 -->
-<!-- npu="IPV350" id3003 -->
-- IPV350：不支持
-<!-- end id3003 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id1 -->
 
 ### 功能说明
@@ -192,9 +189,6 @@ aclError aclrtBinaryLoadFromData(const void *data, size_t length, const aclrtBin
 <!-- npu="910" id76 -->
 - Atlas 训练系列产品：支持
 <!-- end id76 -->
-<!-- npu="IPV350" id77 -->
-- IPV350：不支持
-<!-- end id77 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id2 -->
 
 ### 功能说明
@@ -250,9 +244,6 @@ aclError aclrtBinaryGetFunction(const aclrtBinHandle binHandle, const char *kern
 <!-- npu="910" id3394 -->
 - Atlas 训练系列产品：支持
 <!-- end id3394 -->
-<!-- npu="IPV350" id3395 -->
-- IPV350：不支持
-<!-- end id3395 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id3 -->
 
 ### 功能说明
@@ -337,9 +328,6 @@ aclError aclrtBinaryGetDevAddress(const aclrtBinHandle binHandle, void **binAddr
 <!-- npu="910" id2799 -->
 - Atlas 训练系列产品：支持
 <!-- end id2799 -->
-<!-- npu="IPV350" id2800 -->
-- IPV350：不支持
-<!-- end id2800 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id4 -->
 
 ### 功能说明
@@ -390,9 +378,6 @@ aclError aclrtBinaryGetGlobal(aclrtBinHandle binHandle, const char *name, void *
 <!-- npu="910" id1728 -->
 - Atlas 训练系列产品：支持
 <!-- end id1728 -->
-<!-- npu="IPV350" id1729 -->
-- IPV350：不支持
-<!-- end id1729 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id5 -->
 
 ### 功能说明
@@ -444,9 +429,6 @@ aclError aclrtBinarySetExceptionCallback(aclrtBinHandle binHandle, aclrtOpExcept
 <!-- npu="910" id279 -->
 - Atlas 训练系列产品：支持
 <!-- end id279 -->
-<!-- npu="IPV350" id280 -->
-- IPV350：不支持
-<!-- end id280 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id6 -->
 
 ### 功能说明
@@ -499,9 +481,6 @@ aclError aclrtGetArgsFromExceptionInfo(const aclrtExceptionInfo *info, void **de
 <!-- npu="910" id258 -->
 - Atlas 训练系列产品：支持
 <!-- end id258 -->
-<!-- npu="IPV350" id259 -->
-- IPV350：不支持
-<!-- end id259 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id7 -->
 
 ### 功能说明
@@ -552,9 +531,6 @@ aclError aclrtGetFuncHandleFromExceptionInfo(const aclrtExceptionInfo *info, acl
 <!-- npu="910" id2463 -->
 - Atlas 训练系列产品：支持
 <!-- end id2463 -->
-<!-- npu="IPV350" id2464 -->
-- IPV350：不支持
-<!-- end id2464 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id8 -->
 
 ### 功能说明
@@ -604,9 +580,6 @@ aclError aclrtGetFunctionAddr(aclrtFuncHandle funcHandle, void **aicAddr, void *
 <!-- npu="910" id1077 -->
 - Atlas 训练系列产品：支持
 <!-- end id1077 -->
-<!-- npu="IPV350" id1078 -->
-- IPV350：不支持
-<!-- end id1078 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id9 -->
 
 ### 功能说明
@@ -659,9 +632,6 @@ aclError aclrtGetFunctionSize(aclrtFuncHandle funcHandle, size_t *aicSize, size_
 <!-- npu="910" id678 -->
 - Atlas 训练系列产品：不支持
 <!-- end id678 -->
-<!-- npu="IPV350" id679 -->
-- IPV350：不支持
-<!-- end id679 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id10 -->
 
 ### 功能说明
@@ -712,9 +682,6 @@ aclError aclrtGetFunctionName(aclrtFuncHandle funcHandle, uint32_t maxLen, char 
 <!-- npu="910" id167 -->
 - Atlas 训练系列产品：支持
 <!-- end id167 -->
-<!-- npu="IPV350" id168 -->
-- IPV350：不支持
-<!-- end id168 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id11 -->
 
 ### 功能说明
@@ -765,9 +732,6 @@ aclError aclrtGetFunctionAttribute(aclrtFuncHandle funcHandle, aclrtFuncAttribut
 <!-- npu="910" id62 -->
 - Atlas 训练系列产品：支持
 <!-- end id62 -->
-<!-- npu="IPV350" id63 -->
-- IPV350：不支持
-<!-- end id63 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id12 -->
 
 ### 功能说明
@@ -820,9 +784,6 @@ aclError aclrtGetHardwareSyncAddr(void **addr)
 <!-- npu="910" id27 -->
 - Atlas 训练系列产品：不支持
 <!-- end id27 -->
-<!-- npu="IPV350" id28 -->
-- IPV350：不支持
-<!-- end id28 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id13 -->
 
 ### 功能说明
@@ -871,9 +832,6 @@ aclError aclrtRegisterCpuFunc(const aclrtBinHandle handle, const char *funcName,
 <!-- npu="910" id412 -->
 - Atlas 训练系列产品：支持
 <!-- end id412 -->
-<!-- npu="IPV350" id413 -->
-- IPV350：不支持
-<!-- end id413 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id14 -->
 
 ### 功能说明
@@ -927,9 +885,6 @@ aclError aclrtKernelArgsInit(aclrtFuncHandle funcHandle, aclrtArgsHandle *argsHa
 <!-- npu="910" id944 -->
 - Atlas 训练系列产品：支持
 <!-- end id944 -->
-<!-- npu="IPV350" id945 -->
-- IPV350：不支持
-<!-- end id945 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id15 -->
 
 ### 功能说明
@@ -981,9 +936,6 @@ aclError aclrtKernelArgsInitByUserMem(aclrtFuncHandle funcHandle, aclrtArgsHandl
 <!-- npu="910" id636 -->
 - Atlas 训练系列产品：支持
 <!-- end id636 -->
-<!-- npu="IPV350" id637 -->
-- IPV350：不支持
-<!-- end id637 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id16 -->
 
 ### 功能说明
@@ -1037,9 +989,6 @@ aclError aclrtKernelArgsGetMemSize(aclrtFuncHandle funcHandle, size_t userArgsSi
 <!-- npu="910" id1532 -->
 - Atlas 训练系列产品：支持
 <!-- end id1532 -->
-<!-- npu="IPV350" id1533 -->
-- IPV350：不支持
-<!-- end id1533 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id17 -->
 
 ### 功能说明
@@ -1090,9 +1039,6 @@ aclError aclrtKernelArgsGetHandleMemSize(aclrtFuncHandle funcHandle, size_t *mem
 <!-- npu="910" id1469 -->
 - Atlas 训练系列产品：支持
 <!-- end id1469 -->
-<!-- npu="IPV350" id1470 -->
-- IPV350：不支持
-<!-- end id1470 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id18 -->
 
 ### 功能说明
@@ -1142,9 +1088,6 @@ aclError aclrtKernelArgsAppend(aclrtArgsHandle argsHandle, void *param, size_t p
 <!-- npu="910" id1203 -->
 - Atlas 训练系列产品：支持
 <!-- end id1203 -->
-<!-- npu="IPV350" id1204 -->
-- IPV350：不支持
-<!-- end id1204 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id19 -->
 
 ### 功能说明
@@ -1198,9 +1141,6 @@ aclError aclrtKernelArgsAppendPlaceHolder(aclrtArgsHandle argsHandle, aclrtParam
 <!-- npu="910" id2841 -->
 - Atlas 训练系列产品：支持
 <!-- end id2841 -->
-<!-- npu="IPV350" id2842 -->
-- IPV350：不支持
-<!-- end id2842 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id20 -->
 
 ### 功能说明
@@ -1252,9 +1192,6 @@ aclError aclrtKernelArgsGetPlaceHolderBuffer(aclrtArgsHandle argsHandle, aclrtPa
 <!-- npu="910" id202 -->
 - Atlas 训练系列产品：支持
 <!-- end id202 -->
-<!-- npu="IPV350" id203 -->
-- IPV350：不支持
-<!-- end id203 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id21 -->
 
 ### 功能说明
@@ -1306,9 +1243,6 @@ aclError aclrtKernelArgsParaUpdate(aclrtArgsHandle argsHandle, aclrtParamHandle 
 <!-- npu="910" id3415 -->
 - Atlas 训练系列产品：支持
 <!-- end id3415 -->
-<!-- npu="IPV350" id3416 -->
-- IPV350：不支持
-<!-- end id3416 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id22 -->
 
 ### 功能说明
@@ -1360,9 +1294,6 @@ aclError aclrtKernelArgsFinalize(aclrtArgsHandle argsHandle)
 <!-- npu="910" id3436 -->
 - Atlas 训练系列产品：支持
 <!-- end id3436 -->
-<!-- npu="IPV350" id3437 -->
-- IPV350：不支持
-<!-- end id3437 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id23 -->
 
 ### 功能说明
@@ -1411,9 +1342,6 @@ aclError aclrtLaunchKernel(aclrtFuncHandle funcHandle, uint32_t numBlocks, const
 <!-- npu="910" id3492 -->
 - Atlas 训练系列产品：支持
 <!-- end id3492 -->
-<!-- npu="IPV350" id3493 -->
-- IPV350：支持
-<!-- end id3493 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id24 -->
 
 ### 功能说明
@@ -1482,9 +1410,6 @@ aclError aclrtLaunchKernelV2(aclrtFuncHandle funcHandle, uint32_t numBlocks, con
 <!-- npu="910" id2974 -->
 - Atlas 训练系列产品：支持
 <!-- end id2974 -->
-<!-- npu="IPV350" id2975 -->
-- IPV350：不支持
-<!-- end id2975 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id25 -->
 
 ### 功能说明
@@ -1542,9 +1467,6 @@ aclError aclrtLaunchKernelWithConfig(aclrtFuncHandle funcHandle, uint32_t numBlo
 <!-- npu="910" id2568 -->
 - Atlas 训练系列产品：支持
 <!-- end id2568 -->
-<!-- npu="IPV350" id2569 -->
-- IPV350：不支持
-<!-- end id2569 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id26 -->
 
 ### 功能说明
@@ -1604,9 +1526,6 @@ aclError aclrtLaunchKernelWithHostArgs(aclrtFuncHandle funcHandle, uint32_t numB
 <!-- npu="910" id846 -->
 - Atlas 训练系列产品：支持
 <!-- end id846 -->
-<!-- npu="IPV350" id847 -->
-- IPV350：不支持
-<!-- end id847 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id27 -->
 
 ### 功能说明
@@ -1666,9 +1585,6 @@ aclError aclrtLaunchKernelWithArgsArray(void *func, uint32_t numBlocks, aclrtStr
 <!-- npu="910" id706 -->
 - Atlas 训练系列产品：支持
 <!-- end id706 -->
-<!-- npu="IPV350" id707 -->
-- IPV350：不支持
-<!-- end id707 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id28 -->
 
 ### 功能说明
@@ -1729,9 +1645,6 @@ aclrtBinary aclrtCreateBinary(const void *data, size_t dataLen)
 <!-- npu="910" id3408 -->
 - Atlas 训练系列产品：支持
 <!-- end id3408 -->
-<!-- npu="IPV350" id3409 -->
-- IPV350：不支持
-<!-- end id3409 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id29 -->
 
 ### 功能说明
@@ -1760,10 +1673,6 @@ Ascend EP标准形态下，data参数处需申请Host上的内存。
 <!-- npu="310p,310b" id2 -->
 Ascend RC形态或Control CPU开放形态下，data参数处需申请Device上的内存。
 <!-- end id2 -->
-
-<!-- npu="IPV350" id3 -->
-data参数处需申请Device上的内存。
-<!-- end id3 -->
 
 <!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id38 -->
 
@@ -1799,9 +1708,6 @@ aclError aclrtDestroyBinary(aclrtBinary binary)
 <!-- npu="910" id2246 -->
 - Atlas 训练系列产品：支持
 <!-- end id2246 -->
-<!-- npu="IPV350" id2247 -->
-- IPV350：不支持
-<!-- end id2247 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id30 -->
 
 ### 功能说明
@@ -1852,9 +1758,6 @@ aclError aclrtBinaryLoad(const aclrtBinary binary, aclrtBinHandle *binHandle)
 <!-- npu="910" id538 -->
 - Atlas 训练系列产品：支持
 <!-- end id538 -->
-<!-- npu="IPV350" id539 -->
-- IPV350：不支持
-<!-- end id539 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id31 -->
 
 ### 功能说明
@@ -1904,9 +1807,6 @@ aclError aclrtBinaryUnLoad(aclrtBinHandle binHandle)
 <!-- npu="910" id2519 -->
 - Atlas 训练系列产品：支持
 <!-- end id2519 -->
-<!-- npu="IPV350" id2520 -->
-- IPV350：不支持
-<!-- end id2520 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id32 -->
 
 ### 功能说明
@@ -1959,9 +1859,6 @@ aclError aclrtFunctionGetBinary(const aclrtFuncHandle funcHandle, aclrtBinHandle
 <!-- npu="910" id2848 -->
 - Atlas 训练系列产品：支持
 <!-- end id2848 -->
-<!-- npu="IPV350" id2849 -->
-- IPV350：不支持
-<!-- end id2849 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id33 -->
 
 ### 功能说明
@@ -2011,9 +1908,6 @@ aclError aclrtFunctionGetParamCount(const void *func, size_t *paramCount)
 <!-- npu="910" id265 -->
 - Atlas 训练系列产品：支持
 <!-- end id265 -->
-<!-- npu="IPV350" id266 -->
-- IPV350：不支持
-<!-- end id266 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id34 -->
 
 ### 功能说明
@@ -2065,9 +1959,6 @@ aclError aclrtFunctionGetParamInfo(const void *func, size_t paramIndex, size_t *
 <!-- npu="910" id2253 -->
 - Atlas 训练系列产品：支持
 <!-- end id2253 -->
-<!-- npu="IPV350" id2254 -->
-- IPV350：不支持
-<!-- end id2254 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id35 -->
 
 ### 功能说明
@@ -2119,9 +2010,6 @@ aclError aclrtFunctionGetAvailDynUbufPerBlock(void *func, uint32_t flags, size_t
 <!-- npu="910" id3268 -->
 - Atlas 训练系列产品：支持
 <!-- end id3268 -->
-<!-- npu="IPV350" id3269 -->
-- IPV350：不支持
-<!-- end id3269 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id36 -->
 
 ### 功能说明
@@ -2174,9 +2062,6 @@ aclError aclrtGetFuncBySymbol(const void *symbol, aclrtFuncHandle *funcHandle)
 <!-- npu="910" id608 -->
 - Atlas 训练系列产品：不支持
 <!-- end id608 -->
-<!-- npu="IPV350" id609 -->
-- IPV350：不支持
-<!-- end id609 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id37 -->
 
 ### 功能说明
@@ -2234,15 +2119,11 @@ aclError aclrtLaunchSIMTKernelWithArgsArray(void *func, dim3 gridDim, dim3 block
 <!-- npu="910" id3499 -->
 - Atlas 训练系列产品：不支持
 <!-- end id3499 -->
-<!-- npu="IPV350" id3500 -->
-- IPV350：不支持
-<!-- end id3500 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id39 -->
 
 ### 功能说明
 
 基于参数数组的方式传递SIMT（Single Instruction Multiple Thread）核函数入参，并启动对应算子的计算任务。异步接口。
-
 
 ### 参数说明
 
@@ -2300,15 +2181,11 @@ aclError aclrtLaunchSIMTKernelWithHostArgs(void *func, dim3 gridDim, dim3 blockD
 <!-- npu="910" id3506 -->
 - Atlas 训练系列产品：不支持
 <!-- end id3506 -->
-<!-- npu="IPV350" id3507 -->
-- IPV350：不支持
-<!-- end id3507 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id40 -->
 
 ### 功能说明
 
 基于Host内存参数的方式传递SIMT（Single Instruction Multiple Thread）核函数入参，并启动对应算子的计算任务。异步接口。
-
 
 ### 参数说明
 

@@ -53,9 +53,6 @@ aclError aclrtCreateEvent(aclrtEvent *event)
 <!-- npu="910" id692 -->
 - Atlas 训练系列产品：支持
 <!-- end id692 -->
-<!-- npu="IPV350" id693 -->
-- IPV350：不支持
-<!-- end id693 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/07_event_management_res.md#id1 -->
 
 ### 功能说明
@@ -139,9 +136,6 @@ aclError aclrtCreateEventWithFlag(aclrtEvent *event, uint32_t flag)
 <!-- npu="910" id2813 -->
 - Atlas 训练系列产品：支持
 <!-- end id2813 -->
-<!-- npu="IPV350" id2814 -->
-- IPV350：不支持
-<!-- end id2814 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/07_event_management_res.md#id2 -->
 
 ### 功能说明
@@ -239,9 +233,6 @@ aclError aclrtCreateEventExWithFlag(aclrtEvent *event, uint32_t flag)
 <!-- npu="910" id2785 -->
 - Atlas 训练系列产品：支持
 <!-- end id2785 -->
-<!-- npu="IPV350" id2786 -->
-- IPV350：不支持
-<!-- end id2786 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/07_event_management_res.md#id3 -->
 
 ### 功能说明
@@ -325,9 +316,6 @@ aclError aclrtDestroyEvent(aclrtEvent event)
 <!-- npu="910" id1343 -->
 - Atlas 训练系列产品：支持
 <!-- end id1343 -->
-<!-- npu="IPV350" id1344 -->
-- IPV350：不支持
-<!-- end id1344 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/07_event_management_res.md#id4 -->
 
 ### 功能说明
@@ -380,9 +368,6 @@ aclError aclrtRecordEvent(aclrtEvent event, aclrtStream stream)
 <!-- npu="910" id986 -->
 - Atlas 训练系列产品：支持
 <!-- end id986 -->
-<!-- npu="IPV350" id987 -->
-- IPV350：不支持
-<!-- end id987 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/07_event_management_res.md#id5 -->
 
 ### 功能说明
@@ -441,9 +426,6 @@ aclError aclrtRecordEventWithFlag(aclrtEvent event, aclrtStream stream, uint32_t
 <!-- npu="910" id6 -->
 - Atlas 训练系列产品：不支持
 <!-- end id6 -->
-<!-- npu="IPV350" id7 -->
-- IPV350：不支持
-<!-- end id7 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/07_event_management_res.md#id6 -->
 
 ### 功能说明
@@ -503,9 +485,6 @@ aclError aclrtResetEvent(aclrtEvent event, aclrtStream stream)
 <!-- npu="910" id251 -->
 - Atlas 训练系列产品：支持
 <!-- end id251 -->
-<!-- npu="IPV350" id252 -->
-- IPV350：不支持
-<!-- end id252 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/07_event_management_res.md#id7 -->
 
 ### 功能说明
@@ -567,9 +546,6 @@ aclError aclrtQueryEvent(aclrtEvent event, aclrtEventStatus *status)
 <!-- npu="910" id825 -->
 - Atlas 训练系列产品：支持
 <!-- end id825 -->
-<!-- npu="IPV350" id826 -->
-- IPV350：不支持
-<!-- end id826 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/07_event_management_res.md#id8 -->
 
 ### 功能说明
@@ -619,9 +595,6 @@ aclError aclrtQueryEventStatus(aclrtEvent event, aclrtEventRecordedStatus *statu
 <!-- npu="910" id3100 -->
 - Atlas 训练系列产品：支持
 <!-- end id3100 -->
-<!-- npu="IPV350" id3101 -->
-- IPV350：不支持
-<!-- end id3101 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/07_event_management_res.md#id9 -->
 
 ### 功能说明
@@ -675,9 +648,6 @@ aclError aclrtQueryEventWaitStatus(aclrtEvent event, aclrtEventWaitStatus *statu
 <!-- npu="910" id230 -->
 - Atlas 训练系列产品：支持
 <!-- end id230 -->
-<!-- npu="IPV350" id231 -->
-- IPV350：不支持
-<!-- end id231 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/07_event_management_res.md#id10 -->
 
 ### 功能说明
@@ -731,9 +701,6 @@ aclError aclrtSynchronizeEvent(aclrtEvent event)
 <!-- npu="910" id916 -->
 - Atlas 训练系列产品：支持
 <!-- end id916 -->
-<!-- npu="IPV350" id917 -->
-- IPV350：不支持
-<!-- end id917 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/07_event_management_res.md#id11 -->
 
 ### 功能说明
@@ -782,9 +749,6 @@ aclError aclrtSynchronizeEventWithTimeout(aclrtEvent event, int32_t timeout)
 <!-- npu="910" id1798 -->
 - Atlas 训练系列产品：支持
 <!-- end id1798 -->
-<!-- npu="IPV350" id1799 -->
-- IPV350：不支持
-<!-- end id1799 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/07_event_management_res.md#id12 -->
 
 ### 功能说明
@@ -836,9 +800,6 @@ aclError aclrtEventElapsedTime(float *ms, aclrtEvent startEvent, aclrtEvent endE
 <!-- npu="910" id1672 -->
 - Atlas 训练系列产品：支持
 <!-- end id1672 -->
-<!-- npu="IPV350" id1673 -->
-- IPV350：不支持
-<!-- end id1673 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/07_event_management_res.md#id13 -->
 
 ### 功能说明
@@ -891,9 +852,6 @@ aclError aclrtStreamWaitEvent(aclrtStream stream, aclrtEvent event)
 <!-- npu="910" id69 -->
 - Atlas 训练系列产品：支持
 <!-- end id69 -->
-<!-- npu="IPV350" id70 -->
-- IPV350：不支持
-<!-- end id70 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/07_event_management_res.md#id14 -->
 
 ### 功能说明
@@ -949,9 +907,6 @@ aclError aclrtStreamWaitEventWithFlag(aclrtStream stream, aclrtEvent event, uint
 <!-- npu="910" id13 -->
 - Atlas 训练系列产品：不支持
 <!-- end id13 -->
-<!-- npu="IPV350" id14 -->
-- IPV350：不支持
-<!-- end id14 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/07_event_management_res.md#id15 -->
 
 ### 功能说明
@@ -1012,9 +967,6 @@ aclError aclrtStreamWaitEventWithTimeout(aclrtStream stream, aclrtEvent event, i
 <!-- npu="910" id2134 -->
 - Atlas 训练系列产品：支持
 <!-- end id2134 -->
-<!-- npu="IPV350" id2135 -->
-- IPV350：不支持
-<!-- end id2135 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/07_event_management_res.md#id16 -->
 
 ### 功能说明
@@ -1065,9 +1017,6 @@ aclError aclrtSetOpWaitTimeout(uint32_t timeout)
 <!-- npu="910" id419 -->
 - Atlas 训练系列产品：支持
 <!-- end id419 -->
-<!-- npu="IPV350" id420 -->
-- IPV350：不支持
-<!-- end id420 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/07_event_management_res.md#id17 -->
 
 ### 功能说明
@@ -1122,9 +1071,6 @@ aclError aclrtEventGetTimestamp(aclrtEvent event, uint64_t *timestamp)
 <!-- npu="910" id2414 -->
 - Atlas 训练系列产品：支持
 <!-- end id2414 -->
-<!-- npu="IPV350" id2415 -->
-- IPV350：不支持
-<!-- end id2415 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/07_event_management_res.md#id18 -->
 
 ### 功能说明
@@ -1176,9 +1122,6 @@ aclError aclrtGetEventId(aclrtEvent event, uint32_t *eventId)
 <!-- npu="910" id132 -->
 - Atlas 训练系列产品：支持
 <!-- end id132 -->
-<!-- npu="IPV350" id133 -->
-- IPV350：不支持
-<!-- end id133 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/07_event_management_res.md#id19 -->
 
 ### 功能说明
@@ -1228,9 +1171,6 @@ aclError aclrtGetEventAvailNum(uint32_t *eventCount)
 <!-- npu="910" id622 -->
 - Atlas 训练系列产品：支持
 <!-- end id622 -->
-<!-- npu="IPV350" id623 -->
-- IPV350：不支持
-<!-- end id623 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/07_event_management_res.md#id20 -->
 
 ### 功能说明
@@ -1280,9 +1220,6 @@ aclError aclrtIpcGetEventHandle(aclrtEvent event, aclrtIpcEventHandle *handle)
 <!-- npu="910" id1896 -->
 - Atlas 训练系列产品：不支持
 <!-- end id1896 -->
-<!-- npu="IPV350" id1897 -->
-- IPV350：不支持
-<!-- end id1897 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/07_event_management_res.md#id21 -->
 
 ### 功能说明
@@ -1348,9 +1285,6 @@ aclError aclrtIpcOpenEventHandle(aclrtIpcEventHandle handle, aclrtEvent *event)
 <!-- npu="910" id2169 -->
 - Atlas 训练系列产品：不支持
 <!-- end id2169 -->
-<!-- npu="IPV350" id2170 -->
-- IPV350：不支持
-<!-- end id2170 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/07_event_management_res.md#id22 -->
 
 ### 功能说明

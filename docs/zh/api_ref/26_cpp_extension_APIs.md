@@ -65,9 +65,6 @@ aclError aclrtSynchronizeDevice(int32_t timeout)
 <!-- npu="910" id1210 -->
 - Atlas 训练系列产品：支持
 <!-- end id1210 -->
-<!-- npu="IPV350" id1211 -->
-- IPV350：不支持
-<!-- end id1211 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/26_cpp_extension_APIs_res.md#id1 -->
 
 ### 功能说明
@@ -118,9 +115,6 @@ aclError aclrtSynchronizeStream(aclrtStream stream, int32_t timeout)
 <!-- npu="910" id2225 -->
 - Atlas 训练系列产品：支持
 <!-- end id2225 -->
-<!-- npu="IPV350" id2226 -->
-- IPV350：不支持
-<!-- end id2226 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/26_cpp_extension_APIs_res.md#id2 -->
 
 ### 功能说明
@@ -172,9 +166,6 @@ aclError aclrtSynchronizeEvent(aclrtEvent event, int32_t timeout)
 <!-- npu="910" id3429 -->
 - Atlas 训练系列产品：支持
 <!-- end id3429 -->
-<!-- npu="IPV350" id3430 -->
-- IPV350：不支持
-<!-- end id3430 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/26_cpp_extension_APIs_res.md#id3 -->
 
 ### 功能说明
@@ -226,9 +217,6 @@ aclError aclrtStreamWaitEvent(aclrtStream stream, aclrtEvent event, int32_t time
 <!-- npu="910" id685 -->
 - Atlas 训练系列产品：支持
 <!-- end id685 -->
-<!-- npu="IPV350" id686 -->
-- IPV350：不支持
-<!-- end id686 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/26_cpp_extension_APIs_res.md#id4 -->
 
 ### 功能说明
@@ -281,9 +269,6 @@ aclError aclrtCreateStream(aclrtStream *stream, uint32_t priority, uint32_t flag
 <!-- npu="910" id629 -->
 - Atlas 训练系列产品：支持
 <!-- end id629 -->
-<!-- npu="IPV350" id630 -->
-- IPV350：不支持
-<!-- end id630 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/26_cpp_extension_APIs_res.md#id5 -->
 
 ### 功能说明
@@ -336,9 +321,6 @@ aclError aclrtSetOpExecuteTimeOut(uint64_t timeout, uint64_t *actualTimeout)
 <!-- npu="910" id2323 -->
 - Atlas 训练系列产品：支持
 <!-- end id2323 -->
-<!-- npu="IPV350" id2324 -->
-- IPV350：不支持
-<!-- end id2324 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/26_cpp_extension_APIs_res.md#id6 -->
 
 ### 功能说明
@@ -390,9 +372,6 @@ aclError aclrtCreateEvent(aclrtEvent *event, uint32_t flag)
 <!-- npu="910" id1511 -->
 - Atlas 训练系列产品：支持
 <!-- end id1511 -->
-<!-- npu="IPV350" id1512 -->
-- IPV350：不支持
-<!-- end id1512 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/26_cpp_extension_APIs_res.md#id7 -->
 
 ### 功能说明
@@ -452,9 +431,6 @@ aclError aclrtMemcpyBatch(T **dsts, size_t *destMaxs, U **srcs, size_t *sizes, s
 <!-- npu="910" id209 -->
 - Atlas 训练系列产品：不支持
 <!-- end id209 -->
-<!-- npu="IPV350" id210 -->
-- IPV350：不支持
-<!-- end id210 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/26_cpp_extension_APIs_res.md#id8 -->
 
 ### 功能说明
@@ -523,9 +499,6 @@ aclError aclrtMemcpyBatchAsync(T **dsts, size_t *destMaxs, U **srcs, size_t *siz
 <!-- npu="910" id1161 -->
 - Atlas 训练系列产品：不支持
 <!-- end id1161 -->
-<!-- npu="IPV350" id1162 -->
-- IPV350：不支持
-<!-- end id1162 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/26_cpp_extension_APIs_res.md#id9 -->
 
 ### 功能说明
@@ -592,9 +565,6 @@ aclError aclrtPointerGetAttributes(const T *ptr, aclrtPtrAttributes *attributes)
 <!-- npu="910" id2946 -->
 - Atlas 训练系列产品：支持
 <!-- end id2946 -->
-<!-- npu="IPV350" id2947 -->
-- IPV350：不支持
-<!-- end id2947 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/26_cpp_extension_APIs_res.md#id10 -->
 
 ### 功能说明
@@ -651,9 +621,6 @@ aclError aclrtHostRegister(T *ptr, uint64_t size, uint32_t flag)
 <!-- npu="910" id713 -->
 - Atlas 训练系列产品：不支持
 <!-- end id713 -->
-<!-- npu="IPV350" id714 -->
-- IPV350：不支持
-<!-- end id714 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/26_cpp_extension_APIs_res.md#id11 -->
 
 ### 功能说明
@@ -710,9 +677,6 @@ aclError aclrtHostGetDevicePointer(T *pHost, T **pDevice, uint32_t flag)
 <!-- npu="910" id174 -->
 - Atlas 训练系列产品：不支持
 <!-- end id174 -->
-<!-- npu="IPV350" id175 -->
-- IPV350：不支持
-<!-- end id175 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/26_cpp_extension_APIs_res.md#id12 -->
 
 ### 功能说明
@@ -767,9 +731,6 @@ aclError aclrtHostUnregister(T *ptr)
 <!-- npu="910" id853 -->
 - Atlas 训练系列产品：支持
 <!-- end id853 -->
-<!-- npu="IPV350" id854 -->
-- IPV350：不支持
-<!-- end id854 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/26_cpp_extension_APIs_res.md#id13 -->
 
 ### 功能说明
@@ -823,9 +784,6 @@ aclError aclrtMemAllocManaged(T **devPtr, size_t size, uint32_t flags = ACL_RT_M
 <!-- npu="910" id3422 -->
 - Atlas 训练系列产品：不支持
 <!-- end id3422 -->
-<!-- npu="IPV350" id3423 -->
-- IPV350：不支持
-<!-- end id3423 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/26_cpp_extension_APIs_res.md#id14 -->
 
 ### 功能说明
@@ -883,9 +841,6 @@ aclError aclrtMemManagedPrefetchAsync(const T *ptr, size_t size, aclrtMemManaged
 <!-- npu="910" id2477 -->
 - Atlas 训练系列产品：不支持
 <!-- end id2477 -->
-<!-- npu="IPV350" id2478 -->
-- IPV350：不支持
-<!-- end id2478 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/26_cpp_extension_APIs_res.md#id15 -->
 
 ### 功能说明
@@ -946,9 +901,6 @@ aclError aclrtMemManagedPrefetchBatchAsync(const T **ptrs, size_t *sizes, size_t
 <!-- npu="910" id3303 -->
 - Atlas 训练系列产品：不支持
 <!-- end id3303 -->
-<!-- npu="IPV350" id3304 -->
-- IPV350：不支持
-<!-- end id3304 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/26_cpp_extension_APIs_res.md#id16 -->
 
 ### 功能说明
@@ -1017,9 +969,6 @@ aclError aclrtMalloc(T **devPtr, size_t size, aclrtMemMallocPolicy policy, aclrt
 <!-- npu="910" id1833 -->
 - Atlas 训练系列产品：支持
 <!-- end id1833 -->
-<!-- npu="IPV350" id1834 -->
-- IPV350：支持
-<!-- end id1834 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/26_cpp_extension_APIs_res.md#id17 -->
 
 ### 功能说明
@@ -1076,9 +1025,6 @@ aclError aclrtMallocHost(T **hostPtr, size_t size, aclrtMallocConfig *cfg = null
 <!-- npu="910" id2526 -->
 - Atlas 训练系列产品：支持
 <!-- end id2526 -->
-<!-- npu="IPV350" id2527 -->
-- IPV350：不支持
-<!-- end id2527 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/26_cpp_extension_APIs_res.md#id18 -->
 
 ### 功能说明
@@ -1134,9 +1080,6 @@ aclError aclrtMemcpy(T *dst, size_t destMax, const U *src, size_t count, aclrtMe
 <!-- npu="910" id1637 -->
 - Atlas 训练系列产品：支持
 <!-- end id1637 -->
-<!-- npu="IPV350" id1638 -->
-- IPV350：支持
-<!-- end id1638 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/26_cpp_extension_APIs_res.md#id19 -->
 
 ### 功能说明
@@ -1196,9 +1139,6 @@ aclError aclrtMemcpyAsync(T *dst, size_t destMax, const U *src, size_t count, ac
 <!-- npu="910" id3226 -->
 - Atlas 训练系列产品：支持
 <!-- end id3226 -->
-<!-- npu="IPV350" id3227 -->
-- IPV350：不支持
-<!-- end id3227 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/26_cpp_extension_APIs_res.md#id20 -->
 
 ### 功能说明
@@ -1261,9 +1201,6 @@ aclError aclrtMemcpy2d(T *dst, size_t dpitch, const U *src, size_t spitch, size_
 <!-- npu="910" id2358 -->
 - Atlas 训练系列产品：支持
 <!-- end id2358 -->
-<!-- npu="IPV350" id2359 -->
-- IPV350：不支持
-<!-- end id2359 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/26_cpp_extension_APIs_res.md#id21 -->
 
 ### 功能说明
@@ -1325,9 +1262,6 @@ aclError aclrtMemcpy2dAsync(T *dst, size_t dpitch, const U *src, size_t spitch, 
 <!-- npu="910" id2722 -->
 - Atlas 训练系列产品：支持
 <!-- end id2722 -->
-<!-- npu="IPV350" id2723 -->
-- IPV350：不支持
-<!-- end id2723 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/26_cpp_extension_APIs_res.md#id22 -->
 
 ### 功能说明
@@ -1392,9 +1326,6 @@ aclError aclrtGetSymbolAddress(const T &symbol, void **devPtr)
 <!-- npu="910" id1322 -->
 - Atlas 训练系列产品：不支持
 <!-- end id1322 -->
-<!-- npu="IPV350" id1323 -->
-- IPV350：不支持
-<!-- end id1323 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/26_cpp_extension_APIs_res.md#id23 -->
 
 ### 功能说明
@@ -1457,9 +1388,6 @@ aclError aclrtGetSymbolSize(const T &symbol, size_t *size)
 <!-- npu="910" id2330 -->
 - Atlas 训练系列产品：不支持
 <!-- end id2330 -->
-<!-- npu="IPV350" id2331 -->
-- IPV350：不支持
-<!-- end id2331 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/26_cpp_extension_APIs_res.md#id24 -->
 
 ### 功能说明
@@ -1517,9 +1445,6 @@ aclError aclrtMemcpyFromSymbol(void *dst, size_t dstMax, const T &symbol, size_t
 <!-- npu="910" id1917 -->
 - Atlas 训练系列产品：不支持
 <!-- end id1917 -->
-<!-- npu="IPV350" id1918 -->
-- IPV350：不支持
-<!-- end id1918 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/26_cpp_extension_APIs_res.md#id25 -->
 
 ### 功能说明
@@ -1581,9 +1506,6 @@ aclError aclrtMemcpyFromSymbolAsync(void *dst, size_t dstMax, const T &symbol, s
 <!-- npu="910" id2743 -->
 - Atlas 训练系列产品：不支持
 <!-- end id2743 -->
-<!-- npu="IPV350" id2744 -->
-- IPV350：不支持
-<!-- end id2744 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/26_cpp_extension_APIs_res.md#id26 -->
 
 ### 功能说明
@@ -1648,9 +1570,6 @@ aclError aclrtMemcpyToSymbol(const T &symbol, const void *src, size_t count, siz
 <!-- npu="910" id3296 -->
 - Atlas 训练系列产品：不支持
 <!-- end id3296 -->
-<!-- npu="IPV350" id3297 -->
-- IPV350：不支持
-<!-- end id3297 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/26_cpp_extension_APIs_res.md#id27 -->
 
 ### 功能说明
@@ -1711,9 +1630,6 @@ aclError aclrtMemcpyToSymbolAsync(const T &symbol, const void *src, size_t count
 <!-- npu="910" id3471 -->
 - Atlas 训练系列产品：不支持
 <!-- end id3471 -->
-<!-- npu="IPV350" id3472 -->
-- IPV350：不支持
-<!-- end id3472 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/26_cpp_extension_APIs_res.md#id28 -->
 
 ### 功能说明

@@ -41,9 +41,6 @@ aclError aclrtCreateNotify(aclrtNotify *notify, uint64_t flag)
 <!-- npu="910" id2554 -->
 - Atlas 训练系列产品：支持
 <!-- end id2554 -->
-<!-- npu="IPV350" id2555 -->
-- IPV350：不支持
-<!-- end id2555 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/08_notify_management_res.md#id1 -->
 
 ### 功能说明
@@ -110,9 +107,6 @@ aclError aclrtDestroyNotify(aclrtNotify notify)
 <!-- npu="910" id1665 -->
 - Atlas 训练系列产品：支持
 <!-- end id1665 -->
-<!-- npu="IPV350" id1666 -->
-- IPV350：不支持
-<!-- end id1666 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/08_notify_management_res.md#id2 -->
 
 ### 功能说明
@@ -161,9 +155,6 @@ aclError aclrtRecordNotify(aclrtNotify notify, aclrtStream stream)
 <!-- npu="910" id2582 -->
 - Atlas 训练系列产品：支持
 <!-- end id2582 -->
-<!-- npu="IPV350" id2583 -->
-- IPV350：不支持
-<!-- end id2583 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/08_notify_management_res.md#id3 -->
 
 ### 功能说明
@@ -215,9 +206,6 @@ aclError aclrtWaitAndResetNotify(aclrtNotify notify, aclrtStream stream, uint32_
 <!-- npu="910" id1007 -->
 - Atlas 训练系列产品：支持
 <!-- end id1007 -->
-<!-- npu="IPV350" id1008 -->
-- IPV350：不支持
-<!-- end id1008 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/08_notify_management_res.md#id4 -->
 
 ### 功能说明
@@ -268,9 +256,6 @@ aclError aclrtGetNotifyId(aclrtNotify notify, uint32_t *notifyId)
 <!-- npu="910" id3506 -->
 - Atlas 训练系列产品：支持
 <!-- end id3506 -->
-<!-- npu="IPV350" id3507 -->
-- IPV350：不支持
-<!-- end id3507 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/08_notify_management_res.md#id5 -->
 
 ### 功能说明
@@ -320,9 +305,6 @@ aclError aclrtNotifyBatchReset(aclrtNotify *notifies, size_t num)
 <!-- npu="910" id447 -->
 - Atlas 训练系列产品：不支持
 <!-- end id447 -->
-<!-- npu="IPV350" id448 -->
-- IPV350：不支持
-<!-- end id448 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/08_notify_management_res.md#id6 -->
 
 ### 功能说明
@@ -377,9 +359,6 @@ aclError aclrtNotifyGetExportKey(aclrtNotify notify, char *key, size_t len, uint
 <!-- npu="910" id3170 -->
 - Atlas 训练系列产品：支持
 <!-- end id3170 -->
-<!-- npu="IPV350" id3171 -->
-- IPV350：不支持
-<!-- end id3171 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/08_notify_management_res.md#id7 -->
 
 ### 功能说明
@@ -461,9 +440,6 @@ aclError aclrtNotifySetImportPid(aclrtNotify notify, int32_t *pid, size_t num)
 <!-- npu="910" id1812 -->
 - Atlas 训练系列产品：支持
 <!-- end id1812 -->
-<!-- npu="IPV350" id1813 -->
-- IPV350：不支持
-<!-- end id1813 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/08_notify_management_res.md#id8 -->
 
 ### 功能说明
@@ -522,9 +498,6 @@ aclError aclrtNotifySetImportPidInterServer(aclrtNotify notify, aclrtServerPid *
 <!-- npu="910" id3275 -->
 - Atlas 训练系列产品：不支持
 <!-- end id3275 -->
-<!-- npu="IPV350" id3276 -->
-- IPV350：不支持
-<!-- end id3276 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/08_notify_management_res.md#id9 -->
 
 ### 功能说明
@@ -580,9 +553,6 @@ aclError aclrtNotifyImportByKey(aclrtNotify *notify, const char *key, uint64_t f
 <!-- npu="910" id2106 -->
 - Atlas 训练系列产品：支持
 <!-- end id2106 -->
-<!-- npu="IPV350" id2107 -->
-- IPV350：不支持
-<!-- end id2107 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/08_notify_management_res.md#id10 -->
 
 ### 功能说明

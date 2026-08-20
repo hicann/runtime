@@ -48,9 +48,6 @@ aclError aclrtMemcpy(void *dst, size_t destMax, const void *src, size_t count, a
 <!-- npu="910" id1336 -->
 - Atlas 训练系列产品：支持
 <!-- end id1336 -->
-<!-- npu="IPV350" id1337 -->
-- IPV350：支持
-<!-- end id1337 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-03_memory_copy_and_set_res.md#id1 -->
 
 ### 功能说明
@@ -128,9 +125,6 @@ aclError aclrtMemcpyAsync(void *dst, size_t destMax, const void *src, size_t cou
 <!-- npu="910" id2736 -->
 - Atlas 训练系列产品：支持
 <!-- end id2736 -->
-<!-- npu="IPV350" id2737 -->
-- IPV350：不支持
-<!-- end id2737 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-03_memory_copy_and_set_res.md#id2 -->
 
 ### 功能说明
@@ -201,9 +195,6 @@ aclError aclrtMemcpyAsyncWithCondition(void *dst, size_t destMax, const void *sr
 <!-- npu="910" id3499 -->
 - Atlas 训练系列产品：支持
 <!-- end id3499 -->
-<!-- npu="IPV350" id3500 -->
-- IPV350：支持
-<!-- end id3500 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-03_memory_copy_and_set_res.md#id3 -->
 
 ### 功能说明
@@ -272,9 +263,6 @@ aclError aclrtMemcpyBatch(void **dsts, size_t *destMaxs, void **srcs, size_t *si
 <!-- npu="910" id3387 -->
 - Atlas 训练系列产品：不支持
 <!-- end id3387 -->
-<!-- npu="IPV350" id3388 -->
-- IPV350：不支持
-<!-- end id3388 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-03_memory_copy_and_set_res.md#id4 -->
 
 ### 功能说明
@@ -340,9 +328,6 @@ aclError aclrtMemcpyBatchAsync(void **dsts, size_t *destMaxs, void **srcs, size_
 <!-- npu="910" id2085 -->
 - Atlas 训练系列产品：不支持
 <!-- end id2085 -->
-<!-- npu="IPV350" id2086 -->
-- IPV350：不支持
-<!-- end id2086 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-03_memory_copy_and_set_res.md#id5 -->
 
 ### 功能说明
@@ -409,9 +394,6 @@ aclError aclrtMemcpyBatchV2(void **dsts, size_t *destMaxs, void **srcs, size_t *
 <!-- npu="910" id55 -->
 - Atlas 训练系列产品：不支持
 <!-- end id55 -->
-<!-- npu="IPV350" id56 -->
-- IPV350：不支持
-<!-- end id56 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-03_memory_copy_and_set_res.md#id6 -->
 
 ### 功能说明
@@ -478,9 +460,6 @@ aclError aclrtMemcpyBatchAsyncV2(void **dsts, size_t *destMaxs, void **srcs, siz
 <!-- npu="910" id3345 -->
 - Atlas 训练系列产品：不支持
 <!-- end id3345 -->
-<!-- npu="IPV350" id3346 -->
-- IPV350：不支持
-<!-- end id3346 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-03_memory_copy_and_set_res.md#id7 -->
 
 ### 功能说明
@@ -548,9 +527,6 @@ aclError aclrtMemcpy2d(void *dst, size_t dpitch, const void *src, size_t spitch,
 <!-- npu="910" id1784 -->
 - Atlas 训练系列产品：支持
 <!-- end id1784 -->
-<!-- npu="IPV350" id1785 -->
-- IPV350：不支持
-<!-- end id1785 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-03_memory_copy_and_set_res.md#id8 -->
 
 ### 功能说明
@@ -621,9 +597,6 @@ aclError aclrtMemcpy2dAsync(void *dst, size_t dpitch, const void *src, size_t sp
 <!-- npu="910" id1588 -->
 - Atlas 训练系列产品：支持
 <!-- end id1588 -->
-<!-- npu="IPV350" id1589 -->
-- IPV350：不支持
-<!-- end id1589 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-03_memory_copy_and_set_res.md#id9 -->
 
 ### 功能说明
@@ -702,9 +675,6 @@ aclError aclrtGetMemcpyDescSize(aclrtMemcpyKind kind, size_t *descSize)
 <!-- npu="910" id1819 -->
 - Atlas 训练系列产品：不支持
 <!-- end id1819 -->
-<!-- npu="IPV350" id1820 -->
-- IPV350：不支持
-<!-- end id1820 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-03_memory_copy_and_set_res.md#id10 -->
 
 ### 功能说明
@@ -756,9 +726,6 @@ aclError aclrtSetMemcpyDesc(void *desc, aclrtMemcpyKind kind, void *srcAddr, voi
 <!-- npu="910" id1133 -->
 - Atlas 训练系列产品：不支持
 <!-- end id1133 -->
-<!-- npu="IPV350" id1134 -->
-- IPV350：不支持
-<!-- end id1134 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-03_memory_copy_and_set_res.md#id11 -->
 
 ### 功能说明
@@ -814,9 +781,6 @@ aclError aclrtMemcpyAsyncWithDesc(void *desc, aclrtMemcpyKind kind, aclrtStream 
 <!-- npu="910" id3261 -->
 - Atlas 训练系列产品：不支持
 <!-- end id3261 -->
-<!-- npu="IPV350" id3262 -->
-- IPV350：不支持
-<!-- end id3262 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-03_memory_copy_and_set_res.md#id12 -->
 
 ### 功能说明
@@ -875,9 +839,6 @@ aclError aclrtMemcpyAsyncWithOffset(void **dst, size_t destMax, size_t dstDataOf
 <!-- npu="910" id2988 -->
 - Atlas 训练系列产品：支持
 <!-- end id2988 -->
-<!-- npu="IPV350" id2989 -->
-- IPV350：不支持
-<!-- end id2989 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-03_memory_copy_and_set_res.md#id13 -->
 
 ### 功能说明
@@ -933,9 +894,6 @@ aclError aclrtMemset(void *devPtr, size_t maxCount, int32_t value, size_t count)
 <!-- npu="910" id2001 -->
 - Atlas 训练系列产品：支持
 <!-- end id2001 -->
-<!-- npu="IPV350" id2002 -->
-- IPV350：支持
-<!-- end id2002 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-03_memory_copy_and_set_res.md#id14 -->
 
 ### 功能说明
@@ -993,9 +951,6 @@ aclError aclrtMemsetAsync(void *devPtr, size_t maxCount, int32_t value, size_t c
 <!-- npu="910" id2064 -->
 - Atlas 训练系列产品：支持
 <!-- end id2064 -->
-<!-- npu="IPV350" id2065 -->
-- IPV350：不支持
-<!-- end id2065 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-03_memory_copy_and_set_res.md#id15 -->
 
 ### 功能说明
@@ -1050,9 +1005,6 @@ aclError aclrtMemsetD32(void *ptr, size_t memSize, uint32_t value, size_t N)
 <!-- npu="910" id2897 -->
 - Atlas 训练系列产品：不支持
 <!-- end id2897 -->
-<!-- npu="IPV350" id2898 -->
-- IPV350：不支持
-<!-- end id2898 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-03_memory_copy_and_set_res.md#id16 -->
 
 ### 功能说明
@@ -1110,9 +1062,6 @@ aclError aclrtMemsetD32Async(void *ptr, size_t memSize, uint32_t value, size_t N
 <!-- npu="910" id2057 -->
 - Atlas 训练系列产品：不支持
 <!-- end id2057 -->
-<!-- npu="IPV350" id2058 -->
-- IPV350：不支持
-<!-- end id2058 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-03_memory_copy_and_set_res.md#id17 -->
 
 ### 功能说明

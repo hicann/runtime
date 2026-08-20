@@ -115,9 +115,6 @@ aclDataBuffer *aclCreateDataBuffer(void *data, size_t size)
 <!-- npu="910" id3464 -->
 - Atlas 训练系列产品：支持
 <!-- end id3464 -->
-<!-- npu="IPV350" id3465 -->
-- IPV350：支持
-<!-- end id3465 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/25-03_Operation_APIs_res.md#id1 -->
 
 ### 功能说明
@@ -167,9 +164,6 @@ aclError aclDestroyDataBuffer(const aclDataBuffer *dataBuffer)
 <!-- npu="910" id2008 -->
 - Atlas 训练系列产品：支持
 <!-- end id2008 -->
-<!-- npu="IPV350" id2009 -->
-- IPV350：支持
-<!-- end id2009 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/25-03_Operation_APIs_res.md#id2 -->
 
 ### 功能说明
@@ -218,9 +212,6 @@ void *aclGetDataBufferAddr(const aclDataBuffer *dataBuffer)
 <!-- npu="910" id3324 -->
 - Atlas 训练系列产品：支持
 <!-- end id3324 -->
-<!-- npu="IPV350" id3325 -->
-- IPV350：支持
-<!-- end id3325 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/25-03_Operation_APIs_res.md#id3 -->
 
 ### 功能说明
@@ -269,9 +260,6 @@ uint32 aclGetDataBufferSize(const aclDataBuffer *dataBuffer)
 <!-- npu="910" id3163 -->
 - Atlas 训练系列产品：支持
 <!-- end id3163 -->
-<!-- npu="IPV350" id3164 -->
-- IPV350：支持
-<!-- end id3164 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/25-03_Operation_APIs_res.md#id4 -->
 
 ### 功能说明
@@ -318,9 +306,6 @@ size_t aclGetDataBufferSizeV2(const aclDataBuffer *dataBuffer)
 <!-- npu="910" id1602 -->
 - Atlas 训练系列产品：支持
 <!-- end id1602 -->
-<!-- npu="IPV350" id1603 -->
-- IPV350：支持
-<!-- end id1603 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/25-03_Operation_APIs_res.md#id5 -->
 
 ### 功能说明
@@ -367,9 +352,6 @@ aclError aclUpdateDataBuffer(aclDataBuffer *dataBuffer, void *data, size_t size)
 <!-- npu="910" id2540 -->
 - Atlas 训练系列产品：支持
 <!-- end id2540 -->
-<!-- npu="IPV350" id2541 -->
-- IPV350：不支持
-<!-- end id2541 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/25-03_Operation_APIs_res.md#id6 -->
 
 ### 功能说明
@@ -430,9 +412,6 @@ aclprofConfig *aclprofCreateConfig(uint32_t *deviceIdList, uint32_t deviceNums, 
 <!-- npu="910" id2729 -->
 - Atlas 训练系列产品：支持
 <!-- end id2729 -->
-<!-- npu="IPV350" id2730 -->
-- IPV350：不支持
-<!-- end id2730 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/25-03_Operation_APIs_res.md#id44 -->
 
 ### 功能说明
@@ -494,9 +473,6 @@ aclError aclprofDestroyConfig(const aclprofConfig *profilerConfig)
 <!-- npu="910" id216 -->
 - Atlas 训练系列产品：支持
 <!-- end id216 -->
-<!-- npu="IPV350" id217 -->
-- IPV350：不支持
-<!-- end id217 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/25-03_Operation_APIs_res.md#id45 -->
 ### 功能说明
 
@@ -557,9 +533,6 @@ aclprofStepInfo* aclprofCreateStepInfo()
 <!-- npu="910" id1868 -->
 - Atlas 训练系列产品：支持
 <!-- end id1868 -->
-<!-- npu="IPV350" id1869 -->
-- IPV350：不支持
-<!-- end id1869 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/25-03_Operation_APIs_res.md#id46 -->
 
 ### 功能说明
@@ -609,9 +582,6 @@ void aclprofDestroyStepInfo(aclprofStepInfo* stepinfo)
 <!-- npu="910" id356 -->
 - Atlas 训练系列产品：支持
 <!-- end id356 -->
-<!-- npu="IPV350" id357 -->
-- IPV350：不支持
-<!-- end id357 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/25-03_Operation_APIs_res.md#id47 -->
 
 ### 功能说明
@@ -669,9 +639,6 @@ aclprofSubscribeConfig *aclprofCreateSubscribeConfig(int8_t timeInfoSwitch, aclp
 <!-- npu="910" id48 -->
 - Atlas 训练系列产品：支持
 <!-- end id48 -->
-<!-- npu="IPV350" id49 -->
-- IPV350：不支持
-<!-- end id49 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/25-03_Operation_APIs_res.md#id48 -->
 ### 功能说明
 
@@ -728,9 +695,6 @@ aclError aclprofDestroySubscribeConfig(const aclprofSubscribeConfig *profSubscri
 <!-- npu="910" id1749 -->
 - Atlas 训练系列产品：支持
 <!-- end id1749 -->
-<!-- npu="IPV350" id1750 -->
-- IPV350：不支持
-<!-- end id1750 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/25-03_Operation_APIs_res.md#id49 -->
 
 ### 功能说明
@@ -802,9 +766,6 @@ aclrtAllocatorDesc aclrtAllocatorCreateDesc()
 <!-- npu="910" id1539 -->
 - Atlas 训练系列产品：支持
 <!-- end id1539 -->
-<!-- npu="IPV350" id1540 -->
-- IPV350：不支持
-<!-- end id1540 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/25-03_Operation_APIs_res.md#id7 -->
 
 ### 功能说明
@@ -846,9 +807,6 @@ aclError aclrtAllocatorDestroyDesc(aclrtAllocatorDesc allocatorDesc)
 <!-- npu="910" id1168 -->
 - Atlas 训练系列产品：支持
 <!-- end id1168 -->
-<!-- npu="IPV350" id1169 -->
-- IPV350：不支持
-<!-- end id1169 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/25-03_Operation_APIs_res.md#id8 -->
 
 ### 功能说明
@@ -895,9 +853,6 @@ aclError aclrtAllocatorSetObjToDesc(aclrtAllocatorDesc allocatorDesc,  aclrtAllo
 <!-- npu="910" id3198 -->
 - Atlas 训练系列产品：支持
 <!-- end id3198 -->
-<!-- npu="IPV350" id3199 -->
-- IPV350：不支持
-<!-- end id3199 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/25-03_Operation_APIs_res.md#id9 -->
 
 ### 功能说明
@@ -945,9 +900,6 @@ aclError aclrtAllocatorSetAllocFuncToDesc(aclrtAllocatorDesc allocatorDesc, aclr
 <!-- npu="910" id2435 -->
 - Atlas 训练系列产品：支持
 <!-- end id2435 -->
-<!-- npu="IPV350" id2436 -->
-- IPV350：不支持
-<!-- end id2436 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/25-03_Operation_APIs_res.md#id10 -->
 
 ### 功能说明
@@ -995,9 +947,6 @@ aclError aclrtAllocatorSetAllocAdviseFuncToDesc(aclrtAllocatorDesc allocatorDesc
 <!-- npu="910" id2687 -->
 - Atlas 训练系列产品：支持
 <!-- end id2687 -->
-<!-- npu="IPV350" id2688 -->
-- IPV350：不支持
-<!-- end id2688 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/25-03_Operation_APIs_res.md#id11 -->
 
 ### 功能说明
@@ -1045,9 +994,6 @@ aclError aclrtAllocatorSetFreeFuncToDesc(aclrtAllocatorDesc allocatorDesc, aclrt
 <!-- npu="910" id1756 -->
 - Atlas 训练系列产品：支持
 <!-- end id1756 -->
-<!-- npu="IPV350" id1757 -->
-- IPV350：不支持
-<!-- end id1757 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/25-03_Operation_APIs_res.md#id12 -->
 
 ### 功能说明
@@ -1095,9 +1041,6 @@ aclError aclrtAllocatorSetGetAddrFromBlockFuncToDesc(aclrtAllocatorDesc allocato
 <!-- npu="910" id1455 -->
 - Atlas 训练系列产品：支持
 <!-- end id1455 -->
-<!-- npu="IPV350" id1456 -->
-- IPV350：不支持
-<!-- end id1456 -->
 
 ### 功能说明
 
@@ -1154,9 +1097,6 @@ aclrtStreamConfigHandle *aclrtCreateStreamConfigHandle(void)
 <!-- npu="910" id2379 -->
 - Atlas 训练系列产品：不支持
 <!-- end id2379 -->
-<!-- npu="IPV350" id2380 -->
-- IPV350：支持
-<!-- end id2380 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/25-03_Operation_APIs_res.md#id13 -->
 
 ### 功能说明
@@ -1204,9 +1144,6 @@ aclError aclrtDestroyStreamConfigHandle(aclrtStreamConfigHandle *handle)
 <!-- npu="910" id1476 -->
 - Atlas 训练系列产品：不支持
 <!-- end id1476 -->
-<!-- npu="IPV350" id1477 -->
-- IPV350：支持
-<!-- end id1477 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/25-03_Operation_APIs_res.md#id14 -->
 
 ### 功能说明
@@ -1280,9 +1217,6 @@ size_t size)
 <!-- npu="910" id1609 -->
 - Atlas 训练系列产品：支持
 <!-- end id1609 -->
-<!-- npu="IPV350" id1610 -->
-- IPV350：不支持
-<!-- end id1610 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/25-03_Operation_APIs_res.md#id15 -->
 
 ### 功能说明
@@ -1337,9 +1271,6 @@ aclError acltdtDestroyDataItem(acltdtDataItem *dataItem)
 <!-- npu="910" id3016 -->
 - Atlas 训练系列产品：支持
 <!-- end id3016 -->
-<!-- npu="IPV350" id3017 -->
-- IPV350：不支持
-<!-- end id3017 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/25-03_Operation_APIs_res.md#id16 -->
 
 ### 功能说明
@@ -1386,9 +1317,6 @@ acltdtTensorType acltdtGetTensorTypeFromItem(const acltdtDataItem *dataItem)
 <!-- npu="910" id3366 -->
 - Atlas 训练系列产品：支持
 <!-- end id3366 -->
-<!-- npu="IPV350" id3367 -->
-- IPV350：不支持
-<!-- end id3367 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/25-03_Operation_APIs_res.md#id17 -->
 
 ### 功能说明
@@ -1435,9 +1363,6 @@ aclDataType acltdtGetDataTypeFromItem(const acltdtDataItem *dataItem)
 <!-- npu="910" id2862 -->
 - Atlas 训练系列产品：支持
 <!-- end id2862 -->
-<!-- npu="IPV350" id2863 -->
-- IPV350：不支持
-<!-- end id2863 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/25-03_Operation_APIs_res.md#id18 -->
 
 ### 功能说明
@@ -1484,9 +1409,6 @@ void *acltdtGetDataAddrFromItem(const acltdtDataItem *dataItem)
 <!-- npu="910" id531 -->
 - Atlas 训练系列产品：支持
 <!-- end id531 -->
-<!-- npu="IPV350" id532 -->
-- IPV350：不支持
-<!-- end id532 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/25-03_Operation_APIs_res.md#id19 -->
 
 ### 功能说明
@@ -1533,9 +1455,6 @@ size_t acltdtGetDataSizeFromItem(const acltdtDataItem *dataItem)
 <!-- npu="910" id1462 -->
 - Atlas 训练系列产品：支持
 <!-- end id1462 -->
-<!-- npu="IPV350" id1463 -->
-- IPV350：不支持
-<!-- end id1463 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/25-03_Operation_APIs_res.md#id20 -->
 
 ### 功能说明
@@ -1582,9 +1501,6 @@ size_t acltdtGetDimNumFromItem(const acltdtDataItem *dataItem)
 <!-- npu="910" id2421 -->
 - Atlas 训练系列产品：支持
 <!-- end id2421 -->
-<!-- npu="IPV350" id2422 -->
-- IPV350：不支持
-<!-- end id2422 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/25-03_Operation_APIs_res.md#id21 -->
 
 ### 功能说明
@@ -1631,9 +1547,6 @@ aclError acltdtGetDimsFromItem(const acltdtDataItem *dataItem, int64_t *dims, si
 <!-- npu="910" id370 -->
 - Atlas 训练系列产品：支持
 <!-- end id370 -->
-<!-- npu="IPV350" id371 -->
-- IPV350：不支持
-<!-- end id371 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/25-03_Operation_APIs_res.md#id22 -->
 
 ### 功能说明
@@ -1700,9 +1613,6 @@ acltdtDataset *acltdtCreateDataset()
 <!-- npu="910" id748 -->
 - Atlas 训练系列产品：支持
 <!-- end id748 -->
-<!-- npu="IPV350" id749 -->
-- IPV350：不支持
-<!-- end id749 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/25-03_Operation_APIs_res.md#id23 -->
 
 ### 功能说明
@@ -1750,9 +1660,6 @@ aclError acltdtDestroyDataset(acltdtDataset *dataset)
 <!-- npu="910" id3282 -->
 - Atlas 训练系列产品：支持
 <!-- end id3282 -->
-<!-- npu="IPV350" id3283 -->
-- IPV350：不支持
-<!-- end id3283 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/25-03_Operation_APIs_res.md#id24 -->
 
 ### 功能说明
@@ -1799,9 +1706,6 @@ acltdtDataItem *acltdtGetDataItem(const acltdtDataset *dataset, size_t index)
 <!-- npu="910" id839 -->
 - Atlas 训练系列产品：支持
 <!-- end id839 -->
-<!-- npu="IPV350" id840 -->
-- IPV350：不支持
-<!-- end id840 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/25-03_Operation_APIs_res.md#id25 -->
 
 ### 功能说明
@@ -1850,9 +1754,6 @@ aclError acltdtAddDataItem(acltdtDataset *dataset, acltdtDataItem *dataItem)
 <!-- npu="910" id811 -->
 - Atlas 训练系列产品：支持
 <!-- end id811 -->
-<!-- npu="IPV350" id812 -->
-- IPV350：不支持
-<!-- end id812 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/25-03_Operation_APIs_res.md#id26 -->
 
 ### 功能说明
@@ -1900,9 +1801,6 @@ size_t acltdtGetDatasetSize(const acltdtDataset *dataset)
 <!-- npu="910" id1448 -->
 - Atlas 训练系列产品：支持
 <!-- end id1448 -->
-<!-- npu="IPV350" id1449 -->
-- IPV350：不支持
-<!-- end id1449 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/25-03_Operation_APIs_res.md#id27 -->
 
 ### 功能说明
@@ -1949,9 +1847,6 @@ const char *acltdtGetDatasetName(const acltdtDataset *dataset)
 <!-- npu="910" id3443 -->
 - Atlas 训练系列产品：支持
 <!-- end id3443 -->
-<!-- npu="IPV350" id3444 -->
-- IPV350：不支持
-<!-- end id3444 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/25-03_Operation_APIs_res.md#id28 -->
 
 ### 功能说明
@@ -2012,9 +1907,6 @@ acltdtQueueAttr *acltdtCreateQueueAttr()
 <!-- npu="910" id2890 -->
 - Atlas 训练系列产品：支持
 <!-- end id2890 -->
-<!-- npu="IPV350" id2891 -->
-- IPV350：不支持
-<!-- end id2891 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/25-03_Operation_APIs_res.md#id29 -->
 
 ### 功能说明
@@ -2060,9 +1952,6 @@ aclError acltdtDestroyQueueAttr(const acltdtQueueAttr *attr)
 <!-- npu="910" id881 -->
 - Atlas 训练系列产品：支持
 <!-- end id881 -->
-<!-- npu="IPV350" id882 -->
-- IPV350：不支持
-<!-- end id882 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/25-03_Operation_APIs_res.md#id30 -->
 
 ### 功能说明
@@ -2109,9 +1998,6 @@ aclError acltdtSetQueueAttr(acltdtQueueAttr *attr, acltdtQueueAttrType type, siz
 <!-- npu="910" id1329 -->
 - Atlas 训练系列产品：支持
 <!-- end id1329 -->
-<!-- npu="IPV350" id1330 -->
-- IPV350：不支持
-<!-- end id1330 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/25-03_Operation_APIs_res.md#id31 -->
 
 ### 功能说明
@@ -2161,9 +2047,6 @@ aclError acltdtGetQueueAttr(const acltdtQueueAttr *attr, acltdtQueueAttrType typ
 <!-- npu="910" id1847 -->
 - Atlas 训练系列产品：支持
 <!-- end id1847 -->
-<!-- npu="IPV350" id1848 -->
-- IPV350：不支持
-<!-- end id1848 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/25-03_Operation_APIs_res.md#id32 -->
 
 ### 功能说明
@@ -2226,9 +2109,6 @@ acltdtQueueRoute* acltdtCreateQueueRoute(uint32_t srcId, uint32_t dstId)
 <!-- npu="910" id1420 -->
 - Atlas 训练系列产品：支持
 <!-- end id1420 -->
-<!-- npu="IPV350" id1421 -->
-- IPV350：不支持
-<!-- end id1421 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/25-03_Operation_APIs_res.md#id33 -->
 
 ### 功能说明
@@ -2277,9 +2157,6 @@ aclError acltdtDestroyQueueRoute(const acltdtQueueRoute *route)
 <!-- npu="910" id1805 -->
 - Atlas 训练系列产品：支持
 <!-- end id1805 -->
-<!-- npu="IPV350" id1806 -->
-- IPV350：不支持
-<!-- end id1806 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/25-03_Operation_APIs_res.md#id34 -->
 
 ### 功能说明
@@ -2326,9 +2203,6 @@ aclError acltdtGetQueueRouteParam(const acltdtQueueRoute *route, acltdtQueueRout
 <!-- npu="910" id1826 -->
 - Atlas 训练系列产品：支持
 <!-- end id1826 -->
-<!-- npu="IPV350" id1827 -->
-- IPV350：不支持
-<!-- end id1827 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/25-03_Operation_APIs_res.md#id35 -->
 
 ### 功能说明
@@ -2395,9 +2269,6 @@ acltdtQueueRouteList* acltdtCreateQueueRouteList()
 <!-- npu="910" id97 -->
 - Atlas 训练系列产品：支持
 <!-- end id97 -->
-<!-- npu="IPV350" id98 -->
-- IPV350：不支持
-<!-- end id98 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/25-03_Operation_APIs_res.md#id36 -->
 
 ### 功能说明
@@ -2443,9 +2314,6 @@ aclError acltdtDestroyQueueRouteList(const acltdtQueueRouteList *routeList)
 <!-- npu="910" id804 -->
 - Atlas 训练系列产品：支持
 <!-- end id804 -->
-<!-- npu="IPV350" id805 -->
-- IPV350：不支持
-<!-- end id805 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/25-03_Operation_APIs_res.md#id37 -->
 
 ### 功能说明
@@ -2492,9 +2360,6 @@ aclError acltdtAddQueueRoute(acltdtQueueRouteList *routeList, const acltdtQueueR
 <!-- npu="910" id1119 -->
 - Atlas 训练系列产品：支持
 <!-- end id1119 -->
-<!-- npu="IPV350" id1120 -->
-- IPV350：不支持
-<!-- end id1120 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/25-03_Operation_APIs_res.md#id38 -->
 
 ### 功能说明
@@ -2542,9 +2407,6 @@ aclError acltdtGetQueueRoute(const acltdtQueueRouteList *routeList, size_t index
 <!-- npu="910" id475 -->
 - Atlas 训练系列产品：支持
 <!-- end id475 -->
-<!-- npu="IPV350" id476 -->
-- IPV350：不支持
-<!-- end id476 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/25-03_Operation_APIs_res.md#id39 -->
 
 ### 功能说明
@@ -2593,9 +2455,6 @@ size_t acltdtGetQueueRouteNum(const acltdtQueueRouteList *routeList)
 <!-- npu="910" id2547 -->
 - Atlas 训练系列产品：支持
 <!-- end id2547 -->
-<!-- npu="IPV350" id2548 -->
-- IPV350：不支持
-<!-- end id2548 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/25-03_Operation_APIs_res.md#id40 -->
 
 ### 功能说明
@@ -2654,9 +2513,6 @@ acltdtQueueRouteQueryInfo* acltdtCreateQueueRouteQueryInfo()
 <!-- npu="910" id2589 -->
 - Atlas 训练系列产品：支持
 <!-- end id2589 -->
-<!-- npu="IPV350" id2590 -->
-- IPV350：不支持
-<!-- end id2590 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/25-03_Operation_APIs_res.md#id41 -->
 
 ### 功能说明
@@ -2702,9 +2558,6 @@ aclError acltdtDestroyQueueRouteQueryInfo(const acltdtQueueRouteQueryInfo *info)
 <!-- npu="910" id3205 -->
 - Atlas 训练系列产品：支持
 <!-- end id3205 -->
-<!-- npu="IPV350" id3206 -->
-- IPV350：不支持
-<!-- end id3206 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/25-03_Operation_APIs_res.md#id42 -->
 
 ### 功能说明
@@ -2751,9 +2604,6 @@ aclError acltdtSetQueueRouteQueryInfo(acltdtQueueRouteQueryInfo *param, acltdtQu
 <!-- npu="910" id1392 -->
 - Atlas 训练系列产品：支持
 <!-- end id1392 -->
-<!-- npu="IPV350" id1393 -->
-- IPV350：不支持
-<!-- end id1393 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/25-03_Operation_APIs_res.md#id43 -->
 
 ### 功能说明

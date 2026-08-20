@@ -64,9 +64,6 @@ int32_t AlogRecord(uint32_t moduleId, uint32_t logType, int32_t level, const cha
 <!-- npu="910" id1175 -->
 - Atlas 训练系列产品：支持
 <!-- end id1175 -->
-<!-- npu="IPV350" id1176 -->
-- IPV350：不支持
-<!-- end id1176 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/23_log_APIs_res.md#id1 -->
 
 ### 函数功能
@@ -127,9 +124,6 @@ int32_t AlogCheckDebugLevel(uint32_t moduleId, int32_t level)
 <!-- npu="910" id2043 -->
 - Atlas 训练系列产品：支持
 <!-- end id2043 -->
-<!-- npu="IPV350" id2044 -->
-- IPV350：不支持
-<!-- end id2044 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/23_log_APIs_res.md#id2 -->
 
 ### 函数功能
@@ -194,9 +188,6 @@ void acllogRecord(int32_t moduleId, int32_t level, const char *fmt, ...)
 <!-- npu="910" id52043 -->
 - Atlas 训练系列产品：支持
 <!-- end id52043 -->
-<!-- npu="IPV350" id52044 -->
-- IPV350：不支持
-<!-- end id52044 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/23_log_APIs_res.md#id7 -->
 ### 函数功能
 
@@ -252,9 +243,6 @@ void acllogVaList(int32_t moduleId, int32_t level, const char *fmt, va_list list
 <!-- npu="910" id84245 -->
 - Atlas 训练系列产品：支持
 <!-- end id84245 -->
-<!-- npu="IPV350" id84246 -->
-- IPV350：不支持
-<!-- end id84246 -->
 
 <!-- @ref: runtime/res/docs/zh/api_ref/23_log_APIs_res.md#id4 -->
 
@@ -321,9 +309,6 @@ int32_t acllogCheckDebugLevel(int32_t moduleId, int32_t logLevel)
 <!-- npu="910" id3245 -->
 - Atlas 训练系列产品：支持
 <!-- end id3245 -->
-<!-- npu="IPV350" id3246 -->
-- IPV350：不支持
-<!-- end id3246 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/23_log_APIs_res.md#id5 -->
 
 ### 函数功能
@@ -385,9 +370,6 @@ int32_t acllogRegisterCallback(acllogRecordCallback callbackFunc, void *userData
 <!-- npu="910" id245 -->
 - Atlas 训练系列产品：支持
 <!-- end id245 -->
-<!-- npu="IPV350" id246 -->
-- IPV350：不支持
-<!-- end id246 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/23_log_APIs_res.md#id6 -->
 
 ### 函数功能
@@ -463,9 +445,6 @@ int32_t acllogUnregisterCallback(acllogCallbackHandle callback)
 <!-- npu="910" id1910 -->
 - Atlas 训练系列产品：不支持
 <!-- end id1910 -->
-<!-- npu="IPV350" id1911 -->
-- IPV350：不支持
-<!-- end id1911 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/23_log_APIs_res.md#id3 -->
 
 ### 函数功能

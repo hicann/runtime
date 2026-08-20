@@ -53,9 +53,6 @@ int32_t ReportInnerErrMsg(const char_t *file_name, const char_t *func, uint32_t 
 <!-- npu="910" id6 -->
 - Atlas 训练系列产品：支持
 <!-- end id6 -->
-<!-- npu="IPV350" id7 -->
-- IPV350：不支持
-<!-- end id7 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/22_error_reporting_APIs_res.md#id1 -->
 
 ### 函数功能
@@ -126,9 +123,6 @@ int32_t ReportInnerErrMsg(const char_t *file_name, const char_t *func, uint32_t 
 <!-- npu="910" id13 -->
 - Atlas 训练系列产品：支持
 <!-- end id13 -->
-<!-- npu="IPV350" id14 -->
-- IPV350：不支持
-<!-- end id14 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/22_error_reporting_APIs_res.md#id2 -->
 
 ### 函数功能
@@ -192,9 +186,6 @@ int32_t ReportUserDefinedErrMsg(const char *error_code, const char *format, ...)
 <!-- npu="910" id20 -->
 - Atlas 训练系列产品：支持
 <!-- end id20 -->
-<!-- npu="IPV350" id21 -->
-- IPV350：不支持
-<!-- end id21 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/22_error_reporting_APIs_res.md#id3 -->
 
 ### 函数功能
@@ -250,9 +241,6 @@ int32_t RegisterFormatErrorMessage(const char *error_msg, size_t error_msg_len)
 <!-- npu="910" id27 -->
 - Atlas 训练系列产品：支持
 <!-- end id27 -->
-<!-- npu="IPV350" id28 -->
-- IPV350：不支持
-<!-- end id28 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/22_error_reporting_APIs_res.md#id4 -->
 
 ### 函数功能

@@ -53,9 +53,6 @@ aclError aclrtCreateStream(aclrtStream *stream)
 <!-- npu="910" id2596 -->
 - Atlas 训练系列产品：支持
 <!-- end id2596 -->
-<!-- npu="IPV350" id2597 -->
-- IPV350：不支持
-<!-- end id2597 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/06_stream_management_res.md#id1 -->
 
 ### 功能说明
@@ -128,9 +125,6 @@ aclError aclrtCreateStreamWithConfig(aclrtStream *stream, uint32_t priority, uin
 <!-- npu="910" id3142 -->
 - Atlas 训练系列产品：支持
 <!-- end id3142 -->
-<!-- npu="IPV350" id3143 -->
-- IPV350：不支持
-<!-- end id3143 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/06_stream_management_res.md#id2 -->
 
 ### 功能说明
@@ -238,9 +232,6 @@ aclError aclrtDestroyStream(aclrtStream stream)
 <!-- npu="910" id3352 -->
 - Atlas 训练系列产品：支持
 <!-- end id3352 -->
-<!-- npu="IPV350" id3353 -->
-- IPV350：支持
-<!-- end id3353 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/06_stream_management_res.md#id3 -->
 
 ### 功能说明
@@ -295,9 +286,6 @@ aclError aclrtDestroyStreamForce(aclrtStream stream)
 <!-- npu="910" id3527 -->
 - Atlas 训练系列产品：支持
 <!-- end id3527 -->
-<!-- npu="IPV350" id3528 -->
-- IPV350：不支持
-<!-- end id3528 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/06_stream_management_res.md#id4 -->
 
 ### 功能说明
@@ -350,9 +338,6 @@ aclError aclrtSetStreamOverflowSwitch(aclrtStream stream, uint32_t flag)
 <!-- npu="910" id2232 -->
 - Atlas 训练系列产品：不支持
 <!-- end id2232 -->
-<!-- npu="IPV350" id2233 -->
-- IPV350：不支持
-<!-- end id2233 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/06_stream_management_res.md#id5 -->
 
 ### 功能说明
@@ -406,9 +391,6 @@ aclError aclrtGetStreamOverflowSwitch(aclrtStream stream, uint32_t *flag)
 <!-- npu="910" id314 -->
 - Atlas 训练系列产品：不支持
 <!-- end id314 -->
-<!-- npu="IPV350" id315 -->
-- IPV350：不支持
-<!-- end id315 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/06_stream_management_res.md#id6 -->
 
 ### 功能说明
@@ -458,9 +440,6 @@ aclError aclrtSetStreamFailureMode(aclrtStream stream, uint64_t mode)
 <!-- npu="910" id1112 -->
 - Atlas 训练系列产品：支持
 <!-- end id1112 -->
-<!-- npu="IPV350" id1113 -->
-- IPV350：不支持
-<!-- end id1113 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/06_stream_management_res.md#id7 -->
 
 ### 功能说明
@@ -524,9 +503,6 @@ aclError aclrtStreamQuery(aclrtStream stream, aclrtStreamStatus *status)
 <!-- npu="910" id1315 -->
 - Atlas 训练系列产品：支持
 <!-- end id1315 -->
-<!-- npu="IPV350" id1316 -->
-- IPV350：不支持
-<!-- end id1316 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/06_stream_management_res.md#id8 -->
 
 ### 功能说明
@@ -580,9 +556,6 @@ aclError aclrtSynchronizeStream(aclrtStream stream)
 <!-- npu="910" id2617 -->
 - Atlas 训练系列产品：支持
 <!-- end id2617 -->
-<!-- npu="IPV350" id2618 -->
-- IPV350：支持
-<!-- end id2618 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/06_stream_management_res.md#id9 -->
 
 ### 功能说明
@@ -635,9 +608,6 @@ aclError aclrtSynchronizeStreamWithTimeout(aclrtStream stream, int32_t timeout)
 <!-- npu="910" id1987 -->
 - Atlas 训练系列产品：支持
 <!-- end id1987 -->
-<!-- npu="IPV350" id1988 -->
-- IPV350：不支持
-<!-- end id1988 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/06_stream_management_res.md#id10 -->
 
 ### 功能说明
@@ -691,9 +661,6 @@ aclError aclrtStreamAbort(aclrtStream stream)
 <!-- npu="910" id951 -->
 - Atlas 训练系列产品：不支持
 <!-- end id951 -->
-<!-- npu="IPV350" id952 -->
-- IPV350：不支持
-<!-- end id952 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/06_stream_management_res.md#id11 -->
 
 ### 功能说明
@@ -752,9 +719,6 @@ aclError aclrtStreamGetId(aclrtStream stream, int32_t *streamId)
 <!-- npu="910" id1938 -->
 - Atlas 训练系列产品：支持
 <!-- end id1938 -->
-<!-- npu="IPV350" id1939 -->
-- IPV350：不支持
-<!-- end id1939 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/06_stream_management_res.md#id12 -->
 
 ### 功能说明
@@ -804,9 +768,6 @@ aclError aclrtGetStreamAvailableNum(uint32_t *streamCount)
 <!-- npu="910" id965 -->
 - Atlas 训练系列产品：支持
 <!-- end id965 -->
-<!-- npu="IPV350" id966 -->
-- IPV350：不支持
-<!-- end id966 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/06_stream_management_res.md#id13 -->
 
 ### 功能说明
@@ -855,9 +816,6 @@ aclError aclrtSetStreamAttribute(aclrtStream stream, aclrtStreamAttr stmAttrType
 <!-- npu="910" id1070 -->
 - Atlas 训练系列产品：支持
 <!-- end id1070 -->
-<!-- npu="IPV350" id1071 -->
-- IPV350：不支持
-<!-- end id1071 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/06_stream_management_res.md#id14 -->
 
 ### 功能说明
@@ -923,9 +881,6 @@ aclError aclrtGetStreamAttribute(aclrtStream stream, aclrtStreamAttr stmAttrType
 <!-- npu="910" id2981 -->
 - Atlas 训练系列产品：支持
 <!-- end id2981 -->
-<!-- npu="IPV350" id2982 -->
-- IPV350：不支持
-<!-- end id2982 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/06_stream_management_res.md#id15 -->
 
 ### 功能说明
@@ -989,9 +944,6 @@ aclError aclrtActiveStream(aclrtStream activeStream, aclrtStream stream)
 <!-- npu="910" id342 -->
 - Atlas 训练系列产品：支持
 <!-- end id342 -->
-<!-- npu="IPV350" id343 -->
-- IPV350：不支持
-<!-- end id343 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/06_stream_management_res.md#id16 -->
 
 ### 功能说明
@@ -1043,9 +995,6 @@ aclError aclrtSwitchStream(void *leftValue, aclrtCondition cond, void *rightValu
 <!-- npu="910" id2218 -->
 - Atlas 训练系列产品：支持
 <!-- end id2218 -->
-<!-- npu="IPV350" id2219 -->
-- IPV350：不支持
-<!-- end id2219 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/06_stream_management_res.md#id17 -->
 
 ### 功能说明
@@ -1102,9 +1051,6 @@ aclError aclrtRegStreamStateCallback(const char *regName, aclrtStreamStateCallba
 <!-- npu="910" id1924 -->
 - Atlas 训练系列产品：支持
 <!-- end id1924 -->
-<!-- npu="IPV350" id1925 -->
-- IPV350：不支持
-<!-- end id1925 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/06_stream_management_res.md#id18 -->
 
 ### 功能说明
@@ -1167,9 +1113,6 @@ aclError aclrtStreamStop(aclrtStream stream)
 <!-- npu="910" id2505 -->
 - Atlas 训练系列产品：不支持
 <!-- end id2505 -->
-<!-- npu="IPV350" id2506 -->
-- IPV350：不支持
-<!-- end id2506 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/06_stream_management_res.md#id19 -->
 
 ### 功能说明
@@ -1223,9 +1166,6 @@ aclError aclrtPersistentTaskClean(aclrtStream stream)
 <!-- npu="910" id433 -->
 - Atlas 训练系列产品：不支持
 <!-- end id433 -->
-<!-- npu="IPV350" id434 -->
-- IPV350：不支持
-<!-- end id434 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/06_stream_management_res.md#id20 -->
 
 ### 功能说明
@@ -1276,9 +1216,6 @@ aclError aclrtStreamGetPriority(aclrtStream stream, uint32_t *priority)
 <!-- npu="910" id3093 -->
 - Atlas 训练系列产品：支持
 <!-- end id3093 -->
-<!-- npu="IPV350" id3094 -->
-- IPV350：不支持
-<!-- end id3094 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/06_stream_management_res.md#id21 -->
 
 ### 功能说明
@@ -1328,9 +1265,6 @@ aclError aclrtStreamGetFlags(aclrtStream stream, uint32_t *flags)
 <!-- npu="910" id1567 -->
 - Atlas 训练系列产品：支持
 <!-- end id1567 -->
-<!-- npu="IPV350" id1568 -->
-- IPV350：不支持
-<!-- end id1568 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/06_stream_management_res.md#id22 -->
 
 ### 功能说明

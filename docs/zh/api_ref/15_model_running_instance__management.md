@@ -70,9 +70,6 @@ aclError aclmdlRICaptureBegin(aclrtStream stream, aclmdlRICaptureMode mode)
 <!-- npu="910" id1014 -->
 - Atlas 训练系列产品：不支持
 <!-- end id1014 -->
-<!-- npu="IPV350" id1015 -->
-- IPV350：不支持
-<!-- end id1015 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id1 -->
 
 ### 功能说明
@@ -130,9 +127,6 @@ aclError aclmdlRICaptureGetInfo(aclrtStream stream, aclmdlRICaptureStatus *statu
 <!-- npu="910" id755 -->
 - Atlas 训练系列产品：不支持
 <!-- end id755 -->
-<!-- npu="IPV350" id756 -->
-- IPV350：不支持
-<!-- end id756 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id2 -->
 
 ### 功能说明
@@ -183,9 +177,6 @@ aclError aclmdlRICaptureThreadExchangeMode(aclmdlRICaptureMode *mode)
 <!-- npu="910" id2393 -->
 - Atlas 训练系列产品：不支持
 <!-- end id2393 -->
-<!-- npu="IPV350" id2394 -->
-- IPV350：不支持
-<!-- end id2394 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id3 -->
 
 ### 功能说明
@@ -242,9 +233,6 @@ aclError aclmdlRICaptureEnd(aclrtStream stream, aclmdlRI *modelRI)
 <!-- npu="910" id3072 -->
 - Atlas 训练系列产品：不支持
 <!-- end id3072 -->
-<!-- npu="IPV350" id3073 -->
-- IPV350：不支持
-<!-- end id3073 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id4 -->
 
 ### 功能说明
@@ -298,9 +286,6 @@ aclError aclmdlRICaptureTaskGrpBegin(aclrtStream stream)
 <!-- npu="910" id349 -->
 - Atlas 训练系列产品：不支持
 <!-- end id349 -->
-<!-- npu="IPV350" id350 -->
-- IPV350：不支持
-<!-- end id350 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id5 -->
 
 ### 功能说明
@@ -353,9 +338,6 @@ aclError aclmdlRICaptureTaskGrpEnd(aclrtStream stream, aclrtTaskGrp *handle)
 <!-- npu="910" id1042 -->
 - Atlas 训练系列产品：不支持
 <!-- end id1042 -->
-<!-- npu="IPV350" id1043 -->
-- IPV350：不支持
-<!-- end id1043 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id6 -->
 
 ### 功能说明
@@ -407,9 +389,6 @@ aclError aclmdlRICaptureTaskUpdateBegin(aclrtStream stream, aclrtTaskGrp handle)
 <!-- npu="910" id1434 -->
 - Atlas 训练系列产品：不支持
 <!-- end id1434 -->
-<!-- npu="IPV350" id1435 -->
-- IPV350：不支持
-<!-- end id1435 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id7 -->
 
 ### 功能说明
@@ -478,9 +457,6 @@ aclError aclmdlRICaptureTaskUpdateEnd(aclrtStream stream)
 <!-- npu="910" id20 -->
 - Atlas 训练系列产品：不支持
 <!-- end id20 -->
-<!-- npu="IPV350" id21 -->
-- IPV350：不支持
-<!-- end id21 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id8 -->
 
 ### 功能说明
@@ -537,9 +513,6 @@ aclError aclmdlRIDebugJsonPrint(aclmdlRI modelRI, const char *path, uint32_t fla
 <!-- npu="910" id307 -->
 - Atlas 训练系列产品：不支持
 <!-- end id307 -->
-<!-- npu="IPV350" id308 -->
-- IPV350：不支持
-<!-- end id308 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id9 -->
 
 ### 功能说明
@@ -590,9 +563,6 @@ aclError aclmdlRIDebugPrint(aclmdlRI modelRI)
 <!-- npu="910" id3520 -->
 - Atlas 训练系列产品：不支持
 <!-- end id3520 -->
-<!-- npu="IPV350" id3521 -->
-- IPV350：不支持
-<!-- end id3521 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id10 -->
 
 ### 功能说明
@@ -641,9 +611,6 @@ aclError aclmdlRIBuildBegin(aclmdlRI *modelRI, uint32_t flag)
 <!-- npu="910" id2407 -->
 - Atlas 训练系列产品：支持
 <!-- end id2407 -->
-<!-- npu="IPV350" id2408 -->
-- IPV350：不支持
-<!-- end id2408 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id11 -->
 
 ### 功能说明
@@ -697,9 +664,6 @@ aclError aclmdlRIBindStream(aclmdlRI modelRI, aclrtStream stream, uint32_t flag)
 <!-- npu="910" id1630 -->
 - Atlas 训练系列产品：支持
 <!-- end id1630 -->
-<!-- npu="IPV350" id1631 -->
-- IPV350：不支持
-<!-- end id1631 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id12 -->
 
 ### 功能说明
@@ -750,9 +714,6 @@ aclError aclmdlRIEndTask(aclmdlRI modelRI, aclrtStream stream)
 <!-- npu="910" id2904 -->
 - Atlas 训练系列产品：支持
 <!-- end id2904 -->
-<!-- npu="IPV350" id2905 -->
-- IPV350：不支持
-<!-- end id2905 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id13 -->
 
 ### 功能说明
@@ -802,9 +763,6 @@ aclError aclmdlRIBuildEnd(aclmdlRI modelRI, void *reserve)
 <!-- npu="910" id34 -->
 - Atlas 训练系列产品：支持
 <!-- end id34 -->
-<!-- npu="IPV350" id35 -->
-- IPV350：不支持
-<!-- end id35 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id14 -->
 
 ### 功能说明
@@ -858,9 +816,6 @@ aclError aclmdlRIUnbindStream(aclmdlRI modelRI, aclrtStream stream)
 <!-- npu="910" id727 -->
 - Atlas 训练系列产品：支持
 <!-- end id727 -->
-<!-- npu="IPV350" id728 -->
-- IPV350：不支持
-<!-- end id728 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id15 -->
 
 ### 功能说明
@@ -910,9 +865,6 @@ aclError aclmdlRIExecute(aclmdlRI modelRI, int32_t timeout)
 <!-- npu="910" id587 -->
 - Atlas 训练系列产品：支持
 <!-- end id587 -->
-<!-- npu="IPV350" id588 -->
-- IPV350：不支持
-<!-- end id588 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id16 -->
 
 ### 功能说明
@@ -962,9 +914,6 @@ aclError aclmdlRIExecuteAsync(aclmdlRI modelRI, aclrtStream stream)
 <!-- npu="910" id2911 -->
 - Atlas 训练系列产品：不支持
 <!-- end id2911 -->
-<!-- npu="IPV350" id2912 -->
-- IPV350：不支持
-<!-- end id2912 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id17 -->
 
 ### 功能说明
@@ -1014,9 +963,6 @@ aclError aclmdlRIDestroy(aclmdlRI modelRI)
 <!-- npu="910" id104 -->
 - Atlas 训练系列产品：支持
 <!-- end id104 -->
-<!-- npu="IPV350" id105 -->
-- IPV350：不支持
-<!-- end id105 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id18 -->
 
 ### 功能说明
@@ -1065,9 +1011,6 @@ aclError aclmdlRISetName(aclmdlRI modelRI, const char *name)
 <!-- npu="910" id2176 -->
 - Atlas 训练系列产品：支持
 <!-- end id2176 -->
-<!-- npu="IPV350" id2177 -->
-- IPV350：不支持
-<!-- end id2177 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id19 -->
 
 ### 功能说明
@@ -1117,9 +1060,6 @@ aclError aclmdlRIGetName(aclmdlRI modelRI, uint32_t maxLen, char *name)
 <!-- npu="910" id2764 -->
 - Atlas 训练系列产品：支持
 <!-- end id2764 -->
-<!-- npu="IPV350" id2765 -->
-- IPV350：不支持
-<!-- end id2765 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id20 -->
 
 ### 功能说明
@@ -1172,9 +1112,6 @@ aclError aclmdlRIGetId(aclmdlRI modelRI, uint32_t *modelRIId)
 <!-- npu="910" id874 -->
 - Atlas 训练系列产品：不支持
 <!-- end id874 -->
-<!-- npu="IPV350" id875 -->
-- IPV350：不支持
-<!-- end id875 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id21 -->
 
 ### 功能说明
@@ -1224,9 +1161,6 @@ aclError aclrtCheckArchCompatibility(const char *socVersion, int32_t *canCompati
 <!-- npu="910" id2932 -->
 - Atlas 训练系列产品：支持
 <!-- end id2932 -->
-<!-- npu="IPV350" id2933 -->
-- IPV350：不支持
-<!-- end id2933 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id22 -->
 
 ### 功能说明
@@ -1278,9 +1212,6 @@ aclError aclmdlRIAbort(aclmdlRI modelRI)
 <!-- npu="910" id2029 -->
 - Atlas 训练系列产品：支持
 <!-- end id2029 -->
-<!-- npu="IPV350" id2030 -->
-- IPV350：不支持
-<!-- end id2030 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id23 -->
 
 ### 功能说明
@@ -1337,9 +1268,6 @@ aclError aclmdlRIGetStreams(aclmdlRI modelRI, aclrtStream *streams, uint32_t *nu
 <!-- npu="910" id2603 -->
 - Atlas 训练系列产品：不支持
 <!-- end id2603 -->
-<!-- npu="IPV350" id2604 -->
-- IPV350：不支持
-<!-- end id2604 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id24 -->
 
 ### 功能说明
@@ -1397,9 +1325,6 @@ aclError aclmdlRIGetTasksByStream(aclrtStream stream, aclmdlRITask *tasks, uint3
 <!-- npu="910" id1721 -->
 - Atlas 训练系列产品：不支持
 <!-- end id1721 -->
-<!-- npu="IPV350" id1722 -->
-- IPV350：不支持
-<!-- end id1722 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id25 -->
 
 ### 功能说明
@@ -1459,9 +1384,6 @@ aclError aclmdlRITaskGetSeqId(aclmdlRITask task, uint32_t *id)
 <!-- npu="910" id776 -->
 - Atlas 训练系列产品：不支持
 <!-- end id776 -->
-<!-- npu="IPV350" id777 -->
-- IPV350：不支持
-<!-- end id777 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id26 -->
 
 ### 功能说明
@@ -1519,9 +1441,6 @@ aclError aclmdlRITaskGetParams(aclmdlRITask task, aclmdlRITaskParams* params)
 <!-- npu="910" id2365 -->
 - Atlas 训练系列产品：不支持
 <!-- end id2365 -->
-<!-- npu="IPV350" id2366 -->
-- IPV350：不支持
-<!-- end id2366 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id27 -->
 
 ### 功能说明
@@ -1579,9 +1498,6 @@ aclError aclmdlRITaskSetParams(aclmdlRITask task, aclmdlRITaskParams* params)
 <!-- npu="910" id153 -->
 - Atlas 训练系列产品：不支持
 <!-- end id153 -->
-<!-- npu="IPV350" id154 -->
-- IPV350：不支持
-<!-- end id154 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id28 -->
 
 ### 功能说明
@@ -1640,9 +1556,6 @@ aclError aclmdlRIKernelTaskGetAttribute(aclmdlRITask task, aclrtLaunchKernelAttr
 <!-- npu="910" id1021 -->
 - Atlas 训练系列产品：不支持
 <!-- end id1021 -->
-<!-- npu="IPV350" id1022 -->
-- IPV350：不支持
-<!-- end id1022 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id29 -->
 
 ### 功能说明
@@ -1701,9 +1614,6 @@ aclError aclmdlRITaskDisable(aclmdlRITask task)
 <!-- npu="910" id510 -->
 - Atlas 训练系列产品：不支持
 <!-- end id510 -->
-<!-- npu="IPV350" id511 -->
-- IPV350：不支持
-<!-- end id511 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id30 -->
 
 ### 功能说明
@@ -1760,9 +1670,6 @@ aclError aclmdlRIUpdate(aclmdlRI modelRI)
 <!-- npu="910" id1189 -->
 - Atlas 训练系列产品：不支持
 <!-- end id1189 -->
-<!-- npu="IPV350" id1190 -->
-- IPV350：不支持
-<!-- end id1190 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id31 -->
 
 ### 功能说明
@@ -1817,9 +1724,6 @@ aclError aclmdlRITaskGetType(aclmdlRITask task, aclmdlRITaskType *type)
 <!-- npu="910" id1224 -->
 - Atlas 训练系列产品：不支持
 <!-- end id1224 -->
-<!-- npu="IPV350" id1225 -->
-- IPV350：不支持
-<!-- end id1225 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id32 -->
 
 ### 功能说明
@@ -1873,9 +1777,6 @@ aclError aclmdlRIDestroyRegisterCallback(aclmdlRI modelRI, aclrtCallback func, v
 <!-- npu="910" id1875 -->
 - Atlas 训练系列产品：支持
 <!-- end id1875 -->
-<!-- npu="IPV350" id1876 -->
-- IPV350：不支持
-<!-- end id1876 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id33 -->
 
 ### 功能说明
@@ -1928,9 +1829,6 @@ aclError aclmdlRIDestroyUnregisterCallback(aclmdlRI modelRI, aclrtCallback func)
 <!-- npu="910" id2883 -->
 - Atlas 训练系列产品：支持
 <!-- end id2883 -->
-<!-- npu="IPV350" id2884 -->
-- IPV350：不支持
-<!-- end id2884 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id34 -->
 
 ### 功能说明
@@ -1982,9 +1880,6 @@ aclError aclmdlRICondHandleCreate(aclmdlRI modelRI, uint32_t defaultLaunchValue,
 <!-- npu="910" id139 -->
 - Atlas 训练系列产品：不支持
 <!-- end id139 -->
-<!-- npu="IPV350" id140 -->
-- IPV350：不支持
-<!-- end id140 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id35 -->
 
 ### 功能说明
@@ -2040,9 +1935,6 @@ aclError aclmdlRICondHandleGetCondPtr(aclmdlRICondHandle handle, uint64_t **ptr)
 <!-- npu="910" id741 -->
 - Atlas 训练系列产品：不支持
 <!-- end id741 -->
-<!-- npu="IPV350" id742 -->
-- IPV350：不支持
-<!-- end id742 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id36 -->
 
 ### 功能说明
@@ -2096,9 +1988,6 @@ aclError aclmdlRIAddCondTask(aclmdlRICondTaskParams params, aclrtStream stream, 
 <!-- npu="910" id2694 -->
 - Atlas 训练系列产品：不支持
 <!-- end id2694 -->
-<!-- npu="IPV350" id2695 -->
-- IPV350：不支持
-<!-- end id2695 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id37 -->
 
 ### 功能说明
@@ -2153,9 +2042,6 @@ aclError aclmdlRICaptureToModelRIBegin(aclrtStream stream, aclmdlRI modelRI, acl
 <!-- npu="910" id3317 -->
 - Atlas 训练系列产品：不支持
 <!-- end id3317 -->
-<!-- npu="IPV350" id3318 -->
-- IPV350：不支持
-<!-- end id3318 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id38 -->
 
 ### 功能说明

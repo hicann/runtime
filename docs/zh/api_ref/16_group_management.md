@@ -37,9 +37,6 @@ aclError aclrtSetGroup(int32_t groupId)
 <!-- npu="910" id195 -->
 - Atlas 训练系列产品：不支持
 <!-- end id195 -->
-<!-- npu="IPV350" id196 -->
-- IPV350：不支持
-<!-- end id196 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/16_group_management_res.md#id1 -->
 
 ### 功能说明
@@ -99,9 +96,6 @@ aclError  aclrtGetGroupCount(uint32_t *count)
 <!-- npu="910" id699 -->
 - Atlas 训练系列产品：不支持
 <!-- end id699 -->
-<!-- npu="IPV350" id700 -->
-- IPV350：不支持
-<!-- end id700 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/16_group_management_res.md#id2 -->
 
 ### 功能说明
@@ -161,9 +155,6 @@ aclError  aclrtGetAllGroupInfo(aclrtGroupInfo *groupInfo)
 <!-- npu="910" id1266 -->
 - Atlas 训练系列产品：不支持
 <!-- end id1266 -->
-<!-- npu="IPV350" id1267 -->
-- IPV350：不支持
-<!-- end id1267 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/16_group_management_res.md#id3 -->
 
 ### 功能说明
@@ -223,9 +214,6 @@ aclError  aclrtGetGroupInfoDetail(const aclrtGroupInfo *groupInfo, int32_t group
 <!-- npu="910" id895 -->
 - Atlas 训练系列产品：不支持
 <!-- end id895 -->
-<!-- npu="IPV350" id896 -->
-- IPV350：不支持
-<!-- end id896 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/16_group_management_res.md#id4 -->
 
 ### 功能说明
@@ -290,9 +278,6 @@ aclrtGroupInfo *aclrtCreateGroupInfo()
 <!-- npu="910" id2351 -->
 - Atlas 训练系列产品：不支持
 <!-- end id2351 -->
-<!-- npu="IPV350" id2352 -->
-- IPV350：不支持
-<!-- end id2352 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/16_group_management_res.md#id5 -->
 
 ### 功能说明
@@ -347,9 +332,6 @@ aclError aclrtDestroyGroupInfo(aclrtGroupInfo *groupInfo)
 <!-- npu="910" id1770 -->
 - Atlas 训练系列产品：不支持
 <!-- end id1770 -->
-<!-- npu="IPV350" id1771 -->
-- IPV350：不支持
-<!-- end id1771 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/16_group_management_res.md#id6 -->
 
 ### 功能说明
