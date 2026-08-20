@@ -421,7 +421,7 @@ err\_msg\_mode参数取值范围：0为默认值，表示按线程级别获取�
 <!-- npu="950,A3,910b,910,310p,310b" id15 -->
 ### 默认Device配置示例
 
-**默认Device配置**（用于配置默认的计算设备）。若同时通过[aclrtSetDevice](04_device_management.md#aclrtSetDevice)接口指定Device，则aclrtSetDevice接口优先级高。如果用户开启默认Device功能后，若需要显式创建Context，则需要调用[aclrtSetDevice](04_device_management.md#aclrtSetDevice)，否则可能会导致业务异常。
+**默认Device配置**（用于配置默认的计算设备）。若同时通过[aclrtSetDevice](04_device_management.md#aclrtSetDevice)接口指定Device，则aclrtSetDevice接口优先级高。用户开启默认Device功能后，若需要显式创建Context，则需要调用[aclrtSetDevice](04_device_management.md#aclrtSetDevice)，否则可能会导致业务异常。
 
 default\_device参数处设置Device ID，Device ID可设置为0或十进制正整数，用户可调用[aclrtGetDeviceCount](04_device_management.md#aclrtGetDeviceCount)接口获取可用的Device数量后，这个Device ID的取值范围：\[0, \(可用的Device数量-1\)\]。
 
@@ -595,7 +595,7 @@ aclError aclFinalize()
 去初始化函数，用于释放进程内acl接口使用的相关资源。
 
 <!-- npu="950,A3,910b,910,310p,310b" id29 -->
-对于涉及Device业务日志回传到Host的场景，本接口默认增加2000ms延时（实际最大延时可达2000ms），以确保ERROR级别和EVENT级别日志完整回传，防止丢失。您可以将ASCEND\_LOG\_DEVICE\_FLUSH\_TIMEOUT环境变量设置为0（命令示例：export ASCEND\_LOG\_DEVICE\_FLUSH\_TIMEOUT=0），来取消该默认延时。关于ASCEND\_LOG\_DEVICE\_FLUSH\_TIMEOUT环境变量的详细描述请参见[《环境变量参考》](https://hiascend.com/document/redirect/CannCommunityEnvRef)中的。
+对于涉及Device业务日志回传到Host的场景，本接口默认增加2000ms延时（实际最大延时可达2000ms），以确保ERROR级别和EVENT级别日志完整回传，防止丢失。您可以将ASCEND\_LOG\_DEVICE\_FLUSH\_TIMEOUT环境变量设置为0（命令示例：export ASCEND\_LOG\_DEVICE\_FLUSH\_TIMEOUT=0），来取消该默认延时。关于ASCEND\_LOG\_DEVICE\_FLUSH\_TIMEOUT环境变量的详细描述请参见[《环境变量参考》](https://hiascend.com/document/redirect/CannCommunityEnvRef)中的“ASCEND\_LOG\_DEVICE\_FLUSH\_TIMEOUT”。
 <!-- end id29 -->
 
 ### 参数说明
