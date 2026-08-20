@@ -14,6 +14,11 @@ on:
         required: true
         type: string
         default: 'x64'
+      spec:
+        description: '机器规格'
+        required: false
+        type: string
+        default: 'xlarge'
       package_name:
         required: true
         type: string
@@ -110,8 +115,8 @@ jobs:
           object-prefix: ${{ env.obs_path }}/
     if: "${{ default() }}"
     runs-on:
-      - dedicate-hosted
-      - ${{ inputs.arch }}
-      - xlarge
+      - self-hosted
+      - arch=${{ inputs.arch }}
+      - spec=${{ inputs.spec }}
     container:
       image: swr.cn-north-4.myhuaweicloud.com/ci_cann/${{ inputs.image_version }}

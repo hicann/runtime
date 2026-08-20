@@ -15,6 +15,11 @@ on:
       image_version:
         required: true
         type: string
+      spec:
+        description: '机器规格'
+        required: false
+        type: string
+        default: 'xlarge'
 
 jobs:
   JOB_ut:
@@ -76,6 +81,9 @@ jobs:
             ${{ steps.process_checkout.outputs.path }}/${{ inputs.ut_package }}
           object-prefix: ${{ env.obs_path }}/
     if: "${{ default() }}"
-    runs-on: [dedicate-hosted, x64, xlarge]
+    runs-on:
+      - self-hosted
+      - arch=x64
+      - spec=${{ inputs.spec }}
     container:
       image: swr.cn-north-4.myhuaweicloud.com/ci_cann/${{ inputs.image_version }}

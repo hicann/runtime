@@ -60,4 +60,5 @@ if [ "${BUILD_EXIT_CODE}" -eq 200 ] && ! ls build_out/*.run 1>/dev/null 2>&1; th
     echo "not need compile"
     mkdir build_out
     touch build_out/${package_name}
+    echo "api-check=continue" >> "${ATOMGIT_OUTPUT}"
 fi

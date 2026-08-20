@@ -13,7 +13,6 @@ set -o pipefail
 
 echo "smoke_run_file_url=${smoke_run_file_url}"
 
-mkdir -p /home/taskspace && cd /home/taskspace
 echo "start run test case, please wait ..."
 
 export ASCEND_GLOBAL_LOG_LEVEL=2
@@ -40,10 +39,6 @@ mkdir -p /root/ascend
 slog_name="slog.tar.gz"
 tar -zcf slog.tar.gz -C /root/ascend log
 
-# upload plog
-if python3 /home/upload.py --bucket-name "ascend-ci" --action upload  --local-file "slog.tar.gz" --obs-object-key "${repo_name}/package/${pr_id}/${slog_name}"; then
-  echo "::set-output var=plog_url:https://ascend-ci.obs.cn-north-4.myhuaweicloud.com/${repo_name}/package/${pr_id}/slog.tar.gz"
-fi
 
 npu-smi info
 echo "4. checking test results ..."
