@@ -48,7 +48,7 @@ rts_common:
       - src/runtime/core/inc/task_scheduler_error.h
       - src/runtime/core/inc/runtime_tsch_defines.h
       - src/runtime/core/inc/tsch_defines_profiling.h
-      - src/runtime/core/inc/fwk_adapt_struct.h
+      - src/runtime/core/inc/fwk_adpt_struct.h
       - src/runtime/core/inc/tsch_cmd.h
       - src/runtime/core/inc/sqe/v200/memcpy_sqe.h
       - src/runtime/core/inc/sqe/v200_base/place_holder_sqe.h

@@ -732,3 +732,218 @@ TEST_F(ELFTest, SymbolAddressTest)
     delete elfData;
     elfData = nullptr;
 }
+
+TEST_F(ELFTest, ParseElfStackInfoFromSection_Valid)
+{
+    rtElfData elfData = {};
+    uint64_t stackSize = KERNEL_STACK_SIZE_32K;
+    uint8_t buf[sizeof(uint64_t)] = {0};
+    (void)memcpy_s(buf, sizeof(uint64_t), &stackSize, sizeof(uint64_t));
+    ParseElfStackInfoFromSection(&elfData, buf, sizeof(uint64_t));
+    EXPECT_EQ(elfData.stackSize, KERNEL_STACK_SIZE_32K);
+}
+
+TEST_F(ELFTest, ParseElfStackInfoFromSection_InvalidBufLen)
+{
+    rtElfData elfData = {};
+    uint8_t buf[4] = {0};
+    ParseElfStackInfoFromSection(&elfData, buf, sizeof(buf));
+}
+
+TEST_F(ELFTest, ParseElfStackInfoFromSection_InvalidStackSize)
+{
+    rtElfData elfData = {};
+    uint64_t stackSize = 999U;
+    uint8_t buf[sizeof(uint64_t)] = {0};
+    (void)memcpy_s(buf, sizeof(uint64_t), &stackSize, sizeof(uint64_t));
+    ParseElfStackInfoFromSection(&elfData, buf, sizeof(uint64_t));
+}
+
+TEST_F(ELFTest, ParseElfStackInfoFromSection_MultiEntries)
+{
+    rtElfData elfData = {};
+    uint64_t stackSize = KERNEL_STACK_SIZE_16K;
+    uint8_t buf[sizeof(uint64_t) * 2U] = {0};
+    (void)memcpy_s(buf, sizeof(uint64_t), &stackSize, sizeof(uint64_t));
+    (void)memcpy_s(buf + sizeof(uint64_t), sizeof(uint64_t), &stackSize, sizeof(uint64_t));
+    ParseElfStackInfoFromSection(&elfData, buf, sizeof(buf));
+    EXPECT_EQ(elfData.stackSize, KERNEL_STACK_SIZE_16K);
+}
+
+TEST_F(ELFTest, ParseElfBinaryMetaInfo_Valid)
+{
+    rtElfData elfData = {};
+    ElfBinaryAddrInfo addrInfo = {};
+    addrInfo.head.type = RT_BINARY_TYPE_RUNTIME_IMPLICIT_INFO;
+    addrInfo.head.length = sizeof(uint32_t);
+    addrInfo.type = 1U;
+    uint8_t buf[sizeof(ElfBinaryAddrInfo)] = {0};
+    (void)memcpy_s(buf, sizeof(buf), &addrInfo, sizeof(addrInfo));
+    ParseElfBinaryMetaInfo(&elfData, buf, sizeof(buf), ".ascend.meta");
+    EXPECT_NE(elfData.ascendMetaFlag, 0U);
+}
+
+TEST_F(ELFTest, ParseElfBinaryMetaInfo_WrongSection)
+{
+    rtElfData elfData = {};
+    uint8_t buf[16] = {0};
+    ParseElfBinaryMetaInfo(&elfData, buf, sizeof(buf), ".wrong.section");
+    EXPECT_EQ(elfData.ascendMetaFlag, 0U);
+}
+
+TEST_F(ELFTest, GetKernelTlvInfo_KernelType)
+{
+    ElfFuncTypeInfo typeInfo = {};
+    typeInfo.head.type = RT_FUNCTION_TYPE_KERNEL_TYPE;
+    typeInfo.head.length = sizeof(uint32_t);
+    typeInfo.funcType = 1U;
+    uint8_t buf[sizeof(ElfFuncTypeInfo)] = {0};
+    (void)memcpy_s(buf, sizeof(buf), &typeInfo, sizeof(typeInfo));
+    ElfKernelInfo kernelInfo = {};
+    GetKernelTlvInfo(buf, sizeof(buf), &kernelInfo);
+    EXPECT_NE(kernelInfo.funcType, 0U);
+}
+
+TEST_F(ELFTest, GetKernelTlvInfo_CrossCoreSync)
+{
+    ElfKernelSyncInfo syncInfo = {};
+    syncInfo.head.type = RT_FUNCTION_TYPE_CROSS_CORE;
+    syncInfo.head.length = sizeof(uint32_t);
+    syncInfo.crossCoreSync = 1U;
+    uint8_t buf[sizeof(ElfKernelSyncInfo)] = {0};
+    (void)memcpy_s(buf, sizeof(buf), &syncInfo, sizeof(syncInfo));
+    ElfKernelInfo kernelInfo = {};
+    GetKernelTlvInfo(buf, sizeof(buf), &kernelInfo);
+    EXPECT_NE(kernelInfo.crossCoreSync, 0U);
+}
+
+TEST_F(ELFTest, GetKernelTlvInfo_AivTypeFlag)
+{
+    ElfKernelAivTypeInfo aivInfo = {};
+    aivInfo.head.type = RT_FUNCTION_TYPE_AIV_TYPE_FLAG;
+    aivInfo.head.length = sizeof(uint32_t);
+    aivInfo.aivType = 1U;
+    uint8_t buf[sizeof(ElfKernelAivTypeInfo)] = {0};
+    (void)memcpy_s(buf, sizeof(buf), &aivInfo, sizeof(aivInfo));
+    ElfKernelInfo kernelInfo = {};
+    GetKernelTlvInfo(buf, sizeof(buf), &kernelInfo);
+    EXPECT_NE(kernelInfo.kernelVfType, 0U);
+}
+
+TEST_F(ELFTest, GetKernelTlvInfo_TaskRation)
+{
+    ElfTaskRationInfo rationInfo = {};
+    rationInfo.head.type = RT_FUNCTION_TYPE_MIX_TASK_RATION;
+    rationInfo.head.length = sizeof(uint16_t) * 2U;
+    rationInfo.taskRation[0] = 1U;
+    rationInfo.taskRation[1] = 2U;
+    uint8_t buf[sizeof(ElfTaskRationInfo)] = {0};
+    (void)memcpy_s(buf, sizeof(buf), &rationInfo, sizeof(rationInfo));
+    ElfKernelInfo kernelInfo = {};
+    GetKernelTlvInfo(buf, sizeof(buf), &kernelInfo);
+    EXPECT_NE(kernelInfo.taskRation[0], 0U);
+}
+
+TEST_F(ELFTest, GetKernelTlvInfo_ReportSzInfo)
+{
+    ElfKernelReportSzInfo reportInfo = {};
+    reportInfo.head.type = RT_FUNCTION_TYPE_COMPILER_ALLOC_UB_SIZE;
+    reportInfo.head.length = sizeof(uint32_t);
+    reportInfo.shareMemSize = 1024U;
+    uint8_t buf[sizeof(ElfKernelReportSzInfo)] = {0};
+    (void)memcpy_s(buf, sizeof(buf), &reportInfo, sizeof(reportInfo));
+    ElfKernelInfo kernelInfo = {};
+    GetKernelTlvInfo(buf, sizeof(buf), &kernelInfo);
+    EXPECT_NE(kernelInfo.shareMemSize, 0U);
+}
+
+TEST_F(ELFTest, GetKernelTlvInfo_DfxType)
+{
+    ElfTlvHead tlvHead = {};
+    tlvHead.type = RT_FUNCTION_TYPE_DFX_TYPE;
+    tlvHead.length = sizeof(ElfTlvHead);
+    uint8_t buf[sizeof(ElfTlvHead) * 2U] = {0};
+    (void)memcpy_s(buf, sizeof(ElfTlvHead), &tlvHead, sizeof(ElfTlvHead));
+    ElfKernelInfo kernelInfo = {};
+    GetKernelTlvInfo(buf, sizeof(buf), &kernelInfo);
+}
+
+TEST_F(ELFTest, GetKernelTlvInfo_MinStackSize)
+{
+    ElfKernelMinStackSizeInfo stackInfo = {};
+    stackInfo.head.type = RT_FUNCTION_TYPE_SU_STACK_SIZE;
+    stackInfo.head.length = sizeof(uint32_t);
+    stackInfo.minStackSize = 4096U;
+    uint8_t buf[sizeof(ElfKernelMinStackSizeInfo)] = {0};
+    (void)memcpy_s(buf, sizeof(buf), &stackInfo, sizeof(stackInfo));
+    ElfKernelInfo kernelInfo = {};
+    GetKernelTlvInfo(buf, sizeof(buf), &kernelInfo);
+}
+
+TEST_F(ELFTest, GetKernelTlvInfo_FunctionEntry)
+{
+    ElfKernelFunctionEntryInfo entryInfo = {};
+    entryInfo.head.type = RT_FUNCTION_TYPE_FUNCTION_ENTRY_INFO;
+    entryInfo.head.length = sizeof(uint64_t);
+    entryInfo.flag = KERNEL_FUNCTION_ENTRY_DISABLE;
+    entryInfo.functionEntry = 0U;
+    uint8_t buf[sizeof(ElfKernelFunctionEntryInfo)] = {0};
+    (void)memcpy_s(buf, sizeof(buf), &entryInfo, sizeof(entryInfo));
+    ElfKernelInfo kernelInfo = {};
+    GetKernelTlvInfo(buf, sizeof(buf), &kernelInfo);
+}
+
+TEST_F(ELFTest, GetKernelTlvInfo_SchedMode)
+{
+    ElfKernelSchedModeInfo schedInfo = {};
+    schedInfo.head.type = RT_FUNCTION_TYPE_SCHED_MODE_INFO;
+    schedInfo.head.length = sizeof(uint32_t);
+    schedInfo.schedMode = 1U;
+    uint8_t buf[sizeof(ElfKernelSchedModeInfo)] = {0};
+    (void)memcpy_s(buf, sizeof(buf), &schedInfo, sizeof(schedInfo));
+    ElfKernelInfo kernelInfo = {};
+    GetKernelTlvInfo(buf, sizeof(buf), &kernelInfo);
+}
+
+TEST_F(ELFTest, GetKernelTlvInfo_ParamSummary)
+{
+    ElfParamSummary paramSummary = {};
+    paramSummary.head.type = RT_FUNCTION_TYPE_PARAM_SUMMARY;
+    paramSummary.head.length = sizeof(uint32_t) + sizeof(uint64_t);
+    paramSummary.paraNums = 4U;
+    paramSummary.paramTotalSize = 128U;
+    uint8_t buf[sizeof(ElfParamSummary)] = {0};
+    (void)memcpy_s(buf, sizeof(buf), &paramSummary, sizeof(paramSummary));
+    ElfKernelInfo kernelInfo = {};
+    GetKernelTlvInfo(buf, sizeof(buf), &kernelInfo);
+    EXPECT_TRUE(kernelInfo.hasParamSummary);
+}
+
+TEST_F(ELFTest, GetKernelTlvInfo_EmptyBuf)
+{
+    ElfKernelInfo kernelInfo = {};
+    uint8_t buf[2] = {0};
+    GetKernelTlvInfo(buf, sizeof(buf), &kernelInfo);
+}
+
+TEST_F(ELFTest, GetKernelTlvInfo_MultiTlv)
+{
+    ElfFuncTypeInfo typeInfo = {};
+    typeInfo.head.type = RT_FUNCTION_TYPE_KERNEL_TYPE;
+    typeInfo.head.length = sizeof(uint32_t);
+    typeInfo.funcType = 1U;
+
+    ElfKernelSyncInfo syncInfo = {};
+    syncInfo.head.type = RT_FUNCTION_TYPE_CROSS_CORE;
+    syncInfo.head.length = sizeof(uint32_t);
+    syncInfo.crossCoreSync = 1U;
+
+    uint8_t buf[sizeof(ElfFuncTypeInfo) + sizeof(ElfKernelSyncInfo)] = {0};
+    (void)memcpy_s(buf, sizeof(ElfFuncTypeInfo), &typeInfo, sizeof(typeInfo));
+    (void)memcpy_s(buf + sizeof(ElfFuncTypeInfo), sizeof(ElfKernelSyncInfo), &syncInfo, sizeof(syncInfo));
+
+    ElfKernelInfo kernelInfo = {};
+    GetKernelTlvInfo(buf, sizeof(buf), &kernelInfo);
+    EXPECT_NE(kernelInfo.funcType, 0U);
+    EXPECT_NE(kernelInfo.crossCoreSync, 0U);
+}

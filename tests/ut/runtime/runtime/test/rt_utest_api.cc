@@ -8047,3 +8047,1118 @@ TEST_F(ApiTest, register_all_kernel)
     GlobalContainer::SetRtChipType(originType);
     GlobalMockObject::verify();
 }
+
+TEST_F(ApiTest, api_decorator_event_forwarding)
+{
+    ApiImpl impl;
+    ApiDecorator api(&impl);
+    rtError_t error = RT_ERROR_INTERNAL_ERROR;
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::EventCreate).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.EventCreate(nullptr, 0U);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::EventSynchronize).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.EventSynchronize(nullptr, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::EventQuery).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.EventQuery(nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::EventQueryStatus).stubs().will(returnValue(RT_ERROR_NONE));
+    rtEventStatus_t status = {};
+    error = api.EventQueryStatus(nullptr, &status);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::EventQueryWaitStatus).stubs().will(returnValue(RT_ERROR_NONE));
+    rtEventWaitStatus_t waitStatus = {};
+    error = api.EventQueryWaitStatus(nullptr, &waitStatus);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::EventElapsedTime).stubs().will(returnValue(RT_ERROR_NONE));
+    float32_t retTime = 0.0F;
+    error = api.EventElapsedTime(&retTime, nullptr, nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::EventGetTimeStamp).stubs().will(returnValue(RT_ERROR_NONE));
+    uint64_t timeStamp = 0U;
+    error = api.EventGetTimeStamp(&timeStamp, nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::GetEventID).stubs().will(returnValue(RT_ERROR_NONE));
+    uint32_t evtId = 0U;
+    error = api.GetEventID(nullptr, &evtId);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::EventWorkModeGet).stubs().will(returnValue(RT_ERROR_NONE));
+    uint8_t mode = 0U;
+    error = api.EventWorkModeGet(&mode);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiTest, api_decorator_stream_forwarding)
+{
+    ApiImpl impl;
+    ApiDecorator api(&impl);
+    rtError_t error = RT_ERROR_INTERNAL_ERROR;
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::StreamCreate).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.StreamCreate(nullptr, 0, 0U, nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::StreamSynchronize).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.StreamSynchronize(nullptr, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::StreamQuery).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.StreamQuery(nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::StreamGetPriority).stubs().will(returnValue(RT_ERROR_NONE));
+    uint32_t priority = 0U;
+    error = api.StreamGetPriority(nullptr, &priority);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::StreamGetFlags).stubs().will(returnValue(RT_ERROR_NONE));
+    uint32_t flags = 0U;
+    error = api.StreamGetFlags(nullptr, &flags);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::GetStreamId).stubs().will(returnValue(RT_ERROR_NONE));
+    int32_t streamId = 0;
+    error = api.GetStreamId(nullptr, &streamId);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::GetCqId).stubs().will(returnValue(RT_ERROR_NONE));
+    uint32_t cqId = 0U;
+    uint32_t logicCqId = 0U;
+    error = api.GetCqId(nullptr, &cqId, &logicCqId);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::GetMaxStreamAndTask).stubs().will(returnValue(RT_ERROR_NONE));
+    uint32_t maxStrCount = 0U;
+    uint32_t maxTaskCount = 0U;
+    error = api.GetMaxStreamAndTask(0U, &maxStrCount, &maxTaskCount);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::GetTaskIdAndStreamID).stubs().will(returnValue(RT_ERROR_NONE));
+    uint32_t taskId = 0U;
+    uint32_t stmId = 0U;
+    error = api.GetTaskIdAndStreamID(&taskId, &stmId);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::StreamActive).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.StreamActive(nullptr, nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::StreamSwitchN).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.StreamSwitchN(nullptr, 0U, nullptr, nullptr, 0U, nullptr, RT_SWITCH_INT32);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::NameStream).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.NameStream(nullptr, nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::StreamGetTasks).stubs().will(returnValue(RT_ERROR_NONE));
+    void* tasks = nullptr;
+    uint32_t numTasks = 0U;
+    error = api.StreamGetTasks(nullptr, &tasks, &numTasks);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::SetStreamTag).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.SetStreamTag(nullptr, 0U);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::GetStreamTag).stubs().will(returnValue(RT_ERROR_NONE));
+    uint32_t tag = 0U;
+    error = api.GetStreamTag(nullptr, &tag);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiTest, api_decorator_memory_forwarding)
+{
+    ApiImpl impl;
+    ApiDecorator api(&impl);
+    rtError_t error = RT_ERROR_INTERNAL_ERROR;
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::DevFree).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.DevFree(nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::DevDvppMalloc).stubs().will(returnValue(RT_ERROR_NONE));
+    void* devPtr = nullptr;
+    error = api.DevDvppMalloc(&devPtr, 0U, 0U, 0U);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::DevDvppFree).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.DevDvppFree(nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::ManagedMemAlloc).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.ManagedMemAlloc(&devPtr, 0U, 0U, 0U);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::ManagedMemFree).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.ManagedMemFree(nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::MemsetAsync).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.MemsetAsync(nullptr, 0U, 0U, 0U, nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::MemsetD32).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.MemsetD32(nullptr, 0U, 0U, 0U);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::MemsetD32Async).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.MemsetD32Async(nullptr, 0U, 0U, 0U, nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::MemGetInfo).stubs().will(returnValue(RT_ERROR_NONE));
+    size_t freeSize = 0U;
+    size_t totalSize = 0U;
+    error = api.MemGetInfo(&freeSize, &totalSize);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::FlushCache).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.FlushCache(0U, 0U);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::InvalidCache).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.InvalidCache(0U, 0U);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::MallocHostSharedMemory).stubs().will(returnValue(RT_ERROR_NONE));
+    rtMallocHostSharedMemoryIn mallocIn = {};
+    rtMallocHostSharedMemoryOut mallocOut = {};
+    error = api.MallocHostSharedMemory(&mallocIn, &mallocOut);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::FreeHostSharedMemory).stubs().will(returnValue(RT_ERROR_NONE));
+    rtFreeHostSharedMemoryIn freeIn = {};
+    error = api.FreeHostSharedMemory(&freeIn);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::MemGetInfoEx).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.MemGetInfoEx(RT_MEMORYINFO_NORMAL, &freeSize, &totalSize);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::DevMallocCached).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.DevMallocCached(&devPtr, 0U, RT_MEMORY_HOST, 0U);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::HostRegisterV2).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.HostRegisterV2(nullptr, 0U, 0U);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::HostUnregister).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.HostUnregister(nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::HostGetDevicePointer).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.HostGetDevicePointer(nullptr, &devPtr, 0U);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::MemGetAddressRange).stubs().will(returnValue(RT_ERROR_NONE));
+    void* base = nullptr;
+    error = api.MemGetAddressRange(nullptr, &base, &totalSize);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::PtrGetAttributes).stubs().will(returnValue(RT_ERROR_NONE));
+    rtPtrAttributes_t attrs = {};
+    error = api.PtrGetAttributes(nullptr, &attrs);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::CheckMemType).stubs().will(returnValue(RT_ERROR_NONE));
+    uint32_t checkResult = 0U;
+    error = api.CheckMemType(nullptr, 0U, 0U, &checkResult, 0U);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiTest, api_decorator_model_forwarding)
+{
+    ApiImpl impl;
+    ApiDecorator api(&impl);
+    rtError_t error = RT_ERROR_INTERNAL_ERROR;
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::ModelExecute).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.ModelExecute(nullptr, nullptr, 0U, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::ModelExecuteSync).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.ModelExecuteSync(nullptr, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::ModelAbort).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.ModelAbort(nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::ModelExit).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.ModelExit(nullptr, nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::ModelBindQueue).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.ModelBindQueue(nullptr, 0U, RT_MODEL_INPUT_QUEUE);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::ModelEndGraph).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.ModelEndGraph(nullptr, nullptr, 0U);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::ModelLoadComplete).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.ModelLoadComplete(nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::ModelGetStreams).stubs().will(returnValue(RT_ERROR_NONE));
+    void* streams = nullptr;
+    uint32_t numStreams = 0U;
+    error = api.ModelGetStreams(nullptr, (Stream**)&streams, &numStreams);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::ModelSetExtId).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.ModelSetExtId(nullptr, 0U);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::ModelTaskDisable).stubs().will(returnValue(RT_ERROR_NONE));
+    rtTask_t task = {};
+    error = api.ModelTaskDisable(task);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::ModelExecutorSet).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.ModelExecutorSet(nullptr, 0U);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::ModelBindStream).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.ModelBindStream(nullptr, nullptr, 0U);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::ModelUnbindStream).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.ModelUnbindStream(nullptr, nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiTest, api_decorator_device_forwarding)
+{
+    ApiImpl impl;
+    ApiDecorator api(&impl);
+    rtError_t error = RT_ERROR_INTERNAL_ERROR;
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::DeviceSynchronize).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.DeviceSynchronize(0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::DeviceReset).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.DeviceReset(0, false);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::DeviceGetLimit).stubs().will(returnValue(RT_ERROR_NONE));
+    uint32_t val = 0U;
+    error = api.DeviceGetLimit(RT_LIMIT_TYPE_LOW_POWER_TIMEOUT, &val);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::DeviceSetLimit).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.DeviceSetLimit(0, RT_LIMIT_TYPE_LOW_POWER_TIMEOUT, 0U);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::DeviceCanAccessPeer).stubs().will(returnValue(RT_ERROR_NONE));
+    int32_t canAccess = 0;
+    error = api.DeviceCanAccessPeer(&canAccess, 0U, 0U);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::DeviceGetBareTgid).stubs().will(returnValue(RT_ERROR_NONE));
+    uint32_t pid = 0U;
+    error = api.DeviceGetBareTgid(&pid);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::DeviceGetTsId).stubs().will(returnValue(RT_ERROR_NONE));
+    uint32_t tsId = 0U;
+    error = api.DeviceGetTsId(&tsId);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::DeviceTaskAbort).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.DeviceTaskAbort(0, 0U);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::DeviceGetResLimit).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.DeviceGetResLimit(0U, RT_DEV_RES_CUBE_CORE, &val);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::GetDeviceUuid).stubs().will(returnValue(RT_ERROR_NONE));
+    rtUuid_t uuid = {};
+    error = api.GetDeviceUuid(0, &uuid);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::GetDeviceIndexByPhyId).stubs().will(returnValue(RT_ERROR_NONE));
+    uint32_t devIndex = 0U;
+    error = api.GetDeviceIndexByPhyId(0U, &devIndex);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::GetUserDevIdByLogicDevId).stubs().will(returnValue(RT_ERROR_NONE));
+    int32_t userDevId = 0;
+    error = api.GetUserDevIdByLogicDevId(0, &userDevId);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::GetLogicDevIdByUserDevId).stubs().will(returnValue(RT_ERROR_NONE));
+    int32_t logicDevId = 0;
+    error = api.GetLogicDevIdByUserDevId(0, &logicDevId);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::EnableP2P).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.EnableP2P(0U, 0U, 0U);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::DisableP2P).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.DisableP2P(0U, 0U);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::GetP2PStatus).stubs().will(returnValue(RT_ERROR_NONE));
+    uint32_t p2pStatus = 0U;
+    error = api.GetP2PStatus(0U, 0U, &p2pStatus);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::SetDeviceFailureMode).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.SetDeviceFailureMode(0U);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::DeviceStatusQuery).stubs().will(returnValue(RT_ERROR_NONE));
+    rtDeviceStatus devStatus = {};
+    error = api.DeviceStatusQuery(0U, &devStatus);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::GetPrimaryCtxState).stubs().will(returnValue(RT_ERROR_NONE));
+    int32_t active = 0;
+    error = api.GetPrimaryCtxState(0, &val, &active);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::GetPairPhyDevicesInfo).stubs().will(returnValue(RT_ERROR_NONE));
+    int64_t infoVal = 0;
+    error = api.GetPairPhyDevicesInfo(0U, 0U, 0, &infoVal);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::GetDeviceCapability).stubs().will(returnValue(RT_ERROR_NONE));
+    int32_t capVal = 0;
+    error = api.GetDeviceCapability(0, 0, 0, &capVal);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::GetAiCpuCount).stubs().will(returnValue(RT_ERROR_NONE));
+    uint32_t aiCpuCnt = 0U;
+    error = api.GetAiCpuCount(&aiCpuCnt);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::GetC2cCtrlAddr).stubs().will(returnValue(RT_ERROR_NONE));
+    uint64_t addr = 0U;
+    uint32_t c2cLen = 0U;
+    error = api.GetC2cCtrlAddr(&addr, &c2cLen);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::QueryDevPid).stubs().will(returnValue(RT_ERROR_NONE));
+    rtBindHostpidInfo_t bindInfo = {};
+    int32_t devPid = 0;
+    error = api.QueryDevPid(&bindInfo, &devPid);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiTest, api_decorator_context_forwarding)
+{
+    ApiImpl impl;
+    ApiDecorator api(&impl);
+    rtError_t error = RT_ERROR_INTERNAL_ERROR;
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::ContextCreate).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.ContextCreate(nullptr, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::ContextDestroy).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.ContextDestroy(nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::ContextSetCurrent).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.ContextSetCurrent(nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::ContextGetCurrent).stubs().will(returnValue(RT_ERROR_NONE));
+    Context* ctx = nullptr;
+    error = api.ContextGetCurrent(&ctx);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::ContextSetINFMode).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.ContextSetINFMode(false);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiTest, api_decorator_kernel_forwarding)
+{
+    ApiImpl impl;
+    ApiDecorator api(&impl);
+    rtError_t error = RT_ERROR_INTERNAL_ERROR;
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::KernelLaunch).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.KernelLaunch(nullptr, 0U, nullptr, nullptr, nullptr, false);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::KernelLaunchEx).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.KernelLaunchEx(nullptr, nullptr, 0U, 0U, nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::CpuKernelLaunch).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.CpuKernelLaunch(nullptr, 0U, nullptr, nullptr, 0U);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::KernelFusionEnd).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.KernelFusionEnd(nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::GetFunctionByName).stubs().will(returnValue(RT_ERROR_NONE));
+    void* stubFunc = nullptr;
+    error = api.GetFunctionByName(nullptr, &stubFunc);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::GetAddrByFun).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.GetAddrByFun(nullptr, &stubFunc);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::SymbolLookup).stubs().will(returnValue(RT_ERROR_NONE));
+    size_t sz = 0U;
+    error = api.SymbolLookup(nullptr, &stubFunc, &sz);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::QueryFunctionRegistered).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.QueryFunctionRegistered(nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::RegisterCpuFunc).stubs().will(returnValue(RT_ERROR_NONE));
+    rtFuncHandle funcHandle = {};
+    error = api.RegisterCpuFunc(nullptr, nullptr, nullptr, &funcHandle);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::FunctionGetMetaInfo).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.FunctionGetMetaInfo(nullptr, RT_FUNCTION_TYPE_KERNEL_TYPE, nullptr, 0U);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::FunctionGetMetaInfoSize).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.FunctionGetMetaInfoSize(nullptr, RT_FUNCTION_TYPE_KERNEL_TYPE, &sz);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::FuncGetSize).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.FuncGetSize(nullptr, &sz, &sz);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::FuncGetName).stubs().will(returnValue(RT_ERROR_NONE));
+    char_t name[16] = {0};
+    error = api.FuncGetName(nullptr, 16U, name);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::GetBinBuffer).stubs().will(returnValue(RT_ERROR_NONE));
+    void* bin = nullptr;
+    uint32_t binSize = 0U;
+    error = api.GetBinBuffer(nullptr, RT_BIN_HOST_ADDR, &bin, &binSize);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::GetKernelBin).stubs().will(returnValue(RT_ERROR_NONE));
+    char_t* buffer = nullptr;
+    error = api.GetKernelBin(nullptr, &buffer, &binSize);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::DependencyRegister).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.DependencyRegister(nullptr, nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::GetBinaryDeviceBaseAddr).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.GetBinaryDeviceBaseAddr(nullptr, &stubFunc);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::RegisterVariable).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.RegisterVariable(nullptr, nullptr, nullptr, 0U, 0U);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::BinaryGetGlobal).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.BinaryGetGlobal(nullptr, nullptr, &stubFunc, &sz);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::BinaryGetMetaInfo).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.BinaryGetMetaInfo(nullptr, RT_BINARY_TYPE_BIN_VERSION, 0U, &stubFunc, &sz);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::BinaryGetMetaNum).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.BinaryGetMetaNum(nullptr, RT_BINARY_TYPE_BIN_VERSION, &sz);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::FunctionGetAvailDynUbufPerBlock).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.FunctionGetAvailDynUbufPerBlock(nullptr, 0U, &sz);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::FunctionGetParamInfo).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.FunctionGetParamInfo(nullptr, 0U, &sz, &sz);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::KernelTaskGetAttribute).stubs().will(returnValue(RT_ERROR_NONE));
+    rtTask_t task = {};
+    rtLaunchKernelAttrVal_t attrVal = {};
+    error = api.KernelTaskGetAttribute(task, RT_LAUNCH_KERNEL_ATTR_SCHEM_MODE, &attrVal);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::GetFuncHandleFromExceptionInfo).stubs().will(returnValue(RT_ERROR_NONE));
+    rtExceptionInfo_t excpInfo = {};
+    error = api.GetFuncHandleFromExceptionInfo(&excpInfo, (Kernel**)&stubFunc);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiTest, api_decorator_task_forwarding)
+{
+    ApiImpl impl;
+    ApiDecorator api(&impl);
+    rtError_t error = RT_ERROR_INTERNAL_ERROR;
+
+    rtTask_t task = {};
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::TaskGetParams).stubs().will(returnValue(RT_ERROR_NONE));
+    rtTaskParams params = {};
+    error = api.TaskGetParams(task, &params);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::TaskSetParams).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.TaskSetParams(task, &params);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::TaskGetType).stubs().will(returnValue(RT_ERROR_NONE));
+    rtTaskType taskType = {};
+    error = api.TaskGetType(task, &taskType);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::TaskGetSeqId).stubs().will(returnValue(RT_ERROR_NONE));
+    uint32_t seqId = 0U;
+    error = api.TaskGetSeqId(task, &seqId);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiTest, api_decorator_notify_forwarding)
+{
+    ApiImpl impl;
+    ApiDecorator api(&impl);
+    rtError_t error = RT_ERROR_INTERNAL_ERROR;
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::NotifyCreate).stubs().will(returnValue(RT_ERROR_NONE));
+    Notify* notify = nullptr;
+    error = api.NotifyCreate(0, &notify, 0U);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::NotifyDestroy).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.NotifyDestroy(nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::NotifyRecord).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.NotifyRecord(nullptr, nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::NotifyWait).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.NotifyWait(nullptr, nullptr, 0U);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::GetNotifyID).stubs().will(returnValue(RT_ERROR_NONE));
+    uint32_t notifyId = 0U;
+    error = api.GetNotifyID(nullptr, &notifyId);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::IpcOpenNotify).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.IpcOpenNotify(&notify, nullptr, 0U);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::IpcSetNotifyName).stubs().will(returnValue(RT_ERROR_NONE));
+    char_t name[16] = {0};
+    error = api.IpcSetNotifyName(nullptr, name, 16U, 0U);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::SetIpcNotifyPid).stubs().will(returnValue(RT_ERROR_NONE));
+    int32_t pidArr[1] = {0};
+    error = api.SetIpcNotifyPid(nullptr, pidArr, 1);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiTest, api_decorator_ipc_forwarding)
+{
+    ApiImpl impl;
+    ApiDecorator api(&impl);
+    rtError_t error = RT_ERROR_INTERNAL_ERROR;
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::IpcOpenMemory).stubs().will(returnValue(RT_ERROR_NONE));
+    void* ptr = nullptr;
+    error = api.IpcOpenMemory(&ptr, nullptr, 0U);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::IpcCloseMemory).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.IpcCloseMemory(nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::IpcSetMemoryAttr).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.IpcSetMemoryAttr(nullptr, 0U, 0U);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::IpcCloseMemoryByName).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.IpcCloseMemoryByName(nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::IpcSetMemoryName).stubs().will(returnValue(RT_ERROR_NONE));
+    char_t name[16] = {0};
+    error = api.IpcSetMemoryName(nullptr, 0U, name, 16U, 0U);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::IpcDestroyMemoryName).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.IpcDestroyMemoryName(nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::SetIpcMemPid).stubs().will(returnValue(RT_ERROR_NONE));
+    int32_t pidArr[1] = {0};
+    error = api.SetIpcMemPid(nullptr, pidArr, 1);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiTest, api_decorator_memqueue_forwarding)
+{
+    ApiImpl impl;
+    ApiDecorator api(&impl);
+    rtError_t error = RT_ERROR_INTERNAL_ERROR;
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::MemQueueInit).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.MemQueueInit(0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::MemQueueDestroy).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.MemQueueDestroy(0, 0U);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::MemQueueAttach).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.MemQueueAttach(0, 0U, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::MemQueueEnQueueBuff).stubs().will(returnValue(RT_ERROR_NONE));
+    rtMemQueueBuff_t buf = {};
+    error = api.MemQueueEnQueueBuff(0, 0U, &buf, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::MemQueueDeQueueBuff).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.MemQueueDeQueueBuff(0, 0U, &buf, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::MemQueuePeek).stubs().will(returnValue(RT_ERROR_NONE));
+    size_t bufLen = 0U;
+    error = api.MemQueuePeek(0, 0U, &bufLen, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::MemQueueQuery).stubs().will(returnValue(RT_ERROR_NONE));
+    uint32_t outLen = 0U;
+    error = api.MemQueueQuery(0, RT_MQ_QUERY_QUE_ATTR_OF_CUR_PROC, nullptr, 0U, nullptr, &outLen);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::MemQueueExport).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.MemQueueExport(0, 0U, 0, nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::MemQueueImport).stubs().will(returnValue(RT_ERROR_NONE));
+    uint32_t qId = 0U;
+    error = api.MemQueueImport(0, 0, nullptr, &qId);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::MemQueueGrant).stubs().will(returnValue(RT_ERROR_NONE));
+    rtMemQueueShareAttr_t attr = {};
+    error = api.MemQueueGrant(0, 0U, 0, &attr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::MemQueueGetQidByName).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.MemQueueGetQidByName(0, nullptr, &qId);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::MemQueueReset).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.MemQueueReset(0, 0U);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::MemQueueInitQS).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.MemQueueInitQS(0, nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::MemQueueSet).stubs().will(returnValue(RT_ERROR_NONE));
+    rtMemQueueSetInputPara setInput = {};
+    error = api.MemQueueSet(0, RT_MQ_QUEUE_SET_WORK_MODE, &setInput);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::MemQueueUnExport).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.MemQueueUnExport(0, 0U, 0, nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::MemQueueUnImport).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.MemQueueUnImport(0, 0U, 0, nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::MemQueueQueryInfo).stubs().will(returnValue(RT_ERROR_NONE));
+    rtMemQueueInfo_t queueInfo = {};
+    error = api.MemQueueQueryInfo(0, 0U, &queueInfo);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiTest, api_decorator_snapshot_forwarding)
+{
+    ApiImpl impl;
+    ApiDecorator api(&impl);
+    rtError_t error = RT_ERROR_INTERNAL_ERROR;
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::SnapShotCallbackRegister).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.SnapShotCallbackRegister(RT_SNAPSHOT_RESTORE_PRE, nullptr, nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::SnapShotCallbackUnregister).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.SnapShotCallbackUnregister(RT_SNAPSHOT_RESTORE_PRE, nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::SnapShotProcessBackup).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.SnapShotProcessBackup();
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::SnapShotProcessLock).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.SnapShotProcessLock();
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::SnapShotProcessRestore).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.SnapShotProcessRestore();
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::SnapShotProcessUnlock).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.SnapShotProcessUnlock();
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiTest, api_decorator_misc_forwarding)
+{
+    ApiImpl impl;
+    ApiDecorator api(&impl);
+    rtError_t error = RT_ERROR_INTERNAL_ERROR;
+    void* ptr = nullptr;
+    int32_t pidArr[1] = {0};
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::SetGroup).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.SetGroup(0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::GetGroupInfo).stubs().will(returnValue(RT_ERROR_NONE));
+    rtGroupInfo_t groupInfo = {};
+    error = api.GetGroupInfo(0, &groupInfo, 1U);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::GetGroupCount).stubs().will(returnValue(RT_ERROR_NONE));
+    uint32_t cnt = 0U;
+    error = api.GetGroupCount(&cnt);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::RDMASend).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.RDMASend(0U, 0U, nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::RdmaDbSend).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.RdmaDbSend(0U, 0U, nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::ReduceAsync).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.ReduceAsync(nullptr, nullptr, 0U, RT_MEMCPY_SDMA_AUTOMATIC_ADD, RT_DATA_TYPE_FP16, nullptr, nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::GetRunMode).stubs().will(returnValue(RT_ERROR_NONE));
+    rtRunMode runMode = {};
+    error = api.GetRunMode(&runMode);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::GetRtCapability).stubs().will(returnValue(RT_ERROR_NONE));
+    int64_t capVal = 0;
+    error = api.GetRtCapability(FEATURE_TYPE_MEMCPY, 0, &capVal);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::CheckArchCompatibility).stubs().will(returnValue(RT_ERROR_NONE));
+    int32_t canCompatible = 0;
+    error = api.CheckArchCompatibility(nullptr, nullptr, &canCompatible);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::SetOpExecuteTimeOut).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.SetOpExecuteTimeOut(0U, RT_TIME_UNIT_TYPE_MS);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::GetOpExecuteTimeOut).stubs().will(returnValue(RT_ERROR_NONE));
+    uint32_t timeout = 0U;
+    error = api.GetOpExecuteTimeOut(&timeout);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::GetOpExecuteTimeoutV2).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.GetOpExecuteTimeoutV2(&timeout);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::PeekLastErr).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.PeekLastErr(RT_THREAD_LEVEL);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::CloseNetService).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.CloseNetService();
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::AdcProfiler).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.AdcProfiler(0U, 0U);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::BufEventTrigger).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.BufEventTrigger(nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::BuffGetInfo).stubs().will(returnValue(RT_ERROR_NONE));
+    uint32_t outLen = 0U;
+    error = api.BuffGetInfo(RT_BUFF_GET_MBUF_TIMEOUT_INFO, nullptr, 0U, nullptr, &outLen);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::DatadumpInfoLoad).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.DatadumpInfoLoad(nullptr, 0U, 0U);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::LaunchSqeUpdateTask).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.LaunchSqeUpdateTask(0U, 0U, nullptr, 0U, nullptr, false);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::StarsTaskLaunch).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.StarsTaskLaunch(nullptr, 0U, nullptr, 0U);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::FftsPlusTaskLaunch).stubs().will(returnValue(RT_ERROR_NONE));
+    rtFftsPlusTaskInfo_t fftsInfo = {};
+    error = api.FftsPlusTaskLaunch(&fftsInfo, nullptr, 0U);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::QueueSubscribe).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.QueueSubscribe(0, 0U, 0U, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::QueueSubF2NFEvent).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.QueueSubF2NFEvent(0, 0U, 0U);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::MemGrpAddProc).stubs().will(returnValue(RT_ERROR_NONE));
+    rtMemGrpShareAttr_t grpAttr = {};
+    error = api.MemGrpAddProc(nullptr, 0, &grpAttr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::MemGrpAttach).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.MemGrpAttach(nullptr, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::MemGrpQuery).stubs().will(returnValue(RT_ERROR_NONE));
+    rtMemGrpQueryInput_t grpInput = {};
+    rtMemGrpQueryOutput_t grpOutput = {};
+    error = api.MemGrpQuery(&grpInput, &grpOutput);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::MemGrpCacheAlloc).stubs().will(returnValue(RT_ERROR_NONE));
+    rtMemGrpCacheAllocPara cachePara = {};
+    error = api.MemGrpCacheAlloc(nullptr, 0, &cachePara);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::MemMapSetLink).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.MemMapSetLink(0, RT_MEM_ACCESS_LINK_SIO);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::MemMapSelectedLink).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.MemMapSelectedLink(nullptr, 0U, nullptr, 0U);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::MemPrefetchToDevice).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.MemPrefetchToDevice(nullptr, 0U, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::MemMallocPhysical).stubs().will(returnValue(RT_ERROR_NONE));
+    rtMemHandle memHandle = {};
+    rtMallocConfig_t mallocCfg = {};
+    error = api.MemMallocPhysical(&memHandle, 0U, RT_MEM_MALLOC_HUGE_FIRST, &mallocCfg);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::MemSetAccess).stubs().will(returnValue(RT_ERROR_NONE));
+    rtMemAccessDesc accessDesc = {};
+    error = api.MemSetAccess(nullptr, 0U, &accessDesc, 0U);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::MemReserveAddress).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.MemReserveAddress(&ptr, 0U, RT_MEM_MALLOC_HUGE_FIRST, nullptr, &mallocCfg);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::DevVA2PA).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.DevVA2PA(0U, 0U, nullptr, false);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::ShmemSetPodPid).stubs().will(returnValue(RT_ERROR_NONE));
+    uint32_t sdid = 0U;
+    error = api.ShmemSetPodPid(nullptr, sdid, pidArr, 1);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::MemcpyBatchAsync).stubs().will(returnValue(RT_ERROR_NONE));
+    size_t failIdx = 0U;
+    error = api.MemcpyBatchAsync(nullptr, nullptr, nullptr, nullptr, 0U, nullptr, nullptr, 0U, &failIdx, nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::MemcpyHostTask).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.MemcpyHostTask(nullptr, 0U, nullptr, 0U, RT_MEMCPY_KIND_DEVICE_TO_DEVICE, nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::SetExceptCallback).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.SetExceptCallback(nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::MetadataRegister).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.MetadataRegister(nullptr, nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::GetDevMsg).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.GetDevMsg(RT_GET_DEV_ERROR_MSG, nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::GetDeviceInfo).stubs().will(returnValue(RT_ERROR_NONE));
+    int64_t msgVal = 0;
+    error = api.GetDeviceInfo(0U, 0, 0, &msgVal);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::GetDeviceInfoByAttr).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.GetDeviceInfoByAttr(0U, RT_DEV_ATTR_AICORE_CORE_NUM, &msgVal);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiTest, api_decorator_profiling_forwarding)
+{
+    ApiImpl impl;
+    ApiDecorator api(&impl);
+    rtError_t error = RT_ERROR_INTERNAL_ERROR;
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::ProfilerTraceEx).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.ProfilerTraceEx(0U, 0U, 0U, nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::RegProfCtrlCallback).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.RegProfCtrlCallback(0U, nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::RegStreamStateCallback).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.RegStreamStateCallback(nullptr, nullptr, nullptr, StreamStateCallback::RT_STREAM_STATE_CALLBACK);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::RegDeviceStateCallback).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.RegDeviceStateCallback(
+        nullptr, nullptr, nullptr, DeviceStateCallback::RT_DEVICE_STATE_CALLBACK, DEV_CB_POS_BACK);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::RegTaskFailCallbackByModule).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.RegTaskFailCallbackByModule(
+        nullptr, nullptr, nullptr, TaskFailCallbackType::RT_REG_TASK_FAIL_CALLBACK_BY_MODULE);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::SetKernelDfxInfoCallback).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.SetKernelDfxInfoCallback(RT_KERNEL_DFX_INFO_DEFAULT, nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::BinarySetExceptionCallback).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.BinarySetExceptionCallback(nullptr, nullptr, nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::StartOnlineProf).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.StartOnlineProf(nullptr, 0U);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::StopOnlineProf).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.StopOnlineProf(nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::GetOnlineProfData).stubs().will(returnValue(RT_ERROR_NONE));
+    rtProfDataInfo_t profData = {};
+    error = api.GetOnlineProfData(nullptr, &profData, 0U);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiTest, api_decorator_debug_esched_forwarding)
+{
+    ApiImpl impl;
+    ApiDecorator api(&impl);
+    rtError_t error = RT_ERROR_INTERNAL_ERROR;
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::DebugRegister).stubs().will(returnValue(RT_ERROR_NONE));
+    uint32_t streamId = 0U;
+    uint32_t taskId = 0U;
+    error = api.DebugRegister(nullptr, 0U, nullptr, &streamId, &taskId);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::DebugUnRegister).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.DebugUnRegister(nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::DebugRegisterForStream).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.DebugRegisterForStream(nullptr, 0U, nullptr, &streamId, &taskId);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::DebugUnRegisterForStream).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.DebugUnRegisterForStream(nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::EschedSubmitEventSync).stubs().will(returnValue(RT_ERROR_NONE));
+    rtEschedEventSummary_t evtSum = {};
+    rtEschedEventReply_t evtReply = {};
+    error = api.EschedSubmitEventSync(0, &evtSum, &evtReply);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::EschedWaitEvent).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.EschedWaitEvent(0, 0U, 0U, 0, &evtSum);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::NpuGetFloatStatus).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.NpuGetFloatStatus(nullptr, 0U, 0U, nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::NpuClearFloatStatus).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.NpuClearFloatStatus(0U, nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::NpuGetFloatDebugStatus).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.NpuGetFloatDebugStatus(nullptr, 0U, 0U, nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::NpuClearFloatDebugStatus).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.NpuClearFloatDebugStatus(0U, nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::SetDeviceSatMode).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.SetDeviceSatMode(RT_OVERFLOW_MODE_SATURATION);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::GetDeviceSatMode).stubs().will(returnValue(RT_ERROR_NONE));
+    rtFloatOverflowMode_t satMode = {};
+    error = api.GetDeviceSatMode(&satMode);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::GetDeviceSatModeForStream).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.GetDeviceSatModeForStream(nullptr, &satMode);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::SetStreamOverflowSwitch).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.SetStreamOverflowSwitch(nullptr, 0U);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::GetStreamOverflowSwitch).stubs().will(returnValue(RT_ERROR_NONE));
+    uint32_t switchFlags = 0U;
+    error = api.GetStreamOverflowSwitch(nullptr, &switchFlags);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::SetStreamPriorityValue).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.SetStreamPriorityValue(nullptr, 0U);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::GetStreamPriorityValue).stubs().will(returnValue(RT_ERROR_NONE));
+    error = api.GetStreamPriorityValue(nullptr, &switchFlags);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiTest, api_decorator_host_malloc_forwarding)
+{
+    ApiImpl impl;
+    ApiDecorator api(&impl);
+    rtError_t error = RT_ERROR_INTERNAL_ERROR;
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::HostMallocWithCfg).stubs().will(returnValue(RT_ERROR_NONE));
+    void* hostPtr = nullptr;
+    error = api.HostMallocWithCfg(&hostPtr, 0U, nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}

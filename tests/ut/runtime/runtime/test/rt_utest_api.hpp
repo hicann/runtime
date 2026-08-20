@@ -30,6 +30,7 @@
 #include "api_impl.hpp"
 #include "api_impl_mbuf.hpp"
 #include "api_error.hpp"
+#include "api_decorator.hpp"
 #include "api_soma.hpp"
 #include "api_impl_soma.hpp"
 #include "program.hpp"
