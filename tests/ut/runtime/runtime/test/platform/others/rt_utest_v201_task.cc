@@ -2025,6 +2025,56 @@ TEST_F(TaskTestV201, Test_ModelSerialSchedPostProc_EmptyHeadStream)
     EXPECT_EQ(ret, RT_ERROR_NONE);
 }
 
+TEST_F(TaskTestV201, Test_ModelSerialSchedPreProc_Mc32EarlyReturn)
+{
+    rtModel_t model;
+    rtError_t ret = rtModelCreate(&model, 0);
+    ASSERT_EQ(ret, RT_ERROR_NONE);
+    Model* mdl = rt_ut::UnwrapOrNull<Model>(model);
+    ASSERT_NE(mdl, nullptr);
+
+    Notify* notify = new (std::nothrow) Notify(0, 0);
+    ASSERT_NE(notify, nullptr);
+
+    DevProperties origProps = stream_->Device_()->GetDevProperties();
+    DevProperties props = origProps;
+    props.aivNumPerDie = 4U;
+    stream_->Device_()->RefreshDevProperties(props);
+
+    ret = ModelSerialSchedPreProc(stream_, notify, mdl);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    stream_->Device_()->RefreshDevProperties(origProps);
+    delete notify;
+    ret = rtModelDestroy(model);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+}
+
+TEST_F(TaskTestV201, Test_ModelSerialSchedPostProc_Mc32EarlyReturn)
+{
+    rtModel_t model;
+    rtError_t ret = rtModelCreate(&model, 0);
+    ASSERT_EQ(ret, RT_ERROR_NONE);
+    Model* mdl = rt_ut::UnwrapOrNull<Model>(model);
+    ASSERT_NE(mdl, nullptr);
+
+    Notify* notify = new (std::nothrow) Notify(0, 0);
+    ASSERT_NE(notify, nullptr);
+
+    DevProperties origProps = stream_->Device_()->GetDevProperties();
+    DevProperties props = origProps;
+    props.aivNumPerDie = 4U;
+    stream_->Device_()->RefreshDevProperties(props);
+
+    ret = ModelSerialSchedPostProc(stream_, notify, mdl);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    stream_->Device_()->RefreshDevProperties(origProps);
+    delete notify;
+    ret = rtModelDestroy(model);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+}
+
 TEST_F(TaskTestV201, rtLaunchDqsTask_NullApiInstance)
 {
     MOCKER(Api::Instance).stubs().will(returnValue((Api*)NULL));
