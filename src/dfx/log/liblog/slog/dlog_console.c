@@ -10,10 +10,10 @@
 
 #include "dlog_console.h"
 #include <stdlib.h>
+#include <string.h>
 #include "dlog_core.h"
 #include "dlog_attr.h"
 #include "log_print.h"
-#include "mmpa_api.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -24,7 +24,7 @@ extern "C" {
  * @return      : true   enable; false   disable
  */
 // stdout 开关取值缓冲区长度：合法值为 "0"/"1"，预留冗余以识别非法长值。
-// 取值长度 < 本值时告警可回显具体取值；>= 本值时 mmGetEnv 返回 EN_INVALID_PARAM，告警不回显取值。
+// 取值长度 < 本值时告警可回显具体取值；>= 本值时告警不回显取值。
 #define STDOUT_ENV_VALUE_LEN 16U
 
 // stdout 开关环境变量名。集中定义，使读取与废弃告警共用同一来源，避免拼写不一致。
@@ -32,16 +32,14 @@ extern "C" {
 #define STDOUT_ENV_NAME_DEPRECATED "ASCEND_SLOG_PRINT_TO_STDOUT"
 
 // 读取单个环境变量并判定 stdout 开关，输出维测日志。
-// 使用 mmGetEnv 按名读取（值拷贝到调用者缓冲区），规避 getenv 返回内部指针在多线程下的竞争。
 // replacementName 非 NULL 时，表示 envName 已废弃、应改用 replacementName，
 // 在确认变量存在后先打印一次废弃告警；为 NULL 表示 envName 未废弃，不打印该告警。
 // 注意：本参数用于旧变量兼容期，计划随旧变量在 13.0.0 版本一并移除，详见 DlogCheckEnvStdout 中的说明。
 // 返回 true 表示该变量已配置，*enabled 为判定结果(1 开启/0 关闭)；返回 false 表示未配置。
 STATIC bool DlogGetStdoutEnv(const char* envName, const char* replacementName, int32_t* enabled)
 {
-    char envValue[STDOUT_ENV_VALUE_LEN] = {0};
-    int32_t ret = mmGetEnv(envName, envValue, STDOUT_ENV_VALUE_LEN);
-    if (ret == EN_ERROR) {
+    const char* envValue = getenv(envName);
+    if (envValue == NULL) {
         return false; // 未配置
     }
     if (replacementName != NULL) {
@@ -49,8 +47,8 @@ STATIC bool DlogGetStdoutEnv(const char* envName, const char* replacementName, i
         // 告警不写死移除版本：移除版本由资料承载，避免版本调整需同步改代码。
         SELF_LOG_WARN("Environment variable '%s' is deprecated; use '%s' instead.", envName, replacementName);
     }
-    if (ret != EN_OK) {
-        // 已配置但取值过长/异常 → 非法值（缓冲区未取到值，不回显）
+    if (strlen(envValue) >= STDOUT_ENV_VALUE_LEN) {
+        // 已配置但取值过长 → 非法值（不回显）
         SELF_LOG_WARN(
             "Invalid value for environment variable '%s'; expected '0' or '1'. "
             "Log-to-stdout disabled.",
