@@ -1850,9 +1850,12 @@ static rtError_t SetLimitSizeByType(const rtLimitType_t type, const uint32_t val
                     LimitTypeToString(RT_LIMIT_TYPE_SIMT_DVG_WARP_STACK_SIZE));
             return RT_ERROR_DEVICE_LIMIT;
     }
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
-        (rt->GetSimtWarpStkSize() == 0) && (rt->GetSimtDvgWarpStkSize() == 0), RT_ERROR_INVALID_VALUE,
-        "Setting the SIMT stack size", 0, "non-zero stack size");
+    if ((rt->GetSimtWarpStkSize() == 0ULL) && (rt->GetSimtDvgWarpStkSize() == 0U)) {
+        RT_LOG_OUTER_MSG_WITH_FUNC_DESC(
+            ErrorCode::EE1011, "Setting the SIMT stack size", val, "val",
+            "simtStackSize and simtDvgWarpStackSize cannot both be 0");
+        return RT_ERROR_INVALID_VALUE;
+    }
     return RT_ERROR_NONE;
 }
 
