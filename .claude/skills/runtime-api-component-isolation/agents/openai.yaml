@@ -1,0 +1,14 @@
+# -----------------------------------------------------------------------------------------------------------
+# Copyright (c) 2026 Huawei Technologies Co., Ltd.
+# This program is free software, you can redistribute it and/or modify it under the terms and conditions of
+# CANN Open Software License Agreement Version 2.0 (the "License").
+# Please refer to the License for details. You may not use this file except in compliance with the License.
+# THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+# INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+# See LICENSE in the root of the software repository for the full text of the License.
+# -----------------------------------------------------------------------------------------------------------
+
+interface:
+  display_name: "Runtime API 组件隔离"
+  short_description: "按产品隔离可选 API 组件，保持 ABI 并分阶段验证上库"
+  default_prompt: "使用 $runtime-api-component-isolation 分析指定 Runtime API 组件与目标产品，按模块特性选择准备动作，并生成工厂解耦和产品隔离方案。"
