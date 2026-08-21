@@ -392,6 +392,8 @@ std::string SysParamOptToString(const rtSysParamOpt option);
 const char_t* DevResLimitTypeToString(const rtDevResLimitType_t type);
 std::string ConditionToString(const rtCondition_t condition);
 std::string KernelAttrTypeToString(const rtKernelAttrType type);
+std::string KernelFuncTypeToString(const uint32_t funcType);
+std::string KernelMixTypeToString(const uint8_t mixType);
 std::string LaunchKernelAttrIdToString(const rtLaunchKernelAttrId id);
 
 const char_t* DevAttrToString(const rtDevAttr attr);

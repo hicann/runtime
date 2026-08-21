@@ -161,7 +161,6 @@ set(libruntime_callback_files
 set(libruntime_src_files_include_for_tiny
     ${RUNTIME_API_DIR}/impl/api_error_tiny_stub.cc
     ${RUNTIME_API_DIR}/impl/api_impl_stub.cc
-    ${RUNTIME_API_DIR}/impl/api_impl_event_common.cc
     ${RUNTIME_API_DIR}/impl/api_impl_tiny.cc
     ${RUNTIME_API_DIR}/impl/v100/api_impl_v100.cc
     ${RUNTIME_CORE_DIR}/src/context/context_tiny_stub.cc
@@ -194,6 +193,10 @@ set(libruntime_src_files_include_for_tiny
     ${RUNTIME_FEATURE_DIR}/model/tiny/model_aclgraph_tiny_stub.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/tiny/stream_capture_tiny_stub.cc
     ${RUNTIME_FEATURE_DIR}/jetty/jetty_stub.cc
+)
+
+set(libruntime_event_src_files_include_for_tiny
+    ${RUNTIME_API_DIR}/impl/api_impl_event_tiny_stub.cc
 )
 
 set(libruntime_api_src_files_exclude_for_tiny
@@ -308,6 +311,7 @@ set(libruntime_common_src_files
     ${common_src_files}
     $<$<STREQUAL:${PRODUCT},ascend031>:${libruntime_api_src_files_include_for_tiny}>
     $<$<STREQUAL:${PRODUCT},ascend031>:${libruntime_src_files_include_for_tiny}>
+    $<$<STREQUAL:${PRODUCT},ascend031>:${libruntime_event_src_files_include_for_tiny}>
 )
 
 set(libruntime_dev_info_src_files
@@ -469,6 +473,7 @@ set(libruntime_v100_src_files
     ${RUNTIME_CORE_DIR}/src/task/v200/task_david_stub.cc
     ${libruntime_dev_info_src_files}
     ${libruntime_src_files_include_for_tiny}
+    ${libruntime_event_src_files_include_for_tiny}
 )
 
 set(RUNTIME_INC_DIR_TINY

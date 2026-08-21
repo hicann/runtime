@@ -161,20 +161,32 @@ rtError_t InternalUpdateTaskPrepare(
         return RT_ERROR_STREAM_MODEL;
     }
 
-    if ((updateTask->u.aicTaskInfo.kernel->GetMixType() != kernel->GetMixType()) ||
-        (updateTask->u.aicTaskInfo.kernel->GetFuncType() != kernel->GetFuncType()) ||
-        (updateTask->u.aicTaskInfo.kernel->GetKernelAttrType() != kernel->GetKernelAttrType())) {
-        RT_LOG(
-            RT_LOG_ERROR,
-            "check kernel type failed, device_id=%u, stream_id=%d, task_id=%hu, "
-            "old mixType=%u, funcType=%u, kernelAttrType=%s, "
-            "new mixType=%u, funcType=%u, kernelAttrType=%s.",
-            device->Id_(), updateTask->stream->Id_(), updateTask->id, updateTask->u.aicTaskInfo.kernel->GetMixType(),
-            updateTask->u.aicTaskInfo.kernel->GetFuncType(),
-            KernelAttrTypeToString(updateTask->u.aicTaskInfo.kernel->GetKernelAttrType()).c_str(), kernel->GetMixType(),
-            kernel->GetFuncType(), KernelAttrTypeToString(kernel->GetKernelAttrType()).c_str());
-        return RT_ERROR_KERNEL_TYPE;
-    }
+    COND_RETURN_AND_MSG_OUTER(
+        updateTask->u.aicTaskInfo.kernel->GetMixType() != kernel->GetMixType(), RT_ERROR_KERNEL_TYPE, ErrorCode::EE1012,
+        "Updating the captured kernel task", KernelMixTypeToString(kernel->GetMixType()), "MixType of kernel",
+        RtFmtMsg(
+            "MixType of the new kernel must be equal to MixType %s of the kernel in the original task. device_id=%u, "
+            "task_id=%hu, stream_id=%d",
+            KernelMixTypeToString(updateTask->u.aicTaskInfo.kernel->GetMixType()).c_str(), device->Id_(),
+            updateTask->id, updateTask->stream->Id_()));
+    COND_RETURN_AND_MSG_OUTER(
+        updateTask->u.aicTaskInfo.kernel->GetFuncType() != kernel->GetFuncType(), RT_ERROR_KERNEL_TYPE,
+        ErrorCode::EE1012, "Updating the captured kernel task", KernelFuncTypeToString(kernel->GetFuncType()),
+        "FuncType of kernel",
+        RtFmtMsg(
+            "FuncType of the new kernel must be equal to FuncType %s of the kernel in the original task. device_id=%u, "
+            "task_id=%hu, stream_id=%d",
+            KernelFuncTypeToString(updateTask->u.aicTaskInfo.kernel->GetFuncType()).c_str(), device->Id_(),
+            updateTask->id, updateTask->stream->Id_()));
+    COND_RETURN_AND_MSG_OUTER(
+        updateTask->u.aicTaskInfo.kernel->GetKernelAttrType() != kernel->GetKernelAttrType(), RT_ERROR_KERNEL_TYPE,
+        ErrorCode::EE1012, "Updating the captured kernel task", KernelAttrTypeToString(kernel->GetKernelAttrType()),
+        "KernelAttrType of kernel",
+        RtFmtMsg(
+            "KernelAttrType of the new kernel must be equal to KernelAttrType %s of the kernel in the original task. "
+            "device_id=%u, task_id=%hu, stream_id=%d",
+            KernelAttrTypeToString(updateTask->u.aicTaskInfo.kernel->GetKernelAttrType()).c_str(), device->Id_(),
+            updateTask->id, updateTask->stream->Id_()));
 
     if (updateTask->u.aicTaskInfo.kernel->GetMixType() == NO_MIX) {
         if (!(device->CheckFeatureSupport(TS_FEATURE_CAPTURE_SQE_UPDATE))) {

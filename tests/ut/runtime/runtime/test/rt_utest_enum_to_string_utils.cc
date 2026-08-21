@@ -15,6 +15,8 @@
 #include "device/device_enum_desc.hpp"
 #include "task/task_enum_desc.hpp"
 #include "stream/stream_enum_desc.hpp"
+#include "kernel/elf.hpp"
+#include "runtime.hpp"
 
 #include "gtest/gtest.h"
 
@@ -552,4 +554,36 @@ TEST(EnumToStringUtilsTest, CommonOptionalEnumsAllKnownValues)
     EXPECT_EQ(
         StreamCaptureStatusToString(RT_STREAM_CAPTURE_STATUS_INVALIDATED), "STREAM_CAPTURE_STATUS_INVALIDATED(2)");
     EXPECT_EQ(StreamCaptureStatusToString(RT_STREAM_CAPTURE_STATUS_MAX), "STREAM_CAPTURE_STATUS_MAX(3)");
+}
+
+TEST(EnumToStringUtilsTest, KernelFuncTypeToStringAllKnownValues)
+{
+    EXPECT_EQ(KernelFuncTypeToString(KERNEL_FUNCTION_TYPE_INVALID), "KERNEL_FUNCTION_TYPE_INVALID(0)");
+    EXPECT_EQ(KernelFuncTypeToString(KERNEL_FUNCTION_TYPE_AICORE), "KERNEL_FUNCTION_TYPE_AICORE(1)");
+    EXPECT_EQ(KernelFuncTypeToString(KERNEL_FUNCTION_TYPE_AIC), "KERNEL_FUNCTION_TYPE_AIC(2)");
+    EXPECT_EQ(KernelFuncTypeToString(KERNEL_FUNCTION_TYPE_AIV), "KERNEL_FUNCTION_TYPE_AIV(3)");
+    EXPECT_EQ(KernelFuncTypeToString(KERNEL_FUNCTION_TYPE_MIX_AIC_MAIN), "KERNEL_FUNCTION_TYPE_MIX_AIC_MAIN(4)");
+    EXPECT_EQ(KernelFuncTypeToString(KERNEL_FUNCTION_TYPE_MIX_AIV_MAIN), "KERNEL_FUNCTION_TYPE_MIX_AIV_MAIN(5)");
+    EXPECT_EQ(KernelFuncTypeToString(KERNEL_FUNCTION_TYPE_AIC_ROLLBACK), "KERNEL_FUNCTION_TYPE_AIC_ROLLBACK(6)");
+    EXPECT_EQ(KernelFuncTypeToString(KERNEL_FUNCTION_TYPE_AIV_ROLLBACK), "KERNEL_FUNCTION_TYPE_AIV_ROLLBACK(7)");
+    EXPECT_EQ(KernelFuncTypeToString(KERNEL_FUNCTION_TYPE_MAX), "KERNEL_FUNCTION_TYPE_MAX(8)");
+}
+
+TEST(EnumToStringUtilsTest, KernelFuncTypeToStringUnknownValue)
+{
+    EXPECT_EQ(KernelFuncTypeToString(static_cast<uint32_t>(100U)), "UNKNOWN(100)");
+}
+
+TEST(EnumToStringUtilsTest, KernelMixTypeToStringAllKnownValues)
+{
+    EXPECT_EQ(KernelMixTypeToString(NO_MIX), "NO_MIX(0)");
+    EXPECT_EQ(KernelMixTypeToString(MIX_AIC), "MIX_AIC(1)");
+    EXPECT_EQ(KernelMixTypeToString(MIX_AIV), "MIX_AIV(2)");
+    EXPECT_EQ(KernelMixTypeToString(MIX_AIC_AIV_MAIN_AIC), "MIX_AIC_AIV_MAIN_AIC(3)");
+    EXPECT_EQ(KernelMixTypeToString(MIX_AIC_AIV_MAIN_AIV), "MIX_AIC_AIV_MAIN_AIV(4)");
+}
+
+TEST(EnumToStringUtilsTest, KernelMixTypeToStringUnknownValue)
+{
+    EXPECT_EQ(KernelMixTypeToString(static_cast<uint8_t>(100U)), "UNKNOWN(100)");
 }

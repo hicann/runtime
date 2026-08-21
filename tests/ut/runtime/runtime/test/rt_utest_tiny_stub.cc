@@ -368,6 +368,18 @@ TEST_F(TinyStubTest, api_impl_stub)
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
     ret = eventImpl.IpcOpenEventHandle(nullptr, nullptr);
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
+    ret = eventImpl.GetEventID(nullptr, nullptr);
+    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
+    ret = eventImpl.EventQuery(nullptr);
+    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
+    ret = eventImpl.EventQueryStatus(nullptr, nullptr);
+    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
+    ret = eventImpl.EventQueryWaitStatus(nullptr, nullptr);
+    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
+    ret = eventImpl.EventElapsedTime(nullptr, nullptr, nullptr);
+    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
+    ret = eventImpl.EventGetTimeStamp(nullptr, nullptr);
+    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
     rtMemManagedLocation location;
     ret = impl.MemManagedAdvise(nullptr, 0, 0, location);
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
