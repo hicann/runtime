@@ -170,17 +170,17 @@ class Notifier {
 public:
     virtual ~Notifier() = default;
 
-    // Wait notify. will block if not trgierd.
+    // Wait notify. will block if not triggered.
     virtual rtError_t Wait(int32_t timeout = -1) = 0;
 
-    // Triger notify. all waiting thread will be wakeup.
+    // Trigger notify. all waiting thread will be wakeup.
     virtual rtError_t Triger() = 0;
 
-    // Reset notifier to un-trigerd state.
+    // Reset notifier to un-triggered state.
     virtual rtError_t Reset() = 0;
 };
 
-// Factory class for creating OS dependend object.
+// Factory class for creating OS dependent object.
 class OsalFactory {
 public:
     // Create Thread object.

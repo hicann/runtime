@@ -21,16 +21,16 @@ namespace cce {
 namespace runtime {
 class Task;
 
-// Schedule tasks submitd from user thread to driver queues.
+// Schedule tasks submitted from user thread to driver queues.
 class Scheduler : public NoCopy {
 public:
     Scheduler() = default;
     ~Scheduler() override = default;
 
-    // Called in user thread for submiting task.
+    // Called in user thread for submitting task.
     virtual rtError_t PushTask(TaskInfo* tsk) = 0;
 
-    // Called in sending thread for retrieving submited task.
+    // Called in sending thread for retrieving submitted task.
     virtual TaskInfo* PopTask() = 0;
 
     // Called in receiving thread when task complete.

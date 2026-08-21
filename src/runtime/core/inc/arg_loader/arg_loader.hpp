@@ -57,7 +57,7 @@ struct Handle {
     H2DCopyMgr* argsAlloc;
 };
 
-// Management of argment loading.
+// Management of argument loading.
 class ArgLoader : public NoCopy {
 public:
     explicit ArgLoader(Device* dev) : NoCopy(), drv_(dev->Driver_()), device_(dev) {}

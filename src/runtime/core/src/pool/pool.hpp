@@ -188,7 +188,7 @@ private:
         const uint32_t baseId = AccumulatePoolCount(poolIdx);
         if ((pool_[poolIdx] == nullptr) && (mtx_ != nullptr)) {
             mtx_[poolIdx].lock();
-            // it prevent the Multiple malloc memroy.
+            // it prevent the Multiple malloc memory.
             uint32_t counter = 0;
             while ((pool_[poolIdx] == nullptr) && (counter < 15)) { // try alloc max 15 times
                 pool_[poolIdx] = ObjAlloc();

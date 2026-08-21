@@ -126,7 +126,7 @@ public:
 
     uint64_t GetRefCount() const { return count_.Value() & (~REF_UPDATING); }
 
-    // callef after IncRef return 0.
+    // called after IncRef return 0.
     void SetVal(T val)
     {
         value_ = val;
@@ -135,7 +135,7 @@ public:
         }
     }
 
-    // callef after DecRef return 0.
+    // called after DecRef return 0.
     void ResetVal() { SetVal(initVal); }
 
     void ResetValForAbort()
