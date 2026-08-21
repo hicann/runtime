@@ -273,6 +273,7 @@ bool ClientManager::IsSupportSetVisibleDevices()
         case CHIP_ASCEND_950:
         case CHIP_ASCEND_350:
         case CHIP_CLOUD_V5:
+        case CHIP_CLOUD_V6:
             flag = true;
             break;
         default:

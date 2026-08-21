@@ -25,12 +25,13 @@ typedef enum tagChipType {
     CHIP_ASCEND_950 = 15,
     CHIP_CLOUD_V5 = 16,
     CHIP_ASCEND_350 = 19,
+    CHIP_CLOUD_V6 = 22,
 } ChipType_t;
 
 void FeatureCtrl::Init(const int64_t hardwareVersion, const uint32_t deviceId)
 {
     const ChipType_t chipType = static_cast<ChipType_t>(AICPU_PLAT_GET_CHIP(static_cast<uint64_t>(hardwareVersion)));
-    if (chipType == CHIP_CLOUD_V5) {
+    if ((chipType == CHIP_CLOUD_V5) || (chipType == CHIP_CLOUD_V6)) {
         aicpuFeatureUseMsqV2_ = true;
     }
 

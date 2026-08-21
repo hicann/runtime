@@ -153,6 +153,7 @@ bool PackageEnvInfo::ResolvePackageTitle(uint32_t chipType, uint32_t platInfoMod
         case CHIP_CLOUD_V5:
         case CHIP_MINI_V3:
         case CHIP_ASCEND_350:
+        case CHIP_CLOUD_V6:
             packageTitle = "Ascend";
             break;
         default:

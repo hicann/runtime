@@ -22,6 +22,7 @@ typedef enum tagChipType {
     CHIP_ASCEND_910B = 5,
     CHIP_ASCEND_950 = 15,
     CHIP_ASCEND_350 = 19,
+    CHIP_CLOUD_V6 = 22,
 } ChipType_t;
 
 void FeatureCtrl::Init(const int64_t hardwareVersion, const uint32_t deviceId)
@@ -29,7 +30,7 @@ void FeatureCtrl::Init(const int64_t hardwareVersion, const uint32_t deviceId)
     const ChipType_t chipType = static_cast<ChipType_t>(AICPU_PLAT_GET_CHIP(static_cast<uint64_t>(hardwareVersion)));
 
     if ((chipType == CHIP_ASCEND_910A) || (chipType == CHIP_ASCEND_910B) || (chipType == CHIP_ASCEND_950) ||
-        (chipType == CHIP_ASCEND_350)) {
+        (chipType == CHIP_ASCEND_350) || (chipType == CHIP_CLOUD_V6)) {
         aicpuFeatureBindPidByHal_ = true;
     }
 

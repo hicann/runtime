@@ -16,6 +16,7 @@ using ChipType_t = enum {
     CHIP_ASCEND_950 = 15,
     CHIP_CLOUD_V5 = 16,
     CHIP_ASCEND_350 = 19,
+    CHIP_CLOUD_V6 = 22,
 };
 
 bool QSFeatureCtrl::IsSupportSetVisibleDevices(int64_t chip)
@@ -26,6 +27,7 @@ bool QSFeatureCtrl::IsSupportSetVisibleDevices(int64_t chip)
         case CHIP_ASCEND_910B:
         case CHIP_ASCEND_950:
         case CHIP_ASCEND_350:
+        case CHIP_CLOUD_V6:
             return true;
         default:
             return false;
