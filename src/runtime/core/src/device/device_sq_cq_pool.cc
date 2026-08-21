@@ -46,6 +46,11 @@ void DeviceSqCqPool::FillStreamAttrSimt(rtStreamInfoExMsg_t& infoEX) const
         infoEX.head.vfid = vfId;
     }
 
+    if (device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_KERNEL_EARLY_START) &&
+        Runtime::Instance()->GetEnableOstFlag()) {
+        infoEX.body.validFlag |= static_cast<uint64_t>(InfoExValidFlag::INFO_EX_BODY_FLAG_OST);
+    }
+
     const uint64_t stackPhyAddr = RtPtrToValue(device_->GetSimtStackPhyBase());
     infoEX.body.kisSimtStkBaseAddrLow = static_cast<uint32_t>(stackPhyAddr);
     infoEX.body.kisSimtStkBaseAddrHigh = static_cast<uint16_t>(stackPhyAddr >> UINT32_BIT_NUM);

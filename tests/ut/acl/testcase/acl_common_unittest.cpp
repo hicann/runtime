@@ -2367,7 +2367,7 @@ TEST_F(UTEST_ACL_Common, AclrtCtxSetSysParamOpt)
     // STRONG_CONSISTENCY 下边界 0
     ret = aclrtCtxSetSysParamOpt(ACL_OPT_STRONG_CONSISTENCY, 0);
     EXPECT_EQ(ret, ACL_SUCCESS);
-    // opt 越界 opt=3（等于 SYS_OPT_RESERVED）
+    // opt 越界 opt=3（等于 ACL_OPT_ENABLE_KERNEL_EARLY_START)
     ret = aclrtCtxSetSysParamOpt(static_cast<aclSysParamOpt>(3), 1);
     EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
     // opt 负数 opt=-1
@@ -2428,8 +2428,11 @@ TEST_F(UTEST_ACL_Common, AclrtSetSysParamOpt)
     // STRONG_CONSISTENCY 下边界 0
     ret = aclrtSetSysParamOpt(ACL_OPT_STRONG_CONSISTENCY, 0);
     EXPECT_EQ(ret, ACL_SUCCESS);
-    // opt 越界 opt=3（等于 SYS_OPT_RESERVED）
-    ret = aclrtSetSysParamOpt(static_cast<aclSysParamOpt>(3), 1);
+    // ENABLE_KERNEL_EARLY_START value=1 should pass
+    ret = aclrtSetSysParamOpt(ACL_OPT_ENABLE_KERNEL_EARLY_START, 1);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+    // opt 越界 opt=4（等于 SYS_OPT_RESERVED）
+    ret = aclrtSetSysParamOpt(static_cast<aclSysParamOpt>(4), 1);
     EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
     // opt 负数 opt=-1
     ret = aclrtSetSysParamOpt(static_cast<aclSysParamOpt>(-1), 1);

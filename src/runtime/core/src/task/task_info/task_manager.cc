@@ -928,7 +928,7 @@ void TaskCommonInfoInit(TaskInfo* taskInfo)
     taskInfo->stmArgPos = UINT32_MAX;
     taskInfo->mte_error = 0; // init mte_error
     taskInfo->isNoRingbuffer = 0U;
-
+    taskInfo->enableProfiling = 0U;
     /* if old process, set taskTag */
     if (taskInfo->stream->taskResMang_ == nullptr) {
         SetTaskTag(taskInfo);

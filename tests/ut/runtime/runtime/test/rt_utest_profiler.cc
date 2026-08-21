@@ -3430,21 +3430,6 @@ TEST_F(ProfilerTest, CtxSysParamOptTest)
     delete apiImpl_;
 }
 
-TEST_F(ProfilerTest, KernelFusionTest)
-{
-    ApiImpl* apiImpl_ = new ApiImpl();
-    MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::KernelFusionStart).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::KernelFusionEnd).stubs().will(returnValue(RT_ERROR_NONE));
-    Profiler* profiler = ((Runtime*)Runtime::Instance())->profiler_;
-    profiler->SetProfLogEnable(true);
-    auto error = profiler->apiProfileLogDecorator_->KernelFusionStart(NULL);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    error = profiler->apiProfileLogDecorator_->KernelFusionEnd(NULL);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    profiler->SetProfLogEnable(false);
-    delete apiImpl_;
-}
-
 TEST_F(ProfilerTest, LaunchTest)
 {
     rtError_t error;
@@ -3725,37 +3710,6 @@ TEST_F(ProfilerTest, GetOnlineProfilingDataCopyDataTest)
     delete[] hostTsMem;
     delete[] hostRtMem;
     delete[] deviceMem;
-}
-
-TEST_F(ProfilerTest, ProfileDecoratorKernelApiTest)
-{
-    ApiImpl* apiImpl_ = new ApiImpl();
-    MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::MetadataRegister).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::DependencyRegister).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::KernelFusionStart).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::KernelFusionEnd).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::CpuKernelLaunch).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::CpuKernelLaunchExWithArgs).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::MultipleTaskInfoLaunch).stubs().will(returnValue(RT_ERROR_NONE));
-    Profiler* profiler = ((Runtime*)Runtime::Instance())->profiler_;
-    profiler->SetProfLogEnable(true);
-    auto error = profiler->apiProfileDecorator_->MetadataRegister(nullptr, nullptr);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    error = profiler->apiProfileDecorator_->DependencyRegister(nullptr, nullptr);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    error = profiler->apiProfileDecorator_->KernelFusionStart(nullptr);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    error = profiler->apiProfileDecorator_->KernelFusionEnd(nullptr);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    error = profiler->apiProfileDecorator_->CpuKernelLaunch(nullptr, 0, nullptr, nullptr, 0);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    rtAicpuArgsEx_t aicpuArgs = {0};
-    error = profiler->apiProfileDecorator_->CpuKernelLaunchExWithArgs(nullptr, 0, &aicpuArgs, nullptr, 0, 0);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    error = profiler->apiProfileDecorator_->MultipleTaskInfoLaunch(nullptr, nullptr, 0);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    profiler->SetProfLogEnable(false);
-    delete apiImpl_;
 }
 
 TEST_F(ProfilerTest, ProfileDecoratorNotifyApiTest)

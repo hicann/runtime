@@ -79,6 +79,7 @@ public:
     virtual rtMemType_t GetTsMemType(rtMemRequestFeature_t featureType, uint64_t memSize) = 0;
     virtual void SetBiuperfProfFlag(bool flag) = 0;
     virtual void SetL2CacheProfFlag(bool flag) = 0;
+    virtual void SetEnableOstFlag(bool flag) = 0;
     virtual uint32_t GetWaitTimeout() = 0;
     virtual rtError_t ChgUserDevIdToDeviceId(
         const uint32_t userDevId, uint32_t* const deviceId, bool isDeviceSetResetOp = false) const = 0;

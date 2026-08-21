@@ -23,7 +23,6 @@ const std::unordered_set<RtOptionalFeatureType> CHIP_CLOUD_V5_FEATURE{
     RtOptionalFeatureType::RT_FEATURE_OVERFLOW_MODE,
     RtOptionalFeatureType::RT_FEATURE_IPC_MEMORY,
     RtOptionalFeatureType::RT_FEATURE_TASK_ALLOC_FROM_STREAM_POOL,
-    RtOptionalFeatureType::RT_FEATURE_KERNEL_REGISTER_V2,
     RtOptionalFeatureType::RT_FEATURE_TASK_MEMORY_BATCH_COPY,
     RtOptionalFeatureType::RT_FEATURE_STREAM_GET_AVILIABLE_NUM,
     RtOptionalFeatureType::RT_FEATURE_NOTIFY_USER_VA_MAPPING,
@@ -96,6 +95,7 @@ const std::unordered_set<RtOptionalFeatureType> CHIP_CLOUD_V5_FEATURE{
     RtOptionalFeatureType::RT_FEATURE_STARS_MONITOR_AICPU_TIMEOUT,
     RtOptionalFeatureType::RT_FEATURE_IPC_NOTIFY,
     RtOptionalFeatureType::RT_FEATURE_MEM_HOST_REGISTER,
+    RtOptionalFeatureType::RT_FEATURE_KERNEL_EARLY_START,
 };
 
 REGISTER_CHIP_FEATURE_SET(CHIP_CLOUD_V5, CHIP_CLOUD_V5_FEATURE);

@@ -244,6 +244,10 @@ public:
 
     bool isStlKernel(void) const { return isStlKernel_; }
 
+    void SetEarlyStartEnable(bool earlyStartEnable) { earlyStartEnable_ = earlyStartEnable; }
+
+    bool GetEarlyStartEnable() const { return earlyStartEnable_; }
+
 private:
     Program* program_;
     uint32_t aicpuKernelType_ = static_cast<uint32_t>(KERNEL_TYPE_RESERVED);
@@ -269,6 +273,7 @@ private:
     bool isNeedSetFftsAddrInArg_ = false;
     bool isSupportOverFlow_ = true;
     bool isStlKernel_ = false;
+    bool earlyStartEnable_{false};
 
     const void* dfxAddr_;
     uint16_t dfxSize_;

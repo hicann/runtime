@@ -106,7 +106,6 @@ public:
     rtError_t SetupArgument(const void* const setupArg, const uint32_t size, const uint32_t offset) override;
     rtError_t KernelTransArgSet(
         const void* const ptr, const uint64_t size, const uint32_t flag, void** const setupArg) override;
-    rtError_t KernelFusionStart(Stream* const stm) override;
     rtError_t KernelFusionEnd(Stream* const stm) override;
     rtError_t AppendLaunchAddrInfo(rtLaunchArgs_t* const hdl, void* const addrInfo) override;
     rtError_t AppendLaunchHostInfo(

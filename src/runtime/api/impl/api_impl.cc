@@ -1559,23 +1559,6 @@ rtError_t ApiImpl::KernelTransArgSet(
     return curDrv->DevMemFlushCache(RtPtrToValue(ptr), size);
 }
 
-rtError_t ApiImpl::KernelFusionStart(Stream* const stm)
-{
-    RT_LOG(RT_LOG_DEBUG, "kernel fusion start.");
-    Context* const curCtx = CurrentContext();
-    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-
-    Stream* curStm = stm;
-    if (curStm == nullptr) {
-        curStm = curCtx->DefaultStream_();
-        NULL_STREAM_PTR_RETURN_MSG(curStm);
-    }
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
-        curStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Starting kernel fusion");
-
-    return curStm->KernelFusionStart();
-}
-
 rtError_t ApiImpl::KernelFusionEnd(Stream* const stm)
 {
     RT_LOG(RT_LOG_DEBUG, "kernel fusion end.");

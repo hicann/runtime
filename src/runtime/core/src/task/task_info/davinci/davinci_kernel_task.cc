@@ -165,6 +165,7 @@ void AicTaskInit(
             RT_LOG(RT_LOG_INFO, "Set op never time out.");
             aicTaskInfo->timeout = std::numeric_limits<uint64_t>::max();
         }
+        taskInfo->enableProfiling = taskcfg->base.enableProfiling;
     }
 
     if (taskcfg->isExtendValid == 1U) {

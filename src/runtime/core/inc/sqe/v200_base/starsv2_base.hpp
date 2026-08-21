@@ -30,7 +30,7 @@ struct rtDavidStarsSqeHeader_t {
     uint8_t ptrMode : 1;
     uint8_t rttMode : 1;
     uint8_t headUpdate : 1;
-    uint8_t reserved : 1;
+    uint8_t reserved : 1; // arch9201用来表征log_en
     uint16_t blockDim;
 
     /* word1 */

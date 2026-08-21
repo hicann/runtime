@@ -24,7 +24,6 @@ static const std::unordered_set<RtOptionalFeatureType> CHIP_MC62CM12A_FEATURE{
     RtOptionalFeatureType::RT_FEATURE_IPC_MEMORY,
     RtOptionalFeatureType::RT_FEATURE_TASK_FUSION,
     RtOptionalFeatureType::RT_FEATURE_TASK_ALLOC_FROM_STREAM_POOL,
-    RtOptionalFeatureType::RT_FEATURE_KERNEL_REGISTER_V2,
     RtOptionalFeatureType::RT_FEATURE_STREAM_GET_AVILIABLE_NUM,
     RtOptionalFeatureType::RT_FEATURE_PROFILING_ONLINE,
     RtOptionalFeatureType::RT_FEATURE_DFX_ARGS_DOT_ALLOC_ERROR_LOG,

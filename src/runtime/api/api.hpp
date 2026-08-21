@@ -208,7 +208,6 @@ public:
     virtual rtError_t SetupArgument(const void* const setupArg, const uint32_t size, const uint32_t offset) = 0;
     virtual rtError_t KernelTransArgSet(
         const void* const ptr, const uint64_t size, const uint32_t flag, void** const setupArg) = 0;
-    virtual rtError_t KernelFusionStart(Stream* const stm) = 0;
     virtual rtError_t KernelFusionEnd(Stream* const stm) = 0;
     virtual rtError_t AppendLaunchAddrInfo(rtLaunchArgs_t* const hdl, void* const addrInfo) = 0;
     virtual rtError_t AppendLaunchHostInfo(

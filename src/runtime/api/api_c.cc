@@ -1577,6 +1577,9 @@ rtError_t rtProfSetProSwitch(void* data, uint32_t len)
         if (((profilerConfig->profSwitch) & (PROF_L2CACHE)) != 0U) {
             Runtime::Instance()->SetL2CacheProfFlag(true);
         }
+        if ((profilerConfig->profSwitch & PROF_OP_MASK) != 0U) {
+            Runtime::Instance()->SetTaskLevelProfFlag(true);
+        }
     } else if (profilerConfig->type == PROF_COMMANDHANDLE_TYPE_STOP) {
         const rtError_t error = apiInstance->ProfilerStop(
             profilerConfig->profSwitch, static_cast<int32_t>(profilerConfig->devNums), profilerConfig->devIdList,
@@ -1587,6 +1590,9 @@ rtError_t rtProfSetProSwitch(void* data, uint32_t len)
         }
         if (((profilerConfig->profSwitch) & (PROF_L2CACHE)) != 0U) {
             Runtime::Instance()->SetL2CacheProfFlag(false);
+        }
+        if ((profilerConfig->profSwitch & PROF_OP_MASK) != 0U) {
+            Runtime::Instance()->SetTaskLevelProfFlag(false);
         }
     } else {
         RT_LOG(RT_LOG_INFO, "runtime does not support type:%u", profilerConfig->type);
@@ -3493,6 +3499,12 @@ RTS_API rtError_t rtSetSysParamOpt(const rtSysParamOpt configOpt, const int64_t 
         (configVal >= maxVal) || (configVal < 0), RT_ERROR_INVALID_VALUE, configVal,
         RtFmtMsg("[0, %" PRId64 ")", maxVal));
     sysParamOpt_[configOpt].store(configVal);
+    if (unlikely(configOpt == SYS_OPT_ENABLE_KERNEL_EARLY_START)) {
+        Runtime* const rtInstance = Runtime::Instance();
+        NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
+        bool flag = (configVal == SYS_OPT_ENABLE);
+        rtInstance->SetEnableOstFlag(flag);
+    }
     return ACL_RT_SUCCESS;
 }
 

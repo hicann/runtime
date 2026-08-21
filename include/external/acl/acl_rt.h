@@ -532,6 +532,7 @@ typedef enum aclrtLaunchKernelAttrId {
     ACL_RT_LAUNCH_KERNEL_ATTR_TIMEOUT = 7,
     // ACL_RT_LAUNCH_KERNEL_ATTR_TIMEOUT and ACL_RT_LAUNCH_KERNEL_ATTR_TIMEOUT_US cannot be carried at the same time
     ACL_RT_LAUNCH_KERNEL_ATTR_TIMEOUT_US = 8,
+    ACL_RT_LAUNCH_KERNEL_ATTR_ENABLE_PROFILING = 9,
 } aclrtLaunchKernelAttrId;
 
 /**
@@ -554,6 +555,7 @@ typedef union aclrtLaunchKernelAttrValue {
     uint8_t isDataDump;
     uint16_t timeout;         // unit: s
     aclrtTimeoutUs timeoutUs; // unit: us
+    uint8_t enableProfiling; // 0: disable 1: enable
     uint32_t rsv[4];
 } aclrtLaunchKernelAttrValue;
 

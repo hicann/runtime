@@ -204,7 +204,8 @@ typedef enum {
     ACL_OPT_DETERMINISTIC = 0, // value: 0:disable, 1:deterministic, 2:strong consistency, 3:batch consistency
     ACL_OPT_ENABLE_DEBUG_KERNEL = 1,
     ACL_OPT_STRONG_CONSISTENCY ACL_DEPRECATED_MESSAGE(
-        "ACL_OPT_STRONG_CONSISTENCY is deprecated, use ACL_OPT_DETERMINISTIC with value 2 instead") = 2
+        "ACL_OPT_STRONG_CONSISTENCY is deprecated, use ACL_OPT_DETERMINISTIC with value 2 instead") = 2,
+    ACL_OPT_ENABLE_KERNEL_EARLY_START = 3
 } aclSysParamOpt;
 
 typedef enum {

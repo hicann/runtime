@@ -646,6 +646,7 @@ static rtError_t ElfParseTlvInfo(uint16_t tlvType, const uint8_t* buf, ElfKernel
     const ElfKernelAivTypeInfo* aivTypeInfo = nullptr;
     const ElfKernelReportSzInfo* reportSzInfo = nullptr;
     const ElfKernelMinStackSizeInfo* minStackSizeInfo = nullptr;
+    const ElfKernelEarlyStartInfo* earlyStartInfo = nullptr;
     const ElfKernelFunctionEntryInfo* functionEntryInfo = nullptr;
     const ElfKernelSchedModeInfo* schedModeInfo = nullptr;
     uint16_t tlvLength = 0U;
@@ -691,6 +692,13 @@ static rtError_t ElfParseTlvInfo(uint16_t tlvType, const uint8_t* buf, ElfKernel
             tlvInfo->minStackSize = static_cast<uint32_t>(
                 GetByte(RtPtrToPtr<const uint8_t*, const uint32_t*>(&(minStackSizeInfo->minStackSize)), tlvLength));
             RT_LOG(RT_LOG_INFO, "tlvLength=%u, minStackSize=%u.", tlvLength, tlvInfo->minStackSize);
+            break;
+        case RT_FUNCTION_TYPE_EARLY_START_ENABLE:
+            earlyStartInfo = RtPtrToPtr<const ElfKernelEarlyStartInfo*>(buf);
+            tlvInfo->earlyStartEnable =
+                (static_cast<uint32_t>(GetByte(
+                     RtPtrToPtr<const uint8_t*, const uint32_t*>(&(earlyStartInfo->earlyStartEnable)),
+                     sizeof(uint32_t))) == 1U);
             break;
         case RT_FUNCTION_TYPE_FUNCTION_ENTRY_INFO:
             functionEntryInfo = RtPtrToPtr<const ElfKernelFunctionEntryInfo*>(buf);
@@ -848,6 +856,7 @@ static void KernelMetaInfoInit(RtKernelMetaInfo* const kernelMetaInfo)
     kernelMetaInfo->funcEntryType = KernelFunctionEntryType::KERNEL_TYPE_TILING_KEY;
     kernelMetaInfo->schedMode = static_cast<uint32_t>(RT_SCHEM_MODE_NORMAL);
     kernelMetaInfo->userArgsNum = USER_ARGS_MAX_NUM;
+    kernelMetaInfo->earlyStartEnable = false;
     kernelMetaInfo->minStackSize = 0U;
     kernelMetaInfo->paramInfos = nullptr;
     kernelMetaInfo->paramCount = 0U;
@@ -867,6 +876,7 @@ static void kernelInfoInit(rtElfData* const elfData, Elf_Internal_Shdr* section,
     kernelInfo->dfxAddr = (RtPtrToPtr<uint8_t*>(elfData->obj_ptr_origin) + section->sh_offset);
     kernelInfo->dfxSize = static_cast<uint16_t>(section->sh_size);
     kernelInfo->elfDataFlag = static_cast<int32_t>(elfData->elf_header.e_ident[EI_DATA]);
+    kernelInfo->earlyStartEnable = false;
     kernelInfo->functionEntry = 0U;
     kernelInfo->functionEntryFlag = KERNEL_FUNCTION_ENTRY_DISABLE;
     kernelInfo->isSupportFuncEntry = false;
@@ -935,12 +945,12 @@ static void ParseKernelMetaData(
             RT_LOG_INFO,
             "kernel_name=%s, ration[0]=%u, ration[1]=%u, "
             "dfxAddr=0x%llx, dfxSize=%u, "
-            "funcType=%u, crossCoreSync=%u, kernelVfType=%u, shareMemSize=%u, minStackSize=%u, "
+            "funcType=%u, crossCoreSync=%u, kernelVfType=%u, shareMemSize=%u, minStackSize=%u, earlyStartEnable=%d, "
             "isSupportFuncEntry=%d, functionEntryFlag=%u, functionEntry=%" PRIu64 ".",
             kernelName.c_str(), kernelInfo->taskRation[0], kernelInfo->taskRation[1], RtPtrToValue(kernelInfo->dfxAddr),
             kernelInfo->dfxSize, kernelInfo->funcType, kernelInfo->crossCoreSync, kernelInfo->kernelVfType,
-            kernelInfo->shareMemSize, kernelInfo->minStackSize, kernelInfo->isSupportFuncEntry,
-            kernelInfo->functionEntryFlag, kernelInfo->functionEntry);
+            kernelInfo->shareMemSize, kernelInfo->minStackSize, kernelInfo->earlyStartEnable,
+            kernelInfo->isSupportFuncEntry, kernelInfo->functionEntryFlag, kernelInfo->functionEntry);
     } else if (stringTab.find(ELF_SECTION_ASCEND_STACK_SIZE_RECORD) != std::string::npos) {
         ParseElfStackInfoFromSection(
             elfData, (RtPtrToPtr<uint8_t*>(elfData->obj_ptr_origin) + section->sh_offset),
@@ -1151,6 +1161,7 @@ rtError_t UpdateKernelsInfo(
         metaInfo->taskRation = DEFAULT_TASK_RATION;
         metaInfo->kernelVfType = iter->second->kernelVfType;
         metaInfo->shareMemSize = iter->second->shareMemSize;
+        metaInfo->earlyStartEnable = iter->second->earlyStartEnable;
 
         /* update kernel params info */
         rtError_t error = UpdateCachedParamInfos(metaInfo, iter->second, kernels[index].name);
@@ -1173,12 +1184,13 @@ rtError_t UpdateKernelsInfo(
             "update meta info, kernel_name=%s, dfxAddr=0x%llx, dfxSize=%u, funcType=%u, "
             "elfDataFlag=%d, userArgsNum=%hu, crossCoreSync=%u, kernelVfType=%u, shareMemSize=%u, "
             "minStackSize=%u, funcEntryType=%u, functionEntry=%lu, schedMode=%u, "
-            "taskRation_0=%hu, taskRation_1=%hu, hasParamSummary=%d, paramCount=%u, paramTotalSize=%llu.",
+            "taskRation_0=%hu, taskRation_1=%hu, hasParamSummary=%d, paramCount=%u, paramTotalSize=%llu, "
+            "earlyStartEnable=%d.",
             kernels[index].name, metaInfo->dfxAddr, metaInfo->dfxSize, metaInfo->funcType, metaInfo->elfDataFlag,
             metaInfo->userArgsNum, metaInfo->crossCoreSync, metaInfo->kernelVfType, metaInfo->shareMemSize,
             metaInfo->minStackSize, metaInfo->funcEntryType, metaInfo->functionEntry, metaInfo->schedMode,
             iter->second->taskRation[0], iter->second->taskRation[1], metaInfo->hasParamSummary, metaInfo->paramCount,
-            metaInfo->paramTotalSize);
+            metaInfo->paramTotalSize, metaInfo->earlyStartEnable);
 
         // section no taskRation && not support mix ratio
         if (((iter->second->taskRation[0] == 0U) && (iter->second->taskRation[1] == 0U)) ||

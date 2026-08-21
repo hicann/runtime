@@ -480,9 +480,22 @@ union rtDavidSqe_t {
 #pragma pack(pop)
 
 using PfnTaskToDavidSqe = void (*)(TaskInfo* taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo);
+using PfnDavidSqeHeaderPostProc = void (*)(rtDavidStarsSqeHeader_t* header);
+
+extern PfnDavidSqeHeaderPostProc g_davidSqeHeaderPostProcRunningFunc;
 
 void RegDavidSqeFunc(rtChipType_t chipType, tsTaskType_t taskType, PfnTaskToDavidSqe func);
+void RegDavidSqeHeaderPostProcFunc(rtChipType_t chipType, PfnDavidSqeHeaderPostProc func);
 void RefreshDavidSqeRunningFunc(rtChipType_t chipType);
+
+inline void PostProcessDavidSqeHeader(rtDavidStarsSqeHeader_t* header)
+{
+    const PfnDavidSqeHeaderPostProc postProcFunc = g_davidSqeHeaderPostProcRunningFunc;
+    if (postProcFunc != nullptr) {
+        postProcFunc(header);
+    }
+    return;
+}
 
 void ToConstructDavidSqe(TaskInfo* taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo);
 uint32_t GetSendDavidSqeNum(const TaskInfo* const taskInfo);
@@ -555,6 +568,9 @@ void DoCompleteSuccessForDavidEventWaitTask(TaskInfo* const taskInfo, const uint
 void DoCompleteSuccessForDavidEventResetTask(TaskInfo* const taskInfo, const uint32_t devId);
 void SetStarsResultForDavidEventRecordTask(TaskInfo* const taskInfo, const rtCqReport_t& logicCq);
 void StarsV2SetStarsResultForDavinciTask(TaskInfo* taskInfo, const rtCqReport_t& logicCq);
+uint32_t GetStarsV2VectorErrorCode(const rtCqReport_t& logicCq);
+uint32_t GetStarsV2AicpuErrorCode(const rtCqReport_t& logicCq);
+uint32_t GetStarsV2AicoreErrorCode(const rtCqReport_t& logicCq);
 void ConstructDavidAicAivSqeForDavinciTask(TaskInfo* const taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo);
 void StarsV2DavinciTaskUnInit(TaskInfo* taskInfo);
 void StarsV2DoCompleteSuccessForDavinciTask(TaskInfo* taskInfo, const uint32_t devId);

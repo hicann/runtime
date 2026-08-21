@@ -65,14 +65,6 @@ rtError_t ApiProfileLogDecorator::FunctionRegister(
     return error;
 }
 
-rtError_t ApiProfileLogDecorator::KernelFusionStart(Stream* const stm)
-{
-    ProfileLogRecord record(PROFILE_RECORD_TYPE_RT_CALL_RT, RT_PROF_API_KERNEL_FUSION_START, profiler_);
-    const rtError_t error = impl_->KernelFusionStart(stm);
-    record.SaveRecord();
-    return error;
-}
-
 rtError_t ApiProfileLogDecorator::KernelFusionEnd(Stream* const stm)
 {
     ProfileLogRecord record(PROFILE_RECORD_TYPE_RT_CALL_RT, RT_PROF_API_KERNEL_FUSION_END, profiler_);

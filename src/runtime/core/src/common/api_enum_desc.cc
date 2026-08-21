@@ -99,8 +99,10 @@ std::string SysParamOptToString(const rtSysParamOpt option)
             return "SYS_OPT_ENABLE_DEBUG_KERNEL(1)";
         case SYS_OPT_STRONG_CONSISTENCY:
             return "SYS_OPT_STRONG_CONSISTENCY(2)";
+        case SYS_OPT_ENABLE_KERNEL_EARLY_START:
+            return "SYS_OPT_ENABLE_KERNEL_EARLY_START(3)";
         case SYS_OPT_RESERVED:
-            return "SYS_OPT_RESERVED(3)";
+            return "SYS_OPT_RESERVED(4)";
         default:
             return RtFmtMsg("UNKNOWN(%d)", static_cast<int32_t>(option));
     }

@@ -204,6 +204,7 @@ inline const char* GetSysParamOptDesc(aclSysParamOpt opt)
         {ACL_OPT_DETERMINISTIC, "OPT_DETERMINISTIC(0)"},
         {ACL_OPT_ENABLE_DEBUG_KERNEL, "OPT_ENABLE_DEBUG_KERNEL(1)"},
         {OPT_STRONG_CONSISTENCY, "OPT_STRONG_CONSISTENCY(2)"},
+        {ACL_OPT_ENABLE_KERNEL_EARLY_START, "ACL_OPT_ENABLE_KERNEL_EARLY_START(3)"},
     };
 
     auto it = sysParamOptDescMap.find(opt);

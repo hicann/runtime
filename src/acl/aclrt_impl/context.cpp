@@ -92,15 +92,22 @@ static aclError GetSysParamOpt(aclSysParamOpt opt, int64_t* value, bool isCtx)
     constexpr aclSysParamOpt OPT_STRONG_CONSISTENCY = static_cast<aclSysParamOpt>(2);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT_AND_FUNC_DESC(
         value, "Obtaining system parameter values from the current context");
-    ACL_CHECK_INVALID_VALUE_WITH_DESC_AND_FUNC_DESC(
-        (opt == ACL_OPT_DETERMINISTIC || opt == ACL_OPT_ENABLE_DEBUG_KERNEL || opt == OPT_STRONG_CONSISTENCY),
-        acl::GetSysParamOptDesc(opt), "opt",
-        "ACL_OPT_DETERMINISTIC(0) or ACL_OPT_ENABLE_DEBUG_KERNEL(1) or ACL_OPT_STRONG_CONSISTENCY(2)",
-        ACL_ERROR_INVALID_PARAM, "Obtaining system parameter values from the current context");
     rtError_t rtErr = RT_ERROR_NONE;
     if (isCtx) {
+        ACL_CHECK_INVALID_VALUE_WITH_DESC_AND_FUNC_DESC(
+            (opt == ACL_OPT_DETERMINISTIC || opt == ACL_OPT_ENABLE_DEBUG_KERNEL || opt == OPT_STRONG_CONSISTENCY),
+            acl::GetSysParamOptDesc(opt), "opt",
+            "ACL_OPT_DETERMINISTIC(0) or ACL_OPT_ENABLE_DEBUG_KERNEL(1) or ACL_OPT_STRONG_CONSISTENCY(2)",
+            ACL_ERROR_INVALID_PARAM, "Obtaining system parameter values from the current context");
         rtErr = rtCtxGetSysParamOpt(static_cast<rtSysParamOpt>(opt), value);
     } else {
+        ACL_CHECK_INVALID_VALUE_WITH_DESC_AND_FUNC_DESC(
+            (opt == ACL_OPT_DETERMINISTIC || opt == ACL_OPT_ENABLE_DEBUG_KERNEL || opt == OPT_STRONG_CONSISTENCY ||
+             opt == ACL_OPT_ENABLE_KERNEL_EARLY_START),
+            acl::GetSysParamOptDesc(opt), "opt",
+            "ACL_OPT_DETERMINISTIC(0) or ACL_OPT_ENABLE_DEBUG_KERNEL(1) or ACL_OPT_STRONG_CONSISTENCY(2) or "
+            "ACL_OPT_ENABLE_KERNEL_EARLY_START(3)",
+            ACL_ERROR_INVALID_PARAM, "Obtaining system parameter values from the current context");
         rtErr = rtGetSysParamOpt(static_cast<rtSysParamOpt>(opt), value);
     }
 
@@ -118,17 +125,25 @@ static aclError GetSysParamOpt(aclSysParamOpt opt, int64_t* value, bool isCtx)
 static aclError SetSysParamOpt(aclSysParamOpt opt, int64_t value, bool isCtx)
 {
     constexpr aclSysParamOpt OPT_STRONG_CONSISTENCY = static_cast<aclSysParamOpt>(2);
-    ACL_CHECK_INVALID_VALUE_WITH_DESC_AND_FUNC_DESC(
-        (opt == ACL_OPT_DETERMINISTIC || opt == ACL_OPT_ENABLE_DEBUG_KERNEL || opt == OPT_STRONG_CONSISTENCY),
-        acl::GetSysParamOptDesc(opt), "opt",
-        "ACL_OPT_DETERMINISTIC(0) or ACL_OPT_ENABLE_DEBUG_KERNEL(1) or ACL_OPT_STRONG_CONSISTENCY(2)",
-        ACL_ERROR_INVALID_PARAM, "Setting system parameter values in the current context");
     if (isCtx) {
+        ACL_CHECK_INVALID_VALUE_WITH_DESC_AND_FUNC_DESC(
+            (opt == ACL_OPT_DETERMINISTIC || opt == ACL_OPT_ENABLE_DEBUG_KERNEL || opt == OPT_STRONG_CONSISTENCY),
+            acl::GetSysParamOptDesc(opt), "opt",
+            "ACL_OPT_DETERMINISTIC(0) or ACL_OPT_ENABLE_DEBUG_KERNEL(1) or ACL_OPT_STRONG_CONSISTENCY(2)",
+            ACL_ERROR_INVALID_PARAM, "Setting system parameter values in the current context");
         ACL_REQUIRES_RTS_OK(rtCtxSetSysParamOpt(static_cast<rtSysParamOpt>(opt), value));
+        ACL_LOG_INFO("successfully execute aclrtCtxSetSysParamOpt");
     } else {
+        ACL_CHECK_INVALID_VALUE_WITH_DESC_AND_FUNC_DESC(
+            (opt == ACL_OPT_DETERMINISTIC || opt == ACL_OPT_ENABLE_DEBUG_KERNEL || opt == OPT_STRONG_CONSISTENCY ||
+             opt == ACL_OPT_ENABLE_KERNEL_EARLY_START),
+            acl::GetSysParamOptDesc(opt), "opt",
+            "ACL_OPT_DETERMINISTIC(0) or ACL_OPT_ENABLE_DEBUG_KERNEL(1) or ACL_OPT_STRONG_CONSISTENCY(2) or "
+            "ACL_OPT_ENABLE_KERNEL_EARLY_START(3)",
+            ACL_ERROR_INVALID_PARAM, "Setting system parameter values in the current context");
         ACL_REQUIRES_RTS_OK(rtSetSysParamOpt(static_cast<rtSysParamOpt>(opt), value));
+        ACL_LOG_INFO("successfully execute aclrtSetSysParamOpt");
     }
-    ACL_LOG_INFO("successfully execute aclrtCtxSetSysParamOpt");
     return ACL_SUCCESS;
 }
 

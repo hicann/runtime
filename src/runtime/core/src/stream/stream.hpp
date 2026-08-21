@@ -269,9 +269,6 @@ public:
     // Query state of event
     rtError_t Query(void) const;
 
-    // start fusion kernels
-    rtError_t KernelFusionStart();
-
     // end fuison kernels
     rtError_t KernelFusionEnd();
 

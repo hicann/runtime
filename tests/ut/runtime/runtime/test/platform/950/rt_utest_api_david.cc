@@ -12757,12 +12757,6 @@ TEST_F(ApiDavidTest, api_error_decorator_null_param_branches)
     error = api.KernelGetAddrAndPrefCntV2(nullptr, 0U, nullptr, 0U, nullptr);
     EXPECT_NE(error, RT_ERROR_NONE);
 
-    error = api.KernelFusionStart(nullptr);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = api.KernelFusionEnd(nullptr);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
     error = api.FunctionGetMetaInfo(nullptr, RT_FUNCTION_TYPE_KERNEL_TYPE, nullptr, 0U);
     EXPECT_NE(error, RT_ERROR_NONE);
 

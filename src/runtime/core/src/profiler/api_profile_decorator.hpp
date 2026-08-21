@@ -77,7 +77,6 @@ public:
         const rtMultipleTaskInfo_t* const taskInfo, Stream* const stm, const uint32_t flag) override;
     rtError_t DatadumpInfoLoad(const void* const dumpInfo, const uint32_t length, const uint32_t flag) override;
     rtError_t AicpuInfoLoad(const void* const aicpuInfo, const uint32_t length) override;
-    rtError_t KernelFusionStart(Stream* const stm) override;
     rtError_t KernelFusionEnd(Stream* const stm) override;
     rtError_t GetServerIDBySDID(uint32_t sdid, uint32_t* srvId) override;
     rtError_t FusionLaunch(void* const fusionInfo, Stream* const stm, rtFusionArgsEx_t* argsInfo) override;

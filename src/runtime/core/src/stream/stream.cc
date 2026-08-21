@@ -2158,28 +2158,6 @@ rtError_t Stream::Query(void) const
     return RT_ERROR_NONE;
 }
 
-rtError_t Stream::KernelFusionStart()
-{
-    fusioning_ = true;
-    TaskInfo submitTask = {};
-    rtError_t errorReason;
-    TaskInfo* tsk = AllocTask(&submitTask, TS_TASK_TYPE_FUSION_ISSUE, errorReason);
-    NULL_PTR_RETURN_MSG(tsk, errorReason);
-
-    rtError_t error = KernelFusionTaskInit(tsk, FUSION_START);
-    ERROR_GOTO_MSG_INNER(error, RECYCLE, "Init kernel fusion task failed, retCode=%#x.", static_cast<uint32_t>(error));
-    error = device_->SubmitTask(tsk);
-    ERROR_GOTO_MSG_INNER(
-        error, RECYCLE, "Submit kernel fusion task failed, retCode=%#x.", static_cast<uint32_t>(error));
-
-    return RT_ERROR_NONE;
-
-RECYCLE:
-    (void)device_->GetTaskFactory()->Recycle(tsk);
-    fusioning_ = false;
-    return error;
-}
-
 rtError_t Stream::KernelFusionEnd()
 {
     if (!fusioning_) {

@@ -1100,6 +1100,7 @@ void ElfProgram::SetKernelAttribute(const RtKernel* const kernel, Kernel* const 
     kernelObj->SetParamInfos(metaInfo->paramInfos);
     kernelObj->SetParamCount(metaInfo->paramCount);
     kernelObj->SetHasParamSummary(metaInfo->hasParamSummary);
+    kernelObj->SetEarlyStartEnable(metaInfo->earlyStartEnable);
 
     uint16_t sysParamNum = 0U;
     if (kernelObj->IsSupportOverFlow()) {
@@ -1119,10 +1120,10 @@ void ElfProgram::SetKernelAttribute(const RtKernel* const kernel, Kernel* const 
     RT_LOG(
         RT_LOG_INFO,
         "kernel_name=%s, kernelAttrType=%s, userParamNum=%hu, sysParamNum=%hu, "
-        "IsNeedSetFftsAddrInArg=%u, isSupportOverFlow=%u, elfDataFlag=%d",
+        "IsNeedSetFftsAddrInArg=%u, isSupportOverFlow=%u, elfDataFlag=%d, earlyStartEnable=%d",
         kernel->name, KernelAttrTypeToString(kernelObj->GetKernelAttrType()).c_str(), kernelObj->GetUserParaNum(),
         kernelObj->GetSystemParaNum(), kernelObj->IsNeedSetFftsAddrInArg(), kernelObj->IsSupportOverFlow(),
-        kernelObj->ElfDataFlag());
+        kernelObj->ElfDataFlag(), kernelObj->GetEarlyStartEnable());
     return;
 }
 
@@ -1723,11 +1724,11 @@ rtError_t ElfProgram::BuildNewKernel(
         RT_LOG_INFO,
         "new kernel success, size=%zu, programId=%u, original kernel_name=%s, register kernel_name=%s, "
         "tilingKey=%llu, functionEntry=%llu, funcType=%u, kernelAttrType=%s, mixType=%hu, taskRation=%u, "
-        "offset=%u, dfxAddr=%#" PRIu64 ", dfxSize=%u",
+        "offset=%u, dfxAddr=%#" PRIu64 ", dfxSize=%u, earlyStartEnable=%d",
         sizeof(Kernel), Id_(), elfkernelInfo->name, tripKernelName.c_str(), tilingKey, metaInfo->functionEntry,
         metaInfo->funcType, KernelAttrTypeToString(kernelAttrType).c_str(), mixType, metaInfo->taskRation,
         static_cast<uint32_t>(elfkernelInfo->offset), static_cast<uint64_t>(RtPtrToPtr<uintptr_t>(metaInfo->dfxAddr)),
-        metaInfo->dfxSize);
+        metaInfo->dfxSize, metaInfo->earlyStartEnable);
     kernel = kernelObj;
     return RT_ERROR_NONE;
 }
@@ -1796,6 +1797,8 @@ rtError_t ElfProgram::MergeKernel(const RtKernel* const elfkernelInfo, Kernel* o
         oldKernel->SetMixType(static_cast<uint8_t>(MIX_AIC_AIV_MAIN_AIC));
         oldKernel->SetKernelAttrType(RT_KERNEL_ATTR_TYPE_MIX);
     }
+
+    oldKernel->SetEarlyStartEnable(oldKernel->GetEarlyStartEnable() || metaInfo->earlyStartEnable);
 
     (void)GetPrefetchCnt(oldKernel);
 

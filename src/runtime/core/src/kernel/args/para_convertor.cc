@@ -197,6 +197,9 @@ rtError_t ConvertLaunchCfgToTaskCfg(TaskCfg& taskCfg, const rtKernelLaunchCfg_t*
                             static_cast<uint64_t>(cfg->attrs[idx].value.timeoutUs.timeoutLow);
                 taskCfg.extend.timeout = ConvertTimeoutToInner(timeoutUs);
                 break;
+            case RT_LAUNCH_KERNEL_ATTR_ENABLE_PROFILING:
+                taskCfg.base.enableProfiling = cfg->attrs[idx].value.enableProfiling;
+                break;
             default:
                 RT_LOG(
                     RT_LOG_ERROR, "Launch kernel attr type[%s] is invalid, should be [%u, %u)",

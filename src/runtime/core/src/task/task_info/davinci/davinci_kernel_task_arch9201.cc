@@ -19,7 +19,16 @@ namespace cce {
 namespace runtime {
 
 #if F_DESC("DavinciKernelTask")
-void ConstructArch9201SqeForHeadCommon(const TaskInfo* taskInfo, void* const sqe)
+static void ConfigArch9201AixTaskProfiling(const TaskInfo* taskInfo, rtDavidStarsSqeHeader_t* const header)
+{
+    if (Runtime::Instance()->GetTaskLevelProfFlag()) {
+        header->reserved = taskInfo->enableProfiling;
+    } else {
+        header->reserved = 1U;
+    }
+}
+
+static void ConstructArch9201SqeForHeadCommon(const TaskInfo* taskInfo, void* const sqe)
 {
     const Stream* const stream = taskInfo->stream;
     // Performance-sensitive paths, internally controllable addresses
@@ -28,6 +37,26 @@ void ConstructArch9201SqeForHeadCommon(const TaskInfo* taskInfo, void* const sqe
     (void)memset_s(davidSqe, sizeof(RtArch9201StarsAicAivKernelSqe), 0, sizeof(RtArch9201StarsAicAivKernelSqe));
     davidSqe->header.wrCqe = stream->GetStarsWrCqeFlag();
     davidSqe->header.taskId = taskInfo->taskSn;
+    ConfigArch9201AixTaskProfiling(taskInfo, &(davidSqe->header));
+}
+
+void ConfigArch9201OstEnable(const Kernel* kernel, RtArch9201StarsAicAivKernelSqe* const sqe)
+{
+    if ((sqe->header.preP == 0U) && (sqe->header.postP == 0U)) {
+        sqe->ost = (kernel != nullptr) ? kernel->GetEarlyStartEnable() : 0U;
+    }
+    return;
+}
+
+void ConfigArch9201SqeHeaderTaskProfiling(rtDavidStarsSqeHeader_t* const header)
+{
+    if (Runtime::Instance()->GetTaskLevelProfFlag()) {
+        header->reserved = 0U;
+    } else {
+        header->reserved = 1U;
+    }
+
+    return;
 }
 
 static void ConstructDavidCommonSqeForDavinciTask(TaskInfo* taskInfo, RtArch9201StarsAicAivKernelSqe* const sqe)
@@ -36,7 +65,6 @@ static void ConstructDavidCommonSqeForDavinciTask(TaskInfo* taskInfo, RtArch9201
     AicTaskInfo* aicTaskInfo = &(taskInfo->u.aicTaskInfo);
     ConstructArch9201SqeForHeadCommon(taskInfo, sqe);
     ConstructCommonAicAivSqeWord(&(aicTaskInfo->comm), sqe, taskInfo, stm);
-    /* TODO: OST & logEn*/
 
     /* word 4*/
     sqe->aicMtePortArOstd = 0U;
@@ -139,7 +167,7 @@ static void ConstructDavidMixSqeForDavinciTask(TaskInfo* taskInfo, RtArch9201Sta
     }
     /* dcache preload cnt*/
     GetDcachePrefetchCnt(taskInfo, sqe);
-
+    ConfigArch9201OstEnable(aicTaskInfo->kernel, sqe);
     PrintDavidSqe(sqe, "MIX Task");
     return;
 }
@@ -155,7 +183,7 @@ static void ConstructDavidAICoreSqeForDavinciTask(TaskInfo* taskInfo, RtArch9201
     sqe->aivPreAllocateDisable = 1U;
     /* dcache preload cnt */
     GetDcachePrefetchCnt(taskInfo, sqe);
-
+    ConfigArch9201OstEnable(aicTaskInfo->kernel, sqe);
     PrintDavidSqe(sqe, "AICore Task");
     return;
 }
@@ -171,7 +199,7 @@ static void ConstructDavidAivSqeForDavinciTask(TaskInfo* taskInfo, RtArch9201Sta
     sqe->aivPreAllocateDisable = 0U;
     /* dcache preload cnt */
     GetDcachePrefetchCnt(taskInfo, sqe);
-
+    ConfigArch9201OstEnable(aicTaskInfo->kernel, sqe);
     PrintDavidSqe(sqe, "AIV Task");
     return;
 }
@@ -195,6 +223,38 @@ static void ConstructArch9201AicAivSqeForDavinciTask(
     }
 }
 
+static void SetStarsResultByErrorType(TaskInfo* taskInfo, const rtCqReport_t& logicCq)
+{
+    if ((logicCq.errorType & RT_STARS_EXIST_ERROR) == 0U) {
+        return;
+    }
+    Stream* const reportStream = GetReportStream(taskInfo->stream);
+    if (taskInfo->type == TS_TASK_TYPE_KERNEL_AIVEC) {
+        taskInfo->errorCode = GetStarsV2VectorErrorCode(logicCq);
+        COND_PROC(
+            CheckErrPrint(taskInfo->errorCode),
+            STREAM_REPORT_ERR_MSG(
+                reportStream, ERR_MODULE_TBE,
+                "Vector Core kernel execution failed, retCode=%#x, nextTaskVld=%u, notifyAttached=%u.",
+                taskInfo->errorCode, logicCq.nextTaskVld, logicCq.notifyAttached));
+    } else if (taskInfo->type == TS_TASK_TYPE_KERNEL_AICPU) {
+        taskInfo->errorCode = GetStarsV2AicpuErrorCode(logicCq);
+        COND_PROC(
+            CheckErrPrint(taskInfo->errorCode),
+            STREAM_REPORT_ERR_MSG(
+                reportStream, ERR_MODULE_AICPU, "AI CPU kernel task execution failed, retCode=%#x.",
+                taskInfo->errorCode));
+    } else {
+        taskInfo->errorCode = GetStarsV2AicoreErrorCode(logicCq);
+        COND_PROC(
+            CheckErrPrint(taskInfo->errorCode),
+            STREAM_REPORT_ERR_MSG(
+                reportStream, ERR_MODULE_TBE,
+                "AI Core kernel task execution failed, retCode=%#x, nextTaskVld=%u, notifyAttached=%u.",
+                taskInfo->errorCode, logicCq.nextTaskVld, logicCq.notifyAttached));
+    }
+}
+
 static bool DavinciKernelTaskRegister()
 {
     TaskFuncSingle aicAivFuncs = {
@@ -205,7 +265,7 @@ static bool DavinciKernelTaskRegister()
         .waitAsyncCpCompleteFunc = nullptr,
         .printErrorInfoFunc = &PrintErrorInfoForDavinciTask,
         .setResultFunc = nullptr,
-        .setStarsResultFunc = &StarsV2SetStarsResultForDavinciTask,
+        .setStarsResultFunc = &SetStarsResultByErrorType,
     };
 
     TaskFuncSingle aicpuFuncs = {
@@ -225,6 +285,7 @@ static bool DavinciKernelTaskRegister()
     RegDavidSqeFunc(CHIP_CLOUD_V5, TS_TASK_TYPE_KERNEL_AICPU, &ConstructDavidAICpuSqeForDavinciTask);
     RegDavidSqeFunc(CHIP_CLOUD_V5, TS_TASK_TYPE_KERNEL_AICORE, &ConstructArch9201AicAivSqeForDavinciTask);
     RegDavidSqeFunc(CHIP_CLOUD_V5, TS_TASK_TYPE_KERNEL_AIVEC, &ConstructArch9201AicAivSqeForDavinciTask);
+    RegDavidSqeHeaderPostProcFunc(CHIP_CLOUD_V5, &ConfigArch9201SqeHeaderTaskProfiling);
 
     return true;
 }

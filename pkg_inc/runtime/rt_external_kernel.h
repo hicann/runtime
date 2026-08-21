@@ -408,6 +408,7 @@ typedef enum {
     RT_LAUNCH_KERNEL_ATTR_DATA_DUMP,
     RT_LAUNCH_KERNEL_ATTR_TIMEOUT,
     RT_LAUNCH_KERNEL_ATTR_TIMEOUT_US,
+    RT_LAUNCH_KERNEL_ATTR_ENABLE_PROFILING,
     RT_LAUNCH_KERNEL_ATTR_MAX
 } rtLaunchKernelAttrId;
 
@@ -432,9 +433,10 @@ typedef union {
     rtEngineType engineType;
     uint32_t blockDimOffset;
     uint8_t isBlockTaskPrefetch; // 任务下发时判断是否sqe后续需要刷新标记（tiling key依赖下沉场景）0:disable 1:enable
-    uint8_t isDataDump;    // 0:disable 1:enable
+    uint8_t isDataDump;      // 0:disable 1:enable
     uint16_t timeout;
-    rtTimeoutUs timeoutUs; // uint:us
+    rtTimeoutUs timeoutUs;   // unit:us
+    uint8_t enableProfiling; // 0: disable 1: enable
     uint32_t rsv[4];
 } rtLaunchKernelAttrVal_t;
 

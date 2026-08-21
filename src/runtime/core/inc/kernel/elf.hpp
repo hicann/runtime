@@ -168,6 +168,11 @@ struct ElfKernelMinStackSizeInfo {
     uint32_t minStackSize;
 };
 
+struct ElfKernelEarlyStartInfo {
+    ElfTlvHead head;
+    uint32_t earlyStartEnable;
+};
+
 constexpr uint8_t KERNEL_FUNCTION_ENTRY_DISABLE = 0x80U;
 
 struct ElfKernelFunctionEntryInfo {
@@ -222,6 +227,7 @@ struct ElfKernelInfo {
     uint32_t shareMemSize;
     int32_t elfDataFlag;
     uint16_t userArgsNum;
+    bool earlyStartEnable;
     uint32_t minStackSize;
     uint64_t functionEntry;
     bool isSupportFuncEntry;
@@ -350,6 +356,7 @@ struct RtKernelMetaInfo {
     uint32_t paramCount;
     uint64_t paramTotalSize;
     bool hasParamSummary;
+    bool earlyStartEnable;
 };
 
 struct RtKernel final {

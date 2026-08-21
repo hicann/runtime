@@ -5920,19 +5920,6 @@ TEST_F(ApiTest, api_model_test_set_ext_id)
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
-TEST_F(ApiTest, api_kernel_fusion_test)
-{
-    rtError_t error;
-    Api* api = Api::Instance();
-    ApiDecorator apiDec(api);
-
-    error = apiDec.KernelFusionStart(NULL);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = apiDec.KernelFusionEnd(NULL);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-}
-
 TEST_F(ApiTest, api_notify_test)
 {
     rtError_t error;

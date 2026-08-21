@@ -121,7 +121,8 @@ typedef enum tagSysParamOpt {
     SYS_OPT_DETERMINISTIC = 0,       // value: 0:disable, 1:deterministic, 2:strong consistency, 3:batch consistency
     SYS_OPT_ENABLE_DEBUG_KERNEL = 1, // value: 0:disable, 1:enable
     SYS_OPT_STRONG_CONSISTENCY = 2,  // value: 0:non-STRONG_CONSISTENCY, 1:STRONG_CONSISTENCY
-    SYS_OPT_RESERVED = 3,
+    SYS_OPT_ENABLE_KERNEL_EARLY_START = 3,  // value: 0:disable, 1:enable
+    SYS_OPT_RESERVED = 4,
 } rtSysParamOpt;
 
 typedef enum tagSysParamValue {
@@ -138,7 +139,8 @@ typedef struct tagRtTaskCfgInfo {
     uint32_t blockDimOffset;
     uint8_t dumpflag;         // dumpflag 0:fault 2:RT_KERNEL_DUMPFLAG 4:RT_FUSION_KERNEL_DUMPFLAG
     uint8_t neverTimeout;     // 1: never timeout, 0: will timeout
-    uint8_t rev[2];
+    uint8_t enableProfiling; // 0: disable 1: enable
+    uint8_t rev;
     uint32_t localMemorySize; // for simt ub_size
 } rtTaskCfgInfo_t;
 
@@ -583,7 +585,7 @@ RTS_API rtError_t rtGetSocSpec(const char* label, const char* key, char* val, co
 // clang-format on
 enum { rt_ext_base_common_end_line_guard_ = __LINE__ }; // CCE_RUNTIME_BASE_COMMON_DATA END
 RT_STATIC_ASSERT(
-    ((rt_ext_base_common_end_line_guard_ - rt_ext_base_common_begin_line_guard_) == 555),
+    ((rt_ext_base_common_end_line_guard_ - rt_ext_base_common_begin_line_guard_) == 557),
     "Inside CCE_RUNTIME_BASE_COMMON_DATA is the data shared between rt_external_base.h and base.h. "
     "Adding data structures is not allowed; please add them outside the macro definition.");
 

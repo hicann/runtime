@@ -389,6 +389,10 @@ public:
 
     bool GetL2CacheProfFlag() const { return l2CacheProfFlag_; }
 
+    void SetTaskLevelProfFlag(bool flag) { taskLevelProfFlag_ = flag; }
+
+    bool GetTaskLevelProfFlag() const { return taskLevelProfFlag_; }
+
     bool GetTrackProfFlag() const { return trackProfFlag_; }
 
     void SetWaitTimeout(uint32_t timeout) { waitTimeout_ = timeout; }
@@ -405,6 +409,10 @@ public:
             profileEnabled_ = 0U;
         }
     }
+
+    void SetEnableOstFlag(bool flag) override { enableOstFlag_ = flag; }
+
+    bool GetEnableOstFlag() const { return enableOstFlag_; }
 
     uint8_t GetProfileEnableFlag() const { return profileEnabled_; }
 
@@ -833,11 +841,14 @@ private:
     RtTimeoutConfig timeoutConfig_;
     bool biuperfProfFlag_ = false;
     bool l2CacheProfFlag_ = false;
+    bool taskLevelProfFlag_ = false;
     bool trackProfFlag_ = false;
     uint32_t waitTimeout_ = 0U; // default event wait timeout 0s(never timeout)
     bool disableWaitPrep_ = false;
     uint8_t profileEnabled_ = 0U;
     bool isNpuCollect = false; // Corresponding to the environment NPU_COLLECT_PATH
+
+    bool enableOstFlag_{true};
 
     uint32_t grpID_ = UINT32_MAX;
     bool isStreamSyncEsched_ = false;

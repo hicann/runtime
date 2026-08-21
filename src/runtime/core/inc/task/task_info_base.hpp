@@ -330,7 +330,9 @@ struct rtLogicCqReport_t {
     volatile uint16_t dropFlag : 1;
     volatile uint16_t errorBit : 1;
     volatile uint16_t accError : 1;
-    volatile uint16_t reserved0 : 12;
+    volatile uint16_t nextTaskVld : 1;
+    volatile uint16_t notifyAttached : 1;
+    volatile uint16_t reserved0 : 10;
     union {
         volatile uint64_t timeStamp;
         volatile uint16_t sqeIndex;
@@ -361,7 +363,9 @@ struct rtCqReport_t {
     volatile uint16_t dropFlag : 1;
     volatile uint16_t errorBit : 1;
     volatile uint16_t accError : 1;
-    volatile uint16_t reserved0 : 12;
+    volatile uint16_t nextTaskVld : 1;
+    volatile uint16_t notifyAttached : 1;
+    volatile uint16_t reserved0 : 10;
     union {
         volatile uint64_t timeStamp;
         volatile uint16_t sqeIndex;

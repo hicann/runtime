@@ -244,36 +244,6 @@ TEST_F(ProfileApiTest, kernel_launch_l2_preload)
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
-#if 0
-TEST_F(ProfileApiTest, kernel_launch_fusion)
-{
-    rtError_t error;
-    rtSmDesc_t desc;
-    void *args[] = {&error, NULL};
-
-    memset_s(&desc, sizeof(rtSmDesc_t), 0, sizeof(rtSmDesc_t));
-
-    error = rtKernelFusionStart(NULL);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    desc.size = 128;
-    error = rtKernelLaunch(&function_, 1, (void *)args, sizeof(args), &desc, NULL);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = rtKernelLaunch(&function_, 1, (void *)args, sizeof(args), &desc, NULL);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = rtKernelLaunch(&function_, 1, (void *)args, sizeof(args), &desc, stream_);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = rtKernelFusionEnd(NULL);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = rtStreamSynchronize(NULL);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-}
-#endif
-
 static rtError_t kernel_launch_stub(
     const void* stubFunc, uint32_t blockDim, void* args, uint32_t argsSize, rtSmDesc_t* smDesc, rtStream_t stream)
 {

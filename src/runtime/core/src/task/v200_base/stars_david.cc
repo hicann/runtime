@@ -30,6 +30,8 @@ namespace cce {
 namespace runtime {
 static PfnTaskToDavidSqe g_toDavidSqeFunc[CHIP_END][TS_TASK_TYPE_RESERVED] = {};
 static PfnTaskToDavidSqe* g_toDavidSqeRunningFunc = g_toDavidSqeFunc[CHIP_BEGIN];
+static PfnDavidSqeHeaderPostProc g_davidSqeHeaderPostProcFunc[CHIP_END] = {};
+PfnDavidSqeHeaderPostProc g_davidSqeHeaderPostProcRunningFunc = nullptr;
 
 constexpr uint8_t TASK_SQE_NUM_ONE = 1U;
 constexpr uint8_t TASK_SQE_NUM_TWO = 2U;
@@ -50,9 +52,20 @@ void RegDavidSqeFunc(rtChipType_t chipType, tsTaskType_t taskType, PfnTaskToDavi
     return;
 }
 
+void RegDavidSqeHeaderPostProcFunc(rtChipType_t chipType, PfnDavidSqeHeaderPostProc func)
+{
+    if (chipType < CHIP_BEGIN || chipType >= CHIP_END) {
+        RT_LOG(RT_LOG_ERROR, "Invalid chipType = %d, valid range: [%d, %d).", chipType, CHIP_BEGIN, CHIP_END);
+        return;
+    }
+    g_davidSqeHeaderPostProcFunc[chipType] = func;
+    return;
+}
+
 void RefreshDavidSqeRunningFunc(rtChipType_t chipType)
 {
     g_toDavidSqeRunningFunc = g_toDavidSqeFunc[chipType];
+    g_davidSqeHeaderPostProcRunningFunc = g_davidSqeHeaderPostProcFunc[chipType];
     RT_LOG(RT_LOG_INFO, "David sqe running func refreshed to chipType: %d.", chipType);
     return;
 }
@@ -135,6 +148,34 @@ void ConstructDavidSqeForHeadCommon(const TaskInfo* taskInfo, rtDavidSqe_t* cons
     (void)memset_s(sqe, sizeof(rtDavidSqe_t), 0, sizeof(rtDavidSqe_t));
     sqe->commonSqe.sqeHeader.wrCqe = stream->GetStarsWrCqeFlag();
     sqe->commonSqe.sqeHeader.taskId = taskInfo->taskSn;
+    PostProcessDavidSqeHeader(&(sqe->commonSqe.sqeHeader));
+}
+
+uint32_t GetStarsV2VectorErrorCode(const rtCqReport_t& logicCq)
+{
+    const uint32_t errorIndex = static_cast<uint32_t>(BitScan(static_cast<uint64_t>(logicCq.errorType)));
+    const uint32_t vectorErrMap[TS_STARS_ERROR_MAX_INDEX] = {TS_ERROR_VECTOR_CORE_EXCEPTION, TS_ERROR_TASK_BUS_ERROR,
+                                                             TS_ERROR_VECTOR_CORE_TIMEOUT,   TS_ERROR_TASK_SQE_ERROR,
+                                                             TS_ERROR_VECTOR_CORE_EXCEPTION, logicCq.errorCode};
+    return vectorErrMap[errorIndex];
+}
+
+uint32_t GetStarsV2AicpuErrorCode(const rtCqReport_t& logicCq)
+{
+    const uint32_t errorIndex = static_cast<uint32_t>(BitScan(static_cast<uint64_t>(logicCq.errorType)));
+    const uint32_t aicpuErrMap[TS_STARS_ERROR_MAX_INDEX] = {TS_ERROR_AICPU_EXCEPTION, TS_ERROR_TASK_BUS_ERROR,
+                                                            TS_ERROR_AICPU_TIMEOUT,   TS_ERROR_TASK_SQE_ERROR,
+                                                            TS_ERROR_AICPU_EXCEPTION, logicCq.errorCode};
+    return aicpuErrMap[errorIndex];
+}
+
+uint32_t GetStarsV2AicoreErrorCode(const rtCqReport_t& logicCq)
+{
+    const uint32_t errorIndex = static_cast<uint32_t>(BitScan(static_cast<uint64_t>(logicCq.errorType)));
+    const uint32_t aicoreErrMap[TS_STARS_ERROR_MAX_INDEX] = {TS_ERROR_AICORE_EXCEPTION, TS_ERROR_TASK_BUS_ERROR,
+                                                             TS_ERROR_AICORE_TIMEOUT,   TS_ERROR_TASK_SQE_ERROR,
+                                                             TS_ERROR_AICORE_EXCEPTION, logicCq.errorCode};
+    return aicoreErrMap[errorIndex];
 }
 
 void SetStarsResultCommonForDavid(TaskInfo* taskInfo, const rtCqReport_t& logicCq)

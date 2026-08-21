@@ -21,14 +21,23 @@
 namespace cce {
 namespace runtime {
 
+static void ConstructArch9201SqeHeadForFusionTask(
+    const TaskInfo* taskInfo, RtArch9201StarsAicAivKernelSqe* const davidSqe)
+{
+    const Stream* const stream = taskInfo->stream;
+    (void)memset_s(davidSqe, sizeof(RtArch9201StarsAicAivKernelSqe), 0, sizeof(RtArch9201StarsAicAivKernelSqe));
+    davidSqe->header.wrCqe = stream->GetStarsWrCqeFlag();
+    davidSqe->header.taskId = taskInfo->taskSn;
+    ConfigArch9201SqeHeaderTaskProfiling(&(davidSqe->header));
+}
+
 static void ConstructArch9201CommonSqeForFusionTask(const TaskInfo* taskInfo, RtArch9201StarsAicAivKernelSqe* const sqe)
 {
     Stream* const stm = taskInfo->stream;
     const FusionTaskInfo* const fusionKernelTask = &(taskInfo->u.fusionKernelTask);
     const FusionTaskInfoAicPart* aicPart = &(fusionKernelTask->aicPart);
-    ConstructArch9201SqeForHeadCommon(taskInfo, sqe);
+    ConstructArch9201SqeHeadForFusionTask(taskInfo, sqe);
     ConstructCommonAicAivSqeWord(aicPart, sqe, taskInfo, stm);
-    /* TODO: OST & logEn*/
 
     /* word 4*/
     sqe->aicMtePortArOstd = 0U;
@@ -88,7 +97,7 @@ static void ConstructMixSubSqe(
     }
     /* dcache preload cnt */
     GetDcachePrefetchCnt(taskInfo, sqe);
-
+    ConfigArch9201OstEnable(aicPart->kernel, sqe);
     RT_LOG(
         RT_LOG_INFO,
         "sqeIndex=%u, mixType=%u, cfgInfo schemMode=%u, sqe_schem=%hu, ratio=%hhu, loose=%u, piMix=%u, "
@@ -117,7 +126,7 @@ static void ConstructAicSubSqe(
     sqe->aivPreAllocateDisable = 1U;
     /* dcache preload cnt */
     GetDcachePrefetchCnt(taskInfo, sqe);
-
+    ConfigArch9201OstEnable(fusionKernelTask->aicPart.kernel, sqe);
     PrintDavidSqe(sqe, "FusionKernelTask-Aic");
 }
 
@@ -140,7 +149,7 @@ static void ConstructAivSubSqe(
     sqe->aivPreAllocateDisable = 0U;
     /* dcache preload cnt */
     GetDcachePrefetchCnt(taskInfo, sqe);
-
+    ConfigArch9201OstEnable(fusionKernelTask->aicPart.kernel, sqe);
     PrintDavidSqe(sqe, "FusionKernelTask-Aiv");
 }
 
@@ -156,12 +165,19 @@ static void UpdateArch9201HeaderForFusionKernel(
     rtDavidStarsCommonSqe_t* sqeHead = &(sqeHeadAddr->commonSqe);
     RtArch9201StarsAicAivKernelSqe* sqeAix =
         static_cast<RtArch9201StarsAicAivKernelSqe*>(static_cast<void*>(sqeAixAddr));
-    if ((sqeAix->featureFlag & SQE_BIZ_FLAG_DATADUMP) == 0U) {
-        return;
+    if ((sqeAix->featureFlag & SQE_BIZ_FLAG_DATADUMP) != 0U) {
+        sqeHead->sqeHeader.preP = sqeAix->header.preP;
+        sqeHead->sqeHeader.postP = sqeAix->header.postP;
+        RT_LOG(RT_LOG_DEBUG, "preP=%u, postP=%u", sqeHead->sqeHeader.preP, sqeHead->sqeHeader.postP);
     }
-    sqeHead->sqeHeader.preP = sqeAix->header.preP;
-    sqeHead->sqeHeader.postP = sqeAix->header.postP;
-    PrintDavidSqe(sqeHeadAddr, "FusionKernelTask-FirstSqe");
+
+    if ((sqeHead->sqeHeader.preP == 0U) && (sqeHead->sqeHeader.postP == 0U) && (sqeAix->ost == 1U)) {
+        RtArch9201StarsAicAivKernelSqe* const firstSqe =
+            static_cast<RtArch9201StarsAicAivKernelSqe*>(static_cast<void*>(sqeHeadAddr));
+        firstSqe->ost = 1U;
+        RT_LOG(RT_LOG_DEBUG, "ost=%u", firstSqe->ost);
+    }
+    return;
 }
 
 static void ConstructAicAivSubSqe(

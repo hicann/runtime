@@ -16,8 +16,11 @@
 namespace cce {
 namespace runtime {
 
-void ConstructArch9201SqeForHeadCommon(const TaskInfo* taskInfo, void* const sqe);
+class Kernel;
+
 void GetDcachePrefetchCnt(const TaskInfo* taskInfo, RtArch9201StarsAicAivKernelSqe* const sqe);
+void ConfigArch9201OstEnable(const Kernel* kernel, RtArch9201StarsAicAivKernelSqe* const sqe);
+void ConfigArch9201SqeHeaderTaskProfiling(rtDavidStarsSqeHeader_t* const header);
 } // namespace runtime
 } // namespace cce
 #endif // __CCE_RUNTIME_ARCH9201_SQE_UTIL_HPP__

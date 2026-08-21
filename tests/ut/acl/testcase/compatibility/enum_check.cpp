@@ -426,6 +426,9 @@ TEST_F(UTEST_ACL_compatibility_enum_check, aclSysParamOpt)
 
     sysParamOpt = (aclSysParamOpt)2;
     EXPECT_EQ(sysParamOpt, ACL_OPT_STRONG_CONSISTENCY);
+
+    sysParamOpt = (aclSysParamOpt)3;
+    EXPECT_EQ(sysParamOpt, ACL_OPT_ENABLE_KERNEL_EARLY_START);
 }
 
 TEST_F(UTEST_ACL_compatibility_enum_check, aclrtMemMallocPolicy)

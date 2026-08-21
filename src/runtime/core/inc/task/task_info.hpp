@@ -59,9 +59,10 @@ typedef struct tagTaskInfoStru {
     uint8_t isRingbufferGet : 1;
     uint8_t isUpdateSinkSqe : 1;
     uint8_t isNoRingbuffer : 1;
-    uint8_t taskOwner : 1; // 默认是user，使用此标记需关注其实际值
-    uint8_t resv : 4;
-    uint8_t sqeNum : 7;    // 使用sqeNum必须在对应taskini中初始化
+    uint8_t taskOwner : 1;       // 默认是user，使用此标记需关注其实际值
+    uint8_t resv : 3;
+    uint8_t enableProfiling : 1; // 0: disable 1: enable
+    uint8_t sqeNum : 7;          // 使用sqeNum必须在对应taskini中初始化
     uint8_t needPostProc : 1;
     union {
         AicTaskInfo aicTaskInfo;

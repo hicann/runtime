@@ -299,8 +299,10 @@ std::string LaunchKernelAttrIdToString(const rtLaunchKernelAttrId id)
             return "LAUNCH_KERNEL_ATTR_TIMEOUT(7)";
         case RT_LAUNCH_KERNEL_ATTR_TIMEOUT_US:
             return "LAUNCH_KERNEL_ATTR_TIMEOUT_US(8)";
+        case RT_LAUNCH_KERNEL_ATTR_ENABLE_PROFILING:
+            return "LAUNCH_KERNEL_ATTR_ENABLE_PROFILING(9)";
         case RT_LAUNCH_KERNEL_ATTR_MAX:
-            return "LAUNCH_KERNEL_ATTR_MAX(9)";
+            return "LAUNCH_KERNEL_ATTR_MAX(10)";
         default:
             return RtFmtMsg("UNKNOWN(%d)", static_cast<int32_t>(id));
     }

@@ -27,7 +27,6 @@ static const std::unordered_set<RtOptionalFeatureType> CHIP_CLOUD_V2_FEATURE{
     RtOptionalFeatureType::RT_FEATURE_KERNEL_INTER_CORE_SYNC_ADDR,
     RtOptionalFeatureType::RT_FEATURE_DEVICE_DCACHE_LOCK,
     RtOptionalFeatureType::RT_FEATURE_TASK_RAND_GENERATOR,
-    RtOptionalFeatureType::RT_FEATURE_KERNEL_REGISTER_V2,
     RtOptionalFeatureType::RT_FEATURE_KERNEL_TILING_KEY_SINK,
     RtOptionalFeatureType::RT_FEATURE_TASK_MEMORY_BATCH_COPY,
     RtOptionalFeatureType::RT_FEATURE_STREAM_GET_AVILIABLE_NUM,

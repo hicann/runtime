@@ -1583,6 +1583,7 @@ typedef enum aclrtLaunchKernelAttrId {
     ACL_RT_LAUNCH_KERNEL_ATTR_DATA_DUMP,             // 是否开启Dump
     ACL_RT_LAUNCH_KERNEL_ATTR_TIMEOUT,               // 任务调度器等待任务执行的超时时间，单位秒
     ACL_RT_LAUNCH_KERNEL_ATTR_TIMEOUT_US = 8,        // 任务调度器等待任务执行的超时时间，单位微秒
+    ACL_RT_LAUNCH_KERNEL_ATTR_ENABLE_PROFILING = 9,  // task粒度profiling开关
 } aclrtLaunchKernelAttrId;
 ```
 

@@ -321,8 +321,6 @@ rtError_t ApiDecorator::KernelTransArgSet(
     return impl_->KernelTransArgSet(ptr, size, flag, setupArg);
 }
 
-rtError_t ApiDecorator::KernelFusionStart(Stream* const stm) { return impl_->KernelFusionStart(stm); }
-
 rtError_t ApiDecorator::KernelFusionEnd(Stream* const stm) { return impl_->KernelFusionEnd(stm); }
 
 rtError_t ApiDecorator::StreamCreate(Stream** const stm, const int32_t priority, const uint32_t flags, DvppGrp* grp)

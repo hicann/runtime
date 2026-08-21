@@ -976,6 +976,7 @@ static rtError_t CheckKernelLaunchCfg(const rtKernelLaunchCfg_t* const cfg, cons
     bool engineTypeExist = false;
     bool timeoutFlag = false;
     bool timeoutUsFlag = false;
+    uint8_t enableProfiling = 0U;
     for (size_t idx = 0U; idx < cfg->numAttrs; idx++) {
         switch (cfg->attrs[idx].id) {
             case RT_LAUNCH_KERNEL_ATTR_SCHEM_MODE:
@@ -998,6 +999,9 @@ static rtError_t CheckKernelLaunchCfg(const rtKernelLaunchCfg_t* const cfg, cons
                 break;
             case RT_LAUNCH_KERNEL_ATTR_TIMEOUT_US:
                 timeoutUsFlag = true;
+                break;
+            case RT_LAUNCH_KERNEL_ATTR_ENABLE_PROFILING:
+                enableProfiling = cfg->attrs[idx].value.enableProfiling;
                 break;
             default:
                 break;
@@ -1023,6 +1027,10 @@ static rtError_t CheckKernelLaunchCfg(const rtKernelLaunchCfg_t* const cfg, cons
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
         (isDataDump != DATA_DUMP_ENABLE) && (isDataDump != DATA_DUMP_DISABLE), RT_ERROR_INVALID_VALUE,
         "Checking the parameter configuration before kernel delivery", isDataDump, "[0, 1]");
+
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+        (enableProfiling > 1U), RT_ERROR_INVALID_VALUE, "Checking the parameter configuration before kernel delivery",
+        enableProfiling, "[0, 1]");
 
     // 如果是CHIP_DC vector使能场景，需要校验如果有相应TV参数， 非CHIP_DC、CPU算子、非MIX场景不做校验
     COND_RETURN_WITH_NOLOG(
@@ -1306,13 +1314,6 @@ rtError_t ApiErrorDecorator::KernelTransArgSet(
         size, "Setting the parameter pointer delivered by the kernel and refreshing the device cache");
 
     return impl_->KernelTransArgSet(ptr, size, flag, setupArg);
-}
-
-rtError_t ApiErrorDecorator::KernelFusionStart(Stream* const stm)
-{
-    const rtError_t error = impl_->KernelFusionStart(stm);
-    ERROR_RETURN(error, "Start kernel fusion failed.");
-    return error;
 }
 
 rtError_t ApiErrorDecorator::KernelFusionEnd(Stream* const stm)
@@ -6159,9 +6160,10 @@ rtError_t ApiErrorDecorator::CtxSetSysParamOpt(const rtSysParamOpt configOpt, co
 {
     constexpr int64_t SYS_OPT_DETERMINISTIC_LEVEL_MAX = 4;
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
-        (configOpt >= SYS_OPT_RESERVED) || (configOpt < 0), RT_ERROR_INVALID_VALUE,
-        "Setting system parameter values in the current context", SysParamOptToString(configOpt), "configOpt",
-        RtFmtMsg("[0, %d)", static_cast<int32_t>(SYS_OPT_RESERVED)));
+        ((configOpt >= SYS_OPT_RESERVED) || (configOpt == SYS_OPT_ENABLE_KERNEL_EARLY_START) || (configOpt < 0)),
+        RT_ERROR_INVALID_VALUE, "Setting system parameter values in the current context",
+        SysParamOptToString(configOpt), "configOpt",
+        RtFmtMsg("[0, %d)", static_cast<int32_t>(SYS_OPT_ENABLE_KERNEL_EARLY_START)));
     const int64_t maxVal =
         (configOpt == SYS_OPT_DETERMINISTIC) ? SYS_OPT_DETERMINISTIC_LEVEL_MAX : static_cast<int64_t>(SYS_OPT_MAX);
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
@@ -6173,9 +6175,9 @@ rtError_t ApiErrorDecorator::CtxSetSysParamOpt(const rtSysParamOpt configOpt, co
 rtError_t ApiErrorDecorator::CtxGetSysParamOpt(const rtSysParamOpt configOpt, int64_t* const configVal)
 {
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
-        (configOpt >= SYS_OPT_RESERVED) || (configOpt < 0), RT_ERROR_INVALID_VALUE,
-        "Obtaining the system parameter value in the current context", SysParamOptToString(configOpt), "configOpt",
-        "[0, " + std::to_string(SYS_OPT_RESERVED) + ")");
+        (configOpt >= SYS_OPT_RESERVED) || (configOpt == SYS_OPT_ENABLE_KERNEL_EARLY_START) || (configOpt < 0),
+        RT_ERROR_INVALID_VALUE, "Obtaining the system parameter value in the current context",
+        SysParamOptToString(configOpt), "configOpt", "[0, " + std::to_string(SYS_OPT_ENABLE_KERNEL_EARLY_START) + ")");
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
         configVal, RT_ERROR_INVALID_VALUE, "Obtaining the system parameter value in the current context");
     return impl_->CtxGetSysParamOpt(configOpt, configVal);

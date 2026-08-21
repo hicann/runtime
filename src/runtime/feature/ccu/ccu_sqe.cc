@@ -88,6 +88,7 @@ static void FusionCcuSubSqeCommonInit(
     sqe->header.reserved = 0U;
     sqe->header.blockDim = 0U;
     sqe->header.taskId = taskInfo->taskSn;
+    PostProcessDavidSqeHeader(&(sqe->header));
 
     /* word2 */
     sqe->taskCnt = taskCnt - 1U;

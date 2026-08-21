@@ -28,7 +28,6 @@ const std::unordered_set<RtOptionalFeatureType> CHIP_DAVID_LITE_FEATURE{
     RtOptionalFeatureType::RT_FEATURE_TASK_FUSION,
     RtOptionalFeatureType::RT_FEATURE_DEVICE_DCACHE_LOCK,
     RtOptionalFeatureType::RT_FEATURE_TASK_ALLOC_FROM_STREAM_POOL,
-    RtOptionalFeatureType::RT_FEATURE_KERNEL_REGISTER_V2,
     RtOptionalFeatureType::RT_FEATURE_KERNEL_TILING_KEY_SINK,
     RtOptionalFeatureType::RT_FEATURE_TASK_MEMORY_BATCH_COPY,
     RtOptionalFeatureType::RT_FEATURE_STREAM_GET_AVILIABLE_NUM,
