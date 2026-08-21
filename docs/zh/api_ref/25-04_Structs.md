@@ -322,7 +322,7 @@ typedef struct {
 
 | 成员名称 | 说明 |
 | --- | --- |
-| binHandle | 存放待刷新的算子二进制句柄，可调用[aclrtBinaryLoadFromFile](14_kerne_loading_and_execution.md#aclrtBinaryLoadFromFile)或[aclrtBinaryLoadFromData](14_kerne_loading_and_execution.md#aclrtBinaryLoadFromData)接口获取算子二进制句柄。 |
+| binHandle | 存放待刷新的算子二进制句柄，可调用[aclrtBinaryLoadFromFile](14_Kernel_loading_and_execution.md#aclrtBinaryLoadFromFile)或[aclrtBinaryLoadFromData](14_Kernel_loading_and_execution.md#aclrtBinaryLoadFromData)接口获取算子二进制句柄。 |
 | funcEntryAddr | 存放Function Entry（用于标识函数的关键字）的Device内存地址。 |
 | blockDimAddr | 存放numBlocks(用于指定核函数将会在几个核上执行)的Device内存地址 |
 | rsv | 预留参数。当前固定配置为0。 |
@@ -416,7 +416,7 @@ typedef union aclrtBinaryLoadOptionValue {
 | --- | --- |
 | isLazyLoad | 指定解析算子二进制、注册算子后，是否加载算子到Device侧。<br>取值如下：<br><br>  - 1：调用本接口时不加载算子到Device侧。<br>  - 0：调用本接口时加载算子到Device侧。如果不指定ACL_RT_BINARY_LOAD_OPT_LAZY_LOAD选项，系统默认按此值处理。 |
 | magic | 标识算子计算单元的魔术数字。<br>取值为如下宏：<br><br>  - ACL_RT_BINARY_MAGIC_ELF_AICORE<br>  - ACL_RT_BINARY_MAGIC_ELF_VECTOR_CORE<br>  - ACL_RT_BINARY_MAGIC_ELF_CUBE_CORE<br><br>宏的定义如下：<br>#define ACL_RT_BINARY_MAGIC_ELF_AICORE  0x43554245U<br>#define ACL_RT_BINARY_MAGIC_ELF_VECTOR_CORE 0x41415246U<br>#define ACL_RT_BINARY_MAGIC_ELF_CUBE_CORE  0x41494343U<br>关于Core的定义及详细说明，请参见[aclrtDevAttr](25-02_Enumerations.md#aclrtDevAttr)。 |
-| cpuKernelMode | AI CPU算子注册模式。<br>取值如下：<br><br>  - 0：调用[aclrtBinaryLoadFromFile](14_kerne_loading_and_execution.md#aclrtBinaryLoadFromFile)接口加载算子时，使用算子信息库文件（.json）注册算子。该场景下，AI CPU算子库文件（.so）已经在调用[aclrtSetDevice](04_device_management.md#aclrtSetDevice)接口时被加载到Device。适用于加载CANN内置算子。<br>  - 1：调用[aclrtBinaryLoadFromFile](14_kerne_loading_and_execution.md#aclrtBinaryLoadFromFile)接口加载算子时，使用算子信息库文件（.json）注册算子。该场景下，[aclrtBinaryLoadFromFile](14_kerne_loading_and_execution.md#aclrtBinaryLoadFromFile)接口会查找算子信息库文件同名的AI CPU算子库文件（.so）。适用于加载用户自定义算子。<br>  - 2：调用[aclrtBinaryLoadFromData](14_kerne_loading_and_execution.md#aclrtBinaryLoadFromData)接口加载算子，并配合使用[aclrtRegisterCpuFunc](14_kerne_loading_and_execution.md#aclrtRegisterCpuFunc)接口注册AI CPU算子信息。适用于没有算子信息库文件，也没有算子库文件的场景。 |
+| cpuKernelMode | AI CPU算子注册模式。<br>取值如下：<br><br>  - 0：调用[aclrtBinaryLoadFromFile](14_Kernel_loading_and_execution.md#aclrtBinaryLoadFromFile)接口加载算子时，使用算子信息库文件（.json）注册算子。该场景下，AI CPU算子库文件（.so）已经在调用[aclrtSetDevice](04_device_management.md#aclrtSetDevice)接口时被加载到Device。适用于加载CANN内置算子。<br>  - 1：调用[aclrtBinaryLoadFromFile](14_Kernel_loading_and_execution.md#aclrtBinaryLoadFromFile)接口加载算子时，使用算子信息库文件（.json）注册算子。该场景下，[aclrtBinaryLoadFromFile](14_Kernel_loading_and_execution.md#aclrtBinaryLoadFromFile)接口会查找算子信息库文件同名的AI CPU算子库文件（.so）。适用于加载用户自定义算子。<br>  - 2：调用[aclrtBinaryLoadFromData](14_Kernel_loading_and_execution.md#aclrtBinaryLoadFromData)接口加载算子，并配合使用[aclrtRegisterCpuFunc](14_Kernel_loading_and_execution.md#aclrtRegisterCpuFunc)接口注册AI CPU算子信息。适用于没有算子信息库文件，也没有算子库文件的场景。 |
 | rsv | 预留值。 |
 
 <br>
@@ -535,7 +535,7 @@ typedef union aclrtLaunchKernelAttrValue {
 
     用于指定SIMT（Single Instruction Multiple Thread）算子执行时需要的UB（Unified Buffer，统一缓冲区）动态内存大小，单位Byte。纯SIMD算子该参数仅支持设置为0。
 
-    可通过[aclrtFunctionGetAvailDynUbufPerBlock](14_kerne_loading_and_execution.md#aclrtFunctionGetAvailDynUbufPerBlock)接口获取dynUBufSize参数的最大值。
+    可通过[aclrtFunctionGetAvailDynUbufPerBlock](14_Kernel_loading_and_execution.md#aclrtFunctionGetAvailDynUbufPerBlock)接口获取dynUBufSize参数的最大值。
 
     <!-- npu="950" id1 -->
     仅Ascend 950PR/Ascend 950DT支持该参数。

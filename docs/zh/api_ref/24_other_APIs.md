@@ -572,7 +572,7 @@ aclError aclrtCacheLastTaskOpInfo(const void * const infoPtr, const size_t infoS
 
 1. 调用[aclmdlRICaptureBegin](15_model_running_instance__management.md#aclmdlRICaptureBegin)接口开始捕获任务。
 2. 调用[aclrtSetStreamAttribute](06_stream_management.md#aclrtSetStreamAttribute)接口开启算子信息缓存开关。
-3. 下发算子执行任务，例如调用[aclrtLaunchKernelWithConfig](14_kerne_loading_and_execution.md#aclrtLaunchKernelWithConfig)接口。
+3. 下发算子执行任务，例如调用[aclrtLaunchKernelWithConfig](14_Kernel_loading_and_execution.md#aclrtLaunchKernelWithConfig)接口。
 4. 调用[aclrtGetStreamAttribute](06_stream_management.md#aclrtGetStreamAttribute)接口获取算子信息缓存开关是否开启。
 
     只有在捕获状态下，且通过[aclrtSetStreamAttribute](06_stream_management.md#aclrtSetStreamAttribute)接口开启了算子信息缓存开关，此处的[aclrtGetStreamAttribute](06_stream_management.md#aclrtGetStreamAttribute)接口才能获取到算子信息缓存开关已开启的状态，后续才可以缓存算子信息。
