@@ -13,11 +13,11 @@
 #if (OS_TYPE_DEF == LINUX)
 #include <sys/prctl.h>
 
-#define SYS_SECOND_TO_MSEC                     1000
-#define SYS_MSEC_TO_NSEC                       1000000
-#define SYS_SECOND_TO_NSEC                     1000000000
+#define SYS_SECOND_TO_MSEC 1000
+#define SYS_MSEC_TO_NSEC 1000000
+#define SYS_SECOND_TO_NSEC 1000000000
 
-INT32 ToolSetThreadName(const char *threadName)
+INT32 ToolSetThreadName(const char* threadName)
 {
     return (prctl(PR_SET_NAME, (unsigned long)(uintptr_t)threadName) == EOK) ? SYS_OK : SYS_ERROR;
 }
@@ -27,7 +27,7 @@ INT32 ToolSetThreadName(const char *threadName)
  * @param [in]mutex: ToolMutex struct pointer
  * @return: SYS_OK: succeed; SYS_ERROR: failed; SYS_INVALID_PARAM: param invalid;
  */
-INT32 ToolMutexInit(ToolMutex *mutex)
+INT32 ToolMutexInit(ToolMutex* mutex)
 {
     if (mutex == NULL) {
         return SYS_INVALID_PARAM;
@@ -46,7 +46,7 @@ INT32 ToolMutexInit(ToolMutex *mutex)
  * @param [in]mutex: ToolMutex struct pointer
  * @return: SYS_OK: succeed; SYS_ERROR: failed; SYS_INVALID_PARAM: param invalid;
  */
-INT32 ToolMutexLock(ToolMutex *mutex)
+INT32 ToolMutexLock(ToolMutex* mutex)
 {
     if (mutex == NULL) {
         return SYS_INVALID_PARAM;
@@ -65,7 +65,7 @@ INT32 ToolMutexLock(ToolMutex *mutex)
  * @param [in]mutex: ToolMutex struct pointer
  * @return: SYS_OK: succeed; SYS_ERROR: failed; SYS_INVALID_PARAM: param invalid;
  */
-INT32 ToolMutexUnLock(ToolMutex *mutex)
+INT32 ToolMutexUnLock(ToolMutex* mutex)
 {
     if (mutex == NULL) {
         return SYS_INVALID_PARAM;
@@ -84,7 +84,7 @@ INT32 ToolMutexUnLock(ToolMutex *mutex)
  * @param [in]mutex: ToolMutex struct pointer
  * @return: SYS_OK: succeed; SYS_ERROR: failed; SYS_INVALID_PARAM: param invalid;
  */
-INT32 ToolMutexDestroy(ToolMutex *mutex)
+INT32 ToolMutexDestroy(ToolMutex* mutex)
 {
     if (mutex == NULL) {
         return SYS_INVALID_PARAM;
@@ -104,7 +104,7 @@ INT32 ToolMutexDestroy(ToolMutex *mutex)
  * @param [in]threadAttr: thread attribute, include shcedule policy, priority, stack
  * @return: SYS_OK: succeed; SYS_ERROR: failed; SYS_INVALID_PARAM: param invalid;
  */
-STATIC INT32 LocalSetSchedThreadAttr(pthread_attr_t *attr, const ToolThreadAttr *threadAttr)
+STATIC INT32 LocalSetSchedThreadAttr(pthread_attr_t* attr, const ToolThreadAttr* threadAttr)
 {
     // set PTHREAD_EXPLICIT_SCHED
     if ((threadAttr->policyFlag == TRUE) || (threadAttr->priorityFlag == TRUE)) {
@@ -146,7 +146,7 @@ STATIC INT32 LocalSetSchedThreadAttr(pthread_attr_t *attr, const ToolThreadAttr 
  * @param [in]threadAttr: thread attribute, include shcedule policy, priority, stack
  * @return: SYS_OK: succeed; SYS_ERROR: failed; SYS_INVALID_PARAM: param invalid;
  */
-STATIC INT32 LocalSetToolThreadAttr(pthread_attr_t *attr, const ToolThreadAttr *threadAttr)
+STATIC INT32 LocalSetToolThreadAttr(pthread_attr_t* attr, const ToolThreadAttr* threadAttr)
 {
     // set thread schedule attribute
     INT32 ret = LocalSetSchedThreadAttr(attr, threadAttr);
@@ -179,11 +179,10 @@ STATIC INT32 LocalSetToolThreadAttr(pthread_attr_t *attr, const ToolThreadAttr *
  * @param [in]threadAttr: thread attr
  * @return: SYS_OK: succeed; SYS_ERROR: failed; SYS_INVALID_PARAM: param invalid;
  */
-INT32 ToolCreateTaskWithThreadAttr(ToolThread *threadHandle, const ToolUserBlock *funcBlock,
-                                   const ToolThreadAttr *threadAttr)
+INT32 ToolCreateTaskWithThreadAttr(
+    ToolThread* threadHandle, const ToolUserBlock* funcBlock, const ToolThreadAttr* threadAttr)
 {
-    if ((threadHandle == NULL) || (funcBlock == NULL) ||
-        (funcBlock->procFunc == NULL) || (threadAttr == NULL)) {
+    if ((threadHandle == NULL) || (funcBlock == NULL) || (funcBlock->procFunc == NULL) || (threadAttr == NULL)) {
         return SYS_INVALID_PARAM;
     }
 
@@ -216,7 +215,7 @@ INT32 ToolCreateTaskWithThreadAttr(ToolThread *threadHandle, const ToolUserBlock
  * @param [in]funcBlock: function info
  * @return: SYS_OK: succeed; SYS_ERROR: failed; SYS_INVALID_PARAM: param invalid;
  */
-INT32 ToolCreateTaskWithDetach(ToolThread *threadHandle, const ToolUserBlock *funcBlock)
+INT32 ToolCreateTaskWithDetach(ToolThread* threadHandle, const ToolUserBlock* funcBlock)
 {
     if ((threadHandle == NULL) || (funcBlock == NULL) || (funcBlock->procFunc == NULL)) {
         return SYS_INVALID_PARAM;
@@ -250,7 +249,7 @@ INT32 ToolCreateTaskWithDetach(ToolThread *threadHandle, const ToolUserBlock *fu
  * @param [in]flags: file mode
  * @return: SYS_OK: succeed; SYS_ERROR: failed; SYS_INVALID_PARAM: invalid param;
  */
-INT32 ToolOpen(const CHAR *pathName, INT32 flags)
+INT32 ToolOpen(const CHAR* pathName, INT32 flags)
 {
     if ((pathName == NULL) || (flags < 0)) {
         return SYS_INVALID_PARAM;
@@ -275,7 +274,7 @@ INT32 ToolOpen(const CHAR *pathName, INT32 flags)
  * @param [in]mode: setting mode
  * @return: SYS_OK: succeed; SYS_ERROR: failed; SYS_INVALID_PARAM: invalid param;
  */
-INT32 ToolOpenWithMode(const CHAR *pathName, INT32 flags, toolMode mode)
+INT32 ToolOpenWithMode(const CHAR* pathName, INT32 flags, toolMode mode)
 {
     if ((pathName == NULL) || (flags < 0)) {
         return SYS_INVALID_PARAM;
@@ -286,8 +285,7 @@ INT32 ToolOpenWithMode(const CHAR *pathName, INT32 flags, toolMode mode)
         return SYS_INVALID_PARAM;
     }
     // default user 600
-    if (((mode & (S_IRUSR | S_IREAD)) == 0) &&
-        ((mode & (S_IWUSR | S_IWRITE)) == 0)) {
+    if (((mode & (S_IRUSR | S_IREAD)) == 0) && ((mode & (S_IWUSR | S_IWRITE)) == 0)) {
         return SYS_INVALID_PARAM;
     }
 
@@ -323,7 +321,7 @@ INT32 ToolClose(INT32 fd)
  * @param [in]bufLen: data buffer length
  * @return: buffer length with write; SYS_ERROR: failed; SYS_INVALID_PARAM: invalid param;
  */
-INT32 ToolWrite(INT32 fd, const VOID *buf, UINT32 bufLen)
+INT32 ToolWrite(INT32 fd, const VOID* buf, UINT32 bufLen)
 {
     if ((fd < 0) || (buf == NULL)) {
         return SYS_INVALID_PARAM;
@@ -343,7 +341,7 @@ INT32 ToolWrite(INT32 fd, const VOID *buf, UINT32 bufLen)
  * @param [in]bufLen: read data length
  * @return: buffer length with read; SYS_ERROR: failed; SYS_INVALID_PARAM: invalid param;
  */
-INT32 ToolRead(INT32 fd, VOID *buf, UINT32 bufLen)
+INT32 ToolRead(INT32 fd, VOID* buf, UINT32 bufLen)
 {
     if ((fd < 0) || (buf == NULL)) {
         return SYS_INVALID_PARAM;
@@ -362,7 +360,7 @@ INT32 ToolRead(INT32 fd, VOID *buf, UINT32 bufLen)
  * @param [in]mode: new directory mode
  * @return: SYS_OK: succeed; SYS_ERROR: failed; SYS_INVALID_PARAM: invalid param;
  */
-INT32 ToolMkdir(const CHAR *pathName, toolMode mode)
+INT32 ToolMkdir(const CHAR* pathName, toolMode mode)
 {
     if (pathName == NULL) {
         return SYS_INVALID_PARAM;
@@ -380,7 +378,7 @@ INT32 ToolMkdir(const CHAR *pathName, toolMode mode)
  * @param [in]pathName: directory path name
  * @return: SYS_OK: succeed; SYS_ERROR: failed; SYS_INVALID_PARAM: invalid param;
  */
-INT32 ToolRmdir(const CHAR *pathName)
+INT32 ToolRmdir(const CHAR* pathName)
 {
     if (pathName == NULL) {
         return SYS_INVALID_PARAM;
@@ -399,7 +397,7 @@ INT32 ToolRmdir(const CHAR *pathName)
  * @param [in]newName: new file name
  * @return: SYS_OK: succeed; SYS_ERROR: failed; SYS_INVALID_PARAM: invalid param;
  */
-INT32 ToolRename(const CHAR *oldName, const CHAR *newName)
+INT32 ToolRename(const CHAR* oldName, const CHAR* newName)
 {
     if ((oldName == NULL) || (newName == NULL)) {
         return SYS_INVALID_PARAM;
@@ -413,12 +411,30 @@ INT32 ToolRename(const CHAR *oldName, const CHAR *newName)
 }
 
 /*
+ * @brief: set file mtime and atime to current time
+ * @param [in]path: file path
+ * @return: SYS_OK: succeed; SYS_ERROR: failed; SYS_INVALID_PARAM: invalid param;
+ */
+INT32 ToolSetMtimeNow(const CHAR* path)
+{
+    if (path == NULL) {
+        return SYS_INVALID_PARAM;
+    }
+
+    INT32 ret = utimensat(AT_FDCWD, path, NULL, 0);
+    if (ret != SYS_OK) {
+        return SYS_ERROR;
+    }
+    return SYS_OK;
+}
+
+/*
  * @brief: determine the file priority or if the file exists
  * @param [in]pathName: directory path name
  * @param [in]mode: file mode
  * @return: SYS_OK: succeed; SYS_ERROR: failed; SYS_INVALID_PARAM: invalid param;
  */
-INT32 ToolAccessWithMode(const CHAR *pathName, INT32 mode)
+INT32 ToolAccessWithMode(const CHAR* pathName, INT32 mode)
 {
     if (pathName == NULL) {
         return SYS_INVALID_PARAM;
@@ -436,10 +452,7 @@ INT32 ToolAccessWithMode(const CHAR *pathName, INT32 mode)
  * @param [in]pathName: directory path name
  * @return: SYS_OK: succeed; SYS_ERROR: failed;
  */
-INT32 ToolAccess(const CHAR *pathName)
-{
-    return ToolAccessWithMode(pathName, F_OK);
-}
+INT32 ToolAccess(const CHAR* pathName) { return ToolAccessWithMode(pathName, F_OK); }
 
 /*
  * @brief: get file absolute path
@@ -448,13 +461,13 @@ INT32 ToolAccess(const CHAR *pathName)
  * @param [in]realPathLen: absolute path length
  * @return: SYS_OK: succeed; SYS_ERROR: failed; SYS_INVALID_PARAM: invalid param;
  */
-INT32 ToolRealPath(const CHAR *path, CHAR *realPath, INT32 realPathLen)
+INT32 ToolRealPath(const CHAR* path, CHAR* realPath, INT32 realPathLen)
 {
     if ((realPath == NULL) || (path == NULL) || (realPathLen < TOOL_MAX_PATH)) {
         return SYS_INVALID_PARAM;
     }
 
-    const CHAR *ptr = realpath(path, realPath);
+    const CHAR* ptr = realpath(path, realPath);
     if (ptr == NULL) {
         return SYS_ERROR;
     }
@@ -466,7 +479,7 @@ INT32 ToolRealPath(const CHAR *path, CHAR *realPath, INT32 realPathLen)
  * @param [in]filename: file path
  * @return: SYS_OK: succeed; SYS_ERROR: failed; SYS_INVALID_PARAM: invalid param;
  */
-INT32 ToolUnlink(const CHAR *filename)
+INT32 ToolUnlink(const CHAR* filename)
 {
     if (filename == NULL) {
         return SYS_INVALID_PARAM;
@@ -481,7 +494,7 @@ INT32 ToolUnlink(const CHAR *filename)
  * @param [in]mode: new file mode
  * @return: SYS_OK: succeed; SYS_ERROR: failed; SYS_INVALID_PARAM: invalid param;
  */
-INT32 ToolChmod(const CHAR *filename, INT32 mode)
+INT32 ToolChmod(const CHAR* filename, INT32 mode)
 {
     if ((filename == NULL) || (strlen(filename) == 0)) {
         return SYS_INVALID_PARAM;
@@ -497,7 +510,7 @@ INT32 ToolChmod(const CHAR *filename, INT32 mode)
  * @param [in]owner: new file mode group uid
  * @return: SYS_OK: succeed; SYS_ERROR: failed; SYS_INVALID_PARAM: invalid param;
  */
-INT32 ToolChown(const char *filename, uid_t owner, gid_t group)
+INT32 ToolChown(const char* filename, uid_t owner, gid_t group)
 {
     if (filename == NULL) {
         return SYS_INVALID_PARAM;
@@ -515,7 +528,7 @@ INT32 ToolChown(const char *filename, uid_t owner, gid_t group)
  * @param [in]sort: sort callback function
  * @return: subdirectory size; SYS_ERROR: failed; SYS_INVALID_PARAM: invalid param;
  */
-INT32 ToolScandir(const CHAR *path, ToolDirent ***entryList, ToolFilter filterFunc, ToolSort sort)
+INT32 ToolScandir(const CHAR* path, ToolDirent*** entryList, ToolFilter filterFunc, ToolSort sort)
 {
     if ((path == NULL) || (entryList == NULL)) {
         return SYS_INVALID_PARAM;
@@ -533,7 +546,7 @@ INT32 ToolScandir(const CHAR *path, ToolDirent ***entryList, ToolFilter filterFu
  * @param [in]entryList: directory structure pointer
  * @param [in]count: subdirectory size
  */
-VOID ToolScandirFree(ToolDirent **entryList, INT32 count)
+VOID ToolScandirFree(ToolDirent** entryList, INT32 count)
 {
     if (entryList == NULL) {
         return;
@@ -555,7 +568,7 @@ VOID ToolScandirFree(ToolDirent **entryList, INT32 count)
  * @param [in]buffer: file state buffer, need user to malloc
  * @return SYS_OK: succeed; SYS_ERROR: failed; SYS_INVALID_PARAM: invalid param;
  */
-INT32 ToolStatGet(const CHAR *path,  ToolStat *buffer)
+INT32 ToolStatGet(const CHAR* path, ToolStat* buffer)
 {
     if ((path == NULL) || (buffer == NULL)) {
         return SYS_INVALID_PARAM;
@@ -591,7 +604,7 @@ INT32 ToolFsync(toolProcess fd)
  * @param [in]stream: file stream pointer
  * @return file handle; SYS_ERROR: failed; SYS_INVALID_PARAM: invalid param;
  */
-INT32 ToolFileno(FILE *stream)
+INT32 ToolFileno(FILE* stream)
 {
     if (stream == NULL) {
         return SYS_INVALID_PARAM;
@@ -623,7 +636,7 @@ toolSockHandle ToolSocket(INT32 sockFamily, INT32 type, INT32 protocol)
  * @param [in]addrLen: address length
  * @return SYS_OK: succeed; SYS_ERROR: failed; SYS_INVALID_PARAM: invalid param;
  */
-INT32 ToolBind(toolSockHandle sockFd, const ToolSockAddr *addr, toolSocklen addrLen)
+INT32 ToolBind(toolSockHandle sockFd, const ToolSockAddr* addr, toolSocklen addrLen)
 {
     if ((sockFd < 0) || (addr == NULL) || (addrLen == 0)) {
         return SYS_INVALID_PARAM;
@@ -643,7 +656,7 @@ INT32 ToolBind(toolSockHandle sockFd, const ToolSockAddr *addr, toolSocklen addr
  * @param [in]addrLen: address length
  * @return SYS_OK: succeed; SYS_ERROR: failed; SYS_INVALID_PARAM: invalid param;
  */
-INT32 ToolConnect(toolSockHandle sockFd, const ToolSockAddr *addr, toolSocklen addrLen)
+INT32 ToolConnect(toolSockHandle sockFd, const ToolSockAddr* addr, toolSocklen addrLen)
 {
     if ((sockFd < 0) || (addr == NULL) || (addrLen == 0)) {
         return SYS_INVALID_PARAM;
@@ -678,10 +691,7 @@ INT32 ToolCloseSocket(toolSockHandle sockFd)
  * @brief: get process id
  * @return process id; SYS_ERROR: failed;
  */
-INT32 ToolGetPid(void)
-{
-    return (INT32)getpid();
-}
+INT32 ToolGetPid(void) { return (INT32)getpid(); }
 
 /*
  * @brief: sleep
@@ -711,19 +721,13 @@ INT32 ToolSleep(UINT32 milliSecond)
 /*
  * @brief: create memmory barrier
  */
-VOID ToolMemBarrier(void)
-{
-    __asm__ __volatile__ ("" : : : "memory");
-}
+VOID ToolMemBarrier(void) { __asm__ __volatile__("" : : : "memory"); }
 
 /*
  * @brief: get system error code
  * @return error code;
  */
-INT32 ToolGetErrorCode(void)
-{
-    return (INT32)errno;
-}
+INT32 ToolGetErrorCode(void) { return (INT32)errno; }
 
 /*
  * @brief: get system time and time zone
@@ -731,13 +735,13 @@ INT32 ToolGetErrorCode(void)
  * @param [in]timeZone: system zone, NULL is available
  * @return SYS_OK: succeed; SYS_ERROR: failed; SYS_INVALID_PARAM: invalid param;
  */
-INT32 ToolGetTimeOfDay(ToolTimeval *timeVal, ToolTimezone *timeZone)
+INT32 ToolGetTimeOfDay(ToolTimeval* timeVal, ToolTimezone* timeZone)
 {
     if (timeVal == NULL) {
         return SYS_INVALID_PARAM;
     }
 
-    INT32 ret = gettimeofday((struct timeval *)timeVal, (struct timezone *)timeZone);
+    INT32 ret = gettimeofday((struct timeval*)timeVal, (struct timezone*)timeZone);
     if (ret != SYS_OK) {
         ret = SYS_ERROR;
     }
@@ -750,14 +754,14 @@ INT32 ToolGetTimeOfDay(ToolTimeval *timeVal, ToolTimezone *timeZone)
  * @param [in]result: new time with format 'tm'
  * @return SYS_OK: succeed; SYS_ERROR: failed; SYS_INVALID_PARAM: invalid param;
  */
-INT32 ToolLocalTimeR(const time_t *timep, struct tm *result)
+INT32 ToolLocalTimeR(const time_t* timep, struct tm* result)
 {
     if ((timep == NULL) || (result == NULL)) {
         return SYS_INVALID_PARAM;
     } else {
         time_t stTime = *timep;
         struct tm nowTime = {0};
-        const struct tm *tmp = localtime_r(&stTime, &nowTime);
+        const struct tm* tmp = localtime_r(&stTime, &nowTime);
         if (tmp == NULL) {
             return SYS_ERROR;
         }
@@ -773,7 +777,7 @@ INT32 ToolLocalTimeR(const time_t *timep, struct tm *result)
     return SYS_OK;
 }
 
-INT32 ToolJoinTask(const ToolThread *threadHandle)
+INT32 ToolJoinTask(const ToolThread* threadHandle)
 {
     if (threadHandle == NULL) {
         return SYS_INVALID_PARAM;
@@ -786,7 +790,7 @@ INT32 ToolJoinTask(const ToolThread *threadHandle)
     return ret;
 }
 
-INT32 ToolCondTimedWait(ToolCond *cond, ToolMutex *mutex, UINT32 milliSecond)
+INT32 ToolCondTimedWait(ToolCond* cond, ToolMutex* mutex, UINT32 milliSecond)
 {
     if ((cond == NULL) || (mutex == NULL) || (milliSecond == 0)) {
         return SYS_INVALID_PARAM;
@@ -798,8 +802,7 @@ INT32 ToolCondTimedWait(ToolCond *cond, ToolMutex *mutex, UINT32 milliSecond)
     }
 
     absoluteTime.tv_sec = absoluteTime.tv_sec + ((LONG)milliSecond / SYS_SECOND_TO_MSEC);
-    absoluteTime.tv_nsec = absoluteTime.tv_nsec +
-                           (((LONG)milliSecond % SYS_SECOND_TO_MSEC) * SYS_MSEC_TO_NSEC);
+    absoluteTime.tv_nsec = absoluteTime.tv_nsec + (((LONG)milliSecond % SYS_SECOND_TO_MSEC) * SYS_MSEC_TO_NSEC);
     // 判断是否进位
     if (absoluteTime.tv_nsec > SYS_SECOND_TO_NSEC) {
         ++absoluteTime.tv_sec;
@@ -809,7 +812,7 @@ INT32 ToolCondTimedWait(ToolCond *cond, ToolMutex *mutex, UINT32 milliSecond)
     return pthread_cond_timedwait(cond, mutex, &absoluteTime); // 睡眠相对时间
 }
 
-INT32 ToolCondInit(ToolCond *cond)
+INT32 ToolCondInit(ToolCond* cond)
 {
     if (cond == NULL) {
         return SYS_INVALID_PARAM;
@@ -823,7 +826,7 @@ INT32 ToolCondInit(ToolCond *cond)
     // 为了使 CondTimedWait 使用开机时间而不是系统当前时间
     ret = pthread_condattr_setclock(&condAttr, CLOCK_MONOTONIC);
     if (ret != SYS_OK) {
-        (VOID)pthread_condattr_destroy(&condAttr);
+        (VOID) pthread_condattr_destroy(&condAttr);
         return SYS_ERROR;
     }
 
@@ -832,12 +835,12 @@ INT32 ToolCondInit(ToolCond *cond)
     if (ret != SYS_OK) {
         ret = SYS_ERROR;
     }
-    (VOID)pthread_condattr_destroy(&condAttr);
+    (VOID) pthread_condattr_destroy(&condAttr);
 
     return ret;
 }
 
-INT32 ToolCondNotify(ToolCond *cond)
+INT32 ToolCondNotify(ToolCond* cond)
 {
     if (cond == NULL) {
         return SYS_INVALID_PARAM;
@@ -849,13 +852,13 @@ INT32 ToolCondNotify(ToolCond *cond)
     return ret;
 }
 
-INT32 ToolGetUserGroupId(UINT32 *uid, UINT32 *gid)
+INT32 ToolGetUserGroupId(UINT32* uid, UINT32* gid)
 {
     if ((uid == NULL) || (gid == NULL)) {
         return SYS_INVALID_PARAM;
     }
 
-    const struct passwd *secuWord = getpwuid(getuid());
+    const struct passwd* secuWord = getpwuid(getuid());
     if (secuWord != NULL) {
         *uid = secuWord->pw_uid;
         *gid = secuWord->pw_gid;
@@ -865,7 +868,7 @@ INT32 ToolGetUserGroupId(UINT32 *uid, UINT32 *gid)
     }
 }
 
-INT32 ToolChownPath(const CHAR *path)
+INT32 ToolChownPath(const CHAR* path)
 {
     if ((path == NULL) || (strlen(path) == 0)) {
         return SYS_INVALID_PARAM;
@@ -885,7 +888,7 @@ INT32 ToolChownPath(const CHAR *path)
     return SYS_OK;
 }
 
-INT32 ToolLChownPath(const CHAR *path)
+INT32 ToolLChownPath(const CHAR* path)
 {
     if ((path == NULL) || (strlen(path) == 0)) {
         return SYS_INVALID_PARAM;
@@ -926,221 +929,135 @@ INT32 ToolFChownPath(INT32 fd)
 }
 #else
 
-INT32 ToolSetThreadName(const char *threadName)
+INT32 ToolSetThreadName(const char* threadName)
 {
     return (mmSetCurrentThreadName(threadName) == EN_OK) ? SYS_OK : SYS_ERROR;
 }
 
-INT32 ToolMutexInit(ToolMutex *mutex)
+INT32 ToolMutexInit(ToolMutex* mutex) { return mmMutexInit((mmMutex_t*)mutex); }
+
+INT32 ToolMutexLock(ToolMutex* mutex) { return mmMutexLock((mmMutex_t*)mutex); }
+
+INT32 ToolMutexUnLock(ToolMutex* mutex) { return mmMutexUnLock((mmMutex_t*)mutex); }
+
+INT32 ToolMutexDestroy(ToolMutex* mutex) { return mmMutexDestroy((mmMutex_t*)mutex); }
+
+INT32 ToolCreateTaskWithThreadAttr(
+    ToolThread* threadHandle, const ToolUserBlock* funcBlock, const ToolThreadAttr* threadAttr)
 {
-    return mmMutexInit((mmMutex_t *)mutex);
+    return mmCreateTaskWithThreadAttr(
+        (mmThread*)threadHandle, (const mmUserBlock_t*)funcBlock, (const mmThreadAttr*)threadAttr);
 }
 
-INT32 ToolMutexLock(ToolMutex *mutex)
+INT32 ToolCreateTaskWithDetach(ToolThread* threadHandle, ToolUserBlock* funcBlock)
 {
-    return mmMutexLock((mmMutex_t *)mutex);
+    return mmCreateTaskWithDetach((mmThread*)threadHandle, (mmUserBlock_t*)funcBlock);
 }
 
-INT32 ToolMutexUnLock(ToolMutex *mutex)
-{
-    return mmMutexUnLock((mmMutex_t *)mutex);
-}
+INT32 ToolOpen(const CHAR* pathName, INT32 flags) { return mmOpen(pathName, flags); }
 
-INT32 ToolMutexDestroy(ToolMutex *mutex)
-{
-    return mmMutexDestroy((mmMutex_t *)mutex);
-}
-
-INT32 ToolCreateTaskWithThreadAttr(ToolThread *threadHandle, const ToolUserBlock *funcBlock,
-                                   const ToolThreadAttr *threadAttr)
-{
-    return mmCreateTaskWithThreadAttr((mmThread *)threadHandle, (const mmUserBlock_t *)funcBlock,
-                                      (const mmThreadAttr *)threadAttr);
-}
-
-INT32 ToolCreateTaskWithDetach(ToolThread *threadHandle, ToolUserBlock *funcBlock)
-{
-    return mmCreateTaskWithDetach((mmThread *)threadHandle, (mmUserBlock_t *)funcBlock);
-}
-
-INT32 ToolOpen(const CHAR *pathName, INT32 flags)
-{
-    return mmOpen(pathName, flags);
-}
-
-INT32 ToolOpenWithMode(const CHAR *pathName, INT32 flags, toolMode mode)
+INT32 ToolOpenWithMode(const CHAR* pathName, INT32 flags, toolMode mode)
 {
     return mmOpen2(pathName, flags, (MODE)mode);
 }
 
-INT32 ToolClose(INT32 fd)
-{
-    return mmClose(fd);
-}
+INT32 ToolClose(INT32 fd) { return mmClose(fd); }
 
-INT32 ToolWrite(INT32 fd, VOID *buf, UINT32 bufLen)
-{
-    return mmWrite(fd, buf, bufLen);
-}
+INT32 ToolWrite(INT32 fd, VOID* buf, UINT32 bufLen) { return mmWrite(fd, buf, bufLen); }
 
-INT32 ToolRead(INT32 fd, VOID *buf, UINT32 bufLen)
-{
-    return mmRead(fd, buf, bufLen);
-}
+INT32 ToolRead(INT32 fd, VOID* buf, UINT32 bufLen) { return mmRead(fd, buf, bufLen); }
 
-INT32 ToolMkdir(const CHAR *pathName, toolMode mode)
-{
-    return mmMkdir(pathName, (mmMode_t)mode);
-}
+INT32 ToolMkdir(const CHAR* pathName, toolMode mode) { return mmMkdir(pathName, (mmMode_t)mode); }
 
-INT32 ToolRmdir(const CHAR *pathName)
-{
-    return mmRmdir(pathName);
-}
+INT32 ToolRmdir(const CHAR* pathName) { return mmRmdir(pathName); }
 
-INT32 ToolRename(const CHAR *oldName, const CHAR *newName)
+INT32 ToolRename(const CHAR* oldName, const CHAR* newName) { return SYS_OK; }
+
+/*
+ * @brief: set file mtime and atime to current time
+ * @param [in]path: file path
+ * @return: SYS_OK: succeed; SYS_INVALID_PARAM: invalid param;
+ */
+INT32 ToolSetMtimeNow(const CHAR* path)
 {
+    if (path == NULL) {
+        return SYS_INVALID_PARAM;
+    }
     return SYS_OK;
 }
 
-INT32 ToolAccess(const CHAR *pathName)
-{
-    return mmAccess(pathName);
-}
+INT32 ToolAccess(const CHAR* pathName) { return mmAccess(pathName); }
 
-INT32 ToolAccessWithMode(const CHAR *pathName, INT32 mode)
-{
-    return mmAccess2(pathName, mode);
-}
+INT32 ToolAccessWithMode(const CHAR* pathName, INT32 mode) { return mmAccess2(pathName, mode); }
 
-INT32 ToolRealPath(const CHAR *path, CHAR *realPath, INT32 realPathLen)
+INT32 ToolRealPath(const CHAR* path, CHAR* realPath, INT32 realPathLen)
 {
     return mmRealPath(path, realPath, realPathLen);
 }
 
-INT32 ToolUnlink(const CHAR *filename)
+INT32 ToolUnlink(const CHAR* filename) { return mmUnlink(filename); }
+
+INT32 ToolChmod(const CHAR* filename, INT32 mode) { return mmChmod(filename, mode); }
+
+INT32 ToolScandir(const CHAR* path, ToolDirent*** entryList, ToolFilter filterFunc, ToolSort sort)
 {
-    return mmUnlink(filename);
+    return mmScandir(path, (mmDirent***)entryList, (mmFilter)filterFunc, (mmSort)sort);
 }
 
-INT32 ToolChmod(const CHAR *filename, INT32 mode)
+VOID ToolScandirFree(ToolDirent** entryList, INT32 count) { mmScandirFree((mmDirent**)entryList, count); }
+
+INT32 ToolStatGet(const CHAR* path, ToolStat* buffer) { return mmStatGet(path, (mmStat_t*)buffer); }
+
+INT32 ToolFsync(toolProcess fd) { return mmFsync((mmProcess)fd); }
+
+INT32 ToolFileno(FILE* stream) { return mmFileno(stream); }
+
+toolSockHandle ToolSocket(INT32 sockFamily, INT32 type, INT32 protocol) { return mmSocket(sockFamily, type, protocol); }
+
+INT32 ToolBind(toolSockHandle sockFd, ToolSockAddr* addr, toolSocklen addrLen)
 {
-    return mmChmod(filename, mode);
+    return mmBind((mmSockHandle)sockFd, (mmSockAddr*)addr, (mmSocklen_t)addrLen);
 }
 
-INT32 ToolScandir(const CHAR *path, ToolDirent ***entryList, ToolFilter filterFunc, ToolSort sort)
+INT32 ToolConnect(toolSockHandle sockFd, ToolSockAddr* addr, toolSocklen addrLen)
 {
-    return mmScandir(path, (mmDirent ***)entryList, (mmFilter)filterFunc, (mmSort)sort);
+    return mmConnect((mmSockHandle)sockFd, (mmSockAddr*)addr, (mmSocklen_t)addrLen);
 }
 
-VOID ToolScandirFree(ToolDirent **entryList, INT32 count)
+INT32 ToolCloseSocket(toolSockHandle sockFd) { return mmCloseSocket((mmSockHandle)sockFd); }
+
+INT32 ToolGetPid(void) { return mmGetPid(); }
+
+INT32 ToolSleep(UINT32 milliSecond) { return mmSleep(milliSecond); }
+
+VOID ToolMemBarrier(void) { mmMb(); }
+
+INT32 ToolGetErrorCode(void) { return mmGetErrorCode(); }
+
+INT32 ToolGetTimeOfDay(ToolTimeval* timeVal, ToolTimezone* timeZone)
 {
-    mmScandirFree((mmDirent **)entryList, count);
+    return mmGetTimeOfDay((mmTimeval*)timeVal, (mmTimezone*)timeZone);
 }
 
-INT32 ToolStatGet(const CHAR *path,  ToolStat *buffer)
-{
-    return mmStatGet(path, (mmStat_t *)buffer);
-}
+INT32 ToolLocalTimeR(const time_t* timep, struct tm* result) { return mmLocalTimeR(timep, result); }
 
-INT32 ToolFsync(toolProcess fd)
-{
-    return mmFsync((mmProcess)fd);
-}
+INT32 ToolJoinTask(const ToolThread* threadHandle) { return mmJoinTask(threadHandle); }
 
-INT32 ToolFileno(FILE *stream)
-{
-    return mmFileno(stream);
-}
-
-toolSockHandle ToolSocket(INT32 sockFamily, INT32 type, INT32 protocol)
-{
-    return mmSocket(sockFamily, type, protocol);
-}
-
-INT32 ToolBind(toolSockHandle sockFd, ToolSockAddr *addr, toolSocklen addrLen)
-{
-    return mmBind((mmSockHandle)sockFd, (mmSockAddr *)addr, (mmSocklen_t)addrLen);
-}
-
-INT32 ToolConnect(toolSockHandle sockFd, ToolSockAddr *addr, toolSocklen addrLen)
-{
-    return mmConnect((mmSockHandle)sockFd, (mmSockAddr *)addr, (mmSocklen_t)addrLen);
-}
-
-INT32 ToolCloseSocket(toolSockHandle sockFd)
-{
-    return mmCloseSocket((mmSockHandle)sockFd);
-}
-
-INT32 ToolGetPid(void)
-{
-    return mmGetPid();
-}
-
-INT32 ToolSleep(UINT32 milliSecond)
-{
-    return mmSleep(milliSecond);
-}
-
-VOID ToolMemBarrier(void)
-{
-    mmMb();
-}
-
-INT32 ToolGetErrorCode(void)
-{
-    return mmGetErrorCode();
-}
-
-INT32 ToolGetTimeOfDay(ToolTimeval *timeVal, ToolTimezone *timeZone)
-{
-    return mmGetTimeOfDay((mmTimeval *)timeVal, (mmTimezone *)timeZone);
-}
-
-INT32 ToolLocalTimeR(const time_t *timep, struct tm *result)
-{
-    return mmLocalTimeR(timep, result);
-}
-
-INT32 ToolJoinTask(const ToolThread *threadHandle)
-{
-    return mmJoinTask(threadHandle);
-}
-
-INT32 ToolCondTimedWait(ToolCond *cond, ToolMutex *mutex, UINT32 milliSecond)
+INT32 ToolCondTimedWait(ToolCond* cond, ToolMutex* mutex, UINT32 milliSecond)
 {
     return mmCondTimedWait(cond, mutex, milliSecond);
 }
 
-INT32 ToolCondInit(ToolCond *cond)
-{
-    return mmCondInit(cond);
-}
+INT32 ToolCondInit(ToolCond* cond) { return mmCondInit(cond); }
 
-INT32 ToolCondNotify(ToolCond *cond)
-{
-    return mmCondNotify(cond);
-}
+INT32 ToolCondNotify(ToolCond* cond) { return mmCondNotify(cond); }
 
-INT32 ToolGetUserGroupId(UINT32 *uid, UINT32 *gid)
-{
-    return SYS_ERROR;
-}
+INT32 ToolGetUserGroupId(UINT32* uid, UINT32* gid) { return SYS_ERROR; }
 
-INT32 ToolChownPath(const CHAR *path)
-{
-    return SYS_OK;
-}
+INT32 ToolChownPath(const CHAR* path) { return SYS_OK; }
 
-INT32 ToolLChownPath(const CHAR *path)
-{
-    return SYS_OK;
-}
+INT32 ToolLChownPath(const CHAR* path) { return SYS_OK; }
 
-INT32 ToolFChownPath(INT32 fd)
-{
-    return SYS_OK;
-}
+INT32 ToolFChownPath(INT32 fd) { return SYS_OK; }
 
 #endif

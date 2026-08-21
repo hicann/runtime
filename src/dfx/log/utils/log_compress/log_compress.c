@@ -144,6 +144,11 @@ LogStatus LogCompressFileRotate(const char* file)
         "get rotate path failed.");
     ONE_ACT_ERR_LOG(
         ToolRename(file, newFileName) != LOG_SUCCESS, return LOG_FAILURE, "rename active file name failed.");
+    int32_t mtimeRet = ToolSetMtimeNow(newFileName);
+    if (mtimeRet != SYS_OK) {
+        SELF_LOG_WARN(
+            "can not set mtime, file=%s, ret=%d, strerr=%s.", newFileName, mtimeRet, strerror(ToolGetErrorCode()));
+    }
     FsyncLogToDisk(newFileName);
     return LOG_SUCCESS;
 #else

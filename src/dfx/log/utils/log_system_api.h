@@ -101,9 +101,8 @@ typedef long LONG;
 #define M_IXUSR S_IXUSR
 #define FDSIZE 64
 
-
 // system
-typedef pthread_t ToolThread ;
+typedef pthread_t ToolThread;
 typedef pthread_mutex_t ToolMutex;
 typedef pthread_cond_t ToolCond;
 
@@ -125,14 +124,14 @@ typedef mode_t toolMode;
 typedef struct stat ToolStat;
 
 typedef struct dirent ToolDirent;
-typedef int (*ToolFilter)(const ToolDirent *entry);
-typedef int (*ToolSort)(const ToolDirent **a, const ToolDirent **b);
+typedef int (*ToolFilter)(const ToolDirent* entry);
+typedef int (*ToolSort)(const ToolDirent** a, const ToolDirent** b);
 
-typedef VOID *(*ToolProcFunc)(VOID *pulArg);
+typedef VOID* (*ToolProcFunc)(VOID* pulArg);
 
 typedef struct {
     ToolProcFunc procFunc;
-    VOID *pulArg;
+    VOID* pulArg;
 } ToolUserBlock;
 
 typedef int toolSockHandle;
@@ -150,45 +149,46 @@ typedef struct {
 } ToolTimezone;
 
 // multi thread interface
-INT32 ToolMutexInit(ToolMutex *mutex);
-INT32 ToolMutexLock(ToolMutex *mutex);
-INT32 ToolMutexUnLock(ToolMutex *mutex);
-INT32 ToolMutexDestroy(ToolMutex *mutex);
-INT32 ToolCreateTaskWithThreadAttr(ToolThread *threadHandle, const ToolUserBlock *funcBlock,
-                                   const ToolThreadAttr *threadAttr);
-INT32 ToolCreateTaskWithDetach(ToolThread *threadHandle, const ToolUserBlock *funcBlock);
-INT32 ToolSetThreadName(const char *threadName);
+INT32 ToolMutexInit(ToolMutex* mutex);
+INT32 ToolMutexLock(ToolMutex* mutex);
+INT32 ToolMutexUnLock(ToolMutex* mutex);
+INT32 ToolMutexDestroy(ToolMutex* mutex);
+INT32 ToolCreateTaskWithThreadAttr(
+    ToolThread* threadHandle, const ToolUserBlock* funcBlock, const ToolThreadAttr* threadAttr);
+INT32 ToolCreateTaskWithDetach(ToolThread* threadHandle, const ToolUserBlock* funcBlock);
+INT32 ToolSetThreadName(const char* threadName);
 
 // I/O interface
-INT32 ToolOpen(const CHAR *pathName, INT32 flags);
-INT32 ToolOpenWithMode(const CHAR *pathName, INT32 flags, toolMode mode);
+INT32 ToolOpen(const CHAR* pathName, INT32 flags);
+INT32 ToolOpenWithMode(const CHAR* pathName, INT32 flags, toolMode mode);
 INT32 ToolClose(INT32 fd);
-INT32 ToolWrite(INT32 fd, const VOID *buf, UINT32 bufLen);
-INT32 ToolRead(INT32 fd, VOID *buf, UINT32 bufLen);
-INT32 ToolMkdir(const CHAR *pathName, toolMode mode);
-INT32 ToolRmdir(const CHAR *pathName);
-INT32 ToolRename(const CHAR *oldName, const CHAR *newName);
-INT32 ToolAccess(const CHAR *pathName);
-INT32 ToolAccessWithMode(const CHAR *pathName, INT32 mode);
-INT32 ToolRealPath(const CHAR *path, CHAR *realPath, INT32 realPathLen);
-INT32 ToolUnlink(const CHAR *filename);
-INT32 ToolChmod(const CHAR *filename, INT32 mode);
-INT32 ToolChown(const char *filename, uid_t owner, gid_t group);
-INT32 ToolScandir(const CHAR *path, ToolDirent ***entryList, ToolFilter filterFunc, ToolSort sort);
-VOID ToolScandirFree(ToolDirent **entryList, INT32 count);
-INT32 ToolStatGet(const CHAR *path,  ToolStat *buffer);
+INT32 ToolWrite(INT32 fd, const VOID* buf, UINT32 bufLen);
+INT32 ToolRead(INT32 fd, VOID* buf, UINT32 bufLen);
+INT32 ToolMkdir(const CHAR* pathName, toolMode mode);
+INT32 ToolRmdir(const CHAR* pathName);
+INT32 ToolRename(const CHAR* oldName, const CHAR* newName);
+INT32 ToolSetMtimeNow(const CHAR* path);
+INT32 ToolAccess(const CHAR* pathName);
+INT32 ToolAccessWithMode(const CHAR* pathName, INT32 mode);
+INT32 ToolRealPath(const CHAR* path, CHAR* realPath, INT32 realPathLen);
+INT32 ToolUnlink(const CHAR* filename);
+INT32 ToolChmod(const CHAR* filename, INT32 mode);
+INT32 ToolChown(const char* filename, uid_t owner, gid_t group);
+INT32 ToolScandir(const CHAR* path, ToolDirent*** entryList, ToolFilter filterFunc, ToolSort sort);
+VOID ToolScandirFree(ToolDirent** entryList, INT32 count);
+INT32 ToolStatGet(const CHAR* path, ToolStat* buffer);
 INT32 ToolFsync(toolProcess fd);
-INT32 ToolFileno(FILE *stream);
-INT32 ToolGetUserGroupId(UINT32 *uid, UINT32 *gid);
-INT32 ToolChownPath(const CHAR *path);
-INT32 ToolLChownPath(const CHAR *path);
+INT32 ToolFileno(FILE* stream);
+INT32 ToolGetUserGroupId(UINT32* uid, UINT32* gid);
+INT32 ToolChownPath(const CHAR* path);
+INT32 ToolLChownPath(const CHAR* path);
 INT32 ToolFChownPath(INT32 fd);
 
 // socket interface
 toolSockHandle ToolSocket(INT32 sockFamily, INT32 type, INT32 protocol);
-INT32 ToolBind(toolSockHandle sockFd, const ToolSockAddr *addr, toolSocklen addrLen);
-toolSockHandle ToolAccept(toolSockHandle sockFd, ToolSockAddr *addr, toolSocklen *addrLen);
-INT32 ToolConnect(toolSockHandle sockFd, const ToolSockAddr *addr, toolSocklen addrLen);
+INT32 ToolBind(toolSockHandle sockFd, const ToolSockAddr* addr, toolSocklen addrLen);
+toolSockHandle ToolAccept(toolSockHandle sockFd, ToolSockAddr* addr, toolSocklen* addrLen);
+INT32 ToolConnect(toolSockHandle sockFd, const ToolSockAddr* addr, toolSocklen addrLen);
 INT32 ToolCloseSocket(toolSockHandle sockFd);
 
 // others
@@ -196,12 +196,12 @@ INT32 ToolGetPid(void);
 INT32 ToolSleep(UINT32 milliSecond);
 VOID ToolMemBarrier(void);
 INT32 ToolGetErrorCode(void);
-INT32 ToolGetTimeOfDay(ToolTimeval *timeVal, ToolTimezone *timeZone);
-INT32 ToolLocalTimeR(const time_t *timep, struct tm *result);
-INT32 ToolJoinTask(const ToolThread *threadHandle);
-INT32 ToolCondInit(ToolCond *cond);
-INT32 ToolCondTimedWait(ToolCond *cond, ToolMutex *mutex, UINT32 milliSecond);
-INT32 ToolCondNotify(ToolCond *cond);
+INT32 ToolGetTimeOfDay(ToolTimeval* timeVal, ToolTimezone* timeZone);
+INT32 ToolLocalTimeR(const time_t* timep, struct tm* result);
+INT32 ToolJoinTask(const ToolThread* threadHandle);
+INT32 ToolCondInit(ToolCond* cond);
+INT32 ToolCondTimedWait(ToolCond* cond, ToolMutex* mutex, UINT32 milliSecond);
+INT32 ToolCondNotify(ToolCond* cond);
 
 #ifdef __cplusplus
 #if __cplusplus
@@ -236,13 +236,13 @@ typedef void Buff;
 typedef void* (*ThreadFunc)(ArgPtr);
 
 typedef HANDLE ToolMutex;
-typedef HANDLE ToolThread ;
+typedef HANDLE ToolThread;
 typedef HANDLE toolProcess;
 typedef CONDITION_VARIABLE ToolCond;
-typedef VOID *(*ToolProcFunc)(VOID *pulArg);
+typedef VOID* (*ToolProcFunc)(VOID* pulArg);
 typedef struct {
     ToolProcFunc procFunc;
-    VOID *pulArg;
+    VOID* pulArg;
 } ToolUserBlock;
 
 typedef DWORD toolThreadKey;
@@ -258,12 +258,12 @@ typedef struct {
     char d_name[MAX_PATH]; // file name
 } ToolDirent;
 
-typedef int(*ToolFilter)(const ToolDirent *entry);
-typedef int(*ToolSort)(const ToolDirent **a, const ToolDirent **b);
+typedef int (*ToolFilter)(const ToolDirent* entry);
+typedef int (*ToolSort)(const ToolDirent** a, const ToolDirent** b);
 
 typedef struct {
-    LONG  tvSec;
-    LONG  tvUsec;
+    LONG tvSec;
+    LONG tvUsec;
 } ToolTimeval;
 
 typedef struct {
@@ -272,8 +272,8 @@ typedef struct {
 } ToolTimezone;
 
 typedef struct {
-    LONG  tvSec;
-    LONG  tv_nsec;
+    LONG tvSec;
+    LONG tv_nsec;
 } ToolTimespec;
 
 typedef struct stat ToolStat;
@@ -291,44 +291,45 @@ typedef struct {
 } ToolThreadAttr;
 
 // multi thread interface
-INT32 ToolMutexInit (ToolMutex *mutex);
-INT32 ToolMutexLock(ToolMutex *mutex);
-INT32 ToolMutexUnLock(ToolMutex *mutex);
-INT32 ToolMutexDestroy(ToolMutex *mutex);
-INT32 ToolCreateTaskWithThreadAttr(ToolThread *threadHandle, const ToolUserBlock *funcBlock,
-                                   const ToolThreadAttr *threadAttr);
-INT32 ToolCreateTaskWithDetach(ToolThread *threadHandle, const ToolUserBlock *funcBlock);
-INT32 ToolSetThreadName(const char *threadName);
+INT32 ToolMutexInit(ToolMutex* mutex);
+INT32 ToolMutexLock(ToolMutex* mutex);
+INT32 ToolMutexUnLock(ToolMutex* mutex);
+INT32 ToolMutexDestroy(ToolMutex* mutex);
+INT32 ToolCreateTaskWithThreadAttr(
+    ToolThread* threadHandle, const ToolUserBlock* funcBlock, const ToolThreadAttr* threadAttr);
+INT32 ToolCreateTaskWithDetach(ToolThread* threadHandle, const ToolUserBlock* funcBlock);
+INT32 ToolSetThreadName(const char* threadName);
 
 // I/O interface
-INT32 ToolOpen(const CHAR *pathName, INT32 flags);
-INT32 ToolOpenWithMode(const CHAR *pathName, INT32 flags, toolMode mode);
+INT32 ToolOpen(const CHAR* pathName, INT32 flags);
+INT32 ToolOpenWithMode(const CHAR* pathName, INT32 flags, toolMode mode);
 INT32 ToolClose(INT32 fd);
-INT32 ToolWrite(INT32 fd, const VOID *buf, UINT32 bufLen);
-INT32 ToolRead(INT32 fd, VOID *buf, UINT32 bufLen);
-INT32 ToolMkdir(const CHAR *pathName, toolMode mode);
-INT32 ToolRmdir(const CHAR *pathName);
-INT32 ToolRename(const CHAR *oldName, const CHAR *newName);
-INT32 ToolAccess(const CHAR *pathName);
-INT32 ToolAccessWithMode(const CHAR *pathName, INT32 mode);
-INT32 ToolRealPath(const CHAR *path, CHAR *realPath, INT32 realPathLen);
-INT32 ToolUnlink(const CHAR *filename);
-INT32 ToolChmod(const CHAR *filename, INT32 mode);
-INT32 ToolScandir(const CHAR *path, ToolDirent ***entryList, ToolFilter filterFunc, ToolSort sort);
-VOID ToolScandirFree(ToolDirent **entryList, INT32 count);
-INT32 ToolStatGet(const CHAR *path,  ToolStat *buffer);
+INT32 ToolWrite(INT32 fd, const VOID* buf, UINT32 bufLen);
+INT32 ToolRead(INT32 fd, VOID* buf, UINT32 bufLen);
+INT32 ToolMkdir(const CHAR* pathName, toolMode mode);
+INT32 ToolRmdir(const CHAR* pathName);
+INT32 ToolRename(const CHAR* oldName, const CHAR* newName);
+INT32 ToolSetMtimeNow(const CHAR* path);
+INT32 ToolAccess(const CHAR* pathName);
+INT32 ToolAccessWithMode(const CHAR* pathName, INT32 mode);
+INT32 ToolRealPath(const CHAR* path, CHAR* realPath, INT32 realPathLen);
+INT32 ToolUnlink(const CHAR* filename);
+INT32 ToolChmod(const CHAR* filename, INT32 mode);
+INT32 ToolScandir(const CHAR* path, ToolDirent*** entryList, ToolFilter filterFunc, ToolSort sort);
+VOID ToolScandirFree(ToolDirent** entryList, INT32 count);
+INT32 ToolStatGet(const CHAR* path, ToolStat* buffer);
 INT32 ToolFsync(toolProcess fd);
-INT32 ToolFileno(FILE *stream);
-INT32 ToolGetUserGroupId(UINT32 *uid, UINT32 *gid);
-INT32 ToolChownPath(const CHAR *path);
-INT32 ToolLChownPath(const CHAR *path);
+INT32 ToolFileno(FILE* stream);
+INT32 ToolGetUserGroupId(UINT32* uid, UINT32* gid);
+INT32 ToolChownPath(const CHAR* path);
+INT32 ToolLChownPath(const CHAR* path);
 INT32 ToolFChownPath(INT32 fd);
 
 // socket interface
 toolSockHandle ToolSocket(INT32 sockFamily, INT32 type, INT32 protocol);
-INT32 ToolBind(toolSockHandle sockFd, const ToolSockAddr *addr, toolSocklen addrLen);
-toolSockHandle ToolAccept(toolSockHandle sockFd, ToolSockAddr *addr, toolSocklen *addrLen);
-INT32 ToolConnect(toolSockHandle sockFd, const ToolSockAddr *addr, toolSocklen addrLen);
+INT32 ToolBind(toolSockHandle sockFd, const ToolSockAddr* addr, toolSocklen addrLen);
+toolSockHandle ToolAccept(toolSockHandle sockFd, ToolSockAddr* addr, toolSocklen* addrLen);
+INT32 ToolConnect(toolSockHandle sockFd, const ToolSockAddr* addr, toolSocklen addrLen);
 INT32 ToolCloseSocket(toolSockHandle sockFd);
 
 // others
@@ -336,12 +337,12 @@ INT32 ToolGetPid(void);
 INT32 ToolSleep(UINT32 milliSecond);
 VOID ToolMemBarrier(void);
 INT32 ToolGetErrorCode(void);
-INT32 ToolGetTimeOfDay(ToolTimeval *timeVal, ToolTimezone *timeZone);
-INT32 ToolLocalTimeR(const time_t *timep, struct tm *result);
-INT32 ToolJoinTask(const ToolThread *tid);
-INT32 ToolCondInit(ToolCond *cond);
-INT32 ToolCondTimedWait(ToolCond *cond, ToolMutex *mutex, UINT32 milliSecond);
-INT32 ToolCondNotify(ToolCond *cond);
+INT32 ToolGetTimeOfDay(ToolTimeval* timeVal, ToolTimezone* timeZone);
+INT32 ToolLocalTimeR(const time_t* timep, struct tm* result);
+INT32 ToolJoinTask(const ToolThread* tid);
+INT32 ToolCondInit(ToolCond* cond);
+INT32 ToolCondTimedWait(ToolCond* cond, ToolMutex* mutex, UINT32 milliSecond);
+INT32 ToolCondNotify(ToolCond* cond);
 
 #ifdef __cplusplus
 #if __cplusplus
