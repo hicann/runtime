@@ -116,6 +116,21 @@ int32_t ProfParamsAdapter::CheckDataTypeSupport(const uint64_t dataTypeConfig) c
     return PROFILING_SUCCESS;
 }
 
+bool ProfParamsAdapter::CheckJsonConfigSupport(const std::string& switchName) const
+{
+    auto iter = PLATFORM_FEATURE_MAP.find(switchName);
+    if (iter == PLATFORM_FEATURE_MAP.end()) {
+        return true;
+    }
+    for (const auto& feature : iter->second) {
+        if (Platform::instance()->CheckIfSupport(feature)) {
+            return true;
+        }
+    }
+    MSPROF_LOGE("The json config [%s] is not supported on the current platform.", switchName.c_str());
+    return false;
+}
+
 /**
  * @brief  : Check json config is valid
  * @param  : [in] switchName : switch name

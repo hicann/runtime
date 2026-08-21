@@ -199,6 +199,7 @@ const std::map<std::string, std::vector<PlatformFeature>> PLATFORM_FEATURE_MAP =
     {"hccl", {PLATFORM_TASK_HCCL}},
     {"msproftx", {PLATFORM_TASK_MSPROFTX}},
     {"instr_profiling", {PLATFORM_SYS_DEVICE_INSTR_PROFILING, PLATFORM_TASK_INSTR_PROFILING}},
+    {"instr_profiling_freq", {PLATFORM_SYS_DEVICE_INSTR_PROFILING}},
     {"task_tsfw", {PLATFORM_TASK_TSFW}},
     {"runtime_api", {PLATFORM_TASK_RUNTIME_API}},
     {"ascendcl", {PLATFORM_TASK_ASCENDCL}},

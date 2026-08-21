@@ -79,6 +79,7 @@ public:
         const std::string& config);
     bool CheckHostSysValid(const std::string& config) const;
     bool CheckHostSysUsageValid(const std::string& config) const;
+    bool CheckJsonConfigSupport(const std::string& switchName) const;
     bool CheckJsonConfig(const std::string& switchName, const NanoJson::JsonValue& val) const;
     int32_t HandleJsonConf(
         const NanoJson::Json& jsonCfg, SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params) const;

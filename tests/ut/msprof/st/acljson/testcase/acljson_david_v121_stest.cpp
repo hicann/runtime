@@ -28,7 +28,7 @@ static const char DAVID_V121_RM_RF[] = "rm -rf ./acljsonDavidV121stest_workspace
 static const char DAVID_V121_MKDIR[] = "mkdir ./acljsonDavidV121stest_workspace";
 static const char DAVID_V121_OUTPUT_DIR[] = "./acljsonDavidV121stest_workspace/output";
 
-class AclJsonDavidV121Stest: public testing::Test {
+class AclJsonDavidV121Stest : public testing::Test {
 protected:
     virtual void SetUp()
     {
@@ -64,14 +64,14 @@ TEST_F(AclJsonDavidV121Stest, AclJsonDefault)
     // david: TaskTime
     nlohmann::json data;
     data["output"] = DAVID_V121_OUTPUT_DIR;
-    std::vector<std::string> deviceDataList = {"ts_track.data", "ccu0.instr", "ccu1.instr"};
-    MsprofMgr().SetDeviceCheckList(deviceDataList);
-    std::vector<std::string> hostDataList = {
-        "unaging.api_event.data", "unaging.compact.node_basic_info", "unaging.compact.task_track", "unaging.additional.context_id_info"
-    };
-    MsprofMgr().SetHostCheckList(hostDataList);
-    std::vector<uint64_t> bitList = {PROF_ACL_API, PROF_TASK_TIME_L1, PROF_AICORE_METRICS};
-    MsprofMgr().SetBitSwitchCheckList(bitList);
+    const std::vector<std::string> davidV121DeviceData = {"ts_track.data", "ccu0.instr", "ccu1.instr"};
+    const std::vector<std::string> davidV121HostData = {
+        "unaging.api_event.data", "unaging.compact.node_basic_info", "unaging.compact.task_track",
+        "unaging.additional.context_id_info"};
+    const std::vector<uint64_t> davidV121BitSwitches = {PROF_ACL_API, PROF_TASK_TIME_L1, PROF_AICORE_METRICS};
+    MsprofMgr().SetDeviceCheckList(davidV121DeviceData);
+    MsprofMgr().SetHostCheckList(davidV121HostData);
+    MsprofMgr().SetBitSwitchCheckList(davidV121BitSwitches);
     EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().AclJsonStart(0, data));
 }
 
@@ -135,4 +135,13 @@ TEST_F(AclJsonDavidV121Stest, AclJsonScaleDuplicate)
     data["output"] = DAVID_V121_OUTPUT_DIR;
     data["optype"] = scaleCmd;
     EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().AclJsonStart(1, data));
+}
+
+TEST_F(AclJsonDavidV121Stest, AclJsonInstrProfilingFreqUnsupported)
+{
+    nlohmann::json data;
+    data["output"] = DAVID_V121_OUTPUT_DIR;
+    data["instr_profiling"] = "on";
+    data["instr_profiling_freq"] = 10000;
+    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().AclJsonStart(1, data));
 }

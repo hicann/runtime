@@ -156,6 +156,13 @@ void ExpectLastInputErrorParamAndReasonContains(const std::string& param, const 
     EXPECT_EQ(param, values[1]);
     EXPECT_NE(std::string::npos, values[2].find(reason));
 }
+
+void ExpectLastInputErrorParam(const std::string& param)
+{
+    const std::vector<std::string>& values = MsprofUtestStub::GetMsprofLastInputErrorValues();
+    ASSERT_EQ(1U, values.size());
+    EXPECT_EQ(param, values[0]);
+}
 } // namespace
 struct aclprofConfig {
     ProfConfig config;
@@ -2159,6 +2166,9 @@ TEST_F(MSPROF_ACL_CORE_UTEST, MsprofInitAclJsonInvalidMetricsAndFreqReportInputE
 {
     using namespace Msprofiler::Api;
     MOCKER_CPP(&ProfAclMgr::CallbackInitPrecheck).stubs().will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&Platform::CheckIfSupport, bool(Platform::*)(const PlatformFeature) const)
+        .stubs()
+        .will(returnValue(true));
 
     std::string numericAicMetrics = "{\"switch\":\"on\",\"aic_metrics\":123}";
     MsprofUtestStub::ResetMsprofLastInputErrorCode();
@@ -2196,6 +2206,30 @@ TEST_F(MSPROF_ACL_CORE_UTEST, MsprofInitAclJsonInvalidMetricsAndFreqReportInputE
     ExpectLastInputErrorParamAndReasonContains("sys_cpu_freq", "should be an integer");
 }
 
+TEST_F(MSPROF_ACL_CORE_UTEST, MsprofInitAclJsonUnsupportedInstrProfilingFreqReportsInputError)
+{
+    using namespace Msprofiler::Api;
+    MOCKER_CPP(&ProfAclMgr::CallbackInitPrecheck).stubs().will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
+        .stubs()
+        .will(returnValue(PlatformType::CHIP_CLOUD_V3));
+    Platform::instance()->Uninit();
+    Platform::instance()->Init();
+
+    const std::string intInstrFreq = "{\"switch\":\"on\",\"instr_profiling_freq\":10000}";
+    const std::string stringInstrFreq = "{\"switch\":\"on\",\"instr_profiling_freq\":\"10000\"}";
+    std::vector<std::string> aclJsonConfigs = {intInstrFreq, stringInstrFreq};
+    for (auto& instrFreq : aclJsonConfigs) {
+        MsprofUtestStub::ResetMsprofLastInputErrorCode();
+        EXPECT_EQ(
+            MSPROF_ERROR_CONFIG_INVALID,
+            ProfAclMgr::instance()->MsprofInitAclJson((void*)instrFreq.c_str(), instrFreq.size()));
+        EXPECT_EQ("EK0005", MsprofUtestStub::GetMsprofLastInputErrorCode());
+        ExpectLastInputErrorParam("instr_profiling_freq");
+    }
+    Platform::instance()->Uninit();
+}
+
 TEST_F(MSPROF_ACL_CORE_UTEST, MsprofInitAclJsonTooLongReportsInputError)
 {
     using namespace Msprofiler::Api;
@@ -2214,6 +2248,9 @@ TEST_F(MSPROF_ACL_CORE_UTEST, CheckAclJsonFreqIntegerConfigsValid)
 {
     using namespace Msprofiler::Api;
     NanoJson::Json acljsonCfg("{\"switch\":\"on\",\"instr_profiling_freq\":10000,\"sys_cpu_freq\":10}");
+    MOCKER_CPP(&Platform::CheckIfSupport, bool(Platform::*)(const PlatformFeature) const)
+        .stubs()
+        .will(returnValue(true));
     MOCKER_CPP(&Platform::CheckIfSupport, bool(Platform::*)(const std::string) const).stubs().will(returnValue(true));
 
     EXPECT_EQ(MSPROF_ERROR_NONE, ProfAclMgr::instance()->CheckAclJsonConfigInvalid(acljsonCfg));
@@ -2266,6 +2303,9 @@ TEST_F(MSPROF_ACL_CORE_UTEST, MsprofInitGeOptionsInvalidConfigsReportInputError)
 {
     using namespace Msprofiler::Api;
     MOCKER_CPP(&ProfAclMgr::CallbackInitPrecheck).stubs().will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&Platform::CheckIfSupport, bool(Platform::*)(const PlatformFeature) const)
+        .stubs()
+        .will(returnValue(true));
 
     struct MsprofGeOptions options = {};
     (void)strcpy_s(options.jobId, sizeof(options.jobId), "0");
@@ -2298,6 +2338,12 @@ TEST_F(MSPROF_ACL_CORE_UTEST, MsprofInitGeOptionsInvalidConfigsReportInputError)
     ExpectLastInputErrorParamAndReasonContains("aic_metrics", "Please input in the range of");
     ExpectLastInputErrorReasonContains("Custom:<event-list>");
 
+    (void)strcpy_s(options.options, sizeof(options.options), "{\"instr_profiling_freq\":\"10000\"}");
+    MsprofUtestStub::ResetMsprofLastInputErrorCode();
+    EXPECT_EQ(MSPROF_ERROR_CONFIG_INVALID, ProfAclMgr::instance()->MsprofInitGeOptions(&options, sizeof(options)));
+    EXPECT_EQ("EK0001", MsprofUtestStub::GetMsprofLastInputErrorCode());
+    ExpectLastInputErrorParamAndReasonContains("instr_profiling_freq", "should be an integer");
+
     (void)strcpy_s(options.options, sizeof(options.options), "{\"sys_cpu_freq\":\"10\"}");
     MsprofUtestStub::ResetMsprofLastInputErrorCode();
     EXPECT_EQ(MSPROF_ERROR_CONFIG_INVALID, ProfAclMgr::instance()->MsprofInitGeOptions(&options, sizeof(options)));
@@ -2305,10 +2351,37 @@ TEST_F(MSPROF_ACL_CORE_UTEST, MsprofInitGeOptionsInvalidConfigsReportInputError)
     ExpectLastInputErrorParamAndReasonContains("sys_cpu_freq", "should be an integer");
 }
 
+TEST_F(MSPROF_ACL_CORE_UTEST, MsprofInitGeOptionsUnsupportedInstrProfilingFreqReportsInputError)
+{
+    using namespace Msprofiler::Api;
+    MOCKER_CPP(&ProfAclMgr::CallbackInitPrecheck).stubs().will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
+        .stubs()
+        .will(returnValue(PlatformType::CHIP_CLOUD_V3));
+    Platform::instance()->Uninit();
+    Platform::instance()->Init();
+
+    std::vector<std::string> geOptionsConfigs = {
+        "{\"instr_profiling_freq\":10000}", "{\"instr_profiling_freq\":\"10000\"}"};
+    for (auto& optionConfig : geOptionsConfigs) {
+        struct MsprofGeOptions options = {};
+        (void)strcpy_s(options.jobId, sizeof(options.jobId), "0");
+        (void)strcpy_s(options.options, sizeof(options.options), optionConfig.c_str());
+        MsprofUtestStub::ResetMsprofLastInputErrorCode();
+        EXPECT_EQ(MSPROF_ERROR_CONFIG_INVALID, ProfAclMgr::instance()->MsprofInitGeOptions(&options, sizeof(options)));
+        EXPECT_EQ("EK0005", MsprofUtestStub::GetMsprofLastInputErrorCode());
+        ExpectLastInputErrorParam("instr_profiling_freq");
+    }
+    Platform::instance()->Uninit();
+}
+
 TEST_F(MSPROF_ACL_CORE_UTEST, CheckGeOptionFreqIntegerConfigsValid)
 {
     using namespace Msprofiler::Api;
     NanoJson::Json geoptionCfg("{\"instr_profiling_freq\":10000,\"sys_cpu_freq\":10}");
+    MOCKER_CPP(&Platform::CheckIfSupport, bool(Platform::*)(const PlatformFeature) const)
+        .stubs()
+        .will(returnValue(true));
     MOCKER_CPP(&Platform::CheckIfSupport, bool(Platform::*)(const std::string) const).stubs().will(returnValue(true));
 
     EXPECT_EQ(MSPROF_ERROR_NONE, ProfAclMgr::instance()->CheckGeOptionConfigInvalid(geoptionCfg));

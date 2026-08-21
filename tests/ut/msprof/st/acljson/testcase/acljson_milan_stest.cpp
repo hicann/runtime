@@ -27,7 +27,7 @@ static const char MILAN_RM_RF[] = "rm -rf ./acljsonMilanstest_workspace";
 static const char MILAN_MKDIR[] = "mkdir ./acljsonMilanstest_workspace";
 static const char MILAN_OUTPUT_DIR[] = "./acljsonMilanstest_workspace/output";
 
-class AclJsonMilanStest: public testing::Test {
+class AclJsonMilanStest : public testing::Test {
 protected:
     virtual void SetUp()
     {
@@ -113,6 +113,7 @@ TEST_F(AclJsonMilanStest, AclJsonInstrProfiling)
     nlohmann::json data;
     data["output"] = MILAN_OUTPUT_DIR;
     data["instr_profiling"] = "on";
+    data["instr_profiling_freq"] = 10000;
     std::vector<std::string> dataList = {"instr.group"};
     MsprofMgr().SetDeviceCheckList(dataList);
     std::vector<uint64_t> bitList = {PROF_INSTR};

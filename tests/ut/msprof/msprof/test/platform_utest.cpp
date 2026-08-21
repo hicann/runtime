@@ -35,11 +35,11 @@ using namespace analysis::dvvp::common::validation;
 using namespace Dvvp::Collect::Platform;
 
 namespace {
-class PLATFORM_UTEST: public testing::Test {
+class PLATFORM_UTEST : public testing::Test {
 protected:
-    void SetUp() override {
-    }
-    void TearDown() override {
+    void SetUp() override {}
+    void TearDown() override
+    {
         Msprofiler::Api::ProfAclMgr::instance()->SetModeToOff();
         Msprofiler::Api::ProfAclMgr::instance()->params_ = nullptr;
         Platform::instance()->Uninit();
@@ -47,28 +47,32 @@ protected:
     }
 };
 
-TEST_F(PLATFORM_UTEST, Init) {
+TEST_F(PLATFORM_UTEST, Init)
+{
     GlobalMockObject::verify();
     auto platform = std::make_shared<Platform>();
 
     EXPECT_EQ(PROFILING_SUCCESS, platform->Init());
 }
 
-TEST_F(PLATFORM_UTEST, Uninit) {
+TEST_F(PLATFORM_UTEST, Uninit)
+{
     GlobalMockObject::verify();
     auto platform = std::make_shared<Platform>();
 
     EXPECT_EQ(PROFILING_SUCCESS, platform->Uninit());
 }
 
-TEST_F(PLATFORM_UTEST, PlatformIsRpcSide) {
+TEST_F(PLATFORM_UTEST, PlatformIsRpcSide)
+{
     GlobalMockObject::verify();
     auto platform = std::make_shared<Platform>();
 
     EXPECT_EQ(false, platform->PlatformIsRpcSide());
 }
 
-TEST_F(PLATFORM_UTEST, GetPlatform) {
+TEST_F(PLATFORM_UTEST, GetPlatform)
+{
     GlobalMockObject::verify();
     auto platform = std::make_shared<Platform>();
 
@@ -76,36 +80,32 @@ TEST_F(PLATFORM_UTEST, GetPlatform) {
 }
 
 #ifndef BUILD_PROFILING_OPEN_PROJECT
-TEST_F(PLATFORM_UTEST, NtsFeatureSupportedOnMdcV2) {
+TEST_F(PLATFORM_UTEST, NtsFeatureSupportedOnMdcV2)
+{
     auto platform = Platform::instance();
     EXPECT_EQ(PROFILING_SUCCESS, platform->Uninit());
-    MOCKER_CPP(&ConfigManager::GetPlatformType)
-        .stubs()
-        .will(returnValue(PlatformType::CHIP_MDC_V2));
+    MOCKER_CPP(&ConfigManager::GetPlatformType).stubs().will(returnValue(PlatformType::CHIP_MDC_V2));
     EXPECT_EQ(PROFILING_SUCCESS, platform->Init());
     EXPECT_EQ(true, platform->CheckIfSupport(PLATFORM_TASK_NTS));
-    EXPECT_EQ("0x301,0x312,0x315,0x316,0x32e,0x701,0x202,0x203,0x1,0x35",
-        platform->GetNtsEvents("PipeUtilization"));
+    EXPECT_EQ("0x301,0x312,0x315,0x316,0x32e,0x701,0x202,0x203,0x1,0x35", platform->GetNtsEvents("PipeUtilization"));
 }
 #endif
 
-TEST_F(PLATFORM_UTEST, NtsFeatureNotSupportedOnNonMdcV2) {
+TEST_F(PLATFORM_UTEST, NtsFeatureNotSupportedOnNonMdcV2)
+{
     auto platform = Platform::instance();
     EXPECT_EQ(PROFILING_SUCCESS, platform->Uninit());
-    MOCKER_CPP(&ConfigManager::GetPlatformType)
-        .stubs()
-        .will(returnValue(PlatformType::CHIP_V4_1_0));
+    MOCKER_CPP(&ConfigManager::GetPlatformType).stubs().will(returnValue(PlatformType::CHIP_V4_1_0));
     EXPECT_EQ(PROFILING_SUCCESS, platform->Init());
     EXPECT_EQ(false, platform->CheckIfSupport(PLATFORM_TASK_NTS));
 }
 
 #ifndef BUILD_PROFILING_OPEN_PROJECT
-TEST_F(PLATFORM_UTEST, NtsMetricsParamValidationExpandsDefaultEvents) {
+TEST_F(PLATFORM_UTEST, NtsMetricsParamValidationExpandsDefaultEvents)
+{
     auto platform = Platform::instance();
     EXPECT_EQ(PROFILING_SUCCESS, platform->Uninit());
-    MOCKER_CPP(&ConfigManager::GetPlatformType)
-        .stubs()
-        .will(returnValue(PlatformType::CHIP_MDC_V2));
+    MOCKER_CPP(&ConfigManager::GetPlatformType).stubs().will(returnValue(PlatformType::CHIP_MDC_V2));
     EXPECT_EQ(PROFILING_SUCCESS, platform->Init());
 
     auto params = std::make_shared<analysis::dvvp::message::ProfileParams>();
@@ -113,17 +113,15 @@ TEST_F(PLATFORM_UTEST, NtsMetricsParamValidationExpandsDefaultEvents) {
     params->ntsMetrics = "PipeUtilization";
 
     EXPECT_EQ(true, ParamValidation::instance()->CheckProfilingParams(params));
-    EXPECT_EQ("0x301,0x312,0x315,0x316,0x32e,0x701,0x202,0x203,0x1,0x35",
-        params->ntsPmuEvents);
+    EXPECT_EQ("0x301,0x312,0x315,0x316,0x32e,0x701,0x202,0x203,0x1,0x35", params->ntsPmuEvents);
 }
 #endif
 
-TEST_F(PLATFORM_UTEST, NtsMetricsParamValidationRejectsUnsupportedPlatform) {
+TEST_F(PLATFORM_UTEST, NtsMetricsParamValidationRejectsUnsupportedPlatform)
+{
     auto platform = Platform::instance();
     EXPECT_EQ(PROFILING_SUCCESS, platform->Uninit());
-    MOCKER_CPP(&ConfigManager::GetPlatformType)
-        .stubs()
-        .will(returnValue(PlatformType::CHIP_V4_1_0));
+    MOCKER_CPP(&ConfigManager::GetPlatformType).stubs().will(returnValue(PlatformType::CHIP_V4_1_0));
     EXPECT_EQ(PROFILING_SUCCESS, platform->Init());
 
     auto params = std::make_shared<analysis::dvvp::message::ProfileParams>();
@@ -134,42 +132,45 @@ TEST_F(PLATFORM_UTEST, NtsMetricsParamValidationRejectsUnsupportedPlatform) {
     EXPECT_TRUE(params->ntsPmuEvents.empty());
 }
 
-TEST_F(PLATFORM_UTEST, NtsMetricsReturnsEmptyBeforePlatformInit) {
+TEST_F(PLATFORM_UTEST, NtsMetricsReturnsEmptyBeforePlatformInit)
+{
     auto platform = Platform::instance();
     EXPECT_EQ(PROFILING_SUCCESS, platform->Uninit());
 
     EXPECT_EQ("", platform->GetNtsEvents("PipeUtilization"));
 }
 
-TEST_F(PLATFORM_UTEST, DefaultPlatformInterfaceNtsMetricsIsEmpty) {
+TEST_F(PLATFORM_UTEST, DefaultPlatformInterfaceNtsMetricsIsEmpty)
+{
     Dvvp::Collect::Platform::PlatformInterface platformInterface;
 
     EXPECT_EQ("", platformInterface.GetNtsEvents("PipeUtilization"));
 }
 
-TEST_F(PLATFORM_UTEST, NtsMetricsValidationAcceptsNullAndEmptyParams) {
+TEST_F(PLATFORM_UTEST, NtsMetricsValidationAcceptsNullAndEmptyParams)
+{
     EXPECT_EQ(true, ParamValidation::instance()->CheckNtsMetricsIsValid(nullptr));
 
     auto params = std::make_shared<analysis::dvvp::message::ProfileParams>();
     EXPECT_EQ(true, ParamValidation::instance()->CheckNtsMetricsIsValid(params));
 }
 
-TEST_F(PLATFORM_UTEST, NtsMetricsValidationRejectsEmptyDefaultEvents) {
+TEST_F(PLATFORM_UTEST, NtsMetricsValidationRejectsEmptyDefaultEvents)
+{
     auto params = std::make_shared<analysis::dvvp::message::ProfileParams>();
     params->ntsMetrics = "PipeUtilization";
 
-    MOCKER_CPP(&Platform::CheckIfSupport, bool (Platform::*)(const PlatformFeature) const)
+    MOCKER_CPP(&Platform::CheckIfSupport, bool(Platform::*)(const PlatformFeature) const)
         .stubs()
         .will(returnValue(true));
-    MOCKER_CPP(&Platform::GetNtsEvents)
-        .stubs()
-        .will(returnValue(std::string()));
+    MOCKER_CPP(&Platform::GetNtsEvents).stubs().will(returnValue(std::string()));
 
     EXPECT_EQ(false, ParamValidation::instance()->CheckNtsMetricsIsValid(params));
 }
 
-TEST_F(PLATFORM_UTEST, NtsMetricsValidationAcceptsCustomEventsAndRejectsInvalidInput) {
-    MOCKER_CPP(&Platform::CheckIfSupport, bool (Platform::*)(const PlatformFeature) const)
+TEST_F(PLATFORM_UTEST, NtsMetricsValidationAcceptsCustomEventsAndRejectsInvalidInput)
+{
+    MOCKER_CPP(&Platform::CheckIfSupport, bool(Platform::*)(const PlatformFeature) const)
         .stubs()
         .will(returnValue(true));
 
@@ -183,7 +184,8 @@ TEST_F(PLATFORM_UTEST, NtsMetricsValidationAcceptsCustomEventsAndRejectsInvalidI
     EXPECT_EQ(false, ParamValidation::instance()->CheckNtsMetricsIsValid(params));
 }
 
-TEST_F(PLATFORM_UTEST, AclprofSetConfigRejectsInvalidNtsMetricsArgs) {
+TEST_F(PLATFORM_UTEST, AclprofSetConfigRejectsInvalidNtsMetricsArgs)
+{
     EXPECT_EQ(static_cast<int32_t>(ACL_PROF_OPTYPE) + 1, static_cast<int32_t>(ACL_PROF_NTS_METRICS));
     EXPECT_EQ(static_cast<int32_t>(ACL_PROF_NTS_METRICS) + 1, static_cast<int32_t>(ACL_PROF_PATH));
     EXPECT_EQ(static_cast<int32_t>(ACL_PROF_PATH) + 1, static_cast<int32_t>(ACL_PROF_ARGS_MAX));
@@ -195,50 +197,56 @@ TEST_F(PLATFORM_UTEST, AclprofSetConfigRejectsInvalidNtsMetricsArgs) {
     EXPECT_EQ(ACL_ERROR_INVALID_PARAM, aclprofSetConfig(ACL_PROF_NTS_METRICS, config.c_str(), config.size()));
 }
 
-TEST_F(PLATFORM_UTEST, ProfParamsAdapterValidatesNtsMetrics) {
+TEST_F(PLATFORM_UTEST, ProfParamsAdapterValidatesNtsMetrics)
+{
     auto params = std::make_shared<analysis::dvvp::message::ProfileParams>();
 
-    EXPECT_EQ(PROFILING_SUCCESS,
+    EXPECT_EQ(
+        PROFILING_SUCCESS,
         Analysis::Dvvp::Host::Adapter::ProfParamsAdapter::instance()->CheckApiConfigSupport(ACL_PROF_NTS_METRICS));
-    EXPECT_EQ(PROFILING_SUCCESS,
-        Analysis::Dvvp::Host::Adapter::ProfParamsAdapter::instance()->CheckApiConfigIsValid(params,
-            ACL_PROF_NTS_METRICS, "PipeUtilization"));
+    EXPECT_EQ(
+        PROFILING_SUCCESS, Analysis::Dvvp::Host::Adapter::ProfParamsAdapter::instance()->CheckApiConfigIsValid(
+                               params, ACL_PROF_NTS_METRICS, "PipeUtilization"));
     EXPECT_EQ("PipeUtilization", params->ntsMetrics);
 
     params->ntsMetrics.clear();
-    EXPECT_EQ(PROFILING_SUCCESS,
-        Analysis::Dvvp::Host::Adapter::ProfParamsAdapter::instance()->CheckApiConfigIsValid(params,
-            ACL_PROF_NTS_METRICS, "Custom:0x301"));
+    EXPECT_EQ(
+        PROFILING_SUCCESS, Analysis::Dvvp::Host::Adapter::ProfParamsAdapter::instance()->CheckApiConfigIsValid(
+                               params, ACL_PROF_NTS_METRICS, "Custom:0x301"));
     EXPECT_EQ("Custom:0x301", params->ntsMetrics);
     EXPECT_EQ("0x301", params->ntsPmuEvents);
 
     params->ntsMetrics.clear();
     params->ntsPmuEvents.clear();
-    EXPECT_EQ(PROFILING_FAILED,
-        Analysis::Dvvp::Host::Adapter::ProfParamsAdapter::instance()->CheckApiConfigIsValid(params,
-            ACL_PROF_NTS_METRICS, "TaskTime"));
+    EXPECT_EQ(
+        PROFILING_FAILED, Analysis::Dvvp::Host::Adapter::ProfParamsAdapter::instance()->CheckApiConfigIsValid(
+                              params, ACL_PROF_NTS_METRICS, "TaskTime"));
     EXPECT_TRUE(params->ntsMetrics.empty());
     EXPECT_TRUE(params->ntsPmuEvents.empty());
 }
 
-TEST_F(PLATFORM_UTEST, ProfParamsAdapterValidatesNtsMetricsJsonConfig) {
+TEST_F(PLATFORM_UTEST, ProfParamsAdapterValidatesNtsMetricsJsonConfig)
+{
     NanoJson::Json jsonCfg;
     jsonCfg["nts_metrics"] = "PipeUtilization";
     auto params = std::make_shared<analysis::dvvp::message::ProfileParams>();
 
-    EXPECT_EQ(Msprofiler::Api::ACLJSON_CONFIG_VECTOR.end(),
-        std::find(Msprofiler::Api::ACLJSON_CONFIG_VECTOR.begin(),
-            Msprofiler::Api::ACLJSON_CONFIG_VECTOR.end(), "nts_metrics"));
-    EXPECT_EQ(Msprofiler::Api::GEOPTION_CONFIG_VECTOR.end(),
-        std::find(Msprofiler::Api::GEOPTION_CONFIG_VECTOR.begin(),
-            Msprofiler::Api::GEOPTION_CONFIG_VECTOR.end(), "nts_metrics"));
-    EXPECT_EQ(MSPROF_ERROR_CONFIG_INVALID,
-        Msprofiler::Api::ProfAclMgr::instance()->CheckAclJsonConfigInvalid(jsonCfg));
-    EXPECT_EQ(MSPROF_ERROR_CONFIG_INVALID,
-        Msprofiler::Api::ProfAclMgr::instance()->CheckGeOptionConfigInvalid(jsonCfg));
+    EXPECT_EQ(
+        Msprofiler::Api::ACLJSON_CONFIG_VECTOR.end(), std::find(
+                                                          Msprofiler::Api::ACLJSON_CONFIG_VECTOR.begin(),
+                                                          Msprofiler::Api::ACLJSON_CONFIG_VECTOR.end(), "nts_metrics"));
+    EXPECT_EQ(
+        Msprofiler::Api::GEOPTION_CONFIG_VECTOR.end(),
+        std::find(
+            Msprofiler::Api::GEOPTION_CONFIG_VECTOR.begin(), Msprofiler::Api::GEOPTION_CONFIG_VECTOR.end(),
+            "nts_metrics"));
+    EXPECT_EQ(MSPROF_ERROR_CONFIG_INVALID, Msprofiler::Api::ProfAclMgr::instance()->CheckAclJsonConfigInvalid(jsonCfg));
+    EXPECT_EQ(
+        MSPROF_ERROR_CONFIG_INVALID, Msprofiler::Api::ProfAclMgr::instance()->CheckGeOptionConfigInvalid(jsonCfg));
     EXPECT_FALSE(Analysis::Dvvp::Host::Adapter::ProfParamsAdapter::instance()->CheckJsonConfig(
         "nts_metrics", jsonCfg["nts_metrics"]));
-    EXPECT_EQ(PROFILING_SUCCESS,
+    EXPECT_EQ(
+        PROFILING_SUCCESS,
         Analysis::Dvvp::Host::Adapter::ProfParamsAdapter::instance()->HandleJsonConf(jsonCfg, params));
     EXPECT_TRUE(params->ntsMetrics.empty());
     EXPECT_TRUE(params->ntsPmuEvents.empty());
@@ -246,7 +254,8 @@ TEST_F(PLATFORM_UTEST, ProfParamsAdapterValidatesNtsMetricsJsonConfig) {
     jsonCfg["nts_metrics"] = "Custom:0x301,0x312";
     EXPECT_FALSE(Analysis::Dvvp::Host::Adapter::ProfParamsAdapter::instance()->CheckJsonConfig(
         "nts_metrics", jsonCfg["nts_metrics"]));
-    EXPECT_EQ(PROFILING_SUCCESS,
+    EXPECT_EQ(
+        PROFILING_SUCCESS,
         Analysis::Dvvp::Host::Adapter::ProfParamsAdapter::instance()->HandleJsonConf(jsonCfg, params));
     EXPECT_TRUE(params->ntsMetrics.empty());
     EXPECT_TRUE(params->ntsPmuEvents.empty());
@@ -256,19 +265,41 @@ TEST_F(PLATFORM_UTEST, ProfParamsAdapterValidatesNtsMetricsJsonConfig) {
         "nts_metrics", jsonCfg["nts_metrics"]));
 }
 
+TEST_F(PLATFORM_UTEST, CheckJsonConfigSupportRejectsUnsupportedInstrProfilingFreq)
+{
+    MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
+        .stubs()
+        .will(returnValue(PlatformType::CHIP_CLOUD_V3));
+    Platform::instance()->Uninit();
+    Platform::instance()->Init();
+
+    MsprofUtestStub::ResetMsprofLastInputErrorCode();
+    EXPECT_FALSE(
+        Analysis::Dvvp::Host::Adapter::ProfParamsAdapter::instance()->CheckJsonConfigSupport("instr_profiling_freq"));
+    EXPECT_TRUE(MsprofUtestStub::GetMsprofLastInputErrorCode().empty());
+    Platform::instance()->Uninit();
+}
+
+TEST_F(PLATFORM_UTEST, CheckJsonConfigSupportAllowsSupportedInstrProfilingFreq)
+{
+    MOCKER_CPP(&Platform::CheckIfSupport, bool(Platform::*)(const PlatformFeature) const)
+        .stubs()
+        .will(returnValue(true));
+
+    EXPECT_TRUE(
+        Analysis::Dvvp::Host::Adapter::ProfParamsAdapter::instance()->CheckJsonConfigSupport("instr_profiling_freq"));
+}
+
 TEST_F(PLATFORM_UTEST, CheckAclJsonConfigInvalidReportsConfigErrorForInvalidAicpu)
 {
     NanoJson::Json jsonCfg;
     jsonCfg["switch"] = "on";
     jsonCfg["output"] = "prof_path";
     jsonCfg["aicpu"] = "test";
-    MOCKER_CPP(&Platform::CheckIfSupport, bool (Platform::*)(const std::string) const)
-        .stubs()
-        .will(returnValue(true));
+    MOCKER_CPP(&Platform::CheckIfSupport, bool(Platform::*)(const std::string) const).stubs().will(returnValue(true));
 
     MsprofUtestStub::ResetMsprofLastInputErrorCode();
-    EXPECT_EQ(MSPROF_ERROR_CONFIG_INVALID,
-        Msprofiler::Api::ProfAclMgr::instance()->CheckAclJsonConfigInvalid(jsonCfg));
+    EXPECT_EQ(MSPROF_ERROR_CONFIG_INVALID, Msprofiler::Api::ProfAclMgr::instance()->CheckAclJsonConfigInvalid(jsonCfg));
     EXPECT_EQ("EK0003", MsprofUtestStub::GetMsprofLastInputErrorCode());
 }
 
@@ -278,13 +309,10 @@ TEST_F(PLATFORM_UTEST, CheckAclJsonConfigInvalidReportsConfigErrorForNumericAicp
     jsonCfg["switch"] = "on";
     jsonCfg["output"] = "prof_path";
     jsonCfg["aicpu"] = 123;
-    MOCKER_CPP(&Platform::CheckIfSupport, bool (Platform::*)(const std::string) const)
-        .stubs()
-        .will(returnValue(true));
+    MOCKER_CPP(&Platform::CheckIfSupport, bool(Platform::*)(const std::string) const).stubs().will(returnValue(true));
 
     MsprofUtestStub::ResetMsprofLastInputErrorCode();
-    EXPECT_EQ(MSPROF_ERROR_CONFIG_INVALID,
-        Msprofiler::Api::ProfAclMgr::instance()->CheckAclJsonConfigInvalid(jsonCfg));
+    EXPECT_EQ(MSPROF_ERROR_CONFIG_INVALID, Msprofiler::Api::ProfAclMgr::instance()->CheckAclJsonConfigInvalid(jsonCfg));
     EXPECT_EQ("EK0003", MsprofUtestStub::GetMsprofLastInputErrorCode());
 }
 
@@ -295,13 +323,11 @@ TEST_F(PLATFORM_UTEST, CheckGeOptionConfigInvalidReportsInvalidArgumentForInvali
     jsonCfg["training_trace"] = "on";
     jsonCfg["task_trace"] = "on";
     jsonCfg["aicpu"] = "test";
-    MOCKER_CPP(&Platform::CheckIfSupport, bool (Platform::*)(const std::string) const)
-        .stubs()
-        .will(returnValue(true));
+    MOCKER_CPP(&Platform::CheckIfSupport, bool(Platform::*)(const std::string) const).stubs().will(returnValue(true));
 
     MsprofUtestStub::ResetMsprofLastInputErrorCode();
-    EXPECT_EQ(MSPROF_ERROR_CONFIG_INVALID,
-        Msprofiler::Api::ProfAclMgr::instance()->CheckGeOptionConfigInvalid(jsonCfg));
+    EXPECT_EQ(
+        MSPROF_ERROR_CONFIG_INVALID, Msprofiler::Api::ProfAclMgr::instance()->CheckGeOptionConfigInvalid(jsonCfg));
     EXPECT_EQ("EK0001", MsprofUtestStub::GetMsprofLastInputErrorCode());
 }
 
@@ -312,42 +338,38 @@ TEST_F(PLATFORM_UTEST, CheckGeOptionConfigInvalidReportsInvalidArgumentForNumeri
     jsonCfg["training_trace"] = "on";
     jsonCfg["task_trace"] = "on";
     jsonCfg["aicpu"] = 123;
-    MOCKER_CPP(&Platform::CheckIfSupport, bool (Platform::*)(const std::string) const)
-        .stubs()
-        .will(returnValue(true));
+    MOCKER_CPP(&Platform::CheckIfSupport, bool(Platform::*)(const std::string) const).stubs().will(returnValue(true));
 
     MsprofUtestStub::ResetMsprofLastInputErrorCode();
-    EXPECT_EQ(MSPROF_ERROR_CONFIG_INVALID,
-        Msprofiler::Api::ProfAclMgr::instance()->CheckGeOptionConfigInvalid(jsonCfg));
+    EXPECT_EQ(
+        MSPROF_ERROR_CONFIG_INVALID, Msprofiler::Api::ProfAclMgr::instance()->CheckGeOptionConfigInvalid(jsonCfg));
     EXPECT_EQ("EK0001", MsprofUtestStub::GetMsprofLastInputErrorCode());
 }
 
-TEST_F(PLATFORM_UTEST, ProfSetConfigReturnsInvalidParamWhenNtsMetricsRejected) {
+TEST_F(PLATFORM_UTEST, ProfSetConfigReturnsInvalidParamWhenNtsMetricsRejected)
+{
     Msprofiler::Api::ProfAclMgr::instance()->mode_ = Msprofiler::Api::WORK_MODE_API_CTRL;
-    Msprofiler::Api::ProfAclMgr::instance()->params_ =
-        std::make_shared<analysis::dvvp::message::ProfileParams>();
-    MOCKER(&Analysis::Dvvp::Common::Platform::Platform::PlatformIsHelperHostSide)
-        .stubs()
-        .will(returnValue(false));
+    Msprofiler::Api::ProfAclMgr::instance()->params_ = std::make_shared<analysis::dvvp::message::ProfileParams>();
+    MOCKER(&Analysis::Dvvp::Common::Platform::Platform::PlatformIsHelperHostSide).stubs().will(returnValue(false));
 
     std::string config("TaskTime");
-    EXPECT_EQ(ACL_ERROR_INVALID_PARAM,
+    EXPECT_EQ(
+        ACL_ERROR_INVALID_PARAM,
         Msprofiler::AclApi::ProfSetConfig(ACL_PROF_NTS_METRICS, config.c_str(), config.size()));
 }
 
-TEST_F(PLATFORM_UTEST, ProfSetConfigRejectsNtsMetricsWhenPlatformUnsupported) {
+TEST_F(PLATFORM_UTEST, ProfSetConfigRejectsNtsMetricsWhenPlatformUnsupported)
+{
     Msprofiler::Api::ProfAclMgr::instance()->mode_ = Msprofiler::Api::WORK_MODE_API_CTRL;
-    Msprofiler::Api::ProfAclMgr::instance()->params_ =
-        std::make_shared<analysis::dvvp::message::ProfileParams>();
-    MOCKER(&Analysis::Dvvp::Common::Platform::Platform::PlatformIsHelperHostSide)
-        .stubs()
-        .will(returnValue(false));
-    MOCKER_CPP(&Platform::CheckIfSupport, bool (Platform::*)(const PlatformFeature) const)
+    Msprofiler::Api::ProfAclMgr::instance()->params_ = std::make_shared<analysis::dvvp::message::ProfileParams>();
+    MOCKER(&Analysis::Dvvp::Common::Platform::Platform::PlatformIsHelperHostSide).stubs().will(returnValue(false));
+    MOCKER_CPP(&Platform::CheckIfSupport, bool(Platform::*)(const PlatformFeature) const)
         .stubs()
         .will(returnValue(false));
 
     std::string config("PipeUtilization");
-    EXPECT_EQ(ACL_ERROR_INVALID_PARAM,
+    EXPECT_EQ(
+        ACL_ERROR_INVALID_PARAM,
         Msprofiler::AclApi::ProfSetConfig(ACL_PROF_NTS_METRICS, config.c_str(), config.size()));
 }
 
@@ -365,77 +387,69 @@ TEST_F(PLATFORM_UTEST, ApiStatsFeatureSupportedOnCloudAndDavidPlatforms)
 
 // 通用服务器场景：libascend_hal.so dlopen 失败时，Platform::Init 不返回失败，
 // 置通用服务器标记。覆盖 platform.cpp 的 dlopen 失败分支与 PlatformIsGeneralServer。
-TEST_F(PLATFORM_UTEST, InitAsGeneralServerWhenHalLibUnavailable) {
+TEST_F(PLATFORM_UTEST, InitAsGeneralServerWhenHalLibUnavailable)
+{
     GlobalMockObject::verify();
-    MOCKER(OsalDlopen).stubs().will(returnValue(static_cast<void *>(nullptr)));
-    MOCKER(OsalDlerror).stubs().will(returnValue(static_cast<char *>(nullptr)));
+    MOCKER(OsalDlopen).stubs().will(returnValue(static_cast<void*>(nullptr)));
+    MOCKER(OsalDlerror).stubs().will(returnValue(static_cast<char*>(nullptr)));
 
     auto platform = std::make_shared<Platform>();
     EXPECT_EQ(PROFILING_SUCCESS, platform->Init());       // dlopen 失败不导致 Init 失败
-    EXPECT_EQ(true, platform->PlatformIsGeneralServer());  // 置通用服务器标记
+    EXPECT_EQ(true, platform->PlatformIsGeneralServer()); // 置通用服务器标记
 }
 
-TEST_F(PLATFORM_UTEST, PlatformIsGeneralServerDefaultFalse) {
+TEST_F(PLATFORM_UTEST, PlatformIsGeneralServerDefaultFalse)
+{
     GlobalMockObject::verify();
     auto platform = std::make_shared<Platform>();
-    EXPECT_EQ(false, platform->PlatformIsGeneralServer());  // 默认非通用服务器
+    EXPECT_EQ(false, platform->PlatformIsGeneralServer()); // 默认非通用服务器
 }
 
 // 通用服务器场景采集选项白名单：非白名单采集开关（如 ai_core_profiling）开启时报错停止。
-TEST_F(PLATFORM_UTEST, GeneralServerWhitelistRejectsDeviceOption) {
+TEST_F(PLATFORM_UTEST, GeneralServerWhitelistRejectsDeviceOption)
+{
     GlobalMockObject::verify();
-    MOCKER(&Analysis::Dvvp::Common::Platform::Platform::PlatformIsGeneralServer)
-        .stubs()
-        .will(returnValue(true));
+    MOCKER(&Analysis::Dvvp::Common::Platform::Platform::PlatformIsGeneralServer).stubs().will(returnValue(true));
     auto params = std::make_shared<analysis::dvvp::message::ProfileParams>();
-    params->ai_core_profiling = analysis::dvvp::common::config::MSVP_PROF_ON;  // device 侧采集，非白名单
-    EXPECT_EQ(MSPROF_ERROR,
-        Msprofiler::Api::ProfAclMgr::instance()->CheckGeneralServerOptionWhitelist(params));
+    params->ai_core_profiling = analysis::dvvp::common::config::MSVP_PROF_ON; // device 侧采集，非白名单
+    EXPECT_EQ(MSPROF_ERROR, Msprofiler::Api::ProfAclMgr::instance()->CheckGeneralServerOptionWhitelist(params));
 }
 
 // 通用服务器场景采集选项白名单：仅白名单选项（acl）开启时放行。
-TEST_F(PLATFORM_UTEST, GeneralServerWhitelistAllowsHostOption) {
+TEST_F(PLATFORM_UTEST, GeneralServerWhitelistAllowsHostOption)
+{
     GlobalMockObject::verify();
-    MOCKER(&Analysis::Dvvp::Common::Platform::Platform::PlatformIsGeneralServer)
-        .stubs()
-        .will(returnValue(true));
+    MOCKER(&Analysis::Dvvp::Common::Platform::Platform::PlatformIsGeneralServer).stubs().will(returnValue(true));
     auto params = std::make_shared<analysis::dvvp::message::ProfileParams>();
-    params->acl = analysis::dvvp::common::config::MSVP_PROF_ON;  // host 侧 trace，白名单允许
-    EXPECT_EQ(MSPROF_ERROR_NONE,
-        Msprofiler::Api::ProfAclMgr::instance()->CheckGeneralServerOptionWhitelist(params));
+    params->acl = analysis::dvvp::common::config::MSVP_PROF_ON; // host 侧 trace，白名单允许
+    EXPECT_EQ(MSPROF_ERROR_NONE, Msprofiler::Api::ProfAclMgr::instance()->CheckGeneralServerOptionWhitelist(params));
 }
 
 // 非通用服务器场景：白名单校验直接放行（NPU 行为不变）。
-TEST_F(PLATFORM_UTEST, WhitelistPassthroughWhenNotGeneralServer) {
+TEST_F(PLATFORM_UTEST, WhitelistPassthroughWhenNotGeneralServer)
+{
     GlobalMockObject::verify();
-    MOCKER(&Analysis::Dvvp::Common::Platform::Platform::PlatformIsGeneralServer)
-        .stubs()
-        .will(returnValue(false));
+    MOCKER(&Analysis::Dvvp::Common::Platform::Platform::PlatformIsGeneralServer).stubs().will(returnValue(false));
     auto params = std::make_shared<analysis::dvvp::message::ProfileParams>();
-    params->ai_core_profiling = analysis::dvvp::common::config::MSVP_PROF_ON;  // 非白名单，但非通用服务器 -> 放行
-    EXPECT_EQ(MSPROF_ERROR_NONE,
-        Msprofiler::Api::ProfAclMgr::instance()->CheckGeneralServerOptionWhitelist(params));
+    params->ai_core_profiling = analysis::dvvp::common::config::MSVP_PROF_ON; // 非白名单，但非通用服务器 -> 放行
+    EXPECT_EQ(MSPROF_ERROR_NONE, Msprofiler::Api::ProfAclMgr::instance()->CheckGeneralServerOptionWhitelist(params));
     // params 为空指针时也应放行
-    EXPECT_EQ(MSPROF_ERROR_NONE,
-        Msprofiler::Api::ProfAclMgr::instance()->CheckGeneralServerOptionWhitelist(nullptr));
+    EXPECT_EQ(MSPROF_ERROR_NONE, Msprofiler::Api::ProfAclMgr::instance()->CheckGeneralServerOptionWhitelist(nullptr));
 }
 
 // ProfNotifySetDevice：devId 最高位为 1（通用服务器约定）时直接返回，不启动 device 采集 task。
-TEST_F(PLATFORM_UTEST, ProfNotifySetDeviceSkipsWhenDevIdHighBitSet) {
+TEST_F(PLATFORM_UTEST, ProfNotifySetDeviceSkipsWhenDevIdHighBitSet)
+{
     GlobalMockObject::verify();
-    EXPECT_EQ(MSPROF_ERROR_NONE,
-        Analysis::Dvvp::ProfilerCommon::ProfNotifySetDevice(0, 0x80000000U, true));
-    EXPECT_EQ(MSPROF_ERROR_NONE,
-        Analysis::Dvvp::ProfilerCommon::ProfNotifySetDevice(0, 0x80000001U, false));
+    EXPECT_EQ(MSPROF_ERROR_NONE, Analysis::Dvvp::ProfilerCommon::ProfNotifySetDevice(0, 0x80000000U, true));
+    EXPECT_EQ(MSPROF_ERROR_NONE, Analysis::Dvvp::ProfilerCommon::ProfNotifySetDevice(0, 0x80000001U, false));
 }
 
 TEST_F(PLATFORM_UTEST, L2CacheAdaptorAddsSmmuDfxForSupportedPlatform)
 {
     auto platform = Platform::instance();
     EXPECT_EQ(PROFILING_SUCCESS, platform->Uninit());
-    MOCKER_CPP(&ConfigManager::GetPlatformType)
-        .stubs()
-        .will(returnValue(PlatformType::CHIP_CLOUD_V3));
+    MOCKER_CPP(&ConfigManager::GetPlatformType).stubs().will(returnValue(PlatformType::CHIP_CLOUD_V3));
     EXPECT_EQ(PROFILING_SUCCESS, platform->Init());
 
     std::string l2Switch = "on";
@@ -444,8 +458,7 @@ TEST_F(PLATFORM_UTEST, L2CacheAdaptorAddsSmmuDfxForSupportedPlatform)
     platform->L2CacheAdaptor(npuEvents, l2Switch, l2Events);
 
     EXPECT_EQ("0x00,0x81,0x82,0x83,0x74,0x75", l2Events);
-    EXPECT_EQ("HA:0x00,0x81,0x82,0x83,0x74,0x75;SMMU:0x2,0x8a,0x8b,0x8c,0x8d;SMMU_DFX:",
-        npuEvents);
+    EXPECT_EQ("HA:0x00,0x81,0x82,0x83,0x74,0x75;SMMU:0x2,0x8a,0x8b,0x8c,0x8d;SMMU_DFX:", npuEvents);
     EXPECT_EQ(std::string::npos, npuEvents.find("NOC:"));
 }
 
@@ -453,9 +466,7 @@ TEST_F(PLATFORM_UTEST, L2CacheAdaptorSkipsSmmuDfxForUnsupportedPlatform)
 {
     auto platform = Platform::instance();
     EXPECT_EQ(PROFILING_SUCCESS, platform->Uninit());
-    MOCKER_CPP(&ConfigManager::GetPlatformType)
-        .stubs()
-        .will(returnValue(PlatformType::CHIP_CLOUD_V4));
+    MOCKER_CPP(&ConfigManager::GetPlatformType).stubs().will(returnValue(PlatformType::CHIP_CLOUD_V4));
     EXPECT_EQ(PROFILING_SUCCESS, platform->Init());
 
     std::string l2Switch = "on";
@@ -464,16 +475,16 @@ TEST_F(PLATFORM_UTEST, L2CacheAdaptorSkipsSmmuDfxForUnsupportedPlatform)
     platform->L2CacheAdaptor(npuEvents, l2Switch, l2Events);
 
     EXPECT_EQ("0x00,0x81,0x82,0x83,0x74,0x75", l2Events);
-    EXPECT_EQ("HA:0x00,0x81,0x82,0x83,0x74,0x75;SMMU:0x2,0x8a,0x8b,0x8c,0x8d",
-        npuEvents);
+    EXPECT_EQ("HA:0x00,0x81,0x82,0x83,0x74,0x75;SMMU:0x2,0x8a,0x8b,0x8c,0x8d", npuEvents);
     EXPECT_EQ(std::string::npos, npuEvents.find("SMMU_DFX:"));
     EXPECT_EQ(std::string::npos, npuEvents.find("NOC:"));
 }
 
-TEST_F(PLATFORM_UTEST, MdcLiteV2PlatformMetrics) {
+TEST_F(PLATFORM_UTEST, MdcLiteV2PlatformMetrics)
+{
     GlobalMockObject::verify();
     MdcLiteV2Platform platform;
-    PlatformInterface &platformInterface = platform;
+    PlatformInterface& platformInterface = platform;
     std::string aicEvent;
 
     EXPECT_EQ(PROFILING_SUCCESS, platform.GetAiPmuMetrics("PipeUtilization", aicEvent));
@@ -504,7 +515,8 @@ TEST_F(PLATFORM_UTEST, MdcLiteV2PlatformMetrics) {
     EXPECT_EQ(MAX_COLLECT_MONITOR_NUM, platformInterface.GetQosMonitorNumber());
 }
 
-TEST_F(PLATFORM_UTEST, MdcLiteV2PlatformFeatures) {
+TEST_F(PLATFORM_UTEST, MdcLiteV2PlatformFeatures)
+{
     GlobalMockObject::verify();
     MdcLiteV2Platform platform;
 
@@ -528,7 +540,8 @@ TEST_F(PLATFORM_UTEST, MdcLiteV2PlatformFeatures) {
     EXPECT_EQ(false, platform.FeatureIsSupport(PLATFORM_TASK_RUNTIME));
 }
 
-TEST_F(PLATFORM_UTEST, MdcLiteV2PlatformReflection) {
+TEST_F(PLATFORM_UTEST, MdcLiteV2PlatformReflection)
+{
     GlobalMockObject::verify();
     auto platform = PlatformReflection::CreatePlatformClass(CHIP_MDC_LITE_V2);
     ASSERT_NE(nullptr, platform);
@@ -538,7 +551,8 @@ TEST_F(PLATFORM_UTEST, MdcLiteV2PlatformReflection) {
     EXPECT_EQ("0x424,0x425,0x426,0x42a,0x42b,0x42c", aicEvent);
 }
 
-TEST_F(PLATFORM_UTEST, ModenaPlatformMetrics) {
+TEST_F(PLATFORM_UTEST, ModenaPlatformMetrics)
+{
     GlobalMockObject::verify();
     ModenaPlatform platform;
     std::string aicEvent;
@@ -565,7 +579,8 @@ TEST_F(PLATFORM_UTEST, ModenaPlatformMetrics) {
     EXPECT_EQ(MAX_COLLECT_MONITOR_NUM, platform.GetMaxMonitorNumber());
 }
 
-TEST_F(PLATFORM_UTEST, ModenaPlatformFeatures) {
+TEST_F(PLATFORM_UTEST, ModenaPlatformFeatures)
+{
     GlobalMockObject::verify();
     ModenaPlatform platform;
 
@@ -586,7 +601,8 @@ TEST_F(PLATFORM_UTEST, ModenaPlatformFeatures) {
     EXPECT_EQ(false, platform.FeatureIsSupport(PLATFORM_TASK_BLOCK));
 }
 
-TEST_F(PLATFORM_UTEST, ModenaPlatformReflection) {
+TEST_F(PLATFORM_UTEST, ModenaPlatformReflection)
+{
     GlobalMockObject::verify();
     auto platform = PlatformReflection::CreatePlatformClass(CHIP_5162A);
     ASSERT_NE(nullptr, platform);
@@ -597,7 +613,8 @@ TEST_F(PLATFORM_UTEST, ModenaPlatformReflection) {
     EXPECT_EQ(PROFILING_FAILED, platform->GetAiPmuMetrics("L2Cache", aicEvent));
 }
 
-TEST_F(PLATFORM_UTEST, DavidV121PlatformL2CacheMetrics) {
+TEST_F(PLATFORM_UTEST, DavidV121PlatformL2CacheMetrics)
+{
     GlobalMockObject::verify();
     DavidV121Platform platform;
     std::string aicEvent;
@@ -607,7 +624,8 @@ TEST_F(PLATFORM_UTEST, DavidV121PlatformL2CacheMetrics) {
     EXPECT_EQ("0x00,0x81,0x82,0x83,0x74,0x75", platform.GetL2CacheEvents());
 }
 
-TEST_F(PLATFORM_UTEST, DavidV121PlatformReflectionL2CacheMetrics) {
+TEST_F(PLATFORM_UTEST, DavidV121PlatformReflectionL2CacheMetrics)
+{
     GlobalMockObject::verify();
     auto platform = PlatformReflection::CreatePlatformClass(CHIP_CLOUD_V4);
     ASSERT_NE(nullptr, platform);
@@ -618,7 +636,8 @@ TEST_F(PLATFORM_UTEST, DavidV121PlatformReflectionL2CacheMetrics) {
     EXPECT_EQ("0x00,0x81,0x82,0x83,0x74,0x75", platform->GetL2CacheEvents());
 }
 
-TEST_F(PLATFORM_UTEST, SmmuDFXOffsetAndRegMask) {
+TEST_F(PLATFORM_UTEST, SmmuDFXOffsetAndRegMask)
+{
     GlobalMockObject::verify();
 
     PlatformInterface platformInterface;
@@ -639,7 +658,8 @@ TEST_F(PLATFORM_UTEST, SmmuDFXOffsetAndRegMask) {
     EXPECT_EQ(0U, platform->GetSmmuDFXRegMask());
 }
 
-TEST_F(PLATFORM_UTEST, MdcV2PlatformBiuPerfChannelInfos) {
+TEST_F(PLATFORM_UTEST, MdcV2PlatformBiuPerfChannelInfos)
+{
     GlobalMockObject::verify();
     MdcV2Platform platform;
 
@@ -657,4 +677,4 @@ TEST_F(PLATFORM_UTEST, MdcV2PlatformBiuPerfChannelInfos) {
         EXPECT_EQ(expected[i], channelInfos[i]);
     }
 }
-}
+} // namespace

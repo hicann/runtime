@@ -28,7 +28,7 @@ static const char DAVID_RM_RF[] = "rm -rf ./geoptionDavidstest_workspace";
 static const char DAVID_MKDIR[] = "mkdir ./geoptionDavidstest_workspace";
 static const char DAVID_OUTPUT_DIR[] = "./geoptionDavidstest_workspace/output";
 
-class GeOptionDavidStest: public testing::Test {
+class GeOptionDavidStest : public testing::Test {
 protected:
     virtual void SetUp()
     {
@@ -44,7 +44,7 @@ protected:
     virtual void TearDown()
     {
         GlobalMockObject::verify();
-        DevprofDrvAicpu::instance()->isRegister_ = false;   // 重置aicpu注册状态，使单进程内能多次注册
+        DevprofDrvAicpu::instance()->isRegister_ = false; // 重置aicpu注册状态，使单进程内能多次注册
         EXPECT_EQ(2, SimulatorMgr().DelDeviceSimulator(2, StPlatformType::CHIP_CLOUD_V3));
         system(DAVID_RM_RF);
         system("rm -rf ./geoption.json");
@@ -62,18 +62,19 @@ protected:
 
 TEST_F(GeOptionDavidStest, GeOptionDefault)
 {
-    // david: TaskTime
+    // david geoption: default task time and host/runtime data
     nlohmann::json data;
     data["output"] = DAVID_OUTPUT_DIR;
-    std::vector<std::string> deviceDataList = {"ts_track.data", "ccu0.instr", "ccu1.instr"};
-    MsprofMgr().SetDeviceCheckList(deviceDataList);
-    std::vector<std::string> hostDataList = {
-        "unaging.api_event.data", "unaging.compact.node_basic_info", "unaging.compact.task_track", "unaging.additional.context_id_info"
-    };
-    MsprofMgr().SetHostCheckList(hostDataList);
-    std::vector<uint64_t> bitList = {PROF_ACL_API, PROF_TASK_TIME_L1, PROF_AICORE_METRICS};
-    MsprofMgr().SetBitSwitchCheckList(bitList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().GeOptionStart(0, data));
+    const std::vector<std::string> geOptionDeviceData = {"ts_track.data", "ccu0.instr", "ccu1.instr"};
+    const std::vector<std::string> geOptionHostData = {
+        "unaging.api_event.data", "unaging.compact.node_basic_info", "unaging.compact.task_track",
+        "unaging.additional.context_id_info"};
+    const std::vector<uint64_t> geOptionBitSwitches = {PROF_ACL_API, PROF_TASK_TIME_L1, PROF_AICORE_METRICS};
+    auto& profMgr = MsprofMgr();
+    profMgr.SetDeviceCheckList(geOptionDeviceData);
+    profMgr.SetHostCheckList(geOptionHostData);
+    profMgr.SetBitSwitchCheckList(geOptionBitSwitches);
+    EXPECT_EQ(PROFILING_SUCCESS, profMgr.GeOptionStart(0, data));
 }
 
 TEST_F(GeOptionDavidStest, GeOptionCcuStatUbFreqMax)
@@ -129,15 +130,27 @@ TEST_F(GeOptionDavidStest, GeOptionL2)
     EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().GeOptionStart(1, data));
 }
 
-TEST_F(GeOptionDavidStest,GeOptionInstrProfiling)
+TEST_F(GeOptionDavidStest, GeOptionInstrProfiling)
 {
-    // milan: InstrProfiling
+    // david geoption: instr profiling default groups
     nlohmann::json data;
     data["output"] = DAVID_OUTPUT_DIR;
     data["instr_profiling"] = "on";
-    std::vector<std::string> dataList = {"instr.biu_perf_group0", "instr.biu_perf_group1", "instr.biu_perf_group2"};
+    const std::vector<std::string> geOptionInstrData = {
+        "instr.biu_perf_group0", "instr.biu_perf_group1", "instr.biu_perf_group2"};
     // david device simulator return aicore num 18 <= DAVID_DIE0_AICORE_NUM
-    std::vector<std::string> blackDataList = {"instr.biu_perf_group3", "instr.biu_perf_group4", "instr.biu_perf_group5"};
-    MsprofMgr().SetDeviceCheckList(dataList, blackDataList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().GeOptionStart(1, data));
+    const std::vector<std::string> geOptionInstrBlackData = {
+        "instr.biu_perf_group3", "instr.biu_perf_group4", "instr.biu_perf_group5"};
+    auto& profMgr = MsprofMgr();
+    profMgr.SetDeviceCheckList(geOptionInstrData, geOptionInstrBlackData);
+    EXPECT_EQ(PROFILING_SUCCESS, profMgr.GeOptionStart(1, data));
+}
+
+TEST_F(GeOptionDavidStest, GeOptionInstrProfilingFreqUnsupported)
+{
+    nlohmann::json data;
+    data["output"] = DAVID_OUTPUT_DIR;
+    data["instr_profiling"] = "on";
+    data["instr_profiling_freq"] = 10000;
+    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().GeOptionStart(1, data));
 }

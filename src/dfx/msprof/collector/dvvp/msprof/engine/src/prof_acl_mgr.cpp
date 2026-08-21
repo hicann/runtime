@@ -265,6 +265,87 @@ bool JsonConfigIntegerTypeIsValid(const NanoJson::JsonValue& value)
     return value.type == NanoJson::JsonValueType::INT || value.type == NanoJson::JsonValueType::UINT;
 }
 
+bool JsonConfigRequiresSupportCheck(const std::string& config) { return config == "instr_profiling_freq"; }
+
+bool AclJsonConfigSkipsCommonValueCheck(const std::string& config)
+{
+    return config == "output" || config == "storage_limit" || config == "instr_profiling_freq" || config == "optype";
+}
+
+bool GeOptionConfigSkipsCommonValueCheck(const std::string& config)
+{
+    return config == "output" || config == "storage_limit" || config == "fp_point" || config == "bp_point" ||
+           config == "instr_profiling_freq" || config == "optype";
+}
+
+void ReportJsonConfigUnsupportedError(const std::string& config)
+{
+    MSPROF_INPUT_ERROR("EK0005", std::vector<std::string>({"param"}), std::vector<std::string>({config}));
+}
+
+int32_t CheckAclJsonItemConfigInvalid(const std::string& config, const NanoJson::JsonValue& value)
+{
+    if (JsonConfigRequiresSupportCheck(config) && !ProfParamsAdapter::instance()->CheckJsonConfigSupport(config)) {
+        ReportJsonConfigUnsupportedError(config);
+        return MSPROF_ERROR_CONFIG_INVALID;
+    }
+    if (JsonConfigRequiresInteger(config) && !JsonConfigIntegerTypeIsValid(value)) {
+        std::string reason = GetJsonConfigTypeInvalidReason(config);
+        MSPROF_INPUT_ERROR(
+            "EK0003", std::vector<std::string>({"value", "config", "reason"}),
+            std::vector<std::string>({value(), config, reason}));
+        return MSPROF_ERROR_CONFIG_INVALID;
+    }
+    if (AclJsonConfigSkipsCommonValueCheck(config)) {
+        return MSPROF_ERROR_NONE;
+    }
+    if (!JsonConfigTypeIsValid(value, config)) {
+        std::string reason = GetJsonConfigTypeInvalidReason(config);
+        MSPROF_INPUT_ERROR(
+            "EK0003", std::vector<std::string>({"value", "config", "reason"}),
+            std::vector<std::string>({value(), config, reason}));
+        return MSPROF_ERROR_CONFIG_INVALID;
+    }
+    if (!ProfParamsAdapter::instance()->CheckJsonConfig(config, value)) {
+        std::string reason = GetJsonConfigInvalidReason(config);
+        MSPROF_INPUT_ERROR(
+            "EK0003", std::vector<std::string>({"value", "config", "reason"}),
+            std::vector<std::string>({value(), config, reason}));
+        return MSPROF_ERROR_CONFIG_INVALID;
+    }
+    return MSPROF_ERROR_NONE;
+}
+
+int32_t CheckGeOptionItemConfigInvalid(const std::string& config, const NanoJson::JsonValue& value)
+{
+    if (JsonConfigRequiresSupportCheck(config) && !ProfParamsAdapter::instance()->CheckJsonConfigSupport(config)) {
+        ReportJsonConfigUnsupportedError(config);
+        return MSPROF_ERROR_CONFIG_INVALID;
+    }
+    if (JsonConfigRequiresInteger(config) && !JsonConfigIntegerTypeIsValid(value)) {
+        MSPROF_INPUT_ERROR(
+            "EK0001", std::vector<std::string>({"value", "param", "reason"}),
+            std::vector<std::string>({value(), config, GetJsonConfigTypeInvalidReason(config)}));
+        return MSPROF_ERROR_CONFIG_INVALID;
+    }
+    if (GeOptionConfigSkipsCommonValueCheck(config)) {
+        return MSPROF_ERROR_NONE;
+    }
+    if (!JsonConfigTypeIsValid(value, config)) {
+        MSPROF_INPUT_ERROR(
+            "EK0001", std::vector<std::string>({"value", "param", "reason"}),
+            std::vector<std::string>({value(), config, GetJsonConfigTypeInvalidReason(config)}));
+        return MSPROF_ERROR_CONFIG_INVALID;
+    }
+    if (!ProfParamsAdapter::instance()->CheckJsonConfig(config, value)) {
+        MSPROF_INPUT_ERROR(
+            "EK0001", std::vector<std::string>({"value", "param", "reason"}),
+            std::vector<std::string>({value(), config, GetJsonConfigInvalidReason(config)}));
+        return MSPROF_ERROR_CONFIG_INVALID;
+    }
+    return MSPROF_ERROR_NONE;
+}
+
 const uint32_t ACL_CFG_LEN_MAX = 1024 * 1024; // max input cfg len is 1024 * 1024
 
 int32_t CheckAclJsonInitData(VOID_PTR data, uint32_t len)
@@ -2014,31 +2095,8 @@ int32_t ProfAclMgr::CheckAclJsonConfigInvalid(const NanoJson::Json& acljsonCfg) 
         if (iter->first == "switch" && iter->second.GetValue<std::string>() == "on") {
             aclJsonSwitch = true;
         }
-        if (JsonConfigRequiresInteger(iter->first) && !JsonConfigIntegerTypeIsValid(iter->second)) {
-            std::string reason = GetJsonConfigTypeInvalidReason(iter->first);
-            MSPROF_INPUT_ERROR(
-                "EK0003", std::vector<std::string>({"value", "config", "reason"}),
-                std::vector<std::string>({iter->second(), iter->first, reason}));
+        if (CheckAclJsonItemConfigInvalid(iter->first, iter->second) != MSPROF_ERROR_NONE) {
             return MSPROF_ERROR_CONFIG_INVALID;
-        }
-        if (iter->first == "output" || iter->first == "storage_limit" || iter->first == "instr_profiling_freq" ||
-            iter->first == "optype") {
-            continue;
-        } else {
-            if (!JsonConfigTypeIsValid(iter->second, iter->first)) {
-                std::string reason = GetJsonConfigTypeInvalidReason(iter->first);
-                MSPROF_INPUT_ERROR(
-                    "EK0003", std::vector<std::string>({"value", "config", "reason"}),
-                    std::vector<std::string>({iter->second(), iter->first, reason}));
-                return MSPROF_ERROR_CONFIG_INVALID;
-            }
-            if (!ProfParamsAdapter::instance()->CheckJsonConfig(iter->first, iter->second)) {
-                std::string reason = GetJsonConfigInvalidReason(iter->first);
-                MSPROF_INPUT_ERROR(
-                    "EK0003", std::vector<std::string>({"value", "config", "reason"}),
-                    std::vector<std::string>({iter->second(), iter->first, reason}));
-                return MSPROF_ERROR_CONFIG_INVALID;
-            }
         }
     }
     if (!aclJsonSwitch) {
@@ -2283,29 +2341,8 @@ int32_t ProfAclMgr::CheckGeOptionConfigInvalid(const NanoJson::Json& geoptionCfg
         if (iter->first == "task_trace") {
             MSPROF_LOGW("[Note] [task_trace] This option will be discarded in later versions.Use task_time instead");
         }
-        if (JsonConfigRequiresInteger(iter->first) && !JsonConfigIntegerTypeIsValid(iter->second)) {
-            MSPROF_INPUT_ERROR(
-                "EK0001", std::vector<std::string>({"value", "param", "reason"}),
-                std::vector<std::string>({iter->second(), iter->first, GetJsonConfigTypeInvalidReason(iter->first)}));
+        if (CheckGeOptionItemConfigInvalid(iter->first, iter->second) != MSPROF_ERROR_NONE) {
             return MSPROF_ERROR_CONFIG_INVALID;
-        }
-        if (iter->first == "output" || iter->first == "storage_limit" || iter->first == "fp_point" ||
-            iter->first == "bp_point" || iter->first == "instr_profiling_freq" || iter->first == "optype") {
-            continue;
-        } else {
-            if (!JsonConfigTypeIsValid(iter->second, iter->first)) {
-                MSPROF_INPUT_ERROR(
-                    "EK0001", std::vector<std::string>({"value", "param", "reason"}),
-                    std::vector<std::string>(
-                        {iter->second(), iter->first, GetJsonConfigTypeInvalidReason(iter->first)}));
-                return MSPROF_ERROR_CONFIG_INVALID;
-            }
-            if (!ProfParamsAdapter::instance()->CheckJsonConfig(iter->first, iter->second)) {
-                MSPROF_INPUT_ERROR(
-                    "EK0001", std::vector<std::string>({"value", "param", "reason"}),
-                    std::vector<std::string>({iter->second(), iter->first, GetJsonConfigInvalidReason(iter->first)}));
-                return MSPROF_ERROR_CONFIG_INVALID;
-            }
         }
     }
     MSPROF_EVENT("Success to check all GeOptionConfigs.");

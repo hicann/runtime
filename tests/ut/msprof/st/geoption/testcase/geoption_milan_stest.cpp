@@ -27,7 +27,7 @@ static const char MILAN_RM_RF[] = "rm -rf ./geoptionMilanstest_workspace";
 static const char MILAN_MKDIR[] = "mkdir ./geoptionMilanstest_workspace";
 static const char MILAN_OUTPUT_DIR[] = "./geoptionMilanstest_workspace/output";
 
-class GeOptionMilanStest: public testing::Test {
+class GeOptionMilanStest : public testing::Test {
 protected:
     virtual void SetUp()
     {
@@ -43,7 +43,7 @@ protected:
     virtual void TearDown()
     {
         GlobalMockObject::verify();
-        DevprofDrvAicpu::instance()->isRegister_ = false;   // 重置aicpu注册状态，使单进程内能多次注册
+        DevprofDrvAicpu::instance()->isRegister_ = false; // 重置aicpu注册状态，使单进程内能多次注册
         EXPECT_EQ(2, SimulatorMgr().DelDeviceSimulator(2, StPlatformType::CHIP_V4_1_0));
         system(MILAN_RM_RF);
         system("rm -rf ./geoption.json");
@@ -67,7 +67,7 @@ TEST_F(GeOptionMilanStest, GeOptionDefault)
     EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().GeOptionStart(0, data));
 }
 
-TEST_F(GeOptionMilanStest,GeOptionL2)
+TEST_F(GeOptionMilanStest, GeOptionL2)
 {
     // milan: l2
     nlohmann::json data;
@@ -78,18 +78,19 @@ TEST_F(GeOptionMilanStest,GeOptionL2)
     EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().GeOptionStart(1, data));
 }
 
-TEST_F(GeOptionMilanStest,GeOptionInstrProfiling)
+TEST_F(GeOptionMilanStest, GeOptionInstrProfiling)
 {
     // milan: InstrProfiling
     nlohmann::json data;
     data["output"] = MILAN_OUTPUT_DIR;
     data["instr_profiling"] = "on";
+    data["instr_profiling_freq"] = 10000;
     std::vector<std::string> dataList = {"instr.group"};
     MsprofMgr().SetDeviceCheckList(dataList);
     EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().GeOptionStart(1, data));
 }
 
-TEST_F(GeOptionMilanStest,GeOptionTaskTimeFwkL0)
+TEST_F(GeOptionMilanStest, GeOptionTaskTimeFwkL0)
 {
     // milan: InstrProfiling
     nlohmann::json data;
@@ -99,7 +100,7 @@ TEST_F(GeOptionMilanStest,GeOptionTaskTimeFwkL0)
     EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().GeOptionStart(1, data));
 }
 
-TEST_F(GeOptionMilanStest,GeOptionTaskTimeFwkOff)
+TEST_F(GeOptionMilanStest, GeOptionTaskTimeFwkOff)
 {
     // milan: InstrProfiling
     nlohmann::json data;
@@ -109,7 +110,7 @@ TEST_F(GeOptionMilanStest,GeOptionTaskTimeFwkOff)
     EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().GeOptionStart(1, data));
 }
 
-TEST_F(GeOptionMilanStest,GeOptionTaskTimeFwkL1)
+TEST_F(GeOptionMilanStest, GeOptionTaskTimeFwkL1)
 {
     // milan: InstrProfiling
     nlohmann::json data;
