@@ -36,8 +36,8 @@ typedef struct {
 // prohibit repeat label
 const MsnpureportFileDumpTable MSNPUREPORT_FILE_DUMP_INFO[] = {
     {"dvpp", "system_info", "module_info", "/var/dvpp_proc_collect.sh", NULL, 10000, (TYPE_1 | TYPE_5), true},
-    {"hal", "system_info", "module_info", "/var/hal_proc_collect.sh", NULL, 40000, (TYPE_1 | TYPE_5), true},
-    {"hal", "system_info", "module_info", "/var/hal_proc_collect_normal.sh", NULL, 40000, (TYPE_1 | TYPE_5), false},
+    {"hal", "system_info", "module_info", "/var/hal_proc_collect.sh", NULL, 180000, (TYPE_1 | TYPE_5), true},
+    {"hal", "system_info", "module_info", "/var/hal_proc_collect_normal.sh", NULL, 180000, (TYPE_1 | TYPE_5), false},
     {"tee", "system_info", "module_info", "/var/tee_log_collect.sh", NULL, 12000, (TYPE_1 | TYPE_5), true},
     {"ub", "ub_info", "ub_info", "/var/ub_info_collect.sh", NULL, 100000, (TYPE_6), true},
     {"ao_self", "ao_info", "ao_info", "/var/ao_info_collect.sh", "7", 305000, (TYPE_7), true},
