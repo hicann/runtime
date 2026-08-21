@@ -540,7 +540,7 @@ rtError_t SubmitExternalEventRefreshInfo(
         "External refresh host buffer is null, model_id=%u.", modelId);
     uint64_t realSize = 0U;
     return MemcopyAsync(
-        deviceBase, totalSize, refreshInfo->hostRefresh.get(), totalSize, RT_MEMCPY_HOST_TO_DEVICE, launchStream,
+        deviceBase, totalSize, refreshInfo->hostRefresh.get(), totalSize, RT_MEMCPY_HOST_TO_DEVICE_EX, launchStream,
         &realSize, refreshInfo->hostRefresh);
 }
 

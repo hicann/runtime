@@ -37,6 +37,8 @@
 #define private public
 #define protected public
 #include "capture_model.hpp"
+#include "capture_model_utils.hpp"
+#include "memcpy_c.hpp"
 #include "stream.hpp"
 #include "context.hpp"
 #include "notify.hpp"
@@ -1167,6 +1169,25 @@ protected:
 
     Stream* stream_ = nullptr;
 };
+
+TEST_F(NpuDriverJettyTest, ExternalRefreshUsesHostToDeviceExForUbDma)
+{
+    constexpr uint64_t refreshSize = 16U;
+    ExternalEventRefreshInfo refreshInfo;
+    refreshInfo.hostRefresh.reset(new uint8_t[refreshSize], std::default_delete<uint8_t[]>());
+    uint8_t deviceTable[refreshSize] = {};
+    // 此处验证 UB 场景的 External refresh 选择 RT_MEMCPY_HOST_TO_DEVICE_EX 类型。
+    MOCKER(MemcopyAsync)
+        .stubs()
+        .with(
+            eq(static_cast<void*>(deviceTable)), eq(refreshSize),
+            eq(static_cast<const void*>(refreshInfo.hostRefresh.get())), eq(refreshSize),
+            eq(RT_MEMCPY_HOST_TO_DEVICE_EX), eq(stream_), mockcpp::any(), mockcpp::any(), mockcpp::any(),
+            mockcpp::any())
+        .will(returnValue(RT_ERROR_NONE));
+
+    EXPECT_EQ(SubmitExternalEventRefreshInfo(stream_, &refreshInfo, deviceTable, refreshSize, 1U), RT_ERROR_NONE);
+}
 
 // NpuDriver::AsyncDmaJettyCreate tests
 TEST_F(NpuDriverJettyTest, AsyncDmaJettyCreate_Success)
