@@ -25,6 +25,7 @@ void SetStarsResultForModelExecuteTask(TaskInfo* const taskInfo, const rtCqRepor
 TaskInfo* GetRealReportFaultTaskForModelExecuteTask(TaskInfo* const taskInfo);
 void PrintErrorModelExecuteTaskFuncCall(TaskInfo* const task);
 rtError_t AllocFuncCallMemForModelExecuteTask(TaskInfo* const taskInfo, rtStarsModelExeFuncCallPara_t& funcCallPara);
+rtError_t ConstructFuncCallParaForModelExecuteTask(TaskInfo* taskInfo, rtStarsModelExeFuncCallPara_t& funcCallPara);
 rtError_t PrepareSqeInfoForModelExecuteTask(TaskInfo* const taskInfo);
 rtError_t FreeFuncCallHostMemAndSvmMem(TaskInfo* const taskInfo);
 void ReportModelEndGraphErrorForNotifyWaitTask(TaskInfo* taskInfo, const uint32_t devId);

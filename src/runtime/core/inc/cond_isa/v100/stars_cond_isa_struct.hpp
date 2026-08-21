@@ -25,6 +25,11 @@ enum rtStarsCondIsaRegister_t : uint32_t {
     RT_STARS_COND_ISA_REGISTER_R3 = 3,
     RT_STARS_COND_ISA_REGISTER_R4 = 4,
     RT_STARS_COND_ISA_REGISTER_R5 = 5,
+    RT_STARS_COND_ISA_REGISTER_R6 = 6, // R6-R10 only use in arch9201
+    RT_STARS_COND_ISA_REGISTER_R7 = 7,
+    RT_STARS_COND_ISA_REGISTER_R8 = 8,
+    RT_STARS_COND_ISA_REGISTER_R9 = 9,
+    RT_STARS_COND_ISA_REGISTER_R10 = 10,
 };
 
 // load data form addr of (rs1+signed(immd)) to register rd, RT_STARS_COND_ISA_OP_CODE_LOAD

@@ -358,19 +358,19 @@ static rtError_t ConstructCaptureCondTaskFc(CaptureConditionTaskInfo* condTaskIn
     rtError_t ret;
     switch (condTaskInfo->condHandle->GetCondType()) {
         case RT_COND_TASK_TYPE_IF: {
-            RtStarsCaptureIfCondFc fcIf;
+            RtStarsCaptureIfCondFc fcIf = {};
             ConstructCaptureIfCondFc(para, fcIf);
             ret = memcpy_s(condTaskInfo->funcCallHostMem, condTaskInfo->funCallMemSize, &fcIf, sizeof(fcIf));
             COND_RETURN_ERROR(ret != EOK, RT_ERROR_SEC_HANDLE, "memcpy fcIf failed.");
         } break;
         case RT_COND_TASK_TYPE_WHILE: {
-            RtStarsCaptureWhileCondFc fcWhile;
+            RtStarsCaptureWhileCondFc fcWhile = {};
             ConstructCaptureWhileCondFc(para, fcWhile);
             ret = memcpy_s(condTaskInfo->funcCallHostMem, condTaskInfo->funCallMemSize, &fcWhile, sizeof(fcWhile));
             COND_RETURN_ERROR(ret != EOK, RT_ERROR_SEC_HANDLE, "memcpy fcWhile failed.");
         } break;
         case RT_COND_TASK_TYPE_SWITCH: {
-            RtStarsCaptureSwitchCondFc fcSwitch;
+            RtStarsCaptureSwitchCondFc fcSwitch = {};
             ConstructCaptureSwitchCondFc(para, fcSwitch);
             ret = memcpy_s(condTaskInfo->funcCallHostMem, condTaskInfo->funCallMemSize, &fcSwitch, sizeof(fcSwitch));
             COND_RETURN_ERROR(ret != EOK, RT_ERROR_SEC_HANDLE, "memcpy fcSwitch failed.");

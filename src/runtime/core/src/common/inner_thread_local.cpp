@@ -28,6 +28,7 @@ __THREAD_LOCAL__ bool InnerThreadLocalContainer::curCtxInternalAccess_ = false;
 __THREAD_LOCAL__ bool InnerThreadLocalContainer::curRefInternalAccess_ = false;
 __THREAD_LOCAL__
 std::array<uint32_t, RT_STREAM_CAPTURE_MODE_MAX> InnerThreadLocalContainer::threadCaptureModeRefNum_ = {0U};
+__THREAD_LOCAL__ rtChipType_t InnerThreadLocalContainer::curChipType_ = CHIP_END;
 
 namespace {
 Context* GetBoundContext(Context* curCtx, RefObject<Context*>* curRef)
@@ -104,10 +105,16 @@ void InnerThreadLocalContainer::ClearDeletedContextBinding(Context* const delete
     }
 }
 
+void InnerThreadLocalContainer::SetCurrentChipType(rtChipType_t chipType) { curChipType_ = chipType; }
+
+rtChipType_t InnerThreadLocalContainer::GetCurrentChipType() { return curChipType_; }
+
 void InnerThreadLocalContainer::RefreshDevice()
 {
     Context* const boundCtx = GetBoundContext(curCtx_, curRef_);
     device_ = (boundCtx != nullptr) ? boundCtx->Device_() : nullptr;
+    const rtChipType_t chipType = (device_ != nullptr) ? device_->GetChipType() : CHIP_END;
+    SetCurrentChipType(chipType);
 }
 
 void InnerThreadLocalContainer::SetCurCtx(Context* const inCurCtx, bool internalAccess)

@@ -15,6 +15,7 @@
 #include "runtime_task_manager.h"
 #include "cond_op_stream_task.h"
 #include "stub_task.hpp"
+#include "cond_op_manager.hpp"
 
 namespace cce {
 namespace runtime {
@@ -134,6 +135,10 @@ rtError_t InitFuncCallParaForStreamSwitchTaskV2(
             fcPara.rtSqHeadAddr =
                 props.rtsqVirtualAddr.rtSqHeadAddr + RT_SIMPLE_SQ_OFFSET_1000 * static_cast<uint64_t>(fcPara.trueSqId);
         }
+        if (props.rtsqVirtualAddr.rtSqFsmStateAddr == DAVID_SIMPLE_SQ_STATE_OFFSET) {
+            // virtual rtsq simple addr + sq state offset
+            fcPara.rtSqFsmStateAddr = props.rtsqVirtualAddr.rtSqFsmStateAddr + sqVirtualAddr;
+        }
     } else {
         RT_LOG(RT_LOG_DEBUG, "current chipType[%d] does not support init func call para", chipType);
         return RT_ERROR_FEATURE_NOT_SUPPORT;
@@ -184,7 +189,7 @@ rtError_t FreeFuncCallMemForStreamSwitchTask(TaskInfo* const taskInfo)
     return RT_ERROR_NONE;
 }
 
-rtError_t PrepareSqeInfoForStreamSwitchTask(TaskInfo* taskInfo)
+static rtError_t PrepareSqeInfoForStreamSwitchTaskDefault(TaskInfo* taskInfo)
 {
     rtError_t ret;
     const rtChipType_t chipType = taskInfo->stream->Device_()->GetChipType();
@@ -192,35 +197,36 @@ rtError_t PrepareSqeInfoForStreamSwitchTask(TaskInfo* taskInfo)
                                     RtOptionalFeatureType::RT_FEATURE_DEVICE_MEM_COPY_DOT_D2D_ONLY)) ?
                                     RT_MEMCPY_DEVICE_TO_DEVICE :
                                     RT_MEMCPY_HOST_TO_DEVICE;
-
     StreamSwitchTaskInfo* streamSwitchTask = &(taskInfo->u.streamswitchTask);
     if (streamSwitchTask->isCondEx) {
+        streamSwitchTask->funCallMemSize = sizeof(rtStarsStreamSwitchExFc_t);
         rtStarsStreamSwitchExFc_t exFc = {};
         rtStarsStreamSwitchExFcPara_t exFcPara = {};
 #if (!defined(CFG_VECTOR_CAST))
-        (void)InitFuncCallParaForStreamSwitchTaskV2(taskInfo, exFcPara, chipType);
+        ret = InitFuncCallParaForStreamSwitchTaskV2(taskInfo, exFcPara, chipType);
+        ERROR_RETURN(ret, "Init func call para failed,retCode=%#x.", ret);
 #endif
         ret = AllocFuncCallMemForStreamSwitchTask(taskInfo);
         ERROR_RETURN(ret, "Alloc func call svm failed,retCode=%#x.", ret);
         exFcPara.dataType = streamSwitchTask->dataType;
         exFcPara.valPtr = streamSwitchTask->valuePtr;
         exFcPara.dfxAddr = RtPtrToValue(streamSwitchTask->dfxPtr);
-        ERROR_RETURN(ret, "Init func call para failed,retCode=%#x.", ret);
         ConstructStreamSwitchExFc(exFc, exFcPara);
         ret = taskInfo->stream->Device_()->Driver_()->MemCopySync(
             streamSwitchTask->funcCallSvmMem, streamSwitchTask->funCallMemSize, &exFc, streamSwitchTask->funCallMemSize,
             kind);
     } else {
+        streamSwitchTask->funCallMemSize = sizeof(rtStarsStreamSwitchFc_t);
         rtStarsStreamSwitchFc_t fc = {};
         rtStarsStreamSwitchFcPara_t fcPara = {};
 #if (!defined(CFG_VECTOR_CAST))
-        (void)InitFuncCallParaForStreamSwitchTaskV1(taskInfo, fcPara, chipType);
+        ret = InitFuncCallParaForStreamSwitchTaskV1(taskInfo, fcPara, chipType);
+        ERROR_RETURN(ret, "Init func call para failed,retCode=%#x.", ret);
 #endif
         ret = AllocFuncCallMemForStreamSwitchTask(taskInfo);
         ERROR_RETURN(ret, "Alloc func call svm failed,retCode=%#x.", ret);
         fcPara.val = static_cast<uint64_t>(streamSwitchTask->value);
         fcPara.dfxAddr = RtPtrToValue(streamSwitchTask->dfxPtr);
-        ERROR_RETURN(ret, "Init func call para failed,retCode=%#x.", ret);
         ConstructStreamSwitchFc(fc, fcPara);
         ret = taskInfo->stream->Device_()->Driver_()->MemCopySync(
             streamSwitchTask->funcCallSvmMem, streamSwitchTask->funCallMemSize, &fc, streamSwitchTask->funCallMemSize,
@@ -229,10 +235,18 @@ rtError_t PrepareSqeInfoForStreamSwitchTask(TaskInfo* taskInfo)
 
     if (ret != RT_ERROR_NONE) {
         (void)FreeFuncCallMemForStreamSwitchTask(taskInfo);
-        RT_LOG(RT_LOG_ERROR, "MemCopySync for stream active func call failed,retCode=%#x.", ret);
+        RT_LOG(RT_LOG_ERROR, "MemCopySync for stream switch func call failed, retCode=%#x.", ret);
     }
 
     return ret;
+}
+
+rtError_t PrepareSqeInfoForStreamSwitchTask(TaskInfo* taskInfo)
+{
+    const CondIsaTaskFuncs* const funcs = GetCurrentCondIsaTaskFuncs();
+    return ((funcs != nullptr) && (funcs->prepareStreamSwitch != nullptr)) ?
+               funcs->prepareStreamSwitch(taskInfo) :
+               PrepareSqeInfoForStreamSwitchTaskDefault(taskInfo);
 }
 
 rtError_t StreamSwitchTaskInitV1(
@@ -257,7 +271,7 @@ rtError_t StreamSwitchTaskInitV1(
     streamSwitchTask->trueStreamId = static_cast<uint32_t>(trueStream->Id_());
     streamSwitchTask->isCondEx = false;
     streamSwitchTask->trueStream = const_cast<Stream*>(trueStream);
-    streamSwitchTask->funCallMemSize = sizeof(rtStarsStreamSwitchFc_t);
+    streamSwitchTask->funCallMemSize = 0UL; // may update
 
     // now esl b606 cond is only support physic address, virtual address is support on b607.
     uint64_t physicPtr = 0UL;
@@ -299,7 +313,7 @@ rtError_t StreamSwitchTaskInitV2(
     streamSwitchTask->dataType = taskDataType;
     streamSwitchTask->isCondEx = true;
     streamSwitchTask->trueStream = const_cast<Stream*>(trueStream);
-    streamSwitchTask->funCallMemSize = sizeof(rtStarsStreamSwitchExFc_t);
+    streamSwitchTask->funCallMemSize = 0UL; // may update
     rtError_t error;
     // now esl b606 cond is only support physic address, virtual address is support on b607.
     if (!stm->Device_()->IsDavidPlatform()) {

@@ -25,6 +25,7 @@
 #include "stub_task.hpp"
 #include "capture_model_utils.hpp"
 #include "capture_model.hpp"
+#include "cond_op_manager.hpp"
 
 namespace cce {
 namespace runtime {
@@ -37,8 +38,8 @@ static rtError_t SaveFuncCallDataForModelExecuteTask(
     const size_t streamSvmArrMax = streamSvmAddr.size();
     ModelExecuteTaskInfo* modelExecuteTaskInfo = &(taskInfo->u.modelExecuteTaskInfo);
 
-    uint8_t* dstMem =
-        RtPtrToPtr<uint8_t*>(modelExecuteTaskInfo->model->GetFuncCallHostMem()) + sizeof(RtStarsModelExeFuncCall);
+    uint8_t* dstMem = RtPtrToPtr<uint8_t*>(modelExecuteTaskInfo->model->GetFuncCallHostMem()) +
+                      modelExecuteTaskInfo->model->GetFuncCallInstrSize();
 
     rtError_t ret =
         memcpy_s(dstMem, (headSqArrMax * sizeof(uint64_t)), headSq.data(), (headSqArrMax * sizeof(uint64_t)));
@@ -192,9 +193,9 @@ rtError_t AllocFuncCallMemForModelExecuteTask(TaskInfo* const taskInfo, rtStarsM
         "The head stream of the model does not have the corresponding SQ ID, headSqArrMax=%" PRIu64 ".", headSqArrMax);
 
     const uint64_t funCallMemSize =
-        sizeof(RtStarsModelExeFuncCall) + (headSqArrMax + streamSvmArrMax) * sizeof(uint64_t);
+        funcCallPara.funcCallInstrSize + (headSqArrMax + streamSvmArrMax) * sizeof(uint64_t);
     model->SetFunCallMemSize(funCallMemSize);
-
+    model->SetFuncCallInstrSize(funcCallPara.funcCallInstrSize);
     model->SetFuncCallHostMem(malloc(funCallMemSize));
     COND_RETURN_AND_MSG_OUTER(
         model->GetFuncCallHostMem() == nullptr, RT_ERROR_MEMORY_ALLOCATION, ErrorCode::EE1013, funCallMemSize,
@@ -221,7 +222,7 @@ rtError_t AllocFuncCallMemForModelExecuteTask(TaskInfo* const taskInfo, rtStarsM
     }
 
     funcCallPara.funcCallAddr = model->GetFuncCallSvmMem();
-    funcCallPara.headSqArrAddr = funcCallPara.funcCallAddr + sizeof(RtStarsModelExeFuncCall);
+    funcCallPara.headSqArrAddr = funcCallPara.funcCallAddr + funcCallPara.funcCallInstrSize;
     funcCallPara.streamSvmArrAddr = funcCallPara.headSqArrAddr + (headSqArrMax * sizeof(uint64_t));
     funcCallPara.headSqArrMax = headSqArrMax;
     funcCallPara.streamSvmArrMax = streamSvmArrMax;
@@ -236,17 +237,33 @@ rtError_t AllocFuncCallMemForModelExecuteTask(TaskInfo* const taskInfo, rtStarsM
     return RT_ERROR_NONE;
 }
 
-static rtError_t ConstructFuncCallPara(TaskInfo* const taskInfo, rtStarsModelExeFuncCallPara_t& funcCallPara)
+rtError_t ConstructFuncCallParaForModelExecuteTask(
+    TaskInfo* const taskInfo, rtStarsModelExeFuncCallPara_t& funcCallPara)
 {
     Stream* const stream = taskInfo->stream;
     ModelExecuteTaskInfo* modelExecuteTaskInfo = &(taskInfo->u.modelExecuteTaskInfo);
-
+    RtStarsModelExeFuncCall funcCall = {};
+    funcCallPara.deltaOffset = 0ULL;
+    funcCallPara.isCondTaskModelExec = false;
+    funcCallPara.funcCallInstrSize = sizeof(funcCall);
+    funcCallPara.checkSqStateInstrSize = sizeof(funcCall.checkSqFsm);
+    funcCallPara.checkSqFsmInstrDistance = RtPtrToValue(&(funcCall.checkSqFsm.lhwi0)) - RtPtrToValue(&funcCall);
+    funcCallPara.endInstrDistance = RtPtrToValue(&(funcCall.endInstr.nop)) - RtPtrToValue(&funcCall);
+    funcCallPara.checkSqDisableErrInstrDistance =
+        RtPtrToValue(&(funcCall.checkSqDisableErrInstr.lhwi0)) - RtPtrToValue(&funcCall);
+    funcCallPara.checkSqHeadTailErrInstrDistance =
+        RtPtrToValue(&(funcCall.checkSqHeadTailErrInstr.lhwi0)) - RtPtrToValue(&funcCall);
+    funcCallPara.scanSqInstrDistance =
+        RtPtrToValue(&(funcCall.scanSq.u.rootModelAdapt.lhwi1)) - RtPtrToValue(&funcCall);
+    funcCallPara.errInstrDistance = RtPtrToValue(&(funcCall.errInstr.err)) - RtPtrToValue(&funcCall);
+    funcCallPara.deactiveSqGotoRInstrDistance = RtPtrToValue(&(funcCall.deactiveSq.gotoR)) - RtPtrToValue(&funcCall);
     const rtError_t ret = AllocFuncCallMemForModelExecuteTask(taskInfo, funcCallPara);
     ERROR_RETURN(ret, "alloc func call svm failed, retCode=%#x.", ret);
 
     funcCallPara.sqHeadOffset = STARS_SIMPLE_SQ_HEAD_OFFSET;
     const DevProperties props = taskInfo->stream->Device_()->GetDevProperties();
     funcCallPara.sqTailOffset = props.sqTailOffset;
+
     funcCallPara.sqFsmSelBasAddr = static_cast<uint64_t>(props.fsmSelBase);
     if (props.starsResourceAddrCalculateMethod ==
         StarsResourceAddrCalculateMethod::STARS_RESOURCE_ADDR_CALCULATE_BY_DEVICE_INFO) {
@@ -274,18 +291,17 @@ static rtError_t ConstructFuncCallPara(TaskInfo* const taskInfo, rtStarsModelExe
     return RT_ERROR_NONE;
 }
 
-static void PrintDebugInfoForModelExecute(const Model* model)
+static void PrintDebugInfoForModelExecute(const Model* model, size_t funcCallSize)
 {
     if (CheckLogLevel(static_cast<int32_t>(RUNTIME), DLOG_DEBUG) == 1) {
         const uint32_t* const cmdF = RtPtrToPtr<const uint32_t*>(model->GetFuncCallHostMem());
-        for (size_t i = 0UL; i < (sizeof(RtStarsModelExeFuncCall) / sizeof(uint32_t)); i++) {
+        for (size_t i = 0UL; i < (funcCallSize / sizeof(uint32_t)); i++) {
             RT_LOG(RT_LOG_DEBUG, "model execute before h2d instr[%zu]=0x%08x", i, *(cmdF + i));
         }
 
-        const uint64_t* const cmdS = RtPtrToPtr<const uint64_t*>(
-            RtPtrToPtr<uint8_t*>(model->GetFuncCallHostMem()) + sizeof(RtStarsModelExeFuncCall));
-        for (size_t i = 0UL; i < ((model->GetFunCallMemSize() - sizeof(RtStarsModelExeFuncCall)) / sizeof(uint64_t));
-             i++) {
+        const uint64_t* const cmdS =
+            RtPtrToPtr<const uint64_t*>(RtPtrToPtr<uint8_t*>(model->GetFuncCallHostMem()) + funcCallSize);
+        for (size_t i = 0UL; i < ((model->GetFunCallMemSize() - funcCallSize) / sizeof(uint64_t)); i++) {
             RT_LOG(RT_LOG_DEBUG, "model execute before h2d sq data[%zu]=%#" PRIx64, i, *(cmdS + i));
         }
     }
@@ -317,6 +333,35 @@ static rtError_t FuncCallSvmMemCopy(const Device* const dev, const Model* const 
     return RT_ERROR_NONE;
 }
 
+static rtError_t PrepareModelExecuteFuncCallDefault(TaskInfo* const taskInfo)
+{
+    rtError_t ret;
+    Model* const model = taskInfo->u.modelExecuteTaskInfo.model;
+    RtStarsModelExeFuncCall funcCall = {};
+    rtStarsModelExeFuncCallPara_t funcCallPara = {};
+    ret = ConstructFuncCallParaForModelExecuteTask(taskInfo, funcCallPara);
+    COND_RETURN_ERROR(ret != RT_ERROR_NONE, ret, "construct func call para failed, retCode=%#x.", ret);
+
+    RT_LOG(
+        RT_LOG_DEBUG,
+        "Func call para, funcCallAddr=%#" PRIx64 ", headSqArrAddr=%#" PRIx64 ", headSqArrMax=%#" PRIx64
+        ", streamSvmArrAddr=%#" PRIx64 ", streamSvmArrMax=%#" PRIx64 ", sqFsmSelBasAddr=%#" PRIx64
+        ", dfxAddr=%#" PRIx64,
+        funcCallPara.funcCallAddr, funcCallPara.headSqArrAddr, funcCallPara.headSqArrMax, funcCallPara.streamSvmArrAddr,
+        funcCallPara.streamSvmArrMax, funcCallPara.sqFsmSelBasAddr, funcCallPara.dfxAddr);
+
+    ConstrucModelExeFuncCall(funcCallPara, funcCall);
+    ret = memcpy_s(
+        model->GetFuncCallHostMem(), sizeof(RtStarsModelExeFuncCall), reinterpret_cast<void*>(&funcCall),
+        sizeof(RtStarsModelExeFuncCall));
+    COND_PROC_RETURN_ERROR_MSG_INNER(
+        ret != EOK, RT_ERROR_SEC_HANDLE, (void)FreeFuncCallHostMemAndSvmMem(taskInfo),
+        "Failed to call memcpy_s to copy funcCall, src=%p, dest=%p, dest_max=%zu, count=%zu, retCode=%#x.",
+        RtPtrToPtr<void*>(&funcCall), model->GetFuncCallHostMem(), sizeof(RtStarsModelExeFuncCall),
+        sizeof(RtStarsModelExeFuncCall), ret);
+    return ret;
+}
+
 rtError_t PrepareSqeInfoForModelExecuteTask(TaskInfo* const taskInfo)
 {
     ModelExecuteTaskInfo* modelExecuteTaskInfo = &(taskInfo->u.modelExecuteTaskInfo);
@@ -331,35 +376,15 @@ rtError_t PrepareSqeInfoForModelExecuteTask(TaskInfo* const taskInfo)
     if (unlikely(model->GetFirstExecute())) {
         std::unique_lock<std::mutex> lock(model->GetFirstExecuteMutex());
         if (model->GetFirstExecute()) {
-            RtStarsModelExeFuncCall funcCall = {};
-            rtStarsModelExeFuncCallPara_t funcCallPara = {};
-            funcCallPara.deltaOffset = 0ULL;
-            funcCallPara.isCondTaskModelExec = false;
-            ret = ConstructFuncCallPara(taskInfo, funcCallPara);
-            COND_RETURN_ERROR(ret != RT_ERROR_NONE, ret, "construct func call para failed, retCode=%#x.", ret);
-
-            RT_LOG(
-                RT_LOG_DEBUG,
-                "Func call para, funcCallAddr=%#" PRIx64 ", headSqArrAddr=%#" PRIx64 ", headSqArrMax=%#" PRIx64
-                ", streamSvmArrAddr=%#" PRIx64 ", streamSvmArrMax=%#" PRIx64 ", sqFsmSelBasAddr=%#" PRIx64
-                ", dfxAddr=%#" PRIx64,
-                funcCallPara.funcCallAddr, funcCallPara.headSqArrAddr, funcCallPara.headSqArrMax,
-                funcCallPara.streamSvmArrAddr, funcCallPara.streamSvmArrMax, funcCallPara.sqFsmSelBasAddr,
-                funcCallPara.dfxAddr);
-
-            ConstrucModelExeFuncCall(funcCallPara, funcCall);
-            ret = memcpy_s(
-                model->GetFuncCallHostMem(), sizeof(RtStarsModelExeFuncCall), reinterpret_cast<void*>(&funcCall),
-                sizeof(RtStarsModelExeFuncCall));
-            COND_PROC_RETURN_ERROR_MSG_INNER(
-                ret != EOK, RT_ERROR_SEC_HANDLE, (void)FreeFuncCallHostMemAndSvmMem(taskInfo),
-                "Failed to call memcpy_s to copy funcCall, src=%p, dest=%p, dest_max=%zu, count=%zu, retCode=%#x.",
-                RtPtrToPtr<void*>(&funcCall), model->GetFuncCallHostMem(), sizeof(RtStarsModelExeFuncCall),
-                sizeof(RtStarsModelExeFuncCall), ret);
+            const CondIsaTaskFuncs* const funcs = GetCurrentCondIsaTaskFuncs();
+            ret = ((funcs != nullptr) && (funcs->prepareModelExecuteFuncCall != nullptr)) ?
+                      funcs->prepareModelExecuteFuncCall(taskInfo) :
+                      PrepareModelExecuteFuncCallDefault(taskInfo);
+            COND_RETURN_WITH_NOLOG(ret != RT_ERROR_NONE, ret);
             RT_LOG(RT_LOG_DEBUG, "model first execute.funcCallHostMem=%#" PRIx64, model->GetFuncCallHostMem());
 
             ret = FuncCallSvmMemCopy(dev, model);
-            PrintDebugInfoForModelExecute(model);
+            PrintDebugInfoForModelExecute(model, model->GetFuncCallInstrSize());
             if (ret != RT_ERROR_NONE) {
                 (void)FreeFuncCallHostMemAndSvmMem(taskInfo);
                 RT_LOG(RT_LOG_ERROR, "MemCopySync for model exe func call failed, retCode=%#x.", ret);
@@ -413,7 +438,7 @@ void PrintErrorModelExecuteTaskFuncCall(TaskInfo* const task)
         model->GetFunCallMemSize(), RT_MEMCPY_DEVICE_TO_HOST);
     if (ret == RT_ERROR_NONE) {
         const uint32_t* cmd = RtPtrToPtr<const uint32_t*>(starsModelExefuncCall);
-        for (size_t i = 0UL; i < (sizeof(RtStarsModelExeFuncCall) / sizeof(uint32_t)); i += 8UL) {
+        for (size_t i = 0UL; i < (model->GetFuncCallInstrSize() / sizeof(uint32_t)); i += 8UL) {
             RT_LOG(
                 RT_LOG_ERROR, "FuncCall data : %08x %08x %08x %08x %08x %08x %08x %08x", *(cmd + i), *(cmd + i + 1U),
                 *(cmd + i + 2U), *(cmd + i + 3U), *(cmd + i + 4U), *(cmd + i + 5U), *(cmd + i + 6U), *(cmd + i + 7U));

@@ -15,6 +15,7 @@
 
 namespace cce {
 namespace runtime {
+
 rtCondition_t GetNotCondition(const rtCondition_t condition)
 {
     static const std::map<rtCondition_t, rtCondition_t> notConditions = {
@@ -74,204 +75,6 @@ void ConvertConditionToBranchFunc3(
             break;
     }
 }
-
-void ConstructNop(RtStarsCondOpNop& nop)
-{
-    nop.opCode = RT_STARS_COND_ISA_OP_CODE_NOP;
-    nop.rd = RT_STARS_COND_ISA_REGISTER_R0;
-    nop.func3 = RT_STARS_COND_ISA_OP_IMM_FUNC3_NOP;
-    nop.rs1 = RT_STARS_COND_ISA_REGISTER_R0;
-    nop.immd = 0U;
-}
-
-// func3: LDR(LD_R)
-void ConstructLoad(
-    const rtStarsCondIsaRegister_t rs1Reg, const uint16_t imd, const rtStarsCondIsaRegister_t dstReg,
-    const rtStarsCondIsaLoadFunc3_t func3, RtStarsCondOpLoad& load)
-{
-    load.opCode = RT_STARS_COND_ISA_OP_CODE_LOAD;
-    load.rd = dstReg;
-    load.func3 = func3;
-    load.rs1 = rs1Reg;
-    load.immd = imd;
-}
-
-void ConstructLoadImm(
-    const rtStarsCondIsaRegister_t dstReg, const uint64_t addr, const rtStarsCondIsaLoadImmFunc3_t func3,
-    RtStarsCondOpLoadImm& loadImm)
-{
-    loadImm.opCode = RT_STARS_COND_ISA_OP_CODE_LOAD_IMM;
-    loadImm.rd = dstReg;
-    loadImm.func3 = func3;
-    loadImm.immdAddrHigh = static_cast<uint32_t>((addr >> 32U) & 0X1FFFFU); // bit[48:32]
-    loadImm.immdAddrLow = static_cast<uint32_t>(addr & 0xFFFFFFFFU);        // bit[31:0]
-}
-
-// func3 :ADDI/SLTI[U]/ANDI/ORI/XORI
-void ConstructOpImmAndi(
-    const rtStarsCondIsaRegister_t rs1Reg, const rtStarsCondIsaRegister_t dstReg, const uint32_t immd,
-    const RtStarsCondIsaOpImmFunc3 func3, RtStarsCondOpImm& opImmAndi)
-{
-    opImmAndi.opCode = RT_STARS_COND_ISA_OP_CODE_OP_IMM;
-    opImmAndi.rd = dstReg;
-    opImmAndi.func3 = func3;
-    opImmAndi.rs1 = rs1Reg;
-    opImmAndi.immd = static_cast<uint32_t>(immd & 0xFFFU);
-}
-
-void ConstructOpImmSlli(
-    const rtStarsCondIsaRegister_t rs1Reg, const rtStarsCondIsaRegister_t dstReg, const uint8_t shamt,
-    const RtStarsCondIsaOpImmFunc3 func3, const rtStarsCondIsaOpImmFunc7_t func7, RtStarsCondOpImmSLLI& opImmSlli)
-{
-    opImmSlli.opCode = RT_STARS_COND_ISA_OP_CODE_OP_IMM;
-    opImmSlli.rd = dstReg;
-    opImmSlli.func3 = func3;
-    opImmSlli.rs1 = rs1Reg;
-    opImmSlli.shamt = shamt;
-    opImmSlli.func7 = func7;
-}
-
-void ConstructOpOp(
-    const rtStarsCondIsaRegister_t rs1Reg, const rtStarsCondIsaRegister_t rs2Reg, const rtStarsCondIsaRegister_t dstReg,
-    const rtStarsCondIsaOpFunc3_t func3, const RtStarsCondIsaOpFunc7 func7, RtStarsCondOpOp& opOp)
-{
-    opOp.opCode = RT_STARS_COND_ISA_OP_CODE_OP;
-    opOp.rd = dstReg;
-    opOp.func3 = func3;
-    opOp.rs1 = rs1Reg;
-    opOp.rs2 = rs2Reg;
-    opOp.func7 = func7;
-}
-
-void ConstructLHWI(const rtStarsCondIsaRegister_t dstReg, const uint64_t immd, RtStarsCondOpLHWI& opLHWI)
-{
-    opLHWI.opCode = RT_STARS_COND_ISA_OP_CODE_LWI;
-    opLHWI.func3 = RT_STARS_COND_ISA_LWI_FUNC3_LHWI;
-    opLHWI.rd = dstReg;
-    opLHWI.immd = static_cast<uint32_t>((immd >> 49U) & 0x7FFFU); // High15-immd[63:49]
-}
-
-void ConstructLLWI(const rtStarsCondIsaRegister_t dstReg, const uint64_t immd, RtStarsCondOpLLWI& opLLWI)
-{
-    opLLWI.opCode = RT_STARS_COND_ISA_OP_CODE_LWI;
-    opLLWI.func3 = RT_STARS_COND_ISA_LWI_FUNC3_LLWI;
-    opLLWI.rd = dstReg;
-    opLLWI.immdHigh = static_cast<uint32_t>((immd >> 32U) & 0x1FFFFU); // Low49-immd[48:32]
-    opLLWI.immdLow = static_cast<uint32_t>(immd & 0xFFFFFFFFU);        // Low49-immd[31:0]
-}
-
-void ConstructBranch(
-    const rtStarsCondIsaRegister_t rs1Reg, const rtStarsCondIsaRegister_t rs2Reg,
-    const rtStarsCondIsaBranchFunc3_t func3, const uint8_t instrOffset, RtStarsCondOpBranch& opBranch)
-{
-    opBranch.opCode = RT_STARS_COND_ISA_OP_CODE_BRANCH;
-    opBranch.func3 = func3;
-    opBranch.rs1 = rs1Reg;
-    opBranch.rs2 = rs2Reg;
-    opBranch.jumpInstrOffset = instrOffset & 0xFU; // Jump-immd[3:0]
-}
-
-void ConstructLoop(
-    const rtStarsCondIsaRegister_t rs1Reg, const uint16_t delayCycle, const uint8_t instrOffset,
-    RtStarsCondOpLoop& opLoop)
-{
-    opLoop.opCode = RT_STARS_COND_ISA_OP_CODE_LOOP;
-    opLoop.func3 = 0U;                           // loop is only one func
-    opLoop.rs1 = rs1Reg;
-    opLoop.jumpInstrOffset = instrOffset & 0xFU; // Jump-immd[3:0]
-    opLoop.delayCycle = delayCycle & 0x1FFFU;    // delayCycle[12:0]
-}
-
-void ConstructGotoI(
-    const rtStarsCondIsaRegister_t dstReg, const uint16_t activeStreamSqId, const uint16_t head,
-    RtStarsCondOpStreamGotoI& opGotoI)
-{
-    opGotoI.opCode = RT_STARS_COND_ISA_OP_CODE_STREAM;
-    opGotoI.rd = dstReg;
-    opGotoI.func3 = RT_STARS_COND_ISA_STREAM_FUNC3_GOTO_I;
-    opGotoI.sqId = activeStreamSqId;
-    opGotoI.sqHead = head;
-}
-
-void ConstructActiveI(
-    const rtStarsCondIsaRegister_t dstReg, const uint16_t activeStreamSqId, RtStarsCondOpStreamActiveI& opActiveI)
-{
-    opActiveI.opCode = RT_STARS_COND_ISA_OP_CODE_STREAM;
-    opActiveI.func3 = RT_STARS_COND_ISA_STREAM_FUNC3_ACTIVE_I;
-    opActiveI.rd = dstReg;
-    opActiveI.sqId = activeStreamSqId;
-}
-
-void ConstructDeActiveI(
-    const rtStarsCondIsaRegister_t dstReg, const uint16_t deActiveStreamSqId, RtStarsCondOpStreamDeActiveI& opDeActiveI)
-{
-    opDeActiveI.opCode = RT_STARS_COND_ISA_OP_CODE_STREAM;
-    opDeActiveI.func3 = RT_STARS_COND_ISA_STREAM_FUNC3_DEACTIVE_I;
-    opDeActiveI.rd = dstReg;
-    opDeActiveI.sqId = deActiveStreamSqId;
-}
-
-void ConstructActiveR(
-    const rtStarsCondIsaRegister_t rs1Reg, const rtStarsCondIsaRegister_t dstReg, RtStarsCondOpStreamActiveR& opActiveR)
-{
-    opActiveR.opCode = RT_STARS_COND_ISA_OP_CODE_STREAM;
-    opActiveR.rd = dstReg;
-    opActiveR.func3 = RT_STARS_COND_ISA_STREAM_FUNC3_ACTIVE_R;
-    opActiveR.rs1 = rs1Reg;
-}
-
-void ConstructDeActiveR(
-    const rtStarsCondIsaRegister_t rs1Reg, const rtStarsCondIsaRegister_t dstReg,
-    RtStarsCondOpStreamDeActiveR& opDeActiveR)
-{
-    opDeActiveR.opCode = RT_STARS_COND_ISA_OP_CODE_STREAM;
-    opDeActiveR.rd = dstReg;
-    opDeActiveR.func3 = RT_STARS_COND_ISA_STREAM_FUNC3_DEACTIVE_R;
-    opDeActiveR.rs1 = rs1Reg;
-}
-
-void ConstructGotoR(
-    const rtStarsCondIsaRegister_t sr1Reg, const rtStarsCondIsaRegister_t dstReg, RtStarsCondOpStreamGotoR& opGotoR)
-{
-    opGotoR.opCode = RT_STARS_COND_ISA_OP_CODE_STREAM;
-    opGotoR.rd = dstReg;
-    opGotoR.func3 = RT_STARS_COND_ISA_STREAM_FUNC3_GOTO_R;
-    opGotoR.rs1 = sr1Reg;
-}
-
-void ConstructStore(
-    const rtStarsCondIsaRegister_t addrReg, const rtStarsCondIsaRegister_t valReg, const uint16_t immdOffset,
-    const RtStarsCondIsaStoreFunc3 func3, RtStarsCondOpStore& opStore)
-{
-    opStore.opCode = RT_STARS_COND_ISA_OP_CODE_STORE;
-    opStore.immdLow = static_cast<uint8_t>(immdOffset & 0x1FU); // S-immd[4:0]
-    opStore.func3 = func3;
-    opStore.rs1 = addrReg;
-    opStore.rs2 = valReg;
-    opStore.immdHigh = static_cast<uint8_t>((immdOffset & 0xFE0U) >> 5U); // S-immd[11:5]
-}
-
-void ConstructSystemCsr(
-    const rtStarsCondIsaRegister_t srReg, const rtStarsCondIsaRegister_t dstReg, const rtStarsCondCsrRegister_t csrReg,
-    const rtStarsCondIsaSystemFunc3_t func3, RtStarsCondOpSystemCsr& opCsr)
-{
-    opCsr.opCode = RT_STARS_COND_ISA_OP_CODE_SYSTEM;
-    opCsr.rd = dstReg;
-    opCsr.func3 = func3;
-    opCsr.rs1 = srReg;
-    opCsr.csrReg = csrReg;
-}
-
-void ConstructFuncCall(
-    const rtStarsCondIsaRegister_t rs1Reg, const rtStarsCondIsaRegister_t rs2Reg, RtStarsCondOpFuncCall& opFuncCall)
-{
-    opFuncCall.opCode = RT_STARS_COND_ISA_OP_CODE_FUNC_CALL;
-    opFuncCall.func3 = RT_STARS_COND_FUNC_CALL_FUNC3;
-    opFuncCall.rs1 = rs1Reg;
-    opFuncCall.rs2 = rs2Reg;
-}
-
-void ConstructErrorInstr(RtStarsCondOpErrorInstr& opErrInstr) { opErrInstr.err = 0U; }
 
 void ConstructRdmaPiValueModifyInstr(
     uint64_t piValueArrAddr, uint64_t piValueVecLength, uint64_t dfxAddr, RtStarsPivalueModifyFuncCall& fc)
@@ -431,9 +234,7 @@ void ConstrucModelExeScanSq(rtStarsModelExeFuncCallPara_t& funcCallPara, RtStars
     ConstrucModelExeScanSqAdapt(funcCallPara, scanSq);
 
     // LHWI/LLWI: load goto instr num as a immediate to R5
-    RtStarsModelExeFuncCall fc;
-    const uint64_t toEnd =
-        (RtPtrToValue(&(fc.endInstr.nop)) - RtPtrToValue(&fc)) / sizeof(uint32_t) + funcCallPara.deltaOffset;
+    const uint64_t toEnd = funcCallPara.endInstrDistance / sizeof(uint32_t) + funcCallPara.deltaOffset;
     RT_LOG(RT_LOG_DEBUG, "go to end, instr:%" PRIu64, toEnd);
 
     ConstructLHWI(r5, (toEnd >> 4ULL), scanSq.lhwi3); // {19, 4}bit save in jump_pc
@@ -505,10 +306,8 @@ void ConstrucModelExeCheckSqFsm(rtStarsModelExeFuncCallPara_t& funcCallPara, RtS
 
     // *******************start add loop finding if sq fsm idle *******************
     /* Do not go to lhwi0 cause Offset1 > 15 Loop instruction will high-order truncation.  */
-    RtStarsModelExeFuncCall fc;
     constexpr uint32_t cycle = 1100U;
-    const uint64_t offset1 =
-        (RtPtrToValue(&(fc.checkSqFsm.lhwi0)) - RtPtrToValue(&fc)) / sizeof(uint32_t) + funcCallPara.deltaOffset;
+    const uint64_t offset1 = funcCallPara.checkSqFsmInstrDistance / sizeof(uint32_t) + funcCallPara.deltaOffset;
 
     /* r1 = r4 */
     ConstructOpImmAndi(r4, r1, 0, RT_STARS_COND_ISA_OP_IMM_FUNC3_ADDI, checkSqFsm.addi);
@@ -535,8 +334,7 @@ void ConstrucModelExeCheckSqFsm(rtStarsModelExeFuncCallPara_t& funcCallPara, RtS
     // *******************end add loop finding if sq fsm idle *******************
 
     // LHWI/LLWI: load goto instr num as a immediate to R1
-    const uint64_t errorInstr =
-        (RtPtrToValue(&(fc.errInstr.err)) - RtPtrToValue(&fc)) / sizeof(uint32_t) + funcCallPara.deltaOffset;
+    const uint64_t errorInstr = funcCallPara.errInstrDistance / sizeof(uint32_t) + funcCallPara.deltaOffset;
     RT_LOG(RT_LOG_DEBUG, "go to errorInstr, instr:%" PRIu64, errorInstr);
     // BNE: if sq fsm status is not equal idle(0), goto error
     ConstructSetJumpPcFc(r1, errorInstr, checkSqFsm.jumpPc2);
@@ -545,7 +343,7 @@ void ConstrucModelExeCheckSqFsm(rtStarsModelExeFuncCallPara_t& funcCallPara, RtS
 
     const uint32_t* const cmd = RtPtrToPtr<const uint32_t*>(&checkSqFsm);
     if (CheckLogLevel(static_cast<int32_t>(RUNTIME), DLOG_DEBUG) == 1) {
-        for (size_t i = 0UL; i < (sizeof(RtStarsModelExeCheckSqFsm) / sizeof(uint32_t)); i++) {
+        for (size_t i = 0UL; i < (funcCallPara.checkSqStateInstrSize / sizeof(uint32_t)); i++) {
             RT_LOG(RT_LOG_DEBUG, "model execute checkSqFsm, instr[%zu]=0x%08x", i, cmd[i]);
         }
     }
@@ -575,10 +373,8 @@ void ConstrucModelExeCheckSqDisable(
     ConstructLoad(r4, 0U, r4, RT_STARS_COND_ISA_LOAD_FUNC3_LDR, checkSqDisable.ldr1);
 
     // LHWI/LLWI: load goto instr num as a immediate to R5
-    RtStarsModelExeFuncCall fc;
     const uint64_t errorInstr =
-        (RtPtrToValue(&(fc.checkSqDisableErrInstr.lhwi0)) - RtPtrToValue(&fc)) / sizeof(uint32_t) +
-        funcCallPara.deltaOffset;
+        funcCallPara.checkSqDisableErrInstrDistance / sizeof(uint32_t) + funcCallPara.deltaOffset;
     RT_LOG(RT_LOG_DEBUG, "go to errorInstr, instr:%" PRIu64, errorInstr);
 
     ConstructLHWI(r5, (errorInstr >> 4ULL), checkSqDisable.lhwi3); // {19, 4}bit save in jump_pc
@@ -604,8 +400,7 @@ void ConstrucModelExeCheckSqDisable(
         r1, r1, 63U, RT_STARS_COND_ISA_OP_IMM_FUNC3_SRLI, RT_STARS_COND_ISA_OP_IMM_FUNC7_SRLI, checkSqDisable.srli2);
 
     // LHWI/LLWI: load goto instr num as a immediate to r5
-    const uint64_t setSqHead0 =
-        (RtPtrToValue(&(fc.deactiveSq.gotoR)) - RtPtrToValue(&fc)) / sizeof(uint32_t) + funcCallPara.deltaOffset;
+    const uint64_t setSqHead0 = funcCallPara.deactiveSqGotoRInstrDistance / sizeof(uint32_t) + funcCallPara.deltaOffset;
     RT_LOG(RT_LOG_DEBUG, "go to setSqHead0, instr:%" PRIu64, setSqHead0);
 
     ConstructLHWI(r5, (setSqHead0 >> 4ULL), checkSqDisable.lhwi4); // {19, 4}bit save in jump_pc
@@ -662,10 +457,8 @@ void ConstrucModelExeCheckSqHeadTail(
     ConstructOpOp(r1, r5, r1, RT_STARS_COND_ISA_OP_FUNC3_XOR, RT_STARS_COND_ISA_OP_FUNC7_XOR, checkSqHeadTail.xor1);
 
     // LHWI/LLWI: load goto instr num as a immediate to R5
-    RtStarsModelExeFuncCall fc;
     const uint64_t errorInstr =
-        (RtPtrToValue(&(fc.checkSqHeadTailErrInstr.lhwi0)) - RtPtrToValue(&fc)) / sizeof(uint32_t) +
-        funcCallPara.deltaOffset;
+        funcCallPara.checkSqHeadTailErrInstrDistance / sizeof(uint32_t) + funcCallPara.deltaOffset;
     RT_LOG(RT_LOG_DEBUG, "go to errorInstr, instr:%" PRIu64, errorInstr);
 
     ConstructLHWI(r5, (errorInstr >> 4ULL), checkSqHeadTail.lhwi1); // {19, 4}bit save in jump_pc
@@ -764,10 +557,7 @@ void ConstrucModelExeActiveHeadSq(rtStarsModelExeFuncCallPara_t& funcCallPara, R
 
     // ************************ continue, goto ScanHeadSqArr *************************
     // LHWI/LLWI: load goto instr num as a immediate to r4
-    RtStarsModelExeFuncCall fc;
-    const uint64_t toScanSqArr =
-        (RtPtrToValue(&(fc.scanSq.u.rootModelAdapt.lhwi1)) - RtPtrToValue(&fc)) / sizeof(uint32_t) +
-        funcCallPara.deltaOffset;
+    const uint64_t toScanSqArr = funcCallPara.scanSqInstrDistance / sizeof(uint32_t) + funcCallPara.deltaOffset;
     RT_LOG(RT_LOG_DEBUG, "go to ScanSqArr, instr:%" PRIu64 "", toScanSqArr);
 
     ConstructLHWI(r4, (toScanSqArr >> 4ULL), activeHeadSq.lhwi2); // {19, 4}bit save in jump_pc
@@ -2758,6 +2548,7 @@ void ConstructIfCondSetupBranch(rtStarsCaptureCondFcPara_t& para, RtStarsIfCondS
 
 void TransParaToModelExecuteFuncCallPara(rtStarsCaptureCondFcPara_t& para, rtStarsModelExeFuncCallPara_t& modelPara)
 {
+    RtStarsModelExeFuncCall funcCall = {};
     modelPara.sqFsmSelBasAddr = para.sqFsmSelBasAddr;
     modelPara.sqVirtualAddr = para.sqVirtualAddr;
     modelPara.sqHeadOffset = para.sqHeadOffset;
@@ -2766,6 +2557,17 @@ void TransParaToModelExecuteFuncCallPara(rtStarsCaptureCondFcPara_t& para, rtSta
     modelPara.streamSvmArrAddr = para.streamSvmPtrArrAddr;
     modelPara.deltaOffset = para.deltaOffset;
     modelPara.isCondTaskModelExec = true;
+    modelPara.funcCallInstrSize = sizeof(funcCall);
+    modelPara.checkSqStateInstrSize = sizeof(funcCall.checkSqFsm);
+    modelPara.checkSqFsmInstrDistance = RtPtrToValue(&(funcCall.checkSqFsm.lhwi0)) - RtPtrToValue(&funcCall);
+    modelPara.endInstrDistance = RtPtrToValue(&(funcCall.endInstr.nop)) - RtPtrToValue(&funcCall);
+    modelPara.checkSqDisableErrInstrDistance =
+        RtPtrToValue(&(funcCall.checkSqDisableErrInstr.lhwi0)) - RtPtrToValue(&funcCall);
+    modelPara.checkSqHeadTailErrInstrDistance =
+        RtPtrToValue(&(funcCall.checkSqHeadTailErrInstr.lhwi0)) - RtPtrToValue(&funcCall);
+    modelPara.scanSqInstrDistance = RtPtrToValue(&(funcCall.scanSq.u.rootModelAdapt.lhwi1)) - RtPtrToValue(&funcCall);
+    modelPara.errInstrDistance = RtPtrToValue(&(funcCall.errInstr.err)) - RtPtrToValue(&funcCall);
+    modelPara.deactiveSqGotoRInstrDistance = RtPtrToValue(&(funcCall.deactiveSq.gotoR)) - RtPtrToValue(&funcCall);
 }
 
 void ConstructCaptureIfCondFc(rtStarsCaptureCondFcPara_t& para, RtStarsCaptureIfCondFc& fc)

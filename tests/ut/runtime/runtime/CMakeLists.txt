@@ -29,6 +29,7 @@ set(runtimeut_common_src_task_list
     ${TOP_DIR}/src/runtime/feature/ffts/rdma_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/reduce/reduce_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/cond_op/cond_op_stream_task.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/cond_op/cond_op_manager.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/cond_op/cond_op_label_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/cond_op/cond_op_stream_task_base.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/profiling/profiling_task.cc
@@ -85,6 +86,7 @@ set(runtimeut_src_task_list
     ${TOP_DIR}/src/runtime/feature/ffts/ffts_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/dma/rdma_task_v100.cc
     ${TOP_DIR}/src/runtime/feature/ffts/rdma_task_v100.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/cond_op/stars_cond_isa_construct_common.cc
 )
 
 set(runtimeut_david_series_common_src_task_list
@@ -153,6 +155,10 @@ set(runtimeut_david_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/task_info/cmo/cmo_task_arch9201.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/memory/memory_task_v200.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/davinci/davinci_kernel_task_v200.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/cond_op/stars_cond_isa_construct_v200.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/cond_op/stars_cond_isa_construct_v200_base.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/cond_op/stars_cond_isa_construct_arch9201.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/cond_op/cond_isa_task_arch9201.cc
     ${TOP_DIR}/src/runtime/feature/fusion/fusion_task_arch9201.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/davinci/davinci_kernel_task_arch9201.cc
 )
@@ -1688,6 +1694,7 @@ set(runtimeut_v201_src_list
     ${TOP_DIR}/src/runtime/core/src/device/v200_base/device_error_proc.cc
     ${TOP_DIR}/src/runtime/core/src/device/device_error_core_proc
     ${TOP_DIR}/src/runtime/core/src/task/stars_cond_isa_helper.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/cond_op/stars_cond_isa_construct_common.cc
     ${TOP_DIR}/src/runtime/feature/dqs/stars_dqs_cond_isa_helper.cc
     ${TOP_DIR}/src/runtime/core/src/common/thread_local_container.cc
     ${TOP_DIR}/src/runtime/core/src/common/inner_thread_local.cpp

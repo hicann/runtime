@@ -149,7 +149,7 @@ static const DevProperties CHIP_CLOUD_V5_PROPERTIES = {
     .KernelCreditScale = 0.0F,
     .isSupportInitFuncCallPara = true,
     .rtsqVirtualAddr =
-        {DAVID_SIMPLE_RTSQ_FSM_SEL_REG, STARS_SIMPLE_SQ_ENABLE_OFFSET, DAVID_SIMPLE_SQ_TAIL_OFFSET,
+        {DAVID_SIMPLE_SQ_STATE_OFFSET, STARS_SIMPLE_SQ_ENABLE_OFFSET, DAVID_SIMPLE_SQ_TAIL_OFFSET,
          STARS_SIMPLE_SQ_HEAD_OFFSET},
     .rtsqFsmStateAddrCalMethod = RtsqFsmStateAddrCalMethod::FSM_ADDR_CALCULATE_STATIC,
     .starsBaseAddrMethod = StarsBaseAddrMethod::STARS_BASE_CALCULATE_BY_DRIVER,

@@ -7,7 +7,10 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include <atomic>
+#include <cstring>
 #include <iostream>
+#include <thread>
 #include <unistd.h>
 #include <fstream>
 #include <cstdio>
@@ -63,6 +66,7 @@
 #include "task_res_da.hpp"
 #include "stars_model_execute_cond_isa_define.hpp"
 #include "stars_cond_isa_helper.hpp"
+#include "cond_op_manager.hpp"
 #include "rt_unwrap.h"
 #include "davinci_kernel_task.h"
 #include "task_scheduler_error.h"
@@ -95,6 +99,13 @@ static void* NothrowNewFail(size_t size, const std::nothrow_t& tag)
 }
 
 namespace {
+uint32_t GetCondIsaWord(const RtStarsCondOpStreamActiveR& op)
+{
+    uint32_t word = 0U;
+    std::memcpy(&word, &op, sizeof(word));
+    return word;
+}
+
 rtError_t MemCopySyncCopyStub(
     Driver* drv, void* dst, uint64_t destMax, const void* src, uint64_t size, rtMemcpyKind_t kind)
 {
@@ -1351,6 +1362,149 @@ TEST_F(TaskTestDavid, Test_CondIsaHelper)
     rtStarsStreamSwitchFc_t fc1 = {};
     rtStarsStreamSwitchFcPara_t fcPara1 = {};
     ConstructStreamSwitchFc(fc1, fcPara1);
+}
+
+TEST_F(TaskTestDavid, CaptureCondModelExecuteUsesEmbeddedJumpOffsets)
+{
+    InnerThreadLocalContainer::SetCurrentChipType(CHIP_DAVID);
+    rtStarsCaptureCondFcPara_t para = {};
+
+    RtStarsCaptureIfCondFc ifFc = {};
+    para.deltaOffset = offsetof(RtStarsCaptureIfCondFc, modelExe) / sizeof(uint32_t);
+    ConstructCaptureIfCondFc(para, ifFc);
+    uint64_t expectedOffset =
+        para.deltaOffset +
+        (offsetof(RtStarsModelExeFuncCall, endInstr) + offsetof(RtStarsModelExeExeEndInstr, nop)) / sizeof(uint32_t);
+    EXPECT_EQ(ifFc.modelExe.scanSq.llwi3.immdLow, expectedOffset >> 4U);
+    EXPECT_EQ(ifFc.modelExe.scanSq.bgeu.jumpInstrOffset, expectedOffset & 0xFU);
+
+    RtStarsCaptureWhileCondFc whileFc = {};
+    para.deltaOffset = offsetof(RtStarsCaptureWhileCondFc, modelExe) / sizeof(uint32_t);
+    ConstructCaptureWhileCondFc(para, whileFc);
+    expectedOffset =
+        para.deltaOffset +
+        (offsetof(RtStarsModelExeFuncCall, endInstr) + offsetof(RtStarsModelExeExeEndInstr, nop)) / sizeof(uint32_t);
+    EXPECT_EQ(whileFc.modelExe.scanSq.llwi3.immdLow, expectedOffset >> 4U);
+    EXPECT_EQ(whileFc.modelExe.scanSq.bgeu.jumpInstrOffset, expectedOffset & 0xFU);
+
+    RtStarsCaptureSwitchCondFc switchFc = {};
+    para.deltaOffset = offsetof(RtStarsCaptureSwitchCondFc, modelExe) / sizeof(uint32_t);
+    ConstructCaptureSwitchCondFc(para, switchFc);
+    expectedOffset =
+        para.deltaOffset +
+        (offsetof(RtStarsModelExeFuncCall, endInstr) + offsetof(RtStarsModelExeExeEndInstr, nop)) / sizeof(uint32_t);
+    EXPECT_EQ(switchFc.modelExe.scanSq.llwi3.immdLow, expectedOffset >> 4U);
+    EXPECT_EQ(switchFc.modelExe.scanSq.bgeu.jumpInstrOffset, expectedOffset & 0xFU);
+}
+
+TEST_F(TaskTestDavid, CondIsaConstructFuncSwitchByCurrentChipType)
+{
+    const rtChipType_t originalChipType = InnerThreadLocalContainer::GetCurrentChipType();
+    constexpr uint32_t registerMaskV100 = 0x7U;
+    constexpr uint32_t registerMaskV200 = 0xFU;
+    constexpr uint32_t rdOffset = 7U;
+    constexpr uint32_t func3Offset = 12U;
+    constexpr uint32_t rs1Offset = 15U;
+    constexpr uint32_t rs1Value = 10U;
+    constexpr uint32_t dstValue = 9U;
+    constexpr uint32_t defaultWord = RT_STARS_COND_ISA_OP_CODE_STREAM | ((dstValue & registerMaskV100) << rdOffset) |
+                                     (RT_STARS_COND_ISA_STREAM_FUNC3_ACTIVE_R << func3Offset) |
+                                     ((rs1Value & registerMaskV100) << rs1Offset);
+    constexpr uint32_t cloudV5Word = RT_STARS_COND_ISA_OP_CODE_STREAM | ((dstValue & registerMaskV200) << rdOffset) |
+                                     (RT_STARS_COND_ISA_STREAM_FUNC3_ACTIVE_R << func3Offset) |
+                                     ((rs1Value & registerMaskV200) << rs1Offset);
+    const auto rs1Reg = static_cast<rtStarsCondIsaRegister_t>(rs1Value);
+    const auto dstReg = static_cast<rtStarsCondIsaRegister_t>(dstValue);
+
+    InnerThreadLocalContainer::SetCurrentChipType(CHIP_DAVID);
+    RtStarsCondOpStreamActiveR defaultOp = {};
+    ConstructActiveR(rs1Reg, dstReg, defaultOp);
+    EXPECT_EQ(GetCondIsaWord(defaultOp), defaultWord);
+
+    InnerThreadLocalContainer::SetCurrentChipType(CHIP_CLOUD_V5);
+    RtStarsCondOpStreamActiveR cloudV5Op = {};
+    ConstructActiveR(rs1Reg, dstReg, cloudV5Op);
+    EXPECT_EQ(GetCondIsaWord(cloudV5Op), cloudV5Word);
+    InnerThreadLocalContainer::SetCurrentChipType(originalChipType);
+}
+
+TEST_F(TaskTestDavid, CondIsaDefaultTaskFuncsUseNullFallback)
+{
+    const rtChipType_t originalChipType = InnerThreadLocalContainer::GetCurrentChipType();
+    InnerThreadLocalContainer::SetCurrentChipType(CHIP_DAVID);
+
+    EXPECT_EQ(GetCurrentCondIsaTaskFuncs(), nullptr);
+
+    InnerThreadLocalContainer::SetCurrentChipType(originalChipType);
+}
+
+TEST_F(TaskTestDavid, CondIsaConstructRejectsInvalidCurrentChipType)
+{
+    constexpr uint32_t initialWord = 0x5A5A5A5AU;
+    const rtChipType_t originalChipType = InnerThreadLocalContainer::GetCurrentChipType();
+    InnerThreadLocalContainer::SetCurrentChipType(CHIP_END);
+    RtStarsCondOpNop nop = {};
+    static_assert(sizeof(nop) == sizeof(initialWord), "Unexpected Cond ISA NOP size");
+    std::memcpy(&nop, &initialWord, sizeof(initialWord));
+
+    ConstructNop(nop);
+
+    uint32_t actualWord = 0U;
+    std::memcpy(&actualWord, &nop, sizeof(actualWord));
+    EXPECT_EQ(actualWord, initialWord);
+    InnerThreadLocalContainer::SetCurrentChipType(originalChipType);
+}
+
+TEST_F(TaskTestDavid, CondIsaConstructChipTypeIsThreadLocal)
+{
+    constexpr uint32_t registerMaskV100 = 0x7U;
+    constexpr uint32_t registerMaskV200 = 0xFU;
+    constexpr uint32_t rdOffset = 7U;
+    constexpr uint32_t func3Offset = 12U;
+    constexpr uint32_t rs1Offset = 15U;
+    constexpr uint32_t rs1Value = 10U;
+    constexpr uint32_t dstValue = 9U;
+    constexpr uint32_t loopCount = 1000U;
+    constexpr uint32_t defaultWord = RT_STARS_COND_ISA_OP_CODE_STREAM | ((dstValue & registerMaskV100) << rdOffset) |
+                                     (RT_STARS_COND_ISA_STREAM_FUNC3_ACTIVE_R << func3Offset) |
+                                     ((rs1Value & registerMaskV100) << rs1Offset);
+    constexpr uint32_t cloudV5Word = RT_STARS_COND_ISA_OP_CODE_STREAM | ((dstValue & registerMaskV200) << rdOffset) |
+                                     (RT_STARS_COND_ISA_STREAM_FUNC3_ACTIVE_R << func3Offset) |
+                                     ((rs1Value & registerMaskV200) << rs1Offset);
+    const auto rs1Reg = static_cast<rtStarsCondIsaRegister_t>(rs1Value);
+    const auto dstReg = static_cast<rtStarsCondIsaRegister_t>(dstValue);
+    std::atomic<uint32_t> readyCount{0U};
+    std::atomic<bool> start{false};
+    bool defaultResult = true;
+    bool cloudV5Result = true;
+
+    const auto constructAndCheck = [&](const rtChipType_t chipType, const uint32_t expectedWord, bool& result) {
+        InnerThreadLocalContainer::SetCurrentChipType(chipType);
+        readyCount.fetch_add(1U, std::memory_order_release);
+        while (!start.load(std::memory_order_acquire)) {
+            std::this_thread::yield();
+        }
+        for (uint32_t i = 0U; i < loopCount; ++i) {
+            RtStarsCondOpStreamActiveR op = {};
+            ConstructActiveR(rs1Reg, dstReg, op);
+            if (GetCondIsaWord(op) != expectedWord) {
+                result = false;
+                break;
+            }
+        }
+    };
+
+    std::thread defaultThread(constructAndCheck, CHIP_DAVID, defaultWord, std::ref(defaultResult));
+    std::thread cloudV5Thread(constructAndCheck, CHIP_CLOUD_V5, cloudV5Word, std::ref(cloudV5Result));
+    while (readyCount.load(std::memory_order_acquire) != 2U) {
+        std::this_thread::yield();
+    }
+    start.store(true, std::memory_order_release);
+    defaultThread.join();
+    cloudV5Thread.join();
+
+    EXPECT_TRUE(defaultResult);
+    EXPECT_TRUE(cloudV5Result);
 }
 
 TEST_F(TaskTestDavid, Test_CheckTaskCanSend)

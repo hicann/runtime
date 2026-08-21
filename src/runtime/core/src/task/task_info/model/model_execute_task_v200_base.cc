@@ -41,7 +41,7 @@ static void ConstructDavidSqeForModelExecuteTask(TaskInfo* const taskInfo, void*
     fnCallSqe.reserved0 = static_cast<uint16_t>(modelExecuteTaskInfo->modelId);
 
     const uint64_t funcAddr = modelExecuteTaskInfo->model->GetFuncCallSvmMem();
-    constexpr uint64_t funcCallSize = static_cast<uint64_t>(sizeof(RtStarsModelExeFuncCall));
+    const uint64_t funcCallSize = static_cast<uint64_t>(modelExecuteTaskInfo->model->GetFuncCallInstrSize());
 
     // func call size is rs2[19:0]*4Byte
     ConstructFunctionCallInstr(funcAddr, (funcCallSize / 4UL), fnCallSqe);

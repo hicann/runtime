@@ -42,6 +42,8 @@ rtError_t InitFuncCallParaForStreamSwitchTaskV1(
     TaskInfo* taskInfo, rtStarsStreamSwitchFcPara_t& fcPara, const rtChipType_t chipType);
 rtError_t InitFuncCallParaForStreamSwitchTaskV2(
     TaskInfo* taskInfo, rtStarsStreamSwitchExFcPara_t& fcPara, const rtChipType_t chipType);
+rtError_t AllocFuncCallMemForStreamSwitchTask(TaskInfo* taskInfo);
+rtError_t FreeFuncCallMemForStreamSwitchTask(TaskInfo* taskInfo);
 
 } // namespace runtime
 } // namespace cce

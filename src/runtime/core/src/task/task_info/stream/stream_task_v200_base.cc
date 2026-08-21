@@ -37,7 +37,7 @@ void ConstructDavidSqeForStreamActiveTask(TaskInfo* const taskInfo, void* const 
     fnCallSqe.csc = 1U;
 
     const uint64_t funcAddr = RtPtrToValue(streamActiveTask->funcCallSvmMem);
-    const uint64_t funcCallSize = static_cast<uint64_t>(sizeof(RtStarsStreamActiveFc));
+    const uint64_t funcCallSize = streamActiveTask->funCallMemSize;
 
     // func call size is rs2[19:0]*4Byte
     ConstructFunctionCallInstr(funcAddr, (funcCallSize / 4UL), fnCallSqe);

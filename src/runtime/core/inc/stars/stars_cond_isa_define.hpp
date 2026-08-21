@@ -124,6 +124,7 @@ struct rtStarsStreamActiveFcPara_t {
     uint64_t rtSqTailAddr;
     uint64_t rtSqHeadAddr;
     uint64_t dfxAddr;
+    uint16_t funcCallSize;
 };
 
 struct RtStarsLabelSwitchByIdxCheck {

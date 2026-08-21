@@ -32,6 +32,7 @@ set(libruntime_cmodel_v100_task_src_files
     ${RUNTIME_CORE_DIR}/src/task/task_info/reduce/reduce_task_v100.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/cond_op/cond_op_stream_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/cond_op/cond_op_stream_task_v100.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/cond_op/cond_op_manager.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/cond_op/cond_op_stream_task_base.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/cond_op/cond_op_label_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/cond_op/cond_op_label_task_v100.cc
@@ -111,10 +112,13 @@ set(david_series_common_task_src_file_cmodel
     ${RUNTIME_CORE_DIR}/src/task/task_info/cond_op/cond_op_stream_task_base.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/cond_op/cond_op_stream_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/cond_op/cond_op_stream_task_v200_base.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/cond_op/cond_op_manager.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/cond_op/cond_op_label_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/cond_op/cond_op_label_task_v200_base.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/cond_op/aclgraph_cond_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/cond_op/aclgraph_cond_task_v200_base.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/cond_op/stars_cond_isa_construct_v200.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/cond_op/stars_cond_isa_construct_v200_base.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/profiling/profiling_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/profiling/profiling_task_v200_base.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/dump/dump_task.cc
@@ -175,6 +179,8 @@ set(libruntime_cmodel_v200_task_src_files
     ${RUNTIME_FEATURE_DIR}/fusion/fusion_task_v200.cc
     ${RUNTIME_FEATURE_DIR}/fusion/fusion_task_arch9201.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/event/notify_task_v200.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/cond_op/stars_cond_isa_construct_arch9201.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/cond_op/cond_isa_task_arch9201.cc
     ${RUNTIME_CORE_DIR}/src/task/v200/memory_corruption_checker.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/cmo/cmo_task_v200.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/cmo/cmo_task_arch9201.cc
@@ -485,6 +491,7 @@ set(libruntime_cmodel_src_files
     ${RUNTIME_CORE_DIR}/src/task/ctrl_res_pool.cpp
     ${RUNTIME_CORE_DIR}/src/task/host_task.cc
     ${RUNTIME_CORE_DIR}/src/task/stars_cond_isa_helper.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/cond_op/stars_cond_isa_construct_common.cc
     ${RUNTIME_CORE_DIR}/src/task/stars_external_event_cond_isa_helper.cc
     ${RUNTIME_CORE_DIR}/src/task/v100/stub_task.cc
     ${RUNTIME_CORE_DIR}/src/task/v200/task_david_stub.cc

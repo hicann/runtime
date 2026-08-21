@@ -17,7 +17,7 @@
 #define STARS_SIMPLE_SQ_ENABLE_OFFSET (0x14ULL)
 constexpr uint16_t DAVID_SIMPLE_SQ_TAIL_OFFSET = 0x0U;
 constexpr uint16_t STARS_SIMPLE_SQ_TAIL_OFFSET = 0x8U;
-
+constexpr uint16_t DAVID_SIMPLE_SQ_STATE_OFFSET = 0x28U;
 namespace cce {
 namespace runtime {
 enum RtStarsCondIsaOpCode : uint32_t {

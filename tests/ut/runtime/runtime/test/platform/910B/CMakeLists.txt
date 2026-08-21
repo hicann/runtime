@@ -34,6 +34,7 @@ set(runtimeut_common_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/task_info/reduce/reduce_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/reduce/reduce_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/cond_op/cond_op_stream_task.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/cond_op/cond_op_manager.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/cond_op/cond_op_stream_task_base.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/cond_op/cond_op_stream_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/cond_op/cond_op_label_task.cc
@@ -62,6 +63,7 @@ set(runtimeut_common_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/task_info/maintenance/float_status_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/maintenance/float_status_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/kernel_fusion_task.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/cond_op/stars_cond_isa_construct_common.cc
 )
 
 set(runtimeut_src_task_list

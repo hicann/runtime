@@ -14,6 +14,7 @@
 #include "stream_sqcq_manage.hpp"
 #include "stream_task.h"
 #include "stub_task.hpp"
+#include "cond_op_manager.hpp"
 #include "capture_model.hpp"
 #include "runtime_task_manager.h"
 
@@ -25,7 +26,6 @@ namespace runtime {
 rtError_t AllocFuncCallMemForStreamActiveTask(TaskInfo* taskInfo)
 {
     StreamActiveTaskInfo* streamActiveTask = &(taskInfo->u.streamactiveTask);
-    streamActiveTask->funCallMemSize = static_cast<uint64_t>(sizeof(RtStarsStreamActiveFc));
 
     void* devMem = nullptr;
     const auto dev = taskInfo->stream->Device_();
@@ -66,16 +66,15 @@ rtError_t FreeFuncCallMemForStreamActiveTask(TaskInfo* const taskInfo)
     return RT_ERROR_NONE;
 }
 
-rtError_t PrepareSqeInfoForStreamActiveTask(TaskInfo* taskInfo)
+rtError_t PrepareSqeInfoForStreamActiveTaskDefault(TaskInfo* taskInfo)
 {
     RtStarsStreamActiveFc fc = {};
     rtStarsStreamActiveFcPara_t fcPara = {};
     StreamActiveTaskInfo* streamActiveTask = &(taskInfo->u.streamactiveTask);
-
     const rtChipType_t chipType = taskInfo->stream->Device_()->GetChipType();
+    streamActiveTask->funCallMemSize = sizeof(fc);
     rtError_t ret = AllocFuncCallMemForStreamActiveTask(taskInfo);
     ERROR_RETURN(ret, "Alloc func call svm failed,retCode=%#x.", ret);
-
     if ((streamActiveTask->activeStreamSqId == UINT32_MAX) && streamActiveTask->activeStream->IsSoftwareSqEnable()) {
         CaptureModel* captureMdl = dynamic_cast<CaptureModel*>(streamActiveTask->activeStream->Model_());
         if (captureMdl != nullptr) {
@@ -88,7 +87,6 @@ rtError_t PrepareSqeInfoForStreamActiveTask(TaskInfo* taskInfo)
         }
         return RT_ERROR_NONE;
     }
-
     ret = InitFuncCallParaForStreamActiveTask(taskInfo, fcPara, chipType);
     ERROR_RETURN(ret, "Init func call para failed,retCode=%#x.", ret);
 
@@ -102,6 +100,14 @@ rtError_t PrepareSqeInfoForStreamActiveTask(TaskInfo* taskInfo)
         taskInfo->u.streamactiveTask.funcCallSvmMem, taskInfo->u.streamactiveTask.funCallMemSize, &fc,
         sizeof(RtStarsStreamActiveFc), kind);
     return ret;
+}
+
+rtError_t PrepareSqeInfoForStreamActiveTask(TaskInfo* taskInfo)
+{
+    const CondIsaTaskFuncs* const funcs = GetCurrentCondIsaTaskFuncs();
+    return ((funcs != nullptr) && (funcs->prepareStreamActive != nullptr)) ?
+               funcs->prepareStreamActive(taskInfo) :
+               PrepareSqeInfoForStreamActiveTaskDefault(taskInfo);
 }
 
 rtError_t StreamActiveTaskInit(TaskInfo* taskInfo, const Stream* const stm)

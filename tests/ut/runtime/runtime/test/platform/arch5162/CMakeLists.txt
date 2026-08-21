@@ -19,6 +19,8 @@ set(runtimeut_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/task_info/cmo/cmo_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/cond_op/cond_op_label_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/cond_op/cond_op_stream_task_base.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/cond_op/cond_op_manager.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/cond_op/stars_cond_isa_construct_common.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/davinci/davinci_task_arch5162.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/davinci/davinci_kernel_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/davinci/davinci_multiple_task.cc

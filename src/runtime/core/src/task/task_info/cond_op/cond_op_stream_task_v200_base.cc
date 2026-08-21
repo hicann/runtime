@@ -132,7 +132,6 @@ static bool CondOpStreamTaskRegister()
             chip, TS_TASK_TYPE_STREAM_LABEL_SWITCH_BY_INDEX, &ConstructDavidSqeForStreamLabelSwitchByIndexTask);
         RegDavidSqeFunc(chip, TS_TASK_TYPE_STREAM_LABEL_GOTO, &ConstructDavidSqeBase);
     }
-
     return true;
 }
 

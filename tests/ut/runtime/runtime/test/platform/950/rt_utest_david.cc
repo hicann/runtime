@@ -625,6 +625,7 @@ TEST_F(DavidTaskTest, construct_davidsqe_for_profiling_disable_task)
 
 TEST_F(DavidTaskTest, construct_davidsqe_for_stream_switch_ex)
 {
+    MOCKER_CPP_VIRTUAL(dev_, &Device::GetStarsRegBaseAddr).stubs().will(returnValue(0x100000UL));
     Stream* trueStreams = new Stream(dev_, 0);
     std::unique_ptr<Stream> streamGuard(trueStreams);
     uint32_t trueStreamSqId = trueStreams->GetSqId();

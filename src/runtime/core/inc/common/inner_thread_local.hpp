@@ -53,6 +53,8 @@ public:
     static void SetGlobalErr(const rtError_t errCode);
     static void SetCurrentResLimitStream(const Stream* stm);
     static const Stream* GetCurrentResLimitStream();
+    static void SetCurrentChipType(rtChipType_t chipType);
+    static rtChipType_t GetCurrentChipType();
 
 private:
     static void ClearDeletedContextBinding(Context* const deletedCtx);
@@ -75,6 +77,7 @@ private:
                                                               // that no other threads are using this stream.
     static __THREAD_LOCAL__ bool curCtxInternalAccess_;
     static __THREAD_LOCAL__ bool curRefInternalAccess_;
+    static __THREAD_LOCAL__ rtChipType_t curChipType_;
 };
 } // namespace runtime
 } // namespace cce

@@ -324,6 +324,10 @@ public:
     void SetAutoSplitSq(bool enable) { isAutoSplitSq_ = enable; }
     bool IsAutoSplitSq() const { return isAutoSplitSq_; }
 
+    uint16_t GetFuncCallInstrSize() const { return funcCallInstrSize_; }
+
+    void SetFuncCallInstrSize(uint16_t size) { funcCallInstrSize_ = size; }
+
 private:
     /*
      * Disable sq when the stream is bound to the model,
@@ -395,6 +399,7 @@ private:
     void* funcCallHostMem_;
     uint64_t funCallMemSize_;
     uint64_t funcCallSvmMem_; // device侧内存
+    uint16_t funcCallInstrSize_;
     void* baseFuncCallSvmMem_;
     void* funcCallDfxBaseSvmMem_;
     void* dfxPtr_;

@@ -76,6 +76,7 @@ Model::Model(ModelType type)
       funcCallHostMem_(nullptr),
       funCallMemSize_(0ULL),
       funcCallSvmMem_(0ULL),
+      funcCallInstrSize_(0U),
       baseFuncCallSvmMem_(nullptr),
       funcCallDfxBaseSvmMem_(nullptr),
       dfxPtr_(nullptr),

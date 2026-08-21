@@ -20,10 +20,12 @@ namespace runtime {
 rtError_t CreateStreamTaskInit(TaskInfo* const taskInfo, const uint32_t flag);
 void ToCommandBodyForCreateStreamTask(TaskInfo* const taskInfo, rtCommand_t* const command);
 rtError_t SqLockUnlockTaskInit(TaskInfo* taskInfo, const bool isLock);
-
 rtError_t InitFuncCallParaForStreamActiveTask(
     TaskInfo* taskInfo, rtStarsStreamActiveFcPara_t& fcPara, const rtChipType_t chipType);
+rtError_t AllocFuncCallMemForStreamActiveTask(TaskInfo* taskInfo);
+rtError_t PrepareSqeInfoForStreamActiveTask(TaskInfo* taskInfo);
 rtError_t StreamActiveTaskInit(TaskInfo* taskInfo, const Stream* const stm);
+rtError_t ReConstructStreamActiveTaskFcDefault(TaskInfo* taskInfo);
 rtError_t ReConstructStreamActiveTaskFc(TaskInfo* taskInfo);
 void ToCommandBodyForStreamActiveTask(TaskInfo* taskInfo, rtCommand_t* const command);
 void StreamActiveTaskUnInit(TaskInfo* const taskInfo);

@@ -206,6 +206,17 @@ struct rtStarsModelExeFuncCallPara_t {
     uint16_t sqTailOffset;
     uint64_t deltaOffset;
     bool isCondTaskModelExec;
+    uint16_t sqStateOffset;
+    uint16_t funcCallInstrSize;
+    uint16_t checkSqStateInstrSize;
+    /* use to construct jump instruction */
+    uint16_t endInstrDistance;
+    uint16_t checkSqFsmInstrDistance;
+    uint16_t checkSqDisableErrInstrDistance;
+    uint16_t checkSqHeadTailErrInstrDistance;
+    uint16_t scanSqInstrDistance;
+    uint16_t errInstrDistance;
+    uint16_t deactiveSqGotoRInstrDistance;
 };
 
 struct RtStarsPivalueModifyFuncCall {

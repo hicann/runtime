@@ -15,6 +15,7 @@
 #include "stream_sqcq_manage.hpp"
 #include "stream_task.h"
 #include "stub_task.hpp"
+#include "cond_op_manager.hpp"
 #include "error_message_manage.hpp"
 #include "task.hpp"
 
@@ -23,7 +24,7 @@ namespace runtime {
 
 TIMESTAMP_EXTERN(rtStreamCreate_drvDeviceGetBareTgid);
 
-rtError_t ReConstructStreamActiveTaskFc(TaskInfo* taskInfo)
+rtError_t ReConstructStreamActiveTaskFcDefault(TaskInfo* taskInfo)
 {
     RtStarsStreamActiveFc fc = {};
     rtStarsStreamActiveFcPara_t fcPara = {};
@@ -40,6 +41,14 @@ rtError_t ReConstructStreamActiveTaskFc(TaskInfo* taskInfo)
         taskInfo->u.streamactiveTask.funcCallSvmMem, taskInfo->u.streamactiveTask.funCallMemSize, &fc,
         sizeof(RtStarsStreamActiveFc), kind);
     return ret;
+}
+
+rtError_t ReConstructStreamActiveTaskFc(TaskInfo* taskInfo)
+{
+    const CondIsaTaskFuncs* const funcs = GetCurrentCondIsaTaskFuncs();
+    return ((funcs != nullptr) && (funcs->reconstructStreamActive != nullptr)) ?
+               funcs->reconstructStreamActive(taskInfo) :
+               ReConstructStreamActiveTaskFcDefault(taskInfo);
 }
 
 rtError_t InitFuncCallParaForStreamActiveTask(
