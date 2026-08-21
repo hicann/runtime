@@ -24,7 +24,7 @@
   - [11-11 Device变量内存操作](11-11_device_variable_memory_operation.md)
 - [12. 执行控制](12_execution_control.md)
 - [13. 异常处理](13_exception_handling.md)
-- [14. Kernel加载与执行](14_kerne_loading_and_execution.md)
+- [14. Kernel加载与执行](14_Kernel_loading_and_execution.md)
 - [15. 模型运行实例管理](15_model_running_instance__management.md)
 - [16. 算力Group查询与设置](16_group_management.md)
 - [17. 数据传输](17_data_transmission.md)
