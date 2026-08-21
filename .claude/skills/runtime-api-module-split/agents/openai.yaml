@@ -1,0 +1,13 @@
+# -----------------------------------------------------------------------------------------------------------
+# Copyright (c) 2026 Huawei Technologies Co., Ltd.
+# This program is free software, you can redistribute it and/or modify it under the terms and conditions of
+# CANN Open Software License Agreement Version 2.0 (the "License").
+# Please refer to the License for details. You may not use this file except in compliance with the License.
+# THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+# INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+# See LICENSE in the root of the software repository for the full text of the License.
+# -----------------------------------------------------------------------------------------------------------
+interface:
+  display_name: "Runtime API 模块拆分"
+  short_description: "按模块生成文档 PR 和三阶段代码 PR，并验证 CI"
+  default_prompt: "使用 $runtime-api-module-split 分析指定模块及对外接口文档，首次输出独立文档 PR 和第一批三阶段代码 PR，并给出 CI 验证门禁。"
