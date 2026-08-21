@@ -349,7 +349,7 @@ rtError_t PrepareSqeInfoForModelExecuteTask(TaskInfo* const taskInfo)
 
             ConstrucModelExeFuncCall(funcCallPara, funcCall);
             ret = memcpy_s(
-                model->GetFuncCallHostMem(), sizeof(RtStarsModelExeFuncCall), reinterpret_cast<void*>(&funcCall),
+                model->GetFuncCallHostMem(), sizeof(RtStarsModelExeFuncCall), RtPtrToPtr<void*>(&funcCall),
                 sizeof(RtStarsModelExeFuncCall));
             COND_PROC_RETURN_ERROR_MSG_INNER(
                 ret != EOK, RT_ERROR_SEC_HANDLE, (void)FreeFuncCallHostMemAndSvmMem(taskInfo),

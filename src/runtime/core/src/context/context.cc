@@ -2975,7 +2975,7 @@ rtError_t Context::SetMemcpyDesc(
             desc, dstMax, &memcpyData, sizeof(rtMemcpyAddrInfo), RT_MEMCPY_HOST_TO_DEVICE);
         ERROR_RETURN(error, "Failed to memory copy stream info, device_id=%u, retCode=%#x.", device_->Id_(), error);
 
-        error = device_->Driver_()->DevMemFlushCache(reinterpret_cast<uintptr_t>(desc), static_cast<size_t>(dstMax));
+        error = device_->Driver_()->DevMemFlushCache(RtPtrToValue(desc), static_cast<size_t>(dstMax));
         ERROR_RETURN(error, "Failed to flush stream info, device_id=%u, retCode=%#x", device_->Id_(), error);
     } else {
         error = device_->Driver_()->MemCopySync(

@@ -132,7 +132,7 @@ static rtError_t SyncTaskProcCqReport(
     cqWaitInfo.streamId = streamId; // for camodel
     cqWaitInfo.taskId = MAX_UINT32_NUM;
     cqWaitInfo.timeout = irqWait;
-    const rtError_t error = devDrv->LogicCqReportV2(cqWaitInfo, reinterpret_cast<uint8_t*>(&logicReport), 1U, cnt);
+    const rtError_t error = devDrv->LogicCqReportV2(cqWaitInfo, RtPtrToPtr<uint8_t*>(&logicReport), 1U, cnt);
     ReportTimeoutProc(error, rptTimeoutCnt, stm, taskResPos, isFinished);
     if (timeout > 0) {
         mmTimespec endTimeSpec = mmGetTickCount();

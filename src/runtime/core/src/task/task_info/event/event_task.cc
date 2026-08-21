@@ -145,7 +145,7 @@ void ToCommandBodyForEventRecordTask(TaskInfo* const taskInfo, rtCommand_t* cons
     param.u.eventRecordParams = {
         eventRecordTaskInfo->eventid, static_cast<uint32_t>(eventRecordTaskInfo->waitCqflag),
         eventRecordTaskInfo->waitCqId, false,
-        ((reinterpret_cast<uintptr_t>(eventRecordTaskInfo->event)) & static_cast<uintptr_t>(0xFF))};
+        ((RtPtrToValue(eventRecordTaskInfo->event)) & static_cast<uintptr_t>(0xFF))};
     AtraceSubmitLog(TYPE_EVENT_RECORD, param);
     eventRecordTaskInfo->event->InsertRecordResetToMap(taskInfo);
     if (Runtime::Instance()->GetDisableThread()) {
@@ -274,7 +274,7 @@ void ToCommandBodyForEventResetTask(TaskInfo* const taskInfo, rtCommand_t* const
                           GetCurrentTid(),          stream->Device_()->GetAtraceHandle(), {}};
     uintptr_t eventLowEightAddr = 0;
     if (eventResetTaskInfo->event != nullptr) {
-        eventLowEightAddr = (reinterpret_cast<uintptr_t>(eventResetTaskInfo->event)) & 0xFF;
+        eventLowEightAddr = (RtPtrToValue(eventResetTaskInfo->event)) & 0xFF;
     }
     param.u.eventResetParams = {
         eventResetTaskInfo->eventid, static_cast<uint16_t>(eventResetTaskInfo->isNotify), eventLowEightAddr};
@@ -395,7 +395,7 @@ void ToCommandBodyForEventWaitTask(TaskInfo* const taskInfo, rtCommand_t* const 
                           GetCurrentTid(),          stream->Device_()->GetAtraceHandle(), {}};
     uintptr_t eventLowEightAddr = 0;
     if (eventWaitTaskInfo->event != nullptr) {
-        eventLowEightAddr = (reinterpret_cast<uintptr_t>(eventWaitTaskInfo->event)) & 0xFF;
+        eventLowEightAddr = (RtPtrToValue(eventWaitTaskInfo->event)) & 0xFF;
     }
     param.u.eventWaitParams = {eventWaitTaskInfo->eventId, false, eventLowEightAddr};
     AtraceSubmitLog(TYPE_EVENT_WAIT, param);
