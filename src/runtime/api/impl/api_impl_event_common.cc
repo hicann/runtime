@@ -97,7 +97,7 @@ rtError_t ApiImplEvent::EventQueryWaitStatus(Event* const evt, rtEventWaitStatus
         evt->IsCapturing(), RT_ERROR_EVENT_CAPTURED, ErrorCode::EE1016, "Event waiting status query",
         RtFmtMsg("Event (event_id=%d) during the capture stage is not supported", evt->EventId_()));
 
-    Context* const curCtx = Runtime::Instance()->CurrentContext();
+    Context* const curCtx = Runtime::Instance()->CurrentContext(true, DEFAULT_DEVICE_ID);
     rtError_t error = RT_ERROR_NONE;
     if (curCtx != nullptr) {
         Device* device = curCtx->Device_();

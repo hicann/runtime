@@ -10,6 +10,7 @@
 
 #include "api_c.h"
 #include "api.hpp"
+#include "api_event.hpp"
 #include "api_handle_guard.h"
 #include "stream.hpp"
 #include "event.hpp"
@@ -718,11 +719,11 @@ rtError_t rtEventDestroySync(rtEvent_t evt)
 VISIBILITY_DEFAULT
 rtError_t rtGetEventID(rtEvent_t evt, uint32_t* evtId)
 {
-    Api* const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
+    ApiEvent* const apiEventInstance = ApiEvent::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiEventInstance);
 
     RT_VALIDATE_AND_UNWRAP_OBJECT(evt, Event, eventPtr);
-    const rtError_t error = apiInstance->GetEventID(eventPtr, evtId);
+    const rtError_t error = apiEventInstance->GetEventID(eventPtr, evtId);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
@@ -810,10 +811,10 @@ rtError_t rtEventSynchronizeWithTimeout(rtEvent_t evt, const int32_t timeout)
 VISIBILITY_DEFAULT
 rtError_t rtEventQuery(rtEvent_t evt)
 {
-    Api* const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
+    ApiEvent* const apiEventInstance = ApiEvent::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiEventInstance);
     RT_VALIDATE_AND_UNWRAP_OBJECT(evt, Event, eventPtr);
-    const rtError_t error = apiInstance->EventQuery(eventPtr);
+    const rtError_t error = apiEventInstance->EventQuery(eventPtr);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_EVENT_NOT_COMPLETE, ACL_ERROR_RT_EVENT_NOT_COMPLETE); // special state
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
@@ -823,10 +824,10 @@ rtError_t rtEventQuery(rtEvent_t evt)
 VISIBILITY_DEFAULT
 rtError_t rtEventQueryStatus(rtEvent_t evt, rtEventStatus_t* status)
 {
-    Api* const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
+    ApiEvent* const apiEventInstance = ApiEvent::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiEventInstance);
     RT_VALIDATE_AND_UNWRAP_OBJECT(evt, Event, eventPtr);
-    const rtError_t error = apiInstance->EventQueryStatus(eventPtr, status);
+    const rtError_t error = apiEventInstance->EventQueryStatus(eventPtr, status);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
@@ -835,10 +836,10 @@ rtError_t rtEventQueryStatus(rtEvent_t evt, rtEventStatus_t* status)
 VISIBILITY_DEFAULT
 rtError_t rtEventQueryWaitStatus(rtEvent_t evt, rtEventWaitStatus_t* status)
 {
-    Api* const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
+    ApiEvent* const apiEventInstance = ApiEvent::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiEventInstance);
     RT_VALIDATE_AND_UNWRAP_OBJECT(evt, Event, eventPtr);
-    const rtError_t error = apiInstance->EventQueryWaitStatus(eventPtr, status);
+    const rtError_t error = apiEventInstance->EventQueryWaitStatus(eventPtr, status);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
@@ -847,11 +848,11 @@ rtError_t rtEventQueryWaitStatus(rtEvent_t evt, rtEventWaitStatus_t* status)
 VISIBILITY_DEFAULT
 rtError_t rtEventElapsedTime(float32_t* timeInterval, rtEvent_t startEvent, rtEvent_t endEvent)
 {
-    Api* const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
+    ApiEvent* const apiEventInstance = ApiEvent::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiEventInstance);
     RT_VALIDATE_AND_UNWRAP_OBJECT(startEvent, Event, startEventPtr);
     RT_VALIDATE_AND_UNWRAP_OBJECT(endEvent, Event, endEventPtr);
-    const rtError_t error = apiInstance->EventElapsedTime(timeInterval, startEventPtr, endEventPtr);
+    const rtError_t error = apiEventInstance->EventElapsedTime(timeInterval, startEventPtr, endEventPtr);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
@@ -860,10 +861,10 @@ rtError_t rtEventElapsedTime(float32_t* timeInterval, rtEvent_t startEvent, rtEv
 VISIBILITY_DEFAULT
 rtError_t rtEventGetTimeStamp(uint64_t* timeStamp, rtEvent_t evt)
 {
-    Api* const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
+    ApiEvent* const apiEventInstance = ApiEvent::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiEventInstance);
     RT_VALIDATE_AND_UNWRAP_OBJECT(evt, Event, eventPtr);
-    const rtError_t error = apiInstance->EventGetTimeStamp(timeStamp, eventPtr);
+    const rtError_t error = apiEventInstance->EventGetTimeStamp(timeStamp, eventPtr);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;

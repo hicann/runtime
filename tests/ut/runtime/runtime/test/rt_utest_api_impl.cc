@@ -2040,6 +2040,21 @@ TEST_F(ApiImplTest, api_event_query_success)
     EXPECT_TRUE(startEvent.isGetTimeStampCalled);
 }
 
+TEST_F(ApiImplTest, api_event_query_wait_status_uses_default_device_context)
+{
+    ApiImplEvent impl;
+    ApiEventTestEvent event;
+    rtEventWaitStatus_t waitStatus = EVENT_STATUS_NOT_READY;
+    MOCKER_CPP((static_cast<Context* (Runtime::*)(const bool, int32_t) const>(&Runtime::CurrentContext)))
+        .expects(once())
+        .with(eq(true), eq(DEFAULT_DEVICE_ID))
+        .will(returnValue(static_cast<Context*>(nullptr)));
+
+    EXPECT_EQ(impl.EventQueryWaitStatus(&event, &waitStatus), RT_ERROR_NONE);
+    EXPECT_EQ(waitStatus, EVENT_STATUS_COMPLETE);
+    EXPECT_TRUE(event.isQueryWaitStatusCalled);
+}
+
 TEST_F(ApiImplTest, ipc_open_event_handle_invalid_parameter)
 {
     ApiImplEvent impl;
