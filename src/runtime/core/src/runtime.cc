@@ -15,7 +15,6 @@
 #include "mmpa/mmpa_api.h"
 #include "driver/ascend_hal.h"
 #include "api_impl.hpp"
-#include "api_impl_mbuf.hpp"
 #include "api_impl_event.hpp"
 #include "context.hpp"
 #include "engine_stream_observer.hpp"
@@ -1070,13 +1069,12 @@ rtError_t Runtime::InitApiImplies()
     }
     RT_LOG(RT_LOG_INFO, "ApiImpl:Runtime_alloc_size %zu", sizeof(ApiImpl));
 
-    apiImplMbuf_ = CreateImplMbufAndGet();
-    if (apiImplMbuf_ == nullptr) {
-        RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1013, sizeof(ApiImplMbuf), "new");
-        RT_LOG(RT_LOG_ERROR, "create ApiImplMbuf failed.");
-        return RT_ERROR_API_NEW;
+    if (IsImplMbufSupported()) {
+        apiImplMbuf_ = CreateImplMbufAndGet();
+        if (apiImplMbuf_ == nullptr) {
+            return RT_ERROR_API_NEW;
+        }
     }
-    RT_LOG(RT_LOG_INFO, "ApiImplMbuf:Runtime_alloc_size %zu", sizeof(ApiImplMbuf));
 
     apiImplSoma_ = CreateImplSomaAndGet();
     if (apiImplSoma_ == nullptr) {
@@ -1585,7 +1583,7 @@ INIT_FAIL:
     DELETE_O(profiler_);
     DELETE_O(logger_);
     DELETE_O(apiImpl_);
-    DELETE_O(apiImplMbuf_);
+    DestroyImplMbuf(apiImplMbuf_);
     DELETE_O(apiImplSoma_);
     DELETE_O(apiImplEvent_);
     return error;

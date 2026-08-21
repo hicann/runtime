@@ -378,15 +378,6 @@ TEST_F(CloudV2IpcApiTest, failedSetMemShareHandle)
     EXPECT_EQ(error, RT_ERROR_DRV_INPUT);
 }
 
-TEST_F(CloudV2IpcApiTest, GetIpcNotifyPeerPhyDevIdFailed)
-{
-    MOCKER(halShrIdInfoGet).stubs().will(returnValue(DRV_ERROR_INVALID_VALUE));
-    char name[65] = {0};
-    uint32_t peerPhyDevId = 0U;
-    auto error = NpuDriver::GetIpcNotifyPeerPhyDevId(name, &peerPhyDevId);
-    EXPECT_EQ(error, RT_ERROR_DRV_INPUT);
-}
-
 TEST_F(CloudV2IpcApiTest, MemRetainAllocationHandle01)
 {
     size_t size = 1024 * 1024; // 1mb

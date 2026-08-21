@@ -750,22 +750,6 @@ rtError_t NpuDriver::SetIpcNotifyDisablePidVerify(const char_t* const name)
     return RT_ERROR_NONE;
 }
 
-rtError_t NpuDriver::GetIpcNotifyPeerPhyDevId(const char* const name, uint32_t* const peerPhyDevId)
-{
-    COND_RETURN_WARN(
-        &halShrIdInfoGet == nullptr, RT_ERROR_DRV_NOT_SUPPORT, "[drv api] halShrIdInfoGet does not exist.");
-    struct shrIdGetInfo info {};
-    const drvError_t drvRet = halShrIdInfoGet(name, &info);
-    if (drvRet != DRV_ERROR_NONE) {
-        DRV_ERROR_PROCESS(
-            drvRet, "Call driver api halShrIdInfoGet failed, drvRetCode=%d, name=%s.", static_cast<int32_t>(drvRet),
-            name);
-        return RT_GET_DRV_ERRCODE(drvRet);
-    }
-    *peerPhyDevId = info.phyDevid;
-    return RT_ERROR_NONE;
-}
-
 rtError_t NpuDriver::DestroyIpcNotify(
     const char_t* const name, const int32_t devId, const uint32_t notifyId, const uint32_t tsId)
 {

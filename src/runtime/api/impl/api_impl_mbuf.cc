@@ -8,10 +8,31 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "api_impl_mbuf.hpp"
+#include "api_impl_creator.hpp"
 #include "npu_driver.hpp"
 
 namespace cce {
 namespace runtime {
+
+bool IsImplMbufSupported() { return true; }
+
+ApiMbuf* CreateImplMbufAndGet()
+{
+    ApiMbuf* const apiImplMbuf = new (std::nothrow) ApiImplMbuf();
+    if (apiImplMbuf == nullptr) {
+        RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1013, sizeof(ApiImplMbuf), "new");
+        RT_LOG(RT_LOG_ERROR, "create ApiImplMbuf failed.");
+        return nullptr;
+    }
+    RT_LOG(RT_LOG_INFO, "ApiImplMbuf:Runtime_alloc_size %zu", sizeof(ApiImplMbuf));
+    return apiImplMbuf;
+}
+
+void DestroyImplMbuf(ApiMbuf*& apiImplMbuf)
+{
+    delete apiImplMbuf;
+    apiImplMbuf = nullptr;
+}
 
 rtError_t ApiImplMbuf::MbufInit(rtMemBuffCfg_t* const cfg)
 {

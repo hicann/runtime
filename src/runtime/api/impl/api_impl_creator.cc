@@ -10,14 +10,11 @@
 
 #include "api_impl_creator.hpp"
 #include "api_impl.hpp"
-#include "api_impl_mbuf.hpp"
 #include "api_impl_soma.hpp"
 #include "api_impl_event.hpp"
 
 namespace cce {
 namespace runtime {
-
-ApiMbuf* CreateImplMbufAndGet() { return new (std::nothrow) ApiImplMbuf(); }
 
 ApiSoma* CreateImplSomaAndGet() { return new (std::nothrow) ApiImplSoma(); }
 

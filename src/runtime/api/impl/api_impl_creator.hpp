@@ -11,14 +11,16 @@
 #define __CCE_RUNTIME_API_IMPL_CREATOR_C_HPP__
 
 #include "api.hpp"
-#include "api_mbuf.hpp"
 
 namespace cce {
 namespace runtime {
+class ApiMbuf;
 class ApiEvent;
 
 Api* CreateImplAndGet();
+bool IsImplMbufSupported();
 ApiMbuf* CreateImplMbufAndGet();
+void DestroyImplMbuf(ApiMbuf*& apiImplMbuf);
 ApiSoma* CreateImplSomaAndGet();
 ApiEvent* CreateImplEventAndGet();
 } // namespace runtime

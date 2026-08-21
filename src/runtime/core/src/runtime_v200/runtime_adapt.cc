@@ -13,7 +13,6 @@
 #include "mmpa/mmpa_api.h"
 #include "driver/ascend_hal.h"
 #include "api_impl.hpp"
-#include "api_impl_mbuf.hpp"
 #include "api_impl_soma.hpp"
 #include "api_event.hpp"
 #include "context.hpp"
@@ -82,7 +81,7 @@ Runtime::~Runtime()
     apiEvent_ = nullptr;
 
     DELETE_O(apiImpl_);
-    DELETE_O(apiImplMbuf_);
+    DestroyImplMbuf(apiImplMbuf_);
     DELETE_O(apiImplSoma_);
     DELETE_O(apiImplEvent_);
     DELETE_O(apiError_);

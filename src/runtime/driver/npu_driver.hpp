@@ -410,7 +410,6 @@ public:
     static rtError_t DeviceCanAccessPeer(int32_t* const canAccessPeer, const uint32_t dev, const uint32_t peerDevice);
     static rtError_t GetP2PStatus(const uint32_t devIdDes, const uint32_t phyIdSrc, uint32_t* const status);
     static rtError_t SetIpcNotifyDisablePidVerify(const char* const name);
-    static rtError_t GetIpcNotifyPeerPhyDevId(const char* const name, uint32_t* const peerPhyDevId);
     static rtError_t GetPhyDevIdByIpcMemName(const char* name, uint32_t* const phyDevId);
     static rtError_t SetMemShareHandleDisablePidVerify(uint64_t shareableHandle);
     static rtError_t GetPhyDevIdByMemShareHandle(uint64_t shareableHandle, uint32_t* const peerPhyDevId);

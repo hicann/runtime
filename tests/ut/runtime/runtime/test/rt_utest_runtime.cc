@@ -17,6 +17,7 @@
 #include "npu_driver.hpp"
 #include "api_event.hpp"
 #include "api_impl.hpp"
+#include "api_impl_creator.hpp"
 #include "program.hpp"
 #include "profiler.hpp"
 #include "api_profile_decorator.hpp"
@@ -149,6 +150,40 @@ TEST_F(RuntimeTest, ApiEventInstanceInitialized)
     ASSERT_NE(runtime, nullptr);
     ASSERT_NE(runtime->ApiEvent_(), nullptr);
     EXPECT_EQ(ApiEvent::Instance(), runtime->ApiEvent_());
+}
+
+TEST_F(RuntimeTest, CreateImplMbufAndGetFailed)
+{
+    MOCKER(static_cast<NothrowNewFunc>(&operator new)).expects(once()).will(invoke(NothrowNewFailStub));
+
+    EXPECT_EQ(CreateImplMbufAndGet(), nullptr);
+}
+
+TEST_F(RuntimeTest, DestroyImplMbufSuccess)
+{
+    ApiMbuf* apiImplMbuf = CreateImplMbufAndGet();
+    ASSERT_NE(apiImplMbuf, nullptr);
+
+    DestroyImplMbuf(apiImplMbuf);
+
+    EXPECT_EQ(apiImplMbuf, nullptr);
+}
+
+TEST_F(RuntimeTest, InitApiImpliesCreateMbufFailed)
+{
+    Runtime* const rt = static_cast<Runtime*>(Runtime::Instance());
+    ASSERT_NE(rt, nullptr);
+    Api* const oldApiImpl = rt->apiImpl_;
+    ApiMbuf* const oldApiImplMbuf = rt->apiImplMbuf_;
+    MOCKER(CreateImplMbufAndGet).expects(once()).will(returnValue(static_cast<ApiMbuf*>(nullptr)));
+
+    const rtError_t error = rt->InitApiImplies();
+    Api* const newApiImpl = rt->apiImpl_;
+    rt->apiImpl_ = oldApiImpl;
+    rt->apiImplMbuf_ = oldApiImplMbuf;
+    delete newApiImpl;
+
+    EXPECT_EQ(error, RT_ERROR_API_NEW);
 }
 
 TEST_F(RuntimeTest, BOOT_RUNTIME_TEST_PrepareRuntimeProcessExitDoesNotDeleteRuntime)
