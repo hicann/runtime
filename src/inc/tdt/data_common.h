@@ -10,6 +10,8 @@
 
 #ifndef HOST_INNER_INC_DATA_COMMON_H_
 #define HOST_INNER_INC_DATA_COMMON_H_
+#include <cstdint>
+#include <memory>
 #include <string>
 
 namespace tdt {

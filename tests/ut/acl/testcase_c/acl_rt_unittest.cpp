@@ -535,12 +535,7 @@ TEST_F(AclRtTest, acl_stream_unnormal)
     EXPECT_EQ(ret, ACL_SUCCESS);
 }
 
-void CallBackFuncStub(void* arg)
-{
-    (void)arg;
-    int a = 1;
-    a++;
-}
+void CallBackFuncStub(void* arg) { (void)arg; }
 
 TEST_F(AclRtTest, callback_aclrtSubscribeReportTest)
 {

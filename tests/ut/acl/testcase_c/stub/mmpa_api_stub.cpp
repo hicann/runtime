@@ -95,7 +95,7 @@ void* mmMalloc_Normal_Invoke(unsigned long long size)
 void* mmMalloc_Abnormal_Invoke(unsigned long long size)
 {
     std::cout << "called mmMalloc_AbNormal_Invoke!" << std::endl;
-    size++;
+    (void)size;
     return nullptr;
 }
 

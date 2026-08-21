@@ -1720,12 +1720,7 @@ TEST_F(UTEST_ACL_Common, getOpTimeOutInterval)
     Mock::VerifyAndClear((void*)(&MockFunctionTest::aclStubInstance()));
 }
 
-void CallBackFunc(void* arg)
-{
-    (void)arg;
-    int a = 1;
-    a++;
-}
+void CallBackFunc(void* arg) { (void)arg; }
 
 TEST_F(UTEST_ACL_Common, callback)
 {

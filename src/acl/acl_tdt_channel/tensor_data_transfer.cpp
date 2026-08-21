@@ -366,8 +366,8 @@ aclError TensorDatasetDeserializes(const std::vector<tdt::DataItem>& itemVec, ac
             }
             const aclDataType dataType = iter->second;
             acltdtDataItem* item = new (std::nothrow) acltdtDataItem(
-                aclType, &dims[0], dims.size(), itemVec[i].tensorShape_, dataType, itemVec[i].tensorType_,
-                itemVec[i].dataPtr_, itemVec[i].dataLen_);
+                aclType, dims.empty() ? nullptr : dims.data(), dims.size(), itemVec[i].tensorShape_, dataType,
+                itemVec[i].tensorType_, itemVec[i].dataPtr_, itemVec[i].dataLen_);
             if (item == nullptr) {
                 ACL_LOG_ERROR("[Check][Item]TensorDatasetDeserializes alloc failed");
                 std::string sizeStr = std::to_string(sizeof(acltdtDataItem));
@@ -438,7 +438,8 @@ aclError TensorDatasetDeserializesV2(const std::vector<acl::aclTdtDataItemInfo>&
             std::vector<int64_t> dims = itemVec[i].dims;
             const aclDataType dataType = static_cast<aclDataType>(itemVec[i].ctrlInfo.tensorType);
             acltdtDataItem* item = new (std::nothrow) acltdtDataItem(
-                aclType, &dims[0], dims.size(), "", dataType, "", itemVec[i].dataPtr, itemVec[i].ctrlInfo.dataLen);
+                aclType, dims.empty() ? nullptr : dims.data(), dims.size(), "", dataType, "", itemVec[i].dataPtr,
+                itemVec[i].ctrlInfo.dataLen);
             if (item == nullptr) {
                 ACL_LOG_INNER_ERROR("[Check][Item]TensorDatasetDeserializes alloc failed");
                 ret = ACL_ERROR_BAD_ALLOC;

@@ -1289,12 +1289,7 @@ TEST_F(UTEST_ACL_Runtime, aclrtSetOpWaitTimeout)
     EXPECT_EQ(ret, ACL_ERROR_RT_PARAM_INVALID);
 }
 
-void CallBackFuncStub(void* arg)
-{
-    (void)arg;
-    int a = 1;
-    a++;
-}
+void CallBackFuncStub(void* arg) { (void)arg; }
 
 TEST_F(UTEST_ACL_Runtime, aclrtSubscribeReportTest)
 {

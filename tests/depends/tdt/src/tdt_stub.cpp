@@ -8,6 +8,9 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include <cstdint>
+#include <memory>
+
 #include "tdt/tdt_host_interface.h"
 #include "acl_stub.h"
 

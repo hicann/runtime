@@ -11,6 +11,7 @@
 #ifndef HOST_INNER_INC_TDT_HOST_INTERFACE_H_
 #define HOST_INNER_INC_TDT_HOST_INTERFACE_H_
 
+#include <cstdint>
 #include <string.h>
 #include <memory>
 #include <vector>

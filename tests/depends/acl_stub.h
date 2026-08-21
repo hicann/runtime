@@ -1050,7 +1050,7 @@ public:
     MOCK_METHOD2(rtsKernelArgsGetHandleMemSize, rtError_t(rtFuncHandle funcHandle, size_t* memSize));
     MOCK_METHOD4(
         rtsKernelArgsGetPlaceHolderBuffer,
-        rtError_t(rtArgsHandle argsHandle, rtParaHandle paraHandle, uint32_t dataSize, void** bufferAddr));
+        rtError_t(rtArgsHandle argsHandle, rtParaHandle paraHandle, size_t dataSize, void** bufferAddr));
     MOCK_METHOD5(
         rtsMalloc,
         rtError_t(void** devPtr, uint64_t size, rtMallocPolicy policy, rtMallocAdvise advise, rtMallocConfig_t* cfg));

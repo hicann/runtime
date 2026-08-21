@@ -393,6 +393,21 @@ TEST_F(UTEST_tensor_data_transfer, TestTensorDatasetDeserializes03)
     EXPECT_EQ(acltdtDestroyDataItem(item), ACL_SUCCESS);
 }
 
+TEST_F(UTEST_tensor_data_transfer, TestTensorDatasetDeserializesEmptyDims)
+{
+    acltdtDataset* dataSet = acltdtCreateDataset();
+    ASSERT_NE(dataSet, nullptr);
+    tdt::DataItem dataItem = {tdt::TDT_TENSOR, "tensor", "[]", "int64", 0, nullptr};
+    std::vector<tdt::DataItem> itemVec = {dataItem};
+
+    EXPECT_EQ(TensorDatasetDeserializes(itemVec, dataSet), ACL_SUCCESS);
+    ASSERT_EQ(acltdtGetDatasetSize(dataSet), 1);
+    acltdtDataItem* item = acltdtGetDataItem(dataSet, 0);
+    ASSERT_NE(item, nullptr);
+    EXPECT_EQ(acltdtGetDimNumFromItem(item), 0);
+    EXPECT_EQ(acltdtDestroyDataset(dataSet), ACL_SUCCESS);
+}
+
 TEST_F(UTEST_tensor_data_transfer, TestAcltdtReceiveTensor01)
 {
     uint32_t deviceId = 0;
