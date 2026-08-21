@@ -109,9 +109,9 @@ rtError_t AllocCpyTmpMem(
             addrSize + ASYNC_MEMORY_SIZE, "malloc");
 
         const uintptr_t offset =
-            RtPtrToValue(memcpyAsyncTaskInfo->srcPtr) + static_cast<uint64_t>(ASYNC_MEMORY_ALIGN_SIZE) -
-            (RtPtrToValue(memcpyAsyncTaskInfo->srcPtr) % static_cast<uint64_t>(ASYNC_MEMORY_ALIGN_SIZE));
-        const errno_t rc = memcpy_s(RtPtrToPtr<void*>(offset), addrSize, srcAddr, addrSize);
+            reinterpret_cast<uintptr_t>(memcpyAsyncTaskInfo->srcPtr) + static_cast<uint64_t>(ASYNC_MEMORY_ALIGN_SIZE) -
+            (reinterpret_cast<uintptr_t>(memcpyAsyncTaskInfo->srcPtr) % static_cast<uint64_t>(ASYNC_MEMORY_ALIGN_SIZE));
+        const errno_t rc = memcpy_s(reinterpret_cast<void*>(offset), addrSize, srcAddr, addrSize);
         if (rc != EOK) {
             std::stringstream ss;
             ss << std::hex << "dest=0x" << offset << ", src=0x" << RtPtrToValue(srcAddr) << std::dec
@@ -130,7 +130,7 @@ rtError_t AllocCpyTmpMem(
             }
         }
 
-        srcAddr = RtPtrToPtr<void*>(offset);
+        srcAddr = reinterpret_cast<void*>(offset);
     } else if (cpyType == RT_MEMCPY_DEVICE_TO_HOST_EX) {
         cpyType = RT_MEMCPY_DEVICE_TO_HOST;
         memcpyAsyncTaskInfo->originalDes = desAddr;
@@ -144,9 +144,9 @@ rtError_t AllocCpyTmpMem(
             memcpyAsyncTaskInfo->desPtr == nullptr, RT_ERROR_MEMORY_ALLOCATION, ErrorCode::EE1013,
             addrSize + ASYNC_MEMORY_SIZE, "malloc");
         const uintptr_t offset =
-            RtPtrToValue(memcpyAsyncTaskInfo->desPtr) + static_cast<uint64_t>(ASYNC_MEMORY_ALIGN_SIZE) -
-            (RtPtrToValue(memcpyAsyncTaskInfo->desPtr) % static_cast<uint64_t>(ASYNC_MEMORY_ALIGN_SIZE));
-        desAddr = RtPtrToPtr<void*>(offset);
+            reinterpret_cast<uintptr_t>(memcpyAsyncTaskInfo->desPtr) + static_cast<uint64_t>(ASYNC_MEMORY_ALIGN_SIZE) -
+            (reinterpret_cast<uintptr_t>(memcpyAsyncTaskInfo->desPtr) % static_cast<uint64_t>(ASYNC_MEMORY_ALIGN_SIZE));
+        desAddr = reinterpret_cast<void*>(offset);
         memcpyAsyncTaskInfo->isConcernedRecycle = true;
     } else {
         // no operation
@@ -176,13 +176,14 @@ rtError_t AllocCpyTmpMemForDavid(
             "HostMemAlloc src address failed, malloc size is %" PRIu64, addrSize + asyncMemorySize);
         ERROR_RETURN(error, "HostMemAlloc host memory for args failed, retCode=%#x", static_cast<uint32_t>(error));
         const uintptr_t offset =
-            RtPtrToValue(memcpyAsyncTaskInfo->srcPtr) + static_cast<uint64_t>(asyncMemoryAlignSize) -
-            (RtPtrToValue(memcpyAsyncTaskInfo->srcPtr) % static_cast<uint64_t>(asyncMemoryAlignSize));
-        error = driver->MemCopySync(RtPtrToPtr<void*>(offset), addrSize, srcAddr, addrSize, RT_MEMCPY_HOST_TO_HOST);
+            reinterpret_cast<uintptr_t>(memcpyAsyncTaskInfo->srcPtr) + static_cast<uint64_t>(asyncMemoryAlignSize) -
+            (reinterpret_cast<uintptr_t>(memcpyAsyncTaskInfo->srcPtr) % static_cast<uint64_t>(asyncMemoryAlignSize));
+        error =
+            driver->MemCopySync(reinterpret_cast<void*>(offset), addrSize, srcAddr, addrSize, RT_MEMCPY_HOST_TO_HOST);
         COND_PROC_RETURN_ERROR(
             error != RT_ERROR_NONE, error, (void)driver->HostMemFree(memcpyAsyncTaskInfo->srcPtr),
             "MemCopySync failed, retCode is %d, size is %" PRIu64, error, addrSize);
-        srcAddr = RtPtrToPtr<void*>(offset);
+        srcAddr = reinterpret_cast<void*>(offset);
     } else if (cpyType == RT_MEMCPY_DEVICE_TO_HOST_EX) {
         cpyType = RT_MEMCPY_DEVICE_TO_HOST;
         memcpyAsyncTaskInfo->originalDes = desAddr;
@@ -198,9 +199,9 @@ rtError_t AllocCpyTmpMemForDavid(
             "HostMemAlloc dest address failed, malloc size is %" PRIu64, (addrSize + asyncMemorySize));
         ERROR_RETURN(error, "HostMemAlloc host memory for args failed, retCode=%#x", static_cast<uint32_t>(error));
         const uintptr_t offset =
-            RtPtrToValue(memcpyAsyncTaskInfo->desPtr) + static_cast<uint64_t>(asyncMemoryAlignSize) -
-            (RtPtrToValue(memcpyAsyncTaskInfo->desPtr) % static_cast<uint64_t>(asyncMemoryAlignSize));
-        desAddr = RtPtrToPtr<void*>(offset);
+            reinterpret_cast<uintptr_t>(memcpyAsyncTaskInfo->desPtr) + static_cast<uint64_t>(asyncMemoryAlignSize) -
+            (reinterpret_cast<uintptr_t>(memcpyAsyncTaskInfo->desPtr) % static_cast<uint64_t>(asyncMemoryAlignSize));
+        desAddr = reinterpret_cast<void*>(offset);
         memcpyAsyncTaskInfo->isConcernedRecycle = true;
     } else {
         // no operation
@@ -578,17 +579,17 @@ rtError_t MemcpyAsyncTaskInitV3(
     if (copyType == RT_MEMCPY_ADDR_D2D_SDMA && !stream->Device_()->IsDavidPlatform()) {
         uint64_t sourceAddr;
         uint64_t destAddr;
-        error = driver->MemAddressTranslate(devId, RtPtrToValue(srcAddr), &sourceAddr);
+        error = driver->MemAddressTranslate(devId, reinterpret_cast<uintptr_t>(srcAddr), &sourceAddr);
         COND_RETURN_ERROR(
             (error != RT_ERROR_NONE), error,
             "Convert D2D source memory address from virtual to physic failed, retCode=%#x.", error);
-        error = driver->MemAddressTranslate(devId, RtPtrToValue(desAddr), &destAddr);
+        error = driver->MemAddressTranslate(devId, reinterpret_cast<uintptr_t>(desAddr), &destAddr);
         COND_RETURN_ERROR(
             (error != RT_ERROR_NONE), error,
             "Convert D2D dest memory address from virtual to dma physic failed, retCode=%#x.", error);
 
-        memcpyAsyncTaskInfo->src = RtValueToPtr<void*>(sourceAddr);
-        memcpyAsyncTaskInfo->destPtr = RtValueToPtr<void*>(destAddr);
+        memcpyAsyncTaskInfo->src = reinterpret_cast<void*>(static_cast<uintptr_t>(sourceAddr));
+        memcpyAsyncTaskInfo->destPtr = reinterpret_cast<void*>(static_cast<uintptr_t>(destAddr));
     } else {
         memcpyAsyncTaskInfo->src = const_cast<void*>(srcAddr);
         memcpyAsyncTaskInfo->destPtr = desAddr;
@@ -606,7 +607,8 @@ rtError_t MemcpyAsyncTaskInitV3(
             taskInfo->needPostProc = true;
         } else if (IsPcieDma(memcpyAsyncTaskInfo->copyType) && (driver->GetRunMode() == RT_RUN_MODE_ONLINE)) {
             error = driver->MemConvertAddr(
-                RtPtrToValue(srcAddr), RtPtrToValue(desAddr), cpySize, &(memcpyAsyncTaskInfo->dmaAddr));
+                static_cast<uint64_t>(reinterpret_cast<uintptr_t>(srcAddr)),
+                static_cast<uint64_t>(reinterpret_cast<uintptr_t>(desAddr)), cpySize, &(memcpyAsyncTaskInfo->dmaAddr));
             COND_RETURN_ERROR(
                 (error != RT_ERROR_NONE), error,
                 "Convert memory address from virtual to dma physical failed, retCode=%#x.", error);
@@ -623,7 +625,8 @@ rtError_t MemcpyAsyncTaskInitV3(
         (copyType != RT_MEMCPY_DIR_SDMA_AUTOMATIC_ADD) && (copyType != RT_MEMCPY_ADDR_D2D_SDMA)) {
         TIMESTAMP_BEGIN(rtMemcpyAsync_drvMemConvertAddr);
         error = driver->MemConvertAddr(
-            RtPtrToValue(srcAddr), RtPtrToValue(desAddr), cpySize, &(memcpyAsyncTaskInfo->dmaAddr));
+            static_cast<uint64_t>(reinterpret_cast<uintptr_t>(srcAddr)),
+            static_cast<uint64_t>(reinterpret_cast<uintptr_t>(desAddr)), cpySize, &(memcpyAsyncTaskInfo->dmaAddr));
         TIMESTAMP_END(rtMemcpyAsync_drvMemConvertAddr);
         COND_RETURN_ERROR(
             (error != RT_ERROR_NONE), error, "Convert memory address from virtual to dma physical failed, retCode=%#x.",
@@ -681,15 +684,19 @@ void ToCommandBodyForMemcpyAsyncTask(TaskInfo* const taskInfo, rtCommand_t* cons
         (copyType != RT_MEMCPY_DIR_SDMA_AUTOMATIC_ADD) && (copyType != RT_MEMCPY_ADDR_D2D_SDMA)) {
         command->u.memcpyTask.memcpyType = memcpyAsyncTaskInfo->dmaAddr.phyAddr.flag; // single copy
         command->u.memcpyTask.length = memcpyAsyncTaskInfo->dmaAddr.phyAddr.len;
-        command->u.memcpyTask.srcBaseAddr = RtPtrToValue(memcpyAsyncTaskInfo->dmaAddr.phyAddr.src);
-        command->u.memcpyTask.dstBaseAddr = RtPtrToValue(memcpyAsyncTaskInfo->dmaAddr.phyAddr.dst);
+        command->u.memcpyTask.srcBaseAddr =
+            static_cast<uint64_t>(reinterpret_cast<uintptr_t>(memcpyAsyncTaskInfo->dmaAddr.phyAddr.src));
+        command->u.memcpyTask.dstBaseAddr =
+            static_cast<uint64_t>(reinterpret_cast<uintptr_t>(memcpyAsyncTaskInfo->dmaAddr.phyAddr.dst));
         command->u.memcpyTask.dmaOffsetAddr.offset = memcpyAsyncTaskInfo->dmaAddr.offsetAddr.offset;
         command->u.memcpyTask.isAddrConvert = RT_DMA_ADDR_CONVERT;
     } else {
         command->u.memcpyTask.memcpyType = 0U; // single copy
         command->u.memcpyTask.length = memcpyAsyncTaskInfo->size;
-        command->u.memcpyTask.srcBaseAddr = RtPtrToValue(memcpyAsyncTaskInfo->src);
-        command->u.memcpyTask.dstBaseAddr = RtPtrToValue(memcpyAsyncTaskInfo->destPtr);
+        command->u.memcpyTask.srcBaseAddr =
+            static_cast<uint64_t>(reinterpret_cast<uintptr_t>(memcpyAsyncTaskInfo->src));
+        command->u.memcpyTask.dstBaseAddr =
+            static_cast<uint64_t>(reinterpret_cast<uintptr_t>(memcpyAsyncTaskInfo->destPtr));
         command->u.memcpyTask.dmaOffsetAddr.offset = 0LU;
         command->u.memcpyTask.isAddrConvert = RT_NOT_NEED_CONVERT;
         command->u.memcpyTask.copyDataType = memcpyAsyncTaskInfo->copyDataType;
@@ -750,14 +757,14 @@ void PrintModuleIdProc(Driver const* const driver, char_t* const errStr, void* s
 {
     uint32_t srcModuleId = SVM_INVALID_MODULE_ID;
     uint32_t dstModuleId = SVM_INVALID_MODULE_ID;
-    if (GetModuleIdByMemcpyAddr(driver, RtPtrToPtr<void*>(&src), &srcModuleId)) {
+    if (GetModuleIdByMemcpyAddr(driver, reinterpret_cast<void*>(&src), &srcModuleId)) {
         if (srcModuleId != SVM_INVALID_MODULE_ID) {
             countNum += snprintf_truncated_s(
                 errStr + countNum, (static_cast<size_t>(MSG_LENGTH) - static_cast<uint64_t>(countNum)),
                 ", src_module_id=%u", srcModuleId);
         }
     }
-    if (GetModuleIdByMemcpyAddr(driver, RtPtrToPtr<void*>(&dst), &dstModuleId)) {
+    if (GetModuleIdByMemcpyAddr(driver, reinterpret_cast<void*>(&dst), &dstModuleId)) {
         if (dstModuleId != SVM_INVALID_MODULE_ID) {
             countNum += snprintf_truncated_s(
                 errStr + countNum, (static_cast<size_t>(MSG_LENGTH) - static_cast<uint64_t>(countNum)),
@@ -851,7 +858,8 @@ void PrintErrorInfoForMemcpyAsyncTask(TaskInfo* const taskInfo, const uint32_t d
                 memcpyAsyncTaskInfo->sqId, memcpyAsyncTaskInfo->taskPos, memcpyAsyncTaskInfo->size);
             (void)snprintf_truncated_s(
                 errStr + countNum, (static_cast<size_t>(MSG_LENGTH) - static_cast<uint64_t>(countNum)),
-                ", src_dev_addr=%#" PRIx64, RtPtrToValue(memcpyAsyncTaskInfo->src));
+                ", src_dev_addr=%#" PRIx64,
+                static_cast<uint64_t>(reinterpret_cast<uintptr_t>(memcpyAsyncTaskInfo->src)));
         } else {
             countNum += sprintf_s(
                 errStr + countNum, (static_cast<size_t>(MSG_LENGTH) - static_cast<uint64_t>(countNum)),
@@ -861,8 +869,9 @@ void PrintErrorInfoForMemcpyAsyncTask(TaskInfo* const taskInfo, const uint32_t d
                 static_cast<uint32_t>(memcpyAsyncTaskInfo->copyDataType), memcpyAsyncTaskInfo->dmaAddr.phyAddr.len);
             (void)snprintf_truncated_s(
                 errStr + countNum, (static_cast<size_t>(MSG_LENGTH) - static_cast<uint64_t>(countNum)),
-                ", src_addr=%#" PRIx64 ", dst_addr=%#" PRIx64, RtPtrToValue(memcpyAsyncTaskInfo->dmaAddr.phyAddr.src),
-                RtPtrToValue(memcpyAsyncTaskInfo->dmaAddr.phyAddr.dst));
+                ", src_addr=%#" PRIx64 ", dst_addr=%#" PRIx64,
+                static_cast<uint64_t>(reinterpret_cast<uintptr_t>(memcpyAsyncTaskInfo->dmaAddr.phyAddr.src)),
+                static_cast<uint64_t>(reinterpret_cast<uintptr_t>(memcpyAsyncTaskInfo->dmaAddr.phyAddr.dst)));
         }
     } else {
         errorModuleType = GetMemCpyErrorModule(copyType);
@@ -876,13 +885,15 @@ void PrintErrorInfoForMemcpyAsyncTask(TaskInfo* const taskInfo, const uint32_t d
         if ((copyKind == RT_MEMCPY_RESERVED) && (copyType == RT_MEMCPY_ADDR_D2D_SDMA)) {
             countNum += snprintf_truncated_s(
                 errStr + countNum, (static_cast<size_t>(MSG_LENGTH) - static_cast<uint64_t>(countNum)),
-                ", memcpyAddrInfo=%#" PRIx64, RtPtrToValue(memcpyAsyncTaskInfo->memcpyAddrInfo));
+                ", memcpyAddrInfo=%#" PRIx64,
+                static_cast<uint64_t>(reinterpret_cast<uintptr_t>(memcpyAsyncTaskInfo->memcpyAddrInfo)));
             PrintAsyncPtrProc(driver, errStr, memcpyAsyncTaskInfo->memcpyAddrInfo, countNum);
         } else {
             countNum += snprintf_truncated_s(
                 errStr + countNum, (static_cast<size_t>(MSG_LENGTH) - static_cast<uint64_t>(countNum)),
-                ", src_addr=%#" PRIx64 ", dst_addr=%#" PRIx64, RtPtrToValue(memcpyAsyncTaskInfo->src),
-                RtPtrToValue(memcpyAsyncTaskInfo->destPtr));
+                ", src_addr=%#" PRIx64 ", dst_addr=%#" PRIx64,
+                static_cast<uint64_t>(reinterpret_cast<uintptr_t>(memcpyAsyncTaskInfo->src)),
+                static_cast<uint64_t>(reinterpret_cast<uintptr_t>(memcpyAsyncTaskInfo->destPtr)));
             PrintModuleIdProc(driver, errStr, memcpyAsyncTaskInfo->src, memcpyAsyncTaskInfo->destPtr, countNum);
         }
     }

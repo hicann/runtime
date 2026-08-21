@@ -30,8 +30,8 @@ rtError_t TaskResManage::LoadInputOutputArgs(
         kerArgs = taskRes_[taskResId].copyDev;
 
         if (argsInfo->hasTiling != 0U) { // set tiling data offset to tiling addr
-            *(RtPtrToPtr<uint64_t*>(RtPtrToPtr<char_t*>(argsInfo->args) + argsInfo->tilingAddrOffset)) =
-                static_cast<uint64_t>(RtPtrToValue(kerArgs) + argsInfo->tilingDataOffset);
+            *(reinterpret_cast<uint64_t*>(reinterpret_cast<char_t*>(argsInfo->args) + argsInfo->tilingAddrOffset)) =
+                static_cast<uint64_t>(reinterpret_cast<uintptr_t>(kerArgs) + argsInfo->tilingDataOffset);
         }
         UpdateAddrField(kerArgs, argsInfo->args, argsInfo->hostInputInfoNum, argsInfo->hostInputInfoPtr);
 

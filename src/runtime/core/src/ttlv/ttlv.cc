@@ -102,14 +102,14 @@ rtError_t TTLV::GetTTLV(TTLVWordDecoder& ttlvTag)
         static_cast<uint32_t>(TS_ERR_MSG_DATA_TYPE_RESERVED), offset_);
     // only struct and array using TTLV
     if (static_cast<uint32_t>(type) < TS_ERR_MSG_BASIC_TYPE_MAX_ID) {
-        const auto ttv = RtPtrToPtr<const ts_ttv_msg_t*>(readBuffer);
+        const auto ttv = reinterpret_cast<const ts_ttv_msg_t*>(readBuffer);
         const auto dataTypeIter = g_tsDataTypeToSize.find(static_cast<uint8_t>(ttv->type));
         COND_RETURN_AND_MSG_INNER(
             dataTypeIter == g_tsDataTypeToSize.end(), RT_ERROR_INVALID_VALUE,
             "Failed to decode TTLV because the size of type=%hu was not found. offset=%u.", ttv->type, offset_);
         msgLen = dataTypeIter->second;
         // get msg head addr
-        tlvValue = RtPtrToPtr<const void*>(ttv->value);
+        tlvValue = reinterpret_cast<const void*>(ttv->value);
         // msg head size + value length
         offset_ += TTV_HEAD_SIZE;
     } else { // use TTLV, sentence, error message, array or other struct
@@ -119,9 +119,9 @@ rtError_t TTLV::GetTTLV(TTLVWordDecoder& ttlvTag)
             "Failed to decode TTLV because the remaining buffer length is insufficient for the TTLV header. "
             "offset=%u, length=%u, expected=%zu, tag=%hu, type=%hu.",
             offset_, length_, sizeof(ts_ttlv_msg_t), tag, type);
-        const auto ttlvMsg = RtPtrToPtr<const ts_ttlv_msg_t*>(readBuffer);
+        const auto ttlvMsg = reinterpret_cast<const ts_ttlv_msg_t*>(readBuffer);
         // msg head addr
-        tlvValue = RtPtrToPtr<const void*>(ttlvMsg->value);
+        tlvValue = reinterpret_cast<const void*>(ttlvMsg->value);
         // msg head size
         offset_ += TTLV_HEAD_SIZE;
         // message length should add in parse

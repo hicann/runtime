@@ -210,7 +210,7 @@ void PrintSqe(const rtStarsSqe_t* const sqe, const char* desc)
         return;
     }
 
-    const uint32_t* const cmd = RtPtrToPtr<const uint32_t*>(sqe);
+    const uint32_t* const cmd = reinterpret_cast<const uint32_t*>(sqe);
     for (size_t i = 0UL; i < (sizeof(rtStarsSqe_t) / sizeof(uint32_t)); i += 8U) {
         RT_LOG(
             RT_LOG_DEBUG, "%s: %08x %08x %08x %08x %08x %08x %08x %08x", desc, cmd[i], cmd[i + 1U], cmd[i + 2U],
@@ -231,7 +231,7 @@ void SetStarsResult(TaskInfo* taskInfo, const rtCqReport_t& logicCq)
 
 void PrintErrorSqe(const rtStarsSqe_t* const sqe, const char_t* desc)
 {
-    const uint32_t* const cmd = RtPtrToPtr<const uint32_t*>(sqe);
+    const uint32_t* const cmd = reinterpret_cast<const uint32_t*>(sqe);
     for (size_t i = 0UL; i < (sizeof(rtStarsSqe_t) / sizeof(uint32_t)); i += 8U) {
         RT_LOG(
             RT_LOG_ERROR, "%s: %08x %08x %08x %08x %08x %08x %08x %08x", desc, cmd[i], cmd[i + 1U], cmd[i + 2U],
@@ -600,14 +600,14 @@ static bool GetAicpuExceptionNameCopySize(
         return false;
     }
 
-    const uintptr_t argsBegin = RtPtrToValue(aicpuTaskInfo->comm.args);
+    const uintptr_t argsBegin = reinterpret_cast<uintptr_t>(aicpuTaskInfo->comm.args);
     const uintptr_t argsSize = static_cast<uintptr_t>(aicpuTaskInfo->comm.argsSize);
     if (argsBegin > (std::numeric_limits<uintptr_t>::max() - argsSize)) {
         return false;
     }
 
     const uintptr_t argsEnd = argsBegin + argsSize;
-    const uintptr_t nameBegin = RtPtrToValue(nameAddr);
+    const uintptr_t nameBegin = reinterpret_cast<uintptr_t>(nameAddr);
     if ((nameBegin < argsBegin) || (nameBegin >= argsEnd)) {
         return false;
     }

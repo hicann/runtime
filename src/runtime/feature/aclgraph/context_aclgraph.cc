@@ -69,7 +69,7 @@ rtError_t Context::UpdateSuModelExeStreamNotifyWaitSqe(TaskInfo* taskInfo, Strea
 {
     Notify* ntf = taskInfo->u.captureConditionTask.condHandle->GetSubModelNotify();
     rtStarsSqe_t sqeMem = {};
-    ConstructStarsSqeForConditionNotifyWait(taskInfo, RtPtrToPtr<uint8_t*>(&sqeMem));
+    ConstructStarsSqeForConditionNotifyWait(taskInfo, reinterpret_cast<uint8_t*>(&sqeMem));
     void* targetAddrOfUpdatedSqe =
         RtValueToPtr<void*>(taskInfo->stream->GetSqBaseAddr() + ((taskInfo->pos + 1U) * sizeof(rtStarsSqe_t)));
 

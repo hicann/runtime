@@ -856,7 +856,8 @@ rtError_t ApiImpl::AppendLaunchAddrInfo(rtLaunchArgs_t* const hdl, void* const a
     RT_LOG(
         RT_LOG_DEBUG, "Append LaunchArgs hdl=0x%llx, argsAddrOffset=%hu, argsDataOffset=%hu, addrInfo=0x%llx", hdl,
         hdl->argsAddrOffset, hdl->argsDataOffset, addrInfo);
-    *(RtPtrToPtr<uint64_t*>(RtPtrToPtr<char_t*>(hdl->argsInfo.args) + (hdl->argsAddrOffset))) = RtPtrToValue(addrInfo);
+    *(reinterpret_cast<uint64_t*>(reinterpret_cast<char_t*>(hdl->argsInfo.args) + (hdl->argsAddrOffset))) =
+        reinterpret_cast<uint64_t>(addrInfo);
     hdl->argsAddrOffset += sizeof(uint64_t);
     return RT_ERROR_NONE;
 }
@@ -875,12 +876,12 @@ rtError_t ApiImpl::AppendLaunchHostInfo(rtLaunchArgs_t* const hdl, size_t const 
     hdlArgs->argsAddrOffset += sizeof(uint64_t);
     hdlArgs->argsInfo.hostInputInfoNum++;
 
-    char_t* ptrAddr = RtPtrToPtr<char_t*>(hdlArgs->argsInfo.args) + hdlArgs->argsHostInputOffset;
-    *hostInfo = RtPtrToPtr<char_t*>(ptrAddr);
+    char_t* ptrAddr = reinterpret_cast<char_t*>(hdlArgs->argsInfo.args) + hdlArgs->argsHostInputOffset;
+    *hostInfo = reinterpret_cast<char_t*>(ptrAddr);
 
-    char_t* HostInfoAddr = RtPtrToPtr<char_t*>(hdlArgs->argsInfo.args) + HostInfoAddrOffset;
-    uint64_t* ptr = RtPtrToPtr<uint64_t*>(HostInfoAddr);
-    *ptr = RtPtrToValue(ptrAddr);
+    char_t* HostInfoAddr = reinterpret_cast<char_t*>(hdlArgs->argsInfo.args) + HostInfoAddrOffset;
+    uint64_t* ptr = reinterpret_cast<uint64_t*>(HostInfoAddr);
+    *ptr = reinterpret_cast<uint64_t>(ptrAddr);
 
     hdlArgs->argsHostInputOffset += hostInfoSize;
     hdlArgs->argsInfo.isNoNeedH2DCopy = 0;
@@ -1194,11 +1195,11 @@ rtError_t ApiImpl::FuncGetAddr(const Kernel* const funcHandle, void** const aicA
 
     if ((funcAddr1 != 0ULL) && (funcAddr2 == 0ULL) && (CheckVectorKernel(funcHandle))) {
         // there is only one address, and the kernel is for vector core
-        *aivAddr = RtValueToPtr<void*>(funcAddr1);
-        *aicAddr = RtValueToPtr<void*>(funcAddr2);
+        *aivAddr = reinterpret_cast<void*>(static_cast<uintptr_t>(funcAddr1));
+        *aicAddr = reinterpret_cast<void*>(static_cast<uintptr_t>(funcAddr2));
     } else {
-        *aicAddr = RtValueToPtr<void*>(funcAddr1);
-        *aivAddr = RtValueToPtr<void*>(funcAddr2);
+        *aicAddr = reinterpret_cast<void*>(static_cast<uintptr_t>(funcAddr1));
+        *aivAddr = reinterpret_cast<void*>(static_cast<uintptr_t>(funcAddr2));
     }
     return RT_ERROR_NONE;
 }
@@ -1537,7 +1538,7 @@ rtError_t ApiImpl::StreamCreate(Stream** const stm, const int32_t priority, cons
 
     RT_LOG(
         RT_LOG_INFO, "Succ, flags=%u, stream_id=%d, context=0x%llx", flags, (*stm)->Id_(),
-        RtPtrToPtr<uint64_t*>((*stm)->Context_()));
+        reinterpret_cast<uint64_t*>((*stm)->Context_()));
     return error;
 }
 
@@ -1718,7 +1719,8 @@ rtError_t ApiImpl::StreamSynchronize(Stream* const stm, const int32_t timeout)
     if (curCtx != curStm->Context_()) {
         RT_LOG(
             RT_LOG_INFO, "Ctx switch, stream_id=%d, old ctx=%#" PRIx64 ", new ctx=%#" PRIx64, curStm->Id_(),
-            static_cast<uint64_t>(RtPtrToValue(curCtx)), static_cast<uint64_t>(RtPtrToValue(curStm->Context_())));
+            static_cast<uint64_t>(reinterpret_cast<uintptr_t>(curCtx)),
+            static_cast<uint64_t>(reinterpret_cast<uintptr_t>(curStm->Context_())));
         error = ContextSetCurrent(curStm->Context_());
         ERROR_RETURN(error, "Failed to set current context, retCode=%#x", error);
         ctxSwitch = true;
@@ -1750,7 +1752,7 @@ rtError_t ApiImpl::StreamSynchronize(Stream* const stm, const int32_t timeout)
         COND_RETURN_ERROR((error != RT_ERROR_NONE), error, "Failed to set current context, retCode=%#x", error);
         RT_LOG(
             RT_LOG_INFO, "Ctx switch back, stream_id=%d, current ctx=%#" PRIx64, curStm->Id_(),
-            static_cast<uint64_t>(RtPtrToValue(CurrentContext())));
+            static_cast<uint64_t>(reinterpret_cast<uintptr_t>(CurrentContext())));
     }
 
     RT_LOG(RT_LOG_INFO, "Trigger implicit mempool trim (exclude graph pool).");
@@ -2354,7 +2356,7 @@ rtError_t ApiImpl::DevMalloc(void** const devPtr, const uint64_t size, const rtM
 
 rtError_t ApiImpl::DevFree(void* const devPtr)
 {
-    RT_LOG(RT_LOG_INFO, "device free mem=0x%llx", RtPtrToPtr<uint64_t*>(devPtr));
+    RT_LOG(RT_LOG_INFO, "device free mem=0x%llx", reinterpret_cast<uint64_t*>(devPtr));
     Context* const curCtx = CurrentContext(false);
     rtError_t error = DevFreeStatic(devPtr, curCtx);
     if ((error == RT_ERROR_NONE) && Runtime::Instance()->ApiSoma_()->InMemPoolRegion(devPtr)) {
@@ -2963,8 +2965,9 @@ rtError_t ApiImpl::LaunchSqeUpdateTask(
         if (task->u.starsCommTask.srcDevAddr == nullptr) {
             task->u.starsCommTask.srcDevAddr = src;
         } else {
-            const uint64_t dsaSrcDevAddr = RtPtrToValue(task->u.starsCommTask.srcDevAddr);
-            const uint64_t currentSrcDevAddr = RtPtrToValue(src);
+            const uint64_t dsaSrcDevAddr =
+                static_cast<uint64_t>(reinterpret_cast<uintptr_t>(task->u.starsCommTask.srcDevAddr));
+            const uint64_t currentSrcDevAddr = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(src));
             COND_RETURN_AND_MSG_OUTER(
                 dsaSrcDevAddr != currentSrcDevAddr, RT_ERROR_INVALID_VALUE, ErrorCode::EE1017,
                 "Updating task information", "info",
@@ -5436,7 +5439,8 @@ rtError_t ApiImpl::ProcessReport(const int32_t timeout, const bool noLog)
             COND_RETURN_WARN((ret != RT_ERROR_NONE) && (!noLog), ret, "CqReportGet failed, retCode=%#x", ret);
             COND_RETURN_WITH_NOLOG((ret != RT_ERROR_NONE) && (noLog), ret);
             for (uint32_t idx = 0U; idx < cnt; idx++) {
-                const rtCallback_t hostFunc = RtValueToPtr<rtCallback_t>(report[idx].hostFuncCbPtr);
+                const rtCallback_t hostFunc =
+                    reinterpret_cast<rtCallback_t>(static_cast<uintptr_t>(report[idx].hostFuncCbPtr));
                 NULL_PTR_RETURN_MSG(hostFunc, RT_ERROR_DRV_REPORT);
 
                 RT_LOG(
@@ -7051,7 +7055,7 @@ rtError_t ApiImpl::GetStreamTag(Stream* const stm, uint32_t* const geOpTag)
 rtError_t ApiImpl::GetVisibleDeviceIdByLogicDeviceId(const int32_t logicDeviceId, int32_t* const visibleDeviceId)
 {
     const rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(
-        static_cast<uint32_t>(logicDeviceId), RtPtrToPtr<uint32_t*>(visibleDeviceId));
+        static_cast<uint32_t>(logicDeviceId), reinterpret_cast<uint32_t*>(visibleDeviceId));
     COND_RETURN_ERROR(
         error != RT_ERROR_NONE, error, "Failed to convert the user device ID %d to driver device ID.", logicDeviceId);
     return RT_ERROR_NONE;
@@ -7297,7 +7301,7 @@ rtError_t ApiImpl::ReserveMemAddress(void** devPtr, size_t size, size_t alignmen
 
 rtError_t ApiImpl::ReleaseMemAddress(void* devPtr)
 {
-    RT_LOG(RT_LOG_INFO, "device free mem=0x%llx", RtPtrToPtr<uint64_t*>(devPtr));
+    RT_LOG(RT_LOG_INFO, "device free mem=0x%llx", reinterpret_cast<uint64_t*>(devPtr));
     const rtError_t error = NpuDriver::ReleaseMemAddress(devPtr);
     return error;
 }
@@ -7755,7 +7759,7 @@ rtError_t ApiImpl::GetDeviceStatus(const int32_t devId, rtDevStatus_t* const sta
     Driver* const npuDrv = Runtime::Instance()->driverFactory_.GetDriver(NPU_DRIVER);
     NULL_PTR_RETURN_MSG(npuDrv, RT_ERROR_DRV_NULL);
 
-    return npuDrv->GetDeviceStatus(static_cast<uint32_t>(devId), RtPtrToPtr<drvStatus_t*>(status));
+    return npuDrv->GetDeviceStatus(static_cast<uint32_t>(devId), reinterpret_cast<drvStatus_t*>(status));
 }
 
 static rtError_t UpdatePlatformRes(
@@ -7909,7 +7913,7 @@ rtError_t ApiImpl::GetDeviceByPCIBusId(const char* pciBusId, int32_t* devId)
             continue;
         }
         if (strcmp(pciBusId, curBdf) == 0) {
-            error = rt->GetUserDevIdByDeviceId(logicalDevId, RtPtrToPtr<uint32_t*>(devId));
+            error = rt->GetUserDevIdByDeviceId(logicalDevId, reinterpret_cast<uint32_t*>(devId));
             if (error != RT_ERROR_NONE) {
                 RT_LOG(
                     RT_LOG_ERROR, "GetUserDevIdByDeviceId failed for logicalDevId=%u, error=%#x.", logicalDevId,
@@ -8097,7 +8101,7 @@ rtError_t ApiImpl::GetLogicDevIdByUserDevId(const int32_t userDevId, int32_t* co
 {
     int32_t realDeviceId = 0;
     const rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(
-        static_cast<uint32_t>(userDevId), RtPtrToPtr<uint32_t*>(&realDeviceId));
+        static_cast<uint32_t>(userDevId), reinterpret_cast<uint32_t*>(&realDeviceId));
     COND_RETURN_ERROR(
         error != RT_ERROR_NONE, error, "Failed to convert the user device ID %d to driver device ID.", userDevId);
     *logicDevId = realDeviceId;
@@ -8108,7 +8112,7 @@ rtError_t ApiImpl::GetUserDevIdByLogicDevId(const int32_t logicDevId, int32_t* c
 {
     int32_t realDeviceId = 0;
     const rtError_t error = Runtime::Instance()->GetUserDevIdByDeviceId(
-        static_cast<uint32_t>(logicDevId), RtPtrToPtr<uint32_t*>(&realDeviceId));
+        static_cast<uint32_t>(logicDevId), reinterpret_cast<uint32_t*>(&realDeviceId));
     COND_RETURN_ERROR_MSG_INNER(
         error != RT_ERROR_NONE, error, "Failed to convert the driver device ID %u to user device ID, retCode=%#x",
         logicDevId, static_cast<uint32_t>(error));
@@ -8282,7 +8286,7 @@ rtError_t ApiImpl::MemReserveAddress(
 
     RT_LOG(
         RT_LOG_INFO, "device malloc Succ, size=%" PRIu64 ", start ptr=0x%llx, end ptr=0x%llx", size,
-        RtPtrToPtr<uint64_t*>(*virPtr), RtPtrToPtr<uint64_t*>(RtPtrToPtr<uint8_t*>(*virPtr) + size));
+        reinterpret_cast<uint64_t*>(*virPtr), reinterpret_cast<uint64_t*>(reinterpret_cast<uint8_t*>(*virPtr) + size));
     return error;
 }
 
@@ -8322,7 +8326,7 @@ rtError_t ApiImpl::MemMallocPhysical(rtMemHandle* handle, size_t size, rtMallocP
     prop.module_id = cfgVal.moduleId;
 
     if (cfg == nullptr) {
-        return NpuDriver::MallocPhysical(RtPtrToPtr<rtDrvMemHandle*>(handle), size, &prop, flags);
+        return NpuDriver::MallocPhysical(reinterpret_cast<rtDrvMemHandle*>(handle), size, &prop, flags);
     }
 
     rtError_t error = ParseMallocCfg(cfg, &cfgVal);
@@ -8343,7 +8347,7 @@ rtError_t ApiImpl::MemMallocPhysical(rtMemHandle* handle, size_t size, rtMallocP
     RT_LOG(
         RT_LOG_INFO, "size=%" PRIu64 ", type=%#x, pgType=%#x, moduleId=%hu, deviceId=%d.", size, type, prop.pg_type,
         prop.module_id, prop.devid);
-    return NpuDriver::MallocPhysical(RtPtrToPtr<rtDrvMemHandle*>(handle), size, &prop, flags);
+    return NpuDriver::MallocPhysical(reinterpret_cast<rtDrvMemHandle*>(handle), size, &prop, flags);
 }
 
 rtError_t ApiImpl::GetThreadLastTaskId(uint32_t* const taskId)
@@ -8421,7 +8425,7 @@ uint16_t ApiImpl::GetToBeCalSystemParaNum(const Kernel* const kernel) const
 
 rtError_t ApiImpl::ProcessOverFlowArgs(RtArgsHandle* argsHandle)
 {
-    Kernel* kernel = RtPtrToPtr<Kernel*>(argsHandle->funcHandle);
+    Kernel* kernel = reinterpret_cast<Kernel*>(argsHandle->funcHandle);
     // cpu kernel无需处理直接返回
     COND_RETURN_WITH_NOLOG(kernel->GetKernelRegisterType() == RT_KERNEL_REG_TYPE_CPU, RT_ERROR_NONE);
     // 需要判断是否做overflow隐藏参数处理
@@ -8446,8 +8450,9 @@ rtError_t ApiImpl::ProcessOverFlowArgs(RtArgsHandle* argsHandle)
 
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    const uint64_t overflowAddr = RtPtrToValue(curCtx->CtxGetOverflowAddr());
-    uint64_t* overflowParaAddr = RtPtrToPtr<uint64_t*>(RtPtrToPtr<uint8_t*>(argsHandle->buffer) + realParaOffset);
+    const uint64_t overflowAddr = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(curCtx->CtxGetOverflowAddr()));
+    uint64_t* overflowParaAddr =
+        reinterpret_cast<uint64_t*>(reinterpret_cast<uint8_t*>(argsHandle->buffer) + realParaOffset);
     *overflowParaAddr = overflowAddr;
     argsHandle->argsSize = needOccupyOffset;
     argsHandle->isProcessedOverflow = true;
@@ -8477,7 +8482,7 @@ rtError_t ApiImpl::KernelArgsFinalize(RtArgsHandle* argsHandle)
     rtError_t error = ProcessOverFlowArgs(argsHandle);
     ERROR_RETURN(error, "process over flow args failed,retCode=%#x.", error);
 
-    Kernel* kernel = RtPtrToPtr<Kernel*>(argsHandle->funcHandle);
+    Kernel* kernel = reinterpret_cast<Kernel*>(argsHandle->funcHandle);
     const KernelRegisterType regType = kernel->GetKernelRegisterType();
     Runtime* rtInstance = Runtime::Instance();
     NULL_PTR_RETURN_MSG(rtInstance, RT_ERROR_INSTANCE_NULL);
@@ -8497,7 +8502,7 @@ rtError_t ApiImpl::KernelArgsFinalize(RtArgsHandle* argsHandle)
     uint32_t len = 0U;
     error = GetC2cCtrlAddr(&interCoreAddr, &len);
     ERROR_RETURN(error, "get inter core addr failed, retCode=%#x", static_cast<uint32_t>(error));
-    uint64_t* interCoreSyncAddr = RtPtrToPtr<uint64_t*>(argsHandle->buffer);
+    uint64_t* interCoreSyncAddr = reinterpret_cast<uint64_t*>(argsHandle->buffer);
     *interCoreSyncAddr = interCoreAddr;
     argsHandle->isFinalized = 1U;
     argsHandle->isParamUpdating = 0U;
@@ -8734,8 +8739,8 @@ rtError_t ApiImpl::KernelArgsAppend(RtArgsHandle* argsHandle, void* para, size_t
     argsHandle->para[index].paraOffset = realParaOffset; // 参数在整个内存中的偏移
     argsHandle->para[index].paraSize = paraSize;
     argsHandle->para[index].dataOffset = 0U;
-    const uintptr_t offset = RtPtrToValue(argsHandle->buffer) + static_cast<uint64_t>(realParaOffset);
-    const errno_t ret = memcpy_s(RtPtrToPtr<void*>(offset), paraSize, para, paraSize);
+    const uintptr_t offset = reinterpret_cast<uintptr_t>(argsHandle->buffer) + static_cast<uint64_t>(realParaOffset);
+    const errno_t ret = memcpy_s(reinterpret_cast<void*>(offset), paraSize, para, paraSize);
     if (ret != EOK) {
         std::stringstream ss;
         ss << std::hex << "dest=0x" << offset << ", para=0x" << RtPtrToValue(para) << std::dec
@@ -8783,7 +8788,7 @@ rtError_t ApiImpl::MemcpyBatch(
                 " and the source location type is %s",
                 MemLocationTypeToString(realDstLoc).c_str(), MemLocationTypeToString(realSrcLoc).c_str()));
     }
-    return NpuDriver::MemcpyBatch(RtPtrToPtr<uint64_t*>(dsts), RtPtrToPtr<uint64_t*>(srcs), sizes, count);
+    return NpuDriver::MemcpyBatch(reinterpret_cast<uint64_t*>(dsts), reinterpret_cast<uint64_t*>(srcs), sizes, count);
 }
 
 rtError_t ApiImpl::CheckMemCpyAttr(
@@ -8963,7 +8968,7 @@ rtError_t ApiImpl::SetCmoDesc(rtCmoDesc_t cmoDesc, void* srcAddr, size_t srcLen)
     (void)GET_DEV_PROPERTIES(Runtime::Instance()->GetChipType(), properties);
     if (properties.cmoDDRStructInfoSize == sizeof(rtDavidCmoAddrInfo)) {
         rtDavidCmoAddrInfo davidCmoAddrInfo = {};
-        davidCmoAddrInfo.src = RtPtrToValue(srcAddr);
+        davidCmoAddrInfo.src = reinterpret_cast<uint64_t>(srcAddr);
         davidCmoAddrInfo.len_inner = srcLen;
         return MemCopySync(
             cmoDesc, sizeof(rtDavidCmoAddrInfo), &davidCmoAddrInfo, sizeof(rtDavidCmoAddrInfo),
@@ -8971,7 +8976,7 @@ rtError_t ApiImpl::SetCmoDesc(rtCmoDesc_t cmoDesc, void* srcAddr, size_t srcLen)
     }
 
     rtCmoAddrInfo cmoAddrInfo = {};
-    cmoAddrInfo.src = RtPtrToValue(srcAddr);
+    cmoAddrInfo.src = reinterpret_cast<uint64_t>(srcAddr);
     cmoAddrInfo.len_inner = srcLen;
     return MemCopySync(cmoDesc, sizeof(rtCmoAddrInfo), &cmoAddrInfo, sizeof(rtCmoAddrInfo), RT_MEMCPY_HOST_TO_DEVICE);
 }
@@ -9285,7 +9290,7 @@ rtError_t ApiImpl::FunctionGetAttribute(rtFuncHandle funcHandle, rtFuncAttribute
             uint32_t mixType = kernel->GetMixType();
             uint16_t ratio[2];
             ComputeRatio(ratio, mixType, taskRatio);
-            uint16_t* ratioArr = RtPtrToPtr<uint16_t*>(attrValue);
+            uint16_t* ratioArr = reinterpret_cast<uint16_t*>(attrValue);
             ratioArr[1] = ratio[0]; // aicratio
             ratioArr[0] = ratio[1]; // aivratio
             RT_LOG(RT_LOG_DEBUG, "mixType=%u, ratio[0]=%u, ratio[1]=%u.", mixType, ratio[0], ratio[1]);

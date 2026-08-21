@@ -90,15 +90,15 @@ rtError_t CopyFftsPlusContextToHost(TaskInfo* taskInfo, const uint32_t contextId
         fftsPlusTask->descBufLen);
 
     return taskInfo->stream->Device_()->Driver_()->MemCopySync(
-        ctxInfo, CONTEXT_LEN, static_cast<void*>((RtPtrToPtr<uint8_t*>(fftsPlusTask->descAlignBuf)) + offset),
+        ctxInfo, CONTEXT_LEN, static_cast<void*>((reinterpret_cast<uint8_t*>(fftsPlusTask->descAlignBuf)) + offset),
         CONTEXT_LEN, RT_MEMCPY_DEVICE_TO_HOST);
 }
 
 void LogFftsPlusContextDetail(
     TaskInfo* taskInfo, const uint32_t devId, const uint32_t contextId, const uint8_t* ctxInfo)
 {
-    const auto* const commonCtx = RtPtrToPtr<const rtFftsPlusComCtx_t*>(ctxInfo);
-    const auto* const buf = RtPtrToPtr<const uint32_t*>(ctxInfo);
+    const auto* const commonCtx = reinterpret_cast<const rtFftsPlusComCtx_t*>(ctxInfo);
+    const auto* const buf = reinterpret_cast<const uint32_t*>(ctxInfo);
     const std::string contextTypeName = GetFftsPlusContextTypeName(commonCtx->contextType);
     RT_LOG(
         RT_LOG_ERROR,
@@ -182,7 +182,7 @@ rtError_t FillFftsPlusSqe(TaskInfo* taskInfo, const void* const devMem)
         fftsPlusTask->fftsSqe.reserved16[i] = 0U;
     }
 
-    rtStarsFftsPlusHeader_t* sqeHeader = RtPtrToPtr<rtStarsFftsPlusHeader_t*>(&fftsPlusTask->fftsSqe.sqeHeader);
+    rtStarsFftsPlusHeader_t* sqeHeader = reinterpret_cast<rtStarsFftsPlusHeader_t*>(&fftsPlusTask->fftsSqe.sqeHeader);
     sqeHeader->type = 0U;
     sqeHeader->ie = 0U;
     sqeHeader->preP = 0U;
@@ -228,10 +228,10 @@ rtError_t FillFftsPlusSqe(TaskInfo* taskInfo, const void* const devMem)
 
     fftsPlusTask->fftsSqe.dsaSqId = 0U;
 
-    const uint64_t stackPhyBase = RtPtrToValue(device->GetStackPhyBase32k());
+    const uint64_t stackPhyBase = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(device->GetStackPhyBase32k()));
     fftsPlusTask->fftsSqe.stackPhyBaseL = static_cast<uint32_t>(stackPhyBase);
     fftsPlusTask->fftsSqe.stackPhyBaseH = static_cast<uint32_t>(stackPhyBase >> UINT32_BIT_NUM);
-    const uint64_t devMemAddr = RtPtrToValue(devMem);
+    const uint64_t devMemAddr = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(devMem));
     fftsPlusTask->fftsSqe.contextAddressBaseL = static_cast<uint32_t>(devMemAddr);
     fftsPlusTask->fftsSqe.contextAddressBaseH = (static_cast<uint32_t>(devMemAddr >> UINT32_BIT_NUM)) & MASK_17_BIT;
     if ((CheckLogLevel(static_cast<int32_t>(RUNTIME), DLOG_INFO) == 1) ||
@@ -292,10 +292,10 @@ static rtError_t FftsPlusTmpAllocH2D(
         fftsPlusTask->descBufLen, dev->Id_());
     // 128-byte alignment
     const uint64_t descAlign =
-        (RtPtrToValue(fftsPlusTask->descBuf) & 0x7fU) == 0U ?
-            RtPtrToValue(fftsPlusTask->descBuf) :
-            (((RtPtrToValue(fftsPlusTask->descBuf) >> CONTEXT_ALIGN_BIT) + 1U) << CONTEXT_ALIGN_BIT);
-    fftsPlusTask->descAlignBuf = RtValueToPtr<void*>(descAlign);
+        (reinterpret_cast<uint64_t>(fftsPlusTask->descBuf) & 0x7fU) == 0U ?
+            reinterpret_cast<uint64_t>(fftsPlusTask->descBuf) :
+            (((reinterpret_cast<uint64_t>(fftsPlusTask->descBuf) >> CONTEXT_ALIGN_BIT) + 1U) << CONTEXT_ALIGN_BIT);
+    fftsPlusTask->descAlignBuf = reinterpret_cast<void*>(descAlign);
     ShowFftsPlusTaskDebug(taskInfo, fftsPlusTaskInfo, fftsPlusTask);
     // cpy context from host to device
     TIMESTAMP_BEGIN(FftsPlusTaskH2Dcpy);
@@ -383,9 +383,9 @@ rtError_t FftsPlusTaskInit(TaskInfo* taskInfo, const rtFftsPlusTaskInfo_t* const
         descAddrType, fftsPlusTask->argsHandleInfoNum);
 
     if ((fftsPlusTask->kernelFlag & RT_KERNEL_FFTSPLUS_DYNAMIC_SHAPE_DUMPFLAG) != 0U) {
-        fftsPlusTask->loadDumpInfo = RtPtrToValue(fftsPlusTaskInfo->fftsPlusDumpInfo.loadDumpInfo);
+        fftsPlusTask->loadDumpInfo = reinterpret_cast<uintptr_t>(fftsPlusTaskInfo->fftsPlusDumpInfo.loadDumpInfo);
         fftsPlusTask->loadDumpInfoLen = fftsPlusTaskInfo->fftsPlusDumpInfo.loadDumpInfolen;
-        fftsPlusTask->unloadDumpInfo = RtPtrToValue(fftsPlusTaskInfo->fftsPlusDumpInfo.unloadDumpInfo);
+        fftsPlusTask->unloadDumpInfo = reinterpret_cast<uintptr_t>(fftsPlusTaskInfo->fftsPlusDumpInfo.unloadDumpInfo);
         fftsPlusTask->unloadDumpInfoLen = fftsPlusTaskInfo->fftsPlusDumpInfo.unloadDumpInfolen;
     }
     error = FftsPlusTaskFillArgsAddr(taskInfo, fftsPlusTaskInfo);
@@ -739,7 +739,7 @@ void PrintAicAivErrorInfoForFftsPlusTask(TaskInfo* taskInfo, const rtFftsPlusTas
         mapAddr.emplace_back(CombineTo64Bit(contextInfo.tailTaskStartPcH, contextInfo.tailTaskStartPcL));
         blockDim = contextInfo.tailBlockdim;
     } else if ((contextInfo.contextType == RT_CTX_TYPE_MIX_AIC) || (contextInfo.contextType == RT_CTX_TYPE_MIX_AIV)) {
-        const auto* const mixCtx = RtPtrToPtr<const rtFftsPlusMixAicAivCtx_t*>(&contextInfo);
+        const auto* const mixCtx = reinterpret_cast<const rtFftsPlusMixAicAivCtx_t*>(&contextInfo);
         mapAddr.emplace_back(CombineTo64Bit(mixCtx->nonTailAicTaskStartPcH, mixCtx->nonTailAicTaskStartPcL));
         mapAddr.emplace_back(CombineTo64Bit(mixCtx->tailAicTaskStartPcH, mixCtx->tailAicTaskStartPcL));
         mapAddr.emplace_back(CombineTo64Bit(mixCtx->nonTailAivTaskStartPcH, mixCtx->nonTailAivTaskStartPcL));
@@ -772,7 +772,7 @@ void PrintAicAivErrorInfoForFftsPlusTask(TaskInfo* taskInfo, const rtFftsPlusTas
             devId, taskInfo->stream->Id_(), taskInfo->id, info.contextId, info.threadId, info.errType,
             GetErrMsgStrForFftsPlusTask(info.errType).c_str(), taskInfo->errorCode);
     }
-    LogFftsPlusContextDetail(taskInfo, devId, info.contextId, RtPtrToPtr<const uint8_t*>(&contextInfo));
+    LogFftsPlusContextDetail(taskInfo, devId, info.contextId, reinterpret_cast<const uint8_t*>(&contextInfo));
 }
 
 static void PrintSdmaErrorInfoForFftsPlusTask(
@@ -833,8 +833,9 @@ void GetExceptionArgsForFftsPlus(
 
     rtFftsPlusMixAicAivCtx_t contextInfo;
     const rtError_t ret = taskInfo->stream->Device_()->Driver_()->MemCopySync(
-        &contextInfo, CONTEXT_LEN, static_cast<void*>((RtPtrToPtr<uint8_t*>(fftsPlusTask->descAlignBuf)) + offset),
-        CONTEXT_LEN, RT_MEMCPY_DEVICE_TO_HOST);
+        &contextInfo, CONTEXT_LEN,
+        static_cast<void*>((reinterpret_cast<uint8_t*>(fftsPlusTask->descAlignBuf)) + offset), CONTEXT_LEN,
+        RT_MEMCPY_DEVICE_TO_HOST);
     if (ret != RT_ERROR_NONE) {
         RT_LOG(RT_LOG_ERROR, "FftsPlus MemCopySync failed, retCode=%#x, offset=%llu.", ret, offset);
         return;
@@ -845,7 +846,7 @@ void GetExceptionArgsForFftsPlus(
         return;
     }
 
-    argsInfo->argAddr = RtValueToPtr<void*>(CombineTo64Bit(
+    argsInfo->argAddr = reinterpret_cast<void*>(CombineTo64Bit(
         contextInfo.aicTaskParamPtrH,
         contextInfo.aicTaskParamPtrL)); // aicTaskParamPtr = aivTaskParamPtr, fill in any one
     argsInfo->sizeInfo.infoAddr = fftsPlusTask->inputArgsSize.infoAddr;

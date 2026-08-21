@@ -42,7 +42,7 @@ rtError_t ApiErrorDecorator::CntNotifyCreate(
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(retCntNotify, RT_ERROR_INVALID_VALUE, "CntNotify creation");
     int32_t realDeviceId;
     const rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(
-        static_cast<uint32_t>(deviceId), RtPtrToPtr<uint32_t*>(&realDeviceId));
+        static_cast<uint32_t>(deviceId), reinterpret_cast<uint32_t*>(&realDeviceId));
     COND_RETURN_ERROR(
         error != RT_ERROR_NONE, error, "Failed to convert the user device ID %d to driver device ID.", deviceId);
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
@@ -397,8 +397,8 @@ rtError_t ApiErrorDecorator::StreamTaskClean(Stream* const stm)
 rtError_t ApiErrorDecorator::DeviceResourceClean(const int32_t devId)
 {
     int32_t realDeviceId;
-    rtError_t error =
-        Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(devId), RtPtrToPtr<uint32_t*>(&realDeviceId));
+    rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(
+        static_cast<uint32_t>(devId), reinterpret_cast<uint32_t*>(&realDeviceId));
     COND_RETURN_ERROR(
         error != RT_ERROR_NONE, RT_ERROR_DEVICE_ID, "Failed to convert the user device ID %d to driver device ID.",
         devId);

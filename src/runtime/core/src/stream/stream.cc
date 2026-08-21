@@ -5433,7 +5433,7 @@ rtError_t Stream::StreamGetTasks(void** tasks, uint32_t* numTasks)
             RT_LOG(RT_LOG_ERROR, "task is nullptr, deviceId=%u, streamId=%d.", device_->Id_(), streamId_);
             return RT_ERROR_INVALID_VALUE;
         }
-        tasks[i] = RtPtrToPtr<void*>(task);
+        tasks[i] = reinterpret_cast<void*>(task);
     }
     // 如果numTasks大于实际task数量，剩余空间填充null
     for (uint32_t i = retTaskNum; i < *numTasks; i++) {

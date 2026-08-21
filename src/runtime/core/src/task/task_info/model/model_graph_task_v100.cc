@@ -48,7 +48,7 @@ static void ConstructSqeForAddEndGraphTask(TaskInfo* taskInfo, rtStarsSqe_t* con
     sqe->kernel_credit = RT_STARS_DEFAULT_KERNEL_CREDIT;
 
     // soname aicpu no need
-    const uint64_t addr = 0ULL;
+    const uint64_t addr = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(nullptr));
     sqe->taskSoAddrLow = static_cast<uint32_t>(addr);
     sqe->taskSoAddrHigh = static_cast<uint16_t>(addr >> UINT32_BIT_NUM);
 

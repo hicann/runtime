@@ -207,7 +207,7 @@ rtError_t ApiErrorDecorator::GetAddrAndPrefCntWithHandle(
         prefetchCnt, RT_ERROR_INVALID_VALUE,
         "Obtaining the device address and prefetch count based on the kernel function handle");
 
-    const auto name = RtPtrToPtr<const char_t*>(kernelInfoExt);
+    const auto name = reinterpret_cast<const char_t*>(kernelInfoExt);
     const auto len = strnlen(name, static_cast<size_t>(NAME_MAX_LENGTH));
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
         len >= NAME_MAX_LENGTH, RT_ERROR_INVALID_VALUE,
@@ -2548,7 +2548,7 @@ rtError_t ApiErrorDecorator::MemcpyAsyncWithDesc(
     rtTaskCfgInfo_t cfgInfo = {};
     (void)memset_s(&cfgInfo, sizeof(rtTaskCfgInfo_t), 0, sizeof(rtTaskCfgInfo_t));
 
-    return MemcpyAsyncPtr(RtPtrToPtr<rtMemcpyAddrInfo*>(desc), UINT32_MAX, UINT32_MAX, stm, &cfgInfo, true);
+    return MemcpyAsyncPtr(reinterpret_cast<rtMemcpyAddrInfo*>(desc), UINT32_MAX, UINT32_MAX, stm, &cfgInfo, true);
 }
 
 rtError_t ApiErrorDecorator::GetDevArgsAddr(Stream* stm, rtArgsEx_t* argsInfo, void** devArgsAddr, void** argsHandle)
@@ -5519,7 +5519,7 @@ rtError_t ApiErrorDecorator::MemQueueGrant(
         realDeviceId = DEFAULT_HOSTCPU_LOGIC_DEVICE_ID;
     } else {
         const rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(
-            static_cast<uint32_t>(devId), RtPtrToPtr<uint32_t*>(&realDeviceId));
+            static_cast<uint32_t>(devId), reinterpret_cast<uint32_t*>(&realDeviceId));
         COND_RETURN_ERROR(
             error != RT_ERROR_NONE, error, "Failed to convert the user device ID %d to driver device ID.", devId);
     }
@@ -5866,7 +5866,7 @@ rtError_t ApiErrorDecorator::EschedSubscribeEvent(
         realDeviceId = DEFAULT_HOSTCPU_LOGIC_DEVICE_ID;
     } else {
         const rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(
-            static_cast<uint32_t>(devId), RtPtrToPtr<uint32_t*>(&realDeviceId));
+            static_cast<uint32_t>(devId), reinterpret_cast<uint32_t*>(&realDeviceId));
         COND_RETURN_ERROR(
             error != RT_ERROR_NONE, error, "Failed to convert the user device ID %d to driver device ID.", devId);
     }
