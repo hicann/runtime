@@ -11,7 +11,7 @@ Failed to allocate %s bytes of host memory via %s to Runtime.
 报错示例如下：
 
 ```
-Failed to allocate 160 bytes of host memory via new to ACL
+Failed to allocate 160 bytes of host memory via new to Runtime.
 ```
 
 ## 可能原因
