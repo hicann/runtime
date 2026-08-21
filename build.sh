@@ -95,7 +95,7 @@ checkopts() {
         shift 2
         ;;
       -v | --verbose)
-        VERBOSE="VERBOSE=1"
+        VERBOSE="on"
         shift
         ;;
       --pkg)
@@ -285,13 +285,21 @@ build_rts() {
     return 1
   fi
 
-  cmake --build . -j${THREAD_NUM}
+  if [ "${VERBOSE}" = "on" ]; then
+    cmake --build . -j${THREAD_NUM} --verbose
+  else
+    cmake --build . -j${THREAD_NUM}
+  fi
   if [ $? -ne 0 ]; then
     echo "execute command: cmake --build build -j${THREAD_NUM} failed."
     return 1
   fi
 
-  make package -j${THREAD_NUM}
+  if [ "${VERBOSE}" = "on" ]; then
+    make package -j${THREAD_NUM} VERBOSE=1
+  else
+    make package -j${THREAD_NUM}
+  fi
   if [ $? -ne 0 ]; then
     echo "execute command: make package failed."
     return 1
