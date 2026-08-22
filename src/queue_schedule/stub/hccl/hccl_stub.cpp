@@ -43,14 +43,14 @@ int HcclIsend(void* buffer, int count, HcclDataType dataType, int dstRank, int t
     return (PtrToFunctionPtr<void, dgw::HcclIsendFunc>(func))(buffer, count, dataType, dstRank, tag, comm, request);
 }
 
-int HcclImrecv(void* buffer, int count, HcclDataType datatype, HcclMessage* msg, HcclRequest* request)
+int HcclImrecv(void* buffer, int count, HcclDataType dataType, HcclMessage* msg, HcclRequest* request)
 {
     void* const func = dgw::HcclSoManager::GetInstance()->GetFunc("HcclImrecv");
     if (func == nullptr) {
         DGW_LOG_ERROR("libhccl.so can't get function [HcclImrecv]");
         return HCCL_E_RESERVED;
     }
-    return (PtrToFunctionPtr<void, dgw::HcclImrecvFunc>(func))(buffer, count, datatype, msg, request);
+    return (PtrToFunctionPtr<void, dgw::HcclImrecvFunc>(func))(buffer, count, dataType, msg, request);
 }
 
 int HcclImprobe(int srcRank, int tag, HcclComm comm, int* flag, HcclMessage* msg, HcclStatus* status)
@@ -84,24 +84,24 @@ int HcclTestSome(int count, HcclRequest requestArray[], int* compCount, int comp
         count, requestArray, compCount, compIndices, compStatus);
 }
 
-HcclResult HcclRegisterMemory(HcclComm comm, void* addr, uint64_t size)
+HcclResult HcclRegisterMemory(HcclComm comm, void* buffer, uint64_t size)
 {
     void* const func = dgw::HcclSoManager::GetInstance()->GetFunc("HcclRegisterMemory");
     if (func == nullptr) {
         DGW_LOG_ERROR("libhccl.so can't get function [HcclRegisterMemory]");
         return HCCL_E_RESERVED;
     }
-    return (PtrToFunctionPtr<void, dgw::HcclRegisterMemoryFunc>(func))(comm, addr, size);
+    return (PtrToFunctionPtr<void, dgw::HcclRegisterMemoryFunc>(func))(comm, buffer, size);
 }
 
-HcclResult HcclUnregisterMemory(HcclComm comm, void* addr)
+HcclResult HcclUnregisterMemory(HcclComm comm, void* buffer)
 {
     void* const func = dgw::HcclSoManager::GetInstance()->GetFunc("HcclUnregisterMemory");
     if (func == nullptr) {
         DGW_LOG_ERROR("libhccl.so can't get function [HcclUnregisterMemory]");
         return HCCL_E_RESERVED;
     }
-    return (PtrToFunctionPtr<void, dgw::HcclUnregisterMemoryFunc>(func))(comm, addr);
+    return (PtrToFunctionPtr<void, dgw::HcclUnregisterMemoryFunc>(func))(comm, buffer);
 }
 
 HcclResult HcclSetGrpIdCallback(int32_t (*grpIdCallback)(int32_t, int32_t*, int32_t*))

@@ -9,11 +9,21 @@
  */
 #include "adump_device_pub.h"
 
-ADX_API extern IDE_SESSION IdeDumpStart(const char* connectInfo) { return 0; }
+ADX_API extern IDE_SESSION IdeDumpStart(const char* connectInfo)
+{
+    (void)connectInfo;
+    return 0;
+}
 
 ADX_API extern IdeErrorT IdeDumpData(IDE_SESSION session, const struct IdeDumpChunk* dumpChunk)
 {
+    (void)session;
+    (void)dumpChunk;
     return IDE_DAEMON_NONE_ERROR;
 }
 
-ADX_API extern IdeErrorT IdeDumpEnd(IDE_SESSION session) { return IDE_DAEMON_NONE_ERROR; }
+ADX_API extern IdeErrorT IdeDumpEnd(IDE_SESSION session)
+{
+    (void)session;
+    return IDE_DAEMON_NONE_ERROR;
+}

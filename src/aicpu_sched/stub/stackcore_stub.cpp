@@ -11,5 +11,10 @@
 
 int tsDevSendMsgAsync(unsigned int devId, unsigned int tsId, char* msg, unsigned int msgLen, unsigned int handleId)
 {
+    (void)devId;
+    (void)tsId;
+    (void)msg;
+    (void)msgLen;
+    (void)handleId;
     return 0;
 }

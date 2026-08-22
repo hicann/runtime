@@ -23,8 +23,18 @@ int32_t SendUpdateProfilingRspToTsd(
 
 int32_t CreateOrFindCustPid(
     const uint32_t deviceId, const uint32_t loadLibNum, const char* const loadLibName[], const uint32_t hostPid,
-    const uint32_t vfId, const char* groupNameList, const uint32_t groupNameNum, int32_t* custProcPid, bool* firstStart)
+    const uint32_t vfId, const char* const groupNameList, const uint32_t groupNameNum, int32_t* const custProcPid,
+    bool* const firstStart)
 {
+    (void)deviceId;
+    (void)loadLibNum;
+    (void)loadLibName;
+    (void)hostPid;
+    (void)vfId;
+    (void)groupNameList;
+    (void)groupNameNum;
+    (void)custProcPid;
+    (void)firstStart;
     return 0;
 }
 
@@ -56,15 +66,15 @@ void UnRegEventMsgCallBackFunc(const uint32_t eventType)
 }
 
 int32_t TsdReportStartOrStopErrCode(
-    const uint32_t deviceId, const TsdWaitType waitType, const uint32_t hostPid, const uint32_t vfId, const char* msg,
-    uint32_t msgLen)
+    const uint32_t deviceId, const TsdWaitType waitType, const uint32_t hostPid, const uint32_t vfId,
+    const char* errCode, const uint32_t errLen)
 {
     (void)deviceId;
     (void)waitType;
     (void)hostPid;
     (void)vfId;
-    (void)msg;
-    (void)msgLen;
+    (void)errCode;
+    (void)errLen;
     std::cout << "STUB: TsdReportStartOrStopErrCode called" << std::endl;
     return 0; // 返回 int32_t
 }
@@ -91,13 +101,14 @@ int32_t TsdDestroy(const uint32_t deviceId, const TsdWaitType waitType, const ui
 }
 
 int32_t SubModuleProcessResponse(
-    const uint32_t deviceId, const TsdWaitType waitType, const uint32_t hostPid, const uint32_t vfId, uint32_t response)
+    const uint32_t deviceId, const TsdWaitType waitType, const uint32_t hostPid, const uint32_t vfId,
+    const uint32_t eventType)
 {
     (void)deviceId;
     (void)waitType;
     (void)hostPid;
     (void)vfId;
-    (void)response;
+    (void)eventType;
     std::cout << "STUB: SubModuleProcessResponse called" << std::endl;
     return 0; // 返回 int32_t
 }
