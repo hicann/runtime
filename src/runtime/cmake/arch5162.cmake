@@ -58,8 +58,8 @@ set(libruntime_api_src_files
     ${RUNTIME_DIR}/src/runtime/api/api_c_context.cc
     ${RUNTIME_DIR}/src/runtime/api/api_c_device.cc
     ${RUNTIME_DIR}/src/runtime/api/api_c_event.cc
+    ${RUNTIME_DIR}/src/runtime/api/api_c_mbuf_stub.cc
     ${RUNTIME_DIR}/src/runtime/api/api_c_kernel.cc
-    ${RUNTIME_DIR}/src/runtime/api/api_c_mbuf.cc
     ${RUNTIME_DIR}/src/runtime/api/api_c_memory.cc
     ${RUNTIME_DIR}/src/runtime/api/api_c_model.cc
     ${RUNTIME_DIR}/src/runtime/api/api_c_soc.cc
@@ -77,7 +77,7 @@ set(libruntime_api_impl_src_files
     ${RUNTIME_API_DIR}/impl/api_error.cc
     ${RUNTIME_API_DIR}/impl/api_impl.cc
     ${RUNTIME_API_DIR}/impl/api_impl_creator.cc
-    ${RUNTIME_API_DIR}/impl/api_impl_mbuf.cc
+    ${RUNTIME_API_DIR}/impl/api_impl_mbuf_stub.cc
     ${RUNTIME_API_DIR}/impl/api_impl_event_common.cc
     ${RUNTIME_API_DIR}/impl/api_impl_stub.cc
     ${RUNTIME_API_DIR}/impl/api_impl_arch5162.cc
@@ -426,7 +426,6 @@ macro(add_runtime_library target_name)
         ${RUNTIME_DIR}/src/runtime/driver/npu_driver.cc
         ${RUNTIME_DIR}/src/runtime/driver/npu_driver_mem.cc
         ${RUNTIME_DIR}/src/runtime/driver/npu_driver_queue.cc
-        ${RUNTIME_DIR}/src/runtime/driver/npu_driver_mbuf.cc
         ${RUNTIME_DIR}/src/runtime/driver/npu_driver_res.cc
         ${RUNTIME_DIR}/src/runtime/driver/npu_driver_tiny.cpp
         ${RUNTIME_DIR}/src/runtime/driver/npu_driver_dcache_lock_common.cpp
