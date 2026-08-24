@@ -28,7 +28,7 @@
 - 日志回调接口头文件所在路径：${INSTALL_DIR}/include/base/acl_log.h
 - 依赖的库文件路径：${INSTALL_DIR}/lib64/libascendalog.so
 
-用户自定义模块可使用`acl_log.h`中的`acllogRecord`、`acllogVaList`和`acllogCheckDebugLevel`接口记录日志。用户moduleId范围为`0xff00`~`0xffff`（65280~65535）。该范围内的moduleId会在日志中按十进制ID记录，不转换为moduleName字符串。CANN内部模块moduleId范围为`0x0000`~`0x00ff`（0~255）。
+用户自定义模块可使用`acl_log.h`中的`acllogRecord`、`acllogVaList`和`acllogCheckDebugLevel`接口记录日志。用户moduleId范围为`0xff00`~`0xffff`（65280~65535）。如需记录运行日志，可将用户moduleId与`RUN_LOG_MASK`按位或后传入，日志会落盘到run目录；未携带日志类型掩码时，默认按调测日志处理。该范围内的moduleId会在日志中按十进制ID记录，不转换为moduleName字符串。CANN内部模块moduleId范围为`0x0000`~`0x00ff`（0~255）。
 
 ${INSTALL_DIR}请替换为CANN软件安装后文件存储路径。以root用户安装为例，安装后文件默认存储路径为：/usr/local/Ascend/cann。
 
@@ -206,7 +206,7 @@ void acllogRecord(int32_t moduleId, int32_t level, const char *fmt, ...)
 
 | 参数 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| moduleId | 输入 | 用户模块ID，取值范围为`0xff00`~`0xffff`。该范围内的ID在日志中按十进制记录，不转换为moduleName字符串。 |
+| moduleId | 输入 | 用户模块ID，取值范围为`0xff00`~`0xffff`。如需记录运行日志，可传入`moduleId \| RUN_LOG_MASK`，日志会落盘到run目录；未携带日志类型掩码时，默认按调测日志处理。该范围内的ID在日志中按十进制记录，不转换为moduleName字符串。 |
 | level | 输入 | 本条日志级别，宏定义请参见[数据类型定义](#数据类型定义)。 |
 | fmt | 输入 | 待打印的内容。接口不校验内容合法性。单条日志最大长度为1024字节，超出则会截断。 |
 
@@ -218,6 +218,7 @@ void acllogRecord(int32_t moduleId, int32_t level, const char *fmt, ...)
 
 ```c
 acllogRecord(0xff00, DLOG_INFO, "user module log");
+acllogRecord(0xff00 | RUN_LOG_MASK, DLOG_INFO, "user module run log");
 ```
 
 <br>
@@ -266,7 +267,7 @@ void acllogVaList(int32_t moduleId, int32_t level, const char *fmt, va_list list
 
 | 参数 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| moduleId | 输入 | 用户模块ID，取值范围为`0xff00`~`0xffff`。该范围内的ID在日志中按十进制记录，不转换为moduleName字符串。 |
+| moduleId | 输入 | 用户模块ID，取值范围为`0xff00`~`0xffff`。如需记录运行日志，可传入`moduleId \| RUN_LOG_MASK`，日志会落盘到run目录；未携带日志类型掩码时，默认按调测日志处理。该范围内的ID在日志中按十进制记录，不转换为moduleName字符串。 |
 | level | 输入 | 本条日志级别，宏定义请参见[数据类型定义](#数据类型定义)。 |
 | fmt | 输入 | 待打印的内容。接口不校验内容合法性。单条日志最大长度为1024字节，超出则会截断。 |
 | list | 输入 | 可变参数列表。 |
@@ -287,6 +288,7 @@ static void LogUserModule(int32_t moduleId, int32_t level, const char *fmt, ...)
 }
 
 LogUserModule(0xff00, DLOG_INFO, "user module log");
+LogUserModule(0xff00 | RUN_LOG_MASK, DLOG_INFO, "user module run log");
 ```
 
 <br>
@@ -334,7 +336,7 @@ int32_t acllogCheckDebugLevel(int32_t moduleId, int32_t logLevel)
 
 | 参数 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| moduleId | 输入 | 用户模块ID，取值范围为`0xff00`~`0xffff`。 |
+| moduleId | 输入 | 用户模块ID，取值范围为`0xff00`~`0xffff`。如需校验运行日志级别，可传入`moduleId \| RUN_LOG_MASK`。 |
 | logLevel | 输入 | 日志级别，宏定义请参见[数据类型定义](#数据类型定义)。 |
 
 ### 返回值

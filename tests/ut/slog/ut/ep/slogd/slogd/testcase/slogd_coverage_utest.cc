@@ -49,56 +49,56 @@ typedef struct {
 
 typedef struct {
     int len;
-    char *data;
+    char* data;
 } DynamicLevelFileDataBuf;
 
 typedef struct {
     int32_t devId;
     int32_t moduleNum;
-    char *globalLevel;
-    char *eventLevel;
-    char *moduleLevel;
+    char* globalLevel;
+    char* eventLevel;
+    char* moduleLevel;
 } DynamicGetLevelInfo;
 
-LogRt CheckAppDirIfExist(const char *appLogPath);
-int32_t AppLogDirFilter(const ToolDirent *dir);
-int32_t AppLogFileFilter(const ToolDirent *dir);
-int32_t RemoveDir(const char *dir);
-void RemoveAppLogDir(int logType, const char *dir);
-LogRt ScanAppLog(const char *path, int logType);
-void *AppLogWatcher(const ArgPtr arg);
+LogRt CheckAppDirIfExist(const char* appLogPath);
+int32_t AppLogDirFilter(const ToolDirent* dir);
+int32_t AppLogFileFilter(const ToolDirent* dir);
+int32_t RemoveDir(const char* dir);
+void RemoveAppLogDir(int logType, const char* dir);
+LogRt ScanAppLog(const char* path, int logType);
+void* AppLogWatcher(const ArgPtr arg);
 void CreateThread(void);
 extern AppWatchThreadArg g_args[LOG_TYPE_NUM];
 extern char g_rootLogPath[CFG_LOGAGENT_PATH_MAX_LENGTH + 1U];
 
-LogRt ReadFileAll(const char *cfgFile, DynamicLevelFileDataBuf *dataBuf);
-LogRt WriteToSlogCfg(const char *cfgFile, DynamicLevelFileDataBuf fileBuf);
-LogRt SetSlogCfgLevel(const char *cfgFile, const char *cfgName, int level);
-void ToUpper(char *str);
-LogRt SetGlobalLogLevel(char *data, int32_t devId);
-LogRt SetModuleLogLevel(char *data, int32_t devId);
-LogRt SetEventLevelValue(char *data);
+LogRt ReadFileAll(const char* cfgFile, DynamicLevelFileDataBuf* dataBuf);
+LogRt WriteToSlogCfg(const char* cfgFile, DynamicLevelFileDataBuf fileBuf);
+LogRt SetSlogCfgLevel(const char* cfgFile, const char* cfgName, int level);
+void ToUpper(char* str);
+LogRt SetGlobalLogLevel(char* data, int32_t devId);
+LogRt SetModuleLogLevel(char* data, int32_t devId);
+LogRt SetEventLevelValue(char* data);
 LogRt SetLogLevelValue(LogCmdMsg data);
-int32_t ConstructModuleLevel(DynamicGetLevelInfo *level, const ConfList *listNode, bool isNewStyle);
-int32_t ConstructEventLevel(char *dst, const char *valueString);
-int32_t ConstructGlobalLevel(char *dst, const char *valueString, int32_t mask);
-int32_t FindLevelFunc(const Buff *node, ArgPtr arg, bool isNewStyle);
+int32_t ConstructModuleLevel(DynamicGetLevelInfo* level, const ConfList* listNode, bool isNewStyle);
+int32_t ConstructEventLevel(char* dst, const char* valueString);
+int32_t ConstructGlobalLevel(char* dst, const char* valueString, int32_t mask);
+int32_t FindLevelFunc(const Buff* node, ArgPtr arg, bool isNewStyle);
 }
 
-static const char *g_appSortBase = PATH_ROOT "/appsort";
+static const char* g_appSortBase = PATH_ROOT "/appsort";
 
-static void SendLevelCmd(toolMsgid qid, const char *cmd, uint32_t sleepUs)
+static void SendLevelCmd(toolMsgid qid, const char* cmd, uint32_t sleepUs)
 {
     LogCmdMsg msg;
     (void)memset_s(&msg, sizeof(msg), 0, sizeof(msg));
     msg.msgType = FORWARD_MSG_TYPE;
     msg.phyDevId = 0;
     (void)strcpy_s(msg.msgData, MSG_MAX_LEN, cmd);
-    (void)MsgQueueSend(qid, (const Buff *)&msg, MSG_MAX_LEN, false);
+    (void)MsgQueueSend(qid, (const Buff*)&msg, MSG_MAX_LEN, false);
     usleep(sleepUs);
     LogCmdMsg resp;
     (void)memset_s(&resp, sizeof(resp), 0, sizeof(resp));
-    while (MsgQueueRecv(qid, (Buff *)&resp, MSG_MAX_LEN, true, FEEDBACK_MSG_TYPE) == LOG_SUCCESS) {
+    while (MsgQueueRecv(qid, (Buff*)&resp, MSG_MAX_LEN, true, FEEDBACK_MSG_TYPE) == LOG_SUCCESS) {
         (void)memset_s(&resp, sizeof(resp), 0, sizeof(resp));
     }
 }
@@ -111,14 +111,14 @@ static void DynLevelShmMock(void)
     MOCKER(shmctl).stubs().will(invoke(shmctlStub));
 }
 
-static drvError_t DrvHdcGetCapacityZeroStub(struct drvHdcCapacity *capacity)
+static drvError_t DrvHdcGetCapacityZeroStub(struct drvHdcCapacity* capacity)
 {
     capacity->chanType = HDC_CHAN_TYPE_PCIE;
     capacity->maxSegment = 0U;
     return DRV_ERROR_NONE;
 }
 
-static drvError_t DrvHdcGetCapacityHugeStub(struct drvHdcCapacity *capacity)
+static drvError_t DrvHdcGetCapacityHugeStub(struct drvHdcCapacity* capacity)
 {
     capacity->chanType = HDC_CHAN_TYPE_PCIE;
     capacity->maxSegment = 0xFFFFFFFFU;
@@ -132,8 +132,7 @@ static void SendDataCb(uint32_t pid, uint32_t devId, int32_t timeout)
     (void)timeout;
 }
 
-class SLOGD_COVERAGE_UTEST : public testing::Test
-{
+class SLOGD_COVERAGE_UTEST : public testing::Test {
 protected:
     virtual void SetUp()
     {
@@ -169,7 +168,7 @@ protected:
 
 private:
     AppWatchThreadArg savedArgs_[LOG_TYPE_NUM] = {};
-    char savedRootPath_[CFG_LOGAGENT_PATH_MAX_LENGTH + 1U] = { 0 };
+    char savedRootPath_[CFG_LOGAGENT_PATH_MAX_LENGTH + 1U] = {0};
 };
 
 // ------------------------- log_config_common.c -------------------------
@@ -188,11 +187,11 @@ TEST_F(SLOGD_COVERAGE_UTEST, LogConfCheckPathCoverage)
 TEST_F(SLOGD_COVERAGE_UTEST, LogConfOpenFileCoverage)
 {
     system("cp " CONF_PATH " " SLOG_CONF_FILE_PATH);
-    FILE *fp = NULL;
+    FILE* fp = NULL;
     EXPECT_EQ(SUCCESS, LogConfOpenFile(&fp, NULL));
     LOG_CLOSE_FILE(fp);
 
-    const char *tmpConf = PATH_ROOT "/sub.conf";
+    const char* tmpConf = PATH_ROOT "/sub.conf";
     system("mkdir -p " PATH_ROOT);
     system("cp " CONF_PATH " " PATH_ROOT "/sub.conf");
     EXPECT_EQ(SUCCESS, LogConfOpenFile(&fp, tmpConf));
@@ -205,8 +204,8 @@ TEST_F(SLOGD_COVERAGE_UTEST, LogConfOpenFileCoverage)
 
 TEST_F(SLOGD_COVERAGE_UTEST, LogConfParseLineCoverage)
 {
-    char name[CONF_NAME_MAX_LEN + 1] = { 0 };
-    char val[CONF_VALUE_MAX_LEN + 1] = { 0 };
+    char name[CONF_NAME_MAX_LEN + 1] = {0};
+    char val[CONF_VALUE_MAX_LEN + 1] = {0};
     EXPECT_EQ(SUCCESS, LogConfParseLine("name=value", name, CONF_NAME_MAX_LEN, val, CONF_VALUE_MAX_LEN));
     EXPECT_STREQ("name", name);
     EXPECT_STREQ("value", val);
@@ -227,7 +226,7 @@ TEST_F(SLOGD_COVERAGE_UTEST, LogConfParseLineCoverage)
 
 TEST_F(SLOGD_COVERAGE_UTEST, GetSymbolCoverage)
 {
-    char symbol[SYMBOL_NAME_MAX_LEN + 1] = { 0 };
+    char symbol[SYMBOL_NAME_MAX_LEN + 1] = {0};
     EXPECT_EQ(SUCCESS, GetSymbol("[debug]", symbol, sizeof(symbol)));
     EXPECT_STREQ("debug", symbol);
 
@@ -236,9 +235,11 @@ TEST_F(SLOGD_COVERAGE_UTEST, GetSymbolCoverage)
     EXPECT_EQ(SUCCESS, GetSymbol("[]", symbol, sizeof(symbol)));
     EXPECT_EQ(0U, strlen(symbol));
     // symbol longer than SYMBOL_NAME_MAX_LEN-1 -> error
-    EXPECT_NE(SUCCESS, GetSymbol(
-        "[aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa]",
-        symbol, sizeof(symbol)));
+    EXPECT_NE(
+        SUCCESS, GetSymbol(
+                     "[aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                     "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa]",
+                     symbol, sizeof(symbol)));
     // not a block line -> SUCCESS, symbol left empty
     (void)memset_s(symbol, sizeof(symbol), 0, sizeof(symbol));
     EXPECT_EQ(SUCCESS, GetSymbol("no brackets here", symbol, sizeof(symbol)));
@@ -262,13 +263,13 @@ TEST_F(SLOGD_COVERAGE_UTEST, LogConfParseBlockCoverage)
 {
     // NOTE: each block's first "class=" line saves a zeroed confClass (logClassify=0) to index 0,
     // so the debug block (logClassify=0) must be parsed LAST, otherwise a later block clobbers index 0.
-    const char *conf = "garbageline_outer\n"
+    const char* conf = "garbageline_outer\n"
                        "[run]\nclass=system\ninput_rule=system\noutput_rule=buffer;1048576;2;2097152\n"
                        "storage_rule=0\n[unknownblock]\nclass=system\n"
                        "[debug]\nclass=system\ninput_rule=system\noutput_rule=file;1048576;2;2097152\n"
                        "storage_rule=24\n";
-    const char *confFile = PATH_ROOT "/block.conf";
-    FILE *fp = fopen(confFile, "w");
+    const char* confFile = PATH_ROOT "/block.conf";
+    FILE* fp = fopen(confFile, "w");
     ASSERT_TRUE(fp != NULL);
     fwrite(conf, 1, strlen(conf), fp);
     fclose(fp);
@@ -278,7 +279,7 @@ TEST_F(SLOGD_COVERAGE_UTEST, LogConfParseBlockCoverage)
     LogConfParseBlock(fp);
     fclose(fp);
 
-    LogConfClass *cls = LogConfGetClass(DEBUG_SYS_LOG_TYPE);
+    LogConfClass* cls = LogConfGetClass(DEBUG_SYS_LOG_TYPE);
     EXPECT_TRUE(cls != NULL);
     EXPECT_STREQ("system", cls->inputRule.inputClassify);
     EXPECT_EQ(DEBUG_SYS_LOG_TYPE, cls->logClassify);
@@ -288,7 +289,7 @@ TEST_F(SLOGD_COVERAGE_UTEST, LogConfParseBlockCoverage)
     EXPECT_EQ(2097152U, cls->outputRule.totalSize);
     EXPECT_EQ(24U * 3600U, cls->storageRule.storagePeriod);
 
-    LogConfClass *runCls = LogConfGetClass(RUN_SYS_LOG_TYPE);
+    LogConfClass* runCls = LogConfGetClass(RUN_SYS_LOG_TYPE);
     EXPECT_TRUE(runCls != NULL);
     EXPECT_EQ(1, runCls->outputRule.saveMode); // LOG_SAVE_BUFFER
 
@@ -305,15 +306,29 @@ TEST_F(SLOGD_COVERAGE_UTEST, LogConfGetClassCoverage)
     EXPECT_EQ(0U, GetErrLogNum());
 }
 
-// ------------------------- log_config_group.c (#else branch) -------------------------
+// ------------------------- log_config_group.c -------------------------
 TEST_F(SLOGD_COVERAGE_UTEST, LogConfGroupBranchCoverage)
 {
+#ifdef GROUP_LOG
+    LogConfGroupSetSwitch(true);
+    LogConfGroupInit(NULL);
+    EXPECT_FALSE(LogConfGroupGetSwitch());
+    EXPECT_TRUE(LogConfGroupGetInfo() != NULL);
+    ResetErrLog();
+
+    LogConfGroupSetSwitch(true);
+    LogConfGroupInit("/tmp/nonexistent_group.conf");
+    EXPECT_FALSE(LogConfGroupGetSwitch());
+    EXPECT_TRUE(LogConfGroupGetInfo() != NULL);
+    ResetErrLog();
+#else
     EXPECT_FALSE(LogConfGroupGetSwitch());
     LogConfGroupInit(NULL);
     LogConfGroupInit("/tmp/nonexistent_group.conf");
     EXPECT_FALSE(LogConfGroupGetSwitch());
     EXPECT_TRUE(LogConfGroupGetInfo() == NULL);
     EXPECT_EQ(0U, GetErrLogNum());
+#endif
 }
 
 // ------------------------- slogd_write_limit.c -------------------------
@@ -324,9 +339,9 @@ TEST_F(SLOGD_COVERAGE_UTEST, WriteFileLimitSwitchOffCoverage)
     SlogdConfigMgrInit();
     EXPECT_FALSE(SlogdConfigMgrGetWriteFileLimit());
 
-    WriteFileLimit *limit = (WriteFileLimit *)0x1;
+    WriteFileLimit* limit = (WriteFileLimit*)0x1;
     EXPECT_EQ(LOG_SUCCESS, WriteFileLimitInit(&limit, DEBUG_LOG, 1024, 0));
-    EXPECT_TRUE(limit == (WriteFileLimit *)0x1); // not allocated when switch off
+    EXPECT_TRUE(limit == (WriteFileLimit*)0x1); // not allocated when switch off
     WriteFileLimitUnInit(&limit);
     EXPECT_TRUE(WriteFileLimitCheck(NULL, 100, "label"));
     SlogdConfigMgrExit();
@@ -343,9 +358,9 @@ TEST_F(SLOGD_COVERAGE_UTEST, WriteFileLimitSwitchOnCoverage)
     SlogdConfigMgrInit();
     EXPECT_TRUE(SlogdConfigMgrGetWriteFileLimit());
 
-    WriteFileLimit *limit = NULL;
+    WriteFileLimit* limit = NULL;
     EXPECT_EQ(LOG_INVALID_PTR, WriteFileLimitInit(NULL, DEBUG_LOG, 1024, 1024));
-    limit = (WriteFileLimit *)0x1; // already-initialized pointer
+    limit = (WriteFileLimit*)0x1; // already-initialized pointer
     EXPECT_EQ(LOG_INVALID_PARAM, WriteFileLimitInit(&limit, DEBUG_LOG, 1024, 1024));
     limit = NULL;
     EXPECT_EQ(LOG_INVALID_PARAM, WriteFileLimitInit(&limit, (int32_t)LOG_TYPE_NUM, 1024, 1024));
@@ -431,7 +446,7 @@ TEST_F(SLOGD_COVERAGE_UTEST, DrvBufWriteCoverage)
 
     // large buffer -> subcontract into multiple packets
     size_t bigLen = 600 * 1024; // 600KB > 512KB max segment
-    char *bigBuf = (char *)calloc(1, bigLen);
+    char* bigBuf = (char*)calloc(1, bigLen);
     ASSERT_TRUE(bigBuf != NULL);
     memset(bigBuf, 'A', bigLen);
     EXPECT_EQ(0, DrvBufWrite((HDC_SESSION)0x1000, bigBuf, bigLen));
@@ -534,7 +549,7 @@ TEST_F(SLOGD_COVERAGE_UTEST, ProcEscapeThenLogCoverage)
     }
     // binary head-style message (valid magic + version)
     {
-        char headBuf[256] = { 0 };
+        char headBuf[256] = {0};
         LogHead head;
         (void)memset_s(&head, sizeof(head), 0, sizeof(head));
         head.magic = HEAD_MAGIC;
@@ -586,13 +601,13 @@ TEST_F(SLOGD_COVERAGE_UTEST, SlogdApplogSortFileFuncCoverage)
     (void)strcpy_s(dempty.d_name, sizeof(dempty.d_name), "device-app-empty");
     (void)strcpy_s(dnonexist.d_name, sizeof(dnonexist.d_name), "device-app-nonexist");
 
-    const ToolDirent *pa = &da;
-    const ToolDirent *pb = &db;
+    const ToolDirent* pa = &da;
+    const ToolDirent* pb = &db;
 
     // null input cases
     EXPECT_EQ(1, SlogdApplogSortFileFunc(NULL, &pa, &pb));
     EXPECT_EQ(1, SlogdApplogSortFileFunc(g_appSortBase, NULL, &pb));
-    const ToolDirent *nullA = NULL;
+    const ToolDirent* nullA = NULL;
     EXPECT_EQ(1, SlogdApplogSortFileFunc(g_appSortBase, &nullA, &pb));
 
     // both dirs with files -> compare newest file mtime
@@ -624,7 +639,7 @@ TEST_F(SLOGD_COVERAGE_UTEST, SlogdApplogSortFileFuncCoverage)
 TEST_F(SLOGD_COVERAGE_UTEST, AppLogDirectoryValidationAndFilteringCoverage)
 {
     EXPECT_EQ(ARGV_NULL, CheckAppDirIfExist(nullptr));
-    const char *watchPath = PATH_ROOT "/watch-debug";
+    const char* watchPath = PATH_ROOT "/watch-debug";
     EXPECT_EQ(SUCCESS, CheckAppDirIfExist(watchPath));
     EXPECT_EQ(0, access(watchPath, F_OK));
     EXPECT_EQ(SUCCESS, CheckAppDirIfExist(watchPath));
@@ -649,7 +664,7 @@ TEST_F(SLOGD_COVERAGE_UTEST, AppLogDirectoryValidationAndFilteringCoverage)
 
 TEST_F(SLOGD_COVERAGE_UTEST, AppLogDirectoryRemovalAndScanCoverage)
 {
-    const char *watchPath = PATH_ROOT "/watch-remove";
+    const char* watchPath = PATH_ROOT "/watch-remove";
     ASSERT_EQ(0, mkdir(watchPath, 0750));
     (void)strcpy_s(g_args[DEBUG_LOG].appLogPath, sizeof(g_args[DEBUG_LOG].appLogPath), watchPath);
 
@@ -658,13 +673,11 @@ TEST_F(SLOGD_COVERAGE_UTEST, AppLogDirectoryRemovalAndScanCoverage)
     ResetErrLog();
 
     for (int32_t i = 0; i < 3; i++) {
-        char dirName[128] = { 0 };
-        char fileName[160] = { 0 };
-        ASSERT_GT(snprintf_s(dirName, sizeof(dirName), sizeof(dirName) - 1,
-                             "%s/device-app-%d", watchPath, i), 0);
+        char dirName[128] = {0};
+        char fileName[160] = {0};
+        ASSERT_GT(snprintf_s(dirName, sizeof(dirName), sizeof(dirName) - 1, "%s/device-app-%d", watchPath, i), 0);
         ASSERT_EQ(0, mkdir(dirName, 0750));
-        ASSERT_GT(snprintf_s(fileName, sizeof(fileName), sizeof(fileName) - 1,
-                             "%s/device-app-%d.log", dirName, i), 0);
+        ASSERT_GT(snprintf_s(fileName, sizeof(fileName), sizeof(fileName) - 1, "%s/device-app-%d.log", dirName, i), 0);
         int32_t fd = open(fileName, O_CREAT | O_WRONLY, 0600);
         ASSERT_GE(fd, 0);
         ASSERT_EQ(1, write(fd, "x", 1));
@@ -672,11 +685,11 @@ TEST_F(SLOGD_COVERAGE_UTEST, AppLogDirectoryRemovalAndScanCoverage)
     }
     EXPECT_EQ(SUCCESS, ScanAppLog(watchPath, DEBUG_LOG));
 
-    const char *directDir = PATH_ROOT "/watch-direct";
+    const char* directDir = PATH_ROOT "/watch-direct";
     ASSERT_EQ(0, mkdir(directDir, 0750));
-    char directFile[160] = { 0 };
-    ASSERT_GT(snprintf_s(directFile, sizeof(directFile), sizeof(directFile) - 1,
-                         "%s/device-app-direct.log", directDir), 0);
+    char directFile[160] = {0};
+    ASSERT_GT(
+        snprintf_s(directFile, sizeof(directFile), sizeof(directFile) - 1, "%s/device-app-direct.log", directDir), 0);
     int32_t fd = open(directFile, O_CREAT | O_WRONLY, 0600);
     ASSERT_GE(fd, 0);
     ASSERT_EQ(0, close(fd));
@@ -708,25 +721,25 @@ TEST_F(SLOGD_COVERAGE_UTEST, AppLogWatcherSetupAndExitCoverage)
 
 TEST_F(SLOGD_COVERAGE_UTEST, DynamicLevelFileReadAndUpdateCoverage)
 {
-    DynamicLevelFileDataBuf data = { 0, nullptr };
+    DynamicLevelFileDataBuf data = {0, nullptr};
     EXPECT_EQ(ARGV_NULL, ReadFileAll(nullptr, &data));
     EXPECT_EQ(ARGV_NULL, ReadFileAll(SLOG_CONF_FILE_PATH, nullptr));
     EXPECT_EQ(GET_CONF_FILEPATH_FAILED, ReadFileAll(PATH_ROOT "/missing.conf", &data));
 
-    const char *invalidPath = PATH_ROOT "/dynamic.txt";
-    FILE *fp = fopen(invalidPath, "w");
+    const char* invalidPath = PATH_ROOT "/dynamic.txt";
+    FILE* fp = fopen(invalidPath, "w");
     ASSERT_NE(nullptr, fp);
     ASSERT_GT(fputs("invalid", fp), 0);
     ASSERT_EQ(0, fclose(fp));
     EXPECT_EQ(CONF_FILEPATH_INVALID, ReadFileAll(invalidPath, &data));
 
-    const char *emptyPath = PATH_ROOT "/empty.conf";
+    const char* emptyPath = PATH_ROOT "/empty.conf";
     fp = fopen(emptyPath, "w");
     ASSERT_NE(nullptr, fp);
     ASSERT_EQ(0, fclose(fp));
     EXPECT_EQ(READ_FILE_ERR, ReadFileAll(emptyPath, &data));
 
-    const char *configPath = PATH_ROOT "/dynamic.conf";
+    const char* configPath = PATH_ROOT "/dynamic.conf";
     fp = fopen(configPath, "w");
     ASSERT_NE(nullptr, fp);
     ASSERT_GT(fputs("# dynamic coverage\nglobal_level=3 # keep\nSLOG=2\n", fp), 0);
@@ -735,7 +748,7 @@ TEST_F(SLOGD_COVERAGE_UTEST, DynamicLevelFileReadAndUpdateCoverage)
     ASSERT_NE(nullptr, data.data);
     EXPECT_NE(nullptr, strstr(data.data, "global_level=3"));
     free(data.data);
-    data = { 4, const_cast<char *>("noop") };
+    data = {4, const_cast<char*>("noop")};
     EXPECT_EQ(SUCCESS, WriteToSlogCfg(configPath, data));
 
     fp = fopen(configPath, "w");
@@ -791,10 +804,10 @@ TEST_F(SLOGD_COVERAGE_UTEST, DynamicLevelCommandAndFormattingCoverage)
     (void)strcpy_s(command.msgData, sizeof(command.msgData), "SetLogLevel(9)[info]");
     EXPECT_EQ(LEVEL_INFO_ILLEGAL, SetLogLevelValue(command));
 
-    char globalLevel[GLOBAL_ENABLE_MAX_LEN] = { 0 };
-    char eventLevel[GLOBAL_ENABLE_MAX_LEN] = { 0 };
-    char moduleLevel[INVLID_MOUDLE_ID * SINGLE_MODULE_MAX_LEN] = { 0 };
-    DynamicGetLevelInfo level = { 0, 0, globalLevel, eventLevel, moduleLevel };
+    char globalLevel[GLOBAL_ENABLE_MAX_LEN] = {0};
+    char eventLevel[GLOBAL_ENABLE_MAX_LEN] = {0};
+    char moduleLevel[INVLID_MOUDLE_ID * SINGLE_MODULE_MAX_LEN] = {0};
+    DynamicGetLevelInfo level = {0, 0, globalLevel, eventLevel, moduleLevel};
     ConfList node = {};
     (void)strcpy_s(node.confName, sizeof(node.confName), "SLOG");
     (void)strcpy_s(node.confValue, sizeof(node.confValue), "2");
@@ -818,7 +831,7 @@ TEST_F(SLOGD_COVERAGE_UTEST, DynamicLevelCommandAndFormattingCoverage)
     EXPECT_STREQ("ERROR", globalLevel);
 
     EXPECT_EQ(SYS_ERROR, FindLevelFunc(nullptr, &level, false));
-    EXPECT_EQ(SYS_ERROR, FindLevelFunc(reinterpret_cast<const Buff *>(&node), nullptr, false));
+    EXPECT_EQ(SYS_ERROR, FindLevelFunc(reinterpret_cast<const Buff*>(&node), nullptr, false));
     ResetErrLog();
 }
 
@@ -833,14 +846,14 @@ TEST_F(SLOGD_COVERAGE_UTEST, LogToFileMiscCoverage)
     (void)memset_s(&subInfo, sizeof(subInfo), 0, sizeof(subInfo));
     (void)strcpy_s(subInfo.filePath, sizeof(subInfo.filePath), PATH_ROOT "/logdir");
     (void)strcpy_s(subInfo.fileName, sizeof(subInfo.fileName), "device-os_x.log");
-    char full[MAX_FULLPATH_LEN + 1] = { 0 };
+    char full[MAX_FULLPATH_LEN + 1] = {0};
     EXPECT_EQ(OK, FilePathSplice(&subInfo, full, sizeof(full) - 1U));
     EXPECT_TRUE(strstr(full, "device-os_x.log") != NULL);
 
     EXPECT_EQ(NOK, LogAgentRemoveFile(NULL));
     EXPECT_EQ(NOK, LogAgentRemoveFile(PATH_ROOT "/no_such_file.log"));
-    const char *tmpFile = PATH_ROOT "/tmp_remove.log";
-    FILE *fp = fopen(tmpFile, "w");
+    const char* tmpFile = PATH_ROOT "/tmp_remove.log";
+    FILE* fp = fopen(tmpFile, "w");
     ASSERT_TRUE(fp != NULL);
     fwrite("x", 1, 1, fp);
     fclose(fp);
@@ -914,18 +927,18 @@ TEST_F(SLOGD_COVERAGE_UTEST, SessionNodeListCoverage)
 {
     EXPECT_EQ(SUCCESS, InitSessionList());
     EXPECT_TRUE(IsSessionNodeListNull());
-    EXPECT_TRUE(GetSessionNode(100, GLOBAL_MAX_DEV_NUM) == NULL); // invalid devId
+    EXPECT_TRUE(GetSessionNode(100, GLOBAL_MAX_DEV_NUM) == NULL);        // invalid devId
     EXPECT_TRUE(GetDeletedSessionNode(100, GLOBAL_MAX_DEV_NUM) == NULL);
-    EXPECT_TRUE(PopDeletedSessionNode() == NULL); // empty
+    EXPECT_TRUE(PopDeletedSessionNode() == NULL);                        // empty
     EXPECT_EQ(ARGV_NULL, InsertSessionNode(0, 100, GLOBAL_MAX_DEV_NUM)); // invalid devId
     EXPECT_EQ(ARGV_NULL, DeleteSessionNode(0, 100, GLOBAL_MAX_DEV_NUM)); // invalid devId
     EXPECT_EQ(ARGV_NULL, DeleteSessionNode(0, 100, -1));
-    EXPECT_EQ(ARGV_NULL, DeleteSessionNode(0, 100, 0)); // empty list, valid devId
+    EXPECT_EQ(ARGV_NULL, DeleteSessionNode(0, 100, 0));                  // empty list, valid devId
 
     EXPECT_EQ(SUCCESS, InsertSessionNode(0x100, 100, 0));
     EXPECT_EQ(SUCCESS, InsertSessionNode(0x101, 101, 0));
     EXPECT_FALSE(IsSessionNodeListNull());
-    SessionNode *n = GetSessionNode(100, 0);
+    SessionNode* n = GetSessionNode(100, 0);
     EXPECT_TRUE(n != NULL);
     EXPECT_EQ(100, n->pid);
     EXPECT_TRUE(GetSessionNode(999, 0) == NULL);
@@ -938,11 +951,11 @@ TEST_F(SLOGD_COVERAGE_UTEST, SessionNodeListCoverage)
     // delete non-existent (list empty now)
     EXPECT_EQ(ARGV_NULL, DeleteSessionNode(0x102, 102, 0));
     // popped deleted node should exist
-    SessionNode *popped = PopDeletedSessionNode();
+    SessionNode* popped = PopDeletedSessionNode();
     EXPECT_TRUE(popped != NULL);
-    SessionNode *iter = popped;
+    SessionNode* iter = popped;
     while (iter != NULL) {
-        SessionNode *next = iter->next;
+        SessionNode* next = iter->next;
         free(iter);
         iter = next;
     }
@@ -955,27 +968,27 @@ TEST_F(SLOGD_COVERAGE_UTEST, SessionPushPopListCoverage)
 {
     EXPECT_EQ(SUCCESS, InitSessionList());
     // push single nodes
-    SessionNode *s1 = (SessionNode *)calloc(1, sizeof(SessionNode));
-    SessionNode *s2 = (SessionNode *)calloc(1, sizeof(SessionNode));
+    SessionNode* s1 = (SessionNode*)calloc(1, sizeof(SessionNode));
+    SessionNode* s2 = (SessionNode*)calloc(1, sizeof(SessionNode));
     ASSERT_TRUE(s1 != NULL && s2 != NULL);
     s1->pid = 1;
     s2->pid = 2;
     PushDeletedSessionNode(s1); // list: [s1]
     PushDeletedSessionNode(s2); // list: [s2, s1]
     // push a node which itself is a list (next != NULL)
-    SessionNode *s3 = (SessionNode *)calloc(1, sizeof(SessionNode));
-    SessionNode *s4 = (SessionNode *)calloc(1, sizeof(SessionNode));
+    SessionNode* s3 = (SessionNode*)calloc(1, sizeof(SessionNode));
+    SessionNode* s4 = (SessionNode*)calloc(1, sizeof(SessionNode));
     ASSERT_TRUE(s3 != NULL && s4 != NULL);
     s3->pid = 3;
     s4->pid = 4;
     s3->next = s4;
     PushDeletedSessionNode(s3); // appended to tail
 
-    SessionNode *head = PopDeletedSessionNode();
+    SessionNode* head = PopDeletedSessionNode();
     EXPECT_TRUE(head != NULL);
-    SessionNode *iter = head;
+    SessionNode* iter = head;
     while (iter != NULL) {
-        SessionNode *next = iter->next;
+        SessionNode* next = iter->next;
         free(iter);
         iter = next;
     }
@@ -988,7 +1001,7 @@ TEST_F(SLOGD_COVERAGE_UTEST, HandleDeletedSessionNodeCoverage)
 {
     EXPECT_EQ(SUCCESS, InitSessionList());
     // node that times out (timeout=1 -> freed, DevLogReportEnd called)
-    SessionNode *dn = (SessionNode *)calloc(1, sizeof(SessionNode));
+    SessionNode* dn = (SessionNode*)calloc(1, sizeof(SessionNode));
     ASSERT_TRUE(dn != NULL);
     dn->pid = 300;
     dn->devId = 0;
@@ -999,7 +1012,7 @@ TEST_F(SLOGD_COVERAGE_UTEST, HandleDeletedSessionNodeCoverage)
     EXPECT_TRUE(PopDeletedSessionNode() == NULL);
 
     // node that does NOT time out (stays in list)
-    SessionNode *dn2 = (SessionNode *)calloc(1, sizeof(SessionNode));
+    SessionNode* dn2 = (SessionNode*)calloc(1, sizeof(SessionNode));
     ASSERT_TRUE(dn2 != NULL);
     dn2->pid = 301;
     dn2->devId = 0;
@@ -1059,27 +1072,27 @@ TEST_F(SLOGD_COVERAGE_UTEST, DynamicSetLevelCoverage)
     EXPECT_EQ(LOG_SUCCESS, LogConfInit());
     LogRecordSigNo(0); // make sure the worker thread is willing to run
     EXPECT_EQ(LOG_SUCCESS, SlogdLevelInit(-1, 0, FALSE));
-    usleep(300000); // let thread init module arr, handle level change, then block on recv
+    usleep(300000);    // let thread init module arr, handle level change, then block on recv
 
     toolMsgid qid = -1;
     EXPECT_EQ(LOG_SUCCESS, MsgQueueOpen(&qid));
 
     SendLevelCmd(qid, "GetLogLevel", 80000);
     SendLevelCmd(qid, "GetLogLevelTableFormat", 80000);
-    SendLevelCmd(qid, "SetLogLevel(0)[info]", 250000);          // global success path
-    SendLevelCmd(qid, "SetLogLevel(1)[SLOG:debug]", 120000);    // module success path
-    SendLevelCmd(qid, "SetLogLevel(2)[enable]", 100000);        // event success path
-    SendLevelCmd(qid, "SetLogLevel(9)[info]", 50000);           // invalid mode
-    SendLevelCmd(qid, "SetLogLevel(0)[badlevel]", 50000);       // invalid global level
-    SendLevelCmd(qid, "SetLogLevel(1)[BADMOD:debug]", 50000);   // invalid module name
-    SendLevelCmd(qid, "SetLogLevel(2)[badval]", 50000);         // invalid event value
-    SendLevelCmd(qid, "SetLogLevel(0)[info", 50000);            // malformed (no ')')
-    SendLevelCmd(qid, "BadCommand", 50000);                     // invalid prefix
+    SendLevelCmd(qid, "SetLogLevel(0)[info]", 250000);        // global success path
+    SendLevelCmd(qid, "SetLogLevel(1)[SLOG:debug]", 120000);  // module success path
+    SendLevelCmd(qid, "SetLogLevel(2)[enable]", 100000);      // event success path
+    SendLevelCmd(qid, "SetLogLevel(9)[info]", 50000);         // invalid mode
+    SendLevelCmd(qid, "SetLogLevel(0)[badlevel]", 50000);     // invalid global level
+    SendLevelCmd(qid, "SetLogLevel(1)[BADMOD:debug]", 50000); // invalid module name
+    SendLevelCmd(qid, "SetLogLevel(2)[badval]", 50000);       // invalid event value
+    SendLevelCmd(qid, "SetLogLevel(0)[info", 50000);          // malformed (no ')')
+    SendLevelCmd(qid, "BadCommand", 50000);                   // invalid prefix
 
     LogRecordSigNo(15);
     SendLevelCmd(qid, "GetLogLevel", 200000); // unblock recv so the worker checks signal and exits
     MsgQueueRemove();
-    usleep(100000); // ensure any blocked worker exits after queue removal
+    usleep(100000);                           // ensure any blocked worker exits after queue removal
     SlogdLevelExit();
     system("rm " DEFAULT_LOG_WORKSPACE "/" LEVEL_NOTIFY_FILE);
     ResetErrLog();

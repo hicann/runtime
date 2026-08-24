@@ -600,24 +600,45 @@ int32_t CheckLogLevel(int32_t moduleId, int32_t logLevel)
 static const uint32_t ACLLOG_USER_MODULE_ID_MIN = 0xff00U;
 static const uint32_t ACLLOG_USER_MODULE_ID_MAX = 0xffffU;
 
-static bool IsAcllogUserModuleId(int32_t moduleId)
+static uint32_t GetAcllogModuleId(int32_t moduleId) { return static_cast<uint32_t>(moduleId) & MODULE_ID_MASK; }
+
+static uint32_t GetAcllogLogTypeMask(int32_t moduleId) { return static_cast<uint32_t>(moduleId) & LOG_TYPE_MASK; }
+
+static bool IsAcllogLogTypeMask(uint32_t typeMask)
 {
-    return (moduleId >= static_cast<int32_t>(ACLLOG_USER_MODULE_ID_MIN)) &&
-           (moduleId <= static_cast<int32_t>(ACLLOG_USER_MODULE_ID_MAX));
+    return (typeMask == 0U) || (typeMask == DEBUG_LOG_MASK) || (typeMask == RUN_LOG_MASK) ||
+           (typeMask == SECURITY_LOG_MASK) || (typeMask == STDOUT_LOG_MASK);
 }
 
-static uint32_t GetAcllogModuleId(int32_t moduleId) { return static_cast<uint32_t>(moduleId) & MODULE_ID_MASK; }
+static bool IsAcllogUserModuleId(uint32_t moduleId)
+{
+    return (moduleId >= ACLLOG_USER_MODULE_ID_MIN) && (moduleId <= ACLLOG_USER_MODULE_ID_MAX);
+}
+
+static bool IsAcllogValidModuleId(int32_t moduleId)
+{
+    if (moduleId < 0) {
+        return false;
+    }
+    const uint32_t realModuleId = GetAcllogModuleId(moduleId);
+    const uint32_t typeMask = GetAcllogLogTypeMask(moduleId);
+    if (typeMask == 0U) {
+        return realModuleId <= ACLLOG_USER_MODULE_ID_MAX;
+    }
+    return IsAcllogUserModuleId(realModuleId) && IsAcllogLogTypeMask(typeMask);
+}
 
 extern "C" LOG_FUNC_VISIBILITY __attribute((weak)) int32_t acllogCheckDebugLevel(int32_t moduleId, int32_t logLevel)
 {
-    if (moduleId < 0) {
+    if (!IsAcllogValidModuleId(moduleId)) {
         return FALSE;
     }
-    if (IsAcllogUserModuleId(moduleId)) {
+    const uint32_t typeMask = GetAcllogLogTypeMask(moduleId);
+    if (IsAcllogUserModuleId(GetAcllogModuleId(moduleId))) {
         if (logLevel == DLOG_EVENT) {
             return GetGlobalEnableEventVar() ? TRUE : FALSE;
         }
-        const int32_t moduleLevel = GetGlobalLogTypeLevelVar(static_cast<uint32_t>(moduleId) & LOG_TYPE_MASK);
+        const int32_t moduleLevel = GetGlobalLogTypeLevelVar(typeMask);
         if ((logLevel < moduleLevel) || (logLevel >= LOG_MAX_LEVEL)) {
             return FALSE;
         }
@@ -629,10 +650,11 @@ extern "C" LOG_FUNC_VISIBILITY __attribute((weak)) int32_t acllogCheckDebugLevel
 extern "C" LOG_FUNC_VISIBILITY __attribute((weak)) void acllogVaList(
     int32_t moduleId, int32_t level, const char* fmt, va_list list)
 {
-    if ((moduleId < 0) || (moduleId > static_cast<int32_t>(ACLLOG_USER_MODULE_ID_MAX))) {
+    if (!IsAcllogValidModuleId(moduleId)) {
         SELF_LOG_WARN(
-            "acllogRecord/acllogVaList input moduleId=%d is illegal, valid range is [0, %u], log recording failed.",
-            moduleId, ACLLOG_USER_MODULE_ID_MAX);
+            "acllogRecord/acllogVaList input moduleId=%d is illegal, unmasked moduleId range is [0, 0x%x], masked user "
+            "moduleId range is [0x%x, 0x%x], log recording failed.",
+            moduleId, ACLLOG_USER_MODULE_ID_MAX, ACLLOG_USER_MODULE_ID_MIN, ACLLOG_USER_MODULE_ID_MAX);
         return;
     }
     if (g_slogFuncInfo[DLOG_VA_LIST].handle != nullptr) {
@@ -645,7 +667,7 @@ extern "C" LOG_FUNC_VISIBILITY __attribute((weak)) void acllogVaList(
 
     LogMsgArg msgArg = {
         GetAcllogModuleId(moduleId),
-        static_cast<uint32_t>(moduleId) & LOG_TYPE_MASK,
+        GetAcllogLogTypeMask(moduleId),
         level,
         0,
         {APPLICATION, 0, 0, 0, {'\0'}},

@@ -1099,6 +1099,8 @@ TEST_F(EP_ALOG_HOST_FUNC_UTEST, AcllogCheckDebugLogLevelInterface)
     EXPECT_EQ(1, acllogCheckDebugLevel(0xffff, DLOG_WARN));
     EXPECT_EQ(1, acllogCheckDebugLevel(0xffff, DLOG_ERROR));
     EXPECT_EQ(0, acllogCheckDebugLevel(0xff00, DLOG_NULL + 1));
+    EXPECT_EQ(1, acllogCheckDebugLevel(0xff00 | RUN_LOG_MASK, DLOG_INFO));
+    EXPECT_EQ(0, acllogCheckDebugLevel(0x1 | RUN_LOG_MASK, DLOG_INFO));
 
     DlogDestructor();
     unsetenv("ASCEND_GLOBAL_LOG_LEVEL");
@@ -1116,6 +1118,23 @@ TEST_F(EP_ALOG_HOST_FUNC_UTEST, AcllogPrintUserModuleId)
 
     DlogDestructor();
     EXPECT_EQ(2, DlogCheckHostPrintNum(PATH_ROOT, "debug"));
+    unsetenv("ASCEND_GLOBAL_LOG_LEVEL");
+    unsetenv("ASCEND_PROCESS_LOG_PATH");
+}
+
+TEST_F(EP_ALOG_HOST_FUNC_UTEST, AcllogPrintUserModuleIdToRunLogWithMask)
+{
+    setenv("ASCEND_GLOBAL_LOG_LEVEL", "0", 1);
+    setenv("ASCEND_PROCESS_LOG_PATH", PATH_ROOT, 1);
+    DlogConstructor();
+
+    const int32_t runLogModuleId = 0xff00 | RUN_LOG_MASK;
+    acllogRecord(runLogModuleId, DLOG_INFO, "user module run log %d", 1);
+    CallAcllogVaList(runLogModuleId, DLOG_WARN, "user va run log %d", 2);
+
+    DlogDestructor();
+    EXPECT_EQ(0, DlogCheckHostPrintNum(PATH_ROOT, "debug"));
+    EXPECT_EQ(2, DlogCheckHostPrintNum(PATH_ROOT, "run"));
     unsetenv("ASCEND_GLOBAL_LOG_LEVEL");
     unsetenv("ASCEND_PROCESS_LOG_PATH");
 }
