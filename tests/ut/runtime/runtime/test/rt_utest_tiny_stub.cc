@@ -120,6 +120,8 @@ TEST_F(TinyStubTest, api_c_stub)
     EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ret = rtFusionLaunch(nullptr, nullptr, nullptr);
     EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    ret = rtDeviceTaskAbort(0, 0U);
+    EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ret = rtStreamTaskClean(nullptr);
     EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ret = rtGetBinaryDeviceBaseAddr(nullptr, nullptr);

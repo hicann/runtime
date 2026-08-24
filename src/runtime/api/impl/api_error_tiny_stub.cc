@@ -138,6 +138,13 @@ rtError_t ApiErrorDecorator::StreamTaskAbort(Stream* const stm)
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
+rtError_t ApiErrorDecorator::DeviceTaskAbort(const int32_t devId, const uint32_t timeout)
+{
+    UNUSED(devId);
+    UNUSED(timeout);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
 rtError_t ApiErrorDecorator::StreamRecover(Stream* const stm)
 {
     UNUSED(stm);

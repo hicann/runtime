@@ -33,7 +33,6 @@ namespace cce {
 namespace runtime {
 constexpr int16_t MODEL_SCH_GROUP_ID_MIN = 0;
 constexpr int16_t MODEL_SCH_GROUP_ID_MAX = 4;
-constexpr uint32_t TASK_ABORT_TIMEOUT_MAX = (36 * 60 * 1000U); // 36min
 constexpr uint32_t HUGE1G_PAGE = 2U;
 constexpr size_t MAX_SHAPE_INFO_SIZE = 1024U * 64U;
 constexpr uint32_t DEVICE_TYPE = 1U;
@@ -1893,12 +1892,13 @@ rtError_t ApiErrorDecorator::HostRegister(void* ptr, uint64_t size, rtHostRegist
         ptr, RT_ERROR_INVALID_VALUE, "Registering the host memory as device-accessible memory");
     ZERO_RETURN_AND_MSG_OUTER_WITH_FUNC_DESC(size, "Registering the host memory as device-accessible memory");
     constexpr uint32_t validFlags = RT_HOST_REGISTER_IOMEMORY | RT_HOST_REGISTER_READONLY;
-    if ((static_cast<uint32_t>(type) & (~validFlags)) != 0U) {
-        RT_LOG(
-            RT_LOG_WARNING, "Current type=%u is not supported. Valid flags are combinations of [%u, %u] or 0", type,
-            RT_HOST_REGISTER_IOMEMORY, RT_HOST_REGISTER_READONLY);
-        return RT_ERROR_FEATURE_NOT_SUPPORT;
-    }
+    const bool isValidFlag = ((static_cast<uint32_t>(type) & (~validFlags)) == 0U);
+    COND_RETURN_AND_MSG_OUTER(
+        !isValidFlag, RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1011, "Host memory address registration",
+        static_cast<uint32_t>(type), "type",
+        "Valid values are ACL_HOST_REGISTER_MAPPED(0), ACL_HOST_REGISTER_IOMEMORY(0x04), "
+        "and ACL_HOST_REGISTER_READONLY(0x08). Multiple flags can be combined using bitwise-OR('|')");
+
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
         devPtr, RT_ERROR_INVALID_VALUE, "Registering the host memory as device-accessible memory");
 
@@ -3380,34 +3380,6 @@ rtError_t ApiErrorDecorator::DeviceSynchronize(const int32_t timeout)
     const rtError_t error = impl_->DeviceSynchronize(timeout);
     ERROR_RETURN(error, "Device synchronize failed.");
     return error;
-}
-
-rtError_t ApiErrorDecorator::DeviceTaskAbort(const int32_t devId, const uint32_t timeout)
-{
-    Runtime* const rt = Runtime::Instance();
-    const driverType_t rawDrvType = rt->GetDriverType();
-    Driver* const rawDrv = rt->driverFactory_.GetDriver(rawDrvType);
-    NULL_PTR_RETURN_MSG(rawDrv, RT_ERROR_DRV_NULL);
-    int32_t deviceCnt;
-    int32_t realDeviceId;
-    COND_RETURN_WITH_NOLOG(
-        !IS_SUPPORT_CHIP_FEATURE(rt->GetChipType(), RtOptionalFeatureType::RT_FEATURE_DFX_FAST_RECOVER),
-        ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
-        (timeout > TASK_ABORT_TIMEOUT_MAX), RT_ERROR_INVALID_VALUE, "Stopping all tasks running on the current device",
-        timeout, "[0, " + std::to_string(TASK_ABORT_TIMEOUT_MAX) + "]");
-
-    rtError_t error = rt->ChgUserDevIdToDeviceId(static_cast<uint32_t>(devId), RtPtrToPtr<uint32_t*>(&realDeviceId));
-    COND_RETURN_ERROR(
-        error != RT_ERROR_NONE, error, "Failed to convert the user device ID %d to driver device ID.", devId);
-
-    error = rawDrv->GetDeviceCount(&deviceCnt);
-    ERROR_RETURN_MSG_CALL(ERR_MODULE_DRV, error, "Get device cnt failed, retCode=%#x", static_cast<uint32_t>(error));
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
-        ((realDeviceId < 0) || (realDeviceId >= deviceCnt)), RT_ERROR_DEVICE_ID,
-        "Stopping all tasks running on the current device", realDeviceId, "[0, " + std::to_string(deviceCnt) + ")");
-
-    return impl_->DeviceTaskAbort(realDeviceId, timeout);
 }
 
 rtError_t ApiErrorDecorator::SnapShotProcessLock() { return impl_->SnapShotProcessLock(); }

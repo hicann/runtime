@@ -24,6 +24,7 @@
 
 namespace cce {
 namespace runtime {
+constexpr uint32_t TASK_ABORT_TIMEOUT_MAX = (36 * 60 * 1000U); // 36min
 static string g_fusionSubTypeStr[RT_FUSION_END] = {"HCOM", "AICPU", "AIC", "CCU"};
 static unordered_set<string> g_fusionAllowedList{"HCOMAIC", "AICPUAIC", "CCUAIC", "CCU"};
 
@@ -351,6 +352,34 @@ rtError_t ApiErrorDecorator::FusionLaunch(void* const fusionInfo, Stream* const 
 }
 
 rtError_t ApiErrorDecorator::StreamTaskAbort(Stream* const stm) { return impl_->StreamTaskAbort(stm); }
+
+rtError_t ApiErrorDecorator::DeviceTaskAbort(const int32_t devId, const uint32_t timeout)
+{
+    Runtime* const rt = Runtime::Instance();
+    const driverType_t rawDrvType = rt->GetDriverType();
+    Driver* const rawDrv = rt->driverFactory_.GetDriver(rawDrvType);
+    NULL_PTR_RETURN_MSG(rawDrv, RT_ERROR_DRV_NULL);
+    int32_t deviceCnt;
+    int32_t realDeviceId;
+    COND_RETURN_WITH_NOLOG(
+        !IS_SUPPORT_CHIP_FEATURE(rt->GetChipType(), RtOptionalFeatureType::RT_FEATURE_DFX_FAST_RECOVER),
+        ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+        (timeout > TASK_ABORT_TIMEOUT_MAX), RT_ERROR_INVALID_VALUE, "Stopping all tasks running on the current device",
+        timeout, "[0, " + std::to_string(TASK_ABORT_TIMEOUT_MAX) + "]");
+
+    rtError_t error = rt->ChgUserDevIdToDeviceId(static_cast<uint32_t>(devId), RtPtrToPtr<uint32_t*>(&realDeviceId));
+    COND_RETURN_ERROR(
+        error != RT_ERROR_NONE, error, "Failed to convert the user device ID %d to driver device ID.", devId);
+
+    error = rawDrv->GetDeviceCount(&deviceCnt);
+    ERROR_RETURN_MSG_CALL(ERR_MODULE_DRV, error, "Get device cnt failed, retCode=%#x", static_cast<uint32_t>(error));
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+        ((realDeviceId < 0) || (realDeviceId >= deviceCnt)), RT_ERROR_DEVICE_ID,
+        "Stopping all tasks running on the current device", realDeviceId, "[0, " + std::to_string(deviceCnt) + ")");
+
+    return impl_->DeviceTaskAbort(realDeviceId, timeout);
+}
 
 rtError_t ApiErrorDecorator::StreamRecover(Stream* const stm)
 {
