@@ -28,6 +28,7 @@ static std::map<const uint32_t, std::shared_ptr<ClientManager>> tsdClientInstanc
 
 static std::map<const uint32_t, uint32_t>* g_userDeviceInfo = nullptr;
 bool g_hadGetVisibleDevices = false;
+std::mutex g_visibleDevicesMut;
 
 struct PlatformInfo {
     uint32_t onlineStatus;
@@ -36,6 +37,7 @@ struct PlatformInfo {
 };
 static PlatformInfo g_platInfo;
 bool g_hadGetPlatformInfo = false;
+std::mutex g_platformInfoMut;
 } // namespace
 
 RunningMode ClientManager::g_runningMode = RunningMode::UNSET_MODE;
@@ -53,8 +55,11 @@ bool ClientManager::CheckDestructFlag(const uint32_t logicDevId)
     }
 
     // logicDevId is actually user device id
-    if (!g_hadGetPlatformInfo && (ClientManager::GetPlatformInfo(logicDeviceId) != TSD_OK)) {
-        return false;
+    {
+        const std::lock_guard<std::mutex> lk(g_platformInfoMut);
+        if (!g_hadGetPlatformInfo && (ClientManager::GetPlatformInfo(logicDeviceId) != TSD_OK)) {
+            return false;
+        }
     }
 
     if (!IsSupportSetVisibleDevices()) {
@@ -118,8 +123,11 @@ std::shared_ptr<ClientManager> ClientManager::GetInstance(
         }
     }
 
-    if (!g_hadGetPlatformInfo && (ClientManager::GetPlatformInfo(logicDeviceId) != TSD_OK)) {
-        return nullptr;
+    {
+        const std::lock_guard<std::mutex> lk(g_platformInfoMut);
+        if (!g_hadGetPlatformInfo && (ClientManager::GetPlatformInfo(logicDeviceId) != TSD_OK)) {
+            return nullptr;
+        }
     }
 
     if (!IsSupportSetVisibleDevices()) {
@@ -374,6 +382,7 @@ bool ClientManager::GetVisibleDevices()
 
 TSD_StatusT ClientManager::ChangeUserDeviceIdToLogicDeviceId(const uint32_t userDevId, uint32_t& logicDevId)
 {
+    const std::lock_guard<std::mutex> lk(g_visibleDevicesMut);
     if (!g_hadGetVisibleDevices && !GetVisibleDevices()) {
         return TSD_OK;
     }
