@@ -5123,25 +5123,19 @@ TEST_F(ApiDavidTest, test_model_ub_get_jetty_info)
     error = rtEndGraphEx(model, streamHandle_, 2);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    rt_ut::UnwrapOrNull<Model>(model)->SetProcJettyInfoFlag(false);
-    rt_ut::UnwrapOrNull<Model>(model)->SetUbModelD2dFlag(true);
-    rt_ut::UnwrapOrNull<Model>(model)->SetUbModelH2dFlag(true);
     rt_ut::UnwrapOrNull<Model>(model)->ModelPushFrontStream(stream_);
     halSqCqRes = 0;
     error = rtModelLoadComplete(model);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     halSqCqRes = 1;
-    rt_ut::UnwrapOrNull<Model>(model)->SetProcJettyInfoFlag(false);
     error = rtModelLoadComplete(model);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     halSqCqRes = 2;
-    rt_ut::UnwrapOrNull<Model>(model)->SetProcJettyInfoFlag(false);
     error = rtModelLoadComplete(model);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    rt_ut::UnwrapOrNull<Model>(model)->SetProcJettyInfoFlag(true);
     error = rtModelLoadComplete(model);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
@@ -11768,10 +11762,6 @@ TEST_F(ApiDavidTest, api_decorator_kernel_forwarding)
     error = api.CpuKernelLaunch(nullptr, 0U, nullptr, nullptr, 0U);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::KernelFusionEnd).stubs().will(returnValue(RT_ERROR_NONE));
-    error = api.KernelFusionEnd(nullptr);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
     MOCKER_CPP_VIRTUAL(impl, &ApiImpl::GetFunctionByName).stubs().will(returnValue(RT_ERROR_NONE));
     void* stubFunc = nullptr;
     error = api.GetFunctionByName(nullptr, &stubFunc);
@@ -12560,10 +12550,6 @@ TEST_F(ApiDavidTest, api_impl_kernel_fusion_and_query)
 {
     ApiImpl impl;
     rtError_t error = RT_ERROR_NONE;
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::KernelFusionEnd).stubs().will(returnValue(RT_ERROR_NONE));
-    error = impl.KernelFusionEnd(nullptr);
-    EXPECT_EQ(error, RT_ERROR_NONE);
 
     MOCKER_CPP_VIRTUAL(impl, &ApiImpl::QueryFunctionRegistered).stubs().will(returnValue(RT_ERROR_NONE));
     error = impl.QueryFunctionRegistered(nullptr);

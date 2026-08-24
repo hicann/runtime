@@ -27,6 +27,7 @@
 #include "model_update_task.h"
 #include "stars_david.hpp"
 #include "capture_model_utils.hpp"
+#include "stream_jetty_handler.h"
 #include "program.hpp"
 #include "runtime_handle_guard.h"
 #include "task.hpp"
@@ -230,14 +231,8 @@ rtError_t AicpuMdlDestroy(Model* const mdl)
 
 static rtError_t AsyncJettyToHead(const Model* const mdl, Stream* const stm)
 {
-    if (IsSoftwareSqCaptureModel(mdl)) {
-        if (!mdl->GetNeedUpdateUBPi()) {
-            return RT_ERROR_NONE;
-        }
-    } else if (mdl->GetFirstExecute()) {
+    if (!mdl->GetNeedUpdateUBPi()) {
         return RT_ERROR_NONE;
-    } else {
-        // no operation
     }
     if ((mdl->GetH2dJettyInfo().empty()) && (mdl->GetD2dJettyInfo().empty())) {
         return RT_ERROR_NONE;
@@ -277,8 +272,63 @@ static rtError_t AsyncJettyToHead(const Model* const mdl, Stream* const stm)
     return RT_ERROR_NONE;
 }
 
+static rtError_t FlushJettyForModel(Model* const mdl)
+{
+    if (!Runtime::Instance()->GetConnectUbFlag()) {
+        return RT_ERROR_NONE;
+    }
+    if (IsSoftwareSqCaptureModel(mdl)) {
+        return RT_ERROR_NONE;
+    }
+
+    JettyManager* jettyMgr = mdl->Context_()->Device_()->GetJettyManager();
+    if (jettyMgr == nullptr) {
+        return RT_ERROR_NONE;
+    }
+    RT_LOG(RT_LOG_INFO, "FlushJettyForModel start, model_id=%u.", mdl->Id_());
+    for (Stream* stm : mdl->StreamList_()) {
+        if (stm == nullptr) {
+            continue;
+        }
+        for (const JettyType type : {JettyType::JETTY_TYPE_H2D, JettyType::JETTY_TYPE_D2D}) {
+            StreamJettyContext* ctx = jettyMgr->GetStreamJettyContext(stm->Id_(), type);
+            if (ctx == nullptr || ctx->filledWqeCount == 0U) {
+                continue;
+            }
+            rtError_t error = StreamJettyHandler::FillNopWqeOnCaptureEnd(stm, type);
+            COND_RETURN_ERROR(
+                error != RT_ERROR_NONE, error, "FillNopWqeOnCaptureEnd failed, stream_id=%d, type=%d, retCode=%#x.",
+                stm->Id_(), static_cast<int>(type), error);
+
+            error = StreamJettyHandler::BindJetty(stm, type, nullptr);
+            COND_RETURN_ERROR(
+                error != RT_ERROR_NONE, error, "BindJetty failed, stream_id=%d, type=%d, retCode=%#x.", stm->Id_(),
+                static_cast<int>(type), error);
+        }
+    }
+
+    rtError_t error = StreamJettyHandler::RefreshModelJettyInfoList(mdl);
+    COND_RETURN_ERROR(
+        error != RT_ERROR_NONE, error, "RefreshModelJettyInfoList failed, model_id=%u, retCode=%#x.", mdl->Id_(),
+        error);
+
+    mdl->SetNeedUpdateUBPi(false);
+    mdl->SetNeedRebindJetty(false);
+    RT_LOG(RT_LOG_INFO, "FlushJettyForModel success, model_id=%u.", mdl->Id_());
+    return RT_ERROR_NONE;
+}
+
 rtError_t ModelSubmitExecuteTask(Model* const mdl, Notify* const notify, Stream* const streamIn)
 {
+    if (mdl->GetNeedRebindJetty()) {
+        RT_LOG(RT_LOG_INFO, "Jetty rebind needed for model after execution failure, model_id=%u.", mdl->Id_());
+        rtError_t rebindError = FlushJettyForModel(mdl);
+        COND_RETURN_ERROR_MSG_INNER(
+            rebindError != RT_ERROR_NONE, rebindError,
+            "FlushJettyForModel failed during rebind, model_id=%u, retCode=%#x.", mdl->Id_(),
+            static_cast<uint32_t>(rebindError));
+    }
+
     /* UB互连场景下如果模型中下过H2D/D2H/跨片D2D，需要先下UB DB任务 */
     rtError_t error = AsyncJettyToHead(mdl, streamIn);
     COND_RETURN_ERROR_MSG_INNER(
@@ -333,114 +383,14 @@ rtError_t ModelSubmitExecuteTask(Model* const mdl, Notify* const notify, Stream*
                                 , "Failed to execute model, model_id=%u, retCode=%#x.", mdl->Id_(),
                                 static_cast<uint32_t>(error));
     streamIn->StreamUnLock();
+    if (mdl->GetModelType() == ModelType::RT_MODEL_NORMAL) {
+        mdl->SetNeedUpdateUBPi(true);
+    }
+
     error = SubmitTaskPostProc(streamIn, pos);
     ERROR_RETURN_MSG_INNER(
         error, "Failed to recycle task, stream_id=%d, retCode=%#x.", streamIn->Id_(), static_cast<uint32_t>(error));
     return RT_ERROR_NONE;
-}
-
-static rtError_t GetAndSaveD2dJettyInfo(Model* const mdl, uint32_t sqId, uint32_t deviceId, uint32_t tsId)
-{
-    struct halSqCqQueryInfo queryInfoIn = {};
-    queryInfoIn.type = DRV_NORMAL_TYPE;
-    queryInfoIn.tsId = tsId;
-    queryInfoIn.sqId = sqId;
-    queryInfoIn.cqId = 0U;
-    queryInfoIn.prop = DRV_SQCQ_PROP_D2D_ASYNC_JETTY_INFO;
-
-    COND_RETURN_ERROR(&halSqCqQuery == nullptr, RT_ERROR_DRV_NOT_SUPPORT, "[drv api] halSqCqQuery does not exist.");
-    const drvError_t drvRet = halSqCqQuery(deviceId, &queryInfoIn);
-    /* D2D Jetty队列在首次下发任务时才创建，如果没下发过，返回未初始化 */
-    if (drvRet == DRV_ERROR_UNINIT) {
-        return RT_ERROR_NONE;
-    }
-    if (drvRet != DRV_ERROR_NONE) {
-        RT_LOG(
-            RT_LOG_ERROR, "[drv api] halSqCqQuery d2d jetty info failed, device_id=%u, sq_id=%u, drv_ret=%d.", deviceId,
-            sqId, drvRet);
-        return RT_GET_DRV_ERRCODE(drvRet);
-    }
-    if (queryInfoIn.value[0] != 0U) {
-        UbAsyncJettyInfo info = {};
-        info.jettyId = queryInfoIn.value[1];
-        info.dieId = queryInfoIn.value[3];
-        info.functionId = queryInfoIn.value[2];
-        info.piValue = queryInfoIn.value[0];
-        info.sqId = sqId;
-        mdl->SetD2dJettyInfo(info);
-    }
-
-    return RT_ERROR_NONE;
-}
-
-static rtError_t GetAndSaveH2dJettyInfo(Model* const mdl, uint32_t sqId, uint32_t deviceId, uint32_t tsId)
-{
-    struct halSqCqQueryInfo queryInfoIn = {};
-    queryInfoIn.type = DRV_NORMAL_TYPE;
-    queryInfoIn.tsId = tsId;
-    queryInfoIn.sqId = sqId;
-    queryInfoIn.cqId = 0U;
-    queryInfoIn.prop = DRV_SQCQ_PROP_H2D_ASYNC_JETTY_INFO;
-
-    COND_RETURN_ERROR(&halSqCqQuery == nullptr, RT_ERROR_DRV_NOT_SUPPORT, "[drv api] halSqCqQuery does not exist.");
-    const drvError_t drvRet = halSqCqQuery(deviceId, &queryInfoIn);
-    if (drvRet != DRV_ERROR_NONE) {
-        RT_LOG(
-            RT_LOG_ERROR, "[drv api] halSqCqQuery h2d jetty info failed, device_id=%u, sq_id=%u, drv_ret=%d.", deviceId,
-            sqId, drvRet);
-        return RT_GET_DRV_ERRCODE(drvRet);
-    }
-
-    constexpr uint32_t jettyDepth = 2048U;
-    if ((queryInfoIn.value[0] != jettyDepth) && (queryInfoIn.value[0] != 0U)) {
-        UbAsyncJettyInfo info = {};
-        info.jettyId = queryInfoIn.value[1];
-        info.dieId = queryInfoIn.value[3];
-        info.functionId = queryInfoIn.value[2];
-        info.piValue = queryInfoIn.value[0];
-        info.sqId = sqId;
-        mdl->SetH2dJettyInfo(info);
-    }
-
-    return RT_ERROR_NONE;
-}
-
-static void GetAndSaveJettyInfo(Model* const mdl)
-{
-    // aclgraph 在bind jetty时刷新jetty info
-    if (mdl->GetProcJettyInfoFlag() || IsSoftwareSqCaptureModel(mdl)) {
-        return;
-    }
-
-    mdl->SetProcJettyInfoFlag(true);
-
-    rtError_t error = RT_ERROR_NONE;
-    if (mdl->GetUbModelH2dFlag()) {
-        RT_LOG(RT_LOG_INFO, "ub model includes async h2d copy task.");
-        for (Stream* const sinkStream : mdl->StreamList_()) {
-            error = GetAndSaveH2dJettyInfo(
-                mdl, sinkStream->GetSqId(), sinkStream->Device_()->Id_(), sinkStream->Device_()->DevGetTsId());
-            if (error != RT_ERROR_NONE) {
-                RT_LOG(
-                    RT_LOG_ERROR, "GetH2DJettyInfo failed, device_id=%u, sq_id=%u, error=%d.",
-                    sinkStream->Device_()->Id_(), sinkStream->GetSqId(), error);
-            }
-        }
-    }
-
-    if (mdl->GetUbModelD2dFlag()) {
-        RT_LOG(RT_LOG_INFO, "ub model includes async d2d copy task.");
-        for (Stream* const sinkStream : mdl->StreamList_()) {
-            error = GetAndSaveD2dJettyInfo(
-                mdl, sinkStream->GetSqId(), sinkStream->Device_()->Id_(), sinkStream->Device_()->DevGetTsId());
-            if (error != RT_ERROR_NONE) {
-                RT_LOG(
-                    RT_LOG_ERROR, "GetD2DJettyInfo failed, device_id=%u, sq_id=%u, error=%d.",
-                    sinkStream->Device_()->Id_(), sinkStream->GetSqId(), error);
-            }
-        }
-    }
-    return;
 }
 
 static rtError_t SubmitLoadCompleteDirectly(Model* const mdl, Stream* const stream)
@@ -492,7 +442,10 @@ rtError_t ModelLoadCompleteByStream(Model* const mdl)
         }
     }
 
-    GetAndSaveJettyInfo(mdl);
+    error = FlushJettyForModel(mdl);
+    COND_RETURN_ERROR(
+        error != RT_ERROR_NONE, error, "FlushJettyForModel failed, model_id=%u, retCode=%#x.", mdl->Id_(),
+        static_cast<uint32_t>(error));
 
     Device* const dev = mdl->Context_()->Device_();
     if (dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ)) {

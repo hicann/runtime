@@ -234,7 +234,7 @@ static rtError_t ShiftBatchArrays(AsyncDmaBatchInfo& batchInfo, bool handleFixed
     return RT_ERROR_NONE;
 }
 
-static rtError_t ConvertAsyncDmaBatchForSoftWareSq(TaskInfo* const taskInfo, AsyncDmaBatchInfo& batchInfo)
+static rtError_t ConvertUBDmaBatchForModel(TaskInfo* const taskInfo, AsyncDmaBatchInfo& batchInfo)
 {
     Stream* const stream = taskInfo->stream;
     const uint32_t devId = stream->Device_()->Id_();
@@ -281,8 +281,8 @@ rtError_t ConvertAsyncDmaBatch(TaskInfo* const taskInfo, AsyncDmaBatchInfo& batc
     Stream* const stream = taskInfo->stream;
     MemcpyAsyncTaskInfo* memcpyAsyncTaskInfo = &(taskInfo->u.memcpyAsyncTaskInfo);
 
-    if (stream->IsSoftwareSqEnable()) {
-        return ConvertAsyncDmaBatchForSoftWareSq(taskInfo, batchInfo);
+    if (stream->GetBindFlag() || stream->IsSoftwareSqEnable()) {
+        return ConvertUBDmaBatchForModel(taskInfo, batchInfo);
     }
 
     rtError_t shiftErr = ShiftBatchArrays(batchInfo);
@@ -404,7 +404,7 @@ static void AsyncDmaWqeBasicProc(MemcpyAsyncTaskInfo* memcpyAsyncTaskInfo, const
 
 static void AsyncDmaWqeProc(MemcpyAsyncTaskInfo* memcpyAsyncTaskInfo, const Stream* const stream)
 {
-    if (stream->IsSoftwareSqEnable()) {
+    if ((stream->Flags() & RT_STREAM_PERSISTENT) != 0U || stream->IsSoftwareSqEnable()) {
         return;
     }
     if (memcpyAsyncTaskInfo->copyMethod == static_cast<uint8_t>(rtAsyncCpyMethod::RT_ASYNC_CPY_2D)) {
@@ -794,7 +794,7 @@ static rtError_t HandleUbModeDmaResult(TaskInfo* const taskInfo, const AsyncDmaW
     return RT_ERROR_NONE;
 }
 
-static rtError_t ConvertAsyncDmaForSoftWareSqUb(TaskInfo* const taskInfo, TaskInfo* const updateTask, bool isSqeUpdate)
+static rtError_t ConvertUBDmaForModel(TaskInfo* const taskInfo, TaskInfo* const updateTask, bool isSqeUpdate)
 {
     Stream* const stream = taskInfo->stream;
     const uint32_t devId = stream->Device_()->Id_();
@@ -876,10 +876,9 @@ rtError_t ConvertAsyncDma(TaskInfo* const taskInfo)
         return RT_ERROR_INVALID_VALUE;
     }
     MemcpyAsyncTaskInfo* memcpyAsyncTaskInfo = &(taskInfo->u.memcpyAsyncTaskInfo);
-    if (stream->IsSoftwareSqEnable()) {
-        return ConvertAsyncDmaForSoftWareSqUb(taskInfo, nullptr, false);
+    if (stream->GetBindFlag() || stream->IsSoftwareSqEnable()) {
+        return ConvertUBDmaForModel(taskInfo, nullptr, false);
     }
-
     AsyncDmaWqeInputInfo input;
     (void)memset_s(&input, sizeof(AsyncDmaWqeInputInfo), 0, sizeof(AsyncDmaWqeInputInfo));
     input.destPtr = memcpyAsyncTaskInfo->destPtr;
@@ -922,7 +921,7 @@ rtError_t ConvertAsyncDmaForTaskUpdate(TaskInfo* const taskInfo, TaskInfo* const
                 updateStm->Device_()->Id_(), updateStm->Id_(), static_cast<uint32_t>(err));
         }
         if (isUbMode) {
-            return ConvertAsyncDmaForSoftWareSqUb(taskInfo, updateTaskInfo, true);
+            return ConvertUBDmaForModel(taskInfo, updateTaskInfo, true);
         } else {
             return ConvertAsyncDmaForSoftWareSqPcie(memcpyAsyncTaskInfo, updateTaskInfo);
         }

@@ -15,6 +15,7 @@
 #include <memory>
 #include "jetty_pool.h"
 #include "task_info.hpp"
+#include "model.hpp"
 namespace cce {
 namespace runtime {
 
@@ -34,8 +35,9 @@ struct StreamJettyContext {
     // Record of tasks that need jetty info patch: (taskInfo pointer, wqeCount)
     std::vector<std::pair<TaskInfo*, uint32_t>> taskWqeCounts;
     JettyType jettyType = JettyType::JETTY_TYPE_MAX;
-    bool isLargeDepth = false;
-    uint64_t jettyHandle = 0U;
+    JettyAllocMode allocMode = JettyAllocMode::POOLED;
+    uint64_t jettyHandle = 0ULL;
+    ModelType modelType = ModelType::RT_MODEL_CAPTURE_MODEL;
 
     uint8_t* GetNextWqeBuffer() const;
     rtError_t ExpandCapacity(Driver* driver);

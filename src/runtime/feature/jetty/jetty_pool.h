@@ -28,8 +28,10 @@ enum class JettyType : uint8_t { JETTY_TYPE_H2D = 0, JETTY_TYPE_D2D = 1, JETTY_T
 
 enum class JettyState : uint8_t { FREE = 0, BOUND };
 
+enum class JettyAllocMode : uint8_t { POOLED = 0, DIRECT };
+
 struct JettyInfo {
-    uint64_t handle = 0U;
+    uint64_t handle = 0ULL;
     uint32_t dieId = 0U;
     uint32_t functionId = 0U;
     uint32_t jettyId = 0U;
@@ -51,12 +53,13 @@ public:
     rtError_t PreAllocJetty(JettyType type);
 
     /**
-     * @brief 释放 Jetty, 适用于非large jetty
+     * @brief 释放 Jetty（销毁并移除）
      * @param handle Jetty 句柄
-     * @param type Jetty 类型
+     * @param mode 分配模式：POOLED 从 h2d/d2d pool 中查找，DIRECT 从 directJettyList 中查找
+     * @param type Jetty 类型（仅 POOLED 模式使用）
      * @return rtError_t 错误码
      */
-    rtError_t FreeJetty(uint64_t handle, JettyType type);
+    rtError_t FreeJetty(uint64_t handle, JettyAllocMode mode, JettyType type);
 
     /**
      * @brief 获取 FREE jetty 并标记为 BOUND（用于 Graph Reply 阶段绑定）
@@ -74,20 +77,13 @@ public:
     rtError_t FreeJettyLazy(uint64_t handle);
 
     /**
-     * @brief 创建大深度 Jetty(深度 > 2k，不走标准池)
+     * @brief 直接创建 Jetty，不参与标准池复用
      * @param type Jetty 类型
      * @param depth Jetty 深度(必须是 2^n)
      * @param jettyInfo 输出参数，返回创建的 Jetty 信息
      * @return rtError_t 错误码
      */
-    rtError_t AllocLargeDepthJetty(JettyType type, uint32_t depth, JettyInfo& jettyInfo);
-
-    /**
-     * @brief 销毁大深度 Jetty
-     * @param handle Jetty 句柄
-     * @return rtError_t 错误码
-     */
-    rtError_t FreeLargeDepthJetty(uint64_t handle);
+    rtError_t AllocDirectJetty(JettyType type, uint32_t depth, JettyInfo& jettyInfo);
 
     /**
      * @brief 查询 Jetty 信息
@@ -124,10 +120,10 @@ private:
     rtError_t CreateJetty(JettyType type, uint32_t depth, JettyInfo& jettyInfo) const;
     bool FindJettyByState(JettyType type, JettyState state, JettyInfo*& jettyInfo);
 
-    uint32_t deviceId_{0};
+    uint32_t deviceId_{0U};
     std::vector<JettyInfo> h2dJettyPool_;
     std::vector<JettyInfo> d2dJettyPool_;
-    std::vector<JettyInfo> largeJettyPool_;
+    std::vector<JettyInfo> directJettyList_;
     std::mutex poolLock_;
 };
 } // namespace runtime

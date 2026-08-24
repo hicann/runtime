@@ -239,8 +239,6 @@ rtError_t ProfilingAgent::RegisterProfTypeInfo() const
          "QueryFunctionRegistered"},
         {static_cast<uint32_t>(RT_PROFILE_TYPE_API_BEGIN) + static_cast<uint32_t>(RT_PROF_API_KERNEL_FUSION_START),
          "KernelFusionStart"},
-        {static_cast<uint32_t>(RT_PROFILE_TYPE_API_BEGIN) + static_cast<uint32_t>(RT_PROF_API_KERNEL_FUSION_END),
-         "KernelFusionEnd"},
         {static_cast<uint32_t>(RT_PROFILE_TYPE_API_BEGIN) + static_cast<uint32_t>(RT_PROF_API_KERNEL_LAUNCH_HUGE),
          "KernelLaunch_Huge"},
         {static_cast<uint32_t>(RT_PROFILE_TYPE_API_BEGIN) + static_cast<uint32_t>(RT_PROF_API_KERNEL_LAUNCH_BIG),

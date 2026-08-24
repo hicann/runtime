@@ -8443,10 +8443,6 @@ TEST_F(ApiTest, api_decorator_kernel_forwarding)
     error = api.CpuKernelLaunch(nullptr, 0U, nullptr, nullptr, 0U);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::KernelFusionEnd).stubs().will(returnValue(RT_ERROR_NONE));
-    error = api.KernelFusionEnd(nullptr);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
     MOCKER_CPP_VIRTUAL(impl, &ApiImpl::GetFunctionByName).stubs().will(returnValue(RT_ERROR_NONE));
     void* stubFunc = nullptr;
     error = api.GetFunctionByName(nullptr, &stubFunc);

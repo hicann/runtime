@@ -2158,34 +2158,6 @@ rtError_t Stream::Query(void) const
     return RT_ERROR_NONE;
 }
 
-rtError_t Stream::KernelFusionEnd()
-{
-    if (!fusioning_) {
-        RT_LOG_INNER_MSG(
-            RT_LOG_ERROR, "Run kernel fusion end failed, probably rtKernelFusionStart has not been called");
-        return RT_ERROR_STREAM_FUSION;
-    }
-
-    TaskInfo submitTask = {};
-    rtError_t errorReason;
-    TaskInfo* tsk = AllocTask(&submitTask, TS_TASK_TYPE_FUSION_ISSUE, errorReason);
-    NULL_PTR_RETURN_MSG(tsk, errorReason);
-
-    rtError_t error = KernelFusionTaskInit(tsk, FUSION_END);
-    ERROR_GOTO_MSG_INNER(error, RECYCLE, "Init kernel fusion task failed, retCode=%#x.", static_cast<uint32_t>(error));
-    error = device_->SubmitTask(tsk);
-    ERROR_GOTO_MSG_INNER(
-        error, RECYCLE, "Submit kernel fusion task failed, retCode=%#x.", static_cast<uint32_t>(error));
-
-    fusioning_ = false;
-
-    return RT_ERROR_NONE;
-
-RECYCLE:
-    (void)device_->GetTaskFactory()->Recycle(tsk);
-    return error;
-}
-
 rtError_t Stream::FreePersistentTaskID(TaskAllocator* const tskAllocator)
 {
     const rtError_t error = RT_ERROR_NONE;

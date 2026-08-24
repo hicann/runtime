@@ -18,6 +18,8 @@
 namespace cce {
 namespace runtime {
 
+class Model;
+
 class StreamJettyHandler {
 public:
     static rtError_t HandleUbDmaTask(
@@ -44,7 +46,9 @@ public:
 
     static rtError_t RecycleJetty(Stream* stream, JettyType type, uint32_t& count);
 
-    static rtError_t ReleaseJetty(Stream* stream, JettyType type);
+    static rtError_t ReleaseJetty(Stream* stream, JettyType type, bool deleteContext = true);
+
+    static rtError_t RefreshModelJettyInfoList(Model* mdl);
 
 private:
     static rtError_t ResetJettyCi(

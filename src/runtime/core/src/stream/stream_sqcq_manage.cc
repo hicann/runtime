@@ -150,9 +150,6 @@ rtError_t StreamSqCqManage::AllocDavidStreamSqCq(
     if (infoEx.body.streamFlag.bits.dqsInterChip == 1U) {
         drvFlag |= (static_cast<uint32_t>(TSDRV_FLAG_RTS_RSV_SQCQ_ID));
     }
-    if ((newStm->Flags() & RT_STREAM_PERSISTENT) != 0U) {
-        drvFlag |= (static_cast<uint32_t>(TSDRV_FLAG_TASK_SINK_SQ));
-    }
     if (Runtime::Instance()->GetConnectUbFlag() && (newStm->Flags() & RT_STREAM_CP_PROCESS_USE) == 0U) {
         drvFlag |= (static_cast<uint32_t>(TSDRV_FLAG_PRE_ASYNC_SQ));
     }

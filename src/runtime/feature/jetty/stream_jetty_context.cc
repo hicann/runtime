@@ -78,7 +78,7 @@ rtError_t StreamJettyContext::ExpandCapacity(Driver* driver)
 
 rtError_t StreamJettyContext::RoundUpCapacity(Driver* driver, uint32_t deviceId)
 {
-    if (filledWqeCount == 0 || capacity <= WQE_BUFFER_DEPTH) {
+    if (filledWqeCount == 0U || capacity <= WQE_BUFFER_DEPTH) {
         return RT_ERROR_NONE;
     }
 
@@ -126,7 +126,7 @@ rtError_t StreamJettyContext::RoundUpCapacity(Driver* driver, uint32_t deviceId)
     }
 
     capacity = validDepth;
-    isLargeDepth = true;
+    allocMode = JettyAllocMode::DIRECT;
     return RT_ERROR_NONE;
 }
 

@@ -302,17 +302,9 @@ public:
 
     void ClearD2dJettyInfoList() { d2dJettyInfoList_.clear(); }
 
-    bool GetUbModelD2dFlag() const { return isHasD2d_; }
+    bool GetNeedRebindJetty() const { return needRebindJetty_.load(); }
 
-    bool GetUbModelH2dFlag() const { return isHasH2d_; }
-
-    bool GetProcJettyInfoFlag() const { return isHaveProcJettyInfo_; }
-
-    void SetUbModelD2dFlag(bool flag) { isHasD2d_ = flag; }
-
-    void SetUbModelH2dFlag(bool flag) { isHasH2d_ = flag; }
-
-    void SetProcJettyInfoFlag(bool flag) { isHaveProcJettyInfo_ = flag; }
+    void SetNeedRebindJetty(bool flag) { needRebindJetty_.store(flag); }
 
     rtError_t BuildSqCqForAutoSplit();
     rtError_t SendSqe(void); // copy sqe to sqe addr
@@ -415,9 +407,7 @@ private:
     std::vector<void*> devAddrList_;
     std::vector<UbAsyncJettyInfo> h2dJettyInfoList_;
     std::vector<UbAsyncJettyInfo> d2dJettyInfoList_;
-    bool isHasD2d_ = false;
-    bool isHasH2d_ = false;
-    bool isHaveProcJettyInfo_ = false;
+    std::atomic<bool> needRebindJetty_;
     mutable std::mutex extendInfosMutex_;
     std::map<int32_t, std::map<uint32_t, std::string>> extendInfos_;
     std::set<MdlDestroyCallbackInfo> mdlDestroyCallbackSet_;

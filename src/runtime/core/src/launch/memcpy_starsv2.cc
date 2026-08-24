@@ -193,19 +193,6 @@ static bool isModelByUb(const Stream* const stm)
     return false;
 }
 
-static void SetModelFlag(uint32_t copyType, const Stream* const stm)
-{
-    if (!Runtime::Instance()->GetConnectUbFlag() || !stm->GetBindFlag()) {
-        return;
-    }
-    if ((copyType == RT_MEMCPY_DIR_H2D) || (copyType == RT_MEMCPY_DIR_D2H)) {
-        stm->Model_()->SetUbModelH2dFlag(true);
-    }
-    if (copyType == RT_MEMCPY_DIR_D2D_UB) {
-        stm->Model_()->SetUbModelD2dFlag(true);
-    }
-}
-
 rtError_t MemcopyAsync(
     void* const dst, const uint64_t destMax, const void* const src, const uint64_t cpySize, const rtMemcpyKind_t kind,
     Stream* const stm, uint64_t* const realSize, const std::shared_ptr<void>& guardMem,
@@ -244,9 +231,6 @@ rtError_t MemcopyAsync(
     if (guardMem != nullptr) {
         rtMemcpyAsyncTask->u.memcpyAsyncTaskInfo.guardMemVec->emplace_back(guardMem);
     }
-
-    /* 记录UB互连场景下模型是否下过H2D/D2H/跨片D2D任务 */
-    SetModelFlag(rtMemcpyAsyncTask->u.memcpyAsyncTaskInfo.copyType, dstStm);
 
     rtMemcpyAsyncTask->stmArgPos = static_cast<DavidStream*>(dstStm)->GetArgPos();
     error = DavidSendTask(rtMemcpyAsyncTask, dstStm);

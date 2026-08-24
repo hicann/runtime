@@ -1315,13 +1315,6 @@ rtError_t ApiErrorDecorator::KernelTransArgSet(
     return impl_->KernelTransArgSet(ptr, size, flag, setupArg);
 }
 
-rtError_t ApiErrorDecorator::KernelFusionEnd(Stream* const stm)
-{
-    const rtError_t error = impl_->KernelFusionEnd(stm);
-    ERROR_RETURN(error, "End kernel fusion failed.");
-    return error;
-}
-
 rtError_t ApiErrorDecorator::StreamCreate(
     Stream** const stm, const int32_t priority, const uint32_t flags, DvppGrp* grp)
 {

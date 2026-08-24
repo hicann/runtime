@@ -56,7 +56,7 @@ public:
      * @param type Jetty 类型
      * @return rtError_t 错误码
      */
-    rtError_t FreeJettyByHandle(uint64_t handle, JettyType type);
+    rtError_t FreeJettyByHandle(uint64_t handle, JettyAllocMode allocMode, JettyType type);
 
     /**
      * @brief 重置 snapshot restore 前遗留的 Jetty 状态，保留 WQE 元数据

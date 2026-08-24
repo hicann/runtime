@@ -34,7 +34,7 @@ TIMESTAMP_EXTERN(rtMemcpyAsync_drvMemConvertAddr);
 
 #if F_DESC("MemcpyAsyncTask")
 
-static rtError_t ConvertAsyncDma2DForSoftWareSq(
+static rtError_t ConvertUBDma2DForModel(
     TaskInfo* const taskInfo2D, void* const dst, const void* const src, const uint64_t dstPitch,
     const uint64_t srcPitch, const uint64_t width, const uint64_t height, const uint64_t fixedSize)
 {
@@ -81,8 +81,8 @@ rtError_t ConvertAsyncDma2D(
     const uint32_t devId = stream->Device_()->Id_();
     MemcpyAsyncTaskInfo* memcpyAsyncTaskInfo = &(taskInfo2D->u.memcpyAsyncTaskInfo);
 
-    if (stream->IsSoftwareSqEnable()) {
-        return ConvertAsyncDma2DForSoftWareSq(taskInfo2D, dst, src, dstPitch, srcPitch, width, height, fixedSize);
+    if (stream->GetBindFlag() || stream->IsSoftwareSqEnable()) {
+        return ConvertUBDma2DForModel(taskInfo2D, dst, src, dstPitch, srcPitch, width, height, fixedSize);
     }
 
     Driver* const driver = stream->Device_()->Driver_();

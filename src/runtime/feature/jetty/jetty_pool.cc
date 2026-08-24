@@ -20,6 +20,12 @@ JettyPool::JettyPool(uint32_t deviceId) : deviceId_(deviceId)
 {
     h2dJettyPool_.reserve(JETTY_POOL_H2D_MAX_SIZE);
     d2dJettyPool_.reserve(JETTY_POOL_D2D_MAX_SIZE);
+    // tsdrv约束, 必须device申请过jetty,才能create wqe
+    JettyInfo h2dJetty;
+    (void)CreateJetty(JettyType::JETTY_TYPE_H2D, JETTY_DEPTH_STANDARD, h2dJetty);
+    JettyInfo d2dJetty;
+    (void)CreateJetty(JettyType::JETTY_TYPE_D2D, JETTY_DEPTH_STANDARD, d2dJetty);
+
     RT_LOG(RT_LOG_INFO, "Jetty pool created, device_id=%u.", deviceId_);
 }
 
@@ -33,7 +39,7 @@ rtError_t JettyPool::CreateJetty(JettyType type, uint32_t depth, JettyInfo& jett
     }
 
     uint32_t dir = (type == JettyType::JETTY_TYPE_H2D) ? TRS_ASYNC_JETTY_HOST_DEVICE : TRS_ASYNC_JETTY_DEVICE_TO_DEVICE;
-    uint64_t handle = 0U;
+    uint64_t handle = 0ULL;
 
     rtError_t error = driver->AsyncDmaJettyCreate(deviceId_, 1U, depth, dir, &handle);
     COND_RETURN_ERROR(
@@ -85,7 +91,7 @@ rtError_t JettyPool::PreAllocJetty(JettyType type)
     return RT_ERROR_NONE;
 }
 
-rtError_t JettyPool::FreeJetty(uint64_t handle, JettyType type)
+rtError_t JettyPool::FreeJetty(uint64_t handle, JettyAllocMode mode, JettyType type)
 {
     std::lock_guard<std::mutex> lock(poolLock_);
 
@@ -94,19 +100,21 @@ rtError_t JettyPool::FreeJetty(uint64_t handle, JettyType type)
         return RT_ERROR_INVALID_VALUE;
     }
 
-    std::vector<JettyInfo>& pool = (type == JettyType::JETTY_TYPE_H2D) ? h2dJettyPool_ : d2dJettyPool_;
+    std::vector<JettyInfo>& pool = (mode == JettyAllocMode::DIRECT)    ? directJettyList_ :
+                                   (type == JettyType::JETTY_TYPE_H2D) ? h2dJettyPool_ :
+                                                                         d2dJettyPool_;
     for (auto it = pool.begin(); it != pool.end(); ++it) {
         if (it->handle == handle) {
             const rtError_t ret = driver->AsyncDmaJettyDestroy(deviceId_, it->handle);
             if (ret != RT_ERROR_NONE) {
                 RT_LOG(
-                    RT_LOG_ERROR, "Destroy jetty failed, device_id=%u, type=%d, jetty_id=%u, retCode=%#x.", deviceId_,
-                    static_cast<int32_t>(type), it->jettyId, ret);
+                    RT_LOG_ERROR, "Destroy jetty failed, device_id=%u, handle=%llu, jetty_id=%u, retCode=%#x.",
+                    deviceId_, handle, it->jettyId, ret);
                 return ret;
             }
             RT_LOG(
-                RT_LOG_INFO, "Release jetty success, device_id=%u, type=%d, jetty_id=%u.", deviceId_,
-                static_cast<int32_t>(type), it->jettyId);
+                RT_LOG_INFO, "Release jetty success, device_id=%u, handle=%llu, jetty_id=%u.", deviceId_, handle,
+                it->jettyId);
             (void)pool.erase(it);
             return RT_ERROR_NONE;
         }
@@ -147,10 +155,10 @@ rtError_t JettyPool::FreeJettyLazy(uint64_t handle)
     return RT_ERROR_NONE;
 }
 
-rtError_t JettyPool::AllocLargeDepthJetty(JettyType type, uint32_t depth, JettyInfo& jettyInfo)
+rtError_t JettyPool::AllocDirectJetty(JettyType type, uint32_t depth, JettyInfo& jettyInfo)
 {
     if (depth < JETTY_DEPTH_STANDARD) {
-        RT_LOG(RT_LOG_ERROR, "Invalid large depth jetty depth=%u.", depth);
+        RT_LOG(RT_LOG_ERROR, "Invalid direct jetty depth=%u.", depth);
         return RT_ERROR_INVALID_VALUE;
     }
 
@@ -160,42 +168,13 @@ rtError_t JettyPool::AllocLargeDepthJetty(JettyType type, uint32_t depth, JettyI
     const rtError_t error = CreateJetty(type, depth, newJetty);
     COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
     newJetty.state = JettyState::BOUND;
-    largeJettyPool_.push_back(newJetty);
+    directJettyList_.push_back(newJetty);
     jettyInfo = newJetty;
 
     RT_LOG(
-        RT_LOG_INFO, "Create large depth jetty success, device_id=%u, type=%d, depth=%u, jetty_id=%u.", deviceId_,
+        RT_LOG_INFO, "Create direct jetty success, device_id=%u, type=%d, depth=%u, jetty_id=%u.", deviceId_,
         static_cast<int32_t>(type), depth, newJetty.jettyId);
     return RT_ERROR_NONE;
-}
-
-rtError_t JettyPool::FreeLargeDepthJetty(uint64_t handle)
-{
-    std::lock_guard<std::mutex> lock(poolLock_);
-
-    Driver* const driver = Runtime::Instance()->driverFactory_.GetDriver(NPU_DRIVER);
-    if (driver == nullptr) {
-        return RT_ERROR_INVALID_VALUE;
-    }
-
-    for (auto it = largeJettyPool_.begin(); it != largeJettyPool_.end(); ++it) {
-        if (it->handle == handle) {
-            const rtError_t ret = driver->AsyncDmaJettyDestroy(deviceId_, it->handle);
-            if (ret != RT_ERROR_NONE) {
-                RT_LOG(
-                    RT_LOG_ERROR, "Destroy large depth jetty failed, device_id=%u, handle=%llu, retCode=%#x.",
-                    deviceId_, handle, ret);
-                return ret;
-            }
-            RT_LOG(
-                RT_LOG_INFO, "Destroy large depth jetty success, device_id=%u, handle=%llu, jetty_id=%u.", deviceId_,
-                handle, it->jettyId);
-            (void)largeJettyPool_.erase(it);
-            return RT_ERROR_NONE;
-        }
-    }
-
-    return RT_ERROR_INVALID_VALUE;
 }
 
 rtError_t JettyPool::GetJettyInfoByHandle(uint64_t handle, JettyInfo& jettyInfo)
@@ -228,7 +207,7 @@ void JettyPool::Clear()
     std::lock_guard<std::mutex> lock(poolLock_);
     h2dJettyPool_.clear();
     d2dJettyPool_.clear();
-    largeJettyPool_.clear();
+    directJettyList_.clear();
     RT_LOG(RT_LOG_INFO, "Jetty pool cleared, device_id=%u.", deviceId_);
 }
 
@@ -258,7 +237,7 @@ bool JettyPool::FindJettyByHandle(uint64_t handle, JettyInfo*& jettyInfo)
             return true;
         }
     }
-    for (auto& jetty : largeJettyPool_) {
+    for (auto& jetty : directJettyList_) {
         if (jetty.handle == handle) {
             jettyInfo = &jetty;
             return true;

@@ -237,14 +237,6 @@ rtError_t ApiProfileDecorator::QueryFunctionRegistered(const char_t* const stubN
     return error;
 }
 
-rtError_t ApiProfileDecorator::KernelFusionEnd(Stream* const stm)
-{
-    CallApiBegin(RT_PROF_API_KERNEL_FUSION_END);
-    const rtError_t error = impl_->KernelFusionEnd(stm);
-    CallApiEnd(error);
-    return error;
-}
-
 rtError_t ApiProfileDecorator::BuffGetInfo(
     const rtBuffGetCmdType type, const void* const inBuff, const uint32_t inLen, void* const outBuff,
     uint32_t* const outLen)

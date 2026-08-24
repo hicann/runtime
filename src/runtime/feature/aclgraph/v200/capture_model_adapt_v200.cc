@@ -56,7 +56,7 @@ rtError_t CaptureModel::RefreshJettyInfoList()
         const int32_t streamId = stm->Id_();
         for (const JettyType type : {JettyType::JETTY_TYPE_H2D, JettyType::JETTY_TYPE_D2D}) {
             StreamJettyContext* jettyCtx = jettyMgr->GetStreamJettyContext(streamId, type);
-            if (jettyCtx == nullptr || jettyCtx->jettyHandle == 0 || jettyCtx->filledWqeCount == 0) {
+            if (jettyCtx == nullptr || jettyCtx->jettyHandle == 0U || jettyCtx->filledWqeCount == 0U) {
                 continue;
             }
             JettyInfo jettyInfo = {};
@@ -69,7 +69,11 @@ rtError_t CaptureModel::RefreshJettyInfoList()
             info.dieId = static_cast<uint16_t>(std::min(jettyInfo.dieId, static_cast<uint32_t>(UINT16_MAX)));
             info.functionId = static_cast<uint16_t>(std::min(jettyInfo.functionId, static_cast<uint32_t>(UINT16_MAX)));
             info.jettyId = static_cast<uint16_t>(std::min(jettyInfo.jettyId, static_cast<uint32_t>(UINT16_MAX)));
-            info.piValue = static_cast<uint16_t>(jettyCtx->capacity - jettyCtx->filledWqeCount);
+            const uint32_t piVal = jettyCtx->capacity - jettyCtx->filledWqeCount;
+            if ((piVal == 0U) || (piVal == jettyCtx->capacity)) {
+                continue;
+            }
+            info.piValue = static_cast<uint16_t>(piVal);
             info.sqId = stm->GetSqId();
             if (type == JettyType::JETTY_TYPE_H2D) {
                 SetH2dJettyInfo(info);

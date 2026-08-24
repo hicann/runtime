@@ -29,6 +29,7 @@
 #include "task_info.hpp"
 #include "task_submit.hpp"
 #include "stub_task.hpp"
+#include "stream_jetty_handler.h"
 #include "utils.h"
 #include "model_maintaince_task.h"
 #include "model_execute_task.h"
@@ -80,7 +81,8 @@ Model::Model(ModelType type)
       baseFuncCallSvmMem_(nullptr),
       funcCallDfxBaseSvmMem_(nullptr),
       dfxPtr_(nullptr),
-      modelType_(type)
+      modelType_(type),
+      needRebindJetty_(false)
 {}
 
 Model::~Model() noexcept
@@ -619,7 +621,11 @@ rtError_t Model::UnbindStream(Stream* const streamIn, const bool force)
     ERROR_RETURN_MSG_INNER(
         error, "Failed to unbind the stream from the model, stream_id=%d, retCode=%#x.", streamId,
         static_cast<uint32_t>(error));
-
+    if (Runtime::Instance()->GetConnectUbFlag()) {
+        for (const JettyType type : {JettyType::JETTY_TYPE_H2D, JettyType::JETTY_TYPE_D2D}) {
+            (void)StreamJettyHandler::ReleaseJetty(streamIn, type, true);
+        }
+    }
     streamIn->SetModel(nullptr);
     streamIn->SetBindFlag(false);
     streamIn->EraseCacheStream();
@@ -671,7 +677,6 @@ rtError_t Model::DelStream(Stream* const streamIn)
         headStreams_.remove(streamIn);
         return RT_ERROR_NONE;
     }
-
     streams_.remove(streamIn);
     streamIn->SetModel(nullptr);
     streamIn->SetBindFlag(false);

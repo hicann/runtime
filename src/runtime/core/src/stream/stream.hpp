@@ -269,9 +269,6 @@ public:
     // Query state of event
     rtError_t Query(void) const;
 
-    // end fuison kernels
-    rtError_t KernelFusionEnd();
-
     rtError_t FreePersistentTaskID(TaskAllocator* const tskAllocator);
 
     rtError_t GetError(void);
