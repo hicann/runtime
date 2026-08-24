@@ -958,6 +958,7 @@ typedef enum {
     ACL_DEV_ATTR_MAINBOARD_ID = 407U,
     ACL_DEV_ATTR_HD_CONNECT_TYPE = 408U,
     ACL_DEV_ATTR_DEVICE_FORM_FACTOR = 409U,
+    ACL_DEV_ATTR_SUPER_POD_CHASSIS_ID = 410U,
     ACL_DEV_ATTR_IS_VIRTUAL = 501U,
 
     ACL_DEV_ATTR_NPU_ARCH = 601U,
@@ -1165,6 +1166,16 @@ typedef enum {
     <!-- npu="950" id87 -->
     仅Ascend 950PR/Ascend 950DT支持该选项。
     <!-- end id87 -->
+
+    对于不支持该选项的产品型号，返回报错。
+
+- ACL\_DEV\_ATTR\_SUPER\_POD\_CHASSIS\_ID
+
+    SuperPOD Chassis ID，表示超节点产品中的机箱ID。
+
+    <!-- npu="950" id108 -->
+    仅Ascend 950PR/Ascend 950DT支持该选项。
+    <!-- end id108 -->
 
     对于不支持该选项的产品型号，返回报错。
 

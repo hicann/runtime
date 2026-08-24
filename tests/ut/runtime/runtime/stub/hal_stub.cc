@@ -146,6 +146,7 @@ drvError_t halRepairFault(uint32_t devid, halRepairFaultInfo* info)
 }
 
 int64_t g_device_driver_version_stub = 1;
+int64_t g_device_driver_chassis_id_stub = 0xABCD;
 void halSetDeviceInfoEncap(int32_t moduleType, int32_t infoType, int64_t value)
 {
     if (moduleType == MODULE_TYPE_SYSTEM && infoType == INFO_TYPE_VERSION) {
@@ -161,6 +162,8 @@ drvError_t halGetDeviceInfo(uint32_t devId, int32_t moduleType, int32_t infoType
             printf(
                 "\r\n halGetDeviceInfo:: moduleType = %d, infoType = %d, g_device_driver_version_stub = %d", moduleType,
                 infoType, g_device_driver_version_stub);
+        } else if (moduleType == MODULE_TYPE_SYSTEM && infoType == INFO_TYPE_CHASSIS_ID) {
+            *value = g_device_driver_chassis_id_stub;
         } else {
             *value = 0;
         }

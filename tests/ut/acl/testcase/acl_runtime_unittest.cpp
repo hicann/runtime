@@ -5525,6 +5525,17 @@ TEST_F(UTEST_ACL_Runtime, aclrtGetDeviceInfo_hd_connect_type)
     EXPECT_TRUE(value >= ACL_HOST_DEVICE_CONNECT_TYPE_PCIE && value <= ACL_HOST_DEVICE_CONNECT_TYPE_UB);
 }
 
+TEST_F(UTEST_ACL_Runtime, aclrtGetDeviceInfo_super_pod_chassis_id)
+{
+    uint32_t deviceId = 0;
+    int64_t value = 0;
+    auto ret = aclrtGetDeviceInfo(deviceId, ACL_DEV_ATTR_SUPER_POD_CHASSIS_ID, nullptr);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+
+    ret = aclrtGetDeviceInfo(deviceId, ACL_DEV_ATTR_SUPER_POD_CHASSIS_ID, &value);
+    EXPECT_TRUE(ret == ACL_SUCCESS || ret == ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+}
+
 TEST_F(UTEST_ACL_Runtime, aclrtHostMemMapCapabilities_succ)
 {
     uint32_t deviceId = 0U;

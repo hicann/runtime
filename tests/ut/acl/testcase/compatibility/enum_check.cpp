@@ -966,6 +966,9 @@ TEST_F(UTEST_ACL_compatibility_enum_check, aclrtDevAttr)
     value = (aclrtDevAttr)407U;
     EXPECT_EQ(value, ACL_DEV_ATTR_MAINBOARD_ID);
 
+    value = (aclrtDevAttr)410U;
+    EXPECT_EQ(value, ACL_DEV_ATTR_SUPER_POD_CHASSIS_ID);
+
     value = (aclrtDevAttr)501U;
     EXPECT_EQ(value, ACL_DEV_ATTR_IS_VIRTUAL);
 

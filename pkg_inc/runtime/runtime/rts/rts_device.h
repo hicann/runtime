@@ -51,19 +51,20 @@ typedef enum {
     RT_DEV_ATTR_L2_CACHE_SIZE = 302U,
 
     // MODULE_TYPE_SYSTEM
-    RT_DEV_ATTR_SMP_ID = 401U,              // indicates whether devices are on the same OS
-    RT_DEV_ATTR_PHY_CHIP_ID = 402U,         // physical chip id
-    RT_DEV_ATTR_SUPER_POD_DEVICE_ID = 403U, // super pod device id
-    RT_DEV_ATTR_SUPER_POD_SERVER_ID = 404U, // super pod server id
-    RT_DEV_ATTR_SUPER_POD_ID = 405U,        // super pod id
-    RT_DEV_ATTR_CUST_OP_PRIVILEGE = 406U,   // indicates whether the custom operator privilege is enabled
-    RT_DEV_ATTR_MAINBOARD_ID = 407U,        // mainboard id
-    RT_DEV_ATTR_HD_CONNECT_TYPE = 408U,     // host-device connect type
-    RT_DEV_ATTR_DEVICE_FORM_FACTOR = 409U,  // device form factor (pod/server/pcie card)
+    RT_DEV_ATTR_SMP_ID = 401U,               // indicates whether devices are on the same OS
+    RT_DEV_ATTR_PHY_CHIP_ID = 402U,          // physical chip id
+    RT_DEV_ATTR_SUPER_POD_DEVICE_ID = 403U,  // super pod device id
+    RT_DEV_ATTR_SUPER_POD_SERVER_ID = 404U,  // super pod server id
+    RT_DEV_ATTR_SUPER_POD_ID = 405U,         // super pod id
+    RT_DEV_ATTR_CUST_OP_PRIVILEGE = 406U,    // indicates whether the custom operator privilege is enabled
+    RT_DEV_ATTR_MAINBOARD_ID = 407U,         // mainboard id
+    RT_DEV_ATTR_HD_CONNECT_TYPE = 408U,      // host-device connect type
+    RT_DEV_ATTR_DEVICE_FORM_FACTOR = 409U,   // device form factor (pod/server/pcie card)
+    RT_DEV_ATTR_SUPER_POD_CHASSIS_ID = 410U, // super pod chassis id
 
-    RT_DEV_ATTR_IS_VIRTUAL = 501U,          // is_virtual
+    RT_DEV_ATTR_IS_VIRTUAL = 501U,           // is_virtual
 
-    RT_DEV_ATTR_NPU_ARCH = 601U,            // npu arch
+    RT_DEV_ATTR_NPU_ARCH = 601U,             // npu arch
 
     RT_DEV_ATTR_MAX
 } rtDevAttr;

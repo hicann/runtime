@@ -688,6 +688,7 @@ typedef enum {
     ACL_DEV_ATTR_MAINBOARD_ID = 407U,         // mainborad id
     ACL_DEV_ATTR_HD_CONNECT_TYPE = 408U,      // host-device connect type
     ACL_DEV_ATTR_DEVICE_FORM_FACTOR = 409U,   // device form factor (pod/server/pcie card)
+    ACL_DEV_ATTR_SUPER_POD_CHASSIS_ID = 410U, // super pod chassis id
 
     ACL_DEV_ATTR_IS_VIRTUAL = 501U,           // whether it is in compute power splitting mode
 

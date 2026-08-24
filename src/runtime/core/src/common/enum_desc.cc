@@ -410,6 +410,8 @@ const char_t* DevAttrToString(const rtDevAttr attr)
             return "DEV_ATTR_HD_CONNECT_TYPE(408)";
         case RT_DEV_ATTR_DEVICE_FORM_FACTOR:
             return "DEV_ATTR_DEVICE_FORM_FACTOR(409)";
+        case RT_DEV_ATTR_SUPER_POD_CHASSIS_ID:
+            return "DEV_ATTR_SUPER_POD_CHASSIS_ID(410)";
         case RT_DEV_ATTR_IS_VIRTUAL:
             return "DEV_ATTR_IS_VIRTUAL(501)";
         case RT_DEV_ATTR_NPU_ARCH:

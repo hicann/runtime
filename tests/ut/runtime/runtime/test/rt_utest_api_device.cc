@@ -28,6 +28,8 @@
 using namespace testing;
 using namespace cce::runtime;
 
+extern int64_t g_device_driver_chassis_id_stub;
+
 class ApiDeviceTest : public testing::Test {
 protected:
     static void SetUpTestCase() { std::cout << "ApiDeviceTest test start start. " << std::endl; }
@@ -141,7 +143,8 @@ void CheckDeviceInfoCommonAttrs(int32_t devid, int64_t& val)
         RT_DEV_ATTR_SUPER_POD_SERVER_ID,
         RT_DEV_ATTR_SUPER_POD_ID,
         RT_DEV_ATTR_CUST_OP_PRIVILEGE,
-        RT_DEV_ATTR_MAINBOARD_ID};
+        RT_DEV_ATTR_MAINBOARD_ID,
+        RT_DEV_ATTR_SUPER_POD_CHASSIS_ID};
     for (const auto attr : attrs) {
         error = rtsDeviceGetInfo(devid, attr, &val);
         EXPECT_EQ(error, RT_ERROR_NONE);
@@ -188,6 +191,15 @@ TEST_F(ApiDeviceTest, TestRtsDeviceGetInfo)
     CheckDeviceInfoCommonAttrs(devid, val);
     CheckDeviceInfoNpuArch(devid, val);
     CheckDeviceInfoVirtualAttrs(devid, val);
+}
+
+TEST_F(ApiDeviceTest, TestRtsDeviceGetInfoSuperPodChassisIdMapping)
+{
+    constexpr int32_t devid = 0;
+    int64_t val = 0;
+    const rtError_t error = rtsDeviceGetInfo(devid, RT_DEV_ATTR_SUPER_POD_CHASSIS_ID, &val);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(val, g_device_driver_chassis_id_stub);
 }
 
 TEST_F(ApiDeviceTest, TestRtsDeviceGetInfo_abnormal_1)
