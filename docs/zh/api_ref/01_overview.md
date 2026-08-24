@@ -18,6 +18,7 @@
 | acltdt | 数据传输接口。 |
 | aclmdl&aclop | 模型和算子数据Dump接口。 |
 | aclprof | Profiling数据采集接口。 |
+| acllog | 日志回调接口，用于用户自定义模块记录日志。 |
 
 ### 调用接口依赖的头文件和库文件说明
 
@@ -38,6 +39,7 @@ acl接口的头文件在“${INSTALL_DIR}/include/”目录下，库文件在“
 | acl/acl_rt_api.h | 用于定义 C++ 扩展接口，提供函数重载和模板封装（仅适用于 C++ 程序）。依赖 acl_rt.h。 | libacl_rt.so |
 | acl/acl_dump.h | 用于定义模型和算子Dump接口。 | libascend_dump.so |
 | acl/acl_prof.h | 用于定义Profiling数据采集接口。 | libmsprofiler.so<br>说明：为了兼容旧版本，旧版本中支持使用libascendcl.so，但后续版本这种方式会废弃，建议使用libmsprofiler.so，防止后续版本出现兼容性问题。 |
+| base/acl_log.h | 用于定义日志回调接口，支持用户自定义模块记录日志。 | libascendalog.so |
 | acl/acl_tdt.h | 用于定义Tensor数据传输接口。 | libacl_tdt_channel.so |
 | acl/acl_tdt_queue.h | 用于定义共享队列管理、共享Buffer管理接口。 | libacl_tdt_queue.so |
 
