@@ -20,8 +20,8 @@ extern "C" {
 LogStatus DlogLoadTimerDll(void);
 LogStatus DlogCloseTimerDll(void);
 
-uint32_t DlogAddUnifiedTimer(const char *timerName, void (*callback)(void), int64_t period, enum TimerType type);
-uint32_t DlogRemoveUnifiedTimer(const char *timerName);
+uint32_t DlogAddUnifiedTimer(const char* timerName, void (*callback)(void), int64_t period, enum TimerType type);
+uint32_t DlogRemoveUnifiedTimer(const char* timerName);
 
 #ifdef __cplusplus
 }

@@ -29,4 +29,3 @@ void DlogReportStopInner(int32_t devId);
 }
 #endif
 #endif
-

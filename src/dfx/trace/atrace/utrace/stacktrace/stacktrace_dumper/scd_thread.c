@@ -27,7 +27,7 @@ STATIC TraStatus ScdThreadWaitTidStopped(int32_t tid)
             SCD_DLOG_WAR("can not stop thread, tid=%d, status=%x", tid, status);
             return TRACE_FAILURE;
         }
-        if (WSTOPSIG (status) == SIGSTOP) {
+        if (WSTOPSIG(status) == SIGSTOP) {
             break;
         }
         SCD_DLOG_WAR("waitpid ret = %d, status=%x, tid=%d", ret, status, tid);
@@ -37,7 +37,7 @@ STATIC TraStatus ScdThreadWaitTidStopped(int32_t tid)
     return TRACE_SUCCESS;
 }
 
-TraStatus ScdThreadSuspend(ScdThread *thd)
+TraStatus ScdThreadSuspend(ScdThread* thd)
 {
     int32_t tid = thd->tid;
     if (ScdPtraceAttach(tid) != TRACE_SUCCESS) {
@@ -48,17 +48,14 @@ TraStatus ScdThreadSuspend(ScdThread *thd)
     return ScdThreadWaitTidStopped(tid);
 }
 
-void ScdThreadResume(ScdThread *thd)
-{
-    ScdPtraceDetach(thd->tid);
-}
+void ScdThreadResume(ScdThread* thd) { ScdPtraceDetach(thd->tid); }
 
-STATIC void ScdThreadGetName(ScdThread *thd)
+STATIC void ScdThreadGetName(ScdThread* thd)
 {
     ScdUtilGetThreadName(thd->pid, thd->tid, thd->tname, SCD_THREAD_NAME_LEN);
 }
 
-STATIC TraStatus ScdThreadGetRegs(ScdThread *thd)
+STATIC TraStatus ScdThreadGetRegs(ScdThread* thd)
 {
     uintptr_t regBuf[SCD_REGS_NUM] = {0};
     // 通过ptrace获取
@@ -70,7 +67,7 @@ STATIC TraStatus ScdThreadGetRegs(ScdThread *thd)
     return TRACE_SUCCESS;
 }
 
-TraStatus ScdThreadLoadInfo(ScdThread *thd)
+TraStatus ScdThreadLoadInfo(ScdThread* thd)
 {
     ScdThreadGetName(thd);
     TraStatus ret = ScdThreadGetRegs(thd);
@@ -81,7 +78,7 @@ TraStatus ScdThreadLoadInfo(ScdThread *thd)
     return TRACE_SUCCESS;
 }
 
-TraStatus ScdThreadLoadInfoForCrash(ScdThread *thd, ScdRegs *regs)
+TraStatus ScdThreadLoadInfoForCrash(ScdThread* thd, ScdRegs* regs)
 {
     ScdThreadGetName(thd);
     errno_t ret = memcpy_s(&thd->regs, sizeof(ScdRegs), regs, sizeof(ScdRegs));
@@ -89,17 +86,15 @@ TraStatus ScdThreadLoadInfoForCrash(ScdThread *thd, ScdRegs *regs)
         SCD_DLOG_WAR("can not memcpy_s, ret=%d, errno=%d", (int32_t)ret, errno);
         return TRACE_FAILURE;
     }
-    SCD_DLOG_DBG("set crash thread info, tid=%d, pc=0x%lx, sp=0x%lx, fp=0x%lx.",
-        thd->tid, GET_PCREG(regs->r), GET_SPREG(regs->r), GET_FPREG(regs->r));
+    SCD_DLOG_DBG(
+        "set crash thread info, tid=%d, pc=0x%lx, sp=0x%lx, fp=0x%lx.", thd->tid, GET_PCREG(regs->r),
+        GET_SPREG(regs->r), GET_FPREG(regs->r));
     return TRACE_SUCCESS;
 }
 
-TraStatus ScdThreadLoadFrames(ScdThread *thd, ScdMaps *maps)
-{
-    return ScdFramesLoad(&thd->frames, maps, &thd->regs);
-}
+TraStatus ScdThreadLoadFrames(ScdThread* thd, ScdMaps* maps) { return ScdFramesLoad(&thd->frames, maps, &thd->regs); }
 
-STATIC TraStatus ScdThreadInit(ScdThread *thd, int32_t pid, int32_t tid)
+STATIC TraStatus ScdThreadInit(ScdThread* thd, int32_t pid, int32_t tid)
 {
     SCD_CHK_PTR_ACTION(thd, return TRACE_FAILURE);
     thd->status = SCD_THREAD_STATUS_INIT;
@@ -109,14 +104,11 @@ STATIC TraStatus ScdThreadInit(ScdThread *thd, int32_t pid, int32_t tid)
     return ScdFramesInit(&thd->frames, pid, tid);
 }
 
-STATIC void ScdThreadUninit(ScdThread *thd)
-{
-    ScdFramesUninit(&thd->frames);
-}
+STATIC void ScdThreadUninit(ScdThread* thd) { ScdFramesUninit(&thd->frames); }
 
-ScdThread *ScdThreadCreate(int32_t pid, int32_t tid)
+ScdThread* ScdThreadCreate(int32_t pid, int32_t tid)
 {
-    ScdThread *thd = AdiagMalloc(sizeof(ScdThread)); 
+    ScdThread* thd = AdiagMalloc(sizeof(ScdThread));
     if (thd != NULL) {
         TraStatus ret = ScdThreadInit(thd, pid, tid);
         if (ret != TRACE_SUCCESS) {
@@ -126,7 +118,7 @@ ScdThread *ScdThreadCreate(int32_t pid, int32_t tid)
     return thd;
 }
 
-void ScdThreadDestroy(ScdThread **thd)
+void ScdThreadDestroy(ScdThread** thd)
 {
     if ((thd != NULL) && (*thd != NULL)) {
         ScdThreadUninit(*thd);

@@ -15,15 +15,9 @@
 
 STATIC int32_t g_clientSockFd = -1;
 
-void UtraceSetSocketFd(int32_t fd)
-{
-    g_clientSockFd = fd;
-}
+void UtraceSetSocketFd(int32_t fd) { g_clientSockFd = fd; }
 
-int32_t UtraceGetSocketFd(void)
-{
-    return g_clientSockFd;
-}
+int32_t UtraceGetSocketFd(void) { return g_clientSockFd; }
 
 bool UtraceIsSocketFdValid(void)
 {
@@ -34,7 +28,7 @@ bool UtraceIsSocketFdValid(void)
     }
 }
 
-STATIC TraStatus TraceGetSocketPathByVfid(uint32_t vfid, char *socketPath, uint32_t pathLen)
+STATIC TraStatus TraceGetSocketPathByVfid(uint32_t vfid, char* socketPath, uint32_t pathLen)
 {
     int32_t ret = snprintf_s(socketPath, pathLen, pathLen - 1, "%s%s_%u", SOCKET_FILE_DIR, SOCKET_FILE, vfid);
     if (ret == -1) {
@@ -44,7 +38,7 @@ STATIC TraStatus TraceGetSocketPathByVfid(uint32_t vfid, char *socketPath, uint3
     return TRACE_SUCCESS;
 }
 
-STATIC TraStatus TraceGetSocketPathByPfid(char *socketPath, uint32_t pathLen)
+STATIC TraStatus TraceGetSocketPathByPfid(char* socketPath, uint32_t pathLen)
 {
     int32_t ret = snprintf_s(socketPath, pathLen, pathLen - 1, "%s%s", SOCKET_FILE_DIR, SOCKET_FILE);
     if (ret == -1) {
@@ -61,7 +55,7 @@ STATIC TraStatus TraceGetSocketPathByPfid(char *socketPath, uint32_t pathLen)
  * @param [in]      : pathLen           path length
  * @return          : !=0 failure; ==0 success
  */
-STATIC TraStatus UtraceGetTraceSocketPath(uint32_t devId, char *socketPath, uint32_t pathLen)
+STATIC TraStatus UtraceGetTraceSocketPath(uint32_t devId, char* socketPath, uint32_t pathLen)
 {
     if ((devId >= MIN_VFID_NUM) && (devId <= MAX_VFID_NUM)) {
         // devId(32~63) is vfid, strcat socket path with "socket_trace_vfid"
@@ -79,13 +73,14 @@ int32_t UtraceCreateSocket(uint32_t devId)
     struct sockaddr_un addr;
     int32_t pid = (int32_t)getpid();
     int32_t sockFd = TraceSocket(AF_UNIX, (uint32_t)SOCK_DGRAM | (uint32_t)SOCK_NONBLOCK, 0);
-    ADIAG_CHK_EXPR_ACTION(sockFd == TRACE_FAILURE, return TRACE_FAILURE, "create socket failed, strerr=%s, pid=%d",
+    ADIAG_CHK_EXPR_ACTION(
+        sockFd == TRACE_FAILURE, return TRACE_FAILURE, "create socket failed, strerr=%s, pid=%d",
         strerror(AdiagGetErrorCode()), pid);
 
     const int32_t nSendBuf = 2097152; // 2MB
     int32_t ret;
     do {
-        ret = setsockopt(sockFd, SOL_SOCKET, SO_SNDBUF, (const char *)&nSendBuf, sizeof(int));
+        ret = setsockopt(sockFd, SOL_SOCKET, SO_SNDBUF, (const char*)&nSendBuf, sizeof(int));
         if (ret < 0) {
             ADIAG_ERR("set socket option failed, strerr=%s, pid=%d.", strerror(AdiagGetErrorCode()), pid);
             break;
@@ -94,7 +89,7 @@ int32_t UtraceCreateSocket(uint32_t devId)
         (void)memset_s(&addr, sizeof(addr), 0, sizeof(addr));
 
         addr.sun_family = AF_UNIX;
-        char socketPath[SOCKET_PATH_MAX_LENGTH + 1U] = { 0 };
+        char socketPath[SOCKET_PATH_MAX_LENGTH + 1U] = {0};
         ret = UtraceGetTraceSocketPath(devId, socketPath, SOCKET_PATH_MAX_LENGTH);
         if (ret != TRACE_SUCCESS) {
             ADIAG_ERR("get socket path failed, ret=%d, pid=%d, devId=%u.", ret, pid, devId);
@@ -107,7 +102,7 @@ int32_t UtraceCreateSocket(uint32_t devId)
             break;
         }
 
-        ret = TraceConnect(sockFd, (struct sockaddr *)&addr, sizeof(addr));
+        ret = TraceConnect(sockFd, (struct sockaddr*)&addr, sizeof(addr));
         if (ret != TRACE_SUCCESS) {
             ADIAG_ERR("connect to trace server failed, path %s, ret=%d, pid=%d.", addr.sun_path, ret, pid);
             break;

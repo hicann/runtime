@@ -27,26 +27,25 @@ extern "C" {
 #define TRACE_MAX_OBJ_NAME_LENGTH 200
 
 typedef struct TraceLoadProgSegInfo {
-    uintptr_t loadProgSegAddr;           // load program segment sddr
-    uint32_t segSize;                    // load program segment size
+    uintptr_t loadProgSegAddr; // load program segment sddr
+    uint32_t segSize;          // load program segment size
 } TraceLoadProgSegInfo;
 
 // unwind map info for each elf file
 typedef struct TraceUnwindMapInfo {
-    uintptr_t loadBase;                                              // load base add for elf
-    uintptr_t unwindSegStart;                                        // eh_frame segment address of elf file
-    size_t size;                                                     // eh_frame segment size
-    char objName[TRACE_MAX_OBJ_NAME_LENGTH];                         // name of dynamic library
-    TraceLoadProgSegInfo codeList[TRACE_MAX_CODE_SEGMENT_NUM];       // code segment info
-    uint32_t codeListNum;                                            // num of code segment
-    size_t count;                                                  // FDE count
+    uintptr_t loadBase;                                        // load base add for elf
+    uintptr_t unwindSegStart;                                  // eh_frame segment address of elf file
+    size_t size;                                               // eh_frame segment size
+    char objName[TRACE_MAX_OBJ_NAME_LENGTH];                   // name of dynamic library
+    TraceLoadProgSegInfo codeList[TRACE_MAX_CODE_SEGMENT_NUM]; // code segment info
+    uint32_t codeListNum;                                      // num of code segment
+    size_t count;                                              // FDE count
 } TraceUnwindMapInfo;
-TraStatus TraceStackUnwind(const ThreadArgument *arg, uintptr_t *regsAddr, uint32_t regNum, TraceStackInfo *stackInfo);
+TraStatus TraceStackUnwind(const ThreadArgument* arg, uintptr_t* regsAddr, uint32_t regNum, TraceStackInfo* stackInfo);
 void TraceStackUnwindInit(void);
-TraStatus TraceGetEhFrameHdrAddr(uintptr_t pc, ScdDwarf *dwarf);
+TraStatus TraceGetEhFrameHdrAddr(uintptr_t pc, ScdDwarf* dwarf);
 
 #ifdef __cplusplus
 }
 #endif // __cplusplus
 #endif
-

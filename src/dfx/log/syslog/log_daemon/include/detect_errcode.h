@@ -16,13 +16,13 @@
 extern "C" {
 #endif // __cplusplus
 
-#define DETECT_SUCCESS                                  0
-#define DETECT_FAILURE                                  1
-#define DETECT_ERROR_INVALID_ARGUMENT                   2
-#define DETECT_ERROR_BAD_ALLOC                          3
-#define DETECT_ERROR_OUT_OF_BUFFER                      4
-#define DETECT_ERROR_COMMUNICATION                      200
-#define DETECT_ERROR_TESTCASE_FAIL                      500000   // CPU STL检测异常
+#define DETECT_SUCCESS 0
+#define DETECT_FAILURE 1
+#define DETECT_ERROR_INVALID_ARGUMENT 2
+#define DETECT_ERROR_BAD_ALLOC 3
+#define DETECT_ERROR_OUT_OF_BUFFER 4
+#define DETECT_ERROR_COMMUNICATION 200
+#define DETECT_ERROR_TESTCASE_FAIL 500000 // CPU STL检测异常
 
 #ifdef __cplusplus
 }

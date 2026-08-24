@@ -26,7 +26,7 @@ extern "C" {
 
 // log transfer struct
 typedef struct {
-    uint16_t  version;
+    uint16_t version;
     unsigned int dataCompressed : 1;
     unsigned int frameBegin : 1;
     unsigned int frameEnd : 1;
@@ -37,16 +37,16 @@ typedef struct {
     unsigned int reserved;
     unsigned int dataLen;
     unsigned char data[0];
-}LogMsgHead;
+} LogMsgHead;
 
 /**
-* @brief            : recv log data by safe mode
-* @param [in]       : deviceId          device id
-* @param [out]      : recvBuf           pointer to receive buf
-* @param [in]       : maxLen            recv buffer max length
-* @return           : LogRt, SUCCESS/OTHER
-*/
-LogRt LogRecvSafeRead(int32_t deviceId, LogMsgHead **recvBuf, uint32_t maxLen);
+ * @brief            : recv log data by safe mode
+ * @param [in]       : deviceId          device id
+ * @param [out]      : recvBuf           pointer to receive buf
+ * @param [in]       : maxLen            recv buffer max length
+ * @return           : LogRt, SUCCESS/OTHER
+ */
+LogRt LogRecvSafeRead(int32_t deviceId, LogMsgHead** recvBuf, uint32_t maxLen);
 
 #ifdef __cplusplus
 }

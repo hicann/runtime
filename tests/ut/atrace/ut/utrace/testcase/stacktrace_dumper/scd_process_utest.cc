@@ -14,6 +14,7 @@
 #include "adiag_utils.h"
 #include "trace_system_api.h"
 
+#include "atrace_stackcore_api.h"
 #include "scd_layout.h"
 #include "scd_process.h"
 #include "scd_threads.h"
@@ -23,12 +24,12 @@
 #include <string>
 
 extern "C" {
-    TraStatus ScdProcessInit(ScdProcess **process, ScdProcessArgs *args);
-    TraStatus ScdProcessRecordInfo(int32_t fd, const ScdProcess *pro);
-    TraStatus ScdProcessRecordProcInfo(int32_t fd, pid_t pid, const char *name);
+TraStatus ScdProcessInit(ScdProcess** process, ScdProcessArgs* args);
+TraStatus ScdProcessRecordInfo(int32_t fd, const ScdProcess* pro);
+TraStatus ScdProcessRecordProcInfo(int32_t fd, pid_t pid, const char* name);
 }
 
-static std::string BuildNestedPathForAbsLength(const std::string &basePath, size_t targetAbsLen)
+static std::string BuildNestedPathForAbsLength(const std::string& basePath, size_t targetAbsLen)
 {
     std::string path = basePath + "/scd_long_path_ut";
     if (targetAbsLen < path.size()) {
@@ -52,28 +53,24 @@ TEST(ScdProcessPathHelperTest, BuildNestedPathRejectsLongBasePath)
     EXPECT_TRUE(BuildNestedPathForAbsLength(basePath, tooShortForInitialDir).empty());
 }
 
-class ScdProcessUtest: public testing::Test {
+class ScdProcessUtest : public testing::Test {
 protected:
     virtual void SetUp()
     {
         system("rm -rf " LLT_TEST_DIR "/*");
-        system("mkdir -p " LLT_TEST_DIR );
+        system("mkdir -p " LLT_TEST_DIR);
     }
 
     virtual void TearDown()
     {
         system("echo [DBG][TEST][`date +%Y-%m-%d-%H-%M-%S`] End test case");
         GlobalMockObject::verify();
-        system("rm -rf " LLT_TEST_DIR );
+        system("rm -rf " LLT_TEST_DIR);
     }
 
-    static void SetUpTestCase()
-    {
-    }
+    static void SetUpTestCase() {}
 
-    static void TearDownTestCase()
-    {
-    }
+    static void TearDownTestCase() {}
 };
 
 TEST_F(ScdProcessUtest, TestScdProcessInit)
@@ -82,7 +79,7 @@ TEST_F(ScdProcessUtest, TestScdProcessInit)
     TraStatus ret = TRACE_FAILURE;
 
     // malloc failed
-    MOCKER(AdiagMalloc).stubs().will(returnValue((void *)NULL));
+    MOCKER(AdiagMalloc).stubs().will(returnValue((void*)NULL));
     ret = ScdProcessDump(&arg);
     EXPECT_EQ(TRACE_FAILURE, ret);
     GlobalMockObject::verify();
@@ -152,14 +149,14 @@ TEST_F(ScdProcessUtest, TestScdProcessDump)
 
 TEST_F(ScdProcessUtest, TestScdProcessParseCore)
 {
-    ScdProcess *tmpProcess = (ScdProcess *)AdiagMalloc(sizeof(ScdProcess));
-    EXPECT_NE((ScdProcess *)0, tmpProcess);
+    ScdProcess* tmpProcess = (ScdProcess*)AdiagMalloc(sizeof(ScdProcess));
+    EXPECT_NE((ScdProcess*)0, tmpProcess);
     tmpProcess->shdrUsed = true;
-    char fileName[256] = { "stackcore_tracer_11_49324_python3.8_20241107094559638058" };
+    char fileName[256] = {"stackcore_tracer_11_49324_python3.8_20241107094559638058"};
     strncpy_s(tmpProcess->args.filePath, SCD_MAX_FILEPATH_LEN + 1U, LLT_TEST_DIR, strlen(LLT_TEST_DIR));
     strncpy_s(tmpProcess->args.fileName, SCD_MAX_FILENAME_LEN + 1U, fileName, strlen(fileName));
 
-    char binPath[256] = { LLT_TEST_DIR"/stackcore_tracer_11_49324_python3.8_20241107094559638058.bin" };
+    char binPath[256] = {LLT_TEST_DIR "/stackcore_tracer_11_49324_python3.8_20241107094559638058.bin"};
     int32_t fd = open(binPath, O_CREAT | O_RDWR | O_TRUNC, 0640);
     EXPECT_EQ(sizeof(ScdProcess), ScdUtilWrite(fd, tmpProcess, sizeof(ScdProcess)));
     EXPECT_GE(fd, 0);
@@ -179,7 +176,7 @@ TEST_F(ScdProcessUtest, TestScdProcessParseCore)
     GlobalMockObject::verify();
 
     MOCKER(access).stubs().will(returnValue(0));
-    ret = ScdProcessParseCore(LLT_TEST_DIR"/stackcore_tracer_11_49324_python3.8_20241107094559638058.txt", len);
+    ret = ScdProcessParseCore(LLT_TEST_DIR "/stackcore_tracer_11_49324_python3.8_20241107094559638058.txt", len);
     EXPECT_EQ(TRACE_FAILURE, ret);
     GlobalMockObject::verify();
 
@@ -196,8 +193,7 @@ TEST_F(ScdProcessUtest, TestScdProcessParseCore)
     GlobalMockObject::verify();
 
     // record to txt failed
-    MOCKER(access).stubs().will(returnValue(0))
-        .then(returnValue(-1));
+    MOCKER(access).stubs().will(returnValue(0)).then(returnValue(-1));
     MOCKER(ScdSectionRecord).stubs().will(returnValue(TRACE_FAILURE));
     ret = ScdProcessParseCore(binPath, len);
     EXPECT_EQ(TRACE_FAILURE, ret);
@@ -212,13 +208,20 @@ TEST_F(ScdProcessUtest, TestScdProcessParseCore)
     free(tmpProcess);
 }
 
+TEST_F(ScdProcessUtest, TestAtraceStackcoreParse)
+{
+    const char binPath[] = LLT_TEST_DIR "/stackcore_not_exist.bin";
+    TraStatus ret = AtraceStackcoreParse(binPath, strlen(binPath));
+    EXPECT_EQ(TRACE_FAILURE, ret);
+}
+
 TEST_F(ScdProcessUtest, TestScdProcessRecordTxt)
 {
     ScdProcessArgs arg = {0};
     arg.pid = getpid();
     arg.crashTid = gettid();
     arg.handleType = SCD_DUMP_THREADS_TXT;
-    char fileName[256] = { "stackcore_tracer_11_49324_python3.8_20241107094559638058" };
+    char fileName[256] = {"stackcore_tracer_11_49324_python3.8_20241107094559638058"};
     strncpy_s(arg.filePath, SCD_MAX_FILEPATH_LEN + 1U, LLT_TEST_DIR, strlen(LLT_TEST_DIR));
     strncpy_s(arg.fileName, SCD_MAX_FILENAME_LEN + 1U, fileName, strlen(fileName));
     TraStatus ret = TRACE_FAILURE;
@@ -246,7 +249,7 @@ TEST_F(ScdProcessUtest, TestScdProcessCreateFile_Failed)
     arg.pid = getpid();
     arg.crashTid = gettid();
     arg.handleType = SCD_DUMP_THREADS_TXT;
-    char fileName[256] = { "stackcore_tracer_11_49324_python3.8_20241107094559638058" };
+    char fileName[256] = {"stackcore_tracer_11_49324_python3.8_20241107094559638058"};
     strncpy_s(arg.filePath, SCD_MAX_FILEPATH_LEN + 1U, LLT_TEST_DIR, strlen(LLT_TEST_DIR));
     strncpy_s(arg.fileName, SCD_MAX_FILENAME_LEN + 1U, fileName, strlen(fileName));
     TraStatus ret = TRACE_FAILURE;
@@ -268,7 +271,7 @@ TEST_F(ScdProcessUtest, TestScdProcessCreateFile_Failed)
     GlobalMockObject::verify();
 
     // open failed
-    auto mocker = reinterpret_cast<int (*)(char *, int)>(open);
+    auto mocker = reinterpret_cast<int (*)(char*, int)>(open);
     MOCKER(mocker).stubs().will(returnValue(-1));
     MOCKER(ScdMapsLoad).stubs().will(returnValue(TRACE_SUCCESS));
     MOCKER(ScdThreadsLoad).stubs().will(returnValue(TRACE_SUCCESS));
@@ -319,7 +322,7 @@ TEST_F(ScdProcessUtest, TestScdProcessRecordInfo_Failed)
     int32_t fd = open("/dev/null", O_RDWR);
     EXPECT_GE(fd, 0);
 
-    MOCKER(popen).stubs().will(returnValue((FILE *)NULL));
+    MOCKER(popen).stubs().will(returnValue((FILE*)NULL));
     ret = ScdProcessRecordInfo(fd, &pro);
     EXPECT_EQ(TRACE_SUCCESS, ret);
     GlobalMockObject::verify();
@@ -346,9 +349,8 @@ TEST_F(ScdProcessUtest, TestScdProcessRecordInfo_snprintf_Failed)
     EXPECT_GE(fd, 0);
 
     int32_t callNum = 10;
-    for (int32_t i = 0 ; i < callNum; i++) {
-        MOCKER(vsnprintf_s).stubs().will(repeat(0, i))
-            .then(returnValue(-1));
+    for (int32_t i = 0; i < callNum; i++) {
+        MOCKER(vsnprintf_s).stubs().will(repeat(0, i)).then(returnValue(-1));
         ret = ScdProcessRecordInfo(fd, &pro);
         EXPECT_EQ(TRACE_SUCCESS, ret);
         GlobalMockObject::verify();
@@ -364,7 +366,7 @@ TEST_F(ScdProcessUtest, TestScdProcessRecordStack_Failed)
     arg.pid = getpid();
     arg.crashTid = gettid();
     arg.handleType = SCD_DUMP_THREADS_TXT;
-    char fileName[256] = { "stackcore_tracer_11_49324_python3.8_20241107094559638058" };
+    char fileName[256] = {"stackcore_tracer_11_49324_python3.8_20241107094559638058"};
     strncpy_s(arg.filePath, SCD_MAX_FILEPATH_LEN + 1U, LLT_TEST_DIR, strlen(LLT_TEST_DIR));
     strncpy_s(arg.fileName, SCD_MAX_FILENAME_LEN + 1U, fileName, strlen(fileName));
     TraStatus ret = TRACE_FAILURE;
@@ -383,7 +385,7 @@ TEST_F(ScdProcessUtest, TestScdProcessRecordCore)
     arg.pid = getpid();
     arg.crashTid = gettid();
     arg.handleType = SCD_DUMP_THREADS_BIN;
-    char fileName[256] = { "stackcore_tracer_11_49324_python3.8_20241107094559638058" };
+    char fileName[256] = {"stackcore_tracer_11_49324_python3.8_20241107094559638058"};
     strncpy_s(arg.filePath, SCD_MAX_FILEPATH_LEN + 1U, LLT_TEST_DIR, strlen(LLT_TEST_DIR));
     strncpy_s(arg.fileName, SCD_MAX_FILENAME_LEN + 1U, fileName, strlen(fileName));
     TraStatus ret = TRACE_FAILURE;
@@ -411,7 +413,7 @@ TEST_F(ScdProcessUtest, TestScdProcessRecordCore)
     GlobalMockObject::verify();
 }
 
-TraStatus ScdFramesLoad_stub(ScdFrames *frames, ScdMaps *maps, ScdRegs *regs)
+TraStatus ScdFramesLoad_stub(ScdFrames* frames, ScdMaps* maps, ScdRegs* regs)
 {
     (void)regs;
     (void)maps;
@@ -420,8 +422,8 @@ TraStatus ScdFramesLoad_stub(ScdFrames *frames, ScdMaps *maps, ScdRegs *regs)
     uintptr_t pc = 0;
     uintptr_t sp = 1;
     uintptr_t fp = 2;
-    ScdFrame *frame = ScdFrameCreate(&map, pc, sp, fp);
-    EXPECT_NE((ScdFrame *)NULL, frame);
+    ScdFrame* frame = ScdFrameCreate(&map, pc, sp, fp);
+    EXPECT_NE((ScdFrame*)NULL, frame);
     frame->num = frames->framesNum;
     frame->tid = frames->tid;
 
@@ -432,7 +434,7 @@ TraStatus ScdFramesLoad_stub(ScdFrames *frames, ScdMaps *maps, ScdRegs *regs)
 
 static int32_t g_errIdx = 0;
 static bool g_errFlag = false;
-size_t ScdUtilWrite_stub(int32_t fd, const void *data, size_t len)
+size_t ScdUtilWrite_stub(int32_t fd, const void* data, size_t len)
 {
     g_errFlag = false;
     static int32_t count = 0;
@@ -451,12 +453,12 @@ TEST_F(ScdProcessUtest, TestScdSectionStackRecord)
     int32_t crashTid = gettid();
     ucontext_t uc = {0};
     TraStatus ret = TRACE_FAILURE;
-    ScdProcess *tmpProcess = (ScdProcess *)AdiagMalloc(sizeof(ScdProcess));
-    EXPECT_NE((ScdProcess *)0, tmpProcess);
+    ScdProcess* tmpProcess = (ScdProcess*)AdiagMalloc(sizeof(ScdProcess));
+    EXPECT_NE((ScdProcess*)0, tmpProcess);
     tmpProcess->shdrUsed = true;
     tmpProcess->args.pid = pid;
     tmpProcess->args.crashTid = crashTid;
-    char fileName[256] = { "stackcore_tracer_11_49324_python3.8_20241107094559638058" };
+    char fileName[256] = {"stackcore_tracer_11_49324_python3.8_20241107094559638058"};
     strncpy_s(tmpProcess->args.filePath, SCD_MAX_FILEPATH_LEN + 1U, LLT_TEST_DIR, strlen(LLT_TEST_DIR));
     strncpy_s(tmpProcess->args.fileName, SCD_MAX_FILENAME_LEN + 1U, fileName, strlen(fileName));
 
@@ -470,7 +472,7 @@ TEST_F(ScdProcessUtest, TestScdSectionStackRecord)
     ret = ScdThreadsLoadFrames(&tmpProcess->thds, &maps);
     EXPECT_EQ(TRACE_SUCCESS, ret);
 
-    char binPath[256] = { LLT_TEST_DIR"/stackcore_tracer_11_49324_python3.8_20241107094559638058.bin" };
+    char binPath[256] = {LLT_TEST_DIR "/stackcore_tracer_11_49324_python3.8_20241107094559638058.bin"};
     int32_t fd = open(binPath, O_RDWR | O_CREAT, 0640);
     EXPECT_GE(fd, 0);
     // write bin success
@@ -479,12 +481,12 @@ TEST_F(ScdProcessUtest, TestScdSectionStackRecord)
     close(fd);
 
     // read bin success
-    ScdProcess *readPoint = NULL;
+    ScdProcess* readPoint = NULL;
     ret = ScdLayoutRead(&readPoint, binPath);
     EXPECT_EQ(TRACE_SUCCESS, ret);
-    EXPECT_NE((ScdProcess *)NULL, readPoint);
+    EXPECT_NE((ScdProcess*)NULL, readPoint);
 
-    char txtPath[256] = { LLT_TEST_DIR"/stackcore_tracer_11_49324_python3.8_20241107094559638058.txt" };
+    char txtPath[256] = {LLT_TEST_DIR "/stackcore_tracer_11_49324_python3.8_20241107094559638058.txt"};
     fd = open(txtPath, O_RDWR | O_CREAT, 0640);
     EXPECT_GE(fd, 0);
 
@@ -498,14 +500,13 @@ TEST_F(ScdProcessUtest, TestScdSectionStackRecord)
     EXPECT_EQ(TRACE_FAILURE, ret);
     GlobalMockObject::verify();
 
-    MOCKER(vsnprintf_s).stubs().will(returnValue(0))
-        .then(returnValue(-1));
+    MOCKER(vsnprintf_s).stubs().will(returnValue(0)).then(returnValue(-1));
     ret = ScdSectionRecord(fd, readPoint, SCD_SECTION_STACK);
     EXPECT_EQ(TRACE_FAILURE, ret);
     GlobalMockObject::verify();
 
     int32_t testNum = 10;
-    for (int32_t i = 0 ; i < testNum; i++) {
+    for (int32_t i = 0; i < testNum; i++) {
         g_errIdx = i;
         MOCKER(ScdUtilWrite).stubs().will(invoke(ScdUtilWrite_stub));
         MOCKER(ScdUtilWriteNewLine).stubs();

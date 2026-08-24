@@ -18,8 +18,8 @@
 extern "C" {
 #endif // __cplusplus
 
-LogStatus HardwareCompressFile(const char *file);
-LogStatus HardwareCompressBuffer(const char *source, uint32_t sourceLen, char **dest, uint32_t *destLen);
+LogStatus HardwareCompressFile(const char* file);
+LogStatus HardwareCompressBuffer(const char* source, uint32_t sourceLen, char** dest, uint32_t* destLen);
 
 #ifdef __cplusplus
 }

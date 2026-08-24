@@ -24,44 +24,32 @@ typedef struct {
     int8_t threadStatus;
 } ThreadInfo;
 
-STATIC ThreadInfo **g_plogThread = NULL;
+STATIC ThreadInfo** g_plogThread = NULL;
 STATIC ToolMutex g_plogThreadMutex = TOOL_MUTEX_INITIALIZER;
 
 /**
  * @brief       : init hdc mutex
  * @return      : NA
  */
-STATIC INLINE void PlogThreadMutexInit(void)
-{
-    (void)ToolMutexInit(&g_plogThreadMutex);
-}
+STATIC INLINE void PlogThreadMutexInit(void) { (void)ToolMutexInit(&g_plogThreadMutex); }
 
 /**
  * @brief       : Destroy hdc mutex
  * @return      : NA
  */
-STATIC INLINE void PlogThreadMutexDestroy(void)
-{
-    (void)ToolMutexDestroy(&g_plogThreadMutex);
-}
+STATIC INLINE void PlogThreadMutexDestroy(void) { (void)ToolMutexDestroy(&g_plogThreadMutex); }
 
 /**
  * @brief       : lock thread mutex
  * @return      : NA
  */
-STATIC INLINE void PlogThreadLock(void)
-{
-    (void)ToolMutexLock(&g_plogThreadMutex);
-}
+STATIC INLINE void PlogThreadLock(void) { (void)ToolMutexLock(&g_plogThreadMutex); }
 
 /**
  * @brief       : unlock thread mutex
  * @return      : NA
  */
-STATIC INLINE void PlogThreadUnLock(void)
-{
-    (void)ToolMutexUnLock(&g_plogThreadMutex);
-}
+STATIC INLINE void PlogThreadUnLock(void) { (void)ToolMutexUnLock(&g_plogThreadMutex); }
 
 STATIC void PlogThreadSetStatus(int32_t devId, int8_t value)
 {
@@ -90,8 +78,8 @@ int8_t PlogThreadGetStatus(int32_t devId)
  */
 STATIC ToolThread PlogThreadGetTid(int32_t devId)
 {
-    ONE_ACT_ERR_LOG((devId < 0) || (devId >= HOST_MAX_DEV_NUM), return (ToolThread)0,
-                    "can not get tid, invalid devId=%d.", devId);
+    ONE_ACT_ERR_LOG(
+        (devId < 0) || (devId >= HOST_MAX_DEV_NUM), return (ToolThread)0, "can not get tid, invalid devId=%d.", devId);
     ToolThread tid = 0;
     PlogThreadLock();
     if ((g_plogThread != NULL) && (g_plogThread[devId] != NULL)) {
@@ -101,7 +89,6 @@ STATIC ToolThread PlogThreadGetTid(int32_t devId)
     return tid;
 }
 
-
 /**
  * @brief       : check thread existence or non-existence
  * @param [in]  : devId         device id
@@ -109,8 +96,9 @@ STATIC ToolThread PlogThreadGetTid(int32_t devId)
  */
 STATIC bool PlogThreadCheckExist(int32_t devId)
 {
-    ONE_ACT_ERR_LOG((devId < 0) || (devId >= HOST_MAX_DEV_NUM), return false,
-                    "can not check thread exist, invalid devId=%d.", devId);
+    ONE_ACT_ERR_LOG(
+        (devId < 0) || (devId >= HOST_MAX_DEV_NUM), return false, "can not check thread exist, invalid devId=%d.",
+        devId);
     PlogThreadLock();
     if ((g_plogThread != NULL) && (g_plogThread[devId] != NULL) && (g_plogThread[devId]->tid != 0)) {
         PlogThreadUnLock();
@@ -127,8 +115,8 @@ STATIC bool PlogThreadCheckExist(int32_t devId)
  */
 void PlogThreadFree(int32_t devId)
 {
-    ONE_ACT_ERR_LOG((devId < 0) || (devId >= HOST_MAX_DEV_NUM), return,
-                    "can not free plog thread, invalid devId=%d.", devId);
+    ONE_ACT_ERR_LOG(
+        (devId < 0) || (devId >= HOST_MAX_DEV_NUM), return, "can not free plog thread, invalid devId=%d.", devId);
     PlogThreadLock();
     if ((g_plogThread != NULL) && (g_plogThread[devId] != NULL)) {
         LogFree(g_plogThread[devId]);
@@ -144,8 +132,8 @@ void PlogThreadFree(int32_t devId)
  */
 STATIC bool PlogThreadCheckPid(int32_t devId)
 {
-    ONE_ACT_ERR_LOG((devId < 0) || (devId >= HOST_MAX_DEV_NUM), return false,
-                    "can not get tid, invalid devId=%d.", devId);
+    ONE_ACT_ERR_LOG(
+        (devId < 0) || (devId >= HOST_MAX_DEV_NUM), return false, "can not get tid, invalid devId=%d.", devId);
     bool ret = true;
     PlogThreadLock();
     if ((g_plogThread != NULL) && (g_plogThread[devId] != NULL)) {
@@ -163,8 +151,8 @@ STATIC void PlogThreadJoinTask(int32_t devId)
     ToolThread tid = PlogThreadGetTid(devId);
     if ((tid > 0) && (PlogThreadCheckPid(devId))) {
         int32_t ret = ToolJoinTask(&tid);
-        NO_ACT_WARN_LOG(ret != 0, "can not join plog thread, devId=%d, strerr=%s.",
-                        devId, strerror(ToolGetErrorCode()));
+        NO_ACT_WARN_LOG(
+            ret != 0, "can not join plog thread, devId=%d, strerr=%s.", devId, strerror(ToolGetErrorCode()));
     }
     PlogThreadFree(devId);
 }
@@ -193,16 +181,16 @@ bool PlogThreadSingleTask(int32_t devId)
  * @param [in]  : func          thread run function
  * @return      : !=0 failure; ==0 success
  */
-LogStatus PlogThreadCreate(int32_t devId, ThreadArgs *pArgs, ThreadRunFunc func)
+LogStatus PlogThreadCreate(int32_t devId, ThreadArgs* pArgs, ThreadRunFunc func)
 {
-    ONE_ACT_ERR_LOG((devId < 0) || (devId >= HOST_MAX_DEV_NUM), return LOG_FAILURE,
-                    "create thread failed, invaild devId=%d.", devId);
-    ONE_ACT_ERR_LOG(pArgs == NULL, return LOG_FAILURE,
-                    "create thread failed, thread args is null.");
-    ONE_ACT_ERR_LOG(PlogThreadCheckExist(devId), return LOG_FAILURE,
-                    "log recv thread has bean started, devId=%d.", devId);
+    ONE_ACT_ERR_LOG(
+        (devId < 0) || (devId >= HOST_MAX_DEV_NUM), return LOG_FAILURE, "create thread failed, invaild devId=%d.",
+        devId);
+    ONE_ACT_ERR_LOG(pArgs == NULL, return LOG_FAILURE, "create thread failed, thread args is null.");
+    ONE_ACT_ERR_LOG(
+        PlogThreadCheckExist(devId), return LOG_FAILURE, "log recv thread has bean started, devId=%d.", devId);
 
-    ThreadInfo *pThread = (ThreadInfo *)LogMalloc(sizeof(ThreadInfo));
+    ThreadInfo* pThread = (ThreadInfo*)LogMalloc(sizeof(ThreadInfo));
     ONE_ACT_ERR_LOG(pThread == NULL, return LOG_FAILURE, "malloc failed, can not create plog thread");
 
     PlogThreadLock();
@@ -212,8 +200,8 @@ LogStatus PlogThreadCreate(int32_t devId, ThreadArgs *pArgs, ThreadRunFunc func)
 
     g_plogThread[devId]->pid = ToolGetPid();
     g_plogThread[devId]->block.procFunc = func;
-    g_plogThread[devId]->block.pulArg = (void *)(&g_plogThread[devId]->args);
-    ToolThreadAttr threadAttr = { 0, 0, 0, 0, 0, 0, 128 * 1024 }; // joinable
+    g_plogThread[devId]->block.pulArg = (void*)(&g_plogThread[devId]->args);
+    ToolThreadAttr threadAttr = {0, 0, 0, 0, 0, 0, 128 * 1024}; // joinable
     ret = ToolCreateTaskWithThreadAttr(&g_plogThread[devId]->tid, &g_plogThread[devId]->block, &threadAttr);
     PlogThreadUnLock();
     if (ret != SYS_OK) {
@@ -250,7 +238,7 @@ void PlogThreadRelease(int32_t devId, ThreadStopFunc func, bool sync)
  */
 LogStatus PlogThreadPoolInit(void)
 {
-    g_plogThread = (ThreadInfo **)LogMalloc((size_t)HOST_MAX_DEV_NUM * sizeof(ThreadInfo *));
+    g_plogThread = (ThreadInfo**)LogMalloc((size_t)HOST_MAX_DEV_NUM * sizeof(ThreadInfo*));
     ONE_ACT_ERR_LOG(g_plogThread == NULL, return LOG_FAILURE, "malloc thread pool failed.");
     PlogThreadMutexInit();
     return LOG_SUCCESS;

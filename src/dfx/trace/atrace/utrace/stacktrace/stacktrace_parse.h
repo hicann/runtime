@@ -8,7 +8,6 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-
 #ifndef STACKTRACE_PARSE_H
 #define STACKTRACE_PARSE_H
 
@@ -18,7 +17,7 @@
 extern "C" {
 #endif
 
-TraStatus TraceStackParse(const char *filePath, uint32_t len);
+TraStatus TraceStackParse(const char* filePath, uint32_t len);
 
 #ifdef __cplusplus
 }

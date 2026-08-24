@@ -16,15 +16,15 @@
 #include "log_file_info.h"
 #include "log_common.h"
 
-#define MONITOR_CPU_FILE_PATH        "/proc/stat"
-#define MONITOR_CPU_ALARM_VALUE      90U         // 90%
-#define MONITOR_CPU_RESUME_VALUE     80U         // 80%
-#define MONITOR_CPU_MONITOR_PERIOD   10000U      // 10 seconds
-#define MONITOR_CPU_STAT_PERIOD      3600000U    // 1 hour
-#define MONITOR_CPU_SILENCE_PERIOD   60000U      // 1 minute
-#define MONITOR_CPU_ALARM_MAX        9U
-#define MONITOR_CPU_ZERO             0U
-#define MONITOR_CPU_RECORD_NUM_MAX   16
+#define MONITOR_CPU_FILE_PATH "/proc/stat"
+#define MONITOR_CPU_ALARM_VALUE 90U       // 90%
+#define MONITOR_CPU_RESUME_VALUE 80U      // 80%
+#define MONITOR_CPU_MONITOR_PERIOD 10000U // 10 seconds
+#define MONITOR_CPU_STAT_PERIOD 3600000U  // 1 hour
+#define MONITOR_CPU_SILENCE_PERIOD 60000U // 1 minute
+#define MONITOR_CPU_ALARM_MAX 9U
+#define MONITOR_CPU_ZERO 0U
+#define MONITOR_CPU_RECORD_NUM_MAX 16
 
 typedef struct CpuInfo {
     // in the order of /proc/stat
@@ -49,7 +49,7 @@ typedef struct CpuInfo {
     float usage;
 } CpuInfo;
 
-STATIC CpuInfo g_cpuInfo[MONITOR_CPU_RECORD_NUM_MAX + 1] = { 0 }; // extra record of total
+STATIC CpuInfo g_cpuInfo[MONITOR_CPU_RECORD_NUM_MAX + 1] = {0}; // extra record of total
 STATIC SysmonitorInfo* g_sysmonitorCpuInfo = NULL;
 STATIC MonitorStatInfo g_cpuStatInfo = {MONITOR_ONE_HUNDRED_FLOAT, 0.0, 0.0, 0, 0, 0};
 STATIC float g_totalUsage = 0.0;
@@ -64,12 +64,12 @@ STATIC int32_t SysmonitorCpuGetInfo(void)
 {
     int32_t fd = ToolOpenWithMode(MONITOR_CPU_FILE_PATH, O_RDONLY, LOG_FILE_ARCHIVE_MODE);
     if (fd < 0) {
-        MONITOR_LOGE("open file with mode failed, file=%s, strerr=%s.",
-            MONITOR_CPU_FILE_PATH, strerror(ToolGetErrorCode()));
+        MONITOR_LOGE(
+            "open file with mode failed, file=%s, strerr=%s.", MONITOR_CPU_FILE_PATH, strerror(ToolGetErrorCode()));
         return LOG_FAILURE;
     }
 
-    char *buf = (char *)LogMalloc(MONITOR_MESSAGE_MAX_SIZE);
+    char* buf = (char*)LogMalloc(MONITOR_MESSAGE_MAX_SIZE);
     if (buf == NULL) {
         MONITOR_LOGE("malloc buf failed, strerr=%s", strerror(ToolGetErrorCode()));
         (void)ToolClose(fd);
@@ -77,26 +77,26 @@ STATIC int32_t SysmonitorCpuGetInfo(void)
     }
     int32_t len = ToolRead(fd, buf, MONITOR_MESSAGE_MAX_SIZE);
     if (len <= 0) {
-        MONITOR_LOGE("read file failed, file=%s, strerr=%s.",
-            MONITOR_CPU_FILE_PATH, strerror(ToolGetErrorCode()));
+        MONITOR_LOGE("read file failed, file=%s, strerr=%s.", MONITOR_CPU_FILE_PATH, strerror(ToolGetErrorCode()));
         (void)ToolClose(fd);
         LogFree(buf);
         return LOG_FAILURE;
     }
 
     g_cpuNum = 0;
-    char *ptr = NULL;
-    char *time = strtok_s(buf, "cpu", &ptr);
+    char* ptr = NULL;
+    char* time = strtok_s(buf, "cpu", &ptr);
     while (time != NULL) {
-        int32_t num = sscanf_s(time, "%*c %llu %llu %llu %llu %llu %llu %llu %llu",
-            &g_cpuInfo[g_cpuNum].usrTime, &g_cpuInfo[g_cpuNum].niceTime, &g_cpuInfo[g_cpuNum].systemTime,
-            &g_cpuInfo[g_cpuNum].idleTime, &g_cpuInfo[g_cpuNum].iowaitTime, &g_cpuInfo[g_cpuNum].irqTime,
-            &g_cpuInfo[g_cpuNum].softirqTime, &g_cpuInfo[g_cpuNum].stealTime);
+        int32_t num = sscanf_s(
+            time, "%*c %llu %llu %llu %llu %llu %llu %llu %llu", &g_cpuInfo[g_cpuNum].usrTime,
+            &g_cpuInfo[g_cpuNum].niceTime, &g_cpuInfo[g_cpuNum].systemTime, &g_cpuInfo[g_cpuNum].idleTime,
+            &g_cpuInfo[g_cpuNum].iowaitTime, &g_cpuInfo[g_cpuNum].irqTime, &g_cpuInfo[g_cpuNum].softirqTime,
+            &g_cpuInfo[g_cpuNum].stealTime);
         if (num <= 0) {
             break;
         }
         g_cpuNum++;
-        if(g_cpuNum > MONITOR_CPU_RECORD_NUM_MAX) {
+        if (g_cpuNum > MONITOR_CPU_RECORD_NUM_MAX) {
             MONITOR_LOGW("cpu num exceeds the set maximum value %d", MONITOR_CPU_RECORD_NUM_MAX);
             break;
         }
@@ -120,13 +120,14 @@ STATIC float SysmonitorCpuGetUsage(void)
         int64_t niceFrame = (int64_t)g_cpuInfo[i].niceTime - (int64_t)g_cpuInfo[i].niceSave;
         int64_t systemFrame = (int64_t)g_cpuInfo[i].systemTime - (int64_t)g_cpuInfo[i].systemSave;
         int64_t idleFrame = (int64_t)((g_cpuInfo[i].idleTime < g_cpuInfo[i].idleSave) ?
-            0 : (g_cpuInfo[i].idleTime - g_cpuInfo[i].idleSave));
+                                          0 :
+                                          (g_cpuInfo[i].idleTime - g_cpuInfo[i].idleSave));
         int64_t iowaitFrame = (int64_t)g_cpuInfo[i].iowaitTime - (int64_t)g_cpuInfo[i].iowaitSave;
         int64_t irqFrame = (int64_t)g_cpuInfo[i].irqTime - (int64_t)g_cpuInfo[i].irqSave;
         int64_t softirqFrame = (int64_t)g_cpuInfo[i].softirqTime - (int64_t)g_cpuInfo[i].softirqSave;
         int64_t stealFrame = (int64_t)g_cpuInfo[i].stealTime - (int64_t)g_cpuInfo[i].stealSave;
-        int64_t totalFrame = usrFrame + niceFrame + systemFrame + idleFrame + iowaitFrame +
-            irqFrame +softirqFrame + stealFrame;
+        int64_t totalFrame =
+            usrFrame + niceFrame + systemFrame + idleFrame + iowaitFrame + irqFrame + softirqFrame + stealFrame;
         if (totalFrame < 1) {
             totalFrame = 1;
         }
@@ -190,10 +191,10 @@ STATIC void SysmonitorCpuRecordUsage(float usage)
 STATIC void SysmonitorCpuProcessTopTen(void)
 {
     const char command[] = {"top -bn1|tail -n +4|head -11"};
-    FILE *fp = popen(command, "r");
+    FILE* fp = popen(command, "r");
     ONE_ACT_ERR_LOG(fp == NULL, return, "print top ten process failed, strerr=%s", strerror(ToolGetErrorCode()));
 
-    char *result = (char *)LogMalloc(MONITOR_MESSAGE_MAX_SIZE);
+    char* result = (char*)LogMalloc(MONITOR_MESSAGE_MAX_SIZE);
     if (result == NULL) {
         MONITOR_LOGE("malloc result failed, strerr=%s", strerror(ToolGetErrorCode()));
         pclose(fp);
@@ -209,7 +210,7 @@ STATIC void SysmonitorCpuProcessTopTen(void)
 
 STATIC void SysmonitorCpuProcessAlarm(void)
 {
-    char message[MONITOR_MESSAGE_MAX_SIZE] = { 0 };
+    char message[MONITOR_MESSAGE_MAX_SIZE] = {0};
     int32_t ret = 0;
     ret = sprintf_s(message, MONITOR_MESSAGE_MAX_SIZE, "cpu usage alarm, total: %4.1f%%", g_cpuInfo[0].usage);
     ONE_ACT_ERR_LOG(ret == -1, return, "sprintf_s cpu alarm head failed");
@@ -225,12 +226,13 @@ STATIC void SysmonitorCpuProcessStat(void)
 {
     const char statHead[] = {"cpu usage stat:"};
 
-    char *statInfo = (char *)LogMalloc(MONITOR_MESSAGE_MAX_SIZE);
+    char* statInfo = (char*)LogMalloc(MONITOR_MESSAGE_MAX_SIZE);
     ONE_ACT_ERR_LOG(statInfo == NULL, return, "malloc stat info failed, strerr=%s", strerror(ToolGetErrorCode()));
-    int32_t ret = sprintf_s(statInfo, MONITOR_MESSAGE_MAX_SIZE,
-        "%s minUsage=%4.1f%%, maxUsage=%4.1f%%, avgUsage=%4.1f%%, alarmNum=%u, resumeNum=%u, duration=%ums",
-        statHead, g_cpuStatInfo.minUsage, g_cpuStatInfo.maxUsage, g_cpuStatInfo.avgUsage,
-        g_cpuStatInfo.alarmNum, g_cpuStatInfo.resumeNum, g_cpuStatInfo.duration * g_sysmonitorCpuInfo->monitorPeriod);
+    int32_t ret = sprintf_s(
+        statInfo, MONITOR_MESSAGE_MAX_SIZE,
+        "%s minUsage=%4.1f%%, maxUsage=%4.1f%%, avgUsage=%4.1f%%, alarmNum=%u, resumeNum=%u, duration=%ums", statHead,
+        g_cpuStatInfo.minUsage, g_cpuStatInfo.maxUsage, g_cpuStatInfo.avgUsage, g_cpuStatInfo.alarmNum,
+        g_cpuStatInfo.resumeNum, g_cpuStatInfo.duration * g_sysmonitorCpuInfo->monitorPeriod);
     if (ret == -1) {
         MONITOR_LOGE("sprintf_s stat info failed");
         LogFree(statInfo);
@@ -257,8 +259,7 @@ STATIC void SysmonitorCpuProcessUsage(float usage)
             }
         }
         g_cpuStatInfo.alarmNum++;
-    } else if ((usage <= g_sysmonitorCpuInfo->resumeValue) &&
-        g_sysmonitorCpuInfo->thresholdFlag) {
+    } else if ((usage <= g_sysmonitorCpuInfo->resumeValue) && g_sysmonitorCpuInfo->thresholdFlag) {
         g_sysmonitorCpuInfo->thresholdFlag = false;
         MONITOR_LOGI("cpu usage resume: %4.1f%%", usage);
         g_cpuStatInfo.resumeNum++;
@@ -276,12 +277,11 @@ STATIC void SysmonitorCpuProcessUsage(float usage)
 
     if ((g_sysmonitorCpuInfo->silenceCount >= 0) &&
         (((uint32_t)g_sysmonitorCpuInfo->silenceCount * g_sysmonitorCpuInfo->monitorPeriod) >=
-        g_sysmonitorCpuInfo->silencePeriod)) {
+         g_sysmonitorCpuInfo->silencePeriod)) {
         g_sysmonitorCpuInfo->silenceCount = MONITOR_SILENCE_DISABLE;
     }
 
-    if ((g_sysmonitorCpuInfo->statCount * g_sysmonitorCpuInfo->monitorPeriod) >=
-        g_sysmonitorCpuInfo->statPeriod) {
+    if ((g_sysmonitorCpuInfo->statCount * g_sysmonitorCpuInfo->monitorPeriod) >= g_sysmonitorCpuInfo->statPeriod) {
         // print stat info
         SysmonitorCpuProcessStat();
         // reset stat info
@@ -289,7 +289,7 @@ STATIC void SysmonitorCpuProcessUsage(float usage)
     }
 }
 
- /**
+/**
  * @brief       : cpu monitor execute once
  */
 STATIC void SysmonitorCpu(void)
@@ -318,7 +318,7 @@ void SysmonitorResInitCpu(SysmonitorInfo* info)
     info->alarmMaxCount = MONITOR_CPU_ALARM_MAX;
     info->silenceCount = MONITOR_SILENCE_DISABLE;
     info->silencePeriod = MONITOR_CPU_SILENCE_PERIOD;
-    info->thresholdFlag= false;
+    info->thresholdFlag = false;
     info->monitorFunc = SysmonitorCpu;
     g_sysmonitorCpuInfo = info;
 }

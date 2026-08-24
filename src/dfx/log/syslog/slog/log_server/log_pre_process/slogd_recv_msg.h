@@ -24,11 +24,10 @@ void SlogdMessageRecv(int32_t devId);
 
 LogStatus SlogdInitGlobals(void);
 void SlogdFreeGlobals(void);
-char *SlogdGetRecvBuf(void);
-char *SlogdGetParseBuf(void);
+char* SlogdGetRecvBuf(void);
+char* SlogdGetParseBuf(void);
 
 #ifdef __cplusplus
 }
 #endif
 #endif
-

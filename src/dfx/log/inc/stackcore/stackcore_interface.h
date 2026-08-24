@@ -20,7 +20,7 @@ extern "C" {
  * @param [in]  : subdir      subdirectory name
  * @return      : 0 success; -1 failed
  */
-int StackcoreSetSubdirectory(const char *subdir);
+int StackcoreSetSubdirectory(const char* subdir);
 
 #ifdef __cplusplus
 }

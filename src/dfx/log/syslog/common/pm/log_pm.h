@@ -18,12 +18,12 @@
 extern "C" {
 #endif
 
-#define SLOGD_MONITOR_FLAG      0
-#define LOGDAEMON_MONITOR_FLAG  1
-#define SKLOGD_MONITOR_FLAG     2
+#define SLOGD_MONITOR_FLAG 0
+#define LOGDAEMON_MONITOR_FLAG 1
+#define SKLOGD_MONITOR_FLAG 2
 
-#define LOG_PM_STATUS_WORK      0
-#define LOG_PM_STATUS_SLEEP     1
+#define LOG_PM_STATUS_WORK 0
+#define LOG_PM_STATUS_SLEEP 1
 
 LogStatus LogPmStart(uint32_t flagLog, bool isDocker);
 void LogPmStop(void);

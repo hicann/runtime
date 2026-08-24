@@ -16,17 +16,17 @@
 #include "log_file_info.h"
 #include "log_common.h"
 
-#define MONITOR_MEM_FILE_PATH        "/proc/meminfo"
-#define MONITOR_MEM_ALARM_VALUE      90U         // 90%
-#define MONITOR_MEM_RESUME_VALUE     80U         // 80%
-#define MONITOR_MEM_MONITOR_PERIOD   10000U      // 10 seconds
-#define MONITOR_MEM_STAT_PERIOD      3600000U    // 1 hour
-#define MONITOR_MEM_SILENCE_PERIOD   60000U      // 1 minute
-#define MONITOR_MEM_ALARM_MAX        9U
-#define MONITOR_MEM_ZERO             0U
-#define MONITOR_MEM_INFO_BUFFER      4096U
-#define MONITOR_MEM_NAME_MAX         64U
-#define MONITOR_MEM_DECIMAL          10
+#define MONITOR_MEM_FILE_PATH "/proc/meminfo"
+#define MONITOR_MEM_ALARM_VALUE 90U       // 90%
+#define MONITOR_MEM_RESUME_VALUE 80U      // 80%
+#define MONITOR_MEM_MONITOR_PERIOD 10000U // 10 seconds
+#define MONITOR_MEM_STAT_PERIOD 3600000U  // 1 hour
+#define MONITOR_MEM_SILENCE_PERIOD 60000U // 1 minute
+#define MONITOR_MEM_ALARM_MAX 9U
+#define MONITOR_MEM_ZERO 0U
+#define MONITOR_MEM_INFO_BUFFER 4096U
+#define MONITOR_MEM_NAME_MAX 64U
+#define MONITOR_MEM_DECIMAL 10
 
 typedef struct MemInfo {
     // in the order of /proc/meminfo
@@ -39,23 +39,18 @@ typedef struct MemInfo {
 } MemInfo;
 
 typedef struct MemInfoTable {
-    const char *name;
-    uint64_t *count;
+    const char* name;
+    uint64_t* count;
 } MemInfoTable;
 
-STATIC MemInfo g_memInfo = { 0 };
+STATIC MemInfo g_memInfo = {0};
 STATIC SysmonitorInfo* g_sysmonitorMemInfo = NULL;
-STATIC MonitorStatInfo g_memStatInfo = { MONITOR_ONE_HUNDRED_FLOAT, 0.0, 0.0, 0, 0, 0 };
+STATIC MonitorStatInfo g_memStatInfo = {MONITOR_ONE_HUNDRED_FLOAT, 0.0, 0.0, 0, 0, 0};
 STATIC float g_memTotalUsage = 0.0;
 STATIC uint32_t g_memMonitorTime = 0;
-STATIC MemInfoTable g_memInfoTable[] = {
-    { "Buffers",  &g_memInfo.buffers },
-    { "Cached",   &g_memInfo.cached  },
-    { "MemFree",  &g_memInfo.free    },
-    { "MemTotal", &g_memInfo.total   },
-    { "Shmem",    &g_memInfo.shmem   },
-    { "Slab",     &g_memInfo.slab    }
-};
+STATIC MemInfoTable g_memInfoTable[] = {{"Buffers", &g_memInfo.buffers}, {"Cached", &g_memInfo.cached},
+                                        {"MemFree", &g_memInfo.free},    {"MemTotal", &g_memInfo.total},
+                                        {"Shmem", &g_memInfo.shmem},     {"Slab", &g_memInfo.slab}};
 
 /**
  * @brief       : compare whether the names of two MemInfoTable are the same
@@ -63,9 +58,9 @@ STATIC MemInfoTable g_memInfoTable[] = {
  * @param [in]  : b       another MemInfoTable
  * @return      : 0 same; other different
  */
-STATIC int32_t SysmonitorMemCompareTable(const void *a, const void *b)
+STATIC int32_t SysmonitorMemCompareTable(const void* a, const void* b)
 {
-    return strcmp(((const MemInfoTable *)a)->name, ((const MemInfoTable *)b)->name);
+    return strcmp(((const MemInfoTable*)a)->name, ((const MemInfoTable*)b)->name);
 }
 
 /**
@@ -74,12 +69,12 @@ STATIC int32_t SysmonitorMemCompareTable(const void *a, const void *b)
  * @param [out] : num      number after conversion
  * @return      : LOG_SUCCESS success; LOG_FAILURE fail
  */
-STATIC int32_t SysmonitorMemStrToUlong(const char *str, uint64_t *num)
+STATIC int32_t SysmonitorMemStrToUlong(const char* str, uint64_t* num)
 {
     if ((str == NULL) || (num == NULL) || (str[0] == '-')) {
         return LOG_FAILURE;
     }
-    char *endPtr = NULL;
+    char* endPtr = NULL;
     errno = 0;
     uint64_t ret = strtoull(str, &endPtr, MONITOR_MEM_DECIMAL);
     int32_t error = LOG_SUCCESS;
@@ -98,12 +93,12 @@ STATIC int32_t SysmonitorMemStrToUlong(const char *str, uint64_t *num)
  * @param [in]  : data      value of /proc/meminfo in the format of "label: value\n"
  * @return      : LOG_SUCCESS success; LOG_FAILURE fail
  */
-STATIC int32_t SysmonitorMemParseInfo(char *data)
+STATIC int32_t SysmonitorMemParseInfo(char* data)
 {
-    char *head = data;
-    char *tail = NULL;
-    char nameBuffer[MONITOR_MEM_NAME_MAX] = { 0 };
-    MemInfoTable findName = { nameBuffer, NULL };
+    char* head = data;
+    char* tail = NULL;
+    char nameBuffer[MONITOR_MEM_NAME_MAX] = {0};
+    MemInfoTable findName = {nameBuffer, NULL};
 
     while (true) {
         tail = strchr(head, ':');
@@ -118,8 +113,9 @@ STATIC int32_t SysmonitorMemParseInfo(char *data)
             return LOG_FAILURE;
         }
         head = tail + 1;
-        MemInfoTable *found = (MemInfoTable *)bsearch(&findName, g_memInfoTable, sizeof(g_memInfoTable) /
-            sizeof(g_memInfoTable[0]), sizeof(MemInfoTable), SysmonitorMemCompareTable);
+        MemInfoTable* found = (MemInfoTable*)bsearch(
+            &findName, g_memInfoTable, sizeof(g_memInfoTable) / sizeof(g_memInfoTable[0]), sizeof(MemInfoTable),
+            SysmonitorMemCompareTable);
         if (found != NULL) {
             if (SysmonitorMemStrToUlong(head, found->count) != LOG_SUCCESS) {
                 MONITOR_LOGE("strtoull value failed, strerr=%s", strerror(ToolGetErrorCode()));
@@ -144,12 +140,12 @@ STATIC int32_t SysmonitorMemGetInfo(void)
 {
     int32_t fd = ToolOpenWithMode(MONITOR_MEM_FILE_PATH, O_RDONLY, LOG_FILE_ARCHIVE_MODE);
     if (fd < 0) {
-        MONITOR_LOGE("open file with mode failed, file=%s, strerr=%s.",
-            MONITOR_MEM_FILE_PATH, strerror(ToolGetErrorCode()));
+        MONITOR_LOGE(
+            "open file with mode failed, file=%s, strerr=%s.", MONITOR_MEM_FILE_PATH, strerror(ToolGetErrorCode()));
         return LOG_FAILURE;
     }
 
-    char *buffer =  (char *)LogMalloc(MONITOR_MEM_INFO_BUFFER);
+    char* buffer = (char*)LogMalloc(MONITOR_MEM_INFO_BUFFER);
     if (buffer == NULL) {
         MONITOR_LOGE("malloc buf failed, strerr=%s", strerror(ToolGetErrorCode()));
         (void)ToolClose(fd);
@@ -182,7 +178,8 @@ STATIC int32_t SysmonitorMemGetInfo(void)
 STATIC float SysmonitorMemGetUsage(void)
 {
     return (float)(g_memInfo.total - g_memInfo.free - g_memInfo.buffers - g_memInfo.cached - g_memInfo.slab +
-        g_memInfo.shmem) * MONITOR_ONE_HUNDRED_FLOAT / (float)g_memInfo.total;
+                   g_memInfo.shmem) *
+           MONITOR_ONE_HUNDRED_FLOAT / (float)g_memInfo.total;
 }
 
 /**
@@ -223,11 +220,11 @@ STATIC void SysmonitorMemRecordUsage(float usage)
 
 STATIC void SysmonitorMemProcessTopTen(void)
 {
-    const char command[] = { "top -mbn1|tail -n +4|head" };
-    FILE *fp = popen(command, "r");
+    const char command[] = {"top -mbn1|tail -n +4|head"};
+    FILE* fp = popen(command, "r");
     ONE_ACT_ERR_LOG(fp == NULL, return, "print top ten process failed, strerr=%s", strerror(ToolGetErrorCode()));
 
-    char *result = (char *)LogMalloc(MONITOR_MESSAGE_MAX_SIZE);
+    char* result = (char*)LogMalloc(MONITOR_MESSAGE_MAX_SIZE);
     if (result == NULL) {
         MONITOR_LOGE("malloc result failed, strerr=%s", strerror(ToolGetErrorCode()));
         pclose(fp);
@@ -250,12 +247,13 @@ STATIC void SysmonitorMemProcessAlarm(float usage)
 STATIC void SysmonitorMemProcessStat(void)
 {
     const char statHead[] = {"memory usage stat:"};
-    char *statInfo = (char *)LogMalloc(MONITOR_MESSAGE_MAX_SIZE);
+    char* statInfo = (char*)LogMalloc(MONITOR_MESSAGE_MAX_SIZE);
     ONE_ACT_ERR_LOG(statInfo == NULL, return, "malloc stat info failed, strerr=%s", strerror(ToolGetErrorCode()));
-    int32_t ret = sprintf_s(statInfo, MONITOR_MESSAGE_MAX_SIZE,
-        "%s minUsage=%4.1f%%, maxUsage=%4.1f%%, avgUsage=%4.1f%%, alarmNum=%u, resumeNum=%u, duration=%ums",
-        statHead, g_memStatInfo.minUsage, g_memStatInfo.maxUsage, g_memStatInfo.avgUsage,
-        g_memStatInfo.alarmNum, g_memStatInfo.resumeNum, g_memStatInfo.duration * g_sysmonitorMemInfo->monitorPeriod);
+    int32_t ret = sprintf_s(
+        statInfo, MONITOR_MESSAGE_MAX_SIZE,
+        "%s minUsage=%4.1f%%, maxUsage=%4.1f%%, avgUsage=%4.1f%%, alarmNum=%u, resumeNum=%u, duration=%ums", statHead,
+        g_memStatInfo.minUsage, g_memStatInfo.maxUsage, g_memStatInfo.avgUsage, g_memStatInfo.alarmNum,
+        g_memStatInfo.resumeNum, g_memStatInfo.duration * g_sysmonitorMemInfo->monitorPeriod);
     if (ret == -1) {
         MONITOR_LOGE("sprintf_s stat info failed");
         LogFree(statInfo);
@@ -267,7 +265,6 @@ STATIC void SysmonitorMemProcessStat(void)
     }
     LogFree(statInfo);
 }
-
 
 STATIC void SysmonitorMemProcessUsage(float usage)
 {
@@ -301,7 +298,7 @@ STATIC void SysmonitorMemProcessUsage(float usage)
 
     if ((g_sysmonitorMemInfo->silenceCount >= 0) &&
         (((uint32_t)g_sysmonitorMemInfo->silenceCount * g_sysmonitorMemInfo->monitorPeriod) >=
-        g_sysmonitorMemInfo->silencePeriod)) {
+         g_sysmonitorMemInfo->silencePeriod)) {
         g_sysmonitorMemInfo->silenceCount = MONITOR_SILENCE_DISABLE;
     }
 
@@ -313,7 +310,7 @@ STATIC void SysmonitorMemProcessUsage(float usage)
     }
 }
 
- /**
+/**
  * @brief       : memory monitor execute once
  */
 STATIC void SysmonitorMem(void)
@@ -349,7 +346,7 @@ void SysmonitorResInitMem(SysmonitorInfo* info)
     info->alarmMaxCount = MONITOR_MEM_ALARM_MAX;
     info->silenceCount = MONITOR_SILENCE_DISABLE;
     info->silencePeriod = MONITOR_MEM_SILENCE_PERIOD;
-    info->thresholdFlag= false;
+    info->thresholdFlag = false;
     info->monitorFunc = SysmonitorMem;
     g_sysmonitorMemInfo = info;
 }

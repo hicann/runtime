@@ -17,11 +17,11 @@ extern "C" {
 
 #if (!defined LOG_CPP) && (!defined APP_LOG)
 
-#define ENABLEEVENT_KEY     "enableEvent"
-#define GLOBALLEVEL_KEY     "global_level"
-#define DEBUGLEVEL_KEY      "debug_level"
-#define RUNLEVEL_KEY        "run_level"
-#define IOCTL_W_PRINT_NUM   1000U
+#define ENABLEEVENT_KEY "enableEvent"
+#define GLOBALLEVEL_KEY "global_level"
+#define DEBUGLEVEL_KEY "debug_level"
+#define RUNLEVEL_KEY "run_level"
+#define IOCTL_W_PRINT_NUM 1000U
 
 STATIC uint32_t g_ioctlGlobalPrintNum = 0;
 
@@ -31,18 +31,18 @@ STATIC uint32_t g_ioctlGlobalPrintNum = 0;
 STATIC void GetModuleLogLevelByIam(void)
 {
     LogLevelConfInfo levelInfo;
-    const ModuleInfo *moduleInfo = DlogGetModuleInfos();
+    const ModuleInfo* moduleInfo = DlogGetModuleInfos();
     (void)memset_s(&levelInfo, sizeof(LogLevelConfInfo), 0, sizeof(LogLevelConfInfo));
     int32_t ret = strncpy_s(levelInfo.configName, CONF_NAME_MAX_LEN + 1, IOCTL_MODULE_NAME, strlen(IOCTL_MODULE_NAME));
     if (ret != EOK) {
-        SELF_LOG_ERROR("moduleName strcpy failed, ret=%d, strerr=%s, pid=%d.", \
-                       ret, strerror(ToolGetErrorCode()), ToolGetPid());
+        SELF_LOG_ERROR(
+            "moduleName strcpy failed, ret=%d, strerr=%s, pid=%d.", ret, strerror(ToolGetErrorCode()), ToolGetPid());
         return;
     }
     // app call write to get info from slogmgr
     struct IAMIoctlArg arg;
     arg.size = sizeof(LogLevelConfInfo);
-    arg.argData = (void *)&levelInfo;
+    arg.argData = (void*)&levelInfo;
     ret = DlogIamIoctlGetLevel(&arg);
     if (ret == SYS_ERROR) {
         return;
@@ -54,8 +54,8 @@ STATIC void GetModuleLogLevelByIam(void)
             (levelInfo.configValue[moduleInfo->moduleId] > LOG_MAX_LEVEL)) {
             continue;
         }
-        (void)DlogSetLogTypeLevelByModuleId(moduleInfo->moduleId, levelInfo.configValue[moduleInfo->moduleId],
-                                            DLOG_GLOBAL_TYPE_MASK);
+        (void)DlogSetLogTypeLevelByModuleId(
+            moduleInfo->moduleId, levelInfo.configValue[moduleInfo->moduleId], DLOG_GLOBAL_TYPE_MASK);
     }
     return;
 }
@@ -69,13 +69,14 @@ STATIC void GetGlobalLogLevelByIam(void)
     (void)memset_s(&levelInfo, sizeof(LogLevelConfInfo), 0, sizeof(LogLevelConfInfo));
     int32_t ret = strncpy_s(levelInfo.configName, CONF_NAME_MAX_LEN + 1, GLOBALLEVEL_KEY, strlen(GLOBALLEVEL_KEY));
     if (ret != EOK) {
-        SELF_LOG_ERROR("name(global_level) strcpy failed, result=%d, strerr=%s, pid=%d.", \
-                       ret, strerror(ToolGetErrorCode()), ToolGetPid());
+        SELF_LOG_ERROR(
+            "name(global_level) strcpy failed, result=%d, strerr=%s, pid=%d.", ret, strerror(ToolGetErrorCode()),
+            ToolGetPid());
         return;
     }
     struct IAMIoctlArg arg;
     arg.size = sizeof(LogLevelConfInfo);
-    arg.argData = (void *)&levelInfo;
+    arg.argData = (void*)&levelInfo;
     ret = DlogIamIoctlGetLevel(&arg);
     if (ret == SYS_OK) {
         if ((levelInfo.configValue[0] >= LOG_MIN_LEVEL) && (levelInfo.configValue[0] <= LOG_MAX_LEVEL)) {
@@ -83,20 +84,25 @@ STATIC void GetGlobalLogLevelByIam(void)
             DlogSetLogTypeLevelToAllModule(levelInfo.configValue[0], DLOG_GLOBAL_TYPE_MASK);
             SELF_LOG_INFO("%s=%d.", GLOBALLEVEL_KEY, levelInfo.configValue[0]);
         } else {
-            SELF_LOG_WARN("%s=%d is illegal, pid=%d, use value=%d.", GLOBALLEVEL_KEY,
-                          levelInfo.configValue[0], ToolGetPid(), GetGlobalLogTypeLevelVar(DLOG_GLOBAL_TYPE_MASK));
+            SELF_LOG_WARN(
+                "%s=%d is illegal, pid=%d, use value=%d.", GLOBALLEVEL_KEY, levelInfo.configValue[0], ToolGetPid(),
+                GetGlobalLogTypeLevelVar(DLOG_GLOBAL_TYPE_MASK));
         }
         if ((levelInfo.configValue[1] == EVENT_DISABLE_VALUE) || (levelInfo.configValue[1] == EVENT_ENABLE_VALUE)) {
             bool enable = (levelInfo.configValue[1] == EVENT_ENABLE_VALUE) ? true : false;
             SetGlobalEnableEventVar(enable);
             SELF_LOG_INFO("g_enableEvent=%d.", levelInfo.configValue[1]);
         } else {
-            SELF_LOG_WARN("enableEvent=%d is illegal, pid=%d, use value=%d.", \
-                          levelInfo.configValue[1], ToolGetPid(), GetGlobalEnableEventVar());
+            SELF_LOG_WARN(
+                "enableEvent=%d is illegal, pid=%d, use value=%d.", levelInfo.configValue[1], ToolGetPid(),
+                GetGlobalEnableEventVar());
         }
     } else {
-        SELF_LOG_WARN_N(&g_ioctlGlobalPrintNum, IOCTL_W_PRINT_NUM, "can not get global_level, result=%d, "
-                        "pid=%d, use value=%d", ret, ToolGetPid(), GetGlobalLogTypeLevelVar(DLOG_GLOBAL_TYPE_MASK));
+        SELF_LOG_WARN_N(
+            &g_ioctlGlobalPrintNum, IOCTL_W_PRINT_NUM,
+            "can not get global_level, result=%d, "
+            "pid=%d, use value=%d",
+            ret, ToolGetPid(), GetGlobalLogTypeLevelVar(DLOG_GLOBAL_TYPE_MASK));
     }
 }
 
@@ -105,7 +111,7 @@ STATIC void GetGlobalLogLevelByIam(void)
  */
 STATIC void DlogLevelInitCallBack(void)
 {
-    if (!DlogCheckAttrSystem()) {   // APP
+    if (!DlogCheckAttrSystem()) { // APP
         return;
     }
 
@@ -126,7 +132,7 @@ void DlogLevelInit(void)
     return;
 }
 
-#endif  // ifndef LOG_CPP
+#endif // ifndef LOG_CPP
 
 #ifdef __cplusplus
 }

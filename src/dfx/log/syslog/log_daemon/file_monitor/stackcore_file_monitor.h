@@ -33,14 +33,14 @@ void StackcoreMonitorExit(void);
 
 /**
  * @brief          : start the stackcore file monitor after the session is established.
- * @param [in]     : -  
+ * @param [in]     : -
  * @return         : LOG_SUCCESS success; LOG_FAILURE failed
  */
 int32_t StackcoreMonitorStart(void);
 
 /**
  * @brief          : stop the stackcore file monitor after the session is disconnected.
- * @param [in]     : -  
+ * @param [in]     : -
  * @return         : LOG_SUCCESS success; LOG_FAILURE failed
  */
 int32_t StackcoreMonitorStop(void);

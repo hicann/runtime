@@ -14,14 +14,11 @@
 
 #define DRV_HDC_LIBRARY_NAME "libascend_hal.so"
 #define DRV_GET_PLATFORM_INFO "drvGetPlatformInfo"
-typedef drvError_t (*DrvGetPlatformInfoFunc)(uint32_t *);
+typedef drvError_t (*DrvGetPlatformInfoFunc)(uint32_t*);
 static ArgPtr g_drvLibHandle = NULL;
 
 #ifdef PROCESS_LOG
-int32_t AlogTryUseSlog(void)
-{
-    return AlogTransferToUnifiedlog();
-}
+int32_t AlogTryUseSlog(void) { return AlogTransferToUnifiedlog(); }
 #else
 static bool IsAtDeviceSide(void)
 {
@@ -55,7 +52,4 @@ int32_t AlogTryUseSlog(void)
 }
 #endif
 
-void AlogCloseDrvLib(void)
-{
-    (void)UnloadRuntimeDll(g_drvLibHandle);
-}
+void AlogCloseDrvLib(void) { (void)UnloadRuntimeDll(g_drvLibHandle); }

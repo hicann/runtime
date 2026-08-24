@@ -24,7 +24,7 @@ constexpr size_t MAX_CALLBACK_NUM = 16U;
 struct CallbackEntry {
     acllogCallbackHandle handle;
     acllogRecordCallback callback;
-    void *userData;
+    void* userData;
     uint32_t outputLogType;
 };
 
@@ -32,17 +32,14 @@ std::mutex g_callbackMutex;
 std::vector<CallbackEntry> g_callbacks;
 acllogCallbackHandle g_nextHandle = 1U;
 
-bool IsValidOutputType(const uint32_t outputLogType)
-{
-    return outputLogType < static_cast<uint32_t>(OUTPUT_TYPE_MAX);
-}
+bool IsValidOutputType(const uint32_t outputLogType) { return outputLogType < static_cast<uint32_t>(OUTPUT_TYPE_MAX); }
 
 bool IsMatchedOutputType(const uint32_t registeredType, const uint32_t outputLogType)
 {
     return (registeredType == outputLogType) || (registeredType == static_cast<uint32_t>(OUTPUT_TYPE_BOTH));
 }
 
-bool ConvertLogType(const int32_t logType, uint32_t &outputLogType)
+bool ConvertLogType(const int32_t logType, uint32_t& outputLogType)
 {
     if (logType == static_cast<int32_t>(DEBUG_LOG)) {
         outputLogType = static_cast<uint32_t>(OUTPUT_TYPE_DEBUG);
@@ -66,8 +63,8 @@ acllogCallbackHandle AllocHandle()
 }
 } // namespace
 
-extern "C" int32_t PlogRegisterCallbackInner(acllogRecordCallback callbackFunc, void *userData,
-    uint32_t outputLogType, acllogCallbackHandle *callbackHandle)
+extern "C" int32_t PlogRegisterCallbackInner(
+    acllogRecordCallback callbackFunc, void* userData, uint32_t outputLogType, acllogCallbackHandle* callbackHandle)
 {
     if ((callbackFunc == nullptr) || (callbackHandle == nullptr) || (!IsValidOutputType(outputLogType))) {
         return ACLLOG_FAILURE;
@@ -86,8 +83,9 @@ extern "C" int32_t PlogRegisterCallbackInner(acllogRecordCallback callbackFunc, 
 extern "C" int32_t PlogUnregisterCallbackInner(acllogCallbackHandle callback)
 {
     std::lock_guard<std::mutex> lock(g_callbackMutex);
-    const auto iter = std::find_if(g_callbacks.begin(), g_callbacks.end(),
-        [callback](const CallbackEntry &entry) { return entry.handle == callback; });
+    const auto iter = std::find_if(g_callbacks.begin(), g_callbacks.end(), [callback](const CallbackEntry& entry) {
+        return entry.handle == callback;
+    });
     if (iter == g_callbacks.end()) {
         return ACLLOG_FAILURE;
     }
@@ -95,7 +93,7 @@ extern "C" int32_t PlogUnregisterCallbackInner(acllogCallbackHandle callback)
     return ACLLOG_SUCCESS;
 }
 
-extern "C" void PlogDispatchDeviceLogCallback(int32_t logType, const char *logContent, size_t length)
+extern "C" void PlogDispatchDeviceLogCallback(int32_t logType, const char* logContent, size_t length)
 {
     uint32_t outputLogType = static_cast<uint32_t>(OUTPUT_TYPE_MAX);
     if ((logContent == nullptr) || (length == 0U) || (!ConvertLogType(logType, outputLogType))) {
@@ -108,7 +106,7 @@ extern "C" void PlogDispatchDeviceLogCallback(int32_t logType, const char *logCo
         callbacks = g_callbacks;
     }
 
-    for (const auto &entry : callbacks) {
+    for (const auto& entry : callbacks) {
         if (!IsMatchedOutputType(entry.outputLogType, outputLogType)) {
             continue;
         }

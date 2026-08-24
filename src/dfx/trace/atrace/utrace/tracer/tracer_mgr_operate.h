@@ -17,29 +17,29 @@
 extern "C" {
 #endif
 
-#define TRACE_MAGIC         0xD928U
-#define TRACE_VERSION       0x0003U
+#define TRACE_MAGIC 0xD928U
+#define TRACE_VERSION 0x0003U
 
 typedef struct TraceLogCtrl {
     uint32_t magic;
     uint32_t version;
     uint64_t realTime;
-    char name[TRACE_NAME_LENGTH];		    // entry name
-    uint32_t num;		                    // number of list
+    char name[TRACE_NAME_LENGTH]; // entry name
+    uint32_t num;                 // number of list
     int8_t reserve[4];
 } TraceLogCtrl;
 
-TraStatus TracerScheduleInit(Tracer *tracer);
-TraStatus TracerScheduleExit(Tracer *tracer);
-TraObjHandle TracerScheduleObjCreate(Tracer *tracer, const char *name, const TraceAttr *attr);
-TraObjHandle TracerScheduleObjGet(Tracer *tracer, const char *name);
-TraStatus TracerScheduleObjSubmit(Tracer *tracer, TraObjHandle handle,
-    uint8_t bufferType, const void *buffer, uint32_t bufSize);
-TraStatus TracerScheduleObjDestroy(Tracer *tracer, TraObjHandle handle);
-TraStatus TracerScheduleSave(Tracer *tracer, TracerObject *obj);
-TraStatus TracerScheduleReport(Tracer *tracer, TracerObject *obj);
+TraStatus TracerScheduleInit(Tracer* tracer);
+TraStatus TracerScheduleExit(Tracer* tracer);
+TraObjHandle TracerScheduleObjCreate(Tracer* tracer, const char* name, const TraceAttr* attr);
+TraObjHandle TracerScheduleObjGet(Tracer* tracer, const char* name);
+TraStatus TracerScheduleObjSubmit(
+    Tracer* tracer, TraObjHandle handle, uint8_t bufferType, const void* buffer, uint32_t bufSize);
+TraStatus TracerScheduleObjDestroy(Tracer* tracer, TraObjHandle handle);
+TraStatus TracerScheduleSave(Tracer* tracer, TracerObject* obj);
+TraStatus TracerScheduleReport(Tracer* tracer, TracerObject* obj);
 
-TraStatus TracerScheduleSafeSave(Tracer *tracer, uint64_t timeStamp);
+TraStatus TracerScheduleSafeSave(Tracer* tracer, uint64_t timeStamp);
 
 #ifdef __cplusplus
 }

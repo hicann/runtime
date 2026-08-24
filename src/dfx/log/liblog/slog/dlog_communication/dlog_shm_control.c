@@ -15,7 +15,7 @@
 STATIC int8_t g_msgType = MSGTYPE_TAG;
 
 #if defined LOG_CPP || defined APP_LOG
-STATIC LogStatus DlogReadMsgTypeFormShmem(int8_t *msgType)
+STATIC LogStatus DlogReadMsgTypeFormShmem(int8_t* msgType)
 {
     int32_t shmId = -1;
     ShmErr ret = ShMemOpen(&shmId);
@@ -24,7 +24,7 @@ STATIC LogStatus DlogReadMsgTypeFormShmem(int8_t *msgType)
         return LOG_FAILURE;
     }
 
-    char *tmpBuf = (char *)LogMalloc(GLOBAL_ARR_LEN);
+    char* tmpBuf = (char*)LogMalloc(GLOBAL_ARR_LEN);
     if (tmpBuf == NULL) {
         SELF_LOG_ERROR("malloc failed, pid=%d, strerr=%s.", ToolGetPid(), strerror(ToolGetErrorCode()));
         return LOG_FAILURE;
@@ -37,7 +37,7 @@ STATIC LogStatus DlogReadMsgTypeFormShmem(int8_t *msgType)
         return LOG_FAILURE;
     }
 
-    GloablArr *global = (GloablArr *)tmpBuf;
+    GloablArr* global = (GloablArr*)tmpBuf;
     *msgType = global->msgType;
     XFREE(tmpBuf);
     return LOG_SUCCESS;
@@ -61,7 +61,4 @@ void DlogInitMsgType(void)
 #endif
 }
 
-int8_t DlogGetMsgType(void)
-{
-    return g_msgType;
-}
+int8_t DlogGetMsgType(void) { return g_msgType; }

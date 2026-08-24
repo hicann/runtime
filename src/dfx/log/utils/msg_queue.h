@@ -19,15 +19,9 @@
 extern "C" {
 #endif // __cplusplus
 
-#define MSG_MAX_LEN   1024
+#define MSG_MAX_LEN 1024
 
-enum {
-    FORWARD_MSG_TYPE = 1,
-    FEEDBACK_MSG_TYPE,
-    GET_MSG_REQ_TYPE,
-    GET_LEVEL_REP_TYPE,
-    GET_LOGPATH_REP_TYPE
-};
+enum { FORWARD_MSG_TYPE = 1, FEEDBACK_MSG_TYPE, GET_MSG_REQ_TYPE, GET_LEVEL_REP_TYPE, GET_LOGPATH_REP_TYPE };
 
 typedef struct LogCmdMsg {
     long msgType;
@@ -35,9 +29,9 @@ typedef struct LogCmdMsg {
     char msgData[MSG_MAX_LEN];
 } LogCmdMsg;
 
-LogStatus MsgQueueOpen(toolMsgid *queueId);
-LogStatus MsgQueueSend(toolMsgid queueId, const Buff *data, uint32_t length, bool isWait);
-LogStatus MsgQueueRecv(toolMsgid queueId, Buff *recvData, uint32_t bufLen, bool isWait, long msgType);
+LogStatus MsgQueueOpen(toolMsgid* queueId);
+LogStatus MsgQueueSend(toolMsgid queueId, const Buff* data, uint32_t length, bool isWait);
+LogStatus MsgQueueRecv(toolMsgid queueId, Buff* recvData, uint32_t bufLen, bool isWait, long msgType);
 void MsgQueueRemove(void);
 
 #ifdef __cplusplus

@@ -24,10 +24,10 @@ extern "C" {
 #define RB_LOG_CTRL_NAME_LENGTH 32U
 
 typedef struct RbMsgHead {
-    uint64_t cycle;         // number of cycles when writing msg, relative number of cycles when creating ring buffer
+    uint64_t cycle;     // number of cycles when writing msg, relative number of cycles when creating ring buffer
     uint32_t txtSize;
-    bool busy;              // msg block is busy or not
-    uint8_t bufferType;     // buffer type of entry handle
+    bool busy;          // msg block is busy or not
+    uint8_t bufferType; // buffer type of entry handle
     char reserve[RB_LOG_MSG_HEAD_RESERVE_LENGTH];
 } RbMsgHead;
 
@@ -57,10 +57,10 @@ typedef struct RbLogCtrl {
 } RbLogCtrl;
 
 typedef struct TraceStructField {
-    char name[TRACE_NAME_LENGTH];		    // field name
-    uint8_t type;		                    // field type
-    uint8_t mode;		                    // storage mode of the field
-    uint16_t length;		                // bytes occupied by this field
+    char name[TRACE_NAME_LENGTH]; // field name
+    uint8_t type;                 // field type
+    uint8_t mode;                 // storage mode of the field
+    uint16_t length;              // bytes occupied by this field
     int8_t reserve[4];
 } TraceStructField;
 
@@ -70,17 +70,17 @@ typedef struct RbLog {
     char msg[0];
 } RbLog;
 
-struct RbLog *TraceRbLogCreate(const char *name, const TraceAttr *attr);
-void TraceRbLogDestroy(struct RbLog *rb);
-TraStatus TraceRbLogGetCopyOfRingBuffer(struct RbLog **newRb, struct RbLog *rb);
-TraStatus TraceRbLogWriteRbMsg(struct RbLog *rb, uint8_t bufferType, const char *buffer, uint32_t bufSize);
-TraStatus TraceRbLogWriteRbMsgNoLock(struct RbLog *rb, uint8_t bufferType, const char *buffer, uint32_t bufSize);
-void TraceRbLogPrepareForRead(struct RbLog *rb);
-TraStatus TraceRbLogReadRbMsg(struct RbLog *rb, char *timeStr, uint32_t timeStrSize, char **buffer);
-TraStatus TraceRbLogReadOriRbMsg(struct RbLog *rb, char **buffer, uint32_t *bufLen);
-TraStatus TraceRbLogReadRbMsgSafe(struct RbLog *rb, char *timeStr, uint32_t timeStrSize, char **buffer);
-TraStatus TraceRbLogReadOriRbMsgSafe(struct RbLog *rb, char **buffer, uint32_t *bufLen, uint64_t *cycle);
-uint32_t TracerRbLogGetMsgNum(const RbLog *rb);
+struct RbLog* TraceRbLogCreate(const char* name, const TraceAttr* attr);
+void TraceRbLogDestroy(struct RbLog* rb);
+TraStatus TraceRbLogGetCopyOfRingBuffer(struct RbLog** newRb, struct RbLog* rb);
+TraStatus TraceRbLogWriteRbMsg(struct RbLog* rb, uint8_t bufferType, const char* buffer, uint32_t bufSize);
+TraStatus TraceRbLogWriteRbMsgNoLock(struct RbLog* rb, uint8_t bufferType, const char* buffer, uint32_t bufSize);
+void TraceRbLogPrepareForRead(struct RbLog* rb);
+TraStatus TraceRbLogReadRbMsg(struct RbLog* rb, char* timeStr, uint32_t timeStrSize, char** buffer);
+TraStatus TraceRbLogReadOriRbMsg(struct RbLog* rb, char** buffer, uint32_t* bufLen);
+TraStatus TraceRbLogReadRbMsgSafe(struct RbLog* rb, char* timeStr, uint32_t timeStrSize, char** buffer);
+TraStatus TraceRbLogReadOriRbMsgSafe(struct RbLog* rb, char** buffer, uint32_t* bufLen, uint64_t* cycle);
+uint32_t TracerRbLogGetMsgNum(const RbLog* rb);
 
 #ifdef __cplusplus
 }

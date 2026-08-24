@@ -14,13 +14,13 @@
 extern "C" {
 #endif // __cplusplus
 
-void *LogMalloc(size_t size)
+void* LogMalloc(size_t size)
 {
     if (size == 0) {
         return NULL;
     }
 
-    void *buffer = malloc(size);
+    void* buffer = malloc(size);
     if (buffer == NULL) {
         return NULL;
     }
@@ -33,14 +33,14 @@ void *LogMalloc(size_t size)
     return buffer;
 }
 
-void LogFree(void *buffer)
+void LogFree(void* buffer)
 {
     if (buffer != NULL) {
         free(buffer);
     }
 }
 
-uint32_t LogStrlen(const char *str)
+uint32_t LogStrlen(const char* str)
 {
     size_t len = strlen(str);
     if (len > UINT32_MAX) {
@@ -55,14 +55,14 @@ uint32_t LogStrlen(const char *str)
  * @param[out]  : num       : dest number
  * @return      : SYS_OK: success; SYS_ERROR: fail
  */
-LogStatus LogStrToInt(const char *str, int64_t *num)
+LogStatus LogStrToInt(const char* str, int64_t* num)
 {
     if ((str == NULL) || (num == NULL)) {
         return LOG_FAILURE;
     }
 
     errno = 0;
-    char *endPtr = NULL;
+    char* endPtr = NULL;
     const int32_t numberBase = 10;
     *num = strtol(str, &endPtr, numberBase);
     if ((str == endPtr) || (*endPtr != '\0')) {
@@ -74,12 +74,12 @@ LogStatus LogStrToInt(const char *str, int64_t *num)
     }
 }
 
-LogStatus LogStrToUint(const char *str, uint32_t *num)
+LogStatus LogStrToUint(const char* str, uint32_t* num)
 {
     if ((str == NULL) || (num == NULL)) {
         return LOG_FAILURE;
     }
-    char *endPtr = NULL;
+    char* endPtr = NULL;
     errno = 0;
     const int32_t numberBase = 10;
     uint64_t ret = strtoul(str, &endPtr, numberBase);
@@ -95,12 +95,12 @@ LogStatus LogStrToUint(const char *str, uint32_t *num)
     }
 }
 
-LogStatus LogStrToUlong(const char *str, uint64_t *num)
+LogStatus LogStrToUlong(const char* str, uint64_t* num)
 {
     if ((str == NULL) || (num == NULL) || (str[0] == '-')) {
         return LOG_FAILURE;
     }
-    char *endPtr = NULL;
+    char* endPtr = NULL;
     errno = 0;
     const int32_t numberBase = 10;
     uint64_t ret = strtoull(str, &endPtr, numberBase);
@@ -116,12 +116,12 @@ LogStatus LogStrToUlong(const char *str, uint64_t *num)
 }
 
 // the str should not over INT_MAX, otherwise return false
-bool LogStrCheckNaturalNum(const char *str)
+bool LogStrCheckNaturalNum(const char* str)
 {
     if ((str == NULL) || (*str == '\0')) {
         return false;
     }
-    const char *tmpStr = str;
+    const char* tmpStr = str;
     if (*tmpStr == '0') {
         tmpStr++;
         return *tmpStr == '\0';
@@ -134,7 +134,7 @@ bool LogStrCheckNaturalNum(const char *str)
         }
 
         // to check if str is over INT_MAX(2147483647)
-        totalNum = (totalNum * 10) + (*tmpStr - '0');   // base num is 10
+        totalNum = (totalNum * 10) + (*tmpStr - '0'); // base num is 10
         if (totalNum > INT_MAX) {
             return false;
         }
@@ -158,7 +158,7 @@ STATIC INLINE bool LogIsTrimmedChar(char curChar)
  * @brief       : trim end of string by specific char
  * @param [out] : str          string need to trim
  */
-void LogStrTrimEnd(char *str, int32_t len)
+void LogStrTrimEnd(char* str, int32_t len)
 {
     if ((str == NULL) || (strlen(str) == 0U)) {
         return;
@@ -174,7 +174,7 @@ void LogStrTrimEnd(char *str, int32_t len)
     }
 }
 
-bool LogStrStartsWith(const char *str, const char *pattern)
+bool LogStrStartsWith(const char* str, const char* pattern)
 {
     if ((str == NULL) || (pattern == NULL)) {
         return false;
@@ -193,7 +193,7 @@ bool LogStrStartsWith(const char *str, const char *pattern)
  * @param [in]maxlen:the maxlength of out path
  * @return:succeed: SYS_OK, failed:SYS_ERROR
  */
-int32_t StrcatDir(char *path, const char *filename, const char *dir, uint32_t maxlen)
+int32_t StrcatDir(char* path, const char* filename, const char* dir, uint32_t maxlen)
 {
     if ((dir == NULL) || (filename == NULL) || (path == NULL)) {
         return SYS_ERROR;
@@ -226,4 +226,3 @@ int32_t StrcatDir(char *path, const char *filename, const char *dir, uint32_t ma
 #ifdef __cplusplus
 }
 #endif // __cplusplus
-

@@ -23,4 +23,3 @@ void DumpStackToFile(uintptr_t addr, size_t size);
 }
 #endif // __cplusplus
 #endif
-

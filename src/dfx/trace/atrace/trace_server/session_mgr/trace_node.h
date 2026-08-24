@@ -19,12 +19,12 @@
 extern "C" {
 #endif // __cplusplus
 
-#define ADIAG_INFO_FLAG_START   0
-#define ADIAG_INFO_FLAG_MID     1
-#define ADIAG_INFO_FLAG_END     2
+#define ADIAG_INFO_FLAG_START 0
+#define ADIAG_INFO_FLAG_MID 1
+#define ADIAG_INFO_FLAG_END 2
 
-TraStatus TraceTsPushNode(SessionNode *sessionNode, uint8_t flag, void *data, uint32_t len);
-TraceNode *TraceTsPopNode(SessionNode *sessionNode);
+TraStatus TraceTsPushNode(SessionNode* sessionNode, uint8_t flag, void* data, uint32_t len);
+TraceNode* TraceTsPopNode(SessionNode* sessionNode);
 
 #ifdef __cplusplus
 }

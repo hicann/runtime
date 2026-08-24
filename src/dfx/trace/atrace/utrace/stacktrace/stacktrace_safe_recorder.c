@@ -19,17 +19,17 @@
 #include "adiag_utils.h"
 #include "adiag_print.h"
 
-#define PROCESS_SECTION                     "[process]\n"
-#define STACK_SECTION                       "[stack]\n"
-#define MAPS_SECTION                        "[maps]\n"
-#define MEMORY_SECTION                      "[system memory]\n"
-#define STATUS_SECTION                      "[process status]\n"
-#define LIMITS_SECTION                      "[process limits]\n"
+#define PROCESS_SECTION "[process]\n"
+#define STACK_SECTION "[stack]\n"
+#define MAPS_SECTION "[maps]\n"
+#define MEMORY_SECTION "[system memory]\n"
+#define STATUS_SECTION "[process status]\n"
+#define LIMITS_SECTION "[process limits]\n"
 
-#define PROC_MEMINFO_PATH                   "/proc/meminfo"
+#define PROC_MEMINFO_PATH "/proc/meminfo"
 
-STATIC TraceStackInfo g_stackInfo = { 0 };
-STATIC struct StackcoreBuffer g_stackBuff = { 0 };
+STATIC TraceStackInfo g_stackInfo = {0};
+STATIC struct StackcoreBuffer g_stackBuff = {0};
 
 /**
  * @brief       read a line data from file
@@ -38,7 +38,7 @@ STATIC struct StackcoreBuffer g_stackBuff = { 0 };
  * @param [in]  len:        data buffer length
  * @return      >0  success; -1  failed
  */
-ssize_t TraceSafeReadLine(int32_t fd, char *data, uint32_t len)
+ssize_t TraceSafeReadLine(int32_t fd, char* data, uint32_t len)
 {
     if (fd < 0 || data == NULL || len == 0) {
         return -1;
@@ -46,7 +46,7 @@ ssize_t TraceSafeReadLine(int32_t fd, char *data, uint32_t len)
 
     ssize_t n = 1;
     char c = (char)EOF;
-    char *ptr = data;
+    char* ptr = data;
     while (n < (ssize_t)len) {
         ssize_t rc = read(fd, &c, 1);
         if (rc == 1) {
@@ -77,7 +77,7 @@ ssize_t TraceSafeReadLine(int32_t fd, char *data, uint32_t len)
  * @param [in]  len:        data buffer length
  * @return      TraStatus
  */
-STATIC TraStatus TraceSafeWrite(int32_t fd, const char *data, size_t len)
+STATIC TraStatus TraceSafeWrite(int32_t fd, const char* data, size_t len)
 {
     if ((fd < 0) || (data == NULL) || (len == 0)) {
         return TRACE_INVALID_PARAM;
@@ -98,10 +98,7 @@ STATIC TraStatus TraceSafeWrite(int32_t fd, const char *data, size_t len)
     return TRACE_SUCCESS;
 }
 
-const char* TraceSafeGetFilePath(void)
-{
-    return TraceRecorderSafeGetFilePath();
-}
+const char* TraceSafeGetFilePath(void) { return TraceRecorderSafeGetFilePath(); }
 
 /**
  * @brief       get fd to write stackcore file
@@ -111,21 +108,22 @@ const char* TraceSafeGetFilePath(void)
  * @param [out] fd:             file handle
  * @return      TraStatus
  */
-TraStatus TraceSafeGetFd(const TraceStackRecorderInfo *info, const char *suffix, int32_t *fd)
+TraStatus TraceSafeGetFd(const TraceStackRecorderInfo* info, const char* suffix, int32_t* fd)
 {
     if ((info == NULL) || (fd == NULL)) {
         return TRACE_INVALID_PARAM;
     }
 
-    char timeString[TIMESTAMP_MAX_LENGTH] = { 0 };
+    char timeString[TIMESTAMP_MAX_LENGTH] = {0};
     uint64_t fileTime = GetRealTime();
     TraStatus ret = TimestampToFileStr(fileTime, timeString, TIMESTAMP_MAX_LENGTH);
     if (ret != TRACE_SUCCESS) {
         return ret;
     }
-    char objName[MAX_FILEPATH_LEN] = { 0 };
-    int32_t err = snprintf_s(objName, MAX_FILEPATH_LEN, MAX_FILEPATH_LEN - 1U,
-        "%d_%d_%s_%s", info->signo, info->tid, program_invocation_short_name, timeString);
+    char objName[MAX_FILEPATH_LEN] = {0};
+    int32_t err = snprintf_s(
+        objName, MAX_FILEPATH_LEN, MAX_FILEPATH_LEN - 1U, "%d_%d_%s_%s", info->signo, info->tid,
+        program_invocation_short_name, timeString);
     if (err == -1) {
         return TRACE_FAILURE;
     }
@@ -138,15 +136,12 @@ TraStatus TraceSafeGetFd(const TraceStackRecorderInfo *info, const char *suffix,
 
     g_stackBuff.head.magic = STACK_HEAD_MAGIC;
     g_stackBuff.head.version = STACK_HEAD_VERSION;
-    TraceDirInfo dirInfo = { TRACER_STACKCORE_NAME, info->pid, timeString, false };
-    TraceFileInfo fileInfo = { TRACER_STACKCORE_NAME, objName, suffix };
+    TraceDirInfo dirInfo = {TRACER_STACKCORE_NAME, info->pid, timeString, false};
+    TraceFileInfo fileInfo = {TRACER_STACKCORE_NAME, objName, suffix};
     return TraceRecorderSafeGetFd(&dirInfo, &fileInfo, fd);
 }
 
-TraceStackInfo *TraceSafeGetStackBuffer(void)
-{
-    return &g_stackInfo;
-}
+TraceStackInfo* TraceSafeGetStackBuffer(void) { return &g_stackInfo; }
 
 /**
  * @brief       write "system memory" info
@@ -169,7 +164,7 @@ STATIC TraStatus TraceSafeWriteMemoryInfo(int32_t fd)
         return TRACE_FAILURE;
     }
 
-    char info[CORE_BUFFER_LEN] = { 0 };
+    char info[CORE_BUFFER_LEN] = {0};
     while (TraceSafeReadLine(memFd, info, CORE_BUFFER_LEN) > 0) {
         ret = TraceSafeWrite(fd, info, strlen(info));
         if (ret != TRACE_SUCCESS) {
@@ -197,7 +192,7 @@ STATIC TraStatus TraceSafeWriteStatusInfo(int32_t fd, int32_t pid)
         LOGE("write status title failed, ret=%d, errno=%d", ret, errno);
         return ret;
     }
-    char path[CORE_BUFFER_LEN] = { 0 };
+    char path[CORE_BUFFER_LEN] = {0};
     int32_t err = snprintf_s(path, CORE_BUFFER_LEN, CORE_BUFFER_LEN - 1U, "/proc/%d/status", pid);
     if (err == -1) {
         LOGE("snprintf_s status path failed");
@@ -210,7 +205,7 @@ STATIC TraStatus TraceSafeWriteStatusInfo(int32_t fd, int32_t pid)
         return TRACE_FAILURE;
     }
 
-    char info[CORE_BUFFER_LEN] = { 0 };
+    char info[CORE_BUFFER_LEN] = {0};
     while (TraceSafeReadLine(statFd, info, CORE_BUFFER_LEN) > 0) {
         ret = TraceSafeWrite(fd, info, strlen(info));
         if (ret != TRACE_SUCCESS) {
@@ -223,7 +218,6 @@ STATIC TraStatus TraceSafeWriteStatusInfo(int32_t fd, int32_t pid)
     (void)TraceSafeWrite(fd, "\n", 1);
     return TRACE_SUCCESS;
 }
-
 
 /**
  * @brief       write "process limits" info
@@ -239,7 +233,7 @@ STATIC TraStatus TraceSafeWriteLimitsInfo(int32_t fd, int32_t pid)
         LOGE("write limits title failed, ret=%d, errno=%d", ret, errno);
         return ret;
     }
-    char path[CORE_BUFFER_LEN] = { 0 };
+    char path[CORE_BUFFER_LEN] = {0};
     int32_t err = snprintf_s(path, CORE_BUFFER_LEN, CORE_BUFFER_LEN - 1U, "/proc/%d/limits", pid);
     if (err == -1) {
         LOGE("snprintf_s limits path failed");
@@ -252,7 +246,7 @@ STATIC TraStatus TraceSafeWriteLimitsInfo(int32_t fd, int32_t pid)
         return TRACE_FAILURE;
     }
 
-    char info[CORE_BUFFER_LEN] = { 0 };
+    char info[CORE_BUFFER_LEN] = {0};
     while (TraceSafeReadLine(limitsFd, info, CORE_BUFFER_LEN) > 0) {
         ret = TraceSafeWrite(fd, info, strlen(info));
         if (ret != TRACE_SUCCESS) {
@@ -281,7 +275,7 @@ STATIC TraStatus TraceSafeWriteMapsInfo(int32_t fd, int32_t pid)
         return ret;
     }
 
-    char path[CORE_BUFFER_LEN] = { 0 };
+    char path[CORE_BUFFER_LEN] = {0};
     int32_t err = snprintf_s(path, CORE_BUFFER_LEN, CORE_BUFFER_LEN - 1U, "/proc/%d/maps", pid);
     if (err == -1) {
         LOGE("snprintf_s maps path failed");
@@ -294,7 +288,7 @@ STATIC TraStatus TraceSafeWriteMapsInfo(int32_t fd, int32_t pid)
         return TRACE_FAILURE;
     }
 
-    char info[CORE_BUFFER_LEN] = { 0 };
+    char info[CORE_BUFFER_LEN] = {0};
     while (TraceSafeReadLine(mapFd, info, CORE_BUFFER_LEN) > 0) {
         ret = TraceSafeWrite(fd, info, strlen(info));
         if (ret != TRACE_SUCCESS) {
@@ -345,7 +339,7 @@ TraStatus TraceSafeWriteSystemInfo(int32_t fd, int32_t pid)
  * @param [in]  info:   stack info
  * @return      TraStatus
  */
-TraStatus TraceSafeWriteStackInfo(int32_t fd, const TraceStackInfo *info)
+TraStatus TraceSafeWriteStackInfo(int32_t fd, const TraceStackInfo* info)
 {
     if (info == NULL) {
         return TRACE_INVALID_PARAM;
@@ -362,9 +356,10 @@ TraStatus TraceSafeWriteStackInfo(int32_t fd, const TraceStackInfo *info)
     }
 
     // write stack info
-    char buf[CORE_BUFFER_LEN] = { 0 };
-    (void)snprintf_s(buf, CORE_BUFFER_LEN, CORE_BUFFER_LEN - 1U, "Thread %u (%d, %s)\n",
-        info->threadIdx + 1U, info->threadTid, info->threadName);
+    char buf[CORE_BUFFER_LEN] = {0};
+    (void)snprintf_s(
+        buf, CORE_BUFFER_LEN, CORE_BUFFER_LEN - 1U, "Thread %u (%d, %s)\n", info->threadIdx + 1U, info->threadTid,
+        info->threadName);
     (void)TraceSafeWrite(fd, buf, strlen(buf));
 
     int32_t layer = info->layer;
@@ -394,7 +389,7 @@ TraStatus TraceSafeWriteStackInfo(int32_t fd, const TraceStackInfo *info)
  * @param [in]  info:   process info
  * @return      TraStatus
  */
-TraStatus TraceSafeWriteProcessInfo(int32_t fd, const TraceStackProcessInfo *info)
+TraStatus TraceSafeWriteProcessInfo(int32_t fd, const TraceStackProcessInfo* info)
 {
     if (info == NULL) {
         return TRACE_INVALID_PARAM;
@@ -407,8 +402,9 @@ TraStatus TraceSafeWriteProcessInfo(int32_t fd, const TraceStackProcessInfo *inf
     }
 
     // write process info
-    char data[CORE_BUFFER_LEN] = { 0 };
-    int32_t err = snprintf_s(data, CORE_BUFFER_LEN, CORE_BUFFER_LEN - 1U, 
+    char data[CORE_BUFFER_LEN] = {0};
+    int32_t err = snprintf_s(
+        data, CORE_BUFFER_LEN, CORE_BUFFER_LEN - 1U,
         "crash reason:%d\ncrash pid:%d\ncrash tid:%d\ncrash stack base:0x%016lx\ncrash stack top:0x%016lx\n\n",
         info->signo, info->pid, info->tid, info->baseAddr, info->topAddr);
     if (err == -1) {
@@ -423,7 +419,7 @@ TraStatus TraceSafeWriteProcessInfo(int32_t fd, const TraceStackProcessInfo *inf
     return TRACE_SUCCESS;
 }
 
-TraStatus TraceSaveProcessReg(uintptr_t *regs, uint32_t regSize)
+TraStatus TraceSaveProcessReg(uintptr_t* regs, uint32_t regSize)
 {
     errno_t err = memcpy_s(g_stackBuff.process.regs, sizeof(uintptr_t) * TRACE_CORE_REG_NUM, regs, regSize);
     if (err != EOK) {
@@ -435,7 +431,7 @@ TraStatus TraceSaveProcessReg(uintptr_t *regs, uint32_t regSize)
 
 STATIC TraStatus TraceSaveProcessTask(int32_t pid)
 {
-    char path[CORE_BUFFER_LEN] = { 0 };
+    char path[CORE_BUFFER_LEN] = {0};
     int32_t err = snprintf_s(path, CORE_BUFFER_LEN, CORE_BUFFER_LEN - 1U, "/proc/%d/cmdline", pid);
     if (err == -1) {
         LOGE("snprintf_s cmdline path failed");
@@ -462,7 +458,7 @@ STATIC TraStatus TraceSaveProcessTask(int32_t pid)
  * @param [in]  info:   stack info
  * @return      TraStatus
  */
-TraStatus TraceSaveProcessInfo(const TraceStackProcessInfo *info)
+TraStatus TraceSaveProcessInfo(const TraceStackProcessInfo* info)
 {
     g_stackBuff.process.pid = info->pid;
     g_stackBuff.process.crashTid = info->tid;
@@ -478,7 +474,7 @@ TraStatus TraceSaveProcessInfo(const TraceStackProcessInfo *info)
  * @param [in]  info:   stack info
  * @return      TraStatus
  */
-TraStatus TraceSaveStackInfo(const TraceStackInfo *info)
+TraStatus TraceSaveStackInfo(const TraceStackInfo* info)
 {
     if (info == NULL) {
         return TRACE_INVALID_PARAM;
@@ -487,7 +483,7 @@ TraStatus TraceSaveStackInfo(const TraceStackInfo *info)
         return TRACE_INVALID_PARAM;
     }
 
-    ScThreadInfo *thread = &g_stackBuff.thread[info->threadIdx];
+    ScThreadInfo* thread = &g_stackBuff.thread[info->threadIdx];
     thread->tid = info->threadTid;
     thread->layer = info->layer;
     errno_t err = strncpy_s(thread->name, THREAD_NAME_LEN, info->threadName, strlen(info->threadName));
@@ -505,8 +501,9 @@ TraStatus TraceSaveStackInfo(const TraceStackInfo *info)
         return TRACE_FAILURE;
     }
 
-    err = memcpy_s(thread->frames, sizeof(ScdFrames) * (size_t)MAX_STACK_LAYER,
-        info->frame, sizeof(TraceFrameInfo) * (size_t)MAX_STACK_LAYER);
+    err = memcpy_s(
+        thread->frames, sizeof(ScdFrames) * (size_t)MAX_STACK_LAYER, info->frame,
+        sizeof(TraceFrameInfo) * (size_t)MAX_STACK_LAYER);
     if (err != EOK) {
         LOGE("memcpy thread frames failed");
         return TRACE_FAILURE;
@@ -517,7 +514,7 @@ TraStatus TraceSaveStackInfo(const TraceStackInfo *info)
 
 TraStatus TraceSafeWriteBuff(int32_t fd)
 {
-    TraStatus ret = TraceSafeWrite(fd, (const char *)&g_stackBuff, sizeof(g_stackBuff));
+    TraStatus ret = TraceSafeWrite(fd, (const char*)&g_stackBuff, sizeof(g_stackBuff));
     (void)memset_s(&g_stackBuff, sizeof(struct StackcoreBuffer), 0, sizeof(struct StackcoreBuffer));
     if (ret != TRACE_SUCCESS) {
         LOGE("write buffer to file failed, info : %s", strerror(AdiagGetErrorCode()));
@@ -526,48 +523,48 @@ TraStatus TraceSafeWriteBuff(int32_t fd)
     return TRACE_SUCCESS;
 }
 
-TraStatus TraceSafeMkdirPath(const TraceStackRecorderInfo *info)
+TraStatus TraceSafeMkdirPath(const TraceStackRecorderInfo* info)
 {
     if (info == NULL) {
         return TRACE_INVALID_PARAM;
     }
 
     // get dir time by crash time
-    char timeString[TIMESTAMP_MAX_LENGTH] = { 0 };
+    char timeString[TIMESTAMP_MAX_LENGTH] = {0};
     TraStatus ret = TimestampToFileStr(info->crashTime, timeString, TIMESTAMP_MAX_LENGTH);
     if (ret != TRACE_SUCCESS) {
         LOGE("get dir time failed, ret=%d", ret);
         return ret;
     }
 
-    TraceDirInfo dirInfo = { TRACER_STACKCORE_NAME, info->pid, timeString, false };
+    TraceDirInfo dirInfo = {TRACER_STACKCORE_NAME, info->pid, timeString, false};
     return TraceRecorderSafeMkdirPath(&dirInfo);
 }
 
-TraStatus TraceSafeGetDirPath(const TraceStackRecorderInfo *info, char *path, size_t len)
+TraStatus TraceSafeGetDirPath(const TraceStackRecorderInfo* info, char* path, size_t len)
 {
     if ((info == NULL) || (path == NULL) || (len == 0)) {
         return TRACE_INVALID_PARAM;
     }
 
     // get dir time by crash time
-    char timeString[TIMESTAMP_MAX_LENGTH] = { 0 };
+    char timeString[TIMESTAMP_MAX_LENGTH] = {0};
     TraStatus ret = TimestampToFileStr(info->crashTime, timeString, TIMESTAMP_MAX_LENGTH);
     if (ret != TRACE_SUCCESS) {
         LOGE("get dir time failed, ret=%d", ret);
         return ret;
     }
 
-    TraceDirInfo dirInfo = { TRACER_STACKCORE_NAME, info->pid, timeString, false };
+    TraceDirInfo dirInfo = {TRACER_STACKCORE_NAME, info->pid, timeString, false};
     return TraceRecorderSafeGetDirPath(&dirInfo, path, len);
 }
 
-TraStatus TraceSafeGetFileName(const TraceStackRecorderInfo *info, char *name, size_t len)
+TraStatus TraceSafeGetFileName(const TraceStackRecorderInfo* info, char* name, size_t len)
 {
     if ((info == NULL) || (name == NULL) || (len == 0)) {
         return TRACE_INVALID_PARAM;
     }
-    char timeString[TIMESTAMP_MAX_LENGTH] = { 0 };
+    char timeString[TIMESTAMP_MAX_LENGTH] = {0};
     uint64_t fileTime = GetRealTime();
     TraStatus ret = TimestampToFileStr(fileTime, timeString, TIMESTAMP_MAX_LENGTH);
     if (ret != TRACE_SUCCESS) {
@@ -575,11 +572,13 @@ TraStatus TraceSafeGetFileName(const TraceStackRecorderInfo *info, char *name, s
         return ret;
     }
 
-    int32_t err = snprintf_s(name, len, len - 1U, "%s_tracer_%d_%d_%s_%s",
-        TRACER_STACKCORE_NAME, info->signo, info->tid, program_invocation_short_name, timeString);
+    int32_t err = snprintf_s(
+        name, len, len - 1U, "%s_tracer_%d_%d_%s_%s", TRACER_STACKCORE_NAME, info->signo, info->tid,
+        program_invocation_short_name, timeString);
     if (err == -1) {
-        LOGE("snprintf_s file name failed, info : %s, signo=%d, tid=%d, name=%s",
-            strerror(AdiagGetErrorCode()), info->signo, info->tid, program_invocation_short_name);
+        LOGE(
+            "snprintf_s file name failed, info : %s, signo=%d, tid=%d, name=%s", strerror(AdiagGetErrorCode()),
+            info->signo, info->tid, program_invocation_short_name);
         return TRACE_FAILURE;
     }
     return TRACE_SUCCESS;

@@ -21,10 +21,9 @@ extern "C" {
 LogStatus SlogdEventlogInit(int32_t devId, bool isDocker);
 void SlogdEventlogExit(void);
 
-LogStatus SlogdEventMgrInit(StLogFileList *logList);
+LogStatus SlogdEventMgrInit(StLogFileList* logList);
 
 #ifdef __cplusplus
 }
 #endif
 #endif
-

@@ -20,14 +20,14 @@
 extern "C" {
 #endif
 
-#define MAX_MONITOR_EVENT   64
+#define MAX_MONITOR_EVENT 64
 #define FILE_MONITOR_EVENT_SIZE ((uint32_t)sizeof(struct inotify_event))
 #define FILE_MONITOR_EVENT_BUF_LEN ((uint32_t)MAX_MONITOR_EVENT * (FILE_MONITOR_EVENT_SIZE + 16U))
 #define MAX_FOLDER_DEPTH 10
 #define MASTER_ID_STR_HEAD "dev-os-"
 #define MASTER_ID_STR_LEN 10
 
-typedef int32_t (*FileMonitorSyncFunc)(const char *srcFileName, const char *dstFileName);
+typedef int32_t (*FileMonitorSyncFunc)(const char* srcFileName, const char* dstFileName);
 typedef struct NotifyEvent {
     int32_t wd;
     char fileName[MAX_FULLPATH_LEN];
@@ -46,16 +46,16 @@ typedef struct MonitorEvent {
 } MonitorEvent;
 
 typedef struct FileMonitor {
-    void *argList;
+    void* argList;
     ToolMutex argListLock;
     MonitorEvent eventMonitor;
 } FileMonitor;
 
-int32_t FileMonitorSyncFileList(const char *srcFileName, const char *dstFileName, FileMonitorSyncFunc func,
-    int32_t depth);
-void FileMonitorSetMasterIdStr(const char *masterIdStr);
-char *FileMonitorGetMasterIdStr(void);
-int32_t FileMonitorAddWatch(const char *filePath, int32_t fd, int32_t *wd, uint32_t mask);
+int32_t FileMonitorSyncFileList(
+    const char* srcFileName, const char* dstFileName, FileMonitorSyncFunc func, int32_t depth);
+void FileMonitorSetMasterIdStr(const char* masterIdStr);
+char* FileMonitorGetMasterIdStr(void);
+int32_t FileMonitorAddWatch(const char* filePath, int32_t fd, int32_t* wd, uint32_t mask);
 
 #ifdef __cplusplus
 }

@@ -17,7 +17,7 @@
 extern "C" {
 #endif // __cplusplus
 
-TraStatus KtraceTsCreateThread(uint32_t devNum, uint32_t *devIdArray);
+TraStatus KtraceTsCreateThread(uint32_t devNum, uint32_t* devIdArray);
 void KtraceTsDestroyThread(void);
 
 #ifdef __cplusplus

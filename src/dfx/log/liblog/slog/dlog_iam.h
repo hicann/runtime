@@ -18,17 +18,17 @@
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
-#define IS_BUSY(err)                        (((err) == ETIMEDOUT) || ((err) == EAGAIN) || ((err) == EBUSY))
-#define IS_BADFD(err)                       (((err) == EBADFD) || ((err) == EHOSTUNREACH) || ((err) == EBADF) || \
-                                            ((err) == EAGAIN) || ((err) == EPIPE))
+#define IS_BUSY(err) (((err) == ETIMEDOUT) || ((err) == EAGAIN) || ((err) == EBUSY))
+#define IS_BADFD(err) \
+    (((err) == EBADFD) || ((err) == EHOSTUNREACH) || ((err) == EBADF) || ((err) == EAGAIN) || ((err) == EPIPE))
 
-typedef void (*IamRegisterServer) (void);
+typedef void (*IamRegisterServer)(void);
 
 int32_t DlogIamInit(void);
 void DlogIamExit(void);
 
-int32_t DlogIamIoctlGetLevel(struct IAMIoctlArg *arg);
-int32_t DlogIamIoctlFlushLog(struct IAMIoctlArg *arg);
+int32_t DlogIamIoctlGetLevel(struct IAMIoctlArg* arg);
+int32_t DlogIamIoctlFlushLog(struct IAMIoctlArg* arg);
 int32_t DlogIamWrite(void* buffer, uint32_t length);
 int32_t DlogIamOpenService(void);
 void DlogIamRegisterServer(IamRegisterServer regFunc);

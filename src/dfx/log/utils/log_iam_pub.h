@@ -12,9 +12,9 @@
 
 #define IAM_RETRY_TIMES 3
 #define IAM_SERVICE_NAME_MAX_LENGTH 32U
-#define IAM_CMD_FLUSH_LOG           0x01U
-#define IAM_CMD_GET_LEVEL           0x03U
-#define IAM_CMD_COLLECT_LOG         0x05U
+#define IAM_CMD_FLUSH_LOG 0x01U
+#define IAM_CMD_GET_LEVEL 0x03U
+#define IAM_CMD_COLLECT_LOG 0x05U
 #define IAM_CMD_COLLECT_LOG_PATTERN 0x07U
 
 #ifndef LOGOUT_IAM_SERVICE_PATH
@@ -22,8 +22,7 @@
 #endif
 
 #ifndef KMS_IAM_SERVICE_PATH
-#define KMS_IAM_SERVICE_PATH       "dp:/res/secmgr/kms"
+#define KMS_IAM_SERVICE_PATH "dp:/res/secmgr/kms"
 #endif
 
 #endif
-

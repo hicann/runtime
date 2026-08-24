@@ -35,7 +35,7 @@ LOG_FUNC_VISIBILITY int32_t AlogCheckDebugLevel(uint32_t moduleId, int32_t level
  * @param [in]  : level      log level, eg: DLOG_ERROR/DLOG_WARN/DLOG_INFO/DLOG_DEBUG
  * @return:     : 0: success, other: failed
  */
-LOG_FUNC_VISIBILITY int32_t AlogRecord(uint32_t moduleId, uint32_t logType, int32_t level, const char *fmt, ...)
+LOG_FUNC_VISIBILITY int32_t AlogRecord(uint32_t moduleId, uint32_t logType, int32_t level, const char* fmt, ...)
     __attribute((weak)) __attribute__((format(printf, 4, 5)));
 
 #ifdef __cplusplus

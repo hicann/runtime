@@ -53,7 +53,6 @@ LOG_FUNC_VISIBILITY int DlogReportStart(int devId, int mode) __attribute((weak))
  */
 LOG_FUNC_VISIBILITY void DlogReportStop(int devId) __attribute((weak));
 
-
 #ifdef __cplusplus
 #ifndef LOG_CPP
 }

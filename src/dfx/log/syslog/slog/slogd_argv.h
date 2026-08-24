@@ -18,18 +18,16 @@
 extern "C" {
 #endif
 
-
 struct SlogdOptions {
     int32_t n; // 1: run in foreground; 0: run in background
     int32_t l;
     int32_t v; // -1: pf; 32-63: vf
-    bool d; // true: run in docker; false: not in docker
+    bool d;    // true: run in docker; false: not in docker
 };
 
-LogStatus SlogdInitArgs(int32_t argc, char **argv, struct SlogdOptions *opt);
+LogStatus SlogdInitArgs(int32_t argc, char** argv, struct SlogdOptions* opt);
 
 #ifdef __cplusplus
 }
 #endif
 #endif
-

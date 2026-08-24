@@ -17,21 +17,21 @@
 extern "C" {
 #endif
 
-LogRt LogMkdir(const char *dirPath);
-LogRt LogMkdirRecur(const char *fullPath);
+LogRt LogMkdir(const char* dirPath);
+LogRt LogMkdirRecur(const char* fullPath);
 
-int32_t LogGetHomeDir(char *const homedir, uint32_t len);
-int32_t GetValidPath(char *path, int32_t pathLen, char *validPath, int32_t validPathLen);
-int32_t LogRenameDir(const char *srcDir, const char *dstDir, ToolFilter filterFunc);
-void FsyncLogToDisk(const char *logPath);
+int32_t LogGetHomeDir(char* const homedir, uint32_t len);
+int32_t GetValidPath(char* path, int32_t pathLen, char* validPath, int32_t validPathLen);
+int32_t LogRenameDir(const char* srcDir, const char* dstDir, ToolFilter filterFunc);
+void FsyncLogToDisk(const char* logPath);
 
-void ToolPathListFree(char **pathList, int32_t count);
+void ToolPathListFree(char** pathList, int32_t count);
 
-uint32_t LogGetDirSize(const char *dirPath, int32_t level);
-int32_t LogRemoveDir(const char *dirName, int32_t level);
+uint32_t LogGetDirSize(const char* dirPath, int32_t level);
+int32_t LogRemoveDir(const char* dirName, int32_t level);
 
-LogStatus LogFileGets(char *buf, int32_t len, FILE *fp);
-int64_t LogFileTell(FILE *fp);
+LogStatus LogFileGets(char* buf, int32_t len, FILE* fp);
+int64_t LogFileTell(FILE* fp);
 
 #ifdef __cplusplus
 }

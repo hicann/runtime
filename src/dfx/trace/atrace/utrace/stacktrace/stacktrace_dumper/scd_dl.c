@@ -13,7 +13,7 @@
 #include "scd_log.h"
 #include "adiag_utils.h"
 
-STATIC TraStatus ScdDlMmap(ScdDl *dl, const char *dlName)
+STATIC TraStatus ScdDlMmap(ScdDl* dl, const char* dlName)
 {
     // open file
     int32_t fd = ScdUtilOpen(dlName);
@@ -29,7 +29,7 @@ STATIC TraStatus ScdDlMmap(ScdDl *dl, const char *dlName)
     }
     ScdMemoryInitLocal(&dl->memory);
     // mmap the file
-    void *mapAddr = mmap(NULL, (size_t)st.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+    void* mapAddr = mmap(NULL, (size_t)st.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
     if (mapAddr == MAP_FAILED) {
         SCD_DLOG_ERR("mmap file[%s] failed, errno = %s.", dlName, strerror(AdiagGetErrorCode()));
         (void)close(fd);
@@ -38,18 +38,18 @@ STATIC TraStatus ScdDlMmap(ScdDl *dl, const char *dlName)
     SCD_DLOG_INF("map so %s to %p, size %zu", dlName, dl->memory.data, st.st_size);
     dl->fd = fd;
     dl->memory.data = (uintptr_t)mapAddr;
-    dl->memory.size = (size_t)st.st_size; 
+    dl->memory.size = (size_t)st.st_size;
     return TRACE_SUCCESS;
 }
 
-STATIC void ScdDlMunmap(ScdDl *dl)
+STATIC void ScdDlMunmap(ScdDl* dl)
 {
     if (dl->memory.data != 0) {
-        (void)munmap((void *)dl->memory.data, dl->memory.size);
+        (void)munmap((void*)dl->memory.data, dl->memory.size);
         dl->memory.data = 0;
         dl->memory.size = 0;
     }
-    
+
     if (dl->fd >= 0) {
         (void)close(dl->fd);
         dl->fd = -1;
@@ -63,7 +63,7 @@ STATIC void ScdDlMunmap(ScdDl *dl)
  * @param [in]  dlName:    dynamic library name
  * @return      TraStatus
  */
-TraStatus ScdDlLoad(ScdDl *dl, int32_t pid, const char *dlName)
+TraStatus ScdDlLoad(ScdDl* dl, int32_t pid, const char* dlName)
 {
     SCD_CHK_PTR_ACTION(dl, return TRACE_FAILURE);
     if (dl->elfLoaded) {
@@ -91,7 +91,7 @@ TraStatus ScdDlLoad(ScdDl *dl, int32_t pid, const char *dlName)
  * @param [in]  dl:        dynamic library info
  * @return      TraStatus
  */
-TraStatus ScdDlInit(ScdDl *dl)
+TraStatus ScdDlInit(ScdDl* dl)
 {
     dl->pid = 0;
     dl->fd = -1;
@@ -106,7 +106,7 @@ TraStatus ScdDlInit(ScdDl *dl)
  * @param [in]  dl:        dynamic library info
  * @return      NA
  */
-void ScdDlUninit(ScdDl *dl)
+void ScdDlUninit(ScdDl* dl)
 {
     if (dl->elfLoaded) {
         dl->elfLoaded = false;

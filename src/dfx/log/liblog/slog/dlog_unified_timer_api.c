@@ -18,12 +18,12 @@
 #define TIMER_LIBRARY_NAME "libunified_timer.dll"
 #endif
 
-#define UNIFIED_TIMER_FUNCTION_NUM              3
+#define UNIFIED_TIMER_FUNCTION_NUM 3
 static ArgPtr g_timerLibHandle = NULL;
 static SymbolInfo g_timerFuncInfo[UNIFIED_TIMER_FUNCTION_NUM] = {
-    { "AddUnifiedTimer", NULL },
-    { "RemoveUnifiedTimer", NULL },
-    { "CloseUnifiedTimer", NULL },
+    {"AddUnifiedTimer", NULL},
+    {"RemoveUnifiedTimer", NULL},
+    {"CloseUnifiedTimer", NULL},
 };
 
 LogStatus DlogLoadTimerDll(void)
@@ -59,16 +59,16 @@ LogStatus DlogCloseTimerDll(void)
     return ret;
 }
 
-typedef uint32_t (*UNIFIED_TIMER_ADD)(const char *, void (*)(void), int64_t, enum TimerType);
-uint32_t DlogAddUnifiedTimer(const char *timerName, void (*callback)(void), int64_t period, enum TimerType type)
+typedef uint32_t (*UNIFIED_TIMER_ADD)(const char*, void (*)(void), int64_t, enum TimerType);
+uint32_t DlogAddUnifiedTimer(const char* timerName, void (*callback)(void), int64_t period, enum TimerType type)
 {
     UNIFIED_TIMER_ADD func = (UNIFIED_TIMER_ADD)g_timerFuncInfo[0].handle;
     ONE_ACT_WARN_LOG(func == NULL, return 1, "Can not find unified timer func.");
     return func(timerName, callback, period, type);
 }
 
-typedef uint32_t (*UNIFIED_TIMER_REMOVE)(const char *);
-uint32_t DlogRemoveUnifiedTimer(const char *timerName)
+typedef uint32_t (*UNIFIED_TIMER_REMOVE)(const char*);
+uint32_t DlogRemoveUnifiedTimer(const char* timerName)
 {
     UNIFIED_TIMER_REMOVE func = (UNIFIED_TIMER_REMOVE)g_timerFuncInfo[1].handle;
     ONE_ACT_WARN_LOG(func == NULL, return 1, "Can not find unified timer func.");

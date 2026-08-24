@@ -18,13 +18,11 @@ using namespace Adx;
 int32_t FileDumpInit(void)
 {
     int32_t err = SYS_ERROR;
-    std::unique_ptr<AdxComponent> cpn(new(std::nothrow)LogGetFile());
+    std::unique_ptr<AdxComponent> cpn(new (std::nothrow) LogGetFile());
     ONE_ACT_ERR_LOG(cpn == nullptr, return err, "init component error");
     err = AdxRegisterComponentFunc(HDC_SERVICE_TYPE_IDE_FILE_TRANS, cpn);
     ONE_ACT_ERR_LOG(err != SYS_OK, return err, "register component func error");
     return err;
 }
 
-void FileDumpExit(void)
-{
-}
+void FileDumpExit(void) {}

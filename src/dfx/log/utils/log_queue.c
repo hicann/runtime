@@ -12,18 +12,18 @@
 #include "log_common.h"
 #include "log_print.h"
 
-void XFreeLogNode(LogNode **node)
+void XFreeLogNode(LogNode** node)
 {
     ONE_ACT_WARN_LOG(node == NULL, return, "[input] log node pointer is null.");
     ONE_ACT_WARN_LOG(*node == NULL, return, "[input] log node is null.");
 
-    LogNode *tmp = (LogNode *)*node;
+    LogNode* tmp = (LogNode*)*node;
     XFREE(tmp->stNodeData);
     XFREE(tmp);
     *node = NULL;
 }
 
-LogRt LogQueueInit(LogQueue *queue, uint32_t deviceId)
+LogRt LogQueueInit(LogQueue* queue, uint32_t deviceId)
 {
     ONE_ACT_WARN_LOG(queue == NULL, return ARGV_NULL, "[input] queue is null.");
 
@@ -36,12 +36,12 @@ LogRt LogQueueInit(LogQueue *queue, uint32_t deviceId)
 }
 
 // not free log_queue
-LogRt LogQueueFree(LogQueue *queue, void (*freeNode)(LogNode**))
+LogRt LogQueueFree(LogQueue* queue, void (*freeNode)(LogNode**))
 {
     ONE_ACT_NO_LOG(queue == NULL, return ARGV_NULL);
     ONE_ACT_WARN_LOG(freeNode == NULL, return ARGV_NULL, "[input] node free function is null");
 
-    LogNode *tmp = NULL;
+    LogNode* tmp = NULL;
     int32_t num = (int32_t)queue->uiCount;
     for (int32_t i = 0; i < num; i++) {
         LogRt ret = LogQueueDequeue(queue, &tmp);
@@ -54,10 +54,10 @@ LogRt LogQueueFree(LogQueue *queue, void (*freeNode)(LogNode**))
     return SUCCESS;
 }
 
-LogRt LogQueueEnqueue(LogQueue *queue, LogNode *node)
+LogRt LogQueueEnqueue(LogQueue* queue, LogNode* node)
 {
     ONE_ACT_WARN_LOG(queue == NULL, return ARGV_NULL, "[input] queue is null.");
-    ONE_ACT_WARN_LOG(node  == NULL, return ARGV_NULL, "[input] log node is null.");
+    ONE_ACT_WARN_LOG(node == NULL, return ARGV_NULL, "[input] log node is null.");
     ONE_ACT_WARN_LOG(node->uiNodeDataLen == 0, return ARGV_NULL, "[input] log node is empty.");
 
     // queue would be more than max_size, but node max_count
@@ -73,7 +73,7 @@ LogRt LogQueueEnqueue(LogQueue *queue, LogNode *node)
         queue->uiSize = node->uiNodeDataLen;
     } else {
         queue->stRear->next = node; // firstly, join the node to list
-        queue->stRear = node; // secondly, mv stRear to listRear
+        queue->stRear = node;       // secondly, mv stRear to listRear
         queue->uiCount++;
         queue->uiSize += node->uiNodeDataLen;
     }
@@ -81,10 +81,10 @@ LogRt LogQueueEnqueue(LogQueue *queue, LogNode *node)
     return SUCCESS;
 }
 
-LogRt LogQueueDequeue(LogQueue *queue, LogNode **node)
+LogRt LogQueueDequeue(LogQueue* queue, LogNode** node)
 {
     ONE_ACT_WARN_LOG(queue == NULL, return ARGV_NULL, "[input] queue is null.");
-    ONE_ACT_WARN_LOG(node  == NULL, return ARGV_NULL, "[input] log node is null.");
+    ONE_ACT_WARN_LOG(node == NULL, return ARGV_NULL, "[input] log node is null.");
 
     if (LogQueueNULL(queue) != SUCCESS) {
         return QUEUE_IS_NULL;
@@ -94,7 +94,7 @@ LogRt LogQueueDequeue(LogQueue *queue, LogNode **node)
     if (queue->uiCount == 1) {
         (void)LogQueueInit(queue, queue->deviceId);
     } else {
-        LogNode *tmp = queue->stHead;
+        LogNode* tmp = queue->stHead;
         queue->uiCount--;
         queue->uiSize -= tmp->uiNodeDataLen;
         queue->stHead = tmp->next;
@@ -104,24 +104,22 @@ LogRt LogQueueDequeue(LogQueue *queue, LogNode **node)
     return SUCCESS;
 }
 
-LogRt LogQueueFull(const LogQueue *queue)
+LogRt LogQueueFull(const LogQueue* queue)
 {
     ONE_ACT_WARN_LOG(queue == NULL, return ARGV_NULL, "[input] queue is null.");
 
-    if ((queue->uiCount >= MAX_QUEUE_COUNT) ||
-        (queue->uiSize >= MAX_QUEUE_SIZE)) {
+    if ((queue->uiCount >= MAX_QUEUE_COUNT) || (queue->uiSize >= MAX_QUEUE_SIZE)) {
         return QUEUE_IS_FULL;
     }
 
     return SUCCESS;
 }
 
-LogRt LogQueueNULL(const LogQueue *queue)
+LogRt LogQueueNULL(const LogQueue* queue)
 {
     ONE_ACT_WARN_LOG(queue == NULL, return ARGV_NULL, "[input] queue is null.");
 
-    if ((queue->uiCount == 0) || (queue->uiSize == 0) ||
-        ((queue->stHead == NULL) && (queue->stRear == NULL))) {
+    if ((queue->uiCount == 0) || (queue->uiSize == 0) || ((queue->stHead == NULL) && (queue->stRear == NULL))) {
         return QUEUE_IS_NULL;
     }
 

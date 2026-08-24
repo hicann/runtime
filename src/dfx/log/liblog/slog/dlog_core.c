@@ -26,7 +26,7 @@
 extern "C" {
 #endif // __cplusplus
 
-STATIC DlogCallback g_dlogCallback = { 0 };
+STATIC DlogCallback g_dlogCallback = {0};
 STATIC bool g_dlogIsInited = false;
 STATIC ToolMutex g_slogMutex = TOOL_MUTEX_INITIALIZER;
 STATIC bool g_hasRegistered = false;
@@ -35,29 +35,17 @@ STATIC bool g_hasRegistered = false;
  * @brief       : check dlog init or not
  * @return      : true inited; false not-inited
  */
-STATIC INLINE bool DlogIsInited(void)
-{
-    return g_dlogIsInited;
-}
+STATIC INLINE bool DlogIsInited(void) { return g_dlogIsInited; }
 
 /**
  * @brief       : set dlog init flag
  * @param [in]  : initFlag      init flag setted
  */
-STATIC INLINE void DlogSetInited(bool initFlag)
-{
-    g_dlogIsInited = initFlag;
-}
+STATIC INLINE void DlogSetInited(bool initFlag) { g_dlogIsInited = initFlag; }
 
-STATIC void SlogUnlock(void)
-{
-    UNLOCK_WARN_LOG(&g_slogMutex);
-}
+STATIC void SlogUnlock(void) { UNLOCK_WARN_LOG(&g_slogMutex); }
 
-STATIC void SlogLock(void)
-{
-    LOCK_WARN_LOG(&g_slogMutex);
-}
+STATIC void SlogLock(void) { LOCK_WARN_LOG(&g_slogMutex); }
 
 /**
  * @brief       : parent_process will call it before fork()
@@ -94,9 +82,9 @@ STATIC void DlogAtForkChild(void)
 
 static bool g_logCtrlSwitch = false;
 static int32_t g_writePrintNum = 0;
-static struct timespec g_lastTv = { 0, 0 };
+static struct timespec g_lastTv = {0, 0};
 static int g_logCtrlLevel = DLOG_GLOABLE_DEFAULT_LEVEL;
-static unsigned int g_levelCount[LOG_MAX_LEVEL] = { 0, 0, 0, 0 }; // debug, info, warn, error
+static unsigned int g_levelCount[LOG_MAX_LEVEL] = {0, 0, 0, 0}; // debug, info, warn, error
 
 STATIC void LogCtrlDecLogic(void)
 {
@@ -105,28 +93,31 @@ STATIC void LogCtrlDecLogic(void)
         if (timeValue < LOG_INFO_INTERVAL) {
             if (g_logCtrlLevel != DLOG_WARN) {
                 g_logCtrlLevel = DLOG_WARN;
-                SELF_LOG_WARN("log control down to level=WARNING, pid=%d, pid_name=%s, log loss condition: " \
-                              "error_num=%u, warn_num=%u, info_num=%u, debug_num=%u.",
-                              DlogGetCurrPid(), DlogGetPidName(), g_levelCount[DLOG_ERROR], g_levelCount[DLOG_WARN],
-                              g_levelCount[DLOG_INFO], g_levelCount[DLOG_DEBUG]);
+                SELF_LOG_WARN(
+                    "log control down to level=WARNING, pid=%d, pid_name=%s, log loss condition: "
+                    "error_num=%u, warn_num=%u, info_num=%u, debug_num=%u.",
+                    DlogGetCurrPid(), DlogGetPidName(), g_levelCount[DLOG_ERROR], g_levelCount[DLOG_WARN],
+                    g_levelCount[DLOG_INFO], g_levelCount[DLOG_DEBUG]);
             }
         } else if (timeValue < LOG_CTRL_TOTAL_INTERVAL) {
             if (g_logCtrlLevel != DLOG_INFO) {
                 g_logCtrlLevel = DLOG_INFO;
-                SELF_LOG_WARN("log control down to level=INFO, pid=%d, pid_name=%s, log loss condition: " \
-                              "error_num=%u, warn_num=%u, info_num=%u, debug_num=%u.",
-                              DlogGetCurrPid(), DlogGetPidName(), g_levelCount[DLOG_ERROR], g_levelCount[DLOG_WARN],
-                              g_levelCount[DLOG_INFO], g_levelCount[DLOG_DEBUG]);
+                SELF_LOG_WARN(
+                    "log control down to level=INFO, pid=%d, pid_name=%s, log loss condition: "
+                    "error_num=%u, warn_num=%u, info_num=%u, debug_num=%u.",
+                    DlogGetCurrPid(), DlogGetPidName(), g_levelCount[DLOG_ERROR], g_levelCount[DLOG_WARN],
+                    g_levelCount[DLOG_INFO], g_levelCount[DLOG_DEBUG]);
             }
         } else {
             g_logCtrlSwitch = false;
             g_logCtrlLevel = GetGlobalLogTypeLevelVar(DLOG_GLOBAL_TYPE_MASK);
             g_lastTv.tv_sec = 0;
             g_lastTv.tv_nsec = 0;
-            SELF_LOG_WARN("clear log control switch, pid=%d, pid_name=%s, log loss condition: " \
-                          "error_num=%u, warn_num=%u, info_num=%u, debug_num=%u.",
-                          DlogGetCurrPid(), DlogGetPidName(), g_levelCount[DLOG_ERROR], g_levelCount[DLOG_WARN],
-                          g_levelCount[DLOG_INFO], g_levelCount[DLOG_DEBUG]);
+            SELF_LOG_WARN(
+                "clear log control switch, pid=%d, pid_name=%s, log loss condition: "
+                "error_num=%u, warn_num=%u, info_num=%u, debug_num=%u.",
+                DlogGetCurrPid(), DlogGetPidName(), g_levelCount[DLOG_ERROR], g_levelCount[DLOG_WARN],
+                g_levelCount[DLOG_INFO], g_levelCount[DLOG_DEBUG]);
         }
     }
 }
@@ -136,22 +127,23 @@ STATIC void LogCtrlIncLogic(void)
     if (g_logCtrlSwitch == false) {
         g_logCtrlSwitch = true;
         g_logCtrlLevel = DLOG_ERROR;
-        SELF_LOG_WARN("set log control switch to level=ERROR, pid=%d, pid_name=%s, log loss condition: " \
-                      "error_num=%u, warn_num=%u, info_num=%u, debug_num=%u.",
-                      DlogGetCurrPid(), DlogGetPidName(), g_levelCount[DLOG_ERROR], g_levelCount[DLOG_WARN],
-                      g_levelCount[DLOG_INFO], g_levelCount[DLOG_DEBUG]);
+        SELF_LOG_WARN(
+            "set log control switch to level=ERROR, pid=%d, pid_name=%s, log loss condition: "
+            "error_num=%u, warn_num=%u, info_num=%u, debug_num=%u.",
+            DlogGetCurrPid(), DlogGetPidName(), g_levelCount[DLOG_ERROR], g_levelCount[DLOG_WARN],
+            g_levelCount[DLOG_INFO], g_levelCount[DLOG_DEBUG]);
     } else if (g_logCtrlLevel < DLOG_ERROR) {
         g_logCtrlLevel++;
-        SELF_LOG_WARN("log control up to level=%s, pid=%d, pid_name=%s, log loss condition: " \
-                      "error_num=%u, warn_num=%u, info_num=%u, debug_num=%u.",
-                      DlogGetBasicLevelNameById(g_logCtrlLevel), DlogGetCurrPid(), DlogGetPidName(),
-                      g_levelCount[DLOG_ERROR], g_levelCount[DLOG_WARN], g_levelCount[DLOG_INFO],
-                      g_levelCount[DLOG_DEBUG]);
+        SELF_LOG_WARN(
+            "log control up to level=%s, pid=%d, pid_name=%s, log loss condition: "
+            "error_num=%u, warn_num=%u, info_num=%u, debug_num=%u.",
+            DlogGetBasicLevelNameById(g_logCtrlLevel), DlogGetCurrPid(), DlogGetPidName(), g_levelCount[DLOG_ERROR],
+            g_levelCount[DLOG_WARN], g_levelCount[DLOG_INFO], g_levelCount[DLOG_DEBUG]);
     }
     (void)LogGetMonotonicTime(&g_lastTv);
 }
 
-STATIC int32_t SafeWrites(int32_t fd, const void *buf, uint32_t count, uint32_t moduleId, int32_t level)
+STATIC int32_t SafeWrites(int32_t fd, const void* buf, uint32_t count, uint32_t moduleId, int32_t level)
 {
     int32_t n, err;
     int32_t retryTimes = 0;
@@ -175,23 +167,23 @@ STATIC int32_t SafeWrites(int32_t fd, const void *buf, uint32_t count, uint32_t 
         LogCtrlDecLogic();
     } else if (n < 0) {
         g_levelCount[level]++;
-        SELF_LOG_ERROR_N(&g_writePrintNum, WRITE_E_PRINT_NUM,
-                         "write failed, print every %d times, result=%d, strerr=%s, pid=%d, pid_name=%s, " \
-                         "module=%u, log loss condition: error_num=%u, warn_num=%u, info_num=%u, debug_num=%u.",
-                         WRITE_E_PRINT_NUM, n, strerror(err), DlogGetCurrPid(), DlogGetPidName(), moduleId,
-                         g_levelCount[DLOG_ERROR], g_levelCount[DLOG_WARN], g_levelCount[DLOG_INFO],
-                         g_levelCount[DLOG_DEBUG]);
+        SELF_LOG_ERROR_N(
+            &g_writePrintNum, WRITE_E_PRINT_NUM,
+            "write failed, print every %d times, result=%d, strerr=%s, pid=%d, pid_name=%s, "
+            "module=%u, log loss condition: error_num=%u, warn_num=%u, info_num=%u, debug_num=%u.",
+            WRITE_E_PRINT_NUM, n, strerror(err), DlogGetCurrPid(), DlogGetPidName(), moduleId, g_levelCount[DLOG_ERROR],
+            g_levelCount[DLOG_WARN], g_levelCount[DLOG_INFO], g_levelCount[DLOG_DEBUG]);
     }
     return n;
 }
 
-STATIC int32_t FullWrites(int32_t fd, const char *buf, uint32_t len, uint32_t moduleId, int32_t level)
+STATIC int32_t FullWrites(int32_t fd, const char* buf, uint32_t len, uint32_t moduleId, int32_t level)
 {
     int32_t total = 0;
-    const char *dataBuf = buf;
+    const char* dataBuf = buf;
     uint32_t dataLen = len;
     while (dataLen > 0) {
-        int32_t cc = SafeWrites(fd, (const void *)dataBuf, dataLen, moduleId, level);
+        int32_t cc = SafeWrites(fd, (const void*)dataBuf, dataLen, moduleId, level);
         if (cc < 0) {
             if (total != 0) {
                 return total;
@@ -210,7 +202,7 @@ STATIC int32_t FullWrites(int32_t fd, const char *buf, uint32_t len, uint32_t mo
     return total;
 }
 
-STATIC bool CheckLogLevelInner(const LogMsgArg *msgArg)
+STATIC bool CheckLogLevelInner(const LogMsgArg* msgArg)
 {
     if (msgArg->level == DLOG_EVENT) {
         return GetGlobalEnableEventVar();
@@ -228,7 +220,7 @@ STATIC bool CheckLogLevelInner(const LogMsgArg *msgArg)
  * @param [in]  : msgArg  LogMsgArg struct pointer
  * @return      : TRUE/FALSE
  */
-STATIC int32_t InitLogAndCheckLogLevel(const LogMsgArg *msgArg)
+STATIC int32_t InitLogAndCheckLogLevel(const LogMsgArg* msgArg)
 {
     if (!DlogIsInited()) {
         DlogInit();
@@ -243,7 +235,7 @@ STATIC int32_t InitLogAndCheckLogLevel(const LogMsgArg *msgArg)
  * @brief       : write to plog by callback
  * @param [in]  : logMsg        struct of log message
  */
-STATIC int32_t DlogWriteToPlog(LogMsg *logMsg)
+STATIC int32_t DlogWriteToPlog(LogMsg* logMsg)
 {
     DlogSetMessageNl(logMsg);
 
@@ -254,7 +246,7 @@ STATIC int32_t DlogWriteToPlog(LogMsg *logMsg)
     return TRUE;
 }
 
-STATIC bool CheckLogLevelAfterInited(const LogMsgArg *msgArg)
+STATIC bool CheckLogLevelAfterInited(const LogMsgArg* msgArg)
 {
     if (DlogIsInited()) {
         return CheckLogLevelInner(msgArg);
@@ -263,9 +255,9 @@ STATIC bool CheckLogLevelAfterInited(const LogMsgArg *msgArg)
 }
 
 /**
-* @brief DlogFlush: flush log buffer to file
-* @return: void
-*/
+ * @brief DlogFlush: flush log buffer to file
+ * @return: void
+ */
 void DlogRefreshCache(void)
 {
     if (g_dlogCallback.funcFlush != NULL) {
@@ -344,7 +336,7 @@ STATIC void CheckPid(void)
  * @param [in/out]logMsg: struct of log message
  * @param [in]msgArg: LogMsgArg struct pointer
  */
-STATIC void DlogWriteToSocket(LogMsg *logMsg, const LogMsgArg *msgArg)
+STATIC void DlogWriteToSocket(LogMsg* logMsg, const LogMsgArg* msgArg)
 {
     struct sigaction action, oldaction;
     (void)memset_s(&oldaction, sizeof(oldaction), 0, sizeof(oldaction));
@@ -352,16 +344,18 @@ STATIC void DlogWriteToSocket(LogMsg *logMsg, const LogMsgArg *msgArg)
 
     action.sa_handler = SigPipeHandler;
     int32_t result = sigemptyset(&action.sa_mask);
-    ONE_ACT_ERR_LOG(result < 0, return, "call sigemptyset failed, result=%d, strerr=%s.",
-                    result, strerror(ToolGetErrorCode()));
+    ONE_ACT_ERR_LOG(
+        result < 0, return, "call sigemptyset failed, result=%d, strerr=%s.", result, strerror(ToolGetErrorCode()));
     int32_t sigpipe = sigaction(SIGPIPE, &action, &oldaction);
 
-    char buffer[(uint32_t)MSG_LENGTH + LOGHEAD_LEN] = { 0 };
+    char buffer[(uint32_t)MSG_LENGTH + LOGHEAD_LEN] = {0};
     // pooling:rsyslogd.  except for APPLICATION type, used slogd
     if (DlogIsPoolingDevice() && msgArg->attr.type != APPLICATION) {
-        result = snprintf_s(buffer, sizeof(buffer), sizeof(buffer) - 1U, "<7>%s", logMsg->msg); // priority 7 means debug
+        result =
+            snprintf_s(buffer, sizeof(buffer), sizeof(buffer) - 1U, "<7>%s", logMsg->msg); // priority 7 means debug
         ONE_ACT_ERR_LOG(result == -1, return, "snprintf_s failed, strerr=%s.", strerror(ToolGetErrorCode()));
-        (void)FullWrites(GetRsyslogSocketFd(msgArg->typeMask), buffer, LogStrlen(buffer), logMsg->moduleId, logMsg->level);
+        (void)FullWrites(
+            GetRsyslogSocketFd(msgArg->typeMask), buffer, LogStrlen(buffer), logMsg->moduleId, logMsg->level);
         return;
     }
     // construct message for socket
@@ -371,28 +365,30 @@ STATIC void DlogWriteToSocket(LogMsg *logMsg, const LogMsgArg *msgArg)
         result = DlogAddMessageTag(logMsg, msgArg, buffer, (uint32_t)MSG_LENGTH + (uint32_t)LOGHEAD_LEN);
     }
 
-    ONE_ACT_ERR_LOG(result != LOG_SUCCESS, return, "set message failed before write to socket, result=%d, strerr=%s.",
-                    result, strerror(ToolGetErrorCode()));
+    ONE_ACT_ERR_LOG(
+        result != LOG_SUCCESS, return, "set message failed before write to socket, result=%d, strerr=%s.", result,
+        strerror(ToolGetErrorCode()));
 
     result = FullWrites(GetSocketFd(), buffer, logMsg->msgLength, logMsg->moduleId, logMsg->level);
     if (result < 0) {
         CloseLogInternal();
     }
     if (sigpipe == 0) {
-        if (sigaction(SIGPIPE, &oldaction, (struct sigaction *)NULL) < 0) {
-            SELF_LOG_ERROR("examine and change a signal action failed, strerr=%s, pid=%d, module=%u.",
-                           strerror(ToolGetErrorCode()), DlogGetCurrPid(), logMsg->moduleId);
+        if (sigaction(SIGPIPE, &oldaction, (struct sigaction*)NULL) < 0) {
+            SELF_LOG_ERROR(
+                "examine and change a signal action failed, strerr=%s, pid=%d, module=%u.",
+                strerror(ToolGetErrorCode()), DlogGetCurrPid(), logMsg->moduleId);
         }
     }
 }
 
 /**
-* @brief DlogWriteInner: write log to log socket or stdout
-* @param [in]msgArg: LogMsgArg struct pointer
-* @param [in]fmt: pointer to first value in va_list
-* @param [in]v: variable list
-*/
-int32_t DlogWriteInner(LogMsgArg *msgArg, const char *fmt, va_list v)
+ * @brief DlogWriteInner: write log to log socket or stdout
+ * @param [in]msgArg: LogMsgArg struct pointer
+ * @param [in]fmt: pointer to first value in va_list
+ * @param [in]v: variable list
+ */
+int32_t DlogWriteInner(LogMsgArg* msgArg, const char* fmt, va_list v)
 {
     ONE_ACT_NO_LOG(CheckLogLevelAfterInited(msgArg) == false, return LOG_FAILURE);
 
@@ -473,10 +469,10 @@ void DlogInit(void)
 
     if (!DlogIsInited()) {
         // fix deadlock because of fork
-        int32_t result = pthread_atfork((ThreadAtFork)DlogAtForkParpare,
-                                        (ThreadAtFork)DlogAtForkParent, (ThreadAtFork)DlogAtForkChild);
-        ONE_ACT_ERR_LOG(result != 0, return, "register atFork fail, result=%d, strerr=%s.",
-                        result, strerror(ToolGetErrorCode()));
+        int32_t result = pthread_atfork(
+            (ThreadAtFork)DlogAtForkParpare, (ThreadAtFork)DlogAtForkParent, (ThreadAtFork)DlogAtForkChild);
+        ONE_ACT_ERR_LOG(
+            result != 0, return, "register atFork fail, result=%d, strerr=%s.", result, strerror(ToolGetErrorCode()));
     }
 
     // sync time zone

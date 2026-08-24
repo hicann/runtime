@@ -15,17 +15,14 @@
 extern "C" {
 #endif // __cplusplus
 
-#define DLOG_IAM_RES_FILE_NUM   1
-#define DLOG_IAM_RES_TIMEOUT    (-1)
+#define DLOG_IAM_RES_FILE_NUM 1
+#define DLOG_IAM_RES_TIMEOUT (-1)
 
 STATIC int32_t g_logOutFd = INVALID;
 STATIC enum IAMResourceStatus g_iamResStatus = IAM_RESOURCE_WAITING;
 STATIC IamRegisterServer g_iamRegLevelServer = NULL;
 
-bool DlogIamServiceIsValid(void)
-{
-    return (g_logOutFd != INVALID);
-}
+bool DlogIamServiceIsValid(void) { return (g_logOutFd != INVALID); }
 
 /**
  * @brief       : slog ioctl by iam
@@ -34,7 +31,7 @@ bool DlogIamServiceIsValid(void)
  * @param [in]  : arg           iam ioctl args
  * @return      : == 0 success; != 0 failure
  */
-STATIC int32_t SlogIamIoctl(int32_t fd, uint32_t cmd, struct IAMIoctlArg *arg)
+STATIC int32_t SlogIamIoctl(int32_t fd, uint32_t cmd, struct IAMIoctlArg* arg)
 {
     int32_t retry = 0;
     int32_t ret = 0;
@@ -52,7 +49,7 @@ STATIC int32_t SlogIamIoctl(int32_t fd, uint32_t cmd, struct IAMIoctlArg *arg)
  * @param [in/out]  : fd               iam service fd
  * @return          : == SYS_OK success; == SYS_ERROR failure
  */
-STATIC int32_t DlogIamOpenServiceFd(int32_t *fd)
+STATIC int32_t DlogIamOpenServiceFd(int32_t* fd)
 {
     if (*fd != INVALID) {
         (void)close(*fd);
@@ -71,7 +68,7 @@ STATIC int32_t DlogIamOpenServiceFd(int32_t *fd)
  * @param [in]   : arg      argument
  * @return       : == 0 success; != 0 failure
  */
-int32_t DlogIamIoctlGetLevel(struct IAMIoctlArg *arg)
+int32_t DlogIamIoctlGetLevel(struct IAMIoctlArg* arg)
 {
     if (!DlogIamServiceIsValid()) {
         return SYS_ERROR;
@@ -84,10 +81,7 @@ int32_t DlogIamIoctlGetLevel(struct IAMIoctlArg *arg)
  * @param [in]   : arg      argument
  * @return       : == 0 success; != 0 failure
  */
-int32_t DlogIamIoctlFlushLog(struct IAMIoctlArg *arg)
-{
-    return SlogIamIoctl(g_logOutFd, IAM_CMD_FLUSH_LOG, arg);
-}
+int32_t DlogIamIoctlFlushLog(struct IAMIoctlArg* arg) { return SlogIamIoctl(g_logOutFd, IAM_CMD_FLUSH_LOG, arg); }
 
 /**
  * @brief           : write log buffer to iam
@@ -95,10 +89,7 @@ int32_t DlogIamIoctlFlushLog(struct IAMIoctlArg *arg)
  * @param [in]      : length      length of log buffer
  * @return          : >= 0 success; < 0 failure
  */
-int32_t DlogIamWrite(void* buffer, uint32_t length)
-{
-    return (int32_t)write(g_logOutFd, buffer, length);
-}
+int32_t DlogIamWrite(void* buffer, uint32_t length) { return (int32_t)write(g_logOutFd, buffer, length); }
 
 /**
  * @brief           : open iam service fd
@@ -132,19 +123,17 @@ void DlogIamRegisterServer(IamRegisterServer regFunc)
 /**
  * @brief           : unregister log level call back
  */
-STATIC void DlogIamUnregisterServer(void)
-{
-    g_iamRegLevelServer = NULL;
-}
+STATIC void DlogIamUnregisterServer(void) { g_iamRegLevelServer = NULL; }
 
-STATIC bool DlogIamResStatusIsChange(struct IAMVirtualResourceStatus *resList, int32_t listNum)
+STATIC bool DlogIamResStatusIsChange(struct IAMVirtualResourceStatus* resList, int32_t listNum)
 {
     for (int32_t i = 0; i < listNum; i++) {
         if (strcmp(LOGOUT_IAM_SERVICE_PATH, resList[i].IAMResName) == 0) {
             if (g_iamResStatus != resList[i].status) {
                 g_iamResStatus = resList[i].status;
-                SELF_LOG_INFO("iam resource status update finished, status = %d, pid = %d.",
-                              (int32_t)g_iamResStatus, ToolGetPid());
+                SELF_LOG_INFO(
+                    "iam resource status update finished, status = %d, pid = %d.", (int32_t)g_iamResStatus,
+                    ToolGetPid());
                 return true;
             } else {
                 return false;
@@ -160,10 +149,10 @@ STATIC bool DlogIamResStatusIsChange(struct IAMVirtualResourceStatus *resList, i
  * @param[in]       : listNum       resource list number
  * @return          : == SYS_OK success; == SYS_ERROR failure
  */
-STATIC void DlogIamResStatusCb(struct IAMVirtualResourceStatus *resList, const int32_t listNum)
+STATIC void DlogIamResStatusCb(struct IAMVirtualResourceStatus* resList, const int32_t listNum)
 {
-    ONE_ACT_ERR_LOG((resList == NULL) || (listNum == 0), return,
-                    "iam resource status cb input null, pid = %d.", ToolGetPid());
+    ONE_ACT_ERR_LOG(
+        (resList == NULL) || (listNum == 0), return, "iam resource status cb input null, pid = %d.", ToolGetPid());
     if (DlogIamResStatusIsChange(resList, listNum)) {
         if (g_iamResStatus == IAM_RESOURCE_READY) {
             if ((DlogIamOpenService() == SYS_OK) && (g_iamRegLevelServer != NULL)) {
@@ -187,16 +176,15 @@ int32_t DlogIamInit(void)
         SELF_LOG_WARN("iam resource service is not available, pid = %d", ToolGetPid());
         return SYS_ERROR;
     }
-    struct IAMVirtualResourceStatus virtualResStatus = { LOGOUT_IAM_SERVICE_PATH, IAM_RESOURCE_WAITING };
+    struct IAMVirtualResourceStatus virtualResStatus = {LOGOUT_IAM_SERVICE_PATH, IAM_RESOURCE_WAITING};
     struct IAMResourceSubscribeConfig iamResSubConfig = {
-        &virtualResStatus, DLOG_IAM_RES_FILE_NUM, DLOG_IAM_RES_TIMEOUT
-    };
+        &virtualResStatus, DLOG_IAM_RES_FILE_NUM, DLOG_IAM_RES_TIMEOUT};
     int32_t ret = IAMRegResStatusChangeCb(DlogIamResStatusCb, iamResSubConfig);
     if (ret == 0) {
         SELF_LOG_INFO("iam resource register success, pid = %d.", ToolGetPid());
     } else {
-        SELF_LOG_ERROR("iam resource register failed, ret = %d, errno = %d, pid = %d.",
-                       ret, ToolGetErrorCode(), ToolGetPid());
+        SELF_LOG_ERROR(
+            "iam resource register failed, ret = %d, errno = %d, pid = %d.", ret, ToolGetErrorCode(), ToolGetPid());
         return SYS_ERROR;
     }
     return SYS_OK;
@@ -207,12 +195,12 @@ int32_t DlogIamInit(void)
  */
 void DlogIamExit(void)
 {
-    int32_t ret = IAMUnregAssignedResStatusChangeCb((char *)LOGOUT_IAM_SERVICE_PATH);
+    int32_t ret = IAMUnregAssignedResStatusChangeCb((char*)LOGOUT_IAM_SERVICE_PATH);
     if (ret == 0) {
         SELF_LOG_INFO("iam resource unregister success, pid = %d.", ToolGetPid());
     } else {
-        SELF_LOG_ERROR("iam resource unregister failed, ret = %d, errno = %d, pid = %d.",
-                       ret, ToolGetErrorCode(), ToolGetPid());
+        SELF_LOG_ERROR(
+            "iam resource unregister failed, ret = %d, errno = %d, pid = %d.", ret, ToolGetErrorCode(), ToolGetPid());
     }
     DlogIamUnregisterServer();
     return;

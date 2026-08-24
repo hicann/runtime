@@ -34,19 +34,13 @@ LogStatus LogPmStart(uint32_t flagLog, bool isDocker)
  * @brief       : log process monitor stop
  * @return      : NA
  */
-void LogPmStop(void)
-{
-    LogMonitorStop();
-}
+void LogPmStop(void) { LogMonitorStop(); }
 
 /**
  * @brief       : log process monitor get system status
  * @return      : system state
  */
-enum SystemState LogPmGetSystemStatus(void)
-{
-    return GetSystemState();
-}
+enum SystemState LogPmGetSystemStatus(void) { return GetSystemState(); }
 
 LogStatus LogSetDaemonize(void)
 {

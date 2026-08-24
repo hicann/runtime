@@ -20,13 +20,13 @@ extern "C" {
 #endif // __cplusplus
 
 typedef struct ScdDwarf {
-    int32_t                   pid;
-    uintptr_t                 loadBias;
-    uintptr_t                 hdrLoadBias;
-    ScdMemory                 *memory;
-    size_t                    memoryReadOffset;
-    uintptr_t                 ehFrameHdrOffset;
-    size_t                    fdeCount;
+    int32_t pid;
+    uintptr_t loadBias;
+    uintptr_t hdrLoadBias;
+    ScdMemory* memory;
+    size_t memoryReadOffset;
+    uintptr_t ehFrameHdrOffset;
+    size_t fdeCount;
 } ScdDwarf;
 
 typedef struct ScdDwarfStepArgs {
@@ -35,8 +35,7 @@ typedef struct ScdDwarfStepArgs {
     bool isFirstStack;
 } ScdDwarfStepArgs;
 
-TraStatus ScdDwarfStep(ScdDwarf *dwarf, ScdRegs *regs, const ScdDwarfStepArgs *args, 
-    uintptr_t pc, uintptr_t *nextPc);
+TraStatus ScdDwarfStep(ScdDwarf* dwarf, ScdRegs* regs, const ScdDwarfStepArgs* args, uintptr_t pc, uintptr_t* nextPc);
 
 #ifdef __cplusplus
 }

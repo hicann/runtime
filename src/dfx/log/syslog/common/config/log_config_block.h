@@ -42,8 +42,8 @@ typedef struct {
     LogConfStorageRule storageRule;
 } LogConfClass;
 
-void LogConfParseBlock(FILE *fp);
-LogConfClass *LogConfGetClass(int32_t logType);
+void LogConfParseBlock(FILE* fp);
+LogConfClass* LogConfGetClass(int32_t logType);
 
 #ifdef __cplusplus
 }

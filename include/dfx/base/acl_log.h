@@ -22,27 +22,21 @@ extern "C" {
 
 typedef uintptr_t acllogCallbackHandle;
 
-typedef enum {
-    OUTPUT_TYPE_DEBUG = 0,
-    OUTPUT_TYPE_RUN = 1,
-    OUTPUT_TYPE_BOTH = 2,
-    OUTPUT_TYPE_MAX
-} acllogOutputLogType;
+typedef enum { OUTPUT_TYPE_DEBUG = 0, OUTPUT_TYPE_RUN = 1, OUTPUT_TYPE_BOTH = 2, OUTPUT_TYPE_MAX } acllogOutputLogType;
 
-typedef int32_t (*acllogRecordCallback)(
-    void *userData, uint32_t outputLogType, const char *logContent, size_t length);
+typedef int32_t (*acllogRecordCallback)(void* userData, uint32_t outputLogType, const char* logContent, size_t length);
 
-LOG_FUNC_VISIBILITY int32_t acllogRegisterCallback(acllogRecordCallback callbackFunc, void *userData,
-    uint32_t outputLogType, acllogCallbackHandle *callbackHandle);
+LOG_FUNC_VISIBILITY int32_t acllogRegisterCallback(
+    acllogRecordCallback callbackFunc, void* userData, uint32_t outputLogType, acllogCallbackHandle* callbackHandle);
 
 LOG_FUNC_VISIBILITY int32_t acllogUnregisterCallback(acllogCallbackHandle callback);
 
 LOG_FUNC_VISIBILITY int32_t acllogCheckDebugLevel(int32_t moduleId, int32_t logLevel) __attribute((weak));
 
-LOG_FUNC_VISIBILITY void acllogRecord(int32_t moduleId, int32_t level, const char *fmt, ...)
-    __attribute((weak)) __attribute__((format(printf, 3, 4)));
+LOG_FUNC_VISIBILITY void acllogRecord(int32_t moduleId, int32_t level, const char* fmt, ...) __attribute((weak))
+__attribute__((format(printf, 3, 4)));
 
-LOG_FUNC_VISIBILITY void acllogVaList(int32_t moduleId, int32_t level, const char *fmt, va_list list)
+LOG_FUNC_VISIBILITY void acllogVaList(int32_t moduleId, int32_t level, const char* fmt, va_list list)
     __attribute((weak));
 
 #ifdef __cplusplus

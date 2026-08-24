@@ -19,10 +19,10 @@
 extern "C" {
 #endif
 
-int32_t PlogRegisterCallbackInner(acllogRecordCallback callbackFunc, void *userData, uint32_t outputLogType,
-    acllogCallbackHandle *callbackHandle);
+int32_t PlogRegisterCallbackInner(
+    acllogRecordCallback callbackFunc, void* userData, uint32_t outputLogType, acllogCallbackHandle* callbackHandle);
 int32_t PlogUnregisterCallbackInner(acllogCallbackHandle callback);
-void PlogDispatchDeviceLogCallback(int32_t logType, const char *logContent, size_t length);
+void PlogDispatchDeviceLogCallback(int32_t logType, const char* logContent, size_t length);
 
 #ifdef __cplusplus
 }

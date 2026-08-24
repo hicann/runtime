@@ -46,4 +46,3 @@ int32_t UpdateLevelToShMem(void);
 }
 #endif
 #endif /* OPERATE_LOGLEVEL_H */
-

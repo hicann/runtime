@@ -5,6 +5,7 @@ add_subdirectory(cpu_detect)
 
 set(ATRACE_UT_TARGETS
     utrace_utest
+    utrace_arm_utest
     awatchdog_utest
     awatchdog_stub_utest
     trace_server_utest

@@ -10,7 +10,7 @@
 
 #include "stackcore_common.h"
 #ifdef STACKCORE_DEBUG
-void StackSysLog(int32_t priority, const char *format, ...)
+void StackSysLog(int32_t priority, const char* format, ...)
 {
     va_list args;
     va_start(args, format);
@@ -22,12 +22,9 @@ void StackSysLog(int32_t priority, const char *format, ...)
  * @brief: get system error code
  * @return error code;
  */
-int32_t ToolGetErrorCode(void)
-{
-    return (int32_t)errno;
-}
+int32_t ToolGetErrorCode(void) { return (int32_t)errno; }
 
-uint32_t LogStrlen(const char *str)
+uint32_t LogStrlen(const char* str)
 {
     size_t len = strlen(str);
     if (len > UINT32_MAX) {

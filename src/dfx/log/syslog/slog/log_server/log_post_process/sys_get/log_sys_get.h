@@ -17,7 +17,7 @@ extern "C" {
 #endif
 int32_t SysGetInit(void);
 int32_t SysGetDestroy(void);
-int32_t SysGetProcess(const CommHandle *handle, const void *value, uint32_t len);
+int32_t SysGetProcess(const CommHandle* handle, const void* value, uint32_t len);
 #ifdef __cplusplus
 }
 #endif

@@ -19,15 +19,15 @@ extern "C" {
 #endif // __cplusplus
 
 typedef struct ScdMaps {
-    int32_t          pid;
+    int32_t pid;
     struct AdiagList mapList;
 } ScdMaps;
 
-TraStatus ScdMapsLoad(ScdMaps *maps);
-TraStatus ScdMapsInit(ScdMaps *maps, int32_t pid);
-void ScdMapsUninit(ScdMaps *maps);
-ScdMaps *ScdMapsGet(void);
-ScdMap *ScdMapsGetMapByPc(ScdMaps *maps, uintptr_t pc);
+TraStatus ScdMapsLoad(ScdMaps* maps);
+TraStatus ScdMapsInit(ScdMaps* maps, int32_t pid);
+void ScdMapsUninit(ScdMaps* maps);
+ScdMaps* ScdMapsGet(void);
+ScdMap* ScdMapsGetMapByPc(ScdMaps* maps, uintptr_t pc);
 
 #ifdef __cplusplus
 }

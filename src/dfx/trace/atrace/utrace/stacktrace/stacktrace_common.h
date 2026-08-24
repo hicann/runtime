@@ -17,20 +17,20 @@
 #include <stdint.h>
 #include "trace_system_api.h"
 
-#define SIG_ATRACE              35
+#define SIG_ATRACE 35
 #define STACKTRACE_DUMP_BIN_MODE 0xAABB0003U
-#define THREAD_NAME_LEN         16U
-#define MAX_BIN_PATH_LEN        1024U
-#define MAX_THREAD_NUM          1024U
+#define THREAD_NAME_LEN 16U
+#define MAX_BIN_PATH_LEN 1024U
+#define MAX_THREAD_NUM 1024U
 
-#define SCD_MAX_NAME_HEAD_LEN       64U
-#define SCD_MAX_FILENAME_LEN        128U
-#define SCD_MAX_FULLPATH_LEN        (TRACE_MAX_PATH - 1U)
-#define SCD_FILE_SUFFIX_MAX_LEN     4U
-#define SCD_FILE_RESERVED_LEN       (1U + SCD_MAX_FILENAME_LEN + SCD_FILE_SUFFIX_MAX_LEN)
-#define SCD_MAX_FILEPATH_LEN        ((SCD_MAX_FULLPATH_LEN > SCD_FILE_RESERVED_LEN) ? \
-    (SCD_MAX_FULLPATH_LEN - SCD_FILE_RESERVED_LEN) : 0U)
-#define SCD_MAX_FILEDIR_LEN         SCD_MAX_FILEPATH_LEN
+#define SCD_MAX_NAME_HEAD_LEN 64U
+#define SCD_MAX_FILENAME_LEN 128U
+#define SCD_MAX_FULLPATH_LEN (TRACE_MAX_PATH - 1U)
+#define SCD_FILE_SUFFIX_MAX_LEN 4U
+#define SCD_FILE_RESERVED_LEN (1U + SCD_MAX_FILENAME_LEN + SCD_FILE_SUFFIX_MAX_LEN)
+#define SCD_MAX_FILEPATH_LEN \
+    ((SCD_MAX_FULLPATH_LEN > SCD_FILE_RESERVED_LEN) ? (SCD_MAX_FULLPATH_LEN - SCD_FILE_RESERVED_LEN) : 0U)
+#define SCD_MAX_FILEDIR_LEN SCD_MAX_FILEPATH_LEN
 
 /*
  * [parent process] ---fork---> [child process] ---execv---> [new process]
@@ -46,38 +46,38 @@ typedef enum ScdDumpType {
     SCD_DUMP_THREAD_BIN,
 } ScdDumpType;
 
-static inline bool ScdSignalIsBinDump(int32_t signo, const siginfo_t *siginfo)
+static inline bool ScdSignalIsBinDump(int32_t signo, const siginfo_t* siginfo)
 {
     return (signo == SIG_ATRACE) && (siginfo != NULL) &&
-        ((uint32_t)siginfo->si_value.sival_int == STACKTRACE_DUMP_BIN_MODE);
+           ((uint32_t)siginfo->si_value.sival_int == STACKTRACE_DUMP_BIN_MODE);
 }
 
 // [child process] ---execv---> [new process]
 typedef struct ScdProcessArgs {
-    int32_t     pid;      // the crashing process
-    int32_t     crashTid; // the crashing thread
-    int32_t     signo;
-    uint64_t    crashTime;
-    uintptr_t   stackBaseAddr;
-    siginfo_t   si;
-    ucontext_t  uc;
-    char        filePath[SCD_MAX_FILEPATH_LEN + 1U];
-    char        fileName[SCD_MAX_FILENAME_LEN + 1U];
+    int32_t pid;      // the crashing process
+    int32_t crashTid; // the crashing thread
+    int32_t signo;
+    uint64_t crashTime;
+    uintptr_t stackBaseAddr;
+    siginfo_t si;
+    ucontext_t uc;
+    char filePath[SCD_MAX_FILEPATH_LEN + 1U];
+    char fileName[SCD_MAX_FILENAME_LEN + 1U];
     ScdDumpType handleType;
 } ScdProcessArgs;
 
 // [parent process] ---fork---> [child process]
 typedef struct {
-    int32_t     pid;  // the crashing process
-    int32_t     tid;  // the crashing thread
-    int32_t     signo;
-    uint64_t    crashTime;
-    uintptr_t   stackBaseAddr;
-    siginfo_t   siginfo;
-    ucontext_t  ucontext;
-    char        filePath[SCD_MAX_FILEPATH_LEN + 1U];
-    char        fileName[SCD_MAX_FILENAME_LEN + 1U];
-    char        exePath[MAX_BIN_PATH_LEN];
+    int32_t pid; // the crashing process
+    int32_t tid; // the crashing thread
+    int32_t signo;
+    uint64_t crashTime;
+    uintptr_t stackBaseAddr;
+    siginfo_t siginfo;
+    ucontext_t ucontext;
+    char filePath[SCD_MAX_FILEPATH_LEN + 1U];
+    char fileName[SCD_MAX_FILENAME_LEN + 1U];
+    char exePath[MAX_BIN_PATH_LEN];
 } ThreadArgument;
 
 #endif

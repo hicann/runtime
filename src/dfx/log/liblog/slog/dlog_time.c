@@ -27,7 +27,7 @@ static int32_t GetTimeDst(void)
         return g_timeDst;
     }
 
-    ToolTimeval timeVal = { 0, 0 };
+    ToolTimeval timeVal = {0, 0};
     struct tm tmInfo;
     (void)memset_s(&tmInfo, sizeof(tmInfo), 0, sizeof(tmInfo));
     // sync time zone
@@ -59,16 +59,16 @@ static inline int32_t IsLeapYear(int32_t year)
  * @param [in]dst: daylight time
  * @return: void
  */
-static void CalLocalTime(struct tm *timeInfo, time_t sec, time_t tzone, int32_t dst)
+static void CalLocalTime(struct tm* timeInfo, time_t sec, time_t tzone, int32_t dst)
 {
-    const time_t oneMin = 60; // 1m: 60s
-    const time_t oneHour = 3600; // 1h: 3600s
-    const time_t oneDay = 86400; // 24h: 86400s
-    const time_t oneYear = 365; // 365 days
+    const time_t oneMin = 60;          // 1m: 60s
+    const time_t oneHour = 3600;       // 1h: 3600s
+    const time_t oneDay = 86400;       // 24h: 86400s
+    const time_t oneYear = 365;        // 365 days
 
-    time_t realSec = sec - tzone; // Adjust for timezone
-    realSec += oneHour * dst; // Adjust for daylight time
-    time_t days = realSec / oneDay; // Days passed since epoch
+    time_t realSec = sec - tzone;      // Adjust for timezone
+    realSec += oneHour * dst;          // Adjust for daylight time
+    time_t days = realSec / oneDay;    // Days passed since epoch
     time_t seconds = realSec % oneDay; // Remaining seconds
 
     timeInfo->tm_isdst = dst;
@@ -96,7 +96,7 @@ static void CalLocalTime(struct tm *timeInfo, time_t sec, time_t tzone, int32_t 
     // so we need to skip days according to how many days there are in each * month,
     // and adjust for the leap year that has one more day in February.
     int32_t mDays[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31}; // days of month: 31, 30, 28/29
-    mDays[1] += IsLeapYear(timeInfo->tm_year); // leap year
+    mDays[1] += IsLeapYear(timeInfo->tm_year);                            // leap year
 
     timeInfo->tm_mon = 0;
     while (days >= mDays[timeInfo->tm_mon]) {
@@ -104,7 +104,7 @@ static void CalLocalTime(struct tm *timeInfo, time_t sec, time_t tzone, int32_t 
         timeInfo->tm_mon++;
     }
 
-    timeInfo->tm_mon++; // Add 1 since our 'month' is zero-based
+    timeInfo->tm_mon++;                    // Add 1 since our 'month' is zero-based
     timeInfo->tm_mday = (int32_t)days + 1; // Add 1 since our 'days' is zero-based
 }
 
@@ -114,20 +114,20 @@ static void CalLocalTime(struct tm *timeInfo, time_t sec, time_t tzone, int32_t 
  * @param [in]sec: seconds from 1970/1/1
  * @return: LOG_SUCCESS/LOG_FAILURE
  */
-STATIC LogStatus GetLocaltimeR(struct tm *timeInfo, time_t sec)
+STATIC LogStatus GetLocaltimeR(struct tm* timeInfo, time_t sec)
 {
     ONE_ACT_NO_LOG(timeInfo == NULL, return LOG_FAILURE);
     CalLocalTime(timeInfo, sec, (int32_t)timezone, GetTimeDst());
     return LOG_SUCCESS;
 }
 
-int64_t DlogTimeDiff(const struct timespec *lastTv)
+int64_t DlogTimeDiff(const struct timespec* lastTv)
 {
     if (lastTv == NULL) {
         return 0;
     }
 
-    struct timespec currentTv = { 0, 0 };
+    struct timespec currentTv = {0, 0};
     LogStatus result = LogGetMonotonicTime(&currentTv);
     ONE_ACT_WARN_LOG(result != LOG_SUCCESS, return 0, "can not get time, strerr=%s.", strerror(ToolGetErrorCode()));
 
@@ -136,36 +136,36 @@ int64_t DlogTimeDiff(const struct timespec *lastTv)
     return (timeValue > 0) ? timeValue : 0;
 }
 
-void DlogGetTime(char *timeStr, uint32_t length)
+void DlogGetTime(char* timeStr, uint32_t length)
 {
     ONE_ACT_ERR_LOG(timeStr == NULL, return, "[input] time is null.");
-    struct timespec currentTimeval = { 0, 0 };
+    struct timespec currentTimeval = {0, 0};
     static bool isTimeInit = false;
     static clockid_t clockId = LOG_CLOCK_ID_DEFAULT;
     ONE_ACT_ERR_LOG(LogGetTime(&currentTimeval, &isTimeInit, &clockId) != LOG_SUCCESS, return, "get log time failed.");
 
-    struct tm timeInfo = { 0 };
+    struct tm timeInfo = {0};
     if (GetLocaltimeR(&timeInfo, currentTimeval.tv_sec) != LOG_SUCCESS) {
         SELF_LOG_ERROR("get local time failed, strerr=%s.", strerror(ToolGetErrorCode()));
         return;
     }
-    int32_t ret = snprintf_s(timeStr, length, length - 1U, "%04d-%02d-%02d-%02d:%02d:%02d.%03ld.%03ld",
-                             timeInfo.tm_year, timeInfo.tm_mon, timeInfo.tm_mday, timeInfo.tm_hour, timeInfo.tm_min,
-                             timeInfo.tm_sec, (currentTimeval.tv_nsec / TIME_ONE_THOUSAND_MS) / TIME_ONE_THOUSAND_MS,
-                             (currentTimeval.tv_nsec / TIME_ONE_THOUSAND_MS) % TIME_ONE_THOUSAND_MS);
+    int32_t ret = snprintf_s(
+        timeStr, length, length - 1U, "%04d-%02d-%02d-%02d:%02d:%02d.%03ld.%03ld", timeInfo.tm_year, timeInfo.tm_mon,
+        timeInfo.tm_mday, timeInfo.tm_hour, timeInfo.tm_min, timeInfo.tm_sec,
+        (currentTimeval.tv_nsec / TIME_ONE_THOUSAND_MS) / TIME_ONE_THOUSAND_MS,
+        (currentTimeval.tv_nsec / TIME_ONE_THOUSAND_MS) % TIME_ONE_THOUSAND_MS);
     if (ret == -1) {
-        SELF_LOG_ERROR("snprintf_s time failed, result=%d, strerr=%s.", \
-                       ret, strerror(ToolGetErrorCode()));
+        SELF_LOG_ERROR("snprintf_s time failed, result=%d, strerr=%s.", ret, strerror(ToolGetErrorCode()));
     }
     return;
 }
 
 #else
-int64_t DlogTimeDiff(const struct timespec *lastTv)
+int64_t DlogTimeDiff(const struct timespec* lastTv)
 {
     ONE_ACT_ERR_LOG(lastTv == NULL, return 0, "[input] lastTv is null.");
 
-    ToolTimeval currentTimeval = { 0, 0 };
+    ToolTimeval currentTimeval = {0, 0};
     int32_t result = ToolGetTimeOfDay(&currentTimeval, NULL);
     ONE_ACT_WARN_LOG(result != 0, return 0, "can not get time of day, errno=%s.", strerror(ToolGetErrorCode()));
 
@@ -174,9 +174,9 @@ int64_t DlogTimeDiff(const struct timespec *lastTv)
     return (timeValue > 0) ? timeValue : 0;
 }
 
-void DlogGetTime(char *timeStr, uint32_t length)
+void DlogGetTime(char* timeStr, uint32_t length)
 {
-    ToolTimeval currentTimeval = { 0, 0 };
+    ToolTimeval currentTimeval = {0, 0};
     int32_t pid = ToolGetPid();
     struct tm timInfo;
     (void)memset_s(&timInfo, sizeof(timInfo), 0, sizeof(timInfo));
@@ -194,10 +194,10 @@ void DlogGetTime(char *timeStr, uint32_t length)
         return;
     }
 
-    int32_t err = snprintf_s(timeStr, length, length - 1, "%04d-%02d-%02d-%02d:%02d:%02d.%03ld.%03ld",
-                             (timInfo.tm_year), timInfo.tm_mon, timInfo.tm_mday, timInfo.tm_hour, timInfo.tm_min,
-                             timInfo.tm_sec, currentTimeval.tvUsec / TIME_ONE_THOUSAND_MS,
-                             currentTimeval.tvUsec % TIME_ONE_THOUSAND_MS);
+    int32_t err = snprintf_s(
+        timeStr, length, length - 1, "%04d-%02d-%02d-%02d:%02d:%02d.%03ld.%03ld", (timInfo.tm_year), timInfo.tm_mon,
+        timInfo.tm_mday, timInfo.tm_hour, timInfo.tm_min, timInfo.tm_sec, currentTimeval.tvUsec / TIME_ONE_THOUSAND_MS,
+        currentTimeval.tvUsec % TIME_ONE_THOUSAND_MS);
     if (err == -1) {
         SELF_LOG_ERROR("snprintf_s time failed, result=%d, strerr=%s.", err, strerror(ToolGetErrorCode()));
     }

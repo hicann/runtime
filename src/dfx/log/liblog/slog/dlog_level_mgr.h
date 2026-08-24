@@ -20,18 +20,18 @@ extern "C" {
 #endif // __cplusplus
 
 #if !defined LOG_CPP && defined IAM
-#define LEVEL_FILTER                 1
+#define LEVEL_FILTER 1
 #else
-#define LEVEL_FILTER                 0
+#define LEVEL_FILTER 0
 #endif
 
-#define DLOG_IAM_DEFAULT_LEVEL       (DLOG_INFO)
-#define DLOG_GLOABLE_DEFAULT_LEVEL   (DLOG_ERROR)
-#define DLOG_MODULE_DEFAULT_LEVEL    (DLOG_ERROR)
-#define DLOG_DEBUG_DEFAULT_LEVEL     (DLOG_ERROR)
-#define DLOG_RUN_DEFAULT_LEVEL       (DLOG_INFO)
+#define DLOG_IAM_DEFAULT_LEVEL (DLOG_INFO)
+#define DLOG_GLOABLE_DEFAULT_LEVEL (DLOG_ERROR)
+#define DLOG_MODULE_DEFAULT_LEVEL (DLOG_ERROR)
+#define DLOG_DEBUG_DEFAULT_LEVEL (DLOG_ERROR)
+#define DLOG_RUN_DEFAULT_LEVEL (DLOG_INFO)
 
-#define DLOG_GLOBAL_TYPE_MASK        0U
+#define DLOG_GLOBAL_TYPE_MASK 0U
 // level ctrl
 int32_t GetGlobalLogTypeLevelVar(uint32_t typeMask);
 void SetGlobalLogTypeLevelVar(int32_t level, uint32_t typeMask);
@@ -43,17 +43,17 @@ int32_t GetLevelStatus(void);
 void SetLevelStatus(int32_t levelStatus);
 
 // module level
-const ModuleInfo *DlogGetModuleInfos(void);
-const char *DlogGetModuleNameById(uint32_t moduleId);
-const ModuleInfo *DlogGetModuleInfoByName(const char *name);
+const ModuleInfo* DlogGetModuleInfos(void);
+const char* DlogGetModuleNameById(uint32_t moduleId);
+const ModuleInfo* DlogGetModuleInfoByName(const char* name);
 bool DlogSetLogTypeLevelByModuleId(int32_t moduleId, int32_t level, uint32_t typeMask);
 int32_t DlogGetLogTypeLevelByModuleId(uint32_t moduleId, uint32_t typeMask);
 void DlogSetLogTypeLevelToAllModule(int32_t level, uint32_t typeMask);
 int32_t DlogGetDebugLogLevelByModuleId(uint32_t moduleId);
 
 // level info
-const char *DlogGetLevelNameById(int32_t level);
-const char *DlogGetBasicLevelNameById(int32_t level);
+const char* DlogGetLevelNameById(int32_t level);
+const char* DlogGetBasicLevelNameById(int32_t level);
 
 // level status
 void DlogSetLevelStatus(bool levelStatus);

@@ -15,13 +15,13 @@
 #include "mmpa_api.h"
 #include "adiag_utils.h"
 
-#define TIME_MS_TO_US       1000U
-#define MAX_QUICK_SORT_LEN  1024
+#define TIME_MS_TO_US 1000U
+#define MAX_QUICK_SORT_LEN 1024
 
-void *AdiagMalloc(size_t size)
+void* AdiagMalloc(size_t size)
 {
     ADIAG_CHK_EXPR_ACTION(size == 0, return NULL, "size is 0.");
-    void *ptr = malloc(size);
+    void* ptr = malloc(size);
     if (ptr == NULL) {
         ADIAG_ERR("malloc failed, size=%zu bytes.", size);
         return NULL;
@@ -30,30 +30,27 @@ void *AdiagMalloc(size_t size)
     return ptr;
 }
 
-void AdiagFree(void *ptr)
+void AdiagFree(void* ptr)
 {
     if (ptr != NULL) {
         free(ptr);
     }
 }
 
-int32_t AdiagGetErrorCode(void)
-{
-    return mmGetErrorCode();
-}
+int32_t AdiagGetErrorCode(void) { return mmGetErrorCode(); }
 
-AdiagStatus AdiagStrToInt(const char *str, int32_t *num)
+AdiagStatus AdiagStrToInt(const char* str, int32_t* num)
 {
     if ((str == NULL) || (num == NULL)) {
         return ADIAG_FAILURE;
     }
 
     errno = 0;
-    char *endPtr = NULL;
+    char* endPtr = NULL;
     const int32_t numberBase = 10;
     int64_t ret = strtol(str, &endPtr, numberBase);
     AdiagStatus error = ADIAG_SUCCESS;
-    if (((const char *)endPtr == str) || (*endPtr != '\0')) {
+    if (((const char*)endPtr == str) || (*endPtr != '\0')) {
         error = ADIAG_FAILURE;
     } else if (((ret == LONG_MIN) || (ret == LONG_MAX)) && (errno == ERANGE)) {
         error = ADIAG_FAILURE;
@@ -76,15 +73,15 @@ uint64_t GetCpuCycleCounter(void)
     cycles = 0; // just for tiny compile(without mrrc), will not be executed when running
 #else
 #if defined(__aarch64__)
-    asm volatile("mrs %0, cntvct_el0" : "=r" (cycles));
+    asm volatile("mrs %0, cntvct_el0" : "=r"(cycles));
 #elif defined(__x86_64__)
-    const int uint32Bits = 32;  // 32 is uint bit count
+    const int uint32Bits = 32; // 32 is uint bit count
     uint32_t hi = 0;
     uint32_t lo = 0;
-    __asm__ __volatile__ ("rdtsc" : "=a"(lo), "=d"(hi));
+    __asm__ __volatile__("rdtsc" : "=a"(lo), "=d"(hi));
     cycles = ((uint64_t)lo) | (((uint64_t)hi) << uint32Bits);
 #elif defined(__arm__)
-    const int uint32Bits = 32;  // 32 is uint bit count
+    const int uint32Bits = 32; // 32 is uint bit count
     uint32_t hi = 0;
     uint32_t lo = 0;
     asm volatile("mrrc p15, 1, %0, %1, c14" : "=r"(lo), "=r"(hi));
@@ -143,13 +140,13 @@ uint64_t GetCpuFrequency(void)
  */
 uint32_t GetNearestPowerOfTwo(uint32_t n)
 {
-   uint32_t num = n - 1U;
-   uint32_t i = num;
-   while (i > 0) {
-       num |= i;
-       i >>= 1U;
-   }
-   return num + 1U;
+    uint32_t num = n - 1U;
+    uint32_t i = num;
+    while (i > 0) {
+        num |= i;
+        i >>= 1U;
+    }
+    return num + 1U;
 }
 
 /**
@@ -157,7 +154,7 @@ uint32_t GetNearestPowerOfTwo(uint32_t n)
  * @param [in/out]  a:      pointer to the first integer to swap
  * @param [in/out]  b:      pointer to the second integer to swap
  */
-static void AdiagSwap(int32_t *a, int32_t *b)
+static void AdiagSwap(int32_t* a, int32_t* b)
 {
     int32_t temp = *a;
     *a = *b;

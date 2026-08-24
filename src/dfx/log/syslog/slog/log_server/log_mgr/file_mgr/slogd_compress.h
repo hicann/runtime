@@ -13,9 +13,9 @@
 #include <stdbool.h>
 #include "log_error_code.h"
 
-#define COMPRESS_LIST_HEAD	        0
-#define COMPRESS_LIST_FIRST_TAIL	1
-#define COMPRESS_LIST_TAIL	        2
+#define COMPRESS_LIST_HEAD 0
+#define COMPRESS_LIST_FIRST_TAIL 1
+#define COMPRESS_LIST_TAIL 2
 
 #ifdef __cplusplus
 extern "C" {
@@ -23,7 +23,7 @@ extern "C" {
 
 LogStatus SlogdCompressInit(void);
 void SlogdCompressExit(void);
-LogStatus SlogdCompress(const char *source, uint32_t sourceLen, char **dest, uint32_t *destLen);
+LogStatus SlogdCompress(const char* source, uint32_t sourceLen, char** dest, uint32_t* destLen);
 bool SlogdCompressIsValid(void);
 
 #ifdef __cplusplus

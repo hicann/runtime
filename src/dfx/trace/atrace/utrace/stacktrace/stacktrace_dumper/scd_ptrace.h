@@ -22,7 +22,7 @@ TraStatus ScdPtraceAttach(int32_t tid);
 void ScdPtraceDetach(int32_t tid);
 
 void ScdPtraceContinue(int32_t tid);
-TraStatus ScdPtraceGetRegs(int32_t tid, uintptr_t *regArray, size_t regNum);
+TraStatus ScdPtraceGetRegs(int32_t tid, uintptr_t* regArray, size_t regNum);
 
 #ifdef __cplusplus
 }

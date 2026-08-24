@@ -15,18 +15,17 @@
 typedef void* ArgPtr;
 typedef intptr_t TracerHandle;
 
-#define TRACE_RING_BUFFER_SPRINTF_FAILED            (-100)
-#define TRACE_RING_BUFFER_GET_LOCAL_TIME_FAILED     (-101)
-#define TRACE_RING_BUFFER_EMPTY                     (-102)
+#define TRACE_RING_BUFFER_SPRINTF_FAILED (-100)
+#define TRACE_RING_BUFFER_GET_LOCAL_TIME_FAILED (-101)
+#define TRACE_RING_BUFFER_EMPTY (-102)
 
-#define TRACE_QUEUE_NULL                            (-103)
-#define TRACE_QUEUE_FULL                            (-104)
+#define TRACE_QUEUE_NULL (-103)
+#define TRACE_QUEUE_FULL (-104)
 
-#define TRACER_SCHEDULE_NAME                        "schedule"
-#define TRACER_STACKCORE_NAME                       "stackcore"
-#define TRACER_EVENT_EXIT                           "exit"
+#define TRACER_SCHEDULE_NAME "schedule"
+#define TRACER_STACKCORE_NAME "stackcore"
+#define TRACER_EVENT_EXIT "exit"
 
-#define TRACE_FILE_TXT_SUFFIX                       ".txt"
-#define TRACE_FILE_BIN_SUFFIX                       ".bin"
+#define TRACE_FILE_TXT_SUFFIX ".txt"
+#define TRACE_FILE_BIN_SUFFIX ".bin"
 #endif
-

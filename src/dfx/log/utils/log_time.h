@@ -15,27 +15,27 @@
 #include <stdbool.h>
 #include "log_error_code.h"
 
-#define LOG_CLOCK_ID_0          0
-#define LOG_CLOCK_ID_100        100
-#define LOG_CLOCK_ID_DEFAULT    100
-#define TIME_STR_SIZE           32
-#define US_TO_MS                1000U
-#define US_TO_MS_SIGNED         1000
-#define US_TO_NS                1000U
-#define MS_TO_NS                1000000L
-#define SEC_TO_NS               1000000000ULL
-#define NS_TO_MS                1000000
-#define S_TO_MS                 1000
-#define FREQ_GHZ_TO_KHZ         1000000ULL
-#define TICK_TO_US              (FREQ_GHZ_TO_KHZ / US_TO_NS)
+#define LOG_CLOCK_ID_0 0
+#define LOG_CLOCK_ID_100 100
+#define LOG_CLOCK_ID_DEFAULT 100
+#define TIME_STR_SIZE 32
+#define US_TO_MS 1000U
+#define US_TO_MS_SIGNED 1000
+#define US_TO_NS 1000U
+#define MS_TO_NS 1000000L
+#define SEC_TO_NS 1000000000ULL
+#define NS_TO_MS 1000000
+#define S_TO_MS 1000
+#define FREQ_GHZ_TO_KHZ 1000000ULL
+#define TICK_TO_US (FREQ_GHZ_TO_KHZ / US_TO_NS)
 
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
 
-LogStatus LogGetTime(struct timespec *currentTimeval, bool *isInit, clockid_t *clockId);
-LogStatus LogGetMonotonicTime(struct timespec *currentTimeval);
-LogStatus LogGetTimeStr(char *timeStr, uint32_t len);
+LogStatus LogGetTime(struct timespec* currentTimeval, bool* isInit, clockid_t* clockId);
+LogStatus LogGetMonotonicTime(struct timespec* currentTimeval);
+LogStatus LogGetTimeStr(char* timeStr, uint32_t len);
 uint64_t LogGetCpuCycleCounter(void);
 uint64_t LogGetCpuFrequency(void);
 

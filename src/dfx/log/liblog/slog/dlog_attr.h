@@ -27,8 +27,8 @@ typedef enum {
     AOS_SEA,
 } AosType;
 
-void DlogGetUserAttr(LogAttr *attr);
-void DlogSetUserAttr(const LogAttr *logAttr);
+void DlogGetUserAttr(LogAttr* attr);
+void DlogSetUserAttr(const LogAttr* logAttr);
 bool DlogCheckAttrSystem(void);
 ProcessType DlogGetProcessType(void);
 uint32_t DlogGetAttrDeviceId(void);
@@ -61,7 +61,7 @@ extern "C" {
  * @param [out] : logAttrInfo struct LogAttr pointer
  * @return      : 0: SUCCEED, others: FAILED
  */
-LOG_FUNC_VISIBILITY int32_t DlogGetAttr(LogAttr *logAttrInfo);
+LOG_FUNC_VISIBILITY int32_t DlogGetAttr(LogAttr* logAttrInfo);
 #ifdef __cplusplus
 #ifndef LOG_CPP
 }

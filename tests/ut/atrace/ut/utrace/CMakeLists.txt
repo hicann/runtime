@@ -95,6 +95,8 @@ set(INCLUDE_DIR
     ${TOP_DIR}/src/dfx/trace/inc/toolchain
     ${TOP_DIR}/src/dfx/trace/common
     ${TOP_DIR}/src/dfx/adump
+    ${TOP_DIR}/src/dfx/adump/inc/adump
+    ${TOP_DIR}/src/dfx/adump/external
     ${TOP_DIR}/pkg_inc/driver
 )
 
@@ -119,11 +121,14 @@ set(TEST_SRC
     testcase/stacktrace_dumper/scd_maps_utest.cc
     testcase/stacktrace_dumper/scd_process_utest.cc
     testcase/stacktrace_dumper/scd_registers_utest.cc
-    # testcase/stacktrace_dumper/scd_threads_utest.cc
     testcase/stacktrace_dumper/scd_utils_utest.cc
     testcase/stacktrace_dumper/scd_memory_utest.cc
     testcase/stacktrace_dumper/scd_dwarf_utest.cc
 )
+
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
+    list(APPEND TEST_SRC testcase/stacktrace_dumper/scd_threads_utest.cc)
+endif()
 
 ############################# utrace_utest(x86_64)   #############################
 add_executable(utrace_utest

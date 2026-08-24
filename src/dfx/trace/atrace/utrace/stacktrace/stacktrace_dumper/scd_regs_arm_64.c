@@ -13,16 +13,16 @@
 
 #if defined __aarch64__ || defined __arm__ || defined _ADIAG_LLT_ARM_
 
-#define SCD_REGS_X0  0
-#define SCD_REGS_X1  1
-#define SCD_REGS_X2  2
-#define SCD_REGS_X3  3
-#define SCD_REGS_X4  4
-#define SCD_REGS_X5  5
-#define SCD_REGS_X6  6
-#define SCD_REGS_X7  7
-#define SCD_REGS_X8  8
-#define SCD_REGS_X9  9
+#define SCD_REGS_X0 0
+#define SCD_REGS_X1 1
+#define SCD_REGS_X2 2
+#define SCD_REGS_X3 3
+#define SCD_REGS_X4 4
+#define SCD_REGS_X5 5
+#define SCD_REGS_X6 6
+#define SCD_REGS_X7 7
+#define SCD_REGS_X8 8
+#define SCD_REGS_X9 9
 #define SCD_REGS_X10 10
 #define SCD_REGS_X11 11
 #define SCD_REGS_X12 12
@@ -43,51 +43,31 @@
 #define SCD_REGS_X27 27
 #define SCD_REGS_X28 28
 #define SCD_REGS_X29 29
-#define SCD_REGS_LR  30
-#define SCD_REGS_SP  31
-#define SCD_REGS_PC  16
+#define SCD_REGS_LR 30
+#define SCD_REGS_SP 31
+#define SCD_REGS_PC 16
 
-void ScdRegsLoadFromUcontext(ScdRegs *regs, ucontext_t *uc)
-{
-    GET_REGISTER_FROM_CONTEXT(regs->r, &uc->uc_mcontext);
-}
+void ScdRegsLoadFromUcontext(ScdRegs* regs, ucontext_t* uc) { GET_REGISTER_FROM_CONTEXT(regs->r, &uc->uc_mcontext); }
 
-uintptr_t ScdRegsGetPc(ScdRegs *regs)
-{
-    return regs->r[SCD_REGS_PC];
-}
+uintptr_t ScdRegsGetPc(ScdRegs* regs) { return regs->r[SCD_REGS_PC]; }
 
-void ScdRegsSetPc(ScdRegs *regs, uintptr_t pc)
-{
-    regs->r[SCD_REGS_PC] = pc;
-}
+void ScdRegsSetPc(ScdRegs* regs, uintptr_t pc) { regs->r[SCD_REGS_PC] = pc; }
 
-uintptr_t ScdRegsGetSp(ScdRegs *regs)
-{
-    return regs->r[SCD_REGS_SP];
-}
+uintptr_t ScdRegsGetSp(ScdRegs* regs) { return regs->r[SCD_REGS_SP]; }
 
-void ScdRegsSetSp(ScdRegs *regs, uintptr_t sp)
-{
-    regs->r[SCD_REGS_SP] = sp;
-}
+void ScdRegsSetSp(ScdRegs* regs, uintptr_t sp) { regs->r[SCD_REGS_SP] = sp; }
 
-uintptr_t ScdRegsGetFp(ScdRegs *regs)
-{
-    return regs->r[SCD_REGS_X29];
-}
+uintptr_t ScdRegsGetFp(ScdRegs* regs) { return regs->r[SCD_REGS_X29]; }
 
-void ScdRegsSetFp(ScdRegs *regs, uintptr_t fp)
-{
-    regs->r[SCD_REGS_X29] = fp;
-}
+void ScdRegsSetFp(ScdRegs* regs, uintptr_t fp) { regs->r[SCD_REGS_X29] = fp; }
 
-TraStatus ScdRegsGetString(const ScdRegs *regs, char *buf, size_t bufSize)
+TraStatus ScdRegsGetString(const ScdRegs* regs, char* buf, size_t bufSize)
 {
     if (regs == NULL || buf == NULL || bufSize == 0) {
         return TRACE_INVALID_PARAM;
     }
-    int32_t ret = snprintf_s(buf, bufSize, bufSize - 1U,
+    int32_t ret = snprintf_s(
+        buf, bufSize, bufSize - 1U,
         "crash registers:\n"
         "    x0  0x%016lx  x1  0x%016lx  x2  0x%016lx  x3  0x%016lx\n"
         "    x4  0x%016lx  x5  0x%016lx  x6  0x%016lx  x7  0x%016lx\n"
@@ -98,15 +78,14 @@ TraStatus ScdRegsGetString(const ScdRegs *regs, char *buf, size_t bufSize)
         "    x24 0x%016lx  x25 0x%016lx  x26 0x%016lx  x27 0x%016lx\n"
         "    x28 0x%016lx  x29 0x%016lx\n"
         "    sp  0x%016lx  lr  0x%016lx  pc  0x%016lx\n\n",
-        regs->r[SCD_REGS_X0],  regs->r[SCD_REGS_X1],  regs->r[SCD_REGS_X2],  regs->r[SCD_REGS_X3],
-        regs->r[SCD_REGS_X4],  regs->r[SCD_REGS_X5],  regs->r[SCD_REGS_X6],  regs->r[SCD_REGS_X7],
-        regs->r[SCD_REGS_X8],  regs->r[SCD_REGS_X9],  regs->r[SCD_REGS_X10], regs->r[SCD_REGS_X11],
-        regs->r[SCD_REGS_X12], regs->r[SCD_REGS_X13], regs->r[SCD_REGS_X14], regs->r[SCD_REGS_X15],
-        regs->r[SCD_REGS_X16], regs->r[SCD_REGS_X17], regs->r[SCD_REGS_X18], regs->r[SCD_REGS_X19],
-        regs->r[SCD_REGS_X20], regs->r[SCD_REGS_X21], regs->r[SCD_REGS_X22], regs->r[SCD_REGS_X23],
-        regs->r[SCD_REGS_X24], regs->r[SCD_REGS_X25], regs->r[SCD_REGS_X26], regs->r[SCD_REGS_X27],
-        regs->r[SCD_REGS_X28], regs->r[SCD_REGS_X29],
-        regs->r[SCD_REGS_SP],  regs->r[SCD_REGS_LR],  regs->r[SCD_REGS_PC]);
+        regs->r[SCD_REGS_X0], regs->r[SCD_REGS_X1], regs->r[SCD_REGS_X2], regs->r[SCD_REGS_X3], regs->r[SCD_REGS_X4],
+        regs->r[SCD_REGS_X5], regs->r[SCD_REGS_X6], regs->r[SCD_REGS_X7], regs->r[SCD_REGS_X8], regs->r[SCD_REGS_X9],
+        regs->r[SCD_REGS_X10], regs->r[SCD_REGS_X11], regs->r[SCD_REGS_X12], regs->r[SCD_REGS_X13],
+        regs->r[SCD_REGS_X14], regs->r[SCD_REGS_X15], regs->r[SCD_REGS_X16], regs->r[SCD_REGS_X17],
+        regs->r[SCD_REGS_X18], regs->r[SCD_REGS_X19], regs->r[SCD_REGS_X20], regs->r[SCD_REGS_X21],
+        regs->r[SCD_REGS_X22], regs->r[SCD_REGS_X23], regs->r[SCD_REGS_X24], regs->r[SCD_REGS_X25],
+        regs->r[SCD_REGS_X26], regs->r[SCD_REGS_X27], regs->r[SCD_REGS_X28], regs->r[SCD_REGS_X29],
+        regs->r[SCD_REGS_SP], regs->r[SCD_REGS_LR], regs->r[SCD_REGS_PC]);
     if (ret == -1) {
         return TRACE_FAILURE;
     }

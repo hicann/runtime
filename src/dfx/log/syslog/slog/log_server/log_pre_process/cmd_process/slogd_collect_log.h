@@ -25,10 +25,10 @@ typedef struct {
 } LogConfigInfo;
 
 void SlogdStartCollectThread(void);
-void SlogdCollectNotify(const char *path, uint32_t len);
+void SlogdCollectNotify(const char* path, uint32_t len);
 void SlogdCollectThreadExit(void);
-bool SlogdCheckCollectValid(const char *path, uint32_t len);
-LogStatus SlogdGetLogPatterns(LogConfigInfo *info);
+bool SlogdCheckCollectValid(const char* path, uint32_t len);
+LogStatus SlogdGetLogPatterns(LogConfigInfo* info);
 
 #ifdef __cplusplus
 }

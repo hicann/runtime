@@ -18,24 +18,24 @@
 extern "C" {
 #endif // __cplusplus
 
-#define SCD_FRAME_LENGTH  1024U
+#define SCD_FRAME_LENGTH 1024U
 
 typedef struct ScdFrame {
-    ScdMap    *map;
-    uint32_t   num;
-    int32_t    tid;
-    uintptr_t  pc;
-    uintptr_t  relPc;   // pc in exec process
-    uintptr_t  sp;
-    uintptr_t  fp;
-    uintptr_t  base;
-    char       soName[SCD_DL_NAME_LENGTH];
-    char       funcName[SCD_FUNC_NAME_LENGTH];
-    size_t     funcOffset;
+    ScdMap* map;
+    uint32_t num;
+    int32_t tid;
+    uintptr_t pc;
+    uintptr_t relPc; // pc in exec process
+    uintptr_t sp;
+    uintptr_t fp;
+    uintptr_t base;
+    char soName[SCD_DL_NAME_LENGTH];
+    char funcName[SCD_FUNC_NAME_LENGTH];
+    size_t funcOffset;
 } ScdFrame;
 
-ScdFrame *ScdFrameCreate(ScdMap *map, uintptr_t pc, uintptr_t sp, uintptr_t fp);
-void ScdFrameDestroy(ScdFrame **frame);
+ScdFrame* ScdFrameCreate(ScdMap* map, uintptr_t pc, uintptr_t sp, uintptr_t fp);
+void ScdFrameDestroy(ScdFrame** frame);
 
 #ifdef __cplusplus
 }

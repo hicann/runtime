@@ -18,9 +18,9 @@
 extern "C" {
 #endif
 
-#define THREAD_STATUS_INIT          0
-#define THREAD_STATUS_RUN           1
-#define THREAD_STATUS_WAIT_EXIT     2
+#define THREAD_STATUS_INIT 0
+#define THREAD_STATUS_RUN 1
+#define THREAD_STATUS_WAIT_EXIT 2
 
 typedef struct {
     int32_t devId;
@@ -32,10 +32,9 @@ typedef void* (*ThreadRunFunc)(void* args);
 // thread stop function, callback when release plog thread
 typedef void (*ThreadStopFunc)(int32_t devId);
 
-
 void PlogThreadFree(int32_t devId);
 int8_t PlogThreadGetStatus(int32_t devId);
-LogStatus PlogThreadCreate(int32_t devId, ThreadArgs *pArgs, ThreadRunFunc func);
+LogStatus PlogThreadCreate(int32_t devId, ThreadArgs* pArgs, ThreadRunFunc func);
 void PlogThreadRelease(int32_t devId, ThreadStopFunc func, bool sync);
 LogStatus PlogThreadPoolInit(void);
 void PlogThreadPoolExit(ThreadStopFunc func);

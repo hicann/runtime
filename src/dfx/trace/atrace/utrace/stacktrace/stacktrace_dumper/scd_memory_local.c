@@ -13,9 +13,9 @@
 #include "scd_log.h"
 #include "securec.h"
 
-size_t ScdMemoryLocalRead(uintptr_t addr , void *dst, size_t size)
+size_t ScdMemoryLocalRead(uintptr_t addr, void* dst, size_t size)
 {
-    errno_t err = memcpy_s(dst, size, (const void *)addr, size);
+    errno_t err = memcpy_s(dst, size, (const void*)addr, size);
     if (err != EOK) {
         SCD_DLOG_ERR("memcpy_s failed, err = %d, size : %zu", (int32_t)err, size);
         return 0;

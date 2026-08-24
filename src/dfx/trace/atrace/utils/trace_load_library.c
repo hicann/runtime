@@ -17,13 +17,13 @@
  * @param [in]  libPath:    library path
  * @return      handle
  */
-ArgPtr TraceOpenLibrary(const char *libPath)
+ArgPtr TraceOpenLibrary(const char* libPath)
 {
     if (libPath == NULL) {
         return NULL;
     }
 
-    void *handle = TraceDlopen(libPath, RTLD_LAZY);
+    void* handle = TraceDlopen(libPath, RTLD_LAZY);
     if (handle == NULL) {
         return NULL;
     }
@@ -56,18 +56,18 @@ TraStatus TraceCloseLibrary(ArgPtr handle)
  * @param [in]  symbolNum:      symbol nums
  * @return      TraStatus
  */
-TraStatus TraceLoadFunc(ArgPtr handle, SymbolInfo *symbolInfos, uint32_t symbolNum)
+TraStatus TraceLoadFunc(ArgPtr handle, SymbolInfo* symbolInfos, uint32_t symbolNum)
 {
     if ((handle == NULL) || (symbolInfos == NULL) || (symbolNum == 0)) {
         return TRACE_INVALID_PARAM;
     }
 
     for (uint32_t i = 0; i < symbolNum; i++) {
-        const char *symbol = symbolInfos[i].symbol;
+        const char* symbol = symbolInfos[i].symbol;
         if (symbol == NULL) {
             continue;
         }
-        void *value = TraceDlsym(handle, symbol);
+        void* value = TraceDlsym(handle, symbol);
         if (value == NULL) {
             ADIAG_WAR("can not find function\"%s\" symbol.", symbol);
             continue;

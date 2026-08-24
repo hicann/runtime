@@ -1,4 +1,4 @@
- /**
+/**
  * Copyright (c) 2025 Huawei Technologies Co., Ltd.
  * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
  * CANN Open Software License Agreement Version 2.0 (the "License").
@@ -16,18 +16,18 @@
 #include "log_file_info.h"
 #include "log_common.h"
 
-#define MONITOR_ZP_ALARM_VALUE      5
-#define MONITOR_ZP_RESUME_VALUE     3
-#define MONITOR_ZP_MONITOR_PERIOD   10000U      // 10 seconds
-#define MONITOR_ZP_STAT_PERIOD      3600000U    // 1 hour
-#define MONITOR_ZP_SILENCE_PERIOD   60000U      // 1 minute
-#define MONITOR_ZP_ALARM_MAX        9U
-#define MONITOR_ZP_ZERO             0U
-#define MONITOR_ZP_NAME_MAX         64U
-#define MONITOR_ZP_DECIMAL          10
+#define MONITOR_ZP_ALARM_VALUE 5
+#define MONITOR_ZP_RESUME_VALUE 3
+#define MONITOR_ZP_MONITOR_PERIOD 10000U // 10 seconds
+#define MONITOR_ZP_STAT_PERIOD 3600000U  // 1 hour
+#define MONITOR_ZP_SILENCE_PERIOD 60000U // 1 minute
+#define MONITOR_ZP_ALARM_MAX 9U
+#define MONITOR_ZP_ZERO 0U
+#define MONITOR_ZP_NAME_MAX 64U
+#define MONITOR_ZP_DECIMAL 10
 
 STATIC SysmonitorInfo* g_sysmonitorZpInfo = NULL;
-STATIC MonitorStatInfo g_zpStatInfo = { MONITOR_ONE_HUNDRED_FLOAT, 0.0, 0.0, 0, 0, 0 };
+STATIC MonitorStatInfo g_zpStatInfo = {MONITOR_ONE_HUNDRED_FLOAT, 0.0, 0.0, 0, 0, 0};
 STATIC uint32_t g_zpTotalCount = 0;
 STATIC uint32_t g_zpMonitorTime = 0;
 
@@ -37,12 +37,12 @@ STATIC uint32_t g_zpMonitorTime = 0;
  * @param [out] : num      number after conversion
  * @return      : LOG_SUCCESS success; LOG_FAILURE fail
  */
-STATIC int32_t SysmonitorZpStrToUint(const char *str, uint32_t *num)
+STATIC int32_t SysmonitorZpStrToUint(const char* str, uint32_t* num)
 {
     if ((str == NULL) || (num == NULL) || (str[0] == '-')) {
         return LOG_FAILURE;
     }
-    char *endPtr = NULL;
+    char* endPtr = NULL;
     errno = 0;
     uint64_t ret = strtoul(str, &endPtr, MONITOR_ZP_DECIMAL);
     int32_t error = LOG_SUCCESS;
@@ -58,13 +58,13 @@ STATIC int32_t SysmonitorZpStrToUint(const char *str, uint32_t *num)
     return error;
 }
 
-STATIC int32_t SysmonitorZpGetInfo(uint32_t *count)
+STATIC int32_t SysmonitorZpGetInfo(uint32_t* count)
 {
-    const char command[] = { "ps -o stat|grep -e '^[Zz]'|wc -l" }; // the stat value of zombie process is Z
-    FILE *fp = popen(command, "r");
+    const char command[] = {"ps -o stat|grep -e '^[Zz]'|wc -l"}; // the stat value of zombie process is Z
+    FILE* fp = popen(command, "r");
     ONE_ACT_ERR_LOG(fp == NULL, return LOG_FAILURE, "get zp info failed, strerr=%s", strerror(ToolGetErrorCode()));
 
-    char result[MONITOR_ZP_NAME_MAX] = { 0 };
+    char result[MONITOR_ZP_NAME_MAX] = {0};
     int32_t ret = LOG_FAILURE;
     if (fgets(result, MONITOR_ZP_NAME_MAX, fp) != NULL) {
         if (SysmonitorZpStrToUint(result, count) != LOG_SUCCESS) {
@@ -94,7 +94,6 @@ STATIC void SysmonitorZpReset(void)
     g_zpMonitorTime = 0;
 }
 
-
 /**
  * @brief       : refresh stat info
  * @param [in]  : count       current count
@@ -114,18 +113,16 @@ STATIC void SysmonitorZpRecord(uint32_t count)
     g_zpStatInfo.avgUsage = (float)g_zpTotalCount / (float)g_zpMonitorTime;
 }
 
-STATIC void SysmonitorZpProcessAlarm(uint32_t count)
-{
-    MONITOR_RUN("zombie process count alarm: %u", count);
-}
+STATIC void SysmonitorZpProcessAlarm(uint32_t count) { MONITOR_RUN("zombie process count alarm: %u", count); }
 
 STATIC void SysmonitorZpProcessStat(void)
 {
     const char statHead[] = {"zombie process count stat:"};
-    char statInfo[MONITOR_MESSAGE_MAX_SIZE] = { 0 };
-    int32_t ret = sprintf_s(statInfo, MONITOR_MESSAGE_MAX_SIZE,
-        "%s minCount=%u, maxCount=%u, avgCount=%u, alarmNum=%u, resumeNum=%u, duration=%ums",
-        statHead, (uint32_t)g_zpStatInfo.minUsage, (uint32_t)g_zpStatInfo.maxUsage, (uint32_t)g_zpStatInfo.avgUsage,
+    char statInfo[MONITOR_MESSAGE_MAX_SIZE] = {0};
+    int32_t ret = sprintf_s(
+        statInfo, MONITOR_MESSAGE_MAX_SIZE,
+        "%s minCount=%u, maxCount=%u, avgCount=%u, alarmNum=%u, resumeNum=%u, duration=%ums", statHead,
+        (uint32_t)g_zpStatInfo.minUsage, (uint32_t)g_zpStatInfo.maxUsage, (uint32_t)g_zpStatInfo.avgUsage,
         g_zpStatInfo.alarmNum, g_zpStatInfo.resumeNum, g_zpStatInfo.duration * g_sysmonitorZpInfo->monitorPeriod);
     if (ret == -1) {
         MONITOR_LOGE("sprintf_s stat info failed");
@@ -169,7 +166,7 @@ STATIC void SysmonitorZpProcess(uint32_t count)
 
     if ((g_sysmonitorZpInfo->silenceCount >= 0) &&
         (((uint32_t)g_sysmonitorZpInfo->silenceCount * g_sysmonitorZpInfo->monitorPeriod) >=
-        g_sysmonitorZpInfo->silencePeriod)) {
+         g_sysmonitorZpInfo->silencePeriod)) {
         g_sysmonitorZpInfo->silenceCount = MONITOR_SILENCE_DISABLE;
     }
 
@@ -206,7 +203,7 @@ void SysmonitorResInitZp(SysmonitorInfo* info)
     info->alarmMaxCount = MONITOR_ZP_ALARM_MAX;
     info->silenceCount = MONITOR_SILENCE_DISABLE;
     info->silencePeriod = MONITOR_ZP_SILENCE_PERIOD;
-    info->thresholdFlag= false;
+    info->thresholdFlag = false;
     info->monitorFunc = SysmonitorZp;
     g_sysmonitorZpInfo = info;
 }

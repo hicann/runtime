@@ -18,7 +18,7 @@
 extern "C" {
 #endif // __cplusplus
 
-TraStatus ScExecStart(void *stack, ThreadArgument *args, int32_t *pid);
+TraStatus ScExecStart(void* stack, ThreadArgument* args, int32_t* pid);
 TraStatus ScExecEnd(int32_t pid);
 
 #ifdef __cplusplus

@@ -21,15 +21,15 @@
 extern "C" {
 #endif // __cplusplus
 
-#define SCD_MAX_SHDR_NUM            10U
-#define SCD_SECTION_NAME_LEN        32U
-#define SCD_PNAME_LEN               256U
+#define SCD_MAX_SHDR_NUM 10U
+#define SCD_SECTION_NAME_LEN 32U
+#define SCD_PNAME_LEN 256U
 
 typedef struct ScdProcInfo {
-    uint32_t    offset;
-    uint32_t    size;
+    uint32_t offset;
+    uint32_t size;
 } ScdProcInfo;
- 
+
 typedef enum ScdShdrType {
     SCD_SHDR_TYPE_INVALID,
     SCD_SHDR_TYPE_LIST,
@@ -37,27 +37,27 @@ typedef enum ScdShdrType {
 } ScdShdrType;
 
 typedef struct ScdSection {
-    bool        use;
-    char        name[SCD_SECTION_NAME_LEN];
-    uint32_t    offset;
-    uint32_t    num;
-    uint32_t    entSize;
-    uint32_t    totalSize;
+    bool use;
+    char name[SCD_SECTION_NAME_LEN];
+    uint32_t offset;
+    uint32_t num;
+    uint32_t entSize;
+    uint32_t totalSize;
     ScdShdrType type;
-    uintptr_t   org;
+    uintptr_t org;
 } ScdSection;
 
 typedef struct ScdProcess {
-    ScdProcessArgs  args;
-    char            pname[SCD_PNAME_LEN];
-    ScdMaps         maps;
-    ScdThreads      thds;
-    bool            shdrUsed;
-    ScdSection      shdr[SCD_MAX_SHDR_NUM];
+    ScdProcessArgs args;
+    char pname[SCD_PNAME_LEN];
+    ScdMaps maps;
+    ScdThreads thds;
+    bool shdrUsed;
+    ScdSection shdr[SCD_MAX_SHDR_NUM];
 } ScdProcess;
 
-TraStatus ScdProcessDump(const ScdProcessArgs *args);
-TraStatus ScdProcessParseCore(const char *filePath, uint32_t len);
+TraStatus ScdProcessDump(const ScdProcessArgs* args);
+TraStatus ScdProcessParseCore(const char* filePath, uint32_t len);
 
 #ifdef __cplusplus
 }

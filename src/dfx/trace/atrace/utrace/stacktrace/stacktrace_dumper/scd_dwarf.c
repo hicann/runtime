@@ -31,7 +31,7 @@ typedef struct TraceUnwindEhFrameHdrInfo {
 } TraceUnwindEhFrameHdrInfo;
 // FDE entry in the binary search table
 typedef struct FdeEntry {
-    int32_t initLocOffset;    // location addr offset relative to eh_frame_hdr addr
+    int32_t initLocOffset; // location addr offset relative to eh_frame_hdr addr
     int32_t fdeTableOffset;
 } FdeEntry;
 
@@ -58,10 +58,7 @@ typedef struct TraceEhFrameCie {
  * @param [in]      offset:         offset address
  * @return          cie address
  */
-STATIC INLINE uintptr_t GetCieAddressByOffset(uint32_t *offset)
-{
-    return (uintptr_t)(offset) - (*offset);
-}
+STATIC INLINE uintptr_t GetCieAddressByOffset(uint32_t* offset) { return (uintptr_t)(offset) - (*offset); }
 
 STATIC INLINE uintptr_t GetAddrByOffset(uintptr_t addr, intptr_t offset)
 {
@@ -83,9 +80,9 @@ STATIC INLINE uintptr_t GetAddrByOffset(uintptr_t addr, intptr_t offset)
  *
  * @return      : !=0 failure; ==0 success
  */
-STATIC TraStatus TraceParseFrameHdrAddr(ScdDwarf *dwarf, TraceUnwindEhFrameHdrInfo *ehFrameHdrInfo)
+STATIC TraStatus TraceParseFrameHdrAddr(ScdDwarf* dwarf, TraceUnwindEhFrameHdrInfo* ehFrameHdrInfo)
 {
-    const uint8_t *addr = (uint8_t *)(dwarf->memory->data + dwarf->ehFrameHdrOffset);
+    const uint8_t* addr = (uint8_t*)(dwarf->memory->data + dwarf->ehFrameHdrOffset);
     ehFrameHdrInfo->version = *addr;
     addr++;
     ehFrameHdrInfo->ehframeptrEnc = *addr;
@@ -103,7 +100,7 @@ STATIC TraStatus TraceParseFrameHdrAddr(ScdDwarf *dwarf, TraceUnwindEhFrameHdrIn
         SCD_DLOG_ERR("read encode value frame addr failed");
         return TRACE_FAILURE;
     }
-    
+
     uintptr_t fdeItem;
     if (TRACE_IS_HDR_TBL_PRESENT(ehFrameHdrInfo)) {
         addr = TraceReadEncodeValue(dwarf, ehFrameHdrInfo->fdeCountEnc, addr, &fdeItem);
@@ -117,20 +114,22 @@ STATIC TraStatus TraceParseFrameHdrAddr(ScdDwarf *dwarf, TraceUnwindEhFrameHdrIn
     } else {
         ehFrameHdrInfo->searchTblFlag = 0;
     }
-    SCD_DLOG_INF("[eh_frame_hdr info] version: %u, ehframeptrEnc: %u, fdeCountEnc: %u, tabEnc: %u, searchTblFlag: %u",
-        ehFrameHdrInfo->version, ehFrameHdrInfo->ehframeptrEnc, ehFrameHdrInfo->fdeCountEnc,
-        ehFrameHdrInfo->tabEnc, ehFrameHdrInfo->searchTblFlag);
+    SCD_DLOG_INF(
+        "[eh_frame_hdr info] version: %u, ehframeptrEnc: %u, fdeCountEnc: %u, tabEnc: %u, searchTblFlag: %u",
+        ehFrameHdrInfo->version, ehFrameHdrInfo->ehframeptrEnc, ehFrameHdrInfo->fdeCountEnc, ehFrameHdrInfo->tabEnc,
+        ehFrameHdrInfo->searchTblFlag);
     return TRACE_SUCCESS;
 }
 
-STATIC const uint8_t *TraceParseCIEAug(ScdDwarf *dwarf, const char *augStr, const uint8_t *instr, uint32_t idx,
-    uintptr_t *retIns, TraceFrameRegStateInfo *frameRegState)
+STATIC const uint8_t* TraceParseCIEAug(
+    ScdDwarf* dwarf, const char* augStr, const uint8_t* instr, uint32_t idx, uintptr_t* retIns,
+    TraceFrameRegStateInfo* frameRegState)
 {
     size_t encSize;
     uintptr_t retBegIns = 0;
     uintptr_t ulebTmp;
-    const uint8_t *tmpInstr = instr;
-    uint32_t  indexTmp = idx;
+    const uint8_t* tmpInstr = instr;
+    uint32_t indexTmp = idx;
 
     /* Check for the presence of 'z' in the augmentation string, which indicates
      * the presence of additional information that affects the instruction range */
@@ -148,7 +147,7 @@ STATIC const uint8_t *TraceParseCIEAug(ScdDwarf *dwarf, const char *augStr, cons
             indexTmp++;
             tmpInstr++;
         } else if (augStr[indexTmp] == 'P') {
-            // 'P' indicates a procedure linkage table (PLT) entry, not processed here 
+            // 'P' indicates a procedure linkage table (PLT) entry, not processed here
             uint8_t ucPEnc = *tmpInstr;
             tmpInstr++;
             encSize = TraceEncValueSizeGet(ucPEnc);
@@ -161,7 +160,7 @@ STATIC const uint8_t *TraceParseCIEAug(ScdDwarf *dwarf, const char *augStr, cons
             tmpInstr++;
             frameRegState->flag = 1;
             indexTmp++;
-        } else if (*(const char *)tmpInstr == 'S') {  // 'S' indicates a signal frame
+        } else if (*(const char*)tmpInstr == 'S') { // 'S' indicates a signal frame
             frameRegState->sigFrmFlag = 1;
             indexTmp++;
         } else {
@@ -178,13 +177,14 @@ STATIC const uint8_t *TraceParseCIEAug(ScdDwarf *dwarf, const char *augStr, cons
     return tmpInstr;
 }
 
-STATIC TraStatus TraceParseCie(ScdDwarf *dwarf, uintptr_t cieAddr, TraceAddrRange* initIns, TraceFrameRegStateInfo *frameRegState)
+STATIC TraStatus
+TraceParseCie(ScdDwarf* dwarf, uintptr_t cieAddr, TraceAddrRange* initIns, TraceFrameRegStateInfo* frameRegState)
 {
-    TraceEhFrameCie *ehFrameCIEHdr = (TraceEhFrameCie *)cieAddr;
-    const uint8_t *skipAug = NULL;
+    TraceEhFrameCie* ehFrameCIEHdr = (TraceEhFrameCie*)cieAddr;
+    const uint8_t* skipAug = NULL;
     char ucAugStr[TRACE_MAX_AUG_STR_LEN + 1U] = {0};
     uint32_t idx = 0;
-    skipAug = (const uint8_t *)ehFrameCIEHdr->augmentation;
+    skipAug = (const uint8_t*)ehFrameCIEHdr->augmentation;
     for (size_t i = 0; i < TRACE_MAX_AUG_STR_LEN; i++) {
         size_t size = TraceReadBytes(dwarf, &skipAug, &ucAugStr[i], sizeof(uint8_t));
         SCD_CHK_EXPR_ACTION(size == 0, return TRACE_FAILURE, "read byte failed");
@@ -193,7 +193,7 @@ STATIC TraStatus TraceParseCie(ScdDwarf *dwarf, uintptr_t cieAddr, TraceAddrRang
         }
     }
     if (ucAugStr[0] == 'e' && ucAugStr[1] == 'h') {
-        skipAug += sizeof(void *);
+        skipAug += sizeof(void*);
         idx += 2U; // add 2 for size "eh"
     }
     uintptr_t ulebTmp;
@@ -205,7 +205,7 @@ STATIC TraStatus TraceParseCie(ScdDwarf *dwarf, uintptr_t cieAddr, TraceAddrRang
     SCD_CHK_EXPR_ACTION(skipAug == NULL, return TRACE_FAILURE, "read leb128 failed");
     frameRegState->dataAlign = svLebTmp;
     if (ehFrameCIEHdr->version == 1) {
-        ulebTmp = (uintptr_t)(*(uint8_t *)(uintptr_t)skipAug);
+        ulebTmp = (uintptr_t)(*(uint8_t*)(uintptr_t)skipAug);
         skipAug++;
     } else {
         skipAug = TraceReadUleb128(dwarf, skipAug, &ulebTmp);
@@ -215,25 +215,27 @@ STATIC TraStatus TraceParseCie(ScdDwarf *dwarf, uintptr_t cieAddr, TraceAddrRang
     uintptr_t retIns = 0;
     skipAug = TraceParseCIEAug(dwarf, ucAugStr, skipAug, idx, &retIns, frameRegState);
     SCD_CHK_EXPR_ACTION(skipAug == NULL, return TRACE_FAILURE, "parse CIE aug failed");
- 
+
     // When 'z' appears, the unwind instruction address can be directly obtained through the ret pointer.
     initIns->start = (retIns != 0) ? retIns : (uintptr_t)skipAug;
     initIns->end = (uintptr_t)(cieAddr + ehFrameCIEHdr->cieLengh + sizeof(uint32_t));
-    SCD_DLOG_INF("[CIE info] addr : 0x%lx, Length : 0x%x, Extended cieId : %u, version : %u, initIns [0x%lx-0x%lx],"
+    SCD_DLOG_INF(
+        "[CIE info] addr : 0x%lx, Length : 0x%x, Extended cieId : %u, version : %u, initIns [0x%lx-0x%lx],"
         "codeAlign:0x%lx, dataAlign:%ld,",
         cieAddr, ehFrameCIEHdr->cieLengh, ehFrameCIEHdr->cieId, ehFrameCIEHdr->version, initIns->start, initIns->end,
         frameRegState->codeAlign, frameRegState->dataAlign);
     return TRACE_SUCCESS;
 }
 
-STATIC TraStatus TraceParseFde(ScdDwarf *dwarf, uintptr_t fdeAddr, TraceFrameRegStateInfo *frameRegState, TraceAddrRange* initIns,
+STATIC TraStatus TraceParseFde(
+    ScdDwarf* dwarf, uintptr_t fdeAddr, TraceFrameRegStateInfo* frameRegState, TraceAddrRange* initIns,
     TraceAddrRange* ins)
 {
     uintptr_t cieEntry;
-    const uint8_t *addr = NULL;
+    const uint8_t* addr = NULL;
     uintptr_t funStart;
     uintptr_t range;
-    TraceEhFrameFde *pstFDEHeadInfo = (TraceEhFrameFde *)fdeAddr;
+    TraceEhFrameFde* pstFDEHeadInfo = (TraceEhFrameFde*)fdeAddr;
     cieEntry = GetCieAddressByOffset(&pstFDEHeadInfo->cieOffset);
     TraStatus ret = TraceParseCie(dwarf, cieEntry, initIns, frameRegState);
     if (ret != TRACE_SUCCESS) {
@@ -242,10 +244,10 @@ STATIC TraStatus TraceParseFde(ScdDwarf *dwarf, uintptr_t fdeAddr, TraceFrameReg
     }
     addr = pstFDEHeadInfo->pcBegin;
     if (frameRegState->flag == 0) {
-        funStart = *(uintptr_t *)(uintptr_t)addr;
-        addr += sizeof(void *);
-        range = *(uintptr_t *)(uintptr_t)addr;
-        addr += sizeof(void *);
+        funStart = *(uintptr_t*)(uintptr_t)addr;
+        addr += sizeof(void*);
+        range = *(uintptr_t*)(uintptr_t)addr;
+        addr += sizeof(void*);
     } else {
         // 使用FDE编码解析PC Begin和PC Range
         uint8_t ucFdeEnc = frameRegState->fdeEnc;
@@ -254,7 +256,7 @@ STATIC TraStatus TraceParseFde(ScdDwarf *dwarf, uintptr_t fdeAddr, TraceFrameReg
             SCD_DLOG_ERR("invalid addr");
             return TRACE_FAILURE;
         }
-        addr = TraceReadEncodeValue(dwarf, TRACE_LOBIT4_ENCODE(ucFdeEnc), addr, (uintptr_t *)&range); /* 0x0f */
+        addr = TraceReadEncodeValue(dwarf, TRACE_LOBIT4_ENCODE(ucFdeEnc), addr, (uintptr_t*)&range); /* 0x0f */
         if (addr == NULL) {
             SCD_DLOG_ERR("invalid addr");
             return TRACE_FAILURE;
@@ -272,22 +274,24 @@ STATIC TraStatus TraceParseFde(ScdDwarf *dwarf, uintptr_t fdeAddr, TraceFrameReg
     ins->start = (uintptr_t)(addr + ulebTmp);
     ulebTmp = (uintptr_t)(fdeAddr + pstFDEHeadInfo->fdeLengh + sizeof(uint32_t));
     ins->end = ulebTmp;
-    SCD_DLOG_INF("[FDE info] Length:0x%x,CIE Pointer:0x%x,pcBegin:0x%lx,funStart: 0x%lx,range: 0x%lx,ins [0x%lx-0x%lx]",
-        pstFDEHeadInfo->fdeLengh, pstFDEHeadInfo->cieOffset, (uintptr_t)pstFDEHeadInfo->pcBegin,
-        funStart, range, ulebTmp, ulebTmp + pstFDEHeadInfo->fdeLengh);
+    SCD_DLOG_INF(
+        "[FDE info] Length:0x%x,CIE Pointer:0x%x,pcBegin:0x%lx,funStart: 0x%lx,range: 0x%lx,ins [0x%lx-0x%lx]",
+        pstFDEHeadInfo->fdeLengh, pstFDEHeadInfo->cieOffset, (uintptr_t)pstFDEHeadInfo->pcBegin, funStart, range,
+        ulebTmp, ulebTmp + pstFDEHeadInfo->fdeLengh);
     return TRACE_SUCCESS;
 }
 
-STATIC void TraceGetCFAAddr(ScdDwarf *dwarf, TraceFrameRegStateInfo *frameRegState, ScdRegs *regs,
-    const ScdDwarfStepArgs *args, uintptr_t *cfaAddrPtr)
+STATIC void TraceGetCFAAddr(
+    ScdDwarf* dwarf, TraceFrameRegStateInfo* frameRegState, ScdRegs* regs, const ScdDwarfStepArgs* args,
+    uintptr_t* cfaAddrPtr)
 {
     uintptr_t cfaAddr = 0;
-    intptr_t  offset;
+    intptr_t offset;
     uintptr_t regNum;
     uintptr_t insLen;
     uintptr_t expResult;
     uintptr_t storeReg;
-    const uint8_t *expOpAddr = NULL;
+    const uint8_t* expOpAddr = NULL;
 
     switch (frameRegState->frameStateInfo.cfaHow) {
         case VOS_CFA_REG_OFFSET:
@@ -317,12 +321,13 @@ STATIC void TraceGetCFAAddr(ScdDwarf *dwarf, TraceFrameRegStateInfo *frameRegSta
     return;
 }
 
-STATIC TraStatus CallStackRegUpdate(ScdDwarf *dwarf, uint32_t idx, ScdRegs *pstCoreRegsOld, ScdRegs *coreRegs,
-    uintptr_t cfaAddr, TraceStagRegInfo *pstRegInfo, const ScdDwarfStepArgs *args)
+STATIC TraStatus CallStackRegUpdate(
+    ScdDwarf* dwarf, uint32_t idx, ScdRegs* pstCoreRegsOld, ScdRegs* coreRegs, uintptr_t cfaAddr,
+    TraceStagRegInfo* pstRegInfo, const ScdDwarfStepArgs* args)
 {
     uintptr_t regNum;
     uintptr_t expResult = 0;
-    const uint8_t *expOpAddr = NULL;
+    const uint8_t* expOpAddr = NULL;
     uintptr_t insLen = 0;
     uintptr_t regAddr;
     size_t size;
@@ -331,21 +336,20 @@ STATIC TraStatus CallStackRegUpdate(ScdDwarf *dwarf, uint32_t idx, ScdRegs *pstC
     switch (pstRegInfo->regHow) {
         case REG_SAVED_OFFSET:
             regAddr = GetAddrByOffset(cfaAddr, pstRegInfo->regLoc.offset);
-            SCD_CHK_EXPR_ACTION(regAddr == 0, return TRACE_FAILURE,
-                "invalid offset %llx", pstRegInfo->regLoc.offset);
+            SCD_CHK_EXPR_ACTION(regAddr == 0, return TRACE_FAILURE, "invalid offset %llx", pstRegInfo->regLoc.offset);
             /* 当前使用eh_frame进行unwind推栈的有x86_64、arm64和ilp32，寄存器大小都为64位，因此使用VOS_UINT64取内容
              * ScdMemoryRead(NULL, ...) uses global handler (ScdMemoryRemoteRead via ptrace).
              * Safe here: this function is only called from dumper subprocess context
              * (ScdProcessDump -> ScdDwarfStep), where ptrace is available. */
             size = ScdMemoryRead(NULL, regAddr, &coreRegs->r[idx & REG_VAILD_MASK], sizeof(uint64_t));
             SCD_CHK_EXPR_ACTION(size == 0, return TRACE_FAILURE, "scd read memory failed 0x%llx", regAddr);
-            SCD_DLOG_INF("REG_SAVED_OFFSET reg %u addr:%lx value:%lx offset : %ld",
-                idx, regAddr, coreRegs->r[idx & REG_VAILD_MASK], pstRegInfo->regLoc.offset);
+            SCD_DLOG_INF(
+                "REG_SAVED_OFFSET reg %u addr:%lx value:%lx offset : %ld", idx, regAddr,
+                coreRegs->r[idx & REG_VAILD_MASK], pstRegInfo->regLoc.offset);
             break;
         case REG_SAVED_VAL_OFFSET:
             regAddr = GetAddrByOffset(cfaAddr, pstRegInfo->regLoc.offset);
-            SCD_CHK_EXPR_ACTION(regAddr == 0, return TRACE_FAILURE,
-                "invalid offset %llx", pstRegInfo->regLoc.offset);
+            SCD_CHK_EXPR_ACTION(regAddr == 0, return TRACE_FAILURE, "invalid offset %llx", pstRegInfo->regLoc.offset);
             coreRegs->r[idx & REG_VAILD_MASK] = (uintptr_t)regAddr;
             SCD_DLOG_INF("REG_SAVED_VAL_OFFSET %u %lx", idx, coreRegs->r[idx & REG_VAILD_MASK]);
             break;
@@ -358,8 +362,7 @@ STATIC TraStatus CallStackRegUpdate(ScdDwarf *dwarf, uint32_t idx, ScdRegs *pstC
         case REG_SAVED_EXP:
             expOpAddr = TraceReadUleb128(dwarf, pstRegInfo->regLoc.valExp, &insLen);
             SCD_CHK_EXPR_ACTION(expOpAddr == NULL, return TRACE_FAILURE, "read uleb128 failed");
-            ret = TraceStackOpExc(dwarf, expOpAddr, expOpAddr + insLen, pstCoreRegsOld,
-                                  &expResult, cfaAddr, args);
+            ret = TraceStackOpExc(dwarf, expOpAddr, expOpAddr + insLen, pstCoreRegsOld, &expResult, cfaAddr, args);
             SCD_CHK_EXPR_ACTION(ret != TRACE_SUCCESS, return ret, "stack op exec for add %p failed", expOpAddr);
             /* 异常到正常中间转接函数的unwind指令，由本层SP求出上层所有寄存器(包括SP)
              * 当求sp时不要覆盖，以免无法求8-16号寄存器 最后SP可有CFA求得
@@ -374,8 +377,7 @@ STATIC TraStatus CallStackRegUpdate(ScdDwarf *dwarf, uint32_t idx, ScdRegs *pstC
             break;
         case REG_SAVED_VAL_EXP:
             expOpAddr = TraceReadUleb128(dwarf, pstRegInfo->regLoc.valExp, &insLen);
-            ret = TraceStackOpExc(dwarf, expOpAddr, expOpAddr + insLen, pstCoreRegsOld,
-                                  &expResult, cfaAddr, args);
+            ret = TraceStackOpExc(dwarf, expOpAddr, expOpAddr + insLen, pstCoreRegsOld, &expResult, cfaAddr, args);
             SCD_CHK_EXPR_ACTION(ret != TRACE_SUCCESS, return ret, "stack op exec for add %p failed", expOpAddr);
             coreRegs->r[idx & REG_VAILD_MASK] = expResult;
             SCD_DLOG_INF("REG_SAVED_VAL_EXP %u %lx", idx, coreRegs->r[idx & REG_VAILD_MASK]);
@@ -388,13 +390,13 @@ STATIC TraStatus CallStackRegUpdate(ScdDwarf *dwarf, uint32_t idx, ScdRegs *pstC
     return TRACE_SUCCESS;
 }
 
-static inline bool TraceCheckStackAddrValid(uintptr_t cfaAddr, const ScdDwarfStepArgs *args)
+static inline bool TraceCheckStackAddrValid(uintptr_t cfaAddr, const ScdDwarfStepArgs* args)
 {
     return cfaAddr >= args->stackMinAddr && cfaAddr < args->stackMaxAddr;
 }
 
-STATIC TraStatus TraceUnwinRegUpdate(ScdDwarf *dwarf, TraceFrameRegStateInfo *frameRegState,
-    ScdRegs *regs, const ScdDwarfStepArgs *args)
+STATIC TraStatus
+TraceUnwinRegUpdate(ScdDwarf* dwarf, TraceFrameRegStateInfo* frameRegState, ScdRegs* regs, const ScdDwarfStepArgs* args)
 {
     ScdRegs oldCoreRegArray;
     uintptr_t cfaAddr = 0;
@@ -408,19 +410,20 @@ STATIC TraStatus TraceUnwinRegUpdate(ScdDwarf *dwarf, TraceFrameRegStateInfo *fr
         oldCoreRegArray.r[i] = regs->r[i];
     }
     for (uint32_t i = 0; i < TRACE_CORE_REG_NUM; i++) {
-        TraceStagRegInfo *regInfo = &(frameRegState->frameStateInfo.regInfo[i & REG_VAILD_MASK]);
+        TraceStagRegInfo* regInfo = &(frameRegState->frameStateInfo.regInfo[i & REG_VAILD_MASK]);
         TraStatus ret = CallStackRegUpdate(dwarf, i, &oldCoreRegArray, regs, cfaAddr, regInfo, args);
         SCD_CHK_EXPR_ACTION(ret != TRACE_SUCCESS, return ret, "call stack register update failed");
     }
-    if (frameRegState->frameStateInfo.regInfo[frameRegState->retColumn & REG_VAILD_MASK].regHow == REG_UNDEFINED)  {
+    if (frameRegState->frameStateInfo.regInfo[frameRegState->retColumn & REG_VAILD_MASK].regHow == REG_UNDEFINED) {
         regs->r[frameRegState->retColumn & REG_VAILD_MASK] = 0;
     }
     regs->r[VOS_R_SP] = cfaAddr;
     return TRACE_SUCCESS;
 }
 
-STATIC TraStatus TraceCallstackParse(ScdDwarf *dwarf, uintptr_t pc, const ScdDwarfStepArgs *args,
-    ScdRegs *regs, TraceFrameRegStateInfo *frameRegState, FDECtrlBlock *ctrlBlock)
+STATIC TraStatus TraceCallstackParse(
+    ScdDwarf* dwarf, uintptr_t pc, const ScdDwarfStepArgs* args, ScdRegs* regs, TraceFrameRegStateInfo* frameRegState,
+    FDECtrlBlock* ctrlBlock)
 {
     TraStatus ret;
     uintptr_t fdeAddr = ctrlBlock->unwindEntryAddr;
@@ -434,8 +437,9 @@ STATIC TraStatus TraceCallstackParse(ScdDwarf *dwarf, uintptr_t pc, const ScdDwa
         return ret;
     }
     if (pc < frameRegState->pc || pc > frameRegState->pc + frameRegState->range) {
-        SCD_DLOG_ERR("pc %llx is out of FDE range [%llx, %llx], possible missing CFI",
-             pc, frameRegState->pc, frameRegState->pc + frameRegState->range);
+        SCD_DLOG_ERR(
+            "pc %llx is out of FDE range [%llx, %llx], possible missing CFI", pc, frameRegState->pc,
+            frameRegState->pc + frameRegState->range);
         return TRACE_FAILURE;
     }
     frameRegState->ret = pc;
@@ -444,7 +448,7 @@ STATIC TraStatus TraceCallstackParse(ScdDwarf *dwarf, uintptr_t pc, const ScdDwa
         SCD_DLOG_ERR("TraceUnwindParseFn failed");
         return ret;
     }
-    
+
     isFDEtable = true;
     ret = TraceUnwindParseFn(dwarf, &ins, frameRegState, isFDEtable);
     if (ret != TRACE_SUCCESS) {
@@ -459,11 +463,11 @@ STATIC TraStatus TraceCallstackParse(ScdDwarf *dwarf, uintptr_t pc, const ScdDwa
     return TRACE_SUCCESS;
 }
 
-STATIC FdeEntry *TraceSearchFdeOffsetTable(ScdDwarf *dwarf, uintptr_t tblStatAddr, uintptr_t pc)
+STATIC FdeEntry* TraceSearchFdeOffsetTable(ScdDwarf* dwarf, uintptr_t tblStatAddr, uintptr_t pc)
 {
     // pc may be smaller than enFrameAddr
     uintptr_t enFrameAddr = dwarf->memory->data + dwarf->ehFrameHdrOffset;
-    FdeEntry *fdeItem = (FdeEntry *)tblStatAddr;
+    FdeEntry* fdeItem = (FdeEntry*)tblStatAddr;
     size_t left = 0;
     size_t right = dwarf->fdeCount;
     size_t mid = (left + right) >> 1;
@@ -471,8 +475,9 @@ STATIC FdeEntry *TraceSearchFdeOffsetTable(ScdDwarf *dwarf, uintptr_t tblStatAdd
     SCD_DLOG_DBG("search pc 0x%llx", pc);
     while (left < right) {
         midLocAddr = GetAddrByOffset(enFrameAddr, fdeItem[mid].initLocOffset);
-        SCD_DLOG_DBG("search in range [%d, %d], compare [%d] 0x%llx, offset 0x%x,",
-            left, right, mid, midLocAddr, fdeItem[mid].initLocOffset);
+        SCD_DLOG_DBG(
+            "search in range [%d, %d], compare [%d] 0x%llx, offset 0x%x,", left, right, mid, midLocAddr,
+            fdeItem[mid].initLocOffset);
         if (pc == midLocAddr) {
             SCD_DLOG_DBG("match fde[%d], start pc 0x%llx", mid, midLocAddr);
             return &fdeItem[mid];
@@ -500,7 +505,7 @@ STATIC FdeEntry *TraceSearchFdeOffsetTable(ScdDwarf *dwarf, uintptr_t tblStatAdd
  *
  * @return      : !=0 failure; ==0 success
  */
-TraStatus ScdDwarfStep(ScdDwarf *dwarf, ScdRegs *regs, const ScdDwarfStepArgs *args, uintptr_t pc, uintptr_t *nextPc)
+TraStatus ScdDwarfStep(ScdDwarf* dwarf, ScdRegs* regs, const ScdDwarfStepArgs* args, uintptr_t pc, uintptr_t* nextPc)
 {
     FDECtrlBlock ctrlBlock;
     TraceFrameRegStateInfo frameRegState = {0};
@@ -514,7 +519,7 @@ TraStatus ScdDwarfStep(ScdDwarf *dwarf, ScdRegs *regs, const ScdDwarfStepArgs *a
     if (ehFrameHdrInfo.searchTblFlag == 1U) {
         SCD_DLOG_INF("has search table");
         uintptr_t ehFramrHdrAddr = dwarf->memory->data + dwarf->ehFrameHdrOffset;
-        FdeEntry *entry = TraceSearchFdeOffsetTable(dwarf, ehFrameHdrInfo.tblStatAddr, pc);
+        FdeEntry* entry = TraceSearchFdeOffsetTable(dwarf, ehFrameHdrInfo.tblStatAddr, pc);
         uintptr_t tmpAddr = GetAddrByOffset(ehFramrHdrAddr, entry->fdeTableOffset);
         SCD_CHK_EXPR_ACTION(tmpAddr == 0, return TRACE_FAILURE, "invalid offset %d", entry->fdeTableOffset);
         ctrlBlock.unwindEntryAddr = tmpAddr;

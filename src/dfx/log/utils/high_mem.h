@@ -18,21 +18,21 @@
 extern "C" {
 #endif
 #ifndef HM_DRV_CHAR_DEV_USER_PATH
-#define HM_DRV_CHAR_DEV_USER_PATH     "/local/dev/himem"
+#define HM_DRV_CHAR_DEV_USER_PATH "/local/dev/himem"
 #endif
-#define HM_DRV_IOCTL_BIND_BLOCK       0x000A0001
-#define HM_DRV_BLOCK_TYPE_SLOG        0xA050b003U
-#define HIMEM_LOG_LENGTH              1023U
+#define HM_DRV_IOCTL_BIND_BLOCK 0x000A0001
+#define HM_DRV_BLOCK_TYPE_SLOG 0xA050b003U
+#define HIMEM_LOG_LENGTH 1023U
 
 typedef struct {
     LogHead head;
     char msg[HIMEM_LOG_LENGTH];
 } HimemLogMsg;
 
-int32_t HiMemInit(int32_t *fd);
-void HiMemFree(int32_t *fd);
-int32_t HiMemWriteIamLog(int32_t fd, RingBufferStat *logBuf);
-uint32_t HiMemReadIamLog(int32_t fd, RingBufferStat *logBuf);
+int32_t HiMemInit(int32_t* fd);
+void HiMemFree(int32_t* fd);
+int32_t HiMemWriteIamLog(int32_t fd, RingBufferStat* logBuf);
+uint32_t HiMemReadIamLog(int32_t fd, RingBufferStat* logBuf);
 
 #ifdef __cplusplus
 }

@@ -17,31 +17,32 @@
 extern "C" {
 #endif // __cplusplus
 
-STATIC int32_t ConstructBaseLogForValidModuleId(char *msg, uint32_t msgLen, const LogMsgArg *msgArg)
+STATIC int32_t ConstructBaseLogForValidModuleId(char* msg, uint32_t msgLen, const LogMsgArg* msgArg)
 {
     int32_t err;
     if (((msgArg->level >= DLOG_DEBUG) && (msgArg->level <= DLOG_NULL)) || (msgArg->level == DLOG_EVENT)) {
-        err = snprintf_s(msg, msgLen, (size_t)msgLen - 1U, "[%s] %s(%d,%s):%s ",
-                         DlogGetLevelNameById(msgArg->level), DlogGetModuleNameById(msgArg->moduleId),
-                         msgArg->selfPid, DlogGetPidName(), msgArg->timestamp);
+        err = snprintf_s(
+            msg, msgLen, (size_t)msgLen - 1U, "[%s] %s(%d,%s):%s ", DlogGetLevelNameById(msgArg->level),
+            DlogGetModuleNameById(msgArg->moduleId), msgArg->selfPid, DlogGetPidName(), msgArg->timestamp);
     } else {
-        err = snprintf_s(msg, msgLen, (size_t)msgLen - 1U, "[%d] %s(%d,%s):%s ",
-                         msgArg->level, DlogGetModuleNameById(msgArg->moduleId),
-                         msgArg->selfPid, DlogGetPidName(), msgArg->timestamp);
+        err = snprintf_s(
+            msg, msgLen, (size_t)msgLen - 1U, "[%d] %s(%d,%s):%s ", msgArg->level,
+            DlogGetModuleNameById(msgArg->moduleId), msgArg->selfPid, DlogGetPidName(), msgArg->timestamp);
     }
     return err;
 }
 
-STATIC int32_t ConstructBaseLogForInvalidModuleId(char *msg, uint32_t msgLen, const LogMsgArg *msgArg)
+STATIC int32_t ConstructBaseLogForInvalidModuleId(char* msg, uint32_t msgLen, const LogMsgArg* msgArg)
 {
     int32_t err;
     if (((msgArg->level >= DLOG_DEBUG) && (msgArg->level <= DLOG_NULL)) || (msgArg->level == DLOG_EVENT)) {
-        err = snprintf_s(msg, msgLen, (size_t)msgLen - 1U, "[%s] %u(%d,%s):%s ",
-                         DlogGetLevelNameById(msgArg->level), msgArg->moduleId,
-                         msgArg->selfPid, DlogGetPidName(), msgArg->timestamp);
+        err = snprintf_s(
+            msg, msgLen, (size_t)msgLen - 1U, "[%s] %u(%d,%s):%s ", DlogGetLevelNameById(msgArg->level),
+            msgArg->moduleId, msgArg->selfPid, DlogGetPidName(), msgArg->timestamp);
     } else {
-        err = snprintf_s(msg, msgLen, (size_t)msgLen - 1U, "[%d] %u(%d,%s):%s ",
-                         msgArg->level, msgArg->moduleId, msgArg->selfPid, DlogGetPidName(), msgArg->timestamp);
+        err = snprintf_s(
+            msg, msgLen, (size_t)msgLen - 1U, "[%d] %u(%d,%s):%s ", msgArg->level, msgArg->moduleId, msgArg->selfPid,
+            DlogGetPidName(), msgArg->timestamp);
     }
     return err;
 }
@@ -53,7 +54,7 @@ STATIC int32_t ConstructBaseLogForInvalidModuleId(char *msg, uint32_t msgLen, co
  * @param [in]  : msgArg        log info, include information to construct
  * @return      : SYS_OK success; SYS_ERROR failure
  */
-STATIC int32_t ConstructBaseLogMsg(char *msg, uint32_t msgLen, const LogMsgArg *msgArg)
+STATIC int32_t ConstructBaseLogMsg(char* msg, uint32_t msgLen, const LogMsgArg* msgArg)
 {
     int32_t err;
     if (msgArg->moduleId < (uint32_t)INVALID_MODULE_ID) {
@@ -62,15 +63,15 @@ STATIC int32_t ConstructBaseLogMsg(char *msg, uint32_t msgLen, const LogMsgArg *
         err = ConstructBaseLogForInvalidModuleId(msg, msgLen, msgArg);
     }
     if (err == -1) {
-        SELF_LOG_ERROR("snprintf_s failed, strerr=%s, pid=%d, pid_name=%s, module=%u.",
-                       strerror(ToolGetErrorCode()), msgArg->selfPid, DlogGetPidName(), msgArg->moduleId);
+        SELF_LOG_ERROR(
+            "snprintf_s failed, strerr=%s, pid=%d, pid_name=%s, module=%u.", strerror(ToolGetErrorCode()),
+            msgArg->selfPid, DlogGetPidName(), msgArg->moduleId);
         return SYS_ERROR;
     }
     return SYS_OK;
 }
 
-
-STATIC void DlogInitMsgHead(const LogMsg *logMsg, LogHead *head)
+STATIC void DlogInitMsgHead(const LogMsg* logMsg, LogHead* head)
 {
     ONE_ACT_NO_LOG(logMsg == NULL, return);
     ONE_ACT_NO_LOG(head == NULL, return);
@@ -78,10 +79,10 @@ STATIC void DlogInitMsgHead(const LogMsg *logMsg, LogHead *head)
 
     head->magic = HEAD_MAGIC;
     head->version = HEAD_VERSION;
-    head->aosType = (uint8_t)DlogGetAosType(); // AOS_GEA/AOS_SEA
-    head->processType = (uint8_t)DlogGetProcessType();  // APPLICATION/SYSTEM
-    head->logType = (uint8_t)logMsg->type;     // debug/run/security
-    head->logLevel = (uint8_t)logMsg->level;   // debug/info/warning/error/event
+    head->aosType = (uint8_t)DlogGetAosType();         // AOS_GEA/AOS_SEA
+    head->processType = (uint8_t)DlogGetProcessType(); // APPLICATION/SYSTEM
+    head->logType = (uint8_t)logMsg->type;             // debug/run/security
+    head->logLevel = (uint8_t)logMsg->level;           // debug/info/warning/error/event
     head->hostPid = DlogGetHostPid();
     head->devicePid = (uint32_t)DlogGetCurrPid();
     head->deviceId = (uint16_t)DlogGetAttrDeviceId();
@@ -92,7 +93,7 @@ STATIC void DlogInitMsgHead(const LogMsg *logMsg, LogHead *head)
     head->saveMode = 0;
 }
 
-LogStatus DlogAddMessageHead(LogMsg *logMsg, char *buffer, uint32_t bufLen)
+LogStatus DlogAddMessageHead(LogMsg* logMsg, char* buffer, uint32_t bufLen)
 {
     ONE_ACT_NO_LOG(logMsg == NULL, return LOG_FAILURE);
     ONE_ACT_NO_LOG(buffer == NULL, return LOG_FAILURE);
@@ -100,7 +101,7 @@ LogStatus DlogAddMessageHead(LogMsg *logMsg, char *buffer, uint32_t bufLen)
 
     LogHead head;
     DlogInitMsgHead(logMsg, &head);
-    int32_t ret = memcpy_s(buffer, bufLen, (const char *)&head, LOGHEAD_LEN);
+    int32_t ret = memcpy_s(buffer, bufLen, (const char*)&head, LOGHEAD_LEN);
     ONE_ACT_ERR_LOG(ret != 0, return LOG_FAILURE, "memcpy data failed, strerr=%s.", strerror(ToolGetErrorCode()));
     ret = memcpy_s(buffer + LOGHEAD_LEN, bufLen - LOGHEAD_LEN, &logMsg->msg, logMsg->msgLength);
     ONE_ACT_ERR_LOG(ret != 0, return LOG_FAILURE, "memcpy data failed, strerr=%s.", strerror(ToolGetErrorCode()));
@@ -108,15 +109,15 @@ LogStatus DlogAddMessageHead(LogMsg *logMsg, char *buffer, uint32_t bufLen)
     return LOG_SUCCESS;
 }
 
-LogStatus DlogAddMessageTag(LogMsg *logMsg, const LogMsgArg *msgArg, char *buffer, uint32_t bufLen)
+LogStatus DlogAddMessageTag(LogMsg* logMsg, const LogMsgArg* msgArg, char* buffer, uint32_t bufLen)
 {
     ONE_ACT_NO_LOG(logMsg == NULL, return LOG_FAILURE);
     ONE_ACT_NO_LOG(buffer == NULL, return LOG_FAILURE);
     ONE_ACT_NO_LOG(bufLen < MSG_LENGTH, return LOG_FAILURE);
 
-    int32_t ret = snprintf_s(buffer, (size_t)MSG_LENGTH, (size_t)MSG_LENGTH - 1U, "[%d,%u,%u,%d]%s",
-                             (int32_t)msgArg->attr.type, msgArg->attr.pid, msgArg->attr.deviceId, logMsg->type,
-                             logMsg->msg);
+    int32_t ret = snprintf_s(
+        buffer, (size_t)MSG_LENGTH, (size_t)MSG_LENGTH - 1U, "[%d,%u,%u,%d]%s", (int32_t)msgArg->attr.type,
+        msgArg->attr.pid, msgArg->attr.deviceId, logMsg->type, logMsg->msg);
     ONE_ACT_ERR_LOG(ret == -1, return LOG_FAILURE, "snprintf_s failed, strerr=%s.", strerror(ToolGetErrorCode()));
 
     uint32_t strLen = LogStrlen(buffer);
@@ -141,7 +142,7 @@ LogStatus DlogAddMessageTag(LogMsg *logMsg, const LogMsgArg *msgArg, char *buffe
  * @param [in]  : v             merge to log message variable
  * @return      : SYS_OK success; SYS_ERROR failure
  */
-int32_t DlogSetMessage(LogMsg *logMsg, const LogMsgArg *msgArg, const char *fmt, va_list v)
+int32_t DlogSetMessage(LogMsg* logMsg, const LogMsgArg* msgArg, const char* fmt, va_list v)
 {
     ONE_ACT_NO_LOG(logMsg == NULL, return SYS_ERROR);
     ONE_ACT_NO_LOG(fmt == NULL, return SYS_ERROR);
@@ -153,15 +154,17 @@ int32_t DlogSetMessage(LogMsg *logMsg, const LogMsgArg *msgArg, const char *fmt,
     }
 
     // splice key and value
-    const KeyValue *pstKVArray = msgArg->kvArg.pstKVArray;
+    const KeyValue* pstKVArray = msgArg->kvArg.pstKVArray;
     int32_t i;
     for (i = 0; i < msgArg->kvArg.kvNum; i++) {
         logMsg->msgLength = LogStrlen(logMsg->msg);
-        err = snprintf_s(logMsg->msg + logMsg->msgLength, (size_t)MSG_LENGTH - (size_t)logMsg->msgLength,
+        err = snprintf_s(
+            logMsg->msg + logMsg->msgLength, (size_t)MSG_LENGTH - (size_t)logMsg->msgLength,
             (size_t)MSG_LENGTH - (size_t)logMsg->msgLength - 1U, "[%s:%s] ", pstKVArray->kname, pstKVArray->value);
         if (err == -1) {
-            SELF_LOG_ERROR("snprintf_s failed, strerr=%s, pid=%d, pid_name=%s, module=%u.",
-                           strerror(ToolGetErrorCode()), msgArg->selfPid, DlogGetPidName(), msgArg->moduleId);
+            SELF_LOG_ERROR(
+                "snprintf_s failed, strerr=%s, pid=%d, pid_name=%s, module=%u.", strerror(ToolGetErrorCode()),
+                msgArg->selfPid, DlogGetPidName(), msgArg->moduleId);
             return SYS_ERROR;
         }
         pstKVArray++;
@@ -169,11 +172,12 @@ int32_t DlogSetMessage(LogMsg *logMsg, const LogMsgArg *msgArg, const char *fmt,
 
     // construct log content
     logMsg->msgLength = LogStrlen(logMsg->msg);
-    err = vsnprintf_truncated_s(logMsg->msg + logMsg->msgLength, (size_t)MSG_LENGTH - (size_t)logMsg->msgLength,
-        fmt, v);
+    err =
+        vsnprintf_truncated_s(logMsg->msg + logMsg->msgLength, (size_t)MSG_LENGTH - (size_t)logMsg->msgLength, fmt, v);
     if (err == -1) {
-        SELF_LOG_ERROR("vsnprintf_truncated_s failed, strerr=%s, pid=%d, pid_name=%s, module=%u.",
-                       strerror(ToolGetErrorCode()), msgArg->selfPid, DlogGetPidName(), msgArg->moduleId);
+        SELF_LOG_ERROR(
+            "vsnprintf_truncated_s failed, strerr=%s, pid=%d, pid_name=%s, module=%u.", strerror(ToolGetErrorCode()),
+            msgArg->selfPid, DlogGetPidName(), msgArg->moduleId);
         return SYS_ERROR;
     }
 
@@ -185,11 +189,11 @@ int32_t DlogSetMessage(LogMsg *logMsg, const LogMsgArg *msgArg, const char *fmt,
 }
 
 /**
-* @brief ParseLogMsg: parse module Id
-* @param [in]moduleId: module id (in lower 16 bits) with log type(in higher 16 bits)
-* @param [out]logMsg: log Msg data struct
-*/
-void DlogParseLogMsg(LogMsgArg *msgArg, LogMsg *logMsg)
+ * @brief ParseLogMsg: parse module Id
+ * @param [in]moduleId: module id (in lower 16 bits) with log type(in higher 16 bits)
+ * @param [out]logMsg: log Msg data struct
+ */
+void DlogParseLogMsg(LogMsgArg* msgArg, LogMsg* logMsg)
 {
     logMsg->level = msgArg->level;
     logMsg->moduleId = msgArg->moduleId;
@@ -215,7 +219,7 @@ void DlogParseLogMsg(LogMsgArg *msgArg, LogMsg *logMsg)
  * @brief       : make sure the log message end with '\n'
  * @param [out] : logMsg        struct of log message
  */
-void DlogSetMessageNl(LogMsg *logMsg)
+void DlogSetMessageNl(LogMsg* logMsg)
 {
     if ((logMsg->msgLength > 1) && (logMsg->msg[logMsg->msgLength - 1U] != '\n')) {
         if (logMsg->msgLength == (MSG_LENGTH - 1U)) {
@@ -232,4 +236,3 @@ void DlogSetMessageNl(LogMsg *logMsg)
 #ifdef __cplusplus
 }
 #endif // __cplusplus
-

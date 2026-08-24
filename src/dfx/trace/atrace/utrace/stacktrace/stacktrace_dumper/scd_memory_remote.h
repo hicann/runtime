@@ -25,7 +25,7 @@ extern "C" {
  * @param [in]      size           read size
  * @return          real read size
  */
-size_t ScdMemoryRemoteRead(uintptr_t addr , void *dst, size_t size);
+size_t ScdMemoryRemoteRead(uintptr_t addr, void* dst, size_t size);
 #ifdef __cplusplus
 }
 #endif // __cplusplus

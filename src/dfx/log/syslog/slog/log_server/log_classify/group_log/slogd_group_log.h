@@ -27,12 +27,12 @@ typedef struct TagGroupInfo {
     char groupName[GROUP_NAME_MAX_LEN + 1];
     StSubLogFileList fileList;
     uint32_t deviceNum;
-    StSubLogFileList *deviceLogList;
-    struct TagGroupInfo *next;
+    StSubLogFileList* deviceLogList;
+    struct TagGroupInfo* next;
 } GroupInfo;
 
-GroupInfo *GetGroupInfoById(const int groupId);
-GroupInfo *GetGroupListHead(void);
+GroupInfo* GetGroupInfoById(const int groupId);
+GroupInfo* GetGroupListHead(void);
 
 LogStatus SlogdGroupLogInit(void);
 void SlogdGroupLogExit(void);

@@ -18,12 +18,12 @@
 extern "C" {
 #endif
 
-typedef int32_t (*SysLogWriteFunc)(const char *, uint32_t, const LogInfo *);
+typedef int32_t (*SysLogWriteFunc)(const char*, uint32_t, const LogInfo*);
 
 typedef struct {
     int32_t fd;
     struct pollfd pollFd;
-    char *recvBuf;
+    char* recvBuf;
     SysLogWriteFunc write;
 } SlogdKernelLogMgr;
 
@@ -34,4 +34,3 @@ void SlogdKernelLogExit(void);
 }
 #endif
 #endif
-

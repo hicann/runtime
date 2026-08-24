@@ -12,36 +12,36 @@
 #include "log_file_info.h"
 #include "log_print.h"
 
-#define LOG_MAX_RECURSION_DEPTH     6
+#define LOG_MAX_RECURSION_DEPTH 6
 
 /**
  * @brief : mkdir log root path
  * @param [in]fullPath: log root path
  * @return SUCCESS: mkdir succeed; Others: failed
  */
-LogRt LogMkdirRecur(const char *fullPath)
+LogRt LogMkdirRecur(const char* fullPath)
 {
     LogRt err = SUCCESS;
-    char *path = (char *)calloc(1, (size_t)(MAX_FILEDIR_LEN + 1U) * sizeof(char));
+    char* path = (char*)calloc(1, (size_t)(MAX_FILEDIR_LEN + 1U) * sizeof(char));
     if (path == NULL) {
         SELF_LOG_ERROR("calloc failed, strerr=%s.", strerror(ToolGetErrorCode()));
         return MALLOC_FAILED;
     }
-    char *newDir = strdup(fullPath);
+    char* newDir = strdup(fullPath);
     if (newDir == NULL) {
         SELF_LOG_ERROR("strdup failed, strerr=%s.", strerror(ToolGetErrorCode()));
         XFREE(path);
         return STR_COPY_FAILED;
     }
-    char *tmpNewDir = newDir;
-    char *tmpPath   = path;
-    char *token = strsep(&newDir, FILE_SEPARATOR);
+    char* tmpNewDir = newDir;
+    char* tmpPath = path;
+    char* token = strsep(&newDir, FILE_SEPARATOR);
     while (token != NULL) {
         if (strcmp(token, "") == 0) {
             token = strsep(&newDir, FILE_SEPARATOR);
             continue;
         }
-        char nextDir[MAX_FILEDIR_LEN + 1U] = { 0 };
+        char nextDir[MAX_FILEDIR_LEN + 1U] = {0};
         int32_t ret = snprintf_s(nextDir, MAX_FILEDIR_LEN + 1U, MAX_FILEDIR_LEN, "/%s", token);
         if (ret == -1) {
             SELF_LOG_ERROR("copy data failed, strerr=%s.", strerror(ToolGetErrorCode()));
@@ -54,7 +54,7 @@ LogRt LogMkdirRecur(const char *fullPath)
             err = STR_COPY_FAILED;
             break;
         }
-        err = LogMkdir((const char *)path);
+        err = LogMkdir((const char*)path);
         if (err != SUCCESS) {
             break;
         }
@@ -70,7 +70,7 @@ LogRt LogMkdirRecur(const char *fullPath)
  * @param [in]dirPath: log directory path
  * @return: LogRt
  */
-LogRt LogMkdir(const char *dirPath)
+LogRt LogMkdir(const char* dirPath)
 {
     ONE_ACT_NO_LOG(dirPath == NULL, return ARGV_NULL);
 
@@ -95,15 +95,16 @@ LogRt LogMkdir(const char *dirPath)
  * @param [in]len: max length of home dir path
  * @return: SYS_OK/SYS_ERROR
  */
-int32_t LogGetHomeDir(char *const homedir, uint32_t len)
+int32_t LogGetHomeDir(char* const homedir, uint32_t len)
 {
     ONE_ACT_WARN_LOG(homedir == NULL, return SYS_ERROR, "[input] home directory path is null.");
-    ONE_ACT_WARN_LOG((len == 0) || (len > (unsigned int)(TOOL_MAX_PATH + 1)), return SYS_ERROR,
-                      "[input] path length is invalid, length=%u, max_length=%d.", len, TOOL_MAX_PATH);
+    ONE_ACT_WARN_LOG(
+        (len == 0) || (len > (unsigned int)(TOOL_MAX_PATH + 1)), return SYS_ERROR,
+        "[input] path length is invalid, length=%u, max_length=%d.", len, TOOL_MAX_PATH);
 
     errno_t ret;
 #if (OS_TYPE_DEF == LINUX)
-    const struct passwd *secuWord = getpwuid(getuid());
+    const struct passwd* secuWord = getpwuid(getuid());
     if (secuWord != NULL) {
         ret = strcpy_s(homedir, len, secuWord->pw_dir);
     } else {
@@ -131,7 +132,7 @@ int32_t LogGetHomeDir(char *const homedir, uint32_t len)
  * @param [in]  : ppath     string of path
  * @return      : true: succeed; false: failed
  */
-STATIC bool CheckPathValid(const char *ppath)
+STATIC bool CheckPathValid(const char* ppath)
 {
     if (ppath == NULL) {
         return false;
@@ -150,7 +151,7 @@ STATIC bool CheckPathValid(const char *ppath)
     return false;
 }
 
-int32_t GetValidPath(char *path, int32_t pathLen, char *validPath, int32_t validPathLen)
+int32_t GetValidPath(char* path, int32_t pathLen, char* validPath, int32_t validPathLen)
 {
     if ((path == NULL) || (validPath == NULL) || (validPathLen < TOOL_MAX_PATH)) {
         return SYS_ERROR;
@@ -175,7 +176,7 @@ int32_t GetValidPath(char *path, int32_t pathLen, char *validPath, int32_t valid
  * @param [in]  : filterFunc    func to filter file
  * @return      : LOG_SUCCESS  success; others  failed
  */
-int32_t LogRenameDir(const char *srcDir, const char *dstDir, ToolFilter filterFunc)
+int32_t LogRenameDir(const char* srcDir, const char* dstDir, ToolFilter filterFunc)
 {
     ONE_ACT_NO_LOG(srcDir == NULL, return LOG_FAILURE);
     ONE_ACT_NO_LOG(dstDir == NULL, return LOG_FAILURE);
@@ -187,15 +188,15 @@ int32_t LogRenameDir(const char *srcDir, const char *dstDir, ToolFilter filterFu
 
     // move file and delete dir after move dir failed
     LogStatus result = LOG_SUCCESS;
-    ToolDirent **namelist = NULL;
+    ToolDirent** namelist = NULL;
     int32_t totalNum = ToolScandir(srcDir, &namelist, filterFunc, NULL);
     for (int32_t i = 0; i < totalNum; i++) {
-        char srcFile[MAX_FILEPATH_LEN] = { 0 };
-        int32_t ret = snprintf_s(srcFile, MAX_FILEPATH_LEN, MAX_FILEPATH_LEN - 1U,
-                                 "%s/%s", srcDir, namelist[i]->d_name);
+        char srcFile[MAX_FILEPATH_LEN] = {0};
+        int32_t ret =
+            snprintf_s(srcFile, MAX_FILEPATH_LEN, MAX_FILEPATH_LEN - 1U, "%s/%s", srcDir, namelist[i]->d_name);
         ONE_ACT_ERR_LOG(ret == -1, continue, "snprintf_s failed, strerr=%s", strerror(ToolGetErrorCode()));
 
-        char dstFile[MAX_FILEPATH_LEN] = { 0 };
+        char dstFile[MAX_FILEPATH_LEN] = {0};
         ret = snprintf_s(dstFile, MAX_FILEPATH_LEN, MAX_FILEPATH_LEN - 1U, "%s/%s", dstDir, namelist[i]->d_name);
         ONE_ACT_ERR_LOG(ret == -1, continue, "snprintf_s failed, strerr=%s", strerror(ToolGetErrorCode()));
         if (ToolRename(srcFile, dstFile) != SYS_OK) {
@@ -217,7 +218,7 @@ int32_t LogRenameDir(const char *srcDir, const char *dstDir, ToolFilter filterFu
  * @param [in]logPath: log absolute path
  * @return : NA
  */
-void FsyncLogToDisk(const char *logPath)
+void FsyncLogToDisk(const char* logPath)
 {
     if (logPath == NULL) {
         return;
@@ -242,7 +243,7 @@ void FsyncLogToDisk(const char *logPath)
  * @param [in]pathList: directory path structure pointer
  * @param [in]count: subdirectory size
  */
-void ToolPathListFree(char **pathList, int32_t count)
+void ToolPathListFree(char** pathList, int32_t count)
 {
     if (pathList == NULL) {
         return;
@@ -257,24 +258,24 @@ void ToolPathListFree(char **pathList, int32_t count)
     XFREE(pathList);
 }
 
-uint32_t LogGetDirSize(const char *dirPath, int32_t level)
+uint32_t LogGetDirSize(const char* dirPath, int32_t level)
 {
     if ((dirPath == NULL) || (level > LOG_MAX_RECURSION_DEPTH)) {
         return 0;
     }
-    DIR *dir = NULL;
+    DIR* dir = NULL;
     if ((dir = opendir(dirPath)) == NULL) {
         return 0;
     }
     uint32_t totalSize = 0;
-    ToolStat statBuf = { 0 };
-    ToolDirent *entry = NULL;
+    ToolStat statBuf = {0};
+    ToolDirent* entry = NULL;
     while ((entry = readdir(dir)) != NULL) {
         if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
             continue;
         }
 
-        char fullPath[MAX_FULLPATH_LEN + 1U] = { 0 };
+        char fullPath[MAX_FULLPATH_LEN + 1U] = {0};
         int32_t ret = snprintf_s(fullPath, MAX_FULLPATH_LEN + 1U, MAX_FULLPATH_LEN, "%s/%s", dirPath, entry->d_name);
         if (ret == -1) {
             SELF_LOG_ERROR("copy data failed, strerr=%s.", strerror(ToolGetErrorCode()));
@@ -300,13 +301,13 @@ uint32_t LogGetDirSize(const char *dirPath, int32_t level)
     return totalSize;
 }
 
-int32_t LogRemoveDir(const char *dirName, int32_t level)
+int32_t LogRemoveDir(const char* dirName, int32_t level)
 {
     if ((dirName == NULL) || (level > LOG_MAX_RECURSION_DEPTH)) {
         return LOG_FAILURE;
     }
-    DIR *dir = NULL;
-    ToolDirent *entry;
+    DIR* dir = NULL;
+    ToolDirent* entry;
     ToolStat statBuf;
     if ((dir = opendir(dirName)) == NULL) {
         return LOG_FAILURE;
@@ -345,7 +346,7 @@ int32_t LogRemoveDir(const char *dirName, int32_t level)
     return ret;
 }
 
-LogStatus LogFileGets(char *buf, int32_t len, FILE *fp)
+LogStatus LogFileGets(char* buf, int32_t len, FILE* fp)
 {
     ONE_ACT_ERR_LOG(fp == NULL, return LOG_FAILURE, "fp is null.");
     ONE_ACT_ERR_LOG(buf == NULL, return LOG_FAILURE, "buf is null.");
@@ -356,13 +357,13 @@ LogStatus LogFileGets(char *buf, int32_t len, FILE *fp)
     return LOG_FAILURE;
 }
 
-int64_t LogFileTell(FILE *fp)
+int64_t LogFileTell(FILE* fp)
 {
     ONE_ACT_ERR_LOG(fp == NULL, return -1, "fp is null.");
     errno = 0;
     int64_t offset = ftell(fp);
     if ((offset == -1) && (errno != 0)) {
-        SELF_LOG_ERROR( "ftell error, strerr: %s", strerror(errno));
+        SELF_LOG_ERROR("ftell error, strerr: %s", strerror(errno));
     }
     return offset;
 }

@@ -18,10 +18,10 @@
 #include "atrace_types.h"
 #include "stacktrace_logger.h"
 
-#define SELF_MAP_PATH                       "/proc/self/maps"
-#define CORE_BUFFER_LEN         256U
-#define LIB_PATH_LEN            256U
-#define MAX_STACK_LAYER         0x20 // 0 ~ 31 : 32 layer
+#define SELF_MAP_PATH "/proc/self/maps"
+#define CORE_BUFFER_LEN 256U
+#define LIB_PATH_LEN 256U
+#define MAX_STACK_LAYER 0x20 // 0 ~ 31 : 32 layer
 
 #ifdef __cplusplus
 extern "C" {
@@ -29,18 +29,18 @@ extern "C" {
 
 typedef struct {
     uint64_t crashTime; // crash timestamp
-    int32_t signo; // signal number
-    int32_t pid; // crash process id
-    int32_t tid; // crash thread id
+    int32_t signo;      // signal number
+    int32_t pid;        // crash process id
+    int32_t tid;        // crash thread id
 } TraceStackRecorderInfo;
 
 typedef struct {
-    int32_t signo; // signal number
-    int32_t pid; // crash process id
-    int32_t tid; // crash thread id
+    int32_t signo;      // signal number
+    int32_t pid;        // crash process id
+    int32_t tid;        // crash thread id
     uint64_t crashTime; // crash timestamp
     uintptr_t baseAddr; // stack base addr
-    uintptr_t topAddr; // stack top addr
+    uintptr_t topAddr;  // stack top addr
 } TraceStackProcessInfo;
 
 typedef struct {
@@ -56,22 +56,22 @@ typedef struct {
     TraceFrameInfo frame[MAX_STACK_LAYER];
 } TraceStackInfo;
 
-TraStatus TraceSafeGetFd(const TraceStackRecorderInfo *info, const char *suffix, int32_t *fd);
-TraceStackInfo *TraceSafeGetStackBuffer(void);
+TraStatus TraceSafeGetFd(const TraceStackRecorderInfo* info, const char* suffix, int32_t* fd);
+TraceStackInfo* TraceSafeGetStackBuffer(void);
 TraStatus TraceSafeWriteSystemInfo(int32_t fd, int32_t pid);
-TraStatus TraceSafeWriteStackInfo(int32_t fd, const TraceStackInfo *info);
-TraStatus TraceSafeWriteProcessInfo(int32_t fd, const TraceStackProcessInfo *info);
+TraStatus TraceSafeWriteStackInfo(int32_t fd, const TraceStackInfo* info);
+TraStatus TraceSafeWriteProcessInfo(int32_t fd, const TraceStackProcessInfo* info);
 
-ssize_t TraceSafeReadLine(int32_t fd, char *data, uint32_t len);
+ssize_t TraceSafeReadLine(int32_t fd, char* data, uint32_t len);
 const char* TraceSafeGetFilePath(void);
-TraStatus TraceSaveStackInfo(const TraceStackInfo *info);
-TraStatus TraceSaveProcessInfo(const TraceStackProcessInfo *info);
-TraStatus TraceSaveProcessReg(uintptr_t *regs, uint32_t regSize);
+TraStatus TraceSaveStackInfo(const TraceStackInfo* info);
+TraStatus TraceSaveProcessInfo(const TraceStackProcessInfo* info);
+TraStatus TraceSaveProcessReg(uintptr_t* regs, uint32_t regSize);
 TraStatus TraceSafeWriteBuff(int32_t fd);
 
-TraStatus TraceSafeGetDirPath(const TraceStackRecorderInfo *info, char *path, size_t len);
-TraStatus TraceSafeGetFileName(const TraceStackRecorderInfo *info, char *name, size_t len);
-TraStatus TraceSafeMkdirPath(const TraceStackRecorderInfo *info);
+TraStatus TraceSafeGetDirPath(const TraceStackRecorderInfo* info, char* path, size_t len);
+TraStatus TraceSafeGetFileName(const TraceStackRecorderInfo* info, char* name, size_t len);
+TraStatus TraceSafeMkdirPath(const TraceStackRecorderInfo* info);
 
 #ifdef __cplusplus
 }

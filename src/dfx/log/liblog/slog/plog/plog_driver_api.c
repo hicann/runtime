@@ -22,23 +22,22 @@
 #define DRIVER_FUNCTION_NUM 16
 static ArgPtr g_libHandle = NULL;
 static SymbolInfo g_drvFuncInfo[DRIVER_FUNCTION_NUM] = {
-    { "drvHdcClientCreate", NULL },
-    { "drvHdcClientDestroy", NULL },
-    { "drvHdcSessionConnect", NULL },
-    { "drvHdcSessionClose", NULL },
-    { "drvHdcAllocMsg", NULL },
-    { "drvHdcFreeMsg", NULL },
-    { "drvHdcReuseMsg", NULL },
-    { "drvHdcAddMsgBuffer", NULL },
-    { "drvHdcGetMsgBuffer", NULL },
-    { "drvHdcSetSessionReference", NULL },
-    { "drvGetPlatformInfo", NULL },
-    { "drvHdcGetCapacity", NULL },
-    { "halHdcSend", NULL },
-    { "halHdcRecv", NULL },
-    { "halCtl", NULL },
-    { "drvGetDevNum", NULL}
-};
+    {"drvHdcClientCreate", NULL},
+    {"drvHdcClientDestroy", NULL},
+    {"drvHdcSessionConnect", NULL},
+    {"drvHdcSessionClose", NULL},
+    {"drvHdcAllocMsg", NULL},
+    {"drvHdcFreeMsg", NULL},
+    {"drvHdcReuseMsg", NULL},
+    {"drvHdcAddMsgBuffer", NULL},
+    {"drvHdcGetMsgBuffer", NULL},
+    {"drvHdcSetSessionReference", NULL},
+    {"drvGetPlatformInfo", NULL},
+    {"drvHdcGetCapacity", NULL},
+    {"halHdcSend", NULL},
+    {"halHdcRecv", NULL},
+    {"halCtl", NULL},
+    {"drvGetDevNum", NULL}};
 
 int LoadDriverDllFunctions(void)
 {
@@ -68,8 +67,8 @@ int UnloadDriverDllFunctions(void)
     return ret;
 }
 
-typedef drvError_t (*DRV_HDC_CLIENT_CREATE)(HDC_CLIENT *, int, int, int);
-drvError_t LogdrvHdcClientCreate(HDC_CLIENT *client, int maxSessionNum, int serviceType, int flag)
+typedef drvError_t (*DRV_HDC_CLIENT_CREATE)(HDC_CLIENT*, int, int, int);
+drvError_t LogdrvHdcClientCreate(HDC_CLIENT* client, int maxSessionNum, int serviceType, int flag)
 {
     DRV_HDC_CLIENT_CREATE func = (DRV_HDC_CLIENT_CREATE)g_drvFuncInfo[0].handle;
     ONE_ACT_WARN_LOG(func == NULL, return DRV_ERROR_NOT_SUPPORT, "Can not find drv func.");
@@ -84,8 +83,8 @@ drvError_t LogdrvHdcClientDestroy(HDC_CLIENT client)
     return func(client);
 }
 
-typedef drvError_t(*DRV_SESSION_CONNECT)(int, int, HDC_CLIENT, HDC_SESSION *);
-drvError_t LogdrvHdcSessionConnect(int peerNode, int peerDevid, HDC_CLIENT client, HDC_SESSION *session)
+typedef drvError_t (*DRV_SESSION_CONNECT)(int, int, HDC_CLIENT, HDC_SESSION*);
+drvError_t LogdrvHdcSessionConnect(int peerNode, int peerDevid, HDC_CLIENT client, HDC_SESSION* session)
 {
     DRV_SESSION_CONNECT func = (DRV_SESSION_CONNECT)g_drvFuncInfo[2].handle;
     ONE_ACT_WARN_LOG(func == NULL, return DRV_ERROR_NOT_SUPPORT, "Can not find drv func.");
@@ -100,40 +99,40 @@ drvError_t LogdrvHdcSessionClose(HDC_SESSION session)
     return func(session);
 }
 
-typedef drvError_t (*DRV_HDC_ALLOC_MSG)(HDC_SESSION, struct drvHdcMsg **, int);
-drvError_t LogdrvHdcAllocMsg(HDC_SESSION session, struct drvHdcMsg **ppMsg, int count)
+typedef drvError_t (*DRV_HDC_ALLOC_MSG)(HDC_SESSION, struct drvHdcMsg**, int);
+drvError_t LogdrvHdcAllocMsg(HDC_SESSION session, struct drvHdcMsg** ppMsg, int count)
 {
     DRV_HDC_ALLOC_MSG func = (DRV_HDC_ALLOC_MSG)g_drvFuncInfo[4].handle;
     ONE_ACT_WARN_LOG(func == NULL, return DRV_ERROR_NOT_SUPPORT, "Can not find drv func.");
     return func(session, ppMsg, count);
 }
 
-typedef drvError_t (*DRV_HDC_FREE_MSG)(struct drvHdcMsg *);
-drvError_t LogdrvHdcFreeMsg(struct drvHdcMsg *msg)
+typedef drvError_t (*DRV_HDC_FREE_MSG)(struct drvHdcMsg*);
+drvError_t LogdrvHdcFreeMsg(struct drvHdcMsg* msg)
 {
     DRV_HDC_FREE_MSG func = (DRV_HDC_FREE_MSG)g_drvFuncInfo[5].handle;
     ONE_ACT_WARN_LOG(func == NULL, return DRV_ERROR_NOT_SUPPORT, "Can not find drv func.");
     return func(msg);
 }
 
-typedef drvError_t (*DRV_HDC_REUSE_MSG)(struct drvHdcMsg *);
-drvError_t LogdrvHdcReuseMsg(struct drvHdcMsg *msg)
+typedef drvError_t (*DRV_HDC_REUSE_MSG)(struct drvHdcMsg*);
+drvError_t LogdrvHdcReuseMsg(struct drvHdcMsg* msg)
 {
     DRV_HDC_REUSE_MSG func = (DRV_HDC_REUSE_MSG)g_drvFuncInfo[6].handle;
     ONE_ACT_WARN_LOG(func == NULL, return DRV_ERROR_NOT_SUPPORT, "Can not find drv func.");
     return func(msg);
 }
 
-typedef drvError_t (*DRV_HDC_ADD_MSG_BUF)(struct drvHdcMsg *, char *, int);
-drvError_t LogdrvHdcAddMsgBuffer(struct drvHdcMsg *msg, char *pBuf, int len)
+typedef drvError_t (*DRV_HDC_ADD_MSG_BUF)(struct drvHdcMsg*, char*, int);
+drvError_t LogdrvHdcAddMsgBuffer(struct drvHdcMsg* msg, char* pBuf, int len)
 {
     DRV_HDC_ADD_MSG_BUF func = (DRV_HDC_ADD_MSG_BUF)g_drvFuncInfo[7].handle;
     ONE_ACT_WARN_LOG(func == NULL, return DRV_ERROR_NOT_SUPPORT, "Can not find drv func.");
     return func(msg, pBuf, len);
 }
 
-typedef drvError_t (*DRV_HDC_GET_MSG_BUF)(struct drvHdcMsg *, int, char **, int *);
-drvError_t LogdrvHdcGetMsgBuffer(struct drvHdcMsg *msg, int indexNum, char **pBuf, int *pLen)
+typedef drvError_t (*DRV_HDC_GET_MSG_BUF)(struct drvHdcMsg*, int, char**, int*);
+drvError_t LogdrvHdcGetMsgBuffer(struct drvHdcMsg* msg, int indexNum, char** pBuf, int* pLen)
 {
     DRV_HDC_GET_MSG_BUF func = (DRV_HDC_GET_MSG_BUF)g_drvFuncInfo[8].handle;
     ONE_ACT_WARN_LOG(func == NULL, return DRV_ERROR_NOT_SUPPORT, "Can not find drv func.");
@@ -148,52 +147,51 @@ drvError_t LogdrvHdcSetSessionReference(HDC_SESSION session)
     return func(session);
 }
 
-typedef drvError_t (*DRV_HDC_GET_PLATFORM_INFO)(uint32_t *);
-drvError_t LogdrvGetPlatformInfo(uint32_t *info)
+typedef drvError_t (*DRV_HDC_GET_PLATFORM_INFO)(uint32_t*);
+drvError_t LogdrvGetPlatformInfo(uint32_t* info)
 {
     DRV_HDC_GET_PLATFORM_INFO func = (DRV_HDC_GET_PLATFORM_INFO)g_drvFuncInfo[10].handle;
     ONE_ACT_WARN_LOG(func == NULL, return DRV_ERROR_NOT_SUPPORT, "Can not find drv func.");
     return func(info);
 }
 
-typedef drvError_t (*DRV_HDC_GET_CAPACITY)(struct drvHdcCapacity *);
-drvError_t LogdrvHdcGetCapacity(struct drvHdcCapacity *capacity)
+typedef drvError_t (*DRV_HDC_GET_CAPACITY)(struct drvHdcCapacity*);
+drvError_t LogdrvHdcGetCapacity(struct drvHdcCapacity* capacity)
 {
     DRV_HDC_GET_CAPACITY func = (DRV_HDC_GET_CAPACITY)g_drvFuncInfo[11].handle;
     ONE_ACT_WARN_LOG(func == NULL, return DRV_ERROR_NOT_SUPPORT, "Can not find drv func.");
     return func(capacity);
 }
 
-typedef hdcError_t (*DRV_HDC_SEND)(HDC_SESSION, struct drvHdcMsg *, UINT64, UINT32);
-hdcError_t LogdrvHdcSend(HDC_SESSION session, struct drvHdcMsg *pMsg, UINT64 flag, UINT32 timeout)
+typedef hdcError_t (*DRV_HDC_SEND)(HDC_SESSION, struct drvHdcMsg*, UINT64, UINT32);
+hdcError_t LogdrvHdcSend(HDC_SESSION session, struct drvHdcMsg* pMsg, UINT64 flag, UINT32 timeout)
 {
     DRV_HDC_SEND func = (DRV_HDC_SEND)g_drvFuncInfo[12].handle;
     ONE_ACT_WARN_LOG(func == NULL, return DRV_ERROR_NOT_SUPPORT, "Can not find drv func.");
     return func(session, pMsg, flag, timeout);
 }
 
-typedef hdcError_t (*DRV_HDC_RECV)(HDC_SESSION, struct drvHdcMsg *, int, UINT64, int *, UINT32);
-hdcError_t LogdrvHdcRecv(HDC_SESSION session, struct drvHdcMsg *pMsg, int bufLen,
-                         UINT64 flag, int *recvBufCount, UINT32 timeout)
+typedef hdcError_t (*DRV_HDC_RECV)(HDC_SESSION, struct drvHdcMsg*, int, UINT64, int*, UINT32);
+hdcError_t LogdrvHdcRecv(
+    HDC_SESSION session, struct drvHdcMsg* pMsg, int bufLen, UINT64 flag, int* recvBufCount, UINT32 timeout)
 {
     DRV_HDC_RECV func = (DRV_HDC_RECV)g_drvFuncInfo[13].handle;
     ONE_ACT_WARN_LOG(func == NULL, return DRV_ERROR_NOT_SUPPORT, "Can not find drv func.");
     return func(session, pMsg, bufLen, flag, recvBufCount, timeout);
 }
 
-typedef hdcError_t (*DRV_CTL)(int, void *, size_t, void *, size_t *);
-drvError_t LogdrvCtl(int cmd, void *paramValue, size_t paramValueSize, void *outValue, size_t *outSizeRet)
+typedef hdcError_t (*DRV_CTL)(int, void*, size_t, void*, size_t*);
+drvError_t LogdrvCtl(int cmd, void* paramValue, size_t paramValueSize, void* outValue, size_t* outSizeRet)
 {
     DRV_CTL func = (DRV_CTL)g_drvFuncInfo[14].handle;
     ONE_ACT_WARN_LOG(func == NULL, return DRV_ERROR_NOT_SUPPORT, "Can not find drv func.");
     return func(cmd, paramValue, paramValueSize, outValue, outSizeRet);
 }
 
-typedef drvError_t (*DRV_DEV_NUM)(uint32_t *numDev);
-drvError_t LogdrvGetDevNum(uint32_t *numDev)
+typedef drvError_t (*DRV_DEV_NUM)(uint32_t* numDev);
+drvError_t LogdrvGetDevNum(uint32_t* numDev)
 {
     DRV_DEV_NUM func = (DRV_DEV_NUM)g_drvFuncInfo[15].handle;
     ONE_ACT_WARN_LOG(func == NULL, return DRV_ERROR_NOT_SUPPORT, "Can not find drv func.");
     return func(numDev);
 }
-

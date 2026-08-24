@@ -10,9 +10,9 @@
 #include "file_monitor_common.h"
 #include "log_print.h"
 
-static char g_fileMonitorMasterStr[MASTER_ID_STR_LEN] = { 0 };
+static char g_fileMonitorMasterStr[MASTER_ID_STR_LEN] = {0};
 
-void FileMonitorSetMasterIdStr(const char *masterIdStr)
+void FileMonitorSetMasterIdStr(const char* masterIdStr)
 {
     errno_t err = strcpy_s(g_fileMonitorMasterStr, MASTER_ID_STR_LEN, masterIdStr);
     if (err != EOK) {
@@ -20,18 +20,15 @@ void FileMonitorSetMasterIdStr(const char *masterIdStr)
     }
 }
 
-char *FileMonitorGetMasterIdStr(void)
-{
-    return g_fileMonitorMasterStr;
-}
+char* FileMonitorGetMasterIdStr(void) { return g_fileMonitorMasterStr; }
 
-int32_t FileMonitorSyncFileList(const char *srcFileName, const char *dstFileName, FileMonitorSyncFunc func,
-    int32_t depth)
+int32_t FileMonitorSyncFileList(
+    const char* srcFileName, const char* dstFileName, FileMonitorSyncFunc func, int32_t depth)
 {
     if (ToolAccess(srcFileName) != 0) {
         return LOG_SUCCESS;
     }
-    ToolDirent **nameList = NULL;
+    ToolDirent** nameList = NULL;
     int32_t totalNum = ToolScandir(srcFileName, &nameList, NULL, alphasort);
     if ((totalNum < 0) || ((totalNum > 0) && (nameList == NULL))) {
         SELF_LOG_ERROR("scan dir %s failed, errno=%s", srcFileName, strerror(ToolGetErrorCode()));
@@ -42,8 +39,8 @@ int32_t FileMonitorSyncFileList(const char *srcFileName, const char *dstFileName
             (strcmp(nameList[i]->d_name, "..") == 0)) {
             continue;
         }
-        char src[MAX_FULLPATH_LEN] = { 0 };
-        char dst[MAX_FULLPATH_LEN] = { 0 };
+        char src[MAX_FULLPATH_LEN] = {0};
+        char dst[MAX_FULLPATH_LEN] = {0};
         int32_t ret = sprintf_s(src, MAX_FULLPATH_LEN, "%s/%s", srcFileName, nameList[i]->d_name);
         if (ret == -1) {
             SELF_LOG_ERROR("sprintf failed, get src path failed, filename = %s.", nameList[i]->d_name);
@@ -69,7 +66,7 @@ int32_t FileMonitorSyncFileList(const char *srcFileName, const char *dstFileName
     return LOG_SUCCESS;
 }
 
-int32_t FileMonitorAddWatch(const char *filePath, int32_t fd, int32_t *wd, uint32_t mask)
+int32_t FileMonitorAddWatch(const char* filePath, int32_t fd, int32_t* wd, uint32_t mask)
 {
     if (wd == NULL) {
         return LOG_FAILURE;

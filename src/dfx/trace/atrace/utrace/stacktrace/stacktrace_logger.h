@@ -37,7 +37,7 @@ extern "C" {
 #define DLOG_LEVEL (DLOG_EVENT + 1)
 #endif
 #define LOG_BUFFER_SIZE 4096
-static inline void TraceDlogInner(int level, const char *extendStr, const char *format, ...)
+static inline void TraceDlogInner(int level, const char* extendStr, const char* format, ...)
 {
     if (level < DLOG_LEVEL) {
         return;
@@ -52,49 +52,55 @@ static inline void TraceDlogInner(int level, const char *extendStr, const char *
     va_end(args);
 }
 
-#define LOGI(format, ...) do {                                                          \
-    TraceDlogInner(DLOG_INFO, "[INFO]", format,  ##__VA_ARGS__);                        \
-} while (0)
+#define LOGI(format, ...)                                           \
+    do {                                                            \
+        TraceDlogInner(DLOG_INFO, "[INFO]", format, ##__VA_ARGS__); \
+    } while (0)
 
-#define LOGR(format, ...) do {                                                          \
-    TraceDlogInner(DLOG_EVENT, "[RUN]", format,  ##__VA_ARGS__);                        \
-} while (0)
- 
-#define LOGW(format, ...) do {                                                          \
-    TraceDlogInner(DLOG_WARN, "[WARN] ", format,  ##__VA_ARGS__);                       \
-} while (0)
- 
-#define LOGE(format, ...) do {                                                          \
-    TraceDlogInner(DLOG_ERROR, "[ERROR] ", format,  ##__VA_ARGS__);                     \
-} while (0)
+#define LOGR(format, ...)                                           \
+    do {                                                            \
+        TraceDlogInner(DLOG_EVENT, "[RUN]", format, ##__VA_ARGS__); \
+    } while (0)
 
-#define STACK_CHK_EXPR_ACTION(expr, ACTION, msg, ...) do { \
-    if (expr) { \
-        LOGE(msg, ##__VA_ARGS__); \
-        ACTION; \
-    } \
-} while (0)
+#define LOGW(format, ...)                                            \
+    do {                                                             \
+        TraceDlogInner(DLOG_WARN, "[WARN] ", format, ##__VA_ARGS__); \
+    } while (0)
 
-#define STACKTRACE_LOG_TITLE_MAIN   "[main logcat]"
-#define STACKTRACE_LOG_TITLE_SUB    "[sub logcat]"
+#define LOGE(format, ...)                                              \
+    do {                                                               \
+        TraceDlogInner(DLOG_ERROR, "[ERROR] ", format, ##__VA_ARGS__); \
+    } while (0)
 
-void StacktraceLogSetPath(const char *path, const char *name);
-void StacktraceLogSetPathSuffix(const char *path, const char *name, const char *suffix);
+#define STACK_CHK_EXPR_ACTION(expr, ACTION, msg, ...) \
+    do {                                              \
+        if (expr) {                                   \
+            LOGE(msg, ##__VA_ARGS__);                 \
+            ACTION;                                   \
+        }                                             \
+    } while (0)
+
+#define STACKTRACE_LOG_TITLE_MAIN "[main logcat]"
+#define STACKTRACE_LOG_TITLE_SUB "[sub logcat]"
+
+void StacktraceLogSetPath(const char* path, const char* name);
+void StacktraceLogSetPathSuffix(const char* path, const char* name, const char* suffix);
 void StackcoreLogSaveWithFlag(uint32_t flag);
 void StackcoreLogSave(void);
-void StacktraceLogInner(const char *format, ...);
+void StacktraceLogInner(const char* format, ...);
 
-TraStatus StacktraceLogInit(const char *title);
+TraStatus StacktraceLogInit(const char* title);
 void StackcoreLogExit(void);
 
+#define STACKTRACE_LOG_RUN(fmt, ...)                                                                   \
+    do {                                                                                               \
+        StacktraceLogInner("%lu(%ld): " fmt "\n", GetRealTime(), syscall(__NR_gettid), ##__VA_ARGS__); \
+    } while (0)
 
-#define STACKTRACE_LOG_RUN(fmt, ...) do { \
-    StacktraceLogInner("%lu(%ld): " fmt "\n", GetRealTime(), syscall(__NR_gettid), ##__VA_ARGS__);   \
-} while (0)
-
-#define STACKTRACE_LOG_ERR(fmt, ...) do { \
-    StacktraceLogInner("%lu(%ld): [FAIL]" fmt "\n", GetRealTime(), syscall(__NR_gettid), ##__VA_ARGS__);   \
-} while (0)
+#define STACKTRACE_LOG_ERR(fmt, ...)                                                                         \
+    do {                                                                                                     \
+        StacktraceLogInner("%lu(%ld): [FAIL]" fmt "\n", GetRealTime(), syscall(__NR_gettid), ##__VA_ARGS__); \
+    } while (0)
 
 #ifdef __cplusplus
 }

@@ -17,22 +17,22 @@ extern "C" {
 #endif // __cplusplus
 
 typedef struct TagKv {
-    char *kname;
-    char *value;
+    char* kname;
+    char* value;
 } KeyValue;
 
 /**
  * @ingroup slog
  * @brief Internal log interface, other modules are not allowed to call this interface
  */
-LOG_FUNC_VISIBILITY void DlogErrorInner(int32_t moduleId, const char *fmt, ...);
-LOG_FUNC_VISIBILITY void DlogWarnInner(int32_t moduleId, const char *fmt, ...);
-LOG_FUNC_VISIBILITY void DlogInfoInner(int32_t moduleId, const char *fmt, ...);
-LOG_FUNC_VISIBILITY void DlogDebugInner(int32_t moduleId, const char *fmt, ...);
-LOG_FUNC_VISIBILITY void DlogEventInner(int32_t moduleId, const char *fmt, ...);
-LOG_FUNC_VISIBILITY void DlogInner(int32_t moduleId, int32_t level, const char *fmt, ...);
-LOG_FUNC_VISIBILITY void DlogWithKVInner(int32_t moduleId, int32_t level,
-    const KeyValue *pstKVArray, int32_t kvNum, const char *fmt, ...);
+LOG_FUNC_VISIBILITY void DlogErrorInner(int32_t moduleId, const char* fmt, ...);
+LOG_FUNC_VISIBILITY void DlogWarnInner(int32_t moduleId, const char* fmt, ...);
+LOG_FUNC_VISIBILITY void DlogInfoInner(int32_t moduleId, const char* fmt, ...);
+LOG_FUNC_VISIBILITY void DlogDebugInner(int32_t moduleId, const char* fmt, ...);
+LOG_FUNC_VISIBILITY void DlogEventInner(int32_t moduleId, const char* fmt, ...);
+LOG_FUNC_VISIBILITY void DlogInner(int32_t moduleId, int32_t level, const char* fmt, ...);
+LOG_FUNC_VISIBILITY void DlogWithKVInner(
+    int32_t moduleId, int32_t level, const KeyValue* pstKVArray, int32_t kvNum, const char* fmt, ...);
 
 #ifdef __cplusplus
 #ifndef LOG_CPP
@@ -49,9 +49,9 @@ extern "C" {
  * @ingroup slog
  * @brief Internal log interface, other modules are not allowed to call this interface
  */
-LOG_FUNC_VISIBILITY void DlogInnerForC(int32_t moduleId, int32_t level, const char *fmt, ...);
-LOG_FUNC_VISIBILITY void DlogWithKVInnerForC(int32_t moduleId, int32_t level,
-    const KeyValue *pstKVArray, int32_t kvNum, const char *fmt, ...);
+LOG_FUNC_VISIBILITY void DlogInnerForC(int32_t moduleId, int32_t level, const char* fmt, ...);
+LOG_FUNC_VISIBILITY void DlogWithKVInnerForC(
+    int32_t moduleId, int32_t level, const KeyValue* pstKVArray, int32_t kvNum, const char* fmt, ...);
 
 #ifdef __cplusplus
 }

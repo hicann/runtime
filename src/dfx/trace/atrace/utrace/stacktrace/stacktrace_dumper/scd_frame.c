@@ -14,9 +14,9 @@
 #include "scd_log.h"
 #include "adiag_utils.h"
 
-ScdFrame *ScdFrameCreate(ScdMap *map, uintptr_t pc, uintptr_t sp, uintptr_t fp)
+ScdFrame* ScdFrameCreate(ScdMap* map, uintptr_t pc, uintptr_t sp, uintptr_t fp)
 {
-    ScdFrame *frame = AdiagMalloc(sizeof(ScdFrame));
+    ScdFrame* frame = AdiagMalloc(sizeof(ScdFrame));
     if (frame != NULL) {
         frame->map = map;
         frame->num = 0;
@@ -35,7 +35,7 @@ ScdFrame *ScdFrameCreate(ScdMap *map, uintptr_t pc, uintptr_t sp, uintptr_t fp)
     return frame;
 }
 
-void ScdFrameDestroy(ScdFrame **frame)
+void ScdFrameDestroy(ScdFrame** frame)
 {
     if ((frame != NULL) && (*frame != NULL)) {
         ADIAG_SAFE_FREE(*frame);

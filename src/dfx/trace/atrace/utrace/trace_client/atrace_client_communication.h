@@ -18,9 +18,9 @@ extern "C" {
 #endif // __cplusplus
 
 typedef struct {
-    char *eventName;
-    char *eventTime;
-    char *buf;
+    char* eventName;
+    char* eventTime;
+    char* buf;
     uint32_t bufLen;
     int32_t devPid;
     bool endFlag;
@@ -30,14 +30,14 @@ typedef struct {
 TraStatus AtraceClientSendHello(int32_t devId);
 TraStatus AtraceClientSendEnd(int32_t devId);
 
-TraStatus AtraceClientCreateLongLink(int32_t devId, int32_t timeout, void **handle);
-TraStatus AtraceClientRecv(void *handle, char **data, uint32_t *len, int32_t timeout);
-bool AtraceClientIsHandleValid(void *handle);
-void AtraceClientReleaseHandle(void **handle);
+TraStatus AtraceClientCreateLongLink(int32_t devId, int32_t timeout, void** handle);
+TraStatus AtraceClientRecv(void* handle, char** data, uint32_t* len, int32_t timeout);
+bool AtraceClientIsHandleValid(void* handle);
+void AtraceClientReleaseHandle(void** handle);
 
-bool AtraceClientIsEventMsg(char *data, uint32_t len);
-bool AtraceClientIsEndMsg(char *data, uint32_t len);
-TraStatus AtraceClientParseEventMsg(char *data, uint32_t len, TraceMsgInfo *info);
+bool AtraceClientIsEventMsg(char* data, uint32_t len);
+bool AtraceClientIsEndMsg(char* data, uint32_t len);
+TraStatus AtraceClientParseEventMsg(char* data, uint32_t len, TraceMsgInfo* info);
 
 #ifdef __cplusplus
 }

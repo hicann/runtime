@@ -17,25 +17,26 @@
 #include "extra_config.h"
 #include "ide_daemon_api.h"
 namespace Adx {
-using FileFilterFn = int (*)(const mmDirent *dir);
+using FileFilterFn = int (*)(const mmDirent* dir);
 class LogFileUtils {
 public:
-    static std::string ReplaceAll(std::string &base, const std::string &src, const std::string &dst);
-    static IdeErrorT CopyFileAndRename(const std::string &src, const std::string &des);
-    static bool GetDirFileList(const std::string &path, std::vector<std::string> &list, const FileFilterFn fileter,
-        const std::string &fileNamePrefix, int32_t recursiveDepth);
-    static bool StartsWith(const std::string &s, const std::string &sub);
-    static bool EndsWith(const std::string &s, const std::string &sub);
-    static int32_t FilePathIsReal(const std::string &filePath, std::string &resultPath);
-    static int32_t FileNameIsReal(const std::string &file, std::string &resultPath);
-    static IdeErrorT GetFileName(const std::string &path, std::string &name);
-    static bool IsDirectory(const std::string &path);
-    static IdeErrorT CreateDir(const std::string &path);
-    static std::string GetFileDir(const std::string &path);
-    static bool IsDirExist(const std::string &path);
-    static bool IsAccessible(const std::string &path);
-    static bool IsFileExist(const std::string &path);
-    static int32_t RemoveDir(std::string &dirName, int32_t depth);
+    static std::string ReplaceAll(std::string& base, const std::string& src, const std::string& dst);
+    static IdeErrorT CopyFileAndRename(const std::string& src, const std::string& des);
+    static bool GetDirFileList(
+        const std::string& path, std::vector<std::string>& list, const FileFilterFn fileter,
+        const std::string& fileNamePrefix, int32_t recursiveDepth);
+    static bool StartsWith(const std::string& s, const std::string& sub);
+    static bool EndsWith(const std::string& s, const std::string& sub);
+    static int32_t FilePathIsReal(const std::string& filePath, std::string& resultPath);
+    static int32_t FileNameIsReal(const std::string& file, std::string& resultPath);
+    static IdeErrorT GetFileName(const std::string& path, std::string& name);
+    static bool IsDirectory(const std::string& path);
+    static IdeErrorT CreateDir(const std::string& path);
+    static std::string GetFileDir(const std::string& path);
+    static bool IsDirExist(const std::string& path);
+    static bool IsAccessible(const std::string& path);
+    static bool IsFileExist(const std::string& path);
+    static int32_t RemoveDir(std::string& dirName, int32_t depth);
 };
-}
+} // namespace Adx
 #endif

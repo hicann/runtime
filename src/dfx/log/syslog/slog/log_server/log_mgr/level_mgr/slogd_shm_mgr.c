@@ -21,7 +21,7 @@ STATIC bool g_master = false;
 LogStatus SlogdShmWriteLevelAttr(const char* levelStr, uint32_t length)
 {
     if (!g_master) {
-        return LOG_SUCCESS;  // vf slogd not write attr
+        return LOG_SUCCESS; // vf slogd not write attr
     }
     if (length > LEVEL_ARR_LEN) {
         SELF_LOG_ERROR("Write level arr to shmem failed, level str length exceed the limit.");
@@ -44,11 +44,10 @@ LogStatus SlogdShmWriteLevelAttr(const char* levelStr, uint32_t length)
     return LOG_SUCCESS;
 }
 
-
 LogStatus SlogdShmWriteModuleAttr(const char* moduleStr, uint32_t length)
 {
     if (!g_master) {
-        return LOG_SUCCESS;  // vf slogd not write attr
+        return LOG_SUCCESS; // vf slogd not write attr
     }
     if (length > MODULE_ARR_LEN) {
         SELF_LOG_ERROR("Write module arr to shmem failed, module str length exceed the limit.");
@@ -76,7 +75,7 @@ LogStatus SlogdShmWriteModuleAttr(const char* moduleStr, uint32_t length)
  * @param [in/out]str: global attr string
  * @param [in]strLen: str max length
  */
-STATIC LogStatus ConstructGlobalStr(char *str, uint32_t strLen)
+STATIC LogStatus ConstructGlobalStr(char* str, uint32_t strLen)
 {
     ONE_ACT_ERR_LOG(str == NULL, return LOG_FAILURE, "[input] pointer is null.");
     ONE_ACT_ERR_LOG(strLen < sizeof(GloablArr), return LOG_FAILURE, "strlen is invalid, strlen=%u.", strLen);
@@ -87,14 +86,14 @@ STATIC LogStatus ConstructGlobalStr(char *str, uint32_t strLen)
     global.magicTail = MAGIC_TAIL;
     global.msgType = MSGTYPE_STRUCT;
     int32_t ret = memcpy_s(str, strLen, (const char*)&global, sizeof(GloablArr));
-    ONE_ACT_ERR_LOG(ret != EOK, return LOG_FAILURE,
-                    "memcpy failed, result=%d, strerr=%s.", ret, strerror(ToolGetErrorCode()));
+    ONE_ACT_ERR_LOG(
+        ret != EOK, return LOG_FAILURE, "memcpy failed, result=%d, strerr=%s.", ret, strerror(ToolGetErrorCode()));
     return LOG_SUCCESS;
 }
 
 STATIC LogStatus SlogdShmWriteGlobalAttr(void)
 {
-    char globalStr[GLOBAL_ARR_LEN] = { 0 };
+    char globalStr[GLOBAL_ARR_LEN] = {0};
     int32_t ret = ConstructGlobalStr(globalStr, GLOBAL_ARR_LEN);
     ONE_ACT_ERR_LOG(ret != LOG_SUCCESS, return LOG_FAILURE, "construct global string failed, result=%d.", ret);
 
@@ -120,7 +119,7 @@ STATIC LogStatus SlogdShmWriteGlobalAttr(void)
  * @param [out]configPath: buffer to stor config path
  * @return: LOG_SUCCESS/LOG_FAILURE
  */
-STATIC LogStatus LogSetConfigPathToShm(const char *configPath)
+STATIC LogStatus LogSetConfigPathToShm(const char* configPath)
 {
     // only call by slogd when init
     if (configPath == NULL) {
@@ -129,8 +128,8 @@ STATIC LogStatus LogSetConfigPathToShm(const char *configPath)
     }
     size_t len = strlen(configPath);
     if ((len == 0) || (len > (uint32_t)SLOG_CONF_PATH_MAX_LENGTH)) {
-        SYSLOG_WARN("[input] config Path length is invalid, length=%zu, max_length=%d.\n",
-                    len, SLOG_CONF_PATH_MAX_LENGTH);
+        SYSLOG_WARN(
+            "[input] config Path length is invalid, length=%zu, max_length=%d.\n", len, SLOG_CONF_PATH_MAX_LENGTH);
         return LOG_FAILURE;
     }
     int32_t shmId = 0;
@@ -147,9 +146,9 @@ STATIC LogStatus LogSetConfigPathToShm(const char *configPath)
 }
 
 /**
-* @brief : judge config shared memory exist or not
-* @return: LOG_SUCCESS: exist, LOG_FAILURE : not exist
-*/
+ * @brief : judge config shared memory exist or not
+ * @return: LOG_SUCCESS: exist, LOG_FAILURE : not exist
+ */
 STATIC LogStatus IsConfigShmExist(void)
 {
     int32_t shmId = 0;
@@ -181,7 +180,7 @@ LogStatus SlogdShmInit(int32_t devId)
 {
     g_master = (devId == -1) ? true : false;
     if (!g_master) {
-        return LOG_SUCCESS;  // vf slogd not init shm
+        return LOG_SUCCESS; // vf slogd not init shm
     }
 
     if (InitShm() != LOG_SUCCESS) {
@@ -191,7 +190,7 @@ LogStatus SlogdShmInit(int32_t devId)
 
     // write config path to shared memory for libslog.so.
     LogStatus ret = LOG_FAILURE;
-    const char *confPath = LogConfGetPath();
+    const char* confPath = LogConfGetPath();
     if ((confPath != NULL) && (strlen(confPath) != 0)) {
         ret = LogSetConfigPathToShm(confPath);
         NO_ACT_ERR_LOG(ret != LOG_SUCCESS, "Set config path to share memory failed.");
@@ -203,13 +202,12 @@ LogStatus SlogdShmInit(int32_t devId)
 }
 
 /**
-* @brief : free shared memory
-* @return: void
-*/
+ * @brief : free shared memory
+ * @return: void
+ */
 void SlogdShmExit(void)
 {
     if (g_master) {
         ShMemRemove();
     }
 }
-

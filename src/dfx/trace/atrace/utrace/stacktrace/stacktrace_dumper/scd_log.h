@@ -18,25 +18,27 @@
 extern "C" {
 #endif // __cplusplus
 
-#define SCD_RLOG_INF(msg, ...) TraceDlogInner(DLOG_INFO, "[RUN]", msg,  ##__VA_ARGS__)
-#define SCD_DLOG_ERR(msg, ...) TraceDlogInner(DLOG_ERROR, "[ERROR]", msg,  ##__VA_ARGS__)
-#define SCD_DLOG_WAR(msg, ...) TraceDlogInner(DLOG_WARN, "[WARN]", msg,  ##__VA_ARGS__)
-#define SCD_DLOG_INF(msg, ...) TraceDlogInner(DLOG_INFO, "[INFO]", msg,  ##__VA_ARGS__)
-#define SCD_DLOG_DBG(msg, ...) TraceDlogInner(DLOG_DEBUG, "[DEBUG]", msg,  ##__VA_ARGS__)
+#define SCD_RLOG_INF(msg, ...) TraceDlogInner(DLOG_INFO, "[RUN]", msg, ##__VA_ARGS__)
+#define SCD_DLOG_ERR(msg, ...) TraceDlogInner(DLOG_ERROR, "[ERROR]", msg, ##__VA_ARGS__)
+#define SCD_DLOG_WAR(msg, ...) TraceDlogInner(DLOG_WARN, "[WARN]", msg, ##__VA_ARGS__)
+#define SCD_DLOG_INF(msg, ...) TraceDlogInner(DLOG_INFO, "[INFO]", msg, ##__VA_ARGS__)
+#define SCD_DLOG_DBG(msg, ...) TraceDlogInner(DLOG_DEBUG, "[DEBUG]", msg, ##__VA_ARGS__)
 
-#define SCD_CHK_EXPR_ACTION(expr, ACTION, msg, ...) do { \
-    if (expr) { \
-        SCD_DLOG_ERR(msg, ##__VA_ARGS__); \
-        ACTION; \
-    } \
-} while (0)
+#define SCD_CHK_EXPR_ACTION(expr, ACTION, msg, ...) \
+    do {                                            \
+        if (expr) {                                 \
+            SCD_DLOG_ERR(msg, ##__VA_ARGS__);       \
+            ACTION;                                 \
+        }                                           \
+    } while (0)
 
-#define SCD_CHK_PTR_ACTION(PTR, ACTION) do { \
-    if ((PTR) == NULL) { \
-        SCD_DLOG_ERR("invalid ptr parameter [" #PTR "](NULL)."); \
-        ACTION; \
-    } \
-} while (0)
+#define SCD_CHK_PTR_ACTION(PTR, ACTION)                              \
+    do {                                                             \
+        if ((PTR) == NULL) {                                         \
+            SCD_DLOG_ERR("invalid ptr parameter [" #PTR "](NULL)."); \
+            ACTION;                                                  \
+        }                                                            \
+    } while (0)
 
 #ifdef __cplusplus
 }

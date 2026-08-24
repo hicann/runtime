@@ -11,7 +11,7 @@
 #include "log_print_syslog.h"
 #include "log_system_api.h"
 
-void LogPrintSys(int32_t priority, const char *format, ...)
+void LogPrintSys(int32_t priority, const char* format, ...)
 {
     va_list args;
     va_start(args, format);

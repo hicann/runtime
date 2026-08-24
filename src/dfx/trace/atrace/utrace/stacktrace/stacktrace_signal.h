@@ -21,17 +21,17 @@ extern "C" {
 
 typedef struct TraceSignalInfo {
     int32_t signo;
-    siginfo_t *siginfo;
-    void *ucontext;
+    siginfo_t* siginfo;
+    void* ucontext;
     uint64_t timeStamp;
 } TraceSignalInfo;
 
-typedef TraStatus (*TraceSignalHandle)(const TraceSignalInfo *);
+typedef TraStatus (*TraceSignalHandle)(const TraceSignalInfo*);
 
 TraStatus TraceSignalInit(void);
 void TraceSignalExit(void);
 
-TraStatus TraceSignalAddFunc(const int32_t *signo, uint32_t size, TraceSignalHandle func);
+TraStatus TraceSignalAddFunc(const int32_t* signo, uint32_t size, TraceSignalHandle func);
 bool TraceSignalCheckExit(void);
 void TraceSignalSetHandleFlag(bool value);
 

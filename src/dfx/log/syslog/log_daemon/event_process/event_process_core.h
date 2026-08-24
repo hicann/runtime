@@ -7,7 +7,7 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
- 
+
 #ifndef EVENT_PROCESS_CORE_H
 #define EVENT_PROCESS_CORE_H
 
@@ -19,12 +19,7 @@ extern "C" {
 
 typedef void* EventHandle;
 
-enum EventType {
-    REAL_TIME_EVENT,
-    LOOP_TIME_EVENT,
-    DELAY_TIME_EVENT,
-    MAX_EVENT_TYPE
-};
+enum EventType { REAL_TIME_EVENT, LOOP_TIME_EVENT, DELAY_TIME_EVENT, MAX_EVENT_TYPE };
 
 typedef struct EventAttr {
     enum EventType type;
@@ -34,8 +29,8 @@ typedef struct EventAttr {
 int32_t EventThreadCreate(void);
 void EventThreadRelease(void);
 
-typedef void (*EventProcFunc)(void *arg);
-EventHandle EventAdd(EventProcFunc func, void *arg, EventAttr *attr);
+typedef void (*EventProcFunc)(void* arg);
+EventHandle EventAdd(EventProcFunc func, void* arg, EventAttr* attr);
 int32_t EventDelete(EventHandle handle);
 
 #ifdef __cplusplus

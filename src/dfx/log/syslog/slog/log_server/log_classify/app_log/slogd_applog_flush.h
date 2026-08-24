@@ -23,17 +23,17 @@ typedef struct TagLogBufList {
     uint32_t deviceId;
     uint32_t noAppDataCount;
     uint32_t writeWaitTime;
-    struct TagLogBufList *next;
+    struct TagLogBufList* next;
 } AppLogList;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-AppLogList *SlogdGetAppLogBufList(void);
+AppLogList* SlogdGetAppLogBufList(void);
 uint32_t SlogdGetAppNodeNum(void);
-AppLogList *SlogdApplogGetNode(const LogInfo *info);
-void InnerDeleteAppNode(const AppLogList *input);
+AppLogList* SlogdApplogGetNode(const LogInfo* info);
+void InnerDeleteAppNode(const AppLogList* input);
 
 LogStatus SlogdApplogFlushInit(void);
 void SlogdApplogFlushExit(void);
@@ -42,12 +42,11 @@ void SlogdAppLogLock(void);
 void SlogdAppLogUnLock(void);
 
 #ifdef APP_LOG_WATCH
-LogStatus SlogdFlushToAppBuf(const char *msg, uint32_t msgLen, const LogInfo *info);
-LogStatus SlogdApplogFlushToFile(void *buffer, uint32_t bufLen);
+LogStatus SlogdFlushToAppBuf(const char* msg, uint32_t msgLen, const LogInfo* info);
+LogStatus SlogdApplogFlushToFile(void* buffer, uint32_t bufLen);
 #endif
 
 #ifdef __cplusplus
 }
 #endif
 #endif
-

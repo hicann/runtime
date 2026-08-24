@@ -21,7 +21,6 @@ extern "C" {
 #define MIN_VFID_NUM 32 // min val of vfid
 #define MAX_VFID_NUM 63 // max val of vfid
 
-
 void SlogdInitDeviceId(void);
 bool SlogdIsDevicePooling(void);
 uint32_t GetHostDeviceID(uint32_t deviceId);
@@ -32,4 +31,3 @@ uint32_t GetDeviceSideDeviceId(uint32_t hostDevId);
 }
 #endif
 #endif
-

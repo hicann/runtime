@@ -10,7 +10,4 @@
 
 #include "atrace_stackcore_api.h"
 #include "scd_process.h"
-TraStatus AtraceStackcoreParse(const char *filePath, uint32_t len)
-{
-    return ScdProcessParseCore(filePath, len);
-}
+TraStatus AtraceStackcoreParse(const char* filePath, uint32_t len) { return ScdProcessParseCore(filePath, len); }

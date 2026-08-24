@@ -16,5 +16,5 @@
 namespace Adx {
 int32_t LogIdeGetRunEnvBySession(HDC_SESSION session, IdeI32Pt runEnv);
 int32_t LogIdeGetPidBySession(HDC_SESSION session, IdeI32Pt pid);
-}
+} // namespace Adx
 #endif

@@ -24,4 +24,3 @@ void PlogHostMgrExit(void);
 }
 #endif
 #endif
-

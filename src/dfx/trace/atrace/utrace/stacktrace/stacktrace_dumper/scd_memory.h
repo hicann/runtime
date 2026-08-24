@@ -19,20 +19,20 @@ extern "C" {
 #endif // __cplusplus
 
 typedef struct ScdMemoryHanders {
-    size_t (*read)(uintptr_t addr, void *dst, size_t size);
+    size_t (*read)(uintptr_t addr, void* dst, size_t size);
 } ScdMemoryHanders;
 
 typedef struct ScdMemory {
-    uintptr_t data;  // memory data ptr
-    size_t size;  // memory size
+    uintptr_t data;            // memory data ptr
+    size_t size;               // memory size
     ScdMemoryHanders handlers; // memory handler functions
 } ScdMemory;
 
-void ScdMemoryInitLocal(ScdMemory *memory);
-void ScdMemoryInitRemote(ScdMemory *memory);
-size_t ScdMemoryRead(ScdMemory *memory, uintptr_t addr, void *dst, size_t size);
-void *ScdMemoryGetAddr(ScdMemory *memory, uintptr_t offset, size_t size);
-size_t ScdMemoryReadString(ScdMemory *memory, uintptr_t addr, char *dst, size_t size);
+void ScdMemoryInitLocal(ScdMemory* memory);
+void ScdMemoryInitRemote(ScdMemory* memory);
+size_t ScdMemoryRead(ScdMemory* memory, uintptr_t addr, void* dst, size_t size);
+void* ScdMemoryGetAddr(ScdMemory* memory, uintptr_t offset, size_t size);
+size_t ScdMemoryReadString(ScdMemory* memory, uintptr_t addr, char* dst, size_t size);
 
 #ifdef __cplusplus
 }

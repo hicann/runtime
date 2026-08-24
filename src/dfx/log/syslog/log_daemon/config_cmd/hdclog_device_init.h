@@ -16,5 +16,5 @@
 
 int32_t HdclogDeviceInit(void);
 int32_t HdclogDeviceDestroy(void);
-int32_t IdeDeviceLogProcess(const CommHandle *command, const void* value, uint32_t len);
+int32_t IdeDeviceLogProcess(const CommHandle* command, const void* value, uint32_t len);
 #endif

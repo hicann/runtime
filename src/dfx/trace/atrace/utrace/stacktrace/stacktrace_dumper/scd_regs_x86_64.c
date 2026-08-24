@@ -13,50 +13,30 @@
 
 #ifdef __x86_64__
 
-#define SCD_REGS_SP  SCD_REGS_RSP
-#define SCD_REGS_PC  SCD_REGS_RIP
+#define SCD_REGS_SP SCD_REGS_RSP
+#define SCD_REGS_PC SCD_REGS_RIP
 
-void ScdRegsLoadFromUcontext(ScdRegs *regs, ucontext_t *uc)
-{
-    GET_REGISTER_FROM_CONTEXT(regs->r, &uc->uc_mcontext);
-}
+void ScdRegsLoadFromUcontext(ScdRegs* regs, ucontext_t* uc) { GET_REGISTER_FROM_CONTEXT(regs->r, &uc->uc_mcontext); }
 
-uintptr_t ScdRegsGetPc(ScdRegs *regs)
-{
-    return regs->r[SCD_REGS_PC];
-}
+uintptr_t ScdRegsGetPc(ScdRegs* regs) { return regs->r[SCD_REGS_PC]; }
 
-void ScdRegsSetPc(ScdRegs *regs, uintptr_t pc)
-{
-    regs->r[SCD_REGS_PC] = pc;
-}
+void ScdRegsSetPc(ScdRegs* regs, uintptr_t pc) { regs->r[SCD_REGS_PC] = pc; }
 
-uintptr_t ScdRegsGetSp(ScdRegs *regs)
-{
-    return regs->r[SCD_REGS_SP];
-}
+uintptr_t ScdRegsGetSp(ScdRegs* regs) { return regs->r[SCD_REGS_SP]; }
 
-void ScdRegsSetSp(ScdRegs *regs, uintptr_t sp)
-{
-    regs->r[SCD_REGS_SP] = sp;
-}
+void ScdRegsSetSp(ScdRegs* regs, uintptr_t sp) { regs->r[SCD_REGS_SP] = sp; }
 
-uintptr_t ScdRegsGetFp(ScdRegs *regs)
-{
-    return regs->r[SCD_REGS_RBP];
-}
+uintptr_t ScdRegsGetFp(ScdRegs* regs) { return regs->r[SCD_REGS_RBP]; }
 
-void ScdRegsSetFp(ScdRegs *regs, uintptr_t fp)
-{
-    regs->r[SCD_REGS_RBP] = fp;
-}
+void ScdRegsSetFp(ScdRegs* regs, uintptr_t fp) { regs->r[SCD_REGS_RBP] = fp; }
 
-TraStatus ScdRegsGetString(const ScdRegs *regs, char *buf, size_t bufSize)
+TraStatus ScdRegsGetString(const ScdRegs* regs, char* buf, size_t bufSize)
 {
     if (regs == NULL || buf == NULL || bufSize == 0) {
         return TRACE_INVALID_PARAM;
     }
-    int32_t ret = snprintf_s(buf, bufSize, bufSize - 1U,
+    int32_t ret = snprintf_s(
+        buf, bufSize, bufSize - 1U,
         "crash registers:\n"
         "    rax 0x%016lx  rbx 0x%016lx  rcx 0x%016lx  rdx 0x%016lx\n"
         "    r8  0x%016lx  r9  0x%016lx  r10 0x%016lx  r11 0x%016lx\n"
@@ -64,10 +44,9 @@ TraStatus ScdRegsGetString(const ScdRegs *regs, char *buf, size_t bufSize)
         "    rdi 0x%016lx  rsi 0x%016lx\n"
         "    rbp 0x%016lx  rsp 0x%016lx  rip 0x%016lx\n\n",
         regs->r[SCD_REGS_RAX], regs->r[SCD_REGS_RBX], regs->r[SCD_REGS_RCX], regs->r[SCD_REGS_RDX],
-        regs->r[SCD_REGS_R8],  regs->r[SCD_REGS_R9],  regs->r[SCD_REGS_R10], regs->r[SCD_REGS_R11],
-        regs->r[SCD_REGS_R12], regs->r[SCD_REGS_R13], regs->r[SCD_REGS_R14], regs->r[SCD_REGS_R15],
-        regs->r[SCD_REGS_RDI], regs->r[SCD_REGS_RSI],
-        regs->r[SCD_REGS_RBP], regs->r[SCD_REGS_RSP], regs->r[SCD_REGS_RIP]);
+        regs->r[SCD_REGS_R8], regs->r[SCD_REGS_R9], regs->r[SCD_REGS_R10], regs->r[SCD_REGS_R11], regs->r[SCD_REGS_R12],
+        regs->r[SCD_REGS_R13], regs->r[SCD_REGS_R14], regs->r[SCD_REGS_R15], regs->r[SCD_REGS_RDI],
+        regs->r[SCD_REGS_RSI], regs->r[SCD_REGS_RBP], regs->r[SCD_REGS_RSP], regs->r[SCD_REGS_RIP]);
     if (ret == -1) {
         return TRACE_FAILURE;
     }

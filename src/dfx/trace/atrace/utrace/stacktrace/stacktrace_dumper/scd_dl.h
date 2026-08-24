@@ -19,21 +19,19 @@
 extern "C" {
 #endif // __cplusplus
 
-
 typedef struct ScdDl {
-    int32_t   pid;
-    int32_t   fd;
+    int32_t pid;
+    int32_t fd;
     ScdMemory memory;
-    
-    //ELF
-    ScdElf     elf;
-    bool       elfLoaded;
+
+    // ELF
+    ScdElf elf;
+    bool elfLoaded;
 } ScdDl;
 
-
-TraStatus ScdDlLoad(ScdDl *dl, int32_t pid, const char *dlName);
-TraStatus ScdDlInit(ScdDl *dl);
-void ScdDlUninit(ScdDl *dl);
+TraStatus ScdDlLoad(ScdDl* dl, int32_t pid, const char* dlName);
+TraStatus ScdDlInit(ScdDl* dl);
+void ScdDlUninit(ScdDl* dl);
 
 #ifdef __cplusplus
 }

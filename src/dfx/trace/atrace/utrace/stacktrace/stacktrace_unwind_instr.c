@@ -26,10 +26,10 @@
 #include "scd_log.h"
 #include "scd_dwarf.h"
 
-#define VOS_OP_DATA_TYPE_UINT8    1
-#define VOS_OP_DATA_TYPE_UINT16   2
-#define VOS_OP_DATA_TYPE_UINT32   4
-#define VOS_OP_DATA_TYPE_UINT64   8
+#define VOS_OP_DATA_TYPE_UINT8 1
+#define VOS_OP_DATA_TYPE_UINT16 2
+#define VOS_OP_DATA_TYPE_UINT32 4
+#define VOS_OP_DATA_TYPE_UINT64 8
 
 /**
  * @brief 解析栈操作类指令中的其他类型操作
@@ -43,17 +43,17 @@
  *
  * @return 指令地址
  */
-STATIC const uint8_t *TraceOpStackOtherOpt(ScdDwarf *dwarf, uint8_t opType,
-    const uintptr_t stackContent[VOS_OP_STACK_DEPTH], uint32_t *idx, const uint8_t *insAddr,
-    const ScdRegs *coreRegs, uintptr_t *result)
+STATIC const uint8_t* TraceOpStackOtherOpt(
+    ScdDwarf* dwarf, uint8_t opType, const uintptr_t stackContent[VOS_OP_STACK_DEPTH], uint32_t* idx,
+    const uint8_t* insAddr, const ScdRegs* coreRegs, uintptr_t* result)
 {
     uintptr_t regData;
     uintptr_t resTmp;
-    intptr_t  psvVal;
+    intptr_t psvVal;
     uint16_t offset;
-    const uint8_t *insAddrTmp = insAddr;
+    const uint8_t* insAddrTmp = insAddr;
     uintptr_t tmpRes = 0;
-    uint32_t  tmpIdx = *idx;
+    uint32_t tmpIdx = *idx;
 
     switch (opType) {
         case DW_OP_REGX:
@@ -71,7 +71,7 @@ STATIC const uint8_t *TraceOpStackOtherOpt(ScdDwarf *dwarf, uint8_t opType,
         /* 无编码类型的地址 */
         case DW_OP_ADDR:
             tmpRes = TraceReadUintptr(insAddrTmp, sizeof(uintptr_t));
-            insAddrTmp = insAddrTmp + sizeof(void *);
+            insAddrTmp = insAddrTmp + sizeof(void*);
             break;
         case DW_OP_GNU_ENC_ADDR:
             /* 该地址第一个字节表示编码类型，从第二字节开始才表示该编码类型时的数据 */
@@ -87,7 +87,7 @@ STATIC const uint8_t *TraceOpStackOtherOpt(ScdDwarf *dwarf, uint8_t opType,
         /* dw_op指令依条件跳转 */
         case DW_OP_BRA:
             TRACE_STACK_INDEX_CHECK_RET(tmpIdx, 1U, { return NULL; });
-            tmpIdx  = tmpIdx - 1U;
+            tmpIdx = tmpIdx - 1U;
             offset = TraceReadU16(insAddrTmp, sizeof(uint16_t));
             insAddrTmp += sizeof(uint16_t);
             if (stackContent[(tmpIdx & VOS_OP_STACK_MASK)] != 0) {
@@ -113,8 +113,7 @@ STATIC const uint8_t *TraceOpStackOtherOpt(ScdDwarf *dwarf, uint8_t opType,
  *
  * @return 指令地址
  */
-STATIC void TraceOpStackTwoDataParseAdvanced(uint8_t opType, uintptr_t swapTmp1,
-    uintptr_t swapTmp2, uintptr_t *result)
+STATIC void TraceOpStackTwoDataParseAdvanced(uint8_t opType, uintptr_t swapTmp1, uintptr_t swapTmp2, uintptr_t* result)
 {
     uintptr_t tmpRes = 0;
 
@@ -148,12 +147,11 @@ STATIC void TraceOpStackTwoDataParseAdvanced(uint8_t opType, uintptr_t swapTmp1,
             tmpRes = (uintptr_t)(swapTmp1 != swapTmp2);
             break;
         default:
-            break;  // will never be executed
+            break; // will never be executed
     }
     *result = tmpRes;
     return;
 }
-
 
 /**
  * @brief 解析栈操作类指令中两个操作数的基础操作
@@ -165,8 +163,8 @@ STATIC void TraceOpStackTwoDataParseAdvanced(uint8_t opType, uintptr_t swapTmp1,
  *
  * @return 指令地址
  */
-STATIC TraStatus TraceOpStackTwoDataParseBasic(uint8_t opType, uintptr_t swapTmp1,
-    uintptr_t swapTmp2, uintptr_t *result)
+STATIC TraStatus
+TraceOpStackTwoDataParseBasic(uint8_t opType, uintptr_t swapTmp1, uintptr_t swapTmp2, uintptr_t* result)
 {
     uintptr_t tmpRes = 0;
     TraStatus ret = TRACE_SUCCESS;
@@ -202,7 +200,7 @@ STATIC TraStatus TraceOpStackTwoDataParseBasic(uint8_t opType, uintptr_t swapTmp
             break;
         default:
             ret = TRACE_FAILURE;
-            break;  // will never be executed
+            break; // will never be executed
     }
     *result = tmpRes;
     return ret;
@@ -218,8 +216,7 @@ STATIC TraStatus TraceOpStackTwoDataParseBasic(uint8_t opType, uintptr_t swapTmp
  *
  * @return 指令地址
  */
-STATIC TraStatus TraceOpStackTwoDataParse(uint8_t opType, uintptr_t swapTmp1, uintptr_t swapTmp2,
-    uintptr_t *result)
+STATIC TraStatus TraceOpStackTwoDataParse(uint8_t opType, uintptr_t swapTmp1, uintptr_t swapTmp2, uintptr_t* result)
 {
     uintptr_t tmpRes = 0;
     TraStatus ret;
@@ -248,8 +245,8 @@ STATIC TraStatus TraceOpStackTwoDataParse(uint8_t opType, uintptr_t swapTmp1, ui
  *
  * @return 指令地址
  */
-STATIC TraStatus TraceOpStackTwoDataOpt(uint8_t opType, uintptr_t stackContent[VOS_OP_STACK_DEPTH],
-    uint32_t *idx, uintptr_t *result)
+STATIC TraStatus
+TraceOpStackTwoDataOpt(uint8_t opType, uintptr_t stackContent[VOS_OP_STACK_DEPTH], uint32_t* idx, uintptr_t* result)
 {
     uintptr_t swapTmp1;
     uintptr_t swapTmp2;
@@ -281,7 +278,7 @@ STATIC TraStatus TraceOpStackTwoDataOpt(uint8_t opType, uintptr_t stackContent[V
             }
             swapTmp1 = stackContent[(tmpIdx - 2U) & VOS_OP_STACK_MASK]; /* 2是偏移量 */
             swapTmp2 = stackContent[(tmpIdx - 1U) & VOS_OP_STACK_MASK];
-            tmpIdx = tmpIdx - 2U;  /* 2是偏移量 */
+            tmpIdx = tmpIdx - 2U;                                       /* 2是偏移量 */
             ret = TraceOpStackTwoDataParse(opType, swapTmp1, swapTmp2, &tmpRes);
             break;
         default:
@@ -293,22 +290,22 @@ STATIC TraStatus TraceOpStackTwoDataOpt(uint8_t opType, uintptr_t stackContent[V
     return ret;
 }
 
-STATIC TraStatus TraceDefSizeGet(const uint8_t ucEncode, uintptr_t pDataAddr, uintptr_t *result)
+STATIC TraStatus TraceDefSizeGet(const uint8_t ucEncode, uintptr_t pDataAddr, uintptr_t* result)
 {
     uintptr_t tmpRes = 0;
     TraStatus ret = TRACE_SUCCESS;
     switch (ucEncode) {
         case VOS_OP_DATA_TYPE_UINT8:
-            tmpRes = (uintptr_t)(*(uint8_t *)pDataAddr);
+            tmpRes = (uintptr_t)(*(uint8_t*)pDataAddr);
             break;
         case VOS_OP_DATA_TYPE_UINT16:
-            tmpRes = (uintptr_t)(*(uint16_t *)pDataAddr);
+            tmpRes = (uintptr_t)(*(uint16_t*)pDataAddr);
             break;
         case VOS_OP_DATA_TYPE_UINT32:
-            tmpRes = (uintptr_t)(*(uint32_t *)pDataAddr);
+            tmpRes = (uintptr_t)(*(uint32_t*)pDataAddr);
             break;
         case VOS_OP_DATA_TYPE_UINT64:
-            tmpRes = (uintptr_t)(*(uint64_t *)pDataAddr);
+            tmpRes = (uintptr_t)(*(uint64_t*)pDataAddr);
             break;
         default:
             ret = TRACE_FAILURE;
@@ -329,14 +326,15 @@ STATIC TraStatus TraceDefSizeGet(const uint8_t ucEncode, uintptr_t pDataAddr, ui
  *
  * @return 指令地址
  */
-STATIC const uint8_t *TraceOpStackOneDataParse(ScdDwarf *dwarf, uint8_t opType, uintptr_t tmpRes,
-    const uint8_t *insAddr, const ScdDwarfStepArgs *args, uintptr_t *result)
+STATIC const uint8_t* TraceOpStackOneDataParse(
+    ScdDwarf* dwarf, uint8_t opType, uintptr_t tmpRes, const uint8_t* insAddr, const ScdDwarfStepArgs* args,
+    uintptr_t* result)
 {
     uintptr_t tmp;
     uintptr_t res = 0;
     intptr_t tmpSignedValue;
     TraStatus ret;
-    const uint8_t *insAddrTmp = insAddr;
+    const uint8_t* insAddrTmp = insAddr;
 
     switch (opType) {
         case DW_OP_DEREF:
@@ -383,7 +381,7 @@ STATIC const uint8_t *TraceOpStackOneDataParse(ScdDwarf *dwarf, uint8_t opType, 
             break;
         default:
             insAddrTmp = NULL;
-            break;  // will never be executed
+            break; // will never be executed
     }
     *result = res;
     return insAddrTmp;
@@ -401,13 +399,14 @@ STATIC const uint8_t *TraceOpStackOneDataParse(ScdDwarf *dwarf, uint8_t opType, 
  *
  * @return 指令地址
  */
-STATIC const uint8_t *TraceOpStackOneDataOpt(ScdDwarf *dwarf, uint8_t opType, uintptr_t stackContent[VOS_OP_STACK_DEPTH],
-    uint32_t *idx, const uint8_t *insAddr, const ScdDwarfStepArgs *args, uintptr_t *result)
+STATIC const uint8_t* TraceOpStackOneDataOpt(
+    ScdDwarf* dwarf, uint8_t opType, uintptr_t stackContent[VOS_OP_STACK_DEPTH], uint32_t* idx, const uint8_t* insAddr,
+    const ScdDwarfStepArgs* args, uintptr_t* result)
 {
     uintptr_t indircRes;
     uintptr_t dircRes = 0;
     uint32_t tmpIdx = *idx;
-    const uint8_t *insAddrTmp = insAddr;
+    const uint8_t* insAddrTmp = insAddr;
 
     switch (opType) {
         case DW_OP_DEREF:
@@ -444,12 +443,13 @@ STATIC const uint8_t *TraceOpStackOneDataOpt(ScdDwarf *dwarf, uint8_t opType, ui
  *
  * @return 指令地址
  */
-STATIC const uint8_t *TraceOpStackDataOpt(uint8_t opType, uintptr_t stackContent[VOS_OP_STACK_DEPTH],
-    uint32_t *idx, const uint8_t *insAddr, uintptr_t *result)
+STATIC const uint8_t* TraceOpStackDataOpt(
+    uint8_t opType, uintptr_t stackContent[VOS_OP_STACK_DEPTH], uint32_t* idx, const uint8_t* insAddr,
+    uintptr_t* result)
 {
     uintptr_t swapTmp, swapTmp1, swapTmp2, swapTmp3;
     uint32_t offset;
-    const uint8_t *insAddrTmp = insAddr;
+    const uint8_t* insAddrTmp = insAddr;
     uintptr_t tmpRes = 0;
     uint32_t tmpIdx = *idx;
 
@@ -467,7 +467,7 @@ STATIC const uint8_t *TraceOpStackDataOpt(uint8_t opType, uintptr_t stackContent
             break;
         /* 从栈中间获取一数据 */
         case DW_OP_PICK:
-            offset = (uint32_t)(*(uint8_t *)(uintptr_t)insAddrTmp);
+            offset = (uint32_t)(*(uint8_t*)(uintptr_t)insAddrTmp);
             insAddrTmp++;
             TRACE_STACK_INDEX_CHECK_RET(tmpIdx, offset + 2U, { return NULL; });
             tmpRes = stackContent[(tmpIdx - offset - 1U) & VOS_OP_STACK_MASK];
@@ -496,7 +496,7 @@ STATIC const uint8_t *TraceOpStackDataOpt(uint8_t opType, uintptr_t stackContent
             break;
         default:
             insAddrTmp = NULL;
-            break;  // will never be executed
+            break; // will never be executed
     }
     *idx = tmpIdx;
     *result = tmpRes;
@@ -512,20 +512,20 @@ STATIC const uint8_t *TraceOpStackDataOpt(uint8_t opType, uintptr_t stackContent
  *
  * @return 指令地址
  */
-STATIC const uint8_t *TraceOpConstNumGet(ScdDwarf *dwarf, uint8_t opType, const uint8_t *insAddr, uintptr_t *result)
+STATIC const uint8_t* TraceOpConstNumGet(ScdDwarf* dwarf, uint8_t opType, const uint8_t* insAddr, uintptr_t* result)
 {
     uintptr_t tmp;
     intptr_t tmpSignedValue;
-    const uint8_t *insAddrTmp = insAddr;
-    uintptr_t *resultTmp = result;
+    const uint8_t* insAddrTmp = insAddr;
+    uintptr_t* resultTmp = result;
 
     switch (opType) {
         case DW_OP_COUST1U:
-            *resultTmp = (uintptr_t)(*(uint8_t *)(uintptr_t)insAddrTmp);
+            *resultTmp = (uintptr_t)(*(uint8_t*)(uintptr_t)insAddrTmp);
             insAddrTmp += sizeof(uint8_t);
             break;
         case DW_OP_COUST1S:
-            *resultTmp = (uintptr_t)(*(int8_t *)(uintptr_t)insAddrTmp);
+            *resultTmp = (uintptr_t)(*(int8_t*)(uintptr_t)insAddrTmp);
             insAddrTmp += sizeof(int8_t);
             break;
         case DW_OP_COUST2U:
@@ -565,7 +565,7 @@ STATIC const uint8_t *TraceOpConstNumGet(ScdDwarf *dwarf, uint8_t opType, const 
         default:
             *resultTmp = 0;
             insAddrTmp = NULL;
-            break;  // will never be executed
+            break; // will never be executed
     }
     return insAddrTmp;
 }
@@ -579,20 +579,21 @@ STATIC const uint8_t *TraceOpConstNumGet(ScdDwarf *dwarf, uint8_t opType, const 
  *
  * @return 指令地址
  */
-STATIC const uint8_t *TraceUnwindOpcodeParse(ScdDwarf *dwarf, uint8_t opcode, const uint8_t *instr,
-    TraceFrameRegStateInfo *pstFrameRInfo)
+STATIC const uint8_t* TraceUnwindOpcodeParse(
+    ScdDwarf* dwarf, uint8_t opcode, const uint8_t* instr, TraceFrameRegStateInfo* pstFrameRInfo)
 {
     uintptr_t offsetTemp;
-    intptr_t  offset;
-    const uint8_t *tmpInstr = instr;
-    uint8_t   ucRegNum;
+    intptr_t offset;
+    const uint8_t* tmpInstr = instr;
+    uint8_t ucRegNum;
 
     switch (TRACE_HIBIT2_OPCODE(opcode)) {
         /* 定位PC位置 */
         case DW_CFA_ADVANCE_LOC:
             pstFrameRInfo->pc += TRACE_LOBIT6_OPCODE((uintptr_t)opcode) * pstFrameRInfo->codeAlign;
-            SCD_DLOG_INF("DW_CFA_ADVANCE_LOC %lu to %lx",
-                TRACE_LOBIT6_OPCODE((uintptr_t)opcode) * pstFrameRInfo->codeAlign, pstFrameRInfo->pc);
+            SCD_DLOG_INF(
+                "DW_CFA_ADVANCE_LOC %lu to %lx", TRACE_LOBIT6_OPCODE((uintptr_t)opcode) * pstFrameRInfo->codeAlign,
+                pstFrameRInfo->pc);
             break;
         /* 依据CFA偏移量获取寄存器的值 */
         case DW_CFA_OFFSET:
@@ -601,8 +602,8 @@ STATIC const uint8_t *TraceUnwindOpcodeParse(ScdDwarf *dwarf, uint8_t opcode, co
             SCD_CHK_EXPR_ACTION(tmpInstr == NULL, return NULL, "read uleb128 failed");
             offset = (intptr_t)offsetTemp * pstFrameRInfo->dataAlign;
             pstFrameRInfo->frameStateInfo.regInfo[ucRegNum & REG_VAILD_MASK].regHow = REG_SAVED_OFFSET;
-            pstFrameRInfo->frameStateInfo.regInfo[ucRegNum & REG_VAILD_MASK].regLoc.offset  = offset;
-            SCD_DLOG_INF("DW_CFA_OFFSET reg %hhu at %ld", ucRegNum,  offsetTemp);
+            pstFrameRInfo->frameStateInfo.regInfo[ucRegNum & REG_VAILD_MASK].regLoc.offset = offset;
+            SCD_DLOG_INF("DW_CFA_OFFSET reg %hhu at %ld", ucRegNum, offsetTemp);
             break;
         /* 指定寄存器信息不保存 */
         case DW_CFA_RESTORE:
@@ -627,11 +628,11 @@ STATIC const uint8_t *TraceUnwindOpcodeParse(ScdDwarf *dwarf, uint8_t opcode, co
  *
  * @return 指令地址
  */
-STATIC const uint8_t *TraceUnwindPCLocParse(ScdDwarf *dwarf, uint8_t opcode, const uint8_t *instr,
-    TraceFrameRegStateInfo *pstFrameRInfo)
+STATIC const uint8_t* TraceUnwindPCLocParse(
+    ScdDwarf* dwarf, uint8_t opcode, const uint8_t* instr, TraceFrameRegStateInfo* pstFrameRInfo)
 {
     uintptr_t pc;
-    const uint8_t *tmpInstr = instr;
+    const uint8_t* tmpInstr = instr;
 
     switch (opcode) {
         /* 直接设置PC指针的位置 */
@@ -673,13 +674,13 @@ STATIC const uint8_t *TraceUnwindPCLocParse(ScdDwarf *dwarf, uint8_t opcode, con
  *
  * @return 指令地址
  */
-STATIC const uint8_t *TraceUnwindCFADefParse(ScdDwarf *dwarf, uint8_t opcode, const uint8_t *instr,
-    TraceFrameRegStateInfo *pstFrameRInfo)
+STATIC const uint8_t* TraceUnwindCFADefParse(
+    ScdDwarf* dwarf, uint8_t opcode, const uint8_t* instr, TraceFrameRegStateInfo* pstFrameRInfo)
 {
     uintptr_t regTmp;
     uintptr_t offsetTemp;
-    intptr_t  offset;
-    const uint8_t *tmpInstr = instr;
+    intptr_t offset;
+    const uint8_t* tmpInstr = instr;
 
     switch (opcode) {
         /* 获取CFA所需的寄存器和偏移 */
@@ -753,14 +754,14 @@ STATIC const uint8_t *TraceUnwindCFADefParse(ScdDwarf *dwarf, uint8_t opcode, co
  *
  * @return 指令地址
  */
-STATIC const uint8_t *TraceUnwindRegValueDefParse(ScdDwarf *dwarf, uint8_t opcode, const uint8_t *instr,
-    TraceFrameRegStateInfo *pstFrameRInfo)
+STATIC const uint8_t* TraceUnwindRegValueDefParse(
+    ScdDwarf* dwarf, uint8_t opcode, const uint8_t* instr, TraceFrameRegStateInfo* pstFrameRInfo)
 {
     uintptr_t regTmp;
     uintptr_t offsetTemp;
-    intptr_t  offset;
-    const uint8_t *tmpInstr = instr;
-    TraceStagRegInfo *pstRegInfo = NULL;
+    intptr_t offset;
+    const uint8_t* tmpInstr = instr;
+    TraceStagRegInfo* pstRegInfo = NULL;
     switch (opcode) {
         /* 依据CFA的值获取寄存器信息 */
         case DW_CFA_VAL_OFFSET:
@@ -815,12 +816,13 @@ STATIC const uint8_t *TraceUnwindRegValueDefParse(ScdDwarf *dwarf, uint8_t opcod
  *
  * @return 指令地址
  */
-STATIC const uint8_t *TraceUnwindOtherCodeParse(ScdDwarf *dwarf, uint8_t opcode, const uint8_t *instr,
-    TraceFrameStateInfo *pstStoreFrameRegState, TraceFrameRegStateInfo *pstFrameRInfo)
+STATIC const uint8_t* TraceUnwindOtherCodeParse(
+    ScdDwarf* dwarf, uint8_t opcode, const uint8_t* instr, TraceFrameStateInfo* pstStoreFrameRegState,
+    TraceFrameRegStateInfo* pstFrameRInfo)
 {
     uintptr_t offsetTemp = 0;
-    TraceStagRegInfo *pstRegInfo = NULL;
-    const uint8_t *tmpInstr = instr;
+    TraceStagRegInfo* pstRegInfo = NULL;
+    const uint8_t* tmpInstr = instr;
 
     switch (opcode) {
         case DW_CFA_NOP:
@@ -828,14 +830,16 @@ STATIC const uint8_t *TraceUnwindOtherCodeParse(ScdDwarf *dwarf, uint8_t opcode,
             break;
         /* 将寄存器组的设置状态放在链表前与DW_CFA_RES_STATE配对 */
         case DW_CFA_REMEMBER_STATE:
-            (void)memcpy_s((void *)pstStoreFrameRegState, sizeof(TraceFrameStateInfo),
-                (void *)&pstFrameRInfo->frameStateInfo, sizeof(TraceFrameStateInfo));
+            (void)memcpy_s(
+                (void*)pstStoreFrameRegState, sizeof(TraceFrameStateInfo), (void*)&pstFrameRInfo->frameStateInfo,
+                sizeof(TraceFrameStateInfo));
             SCD_DLOG_INF("DW_CFA_REMEMBER_STATE");
             break;
         /* 将链表中最前面的寄存器组设置信息取出，与DW_CFA_REM_STATE配对使用 */
         case DW_CFA_RESTORE_STATE:
-            (void)memcpy_s((void *)&pstFrameRInfo->frameStateInfo, sizeof(TraceFrameStateInfo),
-                (void *)pstStoreFrameRegState, sizeof(TraceFrameStateInfo));
+            (void)memcpy_s(
+                (void*)&pstFrameRInfo->frameStateInfo, sizeof(TraceFrameStateInfo), (void*)pstStoreFrameRegState,
+                sizeof(TraceFrameStateInfo));
             SCD_DLOG_INF("DW_CFA_RESTORE_STATE");
             break;
         /*
@@ -847,7 +851,7 @@ STATIC const uint8_t *TraceUnwindOtherCodeParse(ScdDwarf *dwarf, uint8_t opcode,
             for (uint32_t idx = 16U; idx < VOS_CORE_REGS_NUM; idx++) { /* 16代表寄存器 */
                 pstRegInfo = &(pstFrameRInfo->frameStateInfo.regInfo[idx & REG_VAILD_MASK]);
                 pstRegInfo->regHow = REG_SAVED_OFFSET;
-                pstRegInfo->regLoc.offset = ((intptr_t)idx - 16LL) * (intptr_t)sizeof(void *); /* 16代表寄存器 */
+                pstRegInfo->regLoc.offset = ((intptr_t)idx - 16LL) * (intptr_t)sizeof(void*); /* 16代表寄存器 */
             }
             SCD_DLOG_INF("DW_CFA_GNU_WIN_SAVE");
             break;
@@ -874,12 +878,13 @@ STATIC const uint8_t *TraceUnwindOtherCodeParse(ScdDwarf *dwarf, uint8_t opcode,
  *
  * @return 指令地址
  */
-STATIC const uint8_t *TraceUnwindRegDefParse(ScdDwarf *dwarf, uint8_t opcode, const uint8_t *instr, TraceFrameRegStateInfo *pstInfo)
+STATIC const uint8_t* TraceUnwindRegDefParse(
+    ScdDwarf* dwarf, uint8_t opcode, const uint8_t* instr, TraceFrameRegStateInfo* pstInfo)
 {
     intptr_t offset;
     uintptr_t regTmp;
-    TraceStagRegInfo *pstRegInfo = NULL;
-    const uint8_t *tmpInstr = instr;
+    TraceStagRegInfo* pstRegInfo = NULL;
+    const uint8_t* tmpInstr = instr;
 
     tmpInstr = TraceReadUleb128(dwarf, tmpInstr, &regTmp);
     pstRegInfo = &(pstInfo->frameStateInfo.regInfo[regTmp & REG_VAILD_MASK]);
@@ -958,8 +963,9 @@ STATIC const uint8_t *TraceUnwindRegDefParse(ScdDwarf *dwarf, uint8_t opcode, co
  *
  * @return 指令地址
  */
-TraStatus TraceStackOpExc(ScdDwarf *dwarf, const uint8_t *opStart, const uint8_t *opEnd, const ScdRegs *coreRegs,
-    uintptr_t *ptrResult, uintptr_t initial, const ScdDwarfStepArgs *args)
+TraStatus TraceStackOpExc(
+    ScdDwarf* dwarf, const uint8_t* opStart, const uint8_t* opEnd, const ScdRegs* coreRegs, uintptr_t* ptrResult,
+    uintptr_t initial, const ScdDwarfStepArgs* args)
 {
     uintptr_t stackContent[VOS_OP_STACK_DEPTH] = {0};
     uint32_t idx = 0;
@@ -967,7 +973,7 @@ TraStatus TraceStackOpExc(ScdDwarf *dwarf, const uint8_t *opStart, const uint8_t
     uintptr_t result = 0;
     intptr_t offset;
     TraStatus ret;
-    const uint8_t *pStartTmp = opStart;
+    const uint8_t* pStartTmp = opStart;
     stackContent[idx & VOS_OP_STACK_MASK] = initial;
     idx++;
 
@@ -984,15 +990,14 @@ TraStatus TraceStackOpExc(ScdDwarf *dwarf, const uint8_t *opStart, const uint8_t
         /* 数值，从0到31，用于后续逻辑处理 */
         if (VOS_ENC_OP_LIT(opType)) {
             result = (uintptr_t)opType - (uintptr_t)DW_OP_LIT0;
-        } else if (VOS_ENC_OP_REG(opType)) { /* 无操作数，类型表示寄存器号 */
-            result =
-                coreRegs->r[(opType - DW_OP_REG0) & REG_VAILD_MASK];
+        } else if (VOS_ENC_OP_REG(opType)) {  /* 无操作数，类型表示寄存器号 */
+            result = coreRegs->r[(opType - DW_OP_REG0) & REG_VAILD_MASK];
         } else if (VOS_ENC_OP_BREG(opType)) { /* 一个操作数，保存有符号leb128的偏移 */
             pStartTmp = TraceReadLeb128(dwarf, pStartTmp, &offset);
             SCD_CHK_EXPR_ACTION(pStartTmp == NULL, return TRACE_FAILURE, "read leb128 failed");
             result = coreRegs->r[(opType - DW_OP_BREG0) & REG_VAILD_MASK] + (uintptr_t)offset;
         } else if (VOS_ENC_OP_CONST(opType)) { /* 读取该编码类型的一个数据 */
-            pStartTmp  = TraceOpConstNumGet(dwarf, opType, pStartTmp, &result);
+            pStartTmp = TraceOpConstNumGet(dwarf, opType, pStartTmp, &result);
             if (pStartTmp == NULL) {
                 return TRACE_FAILURE;
             }
@@ -1046,9 +1051,10 @@ TraStatus TraceStackOpExc(ScdDwarf *dwarf, const uint8_t *opStart, const uint8_t
  *
  * @return      : !=0 failure; ==0 success
  */
-TraStatus TraceUnwindParseFn(ScdDwarf *dwarf, TraceAddrRange *addrRange, TraceFrameRegStateInfo *frameRegState, bool isFEDTable)
+TraStatus TraceUnwindParseFn(
+    ScdDwarf* dwarf, TraceAddrRange* addrRange, TraceFrameRegStateInfo* frameRegState, bool isFEDTable)
 {
-    const uint8_t *instr = (uint8_t *)addrRange->start;
+    const uint8_t* instr = (uint8_t*)addrRange->start;
     uint8_t ucCurInsn;
     uint8_t ucLowCurIns;
     if (instr == NULL) {
@@ -1056,7 +1062,7 @@ TraStatus TraceUnwindParseFn(ScdDwarf *dwarf, TraceAddrRange *addrRange, TraceFr
         return TRACE_FAILURE;
     }
     TraceFrameStateInfo stStoreFrameRegState = {0};
-    while (instr < (uint8_t *)addrRange->end) {
+    while (instr < (uint8_t*)addrRange->end) {
         // 当pc值等于ret时，需要再推一层
         if (isFEDTable && frameRegState->pc > frameRegState->ret) {
             return TRACE_SUCCESS;
@@ -1079,13 +1085,13 @@ TraStatus TraceUnwindParseFn(ScdDwarf *dwarf, TraceAddrRange *addrRange, TraceFr
         /* 直接设置PC指针的位置 */
         if (VOS_INS_PC_LOC(ucLowCurIns)) {
             instr = TraceUnwindPCLocParse(dwarf, ucLowCurIns, instr, frameRegState);
-        } else if (VOS_INS_REG_DEF(ucLowCurIns)) { /* 获取寄存器的计算状态 */
+        } else if (VOS_INS_REG_DEF(ucLowCurIns)) {       /* 获取寄存器的计算状态 */
             instr = TraceUnwindRegDefParse(dwarf, ucLowCurIns, instr, frameRegState);
-        } else if (VOS_INS_CFA_DEF(ucLowCurIns)) { /* 获取CFA的计算状态 */
+        } else if (VOS_INS_CFA_DEF(ucLowCurIns)) {       /* 获取CFA的计算状态 */
             instr = TraceUnwindCFADefParse(dwarf, ucLowCurIns, instr, frameRegState);
         } else if (VOS_INS_REG_VALUE_DEF(ucLowCurIns)) { /* 获取寄存器值的计算状态 */
             instr = TraceUnwindRegValueDefParse(dwarf, ucLowCurIns, instr, frameRegState);
-        } else if (VOS_INS_OTHER_DEF(ucLowCurIns)) { /* 其他unwind指令解析过程 */
+        } else if (VOS_INS_OTHER_DEF(ucLowCurIns)) {     /* 其他unwind指令解析过程 */
             instr = TraceUnwindOtherCodeParse(dwarf, ucLowCurIns, instr, &stStoreFrameRegState, frameRegState);
         } else {
             SCD_DLOG_ERR("invalid opcode");

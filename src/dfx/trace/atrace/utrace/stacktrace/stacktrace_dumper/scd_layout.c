@@ -16,7 +16,7 @@
 #include "trace_system_api.h"
 #include "scd_log.h"
 
-STATIC ScdSection *ScdLayoutGetEmptShdr(ScdProcess *pro)
+STATIC ScdSection* ScdLayoutGetEmptShdr(ScdProcess* pro)
 {
     uint32_t offset = (uint32_t)sizeof(ScdProcess);
     for (uint32_t i = 0; i < SCD_MAX_SHDR_NUM; i++) {
@@ -32,9 +32,9 @@ STATIC ScdSection *ScdLayoutGetEmptShdr(ScdProcess *pro)
     return NULL;
 }
 
-STATIC TraStatus ScdLayoutSetShdrFrames(ScdProcess *pro)
+STATIC TraStatus ScdLayoutSetShdrFrames(ScdProcess* pro)
 {
-    ScdSection *tmp = ScdLayoutGetEmptShdr(pro);
+    ScdSection* tmp = ScdLayoutGetEmptShdr(pro);
     if (tmp == NULL) {
         SCD_DLOG_ERR("get empty section for frames failed.");
         return TRACE_FAILURE;
@@ -49,13 +49,14 @@ STATIC TraStatus ScdLayoutSetShdrFrames(ScdProcess *pro)
     tmp->type = SCD_SHDR_TYPE_LIST;
     tmp->entSize = (uint32_t)sizeof(ScdFrame);
     // 遍历thds，遍历frames的frame，将frame放进section
-    ScdThreads *thds = &pro->thds;
+    ScdThreads* thds = &pro->thds;
     uint32_t frameNum = 0;
-    struct ListHead *pos = NULL;
-    struct AdiagListNode *node = NULL;
-    LIST_FOR_EACH(pos, &thds->thdList.list) {
+    struct ListHead* pos = NULL;
+    struct AdiagListNode* node = NULL;
+    LIST_FOR_EACH(pos, &thds->thdList.list)
+    {
         node = LIST_ENTRY(pos, struct AdiagListNode, list);
-        ScdThread *threadInfo = (ScdThread *)node->data;
+        ScdThread* threadInfo = (ScdThread*)node->data;
         frameNum += threadInfo->frames.frameList.cnt;
     }
     tmp->num = frameNum;
@@ -63,7 +64,7 @@ STATIC TraStatus ScdLayoutSetShdrFrames(ScdProcess *pro)
     return TRACE_SUCCESS;
 }
 
-STATIC uint32_t ScdLayoutGetFileSize(int32_t pid, const char *fileName)
+STATIC uint32_t ScdLayoutGetFileSize(int32_t pid, const char* fileName)
 {
     int32_t fd = ScdUtilGetProcFd(pid, fileName);
     if (fd < 0) {
@@ -71,9 +72,9 @@ STATIC uint32_t ScdLayoutGetFileSize(int32_t pid, const char *fileName)
     }
 
     ssize_t fileSize = 0;
-    char data[SCD_UTIL_TMP_BUF_LEN] = { 0 };
+    char data[SCD_UTIL_TMP_BUF_LEN] = {0};
     ssize_t ret = ScdUtilReadLine(fd, data, SCD_UTIL_TMP_BUF_LEN);
-    while(ret > 0) {
+    while (ret > 0) {
         fileSize += ret;
         ret = ScdUtilReadLine(fd, data, SCD_UTIL_TMP_BUF_LEN);
     }
@@ -81,7 +82,7 @@ STATIC uint32_t ScdLayoutGetFileSize(int32_t pid, const char *fileName)
     return (uint32_t)fileSize;
 }
 
-STATIC TraStatus ScdLayoutSetFdType(ScdSection *shdr, int32_t pid, const char *fileName)
+STATIC TraStatus ScdLayoutSetFdType(ScdSection* shdr, int32_t pid, const char* fileName)
 {
     uint32_t fileSize = ScdLayoutGetFileSize(pid, fileName);
     if (fileSize == 0) {
@@ -102,9 +103,9 @@ STATIC TraStatus ScdLayoutSetFdType(ScdSection *shdr, int32_t pid, const char *f
     return TRACE_SUCCESS;
 }
 
-STATIC TraStatus ScdLayoutSetShdrProcMaps(ScdProcess *pro)
+STATIC TraStatus ScdLayoutSetShdrProcMaps(ScdProcess* pro)
 {
-    ScdSection *tmp = ScdLayoutGetEmptShdr(pro);
+    ScdSection* tmp = ScdLayoutGetEmptShdr(pro);
     if (tmp == NULL) {
         SCD_DLOG_ERR("get empty section for maps failed.");
         return TRACE_FAILURE;
@@ -117,10 +118,10 @@ STATIC TraStatus ScdLayoutSetShdrProcMaps(ScdProcess *pro)
 
     return ScdLayoutSetFdType(tmp, pro->args.pid, "maps");
 }
- 
-STATIC TraStatus ScdLayoutSetShdrProcMeminfo(ScdProcess *pro)
+
+STATIC TraStatus ScdLayoutSetShdrProcMeminfo(ScdProcess* pro)
 {
-    ScdSection *tmp = ScdLayoutGetEmptShdr(pro);
+    ScdSection* tmp = ScdLayoutGetEmptShdr(pro);
     if (tmp == NULL) {
         SCD_DLOG_ERR("get empty section for meminfo failed.");
         return TRACE_FAILURE;
@@ -133,9 +134,9 @@ STATIC TraStatus ScdLayoutSetShdrProcMeminfo(ScdProcess *pro)
     return ScdLayoutSetFdType(tmp, -1, "meminfo");
 }
 
-STATIC TraStatus ScdLayoutSetShdrProcStatus(ScdProcess *pro)
+STATIC TraStatus ScdLayoutSetShdrProcStatus(ScdProcess* pro)
 {
-    ScdSection *tmp = ScdLayoutGetEmptShdr(pro);
+    ScdSection* tmp = ScdLayoutGetEmptShdr(pro);
     if (tmp == NULL) {
         SCD_DLOG_ERR("get empty section for status failed.");
         return TRACE_FAILURE;
@@ -148,9 +149,9 @@ STATIC TraStatus ScdLayoutSetShdrProcStatus(ScdProcess *pro)
     return ScdLayoutSetFdType(tmp, pro->args.pid, "status");
 }
 
-STATIC TraStatus ScdLayoutSetShdrProcLimits(ScdProcess *pro)
+STATIC TraStatus ScdLayoutSetShdrProcLimits(ScdProcess* pro)
 {
-    ScdSection *tmp = ScdLayoutGetEmptShdr(pro);
+    ScdSection* tmp = ScdLayoutGetEmptShdr(pro);
     if (tmp == NULL) {
         SCD_DLOG_ERR("get empty section for limits failed.");
         return TRACE_FAILURE;
@@ -163,7 +164,7 @@ STATIC TraStatus ScdLayoutSetShdrProcLimits(ScdProcess *pro)
     return ScdLayoutSetFdType(tmp, pro->args.pid, "limits");
 }
 
-STATIC TraStatus ScdLayoutSetShdr(ScdProcess *pro)
+STATIC TraStatus ScdLayoutSetShdr(ScdProcess* pro)
 {
     // frame section header
     TraStatus ret = ScdLayoutSetShdrFrames(pro);
@@ -200,7 +201,7 @@ STATIC TraStatus ScdLayoutSetShdr(ScdProcess *pro)
     return TRACE_SUCCESS;
 }
 
-STATIC TraStatus ScdLayoutWriteShdrProc(int32_t fd, ScdSection *shdr)
+STATIC TraStatus ScdLayoutWriteShdrProc(int32_t fd, ScdSection* shdr)
 {
     if (lseek(fd, shdr->offset, SEEK_SET) < 0) {
         SCD_DLOG_ERR("lseek failed, offset=%d, fd=%d, errno=%d.", shdr->offset, fd, errno);
@@ -212,7 +213,7 @@ STATIC TraStatus ScdLayoutWriteShdrProc(int32_t fd, ScdSection *shdr)
     }
     int32_t procFd = (int32_t)shdr->org;
     size_t fileSize = 0;
-    char data[SCD_UTIL_TMP_BUF_LEN] = { 0 };
+    char data[SCD_UTIL_TMP_BUF_LEN] = {0};
     while (ScdUtilReadLine(procFd, data, SCD_UTIL_TMP_BUF_LEN) > 0) {
         size_t ret = ScdUtilWrite(fd, data, strlen(data));
         if (ret != strlen(data)) {
@@ -223,9 +224,10 @@ STATIC TraStatus ScdLayoutWriteShdrProc(int32_t fd, ScdSection *shdr)
         }
         fileSize += ret;
     }
-    SCD_DLOG_INF("write section %s info, totalSize=%u, size=%ld, fd=%d.", shdr->name, shdr->totalSize, fileSize, procFd);
+    SCD_DLOG_INF(
+        "write section %s info, totalSize=%u, size=%ld, fd=%d.", shdr->name, shdr->totalSize, fileSize, procFd);
     size_t totalSize = (size_t)shdr->totalSize;
-    while(fileSize < totalSize) {
+    while (fileSize < totalSize) {
         (void)ScdUtilWrite(fd, " ", 1);
         fileSize++;
     }
@@ -235,41 +237,43 @@ STATIC TraStatus ScdLayoutWriteShdrProc(int32_t fd, ScdSection *shdr)
     return TRACE_SUCCESS;
 }
 
-STATIC TraStatus ScdLayoutWriteShdrFrames(int32_t fd, ScdSection *shdr)
+STATIC TraStatus ScdLayoutWriteShdrFrames(int32_t fd, ScdSection* shdr)
 {
     if (lseek(fd, shdr->offset, SEEK_SET) < 0) {
         SCD_DLOG_ERR("lseek failed, offset=%d, fd=%d, errno=%d.", shdr->offset, fd, errno);
         return TRACE_FAILURE;
     }
-    struct ListHead *pos = NULL;
-    struct AdiagListNode *node = NULL;
-    struct AdiagList *threadList = (struct AdiagList *)shdr->org;
-    LIST_FOR_EACH(pos, &threadList->list) {
+    struct ListHead* pos = NULL;
+    struct AdiagListNode* node = NULL;
+    struct AdiagList* threadList = (struct AdiagList*)shdr->org;
+    LIST_FOR_EACH(pos, &threadList->list)
+    {
         node = LIST_ENTRY(pos, struct AdiagListNode, list);
-        ScdThread *threadInfo = (ScdThread *)node->data;
+        ScdThread* threadInfo = (ScdThread*)node->data;
 
         // record frame info
-        struct ListHead *posFrame = NULL;
-        struct AdiagListNode *nodeFrame = NULL;
-        LIST_FOR_EACH(posFrame, &threadInfo->frames.frameList.list) {
+        struct ListHead* posFrame = NULL;
+        struct AdiagListNode* nodeFrame = NULL;
+        LIST_FOR_EACH(posFrame, &threadInfo->frames.frameList.list)
+        {
             nodeFrame = LIST_ENTRY(posFrame, struct AdiagListNode, list);
-            ScdFrame *frame = (ScdFrame *)nodeFrame->data;
+            ScdFrame* frame = (ScdFrame*)nodeFrame->data;
             size_t len = ScdUtilWrite(fd, frame, sizeof(ScdFrame));
             if (len != sizeof(ScdFrame)) {
                 SCD_DLOG_ERR("write frame section to file failed.");
-                return TRACE_FAILURE; 
+                return TRACE_FAILURE;
             }
         }
     }
     return TRACE_SUCCESS;
 }
 
-STATIC TraStatus ScdLayoutWriteShdr(int32_t fd, ScdProcess *pro)
+STATIC TraStatus ScdLayoutWriteShdr(int32_t fd, ScdProcess* pro)
 {
     for (uint32_t i = 0; i < SCD_MAX_SHDR_NUM; i++) {
         if (!pro->shdr[i].use) {
             break;
-        } 
+        }
         ScdShdrType type = pro->shdr[i].type;
         if (type == SCD_SHDR_TYPE_FD) {
             // read fd , then write
@@ -290,7 +294,7 @@ STATIC TraStatus ScdLayoutWriteShdr(int32_t fd, ScdProcess *pro)
     return TRACE_SUCCESS;
 }
 
-STATIC TraStatus ScdLayoutWritePhdr(int32_t fd, ScdProcess *pro)
+STATIC TraStatus ScdLayoutWritePhdr(int32_t fd, ScdProcess* pro)
 {
     size_t len = ScdUtilWrite(fd, pro, sizeof(ScdProcess));
     if (len != sizeof(ScdProcess)) {
@@ -300,10 +304,10 @@ STATIC TraStatus ScdLayoutWritePhdr(int32_t fd, ScdProcess *pro)
     return TRACE_SUCCESS;
 }
 
-STATIC TraStatus ScdSectionProcRecord(int32_t fd, const ScdSection *shdr, const ScdProcess *pro)
+STATIC TraStatus ScdSectionProcRecord(int32_t fd, const ScdSection* shdr, const ScdProcess* pro)
 {
     uintptr_t pos = (uintptr_t)pro + shdr->offset;
-    size_t len = ScdUtilWrite(fd, (const void *)pos, shdr->totalSize);
+    size_t len = ScdUtilWrite(fd, (const void*)pos, shdr->totalSize);
     if (len != shdr->totalSize) {
         SCD_DLOG_ERR("write proc section \"%s\" failed.", shdr->name);
         return TRACE_FAILURE;
@@ -311,7 +315,7 @@ STATIC TraStatus ScdSectionProcRecord(int32_t fd, const ScdSection *shdr, const 
     return TRACE_SUCCESS;
 }
 
-STATIC TraStatus ScdSectionStackRecord(int32_t fd, const ScdSection *shdr, const ScdProcess *pro)
+STATIC TraStatus ScdSectionStackRecord(int32_t fd, const ScdSection* shdr, const ScdProcess* pro)
 {
     uint32_t frameNum = shdr->num;
     int32_t threadIdx = 0;
@@ -321,7 +325,7 @@ STATIC TraStatus ScdSectionStackRecord(int32_t fd, const ScdSection *shdr, const
     uintptr_t pos = (uintptr_t)pro + shdr->offset;
     for (uint32_t i = 0; i < frameNum; i++) {
         uintptr_t framePos = pos + i * (uintptr_t)shdr->entSize;
-        ScdFrame *frame = (ScdFrame *)framePos;
+        ScdFrame* frame = (ScdFrame*)framePos;
         if (frame->tid != tid) {
             if (threadIdx != 0) {
                 ScdUtilWriteNewLine(fd);
@@ -339,11 +343,13 @@ STATIC TraStatus ScdSectionStackRecord(int32_t fd, const ScdSection *shdr, const
             }
         }
         if (strlen(frame->funcName) == 0) {
-            err = snprintf_s(tmpBuf, SCD_FRAME_LENGTH, SCD_FRAME_LENGTH - 1U,
-                "#%02u 0x%016lx 0x%016lx %s\n", frame->num, frame->pc, frame->base, frame->soName);
+            err = snprintf_s(
+                tmpBuf, SCD_FRAME_LENGTH, SCD_FRAME_LENGTH - 1U, "#%02u 0x%016lx 0x%016lx %s\n", frame->num, frame->pc,
+                frame->base, frame->soName);
         } else {
-            err = snprintf_s(tmpBuf, SCD_FRAME_LENGTH, SCD_FRAME_LENGTH - 1U,
-                "#%02u 0x%016lx 0x%016lx %s (%s)\n", frame->num, frame->pc, frame->base, frame->soName, frame->funcName);
+            err = snprintf_s(
+                tmpBuf, SCD_FRAME_LENGTH, SCD_FRAME_LENGTH - 1U, "#%02u 0x%016lx 0x%016lx %s (%s)\n", frame->num,
+                frame->pc, frame->base, frame->soName, frame->funcName);
         }
         if (err == -1) {
             SCD_DLOG_ERR("snprintf_s frame failed, tid=%d, frame index=%u.", frame->tid, frame->num);
@@ -357,7 +363,7 @@ STATIC TraStatus ScdSectionStackRecord(int32_t fd, const ScdSection *shdr, const
     return TRACE_SUCCESS;
 }
 
-STATIC TraStatus ScdSectionRecordByName(int32_t fd, const ScdSection *shdr, const ScdProcess *pro)
+STATIC TraStatus ScdSectionRecordByName(int32_t fd, const ScdSection* shdr, const ScdProcess* pro)
 {
     size_t len = ScdUtilWrite(fd, shdr->name, strlen(shdr->name));
     if (len != strlen(shdr->name)) {
@@ -375,10 +381,10 @@ STATIC TraStatus ScdSectionRecordByName(int32_t fd, const ScdSection *shdr, cons
     return ret;
 }
 
-TraStatus ScdSectionRecord(int32_t fd, const ScdProcess *pro, const char *name)
+TraStatus ScdSectionRecord(int32_t fd, const ScdProcess* pro, const char* name)
 {
     for (uint32_t i = 0; i < SCD_MAX_SHDR_NUM; i++) {
-        const ScdSection *shdr = &pro->shdr[i];
+        const ScdSection* shdr = &pro->shdr[i];
         if (!shdr->use) {
             continue;
         }
@@ -393,7 +399,7 @@ TraStatus ScdSectionRecord(int32_t fd, const ScdProcess *pro, const char *name)
     return TRACE_SUCCESS;
 }
 
-TraStatus ScdLayoutWrite(int32_t fd, ScdProcess *pro)
+TraStatus ScdLayoutWrite(int32_t fd, ScdProcess* pro)
 {
     // calculate core layout
     TraStatus ret = ScdLayoutSetShdr(pro);
@@ -418,7 +424,7 @@ TraStatus ScdLayoutWrite(int32_t fd, ScdProcess *pro)
     return TRACE_SUCCESS;
 }
 
-TraStatus ScdLayoutRead(ScdProcess **pro, const char *filePath)
+TraStatus ScdLayoutRead(ScdProcess** pro, const char* filePath)
 {
     // open bin
     int32_t fd = ScdUtilOpen(filePath);
@@ -434,7 +440,7 @@ TraStatus ScdLayoutRead(ScdProcess **pro, const char *filePath)
         return TRACE_FAILURE;
     }
     size_t fileSize = (size_t)ret;
-    void *buffer = AdiagMalloc(fileSize);
+    void* buffer = AdiagMalloc(fileSize);
     if (buffer == NULL) {
         SCD_DLOG_ERR("malloc failed.");
         (void)close(fd);
@@ -451,6 +457,6 @@ TraStatus ScdLayoutRead(ScdProcess **pro, const char *filePath)
     }
 
     (void)close(fd);
-    *pro = (ScdProcess *)buffer;
+    *pro = (ScdProcess*)buffer;
     return TRACE_SUCCESS;
 }

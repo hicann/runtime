@@ -154,10 +154,11 @@ DESTRUCTOR int32_t ProcessLogFree(void)
     }
 
     uint32_t platform = PLATFORM_INVALID_VALUE;
-    TWO_ACT_ERR_LOG(DrvGetPlatformInfo(&platform) != 0,
-                    (void)DrvFunctionsUninit(), return -1, "get platform info failed.");
-    TWO_ACT_INFO_LOG((platform != PLATFORM_INVALID_VALUE) && (platform != HOST_SIDE), (void)DrvFunctionsUninit(),
-                     return 0, "can't support platform[%u], only support host.", platform);
+    TWO_ACT_ERR_LOG(
+        DrvGetPlatformInfo(&platform) != 0, (void)DrvFunctionsUninit(), return -1, "get platform info failed.");
+    TWO_ACT_INFO_LOG(
+        (platform != PLATFORM_INVALID_VALUE) && (platform != HOST_SIDE), (void)DrvFunctionsUninit(), return 0,
+        "can't support platform[%u], only support host.", platform);
 
     // call PlogUnregisterDriverLog before free device resources,
     // avoid HDC print ERROR log to /root/ascend/plog when process destructor

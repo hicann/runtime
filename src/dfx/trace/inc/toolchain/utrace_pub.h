@@ -23,7 +23,7 @@ extern "C" {
  * @param [in]  objName:       object name
  * @return      atrace handle
  */
-TRACE_EXPORT TraHandle UtraceCreate(TracerType tracerType, const char *objName) __attribute((weak));
+TRACE_EXPORT TraHandle UtraceCreate(TracerType tracerType, const char* objName) __attribute((weak));
 
 /**
  * @brief       Create trace handle.
@@ -32,7 +32,8 @@ TRACE_EXPORT TraHandle UtraceCreate(TracerType tracerType, const char *objName) 
  * @param [in]  attr:          object attribute
  * @return      atrace handle
  */
-TRACE_EXPORT TraHandle UtraceCreateWithAttr(TracerType tracerType, const char *objName, const TraceAttr *attr) __attribute((weak));
+TRACE_EXPORT TraHandle UtraceCreateWithAttr(TracerType tracerType, const char* objName, const TraceAttr* attr)
+    __attribute((weak));
 
 /**
  * @brief       Get trace handle
@@ -40,7 +41,7 @@ TRACE_EXPORT TraHandle UtraceCreateWithAttr(TracerType tracerType, const char *o
  * @param [in]  objName:       object name
  * @return      atrace handle
  */
-TRACE_EXPORT TraHandle UtraceGetHandle(TracerType tracerType, const char *objName) __attribute((weak));
+TRACE_EXPORT TraHandle UtraceGetHandle(TracerType tracerType, const char* objName) __attribute((weak));
 
 /**
  * @brief       Submite trace info
@@ -49,7 +50,7 @@ TRACE_EXPORT TraHandle UtraceGetHandle(TracerType tracerType, const char *objNam
  * @param [in]  bufSize:   size of buffer
  * @return      TraStatus
  */
-TRACE_EXPORT TraStatus UtraceSubmit(TraHandle handle, const void *buffer, uint32_t bufSize) __attribute((weak));
+TRACE_EXPORT TraStatus UtraceSubmit(TraHandle handle, const void* buffer, uint32_t bufSize) __attribute((weak));
 
 /**
  * @brief       Destroy trace handle
@@ -74,22 +75,22 @@ TRACE_EXPORT TraStatus UtraceSave(TracerType tracerType, bool syncFlag) __attrib
  * @param [in]  bufSize:        size of buffer
  * @return      TraStatus
  */
-TRACE_EXPORT TraStatus UtraceSubmitByType(TraHandle handle, uint8_t bufferType,
-    const void *buffer, uint32_t bufSize) __attribute((weak));
+TRACE_EXPORT TraStatus UtraceSubmitByType(TraHandle handle, uint8_t bufferType, const void* buffer, uint32_t bufSize)
+    __attribute((weak));
 
 /**
  * @brief           create trace struct entry with name
  * @param [in]      name:       trace struct entry name
  * @return          success:trace struct entry  fail:null
  */
-TRACE_EXPORT TraceStructEntry *UtraceStructEntryCreate(const char *name) __attribute((weak));
+TRACE_EXPORT TraceStructEntry* UtraceStructEntryCreate(const char* name) __attribute((weak));
 
 /**
  * @brief           destroy trace struct entry
  * @param [in]      name:       trace struct entry name
  * @return          NA
  */
-TRACE_EXPORT void UtraceStructEntryDestroy(TraceStructEntry *en) __attribute((weak));
+TRACE_EXPORT void UtraceStructEntryDestroy(TraceStructEntry* en) __attribute((weak));
 
 /**
  * @brief           define trace struct item
@@ -100,8 +101,8 @@ TRACE_EXPORT void UtraceStructEntryDestroy(TraceStructEntry *en) __attribute((we
  * @param [in]      len:        bytes occupied by this item
  * @return          NA
  */
-TRACE_EXPORT void UtraceStructItemFieldSet(TraceStructEntry *en, const char *item,
-    uint8_t type, uint8_t mode, uint16_t len) __attribute((weak));
+TRACE_EXPORT void UtraceStructItemFieldSet(
+    TraceStructEntry* en, const char* item, uint8_t type, uint8_t mode, uint16_t len) __attribute((weak));
 
 /**
  * @brief           define trace struct item if array
@@ -112,8 +113,8 @@ TRACE_EXPORT void UtraceStructItemFieldSet(TraceStructEntry *en, const char *ite
  * @param [in]      len:        bytes occupied by this item
  * @return          NA
  */
-TRACE_EXPORT void UtraceStructItemArraySet(TraceStructEntry *en, const char *item,
-    uint8_t type, uint8_t mode, uint16_t len) __attribute((weak));
+TRACE_EXPORT void UtraceStructItemArraySet(
+    TraceStructEntry* en, const char* item, uint8_t type, uint8_t mode, uint16_t len) __attribute((weak));
 
 /**
  * @brief           set trace struct to trace attribute
@@ -122,21 +123,21 @@ TRACE_EXPORT void UtraceStructItemArraySet(TraceStructEntry *en, const char *ite
  * @param [in/out]  attr:       object attribute
  * @return          NA
  */
-TRACE_EXPORT void UtraceStructSetAttr(TraceStructEntry *en, uint8_t type, TraceAttr *attr) __attribute((weak));
+TRACE_EXPORT void UtraceStructSetAttr(TraceStructEntry* en, uint8_t type, TraceAttr* attr) __attribute((weak));
 
 /**
  * @brief       Create trace event.
  * @param [in]  eventName:     event name
  * @return      event handle
  */
-TRACE_EXPORT TraEventHandle UtraceEventCreate(const char *eventName) __attribute((weak));
+TRACE_EXPORT TraEventHandle UtraceEventCreate(const char* eventName) __attribute((weak));
 
 /**
  * @brief       Get event handle
  * @param [in]  eventName:     event name
  * @return      event handle
  */
-TRACE_EXPORT TraEventHandle UtraceEventGetHandle(const char *eventName) __attribute((weak));
+TRACE_EXPORT TraEventHandle UtraceEventGetHandle(const char* eventName) __attribute((weak));
 
 /**
  * @brief       Destroy event handle
@@ -159,7 +160,7 @@ TRACE_EXPORT TraStatus UtraceEventBindTrace(TraEventHandle eventHandle, TraHandl
  * @param [in]  attr:           event attribute
  * @return      TraStatus
  */
-TRACE_EXPORT TraStatus UtraceEventSetAttr(TraEventHandle eventHandle, const TraceEventAttr *attr) __attribute((weak));
+TRACE_EXPORT TraStatus UtraceEventSetAttr(TraEventHandle eventHandle, const TraceEventAttr* attr) __attribute((weak));
 
 /**
  * @brief       Report event and save the bound trace log to disk
@@ -173,7 +174,7 @@ TRACE_EXPORT TraStatus UtraceEventReportSync(TraEventHandle eventHandle) __attri
  * @param [in]  attr:           global attribute
  * @return      TraStatus
  */
-TRACE_EXPORT TraStatus UtraceSetGlobalAttr(const TraceGlobalAttr *attr) __attribute((weak));
+TRACE_EXPORT TraStatus UtraceSetGlobalAttr(const TraceGlobalAttr* attr) __attribute((weak));
 
 #ifdef __cplusplus
 }

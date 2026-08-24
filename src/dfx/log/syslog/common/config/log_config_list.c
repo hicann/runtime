@@ -14,13 +14,13 @@
 #include "log_config_block.h"
 #include "log_file_util.h"
 
-STATIC ConfList *g_confList = NULL;
+STATIC ConfList* g_confList = NULL;
 STATIC ToolMutex g_confMutex = TOOL_MUTEX_INITIALIZER;
 
 STATIC void LogConfListPrint(void)
 {
     SELF_LOG_INFO("============= config list=========");
-    ConfList *confListTmp = g_confList;
+    ConfList* confListTmp = g_confList;
     while (confListTmp != NULL) {
         SELF_LOG_INFO("%s = %s", confListTmp->confName, confListTmp->confValue);
         confListTmp = confListTmp->next;
@@ -29,26 +29,26 @@ STATIC void LogConfListPrint(void)
 }
 
 /**
-* @brief : insert config item to global list
-* @param [in] confName: config name string
-* @param [in] nameLen: config item string length
-* @param [in] confValue: config value string
-* @param [in] valueLen: config value string length
-* @return: SUCCEES: succeed; others: failed
-*/
-STATIC LogRt LogConfListInsert(const char *confName, uint32_t nameLen, const char *confValue, uint32_t valueLen)
+ * @brief : insert config item to global list
+ * @param [in] confName: config name string
+ * @param [in] nameLen: config item string length
+ * @param [in] confValue: config value string
+ * @param [in] valueLen: config value string length
+ * @return: SUCCEES: succeed; others: failed
+ */
+STATIC LogRt LogConfListInsert(const char* confName, uint32_t nameLen, const char* confValue, uint32_t valueLen)
 {
     ONE_ACT_WARN_LOG(confName == NULL, return ARGV_NULL, "[input] config name is null.");
     ONE_ACT_WARN_LOG(confValue == NULL, return ARGV_NULL, "[input] config value is null.");
-    ONE_ACT_WARN_LOG(nameLen > CONF_NAME_MAX_LEN, return ARGV_NULL,
-                     "[input] config name length is invalid, length=%u, max_length=%d.",
-                     nameLen, CONF_NAME_MAX_LEN);
-    ONE_ACT_WARN_LOG(valueLen > CONF_VALUE_MAX_LEN, return ARGV_NULL,
-                     "[input] config value length is invalid, length=%u, max_length=%d.",
-                     valueLen, CONF_VALUE_MAX_LEN);
+    ONE_ACT_WARN_LOG(
+        nameLen > CONF_NAME_MAX_LEN, return ARGV_NULL,
+        "[input] config name length is invalid, length=%u, max_length=%d.", nameLen, CONF_NAME_MAX_LEN);
+    ONE_ACT_WARN_LOG(
+        valueLen > CONF_VALUE_MAX_LEN, return ARGV_NULL,
+        "[input] config value length is invalid, length=%u, max_length=%d.", valueLen, CONF_VALUE_MAX_LEN);
 
-    ConfList *confListTemp = g_confList;
-    ConfList *confListNode = (ConfList *)LogMalloc(sizeof(ConfList));
+    ConfList* confListTemp = g_confList;
+    ConfList* confListNode = (ConfList*)LogMalloc(sizeof(ConfList));
     if (confListNode == NULL) {
         SELF_LOG_ERROR("malloc failed, strerr=%s.", strerror(ToolGetErrorCode()));
         return MALLOC_FAILED;
@@ -66,14 +66,13 @@ STATIC LogRt LogConfListInsert(const char *confName, uint32_t nameLen, const cha
     return SUCCESS;
 }
 
-
-static void LogConfParseCommon(FILE *fp)
+static void LogConfParseCommon(FILE* fp)
 {
     // parse common config item
-    char confName[CONF_NAME_MAX_LEN + 1] = { 0 };
-    char confValue[CONF_VALUE_MAX_LEN + 1] = { 0 };
-    char buf[CONF_FILE_MAX_LINE + 1] = { 0 };
-    char tmpBuf[CONF_FILE_MAX_LINE + 1] = { 0 };
+    char confName[CONF_NAME_MAX_LEN + 1] = {0};
+    char confValue[CONF_VALUE_MAX_LEN + 1] = {0};
+    char buf[CONF_FILE_MAX_LINE + 1] = {0};
+    char tmpBuf[CONF_FILE_MAX_LINE + 1] = {0};
     int64_t pos = LogFileTell(fp);
     while (LogFileGets(buf, CONF_FILE_MAX_LINE, fp) == LOG_SUCCESS) {
         uint32_t start = 0;
@@ -88,16 +87,19 @@ static void LogConfParseCommon(FILE *fp)
         }
 
         int32_t ret = strcpy_s(tmpBuf, sizeof(tmpBuf) - 1U, (buf + start));
-        ONE_ACT_ERR_LOG(ret != EOK, continue, "strcpy_s config item failed, result=%d, strerr=%s.",
-                        ret, strerror(ToolGetErrorCode()));
+        ONE_ACT_ERR_LOG(
+            ret != EOK, continue, "strcpy_s config item failed, result=%d, strerr=%s.", ret,
+            strerror(ToolGetErrorCode()));
 
         LogRt res = LogConfParseLine(tmpBuf, confName, CONF_NAME_MAX_LEN, confValue, CONF_VALUE_MAX_LEN);
-        ONE_ACT_WARN_LOG(res != SUCCESS, continue, "parse one line config item failed, result=%d, strerr=%s.",
-                         (int32_t)res, strerror(ToolGetErrorCode()));
+        ONE_ACT_WARN_LOG(
+            res != SUCCESS, continue, "parse one line config item failed, result=%d, strerr=%s.", (int32_t)res,
+            strerror(ToolGetErrorCode()));
 
         res = LogConfListInsert(confName, CONF_NAME_MAX_LEN, confValue, CONF_VALUE_MAX_LEN);
-        ONE_ACT_ERR_LOG(res != SUCCESS, continue, "init config list failed, result=%d, strerr=%s.",
-                        (int32_t)res, strerror(ToolGetErrorCode()));
+        ONE_ACT_ERR_LOG(
+            res != SUCCESS, continue, "init config list failed, result=%d, strerr=%s.", (int32_t)res,
+            strerror(ToolGetErrorCode()));
         pos = LogFileTell(fp);
     }
     // if not goto file end, reset for next parse
@@ -107,18 +109,19 @@ static void LogConfParseCommon(FILE *fp)
 }
 
 /**
-* @brief LogConfListInit: config item list init from config file
-* @param [in] file: config file realpath include filename, it can be NULL
-* @return: SUCCEES: succeed; others: failed
-*/
-LogRt LogConfListInit(const char *file)
+ * @brief LogConfListInit: config item list init from config file
+ * @param [in] file: config file realpath include filename, it can be NULL
+ * @return: SUCCEES: succeed; others: failed
+ */
+LogRt LogConfListInit(const char* file)
 {
-    FILE *fp = NULL;
+    FILE* fp = NULL;
     // if file is NULL, then use default config file path
     LogRt res = LogConfOpenFile(&fp, file);
     if (res != SUCCESS) {
-        SELF_LOG_ERROR("open config file failed, file=%s, result=%d, strerr=%s.",
-                       file, (int32_t)res, strerror(ToolGetErrorCode()));
+        SELF_LOG_ERROR(
+            "open config file failed, file=%s, result=%d, strerr=%s.", file, (int32_t)res,
+            strerror(ToolGetErrorCode()));
         fp = NULL;
         return OPEN_FILE_FAILED;
     }
@@ -133,15 +136,15 @@ LogRt LogConfListInit(const char *file)
 }
 
 /**
-* @brief : config item list update from config file
-* @param [in] file: config file realpath include filename, it can be NULL
-* @return: SUCCEES: succeed; others: failed
-*/
-LogRt LogConfListUpdate(const char *file)
+ * @brief : config item list update from config file
+ * @param [in] file: config file realpath include filename, it can be NULL
+ * @return: SUCCEES: succeed; others: failed
+ */
+LogRt LogConfListUpdate(const char* file)
 {
     LOCK_WARN_LOG(&g_confMutex);
-    ConfList *confListTmp = g_confList;
-    ConfList *confListNode = NULL;
+    ConfList* confListTmp = g_confList;
+    ConfList* confListNode = NULL;
 
     while (confListTmp != NULL) {
         confListNode = confListTmp;
@@ -157,8 +160,8 @@ LogRt LogConfListUpdate(const char *file)
 void LogConfListFree(void)
 {
     LOCK_WARN_LOG(&g_confMutex);
-    ConfList *confListTmp = g_confList;
-    ConfList *confListNode = NULL;
+    ConfList* confListTmp = g_confList;
+    ConfList* confListNode = NULL;
 
     while (confListTmp != NULL) {
         confListNode = confListTmp;
@@ -172,32 +175,32 @@ void LogConfListFree(void)
 }
 
 /**
-* @brief : get config value
-* @param [in] confName: config name string
-* @param [in] nameLen: config item string length
-* @param [out] confValue: config value string
-* @param [in] valueLen: config value string length
-* @return: SUCCEES: succeed; others: failed
-*/
-LogRt LogConfListGetValue(const char *confName, uint32_t nameLen, char *confValue, uint32_t valueLen)
+ * @brief : get config value
+ * @param [in] confName: config name string
+ * @param [in] nameLen: config item string length
+ * @param [out] confValue: config value string
+ * @param [in] valueLen: config value string length
+ * @return: SUCCEES: succeed; others: failed
+ */
+LogRt LogConfListGetValue(const char* confName, uint32_t nameLen, char* confValue, uint32_t valueLen)
 {
     ONE_ACT_WARN_LOG(confName == NULL, return ARGV_NULL, "[input] config name is null.");
     ONE_ACT_WARN_LOG(confValue == NULL, return ARGV_NULL, "[output] config value is null.");
-    ONE_ACT_WARN_LOG(nameLen > CONF_NAME_MAX_LEN, return ARGV_NULL,
-                     "[input] config name length is invalid, length=%u, max_length=%d.",
-                     nameLen, CONF_NAME_MAX_LEN);
-    ONE_ACT_WARN_LOG(valueLen > CONF_VALUE_MAX_LEN, return ARGV_NULL,
-                     "[input] config value length is invalid, length=%u, max_length=%d.",
-                     valueLen, CONF_VALUE_MAX_LEN);
+    ONE_ACT_WARN_LOG(
+        nameLen > CONF_NAME_MAX_LEN, return ARGV_NULL,
+        "[input] config name length is invalid, length=%u, max_length=%d.", nameLen, CONF_NAME_MAX_LEN);
+    ONE_ACT_WARN_LOG(
+        valueLen > CONF_VALUE_MAX_LEN, return ARGV_NULL,
+        "[input] config value length is invalid, length=%u, max_length=%d.", valueLen, CONF_VALUE_MAX_LEN);
 
     LOCK_WARN_LOG(&g_confMutex);
-    const ConfList *confListTmp = g_confList;
+    const ConfList* confListTmp = g_confList;
     while (confListTmp != NULL) {
         if (strcmp(confName, confListTmp->confName) == 0) {
             int ret = strcpy_s(confValue, valueLen, confListTmp->confValue);
             if (ret != EOK) {
-                SELF_LOG_ERROR("strcpy_s config value failed, result=%d, strerr=%s.",
-                               ret, strerror(ToolGetErrorCode()));
+                SELF_LOG_ERROR(
+                    "strcpy_s config value failed, result=%d, strerr=%s.", ret, strerror(ToolGetErrorCode()));
                 UNLOCK_WARN_LOG(&g_confMutex);
                 return STR_COPY_FAILED;
             }
@@ -218,9 +221,9 @@ LogRt LogConfListGetValue(const char *confName, uint32_t nameLen, char *confValu
  * @param [in]  : defaultValue      default value
  * @return      : config value
  */
-uint32_t LogConfListGetDigit(const char *confName, uint32_t minValue, uint32_t maxValue, uint32_t defaultValue)
+uint32_t LogConfListGetDigit(const char* confName, uint32_t minValue, uint32_t maxValue, uint32_t defaultValue)
 {
-    char confValue[CONF_VALUE_MAX_LEN + 1] = { 0 };
+    char confValue[CONF_VALUE_MAX_LEN + 1] = {0};
     LogRt ret = LogConfListGetValue(confName, (uint32_t)strlen(confName), confValue, CONF_VALUE_MAX_LEN);
     if (ret != SUCCESS) {
         SELF_LOG_WARN("can not get config, config name:%s, use default value:%u", confName, defaultValue);
@@ -241,7 +244,7 @@ int32_t LogConfListTraverse(const LogListFindFunc func, ArgPtr arg, bool isNewSt
         return SYS_ERROR;
     }
     LOCK_WARN_LOG(&g_confMutex);
-    const ConfList *confListTmp = g_confList;
+    const ConfList* confListTmp = g_confList;
     while (confListTmp != NULL) {
         int32_t ret = func(confListTmp, arg, isNewStyle);
         if (ret != SYS_OK) {
@@ -253,4 +256,3 @@ int32_t LogConfListTraverse(const LogListFindFunc func, ArgPtr arg, bool isNewSt
     UNLOCK_WARN_LOG(&g_confMutex);
     return SYS_OK;
 }
-

@@ -14,7 +14,6 @@
 #include "log_error_code.h"
 #include "log_common.h"
 
-
 #define MAX_QUEUE_COUNT 8
 #define MAX_QUEUE_SIZE (8 * 1024 * 1024)
 
@@ -25,46 +24,46 @@ extern "C" {
 typedef struct Node {
     uint32_t uiNodeDataLen;
     uint32_t uiNodeNum;
-    void *stNodeData;
-    struct Node *next;
+    void* stNodeData;
+    struct Node* next;
     int16_t moduleId;
 } LogNode;
 
 typedef struct {
     uint32_t uiNodeNum;
-    void *stNodeData;
+    void* stNodeData;
 } NodesInfo;
 
 typedef struct {
     uint32_t deviceId;
     uint32_t uiCount;
     uint32_t uiSize;
-    LogNode *stHead; // void struct should have uiSize
-    LogNode *stRear;
+    LogNode* stHead; // void struct should have uiSize
+    LogNode* stRear;
 } LogQueue;
 
 // queue init
-LogRt LogQueueInit(LogQueue *queue, uint32_t deviceId);
+LogRt LogQueueInit(LogQueue* queue, uint32_t deviceId);
 
 // queue free
-LogRt LogQueueFree(LogQueue *queue, void (*freeNode)(LogNode **));
+LogRt LogQueueFree(LogQueue* queue, void (*freeNode)(LogNode**));
 
 // node enqueue
-LogRt LogQueueEnqueue(LogQueue *queue, LogNode *node);
+LogRt LogQueueEnqueue(LogQueue* queue, LogNode* node);
 
 // node dequeue
-LogRt LogQueueDequeue(LogQueue *queue, LogNode **node);
+LogRt LogQueueDequeue(LogQueue* queue, LogNode** node);
 
 // check whether queue is full
-LogRt LogQueueFull(const LogQueue *queue);
+LogRt LogQueueFull(const LogQueue* queue);
 
 // check whether queue is NULL
-LogRt LogQueueNULL(const LogQueue *queue);
+LogRt LogQueueNULL(const LogQueue* queue);
 
-void XFreeLogNode(LogNode **node);
+void XFreeLogNode(LogNode** node);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif  // __LOG_BUF_Q_H__
+#endif // __LOG_BUF_Q_H__

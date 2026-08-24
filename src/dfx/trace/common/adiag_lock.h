@@ -20,14 +20,13 @@ extern "C" {
 #endif // __cplusplus
 
 typedef mmMutex_t AdiagLock;
-AdiagStatus AdiagLockInit(AdiagLock *lock);
-AdiagStatus AdiagLockDestroy(AdiagLock *lock);
-AdiagStatus AdiagLockGet(AdiagLock *lock);
-AdiagStatus AdiagLockRelease(AdiagLock *lock);
+AdiagStatus AdiagLockInit(AdiagLock* lock);
+AdiagStatus AdiagLockDestroy(AdiagLock* lock);
+AdiagStatus AdiagLockGet(AdiagLock* lock);
+AdiagStatus AdiagLockRelease(AdiagLock* lock);
 
 #ifdef __cplusplus
 }
 #endif // __cplusplus
 
 #endif
-

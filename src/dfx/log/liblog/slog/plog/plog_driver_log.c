@@ -8,7 +8,6 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-
 #include "plog_driver_log.h"
 #include "dlog_core.h"
 #include "plog_driver_api.h"
@@ -25,7 +24,7 @@ extern "C" {
 #endif
 
 #ifdef HAL_REGISTER_ALOG
-STATIC void PlogDriverLog(int32_t moduleId, int32_t level, const char *fmt, ...)
+STATIC void PlogDriverLog(int32_t moduleId, int32_t level, const char* fmt, ...)
 {
     if ((moduleId < 0) || (fmt == NULL)) {
         return;
@@ -38,8 +37,7 @@ STATIC void PlogDriverLog(int32_t moduleId, int32_t level, const char *fmt, ...)
         0,
         {APPLICATION, 0, 0, 0, {'\0'}},
         {'\0'},
-        {NULL, 0}
-    };
+        {NULL, 0}};
 
     va_list list;
     va_start(list, fmt);
@@ -49,7 +47,7 @@ STATIC void PlogDriverLog(int32_t moduleId, int32_t level, const char *fmt, ...)
 
 STATIC uint32_t PlogGetLogLevelByEnv(void)
 {
-    const char *env = NULL;
+    const char* env = NULL;
     MM_SYS_GET_ENV(MM_ENV_ASCEND_GLOBAL_LOG_LEVEL, (env));
     if (env != NULL) {
         int64_t tmpL = -1;
@@ -58,8 +56,7 @@ STATIC uint32_t PlogGetLogLevelByEnv(void)
             return (uint32_t)tmpL;
         }
     }
-    SELF_LOG_INFO("can not get global log level from env, maybe is's null. Use default: %d",
-                  GLOABLE_DEFAULT_LOG_LEVEL);
+    SELF_LOG_INFO("can not get global log level from env, maybe is's null. Use default: %d", GLOABLE_DEFAULT_LOG_LEVEL);
     return GLOABLE_DEFAULT_LOG_LEVEL;
 }
 
@@ -86,17 +83,10 @@ void PlogUnregisterDriverLog(void)
 
 #else
 
-void PlogRegisterDriverLog(void)
-{
-    return;
-}
+void PlogRegisterDriverLog(void) { return; }
 
-void PlogUnregisterDriverLog(void)
-{
-    return;
-}
+void PlogUnregisterDriverLog(void) { return; }
 #ifdef __cplusplus
 }
 #endif
 #endif
-

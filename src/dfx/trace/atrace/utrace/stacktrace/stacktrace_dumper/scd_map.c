@@ -12,15 +12,12 @@
 #include "scd_log.h"
 #include "adiag_utils.h"
 
-uintptr_t ScdMapGetRelPc(ScdMap *map, uintptr_t absPc)
+uintptr_t ScdMapGetRelPc(ScdMap* map, uintptr_t absPc)
 {
     return absPc - (map->start - map->offset) + map->dl.elf.memory->data + map->dl.elf.loadBias;
 }
 
-uintptr_t ScdMapGetBase(ScdMap *map)
-{
-    return map->start - (uintptr_t)map->offset;
-}
+uintptr_t ScdMapGetBase(ScdMap* map) { return map->start - (uintptr_t)map->offset; }
 
 /**
  * @brief       update map node based on start addr and end addr
@@ -30,20 +27,20 @@ uintptr_t ScdMapGetBase(ScdMap *map)
  * @param [in]  offset:     offset
  * @return      NA
  */
-TraStatus ScdMapUpdata(ScdMap *map, uintptr_t start, uintptr_t end, size_t offset)
+TraStatus ScdMapUpdata(ScdMap* map, uintptr_t start, uintptr_t end, size_t offset)
 {
     SCD_CHK_PTR_ACTION(map, return TRACE_FAILURE);
     if ((map->end != start) && (map->start != end)) {
         return TRACE_FAILURE;
     }
 
-    map->start  = SCD_MIN(start, map->start);
-    map->end    = SCD_MAX(end, map->end);
+    map->start = SCD_MIN(start, map->start);
+    map->end = SCD_MAX(end, map->end);
     map->offset = SCD_MIN(offset, map->offset);
     return TRACE_SUCCESS;
 }
 
-STATIC TraStatus ScdMapInit(ScdMap *map, uintptr_t start, uintptr_t end, size_t offset, const char *name)
+STATIC TraStatus ScdMapInit(ScdMap* map, uintptr_t start, uintptr_t end, size_t offset, const char* name)
 {
     // obtain the data from the file.
     // fault tolerance processing will be added later : if failed from the file, use the ptrace to obtain the data
@@ -68,7 +65,7 @@ STATIC TraStatus ScdMapInit(ScdMap *map, uintptr_t start, uintptr_t end, size_t 
     return TRACE_SUCCESS;
 }
 
-STATIC void ScdMapUninit(ScdMap *map)
+STATIC void ScdMapUninit(ScdMap* map)
 {
     SCD_CHK_PTR_ACTION(map, return);
     ScdDlUninit(&map->dl);
@@ -83,9 +80,9 @@ STATIC void ScdMapUninit(ScdMap *map)
  * @param [in]  name:       dynamic library name
  * @return      ScdMap *
  */
-ScdMap *ScdMapCreate(uintptr_t start, uintptr_t end, size_t offset, const char *name)
+ScdMap* ScdMapCreate(uintptr_t start, uintptr_t end, size_t offset, const char* name)
 {
-    ScdMap *map = (ScdMap *)AdiagMalloc(sizeof(ScdMap)); 
+    ScdMap* map = (ScdMap*)AdiagMalloc(sizeof(ScdMap));
     if (map != NULL) {
         TraStatus ret = ScdMapInit(map, start, end, offset, name);
         if (ret != TRACE_SUCCESS) {
@@ -101,7 +98,7 @@ ScdMap *ScdMapCreate(uintptr_t start, uintptr_t end, size_t offset, const char *
  * @param [in]  map:        a map node
  * @return      NA
  */
-void ScdMapDestroy(ScdMap **map)
+void ScdMapDestroy(ScdMap** map)
 {
     SCD_CHK_PTR_ACTION(map, return);
     ScdMapUninit(*map);

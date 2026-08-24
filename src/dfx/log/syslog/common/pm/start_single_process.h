@@ -27,9 +27,9 @@ typedef struct {
 } LockRegParams;
 
 // File lock, Just start a process
-LogStatus JustStartAProcess(const char *file);
+LogStatus JustStartAProcess(const char* file);
 // File lock, end
-void SingleResourceCleanup(const char *file);
+void SingleResourceCleanup(const char* file);
 
 #ifdef __cplusplus
 }

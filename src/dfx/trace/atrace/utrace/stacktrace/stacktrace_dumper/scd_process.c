@@ -14,15 +14,15 @@
 #include "scd_log.h"
 #include "scd_layout.h"
 
-#define SCD_FILE_TXT_SUFFIX                     ".txt"
-#define SCD_FILE_BIN_SUFFIX                     ".bin"
-#define SCD_BUFFER_LENGTH   1024U
+#define SCD_FILE_TXT_SUFFIX ".txt"
+#define SCD_FILE_BIN_SUFFIX ".bin"
+#define SCD_BUFFER_LENGTH 1024U
 
-STATIC ScdProcess *g_scdProcessCore = NULL;
+STATIC ScdProcess* g_scdProcessCore = NULL;
 
-static void ScdProcessRecordRegInfo(int32_t fd, const ScdRegs *info)
+static void ScdProcessRecordRegInfo(int32_t fd, const ScdRegs* info)
 {
-    char tmpBuf[SCD_BUFFER_LENGTH] = { 0 };
+    char tmpBuf[SCD_BUFFER_LENGTH] = {0};
     TraStatus ret = ScdRegsGetString(info, tmpBuf, SCD_BUFFER_LENGTH);
     if (ret != TRACE_SUCCESS) {
         SCD_DLOG_ERR("get register info string failed, ret=%d.", ret);
@@ -37,19 +37,19 @@ static void ScdProcessRecordRegInfo(int32_t fd, const ScdRegs *info)
 
 STATIC void ScdProcessRecordKernelVersion(int32_t fd)
 {
-    const char *unknownVersion = "kernel version: unknown\n";
-    FILE *fp = popen("uname -a", "r");
+    const char* unknownVersion = "kernel version: unknown\n";
+    FILE* fp = popen("uname -a", "r");
     if (fp == NULL) {
         SCD_DLOG_ERR("get kernel version failed, errno=%d.", errno);
         (void)ScdUtilWrite(fd, unknownVersion, strlen(unknownVersion));
         return;
     }
 
-    char tmpBuf[SCD_BUFFER_LENGTH] = { 0 };
-    char kernelVersion[SCD_BUFFER_LENGTH] = { 0 };
+    char tmpBuf[SCD_BUFFER_LENGTH] = {0};
+    char kernelVersion[SCD_BUFFER_LENGTH] = {0};
     if (fgets(kernelVersion, (int32_t)sizeof(kernelVersion), fp) != NULL) {
-        int32_t err = snprintf_s(tmpBuf, SCD_BUFFER_LENGTH, SCD_BUFFER_LENGTH - 1U,
-            "kernel version: %s", kernelVersion);
+        int32_t err =
+            snprintf_s(tmpBuf, SCD_BUFFER_LENGTH, SCD_BUFFER_LENGTH - 1U, "kernel version: %s", kernelVersion);
         if (err == -1) {
             SCD_DLOG_ERR("snprintf_s kernel version failed, errno = %d.", errno);
             (void)ScdUtilWrite(fd, unknownVersion, strlen(unknownVersion));
@@ -66,22 +66,19 @@ STATIC void ScdProcessRecordKernelVersion(int32_t fd)
     }
 }
 
-STATIC void ScdProcessRecordSiginfo(int32_t fd, const ScdProcess *info)
+STATIC void ScdProcessRecordSiginfo(int32_t fd, const ScdProcess* info)
 {
-    char tmpBuf[SCD_BUFFER_LENGTH] = { 0 };
-    int32_t err = snprintf_s(tmpBuf, SCD_BUFFER_LENGTH, SCD_BUFFER_LENGTH - 1U,
+    char tmpBuf[SCD_BUFFER_LENGTH] = {0};
+    int32_t err = snprintf_s(
+        tmpBuf, SCD_BUFFER_LENGTH, SCD_BUFFER_LENGTH - 1U,
         "crash task:%s\n"
         "crash pid:%d\n"
         "crash tid:%d\n"
         "crash stack base:0x%016lx\n"
         "crash stack top:0x%016lx\n"
         "crash reason: signal %d\n",
-        info->pname,
-        info->args.pid,
-        info->args.crashTid,
-        info->args.stackBaseAddr,
-        GET_SPREG_FROM_CONTEXT(&info->args.uc.uc_mcontext),
-        info->args.signo);
+        info->pname, info->args.pid, info->args.crashTid, info->args.stackBaseAddr,
+        GET_SPREG_FROM_CONTEXT(&info->args.uc.uc_mcontext), info->args.signo);
     if (err == -1) {
         SCD_DLOG_ERR("snprintf_s failed, errno = %d.", errno);
         return;
@@ -94,7 +91,7 @@ STATIC void ScdProcessRecordSiginfo(int32_t fd, const ScdProcess *info)
     }
 }
 
-STATIC TraStatus ScdProcessRecordInfo(int32_t fd, const ScdProcess *pro)
+STATIC TraStatus ScdProcessRecordInfo(int32_t fd, const ScdProcess* pro)
 {
     // record [process]
     ScdUtilWriteTitle(fd, SCD_SECTION_PROCESS);
@@ -105,7 +102,7 @@ STATIC TraStatus ScdProcessRecordInfo(int32_t fd, const ScdProcess *pro)
     return TRACE_SUCCESS;
 }
 
-STATIC TraStatus ScdProcessRecordStack(int32_t fd, const ScdProcess *pro)
+STATIC TraStatus ScdProcessRecordStack(int32_t fd, const ScdProcess* pro)
 {
     // record [stack]
     ScdUtilWriteTitle(fd, SCD_SECTION_STACK);
@@ -116,7 +113,7 @@ STATIC TraStatus ScdProcessRecordStack(int32_t fd, const ScdProcess *pro)
     return TRACE_SUCCESS;
 }
 
-STATIC INLINE TraStatus ScdProcessRecordProcInfo(int32_t fd, pid_t pid, const char *name)
+STATIC INLINE TraStatus ScdProcessRecordProcInfo(int32_t fd, pid_t pid, const char* name)
 {
     // 拼接文件：/proc/{pid}/name
     // 从文件中逐行读取，逐行写
@@ -130,7 +127,7 @@ STATIC INLINE TraStatus ScdProcessRecordProcInfo(int32_t fd, pid_t pid, const ch
     } else if (strcmp(name, SCD_SECTION_LIMITS) == 0) {
         ScdUtilWriteTitle(fd, name);
         ret = ScdUtilWriteProcInfo(fd, pid, "limits");
-    } else  if (strcmp(name, SCD_SECTION_MAPS) == 0) {
+    } else if (strcmp(name, SCD_SECTION_MAPS) == 0) {
         ScdUtilWriteTitle(fd, name);
         ret = ScdUtilWriteProcInfo(fd, pid, "maps");
     } else {
@@ -142,7 +139,7 @@ STATIC INLINE TraStatus ScdProcessRecordProcInfo(int32_t fd, pid_t pid, const ch
     return ret;
 }
 
-STATIC TraStatus ScdProcessLoadInfo(ScdProcess *pro)
+STATIC TraStatus ScdProcessLoadInfo(ScdProcess* pro)
 {
     // get pname
     ScdUtilGetProcessName(pro->args.pid, pro->pname, SCD_PNAME_LEN);
@@ -151,7 +148,7 @@ STATIC TraStatus ScdProcessLoadInfo(ScdProcess *pro)
     return ScdThreadsLoadInfo(&pro->thds);
 }
 
-STATIC TraStatus ScdProcessLoad(ScdProcess *pro)
+STATIC TraStatus ScdProcessLoad(ScdProcess* pro)
 {
     TraStatus ret = ScdMapsLoad(&pro->maps);
     if (ret != TRACE_SUCCESS) {
@@ -173,9 +170,9 @@ STATIC TraStatus ScdProcessLoad(ScdProcess *pro)
     return TRACE_SUCCESS;
 }
 
-STATIC TraStatus ScdProcessInit(ScdProcess **process, const ScdProcessArgs *args)
+STATIC TraStatus ScdProcessInit(ScdProcess** process, const ScdProcessArgs* args)
 {
-    ScdProcess *pro = (ScdProcess *)AdiagMalloc(sizeof(ScdProcess));
+    ScdProcess* pro = (ScdProcess*)AdiagMalloc(sizeof(ScdProcess));
     if (pro == NULL) {
         SCD_DLOG_ERR("malloc struct ScdProcess failed.");
         return TRACE_FAILURE;
@@ -205,12 +202,12 @@ STATIC TraStatus ScdProcessInit(ScdProcess **process, const ScdProcessArgs *args
     return TRACE_SUCCESS;
 }
 
-STATIC void ScdProcessUninit(ScdProcess **process)
+STATIC void ScdProcessUninit(ScdProcess** process)
 {
     if (*process == NULL) {
         return;
     }
-    ScdProcess *pro = *process;
+    ScdProcess* pro = *process;
     ScdMapsUninit(&pro->maps);
     ScdThreadsUninit(&pro->thds);
     AdiagFree(pro);
@@ -218,15 +215,15 @@ STATIC void ScdProcessUninit(ScdProcess **process)
     return;
 }
 
-STATIC TraStatus ScdProcessCreateFile(const ScdProcessArgs *args, const char *suffix, int32_t *fd)
+STATIC TraStatus ScdProcessCreateFile(const ScdProcessArgs* args, const char* suffix, int32_t* fd)
 {
     if (access(args->filePath, F_OK) != 0) {
         SCD_DLOG_ERR("file path \"%s\" does not exist.", args->filePath);
         return TRACE_FAILURE;
     }
     char path[SCD_MAX_FULLPATH_LEN + 1U] = {0};
-    int32_t err = snprintf_s(path, SCD_MAX_FULLPATH_LEN + 1U, SCD_MAX_FULLPATH_LEN, "%s/%s%s",
-        args->filePath, args->fileName, suffix);
+    int32_t err = snprintf_s(
+        path, SCD_MAX_FULLPATH_LEN + 1U, SCD_MAX_FULLPATH_LEN, "%s/%s%s", args->filePath, args->fileName, suffix);
     if (err == -1) {
         SCD_DLOG_ERR("snprintf_s failed, err=%d.", err);
         return TRACE_FAILURE;
@@ -248,7 +245,7 @@ STATIC TraStatus ScdProcessCreateFile(const ScdProcessArgs *args, const char *su
     return TRACE_SUCCESS;
 }
 
-STATIC TraStatus ScdProcessRecordTxt(const ScdProcess *pro)
+STATIC TraStatus ScdProcessRecordTxt(const ScdProcess* pro)
 {
     // open file
     int32_t fd = -1;
@@ -285,7 +282,7 @@ STATIC TraStatus ScdProcessRecordTxt(const ScdProcess *pro)
     return TRACE_SUCCESS;
 }
 
-STATIC TraStatus ScdProcessRecordCore(ScdProcess *pro)
+STATIC TraStatus ScdProcessRecordCore(ScdProcess* pro)
 {
     // create bin file
     int32_t fd = -1;
@@ -305,12 +302,9 @@ STATIC TraStatus ScdProcessRecordCore(ScdProcess *pro)
     return TRACE_SUCCESS;
 }
 
-STATIC TraStatus ScdProcessReadCore(ScdProcess **pro, const char *filePath)
-{
-    return ScdLayoutRead(pro, filePath);
-}
+STATIC TraStatus ScdProcessReadCore(ScdProcess** pro, const char* filePath) { return ScdLayoutRead(pro, filePath); }
 
-TraStatus ScdProcessDump(const ScdProcessArgs *args)
+TraStatus ScdProcessDump(const ScdProcessArgs* args)
 {
     // 1. init process object
     TraStatus ret = ScdProcessInit(&g_scdProcessCore, args);
@@ -357,7 +351,7 @@ TraStatus ScdProcessDump(const ScdProcessArgs *args)
     return ret;
 }
 
-static TraStatus ScdProcessCheckBinPath(const char *filePath, uint32_t len)
+static TraStatus ScdProcessCheckBinPath(const char* filePath, uint32_t len)
 {
     if (len >= TRACE_MAX_PATH) {
         SCD_DLOG_ERR("path length [%u] bytes exceeds [%d] bytes", len, TRACE_MAX_PATH);
@@ -371,7 +365,7 @@ static TraStatus ScdProcessCheckBinPath(const char *filePath, uint32_t len)
         SCD_DLOG_ERR("input path [%s] does not exist", filePath);
         return TRACE_INVALID_PARAM;
     }
-    char *suffix = strrchr(filePath, '.');
+    char* suffix = strrchr(filePath, '.');
     if ((suffix != NULL) && strcmp(suffix, SCD_FILE_BIN_SUFFIX) == 0) {
         return TRACE_SUCCESS;
     } else {
@@ -380,7 +374,7 @@ static TraStatus ScdProcessCheckBinPath(const char *filePath, uint32_t len)
     }
 }
 
-TraStatus ScdProcessParseCore(const char *filePath, uint32_t len)
+TraStatus ScdProcessParseCore(const char* filePath, uint32_t len)
 {
     TraStatus ret = ScdProcessCheckBinPath(filePath, len);
     if (ret != TRACE_SUCCESS) {
@@ -388,7 +382,7 @@ TraStatus ScdProcessParseCore(const char *filePath, uint32_t len)
         return TRACE_FAILURE;
     }
 
-    char realPath[TRACE_MAX_PATH] = { 0 };
+    char realPath[TRACE_MAX_PATH] = {0};
     if ((TraceRealPath(filePath, realPath, TRACE_MAX_PATH) != EN_OK) && (errno != ENOENT)) {
         SCD_DLOG_ERR("can not get realpath, path=%s, errno=%d.", filePath, errno);
         return TRACE_FAILURE;

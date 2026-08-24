@@ -22,44 +22,32 @@ typedef struct {
     TraceUserBlock block;
 } ThreadInfo;
 
-STATIC ThreadInfo **g_traceThread = NULL;
+STATIC ThreadInfo** g_traceThread = NULL;
 STATIC pthread_mutex_t g_traceThreadMutex = TRACE_MUTEX_INITIALIZER;
 
 /**
  * @brief       : init thread mutex
  * @return      : NA
  */
-STATIC INLINE void AtraceThreadMutexInit(void)
-{
-    (void)AdiagLockInit(&g_traceThreadMutex);
-}
+STATIC INLINE void AtraceThreadMutexInit(void) { (void)AdiagLockInit(&g_traceThreadMutex); }
 
 /**
  * @brief       : Destroy thread mutex
  * @return      : NA
  */
-STATIC INLINE void AtraceThreadMutexDestroy(void)
-{
-    (void)AdiagLockDestroy(&g_traceThreadMutex);
-}
+STATIC INLINE void AtraceThreadMutexDestroy(void) { (void)AdiagLockDestroy(&g_traceThreadMutex); }
 
 /**
  * @brief       : lock thread mutex
  * @return      : NA
  */
-STATIC INLINE void AtraceThreadLock(void)
-{
-    (void)AdiagLockGet(&g_traceThreadMutex);
-}
+STATIC INLINE void AtraceThreadLock(void) { (void)AdiagLockGet(&g_traceThreadMutex); }
 
 /**
  * @brief       : unlock thread mutex
  * @return      : NA
  */
-STATIC INLINE void AtraceThreadUnLock(void)
-{
-    (void)AdiagLockRelease(&g_traceThreadMutex);
-}
+STATIC INLINE void AtraceThreadUnLock(void) { (void)AdiagLockRelease(&g_traceThreadMutex); }
 
 STATIC void AtraceThreadSetStatus(int32_t devId, int8_t value)
 {
@@ -88,8 +76,8 @@ int8_t AtraceThreadGetStatus(int32_t devId)
  */
 STATIC TraceThread AtraceThreadGetTid(int32_t devId)
 {
-    ADIAG_CHK_EXPR_ACTION((devId < 0) || (devId >= HOST_MAX_DEV_NUM), return (TraceThread)0,
-        "can not get tid, invalid devId=%d.", devId);
+    ADIAG_CHK_EXPR_ACTION(
+        (devId < 0) || (devId >= HOST_MAX_DEV_NUM), return (TraceThread)0, "can not get tid, invalid devId=%d.", devId);
     TraceThread tid = 0;
     AtraceThreadLock();
     if ((g_traceThread != NULL) && (g_traceThread[devId] != NULL)) {
@@ -99,7 +87,6 @@ STATIC TraceThread AtraceThreadGetTid(int32_t devId)
     return tid;
 }
 
-
 /**
  * @brief       : check thread existence or non-existence
  * @param [in]  : devId         device id
@@ -107,8 +94,8 @@ STATIC TraceThread AtraceThreadGetTid(int32_t devId)
  */
 STATIC bool AtraceThreadCheckExist(int32_t devId)
 {
-    ADIAG_CHK_EXPR_ACTION((devId < 0) || (devId >= HOST_MAX_DEV_NUM), return false,
-        "can not check thread, invalid devId=%d.", devId);
+    ADIAG_CHK_EXPR_ACTION(
+        (devId < 0) || (devId >= HOST_MAX_DEV_NUM), return false, "can not check thread, invalid devId=%d.", devId);
     AtraceThreadLock();
     if ((g_traceThread != NULL) && (g_traceThread[devId] != NULL) && (g_traceThread[devId]->tid != 0)) {
         AtraceThreadUnLock();
@@ -125,8 +112,9 @@ STATIC bool AtraceThreadCheckExist(int32_t devId)
  */
 void AtraceThreadFree(int32_t devId)
 {
-    ADIAG_CHK_EXPR_ACTION((devId < 0) || (devId >= HOST_MAX_DEV_NUM), return,
-        "can not free atrace receive thread, invalid devId=%d.", devId);
+    ADIAG_CHK_EXPR_ACTION(
+        (devId < 0) || (devId >= HOST_MAX_DEV_NUM), return, "can not free atrace receive thread, invalid devId=%d.",
+        devId);
     AtraceThreadLock();
     if ((g_traceThread != NULL) && (g_traceThread[devId] != NULL)) {
         AdiagFree(g_traceThread[devId]);
@@ -142,8 +130,8 @@ void AtraceThreadFree(int32_t devId)
  */
 STATIC bool AtraceThreadCheckPid(int32_t devId)
 {
-    ADIAG_CHK_EXPR_ACTION((devId < 0) || (devId >= HOST_MAX_DEV_NUM), return false,
-        "can not get tid, invalid devId=%d.", devId);
+    ADIAG_CHK_EXPR_ACTION(
+        (devId < 0) || (devId >= HOST_MAX_DEV_NUM), return false, "can not get tid, invalid devId=%d.", devId);
     bool ret = true;
     AtraceThreadLock();
     if ((g_traceThread != NULL) && (g_traceThread[devId] != NULL)) {
@@ -192,18 +180,18 @@ bool AtraceThreadSingleTask(int32_t devId)
  * @param [in]  : func          thread run function
  * @return      : !=0 failure; ==0 success
  */
-TraStatus AtraceThreadCreate(int32_t devId, TraceThreadArgs *pArgs, ThreadRunFunc func)
+TraStatus AtraceThreadCreate(int32_t devId, TraceThreadArgs* pArgs, ThreadRunFunc func)
 {
-    ADIAG_CHK_EXPR_ACTION(g_traceThread == NULL, return TRACE_FAILURE,
-        "create thread failed, thread pool is not initialized.");
-    ADIAG_CHK_EXPR_ACTION((devId < 0) || (devId >= HOST_MAX_DEV_NUM), return TRACE_FAILURE,
-        "create thread failed, invalid devId=%d.", devId);
-    ADIAG_CHK_EXPR_ACTION(pArgs == NULL, return TRACE_FAILURE,
-        "create thread failed, thread args is null.");
-    ADIAG_CHK_EXPR_ACTION(AtraceThreadCheckExist(devId), return TRACE_FAILURE,
-        "log receive thread has bean started, devId=%d.", devId);
+    ADIAG_CHK_EXPR_ACTION(
+        g_traceThread == NULL, return TRACE_FAILURE, "create thread failed, thread pool is not initialized.");
+    ADIAG_CHK_EXPR_ACTION(
+        (devId < 0) || (devId >= HOST_MAX_DEV_NUM), return TRACE_FAILURE, "create thread failed, invalid devId=%d.",
+        devId);
+    ADIAG_CHK_EXPR_ACTION(pArgs == NULL, return TRACE_FAILURE, "create thread failed, thread args is null.");
+    ADIAG_CHK_EXPR_ACTION(
+        AtraceThreadCheckExist(devId), return TRACE_FAILURE, "log receive thread has bean started, devId=%d.", devId);
 
-    ThreadInfo *pThread = (ThreadInfo *)AdiagMalloc(sizeof(ThreadInfo));
+    ThreadInfo* pThread = (ThreadInfo*)AdiagMalloc(sizeof(ThreadInfo));
     ADIAG_CHK_EXPR_ACTION(pThread == NULL, return TRACE_FAILURE, "malloc failed, can not create atrace receive thread");
 
     AtraceThreadLock();
@@ -215,8 +203,8 @@ TraStatus AtraceThreadCreate(int32_t devId, TraceThreadArgs *pArgs, ThreadRunFun
 
     g_traceThread[devId]->pid = TraceGetPid();
     g_traceThread[devId]->block.procFunc = func;
-    g_traceThread[devId]->block.pulArg = (void *)(&g_traceThread[devId]->args);
-    TraceThreadAttr threadAttr = { 0, 0, 0, 0, 0, 0, 128 * 1024 }; // joinable
+    g_traceThread[devId]->block.pulArg = (void*)(&g_traceThread[devId]->args);
+    TraceThreadAttr threadAttr = {0, 0, 0, 0, 0, 0, 128 * 1024}; // joinable
     ret = TraceCreateTaskWithThreadAttr(&g_traceThread[devId]->tid, &g_traceThread[devId]->block, &threadAttr);
     AtraceThreadUnLock();
     if (ret != TRACE_SUCCESS) {
@@ -253,7 +241,7 @@ void AtraceThreadRelease(int32_t devId, ThreadStopFunc func, bool sync)
  */
 TraStatus AtraceThreadPoolInit(void)
 {
-    g_traceThread = (ThreadInfo **)AdiagMalloc((size_t)HOST_MAX_DEV_NUM * sizeof(ThreadInfo *));
+    g_traceThread = (ThreadInfo**)AdiagMalloc((size_t)HOST_MAX_DEV_NUM * sizeof(ThreadInfo*));
     ADIAG_CHK_EXPR_ACTION(g_traceThread == NULL, return TRACE_FAILURE, "malloc thread pool failed.");
     AtraceThreadMutexInit();
     return TRACE_SUCCESS;

@@ -14,10 +14,9 @@
 #include "log_error_code.h"
 #include "log_to_file.h"
 
-#define STORAGE_RULE_COMMON                 1
-#define STORAGE_RULE_FILTER_MODULEID        2
-#define STORAGE_RULE_FILTER_PID             3
-
+#define STORAGE_RULE_COMMON 1
+#define STORAGE_RULE_FILTER_MODULEID 2
+#define STORAGE_RULE_FILTER_PID 3
 
 #ifdef __cplusplus
 extern "C" {
@@ -26,7 +25,7 @@ extern "C" {
 void SlogdConfigMgrInit(void);
 void SlogdConfigMgrExit(void);
 
-int32_t SlogdConfigMgrGetList(StLogFileList *logList);
+int32_t SlogdConfigMgrGetList(StLogFileList* logList);
 uint32_t SlogdConfigMgrGetBufSize(int32_t buffType);
 int32_t SlogdConfigMgrGetDeviceAppDirNums(void);
 

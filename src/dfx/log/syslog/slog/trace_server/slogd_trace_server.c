@@ -13,35 +13,18 @@
 
 #include "trace_server.h"
 
-void LogTraceServiceInit(int32_t devId)
-{
-    TraceServerInit(devId);
-}
+void LogTraceServiceInit(int32_t devId) { TraceServerInit(devId); }
 
-LogStatus LogTraceServiceProcess(void)
-{
-    return TraceServerProcess();
-}
+LogStatus LogTraceServiceProcess(void) { return TraceServerProcess(); }
 
-void LogTraceServiceExit(void)
-{
-    TraceServerExit();
-}
+void LogTraceServiceExit(void) { TraceServerExit(); }
 
 #else
 
-void LogTraceServiceInit(int32_t devId)
-{
-    (void)devId;
-}
+void LogTraceServiceInit(int32_t devId) { (void)devId; }
 
-LogStatus LogTraceServiceProcess(void)
-{
-    return LOG_SUCCESS;
-}
+LogStatus LogTraceServiceProcess(void) { return LOG_SUCCESS; }
 
-void LogTraceServiceExit(void)
-{
-}
+void LogTraceServiceExit(void) {}
 
 #endif

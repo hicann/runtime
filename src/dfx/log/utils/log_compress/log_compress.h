@@ -14,24 +14,24 @@
 #include <stdbool.h>
 #include "log_error_code.h"
 
-#define GZIP_SUFFIX         ".gz"
-#define GZIP_BUFLEN         16384U
-#define GZIP_MAX_NAME_LEN   1024U
+#define GZIP_SUFFIX ".gz"
+#define GZIP_BUFLEN 16384U
+#define GZIP_MAX_NAME_LEN 1024U
 
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
 
 bool LogCompressSwitch(void);
-LogStatus LogCompressAddSuffix(char *file, uint32_t length);
-LogStatus LogCompressFile(const char *file);
-LogStatus LogCompressGetRotatePath(char *file, uint32_t length);
-bool LogCompressCheckUnzipSuffix(const char *fileName);
+LogStatus LogCompressAddSuffix(char* file, uint32_t length);
+LogStatus LogCompressFile(const char* file);
+LogStatus LogCompressGetRotatePath(char* file, uint32_t length);
+bool LogCompressCheckUnzipSuffix(const char* fileName);
 
-LogStatus LogCompressFileRotate(const char *file);
-LogStatus LogCompressBuffer(const char *source, uint32_t sourceLen, char **dest, uint32_t *destLen);
+LogStatus LogCompressFileRotate(const char* file);
+LogStatus LogCompressBuffer(const char* source, uint32_t sourceLen, char** dest, uint32_t* destLen);
 
-bool LogCompressCheckActiveFile(const char *fileName);
+bool LogCompressCheckActiveFile(const char* fileName);
 
 #ifdef __cplusplus
 }

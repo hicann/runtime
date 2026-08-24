@@ -25,17 +25,17 @@
 extern "C" {
 #endif
 typedef struct {
-    unsigned short headInfo;    // head magic data, judge to little
-    unsigned char headVer;      // head version
-    unsigned char order;        // packet order (reserved)
-    unsigned short reqType;     // request type of proto
-    unsigned short devId;       // request device Id
-    unsigned int totalLen;      // whole message length, only all data[0] length
-    unsigned int sliceLen;      // one slice length, only data[0] length
-    unsigned int offset;        // offset
-    unsigned short msgType;     // message type
-    unsigned short status;      // message status data
-    unsigned char data[0];      // message data
+    unsigned short headInfo; // head magic data, judge to little
+    unsigned char headVer;   // head version
+    unsigned char order;     // packet order (reserved)
+    unsigned short reqType;  // request type of proto
+    unsigned short devId;    // request device Id
+    unsigned int totalLen;   // whole message length, only all data[0] length
+    unsigned int sliceLen;   // one slice length, only data[0] length
+    unsigned int offset;     // offset
+    unsigned short msgType;  // message type
+    unsigned short status;   // message status data
+    unsigned char data[0];   // message data
 } LogDataMsg;
 
 enum LogMsgType {
@@ -44,15 +44,12 @@ enum LogMsgType {
     NR_LOG_MSG_TYPE,
 };
 
-enum LogPackageType {
-    LOG_LITTLE_PACKAGE = 0xB0,
-    LOG_BIG_PACKAGE
-};
+enum LogPackageType { LOG_LITTLE_PACKAGE = 0xB0, LOG_BIG_PACKAGE };
 
 // type of platform
-#define DEVICE_SIDE     0U
-#define HOST_SIDE       1U
-#define PLATFORM_INVALID_VALUE   10000U
+#define DEVICE_SIDE 0U
+#define HOST_SIDE 1U
+#define PLATFORM_INVALID_VALUE 10000U
 
 typedef struct {
     unsigned int dataLen;
@@ -62,85 +59,85 @@ typedef struct {
 } DataPacket;
 
 typedef struct {
-    const char *buf;
+    const char* buf;
     size_t bufLen;
     size_t maxSendLen;
 } DataSendMsg;
 
 /**
-* @brief: load drv dll and all driver function symbol
-*/
+ * @brief: load drv dll and all driver function symbol
+ */
 int DrvFunctionsInit(void);
 
 /**
-* @brief: free drv dll handle
-*/
+ * @brief: free drv dll handle
+ */
 int DrvFunctionsUninit(void);
 
 /**
-* @brief DrvClientCreate: create hdc client
-* @param [out]client: hdc client
-* @param [in]clientType: client type, log: HDC_SERVICE_TYPE_LOG
-* @return: 0: success; -1: failed
-*/
-int DrvClientCreate(HDC_CLIENT *client, int clientType);
+ * @brief DrvClientCreate: create hdc client
+ * @param [out]client: hdc client
+ * @param [in]clientType: client type, log: HDC_SERVICE_TYPE_LOG
+ * @return: 0: success; -1: failed
+ */
+int DrvClientCreate(HDC_CLIENT* client, int clientType);
 
 /**
-* @brief DrvClientRelease: release hdc client
-* @param [in]client: hdc client
-* @return: 0: success; -1: failed
-*/
+ * @brief DrvClientRelease: release hdc client
+ * @param [in]client: hdc client
+ * @return: 0: success; -1: failed
+ */
 int DrvClientRelease(HDC_CLIENT client);
 
 /**
-* @brief DrvSessionInit: create connection to server
-* @param [in]client: hdc client
-* @param [out]session: client connection session
-* @param [in]devId: device id
-* @return: 0: success; -1: failed
-*/
-int DrvSessionInit(HDC_CLIENT client, HDC_SESSION *session, int devId);
+ * @brief DrvSessionInit: create connection to server
+ * @param [in]client: hdc client
+ * @param [out]session: client connection session
+ * @param [in]devId: device id
+ * @return: 0: success; -1: failed
+ */
+int DrvSessionInit(HDC_CLIENT client, HDC_SESSION* session, int devId);
 
 /**
-* @brief DrvSessionRelease: release session
-* @param [in]session: hdc session
-* @return: 0: success; -1: failed
-*/
+ * @brief DrvSessionRelease: release session
+ * @param [in]session: hdc session
+ * @return: 0: success; -1: failed
+ */
 int DrvSessionRelease(HDC_SESSION session);
 
 /**
-* @brief DrvGetPlatformInfo: get current platform info
-* @param [out]info: platform info, 0: device size, 1: host side
-* @return: 0: success, -1: failed
-*/
-int DrvGetPlatformInfo(unsigned int *info);
+ * @brief DrvGetPlatformInfo: get current platform info
+ * @param [out]info: platform info, 0: device size, 1: host side
+ * @return: 0: success, -1: failed
+ */
+int DrvGetPlatformInfo(unsigned int* info);
 
 /**
-* @brief DrvGetDevNum: get device num
-* @param [out]num: device num
-* @return: 0: success, -1: failed
-*/
-int DrvGetDevNum(unsigned int *num);
+ * @brief DrvGetDevNum: get device num
+ * @param [out]num: device num
+ * @return: 0: success, -1: failed
+ */
+int DrvGetDevNum(unsigned int* num);
 
 /**
-* @brief DrvBufWrite: write data by hdc
-* @param [in]session: connection session
-* @param [in]buf: write data buffer
-* @param [in]bufLen: data length
-* @return: 0: success; -1: failed
-*/
-int DrvBufWrite(HDC_SESSION session, const char *buf, size_t bufLen);
+ * @brief DrvBufWrite: write data by hdc
+ * @param [in]session: connection session
+ * @param [in]buf: write data buffer
+ * @param [in]bufLen: data length
+ * @return: 0: success; -1: failed
+ */
+int DrvBufWrite(HDC_SESSION session, const char* buf, size_t bufLen);
 
 /**
-* @brief DrvBufRead: recv data by hdc
-* @param [in]session: hdc session
-* @param [in]devId: device id
-* @param [out]buf: recv data memory
-* @param [out]bufLen: recv data length
-* @param [in]timeout: recv timeout, if timeout=10, then timeout 10ms
-* @return: 0: success; other: failed
-*/
-LogStatus DrvBufRead(HDC_SESSION session, int devId, char **buf, unsigned int *bufLen, unsigned int timeout);
+ * @brief DrvBufRead: recv data by hdc
+ * @param [in]session: hdc session
+ * @param [in]devId: device id
+ * @param [out]buf: recv data memory
+ * @param [out]bufLen: recv data length
+ * @param [in]timeout: recv timeout, if timeout=10, then timeout 10ms
+ * @return: 0: success; other: failed
+ */
+LogStatus DrvBufRead(HDC_SESSION session, int devId, char** buf, unsigned int* bufLen, unsigned int timeout);
 
 #ifdef __cplusplus
 }

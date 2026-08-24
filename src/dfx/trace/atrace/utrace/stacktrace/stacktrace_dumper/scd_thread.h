@@ -21,7 +21,7 @@
 extern "C" {
 #endif // __cplusplus
 
-#define SCD_THREAD_NAME_LEN     16U
+#define SCD_THREAD_NAME_LEN 16U
 
 typedef enum {
     SCD_THREAD_STATUS_INIT = 0,
@@ -32,22 +32,22 @@ typedef enum {
 } ScdThreadStatus;
 
 typedef struct ScdThread {
-    ScdThreadStatus  status;
-    int32_t          pid;
-    int32_t          tid;
-    char             tname[SCD_THREAD_NAME_LEN];
-    ScdRegs          regs;
-    ScdFrames        frames;
+    ScdThreadStatus status;
+    int32_t pid;
+    int32_t tid;
+    char tname[SCD_THREAD_NAME_LEN];
+    ScdRegs regs;
+    ScdFrames frames;
 } ScdThread;
 
-TraStatus ScdThreadSuspend(ScdThread *thd);
-void ScdThreadResume(ScdThread *thd);
-TraStatus ScdThreadLoadFrames(ScdThread *thd, ScdMaps *maps);
-TraStatus ScdThreadLoadInfo(ScdThread *thd);
-TraStatus ScdThreadLoadInfoForCrash(ScdThread *thd, ScdRegs *regs);
+TraStatus ScdThreadSuspend(ScdThread* thd);
+void ScdThreadResume(ScdThread* thd);
+TraStatus ScdThreadLoadFrames(ScdThread* thd, ScdMaps* maps);
+TraStatus ScdThreadLoadInfo(ScdThread* thd);
+TraStatus ScdThreadLoadInfoForCrash(ScdThread* thd, ScdRegs* regs);
 
-ScdThread *ScdThreadCreate(int32_t pid, int32_t tid);
-void ScdThreadDestroy(ScdThread **thd);
+ScdThread* ScdThreadCreate(int32_t pid, int32_t tid);
+void ScdThreadDestroy(ScdThread** thd);
 
 #ifdef __cplusplus
 }

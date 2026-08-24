@@ -26,4 +26,3 @@ void LogServiceExit(void);
 }
 #endif
 #endif
-

@@ -19,7 +19,7 @@
 extern "C" {
 #endif // __cplusplus
 
-void DlogWriteToBuf(const LogMsg *logMsg);
+void DlogWriteToBuf(const LogMsg* logMsg);
 void DlogFlushBuf(void);
 void DlogUpdateFlierLevelStatus(void);
 

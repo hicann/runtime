@@ -16,10 +16,10 @@
 #include <fcntl.h>
 
 #define SCD_ARGC_NUM 2
-#define SCD_SLEEP_INTERVAL      (100 * 1000) // ms
-#define SCD_MAX_RETRY_TIME      10
+#define SCD_SLEEP_INTERVAL (100 * 1000) // ms
+#define SCD_MAX_RETRY_TIME 10
 
-STATIC TraStatus ScdWaitDirCreate(const char *dirPath)
+STATIC TraStatus ScdWaitDirCreate(const char* dirPath)
 {
     int32_t count = 0;
     while (access(dirPath, F_OK) != 0) {
@@ -34,7 +34,7 @@ STATIC TraStatus ScdWaitDirCreate(const char *dirPath)
     return TRACE_SUCCESS;
 }
 
-STATIC TraStatus ScdInitLogCat(const ScdProcessArgs *args)
+STATIC TraStatus ScdInitLogCat(const ScdProcessArgs* args)
 {
     TraStatus ret = StacktraceLogInit(STACKTRACE_LOG_TITLE_SUB);
     if (ret != TRACE_SUCCESS) {
@@ -45,23 +45,23 @@ STATIC TraStatus ScdInitLogCat(const ScdProcessArgs *args)
     return TRACE_SUCCESS;
 }
 
-STATIC void ScdReleaseLogCat(const ScdProcessArgs *args)
+STATIC void ScdReleaseLogCat(const ScdProcessArgs* args)
 {
     uint32_t flag = (uint32_t)O_CREAT | (uint32_t)O_RDWR;
     flag |= (args->handleType == SCD_DUMP_THREADS_TXT) ? (uint32_t)O_APPEND : (uint32_t)O_TRUNC;
-    StacktraceLogSetPathSuffix(args->filePath, args->fileName,
-        (args->handleType == SCD_DUMP_THREADS_TXT) ? ".txt" : ".log");
+    StacktraceLogSetPathSuffix(
+        args->filePath, args->fileName, (args->handleType == SCD_DUMP_THREADS_TXT) ? ".txt" : ".log");
     StackcoreLogSaveWithFlag(flag);
     StackcoreLogExit();
 }
 
-int32_t MAIN(int32_t argc, const char **argv)
+int32_t MAIN(int32_t argc, const char** argv)
 {
     (void)argc;
     (void)argv;
     // parse args
     ScdProcessArgs args = {0};
-    TraStatus ret = ScdUtilReadStdin((void *)&args, sizeof(ScdProcessArgs));
+    TraStatus ret = ScdUtilReadStdin((void*)&args, sizeof(ScdProcessArgs));
     if (ret != TRACE_SUCCESS) {
         SCD_DLOG_ERR("read args from stdin failed, ret=%d.", ret);
         return SCD_ERR_CODE_READ_STDIN;

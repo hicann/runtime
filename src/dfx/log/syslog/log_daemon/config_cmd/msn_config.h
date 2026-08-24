@@ -17,7 +17,7 @@ extern "C" {
 #endif
 int32_t MsnCmdInit(void);
 int32_t MsnCmdDestory(void);
-int32_t MsnCmdProcess(const CommHandle *command, const void* value, uint32_t len);
+int32_t MsnCmdProcess(const CommHandle* command, const void* value, uint32_t len);
 #ifdef __cplusplus
 }
 #endif

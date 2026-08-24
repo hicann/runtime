@@ -16,10 +16,9 @@
 extern "C" {
 #endif
 
-void LogPrintSys(int32_t priority, const char *format, ...) __attribute__((format(printf, 2, 3)));
+void LogPrintSys(int32_t priority, const char* format, ...) __attribute__((format(printf, 2, 3)));
 
 #ifdef __cplusplus
 }
 #endif
 #endif
-

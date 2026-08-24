@@ -14,9 +14,9 @@
 #include "trace_system_api.h"
 #include "tracer_mgr_operate.h"
 
-TraStatus TracerScheduleRegister(Tracer *tracer)
+TraStatus TracerScheduleRegister(Tracer* tracer)
 {
-    tracer->mgr = (TracerMgr *)AdiagMalloc(sizeof(struct TracerMgr));
+    tracer->mgr = (TracerMgr*)AdiagMalloc(sizeof(struct TracerMgr));
     if (tracer->mgr == NULL) {
         return TRACE_FAILURE;
     }
@@ -32,7 +32,7 @@ TraStatus TracerScheduleRegister(Tracer *tracer)
     return TRACE_SUCCESS;
 }
 
-TraStatus TracerScheduleUnregister(Tracer *tracer)
+TraStatus TracerScheduleUnregister(Tracer* tracer)
 {
     if (tracer->mgr == NULL) {
         return TRACE_SUCCESS;

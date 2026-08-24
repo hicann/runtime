@@ -18,9 +18,9 @@ extern "C" {
 #endif
 int32_t LogCmdInitMutex(void);
 int32_t LogCmdDestoryMutex(void);
-int32_t LogCmdGetLogLevel(char *resultBuf, uint32_t *resultLen, uint16_t devId);
-int32_t LogCmdSetLogLevel(const char *msg, uint16_t devId);
-int32_t LogCmdSendLogMsg(LogCmdMsg *rcvMsg, const char *msg, uint16_t devId);
+int32_t LogCmdGetLogLevel(char* resultBuf, uint32_t* resultLen, uint16_t devId);
+int32_t LogCmdSetLogLevel(const char* msg, uint16_t devId);
+int32_t LogCmdSendLogMsg(LogCmdMsg* rcvMsg, const char* msg, uint16_t devId);
 #ifdef __cplusplus
 }
 #endif

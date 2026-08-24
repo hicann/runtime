@@ -28,24 +28,24 @@
 #define SLOG_FILE_SIZE_CFG_STR "FileSize"
 #define SLOG_DEFAULT_GROUP_SYMBOL "IsDefaultGroup"
 
-#define MIN_GROUP_FILE_NUM  2   // at least one for .log, one for .log.gz
-#define MAX_GROUP_FILE_NUM  500
+#define MIN_GROUP_FILE_NUM 2 // at least one for .log, one for .log.gz
+#define MAX_GROUP_FILE_NUM 500
 #define MIN_GROUP_FILE_SIZE (1 * 1024)
 #define MAX_GROUP_FILE_SIZE (20 * 1024)
 
 STATIC bool g_groupLogEnabled = false;
-STATIC GeneralGroupInfo g_groupInfo = { 0 };
+STATIC GeneralGroupInfo g_groupInfo = {0};
 STATIC BlockSymbolInfo g_symbolInfo[] = {
-    { (int32_t)SLOGD,      { "SLOGD", "ALOG", NULL, NULL }, 2 },
-    { (int32_t)ALOG,       { "ALOG", NULL, NULL, NULL }, 1 },
-    { (int32_t)PLOG,       { "PLOG", NULL, NULL, NULL }, 1 },
-    { (int32_t)LOGDAEMON,  { "LOG_DAEMON", NULL, NULL, NULL }, 1 },
+    {(int32_t)SLOGD, {"SLOGD", "ALOG", NULL, NULL}, 2},
+    {(int32_t)ALOG, {"ALOG", NULL, NULL, NULL}, 1},
+    {(int32_t)PLOG, {"PLOG", NULL, NULL, NULL}, 1},
+    {(int32_t)LOGDAEMON, {"LOG_DAEMON", NULL, NULL, NULL}, 1},
 };
 
-STATIC int32_t GetConfVal(char *valStr, uint32_t len)
+STATIC int32_t GetConfVal(char* valStr, uint32_t len)
 {
     ONE_ACT_NO_LOG(((valStr == NULL) || (*valStr == '\0')), return 0);
-    char *val = valStr;
+    char* val = valStr;
     for (uint32_t i = 0; i < len; i++) {
         if ((val[i] > '9') || (val[i] < '0')) {
             val[i] = '\0';
@@ -64,10 +64,10 @@ STATIC int32_t GetConfVal(char *valStr, uint32_t len)
     return (int32_t)ret;
 }
 
-STATIC int GetDefaultGroupSymbol(char *valStr, int len)
+STATIC int GetDefaultGroupSymbol(char* valStr, int len)
 {
     int ret;
-    char *valTemp = valStr;
+    char* valTemp = valStr;
     (void)len;
     char upDiff = 'a' - 'A';
     ONE_ACT_NO_LOG(valStr == NULL, return 0);
@@ -77,8 +77,7 @@ STATIC int GetDefaultGroupSymbol(char *valStr, int len)
     }
     if ((strcmp(valStr, "TRUE") == 0) || (strcmp(valStr, "YES") == 0) || (strcmp(valStr, "1") == 0)) {
         ret = 1;
-    } else if ((strcmp(valStr, "FALSE") == 0) || (strcmp(valStr, "NO") == 0) || \
-               (strcmp(valStr, "0") == 0)) {
+    } else if ((strcmp(valStr, "FALSE") == 0) || (strcmp(valStr, "NO") == 0) || (strcmp(valStr, "0") == 0)) {
         ret = 0;
     } else {
         SELF_LOG_ERROR("can't identify str %s as default group symbol.", valStr);
@@ -89,13 +88,13 @@ STATIC int GetDefaultGroupSymbol(char *valStr, int len)
 }
 
 /**
-* @brief IsTargetSymbol: check curr symbol whether meet request.
-* @param [in] buf: config file one line content
-* @param [in] groupTypeStr: target symbol string
-* @param [out] res: reslut of checking
-* @return: SUCCEES: succeed; others: failed
-*/
-STATIC bool IsTargetSymbol(const char *symbol, const char *groupTypeStr)
+ * @brief IsTargetSymbol: check curr symbol whether meet request.
+ * @param [in] buf: config file one line content
+ * @param [in] groupTypeStr: target symbol string
+ * @param [out] res: reslut of checking
+ * @return: SUCCEES: succeed; others: failed
+ */
+STATIC bool IsTargetSymbol(const char* symbol, const char* groupTypeStr)
 {
     if (strcmp(symbol, groupTypeStr) == 0) {
         return true;
@@ -103,9 +102,9 @@ STATIC bool IsTargetSymbol(const char *symbol, const char *groupTypeStr)
     return false;
 }
 
-STATIC LogRt IsParseTarget(const char *buf, bool *res)
+STATIC LogRt IsParseTarget(const char* buf, bool* res)
 {
-    char symbol[SYMBOL_NAME_MAX_LEN + 1] = { 0 };
+    char symbol[SYMBOL_NAME_MAX_LEN + 1] = {0};
 
     LogRt ret = GetSymbol(buf, symbol, SYMBOL_NAME_MAX_LEN);
     ONE_ACT_ERR_LOG(ret != SUCCESS, return ret, "fail to get symbol in this line %s", buf);
@@ -125,7 +124,7 @@ STATIC LogRt IsParseTarget(const char *buf, bool *res)
     return SUCCESS;
 }
 
-STATIC bool IsMatchAnySymbol(const char *symbol)
+STATIC bool IsMatchAnySymbol(const char* symbol)
 {
     uint32_t symbolNum = LOG_SIZEOF(g_symbolInfo) / LOG_SIZEOF(BlockSymbolInfo);
     for (uint32_t symbolIdx = 0; symbolIdx < symbolNum; symbolIdx++) {
@@ -137,7 +136,7 @@ STATIC bool IsMatchAnySymbol(const char *symbol)
     return FALSE;
 }
 
-STATIC int32_t GetTabCount(const char *buf)
+STATIC int32_t GetTabCount(const char* buf)
 {
     int32_t ret = 0;
     int32_t idx = 0;
@@ -154,17 +153,17 @@ STATIC int32_t GetTabCount(const char *buf)
 }
 
 /**
-* @brief MoveToTargetSymbol: move fp to target position
-* @param [in] fp: file handle for slog.conf
-* @param [in] groupTypeStr: target slog module string
-* @return: SUCCEES: succeed; others: failed
-*/
-STATIC LogRt MoveToTargetSymbol(FILE *fp, const char *groupTypeStr)
+ * @brief MoveToTargetSymbol: move fp to target position
+ * @param [in] fp: file handle for slog.conf
+ * @param [in] groupTypeStr: target slog module string
+ * @return: SUCCEES: succeed; others: failed
+ */
+STATIC LogRt MoveToTargetSymbol(FILE* fp, const char* groupTypeStr)
 {
-    char buf[CONF_FILE_MAX_LINE + 1] = { 0 };
+    char buf[CONF_FILE_MAX_LINE + 1] = {0};
 
     while (fgets(buf, CONF_FILE_MAX_LINE, fp) != NULL) {
-        char symbol[SYMBOL_NAME_MAX_LEN + 1] = { 0 };
+        char symbol[SYMBOL_NAME_MAX_LEN + 1] = {0};
         ONE_ACT_NO_LOG(IsBlankline(*buf), continue);
         ONE_ACT_NO_LOG(!IsBlockSymbol(buf), continue);
         // get symbol name
@@ -183,35 +182,33 @@ STATIC void OptimizeGroupCfg(int32_t groupId)
     int32_t maxSize = (g_groupInfo.map[groupId].fileRatio * g_groupInfo.maxSize) / FULL_RATIO;
     // is size inited or not
     if (g_groupInfo.map[groupId].fileSize < minSize) {
-        SELF_LOG_WARN("group %s fileSize(%dKB) is illegal, scope is [%d, %d)", \
-                      g_groupInfo.map[groupId].name, g_groupInfo.map[groupId].fileSize, \
-                      minSize, maxSize);
+        SELF_LOG_WARN(
+            "group %s fileSize(%dKB) is illegal, scope is [%d, %d)", g_groupInfo.map[groupId].name,
+            g_groupInfo.map[groupId].fileSize, minSize, maxSize);
         g_groupInfo.map[groupId].fileSize = minSize;
-        SELF_LOG_WARN("critical value will be configed: fileSize %d KB.", \
-                      g_groupInfo.map[groupId].fileSize);
+        SELF_LOG_WARN("critical value will be configed: fileSize %d KB.", g_groupInfo.map[groupId].fileSize);
     } else if (g_groupInfo.map[groupId].fileSize >= maxSize) {
-        SELF_LOG_WARN("group %s fileSize(%dKB) is illegal, scope is [%d, %d)", \
-                      g_groupInfo.map[groupId].name, g_groupInfo.map[groupId].fileSize, \
-                      minSize, maxSize);
+        SELF_LOG_WARN(
+            "group %s fileSize(%dKB) is illegal, scope is [%d, %d)", g_groupInfo.map[groupId].name,
+            g_groupInfo.map[groupId].fileSize, minSize, maxSize);
         // if config fileSize > group maxSize, set fileSize minSize because of no fileNum for reference now
         g_groupInfo.map[groupId].fileSize = minSize;
-        SELF_LOG_WARN("critical value will be configed: fileSize %d KB.", \
-                      g_groupInfo.map[groupId].fileSize);
+        SELF_LOG_WARN("critical value will be configed: fileSize %d KB.", g_groupInfo.map[groupId].fileSize);
     }
     int32_t size = maxSize - g_groupInfo.map[groupId].fileSize;
     g_groupInfo.map[groupId].totalMaxFileSize = (size < 0) ? 0U : (uint32_t)size;
 }
 
-STATIC LogRt InitGernelCfgItem(const char *confName, unsigned int nameLen, char *confValue, unsigned int valueLen)
+STATIC LogRt InitGernelCfgItem(const char* confName, unsigned int nameLen, char* confValue, unsigned int valueLen)
 {
     ONE_ACT_WARN_LOG(confName == NULL, return ARGV_NULL, "[input] config name is null.");
     ONE_ACT_WARN_LOG(confValue == NULL, return ARGV_NULL, "[input] config value is null.");
-    ONE_ACT_WARN_LOG(nameLen > CONF_NAME_MAX_LEN, return ARGV_NULL,
-                     "[input] config name length is invalid, length=%u, max_length=%d.",
-                     nameLen, CONF_NAME_MAX_LEN);
-    ONE_ACT_WARN_LOG(valueLen > CONF_VALUE_MAX_LEN, return ARGV_NULL,
-                     "[input] config value length is invalid, length=%u, max_length=%d.",
-                     valueLen, CONF_VALUE_MAX_LEN);
+    ONE_ACT_WARN_LOG(
+        nameLen > CONF_NAME_MAX_LEN, return ARGV_NULL,
+        "[input] config name length is invalid, length=%u, max_length=%d.", nameLen, CONF_NAME_MAX_LEN);
+    ONE_ACT_WARN_LOG(
+        valueLen > CONF_VALUE_MAX_LEN, return ARGV_NULL,
+        "[input] config value length is invalid, length=%u, max_length=%d.", valueLen, CONF_VALUE_MAX_LEN);
 
     if (strcmp(confName, SLOG_MAX_SIZE_CFG_STR) == 0) {
         const int convertValueToSize = 1024;
@@ -220,8 +217,9 @@ STATIC LogRt InitGernelCfgItem(const char *confName, unsigned int nameLen, char 
         g_groupInfo.bufSize = GetConfVal(confValue, valueLen);
     } else if (strcmp(confName, SLOG_FILE_DIR_CFG_STR) == 0) {
         int ret = strcpy_s(g_groupInfo.agentFileDir, SLOG_AGENT_FILE_DIR + 1, confValue);
-        ONE_ACT_ERR_LOG(ret != EOK, return STR_COPY_FAILED, "strcpy_s failed, errno=%d, strerr=%s.", \
-                        ret, strerror(ToolGetErrorCode()));
+        ONE_ACT_ERR_LOG(
+            ret != EOK, return STR_COPY_FAILED, "strcpy_s failed, errno=%d, strerr=%s.", ret,
+            strerror(ToolGetErrorCode()));
     } else {
         SELF_LOG_ERROR("unrecognizable config name %s, errno=%d.", confName, (int32_t)KEYVALUE_NOT_FIND);
         return KEYVALUE_NOT_FIND;
@@ -231,19 +229,19 @@ STATIC LogRt InitGernelCfgItem(const char *confName, unsigned int nameLen, char 
 }
 
 /**
-* @brief CheckGernelConfig: check gernel config.
-*/
+ * @brief CheckGernelConfig: check gernel config.
+ */
 STATIC LogRt CheckGernelConfig(void)
 {
     // maxSize、bufSize、logdir must be init
     if ((g_groupInfo.maxSize <= 0) || (g_groupInfo.maxSize > DEFAULT_LOG_SIZE)) {
-        SELF_LOG_ERROR("illegal config MaxSize %d, will be set to default value %d.", \
-                       g_groupInfo.maxSize, DEFAULT_LOG_SIZE);
+        SELF_LOG_ERROR(
+            "illegal config MaxSize %d, will be set to default value %d.", g_groupInfo.maxSize, DEFAULT_LOG_SIZE);
         g_groupInfo.maxSize = DEFAULT_LOG_SIZE;
     }
     if ((g_groupInfo.bufSize <= 0) || (g_groupInfo.bufSize > DEFAULT_BUF_SIZE)) {
-        SELF_LOG_ERROR("illegal config LogBufSize %d,  will be set to default value %d.", \
-                       g_groupInfo.bufSize, DEFAULT_BUF_SIZE);
+        SELF_LOG_ERROR(
+            "illegal config LogBufSize %d,  will be set to default value %d.", g_groupInfo.bufSize, DEFAULT_BUF_SIZE);
         g_groupInfo.bufSize = DEFAULT_BUF_SIZE;
     }
     size_t dirLen = strnlen(g_groupInfo.agentFileDir, SLOG_AGENT_FILE_DIR + 1);
@@ -251,8 +249,8 @@ STATIC LogRt CheckGernelConfig(void)
         SELF_LOG_ERROR("agentFileDir isn't config, default %s will be used.", DEFAULT_FILE_DIR);
         int ret = strcpy_s(g_groupInfo.agentFileDir, SLOG_AGENT_FILE_DIR + 1, DEFAULT_FILE_DIR);
         if (ret != EOK) {
-            SELF_LOG_ERROR("strcpy_s config value to buffer failed, result=%d, strerr=%s.", \
-                           ret, strerror(ToolGetErrorCode()));
+            SELF_LOG_ERROR(
+                "strcpy_s config value to buffer failed, result=%d, strerr=%s.", ret, strerror(ToolGetErrorCode()));
         }
         dirLen = strnlen(g_groupInfo.agentFileDir, SLOG_AGENT_FILE_DIR + 1);
     }
@@ -270,16 +268,16 @@ STATIC LogRt CheckGernelConfig(void)
 }
 
 /**
-* @brief ParseGernelGroupMsg: read gernel info for grouping
-* @param [in] fp: file handle for slog.conf
-* @param [in] buf: buffer for save info in the previous line
-* @return: SUCCEES: succeed; others: failed
-*/
-STATIC LogRt ParseGernelGroupMsg(FILE *fp, char **buf)
+ * @brief ParseGernelGroupMsg: read gernel info for grouping
+ * @param [in] fp: file handle for slog.conf
+ * @param [in] buf: buffer for save info in the previous line
+ * @return: SUCCEES: succeed; others: failed
+ */
+STATIC LogRt ParseGernelGroupMsg(FILE* fp, char** buf)
 {
-    char confName[CONF_NAME_MAX_LEN + 1] = { 0 };
-    char confValue[CONF_VALUE_MAX_LEN + 1] = { 0 };
-    char tmpBuf[CONF_FILE_MAX_LINE + 1] = { 0 };
+    char confName[CONF_NAME_MAX_LEN + 1] = {0};
+    char confValue[CONF_VALUE_MAX_LEN + 1] = {0};
+    char tmpBuf[CONF_FILE_MAX_LINE + 1] = {0};
 
     LogRt res = MoveToTargetSymbol(fp, SLOG_SYMBOL_GENERAL_STR);
     ONE_ACT_NO_LOG(res != SUCCESS, return res);
@@ -293,8 +291,9 @@ STATIC LogRt ParseGernelGroupMsg(FILE *fp, char **buf)
             start++;
         }
         int32_t ret = strcpy_s(tmpBuf, sizeof(tmpBuf) - 1U, (*buf + start));
-        ONE_ACT_ERR_LOG(ret != EOK, continue, "strcpy_s config item failed, errno=%d, strerr=%s.",
-                        (int32_t)STR_COPY_FAILED, strerror(ToolGetErrorCode()));
+        ONE_ACT_ERR_LOG(
+            ret != EOK, continue, "strcpy_s config item failed, errno=%d, strerr=%s.", (int32_t)STR_COPY_FAILED,
+            strerror(ToolGetErrorCode()));
         res = LogConfParseLine(tmpBuf, confName, CONF_NAME_MAX_LEN, confValue, CONF_VALUE_MAX_LEN);
         ONE_ACT_ERR_LOG(res != SUCCESS, continue, "parse line config item failed, line:%s", *buf);
         res = InitGernelCfgItem(confName, CONF_NAME_MAX_LEN, confValue, CONF_VALUE_MAX_LEN);
@@ -308,26 +307,25 @@ STATIC LogRt ParseGernelGroupMsg(FILE *fp, char **buf)
     return SUCCESS;
 }
 
-STATIC LogRt ParseConfigModule(char *modStr, int groupId)
+STATIC LogRt ParseConfigModule(char* modStr, int groupId)
 {
     char delim[2] = ",";
-    char *nameStr = NULL;
-    char *nextToken = NULL;
+    char* nameStr = NULL;
+    char* nextToken = NULL;
     size_t len = strnlen(modStr, GROUP_NAME_MAX_LEN + 1);
     ONE_ACT_ERR_LOG(len == 0, return NO_MATCH_MODULE_NAME, "get none module.");
 
     nameStr = strtok_s(modStr, delim, &nextToken);
     while (nameStr != NULL) {
-        const ModuleInfo *modInfo = NULL;
+        const ModuleInfo* modInfo = NULL;
 
         modInfo = GetModuleInfoByName(nameStr);
-        TWO_ACT_ERR_LOG(modInfo == NULL, nameStr = strtok_s(NULL, delim, &nextToken), \
-                        continue, "group %s, module name for %s is invaild.", \
-                        g_groupInfo.map[groupId].name, nameStr);
-        if ((modInfo->groupId != INVAILD_GROUP_ID) && \
-            (modInfo->groupId != g_groupInfo.defGroupId)) {
-            SELF_LOG_ERROR("group %s, repeat grouping module %s, please check.", \
-                           g_groupInfo.map[groupId].name, nameStr);
+        TWO_ACT_ERR_LOG(
+            modInfo == NULL, nameStr = strtok_s(NULL, delim, &nextToken), continue,
+            "group %s, module name for %s is invaild.", g_groupInfo.map[groupId].name, nameStr);
+        if ((modInfo->groupId != INVAILD_GROUP_ID) && (modInfo->groupId != g_groupInfo.defGroupId)) {
+            SELF_LOG_ERROR(
+                "group %s, repeat grouping module %s, please check.", g_groupInfo.map[groupId].name, nameStr);
             nameStr = strtok_s(NULL, delim, &nextToken);
             continue;
         }
@@ -339,23 +337,22 @@ STATIC LogRt ParseConfigModule(char *modStr, int groupId)
         g_groupInfo.map[groupId].moduleNum++;
         nameStr = strtok_s(NULL, delim, &nextToken);
     }
-    ONE_ACT_ERR_LOG(g_groupInfo.map[groupId].moduleNum == 0, return NO_MATCH_MODULE_NAME, \
-                    "get none module.");
+    ONE_ACT_ERR_LOG(g_groupInfo.map[groupId].moduleNum == 0, return NO_MATCH_MODULE_NAME, "get none module.");
 
     return SUCCESS;
 }
 
-STATIC LogRt InitGroupItem(const char *confName, unsigned int nameLen, char *confValue, \
-                           unsigned int valueLen, int groupId)
+STATIC LogRt
+InitGroupItem(const char* confName, unsigned int nameLen, char* confValue, unsigned int valueLen, int groupId)
 {
     ONE_ACT_WARN_LOG(confName == NULL, return ARGV_NULL, "[input] config name is null.");
     ONE_ACT_WARN_LOG(confValue == NULL, return ARGV_NULL, "[input] config value is null.");
-    ONE_ACT_WARN_LOG(nameLen > CONF_NAME_MAX_LEN, return ARGV_NULL,
-                     "[input] config name length is invalid, length=%u, max_length=%d.",
-                     nameLen, CONF_NAME_MAX_LEN);
-    ONE_ACT_WARN_LOG(valueLen > CONF_VALUE_MAX_LEN, return ARGV_NULL,
-                     "[input] config value length is invalid, length=%u, max_length=%d.",
-                     valueLen, CONF_VALUE_MAX_LEN);
+    ONE_ACT_WARN_LOG(
+        nameLen > CONF_NAME_MAX_LEN, return ARGV_NULL,
+        "[input] config name length is invalid, length=%u, max_length=%d.", nameLen, CONF_NAME_MAX_LEN);
+    ONE_ACT_WARN_LOG(
+        valueLen > CONF_VALUE_MAX_LEN, return ARGV_NULL,
+        "[input] config value length is invalid, length=%u, max_length=%d.", valueLen, CONF_VALUE_MAX_LEN);
 
     if (strcmp(confName, SLOG_GROUP_NAME_CFG_STR) == 0) {
         int32_t ret = strcpy_s(g_groupInfo.map[groupId].name, GROUP_NAME_MAX_LEN, confValue);
@@ -368,7 +365,7 @@ STATIC LogRt InitGroupItem(const char *confName, unsigned int nameLen, char *con
     } else if (strcmp(confName, SLOG_FILE_SIZE_CFG_STR) == 0) {
         const int32_t convertValueToSize = 1024;
         g_groupInfo.map[groupId].fileSize = GetConfVal(confValue, valueLen) * convertValueToSize;
-    }  else if (strcmp(confName, SLOG_DEFAULT_GROUP_SYMBOL) == 0) {
+    } else if (strcmp(confName, SLOG_DEFAULT_GROUP_SYMBOL) == 0) {
         g_groupInfo.map[groupId].isDefGroup = GetDefaultGroupSymbol(confValue, CONF_VALUE_MAX_LEN + 1);
     } else {
         SELF_LOG_ERROR("unrecognizable config name %s, errno=%d.", confName, (int32_t)KEYVALUE_NOT_FIND);
@@ -405,8 +402,9 @@ STATIC LogRt CheckRepeatName(int groupId)
             continue;
         }
         if (strcmp(g_groupInfo.map[idx].name, g_groupInfo.map[groupId].name) == 0) {
-            SELF_LOG_ERROR("group name %s is repeat, this group will be abandon, errno=%d.", \
-                           g_groupInfo.map[groupId].name, (int32_t)REPEAT_GROUP_NAME);
+            SELF_LOG_ERROR(
+                "group name %s is repeat, this group will be abandon, errno=%d.", g_groupInfo.map[groupId].name,
+                (int32_t)REPEAT_GROUP_NAME);
             return REPEAT_GROUP_NAME;
         }
     }
@@ -415,24 +413,25 @@ STATIC LogRt CheckRepeatName(int groupId)
 
 STATIC LogRt CheckGroupRatio(int groupId)
 {
-    ONE_ACT_ERR_LOG((g_groupInfo.map[groupId].fileRatio > FULL_RATIO) || \
-                    (g_groupInfo.map[groupId].fileRatio <= 0), return ILLEGAL_GROUP_PARA,
-                    "illegal group fileRatio = %d or uninitialized, group will be abandon, errno=%d.", \
-                    g_groupInfo.map[groupId].fileRatio, (int32_t)ILLEGAL_GROUP_PARA);
-    ONE_ACT_ERR_LOG((g_groupInfo.allRatio + g_groupInfo.map[groupId].fileRatio) > FULL_RATIO, \
-                    return GROUP_RATIO_OVER_MAX, \
-                    "curr ratio is %d, no enough space for ratio %d, parse fail, errno=%d.", \
-                    g_groupInfo.allRatio, g_groupInfo.map[groupId].fileRatio, (int32_t)GROUP_RATIO_OVER_MAX);
+    ONE_ACT_ERR_LOG(
+        (g_groupInfo.map[groupId].fileRatio > FULL_RATIO) || (g_groupInfo.map[groupId].fileRatio <= 0),
+        return ILLEGAL_GROUP_PARA, "illegal group fileRatio = %d or uninitialized, group will be abandon, errno=%d.",
+        g_groupInfo.map[groupId].fileRatio, (int32_t)ILLEGAL_GROUP_PARA);
+    ONE_ACT_ERR_LOG(
+        (g_groupInfo.allRatio + g_groupInfo.map[groupId].fileRatio) > FULL_RATIO, return GROUP_RATIO_OVER_MAX,
+        "curr ratio is %d, no enough space for ratio %d, parse fail, errno=%d.", g_groupInfo.allRatio,
+        g_groupInfo.map[groupId].fileRatio, (int32_t)GROUP_RATIO_OVER_MAX);
 
     return SUCCESS;
 }
 
 STATIC LogRt CheckGroupModules(int groupId)
 {
-    if ((strnlen(g_groupInfo.map[groupId].moduleStr, GROUP_NAME_MAX_LEN + 1) == 0) || \
+    if ((strnlen(g_groupInfo.map[groupId].moduleStr, GROUP_NAME_MAX_LEN + 1) == 0) ||
         (ParseConfigModule(g_groupInfo.map[groupId].moduleStr, groupId) != SUCCESS)) {
-        SELF_LOG_ERROR("group %s doesn't config moduleId, this group will be abandon, errno=%d.", \
-                       g_groupInfo.map[groupId].name, (int32_t)MISSING_KEY_INFO);
+        SELF_LOG_ERROR(
+            "group %s doesn't config moduleId, this group will be abandon, errno=%d.", g_groupInfo.map[groupId].name,
+            (int32_t)MISSING_KEY_INFO);
         return MISSING_KEY_INFO;
     }
 
@@ -441,11 +440,9 @@ STATIC LogRt CheckGroupModules(int groupId)
 
 STATIC LogRt CheckUnitGroupCfg(int groupId)
 {
-    if ((g_groupInfo.map[groupId].isDefGroup == 1) && \
-        (g_groupInfo.defGroupId != INVAILD_GROUP_ID)) {
-            SELF_LOG_ERROR("default group has been inited, group will be abandon, errno=%d.", \
-                           (int32_t)REPEAT_GROUP_NAME);
-            return REPEAT_GROUP_NAME;
+    if ((g_groupInfo.map[groupId].isDefGroup == 1) && (g_groupInfo.defGroupId != INVAILD_GROUP_ID)) {
+        SELF_LOG_ERROR("default group has been inited, group will be abandon, errno=%d.", (int32_t)REPEAT_GROUP_NAME);
+        return REPEAT_GROUP_NAME;
     }
     // is illegal for don't init fileSize and fileRatio
     LogRt ret = CheckGroupRatio(groupId);
@@ -454,12 +451,10 @@ STATIC LogRt CheckUnitGroupCfg(int groupId)
     size_t len = strnlen(g_groupInfo.map[groupId].name, GROUP_NAME_MAX_LEN + 1);
     if (len == 0) {
         if (g_groupInfo.map[groupId].isDefGroup == 1) {
-            errno_t err = strcpy_s(g_groupInfo.map[groupId].name, \
-                                   GROUP_NAME_MAX_LEN, SLOG_DEFAULT_GROUP_NAME);
+            errno_t err = strcpy_s(g_groupInfo.map[groupId].name, GROUP_NAME_MAX_LEN, SLOG_DEFAULT_GROUP_NAME);
             NO_ACT_ERR_LOG(err != EOK, "strcpy_s default group name failed.");
         } else {
-            SELF_LOG_ERROR("group name isn't config, will be abandon, errno=%d.", \
-                           (int32_t)MISSING_KEY_INFO);
+            SELF_LOG_ERROR("group name isn't config, will be abandon, errno=%d.", (int32_t)MISSING_KEY_INFO);
             return MISSING_KEY_INFO;
         }
     }
@@ -477,19 +472,19 @@ STATIC LogRt CheckUnitGroupCfg(int groupId)
 }
 
 /**
-* @brief ParseUnitGroupCfg: parse all group msg under one slog module
-* @param [in] fp: handle for slog.conf
-* @param [in] groupId: group id for this unit
-* @param [in] lineBuf: line buffer for previous line of msg
-* @return: SUCCEES: succeed; others: failed
-*/
-STATIC LogRt ParseUnitGroupCfg(FILE *fp, int groupId, char **lineBuf)
+ * @brief ParseUnitGroupCfg: parse all group msg under one slog module
+ * @param [in] fp: handle for slog.conf
+ * @param [in] groupId: group id for this unit
+ * @param [in] lineBuf: line buffer for previous line of msg
+ * @return: SUCCEES: succeed; others: failed
+ */
+STATIC LogRt ParseUnitGroupCfg(FILE* fp, int groupId, char** lineBuf)
 {
     LogRt res;
-    char *buf = *lineBuf;
-    char confName[CONF_NAME_MAX_LEN + 1] = { 0 };
-    char confValue[CONF_VALUE_MAX_LEN + 1] = { 0 };
-    char tmpBuf[CONF_FILE_MAX_LINE + 1] = { 0 };
+    char* buf = *lineBuf;
+    char confName[CONF_NAME_MAX_LEN + 1] = {0};
+    char confValue[CONF_VALUE_MAX_LEN + 1] = {0};
+    char tmpBuf[CONF_FILE_MAX_LINE + 1] = {0};
 
     while (fgets(buf, CONF_FILE_MAX_LINE, fp) != NULL) {
         uint32_t start = 0;
@@ -501,8 +496,8 @@ STATIC LogRt ParseUnitGroupCfg(FILE *fp, int groupId, char **lineBuf)
         }
 
         int32_t ret = strcpy_s(tmpBuf, sizeof(tmpBuf) - 1U, (buf + start));
-        ONE_ACT_ERR_LOG(ret != EOK, continue, "strcpy_s config item failed, result=%d, errno=%d.",
-                        ret, (int32_t)STR_COPY_FAILED);
+        ONE_ACT_ERR_LOG(
+            ret != EOK, continue, "strcpy_s config item failed, result=%d, errno=%d.", ret, (int32_t)STR_COPY_FAILED);
         res = LogConfParseLine(tmpBuf, confName, CONF_NAME_MAX_LEN, confValue, CONF_VALUE_MAX_LEN);
         ONE_ACT_ERR_LOG(res != SUCCESS, continue, "parse one line config item failed.");
         res = InitGroupItem(confName, CONF_NAME_MAX_LEN, confValue, CONF_VALUE_MAX_LEN, groupId);
@@ -522,14 +517,14 @@ STATIC LogRt ParseUnitGroupCfg(FILE *fp, int groupId, char **lineBuf)
 }
 
 /**
-* @brief InsertGroupMapItem: insert a slog module config to map
-* @param [in] fp: handle for slog.conf
-* @param [in] lineBuf: line buffer for previous line of msg
-*/
-STATIC LogRt InsertGroupMapItem(FILE *fp, char **lineBuf)
+ * @brief InsertGroupMapItem: insert a slog module config to map
+ * @param [in] fp: handle for slog.conf
+ * @param [in] lineBuf: line buffer for previous line of msg
+ */
+STATIC LogRt InsertGroupMapItem(FILE* fp, char** lineBuf)
 {
-    char *buf = *lineBuf;
-    char symbol[SYMBOL_NAME_MAX_LEN + 1] = { 0 };
+    char* buf = *lineBuf;
+    char symbol[SYMBOL_NAME_MAX_LEN + 1] = {0};
 
     ONE_ACT_NO_LOG(LogFileGets(buf, CONF_FILE_MAX_LINE, fp) != LOG_SUCCESS, return SUCCESS);
     while (feof(fp) == 0) {
@@ -567,29 +562,30 @@ STATIC LogRt InsertGroupMapItem(FILE *fp, char **lineBuf)
     return SUCCESS;
 }
 
-STATIC LogRt UpdateGroupRatio(const char *buf)
+STATIC LogRt UpdateGroupRatio(const char* buf)
 {
     int32_t start = 0;
-    char confName[CONF_NAME_MAX_LEN + 1] = { 0 };
-    char confValue[CONF_VALUE_MAX_LEN + 1] = { 0 };
-    char tmpBuf[CONF_FILE_MAX_LINE + 1] = { 0 };
+    char confName[CONF_NAME_MAX_LEN + 1] = {0};
+    char confValue[CONF_VALUE_MAX_LEN + 1] = {0};
+    char tmpBuf[CONF_FILE_MAX_LINE + 1] = {0};
 
     while (IsBlank(buf[start])) {
         start++;
     }
     int32_t ret = strcpy_s(tmpBuf, sizeof(tmpBuf) - 1U, (buf + start));
-    ONE_ACT_ERR_LOG(ret != EOK, return STR_COPY_FAILED, \
-                    "strcpy_s config item failed, result=%d, strerr=%s.",
-                    ret, strerror(ToolGetErrorCode()));
+    ONE_ACT_ERR_LOG(
+        ret != EOK, return STR_COPY_FAILED, "strcpy_s config item failed, result=%d, strerr=%s.", ret,
+        strerror(ToolGetErrorCode()));
 
     LogRt res = LogConfParseLine(tmpBuf, confName, CONF_NAME_MAX_LEN, confValue, CONF_VALUE_MAX_LEN);
     ONE_ACT_NO_LOG(res != SUCCESS, return res);
 
     if (strcmp(confName, SLOG_RATIO_CFG_STR) == 0) {
         int fileRatio = GetConfVal(confValue, CONF_VALUE_MAX_LEN);
-        ONE_ACT_ERR_LOG((g_groupInfo.allRatio + fileRatio) > FULL_RATIO, return GROUP_RATIO_OVER_MAX, \
-                        "curr ratio is %d, no enough space for ratio %d, parse fail, errno=%d.", \
-                        g_groupInfo.allRatio, fileRatio, (int32_t)GROUP_RATIO_OVER_MAX);
+        ONE_ACT_ERR_LOG(
+            (g_groupInfo.allRatio + fileRatio) > FULL_RATIO, return GROUP_RATIO_OVER_MAX,
+            "curr ratio is %d, no enough space for ratio %d, parse fail, errno=%d.", g_groupInfo.allRatio, fileRatio,
+            (int32_t)GROUP_RATIO_OVER_MAX);
         g_groupInfo.allRatio += fileRatio;
     }
 
@@ -625,18 +621,17 @@ STATIC void SetAllLogToOthersGroup(void)
     g_groupInfo.map[DEFAULT_GROUP_ID].fileRatio = (int)ratio;
     g_groupInfo.allRatio = FULL_RATIO;
     g_groupInfo.map[DEFAULT_GROUP_ID].fileSize = MIN_GROUP_FILE_SIZE;
-    g_groupInfo.map[DEFAULT_GROUP_ID].totalMaxFileSize =
-        (g_groupInfo.maxSize > 0) ? (uint32_t)g_groupInfo.maxSize : 0U;
+    g_groupInfo.map[DEFAULT_GROUP_ID].totalMaxFileSize = (g_groupInfo.maxSize > 0) ? (uint32_t)g_groupInfo.maxSize : 0U;
     int32_t ret = strcpy_s(g_groupInfo.map[DEFAULT_GROUP_ID].name, GROUP_NAME_MAX_LEN, SLOG_DEFAULT_GROUP_NAME);
     NO_ACT_ERR_LOG(ret != EOK, "strcpy_s default group name failed.");
     g_groupInfo.defGroupId = DEFAULT_GROUP_ID;
     SetGroupIdToAllModule(DEFAULT_GROUP_ID);
 }
 
-STATIC void ParseCommonGroupMsg(FILE *fp, char **lineBuf)
+STATIC void ParseCommonGroupMsg(FILE* fp, char** lineBuf)
 {
     LogRt ret;
-    char *buf = *lineBuf;
+    char* buf = *lineBuf;
 
     // Accumulate the value of ratio and find the configuration module of the target.
     while (feof(fp) == 0) {
@@ -672,12 +667,12 @@ HANDLE_RATIO_OVER_MAX:
 
 STATIC void PrintGroupConfig(void)
 {
-    const ModuleInfo *modSet = GetModuleInfos();
+    const ModuleInfo* modSet = GetModuleInfos();
 
     SELF_LOG_INFO("Log max size = %dKB", g_groupInfo.maxSize);
     SELF_LOG_INFO("Log buffer size = %dKB", g_groupInfo.bufSize);
     for (int32_t groupId = 0; groupId < GROUP_MAP_SIZE; groupId++) {
-        char moduleStr[CONF_VALUE_MAX_LEN + 1] = { 0 };
+        char moduleStr[CONF_VALUE_MAX_LEN + 1] = {0};
 
         ONE_ACT_NO_LOG(g_groupInfo.map[groupId].isInit == 0, continue);
         SELF_LOG_INFO("====================================");
@@ -687,7 +682,7 @@ STATIC void PrintGroupConfig(void)
         SELF_LOG_INFO("group contains the following modules:");
         for (int32_t moduleId = 0; moduleId < INVALID_MODULE_ID; moduleId++) {
             if (modSet[moduleId].groupId == groupId) {
-                char tmpStr[CONF_VALUE_MAX_LEN + 1] = { 0 };
+                char tmpStr[CONF_VALUE_MAX_LEN + 1] = {0};
                 int32_t ret = sprintf_s(tmpStr, CONF_VALUE_MAX_LEN, " %s", modSet[moduleId].moduleName);
                 ONE_ACT_ERR_LOG(ret < 0, break, "sprintf fail for %s.", modSet[moduleId].moduleName);
                 errno_t err = strncat_s(moduleStr, CONF_VALUE_MAX_LEN, tmpStr, strlen(tmpStr));
@@ -722,14 +717,14 @@ STATIC void SetGroupCfgToDefaultMode(void)
 }
 
 /**
-* @brief : read group info in slog.conf and parse them
-* @param [in] file: config file realpath include filename, it can't be NULL
-*/
-void LogConfGroupInit(const char *file)
+ * @brief : read group info in slog.conf and parse them
+ * @param [in] file: config file realpath include filename, it can't be NULL
+ */
+void LogConfGroupInit(const char* file)
 {
     LogRt res;
-    FILE *fp = NULL;
-    char *buf = NULL;
+    FILE* fp = NULL;
+    char* buf = NULL;
 
     ResetGroupInfo();
     // if file is NULL, then use default config file path
@@ -739,7 +734,7 @@ void LogConfGroupInit(const char *file)
         return;
     }
     // Allocate a buffer to save the content of the previous line.
-    buf = (char *)LogMalloc(CONF_FILE_MAX_LINE + 1);
+    buf = (char*)LogMalloc(CONF_FILE_MAX_LINE + 1);
     if (buf == NULL) {
         SELF_LOG_ERROR("malloc failed, errno=%d, strerr=%s.", (int32_t)MALLOC_FAILED, strerror(ToolGetErrorCode()));
         SetGroupCfgToDefaultMode();
@@ -765,15 +760,9 @@ void LogConfGroupInit(const char *file)
     XFREE(buf);
 }
 
-const GeneralGroupInfo *LogConfGroupGetInfo(void)
-{
-    return &g_groupInfo;
-}
+const GeneralGroupInfo* LogConfGroupGetInfo(void) { return &g_groupInfo; }
 
-bool LogConfGroupGetSwitch(void)
-{
-    return g_groupLogEnabled;
-}
+bool LogConfGroupGetSwitch(void) { return g_groupLogEnabled; }
 
 void LogConfGroupSetSwitch(bool enabled)
 {
@@ -781,20 +770,14 @@ void LogConfGroupSetSwitch(bool enabled)
     return;
 }
 #else
-void LogConfGroupInit(const char *file)
+void LogConfGroupInit(const char* file)
 {
     (void)file;
     return;
 }
 
-const GeneralGroupInfo *LogConfGroupGetInfo(void)
-{
-    return NULL;
-}
+const GeneralGroupInfo* LogConfGroupGetInfo(void) { return NULL; }
 
-bool LogConfGroupGetSwitch(void)
-{
-    return false;
-}
+bool LogConfGroupGetSwitch(void) { return false; }
 
 #endif

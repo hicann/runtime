@@ -11,10 +11,10 @@
 #define AWATCHDOG_H
 #include "awatchdog_types.h"
 
-#define AWD_ATOMIC_FETCH_AND_ADD(ptr, value)        ((__typeof__(*(ptr)))__sync_fetch_and_add((ptr), (value)))
-#define AWD_ATOMIC_SUB_AND_FETCH(ptr, value)        ((__typeof__(*(ptr)))__sync_sub_and_fetch((ptr), (value)))
-#define AWD_ATOMIC_TEST_AND_SET(ptr, value)          ((void)__sync_lock_test_and_set((ptr), (value)))
-#define AWD_ATOMIC_CMP_AND_SWAP(ptr, comp, value)   (__sync_bool_compare_and_swap((ptr), (comp), (value)))
+#define AWD_ATOMIC_FETCH_AND_ADD(ptr, value) ((__typeof__(*(ptr)))__sync_fetch_and_add((ptr), (value)))
+#define AWD_ATOMIC_SUB_AND_FETCH(ptr, value) ((__typeof__(*(ptr)))__sync_sub_and_fetch((ptr), (value)))
+#define AWD_ATOMIC_TEST_AND_SET(ptr, value) ((void)__sync_lock_test_and_set((ptr), (value)))
+#define AWD_ATOMIC_CMP_AND_SWAP(ptr, comp, value) (__sync_bool_compare_and_swap((ptr), (comp), (value)))
 
 #ifdef __cplusplus
 extern "C" {
@@ -25,9 +25,9 @@ typedef enum AwdWatchdogType {
     AWD_WATCHDOG_TYPE_MAX,
 } AwdWatchdogType;
 
-#define DEFINE_THREAD_WATCHDOG(name)        static __thread AwdHandle name = -1
+#define DEFINE_THREAD_WATCHDOG(name) static __thread AwdHandle name = -1
 #define WATCHDOG_TYPE_BIT 16U
-#define DEFINE_THREAD_WATCHDOG_ID(moduleId)  \
+#define DEFINE_THREAD_WATCHDOG_ID(moduleId) \
     ((uint32_t)moduleId) | ((uint32_t)1U << WATCHDOG_TYPE_BIT) | ((uint32_t)AWD_WATCHDOG_TYPE_THREAD)
 
 /*
@@ -56,7 +56,7 @@ static inline AwdStatus AwdStartThreadWatchdog(const AwdHandle handle)
     if (handle == AWD_INVALID_HANDLE) {
         return AWD_FAILURE;
     }
-    AwdThreadWatchdog *dog = (AwdThreadWatchdog *)handle;
+    AwdThreadWatchdog* dog = (AwdThreadWatchdog*)handle;
     AWD_ATOMIC_TEST_AND_SET(&dog->runCount, 0);
     AWD_ATOMIC_TEST_AND_SET(&dog->startCount, AWD_STATUS_STARTED);
     return AWD_SUCCESS;
@@ -72,7 +72,7 @@ static inline AwdStatus AwdFeedThreadWatchdog(const AwdHandle handle)
     if (handle == AWD_INVALID_HANDLE) {
         return AWD_FAILURE;
     }
-    AwdThreadWatchdog *dog = (AwdThreadWatchdog *)handle;
+    AwdThreadWatchdog* dog = (AwdThreadWatchdog*)handle;
     AWD_ATOMIC_TEST_AND_SET(&dog->startCount, AWD_ATOMIC_FETCH_AND_ADD(&dog->runCount, 0));
     return AWD_SUCCESS;
 }
@@ -87,7 +87,7 @@ static inline AwdStatus AwdStopThreadWatchdog(const AwdHandle handle)
     if (handle == AWD_INVALID_HANDLE) {
         return AWD_FAILURE;
     }
-    AwdThreadWatchdog *dog = (AwdThreadWatchdog *)handle;
+    AwdThreadWatchdog* dog = (AwdThreadWatchdog*)handle;
     AWD_ATOMIC_TEST_AND_SET(&dog->startCount, AWD_STATUS_INIT);
     return AWD_SUCCESS;
 }

@@ -14,23 +14,19 @@
 #include "log_common.h"
 #include "log_system_api.h"
 
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-typedef enum {
-    SESSION_SINGLE_EXPORT,
-    SESSION_CONTINUES_EXPORT
-} SessionType;
+typedef enum { SESSION_SINGLE_EXPORT, SESSION_CONTINUES_EXPORT } SessionType;
 
 typedef struct {
-    void *session;
+    void* session;
     SessionType type;
 } SessionItem;
 
 typedef struct SessionPidDevIdNode {
-    struct SessionPidDevIdNode *next;
+    struct SessionPidDevIdNode* next;
     uintptr_t session;
     int32_t pid;
     int32_t devId;
@@ -44,17 +40,17 @@ void FreeSessionList(void);
 LogRt DeleteSessionNode(uintptr_t session, int32_t pid, int32_t devId);
 LogRt InsertSessionNode(uintptr_t session, int32_t pid, int32_t devId);
 SessionNode* GetSessionNode(uint32_t pid, uint32_t devId);
-void PushDeletedSessionNode(SessionNode *node);
+void PushDeletedSessionNode(SessionNode* node);
 SessionNode* PopDeletedSessionNode(void);
 SessionNode* GetDeletedSessionNode(uint32_t pid, uint32_t devId);
 bool IsSessionNodeListNull(void);
 void HandleInvalidSessionNode(void);
 void HandleDeletedSessionNode(LogSeverSendDataFunc func);
-int32_t SendDataToSessionNode(uint32_t pid, uint32_t devId, const char *buf, size_t bufLen);
-int32_t SessionMgrAddSession(const SessionItem *item);
-int32_t SessionMgrGetSession(SessionItem *item);
-int32_t SessionMgrSendMsg(const SessionItem *handle, const char *data, uint32_t len);
-int32_t SessionMgrDeleteSession(const SessionItem *item);
+int32_t SendDataToSessionNode(uint32_t pid, uint32_t devId, const char* buf, size_t bufLen);
+int32_t SessionMgrAddSession(const SessionItem* item);
+int32_t SessionMgrGetSession(SessionItem* item);
+int32_t SessionMgrSendMsg(const SessionItem* handle, const char* data, uint32_t len);
+int32_t SessionMgrDeleteSession(const SessionItem* item);
 #ifdef __cplusplus
 }
 #endif

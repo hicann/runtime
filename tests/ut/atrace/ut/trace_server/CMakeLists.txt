@@ -180,6 +180,8 @@ set(INCLUDE_DIR
     ${UTRACE_SOURCE_DIR}/utrace_client
     ${ATRACE_SOURCE_DIR}/utils
     ${LIBC_SEC_HEADER}
+    ${TOP_DIR}/src/dfx/adump/inc/adump
+    ${TOP_DIR}/src/dfx/adump/external
     ${TOP_DIR}/pkg_inc/driver
     ${ADIAG_DIR}/common
 )

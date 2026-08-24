@@ -17,11 +17,10 @@
 extern "C" {
 #endif // __cplusplus
 
-TraStatus TracerScheduleRegister(Tracer *tracer);
-TraStatus TracerScheduleUnregister(Tracer *tracer);
+TraStatus TracerScheduleRegister(Tracer* tracer);
+TraStatus TracerScheduleUnregister(Tracer* tracer);
 
 #ifdef __cplusplus
 }
 #endif // __cplusplus
 #endif
-

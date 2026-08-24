@@ -14,16 +14,16 @@
 #include "log_system_api.h"
 #include "log_print.h"
 
-#define MSG_RETRY_TIMES     90
+#define MSG_RETRY_TIMES 90
 
 static ToolMutex g_logconfigLock;
 
-STATIC int32_t LogCmdRecvLogMsg(LogCmdMsg *rcvMsg, int32_t queueId)
+STATIC int32_t LogCmdRecvLogMsg(LogCmdMsg* rcvMsg, int32_t queueId)
 {
     int32_t rcvRes = -1;
     int32_t retryTimes = 0;
     do {
-        rcvRes = MsgQueueRecv(queueId, (void *)rcvMsg, MSG_MAX_LEN, true, FEEDBACK_MSG_TYPE);
+        rcvRes = MsgQueueRecv(queueId, (void*)rcvMsg, MSG_MAX_LEN, true, FEEDBACK_MSG_TYPE);
         if (rcvRes == LOG_SUCCESS) {
             break;
         }
@@ -43,16 +43,17 @@ STATIC int32_t LogCmdRecvLogMsg(LogCmdMsg *rcvMsg, int32_t queueId)
     } while (true);
 
     if (rcvRes != LOG_SUCCESS) {
-        SELF_LOG_ERROR("receive level setting result failed from slogd, result=%d, strerr=%s, retry_time=%d.",
-                       rcvRes, strerror(ToolGetErrorCode()), retryTimes);
+        SELF_LOG_ERROR(
+            "receive level setting result failed from slogd, result=%d, strerr=%s, retry_time=%d.", rcvRes,
+            strerror(ToolGetErrorCode()), retryTimes);
         return CONFIG_LOG_MSGQUEUE_FAILED;
     }
-    SELF_LOG_INFO("receive msg from slogd, type:%ld data:%s, device id:%d",
-                  rcvMsg->msgType, rcvMsg->msgData, rcvMsg->phyDevId);
+    SELF_LOG_INFO(
+        "receive msg from slogd, type:%ld data:%s, device id:%d", rcvMsg->msgType, rcvMsg->msgData, rcvMsg->phyDevId);
     return CONFIG_OK;
 }
 
-int32_t LogCmdSendLogMsg(LogCmdMsg *rcvMsg, const char *msg, uint16_t devId)
+int32_t LogCmdSendLogMsg(LogCmdMsg* rcvMsg, const char* msg, uint16_t devId)
 {
     // get message queue
     LogCmdMsg stMsg = {FORWARD_MSG_TYPE, devId, ""};
@@ -69,14 +70,14 @@ int32_t LogCmdSendLogMsg(LogCmdMsg *rcvMsg, const char *msg, uint16_t devId)
     LOCK_WARN_LOG(&g_logconfigLock);
     // clear message queue
     do {
-        int32_t rcvRes = MsgQueueRecv(queueId, (void *)(rcvMsg), MSG_MAX_LEN, true, FEEDBACK_MSG_TYPE);
+        int32_t rcvRes = MsgQueueRecv(queueId, (void*)(rcvMsg), MSG_MAX_LEN, true, FEEDBACK_MSG_TYPE);
         if ((rcvRes != LOG_SUCCESS) && (ToolGetErrorCode() != EINTR)) {
             break;
         }
     } while (true);
 
     // send message to notify the slog
-    if (MsgQueueSend(queueId, (void *)(&stMsg), MSG_MAX_LEN, true) != LOG_SUCCESS) {
+    if (MsgQueueSend(queueId, (void*)(&stMsg), MSG_MAX_LEN, true) != LOG_SUCCESS) {
         SELF_LOG_ERROR("Send level info to slogd failed, strerr=%s.", strerror(ToolGetErrorCode()));
         UNLOCK_WARN_LOG(&g_logconfigLock);
         return CONFIG_LOG_MSGQUEUE_FAILED;
@@ -89,10 +90,10 @@ int32_t LogCmdSendLogMsg(LogCmdMsg *rcvMsg, const char *msg, uint16_t devId)
     return rcvRes;
 }
 
-int32_t LogCmdGetLogLevel(char *resultBuf, uint32_t *resultLen, uint16_t devId)
+int32_t LogCmdGetLogLevel(char* resultBuf, uint32_t* resultLen, uint16_t devId)
 {
     LogCmdMsg rcvMsg = {0, -1, ""};
-    const char *getLogLevelMsg = "GetLogLevelTableFormat";
+    const char* getLogLevelMsg = "GetLogLevelTableFormat";
     int32_t ret = LogCmdSendLogMsg(&rcvMsg, getLogLevelMsg, devId);
     if (ret != CONFIG_OK) {
         SELF_LOG_ERROR("Get log level failed, return:%d", ret);
@@ -112,7 +113,7 @@ int32_t LogCmdGetLogLevel(char *resultBuf, uint32_t *resultLen, uint16_t devId)
     return CONFIG_OK;
 }
 
-int32_t LogCmdSetLogLevel(const char *msg, uint16_t devId)
+int32_t LogCmdSetLogLevel(const char* msg, uint16_t devId)
 {
     LogCmdMsg rcvMsg = {0, -1, ""};
     int32_t ret = LogCmdSendLogMsg(&rcvMsg, msg, devId);
@@ -126,8 +127,9 @@ int32_t LogCmdSetLogLevel(const char *msg, uint16_t devId)
 int32_t LogCmdInitMutex(void)
 {
     int32_t ret = ToolMutexInit(&g_logconfigLock);
-    ONE_ACT_ERR_LOG(ret != SYS_OK, return CONFIG_MUTEX_ERROR,
-                    "init config log command mutex failed, result=%d, strerr=%s.", ret, strerror(ToolGetErrorCode()));
+    ONE_ACT_ERR_LOG(
+        ret != SYS_OK, return CONFIG_MUTEX_ERROR, "init config log command mutex failed, result=%d, strerr=%s.", ret,
+        strerror(ToolGetErrorCode()));
     return CONFIG_OK;
 }
 

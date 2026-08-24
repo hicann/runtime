@@ -15,34 +15,30 @@
 #include "log_system_api.h"
 #include "log_print.h"
 
-#define FREE_HDC_MSG_BUF(ptr) do {                    \
-    if ((ptr) != NULL) {                                \
-        (void)LogdrvHdcFreeMsg((struct drvHdcMsg *)(ptr)); \
-        (ptr) = NULL;                                   \
-    }                                                 \
-} while (0)
+#define FREE_HDC_MSG_BUF(ptr)                                 \
+    do {                                                      \
+        if ((ptr) != NULL) {                                  \
+            (void)LogdrvHdcFreeMsg((struct drvHdcMsg*)(ptr)); \
+            (ptr) = NULL;                                     \
+        }                                                     \
+    } while (0)
 
 STATIC uint32_t g_platform = PLATFORM_INVALID_VALUE; // 0 is device side, 1 is host side
 
-int DrvFunctionsInit(void)
-{
-    return LoadDriverDllFunctions();
-}
+int DrvFunctionsInit(void) { return LoadDriverDllFunctions(); }
 
-int DrvFunctionsUninit(void)
-{
-    return UnloadDriverDllFunctions();
-}
+int DrvFunctionsUninit(void) { return UnloadDriverDllFunctions(); }
 
-int DrvClientCreate(HDC_CLIENT *client, int clientType)
+int DrvClientCreate(HDC_CLIENT* client, int clientType)
 {
     ONE_ACT_NO_LOG(client == NULL, return -1);
 
     HDC_CLIENT hdcClient = NULL;
 
     hdcError_t drvErr = LogdrvHdcClientCreate(&hdcClient, MAX_HDC_SESSION_NUM, clientType, 0);
-    ONE_ACT_ERR_LOG(drvErr != DRV_ERROR_NONE, return -1, "create HDC client failed, drvErr=%d, strerr=%s.",
-                    (int32_t)drvErr, strerror(ToolGetErrorCode()));
+    ONE_ACT_ERR_LOG(
+        drvErr != DRV_ERROR_NONE, return -1, "create HDC client failed, drvErr=%d, strerr=%s.", (int32_t)drvErr,
+        strerror(ToolGetErrorCode()));
     ONE_ACT_WARN_LOG(hdcClient == NULL, return -1, "HDC client is null.");
 
     *client = hdcClient;
@@ -70,7 +66,7 @@ int DrvClientRelease(HDC_CLIENT client)
     return 0;
 }
 
-int DrvSessionInit(HDC_CLIENT client, HDC_SESSION *session, int devId)
+int DrvSessionInit(HDC_CLIENT client, HDC_SESSION* session, int devId)
 {
     ONE_ACT_WARN_LOG(client == NULL, return -1, "[in] hdc client is null.");
     ONE_ACT_WARN_LOG(session == NULL, return -1, "[out] hdc session is null.");
@@ -81,8 +77,9 @@ int DrvSessionInit(HDC_CLIENT client, HDC_SESSION *session, int devId)
     HDC_SESSION hdcSession = NULL;
 
     drvErr = LogdrvHdcSessionConnect(peerNode, devId, client, &hdcSession);
-    ONE_ACT_ERR_LOG(drvErr != DRV_ERROR_NONE, return -1, "create session failed, drvErr=%d, strerr=%s.",
-                    (int32_t)drvErr, strerror(ToolGetErrorCode()));
+    ONE_ACT_ERR_LOG(
+        drvErr != DRV_ERROR_NONE, return -1, "create session failed, drvErr=%d, strerr=%s.", (int32_t)drvErr,
+        strerror(ToolGetErrorCode()));
 
     drvErr = LogdrvHdcSetSessionReference(hdcSession);
     if (drvErr != DRV_ERROR_NONE) {
@@ -100,13 +97,14 @@ int DrvSessionRelease(HDC_SESSION session)
     ONE_ACT_WARN_LOG(session == NULL, return -1, "[input] session is null.");
 
     hdcError_t drvErr = LogdrvHdcSessionClose(session);
-    ONE_ACT_ERR_LOG(drvErr != DRV_ERROR_NONE, return -1, "close session failed, drvErr=%d, strerr=%s.",
-                    (int32_t)drvErr, strerror(ToolGetErrorCode()));
+    ONE_ACT_ERR_LOG(
+        drvErr != DRV_ERROR_NONE, return -1, "close session failed, drvErr=%d, strerr=%s.", (int32_t)drvErr,
+        strerror(ToolGetErrorCode()));
 
     return 0;
 }
 
-int DrvGetPlatformInfo(unsigned int *info)
+int DrvGetPlatformInfo(unsigned int* info)
 {
     ONE_ACT_NO_LOG(info == NULL, return -1);
 
@@ -120,15 +118,15 @@ int DrvGetPlatformInfo(unsigned int *info)
     hdcError_t drvErr = LogdrvGetPlatformInfo(&platform);
     ONE_ACT_ERR_LOG(drvErr != DRV_ERROR_NONE, return -1, "get platform info failed, drvErr=%d.", (int32_t)drvErr);
     if (platform != PLATFORM_INVALID_VALUE) {
-        ONE_ACT_WARN_LOG((platform != DEVICE_SIDE) && (platform != HOST_SIDE), return -1,
-                         "platform info %u is invaild.", platform);
+        ONE_ACT_WARN_LOG(
+            (platform != DEVICE_SIDE) && (platform != HOST_SIDE), return -1, "platform info %u is invaild.", platform);
     }
     *info = platform;
     g_platform = platform;
     return 0;
 }
 
-int DrvGetDevNum(unsigned int *num)
+int DrvGetDevNum(unsigned int* num)
 {
     unsigned int devNum = 0;
     drvError_t drvErr = LogdrvGetDevNum(&devNum);
@@ -139,36 +137,37 @@ int DrvGetDevNum(unsigned int *num)
 }
 
 /**
-* @brief DrvCapacityInit: get capacity by hdc alloc
-* @param [out]segment: capacity size
-* @return: 0: success, -1: failed
-*/
-static int DrvCapacityInit(size_t *segment)
+ * @brief DrvCapacityInit: get capacity by hdc alloc
+ * @param [out]segment: capacity size
+ * @return: 0: success, -1: failed
+ */
+static int DrvCapacityInit(size_t* segment)
 {
     ONE_ACT_NO_LOG(segment == NULL, return -1);
 
-    struct drvHdcCapacity capacity = { HDC_CHAN_TYPE_MAX, 0 };
+    struct drvHdcCapacity capacity = {HDC_CHAN_TYPE_MAX, 0};
 
     hdcError_t drvErr = LogdrvHdcGetCapacity(&capacity);
     ONE_ACT_ERR_LOG(drvErr != DRV_ERROR_NONE, return -1, "alloc HDC capacity failed, drvErr=%d", (int32_t)drvErr);
-    ONE_ACT_WARN_LOG((capacity.maxSegment == 0) || (capacity.maxSegment > HDC_RECV_MAX_LEN), return -1,
-                     "HDC capacity invalid, size=%u.", capacity.maxSegment);
+    ONE_ACT_WARN_LOG(
+        (capacity.maxSegment == 0) || (capacity.maxSegment > HDC_RECV_MAX_LEN), return -1,
+        "HDC capacity invalid, size=%u.", capacity.maxSegment);
 
     *segment = capacity.maxSegment;
     return 0;
 }
 
 /**
-* @brief DrvPackageWrite: subcontract and send msg to peer end
-* @param [in]session: connection session
-* @param [in]sendMsg: send msg info
-* @param [in]packet: packet buffer
-* @return: 0: success, -1: failed
-*/
-static int DrvPackageWrite(HDC_SESSION session, DataSendMsg sendMsg, DataPacket *packet)
+ * @brief DrvPackageWrite: subcontract and send msg to peer end
+ * @param [in]session: connection session
+ * @param [in]sendMsg: send msg info
+ * @param [in]packet: packet buffer
+ * @return: 0: success, -1: failed
+ */
+static int DrvPackageWrite(HDC_SESSION session, DataSendMsg sendMsg, DataPacket* packet)
 {
     hdcError_t drvErr;
-    struct drvHdcMsg *msg = NULL;
+    struct drvHdcMsg* msg = NULL;
     uint32_t reservedLen = (uint32_t)sendMsg.bufLen;
 
     packet->isLast = (~DATA_LAST_PACKET);
@@ -193,21 +192,20 @@ static int DrvPackageWrite(HDC_SESSION session, DataSendMsg sendMsg, DataPacket 
         ONE_ACT_ERR_LOG(ret != EOK, goto WRITE_ERROR, "memory copy failed, strerr=%s.", strerror(ToolGetErrorCode()));
 
         // add buffer to hdc message descriptor
-        drvErr = LogdrvHdcAddMsgBuffer(msg, (char *)packet, (int32_t)(sizeof(DataPacket) + packet->dataLen));
-        ONE_ACT_ERR_LOG(drvErr != DRV_ERROR_NONE, goto WRITE_ERROR,
-                        "add buffer to HDC msg failed, drvErr=%d.", (int32_t)drvErr);
+        drvErr = LogdrvHdcAddMsgBuffer(msg, (char*)packet, (int32_t)(sizeof(DataPacket) + packet->dataLen));
+        ONE_ACT_ERR_LOG(
+            drvErr != DRV_ERROR_NONE, goto WRITE_ERROR, "add buffer to HDC msg failed, drvErr=%d.", (int32_t)drvErr);
 
         // send hdc message
         const uint32_t sendTimeout = 150U * 1000U; // 150s
-        const uint64_t sendFlag = 2U; // means HDC_FLAG_WAIT_TIMEOUT
+        const uint64_t sendFlag = 2U;              // means HDC_FLAG_WAIT_TIMEOUT
         drvErr = LogdrvHdcSend(session, msg, sendFlag, sendTimeout);
-        ONE_ACT_ERR_LOG(drvErr != DRV_ERROR_NONE, goto WRITE_ERROR,
-                        "HDC send failed, drvErr=%d.", (int32_t)drvErr);
+        ONE_ACT_ERR_LOG(drvErr != DRV_ERROR_NONE, goto WRITE_ERROR, "HDC send failed, drvErr=%d.", (int32_t)drvErr);
 
         // reuse message descriptor
         drvErr = LogdrvHdcReuseMsg(msg);
-        ONE_ACT_ERR_LOG(drvErr != DRV_ERROR_NONE, goto WRITE_ERROR,
-                        "reuse HDC msg failed, drvErr=%d.", (int32_t)drvErr);
+        ONE_ACT_ERR_LOG(
+            drvErr != DRV_ERROR_NONE, goto WRITE_ERROR, "reuse HDC msg failed, drvErr=%d.", (int32_t)drvErr);
 
         reservedLen -= packet->dataLen;
     } while ((reservedLen > 0) && (drvErr == DRV_ERROR_NONE));
@@ -220,12 +218,12 @@ WRITE_ERROR:
     return -1;
 }
 
-int DrvBufWrite(HDC_SESSION session, const char *buf, size_t bufLen)
+int DrvBufWrite(HDC_SESSION session, const char* buf, size_t bufLen)
 {
     ONE_ACT_NO_LOG((session == NULL) || (buf == NULL) || (bufLen == 0), return -1);
 
     size_t packetSize = 0;
-    DataSendMsg sendMsg = { 0 };
+    DataSendMsg sendMsg = {0};
 
     // calloc capacity
     int ret = DrvCapacityInit(&packetSize);
@@ -234,10 +232,10 @@ int DrvBufWrite(HDC_SESSION session, const char *buf, size_t bufLen)
         packetSize = bufLen + sizeof(DataPacket) + 1U;
     }
 
-    DataPacket *packet = (DataPacket *)LogMalloc(packetSize);
+    DataPacket* packet = (DataPacket*)LogMalloc(packetSize);
     // cppcheck-suppress *
-    ONE_ACT_ERR_LOG(packet == NULL, return -1, "calloc %zu size failed, strerr=%s.",
-                    packetSize, strerror(ToolGetErrorCode()));
+    ONE_ACT_ERR_LOG(
+        packet == NULL, return -1, "calloc %zu size failed, strerr=%s.", packetSize, strerror(ToolGetErrorCode()));
 
     // write buffer to hdc
     sendMsg.buf = buf;
@@ -250,19 +248,19 @@ int DrvBufWrite(HDC_SESSION session, const char *buf, size_t bufLen)
 }
 
 /**
-* @brief CopyBufData: add packet data to buf, buf may be not empty, need to realloc new memory and copy
-* @param [in]packet: recv packet data
-* @param [out]buf: recv buffer
-* @param [out]bufLen: recv buffer length
-* @return: 0: success, -1: failed
-*/
-static int CopyBufData(const DataPacket *packet, char **buf, unsigned int *bufLen)
+ * @brief CopyBufData: add packet data to buf, buf may be not empty, need to realloc new memory and copy
+ * @param [in]packet: recv packet data
+ * @param [out]buf: recv buffer
+ * @param [out]bufLen: recv buffer length
+ * @return: 0: success, -1: failed
+ */
+static int CopyBufData(const DataPacket* packet, char** buf, unsigned int* bufLen)
 {
     int ret;
     unsigned int newLen;
 
     newLen = packet->dataLen + *bufLen;
-    char *tempBuf = (char *)LogMalloc(newLen + 1U);
+    char* tempBuf = (char*)LogMalloc(newLen + 1U);
     ONE_ACT_ERR_LOG(tempBuf == NULL, goto COPY_ERROR, "calloc failed, strerr=%s.", strerror(ToolGetErrorCode()));
 
     if ((*buf != NULL) && (*bufLen != 0)) {
@@ -284,19 +282,19 @@ COPY_ERROR:
 }
 
 /**
-* @brief DrvPackageRead: subcontract and send msg to peer end
-* @param [in]session: connection session
-* @param [in]buf: send msg info
-* @param [in]bufLen: packet buffer
-* @return: 0: success, -1: failed
-*/
-static hdcError_t DrvPackageRead(HDC_SESSION session, char **buf, unsigned int *bufLen,
-                                 UINT64 flag, unsigned int timeout)
+ * @brief DrvPackageRead: subcontract and send msg to peer end
+ * @param [in]session: connection session
+ * @param [in]buf: send msg info
+ * @param [in]bufLen: packet buffer
+ * @return: 0: success, -1: failed
+ */
+static hdcError_t DrvPackageRead(
+    HDC_SESSION session, char** buf, unsigned int* bufLen, UINT64 flag, unsigned int timeout)
 {
     hdcError_t drvErr;
-    int bufCount = 0; // receive buffer count
+    int bufCount = 0;                   // receive buffer count
     short isLast = (~DATA_LAST_PACKET); // last packet flag
-    struct drvHdcMsg *msg = NULL;
+    struct drvHdcMsg* msg = NULL;
 
     // alloc hdc msg
     drvErr = LogdrvHdcAllocMsg(session, &msg, 1);
@@ -305,17 +303,18 @@ static hdcError_t DrvPackageRead(HDC_SESSION session, char **buf, unsigned int *
 
     while (isLast != DATA_LAST_PACKET) {
         // receive data from hdc
-        drvErr = LogdrvHdcRecv(session, (struct drvHdcMsg *)msg, HDC_RECV_MAX_LEN, flag, &bufCount, timeout);
+        drvErr = LogdrvHdcRecv(session, (struct drvHdcMsg*)msg, HDC_RECV_MAX_LEN, flag, &bufCount, timeout);
         ONE_ACT_NO_LOG(drvErr != DRV_ERROR_NONE, goto READ_ERROR);
 
         // parse hdc recv msg to buffer
-        char *pBuf = NULL; // get buffer data from msg
-        int pBufLen = 0; // get buffer data length from msg
+        char* pBuf = NULL; // get buffer data from msg
+        int pBufLen = 0;   // get buffer data length from msg
         drvErr = LogdrvHdcGetMsgBuffer(msg, 0, &pBuf, &pBufLen);
-        ONE_ACT_ERR_LOG((drvErr != DRV_ERROR_NONE) || (pBuf == NULL), goto READ_ERROR,
-                        "get HDC msg buffer failed, drvErr=%d.", (int32_t)drvErr);
+        ONE_ACT_ERR_LOG(
+            (drvErr != DRV_ERROR_NONE) || (pBuf == NULL), goto READ_ERROR, "get HDC msg buffer failed, drvErr=%d.",
+            (int32_t)drvErr);
 
-        DataPacket *packet = (DataPacket *)pBuf;
+        DataPacket* packet = (DataPacket*)pBuf;
         if (packet->isLast == DATA_LAST_PACKET) {
             isLast = DATA_LAST_PACKET;
         }
@@ -335,7 +334,7 @@ READ_ERROR:
     return drvErr;
 }
 
-LogStatus DrvBufRead(HDC_SESSION session, int devId, char **buf, unsigned int *bufLen, unsigned int timeout)
+LogStatus DrvBufRead(HDC_SESSION session, int devId, char** buf, unsigned int* bufLen, unsigned int timeout)
 {
     ONE_ACT_NO_LOG((session == NULL) || (buf == NULL) || (bufLen == NULL), return LOG_INVALID_PARAM);
     ONE_ACT_NO_LOG((devId < 0) || (devId >= HOST_MAX_DEV_NUM), return LOG_INVALID_PARAM);

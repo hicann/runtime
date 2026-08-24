@@ -15,17 +15,18 @@
 
 #define FILE_MASK_WC 0640
 #define UNIT_THOUSAND 1000
-#define LOG_PRINT_LOG_BUF_SZ            1024U
-#define LOG_PRINT_LOG_TIME_STR_SIZE     128U
-#define SLOGD_LOG_MAX_SIZE              (1U * 1024U * 1024U)
-#define SLOGD_LOG_BUFFIX_LEN            7U
+#define LOG_PRINT_LOG_BUF_SZ 1024U
+#define LOG_PRINT_LOG_TIME_STR_SIZE 128U
+#define SLOGD_LOG_MAX_SIZE (1U * 1024U * 1024U)
+#define SLOGD_LOG_BUFFIX_LEN 7U
 
-#define SYSLOG_ERR(format, ...)  do {                                               \
-    LogPrintSys(LOG_ERR, "%s:%d: " format "\n", __FILE__, __LINE__, ##__VA_ARGS__); \
-} while (0)
+#define SYSLOG_ERR(format, ...)                                                         \
+    do {                                                                                \
+        LogPrintSys(LOG_ERR, "%s:%d: " format "\n", __FILE__, __LINE__, ##__VA_ARGS__); \
+    } while (0)
 
 typedef struct {
-    char *buff;
+    char* buff;
     size_t buffLen;
 } Buffer;
 
@@ -34,10 +35,10 @@ typedef struct {
  * @param [in]bufLen: length of timeBuffer
  * @param [in]timeBuffer: buffer to store timestamp
  */
-STATIC void GetLocalTimeForSelfLog(size_t bufLen, char *timeBuffer)
+STATIC void GetLocalTimeForSelfLog(size_t bufLen, char* timeBuffer)
 {
-    ToolTimeval currentTimeval = { 0 };
-    struct tm timeInfo = { 0 };
+    ToolTimeval currentTimeval = {0};
+    struct tm timeInfo = {0};
 
     if (timeBuffer == NULL) {
         return;
@@ -51,16 +52,15 @@ STATIC void GetLocalTimeForSelfLog(size_t bufLen, char *timeBuffer)
         return;
     }
 
-    int errT = snprintf_s(timeBuffer, bufLen, bufLen - 1U, "%04d-%02d-%02d %02d:%02d:%02d.%03ld",
-                          timeInfo.tm_year, timeInfo.tm_mon, timeInfo.tm_mday,
-                          timeInfo.tm_hour, timeInfo.tm_min,
-                          timeInfo.tm_sec, (currentTimeval.tvUsec / UNIT_THOUSAND));
+    int errT = snprintf_s(
+        timeBuffer, bufLen, bufLen - 1U, "%04d-%02d-%02d %02d:%02d:%02d.%03ld", timeInfo.tm_year, timeInfo.tm_mon,
+        timeInfo.tm_mday, timeInfo.tm_hour, timeInfo.tm_min, timeInfo.tm_sec, (currentTimeval.tvUsec / UNIT_THOUSAND));
     if (errT == -1) {
         return;
     }
 }
 
-STATIC int CatStr(const char *str1, size_t len1, const char *str2, size_t len2, Buffer *buffer)
+STATIC int CatStr(const char* str1, size_t len1, const char* str2, size_t len2, Buffer* buffer)
 {
     if ((str1 == NULL) || (str2 == NULL) || (buffer->buff == NULL) || ((len1 + len2) >= buffer->buffLen)) {
         return INVALID;
@@ -82,7 +82,7 @@ STATIC int CatStr(const char *str1, size_t len1, const char *str2, size_t len2, 
  * @brief SetRingFile: set self dfx log file ring. lock log file during log rotation
  * @param [in]slogdFile: slogd log file path
  */
-STATIC void SetRingFile(const char *slogdFile)
+STATIC void SetRingFile(const char* slogdFile)
 {
     const char logFileBufFix[SLOGD_LOG_BUFFIX_LEN + 1U] = ".old";
 
@@ -94,14 +94,13 @@ STATIC void SetRingFile(const char *slogdFile)
     if (len <= 1U) {
         return;
     }
-    char *newFileName = (char *)LogMalloc(len + SLOGD_LOG_BUFFIX_LEN);
+    char* newFileName = (char*)LogMalloc(len + SLOGD_LOG_BUFFIX_LEN);
     if (newFileName == NULL) {
         return;
     }
 
-    Buffer buffer = { newFileName, len + SLOGD_LOG_BUFFIX_LEN };
-    int32_t ret = CatStr(slogdFile, strlen(slogdFile), logFileBufFix,
-                         strlen(logFileBufFix), &buffer);
+    Buffer buffer = {newFileName, len + SLOGD_LOG_BUFFIX_LEN};
+    int32_t ret = CatStr(slogdFile, strlen(slogdFile), logFileBufFix, strlen(logFileBufFix), &buffer);
     if (ret != EOK) {
         XFREE(newFileName);
         return;
@@ -146,12 +145,12 @@ STATIC void SetRingFile(const char *slogdFile)
  * @param [in]msg: log msg to be written
  * @return: success:fd, failed:INVALID(-1)
  */
-STATIC int GetRingFd(const char *slogdFile, const char *msg)
+STATIC int GetRingFd(const char* slogdFile, const char* msg)
 {
     int getRenameFileFlag = 0;
     int fd = 0;
     int retryTime = 0;
-    struct stat buf = { 0 };
+    struct stat buf = {0};
 
     if ((slogdFile == NULL) || (msg == NULL)) {
         return INVALID;
@@ -189,11 +188,11 @@ STATIC int GetRingFd(const char *slogdFile, const char *msg)
     return fd;
 }
 
-STATIC int32_t LogOpenSelfFile(const char *msg)
+STATIC int32_t LogOpenSelfFile(const char* msg)
 {
     // to check it is a soft connection or not
-    const char *file = LogGetSelfFile();
-    struct stat buf = { 0 };
+    const char* file = LogGetSelfFile();
+    struct stat buf = {0};
 
     if ((lstat(file, &buf) == 0) && (((uint32_t)S_IFMT & buf.st_mode) == S_IFLNK)) {
         return -1;
@@ -206,9 +205,9 @@ STATIC int32_t LogOpenSelfFile(const char *msg)
     return fd;
 }
 
-STATIC int32_t LogSetMessage(char *msg, uint32_t msgLen, const char *format, va_list arg)
+STATIC int32_t LogSetMessage(char* msg, uint32_t msgLen, const char* format, va_list arg)
 {
-    char timer[LOG_PRINT_LOG_TIME_STR_SIZE + 1U] = { 0 };
+    char timer[LOG_PRINT_LOG_TIME_STR_SIZE + 1U] = {0};
     GetLocalTimeForSelfLog(LOG_PRINT_LOG_TIME_STR_SIZE, timer);
     int32_t ret = strncpy_s(msg, msgLen, timer, strlen(timer));
     if (ret != EOK) {
@@ -220,14 +219,14 @@ STATIC int32_t LogSetMessage(char *msg, uint32_t msgLen, const char *format, va_
     return vsnprintf_truncated_s(msg + len, msgLen - len, format, arg);
 }
 
-void LogPrintSelf(const char *format, ...)
+void LogPrintSelf(const char* format, ...)
 {
     if (format == NULL) {
         return;
     }
     va_list arg;
     va_start(arg, format);
-    char msg[LOG_PRINT_LOG_BUF_SZ + 1U] = { 0 };
+    char msg[LOG_PRINT_LOG_BUF_SZ + 1U] = {0};
     int32_t used = LogSetMessage(msg, LOG_PRINT_LOG_BUF_SZ, format, arg);
     va_end(arg);
     if (used == -1) {
@@ -241,4 +240,3 @@ void LogPrintSelf(const char *format, ...)
     (void)ToolWrite(fd, msg, (UINT32)strlen(msg));
     (void)ToolClose(fd);
 }
-

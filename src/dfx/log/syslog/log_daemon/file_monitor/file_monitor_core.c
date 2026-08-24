@@ -71,9 +71,9 @@ STATIC int32_t FileMonitorStart(ServerHandle handle)
 
     // receives the master ID sent by the host.
     uint32_t bufLen = MASTER_ID_STR_LEN;
-    char *buffer = (char *)LogMalloc(bufLen);
-    ONE_ACT_ERR_LOG(buffer == NULL, return LOG_FAILURE,
-        "malloc for ack buffer failed, strerr=%s.", strerror(ToolGetErrorCode()));
+    char* buffer = (char*)LogMalloc(bufLen);
+    ONE_ACT_ERR_LOG(
+        buffer == NULL, return LOG_FAILURE, "malloc for ack buffer failed, strerr=%s.", strerror(ToolGetErrorCode()));
     const uint32_t timeout = 1000; // timeout for receive msg
     int32_t ret = ServerRecvMsg(handle, &buffer, &bufLen, timeout);
     if ((ret != LOG_SUCCESS) || (bufLen == 0U)) {
@@ -99,7 +99,7 @@ STATIC int32_t FileMonitorStart(ServerHandle handle)
     return LOG_SUCCESS;
 }
 
-static int32_t FileMonitorSync(const char *srcFileName, const char *dstFileName)
+static int32_t FileMonitorSync(const char* srcFileName, const char* dstFileName)
 {
     return ServerSyncFile(g_monitorHandle, srcFileName, dstFileName);
 }
@@ -126,7 +126,7 @@ int32_t FileMonitorInit(void)
         return LOG_FAILURE;
     }
 
-    ServerAttr attr = { MAX_CONCURRENT_NUM, SERVER_LONG_LINK, ENV_NON_DOCKER };
+    ServerAttr attr = {MAX_CONCURRENT_NUM, SERVER_LONG_LINK, ENV_NON_DOCKER};
     ret = ServerCreate(COMPONENT_FILE_REPORT, FileMonitorStart, FileMonitorStop, &attr);
     if (ret != LOG_SUCCESS) {
         SELF_LOG_ERROR("create file trans server failed, ret = %d.", ret);

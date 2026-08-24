@@ -17,17 +17,17 @@
 #include "trace_system_api.h"
 
 STATIC Tracer g_tracers[TRACER_TYPE_MAX] = {
-    {TRACER_SCHEDULE_NAME,    TracerScheduleRegister, TracerScheduleUnregister, NULL},
-    {"progress",   NULL, NULL, NULL},
+    {TRACER_SCHEDULE_NAME, TracerScheduleRegister, TracerScheduleUnregister, NULL},
+    {"progress", NULL, NULL, NULL},
     {"statistics", NULL, NULL, NULL},
 };
 
-TraStatus TracerObjSubmit(TraHandle handle, uint8_t bufferType, const void *buffer, uint32_t bufSize)
+TraStatus TracerObjSubmit(TraHandle handle, uint8_t bufferType, const void* buffer, uint32_t bufSize)
 {
     if (handle < 0) {
         return TRACE_FAILURE;
     }
-    TracerObject *obj = (TracerObject *)handle;
+    TracerObject* obj = (TracerObject*)handle;
     if (obj == NULL) {
         return TRACE_FAILURE;
     }
@@ -36,13 +36,13 @@ TraStatus TracerObjSubmit(TraHandle handle, uint8_t bufferType, const void *buff
         return TRACE_FAILURE;
     }
     if (obj->noLock == TRACE_LOCK_FREE) {
-        return TraceRbLogWriteRbMsgNoLock((RbLog *)obj->data, bufferType, (const char *)buffer, bufSize);
+        return TraceRbLogWriteRbMsgNoLock((RbLog*)obj->data, bufferType, (const char*)buffer, bufSize);
     } else {
-        return TraceRbLogWriteRbMsg((RbLog *)obj->data, bufferType, (const char *)buffer, bufSize);
+        return TraceRbLogWriteRbMsg((RbLog*)obj->data, bufferType, (const char*)buffer, bufSize);
     }
 }
 
-TraHandle TracerObjCreate(TracerType tracerType, const char *objName, const TraceAttr *attr)
+TraHandle TracerObjCreate(TracerType tracerType, const char* objName, const TraceAttr* attr)
 {
     ADIAG_CHK_NULL_PTR(attr, return TRACE_INVALID_HANDLE);
 
@@ -54,10 +54,10 @@ TraHandle TracerObjCreate(TracerType tracerType, const char *objName, const Trac
     return TRACE_INVALID_HANDLE;
 }
 
-TraHandle TracerObjGet(TracerType tracerType, const char *objName)
+TraHandle TracerObjGet(TracerType tracerType, const char* objName)
 {
-    ADIAG_CHK_EXPR_ACTION(tracerType >= TRACER_TYPE_MAX, return TRACE_INVALID_HANDLE,
-        "tracer type %d is invalid.", (int32_t)tracerType);
+    ADIAG_CHK_EXPR_ACTION(
+        tracerType >= TRACER_TYPE_MAX, return TRACE_INVALID_HANDLE, "tracer type %d is invalid.", (int32_t)tracerType);
     ADIAG_CHK_NULL_PTR(objName, return TRACE_INVALID_HANDLE);
 
     if ((g_tracers[tracerType].mgr != NULL) && (g_tracers[tracerType].mgr->op.tracerGetFunc != NULL)) {
@@ -74,7 +74,7 @@ void TracerObjDestroy(TraHandle handle)
         ADIAG_ERR("handle %ld is invalid.", (long)handle);
         return;
     }
-    TracerObject *obj = (TracerObject *)handle;
+    TracerObject* obj = (TracerObject*)handle;
     if (obj == NULL) {
         ADIAG_ERR("handle is null.");
         return;
@@ -95,9 +95,9 @@ void TracerObjDestroy(TraHandle handle)
 
 TraStatus TracerSave(TracerType tracerType, bool syncFlag)
 {
-    ADIAG_CHK_EXPR_ACTION(tracerType >= TRACER_TYPE_MAX, return TRACE_INVALID_PARAM,
-        "tracer type %d is invalid.", (int32_t)tracerType);
-    TracerMgr *mgr = g_tracers[tracerType].mgr;
+    ADIAG_CHK_EXPR_ACTION(
+        tracerType >= TRACER_TYPE_MAX, return TRACE_INVALID_PARAM, "tracer type %d is invalid.", (int32_t)tracerType);
+    TracerMgr* mgr = g_tracers[tracerType].mgr;
     if ((mgr == NULL) || mgr->op.tracerSaveFunc == NULL || mgr->op.tracerReportFunc == NULL) {
         ADIAG_ERR("tracer manager has not been initialized or has been finalized");
         return TRACE_FAILURE;
@@ -106,7 +106,7 @@ TraStatus TracerSave(TracerType tracerType, bool syncFlag)
     return TraceEventReport(mgr->innerEvent);
 }
 
-TraStatus TracerSaveTracer(Tracer *tracer)
+TraStatus TracerSaveTracer(Tracer* tracer)
 {
     if ((tracer->mgr == NULL) || tracer->mgr->op.tracerSaveFunc == NULL) {
         ADIAG_ERR("tracer manager has not been initialized or has been finalized");
@@ -115,11 +115,11 @@ TraStatus TracerSaveTracer(Tracer *tracer)
     return (tracer->mgr->op.tracerSaveFunc)(tracer, NULL);
 }
 
-TraStatus TracerSaveObj(TracerObject *obj)
+TraStatus TracerSaveObj(TracerObject* obj)
 {
     ADIAG_CHK_NULL_PTR(obj, return TRACE_FAILURE);
 
-    Tracer *tracer = &g_tracers[obj->tracerType];
+    Tracer* tracer = &g_tracers[obj->tracerType];
     if ((tracer->mgr == NULL) || tracer->mgr->op.tracerSaveFunc == NULL) {
         ADIAG_ERR("tracer manager has not been initialized or has been finalized");
         return TRACE_FAILURE;
@@ -169,14 +169,14 @@ void TracerExit(void)
     }
 }
 
-void *TracerStructEntryListInit(void)
+void* TracerStructEntryListInit(void)
 {
-    void *list = AdiagMalloc(sizeof(struct AdiagList));
+    void* list = AdiagMalloc(sizeof(struct AdiagList));
     if (list == NULL) {
         ADIAG_ERR("malloc for struct entry failed.");
         return NULL;
     }
-    if (AdiagListInit((struct AdiagList *)list) != TRACE_SUCCESS) {
+    if (AdiagListInit((struct AdiagList*)list) != TRACE_SUCCESS) {
         ADIAG_ERR("init trace list failed.");
         ADIAG_SAFE_FREE(list);
         return NULL;
@@ -184,7 +184,7 @@ void *TracerStructEntryListInit(void)
     return list;
 }
 
-void TracerStructEntryName(TraceStructEntry *entry, const char *name)
+void TracerStructEntryName(TraceStructEntry* entry, const char* name)
 {
     if ((entry == NULL) || (name == NULL)) {
         return;
@@ -196,8 +196,7 @@ void TracerStructEntryName(TraceStructEntry *entry, const char *name)
     }
 }
 
-
-STATIC TraStatus TracerStructParamCheck(TraceStructEntry *entry, const char *name, uint8_t type, uint8_t mode)
+STATIC TraStatus TracerStructParamCheck(TraceStructEntry* entry, const char* name, uint8_t type, uint8_t mode)
 {
     if ((entry == NULL) || (entry->list == NULL)) {
         ADIAG_ERR("entry is invalid, please init entry first.");
@@ -220,13 +219,13 @@ STATIC TraStatus TracerStructParamCheck(TraceStructEntry *entry, const char *nam
     return TRACE_SUCCESS;
 }
 
-void TracerStructItemSet(TraceStructEntry *entry, const char *name, uint8_t type, uint8_t mode, uint16_t length)
+void TracerStructItemSet(TraceStructEntry* entry, const char* name, uint8_t type, uint8_t mode, uint16_t length)
 {
     if (TracerStructParamCheck(entry, name, type, mode) != TRACE_SUCCESS) {
         ADIAG_ERR("input is invalid, add atrace struct item failed.");
         return;
     }
-    TraceStructField *item = (TraceStructField *)AdiagMalloc(sizeof(TraceStructField));
+    TraceStructField* item = (TraceStructField*)AdiagMalloc(sizeof(TraceStructField));
     if (item == NULL) {
         ADIAG_ERR("[%s]malloc for struct field failed, field name = %s.", entry->name, name);
         return;
@@ -240,13 +239,13 @@ void TracerStructItemSet(TraceStructEntry *entry, const char *name, uint8_t type
     item->type = type;
     item->mode = mode;
     item->length = length;
-    if (AdiagListInsert((struct AdiagList *)(entry->list), item) != ADIAG_SUCCESS) {
+    if (AdiagListInsert((struct AdiagList*)(entry->list), item) != ADIAG_SUCCESS) {
         ADIAG_ERR("[%s]trace struct insert to list failed, field name = %s.", entry->name, name);
         ADIAG_SAFE_FREE(item);
     }
 }
 
-STATIC INLINE void TraceStructEntryListExit(struct AdiagList *list)
+STATIC INLINE void TraceStructEntryListExit(struct AdiagList* list)
 {
     if (list != NULL) {
         (void)AdiagListDestroy(list);
@@ -254,27 +253,27 @@ STATIC INLINE void TraceStructEntryListExit(struct AdiagList *list)
     }
 }
 
-void TracerStructEntryExit(TraceStructEntry *entry)
+void TracerStructEntryExit(TraceStructEntry* entry)
 {
     if (entry != NULL) {
-        (void)TraceStructEntryListExit((struct AdiagList *)entry->list);
+        (void)TraceStructEntryListExit((struct AdiagList*)entry->list);
         entry->list = NULL;
     }
 }
 
-TraceStructEntry *TraceStructEntryCreate(const char *name)
+TraceStructEntry* TraceStructEntryCreate(const char* name)
 {
-    TraceStructEntry *en = AdiagMalloc(sizeof(TraceStructEntry));
+    TraceStructEntry* en = AdiagMalloc(sizeof(TraceStructEntry));
     if (en == NULL) {
         return NULL;
     }
-    struct AdiagList *list = TracerStructEntryListInit();
-    en->list = (void *)list;
+    struct AdiagList* list = TracerStructEntryListInit();
+    en->list = (void*)list;
     TracerStructEntryName(en, name);
     return en;
 }
 
-void TraceStructEntryDestroy(TraceStructEntry *en)
+void TraceStructEntryDestroy(TraceStructEntry* en)
 {
     if (en != NULL) {
         TracerStructEntryExit(en);
@@ -282,17 +281,17 @@ void TraceStructEntryDestroy(TraceStructEntry *en)
     }
 }
 
-void TraceStructItemFieldSet(TraceStructEntry *en, const char *item, uint8_t type, uint8_t mode, uint16_t len)
+void TraceStructItemFieldSet(TraceStructEntry* en, const char* item, uint8_t type, uint8_t mode, uint16_t len)
 {
     TracerStructItemSet(en, item, type, mode, len);
 }
 
-void TraceStructItemArraySet(TraceStructEntry *en, const char *item, uint8_t type, uint8_t mode, uint16_t len)
+void TraceStructItemArraySet(TraceStructEntry* en, const char* item, uint8_t type, uint8_t mode, uint16_t len)
 {
     TracerStructItemSet(en, item, type, mode, len);
 }
 
-void TraceStructSetAttr(TraceStructEntry *en, uint8_t type, TraceAttr *attr)
+void TraceStructSetAttr(TraceStructEntry* en, uint8_t type, TraceAttr* attr)
 {
     if ((attr != NULL) && (en != NULL) && (type < TRACE_STRUCT_ENTRY_MAX_NUM)) {
         attr->handle[type] = en;
@@ -314,7 +313,7 @@ TraStatus TraceBindEvent(TraHandle handle, TraEventHandle eventHandle)
         ADIAG_ERR("trace bind event failed");
         return TRACE_INVALID_PARAM;
     }
-    TracerObject *tracer = (TracerObject *)handle;
+    TracerObject* tracer = (TracerObject*)handle;
     ADIAG_CHK_EXPR_ACTION(tracer == NULL, return TRACE_INVALID_PARAM, "invalid param handle %lld", handle);
     if (tracer->relatedEventNum >= MAX_RELATED_EVENT_NUM) {
         ADIAG_ERR("event bound to tracer exceeds the upper limit %u", MAX_RELATED_EVENT_NUM);
@@ -331,7 +330,7 @@ TraStatus TraceUnbindEvent(TraHandle handle, TraEventHandle eventHandle)
         ADIAG_ERR("trace bind event failed");
         return TRACE_INVALID_PARAM;
     }
-    TracerObject *tracer = (TracerObject *)handle;
+    TracerObject* tracer = (TracerObject*)handle;
     ADIAG_CHK_EXPR_ACTION(tracer == NULL, return TRACE_INVALID_PARAM, "invalid param handle %lld", handle);
     if (tracer->relatedEventNum == 0) {
         ADIAG_ERR("tracer has no related event");

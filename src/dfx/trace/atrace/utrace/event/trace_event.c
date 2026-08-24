@@ -13,7 +13,7 @@
 #include "adiag_utils.h"
 #include "tracer_core.h"
 
-#define TRACE_EVENT_THREAD_WAIT_INTERVAL  1000U  // 1000ms
+#define TRACE_EVENT_THREAD_WAIT_INTERVAL 1000U // 1000ms
 typedef struct {
     mmMutex_t mutex;
     mmCond cond;
@@ -27,9 +27,9 @@ typedef struct TraceEventsMgr {
     ThreadCondInfo eventProcessThread;
 } TraceEventsMgr;
 
-STATIC TraceEventsMgr *g_eventsMgr = NULL;
+STATIC TraceEventsMgr* g_eventsMgr = NULL;
 
-STATIC bool CheckEventNameValid(const char *name)
+STATIC bool CheckEventNameValid(const char* name)
 {
     if (name == NULL) {
         ADIAG_ERR("invalid name NULL");
@@ -48,7 +48,7 @@ STATIC bool CheckEventHandleValid(TraEventHandle eventHandle)
         ADIAG_ERR("invalid event handle %lld", eventHandle);
         return false;
     }
-    void *data = AdiagListGetNode(&g_eventsMgr->eventList, (TraceEventNode *)eventHandle);
+    void* data = AdiagListGetNode(&g_eventsMgr->eventList, (TraceEventNode*)eventHandle);
     if (data == NULL) {
         ADIAG_ERR("invalid event handle %lld", eventHandle);
         return false;
@@ -56,7 +56,7 @@ STATIC bool CheckEventHandleValid(TraEventHandle eventHandle)
     return true;
 }
 
-STATIC bool CheckEventAttrValid(const TraceEventAttr *attr)
+STATIC bool CheckEventAttrValid(const TraceEventAttr* attr)
 {
     if (attr == NULL) {
         ADIAG_ERR("invalid event attr NULL");
@@ -67,7 +67,7 @@ STATIC bool CheckEventAttrValid(const TraceEventAttr *attr)
     return true;
 }
 
-STATIC INLINE bool TraceEventReportNumLimited(TraceEventNode *node)
+STATIC INLINE bool TraceEventReportNumLimited(TraceEventNode* node)
 {
     if (node->attr.limitedNum == 0) {
         return false;
@@ -78,28 +78,28 @@ STATIC INLINE bool TraceEventReportNumLimited(TraceEventNode *node)
     return true;
 }
 
-STATIC TraStatus TraceEventCompareName(const void *nodeName, const void *name)
+STATIC TraStatus TraceEventCompareName(const void* nodeName, const void* name)
 {
     if (nodeName == NULL || name == NULL) {
         return TRACE_FAILURE;
     }
-    if (strcmp((const char *)nodeName, (const char *)name) == 0) {
+    if (strcmp((const char*)nodeName, (const char*)name) == 0) {
         return TRACE_SUCCESS;
     }
     return TRACE_FAILURE;
 }
 
-STATIC TraStatus TraceEventSave(void *arg)
+STATIC TraStatus TraceEventSave(void* arg)
 {
     if (arg == NULL) {
         return TRACE_SUCCESS;
     }
-    TraceEventNode *node = (TraceEventNode *)arg;
-    TracerObject *obj = NULL;
+    TraceEventNode* node = (TraceEventNode*)arg;
+    TracerObject* obj = NULL;
     TraStatus ret = TRACE_SUCCESS;
     if (node->relatedTracer != 0) {
         // process inner event
-        if (TracerSaveTracer((Tracer *)node->relatedTracer) != TRACE_SUCCESS) {
+        if (TracerSaveTracer((Tracer*)node->relatedTracer) != TRACE_SUCCESS) {
             ADIAG_ERR("save trace for event %s failed", node->eventName);
             ret = TRACE_FAILURE;
         } else {
@@ -107,7 +107,7 @@ STATIC TraStatus TraceEventSave(void *arg)
         }
     }
     for (uint8_t i = 0; i < node->relatedTraceObjNum; i++) {
-        obj = (TracerObject *)node->relatedTraceObj[i];
+        obj = (TracerObject*)node->relatedTraceObj[i];
         if (TracerSaveObj(obj) != TRACE_SUCCESS) {
             ADIAG_ERR("save trace for event %s handle %s failed", node->eventName, obj->name);
             ret = TRACE_FAILURE;
@@ -124,7 +124,7 @@ STATIC TraStatus TraceEventSave(void *arg)
  */
 TraStatus TraceEventInit(void)
 {
-    g_eventsMgr = (TraceEventsMgr *)AdiagMalloc(sizeof(TraceEventsMgr));
+    g_eventsMgr = (TraceEventsMgr*)AdiagMalloc(sizeof(TraceEventsMgr));
     if (g_eventsMgr == NULL) {
         ADIAG_ERR("malloc g_eventsMgr failed, strerr=%s.", strerror(AdiagGetErrorCode()));
         return TRACE_FAILURE;
@@ -168,7 +168,7 @@ void TraceEventExit(void)
  * @param [in]  eventName:    name of trace event
  * @return      eventHandle if create success, TRACE_INVALID_HANDLE otherwise
  */
-TraEventHandle TraceEventCreate(const char *eventName)
+TraEventHandle TraceEventCreate(const char* eventName)
 {
     if (!CheckEventNameValid(eventName)) {
         ADIAG_ERR("atrace create event failed");
@@ -178,12 +178,12 @@ TraEventHandle TraceEventCreate(const char *eventName)
         ADIAG_ERR("g_eventsMgr has not been init successfully.");
         return TRACE_INVALID_HANDLE;
     }
-    void *data = AdiagListForEach(&g_eventsMgr->eventList, TraceEventCompareName, eventName);
+    void* data = AdiagListForEach(&g_eventsMgr->eventList, TraceEventCompareName, eventName);
     if (data != NULL) {
         ADIAG_ERR("duplicated trace event name %s", eventName);
         return TRACE_INVALID_HANDLE;
     }
-    TraceEventNode *node = (TraceEventNode *)AdiagMalloc(sizeof(TraceEventNode));
+    TraceEventNode* node = (TraceEventNode*)AdiagMalloc(sizeof(TraceEventNode));
     if (node == NULL) {
         ADIAG_ERR("malloc node failed, strerr=%s.", strerror(AdiagGetErrorCode()));
         return TRACE_INVALID_HANDLE;
@@ -210,13 +210,13 @@ TraEventHandle TraceEventCreate(const char *eventName)
  * @param [in]  eventName:    name of trace event
  * @return      eventHandle if found, TRACE_INVALID_HANDLE otherwise
  */
-TraEventHandle TraceEventGetHandle(const char *eventName)
+TraEventHandle TraceEventGetHandle(const char* eventName)
 {
     if (!CheckEventNameValid(eventName)) {
         ADIAG_ERR("atrace get event handle failed");
         return TRACE_INVALID_HANDLE;
     }
-    void *data = AdiagListForEach(&g_eventsMgr->eventList, TraceEventCompareName, eventName);
+    void* data = AdiagListForEach(&g_eventsMgr->eventList, TraceEventCompareName, eventName);
     if (data == NULL) {
         return TRACE_INVALID_HANDLE;
     }
@@ -234,7 +234,7 @@ void TraceEventDestroy(TraEventHandle eventHandle)
         ADIAG_ERR("atrace destroy event failed");
         return;
     }
-    TraceEventNode *node = (TraceEventNode *)eventHandle;
+    TraceEventNode* node = (TraceEventNode*)eventHandle;
     ADIAG_CHK_EXPR_ACTION(node == NULL, return, "invalid param eventHandle %lld", eventHandle);
     for (uint8_t i = 0; i < node->relatedTraceObjNum; i++) {
         (void)TraceUnbindEvent(node->relatedTraceObj[i], eventHandle);
@@ -261,7 +261,7 @@ TraStatus TraceEventBindTracer(TraEventHandle eventHandle, TracerHandle tracer)
         ADIAG_ERR("atrace event bind tracer failed");
         return TRACE_INVALID_PARAM;
     }
-    TraceEventNode *node = (TraceEventNode *)eventHandle;
+    TraceEventNode* node = (TraceEventNode*)eventHandle;
     ADIAG_CHK_EXPR_ACTION(node == NULL, return TRACE_INVALID_PARAM, "invalid param eventHandle %lld", eventHandle);
 
     if (node->relatedTracer != 0) {
@@ -284,7 +284,7 @@ TraStatus TraceEventUnbindTracer(TraEventHandle eventHandle, TracerHandle tracer
         ADIAG_ERR("atrace event bind tracer failed");
         return TRACE_INVALID_PARAM;
     }
-    TraceEventNode *node = (TraceEventNode *)eventHandle;
+    TraceEventNode* node = (TraceEventNode*)eventHandle;
     ADIAG_CHK_EXPR_ACTION(node == NULL, return TRACE_INVALID_PARAM, "invalid param eventHandle %lld", eventHandle);
     if (node->relatedTracer != tracer) {
         ADIAG_ERR("event %s has not been bound to tracer", node->eventName);
@@ -306,7 +306,7 @@ TraStatus TraceEventBindTrace(TraEventHandle eventHandle, TraHandle handle)
         ADIAG_ERR("atrace event bind trace failed");
         return TRACE_INVALID_PARAM;
     }
-    TraceEventNode *node = (TraceEventNode *)eventHandle;
+    TraceEventNode* node = (TraceEventNode*)eventHandle;
     ADIAG_CHK_EXPR_ACTION(node == NULL, return TRACE_INVALID_PARAM, "invalid param eventHandle %lld", eventHandle);
     if (node->relatedTraceObjNum >= MAX_RELATED_TRACER_NUM) {
         ADIAG_ERR("trace bound to event exceeds the upper limit %u", MAX_RELATED_TRACER_NUM);
@@ -334,7 +334,7 @@ TraStatus TraceEventUnbindTrace(TraEventHandle eventHandle, TraHandle handle)
         return TRACE_INVALID_PARAM;
     }
     ADIAG_CHK_EXPR_ACTION(handle < 0, return TRACE_INVALID_PARAM, "invalid param handle %lld", eventHandle);
-    TraceEventNode *node = (TraceEventNode *)eventHandle;
+    TraceEventNode* node = (TraceEventNode*)eventHandle;
     uint8_t j = 0;
     for (uint8_t i = 0; i < node->relatedTraceObjNum; i++) {
         if (node->relatedTraceObj[i] != handle) {
@@ -352,13 +352,13 @@ TraStatus TraceEventUnbindTrace(TraEventHandle eventHandle, TraHandle handle)
  * @param [in]  attr:           event attr
  * @return      TraStatus
  */
-TraStatus TraceEventSetAttr(TraEventHandle eventHandle, const TraceEventAttr *attr)
+TraStatus TraceEventSetAttr(TraEventHandle eventHandle, const TraceEventAttr* attr)
 {
     if (!CheckEventHandleValid(eventHandle) || !CheckEventAttrValid(attr)) {
         ADIAG_ERR("atrace event report failed");
         return TRACE_INVALID_PARAM;
     }
-    TraceEventNode *node = (TraceEventNode *)eventHandle;
+    TraceEventNode* node = (TraceEventNode*)eventHandle;
     ADIAG_CHK_EXPR_ACTION(node == NULL, return TRACE_INVALID_PARAM, "invalid param eventHandle %lld", eventHandle);
     errno_t ret = memcpy_s(&node->attr, sizeof(TraceEventAttr), attr, sizeof(TraceEventAttr));
     if (ret != EOK) {
@@ -380,19 +380,20 @@ TraStatus TraceEventReport(TraEventHandle eventHandle)
         ADIAG_ERR("atrace event report failed");
         return TRACE_INVALID_HANDLE;
     }
-    TraceEventNode *node = (TraceEventNode *)eventHandle;
+    TraceEventNode* node = (TraceEventNode*)eventHandle;
     ADIAG_CHK_EXPR_ACTION(node == NULL, return TRACE_INVALID_PARAM, "invalid param eventHandle %lld", eventHandle);
     if (node->relatedTraceObjNum == 0 && node->relatedTracer == 0) {
         ADIAG_WAR("trace event [%s] has not been bound to tracer, ignored", node->eventName);
         return TRACE_SUCCESS;
     }
     if (TraceEventReportNumLimited(node)) {
-        ADIAG_WAR("the number of trace event[%s] reports has reached the upper limit %hu, ignored",
-            node->eventName, node->attr.limitedNum);
+        ADIAG_WAR(
+            "the number of trace event[%s] reports has reached the upper limit %hu, ignored", node->eventName,
+            node->attr.limitedNum);
         return TRACE_SUCCESS;
     }
     if (node->attr.limitedNum != 0) {
-        node->reportNum++;  // ensure reportNum will be no more than limitedNum
+        node->reportNum++; // ensure reportNum will be no more than limitedNum
     }
     TraStatus ret = TraceEventSave(node);
     ADIAG_DBG("AtraceEventReport [%s], ret=%d.", node->eventName, ret);

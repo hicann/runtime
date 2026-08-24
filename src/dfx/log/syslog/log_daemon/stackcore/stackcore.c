@@ -11,38 +11,32 @@
 #include "stackcore.h"
 #include "stackcore_common.h"
 
-#define SELF_MAP_PATH       "/proc/self/maps"
-#define EXEC_READ_MAP       "r"
-#define EXEC_MAP_ATTR       "r-xp"
-#define STACK_SECTION       "[stack]\n"
-#define OS_SPLIT            '/'
+#define SELF_MAP_PATH "/proc/self/maps"
+#define EXEC_READ_MAP "r"
+#define EXEC_MAP_ATTR "r-xp"
+#define STACK_SECTION "[stack]\n"
+#define OS_SPLIT '/'
 
-#define CORE_BUFFER_LEN     512
-#define CORE_MASK           0640
-#define CORE_DUMP_MASK      0440
-#define MIN_NAME_LEN        256 // stackcore.<exec>.<pid>.<signo>.<timestamp>
-#define CONSTRUCTOR         __attribute__((constructor))
-#define DESTRUCTOR          __attribute__((destructor))
-#define MAX_STACK_LAYER     19 // 0 ~ 19 : 20 layer
+#define CORE_BUFFER_LEN 512
+#define CORE_MASK 0640
+#define CORE_DUMP_MASK 0440
+#define MIN_NAME_LEN 256 // stackcore.<exec>.<pid>.<signo>.<timestamp>
+#define CONSTRUCTOR __attribute__((constructor))
+#define DESTRUCTOR __attribute__((destructor))
+#define MAX_STACK_LAYER 19 // 0 ~ 19 : 20 layer
 #ifdef __x86_64__
-#define FP_REGISTER         15
-#define LR_REGISTER         16
+#define FP_REGISTER 15
+#define LR_REGISTER 16
 #else
-#define FP_REGISTER         29
+#define FP_REGISTER 29
 #endif
-#define LR_OFFSET           8
-#define PC_OFFSET           4
+#define LR_OFFSET 8
+#define PC_OFFSET 4
 
 #ifdef LOG_CORETRACE
-int StackInit(void)
-{
-    return 0;
-}
+int StackInit(void) { return 0; }
 
-STATIC void StackUnInit(void)
-{
-    return;
-}
+STATIC void StackUnInit(void) { return; }
 #else
 #include <ucontext.h>
 #include <signal.h>
@@ -71,15 +65,14 @@ struct StackSigAction g_sigActs[] = {
     {.done = 0, .signo = SIGSEGV, .sigAct = {{NULL}}, .oldSigAct = {{NULL}}},
     {.done = 0, .signo = SIGXCPU, .sigAct = {{NULL}}, .oldSigAct = {{NULL}}},
     {.done = 0, .signo = SIGXFSZ, .sigAct = {{NULL}}, .oldSigAct = {{NULL}}},
-    {.done = 0, .signo = SIGSYS, .sigAct = {{NULL}}, .oldSigAct = {{NULL}}}
-};
+    {.done = 0, .signo = SIGSYS, .sigAct = {{NULL}}, .oldSigAct = {{NULL}}}};
 
 /**
  * @brief       : check input is just the name, to defend attacks such as "../../xxx"
  * @param [in]  : subdir      subdirectory name
  * @return      : 0 success; -1 failed
  */
-STATIC int IsValidSubdir(const char *subdir)
+STATIC int IsValidSubdir(const char* subdir)
 {
     if (strstr(subdir, "/") != NULL || strstr(subdir, "..") != NULL) {
         return -1;
@@ -92,7 +85,7 @@ STATIC int IsValidSubdir(const char *subdir)
  * @param [in]  : subdir      subdirectory name
  * @return      : 0 success; -1 failed
  */
-int StackcoreSetSubdirectory(const char *subdir)
+int StackcoreSetSubdirectory(const char* subdir)
 {
     if (subdir == NULL || strlen(subdir) > STACK_PATH_MAX_LEN || IsValidSubdir(subdir) != 0) {
         return -1;
@@ -104,7 +97,7 @@ int StackcoreSetSubdirectory(const char *subdir)
         return -1;
     }
 
-    char *path = realpath(filePath, g_filePath);
+    char* path = realpath(filePath, g_filePath);
     if (path == NULL) {
         LOGE("get path %s realpath failed, info : %s", subdir, strerror(ToolGetErrorCode()));
         return -1;
@@ -122,7 +115,7 @@ int StackcoreSetSubdirectory(const char *subdir)
  *       0 : success
  *     -1 : failed
  */
-STATIC int StackCoreName(char *name, unsigned int len, int signo)
+STATIC int StackCoreName(char* name, unsigned int len, int signo)
 {
     if (name == NULL || len < MIN_NAME_LEN) {
         return -1;
@@ -135,8 +128,9 @@ STATIC int StackCoreName(char *name, unsigned int len, int signo)
     }
 
     /* stackcore.<execname>.<pid>.<signo>.<timestamp> */
-    int32_t ret = snprintf_s(name, len, len - 1, "%s/stackcore.%s.%d.%d.%ld",
-                             g_filePath, program_invocation_short_name, getpid(), signo, ts);
+    int32_t ret = snprintf_s(
+        name, len, len - 1, "%s/stackcore.%s.%d.%d.%ld", g_filePath, program_invocation_short_name, getpid(), signo,
+        ts);
     if (ret == -1) {
         LOGE("printf core name failed");
         return -1;
@@ -152,7 +146,7 @@ STATIC int StackCoreName(char *name, unsigned int len, int signo)
  *       0 : success
  *     -1 : failed
  */
-STATIC int StackOpen(const char *fileName)
+STATIC int StackOpen(const char* fileName)
 {
     if (fileName == NULL) {
         return -1;
@@ -173,7 +167,7 @@ STATIC int StackOpen(const char *fileName)
  *       0 : success
  *     -1 : failed
  */
-STATIC ssize_t StackReadLine(int fd, char *data, unsigned int len)
+STATIC ssize_t StackReadLine(int fd, char* data, unsigned int len)
 {
     if (fd < 0 || data == NULL || len == 0) {
         return -1;
@@ -181,7 +175,7 @@ STATIC ssize_t StackReadLine(int fd, char *data, unsigned int len)
 
     ssize_t n = 1;
     char c = EOF;
-    char *ptr = data;
+    char* ptr = data;
     for (; n < len; n++) {
         ssize_t rc = 0;
         if ((rc = read(fd, &c, 1)) == 1) {
@@ -213,7 +207,7 @@ STATIC ssize_t StackReadLine(int fd, char *data, unsigned int len)
  *       0 : success
  *     -1 : failed
  */
-STATIC ssize_t StackWriteData(int fd, const char *data, unsigned int len)
+STATIC ssize_t StackWriteData(int fd, const char* data, unsigned int len)
 {
     if (fd < 0 || data == NULL || len == 0) {
         return -1;
@@ -255,9 +249,9 @@ STATIC int StackClose(int fd)
  * @param [in] len :  data buffer len
  * @return None
  */
-STATIC void GetSelfMap(uintptr_t pc, char *data, unsigned int len)
+STATIC void GetSelfMap(uintptr_t pc, char* data, unsigned int len)
 {
-    char *vmPath = NULL;
+    char* vmPath = NULL;
     uintptr_t vmStart = 0;
     uintptr_t vmEnd = 0;
     if (data == NULL || len == 0) {
@@ -265,7 +259,7 @@ STATIC void GetSelfMap(uintptr_t pc, char *data, unsigned int len)
     }
 
     int32_t fd = open(SELF_MAP_PATH, O_RDONLY);
-    char currentPath[CORE_BUFFER_LEN] = { 0 };
+    char currentPath[CORE_BUFFER_LEN] = {0};
     uintptr_t baseAddr = 0; // the minimum addr of load segment
     if (fd >= 0) {
         while (StackReadLine(fd, data, len) > 0) {
@@ -288,7 +282,7 @@ STATIC void GetSelfMap(uintptr_t pc, char *data, unsigned int len)
                 continue;
             }
 
-            ret = snprintf_s(data, len, len - 1, "%018p %s", (void *)baseAddr, currentPath);
+            ret = snprintf_s(data, len, len - 1, "%018p %s", (void*)baseAddr, currentPath);
             if (ret == -1) {
                 LOGE("snprintf_s map info failed");
             }
@@ -311,7 +305,7 @@ STATIC void GetSelfMap(uintptr_t pc, char *data, unsigned int len)
  *         0 : reason end
  *      other : continue to reason
  */
-STATIC uintptr_t StackFrame(int layer, uintptr_t fp, char *data, unsigned int len)
+STATIC uintptr_t StackFrame(int layer, uintptr_t fp, char* data, unsigned int len)
 {
     uintptr_t nfp = 0;
     uintptr_t pc = 0;
@@ -328,11 +322,11 @@ STATIC uintptr_t StackFrame(int layer, uintptr_t fp, char *data, unsigned int le
         if (lr < fp) {
             return 0;
         }
-        pc = *(uintptr_t *)lr;
-        nfp = *(uintptr_t *)fp;
+        pc = *(uintptr_t*)lr;
+        nfp = *(uintptr_t*)fp;
     }
     GetSelfMap(pc, info, sizeof(info));
-    int ret = snprintf_s(data, len, len - 1, "#%d %018p %s", layer, (void *)pc, info);
+    int ret = snprintf_s(data, len, len - 1, "#%d %018p %s", layer, (void*)pc, info);
     if (ret == -1) {
         LOGE("snprintf_s core info failed");
         return 0;
@@ -350,15 +344,14 @@ STATIC uintptr_t StackFrame(int layer, uintptr_t fp, char *data, unsigned int le
  *         0 : reason end
  *      other : continue to reason
  */
-STATIC void StackPcFrame(int layer, uintptr_t pc, char *data, unsigned int len)
+STATIC void StackPcFrame(int layer, uintptr_t pc, char* data, unsigned int len)
 {
     if (layer > MAX_STACK_LAYER || data == NULL || len == 0) {
         return;
     }
 
     if (pc == 0) { // current pc frame
-        int ret = snprintf_s(data, len, len - 1, "#%d 0x%016lx 0x%016lx %s\n",
-            layer, pc, pc, program_invocation_name);
+        int ret = snprintf_s(data, len, len - 1, "#%d 0x%016lx 0x%016lx %s\n", layer, pc, pc, program_invocation_name);
         if (ret == -1) {
             LOGE("snprintf_s core info failed");
         }
@@ -378,7 +371,7 @@ STATIC void StackPcFrame(int layer, uintptr_t pc, char *data, unsigned int len)
 STATIC ssize_t CreateStackCore(const uintptr_t nfp, uintptr_t pc, int signo)
 {
     int layer = 0;
-    char name[CORE_BUFFER_LEN] = { 0 };
+    char name[CORE_BUFFER_LEN] = {0};
     uintptr_t fp = nfp;
     ssize_t ret = StackCoreName(name, sizeof(name), signo);
     if (ret != 0) {
@@ -396,7 +389,7 @@ STATIC ssize_t CreateStackCore(const uintptr_t nfp, uintptr_t pc, int signo)
         goto ERROR;
     }
 
-    char info[CORE_BUFFER_LEN] = { 0 };
+    char info[CORE_BUFFER_LEN] = {0};
     // print pc frame
     StackPcFrame(layer, pc, info, sizeof(info));
     ret = StackWriteData(fd, info, LogStrlen(info));
@@ -432,7 +425,7 @@ ERROR:
  * @param [in] signo :  exception signal number
  * @return None
  */
-STATIC void AnalysisContext(const mcontext_t *mcontext, int signo)
+STATIC void AnalysisContext(const mcontext_t* mcontext, int signo)
 {
     uintptr_t nfp = 0;
     uintptr_t pc = 0;
@@ -465,13 +458,13 @@ STATIC void AnalysisContext(const mcontext_t *mcontext, int signo)
  * @param [in] data : signal context
  * @return None
  */
-STATIC void StackSigHandler(int sigNum, siginfo_t *info, void *data)
+STATIC void StackSigHandler(int sigNum, siginfo_t* info, void* data)
 {
     if (info == NULL || data == NULL) {
         return;
     }
-    ucontext_t *utext = (ucontext_t *)data;
-    mcontext_t *mcontext = (mcontext_t *)&(utext->uc_mcontext);
+    ucontext_t* utext = (ucontext_t*)data;
+    mcontext_t* mcontext = (mcontext_t*)&(utext->uc_mcontext);
     LOGI("get signal number:%d, start to analysis stack info.", sigNum);
     AnalysisContext(mcontext, sigNum);
     // recover thre signal handler
@@ -531,12 +524,6 @@ STATIC void StackUnInit(void)
 /**
  * @brief CONSTRUCTOR init when link stackcore
  */
-STATIC CONSTRUCTOR void Init(void)
-{
-    (void)StackInit();
-}
+STATIC CONSTRUCTOR void Init(void) { (void)StackInit(); }
 
-STATIC DESTRUCTOR void UnInit(void)
-{
-    StackUnInit();
-}
+STATIC DESTRUCTOR void UnInit(void) { StackUnInit(); }

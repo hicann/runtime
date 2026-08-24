@@ -11,8 +11,8 @@
 #ifndef PLOG_BUFFER_MGR_H
 #define PLOG_BUFFER_MGR_H
 
-#define BUFFER_TYPE_WRITE   0
-#define BUFFER_TYPE_SEND    1
+#define BUFFER_TYPE_WRITE 0
+#define BUFFER_TYPE_SEND 1
 
 #include "log_common.h"
 #ifdef __cplusplus
@@ -24,8 +24,8 @@ void PlogBuffExchange(void);
 // check buffer pointer is not null before call this function
 bool PlogBuffCheckFull(LogType logType, uint32_t len);
 bool PlogBuffCheckEnough(LogType logType);
-LogStatus PlogBuffWrite(LogType type, const char *data, uint32_t dataLen);
-LogStatus PlogBuffRead(int32_t buffType, LogType logType, char **data, uint32_t *dataLen);
+LogStatus PlogBuffWrite(LogType type, const char* data, uint32_t dataLen);
+LogStatus PlogBuffRead(int32_t buffType, LogType logType, char** data, uint32_t* dataLen);
 void PlogBuffReset(int32_t buffType, LogType logType);
 void PlogBuffLogLoss(LogType type);
 

@@ -12,18 +12,18 @@
 #include "log_print.h"
 #include "log_system_api.h"
 
-#define EVENT_INTERVAL  100U
+#define EVENT_INTERVAL 100U
 
 typedef struct EventHandleList {
     EventProcFunc func;
-    void *arg;
+    void* arg;
     uint32_t periodTime;
     uint32_t durationTime;
-    struct EventHandleList *next;
+    struct EventHandleList* next;
 } EventHandleList;
 
 typedef struct EventMgr {
-    EventHandleList *eventList[MAX_EVENT_TYPE];
+    EventHandleList* eventList[MAX_EVENT_TYPE];
     ToolMutex lock[MAX_EVENT_TYPE];
     struct {
         ToolMutex mutex;
@@ -35,7 +35,7 @@ typedef struct EventMgr {
 
 static EventMgr g_eventMgr = {0};
 
-static void EventFuncTrigger(EventHandleList *node)
+static void EventFuncTrigger(EventHandleList* node)
 {
     while (node != NULL) {
         node->durationTime += EVENT_INTERVAL;
@@ -54,9 +54,9 @@ static void EventListUpdate(int32_t eventType)
         return;
     }
 
-    EventHandleList *node = g_eventMgr.eventList[eventType];
-    EventHandleList *pre = NULL;
-    EventHandleList *head = node;
+    EventHandleList* node = g_eventMgr.eventList[eventType];
+    EventHandleList* pre = NULL;
+    EventHandleList* head = node;
 
     while (node != NULL) {
         if (node->durationTime == 0) {
@@ -65,7 +65,7 @@ static void EventListUpdate(int32_t eventType)
             } else {
                 pre->next = node->next;
             }
-            EventHandleList *tmp = node->next;
+            EventHandleList* tmp = node->next;
             XFREE(node);
             node = tmp;
         } else {
@@ -76,7 +76,7 @@ static void EventListUpdate(int32_t eventType)
     g_eventMgr.eventList[eventType] = head;
 }
 
-static void *EventProcess(ArgPtr arg)
+static void* EventProcess(ArgPtr arg)
 {
     (void)arg;
     if (ToolSetThreadName("EventProcess") != SYS_OK) {
@@ -111,10 +111,11 @@ int32_t EventThreadCreate(void)
     (void)ToolCondInit(&g_eventMgr.threadMgr.cond);
     (void)ToolMutexInit(&g_eventMgr.threadMgr.mutex);
     g_eventMgr.threadMgr.isExit = false;
-    ToolThreadAttr attr = { 0, 0, 0, 0, 0, 0, 0 };
+    ToolThreadAttr attr = {0, 0, 0, 0, 0, 0, 0};
     ToolThread tid = 0;
-    ONE_ACT_ERR_LOG(ToolCreateTaskWithThreadAttr(&tid, &thread, &attr) != SYS_OK, return LOG_FAILURE,
-                    "create task failed, strerr=%s.", strerror(ToolGetErrorCode()));
+    ONE_ACT_ERR_LOG(
+        ToolCreateTaskWithThreadAttr(&tid, &thread, &attr) != SYS_OK, return LOG_FAILURE,
+        "create task failed, strerr=%s.", strerror(ToolGetErrorCode()));
     g_eventMgr.threadMgr.tid = tid;
     return LOG_SUCCESS;
 }
@@ -130,9 +131,9 @@ static INLINE void EventProcThreadNotify(void)
     (void)ToolMutexUnLock(&g_eventMgr.threadMgr.mutex);
 }
 
-static void EventHandleRelease(EventHandleList *list)
+static void EventHandleRelease(EventHandleList* list)
 {
-    EventHandleList *next = list;
+    EventHandleList* next = list;
     while (list != NULL) {
         next = list->next;
         XFREE(list);
@@ -165,20 +166,20 @@ void EventThreadRelease(void)
     SELF_LOG_INFO("event thread exit.");
 }
 
-static void EventAddToList(EventHandleList *node, EventHandleList **list)
+static void EventAddToList(EventHandleList* node, EventHandleList** list)
 {
     if ((*list) == NULL) {
         *list = node;
         return;
     }
-    EventHandleList *tmp = *list;
+    EventHandleList* tmp = *list;
     while (tmp->next != NULL) {
         tmp = tmp->next;
     }
     tmp->next = node;
 }
 
-EventHandle EventAdd(EventProcFunc func, void *arg, EventAttr *attr)
+EventHandle EventAdd(EventProcFunc func, void* arg, EventAttr* attr)
 {
     if ((func == NULL) || (attr == NULL)) {
         SELF_LOG_ERROR("input is null");
@@ -188,7 +189,7 @@ EventHandle EventAdd(EventProcFunc func, void *arg, EventAttr *attr)
         SELF_LOG_ERROR("invalid input, type = %d.", (int32_t)attr->type);
         return NULL;
     }
-    EventHandleList *node = (EventHandleList *)LogMalloc(sizeof(EventHandleList));
+    EventHandleList* node = (EventHandleList*)LogMalloc(sizeof(EventHandleList));
     if (node == NULL) {
         SELF_LOG_ERROR("malloc failed, strerror = %s.", strerror(ToolGetErrorCode()));
         return NULL;
@@ -210,8 +211,8 @@ int32_t EventDelete(EventHandle handle)
         SELF_LOG_ERROR("input is invalid, handle is null.");
         return LOG_FAILURE;
     }
-    EventHandleList *node = NULL;
-    EventHandleList *pre = NULL;
+    EventHandleList* node = NULL;
+    EventHandleList* pre = NULL;
     int32_t i = 0;
     for (i = (int32_t)REAL_TIME_EVENT; i < (int32_t)MAX_EVENT_TYPE; i++) {
         (void)ToolMutexLock(&g_eventMgr.lock[i]);

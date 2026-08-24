@@ -12,9 +12,9 @@
 
 #include "log_error_code.h"
 
-#define SLOGD_PID_FILE      "/slogd.pid"
-#define SKLOGD_PID_FILE     "/sklogd.pid"
-#define LOGDAEMON_PID_FILE  "/log-daemon.pid"
+#define SLOGD_PID_FILE "/slogd.pid"
+#define SKLOGD_PID_FILE "/sklogd.pid"
+#define LOGDAEMON_PID_FILE "/log-daemon.pid"
 
 LogStatus LogMonitorStart(uint32_t flagLog);
 void LogMonitorStop(void);

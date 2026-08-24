@@ -19,7 +19,7 @@ extern "C" {
 #endif
 
 int32_t ProcSyslogBuf(const char* recvBuf, int32_t* size);
-void ProcEscapeThenLog(char *tmpbuf, int32_t len, LogType type);
+void ProcEscapeThenLog(char* tmpbuf, int32_t len, LogType type);
 
 #ifdef __cplusplus
 }

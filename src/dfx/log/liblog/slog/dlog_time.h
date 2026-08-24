@@ -17,12 +17,11 @@
 extern "C" {
 #endif
 
-void DlogGetTime(char *timeStr, uint32_t length);
+void DlogGetTime(char* timeStr, uint32_t length);
 
-int64_t DlogTimeDiff(const struct timespec *lastTv);
+int64_t DlogTimeDiff(const struct timespec* lastTv);
 
 #ifdef __cplusplus
 }
 #endif
 #endif
-

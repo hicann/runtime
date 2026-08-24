@@ -15,15 +15,9 @@
 
 STATIC int32_t g_gotSignal = 0;
 
-void LogRecordSigNo(int32_t sigNo)
-{
-    g_gotSignal = sigNo;
-}
+void LogRecordSigNo(int32_t sigNo) { g_gotSignal = sigNo; }
 
-int32_t LogGetSigNo(void)
-{
-    return g_gotSignal;
-}
+int32_t LogGetSigNo(void) { return g_gotSignal; }
 
 STATIC void LogSignalActionSet(int32_t sig, void (*handler)(int32_t))
 {
@@ -37,19 +31,13 @@ STATIC void LogSignalActionSet(int32_t sig, void (*handler)(int32_t))
     }
 }
 
-void LogSignalRecord(int32_t sig)
-{
-    LogSignalActionSet(sig, LogRecordSigNo);
-}
+void LogSignalRecord(int32_t sig) { LogSignalActionSet(sig, LogRecordSigNo); }
 
-STATIC void LogSignal(int32_t sigNo, void(*func)(int32_t))
+STATIC void LogSignal(int32_t sigNo, void (*func)(int32_t))
 {
     if (func != NULL) {
         (void)signal(sigNo, func);
     }
 }
 
-void LogSignalIgn(int32_t sig)
-{
-    LogSignal(sig, SIG_IGN);
-}
+void LogSignalIgn(int32_t sig) { LogSignal(sig, SIG_IGN); }

@@ -19,7 +19,7 @@
  * @param [in]      size           read size
  * @return          real read size
  */
-size_t ScdMemoryRemoteRead(uintptr_t addr , void *dst, size_t size)
+size_t ScdMemoryRemoteRead(uintptr_t addr, void* dst, size_t size)
 {
     return ScdUtilsPtraceRead(getppid(), addr, dst, size);
 }

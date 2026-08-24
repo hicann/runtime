@@ -16,7 +16,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
-#if defined (_ADIAG_LLT_)
+#if defined(_ADIAG_LLT_)
 int32_t ScdCoreMain(int32_t argc, const char** argv);
 #define MAIN ScdCoreMain
 #else

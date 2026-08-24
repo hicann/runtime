@@ -53,4 +53,4 @@ int32_t LogIdeGetPidBySession(HDC_SESSION session, IdeI32Pt pid)
 
     return SYS_OK;
 }
-}
+} // namespace Adx

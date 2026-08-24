@@ -17,21 +17,21 @@
 extern "C" {
 #endif // __cplusplus
 
-#define MERGE_SUCCESS             0
-#define MERGE_NOT_FOUND         (-1)      /* file not found */
-#define MERGE_ERROR             (-2)
-#define MERGE_INVALID_ARGV      (-3)      /* input argv is null */
-#define MERGE_NO_PERMISSION     (-4)      /* input path no permission */
+#define MERGE_SUCCESS 0
+#define MERGE_NOT_FOUND (-1)     /* file not found */
+#define MERGE_ERROR (-2)
+#define MERGE_INVALID_ARGV (-3)  /* input argv is null */
+#define MERGE_NO_PERMISSION (-4) /* input path no permission */
 
 struct DlogPattern {
-    char active[NAME_MAX];      // current logging file name, for example: DRV*.log
-    char rotate[NAME_MAX];      // rotate log file name pattern, for example: DRV*.gz
-    char path[PATH_MAX];        // realpath to collect.
+    char active[NAME_MAX]; // current logging file name, for example: DRV*.log
+    char rotate[NAME_MAX]; // rotate log file name pattern, for example: DRV*.gz
+    char path[PATH_MAX];   // realpath to collect.
 };
 
 struct DlogNamePatterns {
-    uint32_t logNum;                // num of logs name pattern.
-    struct DlogPattern *patterns;   // patterns info, dynamic buffer.
+    uint32_t logNum;              // num of logs name pattern.
+    struct DlogPattern* patterns; // patterns info, dynamic buffer.
 };
 
 #define DLL_EXPORT __attribute__((visibility("default")))
@@ -42,7 +42,7 @@ struct DlogNamePatterns {
  * @param [in]  : len       length of dir
  * @return      : 0: success; -2: error; -3: input invalid; -4: path no permission
  */
-DLL_EXPORT int32_t DlogCollectLog(char *dir, uint32_t len);
+DLL_EXPORT int32_t DlogCollectLog(char* dir, uint32_t len);
 
 /**
  * @brief       : check if new log file exist
@@ -50,14 +50,14 @@ DLL_EXPORT int32_t DlogCollectLog(char *dir, uint32_t len);
  * @param [in]  : len       length of dir
  * @return      : 0: success; -1: not found; -2: error; -3: input invalid; -4: path no permission
  */
-DLL_EXPORT int32_t DlogCheckCollectStatus(char *dir, uint32_t len);
+DLL_EXPORT int32_t DlogCheckCollectStatus(char* dir, uint32_t len);
 
 /**
  * @brief       : get hisi log configuration log name patterns, free patterns dynamic buffer by caller is required
  * @param [out] : logs      log name patterns
  * @return      : 0: success; others:   failed
  */
-DLL_EXPORT int32_t DlogGetLogPatterns(struct DlogNamePatterns *logs);
+DLL_EXPORT int32_t DlogGetLogPatterns(struct DlogNamePatterns* logs);
 
 #ifdef __cplusplus
 }

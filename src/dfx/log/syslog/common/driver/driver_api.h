@@ -14,22 +14,22 @@
 
 drvError_t LogdrvHdcSessionClose(HDC_SESSION session);
 
-drvError_t LogdrvHdcAllocMsg(HDC_SESSION session, struct drvHdcMsg **ppMsg, int count);
+drvError_t LogdrvHdcAllocMsg(HDC_SESSION session, struct drvHdcMsg** ppMsg, int count);
 
-drvError_t LogdrvHdcFreeMsg(struct drvHdcMsg *msg);
+drvError_t LogdrvHdcFreeMsg(struct drvHdcMsg* msg);
 
-drvError_t LogdrvHdcReuseMsg(struct drvHdcMsg *msg);
+drvError_t LogdrvHdcReuseMsg(struct drvHdcMsg* msg);
 
-drvError_t LogdrvHdcAddMsgBuffer(struct drvHdcMsg *msg, char *pBuf, int len);
+drvError_t LogdrvHdcAddMsgBuffer(struct drvHdcMsg* msg, char* pBuf, int len);
 
-drvError_t LogdrvHdcGetCapacity(struct drvHdcCapacity *capacity);
+drvError_t LogdrvHdcGetCapacity(struct drvHdcCapacity* capacity);
 
-drvError_t LogdrvHdcGetSessionAttr(HDC_SESSION session, int attr, int *value);
+drvError_t LogdrvHdcGetSessionAttr(HDC_SESSION session, int attr, int* value);
 
-hdcError_t LogdrvHdcSend(HDC_SESSION session, struct drvHdcMsg *pMsg, UINT64 flag, UINT32 timeout);
+hdcError_t LogdrvHdcSend(HDC_SESSION session, struct drvHdcMsg* pMsg, UINT64 flag, UINT32 timeout);
 
-int32_t LogSetDfxParam(uint32_t devId, uint32_t channelType, void *data, uint32_t dataLen);
+int32_t LogSetDfxParam(uint32_t devId, uint32_t channelType, void* data, uint32_t dataLen);
 
-int32_t LogGetDfxParam(uint32_t devId, uint32_t channelType, void *data, uint32_t dataLen);
+int32_t LogGetDfxParam(uint32_t devId, uint32_t channelType, void* data, uint32_t dataLen);
 
 #endif

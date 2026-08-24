@@ -48,7 +48,7 @@ STATIC int32_t GetEventLevel(char levelChar)
  * @param [in] : levelStr       level string from shmem
  * @return     : void
  */
-STATIC void ParseGlobalLevel(const char *levelStr)
+STATIC void ParseGlobalLevel(const char* levelStr)
 {
     ONE_ACT_NO_LOG(levelStr == NULL, return);
     // global
@@ -65,7 +65,7 @@ STATIC void ParseGlobalLevel(const char *levelStr)
  * @param [in]  : moduleInfos    module info
  * @return      : NA
  */
-STATIC void ParseModuleLevel(const char *levelStr, int32_t num, const ModuleInfo *moduleInfos)
+STATIC void ParseModuleLevel(const char* levelStr, int32_t num, const ModuleInfo* moduleInfos)
 {
     ONE_ACT_NO_LOG(moduleInfos == NULL, return);
     if ((levelStr == NULL) || (num < 0) || ((uint32_t)num >= LogStrlen(levelStr))) {
@@ -93,7 +93,7 @@ STATIC void ParseModuleLevel(const char *levelStr, int32_t num, const ModuleInfo
  * @param [in] : moduleStr      module string from shmem
  * @return     : SUCCESS: parse success; ARGV_NULL: param is null;
  */
-STATIC LogRt ParseLogLevel(const char *levelStr, const char *moduleStr)
+STATIC LogRt ParseLogLevel(const char* levelStr, const char* moduleStr)
 {
     ONE_ACT_NO_LOG(levelStr == NULL, return ARGV_NULL);
     ONE_ACT_NO_LOG(moduleStr == NULL, return ARGV_NULL);
@@ -107,7 +107,7 @@ STATIC LogRt ParseLogLevel(const char *levelStr, const char *moduleStr)
     size_t off = 0;
     size_t offPre = 0;
     size_t len = strlen(moduleStr);
-    const ModuleInfo *moduleInfos = DlogGetModuleInfos();
+    const ModuleInfo* moduleInfos = DlogGetModuleInfos();
     while (off < len) {
         if (moduleStr[off] != ';') {
             off++;
@@ -115,7 +115,7 @@ STATIC LogRt ParseLogLevel(const char *levelStr, const char *moduleStr)
         }
         int32_t pre = i;
         for (; i < INVALID_MODULE_ID; i++) {
-            const char *name  = moduleInfos[i].moduleName;
+            const char* name = moduleInfos[i].moduleName;
             if (strncmp(name, moduleStr + offPre, strlen(name)) == 0) {
                 ParseModuleLevel(levelStr, n, &moduleInfos[i]); // parse n module level
                 break;
@@ -124,7 +124,7 @@ STATIC LogRt ParseLogLevel(const char *levelStr, const char *moduleStr)
         if (i == INVALID_MODULE_ID) {
             i = pre;
         }
-        n++; // next module in moduleStr
+        n++;   // next module in moduleStr
         off++; // ';' next
         offPre = off;
     }
@@ -140,7 +140,7 @@ STATIC LogRt ParseLogLevel(const char *levelStr, const char *moduleStr)
  * @param [in]offset: read offset in shmem
  * @return: SYS_ERROR/SYS_OK
  */
-STATIC int32_t ReadStrFromShm(int32_t shmId, char **str, size_t strLen, size_t offset)
+STATIC int32_t ReadStrFromShm(int32_t shmId, char** str, size_t strLen, size_t offset)
 {
     ONE_ACT_NO_LOG(shmId < 0, return SYS_ERROR);
     ONE_ACT_NO_LOG(str == NULL, return SYS_ERROR);
@@ -148,7 +148,7 @@ STATIC int32_t ReadStrFromShm(int32_t shmId, char **str, size_t strLen, size_t o
     ONE_ACT_NO_LOG(((offset > SHM_SIZE) || ((offset + strLen) > SHM_SIZE)), return SYS_ERROR);
 
     size_t bufLen = strLen + 1U;
-    char *tmpBuf = (char *)malloc(bufLen);
+    char* tmpBuf = (char*)malloc(bufLen);
     if (tmpBuf == NULL) {
         SELF_LOG_ERROR("malloc failed, pid=%d, strerr=%s.", ToolGetPid(), strerror(ToolGetErrorCode()));
         return SYS_ERROR;
@@ -174,8 +174,8 @@ STATIC int32_t ReadStrFromShm(int32_t shmId, char **str, size_t strLen, size_t o
 STATIC int32_t UpdateLogLevel(void)
 {
     int32_t shmId = -1;
-    char *moduleStr = NULL;
-    char *levelStr = NULL;
+    char* moduleStr = NULL;
+    char* levelStr = NULL;
 
     ShmErr ret = ShMemOpen(&shmId);
     if (ret == SHM_ERROR) {
@@ -212,14 +212,14 @@ STATIC int32_t UpdateLogLevel(void)
  * @param [in]  : length          notify file pathname max length
  * @return      : SYS_OK: 0; SYS_ERROR: -1
  */
-STATIC int32_t ObtainNotifyFile(char *notifyFile, uint32_t length)
+STATIC int32_t ObtainNotifyFile(char* notifyFile, uint32_t length)
 {
     size_t len = strlen(DEFAULT_LOG_WORKSPACE) + strlen(LEVEL_NOTIFY_FILE) + 1;
-    int32_t res = sprintf_s(notifyFile, length, "%s/%s", DEFAULT_LOG_WORKSPACE,
-                            LEVEL_NOTIFY_FILE);
+    int32_t res = sprintf_s(notifyFile, length, "%s/%s", DEFAULT_LOG_WORKSPACE, LEVEL_NOTIFY_FILE);
     if (res != (int32_t)len) {
-        SELF_LOG_ERROR("copy path failed, res=%d, strerr=%s, pid=%d, Thread(LevelNotifyWatcher) quit.",
-                       res, strerror(ToolGetErrorCode()), ToolGetPid());
+        SELF_LOG_ERROR(
+            "copy path failed, res=%d, strerr=%s, pid=%d, Thread(LevelNotifyWatcher) quit.", res,
+            strerror(ToolGetErrorCode()), ToolGetPid());
         return SYS_ERROR;
     }
     return SYS_OK;
@@ -247,7 +247,7 @@ STATIC int32_t CheckShMemAvailable(void)
  * @param [in]notifyFile: notify file, default is "/usr/slog/level_notify"
  * @return: LogRt, SUCCESS/NOTIFY_WATCH_FAILED/ARGV_NULL/NOTIFY_INIT_FAILED
  */
-STATIC LogRt AddNewWatch(int32_t *pNotifyFd, int32_t *pWatchFd, const char *notifyFile)
+STATIC LogRt AddNewWatch(int32_t* pNotifyFd, int32_t* pWatchFd, const char* notifyFile)
 {
     ONE_ACT_NO_LOG(pNotifyFd == NULL, return ARGV_NULL);
     ONE_ACT_NO_LOG(pWatchFd == NULL, return ARGV_NULL);
@@ -255,16 +255,17 @@ STATIC LogRt AddNewWatch(int32_t *pNotifyFd, int32_t *pWatchFd, const char *noti
 
     uint32_t printNum = 0;
     while (ToolAccess(notifyFile) != SYS_OK) {
-        SELF_LOG_WARN_N(&printNum, CONN_W_PRINT_NUM,
-                        "can not access notify file, file=%s, pid=%d, print once every %d times.",
-                        notifyFile, ToolGetPid(), CONN_W_PRINT_NUM);
+        SELF_LOG_WARN_N(
+            &printNum, CONN_W_PRINT_NUM, "can not access notify file, file=%s, pid=%d, print once every %d times.",
+            notifyFile, ToolGetPid(), CONN_W_PRINT_NUM);
         (void)ToolSleep(1000); // wait file created, sleep 1000ms
     }
 
     if ((*pNotifyFd != INVALID) && (*pWatchFd != INVALID)) {
         int32_t res = inotify_rm_watch(*pNotifyFd, *pWatchFd);
-        NO_ACT_WARN_LOG(res != 0, "can not remove inotify but continue, res=%d, strerr=%s, pid=%d.",
-                        res, strerror(ToolGetErrorCode()), ToolGetPid());
+        NO_ACT_WARN_LOG(
+            res != 0, "can not remove inotify but continue, res=%d, strerr=%s, pid=%d.", res,
+            strerror(ToolGetErrorCode()), ToolGetPid());
         LOG_CLOSE_FD(*pNotifyFd);
     }
     *pNotifyFd = INVALID;
@@ -272,14 +273,14 @@ STATIC LogRt AddNewWatch(int32_t *pNotifyFd, int32_t *pWatchFd, const char *noti
 
     // init notify
     int32_t notifyFd = inotify_init();
-    ONE_ACT_ERR_LOG(notifyFd == INVALID, return NOTIFY_INIT_FAILED,
-                    "init inotify failed, res=%d, strerr=%s, pid=%d.",
-                    notifyFd, strerror(ToolGetErrorCode()), ToolGetPid());
+    ONE_ACT_ERR_LOG(
+        notifyFd == INVALID, return NOTIFY_INIT_FAILED, "init inotify failed, res=%d, strerr=%s, pid=%d.", notifyFd,
+        strerror(ToolGetErrorCode()), ToolGetPid());
     // add new watcher
     int32_t watchFd = inotify_add_watch(notifyFd, notifyFile, IN_DELETE_SELF | IN_CLOSE_WRITE);
-    TWO_ACT_ERR_LOG(watchFd < 0, LOG_CLOSE_FD(notifyFd), return NOTIFY_WATCH_FAILED,
-                    "add file watcher failed, res=%d, strerr=%s, pid=%d.",
-                    watchFd, strerror(ToolGetErrorCode()), ToolGetPid());
+    TWO_ACT_ERR_LOG(
+        watchFd < 0, LOG_CLOSE_FD(notifyFd), return NOTIFY_WATCH_FAILED,
+        "add file watcher failed, res=%d, strerr=%s, pid=%d.", watchFd, strerror(ToolGetErrorCode()), ToolGetPid());
     *pNotifyFd = notifyFd;
     *pWatchFd = watchFd;
     return SUCCESS;
@@ -291,18 +292,19 @@ STATIC LogRt AddNewWatch(int32_t *pNotifyFd, int32_t *pWatchFd, const char *noti
  */
 STATIC bool IsWatcherThreadExit(void)
 {
-    return false;   // use in future
+    return false; // use in future
 }
 
-STATIC void *LevelNotifyWatcher(void *arg)
+STATIC void* LevelNotifyWatcher(void* arg)
 {
     (void)arg;
-    NO_ACT_WARN_LOG(ToolSetThreadName("LogLevelWatcher") != SYS_OK,
-                    "can not set thread_name(LogLevelWatcher), pid=%d.", ToolGetPid());
+    NO_ACT_WARN_LOG(
+        ToolSetThreadName("LogLevelWatcher") != SYS_OK, "can not set thread_name(LogLevelWatcher), pid=%d.",
+        ToolGetPid());
     int32_t notifyFd = INVALID;
     int32_t watchFd = INVALID;
-    char notifyFile[CFG_WORKSPACE_PATH_MAX_LENGTH] = { 0 };
-    char eventBuf[MAX_INOTIFY_BUFF] = { 0 };
+    char notifyFile[CFG_WORKSPACE_PATH_MAX_LENGTH] = {0};
+    char eventBuf[MAX_INOTIFY_BUFF] = {0};
     while (!IsWatcherThreadExit()) {
         if (!g_shmAvail) {
             if (CheckShMemAvailable() != SYS_OK) {
@@ -314,23 +316,23 @@ STATIC void *LevelNotifyWatcher(void *arg)
         if (notifyFd == INVALID) {
             ONE_ACT_NO_LOG(ObtainNotifyFile(notifyFile, CFG_WORKSPACE_PATH_MAX_LENGTH) != SYS_OK, return NULL);
             LogRt err = AddNewWatch(&notifyFd, &watchFd, notifyFile);
-            ONE_ACT_ERR_LOG(err != SUCCESS, return NULL,
-                            "add watcher failed, err=%d, pid=%d, Thread(LevelNotifyWatcher) quit.",
-                            (int32_t)err, ToolGetPid());
+            ONE_ACT_ERR_LOG(
+                err != SUCCESS, return NULL, "add watcher failed, err=%d, pid=%d, Thread(LevelNotifyWatcher) quit.",
+                (int32_t)err, ToolGetPid());
         }
         int32_t numRead = (int32_t)read(notifyFd, eventBuf, MAX_INOTIFY_BUFF);
-        ONE_ACT_WARN_LOG(numRead <= 0, continue,
-                         "can not read watcher event, res=%d, strerr=%s, pid=%d, but continue.",
-                         numRead, strerror(ToolGetErrorCode()), ToolGetPid());
-        char *tmpBuf = eventBuf;
+        ONE_ACT_WARN_LOG(
+            numRead <= 0, continue, "can not read watcher event, res=%d, strerr=%s, pid=%d, but continue.", numRead,
+            strerror(ToolGetErrorCode()), ToolGetPid());
+        char* tmpBuf = eventBuf;
         for (; tmpBuf < (eventBuf + numRead);) {
-            struct inotify_event *event = (struct inotify_event *)tmpBuf;
+            struct inotify_event* event = (struct inotify_event*)tmpBuf;
             if (event->mask & IN_CLOSE_WRITE) {
                 if (DlogCheckAttrSystem()) {
                     (void)UpdateLogLevel();
                 }
             } else if (event->mask & IN_DELETE_SELF) {
-                LogRt err = AddNewWatch(&notifyFd, &watchFd, (const char *)notifyFile);
+                LogRt err = AddNewWatch(&notifyFd, &watchFd, (const char*)notifyFile);
                 ONE_ACT_NO_LOG(err != SUCCESS, break);
                 if (DlogCheckAttrSystem()) {
                     (void)UpdateLogLevel();
@@ -341,8 +343,8 @@ STATIC void *LevelNotifyWatcher(void *arg)
     }
     SELF_LOG_ERROR("Thread(LevelNotifyWatcher) quit, pid=%d.", ToolGetPid());
     int32_t res = inotify_rm_watch(notifyFd, watchFd);
-    NO_ACT_ERR_LOG(res != 0, "remove inotify failed, res=%d, strerr=%s, pid=%d",
-                   res, strerror(ToolGetErrorCode()), ToolGetPid());
+    NO_ACT_ERR_LOG(
+        res != 0, "remove inotify failed, res=%d, strerr=%s, pid=%d", res, strerror(ToolGetErrorCode()), ToolGetPid());
     LOG_CLOSE_FD(notifyFd);
     return NULL;
 }
@@ -360,9 +362,9 @@ STATIC void StartThreadForLevelChangeWatcher(void)
     thread.pulArg = NULL;
 
     ToolThread tid = 0;
-    ONE_ACT_ERR_LOG(ToolCreateTaskWithDetach(&tid, &thread) != SYS_OK, return,
-                    "create task LevelWatcher failed, strerr=%s, pid=%d.",
-                    strerror(ToolGetErrorCode()), ToolGetPid());
+    ONE_ACT_ERR_LOG(
+        ToolCreateTaskWithDetach(&tid, &thread) != SYS_OK, return,
+        "create task LevelWatcher failed, strerr=%s, pid=%d.", strerror(ToolGetErrorCode()), ToolGetPid());
 }
 
 void DlogLevelInit(void)
@@ -373,10 +375,7 @@ void DlogLevelInit(void)
     StartThreadForLevelChangeWatcher();
 }
 
-void DlogLevelReInit(void)
-{
-    StartThreadForLevelChangeWatcher();
-}
+void DlogLevelReInit(void) { StartThreadForLevelChangeWatcher(); }
 #endif
 
 #ifdef __cplusplus

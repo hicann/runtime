@@ -16,21 +16,17 @@
 #define PAGE_SIZES 4096U
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
 
-#define ALIGN __alignof__(sizeof(char *))
+#define ALIGN __alignof__(sizeof(char*))
 #define LOG_ALIGN_MASK(x, mask) (((x) + (mask)) & ~(mask))
-#define LOG_ALIGN(x, a)         LOG_ALIGN_MASK(x, (typeof(x))(a) - 1U)
-#define LOG_ALIGN_DOWN(x, a)    LOG_ALIGN((x) - ((a) - 1U), (a))
-
+#define LOG_ALIGN(x, a) LOG_ALIGN_MASK(x, (typeof(x))(a)-1U)
+#define LOG_ALIGN_DOWN(x, a) LOG_ALIGN((x) - ((a)-1U), (a))
 
 /**
  * @brief       : next address with log head
  * @param [in]  : msg       current log msg
  * @return      : next address
  */
-STATIC char *LogText(LogHead *msg)
-{
-    return (char *)msg + LOGHEAD_LEN;
-}
+STATIC char* LogText(LogHead* msg) { return (char*)msg + LOGHEAD_LEN; }
 
 /**
  * @brief       : next msg
@@ -38,11 +34,11 @@ STATIC char *LogText(LogHead *msg)
  * @param [in]  : idx                  calc offset
  * @return      : NA
  */
-STATIC uint32_t LogNext(const RingBufferCtrl *ringBufferCtrl, uint32_t idx)
+STATIC uint32_t LogNext(const RingBufferCtrl* ringBufferCtrl, uint32_t idx)
 {
-    const LogHead *msg = (const LogHead *)((const char *)ringBufferCtrl + ringBufferCtrl->dataOffset + idx);
+    const LogHead* msg = (const LogHead*)((const char*)ringBufferCtrl + ringBufferCtrl->dataOffset + idx);
     if (msg->allLength == 0U) {
-        msg = (const LogHead *)((const char *)ringBufferCtrl + ringBufferCtrl->dataOffset);
+        msg = (const LogHead*)((const char*)ringBufferCtrl + ringBufferCtrl->dataOffset);
         return msg->allLength;
     }
     return idx + msg->allLength;
@@ -57,8 +53,8 @@ STATIC uint32_t LogNext(const RingBufferCtrl *ringBufferCtrl, uint32_t idx)
  * @param [in]  : empty
  * @return      : NA
  */
-STATIC bool LogbufHasSpace(uint32_t logNextIdx, uint32_t logFirstIdx, uint32_t dateLen, uint32_t msgSize,
-                           uint32_t empty)
+STATIC bool LogbufHasSpace(
+    uint32_t logNextIdx, uint32_t logFirstIdx, uint32_t dateLen, uint32_t msgSize, uint32_t empty)
 {
     uint32_t freeSpace;
     if ((logNextIdx > logFirstIdx) || (empty != 0U)) {
@@ -76,12 +72,12 @@ STATIC bool LogbufHasSpace(uint32_t logNextIdx, uint32_t logFirstIdx, uint32_t d
  * @param [in/out]  : coverCount            log loss count
  * @return          : true: make free space success; false: make free space failed
  */
-STATIC bool LogMakeFreeSpace(RingBufferCtrl *ringBufferCtrl, uint32_t msgSize, uint64_t *coverCount)
+STATIC bool LogMakeFreeSpace(RingBufferCtrl* ringBufferCtrl, uint32_t msgSize, uint64_t* coverCount)
 {
     uint64_t firstSeq = ringBufferCtrl->logFirstSeq;
     while ((ringBufferCtrl->logFirstSeq < ringBufferCtrl->logNextSeq) &&
-           (!LogbufHasSpace(ringBufferCtrl->logNextIdx, ringBufferCtrl->logFirstIdx, ringBufferCtrl->dataLen,
-                            msgSize, 0))) {
+           (!LogbufHasSpace(
+               ringBufferCtrl->logNextIdx, ringBufferCtrl->logFirstIdx, ringBufferCtrl->dataLen, msgSize, 0))) {
         ringBufferCtrl->logFirstIdx = LogNext(ringBufferCtrl, ringBufferCtrl->logFirstIdx);
         ringBufferCtrl->logFirstSeq++;
     }
@@ -89,21 +85,22 @@ STATIC bool LogMakeFreeSpace(RingBufferCtrl *ringBufferCtrl, uint32_t msgSize, u
     if ((coverCount != NULL) && (ringBufferCtrl->logFirstSeq > ringBufferCtrl->lastSeq)) {
         *coverCount += ringBufferCtrl->logFirstSeq - MAX(ringBufferCtrl->lastSeq, firstSeq);
     }
-    if (LogbufHasSpace(ringBufferCtrl->logNextIdx, ringBufferCtrl->logFirstIdx, ringBufferCtrl->dataLen, msgSize,
-                       (uint32_t)(ringBufferCtrl->logFirstSeq == ringBufferCtrl->logNextSeq))) {
+    if (LogbufHasSpace(
+            ringBufferCtrl->logNextIdx, ringBufferCtrl->logFirstIdx, ringBufferCtrl->dataLen, msgSize,
+            (uint32_t)(ringBufferCtrl->logFirstSeq == ringBufferCtrl->logNextSeq))) {
         return true;
     }
     return false;
 }
 
-STATIC const LogHead *LogFromIdx(const RingBufferCtrl *ringBufferCtrl, uint32_t idx)
+STATIC const LogHead* LogFromIdx(const RingBufferCtrl* ringBufferCtrl, uint32_t idx)
 {
     if (idx > ringBufferCtrl->dataLen) {
         return NULL;
     }
-    const LogHead *msg = (const LogHead *)((const char *)ringBufferCtrl + ringBufferCtrl->dataOffset + idx);
+    const LogHead* msg = (const LogHead*)((const char*)ringBufferCtrl + ringBufferCtrl->dataOffset + idx);
     if (msg->allLength == 0U) {
-        return (const LogHead *)((const char *)ringBufferCtrl + ringBufferCtrl->dataOffset);
+        return (const LogHead*)((const char*)ringBufferCtrl + ringBufferCtrl->dataOffset);
     }
     return msg;
 }
@@ -114,7 +111,7 @@ STATIC const LogHead *LogFromIdx(const RingBufferCtrl *ringBufferCtrl, uint32_t 
  * @param [in]  : padLen        pad length
  * @return      : msg length
  */
-STATIC uint32_t MsgUsedSize(uint32_t textLen, uint32_t *padLen)
+STATIC uint32_t MsgUsedSize(uint32_t textLen, uint32_t* padLen)
 {
     uint32_t size = (uint32_t)LOGHEAD_LEN + textLen;
     *padLen = (uint32_t)((~size + 1UL) & (ALIGN - 1UL));
@@ -128,7 +125,7 @@ STATIC uint32_t MsgUsedSize(uint32_t textLen, uint32_t *padLen)
  * @param [in]  : padLen        pad length
  * @return      : msg length
  */
-STATIC uint32_t TruncateMsgIfLong(uint32_t *textLen, uint32_t *padLen)
+STATIC uint32_t TruncateMsgIfLong(uint32_t* textLen, uint32_t* padLen)
 {
     if (*textLen >= MSG_LENGTH) {
         *textLen = MSG_LENGTH - 1U;
@@ -136,11 +133,10 @@ STATIC uint32_t TruncateMsgIfLong(uint32_t *textLen, uint32_t *padLen)
     return MsgUsedSize(*textLen, padLen);
 }
 
-STATIC bool CheckBufHead(const RingBufferCtrl *ringBufferCtrl)
+STATIC bool CheckBufHead(const RingBufferCtrl* ringBufferCtrl)
 {
     if ((ringBufferCtrl->logFirstIdx > ringBufferCtrl->dataLen) ||
-        (ringBufferCtrl->logNextIdx > ringBufferCtrl->dataLen) ||
-        (ringBufferCtrl->lastIdx > ringBufferCtrl->dataLen)) {
+        (ringBufferCtrl->logNextIdx > ringBufferCtrl->dataLen) || (ringBufferCtrl->lastIdx > ringBufferCtrl->dataLen)) {
         return false;
     }
     return true;
@@ -151,12 +147,12 @@ STATIC bool CheckBufHead(const RingBufferCtrl *ringBufferCtrl)
  * @param [in]  : ringBufferCtrl       ring buffer
  * @return      : data length
  */
-uint32_t LogBufCurrDataLen(RingBufferCtrl *ringBufferCtrl)
+uint32_t LogBufCurrDataLen(RingBufferCtrl* ringBufferCtrl)
 {
     if ((ringBufferCtrl == NULL) || (ringBufferCtrl->dataLen < ringBufferCtrl->lastIdx)) {
         return 0;
     }
-    if (ringBufferCtrl->logFirstSeq > ringBufferCtrl->lastSeq) { // overwritten
+    if (ringBufferCtrl->logFirstSeq > ringBufferCtrl->lastSeq) {        // overwritten
         return ringBufferCtrl->dataLen;
     } else if (ringBufferCtrl->logNextIdx >= ringBufferCtrl->lastIdx) { // not overwritten
         return ringBufferCtrl->logNextIdx - ringBufferCtrl->lastIdx;
@@ -169,7 +165,7 @@ uint32_t LogBufCurrDataLen(RingBufferCtrl *ringBufferCtrl)
  * @brief        : calculate the number of log buf is covered
  * @return       : the number of log buf is covered
  */
-uint64_t LogBufLost(RingBufferCtrl *ringBufferCtrl)
+uint64_t LogBufLost(RingBufferCtrl* ringBufferCtrl)
 {
     if (ringBufferCtrl == NULL) {
         return 0;
@@ -180,7 +176,7 @@ uint64_t LogBufLost(RingBufferCtrl *ringBufferCtrl)
     return 0;
 }
 
-STATIC void CompareFirstSeq(const RingBufferCtrl *ringBufferCtrl, ReadContext *readContext)
+STATIC void CompareFirstSeq(const RingBufferCtrl* ringBufferCtrl, ReadContext* readContext)
 {
     if (readContext->readSeq < ringBufferCtrl->logFirstSeq) {
         uint64_t lostNum = ringBufferCtrl->logFirstSeq - readContext->readSeq;
@@ -193,14 +189,14 @@ STATIC void CompareFirstSeq(const RingBufferCtrl *ringBufferCtrl, ReadContext *r
 /**
  * @brief        : reinit log buffer to 0
  */
-void LogBufReInit(RingBufferStat *logBuf)
+void LogBufReInit(RingBufferStat* logBuf)
 {
-    RingBufferCtrl *ringBufferCtrl = logBuf->ringBufferCtrl;
+    RingBufferCtrl* ringBufferCtrl = logBuf->ringBufferCtrl;
     ringBufferCtrl->lastSeq = ringBufferCtrl->logNextSeq;
     ringBufferCtrl->lastIdx = ringBufferCtrl->logNextIdx;
 }
 
-void LogBufReStart(const RingBufferCtrl *ringBufferCtrl, ReadContext *readContext)
+void LogBufReStart(const RingBufferCtrl* ringBufferCtrl, ReadContext* readContext)
 {
     readContext->readIdx = ringBufferCtrl->lastIdx;
     readContext->readSeq = ringBufferCtrl->lastSeq;
@@ -215,7 +211,7 @@ void LogBufReStart(const RingBufferCtrl *ringBufferCtrl, ReadContext *readContex
  * @param [in]  : dataOffset            offset
  * @return      : >= 0 success; < 0 failure
  */
-int32_t LogBufInitHead(RingBufferCtrl *ringBufferCtrl, uint32_t size, uint32_t dataOffset)
+int32_t LogBufInitHead(RingBufferCtrl* ringBufferCtrl, uint32_t size, uint32_t dataOffset)
 {
     if (ringBufferCtrl == NULL) {
         return -1;
@@ -245,9 +241,9 @@ int32_t LogBufInitHead(RingBufferCtrl *ringBufferCtrl, uint32_t size, uint32_t d
  * @param [in/out]  : coverCount            log loss count
  * @return      : >= 0 success; < 0 failure
  */
-int32_t LogBufWrite(RingBufferCtrl *ringBufferCtrl, const char *text, LogHead *head, uint64_t *coverCount)
+int32_t LogBufWrite(RingBufferCtrl* ringBufferCtrl, const char* text, LogHead* head, uint64_t* coverCount)
 {
-    LogHead *msg;
+    LogHead* msg;
     uint32_t size = 0, padLen = 0;
     if (ringBufferCtrl == NULL) {
         return (-(int32_t)BUFFER_NULL);
@@ -257,7 +253,7 @@ int32_t LogBufWrite(RingBufferCtrl *ringBufferCtrl, const char *text, LogHead *h
     }
     uint32_t textLen = (uint32_t)head->msgLength;
     uint32_t logNextIdxTmp = ringBufferCtrl->logNextIdx;
-    char *logBuf = (char *)ringBufferCtrl + ringBufferCtrl->dataOffset;
+    char* logBuf = (char*)ringBufferCtrl + ringBufferCtrl->dataOffset;
     size = TruncateMsgIfLong(&textLen, &padLen);
     head->allLength = (uint16_t)size;
     if (!LogMakeFreeSpace(ringBufferCtrl, size, coverCount)) {
@@ -272,8 +268,8 @@ int32_t LogBufWrite(RingBufferCtrl *ringBufferCtrl, const char *text, LogHead *h
             return (-(int32_t)BUFFER_WRITE_MEMCPY);
         }
     }
-    msg = (LogHead *)(logBuf + logNextIdxTmp);
-    resTmp = memcpy_s((char *)msg, sizeof(LogHead), (char *)head, sizeof(LogHead));
+    msg = (LogHead*)(logBuf + logNextIdxTmp);
+    resTmp = memcpy_s((char*)msg, sizeof(LogHead), (char*)head, sizeof(LogHead));
     if (resTmp != EOK) {
         return (-(int32_t)BUFFER_WRITE_MEMCPY);
     }
@@ -299,8 +295,8 @@ int32_t LogBufWrite(RingBufferCtrl *ringBufferCtrl, const char *text, LogHead *h
  * @param [out] : msgRes            msg head
  * @return      : >= 0 success; < 0 failure
  */
-int32_t LogBufRead(ReadContext *readContext, const RingBufferCtrl *ringBufferCtrl, char *buf,
-                   uint16_t bufSize, LogHead *msgRes)
+int32_t LogBufRead(
+    ReadContext* readContext, const RingBufferCtrl* ringBufferCtrl, char* buf, uint16_t bufSize, LogHead* msgRes)
 {
     int32_t ret;
     if (ringBufferCtrl == NULL) {
@@ -316,7 +312,7 @@ int32_t LogBufRead(ReadContext *readContext, const RingBufferCtrl *ringBufferCtr
         return (-(int32_t)BUFFER_READ_FINISH);
     }
     CompareFirstSeq(ringBufferCtrl, readContext);
-    const LogHead *msg = LogFromIdx(ringBufferCtrl, readContext->readIdx);
+    const LogHead* msg = LogFromIdx(ringBufferCtrl, readContext->readIdx);
     if (msg == NULL) {
         return (-(int32_t)BUFFER_READ_MEMCPY);
     }
@@ -327,10 +323,9 @@ int32_t LogBufRead(ReadContext *readContext, const RingBufferCtrl *ringBufferCtr
     if (msgRes->msgLength > (bufSize - 1U)) {
         msgRes->msgLength = bufSize - 1U;
     }
-    uintptr_t maxAddr = (uintptr_t)((const char *)ringBufferCtrl + ringBufferCtrl->dataOffset +
-        ringBufferCtrl->dataLen);
-    if (((uintptr_t)((const char *)msg + LOGHEAD_LEN + msgRes->msgLength) <= maxAddr)) {
-        ret = memcpy_s(buf, (size_t)(bufSize - 1UL), (const char *)msg + LOGHEAD_LEN, msgRes->msgLength);
+    uintptr_t maxAddr = (uintptr_t)((const char*)ringBufferCtrl + ringBufferCtrl->dataOffset + ringBufferCtrl->dataLen);
+    if (((uintptr_t)((const char*)msg + LOGHEAD_LEN + msgRes->msgLength) <= maxAddr)) {
+        ret = memcpy_s(buf, (size_t)(bufSize - 1UL), (const char*)msg + LOGHEAD_LEN, msgRes->msgLength);
         buf[msgRes->msgLength] = '\0';
         if (ret != EOK) {
             return (-(int32_t)BUFFER_READ_MEMCPY);
@@ -343,12 +338,12 @@ int32_t LogBufRead(ReadContext *readContext, const RingBufferCtrl *ringBufferCtr
     return (int32_t)msgRes->msgLength;
 }
 
-void LogBufSetLevelFilter(RingBufferCtrl *ringBufferCtrl, uint8_t levelFilter)
+void LogBufSetLevelFilter(RingBufferCtrl* ringBufferCtrl, uint8_t levelFilter)
 {
     ringBufferCtrl->levelFilter = levelFilter;
 }
 
-bool LogBufCheckEmpty(RingBufferStat *logBuf)
+bool LogBufCheckEmpty(RingBufferStat* logBuf)
 {
     if ((logBuf == NULL) || (logBuf->ringBufferCtrl == NULL) ||
         (logBuf->ringBufferCtrl->lastSeq == logBuf->ringBufferCtrl->logNextSeq)) {
@@ -357,12 +352,12 @@ bool LogBufCheckEmpty(RingBufferStat *logBuf)
     return false;
 }
 
-bool LogBufCheckEnough(RingBufferStat *logBuf, uint32_t msgLen)
+bool LogBufCheckEnough(RingBufferStat* logBuf, uint32_t msgLen)
 {
     if (logBuf == NULL) {
         return false;
     }
-    RingBufferCtrl *ringBufferCtrl = logBuf->ringBufferCtrl;
+    RingBufferCtrl* ringBufferCtrl = logBuf->ringBufferCtrl;
     uint32_t textLen = msgLen;
     uint32_t padLen = 0;
     uint32_t size = TruncateMsgIfLong(&textLen, &padLen) + (uint32_t)LOGHEAD_LEN;

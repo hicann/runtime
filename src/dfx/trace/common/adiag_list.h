@@ -21,7 +21,7 @@ extern "C" {
 
 struct AdiagListNode {
     struct ListHead list;
-    void *data;
+    void* data;
 };
 
 struct AdiagList {
@@ -31,27 +31,26 @@ struct AdiagList {
     bool valid;
 };
 
-typedef AdiagStatus (*AdiagListCmpFunc)(const void *, const void *);
-typedef AdiagStatus (*AdiagListTraverseFunc)(void *, void *);
-typedef AdiagStatus (*AdiagListElemFunc)(void *);
+typedef AdiagStatus (*AdiagListCmpFunc)(const void*, const void*);
+typedef AdiagStatus (*AdiagListTraverseFunc)(void*, void*);
+typedef AdiagStatus (*AdiagListElemFunc)(void*);
 
-AdiagStatus AdiagListInit(struct AdiagList *traList);
-AdiagStatus AdiagListDestroy(struct AdiagList *traList);
-AdiagStatus AdiagListInsert(struct AdiagList *traList, void *data);
-void *AdiagListTakeOut(struct AdiagList *traList);
-void AdiagListForEachNolock(struct AdiagList *traList, const AdiagListCmpFunc func, const void *arg);
-void AdiagListForEachTraverse(struct AdiagList *traList, const AdiagListTraverseFunc func, void *arg);
-void *AdiagListForEach(struct AdiagList *traList, const AdiagListCmpFunc func, const void *arg);
-void *AdiagListGetNode(struct AdiagList *traList, const void *data);
-AdiagStatus AdiagListRemove(struct AdiagList *traceList, void *data);
-AdiagStatus AdiagListRemoveAll(struct AdiagList *traceList, void *data, const AdiagListElemFunc func);
-void AdiagListMove(struct AdiagList *oldList, struct AdiagList *newList);
-AdiagStatus AdiagListClearAndProcessNoLock(struct AdiagList *traceList, const AdiagListCmpFunc cmpFunc, const void *arg,
-    const AdiagListElemFunc otherFunc);
+AdiagStatus AdiagListInit(struct AdiagList* traList);
+AdiagStatus AdiagListDestroy(struct AdiagList* traList);
+AdiagStatus AdiagListInsert(struct AdiagList* traList, void* data);
+void* AdiagListTakeOut(struct AdiagList* traList);
+void AdiagListForEachNolock(struct AdiagList* traList, const AdiagListCmpFunc func, const void* arg);
+void AdiagListForEachTraverse(struct AdiagList* traList, const AdiagListTraverseFunc func, void* arg);
+void* AdiagListForEach(struct AdiagList* traList, const AdiagListCmpFunc func, const void* arg);
+void* AdiagListGetNode(struct AdiagList* traList, const void* data);
+AdiagStatus AdiagListRemove(struct AdiagList* traceList, void* data);
+AdiagStatus AdiagListRemoveAll(struct AdiagList* traceList, void* data, const AdiagListElemFunc func);
+void AdiagListMove(struct AdiagList* oldList, struct AdiagList* newList);
+AdiagStatus AdiagListClearAndProcessNoLock(
+    struct AdiagList* traceList, const AdiagListCmpFunc cmpFunc, const void* arg, const AdiagListElemFunc otherFunc);
 
 #ifdef __cplusplus
 }
 #endif // __cplusplus
 
 #endif // TRACE_LIST_H
-

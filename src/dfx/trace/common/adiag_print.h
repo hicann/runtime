@@ -33,8 +33,10 @@ extern "C" {
 
 #define ADIAG_MODULE_NAME ATRACE
 
-#define ADIAG_RUN_INF(msg, ...) Dlog((int32_t)((uint32_t)ADIAG_MODULE_NAME | RUN_LOG_MASK), DLOG_INFO, \
-    "(tid:%ld) " msg "\n", syscall(SYS_gettid), ##__VA_ARGS__)
+#define ADIAG_RUN_INF(msg, ...)                                                                                       \
+    Dlog(                                                                                                             \
+        (int32_t)((uint32_t)ADIAG_MODULE_NAME | RUN_LOG_MASK), DLOG_INFO, "(tid:%ld) " msg "\n", syscall(SYS_gettid), \
+        ##__VA_ARGS__)
 #define ADIAG_ERR(msg, ...) \
     Dlog(ADIAG_MODULE_NAME, DLOG_ERROR, "(tid:%ld) " msg "\n", syscall(SYS_gettid), ##__VA_ARGS__)
 #define ADIAG_WAR(msg, ...) \
@@ -44,19 +46,21 @@ extern "C" {
 #define ADIAG_DBG(msg, ...) \
     Dlog(ADIAG_MODULE_NAME, DLOG_DEBUG, "(tid:%ld) " msg "\n", syscall(SYS_gettid), ##__VA_ARGS__)
 
-#define ADIAG_CHK_EXPR_ACTION(expr, ACTION, msg, ...) do { \
-    if (expr) { \
-        ADIAG_ERR(msg, ##__VA_ARGS__); \
-        ACTION; \
-    } \
-} while (0)
+#define ADIAG_CHK_EXPR_ACTION(expr, ACTION, msg, ...) \
+    do {                                              \
+        if (expr) {                                   \
+            ADIAG_ERR(msg, ##__VA_ARGS__);            \
+            ACTION;                                   \
+        }                                             \
+    } while (0)
 
-#define ADIAG_CHK_NULL_PTR(PTR, ACTION) do { \
-    if ((PTR) == NULL) { \
-        ADIAG_ERR("invalid ptr parameter [" #PTR "](NULL)."); \
-        ACTION; \
-    } \
-} while (0)
+#define ADIAG_CHK_NULL_PTR(PTR, ACTION)                           \
+    do {                                                          \
+        if ((PTR) == NULL) {                                      \
+            ADIAG_ERR("invalid ptr parameter [" #PTR "](NULL)."); \
+            ACTION;                                               \
+        }                                                         \
+    } while (0)
 
 #ifdef __cplusplus
 }

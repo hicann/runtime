@@ -21,17 +21,17 @@ extern "C" {
 #endif // __cplusplus
 
 typedef struct ScdFrames {
-    int32_t           pid;
-    int32_t           tid;
-    ScdRegs          *regs;
-    ScdMaps          *maps;
-    struct AdiagList  frameList;
-    uint32_t          framesNum;
+    int32_t pid;
+    int32_t tid;
+    ScdRegs* regs;
+    ScdMaps* maps;
+    struct AdiagList frameList;
+    uint32_t framesNum;
 } ScdFrames;
 
-TraStatus ScdFramesLoad(ScdFrames *frames, ScdMaps *maps, ScdRegs *regs);
-TraStatus ScdFramesInit(ScdFrames *frames, int32_t pid, int32_t tid);
-void ScdFramesUninit(ScdFrames *frames);
+TraStatus ScdFramesLoad(ScdFrames* frames, ScdMaps* maps, ScdRegs* regs);
+TraStatus ScdFramesInit(ScdFrames* frames, int32_t pid, int32_t tid);
+void ScdFramesUninit(ScdFrames* frames);
 
 #ifdef __cplusplus
 }

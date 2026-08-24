@@ -18,7 +18,7 @@ extern "C" {
 #endif
 
 void CreateAppLogWatchThread(void);
-int32_t SlogdApplogSortFileFunc(const char *path, const ToolDirent **a, const ToolDirent **b);
+int32_t SlogdApplogSortFileFunc(const char* path, const ToolDirent** a, const ToolDirent** b);
 
 #ifdef __cplusplus
 }

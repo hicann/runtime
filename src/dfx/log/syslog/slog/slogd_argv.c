@@ -18,10 +18,7 @@
 #define SLOGD_OPT "nhl:v:d"
 
 static const struct option LONG_OPTIONS[] = {
-    {"vfid", required_argument, NULL, 'v'},
-    {"docker", no_argument, NULL, 'd'},
-    {NULL, 0, NULL, 0}
-};
+    {"vfid", required_argument, NULL, 'v'}, {"docker", no_argument, NULL, 'd'}, {NULL, 0, NULL, 0}};
 
 STATIC void SlogdUsage(void) // no use in multi-thread
 {
@@ -40,7 +37,7 @@ STATIC void SlogdUsage(void) // no use in multi-thread
  * @param [out] : opt          options assigned to slogd
  * @return      : SYS_OK: succeed; SYS_ERROR: failed
  */
-STATIC LogStatus ParseSlogdArgv(int32_t argc, char **argv, struct SlogdOptions *opt)
+STATIC LogStatus ParseSlogdArgv(int32_t argc, char** argv, struct SlogdOptions* opt)
 {
     int64_t optVal = -1;
     LogStatus ret = LOG_SUCCESS;
@@ -51,8 +48,8 @@ STATIC LogStatus ParseSlogdArgv(int32_t argc, char **argv, struct SlogdOptions *
                 opt->n = 1;
                 break;
             case 'l':
-                if ((LogStrToInt(optarg, &optVal) != LOG_SUCCESS) ||
-                    (optVal < LOG_MIN_LEVEL) || (optVal > LOG_MAX_LEVEL)) {
+                if ((LogStrToInt(optarg, &optVal) != LOG_SUCCESS) || (optVal < LOG_MIN_LEVEL) ||
+                    (optVal > LOG_MAX_LEVEL)) {
                     SELF_LOG_ERROR("level: %ld is not in range [0, 4].", optVal);
                     ret = LOG_FAILURE;
                     break;
@@ -61,8 +58,8 @@ STATIC LogStatus ParseSlogdArgv(int32_t argc, char **argv, struct SlogdOptions *
                 SELF_LOG_INFO("get level arg: %d", opt->l);
                 break;
             case 'v':
-                if ((LogStrToInt(optarg, &optVal) != LOG_SUCCESS) ||
-                    (optVal < MIN_VFID_NUM) || (optVal > MAX_VFID_NUM)) {
+                if ((LogStrToInt(optarg, &optVal) != LOG_SUCCESS) || (optVal < MIN_VFID_NUM) ||
+                    (optVal > MAX_VFID_NUM)) {
                     SELF_LOG_ERROR("vfid: %ld is not in range [32, 63].", optVal);
                     ret = LOG_FAILURE;
                     break;
@@ -95,7 +92,7 @@ STATIC LogStatus ParseSlogdArgv(int32_t argc, char **argv, struct SlogdOptions *
  * @param [out] : opt          options assigned to slogd
  * @return      : SYS_OK: success; SYS_ERROR: failed
  */
-LogStatus SlogdInitArgs(int32_t argc, char **argv, struct SlogdOptions *opt)
+LogStatus SlogdInitArgs(int32_t argc, char** argv, struct SlogdOptions* opt)
 {
     ONE_ACT_ERR_LOG((argc == 0) || (argv == NULL), return LOG_FAILURE, "no args in main and quit slogd process.");
     LogStatus ret = ParseSlogdArgv(argc, argv, opt);
@@ -106,4 +103,3 @@ LogStatus SlogdInitArgs(int32_t argc, char **argv, struct SlogdOptions *opt)
     }
     return LOG_SUCCESS;
 }
-

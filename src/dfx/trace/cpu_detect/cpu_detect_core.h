@@ -15,7 +15,6 @@
 extern "C" {
 #endif // __cplusplus
 
-
 CpudStatus CpuDetectProcess(uint32_t timeout);
 
 #ifdef __cplusplus

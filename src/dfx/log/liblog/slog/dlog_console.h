@@ -19,7 +19,7 @@ extern "C" {
 #endif // __cplusplus
 
 bool DlogCheckEnvStdout(void);
-void DlogWriteToConsole(LogMsg *logMsg);
+void DlogWriteToConsole(LogMsg* logMsg);
 
 #ifdef __cplusplus
 }

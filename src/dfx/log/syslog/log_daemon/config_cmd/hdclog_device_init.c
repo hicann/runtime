@@ -48,7 +48,7 @@ int32_t HdclogDeviceDestroy(void)
  * @param [in]errLen: level setting error length
  * @return: HDCLOG_SUCCESSED: succeed; others: failed
  */
-STATIC HdclogErr LogCmdRespSettingResult(HDC_SESSION session, const char *errMsg, size_t errLen)
+STATIC HdclogErr LogCmdRespSettingResult(HDC_SESSION session, const char* errMsg, size_t errLen)
 {
     CommHandle handle;
     handle.type = COMM_HDC;
@@ -68,10 +68,7 @@ STATIC HdclogErr LogCmdRespSettingResult(HDC_SESSION session, const char *errMsg
  * @param [in]subStr: substrings
  * @return: contains: true; not contains: false
  */
-STATIC bool IsContainsStr(const char *str, const char *subStr)
-{
-    return strstr(str, subStr) != NULL;
-}
+STATIC bool IsContainsStr(const char* str, const char* subStr) { return strstr(str, subStr) != NULL; }
 
 /*
  * @brief: parse device message, and notify the process of dlog and slog
@@ -79,7 +76,7 @@ STATIC bool IsContainsStr(const char *str, const char *subStr)
  * @param [in]msg: request info from client
  * @return: HDCLOG_SUCCESSED: succeed; others: failed
  */
-STATIC HdclogErr ParseDeviceLogCmd(HDC_SESSION session, const LogDataMsg *msg)
+STATIC HdclogErr ParseDeviceLogCmd(HDC_SESSION session, const LogDataMsg* msg)
 {
     if ((msg->sliceLen >= MSG_MAX_LEN) || (msg->sliceLen <= 0)) {
         SELF_LOG_WARN("request length is illegal, request_length=%u.", msg->sliceLen);
@@ -88,7 +85,7 @@ STATIC HdclogErr ParseDeviceLogCmd(HDC_SESSION session, const LogDataMsg *msg)
     }
 
     LogCmdMsg rcvMsg = {0, -1, ""};
-    int32_t ret = LogCmdSendLogMsg(&rcvMsg, (const char *)msg->data, msg->devId);
+    int32_t ret = LogCmdSendLogMsg(&rcvMsg, (const char*)msg->data, msg->devId);
     if (ret != CONFIG_OK) {
         if (ret == CONFIG_LOG_MSGQUEUE_FAILED) {
             (void)LogCmdRespSettingResult(session, SLOGD_ERROR_MSG, strlen(SLOGD_ERROR_MSG));
@@ -162,13 +159,13 @@ STATIC HdclogErr PreProcessBeforeParseCmd(HDC_SESSION session)
  * @param [in]req: request info from client
  * @return: HDCLOG_SUCCESSED: succeed; others: failed
  */
-int32_t IdeDeviceLogProcess(const CommHandle *command, const void* value, uint32_t len)
+int32_t IdeDeviceLogProcess(const CommHandle* command, const void* value, uint32_t len)
 {
     if ((command == NULL) || (value == NULL)) {
         return HDCLOG_EMPTY_QUEUE;
     }
     HDC_SESSION session = (HDC_SESSION)command->session;
-    LogDataMsg *msg = (LogDataMsg *)LogMalloc(len + 1);
+    LogDataMsg* msg = (LogDataMsg*)LogMalloc(len + 1);
     ONE_ACT_ERR_LOG(msg == NULL, return HDCLOG_MALLOC_FAILED, "malloc failed.")
     int32_t ret = memcpy_s(msg, len + 1, value, len);
     TWO_ACT_ERR_LOG(ret != EOK, XFREE(msg), return HDCLOG_CREATE_SHARE_MEMORY_FAILED, "memcpy_s failed.");

@@ -30,19 +30,13 @@ STATIC bool g_dlogIsInited = false;
  * @brief       : check dlog init or not
  * @return      : true inited; false not-inited
  */
-STATIC INLINE bool DlogIsInited(void)
-{
-    return g_dlogIsInited;
-}
+STATIC INLINE bool DlogIsInited(void) { return g_dlogIsInited; }
 
 /**
  * @brief       : set dlog init flag
  * @param [in]  : initFlag      init flag setted
  */
-STATIC INLINE void DlogSetInited(bool initFlag)
-{
-    g_dlogIsInited = initFlag;
-}
+STATIC INLINE void DlogSetInited(bool initFlag) { g_dlogIsInited = initFlag; }
 
 /**
  * @brief DlogCheckLogLevel: check log allow output or not
@@ -55,7 +49,7 @@ int32_t DlogCheckLogLevel(int32_t logLevel)
     return TRUE;
 }
 
-STATIC bool CheckLogLevelInner(const LogMsgArg *msgArg)
+STATIC bool CheckLogLevelInner(const LogMsgArg* msgArg)
 {
     if (msgArg->level == DLOG_EVENT) {
         return GetGlobalEnableEventVar();
@@ -69,11 +63,11 @@ STATIC bool CheckLogLevelInner(const LogMsgArg *msgArg)
 }
 
 /**
-* @brief ParseLogMsg: parse module Id
-* @param [out]logMsg: log Msg data struct
-* @param [in/out]msgArg: LogMsgArg struct pointer
-*/
-STATIC void ParseLogMsg(LogMsg *logMsg, LogMsgArg *msgArg)
+ * @brief ParseLogMsg: parse module Id
+ * @param [out]logMsg: log Msg data struct
+ * @param [in/out]msgArg: LogMsgArg struct pointer
+ */
+STATIC void ParseLogMsg(LogMsg* logMsg, LogMsgArg* msgArg)
 {
     logMsg->level = msgArg->level;
     logMsg->moduleId = msgArg->moduleId;
@@ -102,33 +96,34 @@ STATIC void ParseLogMsg(LogMsg *logMsg, LogMsgArg *msgArg)
  * @param [in]  : msgArg        log info, include information to construct
  * @return      : SYS_OK success; SYS_ERROR failure
  */
-STATIC int32_t ConstructBaseMsg(char *msg, uint32_t msgLen, const LogMsgArg *msgArg)
+STATIC int32_t ConstructBaseMsg(char* msg, uint32_t msgLen, const LogMsgArg* msgArg)
 {
     int32_t err;
     if (msgArg->moduleId < (uint32_t)INVALID_MODULE_ID) {
         if (((msgArg->level >= DLOG_DEBUG) && (msgArg->level < DLOG_NULL)) || (msgArg->level == DLOG_EVENT)) {
-            err = snprintf_s(msg, msgLen, (size_t)msgLen - 1U, "[%s] %s(%d,%s):%s ",
-                             DlogGetLevelNameById(msgArg->level), DlogGetModuleNameById(msgArg->moduleId),
-                             msgArg->selfPid, DlogGetPidName(), msgArg->timestamp);
+            err = snprintf_s(
+                msg, msgLen, (size_t)msgLen - 1U, "[%s] %s(%d,%s):%s ", DlogGetLevelNameById(msgArg->level),
+                DlogGetModuleNameById(msgArg->moduleId), msgArg->selfPid, DlogGetPidName(), msgArg->timestamp);
         } else {
-            err = snprintf_s(msg, msgLen, (size_t)msgLen - 1U, "[%d] %s(%d,%s):%s ",
-                             msgArg->level, DlogGetModuleNameById(msgArg->moduleId),
-                             msgArg->selfPid, DlogGetPidName(), msgArg->timestamp);
+            err = snprintf_s(
+                msg, msgLen, (size_t)msgLen - 1U, "[%d] %s(%d,%s):%s ", msgArg->level,
+                DlogGetModuleNameById(msgArg->moduleId), msgArg->selfPid, DlogGetPidName(), msgArg->timestamp);
         }
     } else {
         if (((msgArg->level >= DLOG_DEBUG) && (msgArg->level < DLOG_NULL)) || (msgArg->level == DLOG_EVENT)) {
-            err = snprintf_s(msg, msgLen, (size_t)msgLen - 1U, "[%s] %u(%d,%s):%s ",
-                             DlogGetLevelNameById(msgArg->level), msgArg->moduleId,
-                             msgArg->selfPid, DlogGetPidName(), msgArg->timestamp);
+            err = snprintf_s(
+                msg, msgLen, (size_t)msgLen - 1U, "[%s] %u(%d,%s):%s ", DlogGetLevelNameById(msgArg->level),
+                msgArg->moduleId, msgArg->selfPid, DlogGetPidName(), msgArg->timestamp);
         } else {
-            err = snprintf_s(msg, msgLen, (size_t)msgLen - 1U, "[%d] %u(%d,%s):%s ",
-                             msgArg->level, msgArg->moduleId,
-                             msgArg->selfPid, DlogGetPidName(), msgArg->timestamp);
+            err = snprintf_s(
+                msg, msgLen, (size_t)msgLen - 1U, "[%d] %u(%d,%s):%s ", msgArg->level, msgArg->moduleId,
+                msgArg->selfPid, DlogGetPidName(), msgArg->timestamp);
         }
     }
     if (err == -1) {
-        SELF_LOG_ERROR("snprintf_s failed, strerr=%s, pid=%d, pid_name=%s, module=%u.",
-                       strerror(ToolGetErrorCode()), msgArg->selfPid, DlogGetPidName(), msgArg->moduleId);
+        SELF_LOG_ERROR(
+            "snprintf_s failed, strerr=%s, pid=%d, pid_name=%s, module=%u.", strerror(ToolGetErrorCode()),
+            msgArg->selfPid, DlogGetPidName(), msgArg->moduleId);
         return SYS_ERROR;
     }
     return SYS_OK;
@@ -142,7 +137,7 @@ STATIC int32_t ConstructBaseMsg(char *msg, uint32_t msgLen, const LogMsgArg *msg
  * @param [in]  : v             merge to log message variable
  * @return      : SYS_OK success; SYS_ERROR failure
  */
-STATIC int32_t ConstructLogMsg(LogMsg *logMsg, const LogMsgArg *msgArg, const char *fmt, va_list v)
+STATIC int32_t ConstructLogMsg(LogMsg* logMsg, const LogMsgArg* msgArg, const char* fmt, va_list v)
 {
     ONE_ACT_NO_LOG(logMsg == NULL, return SYS_ERROR);
     ONE_ACT_NO_LOG(fmt == NULL, return SYS_ERROR);
@@ -153,14 +148,16 @@ STATIC int32_t ConstructLogMsg(LogMsg *logMsg, const LogMsgArg *msgArg, const ch
     }
 
     // splice key and value
-    const KeyValue *pstKVArray = msgArg->kvArg.pstKVArray;
+    const KeyValue* pstKVArray = msgArg->kvArg.pstKVArray;
     for (int32_t i = 0; i < msgArg->kvArg.kvNum; i++) {
         logMsg->msgLength = LogStrlen(logMsg->msg);
-        err = snprintf_s(logMsg->msg + logMsg->msgLength, (size_t)MSG_LENGTH - (size_t)logMsg->msgLength,
+        err = snprintf_s(
+            logMsg->msg + logMsg->msgLength, (size_t)MSG_LENGTH - (size_t)logMsg->msgLength,
             (size_t)MSG_LENGTH - (size_t)logMsg->msgLength - 1U, "[%s:%s] ", pstKVArray->kname, pstKVArray->value);
         if (err == -1) {
-            SELF_LOG_ERROR("snprintf_s failed, strerr=%s, pid=%d, pid_name=%s, module=%u.",
-                           strerror(ToolGetErrorCode()), msgArg->selfPid, DlogGetPidName(), msgArg->moduleId);
+            SELF_LOG_ERROR(
+                "snprintf_s failed, strerr=%s, pid=%d, pid_name=%s, module=%u.", strerror(ToolGetErrorCode()),
+                msgArg->selfPid, DlogGetPidName(), msgArg->moduleId);
             return SYS_ERROR;
         }
         pstKVArray++;
@@ -168,11 +165,12 @@ STATIC int32_t ConstructLogMsg(LogMsg *logMsg, const LogMsgArg *msgArg, const ch
 
     // construct log content
     logMsg->msgLength = LogStrlen(logMsg->msg);
-    err = vsnprintf_truncated_s(logMsg->msg + logMsg->msgLength, (size_t)MSG_LENGTH - (size_t)logMsg->msgLength,
-        fmt, v);
+    err =
+        vsnprintf_truncated_s(logMsg->msg + logMsg->msgLength, (size_t)MSG_LENGTH - (size_t)logMsg->msgLength, fmt, v);
     if (err == -1) {
-        SELF_LOG_ERROR("vsnprintf_truncated_s failed, strerr=%s, pid=%d, pid_name=%s, module=%u.",
-                       strerror(ToolGetErrorCode()), msgArg->selfPid, DlogGetPidName(), msgArg->moduleId);
+        SELF_LOG_ERROR(
+            "vsnprintf_truncated_s failed, strerr=%s, pid=%d, pid_name=%s, module=%u.", strerror(ToolGetErrorCode()),
+            msgArg->selfPid, DlogGetPidName(), msgArg->moduleId);
         return SYS_ERROR;
     }
 
@@ -190,7 +188,7 @@ STATIC int32_t ConstructLogMsg(LogMsg *logMsg, const LogMsgArg *msgArg, const ch
  * @param [in]  : v             variable list
  * @return      : NA
  */
-STATIC void DlogWriteToStdout(LogMsg *logMsg)
+STATIC void DlogWriteToStdout(LogMsg* logMsg)
 {
     // make sure log content end with '\n'
     DlogSetMessageNl(logMsg);
@@ -198,16 +196,16 @@ STATIC void DlogWriteToStdout(LogMsg *logMsg)
     // write to stdout
     int32_t fd = ToolFileno(stdout);
     ONE_ACT_ERR_LOG(fd <= 0, return, "file_handle is invalid, file_handle=%d.", fd);
-    (void)ToolWrite(fd, (void *)logMsg->logContent, logMsg->contentLength);
+    (void)ToolWrite(fd, (void*)logMsg->logContent, logMsg->contentLength);
 }
 
 /**
-* @brief DlogWriteInner: write log to log socket or stdout
-* @param [in]msgArg: LogMsgArg struct pointer
-* @param [in]fmt: pointer to first value in va_list
-* @param [in]v: variable list
-*/
-int32_t DlogWriteInner(LogMsgArg *msgArg, const char *fmt, va_list v)
+ * @brief DlogWriteInner: write log to log socket or stdout
+ * @param [in]msgArg: LogMsgArg struct pointer
+ * @param [in]fmt: pointer to first value in va_list
+ * @param [in]v: variable list
+ */
+int32_t DlogWriteInner(LogMsgArg* msgArg, const char* fmt, va_list v)
 {
     ONE_ACT_NO_LOG(!CheckLogLevelInner(msgArg), return LOG_FAILURE);
 
@@ -267,9 +265,9 @@ STATIC CONSTRUCTOR void DllMain(void)
 }
 
 /**
-* @brief DlogExitForIam: destructor function of libslog.so
-* @return: void
-*/
+ * @brief DlogExitForIam: destructor function of libslog.so
+ * @return: void
+ */
 STATIC DESTRUCTOR void DlogExitForIam(void)
 {
     // if call this in thread exit, it may not be called
@@ -279,13 +277,10 @@ STATIC DESTRUCTOR void DlogExitForIam(void)
 }
 
 /**
-* @brief DlogRefreshCache: flush log buffer to file
-* @return: void
-*/
-void DlogRefreshCache(void)
-{
-    DlogFlushBuf();
-}
+ * @brief DlogRefreshCache: flush log buffer to file
+ * @return: void
+ */
+void DlogRefreshCache(void) { DlogFlushBuf(); }
 
 /**
  * @brief RegisterCallback: register DlogCallback

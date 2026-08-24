@@ -22,11 +22,9 @@
 #include "scd_ptrace.h"
 #include "scd_regs.h"
 
-class ScdThreadsUtest: public testing::Test {
+class ScdThreadsUtest : public testing::Test {
 protected:
-    virtual void SetUp()
-    {
-    }
+    virtual void SetUp() {}
 
     virtual void TearDown()
     {
@@ -34,17 +32,12 @@ protected:
         GlobalMockObject::verify();
     }
 
-    static void SetUpTestCase()
-    {
-    }
+    static void SetUpTestCase() {}
 
-    static void TearDownTestCase()
-    {
-    }
+    static void TearDownTestCase() {}
 };
 
-extern "C" TraStatus ScdFramesFpStep(ScdFrames *frames, ScdRegs *regs);
-
+extern "C" TraStatus ScdFramesFpStep(ScdFrames* frames, ScdRegs* regs);
 
 TEST_F(ScdThreadsUtest, TestScdThreadLoadFrames)
 {
@@ -60,20 +53,19 @@ TEST_F(ScdThreadsUtest, TestScdThreadCreate)
 {
     pid_t pid = 0;
     pid_t tid = 0;
-    ScdThread *ret = 0;
+    ScdThread* ret = 0;
 
     ret = ScdThreadCreate(pid, tid);
-    EXPECT_NE((ScdThread *)0, ret);
+    EXPECT_NE((ScdThread*)0, ret);
     ScdThreadDestroy(&ret);
 
     MOCKER(ScdFramesInit).stubs().will(returnValue(TRACE_FAILURE));
     ret = ScdThreadCreate(pid, tid);
-    EXPECT_EQ((ScdThread *)0, ret);
+    EXPECT_EQ((ScdThread*)0, ret);
     ScdThreadDestroy(&ret);
 }
 
-
-pid_t waitpid_stub_stopped(pid_t pid, int *wstatus, int options)
+pid_t waitpid_stub_stopped(pid_t pid, int* wstatus, int options)
 {
     printf("waitpid_stub_stopped\n");
     *wstatus = 0x137F;
@@ -81,19 +73,19 @@ pid_t waitpid_stub_stopped(pid_t pid, int *wstatus, int options)
     usleep(1000);
     return 0;
 }
-pid_t waitpid_stub_other_signal(pid_t pid, int *wstatus, int options)
+pid_t waitpid_stub_other_signal(pid_t pid, int* wstatus, int options)
 {
     printf("waitpid_stub_other_signal\n");
     *wstatus = 0x27F;
     return 0;
 }
-pid_t waitpid_stub_failed(pid_t pid, int *wstatus, int options)
+pid_t waitpid_stub_failed(pid_t pid, int* wstatus, int options)
 {
     errno = 0;
     return -1;
 }
 
-pid_t waitpid_stub_not_stopped(pid_t pid, int *wstatus, int options)
+pid_t waitpid_stub_not_stopped(pid_t pid, int* wstatus, int options)
 {
     *wstatus = 0xFF;
     // wait for thread stopped;
@@ -125,7 +117,8 @@ TEST_F(ScdThreadsUtest, TestScdThreadSuspend)
     GlobalMockObject::verify();
 
     MOCKER(ScdPtraceAttach).stubs().will(returnValue(TRACE_SUCCESS));
-    MOCKER(waitpid).stubs()
+    MOCKER(waitpid)
+        .stubs()
         .will(invoke(waitpid_stub_other_signal))
         .then(invoke(waitpid_stub_other_signal))
         .then(invoke(waitpid_stub_stopped));
@@ -157,7 +150,7 @@ TEST_F(ScdThreadsUtest, TestScdThreadLoadInfoForCrash)
 }
 
 static bool g_exit = false;
-void *SleepThread(void *arg)
+void* SleepThread(void* arg)
 {
     while (!g_exit) {
         sleep(1);
@@ -176,7 +169,7 @@ TEST_F(ScdThreadsUtest, TestScdThreadsInit)
 
     g_exit = false;
     int32_t threadNum = 2;
-    pthread_t theadId[threadNum] = { 0 };
+    pthread_t theadId[threadNum] = {0};
     int32_t retThread = 0;
 
     for (int i = 0; i < threadNum; i++) {
@@ -257,7 +250,7 @@ TEST_F(ScdThreadsUtest, TestScdThreadsLoad)
         EXPECT_EQ(0, threadsInfo.thdList.cnt);
         GlobalMockObject::verify();
 
-        MOCKER(ScdThreadCreate).stubs().will(returnValue((ScdThread *)0));
+        MOCKER(ScdThreadCreate).stubs().will(returnValue((ScdThread*)0));
         ret = ScdThreadsLoad(&threadsInfo);
         EXPECT_EQ(TRACE_FAILURE, ret);
         EXPECT_EQ(0, threadsInfo.thdList.cnt);
@@ -290,7 +283,7 @@ TEST_F(ScdThreadsUtest, TestScdFramesInit)
     ScdMaps maps = {0};
     int32_t pid = getpid();
     TraStatus ret = TRACE_FAILURE;
-    ScdMap *mapRet = 0;
+    ScdMap* mapRet = 0;
 
     ret = ScdMapsInit(&maps, pid);
     EXPECT_EQ(TRACE_SUCCESS, ret);
@@ -308,6 +301,7 @@ TEST_F(ScdThreadsUtest, TestScdFramesInit)
     ptrace(PTRACE_GETREGS, pid, NULL, &regs);
     framesInfo.regs = &regs;
     MOCKER(ScdRegsGetPc).stubs().will(returnValue((uintptr_t)&open));
+    MOCKER(ScdElfStep).stubs().will(returnValue(TRACE_SUCCESS));
 
     ret = ScdFramesLoad(&framesInfo, framesInfo.maps, framesInfo.regs);
     EXPECT_EQ(TRACE_SUCCESS, ret);
@@ -323,13 +317,13 @@ TEST_F(ScdThreadsUtest, TestScdFrameCreate)
     uintptr_t pc = 0;
     uintptr_t sp = 0;
     uintptr_t fp = 0;
-    ScdFrame *ret = 0;
+    ScdFrame* ret = 0;
 
     ret = ScdFrameCreate(&mapInfo, pc, sp, fp);
-    EXPECT_NE((ScdFrame *)0, ret);
+    EXPECT_NE((ScdFrame*)0, ret);
 
     ScdFrameDestroy(&ret);
-    EXPECT_EQ((ScdFrame *)0, ret);
+    EXPECT_EQ((ScdFrame*)0, ret);
 }
 
 TEST_F(ScdThreadsUtest, TestScdFramesInitFailed)
@@ -349,7 +343,7 @@ TEST_F(ScdThreadsUtest, TestScdFramesCreateFailed)
     ScdMaps maps;
     int32_t pid = getpid();
     TraStatus ret = TRACE_FAILURE;
-    ScdMap *mapRet = 0;
+    ScdMap* mapRet = 0;
 
     ret = ScdMapsInit(&maps, pid);
     EXPECT_EQ(TRACE_SUCCESS, ret);
@@ -378,11 +372,8 @@ TEST_F(ScdThreadsUtest, TestScdFramesCreateFailed)
     ret = ScdFramesLoad(&framesInfo, framesInfo.maps, framesInfo.regs);
     EXPECT_EQ(TRACE_FAILURE, ret);
 
-    ScdFrame *frame = (ScdFrame *)AdiagMalloc(sizeof(ScdFrame));
-    MOCKER(AdiagMalloc).stubs()
-        .will(returnValue((void *)0))
-        .then(returnValue((void *)frame))
-        .then(returnValue((void *)0));
+    ScdFrame* frame = (ScdFrame*)AdiagMalloc(sizeof(ScdFrame));
+    MOCKER(AdiagMalloc).stubs().will(returnValue((void*)0)).then(returnValue((void*)frame)).then(returnValue((void*)0));
     ret = ScdFramesLoad(&framesInfo, framesInfo.maps, framesInfo.regs);
     EXPECT_EQ(TRACE_FAILURE, ret);
     ret = ScdFramesLoad(&framesInfo, framesInfo.maps, framesInfo.regs);
@@ -401,7 +392,7 @@ TEST_F(ScdThreadsUtest, TestScdFramesMmapFailed)
     ScdMaps maps;
     int32_t pid = getpid();
     TraStatus ret = TRACE_FAILURE;
-    ScdMap *mapRet = 0;
+    ScdMap* mapRet = 0;
 
     ret = ScdMapsInit(&maps, pid);
     EXPECT_EQ(TRACE_SUCCESS, ret);
@@ -432,7 +423,7 @@ TEST_F(ScdThreadsUtest, TestScdFramesMemcpyFailed)
     ScdMaps maps;
     int32_t pid = getpid();
     TraStatus ret = TRACE_FAILURE;
-    ScdMap *mapRet = 0;
+    ScdMap* mapRet = 0;
 
     ret = ScdMapsInit(&maps, pid);
     EXPECT_EQ(TRACE_SUCCESS, ret);
@@ -451,6 +442,7 @@ TEST_F(ScdThreadsUtest, TestScdFramesMemcpyFailed)
     framesInfo.regs = &regs;
     MOCKER(ScdRegsGetPc).stubs().will(returnValue((uintptr_t)&open));
     MOCKER(memcpy_s).stubs().will(returnValue(-1)).then(returnValue(0));
+    MOCKER(ScdFramesFpStep).stubs().will(returnValue(TRACE_SUCCESS)).then(returnValue(TRACE_SUCCESS));
     ret = ScdFramesLoad(&framesInfo, framesInfo.maps, framesInfo.regs);
     EXPECT_EQ(TRACE_SUCCESS, ret);
     ret = ScdFramesLoad(&framesInfo, framesInfo.maps, framesInfo.regs);
@@ -471,7 +463,7 @@ TEST_F(ScdThreadsUtest, TestScdThreadsRecord_Failed)
 
     g_exit = false;
     int32_t threadNum = 2;
-    pthread_t theadId[threadNum] = { 0 };
+    pthread_t theadId[threadNum] = {0};
     int32_t retThread = 0;
 
     for (int i = 0; i < threadNum; i++) {
@@ -533,24 +525,24 @@ TEST_F(ScdThreadsUtest, TestScdThreadsRecord)
     EXPECT_EQ(TRACE_INVALID_PARAM, ScdThreadsRecord(fd, NULL));
 
     ScdThreadsInit(&thds, pid, tid, &uc);
-    ScdThread *thd = ScdThreadCreate(thds.pid, tid);
-    EXPECT_NE((ScdThread *)0, thd);
-    ret = AdiagListInsert(&thds.thdList, (void *)thd);
+    ScdThread* thd = ScdThreadCreate(thds.pid, tid);
+    EXPECT_NE((ScdThread*)0, thd);
+    ret = AdiagListInsert(&thds.thdList, (void*)thd);
     EXPECT_EQ(TRACE_SUCCESS, ret);
 
     uint32_t frameIdx = 0;
-    ScdFrame *frame1 = ScdFrameCreate(&map, 1, 2, 3);
-    EXPECT_NE((ScdFrame *)0, frame1);
+    ScdFrame* frame1 = ScdFrameCreate(&map, 1, 2, 3);
+    EXPECT_NE((ScdFrame*)0, frame1);
     frame1->num = frameIdx++;
     strcpy_s(frame1->funcName, SCD_FUNC_NAME_LENGTH, "test_func");
-    ret = AdiagListInsert(&thd->frames.frameList, (void *)frame1);
+    ret = AdiagListInsert(&thd->frames.frameList, (void*)frame1);
     EXPECT_EQ(TRACE_SUCCESS, ret);
 
-    ScdFrame *frame2 = ScdFrameCreate(&map, 1, 2, 3);
-    EXPECT_NE((ScdFrame *)0, frame1);
+    ScdFrame* frame2 = ScdFrameCreate(&map, 1, 2, 3);
+    EXPECT_NE((ScdFrame*)0, frame1);
     frame2->num = frameIdx++;
     memset(frame2->funcName, 0, SCD_FUNC_NAME_LENGTH);
-    ret = AdiagListInsert(&thd->frames.frameList, (void *)frame2);
+    ret = AdiagListInsert(&thd->frames.frameList, (void*)frame2);
     EXPECT_EQ(TRACE_SUCCESS, ret);
 
     EXPECT_EQ(TRACE_SUCCESS, ScdThreadsRecord(fd, &thds));

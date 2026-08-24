@@ -17,15 +17,14 @@
 #define TMP_DUMP_ELF_PATH "/tmp/elf_%zu.bin"
 #define MAX_FILE_PATH_LENGTH 100U
 #ifdef ENABLE_DUMP_DFX_INFO
-static void DumpToFile(const char *filePath, uintptr_t addr, size_t size)
+static void DumpToFile(const char* filePath, uintptr_t addr, size_t size)
 {
-    #define TRACE_FILE_MODE         0640U
-    int32_t fd = TraceOpen(filePath, (uint32_t)O_CREAT | (uint32_t)O_WRONLY | (uint32_t)O_APPEND,
-        TRACE_FILE_MODE);
+#define TRACE_FILE_MODE 0640U
+    int32_t fd = TraceOpen(filePath, (uint32_t)O_CREAT | (uint32_t)O_WRONLY | (uint32_t)O_APPEND, TRACE_FILE_MODE);
     if (fd == -1) {
         return;
     }
-    write(fd, (void *)addr, size);
+    write(fd, (void*)addr, size);
     close(fd);
     fd = -1;
 }

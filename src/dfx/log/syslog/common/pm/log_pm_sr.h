@@ -16,13 +16,7 @@
 extern "C" {
 #endif
 
-enum SystemState {
-    OFF = 0,
-    WORKING,
-    SLEEP,
-    UPGRADE,
-    CALIBRATION
-};
+enum SystemState { OFF = 0, WORKING, SLEEP, UPGRADE, CALIBRATION };
 
 int32_t RegisterSRNotifyCallback(void);
 enum SystemState GetSystemState(void);

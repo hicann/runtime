@@ -30,14 +30,14 @@ typedef struct {
     char data[0];
 } LogNotifyMsg;
 
-#define MAX_TIMEOUT 3000 // timeout 3s
+#define MAX_TIMEOUT 3000                             // timeout 3s
 #define MAX_DEVICE_LOG_FLUSH_TIMEOUT (3 * 60 * 1000) // max timeout 180s
-#define DEFALUT_DEVICE_LOG_FLUSH_TIMEOUT 2000 // default timeout 2s
+#define DEFALUT_DEVICE_LOG_FLUSH_TIMEOUT 2000        // default timeout 2s
 #define MAX_RETRY_TIME 3
-#define TEN_MILLISECOND 10 // 10 milliseconds
+#define TEN_MILLISECOND 10                           // 10 milliseconds
 
 STATIC ToolMutex g_plogHdcMutex = TOOL_MUTEX_INITIALIZER;
-STATIC void *g_plogClient = NULL;
+STATIC void* g_plogClient = NULL;
 STATIC bool g_isInited = false;
 STATIC bool g_isExit = false;
 
@@ -45,45 +45,33 @@ STATIC bool g_isExit = false;
  * @brief       : init hdc mutex
  * @return      : NA
  */
-STATIC INLINE void DlogReportMutexInit(void)
-{
-    (void)ToolMutexInit(&g_plogHdcMutex);
-}
+STATIC INLINE void DlogReportMutexInit(void) { (void)ToolMutexInit(&g_plogHdcMutex); }
 
 /**
  * @brief       : Destroy hdc mutex
  * @return      : NA
  */
-STATIC INLINE void DlogReportMutexDestroy(void)
-{
-    (void)ToolMutexDestroy(&g_plogHdcMutex);
-}
+STATIC INLINE void DlogReportMutexDestroy(void) { (void)ToolMutexDestroy(&g_plogHdcMutex); }
 
 /**
  * @brief       : lock hdc client mutex
  * @return      : NA
  */
-STATIC INLINE void DlogReportLock(void)
-{
-    (void)ToolMutexLock(&g_plogHdcMutex);
-}
+STATIC INLINE void DlogReportLock(void) { (void)ToolMutexLock(&g_plogHdcMutex); }
 
 /**
  * @brief       : unlock hdc client mutex
  * @return      : NA
  */
-STATIC INLINE void DlogReportUnLock(void)
-{
-    (void)ToolMutexUnLock(&g_plogHdcMutex);
-}
+STATIC INLINE void DlogReportUnLock(void) { (void)ToolMutexUnLock(&g_plogHdcMutex); }
 
-STATIC int32_t DlogReportSendReqMsg(uintptr_t session, const char *data, size_t dataLen)
+STATIC int32_t DlogReportSendReqMsg(uintptr_t session, const char* data, size_t dataLen)
 {
-    LogNotifyMsg *msg = NULL;
-    LogDataMsg *packet = NULL;
+    LogNotifyMsg* msg = NULL;
+    LogDataMsg* packet = NULL;
     size_t msgLen = sizeof(LogNotifyMsg) + dataLen;
 
-    msg = (LogNotifyMsg *)LogMalloc(msgLen + 1U);
+    msg = (LogNotifyMsg*)LogMalloc(msgLen + 1U);
     ONE_ACT_ERR_LOG(msg == NULL, return -1, "calloc failed, strerr=%s.", strerror(ToolGetErrorCode()));
 
     msg->timeout = 0;
@@ -91,7 +79,7 @@ STATIC int32_t DlogReportSendReqMsg(uintptr_t session, const char *data, size_t 
     ONE_ACT_ERR_LOG(ret != EOK, goto FUNC_END, "copy data failed, strerr=%s.", strerror(ToolGetErrorCode()));
 
     ret = -1;
-    packet = (LogDataMsg *)LogMalloc(sizeof(LogDataMsg) + msgLen + 1U);
+    packet = (LogDataMsg*)LogMalloc(sizeof(LogDataMsg) + msgLen + 1U);
     ONE_ACT_ERR_LOG(packet == NULL, goto FUNC_END, "calloc failed, strerr=%s.", strerror(ToolGetErrorCode()));
 
     packet->totalLen = (uint32_t)msgLen;
@@ -102,7 +90,7 @@ STATIC int32_t DlogReportSendReqMsg(uintptr_t session, const char *data, size_t 
     ret = memcpy_s(packet->data, msgLen + 1U, msg, msgLen);
     ONE_ACT_ERR_LOG(ret != 0, goto FUNC_END, "copy failed, ret=%d, strerr=%s.", ret, strerror(ToolGetErrorCode()));
 
-    ret = DrvBufWrite((HDC_SESSION)session, (const char *)packet, sizeof(LogDataMsg) + msgLen);
+    ret = DrvBufWrite((HDC_SESSION)session, (const char*)packet, sizeof(LogDataMsg) + msgLen);
     ONE_ACT_ERR_LOG(ret != 0, goto FUNC_END, "write data to hdc failed, ret=%d.", ret);
 
 FUNC_END:
@@ -125,7 +113,7 @@ STATIC void DlogReportSendEndMsg(int32_t devId)
     }
     uintptr_t session = 0;
     DlogReportLock();
-    int32_t ret = DrvSessionInit((HDC_CLIENT)g_plogClient, (HDC_SESSION *)&session, devId);
+    int32_t ret = DrvSessionInit((HDC_CLIENT)g_plogClient, (HDC_SESSION*)&session, devId);
     DlogReportUnLock();
     ONE_ACT_ERR_LOG(ret != 0, return, "create session failed, ret=%d, devId=%d.", ret, devId);
 
@@ -136,7 +124,7 @@ STATIC void DlogReportSendEndMsg(int32_t devId)
     ONE_ACT_ERR_LOG(ret != 0, return, "release session failed, ret=%d, devId=%d.", ret, devId);
 }
 
-STATIC LogStatus DlogReportSendStartMsg(int32_t devId, uintptr_t *session)
+STATIC LogStatus DlogReportSendStartMsg(int32_t devId, uintptr_t* session)
 {
     DlogReportLock();
     if (g_plogClient == NULL) {
@@ -144,7 +132,7 @@ STATIC LogStatus DlogReportSendStartMsg(int32_t devId, uintptr_t *session)
         SELF_LOG_WARN("plog client is null, skip send start msg, devId=%d.", devId);
         return LOG_FAILURE;
     }
-    int32_t ret = DrvSessionInit((HDC_CLIENT)g_plogClient, (HDC_SESSION *)session, devId);
+    int32_t ret = DrvSessionInit((HDC_CLIENT)g_plogClient, (HDC_SESSION*)session, devId);
     DlogReportUnLock();
     ONE_ACT_ERR_LOG(ret != 0, return LOG_FAILURE, "create session failed, ret=%d, devId=%d.", ret, devId);
 
@@ -163,7 +151,7 @@ STATIC LogStatus DlogReportSendStartMsg(int32_t devId, uintptr_t *session)
  * @param [in]  : pArgs          pointer of thread args
  * @return      : true: check success, false: check fail
  */
-STATIC bool DlogReportCheckArges(ThreadArgs *pArgs)
+STATIC bool DlogReportCheckArges(ThreadArgs* pArgs)
 {
     ONE_ACT_ERR_LOG(pArgs == NULL, return false, "args is null.");
 
@@ -185,7 +173,7 @@ STATIC bool DlogReportCheckArges(ThreadArgs *pArgs)
 STATIC int32_t DlogReportGetFlushTimeout(void)
 {
     int32_t flushTimeout = DEFALUT_DEVICE_LOG_FLUSH_TIMEOUT;
-    const char *env = NULL;
+    const char* env = NULL;
     MM_SYS_GET_ENV(MM_ENV_ASCEND_LOG_DEVICE_FLUSH_TIMEOUT, (env));
     if (env != NULL) {
         int64_t tmpL = -1;
@@ -202,7 +190,7 @@ STATIC int32_t DlogReportGetFlushTimeout(void)
     return flushTimeout;
 }
 
-STATIC LogStatus DlogWriteReportLog(char *buf, uint32_t bufLen, int32_t devId)
+STATIC LogStatus DlogWriteReportLog(char* buf, uint32_t bufLen, int32_t devId)
 {
     if ((buf == NULL) || (bufLen == 0)) {
         SELF_LOG_WARN("recv log buf empty, buf=%s, len=%u.", buf, bufLen);
@@ -211,9 +199,9 @@ STATIC LogStatus DlogWriteReportLog(char *buf, uint32_t bufLen, int32_t devId)
         SELF_LOG_WARN("recv end buf by hdc.");
         return LOG_SESSION_RECV_END;
     } else {
-        PlogDeviceLogInfo info = { 0, (uint32_t)devId, DEBUG_LOG, 0, 0, 0 };
+        PlogDeviceLogInfo info = {0, (uint32_t)devId, DEBUG_LOG, 0, 0, 0};
         int32_t logType = 0;
-        char *realBuf = NULL;
+        char* realBuf = NULL;
         bool isValidLogType = false;
         if (buf[0] == '[') {
             logType = (int32_t)DEBUG_LOG;
@@ -226,7 +214,7 @@ STATIC LogStatus DlogWriteReportLog(char *buf, uint32_t bufLen, int32_t devId)
             info.len = bufLen - 1U;
         }
         if ((logType >= (int32_t)DEBUG_LOG) && (logType < (int32_t)LOG_TYPE_NUM)) {
-            static const LogType sortLogType[LOG_TYPE_NUM] = { DEBUG_LOG, SECURITY_LOG, RUN_LOG };
+            static const LogType sortLogType[LOG_TYPE_NUM] = {DEBUG_LOG, SECURITY_LOG, RUN_LOG};
             info.logType = sortLogType[logType];
             isValidLogType = true;
         }
@@ -243,16 +231,16 @@ STATIC LogStatus DlogWriteReportLog(char *buf, uint32_t bufLen, int32_t devId)
  * @param [in]  : pArgs          pointer of thread args
  * @return      : NA
  */
-STATIC void* DlogReportRecvThread(void *pArgs)
+STATIC void* DlogReportRecvThread(void* pArgs)
 {
     NO_ACT_WARN_LOG(ToolSetThreadName("PlogReportRecv") != SYS_OK, "can not set thread name(PlogReportRecv).");
     ONE_ACT_ERR_LOG(pArgs == NULL, return NULL, "args is null.");
-    ONE_ACT_WARN_LOG(DlogReportCheckArges((ThreadArgs *)pArgs) == false, return NULL,
-                     "invalid thread args, log recv thread exited.");
-    const int32_t devId = ((ThreadArgs *)pArgs)->devId;
-    uintptr_t session = ((ThreadArgs *)pArgs)->session;
+    ONE_ACT_WARN_LOG(
+        DlogReportCheckArges((ThreadArgs*)pArgs) == false, return NULL, "invalid thread args, log recv thread exited.");
+    const int32_t devId = ((ThreadArgs*)pArgs)->devId;
+    uintptr_t session = ((ThreadArgs*)pArgs)->session;
 
-    char *buf = NULL;
+    char* buf = NULL;
     uint32_t bufLen = 0;
     int32_t retryTime = 0;
     int32_t flushTimeout = DlogReportGetFlushTimeout();
@@ -265,7 +253,7 @@ STATIC void* DlogReportRecvThread(void *pArgs)
             (void)ToolSleep(TEN_MILLISECOND); // sleep 10ms
             continue;
         }
-        LogStatus ret = DrvBufRead((HDC_SESSION)session, devId, (char **)&buf, &bufLen, (uint32_t)recvTimeout);
+        LogStatus ret = DrvBufRead((HDC_SESSION)session, devId, (char**)&buf, &bufLen, (uint32_t)recvTimeout);
         if (ret != LOG_SUCCESS) {
             ONE_ACT_NO_LOG(PlogThreadGetStatus(devId) == THREAD_STATUS_WAIT_EXIT, retryTime++);
             TWO_ACT_NO_LOG(ret == LOG_SESSION_CLOSE, (void)DrvSessionRelease((HDC_SESSION)session), session = 0);
@@ -379,7 +367,7 @@ int32_t DlogReportFinalizeInner(void)
     ONE_ACT_NO_LOG(g_isExit, return 0);
     g_isExit = true;
 
-    uint32_t platform = 0; // 0: device side, 1: host side
+    uint32_t platform = 0;                           // 0: device side, 1: host side
     ONE_ACT_ERR_LOG(DrvGetPlatformInfo(&platform) != 0, return -1, "get platform info failed.");
     ONE_ACT_NO_LOG(platform != HOST_SIDE, return 0); // only support host or docker
 

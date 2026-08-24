@@ -22,13 +22,13 @@ STATIC bool g_traceSendThreadState = false;
 
 TraStatus TraceServiceInit(int32_t devId)
 {
-    TraStatus ret = AdxRegisterService((int32_t)HDC_SERVICE_TYPE_BBOX,
-        COMPONENT_TRACE, TraceDeviceInit, TraceDeviceProcess, TraceDeviceExit);
+    TraStatus ret = AdxRegisterService(
+        (int32_t)HDC_SERVICE_TYPE_BBOX, COMPONENT_TRACE, TraceDeviceInit, TraceDeviceProcess, TraceDeviceExit);
     if (ret != TRACE_SUCCESS) {
         ADIAG_ERR("register component function error, ret = %d.", ret);
         return TRACE_FAILURE;
     }
-    int32_t mode = (devId == -1) ? 0 : 1;   // 0 denotes pf , 1 denotes vf
+    int32_t mode = (devId == -1) ? 0 : 1; // 0 denotes pf , 1 denotes vf
     ServerInitInfo serverInfo = {(int32_t)HDC_SERVICE_TYPE_BBOX, mode, devId};
     ret = AdxServiceStartup(serverInfo);
     if (ret != TRACE_SUCCESS) {
@@ -38,11 +38,11 @@ TraStatus TraceServiceInit(int32_t devId)
     return TRACE_SUCCESS;
 }
 
-STATIC TraStatus TraceServerSendEndMsg(const void *handle)
+STATIC TraStatus TraceServerSendEndMsg(const void* handle)
 {
-    TraceEndMsg msg = { 0 };
+    TraceEndMsg msg = {0};
     msg.msgType = TRACE_END_MSG;
-    TraStatus ret = TraceAdxSendMsg(handle, (const char *)&msg, sizeof(TraceEndMsg));
+    TraStatus ret = TraceAdxSendMsg(handle, (const char*)&msg, sizeof(TraceEndMsg));
     TraStatus retEnd = TraceAdxSendMsg(handle, HDC_END_MSG, strlen(HDC_END_MSG));
     if ((ret != TRACE_SUCCESS) || (retEnd != TRACE_SUCCESS)) {
         ADIAG_ERR("send end msg failed, ret = %d, retEnd = %d.", ret, retEnd);
@@ -51,10 +51,10 @@ STATIC TraStatus TraceServerSendEndMsg(const void *handle)
     return TRACE_SUCCESS;
 }
 
-STATIC void TraceServerSendNodeToClient(SessionNode *sessionNode, int8_t listFlag)
+STATIC void TraceServerSendNodeToClient(SessionNode* sessionNode, int8_t listFlag)
 {
     TraStatus ret;
-    TraceNode *node = TraceTsPopNode(sessionNode);
+    TraceNode* node = TraceTsPopNode(sessionNode);
     while (node != NULL) {
         ret = TraceAdxSendMsg(sessionNode->handle, node->data, node->dataLen);
         if (ret != TRACE_SUCCESS) {
@@ -78,7 +78,7 @@ STATIC void TraceServerSendNodeToClient(SessionNode *sessionNode, int8_t listFla
  * @param [in]      arg:         NULL
  * @return          NULL
  */
-STATIC void *TraceServerSendThread(void *arg)
+STATIC void* TraceServerSendThread(void* arg)
 {
     (void)arg;
     ADIAG_RUN_INF("trace server send thread start.");
@@ -102,7 +102,7 @@ TraStatus TraceServerCreateSendThread(void)
     TraceUserBlock thread;
     thread.procFunc = TraceServerSendThread;
     thread.pulArg = NULL;
-    TraceThreadAttr attr = { 0, 0, 0, 0, 0, 0, TRACE_THREAD_STACK_SIZE };
+    TraceThreadAttr attr = {0, 0, 0, 0, 0, 0, TRACE_THREAD_STACK_SIZE};
     TraceThread tid = 0;
     g_traceSendThreadState = true;
     if (TraceCreateTaskWithThreadAttr(&tid, &thread, &attr) != TRACE_SUCCESS) {

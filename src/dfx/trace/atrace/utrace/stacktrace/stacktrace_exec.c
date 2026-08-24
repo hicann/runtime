@@ -16,20 +16,20 @@
 #include "scd_process.h"
 
 #define STACKTRACE_DUMP_EXE "asc_dumper"
-#define TRACE_UTIL_TEMP_FAILURE_RETRY(exp) ({      \
-            __typeof__(exp) rc;                    \
-            do {                                   \
-                errno = 0;                         \
-                rc = (exp);                        \
-            } while (rc == -1 && errno == EINTR);  \
-            rc; })
+#define TRACE_UTIL_TEMP_FAILURE_RETRY(exp)    \
+    ({                                        \
+        __typeof__(exp) rc;                   \
+        do {                                  \
+            errno = 0;                        \
+            rc = (exp);                       \
+        } while (rc == -1 && errno == EINTR); \
+        rc;                                   \
+    })
 
 STATIC TraStatus ScExecUnblockDumpSignals(void)
 {
-    const int32_t dumpSignals[] = {
-        SIGINT, SIGTERM, SIGQUIT, SIGILL, SIGTRAP, SIGABRT, SIGBUS, SIGFPE, SIGSEGV,
-        SIGXCPU, SIGXFSZ, SIGSYS, SIG_ATRACE
-    };
+    const int32_t dumpSignals[] = {SIGINT, SIGTERM, SIGQUIT, SIGILL,  SIGTRAP, SIGABRT,   SIGBUS,
+                                   SIGFPE, SIGSEGV, SIGXCPU, SIGXFSZ, SIGSYS,  SIG_ATRACE};
     sigset_t set;
     if (sigemptyset(&set) != 0) {
         STACKTRACE_LOG_ERR("empty signal mask failed, errno=%d.", errno);
@@ -48,7 +48,7 @@ STATIC TraStatus ScExecUnblockDumpSignals(void)
     return TRACE_SUCCESS;
 }
 
-STATIC TraStatus ScExecSetArgs(ScdProcessArgs *args, const ThreadArgument *info)
+STATIC TraStatus ScExecSetArgs(ScdProcessArgs* args, const ThreadArgument* info)
 {
     errno_t ret = memcpy_s(&args->si, sizeof(siginfo_t), &info->siginfo, sizeof(siginfo_t));
     if (ret != EOK) {
@@ -89,13 +89,13 @@ STATIC TraStatus ScExecSetArgs(ScdProcessArgs *args, const ThreadArgument *info)
     return TRACE_SUCCESS;
 }
 
-STATIC int32_t ScExecEntry(void *args)
+STATIC int32_t ScExecEntry(void* args)
 {
     if (args == NULL) {
         LOGE("args is null.");
         return 1;
     }
-    const ThreadArgument *info = (const ThreadArgument *)args;
+    const ThreadArgument* info = (const ThreadArgument*)args;
     ScdProcessArgs scdArgs;
     if (ScExecSetArgs(&scdArgs, info) != TRACE_SUCCESS) {
         LOGE("set args failed.");
@@ -105,23 +105,21 @@ STATIC int32_t ScExecEntry(void *args)
         return SCD_ERR_CODE_SIGMASK;
     }
 
-    //create args pipe
+    // create args pipe
     int32_t pipeFd[2];
     errno = 0;
-    if(pipe2(pipeFd, O_CLOEXEC) != 0) {
+    if (pipe2(pipeFd, O_CLOEXEC) != 0) {
         STACKTRACE_LOG_ERR("create args pipe failed, errno=%d.", errno);
         return SCD_ERR_CODE_PIPE2;
     }
     int32_t writeLen = (int32_t)sizeof(ScdProcessArgs);
-    if(fcntl(pipeFd[1], F_SETPIPE_SZ, writeLen) < writeLen) {
+    if (fcntl(pipeFd[1], F_SETPIPE_SZ, writeLen) < writeLen) {
         STACKTRACE_LOG_ERR("set args pipe size failed, errno=%d", errno);
         return SCD_ERR_CODE_FCNTL;
     }
 
-    //write args to pipe
-    struct iovec iovs[1] = {
-        {.iov_base = &scdArgs, .iov_len = sizeof(ScdProcessArgs)}
-    };
+    // write args to pipe
+    struct iovec iovs[1] = {{.iov_base = &scdArgs, .iov_len = sizeof(ScdProcessArgs)}};
     int32_t iovsCnt = 1;
     ssize_t ret = TRACE_UTIL_TEMP_FAILURE_RETRY(writev(pipeFd[1], iovs, iovsCnt));
     if (ret != writeLen) {
@@ -169,7 +167,7 @@ STATIC void ScExecLogExitError(int32_t pid, int32_t exitStatus)
     }
 }
 
-TraStatus ScExecStart(void *stack, ThreadArgument *args, int32_t *pid)
+TraStatus ScExecStart(void* stack, ThreadArgument* args, int32_t* pid)
 {
     if (stack == NULL) {
         LOGE("stack for clone is null");
@@ -212,7 +210,7 @@ TraStatus ScExecEnd(int32_t pid)
         return TRACE_FAILURE;
     }
 
-    //check child process state
+    // check child process state
     if (WIFEXITED(status)) {
         int32_t exitStatus = WEXITSTATUS(status);
         STACKTRACE_LOG_RUN("get sub process result(%d).", exitStatus);

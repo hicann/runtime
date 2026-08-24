@@ -17,15 +17,14 @@
 #define CFG_FILE_BUFFIX2 ".conf"
 #define CFG_FILE_BUFFIX3 ".info"
 
-bool LogConfCheckPath(const char *ppath, size_t pathLen)
+bool LogConfCheckPath(const char* ppath, size_t pathLen)
 {
     ONE_ACT_WARN_LOG(ppath == NULL, return false, "[input] file realpath is null.");
-    ONE_ACT_WARN_LOG(pathLen == 0, return false,
-                     "[input] filepath length is invalid, path_length=%zu.", pathLen);
+    ONE_ACT_WARN_LOG(pathLen == 0, return false, "[input] filepath length is invalid, path_length=%zu.", pathLen);
 
-    const char *buffix1 = strstr(ppath, CFG_FILE_BUFFIX1);
-    const char *buffix2 = strstr(ppath, CFG_FILE_BUFFIX2);
-    const char *buffix3 = strstr(ppath, CFG_FILE_BUFFIX3);
+    const char* buffix1 = strstr(ppath, CFG_FILE_BUFFIX1);
+    const char* buffix2 = strstr(ppath, CFG_FILE_BUFFIX2);
+    const char* buffix3 = strstr(ppath, CFG_FILE_BUFFIX3);
     if (((buffix1 != NULL) && (strcmp(buffix1, CFG_FILE_BUFFIX1) == 0)) ||
         ((buffix2 != NULL) && (strcmp(buffix2, CFG_FILE_BUFFIX2) == 0)) ||
         ((buffix3 != NULL) && (strcmp(buffix3, CFG_FILE_BUFFIX3) == 0))) {
@@ -34,7 +33,7 @@ bool LogConfCheckPath(const char *ppath, size_t pathLen)
     return false;
 }
 
-STATIC char *LogConfRealPath(const char *file, const char *homeDir, size_t dirLen)
+STATIC char* LogConfRealPath(const char* file, const char* homeDir, size_t dirLen)
 {
     if (homeDir == NULL) {
         SELF_LOG_WARN("[input] home directory is null.");
@@ -42,12 +41,14 @@ STATIC char *LogConfRealPath(const char *file, const char *homeDir, size_t dirLe
     }
 
     if ((dirLen > TOOL_MAX_PATH) || (dirLen == 0)) {
-        SELF_LOG_WARN("[input] directory length is invalid, " \
-                      "directory_length=%zu, max_length=%d.", dirLen, TOOL_MAX_PATH);
+        SELF_LOG_WARN(
+            "[input] directory length is invalid, "
+            "directory_length=%zu, max_length=%d.",
+            dirLen, TOOL_MAX_PATH);
         return NULL;
     }
 
-    char *ppath = (char *)LogMalloc(dirLen + 1U);
+    char* ppath = (char*)LogMalloc(dirLen + 1U);
     if (ppath == NULL) {
         SELF_LOG_ERROR("malloc failed, strerr=%s.", strerror(ToolGetErrorCode()));
         return NULL;
@@ -70,11 +71,11 @@ STATIC char *LogConfRealPath(const char *file, const char *homeDir, size_t dirLe
 }
 
 // truncate string from first blank char or '#' after given position
-STATIC void LogConfTrimString(char *str)
+STATIC void LogConfTrimString(char* str)
 {
     ONE_ACT_NO_LOG(str == NULL, return);
 
-    const char *head = str;
+    const char* head = str;
     while (*str != '\0') {
         if ((*str == '\t') || (*str == '#')) {
             *str = '\0';
@@ -99,13 +100,14 @@ STATIC void LogConfTrimString(char *str)
  * @param [in]len: max length of path
  * @return: SYS_OK/SYS_ERROR
  */
-STATIC int32_t LogReplaceDefaultByDir(const char *path, char *homeDir, uint32_t len)
+STATIC int32_t LogReplaceDefaultByDir(const char* path, char* homeDir, uint32_t len)
 {
     ONE_ACT_WARN_LOG(path == NULL, return SYS_ERROR, "[input] path is null.");
     ONE_ACT_WARN_LOG(homeDir == NULL, return SYS_ERROR, "[input] home directory path is null.");
-    ONE_ACT_WARN_LOG((len == 0) || (len > (uint32_t)(TOOL_MAX_PATH + 1)), return SYS_ERROR,
-                      "[input] path length is invalid, length=%u, max_length=%d.", len, TOOL_MAX_PATH);
-    const char *filePath = path;
+    ONE_ACT_WARN_LOG(
+        (len == 0) || (len > (uint32_t)(TOOL_MAX_PATH + 1)), return SYS_ERROR,
+        "[input] path length is invalid, length=%u, max_length=%d.", len, TOOL_MAX_PATH);
+    const char* filePath = path;
     if (filePath[0] != '~') {
         int err = strcpy_s(homeDir, len, filePath);
         if (err != EOK) {
@@ -123,14 +125,15 @@ STATIC int32_t LogReplaceDefaultByDir(const char *path, char *homeDir, uint32_t 
     filePath++;
 
     if (len < (uint32_t)(strlen(homeDir) + strlen(filePath) + 1U)) {
-        SELF_LOG_WARN("path length more than upper limit, upper_limit=%u, homeDir=%s, path=%s.",
-                      len, homeDir, filePath);
+        SELF_LOG_WARN(
+            "path length more than upper limit, upper_limit=%u, homeDir=%s, path=%s.", len, homeDir, filePath);
         return SYS_ERROR;
     }
     ret = strcat_s(homeDir, len, filePath);
     if (ret != EOK) {
-        SELF_LOG_ERROR("strcat_s failed, home_directory=%s, path=%s, result=%d, strerr=%s.",
-                       homeDir, filePath, ret, strerror(ToolGetErrorCode()));
+        SELF_LOG_ERROR(
+            "strcat_s failed, home_directory=%s, path=%s, result=%d, strerr=%s.", homeDir, filePath, ret,
+            strerror(ToolGetErrorCode()));
         return SYS_ERROR;
     }
 
@@ -138,14 +141,15 @@ STATIC int32_t LogReplaceDefaultByDir(const char *path, char *homeDir, uint32_t 
 }
 
 /**
-* @brief : open config file and return file pointer
-* @param [out] fp: pointer to file pointer
-* @param [in] file: config file realpath include filename, it can be NULL! file length should be less than 256(PATH_MAX)
-* @return: SUCCEES: succeed; others: failed
-*/
-LogRt LogConfOpenFile(FILE **fp, const char *file)
+ * @brief : open config file and return file pointer
+ * @param [out] fp: pointer to file pointer
+ * @param [in] file: config file realpath include filename, it can be NULL! file length should be less than
+ * 256(PATH_MAX)
+ * @return: SUCCEES: succeed; others: failed
+ */
+LogRt LogConfOpenFile(FILE** fp, const char* file)
 {
-    char *homeDir = (char *)LogMalloc((size_t)TOOL_MAX_PATH + 1U);
+    char* homeDir = (char*)LogMalloc((size_t)TOOL_MAX_PATH + 1U);
     if (homeDir == NULL) {
         SELF_LOG_ERROR("malloc failed, strerr=%s.", strerror(ToolGetErrorCode()));
         return MALLOC_FAILED;
@@ -159,7 +163,7 @@ LogRt LogConfOpenFile(FILE **fp, const char *file)
     }
 
     // if file is NULL, then use default config file path
-    char *ppath = LogConfRealPath(file, homeDir, TOOL_MAX_PATH);
+    char* ppath = LogConfRealPath(file, homeDir, TOOL_MAX_PATH);
     if (ppath == NULL) {
         SELF_LOG_ERROR("get realpath failed or filepath is invalid, file=%s.", file);
         XFREE(homeDir);
@@ -177,8 +181,8 @@ LogRt LogConfOpenFile(FILE **fp, const char *file)
 
     int32_t ret = fseek(*fp, 0L, SEEK_SET);
     if (ret < 0) {
-        SELF_LOG_ERROR("fseek config file failed, file=%s, result=%d, strerr=%s.",
-                       file, ret, strerror(ToolGetErrorCode()));
+        SELF_LOG_ERROR(
+            "fseek config file failed, file=%s, result=%d, strerr=%s.", file, ret, strerror(ToolGetErrorCode()));
         LOG_CLOSE_FILE(*fp);
         return OPEN_FILE_FAILED;
     }
@@ -186,21 +190,21 @@ LogRt LogConfOpenFile(FILE **fp, const char *file)
 }
 
 /**
-* @brief : get config name from lineBuf
-* @param [in] lineBuf: config file one line content
-* @param [out] confName: config name string
-* @param [in] nameLen: config name string length
-* @param [out] pos: '=' position
-* @return: SUCCEES: succeed; others: failed
-*/
-STATIC LogRt LogConfParseName(const char *lineBuf, char *confName, uint32_t nameLen, char **pos)
+ * @brief : get config name from lineBuf
+ * @param [in] lineBuf: config file one line content
+ * @param [out] confName: config name string
+ * @param [in] nameLen: config name string length
+ * @param [out] pos: '=' position
+ * @return: SUCCEES: succeed; others: failed
+ */
+STATIC LogRt LogConfParseName(const char* lineBuf, char* confName, uint32_t nameLen, char** pos)
 {
     ONE_ACT_WARN_LOG(lineBuf == NULL, return ARGV_NULL, "[input] one line is null from config file.");
     ONE_ACT_WARN_LOG(confName == NULL, return ARGV_NULL, "[output] config name is null.");
     ONE_ACT_WARN_LOG(pos == NULL, return ARGV_NULL, "[output] file position pointer is null.");
-    ONE_ACT_WARN_LOG(nameLen > CONF_NAME_MAX_LEN, return ARGV_NULL,
-                     "[input] config name length is invalid, length=%u, max_length=%d.",
-                     nameLen, CONF_NAME_MAX_LEN);
+    ONE_ACT_WARN_LOG(
+        nameLen > CONF_NAME_MAX_LEN, return ARGV_NULL,
+        "[input] config name length is invalid, length=%u, max_length=%d.", nameLen, CONF_NAME_MAX_LEN);
 
     *pos = strchr(lineBuf, '=');
     if (*pos == NULL) {
@@ -230,18 +234,17 @@ STATIC LogRt LogConfParseName(const char *lineBuf, char *confName, uint32_t name
 }
 
 /**
-* @brief : get config name and its value
-* @param [in] lineBuf: config file one line content
-* @param [out] confName: config name string
-* @param [in] nameLen: config name string length
-* @param [out] confValue: config vaulue string
-* @param [in] valueLen: config vaulue string length
-* @return: SUCCEES: succeed; others: failed
-*/
-LogRt LogConfParseLine(const char *lineBuf, char *confName, uint32_t nameLen,
-                       char *confValue, uint32_t valueLen)
+ * @brief : get config name and its value
+ * @param [in] lineBuf: config file one line content
+ * @param [out] confName: config name string
+ * @param [in] nameLen: config name string length
+ * @param [out] confValue: config vaulue string
+ * @param [in] valueLen: config vaulue string length
+ * @return: SUCCEES: succeed; others: failed
+ */
+LogRt LogConfParseLine(const char* lineBuf, char* confName, uint32_t nameLen, char* confValue, uint32_t valueLen)
 {
-    char *pos = NULL;
+    char* pos = NULL;
     LogRt res = LogConfParseName(lineBuf, confName, nameLen, &pos);
     if (res != SUCCESS) {
         return CONF_VALUE_NULL;
@@ -253,11 +256,11 @@ LogRt LogConfParseLine(const char *lineBuf, char *confName, uint32_t nameLen,
     }
     ONE_ACT_ERR_LOG(strlen(pos) == 0, return CONF_VALUE_NULL, "handle invalid value failed, confName=%s.", confName);
 
-    char buff[CONF_VALUE_MAX_LEN + 1] = { 0 };
+    char buff[CONF_VALUE_MAX_LEN + 1] = {0};
     int32_t ret = strcpy_s(buff, CONF_VALUE_MAX_LEN, pos);
-    ONE_ACT_ERR_LOG(ret != EOK, return STR_COPY_FAILED,
-                    "strcpy_s config value to buffer failed, result=%d, strerr=%s.",
-                    ret, strerror(ToolGetErrorCode()));
+    ONE_ACT_ERR_LOG(
+        ret != EOK, return STR_COPY_FAILED, "strcpy_s config value to buffer failed, result=%d, strerr=%s.", ret,
+        strerror(ToolGetErrorCode()));
 
     // delete end invalid char
     size_t strLen = strlen(buff);
@@ -273,27 +276,28 @@ LogRt LogConfParseLine(const char *lineBuf, char *confName, uint32_t nameLen,
     ONE_ACT_ERR_LOG(strlen(buff) == 0, return CONF_VALUE_NULL, "handle invalid value failed, confName=%s.", confName);
 
     ret = strcpy_s(confValue, valueLen, buff);
-    ONE_ACT_ERR_LOG(ret != EOK, return NO_ENOUTH_SPACE, "copy config value failed, result=%d, strerr=%s.",
-                    ret, strerror(ToolGetErrorCode()));
+    ONE_ACT_ERR_LOG(
+        ret != EOK, return NO_ENOUTH_SPACE, "copy config value failed, result=%d, strerr=%s.", ret,
+        strerror(ToolGetErrorCode()));
 
     return SUCCESS;
 }
 
 /**
-* @brief ParseBlockSymbol: Parses symbols str in [].
-* @param [in] buf: config file one line content
-* @param [out] symbol: reslut of parses
-* @param [in] symbolLen: symbol vaulue string length
-* @return: SUCCEES: succeed; others: failed
-*/
-STATIC LogRt ParseBlockSymbol(const char *buf, char *symbol, size_t symbolLen)
+ * @brief ParseBlockSymbol: Parses symbols str in [].
+ * @param [in] buf: config file one line content
+ * @param [out] symbol: reslut of parses
+ * @param [in] symbolLen: symbol vaulue string length
+ * @return: SUCCEES: succeed; others: failed
+ */
+STATIC LogRt ParseBlockSymbol(const char* buf, char* symbol, size_t symbolLen)
 {
-    char *bracketFront = strchr(buf, '[');
-    char *bracketBack = strchr(buf, ']');
+    char* bracketFront = strchr(buf, '[');
+    char* bracketBack = strchr(buf, ']');
     // find section by looking for '[' ']'
     if ((bracketFront != NULL) && (bracketBack != NULL)) {
-        char *sectionHead = bracketFront + 1;
-        char *sectionTail = (bracketBack > (bracketFront + 1)) ? (bracketBack - 1) : bracketBack;
+        char* sectionHead = bracketFront + 1;
+        char* sectionTail = (bracketBack > (bracketFront + 1)) ? (bracketBack - 1) : bracketBack;
         // remove blanks
         while (sectionHead <= sectionTail) {
             if (*sectionHead == ' ') {
@@ -321,9 +325,9 @@ STATIC LogRt ParseBlockSymbol(const char *buf, char *symbol, size_t symbolLen)
     return SUCCESS;
 }
 
-LogRt GetSymbol(const char *buf, char *symbol, size_t symbolLen)
+LogRt GetSymbol(const char* buf, char* symbol, size_t symbolLen)
 {
-    char tempBuf[CONF_FILE_MAX_LINE + 1] = { 0 };
+    char tempBuf[CONF_FILE_MAX_LINE + 1] = {0};
 
     // get symbol name
     errno_t err = strcpy_s(tempBuf, CONF_FILE_MAX_LINE, buf);
@@ -337,13 +341,14 @@ LogRt GetSymbol(const char *buf, char *symbol, size_t symbolLen)
     return SUCCESS;
 }
 
-uint32_t LogConfGetDigit(const char *confName, const char *confValue,
-    uint32_t minValue, uint32_t maxValue, uint32_t defaultValue)
+uint32_t LogConfGetDigit(
+    const char* confName, const char* confValue, uint32_t minValue, uint32_t maxValue, uint32_t defaultValue)
 {
     uint32_t value = 0;
     if (LogStrToUint(confValue, &value) != LOG_SUCCESS) {
-        SELF_LOG_WARN("can not convert to uint32_t, config value:%s, config name:%s, use default value:%u",
-                      confValue, confName, defaultValue);
+        SELF_LOG_WARN(
+            "can not convert to uint32_t, config value:%s, config name:%s, use default value:%u", confValue, confName,
+            defaultValue);
         return defaultValue;
     }
     if (value < minValue) {

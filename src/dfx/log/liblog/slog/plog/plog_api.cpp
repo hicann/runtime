@@ -17,23 +17,18 @@
 #include "log_print.h"
 
 namespace {
-    ArgPtr g_dloglibHandle = nullptr;
-    SymbolInfo g_dlogFuncInfo[PLOG_FUNC_MAX] = {
-        {"DlogReportInitialize", nullptr},
-        {"DlogReportFinalize", nullptr},
-        {"DlogReportStart", nullptr},
-        {"DlogReportStop", nullptr},
-        {"acllogRegisterCallback", nullptr},
-        {"acllogUnregisterCallback", nullptr}
-    };
+ArgPtr g_dloglibHandle = nullptr;
+SymbolInfo g_dlogFuncInfo[PLOG_FUNC_MAX] = {{"DlogReportInitialize", nullptr},   {"DlogReportFinalize", nullptr},
+                                            {"DlogReportStart", nullptr},        {"DlogReportStop", nullptr},
+                                            {"acllogRegisterCallback", nullptr}, {"acllogUnregisterCallback", nullptr}};
 
-    using DlogReportInitializeFunc = decltype(DlogReportInitialize)*;
-    using DlogReportFinalizeFunc = decltype(DlogReportFinalize)*;
-    using DlogReportStartFunc = decltype(DlogReportStart)*;
-    using DlogReportStopFunc = decltype(DlogReportStop)*;
-    using AcllogRegisterCallbackFunc = decltype(acllogRegisterCallback)*;
-    using AcllogUnregisterCallbackFunc = decltype(acllogUnregisterCallback)*;
-};
+using DlogReportInitializeFunc = decltype(DlogReportInitialize)*;
+using DlogReportFinalizeFunc = decltype(DlogReportFinalize)*;
+using DlogReportStartFunc = decltype(DlogReportStart)*;
+using DlogReportStopFunc = decltype(DlogReportStop)*;
+using AcllogRegisterCallbackFunc = decltype(acllogRegisterCallback)*;
+using AcllogUnregisterCallbackFunc = decltype(acllogUnregisterCallback)*;
+}; // namespace
 
 #ifdef __cplusplus
 extern "C" {
@@ -66,10 +61,7 @@ int32_t PlogTransferToUnifiedlog(void)
     return LOG_FAILURE;
 }
 
-int32_t PlogCloseUnifiedlog(void)
-{
-    return LOG_FAILURE;
-}
+int32_t PlogCloseUnifiedlog(void) { return LOG_FAILURE; }
 #endif
 
 #ifdef __cplusplus
@@ -113,8 +105,8 @@ int32_t DlogReportFinalize(void)
     return DlogReportFinalizeInner();
 }
 
-int32_t acllogRegisterCallback(acllogRecordCallback callbackFunc, void *userData, uint32_t outputLogType,
-    acllogCallbackHandle *callbackHandle)
+int32_t acllogRegisterCallback(
+    acllogRecordCallback callbackFunc, void* userData, uint32_t outputLogType, acllogCallbackHandle* callbackHandle)
 {
     if (g_dlogFuncInfo[ACLLOG_REGISTER_CALLBACK].handle != nullptr) {
         return reinterpret_cast<AcllogRegisterCallbackFunc>(g_dlogFuncInfo[ACLLOG_REGISTER_CALLBACK].handle)(
@@ -126,7 +118,8 @@ int32_t acllogRegisterCallback(acllogRecordCallback callbackFunc, void *userData
 int32_t acllogUnregisterCallback(acllogCallbackHandle callback)
 {
     if (g_dlogFuncInfo[ACLLOG_UNREGISTER_CALLBACK].handle != nullptr) {
-        return reinterpret_cast<AcllogUnregisterCallbackFunc>(g_dlogFuncInfo[ACLLOG_UNREGISTER_CALLBACK].handle)(callback);
+        return reinterpret_cast<AcllogUnregisterCallbackFunc>(g_dlogFuncInfo[ACLLOG_UNREGISTER_CALLBACK].handle)(
+            callback);
     }
     return PlogUnregisterCallbackInner(callback);
 }

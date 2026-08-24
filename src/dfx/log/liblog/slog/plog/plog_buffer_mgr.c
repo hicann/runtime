@@ -15,12 +15,12 @@
 #define DEBUG_BUFFER_SIZE (1024U * 1024U)
 #define RUN_BUFFER_SIZE (1024U * 1024U)
 #define SECURITY_BUFFER_SIZE (20U * 1024U)
-#define RATIO_BUFFER_THRESHOLD(size) ((size) * 3U / 4U)
+#define RATIO_BUFFER_THRESHOLD(size) ((size)*3U / 4U)
 #define PLOG_MAX_LOSS_NUM 10000
 #define PLOG_LOSS_PRINT_INTERVAL 900000 // 15min
 
 typedef struct {
-    char *buf;        // buffer pointer
+    char* buf;        // buffer pointer
     uint32_t dataLen; // buffer offset
     uint32_t readIdx;
     uint32_t writeIdx;
@@ -35,8 +35,8 @@ typedef struct {
 } LogLossMgr;
 
 typedef struct {
-    PlogBuffer *writeBuf;
-    PlogBuffer *sendBuf;
+    PlogBuffer* writeBuf;
+    PlogBuffer* sendBuf;
     LogLossMgr lossMgr;
 } PlogBufferMgr;
 
@@ -46,11 +46,11 @@ typedef struct {
     PlogBufferMgr security;
 } PlogBufferSet;
 
-STATIC PlogBufferSet *g_plogBuffer = NULL;
+STATIC PlogBufferSet* g_plogBuffer = NULL;
 
-STATIC PlogBufferMgr *PlogBufferMgrGet(LogType logType)
+STATIC PlogBufferMgr* PlogBufferMgrGet(LogType logType)
 {
-    PlogBufferMgr *bufMgr = NULL;
+    PlogBufferMgr* bufMgr = NULL;
     switch (logType) {
         case DEBUG_LOG:
             bufMgr = &g_plogBuffer->debug;
@@ -73,9 +73,9 @@ STATIC PlogBufferMgr *PlogBufferMgrGet(LogType logType)
  * @param [in]  logType:    log type (debug/run/security)
  * @return      buffer pointer
  */
-STATIC PlogBuffer *PlogBuffGet(int32_t buffType, LogType logType)
+STATIC PlogBuffer* PlogBuffGet(int32_t buffType, LogType logType)
 {
-    PlogBufferMgr *bufMgr = PlogBufferMgrGet(logType);
+    PlogBufferMgr* bufMgr = PlogBufferMgrGet(logType);
     ONE_ACT_NO_LOG(bufMgr == NULL, return NULL);
     if (buffType == BUFFER_TYPE_WRITE) {
         return bufMgr->writeBuf;
@@ -94,11 +94,13 @@ STATIC PlogBuffer *PlogBuffGet(int32_t buffType, LogType logType)
 bool PlogBuffCheckEmpty(int32_t buffType)
 {
     if (buffType == BUFFER_TYPE_WRITE) {
-        return ((g_plogBuffer->debug.writeBuf->dataLen + g_plogBuffer->run.writeBuf->dataLen +
-            g_plogBuffer->security.writeBuf->dataLen) == 0U);
+        return (
+            (g_plogBuffer->debug.writeBuf->dataLen + g_plogBuffer->run.writeBuf->dataLen +
+             g_plogBuffer->security.writeBuf->dataLen) == 0U);
     } else {
-        return ((g_plogBuffer->debug.sendBuf->dataLen + g_plogBuffer->run.sendBuf->dataLen +
-            g_plogBuffer->security.sendBuf->dataLen) == 0U);
+        return (
+            (g_plogBuffer->debug.sendBuf->dataLen + g_plogBuffer->run.sendBuf->dataLen +
+             g_plogBuffer->security.sendBuf->dataLen) == 0U);
     }
 }
 
@@ -110,7 +112,7 @@ bool PlogBuffCheckEmpty(int32_t buffType)
  */
 bool PlogBuffCheckFull(LogType logType, uint32_t len)
 {
-    PlogBuffer *buffer = PlogBuffGet(BUFFER_TYPE_WRITE, logType);
+    PlogBuffer* buffer = PlogBuffGet(BUFFER_TYPE_WRITE, logType);
     if ((buffer == NULL) || (buffer->buf == NULL)) {
         return true;
     }
@@ -128,7 +130,7 @@ bool PlogBuffCheckFull(LogType logType, uint32_t len)
  */
 bool PlogBuffCheckEnough(LogType logType)
 {
-    PlogBuffer *buffer = PlogBuffGet(BUFFER_TYPE_WRITE, logType);
+    PlogBuffer* buffer = PlogBuffGet(BUFFER_TYPE_WRITE, logType);
     if ((buffer != NULL) && (buffer->roundFlag == 0U) && (buffer->dataLen <= buffer->thresholdSize)) {
         return true;
     }
@@ -136,9 +138,9 @@ bool PlogBuffCheckEnough(LogType logType)
     return false;
 }
 
-static void PlogBuffMgrExchange(PlogBufferMgr *bufMgr)
+static void PlogBuffMgrExchange(PlogBufferMgr* bufMgr)
 {
-    PlogBuffer *tmp = bufMgr->writeBuf;
+    PlogBuffer* tmp = bufMgr->writeBuf;
     bufMgr->writeBuf = bufMgr->sendBuf;
     bufMgr->sendBuf = tmp;
 }
@@ -153,12 +155,12 @@ void PlogBuffExchange(void)
     PlogBuffMgrExchange(&g_plogBuffer->security);
 }
 
-STATIC void PlogPrintLogLoss(LogLossMgr *lossMgr, LogType type, bool waitFlag)
+STATIC void PlogPrintLogLoss(LogLossMgr* lossMgr, LogType type, bool waitFlag)
 {
     if (lossMgr->lossCount > PLOG_MAX_LOSS_NUM) {
         lossMgr->lossCount = PLOG_MAX_LOSS_NUM;
     }
-    struct timespec currentTv = { 0, 0 };
+    struct timespec currentTv = {0, 0};
     LogStatus result = LogGetMonotonicTime(&currentTv);
     ONE_ACT_WARN_LOG(result != LOG_SUCCESS, return, "can not get time, strerr=%s.", strerror(ToolGetErrorCode()));
 
@@ -167,11 +169,12 @@ STATIC void PlogPrintLogLoss(LogLossMgr *lossMgr, LogType type, bool waitFlag)
         timeValue = PLOG_LOSS_PRINT_INTERVAL;
     } else {
         timeValue = (int64_t)((currentTv.tv_nsec - lossMgr->lastTv.tv_nsec) / NS_TO_MS) +
-            (int64_t)((currentTv.tv_sec - lossMgr->lastTv.tv_sec) * S_TO_MS);
+                    (int64_t)((currentTv.tv_sec - lossMgr->lastTv.tv_sec) * S_TO_MS);
     }
     if (waitFlag || (timeValue >= PLOG_LOSS_PRINT_INTERVAL)) {
-        const char *fileDir[LOG_TYPE_NUM] = {"debug", "security", "run"};
-        SELF_LOG_INFO("%s log loss num is %u, print every %d seconds.", fileDir[(int32_t)type], lossMgr->lossCount,
+        const char* fileDir[LOG_TYPE_NUM] = {"debug", "security", "run"};
+        SELF_LOG_INFO(
+            "%s log loss num is %u, print every %d seconds.", fileDir[(int32_t)type], lossMgr->lossCount,
             (int32_t)(PLOG_LOSS_PRINT_INTERVAL / S_TO_MS));
         lossMgr->lastTv.tv_nsec = currentTv.tv_nsec;
         lossMgr->lastTv.tv_sec = currentTv.tv_sec;
@@ -185,9 +188,9 @@ STATIC void PlogPrintLogLoss(LogLossMgr *lossMgr, LogType type, bool waitFlag)
  */
 void PlogBuffLogLoss(LogType type)
 {
-    PlogBufferMgr *bufMgr = PlogBufferMgrGet(type);
+    PlogBufferMgr* bufMgr = PlogBufferMgrGet(type);
     ONE_ACT_NO_LOG(bufMgr == NULL, return);
-    LogLossMgr *lossMgr = &bufMgr->lossMgr;
+    LogLossMgr* lossMgr = &bufMgr->lossMgr;
     if (lossMgr->lossCount != 0) {
         PlogPrintLogLoss(lossMgr, type, true);
     }
@@ -200,7 +203,7 @@ void PlogBuffLogLoss(LogType type)
  * @param[in/out]   location:      first index of next complete log from current location
  * @return          log loss number
  */
-STATIC uint32_t PlogCountLossNum(const char *buf, uint32_t len, uint32_t *location)
+STATIC uint32_t PlogCountLossNum(const char* buf, uint32_t len, uint32_t* location)
 {
     uint32_t count = 0;
     char cEnd = '\0';
@@ -228,15 +231,15 @@ STATIC uint32_t PlogCountLossNum(const char *buf, uint32_t len, uint32_t *locati
  * @param [in]  dataLen:    data length
  * @return      LogStatus
  */
-LogStatus PlogBuffWrite(LogType type, const char *data, uint32_t dataLen)
+LogStatus PlogBuffWrite(LogType type, const char* data, uint32_t dataLen)
 {
     if ((data == NULL) || (dataLen == 0U)) {
         return LOG_INVALID_PARAM;
     }
-    PlogBufferMgr *bufMgr = PlogBufferMgrGet(type);
+    PlogBufferMgr* bufMgr = PlogBufferMgrGet(type);
     ONE_ACT_NO_LOG(bufMgr == NULL, return LOG_INVALID_PARAM);
-    LogLossMgr *lossMgr = &bufMgr->lossMgr;
-    PlogBuffer *buffer = bufMgr->writeBuf;
+    LogLossMgr* lossMgr = &bufMgr->lossMgr;
+    PlogBuffer* buffer = bufMgr->writeBuf;
     ONE_ACT_NO_LOG(buffer == NULL, return LOG_INVALID_PARAM);
     uint32_t resLen = buffer->fullSize - buffer->writeIdx;
 
@@ -251,7 +254,7 @@ LogStatus PlogBuffWrite(LogType type, const char *data, uint32_t dataLen)
     if (resLen <= dataLen) {
         // calculate log loss in resLen
         uint32_t newOffset = resLen;
-        char *lossStartIdx = buffer->buf + buffer->writeIdx;
+        char* lossStartIdx = buffer->buf + buffer->writeIdx;
         count += PlogCountLossNum(lossStartIdx, resLen, &newOffset);
         buffer->dataLen -= (buffer->readIdx > buffer->writeIdx) ? LogStrlen(buffer->buf + buffer->readIdx) : 0U;
         (void)memset_s(lossStartIdx, resLen, 0, resLen);
@@ -273,8 +276,8 @@ LogStatus PlogBuffWrite(LogType type, const char *data, uint32_t dataLen)
         PlogPrintLogLoss(lossMgr, type, false);
     }
 
-    errno_t err = memcpy_s(buffer->buf + buffer->writeIdx, (size_t)buffer->fullSize - (size_t)buffer->writeIdx,
-        data, dataLen);
+    errno_t err =
+        memcpy_s(buffer->buf + buffer->writeIdx, (size_t)buffer->fullSize - (size_t)buffer->writeIdx, data, dataLen);
     if (err != EOK) {
         SELF_LOG_ERROR("memcpy failed, err=%d.", err);
         return LOG_FAILURE;
@@ -292,9 +295,9 @@ LogStatus PlogBuffWrite(LogType type, const char *data, uint32_t dataLen)
  * @param [out] dataLen:    data length
  * @return      LogStatus
  */
-LogStatus PlogBuffRead(int32_t buffType, LogType logType, char **data, uint32_t *dataLen)
+LogStatus PlogBuffRead(int32_t buffType, LogType logType, char** data, uint32_t* dataLen)
 {
-    PlogBuffer *buffer = PlogBuffGet(buffType, logType);
+    PlogBuffer* buffer = PlogBuffGet(buffType, logType);
     ONE_ACT_NO_LOG(buffer == NULL, return LOG_FAILURE);
     if (buffer->writeIdx == buffer->readIdx) {
         *dataLen = 0U;
@@ -320,8 +323,8 @@ LogStatus PlogBuffRead(int32_t buffType, LogType logType, char **data, uint32_t 
  */
 void PlogBuffReset(int32_t buffType, LogType logType)
 {
-    PlogBuffer *buffer = PlogBuffGet(buffType, logType);
-    ONE_ACT_NO_LOG(buffer == NULL, return );
+    PlogBuffer* buffer = PlogBuffGet(buffType, logType);
+    ONE_ACT_NO_LOG(buffer == NULL, return);
     (void)memset_s(buffer->buf, buffer->fullSize, 0, buffer->fullSize);
     buffer->dataLen = 0U;
     buffer->writeIdx = 0U;
@@ -329,14 +332,14 @@ void PlogBuffReset(int32_t buffType, LogType logType)
     buffer->roundFlag = 0U;
 }
 
-STATIC LogStatus PlogBufferInit(PlogBuffer **buffer, uint32_t size)
+STATIC LogStatus PlogBufferInit(PlogBuffer** buffer, uint32_t size)
 {
-    *buffer = (PlogBuffer *)LogMalloc(sizeof(PlogBuffer));
+    *buffer = (PlogBuffer*)LogMalloc(sizeof(PlogBuffer));
     if (*buffer == NULL) {
         SELF_LOG_ERROR("malloc plog buffer mgr failed.");
         return LOG_FAILURE;
     }
-    char *buf = (char *)LogMalloc(size);
+    char* buf = (char*)LogMalloc(size);
     if (buf == NULL) {
         SELF_LOG_ERROR("malloc plog buffer failed, size=%u.", size);
         return LOG_FAILURE;
@@ -351,7 +354,7 @@ STATIC LogStatus PlogBufferInit(PlogBuffer **buffer, uint32_t size)
     return LOG_SUCCESS;
 }
 
-STATIC LogStatus PlogBufferMgrInit(PlogBufferMgr *mgr, uint32_t size)
+STATIC LogStatus PlogBufferMgrInit(PlogBufferMgr* mgr, uint32_t size)
 {
     LogStatus ret = PlogBufferInit(&mgr->writeBuf, size);
     ONE_ACT_ERR_LOG(ret != LOG_SUCCESS, return ret, "init plog write buffer failed, ret=%d.", ret);
@@ -362,7 +365,7 @@ STATIC LogStatus PlogBufferMgrInit(PlogBufferMgr *mgr, uint32_t size)
     return LOG_SUCCESS;
 }
 
-STATIC void PlogBufferMgrExit(PlogBufferMgr *mgr)
+STATIC void PlogBufferMgrExit(PlogBufferMgr* mgr)
 {
     if (mgr->writeBuf != NULL) {
         XFREE(mgr->writeBuf->buf);
@@ -387,7 +390,7 @@ STATIC void PlogBufferRelease(void)
  */
 LogStatus PlogBuffInit(void)
 {
-    g_plogBuffer = (PlogBufferSet *)LogMalloc(sizeof(PlogBufferSet));
+    g_plogBuffer = (PlogBufferSet*)LogMalloc(sizeof(PlogBufferSet));
     if (g_plogBuffer == NULL) {
         SELF_LOG_ERROR("malloc plog buffer failed, strerr=%s.", strerror(ToolGetErrorCode()));
         return LOG_FAILURE;

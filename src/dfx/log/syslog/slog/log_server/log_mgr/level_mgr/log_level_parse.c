@@ -25,10 +25,7 @@ void SlogdSetGlobalLevel(int32_t value, int32_t typeMask)
     g_logLevel.globalLogLevel = (int8_t)value;
 }
 
-void SlogdSetEventLevel(int32_t value)
-{
-    g_logLevel.enableEvent = (value == 1) ? true : false;
-}
+void SlogdSetEventLevel(int32_t value) { g_logLevel.enableEvent = (value == 1) ? true : false; }
 
 int32_t SlogdGetGlobalLevel(uint32_t typeMask)
 {
@@ -39,10 +36,7 @@ int32_t SlogdGetGlobalLevel(uint32_t typeMask)
     }
 }
 
-int32_t SlogdGetEventLevel(void)
-{
-    return (g_logLevel.enableEvent == true) ? 1 : 0;
-}
+int32_t SlogdGetEventLevel(void) { return (g_logLevel.enableEvent == true) ? 1 : 0; }
 
 // module level
 STATIC INLINE bool IsModuleIdValid(int32_t moduleId)
@@ -50,11 +44,7 @@ STATIC INLINE bool IsModuleIdValid(int32_t moduleId)
     return ((moduleId >= 0) && (moduleId < INVALID_MODULE_ID)) ? true : false;
 }
 
-STATIC INLINE bool IsDevIdValid(int32_t devId)
-{
-    return ((devId >= 0) && (devId < MAX_DEVICE_NUM)) ? true : false;
-}
-
+STATIC INLINE bool IsDevIdValid(int32_t devId) { return ((devId >= 0) && (devId < MAX_DEVICE_NUM)) ? true : false; }
 
 bool IsMultipleModule(int32_t moduleId)
 {
@@ -101,7 +91,7 @@ int32_t SlogdGetModuleLevel(int32_t moduleId, uint32_t typeMask)
     if (!IsModuleIdValid(moduleId)) {
         return MODULE_DEFAULT_LOG_LEVEL;
     }
- 
+
     if (g_moduleInfo[moduleId].multiFlag) {
         if (typeMask == RUN_LOG_MASK) {
             return GLOABLE_DEFAULT_RUN_LOG_LEVEL;
@@ -122,7 +112,7 @@ int32_t SlogdGetModuleLevelByDevId(int32_t devId, int32_t moduleId, uint32_t typ
     if (!IsDevIdValid(devId)) {
         return MODULE_DEFAULT_LOG_LEVEL;
     }
- 
+
     if (g_moduleInfo[moduleId].multiFlag) {
         if (typeMask == RUN_LOG_MASK) {
             return GLOABLE_DEFAULT_RUN_LOG_LEVEL;
@@ -139,14 +129,14 @@ int32_t SlogdGetModuleLevelByDevId(int32_t devId, int32_t moduleId, uint32_t typ
 }
 
 /**
-* @brief : set module loglevel by moduleId
-* @param [in]moduleId: module id
-* @param [in]value: module group id
-* @return: true: SUCCEED, false: FAILED
-*/
+ * @brief : set module loglevel by moduleId
+ * @param [in]moduleId: module id
+ * @param [in]value: module group id
+ * @return: true: SUCCEED, false: FAILED
+ */
 bool SetGroupIdByModuleId(int32_t moduleId, int32_t value)
 {
-    ModuleInfo *set = g_moduleInfo;
+    ModuleInfo* set = g_moduleInfo;
     if ((moduleId >= 0) && (moduleId < INVALID_MODULE_ID)) {
         set[moduleId].groupId = value;
         return true;
@@ -155,12 +145,12 @@ bool SetGroupIdByModuleId(int32_t moduleId, int32_t value)
 }
 
 /**
-* @brief SetGroupIdToAllModule: module of "eating together"
-* @return: void
-*/
+ * @brief SetGroupIdToAllModule: module of "eating together"
+ * @return: void
+ */
 void SetGroupIdToAllModule(int32_t id)
 {
-    ModuleInfo *set = g_moduleInfo;
+    ModuleInfo* set = g_moduleInfo;
     for (; set->moduleName != NULL; set++) {
         set->groupId = id;
     }
@@ -168,7 +158,7 @@ void SetGroupIdToAllModule(int32_t id)
 
 void SetGroupIdToUninitModule(int32_t id)
 {
-    ModuleInfo *set = g_moduleInfo;
+    ModuleInfo* set = g_moduleInfo;
     for (; set->moduleName != NULL; set++) {
         if (set->groupId == INVAILD_GROUP_ID) {
             set->groupId = id;
@@ -177,13 +167,13 @@ void SetGroupIdToUninitModule(int32_t id)
 }
 
 /**
-* @brief GetGroupIdByModuleId: get group id by moduleId
-* @param [in]moduleId: module id
-* @return: module log level
-*/
+ * @brief GetGroupIdByModuleId: get group id by moduleId
+ * @param [in]moduleId: module id
+ * @return: module log level
+ */
 int32_t GetGroupIdByModuleId(int32_t moduleId)
 {
-    const ModuleInfo *set = g_moduleInfo;
+    const ModuleInfo* set = g_moduleInfo;
     if ((moduleId >= 0) && (moduleId < INVALID_MODULE_ID)) {
         return set[moduleId].groupId;
     }
@@ -191,25 +181,22 @@ int32_t GetGroupIdByModuleId(int32_t moduleId)
 }
 
 /**
-* @brief GetModuleInfos: get g_moduleInfo
-* @return: g_moduleInfo
-*/
-const ModuleInfo *GetModuleInfos(void)
-{
-    return (const ModuleInfo *)g_moduleInfo;
-}
+ * @brief GetModuleInfos: get g_moduleInfo
+ * @return: g_moduleInfo
+ */
+const ModuleInfo* GetModuleInfos(void) { return (const ModuleInfo*)g_moduleInfo; }
 
 /**
-* @brief GetModuleInfoByName: get module info by module name
-* @param [in]name: module name
-* @return: module info struct
-*/
-const ModuleInfo *GetModuleInfoByName(const char *name)
+ * @brief GetModuleInfoByName: get module info by module name
+ * @param [in]name: module name
+ * @return: module info struct
+ */
+const ModuleInfo* GetModuleInfoByName(const char* name)
 {
     if (name == NULL) {
         return NULL;
     }
-    const ModuleInfo *info = g_moduleInfo;
+    const ModuleInfo* info = g_moduleInfo;
     for (; (info != NULL) && (info->moduleName != NULL); info++) {
         if (strcmp(name, info->moduleName) == 0) {
             return info;
@@ -219,11 +206,11 @@ const ModuleInfo *GetModuleInfoByName(const char *name)
 }
 
 /**
-* @brief GetModuleInfoById: get module info by module id
-* @param [in]moduleId: module id
-* @return: module info struct ptr
-*/
-const ModuleInfo *GetModuleInfoById(int32_t moduleId)
+ * @brief GetModuleInfoById: get module info by module id
+ * @param [in]moduleId: module id
+ * @return: module info struct ptr
+ */
+const ModuleInfo* GetModuleInfoById(int32_t moduleId)
 {
     if ((moduleId >= 0) && (moduleId < INVALID_MODULE_ID)) {
         return &(g_moduleInfo[moduleId]);
@@ -232,11 +219,11 @@ const ModuleInfo *GetModuleInfoById(int32_t moduleId)
 }
 
 /**
-* @brief GetModuleNameById: get module name by module id
-* @param [in]moduleId: module id
-* @return: module name
-*/
-const char *GetModuleNameById(int32_t moduleId)
+ * @brief GetModuleNameById: get module name by module id
+ * @param [in]moduleId: module id
+ * @return: module name
+ */
+const char* GetModuleNameById(int32_t moduleId)
 {
     if ((moduleId >= 0) && (moduleId < INVALID_MODULE_ID)) {
         return g_moduleInfo[moduleId].moduleName;
@@ -249,7 +236,7 @@ const char *GetModuleNameById(int32_t moduleId)
  * @param [in]  : name      string of level name
  * @return      : level
  */
-int32_t GetLevelIdByName(const char *name)
+int32_t GetLevelIdByName(const char* name)
 {
     if (name == NULL) {
         return -1;
@@ -266,11 +253,11 @@ int32_t GetLevelIdByName(const char *name)
 }
 
 /**
-* @brief GetLevelNameById: get level name by level
-* @param [in]level: log level, include debug, info, warning, error, null, trace, oplog, event
-* @return: level name
-*/
-const char *GetLevelNameById(int64_t level)
+ * @brief GetLevelNameById: get level name by level
+ * @param [in]level: log level, include debug, info, warning, error, null, trace, oplog, event
+ * @return: level name
+ */
+const char* GetLevelNameById(int64_t level)
 {
     if (((level >= DLOG_DEBUG) && (level <= DLOG_NULL)) || (level == DLOG_EVENT)) {
         return g_levelName[level].levelName;
@@ -279,11 +266,11 @@ const char *GetLevelNameById(int64_t level)
 }
 
 /**
-* @brief GetBasicLevelNameById: get level name by level
-* @param [in]level: log level, include debug, info, warning, error, null
-* @return: level name
-*/
-const char *GetBasicLevelNameById(int32_t level)
+ * @brief GetBasicLevelNameById: get level name by level
+ * @param [in]level: log level, include debug, info, warning, error, null
+ * @return: level name
+ */
+const char* GetBasicLevelNameById(int32_t level)
 {
     if ((level >= DLOG_DEBUG) && (level <= DLOG_NULL)) {
         return g_levelName[level].levelName;

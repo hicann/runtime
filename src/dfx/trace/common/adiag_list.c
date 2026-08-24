@@ -17,7 +17,7 @@
  * @param [in]  traList: list holder ptr
  * @return      AdiagStatus
  */
-AdiagStatus AdiagListInit(struct AdiagList *traList)
+AdiagStatus AdiagListInit(struct AdiagList* traList)
 {
     AdiagStatus ret = ADIAG_FAILURE;
     if (traList != NULL) {
@@ -35,12 +35,12 @@ AdiagStatus AdiagListInit(struct AdiagList *traList)
  * @param [in]  traList:    list ptr to be destroyed
  * @return      AdiagStatus
  */
-AdiagStatus AdiagListDestroy(struct AdiagList *traList)
+AdiagStatus AdiagListDestroy(struct AdiagList* traList)
 {
     AdiagStatus ret = ADIAG_SUCCESS;
 
     if ((traList != NULL) && (traList->valid == true)) {
-        void *data = AdiagListTakeOut(traList);
+        void* data = AdiagListTakeOut(traList);
         while (data != NULL) {
             ADIAG_SAFE_FREE(data);
             data = AdiagListTakeOut(traList);
@@ -58,12 +58,12 @@ AdiagStatus AdiagListDestroy(struct AdiagList *traList)
  * @param [in]  data:       data to be inserted into list
  * @return      AdiagStatus
  */
-AdiagStatus AdiagListInsert(struct AdiagList *traList, void *data)
+AdiagStatus AdiagListInsert(struct AdiagList* traList, void* data)
 {
     ADIAG_CHK_NULL_PTR(traList, return ADIAG_FAILURE);
     ADIAG_CHK_NULL_PTR(data, return ADIAG_FAILURE);
 
-    struct AdiagListNode *node = AdiagMalloc(sizeof(struct AdiagListNode));
+    struct AdiagListNode* node = AdiagMalloc(sizeof(struct AdiagListNode));
     if (node == NULL) {
         ADIAG_ERR("malloc list node failed.");
         return ADIAG_FAILURE;
@@ -91,12 +91,12 @@ AdiagStatus AdiagListInsert(struct AdiagList *traList, void *data)
  * @param [in]  traList:    list ptr
  * @return      data ptr which has been taken out
  */
-void *AdiagListTakeOut(struct AdiagList *traList)
+void* AdiagListTakeOut(struct AdiagList* traList)
 {
     ADIAG_CHK_NULL_PTR(traList, return NULL);
 
-    void *data = NULL;
-    struct AdiagListNode *node = NULL;
+    void* data = NULL;
+    struct AdiagListNode* node = NULL;
     (void)AdiagLockGet(&traList->lock);
     if (!ListEmpty(&traList->list)) {
         node = LIST_FIRST_ENTRY(&traList->list, struct AdiagListNode, list);
@@ -109,7 +109,7 @@ void *AdiagListTakeOut(struct AdiagList *traList)
     (void)AdiagLockRelease(&traList->lock);
 
     ADIAG_SAFE_FREE(node);
-    return (void *)data;
+    return (void*)data;
 }
 /**
  * @brief       apply specified function on every node.
@@ -118,17 +118,15 @@ void *AdiagListTakeOut(struct AdiagList *traList)
  * @param [in]  arg:        extra argument for function
  * @return      NA
  */
-void AdiagListForEachTraverse(struct AdiagList *traList, const AdiagListTraverseFunc func, void *arg)
+void AdiagListForEachTraverse(struct AdiagList* traList, const AdiagListTraverseFunc func, void* arg)
 {
     if ((traList == NULL) || (func == NULL)) {
         return;
     }
 
-    struct AdiagListNode *pos = NULL;
+    struct AdiagListNode* pos = NULL;
     (void)AdiagLockGet(&traList->lock);
-    LIST_FOR_EACH_ENTRY(pos, &traList->list, struct AdiagListNode, list) {
-        (void)func(pos->data, arg);
-    }
+    LIST_FOR_EACH_ENTRY(pos, &traList->list, struct AdiagListNode, list) { (void)func(pos->data, arg); }
     (void)AdiagLockRelease(&traList->lock);
 }
 
@@ -139,20 +137,18 @@ void AdiagListForEachTraverse(struct AdiagList *traList, const AdiagListTraverse
  * @param [in]  arg:        extra argument for function
  * @return      NA
  */
-void AdiagListForEachNolock(struct AdiagList *traList, const AdiagListCmpFunc func, const void *arg)
+void AdiagListForEachNolock(struct AdiagList* traList, const AdiagListCmpFunc func, const void* arg)
 {
     if ((traList == NULL) || (func == NULL)) {
         return;
     }
 
-    const struct AdiagListNode *pos = NULL;
+    const struct AdiagListNode* pos = NULL;
 
-    LIST_FOR_EACH_ENTRY(pos, &traList->list, struct AdiagListNode, list) {
-        (void)func(pos->data, arg);
-    }
+    LIST_FOR_EACH_ENTRY(pos, &traList->list, struct AdiagListNode, list) { (void)func(pos->data, arg); }
 }
 
-STATIC INLINE AdiagStatus AdiagListCmpData(const void *nodeData, const void *data)
+STATIC INLINE AdiagStatus AdiagListCmpData(const void* nodeData, const void* data)
 {
     if (nodeData == data) {
         return ADIAG_SUCCESS;
@@ -160,7 +156,7 @@ STATIC INLINE AdiagStatus AdiagListCmpData(const void *nodeData, const void *dat
     return ADIAG_FAILURE;
 }
 
-void *AdiagListGetNode(struct AdiagList *traList, const void *data)
+void* AdiagListGetNode(struct AdiagList* traList, const void* data)
 {
     return AdiagListForEach(traList, AdiagListCmpData, data);
 }
@@ -173,22 +169,23 @@ void *AdiagListGetNode(struct AdiagList *traList, const void *data)
  * @param [in]  arg: extra argument for function
  * @return  data which let function return true
  */
-void *AdiagListForEach(struct AdiagList *traList, const AdiagListCmpFunc func, const void *arg)
+void* AdiagListForEach(struct AdiagList* traList, const AdiagListCmpFunc func, const void* arg)
 {
-    const struct AdiagListNode *pos = NULL;
-    void *data = NULL;
+    const struct AdiagListNode* pos = NULL;
+    void* data = NULL;
     ADIAG_CHK_NULL_PTR(traList, return NULL);
     ADIAG_CHK_NULL_PTR(func, return NULL);
-    
+
     (void)AdiagLockGet(&traList->lock);
-    LIST_FOR_EACH_ENTRY(pos, &traList->list, struct AdiagListNode, list) {
+    LIST_FOR_EACH_ENTRY(pos, &traList->list, struct AdiagListNode, list)
+    {
         if (func(pos->data, arg) == ADIAG_SUCCESS) {
             data = pos->data;
             break;
         }
     }
     (void)AdiagLockRelease(&traList->lock);
-    return (void *)data;
+    return (void*)data;
 }
 
 /**
@@ -197,18 +194,19 @@ void *AdiagListForEach(struct AdiagList *traList, const AdiagListCmpFunc func, c
  * @param [in]  data: data to be removed
  * @return  0 on success, otherwise -1.
  */
-AdiagStatus AdiagListRemove(struct AdiagList *traceList, void *data)
+AdiagStatus AdiagListRemove(struct AdiagList* traceList, void* data)
 {
     AdiagStatus ret = ADIAG_FAILURE;
-    struct AdiagListNode *node = NULL;
-    struct ListHead *pos = NULL;
+    struct AdiagListNode* node = NULL;
+    struct ListHead* pos = NULL;
 
     ADIAG_CHK_NULL_PTR(traceList, return ADIAG_FAILURE);
     ADIAG_CHK_NULL_PTR(data, return ADIAG_FAILURE);
 
     (void)AdiagLockGet(&traceList->lock);
     if (!ListEmpty(&traceList->list)) {
-        LIST_FOR_EACH(pos, &traceList->list) {
+        LIST_FOR_EACH(pos, &traceList->list)
+        {
             node = LIST_ENTRY(pos, struct AdiagListNode, list);
             if ((node != NULL) && (node->data == data)) {
                 ListDelEntry(pos);
@@ -231,19 +229,20 @@ AdiagStatus AdiagListRemove(struct AdiagList *traceList, void *data)
  * @param [in]  data: data to be removed
  * @return  0 on success, otherwise -1.
  */
-AdiagStatus AdiagListRemoveAll(struct AdiagList *traceList, void *data, const AdiagListElemFunc func)
+AdiagStatus AdiagListRemoveAll(struct AdiagList* traceList, void* data, const AdiagListElemFunc func)
 {
     AdiagStatus ret = ADIAG_FAILURE;
-    struct AdiagListNode *node = NULL;
-    struct ListHead *pos = NULL;
-    struct ListHead *tmp = NULL;
+    struct AdiagListNode* node = NULL;
+    struct ListHead* pos = NULL;
+    struct ListHead* tmp = NULL;
 
     ADIAG_CHK_NULL_PTR(traceList, return ADIAG_FAILURE);
     ADIAG_CHK_NULL_PTR(data, return ADIAG_FAILURE);
 
     (void)AdiagLockGet(&traceList->lock);
     if (!ListEmpty(&traceList->list)) {
-        LIST_FOR_EACH(pos, &traceList->list) {
+        LIST_FOR_EACH(pos, &traceList->list)
+        {
             node = LIST_ENTRY(pos, struct AdiagListNode, list);
             if ((node != NULL) && (node->data == data)) {
                 tmp = pos->next;
@@ -270,9 +269,9 @@ AdiagStatus AdiagListRemoveAll(struct AdiagList *traceList, void *data, const Ad
  * @param [in]  newList: new list to be move to
  * @return  NA
  */
-void AdiagListMove(struct AdiagList *oldList, struct AdiagList *newList)
+void AdiagListMove(struct AdiagList* oldList, struct AdiagList* newList)
 {
-    void *data = NULL;
+    void* data = NULL;
     do {
         data = AdiagListTakeOut(oldList);
         if (data == NULL) {
@@ -291,19 +290,20 @@ void AdiagListMove(struct AdiagList *oldList, struct AdiagList *newList)
 
  * @return  0 on success, otherwise -1.
  */
-AdiagStatus AdiagListClearAndProcessNoLock(struct AdiagList *traceList, const AdiagListCmpFunc cmpFunc, const void *arg,
-    const AdiagListElemFunc otherFunc)
+AdiagStatus AdiagListClearAndProcessNoLock(
+    struct AdiagList* traceList, const AdiagListCmpFunc cmpFunc, const void* arg, const AdiagListElemFunc otherFunc)
 {
     AdiagStatus ret = ADIAG_FAILURE;
-    struct AdiagListNode *node = NULL;
-    struct ListHead *pos = NULL;
-    struct ListHead *tmp = NULL;
-    void *data = NULL;
+    struct AdiagListNode* node = NULL;
+    struct ListHead* pos = NULL;
+    struct ListHead* tmp = NULL;
+    void* data = NULL;
 
     ADIAG_CHK_NULL_PTR(traceList, return ADIAG_FAILURE);
 
     if (!ListEmpty(&traceList->list)) {
-        LIST_FOR_EACH(pos, &traceList->list) {
+        LIST_FOR_EACH(pos, &traceList->list)
+        {
             node = LIST_ENTRY(pos, struct AdiagListNode, list);
             if (node == NULL) {
                 continue;
@@ -312,7 +312,7 @@ AdiagStatus AdiagListClearAndProcessNoLock(struct AdiagList *traceList, const Ad
                 tmp = pos->next;
                 ListDelEntry(pos);
                 traceList->cnt--;
-                data = (void *)node->data;
+                data = (void*)node->data;
                 pos = tmp->prev;
                 ADIAG_SAFE_FREE(node);
                 ADIAG_SAFE_FREE(data);

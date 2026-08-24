@@ -12,7 +12,7 @@
 #include <sys/shm.h>
 #include "log_print.h"
 
-#define MSG_MEMORY_KEY  0x474f4c46
+#define MSG_MEMORY_KEY 0x474f4c46
 
 /*
  * @brief: get shared memory segment
@@ -20,10 +20,7 @@
  * @param [in]msgFlag: message flag
  * @return: failed:-1:;succeed:share memory key
  */
-STATIC INLINE int32_t ToolShmGet(key_t key, size_t size, int32_t shmflg)
-{
-    return shmget(key, size, shmflg);
-}
+STATIC INLINE int32_t ToolShmGet(key_t key, size_t size, int32_t shmflg) { return shmget(key, size, shmflg); }
 
 /*
  * @brief: shared memory attach operation
@@ -34,7 +31,7 @@ STATIC INLINE int32_t ToolShmGet(key_t key, size_t size, int32_t shmflg)
  *              shmflg=0:read &write; shmflg=SHM_RDONLY:read only;
  * @return: failed:-1;success:points to the desired address
  */
-STATIC INLINE void *ToolShmAt(int32_t shmid, const void *shmaddr, int32_t shmflg)
+STATIC INLINE void* ToolShmAt(int32_t shmid, const void* shmaddr, int32_t shmflg)
 {
     return shmat(shmid, shmaddr, shmflg);
 }
@@ -45,10 +42,7 @@ STATIC INLINE void *ToolShmAt(int32_t shmid, const void *shmaddr, int32_t shmflg
  * @param [in]shmaddr: the data segment start address of a shared memory segment
  * @return: failed:-1;succeed:0;
  */
-STATIC INLINE int32_t ToolShmDt(const void *shmaddr)
-{
-    return shmdt(shmaddr);
-}
+STATIC INLINE int32_t ToolShmDt(const void* shmaddr) { return shmdt(shmaddr); }
 
 /*
  * @brief: shared memory control operations
@@ -57,17 +51,14 @@ STATIC INLINE int32_t ToolShmDt(const void *shmaddr)
  * @param [in]buf:the structure pointed
  * @return: failed:-1;succeed:0;
  */
-STATIC INLINE int32_t ToolShmCtl(int32_t shmid, int32_t cmd, struct shmid_ds *buf)
-{
-    return shmctl(shmid, cmd, buf);
-}
+STATIC INLINE int32_t ToolShmCtl(int32_t shmid, int32_t cmd, struct shmid_ds* buf) { return shmctl(shmid, cmd, buf); }
 
 /**
  * @brief : create shared memory
  * @param [in/out]shmId: shared memory id
  * @return succeed:SHM_SUCCEED,failed:SHM_ERROR
-*/
-ShmErr ShMemCreat(int32_t *shmId, toolMode perm)
+ */
+ShmErr ShMemCreat(int32_t* shmId, toolMode perm)
 {
     if (shmId == NULL) {
         return SHM_ERROR;
@@ -86,8 +77,8 @@ ShmErr ShMemCreat(int32_t *shmId, toolMode perm)
  * @brief : open shared memory
  * @param [out]shmId:identifier ID
  * @return: SHM_SUCCEED/SHM_ERROR
-*/
-ShmErr ShMemOpen(int32_t *shmId)
+ */
+ShmErr ShMemOpen(int32_t* shmId)
 {
     if (shmId == NULL) {
         return SHM_ERROR;
@@ -106,14 +97,14 @@ ShmErr ShMemOpen(int32_t *shmId)
  * @param [in]value:string to be write
  * @param [in]len: max length of string
  * @return: SHM_SUCCEED/SHM_ERROR
-*/
-ShmErr ShMemWrite(int32_t shmId, const char *value, uint32_t len, uint32_t offset)
+ */
+ShmErr ShMemWrite(int32_t shmId, const char* value, uint32_t len, uint32_t offset)
 {
     if ((shmId == -1) || (value == NULL) || (len == 0)) {
         SYSLOG_WARN("[input]shmId or value is error, shmId = %d\n ", shmId);
         return SHM_ERROR;
     }
-    char *shmvalue = (char *)ToolShmAt(shmId, NULL, 0);
+    char* shmvalue = (char*)ToolShmAt(shmId, NULL, 0);
     if ((intptr_t)shmvalue == -1) {
         SYSLOG_WARN("WriteToShMem shmat failed ,strerr=%s.\n", strerror(ToolGetErrorCode()));
         return SHM_ERROR;
@@ -133,18 +124,18 @@ ShmErr ShMemWrite(int32_t shmId, const char *value, uint32_t len, uint32_t offse
 }
 
 /**
-* @brief : read string from shared memory
+ * @brief : read string from shared memory
  * @param [in]shmId:share ID to identify shared memory
  * @param [in]value:buffer to store string
  * @param [in]len: max length of string
  * @return: SHM_SUCCEED/SHM_ERROR
-*/
-ShmErr ShMemRead(int32_t shmId, char *value, size_t len, size_t offset)
+ */
+ShmErr ShMemRead(int32_t shmId, char* value, size_t len, size_t offset)
 {
     if ((value == NULL) || (len == 0)) {
         return SHM_ERROR;
     }
-    char *shmvalue = (char *)ToolShmAt(shmId, NULL, SHM_RDONLY);
+    char* shmvalue = (char*)ToolShmAt(shmId, NULL, SHM_RDONLY);
     if ((intptr_t)shmvalue == -1) {
         return SHM_ERROR;
     }
@@ -165,9 +156,9 @@ ShmErr ShMemRead(int32_t shmId, char *value, size_t len, size_t offset)
 }
 
 /**
-* @brief : remove the shared memory
+ * @brief : remove the shared memory
  * @return: SHM_SUCCEED/SHM_ERROR
-*/
+ */
 void ShMemRemove(void)
 {
     int32_t shmId;

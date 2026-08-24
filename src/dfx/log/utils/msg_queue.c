@@ -13,10 +13,10 @@
 #include "log_common.h"
 #include "log_print.h"
 
-#define MSG_QUEUE_KEY   0x474f4c44
-#define MSG_AUTHORITY   0600
-#define M_MSG_CREAT     IPC_CREAT
-#define M_MSG_NOWAIT    IPC_NOWAIT
+#define MSG_QUEUE_KEY 0x474f4c44
+#define MSG_AUTHORITY 0600
+#define M_MSG_CREAT IPC_CREAT
+#define M_MSG_NOWAIT IPC_NOWAIT
 
 /*
  * @brief: open the message queue
@@ -24,10 +24,7 @@
  * @param [in]msgFlag: message flag
  * @return: queue id; -1: failed;
  */
-STATIC INLINE toolMsgid ToolMsgOpen(toolKey key, int32_t msgFlag)
-{
-    return (toolMsgid)msgget(key, msgFlag);
-}
+STATIC INLINE toolMsgid ToolMsgOpen(toolKey key, int32_t msgFlag) { return (toolMsgid)msgget(key, msgFlag); }
 
 /*
  * @brief: send message to queue
@@ -37,7 +34,7 @@ STATIC INLINE toolMsgid ToolMsgOpen(toolKey key, int32_t msgFlag)
  * @param [in]msgFlag: message flag
  * @return: 0: succeed; -1: failed
  */
-STATIC INLINE int32_t ToolMsgSnd(toolMsgid msqid, const void *buf, uint32_t bufLen, int32_t msgFlag)
+STATIC INLINE int32_t ToolMsgSnd(toolMsgid msqid, const void* buf, uint32_t bufLen, int32_t msgFlag)
 {
     return (int32_t)msgsnd(msqid, buf, bufLen, msgFlag);
 }
@@ -51,7 +48,7 @@ STATIC INLINE int32_t ToolMsgSnd(toolMsgid msqid, const void *buf, uint32_t bufL
  * @param [in]msgType: message queue type
  * @return: SYS_OK: succeed; SYS_ERROR: failed; SYS_INVALID_PARAM: invalid param;
  */
-STATIC INLINE int32_t ToolMsgRcv(toolMsgid msqid, void *buf, uint32_t bufLen, int32_t msgFlag, long msgType)
+STATIC INLINE int32_t ToolMsgRcv(toolMsgid msqid, void* buf, uint32_t bufLen, int32_t msgFlag, long msgType)
 {
     return (int32_t)msgrcv(msqid, buf, bufLen, msgType, msgFlag);
 }
@@ -61,17 +58,14 @@ STATIC INLINE int32_t ToolMsgRcv(toolMsgid msqid, void *buf, uint32_t bufLen, in
  * @param [in]msqid: queue id
  * @return: SYS_OK: succeed; SYS_ERROR: failed;
  */
-STATIC INLINE int32_t ToolMsgClose(toolMsgid msqid)
-{
-    return (int32_t)msgctl(msqid, IPC_RMID, NULL);
-}
+STATIC INLINE int32_t ToolMsgClose(toolMsgid msqid) { return (int32_t)msgctl(msqid, IPC_RMID, NULL); }
 
 /**
  * @brief        : open message queue to communicate with another process
  * @param [out]  : queueId      message queue id
  * @return       : LOG_SUCCESS: success, others: failure
  */
-LogStatus MsgQueueOpen(toolMsgid *queueId)
+LogStatus MsgQueueOpen(toolMsgid* queueId)
 {
     ONE_ACT_NO_LOG(queueId == NULL, return LOG_INVALID_PTR);
     toolMsgid msgId = ToolMsgOpen(MSG_QUEUE_KEY, (uint32_t)MSG_AUTHORITY | (uint32_t)M_MSG_CREAT);
@@ -120,7 +114,7 @@ void MsgQueueRemove(void)
  * @param [in]   : isWait       whether wait when queue is full
  * @return       : LOG_SUCCESS: success, others: failure
  */
-LogStatus MsgQueueSend(toolMsgid queueId, const Buff *data, uint32_t length, bool isWait)
+LogStatus MsgQueueSend(toolMsgid queueId, const Buff* data, uint32_t length, bool isWait)
 {
     ONE_ACT_NO_LOG(queueId < 0, return LOG_INVALID_QUEUE_ID);
     ONE_ACT_NO_LOG(data == NULL, return LOG_INVALID_DATA);
@@ -142,16 +136,15 @@ LogStatus MsgQueueSend(toolMsgid queueId, const Buff *data, uint32_t length, boo
  * @param [in]   : msgType      message type
  * @return       : LOG_SUCCESS: success, others: failure
  */
-LogStatus MsgQueueRecv(toolMsgid queueId, Buff *recvData, uint32_t bufLen, bool isWait, long msgType)
+LogStatus MsgQueueRecv(toolMsgid queueId, Buff* recvData, uint32_t bufLen, bool isWait, long msgType)
 {
     ONE_ACT_NO_LOG(queueId < 0, return LOG_INVALID_QUEUE_ID);
     ONE_ACT_NO_LOG(recvData == NULL, return LOG_INVALID_DATA);
     ONE_ACT_NO_LOG(bufLen == 0, return LOG_INVALID_DATA);
 
     int32_t msgFlag = (isWait == false) ? 0 : M_MSG_NOWAIT;
-    if (ToolMsgRcv(queueId, (void *)recvData, bufLen, msgFlag, msgType) == -1) {
+    if (ToolMsgRcv(queueId, (void*)recvData, bufLen, msgFlag, msgType) == -1) {
         return LOG_FAILURE_RECV_MSG;
     }
     return LOG_SUCCESS;
 }
-

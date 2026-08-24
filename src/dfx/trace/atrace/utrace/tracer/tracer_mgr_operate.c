@@ -17,27 +17,27 @@
 #include "adiag_print.h"
 #include "trace_system_api.h"
 
-#define SCHEDULE_RB_SIZE    1024U
+#define SCHEDULE_RB_SIZE 1024U
 #define SCHEDULE_SIGNAL_NUM 12U
 #define TRACE_INNER_EVENT_NAME "trace_inner_event"
 
-typedef struct  TracerDeleteNode {
+typedef struct TracerDeleteNode {
     uint64_t interval;
     intptr_t handle;
 } TracerDeleteNode;
 
-typedef struct  TracerExitNode {
+typedef struct TracerExitNode {
     char objName[MAX_OBJECT_NAME_LENGTH];
-    void *data;
+    void* data;
 } TracerExitNode;
 
-TraObjHandle TracerScheduleObjCreate(Tracer *tracer, const char *name, const TraceAttr *attr)
+TraObjHandle TracerScheduleObjCreate(Tracer* tracer, const char* name, const TraceAttr* attr)
 {
     (void)AdiagLockGet(&tracer->mgr->lock);
     for (int32_t i = 0; i < MAX_OBJECT_NUM; i++) {
-        TracerObject *obj = &tracer->mgr->obj[i];
+        TracerObject* obj = &tracer->mgr->obj[i];
         if (obj->status == (int32_t)OBJ_STATUS_INIT) {
-            RbLog *data = TraceRbLogCreate(name, attr);
+            RbLog* data = TraceRbLogCreate(name, attr);
             if (data == NULL) {
                 (void)AdiagLockRelease(&tracer->mgr->lock);
                 return TRACE_INVALID_HANDLE;
@@ -55,15 +55,16 @@ TraObjHandle TracerScheduleObjCreate(Tracer *tracer, const char *name, const Tra
                 TraceRbLogDestroy(data);
                 return TRACE_INVALID_HANDLE;
             }
-            obj->data = (void *)data;
+            obj->data = (void*)data;
             obj->status = OBJ_STATUS_WORKING;
             obj->pid = TraceGetPid();
             obj->exitSave = attr->exitSave;
             obj->tracerType = TRACER_TYPE_SCHEDULE;
             obj->noLock = attr->noLock;
             (void)AdiagLockRelease(&tracer->mgr->lock);
-            ADIAG_RUN_INF("create object %s successfully, exitSave(%s), noLock(%s).",
-                name, (attr->exitSave) ? "true" : "false", (attr->noLock == TRACE_LOCK_FREE) ? "true" : "false");
+            ADIAG_RUN_INF(
+                "create object %s successfully, exitSave(%s), noLock(%s).", name, (attr->exitSave) ? "true" : "false",
+                (attr->noLock == TRACE_LOCK_FREE) ? "true" : "false");
             return (TraObjHandle)obj;
         }
     }
@@ -71,7 +72,7 @@ TraObjHandle TracerScheduleObjCreate(Tracer *tracer, const char *name, const Tra
     return TRACE_INVALID_HANDLE;
 }
 
-TraObjHandle TracerScheduleObjGet(Tracer *tracer, const char *name)
+TraObjHandle TracerScheduleObjGet(Tracer* tracer, const char* name)
 {
     (void)AdiagLockGet(&tracer->mgr->lock);
     for (int32_t i = 0; i < MAX_OBJECT_NUM; i++) {
@@ -85,25 +86,25 @@ TraObjHandle TracerScheduleObjGet(Tracer *tracer, const char *name)
     return TRACE_INVALID_HANDLE;
 }
 
-TraStatus TracerScheduleObjSubmit(Tracer *tracer, TraObjHandle handle,
-    uint8_t bufferType, const void *buffer, uint32_t bufSize)
+TraStatus TracerScheduleObjSubmit(
+    Tracer* tracer, TraObjHandle handle, uint8_t bufferType, const void* buffer, uint32_t bufSize)
 {
-    TracerObject *obj = &tracer->mgr->obj[handle];
+    TracerObject* obj = &tracer->mgr->obj[handle];
     int32_t status = obj->status;
     if (status != (int32_t)OBJ_STATUS_WORKING) {
         ADIAG_ERR("object is not working, status=%d.", status);
         return TRACE_FAILURE;
     }
-    TraStatus ret = TraceRbLogWriteRbMsg((RbLog *)obj->data, bufferType, (const char *)buffer, bufSize);
+    TraStatus ret = TraceRbLogWriteRbMsg((RbLog*)obj->data, bufferType, (const char*)buffer, bufSize);
     return ret;
 }
 
-STATIC TraStatus TraceExitCompareName(const void *nodeName, const void *name)
+STATIC TraStatus TraceExitCompareName(const void* nodeName, const void* name)
 {
     if (nodeName == NULL || name == NULL) {
         return TRACE_FAILURE;
     }
-    if (strcmp((const char *)nodeName, (const char *)name) == 0) {
+    if (strcmp((const char*)nodeName, (const char*)name) == 0) {
         return TRACE_SUCCESS;
     }
     return TRACE_FAILURE;
@@ -115,14 +116,14 @@ STATIC TraStatus TraceExitCompareName(const void *nodeName, const void *name)
  * @param [in] obj:         pointer of object
  * @return     TraStatus
  */
-STATIC TraStatus TracerSchedulePushExitList(Tracer *tracer, TracerObject *obj)
+STATIC TraStatus TracerSchedulePushExitList(Tracer* tracer, TracerObject* obj)
 {
     if (obj->pid != TraceGetPid()) {
         return TRACE_FAILURE;
     }
     ADIAG_CHK_EXPR_ACTION(obj->data == NULL, return TRACE_FAILURE, "object is invalid.");
 
-    TracerExitNode *node = (TracerExitNode *)AdiagMalloc(sizeof(TracerExitNode));
+    TracerExitNode* node = (TracerExitNode*)AdiagMalloc(sizeof(TracerExitNode));
     ADIAG_CHK_EXPR_ACTION(node == NULL, return TRACE_FAILURE, "malloc exit node failed.");
 
     errno_t err = strncpy_s(node->objName, MAX_OBJECT_NAME_LENGTH, obj->name, strlen(obj->name));
@@ -132,15 +133,15 @@ STATIC TraStatus TracerSchedulePushExitList(Tracer *tracer, TracerObject *obj)
     }
 
     node->data = obj->data;
-    void *data = AdiagListForEach(&tracer->mgr->exitList, TraceExitCompareName, (const void *)node->objName);
+    void* data = AdiagListForEach(&tracer->mgr->exitList, TraceExitCompareName, (const void*)node->objName);
     if (data != NULL) {
         ADIAG_INF("object[%s] has been inserted to exit list.", node->objName);
-        TracerExitNode *oldNode = (TracerExitNode *)data;
+        TracerExitNode* oldNode = (TracerExitNode*)data;
         (void)AdiagListRemove(&tracer->mgr->exitList, data);
-        TraceRbLogDestroy((RbLog *)oldNode->data);
+        TraceRbLogDestroy((RbLog*)oldNode->data);
         AdiagFree(data);
     }
-    AdiagStatus ret = AdiagListInsert(&tracer->mgr->exitList, (void *)node);
+    AdiagStatus ret = AdiagListInsert(&tracer->mgr->exitList, (void*)node);
     if (ret != ADIAG_SUCCESS) {
         AdiagFree(node);
         ADIAG_ERR("insert node to exit list failed, ret=%d.", ret);
@@ -157,15 +158,16 @@ STATIC TraStatus TracerSchedulePushExitList(Tracer *tracer, TracerObject *obj)
  * @param [in] timeStamp:   exit dir time
  * @return     TraStatus
  */
-STATIC TraStatus TracerScheduleExitSave(const char *objName, void *data, uint64_t timeStamp)
+STATIC TraStatus TracerScheduleExitSave(const char* objName, void* data, uint64_t timeStamp)
 {
     char dirTime[TIMESTAMP_MAX_LENGTH] = {0};
     TraStatus ret = TimestampToFileStr(timeStamp, dirTime, TIMESTAMP_MAX_LENGTH);
-    ADIAG_CHK_EXPR_ACTION(ret != TRACE_SUCCESS, return TRACE_FAILURE,
-        "get time string failed, ret=%d, strerr=%s.", ret, strerror(AdiagGetErrorCode()));
+    ADIAG_CHK_EXPR_ACTION(
+        ret != TRACE_SUCCESS, return TRACE_FAILURE, "get time string failed, ret=%d, strerr=%s.", ret,
+        strerror(AdiagGetErrorCode()));
 
-    struct RbLog *newRb = NULL;
-    ret = TraceRbLogGetCopyOfRingBuffer(&newRb, (RbLog *)data);
+    struct RbLog* newRb = NULL;
+    ret = TraceRbLogGetCopyOfRingBuffer(&newRb, (RbLog*)data);
     ADIAG_CHK_EXPR_ACTION(ret != TRACE_SUCCESS, return TRACE_FAILURE, "get copy of ring buffer failed.");
 
     if (TracerScheduleCheckListEmpty(newRb)) {
@@ -186,32 +188,32 @@ STATIC TraStatus TracerScheduleExitSave(const char *objName, void *data, uint64_
  * @param [in] tracer:      pointer of tracer
  * @return     NA
  */
-STATIC void TracerSchedulePopExitList(Tracer *tracer)
+STATIC void TracerSchedulePopExitList(Tracer* tracer)
 {
     uint64_t exitTime = GetRealTime();
-    TracerExitNode *node = (TracerExitNode *)AdiagListTakeOut(&tracer->mgr->exitList);
+    TracerExitNode* node = (TracerExitNode*)AdiagListTakeOut(&tracer->mgr->exitList);
     while (node != NULL) {
         TraStatus ret = TracerScheduleExitSave(node->objName, node->data, exitTime);
         if (ret != TRACE_SUCCESS) {
             ADIAG_WAR("can not save obj[%s] when exit, ret=%d.", node->objName, ret);
         }
-        TraceRbLogDestroy((RbLog *)node->data);
+        TraceRbLogDestroy((RbLog*)node->data);
         node->data = NULL;
         ADIAG_SAFE_FREE(node);
-        node = (TracerExitNode *)AdiagListTakeOut(&tracer->mgr->exitList);
+        node = (TracerExitNode*)AdiagListTakeOut(&tracer->mgr->exitList);
     }
 }
 
-STATIC TraStatus TracerScheduleObjProbe(Tracer *tracer)
+STATIC TraStatus TracerScheduleObjProbe(Tracer* tracer)
 {
     // 获取超时的时间的obj
     (void)AdiagLockGet(&tracer->mgr->lock);
-    TracerDeleteNode *node = (TracerDeleteNode *)AdiagListTakeOut(&tracer->mgr->deleteList);
+    TracerDeleteNode* node = (TracerDeleteNode*)AdiagListTakeOut(&tracer->mgr->deleteList);
     if (node != NULL) {
-        TracerObject *obj = (TracerObject *)(node->handle);
+        TracerObject* obj = (TracerObject*)(node->handle);
         (void)memset_s(obj->name, MAX_OBJECT_NAME_LENGTH, 0, MAX_OBJECT_NAME_LENGTH);
         obj->status = OBJ_STATUS_INIT;
-        TraceRbLogDestroy((RbLog *)obj->data);
+        TraceRbLogDestroy((RbLog*)obj->data);
         obj->data = NULL;
         ADIAG_SAFE_FREE(node);
     }
@@ -219,9 +221,9 @@ STATIC TraStatus TracerScheduleObjProbe(Tracer *tracer)
     return TRACE_SUCCESS;
 }
 
-TraStatus TracerScheduleObjDestroy(Tracer *tracer, TraObjHandle handle)
+TraStatus TracerScheduleObjDestroy(Tracer* tracer, TraObjHandle handle)
 {
-    TracerObject *obj = (TracerObject *)handle;
+    TracerObject* obj = (TracerObject*)handle;
     if (obj == NULL) {
         return TRACE_FAILURE;
     }
@@ -230,7 +232,7 @@ TraStatus TracerScheduleObjDestroy(Tracer *tracer, TraObjHandle handle)
     if (obj->exitSave) {
         (void)TracerSchedulePushExitList(tracer, obj);
     }
-    TracerDeleteNode *node = (TracerDeleteNode *)AdiagMalloc(sizeof(TracerDeleteNode));
+    TracerDeleteNode* node = (TracerDeleteNode*)AdiagMalloc(sizeof(TracerDeleteNode));
     if (node == NULL) {
         ADIAG_ERR("malloc delete node failed.");
         (void)AdiagLockRelease(&tracer->mgr->lock);
@@ -238,7 +240,7 @@ TraStatus TracerScheduleObjDestroy(Tracer *tracer, TraObjHandle handle)
     }
     node->interval = 0; // get time stamp to calculate the time difference
     node->handle = handle;
-    AdiagStatus ret = AdiagListInsert(&(tracer->mgr->deleteList), (void *)node);
+    AdiagStatus ret = AdiagListInsert(&(tracer->mgr->deleteList), (void*)node);
     if (ret != ADIAG_SUCCESS) {
         AdiagFree(node);
         ADIAG_ERR("insert node to list failed.");
@@ -254,14 +256,14 @@ TraStatus TracerScheduleObjDestroy(Tracer *tracer, TraObjHandle handle)
     return TRACE_SUCCESS;
 }
 
-bool TracerScheduleCheckListEmpty(struct RbLog *newRb)
+bool TracerScheduleCheckListEmpty(struct RbLog* newRb)
 {
     if (newRb == NULL) {
         return true;
     }
     bool isListNull = true;
     for (uint32_t i = 0; i < TRACE_STRUCT_ENTRY_MAX_NUM; i++) {
-        if ((newRb->entry[i].list != NULL) && (!ListEmpty(&((struct AdiagList *)newRb->entry[i].list)->list))) {
+        if ((newRb->entry[i].list != NULL) && (!ListEmpty(&((struct AdiagList*)newRb->entry[i].list)->list))) {
             isListNull = false;
             break;
         }
@@ -269,14 +271,14 @@ bool TracerScheduleCheckListEmpty(struct RbLog *newRb)
     return isListNull;
 }
 
-STATIC TraStatus TracerScheduleSaveObject(TracerObject *obj, const char *timestamp)
+STATIC TraStatus TracerScheduleSaveObject(TracerObject* obj, const char* timestamp)
 {
     if ((obj->status != (int32_t)OBJ_STATUS_WORKING) || (obj->pid != TraceGetPid())) {
         return TRACE_SUCCESS;
     }
 
-    struct RbLog *newRb = NULL;
-    TraStatus ret = TraceRbLogGetCopyOfRingBuffer(&newRb, (RbLog *)obj->data);
+    struct RbLog* newRb = NULL;
+    TraStatus ret = TraceRbLogGetCopyOfRingBuffer(&newRb, (RbLog*)obj->data);
     if (ret != TRACE_SUCCESS) {
         ADIAG_ERR("get copy of ring buffer failed.");
         return TRACE_FAILURE;
@@ -294,12 +296,13 @@ STATIC TraStatus TracerScheduleSaveObject(TracerObject *obj, const char *timesta
     return TRACE_SUCCESS;
 }
 
-TraStatus TracerScheduleSave(Tracer *tracer, TracerObject *obj)
+TraStatus TracerScheduleSave(Tracer* tracer, TracerObject* obj)
 {
     char timestamp[TIMESTAMP_MAX_LENGTH] = {0};
     TraStatus ret = TimestampToFileStr(GetRealTime(), timestamp, TIMESTAMP_MAX_LENGTH);
-    ADIAG_CHK_EXPR_ACTION(ret != TRACE_SUCCESS, return TRACE_FAILURE, "get time string failed, ret=%d, strerr=%s.",
-        ret, strerror(AdiagGetErrorCode()));
+    ADIAG_CHK_EXPR_ACTION(
+        ret != TRACE_SUCCESS, return TRACE_FAILURE, "get time string failed, ret=%d, strerr=%s.", ret,
+        strerror(AdiagGetErrorCode()));
 
     (void)AdiagLockGet(&tracer->mgr->lock);
     if (obj != NULL) {
@@ -321,7 +324,7 @@ TraStatus TracerScheduleSave(Tracer *tracer, TracerObject *obj)
     return TRACE_SUCCESS;
 }
 
-TraStatus TracerScheduleReport(Tracer *tracer, TracerObject *obj)
+TraStatus TracerScheduleReport(Tracer* tracer, TracerObject* obj)
 {
     // create thread to save
     return TracerScheduleSave(tracer, obj);
@@ -333,20 +336,20 @@ TraStatus TracerScheduleReport(Tracer *tracer, TracerObject *obj)
  * @param [in]  timeStamp:  dir timestamp
  * @return      TraStatus
  */
-STATIC TraStatus TracerScheduleSignalCallback(void *data, uint64_t timeStamp)
+STATIC TraStatus TracerScheduleSignalCallback(void* data, uint64_t timeStamp)
 {
     if (data == NULL) {
         return TRACE_INVALID_PARAM;
     }
 
-    Tracer *tracer = (Tracer *)data;
+    Tracer* tracer = (Tracer*)data;
     return TracerScheduleSafeSave(tracer, timeStamp);
 }
 
-STATIC TraStatus TracerScheduleEventInit(Tracer *tracer)
+STATIC TraStatus TracerScheduleEventInit(Tracer* tracer)
 {
     // 注册信号量，回调实现安全save
-    TraStatus ret = TraceDumperSetCallback(TracerScheduleSignalCallback, (void *)tracer);
+    TraStatus ret = TraceDumperSetCallback(TracerScheduleSignalCallback, (void*)tracer);
     ADIAG_CHK_EXPR_ACTION(ret != TRACE_SUCCESS, return ret, "schedule tracer set callback failed, ret=%d.", ret);
 
     // add inner event
@@ -365,7 +368,7 @@ STATIC TraStatus TracerScheduleEventInit(Tracer *tracer)
     return TRACE_SUCCESS;
 }
 
-TraStatus TracerScheduleInit(Tracer *tracer)
+TraStatus TracerScheduleInit(Tracer* tracer)
 {
     tracer->mgr->ouputType = 0;
     tracer->mgr->rbType = 0;
@@ -381,7 +384,7 @@ TraStatus TracerScheduleInit(Tracer *tracer)
     return TRACE_SUCCESS;
 }
 
-STATIC void TracerScheduleEventExit(Tracer *tracer)
+STATIC void TracerScheduleEventExit(Tracer* tracer)
 {
     (void)TraceEventUnbindTracer(tracer->mgr->innerEvent, (TracerHandle)tracer);
     TraceEventDestroy(tracer->mgr->innerEvent);
@@ -393,18 +396,18 @@ STATIC void TracerScheduleEventExit(Tracer *tracer)
  * @param [in] tracer:      pointer of tracer
  * @return     NA
  */
-STATIC void TracerScheduleObjDestroyAll(Tracer *tracer)
+STATIC void TracerScheduleObjDestroyAll(Tracer* tracer)
 {
     (void)AdiagLockGet(&tracer->mgr->lock);
     for (int32_t i = 0; i < MAX_OBJECT_NUM; i++) {
-        TracerObject *obj = &tracer->mgr->obj[i];
+        TracerObject* obj = &tracer->mgr->obj[i];
         if (obj->status != (int32_t)OBJ_STATUS_INIT) {
             obj->status = (int32_t)OBJ_STATUS_INIT;
             if (obj->exitSave) {
                 (void)TracerSchedulePushExitList(tracer, obj);
             }
             (void)memset_s(obj->name, MAX_OBJECT_NAME_LENGTH, 0, MAX_OBJECT_NAME_LENGTH);
-            TraceRbLogDestroy((RbLog *)obj->data);
+            TraceRbLogDestroy((RbLog*)obj->data);
             obj->data = NULL;
         }
     }
@@ -412,7 +415,7 @@ STATIC void TracerScheduleObjDestroyAll(Tracer *tracer)
     (void)AdiagLockRelease(&tracer->mgr->lock);
 }
 
-TraStatus TracerScheduleExit(Tracer *tracer)
+TraStatus TracerScheduleExit(Tracer* tracer)
 {
     TracerScheduleObjDestroyAll(tracer);
     TracerScheduleEventExit(tracer);

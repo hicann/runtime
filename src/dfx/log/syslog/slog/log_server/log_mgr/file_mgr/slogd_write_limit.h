@@ -21,7 +21,7 @@ extern "C" {
 
 typedef struct {
     bool isLimit; // true: limited ,false: free
-    uint32_t totalSize; 
+    uint32_t totalSize;
     uint32_t usedSize;
     uint32_t dropSize;
 } PeriodConfig;
@@ -37,9 +37,9 @@ typedef struct {
     struct timespec startTime;
 } WriteFileLimit;
 
-LogStatus WriteFileLimitInit(WriteFileLimit **limit, int32_t type, uint32_t totalSize, uint32_t currSize);
-void WriteFileLimitUnInit(WriteFileLimit **limit);
-bool WriteFileLimitCheck(WriteFileLimit *limit, uint32_t dataLen, const char* label);
+LogStatus WriteFileLimitInit(WriteFileLimit** limit, int32_t type, uint32_t totalSize, uint32_t currSize);
+void WriteFileLimitUnInit(WriteFileLimit** limit);
+bool WriteFileLimitCheck(WriteFileLimit* limit, uint32_t dataLen, const char* label);
 
 #ifdef __cplusplus
 }

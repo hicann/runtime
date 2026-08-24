@@ -15,39 +15,39 @@
 #include "log_print.h"
 #include "log_time.h"
 
-#define LOG_BUFFER_WRITE_MODE   0U
-#define LOG_BUFFER_READ_MODE    1U
+#define LOG_BUFFER_WRITE_MODE 0U
+#define LOG_BUFFER_READ_MODE 1U
 
 typedef struct {
-    void *attr;
-    bool (*slogdBufAttrCompare)(void *, void *);
+    void* attr;
+    bool (*slogdBufAttrCompare)(void*, void*);
 } SlogdBufAttr;
 
 typedef struct {
     char timeStr[TIME_STR_SIZE];
-    char *data;
+    char* data;
 } SlogdMsgData;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-LogStatus SlogdBufferInit(int32_t logType, uint32_t bufSize, uint32_t devId, SlogdBufAttr *bufAttr);
-void SlogdBufferExit(int32_t logType, void *attr);
+LogStatus SlogdBufferInit(int32_t logType, uint32_t bufSize, uint32_t devId, SlogdBufAttr* bufAttr);
+void SlogdBufferExit(int32_t logType, void* attr);
 
-void *SlogdBufferHandleOpen(int32_t logType, void *attr, uint32_t operaMode, uint32_t devId);
-void SlogdBufferHandleClose(void **handle);
-LogStatus SlogdBufferWrite(void *handle, const char *msg, uint32_t msgLen);
-int32_t SlogdBufferRead(void *handle, char *msg, uint32_t msgLen);
+void* SlogdBufferHandleOpen(int32_t logType, void* attr, uint32_t operaMode, uint32_t devId);
+void SlogdBufferHandleClose(void** handle);
+LogStatus SlogdBufferWrite(void* handle, const char* msg, uint32_t msgLen);
+int32_t SlogdBufferRead(void* handle, char* msg, uint32_t msgLen);
 
 uint32_t SlogdBufferGetBufSize(int32_t logType);
 
-void SlogdBufferReset(void *handle);
+void SlogdBufferReset(void* handle);
 
-bool SlogdBufferCheckFull(void *handle, uint32_t msgLen);
-bool SlogdBufferCheckEmpty(void *handle);
+bool SlogdBufferCheckFull(void* handle, uint32_t msgLen);
+bool SlogdBufferCheckEmpty(void* handle);
 
-LogStatus SlogdBufferCollectNewest(char *buf, uint32_t bufSize, uint32_t *pos, void *handle, uint32_t size);
+LogStatus SlogdBufferCollectNewest(char* buf, uint32_t bufSize, uint32_t* pos, void* handle, uint32_t size);
 #ifdef __cplusplus
 }
 #endif

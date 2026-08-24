@@ -15,12 +15,12 @@
 #include "atrace_types.h"
 
 typedef struct {
-    const char *symbol;
+    const char* symbol;
     ArgPtr handle;
 } SymbolInfo;
 
-ArgPtr TraceOpenLibrary(const char *libPath);
+ArgPtr TraceOpenLibrary(const char* libPath);
 TraStatus TraceCloseLibrary(ArgPtr handle);
-TraStatus TraceLoadFunc(ArgPtr handle, SymbolInfo *symbolInfos, uint32_t symbolNum);
+TraStatus TraceLoadFunc(ArgPtr handle, SymbolInfo* symbolInfos, uint32_t symbolNum);
 
 #endif

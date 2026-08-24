@@ -15,32 +15,32 @@
 
 typedef int32_t LogStatus;
 
-#define LOG_SUCCESS         0
-#define LOG_FAILURE         (-1)
-#define LOG_INVALID_PARAM   (-2)
-#define LOG_INVALID_PTR     (-3)
-#define LOG_INVALID_DATA    (-4)
+#define LOG_SUCCESS 0
+#define LOG_FAILURE (-1)
+#define LOG_INVALID_PARAM (-2)
+#define LOG_INVALID_PTR (-3)
+#define LOG_INVALID_DATA (-4)
 
 // process
-#define LOG_PROCESS_REPEAT              (-500)
+#define LOG_PROCESS_REPEAT (-500)
 
 // msg queue
-#define LOG_INVALID_QUEUE_ID            (-1000)
-#define LOG_NOEXIST_QUEUE_ID            (-1001)
-#define LOG_FAILURE_CREATE_MSG_QUEUE    (-1002)
-#define LOG_FAILURE_DELETE_MSG_QUEUE    (-1003)
-#define LOG_FAILURE_SEND_MSG            (-1004)
-#define LOG_FAILURE_RECV_MSG            (-1005)
+#define LOG_INVALID_QUEUE_ID (-1000)
+#define LOG_NOEXIST_QUEUE_ID (-1001)
+#define LOG_FAILURE_CREATE_MSG_QUEUE (-1002)
+#define LOG_FAILURE_DELETE_MSG_QUEUE (-1003)
+#define LOG_FAILURE_SEND_MSG (-1004)
+#define LOG_FAILURE_RECV_MSG (-1005)
 
-#define LOG_USER_NOFOUND                (-1010)
+#define LOG_USER_NOFOUND (-1010)
 
 // drv session
-#define LOG_SESSION_RECV_TIMEOUT        (-1020)
-#define LOG_SESSION_CLOSE               (-1021)
-#define LOG_SESSION_RECV_NULL           (-1022)
-#define LOG_SESSION_RECV_END            (-1023)
+#define LOG_SESSION_RECV_TIMEOUT (-1020)
+#define LOG_SESSION_CLOSE (-1021)
+#define LOG_SESSION_RECV_NULL (-1022)
+#define LOG_SESSION_RECV_END (-1023)
 
-#define LOG_SERVICE_NOT_READY           (-1030)
+#define LOG_SERVICE_NOT_READY (-1030)
 
 typedef enum {
     SUCCESS = 0,

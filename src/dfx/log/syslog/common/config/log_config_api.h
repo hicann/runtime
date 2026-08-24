@@ -21,14 +21,14 @@
 #define SLOG_CONFIG_FILE_LENGTH 16
 #define SLOG_CONF_PATH_MAX_LENGTH (TOOL_MAX_PATH + SLOG_CONFIG_FILE_LENGTH)
 #define SLOG_CONFIG_FILE_SIZE (10 * 1024)
-#define FILE_VERSION        0
+#define FILE_VERSION 0
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 int32_t LogConfInit(void);
-char *LogConfGetPath(void);
+char* LogConfGetPath(void);
 
 #ifdef __cplusplus
 }

@@ -12,15 +12,15 @@
 #define SKLOGD_H
 
 // syslog levels highest to lowest priority
-#define SKLOG_EMERG 0 // system is unusable
-#define SKLOG_ALERT 1 // action must be taken immediately
-#define SKLOG_CRIT 2 // critical conditions
-#define SKLOG_ERROR 3 // error conditions
-#define SKLOG_WARNING 4 // warning conditions
-#define SKLOG_NOTICE 5 // normal but significant condition
-#define SKLOG_INFO 6 // informational
-#define SKLOG_DEBUG 7 // debug-level messages
-#define SKLOG_PRIMASK 0x07  // mask to extract priority part (internal)
+#define SKLOG_EMERG 0      // system is unusable
+#define SKLOG_ALERT 1      // action must be taken immediately
+#define SKLOG_CRIT 2       // critical conditions
+#define SKLOG_ERROR 3      // error conditions
+#define SKLOG_WARNING 4    // warning conditions
+#define SKLOG_NOTICE 5     // normal but significant condition
+#define SKLOG_INFO 6       // informational
+#define SKLOG_DEBUG 7      // debug-level messages
+#define SKLOG_PRIMASK 0x07 // mask to extract priority part (internal)
 #define UNIT_US_TO_S 1000000
 
 #endif

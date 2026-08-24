@@ -11,8 +11,8 @@
 #ifndef STACKTRACE_FILE_STRUCT_H
 #define STACKTRACE_FILE_STRUCT_H
 
-#define STACK_HEAD_MAGIC        0xAC23U
-#define STACK_HEAD_VERSION      0x0001U
+#define STACK_HEAD_MAGIC 0xAC23U
+#define STACK_HEAD_VERSION 0x0001U
 
 #include <stdint.h>
 #include "stacktrace_unwind_reg.h"
@@ -20,7 +20,7 @@ typedef struct ScBlockLayout {
     int32_t type;
     int32_t offset;
     int32_t size;
-    int32_t reseve; 
+    int32_t reseve;
 } ScBlockLayout;
 
 typedef struct ScHead { // 1k
@@ -64,7 +64,7 @@ struct StackcoreBuffer {
     ScHead head;               // 1k
     ScProcessInfo process;     // 1k
     ScThreadInfo thread[1024]; // 1k * 1024
-    ScLog logData;                 // 16k
+    ScLog logData;             // 16k
 };
 
 #endif

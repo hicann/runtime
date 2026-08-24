@@ -33,17 +33,14 @@ static int g_fKlog = INVALID;
 struct {
     int i;
     int n;
-} g_argvOpt = { 0, 0 };
+} g_argvOpt = {0, 0};
 
 /**
  * @brief IsDigit: judge input character if digit or not
  * @param [in]c: input character
  * @return: 1(is digit), 0(not digit)
  */
-STATIC INLINE int32_t IsDigit(char c)
-{
-    return ((c >= '0') && (c <= '9')) ? 1 : 0;
-}
+STATIC INLINE int32_t IsDigit(char c) { return ((c >= '0') && (c <= '9')) ? 1 : 0; }
 
 STATIC char GetChValue(char ch)
 {
@@ -62,14 +59,14 @@ STATIC char GetChValue(char ch)
     return c;
 }
 
-STATIC void DecodeMsg(char *msg, uint32_t length)
+STATIC void DecodeMsg(char* msg, uint32_t length)
 {
     if ((msg == NULL) || (length == 0)) {
         return;
     }
     int32_t idx = 0;
     char ch = '\0';
-    const char *ptr = msg;
+    const char* ptr = msg;
     uint32_t len = 0;
     while ((*ptr != '\0') && (len <= length)) {
         if ((*ptr == '\\') && (*(ptr + 1) == 'x')) {
@@ -98,14 +95,14 @@ STATIC void DecodeMsg(char *msg, uint32_t length)
  * @param [in/out]heapBuf: pointer to msg copy
  * @return: EOK(0), INVALID(-1)
  */
-STATIC int32_t CheckProessBufParm(const char *msg, uint32_t length, char **heapBuf)
+STATIC int32_t CheckProessBufParm(const char* msg, uint32_t length, char** heapBuf)
 {
     ONE_ACT_WARN_LOG(msg == NULL, return INVALID, "[input] message_buffer is null.");
-    ONE_ACT_WARN_LOG((length == 0) || (length > KLOG_BUFF_SIZE), return INVALID,
-                      "[input] length is invalid, length=%u.", length);
+    ONE_ACT_WARN_LOG(
+        (length == 0) || (length > KLOG_BUFF_SIZE), return INVALID, "[input] length is invalid, length=%u.", length);
     ONE_ACT_WARN_LOG(heapBuf == NULL, return INVALID, "[input] heap buffer array is null.");
 
-    *heapBuf = (char *)malloc(length);
+    *heapBuf = (char*)malloc(length);
     if (*heapBuf == NULL) {
         SELF_LOG_ERROR("malloc failed, strerr=%s.", strerror(ToolGetErrorCode()));
         return INVALID;
@@ -122,22 +119,22 @@ STATIC int32_t CheckProessBufParm(const char *msg, uint32_t length, char **heapB
 }
 
 /**
-* @brief ProcessBuf: process kernel msg with timestamp, level and msg itself
-* @param [in]msg: input kernel msg
-* @param [in]length: length of input kernel msg
-* @return: EOK(0)/INVALID(-1)(int)
-*/
-STATIC int32_t ProcessBuf(char *msg, unsigned int length)
+ * @brief ProcessBuf: process kernel msg with timestamp, level and msg itself
+ * @param [in]msg: input kernel msg
+ * @param [in]length: length of input kernel msg
+ * @return: EOK(0)/INVALID(-1)(int)
+ */
+STATIC int32_t ProcessBuf(char* msg, unsigned int length)
 {
     unsigned long int timestamp = 0;
     unsigned short level = 0;
-    char *heapBuf = NULL;
+    char* heapBuf = NULL;
 
     if (CheckProessBufParm(msg, length, &heapBuf) == INVALID) {
         return INVALID;
     }
 
-    char *buf = heapBuf;
+    char* buf = heapBuf;
     for (; (*buf != '\0') && (IsDigit(*buf) != 0); buf++) {
         if (level > (((USHRT_MAX) - (*buf - '0')) / BASE_DECIMAL)) {
             XFREE(heapBuf);
@@ -172,8 +169,8 @@ STATIC int32_t ProcessBuf(char *msg, unsigned int length)
     DecodeMsg(buf, length);
     (void)memset_s(msg, length, 0x00, length);
 
-    int32_t ret = sprintf_s(msg, length - 1, "<%hu>[%lu.%06lu] %s", level,
-                            timestamp / UNIT_US_TO_S, timestamp % UNIT_US_TO_S, buf);
+    int32_t ret = sprintf_s(
+        msg, length - 1, "<%hu>[%lu.%06lu] %s", level, timestamp / UNIT_US_TO_S, timestamp % UNIT_US_TO_S, buf);
     if (ret == -1) {
         SELF_LOG_ERROR("sprintf_s failed, result=%d, strerr=%s.", ret, strerror(ToolGetErrorCode()));
         XFREE(heapBuf);
@@ -183,10 +180,7 @@ STATIC int32_t ProcessBuf(char *msg, unsigned int length)
     return EOK;
 }
 
-STATIC void CloseKernelLog(void)
-{
-    LOG_CLOSE_FD(g_fKlog);
-}
+STATIC void CloseKernelLog(void) { LOG_CLOSE_FD(g_fKlog); }
 
 STATIC void OpenKernelLog(void)
 {
@@ -204,7 +198,7 @@ STATIC void OpenKernelLog(void)
     return;
 }
 
-STATIC int32_t ReadKernelLog(char *bufP, size_t len)
+STATIC int32_t ReadKernelLog(char* bufP, size_t len)
 {
     if ((bufP == NULL) || (g_fKlog == INVALID)) {
         return INVALID;
@@ -212,7 +206,7 @@ STATIC int32_t ReadKernelLog(char *bufP, size_t len)
     return (int32_t)read(g_fKlog, bufP, len);
 }
 
-STATIC void ParseArgv(int32_t argc, char * const *argv)
+STATIC void ParseArgv(int32_t argc, char* const* argv)
 {
     int opts = getopt(argc, argv, "c:n");
     if (opts == INVALID) {
@@ -236,7 +230,7 @@ STATIC void ParseArgv(int32_t argc, char * const *argv)
     } while (opts != INVALID);
 }
 
-STATIC void KLogToSLog(uint32_t priority, const char *msg)
+STATIC void KLogToSLog(uint32_t priority, const char* msg)
 {
     if (msg != NULL) {
         switch (SKLOG_PRIMASK & priority) {
@@ -265,17 +259,17 @@ STATIC void KLogToSLog(uint32_t priority, const char *msg)
     }
 }
 
-STATIC void ParseKernelLog(const char *start)
+STATIC void ParseKernelLog(const char* start)
 {
     unsigned long priority = DLOG_INFO;
     char endptr = '\0';
-    char *pendptr = &endptr;
+    char* pendptr = &endptr;
     if (start == NULL) {
         SELF_LOG_ERROR("[input] start is null.");
         return;
     }
 
-    const char *pos = start;
+    const char* pos = start;
     if (*pos == '<') {
         pos++;
         if ((pos != NULL) && (*pos != '\0')) {
@@ -295,7 +289,7 @@ STATIC void ParseKernelLog(const char *start)
 
 STATIC void ProcKernelLog(void)
 {
-    char *logBuffer = (char *)malloc(COMMON_BUFSIZE);
+    char* logBuffer = (char*)malloc(COMMON_BUFSIZE);
     if (logBuffer == NULL) {
         SELF_LOG_ERROR("malloc failed, strerr=%s.", strerror(ToolGetErrorCode()));
         return;
@@ -324,28 +318,28 @@ STATIC void ProcKernelLog(void)
 STATIC void SignalHandle(void)
 {
     LogSignalIgn(SIGHUP);
-    LogSignalRecord(SIGHUP);     // Close terminal, process end
-    LogSignalRecord(SIGINT);     // Interrupt by ctrl+c
+    LogSignalRecord(SIGHUP); // Close terminal, process end
+    LogSignalRecord(SIGINT); // Interrupt by ctrl+c
     LogSignalRecord(SIGTERM);
 #ifdef IAM_MONITOR
     LogSignalIgn(SIGPIPE);
 #else
-    LogSignalRecord(SIGPIPE);    // Write to pipe with no readers
+    LogSignalRecord(SIGPIPE); // Write to pipe with no readers
 #endif
-    LogSignalRecord(SIGQUIT);    // Interrupt by ctrl+"\"
+    LogSignalRecord(SIGQUIT); // Interrupt by ctrl+"\"
     LogSignalRecord(SIGABRT);
     LogSignalRecord(SIGALRM);
     LogSignalRecord(SIGVTALRM);
-    LogSignalRecord(SIGXCPU);    // Exceeds CPU time limit
-    LogSignalRecord(SIGXFSZ);    // Exceeds file size limit
-    LogSignalRecord(SIGUSR1);    // user custom signal, process end
+    LogSignalRecord(SIGXCPU); // Exceeds CPU time limit
+    LogSignalRecord(SIGXFSZ); // Exceeds file size limit
+    LogSignalRecord(SIGUSR1); // user custom signal, process end
     LogSignalRecord(SIGUSR2);
 }
 
 /**
-* @brief    : sklogd init config file path and self log path
-* @return   : SYS_OK: succeed; SYS_ERROR: failed
-*/
+ * @brief    : sklogd init config file path and self log path
+ * @return   : SYS_OK: succeed; SYS_ERROR: failed
+ */
 STATIC void SklogdConfigInit(void)
 {
     if (LogConfInit() != SYS_OK) {
@@ -364,9 +358,9 @@ STATIC void SklogdConfigExit(void)
 }
 
 #ifdef __IDE_UT
-int KlogdLltMain(int argc, char **argv)
+int KlogdLltMain(int argc, char** argv)
 #else
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 #endif
 {
     SklogdConfigInit();
@@ -383,7 +377,7 @@ int main(int argc, char **argv)
 
     SignalHandle();
     SELF_LOG_INFO("sklogd process started......");
-    LogAttr logAttr = { 0 };
+    LogAttr logAttr = {0};
     logAttr.type = SYSTEM;
     logAttr.pid = 0;
     logAttr.deviceId = 0;

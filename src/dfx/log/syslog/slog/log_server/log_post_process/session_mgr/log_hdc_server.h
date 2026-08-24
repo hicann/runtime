@@ -18,13 +18,13 @@ extern "C" {
 
 extern int32_t SysReportInit(void);
 extern int32_t SysReportDestroy(void);
-extern int32_t SysReportProcess(const CommHandle *handle, const void *value, uint32_t len);
+extern int32_t SysReportProcess(const CommHandle* handle, const void* value, uint32_t len);
 extern int32_t SysGetInit(void);
 extern int32_t SysGetDestroy(void);
-extern int32_t SysGetProcess(const CommHandle *handle, const void *value, uint32_t len);
+extern int32_t SysGetProcess(const CommHandle* handle, const void* value, uint32_t len);
 struct LogServerInitInfo {
-    int32_t mode;      // 0 default, 1 virtual
-    int32_t deviceId;  // set -1 is all
+    int32_t mode;     // 0 default, 1 virtual
+    int32_t deviceId; // set -1 is all
 };
 
 /**
@@ -32,9 +32,8 @@ struct LogServerInitInfo {
  * @return         : SYS_OK     log server init success
  *                   SYS_ERROR  log server init failed
  */
-int32_t LogHdcServerInit(const struct LogServerInitInfo *info);
+int32_t LogHdcServerInit(const struct LogServerInitInfo* info);
 #ifdef __cplusplus
 }
 #endif
 #endif
-

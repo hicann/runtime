@@ -19,25 +19,21 @@
 extern "C" {
 #endif // __cplusplus
 
-#define MAX_TRACER_NAME_LENGTH  16U
-#define MAX_OBJECT_NAME_LENGTH  32U
-#define MAX_OBJECT_NUM          100
-#define MAX_RELATED_EVENT_NUM   64U
+#define MAX_TRACER_NAME_LENGTH 16U
+#define MAX_OBJECT_NAME_LENGTH 32U
+#define MAX_OBJECT_NUM 100
+#define MAX_RELATED_EVENT_NUM 64U
 
 typedef TraHandle TraObjHandle;
 typedef struct Tracer Tracer;
 
-enum ObjStatus {
-    OBJ_STATUS_INIT,
-    OBJ_STATUS_WORKING,
-    OBJ_STATUS_IDLE
-};
+enum ObjStatus { OBJ_STATUS_INIT, OBJ_STATUS_WORKING, OBJ_STATUS_IDLE };
 
 typedef struct TracerObject {
     char name[MAX_OBJECT_NAME_LENGTH];
     int32_t status; // 0:init 1:working 2:idle
     int32_t pid;
-    void *data;
+    void* data;
     bool exitSave;
     uint8_t noLock;
     uint8_t tracerType;
@@ -45,14 +41,14 @@ typedef struct TracerObject {
     TraEventHandle relatedEvent[MAX_RELATED_EVENT_NUM];
 } TracerObject;
 
-typedef TraStatus (*TracerInitFunc)(Tracer *tracer);
-typedef TraStatus (*TracerExitFunc)(Tracer *tracer);
-typedef TraStatus (*TracerSaveFunc)(Tracer *tracer, TracerObject *obj);
-typedef TraObjHandle (*TracerCreateFunc)(Tracer *tracer, const char *name, const TraceAttr *attr);
-typedef TraObjHandle (*TracerGetFunc)(Tracer *tracer, const char *name);
-typedef TraStatus (*TracerSubmitFunc)(Tracer *tracer, TraObjHandle handle,
-    uint8_t bufferType, const void *buffer, uint32_t bufSize);
-typedef TraStatus (*TracerDestroyFunc)(Tracer *tracer, TraObjHandle handle);
+typedef TraStatus (*TracerInitFunc)(Tracer* tracer);
+typedef TraStatus (*TracerExitFunc)(Tracer* tracer);
+typedef TraStatus (*TracerSaveFunc)(Tracer* tracer, TracerObject* obj);
+typedef TraObjHandle (*TracerCreateFunc)(Tracer* tracer, const char* name, const TraceAttr* attr);
+typedef TraObjHandle (*TracerGetFunc)(Tracer* tracer, const char* name);
+typedef TraStatus (*TracerSubmitFunc)(
+    Tracer* tracer, TraObjHandle handle, uint8_t bufferType, const void* buffer, uint32_t bufSize);
+typedef TraStatus (*TracerDestroyFunc)(Tracer* tracer, TraObjHandle handle);
 typedef struct TracerOperate {
     TracerInitFunc tracerInitFunc;
     TracerExitFunc tracerExitFunc;
@@ -75,34 +71,34 @@ typedef struct TracerMgr {
     struct TracerOperate op;
 } TracerMgr;
 
-typedef TraStatus (*TracerRegisterFunc)(Tracer *tracer);
-typedef TraStatus (*TracerUnregisterFunc)(Tracer *tracer);
+typedef TraStatus (*TracerRegisterFunc)(Tracer* tracer);
+typedef TraStatus (*TracerUnregisterFunc)(Tracer* tracer);
 struct Tracer {
     char name[MAX_TRACER_NAME_LENGTH];
     TracerRegisterFunc tracerRegisterFunc;
     TracerUnregisterFunc tracerUnregisterFunc;
-    struct TracerMgr *mgr;
+    struct TracerMgr* mgr;
 };
 
 TraStatus TracerInit(void);
 void TracerExit(void);
 
-TraHandle TracerObjCreate(TracerType tracerType, const char *objName, const TraceAttr *attr);
-TraHandle TracerObjGet(TracerType tracerType, const char *objName);
-TraStatus TracerObjSubmit(TraHandle handle, uint8_t bufferType, const void *buffer, uint32_t bufSize);
+TraHandle TracerObjCreate(TracerType tracerType, const char* objName, const TraceAttr* attr);
+TraHandle TracerObjGet(TracerType tracerType, const char* objName);
+TraStatus TracerObjSubmit(TraHandle handle, uint8_t bufferType, const void* buffer, uint32_t bufSize);
 void TracerObjDestroy(TraHandle handle);
-void *TracerStructEntryListInit(void);
-void TracerStructEntryName(TraceStructEntry *entry, const char *name);
-void TracerStructItemSet(TraceStructEntry *entry, const char *name, uint8_t type, uint8_t mode, uint16_t length);
-void TracerStructEntryExit(TraceStructEntry *entry);
-TraceStructEntry *TraceStructEntryCreate(const char *name);
-void TraceStructEntryDestroy(TraceStructEntry *en);
-void TraceStructItemFieldSet(TraceStructEntry *en, const char *item, uint8_t type, uint8_t mode, uint16_t len);
-void TraceStructItemArraySet(TraceStructEntry *en, const char *item, uint8_t type, uint8_t mode, uint16_t len);
-void TraceStructSetAttr(TraceStructEntry *en, uint8_t type, TraceAttr *attr);
+void* TracerStructEntryListInit(void);
+void TracerStructEntryName(TraceStructEntry* entry, const char* name);
+void TracerStructItemSet(TraceStructEntry* entry, const char* name, uint8_t type, uint8_t mode, uint16_t length);
+void TracerStructEntryExit(TraceStructEntry* entry);
+TraceStructEntry* TraceStructEntryCreate(const char* name);
+void TraceStructEntryDestroy(TraceStructEntry* en);
+void TraceStructItemFieldSet(TraceStructEntry* en, const char* item, uint8_t type, uint8_t mode, uint16_t len);
+void TraceStructItemArraySet(TraceStructEntry* en, const char* item, uint8_t type, uint8_t mode, uint16_t len);
+void TraceStructSetAttr(TraceStructEntry* en, uint8_t type, TraceAttr* attr);
 TraStatus TracerSave(TracerType tracerType, bool syncFlag);
-TraStatus TracerSaveTracer(Tracer *tracer);
-TraStatus TracerSaveObj(TracerObject *obj);
+TraStatus TracerSaveTracer(Tracer* tracer);
+TraStatus TracerSaveObj(TracerObject* obj);
 TraStatus TraceBindEvent(TraHandle handle, TraEventHandle eventHandle);
 TraStatus TraceUnbindEvent(TraHandle handle, TraEventHandle eventHandle);
 

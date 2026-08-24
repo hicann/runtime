@@ -21,17 +21,20 @@
 #include "log_system_api.h"
 #include "log_common.h"
 
-#define MONITOR_THREAD_STATUS_INIT          0
-#define MONITOR_THREAD_STATUS_RUN           1
-#define MONITOR_THREAD_STATUS_WAIT_EXIT     2
-#define MONITOR_THREAD_STATUS_EXIT          3
-#define MONITOR_TIME_NS_TO_MS               1000000
-#define MONITOR_TIME_S_TO_MS                1000
-#define MONITOR_TIME_US_TO_NS               1000
-#define SYS_MONITOR_THREAD_ATTR             { 1, 0, 0, 0, 0, 1, 128 * 1024 } // Default ThreadSize(128KB)
+#define MONITOR_THREAD_STATUS_INIT 0
+#define MONITOR_THREAD_STATUS_RUN 1
+#define MONITOR_THREAD_STATUS_WAIT_EXIT 2
+#define MONITOR_THREAD_STATUS_EXIT 3
+#define MONITOR_TIME_NS_TO_MS 1000000
+#define MONITOR_TIME_S_TO_MS 1000
+#define MONITOR_TIME_US_TO_NS 1000
+#define SYS_MONITOR_THREAD_ATTR      \
+    {                                \
+        1, 0, 0, 0, 0, 1, 128 * 1024 \
+    } // Default ThreadSize(128KB)
 
 STATIC uint32_t g_threadStatus = MONITOR_THREAD_STATUS_INIT;
-STATIC SysmonitorInfo g_sysmonitorInfo[SYS_MONITOR_COUNT] = { 0 };
+STATIC SysmonitorInfo g_sysmonitorInfo[SYS_MONITOR_COUNT] = {0};
 
 /**
  * @brief       : get the greatest common divisor of two numbers
@@ -89,7 +92,8 @@ STATIC void SysmonitorResItem(uint32_t period)
  */
 STATIC int32_t SysmonitorResInit(void)
 {
-    ONE_ACT_WARN_LOG(g_threadStatus == MONITOR_THREAD_STATUS_RUN, return LOG_FAILURE,
+    ONE_ACT_WARN_LOG(
+        g_threadStatus == MONITOR_THREAD_STATUS_RUN, return LOG_FAILURE,
         "please don't init while sys monitor is running");
     SysmonitorResInitCpu(&g_sysmonitorInfo[SYS_MONITOR_CPU]);
     SysmonitorResInitMem(&g_sysmonitorInfo[SYS_MONITOR_MEM]);
@@ -98,15 +102,15 @@ STATIC int32_t SysmonitorResInit(void)
     return LOG_SUCCESS;
 }
 
-STATIC void *SysmonitorResProcessThread(void *arg)
+STATIC void* SysmonitorResProcessThread(void* arg)
 {
     (void)arg;
     NO_ACT_WARN_LOG(ToolSetThreadName("SysMonitor") != SYS_OK, "can not set thread name(SysMonitor).");
 
     uint32_t sysmonitorResPeriod = SysmonitorResGetPeriod();
     uint32_t sleepTime = 0;
-    struct timespec start = { 0, 0 };
-    struct timespec end = { 0, 0 };
+    struct timespec start = {0, 0};
+    struct timespec end = {0, 0};
     int64_t duration = 0;
     while (g_threadStatus == MONITOR_THREAD_STATUS_RUN) {
         (void)LogGetMonotonicTime(&start);
@@ -120,8 +124,9 @@ STATIC void *SysmonitorResProcessThread(void *arg)
         sleepTime = sysmonitorResPeriod;
         if ((uint32_t)duration >= sleepTime) {
             sleepTime = 0;
-            MONITOR_LOGD("time record, start_sec:%ld, start_nsec:%ld, end_sec:%ld, end_nsec:%ld, duration:%ld",
-                start.tv_sec, start.tv_nsec, end.tv_sec, end.tv_nsec, duration);
+            MONITOR_LOGD(
+                "time record, start_sec:%ld, start_nsec:%ld, end_sec:%ld, end_nsec:%ld, duration:%ld", start.tv_sec,
+                start.tv_nsec, end.tv_sec, end.tv_nsec, duration);
         } else {
             sleepTime = sysmonitorResPeriod - (uint32_t)duration;
         }
@@ -142,7 +147,7 @@ STATIC int32_t SysmonitorResProcess(void)
     ToolThread tid = 0;
     ToolUserBlock funcBlock;
     funcBlock.procFunc = SysmonitorResProcessThread;
-    funcBlock.pulArg = (void *)NULL;
+    funcBlock.pulArg = (void*)NULL;
     ToolThreadAttr threadAttr = SYS_MONITOR_THREAD_ATTR;
     int32_t ret = ToolCreateTaskWithThreadAttr(&tid, &funcBlock, &threadAttr);
     if (ret != LOG_SUCCESS) {
@@ -157,24 +162,15 @@ STATIC int32_t SysmonitorResProcess(void)
  * @brief       : init sys monitor
  * @return      : LOG_SUCCESS success; LOG_FAILURE fail
  */
-int32_t SysmonitorInit(void)
-{
-    return SysmonitorResInit();
-}
+int32_t SysmonitorInit(void) { return SysmonitorResInit(); }
 
 /**
  * @brief       : start sys monitor process
  * @return      : LOG_SUCCESS success; LOG_FAILURE fail
  */
-int32_t SysmonitorProcess(void)
-{
-    return SysmonitorResProcess();
-}
+int32_t SysmonitorProcess(void) { return SysmonitorResProcess(); }
 
 /**
  * @brief       : exit sys monitor process
  */
-void SysmonitorExit(void)
-{
-    g_threadStatus = MONITOR_THREAD_STATUS_WAIT_EXIT;
-}
+void SysmonitorExit(void) { g_threadStatus = MONITOR_THREAD_STATUS_WAIT_EXIT; }

@@ -23,13 +23,13 @@
 
 #define MIN(a, b) ((a) > (b) ? (b) : (a))
 
-TraStatus ScdUtilTrim(char *start, uint32_t len, const char **pos)
+TraStatus ScdUtilTrim(char* start, uint32_t len, const char** pos)
 {
     if ((start == NULL) || (len == 0)) {
         return TRACE_FAILURE;
     }
 
-    char *end = start + strlen(start);
+    char* end = start + strlen(start);
     if (start == end) {
         *pos = start;
         return TRACE_SUCCESS;
@@ -52,13 +52,13 @@ TraStatus ScdUtilTrim(char *start, uint32_t len, const char **pos)
     return TRACE_SUCCESS;
 }
 
-TraStatus ScdUtilReadStdin(void *buf, size_t len)
+TraStatus ScdUtilReadStdin(void* buf, size_t len)
 {
     SCD_CHK_PTR_ACTION(buf, return TRACE_FAILURE);
     size_t readLen = 0;
 
-    while(len > readLen) {
-        ssize_t readSize = SCD_UTIL_RETRY(read(STDIN_FILENO, (void *)((uint8_t *)buf + readLen), len - readLen));
+    while (len > readLen) {
+        ssize_t readSize = SCD_UTIL_RETRY(read(STDIN_FILENO, (void*)((uint8_t*)buf + readLen), len - readLen));
         if (readSize <= 0) {
             SCD_DLOG_ERR("read from stdin failed, ret=%ld, errno=%d.", readSize, errno);
             return TRACE_FAILURE;
@@ -68,7 +68,7 @@ TraStatus ScdUtilReadStdin(void *buf, size_t len)
     return TRACE_SUCCESS;
 }
 
-ssize_t ScdUtilReadLine(int32_t fd, char *buf, size_t len)
+ssize_t ScdUtilReadLine(int32_t fd, char* buf, size_t len)
 {
     if (fd < 0 || buf == NULL || len == 0) {
         return -1;
@@ -76,7 +76,7 @@ ssize_t ScdUtilReadLine(int32_t fd, char *buf, size_t len)
 
     ssize_t n = 1;
     char c = (char)EOF;
-    char *ptr = buf;
+    char* ptr = buf;
     while (n < (ssize_t)len) {
         ssize_t rc = read(fd, &c, 1);
         if (rc == 1) {
@@ -100,7 +100,7 @@ ssize_t ScdUtilReadLine(int32_t fd, char *buf, size_t len)
     return n;
 }
 
-STATIC TraStatus ScdUtilGetTaskName(const char *path, char *buf, size_t len)
+STATIC TraStatus ScdUtilGetTaskName(const char* path, char* buf, size_t len)
 {
     int32_t fd = open(path, O_RDONLY | O_CLOEXEC);
     if (fd < 0) {
@@ -117,7 +117,7 @@ STATIC TraStatus ScdUtilGetTaskName(const char *path, char *buf, size_t len)
     }
 
     // trim
-    const char *data = NULL;
+    const char* data = NULL;
     if ((ScdUtilTrim(tmp, SCD_UTIL_TMP_BUF_LEN, &data) != TRACE_SUCCESS) || (strlen(data) == 0)) {
         SCD_DLOG_WAR("file line is empty.");
         return TRACE_FAILURE;
@@ -134,7 +134,7 @@ STATIC TraStatus ScdUtilGetTaskName(const char *path, char *buf, size_t len)
     return TRACE_SUCCESS;
 }
 
-STATIC void ScdUtilSetUnknown(char *buf, size_t len)
+STATIC void ScdUtilSetUnknown(char* buf, size_t len)
 {
     errno_t ret = strncpy_s(buf, len, "unknown", strlen("unknown"));
     if (ret != 0) {
@@ -142,7 +142,7 @@ STATIC void ScdUtilSetUnknown(char *buf, size_t len)
     }
 }
 
-void ScdUtilGetProcessName(int32_t pid, char *buf, size_t len)
+void ScdUtilGetProcessName(int32_t pid, char* buf, size_t len)
 {
     char path[SCD_UTIL_TMP_BUF_LEN] = {0};
 
@@ -159,7 +159,7 @@ void ScdUtilGetProcessName(int32_t pid, char *buf, size_t len)
     }
 }
 
-void ScdUtilGetThreadName(int32_t pid, int32_t tid, char *buf, size_t len)
+void ScdUtilGetThreadName(int32_t pid, int32_t tid, char* buf, size_t len)
 {
     char path[SCD_UTIL_TMP_BUF_LEN] = {0};
     int32_t ret = snprintf_s(path, sizeof(path), sizeof(path) - 1U, "/proc/%d/task/%d/comm", pid, tid);
@@ -175,22 +175,22 @@ void ScdUtilGetThreadName(int32_t pid, int32_t tid, char *buf, size_t len)
     }
 }
 
-STATIC TraStatus ScdUtilPtraceReadLong(int32_t pid, uintptr_t addr, long *value)
+STATIC TraStatus ScdUtilPtraceReadLong(int32_t pid, uintptr_t addr, long* value)
 {
     errno = 0;
     long ret = ptrace(PTRACE_PEEKTEXT, pid, addr, NULL);
     if (ret == -1 && errno != 0) {
         SCD_DLOG_ERR("ptrace peektext failed, ret %ld, error : %s", ret, strerror(errno));
-        return TRACE_FAILURE; 
+        return TRACE_FAILURE;
     }
     *value = ret;
     return TRACE_SUCCESS;
 }
 
-size_t ScdUtilsPtraceRead(int32_t pid, uintptr_t src, void *dst, size_t dstLen)
+size_t ScdUtilsPtraceRead(int32_t pid, uintptr_t src, void* dst, size_t dstLen)
 {
     size_t readSize = dstLen;
-    void *dstPos = dst;
+    void* dstPos = dst;
     uintptr_t srcAddr = src;
     long data = 0;
     size_t alignBytes = srcAddr & (sizeof(long) - 1U);
@@ -200,17 +200,17 @@ size_t ScdUtilsPtraceRead(int32_t pid, uintptr_t src, void *dst, size_t dstLen)
             return 0;
         }
         size_t readLen = MIN(readSize, sizeof(long) - alignBytes);
-        errno_t err = memcpy_s(dstPos, readSize, (const void *)((uintptr_t)(&data) + alignBytes), readLen);
+        errno_t err = memcpy_s(dstPos, readSize, (const void*)((uintptr_t)(&data) + alignBytes), readLen);
         if (err != EOK) {
             SCD_DLOG_ERR("memcpy_s failed, err = %d, errno = %d.", (int32_t)err, errno);
             return 0;
         }
         srcAddr += readLen;
-        dstPos = (void *)((uintptr_t)dstPos + readLen);
+        dstPos = (void*)((uintptr_t)dstPos + readLen);
         readSize -= readLen;
     }
 
-    for (size_t i =  readSize / sizeof(long); i > 0; i--) {
+    for (size_t i = readSize / sizeof(long); i > 0; i--) {
         TraStatus ret = ScdUtilPtraceReadLong(pid, srcAddr, &data);
         if (ret != TRACE_SUCCESS) {
             return 0;
@@ -221,7 +221,7 @@ size_t ScdUtilsPtraceRead(int32_t pid, uintptr_t src, void *dst, size_t dstLen)
             return 0;
         }
         srcAddr += sizeof(long);
-        dstPos = (void *)((uintptr_t)dstPos + sizeof(long));
+        dstPos = (void*)((uintptr_t)dstPos + sizeof(long));
         readSize -= sizeof(long);
     }
     if (readSize != 0) {
@@ -238,7 +238,7 @@ size_t ScdUtilsPtraceRead(int32_t pid, uintptr_t src, void *dst, size_t dstLen)
     return dstLen;
 }
 
-int32_t ScdUtilOpen(const char *path)
+int32_t ScdUtilOpen(const char* path)
 {
     char realPath[TRACE_MAX_PATH] = {0};
     if ((TraceRealPath(path, realPath, TRACE_MAX_PATH) != EN_OK) && (AdiagGetErrorCode() != ENOENT)) {
@@ -254,7 +254,7 @@ int32_t ScdUtilOpen(const char *path)
     return fd;
 }
 
-size_t ScdUtilWrite(int32_t fd, const void *data, size_t len)
+size_t ScdUtilWrite(int32_t fd, const void* data, size_t len)
 {
     if ((fd < 0) || (data == NULL) || (len == 0)) {
         SCD_DLOG_ERR("invalid input, fd=%d, data=%p, len=%zu.", fd, data, len);
@@ -263,7 +263,7 @@ size_t ScdUtilWrite(int32_t fd, const void *data, size_t len)
 
     size_t reserved = len;
     do {
-        ssize_t wrLen = write(fd, (const void *)((uintptr_t)data + (len - reserved)), reserved);
+        ssize_t wrLen = write(fd, (const void*)((uintptr_t)data + (len - reserved)), reserved);
         if ((wrLen < 0) || (errno == EINTR)) {
             SCD_DLOG_ERR("write failed, ret=%ld, errno=%d.", wrLen, errno);
             return len - reserved;
@@ -273,16 +273,13 @@ size_t ScdUtilWrite(int32_t fd, const void *data, size_t len)
     return len;
 }
 
-void ScdUtilWriteTitle(int32_t fd, const char *title)
+void ScdUtilWriteTitle(int32_t fd, const char* title)
 {
     (void)ScdUtilWrite(fd, title, strlen(title));
     ScdUtilWriteNewLine(fd);
 }
 
-void ScdUtilWriteNewLine(int32_t fd)
-{
-    (void)ScdUtilWrite(fd, "\n", 1);
-}
+void ScdUtilWriteNewLine(int32_t fd) { (void)ScdUtilWrite(fd, "\n", 1); }
 
 int32_t ScdUtilGetProcFd(int32_t pid, const char* fileName)
 {
@@ -308,7 +305,7 @@ TraStatus ScdUtilWriteProcInfo(int32_t fd, int32_t pid, const char* fileName)
         return TRACE_FAILURE;
     }
 
-    char info[SCD_UTIL_TMP_BUF_LEN] = { 0 };
+    char info[SCD_UTIL_TMP_BUF_LEN] = {0};
     while (ScdUtilReadLine(procFd, info, SCD_UTIL_TMP_BUF_LEN) > 0) {
         size_t ret = ScdUtilWrite(fd, info, strlen(info));
         if (ret != strlen(info)) {

@@ -21,22 +21,22 @@ extern "C" {
 #endif // __cplusplus
 
 typedef struct ScdThreads {
-    int32_t          pid;
-    int32_t          crashTid;
-    ScdRegs          ucRegs;
+    int32_t pid;
+    int32_t crashTid;
+    ScdRegs ucRegs;
     struct AdiagList thdList;
 } ScdThreads;
 
-void ScdThreadsSuspend(ScdThreads *thds);
-void ScdThreadsResume(ScdThreads *thds);
+void ScdThreadsSuspend(ScdThreads* thds);
+void ScdThreadsResume(ScdThreads* thds);
 
-TraStatus ScdThreadsRecord(int32_t fd, const ScdThreads *thds);
-TraStatus ScdThreadsLoadFrames(ScdThreads *thds, ScdMaps *maps);
-TraStatus ScdThreadsLoadInfo(ScdThreads *thds);
-TraStatus ScdThreadsLoad(ScdThreads *thds);
+TraStatus ScdThreadsRecord(int32_t fd, const ScdThreads* thds);
+TraStatus ScdThreadsLoadFrames(ScdThreads* thds, ScdMaps* maps);
+TraStatus ScdThreadsLoadInfo(ScdThreads* thds);
+TraStatus ScdThreadsLoad(ScdThreads* thds);
 
-TraStatus ScdThreadsInit(ScdThreads *thds, int32_t pid, int32_t crashTid, ucontext_t *uc);
-void ScdThreadsUninit(ScdThreads *thds);
+TraStatus ScdThreadsInit(ScdThreads* thds, int32_t pid, int32_t crashTid, ucontext_t* uc);
+void ScdThreadsUninit(ScdThreads* thds);
 
 #ifdef __cplusplus
 }

@@ -19,13 +19,15 @@ extern "C" {
 #endif
 
 struct ListHead {
-    struct ListHead *next;
-    struct ListHead *prev;
+    struct ListHead* next;
+    struct ListHead* prev;
 };
 
-#define INIT_LIST_HEAD(ptr) do { \
-    (ptr)->next = (ptr); (ptr)->prev = (ptr); \
-} while (0)
+#define INIT_LIST_HEAD(ptr)  \
+    do {                     \
+        (ptr)->next = (ptr); \
+        (ptr)->prev = (ptr); \
+    } while (0)
 
 /**
  * @brief       Insert a new entry between two known consecutive entries.
@@ -34,7 +36,7 @@ struct ListHead {
  * @param [in]  next:    next entry to add it before
  * @return      NA
  */
-static inline void ListAdd(struct ListHead *item, struct ListHead *prev, struct ListHead *next)
+static inline void ListAdd(struct ListHead* item, struct ListHead* prev, struct ListHead* next)
 {
     next->prev = item;
     item->next = next;
@@ -48,10 +50,7 @@ static inline void ListAdd(struct ListHead *item, struct ListHead *prev, struct 
  * @param [in]  head:    list head to add it after
  * @return      NA
  */
-static inline void ListAddAfterEntry(struct ListHead *item, struct ListHead *head)
-{
-    ListAdd(item, head, head->next);
-}
+static inline void ListAddAfterEntry(struct ListHead* item, struct ListHead* head) { ListAdd(item, head, head->next); }
 
 /**
  * @brief       Insert a new entry before the specified head.
@@ -59,10 +58,7 @@ static inline void ListAddAfterEntry(struct ListHead *item, struct ListHead *hea
  * @param [in]  head:    list head to add it before
  * @return      NA
  */
-static inline void ListAddBeforeEntry(struct ListHead *item, struct ListHead *head)
-{
-    ListAdd(item, head->prev, head);
-}
+static inline void ListAddBeforeEntry(struct ListHead* item, struct ListHead* head) { ListAdd(item, head->prev, head); }
 
 /*
  * @brief       Delete an existing entry between two known consecutive entries.
@@ -70,7 +66,7 @@ static inline void ListAddBeforeEntry(struct ListHead *item, struct ListHead *he
  * @param [in]  next:    next entry to delete it before
  * @return      NA
  */
-static inline void ListDel(struct ListHead *prev, struct ListHead *next)
+static inline void ListDel(struct ListHead* prev, struct ListHead* next)
 {
     next->prev = prev;
     prev->next = next;
@@ -81,7 +77,7 @@ static inline void ListDel(struct ListHead *prev, struct ListHead *next)
  * @param [in]  entry:    entry to be deleted
  * @return      NA
  */
-static inline void ListDelEntry(struct ListHead *entry)
+static inline void ListDelEntry(struct ListHead* entry)
 {
     ListDel(entry->prev, entry->next);
     entry->next = entry;
@@ -93,24 +89,17 @@ static inline void ListDelEntry(struct ListHead *entry)
  * @param [in]  head:    list head to be checked
  * @return      true or false
  */
-static inline bool ListEmpty(const struct ListHead *head)
-{
-    return (const struct ListHead *)head->next == head;
-}
+static inline bool ListEmpty(const struct ListHead* head) { return (const struct ListHead*)head->next == head; }
 
-#define LIST_ENTRY(ptr, type, member) \
-    ((type *)((char *)(ptr) - offsetof(type, member)))
+#define LIST_ENTRY(ptr, type, member) ((type*)((char*)(ptr)-offsetof(type, member)))
 
-#define LIST_FIRST_ENTRY(ptr, type, member) \
-    LIST_ENTRY((ptr)->next, type, member)
+#define LIST_FIRST_ENTRY(ptr, type, member) LIST_ENTRY((ptr)->next, type, member)
 
-#define LIST_FOR_EACH(pos, head) \
-    for ((pos) = (head)->next; ((pos) != NULL) && ((head) != (pos)); (pos) = (pos)->next)
+#define LIST_FOR_EACH(pos, head) for ((pos) = (head)->next; ((pos) != NULL) && ((head) != (pos)); (pos) = (pos)->next)
 
-#define LIST_FOR_EACH_ENTRY(pos, head, type, member) \
-    for ((pos) = LIST_ENTRY((head)->next, type, member); \
-        ((pos) != NULL) && (&(pos)->member != (head)); \
-        (pos) = LIST_ENTRY((pos)->member.next, type, member))
+#define LIST_FOR_EACH_ENTRY(pos, head, type, member)                                                    \
+    for ((pos) = LIST_ENTRY((head)->next, type, member); ((pos) != NULL) && (&(pos)->member != (head)); \
+         (pos) = LIST_ENTRY((pos)->member.next, type, member))
 
 #ifdef __cplusplus
 }

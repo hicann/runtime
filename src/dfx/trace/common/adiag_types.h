@@ -13,8 +13,8 @@
 
 #include <stdint.h>
 
-typedef int32_t  AdiagStatus;
+typedef int32_t AdiagStatus;
 
-#define ADIAG_SUCCESS         0
-#define ADIAG_FAILURE         (-1)
+#define ADIAG_SUCCESS 0
+#define ADIAG_FAILURE (-1)
 #endif

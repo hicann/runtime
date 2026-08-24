@@ -13,16 +13,16 @@
 #include "mmpa_api.h"
 typedef void (*ThreadAtFork)(void);
 
-#define STACKTRACE_SLEEP_PERIOD  100000U  // 100ms
-#define STACKTRACE_UPDATE_PERIOD 100U     // 0.1s * 100 = 10s
-#define STACKTRACE_THREAD_STACK_SIZE     128 * 1024
-#define THREAD_STATUS_INIT          0
-#define THREAD_STATUS_RUN           1
-#define THREAD_STATUS_WAIT_EXIT     2
+#define STACKTRACE_SLEEP_PERIOD 100000U // 100ms
+#define STACKTRACE_UPDATE_PERIOD 100U   // 0.1s * 100 = 10s
+#define STACKTRACE_THREAD_STACK_SIZE 128 * 1024
+#define THREAD_STATUS_INIT 0
+#define THREAD_STATUS_RUN 1
+#define THREAD_STATUS_WAIT_EXIT 2
 
-#define STACKTRACE_UPDATE_STATUS_INIT    0U
-#define STACKTRACE_UPDATE_STATUS_START   1U
-#define STACKTRACE_UPDATE_STATUS_FINISH  2U
+#define STACKTRACE_UPDATE_STATUS_INIT 0U
+#define STACKTRACE_UPDATE_STATUS_START 1U
+#define STACKTRACE_UPDATE_STATUS_FINISH 2U
 
 static int32_t g_stacktraceMonitorThreadStatus = THREAD_STATUS_INIT;
 
@@ -32,23 +32,13 @@ static uint32_t g_stacktraceUpdateStatus;
 static bool g_forking = false;
 STATIC pthread_mutex_t g_forkMutex = PTHREAD_MUTEX_INITIALIZER;
 
+void StacktraceMonitorStartUpdate(void) { g_stacktraceUpdateStatus = STACKTRACE_UPDATE_STATUS_START; }
 
-void StacktraceMonitorStartUpdate(void)
-{
-    g_stacktraceUpdateStatus = STACKTRACE_UPDATE_STATUS_START;
-}
+pid_t StacktraceMonitorGetTid(void) { return g_stacktraceMonitorthreadId; }
 
-pid_t StacktraceMonitorGetTid(void)
-{
-    return g_stacktraceMonitorthreadId;
-}
+bool StacktraceCheckUpdateFinished(void) { return (g_stacktraceUpdateStatus == STACKTRACE_UPDATE_STATUS_FINISH); }
 
-bool StacktraceCheckUpdateFinished(void)
-{
-    return (g_stacktraceUpdateStatus == STACKTRACE_UPDATE_STATUS_FINISH);
-}
-
-static void *StacktraceMonitorProcess(void *arg)
+static void* StacktraceMonitorProcess(void* arg)
 {
     (void)arg;
     g_stacktraceMonitorthreadId = (pid_t)syscall(SYS_gettid);
@@ -60,7 +50,7 @@ static void *StacktraceMonitorProcess(void *arg)
             (void)pthread_mutex_lock(&g_forkMutex);
             TraceStackUnwindInit();
             (void)pthread_mutex_unlock(&g_forkMutex);
-            
+
             g_stacktraceUpdateStatus = STACKTRACE_UPDATE_STATUS_FINISH;
         }
     }
@@ -72,7 +62,7 @@ static TraStatus StacktraceCreateMonitorThread(void)
     mmUserBlock_t thread;
     thread.procFunc = StacktraceMonitorProcess;
     thread.pulArg = NULL;
-    mmThreadAttr attr = { 0, 0, 0, 0, 0, 0, STACKTRACE_THREAD_STACK_SIZE };
+    mmThreadAttr attr = {0, 0, 0, 0, 0, 0, STACKTRACE_THREAD_STACK_SIZE};
     mmThread tid = 0;
     if (mmCreateTaskWithThreadAttr(&tid, &thread, &attr) != 0) {
         ADIAG_ERR("create task failed, strerr=%s.", strerror(errno));
@@ -124,7 +114,8 @@ STATIC void StacktraceProcessInit(void)
 
 static void StacktracePrepareForFork(void)
 {
-    int32_t ret = pthread_atfork((ThreadAtFork)StacktraceProcessUnInit, (ThreadAtFork)StacktraceProcessInit,
+    int32_t ret = pthread_atfork(
+        (ThreadAtFork)StacktraceProcessUnInit, (ThreadAtFork)StacktraceProcessInit,
         (ThreadAtFork)StacktraceSubProcessInit);
     if (ret != 0) {
         ADIAG_WAR("can not call pthread_atfork, ret=%d", ret);

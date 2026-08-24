@@ -16,7 +16,7 @@
  * @param [in]dllName: library name
  * @return: library handle
  */
-ArgPtr LoadRuntimeDll(const char *dllName)
+ArgPtr LoadRuntimeDll(const char* dllName)
 {
     ONE_ACT_NO_LOG(dllName == NULL, return NULL);
 
@@ -50,20 +50,20 @@ int32_t UnloadRuntimeDll(ArgPtr handle)
 }
 
 /**
-* @brief LoadDllFunc: find library symbols and load it
-* @param [in]handle: library load handle
-* @param [in]symbolInfos: symbol info and handle
-* @param [in]symbolNum: symbol nums
-* @return: On success, return 0
-*     On failure, return -1
-*/
-int32_t LoadDllFunc(ArgPtr handle, SymbolInfo *symbolInfos, uint32_t symbolNum)
+ * @brief LoadDllFunc: find library symbols and load it
+ * @param [in]handle: library load handle
+ * @param [in]symbolInfos: symbol info and handle
+ * @param [in]symbolNum: symbol nums
+ * @return: On success, return 0
+ *     On failure, return -1
+ */
+int32_t LoadDllFunc(ArgPtr handle, SymbolInfo* symbolInfos, uint32_t symbolNum)
 {
     ONE_ACT_NO_LOG((handle == NULL) || (symbolInfos == NULL), return -1);
     ONE_ACT_NO_LOG(symbolNum == 0, return -1);
 
     for (uint32_t i = 0; i < symbolNum; i++) {
-        const char *symbol = symbolInfos[i].symbol;
+        const char* symbol = symbolInfos[i].symbol;
         if (symbol == NULL) {
             continue;
         }
@@ -82,13 +82,13 @@ int32_t LoadDllFunc(ArgPtr handle, SymbolInfo *symbolInfos, uint32_t symbolNum)
 }
 
 /**
-* @brief LoadDllFuncSingle: find one library symbol and load it
-* @param [in]handle: library load handle
-* @param [in]symbol: function name
-* @return: On success, return the address associated with symbol
-*     On failure, return NULL
-*/
-ArgPtr LoadDllFuncSingle(ArgPtr handle, const char *symbol)
+ * @brief LoadDllFuncSingle: find one library symbol and load it
+ * @param [in]handle: library load handle
+ * @param [in]symbol: function name
+ * @return: On success, return the address associated with symbol
+ *     On failure, return NULL
+ */
+ArgPtr LoadDllFuncSingle(ArgPtr handle, const char* symbol)
 {
     ONE_ACT_NO_LOG((handle == NULL) || (symbol == NULL), return NULL);
 

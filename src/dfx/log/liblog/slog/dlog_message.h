@@ -19,7 +19,7 @@ extern "C" {
 #endif // __cplusplus
 
 #define MODULE_ID_MASK 0x0000FFFFU
-#define LOG_TYPE_MASK  0xFFFF0000U
+#define LOG_TYPE_MASK 0xFFFF0000U
 
 typedef struct {
     uint32_t moduleId;
@@ -36,19 +36,18 @@ typedef struct {
     int32_t level;
     uint32_t moduleId;
     uint32_t contentLength;
-    char *logContent; // pointer to real log content
+    char* logContent; // pointer to real log content
     uint32_t msgLength;
     char msg[MSG_LENGTH];
 } LogMsg;
 
-void DlogParseLogMsg(LogMsgArg *msgArg, LogMsg *logMsg);
-int32_t DlogSetMessage(LogMsg *logMsg, const LogMsgArg *msgArg, const char *fmt, va_list v);
-void DlogSetMessageNl(LogMsg *logMsg);
+void DlogParseLogMsg(LogMsgArg* msgArg, LogMsg* logMsg);
+int32_t DlogSetMessage(LogMsg* logMsg, const LogMsgArg* msgArg, const char* fmt, va_list v);
+void DlogSetMessageNl(LogMsg* logMsg);
 
-LogStatus DlogAddMessageTag(LogMsg *logMsg, const LogMsgArg *msgArg, char *buffer, uint32_t bufLen);
-LogStatus DlogAddMessageHead(LogMsg *logMsg, char *buffer, uint32_t bufLen);
+LogStatus DlogAddMessageTag(LogMsg* logMsg, const LogMsgArg* msgArg, char* buffer, uint32_t bufLen);
+LogStatus DlogAddMessageHead(LogMsg* logMsg, char* buffer, uint32_t bufLen);
 #ifdef __cplusplus
 }
 #endif // __cplusplus
 #endif
-

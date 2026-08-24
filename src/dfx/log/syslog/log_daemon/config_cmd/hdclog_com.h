@@ -43,4 +43,4 @@ typedef enum {
     HDCLOG_RESERVED
 } HdclogErr;
 
-#endif  // __HDCLOG_DEVICE_COM_H__
+#endif // __HDCLOG_DEVICE_COM_H__

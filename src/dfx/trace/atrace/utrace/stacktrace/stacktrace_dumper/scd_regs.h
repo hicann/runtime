@@ -24,14 +24,14 @@ typedef struct ScdRegs {
     uintptr_t r[SCD_REGS_NUM];
 } ScdRegs;
 
-void ScdRegsLoadFromUcontext(ScdRegs *regs, ucontext_t *uc);
-uintptr_t ScdRegsGetPc(ScdRegs *regs);
-void ScdRegsSetPc(ScdRegs *regs, uintptr_t pc);
-uintptr_t ScdRegsGetSp(ScdRegs *regs);
-void ScdRegsSetSp(ScdRegs *regs, uintptr_t sp);
-uintptr_t ScdRegsGetFp(ScdRegs *regs);
-void ScdRegsSetFp(ScdRegs *regs, uintptr_t fp);
-TraStatus ScdRegsGetString(const ScdRegs *regs, char *buf, size_t bufSize);
+void ScdRegsLoadFromUcontext(ScdRegs* regs, ucontext_t* uc);
+uintptr_t ScdRegsGetPc(ScdRegs* regs);
+void ScdRegsSetPc(ScdRegs* regs, uintptr_t pc);
+uintptr_t ScdRegsGetSp(ScdRegs* regs);
+void ScdRegsSetSp(ScdRegs* regs, uintptr_t sp);
+uintptr_t ScdRegsGetFp(ScdRegs* regs);
+void ScdRegsSetFp(ScdRegs* regs, uintptr_t fp);
+TraStatus ScdRegsGetString(const ScdRegs* regs, char* buf, size_t bufSize);
 
 #ifdef __cplusplus
 }

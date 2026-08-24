@@ -19,7 +19,7 @@
 extern "C" {
 #endif
 
-LogStatus SlogdAppLogFlushToBufByReport(const char *msg, uint32_t msgLen, const LogInfo *info);
+LogStatus SlogdAppLogFlushToBufByReport(const char* msg, uint32_t msgLen, const LogInfo* info);
 LogStatus SlogdAppLogReport(void);
 
 LogStatus SlogdAppLogReportInit(int32_t devId);
@@ -29,4 +29,3 @@ void SlogdAppLogReportExit(void);
 }
 #endif
 #endif
-

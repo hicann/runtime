@@ -15,17 +15,14 @@
  * @param [in]  lock:   lock pointer
  * @return      AdiagStatus
  */
-AdiagStatus AdiagLockInit(AdiagLock *lock)
-{
-    return (mmMutexInit(lock) == EN_OK) ? ADIAG_SUCCESS : ADIAG_FAILURE;
-}
+AdiagStatus AdiagLockInit(AdiagLock* lock) { return (mmMutexInit(lock) == EN_OK) ? ADIAG_SUCCESS : ADIAG_FAILURE; }
 
 /**
  * @brief       destroy lock
  * @param [in]  lock:   lock pointer
  * @return      AdiagStatus
  */
-AdiagStatus AdiagLockDestroy(AdiagLock *lock)
+AdiagStatus AdiagLockDestroy(AdiagLock* lock)
 {
     return (mmMutexDestroy(lock) == EN_OK) ? ADIAG_SUCCESS : ADIAG_FAILURE;
 }
@@ -35,18 +32,11 @@ AdiagStatus AdiagLockDestroy(AdiagLock *lock)
  * @param [in]  lock:   lock pointer
  * @return      AdiagStatus
  */
-AdiagStatus AdiagLockGet(AdiagLock *lock)
-{
-    return (mmMutexLock(lock) == EN_OK) ? ADIAG_SUCCESS : ADIAG_FAILURE;
-}
+AdiagStatus AdiagLockGet(AdiagLock* lock) { return (mmMutexLock(lock) == EN_OK) ? ADIAG_SUCCESS : ADIAG_FAILURE; }
 
 /**
  * @brief       unlock
  * @param [in]  lock:   lock pointer
  * @return      AdiagStatus
  */
-AdiagStatus AdiagLockRelease(AdiagLock *lock)
-{
-    return (mmMutexUnLock(lock) == EN_OK) ? ADIAG_SUCCESS : ADIAG_FAILURE;
-}
-
+AdiagStatus AdiagLockRelease(AdiagLock* lock) { return (mmMutexUnLock(lock) == EN_OK) ? ADIAG_SUCCESS : ADIAG_FAILURE; }

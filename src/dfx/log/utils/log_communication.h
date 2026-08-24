@@ -12,13 +12,13 @@
 
 #include "log_error_code.h"
 
-#define LOGHEAD_LEN     sizeof(LogHead)
-#define HEAD_MAGIC      0xA1C0U
-#define HEAD_VERSION    0x0001U
-#define LOG_REPORT_MAGIC    0xB87AU
-#define SINGLE_EXPORT_LOG               "slog_single"
-#define CONTAINER_NO_SUPPORT_MESSAGE    "not support container environment"
-#define CONNECT_OCCUPIED_MESSAGE        "The connection is occupied"
+#define LOGHEAD_LEN sizeof(LogHead)
+#define HEAD_MAGIC 0xA1C0U
+#define HEAD_VERSION 0x0001U
+#define LOG_REPORT_MAGIC 0xB87AU
+#define SINGLE_EXPORT_LOG "slog_single"
+#define CONTAINER_NO_SUPPORT_MESSAGE "not support container environment"
+#define CONNECT_OCCUPIED_MESSAGE "The connection is occupied"
 
 typedef struct {
     uint16_t magic;

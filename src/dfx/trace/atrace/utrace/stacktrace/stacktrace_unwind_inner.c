@@ -24,7 +24,6 @@
 #include "stacktrace_dumper/scd_memory.h"
 #include "scd_log.h"
 
-
 /**
  * @brief       read N bytes from src and move src forward N bytes
  * @param [in]  src  src addr
@@ -33,7 +32,7 @@
  *
  * @return read size, return 0 if failed
  */
-size_t TraceReadBytes(ScdDwarf *dwarf, const uint8_t **src, void *dst, size_t size)
+size_t TraceReadBytes(ScdDwarf* dwarf, const uint8_t** src, void* dst, size_t size)
 {
     size_t ret = ScdMemoryRead(dwarf->memory, (uintptr_t)(*src), dst, size);
     if (ret == 0) {
@@ -58,13 +57,13 @@ size_t TraceReadBytes(ScdDwarf *dwarf, const uint8_t **src, void *dst, size_t si
  *
  * @return 返回读取到的数值后的字节流指针
  */
-const uint8_t *TraceReadLeb128(ScdDwarf *dwarf, const uint8_t *byteStream, intptr_t *psvVal)
+const uint8_t* TraceReadLeb128(ScdDwarf* dwarf, const uint8_t* byteStream, intptr_t* psvVal)
 {
     uint32_t shift = 0;
     uint8_t ucByte;
     uintptr_t result;
     uint32_t byteCount = 0;
-    const uint8_t *byteStreamTmp = byteStream;
+    const uint8_t* byteStreamTmp = byteStream;
     result = 0;
 
     do {
@@ -99,13 +98,13 @@ const uint8_t *TraceReadLeb128(ScdDwarf *dwarf, const uint8_t *byteStream, intpt
  * @param [out] val 存储读取到的数据
  * @return 返回读取到的数据后的字节流位置
  */
-const uint8_t *TraceReadUleb128(ScdDwarf *dwarf, const uint8_t *byteStream, uintptr_t *val)
+const uint8_t* TraceReadUleb128(ScdDwarf* dwarf, const uint8_t* byteStream, uintptr_t* val)
 {
     uint32_t shift = 0;
     uint8_t ucByte;
     uintptr_t result = 0;
     uint32_t byteCount = 0;
-    const uint8_t *byteStreamTmp = byteStream;
+    const uint8_t* byteStreamTmp = byteStream;
 
     /* Uleb128类型处理方式，在64bit机器上该类型最大10byte(10*7 > 8*8)
      * 低字节开始读，若字节最高位为0停止读，取每次读的字节低七位作为数据的低七位
@@ -122,7 +121,7 @@ const uint8_t *TraceReadUleb128(ScdDwarf *dwarf, const uint8_t *byteStream, uint
     return byteStreamTmp;
 }
 
-static uint32_t TraceEncDataHighbitParse(const uint8_t encode, const uintptr_t srcAddr, uintptr_t *resultPtr)
+static uint32_t TraceEncDataHighbitParse(const uint8_t encode, const uintptr_t srcAddr, uintptr_t* resultPtr)
 {
     uintptr_t result = *resultPtr;
 
@@ -133,7 +132,7 @@ static uint32_t TraceEncDataHighbitParse(const uint8_t encode, const uintptr_t s
 
     /* 若编码类型的最高位是1，表示该地址表示的内容也是个地址，要保证地址合法性 */
     if (TRACE_HIBIT1_ENCODE(encode) == DW_EH_PE_INDIRECT) {
-        result = *(uintptr_t *)result;
+        result = *(uintptr_t*)result;
     }
 
     *resultPtr = result;
@@ -141,7 +140,8 @@ static uint32_t TraceEncDataHighbitParse(const uint8_t encode, const uintptr_t s
     return 0;
 }
 
-static const uint8_t *TraceEncDataLowbitParse(ScdDwarf *dwarf, const uint8_t encode, const uint8_t *segAddr, uintptr_t *resultPtr)
+static const uint8_t* TraceEncDataLowbitParse(
+    ScdDwarf* dwarf, const uint8_t encode, const uint8_t* segAddr, uintptr_t* resultPtr)
 {
     uint16_t uint16Value = 0;
     int16_t int16Value = 0;
@@ -150,7 +150,7 @@ static const uint8_t *TraceEncDataLowbitParse(ScdDwarf *dwarf, const uint8_t enc
     uint64_t uint64Value = 0;
     int64_t int64Value = 0;
     intptr_t intptrValue = 0;
-    const uint8_t *segAddrTmp = segAddr;
+    const uint8_t* segAddrTmp = segAddr;
     size_t size = 0;
 
     /* 对编码类型的低4位进行分别处理 */
@@ -220,12 +220,12 @@ static const uint8_t *TraceEncDataLowbitParse(ScdDwarf *dwarf, const uint8_t enc
  *
  * @return 返回执行后的地址
  */
-const uint8_t *TraceReadEncodeValue(ScdDwarf *dwarf, const uint8_t encode, const uint8_t *byteAddr, uintptr_t *val)
+const uint8_t* TraceReadEncodeValue(ScdDwarf* dwarf, const uint8_t encode, const uint8_t* byteAddr, uintptr_t* val)
 {
     uintptr_t result = 0;
     uintptr_t srcAddr;
     uintptr_t alignAddr;
-    const uint8_t *byteAddrTmp = byteAddr;
+    const uint8_t* byteAddrTmp = byteAddr;
 
     if (encode == DW_EH_PE_OMIT) {
         SCD_DLOG_ERR("encode is DW_EH_PE_OMIT");
@@ -236,9 +236,9 @@ const uint8_t *TraceReadEncodeValue(ScdDwarf *dwarf, const uint8_t encode, const
         /* 地址高对齐 */
         alignAddr = (uintptr_t)byteAddrTmp;
         alignAddr = TRACE_UNWIND_HALIGN(alignAddr);
-        size_t size = TraceReadBytes(dwarf, (const uint8_t **)(&alignAddr), &result, sizeof(uintptr_t));
+        size_t size = TraceReadBytes(dwarf, (const uint8_t**)(&alignAddr), &result, sizeof(uintptr_t));
         SCD_CHK_EXPR_ACTION(size == 0, return NULL, "read bytes failed");
-        byteAddrTmp = (const uint8_t *)alignAddr;
+        byteAddrTmp = (const uint8_t*)alignAddr;
     } else {
         /* 对编码类型的低4位进行分别处理 */
         byteAddrTmp = TraceEncDataLowbitParse(dwarf, encode, byteAddrTmp, &result);
@@ -268,7 +268,7 @@ size_t TraceEncValueSizeGet(uint8_t encode)
 
     switch (encode & 0x07U) { /* 0x07 */
         case DW_EH_PE_ABSPTR:
-            encSize = sizeof(void *);
+            encSize = sizeof(void*);
             break;
         case DW_EH_PE_UDATA2:
             encSize = sizeof(uint16_t);

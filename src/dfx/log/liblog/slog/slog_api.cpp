@@ -23,27 +23,20 @@
 #endif
 
 namespace {
-    ArgPtr g_sloglibHandle = nullptr;
-    SymbolInfo g_slogFuncInfo[DLOG_FUNC_MAX] = {
-        {"dlog_init", nullptr},
-        {"dlog_getlevel", nullptr},
-        {"dlog_setlevel", nullptr},
-        {"CheckLogLevel", nullptr},
-        {"DlogGetAttr", nullptr},
-        {"DlogSetAttr", nullptr},
-        {"DlogVaList", nullptr},
-        {"DlogFlush", nullptr}
-    };
+ArgPtr g_sloglibHandle = nullptr;
+SymbolInfo g_slogFuncInfo[DLOG_FUNC_MAX] = {
+    {"dlog_init", nullptr},   {"dlog_getlevel", nullptr}, {"dlog_setlevel", nullptr}, {"CheckLogLevel", nullptr},
+    {"DlogGetAttr", nullptr}, {"DlogSetAttr", nullptr},   {"DlogVaList", nullptr},    {"DlogFlush", nullptr}};
 
-    using DlogInitFunc = decltype(dlog_init)*;
-    using DlogGetLogLevelFunc = decltype(dlog_getlevel)*;
-    using DlogSetLogLevelFunc = decltype(dlog_setlevel)*;
-    using CheckLogLevelFunc = decltype(CheckLogLevel)*;
-    using DlogGetAttrFunc = decltype(DlogGetAttr)*;
-    using DlogSetAttrFunc = decltype(DlogSetAttr)*;
-    using DlogVaListFunc = decltype(DlogVaList)*;
-    using DlogFlushFunc = decltype(DlogFlush)*;
-};
+using DlogInitFunc = decltype(dlog_init)*;
+using DlogGetLogLevelFunc = decltype(dlog_getlevel)*;
+using DlogSetLogLevelFunc = decltype(dlog_setlevel)*;
+using CheckLogLevelFunc = decltype(CheckLogLevel)*;
+using DlogGetAttrFunc = decltype(DlogGetAttr)*;
+using DlogSetAttrFunc = decltype(DlogSetAttr)*;
+using DlogVaListFunc = decltype(DlogVaList)*;
+using DlogFlushFunc = decltype(DlogFlush)*;
+}; // namespace
 
 #ifdef __cplusplus
 extern "C" {
@@ -80,7 +73,7 @@ int32_t AlogCheckDebugLevel(uint32_t moduleId, int32_t level)
     return TRUE;
 }
 
-int32_t AlogRecord(uint32_t moduleId, uint32_t logType, int32_t level, const char *fmt, ...)
+int32_t AlogRecord(uint32_t moduleId, uint32_t logType, int32_t level, const char* fmt, ...)
 {
     uint32_t type = DEBUG_LOG_MASK;
     if (logType == static_cast<uint32_t>(DLOG_TYPE_RUN)) {
@@ -113,7 +106,7 @@ int32_t AlogTransferToSlog(void)
     if (g_sloglibHandle == nullptr) {
         return LOG_FAILURE;
     }
-    void *slogGetAttrFunc = LoadDllFuncSingle(g_sloglibHandle, "DlogGetAttr");
+    void* slogGetAttrFunc = LoadDllFuncSingle(g_sloglibHandle, "DlogGetAttr");
     if (slogGetAttrFunc == nullptr) {
         return LOG_FAILURE;
     }
@@ -133,10 +126,7 @@ int32_t AlogTransferToSlog(void)
     return LOG_SUCCESS;
 }
 #endif
-void AlogCloseSlogLib(void)
-{
-    (void)UnloadRuntimeDll(g_sloglibHandle);
-}
+void AlogCloseSlogLib(void) { (void)UnloadRuntimeDll(g_sloglibHandle); }
 
 #ifdef __cplusplus
 }
@@ -149,13 +139,13 @@ extern "C" {
 #endif // __cplusplus
 
 /**
-* @brief DlogInner: log interface with level
-* @param [in]moduleId: moudule Id eg: CCE
-* @param [in]level: log level((0: debug, 1: info, 2: warning, 3: error)
-* @param [in]fmt: log msg string
-* @return: void
-*/
-void DlogInner(int32_t moduleId, int32_t level, const char *fmt, ...)
+ * @brief DlogInner: log interface with level
+ * @param [in]moduleId: moudule Id eg: CCE
+ * @param [in]level: log level((0: debug, 1: info, 2: warning, 3: error)
+ * @param [in]fmt: log msg string
+ * @return: void
+ */
+void DlogInner(int32_t moduleId, int32_t level, const char* fmt, ...)
 {
     if (g_slogFuncInfo[DLOG_VA_LIST].handle != nullptr) {
         va_list list;
@@ -176,8 +166,7 @@ void DlogInner(int32_t moduleId, int32_t level, const char *fmt, ...)
         0,
         {APPLICATION, 0, 0, 0, {'\0'}},
         {'\0'},
-        {nullptr, 0}
-    };
+        {nullptr, 0}};
 
     va_list list;
     va_start(list, fmt);
@@ -185,7 +174,7 @@ void DlogInner(int32_t moduleId, int32_t level, const char *fmt, ...)
     va_end(list);
 }
 
-void DlogErrorInner(int32_t moduleId, const char *fmt, ...)
+void DlogErrorInner(int32_t moduleId, const char* fmt, ...)
 {
     if (g_slogFuncInfo[DLOG_VA_LIST].handle != nullptr) {
         va_list list;
@@ -206,8 +195,7 @@ void DlogErrorInner(int32_t moduleId, const char *fmt, ...)
         0,
         {APPLICATION, 0, 0, 0, {'\0'}},
         {'\0'},
-        {nullptr, 0}
-    };
+        {nullptr, 0}};
 
     va_list list;
     va_start(list, fmt);
@@ -215,7 +203,7 @@ void DlogErrorInner(int32_t moduleId, const char *fmt, ...)
     va_end(list);
 }
 
-void DlogWarnInner(int32_t moduleId, const char *fmt, ...)
+void DlogWarnInner(int32_t moduleId, const char* fmt, ...)
 {
     if (g_slogFuncInfo[DLOG_VA_LIST].handle != nullptr) {
         va_list list;
@@ -236,8 +224,7 @@ void DlogWarnInner(int32_t moduleId, const char *fmt, ...)
         0,
         {APPLICATION, 0, 0, 0, {'\0'}},
         {'\0'},
-        {nullptr, 0}
-    };
+        {nullptr, 0}};
 
     va_list list;
     va_start(list, fmt);
@@ -245,7 +232,7 @@ void DlogWarnInner(int32_t moduleId, const char *fmt, ...)
     va_end(list);
 }
 
-void DlogInfoInner(int32_t moduleId, const char *fmt, ...)
+void DlogInfoInner(int32_t moduleId, const char* fmt, ...)
 {
     if (g_slogFuncInfo[DLOG_VA_LIST].handle != nullptr) {
         va_list list;
@@ -266,8 +253,7 @@ void DlogInfoInner(int32_t moduleId, const char *fmt, ...)
         0,
         {APPLICATION, 0, 0, 0, {'\0'}},
         {'\0'},
-        {nullptr, 0}
-    };
+        {nullptr, 0}};
 
     va_list list;
     va_start(list, fmt);
@@ -275,7 +261,7 @@ void DlogInfoInner(int32_t moduleId, const char *fmt, ...)
     va_end(list);
 }
 
-void DlogDebugInner(int32_t moduleId, const char *fmt, ...)
+void DlogDebugInner(int32_t moduleId, const char* fmt, ...)
 {
     if (g_slogFuncInfo[DLOG_VA_LIST].handle != nullptr) {
         va_list list;
@@ -296,8 +282,7 @@ void DlogDebugInner(int32_t moduleId, const char *fmt, ...)
         0,
         {APPLICATION, 0, 0, 0, {'\0'}},
         {'\0'},
-        {nullptr, 0}
-    };
+        {nullptr, 0}};
 
     va_list list;
     va_start(list, fmt);
@@ -305,7 +290,7 @@ void DlogDebugInner(int32_t moduleId, const char *fmt, ...)
     va_end(list);
 }
 
-void DlogEventInner(int32_t moduleId, const char *fmt, ...)
+void DlogEventInner(int32_t moduleId, const char* fmt, ...)
 {
     if (g_slogFuncInfo[DLOG_VA_LIST].handle != nullptr) {
         va_list list;
@@ -326,8 +311,7 @@ void DlogEventInner(int32_t moduleId, const char *fmt, ...)
         0,
         {APPLICATION, 0, 0, 0, {'\0'}},
         {'\0'},
-        {nullptr, 0}
-    };
+        {nullptr, 0}};
 
     va_list list;
     va_start(list, fmt);
@@ -336,15 +320,15 @@ void DlogEventInner(int32_t moduleId, const char *fmt, ...)
 }
 
 /**
-* @brief DlogWithKVInner: log interface with level
-* @param [in]moduleId: moudule Id eg: CCE
-* @param [in]level: log level(0: debug, 1: info, 2: warning, 3: error)
-* @param [in]pstKVArray: key-value arrary
-* @param [in]kvNum: num of key-value arrary
-* @param [in]fmt: log msg string
-* @return: void
-*/
-void DlogWithKVInner(int32_t moduleId, int32_t level, const KeyValue *pstKVArray, int32_t kvNum, const char *fmt, ...)
+ * @brief DlogWithKVInner: log interface with level
+ * @param [in]moduleId: moudule Id eg: CCE
+ * @param [in]level: log level(0: debug, 1: info, 2: warning, 3: error)
+ * @param [in]pstKVArray: key-value arrary
+ * @param [in]kvNum: num of key-value arrary
+ * @param [in]fmt: log msg string
+ * @return: void
+ */
+void DlogWithKVInner(int32_t moduleId, int32_t level, const KeyValue* pstKVArray, int32_t kvNum, const char* fmt, ...)
 {
     ONE_ACT_ERR_LOG(pstKVArray == nullptr, return, "[input] key-value array is null.");
     ONE_ACT_ERR_LOG(kvNum <= 0, return, "[input] key-value number is invalid, key_value_number=%d.", kvNum);
@@ -359,8 +343,7 @@ void DlogWithKVInner(int32_t moduleId, int32_t level, const KeyValue *pstKVArray
         0,
         {APPLICATION, 0, 0, 0, {'\0'}},
         {'\0'},
-        {pstKVArray, kvNum}
-    };
+        {pstKVArray, kvNum}};
 
     va_list list;
     va_start(list, fmt);
@@ -369,13 +352,13 @@ void DlogWithKVInner(int32_t moduleId, int32_t level, const KeyValue *pstKVArray
 }
 
 /**
-* @brief DlogRecord: log interface with level
-* @param [in]moduleId: moudule Id eg: CCE
-* @param [in]level: log level(0: debug, 1: info, 2: warning, 3: error)
-* @param [in]fmt: log msg string
-* @return: void
-*/
-void DlogRecord(int32_t moduleId, int32_t level, const char *fmt, ...)
+ * @brief DlogRecord: log interface with level
+ * @param [in]moduleId: moudule Id eg: CCE
+ * @param [in]level: log level(0: debug, 1: info, 2: warning, 3: error)
+ * @param [in]fmt: log msg string
+ * @return: void
+ */
+void DlogRecord(int32_t moduleId, int32_t level, const char* fmt, ...)
 {
     if (g_slogFuncInfo[DLOG_VA_LIST].handle != nullptr) {
         va_list list;
@@ -396,8 +379,7 @@ void DlogRecord(int32_t moduleId, int32_t level, const char *fmt, ...)
         0,
         {APPLICATION, 0, 0, 0, {'\0'}},
         {'\0'},
-        {nullptr, 0}
-    };
+        {nullptr, 0}};
 
     va_list list;
     va_start(list, fmt);
@@ -410,7 +392,7 @@ void DlogRecord(int32_t moduleId, int32_t level, const char *fmt, ...)
  * @param [in]  : logAttrInfo   attr info, include pid, process type and device id
  * @return      : 0: SUCCEED, others: FAILED
  */
-int32_t DlogGetAttr(LogAttr *logAttrInfo)
+int32_t DlogGetAttr(LogAttr* logAttrInfo)
 {
     if (g_slogFuncInfo[DLOG_GET_ATTR].handle != nullptr) {
         return reinterpret_cast<DlogGetAttrFunc>(g_slogFuncInfo[DLOG_GET_ATTR].handle)(logAttrInfo);
@@ -445,7 +427,7 @@ int32_t DlogSetAttr(LogAttr logAttrInfo)
     return LOG_SUCCESS;
 }
 
-void DlogVaList(int32_t moduleId, int32_t level, const char *fmt, va_list list)
+void DlogVaList(int32_t moduleId, int32_t level, const char* fmt, va_list list)
 {
     if (g_slogFuncInfo[DLOG_VA_LIST].handle != nullptr) {
         reinterpret_cast<DlogVaListFunc>(g_slogFuncInfo[DLOG_VA_LIST].handle)(moduleId, level, fmt, list);
@@ -462,8 +444,7 @@ void DlogVaList(int32_t moduleId, int32_t level, const char *fmt, va_list list)
         0,
         {APPLICATION, 0, 0, 0, {'\0'}},
         {'\0'},
-        {nullptr, 0}
-    };
+        {nullptr, 0}};
 
     (void)DlogWriteInner(&msgArg, fmt, list);
 }
@@ -484,7 +465,7 @@ void dlog_init(void)
 * @param [in/out]enableEvent: point to enableEvent to record enableEvent
 * @return: module level(0: debug, 1: info, 2: warning, 3: error, 4: null output)
 */
-STATIC int32_t DlogGetLogLevel(uint32_t moduleId, int32_t *enableEvent)
+STATIC int32_t DlogGetLogLevel(uint32_t moduleId, int32_t* enableEvent)
 {
     if (enableEvent != nullptr) {
         *enableEvent = GetGlobalEnableEventVar() ? TRUE : FALSE;
@@ -514,7 +495,7 @@ STATIC int32_t DlogSetModuleLevel(uint32_t moduleId, int32_t level)
 
     const uint32_t realModuleId = moduleId & MODULE_ID_MASK;
     const uint32_t typeMask = moduleId & LOG_TYPE_MASK;
- 
+
     if (realModuleId == ALL_MODULE) {
         SetGlobalLogTypeLevelVar(level, typeMask);
         DlogSetLogTypeLevelToAllModule(level, typeMask);
@@ -555,12 +536,12 @@ STATIC int32_t DlogSetLogLevel(uint32_t moduleId, int32_t level, int32_t enableE
 }
 
 /**
-* @brief dlog_getlevel: get module loglevel
-* @param [in]moduleId: moudule Id eg: CCE
-* @param [in/out]enableEvent: point to enableEvent to record enableEvent
-* @return: module level(0: debug, 1: info, 2: warning, 3: error, 4: null output)
-*/
-int32_t dlog_getlevel(int32_t moduleId, int32_t *enableEvent)
+ * @brief dlog_getlevel: get module loglevel
+ * @param [in]moduleId: moudule Id eg: CCE
+ * @param [in/out]enableEvent: point to enableEvent to record enableEvent
+ * @return: module level(0: debug, 1: info, 2: warning, 3: error, 4: null output)
+ */
+int32_t dlog_getlevel(int32_t moduleId, int32_t* enableEvent)
 {
     if (g_slogFuncInfo[DLOG_GET_LEVEL].handle != nullptr) {
         return reinterpret_cast<DlogGetLogLevelFunc>(g_slogFuncInfo[DLOG_GET_LEVEL].handle)(moduleId, enableEvent);
@@ -573,12 +554,12 @@ int32_t dlog_getlevel(int32_t moduleId, int32_t *enableEvent)
 }
 
 /**
-* @brief dlog_setlevel: set module loglevel and enableEvent
-* @param [in]moduleId: moudule id(see slog.h, eg: CCE), -1: all modules, others: invalid
-* @param [in]level: log level(0: debug, 1: info, 2: warning, 3: error, 4: null output)
-* @param [in]enableEvent: 1: enable; 0: disable, others:invalid
-* @return: 0: SUCCEED, others: FAILED
-*/
+ * @brief dlog_setlevel: set module loglevel and enableEvent
+ * @param [in]moduleId: moudule id(see slog.h, eg: CCE), -1: all modules, others: invalid
+ * @param [in]level: log level(0: debug, 1: info, 2: warning, 3: error, 4: null output)
+ * @param [in]enableEvent: 1: enable; 0: disable, others:invalid
+ * @return: 0: SUCCEED, others: FAILED
+ */
 int32_t dlog_setlevel(int32_t moduleId, int32_t level, int32_t enableEvent)
 {
     if (g_slogFuncInfo[DLOG_SET_LEVEL].handle != nullptr) {
@@ -607,8 +588,8 @@ int32_t CheckLogLevel(int32_t moduleId, int32_t logLevel)
         return GetGlobalEnableEventVar() ? TRUE : FALSE;
     } else {
         // get module loglevel by moduleId
-        const int32_t moduleLevel = DlogGetLogTypeLevelByModuleId(static_cast<uint32_t>(moduleId) & MODULE_ID_MASK,
-            static_cast<uint32_t>(moduleId) & LOG_TYPE_MASK);
+        const int32_t moduleLevel = DlogGetLogTypeLevelByModuleId(
+            static_cast<uint32_t>(moduleId) & MODULE_ID_MASK, static_cast<uint32_t>(moduleId) & LOG_TYPE_MASK);
         if ((logLevel < moduleLevel) || (logLevel >= LOG_MAX_LEVEL)) {
             return FALSE;
         }
@@ -622,13 +603,10 @@ static const uint32_t ACLLOG_USER_MODULE_ID_MAX = 0xffffU;
 static bool IsAcllogUserModuleId(int32_t moduleId)
 {
     return (moduleId >= static_cast<int32_t>(ACLLOG_USER_MODULE_ID_MIN)) &&
-        (moduleId <= static_cast<int32_t>(ACLLOG_USER_MODULE_ID_MAX));
+           (moduleId <= static_cast<int32_t>(ACLLOG_USER_MODULE_ID_MAX));
 }
 
-static uint32_t GetAcllogModuleId(int32_t moduleId)
-{
-    return static_cast<uint32_t>(moduleId) & MODULE_ID_MASK;
-}
+static uint32_t GetAcllogModuleId(int32_t moduleId) { return static_cast<uint32_t>(moduleId) & MODULE_ID_MASK; }
 
 extern "C" LOG_FUNC_VISIBILITY __attribute((weak)) int32_t acllogCheckDebugLevel(int32_t moduleId, int32_t logLevel)
 {
@@ -648,11 +626,12 @@ extern "C" LOG_FUNC_VISIBILITY __attribute((weak)) int32_t acllogCheckDebugLevel
     return CheckLogLevel(moduleId, logLevel);
 }
 
-extern "C" LOG_FUNC_VISIBILITY __attribute((weak)) void acllogVaList(int32_t moduleId, int32_t level, const char *fmt,
-    va_list list)
+extern "C" LOG_FUNC_VISIBILITY __attribute((weak)) void acllogVaList(
+    int32_t moduleId, int32_t level, const char* fmt, va_list list)
 {
     if ((moduleId < 0) || (moduleId > static_cast<int32_t>(ACLLOG_USER_MODULE_ID_MAX))) {
-        SELF_LOG_WARN("acllogRecord/acllogVaList input moduleId=%d is illegal, valid range is [0, %u], log recording failed.",
+        SELF_LOG_WARN(
+            "acllogRecord/acllogVaList input moduleId=%d is illegal, valid range is [0, %u], log recording failed.",
             moduleId, ACLLOG_USER_MODULE_ID_MAX);
         return;
     }
@@ -671,14 +650,13 @@ extern "C" LOG_FUNC_VISIBILITY __attribute((weak)) void acllogVaList(int32_t mod
         0,
         {APPLICATION, 0, 0, 0, {'\0'}},
         {'\0'},
-        {nullptr, 0}
-    };
+        {nullptr, 0}};
 
     (void)DlogWriteInner(&msgArg, fmt, list);
 }
 
-extern "C" LOG_FUNC_VISIBILITY __attribute((weak)) void acllogRecord(int32_t moduleId, int32_t level, const char *fmt,
-    ...)
+extern "C" LOG_FUNC_VISIBILITY __attribute((weak)) void acllogRecord(
+    int32_t moduleId, int32_t level, const char* fmt, ...)
 {
     va_list list;
     va_start(list, fmt);
@@ -707,32 +685,20 @@ void DlogFlush(void)
 extern "C" {
 #endif
 
-int32_t DlogGetlevelForC(int32_t moduleId, int32_t *enableEvent)
-{
-    return dlog_getlevel(moduleId, enableEvent);
-}
+int32_t DlogGetlevelForC(int32_t moduleId, int32_t* enableEvent) { return dlog_getlevel(moduleId, enableEvent); }
 
 int32_t DlogSetlevelForC(int32_t moduleId, int32_t level, int32_t enableEvent)
 {
     return dlog_setlevel(moduleId, level, enableEvent);
 }
 
-int32_t CheckLogLevelForC(int32_t moduleId, int32_t logLevel)
-{
-    return CheckLogLevel(moduleId, logLevel);
-}
+int32_t CheckLogLevelForC(int32_t moduleId, int32_t logLevel) { return CheckLogLevel(moduleId, logLevel); }
 
-int32_t DlogSetAttrForC(LogAttr logAttrInfo)
-{
-    return DlogSetAttr(logAttrInfo);
-}
+int32_t DlogSetAttrForC(LogAttr logAttrInfo) { return DlogSetAttr(logAttrInfo); }
 
-void DlogFlushForC(void)
-{
-    return DlogFlush();
-}
+void DlogFlushForC(void) { return DlogFlush(); }
 
-void DlogInnerForC(int32_t moduleId, int32_t level, const char *fmt, ...)
+void DlogInnerForC(int32_t moduleId, int32_t level, const char* fmt, ...)
 {
     if (g_slogFuncInfo[DLOG_VA_LIST].handle != nullptr) {
         va_list list;
@@ -753,8 +719,7 @@ void DlogInnerForC(int32_t moduleId, int32_t level, const char *fmt, ...)
         0,
         {APPLICATION, 0, 0, 0, {'\0'}},
         {'\0'},
-        {nullptr, 0}
-    };
+        {nullptr, 0}};
 
     va_list list;
     va_start(list, fmt);
@@ -762,8 +727,8 @@ void DlogInnerForC(int32_t moduleId, int32_t level, const char *fmt, ...)
     va_end(list);
 }
 
-void DlogWithKVInnerForC(int32_t moduleId, int32_t level,
-    const KeyValue *pstKVArray, int32_t kvNum, const char *fmt, ...)
+void DlogWithKVInnerForC(
+    int32_t moduleId, int32_t level, const KeyValue* pstKVArray, int32_t kvNum, const char* fmt, ...)
 {
     ONE_ACT_ERR_LOG(pstKVArray == nullptr, return, "[input] key-value array is null.");
     ONE_ACT_ERR_LOG(kvNum <= 0, return, "[input] key-value number=%d is invalid.", kvNum);
@@ -778,8 +743,7 @@ void DlogWithKVInnerForC(int32_t moduleId, int32_t level,
         0,
         {APPLICATION, 0, 0, 0, {'\0'}},
         {'\0'},
-        {pstKVArray, kvNum}
-    };
+        {pstKVArray, kvNum}};
 
     va_list list;
     va_start(list, fmt);
@@ -787,7 +751,7 @@ void DlogWithKVInnerForC(int32_t moduleId, int32_t level,
     va_end(list);
 }
 
-void DlogRecordForC(int32_t moduleId, int32_t level, const char *fmt, ...)
+void DlogRecordForC(int32_t moduleId, int32_t level, const char* fmt, ...)
 {
     if (g_slogFuncInfo[DLOG_VA_LIST].handle != nullptr) {
         va_list list;
@@ -808,8 +772,7 @@ void DlogRecordForC(int32_t moduleId, int32_t level, const char *fmt, ...)
         0,
         {APPLICATION, 0, 0, 0, {'\0'}},
         {'\0'},
-        {nullptr, 0}
-    };
+        {nullptr, 0}};
 
     va_list list;
     va_start(list, fmt);
@@ -831,15 +794,9 @@ void DlogRecordForC(int32_t moduleId, int32_t level, const char *fmt, ...)
 extern "C" {
 #endif
 #endif // __cplusplus
-int32_t DlogReportInitialize(void)
-{
-    return 0;
-}
+int32_t DlogReportInitialize(void) { return 0; }
 
-int32_t DlogReportFinalize(void)
-{
-    return 0;
-}
+int32_t DlogReportFinalize(void) { return 0; }
 
 int32_t DlogReportStart(int32_t devId, int32_t mode)
 {

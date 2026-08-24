@@ -20,8 +20,8 @@ extern "C" {
 
 #define MAX_RELATED_TRACER_NUM 5U
 #define MAX_EVENT_NAME_LENGTH 32U
-typedef TraStatus (*ProcessFunc)(void *);
-typedef TraStatus (*ProbeFunc)(const void *);
+typedef TraStatus (*ProcessFunc)(void*);
+typedef TraStatus (*ProbeFunc)(const void*);
 typedef struct EventProbeInfo {
     int32_t interval;
     ProbeFunc func;
@@ -40,19 +40,17 @@ typedef struct TraceEventNode {
 
 TraStatus TraceEventInit(void);
 void TraceEventExit(void);
-TraEventHandle TraceEventCreate(const char *eventName);
-TraEventHandle TraceEventGetHandle(const char *eventName);
+TraEventHandle TraceEventCreate(const char* eventName);
+TraEventHandle TraceEventGetHandle(const char* eventName);
 void TraceEventDestroy(TraEventHandle eventHandle);
 TraStatus TraceEventBindTrace(TraEventHandle eventHandle, TraHandle handle);
 TraStatus TraceEventUnbindTrace(TraEventHandle eventHandle, TraHandle handle);
-TraStatus TraceEventSetAttr(TraEventHandle eventHandle, const TraceEventAttr *attr);
+TraStatus TraceEventSetAttr(TraEventHandle eventHandle, const TraceEventAttr* attr);
 TraStatus TraceEventReport(TraEventHandle eventHandle);
 TraStatus TraceEventBindTracer(TraEventHandle eventHandle, TracerHandle tracer);
 TraStatus TraceEventUnbindTracer(TraEventHandle eventHandle, TracerHandle tracer);
-
 
 #ifdef __cplusplus
 }
 #endif // __cplusplus
 #endif
-

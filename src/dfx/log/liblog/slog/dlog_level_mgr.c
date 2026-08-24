@@ -13,7 +13,6 @@
 #include <string.h>
 #include "log_platform.h"
 
-
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
@@ -23,15 +22,9 @@ STATIC DEFINE_MODULE_LEVEL(g_dlogModuleInfo);
 STATIC DEFINE_LEVEL_TYPES(g_dlogLevelName);
 STATIC bool g_dlogLevelChanged = false;
 
-void DlogSetLevelStatus(bool levelStatus)
-{
-    g_dlogLevelChanged = levelStatus;
-}
+void DlogSetLevelStatus(bool levelStatus) { g_dlogLevelChanged = levelStatus; }
 
-bool DlogGetLevelStatus(void)
-{
-    return g_dlogLevelChanged;
-}
+bool DlogGetLevelStatus(void) { return g_dlogLevelChanged; }
 
 /**
  * @brief        : get global log level
@@ -65,58 +58,40 @@ void SetGlobalLogTypeLevelVar(int32_t level, uint32_t typeMask)
  * @brief        : get event log level
  * @return       : event log level
  */
-bool GetGlobalEnableEventVar(void)
-{
-    return g_dlogLevel.enableEvent;
-}
+bool GetGlobalEnableEventVar(void) { return g_dlogLevel.enableEvent; }
 
 /**
  * @brief        : set event log level
  * @param [in]   : enableEvent      current event log level
  * @return       : NA
  */
-void SetGlobalEnableEventVar(bool enableEvent)
-{
-    g_dlogLevel.enableEvent = enableEvent;
-}
+void SetGlobalEnableEventVar(bool enableEvent) { g_dlogLevel.enableEvent = enableEvent; }
 
 /**
  * @brief        : is global log level setted
  * @return       : global log level setted
  */
-bool GetGlobalLevelSettedVar(void)
-{
-    return g_dlogLevel.levelSetted;
-}
+bool GetGlobalLevelSettedVar(void) { return g_dlogLevel.levelSetted; }
 
 /**
  * @brief        : set global log level setted
  * @param [in]   : levelSetted      current level setted
  * @return       : NA
  */
-void SetGlobalLevelSettedVar(bool levelSetted)
-{
-    g_dlogLevel.levelSetted = levelSetted;
-}
+void SetGlobalLevelSettedVar(bool levelSetted) { g_dlogLevel.levelSetted = levelSetted; }
 
 /**
  * @brief        : get log level status
  * @return       : log level status
  */
-int32_t GetLevelStatus(void)
-{
-    return g_dlogLevel.levelStatus;
-}
+int32_t GetLevelStatus(void) { return g_dlogLevel.levelStatus; }
 
 /**
  * @brief        : set log level status
  * @param [in]   : levelStatus      current level status
  * @return       : NA
  */
-void SetLevelStatus(int32_t levelStatus)
-{
-    g_dlogLevel.levelStatus = levelStatus;
-}
+void SetLevelStatus(int32_t levelStatus) { g_dlogLevel.levelStatus = levelStatus; }
 
 /**
  * @brief        : set debug level to module info
@@ -126,7 +101,7 @@ void SetLevelStatus(int32_t levelStatus)
  */
 STATIC bool DlogSetDebugLevelByModuleId(int32_t moduleId, int32_t level)
 {
-    ModuleInfo *set = g_dlogModuleInfo;
+    ModuleInfo* set = g_dlogModuleInfo;
     if ((moduleId >= 0) && (moduleId < INVALID_MODULE_ID)) {
         set[moduleId].moduleLevel = (int8_t)level;
         return true;
@@ -155,7 +130,7 @@ bool DlogSetLogTypeLevelByModuleId(int32_t moduleId, int32_t level, uint32_t typ
  */
 void DlogSetLogTypeLevelToAllModule(int32_t level, uint32_t typeMask)
 {
-    ModuleInfo *set = g_dlogModuleInfo;
+    ModuleInfo* set = g_dlogModuleInfo;
     if (typeMask == RUN_LOG_MASK) {
         return;
     } else {
@@ -198,20 +173,17 @@ int32_t DlogGetDebugLogLevelByModuleId(uint32_t moduleId)
 }
 
 /**
-* @brief : get g_moduleInfo
-* @return: g_moduleInfo
-*/
-const ModuleInfo *DlogGetModuleInfos(void)
-{
-    return (const ModuleInfo *)g_dlogModuleInfo;
-}
+ * @brief : get g_moduleInfo
+ * @return: g_moduleInfo
+ */
+const ModuleInfo* DlogGetModuleInfos(void) { return (const ModuleInfo*)g_dlogModuleInfo; }
 
-static const ModuleInfo *DlogGetInfoByName(const char *name, const ModuleInfo *set)
+static const ModuleInfo* DlogGetInfoByName(const char* name, const ModuleInfo* set)
 {
     if (name == NULL) {
         return NULL;
     }
-    const ModuleInfo *info = set;
+    const ModuleInfo* info = set;
     for (; (info != NULL) && (info->moduleName != NULL); info++) {
         if (strcmp(name, info->moduleName) == 0) {
             return info;
@@ -220,21 +192,18 @@ static const ModuleInfo *DlogGetInfoByName(const char *name, const ModuleInfo *s
     return NULL;
 }
 /**
-* @brief : get module info by module name
-* @param [in]name: module name
-* @return: module info struct
-*/
-const ModuleInfo *DlogGetModuleInfoByName(const char *name)
-{
-    return DlogGetInfoByName(name, g_dlogModuleInfo);
-}
+ * @brief : get module info by module name
+ * @param [in]name: module name
+ * @return: module info struct
+ */
+const ModuleInfo* DlogGetModuleInfoByName(const char* name) { return DlogGetInfoByName(name, g_dlogModuleInfo); }
 
 /**
-* @brief : get module name by module id
-* @param [in]moduleId: module id
-* @return: module name
-*/
-const char *DlogGetModuleNameById(uint32_t moduleId)
+ * @brief : get module name by module id
+ * @param [in]moduleId: module id
+ * @return: module name
+ */
+const char* DlogGetModuleNameById(uint32_t moduleId)
 {
     if (moduleId < (uint32_t)INVALID_MODULE_ID) {
         return g_dlogModuleInfo[moduleId].moduleName;
@@ -243,11 +212,11 @@ const char *DlogGetModuleNameById(uint32_t moduleId)
 }
 
 /**
-* @brief : get level name by level
-* @param [in]level: log level, include debug, info, warning, error, null, event
-* @return: level name
-*/
-const char *DlogGetLevelNameById(int32_t level)
+ * @brief : get level name by level
+ * @param [in]level: log level, include debug, info, warning, error, null, event
+ * @return: level name
+ */
+const char* DlogGetLevelNameById(int32_t level)
 {
     if (((level >= DLOG_DEBUG) && (level <= DLOG_NULL)) || (level == DLOG_EVENT)) {
         return g_dlogLevelName[level].levelName;
@@ -256,11 +225,11 @@ const char *DlogGetLevelNameById(int32_t level)
 }
 
 /**
-* @brief : get level name by level
-* @param [in]level: log level, include debug, info, warning, error, null
-* @return: level name
-*/
-const char *DlogGetBasicLevelNameById(int32_t level)
+ * @brief : get level name by level
+ * @param [in]level: log level, include debug, info, warning, error, null
+ * @return: level name
+ */
+const char* DlogGetBasicLevelNameById(int32_t level)
 {
     if ((level >= DLOG_DEBUG) && (level <= DLOG_NULL)) {
         return g_dlogLevelName[level].levelName;
@@ -271,4 +240,3 @@ const char *DlogGetBasicLevelNameById(int32_t level)
 #ifdef __cplusplus
 }
 #endif // __cplusplus
-

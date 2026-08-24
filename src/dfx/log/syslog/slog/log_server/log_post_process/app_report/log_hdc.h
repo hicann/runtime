@@ -22,17 +22,10 @@ class LogHdc : public AdxComponent {
 public:
     ~LogHdc() override {}
     int32_t Init() override;
-    const std::string GetInfo() override
-    {
-        return "Log hdc server process";
-    }
-    ComponentType GetType() override
-    {
-        return ComponentType::COMPONENT_LOG_BACKHAUL;
-    }
-    int32_t Process(const CommHandle &handle,
-        const SharedPtr<MsgProto> &proto) override;
+    const std::string GetInfo() override { return "Log hdc server process"; }
+    ComponentType GetType() override { return ComponentType::COMPONENT_LOG_BACKHAUL; }
+    int32_t Process(const CommHandle& handle, const SharedPtr<MsgProto>& proto) override;
     int32_t UnInit() override;
 };
-}
+} // namespace Adx
 #endif

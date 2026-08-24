@@ -17,9 +17,9 @@
 #include "log_print.h"
 #include "log_system_api.h"
 #ifndef AOS_PM_STATUS_FILE
-#define AOS_PM_STATUS_FILE      "/proc/aos_pm/aos_suspend"
+#define AOS_PM_STATUS_FILE "/proc/aos_pm/aos_suspend"
 #endif
-#define LPM_IOCTL_PASS_FD       0xfff2
+#define LPM_IOCTL_PASS_FD 0xfff2
 #define TWO_HUNDRED_MILLISECOND 200 // 200ms
 
 STATIC _Atomic enum SystemState g_systemState = OFF;
@@ -32,15 +32,9 @@ STATIC void SlogSysStateHandler(int32_t state)
     }
 }
 
-int32_t RegisterSRNotifyCallback(void)
-{
-    return IamRegisterSystemService(SlogSysStateHandler);
-}
+int32_t RegisterSRNotifyCallback(void) { return IamRegisterSystemService(SlogSysStateHandler); }
 
-enum SystemState GetSystemState(void)
-{
-    return g_systemState;
-}
+enum SystemState GetSystemState(void) { return g_systemState; }
 
 /**
  * @brief       : subscribe to wakeup event of aos and iam
@@ -93,18 +87,9 @@ void SlogdSubscribeToWakeUpState(void)
     SELF_LOG_INFO("subscribe to wake up event end.");
 }
 #else
-int32_t RegisterSRNotifyCallback(void)
-{
-    return 0;
-}
+int32_t RegisterSRNotifyCallback(void) { return 0; }
 
-enum SystemState GetSystemState(void)
-{
-    return WORKING;
-}
+enum SystemState GetSystemState(void) { return WORKING; }
 
-void SlogdSubscribeToWakeUpState(void)
-{
-    return;
-}
+void SlogdSubscribeToWakeUpState(void) { return; }
 #endif

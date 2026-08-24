@@ -25,11 +25,11 @@ extern "C" {
  *
  * log level id
  */
-#define DLOG_EVENT 0x10     // event log print level id
+#define DLOG_EVENT 0x10                 // event log print level id
 
-#define LOG_SAVE_MODE_DEF   (0x0U)          // default
-#define LOG_SAVE_MODE_UNI   (0xFE756E69U)   // unify save mode
-#define LOG_SAVE_MODE_SEP   (0xFE736570U)   // separate save mode
+#define LOG_SAVE_MODE_DEF (0x0U)        // default
+#define LOG_SAVE_MODE_UNI (0xFE756E69U) // unify save mode
+#define LOG_SAVE_MODE_SEP (0xFE736570U) // separate save mode
 
 /**
  * @ingroup slog
@@ -37,7 +37,7 @@ extern "C" {
  * module id
  * if a module needs to be added, add the module at the end and before INVALID_MODULE_ID
  */
-#define ALL_MODULE  (0x0000FFFFU)
+#define ALL_MODULE (0x0000FFFFU)
 
 /**
  * @ingroup slog
@@ -52,8 +52,8 @@ LOG_FUNC_VISIBILITY void dlog_init(void);
  * @param [in]moduleId: module id, eg: CCE
  * @param [in]fmt: log content
  */
-#define dlog_event(moduleId, fmt, ...)                                          \
-    do {                                                                          \
+#define dlog_event(moduleId, fmt, ...)                                                            \
+    do {                                                                                          \
         DlogRecord(moduleId, DLOG_EVENT, "[%s:%d]" fmt, DLOG_FILE_NAME, __LINE__, ##__VA_ARGS__); \
     } while (TMP_LOG != 0)
 
@@ -75,7 +75,7 @@ extern "C" {
  * @param [out]enableEvent: 1: enable; 0: disable
  * @return: module level(0: debug, 1: info, 2: warning, 3: error, 4: null output)
  */
-LOG_FUNC_VISIBILITY int DlogGetlevelForC(int moduleId, int *enableEvent);
+LOG_FUNC_VISIBILITY int DlogGetlevelForC(int moduleId, int* enableEvent);
 
 /**
  * @ingroup slog
@@ -116,11 +116,11 @@ LOG_FUNC_VISIBILITY int32_t DlogSetAttrForC(LogAttr logAttrInfo);
  * @param [in]level(0: debug, 1: info, 2: warning, 3: error, 16: event)
  * @param [in]fmt: log content
  */
-#define DlogForC(moduleId, level, fmt, ...)                                                 \
-    do {                                                                                  \
-        if (CheckLogLevelForC(moduleId, level) == 1) {                                           \
-            DlogRecordForC(moduleId, level, "[%s:%d]" fmt, DLOG_FILE_NAME, __LINE__, ##__VA_ARGS__);   \
-        }                                                                                  \
+#define DlogForC(moduleId, level, fmt, ...)                                                          \
+    do {                                                                                             \
+        if (CheckLogLevelForC(moduleId, level) == 1) {                                               \
+            DlogRecordForC(moduleId, level, "[%s:%d]" fmt, DLOG_FILE_NAME, __LINE__, ##__VA_ARGS__); \
+        }                                                                                            \
     } while (TMP_LOG != 0)
 
 /**
@@ -133,11 +133,11 @@ LOG_FUNC_VISIBILITY int32_t DlogSetAttrForC(LogAttr logAttrInfo);
  * @param [in]level(0: debug, 1: info, 2: warning, 3: error, 16: event)
  * @param [in]fmt: log content
  */
-#define DlogSubForC(moduleId, submodule, level, fmt, ...)                                                   \
-    do {                                                                                                  \
-        if (CheckLogLevelForC(moduleId, level) == 1) {                                                           \
-            DlogRecordForC(moduleId, level, "[%s:%d][%s]" fmt, DLOG_FILE_NAME, __LINE__, submodule, ##__VA_ARGS__);    \
-        }                                                                                                   \
+#define DlogSubForC(moduleId, submodule, level, fmt, ...)                                                           \
+    do {                                                                                                            \
+        if (CheckLogLevelForC(moduleId, level) == 1) {                                                              \
+            DlogRecordForC(moduleId, level, "[%s:%d][%s]" fmt, DLOG_FILE_NAME, __LINE__, submodule, ##__VA_ARGS__); \
+        }                                                                                                           \
     } while (TMP_LOG != 0)
 
 /**
@@ -147,7 +147,7 @@ LOG_FUNC_VISIBILITY int32_t DlogSetAttrForC(LogAttr logAttrInfo);
 LOG_FUNC_VISIBILITY void DlogFlushForC(void);
 
 // log interface
-LOG_FUNC_VISIBILITY void DlogRecordForC(int32_t moduleId, int32_t level, const char *fmt, ...) __attribute((weak));
+LOG_FUNC_VISIBILITY void DlogRecordForC(int32_t moduleId, int32_t level, const char* fmt, ...) __attribute((weak));
 
 #ifdef __cplusplus
 }

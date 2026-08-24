@@ -18,12 +18,12 @@ extern "C" {
 int LogPathMgrInit(void);
 void LogPathMgrExit(void);
 
-char *LogGetWorkspacePath(void);
-char *LogGetRootPath(void);
-char *LogGetSelfPath(void);
-const char *LogGetSelfFile(void);
-const char *LogGetSelfOldFile(void);
-const char *LogGetSelfLockFile(void);
+char* LogGetWorkspacePath(void);
+char* LogGetRootPath(void);
+char* LogGetSelfPath(void);
+const char* LogGetSelfFile(void);
+const char* LogGetSelfOldFile(void);
+const char* LogGetSelfLockFile(void);
 int CheckSelfLogPath(void);
 
 #ifdef __cplusplus

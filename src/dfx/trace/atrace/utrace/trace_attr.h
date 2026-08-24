@@ -18,16 +18,16 @@
 extern "C" {
 #endif // __cplusplus
 
-#define TRACER_TYPE_NUM          TRACER_TYPE_MAX
+#define TRACER_TYPE_NUM TRACER_TYPE_MAX
 
-#define PLATFORM_DEVICE_SIDE     0U
-#define PLATFORM_HOST_SIDE       1U
-#define PLATFORM_INVALID_VALUE   10000U
+#define PLATFORM_DEVICE_SIDE 0U
+#define PLATFORM_HOST_SIDE 1U
+#define PLATFORM_INVALID_VALUE 10000U
 
 typedef struct TraceCoreAttr {
     uint32_t platform;
     int32_t pid;
-    int32_t pgid;   // process group id
+    int32_t pgid; // process group id
     uint32_t uid;
     uint32_t gid;
     char timeStamp[TIMESTAMP_MAX_LENGTH];
@@ -49,8 +49,8 @@ int32_t TraceAttrGetPgid(void);
 uint32_t TraceAttrGetUid(void);
 uint32_t TraceAttrGetGid(void);
 int32_t TraceGetTimeout(void);
-const char *TraceAttrGetTime(void);
-TraStatus TraceSetGlobalAttr(const TraceGlobalAttr *attr);
+const char* TraceAttrGetTime(void);
+TraStatus TraceSetGlobalAttr(const TraceGlobalAttr* attr);
 uint8_t TraceAttrGetSaveMode(void);
 uint8_t TraceAttrGetGlobalDevId(void);
 uint32_t TraceAttrGetGlobalPid(void);
@@ -59,4 +59,3 @@ uint32_t TraceAttrGetGlobalPid(void);
 }
 #endif // __cplusplus
 #endif
-

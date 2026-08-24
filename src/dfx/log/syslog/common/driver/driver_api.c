@@ -11,54 +11,42 @@
 #include "driver_api.h"
 #include "log_print.h"
 
-drvError_t LogdrvHdcSessionClose(HDC_SESSION session)
-{
-    return drvHdcSessionClose(session);
-}
+drvError_t LogdrvHdcSessionClose(HDC_SESSION session) { return drvHdcSessionClose(session); }
 
-drvError_t LogdrvHdcAllocMsg(HDC_SESSION session, struct drvHdcMsg **ppMsg, int count)
+drvError_t LogdrvHdcAllocMsg(HDC_SESSION session, struct drvHdcMsg** ppMsg, int count)
 {
     return drvHdcAllocMsg(session, ppMsg, count);
 }
 
-drvError_t LogdrvHdcFreeMsg(struct drvHdcMsg *msg)
-{
-    return drvHdcFreeMsg(msg);
-}
+drvError_t LogdrvHdcFreeMsg(struct drvHdcMsg* msg) { return drvHdcFreeMsg(msg); }
 
-drvError_t LogdrvHdcReuseMsg(struct drvHdcMsg *msg)
-{
-    return drvHdcReuseMsg(msg);
-}
+drvError_t LogdrvHdcReuseMsg(struct drvHdcMsg* msg) { return drvHdcReuseMsg(msg); }
 
-drvError_t LogdrvHdcAddMsgBuffer(struct drvHdcMsg *msg, char *pBuf, int len)
+drvError_t LogdrvHdcAddMsgBuffer(struct drvHdcMsg* msg, char* pBuf, int len)
 {
     return drvHdcAddMsgBuffer(msg, pBuf, len);
 }
 
-drvError_t LogdrvHdcGetCapacity(struct drvHdcCapacity *capacity)
-{
-    return drvHdcGetCapacity(capacity);
-}
+drvError_t LogdrvHdcGetCapacity(struct drvHdcCapacity* capacity) { return drvHdcGetCapacity(capacity); }
 
-drvError_t LogdrvHdcGetSessionAttr(HDC_SESSION session, int attr, int *value)
+drvError_t LogdrvHdcGetSessionAttr(HDC_SESSION session, int attr, int* value)
 {
     return halHdcGetSessionAttr(session, attr, value);
 }
 
-hdcError_t LogdrvHdcSend(HDC_SESSION session, struct drvHdcMsg *pMsg, UINT64 flag, UINT32 timeout)
+hdcError_t LogdrvHdcSend(HDC_SESSION session, struct drvHdcMsg* pMsg, UINT64 flag, UINT32 timeout)
 {
     return halHdcSend(session, pMsg, flag, timeout);
 }
 
-int32_t LogSetDfxParam(uint32_t devId, uint32_t channelType, void *data, uint32_t dataLen)
+int32_t LogSetDfxParam(uint32_t devId, uint32_t channelType, void* data, uint32_t dataLen)
 {
     int32_t ret = log_set_dfx_param(devId, channelType, LOG_SET_DFX_PARAM, data, dataLen);
     SELF_LOG_INFO("call log_set_dfx_param with devId:%u, channelType:%u, return:%d", devId, channelType, ret);
     return ret;
 }
 
-int32_t LogGetDfxParam(uint32_t devId, uint32_t channelType, void *data, uint32_t dataLen)
+int32_t LogGetDfxParam(uint32_t devId, uint32_t channelType, void* data, uint32_t dataLen)
 {
     int32_t ret = log_get_dfx_param(devId, channelType, LOG_GET_DFX_PARAM, data, dataLen);
     SELF_LOG_INFO("call log_get_dfx_param with devId:%u, channelType:%u, return:%d", devId, channelType, ret);

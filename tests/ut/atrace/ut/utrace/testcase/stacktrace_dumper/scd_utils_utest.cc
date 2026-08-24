@@ -11,6 +11,10 @@
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
 
+#include <signal.h>
+#include <sys/wait.h>
+#include <unistd.h>
+
 #include "adiag_utils.h"
 #include "trace_system_api.h"
 #include "scd_ptrace.h"
@@ -19,41 +23,37 @@
 #include "scd_thread.h"
 
 extern "C" {
-    ScdSection *ScdLayoutGetEmptShdr(ScdProcess *pro);
+ScdSection* ScdLayoutGetEmptShdr(ScdProcess* pro);
 }
 
-class ScdUtilUtest: public testing::Test {
+class ScdUtilUtest : public testing::Test {
 protected:
     virtual void SetUp()
     {
         system("rm -rf " LLT_TEST_DIR "/*");
-        system("mkdir -p " LLT_TEST_DIR );
+        system("mkdir -p " LLT_TEST_DIR);
     }
 
     virtual void TearDown()
     {
         system("echo [DBG][TEST][`date +%Y-%m-%d-%H-%M-%S`] End test case");
         GlobalMockObject::verify();
-        system("rm -rf " LLT_TEST_DIR );
+        system("rm -rf " LLT_TEST_DIR);
     }
 
-    static void SetUpTestCase()
-    {
-    }
+    static void SetUpTestCase() {}
 
-    static void TearDownTestCase()
-    {
-    }
+    static void TearDownTestCase() {}
 };
 
 TEST_F(ScdUtilUtest, TestScdLayoutWrite)
 {
     TraStatus ret = TRACE_FAILURE;
-    ScdProcess procInfo = { 0 };
+    ScdProcess procInfo = {0};
     procInfo.args.pid = getpid();
     procInfo.args.crashTid = gettid();
-    ScdProcess *proc = NULL;
-    char binPath[256] = { LLT_TEST_DIR"/stackcore_tracer_11_49324_python3.8_20241107094559638058.bin" };
+    ScdProcess* proc = NULL;
+    char binPath[256] = {LLT_TEST_DIR "/stackcore_tracer_11_49324_python3.8_20241107094559638058.bin"};
     int32_t fd = open(binPath, O_RDWR | O_CREAT, 0640);
     EXPECT_GE(fd, 0);
 
@@ -62,7 +62,7 @@ TEST_F(ScdUtilUtest, TestScdLayoutWrite)
 
     ret = ScdLayoutRead(&proc, binPath);
     EXPECT_EQ(TRACE_SUCCESS, ret);
-    EXPECT_NE((ScdProcess *)0, proc);
+    EXPECT_NE((ScdProcess*)0, proc);
 
     free(proc);
 }
@@ -70,13 +70,13 @@ TEST_F(ScdUtilUtest, TestScdLayoutWrite)
 TEST_F(ScdUtilUtest, TestScdLayoutWrite_Failed)
 {
     TraStatus ret = TRACE_FAILURE;
-    ScdProcess procInfo = { 0 };
-    char binPath[256] = { LLT_TEST_DIR"/stackcore_tracer_11_49324_python3.8_20241107094559638058.bin" };
+    ScdProcess procInfo = {0};
+    char binPath[256] = {LLT_TEST_DIR "/stackcore_tracer_11_49324_python3.8_20241107094559638058.bin"};
     int32_t fd = open(binPath, O_RDWR | O_CREAT, 0640);
     EXPECT_GE(fd, 0);
 
     // realpath failed
-    errno=0;
+    errno = 0;
     MOCKER(TraceRealPath).stubs().will(returnValue(-1));
     ret = ScdLayoutWrite(fd, &procInfo);
     EXPECT_EQ(TRACE_FAILURE, ret);
@@ -89,7 +89,7 @@ TEST_F(ScdUtilUtest, TestScdLayoutWrite_Failed)
     GlobalMockObject::verify();
 
     // open failed
-    auto mocker = reinterpret_cast<int (*)(char *, int)>(open);
+    auto mocker = reinterpret_cast<int (*)(char*, int)>(open);
     MOCKER(mocker).stubs().will(returnValue(-1));
     ret = ScdLayoutWrite(fd, &procInfo);
     EXPECT_EQ(TRACE_FAILURE, ret);
@@ -102,18 +102,17 @@ TEST_F(ScdUtilUtest, TestScdLayoutWrite_Failed)
 TEST_F(ScdUtilUtest, TestScdLayoutWrite_GetEmptShdr_Failed)
 {
     TraStatus ret = TRACE_FAILURE;
-    char binPath[256] = { LLT_TEST_DIR"/stackcore_tracer_11_49324_python3.8_20241107094559638058.bin" };
+    char binPath[256] = {LLT_TEST_DIR "/stackcore_tracer_11_49324_python3.8_20241107094559638058.bin"};
     int32_t fd = open(binPath, O_RDWR | O_CREAT, 0640);
     EXPECT_GE(fd, 0);
 
     int32_t callNum = 5;
-    for (int32_t i = 0 ; i < callNum; i++) {
-        ScdProcess procInfo = { 0 };
+    for (int32_t i = 0; i < callNum; i++) {
+        ScdProcess procInfo = {0};
         procInfo.args.pid = getpid();
         procInfo.args.crashTid = gettid();
-        ScdSection *section = (ScdSection *)&procInfo.shdr[0];
-        MOCKER(ScdLayoutGetEmptShdr).stubs().will(repeat(section, i))
-            .then(returnValue((ScdSection *)0));
+        ScdSection* section = (ScdSection*)&procInfo.shdr[0];
+        MOCKER(ScdLayoutGetEmptShdr).stubs().will(repeat(section, i)).then(returnValue((ScdSection*)0));
         ret = ScdLayoutWrite(fd, &procInfo);
         EXPECT_EQ(TRACE_FAILURE, ret);
         GlobalMockObject::verify();
@@ -126,17 +125,16 @@ TEST_F(ScdUtilUtest, TestScdLayoutWrite_GetEmptShdr_Failed)
 TEST_F(ScdUtilUtest, TestScdLayoutWrite_memcpy_Failed)
 {
     TraStatus ret = TRACE_FAILURE;
-    char binPath[256] = { LLT_TEST_DIR"/stackcore_tracer_11_49324_python3.8_20241107094559638058.bin" };
+    char binPath[256] = {LLT_TEST_DIR "/stackcore_tracer_11_49324_python3.8_20241107094559638058.bin"};
     int32_t fd = open(binPath, O_RDWR | O_CREAT, 0640);
     EXPECT_GE(fd, 0);
 
     int32_t callNum = 5;
-    for (int32_t i = 0 ; i < callNum; i++) {
-        ScdProcess procInfo = { 0 };
+    for (int32_t i = 0; i < callNum; i++) {
+        ScdProcess procInfo = {0};
         procInfo.args.pid = getpid();
         procInfo.args.crashTid = gettid();
-        MOCKER(memcpy_s).stubs().will(repeat(EOK, i))
-            .then(returnValue(-1));
+        MOCKER(memcpy_s).stubs().will(repeat(EOK, i)).then(returnValue(-1));
         ret = ScdLayoutWrite(fd, &procInfo);
         EXPECT_EQ(TRACE_FAILURE, ret);
         GlobalMockObject::verify();
@@ -149,8 +147,8 @@ TEST_F(ScdUtilUtest, TestScdLayoutWrite_memcpy_Failed)
 TEST_F(ScdUtilUtest, TestScdLayoutWritePhdr_Failed)
 {
     TraStatus ret = TRACE_FAILURE;
-    ScdProcess procInfo = { 0 };
-    char binPath[256] = { LLT_TEST_DIR"/stackcore_tracer_11_49324_python3.8_20241107094559638058.bin" };
+    ScdProcess procInfo = {0};
+    char binPath[256] = {LLT_TEST_DIR "/stackcore_tracer_11_49324_python3.8_20241107094559638058.bin"};
     int32_t fd = open(binPath, O_RDWR | O_CREAT, 0640);
     EXPECT_GE(fd, 0);
 
@@ -165,10 +163,10 @@ TEST_F(ScdUtilUtest, TestScdLayoutWritePhdr_Failed)
 TEST_F(ScdUtilUtest, TestScdLayoutWrite_lseek_Failed)
 {
     TraStatus ret = TRACE_FAILURE;
-    ScdProcess procInfo = { 0 };
+    ScdProcess procInfo = {0};
     procInfo.args.pid = getpid();
     procInfo.args.crashTid = gettid();
-    char binPath[256] = { LLT_TEST_DIR"/stackcore_tracer_11_49324_python3.8_20241107094559638058.bin" };
+    char binPath[256] = {LLT_TEST_DIR "/stackcore_tracer_11_49324_python3.8_20241107094559638058.bin"};
     int32_t fd = open(binPath, O_RDWR | O_CREAT, 0640);
     EXPECT_GE(fd, 0);
 
@@ -196,10 +194,10 @@ TEST_F(ScdUtilUtest, TestScdLayoutWrite_lseek_Failed)
 TEST_F(ScdUtilUtest, TestScdLayoutWrite_invalid_org)
 {
     TraStatus ret = TRACE_FAILURE;
-    ScdProcess procInfo = { 0 };
+    ScdProcess procInfo = {0};
     procInfo.args.pid = getpid();
     procInfo.args.crashTid = gettid();
-    char binPath[256] = { LLT_TEST_DIR"/stackcore_tracer_11_49324_python3.8_20241107094559638058.bin" };
+    char binPath[256] = {LLT_TEST_DIR "/stackcore_tracer_11_49324_python3.8_20241107094559638058.bin"};
     int32_t fd = open(binPath, O_RDWR | O_CREAT, 0640);
     EXPECT_GE(fd, 0);
 
@@ -217,43 +215,43 @@ TEST_F(ScdUtilUtest, TestScdLayoutWrite_invalid_org)
 TEST_F(ScdUtilUtest, TestScdLayoutRead)
 {
     TraStatus ret = TRACE_FAILURE;
-    ScdProcess procInfo = { 0 };
+    ScdProcess procInfo = {0};
     procInfo.args.pid = getpid();
     procInfo.args.crashTid = gettid();
-    ScdProcess *proc = NULL;
-    char binPath[256] = { LLT_TEST_DIR"/stackcore_tracer_11_49324_python3.8_20241107094559638058.bin" };
+    ScdProcess* proc = NULL;
+    char binPath[256] = {LLT_TEST_DIR "/stackcore_tracer_11_49324_python3.8_20241107094559638058.bin"};
     int32_t fd = open(binPath, O_RDWR | O_CREAT, 0640);
     EXPECT_GE(fd, 0);
     ret = ScdLayoutWrite(fd, &procInfo);
     EXPECT_EQ(TRACE_SUCCESS, ret);
 
     // open file failed
-    auto mocker = reinterpret_cast<int (*)(char *, int)>(open);
+    auto mocker = reinterpret_cast<int (*)(char*, int)>(open);
     MOCKER(mocker).stubs().will(returnValue(-1));
     ret = ScdLayoutRead(&proc, binPath);
     EXPECT_EQ(TRACE_FAILURE, ret);
-    EXPECT_EQ((ScdProcess *)0, proc);
+    EXPECT_EQ((ScdProcess*)0, proc);
     GlobalMockObject::verify();
 
     // lseek failed
     MOCKER(lseek).stubs().will(returnValue((off_t)-1));
     ret = ScdLayoutRead(&proc, binPath);
     EXPECT_EQ(TRACE_FAILURE, ret);
-    EXPECT_EQ((ScdProcess *)0, proc);
+    EXPECT_EQ((ScdProcess*)0, proc);
     GlobalMockObject::verify();
 
     // malloc failed
-    MOCKER(AdiagMalloc).stubs().will(returnValue((void *)0));
+    MOCKER(AdiagMalloc).stubs().will(returnValue((void*)0));
     ret = ScdLayoutRead(&proc, binPath);
     EXPECT_EQ(TRACE_FAILURE, ret);
-    EXPECT_EQ((ScdProcess *)0, proc);
+    EXPECT_EQ((ScdProcess*)0, proc);
     GlobalMockObject::verify();
 
     // read failed
     MOCKER(read).stubs().will(returnValue((ssize_t)0));
     ret = ScdLayoutRead(&proc, binPath);
     EXPECT_EQ(TRACE_FAILURE, ret);
-    EXPECT_EQ((ScdProcess *)0, proc);
+    EXPECT_EQ((ScdProcess*)0, proc);
     GlobalMockObject::verify();
 
     if (proc != NULL) {
@@ -264,7 +262,7 @@ TEST_F(ScdUtilUtest, TestScdLayoutRead)
 TEST_F(ScdUtilUtest, TestScdSectionRecord)
 {
     TraStatus ret = TRACE_FAILURE;
-    ScdProcess procInfo = { 0 };
+    ScdProcess procInfo = {0};
     // set stack section
     procInfo.shdr[0].use = true;
     memcpy_s(procInfo.shdr[0].name, SCD_SECTION_NAME_LEN, SCD_SECTION_STACK, strlen(SCD_SECTION_STACK));
@@ -272,7 +270,7 @@ TEST_F(ScdUtilUtest, TestScdSectionRecord)
     procInfo.shdr[1].use = true;
     memcpy_s(procInfo.shdr[1].name, SCD_SECTION_NAME_LEN, "test", strlen("test"));
 
-    char txtPath[256] = { LLT_TEST_DIR"/stackcore_tracer_11_49324_python3.8_20241107094559638058.txt" };
+    char txtPath[256] = {LLT_TEST_DIR "/stackcore_tracer_11_49324_python3.8_20241107094559638058.txt"};
     int32_t fd = open(txtPath, O_RDWR | O_CREAT, 0640);
     EXPECT_GE(fd, 0);
 
@@ -289,31 +287,50 @@ TEST_F(ScdUtilUtest, TestScdSectionRecord)
 
 TEST_F(ScdUtilUtest, TestScdPtraceAttach)
 {
-    int32_t tid = gettid();
-    TraStatus ret = TRACE_FAILURE;
-
-    int status = fork();
-    if (status == -1) {
-        return;
+    pid_t child = fork();
+    ASSERT_NE(-1, child);
+    if (child == 0) {
+        pause();
+        _exit(0);
     }
-    if (status == 0) {
-        sleep(1); // wait for parent to set ptracer
-        ret = ScdPtraceAttach(tid);
-        EXPECT_EQ(TRACE_SUCCESS, ret);
-        ScdPtraceDetach(tid);
 
-        exit(0);
-    } else {
-        int32_t err = prctl(PR_SET_PTRACER, status, 0, 0, 0);
-        EXPECT_EQ(0, err);
-        int ret = 0;
-        (void)wait(&ret);
+    TraStatus ret = ScdPtraceAttach(child);
+    EXPECT_EQ(TRACE_SUCCESS, ret);
+
+    int status = 0;
+    pid_t waitRet = -1;
+    bool stopped = false;
+    for (uint32_t i = 0; i < 100U; i++) {
+        waitRet = waitpid(child, &status, WNOHANG | WUNTRACED);
+        if (waitRet != 0) {
+            stopped = (waitRet == child) && WIFSTOPPED(status);
+            break;
+        }
+        usleep(10000);
+    }
+    EXPECT_EQ(child, waitRet);
+    EXPECT_TRUE(stopped);
+
+    if (ret == TRACE_SUCCESS) {
+        ScdPtraceDetach(child);
+    }
+    (void)kill(child, SIGKILL);
+    pid_t reapRet = 0;
+    for (uint32_t i = 0; i < 100U; i++) {
+        reapRet = waitpid(child, &status, WNOHANG);
+        if (reapRet != 0) {
+            break;
+        }
+        usleep(10000);
+    }
+    if (reapRet == 0) {
+        (void)waitpid(child, &status, 0);
     }
 }
 
 TEST_F(ScdUtilUtest, TestScdUtilTrim)
 {
-    const char *data = NULL;
+    const char* data = NULL;
     TraStatus ret = TRACE_FAILURE;
 
     ret = ScdUtilTrim(NULL, 0, &data);
@@ -345,12 +362,12 @@ TEST_F(ScdUtilUtest, TestScdUtilReadStdin)
     EXPECT_EQ(TRACE_FAILURE, ret);
 
     MOCKER(read).stubs().will(returnValue((ssize_t)-1));
-    ret = ScdUtilReadStdin((void *)buf, 10);
+    ret = ScdUtilReadStdin((void*)buf, 10);
     EXPECT_EQ(TRACE_FAILURE, ret);
     GlobalMockObject::verify();
 
     MOCKER(read).stubs().will(returnValue((ssize_t)10));
-    ret = ScdUtilReadStdin((void *)buf, 10);
+    ret = ScdUtilReadStdin((void*)buf, 10);
     EXPECT_EQ(TRACE_SUCCESS, ret);
     GlobalMockObject::verify();
 }
@@ -358,7 +375,7 @@ TEST_F(ScdUtilUtest, TestScdUtilReadStdin)
 TEST_F(ScdUtilUtest, TestScdUtilOpen)
 {
     int32_t ret = -1;
-    char path[256] = { "/proc/self/maps" };
+    char path[256] = {"/proc/self/maps"};
 
     ret = ScdUtilOpen(path);
     EXPECT_NE(-1, ret);
@@ -369,7 +386,7 @@ TEST_F(ScdUtilUtest, TestScdUtilOpen)
     EXPECT_EQ(-1, ret);
     GlobalMockObject::verify();
 
-    auto mocker = reinterpret_cast<int (*)(char *, int)>(open);
+    auto mocker = reinterpret_cast<int (*)(char*, int)>(open);
     MOCKER(mocker).stubs().will(returnValue(-1));
     ret = ScdUtilOpen(path);
     EXPECT_EQ(-1, ret);
@@ -390,7 +407,7 @@ TEST_F(ScdUtilUtest, TestScdUtilWrite)
     EXPECT_EQ(0, ret);
 }
 
-static ssize_t read_stub(int fd, void *buf, size_t count)
+static ssize_t read_stub(int fd, void* buf, size_t count)
 {
     static int32_t cnt = 0;
     cnt++;
@@ -489,7 +506,6 @@ TEST_F(ScdUtilUtest, TestScdUtilGetTaskName)
     GlobalMockObject::verify();
 }
 
-
 TEST_F(ScdUtilUtest, TestScdUtilGetThreadName)
 {
     int32_t pid = getpid();
@@ -500,8 +516,8 @@ TEST_F(ScdUtilUtest, TestScdUtilGetThreadName)
     std::string strA;
     std::string strB;
     // thread name is less than SCD_THREAD_NAME_LEN(16)
-    strA.assign(SCD_THREAD_NAME_LEN , 'A');
-    strB.assign(SCD_THREAD_NAME_LEN -1U , 'A');
+    strA.assign(SCD_THREAD_NAME_LEN, 'A');
+    strB.assign(SCD_THREAD_NAME_LEN - 1U, 'A');
 
     prctl(PR_SET_NAME, strA.c_str());
     ScdUtilGetThreadName(pid, tid, buf, len);

@@ -16,21 +16,21 @@
 
 #if defined(HARDWARE_ZIP)
 
-#define ZIP_RATIO           1U
+#define ZIP_RATIO 1U
 #ifndef ST_GZIP_HEADER_SZ
-#define ST_GZIP_HEADER_SZ   10U
+#define ST_GZIP_HEADER_SZ 10U
 #endif
 #ifndef ST_GZIP_HEADER
-#define ST_GZIP_HEADER      "\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\x03"
+#define ST_GZIP_HEADER "\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\x03"
 #endif
-#define BLOCK_SIZE          1048576 // 1MB
+#define BLOCK_SIZE 1048576 // 1MB
 
 /*
  * @brief       : compress deinit
  * @param [in]  : stream data struct
  * @return      : NA
  */
-STATIC void HardwareCompressEnd(struct zip_stream *zipStream)
+STATIC void HardwareCompressEnd(struct zip_stream* zipStream)
 {
     int32_t ret = hw_deflateEnd(zipStream);
     if (ret != HZIP_OK) {
@@ -45,12 +45,12 @@ STATIC void HardwareCompressEnd(struct zip_stream *zipStream)
  * @param [in]  : zipStream stream data struct
  * @return      : LOG_SUCCESS: succeed; others: failed;
  */
-STATIC LogStatus HardwareCompressInit(int32_t fd, struct zip_stream *zipStream)
+STATIC LogStatus HardwareCompressInit(int32_t fd, struct zip_stream* zipStream)
 {
     /* deflate for gzip data */
-    int32_t ret = hw_deflateInit2_(zipStream, HZIP_LEVEL_DEFAULT, HZIP_METHOD_DEFAULT, HZIP_WINDOWBITS_GZIP,
-                                   HZIP_MEM_LEVEL_DEFAULT, HZIP_STRATEGY_DEFAULT, HZIP_VERSION,
-                                   (int32_t)sizeof(struct zip_stream));
+    int32_t ret = hw_deflateInit2_(
+        zipStream, HZIP_LEVEL_DEFAULT, HZIP_METHOD_DEFAULT, HZIP_WINDOWBITS_GZIP, HZIP_MEM_LEVEL_DEFAULT,
+        HZIP_STRATEGY_DEFAULT, HZIP_VERSION, (int32_t)sizeof(struct zip_stream));
     if (ret != HZIP_OK) {
         SELF_LOG_ERROR("[input] zipStream init failed, ret=%d, strerr=%s.", ret, strerror(ToolGetErrorCode()));
         return LOG_FAILURE;
@@ -66,12 +66,12 @@ STATIC LogStatus HardwareCompressInit(int32_t fd, struct zip_stream *zipStream)
     return LOG_SUCCESS;
 }
 
-STATIC LogStatus HardwareCompressBufferInit(struct zip_stream *zipStream, char *dest, uint32_t destTotalLen)
+STATIC LogStatus HardwareCompressBufferInit(struct zip_stream* zipStream, char* dest, uint32_t destTotalLen)
 {
     /* deflate for gzip data */
-    int32_t ret = hw_deflateInit2_(zipStream, HZIP_LEVEL_DEFAULT, HZIP_METHOD_DEFAULT, HZIP_WINDOWBITS_GZIP,
-                                   HZIP_MEM_LEVEL_DEFAULT, HZIP_STRATEGY_DEFAULT, HZIP_VERSION,
-                                   (int32_t)sizeof(struct zip_stream));
+    int32_t ret = hw_deflateInit2_(
+        zipStream, HZIP_LEVEL_DEFAULT, HZIP_METHOD_DEFAULT, HZIP_WINDOWBITS_GZIP, HZIP_MEM_LEVEL_DEFAULT,
+        HZIP_STRATEGY_DEFAULT, HZIP_VERSION, (int32_t)sizeof(struct zip_stream));
     if (ret != HZIP_OK) {
         SELF_LOG_ERROR("[input] zipStream init failed, ret=%d, strerr=%s.", ret, strerror(ToolGetErrorCode()));
         return LOG_FAILURE;
@@ -94,7 +94,7 @@ STATIC LogStatus HardwareCompressBufferInit(struct zip_stream *zipStream, char *
  * @param [out] : zipStream     zip stream data struct
  * @return      : data copy length, if failed, return INVALID(-1)
  */
-STATIC int32_t HardwareSrcDataCopy(const char *source, int32_t *sourceLen, struct zip_stream *zipStream)
+STATIC int32_t HardwareSrcDataCopy(const char* source, int32_t* sourceLen, struct zip_stream* zipStream)
 {
     errno_t ret = EOK;
     int32_t length = INVALID;
@@ -133,7 +133,7 @@ STATIC int32_t HardwareSrcDataCopy(const char *source, int32_t *sourceLen, struc
  * @param [out] : destAvailLen  available output buffer length
  * @return      : compress data length, if failed, return INVALID(-1)
  */
-STATIC int32_t HardwareZipProcess(struct zip_stream *zipStream, int32_t flush, char *dest, size_t destAvailLen)
+STATIC int32_t HardwareZipProcess(struct zip_stream* zipStream, int32_t flush, char* dest, size_t destAvailLen)
 {
     zipStream->avail_out = BLOCK_SIZE;
     int32_t ret = hw_deflate(zipStream, flush);
@@ -150,8 +150,9 @@ STATIC int32_t HardwareZipProcess(struct zip_stream *zipStream, int32_t flush, c
     int32_t length = BLOCK_SIZE - (int32_t)zipStream->avail_out;
 
     if ((length < 0) || (destAvailLen < (size_t)length)) {
-        SELF_LOG_WARN("hw_deflate wrong, length = %d, avail out=%ld, destAvailLen=%zu",
-            length, zipStream->avail_out, destAvailLen);
+        SELF_LOG_WARN(
+            "hw_deflate wrong, length = %d, avail out=%ld, destAvailLen=%zu", length, zipStream->avail_out,
+            destAvailLen);
         return INVALID;
     }
 
@@ -172,11 +173,11 @@ STATIC int32_t HardwareZipProcess(struct zip_stream *zipStream, int32_t flush, c
  */
 STATIC LogStatus HardwareCompressProc(int32_t in, uint32_t fileSize, int32_t out)
 {
-    struct zip_stream zipStream = { 0 };
+    struct zip_stream zipStream = {0};
     ONE_ACT_ERR_LOG(HardwareCompressInit(out, &zipStream) != LOG_SUCCESS, return LOG_FAILURE, "hardware init failed.");
-    char *buf = (char *)LogMalloc(BLOCK_SIZE);
+    char* buf = (char*)LogMalloc(BLOCK_SIZE);
     size_t zippedBufLen = (uint32_t)BLOCK_SIZE << ZIP_RATIO;
-    char *zippedBuf = (char *)LogMalloc(zippedBufLen);
+    char* zippedBuf = (char*)LogMalloc(zippedBufLen);
     if ((buf == NULL) || (zippedBuf == NULL)) {
         SELF_LOG_ERROR("malloc failed, strerr=%s.", strerror(ToolGetErrorCode()));
         XFREE(buf);
@@ -214,8 +215,9 @@ STATIC LogStatus HardwareCompressProc(int32_t in, uint32_t fileSize, int32_t out
         }
         int32_t bytes = ToolWrite(out, zippedBuf, dataLen); // write log data
         if (bytes == INVALID) {
-            SELF_LOG_ERROR("write log data failed, dataLen=%d, writen=%d, strerr=%s.", dataLen, bytes,
-                           strerror(ToolGetErrorCode()));
+            SELF_LOG_ERROR(
+                "write log data failed, dataLen=%d, writen=%d, strerr=%s.", dataLen, bytes,
+                strerror(ToolGetErrorCode()));
             ret = LOG_FAILURE;
             break;
         }
@@ -231,7 +233,7 @@ STATIC LogStatus HardwareCompressProc(int32_t in, uint32_t fileSize, int32_t out
  * @param [in]  : file      source log file
  * @return      : LOG_SUCCESS: succeed; others: failed;
  */
-LogStatus HardwareCompressFile(const char *file)
+LogStatus HardwareCompressFile(const char* file)
 {
     ONE_ACT_ERR_LOG(file == NULL, return LOG_FAILURE, "[input] file is invalid.");
     size_t length = strlen(file);
@@ -248,8 +250,7 @@ LogStatus HardwareCompressFile(const char *file)
     }
 
     int32_t in = ToolOpenWithMode(file, O_RDONLY, LOG_FILE_ARCHIVE_MODE);
-    ONE_ACT_WARN_LOG(in < 0, return LOG_FAILURE,
-                     "open %s failed, strerr=%s.", file, strerror(ToolGetErrorCode()));
+    ONE_ACT_WARN_LOG(in < 0, return LOG_FAILURE, "open %s failed, strerr=%s.", file, strerror(ToolGetErrorCode()));
 
     int32_t out = ToolOpenWithMode(outfile, (uint32_t)O_CREAT | (uint32_t)O_WRONLY, LOG_FILE_RDWR_MODE);
     if (out < 0) {
@@ -257,7 +258,7 @@ LogStatus HardwareCompressFile(const char *file)
         (void)ToolClose(in);
         return LOG_FAILURE;
     }
-    ToolStat statbuff = { 0 };
+    ToolStat statbuff = {0};
     if (ToolStatGet(file, &statbuff) != SYS_OK) {
         (void)ToolClose(in);
         (void)ToolClose(out);
@@ -268,37 +269,40 @@ LogStatus HardwareCompressFile(const char *file)
     (void)ToolClose(in);
     (void)ToolClose(out);
     if (err != LOG_SUCCESS) {
-        NO_ACT_ERR_LOG(ToolUnlink(outfile) != LOG_SUCCESS, "can not unlink file, file=%s, strerr=%s.",
-                       outfile, strerror(ToolGetErrorCode()));
+        NO_ACT_ERR_LOG(
+            ToolUnlink(outfile) != LOG_SUCCESS, "can not unlink file, file=%s, strerr=%s.", outfile,
+            strerror(ToolGetErrorCode()));
         return LOG_FAILURE;
     } else {
-        NO_ACT_WARN_LOG(ToolUnlink(file) != LOG_SUCCESS, "can not unlink file, file=%s, strerr=%s.",
-                        file, strerror(ToolGetErrorCode()));
+        NO_ACT_WARN_LOG(
+            ToolUnlink(file) != LOG_SUCCESS, "can not unlink file, file=%s, strerr=%s.", file,
+            strerror(ToolGetErrorCode()));
         return LOG_SUCCESS;
     }
 }
 
-LogStatus HardwareCompressBuffer(const char *source, uint32_t sourceLen, char **dest, uint32_t *destLen)
+LogStatus HardwareCompressBuffer(const char* source, uint32_t sourceLen, char** dest, uint32_t* destLen)
 {
     ONE_ACT_WARN_LOG(source == NULL, return LOG_INVALID_PTR, "compress source is invalid.");
     ONE_ACT_WARN_LOG(dest == NULL, return LOG_INVALID_PTR, "compress dest is invalid.");
     ONE_ACT_WARN_LOG(destLen == NULL, return LOG_INVALID_PTR, "compress destLen is invalid.");
-    ONE_ACT_WARN_LOG((sourceLen == 0) || (sourceLen > INT_MAX), return LOG_INVALID_PARAM,
-        "compress sourceLen[%u] is invalid.", sourceLen);
+    ONE_ACT_WARN_LOG(
+        (sourceLen == 0) || (sourceLen > INT_MAX), return LOG_INVALID_PARAM, "compress sourceLen[%u] is invalid.",
+        sourceLen);
 
     uint32_t destTotalLen = sourceLen << ZIP_RATIO;
-    *dest = (char *)LogMalloc(destTotalLen);
+    *dest = (char*)LogMalloc(destTotalLen);
     if (*dest == NULL) {
         SELF_LOG_ERROR("malloc for dest failed, strerr=%s.", strerror(ToolGetErrorCode()));
         return LOG_FAILURE;
     }
-    struct zip_stream zipStream = { 0 };
+    struct zip_stream zipStream = {0};
     LogStatus ret = HardwareCompressBufferInit(&zipStream, *dest, destTotalLen);
     if (ret != LOG_SUCCESS) {
         XFREE(*dest);
         return LOG_FAILURE;
     }
-    char *dstTmp = *dest + ST_GZIP_HEADER_SZ;
+    char* dstTmp = *dest + ST_GZIP_HEADER_SZ;
     *destLen = ST_GZIP_HEADER_SZ;
     destTotalLen -= ST_GZIP_HEADER_SZ;
     int32_t flush = HZIP_FLUSH_TYPE_SYNC_FLUSH;

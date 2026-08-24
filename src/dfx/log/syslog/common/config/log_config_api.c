@@ -16,16 +16,13 @@
 #define LOG_CONFIG_FILE "slog.conf"
 
 // interface inner
-STATIC char g_configFilePath[SLOG_CONF_PATH_MAX_LENGTH] = { 0 };
+STATIC char g_configFilePath[SLOG_CONF_PATH_MAX_LENGTH] = {0};
 
 /**
-* @brief : return config file path
-* @return: return config file path
-*/
-char *LogConfGetPath(void)
-{
-    return g_configFilePath;
-}
+ * @brief : return config file path
+ * @return: return config file path
+ */
+char* LogConfGetPath(void) { return g_configFilePath; }
 
 STATIC int32_t LogConfInitPath(void)
 {
@@ -43,17 +40,16 @@ STATIC int32_t LogConfInitPath(void)
  * @param [in]len: max length of process dir path
  * @return: SYS_OK/SYS_ERROR
  */
-STATIC int LogConfGetProcessPath(char *processDir, uint32_t len)
+STATIC int LogConfGetProcessPath(char* processDir, uint32_t len)
 {
     if (processDir == NULL) {
         SYSLOG_WARN("[input] process directory path is null.");
         return SYS_ERROR;
     }
-    const char *selfBin = "/proc/self/exe";
+    const char* selfBin = "/proc/self/exe";
     int32_t selflen = (int32_t)readlink(selfBin, processDir, len); // read self path of store
     if ((selflen < 0) || (selflen > TOOL_MAX_PATH)) {
-        SYSLOG_WARN("can not get self bin directory, selflen=%d, strerr=%s.", selflen,
-                    strerror(ToolGetErrorCode()));
+        SYSLOG_WARN("can not get self bin directory, selflen=%d, strerr=%s.", selflen, strerror(ToolGetErrorCode()));
         return SYS_ERROR;
     }
     // please make sure tmp end with '\0'
@@ -67,13 +63,13 @@ STATIC int LogConfGetProcessPath(char *processDir, uint32_t len)
  * @param [in]len: max length of process dir path
  * @return: SYS_OK/SYS_ERROR
  */
-STATIC int LogConfGetProcessFile(char *configPath, uint32_t len)
+STATIC int LogConfGetProcessFile(char* configPath, uint32_t len)
 {
     if (configPath == NULL) {
         SYSLOG_WARN("[input] config path is null.\n");
         return SYS_ERROR;
     }
-    char *tmp = (char *)LogMalloc(TOOL_MAX_PATH + 1);
+    char* tmp = (char*)LogMalloc(TOOL_MAX_PATH + 1);
     if (tmp == NULL) {
         SYSLOG_WARN("can not malloc for tmp, strerr=%s.\n", strerror(ToolGetErrorCode()));
         return SYS_ERROR;
@@ -85,7 +81,7 @@ STATIC int LogConfGetProcessFile(char *configPath, uint32_t len)
         XFREE(tmp);
         return SYS_ERROR;
     }
-    const char *pend = strrchr(tmp, OS_SPLIT);
+    const char* pend = strrchr(tmp, OS_SPLIT);
     if (pend == NULL) {
         SYSLOG_WARN("Config path has no \"\\\".\n");
         XFREE(tmp);
@@ -105,17 +101,17 @@ STATIC int LogConfGetProcessFile(char *configPath, uint32_t len)
     }
     ret = strcat_s(configPath, len, LOG_CONFIG_FILE);
     if (ret != EOK) {
-        SYSLOG_WARN("can not strcat_s, configPath=%s, result=%d, strerr=%s.\n",
-                    configPath, ret, strerror(ToolGetErrorCode()));
+        SYSLOG_WARN(
+            "can not strcat_s, configPath=%s, result=%d, strerr=%s.\n", configPath, ret, strerror(ToolGetErrorCode()));
         return SYS_ERROR;
     }
     return SYS_OK;
 }
 
 /**
-* @brief        : slogd\sklogd\log-daemon get config file path and assign to g_configFilePath
-* @return:      : SYS_OK: succeed; SYS_ERROR: failed
-*/
+ * @brief        : slogd\sklogd\log-daemon get config file path and assign to g_configFilePath
+ * @return:      : SYS_OK: succeed; SYS_ERROR: failed
+ */
 int32_t LogConfInit(void)
 {
     if (LogConfInitPath() != SYS_OK) {

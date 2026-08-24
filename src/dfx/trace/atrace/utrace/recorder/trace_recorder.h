@@ -27,43 +27,44 @@ enum {
 };
 
 // file length
-#define MAX_NAME_HEAD_LEN       64U
-#define MAX_FILENAME_LEN        64U
-#define MAX_FULLPATH_LEN        (TRACE_MAX_PATH - 1U)
-#define TRACE_RECORDER_INT32_MAX_LEN          11U
-#define TRACE_RECORDER_TIMESTAMP_MAX_LEN      28U
-#define TRACE_RECORDER_PATH_CONSTANT_LEN      34U
-#define TRACE_RECORDER_FILE_RESERVED_LEN      (9U + (MAX_FILENAME_LEN * 3U))
-#define TRACE_RECORDER_ROOT_RESERVED_LEN      (TRACE_RECORDER_PATH_CONSTANT_LEN + \
-    (TRACE_RECORDER_INT32_MAX_LEN * 3U) + (TRACE_RECORDER_TIMESTAMP_MAX_LEN * 2U) + \
-    (MAX_FILENAME_LEN * 4U))
-#define MAX_FILEPATH_LEN        ((MAX_FULLPATH_LEN > TRACE_RECORDER_FILE_RESERVED_LEN) ? \
-    (MAX_FULLPATH_LEN - TRACE_RECORDER_FILE_RESERVED_LEN) : 0U)
-#define MAX_FILEDIR_LEN         ((MAX_FULLPATH_LEN > TRACE_RECORDER_ROOT_RESERVED_LEN) ? \
-    (MAX_FULLPATH_LEN - TRACE_RECORDER_ROOT_RESERVED_LEN) : 0U)
-#define MAX_DIR_NUM             10U
+#define MAX_NAME_HEAD_LEN 64U
+#define MAX_FILENAME_LEN 64U
+#define MAX_FULLPATH_LEN (TRACE_MAX_PATH - 1U)
+#define TRACE_RECORDER_INT32_MAX_LEN 11U
+#define TRACE_RECORDER_TIMESTAMP_MAX_LEN 28U
+#define TRACE_RECORDER_PATH_CONSTANT_LEN 34U
+#define TRACE_RECORDER_FILE_RESERVED_LEN (9U + (MAX_FILENAME_LEN * 3U))
+#define TRACE_RECORDER_ROOT_RESERVED_LEN                                      \
+    (TRACE_RECORDER_PATH_CONSTANT_LEN + (TRACE_RECORDER_INT32_MAX_LEN * 3U) + \
+     (TRACE_RECORDER_TIMESTAMP_MAX_LEN * 2U) + (MAX_FILENAME_LEN * 4U))
+#define MAX_FILEPATH_LEN \
+    ((MAX_FULLPATH_LEN > TRACE_RECORDER_FILE_RESERVED_LEN) ? (MAX_FULLPATH_LEN - TRACE_RECORDER_FILE_RESERVED_LEN) : 0U)
+#define MAX_FILEDIR_LEN \
+    ((MAX_FULLPATH_LEN > TRACE_RECORDER_ROOT_RESERVED_LEN) ? (MAX_FULLPATH_LEN - TRACE_RECORDER_ROOT_RESERVED_LEN) : 0U)
+#define MAX_DIR_NUM 10U
 
 typedef struct {
-    const char *tracerName;
-    const char *objName;
-    const char *suffix;
+    const char* tracerName;
+    const char* objName;
+    const char* suffix;
 } TraceFileInfo;
 typedef struct {
-    const char *eventName;
+    const char* eventName;
     int32_t pid;
-    const char *dirTime;
+    const char* dirTime;
     bool isDevice; // ture: device dir; false: host
 } TraceDirInfo;
 
-typedef struct TraceDirNode{
-    char dirPath[MAX_FILEPATH_LEN + 1U]; // {$rootpath}/trace_{pgid}_{attr_pid}_{attr_time}/{event_name}_event_{pid}_time
-    struct TraceDirNode *prev;
-    struct TraceDirNode *next;
+typedef struct TraceDirNode {
+    char
+        dirPath[MAX_FILEPATH_LEN + 1U]; // {$rootpath}/trace_{pgid}_{attr_pid}_{attr_time}/{event_name}_event_{pid}_time
+    struct TraceDirNode* prev;
+    struct TraceDirNode* next;
 } TraceDirNode;
 
-typedef struct TraceDirList{
-    struct TraceDirNode *head;
-    struct TraceDirNode *tail;
+typedef struct TraceDirList {
+    struct TraceDirNode* head;
+    struct TraceDirNode* tail;
     int32_t count;
     AdiagLock lock;
 } TraceDirList;
@@ -71,24 +72,24 @@ typedef struct TraceDirList{
 typedef struct {
     int32_t maxDirNum; // default is 10, controlled by environment variable ASCEND_TRACE_RECORD_NUM, range [10, 1000]
     AdiagLock lock;
-    char rootPath[MAX_FILEDIR_LEN + 1U];    // ~/ascend/atrace
+    char rootPath[MAX_FILEDIR_LEN + 1U]; // ~/ascend/atrace
     TraceDirList hostDirList;
     TraceDirList deviceDirList;
-    TraceDirNode *exitDir;
+    TraceDirNode* exitDir;
     char corePath[MAX_FULLPATH_LEN + 1U];
 } TraceRecorderMgr;
 
 TraStatus TraceRecorderInit(void);
 void TraceRecorderExit(void);
 
-const TraceDirNode *TraceRecorderGetDirPath(const TraceDirInfo *dirInfo);
-TraStatus TraceRecorderGetFd(const TraceDirInfo *dirInfo, const TraceFileInfo *fileInfo, int32_t *fd);
-TraStatus TraceRecorderWrite(int32_t fd, const char *msg, uint32_t len);
+const TraceDirNode* TraceRecorderGetDirPath(const TraceDirInfo* dirInfo);
+TraStatus TraceRecorderGetFd(const TraceDirInfo* dirInfo, const TraceFileInfo* fileInfo, int32_t* fd);
+TraStatus TraceRecorderWrite(int32_t fd, const char* msg, uint32_t len);
 
 // for signal callback
-TraStatus TraceRecorderSafeGetFd(const TraceDirInfo *dirInfo, const TraceFileInfo *fileInfo, int32_t *fd);
-TraStatus TraceRecorderSafeMkdirPath(const TraceDirInfo *dirInfo);
-TraStatus TraceRecorderSafeGetDirPath(const TraceDirInfo *dirInfo, char *path, size_t len);
+TraStatus TraceRecorderSafeGetFd(const TraceDirInfo* dirInfo, const TraceFileInfo* fileInfo, int32_t* fd);
+TraStatus TraceRecorderSafeMkdirPath(const TraceDirInfo* dirInfo);
+TraStatus TraceRecorderSafeGetDirPath(const TraceDirInfo* dirInfo, char* path, size_t len);
 const char* TraceRecorderSafeGetFilePath(void);
 
 #ifdef __cplusplus

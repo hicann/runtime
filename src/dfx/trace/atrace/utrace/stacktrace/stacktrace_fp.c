@@ -21,10 +21,10 @@
 #include "trace_types.h"
 #include "trace_system_api.h"
 
-#define EXEC_READ_MAP                       "r"
-#define EXEC_MAP_ATTR                       "r-xp"
-#define OS_SPLIT                            '/'
-#define LR_OFFSET           8U
+#define EXEC_READ_MAP "r"
+#define EXEC_MAP_ATTR "r-xp"
+#define OS_SPLIT '/'
+#define LR_OFFSET 8U
 
 /**
  * @brief       get current pc self map
@@ -33,7 +33,7 @@
  * @param [in]  len:        data buffer length
  * @return      TRACE_SUCCESS  success; TRACE_FAILURE  failure
  */
-STATIC TraStatus TraceGetSelfMap(uintptr_t pc, char *data, uint32_t len)
+STATIC TraStatus TraceGetSelfMap(uintptr_t pc, char* data, uint32_t len)
 {
     if (data == NULL || len == 0) {
         return TRACE_FAILURE;
@@ -45,10 +45,10 @@ STATIC TraStatus TraceGetSelfMap(uintptr_t pc, char *data, uint32_t len)
         return TRACE_FAILURE;
     }
 
-    char *vmPath = NULL;
+    char* vmPath = NULL;
     uintptr_t vmStart = 0;
     uintptr_t vmEnd = 0;
-    char currentPath[CORE_BUFFER_LEN] = { 0 };
+    char currentPath[CORE_BUFFER_LEN] = {0};
     uintptr_t baseAddr = 0; // the minimum addr of load segment
     while (TraceSafeReadLine(fd, data, len) > 0) {
         vmPath = strchr(data, OS_SPLIT);
@@ -92,11 +92,11 @@ STATIC TraStatus TraceGetSelfMap(uintptr_t pc, char *data, uint32_t len)
  * @param [in]  len:        data buffer length
  * @return      0  reason end; other  continue to reason
  */
-STATIC uintptr_t TraceStackFrame(int32_t layer, uintptr_t fp, char *data, size_t len)
+STATIC uintptr_t TraceStackFrame(int32_t layer, uintptr_t fp, char* data, size_t len)
 {
     uintptr_t nfp = 0;
     uintptr_t pc = 0;
-    char info[CORE_BUFFER_LEN] = { 0 };
+    char info[CORE_BUFFER_LEN] = {0};
     if (fp == 0 || layer >= MAX_STACK_LAYER || data == NULL || len == 0) {
         return 0;
     }
@@ -109,8 +109,8 @@ STATIC uintptr_t TraceStackFrame(int32_t layer, uintptr_t fp, char *data, size_t
         if (lr < fp) {
             return 0;
         }
-        pc = *(uintptr_t *)lr;
-        nfp = *(uintptr_t *)fp;
+        pc = *(uintptr_t*)lr;
+        nfp = *(uintptr_t*)fp;
     }
     int32_t ret;
     if (TraceGetSelfMap(pc, info, (uint32_t)sizeof(info)) != TRACE_SUCCESS) {
@@ -135,15 +135,15 @@ STATIC uintptr_t TraceStackFrame(int32_t layer, uintptr_t fp, char *data, size_t
  * @param [out] data:       exception info
  * @param [in]  len:        data buffer length
  */
-STATIC void TraceStackPcFrame(int32_t layer, uintptr_t pc, char *data, size_t len)
+STATIC void TraceStackPcFrame(int32_t layer, uintptr_t pc, char* data, size_t len)
 {
     if (layer >= MAX_STACK_LAYER || data == NULL || len == 0) {
         return;
     }
 
     if (pc == 0) { // current pc frame
-        int32_t ret = snprintf_s(data, len, len - 1U, "#%d 0x%016lx 0x%016lx %s\n",
-            layer, pc, pc, program_invocation_name);
+        int32_t ret =
+            snprintf_s(data, len, len - 1U, "#%d 0x%016lx 0x%016lx %s\n", layer, pc, pc, program_invocation_name);
         if (ret == -1) {
             LOGE("snprintf_s core info failed");
         }
@@ -174,7 +174,7 @@ STATIC bool TraceCheckRegister(uintptr_t rbp, uintptr_t rsp, uintptr_t stackBase
  * @param [out] stackInfo:  buffer to save stack info
  * @return      TraStatus
  */
-TraStatus TraceStackFp(const ThreadArgument *arg, uintptr_t *regs, uint32_t regNum, TraceStackInfo *stackInfo)
+TraStatus TraceStackFp(const ThreadArgument* arg, uintptr_t* regs, uint32_t regNum, TraceStackInfo* stackInfo)
 {
     if (regs == NULL || arg == NULL || stackInfo == NULL || regNum < MAX_USE_REG_NUM) {
         return TRACE_INVALID_PARAM;
@@ -186,10 +186,12 @@ TraStatus TraceStackFp(const ThreadArgument *arg, uintptr_t *regs, uint32_t regN
 
     int32_t layer = 0;
     stackInfo->layer = -1;
-    char info[CORE_BUFFER_LEN] = { 0 };
+    char info[CORE_BUFFER_LEN] = {0};
     if (!TraceCheckRegister(fp, sp, arg->stackBaseAddr)) {
-        int32_t ret = snprintf_s(info, CORE_BUFFER_LEN, CORE_BUFFER_LEN - 1U,
-            "invalid register value, stack_start_addr=0x%016lx rbp=0x%016lx rsp=0x%016lx \n\n", arg->stackBaseAddr, fp, sp);
+        int32_t ret = snprintf_s(
+            info, CORE_BUFFER_LEN, CORE_BUFFER_LEN - 1U,
+            "invalid register value, stack_start_addr=0x%016lx rbp=0x%016lx rsp=0x%016lx \n\n", arg->stackBaseAddr, fp,
+            sp);
         if (ret != -1) {
             (void)memcpy_s(&stackInfo->errLog, CORE_BUFFER_LEN, info, strlen(info));
         }
@@ -228,15 +230,15 @@ TraStatus TraceStackFp(const ThreadArgument *arg, uintptr_t *regs, uint32_t regN
  * @param [in]  arg:    argument
  * @return      TraStatus
  */
-STATIC TraStatus TraceWriteProcessInfo(int32_t fd, const ThreadArgument *arg)
+STATIC TraStatus TraceWriteProcessInfo(int32_t fd, const ThreadArgument* arg)
 {
     uintptr_t sp = 0;
-    const mcontext_t *mcontext = &(arg->ucontext.uc_mcontext);
+    const mcontext_t* mcontext = &(arg->ucontext.uc_mcontext);
     if (mcontext != NULL) {
         sp = GET_SPREG_FROM_CONTEXT(mcontext);
     }
 
-    TraceStackProcessInfo info = { arg->signo, arg->pid, arg->tid, arg->crashTime, arg->stackBaseAddr, sp };
+    TraceStackProcessInfo info = {arg->signo, arg->pid, arg->tid, arg->crashTime, arg->stackBaseAddr, sp};
     return TraceSafeWriteProcessInfo(fd, &info);
 }
 
@@ -245,19 +247,19 @@ STATIC TraStatus TraceWriteProcessInfo(int32_t fd, const ThreadArgument *arg)
  * @param [in]  arg:        argument
  * @return      TraStatus
  */
-TraStatus TraceStackSigHandler(const ThreadArgument *arg)
+TraStatus TraceStackSigHandler(const ThreadArgument* arg)
 {
     if (arg == NULL) {
         return TRACE_FAILURE;
     }
 
     LOGI("get signal number:%d, start to analysis stack info.", arg->signo);
-    TraceStackInfo *stackInfo = TraceSafeGetStackBuffer();
+    TraceStackInfo* stackInfo = TraceSafeGetStackBuffer();
     stackInfo->threadIdx = 0;
     stackInfo->threadTid = arg->tid;
-    const ucontext_t *utext = &arg->ucontext;
-    const mcontext_t *mcontext = (const mcontext_t *)&(utext->uc_mcontext);
-    uintptr_t regs[TRACE_CORE_REG_NUM] = { 0 };
+    const ucontext_t* utext = &arg->ucontext;
+    const mcontext_t* mcontext = (const mcontext_t*)&(utext->uc_mcontext);
+    uintptr_t regs[TRACE_CORE_REG_NUM] = {0};
     GET_REGISTER_FROM_CONTEXT(regs, mcontext);
     TraStatus ret = TraceStackFp(arg, regs, TRACE_CORE_REG_NUM, stackInfo);
     if (ret != TRACE_SUCCESS) {

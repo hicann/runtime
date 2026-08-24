@@ -12,14 +12,14 @@
 #include "log_file_info.h"
 #include "slogd_config_mgr.h"
 
-#define TIME_HOUR_TO_SECOND         3600
-#define SELF_USE_PREFERRED_PERCENT  80U
-#define SELF_USE_PREFERRED_HUNDRED  100U
+#define TIME_HOUR_TO_SECOND 3600
+#define SELF_USE_PREFERRED_PERCENT 80U
+#define SELF_USE_PREFERRED_HUNDRED 100U
 
 // debug: 7.377M/h, security: 1.475M/h, run: 3.148M/h
 STATIC const uint32_t FLOW_SETTING_INFO[LOG_TYPE_NUM] = {7735345U, 1546650U, 3300917U};
 
-STATIC LogStatus WriteFileLimitGetSpec(int32_t type, uint32_t totalSize, uint32_t currSize, uint32_t *currSpec)
+STATIC LogStatus WriteFileLimitGetSpec(int32_t type, uint32_t totalSize, uint32_t currSize, uint32_t* currSpec)
 {
     ONE_ACT_WARN_LOG(type >= (int32_t)LOG_TYPE_NUM, return LOG_INVALID_PARAM, "[input] invalid log type %d.", type);
     ONE_ACT_WARN_LOG(currSpec == NULL, return LOG_INVALID_PTR, "[input] current specification is null.");
@@ -36,12 +36,12 @@ STATIC INLINE uint32_t WriteFileLimitGetResultSize(uint32_t totalSize)
     return totalSize * SELF_USE_PREFERRED_PERCENT / SELF_USE_PREFERRED_HUNDRED;
 }
 
-STATIC LogStatus WriteFileLimitCreate(WriteFileLimit *limit, uint32_t currSpec)
+STATIC LogStatus WriteFileLimitCreate(WriteFileLimit* limit, uint32_t currSpec)
 {
     ONE_ACT_WARN_LOG(limit == NULL, return LOG_SUCCESS, "[input] write file limit pointer is null.");
     limit->writeSpecification = currSpec;
-    limit->sharedConfig.totalSize = (WRITE_LIMIT_PERIOD_NUM - WriteFileLimitGetResultSize(WRITE_LIMIT_PERIOD_NUM)) *
-        limit->writeSpecification;
+    limit->sharedConfig.totalSize =
+        (WRITE_LIMIT_PERIOD_NUM - WriteFileLimitGetResultSize(WRITE_LIMIT_PERIOD_NUM)) * limit->writeSpecification;
     for (uint32_t i = 0; i < WRITE_LIMIT_PERIOD_NUM; ++i) {
         limit->periodConfig[i].totalSize = WriteFileLimitGetResultSize(limit->writeSpecification);
     }
@@ -51,23 +51,23 @@ STATIC LogStatus WriteFileLimitCreate(WriteFileLimit *limit, uint32_t currSpec)
     return LOG_SUCCESS;
 }
 
-LogStatus WriteFileLimitInit(WriteFileLimit **limit, int32_t type, uint32_t totalSize, uint32_t currSize)
+LogStatus WriteFileLimitInit(WriteFileLimit** limit, int32_t type, uint32_t totalSize, uint32_t currSize)
 {
     if (!SlogdConfigMgrGetWriteFileLimit()) {
         return LOG_SUCCESS;
     }
     ONE_ACT_WARN_LOG(limit == NULL, return LOG_INVALID_PTR, "[input] limit pointer is null.");
     ONE_ACT_WARN_LOG(*limit != NULL, return LOG_INVALID_PARAM, "limit pointer is initialized.");
-    *limit = (WriteFileLimit *)LogMalloc(sizeof(WriteFileLimit));
-    ONE_ACT_ERR_LOG(*limit == NULL, return LOG_FAILURE, "malloc struct limit failed, strerr=%s.",
-        strerror(ToolGetErrorCode()));
+    *limit = (WriteFileLimit*)LogMalloc(sizeof(WriteFileLimit));
+    ONE_ACT_ERR_LOG(
+        *limit == NULL, return LOG_FAILURE, "malloc struct limit failed, strerr=%s.", strerror(ToolGetErrorCode()));
     uint32_t spec = 0U;
     LogStatus status = WriteFileLimitGetSpec(type, totalSize, currSize, &spec);
     if (status != LOG_SUCCESS) {
         WriteFileLimitUnInit(limit);
         SELF_LOG_ERROR("get write limit specification failed, ret: %d.", status);
         return status;
-    } 
+    }
     status = WriteFileLimitCreate(*limit, spec);
     if (status != LOG_SUCCESS) {
         WriteFileLimitUnInit(limit);
@@ -77,7 +77,7 @@ LogStatus WriteFileLimitInit(WriteFileLimit **limit, int32_t type, uint32_t tota
     return LOG_SUCCESS;
 }
 
-void WriteFileLimitUnInit(WriteFileLimit **limit)
+void WriteFileLimitUnInit(WriteFileLimit** limit)
 {
     if (!SlogdConfigMgrGetWriteFileLimit()) {
         return;
@@ -87,9 +87,9 @@ void WriteFileLimitUnInit(WriteFileLimit **limit)
     XFREE(*limit);
 }
 
-STATIC void WriteFileLimitRefresh(WriteFileLimit *limit, const char *label)
+STATIC void WriteFileLimitRefresh(WriteFileLimit* limit, const char* label)
 {
-    PeriodConfig *periodConfig = &limit->periodConfig[limit->periodIndex];
+    PeriodConfig* periodConfig = &limit->periodConfig[limit->periodIndex];
     if (periodConfig->isLimit) {
         SELF_LOG_INFO("write limit refresh, %s discard logs size: %ubytes this period.", label, periodConfig->dropSize);
     }
@@ -112,19 +112,20 @@ STATIC void WriteFileLimitRefresh(WriteFileLimit *limit, const char *label)
 }
 
 /**
-* @brief        : if the current time is in the next period, refresh the limit
-* @param [in]   : limit      the write file limit to process
-* @return       : true: process the limit success; false: process the limit failed
-*/
-STATIC bool WriteFileLimitTimeProcess(WriteFileLimit *limit, const char *label)
+ * @brief        : if the current time is in the next period, refresh the limit
+ * @param [in]   : limit      the write file limit to process
+ * @return       : true: process the limit success; false: process the limit failed
+ */
+STATIC bool WriteFileLimitTimeProcess(WriteFileLimit* limit, const char* label)
 {
-    struct timespec currentTime = { 0, 0 };
+    struct timespec currentTime = {0, 0};
     int32_t ret = clock_gettime(CLOCK_MONOTONIC, &currentTime);
     ONE_ACT_ERR_LOG(ret != EOK, return false, "get current time failed, ret: %d.", ret);
 
     if (currentTime.tv_sec < limit->startTime.tv_sec) {
-        SELF_LOG_ERROR("time compare exception, current time: %lds, start time: %lds.",
-            currentTime.tv_sec, limit->startTime.tv_sec);
+        SELF_LOG_ERROR(
+            "time compare exception, current time: %lds, start time: %lds.", currentTime.tv_sec,
+            limit->startTime.tv_sec);
         return false;
     }
     if (currentTime.tv_sec - limit->startTime.tv_sec <= TIME_HOUR_TO_SECOND) {
@@ -139,7 +140,7 @@ STATIC bool WriteFileLimitTimeProcess(WriteFileLimit *limit, const char *label)
     return true;
 }
 
-STATIC void WriteFileLimitAddDropSize(uint32_t *dropSize, uint32_t dataLen)
+STATIC void WriteFileLimitAddDropSize(uint32_t* dropSize, uint32_t dataLen)
 {
     if (*dropSize == UINT32_MAX) {
         return;
@@ -153,14 +154,14 @@ STATIC void WriteFileLimitAddDropSize(uint32_t *dropSize, uint32_t dataLen)
 }
 
 /**
-* @brief        : decide the current log data is written according to limited state and data length
-* @param [in]   : limit       the write file limit to process
-* @param [in]   : dataLen     current log data length
-* @return       : true: write log pass; false: write log reject
-*/
-STATIC bool WriteFileLimitSizeProcess(WriteFileLimit *limit, uint32_t dataLen, const char* label)
+ * @brief        : decide the current log data is written according to limited state and data length
+ * @param [in]   : limit       the write file limit to process
+ * @param [in]   : dataLen     current log data length
+ * @return       : true: write log pass; false: write log reject
+ */
+STATIC bool WriteFileLimitSizeProcess(WriteFileLimit* limit, uint32_t dataLen, const char* label)
 {
-    PeriodConfig *periodConfig = &limit->periodConfig[limit->periodIndex];
+    PeriodConfig* periodConfig = &limit->periodConfig[limit->periodIndex];
     // already limited in this period
     if (periodConfig->isLimit) {
         WriteFileLimitAddDropSize(&periodConfig->dropSize, dataLen);
@@ -188,12 +189,12 @@ STATIC bool WriteFileLimitSizeProcess(WriteFileLimit *limit, uint32_t dataLen, c
 }
 
 /**
-* @brief        : check whether current log data writing is limited
-* @param [in]   : limit      the write file limit to check
-* @param [in]   : dataLen    current log data length
-* @return       : true: unlimited, write log pass; false: limited, write log reject
-*/
-bool WriteFileLimitCheck(WriteFileLimit *limit, uint32_t dataLen, const char* label)
+ * @brief        : check whether current log data writing is limited
+ * @param [in]   : limit      the write file limit to check
+ * @param [in]   : dataLen    current log data length
+ * @return       : true: unlimited, write log pass; false: limited, write log reject
+ */
+bool WriteFileLimitCheck(WriteFileLimit* limit, uint32_t dataLen, const char* label)
 {
     if (!SlogdConfigMgrGetWriteFileLimit() || (limit == NULL)) {
         return true;

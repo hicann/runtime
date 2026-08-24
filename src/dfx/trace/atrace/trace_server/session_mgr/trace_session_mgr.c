@@ -14,30 +14,21 @@
 #include "trace_adx_api.h"
 #include "ascend_hal.h"
 
-#define MAX_DEV_NUM                 64
+#define MAX_DEV_NUM 64
 
-STATIC SessionNode *g_sessionPidDevIdList = NULL;
-STATIC SessionNode *g_sessionPidDevIdDeletedList = NULL;
+STATIC SessionNode* g_sessionPidDevIdList = NULL;
+STATIC SessionNode* g_sessionPidDevIdDeletedList = NULL;
 STATIC AdiagLock g_sessionLock = TRACE_MUTEX_INITIALIZER;
 
-void TraceServerSessionLock(void)
-{
-    (void)AdiagLockGet(&g_sessionLock);
-}
+void TraceServerSessionLock(void) { (void)AdiagLockGet(&g_sessionLock); }
 
-void TraceServerSessionUnlock(void)
-{
-    (void)AdiagLockRelease(&g_sessionLock);
-}
+void TraceServerSessionUnlock(void) { (void)AdiagLockRelease(&g_sessionLock); }
 
-TraStatus TraceServerSessionInit(void)
-{
-    return AdiagLockInit(&g_sessionLock);
-}
+TraStatus TraceServerSessionInit(void) { return AdiagLockInit(&g_sessionLock); }
 
-STATIC void TraceServerListExit(SessionNode *list)
+STATIC void TraceServerListExit(SessionNode* list)
 {
-    SessionNode *node = NULL;
+    SessionNode* node = NULL;
     while (list != NULL) {
         node = list;
         list = list->next;
@@ -47,7 +38,7 @@ STATIC void TraceServerListExit(SessionNode *list)
         ADIAG_SAFE_FREE(node);
     }
 }
- 
+
 void TraceServerSessionExit(void)
 {
     TraceServerSessionLock();
@@ -61,14 +52,14 @@ void TraceServerSessionExit(void)
 
 STATIC SessionNode* TraceServerPopDeletedSessionNode(void)
 {
-    SessionNode *tmp = g_sessionPidDevIdDeletedList;
+    SessionNode* tmp = g_sessionPidDevIdDeletedList;
     if (tmp != NULL) {
         g_sessionPidDevIdDeletedList = NULL;
     }
     return tmp;
 }
 
-STATIC void TraceServerPushDeletedSessionNode(SessionNode *node)
+STATIC void TraceServerPushDeletedSessionNode(SessionNode* node)
 {
     if (node == NULL) {
         return;
@@ -79,7 +70,7 @@ STATIC void TraceServerPushDeletedSessionNode(SessionNode *node)
     }
     if (node->next != NULL) {
         // if node is list, insert to global list tail
-        SessionNode *tmp = g_sessionPidDevIdDeletedList;
+        SessionNode* tmp = g_sessionPidDevIdDeletedList;
         while (tmp->next != NULL) {
             tmp = tmp->next;
         }
@@ -100,9 +91,9 @@ void TraceServerHandleDeletedSessionNode(TraceSeverSendDataFunc func)
 {
     // pop all session nodes which will be deleted
     TraceServerSessionLock();
-    SessionNode *sessionNode = TraceServerPopDeletedSessionNode();
-    SessionNode *pre = NULL;
-    SessionNode *head = sessionNode;
+    SessionNode* sessionNode = TraceServerPopDeletedSessionNode();
+    SessionNode* pre = NULL;
+    SessionNode* head = sessionNode;
     while (sessionNode != NULL) {
         // traverse each node
         sessionNode->timeout -= SESSION_TIME_INTERVAL;
@@ -113,7 +104,7 @@ void TraceServerHandleDeletedSessionNode(TraceSeverSendDataFunc func)
             ADIAG_RUN_INF("session node is timeout, pid = %d.", sessionNode->pid);
             // session node is timeout, the timeout value is notified by client (libascend_trace.so)
             // delete node from list
-            SessionNode *tmp = sessionNode->next;
+            SessionNode* tmp = sessionNode->next;
             if (pre == NULL) {
                 head = sessionNode->next;
             } else {
@@ -146,9 +137,9 @@ void TraceServerHandleSessionNode(TraceSeverSendDataFunc func)
         return;
     }
 
-    SessionNode *tmp = NULL;
+    SessionNode* tmp = NULL;
     TraceServerSessionLock();
-    SessionNode *node = g_sessionPidDevIdList;
+    SessionNode* node = g_sessionPidDevIdList;
     int32_t status = 0; // invalid value
     TraStatus ret = TRACE_SUCCESS;
     // get the first valid session node
@@ -193,9 +184,9 @@ void TraceServerHandleSessionNode(TraceSeverSendDataFunc func)
     return;
 }
 
-STATIC SessionNode* TraceServerGetSessionNodeByList(int32_t pid, int32_t devId, SessionNode *list)
+STATIC SessionNode* TraceServerGetSessionNodeByList(int32_t pid, int32_t devId, SessionNode* list)
 {
-    SessionNode *tmp = list;
+    SessionNode* tmp = list;
     while (tmp != NULL) {
         if ((tmp->pid == pid) && (tmp->devId == devId)) {
             return tmp;
@@ -218,7 +209,7 @@ SessionNode* TraceServerGetSessionNode(int32_t pid, int32_t devId)
         return NULL;
     }
 
-    SessionNode *tmp = TraceServerGetSessionNodeByList(pid, devId, g_sessionPidDevIdDeletedList);
+    SessionNode* tmp = TraceServerGetSessionNodeByList(pid, devId, g_sessionPidDevIdDeletedList);
     if (tmp == NULL) {
         tmp = TraceServerGetSessionNodeByList(pid, devId, g_sessionPidDevIdList);
     }
@@ -233,7 +224,7 @@ SessionNode* TraceServerGetSessionNode(int32_t pid, int32_t devId)
  * @param [in]  timeout:     timeout
  * @return      TraStatus
  */
-TraStatus TraceServerInsertSessionNode(const void *handle, int32_t pid, int32_t devId, int32_t timeout)
+TraStatus TraceServerInsertSessionNode(const void* handle, int32_t pid, int32_t devId, int32_t timeout)
 {
     if ((TraceAdxIsCommHandleValid(handle) != TRACE_SUCCESS) || (devId < 0) || (devId >= MAX_DEV_NUM) || (pid < 0)) {
         ADIAG_ERR("invalid input for session node insert: pid = %d, devId = %d", pid, devId);
@@ -245,13 +236,13 @@ TraStatus TraceServerInsertSessionNode(const void *handle, int32_t pid, int32_t 
         TraceServerSessionUnlock();
         return TRACE_FAILURE;
     }
-    SessionNode *sessionNode = (SessionNode *)AdiagMalloc(sizeof(SessionNode));
+    SessionNode* sessionNode = (SessionNode*)AdiagMalloc(sizeof(SessionNode));
     if (sessionNode == NULL) {
         ADIAG_ERR("malloc session node failed, strerr=%s.", strerror(AdiagGetErrorCode()));
         TraceServerSessionUnlock();
         return TRACE_FAILURE;
     }
-    sessionNode->queue = (TraceQueue *)AdiagMalloc(sizeof(TraceQueue));
+    sessionNode->queue = (TraceQueue*)AdiagMalloc(sizeof(TraceQueue));
     if (sessionNode->queue == NULL) {
         ADIAG_ERR("malloc queue failed, strerr=%s.", strerror(AdiagGetErrorCode()));
         TraceServerSessionUnlock();
@@ -276,7 +267,7 @@ TraStatus TraceServerInsertSessionNode(const void *handle, int32_t pid, int32_t 
  * @param [in]  devId:          device id
  * @return      TraStatus
  */
-TraStatus TraceServerDeleteSessionNode(const void *handle, int32_t pid, int32_t devId)
+TraStatus TraceServerDeleteSessionNode(const void* handle, int32_t pid, int32_t devId)
 {
     if ((TraceAdxIsCommHandleValid(handle) != TRACE_SUCCESS) || (devId < 0) || (devId >= MAX_DEV_NUM) || (pid < 0)) {
         ADIAG_ERR("invalid input for session node delete: pid = %d, devId = %d", pid, devId);
@@ -287,19 +278,17 @@ TraStatus TraceServerDeleteSessionNode(const void *handle, int32_t pid, int32_t 
         TraceServerSessionUnlock();
         return TRACE_INVALID_DATA;
     }
-    SessionNode *deletedNode = NULL;
-    SessionNode *tmp = g_sessionPidDevIdList;
+    SessionNode* deletedNode = NULL;
+    SessionNode* tmp = g_sessionPidDevIdList;
     if ((tmp->pid == pid) && (tmp->devId == devId)) {
         g_sessionPidDevIdList = tmp->next;
         tmp->next = NULL;
         deletedNode = tmp;
     } else {
-        while ((tmp->next != NULL) && ((tmp->next->pid != pid) ||
-            (tmp->next->devId != devId))) {
+        while ((tmp->next != NULL) && ((tmp->next->pid != pid) || (tmp->next->devId != devId))) {
             tmp = tmp->next;
         }
-        if ((tmp->next != NULL) && (tmp->next->pid == pid) &&
-            (tmp->next->devId == devId)) {
+        if ((tmp->next != NULL) && (tmp->next->pid == pid) && (tmp->next->devId == devId)) {
             deletedNode = tmp->next;
             tmp->next = deletedNode->next;
             deletedNode->next = NULL;
@@ -310,12 +299,6 @@ TraStatus TraceServerDeleteSessionNode(const void *handle, int32_t pid, int32_t 
     return TRACE_SUCCESS;
 }
 
-bool TraceIsSessionNodeListNull(void)
-{
-    return (g_sessionPidDevIdList == NULL);
-}
+bool TraceIsSessionNodeListNull(void) { return (g_sessionPidDevIdList == NULL); }
 
-bool TraceIsDeletedSessionNodeListNull(void)
-{
-    return (g_sessionPidDevIdDeletedList == NULL);
-}
+bool TraceIsDeletedSessionNodeListNull(void) { return (g_sessionPidDevIdDeletedList == NULL); }

@@ -14,23 +14,23 @@
 #include "log_file_util.h"
 
 #ifndef DEFAULT_LOG_WORKSPACE
-#define DEFAULT_LOG_WORKSPACE       "/usr/slog"
+#define DEFAULT_LOG_WORKSPACE "/usr/slog"
 #endif
-#define SLOGD_LOG_LOCK              "/tmp.lock"
+#define SLOGD_LOG_LOCK "/tmp.lock"
 
 #ifdef IAM
-#define DEFAULT_SLOGD_LOG_FILE      "/home/mdc/var/log/slogd/slogdlog"
-#define DEFAULT_SLOGD_LOG_OLD_FILE  "/home/mdc/var/log/slogd/slogdlog.old"
-#define DEFAULT_SLOGD_LOG_LOCK      "/home/mdc/var/log/slogd/tmp.lock"
+#define DEFAULT_SLOGD_LOG_FILE "/home/mdc/var/log/slogd/slogdlog"
+#define DEFAULT_SLOGD_LOG_OLD_FILE "/home/mdc/var/log/slogd/slogdlog.old"
+#define DEFAULT_SLOGD_LOG_LOCK "/home/mdc/var/log/slogd/tmp.lock"
 #else
-#define DEFAULT_SLOGD_LOG_FILE      "/var/log/npu/slog/slogd/slogdlog"
-#define DEFAULT_SLOGD_LOG_OLD_FILE  "/var/log/npu/slog/slogd/slogdlog.old"
-#define DEFAULT_SLOGD_LOG_LOCK      "/var/log/npu/slog/slogd/tmp.lock"
+#define DEFAULT_SLOGD_LOG_FILE "/var/log/npu/slog/slogd/slogdlog"
+#define DEFAULT_SLOGD_LOG_OLD_FILE "/var/log/npu/slog/slogd/slogdlog.old"
+#define DEFAULT_SLOGD_LOG_LOCK "/var/log/npu/slog/slogd/tmp.lock"
 #endif
 
 #define LOG_FOR_SELF_MAX_FILE_LENGTH 8U
 #define LOG_DIR_FOR_SELF_LENGTH (CFG_LOGAGENT_PATH_MAX_LENGTH + LOG_FOR_SELF_MAX_FILE_LENGTH)
-#define SELF_MAX_NAME_LENGTH  16U
+#define SELF_MAX_NAME_LENGTH 16U
 #define SELF_LOG_FILES_LENGTH (LOG_DIR_FOR_SELF_LENGTH + SELF_MAX_NAME_LENGTH)
 
 typedef struct {
@@ -39,27 +39,18 @@ typedef struct {
     char selflogLockFile[SELF_LOG_FILES_LENGTH + 1U];
 } SelfLogFiles;
 
-STATIC char g_selfLogPath[LOG_DIR_FOR_SELF_LENGTH + 1U] = { 0 };
-STATIC char g_rootLogPath[CFG_LOGAGENT_PATH_MAX_LENGTH + 1U] = { 0 };
+STATIC char g_selfLogPath[LOG_DIR_FOR_SELF_LENGTH + 1U] = {0};
+STATIC char g_rootLogPath[CFG_LOGAGENT_PATH_MAX_LENGTH + 1U] = {0};
 STATIC char g_workSpacePath[CFG_WORKSPACE_PATH_MAX_LENGTH + 1U] = DEFAULT_LOG_WORKSPACE;
-STATIC SelfLogFiles *g_selfLogFiles = NULL;
+STATIC SelfLogFiles* g_selfLogFiles = NULL;
 
-char *LogGetWorkspacePath(void)
-{
-    return g_workSpacePath;
-}
+char* LogGetWorkspacePath(void) { return g_workSpacePath; }
 
-char *LogGetRootPath(void)
-{
-    return g_rootLogPath;
-}
+char* LogGetRootPath(void) { return g_rootLogPath; }
 
-char *LogGetSelfPath(void)
-{
-    return g_selfLogPath;
-}
+char* LogGetSelfPath(void) { return g_selfLogPath; }
 
-const char *LogGetSelfFile(void)
+const char* LogGetSelfFile(void)
 {
     if (g_selfLogFiles != NULL) {
         return g_selfLogFiles->selfLogFile;
@@ -67,7 +58,7 @@ const char *LogGetSelfFile(void)
     return DEFAULT_SLOGD_LOG_FILE;
 }
 
-const char *LogGetSelfOldFile(void)
+const char* LogGetSelfOldFile(void)
 {
     if (g_selfLogFiles != NULL) {
         return g_selfLogFiles->selfLogOldFile;
@@ -75,7 +66,7 @@ const char *LogGetSelfOldFile(void)
     return DEFAULT_SLOGD_LOG_OLD_FILE;
 }
 
-const char *LogGetSelfLockFile(void)
+const char* LogGetSelfLockFile(void)
 {
     if (g_selfLogFiles != NULL) {
         return g_selfLogFiles->selflogLockFile;
@@ -89,7 +80,7 @@ const char *LogGetSelfLockFile(void)
  */
 int CheckSelfLogPath(void)
 {
-    const char *logPath = LogGetRootPath();
+    const char* logPath = LogGetRootPath();
     if ((logPath == NULL) || (strlen(logPath) == 0)) {
         return SYS_ERROR;
     }
@@ -98,7 +89,7 @@ int CheckSelfLogPath(void)
         return SYS_ERROR;
     }
 
-    const char *slogdPath = LogGetSelfPath();
+    const char* slogdPath = LogGetSelfPath();
     if ((slogdPath == NULL) || (strlen(slogdPath) == 0)) {
         return SYS_ERROR;
     }
@@ -128,7 +119,7 @@ STATIC int LogInitWorkspacePath(void)
  * @param [in]dirPath: log root path
  * @return: void
  */
-STATIC void LogCheckPathPermission(const char *dirPath)
+STATIC void LogCheckPathPermission(const char* dirPath)
 {
     ONE_ACT_NO_LOG(dirPath == NULL, return);
 
@@ -153,18 +144,17 @@ STATIC void LogCheckPathPermission(const char *dirPath)
 STATIC int LogInitRootPath(void)
 {
     int ret;
-    char val[CONF_VALUE_MAX_LEN + 1] = { 0 };
-    LogRt err = LogConfListGetValue(LOG_AGENT_FILE_DIR_STR, LogStrlen(LOG_AGENT_FILE_DIR_STR),
-                                    val, CONF_VALUE_MAX_LEN);
+    char val[CONF_VALUE_MAX_LEN + 1] = {0};
+    LogRt err = LogConfListGetValue(LOG_AGENT_FILE_DIR_STR, LogStrlen(LOG_AGENT_FILE_DIR_STR), val, CONF_VALUE_MAX_LEN);
     if (err != SUCCESS) {
-        ret = snprintf_s(g_rootLogPath, CFG_LOGAGENT_PATH_MAX_LENGTH + 1U,
-                         CFG_LOGAGENT_PATH_MAX_LENGTH, "%s", LOG_FILE_PATH);
+        ret = snprintf_s(
+            g_rootLogPath, CFG_LOGAGENT_PATH_MAX_LENGTH + 1U, CFG_LOGAGENT_PATH_MAX_LENGTH, "%s", LOG_FILE_PATH);
         if (ret == -1) {
             SYSLOG_WARN("can not snprintf_s, log_path=%s, strerr=%s.\n", LOG_FILE_PATH, strerror(ToolGetErrorCode()));
             return SYS_ERROR;
         }
     } else {
-        char *path = (char *)LogMalloc((size_t)TOOL_MAX_PATH + 1U);
+        char* path = (char*)LogMalloc((size_t)TOOL_MAX_PATH + 1U);
         if (path == NULL) {
             SYSLOG_WARN("can not malloc, strerr=%s.", strerror(ToolGetErrorCode()));
             return SYS_ERROR;
@@ -183,15 +173,16 @@ STATIC int LogInitRootPath(void)
         }
         XFREE(path);
     }
-    LogCheckPathPermission((const char *)g_rootLogPath);
+    LogCheckPathPermission((const char*)g_rootLogPath);
 
     return (int32_t)LogMkdir(g_rootLogPath);
 }
 
 STATIC int LogInitSelfPath(void)
 {
-    int32_t ret = snprintf_s(g_selfLogPath, LOG_DIR_FOR_SELF_LENGTH + 1U, LOG_DIR_FOR_SELF_LENGTH,
-                             "%s%s", g_rootLogPath, LOG_DIR_FOR_SELF_LOG);
+    int32_t ret = snprintf_s(
+        g_selfLogPath, LOG_DIR_FOR_SELF_LENGTH + 1U, LOG_DIR_FOR_SELF_LENGTH, "%s%s", g_rootLogPath,
+        LOG_DIR_FOR_SELF_LOG);
     if (ret == -1) {
         SYSLOG_WARN("can not snprintf_s, slogd_log_path=%s, strerr=%s.\n", g_rootLogPath, strerror(ToolGetErrorCode()));
         return SYS_ERROR;
@@ -206,7 +197,7 @@ STATIC int LogInitSelfFiles(void)
         return SYS_OK;
     }
 
-    g_selfLogFiles = (SelfLogFiles *)LogMalloc(sizeof(SelfLogFiles));
+    g_selfLogFiles = (SelfLogFiles*)LogMalloc(sizeof(SelfLogFiles));
     if (g_selfLogFiles == NULL) {
         return SYS_ERROR;
     }
@@ -247,8 +238,4 @@ int LogPathMgrInit(void)
     return SYS_OK;
 }
 
-void LogPathMgrExit(void)
-{
-    XFREE(g_selfLogFiles);
-}
-
+void LogPathMgrExit(void) { XFREE(g_selfLogFiles); }

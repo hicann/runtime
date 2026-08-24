@@ -19,17 +19,17 @@
 
 #define AVERAGE(a, b) (((a) + (b)) >> 1)
 #define MIN(a, b) ((a) > (b) ? (b) : (a))
-#define AO_F_ADD(ptr, value)        ((__typeof__(*(ptr)))__sync_fetch_and_add((ptr), (value)))
-#define AO_SUB_F(ptr, value)        ((__typeof__(*(ptr)))__sync_sub_and_fetch((ptr), (value)))
-#define AO_SET(ptr, value)          ((void)__sync_lock_test_and_set((ptr), (value)))
-#define AO_CASB(ptr, comp, value)   (__sync_bool_compare_and_swap((ptr), (comp), (value)))
+#define AO_F_ADD(ptr, value) ((__typeof__(*(ptr)))__sync_fetch_and_add((ptr), (value)))
+#define AO_SUB_F(ptr, value) ((__typeof__(*(ptr)))__sync_sub_and_fetch((ptr), (value)))
+#define AO_SET(ptr, value) ((void)__sync_lock_test_and_set((ptr), (value)))
+#define AO_CASB(ptr, comp, value) (__sync_bool_compare_and_swap((ptr), (comp), (value)))
 #define MAX_RING_BUFFER_SIZE 1024U
 #define MIN_RING_BUFFER_SIZE 1U
 #define MAX_MSG_SIZE 1024U
 #define MIN_MSG_SIZE 64U
 #define MAX_RING_BUFFER_SPACE 131072U // 128M
 
-STATIC INLINE void TraceRbLogInitTime(struct RbLogCtrl *head)
+STATIC INLINE void TraceRbLogInitTime(struct RbLogCtrl* head)
 {
     uint64_t realTime1 = GetRealTime();
     uint64_t monotonicTime1 = GetCpuCycleCounter();
@@ -41,17 +41,18 @@ STATIC INLINE void TraceRbLogInitTime(struct RbLogCtrl *head)
         ADIAG_WAR("can not get time offset.");
     }
     head->cpuFreq = GetCpuFrequency();
-    ADIAG_INF("init ring buffer time finished, realTime %llu, monotonicTime %llu, freq %llu kHz, minutesWest %d minutes",
+    ADIAG_INF(
+        "init ring buffer time finished, realTime %llu, monotonicTime %llu, freq %llu kHz, minutesWest %d minutes",
         head->realTime, head->monotonicTime, head->cpuFreq, head->minutesWest);
 }
 
-STATIC bool TraceRbLogCheckParam(const char *name, const TraceAttr *attr)
+STATIC bool TraceRbLogCheckParam(const char* name, const TraceAttr* attr)
 {
     ADIAG_CHK_NULL_PTR(name, return false);
     ADIAG_CHK_NULL_PTR(attr, return false);
     if ((attr->msgNum != 0) && (attr->msgNum > MAX_RING_BUFFER_SIZE || attr->msgNum < MIN_RING_BUFFER_SIZE)) {
-        ADIAG_ERR("[%s] msg num %u out of range [%u, %u]",
-            name, attr->msgNum, MIN_RING_BUFFER_SIZE, MAX_RING_BUFFER_SIZE);
+        ADIAG_ERR(
+            "[%s] msg num %u out of range [%u, %u]", name, attr->msgNum, MIN_RING_BUFFER_SIZE, MAX_RING_BUFFER_SIZE);
         return false;
     }
     if ((attr->msgSize != 0) && (attr->msgSize > MAX_MSG_SIZE || attr->msgSize < MIN_MSG_SIZE)) {
@@ -61,7 +62,7 @@ STATIC bool TraceRbLogCheckParam(const char *name, const TraceAttr *attr)
     return true;
 }
 
-STATIC INLINE TraStatus TraceRbLogInitDataStruct(struct RbLog *rb, const TraceAttr *attr)
+STATIC INLINE TraStatus TraceRbLogInitDataStruct(struct RbLog* rb, const TraceAttr* attr)
 {
     for (uint32_t i = 0; i < TRACE_STRUCT_ENTRY_MAX_NUM; i++) {
         if (attr->handle[i] == NULL) {
@@ -88,7 +89,7 @@ STATIC INLINE TraStatus TraceRbLogInitDataStruct(struct RbLog *rb, const TraceAt
  * @param [in]  bufSize:    ringbuffer size
  * @return      ring buffer ptr
  */
-struct RbLog *TraceRbLogCreate(const char *name, const TraceAttr *attr)
+struct RbLog* TraceRbLogCreate(const char* name, const TraceAttr* attr)
 {
     if (!TraceRbLogCheckParam(name, attr)) {
         return NULL;
@@ -103,16 +104,17 @@ struct RbLog *TraceRbLogCreate(const char *name, const TraceAttr *attr)
     uint32_t msgSize = msgTxtSize + (uint32_t)sizeof(RbMsgHead);
     size_t totalSize = (size_t)msgSize * bufferSize;
     if (msgSize * bufferSize > MAX_RING_BUFFER_SPACE) {
-        ADIAG_ERR("[%s] buffer space %zu bytes exceed max buffer space %u bytes", name, totalSize, MAX_RING_BUFFER_SPACE);
+        ADIAG_ERR(
+            "[%s] buffer space %zu bytes exceed max buffer space %u bytes", name, totalSize, MAX_RING_BUFFER_SPACE);
         return NULL;
     }
     totalSize += sizeof(RbLog);
-    struct RbLog *rb = AdiagMalloc(totalSize);
+    struct RbLog* rb = AdiagMalloc(totalSize);
     if (rb == NULL) {
         ADIAG_ERR("[%s] malloc ring buffer failed.", name);
         return NULL;
     }
-    struct RbLogCtrl *head = &rb->head;
+    struct RbLogCtrl* head = &rb->head;
     errno_t ret = strcpy_s(head->name, sizeof(head->name), name);
     if (ret != EOK) {
         ADIAG_ERR("[%s] strcpy_s ring buffer name failed, ret : %d.", name, ret);
@@ -132,7 +134,8 @@ struct RbLog *TraceRbLogCreate(const char *name, const TraceAttr *attr)
     head->mask = bufferSize - 1U;
     head->errCount = 0;
     TraceRbLogInitTime(head);
-    ADIAG_INF("[%s] create ring buffer successfully, "
+    ADIAG_INF(
+        "[%s] create ring buffer successfully, "
         "msgSize %u bytes, msgTxtSize %u bytes, bufferSize %u bytes, msg space %u bytes, total space %zu bytes",
         name, msgSize, msgTxtSize, bufferSize, msgSize, totalSize);
     return rb;
@@ -143,12 +146,12 @@ struct RbLog *TraceRbLogCreate(const char *name, const TraceAttr *attr)
  * @param [in]  rb:         ringbuffer ptr
  * @return      NA
  */
-void TraceRbLogDestroy(struct RbLog *rb)
+void TraceRbLogDestroy(struct RbLog* rb)
 {
     if (rb != NULL) {
         for (uint32_t i = 0; i < TRACE_STRUCT_ENTRY_MAX_NUM; i++) {
             if (rb->entry[i].list != NULL) {
-                (void)AdiagListDestroy((struct AdiagList *)rb->entry[i].list);
+                (void)AdiagListDestroy((struct AdiagList*)rb->entry[i].list);
                 ADIAG_SAFE_FREE(rb->entry[i].list);
             }
         }
@@ -156,9 +159,9 @@ void TraceRbLogDestroy(struct RbLog *rb)
     }
 }
 
-STATIC INLINE RbLogMsg *TraceRbLogGetMsgByIndex(struct RbLog *rb, uint32_t msgIndex)
+STATIC INLINE RbLogMsg* TraceRbLogGetMsgByIndex(struct RbLog* rb, uint32_t msgIndex)
 {
-    return (RbLogMsg *)(rb->msg + rb->head.msgSize * msgIndex);
+    return (RbLogMsg*)(rb->msg + rb->head.msgSize * msgIndex);
 }
 
 /**
@@ -168,20 +171,21 @@ STATIC INLINE RbLogMsg *TraceRbLogGetMsgByIndex(struct RbLog *rb, uint32_t msgIn
  * @param [in]  bufSize:    data buffer size
  * @return      TraStatus
  */
-TraStatus TraceRbLogWriteRbMsg(struct RbLog *rb, uint8_t bufferType, const char *buffer, uint32_t bufSize)
+TraStatus TraceRbLogWriteRbMsg(struct RbLog* rb, uint8_t bufferType, const char* buffer, uint32_t bufSize)
 {
     ADIAG_CHK_NULL_PTR(buffer, return TRACE_INVALID_PARAM);
     ADIAG_CHK_EXPR_ACTION(bufSize == 0, return TRACE_INVALID_PARAM, "invalid bufSize 0");
     uint32_t txtSize = bufSize;
     if (txtSize > rb->head.msgTxtSize) {
-        ADIAG_WAR("[%s] msg size %u bytes exceeded ringbuffer msg size %u bytes, truncated.",
-            rb->head.name, txtSize, rb->head.msgTxtSize);
+        ADIAG_WAR(
+            "[%s] msg size %u bytes exceeded ringbuffer msg size %u bytes, truncated.", rb->head.name, txtSize,
+            rb->head.msgTxtSize);
         txtSize = rb->head.msgTxtSize;
     }
     uint64_t monotonicTime = GetCpuCycleCounter();
     uint64_t originalWriteIdx = AO_F_ADD(&rb->head.writeIdx, 1);
     uint32_t writeIdx = (uint32_t)(originalWriteIdx & rb->head.mask);
-    RbLogMsg *msg = TraceRbLogGetMsgByIndex(rb, writeIdx);
+    RbLogMsg* msg = TraceRbLogGetMsgByIndex(rb, writeIdx);
     if (!AO_CASB(&msg->head.busy, false, true)) {
         uint32_t errCount = AO_F_ADD(&rb->head.errCount, 1);
         if ((errCount & rb->head.mask) == 0) {
@@ -201,13 +205,13 @@ TraStatus TraceRbLogWriteRbMsg(struct RbLog *rb, uint8_t bufferType, const char 
     return TRACE_SUCCESS;
 }
 
-TraStatus TraceRbLogWriteRbMsgNoLock(struct RbLog *rb, uint8_t bufferType, const char *buffer, uint32_t bufSize)
+TraStatus TraceRbLogWriteRbMsgNoLock(struct RbLog* rb, uint8_t bufferType, const char* buffer, uint32_t bufSize)
 {
     if ((buffer == NULL) || (bufSize == 0)) {
         return TRACE_INVALID_PARAM;
     }
-    struct RbLogCtrl *head = &rb->head;
-    RbLogMsg *msg = (RbLogMsg *)(rb->msg + head->msgSize * (uint32_t)((++head->writeIdx) & head->mask));
+    struct RbLogCtrl* head = &rb->head;
+    RbLogMsg* msg = (RbLogMsg*)(rb->msg + head->msgSize * (uint32_t)((++head->writeIdx) & head->mask));
     uint32_t txtSize = MIN(bufSize, head->msgTxtSize);
 
     int32_t ret = memcpy_s(msg->txt, head->msgTxtSize, buffer, txtSize);
@@ -220,21 +224,21 @@ TraStatus TraceRbLogWriteRbMsgNoLock(struct RbLog *rb, uint8_t bufferType, const
     return TRACE_SUCCESS;
 }
 
-STATIC INLINE int RbLogMsgCmp(const void *a, const void *b)
+STATIC INLINE int RbLogMsgCmp(const void* a, const void* b)
 {
-    const RbLogMsg *msgA = (const RbLogMsg *)a;
-    const RbLogMsg *msgB = (const RbLogMsg *)b;
+    const RbLogMsg* msgA = (const RbLogMsg*)a;
+    const RbLogMsg* msgB = (const RbLogMsg*)b;
     if (msgA->head.busy != msgB->head.busy) {
-        return msgA->head.busy ? 1 : 0;     // msgA->head.busy > msgB->head.busy
+        return msgA->head.busy ? 1 : 0; // msgA->head.busy > msgB->head.busy
     }
     return msgA->head.cycle > msgB->head.cycle;
 }
 
-STATIC TraStatus TraceRbLogCopyMsg(struct RbLog *newRb, struct RbLog *rb, uint32_t msgIndex)
+STATIC TraStatus TraceRbLogCopyMsg(struct RbLog* newRb, struct RbLog* rb, uint32_t msgIndex)
 {
     uint32_t msgTxtSize = rb->head.msgTxtSize;
-    RbLogMsg *msg = TraceRbLogGetMsgByIndex(rb, msgIndex);
-    RbLogMsg *newMsg = TraceRbLogGetMsgByIndex(newRb, msgIndex);
+    RbLogMsg* msg = TraceRbLogGetMsgByIndex(rb, msgIndex);
+    RbLogMsg* newMsg = TraceRbLogGetMsgByIndex(newRb, msgIndex);
 
     uint64_t cycle = msg->head.cycle;
     int32_t ret = memcpy_s(&newMsg->txt, msgTxtSize, &msg->txt, msgTxtSize);
@@ -254,10 +258,7 @@ STATIC TraStatus TraceRbLogCopyMsg(struct RbLog *newRb, struct RbLog *rb, uint32
     return TRACE_SUCCESS;
 }
 
-STATIC void TraceRbLogSort(struct RbLog *rb)
-{
-    qsort(rb->msg, rb->head.bufSize, rb->head.msgSize, RbLogMsgCmp);
-}
+STATIC void TraceRbLogSort(struct RbLog* rb) { qsort(rb->msg, rb->head.bufSize, rb->head.msgSize, RbLogMsgCmp); }
 
 /**
  * @brief           get struct entry list
@@ -265,9 +266,9 @@ STATIC void TraceRbLogSort(struct RbLog *rb)
  * @param [in]      traList:    trace list of ring buffer
  * @return          TRACE_SUCCESS  success; TRACE_FAILURE  failure
  */
-STATIC TraStatus TraceRbLogGetStructEntryList(struct AdiagList **newRbList, const struct AdiagList *traList)
+STATIC TraStatus TraceRbLogGetStructEntryList(struct AdiagList** newRbList, const struct AdiagList* traList)
 {
-    struct AdiagList *newList = (struct AdiagList *)AdiagMalloc(sizeof(struct AdiagList));
+    struct AdiagList* newList = (struct AdiagList*)AdiagMalloc(sizeof(struct AdiagList));
     if (newList == NULL) {
         ADIAG_ERR("malloc new ringbuffer list failed.");
         return TRACE_FAILURE;
@@ -277,16 +278,17 @@ STATIC TraStatus TraceRbLogGetStructEntryList(struct AdiagList **newRbList, cons
         ADIAG_SAFE_FREE(newList);
         return TRACE_FAILURE;
     }
-    struct ListHead *pos = NULL;
-    struct AdiagListNode *node = NULL;
-    LIST_FOR_EACH(pos, &traList->list) {
+    struct ListHead* pos = NULL;
+    struct AdiagListNode* node = NULL;
+    LIST_FOR_EACH(pos, &traList->list)
+    {
         node = LIST_ENTRY(pos, struct AdiagListNode, list);
         if (node == NULL) {
             (void)AdiagListDestroy(newList);
             ADIAG_SAFE_FREE(newList);
             return TRACE_FAILURE;
         }
-        TraceStructField *data = (TraceStructField *)AdiagMalloc(sizeof(TraceStructField));
+        TraceStructField* data = (TraceStructField*)AdiagMalloc(sizeof(TraceStructField));
         if (data == NULL) {
             ADIAG_ERR("malloc struct field failed.");
             (void)AdiagListDestroy(newList);
@@ -319,7 +321,7 @@ STATIC TraStatus TraceRbLogGetStructEntryList(struct AdiagList **newRbList, cons
  * @param [in]  rb:         original ringbuffer
  * @return      TraStatus
  */
-TraStatus TraceRbLogGetCopyOfRingBuffer(struct RbLog **newRb, struct RbLog *rb)
+TraStatus TraceRbLogGetCopyOfRingBuffer(struct RbLog** newRb, struct RbLog* rb)
 {
     size_t totalSize = sizeof(RbLog) + (size_t)rb->head.bufSize * rb->head.msgSize;
     *newRb = AdiagMalloc(totalSize);
@@ -341,13 +343,13 @@ TraStatus TraceRbLogGetCopyOfRingBuffer(struct RbLog **newRb, struct RbLog *rb)
     }
     TraceRbLogSort(*newRb);
     // if trace struct not defined, return success
-    struct AdiagList *traList = NULL;
+    struct AdiagList* traList = NULL;
     for (uint32_t i = 0; i < TRACE_STRUCT_ENTRY_MAX_NUM; i++) {
-        traList = (struct AdiagList *)(rb->entry[i].list);
+        traList = (struct AdiagList*)(rb->entry[i].list);
         if ((rb->entry[i].list == NULL) || (ListEmpty(&traList->list))) {
             continue;
         }
-        if (TraceRbLogGetStructEntryList((struct AdiagList **)&(*newRb)->entry[i].list, traList) != TRACE_SUCCESS) {
+        if (TraceRbLogGetStructEntryList((struct AdiagList**)&(*newRb)->entry[i].list, traList) != TRACE_SUCCESS) {
             ADIAG_SAFE_FREE(*newRb);
             return TRACE_FAILURE;
         }
@@ -362,10 +364,10 @@ TraStatus TraceRbLogGetCopyOfRingBuffer(struct RbLog **newRb, struct RbLog *rb)
  * @param [out] buffer:       ptr of msg txt in ringbuffer
  * @return      TraStatus
  */
-TraStatus TraceRbLogReadRbMsg(struct RbLog *rb, char *timeStr, uint32_t timeStrSize, char **buffer)
+TraStatus TraceRbLogReadRbMsg(struct RbLog* rb, char* timeStr, uint32_t timeStrSize, char** buffer)
 {
-    RbLogMsg *msg = NULL;
-    for (;rb->head.readIdx != rb->head.bufSize; rb->head.readIdx++) {
+    RbLogMsg* msg = NULL;
+    for (; rb->head.readIdx != rb->head.bufSize; rb->head.readIdx++) {
         msg = TraceRbLogGetMsgByIndex(rb, rb->head.readIdx);
         if (msg->head.busy) { // msg has not been written done
             continue;
@@ -381,7 +383,7 @@ TraStatus TraceRbLogReadRbMsg(struct RbLog *rb, char *timeStr, uint32_t timeStrS
             return ret;
         }
         uint32_t lastIndex = MIN(msg->head.txtSize, rb->head.msgTxtSize - 1U);
-        msg->txt[lastIndex] = '\0';  // ensure msg must have a string terminator
+        msg->txt[lastIndex] = '\0'; // ensure msg must have a string terminator
         *buffer = msg->txt;
         return TRACE_SUCCESS;
     }
@@ -396,16 +398,16 @@ TraStatus TraceRbLogReadRbMsg(struct RbLog *rb, char *timeStr, uint32_t timeStrS
  * @param [out] bufLen:       length of msg in ringbuffer
  * @return      TraStatus
  */
-TraStatus TraceRbLogReadOriRbMsg(struct RbLog *rb, char **buffer, uint32_t *bufLen)
+TraStatus TraceRbLogReadOriRbMsg(struct RbLog* rb, char** buffer, uint32_t* bufLen)
 {
-    RbLogMsg *msg = NULL;
-    for (;rb->head.readIdx != rb->head.bufSize; rb->head.readIdx++) {
+    RbLogMsg* msg = NULL;
+    for (; rb->head.readIdx != rb->head.bufSize; rb->head.readIdx++) {
         msg = TraceRbLogGetMsgByIndex(rb, rb->head.readIdx);
         if (msg->head.txtSize == 0) {
             continue;
         }
         rb->head.readIdx++;
-        *buffer = (char *)msg;
+        *buffer = (char*)msg;
         *bufLen = rb->head.msgSize;
         return TRACE_SUCCESS;
     }
@@ -414,15 +416,12 @@ TraStatus TraceRbLogReadOriRbMsg(struct RbLog *rb, char **buffer, uint32_t *bufL
     return TRACE_RING_BUFFER_EMPTY;
 }
 
-void TraceRbLogPrepareForRead(struct RbLog *rb)
-{
-    rb->head.readIdx = 0;
-}
+void TraceRbLogPrepareForRead(struct RbLog* rb) { rb->head.readIdx = 0; }
 
-STATIC RbLogMsg *TraceRbLogGetOldestMsg(struct RbLog *rb, uint64_t *cycle, bool filterBusy)
+STATIC RbLogMsg* TraceRbLogGetOldestMsg(struct RbLog* rb, uint64_t* cycle, bool filterBusy)
 {
-    RbLogMsg *oldestMsg = NULL;
-    RbLogMsg *msg = NULL;
+    RbLogMsg* oldestMsg = NULL;
+    RbLogMsg* msg = NULL;
     for (uint32_t i = 0; i < rb->head.bufSize; i++) {
         msg = TraceRbLogGetMsgByIndex(rb, i);
         if (msg->head.txtSize == 0) {
@@ -451,13 +450,13 @@ STATIC RbLogMsg *TraceRbLogGetOldestMsg(struct RbLog *rb, uint64_t *cycle, bool 
  * @param [out] buffer:       ptr of msg txt in ringbuffer
  * @return      TraStatus
  */
-TraStatus TraceRbLogReadRbMsgSafe(struct RbLog *rb, char *timeStr, uint32_t timeStrSize, char **buffer)
+TraStatus TraceRbLogReadRbMsgSafe(struct RbLog* rb, char* timeStr, uint32_t timeStrSize, char** buffer)
 {
     if (rb->head.readIdx == rb->head.bufSize) {
         return TRACE_RING_BUFFER_EMPTY;
     }
     uint64_t cycle = 0;
-    RbLogMsg *msg = TraceRbLogGetOldestMsg(rb, &cycle, true);
+    RbLogMsg* msg = TraceRbLogGetOldestMsg(rb, &cycle, true);
     if (msg == NULL) {
         return TRACE_RING_BUFFER_EMPTY;
     }
@@ -468,7 +467,7 @@ TraStatus TraceRbLogReadRbMsgSafe(struct RbLog *rb, char *timeStr, uint32_t time
         return ret;
     }
     uint32_t lastIndex = MIN(msg->head.txtSize, rb->head.msgTxtSize - 1U);
-    msg->txt[lastIndex] = '\0';  // ensure msg must have a string terminator
+    msg->txt[lastIndex] = '\0'; // ensure msg must have a string terminator
     *buffer = msg->txt;
     msg->head.txtSize = 0;
     rb->head.readIdx++;
@@ -482,22 +481,22 @@ TraStatus TraceRbLogReadRbMsgSafe(struct RbLog *rb, char *timeStr, uint32_t time
  * @param [out] bufLen:       length of msg in ringbuffer
  * @return      TraStatus
  */
-TraStatus TraceRbLogReadOriRbMsgSafe(struct RbLog *rb, char **buffer, uint32_t *bufLen, uint64_t *cycle)
+TraStatus TraceRbLogReadOriRbMsgSafe(struct RbLog* rb, char** buffer, uint32_t* bufLen, uint64_t* cycle)
 {
     if (rb->head.readIdx == rb->head.bufSize) {
         return TRACE_RING_BUFFER_EMPTY;
     }
-    RbLogMsg *msg = TraceRbLogGetOldestMsg(rb, cycle, false);
+    RbLogMsg* msg = TraceRbLogGetOldestMsg(rb, cycle, false);
     if (msg == NULL) {
         return TRACE_RING_BUFFER_EMPTY;
     }
-    *buffer = (char *)msg;
+    *buffer = (char*)msg;
     *bufLen = rb->head.msgSize;
     rb->head.readIdx++;
     return TRACE_SUCCESS;
 }
 
-uint32_t TracerRbLogGetMsgNum(const RbLog *rb)
+uint32_t TracerRbLogGetMsgNum(const RbLog* rb)
 {
     return (rb->head.writeIdx > (uint64_t)rb->head.bufSize) ? rb->head.bufSize : (uint32_t)rb->head.writeIdx;
 }

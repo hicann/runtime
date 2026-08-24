@@ -22,7 +22,7 @@ extern "C" {
 typedef struct {
     LogType type;            //  debug/security/run for sorted log
     ProcessType processType; //  APPLICATION/SYSTEM(0/1)
-    uint32_t pid;        //  aicpu process pid, it is available when processType is APPLICATION
+    uint32_t pid;            //  aicpu process pid, it is available when processType is APPLICATION
     uint32_t deviceId;
     int32_t moduleId;
     int32_t aosType;
@@ -31,20 +31,20 @@ typedef struct {
 
 typedef struct {
     LogPriority priority;
-    bool (*checkLogType)(const LogInfo *);
-    int32_t (*write)(const char *, uint32_t, const LogInfo *);
+    bool (*checkLogType)(const LogInfo*);
+    int32_t (*write)(const char*, uint32_t, const LogInfo*);
 } LogDistributeNode;
 
 typedef struct {
     LogPriority priority;
-    void (*receive)(void *);
+    void (*receive)(void*);
 } LogReceiveNode;
 
 int32_t SlogdReceiveInit(void);
-void SlogdWriteToBuffer(const char *msg, uint32_t msgLen, const LogInfo *info);
-int32_t SlogdDistributeRegister(const LogDistributeNode *node);
-int32_t SlogdDevReceiveRegister(const LogReceiveNode *node);
-int32_t SlogdComReceiveRegister(const LogReceiveNode *node);
+void SlogdWriteToBuffer(const char* msg, uint32_t msgLen, const LogInfo* info);
+int32_t SlogdDistributeRegister(const LogDistributeNode* node);
+int32_t SlogdDevReceiveRegister(const LogReceiveNode* node);
+int32_t SlogdComReceiveRegister(const LogReceiveNode* node);
 void SlogdReceiveExit(void);
 
 #ifdef __cplusplus

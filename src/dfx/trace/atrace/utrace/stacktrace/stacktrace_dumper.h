@@ -20,8 +20,8 @@ extern "C" {
 TraStatus TraceDumperInit(void);
 void TraceDumperExit(void);
 
-typedef TraStatus (*DumperCallback)(void *, uint64_t);
-TraStatus TraceDumperSetCallback(DumperCallback func, void *arg);
+typedef TraStatus (*DumperCallback)(void*, uint64_t);
+TraStatus TraceDumperSetCallback(DumperCallback func, void* arg);
 
 #ifdef __cplusplus
 }

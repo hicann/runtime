@@ -10,27 +10,21 @@
 #include "trace_adx_api.h"
 #include "adcore_api.h"
 
-int32_t TraceAdxIsCommHandleValid(const void *handle)
-{
-    return AdxIsCommHandleValid((AdxCommConHandle)handle);
-}
+int32_t TraceAdxIsCommHandleValid(const void* handle) { return AdxIsCommHandleValid((AdxCommConHandle)handle); }
 
-void TraceAdxDestroyCommHandle(const void *handle)
-{
-    AdxDestroyCommHandle((AdxCommHandle)handle);
-}
+void TraceAdxDestroyCommHandle(const void* handle) { AdxDestroyCommHandle((AdxCommHandle)handle); }
 
-int32_t TraceAdxSendMsg(const void *handle, const char *data, uint32_t len)
+int32_t TraceAdxSendMsg(const void* handle, const char* data, uint32_t len)
 {
     return AdxSendMsg((AdxCommConHandle)handle, data, len);
 }
 
-int32_t TraceAdxRecvMsg(const void *handle, char **data, uint32_t *len, uint32_t timeout)
+int32_t TraceAdxRecvMsg(const void* handle, char** data, uint32_t* len, uint32_t timeout)
 {
     return AdxRecvMsg((AdxCommHandle)handle, data, len, timeout);
 }
 
-int32_t TraceAdxGetAttrByCommHandle(const void *handle, int32_t attr, int32_t *value)
+int32_t TraceAdxGetAttrByCommHandle(const void* handle, int32_t attr, int32_t* value)
 {
     return AdxGetAttrByCommHandle((AdxCommConHandle)handle, attr, value);
 }

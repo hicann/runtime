@@ -17,7 +17,7 @@ extern "C" {
 #endif
 int32_t SysReportInit(void);
 int32_t SysReportDestroy(void);
-int32_t SysReportProcess(const CommHandle *handle, const void *value, uint32_t len);
+int32_t SysReportProcess(const CommHandle* handle, const void* value, uint32_t len);
 #ifdef __cplusplus
 }
 #endif

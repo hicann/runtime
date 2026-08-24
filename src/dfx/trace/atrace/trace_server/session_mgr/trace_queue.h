@@ -23,33 +23,33 @@ extern "C" {
 typedef struct node {
     uint8_t flag;
     uint32_t dataLen;
-    void *data;
-    struct node *next;
+    void* data;
+    struct node* next;
 } TraceNode;
 
 typedef struct {
     uint32_t count;
     uint32_t size;
-    TraceNode *head; // void struct should have size
-    TraceNode *rear;
+    TraceNode* head; // void struct should have size
+    TraceNode* rear;
 } TraceQueue;
 
 // queue init
-TraStatus TraceQueueInit(TraceQueue *queue);
+TraStatus TraceQueueInit(TraceQueue* queue);
 
 // queue free
-TraStatus TraceQueueFree(TraceQueue *queue);
+TraStatus TraceQueueFree(TraceQueue* queue);
 
 // node enqueue
-TraStatus TraceQueueEnqueue(TraceQueue *queue, TraceNode *node);
+TraStatus TraceQueueEnqueue(TraceQueue* queue, TraceNode* node);
 
 // node dequeue
-TraStatus TraceQueueDequeue(TraceQueue *queue, TraceNode **node);
+TraStatus TraceQueueDequeue(TraceQueue* queue, TraceNode** node);
 
-void XFreeTraceNode(TraceNode **node);
+void XFreeTraceNode(TraceNode** node);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif  // KTRACE_QUEUE_H
+#endif // KTRACE_QUEUE_H

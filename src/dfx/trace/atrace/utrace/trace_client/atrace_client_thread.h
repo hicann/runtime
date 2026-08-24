@@ -17,11 +17,11 @@
 extern "C" {
 #endif
 
-#define HOST_MAX_DEV_NUM    1024
+#define HOST_MAX_DEV_NUM 1024
 
-#define THREAD_STATUS_INIT          0
-#define THREAD_STATUS_RUN           1
-#define THREAD_STATUS_WAIT_EXIT     2
+#define THREAD_STATUS_INIT 0
+#define THREAD_STATUS_RUN 1
+#define THREAD_STATUS_WAIT_EXIT 2
 
 typedef struct {
     int32_t devId;
@@ -32,10 +32,9 @@ typedef void* (*ThreadRunFunc)(void* args);
 // thread stop function, callback when release thread
 typedef int32_t (*ThreadStopFunc)(int32_t devId);
 
-
 TraStatus AtraceThreadPoolInit(void);
 void AtraceThreadPoolExit(ThreadStopFunc func);
-TraStatus AtraceThreadCreate(int32_t devId, TraceThreadArgs *pArgs, ThreadRunFunc func);
+TraStatus AtraceThreadCreate(int32_t devId, TraceThreadArgs* pArgs, ThreadRunFunc func);
 void AtraceThreadRelease(int32_t devId, ThreadStopFunc func, bool sync);
 
 void AtraceThreadFree(int32_t devId);

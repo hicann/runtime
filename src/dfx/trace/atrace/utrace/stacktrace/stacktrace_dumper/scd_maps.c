@@ -16,33 +16,30 @@
 #include "atrace_types.h"
 #include "trace_system_api.h"
 
-#define SCD_MAPS_BUF_LEN     512U
+#define SCD_MAPS_BUF_LEN 512U
 
 STATIC ScdMaps g_maps;
 
-ScdMaps *ScdMapsGet(void)
-{
-    return &g_maps;
-}
+ScdMaps* ScdMapsGet(void) { return &g_maps; }
 
-STATIC TraStatus ScdMapsCmpName(const void *nodeData, const void *data)
+STATIC TraStatus ScdMapsCmpName(const void* nodeData, const void* data)
 {
-    const ScdMap *node = (const ScdMap *)nodeData;
-    const char *name = (const char *)data;
+    const ScdMap* node = (const ScdMap*)nodeData;
+    const char* name = (const char*)data;
     if (strcmp(node->name, name) == 0) {
         return TRACE_SUCCESS;
     }
     return TRACE_FAILURE;
 }
 
-STATIC ScdMap *ScdMapsGetMapByName(ScdMaps *maps, const char *name)
+STATIC ScdMap* ScdMapsGetMapByName(ScdMaps* maps, const char* name)
 {
     return AdiagListForEach(&maps->mapList, ScdMapsCmpName, name);
 }
 
-STATIC TraStatus ScdMapsCmpPcRange(const void *nodeData, const void *data)
+STATIC TraStatus ScdMapsCmpPcRange(const void* nodeData, const void* data)
 {
-    const ScdMap *node = (const ScdMap *)nodeData;
+    const ScdMap* node = (const ScdMap*)nodeData;
     uintptr_t pc = (uintptr_t)data;
     if (pc >= node->start && pc < node->end) {
         return TRACE_SUCCESS;
@@ -50,12 +47,12 @@ STATIC TraStatus ScdMapsCmpPcRange(const void *nodeData, const void *data)
     return TRACE_FAILURE;
 }
 
-ScdMap *ScdMapsGetMapByPc(ScdMaps *maps, uintptr_t pc)
+ScdMap* ScdMapsGetMapByPc(ScdMaps* maps, uintptr_t pc)
 {
-    return AdiagListForEach(&maps->mapList, ScdMapsCmpPcRange, (const void *)pc);
+    return AdiagListForEach(&maps->mapList, ScdMapsCmpPcRange, (const void*)pc);
 }
 
-STATIC ScdMap *ScdMapsParseLine(ScdMaps *maps, char *line, uint32_t len)
+STATIC ScdMap* ScdMapsParseLine(ScdMaps* maps, char* line, uint32_t len)
 {
     uintptr_t start = 0;
     uintptr_t end = 0;
@@ -69,14 +66,14 @@ STATIC ScdMap *ScdMapsParseLine(ScdMaps *maps, char *line, uint32_t len)
         return NULL;
     }
 
-    const char *name = NULL;
+    const char* name = NULL;
     if (ScdUtilTrim(line + pos, len - (uint32_t)pos, &name) != TRACE_SUCCESS) {
         return NULL;
     }
     if ((name == NULL) || (strlen(name) == 0)) {
         return NULL;
     }
-    char realPath[TRACE_MAX_PATH] = { 0 };
+    char realPath[TRACE_MAX_PATH] = {0};
     errno = 0;
     if ((TraceRealPath(name, realPath, TRACE_MAX_PATH) != EN_OK) && (errno != ENOENT)) {
         SCD_DLOG_ERR("can not get realpath, path=%s, strerr=%s.", name, strerror(errno));
@@ -84,7 +81,7 @@ STATIC ScdMap *ScdMapsParseLine(ScdMaps *maps, char *line, uint32_t len)
     }
 
     // find map
-    ScdMap *map = ScdMapsGetMapByName(maps, realPath);
+    ScdMap* map = ScdMapsGetMapByName(maps, realPath);
     if (map != NULL) {
         // the start and end of the multi-segment code segment of the map are updated each time
         if (ScdMapUpdata(map, start, end, offset) == TRACE_SUCCESS) {
@@ -100,7 +97,7 @@ STATIC ScdMap *ScdMapsParseLine(ScdMaps *maps, char *line, uint32_t len)
  * @param [in]  maps:       maps info
  * @return      TraStatus
  */
-TraStatus ScdMapsLoad(ScdMaps *maps)
+TraStatus ScdMapsLoad(ScdMaps* maps)
 {
     char buf[SCD_MAPS_BUF_LEN] = {0};
     int32_t err = snprintf_s(buf, SCD_MAPS_BUF_LEN, SCD_MAPS_BUF_LEN - 1U, "/proc/%d/maps", maps->pid);
@@ -109,14 +106,14 @@ TraStatus ScdMapsLoad(ScdMaps *maps)
         return TRACE_FAILURE;
     }
 
-    FILE *fp = fopen(buf, "r");
+    FILE* fp = fopen(buf, "r");
     if (fp == NULL) {
         SCD_DLOG_ERR("open maps file failed.");
         return TRACE_FAILURE;
     }
 
     while (fgets(buf, SCD_MAPS_BUF_LEN, fp) != NULL) {
-        ScdMap *node = ScdMapsParseLine(maps, buf, SCD_MAPS_BUF_LEN);
+        ScdMap* node = ScdMapsParseLine(maps, buf, SCD_MAPS_BUF_LEN);
         if (node == NULL) {
             continue;
         }
@@ -140,7 +137,7 @@ TraStatus ScdMapsLoad(ScdMaps *maps)
  * @param [in]  pid:        process id
  * @return      TraStatus
  */
-TraStatus ScdMapsInit(ScdMaps *maps, int32_t pid)
+TraStatus ScdMapsInit(ScdMaps* maps, int32_t pid)
 {
     SCD_CHK_PTR_ACTION(maps, return TRACE_FAILURE);
 
@@ -158,11 +155,11 @@ TraStatus ScdMapsInit(ScdMaps *maps, int32_t pid)
  * @param [in]  maps:       maps info
  * @return      NA
  */
-void ScdMapsUninit(ScdMaps *maps)
+void ScdMapsUninit(ScdMaps* maps)
 {
-    ScdMap *node = (ScdMap *)AdiagListTakeOut(&maps->mapList);
+    ScdMap* node = (ScdMap*)AdiagListTakeOut(&maps->mapList);
     while (node != NULL) {
         ScdMapDestroy(&node);
-        node = (ScdMap *)AdiagListTakeOut(&maps->mapList);
+        node = (ScdMap*)AdiagListTakeOut(&maps->mapList);
     }
 }

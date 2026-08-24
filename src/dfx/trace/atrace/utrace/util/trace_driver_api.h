@@ -20,8 +20,8 @@ extern "C" {
 TraStatus TraceDriverInit(void);
 void TraceDriverExit(void);
 
-TraStatus TraceDrvGetPlatformInfo(uint32_t *info);
-TraStatus TraceDrvGetDevNum(uint32_t *num);
+TraStatus TraceDrvGetPlatformInfo(uint32_t* info);
+TraStatus TraceDrvGetDevNum(uint32_t* num);
 
 #ifdef __cplusplus
 }

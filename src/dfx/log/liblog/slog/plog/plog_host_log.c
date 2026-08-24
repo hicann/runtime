@@ -25,46 +25,31 @@
 extern "C" {
 #endif
 #define THREAD_SLEEP_INTERVAL 20U
-#define THREAD_SLEEP_TIMES    10U
+#define THREAD_SLEEP_TIMES 10U
 
 #define PLOG_ASYNC_SAVE 0
-#define PLOG_SYNC_SAVE  1
+#define PLOG_SYNC_SAVE 1
 
 STATIC ToolThread g_alogFlushTid = 0;
 STATIC bool g_alogFlushStarting = false;
 STATIC bool g_threadExit = false;
-STATIC bool g_threadSleepFlag = true; // true, sleep; false, skip sleep
+STATIC bool g_threadSleepFlag = true;                  // true, sleep; false, skip sleep
 STATIC ToolMutex g_plogMutex = TOOL_MUTEX_INITIALIZER;
 STATIC ToolMutex g_forkMutex = TOOL_MUTEX_INITIALIZER; // lock it before fork to protect critical resource
 
 STATIC int32_t g_plogSyncMode = PLOG_ASYNC_SAVE;
 
-static const LogType SORT_LOG_TYPE[LOG_TYPE_NUM] = { DEBUG_LOG, SECURITY_LOG, RUN_LOG };
+static const LogType SORT_LOG_TYPE[LOG_TYPE_NUM] = {DEBUG_LOG, SECURITY_LOG, RUN_LOG};
 
-STATIC void PlogNotifyFlushThread(void)
-{
-    (void)__sync_lock_test_and_set(&g_threadSleepFlag, false);
-}
+STATIC void PlogNotifyFlushThread(void) { (void)__sync_lock_test_and_set(&g_threadSleepFlag, false); }
 
-STATIC LogStatus PlogMutexInit(void)
-{
-    return ToolMutexInit(&g_plogMutex);
-}
+STATIC LogStatus PlogMutexInit(void) { return ToolMutexInit(&g_plogMutex); }
 
-STATIC void PlogMutexDestory(void)
-{
-    (void)ToolMutexDestroy(&g_plogMutex);
-}
+STATIC void PlogMutexDestory(void) { (void)ToolMutexDestroy(&g_plogMutex); }
 
-STATIC void PlogLock(void)
-{
-    LOCK_WARN_LOG(&g_plogMutex);
-}
+STATIC void PlogLock(void) { LOCK_WARN_LOG(&g_plogMutex); }
 
-STATIC void PlogUnlock(void)
-{
-    UNLOCK_WARN_LOG(&g_plogMutex);
-}
+STATIC void PlogUnlock(void) { UNLOCK_WARN_LOG(&g_plogMutex); }
 
 STATIC void PlogChildUnlock(void)
 {
@@ -100,28 +85,22 @@ STATIC void PlogAtForkCallback(int32_t type)
  * @brief       : set flag to exit thread
  * @param [in]  : threadExitFlag    exit flag
  */
-STATIC INLINE void PlogSetThreadExit(bool threadExitFlag)
-{
-    g_threadExit = threadExitFlag;
-}
+STATIC INLINE void PlogSetThreadExit(bool threadExitFlag) { g_threadExit = threadExitFlag; }
 
 /**
  * @brief       : get flag for thread exit
  * @return      : true exit; false not-exit
  */
-STATIC INLINE bool PlogIsThreadExit(void)
-{
-    return g_threadExit;
-}
+STATIC INLINE bool PlogIsThreadExit(void) { return g_threadExit; }
 
 /**
-* @brief : flush host log to disk
-*/
+ * @brief : flush host log to disk
+ */
 STATIC void PlogFlushHostLog(int32_t bufferType)
 {
     (void)ToolMutexLock(&g_forkMutex); // avoid thread running right here when fork
     uint32_t len = 0;
-    char *msg = NULL;
+    char* msg = NULL;
     for (int32_t type = (int32_t)DEBUG_LOG; type < (int32_t)LOG_TYPE_NUM; type++) {
         do {
             LogStatus ret = PlogBuffRead(bufferType, SORT_LOG_TYPE[type], &msg, &len);
@@ -145,8 +124,8 @@ STATIC void PlogFlushHostLog(int32_t bufferType)
 STATIC ArgPtr PlogFlushAppLog(ArgPtr args)
 {
     (void)args;
-    NO_ACT_WARN_LOG(ToolSetThreadName("PlogFlush") != SYS_OK,
-        "can not set thread_name(PlogFlush), pid=%d.", ToolGetPid());
+    NO_ACT_WARN_LOG(
+        ToolSetThreadName("PlogFlush") != SYS_OK, "can not set thread_name(PlogFlush), pid=%d.", ToolGetPid());
 
     while (!PlogIsThreadExit()) {
         if (!PlogBuffCheckEmpty(BUFFER_TYPE_WRITE)) {
@@ -191,11 +170,12 @@ STATIC void PlogStartFlushThread(void)
     ToolUserBlock thread;
     thread.procFunc = PlogFlushAppLog;
     thread.pulArg = NULL;
-    ToolThreadAttr threadAttr = { 0, 0, 0, 0, 0, 0, 128 * 1024 }; // joinable
+    ToolThreadAttr threadAttr = {0, 0, 0, 0, 0, 0, 128 * 1024}; // joinable
 
     int32_t ret = ToolCreateTaskWithThreadAttr(&g_alogFlushTid, &thread, &threadAttr);
-    ONE_ACT_ERR_LOG(ret != SYS_OK, return, "create task FlushAppLog failed, strerr=%s, pid=%d.",
-                    strerror(ToolGetErrorCode()), ToolGetPid());
+    ONE_ACT_ERR_LOG(
+        ret != SYS_OK, return, "create task FlushAppLog failed, strerr=%s, pid=%d.", strerror(ToolGetErrorCode()),
+        ToolGetPid());
 }
 
 STATIC void PlogStartFlushThreadOnce(void)
@@ -232,12 +212,12 @@ STATIC void PlogStopFlushThread(void)
 }
 
 /**
-* @brief : write process log from libalog.so
-* @param [in]buf: log msg
-* @param [in]bufLen: log msg length
-* @return: 0: success; -1: failed
-*/
-STATIC int32_t PlogWriteCallback(const char *data, uint32_t dataLen, LogType type)
+ * @brief : write process log from libalog.so
+ * @param [in]buf: log msg
+ * @param [in]bufLen: log msg length
+ * @return: 0: success; -1: failed
+ */
+STATIC int32_t PlogWriteCallback(const char* data, uint32_t dataLen, LogType type)
 {
     ONE_ACT_NO_LOG((data == NULL) || (dataLen == 0), return -1);
     ONE_ACT_NO_LOG(type >= LOG_TYPE_NUM, return -1);
@@ -268,8 +248,8 @@ STATIC void PlogCleanUpBuff(int32_t bufferType)
 }
 
 /**
-* @brief : call by alog.so when fork process printf log
-*/
+ * @brief : call by alog.so when fork process printf log
+ */
 STATIC void PlogForkCallback(void)
 {
     PlogLock();
@@ -284,9 +264,9 @@ STATIC void PlogForkCallback(void)
     PlogReinitFileHeadsForChild();
 }
 
-static LogStatus PlogGetSyncEnv(int32_t *syncStatus)
+static LogStatus PlogGetSyncEnv(int32_t* syncStatus)
 {
-    const char *env = NULL;
+    const char* env = NULL;
     MM_SYS_GET_ENV(MM_ENV_ASCEND_LOG_SYNC_SAVE, (env));
     if (env != NULL) {
         int64_t tmpL = -1;

@@ -64,13 +64,14 @@ STATIC CpudStatus CpuDetectReleaseProcess(pid_t pid)
         return CPUD_FAILURE;
     }
 
-    return CPUD_SUCCESS; 
+    return CPUD_SUCCESS;
 }
 
 CpudStatus CpuDetectStart(uint32_t timeout)
 {
-    ADETECT_CHK_EXPR_ACTION(((timeout == 0) || (timeout > CPUD_DETECT_MAX_TIME)), 
-                            return CPUD_ERROR_PARAM, "invalid param timeout: %d", timeout);
+    ADETECT_CHK_EXPR_ACTION(
+        ((timeout == 0) || (timeout > CPUD_DETECT_MAX_TIME)), return CPUD_ERROR_PARAM, "invalid param timeout: %d",
+        timeout);
     ADETECT_CHK_EXPR_ACTION(g_pid != 0, return CPUD_ERROR_BUSY, "cpu detect is running on process[%d].", g_pid);
 
     CpuDetectMutexLock();
@@ -79,7 +80,7 @@ CpudStatus CpuDetectStart(uint32_t timeout)
         CpuDetectMutexUnLock();
         return CPUD_ERROR_BUSY;
     }
-    
+
     ADETECT_RUN_INF("cpu detect process start.");
     g_pid = CpuDetectCreateProcess(timeout);
     if (g_pid == 0) {
@@ -90,10 +91,10 @@ CpudStatus CpuDetectStart(uint32_t timeout)
         ADETECT_INF("start cpu detect process[%d] success", g_pid);
     }
     CpuDetectMutexUnLock();
-    
+
     CpudStatus ret = CpuDetectReleaseProcess(g_pid);
     ADETECT_RUN_INF("cpu detect process[%d] end with %d.", g_pid, ret);
-    
+
     g_pid = 0;
     return ret;
 }

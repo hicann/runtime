@@ -16,28 +16,29 @@
 
 #ifdef GETCLOCK_VIRTUAL
 #ifndef BOOTARGS_FILE_PATH
-#define BOOTARGS_FILE_PATH      "/proc/cmdline"
+#define BOOTARGS_FILE_PATH "/proc/cmdline"
 #endif
-#define BOOTARGS_MAX_SIZE       1024U
-#define LOG_DP_CLOCK            "dpclk=100"
+#define BOOTARGS_MAX_SIZE 1024U
+#define LOG_DP_CLOCK "dpclk=100"
 
 /**
  * @brief           : get clock id from BOOTARGS_FILE_PATH
  * @param [in/out]  : clockId      clock id
  * @return          : LOG_SUCCESS: success, others: failure
  */
-STATIC LogStatus LogGetDpClock(clockid_t *clockId)
+STATIC LogStatus LogGetDpClock(clockid_t* clockId)
 {
     int32_t fd = ToolOpen(BOOTARGS_FILE_PATH, O_RDONLY);
-    ONE_ACT_WARN_LOG(fd < 0, return LOG_SUCCESS,
-                     "bootargs file is not exist, use default clock id, file=%s.", BOOTARGS_FILE_PATH);
-    char bootargs[BOOTARGS_MAX_SIZE + 1U] = { 0 };
+    ONE_ACT_WARN_LOG(
+        fd < 0, return LOG_SUCCESS, "bootargs file is not exist, use default clock id, file=%s.", BOOTARGS_FILE_PATH);
+    char bootargs[BOOTARGS_MAX_SIZE + 1U] = {0};
     int32_t len = ToolRead(fd, bootargs, BOOTARGS_MAX_SIZE);
     LOG_CLOSE_FD(fd);
-    ONE_ACT_WARN_LOG(len == 0, return LOG_SUCCESS, "bootargs file is null, use default clock id, strerr=%s.",
-                     strerror(ToolGetErrorCode()));
+    ONE_ACT_WARN_LOG(
+        len == 0, return LOG_SUCCESS, "bootargs file is null, use default clock id, strerr=%s.",
+        strerror(ToolGetErrorCode()));
 
-    const char *target = strstr(bootargs, LOG_DP_CLOCK);
+    const char* target = strstr(bootargs, LOG_DP_CLOCK);
     if (target != NULL) {
         *clockId = LOG_CLOCK_ID_0;
     } else {
@@ -54,7 +55,7 @@ STATIC LogStatus LogGetDpClock(clockid_t *clockId)
  * @param [in/out]  : clockId             clock id
  * @return          : LOG_SUCCESS: success, others: failure
  */
-LogStatus LogGetTime(struct timespec *currentTimeval, bool *isInit, clockid_t *clockId)
+LogStatus LogGetTime(struct timespec* currentTimeval, bool* isInit, clockid_t* clockId)
 {
     ONE_ACT_ERR_LOG(currentTimeval == NULL, return LOG_FAILURE, "input timeval is null.");
     ONE_ACT_ERR_LOG(isInit == NULL, return LOG_FAILURE, "input init flag is null.");
@@ -77,12 +78,12 @@ LogStatus LogGetTime(struct timespec *currentTimeval, bool *isInit, clockid_t *c
  * @param [in/out]  : clockId             clock id
  * @return          : LOG_SUCCESS: success, others: failure
  */
-LogStatus LogGetTime(struct timespec *currentTimeval, bool *isInit, clockid_t *clockId)
+LogStatus LogGetTime(struct timespec* currentTimeval, bool* isInit, clockid_t* clockId)
 {
     ONE_ACT_ERR_LOG(currentTimeval == NULL, return LOG_FAILURE, "input timeval is null.");
     ONE_ACT_ERR_LOG(isInit == NULL, return LOG_FAILURE, "input init flag is null.");
     ONE_ACT_ERR_LOG(clockId == NULL, return LOG_FAILURE, "input clockId is null.");
-    ToolTimeval timeval = { 0, 0 };
+    ToolTimeval timeval = {0, 0};
     if (ToolGetTimeOfDay(&timeval, NULL) != SYS_OK) {
         SELF_LOG_ERROR("get time of day failed, strerr=%s.", strerror(ToolGetErrorCode()));
         return LOG_FAILURE;
@@ -98,7 +99,7 @@ LogStatus LogGetTime(struct timespec *currentTimeval, bool *isInit, clockid_t *c
  * @param [in/out]  : currentTimeval      current time
  * @return          : LOG_SUCCESS: success, others: failure
  */
-LogStatus LogGetMonotonicTime(struct timespec *currentTimeval)
+LogStatus LogGetMonotonicTime(struct timespec* currentTimeval)
 {
     ONE_ACT_ERR_LOG(currentTimeval == NULL, return LOG_FAILURE, "input timeval is null.");
     if (clock_gettime(CLOCK_MONOTONIC_RAW, currentTimeval) != EOK) {
@@ -107,24 +108,24 @@ LogStatus LogGetMonotonicTime(struct timespec *currentTimeval)
     return LOG_SUCCESS;
 }
 
-LogStatus LogGetTimeStr(char *timeStr, uint32_t len)
+LogStatus LogGetTimeStr(char* timeStr, uint32_t len)
 {
-    ONE_ACT_ERR_LOG((timeStr == NULL) || (len < TIME_STR_SIZE), return LOG_FAILURE,
-        "get time str failed, input is invalid.");
-    struct timespec currentTimeval = { 0, 0 };
+    ONE_ACT_ERR_LOG(
+        (timeStr == NULL) || (len < TIME_STR_SIZE), return LOG_FAILURE, "get time str failed, input is invalid.");
+    struct timespec currentTimeval = {0, 0};
     static bool isTimeInit = false;
     static clockid_t clockId = LOG_CLOCK_ID_DEFAULT;
-    ONE_ACT_ERR_LOG(LogGetTime(&currentTimeval, &isTimeInit, &clockId) != LOG_SUCCESS, return LOG_FAILURE,
-                    "get log time failed.");
-    struct tm timeInfo = { 0 };
+    ONE_ACT_ERR_LOG(
+        LogGetTime(&currentTimeval, &isTimeInit, &clockId) != LOG_SUCCESS, return LOG_FAILURE, "get log time failed.");
+    struct tm timeInfo = {0};
     if (ToolLocalTimeR((&currentTimeval.tv_sec), &timeInfo) != SYS_OK) {
         SELF_LOG_ERROR("get local time failed, strerr=%s.", strerror(ToolGetErrorCode()));
         return LOG_FAILURE;
     }
 
-    int32_t ret = snprintf_s(timeStr, len, (size_t)len - 1U, "%04d%02d%02d%02d%02d%02d%03ld",
-        timeInfo.tm_year, timeInfo.tm_mon, timeInfo.tm_mday, timeInfo.tm_hour,
-        timeInfo.tm_min, timeInfo.tm_sec, currentTimeval.tv_nsec / MS_TO_NS);
+    int32_t ret = snprintf_s(
+        timeStr, len, (size_t)len - 1U, "%04d%02d%02d%02d%02d%02d%03ld", timeInfo.tm_year, timeInfo.tm_mon,
+        timeInfo.tm_mday, timeInfo.tm_hour, timeInfo.tm_min, timeInfo.tm_sec, currentTimeval.tv_nsec / MS_TO_NS);
     if (ret == -1) {
         SELF_LOG_ERROR("snprintf_s time buffer failed, result=%d, strerr=%s.", ret, strerror(ToolGetErrorCode()));
         return LOG_FAILURE;
@@ -175,15 +176,15 @@ uint64_t LogGetCpuCycleCounter(void)
     cycles = 0; // just for tiny compile(without mrrc), will not be executed when running
 #else
 #if defined(__aarch64__)
-    asm volatile("mrs %0, cntvct_el0" : "=r" (cycles));
+    asm volatile("mrs %0, cntvct_el0" : "=r"(cycles));
 #elif defined(__x86_64__)
-    const int uint32Bits = 32;  // 32 is uint bit count
+    const int uint32Bits = 32; // 32 is uint bit count
     uint32_t hi = 0;
     uint32_t lo = 0;
-    __asm__ __volatile__ ("rdtsc" : "=a"(lo), "=d"(hi));
+    __asm__ __volatile__("rdtsc" : "=a"(lo), "=d"(hi));
     cycles = ((uint64_t)lo) | (((uint64_t)hi) << uint32Bits);
 #elif defined(__arm__)
-    const int uint32Bits = 32;  // 32 is uint bit count
+    const int uint32Bits = 32; // 32 is uint bit count
     uint32_t hi = 0;
     uint32_t lo = 0;
     asm volatile("mrrc p15, 1, %0, %1, c14" : "=r"(lo), "=r"(hi));

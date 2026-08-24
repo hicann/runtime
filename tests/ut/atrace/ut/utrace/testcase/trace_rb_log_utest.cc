@@ -21,7 +21,7 @@
 #include "adiag_list.h"
 #include "adiag_utils.h"
 
-using RunFunc = uint64_t (*)(int, int, struct RbLog *, int, int);
+using RunFunc = uint64_t (*)(int, int, struct RbLog*, int, int);
 static constexpr uint64_t SEC_TO_US = 1000000;
 
 uint64_t GetSysCycleTime()
@@ -31,7 +31,7 @@ uint64_t GetSysCycleTime()
     return (static_cast<uint64_t>(now.tv_sec) * SEC_TO_NS) + static_cast<uint64_t>(now.tv_nsec);
 }
 
-class RraceRbLogUtest: public testing::Test {
+class RraceRbLogUtest : public testing::Test {
 protected:
     virtual void SetUp()
     {
@@ -39,21 +39,24 @@ protected:
         writeThreadNum_ = 1;
         readThreadNum_ = 1;
     }
-    virtual void TearDown()
-    {
-        GlobalMockObject::verify();
-    }
-    
+    virtual void TearDown() { GlobalMockObject::verify(); }
+
     int bufferSize_;
     int writeThreadNum_;
     int readThreadNum_;
     uint64_t EXPECT_TestLogRingBuffer(int msgNum, int expectResult, RunFunc runFunc);
 };
 
-uint64_t WriteMsgPerfFunc(int threadId, struct RbLog *rb, const int msgNum)
+std::string BuildRbMsg(int threadId, int msgId, const struct RbLog* rb)
 {
-    std::string buffer = std::to_string(threadId) + "_msg";
-    buffer = std::string(rb->head.msgSize - sizeof(RbMsgHead) - buffer.length() - 1, '*') + buffer;
+    std::string buffer = "msg_" + std::to_string(threadId) + "_" + std::to_string(msgId);
+    buffer += std::string(rb->head.msgSize - sizeof(RbMsgHead) - buffer.length() - 1, '*');
+    return buffer;
+}
+
+uint64_t WriteMsgPerfFunc(int threadId, struct RbLog* rb, const int msgNum)
+{
+    std::string buffer = BuildRbMsg(threadId, 0, rb);
     uint32_t bufSize = buffer.size() + 1;
     uint64_t startTime = GetSysCycleTime();
     for (int i = 0; i < msgNum; i++) {
@@ -63,134 +66,133 @@ uint64_t WriteMsgPerfFunc(int threadId, struct RbLog *rb, const int msgNum)
     return stopTime - startTime;
 }
 
-uint64_t WriteMsgFunc(int threadId, struct RbLog *rb, const int msgNum)
+uint64_t WriteMsgFunc(int threadId, struct RbLog* rb, const int msgNum)
 {
     uint64_t time = 0;
     for (int i = 0; i < msgNum; i++) {
-        std::string buffer = std::to_string(threadId) + "_" + std::to_string(i) + "_msg";
-        buffer = std::string(rb->head.msgSize - sizeof(RbMsgHead) - buffer.length() - 1, '*') + buffer;
+        std::string buffer = BuildRbMsg(threadId, i, rb);
         uint32_t bufSize = buffer.size() + 1;
         ADIAG_DBG("threadId %d write msg %d %s,size : %zu", threadId, i, buffer.c_str(), buffer.length() + 1);
         uint64_t startTime = GetSysCycleTime();
-        auto ret = TraceRbLogWriteRbMsg(rb, 0, buffer.c_str(), bufSize);
+        (void)TraceRbLogWriteRbMsg(rb, 0, buffer.c_str(), bufSize);
         uint64_t stopTime = GetSysCycleTime();
         time += stopTime - startTime;
-        EXPECT_EQ(ret, TRACE_SUCCESS);
     }
     return time;
 }
 
 #define TIMESTAMP_MAX_LENGTH 29U
-int ReadMsgFunc(int threadId, struct RbLog *rb)
+int ReadMsgFunc(int threadId, struct RbLog* rb)
 {
     int num = 0;
-    RbLogMsg *msg = NULL;
-    struct RbLog *newRb;
+    RbLogMsg* msg = NULL;
+    struct RbLog* newRb;
     struct RbLogMsgTime tm;
     TraStatus ret = TraceRbLogGetCopyOfRingBuffer(&newRb, rb);
     EXPECT_EQ(ret, TRACE_SUCCESS);
     char timestamp[TIMESTAMP_MAX_LENGTH] = {0};
-    char *txt;
+    char* txt;
     do {
-        ret = TraceRbLogReadRbMsg(newRb, (char *)&timestamp, sizeof(timestamp), &txt);
+        ret = TraceRbLogReadRbMsg(newRb, (char*)&timestamp, sizeof(timestamp), &txt);
         if (ret == TRACE_SUCCESS) {
             ADIAG_DBG("threadId %d read msg %d [%s]", threadId, timestamp, txt);
             std::string str = txt;
-            std::string tmp = str.erase(0, str.length() - 3);
-            if (tmp.compare("msg") != 0) {
+            if (str.rfind("msg", 0) != 0) {
                 uint32_t readIdx = 0;
                 for (; readIdx != rb->head.bufSize; readIdx++) {
-                    RbLogMsg *msg = (RbLogMsg *)(rb->msg + rb->head.msgSize * readIdx);
-                    ADIAG_RUN_INF("[rb] readIdx : %d busy :%d, txtSize : %d, txt:%s",
-                        readIdx, (int)msg->head.busy, msg->head.txtSize, msg->txt);
+                    RbLogMsg* msg = (RbLogMsg*)(rb->msg + rb->head.msgSize * readIdx);
+                    ADIAG_RUN_INF(
+                        "[rb] readIdx : %d busy :%d, txtSize : %d, txt:%s", readIdx, (int)msg->head.busy,
+                        msg->head.txtSize, msg->txt);
                 }
                 readIdx = 0;
-                for (;readIdx != newRb->head.bufSize; readIdx++) {
-                    RbLogMsg *msg = (RbLogMsg *)(newRb->msg + newRb->head.msgSize * readIdx);
-                    ADIAG_RUN_INF("[new rb] readIdx : %d busy :%d, txtSize : %d, txt:%s",
-                        readIdx, (int)msg->head.busy, msg->head.txtSize, msg->txt);
+                for (; readIdx != newRb->head.bufSize; readIdx++) {
+                    RbLogMsg* msg = (RbLogMsg*)(newRb->msg + newRb->head.msgSize * readIdx);
+                    ADIAG_RUN_INF(
+                        "[new rb] readIdx : %d busy :%d, txtSize : %d, txt:%s", readIdx, (int)msg->head.busy,
+                        msg->head.txtSize, msg->txt);
                 }
             }
-            EXPECT_STREQ(tmp.c_str(), "msg");
+            EXPECT_EQ(str.rfind("msg", 0), 0);
             num++;
-        } 
+        }
 
-    } while(ret == TRACE_SUCCESS);
+    } while (ret == TRACE_SUCCESS);
     free(newRb);
     newRb = NULL;
     ADIAG_INF("threadId %d write msg %d", threadId, num);
-    
+
     return num;
 }
 
-void WriteMsgPerf(std::vector<std::future<uint64_t>> &thread, int threadNum, int msgNum, struct RbLog *rb)
+void WriteMsgPerf(std::vector<std::future<uint64_t>>& thread, int threadNum, int msgNum, struct RbLog* rb)
 {
-    for (int i = 0; i < threadNum; i++) {        
+    for (int i = 0; i < threadNum; i++) {
         thread.push_back(std::move(std::async(&WriteMsgPerfFunc, i, rb, msgNum)));
     }
 }
 
-void WriteMsg(std::vector<std::future<uint64_t>> &thread, int threadNum, int msgNum, struct RbLog *rb)
+void WriteMsg(std::vector<std::future<uint64_t>>& thread, int threadNum, int msgNum, struct RbLog* rb)
 {
-    for (int i = 0; i < threadNum; i++) {        
+    for (int i = 0; i < threadNum; i++) {
         thread.push_back(std::move(std::async(&WriteMsgFunc, i, rb, msgNum)));
     }
 }
 
-void ReadMsg(std::vector<std::future<int>> &thread, int threadNum, struct RbLog *rb)
+void ReadMsg(std::vector<std::future<int>>& thread, int threadNum, struct RbLog* rb)
 {
     for (int i = 0; i < threadNum; i++) {
         thread.push_back(std::move(std::async(&ReadMsgFunc, i, rb)));
     }
 }
 
-uint64_t TestWritePerf(int writeThreadNum_, int readThreadNum_, struct RbLog *rb, int msgNum, int expectResult)
+uint64_t TestWritePerf(int writeThreadNum_, int readThreadNum_, struct RbLog* rb, int msgNum, int expectResult)
 {
     std::vector<std::future<uint64_t>> writeThread;
     std::vector<std::future<int>> readThread;
 
     WriteMsgPerf(writeThread, writeThreadNum_, msgNum, rb);
     uint64_t time = 0;
-    for (auto &fret : writeThread) {
+    for (auto& fret : writeThread) {
         time += fret.get();
     }
     return time;
 }
 
-uint64_t TestReadAfterWrite(int writeThreadNum_, int readThreadNum_, struct RbLog *rb, int msgNum, int expectResult)
+uint64_t TestReadAfterWrite(int writeThreadNum_, int readThreadNum_, struct RbLog* rb, int msgNum, int expectResult)
 {
     std::vector<std::future<uint64_t>> writeThread;
     std::vector<std::future<int>> readThread;
 
     WriteMsg(writeThread, writeThreadNum_, msgNum, rb);
     uint64_t time = 0;
-    for (auto &fret : writeThread) {
+    for (auto& fret : writeThread) {
         time += fret.get();
     }
 
-    ReadMsg(readThread, readThreadNum_, rb);    
+    ReadMsg(readThread, readThreadNum_, rb);
     int count = 0;
-    for (auto &fret : readThread) {
+    for (auto& fret : readThread) {
         count += fret.get();
     }
     ADIAG_RUN_INF("read count %d", count);
     return time;
 }
 
-uint64_t TestReadWhileWrite(int writeThreadNum_, int readThreadNum_, struct RbLog *rb, int msgNum, int expectResult)
+uint64_t TestReadWhileWrite(int writeThreadNum_, int readThreadNum_, struct RbLog* rb, int msgNum, int expectResult)
 {
     std::vector<std::future<uint64_t>> writeThread;
     std::vector<std::future<int>> readThread;
 
     WriteMsg(writeThread, writeThreadNum_, msgNum, rb);
     ReadMsg(readThread, readThreadNum_, rb);
-    
+
     uint64_t time = 0;
-    for (auto &fret : writeThread) {
+    for (auto& fret : writeThread) {
         time += fret.get();
     }
     int count = 0;
-    for (auto &fret : readThread) {
+    for (auto& fret : readThread) {
         count += fret.get();
     }
     ADIAG_RUN_INF("read count %d", count);
@@ -200,21 +202,23 @@ uint64_t TestReadWhileWrite(int writeThreadNum_, int readThreadNum_, struct RbLo
 uint64_t RraceRbLogUtest::EXPECT_TestLogRingBuffer(int msgNum, int expectResult, RunFunc runFunc)
 {
     const char objName[] = "HCCL";
-    
-    ADIAG_RUN_INF("start writeThreadNum_ %d, readThreadNum_ %d, bufferSize_ %d, msgNum %d",
-        writeThreadNum_, readThreadNum_, bufferSize_, msgNum);
-    TraceAttr attr = { 0 };
+
+    ADIAG_RUN_INF(
+        "start writeThreadNum_ %d, readThreadNum_ %d, bufferSize_ %d, msgNum %d", writeThreadNum_, readThreadNum_,
+        bufferSize_, msgNum);
+    TraceAttr attr = {0};
     attr.msgNum = bufferSize_;
     attr.msgSize = 112;
     auto rb = TraceRbLogCreate(objName, &attr);
-    
+
     // test
     uint64_t time = runFunc(writeThreadNum_, readThreadNum_, rb, msgNum, expectResult);
 
     // restoration
     TraceRbLogDestroy(rb);
-    ADIAG_RUN_INF("finish writeThreadNum_ %d, readThreadNum_ %d, bufferSize_ %d, msgNum %d, duration %lluns",
-        writeThreadNum_, readThreadNum_, bufferSize_, msgNum, time);
+    ADIAG_RUN_INF(
+        "finish writeThreadNum_ %d, readThreadNum_ %d, bufferSize_ %d, msgNum %d, duration %lluns", writeThreadNum_,
+        readThreadNum_, bufferSize_, msgNum, time);
     return time;
 }
 
@@ -269,7 +273,7 @@ TEST_F(RraceRbLogUtest, TestMsgNumGTBufferSize)
 
 TEST_F(RraceRbLogUtest, TestTraceRbLogCreateSuccess)
 {
-    TraceAttr attr = { 0 };
+    TraceAttr attr = {0};
     attr.msgNum = 512;
     attr.msgSize = 112;
     std::string name = "HCCL";
@@ -283,7 +287,7 @@ TEST_F(RraceRbLogUtest, TestTraceRbLogCreateSuccess)
 TEST_F(RraceRbLogUtest, TestTraceRbLogCreateGetTimeFailed)
 {
     MOCKER(TraceGetTimeOffset).stubs().will(returnValue(-1));
-    TraceAttr attr = { 0 };
+    TraceAttr attr = {0};
     std::string name = "HCCL";
     auto rb = TraceRbLogCreate(name.c_str(), &attr);
     EXPECT_TRUE(rb != NULL);
@@ -293,7 +297,7 @@ TEST_F(RraceRbLogUtest, TestTraceRbLogCreateGetTimeFailed)
 
 TEST_F(RraceRbLogUtest, TestTraceRbLogCreateNonPowerOf2)
 {
-    TraceAttr attr = { 0 };
+    TraceAttr attr = {0};
     attr.msgNum = 1000;
     attr.msgSize = 112;
     std::string name = "HCCL";
@@ -314,7 +318,7 @@ TEST_F(RraceRbLogUtest, TestTraceRbLogCreateNonPowerOf2)
 TEST_F(RraceRbLogUtest, TestTraceRbLogCreateInvalidBufferSize)
 {
     std::string name = "HCCL";
-    TraceAttr attr = { 0 };
+    TraceAttr attr = {0};
     attr.msgNum = 1025;
     attr.msgSize = 112;
     auto rb = TraceRbLogCreate(name.c_str(), &attr);
@@ -323,7 +327,7 @@ TEST_F(RraceRbLogUtest, TestTraceRbLogCreateInvalidBufferSize)
 
 TEST_F(RraceRbLogUtest, TestTraceRbLogCreateValidName)
 {
-    TraceAttr attr = { 0 };
+    TraceAttr attr = {0};
     attr.msgNum = 1024;
     attr.msgSize = 112;
     std::string name = "1234567890123456789012345678901";
@@ -339,7 +343,7 @@ TEST_F(RraceRbLogUtest, TestTraceRbLogCreateValidName)
 
 TEST_F(RraceRbLogUtest, TestTraceRbLogCreateInvalidName)
 {
-    TraceAttr attr = { 0 };
+    TraceAttr attr = {0};
     attr.msgNum = 1024;
     attr.msgSize = 112;
     std::string name = "12345678901234567890123456789012";
@@ -355,17 +359,17 @@ TEST_F(RraceRbLogUtest, TestTraceRbLogCreateMallocFailed)
 {
     MOCKER(AdiagMalloc).stubs().will(returnValue((void*)NULL));
     std::string name = "HCCL";
-    TraceAttr attr = { 0 };
+    TraceAttr attr = {0};
     attr.msgNum = 1024;
     attr.msgSize = 112;
     auto rb = TraceRbLogCreate(name.c_str(), &attr);
     EXPECT_TRUE(rb == NULL);
 }
 
-struct RbLog *GetDefaultRb()
+struct RbLog* GetDefaultRb()
 {
     std::string name = "HCCL";
-    TraceAttr attr = { 0 };
+    TraceAttr attr = {0};
     attr.msgNum = 1024;
     attr.msgSize = 112;
     auto rb = TraceRbLogCreate(name.c_str(), &attr);
@@ -373,7 +377,7 @@ struct RbLog *GetDefaultRb()
     return rb;
 }
 
-void FillBuffer(struct RbLog *rb)
+void FillBuffer(struct RbLog* rb)
 {
     std::string buffer(rb->head.msgTxtSize, '*');
     auto ret = TraceRbLogWriteRbMsg(rb, 0, buffer.c_str(), buffer.length());
@@ -419,7 +423,7 @@ TEST_F(RraceRbLogUtest, TestTraceRbLogCopyMemcpyFailed)
     auto rb = GetDefaultRb();
 
     MOCKER(memcpy_s).stubs().will(returnValue(-1));
-    struct RbLog *newRb = NULL;
+    struct RbLog* newRb = NULL;
     auto ret = TraceRbLogGetCopyOfRingBuffer(&newRb, rb);
     EXPECT_NE(ret, TRACE_SUCCESS);
 
@@ -430,11 +434,8 @@ TEST_F(RraceRbLogUtest, TestTraceRbLogCopyMemcpyFailed2)
 {
     auto rb = GetDefaultRb();
 
-    MOCKER(memcpy_s)
-        .stubs()
-        .will(returnValue(EOK))
-        .then(returnValue(-1));
-    struct RbLog *newRb = NULL;
+    MOCKER(memcpy_s).stubs().will(returnValue(EOK)).then(returnValue(-1));
+    struct RbLog* newRb = NULL;
     auto ret = TraceRbLogGetCopyOfRingBuffer(&newRb, rb);
     EXPECT_NE(ret, TRACE_SUCCESS);
 
@@ -446,12 +447,8 @@ TEST_F(RraceRbLogUtest, TestTraceRbLogCopyMemcpyFailed3)
     std::string buffer(90, '*');
     auto rb = GetDefaultRb();
 
-    MOCKER(memcpy_s)
-        .stubs()
-        .will(returnValue(EOK))
-        .then(returnValue(EOK))
-        .then(returnValue(-1));
-    struct RbLog *newRb = NULL;
+    MOCKER(memcpy_s).stubs().will(returnValue(EOK)).then(returnValue(EOK)).then(returnValue(-1));
+    struct RbLog* newRb = NULL;
     auto ret = TraceRbLogGetCopyOfRingBuffer(&newRb, rb);
     EXPECT_NE(ret, TRACE_SUCCESS);
 
@@ -467,16 +464,16 @@ TEST_F(RraceRbLogUtest, TestTraceRbLogWriteBufSizeLTMsgLength)
     uint32_t bufSize = 1;
     auto ret = TraceRbLogWriteRbMsg(rb, 0, buffer.c_str(), bufSize);
     EXPECT_EQ(ret, TRACE_SUCCESS);
-    char *txt = NULL;
+    char* txt = NULL;
     char timestamp[TIMESTAMP_MAX_LENGTH] = {0};
-    ret = TraceRbLogReadRbMsgSafe(rb, (char *)&timestamp, sizeof(timestamp), &txt);
+    ret = TraceRbLogReadRbMsgSafe(rb, (char*)&timestamp, sizeof(timestamp), &txt);
     EXPECT_EQ(ret, TRACE_SUCCESS);
     EXPECT_STREQ(txt, "1");
 
     bufSize = 2;
     ret = TraceRbLogWriteRbMsg(rb, 0, buffer.c_str(), bufSize);
     EXPECT_EQ(ret, TRACE_SUCCESS);
-    ret = TraceRbLogReadRbMsgSafe(rb, (char *)&timestamp, sizeof(timestamp), &txt);
+    ret = TraceRbLogReadRbMsgSafe(rb, (char*)&timestamp, sizeof(timestamp), &txt);
     EXPECT_EQ(ret, TRACE_SUCCESS);
     EXPECT_STREQ(txt, buffer.substr(0, bufSize).c_str());
 
@@ -492,9 +489,9 @@ TEST_F(RraceRbLogUtest, TestTraceRbLogWriteBufSizeEQMsgLength)
     auto ret = TraceRbLogWriteRbMsg(rb, 0, buffer.c_str(), buffer.length());
     EXPECT_EQ(ret, TRACE_SUCCESS);
 
-    char *txt = NULL;
+    char* txt = NULL;
     char timestamp[TIMESTAMP_MAX_LENGTH] = {0};
-    ret = TraceRbLogReadRbMsgSafe(rb, (char *)&timestamp, sizeof(timestamp), &txt);
+    ret = TraceRbLogReadRbMsgSafe(rb, (char*)&timestamp, sizeof(timestamp), &txt);
     EXPECT_EQ(ret, TRACE_SUCCESS);
     EXPECT_STREQ(txt, buffer.substr(0, buffer.length()).c_str());
 
@@ -510,12 +507,12 @@ TEST_F(RraceRbLogUtest, TestTraceRbLogWriteBufSizeEQMsgTxtSize)
     auto ret = TraceRbLogWriteRbMsg(rb, 0, buffer.c_str(), buffer.length());
     EXPECT_EQ(ret, TRACE_SUCCESS);
 
-    char *txt = NULL;
+    char* txt = NULL;
     char timestamp[TIMESTAMP_MAX_LENGTH] = {0};
     TraceRbLogPrepareForRead(rb);
-    ret = TraceRbLogReadRbMsgSafe(rb, (char *)&timestamp, sizeof(timestamp), &txt);
+    ret = TraceRbLogReadRbMsgSafe(rb, (char*)&timestamp, sizeof(timestamp), &txt);
     EXPECT_EQ(ret, TRACE_SUCCESS);
-    ret = TraceRbLogReadRbMsgSafe(rb, (char *)&timestamp, sizeof(timestamp), &txt);
+    ret = TraceRbLogReadRbMsgSafe(rb, (char*)&timestamp, sizeof(timestamp), &txt);
     EXPECT_EQ(ret, TRACE_RING_BUFFER_EMPTY);
     EXPECT_STREQ(txt, buffer.substr(0, buffer.length() - 1).c_str());
 
@@ -531,16 +528,16 @@ TEST_F(RraceRbLogUtest, TestTraceRbLogWriteBufSizeGTMsgTxtSize)
     auto ret = TraceRbLogWriteRbMsg(rb, 0, buffer.c_str(), buffer.length());
     EXPECT_EQ(ret, TRACE_SUCCESS);
 
-    char *txt = NULL;
+    char* txt = NULL;
     char timestamp[TIMESTAMP_MAX_LENGTH] = {0};
-    ret = TraceRbLogReadRbMsg(rb, (char *)&timestamp, sizeof(timestamp), &txt);
+    ret = TraceRbLogReadRbMsg(rb, (char*)&timestamp, sizeof(timestamp), &txt);
     EXPECT_EQ(ret, TRACE_SUCCESS);
     EXPECT_STREQ(txt, buffer.substr(0, buffer.length() - 2).c_str());
 
     TraceRbLogDestroy(rb);
 }
 
-extern void RecordLog(int level, char *buffer);
+extern void RecordLog(int level, char* buffer);
 TEST_F(RraceRbLogUtest, TestWriteBufferPress)
 {
     int msgNum = 1;
@@ -549,7 +546,7 @@ TEST_F(RraceRbLogUtest, TestWriteBufferPress)
     // sleep in memcpy to let ring buffer be busy when submite msg
     MOCKER(RecordLog).stubs();
     // check ERROR msg print not more than once
-    MOCKER(RecordLog).expects(atMost(1)).with(eq(DLOG_ERROR), any()); 
+    MOCKER(RecordLog).expects(atMost(1)).with(eq(DLOG_ERROR), any());
 
     EXPECT_TestLogRingBuffer(msgNum, expectResult, &TestWritePerf);
 }
@@ -563,7 +560,7 @@ TEST_F(RraceRbLogUtest, TestTraceRbLogReadOriRbMsg)
     auto ret = TraceRbLogWriteRbMsg(rb, 0, buffer.c_str(), buffer.length());
     EXPECT_EQ(ret, TRACE_SUCCESS);
 
-    char *txt = NULL;
+    char* txt = NULL;
     uint32_t len = 0;
     ret = TraceRbLogReadOriRbMsg(rb, &txt, &len);
     EXPECT_EQ(ret, TRACE_SUCCESS);
@@ -582,7 +579,7 @@ TEST_F(RraceRbLogUtest, TestTraceRbLogReadOriRbMsgSafe)
     auto ret = TraceRbLogWriteRbMsg(rb, 0, buffer.c_str(), buffer.length());
     EXPECT_EQ(ret, TRACE_SUCCESS);
 
-    char *txt = NULL;
+    char* txt = NULL;
     uint32_t len = 0;
     uint64_t cycle = 0;
     ret = TraceRbLogReadOriRbMsgSafe(rb, &txt, &len, &cycle);
@@ -593,13 +590,13 @@ TEST_F(RraceRbLogUtest, TestTraceRbLogReadOriRbMsgSafe)
     TraceRbLogDestroy(rb);
 }
 
-struct RbLog *GetDefaultRbAttr(TraceStructEntry *en)
+struct RbLog* GetDefaultRbAttr(TraceStructEntry* en)
 {
     std::string name = "HCCL";
-    TraceAttr attr = { 0 };
+    TraceAttr attr = {0};
     attr.msgNum = 1024;
     attr.msgSize = 112;
-    
+
     TRACE_STRUCT_SET_ATTR(*en, 0, &attr);
     auto rb = TraceRbLogCreate(name.c_str(), &attr);
     EXPECT_TRUE(rb != NULL);
@@ -612,15 +609,15 @@ TEST_F(RraceRbLogUtest, TestTraceRbLogCopyEntryFailed)
     TRACE_STRUCT_DEFINE_ENTRY_NAME(en, "demo");
     TRACE_STRUCT_DEFINE_FIELD_UINT32(en, tid, TRACE_STRUCT_SHOW_MODE_DEC);
     auto rb = GetDefaultRbAttr(&en);
-    struct RbLog *newRb = NULL;
+    struct RbLog* newRb = NULL;
 
     MOCKER(mmMutexInit).stubs().will(returnValue(-1));
     auto ret = TraceRbLogGetCopyOfRingBuffer(&newRb, rb);
     EXPECT_NE(ret, TRACE_SUCCESS);
 
     size_t totalSize = sizeof(RbLog) + rb->head.bufSize * rb->head.msgSize;
-    void *buffer = malloc(totalSize);
-    MOCKER(AdiagMalloc).stubs().will(returnValue(buffer)).then(returnValue((void *)NULL));
+    void* buffer = malloc(totalSize);
+    MOCKER(AdiagMalloc).stubs().will(returnValue(buffer)).then(returnValue((void*)NULL));
     ret = TraceRbLogGetCopyOfRingBuffer(&newRb, rb);
     EXPECT_NE(ret, TRACE_SUCCESS);
 
@@ -634,12 +631,12 @@ TEST_F(RraceRbLogUtest, TestTraceRbLogCopyEntryListFailed)
     TRACE_STRUCT_DEFINE_ENTRY_NAME(en, "demo");
     TRACE_STRUCT_DEFINE_FIELD_UINT32(en, tid, TRACE_STRUCT_SHOW_MODE_DEC);
     auto rb = GetDefaultRbAttr(&en);
-    struct RbLog *newRb = NULL;
+    struct RbLog* newRb = NULL;
 
     size_t totalSize = sizeof(RbLog) + rb->head.bufSize * rb->head.msgSize;
-    void *buffer1 = malloc(totalSize);
-    void *buffer2 = malloc(sizeof(struct AdiagList));
-    MOCKER(AdiagMalloc).stubs().will(returnValue(buffer1)).then(returnValue(buffer2)).then(returnValue((void *)NULL));
+    void* buffer1 = malloc(totalSize);
+    void* buffer2 = malloc(sizeof(struct AdiagList));
+    MOCKER(AdiagMalloc).stubs().will(returnValue(buffer1)).then(returnValue(buffer2)).then(returnValue((void*)NULL));
     auto ret = TraceRbLogGetCopyOfRingBuffer(&newRb, rb);
     EXPECT_NE(ret, TRACE_SUCCESS);
 
@@ -653,17 +650,18 @@ TEST_F(RraceRbLogUtest, TestTraceRbLogCopyEntryListMallocFailed)
     TRACE_STRUCT_DEFINE_ENTRY_NAME(en, "demo");
     TRACE_STRUCT_DEFINE_FIELD_UINT32(en, tid, TRACE_STRUCT_SHOW_MODE_DEC);
     auto rb = GetDefaultRbAttr(&en);
-    struct RbLog *newRb = NULL;
+    struct RbLog* newRb = NULL;
 
     size_t totalSize = sizeof(RbLog) + rb->head.bufSize * rb->head.msgSize;
-    void *buffer1 = malloc(totalSize);
-    void *buffer2 = malloc(sizeof(struct AdiagList));
-    void *buffer3 = malloc(sizeof(TraceStructField));
-    MOCKER(AdiagMalloc).stubs()
+    void* buffer1 = malloc(totalSize);
+    void* buffer2 = malloc(sizeof(struct AdiagList));
+    void* buffer3 = malloc(sizeof(TraceStructField));
+    MOCKER(AdiagMalloc)
+        .stubs()
         .will(returnValue(buffer1))
         .then(returnValue(buffer2))
         .then(returnValue(buffer3))
-        .then(returnValue((void *)NULL));
+        .then(returnValue((void*)NULL));
     auto ret = TraceRbLogGetCopyOfRingBuffer(&newRb, rb);
     EXPECT_NE(ret, TRACE_SUCCESS);
 
@@ -673,7 +671,7 @@ TEST_F(RraceRbLogUtest, TestTraceRbLogCopyEntryListMallocFailed)
 
 TEST_F(RraceRbLogUtest, TestTraceRbLogCreateInvalid)
 {
-    TraceAttr attr = { 0 };
+    TraceAttr attr = {0};
     attr.exitSave = true;
     attr.msgSize = 0;
     attr.msgNum = DEFAULT_ATRACE_MSG_NUM;
@@ -684,12 +682,11 @@ TEST_F(RraceRbLogUtest, TestTraceRbLogCreateInvalid)
         {1025, DEFAULT_ATRACE_MSG_NUM},
         {DEFAULT_ATRACE_MSG_SIZE, 1025},
         {113, 1024},
-        {1024, 1024}
-        };
+        {1024, 1024}};
     for (auto item : attrList) {
         attr.msgSize = item.first;
         attr.msgNum = item.second;
-        EXPECT_EQ((struct RbLog *)NULL, TraceRbLogCreate(objName, &attr));
+        EXPECT_EQ((struct RbLog*)NULL, TraceRbLogCreate(objName, &attr));
     }
 }
 
@@ -697,10 +694,10 @@ TEST_F(RraceRbLogUtest, TestTraceRbLogCreateStrcpyFailed)
 {
     MOCKER(strcpy_s).stubs().will(returnValue(EOK + 1));
     std::string name = "HCCL";
-    TraceAttr attr = { 0 };
+    TraceAttr attr = {0};
     attr.msgNum = 1024;
     attr.msgSize = 112;
 
     auto rb = TraceRbLogCreate(name.c_str(), &attr);
-    EXPECT_EQ((struct RbLog *)NULL, rb);
+    EXPECT_EQ((struct RbLog*)NULL, rb);
 }

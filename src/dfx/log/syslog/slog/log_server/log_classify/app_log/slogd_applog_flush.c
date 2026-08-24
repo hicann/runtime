@@ -14,28 +14,19 @@
 
 #define MAX_NODE_COUNT 512
 
-STATIC AppLogList *g_appLogList = NULL;
+STATIC AppLogList* g_appLogList = NULL;
 static ToolMutex g_appLogMutex = TOOL_MUTEX_INITIALIZER;
 
-void SlogdAppLogLock(void)
-{
-    (void)ToolMutexLock(&g_appLogMutex);
-}
+void SlogdAppLogLock(void) { (void)ToolMutexLock(&g_appLogMutex); }
 
-void SlogdAppLogUnLock(void)
-{
-    (void)ToolMutexUnLock(&g_appLogMutex);
-}
+void SlogdAppLogUnLock(void) { (void)ToolMutexUnLock(&g_appLogMutex); }
 
-AppLogList *SlogdGetAppLogBufList(void)
-{
-    return g_appLogList;
-}
+AppLogList* SlogdGetAppLogBufList(void) { return g_appLogList; }
 
 uint32_t SlogdGetAppNodeNum(void)
 {
     uint32_t num = 0;
-    AppLogList *node = g_appLogList;
+    AppLogList* node = g_appLogList;
     while (node != NULL) {
         num++;
         node = node->next;
@@ -43,20 +34,17 @@ uint32_t SlogdGetAppNodeNum(void)
     return num;
 }
 
-static bool SlogdAppLogBufCheck(void *srcAttr, void *dstAttr)
-{
-    return srcAttr == dstAttr;
-}
+static bool SlogdAppLogBufCheck(void* srcAttr, void* dstAttr) { return srcAttr == dstAttr; }
 
-static AppLogList *SlogdAppLogInitBuf(uint32_t devId, LogType type)
+static AppLogList* SlogdAppLogInitBuf(uint32_t devId, LogType type)
 {
-    AppLogList *node = (AppLogList *)LogMalloc(sizeof(AppLogList));
+    AppLogList* node = (AppLogList*)LogMalloc(sizeof(AppLogList));
     if (node == NULL) {
         SELF_LOG_ERROR("malloc failed, strerr=%s.", strerror(ToolGetErrorCode()));
         return NULL;
     }
     uint32_t bufSize = SlogdConfigMgrGetBufSize(DEBUG_APP_LOG_TYPE + (int32_t)type);
-    SlogdBufAttr attr = { node, SlogdAppLogBufCheck };
+    SlogdBufAttr attr = {node, SlogdAppLogBufCheck};
     LogStatus ret = SlogdBufferInit(DEBUG_APP_LOG_TYPE + (int32_t)type, bufSize, devId, &attr);
     if (ret != LOG_SUCCESS) {
         XFREE(node);
@@ -67,11 +55,11 @@ static AppLogList *SlogdAppLogInitBuf(uint32_t devId, LogType type)
 }
 
 // inner interface without lock, cannot use by other source file
-STATIC AppLogList *InnerInsertAppNode(const LogInfo *info)
+STATIC AppLogList* InnerInsertAppNode(const LogInfo* info)
 {
     ONE_ACT_WARN_LOG(info->deviceId >= HOST_MAX_DEV_NUM, return NULL, "deviceId[%u] invalid.", info->deviceId);
-    
-    AppLogList *node = SlogdAppLogInitBuf(info->deviceId, info->type);
+
+    AppLogList* node = SlogdAppLogInitBuf(info->deviceId, info->type);
     if (node == NULL) {
         SELF_LOG_ERROR("malloc failed, strerr=%s.", strerror(ToolGetErrorCode()));
         return NULL;
@@ -87,14 +75,14 @@ STATIC AppLogList *InnerInsertAppNode(const LogInfo *info)
 }
 
 // inner interface without lock, cannot use by other source file
-STATIC AppLogList *InnerGetAppNode(const LogInfo *info, bool *isFull)
+STATIC AppLogList* InnerGetAppNode(const LogInfo* info, bool* isFull)
 {
     ONE_ACT_WARN_LOG(info->deviceId >= HOST_MAX_DEV_NUM, return NULL, "deviceId[%u] is invalid.", info->deviceId);
-    AppLogList *tmp = g_appLogList;
+    AppLogList* tmp = g_appLogList;
     int32_t count = 0;
     while (tmp != NULL) {
-        if ((tmp->pid == info->pid) && (tmp->deviceId == info->deviceId) &&
-            (tmp->type == info->type) && (tmp->aosType == info->aosType)) {
+        if ((tmp->pid == info->pid) && (tmp->deviceId == info->deviceId) && (tmp->type == info->type) &&
+            (tmp->aosType == info->aosType)) {
             return tmp;
         }
         tmp = tmp->next;
@@ -108,10 +96,10 @@ STATIC AppLogList *InnerGetAppNode(const LogInfo *info, bool *isFull)
     return NULL;
 }
 
-AppLogList *SlogdApplogGetNode(const LogInfo *info)
+AppLogList* SlogdApplogGetNode(const LogInfo* info)
 {
     bool isFull = false;
-    AppLogList *node = InnerGetAppNode(info, &isFull);
+    AppLogList* node = InnerGetAppNode(info, &isFull);
     if (isFull) {
         return NULL;
     } else if (node == NULL) {
@@ -123,7 +111,7 @@ AppLogList *SlogdApplogGetNode(const LogInfo *info)
 
 // inner interface without lock, cannot use by other source file
 #if (defined APP_LOG_WATCH) || (defined APP_LOG_REPORT)
-STATIC bool IsToDeleteNode(const AppLogList *input, const AppLogList *targetNode)
+STATIC bool IsToDeleteNode(const AppLogList* input, const AppLogList* targetNode)
 {
     if ((input == NULL) || (targetNode == NULL)) {
         return false;
@@ -136,25 +124,25 @@ STATIC bool IsToDeleteNode(const AppLogList *input, const AppLogList *targetNode
     }
 }
 
-void InnerDeleteAppNode(const AppLogList *input)
+void InnerDeleteAppNode(const AppLogList* input)
 {
     ONE_ACT_NO_LOG(input == NULL, return);
-    AppLogList *tmp = g_appLogList;
+    AppLogList* tmp = g_appLogList;
     if (tmp == NULL) {
         return;
     }
-    if (IsToDeleteNode((const AppLogList *)tmp, input) == true) {
+    if (IsToDeleteNode((const AppLogList*)tmp, input) == true) {
         g_appLogList = g_appLogList->next;
-        SlogdBufferExit(DEBUG_APP_LOG_TYPE + (int32_t)tmp->type, (void *)tmp);
+        SlogdBufferExit(DEBUG_APP_LOG_TYPE + (int32_t)tmp->type, (void*)tmp);
         XFREE(tmp);
     } else {
-        while ((tmp != NULL) && (IsToDeleteNode((const AppLogList *)tmp->next, input) == false)) {
+        while ((tmp != NULL) && (IsToDeleteNode((const AppLogList*)tmp->next, input) == false)) {
             tmp = tmp->next;
         }
-        if ((tmp != NULL) && (IsToDeleteNode((const AppLogList *)tmp->next, input) == true)) {
-            AppLogList *node = tmp->next;
+        if ((tmp != NULL) && (IsToDeleteNode((const AppLogList*)tmp->next, input) == true)) {
+            AppLogList* node = tmp->next;
             tmp->next = tmp->next->next;
-            SlogdBufferExit(DEBUG_APP_LOG_TYPE + (int32_t)node->type, (void *)node);
+            SlogdBufferExit(DEBUG_APP_LOG_TYPE + (int32_t)node->type, (void*)node);
             XFREE(node);
         }
     }
@@ -170,7 +158,7 @@ void InnerDeleteAppNode(const AppLogList *input)
  * @param[in]       : bufSize       log buffer size
  * @param[in]       : fileList      target file list
  */
-STATIC void SlogdWriteDeviceAppLog(void *handle, const LogInfo *info, void *buffer, uint32_t bufSize)
+STATIC void SlogdWriteDeviceAppLog(void* handle, const LogInfo* info, void* buffer, uint32_t bufSize)
 {
     ONE_ACT_ERR_LOG(handle == NULL, return, "input args is null, write buffer log failed.");
     int32_t dataLen = SlogdBufferRead(handle, buffer, bufSize);
@@ -181,23 +169,24 @@ STATIC void SlogdWriteDeviceAppLog(void *handle, const LogInfo *info, void *buff
         SELF_LOG_ERROR("read log from ring buffer failed, write buffer log failed, ret = %d.", dataLen);
         return;
     }
-    StLogFileList *fileList = GetGlobalLogFileList();
+    StLogFileList* fileList = GetGlobalLogFileList();
     uint32_t ret = LogAgentWriteDeviceApplicationLog(buffer, LogStrlen(buffer), info, fileList);
     if (ret != OK) {
         SELF_LOG_ERROR("write device app log failed, result=%u, strerr=%s.", ret, strerror(ToolGetErrorCode()));
     }
 }
 
-static int32_t SlogdFlushToAppNode(const char *msg, uint32_t msgLen, const LogInfo *info)
+static int32_t SlogdFlushToAppNode(const char* msg, uint32_t msgLen, const LogInfo* info)
 {
     SlogdAppLogLock();
-    AppLogList *node = SlogdApplogGetNode(info);
-    TWO_ACT_WARN_LOG(node == NULL, (SlogdAppLogUnLock()), return LOG_FAILURE,
-        "device log node null, type=%d", (int32_t)info->processType);
+    AppLogList* node = SlogdApplogGetNode(info);
+    TWO_ACT_WARN_LOG(
+        node == NULL, (SlogdAppLogUnLock()), return LOG_FAILURE, "device log node null, type=%d",
+        (int32_t)info->processType);
 
     node->noAppDataCount = 0;
-    void *handle = SlogdBufferHandleOpen(DEBUG_APP_LOG_TYPE + (int32_t)info->type, (void *)node,
-        LOG_BUFFER_WRITE_MODE, node->deviceId);
+    void* handle = SlogdBufferHandleOpen(
+        DEBUG_APP_LOG_TYPE + (int32_t)info->type, (void*)node, LOG_BUFFER_WRITE_MODE, node->deviceId);
     if (handle == NULL) {
         SlogdAppLogUnLock();
         SELF_LOG_ERROR("get app buffer handle failed.");
@@ -205,7 +194,7 @@ static int32_t SlogdFlushToAppNode(const char *msg, uint32_t msgLen, const LogIn
     }
     if (SlogdBufferCheckFull(handle, msgLen)) {
         uint32_t bufSize = SlogdBufferGetBufSize(DEBUG_APP_LOG_TYPE + (int32_t)info->type);
-        void *buffer = LogMalloc((size_t)bufSize + 1U);
+        void* buffer = LogMalloc((size_t)bufSize + 1U);
         if (buffer == NULL) {
             SELF_LOG_ERROR("malloc failed, strerror = %s.", strerror(ToolGetErrorCode()));
             SlogdBufferReset(handle);
@@ -220,13 +209,12 @@ static int32_t SlogdFlushToAppNode(const char *msg, uint32_t msgLen, const LogIn
     return ret;
 }
 
-static int32_t SlogdFlushToAppAll(const char *msg, uint32_t msgLen, const LogInfo *info)
+static int32_t SlogdFlushToAppAll(const char* msg, uint32_t msgLen, const LogInfo* info)
 {
-    void *handle = SlogdBufferHandleOpen(DEBUG_APP_LOG_TYPE + (int32_t)info->type,
-        NULL, LOG_BUFFER_WRITE_MODE, 0);
+    void* handle = SlogdBufferHandleOpen(DEBUG_APP_LOG_TYPE + (int32_t)info->type, NULL, LOG_BUFFER_WRITE_MODE, 0);
     if (SlogdBufferCheckFull(handle, msgLen)) {
         uint32_t bufSize = SlogdBufferGetBufSize(DEBUG_APP_LOG_TYPE + (int32_t)info->type);
-        void *buffer = LogMalloc((size_t)bufSize + 1U);
+        void* buffer = LogMalloc((size_t)bufSize + 1U);
         if (buffer == NULL) {
             SELF_LOG_ERROR("malloc failed, strerror = %s.", strerror(ToolGetErrorCode()));
             SlogdBufferReset(handle);
@@ -247,10 +235,10 @@ static int32_t SlogdFlushToAppAll(const char *msg, uint32_t msgLen, const LogInf
  * @param[in]   : info          info of log
  * @return      : LOG_SUCCESS  save to buffer success; LOG_FAILURE failure
  */
-LogStatus SlogdFlushToAppBuf(const char *msg, uint32_t msgLen, const LogInfo *info)
+LogStatus SlogdFlushToAppBuf(const char* msg, uint32_t msgLen, const LogInfo* info)
 {
-    ONE_ACT_ERR_LOG((msg == NULL) || (info == NULL),
-                    return LOG_FAILURE, "flush app log to buffer failed, input msg is null.")
+    ONE_ACT_ERR_LOG(
+        (msg == NULL) || (info == NULL), return LOG_FAILURE, "flush app log to buffer failed, input msg is null.")
     int32_t ret = 0;
     if (SlogdConfigMgrGetStorageMode(DEBUG_APP_LOG_TYPE + (int32_t)info->type) == STORAGE_RULE_COMMON) {
         ret = SlogdFlushToAppAll(msg, msgLen, info);
@@ -261,21 +249,21 @@ LogStatus SlogdFlushToAppBuf(const char *msg, uint32_t msgLen, const LogInfo *in
     return LOG_SUCCESS;
 }
 
-static void SlogdApplogNodeFlushToFile(void *buffer, uint32_t bufLen)
+static void SlogdApplogNodeFlushToFile(void* buffer, uint32_t bufLen)
 {
     SlogdAppLogLock();
-    AppLogList *tmp = g_appLogList;
+    AppLogList* tmp = g_appLogList;
     while (tmp != NULL) {
-        AppLogList *node = tmp;
+        AppLogList* node = tmp;
         tmp = tmp->next;
-        void *handle = SlogdBufferHandleOpen(DEBUG_APP_LOG_TYPE + (int32_t)node->type, (void *)node,
-            LOG_BUFFER_WRITE_MODE, node->deviceId);
+        void* handle = SlogdBufferHandleOpen(
+            DEBUG_APP_LOG_TYPE + (int32_t)node->type, (void*)node, LOG_BUFFER_WRITE_MODE, node->deviceId);
         if (handle == NULL) {
             SELF_LOG_ERROR("get app buffer handle[pid = %u] failed.", node->pid);
             continue;
         }
         if (!SlogdBufferCheckEmpty(handle)) {
-            LogInfo info = { node->type, APPLICATION, node->pid, node->deviceId, 0, node->aosType, 0 };
+            LogInfo info = {node->type, APPLICATION, node->pid, node->deviceId, 0, node->aosType, 0};
             SlogdWriteDeviceAppLog(handle, &info, buffer, bufLen);
         } else {
             node->noAppDataCount++;
@@ -289,22 +277,22 @@ static void SlogdApplogNodeFlushToFile(void *buffer, uint32_t bufLen)
     SlogdAppLogUnLock();
 }
 
-static void SlogdApplogAllFlushToFile(void *buffer, uint32_t bufLen)
+static void SlogdApplogAllFlushToFile(void* buffer, uint32_t bufLen)
 {
-    const LogType type[LOG_TYPE_NUM] = { DEBUG_LOG, SECURITY_LOG, RUN_LOG };
+    const LogType type[LOG_TYPE_NUM] = {DEBUG_LOG, SECURITY_LOG, RUN_LOG};
     for (int32_t i = 0; i < (int32_t)LOG_TYPE_NUM; i++) {
-        void *handle = SlogdBufferHandleOpen(DEBUG_APP_LOG_TYPE + i, NULL, LOG_BUFFER_WRITE_MODE, 0);
+        void* handle = SlogdBufferHandleOpen(DEBUG_APP_LOG_TYPE + i, NULL, LOG_BUFFER_WRITE_MODE, 0);
         if (SlogdBufferCheckEmpty(handle)) {
             SlogdBufferHandleClose(&handle);
             continue;
         }
-        LogInfo info = { type[i], APPLICATION, 0, 0, 0, 0, 0 };
-        SlogdWriteDeviceAppLog(handle, &info, (char *)buffer, bufLen);
+        LogInfo info = {type[i], APPLICATION, 0, 0, 0, 0, 0};
+        SlogdWriteDeviceAppLog(handle, &info, (char*)buffer, bufLen);
         SlogdBufferHandleClose(&handle);
     }
 }
 
-LogStatus SlogdApplogFlushToFile(void *buffer, uint32_t bufLen)
+LogStatus SlogdApplogFlushToFile(void* buffer, uint32_t bufLen)
 {
     ONE_ACT_ERR_LOG(buffer == NULL, return LOG_FAILURE, "input buffer is NULL.");
     SlogdApplogNodeFlushToFile(buffer, bufLen);
@@ -313,15 +301,12 @@ LogStatus SlogdApplogFlushToFile(void *buffer, uint32_t bufLen)
 }
 #endif // APP_LOG_WATCH
 
-LogStatus SlogdApplogFlushInit(void)
-{
-    return LOG_SUCCESS;
-}
+LogStatus SlogdApplogFlushInit(void) { return LOG_SUCCESS; }
 
 void SlogdApplogFlushExit(void)
 {
-    AppLogList *tmp = g_appLogList;
-    AppLogList *node = NULL;
+    AppLogList* tmp = g_appLogList;
+    AppLogList* node = NULL;
     while (tmp != NULL) {
         node = tmp;
         tmp = tmp->next;

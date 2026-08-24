@@ -20,11 +20,10 @@
 extern "C" {
 #endif // __cplusplus
 
-TraStatus TraceStackSigHandler(const ThreadArgument *arg);
-TraStatus TraceStackFp(const ThreadArgument *arg, uintptr_t *regs, uint32_t regNum, TraceStackInfo *stackInfo);
+TraStatus TraceStackSigHandler(const ThreadArgument* arg);
+TraStatus TraceStackFp(const ThreadArgument* arg, uintptr_t* regs, uint32_t regNum, TraceStackInfo* stackInfo);
 
 #ifdef __cplusplus
 }
 #endif // __cplusplus
 #endif
-

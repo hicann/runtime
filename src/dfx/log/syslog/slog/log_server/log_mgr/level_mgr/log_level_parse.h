@@ -18,7 +18,7 @@
 extern "C" {
 #endif // __cplusplus
 
-#define SLOGD_GLOBAL_TYPE_MASK        0U
+#define SLOGD_GLOBAL_TYPE_MASK 0U
 
 // global level
 void SlogdSetGlobalLevel(int32_t value, int32_t typeMask);
@@ -33,15 +33,15 @@ bool SlogdSetModuleLevelByDevId(int32_t devId, int32_t moduleId, int32_t value, 
 int32_t SlogdGetModuleLevel(int32_t moduleId, uint32_t typeMask);
 int32_t SlogdGetModuleLevelByDevId(int32_t devId, int32_t moduleId, uint32_t typeMask);
 
-const ModuleInfo *GetModuleInfos(void);
-const char *GetModuleNameById(int32_t moduleId);
-const ModuleInfo *GetModuleInfoByName(const char *name);
-const ModuleInfo *GetModuleInfoById(int32_t moduleId);
+const ModuleInfo* GetModuleInfos(void);
+const char* GetModuleNameById(int32_t moduleId);
+const ModuleInfo* GetModuleInfoByName(const char* name);
+const ModuleInfo* GetModuleInfoById(int32_t moduleId);
 
 // level info
-int32_t GetLevelIdByName(const char *name);
-const char *GetLevelNameById(int64_t level);
-const char *GetBasicLevelNameById(int32_t level);
+int32_t GetLevelIdByName(const char* name);
+const char* GetLevelNameById(int64_t level);
+const char* GetBasicLevelNameById(int32_t level);
 
 // group info
 void SetGroupIdToUninitModule(int32_t id);

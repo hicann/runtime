@@ -24,4 +24,3 @@ void SlogdApplogExit(void);
 }
 #endif
 #endif
-

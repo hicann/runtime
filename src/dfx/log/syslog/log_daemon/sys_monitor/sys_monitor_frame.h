@@ -22,18 +22,18 @@ extern "C" {
  * @brief       : init sys monitor
  * @return      : LOG_SUCCESS success; LOG_FAILURE fail
  */
- int32_t SysmonitorInit(void);
+int32_t SysmonitorInit(void);
 
- /**
+/**
  * @brief       : start sys monitor process
  * @return      : LOG_SUCCESS success; LOG_FAILURE fail
  */
- int32_t SysmonitorProcess(void);
+int32_t SysmonitorProcess(void);
 
- /**
+/**
  * @brief       : exit sys monitor process
  */
- void SysmonitorExit(void);
+void SysmonitorExit(void);
 
 #ifdef __cplusplus
 }

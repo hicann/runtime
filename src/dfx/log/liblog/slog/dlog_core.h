@@ -17,7 +17,7 @@ extern "C" {
 #endif // __cplusplus
 
 void DlogInit(void);
-int32_t DlogWriteInner(LogMsgArg *msgArg, const char *fmt, va_list v);
+int32_t DlogWriteInner(LogMsgArg* msgArg, const char* fmt, va_list v);
 void DlogRefreshCache(void);
 int32_t DlogCheckLogLevel(int32_t logLevel);
 

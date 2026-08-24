@@ -21,22 +21,22 @@ extern "C" {
 #endif // __cplusplus
 
 typedef struct ScdMap {
-    //base info from /proc/<PID>/maps
-    uintptr_t  start;
-    uintptr_t  end;
-    size_t     offset;
-    size_t     nameLength;
-    char      *name;
+    // base info from /proc/<PID>/maps
+    uintptr_t start;
+    uintptr_t end;
+    size_t offset;
+    size_t nameLength;
+    char* name;
 
     // dl
-    ScdDl      dl;
+    ScdDl dl;
 } ScdMap;
 
-uintptr_t ScdMapGetRelPc(ScdMap *map, uintptr_t absPc);
-uintptr_t ScdMapGetBase(ScdMap *map);
-TraStatus ScdMapUpdata(ScdMap *map, uintptr_t start, uintptr_t end, size_t offset);
-ScdMap *ScdMapCreate(uintptr_t start, uintptr_t end, size_t offset, const char *name);
-void ScdMapDestroy(ScdMap **map);
+uintptr_t ScdMapGetRelPc(ScdMap* map, uintptr_t absPc);
+uintptr_t ScdMapGetBase(ScdMap* map);
+TraStatus ScdMapUpdata(ScdMap* map, uintptr_t start, uintptr_t end, size_t offset);
+ScdMap* ScdMapCreate(uintptr_t start, uintptr_t end, size_t offset, const char* name);
+void ScdMapDestroy(ScdMap** map);
 
 #ifdef __cplusplus
 }

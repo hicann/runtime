@@ -19,8 +19,8 @@
 
 STATIC ArgPtr g_libHandle = NULL;
 STATIC SymbolInfo g_drvFuncInfo[DRIVER_FUNCTION_NUM] = {
-    { "drvGetPlatformInfo", NULL },
-    { "drvGetDevNum", NULL },
+    {"drvGetPlatformInfo", NULL},
+    {"drvGetDevNum", NULL},
 };
 
 TraStatus TraceDriverInit(void)
@@ -29,8 +29,9 @@ TraStatus TraceDriverInit(void)
     if (g_libHandle == NULL) {
         // on the general server (pure cpu) scene the driver library is absent, this is expected
         // and should not report an error, otherwise it pollutes the disk log on a normal startup.
-        ADIAG_WAR("dlopen library %s failed, treat as pure cpu env, strerr=%s.",
-            DRIVER_LIBRARY_NAME, strerror(AdiagGetErrorCode()));
+        ADIAG_WAR(
+            "dlopen library %s failed, treat as pure cpu env, strerr=%s.", DRIVER_LIBRARY_NAME,
+            strerror(AdiagGetErrorCode()));
         return TRACE_FAILURE;
     }
 
@@ -50,21 +51,21 @@ void TraceDriverExit(void)
     }
 }
 
-typedef drvError_t (*DrvGetPlatformInfo)(uint32_t *);
-TraStatus TraceDrvGetPlatformInfo(uint32_t *info)
+typedef drvError_t (*DrvGetPlatformInfo)(uint32_t*);
+TraStatus TraceDrvGetPlatformInfo(uint32_t* info)
 {
     DrvGetPlatformInfo func = (DrvGetPlatformInfo)g_drvFuncInfo[0].handle;
     ADIAG_CHK_EXPR_ACTION(func == NULL, return TRACE_FAILURE, "can not find function\"%s\".", g_drvFuncInfo[0].symbol);
 
     drvError_t drvErr = func(info);
-    ADIAG_CHK_EXPR_ACTION(drvErr != DRV_ERROR_NONE, return TRACE_FAILURE,
-        "get platform info failed, drvErr=%d.", (int32_t)drvErr);
+    ADIAG_CHK_EXPR_ACTION(
+        drvErr != DRV_ERROR_NONE, return TRACE_FAILURE, "get platform info failed, drvErr=%d.", (int32_t)drvErr);
 
     return TRACE_SUCCESS;
 }
 
-typedef drvError_t (*DrvGetDevNum)(uint32_t *);
-TraStatus TraceDrvGetDevNum(uint32_t *num)
+typedef drvError_t (*DrvGetDevNum)(uint32_t*);
+TraStatus TraceDrvGetDevNum(uint32_t* num)
 {
     DrvGetDevNum func = (DrvGetDevNum)g_drvFuncInfo[1].handle;
     ADIAG_CHK_EXPR_ACTION(func == NULL, return TRACE_FAILURE, "can not find function\"%s\".", g_drvFuncInfo[1].symbol);
@@ -74,8 +75,8 @@ TraStatus TraceDrvGetDevNum(uint32_t *num)
     if (drvErr == DRV_ERROR_NOT_SUPPORT) {
         return TRACE_FAILURE;
     }
-    ADIAG_CHK_EXPR_ACTION(drvErr != DRV_ERROR_NONE, return TRACE_FAILURE,
-        "get device num failed, drvErr=%d.", (int32_t)drvErr);
+    ADIAG_CHK_EXPR_ACTION(
+        drvErr != DRV_ERROR_NONE, return TRACE_FAILURE, "get device num failed, drvErr=%d.", (int32_t)drvErr);
 
     return TRACE_SUCCESS;
 }
