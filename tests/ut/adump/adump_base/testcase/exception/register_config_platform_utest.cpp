@@ -112,6 +112,41 @@ TEST_F(RegisterManagerPlatformUtest, Test_CloudV5ErrorRegisterTableIntegrity)
     EXPECT_EQ(0x5704U, su->offsetAddr);
 }
 
+TEST_F(RegisterManagerPlatformUtest, Test_CloudV5DebugRegisterLayoutIsIntentionallyEmpty)
+{
+    // V5 Debug 排列尚未适配，必须留空：若误从基类恢复，V5 会按 V4 排列读寄存器产出错误数据。
+    CloudV5Register reg;
+    EXPECT_TRUE(reg.GetRegisterTypes(CORE_TYPE_AIC).empty());
+    EXPECT_TRUE(reg.GetRegisterTypes(CORE_TYPE_AIV).empty());
+    EXPECT_TRUE(reg.GetRegisterTable(RegisterType::AIC).empty());
+    EXPECT_TRUE(reg.GetRegisterTable(RegisterType::AIV).empty());
+    EXPECT_TRUE(reg.GetRegisterTable(RegisterType::AIC_DBG).empty());
+    EXPECT_TRUE(reg.GetRegisterTable(RegisterType::AIV_DBG).empty());
+
+    // 错误寄存器为 V5 专用排列，不受 Debug 留空影响。
+    EXPECT_FALSE(reg.GetErrorRegisterTable().empty());
+}
+
+TEST_F(RegisterManagerPlatformUtest, Test_CloudV4DebugRegisterLayoutStaysPopulated)
+{
+    // 所属权下移到 V4 后，V4 自身的表必须仍然完整。
+    CloudV4Register reg;
+    const auto& aicTypes = reg.GetRegisterTypes(CORE_TYPE_AIC);
+    const auto& aivTypes = reg.GetRegisterTypes(CORE_TYPE_AIV);
+    ASSERT_EQ(2U, aicTypes.size());
+    ASSERT_EQ(2U, aivTypes.size());
+    EXPECT_EQ(RegisterType::AIC, aicTypes[0]);
+    EXPECT_EQ(RegisterType::AIC_DBG, aicTypes[1]);
+    EXPECT_EQ(RegisterType::AIV, aivTypes[0]);
+    EXPECT_EQ(RegisterType::AIV_DBG, aivTypes[1]);
+
+    EXPECT_FALSE(reg.GetRegisterTable(RegisterType::AIC).empty());
+    EXPECT_FALSE(reg.GetRegisterTable(RegisterType::AIV).empty());
+    EXPECT_FALSE(reg.GetRegisterTable(RegisterType::AIC_DBG).empty());
+    EXPECT_FALSE(reg.GetRegisterTable(RegisterType::AIV_DBG).empty());
+    EXPECT_FALSE(reg.GetErrorRegisterTable().empty());
+}
+
 TEST_F(RegisterManagerPlatformUtest, Test_CreateRegisterCloudV2)
 {
     uint32_t vtype = static_cast<uint32_t>(PlatformType::CHIP_CLOUD_V2);

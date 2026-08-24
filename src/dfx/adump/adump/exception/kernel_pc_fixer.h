@@ -34,8 +34,15 @@ public:
     PcFixerInterface() = default;
     virtual ~PcFixerInterface() = default;
 
+    // 单个寄存器项的最大长度："NAME=0xVALUE " = 名字(<=REG_NAME_MAX_LEN) + "=0x" + %x(<=8) + 空格。
+    static constexpr size_t REG_NAME_MAX_LEN = 18U;
+    static constexpr size_t REG_ITEM_MAX_LEN = REG_NAME_MAX_LEN + 3U + 8U + 1U;
+
     uint64_t FixPc(uint64_t pc, const uint32_t errReg[], size_t errRegLen);
-    virtual std::string GetErrorRegisters(const uint32_t errReg[], size_t errRegLen) const = 0;
+    // 逐项返回 "NAME=0xVALUE" 形式的寄存器 dump，调用方可按固定项数分行打印，避免超出单条日志上限。
+    virtual std::vector<std::string> GetErrorRegisterItems(const uint32_t errReg[], size_t errRegLen) const = 0;
+    // 完整寄存器 dump 串（各项以空格分隔），等价于 GetErrorRegisterItems 的拼接结果。
+    std::string GetErrorRegisters(const uint32_t errReg[], size_t errRegLen) const;
 
 protected:
     uint32_t errStartIdx_{0};
@@ -50,7 +57,7 @@ protected:
 class CloudV2PcFixer : public PcFixerInterface {
 public:
     CloudV2PcFixer();
-    std::string GetErrorRegisters(const uint32_t errReg[], size_t errRegLen) const override;
+    std::vector<std::string> GetErrorRegisterItems(const uint32_t errReg[], size_t errRegLen) const override;
 
 private:
     std::string GetModuleName(uint32_t moduleId) const override;
@@ -59,7 +66,7 @@ private:
 class CloudV4PcFixer : public PcFixerInterface {
 public:
     CloudV4PcFixer();
-    std::string GetErrorRegisters(const uint32_t errReg[], size_t errRegLen) const override;
+    std::vector<std::string> GetErrorRegisterItems(const uint32_t errReg[], size_t errRegLen) const override;
 
 private:
     std::string GetModuleName(uint32_t moduleId) const override;
@@ -68,7 +75,7 @@ private:
 class CloudV5PcFixer : public PcFixerInterface {
 public:
     CloudV5PcFixer();
-    std::string GetErrorRegisters(const uint32_t errReg[], size_t errRegLen) const override;
+    std::vector<std::string> GetErrorRegisterItems(const uint32_t errReg[], size_t errRegLen) const override;
 
 private:
     std::string GetModuleName(uint32_t moduleId) const override;

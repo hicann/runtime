@@ -525,6 +525,9 @@ void PrintSummaryGroup(size_t index, const SummaryGroup& g)
 
 std::unordered_map<rtBinHandle, KernelSymbolSet> KernelSymbolLocator::cache_;
 
+// 类外定义：C++11/14 下按引用传参（如 gtest 宏）会 ODR-use 该成员，仅类内初始化会链接失败。
+constexpr size_t KernelSymbolLocator::REG_NUM_PER_LINE;
+
 KernelSymbolLocator::KernelSymbolLocator() : initialized_(false) {}
 KernelSymbolLocator::~KernelSymbolLocator() = default;
 
@@ -654,6 +657,37 @@ bool KernelSymbolLocator::GetCorrectedStartPC(const rtExceptionErrRegInfo_t& cor
     return false;
 }
 
+std::vector<std::string> KernelSymbolLocator::BuildRegisterLines(const std::vector<std::string>& regItems)
+{
+    std::vector<std::string> lines;
+    for (size_t begin = 0; begin < regItems.size(); begin += REG_NUM_PER_LINE) {
+        const size_t end = std::min(begin + REG_NUM_PER_LINE, regItems.size());
+        std::string line;
+        line.reserve(REG_NUM_PER_LINE * PcFixerInterface::REG_ITEM_MAX_LEN);
+        for (size_t i = begin; i < end; ++i) {
+            line += regItems[i];
+            line += " ";
+        }
+        lines.push_back(line);
+    }
+    return lines;
+}
+
+void KernelSymbolLocator::PrintErrorRegisters(
+    uint32_t coreId, uint32_t coreType, const std::vector<std::string>& regItems)
+{
+    // 日志格式为对外契约：coreType 后须直接接寄存器串，有组件依赖该格式解析，不得插入额外字段。
+    // 寄存器为空时保持与原实现一致，仍输出一条（寄存器部分为空串）。
+    std::vector<std::string> lines = BuildRegisterLines(regItems);
+    if (lines.empty()) {
+        lines.emplace_back("");
+    }
+    for (const std::string& line : lines) {
+        IDE_LOGE(
+            "[Dump][Exception] Error register information. coreId=%u, coreType=%u, %s", coreId, coreType, line.c_str());
+    }
+}
+
 void KernelSymbolLocator::PrintErrorForCore(rtExceptionErrRegInfo_t coreInfo, ErrorLocation& outLocation)
 {
     outLocation.coreId = coreInfo.coreId;
@@ -664,9 +698,7 @@ void KernelSymbolLocator::PrintErrorForCore(rtExceptionErrRegInfo_t coreInfo, Er
     outLocation.skipped = false;
 
     uint32_t coreType = static_cast<uint32_t>(coreInfo.coreType);
-    IDE_LOGE(
-        "[Dump][Exception] Error register information. coreId=%u, coreType=%u, %s", coreInfo.coreId, coreType,
-        GetErrorRegisters(coreInfo).c_str());
+    PrintErrorRegisters(coreInfo.coreId, coreType, GetErrorRegisterItems(coreInfo));
     uint64_t fixedCurrentPC = FixPcByErrorRegs(coreInfo);
     uint64_t fixedStartPC = coreInfo.startPC;
     if (GetCorrectedStartPC(coreInfo, fixedStartPC)) {
@@ -831,6 +863,15 @@ std::string KernelSymbolLocator::GetErrorRegisters(const rtExceptionErrRegInfo_t
         return "";
     }
     return fixer->GetErrorRegisters(coreInfo.errReg, RT_ERR_REG_NUMS);
+}
+
+std::vector<std::string> KernelSymbolLocator::GetErrorRegisterItems(const rtExceptionErrRegInfo_t& coreInfo)
+{
+    PcFixerInterface* fixer = PcFixerFactory::GetInstance();
+    if (fixer == nullptr) {
+        return {};
+    }
+    return fixer->GetErrorRegisterItems(coreInfo.errReg, RT_ERR_REG_NUMS);
 }
 
 std::string KernelSymbolLocator::ResolveOFilePath(const std::string& hostOPath)

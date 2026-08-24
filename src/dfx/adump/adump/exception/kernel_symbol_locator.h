@@ -70,6 +70,7 @@ public:
 
     static uint64_t FixPcByErrorRegs(const rtExceptionErrRegInfo& coreInfo);
     static std::string GetErrorRegisters(const rtExceptionErrRegInfo& coreInfo);
+    static std::vector<std::string> GetErrorRegisterItems(const rtExceptionErrRegInfo& coreInfo);
     // 默认（非回调）异常路径：同步落 _host.o，即刻 symbolize，并打印分类汇总。
     static void DumpErrorSymbols(const rtExceptionInfo& exception, const std::string& dumpPath);
     static void DumpErrorSymbols(
@@ -92,6 +93,12 @@ private:
     int32_t ParseElfSymbols(const char* elf, size_t elfSize, KernelSymbolSet& symbols);
     // 定位单个 core 的错误寄存器/PC/symbol 并回填 outLocation（不做 symbolize，源码解析统一批量执行）。
     void PrintErrorForCore(rtExceptionErrRegInfo_t coreInfo, ErrorLocation& outLocation);
+    // 每行寄存器数：12 * REG_ITEM_MAX_LEN = 360 字节，连同日志头仍低于 slog 单条上限 1024 字节。
+    static constexpr size_t REG_NUM_PER_LINE = 12U;
+
+    static std::vector<std::string> BuildRegisterLines(const std::vector<std::string>& regItems);
+    // 整串会超过 slog 单条上限被静默截断尾部，故按固定寄存器个数分多条打印。
+    static void PrintErrorRegisters(uint32_t coreId, uint32_t coreType, const std::vector<std::string>& regItems);
     // 按 fixedPCOffset 匹配最优符号并回填 outLocation，未命中时打印符号区间辅助定位。
     void MatchSymbolForCore(
         const rtExceptionErrRegInfo_t& coreInfo, uint64_t fixedPCOffset, ErrorLocation& outLocation);

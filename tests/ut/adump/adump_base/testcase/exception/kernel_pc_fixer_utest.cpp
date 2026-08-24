@@ -290,6 +290,61 @@ TEST_F(KernelPcFixerUTest, CloudV5GetErrorRegistersRespectsNameBoundary)
     EXPECT_NE(std::string::npos, dump.find("SU_ERROR_T0_1=0x2"));
 }
 
+TEST_F(KernelPcFixerUTest, GetErrorRegisterItemsBoundsItemLengthAndMatchesJoinedStr)
+{
+    CloudV5PcFixer fixer;
+    auto regs = EmptyRegs();
+    for (size_t i = 0; i < regs.size(); i++) {
+        regs[i] = 0xDEADBEEFU;
+    }
+
+    EXPECT_TRUE(fixer.GetErrorRegisterItems(nullptr, RT_ERR_REG_NUMS).empty());
+    EXPECT_TRUE(fixer.GetErrorRegisterItems(regs.data(), 0).empty());
+
+    // 本地副本传参：避免按引用 ODR-use 类内 static constexpr 成员。
+    const size_t itemMaxLen = PcFixerInterface::REG_ITEM_MAX_LEN;
+    const std::vector<std::string> items = fixer.GetErrorRegisterItems(regs.data(), regs.size());
+    ASSERT_EQ(40U, items.size());
+    for (const std::string& item : items) {
+        EXPECT_GE(itemMaxLen, item.size() + 1U);
+    }
+
+    // 整串等价于逐项以空格拼接，避免两个入口输出漂移。
+    std::string joined;
+    for (const std::string& item : items) {
+        joined += item + " ";
+    }
+    EXPECT_EQ(joined, fixer.GetErrorRegisters(regs.data(), regs.size()));
+}
+
+TEST_F(KernelPcFixerUTest, CloudV2GetErrorRegisterItemsBoundsLengthAndMatchesJoinedStr)
+{
+    // V100 与 V200 共用 BuildErrorRegisterItems 但名字表不同，单独覆盖。
+    CloudV2PcFixer fixer;
+    auto regs = EmptyRegs();
+    for (size_t i = 0; i < regs.size(); i++) {
+        regs[i] = 0xDEADBEEFU;
+    }
+
+    EXPECT_TRUE(fixer.GetErrorRegisterItems(nullptr, RT_ERR_REG_NUMS).empty());
+    EXPECT_TRUE(fixer.GetErrorRegisterItems(regs.data(), 0).empty());
+
+    const size_t itemMaxLen = PcFixerInterface::REG_ITEM_MAX_LEN;
+    const std::vector<std::string> items = fixer.GetErrorRegisterItems(regs.data(), regs.size());
+    ASSERT_EQ(22U, items.size());
+    for (const std::string& item : items) {
+        EXPECT_EQ(std::string::npos, item.find(' '));
+        EXPECT_GE(itemMaxLen, item.size() + 1U);
+    }
+    EXPECT_NE(std::string::npos, items[0].find("AIC_ERR_0=0xdeadbeef"));
+
+    std::string joined;
+    for (const std::string& item : items) {
+        joined += item + " ";
+    }
+    EXPECT_EQ(joined, fixer.GetErrorRegisters(regs.data(), regs.size()));
+}
+
 TEST_F(KernelPcFixerUTest, CloudV5ProducerFillsNewOutlierIndicesConsumerHandles)
 {
     CloudV5PcFixer fixer;

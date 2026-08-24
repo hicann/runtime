@@ -13,6 +13,7 @@
 #include "register_config.h"
 #include "acc_error_info.h"
 #include "adump_platform_manager.h"
+#include "log/adx_log.h"
 
 namespace Adx {
 
@@ -73,7 +74,10 @@ uint64_t CloudV2Register::GetAddr(uint64_t regAddrHigh, uint64_t regAddrLow) con
     return (regAddrHigh << HIGH_ADDR_SHIFT) | regAddrLow;
 }
 
-CloudBaseRegister::CloudBaseRegister()
+// 基类只提供地址生成工具，不预置版本专属排列：Debug 寄存器排列各版本不同，由派生类自行初始化。
+CloudBaseRegister::CloudBaseRegister() = default;
+
+CloudV4Register::CloudV4Register()
 {
     GenAICDbgAddr();
     GenAIVDbgAddr();
@@ -82,9 +86,8 @@ CloudBaseRegister::CloudBaseRegister()
     registerTypeMap_ = {
         {CORE_TYPE_AIC, {RegisterType::AIC, RegisterType::AIC_DBG}},
         {CORE_TYPE_AIV, {RegisterType::AIV, RegisterType::AIV_DBG}}};
+    InitErrorRegisterMap();
 }
-
-CloudV4Register::CloudV4Register() { InitErrorRegisterMap(); }
 
 void CloudV4Register::InitErrorRegisterMap()
 {
@@ -209,7 +212,14 @@ void CloudBaseRegister::GenAIVDbgAddr()
     registerTableMap_[RegisterType::AIV_DBG] = regAIVDbgTab;
 }
 
-CloudV5Register::CloudV5Register() { InitErrorRegisterMap(); }
+CloudV5Register::CloudV5Register()
+{
+    // V5 Debug 排列与 V4 不同，暂未适配，registerTableMap_/registerTypeMap_ 有意留空待后续开发：
+    // 留空使 Debug 循环空转，避免按 V4 排列读 V5 地址产出错误数据；错误寄存器不受影响。
+    IDE_LOGW("[DumpCore] CloudV5 debug register layout is not adapted yet, "
+             "coredump will contain error registers only.");
+    InitErrorRegisterMap();
+}
 
 void CloudV5Register::InitErrorRegisterMap()
 {

@@ -55,6 +55,10 @@ void AddPcFixGroup(
 
 } // namespace
 
+// 类外定义：C++17 前按引用传参会 ODR-use 静态成员，仅类内初始化会链接失败。
+constexpr size_t PcFixerInterface::REG_NAME_MAX_LEN;
+constexpr size_t PcFixerInterface::REG_ITEM_MAX_LEN;
+
 void PcFixerInterface::ReplacePcBits(uint64_t& pc, uint32_t regValue, uint64_t srcMask, uint64_t dstMask)
 {
     if (srcMask == 0 || dstMask == 0 || __builtin_popcountll(srcMask) != __builtin_popcountll(dstMask)) {
@@ -98,6 +102,16 @@ uint64_t PcFixerInterface::FixPc(uint64_t pc, const uint32_t errReg[], size_t er
             fixedPcs.back());
     }
     return fixedPcs.front();
+}
+
+std::string PcFixerInterface::GetErrorRegisters(const uint32_t errReg[], size_t errRegLen) const
+{
+    std::string result;
+    for (const std::string& item : GetErrorRegisterItems(errReg, errRegLen)) {
+        result += item;
+        result += " ";
+    }
+    return result;
 }
 
 std::vector<const PcFixGroup*> PcFixerInterface::GetMatchedGroups(const uint32_t errReg[], size_t errRegLen) const
@@ -349,15 +363,33 @@ enum V200ErrorIdx {
     V200_ERROR_IDX_NUM
 };
 
+// 编译期求寄存器名的最大长度，用于在数组定义处校验 REG_NAME_MAX_LEN。
+// 递归而非循环：C++11 的 constexpr 函数体只允许单条 return 语句。
+constexpr size_t ConstMax(size_t lhs, size_t rhs) { return (lhs > rhs) ? lhs : rhs; }
+
+constexpr size_t ConstStrLen(const char* str) { return (*str == '\0') ? 0U : (1U + ConstStrLen(str + 1)); }
+
+constexpr size_t MaxRegNameLen(const char* const regNames[], size_t regNameNum)
+{
+    return (regNameNum == 0U) ?
+               0U :
+               ConstMax(ConstStrLen(regNames[regNameNum - 1U]), MaxRegNameLen(regNames, regNameNum - 1U));
+}
+
 // V100 errReg 下标对应的 RTS 寄存器枚举名称，与 rtErrRegInfoIdxV100_t 顺序一致。
-const char* const V100_REG_NAMES[] = {
+constexpr const char* const V100_REG_NAMES[] = {
     "AIC_ERR_0", "AIC_ERR_1", "AIC_ERR_2",  "AIC_ERR_3",  "AIC_ERR_4",  "AIC_ERR_5",  "BIU_ERR_0", "BIU_ERR_1",
     "CCU_ERR_0", "CCU_ERR_1", "CUBE_ERR_0", "CUBE_ERR_1", "IFU_ERR_0",  "IFU_ERR_1",  "MTE_ERR_0", "MTE_ERR_1",
     "VEC_ERR_0", "VEC_ERR_1", "FIXP_ERR_0", "FIXP_ERR_1", "AIC_COND_0", "AIC_COND_1",
 };
+// 校验放在数组定义处，不依赖任何一个使用点的实现是否存在。
+static_assert(
+    MaxRegNameLen(V100_REG_NAMES, sizeof(V100_REG_NAMES) / sizeof(V100_REG_NAMES[0])) <=
+        PcFixerInterface::REG_NAME_MAX_LEN,
+    "V100_REG_NAMES exceeds REG_NAME_MAX_LEN, update the constant.");
 
 // V200 errReg 下标对应的 RTS 寄存器枚举名称，与 rtErrRegInfoIdxV200_t 顺序一致。
-const char* const V200_REG_NAMES[] = {
+constexpr const char* const V200_REG_NAMES[] = {
     "SU_ERR_INFO_T0_0",  "SU_ERR_INFO_T0_1",   "SU_ERR_INFO_T0_2",   "SU_ERR_INFO_T0_3",   "MTE_ERR_INFO_T0_0",
     "MTE_ERR_INFO_T0_1", "MTE_ERR_INFO_T0_2",  "MTE_ERR_INFO_T1_0",  "MTE_ERR_INFO_T1_1",  "MTE_ERR_INFO_T1_2",
     "VEC_ERR_INFO_T0_0", "VEC_ERR_INFO_T0_1",  "VEC_ERR_INFO_T0_2",  "VEC_ERR_INFO_T0_3",  "VEC_ERR_INFO_T0_4",
@@ -367,6 +399,10 @@ const char* const V200_REG_NAMES[] = {
     "SC_ERR_INFO_T0_0",  "SC_ERR_INFO_T0_1",   "SU_SPR_CONDITION_0", "SU_SPR_CONDITION_1", "SU_ERR_INFO_T0_4",
     "SU_ERR_INFO_T0_5",  "SU_ERR_INFO_T0_6",   "SU_ERR_INFO_T0_7",   "VEC_ERR_INFO_T0_6",  "SU_ERROR_T0_1",
 };
+static_assert(
+    MaxRegNameLen(V200_REG_NAMES, sizeof(V200_REG_NAMES) / sizeof(V200_REG_NAMES[0])) <=
+        PcFixerInterface::REG_NAME_MAX_LEN,
+    "V200_REG_NAMES exceeds REG_NAME_MAX_LEN, update the constant.");
 
 std::string GetV100BitName(uint32_t aicErrorIdx, uint32_t bit)
 {
@@ -480,20 +516,20 @@ void InitV200CubeAndL1PcFixGroups(std::vector<std::vector<PcFixGroup>>& table)
         {MakePcFixEntry(RT_V200_L1_ERR_INFO_T0_1, GenPcMask64(0, 15), GenPcMask64(2, 17))});
 }
 
-std::string BuildErrorRegistersStr(
+std::vector<std::string> BuildErrorRegisterItems(
     const char* const regNames[], size_t regNameNum, const uint32_t errReg[], size_t errRegLen)
 {
-    constexpr size_t REG_ITEM_BUF_LEN = 256U;
-    std::string result;
+    constexpr size_t REG_ITEM_BUF_LEN = 128U;
+    std::vector<std::string> items;
     for (size_t i = 0; i < regNameNum && i < errRegLen; i++) {
         char item[REG_ITEM_BUF_LEN] = {0};
-        int len = snprintf_s(item, sizeof(item), sizeof(item) - 1, "%s=0x%x ", regNames[i], errReg[i]);
+        int len = snprintf_s(item, sizeof(item), sizeof(item) - 1, "%s=0x%x", regNames[i], errReg[i]);
         if (len < 0) {
             continue;
         }
-        result += item;
+        items.emplace_back(item);
     }
-    return result;
+    return items;
 }
 } // namespace
 
@@ -512,13 +548,13 @@ CloudV2PcFixer::CloudV2PcFixer()
     }
 }
 
-std::string CloudV2PcFixer::GetErrorRegisters(const uint32_t errReg[], size_t errRegLen) const
+std::vector<std::string> CloudV2PcFixer::GetErrorRegisterItems(const uint32_t errReg[], size_t errRegLen) const
 {
     if (errReg == nullptr || errRegLen == 0) {
-        return "";
+        return {};
     }
     constexpr size_t regNameNum = sizeof(V100_REG_NAMES) / sizeof(V100_REG_NAMES[0]);
-    return BuildErrorRegistersStr(V100_REG_NAMES, regNameNum, errReg, errRegLen);
+    return BuildErrorRegisterItems(V100_REG_NAMES, regNameNum, errReg, errRegLen);
 }
 
 std::string CloudV2PcFixer::GetModuleName(uint32_t moduleId) const
@@ -545,13 +581,13 @@ CloudV4PcFixer::CloudV4PcFixer()
     InitV200CubeAndL1PcFixGroups(table_);
 }
 
-std::string CloudV4PcFixer::GetErrorRegisters(const uint32_t errReg[], size_t errRegLen) const
+std::vector<std::string> CloudV4PcFixer::GetErrorRegisterItems(const uint32_t errReg[], size_t errRegLen) const
 {
     if (errReg == nullptr || errRegLen == 0) {
-        return "";
+        return {};
     }
     constexpr size_t regNameNum = sizeof(V200_REG_NAMES) / sizeof(V200_REG_NAMES[0]);
-    return BuildErrorRegistersStr(V200_REG_NAMES, regNameNum, errReg, errRegLen);
+    return BuildErrorRegisterItems(V200_REG_NAMES, regNameNum, errReg, errRegLen);
 }
 
 std::string CloudV4PcFixer::GetModuleName(uint32_t moduleId) const
@@ -655,14 +691,14 @@ CloudV5PcFixer::CloudV5PcFixer()
     InitV300CubeAndL1PcFixGroups(table_);
 }
 
-std::string CloudV5PcFixer::GetErrorRegisters(const uint32_t errReg[], size_t errRegLen) const
+std::vector<std::string> CloudV5PcFixer::GetErrorRegisterItems(const uint32_t errReg[], size_t errRegLen) const
 {
     if (errReg == nullptr || errRegLen == 0) {
-        return "";
+        return {};
     }
     // V5 errReg 为 V200 布局，寄存器名沿用 V200_REG_NAMES。
     constexpr size_t regNameNum = sizeof(V200_REG_NAMES) / sizeof(V200_REG_NAMES[0]);
-    return BuildErrorRegistersStr(V200_REG_NAMES, regNameNum, errReg, errRegLen);
+    return BuildErrorRegisterItems(V200_REG_NAMES, regNameNum, errReg, errRegLen);
 }
 
 std::string CloudV5PcFixer::GetModuleName(uint32_t moduleId) const

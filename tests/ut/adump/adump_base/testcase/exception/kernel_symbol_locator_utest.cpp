@@ -512,6 +512,94 @@ TEST_F(KernelSymbolLocatorUTest, LocateAndPrintNormalCloudV4)
     EXPECT_EQ(ADUMP_SUCCESS, locator.LocateErrorSymbols(regInfo, locations));
 }
 
+TEST_F(KernelSymbolLocatorUTest, GetErrorRegisterItemsAndJoinedStrStayConsistent)
+{
+    rtExceptionErrRegInfo_t noFixerCore = MakeCore(0U, RT_CORE_TYPE_AIC, 0ULL, 0ULL);
+    EXPECT_TRUE(KernelSymbolLocator::GetErrorRegisterItems(noFixerCore).empty());
+    EXPECT_EQ("", KernelSymbolLocator::GetErrorRegisters(noFixerCore));
+
+    uint32_t v5Type = static_cast<uint32_t>(PlatformType::CHIP_CLOUD_V5);
+    MOCKER_CPP(&Adx::AdumpDsmi::DrvGetPlatformType).stubs().with(outBound(v5Type)).will(returnValue(true));
+    rtExceptionErrRegInfo_t core = MakeCore(0U, RT_CORE_TYPE_AIC, 0ULL, 0ULL);
+    for (uint32_t i = 0; i < RT_ERR_REG_NUMS; i++) {
+        core.errReg[i] = 0xDEADBEEFU;
+    }
+
+    // V5 沿用 V200_REG_NAMES，共 40 项，单项不含分隔空格。
+    const std::vector<std::string> items = KernelSymbolLocator::GetErrorRegisterItems(core);
+    ASSERT_EQ(40U, items.size());
+    // 本地副本传参：避免按引用 ODR-use 类内 static constexpr 成员。
+    const size_t itemMaxLen = PcFixerInterface::REG_ITEM_MAX_LEN;
+    for (const std::string& item : items) {
+        EXPECT_EQ(std::string::npos, item.find(' '));
+        EXPECT_GE(itemMaxLen, item.size() + 1U);
+    }
+
+    // 整串等价于逐项以空格拼接，避免两个入口输出漂移。
+    std::string joined;
+    for (const std::string& item : items) {
+        joined += item + " ";
+    }
+    EXPECT_EQ(joined, KernelSymbolLocator::GetErrorRegisters(core));
+}
+
+TEST_F(KernelSymbolLocatorUTest, BuildRegisterLinesSplitsByFixedCountAndBoundsLineLength)
+{
+    const size_t numPerLine = KernelSymbolLocator::REG_NUM_PER_LINE;
+    const size_t itemMaxLen = PcFixerInterface::REG_ITEM_MAX_LEN;
+
+    EXPECT_TRUE(KernelSymbolLocator::BuildRegisterLines({}).empty());
+
+    // 未满一行：只出一行。
+    auto lines = KernelSymbolLocator::BuildRegisterLines({"A=0x1", "B=0x2"});
+    ASSERT_EQ(1U, lines.size());
+    EXPECT_EQ("A=0x1 B=0x2 ", lines[0]);
+
+    std::vector<std::string> exact(numPerLine, "R=0x1");
+    EXPECT_EQ(1U, KernelSymbolLocator::BuildRegisterLines(exact).size());
+    std::vector<std::string> exactTwice(numPerLine * 2U, "R=0x1");
+    EXPECT_EQ(2U, KernelSymbolLocator::BuildRegisterLines(exactTwice).size());
+
+    // 40 项应切成 4 行：12/12/12/4，不丢项且行长在上限内。
+    std::vector<std::string> items;
+    for (size_t i = 0; i < 40U; ++i) {
+        items.push_back("SU_SPR_CONDITION_0=0xdeadbeef");
+    }
+    lines = KernelSymbolLocator::BuildRegisterLines(items);
+    ASSERT_EQ(4U, lines.size());
+    size_t totalItems = 0;
+    for (const std::string& line : lines) {
+        // 行长上限保证加上日志头后不触发 slog 截断。
+        EXPECT_GE(numPerLine * itemMaxLen, line.size());
+        totalItems += static_cast<size_t>(std::count(line.begin(), line.end(), ' '));
+    }
+    EXPECT_EQ(40U, totalItems);
+    EXPECT_EQ(numPerLine, static_cast<size_t>(std::count(lines[0].begin(), lines[0].end(), ' ')));
+    EXPECT_EQ(4U, static_cast<size_t>(std::count(lines[3].begin(), lines[3].end(), ' ')));
+}
+
+TEST_F(KernelSymbolLocatorUTest, PrintErrorRegistersSplitsByFixedRegisterCount)
+{
+    // 列表为空时仍打印一条，便于确认该核已处理。
+    KernelSymbolLocator::PrintErrorRegisters(0U, static_cast<uint32_t>(RT_CORE_TYPE_AIC), {});
+
+    KernelSymbolLocator::PrintErrorRegisters(0U, static_cast<uint32_t>(RT_CORE_TYPE_AIC), {"A=0x1", "B=0x2"});
+
+    // 满寄存器场景：40 项按 12 个/行切成 4 行。
+    uint32_t v5Type = static_cast<uint32_t>(PlatformType::CHIP_CLOUD_V5);
+    MOCKER_CPP(&Adx::AdumpDsmi::DrvGetPlatformType).stubs().with(outBound(v5Type)).will(returnValue(true));
+    rtExceptionErrRegInfo_t core = MakeCore(0U, RT_CORE_TYPE_AIC, 0ULL, 0ULL);
+    for (uint32_t i = 0; i < RT_ERR_REG_NUMS; i++) {
+        core.errReg[i] = 0xDEADBEEFU;
+    }
+    const std::vector<std::string> items = KernelSymbolLocator::GetErrorRegisterItems(core);
+    ASSERT_FALSE(items.empty());
+    // 整串超过 slog 单条上限，故必须分行。
+    EXPECT_LT(1024U, KernelSymbolLocator::GetErrorRegisters(core).size());
+    EXPECT_EQ(4U, KernelSymbolLocator::BuildRegisterLines(items).size());
+    KernelSymbolLocator::PrintErrorRegisters(core.coreId, static_cast<uint32_t>(core.coreType), items);
+}
+
 TEST_F(KernelSymbolLocatorUTest, StaticPcHelpersUseFactoryResult)
 {
     rtExceptionErrRegInfo_t core = MakeCore(0U, RT_CORE_TYPE_AIC, 0, 0);
