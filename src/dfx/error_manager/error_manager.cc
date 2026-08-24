@@ -353,15 +353,16 @@ ErrorManager& ErrorManager::GetInstance()
 /// @return int 0(success) -1(fail)
 int32_t ErrorManager::Init(const std::string path)
 {
-    const std::unique_lock<std::mutex> lck(mutex_);
     const std::string file_path = path + kErrorCodePath;
     GELOGI("Begin to init, path is %s", path.c_str());
+    // error_map_由ParseJsonFormatString内部持mutex_保护, 此处不再持锁:
+    // 一方面避免文件IO在临界区内执行, 另一方面避免与ParseJsonFormatString的加锁递归
     const int32_t ret = ParseJsonFile(file_path);
     if (ret != 0) {
         GELOGW("[Parse][File]Parse config file:%s failed", file_path.c_str());
         return -1;
     }
-    is_init_ = true;
+    is_init_.store(true, std::memory_order_release);
     return 0;
 }
 
@@ -369,26 +370,39 @@ int32_t ErrorManager::Init(const std::string path)
 /// @return int 0(success) -1(fail)
 int32_t ErrorManager::Init() { return Init(GetSelfLibraryDir()); }
 
+int32_t ErrorManager::EnsureInitialized()
+{
+    if (is_init_.load(std::memory_order_acquire)) {
+        return 0;
+    }
+    const std::unique_lock<std::mutex> lck(init_mutex_);
+    if (is_init_.load(std::memory_order_relaxed)) {
+        return 0;
+    }
+    return Init(GetSelfLibraryDir());
+}
+
 int32_t ErrorManager::Init(error_message::ErrorMsgMode error_mode)
 {
     if (error_mode >= error_message::ErrorMsgMode::ERR_MSG_MODE_MAX) {
         GELOGE("[Init][Error]error mode is invalid %u", error_mode);
         return -1;
     }
-    error_mode_ = error_mode;
-    return Init(GetSelfLibraryDir());
+    const int32_t ret = Init(GetSelfLibraryDir());
+    if (ret != 0) {
+        return -1;
+    }
+    error_mode_.store(error_mode, std::memory_order_release);
+    return 0;
 }
 
 int32_t ErrorManager::ReportInterErrMessage(const std::string error_code, const std::string& error_msg)
 {
     std::string report_time = CurrentTimeFormatStr();
     constexpr uint64_t kMaxWorkSize = 1000UL;
-    if (!is_init_) {
-        const int32_t kRetInit = Init();
-        if (kRetInit == -1) {
-            GELOGI("ErrorManager has not been initialized, can't report error_message.");
-            return -1;
-        }
+    if (EnsureInitialized() != 0) {
+        GELOGI("ErrorManager has not been initialized, can't report error_message.");
+        return -1;
     }
     if (!IsInnerErrorCode(error_code)) {
         GELOGE("[Report][Error]error_code %s is not internal error code", error_code.c_str());
@@ -408,7 +422,7 @@ int32_t ErrorManager::ReportInterErrMessage(const std::string error_code, const 
 
     GELOGI(
         "report error_message, error_code:%s, work_stream_id:%lu, error_mode:%u", error_code.c_str(),
-        error_context_.work_stream_id, error_mode_);
+        error_context_.work_stream_id, static_cast<uint32_t>(error_mode_.load(std::memory_order_relaxed)));
 
     auto& error_messages = GetErrorMsgContainer(error_context_.work_stream_id);
     auto& warning_messages = GetWarningMsgContainer(error_context_.work_stream_id);
@@ -421,7 +435,7 @@ int32_t ErrorManager::ReportInterErrMessage(const std::string error_code, const 
     }
 
     std::string tmp = error_msg;
-    if (error_mode_ == error_message::ErrorMsgMode::PROCESS_MODE) {
+    if (error_mode_.load(std::memory_order_acquire) == error_message::ErrorMsgMode::PROCESS_MODE) {
         tmp += "[THREAD:" + std::to_string(mmGetTid()) + "]";
     }
 
@@ -447,12 +461,9 @@ int32_t ErrorManager::ReportInterErrMessage(const std::string error_code, const 
 int32_t ErrorManager::ReportErrMessage(const std::string error_code, const std::map<std::string, std::string>& args_map)
 {
     std::string report_time = CurrentTimeFormatStr();
-    if (!is_init_) {
-        const int32_t kRetInit = Init();
-        if (kRetInit == -1) {
-            GELOGI("ErrorManager has not been initialized, can't report error_message.");
-            return 0;
-        }
+    if (EnsureInitialized() != 0) {
+        GELOGI("ErrorManager has not been initialized, can't report error_message.");
+        return 0;
     }
 
     if (error_context_.work_stream_id == 0UL) {
@@ -461,13 +472,19 @@ int32_t ErrorManager::ReportErrMessage(const std::string error_code, const std::
 
     GELOGI(
         "report error_message, error_code:%s, work_stream_id:%lu, error_mode:%u.", error_code.c_str(),
-        error_context_.work_stream_id, error_mode_);
-    const std::map<std::string, ErrorManager::ErrorInfoConfig>::const_iterator iter = error_map_.find(error_code);
-    if (iter == error_map_.cend()) {
-        GELOGW("[Report][Warning]error_code %s is not registered", error_code.c_str());
-        return -1;
+        error_context_.work_stream_id, static_cast<uint32_t>(error_mode_.load(std::memory_order_relaxed)));
+    // error_map_可能被ParseJsonFormatString并发改写, 此处必须持锁查找并整体拷贝出配置,
+    // 不能在锁外继续持有指向map内部的引用
+    ErrorInfoConfig error_info;
+    {
+        const std::unique_lock<std::mutex> lock(mutex_);
+        const std::map<std::string, ErrorManager::ErrorInfoConfig>::const_iterator iter = error_map_.find(error_code);
+        if (iter == error_map_.cend()) {
+            GELOGW("[Report][Warning]error_code %s is not registered", error_code.c_str());
+            return -1;
+        }
+        error_info = iter->second;
     }
-    const ErrorInfoConfig& error_info = iter->second;
     std::string error_message = error_info.error_message;
     for (const std::string& arg : error_info.arg_list) {
         if (arg.empty()) {
@@ -494,7 +511,7 @@ int32_t ErrorManager::ReportErrMessage(const std::string error_code, const std::
     auto& error_messages = GetErrorMsgContainer(error_context_.work_stream_id);
     auto& warning_messages = GetWarningMsgContainer(error_context_.work_stream_id);
 
-    if (error_mode_ == error_message::ErrorMsgMode::PROCESS_MODE) {
+    if (error_mode_.load(std::memory_order_acquire) == error_message::ErrorMsgMode::PROCESS_MODE) {
         error_message += "[THREAD:" + std::to_string(mmGetTid()) + "]";
     }
     ErrorManager::ErrorItem error_item = {
@@ -517,12 +534,9 @@ int32_t ErrorManager::ReportErrMessage(const std::string error_code, const std::
 int32_t ErrorManager::ReportErrMsgWithoutTpl(const std::string& error_code, const std::string& errmsg)
 {
     std::string report_time = CurrentTimeFormatStr();
-    if (!is_init_) {
-        const auto ret = Init();
-        if (ret == -1) {
-            GELOGI("ErrorManager has not been initialized, can't report error_message.");
-            return -1;
-        }
+    if (EnsureInitialized() != 0) {
+        GELOGI("ErrorManager has not been initialized, can't report error_message.");
+        return -1;
     }
 
     if (error_context_.work_stream_id == 0UL) {
@@ -540,7 +554,7 @@ int32_t ErrorManager::ReportErrMsgWithoutTpl(const std::string& error_code, cons
 
     GELOGI(
         "report error_message, error_code:%s, work_stream_id:%lu, error_mode:%u.", error_code.c_str(),
-        error_context_.work_stream_id, error_mode_);
+        error_context_.work_stream_id, static_cast<uint32_t>(error_mode_.load(std::memory_order_relaxed)));
 
     const std::unique_lock<std::mutex> lock(mutex_);
     auto& error_messages = GetErrorMsgContainer(error_context_.work_stream_id);
@@ -630,7 +644,9 @@ std::string ErrorManager::GetErrorMessage()
 
 std::string ErrorManager::GetWarningMessage()
 {
-    GELOGI("current work_stream_id:%lu, error_mode:%u", error_context_.work_stream_id, error_mode_);
+    GELOGI(
+        "current work_stream_id:%lu, error_mode:%u", error_context_.work_stream_id,
+        static_cast<uint32_t>(error_mode_.load(std::memory_order_relaxed)));
     const std::unique_lock<std::mutex> lck(mutex_);
     auto& warning_messages = GetWarningMsgContainer(error_context_.work_stream_id);
 
@@ -698,6 +714,8 @@ int32_t ErrorManager::ParseJsonFile(const std::string path)
 int32_t ErrorManager::ParseJsonFormatString(const void* const handle, uint32_t priority)
 {
     GELOGD("Begin to parse json string");
+    // 本接口是公开接口, RegisterFormatErrorMessage会在运行期由任意线程调用, 必须持锁改写error_map_
+    const std::unique_lock<std::mutex> lck(mutex_);
     try {
         const nlohmann::json* const json_file = PtrToPtr<void, nlohmann::json>(handle);
         if (json_file->find("error_info_list") == json_file->end()) {
@@ -796,12 +814,9 @@ int32_t ErrorManager::ReadJsonFile(const std::string& file_path, void* const han
 void ErrorManager::ATCReportErrMessage(
     const std::string error_code, const std::vector<std::string>& key, const std::vector<std::string>& value)
 {
-    if (!is_init_) {
-        const int32_t kRetInit = Init();
-        if (kRetInit == -1) {
-            GELOGI("ErrorManager has not been initialized, can't report error_message.");
-            return;
-        }
+    if (EnsureInitialized() != 0) {
+        GELOGI("ErrorManager has not been initialized, can't report error_message.");
+        return;
     }
     std::map<std::string, std::string> args_map;
     if (key.empty()) {
@@ -841,12 +856,9 @@ void ErrorManager::ClassifyCompileFailedMsg(
 int32_t ErrorManager::ReportMstuneCompileFailedMsg(
     const std::string& root_graph_name, const std::map<std::string, std::string>& msg)
 {
-    if (!is_init_) {
-        const int32_t kRetInit = Init();
-        if (kRetInit == -1) {
-            GELOGI("ErrorManager has not been initialized, can't report error_message.");
-            return 0;
-        }
+    if (EnsureInitialized() != 0) {
+        GELOGI("ErrorManager has not been initialized, can't report error_message.");
+        return 0;
     }
     if (msg.empty() || root_graph_name.empty()) {
         GELOGW(
@@ -875,12 +887,9 @@ int32_t ErrorManager::ReportMstuneCompileFailedMsg(
 int32_t ErrorManager::GetMstuneCompileFailedMsg(
     const std::string& graph_name, std::map<std::string, std::vector<std::string>>& msg_map)
 {
-    if (!is_init_) {
-        const int32_t kRetInit = Init();
-        if (kRetInit == -1) {
-            GELOGI("ErrorManager has not been initialized, can't report error_message.");
-            return 0;
-        }
+    if (EnsureInitialized() != 0) {
+        GELOGI("ErrorManager has not been initialized, can't report error_message.");
+        return 0;
     }
     if (!msg_map.empty()) {
         GELOGW("msg_map is not empty, exist msg");
@@ -913,13 +922,14 @@ std::vector<ErrorManager::ErrorItem>& ErrorManager::GetWarningMsgContainerByWork
 
 std::vector<ErrorManager::ErrorItem>& ErrorManager::GetErrorMsgContainer(uint64_t work_stream_id)
 {
-    return (error_mode_ == error_message::ErrorMsgMode::INTERNAL_MODE) ? GetErrorMsgContainerByWorkId(work_stream_id) :
-                                                                         error_message_process_;
+    return (error_mode_.load(std::memory_order_acquire) == error_message::ErrorMsgMode::INTERNAL_MODE) ?
+               GetErrorMsgContainerByWorkId(work_stream_id) :
+               error_message_process_;
 }
 
 std::vector<ErrorManager::ErrorItem>& ErrorManager::GetWarningMsgContainer(uint64_t work_stream_id)
 {
-    return (error_mode_ == error_message::ErrorMsgMode::INTERNAL_MODE) ?
+    return (error_mode_.load(std::memory_order_acquire) == error_message::ErrorMsgMode::INTERNAL_MODE) ?
                GetWarningMsgContainerByWorkId(work_stream_id) :
                warning_messages_process_;
 }
@@ -966,7 +976,7 @@ void ErrorManager::ClearWarningMsgContainerByWorkId(const uint64_t work_stream_i
 
 void ErrorManager::ClearErrorMsgContainer(const uint64_t work_stream_id)
 {
-    if (error_mode_ == error_message::ErrorMsgMode::PROCESS_MODE) {
+    if (error_mode_.load(std::memory_order_acquire) == error_message::ErrorMsgMode::PROCESS_MODE) {
         error_message_process_.clear();
     } else {
         ClearErrorMsgContainerByWorkId(work_stream_id);
@@ -975,7 +985,7 @@ void ErrorManager::ClearErrorMsgContainer(const uint64_t work_stream_id)
 
 void ErrorManager::ClearWarningMsgContainer(const uint64_t work_stream_id)
 {
-    if (error_mode_ == error_message::ErrorMsgMode::PROCESS_MODE) {
+    if (error_mode_.load(std::memory_order_acquire) == error_message::ErrorMsgMode::PROCESS_MODE) {
         warning_messages_process_.clear();
     } else {
         ClearWarningMsgContainerByWorkId(work_stream_id);
@@ -1033,14 +1043,12 @@ bool ErrorManager::IsUserDefinedErrorCode(const std::string& error_code)
         return false;
     }
 
-    if (!is_init_) {
-        const auto ret = Init();
-        if (ret == -1) {
-            GELOGI("ErrorManager has not been initialized, can't verify error code.");
-            return false;
-        }
+    if (EnsureInitialized() != 0) {
+        GELOGI("ErrorManager has not been initialized, can't verify error code.");
+        return false;
     }
 
+    const std::unique_lock<std::mutex> lck(mutex_);
     if (error_map_.find(error_code) != error_map_.end()) {
         GELOGW("Report error_code:[%s] is predefined error code, suggested use U error code", error_code.c_str());
         return false;

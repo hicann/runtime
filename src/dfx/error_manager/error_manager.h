@@ -20,6 +20,7 @@
 #include <string>
 #include <vector>
 #include <mutex>
+#include <atomic>
 #include <cstring>
 #include <cstdlib>
 
@@ -238,6 +239,9 @@ private:
 
     int32_t ParseJsonFile(const std::string path);
 
+    // 供各上报接口做懒初始化, 保证并发调用下ParseJsonFile只会被真正执行一次
+    int32_t EnsureInitialized();
+
     static int32_t ReadJsonFile(const std::string& file_path, void* const handle);
 
     void ClassifyCompileFailedMsg(
@@ -271,8 +275,10 @@ private:
     void ClearErrorMsgContainer(const uint64_t work_stream_id);
     void ClearWarningMsgContainer(const uint64_t work_stream_id);
 
-    bool is_init_ = false;
+    std::atomic<bool> is_init_{false};
     std::mutex mutex_;
+    // 仅用于保护懒初始化的check-then-act, 与mutex_的加锁顺序固定为 init_mutex_ -> mutex_
+    std::mutex init_mutex_;
     std::map<std::string, ErrorInfoConfig> error_map_;
     std::map<std::string, std::map<std::string, std::vector<std::string>>> compile_failed_msg_map_;
 
@@ -281,7 +287,7 @@ private:
 
     thread_local static error_message::Context error_context_;
 
-    error_message::ErrorMsgMode error_mode_ = error_message::ErrorMsgMode::INTERNAL_MODE;
+    std::atomic<error_message::ErrorMsgMode> error_mode_{error_message::ErrorMsgMode::INTERNAL_MODE};
     std::vector<ErrorItem> error_message_process_;    // 进程粒度，所有的errmsg存到同一个vector
     std::vector<ErrorItem> warning_messages_process_; // 进程粒度，所有的warning msg存到同一个vector
 };

@@ -12,6 +12,7 @@
 #include <memory>
 #include <fstream>
 #include <thread>
+#include <atomic>
 #include <mutex>
 #include <condition_variable>
 #include <dlfcn.h>
@@ -1274,5 +1275,111 @@ TEST_F(UtestErrorManagerUninitialized, ReportUserDefinedErrMsg_Failed_uninitiali
     EXPECT_FALSE(instance.is_init_);
     auto ret = error_message::ReportUserDefinedErrMsg("EU0001", "Report user defined error code!");
     EXPECT_EQ(ret, -1);
+}
+// 并发注册错误码 + 并发上报: 覆盖 error_map_ 的读写竞争。
+// 修复前 ReportErrMessage 在锁外执行 error_map_.find 并把指向 map 内部的引用带出锁,
+// 而 RegisterFormatErrorMessage -> ParseJsonFormatString 全程不持锁改写 error_map_,
+// 两者构成数据竞争, 在 TSAN/ASAN 下可稳定暴露。
+TEST_F(UtestErrorManager, ConcurrentRegisterAndReportErrMessage)
+{
+    auto& instance = ErrorManager::GetInstance();
+    instance.error_mode_ = error_message::ErrorMsgMode::INTERNAL_MODE;
+
+    auto conf = ErrorManager::ErrorInfoConfig();
+    conf.error_id = "E13001";
+    conf.error_message = "concurrent report happend, arg=%s.";
+    conf.arg_list.push_back("argv1");
+    instance.error_map_["E13001"] = conf;
+
+    constexpr int32_t kLoopCnt = 300;
+    std::atomic<bool> start{false};
+
+    std::thread registerer([&start]() {
+        while (!start.load()) {
+        }
+        for (int32_t i = 0; i < kLoopCnt; ++i) {
+            // 每轮注册一个新错误码, 持续触发 error_map_ 的插入与红黑树调整
+            const std::string msg = std::string(R"({"error_info_list":[{"ErrCode":"E9)") + std::to_string(1000 + i) +
+                                    R"(","ErrMessage":"concurrent %s","Arglist":"argv1"}]})";
+            (void)error_message::RegisterFormatErrorMessage(msg.c_str(), msg.size());
+        }
+    });
+    std::thread reporter([&instance, &start]() {
+        while (!start.load()) {
+        }
+        for (int32_t i = 0; i < kLoopCnt; ++i) {
+            (void)instance.ReportErrMessage("E13001", {{"argv1", "value"}});
+        }
+    });
+    start.store(true);
+    registerer.join();
+    reporter.join();
+
+    // 并发写入过程中不应丢失任何已注册的错误码模板
+    int32_t found = 0;
+    for (int32_t i = 0; i < kLoopCnt; ++i) {
+        if (instance.error_map_.find(std::string("E9") + std::to_string(1000 + i)) != instance.error_map_.end()) {
+            ++found;
+        }
+    }
+    EXPECT_EQ(found, kLoopCnt);
+    EXPECT_NE(instance.error_map_.find("E13001"), instance.error_map_.end());
+
+    for (int32_t i = 0; i < kLoopCnt; ++i) {
+        (void)instance.error_map_.erase(std::string("E9") + std::to_string(1000 + i));
+    }
+    (void)instance.error_map_.erase("E13001");
+}
+
+// Init(mode) 失败时不得改写 error_mode_: 修复前 error_mode_ 在校验解析结果之前就被写入,
+// 一次失败的 Init 会把错误消息粒度模式永久置成调用方期望但实际未生效的值。
+TEST_F(UtestErrorManager, InitWithModeNotPolluteModeOnFailure)
+{
+    auto& instance = ErrorManager::GetInstance();
+    const auto origin_mode = instance.error_mode_.load();
+    instance.error_mode_ = error_message::ErrorMsgMode::INTERNAL_MODE;
+
+    // 非法模式直接返回失败, 模式保持不变
+    EXPECT_EQ(instance.Init(error_message::ErrorMsgMode::ERR_MSG_MODE_MAX), -1);
+    EXPECT_EQ(instance.error_mode_.load(), error_message::ErrorMsgMode::INTERNAL_MODE);
+
+    // 合法模式但解析 error_code.json 失败时, 模式同样不应被改写
+    const int32_t ret = instance.Init(error_message::ErrorMsgMode::PROCESS_MODE);
+    if (ret != 0) {
+        EXPECT_EQ(instance.error_mode_.load(), error_message::ErrorMsgMode::INTERNAL_MODE);
+    } else {
+        EXPECT_EQ(instance.error_mode_.load(), error_message::ErrorMsgMode::PROCESS_MODE);
+    }
+
+    instance.error_mode_ = origin_mode;
+}
+
+// 未初始化时多线程并发上报: 覆盖 is_init_ 的 check-then-init 竞争,
+// 修复前多个线程可同时读到 is_init_ == false 并各自完整跑一遍 ParseJsonFile。
+TEST_F(UtestErrorManagerUninitialized, ConcurrentLazyInitFromMultipleThreads)
+{
+    auto& instance = ErrorManager::GetInstance();
+    EXPECT_FALSE(instance.is_init_);
+
+    constexpr int32_t kThreadNum = 8;
+    std::atomic<bool> start{false};
+    std::vector<std::thread> threads;
+    for (int32_t i = 0; i < kThreadNum; ++i) {
+        threads.emplace_back([&instance, &start]() {
+            while (!start.load()) {
+            }
+            (void)instance.ReportErrMessage("E19999", {});
+            (void)instance.ReportInterErrMessage("EZ9999", "inner");
+        });
+    }
+    start.store(true);
+    for (auto& t : threads) {
+        t.join();
+    }
+
+    // 复位, 避免影响后续用例对未初始化状态的断言
+    instance.is_init_ = false;
+    instance.error_message_per_work_id_.clear();
+    instance.warning_messages_per_work_id_.clear();
 }
 } // namespace error_message
