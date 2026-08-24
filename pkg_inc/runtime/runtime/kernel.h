@@ -144,16 +144,6 @@ typedef enum rtKernelType {
     KERNEL_TYPE_RESERVED = 99,
 } rtKernelType_t;
 
-/**
- * @ingroup rt_kernel
- * @brief rt bin buffer type
- */
-typedef enum tagRtBinBufferType {
-    RT_BIN_HOST_ADDR = 1,
-    RT_BIN_DEVICE_ADDR = 2,
-    RT_BIN_TYPE_MAX,
-} rtBinBufferType_t;
-
 typedef enum {
     RT_FUNCTION_ATTR_KERNEL_TYPE = 1,
     RT_FUNCTION_ATTR_KERNEL_RATIO,
@@ -855,19 +845,6 @@ RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtCleanDe
  */
 RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t
     rtGetKernelBin(const char_t* const binFileName, char_t** const buffer, uint32_t* length);
-
-/**
- * @ingroup rt_kernel
- * @brief Get Bin Buffer
- * @param [in] binHandle    bin handle
- * @param [in] type         bin buffer type
- * @param [out] bin         bin addr
- * @param [out] binSize     bin size
- * @return RT_ERROR_NONE for ok
- * @return RT_ERROR_INVALID_VALUE for error input
- */
-RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t
-    rtGetBinBuffer(const rtBinHandle binHandle, const rtBinBufferType_t type, void** bin, uint32_t* binSize);
 
 /**
  * @ingroup rt_kernel

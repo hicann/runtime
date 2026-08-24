@@ -16,6 +16,7 @@
 #include "adump_platform_manager.h"
 #include "kernel_pc_fixer.h"
 #include "runtime/base.h"
+#include "runtime/rt_external.h"
 #include "acc_error_info.h"
 
 using namespace Adx;

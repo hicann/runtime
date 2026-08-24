@@ -623,6 +623,26 @@ typedef enum {
 
 typedef enum tagRtXpuDevType { RT_DEV_TYPE_DPU = 0, RT_DEV_TYPE_REV } rtXpuDevType;
 
+#define RT_ERR_REG_NUMS (64U)
+typedef struct rtExceptionErrRegInfo {
+    uint32_t coreId;
+    rtCoreType_t coreType;
+    uint64_t startPC;
+    uint64_t currentPC;
+    uint32_t errReg[RT_ERR_REG_NUMS];
+} rtExceptionErrRegInfo_t;
+
+/**
+ * @ingroup dvrt_base
+ * @brief get exception register info while core exception
+ * @param [in] exceptionInfo used to find error register info
+ * @param [out] exceptionErrRegInfo exception error register info array
+ * @param [out] num the num of elements in the array
+ * @return RT_ERROR_NONE for ok, errno for failed
+ * @return RT_ERROR_INVALID_VALUE for error input
+ */
+RTS_API rtError_t rtGetExceptionRegInfo(
+    const rtExceptionInfo_t* const exceptionInfo, rtExceptionErrRegInfo_t** exceptionErrRegInfo, uint32_t* num);
 #if defined(__cplusplus)
 }
 #endif

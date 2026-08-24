@@ -589,6 +589,29 @@ RTS_API void rtRegisterVariable(
  * @return ACL_ERROR_RT_PARAM_INVALID for error input
  */
 RTS_API rtError_t rtRegisterFuncSymbol(void* binHandle, const void* symbol, const char* kernelName, void* reserve);
+
+/**
+ * @ingroup rt_kernel
+ * @brief rt bin buffer type
+ */
+typedef enum tagRtBinBufferType {
+    RT_BIN_HOST_ADDR = 1,
+    RT_BIN_DEVICE_ADDR = 2,
+    RT_BIN_TYPE_MAX,
+} rtBinBufferType_t;
+
+/**
+ * @ingroup rt_kernel
+ * @brief Get Bin Buffer
+ * @param [in] binHandle    bin handle
+ * @param [in] type         bin buffer type
+ * @param [out] bin         bin addr
+ * @param [out] binSize     bin size
+ * @return RT_ERROR_NONE for ok
+ * @return RT_ERROR_INVALID_VALUE for error input
+ */
+RTS_API rtError_t
+rtGetBinBuffer(const rtBinHandle binHandle, const rtBinBufferType_t type, void** bin, uint32_t* binSize);
 #if defined(__cplusplus)
 }
 #endif
