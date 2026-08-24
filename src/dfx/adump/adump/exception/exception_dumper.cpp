@@ -31,7 +31,7 @@ constexpr char DEFAULT_DUMP_PATH[] = "./";
 constexpr char EXTRA_DUMP_PATH[] = "/extra-info/data-dump/";
 constexpr size_t MAX_DUMP_OP_NUM = (2048U * 2048U) / 20U;
 
-static bool IsSafeKernelDisplayName(const char *name)
+static bool IsSafeKernelDisplayName(const char* name)
 {
     for (size_t i = 0; i < MAX_KERNELNAME_LEN && name[i] != '\0'; ++i) {
         char c = name[i];
@@ -42,7 +42,7 @@ static bool IsSafeKernelDisplayName(const char *name)
     return std::string(name).find("..") == std::string::npos;
 }
 
-bool ValidateKernelName(const ExceptionDumpInfo &info)
+bool ValidateKernelName(const ExceptionDumpInfo& info)
 {
     if (strnlen(info.kernelName, MAX_KERNELNAME_LEN) == MAX_KERNELNAME_LEN ||
         strnlen(info.kernelDisplayName, MAX_KERNELNAME_LEN) == MAX_KERNELNAME_LEN) {
@@ -57,14 +57,13 @@ bool ValidateKernelName(const ExceptionDumpInfo &info)
 
 bool IsValidExceptionDumpMode(ExceptionDumpMode dumpMode)
 {
-    return dumpMode == ExceptionDumpMode::DUMP_MODE_NONE ||
-           dumpMode == ExceptionDumpMode::DUMP_MODE_OVERWRITE ||
+    return dumpMode == ExceptionDumpMode::DUMP_MODE_NONE || dumpMode == ExceptionDumpMode::DUMP_MODE_OVERWRITE ||
            dumpMode == ExceptionDumpMode::DUMP_MODE_ADDITIONAL;
 }
-}  // namespace
+} // namespace
 
-uint64_t *g_dynamicChunk = nullptr;
-uint64_t *g_staticChunk = nullptr;
+uint64_t* g_dynamicChunk = nullptr;
+uint64_t* g_staticChunk = nullptr;
 
 ExceptionDumper::~ExceptionDumper()
 {
@@ -99,10 +98,9 @@ bool ExceptionDumper::InitArgsExceptionMemory() const
     return true;
 }
 
-bool ExceptionDumper::IsRepeatEnableException(DumpType type, const DumpConfig &dumpConfig)
+bool ExceptionDumper::IsRepeatEnableException(DumpType type, const DumpConfig& dumpConfig)
 {
-    if (type == DumpType::ARGS_EXCEPTION || type == DumpType:: EXCEPTION ||
-        type == DumpType::AIC_ERR_DETAIL_DUMP) {
+    if (type == DumpType::ARGS_EXCEPTION || type == DumpType::EXCEPTION || type == DumpType::AIC_ERR_DETAIL_DUMP) {
         std::string dumpStatus = dumpConfig.dumpStatus;
         std::transform(dumpStatus.begin(), dumpStatus.end(), dumpStatus.begin(), ::tolower);
         if (dumpStatus != "on") {
@@ -118,7 +116,7 @@ bool ExceptionDumper::IsEnabledExceptionDump() const
     return coredumpStatus_ || exceptionStatus_ || argsExceptionStatus_;
 }
 
-int32_t ExceptionDumper::ExceptionDumperInit(DumpType dumpType, const DumpConfig &dumpConfig)
+int32_t ExceptionDumper::ExceptionDumperInit(DumpType dumpType, const DumpConfig& dumpConfig)
 {
     bool status = false;
     if (!setting_.InitDumpStatus(dumpConfig.dumpStatus, status)) {
@@ -134,8 +132,8 @@ int32_t ExceptionDumper::ExceptionDumperInit(DumpType dumpType, const DumpConfig
         IDE_CTRL_VALUE_WARN(status || argsExceptionStatus_, return ADUMP_SUCCESS, "dump type %d not start.", dumpType);
         IDE_CTRL_VALUE_FAILED(InitArgsExceptionMemory(), return ADUMP_FAILED, "Init args exception memory failed.");
         if (status && !argsExceptionStatus_) {
-            IDE_CTRL_VALUE_WARN(LoadTensorPluginLib() == ADUMP_SUCCESS, return ADUMP_FAILED,
-                "Load tersor custom plugin failed.");
+            IDE_CTRL_VALUE_WARN(
+                LoadTensorPluginLib() == ADUMP_SUCCESS, return ADUMP_FAILED, "Load tersor custom plugin failed.");
         }
         argsExceptionStatus_ = status;
     } else {
@@ -170,13 +168,12 @@ std::string ExceptionDumper::GetDumpSceneName() const
     }
 }
 
-int32_t ExceptionDumper::DumpException(const rtExceptionInfo &exception)
+int32_t ExceptionDumper::DumpException(const rtExceptionInfo& exception)
 {
     IDE_CTRL_VALUE_WARN(!destructionFlag_, return ADUMP_FAILED, "ExceptionDumper has been destructed.");
-    IDE_CTRL_VALUE_WARN(ExceptionInfoCommon::IsSupportExceptionDump(exception),
-        return ADUMP_FAILED, "Exception is not need to dump.");
-    IDE_CTRL_VALUE_WARN(IsEnabledExceptionDump(), return ADUMP_FAILED,
-        "Not enable exception dump.");
+    IDE_CTRL_VALUE_WARN(
+        ExceptionInfoCommon::IsSupportExceptionDump(exception), return ADUMP_FAILED, "Exception is not need to dump.");
+    IDE_CTRL_VALUE_WARN(IsEnabledExceptionDump(), return ADUMP_FAILED, "Not enable exception dump.");
     std::string dumpPath = CreateDeviceDumpPath(exception.deviceid);
     if (dumpPath.empty()) {
         return ADUMP_FAILED;
@@ -185,10 +182,11 @@ int32_t ExceptionDumper::DumpException(const rtExceptionInfo &exception)
     const std::string dumpScene = GetDumpSceneName();
     const std::string exceptionType = ExceptionInfoCommon::GetExceptionTaskTypeName(exception);
     const std::string kernelName = ExceptionInfoCommon::GetExceptionKernelName(exception);
-    IDE_LOGE("[Dump][Exception] Begin to dump exception. dumpScene=%s, deviceId=%u, streamId=%u, taskId=%u, "
-        "exceptionType=%d(%s), kernelName=%s.", dumpScene.c_str(), exception.deviceid, exception.streamid,
-        exception.taskid, static_cast<int32_t>(exception.expandInfo.type), exceptionType.c_str(),
-        kernelName.c_str());
+    IDE_LOGE(
+        "[Dump][Exception] Begin to dump exception. dumpScene=%s, deviceId=%u, streamId=%u, taskId=%u, "
+        "exceptionType=%d(%s), kernelName=%s.",
+        dumpScene.c_str(), exception.deviceid, exception.streamid, exception.taskid,
+        static_cast<int32_t>(exception.expandInfo.type), exceptionType.c_str(), kernelName.c_str());
 
     if (coredumpStatus_) {
         return DumpDetailException(exception, dumpPath);
@@ -199,20 +197,20 @@ int32_t ExceptionDumper::DumpException(const rtExceptionInfo &exception)
     }
 }
 
-void ExceptionDumper::SetDumpPath(const std::string &dumpPath)
+void ExceptionDumper::SetDumpPath(const std::string& dumpPath)
 {
     dumpPath_ = dumpPath.empty() ? DEFAULT_DUMP_PATH : dumpPath;
     IDE_LOGI("Update exception dump path: %s", dumpPath_.c_str());
 }
 
-void ExceptionDumper::AddDumpOperator(const OperatorInfo &opInfo)
+void ExceptionDumper::AddDumpOperator(const OperatorInfo& opInfo)
 {
     OperatorInfoV2 dumpOperator = {};
     DumpManager::Instance().ConvertOperatorInfo(opInfo, dumpOperator);
     AddDumpOperatorV2(dumpOperator);
 }
 
-void ExceptionDumper::AddDumpOperatorV2(const OperatorInfoV2 &opInfo)
+void ExceptionDumper::AddDumpOperatorV2(const OperatorInfoV2& opInfo)
 {
     const std::lock_guard<std::mutex> lock(mutex_);
     if (opInfo.agingFlag) {
@@ -224,7 +222,7 @@ void ExceptionDumper::AddDumpOperatorV2(const OperatorInfoV2 &opInfo)
         uint32_t maxStreamCount = 0;
         uint32_t maxTaskCount = 0;
         rtGetMaxStreamAndTask(0, &maxStreamCount, &maxTaskCount);
-        auto &taskDeque = residentOperators_[opInfo.deviceId][opInfo.streamId];
+        auto& taskDeque = residentOperators_[opInfo.deviceId][opInfo.streamId];
         taskDeque.emplace_back(opInfo);
         if (taskDeque.size() > maxTaskCount) {
             taskDeque.pop_front();
@@ -246,12 +244,12 @@ int32_t ExceptionDumper::DelDumpOperator(uint32_t deviceId, uint32_t streamId)
     return ADUMP_SUCCESS;
 }
 
-std::string ExceptionDumper::CreateDumpPath(Path &dumpPath) const
+std::string ExceptionDumper::CreateDumpPath(Path& dumpPath) const
 {
-    IDE_CTRL_VALUE_FAILED(dumpPath.CreateDirectory(true), return "", "Create path[%s] failed",
-        dumpPath.GetCString());
-    IDE_CTRL_VALUE_FAILED(dumpPath.RealPath(), return "", "Get RealPath of [%s] failed, strerr=%s",
-        dumpPath.GetCString(), strerror(errno));
+    IDE_CTRL_VALUE_FAILED(dumpPath.CreateDirectory(true), return "", "Create path[%s] failed", dumpPath.GetCString());
+    IDE_CTRL_VALUE_FAILED(
+        dumpPath.RealPath(), return "", "Get RealPath of [%s] failed, strerr=%s", dumpPath.GetCString(),
+        strerror(errno));
     return dumpPath.GetString();
 }
 
@@ -264,11 +262,12 @@ std::string ExceptionDumper::CreateDeviceDumpPath(uint32_t deviceId) const
     return CreateDumpPath(deviceDumpPath);
 }
 
-int32_t ExceptionDumper::GetExceptionDumpPath(std::string &path)
+int32_t ExceptionDumper::GetExceptionDumpPath(std::string& path)
 {
     int32_t deviceId = 0;
     const rtError_t rtRet = rtGetDevice(&deviceId);
-    IDE_CTRL_VALUE_FAILED(rtRet == RT_ERROR_NONE, return ADUMP_FAILED,
+    IDE_CTRL_VALUE_FAILED(
+        rtRet == RT_ERROR_NONE, return ADUMP_FAILED,
         "rtGetDevice failed when get the exception root dump path, ret=%d.", static_cast<int32_t>(rtRet));
 
     path = CreateDeviceDumpPath(static_cast<uint32_t>(deviceId));
@@ -276,23 +275,26 @@ int32_t ExceptionDumper::GetExceptionDumpPath(std::string &path)
     return ADUMP_SUCCESS;
 }
 
-int32_t ExceptionDumper::SaveExceptionInfo(const std::string &fileName, const std::string &userTag,
-    const std::vector<TensorInfo> &tensors)
+int32_t ExceptionDumper::SaveExceptionInfo(
+    const std::string& fileName, const std::string& userTag, const std::vector<TensorInfo>& tensors)
 {
     std::string rootPath;
-    IDE_CTRL_VALUE_FAILED(GetExceptionDumpPath(rootPath) == ADUMP_SUCCESS, return ADUMP_FAILED,
+    IDE_CTRL_VALUE_FAILED(
+        GetExceptionDumpPath(rootPath) == ADUMP_SUCCESS, return ADUMP_FAILED,
         "[SaveExceptionInfo] get exception dump root path failed.");
 
     std::string realFilePath;
-    IDE_CTRL_VALUE_FAILED(Path::BuildFullPathUnderRoot(rootPath, fileName, realFilePath),
-        return ADUMP_FAILED, "[SaveExceptionInfo] build full file path failed.");
+    IDE_CTRL_VALUE_FAILED(
+        Path::BuildFullPathUnderRoot(rootPath, fileName, realFilePath), return ADUMP_FAILED,
+        "[SaveExceptionInfo] build full file path failed.");
 
     realFilePath += ".custom." + SysUtils::GetCurrentTimeWithMillisecond();
 
     int32_t devId = 0;
     const rtError_t rtRet = rtGetDevice(&devId);
-    IDE_CTRL_VALUE_FAILED(rtRet == RT_ERROR_NONE, return ADUMP_FAILED,
-        "[SaveExceptionInfo] rtGetDevice failed, ret=%d.", static_cast<int32_t>(rtRet));
+    IDE_CTRL_VALUE_FAILED(
+        rtRet == RT_ERROR_NONE, return ADUMP_FAILED, "[SaveExceptionInfo] rtGetDevice failed, ret=%d.",
+        static_cast<int32_t>(rtRet));
 
     DumpFile dumpFile(static_cast<uint32_t>(devId), realFilePath);
     dumpFile.SetHeader(Path(realFilePath).GetFileName());
@@ -303,7 +305,8 @@ int32_t ExceptionDumper::SaveExceptionInfo(const std::string &fileName, const st
     std::vector<std::string> record;
     dumpFile.SetTensors(tensors, record);
 
-    IDE_CTRL_VALUE_FAILED(dumpFile.Dump(record) == ADUMP_SUCCESS, return ADUMP_FAILED,
+    IDE_CTRL_VALUE_FAILED(
+        dumpFile.Dump(record) == ADUMP_SUCCESS, return ADUMP_FAILED,
         "[SaveExceptionInfo] dump exception info to file failed, file: %s", realFilePath.c_str());
 
     (void)mmChmod(realFilePath.c_str(), M_IRUSR);
@@ -326,7 +329,7 @@ const char* ExceptionDumper::GetExtraDumpCPath() const
     return extraDumpPath_.empty() ? nullptr : extraDumpPath_.c_str();
 }
 
-bool ExceptionDumper::FindExceptionOperator(const rtExceptionInfo &exception, DumpOperator &excOp)
+bool ExceptionDumper::FindExceptionOperator(const rtExceptionInfo& exception, DumpOperator& excOp)
 {
     OpIdentity excOpIdentiy(exception.deviceid, exception.taskid, exception.streamid);
     if (exception.expandInfo.type == RT_EXCEPTION_FFTS_PLUS) {
@@ -337,9 +340,10 @@ bool ExceptionDumper::FindExceptionOperator(const rtExceptionInfo &exception, Du
     }
 
     const std::lock_guard<std::mutex> lock(mutex_);
-    IDE_LOGI("Dump op size, aging:%zu, resident:%zu, target: %s", agingOperators_.size(), residentOperators_.size(),
-             excOpIdentiy.GetString().c_str());
-    for (const auto &op : agingOperators_) {
+    IDE_LOGI(
+        "Dump op size, aging:%zu, resident:%zu, target: %s", agingOperators_.size(), residentOperators_.size(),
+        excOpIdentiy.GetString().c_str());
+    for (const auto& op : agingOperators_) {
         if (op.IsBelongTo(excOpIdentiy)) {
             IDE_LOGI("Find exception op in aging list: %s", excOpIdentiy.GetString().c_str());
             excOp = op;
@@ -348,10 +352,10 @@ bool ExceptionDumper::FindExceptionOperator(const rtExceptionInfo &exception, Du
     }
 
     if (residentOperators_.find(excOpIdentiy.deviceId) != residentOperators_.end()) {
-        auto &streamMap = residentOperators_[excOpIdentiy.deviceId];
+        auto& streamMap = residentOperators_[excOpIdentiy.deviceId];
         if (streamMap.find(excOpIdentiy.streamId) != streamMap.end()) {
-            auto &taskDeque = streamMap[excOpIdentiy.streamId];
-            for (const auto &op : taskDeque) {
+            auto& taskDeque = streamMap[excOpIdentiy.streamId];
+            for (const auto& op : taskDeque) {
                 if (op.IsBelongTo(excOpIdentiy)) {
                     IDE_LOGI("Find exception op in resident list: %s", excOpIdentiy.GetString().c_str());
                     excOp = op;
@@ -365,19 +369,19 @@ bool ExceptionDumper::FindExceptionOperator(const rtExceptionInfo &exception, Du
     return false;
 }
 
-void ExceptionDumper::DumpHostKernelBinBeforeSymbolize(const rtExceptionInfo &exception,
-                                                       const std::string &dumpPath) const
+void ExceptionDumper::DumpHostKernelBinBeforeSymbolize(
+    const rtExceptionInfo& exception, const std::string& dumpPath) const
 {
     rtExceptionArgsInfo_t exceptionArgsInfo{};
     int32_t ret = ExceptionInfoCommon::GetExceptionInfo(exception, exceptionArgsInfo);
-    IDE_CTRL_VALUE_WARN(ret == ADUMP_SUCCESS, return,
-        "Get exception args info failed, skip early dump host kernel bin.");
+    IDE_CTRL_VALUE_WARN(
+        ret == ADUMP_SUCCESS, return, "Get exception args info failed, skip early dump host kernel bin.");
 
     KernelInfoCollector collector;
     collector.LoadKernelInfo(exceptionArgsInfo);
     ret = collector.LoadKernelBinBuffer();
-    IDE_CTRL_VALUE_WARN(ret == ADUMP_SUCCESS, return,
-        "Load kernel bin buffer failed, skip early dump host kernel bin.");
+    IDE_CTRL_VALUE_WARN(
+        ret == ADUMP_SUCCESS, return, "Load kernel bin buffer failed, skip early dump host kernel bin.");
 
     // 提前无条件同步落 _host.o（只依赖 kernel bin buffer，不依赖 ELF 符号解析），
     // 保证符号表损坏等场景下 _host.o 仍能落盘供事后分析；DumpHostKernelBin 幂等，
@@ -386,10 +390,16 @@ void ExceptionDumper::DumpHostKernelBinBeforeSymbolize(const rtExceptionInfo &ex
     (void)collector.DumpHostKernelBin(dumpPath, hostOPath);
 }
 
-int32_t ExceptionDumper::DumpNormalException(const rtExceptionInfo &exception, const std::string &dumpPath)
+int32_t ExceptionDumper::DumpNormalException(const rtExceptionInfo& exception, const std::string& dumpPath)
 {
-    IDE_CTRL_VALUE_WARN(ExceptionInfoCommon::IsSupportDefaultExceptionDump(exception),
-        return ADUMP_FAILED, "Exception is not support default dump.");
+    return DumpExceptionWithCallbacks(exception, dumpPath, &ExceptionDumper::DumpNormalExceptionDefault);
+}
+
+int32_t ExceptionDumper::DumpNormalExceptionDefault(const rtExceptionInfo& exception, const std::string& dumpPath)
+{
+    IDE_CTRL_VALUE_WARN(
+        ExceptionInfoCommon::IsSupportDefaultExceptionDump(exception), return ADUMP_FAILED,
+        "Exception is not support default dump.");
     // 先无条件提前落 _host.o，再符号化（symbolize 复用已落盘文件，不重复落盘）。
     DumpHostKernelBinBeforeSymbolize(exception, dumpPath);
     KernelSymbolLocator::DumpErrorSymbols(exception, dumpPath);
@@ -415,10 +425,11 @@ int32_t ExceptionDumper::DumpNormalException(const rtExceptionInfo &exception, c
     return ADUMP_SUCCESS;
 }
 
-int32_t ExceptionDumper::DumpArgsExceptionDefault(const rtExceptionInfo &exception, const std::string &dumpPath)
+int32_t ExceptionDumper::DumpArgsExceptionDefault(const rtExceptionInfo& exception, const std::string& dumpPath)
 {
-    IDE_CTRL_VALUE_WARN(ExceptionInfoCommon::IsSupportDefaultExceptionDump(exception),
-        return ADUMP_FAILED, "Exception is not support default dump.");
+    IDE_CTRL_VALUE_WARN(
+        ExceptionInfoCommon::IsSupportDefaultExceptionDump(exception), return ADUMP_FAILED,
+        "Exception is not support default dump.");
     // 先无条件提前落 _host.o，再符号化（symbolize 复用已落盘文件，不重复落盘）。
     DumpHostKernelBinBeforeSymbolize(exception, dumpPath);
     KernelSymbolLocator::DumpErrorSymbols(exception, dumpPath);
@@ -433,7 +444,9 @@ int32_t ExceptionDumper::DumpArgsExceptionDefault(const rtExceptionInfo &excepti
     return ADUMP_SUCCESS;
 }
 
-int32_t ExceptionDumper::DumpArgsExceptionInner(const rtExceptionInfo &exception, const std::string &dumpPath)
+int32_t ExceptionDumper::DumpExceptionWithCallbacks(
+    const rtExceptionInfo& exception, const std::string& dumpPath,
+    int32_t (ExceptionDumper::*defaultDump)(const rtExceptionInfo&, const std::string&))
 {
     ExceptionDumpMode dumpMode = ExceptionDumpMode::DUMP_MODE_NONE;
     std::vector<ExceptionDumpInfo> dumpInfos;
@@ -451,23 +464,25 @@ int32_t ExceptionDumper::DumpArgsExceptionInner(const rtExceptionInfo &exception
         return ADUMP_SUCCESS;
     }
 
-    if (dumpMode == ExceptionDumpMode::DUMP_MODE_ADDITIONAL) {
-        if (!dumpInfos.empty()) {
-            IDE_LOGI("DumpMode of callbacks is ADDITIONAL, dump callback data and default.");
-            DumpCallbackData(exception, dumpInfos, dumpPath);
-        }
+    if (dumpMode == ExceptionDumpMode::DUMP_MODE_ADDITIONAL && !dumpInfos.empty()) {
+        IDE_LOGI("DumpMode of callbacks is ADDITIONAL, dump callback data and default.");
+        DumpCallbackData(exception, dumpInfos, dumpPath);
     }
 
-    return DumpArgsExceptionDefault(exception, dumpPath);
+    return (this->*defaultDump)(exception, dumpPath);
 }
 
-int32_t ExceptionDumper::InvokeCallbacks(const rtExceptionInfo &exception,
-                                         std::vector<ExceptionDumpInfo> &dumpInfos,
-                                         ExceptionDumpMode &dumpMode)
+int32_t ExceptionDumper::DumpArgsExceptionInner(const rtExceptionInfo& exception, const std::string& dumpPath)
+{
+    return DumpExceptionWithCallbacks(exception, dumpPath, &ExceptionDumper::DumpArgsExceptionDefault);
+}
+
+int32_t ExceptionDumper::InvokeCallbacks(
+    const rtExceptionInfo& exception, std::vector<ExceptionDumpInfo>& dumpInfos, ExceptionDumpMode& dumpMode)
 {
     dumpMode = ExceptionDumpMode::DUMP_MODE_NONE;
     dumpInfos.clear();
-    
+
     std::lock_guard<std::recursive_mutex> lock(callbackMutex_);
     if (callbacks_.empty()) {
         IDE_LOGI("No exception callbacks registered.");
@@ -476,20 +491,22 @@ int32_t ExceptionDumper::InvokeCallbacks(const rtExceptionInfo &exception,
 
     ExceptionRegInfo exceptionRegInfo{0, nullptr};
     int32_t ret = ExceptionInfoCommon::GetExceptionRegInfo(exception, exceptionRegInfo);
-    IDE_CTRL_VALUE_WARN(ret == ADUMP_SUCCESS, return ADUMP_FAILED,
-        "GetExceptionRegInfo failed, ret=%d, coreNum=%u.", ret, exceptionRegInfo.coreNum);
-    
+    IDE_CTRL_VALUE_WARN(
+        ret == ADUMP_SUCCESS, return ADUMP_FAILED, "GetExceptionRegInfo failed, ret=%d, coreNum=%u.", ret,
+        exceptionRegInfo.coreNum);
+
     uint32_t maxDumpSize = exceptionRegInfo.coreNum == 0 ? 1 : exceptionRegInfo.coreNum;
     IDE_LOGI("Exception callbacks size=%zu, maxDumpSize=%u.", callbacks_.size(), maxDumpSize);
-    
-    for (auto &callback : callbacks_) {       
+
+    for (auto& callback : callbacks_) {
         std::vector<ExceptionDumpInfo> cbDumpInfos(maxDumpSize);
-        
+
         uint32_t cbDumpRealSize = 0;
         ExceptionDumpMode cbDumpMode = ExceptionDumpMode::DUMP_MODE_NONE;
 
-        uint32_t ret = callback(reinterpret_cast<void*>(const_cast<rtExceptionInfo*>(&exception)), cbDumpInfos.data(),
-                                maxDumpSize, &cbDumpRealSize, &cbDumpMode);
+        uint32_t ret = callback(
+            reinterpret_cast<void*>(const_cast<rtExceptionInfo*>(&exception)), cbDumpInfos.data(), maxDumpSize,
+            &cbDumpRealSize, &cbDumpMode);
         if (ret != ADUMP_SUCCESS) {
             IDE_LOGW("Callback execute failed. ret=%u", ret);
             continue;
@@ -511,25 +528,25 @@ int32_t ExceptionDumper::InvokeCallbacks(const rtExceptionInfo &exception,
             }
             dumpInfos.push_back(cbDumpInfos[i]);
         }
-        
+
         // 多回调聚合时取优先级最高者：ADDITIONAL > OVERWRITE > NONE
         if (static_cast<uint32_t>(cbDumpMode) > static_cast<uint32_t>(dumpMode)) {
             dumpMode = cbDumpMode;
         }
     }
-    
+
     IDE_LOGI("Callback final dumpMode=%d, dumpInfo total size=%zu.", dumpMode, dumpInfos.size());
     return ADUMP_SUCCESS;
 }
 
-void ExceptionDumper::DumpCallbackData(const rtExceptionInfo &exception,
-                                       const std::vector<ExceptionDumpInfo> &dumpInfos,
-                                       const std::string &dumpPath)
+void ExceptionDumper::DumpCallbackData(
+    const rtExceptionInfo& exception, const std::vector<ExceptionDumpInfo>& dumpInfos, const std::string& dumpPath)
 {
     // 收集每个回调 info(单核) 的定位结果，循环结束后按 (.o, 偏移) 聚类打印。
     std::vector<ErrorLocation> allLocations;
-    for (const auto &info : dumpInfos) {
-        IDE_LOGE("[Dump][Exception] Begin to dump callback exception. coreType=%u, coreId=%u, "
+    for (const auto& info : dumpInfos) {
+        IDE_LOGE(
+            "[Dump][Exception] Begin to dump callback exception. coreType=%u, coreId=%u, "
             "argAddr=%p, argSize=%u, binHandle=%p, extraTensorNum=%u, kernelName=%s.",
             info.coreType, info.coreId, info.argAddr, info.argSize, info.bin, info.extraTensorNum, info.kernelName);
         IDE_LOGE("[Dump][Exception] Callback exception. kernelDisplayName=%s.", info.kernelDisplayName);
@@ -574,10 +591,7 @@ void ExceptionDumper::DumpCallbackData(const rtExceptionInfo &exception,
     IDE_LOGI("Dump all callback data success.");
 }
 
-void ExceptionDumper::ExceptionModeDowngrade()
-{
-    coredumpEnableComplete_ = false;
-}
+void ExceptionDumper::ExceptionModeDowngrade() { coredumpEnableComplete_ = false; }
 
 void ExceptionDumper::Exit() const
 {
@@ -607,9 +621,9 @@ int32_t ExceptionDumper::RegisterExceptionDumpCallback(ExceptionDumpCallback cal
         IDE_LOGE("Register callback is nullptr.");
         return ADUMP_INPUT_FAILED;
     }
-    
+
     const std::lock_guard<std::recursive_mutex> lock(callbackMutex_);
-    for (auto &cb : callbacks_) {
+    for (auto& cb : callbacks_) {
         if (cb == callback) {
             IDE_LOGW("Callback already registered.");
             return ADUMP_SUCCESS;
@@ -626,7 +640,7 @@ int32_t ExceptionDumper::UnregisterExceptionDumpCallback(ExceptionDumpCallback c
         IDE_LOGE("Unregister callback is nullptr.");
         return ADUMP_INPUT_FAILED;
     }
-    
+
     const std::lock_guard<std::recursive_mutex> lock(callbackMutex_);
     for (auto it = callbacks_.begin(); it != callbacks_.end(); ++it) {
         if (*it == callback) {
@@ -639,4 +653,4 @@ int32_t ExceptionDumper::UnregisterExceptionDumpCallback(ExceptionDumpCallback c
     return ADUMP_SUCCESS;
 }
 
-}  // namespace Adx
+} // namespace Adx

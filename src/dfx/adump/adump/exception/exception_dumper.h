@@ -24,23 +24,23 @@ class ExceptionDumper {
 public:
     ExceptionDumper() = default;
     ~ExceptionDumper();
-    int32_t ExceptionDumperInit(DumpType dumpType, const DumpConfig &dumpConfig);
+    int32_t ExceptionDumperInit(DumpType dumpType, const DumpConfig& dumpConfig);
     inline bool GetExceptionStatus() const;
     inline bool GetArgsExceptionStatus() const;
     inline bool GetCoredumpStatus() const;
-    void SetDumpPath(const std::string &dumpPath);
+    void SetDumpPath(const std::string& dumpPath);
     std::string CreateExtraDumpPath();
     std::string CreateDeviceDumpPath(uint32_t deviceId) const;
     const char* GetExtraDumpCPath() const;
-    void AddDumpOperator(const OperatorInfo &opInfo);
-    void AddDumpOperatorV2(const OperatorInfoV2 &opInfo);
+    void AddDumpOperator(const OperatorInfo& opInfo);
+    void AddDumpOperatorV2(const OperatorInfoV2& opInfo);
     int32_t DelDumpOperator(uint32_t deviceId, uint32_t streamId);
-    int32_t DumpException(const rtExceptionInfo &exception);
-    int32_t GetExceptionDumpPath(std::string &path);
-    int32_t SaveExceptionInfo(const std::string &fileName, const std::string &userTag,
-        const std::vector<TensorInfo> &tensors);
+    int32_t DumpException(const rtExceptionInfo& exception);
+    int32_t GetExceptionDumpPath(std::string& path);
+    int32_t SaveExceptionInfo(
+        const std::string& fileName, const std::string& userTag, const std::vector<TensorInfo>& tensors);
     void ExceptionModeDowngrade();
-    bool IsRepeatEnableException(DumpType type, const DumpConfig &dumpConfig);
+    bool IsRepeatEnableException(DumpType type, const DumpConfig& dumpConfig);
     bool IsEnabledExceptionDump() const;
     int32_t RegisterExceptionDumpCallback(ExceptionDumpCallback callback);
     int32_t UnregisterExceptionDumpCallback(ExceptionDumpCallback callback);
@@ -50,31 +50,33 @@ public:
 #endif
 
 private:
-    std::string CreateDumpPath(Path &dumpPath) const;
-    bool FindExceptionOperator(const rtExceptionInfo &exception, DumpOperator &excOp);
-    int32_t DumpArgsException(const rtExceptionInfo &exception, const std::string &dumpPath);
-    int32_t DumpArgsExceptionInner(const rtExceptionInfo &exception, const std::string &dumpPath);
-    int32_t DumpArgsExceptionDefault(const rtExceptionInfo &exception, const std::string &dumpPath);
-    int32_t DumpArgsExceptionFastRecovery(const rtExceptionInfo &exception) const;
-    
-    int32_t InvokeCallbacks(const rtExceptionInfo &exception,
-                             std::vector<ExceptionDumpInfo> &dumpInfos,
-                             ExceptionDumpMode &finalMode);
-    void DumpCallbackData(const rtExceptionInfo &exception,
-                          const std::vector<ExceptionDumpInfo> &dumpInfos,
-                          const std::string &dumpPath);
-    int32_t DumpNormalException(const rtExceptionInfo &exception, const std::string &dumpPath);
-    int32_t DumpDetailException(const rtExceptionInfo &exception, const std::string &dumpPath);
+    std::string CreateDumpPath(Path& dumpPath) const;
+    bool FindExceptionOperator(const rtExceptionInfo& exception, DumpOperator& excOp);
+    int32_t DumpArgsException(const rtExceptionInfo& exception, const std::string& dumpPath);
+    int32_t DumpArgsExceptionInner(const rtExceptionInfo& exception, const std::string& dumpPath);
+    int32_t DumpArgsExceptionDefault(const rtExceptionInfo& exception, const std::string& dumpPath);
+    int32_t DumpArgsExceptionFastRecovery(const rtExceptionInfo& exception) const;
+
+    int32_t InvokeCallbacks(
+        const rtExceptionInfo& exception, std::vector<ExceptionDumpInfo>& dumpInfos, ExceptionDumpMode& finalMode);
+    void DumpCallbackData(
+        const rtExceptionInfo& exception, const std::vector<ExceptionDumpInfo>& dumpInfos, const std::string& dumpPath);
+    int32_t DumpNormalException(const rtExceptionInfo& exception, const std::string& dumpPath);
+    int32_t DumpNormalExceptionDefault(const rtExceptionInfo& exception, const std::string& dumpPath);
+    int32_t DumpDetailException(const rtExceptionInfo& exception, const std::string& dumpPath);
+    int32_t DumpExceptionWithCallbacks(
+        const rtExceptionInfo& exception, const std::string& dumpPath,
+        int32_t (ExceptionDumper::*defaultDump)(const rtExceptionInfo&, const std::string&));
     // 在符号化(DumpErrorSymbols)之前，提前同步把 _host.o 落盘，供后续按错误 PC 解析源码行使用。best-effort。
-    void DumpHostKernelBinBeforeSymbolize(const rtExceptionInfo &exception, const std::string &dumpPath) const;
+    void DumpHostKernelBinBeforeSymbolize(const rtExceptionInfo& exception, const std::string& dumpPath) const;
     int32_t LoadTensorPluginLib();
     bool InitArgsExceptionMemory() const;
     std::string GetDumpSceneName() const;
     void Exit() const;
-    bool coredumpStatus_{ false };
-    bool coredumpEnableComplete_{ true };
-    bool exceptionStatus_{ false };
-    bool argsExceptionStatus_{ false };
+    bool coredumpStatus_{false};
+    bool coredumpEnableComplete_{true};
+    bool exceptionStatus_{false};
+    bool argsExceptionStatus_{false};
     bool destructionFlag_{false};
     std::string dumpPath_;
     std::string extraDumpPath_;
@@ -86,19 +88,10 @@ private:
     std::recursive_mutex callbackMutex_;
 };
 
-inline bool ExceptionDumper::GetExceptionStatus() const
-{
-    return exceptionStatus_;
-}
+inline bool ExceptionDumper::GetExceptionStatus() const { return exceptionStatus_; }
 
-inline bool ExceptionDumper::GetArgsExceptionStatus() const
-{
-    return argsExceptionStatus_;
-}
+inline bool ExceptionDumper::GetArgsExceptionStatus() const { return argsExceptionStatus_; }
 
-inline bool ExceptionDumper::GetCoredumpStatus() const
-{
-    return coredumpStatus_;
-}
+inline bool ExceptionDumper::GetCoredumpStatus() const { return coredumpStatus_; }
 } // namespace Adx
 #endif // EXCEPTION_DUMPER_H

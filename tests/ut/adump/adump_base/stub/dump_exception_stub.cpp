@@ -28,7 +28,7 @@ void FreeExceptionRegInfo()
     g_exceptionRegInfoList.clear();
 }
 
-void SafeStrCopy(char *dest, const char *src, size_t maxLen)
+void SafeStrCopy(char* dest, const char* src, size_t maxLen)
 {
     if (dest == nullptr || src == nullptr) {
         return;
@@ -43,18 +43,18 @@ void SafeStrCopy(char *dest, const char *src, size_t maxLen)
     dest[srcLen] = '\0';
 }
 
-void SetKernelName(ExceptionDumpInfo &info, const char *name)
+void SetKernelName(ExceptionDumpInfo& info, const char* name)
 {
     SafeStrCopy(info.kernelName, name, MAX_KERNELNAME_LEN);
 }
 
-void SetDisplayName(ExceptionDumpInfo &info, const char *name)
+void SetDisplayName(ExceptionDumpInfo& info, const char* name)
 {
     SafeStrCopy(info.kernelDisplayName, name, MAX_KERNELNAME_LEN);
 }
 
-uint32_t FillCallbackResult(uint32_t realSizeVal, ExceptionDumpMode modeVal,
-                           uint32_t *realSize, ExceptionDumpMode *mode)
+uint32_t FillCallbackResult(
+    uint32_t realSizeVal, ExceptionDumpMode modeVal, uint32_t* realSize, ExceptionDumpMode* mode)
 {
     if (realSize != nullptr) {
         *realSize = realSizeVal;
@@ -65,8 +65,8 @@ uint32_t FillCallbackResult(uint32_t realSizeVal, ExceptionDumpMode modeVal,
     return 0;
 }
 
-uint32_t MockExceptionCallback(void *exceptionInfo, ExceptionDumpInfo *dumpInfo,
-                              uint32_t dumpSize, uint32_t *realSize, ExceptionDumpMode *mode)
+uint32_t MockExceptionCallback(
+    void* exceptionInfo, ExceptionDumpInfo* dumpInfo, uint32_t dumpSize, uint32_t* realSize, ExceptionDumpMode* mode)
 {
     (void)exceptionInfo;
     (void)dumpInfo;
@@ -74,8 +74,8 @@ uint32_t MockExceptionCallback(void *exceptionInfo, ExceptionDumpInfo *dumpInfo,
     return FillCallbackResult(0, ExceptionDumpMode::DUMP_MODE_NONE, realSize, mode);
 }
 
-uint32_t MockCallbackWithOverwrite(void *exceptionInfo, ExceptionDumpInfo *dumpInfo,
-                                  uint32_t dumpSize, uint32_t *realSize, ExceptionDumpMode *mode)
+uint32_t MockCallbackWithOverwrite(
+    void* exceptionInfo, ExceptionDumpInfo* dumpInfo, uint32_t dumpSize, uint32_t* realSize, ExceptionDumpMode* mode)
 {
     (void)exceptionInfo;
     if (dumpInfo != nullptr && dumpSize > 0) {
@@ -90,8 +90,8 @@ uint32_t MockCallbackWithOverwrite(void *exceptionInfo, ExceptionDumpInfo *dumpI
     return FillCallbackResult(1, ExceptionDumpMode::DUMP_MODE_OVERWRITE, realSize, mode);
 }
 
-uint32_t MockCallbackWithAdditional(void *exceptionInfo, ExceptionDumpInfo *dumpInfo,
-                                   uint32_t dumpSize, uint32_t *realSize, ExceptionDumpMode *mode)
+uint32_t MockCallbackWithAdditional(
+    void* exceptionInfo, ExceptionDumpInfo* dumpInfo, uint32_t dumpSize, uint32_t* realSize, ExceptionDumpMode* mode)
 {
     (void)exceptionInfo;
     if (dumpInfo != nullptr && dumpSize > 0) {
@@ -103,8 +103,8 @@ uint32_t MockCallbackWithAdditional(void *exceptionInfo, ExceptionDumpInfo *dump
     return FillCallbackResult(1, ExceptionDumpMode::DUMP_MODE_ADDITIONAL, realSize, mode);
 }
 
-uint32_t MockCallbackWithNone(void *exceptionInfo, ExceptionDumpInfo *dumpInfo,
-                             uint32_t dumpSize, uint32_t *realSize, ExceptionDumpMode *mode)
+uint32_t MockCallbackWithNone(
+    void* exceptionInfo, ExceptionDumpInfo* dumpInfo, uint32_t dumpSize, uint32_t* realSize, ExceptionDumpMode* mode)
 {
     (void)exceptionInfo;
     (void)dumpInfo;
@@ -112,8 +112,18 @@ uint32_t MockCallbackWithNone(void *exceptionInfo, ExceptionDumpInfo *dumpInfo,
     return FillCallbackResult(0, ExceptionDumpMode::DUMP_MODE_NONE, realSize, mode);
 }
 
-uint32_t MockCallbackWithInvalidMode(void *exceptionInfo, ExceptionDumpInfo *dumpInfo,
-                                     uint32_t dumpSize, uint32_t *realSize, ExceptionDumpMode *mode)
+// 声明 OVERWRITE 模式但 realSize=0：模拟回调侧数据缺失，用于验证聚合结果退化为 NONE 后默认 dump 兜底。
+uint32_t MockCallbackWithOverwriteNoData(
+    void* exceptionInfo, ExceptionDumpInfo* dumpInfo, uint32_t dumpSize, uint32_t* realSize, ExceptionDumpMode* mode)
+{
+    (void)exceptionInfo;
+    (void)dumpInfo;
+    (void)dumpSize;
+    return FillCallbackResult(0, ExceptionDumpMode::DUMP_MODE_OVERWRITE, realSize, mode);
+}
+
+uint32_t MockCallbackWithInvalidMode(
+    void* exceptionInfo, ExceptionDumpInfo* dumpInfo, uint32_t dumpSize, uint32_t* realSize, ExceptionDumpMode* mode)
 {
     (void)exceptionInfo;
     if (dumpInfo != nullptr && dumpSize > 0) {
@@ -125,8 +135,8 @@ uint32_t MockCallbackWithInvalidMode(void *exceptionInfo, ExceptionDumpInfo *dum
     return FillCallbackResult(1, static_cast<ExceptionDumpMode>(99U), realSize, mode);
 }
 
-uint32_t MockCallbackWithUnsafePathSlash(void *exceptionInfo, ExceptionDumpInfo *dumpInfo,
-                                        uint32_t dumpSize, uint32_t *realSize, ExceptionDumpMode *mode)
+uint32_t MockCallbackWithUnsafePathSlash(
+    void* exceptionInfo, ExceptionDumpInfo* dumpInfo, uint32_t dumpSize, uint32_t* realSize, ExceptionDumpMode* mode)
 {
     (void)exceptionInfo;
     if (dumpInfo != nullptr && dumpSize > 0) {
@@ -137,8 +147,8 @@ uint32_t MockCallbackWithUnsafePathSlash(void *exceptionInfo, ExceptionDumpInfo 
     return FillCallbackResult(1, ExceptionDumpMode::DUMP_MODE_OVERWRITE, realSize, mode);
 }
 
-uint32_t MockCallbackWithUnsafePathBackslash(void *exceptionInfo, ExceptionDumpInfo *dumpInfo,
-                                            uint32_t dumpSize, uint32_t *realSize, ExceptionDumpMode *mode)
+uint32_t MockCallbackWithUnsafePathBackslash(
+    void* exceptionInfo, ExceptionDumpInfo* dumpInfo, uint32_t dumpSize, uint32_t* realSize, ExceptionDumpMode* mode)
 {
     (void)exceptionInfo;
     if (dumpInfo != nullptr && dumpSize > 0) {
@@ -149,8 +159,8 @@ uint32_t MockCallbackWithUnsafePathBackslash(void *exceptionInfo, ExceptionDumpI
     return FillCallbackResult(1, ExceptionDumpMode::DUMP_MODE_OVERWRITE, realSize, mode);
 }
 
-uint32_t MockCallbackWithUnsafeParentDir(void *exceptionInfo, ExceptionDumpInfo *dumpInfo,
-                                        uint32_t dumpSize, uint32_t *realSize, ExceptionDumpMode *mode)
+uint32_t MockCallbackWithUnsafeParentDir(
+    void* exceptionInfo, ExceptionDumpInfo* dumpInfo, uint32_t dumpSize, uint32_t* realSize, ExceptionDumpMode* mode)
 {
     (void)exceptionInfo;
     if (dumpInfo != nullptr && dumpSize > 0) {
@@ -161,8 +171,8 @@ uint32_t MockCallbackWithUnsafeParentDir(void *exceptionInfo, ExceptionDumpInfo 
     return FillCallbackResult(1, ExceptionDumpMode::DUMP_MODE_ADDITIONAL, realSize, mode);
 }
 
-uint32_t MockCallbackWithUnsafeControlChar(void *exceptionInfo, ExceptionDumpInfo *dumpInfo,
-                                          uint32_t dumpSize, uint32_t *realSize, ExceptionDumpMode *mode)
+uint32_t MockCallbackWithUnsafeControlChar(
+    void* exceptionInfo, ExceptionDumpInfo* dumpInfo, uint32_t dumpSize, uint32_t* realSize, ExceptionDumpMode* mode)
 {
     (void)exceptionInfo;
     if (dumpInfo != nullptr && dumpSize > 0) {
@@ -173,8 +183,8 @@ uint32_t MockCallbackWithUnsafeControlChar(void *exceptionInfo, ExceptionDumpInf
     return FillCallbackResult(1, ExceptionDumpMode::DUMP_MODE_OVERWRITE, realSize, mode);
 }
 
-uint32_t MockCallbackWithEmptyNames(void *exceptionInfo, ExceptionDumpInfo *dumpInfo,
-                                   uint32_t dumpSize, uint32_t *realSize, ExceptionDumpMode *mode)
+uint32_t MockCallbackWithEmptyNames(
+    void* exceptionInfo, ExceptionDumpInfo* dumpInfo, uint32_t dumpSize, uint32_t* realSize, ExceptionDumpMode* mode)
 {
     (void)exceptionInfo;
     if (dumpInfo != nullptr && dumpSize > 0) {
@@ -188,4 +198,4 @@ uint32_t MockCallbackWithEmptyNames(void *exceptionInfo, ExceptionDumpInfo *dump
     }
     return FillCallbackResult(1, ExceptionDumpMode::DUMP_MODE_OVERWRITE, realSize, mode);
 }
-}
+} // namespace Adx

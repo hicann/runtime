@@ -33,10 +33,10 @@ const char* GetKernelMixSuffix(KernelMixType kernelMixType)
             return nullptr;
     }
 }
-}  // namespace
+} // namespace
 
-int32_t ExceptionInfoCommon::GetExceptionInfo(const rtExceptionInfo &exception,
-                                              rtExceptionArgsInfo_t &exceptionArgsInfo)
+int32_t ExceptionInfoCommon::GetExceptionInfo(
+    const rtExceptionInfo& exception, rtExceptionArgsInfo_t& exceptionArgsInfo)
 {
     rtExceptionExpandType_t exceptionTaskType = exception.expandInfo.type;
     if (exceptionTaskType == RT_EXCEPTION_AICORE) {
@@ -46,7 +46,8 @@ int32_t ExceptionInfoCommon::GetExceptionInfo(const rtExceptionInfo &exception,
     } else if (exceptionTaskType == RT_EXCEPTION_FUSION) {
         exceptionArgsInfo = exception.expandInfo.u.fusionInfo.u.aicoreCcuInfo.exceptionArgs;
     } else {
-        IDE_LOGW("Not support exception dump, type=%d(%s)", static_cast<int32_t>(exceptionTaskType),
+        IDE_LOGW(
+            "Not support exception dump, type=%d(%s)", static_cast<int32_t>(exceptionTaskType),
             GetExceptionTaskTypeName(exception).c_str());
         return ADUMP_FAILED;
     }
@@ -54,7 +55,7 @@ int32_t ExceptionInfoCommon::GetExceptionInfo(const rtExceptionInfo &exception,
     return ADUMP_SUCCESS;
 }
 
-std::string ExceptionInfoCommon::GetExceptionTaskTypeName(const rtExceptionInfo &exception)
+std::string ExceptionInfoCommon::GetExceptionTaskTypeName(const rtExceptionInfo& exception)
 {
     switch (exception.expandInfo.type) {
         case RT_EXCEPTION_INVALID:
@@ -76,48 +77,46 @@ std::string ExceptionInfoCommon::GetExceptionTaskTypeName(const rtExceptionInfo 
     }
 }
 
-bool ExceptionInfoCommon::IsSupportExceptionDump(const rtExceptionInfo &exception)
+bool ExceptionInfoCommon::IsSupportExceptionDump(const rtExceptionInfo& exception)
 {
-    if (exception.retcode == ACL_ERROR_RT_AICORE_OVER_FLOW ||
-        exception.retcode == ACL_ERROR_RT_AIVEC_OVER_FLOW ||
+    if (exception.retcode == ACL_ERROR_RT_AICORE_OVER_FLOW || exception.retcode == ACL_ERROR_RT_AIVEC_OVER_FLOW ||
         // Hardware faults do not need dump.
-        exception.retcode == ACL_ERROR_RT_DEVICE_MEM_ERROR ||
-        exception.retcode == ACL_ERROR_RT_SUSPECT_REMOTE_ERROR ||
+        exception.retcode == ACL_ERROR_RT_DEVICE_MEM_ERROR || exception.retcode == ACL_ERROR_RT_SUSPECT_REMOTE_ERROR ||
         exception.retcode == ACL_ERROR_RT_LINK_ERROR) {
-        IDE_LOGW("Not support exception dump, rts retcode=%u.", exception.retcode);
+        IDE_LOGE("Not support exception dump, rts retcode=%u.", exception.retcode);
         return false;
     }
 
     rtExceptionExpandType_t exceptionType = exception.expandInfo.type;
-    if (exceptionType == RT_EXCEPTION_FFTS_PLUS ||
-        exceptionType == RT_EXCEPTION_AICORE ||
+    if (exceptionType == RT_EXCEPTION_FFTS_PLUS || exceptionType == RT_EXCEPTION_AICORE ||
         exceptionType == RT_EXCEPTION_FUSION ||
         // Supported for callback exception dump.
         exceptionType == RT_EXCEPTION_AICPU) {
         return true;
     }
 
-    IDE_LOGW("Not support exception dump, type=%d(%s)", static_cast<int32_t>(exceptionType),
+    IDE_LOGE(
+        "Not support exception dump, type=%d(%s)", static_cast<int32_t>(exceptionType),
         GetExceptionTaskTypeName(exception).c_str());
     return false;
 }
 
-bool ExceptionInfoCommon::IsSupportDefaultExceptionDump(const rtExceptionInfo &exception)
+bool ExceptionInfoCommon::IsSupportDefaultExceptionDump(const rtExceptionInfo& exception)
 {
     rtExceptionExpandType_t exceptionType = exception.expandInfo.type;
-    if (exceptionType == RT_EXCEPTION_FFTS_PLUS ||
-        exceptionType == RT_EXCEPTION_AICORE ||
+    if (exceptionType == RT_EXCEPTION_FFTS_PLUS || exceptionType == RT_EXCEPTION_AICORE ||
         exceptionType == RT_EXCEPTION_FUSION) {
         return true;
     }
-    IDE_LOGW("Not support default exception dump, type=%d(%s)", static_cast<int32_t>(exceptionType),
+    IDE_LOGW(
+        "Not support default exception dump, type=%d(%s)", static_cast<int32_t>(exceptionType),
         GetExceptionTaskTypeName(exception).c_str());
     return false;
 }
 
-std::string ExceptionInfoCommon::GetKernelNameWithoutMixSuffix(const std::string &kernelName)
+std::string ExceptionInfoCommon::GetKernelNameWithoutMixSuffix(const std::string& kernelName)
 {
-    const char *suffix = GetKernelMixSuffix(GetKernelMixType(kernelName));
+    const char* suffix = GetKernelMixSuffix(GetKernelMixType(kernelName));
     if (suffix == nullptr) {
         return kernelName;
     }
@@ -128,11 +127,11 @@ std::string ExceptionInfoCommon::GetKernelNameWithoutMixSuffix(const std::string
     return processedKernelName;
 }
 
-std::string ExceptionInfoCommon::GetExceptionKernelName(const rtExceptionInfo &exception)
+std::string ExceptionInfoCommon::GetExceptionKernelName(const rtExceptionInfo& exception)
 {
     std::string rawKernelName;
     if (exception.expandInfo.type == RT_EXCEPTION_AICPU) {
-        const rtAicpuExDetailInfo_t &aicpuInfo = exception.expandInfo.u.aicpuInfo;
+        const rtAicpuExDetailInfo_t& aicpuInfo = exception.expandInfo.u.aicpuInfo;
         if (aicpuInfo.kernelName == nullptr) {
             return "";
         }
@@ -143,7 +142,7 @@ std::string ExceptionInfoCommon::GetExceptionKernelName(const rtExceptionInfo &e
             return "";
         }
 
-        const rtExceptionKernelInfo_t &kernelInfo = exceptionArgsInfo.exceptionKernelInfo;
+        const rtExceptionKernelInfo_t& kernelInfo = exceptionArgsInfo.exceptionKernelInfo;
         if (kernelInfo.kernelName == nullptr || kernelInfo.kernelNameSize == 0) {
             return "";
         }
@@ -153,21 +152,22 @@ std::string ExceptionInfoCommon::GetExceptionKernelName(const rtExceptionInfo &e
     return GetKernelNameWithoutMixSuffix(rawKernelName);
 }
 
-int32_t ExceptionInfoCommon::GetKernelDeviceAddr(rtBinHandle binHandle, void * &devAddr)
+int32_t ExceptionInfoCommon::GetKernelDeviceAddr(rtBinHandle binHandle, void*& devAddr)
 {
     devAddr = nullptr;
     uint32_t binSize = 0;
     IDE_CTRL_VALUE_WARN(binHandle != nullptr, return ADUMP_FAILED, "bindHandle is nullptr.");
     rtError_t ret = rtsBinaryGetDevAddress(binHandle, &devAddr, &binSize);
-    IDE_CTRL_VALUE_FAILED(ret == RT_ERROR_NONE && devAddr != nullptr, return ADUMP_FAILED,
-        "rtsBinaryGetDevAddress failed, ret=%d, binHandle=%p, devAddr=%p.",
-        static_cast<int32_t>(ret), binHandle, devAddr);
+    IDE_CTRL_VALUE_FAILED(
+        ret == RT_ERROR_NONE && devAddr != nullptr, return ADUMP_FAILED,
+        "rtsBinaryGetDevAddress failed, ret=%d, binHandle=%p, devAddr=%p.", static_cast<int32_t>(ret), binHandle,
+        devAddr);
 
     IDE_LOGI("The device address of binHandle(%p) is %p, binSize=%u.", binHandle, devAddr, binSize);
     return ADUMP_SUCCESS;
 }
 
-KernelMixType ExceptionInfoCommon::GetKernelMixType(const std::string &kernelName)
+KernelMixType ExceptionInfoCommon::GetKernelMixType(const std::string& kernelName)
 {
     if (kernelName.size() > std::strlen(MIX_AIC_SUFFIX) && StrUtils::EndsWith(kernelName, MIX_AIC_SUFFIX)) {
         return KernelMixType::AIC;
@@ -178,26 +178,28 @@ KernelMixType ExceptionInfoCommon::GetKernelMixType(const std::string &kernelNam
     return KernelMixType::NONE;
 }
 
-int32_t ExceptionInfoCommon::GetExceptionRegInfo(const rtExceptionInfo &exception, ExceptionRegInfo &exceptionRegInfo)
+int32_t ExceptionInfoCommon::GetExceptionRegInfo(const rtExceptionInfo& exception, ExceptionRegInfo& exceptionRegInfo)
 {
     rtError_t rtRet = rtGetExceptionRegInfo(&exception, &exceptionRegInfo.errRegInfo, &exceptionRegInfo.coreNum);
-    IDE_CTRL_VALUE_FAILED(rtRet == RT_ERROR_NONE, return ADUMP_FAILED,
-        "rtGetExceptionRegInfo failed. ret: %d", static_cast<int32_t>(rtRet));
+    IDE_CTRL_VALUE_FAILED(
+        rtRet == RT_ERROR_NONE, return ADUMP_FAILED, "rtGetExceptionRegInfo failed. ret: %d",
+        static_cast<int32_t>(rtRet));
 
     IDE_LOGI("Get exception register information. coreNum=%u", exceptionRegInfo.coreNum);
     return ADUMP_SUCCESS;
 }
 
-int32_t ExceptionInfoCommon::GetBinDataFromHandle(rtBinHandle binHandle, std::string &binData, uint32_t &binSize)
+int32_t ExceptionInfoCommon::GetBinDataFromHandle(rtBinHandle binHandle, std::string& binData, uint32_t& binSize)
 {
     IDE_CTRL_VALUE_FAILED(binHandle != nullptr, return ADUMP_FAILED, "binHandle is null");
 
-    void *bufAddr = nullptr;
+    void* bufAddr = nullptr;
     uint32_t bufSize = 0;
     rtError_t ret = rtGetBinBuffer(binHandle, RT_BIN_HOST_ADDR, &bufAddr, &bufSize);
-    IDE_CTRL_VALUE_FAILED(ret == RT_ERROR_NONE && bufAddr != nullptr && bufSize != 0, return ADUMP_FAILED,
-        "rtGetBinBuffer failed, ret=%d, binHandle=%p, bufAddr=%p, bufSize=%u.",
-        static_cast<int32_t>(ret), binHandle, bufAddr, bufSize);
+    IDE_CTRL_VALUE_FAILED(
+        ret == RT_ERROR_NONE && bufAddr != nullptr && bufSize != 0, return ADUMP_FAILED,
+        "rtGetBinBuffer failed, ret=%d, binHandle=%p, bufAddr=%p, bufSize=%u.", static_cast<int32_t>(ret), binHandle,
+        bufAddr, bufSize);
 
     IDE_LOGI("Get kernel bin data success. binHandle=%p, bufAddr=%p, bufSize=%u", binHandle, bufAddr, bufSize);
     binData.assign(reinterpret_cast<char*>(bufAddr), bufSize);
@@ -205,4 +207,4 @@ int32_t ExceptionInfoCommon::GetBinDataFromHandle(rtBinHandle binHandle, std::st
     return ADUMP_SUCCESS;
 }
 
-}  // namespace Adx
+} // namespace Adx

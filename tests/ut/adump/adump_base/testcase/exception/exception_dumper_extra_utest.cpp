@@ -30,16 +30,16 @@ uint32_t g_aicpuCallbackCount = 0U;
 rtExceptionExpandType_t g_aicpuCallbackType = RT_EXCEPTION_INVALID;
 
 // 记录调用次数与传入的异常类型，用于验证回调确实被触发。
-uint32_t CountingOverwriteCallback(void *exceptionInfo, ExceptionDumpInfo *dumpInfo,
-                                   uint32_t dumpSize, uint32_t *realSize, ExceptionDumpMode *mode)
+uint32_t CountingOverwriteCallback(
+    void* exceptionInfo, ExceptionDumpInfo* dumpInfo, uint32_t dumpSize, uint32_t* realSize, ExceptionDumpMode* mode)
 {
     ++g_aicpuCallbackCount;
     if (exceptionInfo != nullptr) {
-        g_aicpuCallbackType = static_cast<rtExceptionInfo *>(exceptionInfo)->expandInfo.type;
+        g_aicpuCallbackType = static_cast<rtExceptionInfo*>(exceptionInfo)->expandInfo.type;
     }
     return MockCallbackWithOverwrite(exceptionInfo, dumpInfo, dumpSize, realSize, mode);
 }
-}  // namespace
+} // namespace
 
 class ExceptionDumperExtraUtest : public testing::Test {
 protected:
@@ -290,7 +290,7 @@ TEST_F(ExceptionDumperExtraUtest, GetExtraDumpCPath_Empty)
 {
     ExceptionDumper dumper;
     // extraDumpPath_ is empty by default → returns nullptr
-    const char *path = dumper.GetExtraDumpCPath();
+    const char* path = dumper.GetExtraDumpCPath();
     EXPECT_EQ(path, nullptr);
 }
 
@@ -454,12 +454,8 @@ TEST_F(ExceptionDumperExtraUtest, DumpException_IgnoredRetcode_Rejected)
     ASSERT_EQ(dumper.ExceptionDumperInit(DumpType::EXCEPTION, config), ADUMP_SUCCESS);
 
     const uint32_t ignoredRetcodes[] = {
-        ACL_ERROR_RT_AICORE_OVER_FLOW,
-        ACL_ERROR_RT_AIVEC_OVER_FLOW,
-        ACL_ERROR_RT_DEVICE_MEM_ERROR,
-        ACL_ERROR_RT_SUSPECT_REMOTE_ERROR,
-        ACL_ERROR_RT_LINK_ERROR
-    };
+        ACL_ERROR_RT_AICORE_OVER_FLOW, ACL_ERROR_RT_AIVEC_OVER_FLOW, ACL_ERROR_RT_DEVICE_MEM_ERROR,
+        ACL_ERROR_RT_SUSPECT_REMOTE_ERROR, ACL_ERROR_RT_LINK_ERROR};
 
     for (const uint32_t retcode : ignoredRetcodes) {
         rtExceptionInfo exception = {};
@@ -480,11 +476,7 @@ TEST_F(ExceptionDumperExtraUtest, DumpException_UnsupportedType_Rejected)
     config.dumpPath = "/tmp/adump_unsupported_type_test";
     ASSERT_EQ(dumper.ExceptionDumperInit(DumpType::EXCEPTION, config), ADUMP_SUCCESS);
 
-    const rtExceptionExpandType_t unsupportedTypes[] = {
-        RT_EXCEPTION_INVALID,
-        RT_EXCEPTION_UB,
-        RT_EXCEPTION_CCU
-    };
+    const rtExceptionExpandType_t unsupportedTypes[] = {RT_EXCEPTION_INVALID, RT_EXCEPTION_UB, RT_EXCEPTION_CCU};
 
     for (const rtExceptionExpandType_t type : unsupportedTypes) {
         rtExceptionInfo exception = {};
@@ -663,6 +655,208 @@ TEST_F(ExceptionDumperExtraUtest, DumpException_Aicore_CallbackNone_OnlyDefault)
     EXPECT_EQ(dumper.DumpException(exception), ADUMP_SUCCESS);
 }
 
+// ============================================================================
+// L1 exception (DumpType::EXCEPTION) also supports ExceptionDumpCallback
+// ============================================================================
+TEST_F(ExceptionDumperExtraUtest, DumpException_L1_CallbackOverwrite_OnlyDumpCallbackData)
+{
+    g_aicpuCallbackCount = 0U;
+    g_aicpuCallbackType = RT_EXCEPTION_INVALID;
+
+    ExceptionDumper dumper;
+    DumpConfig config;
+    config.dumpStatus = "on";
+    config.dumpPath = "/tmp/adump_l1_overwrite_test";
+    ASSERT_EQ(dumper.ExceptionDumperInit(DumpType::EXCEPTION, config), ADUMP_SUCCESS);
+    ASSERT_TRUE(dumper.GetExceptionStatus());
+    ASSERT_EQ(dumper.RegisterExceptionDumpCallback(CountingOverwriteCallback), ADUMP_SUCCESS);
+
+    MOCKER_CPP(&ExceptionDumper::DumpCallbackData).expects(once());
+    MOCKER_CPP(&ExceptionDumper::DumpNormalExceptionDefault).expects(never());
+
+    rtExceptionInfo exception = {};
+    exception.deviceid = 0U;
+    exception.taskid = 1U;
+    exception.streamid = 2U;
+    exception.expandInfo.type = RT_EXCEPTION_AICORE;
+    EXPECT_EQ(dumper.DumpException(exception), ADUMP_SUCCESS);
+    EXPECT_EQ(g_aicpuCallbackCount, 1U);
+    EXPECT_EQ(g_aicpuCallbackType, RT_EXCEPTION_AICORE);
+    g_aicpuCallbackCount = 0U;
+    g_aicpuCallbackType = RT_EXCEPTION_INVALID;
+}
+
+TEST_F(ExceptionDumperExtraUtest, DumpException_L1_CallbackAdditional_DumpBoth)
+{
+    ExceptionDumper dumper;
+    DumpConfig config;
+    config.dumpStatus = "on";
+    config.dumpPath = "/tmp/adump_l1_additional_test";
+    ASSERT_EQ(dumper.ExceptionDumperInit(DumpType::EXCEPTION, config), ADUMP_SUCCESS);
+    ASSERT_EQ(dumper.RegisterExceptionDumpCallback(MockCallbackWithAdditional), ADUMP_SUCCESS);
+
+    MOCKER_CPP(&ExceptionDumper::DumpCallbackData).expects(once());
+    MOCKER_CPP(&ExceptionDumper::DumpNormalExceptionDefault).expects(once()).will(returnValue(ADUMP_SUCCESS));
+
+    rtExceptionInfo exception = {};
+    exception.deviceid = 0U;
+    exception.taskid = 1U;
+    exception.streamid = 2U;
+    exception.expandInfo.type = RT_EXCEPTION_AICORE;
+    EXPECT_EQ(dumper.DumpException(exception), ADUMP_SUCCESS);
+}
+
+TEST_F(ExceptionDumperExtraUtest, DumpException_L1_CallbackNone_OnlyDefault)
+{
+    ExceptionDumper dumper;
+    DumpConfig config;
+    config.dumpStatus = "on";
+    config.dumpPath = "/tmp/adump_l1_none_test";
+    ASSERT_EQ(dumper.ExceptionDumperInit(DumpType::EXCEPTION, config), ADUMP_SUCCESS);
+    ASSERT_EQ(dumper.RegisterExceptionDumpCallback(MockCallbackWithNone), ADUMP_SUCCESS);
+
+    MOCKER_CPP(&ExceptionDumper::DumpCallbackData).expects(never());
+    MOCKER_CPP(&ExceptionDumper::DumpNormalExceptionDefault).expects(once()).will(returnValue(ADUMP_SUCCESS));
+
+    rtExceptionInfo exception = {};
+    exception.deviceid = 0U;
+    exception.taskid = 1U;
+    exception.streamid = 3U;
+    exception.expandInfo.type = RT_EXCEPTION_AICORE;
+    EXPECT_EQ(dumper.DumpException(exception), ADUMP_SUCCESS);
+}
+
+TEST_F(ExceptionDumperExtraUtest, DumpException_L1_NoCallback_OnlyDefault)
+{
+    ExceptionDumper dumper;
+    DumpConfig config;
+    config.dumpStatus = "on";
+    config.dumpPath = "/tmp/adump_l1_nocallback_test";
+    ASSERT_EQ(dumper.ExceptionDumperInit(DumpType::EXCEPTION, config), ADUMP_SUCCESS);
+
+    MOCKER_CPP(&ExceptionDumper::DumpCallbackData).expects(never());
+    MOCKER_CPP(&ExceptionDumper::DumpNormalExceptionDefault).expects(once()).will(returnValue(ADUMP_SUCCESS));
+
+    rtExceptionInfo exception = {};
+    exception.deviceid = 0U;
+    exception.taskid = 1U;
+    exception.streamid = 4U;
+    exception.expandInfo.type = RT_EXCEPTION_AICORE;
+    EXPECT_EQ(dumper.DumpException(exception), ADUMP_SUCCESS);
+}
+
+// 回调声明 OVERWRITE 但 realSize=0：InvokeCallbacks 校验 continue 跳过该回调，聚合模式保持 NONE，
+// 必须回落默认 dump，且 DumpCallbackData 不得被调用。
+TEST_F(ExceptionDumperExtraUtest, DumpException_L1_CallbackOverwriteEmptyData_FallbackDefault)
+{
+    ExceptionDumper dumper;
+    DumpConfig config;
+    config.dumpStatus = "on";
+    config.dumpPath = "/tmp/adump_l1_overwrite_empty_test";
+    ASSERT_EQ(dumper.ExceptionDumperInit(DumpType::EXCEPTION, config), ADUMP_SUCCESS);
+    ASSERT_EQ(dumper.RegisterExceptionDumpCallback(MockCallbackWithOverwriteNoData), ADUMP_SUCCESS);
+
+    MOCKER_CPP(&ExceptionDumper::DumpCallbackData).expects(never());
+    MOCKER_CPP(&ExceptionDumper::DumpNormalExceptionDefault).expects(once()).will(returnValue(ADUMP_SUCCESS));
+
+    rtExceptionInfo exception = {};
+    exception.deviceid = 0U;
+    exception.taskid = 1U;
+    exception.streamid = 5U;
+    exception.expandInfo.type = RT_EXCEPTION_AICORE;
+    EXPECT_EQ(dumper.DumpException(exception), ADUMP_SUCCESS);
+}
+
+// GetExceptionRegInfo 失败：InvokeCallbacks 直接返回失败，不执行默认 dump 兜底。
+TEST_F(ExceptionDumperExtraUtest, DumpException_L1_GetRegInfoFailed_NoDefaultFallback)
+{
+    ExceptionDumper dumper;
+    DumpConfig config;
+    config.dumpStatus = "on";
+    config.dumpPath = "/tmp/adump_l1_reginfo_fail_test";
+    ASSERT_EQ(dumper.ExceptionDumperInit(DumpType::EXCEPTION, config), ADUMP_SUCCESS);
+    ASSERT_EQ(dumper.RegisterExceptionDumpCallback(MockCallbackWithAdditional), ADUMP_SUCCESS);
+
+    MOCKER_CPP(&ExceptionInfoCommon::GetExceptionRegInfo).stubs().will(returnValue(ADUMP_FAILED));
+    MOCKER_CPP(&ExceptionDumper::DumpCallbackData).expects(never());
+    MOCKER_CPP(&ExceptionDumper::DumpNormalExceptionDefault).expects(never());
+
+    rtExceptionInfo exception = {};
+    exception.deviceid = 0U;
+    exception.taskid = 1U;
+    exception.streamid = 6U;
+    exception.expandInfo.type = RT_EXCEPTION_AICORE;
+    EXPECT_EQ(dumper.DumpException(exception), ADUMP_FAILED);
+}
+
+// 多回调聚合优先级：OVERWRITE(1) + NONE(0) → 聚合 OVERWRITE，仅 dump 回调数据。
+TEST_F(ExceptionDumperExtraUtest, DumpException_L1_MultiCallbacks_OverwriteWinsOverNone)
+{
+    ExceptionDumper dumper;
+    DumpConfig config;
+    config.dumpStatus = "on";
+    config.dumpPath = "/tmp/adump_l1_multi_overwrite_test";
+    ASSERT_EQ(dumper.ExceptionDumperInit(DumpType::EXCEPTION, config), ADUMP_SUCCESS);
+    ASSERT_EQ(dumper.RegisterExceptionDumpCallback(MockCallbackWithNone), ADUMP_SUCCESS);
+    ASSERT_EQ(dumper.RegisterExceptionDumpCallback(MockCallbackWithOverwrite), ADUMP_SUCCESS);
+
+    MOCKER_CPP(&ExceptionDumper::DumpCallbackData).expects(once());
+    MOCKER_CPP(&ExceptionDumper::DumpNormalExceptionDefault).expects(never());
+
+    rtExceptionInfo exception = {};
+    exception.deviceid = 0U;
+    exception.taskid = 1U;
+    exception.streamid = 7U;
+    exception.expandInfo.type = RT_EXCEPTION_AICORE;
+    EXPECT_EQ(dumper.DumpException(exception), ADUMP_SUCCESS);
+}
+
+// 多回调聚合优先级：OVERWRITE(1) + ADDITIONAL(2) → 聚合 ADDITIONAL，回调数据与默认 dump 均执行。
+TEST_F(ExceptionDumperExtraUtest, DumpException_L1_MultiCallbacks_AdditionalWinsOverOverwrite)
+{
+    ExceptionDumper dumper;
+    DumpConfig config;
+    config.dumpStatus = "on";
+    config.dumpPath = "/tmp/adump_l1_multi_additional_test";
+    ASSERT_EQ(dumper.ExceptionDumperInit(DumpType::EXCEPTION, config), ADUMP_SUCCESS);
+    ASSERT_EQ(dumper.RegisterExceptionDumpCallback(MockCallbackWithOverwrite), ADUMP_SUCCESS);
+    ASSERT_EQ(dumper.RegisterExceptionDumpCallback(MockCallbackWithAdditional), ADUMP_SUCCESS);
+
+    MOCKER_CPP(&ExceptionDumper::DumpCallbackData).expects(once());
+    MOCKER_CPP(&ExceptionDumper::DumpNormalExceptionDefault).expects(once()).will(returnValue(ADUMP_SUCCESS));
+
+    rtExceptionInfo exception = {};
+    exception.deviceid = 0U;
+    exception.taskid = 1U;
+    exception.streamid = 5U;
+    exception.expandInfo.type = RT_EXCEPTION_AICORE;
+    EXPECT_EQ(dumper.DumpException(exception), ADUMP_SUCCESS);
+}
+
+// 多回调聚合优先级：NONE(0) + NONE(0) + ADDITIONAL(2) → 聚合 ADDITIONAL；NONE 回调无数据，
+// 仅 ADDITIONAL 回调的数据参与 DumpCallbackData，默认 dump 仍执行。
+TEST_F(ExceptionDumperExtraUtest, DumpException_L1_MultiCallbacks_NoneAndAdditional_Mixed)
+{
+    ExceptionDumper dumper;
+    DumpConfig config;
+    config.dumpStatus = "on";
+    config.dumpPath = "/tmp/adump_l1_multi_mixed_test";
+    ASSERT_EQ(dumper.ExceptionDumperInit(DumpType::EXCEPTION, config), ADUMP_SUCCESS);
+    ASSERT_EQ(dumper.RegisterExceptionDumpCallback(MockCallbackWithNone), ADUMP_SUCCESS);
+    ASSERT_EQ(dumper.RegisterExceptionDumpCallback(MockCallbackWithAdditional), ADUMP_SUCCESS);
+    ASSERT_EQ(dumper.RegisterExceptionDumpCallback(MockCallbackWithNone), ADUMP_SUCCESS);
+
+    MOCKER_CPP(&ExceptionDumper::DumpCallbackData).expects(once());
+    MOCKER_CPP(&ExceptionDumper::DumpNormalExceptionDefault).expects(once()).will(returnValue(ADUMP_SUCCESS));
+
+    rtExceptionInfo exception = {};
+    exception.deviceid = 0U;
+    exception.taskid = 1U;
+    exception.streamid = 6U;
+    exception.expandInfo.type = RT_EXCEPTION_AICORE;
+    EXPECT_EQ(dumper.DumpException(exception), ADUMP_SUCCESS);
+}
+
 TEST_F(ExceptionDumperExtraUtest, DumpArgsExceptionInner_NoCallbacks)
 {
     ExceptionDumper dumper;
@@ -810,14 +1004,14 @@ TEST_F(ExceptionDumperExtraUtest, DumpArgsExceptionInner_EmptyNamesAllowed)
 
 namespace {
 const std::string g_hostBinContentForSymFail = "host kernel bin content for symbolize-fail regression";
-int32_t StubGetBinDataForSymFail(rtBinHandle binHandle, std::string &binData, uint32_t &binSize)
+int32_t StubGetBinDataForSymFail(rtBinHandle binHandle, std::string& binData, uint32_t& binSize)
 {
     (void)binHandle;
     binData = g_hostBinContentForSymFail;
     binSize = static_cast<uint32_t>(g_hostBinContentForSymFail.size());
     return ADUMP_SUCCESS;
 }
-}  // namespace
+} // namespace
 
 // 编排层端到端回归：DumpException(args 默认路径) 先无条件 DumpHostKernelBinBeforeSymbolize 落 _host.o，
 // 再调 KernelSymbolLocator::DumpErrorSymbols 做符号化。这里打桩符号解析(InitFromBinBuffer)失败，
@@ -840,9 +1034,7 @@ TEST_F(ExceptionDumperExtraUtest, DumpArgsException_HostBinDroppedWhenSymbolizeF
     // 落盘链依赖 GetBinDataFromHandle 返回 bin buffer，打桩成功以确保 _host.o 能落盘且内容可校验。
     MOCKER_CPP(&ExceptionInfoCommon::GetBinDataFromHandle).stubs().will(invoke(StubGetBinDataForSymFail));
     // 关键：符号解析失败，使 DumpErrorSymbols 在 InitFromBinBuffer 处提前 return，不再落盘。
-    MOCKER_CPP(&KernelSymbolLocator::InitFromBinBuffer)
-        .stubs()
-        .will(returnValue(static_cast<int32_t>(ADUMP_FAILED)));
+    MOCKER_CPP(&KernelSymbolLocator::InitFromBinBuffer).stubs().will(returnValue(static_cast<int32_t>(ADUMP_FAILED)));
 
     char hostKernel[] = "host kernel bin file stub";
     rtExceptionInfo exception = {};
@@ -850,10 +1042,10 @@ TEST_F(ExceptionDumperExtraUtest, DumpArgsException_HostBinDroppedWhenSymbolizeF
     exception.taskid = 1U;
     exception.streamid = 2U;
     exception.expandInfo.type = RT_EXCEPTION_AICORE;
-    auto &kernelInfo = exception.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo;
+    auto& kernelInfo = exception.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo;
     kernelInfo.bin = static_cast<rtBinHandle>(hostKernel);
     kernelInfo.binSize = sizeof(hostKernel);
-    kernelInfo.kernelName = const_cast<char *>(kernelName.data());
+    kernelInfo.kernelName = const_cast<char*>(kernelName.data());
     kernelInfo.kernelNameSize = kernelName.size();
 
     // 最终返回值不作断言：后续 args 解析在无真实 device args 时可能失败，

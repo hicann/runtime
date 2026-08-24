@@ -13,40 +13,42 @@
 #include <vector>
 #include "adump_pub.h"
 
-extern std::vector<void *> g_exceptionRegInfoList;
+extern std::vector<void*> g_exceptionRegInfoList;
 
 namespace Adx {
 void FreeExceptionRegInfo();
 
-void SafeStrCopy(char *dest, const char *src, size_t maxLen);
-void SetKernelName(ExceptionDumpInfo &info, const char *name);
-void SetDisplayName(ExceptionDumpInfo &info, const char *name);
-uint32_t FillCallbackResult(uint32_t realSizeVal, ExceptionDumpMode modeVal,
-                           uint32_t *realSize, ExceptionDumpMode *mode);
-uint32_t MockExceptionCallback(void *exceptionInfo, ExceptionDumpInfo *dumpInfo,
-                              uint32_t dumpSize, uint32_t *realSize, ExceptionDumpMode *mode);
-uint32_t MockCallbackWithOverwrite(void *exceptionInfo, ExceptionDumpInfo *dumpInfo,
-                                  uint32_t dumpSize, uint32_t *realSize, ExceptionDumpMode *mode);
-uint32_t MockCallbackWithAdditional(void *exceptionInfo, ExceptionDumpInfo *dumpInfo,
-                                   uint32_t dumpSize, uint32_t *realSize, ExceptionDumpMode *mode);
-uint32_t MockCallbackWithNone(void *exceptionInfo, ExceptionDumpInfo *dumpInfo,
-                             uint32_t dumpSize, uint32_t *realSize, ExceptionDumpMode *mode);
-uint32_t MockCallbackWithInvalidMode(void *exceptionInfo, ExceptionDumpInfo *dumpInfo,
-                                     uint32_t dumpSize, uint32_t *realSize, ExceptionDumpMode *mode);
+void SafeStrCopy(char* dest, const char* src, size_t maxLen);
+void SetKernelName(ExceptionDumpInfo& info, const char* name);
+void SetDisplayName(ExceptionDumpInfo& info, const char* name);
+uint32_t FillCallbackResult(
+    uint32_t realSizeVal, ExceptionDumpMode modeVal, uint32_t* realSize, ExceptionDumpMode* mode);
+uint32_t MockExceptionCallback(
+    void* exceptionInfo, ExceptionDumpInfo* dumpInfo, uint32_t dumpSize, uint32_t* realSize, ExceptionDumpMode* mode);
+uint32_t MockCallbackWithOverwrite(
+    void* exceptionInfo, ExceptionDumpInfo* dumpInfo, uint32_t dumpSize, uint32_t* realSize, ExceptionDumpMode* mode);
+uint32_t MockCallbackWithAdditional(
+    void* exceptionInfo, ExceptionDumpInfo* dumpInfo, uint32_t dumpSize, uint32_t* realSize, ExceptionDumpMode* mode);
+uint32_t MockCallbackWithNone(
+    void* exceptionInfo, ExceptionDumpInfo* dumpInfo, uint32_t dumpSize, uint32_t* realSize, ExceptionDumpMode* mode);
+uint32_t MockCallbackWithOverwriteNoData(
+    void* exceptionInfo, ExceptionDumpInfo* dumpInfo, uint32_t dumpSize, uint32_t* realSize, ExceptionDumpMode* mode);
+uint32_t MockCallbackWithInvalidMode(
+    void* exceptionInfo, ExceptionDumpInfo* dumpInfo, uint32_t dumpSize, uint32_t* realSize, ExceptionDumpMode* mode);
 
-uint32_t MockCallbackWithUnsafePathSlash(void *exceptionInfo, ExceptionDumpInfo *dumpInfo,
-                                        uint32_t dumpSize, uint32_t *realSize, ExceptionDumpMode *mode);
+uint32_t MockCallbackWithUnsafePathSlash(
+    void* exceptionInfo, ExceptionDumpInfo* dumpInfo, uint32_t dumpSize, uint32_t* realSize, ExceptionDumpMode* mode);
 
-uint32_t MockCallbackWithUnsafePathBackslash(void *exceptionInfo, ExceptionDumpInfo *dumpInfo,
-                                            uint32_t dumpSize, uint32_t *realSize, ExceptionDumpMode *mode);
+uint32_t MockCallbackWithUnsafePathBackslash(
+    void* exceptionInfo, ExceptionDumpInfo* dumpInfo, uint32_t dumpSize, uint32_t* realSize, ExceptionDumpMode* mode);
 
-uint32_t MockCallbackWithUnsafeParentDir(void *exceptionInfo, ExceptionDumpInfo *dumpInfo,
-                                        uint32_t dumpSize, uint32_t *realSize, ExceptionDumpMode *mode);
+uint32_t MockCallbackWithUnsafeParentDir(
+    void* exceptionInfo, ExceptionDumpInfo* dumpInfo, uint32_t dumpSize, uint32_t* realSize, ExceptionDumpMode* mode);
 
-uint32_t MockCallbackWithUnsafeControlChar(void *exceptionInfo, ExceptionDumpInfo *dumpInfo,
-                                          uint32_t dumpSize, uint32_t *realSize, ExceptionDumpMode *mode);
+uint32_t MockCallbackWithUnsafeControlChar(
+    void* exceptionInfo, ExceptionDumpInfo* dumpInfo, uint32_t dumpSize, uint32_t* realSize, ExceptionDumpMode* mode);
 
-uint32_t MockCallbackWithEmptyNames(void *exceptionInfo, ExceptionDumpInfo *dumpInfo,
-                                   uint32_t dumpSize, uint32_t *realSize, ExceptionDumpMode *mode);
-}
+uint32_t MockCallbackWithEmptyNames(
+    void* exceptionInfo, ExceptionDumpInfo* dumpInfo, uint32_t dumpSize, uint32_t* realSize, ExceptionDumpMode* mode);
+} // namespace Adx
 #endif // TEST_DUMP_EXCEPTION_STUB_H
