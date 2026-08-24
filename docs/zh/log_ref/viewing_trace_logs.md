@@ -6,7 +6,7 @@ trace机制是指在程序运行过程中将软件栈的维测信息记录在内
 
 ## 日志说明
 
-trace日志落盘根目录默认为“$HOME/ascend/atrace/”，也可以通过环境变量ASCEND\_WORK\_PATH指定trace日志落盘路径，例如设置export ASCEND\_WORK\_PATH=/home/test，具体请参考[《环境变量参考》](https://hiascend.com/document/redirect/CannCommunityEnvRef)。
+trace日志落盘根目录默认为“$HOME/ascend/atrace/”，也可以通过环境变量ASCEND\_WORK\_PATH指定trace日志落盘路径，例如设置export ASCEND\_WORK\_PATH=/home/test，具体请参考《[环境变量参考](https://gitcode.com/cann/docs/blob/9.2.0-beta.2/docs/zh/env-vars/README.md)》。
 
 trace日志具体落盘路径为：“`$HOME/ascend/atrace/trace_{进程组pid}_{首次加载trace动态库的进程pid}_{首次加载trace动态库的时间戳}/{event_name}_event_{当前进程pid}_{目录生成时的时间戳}/`”，其中event\_name为事件类型，取值为：schedule（业务流程异常，如算子执行报错等）、stackcore（进程崩溃或收到异常信号）、exit（进程正常退出析构）。
 
@@ -19,7 +19,7 @@ trace日志具体落盘路径为：“`$HOME/ascend/atrace/trace_{进程组pid}_
 |`schedule_tracer_{object_name}.txt`|Runtime、HCCL等模块在运行过程中上报的轨迹信息，记录进程运行过程。|
 |`schedule_tracer_{object_name}.bin`|AICPU等模块在运行过程中上报的轨迹信息，记录进程运行过程。以二进制格式存储，需要使用asys工具解析，具体请参见[asys工具](https://hiascend.com/document/redirect/CannCommunityasys)。|
 
-- 通过环境变量ASCEND\_LOG\_DEVICE\_FLUSH\_TIMEOUT配置Device侧日志回传到Host侧的延时时间，具体请参考[《环境变量参考》](https://hiascend.com/document/redirect/CannCommunityEnvRef)。
-- 通过环境变量ASCEND\_TRACE\_RECORD\_NUM可控制“`$HOME/ascend/atrace/trace_{进程组pid}_{首次加载trace动态库的进程pid}_{首次加载trace动态库的时间戳}/`”目录下“`schedule_event_{当前进程pid}_{目录生成时的时间戳}`”子目录的老化规格，具体请参考[《环境变量参考》](https://hiascend.com/document/redirect/CannCommunityEnvRef)。
+- 通过环境变量ASCEND\_LOG\_DEVICE\_FLUSH\_TIMEOUT配置Device侧日志回传到Host侧的延时时间，具体请参考《[环境变量参考](https://gitcode.com/cann/docs/blob/9.2.0-beta.2/docs/zh/env-vars/README.md)》。
+- 通过环境变量ASCEND\_TRACE\_RECORD\_NUM可控制“`$HOME/ascend/atrace/trace_{进程组pid}_{首次加载trace动态库的进程pid}_{首次加载trace动态库的时间戳}/`”目录下“`schedule_event_{当前进程pid}_{目录生成时的时间戳}`”子目录的老化规格，具体请参考《[环境变量参考](https://gitcode.com/cann/docs/blob/9.2.0-beta.2/docs/zh/env-vars/README.md)》。
 
 以上目录是容器或物理机内所有应用程序共同使用的，会不断增加新的应用进程，日志会不断增多，因此需要用户定期清理该目录（可以使用系统自带的logrotate实现日志切分），否则可能导致磁盘空间不足，影响业务正常运行。

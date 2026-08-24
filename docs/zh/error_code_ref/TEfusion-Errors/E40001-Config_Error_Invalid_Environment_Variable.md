@@ -16,4 +16,4 @@ Value /usr/local/Ascend/cann/opp for environment variable PATH is invalid when e
 
 ## 解决方法
 
-需按照Reason中的提示设置环境变量，或根据《环境变量参考》重新设置环境变量。
+需按照Reason中的提示设置环境变量，或根据[《环境变量参考》](https://hiascend.com/document/redirect/CannCommunityEnvRef)重新设置环境变量。

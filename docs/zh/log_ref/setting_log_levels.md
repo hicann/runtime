@@ -20,7 +20,7 @@
 
 调试日志默认为ERROR级别，且支持调整日志级别；安全日志默认为DEBUG级别，运行日志默认为INFO级别，且均不支持调整日志级别。
 
-下面介绍设置日志级别的具体方法，相关环境变量的具体说明请参考[《环境变量参考》](https://hiascend.com/document/redirect/CannCommunityEnvRef)。
+下面介绍设置日志级别的具体方法，相关环境变量的具体说明请参考《[环境变量参考](https://gitcode.com/cann/docs/blob/9.2.0-beta.2/docs/zh/env-vars/README.md)》。
 
 ## 设置应用类日志级别
 
@@ -44,7 +44,7 @@
 
 ## 设置系统类日志级别
 
-Ascend EP形态，通过msnpureport工具设置，具体方法请参见[《msnpureport 工具使用指南》](https://support.huawei.com/enterprise/zh/ascend-computing/ascend-hdk-pid-252764743?category=reference-guides&subcategory=command-reference)。
+Ascend EP形态，通过msnpureport工具设置，具体方法请参见《[msnpureport 工具使用指南](https://support.huawei.com/enterprise/zh/ascend-computing/ascend-hdk-pid-252764743?category=reference-guides&subcategory=command-reference)》。
 
 <!-- npu="310b" id1 -->
 Ascend RC形态，对于Atlas 200I/500 A2 推理产品，通过`/etc/slog.conf`配置文件设置全局日志级别、模块日志级别和是否开启Event日志，具体请参见[查看日志配置文件](viewing_config_file.md)，设置后需重启slogd进程使配置生效，具体请参见[重启日志进程](restarting_log_processes.md)。

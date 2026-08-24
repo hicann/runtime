@@ -18,7 +18,7 @@
 |`/var/log/npu/slog/run/device-app-pid/device-app-pid_*.log`|Control CPU上应用进程产生的运行日志。|
 |`/var/log/npu/slog/security/device-app-pid/device-app-pid_*.log`|Control CPU上应用进程产生的安全日志。|
 |`/var/log/npu/slog/slogd/slogdlog`|维测日志。记录日志工具自身的运行信息，用于日志工具自身问题定位。日志具备老化策略，当slogdlog文件达到规定大小（1MB）后，名称变更为slogdlog.old进行备份（如果已有备份文件，则删除最早的备份文件）。|
-|以下文件需要登录Host侧服务器，使用msnpureport工具导出并查看，具体使用方法请参考[《msnpureport 工具使用指南》](https://support.huawei.com/enterprise/zh/ascend-computing/ascend-hdk-pid-252764743?category=reference-guides&subcategory=command-reference)。| -|
+|以下文件需要登录Host侧服务器，使用msnpureport工具导出并查看，具体使用方法请参考《[msnpureport 工具使用指南》](https://support.huawei.com/enterprise/zh/ascend-computing/ascend-hdk-pid-252764743?category=reference-guides&subcategory=command-reference)》。| -|
 |`/var/log/npu/slog/debug/device-os/device-os_*.log`|Control CPU上系统进程产生的调试日志，包括用户态日志和内核态日志。|
 |`/var/log/npu/slog/run/event/event_*.log`|Control CPU上系统进程产生的EVENT日志。|
 |`/var/log/npu/slog/run/device-os/device-os_*.log`|Control CPU上系统进程产生的运行日志。|

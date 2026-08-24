@@ -50,7 +50,7 @@
 
 3. 在Host侧通过msnpureport工具导出Device侧系统日志，查看是否有相关的错误日志。
 
-    通过msnpureport工具导出Device侧系统日志的方法请参见[《msnpureport 工具使用指南》](https://support.huawei.com/enterprise/zh/ascend-computing/ascend-hdk-pid-252764743?category=reference-guides&subcategory=command-reference)。
+    通过msnpureport工具导出Device侧系统日志的方法请参见《[msnpureport 工具使用指南](https://support.huawei.com/enterprise/zh/ascend-computing/ascend-hdk-pid-252764743?category=reference-guides&subcategory=command-reference)》。
 
 4. 若未能解决问题，您可以获取日志后单击[support](https://www.hiascend.com/support)联系技术支持。
 
