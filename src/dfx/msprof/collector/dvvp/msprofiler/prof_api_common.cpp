@@ -55,6 +55,9 @@ aclError aclprofDestroySubscribeConfig(const aclprofSubscribeConfig* profSubscri
 {
     if (profSubscribeConfig == nullptr) {
         MSPROF_LOGE("profSubscribeConfig is nullptr");
+        MSPROF_INPUT_ERROR(
+            "EK0006", std::vector<std::string>({"api", "param"}),
+            std::vector<std::string>({"aclprofDestroySubscribeConfig", "profSubscribeConfig"}));
         return ACL_ERROR_INVALID_PARAM;
     }
     delete profSubscribeConfig;

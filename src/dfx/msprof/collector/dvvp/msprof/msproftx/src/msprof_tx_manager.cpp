@@ -363,8 +363,9 @@ int32_t MsprofTxManager::RangeStop(uint32_t rangeId) const
     if (stamp == nullptr) {
         MSPROF_LOGE("[RangeStop] Get stamp by rangeId failed, rangeId is %u!", rangeId);
         MSPROF_INPUT_ERROR(
-            "EK0002", std::vector<std::string>({"intf1", "intf2"}),
-            std::vector<std::string>({"aclprofRangeStart", "aclprofRangeStop"}));
+            "EK0001", std::vector<std::string>({"value", "param", "reason"}),
+            std::vector<std::string>(
+                {std::to_string(rangeId), "rangeId", "The range ID must be returned by aclprofRangeStart"}));
         return PROFILING_FAILED;
     }
     stamp->txInfo.value.stampInfo.endTime = Platform::instance()->PlatformSysCycleTime();

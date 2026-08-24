@@ -3391,6 +3391,9 @@ int32_t ProfAclMgr::PrepareStopAclSubscribe(const MsprofConfig* config) const
 
     if (!isReady_) {
         MSPROF_LOGE("ProfAclMgr has not been inited.");
+        MSPROF_INPUT_ERROR(
+            "EK0002", std::vector<std::string>({"intf1", "intf2"}),
+            std::vector<std::string>({"aclprofModelSubscribe", "aclprofModelUnSubscribe"}));
         return ACL_ERROR_INVALID_MODEL_ID;
     }
     uint32_t devId = 0;
