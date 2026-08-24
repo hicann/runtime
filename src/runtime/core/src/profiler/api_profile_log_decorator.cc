@@ -289,14 +289,6 @@ rtError_t ApiProfileLogDecorator::EventCreateEx(Event** const evt, const uint64_
     return error;
 }
 
-rtError_t ApiProfileLogDecorator::GetEventID(Event* const evt, uint32_t* const evtId)
-{
-    ProfileLogRecord record(PROFILE_RECORD_TYPE_RT_CALL_RT, RT_PROF_API_GetEventID, profiler_);
-    const rtError_t error = impl_->GetEventID(evt, evtId);
-    record.SaveRecord();
-    return error;
-}
-
 rtError_t ApiProfileLogDecorator::EventDestroy(Event* evt)
 {
     ProfileLogRecord record(PROFILE_RECORD_TYPE_RT_CALL_RT, RT_PROF_API_EVENT_DESTROY, profiler_);

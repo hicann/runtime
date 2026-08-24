@@ -173,12 +173,6 @@ public:
     rtError_t EventRecord(Event* const evt, Stream* const stm, const uint32_t flag = RT_EVENT_RECORD_DEFAULT) override;
     rtError_t EventReset(Event* const evt, Stream* const stm) override;
     rtError_t EventSynchronize(Event* const evt, const int32_t timeout) override;
-    rtError_t EventQuery(Event* const evt) override;
-    rtError_t EventQueryStatus(Event* const evt, rtEventStatus_t* const status) override;
-    rtError_t EventQueryWaitStatus(Event* const evt, rtEventWaitStatus_t* const status) override;
-    rtError_t EventElapsedTime(float32_t* const retTime, Event* const startEvt, Event* const endEvt) override;
-    rtError_t EventGetTimeStamp(uint64_t* const retTime, Event* const evt) override;
-    rtError_t GetEventID(Event* const evt, uint32_t* const evtId) override;
     // memory API
     rtError_t DevMallocCached(
         void** const devPtr, const uint64_t size, const rtMemType_t type,

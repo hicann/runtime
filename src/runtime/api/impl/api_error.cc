@@ -1734,16 +1734,6 @@ rtError_t ApiErrorDecorator::EventRecord(Event* const evt, Stream* const stm, co
     return error;
 }
 
-rtError_t ApiErrorDecorator::GetEventID(Event* const evt, uint32_t* const evtId)
-{
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(evt, RT_ERROR_INVALID_VALUE, "Obtaining the event ID");
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(evtId, RT_ERROR_INVALID_VALUE, "Obtaining the event ID");
-    COND_RETURN_WARN(
-        evt->GetEventFlag() == static_cast<uint32_t>(RT_EVENT_IPC), RT_ERROR_FEATURE_NOT_SUPPORT,
-        "IPC events are not supported by the rtGetEventID API");
-    return impl_->GetEventID(evt, evtId);
-}
-
 rtError_t ApiErrorDecorator::EventReset(Event* const evt, Stream* const stm)
 {
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(evt, RT_ERROR_INVALID_VALUE, "Event reset");
@@ -1783,98 +1773,6 @@ rtError_t ApiErrorDecorator::EventSynchronize(Event* const evt, const int32_t ti
         evt->IsEventInModel(), RT_ERROR_INVALID_VALUE, ErrorCode::EE1016, "Event synchronization",
         RtFmtMsg("The event (event_id=%d) in the stream bound to the model is not supported", evt->EventId_()));
     return impl_->EventSynchronize(evt, timeout);
-}
-
-rtError_t ApiErrorDecorator::EventQuery(Event* const evt)
-{
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(evt, RT_ERROR_INVALID_VALUE, "Event query");
-    COND_RETURN_WARN(
-        evt->IsNewMode(), RT_ERROR_FEATURE_NOT_SUPPORT, "The current mode is not supported, mode=%d",
-        static_cast<int32_t>(evt->IsNewMode()));
-    COND_RETURN_WARN(
-        evt->GetEventFlag() == RT_EVENT_EXTERNAL, RT_ERROR_FEATURE_NOT_SUPPORT,
-        "The external event does not support querying status.");
-    COND_RETURN_WARN(
-        evt->GetEventFlag() == static_cast<uint32_t>(RT_EVENT_IPC), RT_ERROR_FEATURE_NOT_SUPPORT,
-        "IPC events are not supported by the rtEventQuery API");
-    COND_RETURN_AND_MSG_OUTER(
-        evt->IsCapturing(), RT_ERROR_EVENT_CAPTURED, ErrorCode::EE1016, "Event query",
-        RtFmtMsg("Event (event_id=%d) during the capture stage is not supported", evt->EventId_()));
-    return impl_->EventQuery(evt);
-}
-
-rtError_t ApiErrorDecorator::EventQueryStatus(Event* const evt, rtEventStatus_t* const status)
-{
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(evt, RT_ERROR_INVALID_VALUE, "Event status query");
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(status, RT_ERROR_INVALID_VALUE, "Event status query");
-    COND_RETURN_WARN(
-        evt->GetEventFlag() == RT_EVENT_EXTERNAL, RT_ERROR_FEATURE_NOT_SUPPORT,
-        "The external event does not support querying status.");
-    COND_RETURN_AND_MSG_OUTER(
-        evt->IsCapturing(), RT_ERROR_EVENT_CAPTURED, ErrorCode::EE1016, "Event status query",
-        RtFmtMsg("Event (event_id=%d) during the capture stage is not supported", evt->EventId_()));
-    return impl_->EventQueryStatus(evt, status);
-}
-
-rtError_t ApiErrorDecorator::EventQueryWaitStatus(Event* const evt, rtEventWaitStatus_t* const status)
-{
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(evt, RT_ERROR_INVALID_VALUE, "Event waiting status query");
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(status, RT_ERROR_INVALID_VALUE, "Event waiting status query");
-    COND_RETURN_WARN(
-        evt->IsNewMode(), RT_ERROR_FEATURE_NOT_SUPPORT, "The current mode is not supported, mode=%d",
-        static_cast<int32_t>(evt->IsNewMode()));
-    COND_RETURN_WARN(
-        evt->GetEventFlag() == RT_EVENT_EXTERNAL, RT_ERROR_FEATURE_NOT_SUPPORT,
-        "The external event does not support querying status.");
-    COND_RETURN_WARN(
-        evt->GetEventFlag() == static_cast<uint32_t>(RT_EVENT_IPC), RT_ERROR_FEATURE_NOT_SUPPORT,
-        "IPC events are not supported by the rtEventQueryWaitStatus API");
-    COND_RETURN_AND_MSG_OUTER(
-        evt->IsCapturing(), RT_ERROR_EVENT_CAPTURED, ErrorCode::EE1016, "Event waiting status query",
-        RtFmtMsg("Event (event_id=%d) during the capture stage is not supported", evt->EventId_()));
-    return impl_->EventQueryWaitStatus(evt, status);
-}
-
-rtError_t ApiErrorDecorator::EventElapsedTime(float32_t* const retTime, Event* const startEvt, Event* const endEvt)
-{
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        retTime, RT_ERROR_INVALID_VALUE, "Computing the elapsed time between two events");
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        startEvt, RT_ERROR_INVALID_VALUE, "Computing the elapsed time between two events");
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        endEvt, RT_ERROR_INVALID_VALUE, "Computing the elapsed time between two events");
-    COND_RETURN_AND_MSG_OUTER(
-        startEvt->IsCapturing(), RT_ERROR_EVENT_CAPTURED, ErrorCode::EE1016,
-        "Computing the elapsed time between two events",
-        RtFmtMsg("StartEvent %d during the capture stage is not supported", startEvt->EventId_()));
-    COND_RETURN_AND_MSG_OUTER(
-        endEvt->IsCapturing(), RT_ERROR_EVENT_CAPTURED, ErrorCode::EE1016,
-        "Computing the elapsed time between two events",
-        RtFmtMsg("EndEvent %d during the capture stage is not supported", endEvt->EventId_()));
-    COND_RETURN_WARN(
-        (startEvt->GetEventFlag() == RT_EVENT_EXTERNAL || endEvt->GetEventFlag() == RT_EVENT_EXTERNAL),
-        RT_ERROR_FEATURE_NOT_SUPPORT, "The external event does not support getting elapsed time.");
-    COND_RETURN_WARN(
-        (startEvt->GetEventFlag() == static_cast<uint32_t>(RT_EVENT_IPC) ||
-         endEvt->GetEventFlag() == static_cast<uint32_t>(RT_EVENT_IPC)),
-        RT_ERROR_FEATURE_NOT_SUPPORT, "IPC events are not supported by the rtEventElapsedTime API");
-    return impl_->EventElapsedTime(retTime, startEvt, endEvt);
-}
-
-rtError_t ApiErrorDecorator::EventGetTimeStamp(uint64_t* const retTime, Event* const evt)
-{
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(retTime, RT_ERROR_INVALID_VALUE, "Obtaining the event execution end time");
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(evt, RT_ERROR_INVALID_VALUE, "Obtaining the event execution end time");
-    COND_RETURN_WARN(
-        evt->GetEventFlag() == RT_EVENT_EXTERNAL, RT_ERROR_FEATURE_NOT_SUPPORT,
-        "The external event does not support getting timestamp.");
-    COND_RETURN_WARN(
-        evt->GetEventFlag() == static_cast<uint32_t>(RT_EVENT_IPC), RT_ERROR_FEATURE_NOT_SUPPORT,
-        "IPC events are not supported by the rtEventGetTimeStamp API");
-    COND_RETURN_AND_MSG_OUTER(
-        evt->IsCapturing(), RT_ERROR_EVENT_CAPTURED, ErrorCode::EE1016, "Obtaining the event execution end time",
-        RtFmtMsg("Event %d during the capture stage is not supported", evt->EventId_()));
-    return impl_->EventGetTimeStamp(retTime, evt);
 }
 
 rtError_t ApiErrorDecorator::DevMallocCached(

@@ -6052,26 +6052,6 @@ TEST_F(ApiTest, api_event_test)
     error = api.EschedSubmitEventSync(0, NULL, NULL);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::EventQuery).stubs().will(returnValue(RT_ERROR_NONE));
-    error = api.EventQuery(NULL);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::EventQueryStatus).stubs().will(returnValue(RT_ERROR_NONE));
-    error = api.EventQueryStatus(NULL, NULL);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::EventQueryWaitStatus).stubs().will(returnValue(RT_ERROR_NONE));
-    error = api.EventQueryWaitStatus(NULL, NULL);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::EventElapsedTime).stubs().will(returnValue(RT_ERROR_NONE));
-    error = api.EventElapsedTime(NULL, NULL, NULL);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::EventGetTimeStamp).stubs().will(returnValue(RT_ERROR_NONE));
-    error = api.EventGetTimeStamp(NULL, NULL);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
     MOCKER_CPP_VIRTUAL(impl, &ApiImpl::QueueSubF2NFEvent).stubs().will(returnValue(RT_ERROR_NONE));
     error = api.QueueSubF2NFEvent(0, 0, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -8047,35 +8027,6 @@ TEST_F(ApiTest, api_decorator_event_forwarding)
 
     MOCKER_CPP_VIRTUAL(impl, &ApiImpl::EventSynchronize).stubs().will(returnValue(RT_ERROR_NONE));
     error = api.EventSynchronize(nullptr, 0);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::EventQuery).stubs().will(returnValue(RT_ERROR_NONE));
-    error = api.EventQuery(nullptr);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::EventQueryStatus).stubs().will(returnValue(RT_ERROR_NONE));
-    rtEventStatus_t status = {};
-    error = api.EventQueryStatus(nullptr, &status);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::EventQueryWaitStatus).stubs().will(returnValue(RT_ERROR_NONE));
-    rtEventWaitStatus_t waitStatus = {};
-    error = api.EventQueryWaitStatus(nullptr, &waitStatus);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::EventElapsedTime).stubs().will(returnValue(RT_ERROR_NONE));
-    float32_t retTime = 0.0F;
-    error = api.EventElapsedTime(&retTime, nullptr, nullptr);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::EventGetTimeStamp).stubs().will(returnValue(RT_ERROR_NONE));
-    uint64_t timeStamp = 0U;
-    error = api.EventGetTimeStamp(&timeStamp, nullptr);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::GetEventID).stubs().will(returnValue(RT_ERROR_NONE));
-    uint32_t evtId = 0U;
-    error = api.GetEventID(nullptr, &evtId);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     MOCKER_CPP_VIRTUAL(impl, &ApiImpl::EventWorkModeGet).stubs().will(returnValue(RT_ERROR_NONE));

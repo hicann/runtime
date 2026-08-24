@@ -1761,16 +1761,11 @@ TEST_F(ProfilerTest, EventCreate_ProfileLog)
 
     Event* evt = new Event();
     Event* evt2 = new Event();
-    uint32_t evtId = 0;
     Profiler* profiler = ((Runtime*)Runtime::Instance())->profiler_;
 
     ApiImpl* apiImpl_ = new ApiImpl();
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::EventCreate).stubs().will(returnValue(RT_ERROR_NONE));
     rtError_t error = profiler->apiProfileLogDecorator_->EventCreate(&evt, 0);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::GetEventID).stubs().will(returnValue(RT_ERROR_NONE));
-    error = profiler->apiProfileLogDecorator_->GetEventID(evt, &evtId);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::EventRecord).stubs().will(returnValue(RT_ERROR_NONE));
@@ -2986,7 +2981,6 @@ TEST_F(ProfilerTest, ProfileDecoratorNotifyApiTest)
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::CntNotifyReset).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::CntNotifyWaitWithTimeout).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::GetCntNotifyAddress).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::GetEventID).stubs().will(returnValue(RT_ERROR_NONE));
     Profiler* profiler = ((Runtime*)Runtime::Instance())->profiler_;
     profiler->SetProfLogEnable(true);
     auto error = profiler->apiProfileDecorator_->CntNotifyCreate(0, nullptr, 0);
@@ -3000,8 +2994,6 @@ TEST_F(ProfilerTest, ProfileDecoratorNotifyApiTest)
     error = profiler->apiProfileDecorator_->CntNotifyWaitWithTimeout(nullptr, nullptr, nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);
     error = profiler->apiProfileDecorator_->GetCntNotifyAddress(nullptr, nullptr, NOTIFY_TABLE_SLICE);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    error = profiler->apiProfileDecorator_->GetEventID(nullptr, nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);
     profiler->SetProfLogEnable(false);
     delete apiImpl_;

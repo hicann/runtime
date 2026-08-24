@@ -415,33 +415,9 @@ rtError_t ApiDecorator::EventRecord(Event* const evt, Stream* const stm, const u
 
 rtError_t ApiDecorator::EventReset(Event* const evt, Stream* const stm) { return impl_->EventReset(evt, stm); }
 
-rtError_t ApiDecorator::GetEventID(Event* const evt, uint32_t* const evtId) { return impl_->GetEventID(evt, evtId); }
-
 rtError_t ApiDecorator::EventSynchronize(Event* const evt, const int32_t timeout)
 {
     return impl_->EventSynchronize(evt, timeout);
-}
-
-rtError_t ApiDecorator::EventQuery(Event* const evt) { return impl_->EventQuery(evt); }
-
-rtError_t ApiDecorator::EventQueryStatus(Event* const evt, rtEventStatus_t* const status)
-{
-    return impl_->EventQueryStatus(evt, status);
-}
-
-rtError_t ApiDecorator::EventQueryWaitStatus(Event* const evt, rtEventWaitStatus_t* const status)
-{
-    return impl_->EventQueryWaitStatus(evt, status);
-}
-
-rtError_t ApiDecorator::EventElapsedTime(float32_t* const retTime, Event* const startEvt, Event* const endEvt)
-{
-    return impl_->EventElapsedTime(retTime, startEvt, endEvt);
-}
-
-rtError_t ApiDecorator::EventGetTimeStamp(uint64_t* const retTime, Event* const evt)
-{
-    return impl_->EventGetTimeStamp(retTime, evt);
 }
 
 rtError_t ApiDecorator::DevMalloc(

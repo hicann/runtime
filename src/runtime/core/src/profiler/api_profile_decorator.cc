@@ -551,14 +551,6 @@ rtError_t ApiProfileDecorator::EventCreateEx(Event** const evt, const uint64_t f
     return error;
 }
 
-rtError_t ApiProfileDecorator::GetEventID(Event* const evt, uint32_t* const evtId)
-{
-    CallApiBegin(RT_PROF_API_GetEventID);
-    const rtError_t error = impl_->GetEventID(evt, evtId);
-    CallApiEnd(error);
-    return error;
-}
-
 rtError_t ApiProfileDecorator::EventDestroy(Event* evt)
 {
     CallApiBegin(RT_PROF_API_EVENT_DESTROY);

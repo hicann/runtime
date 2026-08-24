@@ -2194,8 +2194,6 @@ rtError_t ApiImpl::EventRecord(Event* const evt, Stream* const stm, const uint32
     }
 }
 
-rtError_t ApiImpl::GetEventID(Event* const evt, uint32_t* const evtId) { return evt->GetEventID(evtId); }
-
 rtError_t ApiImpl::EventReset(Event* const evt, Stream* const stm)
 {
     RT_LOG(RT_LOG_DEBUG, "event reset.");
@@ -2270,66 +2268,6 @@ rtError_t ApiImpl::EventSynchronize(Event* const evt, const int32_t timeout)
 
     return error;
 }
-
-rtError_t ApiImpl::EventQuery(Event* const evt)
-{
-    Context* eventCtx = evt->Context_();
-    if (eventCtx != nullptr) {
-        const rtError_t error = eventCtx->CheckStatus();
-        ERROR_RETURN(error, "context is abort, status=%#x.", static_cast<uint32_t>(error));
-    }
-    return evt->Query();
-}
-
-rtError_t ApiImpl::EventQueryStatus(Event* const evt, rtEventStatus_t* const status)
-{
-    Context* eventCtx = evt->Context_();
-    if (eventCtx != nullptr) {
-        const rtError_t error = eventCtx->CheckStatus();
-        ERROR_RETURN(error, "context is abort, status=%#x.", static_cast<uint32_t>(error));
-    }
-    *status = RT_EVENT_INIT;
-    if (evt->GetEventFlag() == RT_EVENT_IPC) {
-        return (dynamic_cast<IpcEvent*>(evt))->IpcEventQuery(status);
-    } else {
-        return evt->QueryEventStatus(status);
-    }
-}
-
-rtError_t ApiImpl::EventQueryWaitStatus(Event* const evt, rtEventWaitStatus_t* const status)
-{
-    Context* const curCtx = CurrentContext();
-    rtError_t error = RT_ERROR_NONE;
-
-    if ((curCtx != nullptr)) {
-        Device* device = curCtx->Device_();
-        (void)device->GetDevRunningState();
-        error = device->GetDevStatus();
-        COND_PROC_RETURN_ERROR_MSG_CALL(
-            ERR_MODULE_DRV, error != RT_ERROR_NONE, error,
-            RT_LOG_INNER_DETAIL_MSG(RT_DRV_INNER_ERROR, {"device_id"}, {std::to_string(device->Id_())});
-            , "Device[%u] fault, ret=%#x.", device->Id_(), error);
-        error = device->GetDeviceStatus();
-        ERROR_RETURN(error, "device_id=%d status=%d is abnormal.", device->Id_(), error);
-        error = curCtx->GetFailureError();
-        ERROR_RETURN(error, "context is abort, status=%#x.", static_cast<uint32_t>(error));
-    }
-    *status = EVENT_STATUS_NOT_READY;
-    bool waitStatus = false;
-    const bool isDisableThreadFlag = Runtime::Instance()->GetDisableThread();
-    error = evt->QueryEventWaitStatus(isDisableThreadFlag, waitStatus);
-    if (waitStatus) {
-        *status = EVENT_STATUS_COMPLETE;
-    }
-    return error;
-}
-
-rtError_t ApiImpl::EventElapsedTime(float32_t* const retTime, Event* const startEvt, Event* const endEvt)
-{
-    return endEvt->ElapsedTime(retTime, startEvt);
-}
-
-rtError_t ApiImpl::EventGetTimeStamp(uint64_t* const retTime, Event* const evt) { return evt->GetTimeStamp(retTime); }
 
 rtError_t ApiImpl::DevMalloc(void** const devPtr, const uint64_t size, const rtMemType_t type, const uint16_t moduleId)
 {

@@ -273,12 +273,6 @@ public:
         Event* const evt, Stream* const stm, const uint32_t flag = RT_EVENT_RECORD_DEFAULT) = 0;
     virtual rtError_t EventReset(Event* const evt, Stream* const stm) = 0;
     virtual rtError_t EventSynchronize(Event* const evt, const int32_t timeout = -1) = 0;
-    virtual rtError_t EventQuery(Event* const evt) = 0;
-    virtual rtError_t EventQueryStatus(Event* const evt, rtEventStatus_t* const status) = 0;
-    virtual rtError_t EventQueryWaitStatus(Event* const evt, rtEventWaitStatus_t* const status) = 0;
-    virtual rtError_t EventElapsedTime(float32_t* const retTime, Event* const startEvt, Event* const endEvt) = 0;
-    virtual rtError_t EventGetTimeStamp(uint64_t* const retTime, Event* const evt) = 0;
-    virtual rtError_t GetEventID(Event* const evt, uint32_t* const evtId) = 0;
     // memory API
     virtual rtError_t DevMalloc(
         void** const devPtr, const uint64_t size, const rtMemType_t type,
