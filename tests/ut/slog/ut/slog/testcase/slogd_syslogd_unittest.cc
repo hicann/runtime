@@ -27,57 +27,51 @@
 #include <grp.h>
 
 extern "C" {
-    #include "slog.h"
-    #include "operate_loglevel.h"
-    #include "share_mem.h"
-    #include "log_config_api.h"
-    #include "log_common.h"
-    #include "log_session_manage.h"
-    #include "slogd_utest_stub.h"
-    #include "dlog_socket.h"
-    #include "log_path_mgr.h"
-    #include "log_recv.h"
-    #include "log_to_file.h"
-    int32_t SlogdCreateSocket(int32_t devId, uint32_t *fileNum);
-    int SlogdDataBufUnlock(ToolMutex* mutex);
-    void *SlogdFlushCommonLog(void *arg);
-    extern int32_t SlogdGetSocketPath(int32_t devId, char socketPath[SLOG_FILE_NUM][WORKSPACE_PATH_MAX_LENGTH + 1U], uint32_t *fileNum);
-    extern toolSockHandle SlogdCreateSocketBySlogFile(char *socketPath, char *username, int32_t permission);
-    int32_t SlogdInitArgs(int argc, char **argv, struct SlogdOptions *opt);
-    int GetPermissionForAllUserFlag(void);
-    void LogSignalActionSet(int32_t sig, void (*handler)(int32_t));
+#include "slog.h"
+#include "operate_loglevel.h"
+#include "share_mem.h"
+#include "log_config_api.h"
+#include "log_common.h"
+#include "log_session_manage.h"
+#include "slogd_utest_stub.h"
+#include "dlog_socket.h"
+#include "log_path_mgr.h"
+#include "log_recv.h"
+#include "log_to_file.h"
+int32_t SlogdCreateSocket(int32_t devId, uint32_t* fileNum);
+int SlogdDataBufUnlock(ToolMutex* mutex);
+void* SlogdFlushCommonLog(void* arg);
+extern int32_t SlogdGetSocketPath(
+    int32_t devId, char socketPath[SLOG_FILE_NUM][WORKSPACE_PATH_MAX_LENGTH + 1U], uint32_t* fileNum);
+extern toolSockHandle SlogdCreateSocketBySlogFile(char* socketPath, char* username, int32_t permission);
+int32_t SlogdInitArgs(int argc, char** argv, struct SlogdOptions* opt);
+int GetPermissionForAllUserFlag(void);
+void LogSignalActionSet(int32_t sig, void (*handler)(int32_t));
 }
 
 #define DEFAULT_LOG_BUF_SIZE (256 * 1024) // 256KB
-#define MIN_LOG_BUF_SIZE (64 * 1024) // 64KB
-#define MAX_LOG_BUF_SIZE (1024 * 1024) // 1024KB
+#define MIN_LOG_BUF_SIZE (64 * 1024)      // 64KB
+#define MAX_LOG_BUF_SIZE (1024 * 1024)    // 1024KB
 
-class SlogdSyslogd : public testing::Test
-{
+class SlogdSyslogd : public testing::Test {
 public:
     void SetUp();
     void TearDown();
 };
 
-void SlogdSyslogd::SetUp()
-{
-    SlogdCommunicationInit();
-}
+void SlogdSyslogd::SetUp() { SlogdCommunicationInit(); }
 
-void SlogdSyslogd::TearDown()
-{
-    SlogdCommunicationExit();
-}
+void SlogdSyslogd::TearDown() { SlogdCommunicationExit(); }
 
 TEST_F(SlogdSyslogd, FflushLogDataBuf00)
 {
-    SessionNode *node = (SessionNode *)malloc(sizeof(SessionNode));
+    SessionNode* node = (SessionNode*)malloc(sizeof(SessionNode));
     node->next = nullptr;
     node->session = (uintptr_t)0x12345678;
     node->pid = 1;
     node->devId = 1;
     node->timeout = 1000;
-    LogInfo info = { DEBUG_LOG, SYSTEM, 0, 0 };
+    LogInfo info = {DEBUG_LOG, SYSTEM, 0, 0};
     MOCKER(SlogdSyslogMgrInit).stubs().will(returnValue(LOG_SUCCESS));
     MOCKER(ToolCreateTaskWithDetach).stubs().will(returnValue(LOG_SUCCESS));
     EXPECT_EQ(LOG_SUCCESS, SlogdFlushInit());
@@ -99,21 +93,16 @@ TEST_F(SlogdSyslogd, ProcSyslogBuf)
 
 TEST_F(SlogdSyslogd, CreateSocket00)
 {
-    char *workDir = "/usr/slog";
+    char* workDir = "/usr/slog";
     uint32_t fileNum = 0;
 
-
-    MOCKER(SlogdGetSocketPath).stubs()
-        .with(any(), any(), outBoundP(&fileNum))
-        .will(returnValue(0));
+    MOCKER(SlogdGetSocketPath).stubs().with(any(), any(), outBoundP(&fileNum)).will(returnValue(0));
     MOCKER(SlogdCreateSocketBySlogFile).stubs().will(returnValue(0));
     EXPECT_EQ(0, SlogdCreateSocket(0, &fileNum));
     GlobalMockObject::reset();
 }
 
-void ChangeSignal() {
-    LogRecordSigNo(1);
-}
+void ChangeSignal() { LogRecordSigNo(1); }
 
 TEST_F(SlogdSyslogd, CreateSocket01)
 {
@@ -176,13 +165,13 @@ TEST_F(SlogdSyslogd, GetDeviceSideDeviceId)
 
 TEST_F(SlogdSyslogd, getSlogdSocketPath_approve_vfidNotSet)
 {
-    char *workDir = "/usr/slog";
+    char* workDir = "/usr/slog";
     char socketPath[SLOG_FILE_NUM][WORKSPACE_PATH_MAX_LENGTH + 1U];
     (void)memset_s(socketPath, sizeof(socketPath), 0, sizeof(socketPath));
     uint32_t fileNum = 0;
 
     int32_t devId = -1;
-    char *expectRes = "/usr/slog/slog";
+    char* expectRes = "/usr/slog/slog";
     MOCKER(LogGetWorkspacePath).stubs().will(returnValue(workDir));
     SlogdGetSocketPath(devId, socketPath, &fileNum);
     EXPECT_EQ(2, fileNum);
@@ -193,13 +182,13 @@ TEST_F(SlogdSyslogd, getSlogdSocketPath_approve_vfidNotSet)
 
 TEST_F(SlogdSyslogd, getSlogdSocketPath_approve_vfidMin)
 {
-    char *workDir = "/usr/slog";
+    char* workDir = "/usr/slog";
     char socketPath[SLOG_FILE_NUM][WORKSPACE_PATH_MAX_LENGTH + 1U];
     (void)memset_s(socketPath, sizeof(socketPath), 0, sizeof(socketPath));
     uint32_t fileNum = 0;
 
     int32_t devId = 32;
-    char *expectRes = "/usr/slog/slog_32";
+    char* expectRes = "/usr/slog/slog_32";
     MOCKER(LogGetWorkspacePath).stubs().will(returnValue(workDir));
     SlogdGetSocketPath(devId, socketPath, &fileNum);
     EXPECT_EQ(1, fileNum);
@@ -209,13 +198,13 @@ TEST_F(SlogdSyslogd, getSlogdSocketPath_approve_vfidMin)
 
 TEST_F(SlogdSyslogd, getSlogdSocketPath_approve_vfidMax)
 {
-    char *workDir = "/usr/slog";
+    char* workDir = "/usr/slog";
     char socketPath[SLOG_FILE_NUM][WORKSPACE_PATH_MAX_LENGTH + 1U];
     (void)memset_s(socketPath, sizeof(socketPath), 0, sizeof(socketPath));
     uint32_t fileNum = 0;
 
     int32_t devId = 63;
-    char *expectRes = "/usr/slog/slog_63";
+    char* expectRes = "/usr/slog/slog_63";
     MOCKER(LogGetWorkspacePath).stubs().will(returnValue(workDir));
     SlogdGetSocketPath(devId, socketPath, &fileNum);
     EXPECT_EQ(1, fileNum);
@@ -225,13 +214,13 @@ TEST_F(SlogdSyslogd, getSlogdSocketPath_approve_vfidMax)
 
 TEST_F(SlogdSyslogd, getSlogdSocketPath_approve_vfidExceed)
 {
-    char *workDir = "/usr/slog";
+    char* workDir = "/usr/slog";
     char socketPath[SLOG_FILE_NUM][WORKSPACE_PATH_MAX_LENGTH + 1U];
     (void)memset_s(socketPath, sizeof(socketPath), 0, sizeof(socketPath));
     uint32_t fileNum = 0;
 
     int32_t devId = 64;
-    char *expectRes = "/usr/slog/slog";
+    char* expectRes = "/usr/slog/slog";
     MOCKER(LogGetWorkspacePath).stubs().will(returnValue(workDir));
     SlogdGetSocketPath(devId, socketPath, &fileNum);
     EXPECT_EQ(2, fileNum);
@@ -243,8 +232,8 @@ TEST_F(SlogdSyslogd, getSlogdSocketPath_approve_vfidExceed)
 TEST_F(SlogdSyslogd, slogdInitArgs_reject_nullArgs)
 {
     int32_t argc = 0;
-    char *argv[] = {};
-    struct SlogdOptions opt = { 0, 0, -1};
+    char* argv[] = {};
+    struct SlogdOptions opt = {0, 0, -1};
     EXPECT_EQ(SlogdInitArgs(argc, argv, &opt), SYS_ERROR);
     GlobalMockObject::reset();
 }
@@ -252,8 +241,8 @@ TEST_F(SlogdSyslogd, slogdInitArgs_reject_nullArgs)
 TEST_F(SlogdSyslogd, slogdInitArgs_approve_helpArgs)
 {
     int32_t argc = 2;
-    char *argv[2] = {"./slogd", "-h"};
-    struct SlogdOptions opt = { 0, 0, -1};
+    char* argv[2] = {"./slogd", "-h"};
+    struct SlogdOptions opt = {0, 0, -1};
     MOCKER(ParseSlogdArgv).stubs().will(returnValue(SYS_ERROR));
     MOCKER(LogSetDaemonize).stubs().will(returnValue(SYS_OK));
     printf("ret=%d\n", SlogdInitArgs(argc, argv, &opt));
@@ -264,8 +253,8 @@ TEST_F(SlogdSyslogd, slogdInitArgs_approve_helpArgs)
 TEST_F(SlogdSyslogd, slogdInitArgs_approve_levelArgs)
 {
     int32_t argc = 3;
-    char *argv[3] = { "./slogd", "-l", "2"};
-    struct SlogdOptions opt = { 0, 0, -1};
+    char* argv[3] = {"./slogd", "-l", "2"};
+    struct SlogdOptions opt = {0, 0, -1};
     MOCKER(ParseSlogdArgv).stubs().will(returnValue(SYS_OK));
     MOCKER(LogSetDaemonize).stubs().will(returnValue(SYS_OK));
     EXPECT_EQ(SlogdInitArgs(argc, argv, &opt), SYS_OK);
@@ -275,8 +264,8 @@ TEST_F(SlogdSyslogd, slogdInitArgs_approve_levelArgs)
 TEST_F(SlogdSyslogd, slogdInitArgs_approve_vfidArgs)
 {
     int32_t argc = 3;
-    char *argv[3] = { "./slogd", "-v", "32"};
-    struct SlogdOptions opt = { 0, 0, -1};
+    char* argv[3] = {"./slogd", "-v", "32"};
+    struct SlogdOptions opt = {0, 0, -1};
     MOCKER(ParseSlogdArgv).stubs().will(returnValue(SYS_OK));
     MOCKER(LogSetDaemonize).stubs().will(returnValue(SYS_OK));
     EXPECT_EQ(SlogdInitArgs(argc, argv, &opt), SYS_OK);
@@ -294,4 +283,3 @@ TEST_F(SlogdSyslogd, RegisterSRNotifyCallback)
     EXPECT_EQ(0, RegisterSRNotifyCallback());
     GlobalMockObject::reset();
 }
-

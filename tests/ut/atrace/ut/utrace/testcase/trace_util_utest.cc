@@ -19,21 +19,12 @@
 #include "trace_system_api.h"
 #include <pwd.h>
 
-class TraceUtilUtest: public testing::Test {
+class TraceUtilUtest : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-    }
-    virtual void SetUp()
-    {
-    }
-    virtual void TearDown()
-    {
-        GlobalMockObject::verify();
-    }
-    static void TearDownTestCase()
-    {
-    }
+    static void SetUpTestCase() {}
+    virtual void SetUp() {}
+    virtual void TearDown() { GlobalMockObject::verify(); }
+    static void TearDownTestCase() {}
 };
 
 TEST_F(TraceUtilUtest, AdiagListInit)
@@ -84,7 +75,7 @@ TEST_F(TraceUtilUtest, TraceListInsertTwo)
 
 TEST_F(TraceUtilUtest, TraceListInsertFailed)
 {
-    MOCKER(AdiagMalloc).stubs().will(returnValue((void *)NULL));
+    MOCKER(AdiagMalloc).stubs().will(returnValue((void*)NULL));
     struct AdiagList list;
     AdiagStatus ret = AdiagListInit(&list);
     EXPECT_EQ(ret, ADIAG_SUCCESS);
@@ -100,8 +91,8 @@ TEST_F(TraceUtilUtest, TraceListInsertFailed)
 TEST_F(TraceUtilUtest, TestAdiagQuickSort)
 {
     int32_t arraySize = 9;
-    int32_t array[arraySize] = { 5, 8, 1, 3, 7, 9, 2, 6, 4 };
-    int32_t expectArray[arraySize] = { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+    int32_t array[arraySize] = {5, 8, 1, 3, 7, 9, 2, 6, 4};
+    int32_t expectArray[arraySize] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
     AdiagQuickSort(array, 0, arraySize - 1);
     for (int32_t i = 0; i < arraySize; i++) {
         EXPECT_EQ(expectArray[i], array[i]);
@@ -111,7 +102,7 @@ TEST_F(TraceUtilUtest, TestAdiagQuickSort)
 TEST_F(TraceUtilUtest, TestAdiagQuickSortFailed)
 {
     int32_t arraySize = 9;
-    int32_t array[arraySize] = { 5, 8, 1, 3, 7, 9, 2, 6, 4 };
+    int32_t array[arraySize] = {5, 8, 1, 3, 7, 9, 2, 6, 4};
     AdiagQuickSort(array, 0, 1024);
     for (int32_t i = 0; i < arraySize; i++) {
         EXPECT_EQ(array[i], array[i]);
@@ -144,7 +135,7 @@ TEST_F(TraceUtilUtest, AdiagListForEachTraverseFailed)
     EXPECT_EQ(ADIAG_SUCCESS, ret);
     MOCKER(AdiagLockGet).expects(never());
     AdiagListForEachTraverse(&list, NULL, NULL);
-    AdiagListForEachTraverse(NULL,(const AdiagListTraverseFunc)1, NULL);
+    AdiagListForEachTraverse(NULL, (const AdiagListTraverseFunc)1, NULL);
 }
 
 TEST_F(TraceUtilUtest, TestTraceDriverApi)

@@ -14,30 +14,25 @@
 #include "scd_core.h"
 #include "scd_process.h"
 
-class ScdRegsUtest: public testing::Test {
+class ScdRegsUtest : public testing::Test {
 protected:
     virtual void SetUp()
     {
         system("rm -rf " LLT_TEST_DIR "/*");
-        system("mkdir -p " LLT_TEST_DIR );
+        system("mkdir -p " LLT_TEST_DIR);
     }
 
     virtual void TearDown()
     {
         system("echo [DBG][TEST][`date +%Y-%m-%d-%H-%M-%S`] End test case");
         GlobalMockObject::verify();
-        system("rm -rf " LLT_TEST_DIR );
+        system("rm -rf " LLT_TEST_DIR);
     }
 
-    static void SetUpTestCase()
-    {
-    }
+    static void SetUpTestCase() {}
 
-    static void TearDownTestCase()
-    {
-    }
+    static void TearDownTestCase() {}
 };
-
 
 TEST_F(ScdRegsUtest, TestScdRegsLoadFromUcontext)
 {
@@ -65,7 +60,7 @@ TEST_F(ScdRegsUtest, TestScdRegsLoadFromUcontext)
 TEST_F(ScdRegsUtest, TestScdRegsGetString)
 {
     ScdRegs regsInfo = {0};
-    char tmpBuf[1024] = { 0 };
+    char tmpBuf[1024] = {0};
     TraStatus ret = TRACE_FAILURE;
 
     ret = ScdRegsGetString(&regsInfo, tmpBuf, 1024);

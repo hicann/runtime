@@ -11,47 +11,34 @@
 #include "mockcpp/mockcpp.hpp"
 
 extern "C" {
-    #include "slogd_utest_stub.h"
-    #include "log_ring_buffer.h"
+#include "slogd_utest_stub.h"
+#include "log_ring_buffer.h"
 }
 
 using namespace std;
 using namespace testing;
 
-class LogBufferUtest : public testing::Test
-{
-    protected:
-        static void SetUpTestCase()
-        {
-            cout << "LogBufferUtest SetUP" << endl;
-        }
-        static void TearDownTestCase()
-        {
-            cout << "LogBufferUtest TearDown" << endl;
-        }
-        virtual void SetUp()
-        {
-            cout << "a test SetUP" << endl;
-        }
-        virtual void TearDown()
-        {
-            cout << "a test TearDown" << endl;
-        }
+class LogBufferUtest : public testing::Test {
+protected:
+    static void SetUpTestCase() { cout << "LogBufferUtest SetUP" << endl; }
+    static void TearDownTestCase() { cout << "LogBufferUtest TearDown" << endl; }
+    virtual void SetUp() { cout << "a test SetUP" << endl; }
+    virtual void TearDown() { cout << "a test TearDown" << endl; }
 };
 
 TEST_F(LogBufferUtest, InitRingbufferHead_suc)
 {
-    RingBufferCtrl *ringBuffer = (RingBufferCtrl *)calloc(1, 1*1024*1024);
-    int res = LogBufInitHead(ringBuffer, 1*1024*1024, 0);
-    EXPECT_EQ(ringBuffer->dataLen, 1*1024*1024 - 128);
+    RingBufferCtrl* ringBuffer = (RingBufferCtrl*)calloc(1, 1 * 1024 * 1024);
+    int res = LogBufInitHead(ringBuffer, 1 * 1024 * 1024, 0);
+    EXPECT_EQ(ringBuffer->dataLen, 1 * 1024 * 1024 - 128);
     EXPECT_EQ(ringBuffer->dataOffset, 128);
     free(ringBuffer);
 }
 
 TEST_F(LogBufferUtest, InitRingbufferHead_suc2)
 {
-    RingBufferCtrl *ringBuffer = (RingBufferCtrl *)calloc(1, 4*1024 + 500);
-    int res = LogBufInitHead(ringBuffer, 4*1024 + 500, 0);
+    RingBufferCtrl* ringBuffer = (RingBufferCtrl*)calloc(1, 4 * 1024 + 500);
+    int res = LogBufInitHead(ringBuffer, 4 * 1024 + 500, 0);
     EXPECT_EQ(ringBuffer->dataLen, 3968);
     EXPECT_EQ(ringBuffer->dataOffset, 128);
     free(ringBuffer);
@@ -60,8 +47,8 @@ TEST_F(LogBufferUtest, InitRingbufferHead_suc2)
 TEST_F(LogBufferUtest, ReadAndWritesSuc)
 {
     LogHead head;
-    char *mem = (char *)calloc(1, sizeof(RingBufferCtrl) + 480 + 32);
-    RingBufferCtrl *ctrl = (RingBufferCtrl *)mem;
+    char* mem = (char*)calloc(1, sizeof(RingBufferCtrl) + 480 + 32);
+    RingBufferCtrl* ctrl = (RingBufferCtrl*)mem;
     ctrl->dataLen = 480 + 32;
     ctrl->dataOffset = sizeof(RingBufferCtrl);
     char szBuff[14];
@@ -69,7 +56,7 @@ TEST_F(LogBufferUtest, ReadAndWritesSuc)
     int32_t res;
     uint64_t coverCount;
     for (int i = 0; i < 15; i++) {
-        sprintf(szBuff,"%s%d","Hello world",count1);
+        sprintf(szBuff, "%s%d", "Hello world", count1);
         head.msgLength = strlen(szBuff);
         res = LogBufWrite(ctrl, szBuff, &head, &coverCount);
         count1++;
@@ -92,8 +79,8 @@ TEST_F(LogBufferUtest, ReadAndWritesSuc)
 TEST_F(LogBufferUtest, ReadAndWritesSuc2)
 {
     LogHead head;
-    char *mem = (char *)calloc(1, sizeof(RingBufferCtrl) + 480 + 31);
-    RingBufferCtrl *ctrl = (RingBufferCtrl *)mem;
+    char* mem = (char*)calloc(1, sizeof(RingBufferCtrl) + 480 + 31);
+    RingBufferCtrl* ctrl = (RingBufferCtrl*)mem;
     ctrl->dataLen = 480 + 31;
     ctrl->dataOffset = sizeof(RingBufferCtrl);
     char szBuff[14];
@@ -101,11 +88,11 @@ TEST_F(LogBufferUtest, ReadAndWritesSuc2)
     int32_t res;
     uint64_t coverCount;
     for (int i = 0; i < 10; i++) {
-        sprintf(szBuff,"%s%d","Hello world",count1);
+        sprintf(szBuff, "%s%d", "Hello world", count1);
         head.msgLength = strlen(szBuff);
         res = LogBufWrite(ctrl, szBuff, &head, &coverCount);
         count1++;
-     }
+    }
 
     LogHead msgRes;
     int resCount = 0;
@@ -113,7 +100,7 @@ TEST_F(LogBufferUtest, ReadAndWritesSuc2)
     for (int i = 0; i < 10; i++) {
         char tmp[MSG_LENGTH];
         res = LogBufRead(&readContext, ctrl, tmp, MSG_LENGTH, &msgRes);
-        if(res > 0) {
+        if (res > 0) {
             resCount++;
         }
     }
@@ -124,8 +111,8 @@ TEST_F(LogBufferUtest, ReadAndWritesSuc2)
 TEST_F(LogBufferUtest, ReadAndWritesSuc3)
 {
     LogHead head;
-    char *mem = (char *)calloc(1, sizeof(RingBufferCtrl) + 480 + 32);
-    RingBufferCtrl *ctrl = (RingBufferCtrl *)mem;
+    char* mem = (char*)calloc(1, sizeof(RingBufferCtrl) + 480 + 32);
+    RingBufferCtrl* ctrl = (RingBufferCtrl*)mem;
     ctrl->dataLen = 480 + 32;
     ctrl->dataOffset = sizeof(RingBufferCtrl);
     char szBuff[100];
@@ -138,26 +125,26 @@ TEST_F(LogBufferUtest, ReadAndWritesSuc3)
     uint64_t coverCount;
     for (int j = 0; j < 2000; j++) {
         for (int i = 0; i < 5; i++) {
-        sprintf(szBuff,"%s%d%d%d%d","Hello world",count1,count1,count1,count1);
-        head.msgLength = strlen(szBuff);
-        res = LogBufWrite(ctrl, szBuff, &head, &coverCount);
-        count1++;
+            sprintf(szBuff, "%s%d%d%d%d", "Hello world", count1, count1, count1, count1);
+            head.msgLength = strlen(szBuff);
+            res = LogBufWrite(ctrl, szBuff, &head, &coverCount);
+            count1++;
         }
         for (int i = 0; i < 5; i++) {
-        res = LogBufRead(&readContext, ctrl, tmp, MSG_LENGTH, &msgRes);
-        if(res > 0) {
-            resCount++;
-        }
+            res = LogBufRead(&readContext, ctrl, tmp, MSG_LENGTH, &msgRes);
+            if (res > 0) {
+                resCount++;
+            }
         }
         if (resCount == 5000) {
-            const char *str = "Hello world4999499949994999";
+            const char* str = "Hello world4999499949994999";
             EXPECT_STREQ(str, tmp);
         }
     }
 
     for (int i = 0; i < 10; i++) {
         res = LogBufRead(&readContext, ctrl, tmp, MSG_LENGTH, &msgRes);
-        if(res > 0) {
+        if (res > 0) {
             resCount++;
         }
     }

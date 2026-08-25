@@ -16,8 +16,7 @@
 using namespace std;
 using namespace testing;
 
-class EP_SLOGD_PM_FUNC_UTEST : public testing::Test
-{
+class EP_SLOGD_PM_FUNC_UTEST : public testing::Test {
 protected:
     virtual void SetUp()
     {
@@ -48,7 +47,6 @@ protected:
     }
 
 public:
-
 };
 
 // log_pm.h

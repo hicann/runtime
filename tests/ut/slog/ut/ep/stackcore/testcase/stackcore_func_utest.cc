@@ -20,15 +20,14 @@
 using namespace std;
 using namespace testing;
 
-class EP_STACKCORE_FUNC_UTEST : public testing::Test
-{
+class EP_STACKCORE_FUNC_UTEST : public testing::Test {
 protected:
     virtual void SetUp()
     {
         system("rm -rf " PATH_ROOT "/*");
         system("mkdir -p " PATH_ROOT "/" SUBDIR);
         EXPECT_EQ(0, StackInit());
-        EXPECT_EQ(0, StackcoreSetSubdirectory("")); //重置为默认路径
+        EXPECT_EQ(0, StackcoreSetSubdirectory("")); // 重置为默认路径
         system("echo [DBG][TEST][`date +%Y-%m-%d-%H-%M-%S`] Start test case");
     }
 
@@ -56,9 +55,9 @@ protected:
 // 未设置子目录 向默认路径落盘stackcore文件
 TEST_F(EP_STACKCORE_FUNC_UTEST, StackInit)
 {
-    ucontext_t utext = { 0 };
+    ucontext_t utext = {0};
     EXPECT_NE(-1, getcontext(&utext));
-    siginfo_t info = { 0 };
+    siginfo_t info = {0};
     info.si_signo = SIGQUIT;
     MOCKER(raise).stubs().will(invoke(raise_stub));
     MOCKER(StackFrame).stubs().will(invoke(StackFrame_stub));
@@ -70,14 +69,14 @@ TEST_F(EP_STACKCORE_FUNC_UTEST, StackInit)
 TEST_F(EP_STACKCORE_FUNC_UTEST, StackInitSetSubdir)
 {
     EXPECT_EQ(0, StackcoreSetSubdirectory(SUBDIR));
-    ucontext_t utext = { 0 };
+    ucontext_t utext = {0};
     EXPECT_NE(-1, getcontext(&utext));
-    siginfo_t info = { 0 };
+    siginfo_t info = {0};
     info.si_signo = SIGQUIT;
     MOCKER(raise).stubs().will(invoke(raise_stub));
     MOCKER(StackFrame).stubs().will(invoke(StackFrame_stub));
     StackSigHandler(2, &info, &utext);
-    char path[MAX_FILENAME_LEN] = { 0 };
+    char path[MAX_FILENAME_LEN] = {0};
     (void)snprintf_s(path, MAX_FILENAME_LEN, MAX_FILENAME_LEN - 1, "%s%s", PATH_ROOT, SUBDIR);
     EXPECT_EQ(1, CheckStackcoreFileNum(path));
 }

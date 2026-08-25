@@ -24,17 +24,16 @@
 #include "cpu_detect.h"
 #include "server_mgr.h"
 #include "sys_monitor_frame.h"
-#define RESULT_BUFFER_LEN   1024U
+#define RESULT_BUFFER_LEN 1024U
 
 extern "C" {
-extern int LogDaemonTest(int argc, char **argv);
+extern int LogDaemonTest(int argc, char** argv);
 extern int32_t ServerProcess(const CommHandle* handle, const void* msg, uint32_t len);
 extern int32_t ServerWaitStop(ServerHandle handle);
 extern ServerMgr g_serverMgr[NR_COMPONENTS];
 }
 
-class EP_LOG_DAEMON_FUNC_UTEST : public testing::Test
-{
+class EP_LOG_DAEMON_FUNC_UTEST : public testing::Test {
 protected:
     virtual void SetUp()
     {
@@ -68,21 +67,21 @@ protected:
 
 typedef struct {
     int32_t argc;
-    char **argv;
+    char** argv;
 } Args;
 
-static void *MainThreadFunc(void *arg)
+static void* MainThreadFunc(void* arg)
 {
-    Args *in = (Args *)arg;
+    Args* in = (Args*)arg;
     LogDaemonTest(in->argc, in->argv);
     return NULL;
 }
 
-static pthread_t StartThread(Args *arg)
+static pthread_t StartThread(Args* arg)
 {
     pthread_t tid = 0;
     pthread_attr_t attr;
-    (void)pthread_create(&tid, NULL, MainThreadFunc, (void *)arg);
+    (void)pthread_create(&tid, NULL, MainThreadFunc, (void*)arg);
     return tid;
 }
 
@@ -94,30 +93,26 @@ static int32_t TestServerStart(ServerHandle handle)
     EXPECT_EQ(0, ServerSyncFile(handle, "src", "dts"));
     EXPECT_EQ(0, ServerSendMsg(handle, "message", 6));
     char recvBuf[] = "receive";
-    char *msg = recvBuf;
+    char* msg = recvBuf;
     uint32_t len = 7;
-    EXPECT_EQ(0, ServerRecvMsg(handle, (char **)&msg, &len, 10000));
+    EXPECT_EQ(0, ServerRecvMsg(handle, (char**)&msg, &len, 10000));
     return 0;
 }
 
-static void TestServerStop(void)
-{
-}
+static void TestServerStop(void) {}
 
 static int32_t TestFailServerStart(ServerHandle handle)
 {
     EXPECT_EQ(-1, ServerSyncFile(nullptr, "src", "dts"));
     EXPECT_EQ(-1, ServerSendMsg(nullptr, "message", 6));
     char recvBuf[] = "receive";
-    char *msg = recvBuf;
+    char* msg = recvBuf;
     uint32_t len = 7;
-    EXPECT_EQ(-1, ServerRecvMsg(nullptr, (char **)&msg, &len, 10000));
+    EXPECT_EQ(-1, ServerRecvMsg(nullptr, (char**)&msg, &len, 10000));
     return -1;
 }
 
-static void TestFailServerStop(void)
-{
-}
+static void TestFailServerStop(void) {}
 
 TEST_F(EP_LOG_DAEMON_FUNC_UTEST, LogDaemonMainCreateThreadFailed)
 {
@@ -130,11 +125,11 @@ TEST_F(EP_LOG_DAEMON_FUNC_UTEST, LogDaemonMainCreateThreadFailed)
     LogRecordSigNo(0);
     // 运行
     int argc = 2;
-    char *argv[] = { "log-daemon", "-n", NULL };
-    Args arg = { argc, argv };
+    char* argv[] = {"log-daemon", "-n", NULL};
+    Args arg = {argc, argv};
     sleep(1);
 
-    ServerAttr attr = { 0 };
+    ServerAttr attr = {0};
     attr.num = 1;
     attr.linkType = 0;
     attr.runEnv = 1;
@@ -156,17 +151,17 @@ TEST_F(EP_LOG_DAEMON_FUNC_UTEST, LogDaemonMainCreateThreadFailed)
 }
 
 static bool g_handleStatus = true;
-static int32_t AdxGetAttrByCommHandleStub(AdxCommConHandle handle, int32_t attr, int32_t *value)
+static int32_t AdxGetAttrByCommHandleStub(AdxCommConHandle handle, int32_t attr, int32_t* value)
 {
     if (!g_handleStatus) {
         g_handleStatus = true;
         return -1;
     }
     (void)handle;
-    if (attr == 6) { // HDC_SESSION_ATTR_STATUS
-        *value = 1; // connect
+    if (attr == 6) {        // HDC_SESSION_ATTR_STATUS
+        *value = 1;         // connect
     } else if (attr == 2) { // HDC_SESSION_ATTR_RUN_ENV
-        *value = 1; // NON_DOCKER
+        *value = 1;         // NON_DOCKER
     } else {
         *value = 0;
     }
@@ -184,17 +179,15 @@ TEST_F(EP_LOG_DAEMON_FUNC_UTEST, LogDaemonMainInvalidHanlde)
     LogRecordSigNo(0);
     // 运行
     int argc = 2;
-    char *argv[] = { "log-daemon", "-n", NULL };
-    Args arg = { argc, argv };
+    char* argv[] = {"log-daemon", "-n", NULL};
+    Args arg = {argc, argv};
     sleep(1);
 
-    ServerAttr attr = { 0 };
+    ServerAttr attr = {0};
     attr.num = 1;
     attr.linkType = 0;
     attr.runEnv = 1;
-    MOCKER(AdxGetAttrByCommHandle)
-        .stubs()
-        .will(invoke(AdxGetAttrByCommHandleStub));
+    MOCKER(AdxGetAttrByCommHandle).stubs().will(invoke(AdxGetAttrByCommHandleStub));
     EXPECT_EQ(0, ServerCreate(ComponentType::COMPONENT_GETD_FILE, TestServerStart, TestServerStop, &attr));
     CommHandle handle;
     handle.type = COMM_HDC;
@@ -223,12 +216,12 @@ TEST_F(EP_LOG_DAEMON_FUNC_UTEST, LogDaemonMain)
     LogRecordSigNo(0);
     // 运行
     int argc = 2;
-    char *argv[] = { "log-daemon", "-n", NULL };
-    Args arg = { argc, argv };
+    char* argv[] = {"log-daemon", "-n", NULL};
+    Args arg = {argc, argv};
     pthread_t tid = StartThread(&arg);
     sleep(1);
 
-    ServerAttr attr = { 0 };
+    ServerAttr attr = {0};
     attr.num = 1;
     attr.linkType = 0;
     attr.runEnv = 1;
@@ -256,7 +249,7 @@ TEST_F(EP_LOG_DAEMON_FUNC_UTEST, LogDaemonMain)
 
 TEST_F(EP_LOG_DAEMON_FUNC_UTEST, LogDaemonMainServerCreateFailed)
 {
-    ServerAttr attr = { 0 };
+    ServerAttr attr = {0};
     attr.num = 1;
     attr.linkType = 0;
     attr.runEnv = 1;
@@ -273,7 +266,7 @@ TEST_F(EP_LOG_DAEMON_FUNC_UTEST, LogDaemonMainServerCreateFailed)
 
 TEST_F(EP_LOG_DAEMON_FUNC_UTEST, LogDaemonMainServerMonitorAll)
 {
-    ServerAttr attr = { 0 };
+    ServerAttr attr = {0};
     attr.num = 1;
     attr.linkType = 0;
     attr.runEnv = 0;
@@ -294,7 +287,7 @@ TEST_F(EP_LOG_DAEMON_FUNC_UTEST, LogDaemonMainServerMonitorAll)
 
 TEST_F(EP_LOG_DAEMON_FUNC_UTEST, LogDaemonMainServerMonitorInvalid)
 {
-    ServerAttr attr = { 0 };
+    ServerAttr attr = {0};
     attr.num = 1;
     attr.linkType = 0;
     attr.runEnv = 1;
@@ -322,16 +315,13 @@ TEST_F(EP_LOG_DAEMON_FUNC_UTEST, LogDaemonMainServerMonitorInvalid)
 
 TEST_F(EP_LOG_DAEMON_FUNC_UTEST, LogDaemonMainAdxGetAttrByCommHandleFaild)
 {
-    ServerAttr attr = { 0 };
+    ServerAttr attr = {0};
     attr.num = 1;
     attr.linkType = 0;
     attr.runEnv = ENV_NON_DOCKER;
     EXPECT_EQ(0, ServerCreate(ComponentType::COMPONENT_GETD_FILE, TestServerStart, TestServerStop, &attr));
 
-    MOCKER(AdxGetAttrByCommHandle)
-        .stubs()
-        .will(invoke(AdxGetAttrByCommHandleStub))
-        .then(returnValue(-1));
+    MOCKER(AdxGetAttrByCommHandle).stubs().will(invoke(AdxGetAttrByCommHandleStub)).then(returnValue(-1));
     CommHandle handle;
     handle.type = COMM_HDC;
     handle.session = (OptHandle)0x12345;
@@ -344,15 +334,14 @@ TEST_F(EP_LOG_DAEMON_FUNC_UTEST, LogDaemonMainAdxGetAttrByCommHandleFaild)
     ServerRelease(ComponentType::COMPONENT_GETD_FILE);
 }
 
-
-int32_t AdxGetAttrByCommHandleStub2(AdxCommConHandle handle, int32_t attr, int32_t *value)
+int32_t AdxGetAttrByCommHandleStub2(AdxCommConHandle handle, int32_t attr, int32_t* value)
 {
     *value = RUN_ENV_PHYSICAL_CONTAINER;
     return 0;
 }
 TEST_F(EP_LOG_DAEMON_FUNC_UTEST, LogDaemonMainInvalidRunEnv)
 {
-    ServerAttr attr = { 0 };
+    ServerAttr attr = {0};
     attr.num = 1;
     attr.linkType = 0;
     attr.runEnv = ENV_NON_DOCKER;
@@ -376,7 +365,7 @@ TEST_F(EP_LOG_DAEMON_FUNC_UTEST, LogDaemonMainInvalidRunEnv)
 
 TEST_F(EP_LOG_DAEMON_FUNC_UTEST, LogDaemonMainServerProcessFailed)
 {
-    ServerAttr attr = { 0 };
+    ServerAttr attr = {0};
     attr.num = 1;
     attr.linkType = 0;
     attr.runEnv = 1;
@@ -413,7 +402,7 @@ static int32_t TestServerStartException(ServerHandle handle)
     EXPECT_EQ(-1, ServerSendMsg(handle, "message", 6));
     char msg[] = "receive";
     uint32_t len = 7;
-    EXPECT_EQ(-1, ServerRecvMsg(handle, (char **)&msg, &len, 10000));
+    EXPECT_EQ(-1, ServerRecvMsg(handle, (char**)&msg, &len, 10000));
     return 0;
 }
 
@@ -427,7 +416,7 @@ static void TestServerStopException(void)
 
 TEST_F(EP_LOG_DAEMON_FUNC_UTEST, LogDaemonMainServerStop)
 {
-    ServerAttr attr = { 0 };
+    ServerAttr attr = {0};
     attr.num = 1;
     attr.linkType = 0;
     attr.runEnv = 1;
@@ -453,7 +442,7 @@ TEST_F(EP_LOG_DAEMON_FUNC_UTEST, LogDaemonMainServerStop)
 
 TEST_F(EP_LOG_DAEMON_FUNC_UTEST, LogDaemonMainServerRegisterInvalidFunc)
 {
-    ServerAttr attr = { 0 };
+    ServerAttr attr = {0};
     attr.num = 1;
     attr.linkType = 0;
     attr.runEnv = 1;

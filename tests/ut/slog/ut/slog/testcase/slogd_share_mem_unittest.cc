@@ -13,32 +13,28 @@
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
 extern "C" {
-    #include "log_common.h"
-    #include "share_mem.h"
+#include "log_common.h"
+#include "share_mem.h"
 
-    int32_t ToolShmGet(key_t key, size_t size, int32_t shmflg);
-    void *ToolShmAt(int32_t shmid, const void *shmaddr, int32_t shmflg);
-    int32_t ToolShmDt(const void *shmaddr);
-    int32_t ToolShmCtl(int32_t shmid, int32_t cmd, struct shmid_ds *buf);
+int32_t ToolShmGet(key_t key, size_t size, int32_t shmflg);
+void* ToolShmAt(int32_t shmid, const void* shmaddr, int32_t shmflg);
+int32_t ToolShmDt(const void* shmaddr);
+int32_t ToolShmCtl(int32_t shmid, int32_t cmd, struct shmid_ds* buf);
 }
-class SlogdShareMem : public testing::Test
-{
+class SlogdShareMem : public testing::Test {
 public:
     void SetUp();
     void TearDown();
 };
 
-void SlogdShareMem::SetUp()
-{
-}
+void SlogdShareMem::SetUp() {}
 
-void SlogdShareMem::TearDown()
-{}
+void SlogdShareMem::TearDown() {}
 
 TEST_F(SlogdShareMem, CreateShareMemIdIsNULL)
 {
     EXPECT_EQ(SHM_ERROR, ShMemCreat(NULL, NULL));
-    //GlobalMockObject::reset();
+    // GlobalMockObject::reset();
 }
 
 TEST_F(SlogdShareMem, CreateShareMemgetRetLeZero)
@@ -52,9 +48,8 @@ TEST_F(SlogdShareMem, CreateShareMemgetRetLeZero)
 TEST_F(SlogdShareMem, OpenMemIdIsNULL)
 {
     EXPECT_EQ(SHM_ERROR, ShMemOpen(NULL));
-    //GlobalMockObject::reset();
+    // GlobalMockObject::reset();
 }
-
 
 TEST_F(SlogdShareMem, OpenMemRetLeZero)
 {

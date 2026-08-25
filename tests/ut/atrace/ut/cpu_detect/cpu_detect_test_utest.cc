@@ -22,12 +22,12 @@
 #include "ascend_hal.h"
 #include "slog.h"
 
-class CpuDetectTestUtest: public testing::Test {
+class CpuDetectTestUtest : public testing::Test {
 protected:
     virtual void SetUp()
     {
         system("rm -rf " LLT_TEST_DIR "/*");
-        system("mkdir -p " LLT_TEST_DIR );
+        system("mkdir -p " LLT_TEST_DIR);
         system("echo [DBG][CpuDetectTest][`date +%Y-%m-%d-%H-%M-%S`] Start test case");
     }
 
@@ -38,28 +38,22 @@ protected:
         GlobalMockObject::verify();
     }
 
-    static void SetUpTestCase()
-    {
-        system("echo [DBG][CpuDetectTest][`date +%Y-%m-%d-%H-%M-%S`] Start test suite");
-    }
+    static void SetUpTestCase() { system("echo [DBG][CpuDetectTest][`date +%Y-%m-%d-%H-%M-%S`] Start test suite"); }
 
-    static void TearDownTestCase()
-    {
-        system("echo [DBG][CpuDetectTest][`date +%Y-%m-%d-%H-%M-%S`] End test suite");
-    }
+    static void TearDownTestCase() { system("echo [DBG][CpuDetectTest][`date +%Y-%m-%d-%H-%M-%S`] End test suite"); }
 };
 
 TEST_F(CpuDetectTestUtest, UtestCpuDetectGroup)
 {
-    uint32_t *regValues = (uint32_t *)malloc(64 * 512);
-    uint32_t *loadStoreBuf = (uint32_t *)malloc(64 * 512);
+    uint32_t* regValues = (uint32_t*)malloc(64 * 512);
+    uint32_t* loadStoreBuf = (uint32_t*)malloc(64 * 512);
     CpudStatus ret = CpuDetectGroup(regValues, loadStoreBuf, 0);
     EXPECT_EQ(ret, CPUD_SUCCESS);
     free(regValues);
     free(loadStoreBuf);
 }
 
-static void EnhanceLoadStoreP02Stub(uint32_t *reg_values, uint32_t *load_store_buf)
+static void EnhanceLoadStoreP02Stub(uint32_t* reg_values, uint32_t* load_store_buf)
 {
     static uint32_t num = 1;
     reg_values[0] = num;
@@ -70,8 +64,8 @@ static void EnhanceLoadStoreP02Stub(uint32_t *reg_values, uint32_t *load_store_b
 TEST_F(CpuDetectTestUtest, UtestCpuDetectGroup_TestcaseFail)
 {
     MOCKER(EnhanceLoadStoreP02).stubs().will(invoke(EnhanceLoadStoreP02Stub));
-    uint32_t *regValues = (uint32_t *)malloc(64 * 512);
-    uint32_t *loadStoreBuf = (uint32_t *)malloc(64 * 512);
+    uint32_t* regValues = (uint32_t*)malloc(64 * 512);
+    uint32_t* loadStoreBuf = (uint32_t*)malloc(64 * 512);
     CpudStatus ret = CpuDetectGroup(regValues, loadStoreBuf, 0);
     EXPECT_EQ(ret, CPUD_ERROR_TESTCASE);
     free(regValues);

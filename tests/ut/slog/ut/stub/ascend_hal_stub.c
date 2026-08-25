@@ -10,12 +10,12 @@
 #include "ascend_hal.h"
 #include "log_common.h"
 
-drvError_t halGetDeviceInfo(uint32_t devId, int32_t moduleType, int32_t infoType, int64_t *value)
+drvError_t halGetDeviceInfo(uint32_t devId, int32_t moduleType, int32_t infoType, int64_t* value)
 {
     return DRV_ERROR_NOT_SUPPORT;
 }
 
-int log_set_dfx_param(uint32_t devid, uint32_t chan_type, uint32_t cmd_type, void *data, uint32_t data_len)
+int log_set_dfx_param(uint32_t devid, uint32_t chan_type, uint32_t cmd_type, void* data, uint32_t data_len)
 {
     (void)devid;
     (void)chan_type;
@@ -24,7 +24,7 @@ int log_set_dfx_param(uint32_t devid, uint32_t chan_type, uint32_t cmd_type, voi
     (void)data_len;
     return 0;
 }
-int log_get_dfx_param(uint32_t device_id, uint32_t channel_type, uint32_t cmd_type, void *data, uint32_t dataLen)
+int log_get_dfx_param(uint32_t device_id, uint32_t channel_type, uint32_t cmd_type, void* data, uint32_t dataLen)
 {
     (void)device_id;
     (void)channel_type;
@@ -34,7 +34,7 @@ int log_get_dfx_param(uint32_t device_id, uint32_t channel_type, uint32_t cmd_ty
     return 0;
 }
 
-int32_t log_get_device_id(int32_t *devices, int32_t *devNum, int32_t len)
+int32_t log_get_device_id(int32_t* devices, int32_t* devNum, int32_t len)
 {
     if (devices == NULL || devNum == NULL || len == 0) {
         return -1;
@@ -46,13 +46,13 @@ int32_t log_get_device_id(int32_t *devices, int32_t *devNum, int32_t len)
 
 typedef struct {
     uint32_t size;
-    void *buffer;
+    void* buffer;
 } bufMgr;
 
-#define MAX_DEV_NUM             64
+#define MAX_DEV_NUM 64
 
-static bufMgr g_buffer[LOG_TYPE_MAX_NUM][MAX_DEV_NUM] = { 0 };
-void *log_type_alloc_mem(uint32_t device_id, uint32_t type, uint32_t *size)
+static bufMgr g_buffer[LOG_TYPE_MAX_NUM][MAX_DEV_NUM] = {0};
+void* log_type_alloc_mem(uint32_t device_id, uint32_t type, uint32_t* size)
 {
     if (g_buffer[type][device_id].buffer == NULL) {
         g_buffer[type][device_id].buffer = malloc(*size);

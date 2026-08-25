@@ -32,15 +32,15 @@ using namespace std;
 using namespace testing;
 
 extern "C" {
-    extern ToolMutex g_confMutex;
-    extern SlogdStatus g_slogdStatus;
-    extern char g_rootLogPath[CFG_LOGAGENT_PATH_MAX_LENGTH + 1U];
-    int32_t TestMain(int32_t argc, char **argv);
-    toolSockHandle SlogdCreateSocketBySlogFile(char *socketPath, char *username, int32_t permission);
-    int32_t SlogdGetSocketPath(int32_t devId, char socketPath[SLOG_FILE_NUM][WORKSPACE_PATH_MAX_LENGTH + 1U], uint32_t *fileNum);
+extern ToolMutex g_confMutex;
+extern SlogdStatus g_slogdStatus;
+extern char g_rootLogPath[CFG_LOGAGENT_PATH_MAX_LENGTH + 1U];
+int32_t TestMain(int32_t argc, char** argv);
+toolSockHandle SlogdCreateSocketBySlogFile(char* socketPath, char* username, int32_t permission);
+int32_t SlogdGetSocketPath(
+    int32_t devId, char socketPath[SLOG_FILE_NUM][WORKSPACE_PATH_MAX_LENGTH + 1U], uint32_t* fileNum);
 }
-class SLOGD_FUNC_UTEST : public testing::Test
-{
+class SLOGD_FUNC_UTEST : public testing::Test {
 protected:
     virtual void SetUp()
     {
@@ -83,11 +83,9 @@ public:
         LogRecordSigNo(0);
     }
 
-    static void DlogDestructor() {
-        log_release_buffer();
-    }
+    static void DlogDestructor() { log_release_buffer(); }
 
-    int DlogCmdGetIntRet(const char *path, const char*cmd)
+    int DlogCmdGetIntRet(const char* path, const char* cmd)
     {
         char resultFile[200] = {0};
         sprintf(resultFile, "%s/EP_SLOGD_FUNC_STEST_cmd_result.txt", path);
@@ -97,7 +95,7 @@ public:
         system(cmdToFile);
 
         char buf[100] = {0};
-        FILE *fp = fopen(resultFile, "r");
+        FILE* fp = fopen(resultFile, "r");
         if (fp == NULL) {
             return 0;
         }
@@ -109,7 +107,7 @@ public:
         return atoi(buf);
     }
 
-    int DlogCheckDir(const char *path, const char *str)
+    int DlogCheckDir(const char* path, const char* str)
     {
         if (access(path, F_OK) != 0) {
             return 0;
@@ -124,25 +122,25 @@ public:
 
 typedef struct {
     int32_t argc;
-    char **argv;
+    char** argv;
 } Args;
 
-static void *MainThreadFunc(void *arg)
+static void* MainThreadFunc(void* arg)
 {
-    Args *in = (Args *)arg;
+    Args* in = (Args*)arg;
     TestMain(in->argc, in->argv);
     return NULL;
 }
 
-static pthread_t StartThread(Args *arg)
+static pthread_t StartThread(Args* arg)
 {
     pthread_t tid = 0;
     pthread_attr_t attr;
-    (void)pthread_create(&tid, NULL, MainThreadFunc, (void *)arg);
+    (void)pthread_create(&tid, NULL, MainThreadFunc, (void*)arg);
     return tid;
 }
 
-static toolSockHandle SlogdCreateSocketBySlogFile_stub(char *socketPath, char *groupName, int32_t permission)
+static toolSockHandle SlogdCreateSocketBySlogFile_stub(char* socketPath, char* groupName, int32_t permission)
 {
     int32_t fd = open(socketPath, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
     char str[128] = "socket test.";
@@ -150,11 +148,11 @@ static toolSockHandle SlogdCreateSocketBySlogFile_stub(char *socketPath, char *g
     return (toolSockHandle)fd;
 }
 
-static int32_t ToolRead_stub(int32_t fd, void *buf, uint32_t bufLen)
+static int32_t ToolRead_stub(int32_t fd, void* buf, uint32_t bufLen)
 {
     lseek(fd, 0L, SEEK_SET);
     int32_t ret = (int32_t)read(fd, buf, (size_t)bufLen);
-    EXPECT_STREQ("socket test.", (char *)buf);
+    EXPECT_STREQ("socket test.", (char*)buf);
     return ret;
 }
 
@@ -162,7 +160,7 @@ TEST_F(SLOGD_FUNC_UTEST, SlogdCreateSocketBySlogFile)
 {
     struct group grpInfo;
 
-    char *workDir = "/usr/slog";
+    char* workDir = "/usr/slog";
 
     MOCKER(ToolUnlink).stubs().will(returnValue(0));
     MOCKER(ToolSocket).stubs().will(returnValue(2));
@@ -173,13 +171,15 @@ TEST_F(SLOGD_FUNC_UTEST, SlogdCreateSocketBySlogFile)
     MOCKER(ToolChmod).stubs().will(returnValue(0));
 
     uint32_t fileNum = 0;
-    EXPECT_EQ(2, SlogdCreateSocketBySlogFile(workDir, "HwHiAiUser", (int32_t)SyncGroupToOther(S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP)));
+    EXPECT_EQ(
+        2, SlogdCreateSocketBySlogFile(
+               workDir, "HwHiAiUser", (int32_t)SyncGroupToOther(S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP)));
     GlobalMockObject::reset();
 }
 
 TEST_F(SLOGD_FUNC_UTEST, SlogdGetSocketPath_devIdNotSet)
 {
-    char *workDir = "/usr/slog";
+    char* workDir = "/usr/slog";
     char socketPath[SLOG_FILE_NUM][WORKSPACE_PATH_MAX_LENGTH + 1U];
     (void)memset_s(socketPath, sizeof(socketPath), 0, sizeof(socketPath));
     uint32_t fileNum = 0;
@@ -196,7 +196,7 @@ TEST_F(SLOGD_FUNC_UTEST, SlogdGetSocketPath_devIdNotSet)
 
 TEST_F(SLOGD_FUNC_UTEST, SlogdGetSocketPath_vfId)
 {
-    char *workDir = "/usr/slog";
+    char* workDir = "/usr/slog";
     char socketPath[SLOG_FILE_NUM][WORKSPACE_PATH_MAX_LENGTH + 1U];
     (void)memset_s(socketPath, sizeof(socketPath), 0, sizeof(socketPath));
     uint32_t fileNum = 0;
@@ -217,13 +217,13 @@ TEST_F(SLOGD_FUNC_UTEST, SlogdGetSocketPath_vfId)
 
 TEST_F(SLOGD_FUNC_UTEST, SlogdGetSocketPath_devIdExceed)
 {
-    char *workDir = "/usr/slog";
+    char* workDir = "/usr/slog";
     char socketPath[SLOG_FILE_NUM][WORKSPACE_PATH_MAX_LENGTH + 1U];
     (void)memset_s(socketPath, sizeof(socketPath), 0, sizeof(socketPath));
     uint32_t fileNum = 0;
 
     int32_t devId = 64;
-    char *expectRes = "/usr/slog/slog";
+    char* expectRes = "/usr/slog/slog";
     MOCKER(LogGetWorkspacePath).stubs().will(returnValue(workDir));
     SlogdGetSocketPath(devId, socketPath, &fileNum);
     EXPECT_EQ(2, fileNum);
@@ -234,7 +234,7 @@ TEST_F(SLOGD_FUNC_UTEST, SlogdGetSocketPath_devIdExceed)
 
 TEST_F(SLOGD_FUNC_UTEST, argvInvalid)
 {
-    char *argv[] = {"slogd", "--test_error"};
+    char* argv[] = {"slogd", "--test_error"};
     EXPECT_EQ(LOG_FAILURE, TestMain(2, argv));
 }
 

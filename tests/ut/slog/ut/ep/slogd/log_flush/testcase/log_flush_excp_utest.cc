@@ -30,8 +30,7 @@ extern SlogdStatus g_slogdStatus;
 extern StLogFileList g_fileList;
 }
 
-class EP_SLOGD_EXCP_UTEST : public testing::Test
-{
+class EP_SLOGD_EXCP_UTEST : public testing::Test {
 protected:
     virtual void SetUp()
     {
@@ -74,7 +73,7 @@ public:
         LogRecordSigNo(0);
     }
 
-    int SlogdCmdGetIntRet(const char *path, const char*cmd)
+    int SlogdCmdGetIntRet(const char* path, const char* cmd)
     {
         char resultFile[200] = {0};
         sprintf(resultFile, "%s/MDC_SLOGD_FLUSH_FUNC_UTEST_cmd_result.txt", path);
@@ -84,7 +83,7 @@ public:
         system(cmdToFile);
 
         char buf[100] = {0};
-        FILE *fp = fopen(resultFile, "r");
+        FILE* fp = fopen(resultFile, "r");
         if (fp == NULL) {
             return 0;
         }
@@ -95,10 +94,8 @@ public:
         }
         return atoi(buf);
     }
-    static void DlogDestructor() {
-        log_release_buffer();
-    }
-    int32_t SlogdGetPrintNum(const char *path, const char *dir)
+    static void DlogDestructor() { log_release_buffer(); }
+    int32_t SlogdGetPrintNum(const char* path, const char* dir)
     {
         char cmd[200] = {0};
         sprintf(cmd, " cat %s/%s/* | wc -l", path, dir);
@@ -108,9 +105,9 @@ public:
     }
 };
 
-static void *MallocStub(size_t len)
+static void* MallocStub(size_t len)
 {
-    void *buf = malloc(len);
+    void* buf = malloc(len);
     (void)memset_s(buf, len, 0, len);
     return buf;
 }
@@ -119,16 +116,17 @@ TEST_F(EP_SLOGD_EXCP_UTEST, FlushLogMallocFailed)
 {
     // 初始化
     LogRecordSigNo(0);
-    char *path = LOG_FILE_PATH;
+    char* path = LOG_FILE_PATH;
     MOCKER(ToolSleep).stubs().will(returnValue(0));
     MOCKER(LogGetRootPath).stubs().will(returnValue(path));
     SlogdConfigMgrInit();
-    MOCKER(LogMalloc).stubs()
+    MOCKER(LogMalloc)
+        .stubs()
         .will(invoke(MallocStub))
         .then(invoke(MallocStub))
         .then(invoke(MallocStub))
         .then(invoke(MallocStub))
-        .then(returnValue((void *)NULL));
+        .then(returnValue((void*)NULL));
     EXPECT_EQ(LOG_SUCCESS, SlogdFlushInit());
     sleep(1);
     EXPECT_LT(0, GetErrLogNum());

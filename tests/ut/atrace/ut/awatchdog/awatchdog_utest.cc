@@ -22,31 +22,28 @@
 #include "ascend_hal.h"
 
 extern "C" {
-    typedef struct AwdWatchDog {
-        struct AdiagList runList;
-        struct AdiagList newList;
-    } AwdWatchDog;
-    void AwatchdogInit(void);
-    void AwatchdogExit(void);
-    AwdStatus AwdMonitorInit(void);
-    void AwdProcessUnInit(void);
-    void AwdProcessInit(void);
-    void AwdSubProcessInit(void);
-    struct AwdWatchDog* AwdGetWatchDog(enum AwdWatchdogType type);
+typedef struct AwdWatchDog {
+    struct AdiagList runList;
+    struct AdiagList newList;
+} AwdWatchDog;
+void AwatchdogInit(void);
+void AwatchdogExit(void);
+AwdStatus AwdMonitorInit(void);
+void AwdProcessUnInit(void);
+void AwdProcessInit(void);
+void AwdSubProcessInit(void);
+struct AwdWatchDog* AwdGetWatchDog(enum AwdWatchdogType type);
 }
-class AwatchdogUtest: public testing::Test {
+class AwatchdogUtest : public testing::Test {
 protected:
     virtual void SetUp()
     {
         Clear();
-        system("mkdir -p " LLT_TEST_DIR );
+        system("mkdir -p " LLT_TEST_DIR);
         MOCKER(pthread_atfork).stubs().will(returnValue(0));
         AwatchdogInit();
     }
-    void Clear()
-    {
-        system("rm -rf " LLT_TEST_DIR "/*");
-    }
+    void Clear() { system("rm -rf " LLT_TEST_DIR "/*"); }
     virtual void TearDown()
     {
         AwatchdogExit();
@@ -54,14 +51,9 @@ protected:
         Clear();
     }
 
-    static void SetUpTestCase()
-    {
-        pthread_atfork(AwdProcessUnInit, AwdProcessInit, AwdSubProcessInit);
-    }
+    static void SetUpTestCase() { pthread_atfork(AwdProcessUnInit, AwdProcessInit, AwdSubProcessInit); }
 
-    static void TearDownTestCase()
-    {
-    }
+    static void TearDownTestCase() {}
 };
 
 DEFINE_THREAD_WATCHDOG(threadHandle);
@@ -126,7 +118,7 @@ TEST_F(AwatchdogUtest, TestWatchDogCreateBeforeFork)
     if (status == -1) {
         return;
     }
-    if(status == 0) {
+    if (status == 0) {
         MOCKER(AdiagListInsert).expects(once()).will(returnValue(ADIAG_SUCCESS));
         auto handle = AwdCreateThreadWatchdog(0, 0, NULL);
         EXPECT_NE(handle, AWD_INVALID_HANDLE);
@@ -147,7 +139,7 @@ TEST_F(AwatchdogUtest, TestWatchDogCreateAfterFork)
     if (status == -1) {
         return;
     }
-    if(status == 0) {
+    if (status == 0) {
         exit(0);
     }
     AwdDestroyThreadWatchdog(handle);
@@ -190,7 +182,7 @@ TEST_F(AwatchdogUtest, SubProcessInitAfterProcessUnInitAllowsListReuse)
 //     AwatchdogInit();
 // }
 
-drvError_t drvGetPlatformInfoStub(uint32_t *info)
+drvError_t drvGetPlatformInfoStub(uint32_t* info)
 {
     *info = 0; // DEVICE_SIDE
     return DRV_ERROR_NONE;

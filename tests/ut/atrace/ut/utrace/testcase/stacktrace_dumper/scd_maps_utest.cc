@@ -19,38 +19,33 @@
 #include <link.h>
 #include "scd_map.h"
 
-class ScdMapsUtest: public testing::Test {
+class ScdMapsUtest : public testing::Test {
 protected:
     virtual void SetUp()
     {
         system("rm -rf " LLT_TEST_DIR "/*");
-        system("mkdir -p " LLT_TEST_DIR );
+        system("mkdir -p " LLT_TEST_DIR);
     }
 
     virtual void TearDown()
     {
         system("echo [DBG][TEST][`date +%Y-%m-%d-%H-%M-%S`] End test case");
         GlobalMockObject::verify();
-        system("rm -rf " LLT_TEST_DIR );
+        system("rm -rf " LLT_TEST_DIR);
     }
 
-    static void SetUpTestCase()
-    {
-    }
+    static void SetUpTestCase() {}
 
-    static void TearDownTestCase()
-    {
-    }
+    static void TearDownTestCase() {}
 };
-
 
 TEST_F(ScdMapsUtest, TestScdMapsInit)
 {
     ScdDwarf dwarf;
-    ScdMaps *maps = ScdMapsGet();
+    ScdMaps* maps = ScdMapsGet();
     int32_t pid = getpid();
     TraStatus ret = TRACE_FAILURE;
-    ScdMap *mapRet = 0;
+    ScdMap* mapRet = 0;
 
     ret = ScdMapsInit(maps, pid);
     EXPECT_EQ(TRACE_SUCCESS, ret);
@@ -64,10 +59,10 @@ TEST_F(ScdMapsUtest, TestScdMapsInit)
 TEST_F(ScdMapsUtest, TestScdMapsInitFailed)
 {
     MOCKER(mmMutexInit).stubs().will(returnValue(-1));
-    ScdMaps *maps = ScdMapsGet();
+    ScdMaps* maps = ScdMapsGet();
     int32_t pid = getpid();
     TraStatus ret = TRACE_FAILURE;
-    ScdMap *mapRet = 0;
+    ScdMap* mapRet = 0;
 
     ret = ScdMapsInit(maps, pid);
     EXPECT_EQ(TRACE_FAILURE, ret);
@@ -76,10 +71,10 @@ TEST_F(ScdMapsUtest, TestScdMapsInitFailed)
 TEST_F(ScdMapsUtest, TestScdMapsFailed)
 {
     MOCKER(vsnprintf_s).stubs().will(returnValue(-1));
-    ScdMaps *maps = ScdMapsGet();
+    ScdMaps* maps = ScdMapsGet();
     int32_t pid = getpid();
     TraStatus ret = TRACE_FAILURE;
-    ScdMap *mapRet = 0;
+    ScdMap* mapRet = 0;
 
     ret = ScdMapsInit(maps, pid);
     EXPECT_EQ(TRACE_SUCCESS, ret);
@@ -92,12 +87,12 @@ TEST_F(ScdMapsUtest, TestScdMapsFailed)
 
 TEST_F(ScdMapsUtest, TestScdMapsInsertFailed)
 {
-    void *buf = malloc(sizeof(ScdMap));
-    MOCKER(AdiagMalloc).stubs().will(returnValue(buf)).then(returnValue((void *)NULL));
-    ScdMaps maps = { 0 };
+    void* buf = malloc(sizeof(ScdMap));
+    MOCKER(AdiagMalloc).stubs().will(returnValue(buf)).then(returnValue((void*)NULL));
+    ScdMaps maps = {0};
     int32_t pid = getpid();
     TraStatus ret = TRACE_FAILURE;
-    ScdMap *mapRet = 0;
+    ScdMap* mapRet = 0;
 
     ret = ScdMapsInit(&maps, pid);
     EXPECT_EQ(TRACE_SUCCESS, ret);
@@ -111,10 +106,10 @@ TEST_F(ScdMapsUtest, TestScdMapsInsertFailed)
 TEST_F(ScdMapsUtest, TestScdMapsScanfFailed)
 {
     MOCKER(vsscanf_s).stubs().will(returnValue(-1));
-    ScdMaps *maps = ScdMapsGet();
+    ScdMaps* maps = ScdMapsGet();
     int32_t pid = getpid();
     TraStatus ret = TRACE_FAILURE;
-    ScdMap *mapRet = 0;
+    ScdMap* mapRet = 0;
 
     ret = ScdMapsInit(maps, pid);
     EXPECT_EQ(TRACE_SUCCESS, ret);
@@ -130,15 +125,15 @@ TEST_F(ScdMapsUtest, TestScdMapCreate)
     uintptr_t start = 0x7f1d28000000;
     uintptr_t end = 0x7f1d28021000;
     size_t offset = 0;
-    ScdMap *ret = 0;
+    ScdMap* ret = 0;
 
     ret = ScdMapCreate(start, end, offset, "libc.so.6");
-    EXPECT_NE((ScdMap *)0, ret);
+    EXPECT_NE((ScdMap*)0, ret);
 
     ScdMapUpdata(ret, start, end, offset);
 
     ScdMapDestroy(&ret);
-    EXPECT_EQ((ScdMap *)0, ret);
+    EXPECT_EQ((ScdMap*)0, ret);
 }
 
 TEST_F(ScdMapsUtest, TestScdDlInit)
@@ -164,10 +159,10 @@ TEST_F(ScdMapsUtest, TestScdDlLoadElfFailed)
 
     ret = ScdDlInit(&dlInfo);
     EXPECT_EQ(TRACE_SUCCESS, ret);
-    char log[200] = { 0 };
+    char log[200] = {0};
     (void)memset_s(log, 200, 1, 199);
-    char cmd[256] = { 0 };
-    const char *fileName = "/test_scd_maps.txt";
+    char cmd[256] = {0};
+    const char* fileName = "/test_scd_maps.txt";
     (void)snprintf_s(cmd, 256, 256, "echo %s > %s%s", log, LLT_TEST_DIR, fileName);
     system(cmd);
     std::string str(fileName);
@@ -187,17 +182,17 @@ TEST_F(ScdMapsUtest, TestScdDlLoadElfPheadFailed)
     ret = ScdDlInit(&dlInfo);
     EXPECT_EQ(TRACE_SUCCESS, ret);
 
-    const char *fileName = "/test_scd_maps.txt";
+    const char* fileName = "/test_scd_maps.txt";
     std::string str(fileName);
     str = LLT_TEST_DIR + str;
-    FILE *file = fopen(str.c_str(), "w");
+    FILE* file = fopen(str.c_str(), "w");
 
     ElfW(Ehdr) ehdr;
     memcpy_s(ehdr.e_ident, sizeof(ehdr.e_ident), ELFMAG, SELFMAG);
     ehdr.e_phoff = 64;
     ehdr.e_phnum = 1;
     ehdr.e_phentsize = 56;
-    char log[10] = { 0 };
+    char log[10] = {0};
     (void)memset_s(log, 10, 1, 9);
     fwrite(&ehdr, sizeof(ElfW(Ehdr)), 1, file);
     fwrite(log, 10, 1, file);
@@ -243,20 +238,20 @@ TEST_F(ScdMapsUtest, TestScdDlInitFailed)
     uintptr_t start = 0x7f1d28000000;
     uintptr_t end = 0x7f1d28021000;
     size_t offset = 0;
-    ScdMap *ret = 0;
+    ScdMap* ret = 0;
 
     ret = ScdMapCreate(start, end, offset, "libc.so.6");
-    EXPECT_EQ((ScdMap *)0, ret);
+    EXPECT_EQ((ScdMap*)0, ret);
 }
 
 TEST_F(ScdMapsUtest, TestScdOpenFailed)
 {
     ScdDwarf dwarf;
-    MOCKER(fopen).stubs().will(returnValue((FILE *)NULL));
+    MOCKER(fopen).stubs().will(returnValue((FILE*)NULL));
     ScdMaps maps = {0};
     int32_t pid = getpid();
     TraStatus ret = TRACE_FAILURE;
-    ScdMap *mapRet = 0;
+    ScdMap* mapRet = 0;
 
     ret = ScdMapsInit(&maps, pid);
     EXPECT_EQ(TRACE_SUCCESS, ret);
@@ -274,7 +269,7 @@ TEST_F(ScdMapsUtest, TestScdFstatFailed)
     ScdMaps maps = {0};
     int32_t pid = getpid();
     TraStatus ret = TRACE_FAILURE;
-    ScdMap *mapRet = 0;
+    ScdMap* mapRet = 0;
 
     ret = ScdMapsInit(&maps, pid);
     EXPECT_EQ(TRACE_SUCCESS, ret);
@@ -292,7 +287,7 @@ TEST_F(ScdMapsUtest, TestScdMmapFailed)
     ScdMaps maps = {0};
     int32_t pid = getpid();
     TraStatus ret = TRACE_FAILURE;
-    ScdMap *mapRet = 0;
+    ScdMap* mapRet = 0;
 
     ret = ScdMapsInit(&maps, pid);
     EXPECT_EQ(TRACE_SUCCESS, ret);
@@ -326,7 +321,7 @@ TEST_F(ScdMapsUtest, TestScdElfInit)
 TEST_F(ScdMapsUtest, TestScdElfLoadFailed)
 {
     ScdDwarf dwarf;
-    ScdMaps *maps = ScdMapsGet();
+    ScdMaps* maps = ScdMapsGet();
     int32_t pid = getpid();
     TraStatus ret = TRACE_FAILURE;
 
@@ -376,7 +371,7 @@ TEST_F(ScdMapsUtest, TestScdMap)
     uintptr_t start = 0;
     uintptr_t end = 10;
     size_t offset = 0;
-    ScdMap *map = ScdMapCreate(200, 300, 100, "test1");
+    ScdMap* map = ScdMapCreate(200, 300, 100, "test1");
     TraStatus ret = ScdMapUpdata(map, 300, 400, 200);
     EXPECT_EQ(TRACE_SUCCESS, ret);
     ret = ScdMapUpdata(map, 100, 200, 0);

@@ -20,28 +20,23 @@
 #include <pwd.h>
 
 extern "C" {
-    void TraceInit(void);
-    void TraceExit(void);
+void TraceInit(void);
+void TraceExit(void);
 }
 
-class UtraceUtest: public testing::Test {
+class UtraceUtest : public testing::Test {
 protected:
     static void SetUpTestCase()
     {
         system("mkdir -p " LLT_TEST_DIR);
-        struct passwd *pwd = getpwuid(getuid());
+        struct passwd* pwd = getpwuid(getuid());
         pwd->pw_dir = LLT_TEST_DIR;
         MOCKER(getpwuid).stubs().will(returnValue(pwd));
 
         TraceInit();
     }
-    virtual void SetUp()
-    {
-    }
-    virtual void TearDown()
-    {
-        GlobalMockObject::verify();
-    }
+    virtual void SetUp() {}
+    virtual void TearDown() { GlobalMockObject::verify(); }
     static void TearDownTestCase()
     {
         TraceExit();
@@ -89,7 +84,7 @@ TEST_F(UtraceUtest, TestAtraceSave)
 
 TEST_F(UtraceUtest, TestAtraceCreateWithAttr)
 {
-    TraceAttr attr = { 0 };
+    TraceAttr attr = {0};
     attr.exitSave = true;
     attr.msgSize = DEFAULT_ATRACE_MSG_SIZE;
     attr.msgNum = DEFAULT_ATRACE_MSG_NUM;
@@ -107,7 +102,7 @@ TEST_F(UtraceUtest, TestAtraceCreateWithAttr)
 
 TEST_F(UtraceUtest, TestAtraceCreateWithAttrLockFree)
 {
-    TraceAttr attr = { 0 };
+    TraceAttr attr = {0};
     attr.exitSave = true;
     attr.msgSize = DEFAULT_ATRACE_MSG_SIZE;
     attr.msgNum = DEFAULT_ATRACE_MSG_NUM;
@@ -129,7 +124,7 @@ TEST_F(UtraceUtest, TestGetHandleAfterDestroy)
     TracerType tracerType = TRACER_TYPE_SCHEDULE;
     std::string buffer = "msg";
     size_t bufSize = buffer.length();
-    const char objName[] = "FE";    
+    const char objName[] = "FE";
     auto handle = AtraceCreate(tracerType, objName);
     EXPECT_NE(TRACE_INVALID_HANDLE, handle);
     auto ret = AtraceSubmit(handle, buffer.c_str(), bufSize);
@@ -145,14 +140,12 @@ TEST_F(UtraceUtest, TestGetHandleAfterDestroy)
 
 TEST_F(UtraceUtest, TestApiNotSupported)
 {
-    MOCKER(AtraceCheckSupported)
-        .stubs()
-        .will(returnValue(false));
+    MOCKER(AtraceCheckSupported).stubs().will(returnValue(false));
     TracerType tracerType = TRACER_TYPE_SCHEDULE;
     const char objName[] = "HCCL";
     const char buffer[] = "msg";
     uint32_t bufSize = sizeof(buffer);
-    TraceAttr attr = { 0 };
+    TraceAttr attr = {0};
     attr.exitSave = true;
 
     auto handle = AtraceCreate(tracerType, objName);
@@ -169,9 +162,7 @@ TEST_F(UtraceUtest, TestApiNotSupported)
 
 TEST_F(UtraceUtest, TestOpenFailed)
 {
-    MOCKER(TraceOpen)
-        .stubs()
-        .will(returnValue(-1));
+    MOCKER(TraceOpen).stubs().will(returnValue(-1));
     TracerType tracerType = TRACER_TYPE_SCHEDULE;
     const char objName[] = "HCCL";
     const char buffer[] = "msg";
@@ -195,11 +186,8 @@ TEST_F(UtraceUtest, TestAtraceCreatelongerName)
     const char objName[] = "TestName_CurentNameIsLongerThan34";
     RbLogCtrl head = {"name", 0, 0, 0, 0, 0, 0, 0, 0, 0};
     RbLog data = {head};
-    MOCKER(TraceRbLogCreate)
-        .stubs()
-        .will(returnValue(&data));
-    MOCKER(TraceRbLogDestroy)
-        .stubs();
+    MOCKER(TraceRbLogCreate).stubs().will(returnValue(&data));
+    MOCKER(TraceRbLogDestroy).stubs();
 
     auto handle = AtraceCreate(tracerType, objName);
     EXPECT_EQ(TRACE_INVALID_HANDLE, handle);
@@ -214,16 +202,12 @@ TEST_F(UtraceUtest, TestAtraceDestroyFailed)
 
     auto handle = AtraceCreate(tracerType, objName);
     EXPECT_LT(TRACE_INVALID_HANDLE, handle);
-    MOCKER(AdiagMalloc)
-    .stubs()
-    .will(returnValue((void *)0));
+    MOCKER(AdiagMalloc).stubs().will(returnValue((void*)0));
 
     AtraceDestroy(handle);
     GlobalMockObject::verify();
 
-    MOCKER(AdiagListInsert)
-    .stubs()
-    .will(returnValue(TRACE_FAILURE));
+    MOCKER(AdiagListInsert).stubs().will(returnValue(TRACE_FAILURE));
     AtraceDestroy(handle);
 
     GlobalMockObject::verify();
@@ -245,18 +229,14 @@ TEST_F(UtraceUtest, TestAtraceSaveFailed)
     auto status = AtraceSubmit(handle, buffer, bufSize);
     EXPECT_EQ(TRACE_SUCCESS, status);
     // TraceRecorderGetDirPath failed
-    MOCKER(AdiagMalloc)
-    .stubs()
-    .will(returnValue((void *)0));
+    MOCKER(AdiagMalloc).stubs().will(returnValue((void*)0));
 
     status = AtraceSave(tracerType, false);
     EXPECT_EQ(TRACE_FAILURE, status);
     GlobalMockObject::verify();
 
     // TraceRbLogGetCopyOfRingBuffer failed
-    MOCKER(TraceRbLogGetCopyOfRingBuffer)
-    .stubs()
-    .will(returnValue(TRACE_FAILURE));
+    MOCKER(TraceRbLogGetCopyOfRingBuffer).stubs().will(returnValue(TRACE_FAILURE));
     status = AtraceSave(tracerType, false);
     EXPECT_EQ(TRACE_FAILURE, status);
 
@@ -279,7 +259,7 @@ struct demoStructAlign {
 
 TEST_F(UtraceUtest, TestAtraceCreateWithAttrDataStructDefineAlign)
 {
-    TraceAttr attr = { true, DEFAULT_ATRACE_MSG_NUM, DEFAULT_ATRACE_MSG_SIZE, NULL };
+    TraceAttr attr = {true, DEFAULT_ATRACE_MSG_NUM, DEFAULT_ATRACE_MSG_SIZE, NULL};
     TRACE_STRUCT_DEFINE_ENTRY(demoSt);
     TRACE_STRUCT_DEFINE_ENTRY_NAME(demoSt, "demo");
     TRACE_STRUCT_DEFINE_FIELD_UINT32(demoSt, tid, TRACE_STRUCT_SHOW_MODE_DEC);
@@ -312,7 +292,7 @@ TEST_F(UtraceUtest, TestAtraceCreateWithAttrDataStructDefineAlign)
         structList[i].hostIdArray[1] = i + 2;
         structList[i].hostIdArray[2] = i + 3;
         structList[i].hostIdArray[3] = i + 4;
-        auto ret = AtraceSubmit(handle, (void *)&structList[i], sizeof(struct demoStructAlign));
+        auto ret = AtraceSubmit(handle, (void*)&structList[i], sizeof(struct demoStructAlign));
         EXPECT_EQ(ret, TRACE_SUCCESS);
     }
 
@@ -322,7 +302,7 @@ TEST_F(UtraceUtest, TestAtraceCreateWithAttrDataStructDefineAlign)
 
 TEST_F(UtraceUtest, TestAtraceCreateWithAttrDataStructDefineMallocFailed)
 {
-    TraceAttr attr = { true, DEFAULT_ATRACE_MSG_NUM, DEFAULT_ATRACE_MSG_SIZE, NULL };
+    TraceAttr attr = {true, DEFAULT_ATRACE_MSG_NUM, DEFAULT_ATRACE_MSG_SIZE, NULL};
     MOCKER(AdiagMalloc).stubs().will(returnValue((void*)NULL));
     TRACE_STRUCT_DEFINE_ENTRY(demoSt);
     TRACE_STRUCT_DEFINE_ENTRY_NAME(demoSt, "demo");
@@ -337,7 +317,7 @@ TEST_F(UtraceUtest, TestAtraceCreateWithAttrDataStructDefineMallocFailed)
 
 TEST_F(UtraceUtest, TestAtraceCreateWithAttrDataStructDefineNameNull)
 {
-    TraceAttr attr = { true, DEFAULT_ATRACE_MSG_NUM, DEFAULT_ATRACE_MSG_SIZE, NULL };
+    TraceAttr attr = {true, DEFAULT_ATRACE_MSG_NUM, DEFAULT_ATRACE_MSG_SIZE, NULL};
     TRACE_STRUCT_DEFINE_ENTRY(demoSt);
     TRACE_STRUCT_DEFINE_ENTRY_NAME(demoSt, "");
     TRACE_STRUCT_DEFINE_FIELD_UINT32(demoSt, tid, TRACE_STRUCT_SHOW_MODE_DEC);
@@ -352,7 +332,7 @@ TEST_F(UtraceUtest, TestAtraceCreateWithAttrDataStructDefineNameNull)
 TEST_F(UtraceUtest, TestAtraceCreateWithAttrDataStructDefineStrcpyFailed)
 {
     MOCKER(strcpy_s).stubs().will(returnValue(-1));
-    TraceAttr attr = { true, DEFAULT_ATRACE_MSG_NUM, DEFAULT_ATRACE_MSG_SIZE, NULL };
+    TraceAttr attr = {true, DEFAULT_ATRACE_MSG_NUM, DEFAULT_ATRACE_MSG_SIZE, NULL};
     TRACE_STRUCT_DEFINE_ENTRY(demoSt);
     TRACE_STRUCT_DEFINE_ENTRY_NAME(demoSt, "demo");
     TRACE_STRUCT_DEFINE_FIELD_UINT32(demoSt, tid, TRACE_STRUCT_SHOW_MODE_DEC);
@@ -366,7 +346,7 @@ TEST_F(UtraceUtest, TestAtraceCreateWithAttrDataStructDefineStrcpyFailed)
 
 TEST_F(UtraceUtest, TestAtraceCreateWithAttrDataStructDefineListNull)
 {
-    TraceAttr attr = { true, DEFAULT_ATRACE_MSG_NUM, DEFAULT_ATRACE_MSG_SIZE, NULL };
+    TraceAttr attr = {true, DEFAULT_ATRACE_MSG_NUM, DEFAULT_ATRACE_MSG_SIZE, NULL};
     TRACE_STRUCT_DEFINE_ENTRY(demoSt);
     TRACE_STRUCT_DEFINE_ENTRY_NAME(demoSt, "demo");
     TRACE_STRUCT_SET_ATTR(demoSt, 0, &attr);
@@ -389,7 +369,7 @@ TEST_F(UtraceUtest, TestAtraceCreateWithAttrDataStructDefineListNull)
         structList[i].hostIdArray[1] = i + 2;
         structList[i].hostIdArray[2] = i + 3;
         structList[i].hostIdArray[3] = i + 4;
-        auto ret = AtraceSubmit(handle, (void *)&structList[i], sizeof(struct demoStructAlign));
+        auto ret = AtraceSubmit(handle, (void*)&structList[i], sizeof(struct demoStructAlign));
         EXPECT_EQ(ret, TRACE_SUCCESS);
     }
     AtraceDestroy(handle);
@@ -398,7 +378,7 @@ TEST_F(UtraceUtest, TestAtraceCreateWithAttrDataStructDefineListNull)
 
 TEST_F(UtraceUtest, TestAtraceCreateWithAttrDataStructDefineAlignSafe)
 {
-    TraceAttr attr = { true, DEFAULT_ATRACE_MSG_NUM, DEFAULT_ATRACE_MSG_SIZE, NULL };
+    TraceAttr attr = {true, DEFAULT_ATRACE_MSG_NUM, DEFAULT_ATRACE_MSG_SIZE, NULL};
     TRACE_STRUCT_DEFINE_ENTRY(demoSt);
     TRACE_STRUCT_DEFINE_ENTRY_NAME(demoSt, "demo");
     TRACE_STRUCT_DEFINE_FIELD_UINT32(demoSt, tid, TRACE_STRUCT_SHOW_MODE_DEC);
@@ -431,7 +411,7 @@ TEST_F(UtraceUtest, TestAtraceCreateWithAttrDataStructDefineAlignSafe)
         structList[i].hostIdArray[1] = i + 2;
         structList[i].hostIdArray[2] = i + 3;
         structList[i].hostIdArray[3] = i + 4;
-        auto ret = AtraceSubmit(handle, (void *)&structList[i], sizeof(struct demoStructAlign));
+        auto ret = AtraceSubmit(handle, (void*)&structList[i], sizeof(struct demoStructAlign));
         EXPECT_EQ(ret, TRACE_SUCCESS);
     }
     raise(SIGTERM);
@@ -461,7 +441,7 @@ TEST_F(UtraceUtest, TestAtraceCreateWithAttrDataStructListInitFailed)
 {
     MOCKER(mmMutexInit).stubs().will(returnValue(-1));
     TRACE_STRUCT_DEFINE_ENTRY(en);
-    EXPECT_EQ(en.list, (void *)NULL);
+    EXPECT_EQ(en.list, (void*)NULL);
     TRACE_STRUCT_UNDEFINE_ENTRY(en);
 }
 
@@ -469,16 +449,16 @@ TEST_F(UtraceUtest, TestAtraceCreateWithAttrDataStructListItemFailed)
 {
     TRACE_STRUCT_DEFINE_ENTRY(en);
     TRACE_STRUCT_DEFINE_ENTRY_NAME(en, "demo");
-    MOCKER(AdiagMalloc).stubs().will(returnValue((void *)NULL));
+    MOCKER(AdiagMalloc).stubs().will(returnValue((void*)NULL));
     TRACE_STRUCT_DEFINE_FIELD_UINT32(en, tid, TRACE_STRUCT_SHOW_MODE_DEC);
-    EXPECT_EQ(ListEmpty(&((struct AdiagList *)en.list)->list), true);
+    EXPECT_EQ(ListEmpty(&((struct AdiagList*)en.list)->list), true);
     TRACE_STRUCT_UNDEFINE_ENTRY(en);
 }
 
 TEST_F(UtraceUtest, TestAtraceCreateWithAttrDataStructFuncDefineAlign)
 {
-    TraceAttr attr = { true, DEFAULT_ATRACE_MSG_NUM, DEFAULT_ATRACE_MSG_SIZE, NULL };
-    TraceStructEntry *demoSt = AtraceStructEntryCreate("demo");
+    TraceAttr attr = {true, DEFAULT_ATRACE_MSG_NUM, DEFAULT_ATRACE_MSG_SIZE, NULL};
+    TraceStructEntry* demoSt = AtraceStructEntryCreate("demo");
     AtraceStructItemFieldSet(demoSt, "tid", TRACE_STRUCT_FIELD_TYPE_UINT32, TRACE_STRUCT_SHOW_MODE_DEC, 4);
     AtraceStructItemFieldSet(demoSt, "count", TRACE_STRUCT_FIELD_TYPE_UINT32, TRACE_STRUCT_SHOW_MODE_DEC, 4);
     AtraceStructItemArraySet(demoSt, "tag", TRACE_STRUCT_ARRAY_TYPE_CHAR, TRACE_STRUCT_SHOW_MODE_CHAR, 32);
@@ -509,7 +489,7 @@ TEST_F(UtraceUtest, TestAtraceCreateWithAttrDataStructFuncDefineAlign)
         structList[i].hostIdArray[1] = i + 2;
         structList[i].hostIdArray[2] = i + 3;
         structList[i].hostIdArray[3] = i + 4;
-        auto ret = AtraceSubmit(handle, (void *)&structList[i], sizeof(struct demoStructAlign));
+        auto ret = AtraceSubmit(handle, (void*)&structList[i], sizeof(struct demoStructAlign));
         EXPECT_EQ(ret, TRACE_SUCCESS);
     }
 
@@ -519,7 +499,7 @@ TEST_F(UtraceUtest, TestAtraceCreateWithAttrDataStructFuncDefineAlign)
 
 TEST_F(UtraceUtest, TestAtraceCreateWithAttrDataStructDefineAlignWithNodata)
 {
-    TraceAttr attr = { true, DEFAULT_ATRACE_MSG_NUM, DEFAULT_ATRACE_MSG_SIZE, NULL };
+    TraceAttr attr = {true, DEFAULT_ATRACE_MSG_NUM, DEFAULT_ATRACE_MSG_SIZE, NULL};
     auto handle1 = AtraceCreateWithAttr(TRACER_TYPE_SCHEDULE, "demo", &attr);
     EXPECT_NE(TRACE_INVALID_HANDLE, handle1);
     TRACE_STRUCT_DEFINE_ENTRY(demoSt);
@@ -553,7 +533,7 @@ TEST_F(UtraceUtest, TimestampToStrFailed)
 TEST_F(UtraceUtest, TimestampOffsetFailed)
 {
     MOCKER(mmGetTimeOfDay).stubs().will(returnValue(-1)).then(returnValue(0));
-    MOCKER(localtime_r).stubs().will(returnValue((struct tm *)NULL));
+    MOCKER(localtime_r).stubs().will(returnValue((struct tm*)NULL));
     int32_t time = 0;
     EXPECT_EQ(TRACE_FAILURE, TraceGetTimeOffset(&time));
     EXPECT_EQ(TRACE_FAILURE, TraceGetTimeOffset(&time));
@@ -567,7 +547,7 @@ TEST_F(UtraceUtest, TraceAttrInitTimeFailed)
 
 TEST_F(UtraceUtest, TestExitSave_SameObjName)
 {
-    TraceAttr attr = { 0 };
+    TraceAttr attr = {0};
     attr.exitSave = true;
     attr.msgSize = DEFAULT_ATRACE_MSG_SIZE;
     attr.msgNum = DEFAULT_ATRACE_MSG_NUM;

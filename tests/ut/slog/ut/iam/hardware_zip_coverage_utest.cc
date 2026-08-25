@@ -126,10 +126,10 @@ TEST_F(HardwareZipCoverageUtest, CoversHardwareBoundaryFailures)
     ASSERT_GE(fullFd, 0);
     EXPECT_EQ(LOG_FAILURE, HardwareCompressInit(fullFd, &stream));
     ASSERT_EQ(0, close(fullFd));
-    char tiny[1] = { 0 };
+    char tiny[1] = {0};
     EXPECT_EQ(LOG_FAILURE, HardwareCompressBufferInit(&stream, tiny, sizeof(tiny)));
 
-    char output[32] = { 0 };
+    char output[32] = {0};
     ASSERT_EQ(LOG_SUCCESS, HardwareCompressBufferInit(&stream, output, sizeof(output)));
     int32_t sourceLen = 0;
     EXPECT_EQ(INVALID, HardwareSrcDataCopy("", &sourceLen, &stream));

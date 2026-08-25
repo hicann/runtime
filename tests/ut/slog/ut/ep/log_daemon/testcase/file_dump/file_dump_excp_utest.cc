@@ -14,8 +14,7 @@ using namespace testing;
 
 #include "self_log_stub.h"
 
-class EP_FILE_DUMP_EXCP_UTEST : public testing::Test
-{
+class EP_FILE_DUMP_EXCP_UTEST : public testing::Test {
 protected:
     virtual void SetUp()
     {

@@ -10,17 +10,7 @@
 #ifndef SLOG_STUB_H
 #define SLOG_STUB_H
 extern void RecordErrorLog(void);
-static inline void EXPECT_CheckNoErrorLog()
-{
-    MOCKER(RecordErrorLog)
-        .expects(never())
-        .will(ignoreReturnValue());
-}
+static inline void EXPECT_CheckNoErrorLog() { MOCKER(RecordErrorLog).expects(never()).will(ignoreReturnValue()); }
 
-static inline void EXPECT_CheckErrorLog()
-{
-    MOCKER(RecordErrorLog)
-        .expects(atLeast(1))
-        .will(ignoreReturnValue());
-}
+static inline void EXPECT_CheckErrorLog() { MOCKER(RecordErrorLog).expects(atLeast(1)).will(ignoreReturnValue()); }
 #endif

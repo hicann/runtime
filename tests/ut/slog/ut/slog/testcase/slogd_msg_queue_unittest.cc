@@ -13,33 +13,29 @@
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
 extern "C" {
-    #include "log_common.h"
-    #include "msg_queue.h"
+#include "log_common.h"
+#include "msg_queue.h"
 
-    toolMsgid ToolMsgOpen(toolKey key, int32_t msgFlag);
-    int32_t ToolMsgSnd(toolMsgid msqid, const void *buf, uint32_t bufLen, int32_t msgFlag);
-    int32_t ToolMsgRcv(toolMsgid msqid, void *buf, uint32_t bufLen, int32_t msgFlag, long msgType);
-    int32_t ToolMsgClose(toolMsgid msqid);
-    LogStatus MsgQueueDelete(toolMsgid queueId);
+toolMsgid ToolMsgOpen(toolKey key, int32_t msgFlag);
+int32_t ToolMsgSnd(toolMsgid msqid, const void* buf, uint32_t bufLen, int32_t msgFlag);
+int32_t ToolMsgRcv(toolMsgid msqid, void* buf, uint32_t bufLen, int32_t msgFlag, long msgType);
+int32_t ToolMsgClose(toolMsgid msqid);
+LogStatus MsgQueueDelete(toolMsgid queueId);
 }
-class SlogdMsgQueue : public testing::Test
-{
+class SlogdMsgQueue : public testing::Test {
 public:
     void SetUp();
     void TearDown();
 };
 
-void SlogdMsgQueue::SetUp()
-{
-}
+void SlogdMsgQueue::SetUp() {}
 
-void SlogdMsgQueue::TearDown()
-{}
+void SlogdMsgQueue::TearDown() {}
 
 TEST_F(SlogdMsgQueue, DeleteMsgQueueIdLeZero)
 {
     EXPECT_EQ(LOG_INVALID_QUEUE_ID, MsgQueueDelete(-1));
-    //GlobalMockObject::reset();
+    // GlobalMockObject::reset();
 }
 
 TEST_F(SlogdMsgQueue, DeleteMsgQueueMsgctlFail)
@@ -52,7 +48,7 @@ TEST_F(SlogdMsgQueue, DeleteMsgQueueMsgctlFail)
 TEST_F(SlogdMsgQueue, DeleteMsgQueueMsgctlSuccess)
 {
     MOCKER(msgctl).stubs().will(returnValue(0));
-    EXPECT_EQ(0, MsgQueueDelete(1));    
+    EXPECT_EQ(0, MsgQueueDelete(1));
     GlobalMockObject::reset();
 }
 
@@ -63,12 +59,11 @@ TEST_F(SlogdMsgQueue, DeleteMsgQueueMsgctlSuccess3)
     GlobalMockObject::reset();
 }
 
-
 TEST_F(SlogdMsgQueue, SendMsgIdLeZero)
 {
     EXPECT_EQ(LOG_INVALID_QUEUE_ID, MsgQueueSend(-1, NULL, 0, 0));
-    
-    //GlobalMockObject::reset();
+
+    // GlobalMockObject::reset();
 }
 
 TEST_F(SlogdMsgQueue, SendMsgDataIsZero)
@@ -87,10 +82,10 @@ TEST_F(SlogdMsgQueue, SendMsgLengthLeZero)
 TEST_F(SlogdMsgQueue, SendMsgWaitIsZero)
 {
     LogCmdMsg data = {1, 0, "Msg"};
-    
+
     MOCKER(ToolMsgSnd).stubs().will(returnValue(-1));
     EXPECT_EQ(LOG_FAILURE_SEND_MSG, MsgQueueSend(1, (void*)&data, 3, 0));
-    
+
     GlobalMockObject::reset();
 }
 
@@ -107,18 +102,18 @@ TEST_F(SlogdMsgQueue, SendMsgWaitGeZero)
 TEST_F(SlogdMsgQueue, SendMsgWaitGeZero2)
 {
     LogCmdMsg data = {1, 0, "Msg"};
-    
+
     MOCKER(ToolMsgSnd).stubs().will(returnValue(0));
     EXPECT_EQ(LOG_SUCCESS, MsgQueueSend(1, (void*)&data, 3, 10));
-    
+
     GlobalMockObject::reset();
 }
 
 TEST_F(SlogdMsgQueue, RecvMsgIdLeZero)
 {
     EXPECT_EQ(LOG_INVALID_QUEUE_ID, MsgQueueRecv(-1, NULL, 0, 0, 1));
-    
-    //GlobalMockObject::reset();
+
+    // GlobalMockObject::reset();
 }
 
 TEST_F(SlogdMsgQueue, RecvMsgDataIsZero)
@@ -156,7 +151,7 @@ TEST_F(SlogdMsgQueue, RecvMsgWaitIsZero2)
 TEST_F(SlogdMsgQueue, RecvMsgWaitGeZero)
 {
     LogCmdMsg data = {1, 0, "Msg"};
-    
+
     MOCKER(ToolMsgRcv).stubs().will(returnValue(SYS_ERROR));
     EXPECT_EQ(LOG_FAILURE_RECV_MSG, MsgQueueRecv(1, (void*)&data, 3, 10, 1));
     GlobalMockObject::reset();
@@ -164,19 +159,20 @@ TEST_F(SlogdMsgQueue, RecvMsgWaitGeZero)
 
 TEST_F(SlogdMsgQueue, ToolMsgSnd2)
 {
-    LogCmdMsg buf = { 0, 0, "" };
-    int sendLen = 10;;
+    LogCmdMsg buf = {0, 0, ""};
+    int sendLen = 10;
+    ;
     MOCKER(msgsnd).stubs().will(returnValue(sendLen));
-    EXPECT_EQ(sendLen, ToolMsgSnd(1, (VOID *)(&buf), MSG_MAX_LEN, 0));
+    EXPECT_EQ(sendLen, ToolMsgSnd(1, (VOID*)(&buf), MSG_MAX_LEN, 0));
     GlobalMockObject::reset();
 }
 
 TEST_F(SlogdMsgQueue, ToolMsgRcv2)
 {
-    LogCmdMsg buf = { 0, 0, "" };
+    LogCmdMsg buf = {0, 0, ""};
     int recvLen = 10;
     MOCKER(msgrcv).stubs().will(returnValue(recvLen));
-    EXPECT_EQ(recvLen, ToolMsgRcv(1, (VOID *)(&buf), MSG_MAX_LEN, 0, 1));
+    EXPECT_EQ(recvLen, ToolMsgRcv(1, (VOID*)(&buf), MSG_MAX_LEN, 0, 1));
     GlobalMockObject::reset();
 }
 

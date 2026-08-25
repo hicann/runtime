@@ -12,28 +12,20 @@
 #include "adx_component_api_c.h"
 #include "adcore_api.h"
 
-int32_t AdxRegisterService(int32_t serverType, ComponentType componentType, AdxComponentInit init,
-    AdxComponentProcess process, AdxComponentUnInit uninit)
+int32_t AdxRegisterService(
+    int32_t serverType, ComponentType componentType, AdxComponentInit init, AdxComponentProcess process,
+    AdxComponentUnInit uninit)
 {
     return 0;
 }
 
-int32_t AdxServiceStartup(ServerInitInfo info)
-{
-    return 0;
-}
+int32_t AdxServiceStartup(ServerInitInfo info) { return 0; }
 
-int32_t AdxSendMsg(AdxCommConHandle handle, const char* data, uint32_t len)
-{
-    return 0;
-}
+int32_t AdxSendMsg(AdxCommConHandle handle, const char* data, uint32_t len) { return 0; }
 
-int32_t AdxRecvMsg(AdxCommHandle handle, char **data, uint32_t *len, uint32_t timeout)
-{
-    return 0;
-}
+int32_t AdxRecvMsg(AdxCommHandle handle, char** data, uint32_t* len, uint32_t timeout) { return 0; }
 
-int32_t AdxGetAttrByCommHandle(AdxCommConHandle handle, int32_t attr, int32_t *value)
+int32_t AdxGetAttrByCommHandle(AdxCommConHandle handle, int32_t attr, int32_t* value)
 {
     *value = 0;
     return 0;

@@ -29,35 +29,17 @@ void LogProxyStubReset(void)
     g_logBufInitRet = SYS_ERROR;
 }
 
-void LogProxyStubSetIamReady(int32_t ret)
-{
-    g_iamReadyRet = ret;
-}
+void LogProxyStubSetIamReady(int32_t ret) { g_iamReadyRet = ret; }
 
-void LogProxyStubSetRegisterRet(int32_t ret)
-{
-    g_registerRet = ret;
-}
+void LogProxyStubSetRegisterRet(int32_t ret) { g_registerRet = ret; }
 
-void LogProxyStubSetUnregisterRet(int32_t ret)
-{
-    g_unregisterRet = ret;
-}
+void LogProxyStubSetUnregisterRet(int32_t ret) { g_unregisterRet = ret; }
 
-void LogProxyStubSetHiMemInitRet(LogStatus ret)
-{
-    g_hiMemInitRet = ret;
-}
+void LogProxyStubSetHiMemInitRet(LogStatus ret) { g_hiMemInitRet = ret; }
 
-void LogProxyStubSetHiMemReadNodes(uint32_t nodes)
-{
-    g_hiMemReadNodes = nodes;
-}
+void LogProxyStubSetHiMemReadNodes(uint32_t nodes) { g_hiMemReadNodes = nodes; }
 
-void LogProxyStubSetLogBufInitRet(int32_t ret)
-{
-    g_logBufInitRet = ret;
-}
+void LogProxyStubSetLogBufInitRet(int32_t ret) { g_logBufInitRet = ret; }
 
 void LogPrintSys(int32_t priority, const char* format, ...)
 {

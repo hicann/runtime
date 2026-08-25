@@ -20,12 +20,12 @@
 #include "trace_recorder.h"
 #include "mmpa_api.h"
 
-class TraceClientUtest: public testing::Test {
+class TraceClientUtest : public testing::Test {
 protected:
     virtual void SetUp()
     {
         MOCKER(TraceRecorderGetFd).stubs().will(returnValue(TRACE_SUCCESS));
-        MOCKER(TraceRecorderGetDirPath).stubs().will(returnValue((const TraceDirNode *)1));
+        MOCKER(TraceRecorderGetDirPath).stubs().will(returnValue((const TraceDirNode*)1));
         MOCKER(TraceRecorderWrite).stubs().will(returnValue(TRACE_SUCCESS));
         system("echo [DBG][TEST][`date +%Y-%m-%d-%H-%M-%S`] Start test case");
     }
@@ -118,7 +118,7 @@ TEST_F(TraceClientUtest, TraceClient_RecvEeventMsg)
 TEST_F(TraceClientUtest, TraceClient_GetDirFailed)
 {
     GlobalMockObject::verify();
-    MOCKER(TraceRecorderGetDirPath).stubs().will(returnValue((const TraceDirNode *)0));
+    MOCKER(TraceRecorderGetDirPath).stubs().will(returnValue((const TraceDirNode*)0));
     int32_t devId = 0;
     auto ret = AtraceClientStart(devId);
     EXPECT_EQ(TRACE_SUCCESS, ret);
@@ -140,7 +140,7 @@ TEST_F(TraceClientUtest, TraceClient_SendMsgFailed)
 TEST_F(TraceClientUtest, TraceClient_GetFdFailed)
 {
     GlobalMockObject::verify();
-    MOCKER(TraceRecorderGetDirPath).stubs().will(returnValue((const TraceDirNode *)1));
+    MOCKER(TraceRecorderGetDirPath).stubs().will(returnValue((const TraceDirNode*)1));
     MOCKER(TraceRecorderGetFd).stubs().will(returnValue(TRACE_FAILURE));
     int32_t devId = 0;
     auto ret = AtraceClientStart(devId);
@@ -152,7 +152,7 @@ TEST_F(TraceClientUtest, TraceClient_GetFdFailed)
 TEST_F(TraceClientUtest, TraceClient_WriteFailed)
 {
     GlobalMockObject::verify();
-    MOCKER(TraceRecorderGetDirPath).stubs().will(returnValue((const TraceDirNode *)0));
+    MOCKER(TraceRecorderGetDirPath).stubs().will(returnValue((const TraceDirNode*)0));
     MOCKER(TraceRecorderGetFd).stubs().will(returnValue(TRACE_SUCCESS));
     MOCKER(TraceRecorderWrite).stubs().will(returnValue(TRACE_FAILURE));
     int32_t devId = 0;
@@ -204,7 +204,7 @@ TEST_F(TraceClientUtest, AtraceClientExitNoSend_ReturnsSuccessWithoutHdc)
     MOCKER(AdxSendMsgAndNoResultByType).expects(never());
     EXPECT_EQ(TRACE_SUCCESS, AtraceClientExitNoSend(0));
     EXPECT_EQ(TRACE_SUCCESS, AtraceClientExitNoSend(1));
-    EXPECT_EQ(TRACE_SUCCESS, AtraceClientExitNoSend(-1));   // stub ignores devId
+    EXPECT_EQ(TRACE_SUCCESS, AtraceClientExitNoSend(-1)); // stub ignores devId
 }
 
 TEST_F(TraceClientUtest, AtraceClientExit_DoesNotSendEnd)
@@ -218,7 +218,7 @@ TEST_F(TraceClientUtest, AtraceClientExit_DoesNotSendEnd)
     // real system, re-attach the device and fail register_urma_seg.
     int32_t devId = 0;
     EXPECT_EQ(TRACE_SUCCESS, AtraceClientStart(devId));
-    sleep(1);   // let the recv thread enter its loop
+    sleep(1); // let the recv thread enter its loop
 
     MOCKER(AdxSendMsgAndNoResultByType).expects(never());
     AtraceClientExit();
@@ -242,4 +242,3 @@ TEST_F(TraceClientUtest, AtraceClientStop_StillSendsEnd)
     MOCKER(AdxSendMsgAndNoResultByType).expects(atLeast(1)).will(returnValue((int32_t)IDE_DAEMON_OK));
     AtraceClientStop(devId);
 }
-

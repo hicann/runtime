@@ -15,12 +15,9 @@
 #include "ascend_hal.h"
 #include <pwd.h>
 
-class TraceAttrUtest: public testing::Test {
+class TraceAttrUtest : public testing::Test {
 protected:
-    virtual void SetUp()
-    {
-        system("echo [DBG][TEST][`date +%Y-%m-%d-%H-%M-%S`] Start test case");
-    }
+    virtual void SetUp() { system("echo [DBG][TEST][`date +%Y-%m-%d-%H-%M-%S`] Start test case"); }
 
     virtual void TearDown()
     {
@@ -28,19 +25,13 @@ protected:
         GlobalMockObject::verify();
     }
 
-    static void SetUpTestCase()
-    {
-        system("echo [DBG][TEST][`date +%Y-%m-%d-%H-%M-%S`] Start test suite");
-    }
+    static void SetUpTestCase() { system("echo [DBG][TEST][`date +%Y-%m-%d-%H-%M-%S`] Start test suite"); }
 
-    static void TearDownTestCase()
-    {
-        system("echo [DBG][TEST][`date +%Y-%m-%d-%H-%M-%S`] End test suite");
-    }
+    static void TearDownTestCase() { system("echo [DBG][TEST][`date +%Y-%m-%d-%H-%M-%S`] End test suite"); }
 };
 
 extern "C" {
-    uint32_t TraceAttrGetPlatform(void);
+uint32_t TraceAttrGetPlatform(void);
 }
 TEST_F(TraceAttrUtest, TraceAttrInit)
 {
@@ -63,7 +54,7 @@ TEST_F(TraceAttrUtest, TraceAttrGetPlatform)
     TraceAttrExit();
 }
 
-drvError_t drvGetPlatformInfoStub(uint32_t *info)
+drvError_t drvGetPlatformInfoStub(uint32_t* info)
 {
     *info = 0; // DEVICE_SIDE
     return DRV_ERROR_NONE;
@@ -81,9 +72,7 @@ TEST_F(TraceAttrUtest, TraceAttrGetPlatformHelperHost)
 
 TEST_F(TraceAttrUtest, TraceAttrHelperDevice)
 {
-    MOCKER(drvGetPlatformInfo)
-        .stubs()
-        .will(invoke(drvGetPlatformInfoStub));
+    MOCKER(drvGetPlatformInfo).stubs().will(invoke(drvGetPlatformInfoStub));
     auto ret = TraceAttrInit();
     EXPECT_EQ(TRACE_SUCCESS, ret);
 
@@ -109,18 +98,18 @@ TEST_F(TraceAttrUtest, AtraceCheckSupported_PureCpu)
     EXPECT_EQ(TRACE_SUCCESS, ret);
 
     EXPECT_EQ(PLATFORM_INVALID_VALUE, TraceAttrGetPlatform());
-    EXPECT_TRUE(AtraceCheckSupported());         // cpu-only features supported
-    EXPECT_FALSE(AtraceCheckDeviceSupported());  // device-interacting features not supported
+    EXPECT_TRUE(AtraceCheckSupported());        // cpu-only features supported
+    EXPECT_FALSE(AtraceCheckDeviceSupported()); // device-interacting features not supported
     TraceAttrExit();
 }
 
-drvError_t drvGetPlatformInfoHostStub(uint32_t *info)
+drvError_t drvGetPlatformInfoHostStub(uint32_t* info)
 {
     *info = 1; // HOST_SIDE
     return DRV_ERROR_NONE;
 }
 
-drvError_t drvGetDevNumStub(uint32_t *numDev)
+drvError_t drvGetDevNumStub(uint32_t* numDev)
 {
     *numDev = 1;
     return DRV_ERROR_NONE;
@@ -131,12 +120,8 @@ TEST_F(TraceAttrUtest, AtraceCheckSupported_Host)
 {
     // mock the driver query explicitly instead of relying on the default value in
     // ascend_hal_stub.c, so the host side truth table does not depend on the stub.
-    MOCKER(drvGetPlatformInfo)
-        .stubs()
-        .will(invoke(drvGetPlatformInfoHostStub));
-    MOCKER(drvGetDevNum)
-        .stubs()
-        .will(invoke(drvGetDevNumStub));
+    MOCKER(drvGetPlatformInfo).stubs().will(invoke(drvGetPlatformInfoHostStub));
+    MOCKER(drvGetDevNum).stubs().will(invoke(drvGetDevNumStub));
     auto ret = TraceAttrInit();
     EXPECT_EQ(TRACE_SUCCESS, ret);
 
@@ -149,9 +134,7 @@ TEST_F(TraceAttrUtest, AtraceCheckSupported_Host)
 // device side: neither cpu-only nor device-interacting trace features are supported.
 TEST_F(TraceAttrUtest, AtraceCheckSupported_Device)
 {
-    MOCKER(drvGetPlatformInfo)
-        .stubs()
-        .will(invoke(drvGetPlatformInfoStub));
+    MOCKER(drvGetPlatformInfo).stubs().will(invoke(drvGetPlatformInfoStub));
     auto ret = TraceAttrInit();
     EXPECT_EQ(TRACE_SUCCESS, ret);
 
@@ -193,7 +176,7 @@ TEST_F(TraceAttrUtest, TestEnvTimeout_InvalidValue)
 
 TEST_F(TraceAttrUtest, TestGlobalAttr)
 {
-    TraceGlobalAttr attr = { 1, 32, 100 };
+    TraceGlobalAttr attr = {1, 32, 100};
     EXPECT_EQ(TRACE_SUCCESS, TraceSetGlobalAttr(&attr));
     EXPECT_EQ(1, TraceAttrGetSaveMode());
     EXPECT_EQ(32, TraceAttrGetGlobalDevId());

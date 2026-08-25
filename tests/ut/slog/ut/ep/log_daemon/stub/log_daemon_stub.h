@@ -12,16 +12,16 @@
 
 #include "ascend_hal_error.h"
 
-#define SET_SUCCESS_MSG            "Configuration successfully set"
-#define DRV_NOT_READY              "Driver api wait timeout"
-#define DRV_ERROR                  "Set config failed, check slogdlog for more information"
-#define TS_NOT_SUPPORT             "This chip platform does not support"
-#define TS_CORE_ID_INVALID         "The specified core id is invalid"
-#define TS_CORE_ID_PF_DOWN         "The specified core is pg down core and does not support the operation"
-#define TS_NOT_SUPPORT_CORE        "This chip platform not support core mask"
-#define TS_NOT_SUPPORT_AIV_CORE    "This chip platform not support aiv core"
-#define TS_CORE_NOT_IN_POOL        "The specified core maybe not in pool"
-#define TS_POOLING_STATUS_FAIL     "The specified core need pooling status"
+#define SET_SUCCESS_MSG "Configuration successfully set"
+#define DRV_NOT_READY "Driver api wait timeout"
+#define DRV_ERROR "Set config failed, check slogdlog for more information"
+#define TS_NOT_SUPPORT "This chip platform does not support"
+#define TS_CORE_ID_INVALID "The specified core id is invalid"
+#define TS_CORE_ID_PF_DOWN "The specified core is pg down core and does not support the operation"
+#define TS_NOT_SUPPORT_CORE "This chip platform not support core mask"
+#define TS_NOT_SUPPORT_AIV_CORE "This chip platform not support aiv core"
+#define TS_CORE_NOT_IN_POOL "The specified core maybe not in pool"
+#define TS_POOLING_STATUS_FAIL "The specified core need pooling status"
 #ifdef __cplusplus
 extern "C" {
 #endif

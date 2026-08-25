@@ -52,7 +52,7 @@ void CreateIamService()
     ASSERT_GE(fd, 0) << strerror(errno);
     ASSERT_EQ(0, close(fd));
 }
-}
+} // namespace
 
 class LogProxyCoverageUtest : public testing::Test {
 protected:

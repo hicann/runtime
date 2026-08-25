@@ -28,10 +28,7 @@ void HardwareZipStubReset(void)
     g_deflateEndResult = HZIP_OK;
 }
 
-void HardwareZipStubSetDeflateInitResult(int result)
-{
-    g_deflateInitResult = result;
-}
+void HardwareZipStubSetDeflateInitResult(int result) { g_deflateInitResult = result; }
 
 void HardwareZipStubSetDeflateResult(int result, unsigned long availOut)
 {
@@ -39,10 +36,7 @@ void HardwareZipStubSetDeflateResult(int result, unsigned long availOut)
     g_deflateAvailOut = availOut;
 }
 
-void HardwareZipStubSetDeflateEndResult(int result)
-{
-    g_deflateEndResult = result;
-}
+void HardwareZipStubSetDeflateEndResult(int result) { g_deflateEndResult = result; }
 
 void LogPrintSys(int32_t priority, const char* format, ...)
 {

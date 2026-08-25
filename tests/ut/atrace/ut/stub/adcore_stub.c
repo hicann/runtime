@@ -13,8 +13,8 @@
 #include "securec.h"
 #include "trace_msg.h"
 
-int32_t AdxSendMsgAndGetResultByType(AdxHdcServiceType type, IdeTlvConReq req, AdxStringBuffer const result,
-    uint32_t resultLen)
+int32_t AdxSendMsgAndGetResultByType(
+    AdxHdcServiceType type, IdeTlvConReq req, AdxStringBuffer const result, uint32_t resultLen)
 {
     if (type != HDC_SERVICE_TYPE_BBOX) {
         return IDE_DAEMON_ERROR;
@@ -60,7 +60,7 @@ int32_t AdxSendMsg(AdxCommConHandle handle, AdxString data, uint32_t len)
     return IDE_DAEMON_OK;
 }
 
-int32_t AdxRecvMsg(AdxCommHandle handle, char **data, uint32_t *len, uint32_t timeout)
+int32_t AdxRecvMsg(AdxCommHandle handle, char** data, uint32_t* len, uint32_t timeout)
 {
     if ((len == NULL) || (data == NULL) || (handle == NULL)) {
         return IDE_DAEMON_ERROR;
@@ -77,21 +77,21 @@ int32_t AdxRecvMsg(AdxCommHandle handle, char **data, uint32_t *len, uint32_t ti
         return IDE_DAEMON_OK;
     } else if (i == 2) { // receive event msg(start)
         *len = sizeof(TraceEventMsg);
-        TraceEventMsg msg = { 0 };
+        TraceEventMsg msg = {0};
         msg.msgType = TRACE_EVENT_MSG;
         msg.seqFlag = TRACE_MSG_SEQFLAG_START;
         memcpy_s(*data, sizeof(TraceEventMsg), &msg, sizeof(TraceEventMsg));
         return IDE_DAEMON_OK;
     } else if (i == 3) { // receive event msg(end)
         *len = sizeof(TraceEventMsg);
-        TraceEventMsg msg = { 0 };
+        TraceEventMsg msg = {0};
         msg.msgType = TRACE_EVENT_MSG;
         msg.seqFlag = TRACE_MSG_SEQFLAG_END;
         memcpy_s(*data, sizeof(TraceEventMsg), &msg, sizeof(TraceEventMsg));
         return IDE_DAEMON_OK;
     } else if (i == 4) { // receive event msg
         *len = sizeof(TraceEndMsg);
-        TraceEndMsg msg = { 0 };
+        TraceEndMsg msg = {0};
         msg.msgType = TRACE_END_MSG;
         memcpy_s(*data, sizeof(TraceEndMsg), &msg, sizeof(TraceEndMsg));
         return IDE_DAEMON_OK;
@@ -103,7 +103,4 @@ int32_t AdxRecvMsg(AdxCommHandle handle, char **data, uint32_t *len, uint32_t ti
     return IDE_DAEMON_ERROR;
 }
 
-void AdxDestroyCommHandle(AdxCommHandle handle)
-{
-    (void)handle;
-}
+void AdxDestroyCommHandle(AdxCommHandle handle) { (void)handle; }

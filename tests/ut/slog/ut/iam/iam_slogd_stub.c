@@ -44,8 +44,9 @@ void IamSlogdStubReset(void)
     (void)memset(&g_fileList, 0, sizeof(g_fileList));
     (void)strcpy_s(g_fileList.aucFilePath, sizeof(g_fileList.aucFilePath), "/tmp");
     for (int32_t type = 0; type < (int32_t)LOG_TYPE_NUM; type++) {
-        (void)strcpy_s(g_fileList.sortDeviceOsLogList[type].fileName,
-                       sizeof(g_fileList.sortDeviceOsLogList[type].fileName), "device-os.log");
+        (void)strcpy_s(
+            g_fileList.sortDeviceOsLogList[type].fileName, sizeof(g_fileList.sortDeviceOsLogList[type].fileName),
+            "device-os.log");
     }
 }
 
@@ -105,9 +106,7 @@ int32_t SlogdGetModuleLevel(int32_t moduleId, uint32_t typeMask)
 const ModuleInfo* GetModuleInfos(void)
 {
     static const ModuleInfo moduleInfos[] = {
-        {"SLOG", SLOG, false, DLOG_INFO, {-1, -1, -1, -1}, -1},
-        {NULL, -1, false, -1, {-1, -1, -1, -1}, -1}
-    };
+        {"SLOG", SLOG, false, DLOG_INFO, {-1, -1, -1, -1}, -1}, {NULL, -1, false, -1, {-1, -1, -1, -1}, -1}};
     return moduleInfos;
 }
 

@@ -22,13 +22,12 @@ using namespace std;
 using namespace testing;
 
 extern "C" {
-void SlogdEventlogReceive(void *args);
+void SlogdEventlogReceive(void* args);
 int32_t SlogdEventlogRegister(void);
-int32_t SlogdEventlogWrite(const char *msg, uint32_t msgLen, const LogInfo *info);
+int32_t SlogdEventlogWrite(const char* msg, uint32_t msgLen, const LogInfo* info);
 }
 
-class EP_SLOGD_EVENT_LOG_FUNC_UTEST : public testing::Test
-{
+class EP_SLOGD_EVENT_LOG_FUNC_UTEST : public testing::Test {
 protected:
     virtual void SetUp()
     {
@@ -58,7 +57,7 @@ protected:
     }
 
 public:
-    int DlogCmdGetIntRet(const char *path, const char*cmd)
+    int DlogCmdGetIntRet(const char* path, const char* cmd)
     {
         char resultFile[200] = {0};
         sprintf(resultFile, "%s/EP_SLOGD_FUNC_STEST_cmd_result.txt", path);
@@ -68,7 +67,7 @@ public:
         system(cmdToFile);
 
         char buf[100] = {0};
-        FILE *fp = fopen(resultFile, "r");
+        FILE* fp = fopen(resultFile, "r");
         if (fp == NULL) {
             return 0;
         }
@@ -80,7 +79,7 @@ public:
         return atoi(buf);
     }
 
-    int DlogCheckLog(const char *path, const char *str)
+    int DlogCheckLog(const char* path, const char* str)
     {
         if (access(path, F_OK) != 0) {
             return 0;
@@ -94,7 +93,7 @@ public:
 };
 
 static int32_t g_eventFileFd = -1;
-int32_t SlogdEventlogWrite_stub(const char *msg, uint32_t msgLen, const LogInfo *info)
+int32_t SlogdEventlogWrite_stub(const char* msg, uint32_t msgLen, const LogInfo* info)
 {
     (void)info;
     if (g_eventFileFd == -1) {
@@ -118,9 +117,9 @@ TEST_F(EP_SLOGD_EVENT_LOG_FUNC_UTEST, SlogdEventLogReceive_malloc_failed)
     system("mkdir -p " LOG_FILE_PATH "/event");
     system("touch " LOG_FILE_PATH "/event/event_2025022835702082.log");
     int32_t devId = 0;
-    void *args = (void *)&devId;
+    void* args = (void*)&devId;
     MOCKER(SlogdEventlogWrite).stubs().will(invoke(SlogdEventlogWrite_stub));
-    MOCKER(LogMalloc).stubs().will(returnValue((void *)0));
+    MOCKER(LogMalloc).stubs().will(returnValue((void*)0));
     SlogdEventlogReceive(args);
 
     EXPECT_EQ(0, DlogCheckLog(LOG_FILE_PATH "/event/event_2025022835702082.log", "EVENT"));
@@ -132,7 +131,7 @@ TEST_F(EP_SLOGD_EVENT_LOG_FUNC_UTEST, SlogdEventLogReceive_no_data)
     system("mkdir -p " LOG_FILE_PATH "/event");
     system("touch " LOG_FILE_PATH "/event/event_2025022835702082.log");
     int32_t devId = 0;
-    void *args = (void *)&devId;
+    void* args = (void*)&devId;
 
     MOCKER(log_read_by_type).stubs().will(invoke(log_read_by_type_stub_no_data));
     MOCKER(SlogdEventlogWrite).stubs().will(invoke(SlogdEventlogWrite_stub));
@@ -148,7 +147,7 @@ TEST_F(EP_SLOGD_EVENT_LOG_FUNC_UTEST, SlogdEventLogReceive_success)
     system("mkdir -p " LOG_FILE_PATH "/event");
     system("touch " LOG_FILE_PATH "/event/event_2025022835702082.log");
     int32_t devId = 0;
-    void *args = (void *)&devId;
+    void* args = (void*)&devId;
 
     int32_t exceptNums = 10;
     MOCKER(log_read_by_type).stubs().will(invoke(log_read_by_type_stub_data));
@@ -166,7 +165,7 @@ TEST_F(EP_SLOGD_EVENT_LOG_FUNC_UTEST, SlogdEventLogReceive_disable_event)
     system("mkdir -p " LOG_FILE_PATH "/event");
     system("touch " LOG_FILE_PATH "/event/event_2025022835702082.log");
     int32_t devId = 0;
-    void *args = (void *)&devId;
+    void* args = (void*)&devId;
 
     int32_t exceptNums = 10;
     MOCKER(log_read_by_type).stubs().will(invoke(log_read_by_type_stub_data));
@@ -182,6 +181,6 @@ TEST_F(EP_SLOGD_EVENT_LOG_FUNC_UTEST, SlogdEventLogReceive_disable_event)
 TEST_F(EP_SLOGD_EVENT_LOG_FUNC_UTEST, SlogdEventlogRegister_mallocFailed)
 {
     SlogdEventlogExit();
-    MOCKER(LogMalloc).stubs().will(returnValue((void *)0));
+    MOCKER(LogMalloc).stubs().will(returnValue((void*)0));
     EXPECT_EQ(LOG_FAILURE, SlogdEventlogRegister());
 }

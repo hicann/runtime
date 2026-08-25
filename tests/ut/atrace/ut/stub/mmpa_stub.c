@@ -15,31 +15,27 @@
 int32_t g_drvHandle = 0;
 typedef void* ArgPtr;
 typedef struct {
-    const char *symbol;
+    const char* symbol;
     ArgPtr handle;
 } SymbolInfo;
 
 static SymbolInfo g_drvMap[MAP_SIZE] = {
-    { "drvGetPlatformInfo", (void *)drvGetPlatformInfo },
-    { "drvGetDevNum", (void *)drvGetDevNum },
-    { "halGetAPIVersion", (void *)halGetAPIVersion },
+    {"drvGetPlatformInfo", (void*)drvGetPlatformInfo},
+    {"drvGetDevNum", (void*)drvGetDevNum},
+    {"halGetAPIVersion", (void*)halGetAPIVersion},
 };
 
-void * mmDlopen(const char *fileName, int mode)
+void* mmDlopen(const char* fileName, int mode)
 {
-    if (strcmp(fileName, "libascend_hal.so") == 0)
-    {
+    if (strcmp(fileName, "libascend_hal.so") == 0) {
         return &g_drvHandle;
     }
     return NULL;
 }
 
-int32_t mmDlclose(void *handle)
-{
-    return 0;
-}
+int32_t mmDlclose(void* handle) { return 0; }
 
-void *mmDlsym(void *handle, const char* funcName)
+void* mmDlsym(void* handle, const char* funcName)
 {
     for (int32_t i = 0; i < MAP_SIZE; i++) {
         if (strcmp(funcName, g_drvMap[i].symbol) == 0) {
@@ -49,12 +45,9 @@ void *mmDlsym(void *handle, const char* funcName)
     return NULL;
 }
 
-int32_t mmGetErrorCode()
-{
-    return 0;
-}
+int32_t mmGetErrorCode() { return 0; }
 
-int32_t mmMutexInit(mmMutex_t *lock)
+int32_t mmMutexInit(mmMutex_t* lock)
 {
     if (lock == NULL) {
         return -1;
@@ -67,8 +60,8 @@ int32_t mmMutexInit(mmMutex_t *lock)
 
     return ret;
 }
- 
-int32_t mmMutexDestroy(mmMutex_t *lock)
+
+int32_t mmMutexDestroy(mmMutex_t* lock)
 {
     if (lock == NULL) {
         return -1;
@@ -81,8 +74,8 @@ int32_t mmMutexDestroy(mmMutex_t *lock)
 
     return ret;
 }
- 
-int32_t mmMutexLock(mmMutex_t *lock)
+
+int32_t mmMutexLock(mmMutex_t* lock)
 {
     if (lock == NULL) {
         return -1;
@@ -95,8 +88,8 @@ int32_t mmMutexLock(mmMutex_t *lock)
 
     return ret;
 }
- 
-int32_t mmMutexUnLock(mmMutex_t *lock)
+
+int32_t mmMutexUnLock(mmMutex_t* lock)
 {
     if (lock == NULL) {
         return -1;
@@ -110,9 +103,9 @@ int32_t mmMutexUnLock(mmMutex_t *lock)
     return ret;
 }
 
-int32_t mmRmdir(const char *pathName)
+int32_t mmRmdir(const char* pathName)
 {
-    char cmd[1024] = { 0 };
+    char cmd[1024] = {0};
     snprintf_s(cmd, 1024, 1023, "rm -rf %s", pathName);
     system(cmd);
     return 0;
@@ -122,32 +115,32 @@ mmTimespec mmGetTickCount(VOID)
 {
     mmTimespec rts = {0};
     struct timespec ts = {0};
-    (VOID)clock_gettime(CLOCK_MONOTONIC_RAW, &ts);
+    (VOID) clock_gettime(CLOCK_MONOTONIC_RAW, &ts);
     rts.tv_sec = ts.tv_sec;
     rts.tv_nsec = ts.tv_nsec;
     return rts;
 }
 
-INT32 mmGetTimeOfDay(mmTimeval *timeVal, mmTimezone *timeZone)
+INT32 mmGetTimeOfDay(mmTimeval* timeVal, mmTimezone* timeZone)
 {
     if (timeVal == NULL) {
         return EN_INVALID_PARAM;
     }
-    INT32 ret = gettimeofday((struct timeval *)timeVal, (struct timezone *)timeZone);
+    INT32 ret = gettimeofday((struct timeval*)timeVal, (struct timezone*)timeZone);
     if (ret != EN_OK) {
         ret = EN_ERROR;
     }
     return ret;
 }
 
-INT32 mmLocalTimeR(const time_t *timep, struct tm *result)
+INT32 mmLocalTimeR(const time_t* timep, struct tm* result)
 {
     if ((timep == NULL) || (result == NULL)) {
         return EN_INVALID_PARAM;
     } else {
         time_t ts = *timep;
         struct tm nowTime = {0};
-        const struct tm *tmp = localtime_r(&ts, &nowTime);
+        const struct tm* tmp = localtime_r(&ts, &nowTime);
         if (tmp == NULL) {
             return EN_ERROR;
         }
@@ -162,13 +155,13 @@ INT32 mmLocalTimeR(const time_t *timep, struct tm *result)
     return EN_OK;
 }
 
-INT32 mmRealPath(const CHAR *path, CHAR *realPath, INT32 realPathLen)
+INT32 mmRealPath(const CHAR* path, CHAR* realPath, INT32 realPathLen)
 {
     strcpy(realPath, path);
     return EN_OK;
 }
 
-INT32 mmAccess2(const CHAR *pathName, INT32 mode)
+INT32 mmAccess2(const CHAR* pathName, INT32 mode)
 {
     if (pathName == NULL) {
         return EN_INVALID_PARAM;
@@ -181,12 +174,9 @@ INT32 mmAccess2(const CHAR *pathName, INT32 mode)
     return EN_OK;
 }
 
-int mmGetPid()
-{
-    return getpid();
-}
+int mmGetPid() { return getpid(); }
 
-static int32_t LocalSetSchedThreadAttr(pthread_attr_t *attr, const mmThreadAttr *threadAttr)
+static int32_t LocalSetSchedThreadAttr(pthread_attr_t* attr, const mmThreadAttr* threadAttr)
 {
     // set PTHREAD_EXPLICIT_SCHED
     if ((threadAttr->policyFlag == TRUE) || (threadAttr->priorityFlag == TRUE)) {
@@ -222,7 +212,7 @@ static int32_t LocalSetSchedThreadAttr(pthread_attr_t *attr, const mmThreadAttr 
     return 0;
 }
 
-static int32_t LocalSetToolThreadAttr(pthread_attr_t *attr, const mmThreadAttr *threadAttr)
+static int32_t LocalSetToolThreadAttr(pthread_attr_t* attr, const mmThreadAttr* threadAttr)
 {
     // set thread schedule attribute
     int32_t ret = LocalSetSchedThreadAttr(attr, threadAttr);
@@ -248,11 +238,10 @@ static int32_t LocalSetToolThreadAttr(pthread_attr_t *attr, const mmThreadAttr *
     return 0;
 }
 
-int32_t mmCreateTaskWithThreadAttr(mmThread *threadHandle, const mmUserBlock_t *funcBlock,
-    const mmThreadAttr *threadAttr)
+int32_t mmCreateTaskWithThreadAttr(
+    mmThread* threadHandle, const mmUserBlock_t* funcBlock, const mmThreadAttr* threadAttr)
 {
-    if ((threadHandle == NULL) || (funcBlock == NULL) ||
-        (funcBlock->procFunc == NULL) || (threadAttr == NULL)) {
+    if ((threadHandle == NULL) || (funcBlock == NULL) || (funcBlock->procFunc == NULL) || (threadAttr == NULL)) {
         return -1;
     }
 
@@ -279,7 +268,7 @@ int32_t mmCreateTaskWithThreadAttr(mmThread *threadHandle, const mmUserBlock_t *
     return ret;
 }
 
-int32_t mmJoinTask(mmThread *threadHandle)
+int32_t mmJoinTask(mmThread* threadHandle)
 {
     if (threadHandle == NULL) {
         return -1;
@@ -300,7 +289,7 @@ int32_t mmSetCurrentThreadName(const char* name)
     return EN_OK;
 }
 
-int32_t mmCondInit(mmCond *cond)
+int32_t mmCondInit(mmCond* cond)
 {
     pthread_condattr_t condAttr;
     pthread_condattr_init(&condAttr);
@@ -310,12 +299,9 @@ int32_t mmCondInit(mmCond *cond)
     return 0;
 }
 
-int32_t mmCondNotify(mmCond *cond)
-{
-    return pthread_cond_signal(cond);
-}
+int32_t mmCondNotify(mmCond* cond) { return pthread_cond_signal(cond); }
 
-int32_t mmCondTimedWait(mmCond *cond, mmMutexFC *mutex, uint32_t milliSecond)
+int32_t mmCondTimedWait(mmCond* cond, mmMutexFC* mutex, uint32_t milliSecond)
 {
     struct timespec tmpTime = {0};
     clock_gettime(CLOCK_MONOTONIC, &tmpTime);
@@ -333,39 +319,39 @@ int32_t mmSocket(int32_t sockFamily, int32_t type, int32_t protocol)
     }
     return socketHandle;
 }
- 
-int32_t mmBind(mmSockHandle sockFd, mmSockAddr * addr, mmSocklen_t addrLen)
+
+int32_t mmBind(mmSockHandle sockFd, mmSockAddr* addr, mmSocklen_t addrLen)
 {
     if ((sockFd < MMPA_ZERO) || (addr == NULL) || (addrLen == MMPA_ZERO)) {
         return EN_INVALID_PARAM;
     }
- 
+
     int32_t ret = bind(sockFd, addr, addrLen);
     if (ret != EN_OK) {
         return EN_ERROR;
     }
     return EN_OK;
 }
- 
-int32_t mmConnect(mmSockHandle sockFd, mmSockAddr * addr, mmSocklen_t addrLen)
+
+int32_t mmConnect(mmSockHandle sockFd, mmSockAddr* addr, mmSocklen_t addrLen)
 {
     if ((sockFd < MMPA_ZERO) || (addr == NULL) || (addrLen == MMPA_ZERO)) {
         return EN_INVALID_PARAM;
     }
- 
+
     int32_t ret = connect(sockFd, addr, addrLen);
     if (ret < MMPA_ZERO) {
         return EN_ERROR;
     }
     return EN_OK;
 }
- 
+
 int32_t mmCloseSocket(mmSockHandle sockFd)
 {
     if (sockFd < MMPA_ZERO) {
         return EN_INVALID_PARAM;
     }
- 
+
     int32_t ret = close(sockFd);
     if (ret != EN_OK) {
         return EN_ERROR;
@@ -373,19 +359,17 @@ int32_t mmCloseSocket(mmSockHandle sockFd)
     return EN_OK;
 }
 
-int32_t mmDladdr(void *addr, mmDlInfo *info)
+int32_t mmDladdr(void* addr, mmDlInfo* info)
 {
     info->dli_fname = "/tmp/libascend_trace.so";
     return 0;
 }
 
-char *mmDlerror(void) {
-  return dlerror();
-}
+char* mmDlerror(void) { return dlerror(); }
 
 typedef struct {
     mmEnvId id;
-    const CHAR *name;
+    const CHAR* name;
 } mmEnvInfo;
 
 static mmEnvInfo s_envList[] = {
@@ -417,10 +401,10 @@ static mmEnvInfo s_envList[] = {
     {MM_ENV_LD_LIBRARY_PATH, "LD_LIBRARY_PATH"},
 };
 
-static mmEnvInfo *GetEnvInfoById(mmEnvId id)
+static mmEnvInfo* GetEnvInfoById(mmEnvId id)
 {
     ULONG i = 0;
-    for (i = 0; i < sizeof(s_envList)/sizeof(s_envList[0]); ++i) {
+    for (i = 0; i < sizeof(s_envList) / sizeof(s_envList[0]); ++i) {
         if (s_envList[i].id == id) {
             return &s_envList[i];
         }
@@ -428,18 +412,18 @@ static mmEnvInfo *GetEnvInfoById(mmEnvId id)
     return NULL;
 }
 
-CHAR *mmSysGetEnv(mmEnvId id)
+CHAR* mmSysGetEnv(mmEnvId id)
 {
-    mmEnvInfo *envInfo = GetEnvInfoById(id);
+    mmEnvInfo* envInfo = GetEnvInfoById(id);
     if (NULL != envInfo) {
         return getenv(envInfo->name);
     }
     return NULL;
 }
 
-INT32 mmSysSetEnv(mmEnvId id, const CHAR *value, INT32 overwrite)
+INT32 mmSysSetEnv(mmEnvId id, const CHAR* value, INT32 overwrite)
 {
-    mmEnvInfo *envInfo = GetEnvInfoById(id);
+    mmEnvInfo* envInfo = GetEnvInfoById(id);
     if (NULL == envInfo) {
         return EN_INVALID_PARAM;
     }

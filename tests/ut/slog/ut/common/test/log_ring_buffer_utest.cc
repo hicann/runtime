@@ -18,24 +18,24 @@ namespace {
 constexpr uint32_t BUF_SIZE = 8192U;
 constexpr uint32_t SMALL_SIZE = 128U;
 
-void BuildHead(LogHead &head, uint16_t msgLen)
+void BuildHead(LogHead& head, uint16_t msgLen)
 {
     memset_s(&head, sizeof(head), 0, sizeof(head));
     head.magic = HEAD_MAGIC;
     head.version = HEAD_VERSION;
     head.msgLength = msgLen;
 }
-}
+} // namespace
 
 class LogRingBufferUtest : public testing::Test {
 protected:
-    char *buf_ = nullptr;
-    RingBufferCtrl *ctrl_ = nullptr;
+    char* buf_ = nullptr;
+    RingBufferCtrl* ctrl_ = nullptr;
     void SetUp() override
     {
-        buf_ = static_cast<char *>(calloc(BUF_SIZE, 1));
+        buf_ = static_cast<char*>(calloc(BUF_SIZE, 1));
         ASSERT_NE(nullptr, buf_);
-        ctrl_ = reinterpret_cast<RingBufferCtrl *>(buf_);
+        ctrl_ = reinterpret_cast<RingBufferCtrl*>(buf_);
     }
     void TearDown() override
     {
@@ -45,10 +45,7 @@ protected:
     }
 };
 
-TEST_F(LogRingBufferUtest, InitHeadNull)
-{
-    EXPECT_EQ(-1, LogBufInitHead(nullptr, BUF_SIZE, 0));
-}
+TEST_F(LogRingBufferUtest, InitHeadNull) { EXPECT_EQ(-1, LogBufInitHead(nullptr, BUF_SIZE, 0)); }
 
 TEST_F(LogRingBufferUtest, InitHeadSizeTooSmall)
 {
@@ -95,7 +92,7 @@ TEST_F(LogRingBufferUtest, WriteBadBufHead)
 TEST_F(LogRingBufferUtest, WriteAndReadNormal)
 {
     ASSERT_EQ(0, LogBufInitHead(ctrl_, BUF_SIZE, 0));
-    const char *text = "hello ring buffer";
+    const char* text = "hello ring buffer";
     LogHead head;
     BuildHead(head, (uint16_t)strlen(text));
     uint64_t cover = 0;
@@ -239,7 +236,7 @@ TEST_F(LogRingBufferUtest, CurrDataLen)
     EXPECT_EQ(0U, LogBufCurrDataLen(nullptr));
     ASSERT_EQ(0, LogBufInitHead(ctrl_, BUF_SIZE, 0));
     EXPECT_EQ(0U, LogBufCurrDataLen(ctrl_)); // empty
-    const char *text = "data";
+    const char* text = "data";
     LogHead head;
     BuildHead(head, (uint16_t)strlen(text));
     uint64_t cover = 0;
@@ -277,7 +274,7 @@ TEST_F(LogRingBufferUtest, Lost)
 TEST_F(LogRingBufferUtest, ReInitAndReStart)
 {
     ASSERT_EQ(0, LogBufInitHead(ctrl_, BUF_SIZE, 0));
-    const char *text = "init";
+    const char* text = "init";
     LogHead head;
     BuildHead(head, (uint16_t)strlen(text));
     uint64_t cover = 0;
@@ -310,7 +307,7 @@ TEST_F(LogRingBufferUtest, CheckEmpty)
     ASSERT_EQ(0, LogBufInitHead(ctrl_, BUF_SIZE, 0));
     stat.ringBufferCtrl = ctrl_;
     EXPECT_TRUE(LogBufCheckEmpty(&stat)); // lastSeq == logNextSeq
-    const char *text = "x";
+    const char* text = "x";
     LogHead head;
     BuildHead(head, (uint16_t)strlen(text));
     uint64_t cover = 0;

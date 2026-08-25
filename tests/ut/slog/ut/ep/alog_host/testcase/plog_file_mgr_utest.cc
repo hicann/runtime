@@ -41,19 +41,18 @@
 #include <cstring>
 
 /* ── constants mirrored from plog_file_mgr.c ─────────────────────────────── */
-static const char HOST_FILE_HEAD_PREFIX[] = "plog-";   /* PROC_HEAD + "-" */
-static const char DEV_FILE_HEAD_PREFIX[]  = "device-"; /* DEVICE_HEAD     */
+static const char HOST_FILE_HEAD_PREFIX[] = "plog-";  /* PROC_HEAD + "-" */
+static const char DEV_FILE_HEAD_PREFIX[] = "device-"; /* DEVICE_HEAD     */
 
 /* ── helper: check that aucFileHead encodes the expected pid ──────────────── */
-static ::testing::AssertionResult FileHeadContainsPid(const char *fileHead, uint32_t pid)
+static ::testing::AssertionResult FileHeadContainsPid(const char* fileHead, uint32_t pid)
 {
     char expected[32] = {};
     (void)snprintf_s(expected, sizeof(expected), sizeof(expected) - 1, "%u", pid);
     if (strstr(fileHead, expected) != nullptr) {
         return ::testing::AssertionSuccess();
     }
-    return ::testing::AssertionFailure()
-           << "aucFileHead \"" << fileHead << "\" does not contain pid " << pid;
+    return ::testing::AssertionFailure() << "aucFileHead \"" << fileHead << "\" does not contain pid " << pid;
 }
 
 /* ── test fixture ─────────────────────────────────────────────────────────── */
@@ -109,7 +108,7 @@ TEST_F(PlogFileMgrUtest, ReinitForChild_NullListSafe)
 TEST_F(PlogFileMgrUtest, ReinitForChild_UpdatesAllHostLogPidAndFileHead)
 {
     ASSERT_EQ(LOG_SUCCESS, PlogFileMgrInit());
-    PlogFileMgrInfo *fileList = PlogGetFileMgrInfo();
+    PlogFileMgrInfo* fileList = PlogGetFileMgrInfo();
     ASSERT_NE(nullptr, fileList);
 
     const uint32_t parentPid = (uint32_t)getpid();
@@ -130,10 +129,9 @@ TEST_F(PlogFileMgrUtest, ReinitForChild_UpdatesAllHostLogPidAndFileHead)
 
     /* All host log entries must now carry the child PID. */
     for (int i = (int)DEBUG_LOG; i < (int)LOG_TYPE_NUM; i++) {
-        EXPECT_EQ(fakePid, fileList->hostLogList[i].pid)
-            << "hostLogList[" << i << "].pid not updated after reinit";
+        EXPECT_EQ(fakePid, fileList->hostLogList[i].pid) << "hostLogList[" << i << "].pid not updated after reinit";
 
-        const char *head = fileList->hostLogList[i].aucFileHead;
+        const char* head = fileList->hostLogList[i].aucFileHead;
         /* Must start with "plog-" and contain the new PID. */
         EXPECT_EQ(0, strncmp(head, HOST_FILE_HEAD_PREFIX, strlen(HOST_FILE_HEAD_PREFIX)))
             << "hostLogList[" << i << "].aucFileHead prefix wrong: " << head;
@@ -154,11 +152,11 @@ TEST_F(PlogFileMgrUtest, ReinitForChild_UpdatesAllHostLogPidAndFileHead)
 TEST_F(PlogFileMgrUtest, ReinitForChild_UpdatesAllDeviceLogPidAndFileHead)
 {
     ASSERT_EQ(LOG_SUCCESS, PlogFileMgrInit());
-    PlogFileMgrInfo *fileList = PlogGetFileMgrInfo();
+    PlogFileMgrInfo* fileList = PlogGetFileMgrInfo();
     ASSERT_NE(nullptr, fileList);
 
     const uint32_t parentPid = (uint32_t)getpid();
-    const uint32_t fakePid   = parentPid + 9999U;
+    const uint32_t fakePid = parentPid + 9999U;
 
     MOCKER(ToolGetPid).stubs().will(returnValue((INT32)fakePid));
 
@@ -168,11 +166,10 @@ TEST_F(PlogFileMgrUtest, ReinitForChild_UpdatesAllDeviceLogPidAndFileHead)
     for (uint32_t type = 0; type < (uint32_t)LOG_TYPE_NUM; type++) {
         ASSERT_NE(nullptr, fileList->deviceLogList[type]);
         for (uint32_t idx = 0; idx < fileList->deviceNum; idx++) {
-            PlogFileList *list = &fileList->deviceLogList[type][idx];
-            EXPECT_EQ(fakePid, list->pid)
-                << "deviceLogList[" << type << "][" << idx << "].pid not updated";
+            PlogFileList* list = &fileList->deviceLogList[type][idx];
+            EXPECT_EQ(fakePid, list->pid) << "deviceLogList[" << type << "][" << idx << "].pid not updated";
 
-            const char *head = list->aucFileHead;
+            const char* head = list->aucFileHead;
             EXPECT_EQ(0, strncmp(head, DEV_FILE_HEAD_PREFIX, strlen(DEV_FILE_HEAD_PREFIX)))
                 << "deviceLogList[" << type << "][" << idx << "].aucFileHead prefix wrong";
             EXPECT_TRUE(FileHeadContainsPid(head, fakePid))
@@ -192,15 +189,14 @@ TEST_F(PlogFileMgrUtest, ReinitForChild_UpdatesAllDeviceLogPidAndFileHead)
 TEST_F(PlogFileMgrUtest, ReinitForChild_ClearsCurrentFileNameSlot)
 {
     ASSERT_EQ(LOG_SUCCESS, PlogFileMgrInit());
-    PlogFileMgrInfo *fileList = PlogGetFileMgrInfo();
+    PlogFileMgrInfo* fileList = PlogGetFileMgrInfo();
     ASSERT_NE(nullptr, fileList);
 
     /* Artificially set a non-empty filename so we can verify it gets cleared. */
     for (int i = (int)DEBUG_LOG; i < (int)LOG_TYPE_NUM; i++) {
-        PlogFileList *list = &fileList->hostLogList[i];
+        PlogFileList* list = &fileList->hostLogList[i];
         if ((list->aucFileName != nullptr) && (list->currIndex < list->maxFileNum)) {
-            (void)strcpy_s(list->aucFileName[list->currIndex], MAX_FILENAME_LEN + 1U,
-                           "stale_parent_pid_name.log");
+            (void)strcpy_s(list->aucFileName[list->currIndex], MAX_FILENAME_LEN + 1U, "stale_parent_pid_name.log");
         }
     }
 
@@ -212,7 +208,7 @@ TEST_F(PlogFileMgrUtest, ReinitForChild_ClearsCurrentFileNameSlot)
 
     /* The current slot must be zeroed out so the child starts a new file. */
     for (int i = (int)DEBUG_LOG; i < (int)LOG_TYPE_NUM; i++) {
-        PlogFileList *list = &fileList->hostLogList[i];
+        PlogFileList* list = &fileList->hostLogList[i];
         if ((list->aucFileName != nullptr) && (list->currIndex < list->maxFileNum)) {
             EXPECT_EQ('\0', list->aucFileName[list->currIndex][0])
                 << "hostLogList[" << i << "] current filename slot not cleared after reinit";
@@ -236,7 +232,7 @@ TEST_F(PlogFileMgrUtest, ReinitForChild_IdempotentMultipleCalls)
     PlogReinitFileHeadsForChild();
     PlogReinitFileHeadsForChild(); /* second call must not corrupt state */
 
-    PlogFileMgrInfo *fileList = PlogGetFileMgrInfo();
+    PlogFileMgrInfo* fileList = PlogGetFileMgrInfo();
     for (int i = (int)DEBUG_LOG; i < (int)LOG_TYPE_NUM; i++) {
         EXPECT_EQ(fakePid, fileList->hostLogList[i].pid);
         EXPECT_TRUE(FileHeadContainsPid(fileList->hostLogList[i].aucFileHead, fakePid));
@@ -261,7 +257,7 @@ TEST_F(PlogFileMgrUtest, ReinitForChild_ChangesPidWithoutFork)
 
     PlogReinitFileHeadsForChild();
 
-    PlogFileMgrInfo *parentList = PlogGetFileMgrInfo();
+    PlogFileMgrInfo* parentList = PlogGetFileMgrInfo();
     for (int i = (int)DEBUG_LOG; i < (int)LOG_TYPE_NUM; i++) {
         EXPECT_EQ(childPid, parentList->hostLogList[i].pid);
         EXPECT_TRUE(FileHeadContainsPid(parentList->hostLogList[i].aucFileHead, childPid));
@@ -278,7 +274,7 @@ TEST_F(PlogFileMgrUtest, WithoutReinit_KeepsOriginalPid_Regression)
     ASSERT_NE(nullptr, PlogGetFileMgrInfo());
 
     const uint32_t parentPid = (uint32_t)getpid();
-    PlogFileMgrInfo *fileList = PlogGetFileMgrInfo();
+    PlogFileMgrInfo* fileList = PlogGetFileMgrInfo();
     for (int i = (int)DEBUG_LOG; i < (int)LOG_TYPE_NUM; i++) {
         EXPECT_EQ(parentPid, fileList->hostLogList[i].pid);
         EXPECT_TRUE(FileHeadContainsPid(fileList->hostLogList[i].aucFileHead, parentPid));

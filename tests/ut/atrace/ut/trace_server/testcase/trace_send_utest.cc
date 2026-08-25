@@ -21,49 +21,42 @@
 #include "trace_server_mgr.h"
 #include "adx_component_api_c.h"
 
-#define MSG_STATUS_LONG_LINK    12
-#define MSG_STATUS_SHORT_LINK   13
+#define MSG_STATUS_LONG_LINK 12
+#define MSG_STATUS_SHORT_LINK 13
 
-class TraceSendUtest: public testing::Test {
+class TraceSendUtest : public testing::Test {
 protected:
     virtual void SetUp()
     {
         Clear();
-        system("mkdir -p " LLT_TEST_DIR );
+        system("mkdir -p " LLT_TEST_DIR);
     }
 
-    void Clear()
-    {
-        system("rm -rf " LLT_TEST_DIR "/*");
-    }
+    void Clear() { system("rm -rf " LLT_TEST_DIR "/*"); }
     virtual void TearDown()
     {
         system("echo [DBG][TEST][`date +%Y-%m-%d-%H-%M-%S`] End test case");
         GlobalMockObject::verify();
-        system("rm -rf " LLT_TEST_DIR );
+        system("rm -rf " LLT_TEST_DIR);
     }
 
-    static void SetUpTestCase()
-    {
-    }
+    static void SetUpTestCase() {}
 
-    static void TearDownTestCase()
-    {
-    }
+    static void TearDownTestCase() {}
 };
 
 typedef struct {
-    unsigned short headInfo;    // head magic data, judge to little
-    unsigned char headVer;      // head version
-    unsigned char order;        // packet order (reserved)
-    unsigned short reqType;     // request type of proto
-    unsigned short devId;       // request device Id
-    unsigned int totalLen;      // whole message length, only all data[0] length
-    unsigned int sliceLen;      // one slice length, only data[0] length
-    unsigned int offset;        // offset
-    unsigned short msgType;     // message type
-    unsigned short status;      // message status data
-    unsigned char data[0];      // message data
+    unsigned short headInfo; // head magic data, judge to little
+    unsigned char headVer;   // head version
+    unsigned char order;     // packet order (reserved)
+    unsigned short reqType;  // request type of proto
+    unsigned short devId;    // request device Id
+    unsigned int totalLen;   // whole message length, only all data[0] length
+    unsigned int sliceLen;   // one slice length, only data[0] length
+    unsigned int offset;     // offset
+    unsigned short msgType;  // message type
+    unsigned short status;   // message status data
+    unsigned char data[0];   // message data
 } TraceDataMsg;
 
 // send mgr
@@ -73,35 +66,35 @@ TEST_F(TraceSendUtest, KtraceSendMgr)
     EXPECT_EQ(TRACE_SUCCESS, TraceServerSessionInit());
     EXPECT_EQ(true, TraceIsSessionNodeListNull());
     EXPECT_EQ(true, TraceIsDeletedSessionNodeListNull());
- 
+
     // insert session node
-    void *handle1 = malloc(10);
+    void* handle1 = malloc(10);
     int32_t pid1 = 10;
     int32_t devId1 = 0;
     int32_t timeout1 = 3000;
     EXPECT_EQ(NULL, TraceServerGetSessionNode(pid1, devId1));
     EXPECT_EQ(TRACE_SUCCESS, TraceServerInsertSessionNode(handle1, pid1, devId1, timeout1));
-    SessionNode *sessionNode1 = TraceServerGetSessionNode(pid1, devId1);
+    SessionNode* sessionNode1 = TraceServerGetSessionNode(pid1, devId1);
     EXPECT_EQ(pid1, sessionNode1->pid);
     EXPECT_EQ(devId1, sessionNode1->devId);
     EXPECT_EQ(timeout1, sessionNode1->timeout);
     EXPECT_EQ(false, TraceIsSessionNodeListNull());
     EXPECT_EQ(true, TraceIsDeletedSessionNodeListNull());
 
-    void *handle2 = malloc(10);
+    void* handle2 = malloc(10);
     int32_t pid2 = 0;
     int32_t devId2 = 0;
     int32_t timeout2 = 3000;
     EXPECT_EQ(NULL, TraceServerGetSessionNode(pid2, devId2));
     EXPECT_EQ(TRACE_SUCCESS, TraceServerInsertSessionNode(handle2, pid2, devId2, timeout2));
     EXPECT_EQ(TRACE_SUCCESS, TraceServerDeleteSessionNode(handle1, pid1, devId1));
-    SessionNode *sessionNode2 = TraceServerGetSessionNode(pid2, devId2);
+    SessionNode* sessionNode2 = TraceServerGetSessionNode(pid2, devId2);
 
     // push node
     int8_t flag = 2;
-    char *data1 = (char *)malloc(1024);
+    char* data1 = (char*)malloc(1024);
     snprintf_s(data1, 1024, 1023, "test node1 mgr.");
-    char *data2 = (char *)malloc(1024);
+    char* data2 = (char*)malloc(1024);
     snprintf_s(data2, 1024, 1023, "test node2 mgr.");
     uint32_t len = 1024;
     EXPECT_EQ(TRACE_SUCCESS, TraceTsPushNode(sessionNode1, flag, data1, len));
@@ -120,35 +113,35 @@ TEST_F(TraceSendUtest, KtraceSendMgrFailed)
     EXPECT_EQ(TRACE_SUCCESS, TraceServerSessionInit());
     EXPECT_EQ(true, TraceIsSessionNodeListNull());
     EXPECT_EQ(true, TraceIsDeletedSessionNodeListNull());
- 
+
     // insert session node
-    void *handle1 = malloc(10);
+    void* handle1 = malloc(10);
     int32_t pid1 = 10;
     int32_t devId1 = 0;
     int32_t timeout1 = 3000;
     EXPECT_EQ(NULL, TraceServerGetSessionNode(pid1, devId1));
     EXPECT_EQ(TRACE_SUCCESS, TraceServerInsertSessionNode(handle1, pid1, devId1, timeout1));
-    SessionNode *sessionNode1 = TraceServerGetSessionNode(pid1, devId1);
+    SessionNode* sessionNode1 = TraceServerGetSessionNode(pid1, devId1);
     EXPECT_EQ(pid1, sessionNode1->pid);
     EXPECT_EQ(devId1, sessionNode1->devId);
     EXPECT_EQ(timeout1, sessionNode1->timeout);
     EXPECT_EQ(false, TraceIsSessionNodeListNull());
     EXPECT_EQ(true, TraceIsDeletedSessionNodeListNull());
 
-    void *handle2 = malloc(10);
+    void* handle2 = malloc(10);
     int32_t pid2 = 0;
     int32_t devId2 = 0;
     int32_t timeout2 = 3000;
     EXPECT_EQ(NULL, TraceServerGetSessionNode(pid2, devId2));
     EXPECT_EQ(TRACE_SUCCESS, TraceServerInsertSessionNode(handle2, pid2, devId2, timeout2));
     EXPECT_EQ(TRACE_SUCCESS, TraceServerDeleteSessionNode(handle1, pid1, devId1));
-    SessionNode *sessionNode2 = TraceServerGetSessionNode(pid2, devId2);
+    SessionNode* sessionNode2 = TraceServerGetSessionNode(pid2, devId2);
 
     // push node
     int8_t flag = 2;
-    char *data1 = (char *)malloc(1024);
+    char* data1 = (char*)malloc(1024);
     snprintf_s(data1, 1024, 1023, "test node1 mgr.");
-    char *data2 = (char *)malloc(1024);
+    char* data2 = (char*)malloc(1024);
     snprintf_s(data2, 1024, 1023, "test node2 mgr.");
     uint32_t len = 1024;
     EXPECT_EQ(TRACE_SUCCESS, TraceTsPushNode(sessionNode1, flag, data1, len));
@@ -166,10 +159,7 @@ TEST_F(TraceSendUtest, KtraceSendMgrThreadFailed)
     EXPECT_EQ(TRACE_FAILURE, TraceServerCreateSendThread());
 }
 
-TEST_F(TraceSendUtest, TraceServiceInit)
-{
-    EXPECT_EQ(TRACE_SUCCESS, TraceServiceInit(-1));
-}
+TEST_F(TraceSendUtest, TraceServiceInit) { EXPECT_EQ(TRACE_SUCCESS, TraceServiceInit(-1)); }
 
 TEST_F(TraceSendUtest, TraceServiceInitFailed)
 {
@@ -183,12 +173,12 @@ TEST_F(TraceSendUtest, TraceDeviceProcessHello)
 {
     EXPECT_EQ(TRACE_SUCCESS, TraceDeviceInit());
     AdxCommConHandle handle = (AdxCommConHandle)AdiagMalloc(10);
-    TraceDataMsg* msg = (TraceDataMsg *)AdiagMalloc(sizeof(TraceDataMsg) + sizeof(TraceHelloMsg));
-    TraceHelloMsg *helloMsg = (TraceHelloMsg *)msg->data;
+    TraceDataMsg* msg = (TraceDataMsg*)AdiagMalloc(sizeof(TraceDataMsg) + sizeof(TraceHelloMsg));
+    TraceHelloMsg* helloMsg = (TraceHelloMsg*)msg->data;
     helloMsg->msgType = TRACE_HELLO_MSG;
     helloMsg->magic = TRACE_HEAD_MAGIC;
     helloMsg->version = TRACE_HEAD_VERSION;
-    EXPECT_EQ(TRACE_SUCCESS, TraceDeviceProcess(handle, (const void *)msg, sizeof(TraceHelloMsg)));
+    EXPECT_EQ(TRACE_SUCCESS, TraceDeviceProcess(handle, (const void*)msg, sizeof(TraceHelloMsg)));
     free(msg);
     msg = NULL;
     EXPECT_EQ(TRACE_SUCCESS, TraceDeviceExit());
@@ -198,10 +188,10 @@ TEST_F(TraceSendUtest, TraceDeviceProcessEndNull)
 {
     EXPECT_EQ(TRACE_SUCCESS, TraceDeviceInit());
     AdxCommConHandle handle = (AdxCommConHandle)AdiagMalloc(10);
-    TraceDataMsg* msg = (TraceDataMsg *)AdiagMalloc(sizeof(TraceDataMsg) + sizeof(TraceEndMsg));
-    TraceEndMsg *endMsg = (TraceEndMsg *)msg->data;
+    TraceDataMsg* msg = (TraceDataMsg*)AdiagMalloc(sizeof(TraceDataMsg) + sizeof(TraceEndMsg));
+    TraceEndMsg* endMsg = (TraceEndMsg*)msg->data;
     endMsg->msgType = TRACE_END_MSG;
-    EXPECT_EQ(TRACE_FAILURE, TraceDeviceProcess(handle, (const void *)msg, sizeof(TraceEndMsg)));
+    EXPECT_EQ(TRACE_FAILURE, TraceDeviceProcess(handle, (const void*)msg, sizeof(TraceEndMsg)));
     free(msg);
     msg = NULL;
     EXPECT_EQ(TRACE_SUCCESS, TraceDeviceExit());
@@ -212,18 +202,18 @@ TEST_F(TraceSendUtest, TraceDeviceProcessStart)
     EXPECT_EQ(TRACE_SUCCESS, TraceServerSessionInit());
     EXPECT_EQ(TRACE_SUCCESS, TraceDeviceInit());
     AdxCommConHandle handle1 = (AdxCommConHandle)AdiagMalloc(10);
-    TraceDataMsg* msg = (TraceDataMsg *)AdiagMalloc(sizeof(TraceDataMsg) + sizeof(TraceEndMsg));
+    TraceDataMsg* msg = (TraceDataMsg*)AdiagMalloc(sizeof(TraceDataMsg) + sizeof(TraceEndMsg));
     msg->status = MSG_STATUS_LONG_LINK;
-    EXPECT_EQ(TRACE_SUCCESS, TraceDeviceProcess(handle1, (const void *)msg, sizeof(TraceEndMsg)));
+    EXPECT_EQ(TRACE_SUCCESS, TraceDeviceProcess(handle1, (const void*)msg, sizeof(TraceEndMsg)));
     free(msg);
     msg = NULL;
 
     // end
     AdxCommConHandle handle2 = (AdxCommConHandle)AdiagMalloc(10);
-    msg = (TraceDataMsg *)AdiagMalloc(sizeof(TraceDataMsg) + sizeof(TraceEndMsg));
-    TraceEndMsg *endMsg = (TraceEndMsg *)msg->data;
+    msg = (TraceDataMsg*)AdiagMalloc(sizeof(TraceDataMsg) + sizeof(TraceEndMsg));
+    TraceEndMsg* endMsg = (TraceEndMsg*)msg->data;
     endMsg->msgType = TRACE_END_MSG;
-    EXPECT_EQ(TRACE_SUCCESS, TraceDeviceProcess(handle2, (const void *)msg, sizeof(TraceEndMsg)));
+    EXPECT_EQ(TRACE_SUCCESS, TraceDeviceProcess(handle2, (const void*)msg, sizeof(TraceEndMsg)));
     free(msg);
     msg = NULL;
     EXPECT_EQ(TRACE_SUCCESS, TraceDeviceExit());
@@ -234,12 +224,12 @@ TEST_F(TraceSendUtest, TraceDeviceProcessInvalid)
 {
     EXPECT_EQ(TRACE_SUCCESS, TraceDeviceInit());
     AdxCommConHandle handle = (AdxCommConHandle)AdiagMalloc(10);
-    TraceDataMsg* msg = (TraceDataMsg *)AdiagMalloc(sizeof(TraceDataMsg) + sizeof(TraceHelloMsg));
-    TraceHelloMsg *helloMsg = (TraceHelloMsg *)msg->data;
+    TraceDataMsg* msg = (TraceDataMsg*)AdiagMalloc(sizeof(TraceDataMsg) + sizeof(TraceHelloMsg));
+    TraceHelloMsg* helloMsg = (TraceHelloMsg*)msg->data;
     helloMsg->msgType = 5;
     helloMsg->magic = TRACE_HEAD_MAGIC;
     helloMsg->version = TRACE_HEAD_VERSION;
-    EXPECT_EQ(TRACE_FAILURE, TraceDeviceProcess(handle, (const void *)msg, 0));
+    EXPECT_EQ(TRACE_FAILURE, TraceDeviceProcess(handle, (const void*)msg, 0));
     free(msg);
     msg = NULL;
     EXPECT_EQ(TRACE_SUCCESS, TraceDeviceExit());
@@ -249,20 +239,20 @@ TEST_F(TraceSendUtest, TraceDeviceProcessNull)
 {
     EXPECT_EQ(TRACE_SUCCESS, TraceDeviceInit());
     AdxCommConHandle handle = (AdxCommConHandle)AdiagMalloc(10);
-    EXPECT_EQ(TRACE_FAILURE, TraceDeviceProcess(handle, (const void *)NULL, 0));
+    EXPECT_EQ(TRACE_FAILURE, TraceDeviceProcess(handle, (const void*)NULL, 0));
     MOCKER(AdxIsCommHandleValid).stubs().will(returnValue(-1));
-    EXPECT_EQ(TRACE_FAILURE, TraceDeviceProcess(handle, (const void *)NULL, 0));
+    EXPECT_EQ(TRACE_FAILURE, TraceDeviceProcess(handle, (const void*)NULL, 0));
     EXPECT_EQ(TRACE_SUCCESS, TraceDeviceExit());
 }
 
 TEST_F(TraceSendUtest, TraceMallocFailed)
 {
     EXPECT_EQ(TRACE_SUCCESS, TraceDeviceInit());
-    MOCKER(AdiagMalloc).stubs().will(returnValue((void *)NULL));
+    MOCKER(AdiagMalloc).stubs().will(returnValue((void*)NULL));
     AdxCommConHandle handle = (AdxCommConHandle)malloc(10);
-    TraceDataMsg* msg = (TraceDataMsg *)malloc(sizeof(TraceDataMsg) + sizeof(TraceEndMsg));
+    TraceDataMsg* msg = (TraceDataMsg*)malloc(sizeof(TraceDataMsg) + sizeof(TraceEndMsg));
     msg->status = MSG_STATUS_LONG_LINK;
-    EXPECT_EQ(TRACE_FAILURE, TraceDeviceProcess(handle, (const void *)msg, sizeof(TraceEndMsg)));
+    EXPECT_EQ(TRACE_FAILURE, TraceDeviceProcess(handle, (const void*)msg, sizeof(TraceEndMsg)));
     free(msg);
     msg = NULL;
     EXPECT_EQ(TRACE_SUCCESS, TraceDeviceExit());
@@ -273,13 +263,12 @@ TEST_F(TraceSendUtest, TraceAdxRecvMsgFailed)
     EXPECT_EQ(TRACE_SUCCESS, TraceDeviceInit());
     MOCKER(AdxRecvMsg).stubs().will(returnValue(-1));
     AdxCommConHandle handle = (AdxCommConHandle)AdiagMalloc(10);
-    TraceDataMsg* msg = (TraceDataMsg *)AdiagMalloc(sizeof(TraceDataMsg) + sizeof(TraceEndMsg));
+    TraceDataMsg* msg = (TraceDataMsg*)AdiagMalloc(sizeof(TraceDataMsg) + sizeof(TraceEndMsg));
     msg->status = MSG_STATUS_LONG_LINK;
-    EXPECT_EQ(TRACE_FAILURE, TraceDeviceProcess(handle, (const void *)msg, sizeof(TraceEndMsg)));
+    EXPECT_EQ(TRACE_FAILURE, TraceDeviceProcess(handle, (const void*)msg, sizeof(TraceEndMsg)));
     free(msg);
     msg = NULL;
     EXPECT_EQ(TRACE_SUCCESS, TraceDeviceExit());
-
 }
 
 TEST_F(TraceSendUtest, TraceAdxSendHelloMsgFailed)
@@ -287,12 +276,12 @@ TEST_F(TraceSendUtest, TraceAdxSendHelloMsgFailed)
     EXPECT_EQ(TRACE_SUCCESS, TraceDeviceInit());
     MOCKER(AdxSendMsg).stubs().will(returnValue(-1));
     AdxCommConHandle handle = (AdxCommConHandle)AdiagMalloc(10);
-    TraceDataMsg* msg = (TraceDataMsg *)AdiagMalloc(sizeof(TraceDataMsg) + sizeof(TraceHelloMsg));
-    TraceHelloMsg *helloMsg = (TraceHelloMsg *)msg->data;
+    TraceDataMsg* msg = (TraceDataMsg*)AdiagMalloc(sizeof(TraceDataMsg) + sizeof(TraceHelloMsg));
+    TraceHelloMsg* helloMsg = (TraceHelloMsg*)msg->data;
     helloMsg->msgType = TRACE_HELLO_MSG;
     helloMsg->magic = TRACE_HEAD_MAGIC;
     helloMsg->version = TRACE_HEAD_VERSION;
-    EXPECT_EQ(TRACE_FAILURE, TraceDeviceProcess(handle, (const void *)msg, sizeof(TraceHelloMsg)));
+    EXPECT_EQ(TRACE_FAILURE, TraceDeviceProcess(handle, (const void*)msg, sizeof(TraceHelloMsg)));
     free(msg);
     msg = NULL;
     EXPECT_EQ(TRACE_SUCCESS, TraceDeviceExit());
@@ -302,12 +291,12 @@ TEST_F(TraceSendUtest, TraceAdxSendInvalidMsg)
 {
     EXPECT_EQ(TRACE_SUCCESS, TraceDeviceInit());
     AdxCommConHandle handle = (AdxCommConHandle)AdiagMalloc(10);
-    TraceDataMsg* msg = (TraceDataMsg *)AdiagMalloc(sizeof(TraceDataMsg) + sizeof(TraceHelloMsg));
-    TraceHelloMsg *helloMsg = (TraceHelloMsg *)msg->data;
+    TraceDataMsg* msg = (TraceDataMsg*)AdiagMalloc(sizeof(TraceDataMsg) + sizeof(TraceHelloMsg));
+    TraceHelloMsg* helloMsg = (TraceHelloMsg*)msg->data;
     helloMsg->msgType = 10;
     helloMsg->magic = TRACE_HEAD_MAGIC;
     helloMsg->version = TRACE_HEAD_VERSION;
-    EXPECT_EQ(TRACE_FAILURE, TraceDeviceProcess(handle, (const void *)msg, sizeof(TraceHelloMsg)));
+    EXPECT_EQ(TRACE_FAILURE, TraceDeviceProcess(handle, (const void*)msg, sizeof(TraceHelloMsg)));
     free(msg);
     msg = NULL;
     EXPECT_EQ(TRACE_SUCCESS, TraceDeviceExit());
@@ -317,12 +306,12 @@ TEST_F(TraceSendUtest, TraceAdxSendInvalidMagic)
 {
     EXPECT_EQ(TRACE_SUCCESS, TraceDeviceInit());
     AdxCommConHandle handle = (AdxCommConHandle)AdiagMalloc(10);
-    TraceDataMsg* msg = (TraceDataMsg *)AdiagMalloc(sizeof(TraceDataMsg) + sizeof(TraceHelloMsg));
-    TraceHelloMsg *helloMsg = (TraceHelloMsg *)msg->data;
+    TraceDataMsg* msg = (TraceDataMsg*)AdiagMalloc(sizeof(TraceDataMsg) + sizeof(TraceHelloMsg));
+    TraceHelloMsg* helloMsg = (TraceHelloMsg*)msg->data;
     helloMsg->msgType = TRACE_HELLO_MSG;
     helloMsg->magic = TRACE_HEAD_MAGIC + 1U;
     helloMsg->version = TRACE_HEAD_VERSION;
-    EXPECT_EQ(TRACE_FAILURE, TraceDeviceProcess(handle, (const void *)msg, sizeof(TraceHelloMsg)));
+    EXPECT_EQ(TRACE_FAILURE, TraceDeviceProcess(handle, (const void*)msg, sizeof(TraceHelloMsg)));
     free(msg);
     msg = NULL;
     EXPECT_EQ(TRACE_SUCCESS, TraceDeviceExit());
@@ -333,12 +322,12 @@ TEST_F(TraceSendUtest, TraceAdxSendInvalidHandle)
     MOCKER(AdxGetAttrByCommHandle).stubs().will(returnValue(-1));
     EXPECT_EQ(TRACE_SUCCESS, TraceDeviceInit());
     AdxCommConHandle handle = (AdxCommConHandle)AdiagMalloc(10);
-    TraceDataMsg* msg = (TraceDataMsg *)AdiagMalloc(sizeof(TraceDataMsg) + sizeof(TraceHelloMsg));
-    TraceHelloMsg *helloMsg = (TraceHelloMsg *)msg->data;
+    TraceDataMsg* msg = (TraceDataMsg*)AdiagMalloc(sizeof(TraceDataMsg) + sizeof(TraceHelloMsg));
+    TraceHelloMsg* helloMsg = (TraceHelloMsg*)msg->data;
     helloMsg->msgType = TRACE_HELLO_MSG;
     helloMsg->magic = TRACE_HEAD_MAGIC;
     helloMsg->version = TRACE_HEAD_VERSION;
-    EXPECT_EQ(TRACE_FAILURE, TraceDeviceProcess(handle, (const void *)msg, sizeof(TraceHelloMsg)));
+    EXPECT_EQ(TRACE_FAILURE, TraceDeviceProcess(handle, (const void*)msg, sizeof(TraceHelloMsg)));
     free(msg);
     msg = NULL;
     EXPECT_EQ(TRACE_SUCCESS, TraceDeviceExit());
@@ -346,15 +335,15 @@ TEST_F(TraceSendUtest, TraceAdxSendInvalidHandle)
 
 TEST_F(TraceSendUtest, TraceAdxSendMallocFailed)
 {
-    MOCKER(AdiagMalloc).stubs().will(returnValue((void *)NULL));
+    MOCKER(AdiagMalloc).stubs().will(returnValue((void*)NULL));
     EXPECT_EQ(TRACE_SUCCESS, TraceDeviceInit());
     AdxCommConHandle handle = (AdxCommConHandle)malloc(10);
-    TraceDataMsg* msg = (TraceDataMsg *)malloc(sizeof(TraceDataMsg) + sizeof(TraceHelloMsg));
-    TraceHelloMsg *helloMsg = (TraceHelloMsg *)msg->data;
+    TraceDataMsg* msg = (TraceDataMsg*)malloc(sizeof(TraceDataMsg) + sizeof(TraceHelloMsg));
+    TraceHelloMsg* helloMsg = (TraceHelloMsg*)msg->data;
     helloMsg->msgType = TRACE_HELLO_MSG;
     helloMsg->magic = TRACE_HEAD_MAGIC;
     helloMsg->version = TRACE_HEAD_VERSION;
-    EXPECT_EQ(TRACE_FAILURE, TraceDeviceProcess(handle, (const void *)msg, sizeof(TraceHelloMsg)));
+    EXPECT_EQ(TRACE_FAILURE, TraceDeviceProcess(handle, (const void*)msg, sizeof(TraceHelloMsg)));
     free(msg);
     msg = NULL;
     EXPECT_EQ(TRACE_SUCCESS, TraceDeviceExit());
@@ -367,18 +356,18 @@ TEST_F(TraceSendUtest, TraceAdxGetAttrByCommHandleFailed)
     MOCKER(AdxGetAttrByCommHandle).stubs().will(returnValue(-1)).then(returnValue(0)).then(returnValue(-1));
     AdxCommConHandle handle1 = (AdxCommConHandle)AdiagMalloc(10);
     AdxCommConHandle handle2 = (AdxCommConHandle)AdiagMalloc(10);
-    TraceDataMsg* msg = (TraceDataMsg *)AdiagMalloc(sizeof(TraceDataMsg) + sizeof(TraceEndMsg));
+    TraceDataMsg* msg = (TraceDataMsg*)AdiagMalloc(sizeof(TraceDataMsg) + sizeof(TraceEndMsg));
     msg->status = MSG_STATUS_LONG_LINK;
-    EXPECT_EQ(TRACE_FAILURE, TraceDeviceProcess(handle1, (const void *)msg, sizeof(TraceEndMsg)));
-    EXPECT_EQ(TRACE_FAILURE, TraceDeviceProcess(handle2, (const void *)msg, sizeof(TraceEndMsg)));
+    EXPECT_EQ(TRACE_FAILURE, TraceDeviceProcess(handle1, (const void*)msg, sizeof(TraceEndMsg)));
+    EXPECT_EQ(TRACE_FAILURE, TraceDeviceProcess(handle2, (const void*)msg, sizeof(TraceEndMsg)));
     free(msg);
     msg = NULL;
 
     AdxCommConHandle handle3 = (AdxCommConHandle)AdiagMalloc(10);
-    msg = (TraceDataMsg *)AdiagMalloc(sizeof(TraceDataMsg) + sizeof(TraceEndMsg));
-    TraceEndMsg *endMsg = (TraceEndMsg *)msg->data;
+    msg = (TraceDataMsg*)AdiagMalloc(sizeof(TraceDataMsg) + sizeof(TraceEndMsg));
+    TraceEndMsg* endMsg = (TraceEndMsg*)msg->data;
     endMsg->msgType = TRACE_END_MSG;
-    EXPECT_EQ(TRACE_FAILURE, TraceDeviceProcess(handle3, (const void *)msg, sizeof(TraceEndMsg)));
+    EXPECT_EQ(TRACE_FAILURE, TraceDeviceProcess(handle3, (const void*)msg, sizeof(TraceEndMsg)));
     free(msg);
     msg = NULL;
     EXPECT_EQ(TRACE_SUCCESS, TraceDeviceExit());
@@ -390,10 +379,10 @@ TEST_F(TraceSendUtest, TraceEndMsgAdxGetAttrByCommHandleFailed)
     MOCKER(AdxGetAttrByCommHandle).stubs().will(returnValue(0)).then(returnValue(-1));
     EXPECT_EQ(TRACE_SUCCESS, TraceDeviceInit());
     AdxCommConHandle handle = (AdxCommConHandle)AdiagMalloc(10);
-    TraceDataMsg* msg = (TraceDataMsg *)AdiagMalloc(sizeof(TraceDataMsg) + sizeof(TraceEndMsg));
-    TraceEndMsg *endMsg = (TraceEndMsg *)msg->data;
+    TraceDataMsg* msg = (TraceDataMsg*)AdiagMalloc(sizeof(TraceDataMsg) + sizeof(TraceEndMsg));
+    TraceEndMsg* endMsg = (TraceEndMsg*)msg->data;
     endMsg->msgType = TRACE_END_MSG;
-    EXPECT_EQ(TRACE_FAILURE, TraceDeviceProcess(handle, (const void *)msg, sizeof(TraceEndMsg)));
+    EXPECT_EQ(TRACE_FAILURE, TraceDeviceProcess(handle, (const void*)msg, sizeof(TraceEndMsg)));
     free(msg);
     msg = NULL;
     EXPECT_EQ(TRACE_SUCCESS, TraceDeviceExit());
@@ -403,11 +392,11 @@ TEST_F(TraceSendUtest, TraceStartMsgAdxGetAttrByCommHandleFailed)
 {
     MOCKER(AdxGetAttrByCommHandle).stubs().will(returnValue(0)).then(returnValue(-1));
     EXPECT_EQ(TRACE_SUCCESS, TraceDeviceInit());
-    MOCKER(AdiagMalloc).stubs().will(returnValue((void *)NULL));
+    MOCKER(AdiagMalloc).stubs().will(returnValue((void*)NULL));
     AdxCommConHandle handle = (AdxCommConHandle)malloc(10);
-    TraceDataMsg* msg = (TraceDataMsg *)malloc(sizeof(TraceDataMsg) + sizeof(TraceEndMsg));
+    TraceDataMsg* msg = (TraceDataMsg*)malloc(sizeof(TraceDataMsg) + sizeof(TraceEndMsg));
     msg->status = MSG_STATUS_LONG_LINK;
-    EXPECT_EQ(TRACE_FAILURE, TraceDeviceProcess(handle, (const void *)msg, sizeof(TraceEndMsg)));
+    EXPECT_EQ(TRACE_FAILURE, TraceDeviceProcess(handle, (const void*)msg, sizeof(TraceEndMsg)));
     free(msg);
     msg = NULL;
     EXPECT_EQ(TRACE_SUCCESS, TraceDeviceExit());

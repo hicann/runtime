@@ -17,8 +17,7 @@
 using namespace std;
 using namespace testing;
 
-class EP_SLOGD_BUF_MGR_EXCP_UTEST : public testing::Test
-{
+class EP_SLOGD_BUF_MGR_EXCP_UTEST : public testing::Test {
 protected:
     virtual void SetUp()
     {
@@ -47,13 +46,13 @@ protected:
     }
 };
 
-static void *MallocStub(size_t size)
+static void* MallocStub(size_t size)
 {
     if (size == 0) {
         return NULL;
     }
 
-    void *buffer = malloc(size);
+    void* buffer = malloc(size);
     if (buffer == NULL) {
         return NULL;
     }
@@ -73,17 +72,12 @@ TEST_F(EP_SLOGD_BUF_MGR_EXCP_UTEST, SlogdBufferInitMallocFailed)
     SlogdBufferExit(DEBUG_SYS_LOG_TYPE, NULL);
     GlobalMockObject::verify();
 
-    MOCKER(LogMalloc).stubs()
-        .will(invoke(MallocStub))
-        .then(returnValue((void*)NULL));
+    MOCKER(LogMalloc).stubs().will(invoke(MallocStub)).then(returnValue((void*)NULL));
     EXPECT_EQ(LOG_FAILURE, SlogdBufferInit(DEBUG_SYS_LOG_TYPE, 1024U, 0U, NULL));
     SlogdBufferExit(DEBUG_SYS_LOG_TYPE, NULL);
     GlobalMockObject::verify();
 
-    MOCKER(LogMalloc).stubs()
-        .will(invoke(MallocStub))
-        .then(invoke(MallocStub))
-        .then(returnValue((void*)NULL));
+    MOCKER(LogMalloc).stubs().will(invoke(MallocStub)).then(invoke(MallocStub)).then(returnValue((void*)NULL));
     EXPECT_EQ(LOG_FAILURE, SlogdBufferInit(DEBUG_APP_LOG_TYPE, 1024U, 0U, NULL));
     SlogdBufferExit(DEBUG_APP_LOG_TYPE, NULL);
     GlobalMockObject::verify();
@@ -93,31 +87,26 @@ TEST_F(EP_SLOGD_BUF_MGR_EXCP_UTEST, SlogdBufferOpenHandleFailed)
 {
     EXPECT_EQ(LOG_SUCCESS, SlogdBufferInit(DEBUG_SYS_LOG_TYPE, 1024U, 0U, NULL));
     MOCKER(LogMalloc).stubs().will(returnValue((void*)NULL));
-    void *handle = SlogdBufferHandleOpen(DEBUG_SYS_LOG_TYPE, NULL, LOG_BUFFER_READ_MODE, 0);
-    EXPECT_EQ((void *)NULL, handle);
+    void* handle = SlogdBufferHandleOpen(DEBUG_SYS_LOG_TYPE, NULL, LOG_BUFFER_READ_MODE, 0);
+    EXPECT_EQ((void*)NULL, handle);
     SlogdBufferHandleClose(&handle);
     GlobalMockObject::verify();
 
-    MOCKER(LogMalloc).stubs()
-        .will(invoke(MallocStub))
-        .then(invoke(MallocStub))
-        .then(returnValue((void*)NULL));
+    MOCKER(LogMalloc).stubs().will(invoke(MallocStub)).then(invoke(MallocStub)).then(returnValue((void*)NULL));
     handle = SlogdBufferHandleOpen(DEBUG_SYS_LOG_TYPE, NULL, LOG_BUFFER_READ_MODE, 0);
-    EXPECT_EQ((void *)NULL, handle);
+    EXPECT_EQ((void*)NULL, handle);
     SlogdBufferHandleClose(&handle);
     GlobalMockObject::verify();
 
     MOCKER(memcpy_s).stubs().will(returnValue(EOK + 1));
     handle = SlogdBufferHandleOpen(DEBUG_SYS_LOG_TYPE, NULL, LOG_BUFFER_READ_MODE, 0);
-    EXPECT_EQ((void *)NULL, handle);
+    EXPECT_EQ((void*)NULL, handle);
     SlogdBufferHandleClose(&handle);
     GlobalMockObject::verify();
 
-    MOCKER(memcpy_s).stubs()
-        .will(returnValue(EOK))
-        .then(returnValue(EOK + 1));
+    MOCKER(memcpy_s).stubs().will(returnValue(EOK)).then(returnValue(EOK + 1));
     handle = SlogdBufferHandleOpen(DEBUG_SYS_LOG_TYPE, NULL, LOG_BUFFER_READ_MODE, 0);
-    EXPECT_EQ((void *)NULL, handle);
+    EXPECT_EQ((void*)NULL, handle);
     SlogdBufferHandleClose(&handle);
     SlogdBufferExit(DEBUG_SYS_LOG_TYPE, NULL);
     GlobalMockObject::verify();
@@ -125,15 +114,15 @@ TEST_F(EP_SLOGD_BUF_MGR_EXCP_UTEST, SlogdBufferOpenHandleFailed)
 
 TEST_F(EP_SLOGD_BUF_MGR_EXCP_UTEST, SlogdStaticBufferWriteFailed)
 {
-    const char *msg = "test.";
+    const char* msg = "test.";
     EXPECT_EQ(LOG_INVALID_PTR, SlogdBufferWrite(NULL, msg, strlen(msg)));
 
     EXPECT_EQ(LOG_SUCCESS, SlogdBufferInit(DEBUG_SYS_LOG_TYPE, 1024U, 0U, NULL));
-    void *handle = SlogdBufferHandleOpen(DEBUG_SYS_LOG_TYPE, NULL, LOG_BUFFER_WRITE_MODE, 0);
+    void* handle = SlogdBufferHandleOpen(DEBUG_SYS_LOG_TYPE, NULL, LOG_BUFFER_WRITE_MODE, 0);
     EXPECT_EQ(LOG_INVALID_PTR, SlogdBufferWrite(handle, NULL, strlen(msg)));
     EXPECT_EQ(LOG_INVALID_PTR, SlogdBufferWrite(handle, msg, 1025U));
 
-    MOCKER(localtime_r).stubs().will(returnValue((struct tm *)NULL));
+    MOCKER(localtime_r).stubs().will(returnValue((struct tm*)NULL));
     EXPECT_EQ(LOG_FAILURE, SlogdBufferWrite(handle, msg, strlen(msg)));
     GlobalMockObject::verify();
 
@@ -145,9 +134,9 @@ TEST_F(EP_SLOGD_BUF_MGR_EXCP_UTEST, SlogdStaticBufferWriteFailed)
 
 TEST_F(EP_SLOGD_BUF_MGR_EXCP_UTEST, SlogdDynamicBufferWriteFailed)
 {
-    const char *msg = "test.";
+    const char* msg = "test.";
     EXPECT_EQ(LOG_SUCCESS, SlogdBufferInit(DEBUG_APP_LOG_TYPE, 1024U, 0U, NULL));
-    void *handle = SlogdBufferHandleOpen(DEBUG_APP_LOG_TYPE, NULL, LOG_BUFFER_WRITE_MODE, 0);
+    void* handle = SlogdBufferHandleOpen(DEBUG_APP_LOG_TYPE, NULL, LOG_BUFFER_WRITE_MODE, 0);
     MOCKER(memcpy_s).stubs().will(returnValue(EOK + 1));
     EXPECT_EQ(LOG_FAILURE, SlogdBufferWrite(handle, msg, strlen(msg)));
     SlogdBufferHandleClose(&handle);
@@ -158,7 +147,7 @@ TEST_F(EP_SLOGD_BUF_MGR_EXCP_UTEST, SlogdDynamicBufferReadFailed)
 {
     EXPECT_EQ(-1, SlogdBufferRead(NULL, NULL, 0));
     EXPECT_EQ(LOG_SUCCESS, SlogdBufferInit(DEBUG_APP_LOG_TYPE, 1024U, 0U, NULL));
-    void *handle = SlogdBufferHandleOpen(DEBUG_APP_LOG_TYPE, NULL, LOG_BUFFER_WRITE_MODE, 0);
+    void* handle = SlogdBufferHandleOpen(DEBUG_APP_LOG_TYPE, NULL, LOG_BUFFER_WRITE_MODE, 0);
     EXPECT_EQ(-1, SlogdBufferRead(handle, NULL, 0));
     SlogdBufferHandleClose(&handle);
     SlogdBufferExit(DEBUG_APP_LOG_TYPE, NULL);
@@ -168,7 +157,7 @@ TEST_F(EP_SLOGD_BUF_MGR_EXCP_UTEST, SlogdStaticBufferReadFailed)
 {
     MOCKER(memcpy_s).stubs().will(returnValue(EOK + 1));
     EXPECT_EQ(LOG_SUCCESS, SlogdBufferInit(DEBUG_SYS_LOG_TYPE, 1024U, 0U, NULL));
-    void *handle = SlogdBufferHandleOpen(DEBUG_SYS_LOG_TYPE, NULL, LOG_BUFFER_WRITE_MODE, 0);
+    void* handle = SlogdBufferHandleOpen(DEBUG_SYS_LOG_TYPE, NULL, LOG_BUFFER_WRITE_MODE, 0);
     EXPECT_EQ(-1, SlogdBufferRead(handle, NULL, 0));
     SlogdBufferHandleClose(&handle);
     SlogdBufferExit(DEBUG_SYS_LOG_TYPE, NULL);

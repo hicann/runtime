@@ -22,12 +22,11 @@ using namespace std;
 using namespace testing;
 
 extern "C" {
-    void DllMain(void);
-    void DlogFree(void);
+void DllMain(void);
+void DlogFree(void);
 }
 
-class RC_ALOG_FUNC_UTEST : public testing::Test
-{
+class RC_ALOG_FUNC_UTEST : public testing::Test {
 protected:
     virtual void SetUp()
     {
@@ -63,17 +62,11 @@ protected:
     }
 
 public:
-    static void DlogConstructor()
-    {
-        DllMain();
-    }
+    static void DlogConstructor() { DllMain(); }
 
-    static void DlogDestructor()
-    {
-        DlogFree();
-    }
+    static void DlogDestructor() { DlogFree(); }
 
-    int DlogCmdGetIntRet(const char *path, const char*cmd)
+    int DlogCmdGetIntRet(const char* path, const char* cmd)
     {
         char resultFile[200] = {0};
         sprintf(resultFile, "%s/RC_ALOG_FUNC_UTEST_cmd_result.txt", path);
@@ -83,7 +76,7 @@ public:
         system(cmdToFile);
 
         char buf[100] = {0};
-        FILE *fp = fopen(resultFile, "r");
+        FILE* fp = fopen(resultFile, "r");
         if (fp == NULL) {
             return 0;
         }
@@ -95,14 +88,18 @@ public:
         return atoi(buf);
     }
 
-    int DlogCheckSocket(const char *str)
+    int DlogCheckSocket(const char* str)
     {
         if (access(PATH_ROOT "/socket/rc_alog_socket", F_OK) != 0) {
             return 0;
         }
 
         char cmd[200] = {0};
-        sprintf(cmd, "grep -oa %s " PATH_ROOT "/socket/rc_alog_socket" " | wc -l", str);
+        sprintf(
+            cmd,
+            "grep -oa %s " PATH_ROOT "/socket/rc_alog_socket"
+            " | wc -l",
+            str);
         int ret = DlogCmdGetIntRet(PATH_ROOT, cmd);
         return ret;
     }
@@ -181,23 +178,19 @@ TEST_F(RC_ALOG_FUNC_UTEST, AlogWrite_Failed)
 }
 
 extern "C" {
-    int32_t GetSlogSocketPath(const uint32_t devId, char *socketPath, const uint32_t pathLen);
+int32_t GetSlogSocketPath(const uint32_t devId, char* socketPath, const uint32_t pathLen);
 }
-class GetSlogSocketPathTest : public testing::Test
-{
+class GetSlogSocketPathTest : public testing::Test {
 protected:
     virtual void SetUp() {}
-    virtual void TearDown()
-    {
-        GlobalMockObject::reset();
-    }
+    virtual void TearDown() { GlobalMockObject::reset(); }
 };
 
 TEST_F(GetSlogSocketPathTest, GetSlogSocketPath_syslog)
 {
     MOCKER(DlogCheckAttrSystem).stubs().will(returnValue(true));
 
-    char path[WORKSPACE_PATH_MAX_LENGTH + 1] = { 0 };
+    char path[WORKSPACE_PATH_MAX_LENGTH + 1] = {0};
     EXPECT_EQ(0, GetSlogSocketPath(0, path, WORKSPACE_PATH_MAX_LENGTH));
     EXPECT_STREQ("/usr/slog/slog", path);
 
@@ -220,7 +213,7 @@ TEST_F(GetSlogSocketPathTest, GetSlogSocketPath_alogWithSameUser)
     dirStat.st_uid = (uid_t)12345;
     MOCKER(ToolStatGet).stubs().with(mockcpp::any(), outBoundP(&dirStat)).will(returnValue(0));
 
-    char path[WORKSPACE_PATH_MAX_LENGTH + 1] = { 0 };
+    char path[WORKSPACE_PATH_MAX_LENGTH + 1] = {0};
     EXPECT_EQ(0, GetSlogSocketPath(0, path, WORKSPACE_PATH_MAX_LENGTH));
     EXPECT_STREQ("/usr/slog/slog", path);
 
@@ -243,7 +236,7 @@ TEST_F(GetSlogSocketPathTest, GetSlogSocketPath_alogWithDiffUser)
     MOCKER(ToolStatGet).stubs().with(mockcpp::any(), outBoundP(&dirStat)).will(returnValue(0));
     MOCKER(ToolAccess).stubs().will(returnValue(0));
 
-    char path[WORKSPACE_PATH_MAX_LENGTH + 1] = { 0 };
+    char path[WORKSPACE_PATH_MAX_LENGTH + 1] = {0};
     EXPECT_EQ(0, GetSlogSocketPath(0, path, WORKSPACE_PATH_MAX_LENGTH));
     EXPECT_STREQ("/usr/slog/slog_app", path);
 
@@ -266,7 +259,7 @@ TEST_F(GetSlogSocketPathTest, GetSlogSocketPath_alogWithDiffUserInvalidPath)
     MOCKER(ToolStatGet).stubs().with(mockcpp::any(), outBoundP(&dirStat)).will(returnValue(0));
     MOCKER(ToolAccess).stubs().will(returnValue(-1));
 
-    char path[WORKSPACE_PATH_MAX_LENGTH + 1] = { 0 };
+    char path[WORKSPACE_PATH_MAX_LENGTH + 1] = {0};
     EXPECT_EQ(0, GetSlogSocketPath(0, path, WORKSPACE_PATH_MAX_LENGTH));
     EXPECT_STREQ("/usr/slog/slog", path);
 
@@ -315,7 +308,7 @@ TEST_F(RC_ALOG_FUNC_UTEST, TransferToSlog)
     EXPECT_EQ(1, GetSlogFuncCallCount(DLOG_SET_LEVEL));
     EXPECT_EQ(1, GetSlogFuncCallCount(CHECK_LOG_LEVEL));
     EXPECT_EQ(1, GetSlogFuncCallCount(DLOG_GET_ATTR));
-    EXPECT_EQ(2, GetSlogFuncCallCount(DLOG_SET_ATTR));  // alog so 构造函数中会调用一次
+    EXPECT_EQ(2, GetSlogFuncCallCount(DLOG_SET_ATTR)); // alog so 构造函数中会调用一次
     EXPECT_EQ(10, GetSlogFuncCallCount(DLOG_VA_LIST));
     EXPECT_EQ(1, GetSlogFuncCallCount(DLOG_FLUSH));
     DlogDestructor();
@@ -330,7 +323,12 @@ TEST_F(RC_ALOG_FUNC_UTEST, compatibility)
     EXPECT_EQ(LOG_FAILURE, AlogTryUseSlog());
 
     GlobalMockObject::verify();
-    MOCKER(dlopen).stubs().will(invoke(logDlopen)).then(invoke(logDlopen)).then(invoke(logDlopen)).then(returnValue((void*)nullptr));
+    MOCKER(dlopen)
+        .stubs()
+        .will(invoke(logDlopen))
+        .then(invoke(logDlopen))
+        .then(invoke(logDlopen))
+        .then(returnValue((void*)nullptr));
     MOCKER(dlclose).stubs().will(invoke(logDlclose));
     MOCKER(dlsym).stubs().will(invoke(logDlsym)).then(invoke(logDlsym)).then(returnValue((void*)nullptr));
     MOCKER(DlogSetAttr).stubs().will(returnValue(LOG_FAILURE));

@@ -17,23 +17,17 @@
 
 using namespace Adx;
 
-class ADX_LOG_HDC_SERVER_UTEST: public testing::Test {
+class ADX_LOG_HDC_SERVER_UTEST : public testing::Test {
 protected:
     virtual void SetUp() {}
-    virtual void TearDown() {
-        GlobalMockObject::verify();
-    }
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 TEST_F(ADX_LOG_HDC_SERVER_UTEST, LogHdcServerInit)
 {
-    MOCKER(AdxRegisterComponentFunc).stubs()
-        .will(returnValue(IDE_DAEMON_ERROR))
-        .then(returnValue(IDE_DAEMON_OK));
+    MOCKER(AdxRegisterComponentFunc).stubs().will(returnValue(IDE_DAEMON_ERROR)).then(returnValue(IDE_DAEMON_OK));
 
-    MOCKER(AdxComponentServerStartup).stubs()
-        .will(returnValue(IDE_DAEMON_ERROR))
-        .then(returnValue(IDE_DAEMON_OK));
+    MOCKER(AdxComponentServerStartup).stubs().will(returnValue(IDE_DAEMON_ERROR)).then(returnValue(IDE_DAEMON_OK));
 
     struct LogServerInitInfo info;
     info.deviceId = -1;

@@ -18,48 +18,53 @@
 
 #define VOS_ERRNO_URC_FAILURE (-1)
 extern "C" {
-    TraStatus TraceOpStackTwoDataParseBasic(uint8_t enOpType, uintptr_t uvSwapTmp1,
-        uintptr_t uvSwapTmp2, uintptr_t *puvResult);
-    const uint8_t *TraceOpStackOneDataParse(ScdDwarf *dwarf, uint8_t enOpType, uintptr_t uvTmpRes,
-        const uint8_t *pucInsAddr, const ScdDwarfStepArgs *pstStackLimit, uintptr_t *puvResult);
-    const uint8_t *TraceOpStackDataOpt(uint8_t enOpType, uintptr_t auvStackContent[VOS_OP_STACK_DEPTH],
-        uint32_t *puiIndex, const uint8_t *pucInsAddr, uintptr_t *puvResult);
-    const uint8_t *TraceOpConstNumGet(ScdDwarf *dwarf, uint8_t enOpType, const uint8_t *pucInsAddr, uintptr_t *puvResult);
-    TraStatus TraceOpStackTwoDataOpt(uint8_t enOpType, uintptr_t auvStackContent[VOS_OP_STACK_DEPTH],
-                                uint32_t *puiIndex, uintptr_t *puvResult);
-    const uint8_t *TraceOpStackOneDataOpt(ScdDwarf *dwarf, uint8_t enOpType, uintptr_t auvStackContent[VOS_OP_STACK_DEPTH],
-        uint32_t *puiIndex, const uint8_t *pucInsAddr, const ScdDwarfStepArgs *pstStackLimit,
-        uintptr_t *puvResult);
-    const uint8_t *TraceUnwindRegDefParse(ScdDwarf *dwarf,uint8_t ucOpcode, const uint8_t *pucInstr, TraceFrameRegStateInfo *pstInfo);
-    const uint8_t *TraceUnwindOpcodeParse(ScdDwarf *dwarf,uint8_t ucOpcode, const uint8_t *pucInstr,
-        TraceFrameRegStateInfo *pstFrameRInfo);
-    const uint8_t *TraceUnwindPCLocParse(ScdDwarf *dwarf,uint8_t ucOpcode, const uint8_t *pucInstr,
-        TraceFrameRegStateInfo *pstFrameRInfo);
-    const uint8_t *TraceUnwindCFADefParse(ScdDwarf *dwarf,uint8_t ucOpcode, const uint8_t *pucInstr,
-        TraceFrameRegStateInfo *pstFrameRInfo);
-    const uint8_t *TraceUnwindRegValueDefParse(ScdDwarf *dwarf,uint8_t ucOpcode, const uint8_t *pucInstr,
-        TraceFrameRegStateInfo *pstFrameRInfo);
-    const uint8_t *TraceUnwindOtherCodeParse(ScdDwarf *dwarf,uint8_t ucOpcode, const uint8_t *pucInstr,
-        TraceFrameStateInfo *pstStoreFrameRegState, TraceFrameRegStateInfo *pstFrameRInfo);
+TraStatus TraceOpStackTwoDataParseBasic(
+    uint8_t enOpType, uintptr_t uvSwapTmp1, uintptr_t uvSwapTmp2, uintptr_t* puvResult);
+const uint8_t* TraceOpStackOneDataParse(
+    ScdDwarf* dwarf, uint8_t enOpType, uintptr_t uvTmpRes, const uint8_t* pucInsAddr,
+    const ScdDwarfStepArgs* pstStackLimit, uintptr_t* puvResult);
+const uint8_t* TraceOpStackDataOpt(
+    uint8_t enOpType, uintptr_t auvStackContent[VOS_OP_STACK_DEPTH], uint32_t* puiIndex, const uint8_t* pucInsAddr,
+    uintptr_t* puvResult);
+const uint8_t* TraceOpConstNumGet(ScdDwarf* dwarf, uint8_t enOpType, const uint8_t* pucInsAddr, uintptr_t* puvResult);
+TraStatus TraceOpStackTwoDataOpt(
+    uint8_t enOpType, uintptr_t auvStackContent[VOS_OP_STACK_DEPTH], uint32_t* puiIndex, uintptr_t* puvResult);
+const uint8_t* TraceOpStackOneDataOpt(
+    ScdDwarf* dwarf, uint8_t enOpType, uintptr_t auvStackContent[VOS_OP_STACK_DEPTH], uint32_t* puiIndex,
+    const uint8_t* pucInsAddr, const ScdDwarfStepArgs* pstStackLimit, uintptr_t* puvResult);
+const uint8_t* TraceUnwindRegDefParse(
+    ScdDwarf* dwarf, uint8_t ucOpcode, const uint8_t* pucInstr, TraceFrameRegStateInfo* pstInfo);
+const uint8_t* TraceUnwindOpcodeParse(
+    ScdDwarf* dwarf, uint8_t ucOpcode, const uint8_t* pucInstr, TraceFrameRegStateInfo* pstFrameRInfo);
+const uint8_t* TraceUnwindPCLocParse(
+    ScdDwarf* dwarf, uint8_t ucOpcode, const uint8_t* pucInstr, TraceFrameRegStateInfo* pstFrameRInfo);
+const uint8_t* TraceUnwindCFADefParse(
+    ScdDwarf* dwarf, uint8_t ucOpcode, const uint8_t* pucInstr, TraceFrameRegStateInfo* pstFrameRInfo);
+const uint8_t* TraceUnwindRegValueDefParse(
+    ScdDwarf* dwarf, uint8_t ucOpcode, const uint8_t* pucInstr, TraceFrameRegStateInfo* pstFrameRInfo);
+const uint8_t* TraceUnwindOtherCodeParse(
+    ScdDwarf* dwarf, uint8_t ucOpcode, const uint8_t* pucInstr, TraceFrameStateInfo* pstStoreFrameRegState,
+    TraceFrameRegStateInfo* pstFrameRInfo);
 }
 
 using StackTraceUnwindInstrUtest = DwarfLocalMemoryTest;
 
-#define LOG_EXPECT_EQ(X, Y, msg, ...) do {  \
-    if ((X) != (Y)) {                       \
-        printf(msg "\n", ##__VA_ARGS__);    \
-    }                                       \
-    EXPECT_EQ((X), (Y));                    \
-} while (0)
+#define LOG_EXPECT_EQ(X, Y, msg, ...)        \
+    do {                                     \
+        if ((X) != (Y)) {                    \
+            printf(msg "\n", ##__VA_ARGS__); \
+        }                                    \
+        EXPECT_EQ((X), (Y));                 \
+    } while (0)
 
 TEST_F(StackTraceUnwindInstrUtest, TestTraceUnwindOpcodeParse)
 {
     uint8_t opCode = 0;
-    uint8_t data[4] = { 0 };
-    const uint8_t *instr = &data[0];
-    const uint8_t *mockValue = &data[1];
-    TraceFrameRegStateInfo regInfo = { 0 };
-    const uint8_t *ret = NULL;
+    uint8_t data[4] = {0};
+    const uint8_t* instr = &data[0];
+    const uint8_t* mockValue = &data[1];
+    TraceFrameRegStateInfo regInfo = {0};
+    const uint8_t* ret = NULL;
 
     // case DW_CFA_ADVANCE_LOC
     opCode = 0x40;
@@ -88,15 +93,15 @@ TEST_F(StackTraceUnwindInstrUtest, TestTraceUnwindOpcodeParse)
 TEST_F(StackTraceUnwindInstrUtest, TestTraceUnwindPCLocParse)
 {
     uint8_t opCode = 0;
-    uint8_t data[4] = { 0 };
-    const uint8_t *instr = &data[0];
-    const uint8_t *mockValue = &data[1];
-    TraceFrameRegStateInfo regInfo = { 0 };
-    const uint8_t *ret = NULL;
+    uint8_t data[4] = {0};
+    const uint8_t* instr = &data[0];
+    const uint8_t* mockValue = &data[1];
+    TraceFrameRegStateInfo regInfo = {0};
+    const uint8_t* ret = NULL;
 
     // case DW_CFA_SET_LOC
     opCode = DW_CFA_SET_LOC;
-    MOCKER(TraceReadEncodeValue).expects(once()).will(returnValue((const uint8_t *)0));
+    MOCKER(TraceReadEncodeValue).expects(once()).will(returnValue((const uint8_t*)0));
     ret = TraceUnwindPCLocParse(&dwarf, opCode, instr, &regInfo);
     EXPECT_EQ(NULL, ret);
     GlobalMockObject::verify();
@@ -129,12 +134,12 @@ TEST_F(StackTraceUnwindInstrUtest, TestTraceUnwindPCLocParse)
 TEST_F(StackTraceUnwindInstrUtest, TestTraceUnwindCFADefParse)
 {
     uint8_t opCode = 0;
-    uint8_t data[4] = { 0 };
-    const uint8_t *instr = &data[0];
-    const uint8_t *mockValue = &data[1];
-    TraceFrameRegStateInfo regInfo = { 0 };
+    uint8_t data[4] = {0};
+    const uint8_t* instr = &data[0];
+    const uint8_t* mockValue = &data[1];
+    TraceFrameRegStateInfo regInfo = {0};
     uintptr_t offset = 10;
-    const uint8_t *ret = NULL;
+    const uint8_t* ret = NULL;
 
     // case DW_CFA_DEF_CFA
     opCode = DW_CFA_DEF_CFA;
@@ -174,8 +179,10 @@ TEST_F(StackTraceUnwindInstrUtest, TestTraceUnwindCFADefParse)
 
     // case DW_CFA_DEF_CFA_EXPRESSION
     opCode = DW_CFA_DEF_CFA_EXPRESSION;
-    MOCKER(TraceReadUleb128).stubs().with(any(), any(), outBoundP(&offset, sizeof(uintptr_t *)))
-                            .will(returnValue(mockValue));
+    MOCKER(TraceReadUleb128)
+        .stubs()
+        .with(any(), any(), outBoundP(&offset, sizeof(uintptr_t*)))
+        .will(returnValue(mockValue));
     ret = TraceUnwindCFADefParse(&dwarf, opCode, instr, &regInfo);
     EXPECT_EQ(mockValue + offset, ret);
     GlobalMockObject::verify();
@@ -189,12 +196,12 @@ TEST_F(StackTraceUnwindInstrUtest, TestTraceUnwindCFADefParse)
 TEST_F(StackTraceUnwindInstrUtest, TestTraceUnwindRegValueDefParse)
 {
     uint8_t opCode = 0;
-    uint8_t data[4] = { 0 };
-    const uint8_t *instr = &data[0];
-    const uint8_t *mockValue = &data[1];
-    TraceFrameRegStateInfo regInfo = { 0 };
+    uint8_t data[4] = {0};
+    const uint8_t* instr = &data[0];
+    const uint8_t* mockValue = &data[1];
+    TraceFrameRegStateInfo regInfo = {0};
     uintptr_t offset = 10;
-    const uint8_t *ret = NULL;
+    const uint8_t* ret = NULL;
 
     // case DW_CFA_VAL_OFFSET
     opCode = DW_CFA_VAL_OFFSET;
@@ -213,8 +220,11 @@ TEST_F(StackTraceUnwindInstrUtest, TestTraceUnwindRegValueDefParse)
 
     // case DW_CFA_VAL_EXPRESSION
     opCode = DW_CFA_VAL_EXPRESSION;
-    MOCKER(TraceReadUleb128).stubs().with(any(), any(), outBoundP(&offset, sizeof(uintptr_t *)))
-        .will(returnValue(mockValue)).then(returnValue(mockValue + 1));
+    MOCKER(TraceReadUleb128)
+        .stubs()
+        .with(any(), any(), outBoundP(&offset, sizeof(uintptr_t*)))
+        .will(returnValue(mockValue))
+        .then(returnValue(mockValue + 1));
     ret = TraceUnwindRegValueDefParse(&dwarf, opCode, instr, &regInfo);
     EXPECT_EQ(mockValue + 1 + offset, ret);
     GlobalMockObject::verify();
@@ -228,13 +238,13 @@ TEST_F(StackTraceUnwindInstrUtest, TestTraceUnwindRegValueDefParse)
 TEST_F(StackTraceUnwindInstrUtest, TestTraceUnwindOtherCodeParse)
 {
     uint8_t opCode = 0;
-    uint8_t data[4] = { 0 };
-    const uint8_t *instr = &data[0];
-    const uint8_t *mockValue = &data[1];
-    TraceFrameStateInfo info = { 0 };
-    TraceFrameRegStateInfo regInfo = { 0 };
+    uint8_t data[4] = {0};
+    const uint8_t* instr = &data[0];
+    const uint8_t* mockValue = &data[1];
+    TraceFrameStateInfo info = {0};
+    TraceFrameRegStateInfo regInfo = {0};
     uintptr_t offset = 10;
-    const uint8_t *ret = NULL;
+    const uint8_t* ret = NULL;
 
     // case DW_CFA_NOP
     opCode = DW_CFA_NOP;
@@ -271,12 +281,12 @@ TEST_F(StackTraceUnwindInstrUtest, TestTraceUnwindOtherCodeParse)
 
 TEST_F(StackTraceUnwindInstrUtest, TestTraceUnwindRegDefParse)
 {
-    uint8_t data[4] = { 0 };
-    const uint8_t *instr = &data[0];
-    const uint8_t *mockValue = &data[1];
-    TraceFrameRegStateInfo regInfo = { 0 };
+    uint8_t data[4] = {0};
+    const uint8_t* instr = &data[0];
+    const uint8_t* mockValue = &data[1];
+    TraceFrameRegStateInfo regInfo = {0};
     uintptr_t offset = 10;
-    const uint8_t *ret = NULL;
+    const uint8_t* ret = NULL;
 
     for (uint8_t opCode = 0x00; opCode < 0xFF - 1; opCode++) {
         // case DW_CFA_OFFSET_EXTENDED
@@ -345,8 +355,11 @@ TEST_F(StackTraceUnwindInstrUtest, TestTraceUnwindRegDefParse)
 
         // case DW_CFA_EXPRESSION
         if (opCode == DW_CFA_EXPRESSION) {
-            MOCKER(TraceReadUleb128).stubs().with(any(), any(), outBoundP(&offset, sizeof(uintptr_t *)))
-                .will(returnValue(mockValue)).then(returnValue(mockValue + 1));
+            MOCKER(TraceReadUleb128)
+                .stubs()
+                .with(any(), any(), outBoundP(&offset, sizeof(uintptr_t*)))
+                .will(returnValue(mockValue))
+                .then(returnValue(mockValue + 1));
             ret = TraceUnwindRegDefParse(&dwarf, opCode, instr, &regInfo);
             EXPECT_EQ(mockValue + 1 + offset, ret);
             GlobalMockObject::verify();
@@ -356,25 +369,25 @@ TEST_F(StackTraceUnwindInstrUtest, TestTraceUnwindRegDefParse)
         // default
         MOCKER(TraceReadUleb128).stubs().will(returnValue(mockValue));
         ret = TraceUnwindRegDefParse(&dwarf, opCode, instr, &regInfo);
-        LOG_EXPECT_EQ((const uint8_t *)0, ret, "test TraceUnwindRegDefParse failed, opCode=0x%02hhx.", opCode);
+        LOG_EXPECT_EQ((const uint8_t*)0, ret, "test TraceUnwindRegDefParse failed, opCode=0x%02hhx.", opCode);
         GlobalMockObject::verify();
     }
 }
 
-static void Mocker_TraceOpConstNumGet(uint8_t enOpType, const uint8_t *pucInsAddr, uintptr_t *puvResult)
+static void Mocker_TraceOpConstNumGet(uint8_t enOpType, const uint8_t* pucInsAddr, uintptr_t* puvResult)
 {
-    const uint8_t *mockValue = pucInsAddr;
+    const uint8_t* mockValue = pucInsAddr;
     uintptr_t uOffset = 0x08;
     intptr_t sOffset = 0x12;
-    const uint8_t *pucInsAddrTmp = pucInsAddr;
-    uintptr_t *puvResultTmp = puvResult;
+    const uint8_t* pucInsAddrTmp = pucInsAddr;
+    uintptr_t* puvResultTmp = puvResult;
 
     switch (enOpType) {
         case DW_OP_COUST1U:
-            *puvResultTmp = (uintptr_t)(*(uint8_t *)(uintptr_t)pucInsAddrTmp);
+            *puvResultTmp = (uintptr_t)(*(uint8_t*)(uintptr_t)pucInsAddrTmp);
             break;
         case DW_OP_COUST1S:
-            *puvResultTmp = (uintptr_t)(*(int8_t *)(uintptr_t)pucInsAddrTmp);
+            *puvResultTmp = (uintptr_t)(*(int8_t*)(uintptr_t)pucInsAddrTmp);
             break;
         case DW_OP_COUST2U:
             memcpy(puvResultTmp, pucInsAddrTmp, sizeof(uint16_t));
@@ -395,12 +408,16 @@ static void Mocker_TraceOpConstNumGet(uint8_t enOpType, const uint8_t *pucInsAdd
             memcpy(puvResultTmp, pucInsAddrTmp, sizeof(int64_t));
             break;
         case DW_OP_COUSTU:
-            MOCKER(TraceReadUleb128).stubs().with(any(), any(), outBoundP(&uOffset, sizeof(uintptr_t *)))
+            MOCKER(TraceReadUleb128)
+                .stubs()
+                .with(any(), any(), outBoundP(&uOffset, sizeof(uintptr_t*)))
                 .will(returnValue(mockValue));
             *puvResultTmp = uOffset;
             break;
         case DW_OP_COUSTS:
-            MOCKER(TraceReadLeb128).stubs().with(any(), any(), outBoundP(&sOffset, sizeof(intptr_t *)))
+            MOCKER(TraceReadLeb128)
+                .stubs()
+                .with(any(), any(), outBoundP(&sOffset, sizeof(intptr_t*)))
                 .will(returnValue(mockValue));
             *puvResultTmp = (uintptr_t)sOffset;
             break;
@@ -411,26 +428,33 @@ static void Mocker_TraceOpConstNumGet(uint8_t enOpType, const uint8_t *pucInsAdd
     return;
 }
 
-const uint8_t *Mocker_TraceOpStackOtherOpt(uint8_t enOpType, const uintptr_t auvStackContent[VOS_OP_STACK_DEPTH],
-    uint32_t *puiIndex, const uint8_t *pucInsAddr, const ScdRegs *pstCoreRegs, uintptr_t *puvResult)
+const uint8_t* Mocker_TraceOpStackOtherOpt(
+    uint8_t enOpType, const uintptr_t auvStackContent[VOS_OP_STACK_DEPTH], uint32_t* puiIndex,
+    const uint8_t* pucInsAddr, const ScdRegs* pstCoreRegs, uintptr_t* puvResult)
 {
-    const uint8_t *mockValue = pucInsAddr;
+    const uint8_t* mockValue = pucInsAddr;
     uintptr_t uOffset = 0x08;
     intptr_t sOffset = 0x12;
-    const uint8_t *pucInsAddrTmp = pucInsAddr;
+    const uint8_t* pucInsAddrTmp = pucInsAddr;
     uintptr_t uvTmpRes = 0;
-    uint32_t  uiIdx = *puiIndex;
+    uint32_t uiIdx = *puiIndex;
 
     switch (enOpType) {
         case DW_OP_REGX:
-            MOCKER(TraceReadUleb128).stubs().with(any(), any(), outBoundP(&uOffset, sizeof(uintptr_t *)))
+            MOCKER(TraceReadUleb128)
+                .stubs()
+                .with(any(), any(), outBoundP(&uOffset, sizeof(uintptr_t*)))
                 .will(returnValue(mockValue));
             uvTmpRes = (uintptr_t)pstCoreRegs->r[uOffset & REG_VAILD_MASK];
             break;
         case DW_OP_BREGX:
-            MOCKER(TraceReadUleb128).stubs().with(any(), any(), outBoundP(&uOffset, sizeof(uintptr_t *)))
+            MOCKER(TraceReadUleb128)
+                .stubs()
+                .with(any(), any(), outBoundP(&uOffset, sizeof(uintptr_t*)))
                 .will(returnValue(mockValue));
-            MOCKER(TraceReadLeb128).stubs().with(any(), any(), outBoundP(&sOffset, sizeof(intptr_t *)))
+            MOCKER(TraceReadLeb128)
+                .stubs()
+                .with(any(), any(), outBoundP(&sOffset, sizeof(intptr_t*)))
                 .will(returnValue(mockValue));
             uvTmpRes = pstCoreRegs->r[uOffset & REG_VAILD_MASK] + (uintptr_t)sOffset;
             break;
@@ -438,7 +462,9 @@ const uint8_t *Mocker_TraceOpStackOtherOpt(uint8_t enOpType, const uintptr_t auv
             memcpy(&uvTmpRes, pucInsAddrTmp, sizeof(uintptr_t));
             break;
         case DW_OP_GNU_ENC_ADDR:
-            MOCKER(TraceReadEncodeValue).stubs().with(any(), any(), any(), outBoundP(&uOffset, sizeof(uintptr_t *)))
+            MOCKER(TraceReadEncodeValue)
+                .stubs()
+                .with(any(), any(), any(), outBoundP(&uOffset, sizeof(uintptr_t*)))
                 .will(returnValue(mockValue));
             uvTmpRes = uOffset;
             break;
@@ -446,7 +472,7 @@ const uint8_t *Mocker_TraceOpStackOtherOpt(uint8_t enOpType, const uintptr_t auv
             break;
         case DW_OP_BRA:
             TRACE_STACK_INDEX_CHECK_RET(uiIdx, 1, { return NULL; });
-            uiIdx  = uiIdx - 1;
+            uiIdx = uiIdx - 1;
             break;
         case DW_OP_NOP:
         default:
@@ -461,16 +487,16 @@ const uint8_t *Mocker_TraceOpStackOtherOpt(uint8_t enOpType, const uintptr_t auv
 
 TEST_F(StackTraceUnwindInstrUtest, TestTraceStackOpExc)
 {
-    uint8_t data[0xFF + 1] = { 0 };
+    uint8_t data[0xFF + 1] = {0};
     for (uint32_t i = 0x00; i <= 0xFF; i++) {
         data[i] = i;
     }
-    const uint8_t *opStart = &data[0];
-    const uint8_t *opEnd = &data[0xFF + 1];
-    ScdRegs coreRegs = { 0 };
+    const uint8_t* opStart = &data[0];
+    const uint8_t* opEnd = &data[0xFF + 1];
+    ScdRegs coreRegs = {0};
     uintptr_t result = 0;
     uintptr_t initial = 0x001234;
-    ScdDwarfStepArgs args = { 0 };
+    ScdDwarfStepArgs args = {0};
     uint32_t ret = TRACE_FAILURE;
 
     // opStart == NULL
@@ -494,7 +520,9 @@ TEST_F(StackTraceUnwindInstrUtest, TestTraceStackOpExc)
             coreRegs.r[(enOpType - DW_OP_REG0) & REG_VAILD_MASK] = exceptResult;
         } else if (VOS_ENC_OP_BREG(enOpType)) {
             intptr_t offset = 0x10;
-            MOCKER(TraceReadLeb128).stubs().with(any(), any(), outBoundP(&offset, sizeof(intptr_t *)))
+            MOCKER(TraceReadLeb128)
+                .stubs()
+                .with(any(), any(), outBoundP(&offset, sizeof(intptr_t*)))
                 .will(returnValue(opEnd));
             exceptResult = coreRegs.r[(enOpType - DW_OP_BREG0) & REG_VAILD_MASK] + (uintptr_t)offset;
         } else if (VOS_ENC_OP_CONST(enOpType)) {
@@ -504,7 +532,9 @@ TEST_F(StackTraceUnwindInstrUtest, TestTraceStackOpExc)
         } else if (VOS_ENC_OP_ONE_DATA(enOpType)) {
             continue; // in TestCase TestTraceStackOpExc_TraceOpStackOneDataOpt
         } else if (VOS_ENC_OP_TWO_DATA(enOpType)) {
-            MOCKER(TraceOpStackTwoDataOpt).stubs().will(returnValue(TRACE_SUCCESS)); // in TestCase TestTraceStackOpExc_TraceOpStackTwoDataOpt
+            MOCKER(TraceOpStackTwoDataOpt)
+                .stubs()
+                .will(returnValue(TRACE_SUCCESS)); // in TestCase TestTraceStackOpExc_TraceOpStackTwoDataOpt
             ret = TraceStackOpExc(&dwarf, opStart, opEnd, &coreRegs, &result, initial, &args);
             LOG_EXPECT_EQ(TRACE_SUCCESS, ret, "test TraceStackOpExc failed, enOpType=0x%02hhx.", enOpType);
             continue;
@@ -516,7 +546,8 @@ TEST_F(StackTraceUnwindInstrUtest, TestTraceStackOpExc)
         } else {
             exceptResult = result;
             ret = TraceStackOpExc(&dwarf, opStart, opEnd, &coreRegs, &result, initial, &args);
-            // printf("%s:%d enOpType[0x%02hhx], exceptResult[%d], result[%d]\n", __FILE__, __LINE__, enOpType, exceptResult, result);
+            // printf("%s:%d enOpType[0x%02hhx], exceptResult[%d], result[%d]\n", __FILE__, __LINE__, enOpType,
+            // exceptResult, result);
             LOG_EXPECT_EQ(exceptResult, result, "test TraceStackOpExc failed, enOpType=0x%02hhx.", enOpType);
             LOG_EXPECT_EQ(TRACE_FAILURE, ret, "test TraceStackOpExc failed, enOpType=0x%02hhx.", enOpType);
             continue;
@@ -524,7 +555,8 @@ TEST_F(StackTraceUnwindInstrUtest, TestTraceStackOpExc)
 
         if (uiIndex < 1 || uiIndex >= VOS_OP_STACK_DEPTH) {
             ret = TraceStackOpExc(&dwarf, opStart, opEnd, &coreRegs, &result, initial, &args);
-            // printf("%s:%d enOpType[0x%02hhx], exceptResult[%d], result[%d]\n", __FILE__, __LINE__, enOpType, exceptResult, result);
+            // printf("%s:%d enOpType[0x%02hhx], exceptResult[%d], result[%d]\n", __FILE__, __LINE__, enOpType,
+            // exceptResult, result);
             LOG_EXPECT_EQ(TRACE_FAILURE, ret, "test TraceStackOpExc failed, enOpType=0x%02hhx.", enOpType);
             continue;
         }
@@ -534,7 +566,8 @@ TEST_F(StackTraceUnwindInstrUtest, TestTraceStackOpExc)
         }
 
         ret = TraceStackOpExc(&dwarf, opStart, opEnd, &coreRegs, &result, initial, &args);
-        // printf("%s:%d enOpType[0x%02hhx], exceptResult[%d], result[%d]\n", __FILE__, __LINE__, enOpType, exceptResult, result);
+        // printf("%s:%d enOpType[0x%02hhx], exceptResult[%d], result[%d]\n", __FILE__, __LINE__, enOpType,
+        // exceptResult, result);
         LOG_EXPECT_EQ(exceptResult, result, "test TraceStackOpExc failed, enOpType=0x%02hhx.", enOpType);
         LOG_EXPECT_EQ(TRACE_SUCCESS, ret, "test TraceStackOpExc failed, enOpType=0x%02hhx.", enOpType);
         GlobalMockObject::verify();
@@ -544,16 +577,16 @@ TEST_F(StackTraceUnwindInstrUtest, TestTraceStackOpExc)
 TEST_F(StackTraceUnwindInstrUtest, TestTraceStackOpExc_TraceOpStackDataOpt)
 {
     // for VOS_ENC_OP_STACK_OPR, from DW_OP_DUP(0x12) ot DW_OP_ROT(0x17)
-    const uint8_t *opStart = 0;
-    const uint8_t *opEnd = 0;
-    ScdRegs coreRegs = { 0 };
+    const uint8_t* opStart = 0;
+    const uint8_t* opEnd = 0;
+    ScdRegs coreRegs = {0};
     uintptr_t result = 0;
     uintptr_t initial = 0x001234;
-    ScdDwarfStepArgs args = { 0 };
+    ScdDwarfStepArgs args = {0};
     uint32_t ret = TRACE_FAILURE;
 
     // case DW_OP_DUP
-    uint8_t dataDup[4] = { DW_OP_DUP, DW_OP_DUP, DW_OP_DUP, DW_OP_DUP }; // Index++, = 5
+    uint8_t dataDup[4] = {DW_OP_DUP, DW_OP_DUP, DW_OP_DUP, DW_OP_DUP}; // Index++, = 5
     opStart = &dataDup[0];
     opEnd = &dataDup[4];
     ret = TraceStackOpExc(&dwarf, opStart, opEnd, &coreRegs, &result, initial, &args);
@@ -561,10 +594,11 @@ TEST_F(StackTraceUnwindInstrUtest, TestTraceStackOpExc_TraceOpStackDataOpt)
     EXPECT_EQ(initial, result);
 
     // case DW_OP_DROP
-    uint8_t dataDrop[4] = { DW_OP_DUP, // Index++, = 2
-        DW_OP_DROP, // Index--, =1, success
-        DW_OP_DROP, // Index--, =0
-        DW_OP_DROP }; // Index--, =-1
+    uint8_t dataDrop[4] = {
+        DW_OP_DUP,   // Index++, = 2
+        DW_OP_DROP,  // Index--, =1, success
+        DW_OP_DROP,  // Index--, =0
+        DW_OP_DROP}; // Index--, =-1
     opStart = &dataDrop[0];
     opEnd = &dataDrop[2];
     result = 0;
@@ -583,9 +617,9 @@ TEST_F(StackTraceUnwindInstrUtest, TestTraceStackOpExc_TraceOpStackDataOpt)
     EXPECT_EQ(TRACE_FAILURE, ret); // check Index fail
 
     // case DW_OP_PICK
-    uint8_t dataPick[8] = { DW_OP_DUP, DW_OP_DUP, DW_OP_DUP, DW_OP_DUP, // Index++, = 5
-        DW_OP_PICK, 0x03, // Index(0x05) >= offset(0x03) + 2, success; Index++ for DW_OP_PICK, =6
-        DW_OP_PICK, 0x05 }; // Index(0x06) < offset(0x05) + 2, failure
+    uint8_t dataPick[8] = {DW_OP_DUP,  DW_OP_DUP, DW_OP_DUP, DW_OP_DUP, // Index++, = 5
+                           DW_OP_PICK, 0x03,  // Index(0x05) >= offset(0x03) + 2, success; Index++ for DW_OP_PICK, =6
+                           DW_OP_PICK, 0x05}; // Index(0x06) < offset(0x05) + 2, failure
     opStart = &dataPick[0];
     opEnd = &dataPick[6];
     result = 0;
@@ -600,15 +634,16 @@ TEST_F(StackTraceUnwindInstrUtest, TestTraceStackOpExc_TraceOpStackDataOpt)
     EXPECT_EQ(TRACE_FAILURE, ret);
 
     // case DW_OP_OVER
-    uint8_t dataOver1[1] = { DW_OP_OVER }; // Index(0x01) < 2, failure
+    uint8_t dataOver1[1] = {DW_OP_OVER}; // Index(0x01) < 2, failure
     opStart = &dataOver1[0];
     opEnd = &dataOver1[1];
     result = 0;
     ret = TraceStackOpExc(&dwarf, opStart, opEnd, &coreRegs, &result, initial, &args);
     EXPECT_EQ(TRACE_FAILURE, ret);
 
-    uint8_t dataOver2[2] = { DW_OP_DUP, // Index++, = 2
-        DW_OP_OVER }; // Index(0x02) >= 2, success;
+    uint8_t dataOver2[2] = {
+        DW_OP_DUP,   // Index++, = 2
+        DW_OP_OVER}; // Index(0x02) >= 2, success;
     opStart = &dataOver2[0];
     opEnd = &dataOver2[2];
     result = 0;
@@ -616,17 +651,17 @@ TEST_F(StackTraceUnwindInstrUtest, TestTraceStackOpExc_TraceOpStackDataOpt)
     EXPECT_EQ(TRACE_SUCCESS, ret);
     EXPECT_EQ(initial, result);
 
-
     // case DW_OP_SWAP
-    uint8_t dataSwap1[1] = { DW_OP_SWAP }; // Index(0x01) < 2, failure
+    uint8_t dataSwap1[1] = {DW_OP_SWAP}; // Index(0x01) < 2, failure
     opStart = &dataSwap1[0];
     opEnd = &dataSwap1[1];
     result = 0;
     ret = TraceStackOpExc(&dwarf, opStart, opEnd, &coreRegs, &result, initial, &args);
     EXPECT_EQ(TRACE_FAILURE, ret);
 
-    uint8_t dataSwap2[2] = { DW_OP_DUP, // Index++
-        DW_OP_SWAP }; // Index(0x02) >= 2, success;
+    uint8_t dataSwap2[2] = {
+        DW_OP_DUP,   // Index++
+        DW_OP_SWAP}; // Index(0x02) >= 2, success;
     opStart = &dataSwap2[0];
     opEnd = &dataSwap2[2];
     result = 0;
@@ -635,16 +670,18 @@ TEST_F(StackTraceUnwindInstrUtest, TestTraceStackOpExc_TraceOpStackDataOpt)
     EXPECT_EQ(initial, result);
 
     // case DW_OP_ROT
-    uint8_t dataRot1[2] = { DW_OP_DUP, // Index++, = 2
-        DW_OP_ROT }; // Index(0x02) < 3, failure
+    uint8_t dataRot1[2] = {
+        DW_OP_DUP,  // Index++, = 2
+        DW_OP_ROT}; // Index(0x02) < 3, failure
     opStart = &dataRot1[0];
     opEnd = &dataRot1[2];
     result = 0;
     ret = TraceStackOpExc(&dwarf, opStart, opEnd, &coreRegs, &result, initial, &args);
     EXPECT_EQ(TRACE_FAILURE, ret);
 
-    uint8_t dataRot2[3] = { DW_OP_DUP, DW_OP_DUP, // Index++, = 3
-        DW_OP_ROT }; // Index(0x03) >= 3, success;
+    uint8_t dataRot2[3] = {
+        DW_OP_DUP, DW_OP_DUP, // Index++, = 3
+        DW_OP_ROT};           // Index(0x03) >= 3, success;
     opStart = &dataRot2[0];
     opEnd = &dataRot2[3];
     result = 0;
@@ -657,23 +694,23 @@ TEST_F(StackTraceUnwindInstrUtest, TestTraceStackOpExc_TraceOpStackOneDataOpt)
 {
     // for VOS_ENC_OP_ONE_DATA
     uintptr_t value = 0x12345678;
-    uint8_t addr[5] = { 1, 2, 4, 8, 0 };
-    uintptr_t data[4] = { 0, value, 0, 0 };
+    uint8_t addr[5] = {1, 2, 4, 8, 0};
+    uintptr_t data[4] = {0, value, 0, 0};
     uintptr_t dataAddr = 0;
     uint32_t index = 2;
-    const uint8_t *insAddr = 0;
-    uintptr_t stackContent[VOS_OP_STACK_DEPTH] = { 0 };
+    const uint8_t* insAddr = 0;
+    uintptr_t stackContent[VOS_OP_STACK_DEPTH] = {0};
     uint8_t enOpType = DW_OP_ADDR;
-    ScdDwarfStepArgs args = { 0 };
-    const uint8_t *ret = NULL;
+    ScdDwarfStepArgs args = {0};
+    const uint8_t* ret = NULL;
     uintptr_t result = 0;
     uint32_t exceptRet = TRACE_FAILURE;
     uintptr_t exceptResult = 0;
 
     // invalid type
     enOpType = DW_OP_ADDR;
-    ret =  TraceOpStackOneDataOpt(&dwarf, enOpType, stackContent, &index, insAddr, &args, &result);
-    EXPECT_EQ((const uint8_t *)0, ret);
+    ret = TraceOpStackOneDataOpt(&dwarf, enOpType, stackContent, &index, insAddr, &args, &result);
+    EXPECT_EQ((const uint8_t*)0, ret);
 
     // case DW_OP_DEREF
     enOpType = DW_OP_DEREF;
@@ -681,8 +718,8 @@ TEST_F(StackTraceUnwindInstrUtest, TestTraceStackOpExc_TraceOpStackOneDataOpt)
     result = 0;
     insAddr = &addr[0];
     stackContent[(index - 1) & VOS_OP_STACK_MASK] = 0; // invalid addr
-    ret =  TraceOpStackOneDataOpt(&dwarf, enOpType, stackContent, &index, insAddr, &args, &result);
-    EXPECT_EQ((const uint8_t *)0, ret);
+    ret = TraceOpStackOneDataOpt(&dwarf, enOpType, stackContent, &index, insAddr, &args, &result);
+    EXPECT_EQ((const uint8_t*)0, ret);
 
     index = 2;
     result = 0;
@@ -691,7 +728,7 @@ TEST_F(StackTraceUnwindInstrUtest, TestTraceStackOpExc_TraceOpStackOneDataOpt)
     args.stackMaxAddr = dataAddr + 8;
     args.stackMinAddr = dataAddr - 8;
     insAddr = &addr[0];
-    ret =  TraceOpStackOneDataOpt(&dwarf, enOpType, stackContent, &index, insAddr, &args, &result);
+    ret = TraceOpStackOneDataOpt(&dwarf, enOpType, stackContent, &index, insAddr, &args, &result);
     EXPECT_EQ(insAddr, ret);
     EXPECT_EQ(value, result);
 
@@ -701,10 +738,10 @@ TEST_F(StackTraceUnwindInstrUtest, TestTraceStackOpExc_TraceOpStackOneDataOpt)
     result = 0;
     stackContent[(index - 1) & VOS_OP_STACK_MASK] = 0; // invalid addr
     insAddr = &addr[0];
-    ret =  TraceOpStackOneDataOpt(&dwarf, enOpType, stackContent, &index, insAddr, &args, &result);
-    EXPECT_EQ((const uint8_t *)0, ret);
+    ret = TraceOpStackOneDataOpt(&dwarf, enOpType, stackContent, &index, insAddr, &args, &result);
+    EXPECT_EQ((const uint8_t*)0, ret);
 
-    {   // test for TraceDefSizeGet
+    { // test for TraceDefSizeGet
         // case VOS_OP_DATA_TYPE_UINT8
         index = 2;
         result = 0;
@@ -713,9 +750,9 @@ TEST_F(StackTraceUnwindInstrUtest, TestTraceStackOpExc_TraceOpStackOneDataOpt)
         args.stackMaxAddr = dataAddr + 8;
         args.stackMinAddr = dataAddr - 8;
         insAddr = &addr[0]; // data type uint8_t
-        ret =  TraceOpStackOneDataOpt(&dwarf, enOpType, stackContent, &index, insAddr, &args, &result);
+        ret = TraceOpStackOneDataOpt(&dwarf, enOpType, stackContent, &index, insAddr, &args, &result);
         EXPECT_EQ(insAddr + 1, ret);
-        EXPECT_EQ(*(uint8_t *)dataAddr , result);
+        EXPECT_EQ(*(uint8_t*)dataAddr, result);
 
         // case VOS_OP_DATA_TYPE_UINT16
         index = 2;
@@ -725,9 +762,9 @@ TEST_F(StackTraceUnwindInstrUtest, TestTraceStackOpExc_TraceOpStackOneDataOpt)
         args.stackMaxAddr = dataAddr + 8;
         args.stackMinAddr = dataAddr - 8;
         insAddr = &addr[1]; // data type uint16_t
-        ret =  TraceOpStackOneDataOpt(&dwarf, enOpType, stackContent, &index, insAddr, &args, &result);
+        ret = TraceOpStackOneDataOpt(&dwarf, enOpType, stackContent, &index, insAddr, &args, &result);
         EXPECT_EQ(insAddr + 1, ret);
-        EXPECT_EQ(*(uint16_t *)dataAddr , result);
+        EXPECT_EQ(*(uint16_t*)dataAddr, result);
 
         // case VOS_OP_DATA_TYPE_UINT32
         index = 2;
@@ -737,9 +774,9 @@ TEST_F(StackTraceUnwindInstrUtest, TestTraceStackOpExc_TraceOpStackOneDataOpt)
         args.stackMaxAddr = dataAddr + 8;
         args.stackMinAddr = dataAddr - 8;
         insAddr = &addr[2]; // data type uint32_t
-        ret =  TraceOpStackOneDataOpt(&dwarf, enOpType, stackContent, &index, insAddr, &args, &result);
+        ret = TraceOpStackOneDataOpt(&dwarf, enOpType, stackContent, &index, insAddr, &args, &result);
         EXPECT_EQ(insAddr + 1, ret);
-        EXPECT_EQ(*(uint32_t *)dataAddr , result);
+        EXPECT_EQ(*(uint32_t*)dataAddr, result);
 
         // case VOS_OP_DATA_TYPE_UINT64
         index = 2;
@@ -749,9 +786,9 @@ TEST_F(StackTraceUnwindInstrUtest, TestTraceStackOpExc_TraceOpStackOneDataOpt)
         args.stackMaxAddr = dataAddr + 8;
         args.stackMinAddr = dataAddr - 8;
         insAddr = &addr[3]; // data type uint64_t
-        ret =  TraceOpStackOneDataOpt(&dwarf, enOpType, stackContent, &index, insAddr, &args, &result);
+        ret = TraceOpStackOneDataOpt(&dwarf, enOpType, stackContent, &index, insAddr, &args, &result);
         EXPECT_EQ(insAddr + 1, ret);
-        EXPECT_EQ(*(uint64_t *)dataAddr , result);
+        EXPECT_EQ(*(uint64_t*)dataAddr, result);
 
         // default
         index = 2;
@@ -761,8 +798,8 @@ TEST_F(StackTraceUnwindInstrUtest, TestTraceStackOpExc_TraceOpStackOneDataOpt)
         args.stackMaxAddr = dataAddr + 8;
         args.stackMinAddr = dataAddr - 8;
         insAddr = &addr[4]; // invalid data type
-        ret =  TraceOpStackOneDataOpt(&dwarf, enOpType, stackContent, &index, insAddr, &args, &result);
-        EXPECT_EQ((const uint8_t *)0, ret);
+        ret = TraceOpStackOneDataOpt(&dwarf, enOpType, stackContent, &index, insAddr, &args, &result);
+        EXPECT_EQ((const uint8_t*)0, ret);
     }
 
     // case DW_OP_ABS
@@ -772,7 +809,7 @@ TEST_F(StackTraceUnwindInstrUtest, TestTraceStackOpExc_TraceOpStackOneDataOpt)
     dataAddr = (uintptr_t)&data[1];
     stackContent[(index - 1) & VOS_OP_STACK_MASK] = 0 - dataAddr; // < 0
     insAddr = &addr[0];
-    ret =  TraceOpStackOneDataOpt(&dwarf, enOpType, stackContent, &index, insAddr, &args, &result);
+    ret = TraceOpStackOneDataOpt(&dwarf, enOpType, stackContent, &index, insAddr, &args, &result);
     EXPECT_EQ(insAddr, ret);
     EXPECT_EQ(dataAddr, result);
 
@@ -783,7 +820,7 @@ TEST_F(StackTraceUnwindInstrUtest, TestTraceStackOpExc_TraceOpStackOneDataOpt)
     dataAddr = (uintptr_t)&data[1];
     stackContent[(index - 1) & VOS_OP_STACK_MASK] = dataAddr;
     insAddr = &addr[0];
-    ret =  TraceOpStackOneDataOpt(&dwarf, enOpType, stackContent, &index, insAddr, &args, &result);
+    ret = TraceOpStackOneDataOpt(&dwarf, enOpType, stackContent, &index, insAddr, &args, &result);
     EXPECT_EQ(insAddr, ret);
     EXPECT_EQ((uintptr_t)(-(intptr_t)dataAddr), result);
 
@@ -794,7 +831,7 @@ TEST_F(StackTraceUnwindInstrUtest, TestTraceStackOpExc_TraceOpStackOneDataOpt)
     dataAddr = (uintptr_t)&data[1];
     stackContent[(index - 1) & VOS_OP_STACK_MASK] = dataAddr;
     insAddr = &addr[0];
-    ret =  TraceOpStackOneDataOpt(&dwarf, enOpType, stackContent, &index, insAddr, &args, &result);
+    ret = TraceOpStackOneDataOpt(&dwarf, enOpType, stackContent, &index, insAddr, &args, &result);
     EXPECT_EQ(insAddr, ret);
     EXPECT_EQ(~dataAddr, result);
 
@@ -805,17 +842,19 @@ TEST_F(StackTraceUnwindInstrUtest, TestTraceStackOpExc_TraceOpStackOneDataOpt)
     dataAddr = (uintptr_t)&data[1];
     stackContent[(index - 1) & VOS_OP_STACK_MASK] = dataAddr;
     insAddr = &addr[0];
-    const uint8_t *mockValue = insAddr + 2;
+    const uint8_t* mockValue = insAddr + 2;
     uintptr_t uOffset = 0x08;
-    MOCKER(TraceReadUleb128).stubs().with(any(), any(), outBoundP(&uOffset, sizeof(uintptr_t *)))
+    MOCKER(TraceReadUleb128)
+        .stubs()
+        .with(any(), any(), outBoundP(&uOffset, sizeof(uintptr_t*)))
         .will(returnValue(mockValue));
-    ret =  TraceOpStackOneDataOpt(&dwarf, enOpType, stackContent, &index, insAddr, &args, &result);
+    ret = TraceOpStackOneDataOpt(&dwarf, enOpType, stackContent, &index, insAddr, &args, &result);
     EXPECT_EQ(mockValue, ret);
     EXPECT_EQ(dataAddr + uOffset, result);
 }
 
-uint32_t Mocker_TraceOpStackTwoDataParse(uint8_t enOpType, uintptr_t uvSwapTmp1,
-    uintptr_t uvSwapTmp2, uintptr_t *puvResult)
+uint32_t Mocker_TraceOpStackTwoDataParse(
+    uint8_t enOpType, uintptr_t uvSwapTmp1, uintptr_t uvSwapTmp2, uintptr_t* puvResult)
 {
     uintptr_t uvTmpRes = 0;
 
@@ -891,7 +930,7 @@ TEST_F(StackTraceUnwindInstrUtest, TestTraceStackOpExc_TraceOpStackTwoDataOpt)
     uintptr_t initial = 0x001234;
     uint32_t index = 2;
     uint32_t ret = TRACE_FAILURE;
-    uintptr_t stackContent[VOS_OP_STACK_DEPTH] = { 0 };
+    uintptr_t stackContent[VOS_OP_STACK_DEPTH] = {0};
     uint8_t enOpType = DW_OP_ADDR;
     uint32_t exceptRet = TRACE_FAILURE;
     uintptr_t exceptResult = 0;
@@ -954,7 +993,7 @@ TEST_F(StackTraceUnwindInstrUtest, TestTraceEncValueSizeGet)
         // case DW_EH_PE_ABSPTR
         if ((enCode & 0x07) == DW_EH_PE_ABSPTR) {
             ret = TraceEncValueSizeGet(enCode);
-            EXPECT_EQ(sizeof(void *), ret);
+            EXPECT_EQ(sizeof(void*), ret);
             continue;
         }
 
@@ -993,8 +1032,8 @@ TEST_F(StackTraceUnwindInstrUtest, TraceUnwindParseFnOpcodeParseFailed)
     range.end = (uintptr_t)&tmp + sizeof(int);
     TraceFrameRegStateInfo regState;
     bool isFEDTable = false;
-    const uint8_t *retPtr = 0;
-    MOCKER(TraceUnwindOpcodeParse).stubs().will(returnValue((const uint8_t *)NULL));
+    const uint8_t* retPtr = 0;
+    MOCKER(TraceUnwindOpcodeParse).stubs().will(returnValue((const uint8_t*)NULL));
     auto ret = TraceUnwindParseFn(&dwarf, &range, &regState, isFEDTable);
     EXPECT_EQ(ret, TRACE_FAILURE);
 }
@@ -1008,8 +1047,8 @@ TEST_F(StackTraceUnwindInstrUtest, TraceUnwindParseFnParseReg)
     dwarf.memory->data = (uintptr_t)&tmp;
     TraceFrameRegStateInfo regState;
     bool isFEDTable = false;
-    const uint8_t *retPtr = 0;
-    MOCKER(TraceUnwindOpcodeParse).stubs().will(returnValue((const uint8_t *)range.end));
+    const uint8_t* retPtr = 0;
+    MOCKER(TraceUnwindOpcodeParse).stubs().will(returnValue((const uint8_t*)range.end));
     auto ret = TraceUnwindParseFn(&dwarf, &range, &regState, isFEDTable);
     EXPECT_EQ(ret, TRACE_SUCCESS);
 }
@@ -1022,8 +1061,8 @@ TEST_F(StackTraceUnwindInstrUtest, TraceUnwindParseFnInvalidOpCode)
     range.end = (uintptr_t)&tmp + sizeof(int);
     TraceFrameRegStateInfo regState;
     bool isFEDTable = false;
-    const uint8_t *retPtr = 0;
-    MOCKER(TraceUnwindOpcodeParse).stubs().will(returnValue((const uint8_t *)range.end));
+    const uint8_t* retPtr = 0;
+    MOCKER(TraceUnwindOpcodeParse).stubs().will(returnValue((const uint8_t*)range.end));
     auto ret = TraceUnwindParseFn(&dwarf, &range, &regState, isFEDTable);
     EXPECT_EQ(ret, TRACE_FAILURE);
 }
@@ -1036,8 +1075,8 @@ TEST_F(StackTraceUnwindInstrUtest, Test)
     range.end = (uintptr_t)&tmp + sizeof(int);
     TraceFrameRegStateInfo regState;
     bool isFEDTable = false;
-    const uint8_t *retPtr = 0;
-    MOCKER(TraceUnwindOpcodeParse).stubs().will(returnValue((const uint8_t *)range.end));
+    const uint8_t* retPtr = 0;
+    MOCKER(TraceUnwindOpcodeParse).stubs().will(returnValue((const uint8_t*)range.end));
     auto ret = TraceUnwindParseFn(&dwarf, &range, &regState, isFEDTable);
     EXPECT_EQ(ret, TRACE_FAILURE);
 }
@@ -1051,18 +1090,16 @@ TEST_F(StackTraceUnwindInstrUtest, TestTraceOpStackTwoDataOptWithInvalidOpcode)
     auto ret = TraceOpStackTwoDataParseBasic(enOpType, uvSwapTmp1, uvSwapTmp2, &puvResult);
     EXPECT_EQ(ret, TRACE_FAILURE);
 
-    const ScdDwarfStepArgs *pstStackLimit = NULL;
+    const ScdDwarfStepArgs* pstStackLimit = NULL;
     const uint8_t pucInsAddr = 0;
     auto addr = TraceOpStackOneDataParse(&dwarf, enOpType, uvSwapTmp1, &pucInsAddr, pstStackLimit, &puvResult);
-    EXPECT_EQ(addr, (const void *)NULL);
+    EXPECT_EQ(addr, (const void*)NULL);
 
     uint32_t puiIndex;
     uintptr_t auvStackContent[] = {0};
     addr = TraceOpStackDataOpt(enOpType, auvStackContent, &puiIndex, &pucInsAddr, &puvResult);
-    EXPECT_EQ(addr, (const void *)NULL);
+    EXPECT_EQ(addr, (const void*)NULL);
 
     addr = TraceOpConstNumGet(&dwarf, enOpType, &pucInsAddr, &puvResult);
-    EXPECT_EQ(addr, (const void *)NULL);
+    EXPECT_EQ(addr, (const void*)NULL);
 }
-
-

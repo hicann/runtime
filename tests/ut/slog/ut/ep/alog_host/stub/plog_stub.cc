@@ -49,8 +49,8 @@ static void PlogDlogReportStop(int32_t devId)
     return;
 }
 
-static int32_t PlogAcllogRegisterCallback(void *callbackFunc, void *userData, uint32_t outputLogType,
-    uintptr_t *callbackHandle)
+static int32_t PlogAcllogRegisterCallback(
+    void* callbackFunc, void* userData, uint32_t outputLogType, uintptr_t* callbackHandle)
 {
     (void)callbackFunc;
     (void)userData;
@@ -73,41 +73,36 @@ static SymbolInfo g_plogFuncMap[PLOG_FUNC_MAX] = {
     {"DlogReportStart", (ArgPtr)PlogDlogReportStart},
     {"DlogReportStop", (ArgPtr)PlogDlogReportStop},
     {"acllogRegisterCallback", (ArgPtr)PlogAcllogRegisterCallback},
-    {"acllogUnregisterCallback", (ArgPtr)PlogAcllogUnregisterCallback}
-};
+    {"acllogUnregisterCallback", (ArgPtr)PlogAcllogUnregisterCallback}};
 
 int32_t g_drvHandle = 0;
 int32_t g_dlogHandle = 1;
 int32_t g_slogHandle = 2;
 #define MAP_SIZE 17
 static SymbolInfo g_drvMap[MAP_SIZE] = {
-    { "drvHdcClientCreate", (void *)drvHdcClientCreate },
-    { "drvHdcClientDestroy", (void *)drvHdcClientDestroy },
-    { "drvHdcSessionConnect", (void *)drvHdcSessionConnect },
-    { "drvHdcSessionClose", (void *)drvHdcSessionClose },
-    { "drvHdcAllocMsg", (void *)drvHdcAllocMsg },
-    { "drvHdcFreeMsg", (void *)drvHdcFreeMsg },
-    { "drvHdcReuseMsg", (void *)drvHdcReuseMsg },
-    { "drvHdcAddMsgBuffer", (void *)drvHdcAddMsgBuffer },
-    { "drvHdcGetMsgBuffer", (void *)drvHdcGetMsgBuffer },
-    { "drvHdcSetSessionReference", (void *)drvHdcSetSessionReference },
-    { "drvGetPlatformInfo", (void *)drvGetPlatformInfo },
-    { "drvHdcGetCapacity", (void *)drvHdcGetCapacity },
-    { "halHdcSend", (void *)halHdcSend },
-    { "halHdcRecv", (void *)halHdcRecv },
-    { "halCtl", (void *)halCtl },
-    { "drvGetDevNum", (void *)drvGetDevNum },
-    { "halGetDeviceInfo", (void *)halGetDeviceInfo }
-};
+    {"drvHdcClientCreate", (void*)drvHdcClientCreate},
+    {"drvHdcClientDestroy", (void*)drvHdcClientDestroy},
+    {"drvHdcSessionConnect", (void*)drvHdcSessionConnect},
+    {"drvHdcSessionClose", (void*)drvHdcSessionClose},
+    {"drvHdcAllocMsg", (void*)drvHdcAllocMsg},
+    {"drvHdcFreeMsg", (void*)drvHdcFreeMsg},
+    {"drvHdcReuseMsg", (void*)drvHdcReuseMsg},
+    {"drvHdcAddMsgBuffer", (void*)drvHdcAddMsgBuffer},
+    {"drvHdcGetMsgBuffer", (void*)drvHdcGetMsgBuffer},
+    {"drvHdcSetSessionReference", (void*)drvHdcSetSessionReference},
+    {"drvGetPlatformInfo", (void*)drvGetPlatformInfo},
+    {"drvHdcGetCapacity", (void*)drvHdcGetCapacity},
+    {"halHdcSend", (void*)halHdcSend},
+    {"halHdcRecv", (void*)halHdcRecv},
+    {"halCtl", (void*)halCtl},
+    {"drvGetDevNum", (void*)drvGetDevNum},
+    {"halGetDeviceInfo", (void*)halGetDeviceInfo}};
 
 static int32_t g_slogFuncCount[DLOG_FUNC_MAX];
- 
-static void SlogDlogInit(void)
-{
-    g_slogFuncCount[DLOG_INIT]++;
-}
 
-static int32_t SlogDlogGetLevel(int32_t moduleId, int32_t *enableEvent)
+static void SlogDlogInit(void) { g_slogFuncCount[DLOG_INIT]++; }
+
+static int32_t SlogDlogGetLevel(int32_t moduleId, int32_t* enableEvent)
 {
     g_slogFuncCount[DLOG_GET_LEVEL]++;
     return 0;
@@ -118,14 +113,14 @@ static int32_t SlogDlogSetLevel(int32_t moduleId, int32_t level, int32_t enableE
     g_slogFuncCount[DLOG_SET_LEVEL]++;
     return 0;
 }
- 
+
 static int32_t SlogCheckLogLevel(int32_t moduleId, int32_t logLevel)
 {
     g_slogFuncCount[CHECK_LOG_LEVEL]++;
     return 1;
 }
 
-static int32_t SlogDlogGetAttr(LogAttr *logAttrInfo)
+static int32_t SlogDlogGetAttr(LogAttr* logAttrInfo)
 {
     g_slogFuncCount[DLOG_GET_ATTR]++;
     return 0;
@@ -137,28 +132,21 @@ static int32_t SlogDlogSetAttr(LogAttr logAttrInfo)
     return 0;
 }
 
-static void SlogDlogVaList(int32_t moduleId, int32_t level, const char *fmt, va_list list)
+static void SlogDlogVaList(int32_t moduleId, int32_t level, const char* fmt, va_list list)
 {
     g_slogFuncCount[DLOG_VA_LIST]++;
 }
- 
-static void SlogDlogFlush(void)
-{
-    g_slogFuncCount[DLOG_FLUSH]++;
-}
- 
+
+static void SlogDlogFlush(void) { g_slogFuncCount[DLOG_FLUSH]++; }
+
 static SymbolInfo g_slogFuncMap[DLOG_FUNC_MAX] = {
-    {"dlog_init", (ArgPtr)SlogDlogInit},
-    {"dlog_getlevel", (ArgPtr)SlogDlogGetLevel},
-    {"dlog_setlevel", (ArgPtr)SlogDlogSetLevel},
-    {"CheckLogLevel", (ArgPtr)SlogCheckLogLevel},
-    {"DlogGetAttr", (ArgPtr)SlogDlogGetAttr},
-    {"DlogSetAttr", (ArgPtr)SlogDlogSetAttr},
-    {"DlogVaList", (ArgPtr)SlogDlogVaList},
-    {"DlogFlush", (ArgPtr)SlogDlogFlush},
+    {"dlog_init", (ArgPtr)SlogDlogInit},         {"dlog_getlevel", (ArgPtr)SlogDlogGetLevel},
+    {"dlog_setlevel", (ArgPtr)SlogDlogSetLevel}, {"CheckLogLevel", (ArgPtr)SlogCheckLogLevel},
+    {"DlogGetAttr", (ArgPtr)SlogDlogGetAttr},    {"DlogSetAttr", (ArgPtr)SlogDlogSetAttr},
+    {"DlogVaList", (ArgPtr)SlogDlogVaList},      {"DlogFlush", (ArgPtr)SlogDlogFlush},
 };
 
-void *logDlopen(const char *fileName, int mode)
+void* logDlopen(const char* fileName, int mode)
 {
     if (strcmp(fileName, "libascend_hal.so") == 0) {
         return &g_drvHandle;
@@ -174,15 +162,15 @@ void *logDlopen(const char *fileName, int mode)
             ProcessLogInit();
         }
         status = !status;
-        return &g_dlogHandle;    // not NULL
+        return &g_dlogHandle; // not NULL
     }
     if (strcmp(fileName, "libslog.so") == 0) {
-        return &g_slogHandle;    // not NULL
+        return &g_slogHandle; // not NULL
     }
     return NULL;
 }
 
-int logDlclose(void *handle)
+int logDlclose(void* handle)
 {
     if (!g_isUnifiedSwitch) {
         MOCKER(PlogCloseUnifiedlog).stubs().will(returnValue(-1));
@@ -199,7 +187,7 @@ int logDlclose(void *handle)
     return 0;
 }
 
-void *logDlsym(void *handle, const char* funcName)
+void* logDlsym(void* handle, const char* funcName)
 {
     for (int32_t i = 0; i < MAP_SIZE; i++) {
         if (strcmp(funcName, g_drvMap[i].symbol) == 0) {
@@ -222,17 +210,8 @@ void *logDlsym(void *handle, const char* funcName)
     return NULL;
 }
 
-int32_t GetSlogFuncCallCount(int32_t index)
-{
-    return g_slogFuncCount[index];
-}
+int32_t GetSlogFuncCallCount(int32_t index) { return g_slogFuncCount[index]; }
 
-int32_t GetPlogFuncCallCount(int32_t index)
-{
-    return g_plogFuncCount[index];
-}
+int32_t GetPlogFuncCallCount(int32_t index) { return g_plogFuncCount[index]; }
 
-void SetUnifiedSwitch(bool swtich)
-{
-    g_isUnifiedSwitch = swtich;
-}
+void SetUnifiedSwitch(bool swtich) { g_isUnifiedSwitch = swtich; }

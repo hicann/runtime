@@ -15,12 +15,9 @@
 using namespace std;
 using namespace testing;
 
-extern "C" {
+extern "C" {}
 
-}
-
-class EP_LOG_LEVEL_EXCP_UTEST : public testing::Test
-{
+class EP_LOG_LEVEL_EXCP_UTEST : public testing::Test {
 protected:
     virtual void SetUp()
     {
@@ -49,7 +46,6 @@ protected:
     }
 
 public:
-
 };
 
 // log_level_parse.h

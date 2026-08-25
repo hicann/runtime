@@ -30,19 +30,19 @@ struct CallbackRecord {
 
 struct CallbackContext {
     int32_t id;
-    std::vector<int32_t> *order;
-    std::vector<CallbackRecord> *records;
+    std::vector<int32_t>* order;
+    std::vector<CallbackRecord>* records;
 };
 
-int32_t RecordCallback(void *userData, uint32_t outputLogType, const char *logContent, size_t length)
+int32_t RecordCallback(void* userData, uint32_t outputLogType, const char* logContent, size_t length)
 {
-    auto *ctx = static_cast<CallbackContext *>(userData);
+    auto* ctx = static_cast<CallbackContext*>(userData);
     ctx->order->push_back(ctx->id);
     ctx->records->push_back({outputLogType, std::string(logContent, length)});
     return ACLLOG_SUCCESS;
 }
 
-int32_t FailedCallback(void *userData, uint32_t outputLogType, const char *logContent, size_t length)
+int32_t FailedCallback(void* userData, uint32_t outputLogType, const char* logContent, size_t length)
 {
     (void)userData;
     (void)outputLogType;
@@ -57,11 +57,13 @@ class PlogCallbackUtest : public testing::Test {};
 TEST_F(PlogCallbackUtest, RegisterParamInvalid)
 {
     acllogCallbackHandle handle = 0U;
-    EXPECT_EQ(ACLLOG_FAILURE,
-        PlogRegisterCallbackInner(nullptr, nullptr, static_cast<uint32_t>(OUTPUT_TYPE_DEBUG), &handle));
-    EXPECT_EQ(ACLLOG_FAILURE,
+    EXPECT_EQ(
+        ACLLOG_FAILURE, PlogRegisterCallbackInner(nullptr, nullptr, static_cast<uint32_t>(OUTPUT_TYPE_DEBUG), &handle));
+    EXPECT_EQ(
+        ACLLOG_FAILURE,
         PlogRegisterCallbackInner(RecordCallback, nullptr, static_cast<uint32_t>(OUTPUT_TYPE_DEBUG), nullptr));
-    EXPECT_EQ(ACLLOG_FAILURE,
+    EXPECT_EQ(
+        ACLLOG_FAILURE,
         PlogRegisterCallbackInner(RecordCallback, nullptr, static_cast<uint32_t>(OUTPUT_TYPE_MAX), &handle));
 }
 
@@ -74,9 +76,11 @@ TEST_F(PlogCallbackUtest, MultiCallbacksDispatchByRegisterOrder)
     acllogCallbackHandle handle1 = 0U;
     acllogCallbackHandle handle2 = 0U;
 
-    EXPECT_EQ(ACLLOG_SUCCESS,
+    EXPECT_EQ(
+        ACLLOG_SUCCESS,
         PlogRegisterCallbackInner(RecordCallback, &ctx1, static_cast<uint32_t>(OUTPUT_TYPE_DEBUG), &handle1));
-    EXPECT_EQ(ACLLOG_SUCCESS,
+    EXPECT_EQ(
+        ACLLOG_SUCCESS,
         PlogRegisterCallbackInner(RecordCallback, &ctx2, static_cast<uint32_t>(OUTPUT_TYPE_DEBUG), &handle2));
 
     const char log[] = "debug log";
@@ -101,14 +105,16 @@ TEST_F(PlogCallbackUtest, RegisterMoreThanSixteenFailed)
 
     for (size_t i = 0U; i < maxCallbackNum; ++i) {
         acllogCallbackHandle handle = 0U;
-        EXPECT_EQ(ACLLOG_SUCCESS,
+        EXPECT_EQ(
+            ACLLOG_SUCCESS,
             PlogRegisterCallbackInner(RecordCallback, &ctx, static_cast<uint32_t>(OUTPUT_TYPE_DEBUG), &handle));
         EXPECT_NE(0U, handle);
         handles.push_back(handle);
     }
 
     acllogCallbackHandle overflowHandle = 0U;
-    EXPECT_EQ(ACLLOG_FAILURE,
+    EXPECT_EQ(
+        ACLLOG_FAILURE,
         PlogRegisterCallbackInner(RecordCallback, &ctx, static_cast<uint32_t>(OUTPUT_TYPE_DEBUG), &overflowHandle));
     EXPECT_EQ(0U, overflowHandle);
 
@@ -128,11 +134,14 @@ TEST_F(PlogCallbackUtest, DispatchFiltersOutputType)
     acllogCallbackHandle runHandle = 0U;
     acllogCallbackHandle bothHandle = 0U;
 
-    EXPECT_EQ(ACLLOG_SUCCESS,
+    EXPECT_EQ(
+        ACLLOG_SUCCESS,
         PlogRegisterCallbackInner(RecordCallback, &debugCtx, static_cast<uint32_t>(OUTPUT_TYPE_DEBUG), &debugHandle));
-    EXPECT_EQ(ACLLOG_SUCCESS,
+    EXPECT_EQ(
+        ACLLOG_SUCCESS,
         PlogRegisterCallbackInner(RecordCallback, &runCtx, static_cast<uint32_t>(OUTPUT_TYPE_RUN), &runHandle));
-    EXPECT_EQ(ACLLOG_SUCCESS,
+    EXPECT_EQ(
+        ACLLOG_SUCCESS,
         PlogRegisterCallbackInner(RecordCallback, &bothCtx, static_cast<uint32_t>(OUTPUT_TYPE_BOTH), &bothHandle));
 
     const char debugLog[] = "debug";
@@ -161,9 +170,11 @@ TEST_F(PlogCallbackUtest, UnregisterRemovesOnlyTargetHandle)
     acllogCallbackHandle handle1 = 0U;
     acllogCallbackHandle handle2 = 0U;
 
-    EXPECT_EQ(ACLLOG_SUCCESS,
+    EXPECT_EQ(
+        ACLLOG_SUCCESS,
         PlogRegisterCallbackInner(RecordCallback, &ctx1, static_cast<uint32_t>(OUTPUT_TYPE_DEBUG), &handle1));
-    EXPECT_EQ(ACLLOG_SUCCESS,
+    EXPECT_EQ(
+        ACLLOG_SUCCESS,
         PlogRegisterCallbackInner(RecordCallback, &ctx2, static_cast<uint32_t>(OUTPUT_TYPE_DEBUG), &handle2));
     EXPECT_EQ(ACLLOG_SUCCESS, PlogUnregisterCallbackInner(handle1));
     EXPECT_EQ(ACLLOG_FAILURE, PlogUnregisterCallbackInner(handle1));
@@ -183,9 +194,11 @@ TEST_F(PlogCallbackUtest, FailedCallbackDoesNotStopDispatch)
     acllogCallbackHandle failedHandle = 0U;
     acllogCallbackHandle recordHandle = 0U;
 
-    EXPECT_EQ(ACLLOG_SUCCESS,
+    EXPECT_EQ(
+        ACLLOG_SUCCESS,
         PlogRegisterCallbackInner(FailedCallback, nullptr, static_cast<uint32_t>(OUTPUT_TYPE_DEBUG), &failedHandle));
-    EXPECT_EQ(ACLLOG_SUCCESS,
+    EXPECT_EQ(
+        ACLLOG_SUCCESS,
         PlogRegisterCallbackInner(RecordCallback, &ctx, static_cast<uint32_t>(OUTPUT_TYPE_DEBUG), &recordHandle));
 
     const char log[] = "debug log";

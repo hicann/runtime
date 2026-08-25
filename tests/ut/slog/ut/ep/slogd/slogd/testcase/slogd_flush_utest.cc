@@ -28,8 +28,7 @@ extern void SlogdFlushFreeNode(void);
 
 static int32_t g_flushProcess = 0;
 
-class SLOGD_FLUSH_UTEST : public testing::Test
-{
+class SLOGD_FLUSH_UTEST : public testing::Test {
 protected:
     virtual void SetUp()
     {
@@ -50,12 +49,11 @@ protected:
     }
 };
 
-static int32_t TestFlush(void *buffer, uint32_t bufferLen, bool flushFlag)
+static int32_t TestFlush(void* buffer, uint32_t bufferLen, bool flushFlag)
 {
     g_flushProcess++;
     return LOG_SUCCESS;
 }
-
 
 TEST_F(SLOGD_FLUSH_UTEST, FlushDevice)
 {

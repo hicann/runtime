@@ -22,24 +22,24 @@
 #include "slog_stub.h"
 
 extern "C" {
-    typedef struct AwdWatchDog {
-        struct AdiagList runList;
-        struct AdiagList newList;
-    } AwdWatchDog;
-    AwdStatus AwdMonitorInit(void);
-    void AwdMonitorExit(void);
-    struct AwdWatchDog* AwdGetWatchDog(enum AwdWatchdogType type);
-    AwdThreadWatchdog *AwdWatchdogCreate(uint32_t moduleId, uint32_t timeout, AwatchdogCallbackFunc callback,
-    enum AwdWatchdogType type);
-    void AwdWatchdogDestroy(AwdThreadWatchdog *node);
-    void AwdMonitorReset(void);
-    void *AwdMonitorProcess(void *arg);
-    AdiagStatus AwdMonitorThreadWatchdogPro(void *data);
-    void AwdMonitorThreadWatchdog(void);
+typedef struct AwdWatchDog {
+    struct AdiagList runList;
+    struct AdiagList newList;
+} AwdWatchDog;
+AwdStatus AwdMonitorInit(void);
+void AwdMonitorExit(void);
+struct AwdWatchDog* AwdGetWatchDog(enum AwdWatchdogType type);
+AwdThreadWatchdog* AwdWatchdogCreate(
+    uint32_t moduleId, uint32_t timeout, AwatchdogCallbackFunc callback, enum AwdWatchdogType type);
+void AwdWatchdogDestroy(AwdThreadWatchdog* node);
+void AwdMonitorReset(void);
+void* AwdMonitorProcess(void* arg);
+AdiagStatus AwdMonitorThreadWatchdogPro(void* data);
+void AwdMonitorThreadWatchdog(void);
 }
 
-static int32_t CreateMonitorTaskStub(mmThread *threadHandle, const mmUserBlock_t *funcBlock,
-    const mmThreadAttr *threadAttr)
+static int32_t CreateMonitorTaskStub(
+    mmThread* threadHandle, const mmUserBlock_t* funcBlock, const mmThreadAttr* threadAttr)
 {
     (void)funcBlock;
     (void)threadAttr;
@@ -49,25 +49,25 @@ static int32_t CreateMonitorTaskStub(mmThread *threadHandle, const mmUserBlock_t
 
 static int32_t g_awatchdogCallbackCount = 0;
 
-static void CountAwatchdogCallback(void *args)
+static void CountAwatchdogCallback(void* args)
 {
     (void)args;
     g_awatchdogCallbackCount++;
 }
 
-class AwatchdogMonitorUtest: public testing::Test {
+class AwatchdogMonitorUtest : public testing::Test {
 protected:
     virtual void SetUp()
     {
         Clear();
-        system("mkdir -p " LLT_TEST_DIR );
-        AwdWatchDog *awd = AwdGetWatchDog(AWD_WATCHDOG_TYPE_THREAD);
+        system("mkdir -p " LLT_TEST_DIR);
+        AwdWatchDog* awd = AwdGetWatchDog(AWD_WATCHDOG_TYPE_THREAD);
         AdiagListInit(&awd->runList);
         AdiagListInit(&awd->newList);
     }
     void Clear()
     {
-        AwdWatchDog *awd = AwdGetWatchDog(AWD_WATCHDOG_TYPE_THREAD);
+        AwdWatchDog* awd = AwdGetWatchDog(AWD_WATCHDOG_TYPE_THREAD);
         AdiagListDestroy(&awd->runList);
         AdiagListDestroy(&awd->newList);
         system("rm -rf " LLT_TEST_DIR "/*");
@@ -78,13 +78,9 @@ protected:
         Clear();
     }
 
-    static void SetUpTestCase()
-    {
-    }
+    static void SetUpTestCase() {}
 
-    static void TearDownTestCase()
-    {
-    }
+    static void TearDownTestCase() {}
 };
 
 // TEST_F(AwatchdogMonitorUtest, TestMonitorInitCreateThreadFailed)
@@ -126,15 +122,15 @@ TEST_F(AwatchdogMonitorUtest, MonitorProcessExitsAndDestroysListsAfterReset)
 
     EXPECT_EQ(nullptr, AwdMonitorProcess(nullptr));
 
-    AwdWatchDog *awd = AwdGetWatchDog(AWD_WATCHDOG_TYPE_THREAD);
+    AwdWatchDog* awd = AwdGetWatchDog(AWD_WATCHDOG_TYPE_THREAD);
     AdiagListInit(&awd->runList);
     AdiagListInit(&awd->newList);
 }
 
 TEST_F(AwatchdogMonitorUtest, MonitorThreadWatchdogRemovesDestroyedNode)
 {
-    AwdWatchDog *awd = AwdGetWatchDog(AWD_WATCHDOG_TYPE_THREAD);
-    AwdThreadWatchdog *dog = static_cast<AwdThreadWatchdog *>(AdiagMalloc(sizeof(AwdThreadWatchdog)));
+    AwdWatchDog* awd = AwdGetWatchDog(AWD_WATCHDOG_TYPE_THREAD);
+    AwdThreadWatchdog* dog = static_cast<AwdThreadWatchdog*>(AdiagMalloc(sizeof(AwdThreadWatchdog)));
     ASSERT_NE(dog, nullptr);
     dog->startCount = AWD_STATUS_DESTROYED;
     ASSERT_EQ(ADIAG_SUCCESS, AdiagListInsert(&awd->newList, dog));
@@ -165,10 +161,7 @@ TEST_F(AwatchdogMonitorUtest, MonitorThreadWatchdogProProcessesTimeoutForExistin
     EXPECT_EQ(1, g_awatchdogCallbackCount);
 }
 
-void AwatchdogCallback(void *args)
-{
-    sleep(1);
-}
+void AwatchdogCallback(void* args) { sleep(1); }
 
 // TEST_F(AwatchdogMonitorUtest, TestMonitorTimeoutWithoutStart)
 // {

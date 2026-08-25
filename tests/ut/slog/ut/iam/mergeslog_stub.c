@@ -29,15 +29,9 @@ typedef struct {
 
 static uint32_t g_lastCmd;
 
-void MergeSlogStubReset(void)
-{
-    g_lastCmd = 0U;
-}
+void MergeSlogStubReset(void) { g_lastCmd = 0U; }
 
-uint32_t MergeSlogStubGetLastCmd(void)
-{
-    return g_lastCmd;
-}
+uint32_t MergeSlogStubGetLastCmd(void) { return g_lastCmd; }
 
 int ioctl(int fd, unsigned long request, ...)
 {

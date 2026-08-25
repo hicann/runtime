@@ -24,23 +24,20 @@
 #include "scd_memory_remote.h"
 
 extern "C" {
-    void TraceInit(void);
-    void TraceExit(void);
+void TraceInit(void);
+void TraceExit(void);
 }
 
 // After the ENABLE_SCD collapse the global memory handler reads via ptrace
 // (remote) in the real process, while UT reads local test buffers through
 // ScdMemoryRead(NULL, ...). Redirect the remote read to the local read so the
 // dwarf/unwind unit tests keep working.
-inline void RedirectScdMemoryReadToLocal()
-{
-    MOCKER(ScdMemoryRemoteRead).stubs().will(invoke(ScdMemoryLocalRead));
-}
+inline void RedirectScdMemoryReadToLocal() { MOCKER(ScdMemoryRemoteRead).stubs().will(invoke(ScdMemoryLocalRead)); }
 
 // Bind a dwarf context to a local-read memory covering the full address range,
 // and redirect the global remote read to local. Shared by the unwind/instr
 // fixtures to avoid duplicated setup.
-inline void InitDwarfLocalMemory(ScdDwarf &dwarf, ScdMemory &memory)
+inline void InitDwarfLocalMemory(ScdDwarf& dwarf, ScdMemory& memory)
 {
     ScdMemoryInitLocal(&memory);
     dwarf.memory = &memory;
@@ -53,15 +50,9 @@ inline void InitDwarfLocalMemory(ScdDwarf &dwarf, ScdMemory &memory)
 // a dwarf context. Avoids duplicating the identical SetUp/TearDown/members.
 class DwarfLocalMemoryTest : public testing::Test {
 protected:
-    void SetUp() override
-    {
-        InitDwarfLocalMemory(dwarf, memory);
-    }
+    void SetUp() override { InitDwarfLocalMemory(dwarf, memory); }
 
-    void TearDown() override
-    {
-        GlobalMockObject::verify();
-    }
+    void TearDown() override { GlobalMockObject::verify(); }
 
     ScdMemory memory;
     ScdDwarf dwarf;
@@ -76,7 +67,7 @@ inline void SetupTraceUtestEnv()
 {
     system("mkdir -p " LLT_TEST_DIR);
     system("rm -rf " LLT_TEST_DIR "/*");
-    struct passwd *pwd = getpwuid(getuid());
+    struct passwd* pwd = getpwuid(getuid());
     if (pwd == nullptr) {
         return;
     }

@@ -21,11 +21,10 @@ using namespace std;
 using namespace testing;
 
 extern "C" {
-void ScanFirmwareDir(const char *path);
+void ScanFirmwareDir(const char* path);
 }
 
-class EP_SLOGD_FIRMWARE_LOG_FUNC_UTEST : public testing::Test
-{
+class EP_SLOGD_FIRMWARE_LOG_FUNC_UTEST : public testing::Test {
 protected:
     virtual void SetUp()
     {
@@ -54,7 +53,7 @@ protected:
     }
 
 public:
-    int DlogCmdGetIntRet(const char *path, const char*cmd)
+    int DlogCmdGetIntRet(const char* path, const char* cmd)
     {
         char resultFile[200] = {0};
         sprintf(resultFile, "%s/EP_SLOGD_FUNC_STEST_cmd_result.txt", path);
@@ -64,7 +63,7 @@ public:
         system(cmdToFile);
 
         char buf[100] = {0};
-        FILE *fp = fopen(resultFile, "r");
+        FILE* fp = fopen(resultFile, "r");
         if (fp == NULL) {
             return 0;
         }
@@ -76,7 +75,7 @@ public:
         return atoi(buf);
     }
 
-    int DlogCheckDir(const char *path, const char *str)
+    int DlogCheckDir(const char* path, const char* str)
     {
         if (access(path, F_OK) != 0) {
             return 0;
@@ -110,10 +109,7 @@ TEST_F(EP_SLOGD_FIRMWARE_LOG_FUNC_UTEST, MoveFirmwareDirToDirDebug)
     EXPECT_EQ(0, GetErrLogNum());
 }
 
-static void *malloc_stub(size_t size)
-{
-    return malloc(size);
-}
+static void* malloc_stub(size_t size) { return malloc(size); }
 
 TEST_F(EP_SLOGD_FIRMWARE_LOG_FUNC_UTEST, SlogdFirmwareLogFlushFailed)
 {
@@ -122,10 +118,7 @@ TEST_F(EP_SLOGD_FIRMWARE_LOG_FUNC_UTEST, SlogdFirmwareLogFlushFailed)
     EXPECT_EQ(1, CheckErrLog("firmware log flush args is NULL"));
     ResetErrLog();
 
-    MOCKER(LogMalloc).stubs()
-        .will(invoke(malloc_stub))
-        .then(invoke(malloc_stub))
-        .then(returnValue((void *)NULL));
+    MOCKER(LogMalloc).stubs().will(invoke(malloc_stub)).then(invoke(malloc_stub)).then(returnValue((void*)NULL));
     EXPECT_EQ(LOG_FAILURE, SlogdFirmwareLogResInit());
     EXPECT_EQ(1, GetErrLogNum());
     EXPECT_EQ(1, CheckErrLog("malloc failed, device_id=0"));
@@ -133,11 +126,12 @@ TEST_F(EP_SLOGD_FIRMWARE_LOG_FUNC_UTEST, SlogdFirmwareLogFlushFailed)
     ResetErrLog();
     GlobalMockObject::verify();
 
-    MOCKER(LogMalloc).stubs()
+    MOCKER(LogMalloc)
+        .stubs()
         .will(invoke(malloc_stub))
         .then(invoke(malloc_stub))
         .then(invoke(malloc_stub))
-        .then(returnValue((void *)NULL));
+        .then(returnValue((void*)NULL));
     EXPECT_EQ(LOG_FAILURE, SlogdFirmwareLogResInit());
     EXPECT_EQ(1, GetErrLogNum());
     EXPECT_EQ(1, CheckErrLog("malloc failed, device_id=0"));
@@ -145,7 +139,7 @@ TEST_F(EP_SLOGD_FIRMWARE_LOG_FUNC_UTEST, SlogdFirmwareLogFlushFailed)
     ResetErrLog();
     GlobalMockObject::verify();
 
-    MOCKER(log_type_alloc_mem).stubs().will(returnValue((void *)NULL));
+    MOCKER(log_type_alloc_mem).stubs().will(returnValue((void*)NULL));
     EXPECT_EQ(LOG_FAILURE, SlogdFirmwareLogResInit());
     EXPECT_EQ(1, GetErrLogNum());
     EXPECT_EQ(1, CheckErrLog("get log buffer"));
@@ -153,7 +147,7 @@ TEST_F(EP_SLOGD_FIRMWARE_LOG_FUNC_UTEST, SlogdFirmwareLogFlushFailed)
     ResetErrLog();
     GlobalMockObject::verify();
 
-    MOCKER(LogGetRootPath).stubs().will(returnValue((char *)NULL));
+    MOCKER(LogGetRootPath).stubs().will(returnValue((char*)NULL));
     EXPECT_EQ(LOG_FAILURE, SlogdFirmwareLogResInit());
     EXPECT_EQ(1, GetErrLogNum());
     EXPECT_EQ(1, CheckErrLog("Root path is null"));
@@ -163,15 +157,12 @@ TEST_F(EP_SLOGD_FIRMWARE_LOG_FUNC_UTEST, SlogdFirmwareLogFlushFailed)
 
     EXPECT_EQ(LOG_SUCCESS, SlogdFirmwareLogResInit());
     int32_t devId = 0;
-    SlogdFirmwareLogReceive((void *)&devId);
+    SlogdFirmwareLogReceive((void*)&devId);
     SlogdFirmwareLogResExit();
 }
 
 TEST_F(EP_SLOGD_FIRMWARE_LOG_FUNC_UTEST, SlogdFirmwareLogFailed)
 {
-    MOCKER(LogMalloc).stubs()
-        .will(invoke(malloc_stub))
-        .then(invoke(malloc_stub))
-        .then(returnValue((void *)NULL));
+    MOCKER(LogMalloc).stubs().will(invoke(malloc_stub)).then(invoke(malloc_stub)).then(returnValue((void*)NULL));
     EXPECT_EQ(LOG_FAILURE, SlogdFirmwareLogInit(-1, false));
 }

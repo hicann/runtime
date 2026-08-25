@@ -16,13 +16,13 @@
 extern "C" {
 #endif
 
-int log_read(int device_id, char *buf, unsigned int *size, int timeout);
+int log_read(int device_id, char* buf, unsigned int* size, int timeout);
 int log_set_level(int device_id, int channel_type, unsigned int log_level);
-int log_get_channel_type(int device_id, int *channel_type_set, int *channel_type_num, int set_size);
-int32_t log_get_device_id(int32_t *devices, int32_t *devNum, int32_t len);
+int log_get_channel_type(int device_id, int* channel_type_set, int* channel_type_num, int set_size);
+int32_t log_get_device_id(int32_t* devices, int32_t* devNum, int32_t len);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif  // TESTS_UT_SLOG_UT_STUB_ASCEND_HAL_UT_COMPAT_H_
+#endif // TESTS_UT_SLOG_UT_STUB_ASCEND_HAL_UT_COMPAT_H_

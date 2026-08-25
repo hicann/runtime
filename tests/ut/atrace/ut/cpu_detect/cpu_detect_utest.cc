@@ -22,16 +22,16 @@
 #include "slog.h"
 
 extern "C" {
-    extern pid_t g_pid;
-    extern pid_t CpuDetectCreateProcess(uint32_t timeout);
+extern pid_t g_pid;
+extern pid_t CpuDetectCreateProcess(uint32_t timeout);
 }
 
-class CpuDetectUtest: public testing::Test {
+class CpuDetectUtest : public testing::Test {
 protected:
     virtual void SetUp()
     {
         system("rm -rf " LLT_TEST_DIR "/*");
-        system("mkdir -p " LLT_TEST_DIR );
+        system("mkdir -p " LLT_TEST_DIR);
         system("echo [DBG][CpuDetect][`date +%Y-%m-%d-%H-%M-%S`] Start test case");
     }
 
@@ -42,15 +42,9 @@ protected:
         GlobalMockObject::verify();
     }
 
-    static void SetUpTestCase()
-    {
-        system("echo [DBG][CpuDetect][`date +%Y-%m-%d-%H-%M-%S`] Start test suite");
-    }
+    static void SetUpTestCase() { system("echo [DBG][CpuDetect][`date +%Y-%m-%d-%H-%M-%S`] Start test suite"); }
 
-    static void TearDownTestCase()
-    {
-        system("echo [DBG][CpuDetect][`date +%Y-%m-%d-%H-%M-%S`] End test suite");
-    }
+    static void TearDownTestCase() { system("echo [DBG][CpuDetect][`date +%Y-%m-%d-%H-%M-%S`] End test suite"); }
 };
 
 TEST_F(CpuDetectUtest, UtestCpuDetectStart)

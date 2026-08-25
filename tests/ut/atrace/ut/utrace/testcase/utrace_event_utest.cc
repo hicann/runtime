@@ -17,33 +17,28 @@
 #include "tracer_core.h"
 
 extern "C" {
-    void TraceInit(void);
-    void TraceExit(void);
-    TraStatus TraceEventInit(void);
-    TraStatus TraceEventSave(void *arg);
-    void *AdiagMalloc(size_t size);
-    TraStatus AdiagListInit(struct AdiagList *traList);
-    bool AtraceCheckSupported(void);
+void TraceInit(void);
+void TraceExit(void);
+TraStatus TraceEventInit(void);
+TraStatus TraceEventSave(void* arg);
+void* AdiagMalloc(size_t size);
+TraStatus AdiagListInit(struct AdiagList* traList);
+bool AtraceCheckSupported(void);
 }
 
-class UtraceEventUtest: public testing::Test {
+class UtraceEventUtest : public testing::Test {
 protected:
     static void SetUpTestCase()
     {
         system("mkdir -p " LLT_TEST_DIR);
-        struct passwd *pwd = getpwuid(getuid());
+        struct passwd* pwd = getpwuid(getuid());
         pwd->pw_dir = LLT_TEST_DIR;
         MOCKER(getpwuid).stubs().will(returnValue(pwd));
 
         TraceInit();
     }
-    virtual void SetUp()
-    {
-    }
-    virtual void TearDown()
-    {
-        GlobalMockObject::verify();
-    }
+    virtual void SetUp() {}
+    virtual void TearDown() { GlobalMockObject::verify(); }
     static void TearDownTestCase()
     {
         TraceExit();
@@ -76,7 +71,8 @@ TEST_F(UtraceEventUtest, TestTraceEventInitMallocFailed)
 TEST_F(UtraceEventUtest, TestTraceEventInitListInitFailed)
 {
     TraceExit();
-    MOCKER(AdiagListInit).stubs()
+    MOCKER(AdiagListInit)
+        .stubs()
         .will(returnValue(TRACE_FAILURE))
         .then(returnValue(TRACE_SUCCESS))
         .then(returnValue(TRACE_FAILURE));
@@ -155,11 +151,11 @@ TEST_F(UtraceEventUtest, TestAtraceEventBindTrace)
     AtraceDestroy(handle);
 }
 
-using TestEventFunc = std::function<void(TraHandle &)>;
+using TestEventFunc = std::function<void(TraHandle&)>;
 void TestEvent(TestEventFunc func)
 {
     TracerType tracerType = TRACER_TYPE_SCHEDULE;
-    const char objName1[] = "HCCL";    
+    const char objName1[] = "HCCL";
     auto handle1 = AtraceCreate(tracerType, objName1);
     auto ret = AtraceSubmit(handle1, objName1, sizeof(objName1));
     EXPECT_EQ(ret, TRACE_SUCCESS);
@@ -178,7 +174,7 @@ void TestEvent(TestEventFunc func)
 
 TEST_F(UtraceEventUtest, TestTraceEventReportBindOne)
 {
-    TestEvent([](TraHandle &handle) -> void {
+    TestEvent([](TraHandle& handle) -> void {
         auto eventHandle = AtraceEventCreate("save_hccl");
         TraStatus ret = AtraceEventBindTrace(eventHandle, handle);
         EXPECT_EQ(ret, TRACE_SUCCESS);
@@ -189,7 +185,7 @@ TEST_F(UtraceEventUtest, TestTraceEventReportBindOne)
 
 TEST_F(UtraceEventUtest, TestTraceEventReportSyncBindOne)
 {
-    TestEvent([](TraHandle &handle) -> void {
+    TestEvent([](TraHandle& handle) -> void {
         auto eventHandle = AtraceEventCreate("save_hccl");
         TraStatus ret = AtraceEventBindTrace(eventHandle, handle);
         EXPECT_EQ(ret, TRACE_SUCCESS);
@@ -198,7 +194,7 @@ TEST_F(UtraceEventUtest, TestTraceEventReportSyncBindOne)
     });
 }
 
-static drvError_t drvGetPlatformInfoStub(uint32_t *info)
+static drvError_t drvGetPlatformInfoStub(uint32_t* info)
 {
     *info = 0; // DEVICE_SIDE
     return DRV_ERROR_NONE;
@@ -207,9 +203,7 @@ static drvError_t drvGetPlatformInfoStub(uint32_t *info)
 TEST_F(UtraceEventUtest, TestTraceEventReportSyncNotSupport)
 {
     TraceExit();
-    MOCKER(drvGetPlatformInfo)
-        .stubs()
-        .will(invoke(drvGetPlatformInfoStub));
+    MOCKER(drvGetPlatformInfo).stubs().will(invoke(drvGetPlatformInfoStub));
     TraceInit();
     EXPECT_EQ(TRACE_UNSUPPORTED, AtraceEventReportSync(0));
     GlobalMockObject::verify();
@@ -220,14 +214,14 @@ TEST_F(UtraceEventUtest, TestTraceEventReportSyncNotSupport)
 TEST_F(UtraceEventUtest, TestTraceEventReportLimitedNum)
 {
     std::map<int, int> limitedNumMap = {
-        {-1, 2},  // not set limited num, expect unlimied
-        {0, 2},   // set unlimited, expect unlimied
-        {1, 1},   // set limited num 1, expect 1
-        {2, 2},   // set limited num 2, expect 2
-        {3, 2},   // set limited num 3, expect 2
+        {-1, 2}, // not set limited num, expect unlimied
+        {0, 2},  // set unlimited, expect unlimied
+        {1, 1},  // set limited num 1, expect 1
+        {2, 2},  // set limited num 2, expect 2
+        {3, 2},  // set limited num 3, expect 2
     };
     for (auto limitedNum : limitedNumMap) {
-        TestEvent([&limitedNum](TraHandle &handle) -> void {
+        TestEvent([&limitedNum](TraHandle& handle) -> void {
             auto eventHandle = AtraceEventCreate("save_hccl");
             TraStatus ret = AtraceEventBindTrace(eventHandle, handle);
 
@@ -249,7 +243,7 @@ TEST_F(UtraceEventUtest, TestTraceEventReportUpperLimitedNum)
 {
     uint32_t limitedNum = 65535;
     MOCKER(TraceEventSave).expects(exactly(limitedNum)).will(returnValue(TRACE_SUCCESS));
-    TestEvent([&limitedNum](TraHandle &handle) -> void {
+    TestEvent([&limitedNum](TraHandle& handle) -> void {
         auto eventHandle = AtraceEventCreate("save_hccl");
         TraStatus ret = AtraceEventBindTrace(eventHandle, handle);
 
@@ -265,13 +259,12 @@ TEST_F(UtraceEventUtest, TestTraceEventReportUpperLimitedNum)
         AtraceEventReport(eventHandle);
         AtraceEventDestroy(eventHandle);
     });
-
 }
 
 TEST_F(UtraceEventUtest, TestTraceEventReportAsync)
 {
     TracerType tracerType = TRACER_TYPE_SCHEDULE;
-    const char objName[] = "HCCL";    
+    const char objName[] = "HCCL";
     auto handle = AtraceCreate(tracerType, objName);
     auto ret = AtraceSubmit(handle, objName, sizeof(objName));
     EXPECT_EQ(ret, TRACE_SUCCESS);
@@ -291,7 +284,7 @@ TEST_F(UtraceEventUtest, TestTraceEventReportAsync)
 TEST_F(UtraceEventUtest, TestDestroyHandleBeforeDestroyEvent)
 {
     TracerType tracerType = TRACER_TYPE_SCHEDULE;
-    const char objName[] = "HCCL";    
+    const char objName[] = "HCCL";
     auto handle = AtraceCreate(tracerType, objName);
     auto ret = AtraceSubmit(handle, objName, sizeof(objName));
     EXPECT_EQ(ret, TRACE_SUCCESS);

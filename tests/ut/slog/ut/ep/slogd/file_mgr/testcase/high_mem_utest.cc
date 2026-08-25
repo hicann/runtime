@@ -37,8 +37,8 @@ int RunIamRingBufferRoundTrip()
     }
 
     std::vector<char> sourceStorage(DEF_SIZE);
-    RingBufferStat source = { static_cast<uint32_t>(sourceStorage.size()),
-                              reinterpret_cast<RingBufferCtrl*>(sourceStorage.data()) };
+    RingBufferStat source = {
+        static_cast<uint32_t>(sourceStorage.size()), reinterpret_cast<RingBufferCtrl*>(sourceStorage.data())};
     if (LogBufInitHead(source.ringBufferCtrl, source.logBufSize, 0) != SYS_OK) {
         return 1;
     }
@@ -52,7 +52,7 @@ int RunIamRingBufferRoundTrip()
         return 1;
     }
 
-    int32_t pipeFd[2] = { -1, -1 };
+    int32_t pipeFd[2] = {-1, -1};
     if (pipe(pipeFd) != 0) {
         return 1;
     }
@@ -62,8 +62,8 @@ int RunIamRingBufferRoundTrip()
     (void)close(pipeFd[1]);
 
     std::vector<char> destinationStorage(DEF_SIZE);
-    RingBufferStat destination = { static_cast<uint32_t>(destinationStorage.size()),
-                                   reinterpret_cast<RingBufferCtrl*>(destinationStorage.data()) };
+    RingBufferStat destination = {
+        static_cast<uint32_t>(destinationStorage.size()), reinterpret_cast<RingBufferCtrl*>(destinationStorage.data())};
     if (LogBufInitHead(destination.ringBufferCtrl, destination.logBufSize, 0) != SYS_OK ||
         HiMemReadIamLog(pipeFd[0], &destination) != 1U || LogBufCheckEmpty(&destination)) {
         result = 1;
@@ -71,19 +71,13 @@ int RunIamRingBufferRoundTrip()
     (void)close(pipeFd[0]);
     return result;
 }
-}
+} // namespace
 
 class EP_SLOGD_HIGH_MEM_UTEST : public testing::Test {
 protected:
-    void SetUp() override
-    {
-        ResetErrLog();
-    }
+    void SetUp() override { ResetErrLog(); }
 
-    void TearDown() override
-    {
-        ResetErrLog();
-    }
+    void TearDown() override { ResetErrLog(); }
 };
 
 TEST_F(EP_SLOGD_HIGH_MEM_UTEST, HiMemInitReturnsFailureWhenDeviceIsUnavailable)
@@ -109,11 +103,11 @@ TEST_F(EP_SLOGD_HIGH_MEM_UTEST, HiMemFreeClosesPositiveFd)
 
 TEST_F(EP_SLOGD_HIGH_MEM_UTEST, HiMemRawIoRoundTrip)
 {
-    char buffer[16] = { 0 };
+    char buffer[16] = {0};
     EXPECT_EQ(LOG_FAILURE, HiMemWrite(0, "data", 4));
     EXPECT_EQ(LOG_FAILURE, HiMemRead(0, buffer, sizeof(buffer)));
 
-    int32_t pipeFd[2] = { -1, -1 };
+    int32_t pipeFd[2] = {-1, -1};
     ASSERT_EQ(0, pipe(pipeFd));
     EXPECT_EQ(LOG_SUCCESS, HiMemWrite(pipeFd[1], "data", 4));
     EXPECT_EQ(4, HiMemRead(pipeFd[0], buffer, sizeof(buffer)));
@@ -124,7 +118,7 @@ TEST_F(EP_SLOGD_HIGH_MEM_UTEST, HiMemRawIoRoundTrip)
 
 TEST_F(EP_SLOGD_HIGH_MEM_UTEST, HiMemLogMessageRoundTripAndRejectsShortInput)
 {
-    int32_t pipeFd[2] = { -1, -1 };
+    int32_t pipeFd[2] = {-1, -1};
     ASSERT_EQ(0, pipe(pipeFd));
     LogHead head = {};
     head.magic = HEAD_MAGIC;
@@ -133,7 +127,7 @@ TEST_F(EP_SLOGD_HIGH_MEM_UTEST, HiMemLogMessageRoundTripAndRejectsShortInput)
     head.msgLength = 5;
     ASSERT_EQ(LOG_SUCCESS, HiMemWriteLog(pipeFd[1], "hello", 5, &head));
 
-    char message[MSG_LENGTH] = { 0 };
+    char message[MSG_LENGTH] = {0};
     LogHead actual = {};
     EXPECT_EQ(5, HiMemReadLog(pipeFd[0], message, sizeof(message), &actual));
     EXPECT_STREQ("hello", message);

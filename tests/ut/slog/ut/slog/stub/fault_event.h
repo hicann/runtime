@@ -53,13 +53,13 @@ struct FTEInfo {
 struct FTEDidInfo {
     uint16_t didId;
     uint16_t didValueSize;
-    uint8_t *didValue;
+    uint8_t* didValue;
 };
 
 struct FTEUDSInfo {
     uint16_t totalSize;
     uint16_t didInfoSize;
-    struct FTEDidInfo *didRec;
+    struct FTEDidInfo* didRec;
 };
 
 struct AntiFlash {
@@ -70,9 +70,9 @@ struct FTEAttr {
     struct AntiFlash antiFlash;
 };
 
-int32_t FTEConfig(const struct FTEAttr *attr);
+int32_t FTEConfig(const struct FTEAttr* attr);
 
-int32_t FTEReport(const struct FTEInfo *eventInfo, const struct FTEUDSInfo *udsInfo);
+int32_t FTEReport(const struct FTEInfo* eventInfo, const struct FTEUDSInfo* udsInfo);
 
 #ifdef __cplusplus
 }
@@ -84,9 +84,10 @@ struct FTEDeserializedDid {
     uint16_t didValueSize;
     std::unique_ptr<uint8_t[]> didValue;
     int32_t DeSerializeDidInfo(const uint8_t* buf, uint32_t bufSize, uint32_t& offset);
+
 private:
-    template<typename T>
-    void GetDidDataFromBuf(T &dest, uint32_t &offset, const uint8_t* buf, uint32_t srcSize);
+    template <typename T>
+    void GetDidDataFromBuf(T& dest, uint32_t& offset, const uint8_t* buf, uint32_t srcSize);
 };
 
 struct FTEDeserializedUDS {
@@ -94,17 +95,16 @@ struct FTEDeserializedUDS {
     uint16_t didInfoSize;
     std::unique_ptr<FTEDeserializedDid[]> didRec;
     int32_t DeSerialize(const uint8_t* buf, uint32_t bufSize);
+
 private:
-    template<typename T>
-    void GetUdsDataFromBuf(T &dest, uint32_t &offset, const uint8_t* buf, uint32_t srcSize);
+    template <typename T>
+    void GetUdsDataFromBuf(T& dest, uint32_t& offset, const uint8_t* buf, uint32_t srcSize);
 };
 
-int32_t FTEDeSerialize(const uint8_t *buf, const uint32_t bufSize, FTEInfo &eventInfo,
-                   FTEDeserializedUDS &udsInfo);
+int32_t FTEDeSerialize(const uint8_t* buf, const uint32_t bufSize, FTEInfo& eventInfo, FTEDeserializedUDS& udsInfo);
 
-int32_t FTERegisterCallback(const std::function<int32_t (const uint8_t *, uint32_t)> &callBack);
+int32_t FTERegisterCallback(const std::function<int32_t(const uint8_t*, uint32_t)>& callBack);
 int32_t FTEUnregisterCallback();
 #endif
 
 #endif
-

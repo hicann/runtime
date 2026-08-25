@@ -25,8 +25,8 @@
 using namespace std;
 using namespace testing;
 
-#define SINGLE_EXPORT_LOG        "slog_single"
-#define MSG_STATUS_LONG_LINK     12
+#define SINGLE_EXPORT_LOG "slog_single"
+#define MSG_STATUS_LONG_LINK 12
 static std::map<std::string, std::string> g_dataSingleBuffer;
 static std::map<std::string, std::string> g_dataContinusBuffer;
 static std::mutex g_continusMtx;
@@ -40,8 +40,7 @@ void SlogdLogClassifyExit(void);
 extern int32_t g_adcoreReturnError;
 }
 
-class EP_SLOGD_FUNC_UTEST : public testing::Test
-{
+class EP_SLOGD_FUNC_UTEST : public testing::Test {
 protected:
     virtual void SetUp()
     {
@@ -89,7 +88,7 @@ public:
         LogRecordSigNo(0);
     }
 
-    int SlogdCmdGetIntRet(const char *path, const char*cmd)
+    int SlogdCmdGetIntRet(const char* path, const char* cmd)
     {
         char resultFile[200] = {0};
         sprintf(resultFile, "%s/MDC_SLOGD_FLUSH_FUNC_UTEST_cmd_result.txt", path);
@@ -99,7 +98,7 @@ public:
         system(cmdToFile);
 
         char buf[100] = {0};
-        FILE *fp = fopen(resultFile, "r");
+        FILE* fp = fopen(resultFile, "r");
         if (fp == NULL) {
             return 0;
         }
@@ -110,10 +109,8 @@ public:
         }
         return atoi(buf);
     }
-    static void DlogDestructor() {
-        log_release_buffer();
-    }
-    int32_t SlogdGetPrintNum(const char *path, const char *dir)
+    static void DlogDestructor() { log_release_buffer(); }
+    int32_t SlogdGetPrintNum(const char* path, const char* dir)
     {
         char cmd[200] = {0};
         sprintf(cmd, " cat %s/%s/* | wc -l", path, dir);
@@ -123,7 +120,8 @@ public:
     }
 };
 
-static void CheckLogResult(const char *msg, const char *fileName, int32_t logNum, std::map<std::string, std::string> &data)
+static void CheckLogResult(
+    const char* msg, const char* fileName, int32_t logNum, std::map<std::string, std::string>& data)
 {
     int32_t count = 0;
     size_t pos = 0;
@@ -139,7 +137,8 @@ static void CheckLogResult(const char *msg, const char *fileName, int32_t logNum
     EXPECT_EQ(logNum, count);
 }
 
-static void CheckLogResultRange(const char *msg, const char *fileName, int32_t logNum, std::map<std::string, std::string> &data)
+static void CheckLogResultRange(
+    const char* msg, const char* fileName, int32_t logNum, std::map<std::string, std::string>& data)
 {
     int32_t count = 0;
     size_t pos = 0;
@@ -155,7 +154,7 @@ static void CheckLogResultRange(const char *msg, const char *fileName, int32_t l
     EXPECT_LE(logNum, count);
 }
 
-static int32_t AdxSendMsgSingleStub(const CommHandle *handle, AdxString data, uint32_t len)
+static int32_t AdxSendMsgSingleStub(const CommHandle* handle, AdxString data, uint32_t len)
 {
     static uint32_t count = 0;
     static std::string fileName;
@@ -173,7 +172,7 @@ static int32_t AdxSendMsgSingleStub(const CommHandle *handle, AdxString data, ui
     return 0;
 }
 
-int32_t AdxSendMsg(const CommHandle *handle, AdxString data, uint32_t len)
+int32_t AdxSendMsg(const CommHandle* handle, AdxString data, uint32_t len)
 {
     if (data == NULL) {
         return -1;
@@ -181,24 +180,20 @@ int32_t AdxSendMsg(const CommHandle *handle, AdxString data, uint32_t len)
     if (strcmp(data, HDC_END_MSG) == 0) {
         return 0;
     }
-    LogReportMsg *msg = (LogReportMsg *)data;
+    LogReportMsg* msg = (LogReportMsg*)data;
     if (msg->magic != LOG_REPORT_MAGIC) {
         return -1;
     }
-    const std::vector<std::string>logNameMap = {
-        "debug/device-os/device-os.log",
-        "security/device-os/device-os.log",
-        "run/device-os/device-os.log",
-        "run/event/event.log",
-        "debug/device-0/device-0.log"
-    };
+    const std::vector<std::string> logNameMap = {
+        "debug/device-os/device-os.log", "security/device-os/device-os.log", "run/device-os/device-os.log",
+        "run/event/event.log", "debug/device-0/device-0.log"};
     if (msg->logType > 4) {
         return -1;
     }
     std::string fileName = logNameMap[msg->logType];
     g_continusMtx.lock();
     auto it = g_dataContinusBuffer.find(fileName);
-    if (it!= g_dataContinusBuffer.end()) {
+    if (it != g_dataContinusBuffer.end()) {
         it->second += msg->buf;
     } else {
         g_dataContinusBuffer.emplace(fileName, msg->buf);
@@ -217,7 +212,7 @@ static void ContinuousExportSessoionCreate()
     handle->client = nullptr;
 
     size_t len = sizeof(LogDataMsg) + 1;
-    LogDataMsg *value = (LogDataMsg *)malloc(len);
+    LogDataMsg* value = (LogDataMsg*)malloc(len);
     memset_s(value, len, 0, len);
     value->status = MSG_STATUS_LONG_LINK;
     value->devId = 0;
@@ -231,7 +226,7 @@ TEST_F(EP_SLOGD_FUNC_UTEST, FlushLog)
 {
     // 初始化
     LogRecordSigNo(0);
-    char *path = LOG_FILE_PATH;
+    char* path = LOG_FILE_PATH;
     MOCKER(ToolSleep).stubs().will(returnValue(0));
     MOCKER(LogGetRootPath).stubs().will(returnValue(path));
     SlogdConfigMgrInit();
@@ -241,30 +236,30 @@ TEST_F(EP_SLOGD_FUNC_UTEST, FlushLog)
 
     // 向buffer内写数据
     char msg[1024] = "test for slogd flush log.\n";
-    LogInfo msgInfo = { DEBUG_LOG, SYSTEM, 100, 0, 0, 0, DLOG_ERROR };
-    SlogdWriteToBuffer((const char *)&msg, strlen((const char *)&msg), &msgInfo);
+    LogInfo msgInfo = {DEBUG_LOG, SYSTEM, 100, 0, 0, 0, DLOG_ERROR};
+    SlogdWriteToBuffer((const char*)&msg, strlen((const char*)&msg), &msgInfo);
 
-    msgInfo = (LogInfo){ RUN_LOG, SYSTEM, 100, 0, 0, 0, DLOG_INFO };
-    SlogdWriteToBuffer((const char *)&msg, strlen((const char *)&msg), &msgInfo);
+    msgInfo = (LogInfo){RUN_LOG, SYSTEM, 100, 0, 0, 0, DLOG_INFO};
+    SlogdWriteToBuffer((const char*)&msg, strlen((const char*)&msg), &msgInfo);
 
-    msgInfo = (LogInfo){ SECURITY_LOG, SYSTEM, 100, 0, 0, 0, DLOG_INFO };
-    SlogdWriteToBuffer((const char *)&msg, strlen((const char *)&msg), &msgInfo);
+    msgInfo = (LogInfo){SECURITY_LOG, SYSTEM, 100, 0, 0, 0, DLOG_INFO};
+    SlogdWriteToBuffer((const char*)&msg, strlen((const char*)&msg), &msgInfo);
 
-    msgInfo = (LogInfo){ RUN_LOG, SYSTEM, 100, 0, 0, 0, DLOG_EVENT };
-    SlogdWriteToBuffer((const char *)&msg, strlen((const char *)&msg), &msgInfo);
+    msgInfo = (LogInfo){RUN_LOG, SYSTEM, 100, 0, 0, 0, DLOG_EVENT};
+    SlogdWriteToBuffer((const char*)&msg, strlen((const char*)&msg), &msgInfo);
 
-    msgInfo = (LogInfo){ DEBUG_LOG, APPLICATION, 100, 0, 0, 0, DLOG_ERROR };
-    SlogdWriteToBuffer((const char *)&msg, strlen((const char *)&msg), &msgInfo);
+    msgInfo = (LogInfo){DEBUG_LOG, APPLICATION, 100, 0, 0, 0, DLOG_ERROR};
+    SlogdWriteToBuffer((const char*)&msg, strlen((const char*)&msg), &msgInfo);
 
-    msgInfo = (LogInfo){ RUN_LOG, APPLICATION, 100, 0, 0, 0, DLOG_ERROR };
-    SlogdWriteToBuffer((const char *)&msg, strlen((const char *)&msg), &msgInfo);
+    msgInfo = (LogInfo){RUN_LOG, APPLICATION, 100, 0, 0, 0, DLOG_ERROR};
+    SlogdWriteToBuffer((const char*)&msg, strlen((const char*)&msg), &msgInfo);
     // 等待flush线程创建并运行
     sleep(1);
 
     g_adcoreReturnError = -1;
     MOCKER(AdxSendMsg).reset();
-    msgInfo = (LogInfo){ RUN_LOG, SYSTEM, 100, 0, 0, 0, DLOG_INFO };
-    SlogdWriteToBuffer((const char *)&msg, strlen((const char *)&msg), &msgInfo);
+    msgInfo = (LogInfo){RUN_LOG, SYSTEM, 100, 0, 0, 0, DLOG_INFO};
+    SlogdWriteToBuffer((const char*)&msg, strlen((const char*)&msg), &msgInfo);
     sleep(1);
 
     // 释放
@@ -289,7 +284,7 @@ TEST_F(EP_SLOGD_FUNC_UTEST, SingleExport)
 {
     // 初始化
     LogRecordSigNo(0);
-    char *path = LOG_FILE_PATH;
+    char* path = LOG_FILE_PATH;
     MOCKER(ToolSleep).stubs().will(returnValue(0));
     MOCKER(LogGetRootPath).stubs().will(returnValue(path));
     SlogdConfigMgrInit();
@@ -299,17 +294,17 @@ TEST_F(EP_SLOGD_FUNC_UTEST, SingleExport)
     sleep(1);
 
     // 向buffer内写数据
-    char *msg = "test for slogd flush log.\n";
-    LogInfo msgInfo = { DEBUG_LOG, SYSTEM, 100, 0, 0, 0, DLOG_ERROR };
+    char* msg = "test for slogd flush log.\n";
+    LogInfo msgInfo = {DEBUG_LOG, SYSTEM, 100, 0, 0, 0, DLOG_ERROR};
     SlogdWriteToBuffer(msg, strlen(msg), &msgInfo);
 
-    msgInfo = (LogInfo){ RUN_LOG, SYSTEM, 100, 0, 0, 0, DLOG_INFO };
+    msgInfo = (LogInfo){RUN_LOG, SYSTEM, 100, 0, 0, 0, DLOG_INFO};
     SlogdWriteToBuffer(msg, strlen(msg), &msgInfo);
 
-    msgInfo = (LogInfo){ SECURITY_LOG, SYSTEM, 100, 0, 0, 0, DLOG_INFO };
+    msgInfo = (LogInfo){SECURITY_LOG, SYSTEM, 100, 0, 0, 0, DLOG_INFO};
     SlogdWriteToBuffer(msg, strlen(msg), &msgInfo);
 
-    msgInfo = (LogInfo){ RUN_LOG, SYSTEM, 100, 0, 0, 0, DLOG_EVENT };
+    msgInfo = (LogInfo){RUN_LOG, SYSTEM, 100, 0, 0, 0, DLOG_EVENT};
     SlogdWriteToBuffer(msg, strlen(msg), &msgInfo);
 
     // export
@@ -320,7 +315,7 @@ TEST_F(EP_SLOGD_FUNC_UTEST, SingleExport)
     handle->timeout = 0;
     handle->client = nullptr;
     size_t len = sizeof(LogDataMsg) + strlen(SINGLE_EXPORT_LOG) + 1;
-    LogDataMsg *value = (LogDataMsg *)malloc(len);
+    LogDataMsg* value = (LogDataMsg*)malloc(len);
     memset_s(value, len, 0, len);
     value->devId = 0;
     value->sliceLen = strlen(SINGLE_EXPORT_LOG);

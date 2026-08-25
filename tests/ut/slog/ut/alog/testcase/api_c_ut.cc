@@ -19,22 +19,17 @@ extern "C" {
 #include "dlog_time.h"
 }
 
-
-class ApiForC : public testing::Test
-{
+class ApiForC : public testing::Test {
 public:
     void SetUp();
     void TearDown();
 };
-void ApiForC::SetUp()
-{
-}
+void ApiForC::SetUp() {}
 
-void ApiForC::TearDown()
-{
-}
+void ApiForC::TearDown() {}
 
-TEST_F(ApiForC, DlogSetlevelForC) {
+TEST_F(ApiForC, DlogSetlevelForC)
+{
     EXPECT_EQ(SYS_OK, DlogSetlevelForC(0, 1, 1));
     EXPECT_EQ(SYS_ERROR, DlogSetlevelForC(0, 1, -1));
     EXPECT_EQ(SYS_ERROR, DlogSetlevelForC(0, 5, 1));
@@ -42,13 +37,15 @@ TEST_F(ApiForC, DlogSetlevelForC) {
     GlobalMockObject::reset();
 }
 
-TEST_F(ApiForC, DlogGetlevelForC) {
+TEST_F(ApiForC, DlogGetlevelForC)
+{
     int enableEvent = -1;
     EXPECT_EQ(1, DlogGetlevelForC(1, &enableEvent));
     GlobalMockObject::reset();
 }
 
-TEST_F(ApiForC, CheckLogLevelForC) {
+TEST_F(ApiForC, CheckLogLevelForC)
+{
     EXPECT_EQ(1, CheckLogLevelForC(10, 3));
     GlobalMockObject::reset();
 }

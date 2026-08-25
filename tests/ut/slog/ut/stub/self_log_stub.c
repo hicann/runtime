@@ -11,18 +11,18 @@
 #include "log_print.h"
 
 static uint32_t g_errLogNum = 0;
-void LogPrintSys(int priority, const char *format, ...)
+void LogPrintSys(int priority, const char* format, ...)
 {
     va_list args;
     va_start(args, format);
-    char msg[MSG_LENGTH] = { 0 };
+    char msg[MSG_LENGTH] = {0};
     vsprintf(msg, format, args);
     va_end(args);
     if (priority == LOG_ERR) {
         g_errLogNum++;
         char errLogFile[200] = {0};
         sprintf(errLogFile, "%s/errLogFile.txt", PATH_ROOT);
-        FILE *errFileFp = fopen(errLogFile, "aw");
+        FILE* errFileFp = fopen(errLogFile, "aw");
         fseek(errFileFp, 0, SEEK_END);
         fwrite(msg, strlen(msg), 1, errFileFp);
         fclose(errFileFp);
@@ -33,7 +33,7 @@ void LogPrintSys(int priority, const char *format, ...)
 #ifdef LLT_DEBUG
     char logFile[200] = {0};
     sprintf(logFile, "%s/LogFile.txt", PATH_ROOT);
-    FILE *fp = fopen(logFile, "aw");
+    FILE* fp = fopen(logFile, "aw");
     fseek(fp, 0, SEEK_END);
     if (priority == LOG_WARNING) {
         fwrite(msg, strlen(msg), 1, fp);
@@ -47,20 +47,20 @@ void LogPrintSys(int priority, const char *format, ...)
 #endif
 }
 
-void LogPrintSelf(const char *format, ...)
+void LogPrintSelf(const char* format, ...)
 {
     va_list args;
     va_start(args, format);
-    char msg[MSG_LENGTH] = { 0 };
+    char msg[MSG_LENGTH] = {0};
     vsprintf(msg, format, args);
     va_end(args);
-    char *ret = strstr(msg, "[ERROR]");
+    char* ret = strstr(msg, "[ERROR]");
     if (ret != NULL) {
         g_errLogNum++;
         char errLogFile[200] = {0};
         sprintf(errLogFile, "%s/errLogFile.txt", PATH_ROOT);
         printf("errLogFile=%s\n", errLogFile);
-        FILE *errFileFp = fopen(errLogFile, "aw");
+        FILE* errFileFp = fopen(errLogFile, "aw");
         if (errFileFp == NULL) {
             printf("fopen failed, msg=%s\n", msg);
             return;
@@ -76,10 +76,7 @@ void LogPrintSelf(const char *format, ...)
 #endif
 }
 
-uint32_t GetErrLogNum(void)
-{
-    return g_errLogNum;
-}
+uint32_t GetErrLogNum(void) { return g_errLogNum; }
 
 void ResetErrLog(void)
 {
@@ -92,7 +89,7 @@ void ResetErrLog(void)
     }
 }
 
-int32_t CheckErrLog(char *msg)
+int32_t CheckErrLog(char* msg)
 {
     char resultFile[200] = {0};
     sprintf(resultFile, "%s/errLogFile_cmd_result.txt", PATH_ROOT);
@@ -102,7 +99,7 @@ int32_t CheckErrLog(char *msg)
     system(cmd);
 
     char buf[MSG_LENGTH] = {0};
-    FILE *fp = fopen(resultFile, "r");
+    FILE* fp = fopen(resultFile, "r");
     if (fp == NULL) {
         return false;
     }

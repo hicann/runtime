@@ -44,20 +44,11 @@ void IamSlogStubReset(void)
     g_periodicTimerCallback = NULL;
 }
 
-void IamSlogStubSetServicePreparation(bool ready)
-{
-    g_servicePrepared = ready;
-}
+void IamSlogStubSetServicePreparation(bool ready) { g_servicePrepared = ready; }
 
-void IamSlogStubSetRegisterRet(int32_t ret)
-{
-    g_registerRet = ret;
-}
+void IamSlogStubSetRegisterRet(int32_t ret) { g_registerRet = ret; }
 
-void IamSlogStubSetUnregisterRet(int32_t ret)
-{
-    g_unregisterRet = ret;
-}
+void IamSlogStubSetUnregisterRet(int32_t ret) { g_unregisterRet = ret; }
 
 void IamSlogStubSetIoctlResult(int32_t ret, int32_t errorCode)
 {
@@ -77,7 +68,7 @@ void IamSlogStubNotifyResource(enum IAMResourceStatus status)
     if (g_resourceCallback == NULL) {
         return;
     }
-    struct IAMVirtualResourceStatus resource = { LOGOUT_IAM_SERVICE_PATH, status };
+    struct IAMVirtualResourceStatus resource = {LOGOUT_IAM_SERVICE_PATH, status};
     g_resourceCallback(&resource, 1);
 }
 

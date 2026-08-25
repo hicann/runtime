@@ -25,32 +25,31 @@
 #include "log_file_util.h"
 
 extern "C" {
-    #include "slogd_utest_stub.h"
-    #include "log_config_api.h"
-    #include "log_ring_buffer.h"
-    #include "log_path_mgr.h"
-    #include "dlog_level_mgr.h"
-    #include "log_level_parse.h"
+#include "slogd_utest_stub.h"
+#include "log_config_api.h"
+#include "log_ring_buffer.h"
+#include "log_path_mgr.h"
+#include "dlog_level_mgr.h"
+#include "log_level_parse.h"
 
-    #define LOG_FOR_SELF_MAX_FILE_LENGTH 8
-    #define LOG_DIR_FOR_SELF_LENGTH (CFG_LOGAGENT_PATH_MAX_LENGTH + LOG_FOR_SELF_MAX_FILE_LENGTH)
+#define LOG_FOR_SELF_MAX_FILE_LENGTH 8
+#define LOG_DIR_FOR_SELF_LENGTH (CFG_LOGAGENT_PATH_MAX_LENGTH + LOG_FOR_SELF_MAX_FILE_LENGTH)
 
-    extern char g_configFilePath[SLOG_CONF_PATH_MAX_LENGTH];
-    extern char g_rootLogPath[CFG_LOGAGENT_PATH_MAX_LENGTH + 1];
-    extern char g_selfLogPath[LOG_DIR_FOR_SELF_LENGTH + 1];
-    int StrcatDir(char *path, const char *filename, const char *dir, unsigned int maxlen);
-    int DlogStrcatDir(char *path, const char *filename, const char *dir, unsigned int maxlen);
-    int LogConfGetProcessPath(char *processDir, unsigned int len);
-    void LogCheckPathPermission(const char *dirPath);
-    int32_t GetValidPath(char *path, int32_t pathLen, char *validPath, int32_t validPathLen);
-    int LogConfGetProcessFile(char *configPath, unsigned int len);
-    int LogConfGetProcessPath(char *processDir, unsigned int len);
-    int LogInitRootPath(void);
-    int32_t LogReplaceDefaultByDir(const char *path, char *homeDir, uint32_t len);
+extern char g_configFilePath[SLOG_CONF_PATH_MAX_LENGTH];
+extern char g_rootLogPath[CFG_LOGAGENT_PATH_MAX_LENGTH + 1];
+extern char g_selfLogPath[LOG_DIR_FOR_SELF_LENGTH + 1];
+int StrcatDir(char* path, const char* filename, const char* dir, unsigned int maxlen);
+int DlogStrcatDir(char* path, const char* filename, const char* dir, unsigned int maxlen);
+int LogConfGetProcessPath(char* processDir, unsigned int len);
+void LogCheckPathPermission(const char* dirPath);
+int32_t GetValidPath(char* path, int32_t pathLen, char* validPath, int32_t validPathLen);
+int LogConfGetProcessFile(char* configPath, unsigned int len);
+int LogConfGetProcessPath(char* processDir, unsigned int len);
+int LogInitRootPath(void);
+int32_t LogReplaceDefaultByDir(const char* path, char* homeDir, uint32_t len);
 }
 
-class SlogdLogCommon : public testing::Test
-{
+class SlogdLogCommon : public testing::Test {
 public:
     void SetUp();
     void TearDown();
@@ -63,10 +62,7 @@ void SlogdLogCommon::SetUp()
     memset_s(g_selfLogPath, LOG_DIR_FOR_SELF_LENGTH + 1, 0, LOG_DIR_FOR_SELF_LENGTH + 1);
 }
 
-void SlogdLogCommon::TearDown()
-{
-
-}
+void SlogdLogCommon::TearDown() {}
 
 TEST_F(SlogdLogCommon, GetUserGroupID4)
 {
@@ -75,21 +71,18 @@ TEST_F(SlogdLogCommon, GetUserGroupID4)
     struct passwd pwd;
     pwd.pw_uid = 1;
     pwd.pw_gid = 1;
-    MOCKER(getpwuid).stubs().will(returnValue((struct passwd *)&pwd));
+    MOCKER(getpwuid).stubs().will(returnValue((struct passwd*)&pwd));
     EXPECT_EQ(SYS_OK, ToolGetUserGroupId(&uid, &gid));
     GlobalMockObject::reset();
 }
 
-TEST_F(SlogdLogCommon, LogGetHomedir1)
-{
-    EXPECT_EQ(SYS_ERROR, LogGetHomeDir(NULL, 0));
-}
+TEST_F(SlogdLogCommon, LogGetHomedir1) { EXPECT_EQ(SYS_ERROR, LogGetHomeDir(NULL, 0)); }
 
 TEST_F(SlogdLogCommon, LogGetHomedir2)
 {
     char homedir[TOOL_MAX_PATH] = "";
 
-    MOCKER(getpwuid).stubs().will(returnValue((struct  passwd*)NULL));
+    MOCKER(getpwuid).stubs().will(returnValue((struct passwd*)NULL));
     MOCKER(strcpy_s).stubs().will(returnValue(-1));
 
     EXPECT_EQ(SYS_ERROR, LogGetHomeDir(homedir, TOOL_MAX_PATH));
@@ -99,7 +92,7 @@ TEST_F(SlogdLogCommon, LogGetHomedir2)
 TEST_F(SlogdLogCommon, LogGetHomedir3)
 {
     char homedir[TOOL_MAX_PATH] = "";
-    struct  passwd pw;
+    struct passwd pw;
     pw.pw_dir = (char*)malloc(TOOL_MAX_PATH);
     strcpy(pw.pw_dir, "/home");
 
@@ -110,42 +103,39 @@ TEST_F(SlogdLogCommon, LogGetHomedir3)
     GlobalMockObject::reset();
 }
 
-TEST_F(SlogdLogCommon,  LogGetProcessPath1)
-{
-    EXPECT_EQ(SYS_ERROR, LogConfGetProcessPath(NULL, 0));
-}
+TEST_F(SlogdLogCommon, LogGetProcessPath1) { EXPECT_EQ(SYS_ERROR, LogConfGetProcessPath(NULL, 0)); }
 
-TEST_F(SlogdLogCommon,  LogGetProcessPath2)
+TEST_F(SlogdLogCommon, LogGetProcessPath2)
 {
     char processDir[TOOL_MAX_PATH] = "\0";
-    int len  = 256;
+    int len = 256;
     EXPECT_EQ(SYS_OK, LogConfGetProcessPath(processDir, len));
 }
 
-TEST_F(SlogdLogCommon,  LogGetProcessPath3)
+TEST_F(SlogdLogCommon, LogGetProcessPath3)
 {
     char processDir[TOOL_MAX_PATH] = "\0";
-    int len  = 256;
+    int len = 256;
     MOCKER(readlink).stubs().will(returnValue(4097));
     EXPECT_EQ(SYS_ERROR, LogConfGetProcessPath(processDir, len));
     GlobalMockObject::reset();
 }
 
-TEST_F(SlogdLogCommon,  LogGetProcessPath4)
+TEST_F(SlogdLogCommon, LogGetProcessPath4)
 {
     char processDir[TOOL_MAX_PATH] = "\0";
-    int len  = 256;
+    int len = 256;
     MOCKER(readlink).stubs().will(returnValue(10));
     EXPECT_EQ(SYS_OK, LogConfGetProcessPath(processDir, len));
     GlobalMockObject::reset();
 }
 
-TEST_F(SlogdLogCommon,  LogGetProcessConfigPath_Failed)
+TEST_F(SlogdLogCommon, LogGetProcessConfigPath_Failed)
 {
     EXPECT_EQ(SYS_ERROR, LogConfGetProcessFile(NULL, 0));
 
     char processDir[TOOL_MAX_PATH] = "\0";
-    uint32_t len  = 256;
+    uint32_t len = 256;
     MOCKER(malloc).stubs().will(returnValue((void*)NULL));
     EXPECT_EQ(SYS_ERROR, LogConfGetProcessFile(processDir, len));
     GlobalMockObject::reset();
@@ -171,15 +161,15 @@ TEST_F(SlogdLogCommon,  LogGetProcessConfigPath_Failed)
     GlobalMockObject::reset();
 }
 
-TEST_F(SlogdLogCommon,  LogInitLogAgentPath0)
+TEST_F(SlogdLogCommon, LogInitLogAgentPath0)
 {
     MOCKER(LogConfListGetValue).stubs().will(returnValue(SUCCESS));
-    MOCKER(malloc).stubs().will(returnValue((void *)NULL));
+    MOCKER(malloc).stubs().will(returnValue((void*)NULL));
     EXPECT_EQ(SYS_ERROR, LogInitRootPath());
     GlobalMockObject::reset();
 }
 
-TEST_F(SlogdLogCommon,  LogInitLogAgentPath1)
+TEST_F(SlogdLogCommon, LogInitLogAgentPath1)
 {
     MOCKER(LogConfListGetValue).stubs().will(returnValue(SUCCESS));
     MOCKER(GetValidPath).stubs().will(returnValue(SYS_OK));
@@ -187,7 +177,7 @@ TEST_F(SlogdLogCommon,  LogInitLogAgentPath1)
     GlobalMockObject::reset();
 }
 
-TEST_F(SlogdLogCommon,  LogInitLogAgentPath2)
+TEST_F(SlogdLogCommon, LogInitLogAgentPath2)
 {
     MOCKER(LogConfListGetValue).stubs().will(returnValue(SUCCESS));
     MOCKER(GetValidPath).stubs().will(returnValue(SYS_OK));
@@ -196,7 +186,7 @@ TEST_F(SlogdLogCommon,  LogInitLogAgentPath2)
     GlobalMockObject::reset();
 }
 
-TEST_F(SlogdLogCommon,  LogInitLogAgentPath3)
+TEST_F(SlogdLogCommon, LogInitLogAgentPath3)
 {
     MOCKER(LogConfListGetValue).stubs().will(returnValue(SUCCESS));
     MOCKER(GetValidPath).stubs().will(returnValue(SYS_OK));
@@ -206,7 +196,7 @@ TEST_F(SlogdLogCommon,  LogInitLogAgentPath3)
     GlobalMockObject::reset();
 }
 
-TEST_F(SlogdLogCommon,  LogInitLogAgentPath4)
+TEST_F(SlogdLogCommon, LogInitLogAgentPath4)
 {
     MOCKER(LogConfListGetValue).stubs().will(returnValue(SUCCESS + 1));
     MOCKER(LogCheckPathPermission).stubs();
@@ -221,13 +211,13 @@ TEST_F(SlogdLogCommon,  LogInitLogAgentPath4)
     EXPECT_EQ(SYS_ERROR, LogInitRootPath());
 }
 
-TEST_F(SlogdLogCommon,  StrcatDir0)
+TEST_F(SlogdLogCommon, StrcatDir0)
 {
-    EXPECT_EQ(SYS_ERROR, StrcatDir(NULL,NULL,NULL,4096));
+    EXPECT_EQ(SYS_ERROR, StrcatDir(NULL, NULL, NULL, 4096));
     GlobalMockObject::reset();
 }
 
-TEST_F(SlogdLogCommon,  StrcatDir1)
+TEST_F(SlogdLogCommon, StrcatDir1)
 {
     char path[TOOL_MAX_PATH] = "\0";
     char filename[] = "/slog";
@@ -238,7 +228,7 @@ TEST_F(SlogdLogCommon,  StrcatDir1)
     GlobalMockObject::reset();
 }
 
-TEST_F(SlogdLogCommon,  StrcatDir2)
+TEST_F(SlogdLogCommon, StrcatDir2)
 {
     char path[TOOL_MAX_PATH] = "\0";
     char filename[] = "/slog";
@@ -251,7 +241,7 @@ TEST_F(SlogdLogCommon,  StrcatDir2)
     GlobalMockObject::reset();
 }
 
-TEST_F(SlogdLogCommon,  StrcatDir3)
+TEST_F(SlogdLogCommon, StrcatDir3)
 {
     char path[TOOL_MAX_PATH] = "\0";
     char filename[] = "/slog";
@@ -263,7 +253,7 @@ TEST_F(SlogdLogCommon,  StrcatDir3)
     GlobalMockObject::reset();
 }
 
-TEST_F(SlogdLogCommon,  StrcatDir4)
+TEST_F(SlogdLogCommon, StrcatDir4)
 {
     char path[TOOL_MAX_PATH] = "\0";
     char filename[] = "/slog";
@@ -273,13 +263,13 @@ TEST_F(SlogdLogCommon,  StrcatDir4)
     GlobalMockObject::reset();
 }
 
-TEST_F(SlogdLogCommon,  DlogStrcatDir0)
+TEST_F(SlogdLogCommon, DlogStrcatDir0)
 {
-    EXPECT_EQ(SYS_ERROR, DlogStrcatDir(NULL,NULL,NULL,4096));
+    EXPECT_EQ(SYS_ERROR, DlogStrcatDir(NULL, NULL, NULL, 4096));
     GlobalMockObject::reset();
 }
 
-TEST_F(SlogdLogCommon,  DlogStrcatDir1)
+TEST_F(SlogdLogCommon, DlogStrcatDir1)
 {
     char path[TOOL_MAX_PATH] = "\0";
     char filename[] = "/slog";
@@ -290,7 +280,7 @@ TEST_F(SlogdLogCommon,  DlogStrcatDir1)
     GlobalMockObject::reset();
 }
 
-TEST_F(SlogdLogCommon,  DlogStrcatDir2)
+TEST_F(SlogdLogCommon, DlogStrcatDir2)
 {
     char path[TOOL_MAX_PATH] = "\0";
     char filename[] = "/slog";
@@ -303,7 +293,7 @@ TEST_F(SlogdLogCommon,  DlogStrcatDir2)
     GlobalMockObject::reset();
 }
 
-TEST_F(SlogdLogCommon,  DlogStrcatDir3)
+TEST_F(SlogdLogCommon, DlogStrcatDir3)
 {
     char path[TOOL_MAX_PATH] = "\0";
     char filename[] = "/slog";
@@ -315,7 +305,7 @@ TEST_F(SlogdLogCommon,  DlogStrcatDir3)
     GlobalMockObject::reset();
 }
 
-TEST_F(SlogdLogCommon,  DlogStrcatDir4)
+TEST_F(SlogdLogCommon, DlogStrcatDir4)
 {
     char path[TOOL_MAX_PATH] = "\0";
     char filename[] = "/slog";
@@ -325,10 +315,7 @@ TEST_F(SlogdLogCommon,  DlogStrcatDir4)
     GlobalMockObject::reset();
 }
 
-TEST_F(SlogdLogCommon, LogReplaceWaveWithHomedir1)
-{
-    EXPECT_EQ(SYS_ERROR, LogReplaceDefaultByDir(NULL, NULL, NULL));
-}
+TEST_F(SlogdLogCommon, LogReplaceWaveWithHomedir1) { EXPECT_EQ(SYS_ERROR, LogReplaceDefaultByDir(NULL, NULL, NULL)); }
 
 TEST_F(SlogdLogCommon, LogReplaceWaveWithHomedir2)
 {
@@ -400,8 +387,8 @@ TEST_F(SlogdLogCommon, GetLevelByModuleId1)
 
 TEST_F(SlogdLogCommon, SetLevelByModuleId1)
 {
-    EXPECT_EQ(FALSE,  DlogSetLogTypeLevelByModuleId(-1, 1, DEBUG_LOG_MASK));
-    EXPECT_EQ(TRUE,  DlogSetLogTypeLevelByModuleId(1, 1, DEBUG_LOG_MASK));
+    EXPECT_EQ(FALSE, DlogSetLogTypeLevelByModuleId(-1, 1, DEBUG_LOG_MASK));
+    EXPECT_EQ(TRUE, DlogSetLogTypeLevelByModuleId(1, 1, DEBUG_LOG_MASK));
     GlobalMockObject::reset();
 }
 

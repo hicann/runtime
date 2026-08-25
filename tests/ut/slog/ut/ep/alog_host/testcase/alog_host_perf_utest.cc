@@ -13,8 +13,7 @@
 using namespace std;
 using namespace testing;
 
-class EP_ALOG_HOST_PERF_UTEST : public testing::Test
-{
+class EP_ALOG_HOST_PERF_UTEST : public testing::Test {
 protected:
     virtual void SetUp()
     {
@@ -43,22 +42,12 @@ protected:
     }
 
 public:
-    void DlogConstructor()
-    {
-    }
+    void DlogConstructor() {}
 
-    void DlogDestructor()
-    {
-    }
-    bool DlogCheckPrint()
-    {
-    }
-    bool DlogCheckPrintNum()
-    {
-    }
-    bool DlogCheckFileValue()
-    {
-    }
+    void DlogDestructor() {}
+    bool DlogCheckPrint() {}
+    bool DlogCheckPrintNum() {}
+    bool DlogCheckFileValue() {}
 };
 
 #define SEC_TO_NS 1000000000ULL

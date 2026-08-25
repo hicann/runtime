@@ -13,18 +13,15 @@
 extern "C" {
 int32_t g_adcoreReturnError = 0;
 
-int32_t AdxRecvMsg(AdxCommHandle handle, char **data, uint32_t *len, uint32_t timeout)
-{
-    return 0;
-}
+int32_t AdxRecvMsg(AdxCommHandle handle, char** data, uint32_t* len, uint32_t timeout) { return 0; }
 
-int32_t AdxGetAttrByCommHandle(AdxCommConHandle handle, int32_t attr, int32_t *value)
+int32_t AdxGetAttrByCommHandle(AdxCommConHandle handle, int32_t attr, int32_t* value)
 {
     (void)handle;
-    if (attr == 6) { // HDC_SESSION_ATTR_STATUS
-        *value = 1; // connect
+    if (attr == 6) {        // HDC_SESSION_ATTR_STATUS
+        *value = 1;         // connect
     } else if (attr == 2) { // HDC_SESSION_ATTR_RUN_ENV
-        *value = 1; // NON_DOCKER
+        *value = 1;         // NON_DOCKER
     } else {
         *value = 0;
     }
@@ -37,5 +34,4 @@ void AdxDestroyCommHandle(AdxCommHandle handle)
         free(handle);
     }
 }
-
 }

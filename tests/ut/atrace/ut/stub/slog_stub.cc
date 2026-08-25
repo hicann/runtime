@@ -17,7 +17,8 @@
 std::mutex mtx_;
 int g_log_level = DLOG_INFO;
 
-void DlogErrorInner(int moduleId, const char *format, ...) {
+void DlogErrorInner(int moduleId, const char* format, ...)
+{
     va_list args;
 
     char buffer[4096] = {0};
@@ -28,7 +29,8 @@ void DlogErrorInner(int moduleId, const char *format, ...) {
     va_end(args);
 }
 
-void DlogInfoInner(int moduleId, const char *format, ...) {
+void DlogInfoInner(int moduleId, const char* format, ...)
+{
     va_list args;
 
     char buffer[4096] = {0};
@@ -39,7 +41,8 @@ void DlogInfoInner(int moduleId, const char *format, ...) {
     va_end(args);
 }
 
-void DlogWarnInner(int moduleId, const char *format, ...) {
+void DlogWarnInner(int moduleId, const char* format, ...)
+{
     va_list args;
 
     char buffer[4096] = {0};
@@ -50,7 +53,8 @@ void DlogWarnInner(int moduleId, const char *format, ...) {
     va_end(args);
 }
 
-void DlogDebugInner(int moduleId, const char *format, ...) {
+void DlogDebugInner(int moduleId, const char* format, ...)
+{
     va_list args;
 
     char buffer[4096] = {0};
@@ -61,7 +65,8 @@ void DlogDebugInner(int moduleId, const char *format, ...) {
     va_end(args);
 }
 
-void ide_log(int priority, const char *format, ...) {
+void ide_log(int priority, const char* format, ...)
+{
     va_list args;
 
     char buffer[4096] = {0};
@@ -72,14 +77,11 @@ void ide_log(int priority, const char *format, ...) {
     va_end(args);
 }
 
-void RecordErrorLog(void)
-{
-    return;
-}
+void RecordErrorLog(void) { return; }
 
-void RecordLog(int level, char *buffer)
+void RecordLog(int level, char* buffer)
 {
-    if(buffer == nullptr){
+    if (buffer == nullptr) {
         return;
     }
     if (level == DLOG_ERROR) {
@@ -90,7 +92,7 @@ void RecordLog(int level, char *buffer)
 
 std::string GetLevelString(int level)
 {
-    switch(level) {
+    switch (level) {
         case DLOG_DEBUG:
             return "DEBUG";
         case DLOG_INFO:
@@ -105,7 +107,7 @@ std::string GetLevelString(int level)
     return "";
 }
 
-void DlogInnerForC(int moduleId, int level, const char *fmt, ...)
+void DlogInnerForC(int moduleId, int level, const char* fmt, ...)
 {
     va_list args;
 
@@ -118,10 +120,9 @@ void DlogInnerForC(int moduleId, int level, const char *fmt, ...)
     RecordLog(level, buffer);
     printf("[%s][pid:%d]%s", levelStr.c_str(), getpid(), buffer);
     va_end(args);
-
 }
 
-void DlogInner(int moduleId, int level, const char *fmt, ...)
+void DlogInner(int moduleId, int level, const char* fmt, ...)
 {
     va_list args;
 
@@ -133,10 +134,9 @@ void DlogInner(int moduleId, int level, const char *fmt, ...)
     RecordLog(level, buffer);
     printf("[%s][pid:%d]%s", levelStr.c_str(), getpid(), buffer);
     va_end(args);
-
 }
 
-void DlogRecord(int moduleId, int level, const char *fmt, ...)
+void DlogRecord(int moduleId, int level, const char* fmt, ...)
 {
     va_list args;
 
@@ -144,14 +144,14 @@ void DlogRecord(int moduleId, int level, const char *fmt, ...)
 
     va_start(args, fmt);
     vsnprintf(buffer, sizeof(buffer), fmt, args);
-    std::unique_lock<std::mutex> lk(mtx_); 
+    std::unique_lock<std::mutex> lk(mtx_);
     std::string levelStr = GetLevelString(level);
     RecordLog(level, buffer);
     printf("[%s][pid:%d]%s", levelStr.c_str(), getpid(), buffer);
     va_end(args);
 }
 
-void DlogRecordForC(int moduleId, int level, const char *fmt, ...)
+void DlogRecordForC(int moduleId, int level, const char* fmt, ...)
 {
     va_list args;
 
@@ -159,7 +159,7 @@ void DlogRecordForC(int moduleId, int level, const char *fmt, ...)
 
     va_start(args, fmt);
     vsnprintf(buffer, sizeof(buffer), fmt, args);
-    std::unique_lock<std::mutex> lk(mtx_); 
+    std::unique_lock<std::mutex> lk(mtx_);
     std::string levelStr = GetLevelString(level);
     RecordLog(level, buffer);
     printf("[%s][pid:%d]%s", levelStr.c_str(), getpid(), buffer);

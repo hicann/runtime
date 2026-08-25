@@ -47,7 +47,7 @@ void CreateIamService()
 // Read back the ring buffer header handed to slogd. slogd only re-checks the log
 // level when levelFilter is LEVEL_FILTER_OPEN, so this header field is exactly
 // what decides whether info logs survive on the daemon side.
-bool ReadSentLevelFilter(uint8_t *levelFilter)
+bool ReadSentLevelFilter(uint8_t* levelFilter)
 {
     int32_t fd = open(LOGOUT_IAM_SERVICE_PATH, O_RDONLY);
     if (fd < 0) {
@@ -63,7 +63,7 @@ bool ReadSentLevelFilter(uint8_t *levelFilter)
     return true;
 }
 
-void WriteOneLogAndSend(int32_t level, const char *text)
+void WriteOneLogAndSend(int32_t level, const char* text)
 {
     LogMsg message = {};
     message.type = DEBUG_LOG;
@@ -139,7 +139,7 @@ int RunDefaultLevelScenario()
     DlogSetInited(false);
     return result;
 }
-}  // namespace
+} // namespace
 
 class IamAppSlogLevelFilterUtest : public testing::Test {
 protected:

@@ -16,18 +16,17 @@
 
 #include "securec.h"
 
-int CheckStackcoreFileNum(const char *path)
+int CheckStackcoreFileNum(const char* path)
 {
-    DIR *dirStream = opendir(path);
+    DIR* dirStream = opendir(path);
     if (dirStream == NULL) {
         printf("opendir [%s]failed, res:%s\n", path, strerror(errno));
         return -1;
     }
     struct dirent* dirInfo;
     int num = 0;
-    while((dirInfo = readdir(dirStream)) != NULL)
-    {
-        char *dname = dirInfo->d_name;
+    while ((dirInfo = readdir(dirStream)) != NULL) {
+        char* dname = dirInfo->d_name;
         if (strcmp(dname, ".") == 0 || strcmp(dname, "..") == 0) {
             continue;
         }
@@ -40,7 +39,7 @@ int CheckStackcoreFileNum(const char *path)
     return num;
 }
 
-uintptr_t StackFrame_stub(int layer, uintptr_t fp, char *data, unsigned int len)
+uintptr_t StackFrame_stub(int layer, uintptr_t fp, char* data, unsigned int len)
 {
     static uintptr_t res = 10;
     (void)snprintf_s(data, len, len - 1, "#%d test for stackcore", layer);

@@ -15,12 +15,6 @@ void TraceServerInit(int32_t devId)
     return;
 }
 
-TraStatus TraceServerProcess(void)
-{
-    return TRACE_SUCCESS;
-}
+TraStatus TraceServerProcess(void) { return TRACE_SUCCESS; }
 
-void TraceServerExit(void)
-{
-    return;
-}
+void TraceServerExit(void) { return; }

@@ -17,30 +17,23 @@
 #include "awatchdog.h"
 #include "slog.h"
 
-class AwatchdogStubUtest: public testing::Test {
+class AwatchdogStubUtest : public testing::Test {
 protected:
     virtual void SetUp()
     {
         Clear();
-        system("mkdir -p " LLT_TEST_DIR );
+        system("mkdir -p " LLT_TEST_DIR);
     }
-    void Clear()
-    {
-        system("rm -rf " LLT_TEST_DIR "/*");
-    }
+    void Clear() { system("rm -rf " LLT_TEST_DIR "/*"); }
     virtual void TearDown()
     {
         GlobalMockObject::verify();
         Clear();
     }
 
-    static void SetUpTestCase()
-    {
-    }
+    static void SetUpTestCase() {}
 
-    static void TearDownTestCase()
-    {
-    }
+    static void TearDownTestCase() {}
 };
 
 DEFINE_THREAD_WATCHDOG(threadHandle);

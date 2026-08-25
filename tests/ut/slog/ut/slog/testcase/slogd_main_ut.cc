@@ -18,44 +18,40 @@
 #include "slogd_collect_log.h"
 #include "slogd_recv_msg.h"
 
-extern "C"
-{
-    #include "slogd_utest_stub.h"
-    #include "start_single_process.h"
-    #include "log_config_api.h"
-    #include "log_path_mgr.h"
-    #include <getopt.h>
+extern "C" {
+#include "slogd_utest_stub.h"
+#include "start_single_process.h"
+#include "log_config_api.h"
+#include "log_path_mgr.h"
+#include <getopt.h>
 
-    int InitShm(void);
+int InitShm(void);
 }
 
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
 
-#define LOG_W(format, ...) do {} while (0);
+#define LOG_W(format, ...) \
+    do {                   \
+    } while (0);
 using namespace std;
 using namespace testing;
 
-class SLOGD_MAIN_UTEST : public testing::Test
-{
+class SLOGD_MAIN_UTEST : public testing::Test {
 public:
     void SetUp();
     void TearDown();
 };
 
-void SLOGD_MAIN_UTEST::SetUp()
-{
-}
+void SLOGD_MAIN_UTEST::SetUp() {}
 
-void SLOGD_MAIN_UTEST::TearDown()
-{
-}
+void SLOGD_MAIN_UTEST::TearDown() {}
 
-extern char *optarg;
+extern char* optarg;
 extern int optind, opterr, optopt;
 
-void ProcSyslogdStub(){}
-INT32 mmGetOptStub(INT32 argc, char * const * argv, const char *opts)
+void ProcSyslogdStub() {}
+INT32 mmGetOptStub(INT32 argc, char* const* argv, const char* opts)
 {
     optarg = NULL;
     return (INT32)'l';
@@ -63,18 +59,15 @@ INT32 mmGetOptStub(INT32 argc, char * const * argv, const char *opts)
 
 TEST_F(SLOGD_MAIN_UTEST, parseSlogdArgv_reject_negativeVf)
 {
-    const char *optstring = "nhl:v:";
-    const struct option long_options[] = {
-        {"vfid", required_argument, NULL, 'v'},
-        {0, 0, 0, 0}
-    };
+    const char* optstring = "nhl:v:";
+    const struct option long_options[] = {{"vfid", required_argument, NULL, 'v'}, {0, 0, 0, 0}};
 
     optind = 1;
     int32_t argc = 3;
-    char *argv[3] = { "./slogd", "-v", "-1"};
-    int32_t mockRet = getopt_long(argc, (char **)argv, optstring, long_options, NULL);
+    char* argv[3] = {"./slogd", "-v", "-1"};
+    int32_t mockRet = getopt_long(argc, (char**)argv, optstring, long_options, NULL);
 
-    struct SlogdOptions opt = { 0, 0, -1};
+    struct SlogdOptions opt = {0, 0, -1};
     MOCKER(getopt_long).stubs().will(returnValue(mockRet)).then(returnValue(-1));
     EXPECT_EQ(SYS_ERROR, ParseSlogdArgv(argc, argv, &opt));
     EXPECT_EQ(-1, opt.v);
@@ -83,18 +76,15 @@ TEST_F(SLOGD_MAIN_UTEST, parseSlogdArgv_reject_negativeVf)
 
 TEST_F(SLOGD_MAIN_UTEST, parseSlogdArgv_reject_ExceedVf)
 {
-    const char *optstring = "nhl:v:";
-    const struct option long_options[] = {
-        {"vfid", required_argument, NULL, 'v'},
-        {0, 0, 0, 0}
-    };
+    const char* optstring = "nhl:v:";
+    const struct option long_options[] = {{"vfid", required_argument, NULL, 'v'}, {0, 0, 0, 0}};
 
     optind = 1;
     int32_t argc = 3;
-    char *argv[3] = { "./slogd", "-v", "64"};
-    int32_t mockRet = getopt_long(argc, (char **)argv, optstring, long_options, NULL);
+    char* argv[3] = {"./slogd", "-v", "64"};
+    int32_t mockRet = getopt_long(argc, (char**)argv, optstring, long_options, NULL);
 
-    struct SlogdOptions opt = { 0, 0, -1};
+    struct SlogdOptions opt = {0, 0, -1};
     MOCKER(getopt_long).stubs().will(returnValue(mockRet)).then(returnValue(-1));
     EXPECT_EQ(SYS_ERROR, ParseSlogdArgv(argc, argv, &opt));
     EXPECT_EQ(-1, opt.v);
@@ -103,18 +93,15 @@ TEST_F(SLOGD_MAIN_UTEST, parseSlogdArgv_reject_ExceedVf)
 
 TEST_F(SLOGD_MAIN_UTEST, parseSlogdArgv_reject_NotNatural)
 {
-    const char *optstring = "nhl:v:";
-    const struct option long_options[] = {
-        {"vfid", required_argument, NULL, 'v'},
-        {0, 0, 0, 0}
-    };
+    const char* optstring = "nhl:v:";
+    const struct option long_options[] = {{"vfid", required_argument, NULL, 'v'}, {0, 0, 0, 0}};
 
     optind = 1;
     int32_t argc = 3;
-    char *argv[3] = { "./slogd", "-v", "n2"};
-    int32_t mockRet = getopt_long(argc, (char **)argv, optstring, long_options, NULL);
+    char* argv[3] = {"./slogd", "-v", "n2"};
+    int32_t mockRet = getopt_long(argc, (char**)argv, optstring, long_options, NULL);
 
-    struct SlogdOptions opt = { 0, 0, -1};
+    struct SlogdOptions opt = {0, 0, -1};
     MOCKER(getopt_long).stubs().will(returnValue(mockRet)).then(returnValue(-1));
     EXPECT_EQ(SYS_ERROR, ParseSlogdArgv(argc, argv, &opt));
     EXPECT_EQ(-1, opt.v);
@@ -123,18 +110,15 @@ TEST_F(SLOGD_MAIN_UTEST, parseSlogdArgv_reject_NotNatural)
 
 TEST_F(SLOGD_MAIN_UTEST, parseSlogdArgv_approve_Level)
 {
-    const char *optstring = "nhl:v:";
-    const struct option long_options[] = {
-        {"vfid", required_argument, NULL, 'v'},
-        {0, 0, 0, 0}
-    };
+    const char* optstring = "nhl:v:";
+    const struct option long_options[] = {{"vfid", required_argument, NULL, 'v'}, {0, 0, 0, 0}};
 
     optind = 1;
     int32_t argc = 3;
-    char *argv[3] = { "./slogd", "-l", "2"};
-    int32_t mockRet_1 = getopt_long(argc, (char **)argv, optstring, long_options, NULL);
+    char* argv[3] = {"./slogd", "-l", "2"};
+    int32_t mockRet_1 = getopt_long(argc, (char**)argv, optstring, long_options, NULL);
 
-    struct SlogdOptions opt = { 0, 0, -1};
+    struct SlogdOptions opt = {0, 0, -1};
     MOCKER(getopt_long).stubs().will(returnValue(mockRet_1)).then(returnValue(-1));
     EXPECT_EQ(SYS_OK, ParseSlogdArgv(argc, argv, &opt));
     EXPECT_EQ(2, opt.l);
@@ -143,18 +127,15 @@ TEST_F(SLOGD_MAIN_UTEST, parseSlogdArgv_approve_Level)
 
 TEST_F(SLOGD_MAIN_UTEST, parseSlogdArgv_reject_LevelNegative)
 {
-    const char *optstring = "nhl:v:";
-    const struct option long_options[] = {
-        {"vfid", required_argument, NULL, 'v'},
-        {0, 0, 0, 0}
-    };
+    const char* optstring = "nhl:v:";
+    const struct option long_options[] = {{"vfid", required_argument, NULL, 'v'}, {0, 0, 0, 0}};
 
     optind = 1;
     int32_t argc = 3;
-    char *argv[3] = { "./slogd", "-l", "-1"};
-    int32_t mockRet = getopt_long(argc, (char **)argv, optstring, long_options, NULL);
+    char* argv[3] = {"./slogd", "-l", "-1"};
+    int32_t mockRet = getopt_long(argc, (char**)argv, optstring, long_options, NULL);
 
-    struct SlogdOptions opt = { 0, 0, -1};
+    struct SlogdOptions opt = {0, 0, -1};
     MOCKER(getopt_long).stubs().will(returnValue(mockRet)).then(returnValue(-1));
     EXPECT_EQ(SYS_ERROR, ParseSlogdArgv(argc, argv, &opt));
     EXPECT_EQ(0, opt.l);
@@ -163,18 +144,15 @@ TEST_F(SLOGD_MAIN_UTEST, parseSlogdArgv_reject_LevelNegative)
 
 TEST_F(SLOGD_MAIN_UTEST, parseSlogdArgv_reject_LevelExceed)
 {
-    const char *optstring = "nhl:v:";
-    const struct option long_options[] = {
-        {"vfid", required_argument, NULL, 'v'},
-        {0, 0, 0, 0}
-    };
+    const char* optstring = "nhl:v:";
+    const struct option long_options[] = {{"vfid", required_argument, NULL, 'v'}, {0, 0, 0, 0}};
 
     optind = 1;
     int32_t argc = 3;
-    char *argv[3] = { "./slogd", "-l", "5"};
-    int32_t mockRet = getopt_long(argc, (char **)argv, optstring, long_options, NULL);
+    char* argv[3] = {"./slogd", "-l", "5"};
+    int32_t mockRet = getopt_long(argc, (char**)argv, optstring, long_options, NULL);
 
-    struct SlogdOptions opt = { 0, 0, -1};
+    struct SlogdOptions opt = {0, 0, -1};
     MOCKER(getopt_long).stubs().will(returnValue(mockRet)).then(returnValue(-1));
     EXPECT_EQ(SYS_ERROR, ParseSlogdArgv(argc, argv, &opt));
     EXPECT_EQ(0, opt.l);
@@ -183,18 +161,15 @@ TEST_F(SLOGD_MAIN_UTEST, parseSlogdArgv_reject_LevelExceed)
 
 TEST_F(SLOGD_MAIN_UTEST, parseSlogdArgv_reject_LevelNotNatural)
 {
-    const char *optstring = "nhl:v:";
-    const struct option long_options[] = {
-        {"vfid", required_argument, NULL, 'v'},
-        {0, 0, 0, 0}
-    };
+    const char* optstring = "nhl:v:";
+    const struct option long_options[] = {{"vfid", required_argument, NULL, 'v'}, {0, 0, 0, 0}};
 
     optind = 1;
     int32_t argc = 3;
-    char *argv[3] = {"./slogd", "-l", "n2"};
-    int32_t mockRet = getopt_long(argc, (char **)argv, optstring, long_options, NULL);
+    char* argv[3] = {"./slogd", "-l", "n2"};
+    int32_t mockRet = getopt_long(argc, (char**)argv, optstring, long_options, NULL);
 
-    struct SlogdOptions opt = { 0, 0, -1};
+    struct SlogdOptions opt = {0, 0, -1};
     MOCKER(getopt_long).stubs().will(returnValue(mockRet)).then(returnValue(-1));
     EXPECT_EQ(SYS_ERROR, ParseSlogdArgv(argc, argv, &opt));
     EXPECT_EQ(0, opt.l);
@@ -205,9 +180,9 @@ TEST_F(SLOGD_MAIN_UTEST, parseSlogdArgv_approve_docker)
 {
     optind = 1;
     int32_t argc = 2;
-    char *argv[2] = { "./slogd", "-d"};
+    char* argv[2] = {"./slogd", "-d"};
 
-    struct SlogdOptions opt = { 0, 0, -1, false};
+    struct SlogdOptions opt = {0, 0, -1, false};
     EXPECT_EQ(SYS_OK, ParseSlogdArgv(argc, argv, &opt));
     EXPECT_EQ(true, opt.d);
     GlobalMockObject::reset();
@@ -215,18 +190,15 @@ TEST_F(SLOGD_MAIN_UTEST, parseSlogdArgv_approve_docker)
 
 TEST_F(SLOGD_MAIN_UTEST, parseSlogdArgv_help)
 {
-    const char *optstring = "nhl:v:";
-    const struct option long_options[] = {
-        {"vfid", required_argument, NULL, 'v'},
-        {0, 0, 0, 0}
-    };
+    const char* optstring = "nhl:v:";
+    const struct option long_options[] = {{"vfid", required_argument, NULL, 'v'}, {0, 0, 0, 0}};
 
     optind = 1;
     int32_t argc = 2;
-    char *argv[2] = {"./slogd", "-h"};
-    int32_t mockRet = getopt_long(argc, (char **)argv, optstring, long_options, NULL);
+    char* argv[2] = {"./slogd", "-h"};
+    int32_t mockRet = getopt_long(argc, (char**)argv, optstring, long_options, NULL);
 
-    struct SlogdOptions opt = { 0, 0, -1};
+    struct SlogdOptions opt = {0, 0, -1};
     MOCKER(getopt_long).stubs().will(returnValue(mockRet)).then(returnValue(-1));
     EXPECT_EQ(SYS_ERROR, ParseSlogdArgv(argc, argv, &opt));
     GlobalMockObject::reset();

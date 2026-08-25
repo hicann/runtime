@@ -33,37 +33,19 @@ void SetToolSocketFail(int32_t fail) { g_toolSocketFail = fail; }
 void SetToolConnectFail(int32_t fail) { g_toolConnectFail = fail; }
 void SetToolCreateThread(int32_t en) { g_toolCreateThread = en; }
 
-int ToolSetThreadName(const char *threadName)
-{
-    return 0;
-}
+int ToolSetThreadName(const char* threadName) { return 0; }
 
-LogRt InitWriteZip(const char* fileName, int* fd)
-{
-    return SUCCESS;
-}
+LogRt InitWriteZip(const char* fileName, int* fd) { return SUCCESS; }
 
-INT32 ToolGetErrorCode()
-{
-    return g_toolErrno;
-}
+INT32 ToolGetErrorCode() { return g_toolErrno; }
 
-INT32 ToolOpen(const CHAR *pathName, INT32 flags)
-{
-    return 0;
-}
+INT32 ToolOpen(const CHAR* pathName, INT32 flags) { return 0; }
 
-INT32 ToolOpenWithMode(const CHAR *pathName, INT32 flags, toolMode mode)
-{
-    return 0;
-}
+INT32 ToolOpenWithMode(const CHAR* pathName, INT32 flags, toolMode mode) { return 0; }
 
-INT32 ToolFsync(toolProcess fd)
-{
-    return 0;
-}
+INT32 ToolFsync(toolProcess fd) { return 0; }
 
-INT32 ToolWrite(INT32 fd, const VOID *buf, UINT32 bufLen)
+INT32 ToolWrite(INT32 fd, const VOID* buf, UINT32 bufLen)
 {
     if (buf == NULL) {
         return -2;
@@ -77,10 +59,7 @@ INT32 ToolWrite(INT32 fd, const VOID *buf, UINT32 bufLen)
     return (INT32)bufLen;
 }
 
-INT32 ToolClose(INT32 fd)
-{
-    return 0;
-}
+INT32 ToolClose(INT32 fd) { return 0; }
 
 toolSockHandle ToolSocket(INT32 sockFamily, INT32 type, INT32 protocol)
 {
@@ -90,97 +69,57 @@ toolSockHandle ToolSocket(INT32 sockFamily, INT32 type, INT32 protocol)
     return socket(sockFamily, type, protocol);
 }
 
-INT32 ToolBind(toolSockHandle sockfd, const ToolSockAddr *addr, toolSocklen addrlen)
-{
-    return 0;
-}
+INT32 ToolBind(toolSockHandle sockfd, const ToolSockAddr* addr, toolSocklen addrlen) { return 0; }
 
-INT32 ToolMutexInit( ToolMutex *mutex )
-{
-    return 0;
-}
+INT32 ToolMutexInit(ToolMutex* mutex) { return 0; }
 
 static int32_t g_mutexCount = 0;
 
-int32_t CheckMutex(void)
-{
-    return g_mutexCount;
-}
+int32_t CheckMutex(void) { return g_mutexCount; }
 
-int32_t pthread_mutex_lock(ToolMutex *mutex)
+int32_t pthread_mutex_lock(ToolMutex* mutex)
 {
     g_mutexCount++;
     return 0;
 }
 
-int32_t pthread_mutex_unlock(ToolMutex *mutex)
+int32_t pthread_mutex_unlock(ToolMutex* mutex)
 {
     g_mutexCount--;
     return 0;
 }
 
-INT32 ToolMutexLock(ToolMutex *mutex)
+INT32 ToolMutexLock(ToolMutex* mutex)
 {
     g_mutexCount++;
     return 0;
 }
 
-INT32 ToolMutexUnLock(ToolMutex *mutex)
+INT32 ToolMutexUnLock(ToolMutex* mutex)
 {
     g_mutexCount--;
     return 0;
 }
 
-INT32 ToolChmod(const CHAR *filename, INT32 mode)
-{
-    return 0;
-}
+INT32 ToolChmod(const CHAR* filename, INT32 mode) { return 0; }
 
-INT32 ToolLocalTimeR(const time_t *timep, struct tm *result)
-{
-    return  0;
-}
+INT32 ToolLocalTimeR(const time_t* timep, struct tm* result) { return 0; }
 
-INT32 ToolGetTimeOfDay(ToolTimeval *tv, ToolTimezone *tz)
-{
-    return 0;
-}
+INT32 ToolGetTimeOfDay(ToolTimeval* tv, ToolTimezone* tz) { return 0; }
 
-INT32 ToolGetPid()
-{
-    return 0;
-}
+INT32 ToolGetPid() { return 0; }
 
-INT32 ToolAccess(const CHAR *lpPathName)
-{
-    return 0;
-}
+INT32 ToolAccess(const CHAR* lpPathName) { return 0; }
 
-INT32 ToolAccessWithMode(const CHAR *pathName, INT32 mode)
-{
-    return 0;
-}
+INT32 ToolAccessWithMode(const CHAR* pathName, INT32 mode) { return 0; }
 
-INT32 ToolScandir(const CHAR *path, ToolDirent ***entry_list, ToolFilter filterFunc, ToolSort sort)
-{
-    return 0;
-}
+INT32 ToolScandir(const CHAR* path, ToolDirent*** entry_list, ToolFilter filterFunc, ToolSort sort) { return 0; }
 
-void ToolScandirFree(ToolDirent **entry_list,INT32 count)
-{
+void ToolScandirFree(ToolDirent** entry_list, INT32 count) {}
 
-}
+INT32 ToolUnlink(const CHAR* filename) { return 0; }
 
-INT32 ToolUnlink(const CHAR *filename)
-{
-
-    return 0;
-}
-
-INT32 ToolRead (INT32 fd, VOID* mmBuf, UINT32 mmCount)
-{
-    return 0;
-}
+INT32 ToolRead(INT32 fd, VOID* mmBuf, UINT32 mmCount) { return 0; }
 
 INT32 ToolConnect(toolSockHandle sockfd, const ToolSockAddr* addr, toolSocklen addrlen)
 {
@@ -193,22 +132,13 @@ INT32 ToolConnect(toolSockHandle sockfd, const ToolSockAddr* addr, toolSocklen a
     return 0;
 }
 
-INT32 ToolMkdir(const CHAR* lpPathName, toolMode mode)
-{
-    return 0;
-}
+INT32 ToolMkdir(const CHAR* lpPathName, toolMode mode) { return 0; }
 
-INT32 ToolRmdir(const CHAR *pathName)
-{
-    return 0;
-}
+INT32 ToolRmdir(const CHAR* pathName) { return 0; }
 
-INT32 ToolRename(const CHAR *oldName, const CHAR *newName)
-{
-    return 0;
-}
+INT32 ToolRename(const CHAR* oldName, const CHAR* newName) { return 0; }
 
-INT32 ToolCreateTaskWithDetach(ToolThread  *pstThreadHandle, const ToolUserBlock *pstFuncBlock)
+INT32 ToolCreateTaskWithDetach(ToolThread* pstThreadHandle, const ToolUserBlock* pstFuncBlock)
 {
     if (g_toolCreateThread != 0) {
         if (pthread_create(pstThreadHandle, NULL, pstFuncBlock->procFunc, pstFuncBlock->pulArg) == 0) {
@@ -218,91 +148,53 @@ INT32 ToolCreateTaskWithDetach(ToolThread  *pstThreadHandle, const ToolUserBlock
     return 0;
 }
 
-INT32 ToolCreateTaskWithThreadAttr(ToolThread  *threadHandle, const ToolUserBlock *funcBlock,
-    const ToolThreadAttr *threadAttr)
+INT32 ToolCreateTaskWithThreadAttr(
+    ToolThread* threadHandle, const ToolUserBlock* funcBlock, const ToolThreadAttr* threadAttr)
 {
     return 0;
 }
 
-INT32 ToolStatGet(const CHAR *path,  ToolStat *buffer)
-{
-    return 0;
-}
+INT32 ToolStatGet(const CHAR* path, ToolStat* buffer) { return 0; }
 
-INT32 ToolRealPath(const CHAR *path,CHAR *realPath, INT32 realPathLen)
+INT32 ToolRealPath(const CHAR* path, CHAR* realPath, INT32 realPathLen)
 {
     memcpy(realPath, path, strlen(path));
     return 0;
 }
 
-INT32 ToolFileno(FILE *stream)
-{
-    return FD_STDOUT;
-}
+INT32 ToolFileno(FILE* stream) { return FD_STDOUT; }
 
-VOID ToolMemBarrier()
-{
-    return;
-}
+VOID ToolMemBarrier() { return; }
 
-INT32 ToolSleep(UINT32 millseconds)
-{
-    return 0;
-}
+INT32 ToolSleep(UINT32 millseconds) { return 0; }
 
-INT32 ToolCloseSocket(toolSockHandle sockFd)
-{
-    return 0;
-}
+INT32 ToolCloseSocket(toolSockHandle sockFd) { return 0; }
 
-INT32 ToolChown(const char *filename, uid_t owner, gid_t group)
-{
-    return 0;
-}
+INT32 ToolChown(const char* filename, uid_t owner, gid_t group) { return 0; }
 
-INT32 ToolGetUserGroupId(UINT32 *uid, UINT32 *gid)
-{
-    return SYS_OK;
-}
+INT32 ToolGetUserGroupId(UINT32* uid, UINT32* gid) { return SYS_OK; }
 
-INT32 ToolChownPath(const CHAR *path)
-{
-    return SYS_OK;
-}
+INT32 ToolChownPath(const CHAR* path) { return SYS_OK; }
 
-INT32 ToolLChownPath(const CHAR *path)
-{
-    return SYS_OK;
-}
+INT32 ToolLChownPath(const CHAR* path) { return SYS_OK; }
 
-INT32 ToolFChownPath(INT32 fd)
-{
-    return SYS_OK;
-}
+INT32 ToolFChownPath(INT32 fd) { return SYS_OK; }
 
-int log_get_channel_type(int device_id, int *channel_type_set,
-               int *channel_type_num, int set_size)
+int log_get_channel_type(int device_id, int* channel_type_set, int* channel_type_num, int set_size) { return 0; }
+
+int log_set_level(int device_id, int channel_type, unsigned int log_level) { return 0; }
+
+int dsmi_get_user_config(int device_id, const char* config_name, unsigned int buf_size, unsigned char* buf)
 {
     return 0;
 }
 
-int log_set_level(int device_id, int channel_type,
-                  unsigned int log_level)
+int dsmi_set_user_config(int device_id, const char* config_name, unsigned int buf_size, unsigned char* buf)
 {
     return 0;
 }
 
-int dsmi_get_user_config(int device_id, const char *config_name, unsigned int buf_size, unsigned char *buf)
-{
-    return 0;
-}
-
-int dsmi_set_user_config(int device_id, const char *config_name, unsigned int buf_size, unsigned char *buf)
-{
-    return 0;
-}
-
-drvError_t halGetDevNumEx(uint32_t hw_type, uint32_t *devNum)
+drvError_t halGetDevNumEx(uint32_t hw_type, uint32_t* devNum)
 {
     if (hw_type == 0) {
         *devNum = 1;
@@ -313,7 +205,7 @@ drvError_t halGetDevNumEx(uint32_t hw_type, uint32_t *devNum)
     }
 }
 
-drvError_t halGetDevIDsEx(uint32_t hw_type, uint32_t *devices, uint32_t len)
+drvError_t halGetDevIDsEx(uint32_t hw_type, uint32_t* devices, uint32_t len)
 {
     if (hw_type == 0) {
         devices[0] = 0;
@@ -323,12 +215,9 @@ drvError_t halGetDevIDsEx(uint32_t hw_type, uint32_t *devices, uint32_t len)
     }
 }
 
-int log_read(int device_id, char *buf, unsigned int *size, int timeout)
-{
-    return 0;
-}
+int log_read(int device_id, char* buf, unsigned int* size, int timeout) { return 0; }
 
-int log_read_by_type(int device_id, char *buf, unsigned int *size, int timeout, enum log_channel_type channel_type)
+int log_read_by_type(int device_id, char* buf, unsigned int* size, int timeout, enum log_channel_type channel_type)
 {
     (void)device_id;
     (void)buf;
@@ -338,82 +227,45 @@ int log_read_by_type(int device_id, char *buf, unsigned int *size, int timeout, 
     return LOG_NOT_READY;
 }
 
-DLLEXPORT drvError_t drvDeviceStatus(uint32_t devId, drvStatus_t *status)
-{
-    return DRV_ERROR_NONE;
-}
+DLLEXPORT drvError_t drvDeviceStatus(uint32_t devId, drvStatus_t* status) { return DRV_ERROR_NONE; }
 
-int JustStartAProcess(const char *file)
-{
-    return 0;
-}
+int JustStartAProcess(const char* file) { return 0; }
 
-void SingleResourceCleanup(const char *file)
-{
+void SingleResourceCleanup(const char* file) {}
 
-}
-
-int log_write_slog(int device_id, const char *in_buf, unsigned int buf_size, int *write_size, unsigned int timeout)
+int log_write_slog(int device_id, const char* in_buf, unsigned int buf_size, int* write_size, unsigned int timeout)
 {
     return 0;
 }
 
-int appmon_client_init(client_info_t *clnt, const char *server_addr)
+int appmon_client_init(client_info_t* clnt, const char* server_addr) { return 0; }
+
+int appmon_client_register(client_info_t* clnt, unsigned long timeout, const char* timeout_action) { return 0; }
+
+drvError_t drvGetDevIDByLocalDevID(uint32_t localDevId, uint32_t* devId) { return 0; }
+
+int appmon_client_heartbeat(client_info_t* clnt) { return 0; }
+
+int appmon_client_deregister(client_info_t* clnt, const char* reason) { return 0; }
+
+void appmon_client_exit(client_info_t* clnt) { return; }
+
+hdcError_t drvHdcSendFile(
+    int peer_node, int peer_devid, const char* file, const char* dst_path,
+    void (*progress_notifier)(struct drvHdcProgInfo*))
 {
     return 0;
 }
 
-int appmon_client_register(client_info_t *clnt, unsigned long timeout, const char *timeout_action)
-{
-    return 0;
-}
+int AdxHdcSendFile(const char* srcFile, const char* desFile) { return 0; }
 
-drvError_t drvGetDevIDByLocalDevID(uint32_t localDevId, uint32_t *devId)
-{
-    return 0;
-}
+void AdxDestroyCommHandle(CommHandle* handle) { (void)handle; }
 
-int appmon_client_heartbeat(client_info_t *clnt)
-{
-    return 0;
-}
+hdcError_t drvHdcGetTrustedBasePath(int peer_node, int peer_devid, char* base_path, unsigned int path_len) { return 0; }
 
-int appmon_client_deregister(client_info_t *clnt, const char *reason)
-{
-    return 0;
-}
+INT32 ToolMutexDestroy(ToolMutex* mutex) { return 0; }
 
-void appmon_client_exit(client_info_t *clnt)
-{
-    return;
-}
-
-hdcError_t drvHdcSendFile(int peer_node, int peer_devid, const char *file, const char *dst_path, void(*progress_notifier)(struct drvHdcProgInfo *))
-{
-    return 0;
-}
-
-int AdxHdcSendFile(const char * srcFile, const char * desFile)
-{
-    return 0;
-}
-
-void AdxDestroyCommHandle(CommHandle *handle)
-{
-    (void)handle;
-}
-
-hdcError_t drvHdcGetTrustedBasePath(int peer_node, int peer_devid, char *base_path, unsigned int path_len)
-{
-    return 0;
-}
-
-INT32 ToolMutexDestroy(ToolMutex *mutex)
-{
-    return 0;
-}
-
-ssize_t read(int fd, void *buf, size_t nbytes)
+ssize_t read(int fd, void* buf, size_t nbytes)
 {
     struct inotify_event event1;
     event1.mask = IN_DELETE_SELF;
@@ -421,126 +273,64 @@ ssize_t read(int fd, void *buf, size_t nbytes)
     return sizeof(event1);
 }
 
-INT32 ToolCondTimedWait(ToolCond *cond, ToolMutex *mutex, UINT32 milliSecond)
+INT32 ToolCondTimedWait(ToolCond* cond, ToolMutex* mutex, UINT32 milliSecond) { return 0; }
+
+INT32 ToolCondInit(ToolCond* cond) { return 0; }
+
+INT32 ToolCondNotify(ToolCond* cond) { return 0; }
+
+INT32 ToolJoinTask(const ToolThread* tid) { return 0; }
+
+int32_t IamRegisterSystemService(void (*resMgrSysStateHandle)(int32_t)) { return 0; }
+
+int AdxComponentServerStartup(ServerInitInfo info) { return 0; }
+
+int AdxRegisterComponentFunc(int serverType, void** adxComponent) { return 0; }
+
+int32_t AdxSendMsg(const CommHandle* handle, const char* data, uint32_t len) { return 0; }
+
+int32_t AdxRecvMsg(AdxCommHandle handle, char** data, uint32_t* len, uint32_t timeout) { return 0; }
+
+int32_t AdxRegisterService(
+    int32_t serverType, ComponentType componentType, AdxComponentInit init, AdxComponentProcess process,
+    AdxComponentUnInit uninit)
 {
     return 0;
 }
 
-INT32 ToolCondInit(ToolCond *cond)
-{
-    return 0;
-}
+int32_t SysGetInit(void) { return 0; }
 
-INT32 ToolCondNotify(ToolCond *cond)
-{
-    return 0;
-}
+int32_t SysGetDestroy(void) { return 0; }
 
-INT32 ToolJoinTask(const ToolThread  *tid)
-{
-    return 0;
-}
+int32_t SysGetProcess(const CommHandle* handle, const void* value, uint32_t len) { return 0; }
 
-int32_t IamRegisterSystemService(void (*resMgrSysStateHandle)(int32_t))
-{
-	return 0;
-}
+int32_t SysReportInit(void) { return 0; }
 
-int AdxComponentServerStartup(ServerInitInfo info)
-{
-    return 0;
-}
+int32_t SysReportDestroy(void) { return 0; }
 
-int AdxRegisterComponentFunc(int serverType, void **adxComponent)
-{
-    return 0;
-}
+int32_t SysReportProcess(const CommHandle* handle, const void* value, uint32_t len) { return 0; }
 
-int32_t AdxSendMsg(const CommHandle *handle, const char *data, uint32_t len)
-{
-    return 0;
-}
+LogRt InsertSessionNode(uintptr_t session, int32_t pid, int32_t devId) { return SYS_OK; }
 
-int32_t AdxRecvMsg(AdxCommHandle handle, char **data, uint32_t *len, uint32_t timeout)
-{
-    return 0;
-}
+SessionNode* GetSessionNode(uint32_t pid, uint32_t devId) { return NULL; }
 
-int32_t AdxRegisterService(int32_t serverType, ComponentType componentType, AdxComponentInit init,
-    AdxComponentProcess process, AdxComponentUnInit uninit)
-{
-    return 0;
-}
+bool IsSessionNodeListNull(void) { return true; }
 
-int32_t SysGetInit(void)
-{
-    return 0;
-}
+LogRt DeleteSessionNode(uintptr_t session, int32_t pid, int32_t devId) { return SYS_OK; }
 
-int32_t SysGetDestroy(void)
-{
-    return 0;
-}
-
-int32_t SysGetProcess(const CommHandle *handle, const void *value, uint32_t len)
-{
-    return 0;
-}
-
-int32_t SysReportInit(void)
-{
-    return 0;
-}
-
-int32_t SysReportDestroy(void)
-{
-    return 0;
-}
-
-int32_t SysReportProcess(const CommHandle *handle, const void *value, uint32_t len)
-{
-    return 0;
-}
-
-LogRt InsertSessionNode(uintptr_t session, int32_t pid, int32_t devId)
-{
-    return SYS_OK;
-}
-
-SessionNode *GetSessionNode(uint32_t pid, uint32_t devId)
-{
-    return NULL;
-}
-
-bool IsSessionNodeListNull(void)
-{
-    return true;
-}
-
-LogRt DeleteSessionNode(uintptr_t session, int32_t pid, int32_t devId)
-{
-    return SYS_OK;
-}
-
-int32_t AdxGetAttrByCommHandle(AdxCommConHandle handle, int32_t attr, int32_t *value)
+int32_t AdxGetAttrByCommHandle(AdxCommConHandle handle, int32_t attr, int32_t* value)
 {
     *value = 0;
     return 0;
 }
 
-drvError_t halHdcGetSessionAttr(HDC_SESSION session, int attr, int *value)
-{
-    return DRV_ERROR_NONE;
-}
+drvError_t halHdcGetSessionAttr(HDC_SESSION session, int attr, int* value) { return DRV_ERROR_NONE; }
 
-drvError_t drvHdcSessionClose(HDC_SESSION session)
-{
-    return DRV_ERROR_NONE;
-}
+drvError_t drvHdcSessionClose(HDC_SESSION session) { return DRV_ERROR_NONE; }
 
-drvError_t drvHdcAllocMsg(HDC_SESSION session, struct drvHdcMsg **ppMsg, int count)
+drvError_t drvHdcAllocMsg(HDC_SESSION session, struct drvHdcMsg** ppMsg, int count)
 {
-    struct drvHdcMsg *msg = (struct drvHdcMsg *)calloc(1, sizeof(struct drvHdcMsg));
+    struct drvHdcMsg* msg = (struct drvHdcMsg*)calloc(1, sizeof(struct drvHdcMsg));
     if (msg == NULL) {
         printf("calloc hdc msg failed.\n");
         return DRV_ERROR_RESERVED;
@@ -549,31 +339,25 @@ drvError_t drvHdcAllocMsg(HDC_SESSION session, struct drvHdcMsg **ppMsg, int cou
     return DRV_ERROR_NONE;
 }
 
-drvError_t drvHdcFreeMsg(struct drvHdcMsg *msg)
+drvError_t drvHdcFreeMsg(struct drvHdcMsg* msg)
 {
     free(msg);
     msg = NULL;
     return DRV_ERROR_NONE;
 }
 
-drvError_t drvHdcReuseMsg(struct drvHdcMsg *msg)
-{
-    return DRV_ERROR_NONE;
-}
+drvError_t drvHdcReuseMsg(struct drvHdcMsg* msg) { return DRV_ERROR_NONE; }
 
-drvError_t drvHdcAddMsgBuffer(struct drvHdcMsg *msg, char *pBuf, int len)
-{
-    return DRV_ERROR_NONE;
-}
+drvError_t drvHdcAddMsgBuffer(struct drvHdcMsg* msg, char* pBuf, int len) { return DRV_ERROR_NONE; }
 
-drvError_t drvHdcGetCapacity(struct drvHdcCapacity *capacity)
+drvError_t drvHdcGetCapacity(struct drvHdcCapacity* capacity)
 {
     capacity->chanType = HDC_CHAN_TYPE_PCIE;
     capacity->maxSegment = HDC_RECV_MAX_LEN;
     return DRV_ERROR_NONE;
 }
 
-hdcError_t halHdcSend(HDC_SESSION session, struct drvHdcMsg *pMsg, UINT64 flag, UINT32 timeout)
+hdcError_t halHdcSend(HDC_SESSION session, struct drvHdcMsg* pMsg, UINT64 flag, UINT32 timeout)
 {
     return DRV_ERROR_NONE;
 }

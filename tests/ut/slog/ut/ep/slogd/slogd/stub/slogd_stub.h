@@ -16,8 +16,8 @@
 
 // flush
 typedef struct {
-    int32_t (*flush)(void *, size_t, bool);
-    int32_t (*get)(void *, void*, size_t);
+    int32_t (*flush)(void*, size_t, bool);
+    int32_t (*get)(void*, void*, size_t);
 } FlushNode;
 
 typedef struct {
@@ -27,8 +27,8 @@ typedef struct {
 
 typedef struct {
     int32_t devNum;
-    DevThread devThread[MAX_DEV_NUM];   // DevThread devThread[GROUP_NUM][MAX_DEV_NUM]
-    FlushNode devNode[LOG_PRIORITY_TYPE_NUM];    // FlushNode devNode[GROUP_NUM][LOG_PRIORITY_TYPE_NUM]
+    DevThread devThread[MAX_DEV_NUM];         // DevThread devThread[GROUP_NUM][MAX_DEV_NUM]
+    FlushNode devNode[LOG_PRIORITY_TYPE_NUM]; // FlushNode devNode[GROUP_NUM][LOG_PRIORITY_TYPE_NUM]
 } FlushDevThreadMgr;
 
 typedef struct {
@@ -38,7 +38,7 @@ typedef struct {
 
 // receive
 struct LogRecFuncNode {
-    void (*receive)(void *);
+    void (*receive)(void*);
 };
 
 typedef struct {

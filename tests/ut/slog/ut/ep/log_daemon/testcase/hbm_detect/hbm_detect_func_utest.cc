@@ -16,12 +16,12 @@
 #include "adcore_api.h"
 using namespace std;
 using namespace testing;
-int32_t ServerCreateHbmDetectStub(ComponentType type, AdxComponentInit init, AdxComponentProcess process, AdxComponentUnInit uninit)
+int32_t ServerCreateHbmDetectStub(
+    ComponentType type, AdxComponentInit init, AdxComponentProcess process, AdxComponentUnInit uninit)
 {
     return 0;
 }
-class EP_HBM_DETECT_FUNC_UTEST : public testing::Test
-{
+class EP_HBM_DETECT_FUNC_UTEST : public testing::Test {
 protected:
     virtual void SetUp()
     {
@@ -55,11 +55,11 @@ TEST(EP_HBM_DETECT_FUNC_UTEST, HbmDetectRunFree)
 {
     OptHandle session = (OptHandle)0x123456;
     CommHandle handle = {COMM_HDC, session, COMPONENT_HBM_DETECT, -1, nullptr};
-    AmlHbmDetectInfo info = { 0 };
+    AmlHbmDetectInfo info = {0};
     info.magic = HBM_AML_MAGIC_NUM;
     info.version = HBM_AML_VERSION;
     info.operate = OPERATE_RUN_FREE;
-    LogDataMsg *msg = (LogDataMsg *)malloc(sizeof(LogDataMsg) + sizeof(AmlHbmDetectInfo));
+    LogDataMsg* msg = (LogDataMsg*)malloc(sizeof(LogDataMsg) + sizeof(AmlHbmDetectInfo));
     (void)memcpy_s(msg->data, sizeof(AmlHbmDetectInfo), &info, sizeof(AmlHbmDetectInfo));
     MOCKER(ToolAccessWithMode).stubs().will(returnValue(0));
     int ret = HbmDetectProcess(&handle, (void*)msg, sizeof(LogDataMsg) + sizeof(AmlHbmDetectInfo));
@@ -71,14 +71,14 @@ TEST(EP_HBM_DETECT_FUNC_UTEST, HbmDetectSetAddr)
 {
     OptHandle session = (OptHandle)0x123456;
     CommHandle handle = {COMM_HDC, session, COMPONENT_HBM_DETECT, -1, nullptr};
-    AmlHbmDetectInfo info = { 0 };
+    AmlHbmDetectInfo info = {0};
     info.magic = HBM_AML_MAGIC_NUM;
     info.version = HBM_AML_VERSION;
     info.operate = OPERATE_SET_ADDR;
     info.num = 1;
     info.info[0].startAddr = 0x123456;
     info.info[0].endAddr = 0x123456 + 0x1000;
-    LogDataMsg *msg = (LogDataMsg *)malloc(sizeof(LogDataMsg) + sizeof(AmlHbmDetectInfo));
+    LogDataMsg* msg = (LogDataMsg*)malloc(sizeof(LogDataMsg) + sizeof(AmlHbmDetectInfo));
     (void)memcpy_s(msg->data, sizeof(AmlHbmDetectInfo), &info, sizeof(AmlHbmDetectInfo));
     MOCKER(ToolAccessWithMode).stubs().will(returnValue(0));
     int ret = HbmDetectProcess(&handle, (void*)msg, sizeof(LogDataMsg) + sizeof(AmlHbmDetectInfo));
@@ -86,12 +86,6 @@ TEST(EP_HBM_DETECT_FUNC_UTEST, HbmDetectSetAddr)
     free(msg);
 }
 
-TEST(EP_HBM_DETECT_FUNC_UTEST, HbmDetectInit)
-{
-    EXPECT_EQ(0, HbmDetectInit());
-}
+TEST(EP_HBM_DETECT_FUNC_UTEST, HbmDetectInit) { EXPECT_EQ(0, HbmDetectInit()); }
 
-TEST(EP_HBM_DETECT_FUNC_UTEST, HbmDetectDestroy)
-{
-    EXPECT_EQ(0, HbmDetectDestroy());
-}
+TEST(EP_HBM_DETECT_FUNC_UTEST, HbmDetectDestroy) { EXPECT_EQ(0, HbmDetectDestroy()); }

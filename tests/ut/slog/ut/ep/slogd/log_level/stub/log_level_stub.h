@@ -21,11 +21,11 @@ extern "C" {
 
 int32_t shmgetStub(key_t key, size_t size, int32_t shmflg);
 
-void *shmatStub(int32_t shmid, const void *shmaddr, int32_t shmflg);
+void* shmatStub(int32_t shmid, const void* shmaddr, int32_t shmflg);
 
-int32_t shmdtStub(const void *shmaddr);
+int32_t shmdtStub(const void* shmaddr);
 
-int32_t shmctlStub(int32_t shmid, int32_t cmd, struct shmid_ds *buf);
+int32_t shmctlStub(int32_t shmid, int32_t cmd, struct shmid_ds* buf);
 
 #ifdef __cplusplus
 }

@@ -23,24 +23,18 @@ extern "C" {
 #include "slogd_flush.h"
 #include "log_file_util.h"
 
-class SlogdLogSessionManage : public testing::Test
-{
+class SlogdLogSessionManage : public testing::Test {
 public:
     void SetUp();
     void TearDown();
 };
 
-void SlogdLogSessionManage::SetUp()
-{
-}
+void SlogdLogSessionManage::SetUp() {}
 
-void SlogdLogSessionManage::TearDown()
-{
-}
+void SlogdLogSessionManage::TearDown() {}
 
 TEST_F(SlogdLogSessionManage, HandleSessionNode)
 {
-
     MOCKER(ToolMutexInit).stubs().will(returnValue(-1));
     int ret = InitSessionList();
     EXPECT_EQ(51, ret);

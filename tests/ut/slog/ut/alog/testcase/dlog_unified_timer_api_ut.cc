@@ -16,10 +16,7 @@ extern "C" {
 
 class DLOG_UNIFIED_TIMER_API_UTEST : public testing::Test {
 protected:
-    void TearDown() override
-    {
-        (void)DlogCloseTimerDll();
-    }
+    void TearDown() override { (void)DlogCloseTimerDll(); }
 };
 
 TEST_F(DLOG_UNIFIED_TIMER_API_UTEST, LoadTimerDllReturnsFailureWhenLibraryIsUnavailable)

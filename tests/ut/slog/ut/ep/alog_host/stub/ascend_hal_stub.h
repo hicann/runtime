@@ -16,13 +16,13 @@
 extern "C" {
 #endif
 
-int readEndMsg(void *session, int devId, char **buf, unsigned int *bufLen, unsigned int timeout);
+int readEndMsg(void* session, int devId, char** buf, unsigned int* bufLen, unsigned int timeout);
 void SetDrvCrlCmd(int cmd);
-int readDeviceMsg(void *session, int devId, char **buf, unsigned int *bufLen, unsigned int timeout);
+int readDeviceMsg(void* session, int devId, char** buf, unsigned int* bufLen, unsigned int timeout);
 
-int DrvBufReadSessionClose(void *session, int devId, char **buf, unsigned int *bufLen, unsigned int timeout);
-drvError_t drvHdcSessionConnectClose(int peer_node, int peer_devid, HDC_CLIENT client, HDC_SESSION *session);
-drvError_t drvHdcClientCreate_failed(HDC_CLIENT *client, int maxSessionNum, int serviceType, int flag);
+int DrvBufReadSessionClose(void* session, int devId, char** buf, unsigned int* bufLen, unsigned int timeout);
+drvError_t drvHdcSessionConnectClose(int peer_node, int peer_devid, HDC_CLIENT client, HDC_SESSION* session);
+drvError_t drvHdcClientCreate_failed(HDC_CLIENT* client, int maxSessionNum, int serviceType, int flag);
 
 void SetServerType(long long value, int ret);
 void ReSetServerType(void);
@@ -30,4 +30,3 @@ void ReSetServerType(void);
 }
 #endif
 #endif // ASCEND_HAL_STUB_H
-

@@ -51,7 +51,7 @@ constexpr int32_t RT_FAIL = -1;
 
 constexpr key_t kShmKey = (key_t)0x474f4c46;
 constexpr size_t kShmSize = 4096U;
-constexpr size_t kModuleOffset = (size_t)(CONFIG_PATH_LEN + GLOBAL_ARR_LEN);   /* 1024 */
+constexpr size_t kModuleOffset = (size_t)(CONFIG_PATH_LEN + GLOBAL_ARR_LEN);                 /* 1024 */
 constexpr size_t kLevelOffset = (size_t)(CONFIG_PATH_LEN + GLOBAL_ARR_LEN + MODULE_ARR_LEN); /* 3072 */
 
 LogMsgArg MakeMsgArg(uint32_t moduleId, uint32_t typeMask, int32_t level)
@@ -68,7 +68,7 @@ LogMsgArg MakeMsgArg(uint32_t moduleId, uint32_t typeMask, int32_t level)
     return arg;
 }
 
-int32_t CallWrite(LogMsgArg *arg, const char *fmt, ...)
+int32_t CallWrite(LogMsgArg* arg, const char* fmt, ...)
 {
     va_list v;
     va_start(v, fmt);
@@ -78,14 +78,14 @@ int32_t CallWrite(LogMsgArg *arg, const char *fmt, ...)
 }
 
 /* ---- write/flush/fork/atfork callbacks used by dlog_core tests ---- */
-extern "C" int32_t CovWriteOkCb(const char *content, uint32_t len, int32_t type)
+extern "C" int32_t CovWriteOkCb(const char* content, uint32_t len, int32_t type)
 {
     (void)content;
     (void)len;
     (void)type;
     return 0;
 }
-extern "C" int32_t CovWriteFailCb(const char *content, uint32_t len, int32_t type)
+extern "C" int32_t CovWriteFailCb(const char* content, uint32_t len, int32_t type)
 {
     (void)content;
     (void)len;
@@ -94,10 +94,7 @@ extern "C" int32_t CovWriteFailCb(const char *content, uint32_t len, int32_t typ
 }
 extern "C" void CovFlushCb(void) {}
 extern "C" void CovForkCb(void) {}
-extern "C" void CovAtForkCb(int32_t stage)
-{
-    (void)stage;
-}
+extern "C" void CovAtForkCb(int32_t stage) { (void)stage; }
 
 /*
  * Build (or reset) the shared memory segment used by dlog_level_shm.c.
@@ -105,14 +102,14 @@ extern "C" void CovAtForkCb(int32_t stage)
  * strlen() from the segment base). moduleStr is written at the module offset and
  * levelBytes at the level offset.
  */
-int32_t SetupShmemRaw(size_t baseLen, const char *moduleStr, const unsigned char *levelBytes, size_t levelLen)
+int32_t SetupShmemRaw(size_t baseLen, const char* moduleStr, const unsigned char* levelBytes, size_t levelLen)
 {
     int32_t shmId = shmget(kShmKey, kShmSize, IPC_CREAT | 0666);
     if (shmId < 0) {
         return -1;
     }
-    char *p = (char *)shmat(shmId, NULL, 0);
-    if (p == (char *)-1) {
+    char* p = (char*)shmat(shmId, NULL, 0);
+    if (p == (char*)-1) {
         return -1;
     }
     (void)memset(p, 0, kShmSize);
@@ -737,7 +734,4 @@ TEST_F(DlogLevelShmUtest, WatcherThreadRunsAndExitsWhenNotifyUnavailable)
     EXPECT_TRUE(true);
 }
 
-TEST(SlogdCollectCoverageUtest, DisabledCollectAcceptsInput)
-{
-    EXPECT_TRUE(SlogdCheckCollectValid(nullptr, 0));
-}
+TEST(SlogdCollectCoverageUtest, DisabledCollectAcceptsInput) { EXPECT_TRUE(SlogdCheckCollectValid(nullptr, 0)); }

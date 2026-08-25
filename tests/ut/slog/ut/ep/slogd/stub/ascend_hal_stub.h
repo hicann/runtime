@@ -23,12 +23,13 @@ extern "C" {
 
 int32_t LogGetSigNo_stub(void);
 void log_release_buffer(void);
-int32_t log_read_by_type_stub_no_data(int device_id, char *buf, unsigned int *size, int timeout, enum log_channel_type channel_type);
-int32_t log_read_by_type_stub_data(int device_id, char *buf, unsigned int *size, int timeout, enum log_channel_type channel_type);
+int32_t log_read_by_type_stub_no_data(
+    int device_id, char* buf, unsigned int* size, int timeout, enum log_channel_type channel_type);
+int32_t log_read_by_type_stub_data(
+    int device_id, char* buf, unsigned int* size, int timeout, enum log_channel_type channel_type);
 
-drvError_t halGetDeviceInfo_stub(uint32_t devId, int32_t moduleType, int32_t infoType, int64_t *value);
+drvError_t halGetDeviceInfo_stub(uint32_t devId, int32_t moduleType, int32_t infoType, int64_t* value);
 #ifdef __cplusplus
 }
 #endif
 #endif // ASCEND_HAL_STUB_H
-

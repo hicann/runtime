@@ -32,14 +32,14 @@ enum SlogFuncIndex {
     DLOG_FUNC_MAX
 };
 
-void *logDlopen(const char *fileName, int mode);
-int logDlclose(void *handle);
-void *logDlsym(void *handle, const char* funcName);
+void* logDlopen(const char* fileName, int mode);
+int logDlclose(void* handle);
+void* logDlsym(void* handle, const char* funcName);
 
 int32_t GetSlogFuncCallCount(int32_t index);
 
 void SetShmem(uint8_t msgType);
-ShmErr ShMemRead_stub(int32_t shmId, char *value, size_t len, size_t offset);
+ShmErr ShMemRead_stub(int32_t shmId, char* value, size_t len, size_t offset);
 int32_t CreatSocket_stub(uint32_t devId);
 
 #ifdef __cplusplus

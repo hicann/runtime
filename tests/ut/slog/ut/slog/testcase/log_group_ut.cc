@@ -8,28 +8,25 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "slogd_group_log.h"
-extern "C"
-{
-extern int AddNewGroup(GroupInfo *groupInfo, char *groupLogPath, unsigned int pathLen);
+extern "C" {
+extern int AddNewGroup(GroupInfo* groupInfo, char* groupLogPath, unsigned int pathLen);
 };
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
 #define LLT_SLOG_DIR "llt/abl/slog"
-class LogGroupUtest : public testing::Test
-{
-};
+class LogGroupUtest : public testing::Test {};
 TEST_F(LogGroupUtest, AddNewGroupTest)
 {
     GlobalMockObject::reset();
     GroupInfo group;
-    const char *name1 = "Others";
-    const char *name2 = "NN";
+    const char* name1 = "Others";
+    const char* name2 = "NN";
     (void)memset_s(&group, sizeof(GroupInfo), 0, sizeof(GroupInfo));
     group.groupId = 0;
     group.bufSize = 0;
     (void)memcpy_s(group.groupName, 127, name1, strlen(name1));
 
-    char *path = LLT_SLOG_DIR "/ut/slog/res";
+    char* path = LLT_SLOG_DIR "/ut/slog/res";
     EXPECT_EQ(NULL, GetGroupListHead());
     EXPECT_EQ(SYS_ERROR, AddNewGroup(&group, path, strlen(path)));
 
@@ -38,7 +35,7 @@ TEST_F(LogGroupUtest, AddNewGroupTest)
     group.groupId = 1;
     (void)memcpy_s(group.groupName, 127, name2, strlen(name2));
     EXPECT_EQ(SYS_OK, AddNewGroup(&group, path, strlen(path)));
-    GroupInfo *info = GetGroupListHead();
+    GroupInfo* info = GetGroupListHead();
 
     SlogdGroupLogExit();
     EXPECT_EQ(NULL, GetGroupListHead());

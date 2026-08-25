@@ -18,11 +18,11 @@ extern "C" {
 
 // stub for time
 int usleep_stub(unsigned int microSeconds);
-int clock_gettime_stub(clockid_t clock_id, struct timespec *tp);
+int clock_gettime_stub(clockid_t clock_id, struct timespec* tp);
 // stub for thread
-int pthread_mutex_lock_stub(pthread_mutex_t *mutex);
-int pthread_mutex_unlock_stub(pthread_mutex_t *mutex);
-int pthread_cond_signal_stub(pthread_cond_t *cond);
+int pthread_mutex_lock_stub(pthread_mutex_t* mutex);
+int pthread_mutex_unlock_stub(pthread_mutex_t* mutex);
+int pthread_cond_signal_stub(pthread_cond_t* cond);
 bool CheckMutex(void);
 
 #ifdef __cplusplus

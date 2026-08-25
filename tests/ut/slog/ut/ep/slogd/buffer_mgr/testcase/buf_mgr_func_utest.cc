@@ -17,8 +17,7 @@
 using namespace std;
 using namespace testing;
 
-class EP_SLOGD_BUF_MGR_FUNC_UTEST : public testing::Test
-{
+class EP_SLOGD_BUF_MGR_FUNC_UTEST : public testing::Test {
 protected:
     virtual void SetUp()
     {
@@ -60,18 +59,18 @@ TEST_F(EP_SLOGD_BUF_MGR_FUNC_UTEST, SlogdBufferInit)
 TEST_F(EP_SLOGD_BUF_MGR_FUNC_UTEST, SlogdBufferStaticInit)
 {
     EXPECT_EQ(LOG_SUCCESS, SlogdBufferInit(DEBUG_SYS_LOG_TYPE, 3 * 1024 * 1024, 0, NULL));
-    const char *msg = "test slogd buffer write.\n";
-    void *handle = SlogdBufferHandleOpen(DEBUG_SYS_LOG_TYPE, NULL, LOG_BUFFER_WRITE_MODE, 0);
+    const char* msg = "test slogd buffer write.\n";
+    void* handle = SlogdBufferHandleOpen(DEBUG_SYS_LOG_TYPE, NULL, LOG_BUFFER_WRITE_MODE, 0);
     EXPECT_EQ(LOG_SUCCESS, SlogdBufferWrite(handle, msg, strlen(msg)));
     SlogdBufferHandleClose(&handle);
     SlogdBufferExit(DEBUG_SYS_LOG_TYPE, NULL);
 
     EXPECT_EQ(LOG_SUCCESS, SlogdBufferInit(DEBUG_SYS_LOG_TYPE, 3 * 1024 * 1024, 0, NULL));
     handle = SlogdBufferHandleOpen(DEBUG_SYS_LOG_TYPE, NULL, LOG_BUFFER_READ_MODE, 0);
-    char result[1024] = { 0 };
+    char result[1024] = {0};
     EXPECT_EQ(strlen(msg), SlogdBufferRead(handle, result, 1024));
-    SlogdMsgData *data = (SlogdMsgData *)result;
-    EXPECT_STREQ((char *)msg, data->data);
+    SlogdMsgData* data = (SlogdMsgData*)result;
+    EXPECT_STREQ((char*)msg, data->data);
     SlogdBufferReset(handle);
     SlogdBufferHandleClose(&handle);
     SlogdBufferExit(DEBUG_SYS_LOG_TYPE, NULL);
@@ -79,13 +78,13 @@ TEST_F(EP_SLOGD_BUF_MGR_FUNC_UTEST, SlogdBufferStaticInit)
 
 TEST_F(EP_SLOGD_BUF_MGR_FUNC_UTEST, SlogdBufferWrite)
 {
-    const char *msg = "test slogd buffer write.\n";
+    const char* msg = "test slogd buffer write.\n";
     EXPECT_EQ(LOG_SUCCESS, SlogdBufferInit(DEBUG_SYS_LOG_TYPE, 3 * 1024 * 1024, 0, NULL));
-    void *handle = SlogdBufferHandleOpen(DEBUG_SYS_LOG_TYPE, NULL, LOG_BUFFER_WRITE_MODE, 0);
+    void* handle = SlogdBufferHandleOpen(DEBUG_SYS_LOG_TYPE, NULL, LOG_BUFFER_WRITE_MODE, 0);
     EXPECT_EQ(LOG_SUCCESS, SlogdBufferWrite(handle, msg, strlen(msg)));
-    char result[1024] = { 0 };
+    char result[1024] = {0};
     EXPECT_EQ(strlen(msg), SlogdBufferRead(handle, result, 1024));
-    EXPECT_STREQ((char *)msg, result);
+    EXPECT_STREQ((char*)msg, result);
     memset_s(result, 1024, 0, 1024);
     EXPECT_EQ(0, SlogdBufferRead(handle, result, 1024));
     EXPECT_STREQ("", result);
@@ -101,17 +100,17 @@ TEST_F(EP_SLOGD_BUF_MGR_FUNC_UTEST, SlogdBufferWrite)
 
 TEST_F(EP_SLOGD_BUF_MGR_FUNC_UTEST, SlogdBufferRead)
 {
-    const char *msg = "test slogd buffer write.\n";
+    const char* msg = "test slogd buffer write.\n";
     EXPECT_EQ(LOG_SUCCESS, SlogdBufferInit(DEBUG_SYS_LOG_TYPE, 3 * 1024 * 1024, 0, NULL));
-    void *handle = SlogdBufferHandleOpen(DEBUG_SYS_LOG_TYPE, NULL, LOG_BUFFER_WRITE_MODE, 0);
+    void* handle = SlogdBufferHandleOpen(DEBUG_SYS_LOG_TYPE, NULL, LOG_BUFFER_WRITE_MODE, 0);
     EXPECT_EQ(LOG_SUCCESS, SlogdBufferWrite(handle, msg, strlen(msg)));
     SlogdBufferHandleClose(&handle);
 
     handle = SlogdBufferHandleOpen(DEBUG_SYS_LOG_TYPE, NULL, LOG_BUFFER_READ_MODE, 0);
-    char result[1024] = { 0 };
+    char result[1024] = {0};
     EXPECT_EQ(strlen(msg), SlogdBufferRead(handle, result, 1024));
-    SlogdMsgData *data = (SlogdMsgData *)result;
-    EXPECT_STREQ((char *)msg, data->data);
+    SlogdMsgData* data = (SlogdMsgData*)result;
+    EXPECT_STREQ((char*)msg, data->data);
     memset_s(result, 1024, 0, 1024);
     EXPECT_EQ(0, SlogdBufferRead(handle, result, 1024));
     EXPECT_STREQ("", result);
@@ -120,54 +119,51 @@ TEST_F(EP_SLOGD_BUF_MGR_FUNC_UTEST, SlogdBufferRead)
     handle = SlogdBufferHandleOpen(DEBUG_SYS_LOG_TYPE, NULL, LOG_BUFFER_READ_MODE, 0);
     memset_s(result, 1024, 0, 1024);
     EXPECT_EQ(strlen(msg), SlogdBufferRead(handle, result, 1024));
-    EXPECT_STREQ((char *)msg, data->data);
+    EXPECT_STREQ((char*)msg, data->data);
     SlogdBufferHandleClose(&handle);
     SlogdBufferExit(DEBUG_SYS_LOG_TYPE, NULL);
 }
 
-static bool SlogdBufAttrCompare(void *srcAttr, void *dstAttr)
-{
-    return srcAttr == dstAttr;
-}
+static bool SlogdBufAttrCompare(void* srcAttr, void* dstAttr) { return srcAttr == dstAttr; }
 
 TEST_F(EP_SLOGD_BUF_MGR_FUNC_UTEST, SlogdBufferList)
 {
-    AppLogList *appLog = NULL;
+    AppLogList* appLog = NULL;
     for (int i = 0; i < 1024; i++) {
-        AppLogList *node = (AppLogList *)LogMalloc(sizeof(AppLogList));
-        SlogdBufAttr bufAttr = { node, SlogdBufAttrCompare };
+        AppLogList* node = (AppLogList*)LogMalloc(sizeof(AppLogList));
+        SlogdBufAttr bufAttr = {node, SlogdBufAttrCompare};
         EXPECT_EQ(LOG_SUCCESS, SlogdBufferInit(DEBUG_APP_LOG_TYPE, 256 * 1024, 0, &bufAttr));
         if (i == 0) {
             appLog = node;
         } else {
-            AppLogList *next = appLog->next;
+            AppLogList* next = appLog->next;
             appLog->next = node;
             node->next = next;
         }
     }
-    AppLogList *pre = appLog;
-    AppLogList *logNode = appLog->next;
+    AppLogList* pre = appLog;
+    AppLogList* logNode = appLog->next;
     int num = 0;
     for (; num < 100; num++) {
         pre = logNode;
         logNode = logNode->next;
     }
     EXPECT_EQ(100, num);
-    void *handle = SlogdBufferHandleOpen(DEBUG_APP_LOG_TYPE, logNode, LOG_BUFFER_WRITE_MODE, 0);
-    const char *msg = "test app log list.";
+    void* handle = SlogdBufferHandleOpen(DEBUG_APP_LOG_TYPE, logNode, LOG_BUFFER_WRITE_MODE, 0);
+    const char* msg = "test app log list.";
     EXPECT_EQ(LOG_SUCCESS, SlogdBufferWrite(handle, msg, strlen(msg)));
     SlogdBufferHandleClose(&handle);
 
     handle = SlogdBufferHandleOpen(DEBUG_APP_LOG_TYPE, logNode, LOG_BUFFER_READ_MODE, 0);
-    char result[1024] = { 0 };
+    char result[1024] = {0};
     EXPECT_EQ(strlen(msg), SlogdBufferRead(handle, result, 1024));
-    EXPECT_STREQ((char *)msg, result);
+    EXPECT_STREQ((char*)msg, result);
     SlogdBufferHandleClose(&handle);
 
     handle = SlogdBufferHandleOpen(DEBUG_APP_LOG_TYPE, logNode, LOG_BUFFER_WRITE_MODE, 0);
     memset_s(result, 1024, 0, 1024);
     EXPECT_EQ(strlen(msg), SlogdBufferRead(handle, result, 1024));
-    EXPECT_STREQ((char *)msg, result);
+    EXPECT_STREQ((char*)msg, result);
     EXPECT_EQ(true, SlogdBufferCheckEmpty(handle));
     SlogdBufferHandleClose(&handle);
     SlogdBufferExit(DEBUG_APP_LOG_TYPE, logNode);
@@ -176,7 +172,7 @@ TEST_F(EP_SLOGD_BUF_MGR_FUNC_UTEST, SlogdBufferList)
 
     num = 0;
     while (appLog != NULL) {
-        AppLogList *next = appLog->next;
+        AppLogList* next = appLog->next;
         SlogdBufferExit(DEBUG_APP_LOG_TYPE, appLog);
         XFREE(appLog);
         appLog = next;
@@ -188,9 +184,9 @@ TEST_F(EP_SLOGD_BUF_MGR_FUNC_UTEST, SlogdBufferList)
 TEST_F(EP_SLOGD_BUF_MGR_FUNC_UTEST, SlogdBufferFull)
 {
     EXPECT_EQ(LOG_SUCCESS, SlogdBufferInit(DEBUG_APP_LOG_TYPE, 1024, 0, NULL));
-    void *handle = SlogdBufferHandleOpen(DEBUG_APP_LOG_TYPE, NULL, LOG_BUFFER_WRITE_MODE, 0);
+    void* handle = SlogdBufferHandleOpen(DEBUG_APP_LOG_TYPE, NULL, LOG_BUFFER_WRITE_MODE, 0);
     EXPECT_EQ(true, SlogdBufferCheckEmpty(handle));
-    const char *msg = "test slogd buffer write.\n";
+    const char* msg = "test slogd buffer write.\n";
     for (int i = 0; i < 1024; i++) {
         if (SlogdBufferCheckFull(handle, strlen(msg))) {
             break;
@@ -198,7 +194,7 @@ TEST_F(EP_SLOGD_BUF_MGR_FUNC_UTEST, SlogdBufferFull)
         EXPECT_EQ(LOG_SUCCESS, SlogdBufferWrite(handle, msg, strlen(msg)));
     }
     EXPECT_EQ(true, SlogdBufferCheckFull(handle, 1024));
-    char result[1024] = { 0 };
+    char result[1024] = {0};
     while (!SlogdBufferCheckEmpty(handle)) {
         EXPECT_LT(0, SlogdBufferRead(handle, result, 1024));
     };
@@ -210,10 +206,10 @@ TEST_F(EP_SLOGD_BUF_MGR_FUNC_UTEST, SlogdBufferFull)
 TEST_F(EP_SLOGD_BUF_MGR_FUNC_UTEST, SlogdDynamicBufferBlockFull)
 {
     EXPECT_EQ(LOG_SUCCESS, SlogdBufferInit(DEBUG_SYS_LOG_TYPE, 2 * 1024 * 1024, 0, NULL));
-    void *handle = SlogdBufferHandleOpen(DEBUG_SYS_LOG_TYPE, NULL, LOG_BUFFER_WRITE_MODE, 0);
-    EXPECT_NE(handle, (void *)NULL);
+    void* handle = SlogdBufferHandleOpen(DEBUG_SYS_LOG_TYPE, NULL, LOG_BUFFER_WRITE_MODE, 0);
+    EXPECT_NE(handle, (void*)NULL);
     EXPECT_EQ(true, SlogdBufferCheckEmpty(handle));
-    const char *msg = "test slogd buffer write.\n";
+    const char* msg = "test slogd buffer write.\n";
     int num = 0;
     for (num = 0; num < 1024 * 1024; num++) {
         if (SlogdBufferCheckFull(handle, strlen(msg))) {
@@ -222,7 +218,7 @@ TEST_F(EP_SLOGD_BUF_MGR_FUNC_UTEST, SlogdDynamicBufferBlockFull)
         EXPECT_EQ(LOG_SUCCESS, SlogdBufferWrite(handle, msg, strlen(msg)));
     }
     SELF_LOG_ERROR("NUM=%d", num);
-    char result[1024] = { 0 };
+    char result[1024] = {0};
     for (int i = 0; i < num - 1; i++) {
         uint32_t ret = SlogdBufferRead(handle, result, strlen(msg));
         EXPECT_EQ(strlen(msg), ret);
@@ -242,10 +238,10 @@ TEST_F(EP_SLOGD_BUF_MGR_FUNC_UTEST, SlogdDynamicBufferBlockFull)
 void TestBuffer(int32_t type, uint32_t bufSize)
 {
     EXPECT_EQ(LOG_SUCCESS, SlogdBufferInit(type, bufSize, 0, NULL));
-    void *handle = SlogdBufferHandleOpen(type, NULL, LOG_BUFFER_WRITE_MODE, 0);
-    EXPECT_NE(handle, (void *)NULL);
+    void* handle = SlogdBufferHandleOpen(type, NULL, LOG_BUFFER_WRITE_MODE, 0);
+    EXPECT_NE(handle, (void*)NULL);
     EXPECT_EQ(true, SlogdBufferCheckEmpty(handle));
-    const char *msg = "test slogd buffer write.\n";
+    const char* msg = "test slogd buffer write.\n";
     int num = 0;
     for (num = 0; num < 1024 * 1024; num++) {
         if (SlogdBufferCheckFull(handle, strlen(msg))) {
@@ -253,7 +249,7 @@ void TestBuffer(int32_t type, uint32_t bufSize)
         }
         EXPECT_EQ(LOG_SUCCESS, SlogdBufferWrite(handle, msg, strlen(msg)));
     }
-    char result[1024] = { 0 };
+    char result[1024] = {0};
     for (int i = 0; i < num; i++) {
         uint32_t ret = SlogdBufferRead(handle, result, strlen(msg));
         EXPECT_EQ(strlen(msg), ret);
@@ -276,10 +272,10 @@ TEST_F(EP_SLOGD_BUF_MGR_FUNC_UTEST, SlogdStaticBufferBlockFull)
 TEST_F(EP_SLOGD_BUF_MGR_FUNC_UTEST, SlogdCollectBufferRound)
 {
     EXPECT_EQ(LOG_SUCCESS, SlogdBufferInit(DEBUG_APP_LOG_TYPE, 1024 * 1024, 0, NULL));
-    void *handle = SlogdBufferHandleOpen(DEBUG_APP_LOG_TYPE, NULL, LOG_BUFFER_WRITE_MODE, 0);
-    EXPECT_NE(handle, (void *)NULL);
+    void* handle = SlogdBufferHandleOpen(DEBUG_APP_LOG_TYPE, NULL, LOG_BUFFER_WRITE_MODE, 0);
+    EXPECT_NE(handle, (void*)NULL);
     EXPECT_EQ(true, SlogdBufferCheckEmpty(handle));
-    const char *msg = "[ERROR]test slogd buffer write.\n";
+    const char* msg = "[ERROR]test slogd buffer write.\n";
     int num = 0;
     for (num = 0; num < 1024 * 1024; num++) {
         if (SlogdBufferCheckFull(handle, strlen(msg))) {
@@ -287,7 +283,7 @@ TEST_F(EP_SLOGD_BUF_MGR_FUNC_UTEST, SlogdCollectBufferRound)
         }
         EXPECT_EQ(LOG_SUCCESS, SlogdBufferWrite(handle, msg, strlen(msg)));
     }
-    char result[1024] = { 0 };
+    char result[1024] = {0};
     for (int i = 0; i < num; i++) {
         uint32_t ret = SlogdBufferRead(handle, result, strlen(msg));
         EXPECT_EQ(strlen(msg), ret);
@@ -298,7 +294,7 @@ TEST_F(EP_SLOGD_BUF_MGR_FUNC_UTEST, SlogdCollectBufferRound)
     }
     EXPECT_EQ(true, SlogdBufferCheckEmpty(handle));
     EXPECT_EQ(LOG_SUCCESS, SlogdBufferWrite(handle, msg, strlen(msg)));
-    char buf[100] = { 0 };
+    char buf[100] = {0};
     uint32_t pos = 0;
     EXPECT_EQ(LOG_SUCCESS, SlogdBufferCollectNewest(buf, 100, &pos, handle, 100));
     EXPECT_EQ(0, pos % strlen(msg));

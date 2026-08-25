@@ -26,48 +26,41 @@ typedef struct {
     ToolStat bStatbuff;
     ToolStat aDirStatbuff;
     ToolStat bDirStatbuff;
-    ToolDirent **listA;
-    ToolDirent **listB;
+    ToolDirent** listA;
+    ToolDirent** listB;
     char aDirName[MAX_FILE_NAME_LEN];
     char bDirName[MAX_FILE_NAME_LEN];
     char aFileName[MAX_FILE_NAME_LEN];
     char bFileName[MAX_FILE_NAME_LEN];
 } SortArg;
 
-LogRt CheckAppDirIfExist(const char *appLogPath);
-void *AppLogWatcher(ArgPtr arg);
-int AppLogDirFilter(const ToolDirent *dir);
-int AppLogFileFilter(const ToolDirent *dir);
-int SlogdApplogSortFileFunc(const char *path, const ToolDirent **a, const ToolDirent **b);
-int RemoveDir(const char *dir);
-void RemoveAppLogDir(int logType, const char *dir);
-LogRt ScanAppLog(const char *path, int logType);
+LogRt CheckAppDirIfExist(const char* appLogPath);
+void* AppLogWatcher(ArgPtr arg);
+int AppLogDirFilter(const ToolDirent* dir);
+int AppLogFileFilter(const ToolDirent* dir);
+int SlogdApplogSortFileFunc(const char* path, const ToolDirent** a, const ToolDirent** b);
+int RemoveDir(const char* dir);
+void RemoveAppLogDir(int logType, const char* dir);
+LogRt ScanAppLog(const char* path, int logType);
 void CreateThread(int logType);
 void CreateAppLogWatchThread();
-INT32 ScanAndGetDirFile(SortArg *sortArg, const char *path, const ToolDirent **a, const ToolDirent **b);
-extern INT32 GetSortResult(SortArg *sortArg, int type, int numA, int numB);
+INT32 ScanAndGetDirFile(SortArg* sortArg, const char* path, const ToolDirent** a, const ToolDirent** b);
+extern INT32 GetSortResult(SortArg* sortArg, int type, int numA, int numB);
 }
 
-class AppLogWatch : public testing::Test
-{
+class AppLogWatch : public testing::Test {
 public:
     void SetUp();
     void TearDown();
 };
 
-void AppLogWatch::SetUp()
-{
+void AppLogWatch::SetUp() {}
 
-}
-
-void AppLogWatch::TearDown()
-{
-
-}
+void AppLogWatch::TearDown() {}
 
 TEST_F(AppLogWatch, CheckAppDirIfExist01)
 {
-    const char *path = "/var/log";
+    const char* path = "/var/log";
     MOCKER(access).stubs().will(returnValue(1));
     MOCKER(ToolMkdir).stubs().will(returnValue(-1));
     EXPECT_EQ(MKDIR_FAILED, CheckAppDirIfExist(path));
@@ -76,7 +69,7 @@ TEST_F(AppLogWatch, CheckAppDirIfExist01)
 
 TEST_F(AppLogWatch, CheckAppDirIfExist02)
 {
-    const char *path = "/var/log";
+    const char* path = "/var/log";
     MOCKER(access).stubs().will(returnValue(0));
     MOCKER(ToolMkdir).stubs().will(returnValue(0));
     EXPECT_EQ(SUCCESS, CheckAppDirIfExist(path));
@@ -88,7 +81,8 @@ typedef struct {
     char appLogPath[CFG_LOGAGENT_PATH_MAX_LENGTH + 1];
 } ThreadArg;
 
-int SetState02() {
+int SetState02()
+{
     LogRecordSigNo(1);
     return 0;
 }
@@ -108,8 +102,8 @@ TEST_F(AppLogWatch, AppLogWatcher01)
 
 TEST_F(AppLogWatch, AppLogDirFilter01)
 {
-    ToolDirent *namelist = NULL;
-    namelist = (ToolDirent *)malloc(sizeof(ToolDirent));
+    ToolDirent* namelist = NULL;
+    namelist = (ToolDirent*)malloc(sizeof(ToolDirent));
     strcpy_s(namelist->d_name, 256, "core.123456");
     EXPECT_EQ(0, AppLogDirFilter(namelist));
     free(namelist);
@@ -118,8 +112,8 @@ TEST_F(AppLogWatch, AppLogDirFilter01)
 
 TEST_F(AppLogWatch, AppLogFileFilter01)
 {
-    ToolDirent *namelist = NULL;
-    namelist = (ToolDirent *)malloc(sizeof(ToolDirent));
+    ToolDirent* namelist = NULL;
+    namelist = (ToolDirent*)malloc(sizeof(ToolDirent));
     strcpy_s(namelist->d_name, 256, "core");
     EXPECT_EQ(0, AppLogFileFilter(namelist));
     free(namelist);
@@ -130,8 +124,8 @@ TEST_F(AppLogWatch, GetSortResult01)
 {
     SortArg sortArg;
     memset(&sortArg, 0, sizeof(sortArg));
-    ToolDirent **list = (ToolDirent**)malloc(sizeof(ToolDirent*) * 1);
-    list[0] = (ToolDirent *)malloc(sizeof(ToolDirent));
+    ToolDirent** list = (ToolDirent**)malloc(sizeof(ToolDirent*) * 1);
+    list[0] = (ToolDirent*)malloc(sizeof(ToolDirent));
     strcpy_s(list[0]->d_name, 256, "1.log");
     sortArg.listB = list;
     int type = 0;
@@ -149,8 +143,8 @@ TEST_F(AppLogWatch, GetSortResult02)
 {
     SortArg sortArg;
     memset(&sortArg, 0, sizeof(sortArg));
-    ToolDirent **list = (ToolDirent**)malloc(sizeof(ToolDirent*) * 1);
-    list[0] = (ToolDirent *)malloc(sizeof(ToolDirent));
+    ToolDirent** list = (ToolDirent**)malloc(sizeof(ToolDirent*) * 1);
+    list[0] = (ToolDirent*)malloc(sizeof(ToolDirent));
     strcpy_s(list[0]->d_name, 256, "1.log");
     sortArg.listA = list;
     int type = 1;
@@ -172,14 +166,14 @@ TEST_F(AppLogWatch, SortFileFunc01)
 
 TEST_F(AppLogWatch, SortFileFunc02)
 {
-    const char *path = "/var/log";
-    const struct dirent a[] = { 0, 0, 0, 0, "device-0_20180807190224530.log" };
-    const struct dirent b[] = { 0, 0, 0, 0, "device-0_20180807190224529.log" };
+    const char* path = "/var/log";
+    const struct dirent a[] = {0, 0, 0, 0, "device-0_20180807190224530.log"};
+    const struct dirent b[] = {0, 0, 0, 0, "device-0_20180807190224529.log"};
     const struct dirent* c = a;
     const struct dirent* d = b;
     const struct dirent** e = &c;
     const struct dirent** f = &d;
-    ToolStat astatbuff = { 0 };
+    ToolStat astatbuff = {0};
     astatbuff.st_ctime = 125;
     MOCKER(ToolScandir).stubs().will(returnValue(0));
     MOCKER(ToolScandirFree).stubs();
@@ -189,20 +183,20 @@ TEST_F(AppLogWatch, SortFileFunc02)
 
 TEST_F(AppLogWatch, SortFileFunc03)
 {
-    const char *path = "/var/log";
-    const struct dirent a[] = { 0, 0, 0, 0, "device-0_20180807190224530.log" };
-    const struct dirent b[] = { 0, 0, 0, 0, "device-0_20180807190224529.log" };
+    const char* path = "/var/log";
+    const struct dirent a[] = {0, 0, 0, 0, "device-0_20180807190224530.log"};
+    const struct dirent b[] = {0, 0, 0, 0, "device-0_20180807190224529.log"};
     const struct dirent* c = a;
     const struct dirent* d = b;
     const struct dirent** e = &c;
     const struct dirent** f = &d;
-    ToolDirent **namelist = (ToolDirent**)malloc(sizeof(ToolDirent*) * 1);
-    namelist[0] = (ToolDirent *)malloc(sizeof(ToolDirent));
+    ToolDirent** namelist = (ToolDirent**)malloc(sizeof(ToolDirent*) * 1);
+    namelist[0] = (ToolDirent*)malloc(sizeof(ToolDirent));
     memset(namelist[0], 0, sizeof(ToolDirent));
     strcpy_s(namelist[0]->d_name, 256, "1.log");
     MOCKER(ToolScandir).stubs().with(any(), outBoundP(&namelist), any(), any()).will(returnValue(1));
 
-    ToolStat astatbuff = { 0 };
+    ToolStat astatbuff = {0};
     astatbuff.st_ctime = 125;
     MOCKER(ToolStatGet).stubs().with(any(), outBoundP(&astatbuff)).will(returnValue(0));
     MOCKER(ToolScandir).stubs().will(returnValue(0));
@@ -215,20 +209,20 @@ TEST_F(AppLogWatch, SortFileFunc03)
 
 TEST_F(AppLogWatch, SortFileFunc04)
 {
-    const char *path = "/var/log";
-    const struct dirent a[] = { 0, 0, 0, 0, "device-0_20180807190224530.log" };
-    const struct dirent b[] = { 0, 0, 0, 0, "device-0_20180807190224529.log" };
+    const char* path = "/var/log";
+    const struct dirent a[] = {0, 0, 0, 0, "device-0_20180807190224530.log"};
+    const struct dirent b[] = {0, 0, 0, 0, "device-0_20180807190224529.log"};
     const struct dirent* c = a;
     const struct dirent* d = b;
     const struct dirent** e = &c;
     const struct dirent** f = &d;
-    ToolDirent **namelist = (ToolDirent**)malloc(sizeof(ToolDirent*) * 1);
-    namelist[0] = (ToolDirent *)malloc(sizeof(ToolDirent));
+    ToolDirent** namelist = (ToolDirent**)malloc(sizeof(ToolDirent*) * 1);
+    namelist[0] = (ToolDirent*)malloc(sizeof(ToolDirent));
     memset(namelist[0], 0, sizeof(ToolDirent));
     strcpy_s(namelist[0]->d_name, 256, "1.log");
     MOCKER(ToolScandir).stubs().with(any(), outBoundP(&namelist), any(), any()).will(returnValue(1));
 
-    ToolStat astatbuff = { 0 };
+    ToolStat astatbuff = {0};
     astatbuff.st_ctime = 125;
     MOCKER(ToolStatGet).stubs().with(any(), outBoundP(&astatbuff)).will(returnValue(1));
     MOCKER(ToolScandir).stubs().will(returnValue(0));
@@ -251,8 +245,8 @@ TEST_F(AppLogWatch, RemoveDir01)
 TEST_F(AppLogWatch, RemoveDir02)
 {
     const char* path = "/var/log";
-    ToolDirent **namelist = (ToolDirent**)malloc(sizeof(ToolDirent*) * 1);
-    namelist[0] = (ToolDirent *)malloc(sizeof(ToolDirent));
+    ToolDirent** namelist = (ToolDirent**)malloc(sizeof(ToolDirent*) * 1);
+    namelist[0] = (ToolDirent*)malloc(sizeof(ToolDirent));
     memset(namelist[0], 0, sizeof(ToolDirent));
     strcpy_s(namelist[0]->d_name, 256, "1.log");
     MOCKER(ToolScandir).stubs().with(any(), outBoundP(&namelist), any(), any()).will(returnValue(1));
@@ -268,8 +262,8 @@ TEST_F(AppLogWatch, RemoveDir02)
 TEST_F(AppLogWatch, RemoveDir03)
 {
     const char* path = "/var/log";
-    ToolDirent **namelist = (ToolDirent**)malloc(sizeof(ToolDirent*) * 1);
-    namelist[0] = (ToolDirent *)malloc(sizeof(ToolDirent));
+    ToolDirent** namelist = (ToolDirent**)malloc(sizeof(ToolDirent*) * 1);
+    namelist[0] = (ToolDirent*)malloc(sizeof(ToolDirent));
     memset(namelist[0], 0, sizeof(ToolDirent));
     strcpy_s(namelist[0]->d_name, 256, "1.log");
     MOCKER(ToolScandir).stubs().with(any(), outBoundP(&namelist), any(), any()).will(returnValue(1));
@@ -293,9 +287,9 @@ TEST_F(AppLogWatch, ScanAppLog01)
 TEST_F(AppLogWatch, ScanAppLog03)
 {
     const char* path = "/var/log";
-    ToolDirent **namelist = (ToolDirent**)malloc(sizeof(ToolDirent*) * 2);
-    namelist[0] = (ToolDirent *)malloc(sizeof(ToolDirent));
-    namelist[1] = (ToolDirent *)malloc(sizeof(ToolDirent));
+    ToolDirent** namelist = (ToolDirent**)malloc(sizeof(ToolDirent*) * 2);
+    namelist[0] = (ToolDirent*)malloc(sizeof(ToolDirent));
+    namelist[1] = (ToolDirent*)malloc(sizeof(ToolDirent));
     strcpy_s(namelist[0]->d_name, 256, "core.123456");
     strcpy_s(namelist[1]->d_name, 256, "core.123456");
     MOCKER(ToolScandir).stubs().with(any(), outBoundP(&namelist), any(), any()).will(returnValue(2));
@@ -312,14 +306,14 @@ TEST_F(AppLogWatch, ScanAppLog04)
 {
     const char* path = "/var/log";
     const int maxDirNum = MAX_RESERVE_APP_DIR_NUMS + 1;
-    ToolDirent **namelist = (ToolDirent**)malloc(sizeof(ToolDirent*) * maxDirNum);
+    ToolDirent** namelist = (ToolDirent**)malloc(sizeof(ToolDirent*) * maxDirNum);
     if (namelist == NULL) {
         printf("malloc failed.\n");
         return;
     }
     (void)memset_s(namelist, sizeof(ToolDirent*) * maxDirNum, 0, sizeof(ToolDirent*) * maxDirNum);
     for (int i = 0; i < maxDirNum; i++) {
-        namelist[i] = (ToolDirent *)malloc(sizeof(ToolDirent));
+        namelist[i] = (ToolDirent*)malloc(sizeof(ToolDirent));
         if (namelist[i] == NULL) {
             printf("malloc failed.\n");
             goto TEST_END;

@@ -22,11 +22,10 @@ using namespace std;
 using namespace testing;
 
 extern "C" {
-    extern ToolMutex g_confMutex;
+extern ToolMutex g_confMutex;
 }
 
-class EP_SLOGD_CONFIG_FUNC_MILAN_UTEST : public testing::Test
-{
+class EP_SLOGD_CONFIG_FUNC_MILAN_UTEST : public testing::Test {
 protected:
     virtual void SetUp()
     {
@@ -58,10 +57,7 @@ protected:
     }
 };
 
-int32_t AdxSendMsg(const CommHandle *handle, AdxString data, uint32_t len)
-{
-    return 0;
-}
+int32_t AdxSendMsg(const CommHandle* handle, AdxString data, uint32_t len) { return 0; }
 
 TEST_F(EP_SLOGD_CONFIG_FUNC_MILAN_UTEST, SlogdConfigGetItem)
 {

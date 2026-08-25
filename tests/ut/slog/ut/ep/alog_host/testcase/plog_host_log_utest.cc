@@ -15,19 +15,19 @@
 #include "dlog_common.h"
 
 extern "C" {
-    extern ToolThread g_alogFlushTid;
-    extern bool g_alogFlushStarting;
-    extern ToolMutex g_plogMutex;
-    void PlogAtForkCallback(int32_t type);
-    void PlogForkCallback(void);
-    int32_t PlogWriteCallback(const char *data, uint32_t dataLen, LogType type);
-    int32_t ToolCreateTaskWithThreadAttr(ToolThread *threadHandle, const ToolUserBlock *funcBlock,
-        const ToolThreadAttr *threadAttr);
-    int32_t ToolJoinTask(const ToolThread *threadHandle);
+extern ToolThread g_alogFlushTid;
+extern bool g_alogFlushStarting;
+extern ToolMutex g_plogMutex;
+void PlogAtForkCallback(int32_t type);
+void PlogForkCallback(void);
+int32_t PlogWriteCallback(const char* data, uint32_t dataLen, LogType type);
+int32_t ToolCreateTaskWithThreadAttr(
+    ToolThread* threadHandle, const ToolUserBlock* funcBlock, const ToolThreadAttr* threadAttr);
+int32_t ToolJoinTask(const ToolThread* threadHandle);
 }
 
-static int32_t ToolCreateTaskWithThreadAttrStub(ToolThread *threadHandle, const ToolUserBlock *funcBlock,
-    const ToolThreadAttr *threadAttr)
+static int32_t ToolCreateTaskWithThreadAttrStub(
+    ToolThread* threadHandle, const ToolUserBlock* funcBlock, const ToolThreadAttr* threadAttr)
 {
     (void)funcBlock;
     (void)threadAttr;
@@ -37,8 +37,8 @@ static int32_t ToolCreateTaskWithThreadAttrStub(ToolThread *threadHandle, const 
 
 static bool g_plogLockHeldDuringThreadCreate = false;
 
-static int32_t ToolCreateTaskWithoutPlogLockStub(ToolThread *threadHandle, const ToolUserBlock *funcBlock,
-    const ToolThreadAttr *threadAttr)
+static int32_t ToolCreateTaskWithoutPlogLockStub(
+    ToolThread* threadHandle, const ToolUserBlock* funcBlock, const ToolThreadAttr* threadAttr)
 {
     (void)funcBlock;
     (void)threadAttr;
@@ -53,8 +53,7 @@ static int32_t ToolCreateTaskWithoutPlogLockStub(ToolThread *threadHandle, const
 
 using namespace std;
 using namespace testing;
-class EP_PLOG_HOST_LOG_UTEST : public testing::Test
-{
+class EP_PLOG_HOST_LOG_UTEST : public testing::Test {
 protected:
     virtual void SetUp()
     {
@@ -141,7 +140,8 @@ TEST_F(EP_PLOG_HOST_LOG_UTEST, PlogWriteCallbackStartsFlushThreadWithoutPlogLock
 
 TEST_F(EP_PLOG_HOST_LOG_UTEST, PlogWriteCallbackRetriesAfterFlushThreadStartFailure)
 {
-    MOCKER(ToolCreateTaskWithThreadAttr).expects(exactly(2))
+    MOCKER(ToolCreateTaskWithThreadAttr)
+        .expects(exactly(2))
         .will(returnValue(SYS_ERROR))
         .then(invoke(ToolCreateTaskWithThreadAttrStub));
     MOCKER(ToolJoinTask).expects(once()).will(returnValue(SYS_OK));

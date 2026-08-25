@@ -17,16 +17,16 @@
 extern "C" {
 #endif
 
-#define SUBDIR           "stackcore_subdir"
+#define SUBDIR "stackcore_subdir"
 #define MAX_FILENAME_LEN 256
-#define CORE_BUFFER_LEN  512
+#define CORE_BUFFER_LEN 512
 #define MAX_COREFILE_NUM 50
 
-extern void StackSigHandler(int sigNum, siginfo_t *info, void *data);
-extern uintptr_t StackFrame(int layer, uintptr_t fp, char *data, unsigned int len);
+extern void StackSigHandler(int sigNum, siginfo_t* info, void* data);
+extern uintptr_t StackFrame(int layer, uintptr_t fp, char* data, unsigned int len);
 
-int CheckStackcoreFileNum(const char *path);
-uintptr_t StackFrame_stub(int layer, uintptr_t fp, char *data, unsigned int len);
+int CheckStackcoreFileNum(const char* path);
+uintptr_t StackFrame_stub(int layer, uintptr_t fp, char* data, unsigned int len);
 int32_t raise_stub(int32_t sig);
 
 #ifdef __cplusplus

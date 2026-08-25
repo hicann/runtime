@@ -19,12 +19,9 @@
 using namespace std;
 using namespace testing;
 
-extern "C" {
+extern "C" {}
 
-}
-
-class EP_LOG_LEVEL_FUNC_UTEST : public testing::Test
-{
+class EP_LOG_LEVEL_FUNC_UTEST : public testing::Test {
 protected:
     virtual void SetUp()
     {
@@ -55,7 +52,6 @@ protected:
     }
 
 public:
-
 };
 
 // log_level_parse.h
@@ -125,7 +121,7 @@ TEST_F(EP_LOG_LEVEL_FUNC_UTEST, ModuleInfo)
     EXPECT_STREQ("BBOX", GetModuleNameById(55));
     EXPECT_STREQ("ATRACE", GetModuleNameById(71));
 
-    const ModuleInfo *module = GetModuleInfoByName("SLOG");
+    const ModuleInfo* module = GetModuleInfoByName("SLOG");
     EXPECT_EQ(0, module->moduleId);
     EXPECT_EQ(false, module->multiFlag);
 
@@ -174,7 +170,7 @@ static void ShmMock(void)
 TEST_F(EP_LOG_LEVEL_FUNC_UTEST, SlogdLevelInit)
 {
     ShmMock();
-    
+
     system("> " DEFAULT_LOG_WORKSPACE "/" LEVEL_NOTIFY_FILE);
     // pf and not in docker
     LogConfInit();

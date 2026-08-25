@@ -18,32 +18,31 @@ using namespace std;
 using namespace testing;
 
 extern "C" {
-    //  extern
+//  extern
 }
 
-class EP_SLOGD_SESSION_MGR_FUNC_UTEST : public testing::Test
-{
+class EP_SLOGD_SESSION_MGR_FUNC_UTEST : public testing::Test {
 protected:
     virtual void SetUp()
     {
         system("echo [DBG][TEST][`date +%Y-%m-%d-%H-%M-%S`] Start test case");
         ResetErrLog();
     }
- 
+
     virtual void TearDown()
     {
         system("rm -rf " PATH_ROOT "/*");
         system("echo [DBG][TEST][`date +%Y-%m-%d-%H-%M-%S`] End test case");
         GlobalMockObject::verify();
     }
- 
+
     static void SetUpTestCase()
     {
         system("rm -rf " PATH_ROOT);
         system("mkdir -p " PATH_ROOT);
         system("echo [DBG][TEST][`date +%Y-%m-%d-%H-%M-%S`] Start test suite");
     }
- 
+
     static void TearDownTestCase()
     {
         system("rm -rf " PATH_ROOT);
@@ -51,7 +50,7 @@ protected:
     }
 };
 
-#define SESSION_MESSAGE    "session_message"
+#define SESSION_MESSAGE "session_message"
 TEST_F(EP_SLOGD_SESSION_MGR_FUNC_UTEST, ContinuousSession)
 {
     AdxCommHandle session = static_cast<AdxCommHandle>(LogMalloc(sizeof(CommHandle)));
@@ -61,7 +60,7 @@ TEST_F(EP_SLOGD_SESSION_MGR_FUNC_UTEST, ContinuousSession)
     session->timeout = 0;
     session->client = nullptr;
     SessionItem item;
-    item.session = (void *)session;
+    item.session = (void*)session;
     item.type = SESSION_CONTINUES_EXPORT;
     MOCKER(AdxSendMsg).stubs().will(returnValue(0));
     SessionMgrDeleteSession(&item);
@@ -80,7 +79,7 @@ TEST_F(EP_SLOGD_SESSION_MGR_FUNC_UTEST, ContinuousSessionError)
     session->timeout = 0;
     session->client = nullptr;
     SessionItem item;
-    item.session = (void *)session;
+    item.session = (void*)session;
     item.type = SESSION_CONTINUES_EXPORT;
     EXPECT_EQ(SessionMgrAddSession(&item), 0);
     EXPECT_EQ(SessionMgrAddSession(&item), -1);
@@ -92,7 +91,7 @@ TEST_F(EP_SLOGD_SESSION_MGR_FUNC_UTEST, SingleSession)
 {
     CommHandle session = {OptType::COMM_HDC, static_cast<OptHandle>(-1), NR_COMPONENTS, -1, nullptr};
     SessionItem item;
-    item.session = (void *)&session;
+    item.session = (void*)&session;
     item.type = SESSION_SINGLE_EXPORT;
     EXPECT_EQ(SessionMgrAddSession(&item), 0);
     EXPECT_EQ(SessionMgrDeleteSession(&item), 0);
@@ -102,7 +101,7 @@ TEST_F(EP_SLOGD_SESSION_MGR_FUNC_UTEST, SingleSessionError)
 {
     CommHandle session = {OptType::COMM_HDC, static_cast<OptHandle>(-1), NR_COMPONENTS, -1, nullptr};
     SessionItem item;
-    item.session = (void *)&session;
+    item.session = (void*)&session;
     item.type = SESSION_SINGLE_EXPORT;
     EXPECT_EQ(SessionMgrAddSession(&item), 0);
     EXPECT_EQ(SessionMgrAddSession(&item), 0);
@@ -146,7 +145,7 @@ TEST_F(EP_SLOGD_SESSION_MGR_FUNC_UTEST, InValidType)
     SessionType invalidType = (SessionType)99;
     CommHandle session = {OptType::COMM_HDC, static_cast<OptHandle>(-1), NR_COMPONENTS, -1, nullptr};
     SessionItem item;
-    item.session = (void *)&session;
+    item.session = (void*)&session;
     item.type = invalidType;
     EXPECT_EQ(SessionMgrAddSession(&item), -1);
     EXPECT_EQ(SessionMgrGetSession(&item), -1);
@@ -155,16 +154,16 @@ TEST_F(EP_SLOGD_SESSION_MGR_FUNC_UTEST, InValidType)
 
 TEST_F(EP_SLOGD_SESSION_MGR_FUNC_UTEST, InvalidItem)
 {
-    SessionItem *item = nullptr;
+    SessionItem* item = nullptr;
     EXPECT_EQ(SessionMgrAddSession(item), -1);
     EXPECT_EQ(SessionMgrSendMsg(item, SESSION_MESSAGE, sizeof(SESSION_MESSAGE)), -1);
 }
 
 TEST_F(EP_SLOGD_SESSION_MGR_FUNC_UTEST, InvalidSession)
 {
-    CommHandle *session = nullptr;
+    CommHandle* session = nullptr;
     SessionItem item;
-    item.session = (void *)session;
+    item.session = (void*)session;
     item.type = SESSION_SINGLE_EXPORT;
     EXPECT_EQ(SessionMgrAddSession(&item), -1);
     EXPECT_EQ(SessionMgrSendMsg(&item, SESSION_MESSAGE, sizeof(SESSION_MESSAGE)), -1);
@@ -174,13 +173,13 @@ TEST_F(EP_SLOGD_SESSION_MGR_FUNC_UTEST, InvalidData)
 {
     CommHandle session = {OptType::COMM_HDC, static_cast<OptHandle>(-1), NR_COMPONENTS, -1, nullptr};
     SessionItem item;
-    item.session = (void *)&session;
+    item.session = (void*)&session;
     item.type = SESSION_SINGLE_EXPORT;
     EXPECT_EQ(SessionMgrSendMsg(&item, nullptr, sizeof(SESSION_MESSAGE)), -1);
     EXPECT_EQ(SessionMgrSendMsg(&item, SESSION_MESSAGE, 0), -1);
 }
 
-int32_t AdxGetAttrByCommHandleStub(const CommHandle *handle, int32_t attr, int32_t *value)
+int32_t AdxGetAttrByCommHandleStub(const CommHandle* handle, int32_t attr, int32_t* value)
 {
     (void)handle;
     if (attr == HDC_SESSION_ATTR_STATUS) {
@@ -200,22 +199,20 @@ TEST_F(EP_SLOGD_SESSION_MGR_FUNC_UTEST, ContinuousGetStatusFailed)
     session->timeout = 0;
     session->client = nullptr;
     SessionItem item;
-    item.session = (void *)session;
+    item.session = (void*)session;
     item.type = SESSION_CONTINUES_EXPORT;
-    MOCKER(AdxGetAttrByCommHandle)
-        .stubs()
-        .will(invoke(AdxGetAttrByCommHandleStub));
+    MOCKER(AdxGetAttrByCommHandle).stubs().will(invoke(AdxGetAttrByCommHandleStub));
     EXPECT_EQ(SessionMgrAddSession(&item), 0);
     EXPECT_EQ(SessionMgrGetSession(&item), -1);
     EXPECT_EQ(SessionMgrDeleteSession(&item), 0);
 }
 
-#define SESSION_ERROR_WAIT_TIMEOUT      16
+#define SESSION_ERROR_WAIT_TIMEOUT 16
 TEST_F(EP_SLOGD_SESSION_MGR_FUNC_UTEST, SendMsgSingleTimeoutTwice)
 {
     CommHandle session = {OptType::COMM_HDC, static_cast<OptHandle>(-1), NR_COMPONENTS, -1, nullptr};
     SessionItem item;
-    item.session = (void *)&session;
+    item.session = (void*)&session;
     item.type = SESSION_SINGLE_EXPORT;
     MOCKER(AdxSendMsg)
         .stubs()
@@ -229,11 +226,9 @@ TEST_F(EP_SLOGD_SESSION_MGR_FUNC_UTEST, SendMsgSingleTimeoutAllAlong)
 {
     CommHandle session = {OptType::COMM_HDC, static_cast<OptHandle>(-1), NR_COMPONENTS, -1, nullptr};
     SessionItem item;
-    item.session = (void *)&session;
+    item.session = (void*)&session;
     item.type = SESSION_SINGLE_EXPORT;
-    MOCKER(AdxSendMsg)
-        .stubs()
-        .will(returnValue(SESSION_ERROR_WAIT_TIMEOUT));
+    MOCKER(AdxSendMsg).stubs().will(returnValue(SESSION_ERROR_WAIT_TIMEOUT));
     EXPECT_EQ(SessionMgrSendMsg(&item, SESSION_MESSAGE, sizeof(SESSION_MESSAGE)), -1);
 }
 
@@ -246,7 +241,7 @@ TEST_F(EP_SLOGD_SESSION_MGR_FUNC_UTEST, SendMsgContinuousTimeoutTwice)
     session->timeout = 0;
     session->client = nullptr;
     SessionItem item;
-    item.session = (void *)session;
+    item.session = (void*)session;
     item.type = SESSION_CONTINUES_EXPORT;
     MOCKER(AdxSendMsg)
         .stubs()
@@ -268,12 +263,9 @@ TEST_F(EP_SLOGD_SESSION_MGR_FUNC_UTEST, SendMsgContinuousSendFailed)
     session->timeout = 0;
     session->client = nullptr;
     SessionItem item;
-    item.session = (void *)session;
+    item.session = (void*)session;
     item.type = SESSION_CONTINUES_EXPORT;
-    MOCKER(AdxSendMsg)
-        .stubs()
-        .will(returnValue(-1))
-        .then(returnValue(0));
+    MOCKER(AdxSendMsg).stubs().will(returnValue(-1)).then(returnValue(0));
     EXPECT_EQ(SessionMgrAddSession(&item), -1);
     EXPECT_EQ(SessionMgrAddSession(&item), 0);
     EXPECT_EQ(SessionMgrSendMsg(&item, SESSION_MESSAGE, sizeof(SESSION_MESSAGE)), 0);
@@ -289,12 +281,9 @@ TEST_F(EP_SLOGD_SESSION_MGR_FUNC_UTEST, SendMsgContinuousTimeoutAllAlong)
     session->timeout = 0;
     session->client = nullptr;
     SessionItem item;
-    item.session = (void *)session;
+    item.session = (void*)session;
     item.type = SESSION_CONTINUES_EXPORT;
-    MOCKER(AdxSendMsg)
-        .stubs()
-        .will(returnValue(0))
-        .then(returnValue(SESSION_ERROR_WAIT_TIMEOUT));
+    MOCKER(AdxSendMsg).stubs().will(returnValue(0)).then(returnValue(SESSION_ERROR_WAIT_TIMEOUT));
     EXPECT_EQ(SessionMgrAddSession(&item), 0);
     EXPECT_EQ(SessionMgrSendMsg(&item, SESSION_MESSAGE, sizeof(SESSION_MESSAGE)), -1);
 }
@@ -303,7 +292,7 @@ TEST_F(EP_SLOGD_SESSION_MGR_FUNC_UTEST, SendMsgContinuousWithoutAdd)
 {
     AdxCommHandle session = nullptr;
     SessionItem item;
-    item.session = (void *)session;
+    item.session = (void*)session;
     item.type = SESSION_CONTINUES_EXPORT;
     EXPECT_EQ(SessionMgrSendMsg(&item, SESSION_MESSAGE, sizeof(SESSION_MESSAGE)), -1);
 }

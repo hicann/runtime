@@ -14,17 +14,17 @@
 extern "C" {
 #endif
 
-#define DEVICE_MAX_FILE_NUM_STR              "DeviceMaxFileNum"
-#define DEVICE_OS_MAX_FILE_NUM_STR           "DeviceOsMaxFileNum"
-#define DEVICE_NDEBUG_MAX_FILE_NUM_STR       "DeviceOsNdebugMaxFileNum"
-#define DEVICE_APP_MAX_FILE_NUM_STR          "DeviceAppMaxFileNum"
-#define DEVICE_MAX_FILE_SIZE_STR             "DeviceMaxFileSize"
-#define DEVICE_OS_MAX_FILE_SIZE_STR          "DeviceOsMaxFileSize"
-#define DEVICE_NDEBUG_MAX_FILE_SIZE_STR      "DeviceOsNdebugMaxFileSize"
-#define DEVICE_APP_MAX_FILE_SIZE_STR         "DeviceAppMaxFileSize"
-#define LOG_CONFIG_FILE                      "slog.conf"
-#define DEFAULT_LOG_BUF_SIZE                 (256 * 1024) // 256KB
-#define DEFAULT_RESERVE_DEVICE_APP_DIR_NUMS  24
+#define DEVICE_MAX_FILE_NUM_STR "DeviceMaxFileNum"
+#define DEVICE_OS_MAX_FILE_NUM_STR "DeviceOsMaxFileNum"
+#define DEVICE_NDEBUG_MAX_FILE_NUM_STR "DeviceOsNdebugMaxFileNum"
+#define DEVICE_APP_MAX_FILE_NUM_STR "DeviceAppMaxFileNum"
+#define DEVICE_MAX_FILE_SIZE_STR "DeviceMaxFileSize"
+#define DEVICE_OS_MAX_FILE_SIZE_STR "DeviceOsMaxFileSize"
+#define DEVICE_NDEBUG_MAX_FILE_SIZE_STR "DeviceOsNdebugMaxFileSize"
+#define DEVICE_APP_MAX_FILE_SIZE_STR "DeviceAppMaxFileSize"
+#define LOG_CONFIG_FILE "slog.conf"
+#define DEFAULT_LOG_BUF_SIZE (256 * 1024) // 256KB
+#define DEFAULT_RESERVE_DEVICE_APP_DIR_NUMS 24
 
 #ifdef __cplusplus
 }

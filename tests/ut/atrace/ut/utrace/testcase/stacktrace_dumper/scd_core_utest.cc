@@ -17,38 +17,33 @@
 #include "stacktrace_logger.h"
 
 extern "C" {
-    int32_t ScdCoreMain(int32_t argc, const char** argv);
+int32_t ScdCoreMain(int32_t argc, const char** argv);
 }
 
-class ScdCoreUtest: public testing::Test {
+class ScdCoreUtest : public testing::Test {
 protected:
     virtual void SetUp()
     {
         system("rm -rf " LLT_TEST_DIR "/*");
-        system("mkdir -p " LLT_TEST_DIR );
+        system("mkdir -p " LLT_TEST_DIR);
     }
 
     virtual void TearDown()
     {
         system("echo [DBG][TEST][`date +%Y-%m-%d-%H-%M-%S`] End test case");
         GlobalMockObject::verify();
-        system("rm -rf " LLT_TEST_DIR );
+        system("rm -rf " LLT_TEST_DIR);
     }
 
-    static void SetUpTestCase()
-    {
-    }
+    static void SetUpTestCase() {}
 
-    static void TearDownTestCase()
-    {
-    }
+    static void TearDownTestCase() {}
 };
-
 
 TEST_F(ScdCoreUtest, TestScdCoreMain)
 {
-    const char *argValue[] = {"./asc_dumper"};
-    const char **argv = (const char **)&argValue;
+    const char* argValue[] = {"./asc_dumper"};
+    const char** argv = (const char**)&argValue;
     auto argc = sizeof(argv) / sizeof(argv[0]);
     TraStatus ret = TRACE_FAILURE;
 

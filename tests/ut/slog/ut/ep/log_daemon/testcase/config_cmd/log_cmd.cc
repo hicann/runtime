@@ -25,16 +25,15 @@ using namespace std;
 using namespace testing;
 
 extern "C" {
-extern int32_t LogCmdSendLogMsg(LogCmdMsg *rcvMsg, const char *msg, uint16_t devId);
-extern int32_t CheckEnvSupport(const CommHandle *handle, const MsnReq *req);
-extern int32_t ParseDeviceCmd(const CommHandle *handle, MsnReq *req, uint16_t devId);
-extern int32_t CmdRespSettingResult(const CommHandle *handle, const char *resultBuf, size_t resultLen, bool isError);
-extern void HandleErrorCode(int32_t drvRet, ts_error_t tsRet, const char **result);
-extern int32_t SaveToResult(char *resultBuf, uint32_t bufLen, const char *value);
+extern int32_t LogCmdSendLogMsg(LogCmdMsg* rcvMsg, const char* msg, uint16_t devId);
+extern int32_t CheckEnvSupport(const CommHandle* handle, const MsnReq* req);
+extern int32_t ParseDeviceCmd(const CommHandle* handle, MsnReq* req, uint16_t devId);
+extern int32_t CmdRespSettingResult(const CommHandle* handle, const char* resultBuf, size_t resultLen, bool isError);
+extern void HandleErrorCode(int32_t drvRet, ts_error_t tsRet, const char** result);
+extern int32_t SaveToResult(char* resultBuf, uint32_t bufLen, const char* value);
 }
 
-class EP_LOG_DAEMON_CONFIG_CMD_UTEST : public testing::Test
-{
+class EP_LOG_DAEMON_CONFIG_CMD_UTEST : public testing::Test {
 protected:
     virtual void SetUp()
     {
@@ -63,10 +62,7 @@ protected:
     }
 };
 
-TEST_F(EP_LOG_DAEMON_CONFIG_CMD_UTEST, MsnCmdInit)
-{
-    EXPECT_EQ(CONFIG_OK, MsnCmdInit());
-}
+TEST_F(EP_LOG_DAEMON_CONFIG_CMD_UTEST, MsnCmdInit) { EXPECT_EQ(CONFIG_OK, MsnCmdInit()); }
 
 TEST_F(EP_LOG_DAEMON_CONFIG_CMD_UTEST, MsnCmdDestory)
 {
@@ -108,10 +104,7 @@ TEST_F(EP_LOG_DAEMON_CONFIG_CMD_UTEST, CmdRespSettingResult)
     handle.type = COMM_HDC;
     handle.session = (OptHandle)0x12345678;
     char result[] = "success";
-    MOCKER(AdxSendMsgByHandle)
-        .stubs()
-        .will(returnValue(-1))
-        .then(returnValue(0));
+    MOCKER(AdxSendMsgByHandle).stubs().will(returnValue(-1)).then(returnValue(0));
     EXPECT_EQ(CONFIG_ERROR, CmdRespSettingResult(&handle, result, strlen(result), false));
     EXPECT_EQ(CONFIG_OK, CmdRespSettingResult(&handle, result, strlen(result), false));
     EXPECT_EQ(CONFIG_OK, CmdRespSettingResult(&handle, result, strlen(result), true));
@@ -122,7 +115,6 @@ TEST_F(EP_LOG_DAEMON_CONFIG_CMD_UTEST, ReportHandle)
     CommHandle handle;
     handle.type = COMM_HDC;
     handle.session = (OptHandle)0x12345678;
-
 
     MOCKER(log_set_dfx_param)
         .stubs()
@@ -140,7 +132,7 @@ TEST_F(EP_LOG_DAEMON_CONFIG_CMD_UTEST, SetLogLevel)
 {
     EXPECT_EQ(CONFIG_OK, LogCmdInitMutex());
 
-    char *value = "SetLogLevel(1)[FMK:debug]";
+    char* value = "SetLogLevel(1)[FMK:debug]";
     MOCKER(MsgQueueOpen).stubs().will(returnValue(-1)).then(returnValue(0));
     MOCKER(ToolGetErrorCode).stubs().will(repeat(0, 3)).then(returnValue(ENOMSG));
     EXPECT_EQ(CONFIG_ERROR, LogCmdSetLogLevel(value, 0));
@@ -159,10 +151,7 @@ TEST_F(EP_LOG_DAEMON_CONFIG_CMD_UTEST, GetLogLevel)
     char resultBuf[1024] = {0};
     uint32_t resultLen = 0;
 
-    MOCKER(LogCmdSendLogMsg)
-        .stubs()
-        .will(returnValue(CONFIG_LOG_MSGQUEUE_FAILED))
-        .then(returnValue(CONFIG_OK));
+    MOCKER(LogCmdSendLogMsg).stubs().will(returnValue(CONFIG_LOG_MSGQUEUE_FAILED)).then(returnValue(CONFIG_OK));
     EXPECT_EQ(CONFIG_LOG_MSGQUEUE_FAILED, LogCmdGetLogLevel(resultBuf, &resultLen, 0));
     EXPECT_EQ(CONFIG_OK, LogCmdGetLogLevel(resultBuf, &resultLen, 0));
 
@@ -174,10 +163,10 @@ TEST_F(EP_LOG_DAEMON_CONFIG_CMD_UTEST, MsnCmdProcessConfigGet)
     EXPECT_EQ(CONFIG_OK, MsnCmdInit());
     CommHandle command = {COMM_HDC, (OptHandle)0x12345678};
     size_t len = sizeof(LogDataMsg) + sizeof(MsnReq);
-    LogDataMsg *logDataMsg = (LogDataMsg *)malloc(len);
+    LogDataMsg* logDataMsg = (LogDataMsg*)malloc(len);
     logDataMsg->devId = 0;
     logDataMsg->sliceLen = sizeof(MsnReq);
-    MsnReq *msnReq = (MsnReq *)logDataMsg->data;
+    MsnReq* msnReq = (MsnReq*)logDataMsg->data;
     msnReq->cmdType = CONFIG_GET;
     msnReq->subCmd = 0;
     msnReq->valueLen = 0;
@@ -192,7 +181,7 @@ TEST_F(EP_LOG_DAEMON_CONFIG_CMD_UTEST, SaveToResultError)
 {
     char resultBuf[8] = {0};
     uint32_t resultLen = strlen(resultBuf);
-    char *value = "1,2,3,4,5,6,7,8,9,10,11";
+    char* value = "1,2,3,4,5,6,7,8,9,10,11";
     EXPECT_EQ(CONFIG_BUFFER_NOT_ENOUGH, SaveToResult(resultBuf, 8, value));
 
     MOCKER(strcat_s).stubs().will(returnValue(-1));
@@ -205,15 +194,15 @@ TEST_F(EP_LOG_DAEMON_CONFIG_CMD_UTEST, MsnCmdProcessConfigSet)
     EXPECT_EQ(CONFIG_OK, MsnCmdInit());
     CommHandle command = {COMM_HDC, (OptHandle)0x12345678};
     size_t len = sizeof(LogDataMsg) + sizeof(MsnReq) + sizeof(DfxCommon);
-    LogDataMsg *logDataMsg = (LogDataMsg *)malloc(len);
+    LogDataMsg* logDataMsg = (LogDataMsg*)malloc(len);
     memset_s(logDataMsg, len, 0, len);
     logDataMsg->devId = 0;
     logDataMsg->sliceLen = sizeof(MsnReq) + sizeof(DfxCommon);
-    MsnReq *msnReq = (MsnReq *)logDataMsg->data;
+    MsnReq* msnReq = (MsnReq*)logDataMsg->data;
     msnReq->cmdType = CONFIG_SET;
     msnReq->subCmd = INVALID_TYPE;
     msnReq->valueLen = sizeof(DfxCommon);
-    DfxCommon *common = (DfxCommon*)msnReq->value;
+    DfxCommon* common = (DfxCommon*)msnReq->value;
     common->value = 1;
 
     EXPECT_EQ(CONFIG_OK, MsnCmdProcess(&command, logDataMsg, len)); // COMMAND_INFO_ERROR_MSG
@@ -240,7 +229,7 @@ TEST_F(EP_LOG_DAEMON_CONFIG_CMD_UTEST, MsnCmdProcessConfigSet)
     common->value = 1;
 
     msnReq->subCmd = AIC_SWITCH;
-    DfxCoreSetMask * coreMask = (DfxCoreSetMask*)msnReq->value;
+    DfxCoreSetMask* coreMask = (DfxCoreSetMask*)msnReq->value;
     coreMask->coreSwitch = 1;
     coreMask->configNum = 2;
     coreMask->coreId[0] = 1;
@@ -259,7 +248,7 @@ TEST_F(EP_LOG_DAEMON_CONFIG_CMD_UTEST, MsnCmdProcessConfigSet)
 
 TEST_F(EP_LOG_DAEMON_CONFIG_CMD_UTEST, HandleErrorCode)
 {
-    const char *result = SET_SUCCESS_MSG;
+    const char* result = SET_SUCCESS_MSG;
     HandleErrorCode(LOG_OK, TS_SUCCESS, &result);
     EXPECT_EQ(0, strcmp(SET_SUCCESS_MSG, result));
     HandleErrorCode(LOG_ERROR, TS_SUCCESS, &result);

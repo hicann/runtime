@@ -26,7 +26,7 @@ uint32_t MergeSlogStubGetLastCmd(void);
 namespace {
 constexpr char kMergeRoot[] = "/tmp/mergeslog_coverage_utest";
 constexpr char kMergeOutput[] = "/tmp/mergeslog_coverage_utest/ascendmerge.log.gz";
-}
+} // namespace
 
 class MergeSlogCoverageUtest : public testing::Test {
 protected:
@@ -39,10 +39,7 @@ protected:
         (void)std::remove(kMergeOutput);
     }
 
-    void TearDown() override
-    {
-        std::filesystem::remove_all(kMergeRoot);
-    }
+    void TearDown() override { std::filesystem::remove_all(kMergeRoot); }
 };
 
 TEST_F(MergeSlogCoverageUtest, RejectsInvalidArguments)

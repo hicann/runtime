@@ -18,11 +18,10 @@ using namespace std;
 using namespace testing;
 
 extern "C" {
-extern int32_t HbmDetectGetResult(const CommHandle *handle);
+extern int32_t HbmDetectGetResult(const CommHandle* handle);
 }
 
-class EP_HBM_DETECT_EXCP_UTEST : public testing::Test
-{
+class EP_HBM_DETECT_EXCP_UTEST : public testing::Test {
 protected:
     virtual void SetUp()
     {
@@ -55,11 +54,11 @@ protected:
 TEST(EP_HBM_DETECT_EXCP_UTEST, HbmDetectHandleInvalid)
 {
     OptHandle session = (OptHandle)0x123456;
-    AmlHbmDetectInfo info = { 0 };
+    AmlHbmDetectInfo info = {0};
     info.magic = HBM_AML_MAGIC_NUM;
     info.version = HBM_AML_VERSION;
     info.operate = OPERATE_RUN;
-    LogDataMsg *msg = (LogDataMsg *)malloc(sizeof(LogDataMsg) + sizeof(AmlHbmDetectInfo));
+    LogDataMsg* msg = (LogDataMsg*)malloc(sizeof(LogDataMsg) + sizeof(AmlHbmDetectInfo));
     (void)memcpy_s(msg->data, sizeof(AmlHbmDetectInfo), &info, sizeof(AmlHbmDetectInfo));
     int ret = HbmDetectProcess(NULL, (void*)msg, sizeof(LogDataMsg) + sizeof(AmlHbmDetectInfo));
     EXPECT_EQ(-1, ret);
@@ -80,11 +79,11 @@ TEST(EP_HBM_DETECT_EXCP_UTEST, HbmDetectLengthInvalid)
 {
     OptHandle session = (OptHandle)0x123456;
     CommHandle handle = {COMM_HDC, session, COMPONENT_HBM_DETECT, -1, nullptr};
-    AmlHbmDetectInfo info = { 0 };
+    AmlHbmDetectInfo info = {0};
     info.magic = HBM_AML_MAGIC_NUM;
     info.version = HBM_AML_VERSION;
     info.operate = OPERATE_RUN;
-    LogDataMsg *msg = (LogDataMsg *)malloc(sizeof(LogDataMsg) + sizeof(AmlHbmDetectInfo));
+    LogDataMsg* msg = (LogDataMsg*)malloc(sizeof(LogDataMsg) + sizeof(AmlHbmDetectInfo));
     (void)memcpy_s(msg->data, sizeof(AmlHbmDetectInfo), &info, sizeof(AmlHbmDetectInfo));
     int ret = HbmDetectProcess(&handle, (void*)msg, 0);
     EXPECT_EQ(-1, ret);
@@ -96,11 +95,11 @@ TEST(EP_HBM_DETECT_EXCP_UTEST, HbmDetectMagicInvalid)
 {
     OptHandle session = (OptHandle)0x123456;
     CommHandle handle = {COMM_HDC, session, COMPONENT_HBM_DETECT, -1, nullptr};
-    AmlHbmDetectInfo info = { 0 };
+    AmlHbmDetectInfo info = {0};
     info.magic = HBM_AML_MAGIC_NUM + 1;
     info.version = HBM_AML_VERSION;
     info.operate = OPERATE_RUN;
-    LogDataMsg *msg = (LogDataMsg *)malloc(sizeof(LogDataMsg) + sizeof(AmlHbmDetectInfo));
+    LogDataMsg* msg = (LogDataMsg*)malloc(sizeof(LogDataMsg) + sizeof(AmlHbmDetectInfo));
     (void)memcpy_s(msg->data, sizeof(AmlHbmDetectInfo), &info, sizeof(AmlHbmDetectInfo));
     MOCKER(ToolAccessWithMode).stubs().will(returnValue(0));
     int ret = HbmDetectProcess(&handle, (void*)msg, sizeof(LogDataMsg) + sizeof(AmlHbmDetectInfo));
@@ -113,11 +112,11 @@ TEST(EP_HBM_DETECT_EXCP_UTEST, HbmDetectVersionInvalid)
 {
     OptHandle session = (OptHandle)0x123456;
     CommHandle handle = {COMM_HDC, session, COMPONENT_HBM_DETECT, -1, nullptr};
-    AmlHbmDetectInfo info = { 0 };
+    AmlHbmDetectInfo info = {0};
     info.magic = HBM_AML_MAGIC_NUM;
     info.version = HBM_AML_VERSION - 1;
     info.operate = OPERATE_RUN;
-    LogDataMsg *msg = (LogDataMsg *)malloc(sizeof(LogDataMsg) + sizeof(AmlHbmDetectInfo));
+    LogDataMsg* msg = (LogDataMsg*)malloc(sizeof(LogDataMsg) + sizeof(AmlHbmDetectInfo));
     (void)memcpy_s(msg->data, sizeof(AmlHbmDetectInfo), &info, sizeof(AmlHbmDetectInfo));
     MOCKER(ToolAccessWithMode).stubs().will(returnValue(0));
     int ret = HbmDetectProcess(&handle, (void*)msg, sizeof(LogDataMsg) + sizeof(AmlHbmDetectInfo));
@@ -130,11 +129,11 @@ TEST(EP_HBM_DETECT_EXCP_UTEST, HbmDetectHbmOperateInvalid)
 {
     OptHandle session = (OptHandle)0x123456;
     CommHandle handle = {COMM_HDC, session, COMPONENT_HBM_DETECT, -1, nullptr};
-    AmlHbmDetectInfo info = { 0 };
+    AmlHbmDetectInfo info = {0};
     info.magic = HBM_AML_MAGIC_NUM;
     info.version = HBM_AML_VERSION;
     info.operate = (AmlHbmOperate)9;
-    LogDataMsg *msg = (LogDataMsg *)malloc(sizeof(LogDataMsg) + sizeof(AmlHbmDetectInfo));
+    LogDataMsg* msg = (LogDataMsg*)malloc(sizeof(LogDataMsg) + sizeof(AmlHbmDetectInfo));
     (void)memcpy_s(msg->data, sizeof(AmlHbmDetectInfo), &info, sizeof(AmlHbmDetectInfo));
     MOCKER(ToolAccessWithMode).stubs().will(returnValue(0));
     int ret = HbmDetectProcess(&handle, (void*)msg, sizeof(LogDataMsg) + sizeof(AmlHbmDetectInfo));
@@ -143,7 +142,7 @@ TEST(EP_HBM_DETECT_EXCP_UTEST, HbmDetectHbmOperateInvalid)
     GlobalMockObject::verify();
 }
 
-drvError_t halHdcGetSessionAttrStatusClosed(HDC_SESSION session, int attr, int *value)
+drvError_t halHdcGetSessionAttrStatusClosed(HDC_SESSION session, int attr, int* value)
 {
     (void)session;
     if (attr == HDC_SESSION_ATTR_STATUS) {
@@ -157,7 +156,7 @@ drvError_t halHdcGetSessionAttrStatusClosed(HDC_SESSION session, int attr, int *
     return DRV_ERROR_NONE;
 }
 
-drvError_t halHdcGetSessionAttrRunEnvGetFailed(HDC_SESSION session, int attr, int *value)
+drvError_t halHdcGetSessionAttrRunEnvGetFailed(HDC_SESSION session, int attr, int* value)
 {
     (void)session;
     if (attr == HDC_SESSION_ATTR_RUN_ENV) {
@@ -167,7 +166,7 @@ drvError_t halHdcGetSessionAttrRunEnvGetFailed(HDC_SESSION session, int attr, in
     return DRV_ERROR_NONE;
 }
 
-drvError_t halHdcGetSessionAttrStatusRunEnvDocker(HDC_SESSION session, int attr, int *value)
+drvError_t halHdcGetSessionAttrStatusRunEnvDocker(HDC_SESSION session, int attr, int* value)
 {
     (void)session;
     if (attr == HDC_SESSION_ATTR_RUN_ENV) {
@@ -181,11 +180,11 @@ TEST(EP_HBM_DETECT_EXCP_UTEST, HbmDetectHandleGetRunEnvFailed)
 {
     OptHandle session = (OptHandle)0x123456;
     CommHandle handle = {COMM_HDC, session, COMPONENT_HBM_DETECT, -1, nullptr};
-    AmlHbmDetectInfo info = { 0 };
+    AmlHbmDetectInfo info = {0};
     info.magic = HBM_AML_MAGIC_NUM;
     info.version = HBM_AML_VERSION;
     info.operate = OPERATE_RUN_FREE;
-    LogDataMsg *msg = (LogDataMsg *)malloc(sizeof(LogDataMsg) + sizeof(AmlHbmDetectInfo));
+    LogDataMsg* msg = (LogDataMsg*)malloc(sizeof(LogDataMsg) + sizeof(AmlHbmDetectInfo));
     (void)memcpy_s(msg->data, sizeof(AmlHbmDetectInfo), &info, sizeof(AmlHbmDetectInfo));
     MOCKER(ToolAccessWithMode).stubs().will(returnValue(0));
     MOCKER(halHdcGetSessionAttr).stubs().will(invoke(halHdcGetSessionAttrRunEnvGetFailed));
@@ -199,11 +198,11 @@ TEST(EP_HBM_DETECT_EXCP_UTEST, HbmDetectHandleInDocker)
 {
     OptHandle session = (OptHandle)0x123456;
     CommHandle handle = {COMM_HDC, session, COMPONENT_HBM_DETECT, -1, nullptr};
-    AmlHbmDetectInfo info = { 0 };
+    AmlHbmDetectInfo info = {0};
     info.magic = HBM_AML_MAGIC_NUM;
     info.version = HBM_AML_VERSION;
     info.operate = OPERATE_RUN_FREE;
-    LogDataMsg *msg = (LogDataMsg *)malloc(sizeof(LogDataMsg) + sizeof(AmlHbmDetectInfo));
+    LogDataMsg* msg = (LogDataMsg*)malloc(sizeof(LogDataMsg) + sizeof(AmlHbmDetectInfo));
     (void)memcpy_s(msg->data, sizeof(AmlHbmDetectInfo), &info, sizeof(AmlHbmDetectInfo));
     MOCKER(ToolAccessWithMode).stubs().will(returnValue(0));
     MOCKER(halHdcGetSessionAttr).stubs().will(invoke(halHdcGetSessionAttrStatusRunEnvDocker));
@@ -213,16 +212,15 @@ TEST(EP_HBM_DETECT_EXCP_UTEST, HbmDetectHandleInDocker)
     GlobalMockObject::verify();
 }
 
-
 TEST(EP_HBM_DETECT_EXCP_UTEST, HbmDetectHandleInterrupts)
 {
     OptHandle session = (OptHandle)0x123456;
     CommHandle handle = {COMM_HDC, session, COMPONENT_HBM_DETECT, -1, nullptr};
-    AmlHbmDetectInfo info = { 0 };
+    AmlHbmDetectInfo info = {0};
     info.magic = HBM_AML_MAGIC_NUM;
     info.version = HBM_AML_VERSION;
     info.operate = OPERATE_RUN_FREE;
-    LogDataMsg *msg = (LogDataMsg *)malloc(sizeof(LogDataMsg) + sizeof(AmlHbmDetectInfo));
+    LogDataMsg* msg = (LogDataMsg*)malloc(sizeof(LogDataMsg) + sizeof(AmlHbmDetectInfo));
     (void)memcpy_s(msg->data, sizeof(AmlHbmDetectInfo), &info, sizeof(AmlHbmDetectInfo));
     MOCKER(ToolAccessWithMode).stubs().will(returnValue(0));
     MOCKER(halHdcGetSessionAttr).stubs().will(invoke(halHdcGetSessionAttrStatusClosed));
@@ -236,11 +234,11 @@ TEST(EP_HBM_DETECT_EXCP_UTEST, HbmDetectCreateThreadFailed)
 {
     OptHandle session = (OptHandle)0x123456;
     CommHandle handle = {COMM_HDC, session, COMPONENT_HBM_DETECT, -1, nullptr};
-    AmlHbmDetectInfo info = { 0 };
+    AmlHbmDetectInfo info = {0};
     info.magic = HBM_AML_MAGIC_NUM;
     info.version = HBM_AML_VERSION;
     info.operate = OPERATE_RUN_FREE;
-    LogDataMsg *msg = (LogDataMsg *)malloc(sizeof(LogDataMsg) + sizeof(AmlHbmDetectInfo));
+    LogDataMsg* msg = (LogDataMsg*)malloc(sizeof(LogDataMsg) + sizeof(AmlHbmDetectInfo));
     (void)memcpy_s(msg->data, sizeof(AmlHbmDetectInfo), &info, sizeof(AmlHbmDetectInfo));
     MOCKER(ToolAccessWithMode).stubs().will(returnValue(0));
     MOCKER(ToolCreateTaskWithThreadAttr).stubs().will(returnValue(-1));
@@ -254,11 +252,11 @@ TEST(EP_HBM_DETECT_EXCP_UTEST, HbmDetectHbmtesterNotExist)
 {
     OptHandle session = (OptHandle)0x123456;
     CommHandle handle = {COMM_HDC, session, COMPONENT_HBM_DETECT, -1, nullptr};
-    AmlHbmDetectInfo info = { 0 };
+    AmlHbmDetectInfo info = {0};
     info.magic = HBM_AML_MAGIC_NUM;
     info.version = HBM_AML_VERSION;
     info.operate = OPERATE_RUN_FREE;
-    LogDataMsg *msg = (LogDataMsg *)malloc(sizeof(LogDataMsg) + sizeof(AmlHbmDetectInfo));
+    LogDataMsg* msg = (LogDataMsg*)malloc(sizeof(LogDataMsg) + sizeof(AmlHbmDetectInfo));
     (void)memcpy_s(msg->data, sizeof(AmlHbmDetectInfo), &info, sizeof(AmlHbmDetectInfo));
     MOCKER(ToolAccessWithMode).stubs().will(returnValue(-1));
     int ret = HbmDetectProcess(&handle, (void*)msg, sizeof(LogDataMsg) + sizeof(AmlHbmDetectInfo));
@@ -271,11 +269,11 @@ TEST(EP_HBM_DETECT_EXCP_UTEST, HbmDetectSetThreadNameFailed)
 {
     OptHandle session = (OptHandle)0x123456;
     CommHandle handle = {COMM_HDC, session, COMPONENT_HBM_DETECT, -1, nullptr};
-    AmlHbmDetectInfo info = { 0 };
+    AmlHbmDetectInfo info = {0};
     info.magic = HBM_AML_MAGIC_NUM;
     info.version = HBM_AML_VERSION;
     info.operate = OPERATE_RUN_FREE;
-    LogDataMsg *msg = (LogDataMsg *)malloc(sizeof(LogDataMsg) + sizeof(AmlHbmDetectInfo));
+    LogDataMsg* msg = (LogDataMsg*)malloc(sizeof(LogDataMsg) + sizeof(AmlHbmDetectInfo));
     (void)memcpy_s(msg->data, sizeof(AmlHbmDetectInfo), &info, sizeof(AmlHbmDetectInfo));
     MOCKER(ToolAccessWithMode).stubs().will(returnValue(0));
     MOCKER(ToolSetThreadName).stubs().will(returnValue(-1));
@@ -289,14 +287,14 @@ TEST(EP_HBM_DETECT_EXCP_UTEST, HbmDetectSetAddrExeFailed)
 {
     OptHandle session = (OptHandle)0x123456;
     CommHandle handle = {COMM_HDC, session, COMPONENT_HBM_DETECT, -1, nullptr};
-    AmlHbmDetectInfo info = { 0 };
+    AmlHbmDetectInfo info = {0};
     info.magic = HBM_AML_MAGIC_NUM;
     info.version = HBM_AML_VERSION;
     info.operate = OPERATE_SET_ADDR;
     info.num = 1;
     info.info[0].startAddr = 0x123456;
     info.info[0].endAddr = 0x123456 + 0x1000;
-    LogDataMsg *msg = (LogDataMsg *)malloc(sizeof(LogDataMsg) + sizeof(AmlHbmDetectInfo));
+    LogDataMsg* msg = (LogDataMsg*)malloc(sizeof(LogDataMsg) + sizeof(AmlHbmDetectInfo));
     (void)memcpy_s(msg->data, sizeof(AmlHbmDetectInfo), &info, sizeof(AmlHbmDetectInfo));
     MOCKER(ToolAccessWithMode).stubs().will(returnValue(0));
     MOCKER(HbmDetectGetResult).stubs().will(returnValue(-1));
@@ -310,14 +308,14 @@ TEST(EP_HBM_DETECT_EXCP_UTEST, HbmDetectRunExeFailed)
 {
     OptHandle session = (OptHandle)0x123456;
     CommHandle handle = {COMM_HDC, session, COMPONENT_HBM_DETECT, -1, nullptr};
-    AmlHbmDetectInfo info = { 0 };
+    AmlHbmDetectInfo info = {0};
     info.magic = HBM_AML_MAGIC_NUM;
     info.version = HBM_AML_VERSION;
     info.operate = OPERATE_RUN;
     info.num = 1;
     info.info[0].startAddr = 0x123456;
     info.info[0].endAddr = 0x123456 + 0x1000;
-    LogDataMsg *msg = (LogDataMsg *)malloc(sizeof(LogDataMsg) + sizeof(AmlHbmDetectInfo));
+    LogDataMsg* msg = (LogDataMsg*)malloc(sizeof(LogDataMsg) + sizeof(AmlHbmDetectInfo));
     (void)memcpy_s(msg->data, sizeof(AmlHbmDetectInfo), &info, sizeof(AmlHbmDetectInfo));
     MOCKER(ToolAccessWithMode).stubs().will(returnValue(0));
     MOCKER(HbmDetectGetResult).stubs().will(returnValue(-1));

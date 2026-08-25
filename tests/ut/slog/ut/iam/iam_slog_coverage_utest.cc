@@ -49,10 +49,7 @@ namespace {
 constexpr char kIamRoot[] = "/tmp/iam_slog_utest";
 int32_t g_registerCallbackCount = 0;
 
-void CountRegisterCallback()
-{
-    g_registerCallbackCount++;
-}
+void CountRegisterCallback() { g_registerCallbackCount++; }
 
 void CreateIamService()
 {
@@ -117,7 +114,7 @@ int RunAsyncCoverageScenario()
     RingBufferCtrl countCtrl = {};
     countCtrl.logNextSeq = 2U;
     countCtrl.lastSeq = 5U;
-    RingBufferStat countBuffer = { sizeof(countCtrl), &countCtrl };
+    RingBufferStat countBuffer = {sizeof(countCtrl), &countCtrl};
     check(DlogGetBufNodeCount(&countBuffer) == 0U);
     check(countCtrl.lastSeq == 2U);
     LogCtrlIncLogic();
@@ -140,8 +137,8 @@ int RunAsyncCoverageScenario()
     check((stat(LOGOUT_IAM_SERVICE_PATH, &serviceStat) == 0) && (serviceStat.st_size > 0));
 
     std::vector<char> retryStorage(DEF_SIZE / 4U);
-    RingBufferStat retryBuffer = { static_cast<uint32_t>(retryStorage.size()),
-                                   reinterpret_cast<RingBufferCtrl*>(retryStorage.data()) };
+    RingBufferStat retryBuffer = {
+        static_cast<uint32_t>(retryStorage.size()), reinterpret_cast<RingBufferCtrl*>(retryStorage.data())};
     check(LogBufInitHead(retryBuffer.ringBufferCtrl, retryBuffer.logBufSize, 0) == SYS_OK);
     LogHead retryHead = {};
     retryHead.magic = HEAD_MAGIC;
@@ -175,7 +172,7 @@ int RunAsyncCoverageScenario()
     DlogSetInited(false);
     return result;
 }
-}
+} // namespace
 
 class IamSlogCoverageUtest : public testing::Test {
 protected:
@@ -208,8 +205,7 @@ protected:
         SetGlobalLogTypeLevelVar(originalGlobalLevel_, DLOG_GLOBAL_TYPE_MASK);
         SetGlobalEnableEventVar(originalEventLevel_);
         for (uint32_t moduleId = 0; moduleId < originalModuleLevels_.size(); moduleId++) {
-            (void)DlogSetLogTypeLevelByModuleId(
-                moduleId, originalModuleLevels_[moduleId], DLOG_GLOBAL_TYPE_MASK);
+            (void)DlogSetLogTypeLevelByModuleId(moduleId, originalModuleLevels_[moduleId], DLOG_GLOBAL_TYPE_MASK);
         }
         DlogSetInited(false);
         (void)unlink(LOGOUT_IAM_SERVICE_PATH);

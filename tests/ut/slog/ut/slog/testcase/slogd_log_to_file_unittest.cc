@@ -19,26 +19,26 @@
 #include "slogd_syslog.h"
 
 extern "C" {
-    #include "securec.h"
-    #include "log_to_file.h"
-    #include "log_config_api.h"
-    #include "slogd_utest_stub.h"
-    #include "log_queue.h"
-    void FsyncLogToDisk(const char *logPath);
-    unsigned int LogAgentMkdir(const char *logPath);
-    unsigned int LogAgentInitDeviceApp(StLogFileList *logList, StSubLogFileList *subFileList, LogInfo* logInfo);
-    unsigned int LogAgentGetDeviceAppFileList(StSubLogFileList *subFileList);
-    unsigned int LogAgentInitDeviceOsMaxFileNum(StLogFileList *logList);
-    unsigned int LogAgentGetDeviceFileList(StLogFileList *logList);
-    unsigned int LogAgentGetDeviceOsFileList(StLogFileList *logList);
-    unsigned int LogAgentWriteDeviceLog(const StLogFileList *logList, char *msg, const DeviceWriteLogInfo *info);
-    int32_t GetFileOfSize(StSubLogFileList *pstSubInfo, const StLogDataBlock *pstLogData,
-                          const char *pFileName, off_t *filesize);
-    bool IsPathValidbyLog(const char *ppath, size_t pathLen);
-    bool CheckPathValid(const char *ppath);
-    uint32_t GetLocalTimeHelper(size_t bufLen, char *timeBuffer);
-    uint32_t LogAgentWriteDataToFile(StSubLogFileList *pstSubInfo, const StLogDataBlock *pstLogData,
-                                     char *const aucFileName, size_t aucFileNameLen);
+#include "securec.h"
+#include "log_to_file.h"
+#include "log_config_api.h"
+#include "slogd_utest_stub.h"
+#include "log_queue.h"
+void FsyncLogToDisk(const char* logPath);
+unsigned int LogAgentMkdir(const char* logPath);
+unsigned int LogAgentInitDeviceApp(StLogFileList* logList, StSubLogFileList* subFileList, LogInfo* logInfo);
+unsigned int LogAgentGetDeviceAppFileList(StSubLogFileList* subFileList);
+unsigned int LogAgentInitDeviceOsMaxFileNum(StLogFileList* logList);
+unsigned int LogAgentGetDeviceFileList(StLogFileList* logList);
+unsigned int LogAgentGetDeviceOsFileList(StLogFileList* logList);
+unsigned int LogAgentWriteDeviceLog(const StLogFileList* logList, char* msg, const DeviceWriteLogInfo* info);
+int32_t GetFileOfSize(
+    StSubLogFileList* pstSubInfo, const StLogDataBlock* pstLogData, const char* pFileName, off_t* filesize);
+bool IsPathValidbyLog(const char* ppath, size_t pathLen);
+bool CheckPathValid(const char* ppath);
+uint32_t GetLocalTimeHelper(size_t bufLen, char* timeBuffer);
+uint32_t LogAgentWriteDataToFile(
+    StSubLogFileList* pstSubInfo, const StLogDataBlock* pstLogData, char* const aucFileName, size_t aucFileNameLen);
 }
 
 #define LLT_SLOG_DIR "llt/abl/slog"
@@ -50,24 +50,15 @@ public:
     void TearDown();
 };
 
-void LogToFile::SetUp()
-{
-    MOCKER(LogAgentRemoveFile).stubs().will(returnValue((unsigned int)OK));
-}
+void LogToFile::SetUp() { MOCKER(LogAgentRemoveFile).stubs().will(returnValue((unsigned int)OK)); }
 
-void LogToFile::TearDown()
-{
-    GlobalMockObject::reset();
-}
+void LogToFile::TearDown() { GlobalMockObject::reset(); }
 
-TEST_F(LogToFile, GetLocalTime01)
-{
-    EXPECT_EQ(NOK, GetLocalTimeHelper(0, NULL));
-}
+TEST_F(LogToFile, GetLocalTime01) { EXPECT_EQ(NOK, GetLocalTimeHelper(0, NULL)); }
 
 TEST_F(LogToFile, GetLocalTime02)
 {
-    CHAR aucTime[TIME_STR_SIZE + 1] = { 0 };
+    CHAR aucTime[TIME_STR_SIZE + 1] = {0};
     MOCKER(ToolLocalTimeR).stubs().will(returnValue(1));
     EXPECT_EQ(NOK, GetLocalTimeHelper(TIME_STR_SIZE, aucTime));
     GlobalMockObject::reset();
@@ -75,7 +66,7 @@ TEST_F(LogToFile, GetLocalTime02)
 
 TEST_F(LogToFile, GetLocalTime03)
 {
-    CHAR aucTime[TIME_STR_SIZE + 1] = { 0 };
+    CHAR aucTime[TIME_STR_SIZE + 1] = {0};
     MOCKER(ToolGetTimeOfDay).stubs().will(returnValue(-1));
     EXPECT_EQ(NOK, GetLocalTimeHelper(TIME_STR_SIZE, aucTime));
     GlobalMockObject::reset();
@@ -83,14 +74,14 @@ TEST_F(LogToFile, GetLocalTime03)
 
 TEST_F(LogToFile, GetLocalTime04)
 {
-    CHAR aucTime[TIME_STR_SIZE + 1] = { 0 };
+    CHAR aucTime[TIME_STR_SIZE + 1] = {0};
     EXPECT_EQ(NOK, GetLocalTimeHelper(1, aucTime));
     GlobalMockObject::reset();
 }
 
 TEST_F(LogToFile, GetLocalTime05)
 {
-    CHAR aucTime[TIME_STR_SIZE + 1] = { 0 };
+    CHAR aucTime[TIME_STR_SIZE + 1] = {0};
     EXPECT_EQ(OK, GetLocalTimeHelper(TIME_STR_SIZE, aucTime));
     GlobalMockObject::reset();
 }
@@ -168,10 +159,7 @@ TEST_F(LogToFile, GetFileSizeOverFlow)
     GlobalMockObject::reset();
 }
 
-TEST_F(LogToFile, LogAgentGetDeviceOsFileList01)
-{
-    EXPECT_EQ(NOK, LogAgentGetDeviceOsFileList(NULL));
-}
+TEST_F(LogToFile, LogAgentGetDeviceOsFileList01) { EXPECT_EQ(NOK, LogAgentGetDeviceOsFileList(NULL)); }
 
 TEST_F(LogToFile, LogAgentGetDeviceOsFileList02)
 {
@@ -191,10 +179,7 @@ TEST_F(LogToFile, LogAgentInitDeviceOsMaxFileNum01)
     GlobalMockObject::reset();
 }
 
-TEST_F(LogToFile, LogAgentInitDeviceOs01)
-{
-    EXPECT_EQ(LOG_FAILURE, SlogdSyslogMgrInit(NULL));
-}
+TEST_F(LogToFile, LogAgentInitDeviceOs01) { EXPECT_EQ(LOG_FAILURE, SlogdSyslogMgrInit(NULL)); }
 
 TEST_F(LogToFile, LogAgentInitDeviceOs02)
 {
@@ -203,10 +188,7 @@ TEST_F(LogToFile, LogAgentInitDeviceOs02)
     GlobalMockObject::reset();
 }
 
-TEST_F(LogToFile, LogAgentWriteDeviceOsLog01)
-{
-    EXPECT_EQ(NOK, LogAgentWriteDeviceOsLog(DEBUG_LOG, NULL, NULL, 0));
-}
+TEST_F(LogToFile, LogAgentWriteDeviceOsLog01) { EXPECT_EQ(NOK, LogAgentWriteDeviceOsLog(DEBUG_LOG, NULL, NULL, 0)); }
 
 TEST_F(LogToFile, LogAgentWriteDeviceOsLog02)
 {
@@ -222,19 +204,21 @@ TEST_F(LogToFile, LogAgentWriteDeviceOsLog03)
     char msg[] = "No such file or directry.";
     StLogFileList stLogFileInfo;
     MOCKER(LogAgentWriteFile).stubs().will(returnValue((unsigned int)OK));
-    EXPECT_EQ((unsigned int)OK, LogAgentWriteDeviceOsLog(DEBUG_LOG, &(stLogFileInfo.sortDeviceOsLogList[0]), msg, strlen(msg)));
+    EXPECT_EQ(
+        (unsigned int)OK,
+        LogAgentWriteDeviceOsLog(DEBUG_LOG, &(stLogFileInfo.sortDeviceOsLogList[0]), msg, strlen(msg)));
     GlobalMockObject::reset();
 }
 
 TEST_F(LogToFile, LogAgentCleanUpDevice)
 {
     char dir[] = LLT_SLOG_DIR "/ut/slog/res";
-    StLogFileList pstLogFileInfo = { 0 };
+    StLogFileList pstLogFileInfo = {0};
     uint32_t deviceNum = 2;
     pstLogFileInfo.ucDeviceNum = deviceNum;
     size_t len = sizeof(StSubLogFileList) * deviceNum;
     for (uint32_t iType = 0; iType < LOG_TYPE_NUM; iType++) {
-        pstLogFileInfo.deviceLogList[iType] = (StSubLogFileList *)malloc(len);
+        pstLogFileInfo.deviceLogList[iType] = (StSubLogFileList*)malloc(len);
         for (uint32_t idx = 0; idx < deviceNum; idx++) {
             LogAgentInitMaxFileNumHelper(&pstLogFileInfo.deviceLogList[iType][idx], dir, 1);
         }
@@ -246,16 +230,13 @@ TEST_F(LogToFile, LogAgentCleanUpDevice)
     GlobalMockObject::reset();
 }
 
-TEST_F(LogToFile, LogAgentGetDeviceFileList01)
-{
-    EXPECT_EQ(NOK, LogAgentGetDeviceFileList(NULL));
-}
+TEST_F(LogToFile, LogAgentGetDeviceFileList01) { EXPECT_EQ(NOK, LogAgentGetDeviceFileList(NULL)); }
 
 TEST_F(LogToFile, LogAgentGetDeviceFileList02)
 {
     StLogFileList pstLogFileInfo;
     pstLogFileInfo.ucDeviceNum = 1;
-    pstLogFileInfo.deviceLogList[0] = (StSubLogFileList *)malloc(sizeof(StSubLogFileList));
+    pstLogFileInfo.deviceLogList[0] = (StSubLogFileList*)malloc(sizeof(StSubLogFileList));
     MOCKER(LogAgentGetFileListForModule).stubs().will(returnValue(NOK));
     EXPECT_EQ(NOK, LogAgentGetDeviceFileList(&pstLogFileInfo));
     free(pstLogFileInfo.deviceLogList[0]);
@@ -274,7 +255,7 @@ TEST_F(LogToFile, LogAgentInitDeviceMaxFileNum02)
     StLogFileList stLogFileInfo;
     strcpy(stLogFileInfo.aucFilePath, LLT_SLOG_DIR "/ut/slog/res");
     stLogFileInfo.ucDeviceNum = 1;
-    stLogFileInfo.deviceLogList[0] = (StSubLogFileList *)malloc(sizeof(StSubLogFileList));
+    stLogFileInfo.deviceLogList[0] = (StSubLogFileList*)malloc(sizeof(StSubLogFileList));
     MOCKER(LogAgentInitMaxFileNumHelper).stubs().will(returnValue(NOK));
     EXPECT_EQ(NOK, LogAgentInitDeviceMaxFileNum(&stLogFileInfo));
     free(stLogFileInfo.deviceLogList[0]);
@@ -282,14 +263,11 @@ TEST_F(LogToFile, LogAgentInitDeviceMaxFileNum02)
     GlobalMockObject::reset();
 }
 
-TEST_F(LogToFile, LogAgentInitDevice01)
-{
-    EXPECT_EQ(LOG_INVALID_PARAM, LogAgentInitDevice(NULL, 0));
-}
+TEST_F(LogToFile, LogAgentInitDevice01) { EXPECT_EQ(LOG_INVALID_PARAM, LogAgentInitDevice(NULL, 0)); }
 
 TEST_F(LogToFile, LogAgentInitDevice03)
 {
-    StLogFileList stLogFileInfo = { 0 };
+    StLogFileList stLogFileInfo = {0};
     stLogFileInfo.ucDeviceNum = 1;
     MOCKER(LogAgentInitDeviceMaxFileNum).stubs().will(returnValue((unsigned int)OK));
     MOCKER(LogAgentGetDeviceFileList).stubs().will(returnValue((unsigned int)OK));
@@ -299,15 +277,12 @@ TEST_F(LogToFile, LogAgentInitDevice03)
     LogAgentCleanUpDevice(&stLogFileInfo);
 }
 
-TEST_F(LogToFile, LogAgentWriteDeviceLog01)
-{
-    EXPECT_EQ(NOK, LogAgentWriteDeviceLog(NULL, NULL, 0));
-}
+TEST_F(LogToFile, LogAgentWriteDeviceLog01) { EXPECT_EQ(NOK, LogAgentWriteDeviceLog(NULL, NULL, 0)); }
 
 TEST_F(LogToFile, LogAgentWriteDeviceLog02)
 {
     char msg[] = "No such file or directry.";
-    DeviceWriteLogInfo info = { 0 };
+    DeviceWriteLogInfo info = {0};
     StLogFileList stLogFileInfo;
     stLogFileInfo.ucDeviceNum = 10;
     info.deviceId = 15;
@@ -318,7 +293,7 @@ TEST_F(LogToFile, LogAgentWriteDeviceLog02)
 TEST_F(LogToFile, LogAgentWriteDeviceLog03)
 {
     char msg[] = "No such file or directry.";
-    DeviceWriteLogInfo info = { 0 };
+    DeviceWriteLogInfo info = {0};
     StLogFileList stLogFileInfo;
     stLogFileInfo.ucDeviceNum = 10;
     stLogFileInfo.deviceLogList[0] = NULL;
@@ -330,21 +305,18 @@ TEST_F(LogToFile, LogAgentWriteDeviceLog03)
 TEST_F(LogToFile, LogAgentWriteDeviceLog04)
 {
     char msg[] = "No such file or directry.";
-    DeviceWriteLogInfo info = { 0 };
+    DeviceWriteLogInfo info = {0};
     StLogFileList stLogFileInfo;
     StSubLogFileList stSubLogFileList;
     stLogFileInfo.ucDeviceNum = 10;
     stLogFileInfo.deviceLogList[0] = &stSubLogFileList;
     info.deviceId = 8;
     info.logType = LOG_TYPE_NUM;
-    EXPECT_EQ(OK,LogAgentWriteDeviceLog(&stLogFileInfo, msg, &info));
+    EXPECT_EQ(OK, LogAgentWriteDeviceLog(&stLogFileInfo, msg, &info));
     GlobalMockObject::reset();
 }
 
-TEST_F(LogToFile, LogAgentGetDeviceAppFileList01)
-{
-    EXPECT_EQ(NOK, LogAgentGetDeviceAppFileList(NULL));
-}
+TEST_F(LogToFile, LogAgentGetDeviceAppFileList01) { EXPECT_EQ(NOK, LogAgentGetDeviceAppFileList(NULL)); }
 
 TEST_F(LogToFile, LogAgentGetDeviceAppFileList02)
 {
@@ -354,10 +326,7 @@ TEST_F(LogToFile, LogAgentGetDeviceAppFileList02)
     GlobalMockObject::reset();
 }
 
-TEST_F(LogToFile, LogAgentInitDeviceApp01)
-{
-    EXPECT_EQ(NOK, LogAgentInitDeviceApp(NULL, NULL, NULL));
-}
+TEST_F(LogToFile, LogAgentInitDeviceApp01) { EXPECT_EQ(NOK, LogAgentInitDeviceApp(NULL, NULL, NULL)); }
 
 TEST_F(LogToFile, LogAgentInitDeviceApp02)
 {
@@ -384,7 +353,7 @@ TEST_F(LogToFile, LogAgentWriteDeviceApplicationLogSysInfo)
     unsigned int length = strlen(msg);
     LogInfo info;
     info.processType = SYSTEM;
-    StLogFileList *logList;
+    StLogFileList* logList;
     EXPECT_EQ(NOK, LogAgentWriteDeviceApplicationLog(msg, length, &info, logList));
     GlobalMockObject::reset();
 }
@@ -395,7 +364,7 @@ TEST_F(LogToFile, LogAgentWriteDeviceApplicationLog)
     unsigned int length = strlen(msg);
     LogInfo info;
     info.processType = APPLICATION;
-    StLogFileList *logList;
+    StLogFileList* logList;
     MOCKER(LogAgentInitDeviceApp).stubs().will(returnValue((unsigned int)OK));
     MOCKER(LogAgentWriteFile).stubs().will(returnValue((unsigned int)1));
     EXPECT_EQ((unsigned int)1, LogAgentWriteDeviceApplicationLog(msg, length, &info, logList));
@@ -408,7 +377,7 @@ TEST_F(LogToFile, LogAgentWriteDeviceApplicationLog_withTag)
     unsigned int length = strlen(msg);
     LogInfo info;
     info.processType = APPLICATION;
-    StLogFileList *logList;
+    StLogFileList* logList;
     MOCKER(LogAgentInitDeviceApp).stubs().will(returnValue((unsigned int)OK));
     MOCKER(LogAgentWriteFile).stubs().will(returnValue((unsigned int)1));
     EXPECT_EQ((unsigned int)1, LogAgentWriteDeviceApplicationLog(msg, length, &info, logList));
@@ -417,8 +386,8 @@ TEST_F(LogToFile, LogAgentWriteDeviceApplicationLog_withTag)
 
 TEST_F(LogToFile, GetValidPath_Failed)
 {
-    char path[10] = { 0 };
-    char validPath[10] = { 0 };
+    char path[10] = {0};
+    char validPath[10] = {0};
     EXPECT_EQ(SYS_ERROR, GetValidPath(NULL, 0, NULL, 0));
 
     MOCKER(CheckPathValid).stubs().will(returnValue(false));

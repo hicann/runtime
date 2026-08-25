@@ -39,11 +39,11 @@ protected:
 
 TEST_F(EP_SLOGD_SOFTWARE_ZIP_UTEST, SoftwareCompressFileCreatesGzipAndRemovesSource)
 {
-    const char *srcFile = PATH_ROOT "/software_zip/source.log";
-    const char *gzPath = PATH_ROOT "/software_zip/source.log.gz";
-    const char *content = "software zip coverage\nsecond line\n";
+    const char* srcFile = PATH_ROOT "/software_zip/source.log";
+    const char* gzPath = PATH_ROOT "/software_zip/source.log.gz";
+    const char* content = "software zip coverage\nsecond line\n";
 
-    FILE *src = fopen(srcFile, "wb");
+    FILE* src = fopen(srcFile, "wb");
     ASSERT_NE(nullptr, src);
     ASSERT_EQ(strlen(content), fwrite(content, 1, strlen(content), src));
     ASSERT_EQ(0, fclose(src));

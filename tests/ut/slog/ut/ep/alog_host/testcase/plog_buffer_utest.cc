@@ -15,8 +15,7 @@
 
 using namespace std;
 using namespace testing;
-class EP_PLOG_BUFFER_UTEST : public testing::Test
-{
+class EP_PLOG_BUFFER_UTEST : public testing::Test {
 protected:
     virtual void SetUp()
     {
@@ -48,71 +47,72 @@ protected:
 public:
 };
 
-static void *MallocStub(size_t len)
+static void* MallocStub(size_t len)
 {
-    void *buf = malloc(len);
+    void* buf = malloc(len);
     (void)memset_s(buf, len, 0, len);
     return buf;
 }
 
 TEST_F(EP_PLOG_BUFFER_UTEST, PlogBuffInit_failed)
 {
-    MOCKER(LogMalloc).stubs().will(returnValue((void *)NULL));
+    MOCKER(LogMalloc).stubs().will(returnValue((void*)NULL));
     EXPECT_EQ(LOG_FAILURE, PlogBuffInit());
     PlogBuffExit();
     GlobalMockObject::verify();
 
-    MOCKER(LogMalloc).stubs().will(invoke(MallocStub)).then(returnValue((void *)NULL));
+    MOCKER(LogMalloc).stubs().will(invoke(MallocStub)).then(returnValue((void*)NULL));
     EXPECT_EQ(LOG_FAILURE, PlogBuffInit());
     PlogBuffExit();
     GlobalMockObject::verify();
 
-    MOCKER(LogMalloc).stubs()
-        .will(invoke(MallocStub))
-        .then(invoke(MallocStub))
-        .then(returnValue((void *)NULL));
+    MOCKER(LogMalloc).stubs().will(invoke(MallocStub)).then(invoke(MallocStub)).then(returnValue((void*)NULL));
     EXPECT_EQ(LOG_FAILURE, PlogBuffInit());
     PlogBuffExit();
     GlobalMockObject::verify();
 
-    MOCKER(LogMalloc).stubs()
-        .will(invoke(MallocStub))
-        .then(invoke(MallocStub))
-        .then(invoke(MallocStub))
-        .then(returnValue((void *)NULL));
-    EXPECT_EQ(LOG_FAILURE, PlogBuffInit());
-    PlogBuffExit();
-    GlobalMockObject::verify();
-
-    MOCKER(LogMalloc).stubs()
+    MOCKER(LogMalloc)
+        .stubs()
         .will(invoke(MallocStub))
         .then(invoke(MallocStub))
         .then(invoke(MallocStub))
-        .then(invoke(MallocStub))
-        .then(returnValue((void *)NULL));
+        .then(returnValue((void*)NULL));
     EXPECT_EQ(LOG_FAILURE, PlogBuffInit());
     PlogBuffExit();
     GlobalMockObject::verify();
 
-    MOCKER(LogMalloc).stubs()
+    MOCKER(LogMalloc)
+        .stubs()
         .will(invoke(MallocStub))
         .then(invoke(MallocStub))
         .then(invoke(MallocStub))
         .then(invoke(MallocStub))
-        .then(invoke(MallocStub))
-        .then(returnValue((void *)NULL));
+        .then(returnValue((void*)NULL));
     EXPECT_EQ(LOG_FAILURE, PlogBuffInit());
     PlogBuffExit();
     GlobalMockObject::verify();
 
-    MOCKER(LogMalloc).stubs()
+    MOCKER(LogMalloc)
+        .stubs()
         .will(invoke(MallocStub))
         .then(invoke(MallocStub))
         .then(invoke(MallocStub))
         .then(invoke(MallocStub))
         .then(invoke(MallocStub))
+        .then(returnValue((void*)NULL));
+    EXPECT_EQ(LOG_FAILURE, PlogBuffInit());
+    PlogBuffExit();
+    GlobalMockObject::verify();
+
+    MOCKER(LogMalloc)
+        .stubs()
+        .will(invoke(MallocStub))
         .then(invoke(MallocStub))
-        .then(returnValue((void *)NULL));
+        .then(invoke(MallocStub))
+        .then(invoke(MallocStub))
+        .then(invoke(MallocStub))
+        .then(invoke(MallocStub))
+        .then(returnValue((void*)NULL));
     EXPECT_EQ(LOG_FAILURE, PlogBuffInit());
     PlogBuffExit();
     GlobalMockObject::verify();

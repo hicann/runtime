@@ -20,21 +20,21 @@
 #include "mockcpp/mockcpp.hpp"
 
 extern "C" {
-    #include "slogd_utest_stub.h"
-    #include "securec.h"
-    #include "log_path_mgr.h"
+#include "slogd_utest_stub.h"
+#include "securec.h"
+#include "log_path_mgr.h"
 
-    typedef struct {
-        char *buff;
-        unsigned int buffLen;
-    } Buffer;
+typedef struct {
+    char* buff;
+    unsigned int buffLen;
+} Buffer;
 
-    void GetLocalTimeForSelfLog(size_t bufLen, char *timeBuffer);
-    int GetRingFd(const char *slogdFile, const char *msg);
-    void SetRingFile(const char *slogdFile);
-    int CatStr(const char *str1, unsigned int len1, const char *str2, unsigned int len2, Buffer *buffer);
-    int LogInitRootPath(void);
-    void LogSignalActionSet(int32_t sig, void (*handler)(int32_t));
+void GetLocalTimeForSelfLog(size_t bufLen, char* timeBuffer);
+int GetRingFd(const char* slogdFile, const char* msg);
+void SetRingFile(const char* slogdFile);
+int CatStr(const char* str1, unsigned int len1, const char* str2, unsigned int len2, Buffer* buffer);
+int LogInitRootPath(void);
+void LogSignalActionSet(int32_t sig, void (*handler)(int32_t));
 }
 
 #define LLT_SLOG_DIR "llt/abl/slog"
@@ -42,21 +42,15 @@ extern "C" {
 #undef SLOGD_LOG_FILE
 #define SLOGD_LOG_FILE LLT_SLOG_DIR "/ut/slog/res/slogd.log"
 
-class SlogdLib : public testing::Test
-{
+class SlogdLib : public testing::Test {
 public:
     void SetUp();
     void TearDown();
 };
 
-void SlogdLib::SetUp()
-{
-}
+void SlogdLib::SetUp() {}
 
-void SlogdLib::TearDown()
-{
-    unlink(SLOGD_LOG_FILE);
-}
+void SlogdLib::TearDown() { unlink(SLOGD_LOG_FILE); }
 
 void function(int b)
 {
@@ -97,9 +91,7 @@ TEST_F(SlogdLib, CatStr_STRCPY_S_ERR1)
     unsigned int len2 = strlen(str2) + 1;
     char buff[128] = {0};
 
-    MOCKER(strcpy_s)
-        .stubs()
-        .will(returnValue(1));
+    MOCKER(strcpy_s).stubs().will(returnValue(1));
     Buffer buffer = {buff, 128};
     EXPECT_EQ(-1, CatStr(str1, len1, str2, len2, &buffer));
     GlobalMockObject::reset();
@@ -113,10 +105,7 @@ TEST_F(SlogdLib, CatStr_STRCPY_S_ERR2)
     unsigned int len2 = strlen(str2) + 1;
     char buff[128] = {0};
 
-    MOCKER(strcpy_s)
-        .stubs()
-        .will(returnValue(EOK))
-        .then(returnValue(-1));
+    MOCKER(strcpy_s).stubs().will(returnValue(EOK)).then(returnValue(-1));
     Buffer buffer = {buff, 128};
     EXPECT_EQ(-1, CatStr(str1, len1, str2, len2, &buffer));
     GlobalMockObject::reset();
@@ -132,42 +121,42 @@ TEST_F(SlogdLib, CatStr_STRCPY_S_SUCCESS)
 
     Buffer buffer = {buff, 128};
     EXPECT_EQ(EOK, CatStr(str1, len1, str2, len2, &buffer));
-    std::cout<<"buff = "; 
-    std::cout<< buff << std::endl;
+    std::cout << "buff = ";
+    std::cout << buff << std::endl;
     GlobalMockObject::reset();
 }
 
 TEST_F(SlogdLib, CheckSelfLogPath)
 {
-    MOCKER(LogGetRootPath).stubs().will(returnValue((char *)NULL));
+    MOCKER(LogGetRootPath).stubs().will(returnValue((char*)NULL));
     EXPECT_EQ(SYS_ERROR, CheckSelfLogPath());
     GlobalMockObject::reset();
 
-    char logPath[24] = { 0 };
-    char selfLogPath[32] = { 0 };
+    char logPath[24] = {0};
+    char selfLogPath[32] = {0};
     strcpy(logPath, "/var/log/npu/slog");
     strcpy(selfLogPath, "/var/log/npu/slog/slogd");
 
-    MOCKER(LogGetRootPath).stubs().will(returnValue((char *)logPath));
+    MOCKER(LogGetRootPath).stubs().will(returnValue((char*)logPath));
     MOCKER(LogMkdir).stubs().will(returnValue(SUCCESS + 1));
     EXPECT_EQ(SYS_ERROR, CheckSelfLogPath());
     GlobalMockObject::reset();
 
-    MOCKER(LogGetRootPath).stubs().will(returnValue((char *)logPath));
+    MOCKER(LogGetRootPath).stubs().will(returnValue((char*)logPath));
     MOCKER(LogMkdir).stubs().will(returnValue(SUCCESS));
-    MOCKER(LogGetSelfPath).stubs().will(returnValue((char *)NULL));
+    MOCKER(LogGetSelfPath).stubs().will(returnValue((char*)NULL));
     EXPECT_EQ(SYS_ERROR, CheckSelfLogPath());
     GlobalMockObject::reset();
 
-    MOCKER(LogGetRootPath).stubs().will(returnValue((char *)logPath));
+    MOCKER(LogGetRootPath).stubs().will(returnValue((char*)logPath));
     MOCKER(LogMkdir).stubs().will(returnValue(SUCCESS)).then(returnValue(SUCCESS + 1));
-    MOCKER(LogGetSelfPath).stubs().will(returnValue((char *)selfLogPath));
+    MOCKER(LogGetSelfPath).stubs().will(returnValue((char*)selfLogPath));
     EXPECT_EQ(SYS_ERROR, CheckSelfLogPath());
     GlobalMockObject::reset();
 
-    MOCKER(LogGetRootPath).stubs().will(returnValue((char *)logPath));
+    MOCKER(LogGetRootPath).stubs().will(returnValue((char*)logPath));
     MOCKER(LogMkdir).stubs().will(returnValue(SUCCESS));
-    MOCKER(LogGetSelfPath).stubs().will(returnValue((char *)selfLogPath));
+    MOCKER(LogGetSelfPath).stubs().will(returnValue((char*)selfLogPath));
     EXPECT_EQ(SYS_OK, CheckSelfLogPath());
     GlobalMockObject::reset();
 }

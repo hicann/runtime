@@ -40,18 +40,18 @@ using namespace testing;
 /* Under LLT_TEST, STATIC is empty, so the file-static helpers below have
  * external linkage and can be invoked directly from the unit test. */
 extern "C" {
-    int IsValidSubdir(const char *subdir);
-    int StackCoreName(char *name, unsigned int len, int signo);
-    int StackOpen(const char *fileName);
-    ssize_t StackReadLine(int fd, char *data, unsigned int len);
-    ssize_t StackWriteData(int fd, const char *data, unsigned int len);
-    int StackClose(int fd);
-    void GetSelfMap(uintptr_t pc, char *data, unsigned int len);
-    void StackPcFrame(int layer, uintptr_t pc, char *data, unsigned int len);
-    ssize_t CreateStackCore(const uintptr_t nfp, uintptr_t pc, int signo);
-    void AnalysisContext(const mcontext_t *mcontext, int signo);
-    void StackUnInit(void);
-    extern char g_filePath[STACK_PATH_MAX_LEN + 1U];
+int IsValidSubdir(const char* subdir);
+int StackCoreName(char* name, unsigned int len, int signo);
+int StackOpen(const char* fileName);
+ssize_t StackReadLine(int fd, char* data, unsigned int len);
+ssize_t StackWriteData(int fd, const char* data, unsigned int len);
+int StackClose(int fd);
+void GetSelfMap(uintptr_t pc, char* data, unsigned int len);
+void StackPcFrame(int layer, uintptr_t pc, char* data, unsigned int len);
+ssize_t CreateStackCore(const uintptr_t nfp, uintptr_t pc, int signo);
+void AnalysisContext(const mcontext_t* mcontext, int signo);
+void StackUnInit(void);
+extern char g_filePath[STACK_PATH_MAX_LEN + 1U];
 }
 
 #define COV_SIGNO SIGABRT
@@ -135,10 +135,10 @@ TEST_F(EP_STACKCORE_COV_UTEST, IsValidSubdir_ValidAndInvalid)
 {
     EXPECT_EQ(0, IsValidSubdir("abc"));
     EXPECT_EQ(0, IsValidSubdir(""));
-    EXPECT_EQ(-1, IsValidSubdir("a/b"));     // contains "/"
-    EXPECT_EQ(-1, IsValidSubdir(".."));      // contains ".."
-    EXPECT_EQ(-1, IsValidSubdir("a..b"));    // contains ".."
-    EXPECT_EQ(-1, IsValidSubdir("../x"));    // contains "/" and ".."
+    EXPECT_EQ(-1, IsValidSubdir("a/b"));  // contains "/"
+    EXPECT_EQ(-1, IsValidSubdir(".."));   // contains ".."
+    EXPECT_EQ(-1, IsValidSubdir("a..b")); // contains ".."
+    EXPECT_EQ(-1, IsValidSubdir("../x")); // contains "/" and ".."
 }
 
 /* ── StackcoreSetSubdirectory ──────────────────────────────────────────── */
@@ -221,7 +221,7 @@ TEST_F(EP_STACKCORE_COV_UTEST, StackReadLine_NormalAndEof)
     (void)StackClose(fd);
 }
 
-static ssize_t ReadStub_EintrThenEof(int fd, void *buf, size_t count)
+static ssize_t ReadStub_EintrThenEof(int fd, void* buf, size_t count)
 {
     (void)fd;
     (void)buf;
@@ -235,7 +235,7 @@ static ssize_t ReadStub_EintrThenEof(int fd, void *buf, size_t count)
     return 0; // EOF
 }
 
-static ssize_t ReadStub_ErrorIo(int fd, void *buf, size_t count)
+static ssize_t ReadStub_ErrorIo(int fd, void* buf, size_t count)
 {
     (void)fd;
     (void)buf;
@@ -285,7 +285,7 @@ TEST_F(EP_STACKCORE_COV_UTEST, StackWriteData_SuccessAndInvalid)
     (void)StackClose(fd);
 }
 
-static ssize_t WriteStub_EintrThenOk(int fd, const void *buf, size_t count)
+static ssize_t WriteStub_EintrThenOk(int fd, const void* buf, size_t count)
 {
     (void)fd;
     (void)buf;
@@ -298,7 +298,7 @@ static ssize_t WriteStub_EintrThenOk(int fd, const void *buf, size_t count)
     return (ssize_t)count;
 }
 
-static ssize_t WriteStub_ErrorIo(int fd, const void *buf, size_t count)
+static ssize_t WriteStub_ErrorIo(int fd, const void* buf, size_t count)
 {
     (void)fd;
     (void)buf;
@@ -341,9 +341,9 @@ TEST_F(EP_STACKCORE_COV_UTEST, StackClose_InvalidAndValid)
 TEST_F(EP_STACKCORE_COV_UTEST, StackFrame_InvalidInputs)
 {
     char buf[CORE_BUFFER_LEN] = {0};
-    EXPECT_EQ(0U, StackFrame(0, 0, buf, sizeof(buf)));              // fp == 0
-    EXPECT_EQ(0U, StackFrame(0, (uintptr_t)0x10, NULL, sizeof(buf))); // data null
-    EXPECT_EQ(0U, StackFrame(0, (uintptr_t)0x10, buf, 0));            // len 0
+    EXPECT_EQ(0U, StackFrame(0, 0, buf, sizeof(buf)));                                     // fp == 0
+    EXPECT_EQ(0U, StackFrame(0, (uintptr_t)0x10, NULL, sizeof(buf)));                      // data null
+    EXPECT_EQ(0U, StackFrame(0, (uintptr_t)0x10, buf, 0));                                 // len 0
     EXPECT_EQ(0U, StackFrame(COV_MAX_STACK_LAYER + 1, (uintptr_t)0x10, buf, sizeof(buf))); // layer too big
 }
 
@@ -357,10 +357,10 @@ TEST_F(EP_STACKCORE_COV_UTEST, StackFrame_LayerZeroAndFrames)
 
     // layer > 0: dereference fp for pc/nfp
     uintptr_t frameMem[8] = {0};
-    frameMem[0] = 0;            // *(fp) = next fp = 0 (stop)
+    frameMem[0] = 0;                 // *(fp) = next fp = 0 (stop)
     frameMem[1] = (uintptr_t)0x5000; // *(fp+8) = lr = pc
     ret = StackFrame(1, (uintptr_t)&frameMem[0], buf, sizeof(buf));
-    EXPECT_EQ(0U, ret); // next fp == 0
+    EXPECT_EQ(0U, ret);              // next fp == 0
     EXPECT_NE(nullptr, strstr(buf, "#1"));
 }
 
@@ -369,8 +369,8 @@ TEST_F(EP_STACKCORE_COV_UTEST, StackPcFrame_InvalidInputs)
 {
     char buf[CORE_BUFFER_LEN] = {0};
     StackPcFrame(COV_MAX_STACK_LAYER + 1, (uintptr_t)0x10, buf, sizeof(buf)); // layer too big
-    StackPcFrame(0, (uintptr_t)0x10, NULL, sizeof(buf));                  // data null
-    StackPcFrame(0, (uintptr_t)0x10, buf, 0);                             // len 0
+    StackPcFrame(0, (uintptr_t)0x10, NULL, sizeof(buf));                      // data null
+    StackPcFrame(0, (uintptr_t)0x10, buf, 0);                                 // len 0
 }
 
 TEST_F(EP_STACKCORE_COV_UTEST, StackPcFrame_PcZeroAndNonZero)
@@ -434,7 +434,7 @@ TEST_F(EP_STACKCORE_COV_UTEST, AnalysisContext_NullAndZeroFp)
     ucontext_t utext;
     (void)memset_s(&utext, sizeof(utext), 0, sizeof(utext));
     EXPECT_NE(-1, getcontext(&utext));
-    mcontext_t *mc = (mcontext_t *)&(utext.uc_mcontext);
+    mcontext_t* mc = (mcontext_t*)&(utext.uc_mcontext);
     COV_SET_FP(mc, 0); // nfp == 0 -> LOGE, return
     AnalysisContext(mc, COV_SIGNO);
     EXPECT_EQ(0, CheckStackcoreFileNum(PATH_ROOT));
@@ -445,11 +445,11 @@ TEST_F(EP_STACKCORE_COV_UTEST, AnalysisContext_WithFrameChain)
     ucontext_t utext;
     (void)memset_s(&utext, sizeof(utext), 0, sizeof(utext));
     EXPECT_NE(-1, getcontext(&utext));
-    mcontext_t *mc = (mcontext_t *)&(utext.uc_mcontext);
+    mcontext_t* mc = (mcontext_t*)&(utext.uc_mcontext);
 
     uintptr_t frameMem[8] = {0};
-    frameMem[0] = 0;                  // next fp = 0 (stop after one frame)
-    frameMem[1] = (uintptr_t)0x4000;  // lr (pc)
+    frameMem[0] = 0;                 // next fp = 0 (stop after one frame)
+    frameMem[1] = (uintptr_t)0x4000; // lr (pc)
     COV_SET_FP(mc, (uintptr_t)&frameMem[0]);
     COV_SET_PC(mc, (uintptr_t)0x3000);
     AnalysisContext(mc, COV_SIGNO);
@@ -462,12 +462,12 @@ TEST_F(EP_STACKCORE_COV_UTEST, StackSigHandler_NullInfoAndData)
     ucontext_t utext;
     (void)memset_s(&utext, sizeof(utext), 0, sizeof(utext));
     EXPECT_NE(-1, getcontext(&utext));
-    StackSigHandler(COV_SIGNO, NULL, &utext);   // null info -> return
-    StackSigHandler(COV_SIGNO, NULL, NULL);     // null info -> return
+    StackSigHandler(COV_SIGNO, NULL, &utext); // null info -> return
+    StackSigHandler(COV_SIGNO, NULL, NULL);   // null info -> return
     siginfo_t info;
     (void)memset_s(&info, sizeof(info), 0, sizeof(info));
     info.si_signo = COV_SIGNO;
-    StackSigHandler(COV_SIGNO, &info, NULL);    // null data -> return
+    StackSigHandler(COV_SIGNO, &info, NULL); // null data -> return
     EXPECT_EQ(0, CheckStackcoreFileNum(PATH_ROOT));
 }
 
@@ -477,7 +477,7 @@ TEST_F(EP_STACKCORE_COV_UTEST, StackSigHandler_NoMatchingSignal)
     ucontext_t utext;
     (void)memset_s(&utext, sizeof(utext), 0, sizeof(utext));
     EXPECT_NE(-1, getcontext(&utext));
-    mcontext_t *mc = (mcontext_t *)&(utext.uc_mcontext);
+    mcontext_t* mc = (mcontext_t*)&(utext.uc_mcontext);
     uintptr_t frameMem[4] = {0};
     frameMem[0] = 0;
     frameMem[1] = (uintptr_t)0x4000;
@@ -499,7 +499,7 @@ TEST_F(EP_STACKCORE_COV_UTEST, StackSigHandler_RaiseFail)
     ucontext_t utext;
     (void)memset_s(&utext, sizeof(utext), 0, sizeof(utext));
     EXPECT_NE(-1, getcontext(&utext));
-    mcontext_t *mc = (mcontext_t *)&(utext.uc_mcontext);
+    mcontext_t* mc = (mcontext_t*)&(utext.uc_mcontext);
     uintptr_t frameMem[4] = {0};
     frameMem[0] = 0;
     frameMem[1] = (uintptr_t)0x4000;
@@ -525,7 +525,7 @@ TEST_F(EP_STACKCORE_COV_UTEST, StackSigHandler_SigactionRecoverFail)
     ucontext_t utext;
     (void)memset_s(&utext, sizeof(utext), 0, sizeof(utext));
     EXPECT_NE(-1, getcontext(&utext));
-    mcontext_t *mc = (mcontext_t *)&(utext.uc_mcontext);
+    mcontext_t* mc = (mcontext_t*)&(utext.uc_mcontext);
     uintptr_t frameMem[4] = {0};
     frameMem[0] = 0;
     frameMem[1] = (uintptr_t)0x4000;

@@ -12,43 +12,39 @@
 #include "log_pm_sig.h"
 
 extern "C" {
-    #include <stdbool.h>
-    #include "ascend_hal.h"
-    #include "log_pm.h"
-    #include "log_monitor.h"
-    #include "slogd_utest_stub.h"
+#include <stdbool.h>
+#include "ascend_hal.h"
+#include "log_pm.h"
+#include "log_monitor.h"
+#include "slogd_utest_stub.h"
 
-    struct LogMonitorMgr {
-        int status;
-        ToolThread  tid;
-        client_info_t clnt;
-    };
+struct LogMonitorMgr {
+    int status;
+    ToolThread tid;
+    client_info_t clnt;
+};
 
-    enum LOG_MONITOR_STATUS {
+enum LOG_MONITOR_STATUS {
     LOG_MONITOR_INIT = 0,
     LOG_MONITOR_RUNNING,
     LOG_MONITOR_HEARTBEAT,
     LOG_MONITOR_EXIT,
-    };
+};
 
-    extern struct LogMonitorMgr g_logMonitorMgr;
-    extern bool LogMonitorIsRun(void);
-    extern void LogMonitorInit(void);
-    extern void *LogMonitorThread(void *args);
-    extern void LogMonitorSetStatus(int status);
-    extern int LogMonitorRegister(unsigned int flagLog);
-    extern bool GetLogDaemonScript(char **logDaemonScript);
-    extern bool AppMonInit();
+extern struct LogMonitorMgr g_logMonitorMgr;
+extern bool LogMonitorIsRun(void);
+extern void LogMonitorInit(void);
+extern void* LogMonitorThread(void* args);
+extern void LogMonitorSetStatus(int status);
+extern int LogMonitorRegister(unsigned int flagLog);
+extern bool GetLogDaemonScript(char** logDaemonScript);
+extern bool AppMonInit();
 }
 
-class LOG_MONITOR : public testing::Test
-{
+class LOG_MONITOR : public testing::Test {
 public:
-    void SetUp(){
-    }
-    void TearDown(){
-        GlobalMockObject::verify();
-    }
+    void SetUp() {}
+    void TearDown() { GlobalMockObject::verify(); }
 };
 
 TEST_F(LOG_MONITOR, LogMonitorIsRun)

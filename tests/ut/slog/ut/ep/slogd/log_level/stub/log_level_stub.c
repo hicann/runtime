@@ -10,33 +10,33 @@
 #include "log_level_stub.h"
 #include "log_print.h"
 
-#define SHMEM_FILE  "/tmp/ep_slogd_utest_6cEd5299d8d9Be97/shmem.log"
+#define SHMEM_FILE "/tmp/ep_slogd_utest_6cEd5299d8d9Be97/shmem.log"
 
 int32_t g_shmFd = -1;
 int32_t g_shmFlag = 0;
-void *g_value;
+void* g_value;
 
 int32_t shmgetStub(key_t key, size_t size, int32_t shmflg)
 {
     system("rm " SHMEM_FILE);
-    system("> "SHMEM_FILE);
+    system("> " SHMEM_FILE);
     if (g_shmFd == -1) {
         g_shmFd = open(SHMEM_FILE, O_CREAT | O_RDWR);
     }
     return g_shmFd;
 }
 
-void *shmatStub(int32_t shmid, const void *shmaddr, int32_t shmflg)
+void* shmatStub(int32_t shmid, const void* shmaddr, int32_t shmflg)
 {
     g_shmFlag = shmflg;
     if (g_shmFlag == SHM_RDONLY) {
-        read(g_shmFd, (void *)shmaddr, strlen(shmaddr));
+        read(g_shmFd, (void*)shmaddr, strlen(shmaddr));
     }
     g_value = malloc(10240);
     return g_value;
 }
 
-int32_t shmdtStub(const void *shmaddr)
+int32_t shmdtStub(const void* shmaddr)
 {
     if (g_shmFlag == 0) {
         write(g_shmFd, shmaddr, strlen(shmaddr));
@@ -45,7 +45,7 @@ int32_t shmdtStub(const void *shmaddr)
     return 0;
 }
 
-int32_t shmctlStub(int32_t shmid, int32_t cmd, struct shmid_ds *buf)
+int32_t shmctlStub(int32_t shmid, int32_t cmd, struct shmid_ds* buf)
 {
     close(g_shmFd);
     system("rm " SHMEM_FILE);

@@ -10,25 +10,13 @@
 
 #include "adx_comm_opt_manager.h"
 #include "adx_service_config.h"
-using  namespace Adx;
+using namespace Adx;
 namespace Adx {
-AdxCommOptManager::~AdxCommOptManager()
-{
+AdxCommOptManager::~AdxCommOptManager() {}
 
-}
+int32_t AdxCommOptManager::Close(CommHandle& handle) const { return 0; }
 
-int32_t AdxCommOptManager::Close(CommHandle &handle) const
-{
-    return 0;
-}
+int32_t IdeGetDevIdBySession(void* session, int* id) { return 0; }
 
-int32_t IdeGetDevIdBySession(void *session, int *id)
-{
-    return 0;
-}
-
-int32_t IdeGetPidBySession(void *session, int *id)
-{
-    return 0;
-}
-}
+int32_t IdeGetPidBySession(void* session, int* id) { return 0; }
+} // namespace Adx

@@ -17,17 +17,15 @@
 using namespace std;
 using namespace testing;
 
-#define SLOGD_LOG_FILE              "/slogdlog"
-#define SLOGD_LOG_OLD_FILE          "/slogdlog.old"
-#define SLOGD_LOG_LOCK              "/tmp.lock"
+#define SLOGD_LOG_FILE "/slogdlog"
+#define SLOGD_LOG_OLD_FILE "/slogdlog.old"
+#define SLOGD_LOG_LOCK "/tmp.lock"
 
-extern "C"
-{
-    extern char g_rootLogPath[CFG_LOGAGENT_PATH_MAX_LENGTH + 1U];
+extern "C" {
+extern char g_rootLogPath[CFG_LOGAGENT_PATH_MAX_LENGTH + 1U];
 }
 
-class EP_SLOGD_LOG_PATH_FUNC_UTEST : public testing::Test
-{
+class EP_SLOGD_LOG_PATH_FUNC_UTEST : public testing::Test {
 protected:
     virtual void SetUp()
     {
@@ -61,7 +59,6 @@ protected:
     }
 
 public:
-
 };
 
 TEST_F(EP_SLOGD_LOG_PATH_FUNC_UTEST, LogPathMgrInitDefault)
@@ -69,7 +66,7 @@ TEST_F(EP_SLOGD_LOG_PATH_FUNC_UTEST, LogPathMgrInitDefault)
     EXPECT_EQ(SYS_OK, LogPathMgrInit());
 
     EXPECT_STREQ(LOG_FILE_PATH, LogGetRootPath());
-    char path[256] = { 0 };
+    char path[256] = {0};
     snprintf_s(path, 256, 255, "%s%s", LOG_FILE_PATH, LOG_DIR_FOR_SELF_LOG);
     EXPECT_STREQ(path, LogGetSelfPath());
 
@@ -88,10 +85,10 @@ TEST_F(EP_SLOGD_LOG_PATH_FUNC_UTEST, LogPathMgrInitDefault)
 
 TEST_F(EP_SLOGD_LOG_PATH_FUNC_UTEST, LogPathMgrInit)
 {
-    char cmd[256] = { 0 };
+    char cmd[256] = {0};
     snprintf_s(cmd, 256, 255, "sed -i 's/npu/&test/' %s", SLOG_CONF_FILE_PATH);
     system(cmd);
-    char *rootPath = "/tmp/ep_slogd_utest_6cEd5299d8d9Be97/var/log/nputest/slog";
+    char* rootPath = "/tmp/ep_slogd_utest_6cEd5299d8d9Be97/var/log/nputest/slog";
     system("mkdir -p /tmp/ep_slogd_utest_6cEd5299d8d9Be97/var/log/nputest/slog");
 
     EXPECT_EQ(SYS_OK, LogConfInit());
@@ -99,7 +96,7 @@ TEST_F(EP_SLOGD_LOG_PATH_FUNC_UTEST, LogPathMgrInit)
 
     EXPECT_STREQ(rootPath, LogGetRootPath());
 
-    char path[256] = { 0 };
+    char path[256] = {0};
     snprintf_s(path, 256, 255, "%s%s", LogGetRootPath(), LOG_DIR_FOR_SELF_LOG);
     EXPECT_STREQ(path, LogGetSelfPath());
 
@@ -115,16 +112,16 @@ TEST_F(EP_SLOGD_LOG_PATH_FUNC_UTEST, LogPathMgrInit)
 
     LogPathMgrExit();
     LogConfListFree();
-    system("rm "SLOG_CONF_FILE_PATH);
+    system("rm " SLOG_CONF_FILE_PATH);
     system("cp " CONF_PATH " " SLOG_CONF_FILE_PATH);
 }
 
 TEST_F(EP_SLOGD_LOG_PATH_FUNC_UTEST, LogPathMgrInitFailed)
 {
-    char cmd[256] = { 0 };
+    char cmd[256] = {0};
     snprintf_s(cmd, 256, 255, "sed -i 's/npu/&test/' %s", SLOG_CONF_FILE_PATH);
     system(cmd);
-    char *rootPath = "/tmp/ep_slogd_utest_6cEd5299d8d9Be97/var/log/nputest/slog";
+    char* rootPath = "/tmp/ep_slogd_utest_6cEd5299d8d9Be97/var/log/nputest/slog";
     system("mkdir -p /tmp/ep_slogd_utest_6cEd5299d8d9Be97/var/log/nputest/slog");
 
     EXPECT_EQ(SYS_OK, LogConfInit());
@@ -132,7 +129,7 @@ TEST_F(EP_SLOGD_LOG_PATH_FUNC_UTEST, LogPathMgrInitFailed)
     EXPECT_EQ(SYS_ERROR, LogPathMgrInit());
     LogPathMgrExit();
     LogConfListFree();
-    system("rm "SLOG_CONF_FILE_PATH);
+    system("rm " SLOG_CONF_FILE_PATH);
     system("cp " CONF_PATH " " SLOG_CONF_FILE_PATH);
 }
 

@@ -19,36 +19,35 @@ using namespace std;
 using namespace testing;
 
 extern "C" {
-    //  extern
+//  extern
 }
-#define SINGLE_EXPORT_LOG        "slog_single"
-#define CONTINUOUS_EXPORT_LOG    "slog_continuous"
-#define INVALID_MSG              "invalid"
-#define MSG_STATUS_LONG_LINK     12
+#define SINGLE_EXPORT_LOG "slog_single"
+#define CONTINUOUS_EXPORT_LOG "slog_continuous"
+#define INVALID_MSG "invalid"
+#define MSG_STATUS_LONG_LINK 12
 
-class EP_SLOGD_SYS_REPORT_FUNC_UTEST : public testing::Test
-{
+class EP_SLOGD_SYS_REPORT_FUNC_UTEST : public testing::Test {
 protected:
     virtual void SetUp()
     {
         system("echo [DBG][TEST][`date +%Y-%m-%d-%H-%M-%S`] Start test case");
         ResetErrLog();
     }
- 
+
     virtual void TearDown()
     {
         system("rm -rf " PATH_ROOT "/*");
         system("echo [DBG][TEST][`date +%Y-%m-%d-%H-%M-%S`] End test case");
         GlobalMockObject::verify();
     }
- 
+
     static void SetUpTestCase()
     {
         system("rm -rf " PATH_ROOT);
         system("mkdir -p " PATH_ROOT);
         system("echo [DBG][TEST][`date +%Y-%m-%d-%H-%M-%S`] Start test suite");
     }
- 
+
     static void TearDownTestCase()
     {
         system("rm -rf " PATH_ROOT);
@@ -56,25 +55,13 @@ protected:
     }
 };
 
-TEST_F(EP_SLOGD_SYS_REPORT_FUNC_UTEST, SysReportInit)
-{
-    EXPECT_EQ(0, SysReportInit());
-}
+TEST_F(EP_SLOGD_SYS_REPORT_FUNC_UTEST, SysReportInit) { EXPECT_EQ(0, SysReportInit()); }
 
-TEST_F(EP_SLOGD_SYS_REPORT_FUNC_UTEST, SysReportDestroy)
-{
-    EXPECT_EQ(0, SysReportDestroy());
-}
+TEST_F(EP_SLOGD_SYS_REPORT_FUNC_UTEST, SysReportDestroy) { EXPECT_EQ(0, SysReportDestroy()); }
 
-TEST_F(EP_SLOGD_SYS_REPORT_FUNC_UTEST, SysGetInit)
-{
-    EXPECT_EQ(0, SysGetInit());
-}
+TEST_F(EP_SLOGD_SYS_REPORT_FUNC_UTEST, SysGetInit) { EXPECT_EQ(0, SysGetInit()); }
 
-TEST_F(EP_SLOGD_SYS_REPORT_FUNC_UTEST, SysGetDestroy)
-{
-    EXPECT_EQ(0, SysGetDestroy());
-}
+TEST_F(EP_SLOGD_SYS_REPORT_FUNC_UTEST, SysGetDestroy) { EXPECT_EQ(0, SysGetDestroy()); }
 
 TEST_F(EP_SLOGD_SYS_REPORT_FUNC_UTEST, SysGetSingleProcess)
 {
@@ -85,7 +72,7 @@ TEST_F(EP_SLOGD_SYS_REPORT_FUNC_UTEST, SysGetSingleProcess)
     handle->timeout = 0;
     handle->client = nullptr;
     size_t len = sizeof(LogDataMsg) + strlen(SINGLE_EXPORT_LOG) + 1;
-    LogDataMsg *value = (LogDataMsg *)malloc(len);
+    LogDataMsg* value = (LogDataMsg*)malloc(len);
     memset_s(value, len, 0, len);
     value->devId = 0;
     value->sliceLen = strlen(SINGLE_EXPORT_LOG);
@@ -106,7 +93,7 @@ TEST_F(EP_SLOGD_SYS_REPORT_FUNC_UTEST, SysReportContinuousProcess)
     handle->client = nullptr;
 
     size_t len = sizeof(LogDataMsg) + 1;
-    LogDataMsg *value = (LogDataMsg *)malloc(len);
+    LogDataMsg* value = (LogDataMsg*)malloc(len);
     memset_s(value, len, 0, len);
     value->status = MSG_STATUS_LONG_LINK;
     value->devId = 0;
@@ -126,7 +113,7 @@ TEST_F(EP_SLOGD_SYS_REPORT_FUNC_UTEST, SysReportInvalidProcess)
     handle->client = nullptr;
 
     size_t len = sizeof(LogDataMsg) + strlen(INVALID_MSG) + 1;
-    LogDataMsg *value = (LogDataMsg *)malloc(len);
+    LogDataMsg* value = (LogDataMsg*)malloc(len);
     memset_s(value, len, 0, len);
     value->devId = 0;
     value->sliceLen = strlen(INVALID_MSG);
@@ -146,7 +133,7 @@ TEST_F(EP_SLOGD_SYS_REPORT_FUNC_UTEST, SysGetInvalidProcess)
     handle->client = nullptr;
 
     size_t len = sizeof(LogDataMsg) + strlen(INVALID_MSG) + 1;
-    LogDataMsg *value = (LogDataMsg *)malloc(len);
+    LogDataMsg* value = (LogDataMsg*)malloc(len);
     memset_s(value, len, 0, len);
     value->devId = 0;
     value->sliceLen = strlen(INVALID_MSG);
@@ -159,10 +146,10 @@ TEST_F(EP_SLOGD_SYS_REPORT_FUNC_UTEST, SysGetInvalidProcess)
 
 TEST_F(EP_SLOGD_SYS_REPORT_FUNC_UTEST, SysProcessHandleFailed)
 {
-    CommHandle *handle = nullptr;
+    CommHandle* handle = nullptr;
 
     size_t len = sizeof(LogDataMsg) + strlen(SINGLE_EXPORT_LOG) + 1;
-    LogDataMsg *value = (LogDataMsg *)malloc(len);
+    LogDataMsg* value = (LogDataMsg*)malloc(len);
     memset_s(value, len, 0, len);
     value->devId = 0;
     value->sliceLen = strlen(SINGLE_EXPORT_LOG);
@@ -183,7 +170,7 @@ TEST_F(EP_SLOGD_SYS_REPORT_FUNC_UTEST, SysReportProcessValueFailed)
     handle->client = nullptr;
 
     size_t len = sizeof(LogDataMsg) + strlen(SINGLE_EXPORT_LOG) + 1;
-    LogDataMsg *value = nullptr;
+    LogDataMsg* value = nullptr;
 
     EXPECT_EQ(SysReportProcess(handle, value, len), -1);
 }
@@ -198,7 +185,7 @@ TEST_F(EP_SLOGD_SYS_REPORT_FUNC_UTEST, SysGetProcessValueFailed)
     handle->client = nullptr;
 
     size_t len = sizeof(LogDataMsg) + strlen(SINGLE_EXPORT_LOG) + 1;
-    LogDataMsg *value = nullptr;
+    LogDataMsg* value = nullptr;
 
     EXPECT_EQ(SysGetProcess(handle, value, len), -1);
     XFREE(handle);
@@ -214,7 +201,7 @@ TEST_F(EP_SLOGD_SYS_REPORT_FUNC_UTEST, SysReportProcessLenFailed)
     handle->client = nullptr;
 
     size_t len = sizeof(LogDataMsg) + strlen(SINGLE_EXPORT_LOG) + 1;
-    LogDataMsg *value = (LogDataMsg *)malloc(len);
+    LogDataMsg* value = (LogDataMsg*)malloc(len);
     memset_s(value, len, 0, len);
     value->devId = 0;
     value->sliceLen = strlen(SINGLE_EXPORT_LOG);
@@ -234,7 +221,7 @@ TEST_F(EP_SLOGD_SYS_REPORT_FUNC_UTEST, SysGetProcessLenFailed)
     handle->client = nullptr;
 
     size_t len = sizeof(LogDataMsg) + strlen(SINGLE_EXPORT_LOG) + 1;
-    LogDataMsg *value = (LogDataMsg *)malloc(len);
+    LogDataMsg* value = (LogDataMsg*)malloc(len);
     memset_s(value, len, 0, len);
     value->devId = 0;
     value->sliceLen = strlen(SINGLE_EXPORT_LOG);
@@ -255,15 +242,13 @@ TEST_F(EP_SLOGD_SYS_REPORT_FUNC_UTEST, SysReportContainerFailed)
     handle->client = nullptr;
 
     size_t len = sizeof(LogDataMsg) + strlen(SINGLE_EXPORT_LOG) + 1;
-    LogDataMsg *value = (LogDataMsg *)malloc(len);
+    LogDataMsg* value = (LogDataMsg*)malloc(len);
     memset_s(value, len, 0, len);
     value->devId = 0;
     value->sliceLen = strlen(SINGLE_EXPORT_LOG);
     memcpy_s(value->data, strlen(SINGLE_EXPORT_LOG), SINGLE_EXPORT_LOG, strlen(SINGLE_EXPORT_LOG));
 
-    MOCKER(AdxGetAttrByCommHandle)
-        .stubs()
-        .will(returnValue(-1));
+    MOCKER(AdxGetAttrByCommHandle).stubs().will(returnValue(-1));
 
     EXPECT_EQ(SysReportProcess(handle, value, len), -1);
     XFREE(value);
@@ -279,22 +264,20 @@ TEST_F(EP_SLOGD_SYS_REPORT_FUNC_UTEST, SysGetContainerFailed)
     handle->client = nullptr;
 
     size_t len = sizeof(LogDataMsg) + strlen(SINGLE_EXPORT_LOG) + 1;
-    LogDataMsg *value = (LogDataMsg *)malloc(len);
+    LogDataMsg* value = (LogDataMsg*)malloc(len);
     memset_s(value, len, 0, len);
     value->devId = 0;
     value->sliceLen = strlen(SINGLE_EXPORT_LOG);
     memcpy_s(value->data, strlen(SINGLE_EXPORT_LOG), SINGLE_EXPORT_LOG, strlen(SINGLE_EXPORT_LOG));
 
-    MOCKER(AdxGetAttrByCommHandle)
-        .stubs()
-        .will(returnValue(-1));
+    MOCKER(AdxGetAttrByCommHandle).stubs().will(returnValue(-1));
 
     EXPECT_EQ(SysGetProcess(handle, value, len), -1);
     XFREE(handle);
     XFREE(value);
 }
 
-int32_t AdxGetAttrIsDockerStub(const CommHandle *handle, int32_t attr, int32_t *value)
+int32_t AdxGetAttrIsDockerStub(const CommHandle* handle, int32_t attr, int32_t* value)
 {
     *value = 2;
     return 0;
@@ -310,15 +293,13 @@ TEST_F(EP_SLOGD_SYS_REPORT_FUNC_UTEST, SysReportIsContainer)
     handle->client = nullptr;
 
     size_t len = sizeof(LogDataMsg) + strlen(SINGLE_EXPORT_LOG) + 1;
-    LogDataMsg *value = (LogDataMsg *)malloc(len);
+    LogDataMsg* value = (LogDataMsg*)malloc(len);
     memset_s(value, len, 0, len);
     value->devId = 0;
     value->sliceLen = strlen(SINGLE_EXPORT_LOG);
     memcpy_s(value->data, strlen(SINGLE_EXPORT_LOG), SINGLE_EXPORT_LOG, strlen(SINGLE_EXPORT_LOG));
 
-    MOCKER(AdxGetAttrByCommHandle)
-        .stubs()
-        .will(invoke(AdxGetAttrIsDockerStub));
+    MOCKER(AdxGetAttrByCommHandle).stubs().will(invoke(AdxGetAttrIsDockerStub));
 
     EXPECT_EQ(SysReportProcess(handle, value, len), 0);
     XFREE(value);
@@ -334,15 +315,13 @@ TEST_F(EP_SLOGD_SYS_REPORT_FUNC_UTEST, SysGetIsContainer)
     handle->client = nullptr;
 
     size_t len = sizeof(LogDataMsg) + strlen(SINGLE_EXPORT_LOG) + 1;
-    LogDataMsg *value = (LogDataMsg *)malloc(len);
+    LogDataMsg* value = (LogDataMsg*)malloc(len);
     memset_s(value, len, 0, len);
     value->devId = 0;
     value->sliceLen = strlen(SINGLE_EXPORT_LOG);
     memcpy_s(value->data, strlen(SINGLE_EXPORT_LOG), SINGLE_EXPORT_LOG, strlen(SINGLE_EXPORT_LOG));
 
-    MOCKER(AdxGetAttrByCommHandle)
-        .stubs()
-        .will(invoke(AdxGetAttrIsDockerStub));
+    MOCKER(AdxGetAttrByCommHandle).stubs().will(invoke(AdxGetAttrIsDockerStub));
 
     EXPECT_EQ(SysGetProcess(handle, value, len), 0);
     XFREE(handle);
@@ -359,15 +338,13 @@ TEST_F(EP_SLOGD_SYS_REPORT_FUNC_UTEST, SysGetSingleAddFail)
     handle->client = nullptr;
 
     size_t len = sizeof(LogDataMsg) + strlen(SINGLE_EXPORT_LOG) + 1;
-    LogDataMsg *value = (LogDataMsg *)malloc(len);
+    LogDataMsg* value = (LogDataMsg*)malloc(len);
     memset_s(value, len, 0, len);
     value->devId = 0;
     value->sliceLen = strlen(SINGLE_EXPORT_LOG);
     memcpy_s(value->data, strlen(SINGLE_EXPORT_LOG), SINGLE_EXPORT_LOG, strlen(SINGLE_EXPORT_LOG));
 
-    MOCKER(SessionMgrAddSession)
-        .stubs()
-        .will(returnValue(-1));
+    MOCKER(SessionMgrAddSession).stubs().will(returnValue(-1));
 
     EXPECT_EQ(SysGetProcess(handle, value, len), -1);
     XFREE(handle);
@@ -384,15 +361,13 @@ TEST_F(EP_SLOGD_SYS_REPORT_FUNC_UTEST, SysGetSingleDeleteFail)
     handle->client = nullptr;
 
     size_t len = sizeof(LogDataMsg) + strlen(SINGLE_EXPORT_LOG) + 1;
-    LogDataMsg *value = (LogDataMsg *)malloc(len);
+    LogDataMsg* value = (LogDataMsg*)malloc(len);
     memset_s(value, len, 0, len);
     value->devId = 0;
     value->sliceLen = strlen(SINGLE_EXPORT_LOG);
     memcpy_s(value->data, strlen(SINGLE_EXPORT_LOG), SINGLE_EXPORT_LOG, strlen(SINGLE_EXPORT_LOG));
 
-    MOCKER(SessionMgrDeleteSession)
-        .stubs()
-        .will(returnValue(-1));
+    MOCKER(SessionMgrDeleteSession).stubs().will(returnValue(-1));
 
     EXPECT_EQ(SysGetProcess(handle, value, len), -1);
     XFREE(handle);
@@ -409,15 +384,13 @@ TEST_F(EP_SLOGD_SYS_REPORT_FUNC_UTEST, SysReportContinuousAddFailed)
     handle->client = nullptr;
 
     size_t len = sizeof(LogDataMsg) + 1;
-    LogDataMsg *value = (LogDataMsg *)malloc(len);
+    LogDataMsg* value = (LogDataMsg*)malloc(len);
     memset_s(value, len, 0, len);
     value->status = MSG_STATUS_LONG_LINK;
     value->devId = 0;
     value->sliceLen = 0;
 
-    MOCKER(SessionMgrAddSession)
-        .stubs()
-        .will(returnValue(-1));
+    MOCKER(SessionMgrAddSession).stubs().will(returnValue(-1));
 
     EXPECT_EQ(SysReportProcess(handle, value, len), -1);
     XFREE(value);

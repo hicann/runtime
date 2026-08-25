@@ -9,12 +9,9 @@
  */
 #include "system_api_stub.h"
 
-int usleep_stub(unsigned int microSeconds)
-{
-    return 0;
-}
+int usleep_stub(unsigned int microSeconds) { return 0; }
 
-int clock_gettime_stub(clockid_t clock_id, struct timespec *tp)
+int clock_gettime_stub(clockid_t clock_id, struct timespec* tp)
 {
     static long nsec = 0;
     nsec += 200 * 1000000; // 200ms
@@ -23,13 +20,13 @@ int clock_gettime_stub(clockid_t clock_id, struct timespec *tp)
 }
 
 int g_mutexCount = 0;
-int pthread_mutex_lock_stub(pthread_mutex_t *mutex)
+int pthread_mutex_lock_stub(pthread_mutex_t* mutex)
 {
     g_mutexCount++;
     return 0;
 }
 
-int pthread_mutex_unlock_stub(pthread_mutex_t *mutex)
+int pthread_mutex_unlock_stub(pthread_mutex_t* mutex)
 {
     if (g_mutexCount <= 0) {
         return -1;
@@ -38,12 +35,6 @@ int pthread_mutex_unlock_stub(pthread_mutex_t *mutex)
     return 0;
 }
 
-bool CheckMutex(void)
-{
-    return (g_mutexCount == 0) ? true : false;
-}
+bool CheckMutex(void) { return (g_mutexCount == 0) ? true : false; }
 
-int pthread_cond_signal_stub(pthread_cond_t *cond)
-{
-    return 0;
-}
+int pthread_cond_signal_stub(pthread_cond_t* cond) { return 0; }

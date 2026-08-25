@@ -28,7 +28,7 @@ typedef struct TraceUnwindEhFrameHdrInfo {
     uint8_t ucSearchTblFlag; /* the flag of table present 1:present 0:no present */
     uint8_t ucReserved[3];   /* the reserved */
     uintptr_t uvFrameAddr;   /* the start of frame */
-    size_t uvFDECount;     /* the num of FDE */
+    size_t uvFDECount;       /* the num of FDE */
     uintptr_t uvTblStatAddr; /* the table addr */
 } TraceUnwindEhFrameHdrInfo;
 
@@ -50,15 +50,18 @@ typedef struct FdeEntry {
     int32_t fdeTableOffset;
 } FdeEntry;
 extern "C" {
-    TraStatus TraceParseFrameHdrAddr(ScdDwarf *dwarf, TraceUnwindEhFrameHdrInfo *ehFrameHdrInfo);
-    TraStatus TraceParseCie(ScdDwarf *dwarf, uintptr_t CIEAddr, TraceAddrRange* initIns, TraceFrameRegStateInfo *frameRegState);
-    TraStatus TraceParseFde(ScdDwarf *dwarf, uintptr_t FDEAddr, TraceFrameRegStateInfo *frameRegState, TraceAddrRange* initIns,
-        TraceAddrRange* ins);
-    void CallStackRegUpdate(ScdDwarf *dwarf, uint32_t uiIndex, ScdRegs *pstCoreRegsOld, ScdRegs *pstCoreRegs,
-        uintptr_t uvCFAAddr, TraceStagRegInfo *pstRegInfo, ScdDwarfStepArgs *pstStackLimit);
-    TraStatus TraceUnwinRegUpdate(ScdDwarf *dwarf, TraceFrameRegStateInfo *frameRegState,
-        ScdRegs *coreRegArray, ScdDwarfStepArgs *stackAddr);
-    FdeEntry *TraceSearchFdeOffsetTable(uintptr_t enFrameAddr, uintptr_t uvTblStatAddr, uintptr_t pc);
+TraStatus TraceParseFrameHdrAddr(ScdDwarf* dwarf, TraceUnwindEhFrameHdrInfo* ehFrameHdrInfo);
+TraStatus TraceParseCie(
+    ScdDwarf* dwarf, uintptr_t CIEAddr, TraceAddrRange* initIns, TraceFrameRegStateInfo* frameRegState);
+TraStatus TraceParseFde(
+    ScdDwarf* dwarf, uintptr_t FDEAddr, TraceFrameRegStateInfo* frameRegState, TraceAddrRange* initIns,
+    TraceAddrRange* ins);
+void CallStackRegUpdate(
+    ScdDwarf* dwarf, uint32_t uiIndex, ScdRegs* pstCoreRegsOld, ScdRegs* pstCoreRegs, uintptr_t uvCFAAddr,
+    TraceStagRegInfo* pstRegInfo, ScdDwarfStepArgs* pstStackLimit);
+TraStatus TraceUnwinRegUpdate(
+    ScdDwarf* dwarf, TraceFrameRegStateInfo* frameRegState, ScdRegs* coreRegArray, ScdDwarfStepArgs* stackAddr);
+FdeEntry* TraceSearchFdeOffsetTable(uintptr_t enFrameAddr, uintptr_t uvTblStatAddr, uintptr_t pc);
 }
 
 using TraceUnwindUtest = DwarfLocalMemoryTest;
@@ -66,9 +69,9 @@ using TraceUnwindUtest = DwarfLocalMemoryTest;
 TEST_F(TraceUnwindUtest, TestTraceStackUnwind_failed)
 {
     TraStatus ret = TRACE_FAILURE;
-    ThreadArgument arg = { 0 };
-    TraceStackInfo info = { 0 };
-    uintptr_t regs[TRACE_CORE_REG_NUM] = { 0 };
+    ThreadArgument arg = {0};
+    TraceStackInfo info = {0};
+    uintptr_t regs[TRACE_CORE_REG_NUM] = {0};
 
     // arg==NULL
     ret = TraceStackUnwind(NULL, regs, TRACE_CORE_REG_NUM, &info);
@@ -90,9 +93,9 @@ TEST_F(TraceUnwindUtest, TestTraceStackUnwind_failed)
 TEST_F(TraceUnwindUtest, TestTraceGetStackBaseAddrLibc_failed)
 {
     TraStatus ret = TRACE_FAILURE;
-    ThreadArgument arg = { 0 };
-    TraceStackInfo info = { 0 };
-    uintptr_t regs[TRACE_CORE_REG_NUM] = { 0 };
+    ThreadArgument arg = {0};
+    TraceStackInfo info = {0};
+    uintptr_t regs[TRACE_CORE_REG_NUM] = {0};
     MOCKER(pthread_getattr_np).stubs().will(returnValue(-1));
 
     ret = TraceStackUnwind(&arg, regs, TRACE_CORE_REG_NUM, &info);
@@ -102,7 +105,7 @@ TEST_F(TraceUnwindUtest, TestTraceGetStackBaseAddrLibc_failed)
 TEST_F(TraceUnwindUtest, TestTraceParseFrameHdrAddr)
 {
     uint8_t version = 0;
-    uint8_t data[64] = { 0 };
+    uint8_t data[64] = {0};
     TraceUnwindEhFrameHdrInfo info = {0};
     uint8_t addr = 1;
 
@@ -123,11 +126,11 @@ TEST_F(TraceUnwindUtest, TestTraceParseFrameHdrAddr)
 
 TEST_F(TraceUnwindUtest, TestTraceParseFDE)
 {
-    TraceEhFrameFde stFDEHeadInfo = { 0 };
+    TraceEhFrameFde stFDEHeadInfo = {0};
     uintptr_t addr = (uintptr_t)&stFDEHeadInfo;
-    TraceAddrRange range = { 0 };
-    TraceFrameRegStateInfo regState = { 0 };
-    const uint8_t *mockerPtr = 0;
+    TraceAddrRange range = {0};
+    TraceFrameRegStateInfo regState = {0};
+    const uint8_t* mockerPtr = 0;
     TraStatus ret = TRACE_FAILURE;
 
     MOCKER(TraceParseCie).stubs().will(returnValue(TRACE_SUCCESS));
@@ -141,7 +144,7 @@ TEST_F(TraceUnwindUtest, TestTraceParseFDE)
     MOCKER(TraceReadEncodeValue).stubs().will(returnValue(mockerPtr));
     ret = TraceParseFde(&dwarf, addr, &regState, &range, &range);
     EXPECT_EQ(TRACE_FAILURE, ret);
-    
+
     GlobalMockObject::verify();
 
     MOCKER(TraceParseCie).stubs().will(returnValue(TRACE_FAILURE));
@@ -168,15 +171,15 @@ TEST_F(TraceUnwindUtest, TestTraceParseCIEEh)
 {
     TraceEhFrameCie ehFrameCIEHdr = {0};
     uintptr_t addr = (uintptr_t)&ehFrameCIEHdr;
-    uint8_t data[4] = { 0 };
+    uint8_t data[4] = {0};
     dwarf.memory->data = addr;
     TraceAddrRange range = {0};
     TraceFrameRegStateInfo regState = {0};
 
     ehFrameCIEHdr.augmentation[0] = 'e';
     ehFrameCIEHdr.augmentation[1] = 'h';
-    MOCKER(TraceReadUleb128).stubs().will(returnValue((const uint8_t *)&data[0]));
-    MOCKER(TraceReadLeb128).stubs().will(returnValue((const uint8_t *)&data[0]));
+    MOCKER(TraceReadUleb128).stubs().will(returnValue((const uint8_t*)&data[0]));
+    MOCKER(TraceReadLeb128).stubs().will(returnValue((const uint8_t*)&data[0]));
 
     TraceParseCie(&dwarf, addr, &range, &regState);
     EXPECT_EQ((uintptr_t)&data[0], range.start);
@@ -187,14 +190,14 @@ TEST_F(TraceUnwindUtest, TestTraceParseCIE)
 {
     TraceEhFrameCie ehFrameCIEHdr = {0};
     uintptr_t addr = (uintptr_t)&ehFrameCIEHdr;
-    uint8_t data[4] = { 0 };
+    uint8_t data[4] = {0};
     dwarf.memory->data = addr;
     TraceAddrRange range = {0};
     TraceFrameRegStateInfo regState = {0};
 
     ehFrameCIEHdr.augmentation[0] = 'R';
-    MOCKER(TraceReadUleb128).stubs().will(returnValue((const uint8_t *)&data[0]));
-    MOCKER(TraceReadLeb128).stubs().will(returnValue((const uint8_t *)&data[0]));
+    MOCKER(TraceReadUleb128).stubs().will(returnValue((const uint8_t*)&data[0]));
+    MOCKER(TraceReadLeb128).stubs().will(returnValue((const uint8_t*)&data[0]));
 
     TraceParseCie(&dwarf, addr, &range, &regState);
     EXPECT_NE(0, range.start);
@@ -214,11 +217,14 @@ TEST_F(TraceUnwindUtest, TestTraceUnwinRegUpdate)
     // case VOS_CFA_EXP
     regState.frameStateInfo.cfaHow = VOS_CFA_EXP;
     uintptr_t mockResult = 0; // invalid stack addr
-    MOCKER(TraceReadUleb128).stubs()
-        .will(returnValue((const uint8_t *)0))
-        .then(returnValue((const uint8_t *)1))
-        .then(returnValue((const uint8_t *)0));
-    MOCKER(TraceStackOpExc).stubs().with(any(), any(), any(), any(), outBoundP(&mockResult, sizeof(uintptr_t *)), any(), any())
+    MOCKER(TraceReadUleb128)
+        .stubs()
+        .will(returnValue((const uint8_t*)0))
+        .then(returnValue((const uint8_t*)1))
+        .then(returnValue((const uint8_t*)0));
+    MOCKER(TraceStackOpExc)
+        .stubs()
+        .with(any(), any(), any(), any(), outBoundP(&mockResult, sizeof(uintptr_t*)), any(), any())
         .will(returnValue((int32_t)0));
     ret = TraceUnwinRegUpdate(&dwarf, &regState, &regArr, &args);
     EXPECT_EQ(TRACE_FAILURE, ret);
@@ -279,11 +285,13 @@ TEST_F(TraceUnwindUtest, TestCallStackRegUpdate)
     // case REG_SAVED_EXP
     expResult = 0x10;
     regInfo.regHow = REG_SAVED_EXP;
-    uintptr_t data[2] = { expResult, 0 };
+    uintptr_t data[2] = {expResult, 0};
     index = 0;
     mockResult = (uintptr_t)&data[0];
-    MOCKER(TraceReadUleb128).stubs().will(returnValue((const uint8_t *)1));
-    MOCKER(TraceStackOpExc).stubs().with(any(), any(), any(), any(), outBoundP(&mockResult, sizeof(uintptr_t *)), any(), any())
+    MOCKER(TraceReadUleb128).stubs().will(returnValue((const uint8_t*)1));
+    MOCKER(TraceStackOpExc)
+        .stubs()
+        .with(any(), any(), any(), any(), outBoundP(&mockResult, sizeof(uintptr_t*)), any(), any())
         .will(returnValue((int32_t)0));
     CallStackRegUpdate(&dwarf, index, &oldRegArr, &regArr, cfaAddr, &regInfo, &args);
     EXPECT_EQ(expResult, regArr.r[index & REG_VAILD_MASK]);
@@ -292,8 +300,10 @@ TEST_F(TraceUnwindUtest, TestCallStackRegUpdate)
     index = 0;
     expResult = regArr.r[index & REG_VAILD_MASK];
     mockResult = 0; // invalid result
-    MOCKER(TraceReadUleb128).stubs().will(returnValue((const uint8_t *)1));
-    MOCKER(TraceStackOpExc).stubs().with(any(), any(), any(), any(), outBoundP(&mockResult, sizeof(uintptr_t *)), any(), any())
+    MOCKER(TraceReadUleb128).stubs().will(returnValue((const uint8_t*)1));
+    MOCKER(TraceStackOpExc)
+        .stubs()
+        .with(any(), any(), any(), any(), outBoundP(&mockResult, sizeof(uintptr_t*)), any(), any())
         .will(returnValue((int32_t)0));
     CallStackRegUpdate(&dwarf, index, &oldRegArr, &regArr, cfaAddr, &regInfo, &args);
     EXPECT_EQ(expResult, regArr.r[index & REG_VAILD_MASK]);
@@ -304,8 +314,10 @@ TEST_F(TraceUnwindUtest, TestCallStackRegUpdate)
     expResult = 0x12;
     mockResult = expResult;
     index = 0;
-    MOCKER(TraceReadUleb128).stubs().will(returnValue((const uint8_t *)1));
-    MOCKER(TraceStackOpExc).stubs().with(any(), any(), any(), any(), outBoundP(&mockResult, sizeof(uintptr_t *)), any(), any())
+    MOCKER(TraceReadUleb128).stubs().will(returnValue((const uint8_t*)1));
+    MOCKER(TraceStackOpExc)
+        .stubs()
+        .with(any(), any(), any(), any(), outBoundP(&mockResult, sizeof(uintptr_t*)), any(), any())
         .will(returnValue((int32_t)0));
     CallStackRegUpdate(&dwarf, index, &oldRegArr, &regArr, cfaAddr, &regInfo, &args);
     EXPECT_EQ(expResult, regArr.r[index & REG_VAILD_MASK]);

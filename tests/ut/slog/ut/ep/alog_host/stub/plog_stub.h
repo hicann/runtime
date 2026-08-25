@@ -17,9 +17,9 @@
 extern "C" {
 #endif
 
-void *logDlopen(const char *fileName, int mode);
-int logDlclose(void *handle);
-void *logDlsym(void *handle, const char* funcName);
+void* logDlopen(const char* fileName, int mode);
+int logDlclose(void* handle);
+void* logDlsym(void* handle, const char* funcName);
 
 int32_t GetSlogFuncCallCount(int32_t index);
 int32_t GetPlogFuncCallCount(int32_t index);

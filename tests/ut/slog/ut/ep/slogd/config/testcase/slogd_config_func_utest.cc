@@ -21,11 +21,10 @@ using namespace std;
 using namespace testing;
 
 extern "C" {
-    extern ToolMutex g_confMutex;
+extern ToolMutex g_confMutex;
 }
 
-class EP_SLOGD_CONFIG_FUNC_UTEST : public testing::Test
-{
+class EP_SLOGD_CONFIG_FUNC_UTEST : public testing::Test {
 protected:
     virtual void SetUp()
     {
@@ -58,7 +57,6 @@ protected:
     }
 
 public:
-
 };
 
 // log_config_api.h
@@ -76,10 +74,7 @@ TEST_F(EP_SLOGD_CONFIG_FUNC_UTEST, LogConfListInit)
     LogConfListFree();
 }
 
-static int32_t LogConfListTraverseFunc(const Buff *node, ArgPtr arg, bool isNewStyle)
-{
-    return SYS_OK;
-}
+static int32_t LogConfListTraverseFunc(const Buff* node, ArgPtr arg, bool isNewStyle) { return SYS_OK; }
 
 TEST_F(EP_SLOGD_CONFIG_FUNC_UTEST, LogConfListTraverse)
 {
@@ -92,17 +87,24 @@ TEST_F(EP_SLOGD_CONFIG_FUNC_UTEST, LogConfListGetValue)
 {
     EXPECT_EQ(SYS_OK, LogConfInit());
     char confStr[][CONF_VALUE_MAX_LEN + 1] = {
-        LOG_AGENT_FILE_DIR_STR, GLOBALLEVEL_KEY, DEVICE_MAX_FILE_NUM_STR, DEVICE_MAX_FILE_SIZE_STR, DEVICE_OS_MAX_FILE_NUM_STR,
-        DEVICE_OS_MAX_FILE_SIZE_STR, DEVICE_APP_MAX_FILE_NUM_STR, DEVICE_APP_MAX_FILE_SIZE_STR, DEVICE_NDEBUG_MAX_FILE_NUM_STR,
-        DEVICE_NDEBUG_MAX_FILE_SIZE_STR, ENABLEEVENT_KEY, PERMISSION_FOR_ALL
-    };
-    char value[][CONF_VALUE_MAX_LEN + 1] = {
-        LOG_FILE_PATH, "0", "8", "2097152", "2", "1048576", "2", "524288", "2", "1048576", "1", "0"
-    };
-    
-    char val[CONF_VALUE_MAX_LEN + 1] = { 0 };
+        LOG_AGENT_FILE_DIR_STR,
+        GLOBALLEVEL_KEY,
+        DEVICE_MAX_FILE_NUM_STR,
+        DEVICE_MAX_FILE_SIZE_STR,
+        DEVICE_OS_MAX_FILE_NUM_STR,
+        DEVICE_OS_MAX_FILE_SIZE_STR,
+        DEVICE_APP_MAX_FILE_NUM_STR,
+        DEVICE_APP_MAX_FILE_SIZE_STR,
+        DEVICE_NDEBUG_MAX_FILE_NUM_STR,
+        DEVICE_NDEBUG_MAX_FILE_SIZE_STR,
+        ENABLEEVENT_KEY,
+        PERMISSION_FOR_ALL};
+    char value[][CONF_VALUE_MAX_LEN + 1] = {LOG_FILE_PATH, "0",      "8", "2097152", "2", "1048576",
+                                            "2",           "524288", "2", "1048576", "1", "0"};
 
-    for (int i = 0; i < sizeof(value)/sizeof(value[0]); i++) {
+    char val[CONF_VALUE_MAX_LEN + 1] = {0};
+
+    for (int i = 0; i < sizeof(value) / sizeof(value[0]); i++) {
         EXPECT_EQ(SUCCESS, LogConfListGetValue(confStr[i], LogStrlen(confStr[i]), val, CONF_VALUE_MAX_LEN));
         EXPECT_STREQ(value[i], val);
         memset_s(val, CONF_VALUE_MAX_LEN + 1, 0, CONF_VALUE_MAX_LEN + 1);
@@ -124,7 +126,7 @@ TEST_F(EP_SLOGD_CONFIG_FUNC_UTEST, LogConfListUpdate)
 TEST_F(EP_SLOGD_CONFIG_FUNC_UTEST, SlogdConfigMgrGetList)
 {
     SlogdConfigMgrInit();
-    StLogFileList logList = { 0 };
+    StLogFileList logList = {0};
     EXPECT_EQ(SUCCESS, SlogdConfigMgrGetList(&logList));
     EXPECT_EQ(8, logList.maxFileNum);
     EXPECT_EQ(2097152, logList.ulMaxFileSize);
