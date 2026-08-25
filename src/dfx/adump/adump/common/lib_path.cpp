@@ -17,7 +17,7 @@
 namespace Adx {
 constexpr char LIBSUFFIX[] = ".so";
 
-LibPath &LibPath::Instance()
+LibPath& LibPath::Instance()
 {
     static LibPath libPath;
     return libPath;
@@ -46,7 +46,7 @@ Path LibPath::GetSelfLibraryDir() const
 {
     mmDlInfo info;
     LibPath& (*instancePtr)() = &LibPath::Instance;
-    const auto ret = mmDladdr(reinterpret_cast<void *>(instancePtr), &info);
+    const auto ret = mmDladdr(reinterpret_cast<void*>(instancePtr), &info);
     if (ret != EN_OK) {
         IDE_LOGE("Cannot find symbol GetSelfLibraryDir");
         return Path();
@@ -89,14 +89,14 @@ Path LibPath::GetSelfPath() const
     return selfPath;
 }
 
-std::string LibPath::GetTargetPath(const std::string &concatName) const
+std::string LibPath::GetTargetPath(const std::string& concatName) const
 {
     Path installBasePath = GetInstallPath();
     IDE_CTRL_VALUE_FAILED(!installBasePath.Empty(), return "", "Failed to get install path.");
     return installBasePath.Concat(concatName).GetString();
 }
 
-bool LibPath::IsPluginSo(const std::string &fileName) const
+bool LibPath::IsPluginSo(const std::string& fileName) const
 {
     const std::string prefix = "adump_";
     const std::string suffix = "_plugin.so";
@@ -109,14 +109,15 @@ bool LibPath::IsPluginSo(const std::string &fileName) const
     return true;
 }
 
-std::vector<std::string> LibPath::ObtainAllPluginSo(const std::string &searchPath) const
+std::vector<std::string> LibPath::ObtainAllPluginSo(const std::string& searchPath) const
 {
     std::vector<std::string> result;
     std::string realPath;
-    IDE_CTRL_VALUE_WARN(FileUtils::FileNameIsReal(searchPath, realPath) == IDE_DAEMON_OK, return result,
+    IDE_CTRL_VALUE_WARN(
+        FileUtils::FileNameIsReal(searchPath, realPath) == IDE_DAEMON_OK, return result,
         "Unable to get real path of %s and the search path is %s.", realPath.c_str(), searchPath.c_str());
-    IDE_CTRL_VALUE_WARN(FileUtils::IsFileExist(realPath), return result,
-        "Unable to find so from %s.", realPath.c_str());
+    IDE_CTRL_VALUE_WARN(
+        FileUtils::IsFileExist(realPath), return result, "Unable to find so from %s.", realPath.c_str());
 
     DIR* dir = opendir(realPath.c_str());
     IDE_CTRL_VALUE_WARN(dir, return result, "Unable to open dir %s with info %s.", realPath.c_str(), strerror(errno));
@@ -135,4 +136,3 @@ std::vector<std::string> LibPath::ObtainAllPluginSo(const std::string &searchPat
 }
 
 } // namespace Adx
-

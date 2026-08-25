@@ -30,8 +30,8 @@ struct BufferSize {
 
 class AdumpPlatformApi {
 public:
-    static bool GetUBSizeAndCoreNum(const std::string &socVersion, PlatformType platform, PlatformData &data);
-    static bool GetAicoreSizeInfo(const std::string &socVersion, BufferSize &bufferSize);
+    static bool GetUBSizeAndCoreNum(const std::string& socVersion, PlatformType platform, PlatformData& data);
+    static bool GetAicoreSizeInfo(const std::string& socVersion, BufferSize& bufferSize);
 };
 } // namespace Adx
 #endif // ADUMP_COMMON_ADUMP_FE_API_H

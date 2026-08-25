@@ -15,10 +15,10 @@
 #include "sys_utils.h"
 
 #if !defined(ADUMP_SOC_HOST) || ADUMP_SOC_HOST == 1
-__attribute__((weak)) drvError_t halGetVdevNum(uint32_t *num_dev);
-__attribute__((weak)) drvError_t halGetVdevIDs(uint32_t *devices, uint32_t len);
-__attribute__((weak)) drvError_t halGetChipInfo(uint32_t devId, halChipInfo *chipInfo);
-__attribute__((weak)) drvError_t halGetAPIVersion(int *halAPIVersion);
+__attribute__((weak)) drvError_t halGetVdevNum(uint32_t* num_dev);
+__attribute__((weak)) drvError_t halGetVdevIDs(uint32_t* devices, uint32_t len);
+__attribute__((weak)) drvError_t halGetChipInfo(uint32_t devId, halChipInfo* chipInfo);
+__attribute__((weak)) drvError_t halGetAPIVersion(int* halAPIVersion);
 #endif
 
 namespace Adx {
@@ -26,25 +26,27 @@ uint32_t AdumpDsmi::DrvGetDevNum()
 {
     int32_t numDev = 0;
     rtError_t ret = rtGetDeviceCount(&numDev);
-    IDE_CTRL_VALUE_WARN(ret != ACL_ERROR_RT_FEATURE_NOT_SUPPORT, return 0,
-        "Driver doesn't support rtGetDeviceCount interface, ret=%d", static_cast<int32_t>(ret));
-    IDE_CTRL_VALUE_FAILED((ret == RT_ERROR_NONE) && (numDev >= 0) && (numDev <= DEV_NUM), return 0,
+    IDE_CTRL_VALUE_WARN(
+        ret != ACL_ERROR_RT_FEATURE_NOT_SUPPORT, return 0, "Driver doesn't support rtGetDeviceCount interface, ret=%d",
+        static_cast<int32_t>(ret));
+    IDE_CTRL_VALUE_FAILED(
+        (ret == RT_ERROR_NONE) && (numDev >= 0) && (numDev <= DEV_NUM), return 0,
         "Failed to get device count, ret=%d, num=%d", static_cast<int32_t>(ret), numDev);
 
     IDE_LOGD("Succeeded to get device count, numDev=%d", numDev);
     return static_cast<uint32_t>(numDev);
 }
 
-bool AdumpDsmi::DrvGetDevIds(uint32_t numDevices, std::vector<uint32_t> &devIds)
+bool AdumpDsmi::DrvGetDevIds(uint32_t numDevices, std::vector<uint32_t>& devIds)
 {
     devIds.clear();
     if (numDevices > DEV_NUM) {
         return false;
     }
-    uint32_t devices[DEV_NUM] = { 0 };
+    uint32_t devices[DEV_NUM] = {0};
     rtError_t ret = rtGetDeviceIDs(devices, numDevices);
-    IDE_CTRL_VALUE_FAILED(ret == RT_ERROR_NONE, return false, "Failed to rtGetDeviceIDs, ret=%d",
-        static_cast<int32_t>(ret));
+    IDE_CTRL_VALUE_FAILED(
+        ret == RT_ERROR_NONE, return false, "Failed to rtGetDeviceIDs, ret=%d", static_cast<int32_t>(ret));
     for (uint32_t i = 0; i < numDevices; ++i) {
         if (DrvGetDeviceStatus(devices[i])) {
             devIds.push_back(devices[i]);
@@ -59,14 +61,17 @@ bool AdumpDsmi::DrvGetDeviceStatus(const uint32_t deviceId)
 {
     rtDevStatus_t deviceStatus = RT_DEV_STATUS_INITING;
     rtError_t ret = rtGetDeviceStatus(deviceId, &deviceStatus);
-    IDE_CTRL_VALUE_WARN(ret != ACL_ERROR_RT_FEATURE_NOT_SUPPORT, return true,
+    IDE_CTRL_VALUE_WARN(
+        ret != ACL_ERROR_RT_FEATURE_NOT_SUPPORT, return true,
         "Driver doesn't support rtGetDeviceStatus interface, ret=%d", static_cast<int32_t>(ret));
 
-    IDE_CTRL_VALUE_FAILED(ret == RT_ERROR_NONE, return false, "Failed to get device %u status, ret=%d.",
-        deviceId, static_cast<int32_t>(ret));
+    IDE_CTRL_VALUE_FAILED(
+        ret == RT_ERROR_NONE, return false, "Failed to get device %u status, ret=%d.", deviceId,
+        static_cast<int32_t>(ret));
 
-    IDE_CTRL_VALUE_WARN(deviceStatus != RT_DEV_STATUS_COMMUNICATION_LOST, return false,
-        "Device %u status is communication lost.", deviceId);
+    IDE_CTRL_VALUE_WARN(
+        deviceStatus != RT_DEV_STATUS_COMMUNICATION_LOST, return false, "Device %u status is communication lost.",
+        deviceId);
     return true;
 }
 
@@ -83,7 +88,7 @@ std::vector<uint32_t> AdumpDsmi::DrvGetDeviceList()
     return devList;
 }
 
-bool AdumpDsmi::DrvGetPlatformType(uint32_t &platformType)
+bool AdumpDsmi::DrvGetPlatformType(uint32_t& platformType)
 {
     IDE_LOGD("Start to get chip type.");
     std::vector<uint32_t> devList = DrvGetDeviceList();
@@ -91,20 +96,23 @@ bool AdumpDsmi::DrvGetPlatformType(uint32_t &platformType)
     int64_t versionInfo = 0;
     uint64_t chipId = 0;
     rtError_t ret = ACL_ERROR_RT_NO_DEVICE;
-    for (auto &devId : devList) {
-        ret = rtGetDeviceInfo(devId, static_cast<int32_t>(MODULE_TYPE_SYSTEM),
-            static_cast<int32_t>(INFO_TYPE_VERSION), &versionInfo);
+    for (auto& devId : devList) {
+        ret = rtGetDeviceInfo(
+            devId, static_cast<int32_t>(MODULE_TYPE_SYSTEM), static_cast<int32_t>(INFO_TYPE_VERSION), &versionInfo);
         if (ret == RT_ERROR_NONE) {
             chipId = ((static_cast<uint64_t>(versionInfo) >> 8) & 0xff); // 8:shift 8 bits, get the low 8 bits(0xff)
             break;
         } else if (ret == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
-            IDE_LOGW("Driver doesn't support device type version by rtGetDeviceInfo interface, ret=%d"
-                ", set PlatformType::HELPER_DEVICE_TYPE", static_cast<int32_t>(ret));
+            IDE_LOGW(
+                "Driver doesn't support device type version by rtGetDeviceInfo interface, ret=%d"
+                ", set PlatformType::HELPER_DEVICE_TYPE",
+                static_cast<int32_t>(ret));
             chipId = DEFAULT_CHIP_TYPE; // tmp set default chip type for helper device
             break;
         }
     }
-    IDE_CTRL_VALUE_FAILED((ret == RT_ERROR_NONE) || (ret == ACL_ERROR_RT_FEATURE_NOT_SUPPORT), return false,
+    IDE_CTRL_VALUE_FAILED(
+        (ret == RT_ERROR_NONE) || (ret == ACL_ERROR_RT_FEATURE_NOT_SUPPORT), return false,
         "Failed to get chip id, ret is %d.", static_cast<int32_t>(ret));
 
     platformType = static_cast<uint32_t>(chipId);
@@ -113,13 +121,13 @@ bool AdumpDsmi::DrvGetPlatformType(uint32_t &platformType)
 }
 
 /**
-* @ingroup driver
-* @brief Get current platform information
-* @attention null
-* @param [out] *platformInfo  0 Means currently on the Device side, 1/Means currently on the host side
-* @return   true for success, false for fail
-*/
-bool AdumpDsmi::DrvGetPlatformInfo(uint32_t &platformInfo)
+ * @ingroup driver
+ * @brief Get current platform information
+ * @attention null
+ * @param [out] *platformInfo  0 Means currently on the Device side, 1/Means currently on the host side
+ * @return   true for success, false for fail
+ */
+bool AdumpDsmi::DrvGetPlatformInfo(uint32_t& platformInfo)
 {
     rtRunMode info = RT_RUN_MODE_RESERVED;
     rtError_t ret = rtGetRunMode(&info);
@@ -150,4 +158,4 @@ int32_t AdumpDsmi::DrvGetAPIVersion()
     return halAPIVersion;
 }
 #endif
-}
+} // namespace Adx

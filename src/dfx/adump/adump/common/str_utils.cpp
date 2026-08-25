@@ -17,30 +17,29 @@
 namespace Adx {
 constexpr size_t const LIMIT_PER_MESSAGE = 1024U;
 
-std::string StrUtils::TrimLeft(const std::string &s)
+std::string StrUtils::TrimLeft(const std::string& s)
 {
     std::string rs = s;
     (void)rs.erase(rs.begin(), std::find_if(rs.begin(), rs.end(), [](uint8_t ch) { return !std::isspace(ch); }));
     return rs;
 }
 
-std::string StrUtils::TrimRight(const std::string &s)
+std::string StrUtils::TrimRight(const std::string& s)
 {
     std::string rs = s;
-    (void)rs.erase(std::find_if(rs.rbegin(), rs.rend(), [](uint8_t ch) { return !std::isspace(ch); }).base(),
-        rs.end());
+    (void)rs.erase(std::find_if(rs.rbegin(), rs.rend(), [](uint8_t ch) { return !std::isspace(ch); }).base(), rs.end());
     return rs;
 }
 
-std::string StrUtils::Trim(const std::string &s)
+std::string StrUtils::Trim(const std::string& s)
 {
     std::string tmp = TrimLeft(s);
     return TrimRight(tmp);
 }
 
-std::string StrUtils::Replace(const std::string &s, const std::set<char> &oldChars, char newChar)
+std::string StrUtils::Replace(const std::string& s, const std::set<char>& oldChars, char newChar)
 {
-    auto replace = [&oldChars, newChar](char &ch) {
+    auto replace = [&oldChars, newChar](char& ch) {
         if (oldChars.find(ch) != oldChars.cend()) {
             ch = newChar;
         }
@@ -50,7 +49,7 @@ std::string StrUtils::Replace(const std::string &s, const std::set<char> &oldCha
     return rs;
 }
 
-bool StrUtils::EndsWith(const std::string &s, const char *suffix)
+bool StrUtils::EndsWith(const std::string& s, const char* suffix)
 {
     if (suffix == nullptr) {
         return false;
@@ -59,7 +58,7 @@ bool StrUtils::EndsWith(const std::string &s, const char *suffix)
     return s.size() >= suffixLen && s.compare(s.size() - suffixLen, suffixLen, suffix) == 0;
 }
 
-bool StrUtils::StartsWith(const std::string &s, const char *prefix)
+bool StrUtils::StartsWith(const std::string& s, const char* prefix)
 {
     if (prefix == nullptr) {
         return false;
@@ -68,7 +67,7 @@ bool StrUtils::StartsWith(const std::string &s, const char *prefix)
     return s.size() >= prefixLen && s.compare(0, prefixLen, prefix) == 0;
 }
 
-std::vector<std::string> StrUtils::Split(const std::string &str, const char * const delimiter)
+std::vector<std::string> StrUtils::Split(const std::string& str, const char* const delimiter)
 {
     std::vector<std::string> resVec;
     if (str.empty()) {
@@ -86,12 +85,13 @@ std::vector<std::string> StrUtils::Split(const std::string &str, const char * co
     }
     return resVec;
 }
-std::string StrUtils::Format(const char *const fmt, ...) {
+std::string StrUtils::Format(const char* const fmt, ...)
+{
     va_list ap;
     va_start(ap, fmt);
     char formatStr[LIMIT_PER_MESSAGE] = {};
-    const int32_t ret = vsnprintf_s(formatStr, static_cast<size_t>(LIMIT_PER_MESSAGE),
-        static_cast<size_t>(LIMIT_PER_MESSAGE - 1U), fmt, ap);
+    const int32_t ret = vsnprintf_s(
+        formatStr, static_cast<size_t>(LIMIT_PER_MESSAGE), static_cast<size_t>(LIMIT_PER_MESSAGE - 1U), fmt, ap);
     va_end(ap);
     return ret == -1 ? "" : formatStr;
 }

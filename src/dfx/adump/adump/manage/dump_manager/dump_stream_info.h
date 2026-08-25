@@ -108,10 +108,7 @@ int32_t SetupAsyncDump(
     aclrtStream mainStream);
 int32_t GetDumpInfoFromMap(DumpInfoParams& params);
 
-inline int32_t GetPrimaryFormat(int32_t format)
-{
-    return static_cast<int32_t>(static_cast<uint32_t>(format) & 0xffU);
-}
+inline int32_t GetPrimaryFormat(int32_t format) { return static_cast<int32_t>(static_cast<uint32_t>(format) & 0xffU); }
 
 inline int32_t GetSubFormat(int32_t format)
 {
@@ -209,8 +206,7 @@ private:
     void StopCleanupThread();
     void CleanupThreadLoop();
 
-    DumpResourceSafeMap() : cleanupThreadActive_(false)
-    {}
+    DumpResourceSafeMap() : cleanupThreadActive_(false) {}
     ~DumpResourceSafeMap()
     {
         StopCleanupThread();

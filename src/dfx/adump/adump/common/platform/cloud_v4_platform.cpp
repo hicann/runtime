@@ -26,15 +26,13 @@ ADUMP_PLATFORM_REGISTER(DataDumpInterface, PlatformType::CHIP_CLOUD_V4, CloudV4D
 namespace {
 constexpr size_t ADX_MAX_AICORE_ON_ASCEND950 = 36U;
 constexpr size_t ADX_MAX_STR_LEN = 1024U * 1024U;
-}
+} // namespace
 
 CloudV4Features::CloudV4Features()
 {
     supported_ = {
-        AdumpPlatformFeature::FEATURE_DATA_DUMP,
-        AdumpPlatformFeature::FEATURE_OVERFLOW_DUMP,
-        AdumpPlatformFeature::FEATURE_EXCEPTION_DUMP_L0,
-        AdumpPlatformFeature::FEATURE_EXCEPTION_DUMP_L1,
+        AdumpPlatformFeature::FEATURE_DATA_DUMP,         AdumpPlatformFeature::FEATURE_OVERFLOW_DUMP,
+        AdumpPlatformFeature::FEATURE_EXCEPTION_DUMP_L0, AdumpPlatformFeature::FEATURE_EXCEPTION_DUMP_L1,
         AdumpPlatformFeature::FEATURE_CORE_DUMP,
     };
 }
@@ -59,10 +57,7 @@ uint16_t CloudV4Coredump::ConvertCoreId(uint8_t coreType, uint16_t coreId) const
     return (coreType == CORE_TYPE_AIC) ? coreId : static_cast<uint16_t>(CORE_SIZE_AIC_DAVID + coreId);
 }
 
-bool CloudV4Exception::IsArgsDataTypeSizeByByte() const
-{
-    return false;
-}
+bool CloudV4Exception::IsArgsDataTypeSizeByByte() const { return false; }
 
 uint64_t CloudV4DataDump::GetKfcStackSize() const
 {
@@ -70,25 +65,13 @@ uint64_t CloudV4DataDump::GetKfcStackSize() const
     return CalcKfcStackSize(OP_STACK_950);
 }
 
-std::string CloudV4DataDump::GetKfcBinName() const
-{
-    return "kfc_dump_stat_ascend950.o";
-}
+std::string CloudV4DataDump::GetKfcBinName() const { return "kfc_dump_stat_ascend950.o"; }
 
-bool CloudV4DataDump::IsUbFromAiCore() const
-{
-    return true;
-}
+bool CloudV4DataDump::IsUbFromAiCore() const { return true; }
 
-size_t CloudV4DataDump::GetCoreTypeIDOffset() const
-{
-    return ADX_MAX_AICORE_ON_ASCEND950 * 2;
-}
+size_t CloudV4DataDump::GetCoreTypeIDOffset() const { return ADX_MAX_AICORE_ON_ASCEND950 * 2; }
 
-size_t CloudV4DataDump::GetBlockNum() const
-{
-    return ADX_MAX_AICORE_ON_ASCEND950 * 3;
-}
+size_t CloudV4DataDump::GetBlockNum() const { return ADX_MAX_AICORE_ON_ASCEND950 * 3; }
 
 int32_t CloudV4DataDump::GetStreamSyncTimeout() const
 {

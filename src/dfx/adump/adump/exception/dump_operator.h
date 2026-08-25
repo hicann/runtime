@@ -20,13 +20,10 @@
 namespace Adx {
 struct DumpWorkspace {
     DumpWorkspace() = default;
-    DumpWorkspace(const void *wsAddr, uint64_t wsBytes, uint32_t wsArgsOffset)
-        : addr(wsAddr),
-          bytes(wsBytes),
-          argsOffset(wsArgsOffset)
-    {
-    }
-    const void *addr;
+    DumpWorkspace(const void* wsAddr, uint64_t wsBytes, uint32_t wsArgsOffset)
+        : addr(wsAddr), bytes(wsBytes), argsOffset(wsArgsOffset)
+    {}
+    const void* addr;
     uint64_t bytes;
     uint32_t argsOffset;
 };
@@ -34,20 +31,13 @@ struct DumpWorkspace {
 struct OpIdentity {
     OpIdentity() = default;
     OpIdentity(uint32_t deviceid, uint32_t taskid, uint32_t streamid)
-        : deviceId(deviceid),
-          taskId(taskid),
-          streamId(streamid)
-    {
-    }
+        : deviceId(deviceid), taskId(taskid), streamId(streamid)
+    {}
     OpIdentity(uint32_t deviceid, uint32_t taskid, uint32_t streamid, uint32_t contextid)
-        : deviceId(deviceid),
-          taskId(taskid),
-          streamId(streamid),
-          contextId(contextid)
-    {
-    }
+        : deviceId(deviceid), taskId(taskid), streamId(streamid), contextId(contextid)
+    {}
 
-    bool operator==(const OpIdentity &rhs) const;
+    bool operator==(const OpIdentity& rhs) const;
     std::string GetString() const;
 
     uint32_t deviceId = 0U;
@@ -59,24 +49,24 @@ struct OpIdentity {
 class DumpOperator {
 public:
     DumpOperator() = default;
-    void Init(const OperatorInfoV2 &opInfo);
-    bool IsBelongTo(const OpIdentity &identity) const;
-    int32_t LogExceptionInfo(const rtExceptionArgsInfo &argsInfo);
+    void Init(const OperatorInfoV2& opInfo);
+    bool IsBelongTo(const OpIdentity& identity) const;
+    int32_t LogExceptionInfo(const rtExceptionArgsInfo& argsInfo);
     int32_t CopyOpKernelFile() const;
-    int32_t RefreshAddrs(const rtExceptionArgsInfo &argsInfo);
-    int32_t DumpException(const uint32_t deviceId, const std::string &dumpPath);
-    explicit DumpOperator(const OperatorInfoV2 &opInfo);
+    int32_t RefreshAddrs(const rtExceptionArgsInfo& argsInfo);
+    int32_t DumpException(const uint32_t deviceId, const std::string& dumpPath);
+    explicit DumpOperator(const OperatorInfoV2& opInfo);
 
 private:
-    int32_t DumpExceptionFile(const uint32_t deviceId, const std::string &dumpPath);
+    int32_t DumpExceptionFile(const uint32_t deviceId, const std::string& dumpPath);
     void InitDeviceArgs();
     bool IsTvmOperator() const;
-    std::string GetTensorString(const DumpTensor &tensor);
-    int32_t LogExceptionArgs(const rtExceptionArgsInfo &argsInfo) const;
-    std::string GetDumpFilePath(const std::string &dumpPath) const;
-    void PrintAdditionInfo(const char *flag) const;
-    void PrintLog(void *const *argsOnHost, size_t argNum, const std::string &tag) const;
-    void RecordCurrentLog(std::ostringstream &oss);
+    std::string GetTensorString(const DumpTensor& tensor);
+    int32_t LogExceptionArgs(const rtExceptionArgsInfo& argsInfo) const;
+    std::string GetDumpFilePath(const std::string& dumpPath) const;
+    void PrintAdditionInfo(const char* flag) const;
+    void PrintLog(void* const* argsOnHost, size_t argNum, const std::string& tag) const;
+    void RecordCurrentLog(std::ostringstream& oss);
 
     // basic info
     std::string opName_;
@@ -85,7 +75,7 @@ private:
 
     std::vector<DeviceInfo> deviceInfos_;
     // args
-    std::vector<void *> hostArgs_;
+    std::vector<void*> hostArgs_;
 
     // addition info
     std::map<std::string, std::string> additions_;
@@ -99,5 +89,5 @@ private:
 
     KernelInfoCollector kernelCollector_;
 };
-}  // namespace Adx
-#endif  // DUMP_OPERATOR_H
+} // namespace Adx
+#endif // DUMP_OPERATOR_H

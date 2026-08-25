@@ -15,7 +15,7 @@
 #include "str_utils.h"
 
 namespace Adx {
-int32_t AdxRegDumpProcessCallBack(int32_t (*const messageCallback)(const Adx::DumpChunk *, int32_t))
+int32_t AdxRegDumpProcessCallBack(int32_t (*const messageCallback)(const Adx::DumpChunk*, int32_t))
 {
     if (messageCallback == nullptr) {
         IDE_LOGE("The param MessageCallback is null, please check it!");
@@ -31,7 +31,7 @@ void AdxUnRegDumpProcessCallBack()
     Adx::AdxDumpProcess::Instance().MessageCallbackUnRegister();
     IDE_LOGI("MessageCallback unregistered success!");
 }
-}
+} // namespace Adx
 
 /**
  * @param messageCallback : record file Path
@@ -41,11 +41,10 @@ void AdxUnRegDumpProcessCallBack()
  * @retval ACL_SUCCESS The function is successfully executed.
  * @retval OtherValues Failure
  */
-aclError acldumpRegCallback(int32_t (* const messageCallback)(const acldumpChunk *, int32_t), int32_t flag)
+aclError acldumpRegCallback(int32_t (*const messageCallback)(const acldumpChunk*, int32_t), int32_t flag)
 {
     if (messageCallback == nullptr) {
-        REPORT_EP0007_NULL_POINTER(
-            Adx::FUNC_NAME_ACL_DUMP_REG_CALLBACK, Adx::FUNC_ACL_DUMP_REG_CALLBACK_PARAM_CLBK);
+        REPORT_EP0007_NULL_POINTER(Adx::FUNC_NAME_ACL_DUMP_REG_CALLBACK, Adx::FUNC_ACL_DUMP_REG_CALLBACK_PARAM_CLBK);
         return ACL_ERROR_FAILURE;
     }
 
@@ -66,7 +65,4 @@ aclError acldumpRegCallback(int32_t (* const messageCallback)(const acldumpChunk
     return ACL_SUCCESS;
 }
 
-void acldumpUnregCallback()
-{
-    Adx::AdxUnRegDumpProcessCallBack();
-}
+void acldumpUnregCallback() { Adx::AdxUnRegDumpProcessCallBack(); }

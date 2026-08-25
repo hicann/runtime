@@ -27,12 +27,12 @@ namespace Adx {
 // （写 map）与查询（读 map）可能来自不同线程并发发生，而 std::map 的并发读写属未定义行为。
 // 因此这里用每个 Iface 独立的静态互斥锁保护 map 的所有读写；函数内局部静态量的初始化
 // 由 C++11 保证线程安全，规避了跨翻译单元静态初始化顺序问题。
-template<typename Iface>
+template <typename Iface>
 class PlatformReflection {
 public:
     using Factory = std::function<std::shared_ptr<Iface>()>;
 
-    template<typename T>
+    template <typename T>
     static void RegisterPlatform(PlatformType type)
     {
         std::lock_guard<std::mutex> lock(GetMutex());
@@ -51,7 +51,7 @@ public:
             if (it == map.end()) {
                 return nullptr;
             }
-            factory = it->second;  // 锁内取出工厂，锁外再构造对象，避免持锁做堆分配
+            factory = it->second; // 锁内取出工厂，锁外再构造对象，避免持锁做堆分配
         }
         return factory ? factory() : nullptr;
     }
@@ -72,20 +72,16 @@ private:
     }
 };
 
-template<typename Iface, typename T>
+template <typename Iface, typename T>
 class PlatformRegister {
 public:
-    explicit PlatformRegister(PlatformType type)
-    {
-        PlatformReflection<Iface>::template RegisterPlatform<T>(type);
-    }
+    explicit PlatformRegister(PlatformType type) { PlatformReflection<Iface>::template RegisterPlatform<T>(type); }
 };
 
 // 一行注册某平台实现类 platformClass 到接口域 Iface 的工厂。
 // 各平台 .cpp 顶部按支持的域写若干行；不支持的域不写。
 #define ADUMP_PLATFORM_REGISTER(Iface, platformType, platformClass) \
-    static Adx::PlatformRegister<Iface, platformClass> \
-        g_adumpReg_##Iface##_##platformClass(platformType)
+    static Adx::PlatformRegister<Iface, platformClass> g_adumpReg_##Iface##_##platformClass(platformType)
 
 } // namespace Adx
 #endif // ADUMP_COMMON_ADUMP_PLATFORM_REGISTRY_H

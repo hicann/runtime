@@ -18,9 +18,9 @@ uint64_t g_chunk[RING_CHUNK_SIZE + MAX_TENSOR_NUM] = {0};
 namespace {
 std::atomic<uint64_t> g_writeIdx{0};
 uint32_t g_atomicIndex = 0x2000;
-}  // namespace
+} // namespace
 
-void *AdumpGetSizeInfoAddr(uint32_t space, uint32_t &atomicIndex)
+void* AdumpGetSizeInfoAddr(uint32_t space, uint32_t& atomicIndex)
 {
     if (space > MAX_TENSOR_NUM) {
         return nullptr;
@@ -35,7 +35,7 @@ int32_t AdumpRegisterCallback(uint32_t moduleId, AdumpCallback enableFunc, Adump
 {
     return DumpManager::Instance().RegisterCallback(moduleId, enableFunc, disableFunc);
 }
-}  // namespace Adx
+} // namespace Adx
 
 /**
  * @ingroup AscendCL
@@ -55,8 +55,8 @@ const char* acldumpGetPath(acldumpType dumpType)
  * @brief Save custom exception info to the Exception Dump path. Not supported on this platform.
  * @retval ACL_ERROR_FAILURE Not supported.
  */
-aclError acldumpSaveExceptionInfo(const char *fileName, const char *userTag,
-    const acldumpTensorInfo *tensors, size_t tensorCount)
+aclError acldumpSaveExceptionInfo(
+    const char* fileName, const char* userTag, const acldumpTensorInfo* tensors, size_t tensorCount)
 {
     UNUSED(fileName);
     UNUSED(userTag);
@@ -70,7 +70,7 @@ aclError acldumpSaveExceptionInfo(const char *fileName, const char *userTag,
  * @brief Get the Exception Dump root path. Not supported on this platform.
  * @retval ACL_ERROR_FAILURE Not supported.
  */
-aclError acldumpGetExceptionInfoPath(char *path, size_t maxLen)
+aclError acldumpGetExceptionInfoPath(char* path, size_t maxLen)
 {
     UNUSED(path);
     UNUSED(maxLen);

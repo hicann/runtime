@@ -27,10 +27,10 @@ const std::string ASCEND_SHNAME_FILE_KERNEL_OBJECT(".ascend.file_kernel_object")
 const std::string ASCEND_SHNAME_FILE_KERNEL_JSON(".ascend.file_kernel_json");
 const std::string ASCEND_SHNAME_KERNEL_INFO(".ascend.kernel_info");
 
-constexpr uint8_t CORE_TYPE_AIC = RT_CORE_TYPE_AIC ;
+constexpr uint8_t CORE_TYPE_AIC = RT_CORE_TYPE_AIC;
 constexpr uint8_t CORE_TYPE_AIV = RT_CORE_TYPE_AIV;
-constexpr uint16_t CORE_SIZE_AIC = 25U;     // milan
-constexpr uint16_t CORE_SIZE_AIC_DAVID = 36U;     // david
+constexpr uint16_t CORE_SIZE_AIC = 25U;       // milan
+constexpr uint16_t CORE_SIZE_AIC_DAVID = 36U; // david
 constexpr uint64_t INVALID_DATA_FLAG = 1LLU << 63U;
 constexpr uint8_t REG_DATA_VALID = 0U;
 constexpr uint8_t REG_DATA_INVALID = 1U;
@@ -42,35 +42,35 @@ struct DevInfo {
 };
 
 struct GlobalMemInfo {
-    uint64_t devAddr;       // 虚拟地址
-    uint64_t size;          // 内存大小
-    uint32_t sectionIndex;  // 对应哪个.ascend.global section
-    DfxTensorType type;     // 内存是input/output/workspace/stack等类型
+    uint64_t devAddr;      // 虚拟地址
+    uint64_t size;         // 内存大小
+    uint32_t sectionIndex; // 对应哪个.ascend.global section
+    DfxTensorType type;    // 内存是input/output/workspace/stack等类型
     uint16_t reserve;
     union {
         struct {
             uint16_t coreId;
-        } coreInfo;         // stack 类型的内存区分不同core
+        } coreInfo;       // stack 类型的内存区分不同core
         struct {
-            uint32_t dim;   // tensor shape
+            uint32_t dim; // tensor shape
             uint64_t dimSize[25];
-        } shape;            // input、output
+        } shape;          // input、output
     } extraInfo;
 };
 
 struct LocalMemInfo {
-    uint64_t size;                  // memory size
-    uint32_t sectionIndex;          // which .ascend.local section
-    uint32_t globalSectionIndex;    // which .ascend.gloabl section, cache only
+    uint64_t size;               // memory size
+    uint32_t sectionIndex;       // which .ascend.local section
+    uint32_t globalSectionIndex; // which .ascend.gloabl section, cache only
     rtDebugMemoryType_t type;
     uint32_t reserve;
 };
 
 struct RegInfo {
     uint64_t addr;
-    uint8_t validFlag;              //标识寄存器value是否有效, 0：有效，1：无效
+    uint8_t validFlag; // 标识寄存器value是否有效, 0：有效，1：无效
     uint8_t reserve[6];
-    uint8_t regSize;                // byte
+    uint8_t regSize;   // byte
     uint8_t value[16];
 };
 
@@ -82,5 +82,5 @@ struct RegInfoWide {
     uint8_t value[32];
 };
 
-}
+} // namespace Adx
 #endif

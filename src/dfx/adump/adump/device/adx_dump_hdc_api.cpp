@@ -19,14 +19,13 @@
  *      not NULL: Handle used by hdc
  *      NULL:     dump start failed
  */
-extern "C" IDE_SESSION IdeDumpStart(const char *connectInfo)
+extern "C" IDE_SESSION IdeDumpStart(const char* connectInfo)
 {
     std::string connectInfoStr = connectInfo;
     std::string pid = std::to_string(mmGetPid());
     if (connectInfoStr.length() > pid.length()) {
         std::string::size_type idx = connectInfoStr.rfind(";");
-        if (idx != std::string::npos && idx < connectInfoStr.length() - 1
-            && connectInfoStr.substr(idx + 1) == pid) {
+        if (idx != std::string::npos && idx < connectInfoStr.length() - 1 && connectInfoStr.substr(idx + 1) == pid) {
             return Adx::SocDumpStart(connectInfo);
         }
     }
@@ -42,7 +41,7 @@ extern "C" IDE_SESSION IdeDumpStart(const char *connectInfo)
  *      IDE_DAEMON_UNKNOW_ERROR: write data failed
  *      IDE_DAEMON_NONE_ERROR:   write data succ
  */
-extern "C" IdeErrorT IdeDumpData(IDE_SESSION session, const IdeDumpChunk *dumpChunk)
+extern "C" IdeErrorT IdeDumpData(IDE_SESSION session, const IdeDumpChunk* dumpChunk)
 {
     if (session == Adx::DEFAULT_SOC_SESSION) {
         return Adx::SocDumpData(session, dumpChunk);

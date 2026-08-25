@@ -15,11 +15,11 @@
 namespace Adx {
 bool DumpManager::CheckCoredumpSupportedPlatform() const
 {
-    auto *plat = FeaturesSupportManager::Get();
+    auto* plat = FeaturesSupportManager::Get();
     if (plat == nullptr) {
         IDE_LOGW("[DumpManager] Platform unavailable, coredump not supported.");
         return false;
     }
     return plat->FeatureIsSupport(AdumpPlatformFeature::FEATURE_CORE_DUMP);
 }
-}  // namespace Adx
+} // namespace Adx

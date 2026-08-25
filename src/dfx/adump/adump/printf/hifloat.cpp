@@ -22,25 +22,21 @@ constexpr uint32_t FP8E4M3_EXPONENT_BIT_NUM = 4U;
 constexpr int32_t HIFLOAT8_SUBNORMAL_NUM = 23;
 
 static std::unordered_map<std::string, float> g_adxMantissaMapB2f = {
-    {"000", 0}, {"001", 0.125}, {"010", 0.25}, {"011", 0.375}, {"100", 0.5},
-    {"101", 0.625}, {"110", 0.75}, {"111", 0.875}, {"00", 0}, {"01", 0.25},
-    {"10", 0.5}, {"11", 0.75}, {"0", 0}, {"1", 0.5}
-};
+    {"000", 0},     {"001", 0.125}, {"010", 0.25}, {"011", 0.375}, {"100", 0.5}, {"101", 0.625}, {"110", 0.75},
+    {"111", 0.875}, {"00", 0},      {"01", 0.25},  {"10", 0.5},    {"11", 0.75}, {"0", 0},       {"1", 0.5}};
 
 static std::unordered_map<std::string, float> g_adxPresetEncoedsMap = {
-    {"00000000", 0}, {"10000000", std::numeric_limits<float>::quiet_NaN()},
-    {"01101111", std::numeric_limits<float>::infinity()}, {"11101111", -std::numeric_limits<float>::infinity()}
-};
+    {"00000000", 0},
+    {"10000000", std::numeric_limits<float>::quiet_NaN()},
+    {"01101111", std::numeric_limits<float>::infinity()},
+    {"11101111", -std::numeric_limits<float>::infinity()}};
 
-static std::unordered_map<std::string, uint32_t> g_adxConventionalMap = {
-    {"11", 4}, {"10", 3}, {"01", 2}, {"001", 1}, {"0001", 0}, {"0000", 0}
-};
+static std::unordered_map<std::string, uint32_t> g_adxConventionalMap = {{"11", 4},  {"10", 3},   {"01", 2},
+                                                                         {"001", 1}, {"0001", 0}, {"0000", 0}};
 
-static inline std::string ByteToBinary(const uint8_t byte) {
-    return std::bitset<ONE_BYTE_BIT_NUM>(byte).to_string();
-}
+static inline std::string ByteToBinary(const uint8_t byte) { return std::bitset<ONE_BYTE_BIT_NUM>(byte).to_string(); }
 
-int32_t HiFloat8::GetExponent(const std::string &binary) const
+int32_t HiFloat8::GetExponent(const std::string& binary) const
 {
     if (binary.length() == 0) {
         return 0;
@@ -50,7 +46,7 @@ int32_t HiFloat8::GetExponent(const std::string &binary) const
     return symbol * std::stoi(revisedBinary, nullptr, BASE_NUM);
 }
 
-float HiFloat8::GetMantissaField(const std::string &binary) const
+float HiFloat8::GetMantissaField(const std::string& binary) const
 {
     return std::stoi(binary, nullptr, BASE_NUM) / static_cast<float>(pow(BASE_NUM, binary.length()));
 }
@@ -69,7 +65,7 @@ float HiFloat8::GetValue() const
         std::string dotField;
         uint32_t dotVal = 0;
         for (const auto& pair : g_adxConventionalMap) {
-            const std::string &dot = pair.first;
+            const std::string& dot = pair.first;
             if (bitString.substr(1).find(dot) == 0) {
                 dotField = dot;
                 dotVal = pair.second;
@@ -87,14 +83,15 @@ float HiFloat8::GetValue() const
             return value;
         }
         int32_t exponentField = GetExponent(bitString.substr(1 + dotField.length(), dotVal));
-        float mantissaField = GetMantissaField(bitString.substr(1 +  dotField.length() + dotVal));
+        float mantissaField = GetMantissaField(bitString.substr(1 + dotField.length() + dotVal));
         value = signVal * static_cast<float>(pow(BASE_NUM, exponentField) * (1 + mantissaField));
     }
     return value;
 }
 
-float FpaEbMc::Decode(const std::string &bitString, const std::string &exponentBit, const std::string &mantissaBit,
-        const uint32_t exponentBitNum) const
+float FpaEbMc::Decode(
+    const std::string& bitString, const std::string& exponentBit, const std::string& mantissaBit,
+    const uint32_t exponentBitNum) const
 {
     int32_t exponentBias = (1 << (exponentBitNum - 1)) - 1;
     int32_t signVal = std::stoi(bitString.substr(0, 1), nullptr, BASE_NUM);
@@ -150,4 +147,4 @@ float Fp8E8M0::GetValue() const
     value = static_cast<float>(pow(BASE_NUM, exponentVal - FP8E8M0_EXPONENT_BIAS));
     return value;
 }
-}; // namespace
+}; // namespace Adx

@@ -19,7 +19,7 @@
 
 namespace Adx {
 using AdumpPluginInitFunc = int32_t (*)();
-using AdumpPluginInit = int32_t ();
+using AdumpPluginInit = int32_t();
 
 class DumpTensorPlugin : public Adx::Common::Singleton::Singleton<DumpTensorPlugin> {
 public:
@@ -28,16 +28,16 @@ public:
     int32_t InitPluginLib();
     void HeadCallbackRegister(DfxTensorType tensorType, HeadProcess headProcess);
     void TensorCallbackRegister(DfxTensorType tensorType, TensorProcess tensorProcess);
-    int32_t NotifyHeadCallback(DfxTensorType tensorType, uint32_t devId, const void *addr, uint64_t headerSize,
-        uint64_t &newHeaderSize);
-    int32_t NotifyTensorCallback(DfxTensorType tensorType, uint32_t devId, const void *addr, uint64_t size, int32_t fd);
+    int32_t NotifyHeadCallback(
+        DfxTensorType tensorType, uint32_t devId, const void* addr, uint64_t headerSize, uint64_t& newHeaderSize);
+    int32_t NotifyTensorCallback(DfxTensorType tensorType, uint32_t devId, const void* addr, uint64_t size, int32_t fd);
     bool IsTensorTypeRegistered(DfxTensorType tensorType);
 
 private:
-    void ReceiveInitialFunc(void *handle) const;
+    void ReceiveInitialFunc(void* handle) const;
     std::mutex dlopenMtx_;
     std::mutex regMtx_;
-    std::vector<void *> pluginLibHandles_;
+    std::vector<void*> pluginLibHandles_;
     std::map<DfxTensorType, HeadProcess> headProcessMap_;
     std::map<DfxTensorType, TensorProcess> tensorProcessMap_;
 };

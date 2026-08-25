@@ -15,8 +15,8 @@
 namespace Adx {
 class DumpTensor {
 public:
-    template<typename TensorInfoT>
-    explicit DumpTensor(const TensorInfoT &tensorInfo)
+    template <typename TensorInfoT>
+    explicit DumpTensor(const TensorInfoT& tensorInfo)
         : dataType_(tensorInfo.dataType),
           format_(tensorInfo.format),
           shape_(tensorInfo.shape),
@@ -24,16 +24,17 @@ public:
           size_(tensorInfo.tensorSize),
           address_(tensorInfo.tensorAddr),
           addrType_(tensorInfo.addrType),
-          argsOffSet_(tensorInfo.argsOffSet) {}
-    
+          argsOffSet_(tensorInfo.argsOffSet)
+    {}
+
     ~DumpTensor() = default;
     int32_t GetDataType() const;
     int32_t GetFormat() const;
     std::vector<int64_t> GetShape() const;
     std::vector<int64_t> GetOriginShape() const;
     size_t GetSize() const;
-    const void *GetAddress() const;
-    void SetAddress(const void *address);
+    const void* GetAddress() const;
+    void SetAddress(const void* address);
     AddressType GetAddressType() const;
     uint32_t GetArgsOffSet() const;
 
@@ -43,7 +44,7 @@ private:
     std::vector<int64_t> shape_;
     std::vector<int64_t> originShape_;
     size_t size_;
-    const void *address_;
+    const void* address_;
     AddressType addrType_;
     uint32_t argsOffSet_;
 };

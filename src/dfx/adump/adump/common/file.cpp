@@ -20,9 +20,9 @@ constexpr int32_t INVALID_FILE_FD = -1;
 constexpr mmMode_t READ_WRITE_MODE = M_IRUSR | M_IWUSR;
 constexpr int64_t MAX_BUFFER_LENGTH = 512;
 static const std::string MAPPING_FILE_NAME = "mapping.csv";
-}  // namespace
+} // namespace
 
-File::File(const std::string &path, int32_t flag, mmMode_t mode, bool lazyOpen)
+File::File(const std::string& path, int32_t flag, mmMode_t mode, bool lazyOpen)
     : filePath_(path), fd_(INVALID_FILE_FD), flag_(flag), mode_(mode)
 {
     if (lazyOpen) {
@@ -45,10 +45,7 @@ int32_t File::EnsureOpen()
     return ADUMP_SUCCESS;
 }
 
-File::~File()
-{
-    (void)Close();
-}
+File::~File() { (void)Close(); }
 
 int32_t File::Open(int32_t flag, mmMode_t mode)
 {
@@ -79,17 +76,15 @@ int32_t File::Open(int32_t flag, mmMode_t mode)
         IDE_LOGE("Add mapping item [ %s ] failed", hashName.c_str());
     }
     realFilePath = parentPath.Concat(hashName).GetString();
-    IDE_LOGW("File name [ %s ] too long rename as [ %s ] and the mapping record in %s",
-        fileName.c_str(), realFilePath.c_str(), MAPPING_FILE_NAME.c_str());
+    IDE_LOGW(
+        "File name [ %s ] too long rename as [ %s ] and the mapping record in %s", fileName.c_str(),
+        realFilePath.c_str(), MAPPING_FILE_NAME.c_str());
     fd_ = mmOpen2(realFilePath.c_str(), O_APPEND | M_RDWR | M_CREAT, M_IREAD | M_IWRITE);
     IDE_CTRL_VALUE_FAILED(fd_ >= 0, return ADUMP_FAILED, "Open hash file failed, fd: %d", fd_);
     return ADUMP_SUCCESS;
 }
 
-int32_t File::GetFileDiscriptor() const
-{
-    return fd_;
-}
+int32_t File::GetFileDiscriptor() const { return fd_; }
 
 int32_t File::IsFileOpen() const
 {
@@ -114,12 +109,12 @@ int32_t File::Close()
     return ADUMP_SUCCESS;
 }
 
-int64_t File::Write(const char *const buffer, int64_t length) const
+int64_t File::Write(const char* const buffer, int64_t length) const
 {
     mmSsize_t ret = 0;
     UINT32 reserve = static_cast<UINT32>(length);
     do {
-        ret = mmWrite(fd_, const_cast<char *>(buffer) + (static_cast<UINT32>(length) - reserve), reserve);
+        ret = mmWrite(fd_, const_cast<char*>(buffer) + (static_cast<UINT32>(length) - reserve), reserve);
         if ((ret == EN_ERROR) && (mmGetErrorCode() == EINTR)) {
             continue;
         }
@@ -136,7 +131,7 @@ int64_t File::Write(const char *const buffer, int64_t length) const
     return static_cast<int64_t>(ret);
 }
 
-int64_t File::Read(char *buffer, int64_t length) const
+int64_t File::Read(char* buffer, int64_t length) const
 {
     mmSsize_t ret;
     do {
@@ -149,7 +144,7 @@ int64_t File::Read(char *buffer, int64_t length) const
     return static_cast<int64_t>(ret);
 }
 
-int32_t File::Copy(const std::string &srcPath, const std::string &dstPath)
+int32_t File::Copy(const std::string& srcPath, const std::string& dstPath)
 {
     IDE_LOGI("copy file from %s to %s", srcPath.c_str(), dstPath.c_str());
     File srcFile(srcPath, M_RDONLY);
@@ -166,7 +161,7 @@ int32_t File::Copy(const std::string &srcPath, const std::string &dstPath)
         return ret;
     }
 
-    char buffer[MAX_BUFFER_LENGTH] = { 0 };
+    char buffer[MAX_BUFFER_LENGTH] = {0};
     int64_t size = 0;
     do {
         size = srcFile.Read(buffer, MAX_BUFFER_LENGTH);
@@ -186,13 +181,13 @@ int32_t File::Copy(const std::string &srcPath, const std::string &dstPath)
     return ADUMP_SUCCESS;
 }
 
- /**
+/**
  * @brief       : add map item into mapping.csv
  * @param [in]  : filePath    file path
  * @param [in]  : hashName    hash value of file name
  * @return      : ADUMP_SUCCESS: success; ADUMP_FAILED: failed
  */
-int32_t File::AddMapping(const std::string &filePath, const std::string &fileName, const std::string &hashName)
+int32_t File::AddMapping(const std::string& filePath, const std::string& fileName, const std::string& hashName)
 {
     IDE_CTRL_VALUE_FAILED(!filePath.empty(), return ADUMP_FAILED, "FilePath is empty");
     IDE_CTRL_VALUE_FAILED(!hashName.empty(), return ADUMP_FAILED, "HashName is empty");
@@ -207,8 +202,8 @@ int32_t File::AddMapping(const std::string &filePath, const std::string &fileNam
     uint32_t residLen = mappingLen;
 
     do {
-        mmSsize_t writeLen = mmWrite(fd_, const_cast<AdxStringBuffer>(mapping.c_str()) + (mappingLen - residLen),
-            residLen);
+        mmSsize_t writeLen =
+            mmWrite(fd_, const_cast<AdxStringBuffer>(mapping.c_str()) + (mappingLen - residLen), residLen);
         if (writeLen < 0) {
             IDE_LOGE("Write failed, info: %s, write length: %ld bytes", strerror(errno), writeLen);
             (void)Close();
@@ -226,4 +221,4 @@ int32_t File::AddMapping(const std::string &filePath, const std::string &fileNam
     (void)Close();
     return ADUMP_SUCCESS;
 }
-}  // namespace Adx
+} // namespace Adx

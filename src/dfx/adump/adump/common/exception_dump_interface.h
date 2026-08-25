@@ -21,7 +21,7 @@ public:
     virtual ~ExceptionDumpInterface() = default;
 
     virtual bool SupportMc2SpacesDump() const { return false; }
-    virtual uint64_t GetMc2StructSize() const { return 0; }        // 910_93 子型号判断内聚于 V2 实现
+    virtual uint64_t GetMc2StructSize() const { return 0; } // 910_93 子型号判断内聚于 V2 实现
     virtual bool IsArgsDataTypeSizeByByte() const { return false; }
 };
 

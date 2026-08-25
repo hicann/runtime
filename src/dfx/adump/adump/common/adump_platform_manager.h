@@ -25,7 +25,7 @@ namespace Adx {
 // 各平台接口域共用的懒加载单例管理器基类：加锁缓存成功实例；创建失败不固化，
 // 后续 Get() 可重试；Reset() 供 UT 清理缓存以重新 mock 平台类型。
 // 每个域用一个空派生类特化出独立的静态存储（见下方 4 个 Manager）。
-template<typename Iface, typename Derived>
+template <typename Iface, typename Derived>
 class AdumpPlatformManagerBase {
 public:
     static Iface* Get()
@@ -63,22 +63,18 @@ private:
     static std::mutex mtx_;
 };
 
-template<typename Iface, typename Derived>
+template <typename Iface, typename Derived>
 std::shared_ptr<Iface> AdumpPlatformManagerBase<Iface, Derived>::instance_;
-template<typename Iface, typename Derived>
+template <typename Iface, typename Derived>
 std::mutex AdumpPlatformManagerBase<Iface, Derived>::mtx_;
 
-class FeaturesSupportManager
-    : public AdumpPlatformManagerBase<FeaturesSupportInterface, FeaturesSupportManager> {};
+class FeaturesSupportManager : public AdumpPlatformManagerBase<FeaturesSupportInterface, FeaturesSupportManager> {};
 
-class CoredumpManager
-    : public AdumpPlatformManagerBase<CoredumpInterface, CoredumpManager> {};
+class CoredumpManager : public AdumpPlatformManagerBase<CoredumpInterface, CoredumpManager> {};
 
-class ExceptionDumpManager
-    : public AdumpPlatformManagerBase<ExceptionDumpInterface, ExceptionDumpManager> {};
+class ExceptionDumpManager : public AdumpPlatformManagerBase<ExceptionDumpInterface, ExceptionDumpManager> {};
 
-class DataDumpManager
-    : public AdumpPlatformManagerBase<DataDumpInterface, DataDumpManager> {};
+class DataDumpManager : public AdumpPlatformManagerBase<DataDumpInterface, DataDumpManager> {};
 
 // 聚合重置，供 UT fixture 在 SetUp/TearDown 中一次清空全部域缓存。
 inline void ResetAllPlatformManagers()

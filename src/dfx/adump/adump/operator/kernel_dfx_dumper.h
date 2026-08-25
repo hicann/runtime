@@ -27,8 +27,8 @@ struct DumpDfxInfo {
     uint32_t length;
 };
 
-void DumpKernelDfxInfoCallback(rtKernelDfxInfoType dfxType, uint32_t coreType, uint32_t coreId,
-                               const uint8_t *buffer, size_t length);
+void DumpKernelDfxInfoCallback(
+    rtKernelDfxInfoType dfxType, uint32_t coreType, uint32_t coreId, const uint8_t* buffer, size_t length);
 
 class KernelDfxDumper : public Adx::Common::Singleton::Singleton<KernelDfxDumper> {
 public:
@@ -40,18 +40,19 @@ public:
     void EnableDfxDumper();
     int32_t EnableDfxDumper(const DumpDfxConfig config);
     void RecordDfxInfo();
-    int32_t DumpKernelDfxInfo(rtKernelDfxInfoType dfxType, uint32_t coreType, uint32_t coreId,
-        const uint8_t *buffer, size_t length);
+    int32_t DumpKernelDfxInfo(
+        rtKernelDfxInfoType dfxType, uint32_t coreType, uint32_t coreId, const uint8_t* buffer, size_t length);
+
 private:
-    int32_t PushDfxInfoToQueue(DumpDfxInfo &dfxInfo);
-    void RecordDfxInfoToDisk(DumpDfxInfo &dfxInfo);
-    bool InitDumpPath(const std::string &dumpPath);
+    int32_t PushDfxInfoToQueue(DumpDfxInfo& dfxInfo);
+    void RecordDfxInfoToDisk(DumpDfxInfo& dfxInfo);
+    bool InitDumpPath(const std::string& dumpPath);
     std::string GetDfxTypeStr(const rtKernelDfxInfoType rtDfxType);
     std::string GetCoreTypeStr(uint32_t coreType);
-    void GetRegisterDfxTypes(const std::vector<std::string> &cfgDfxTypes, std::set<rtKernelDfxInfoType> &rtDfxTypes);
+    void GetRegisterDfxTypes(const std::vector<std::string>& cfgDfxTypes, std::set<rtKernelDfxInfoType>& rtDfxTypes);
     bool IsEnabled();
     bool IsEnabled(const rtKernelDfxInfoType dfxType);
-    std::string GetDfxInfoFilePath(uint32_t coreId, std::string &coreType);
+    std::string GetDfxInfoFilePath(uint32_t coreId, std::string& coreType);
     static void PrepareFork();
     static void PostForkParent();
     static void PostForkChild();

@@ -12,99 +12,63 @@
 #include "log/adx_log.h"
 #include "mmpa_api.h"
 
-namespace Adx{
-namespace ELF{
+namespace Adx {
+namespace ELF {
 
 namespace {
 constexpr Elf64_Half EM_HIIPU = 0x1029;
 constexpr Elf64_Word EV_VERSION = 0x01;
 constexpr Elf64_Off ADD_ALIGN = 16;
 const std::string STRTAB_SECTION_NAME = ".shstrtab";
-}
+} // namespace
 
-Section::Section(Elf64_Word type)
-{
-    header_.sh_type = type;
-}
+Section::Section(Elf64_Word type) { header_.sh_type = type; }
 
-void Section::SetData(std::string &data)
+void Section::SetData(std::string& data)
 {
     data_ = std::move(data);
     header_.sh_size = data_.size();
 }
 
-void Section::SetAddr(Elf64_Addr addr)
-{
-    header_.sh_addr = addr;
-}
+void Section::SetAddr(Elf64_Addr addr) { header_.sh_addr = addr; }
 
-void Section::SetOffSet(Elf64_Off offset)
-{
-    header_.sh_offset = offset;
-}
+void Section::SetOffSet(Elf64_Off offset) { header_.sh_offset = offset; }
 
-void Section::SetEntSize(Elf64_Word entSize)
-{
-    header_.sh_entsize = entSize;
-}
+void Section::SetEntSize(Elf64_Word entSize) { header_.sh_entsize = entSize; }
 
-void Section::SetNameIndex(Elf64_Word nameIndex)
-{
-    header_.sh_name = nameIndex;
-}
+void Section::SetNameIndex(Elf64_Word nameIndex) { header_.sh_name = nameIndex; }
 
-void Section::SetLink(Elf64_Word link)
-{
-    header_.sh_link = link;
-}
+void Section::SetLink(Elf64_Word link) { header_.sh_link = link; }
 
-void Section::SetInfo(Elf64_Word info)
-{
-    header_.sh_info = info;
-}
+void Section::SetInfo(Elf64_Word info) { header_.sh_info = info; }
 
-void Section::SetIndex(uint32_t index)
-{
-    index_ = index;
-}
+void Section::SetIndex(uint32_t index) { index_ = index; }
 
-uint32_t Section::GetIndex() const
-{
-    return index_;
-}
+uint32_t Section::GetIndex() const { return index_; }
 
-void Section::Save(std::ofstream &ofs, std::streampos headerPosition)
+void Section::Save(std::ofstream& ofs, std::streampos headerPosition)
 {
     SaveHeader(ofs, headerPosition);
     SaveData(ofs);
 }
 
-void Section::SaveHeader(std::ofstream &ofs, std::streampos offset)
+void Section::SaveHeader(std::ofstream& ofs, std::streampos offset)
 {
     ofs.seekp(offset);
-    ofs.write(reinterpret_cast<const char *>(&header_), sizeof(header_));
+    ofs.write(reinterpret_cast<const char*>(&header_), sizeof(header_));
 }
 
-void Section::SaveData(std::ofstream &ofs)
+void Section::SaveData(std::ofstream& ofs)
 {
     ofs.seekp(header_.sh_offset);
     ofs.write(data_.c_str(), data_.size());
 }
 
-Elf64_Xword Section::GetSize() const
-{
-    return header_.sh_size;
-}
+Elf64_Xword Section::GetSize() const { return header_.sh_size; }
 
-void Section::SetAddrAlign(Elf64_Xword addrAlign)
-{
-    header_.sh_addralign = addrAlign;
-}
+void Section::SetAddrAlign(Elf64_Xword addrAlign) { header_.sh_addralign = addrAlign; }
 
-Elf64_Xword Section::GetAddrAlign() const
-{
-    return header_.sh_addralign;
-}
+Elf64_Xword Section::GetAddrAlign() const { return header_.sh_addralign; }
 
 DumpELF::DumpELF()
 {
@@ -128,7 +92,7 @@ SectionPtr DumpELF::CreateSection(Elf64_Word type)
         sections_.emplace_back(std::make_shared<Section>(type));
         sections_.back()->SetIndex(static_cast<uint32_t>(sections_.size() - 1));
         return sections_.back();
-    } catch (std::exception &ex) {
+    } catch (std::exception& ex) {
         IDE_LOGE("Section make shared failed, strerr=%s", ex.what());
         return nullptr;
     }
@@ -143,7 +107,7 @@ void DumpELF::CreateMandatorySection()
     sec0->SetNameIndex(0);
 }
 
-SectionPtr DumpELF::AddSection(Elf64_Word type, const std::string &name)
+SectionPtr DumpELF::AddSection(Elf64_Word type, const std::string& name)
 {
     SectionPtr newSection = CreateSection(type);
     if (newSection == nullptr) {
@@ -165,18 +129,19 @@ SectionPtr DumpELF::AddSection(Elf64_Word type, const std::string &name)
 
 SectionPtr DumpELF::GetSectionByIndex(uint32_t index) const
 {
-    IDE_CTRL_VALUE_FAILED(index < sections_.size(), return nullptr, "Get section failed, index %u out of range %u",
-        index, sections_.size());
+    IDE_CTRL_VALUE_FAILED(
+        index < sections_.size(), return nullptr, "Get section failed, index %u out of range %u", index,
+        sections_.size());
 
     return sections_[index];
 }
 
-void DumpELF::Save(const std::string &filename)
+void DumpELF::Save(const std::string& filename)
 {
-    IDE_CTRL_VALUE_FAILED(mmAccess2(filename.c_str(), F_OK) != EN_OK, return,
-        "file %s already exist", filename.c_str());
+    IDE_CTRL_VALUE_FAILED(
+        mmAccess2(filename.c_str(), F_OK) != EN_OK, return, "file %s already exist", filename.c_str());
 
-    int32_t fd = mmOpen2(filename.c_str() ,M_RDWR | M_CREAT, M_IRUSR | M_IWUSR);
+    int32_t fd = mmOpen2(filename.c_str(), M_RDWR | M_CREAT, M_IRUSR | M_IWUSR);
     IDE_CTRL_VALUE_FAILED(fd >= 0, return, "open file %s failed, strerr=%s", filename.c_str(), strerror(errno));
     close(fd);
 
@@ -202,7 +167,7 @@ void DumpELF::Save(const std::string &filename)
     ofs.close();
     IDE_LOGE("Save dump file %s", filename.c_str());
 
-    int32_t err = mmChmod(filename.c_str(), M_IRUSR);  // 落盘文件置为最小权限:用户只读, 400
+    int32_t err = mmChmod(filename.c_str(), M_IRUSR); // 落盘文件置为最小权限:用户只读, 400
     IDE_CTRL_VALUE_WARN(err == 0, return, "mmChmod %s failed, strerr=%s", filename.c_str(), strerror(errno));
 }
 
@@ -217,7 +182,7 @@ void DumpELF::SetSectionHeaderStringTable()
 
 void DumpELF::LayoutSections()
 {
-    for (const auto &section : sections_) {
+    for (const auto& section : sections_) {
         Elf64_Xword sectionAlign = section->GetAddrAlign();
         if ((sectionAlign > 1) && (currentFilePos_ % sectionAlign != 0)) {
             currentFilePos_ += sectionAlign - (currentFilePos_ % sectionAlign);
@@ -235,14 +200,14 @@ void DumpELF::LayoutSectionTable()
     header_.e_shoff = currentFilePos_;
 }
 
-bool DumpELF::SaveHeader(std::ofstream &ofs) const
+bool DumpELF::SaveHeader(std::ofstream& ofs) const
 {
     ofs.seekp(0);
-    ofs.write(reinterpret_cast<const char *>(&header_), sizeof(header_));
+    ofs.write(reinterpret_cast<const char*>(&header_), sizeof(header_));
     return ofs.good();
 }
 
-void DumpELF::SaveSections(std::ofstream &ofs)
+void DumpELF::SaveSections(std::ofstream& ofs)
 {
     for (uint32_t i = 0; i < sections_.size(); ++i) {
         std::streampos headerPosition = header_.e_shoff + i * sizeof(Elf64_Shdr);
@@ -251,5 +216,5 @@ void DumpELF::SaveSections(std::ofstream &ofs)
     }
 }
 
-}
-}
+} // namespace ELF
+} // namespace Adx

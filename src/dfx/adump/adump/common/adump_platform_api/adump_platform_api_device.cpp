@@ -10,7 +10,7 @@
 #include "adump_platform_api.h"
 
 namespace Adx {
-bool AdumpPlatformApi::GetUBSizeAndCoreNum(const std::string &socVersion, PlatformType platform, PlatformData &data)
+bool AdumpPlatformApi::GetUBSizeAndCoreNum(const std::string& socVersion, PlatformType platform, PlatformData& data)
 {
     (void)socVersion;
     (void)platform;
@@ -18,10 +18,10 @@ bool AdumpPlatformApi::GetUBSizeAndCoreNum(const std::string &socVersion, Platfo
     return true;
 }
 
-bool AdumpPlatformApi::GetAicoreSizeInfo(const std::string &socVersion, BufferSize &bufferSize)
+bool AdumpPlatformApi::GetAicoreSizeInfo(const std::string& socVersion, BufferSize& bufferSize)
 {
     (void)socVersion;
     (void)bufferSize;
     return true;
 }
-}
+} // namespace Adx

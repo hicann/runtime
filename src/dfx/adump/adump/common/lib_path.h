@@ -22,14 +22,15 @@ public:
     static LibPath& Instance();
     Path GetInstallParentPath() const;
     Path GetInstallPath() const;
-    std::string GetTargetPath(const std::string &concatName) const;
-    std::vector<std::string> ObtainAllPluginSo(const std::string &searchPath) const;
+    std::string GetTargetPath(const std::string& concatName) const;
+    std::vector<std::string> ObtainAllPluginSo(const std::string& searchPath) const;
+
 private:
     LibPath(){};
     ~LibPath(){};
     Path GetSelfLibraryDir() const;
     Path GetSelfPath() const;
-    bool IsPluginSo(const std::string &fileName) const;
+    bool IsPluginSo(const std::string& fileName) const;
 };
 } // namespace Adx
 #endif

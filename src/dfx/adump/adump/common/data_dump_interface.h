@@ -25,7 +25,7 @@ public:
     // KFC stats
     virtual uint64_t GetKfcStackSize() const { return 0; }
     virtual std::string GetKfcBinName() const { return ""; }
-    virtual bool IsUbFromAiCore() const { return false; }  // 原 CHIP_CORE_MAP
+    virtual bool IsUbFromAiCore() const { return false; } // 原 CHIP_CORE_MAP
 
     // dump_printf 参数（原 Ascend950 专属逻辑，芯片身份消失）
     virtual size_t GetCoreTypeIDOffset() const { return 50U; }

@@ -15,20 +15,20 @@
 #include "common/singleton.h"
 #include "adx_datadump_callback.h"
 namespace Adx {
-using MessageCallback = int32_t (*)(const struct DumpChunk *, int32_t);
+using MessageCallback = int32_t (*)(const struct DumpChunk*, int32_t);
 
 class AdxDumpProcess : public Adx::Common::Singleton::Singleton<AdxDumpProcess> {
 public:
     AdxDumpProcess() : messageCallback_(nullptr), init_(false) {}
-    ~AdxDumpProcess() override {};
+    ~AdxDumpProcess() override{};
     ADX_API void MessageCallbackRegister(const MessageCallback callbackFun);
     ADX_API void MessageCallbackUnRegister();
-    const std::function<int32_t(const struct DumpChunk *, int32_t)>& GetCallbackFun() const;
+    const std::function<int32_t(const struct DumpChunk*, int32_t)>& GetCallbackFun() const;
     bool IsRegistered() const;
 
 private:
-    std::function<int32_t(const struct DumpChunk *, int32_t)> messageCallback_;
+    std::function<int32_t(const struct DumpChunk*, int32_t)> messageCallback_;
     std::atomic<bool> init_;
 };
-}
+} // namespace Adx
 #endif

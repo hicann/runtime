@@ -19,7 +19,8 @@ class BFloat16 {
 public:
     explicit BFloat16(uint16_t v = 0) : val(v) {}
 
-    float GetValue() const {
+    float GetValue() const
+    {
         if (val == 0xFF80) {
             return -std::numeric_limits<float>::infinity();
         } else if (val == 0x7F80) {
@@ -35,7 +36,8 @@ public:
             if (exponentVal == 0) {
                 value = static_cast<float>(symbol * pow(BASE_NUM, 1 - BF16_EXPONENT_BIAS) * mantissaVal);
             } else {
-                value = static_cast<float>(symbol * pow(BASE_NUM, exponentVal - BF16_EXPONENT_BIAS) * (mantissaVal + 1));
+                value =
+                    static_cast<float>(symbol * pow(BASE_NUM, exponentVal - BF16_EXPONENT_BIAS) * (mantissaVal + 1));
             }
             return value;
         }

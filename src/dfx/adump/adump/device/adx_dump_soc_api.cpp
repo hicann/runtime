@@ -18,10 +18,7 @@
  *      not NULL: Handle used by hdc
  *      NULL:     dump start failed
  */
-extern "C" IDE_SESSION IdeDumpStart(const char *connectInfo)
-{
-    return Adx::SocDumpStart(connectInfo);
-}
+extern "C" IDE_SESSION IdeDumpStart(const char* connectInfo) { return Adx::SocDumpStart(connectInfo); }
 
 /**
  * @brief dump data to remote server
@@ -32,7 +29,7 @@ extern "C" IDE_SESSION IdeDumpStart(const char *connectInfo)
  *      IDE_DAEMON_UNKNOW_ERROR: write data failed
  *      IDE_DAEMON_NONE_ERROR:   write data succ
  */
-extern "C" IdeErrorT IdeDumpData(IDE_SESSION session, const IdeDumpChunk *dumpChunk)
+extern "C" IdeErrorT IdeDumpData(IDE_SESSION session, const IdeDumpChunk* dumpChunk)
 {
     return Adx::SocDumpData(session, dumpChunk);
 }
@@ -44,7 +41,4 @@ extern "C" IdeErrorT IdeDumpData(IDE_SESSION session, const IdeDumpChunk *dumpCh
  *      IDE_DAEMON_UNKNOW_ERROR: send dump end msg failed
  *      IDE_DAEMON_NONE_ERROR:   send dump end msg success
  */
-extern "C" IdeErrorT IdeDumpEnd(IDE_SESSION session)
-{
-    return Adx::SocDumpEnd(session);
-}
+extern "C" IdeErrorT IdeDumpEnd(IDE_SESSION session) { return Adx::SocDumpEnd(session); }

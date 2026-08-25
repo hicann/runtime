@@ -27,16 +27,16 @@ namespace Adx {
 namespace {
 constexpr char DUMP_FILE_VERSION[] = "2.0";
 constexpr uint32_t MAX_DEV_NUM = 64;
-}  // namespace
+} // namespace
 
-void DumpFile::SetHeader(const std::string &opName)
+void DumpFile::SetHeader(const std::string& opName)
 {
     header_.set_version(DUMP_FILE_VERSION);
     header_.set_dump_time(SysUtils::GetTimestamp());
     header_.set_op_name(opName);
 }
 
-void DumpFile::SetOpAttr(const std::string &name, const std::string &value)
+void DumpFile::SetOpAttr(const std::string& name, const std::string& value)
 {
     toolkit::dump::OpAttr attr;
     attr.set_name(name);
@@ -45,10 +45,10 @@ void DumpFile::SetOpAttr(const std::string &name, const std::string &value)
     IDE_LOGI("[Set][DumpData] Set op attr, name: %s", name.c_str());
 }
 
-void DumpFile::SetInputTensors(const std::vector<DumpTensor> &inputTensors)
+void DumpFile::SetInputTensors(const std::vector<DumpTensor>& inputTensors)
 {
     for (size_t i = 0U; i < inputTensors.size(); ++i) {
-        const DumpTensor &tensor = inputTensors[i];
+        const DumpTensor& tensor = inputTensors[i];
         if (tensor.GetAddress() == nullptr) {
             continue;
         }
@@ -57,8 +57,7 @@ void DumpFile::SetInputTensors(const std::vector<DumpTensor> &inputTensors)
         input.set_data_type(static_cast<toolkit::dump::OutputDataType>(ir_data_type));
         input.set_format(static_cast<toolkit::dump::OutputFormat>(tensor.GetFormat()));
         std::vector<int64_t> shape = tensor.GetShape();
-        for (auto dim : shape)
-        {
+        for (auto dim : shape) {
             input.mutable_shape()->add_dim(static_cast<uint64_t>(dim));
         }
         uint64_t size = static_cast<uint64_t>(tensor.GetSize());
@@ -72,10 +71,10 @@ void DumpFile::SetInputTensors(const std::vector<DumpTensor> &inputTensors)
     }
 }
 
-void DumpFile::SetOutputTensors(const std::vector<DumpTensor> &outputTensors)
+void DumpFile::SetOutputTensors(const std::vector<DumpTensor>& outputTensors)
 {
     for (size_t i = 0U; i < outputTensors.size(); ++i) {
-        const DumpTensor &tensor = outputTensors[i];
+        const DumpTensor& tensor = outputTensors[i];
         if (tensor.GetAddress() == nullptr) {
             continue;
         }
@@ -97,7 +96,7 @@ void DumpFile::SetOutputTensors(const std::vector<DumpTensor> &outputTensors)
     }
 }
 
-void DumpFile::SetWorkspaces(const std::vector<DumpWorkspace> &workspaces)
+void DumpFile::SetWorkspaces(const std::vector<DumpWorkspace>& workspaces)
 {
     IDE_LOGI("[Set][DumpData] Workspace size is %zu bytes", workspaces.size());
     for (size_t i = 0U; i < workspaces.size(); ++i) {
@@ -115,16 +114,17 @@ void DumpFile::SetWorkspaces(const std::vector<DumpWorkspace> &workspaces)
     }
 }
 
-void DumpFile::SetTensors(const std::vector<TensorInfo> &tensors, std::vector<std::string> &record)
+void DumpFile::SetTensors(const std::vector<TensorInfo>& tensors, std::vector<std::string>& record)
 {
     std::vector<DumpTensor> inputTensors;
     std::vector<DumpTensor> outputTensors;
     std::vector<DumpWorkspace> workspaces;
     for (size_t index = 0U; index < tensors.size(); ++index) {
-        const TensorInfo &tensor = tensors[index];
+        const TensorInfo& tensor = tensors[index];
         if (tensor.tensorAddr == nullptr || tensor.tensorSize == 0) {
-            IDE_LOGW("[Set][DumpData] skip null/empty tensor[%zu], addr=%p, size=%zu, type=%d.",
-                index, tensor.tensorAddr, tensor.tensorSize, static_cast<int32_t>(tensor.type));
+            IDE_LOGW(
+                "[Set][DumpData] skip null/empty tensor[%zu], addr=%p, size=%zu, type=%d.", index, tensor.tensorAddr,
+                tensor.tensorSize, static_cast<int32_t>(tensor.type));
             continue;
         }
 
@@ -132,10 +132,8 @@ void DumpFile::SetTensors(const std::vector<TensorInfo> &tensors, std::vector<st
             "[Dump][Exception] exception info dump tensor data, type=%s; index=%zu; shape=%s; format=%s; "
             "dtype=%s; address=%p; size=%zu bytes",
             DumpDataType::TensorTypeToSerialString(tensor.type).c_str(), index,
-            StrUtils::ToString(tensor.shape).c_str(),
-            DumpDataType::FormatToSerialString(tensor.format).c_str(),
-            DumpDataType::DataTypeToSerialString(tensor.dataType).c_str(),
-            tensor.tensorAddr, tensor.tensorSize);
+            StrUtils::ToString(tensor.shape).c_str(), DumpDataType::FormatToSerialString(tensor.format).c_str(),
+            DumpDataType::DataTypeToSerialString(tensor.dataType).c_str(), tensor.tensorAddr, tensor.tensorSize);
         IDE_LOGI("%s", info.c_str());
         record.emplace_back(info + "\n");
 
@@ -153,7 +151,7 @@ void DumpFile::SetTensors(const std::vector<TensorInfo> &tensors, std::vector<st
 }
 
 #if !defined(ADUMP_SOC_HOST) || ADUMP_SOC_HOST == 1
-void DumpFile::SetMc2spaces(const std::vector<DumpWorkspace> &mc2Spaces)
+void DumpFile::SetMc2spaces(const std::vector<DumpWorkspace>& mc2Spaces)
 {
     IDE_CTRL_VALUE_WARN(SupportDumpMc2spaces(), return, "Not support to dump mc2 spaces data");
     IDE_LOGI("[Set][DumpData] mc2 space size is %zu", mc2Spaces.size());
@@ -204,7 +202,7 @@ void DumpFile::SetInputBuffer(const std::vector<InputBuffer> input)
     }
 }
 
-void DumpFile::SetTensorBuffer(const std::vector<TensorBuffer> &tensorBuffer)
+void DumpFile::SetTensorBuffer(const std::vector<TensorBuffer>& tensorBuffer)
 {
     for (size_t i = 0U; i < tensorBuffer.size(); ++i) {
         if (tensorBuffer[i].addr == nullptr) {
@@ -234,8 +232,9 @@ void DumpFile::SetTensorBuffer(const std::vector<TensorBuffer> &tensorBuffer)
             header_.mutable_input()->Add(std::move(input));
 
             inputs_.emplace_back(tensorBuffer[i].addr, size);
-        } else if (tensorBuffer[i].tensorType == DfxTensorType::OUTPUT_TENSOR ||
-                   tensorBuffer[i].tensorType == DfxTensorType::SHAPE_TENSOR) {
+        } else if (
+            tensorBuffer[i].tensorType == DfxTensorType::OUTPUT_TENSOR ||
+            tensorBuffer[i].tensorType == DfxTensorType::SHAPE_TENSOR) {
             toolkit::dump::OpOutput output;
             output.set_data_type(toolkit::dump::OutputDataType::DT_UNDEFINED);
             uint64_t dimension = tensorBuffer[i].dimension;
@@ -279,7 +278,7 @@ bool DumpFile::HasDumpData() const
     return false;
 }
 
-int32_t DumpFile::Dump(std::vector<std::string> &record)
+int32_t DumpFile::Dump(std::vector<std::string>& record)
 {
     if (!HasDumpData()) {
         IDE_LOGI("No dump data, skip dump file.");
@@ -325,14 +324,14 @@ int32_t DumpFile::Dump(std::vector<std::string> &record)
     return ADUMP_SUCCESS;
 }
 
-void DumpFile::SetAicInfo(std::vector<std::string> &record)
+void DumpFile::SetAicInfo(std::vector<std::string>& record)
 {
     IDE_LOGI("[Set][DumpData] Start to set aic info");
     std::ostringstream oss;
-    for (const auto &str : record) {
+    for (const auto& str : record) {
         oss << str;
     }
-    for (const auto &str : logRecord_) {
+    for (const auto& str : logRecord_) {
         oss << str;
     }
     header_.set_dfx_message(oss.str());
@@ -350,7 +349,7 @@ int32_t DumpFile::WriteHeader() const
         return ADUMP_FAILED;
     }
 
-    int64_t ret = file_.Write(reinterpret_cast<char *>(&protoHeaderSize), sizeof(protoHeaderSize));
+    int64_t ret = file_.Write(reinterpret_cast<char*>(&protoHeaderSize), sizeof(protoHeaderSize));
     if (ret == EN_ERROR || ret == EN_INVALID_PARAM) {
         IDE_LOGE("Write header proto msg size to dump file failed, ret: %ld", ret);
         return ADUMP_FAILED;
@@ -409,12 +408,12 @@ int32_t DumpFile::WriteMc2Space() const
     IDE_LOGI("[Dump][ExceptionMc2Space] Start to dump exception mc2 space on device %u.", deviceId_);
     for (size_t idx = 0U; idx < mc2Spaces_.size(); ++idx) {
         auto ret = WriteDeviceDataToFile(mc2Spaces_[idx]);
-        IDE_CTRL_VALUE_FAILED(ret == ADUMP_SUCCESS, return ADUMP_FAILED,
-            "[Dump][ExceptionWorkspace] Dump %zu workspace failed.", idx);
+        IDE_CTRL_VALUE_FAILED(
+            ret == ADUMP_SUCCESS, return ADUMP_FAILED, "[Dump][ExceptionWorkspace] Dump %zu workspace failed.", idx);
 
         auto it = mc2Ctx_.find(idx);
         if (it != mc2Ctx_.end()) {
-            for (const DeviceData &devData : it->second) {
+            for (const DeviceData& devData : it->second) {
                 ret = WriteDeviceDataToFile(devData);
             }
         }
@@ -439,7 +438,7 @@ int32_t DumpFile::WriteInputBuffer()
 #if !defined(ADUMP_SOC_HOST) || ADUMP_SOC_HOST == 1
 bool DumpFile::SupportDumpMc2spaces() const
 {
-    auto *plat = ExceptionDumpManager::Get();
+    auto* plat = ExceptionDumpManager::Get();
     if (plat == nullptr) {
         IDE_LOGW("[Dump][Exception] Platform unavailable, mc2 spaces dump disabled.");
         return false;
@@ -449,7 +448,7 @@ bool DumpFile::SupportDumpMc2spaces() const
 
 uint64_t DumpFile::ComputeStructSize() const
 {
-    auto *plat = ExceptionDumpManager::Get();
+    auto* plat = ExceptionDumpManager::Get();
     if (plat == nullptr) {
         IDE_LOGE("[Dump][Exception] Platform unavailable, cannot determine mc2 struct size.");
         return 0;
@@ -457,28 +456,30 @@ uint64_t DumpFile::ComputeStructSize() const
     return plat->GetMc2StructSize();
 }
 
-void DumpFile::HandleMc2CtxV1(const void *hostData, uint64_t &totalSize, std::vector<DeviceData> &dataList) const
+void DumpFile::HandleMc2CtxV1(const void* hostData, uint64_t& totalSize, std::vector<DeviceData>& dataList) const
 {
-    const HcclCombinOpParam *param = static_cast<const HcclCombinOpParam *>(hostData);
-    dataList.emplace_back(reinterpret_cast<const void*>(param->mc2WorkSpace.workSpace),
-                          param->mc2WorkSpace.workSpaceSize);
+    const HcclCombinOpParam* param = static_cast<const HcclCombinOpParam*>(hostData);
+    dataList.emplace_back(
+        reinterpret_cast<const void*>(param->mc2WorkSpace.workSpace), param->mc2WorkSpace.workSpaceSize);
     totalSize += param->mc2WorkSpace.workSpaceSize;
-    IDE_LOGI("[Dump][Exception] MC2 workspace addr 0x%llx and size %llu bytes, rankId %u",
-        param->mc2WorkSpace.workSpace, param->mc2WorkSpace.workSpaceSize, param->rankId);
+    IDE_LOGI(
+        "[Dump][Exception] MC2 workspace addr 0x%llx and size %llu bytes, rankId %u", param->mc2WorkSpace.workSpace,
+        param->mc2WorkSpace.workSpaceSize, param->rankId);
 
     if (param->rankId < RANK_NUM) {
         dataList.emplace_back(reinterpret_cast<const void*>(param->windowsIn[param->rankId]), param->winSize);
         dataList.emplace_back(reinterpret_cast<const void*>(param->windowsOut[param->rankId]), param->winSize);
-        IDE_LOGI("[Dump][Exception] MC2 winSize %llu bytes, windowsIn addr 0x%llx, windowsOut addr 0x%llx",
-            param->winSize, param->windowsIn[param->rankId], param->windowsOut[param->rankId]);
+        IDE_LOGI(
+            "[Dump][Exception] MC2 winSize %llu bytes, windowsIn addr 0x%llx, windowsOut addr 0x%llx", param->winSize,
+            param->windowsIn[param->rankId], param->windowsOut[param->rankId]);
     } else {
-        dataList.emplace_back(nullptr, param->winSize);     // windowsIn 占位
-        dataList.emplace_back(nullptr, param->winSize);     // windowsOut 占位
+        dataList.emplace_back(nullptr, param->winSize); // windowsIn 占位
+        dataList.emplace_back(nullptr, param->winSize); // windowsOut 占位
         IDE_LOGW("[Dump][Exception] MC2 winSize %llu bytes, rankId is invalid, max rankId %u", RANK_NUM);
     }
     totalSize += param->winSize + param->winSize;
 
-    const void *deviceDataPtr = reinterpret_cast<const void*>(param->ibverbsData);
+    const void* deviceDataPtr = reinterpret_cast<const void*>(param->ibverbsData);
     dataList.emplace_back(deviceDataPtr, param->ibverbsDataSize);
     totalSize += param->ibverbsDataSize;
 
@@ -489,16 +490,19 @@ void DumpFile::HandleMc2CtxV1(const void *hostData, uint64_t &totalSize, std::ve
 
     int32_t ret = DumpMemory::CheckDeviceMemory(deviceId_, deviceDataPtr);
     if (ret == ADUMP_SUCCESS) {
-        void *hostDataPtr = DumpMemory::CopyDeviceToHost(deviceDataPtr, param->ibverbsDataSize);
+        void* hostDataPtr = DumpMemory::CopyDeviceToHost(deviceDataPtr, param->ibverbsDataSize);
         if (hostDataPtr != nullptr) {
-            IbVerbsData *ibverbsData = static_cast<IbVerbsData *>(hostDataPtr);
-            dataList.emplace_back(reinterpret_cast<const void*>(ibverbsData[param->rankId].localInput.addr),
+            IbVerbsData* ibverbsData = static_cast<IbVerbsData*>(hostDataPtr);
+            dataList.emplace_back(
+                reinterpret_cast<const void*>(ibverbsData[param->rankId].localInput.addr),
                 ibverbsData[param->rankId].localInput.size);
-            dataList.emplace_back(reinterpret_cast<const void*>(ibverbsData[param->rankId].localOutput.addr),
+            dataList.emplace_back(
+                reinterpret_cast<const void*>(ibverbsData[param->rankId].localOutput.addr),
                 ibverbsData[param->rankId].localOutput.size);
             totalSize += ibverbsData[param->rankId].localInput.size + ibverbsData[param->rankId].localOutput.size;
-            IDE_LOGI("[Dump][Exception] MC2 ibverbsData localInput addr 0x%llx and size %llu bytes, "
-                        "localOutput addr 0x%llx and size %llu bytes",
+            IDE_LOGI(
+                "[Dump][Exception] MC2 ibverbsData localInput addr 0x%llx and size %llu bytes, "
+                "localOutput addr 0x%llx and size %llu bytes",
                 ibverbsData[param->rankId].localInput.addr, ibverbsData[param->rankId].localInput.size,
                 ibverbsData[param->rankId].localOutput.addr, ibverbsData[param->rankId].localOutput.size);
             DumpMemory::FreeHost(hostDataPtr);
@@ -506,20 +510,21 @@ void DumpFile::HandleMc2CtxV1(const void *hostData, uint64_t &totalSize, std::ve
     }
 }
 
-uint64_t DumpFile::HandleMc2Ctx(const void *hostData, uint64_t opParamSize, size_t index)
+uint64_t DumpFile::HandleMc2Ctx(const void* hostData, uint64_t opParamSize, size_t index)
 {
     std::vector<DeviceData> dataList;
     uint64_t totalSize = opParamSize;
     if (opParamSize == sizeof(HcclOpResParam)) {
-        const HcclOpResParam *param = static_cast<const HcclOpResParam *>(hostData);
-        dataList.emplace_back(reinterpret_cast<const void*>(param->mc2WorkSpace.workSpace),
-            param->mc2WorkSpace.workSpaceSize);
+        const HcclOpResParam* param = static_cast<const HcclOpResParam*>(hostData);
+        dataList.emplace_back(
+            reinterpret_cast<const void*>(param->mc2WorkSpace.workSpace), param->mc2WorkSpace.workSpaceSize);
         dataList.emplace_back(reinterpret_cast<const void*>(param->localWindowsExp), param->winExpSize);
         totalSize += param->mc2WorkSpace.workSpaceSize + param->winExpSize;
-        IDE_LOGI("[Dump][Exception] MC2 workspace addr 0x%llx and size %llu bytes, windowsExp addr 0x%llx and "
-                 "size %llu bytes",
-            param->mc2WorkSpace.workSpace, param->mc2WorkSpace.workSpaceSize,
-            param->localWindowsExp, param->winExpSize);
+        IDE_LOGI(
+            "[Dump][Exception] MC2 workspace addr 0x%llx and size %llu bytes, windowsExp addr 0x%llx and "
+            "size %llu bytes",
+            param->mc2WorkSpace.workSpace, param->mc2WorkSpace.workSpaceSize, param->localWindowsExp,
+            param->winExpSize);
     } else {
         HandleMc2CtxV1(hostData, totalSize, dataList);
     }
@@ -527,13 +532,13 @@ uint64_t DumpFile::HandleMc2Ctx(const void *hostData, uint64_t opParamSize, size
     return totalSize;
 }
 
-uint64_t DumpFile::GetMc2DataSize(const void *addr, size_t index, uint64_t &opParamSize)
+uint64_t DumpFile::GetMc2DataSize(const void* addr, size_t index, uint64_t& opParamSize)
 {
     if (addr == nullptr) {
         IDE_LOGW("The addr from index %zu is nullptr, nothing need to do.", index);
         return 0;
     }
-    void *hostData = nullptr;
+    void* hostData = nullptr;
     opParamSize = ComputeStructSize();
     if (opParamSize == 0) {
         IDE_LOGE("[Dump][Exception] Get struct size failed, size is 0.");
@@ -558,7 +563,7 @@ uint64_t DumpFile::GetMc2DataSize(const void *addr, size_t index, uint64_t &opPa
 }
 #endif
 
-void DumpFile::LogIsOtherDeviceAddress(const DeviceData &devData, rtMemInfo_t &memInfo) const
+void DumpFile::LogIsOtherDeviceAddress(const DeviceData& devData, rtMemInfo_t& memInfo) const
 {
     uint32_t devNum = AdumpDsmi::DrvGetDevNum();
     if (devNum == 0) {
@@ -579,14 +584,14 @@ void DumpFile::LogIsOtherDeviceAddress(const DeviceData &devData, rtMemInfo_t &m
         }
         rtError_t ret = rtMemGetInfoByType(deviceIds[i], RT_MEM_INFO_TYPE_ADDR_CHECK, &memInfo);
         if ((ret == RT_ERROR_NONE) && (memInfo.addrInfo.flag == true)) {
-            IDE_LOGE("[Dump][Exception] the address[%p] is the valid address of device[%d]", devData.addr,
-                     deviceIds[i]);
+            IDE_LOGE(
+                "[Dump][Exception] the address[%p] is the valid address of device[%d]", devData.addr, deviceIds[i]);
             return;
         }
     }
 }
 
-int32_t DumpFile::AllocDefaultMemory(void **hostPtr, uint64_t size) const
+int32_t DumpFile::AllocDefaultMemory(void** hostPtr, uint64_t size) const
 {
     rtError_t rtRet = rtMallocHost(hostPtr, size, static_cast<uint16_t>(IDEDD));
     if (rtRet != RT_ERROR_NONE) {
@@ -603,26 +608,27 @@ int32_t DumpFile::AllocDefaultMemory(void **hostPtr, uint64_t size) const
     return ADUMP_SUCCESS;
 }
 
-int32_t DumpFile::WriteDeviceDataToFile(const DeviceData &devData) const
+int32_t DumpFile::WriteDeviceDataToFile(const DeviceData& devData) const
 {
     if (devData.bytes == 0) {
         IDE_LOGW("Skip dump addr %p because size is 0", devData.addr);
         return ADUMP_SUCCESS;
     }
 
-    void *hostData = nullptr;
+    void* hostData = nullptr;
 
     rtMemInfo_t memInfo{};
-    uint64_t *deviceAddr[1] = {static_cast<uint64_t *>(const_cast<void *>(devData.addr))};
-    memInfo.addrInfo.addr = static_cast<uint64_t **>(deviceAddr);
+    uint64_t* deviceAddr[1] = {static_cast<uint64_t*>(const_cast<void*>(devData.addr))};
+    memInfo.addrInfo.addr = static_cast<uint64_t**>(deviceAddr);
     memInfo.addrInfo.cnt = 1;
     memInfo.addrInfo.memType = RT_MEM_MASK_DEV_TYPE | RT_MEM_MASK_RSVD_TYPE;
     memInfo.addrInfo.flag = true;
     rtError_t err = rtMemGetInfoByType(deviceId_, RT_MEM_INFO_TYPE_ADDR_CHECK, &memInfo);
     if ((err != RT_ERROR_NONE) || (memInfo.addrInfo.flag == false)) {
-        IDE_LOGE("[Dump][Exception] the address maybe invalid, check addr info failed, error code: %d, check flag: %u, "
-                 "addr info: %p;%llu.",
-                 static_cast<int32_t>(err), memInfo.addrInfo.flag, devData.addr, devData.bytes);
+        IDE_LOGE(
+            "[Dump][Exception] the address maybe invalid, check addr info failed, error code: %d, check flag: %u, "
+            "addr info: %p;%llu.",
+            static_cast<int32_t>(err), memInfo.addrInfo.flag, devData.addr, devData.bytes);
         LogIsOtherDeviceAddress(devData, memInfo);
         if (AllocDefaultMemory(&hostData, devData.bytes) != ADUMP_SUCCESS) {
             return ADUMP_FAILED;
@@ -630,8 +636,9 @@ int32_t DumpFile::WriteDeviceDataToFile(const DeviceData &devData) const
     } else {
         hostData = DumpMemory::CopyDeviceToHost(devData.addr, devData.bytes);
         if (hostData == nullptr) {
-            IDE_LOGE("[Dump][Exception] the address maybe invalid, D2H failed, addr info: %p;%llu.", devData.addr,
-                     devData.bytes);
+            IDE_LOGE(
+                "[Dump][Exception] the address maybe invalid, D2H failed, addr info: %p;%llu.", devData.addr,
+                devData.bytes);
             if (AllocDefaultMemory(&hostData, devData.bytes) != ADUMP_SUCCESS) {
                 return ADUMP_FAILED;
             }
@@ -640,11 +647,11 @@ int32_t DumpFile::WriteDeviceDataToFile(const DeviceData &devData) const
 
     HOST_RT_MEMORY_GUARD(hostData);
 
-    const int64_t ret = file_.Write(reinterpret_cast<char *>(hostData), devData.bytes);
+    const int64_t ret = file_.Write(reinterpret_cast<char*>(hostData), devData.bytes);
     if (ret == EN_ERROR || ret == EN_INVALID_PARAM) {
         IDE_LOGE("Write data to dump file failed, ret: %ld", ret);
         return ADUMP_FAILED;
     }
     return ADUMP_SUCCESS;
 }
-}  // namespace Adx
+} // namespace Adx

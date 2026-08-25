@@ -20,19 +20,20 @@ extern "C" {
 size_t AdxGetCoreTypeIDOffset()
 {
     static const Adx::DataDumpInterface defaultPlat;
-    auto *plat = Adx::DataDumpManager::Get();
+    auto* plat = Adx::DataDumpManager::Get();
     return (plat != nullptr) ? plat->GetCoreTypeIDOffset() : defaultPlat.GetCoreTypeIDOffset();
 }
 
-size_t AdxGetBlockNum() {
+size_t AdxGetBlockNum()
+{
     static const Adx::DataDumpInterface defaultPlat;
-    auto *plat = Adx::DataDumpManager::Get();
+    auto* plat = Adx::DataDumpManager::Get();
     return (plat != nullptr) ? plat->GetBlockNum() : defaultPlat.GetBlockNum();
 }
 
 bool AdxEnableSimtDump(size_t dumpWorkSpaceSize)
 {
-    auto *plat = Adx::DataDumpManager::Get();
+    auto* plat = Adx::DataDumpManager::Get();
     if (plat == nullptr) {
         return false;
     }
@@ -42,7 +43,7 @@ bool AdxEnableSimtDump(size_t dumpWorkSpaceSize)
 int32_t GetStreamSynchronizeTimeout()
 {
     static const Adx::DataDumpInterface defaultPlat;
-    auto *plat = Adx::DataDumpManager::Get();
+    auto* plat = Adx::DataDumpManager::Get();
     return (plat != nullptr) ? plat->GetStreamSyncTimeout() : defaultPlat.GetStreamSyncTimeout();
 }
 

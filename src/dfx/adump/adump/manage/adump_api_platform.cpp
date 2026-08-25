@@ -25,7 +25,7 @@ namespace {
 uint32_t g_atomicIndex = 0x2000;
 std::atomic<uint64_t> g_writeIdx{0};
 
-void ConvertAclDumpTensorInner(const acldumpTensorInfo &src, size_t index, TensorInfo &dst)
+void ConvertAclDumpTensorInner(const acldumpTensorInfo& src, size_t index, TensorInfo& dst)
 {
     dst.type = static_cast<TensorType>(src.type);
     dst.tensorSize = src.tensorSize;
@@ -44,47 +44,50 @@ void ConvertAclDumpTensorInner(const acldumpTensorInfo &src, size_t index, Tenso
     }
 }
 
-bool ReportInvalidTensorField(size_t index, const char *field, const std::string &reason)
+bool ReportInvalidTensorField(size_t index, const char* field, const std::string& reason)
 {
     std::string param = StrUtils::Format("tensors[%zu].%s", index, field);
-    REPORT_EP0006_INVALID_ARGUMENT(FUNC_NAME_ACL_DUMP_SAVE_EXCEPTION_INFO, param,
-        FUNC_ACL_DUMP_SAVE_EXCEPTION_INFO_PARAM_TENSORS, reason);
+    REPORT_EP0006_INVALID_ARGUMENT(
+        FUNC_NAME_ACL_DUMP_SAVE_EXCEPTION_INFO, param, FUNC_ACL_DUMP_SAVE_EXCEPTION_INFO_PARAM_TENSORS, reason);
     return false;
 }
 
-bool ReportUnsupportedTensorField(size_t index, const char *field, int32_t value, const char *expected)
+bool ReportUnsupportedTensorField(size_t index, const char* field, int32_t value, const char* expected)
 {
-    return ReportInvalidTensorField(index, field,
+    return ReportInvalidTensorField(
+        index, field,
         StrUtils::Format(ADUMP_REASON_PARAM_VALUE_NOT_SUPPORTED, std::to_string(value).c_str(), expected));
 }
 
-bool CheckAclDumpTensorShape(const acldumpTensorInfo &src, size_t index)
+bool CheckAclDumpTensorShape(const acldumpTensorInfo& src, size_t index)
 {
     const std::string maxShapeNum = std::to_string(ACL_DUMP_MAX_SHAPE_NUM);
     if (src.shapeNum > ACL_DUMP_MAX_SHAPE_NUM) {
-        return ReportInvalidTensorField(index, "shapeNum",
-            StrUtils::Format(ADUMP_REASON_PARAM_VALUE_EXCEED_LIMIT, 
-                std::to_string(src.shapeNum).c_str(), maxShapeNum.c_str()));
+        return ReportInvalidTensorField(
+            index, "shapeNum",
+            StrUtils::Format(
+                ADUMP_REASON_PARAM_VALUE_EXCEED_LIMIT, std::to_string(src.shapeNum).c_str(), maxShapeNum.c_str()));
     }
     if (src.originShapeNum > ACL_DUMP_MAX_SHAPE_NUM) {
-        return ReportInvalidTensorField(index, "originShapeNum",
-            StrUtils::Format(ADUMP_REASON_PARAM_VALUE_EXCEED_LIMIT, 
-                std::to_string(src.originShapeNum).c_str(), maxShapeNum.c_str()));
+        return ReportInvalidTensorField(
+            index, "originShapeNum",
+            StrUtils::Format(
+                ADUMP_REASON_PARAM_VALUE_EXCEED_LIMIT, std::to_string(src.originShapeNum).c_str(),
+                maxShapeNum.c_str()));
     }
     return true;
 }
 
-bool CheckAclDumpTensorEnum(const acldumpTensorInfo &src, size_t index)
+bool CheckAclDumpTensorEnum(const acldumpTensorInfo& src, size_t index)
 {
-    if (src.type != ACL_DUMP_TENSOR_INPUT
-        && src.type != ACL_DUMP_TENSOR_OUTPUT
-        && src.type != ACL_DUMP_TENSOR_WORKSPACE) {
-        return ReportUnsupportedTensorField(index, "type", static_cast<int32_t>(src.type),
+    if (src.type != ACL_DUMP_TENSOR_INPUT && src.type != ACL_DUMP_TENSOR_OUTPUT &&
+        src.type != ACL_DUMP_TENSOR_WORKSPACE) {
+        return ReportUnsupportedTensorField(
+            index, "type", static_cast<int32_t>(src.type),
             "ACL_DUMP_TENSOR_INPUT/ACL_DUMP_TENSOR_OUTPUT/ACL_DUMP_TENSOR_WORKSPACE");
     }
     if (src.addrType != ACL_DUMP_ADDR_RAW) {
-        return ReportUnsupportedTensorField(
-            index, "addrType", static_cast<int32_t>(src.addrType), "ACL_DUMP_ADDR_RAW");
+        return ReportUnsupportedTensorField(index, "addrType", static_cast<int32_t>(src.addrType), "ACL_DUMP_ADDR_RAW");
     }
     if (src.placement != ACL_DUMP_PLACEMENT_DEVICE) {
         return ReportUnsupportedTensorField(
@@ -93,7 +96,7 @@ bool CheckAclDumpTensorEnum(const acldumpTensorInfo &src, size_t index)
     return true;
 }
 
-bool CheckAclDumpTensorData(const acldumpTensorInfo &src, size_t index)
+bool CheckAclDumpTensorData(const acldumpTensorInfo& src, size_t index)
 {
     if (src.tensorAddr == nullptr) {
         std::string param = StrUtils::Format("tensors[%zu].tensorAddr", index);
@@ -107,20 +110,19 @@ bool CheckAclDumpTensorData(const acldumpTensorInfo &src, size_t index)
     return true;
 }
 
-bool ConvertAclDumpTensor(const acldumpTensorInfo &src, size_t index, TensorInfo &dst)
+bool ConvertAclDumpTensor(const acldumpTensorInfo& src, size_t index, TensorInfo& dst)
 {
-    if (!CheckAclDumpTensorShape(src, index)
-        || !CheckAclDumpTensorEnum(src, index)
-        || !CheckAclDumpTensorData(src, index)) {
+    if (!CheckAclDumpTensorShape(src, index) || !CheckAclDumpTensorEnum(src, index) ||
+        !CheckAclDumpTensorData(src, index)) {
         return false;
     }
 
     ConvertAclDumpTensorInner(src, index, dst);
     return true;
 }
-}  // namespace
+} // namespace
 
-void *AdumpGetSizeInfoAddr(uint32_t space, uint32_t &atomicIndex)
+void* AdumpGetSizeInfoAddr(uint32_t space, uint32_t& atomicIndex)
 {
     if (!g_setAssert) {
         const std::lock_guard<std::mutex> lock(g_setAssertMtx);
@@ -143,11 +145,11 @@ int32_t AdumpRegisterCallback(uint32_t moduleId, AdumpCallback enableFunc, Adump
     return DumpManager::Instance().RegisterCallback(moduleId, enableFunc, disableFunc);
 }
 
-int32_t AdumpSaveToFile(const char *data, size_t dataLen, const char *filename, SaveType type)
+int32_t AdumpSaveToFile(const char* data, size_t dataLen, const char* filename, SaveType type)
 {
     return DumpManager::Instance().SaveFile(data, dataLen, filename, type);
 }
-}  // namespace Adx
+} // namespace Adx
 
 /**
  * @ingroup AscendCL
@@ -159,22 +161,20 @@ int32_t AdumpSaveToFile(const char *data, size_t dataLen, const char *filename, 
  * @retval ACL_SUCCESS The function is successfully executed.
  * @retval OtherValues Failure
  */
-aclError aclopStartDumpArgs(uint32_t dumpType, const char *path)
+aclError aclopStartDumpArgs(uint32_t dumpType, const char* path)
 {
     if (path == nullptr) {
-        REPORT_EP0007_NULL_POINTER(
-            Adx::FUNC_NAME_ACL_OP_START_DUMP_ARGS, Adx::FUNC_ACL_OP_START_DUMP_ARGS_PARAM_PATH);
+        REPORT_EP0007_NULL_POINTER(Adx::FUNC_NAME_ACL_OP_START_DUMP_ARGS, Adx::FUNC_ACL_OP_START_DUMP_ARGS_PARAM_PATH);
         return ACL_ERROR_FAILURE;
     }
 
     if ((dumpType & ACL_OP_DUMP_OP_AICORE_ARGS) != ACL_OP_DUMP_OP_AICORE_ARGS) {
         std::string dumpTypeStr = std::to_string(dumpType);
         std::string expTypeStr = std::to_string(ACL_OP_DUMP_OP_AICORE_ARGS);
-        std::string reason = Adx::StrUtils::Format(
-            Adx::ADUMP_REASON_RESERVED_PARAM_MUST_EQUAL, expTypeStr.c_str());
+        std::string reason = Adx::StrUtils::Format(Adx::ADUMP_REASON_RESERVED_PARAM_MUST_EQUAL, expTypeStr.c_str());
         REPORT_EP0006_INVALID_ARGUMENT(
-            Adx::FUNC_NAME_ACL_OP_START_DUMP_ARGS, dumpTypeStr,
-            Adx::FUNC_ACL_OP_START_DUMP_ARGS_PARAM_DUMPTYPE, reason);
+            Adx::FUNC_NAME_ACL_OP_START_DUMP_ARGS, dumpTypeStr, Adx::FUNC_ACL_OP_START_DUMP_ARGS_PARAM_DUMPTYPE,
+            reason);
         return ACL_ERROR_FAILURE;
     }
 
@@ -234,8 +234,8 @@ const char* acldumpGetPath(acldumpType dumpType)
  * @retval ACL_SUCCESS The function is successfully executed.
  * @retval OtherValues Failure
  */
-aclError acldumpSaveExceptionInfo(const char *fileName, const char *userTag,
-    const acldumpTensorInfo *tensors, size_t tensorCount)
+aclError acldumpSaveExceptionInfo(
+    const char* fileName, const char* userTag, const acldumpTensorInfo* tensors, size_t tensorCount)
 {
     if (fileName == nullptr) {
         REPORT_EP0007_NULL_POINTER(
@@ -244,13 +244,15 @@ aclError acldumpSaveExceptionInfo(const char *fileName, const char *userTag,
     }
 
     if (fileName[0] == '\0') {
-        REPORT_EP0006_INVALID_ARGUMENT(Adx::FUNC_NAME_ACL_DUMP_SAVE_EXCEPTION_INFO, "",
-            Adx::FUNC_ACL_DUMP_SAVE_EXCEPTION_INFO_PARAM_FILENAME, Adx::ADUMP_REASON_PARAM_PATH_EMPTY);
+        REPORT_EP0006_INVALID_ARGUMENT(
+            Adx::FUNC_NAME_ACL_DUMP_SAVE_EXCEPTION_INFO, "", Adx::FUNC_ACL_DUMP_SAVE_EXCEPTION_INFO_PARAM_FILENAME,
+            Adx::ADUMP_REASON_PARAM_PATH_EMPTY);
         return ACL_ERROR_INVALID_PARAM;
     }
 
     if (Adx::Path::HasParentDirSegment(fileName)) {
-        REPORT_EP0006_INVALID_ARGUMENT(Adx::FUNC_NAME_ACL_DUMP_SAVE_EXCEPTION_INFO, fileName,
+        REPORT_EP0006_INVALID_ARGUMENT(
+            Adx::FUNC_NAME_ACL_DUMP_SAVE_EXCEPTION_INFO, fileName,
             Adx::FUNC_ACL_DUMP_SAVE_EXCEPTION_INFO_PARAM_FILENAME, Adx::ADUMP_REASON_PARAM_PATH_HAS_PARENT_DIR);
         return ACL_ERROR_INVALID_PARAM;
     }
@@ -263,7 +265,8 @@ aclError acldumpSaveExceptionInfo(const char *fileName, const char *userTag,
 
     if (tensorCount == 0) {
         const std::string reason = Adx::StrUtils::Format(Adx::ADUMP_REASON_PARAM_MUST_BE_GREATER_THAN, "0");
-        REPORT_EP0006_INVALID_ARGUMENT(Adx::FUNC_NAME_ACL_DUMP_SAVE_EXCEPTION_INFO, std::to_string(tensorCount),
+        REPORT_EP0006_INVALID_ARGUMENT(
+            Adx::FUNC_NAME_ACL_DUMP_SAVE_EXCEPTION_INFO, std::to_string(tensorCount),
             Adx::FUNC_ACL_DUMP_SAVE_EXCEPTION_INFO_PARAM_TENSORCOUNT, reason);
         return ACL_ERROR_INVALID_PARAM;
     }
@@ -293,7 +296,7 @@ aclError acldumpSaveExceptionInfo(const char *fileName, const char *userTag,
  * @retval ACL_SUCCESS The function is successfully executed.
  * @retval OtherValues Failure
  */
-aclError acldumpGetExceptionInfoPath(char *path, size_t maxLen)
+aclError acldumpGetExceptionInfoPath(char* path, size_t maxLen)
 {
     if (path == nullptr) {
         REPORT_EP0007_NULL_POINTER(
@@ -302,7 +305,8 @@ aclError acldumpGetExceptionInfoPath(char *path, size_t maxLen)
     }
     if (maxLen <= 1) {
         std::string reason = Adx::StrUtils::Format(Adx::ADUMP_REASON_PARAM_MUST_BE_GREATER_THAN, "1");
-        REPORT_EP0006_INVALID_ARGUMENT(Adx::FUNC_NAME_ACL_DUMP_GET_EXCEPTION_INFO_PATH, std::to_string(maxLen),
+        REPORT_EP0006_INVALID_ARGUMENT(
+            Adx::FUNC_NAME_ACL_DUMP_GET_EXCEPTION_INFO_PATH, std::to_string(maxLen),
             Adx::FUNC_ACL_DUMP_GET_EXCEPTION_INFO_PATH_PARAM_MAXLEN, reason);
         return ACL_ERROR_INVALID_PARAM;
     }
@@ -322,14 +326,17 @@ aclError acldumpGetExceptionInfoPath(char *path, size_t maxLen)
     }
 
     if (dumpPath.size() + 1 > maxLen) {
-        std::string reason = Adx::StrUtils::Format(Adx::ADUMP_REASON_BUFFER_SIZE_NOT_ENOUGH,
-            std::to_string(maxLen).c_str(), std::to_string(dumpPath.size() + 1).c_str());
-        REPORT_EP0006_INVALID_ARGUMENT(Adx::FUNC_NAME_ACL_DUMP_GET_EXCEPTION_INFO_PATH, std::to_string(maxLen),
+        std::string reason = Adx::StrUtils::Format(
+            Adx::ADUMP_REASON_BUFFER_SIZE_NOT_ENOUGH, std::to_string(maxLen).c_str(),
+            std::to_string(dumpPath.size() + 1).c_str());
+        REPORT_EP0006_INVALID_ARGUMENT(
+            Adx::FUNC_NAME_ACL_DUMP_GET_EXCEPTION_INFO_PATH, std::to_string(maxLen),
             Adx::FUNC_ACL_DUMP_GET_EXCEPTION_INFO_PATH_PARAM_MAXLEN, reason);
         return ACL_ERROR_INVALID_PARAM;
     }
     if (strcpy_s(path, maxLen, dumpPath.c_str()) != EOK) {
-        IDE_LOGE("Copy the path to buffer failed when get the exception dump path, path size=%zu, maxLen=%zu.",
+        IDE_LOGE(
+            "Copy the path to buffer failed when get the exception dump path, path size=%zu, maxLen=%zu.",
             dumpPath.size(), maxLen);
         return ACL_ERROR_FAILURE;
     }

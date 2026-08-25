@@ -20,30 +20,30 @@ constexpr uint32_t FILE_NAME_MAX = 32;
 constexpr uint32_t SOC_VERSION_LEN = 50U;
 
 struct OperatorData {
-    aclrtStream deviceStm   = nullptr;
-    void *pcAddr           = nullptr;
-    rtBinHandle binHandle  = nullptr;
-    void *memoryAddr       = nullptr;
-    bool setDevice         = false;
-    uint64_t msgQSize      = 0;
-    uint64_t outputSize    = 0;
+    aclrtStream deviceStm = nullptr;
+    void* pcAddr = nullptr;
+    rtBinHandle binHandle = nullptr;
+    void* memoryAddr = nullptr;
+    bool setDevice = false;
+    uint64_t msgQSize = 0;
+    uint64_t outputSize = 0;
     uint64_t workspaceSize = 0;
     uint64_t stackBaseSize = 0;
-    int32_t streamId       = 0;
-    uint32_t sqId          = 0;
-    uint32_t cqIds         = 0;
-    uint32_t logicCqIds    = 0;
-    uint64_t ubSize        = 0;
-    uint32_t aiCoreCnt     = 0;
-    uint32_t vectCoreCnt   = 0;
+    int32_t streamId = 0;
+    uint32_t sqId = 0;
+    uint32_t cqIds = 0;
+    uint32_t logicCqIds = 0;
+    uint64_t ubSize = 0;
+    uint32_t aiCoreCnt = 0;
+    uint32_t vectCoreCnt = 0;
 };
 
 struct KfcDumpWorkSpace {
-    uint64_t msgQ; //消息队列头指针
-    uint64_t msgQSize; // 地址大小
-    uint64_t output; //aiv计算用的output头指针
+    uint64_t msgQ;      // 消息队列头指针
+    uint64_t msgQSize;  // 地址大小
+    uint64_t output;    // aiv计算用的output头指针
     uint64_t outputSize;
-    uint64_t workspace; //aiv计算用的workspace头指针
+    uint64_t workspace; // aiv计算用的workspace头指针
     uint64_t workspaceSize;
     uint64_t stackBase;
     uint64_t stackBaseSize; // 32k处理空间
@@ -53,15 +53,15 @@ struct KfcDumpOpConfig {
     uint64_t aiCoreNum;
     uint64_t vectorCoreNum;
     uint64_t ubSize;
-    uint64_t dumpStatPcAddr;  // dump算子入口地址
-    uint64_t statsType; // 统计项比特位
+    uint64_t dumpStatPcAddr; // dump算子入口地址
+    uint64_t statsType;      // 统计项比特位
     uint64_t chipType;
 };
 
 struct KfcDumpStreamInfo {
     int32_t streamId;
     uint32_t sqIds;
-    uint32_t cqIds;   // 记录物理cqId
+    uint32_t cqIds;      // 记录物理cqId
     uint32_t logicCqIds; // 记录逻辑cqId
     uint32_t deviceId;
     uint32_t res;
@@ -77,7 +77,7 @@ struct KfcDumpOpInitParam {
 
 class OperatorPreliminary {
 public:
-    OperatorPreliminary(const DumpSetting &setting, const uint32_t deviceId);
+    OperatorPreliminary(const DumpSetting& setting, const uint32_t deviceId);
     ~OperatorPreliminary();
     int32_t OperatorInit();
 
@@ -87,7 +87,7 @@ private:
     std::string GetBinName() const;
     int32_t GetStreamInfo();
     int32_t GetUBSizeAndCoreNum();
-    std::unique_ptr<char[]> LoadBinFile(const std::string &filename, size_t &fileSize) const;
+    std::unique_ptr<char[]> LoadBinFile(const std::string& filename, size_t& fileSize) const;
     int32_t GetOperatorPCAddr();
     int32_t CreateMemory();
     int32_t KFCKernelLaunch();

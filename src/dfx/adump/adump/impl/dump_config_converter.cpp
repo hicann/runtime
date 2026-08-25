@@ -29,29 +29,24 @@ constexpr int32_t DECIMAL = 10;
 const std::map<std::string, std::set<std::string>> dumpValidOptions = {
     {ADUMP_DUMP_MODE, {ADUMP_DUMP_MODE_INPUT, ADUMP_DUMP_MODE_OUTPUT, ADUMP_DUMP_MODE_ALL}},
     {ADUMP_DUMP_DATA, {ADUMP_DUMP_DATA_TENSOR, ADUMP_DUMP_DATA_STATS}},
-    {ADUMP_DUMP_KERNEL_DATA, {ADUMP_DUMP_KERNEL_DATA_ALL, ADUMP_DUMP_KERNEL_DATA_PRINTF,
-                              ADUMP_DUMP_KERNEL_DATA_TENSOR, ADUMP_DUMP_KERNEL_DATA_ASSERT,
-                              ADUMP_DUMP_KERNEL_DATA_TIMESTAMP}},
+    {ADUMP_DUMP_KERNEL_DATA,
+     {ADUMP_DUMP_KERNEL_DATA_ALL, ADUMP_DUMP_KERNEL_DATA_PRINTF, ADUMP_DUMP_KERNEL_DATA_TENSOR,
+      ADUMP_DUMP_KERNEL_DATA_ASSERT, ADUMP_DUMP_KERNEL_DATA_TIMESTAMP}},
     {ADUMP_DUMP_OP_SWITCH, {ADUMP_DUMP_STATUS_SWITCH_ON, ADUMP_DUMP_STATUS_SWITCH_OFF}},
     {ADUMP_DUMP_LEVEL, {ADUMP_DUMP_LEVEL_OP, ADUMP_DUMP_LEVEL_KERNEL, ADUMP_DUMP_LEVEL_ALL}},
     {ADUMP_DUMP_DEBUG, {ADUMP_DUMP_STATUS_SWITCH_ON, ADUMP_DUMP_STATUS_SWITCH_OFF}},
-    {ADUMP_DUMP_SCENE, {ADUMP_DUMP_LITE_EXCEPTION,
-                        ADUMP_DUMP_EXCEPTION_AIC_ERR_BRIEF,
-                        ADUMP_DUMP_EXCEPTION_AIC_ERR_NORM,
-                        ADUMP_DUMP_EXCEPTION_AIC_ERR_DETAIL,
-                        ADUMP_DUMP_WATCHER}},
-    {ADUMP_DUMP_STATS, {ADUMP_DUMP_STATS_MAX, ADUMP_DUMP_STATS_MIN, ADUMP_DUMP_STATS_AVG,
-                        ADUMP_DUMP_STATS_NAN, ADUMP_DUMP_STATS_NEG_INF,
-                        ADUMP_DUMP_STATS_POS_INF, ADUMP_DUMP_STATS_L2NORM}},
+    {ADUMP_DUMP_SCENE,
+     {ADUMP_DUMP_LITE_EXCEPTION, ADUMP_DUMP_EXCEPTION_AIC_ERR_BRIEF, ADUMP_DUMP_EXCEPTION_AIC_ERR_NORM,
+      ADUMP_DUMP_EXCEPTION_AIC_ERR_DETAIL, ADUMP_DUMP_WATCHER}},
+    {ADUMP_DUMP_STATS,
+     {ADUMP_DUMP_STATS_MAX, ADUMP_DUMP_STATS_MIN, ADUMP_DUMP_STATS_AVG, ADUMP_DUMP_STATS_NAN, ADUMP_DUMP_STATS_NEG_INF,
+      ADUMP_DUMP_STATS_POS_INF, ADUMP_DUMP_STATS_L2NORM}},
 };
 
 const std::set<std::string> envDumpScenes = {
-    ADUMP_DUMP_EXCEPTION_AIC_ERR_BRIEF,
-    ADUMP_DUMP_EXCEPTION_AIC_ERR_NORM,
-    ADUMP_DUMP_EXCEPTION_AIC_ERR_DETAIL
-};
+    ADUMP_DUMP_EXCEPTION_AIC_ERR_BRIEF, ADUMP_DUMP_EXCEPTION_AIC_ERR_NORM, ADUMP_DUMP_EXCEPTION_AIC_ERR_DETAIL};
 
-static void from_json(const nlohmann::json &js, RawDumpConfig &config)
+static void from_json(const nlohmann::json& js, RawDumpConfig& config)
 {
     JsonParser::GetStringIfExist(js, ADUMP_DUMP_PATH, config.dumpPath);
     config.dumpMode = JsonParser::GetStringOrDefault(js, ADUMP_DUMP_MODE, ADUMP_DUMP_MODE_OUTPUT);
@@ -66,13 +61,13 @@ static void from_json(const nlohmann::json &js, RawDumpConfig &config)
     }
 }
 
-static void from_json(const nlohmann::json &js, OpNameRange &range)
+static void from_json(const nlohmann::json& js, OpNameRange& range)
 {
     JsonParser::GetStringIfExist(js, ADUMP_DUMP_OPNAME_RANGE_BEGIN, range.begin);
     JsonParser::GetStringIfExist(js, ADUMP_DUMP_OPNAME_RANGE_END, range.end);
 }
 
-static void from_json(const nlohmann::json &js, AclDumpBlacklist &blacklist)
+static void from_json(const nlohmann::json& js, AclDumpBlacklist& blacklist)
 {
     JsonParser::GetStringIfExist(js, ADUMP_DUMP_BLACKLIST_NAME, blacklist.name);
     if (JsonParser::ContainKey(js, ADUMP_DUMP_BLACKLIST_POS)) {
@@ -80,7 +75,7 @@ static void from_json(const nlohmann::json &js, AclDumpBlacklist &blacklist)
     }
 }
 
-static void from_json(const nlohmann::json &js, AclModelDumpConfig &info)
+static void from_json(const nlohmann::json& js, AclModelDumpConfig& info)
 {
     info.isLayer = false;
     if (JsonParser::GetStringIfExist(js, ADUMP_DUMP_MODEL_NAME, info.modelName)) {
@@ -105,90 +100,88 @@ static void from_json(const nlohmann::json &js, AclModelDumpConfig &info)
     }
 }
 
-std::string DumpConfigConverter::BuildIndexedPath(const std::string &base, size_t index) const
+std::string DumpConfigConverter::BuildIndexedPath(const std::string& base, size_t index) const
 {
     return base + "[" + std::to_string(index) + "]";
 }
 
-std::string DumpConfigConverter::BuildPath(const std::string &base, const std::string &key) const
+std::string DumpConfigConverter::BuildPath(const std::string& base, const std::string& key) const
 {
     return base.empty() ? key : base + "." + key;
 }
 
 bool DumpConfigConverter::CheckDumpFieldTypes() const
 {
-    const std::vector<std::string> stringFields = {
-        ADUMP_DUMP_PATH, ADUMP_DUMP_MODE, ADUMP_DUMP_OP_SWITCH, ADUMP_DUMP_LEVEL, ADUMP_DUMP_SCENE,
-        ADUMP_DUMP_DATA, ADUMP_DUMP_DEBUG, ADUMP_DUMP_KERNEL_DATA, ADUMP_DUMP_STEP
-    };
-    
-    for (const auto &field : stringFields) {
+    const std::vector<std::string> stringFields = {ADUMP_DUMP_PATH,  ADUMP_DUMP_MODE,        ADUMP_DUMP_OP_SWITCH,
+                                                   ADUMP_DUMP_LEVEL, ADUMP_DUMP_SCENE,       ADUMP_DUMP_DATA,
+                                                   ADUMP_DUMP_DEBUG, ADUMP_DUMP_KERNEL_DATA, ADUMP_DUMP_STEP};
+
+    for (const auto& field : stringFields) {
         if (!CheckStringField(dumpJs_, field, "")) {
             return false;
         }
     }
-    
+
     if (JsonParser::ContainKey(dumpJs_, ADUMP_DUMP_STATS)) {
         std::string fieldPath = ADUMP_DUMP_STATS;
         if (!CheckArrayOfString(dumpJs_.at(ADUMP_DUMP_STATS), fieldPath)) {
             return false;
         }
     }
-    
+
     if (JsonParser::ContainKey(dumpJs_, ADUMP_DUMP_LIST)) {
         if (!CheckDumpListFieldTypes()) {
             return false;
         }
     }
-    
+
     return true;
 }
 
-bool DumpConfigConverter::CheckStringField(const nlohmann::json &js, const std::string &key,
-    const std::string &basePath) const
+bool DumpConfigConverter::CheckStringField(
+    const nlohmann::json& js, const std::string& key, const std::string& basePath) const
 {
     if (!JsonParser::ContainKey(js, key)) {
         return true;
     }
-    
+
     std::string fieldPath = BuildPath(basePath, key);
     if (!js.at(key).is_string()) {
         REPORT_EP0001_ITEM_ERROR("CheckFieldValue", fieldPath, ADUMP_REASON_ITEM_MUST_BE_STRING, configPath_);
         return false;
     }
-    
+
     return true;
 }
 
 bool DumpConfigConverter::CheckDumpFieldValues() const
 {
-    const std::vector<std::string> singleValueFields = {
-        ADUMP_DUMP_MODE, ADUMP_DUMP_DATA, ADUMP_DUMP_OP_SWITCH, ADUMP_DUMP_LEVEL, ADUMP_DUMP_DEBUG, ADUMP_DUMP_SCENE
-    };
-    
-    for (const auto &field : singleValueFields) {
+    const std::vector<std::string> singleValueFields = {ADUMP_DUMP_MODE,  ADUMP_DUMP_DATA,  ADUMP_DUMP_OP_SWITCH,
+                                                        ADUMP_DUMP_LEVEL, ADUMP_DUMP_DEBUG, ADUMP_DUMP_SCENE};
+
+    for (const auto& field : singleValueFields) {
         if (!CheckFieldValue(dumpJs_, field)) {
             return false;
         }
     }
-    
+
     std::string kernelData;
     if (JsonParser::GetStringIfExist(dumpJs_, ADUMP_DUMP_KERNEL_DATA, kernelData)) {
         if (!CheckKernelDataValues(kernelData)) {
             return false;
         }
     }
-    
+
     if (JsonParser::ContainKey(dumpJs_, ADUMP_DUMP_STATS)) {
         if (!CheckDumpStatsValues()) {
             return false;
         }
     }
-    
+
     return true;
 }
 
-bool DumpConfigConverter::CheckFieldValue(const nlohmann::json &js, const std::string &key) const
+bool DumpConfigConverter::CheckFieldValue(const nlohmann::json& js, const std::string& key) const
 {
     std::string value;
     if (JsonParser::GetStringIfExist(js, key, value)) {
@@ -198,12 +191,12 @@ bool DumpConfigConverter::CheckFieldValue(const nlohmann::json &js, const std::s
     return true;
 }
 
-bool DumpConfigConverter::CheckKernelDataValues(const std::string &kernelData) const
+bool DumpConfigConverter::CheckKernelDataValues(const std::string& kernelData) const
 {
     std::vector<std::string> dfxTypes;
     Split(kernelData, ',', dfxTypes);
-    
-    for (const auto &dfxType : dfxTypes) {
+
+    for (const auto& dfxType : dfxTypes) {
         if (!IsValueValid(ADUMP_DUMP_KERNEL_DATA, dfxType)) {
             return false;
         }
@@ -214,8 +207,8 @@ bool DumpConfigConverter::CheckKernelDataValues(const std::string &kernelData) c
 
 bool DumpConfigConverter::CheckDumpStatsValues() const
 {
-    const auto &statsArray = dumpJs_.at(ADUMP_DUMP_STATS);
-    
+    const auto& statsArray = dumpJs_.at(ADUMP_DUMP_STATS);
+
     for (size_t i = 0; i < statsArray.size(); ++i) {
         std::string statValue = statsArray[i].get<std::string>();
         std::string indexedPath = BuildIndexedPath(ADUMP_DUMP_STATS, i);
@@ -223,24 +216,24 @@ bool DumpConfigConverter::CheckDumpStatsValues() const
             return false;
         }
     }
-    
+
     return true;
 }
 
 bool DumpConfigConverter::CheckDumpListFieldTypes() const
 {
-    const auto &dumpListArray = dumpJs_.at(ADUMP_DUMP_LIST);
+    const auto& dumpListArray = dumpJs_.at(ADUMP_DUMP_LIST);
     if (!dumpListArray.is_array()) {
-        REPORT_EP0001_ITEM_ERROR("CheckDumpListFieldTypes", ADUMP_DUMP_LIST,
-            ADUMP_REASON_ITEM_MUST_BE_ARRAY, configPath_);
+        REPORT_EP0001_ITEM_ERROR(
+            "CheckDumpListFieldTypes", ADUMP_DUMP_LIST, ADUMP_REASON_ITEM_MUST_BE_ARRAY, configPath_);
         return false;
     }
-    
+
     for (size_t i = 0; i < dumpListArray.size(); ++i) {
         std::string itemPath = BuildIndexedPath(ADUMP_DUMP_LIST, i);
         if (!dumpListArray[i].is_object()) {
-            REPORT_EP0001_ITEM_ERROR("CheckDumpListFieldTypes", itemPath,
-                ADUMP_REASON_ITEM_MUST_BE_OBJECT, configPath_);
+            REPORT_EP0001_ITEM_ERROR(
+                "CheckDumpListFieldTypes", itemPath, ADUMP_REASON_ITEM_MUST_BE_OBJECT, configPath_);
             return false;
         }
         if (!CheckDumpListItemFieldTypes(dumpListArray[i], itemPath)) {
@@ -250,64 +243,64 @@ bool DumpConfigConverter::CheckDumpListFieldTypes() const
     return true;
 }
 
-bool DumpConfigConverter::CheckDumpListItemFieldTypes(const nlohmann::json &item, const std::string &basePath) const
+bool DumpConfigConverter::CheckDumpListItemFieldTypes(const nlohmann::json& item, const std::string& basePath) const
 {
     if (!CheckStringField(item, ADUMP_DUMP_MODEL_NAME, basePath)) {
         return false;
     }
-    
+
     if (JsonParser::ContainKey(item, ADUMP_DUMP_LAYER)) {
         std::string fieldPath = BuildPath(basePath, ADUMP_DUMP_LAYER);
         if (!CheckArrayOfString(item.at(ADUMP_DUMP_LAYER), fieldPath)) {
             return false;
         }
     }
-    
+
     if (JsonParser::ContainKey(item, ADUMP_DUMP_WATCHER_NODES)) {
         std::string fieldPath = BuildPath(basePath, ADUMP_DUMP_WATCHER_NODES);
         if (!CheckArrayOfString(item.at(ADUMP_DUMP_WATCHER_NODES), fieldPath)) {
             return false;
         }
     }
-    
+
     if (JsonParser::ContainKey(item, ADUMP_DUMP_OPTYPE_BLACKLIST)) {
         std::string fieldPath = BuildPath(basePath, ADUMP_DUMP_OPTYPE_BLACKLIST);
         if (!CheckBlacklistFieldTypes(item.at(ADUMP_DUMP_OPTYPE_BLACKLIST), fieldPath)) {
             return false;
         }
     }
-    
+
     if (JsonParser::ContainKey(item, ADUMP_DUMP_OPNAME_BLACKLIST)) {
         std::string fieldPath = BuildPath(basePath, ADUMP_DUMP_OPNAME_BLACKLIST);
         if (!CheckBlacklistFieldTypes(item.at(ADUMP_DUMP_OPNAME_BLACKLIST), fieldPath)) {
             return false;
         }
     }
-    
+
     if (JsonParser::ContainKey(item, ADUMP_DUMP_OPNAME_RANGE)) {
         std::string fieldPath = BuildPath(basePath, ADUMP_DUMP_OPNAME_RANGE);
         if (!CheckOpnameRangeFieldTypes(item.at(ADUMP_DUMP_OPNAME_RANGE), fieldPath)) {
             return false;
         }
     }
-    
+
     return true;
 }
 
-bool DumpConfigConverter::CheckArrayOfType(const nlohmann::json &arr, const std::string &basePath,
-    bool isStringType) const
+bool DumpConfigConverter::CheckArrayOfType(
+    const nlohmann::json& arr, const std::string& basePath, bool isStringType) const
 {
     if (!arr.is_array()) {
         REPORT_EP0001_ITEM_ERROR("CheckArrayOfType", basePath, ADUMP_REASON_ITEM_MUST_BE_ARRAY, configPath_);
         return false;
     }
-    
+
     for (size_t i = 0; i < arr.size(); ++i) {
         std::string itemPath = BuildIndexedPath(basePath, i);
         bool typeMatch = isStringType ? arr[i].is_string() : arr[i].is_object();
         if (!typeMatch) {
-            const std::string &reason = isStringType ? ADUMP_REASON_MEMBER_MUST_BE_STRING :
-                                        ADUMP_REASON_MEMBER_MUST_BE_OBJECT;
+            const std::string& reason =
+                isStringType ? ADUMP_REASON_MEMBER_MUST_BE_STRING : ADUMP_REASON_MEMBER_MUST_BE_OBJECT;
             REPORT_EP0001_ITEM_ERROR("CheckArrayOfType", itemPath, reason, configPath_);
             return false;
         }
@@ -315,23 +308,23 @@ bool DumpConfigConverter::CheckArrayOfType(const nlohmann::json &arr, const std:
     return true;
 }
 
-bool DumpConfigConverter::CheckArrayOfString(const nlohmann::json &arr, const std::string &basePath) const
+bool DumpConfigConverter::CheckArrayOfString(const nlohmann::json& arr, const std::string& basePath) const
 {
     return CheckArrayOfType(arr, basePath, true);
 }
 
-bool DumpConfigConverter::CheckArrayOfObject(const nlohmann::json &arr, const std::string &basePath) const
+bool DumpConfigConverter::CheckArrayOfObject(const nlohmann::json& arr, const std::string& basePath) const
 {
     return CheckArrayOfType(arr, basePath, false);
 }
 
-bool DumpConfigConverter::CheckBlacklistFieldTypes(const nlohmann::json &blacklistArray,
-    const std::string &basePath) const
+bool DumpConfigConverter::CheckBlacklistFieldTypes(
+    const nlohmann::json& blacklistArray, const std::string& basePath) const
 {
     if (!CheckArrayOfObject(blacklistArray, basePath)) {
         return false;
     }
-    
+
     for (size_t i = 0; i < blacklistArray.size(); ++i) {
         std::string itemPath = BuildIndexedPath(basePath, i);
         if (!CheckBlacklistItemFieldTypes(blacklistArray[i], itemPath)) {
@@ -341,30 +334,30 @@ bool DumpConfigConverter::CheckBlacklistFieldTypes(const nlohmann::json &blackli
     return true;
 }
 
-bool DumpConfigConverter::CheckBlacklistItemFieldTypes(const nlohmann::json &blacklistItem,
-    const std::string &basePath) const
+bool DumpConfigConverter::CheckBlacklistItemFieldTypes(
+    const nlohmann::json& blacklistItem, const std::string& basePath) const
 {
     if (!CheckStringField(blacklistItem, ADUMP_DUMP_BLACKLIST_NAME, basePath)) {
         return false;
     }
-    
+
     if (JsonParser::ContainKey(blacklistItem, ADUMP_DUMP_BLACKLIST_POS)) {
         std::string fieldPath = BuildPath(basePath, ADUMP_DUMP_BLACKLIST_POS);
         if (!CheckArrayOfString(blacklistItem.at(ADUMP_DUMP_BLACKLIST_POS), fieldPath)) {
             return false;
         }
     }
-    
+
     return true;
 }
 
-bool DumpConfigConverter::CheckOpnameRangeFieldTypes(const nlohmann::json &rangeArray,
-    const std::string &basePath) const
+bool DumpConfigConverter::CheckOpnameRangeFieldTypes(
+    const nlohmann::json& rangeArray, const std::string& basePath) const
 {
     if (!CheckArrayOfObject(rangeArray, basePath)) {
         return false;
     }
-    
+
     for (size_t i = 0; i < rangeArray.size(); ++i) {
         std::string itemPath = BuildIndexedPath(basePath, i);
         if (!CheckOpnameRangeItemFieldTypes(rangeArray[i], itemPath)) {
@@ -374,17 +367,17 @@ bool DumpConfigConverter::CheckOpnameRangeFieldTypes(const nlohmann::json &range
     return true;
 }
 
-bool DumpConfigConverter::CheckOpnameRangeItemFieldTypes(const nlohmann::json &rangeItem,
-    const std::string &basePath) const
+bool DumpConfigConverter::CheckOpnameRangeItemFieldTypes(
+    const nlohmann::json& rangeItem, const std::string& basePath) const
 {
     if (!CheckStringField(rangeItem, ADUMP_DUMP_OPNAME_RANGE_BEGIN, basePath)) {
         return false;
     }
-    
+
     if (!CheckStringField(rangeItem, ADUMP_DUMP_OPNAME_RANGE_END, basePath)) {
         return false;
     }
-    
+
     return true;
 }
 
@@ -427,7 +420,7 @@ bool DumpConfigConverter::CheckDumpConstraints() const
     return true;
 }
 
-bool DumpConfigConverter::CheckDumpScene(std::string &dumpScene) const
+bool DumpConfigConverter::CheckDumpScene(std::string& dumpScene) const
 {
     if (!JsonParser::GetStringIfExist(dumpJs_, ADUMP_DUMP_SCENE, dumpScene)) {
         return true;
@@ -437,49 +430,53 @@ bool DumpConfigConverter::CheckDumpScene(std::string &dumpScene) const
         return CheckWatcherDumpScene(dumpScene);
     } else {
         return CheckExceptionDumpScene(dumpScene);
-    }   
+    }
 }
 
-bool DumpConfigConverter::CheckWatcherDumpScene(const std::string &dumpScene) const
+bool DumpConfigConverter::CheckWatcherDumpScene(const std::string& dumpScene) const
 {
     if (ConflictWith(ADUMP_DUMP_DEBUG, ADUMP_DUMP_STATUS_SWITCH_ON)) {
-        REPORT_EP0005_ITEM_VALUE_CANNOT_SET_WHEN_ITEM_VALUE("CheckWatcherDumpScene",
-            ADUMP_DUMP_DEBUG, ADUMP_DUMP_STATUS_SWITCH_ON, ADUMP_DUMP_SCENE, dumpScene, configPath_);
+        REPORT_EP0005_ITEM_VALUE_CANNOT_SET_WHEN_ITEM_VALUE(
+            "CheckWatcherDumpScene", ADUMP_DUMP_DEBUG, ADUMP_DUMP_STATUS_SWITCH_ON, ADUMP_DUMP_SCENE, dumpScene,
+            configPath_);
         return false;
     }
     if (ConflictWith(ADUMP_DUMP_OP_SWITCH, ADUMP_DUMP_STATUS_SWITCH_ON)) {
-        REPORT_EP0005_ITEM_VALUE_CANNOT_SET_WHEN_ITEM_VALUE("CheckWatcherDumpScene",
-            ADUMP_DUMP_OP_SWITCH, ADUMP_DUMP_STATUS_SWITCH_ON, ADUMP_DUMP_SCENE, dumpScene, configPath_);
+        REPORT_EP0005_ITEM_VALUE_CANNOT_SET_WHEN_ITEM_VALUE(
+            "CheckWatcherDumpScene", ADUMP_DUMP_OP_SWITCH, ADUMP_DUMP_STATUS_SWITCH_ON, ADUMP_DUMP_SCENE, dumpScene,
+            configPath_);
         return false;
     }
-    
+
     std::string dumpMode = JsonParser::GetStringOrDefault(dumpJs_, ADUMP_DUMP_MODE, ADUMP_DUMP_MODE_OUTPUT);
     if (dumpMode != ADUMP_DUMP_MODE_OUTPUT) {
-        REPORT_EP0005_ITEM_VALUE_CANNOT_SET_WHEN_ITEM_VALUE("CheckWatcherDumpScene",
-            ADUMP_DUMP_MODE, dumpMode, ADUMP_DUMP_SCENE, dumpScene, configPath_);
+        REPORT_EP0005_ITEM_VALUE_CANNOT_SET_WHEN_ITEM_VALUE(
+            "CheckWatcherDumpScene", ADUMP_DUMP_MODE, dumpMode, ADUMP_DUMP_SCENE, dumpScene, configPath_);
         return false;
     }
-    
+
     return true;
 }
 
-bool DumpConfigConverter::CheckExceptionDumpScene(const std::string &dumpScene) const
+bool DumpConfigConverter::CheckExceptionDumpScene(const std::string& dumpScene) const
 {
     if (ConflictWith(ADUMP_DUMP_DEBUG, ADUMP_DUMP_STATUS_SWITCH_ON)) {
-        REPORT_EP0005_ITEM_VALUE_CANNOT_SET_WHEN_ITEM_VALUE("CheckExceptionDumpScene",
-            ADUMP_DUMP_DEBUG, ADUMP_DUMP_STATUS_SWITCH_ON, ADUMP_DUMP_SCENE, dumpScene, configPath_);
+        REPORT_EP0005_ITEM_VALUE_CANNOT_SET_WHEN_ITEM_VALUE(
+            "CheckExceptionDumpScene", ADUMP_DUMP_DEBUG, ADUMP_DUMP_STATUS_SWITCH_ON, ADUMP_DUMP_SCENE, dumpScene,
+            configPath_);
         return false;
     }
     if (ConflictWith(ADUMP_DUMP_OP_SWITCH, ADUMP_DUMP_STATUS_SWITCH_ON)) {
-        REPORT_EP0005_ITEM_VALUE_CANNOT_SET_WHEN_ITEM_VALUE("CheckExceptionDumpScene",
-            ADUMP_DUMP_OP_SWITCH, ADUMP_DUMP_STATUS_SWITCH_ON, ADUMP_DUMP_SCENE, dumpScene, configPath_);
+        REPORT_EP0005_ITEM_VALUE_CANNOT_SET_WHEN_ITEM_VALUE(
+            "CheckExceptionDumpScene", ADUMP_DUMP_OP_SWITCH, ADUMP_DUMP_STATUS_SWITCH_ON, ADUMP_DUMP_SCENE, dumpScene,
+            configPath_);
         return false;
     }
-    
+
     return true;
 }
 
-bool DumpConfigConverter::CheckDumpDebug(std::string &dumpDebug) const
+bool DumpConfigConverter::CheckDumpDebug(std::string& dumpDebug) const
 {
     dumpDebug = JsonParser::GetStringOrDefault(dumpJs_, ADUMP_DUMP_DEBUG, ADUMP_DUMP_STATUS_SWITCH_OFF);
 
@@ -488,16 +485,16 @@ bool DumpConfigConverter::CheckDumpDebug(std::string &dumpDebug) const
     }
 
     if (ConflictWith(ADUMP_DUMP_OP_SWITCH, ADUMP_DUMP_STATUS_SWITCH_ON)) {
-        REPORT_EP0005_ITEM_VALUE_CANNOT_SET_WHEN_ITEM_VALUE("CheckDumpDebug",
-            ADUMP_DUMP_OP_SWITCH, ADUMP_DUMP_STATUS_SWITCH_ON,
-            ADUMP_DUMP_DEBUG, ADUMP_DUMP_STATUS_SWITCH_ON, configPath_);
+        REPORT_EP0005_ITEM_VALUE_CANNOT_SET_WHEN_ITEM_VALUE(
+            "CheckDumpDebug", ADUMP_DUMP_OP_SWITCH, ADUMP_DUMP_STATUS_SWITCH_ON, ADUMP_DUMP_DEBUG,
+            ADUMP_DUMP_STATUS_SWITCH_ON, configPath_);
         return false;
     }
 
     return true;
 }
 
-void DumpConfigConverter::ParseDfxTypesFromJson(const RawDumpConfig &rawDumpConfig, DumpDfxConfig &dumpDfxConfig) const
+void DumpConfigConverter::ParseDfxTypesFromJson(const RawDumpConfig& rawDumpConfig, DumpDfxConfig& dumpDfxConfig) const
 {
     dumpDfxConfig.dumpPath = rawDumpConfig.dumpPath;
     if (JsonParser::ContainKey(dumpJs_, ADUMP_DUMP_KERNEL_DATA)) {
@@ -506,7 +503,7 @@ void DumpConfigConverter::ParseDfxTypesFromJson(const RawDumpConfig &rawDumpConf
     }
 }
 
-void DumpConfigConverter::EnsureDefaultDfxType(const DumpType &dumpType, DumpDfxConfig &dumpDfxConfig) const
+void DumpConfigConverter::EnsureDefaultDfxType(const DumpType& dumpType, DumpDfxConfig& dumpDfxConfig) const
 {
     if (dumpType == DumpType::OPERATOR && dumpDfxConfig.dfxTypes.empty()) {
         dumpDfxConfig.dfxTypes.push_back(ADUMP_DUMP_KERNEL_DATA_ALL);
@@ -519,7 +516,7 @@ bool DumpConfigConverter::CheckDumpPath() const
         REPORT_EP0001_ITEM_ERROR("CheckDumpPath", ADUMP_DUMP_PATH, ADUMP_REASON_ITEM_NOT_FOUND, configPath_);
         return false;
     }
-    
+
     std::string dumpPath = JsonParser::GetCfgStrByKey(dumpJs_, ADUMP_DUMP_PATH);
     if (dumpPath.empty()) {
         REPORT_EP0001_ITEM_ERROR("CheckDumpPath", ADUMP_DUMP_PATH, ADUMP_REASON_ITEM_VALUE_EMPTY, configPath_);
@@ -544,19 +541,19 @@ bool DumpConfigConverter::CheckDumpPath() const
     } else {
         Path path(dumpPath);
         if (!path.RealPath()) {
-            REPORT_EP0003_INVALID_VALUE("CheckDumpPath", dumpPath, ADUMP_DUMP_PATH, 
-                ADUMP_REASON_PATH_NOT_EXIST, configPath_);
+            REPORT_EP0003_INVALID_VALUE(
+                "CheckDumpPath", dumpPath, ADUMP_DUMP_PATH, ADUMP_REASON_PATH_NOT_EXIST, configPath_);
             return false;
         }
         if (!path.IsDirectory()) {
-            REPORT_EP0003_INVALID_VALUE("CheckDumpPath", dumpPath, ADUMP_DUMP_PATH, 
-                ADUMP_REASON_PATH_NOT_DIRECTORY, configPath_);
+            REPORT_EP0003_INVALID_VALUE(
+                "CheckDumpPath", dumpPath, ADUMP_DUMP_PATH, ADUMP_REASON_PATH_NOT_DIRECTORY, configPath_);
             return false;
         }
         constexpr uint32_t accessMode = static_cast<uint32_t>(M_R_OK) | static_cast<uint32_t>(M_W_OK);
         if (!path.Asccess(accessMode)) {
-            REPORT_EP0003_INVALID_VALUE("CheckDumpPath", dumpPath, ADUMP_DUMP_PATH, 
-                ADUMP_REASON_PATH_NO_PERMISSION, configPath_);
+            REPORT_EP0003_INVALID_VALUE(
+                "CheckDumpPath", dumpPath, ADUMP_DUMP_PATH, ADUMP_REASON_PATH_NO_PERMISSION, configPath_);
             return false;
         }
     }
@@ -588,7 +585,7 @@ bool DumpConfigConverter::CheckDumpStep() const
             return false;
         }
 
-        for (const auto &step : steps) {
+        for (const auto& step : steps) {
             if (!IsDigit(step)) {
                 std::string indexedPath = BuildIndexedPath(ADUMP_DUMP_STEP, i);
                 REPORT_EP0003_INVALID_VALUE(
@@ -618,15 +615,15 @@ bool DumpConfigConverter::CheckDumplist(const std::string& dumpLevel) const
         return true;
     }
 
-    std::string dumpOpSwitch = JsonParser::GetStringOrDefault(
-        dumpJs_, ADUMP_DUMP_OP_SWITCH, ADUMP_DUMP_STATUS_SWITCH_OFF);
+    std::string dumpOpSwitch =
+        JsonParser::GetStringOrDefault(dumpJs_, ADUMP_DUMP_OP_SWITCH, ADUMP_DUMP_STATUS_SWITCH_OFF);
     std::string dumpScene = JsonParser::GetStringOrDefault(dumpJs_, ADUMP_DUMP_SCENE, "");
     bool isSwitchOff = (dumpOpSwitch == ADUMP_DUMP_STATUS_SWITCH_OFF);
 
     return CheckDumpListItems(dumpList, dumpLevel, dumpScene, isSwitchOff);
 }
 
-bool DumpConfigConverter::CheckModelNameAndLayer(const AclModelDumpConfig &item, const std::string &itemPath) const
+bool DumpConfigConverter::CheckModelNameAndLayer(const AclModelDumpConfig& item, const std::string& itemPath) const
 {
     if (item.isModelName && item.modelName.empty()) {
         std::string modelPath = BuildPath(itemPath, ADUMP_DUMP_MODEL_NAME);
@@ -639,11 +636,11 @@ bool DumpConfigConverter::CheckModelNameAndLayer(const AclModelDumpConfig &item,
         REPORT_EP0001_ITEM_ERROR("CheckDumpList", layerPath, ADUMP_REASON_ITEM_VALUE_EMPTY, configPath_);
         return false;
     }
-    
+
     return true;
 }
-bool DumpConfigConverter::CheckWatcherSceneConstraints(const AclModelDumpConfig &item, const std::string &itemPath,
-     const std::string &dumpScene) const
+bool DumpConfigConverter::CheckWatcherSceneConstraints(
+    const AclModelDumpConfig& item, const std::string& itemPath, const std::string& dumpScene) const
 {
     if (dumpScene == ADUMP_DUMP_WATCHER) {
         if (!item.isWatcherNodes) {
@@ -660,75 +657,76 @@ bool DumpConfigConverter::CheckWatcherSceneConstraints(const AclModelDumpConfig 
 
         if (item.isModelName) {
             std::string modelPath = BuildPath(itemPath, ADUMP_DUMP_MODEL_NAME);
-            REPORT_EP0005_ITEM_CANNOT_SET_WHEN_ITEM_VALUE("CheckDumpList", modelPath,
-                ADUMP_DUMP_SCENE, ADUMP_DUMP_WATCHER, configPath_);
+            REPORT_EP0005_ITEM_CANNOT_SET_WHEN_ITEM_VALUE(
+                "CheckDumpList", modelPath, ADUMP_DUMP_SCENE, ADUMP_DUMP_WATCHER, configPath_);
             return false;
         }
     } else {
         if (!item.watcherNodes.empty()) {
             std::string watcherPath = BuildPath(itemPath, ADUMP_DUMP_WATCHER_NODES);
-            REPORT_EP0005_ITEM_CANNOT_SET_WHEN_ITEM_NOT_VALUE("CheckDumpList", watcherPath,
-                ADUMP_DUMP_SCENE, ADUMP_DUMP_WATCHER, configPath_);
+            REPORT_EP0005_ITEM_CANNOT_SET_WHEN_ITEM_NOT_VALUE(
+                "CheckDumpList", watcherPath, ADUMP_DUMP_SCENE, ADUMP_DUMP_WATCHER, configPath_);
             return false;
         }
     }
-    
+
     return true;
 }
 
-bool DumpConfigConverter::CheckBlacklistSize(const AclModelDumpConfig &item,
-                                               const std::string &itemPath) const
+bool DumpConfigConverter::CheckBlacklistSize(const AclModelDumpConfig& item, const std::string& itemPath) const
 {
     if (item.optypeBlacklist.size() > MAX_BLACKLIST_SIZE) {
         std::string blacklistPath = BuildPath(itemPath, ADUMP_DUMP_OPTYPE_BLACKLIST);
-        REPORT_EP0003_INVALID_VALUE("CheckDumpList", std::to_string(item.optypeBlacklist.size()),
-            blacklistPath, ADUMP_REASON_BLACKLIST_SIZE_EXCEED_LIMIT, configPath_);
+        REPORT_EP0003_INVALID_VALUE(
+            "CheckDumpList", std::to_string(item.optypeBlacklist.size()), blacklistPath,
+            ADUMP_REASON_BLACKLIST_SIZE_EXCEED_LIMIT, configPath_);
         return false;
     }
 
     if (item.opnameBlacklist.size() > MAX_BLACKLIST_SIZE) {
         std::string blacklistPath = BuildPath(itemPath, ADUMP_DUMP_OPNAME_BLACKLIST);
-        REPORT_EP0003_INVALID_VALUE("CheckDumpList", std::to_string(item.opnameBlacklist.size()),
-            blacklistPath, ADUMP_REASON_BLACKLIST_SIZE_EXCEED_LIMIT, configPath_);
+        REPORT_EP0003_INVALID_VALUE(
+            "CheckDumpList", std::to_string(item.opnameBlacklist.size()), blacklistPath,
+            ADUMP_REASON_BLACKLIST_SIZE_EXCEED_LIMIT, configPath_);
         return false;
     }
-    
+
     return true;
 }
-bool DumpConfigConverter::CheckBlacklistWithDumpLevel(const AclModelDumpConfig &item, const std::string &itemPath,
-    const std::string &dumpLevel) const
+bool DumpConfigConverter::CheckBlacklistWithDumpLevel(
+    const AclModelDumpConfig& item, const std::string& itemPath, const std::string& dumpLevel) const
 {
     bool hasOptypeBlacklist = !item.optypeBlacklist.empty();
     bool hasOpnameBlacklist = !item.opnameBlacklist.empty();
 
     if (hasOptypeBlacklist && dumpLevel != ADUMP_DUMP_LEVEL_OP) {
         std::string blacklistPath = BuildPath(itemPath, ADUMP_DUMP_OPTYPE_BLACKLIST);
-        REPORT_EP0005_ITEM_CANNOT_SET_WHEN_ITEM_NOT_VALUE("CheckDumpList", blacklistPath,
-            ADUMP_DUMP_LEVEL, ADUMP_DUMP_LEVEL_OP, configPath_);
+        REPORT_EP0005_ITEM_CANNOT_SET_WHEN_ITEM_NOT_VALUE(
+            "CheckDumpList", blacklistPath, ADUMP_DUMP_LEVEL, ADUMP_DUMP_LEVEL_OP, configPath_);
         return false;
     }
 
     if (hasOpnameBlacklist && dumpLevel != ADUMP_DUMP_LEVEL_OP) {
         std::string blacklistPath = BuildPath(itemPath, ADUMP_DUMP_OPNAME_BLACKLIST);
-        REPORT_EP0005_ITEM_CANNOT_SET_WHEN_ITEM_NOT_VALUE("CheckDumpList", blacklistPath,
-            ADUMP_DUMP_LEVEL, ADUMP_DUMP_LEVEL_OP, configPath_);
+        REPORT_EP0005_ITEM_CANNOT_SET_WHEN_ITEM_NOT_VALUE(
+            "CheckDumpList", blacklistPath, ADUMP_DUMP_LEVEL, ADUMP_DUMP_LEVEL_OP, configPath_);
         return false;
     }
-    
+
     return true;
 }
-bool DumpConfigConverter::CheckOpNameRange(const AclModelDumpConfig &item, const std::string &itemPath,
-    const std::string &dumpLevel) const
+bool DumpConfigConverter::CheckOpNameRange(
+    const AclModelDumpConfig& item, const std::string& itemPath, const std::string& dumpLevel) const
 {
     if (item.dumpOpNameRanges.empty()) {
         return true;
     }
-    
+
     std::string rangePath = BuildPath(itemPath, ADUMP_DUMP_OPNAME_RANGE);
 
     if (dumpLevel != ADUMP_DUMP_LEVEL_OP) {
-        REPORT_EP0005_ITEM_CANNOT_SET_WHEN_ITEM_NOT_VALUE("CheckDumpList", rangePath,
-            ADUMP_DUMP_LEVEL, ADUMP_DUMP_LEVEL_OP, configPath_);
+        REPORT_EP0005_ITEM_CANNOT_SET_WHEN_ITEM_NOT_VALUE(
+            "CheckDumpList", rangePath, ADUMP_DUMP_LEVEL, ADUMP_DUMP_LEVEL_OP, configPath_);
         return false;
     }
 
@@ -744,81 +742,82 @@ bool DumpConfigConverter::CheckOpNameRange(const AclModelDumpConfig &item, const
     }
 
     for (size_t j = 0U; j < item.dumpOpNameRanges.size(); ++j) {
-        const auto &range = item.dumpOpNameRanges[j];
+        const auto& range = item.dumpOpNameRanges[j];
         std::string rangeIndexPath = BuildIndexedPath(rangePath, j);
 
         if (range.begin.empty() || range.end.empty()) {
             std::string rangeValue = "begin=" + range.begin + ", end=" + range.end;
-            REPORT_EP0003_INVALID_VALUE("CheckDumpList", rangeValue, rangeIndexPath,
-                ADUMP_REASON_OPNAME_RANGE_INCOMPLETE, configPath_);
+            REPORT_EP0003_INVALID_VALUE(
+                "CheckDumpList", rangeValue, rangeIndexPath, ADUMP_REASON_OPNAME_RANGE_INCOMPLETE, configPath_);
             return false;
         }
         IDE_LOGI("op name range begin[%s], op name range end[%s].", range.begin.c_str(), range.end.c_str());
     }
-    
+
     return true;
 }
 
-bool DumpConfigConverter::CheckDumpListItems(const std::vector<AclModelDumpConfig> &dumpList,
-    const std::string &dumpLevel, const std::string &dumpScene, bool isSwitchOff) const
+bool DumpConfigConverter::CheckDumpListItems(
+    const std::vector<AclModelDumpConfig>& dumpList, const std::string& dumpLevel, const std::string& dumpScene,
+    bool isSwitchOff) const
 {
     for (size_t i = 0U; i < dumpList.size(); ++i) {
-        const auto &item = dumpList[i];
+        const auto& item = dumpList[i];
         std::string itemPath = BuildIndexedPath(ADUMP_DUMP_LIST, i);
-        
+
         if (isSwitchOff && !CheckModelNameAndLayer(item, itemPath)) {
             return false;
         }
-        
+
         if (!CheckWatcherSceneConstraints(item, itemPath, dumpScene)) {
             return false;
         }
-        
+
         if (!CheckBlacklistSize(item, itemPath)) {
             return false;
         }
-        
+
         if (!CheckBlacklistWithDumpLevel(item, itemPath, dumpLevel)) {
             return false;
         }
-        
+
         if (!CheckOpNameRange(item, itemPath, dumpLevel)) {
             return false;
         }
     }
-    
+
     IDE_LOGI("end to check the validity of dump_list and dump_op_switch field.");
     return true;
 }
 
-void DumpConfigConverter::Split(const std::string &str, const char delim, std::vector<std::string> &elems) const
+void DumpConfigConverter::Split(const std::string& str, const char delim, std::vector<std::string>& elems) const
 {
     elems.clear();
     if (str.empty()) {
         elems.emplace_back("");
         return;
     }
- 
+
     std::stringstream ss(str);
     std::string item;
- 
+
     while (getline(ss, item, delim)) {
         elems.push_back(item);
     }
- 
+
     const auto strSize = str.size();
     if ((strSize > 0U) && (str[strSize - 1U] == delim)) {
         elems.emplace_back("");
     }
 }
- 
-bool DumpConfigConverter::IsDigit(const std::string &str) const
+
+bool DumpConfigConverter::IsDigit(const std::string& str) const
 {
     if (str.empty()) {
         return false;
     }
- 
-    for (const char &c : str) {
+
+    for (const char& c : str) {
         if (isdigit(static_cast<int32_t>(c)) == 0) {
             return false;
         }
@@ -836,21 +835,21 @@ bool DumpConfigConverter::CheckDumpStats() const
         REPORT_EP0001_ITEM_ERROR("CheckDumpStats", ADUMP_DUMP_STATS, ADUMP_REASON_ITEM_VALUE_EMPTY, configPath_);
         return false;
     }
-    
+
     std::string dumpData = JsonParser::GetStringOrDefault(dumpJs_, ADUMP_DUMP_DATA, ADUMP_DUMP_DATA_TENSOR);
     if (dumpData == ADUMP_DUMP_DATA_TENSOR) {
-        REPORT_EP0005_ITEM_CANNOT_SET_WHEN_ITEM_VALUE("CheckDumpStats", ADUMP_DUMP_STATS,
-            ADUMP_DUMP_DATA, ADUMP_DUMP_DATA_TENSOR, configPath_);
+        REPORT_EP0005_ITEM_CANNOT_SET_WHEN_ITEM_VALUE(
+            "CheckDumpStats", ADUMP_DUMP_STATS, ADUMP_DUMP_DATA, ADUMP_DUMP_DATA_TENSOR, configPath_);
         return false;
     }
     return true;
 }
 
-bool DumpConfigConverter::IsValueValid(const std::string key, const std::string value,
-                                        const std::string &errorPath) const
+bool DumpConfigConverter::IsValueValid(
+    const std::string key, const std::string value, const std::string& errorPath) const
 {
     std::string reportPath = errorPath.empty() ? key : errorPath;
-    
+
     if (value.empty()) {
         REPORT_EP0001_ITEM_ERROR("CheckItemValue", reportPath, ADUMP_REASON_ITEM_VALUE_EMPTY, configPath_);
         return false;
@@ -865,7 +864,7 @@ bool DumpConfigConverter::IsValueValid(const std::string key, const std::string 
     return false;
 }
 
-std::string DumpConfigConverter::TransOptionsToStr(const std::set<std::string> &options)
+std::string DumpConfigConverter::TransOptionsToStr(const std::set<std::string>& options)
 {
     std::string optionStr;
     for (auto option : options) {
@@ -891,15 +890,15 @@ bool DumpConfigConverter::CheckIpAddress(const std::string dumpPath) const
     if (colonPos != std::string::npos) {
         IDE_LOGI("dump_path field contains ip address.");
         if ((colonPos + 1U) == dumpPath.size()) {
-            REPORT_EP0003_INVALID_VALUE("CheckIpAddress", dumpPath, ADUMP_DUMP_PATH,
-                ADUMP_REASON_PATH_INVALID, configPath_);
+            REPORT_EP0003_INVALID_VALUE(
+                "CheckIpAddress", dumpPath, ADUMP_DUMP_PATH, ADUMP_REASON_PATH_INVALID, configPath_);
             return false;
         }
         const std::string ipAddress = dumpPath.substr(0U, colonPos);
         const std::vector<std::string> ipRet = StrUtils::Split(ipAddress, ".");
         if (ipRet.size() == static_cast<size_t>(MAX_IPV4_ADDRESS_LENGTH)) {
             try {
-                for (const std::string &ret : ipRet) {
+                for (const std::string& ret : ipRet) {
                     const int32_t val = std::stoi(ret);
                     if ((val < 0) || (val > MAX_IPV4_ADDRESS_VALUE)) {
                         IDE_LOGW("ip address[%s] is invalid in dump_path field", ipAddress.c_str());
@@ -919,7 +918,7 @@ bool DumpConfigConverter::CheckIpAddress(const std::string dumpPath) const
     return false;
 }
 
-DumpConfig DumpConfigConverter::ConvertDumpConfig(const RawDumpConfig &rawDumpConfig) const
+DumpConfig DumpConfigConverter::ConvertDumpConfig(const RawDumpConfig& rawDumpConfig) const
 {
     DumpConfig dumpConfig;
     dumpConfig.dumpStatus = ADUMP_DUMP_STATUS_SWITCH_ON;
@@ -949,19 +948,19 @@ DumpConfig DumpConfigConverter::ConvertDumpConfig(const RawDumpConfig &rawDumpCo
     return dumpConfig;
 }
 
-DumpType DumpConfigConverter::ConvertDumpType(const RawDumpConfig &rawDumpConfig) const
+DumpType DumpConfigConverter::ConvertDumpType(const RawDumpConfig& rawDumpConfig) const
 {
     DumpType dumpType;
     if (ConvertDumpScene(rawDumpConfig.dumpScene, dumpType)) {
         return dumpType;
     } else if (rawDumpConfig.dumpDebug == ADUMP_DUMP_STATUS_SWITCH_ON) {
         return DumpType::OP_OVERFLOW;
-    } else{
+    } else {
         return DumpType::OPERATOR;
     }
 }
 
-bool DumpConfigConverter::ConvertDumpScene(const std::string dumpScene, DumpType &dumpType)
+bool DumpConfigConverter::ConvertDumpScene(const std::string dumpScene, DumpType& dumpType)
 {
     if (dumpScene == ADUMP_DUMP_EXCEPTION_AIC_ERR_BRIEF || dumpScene == ADUMP_DUMP_LITE_EXCEPTION) {
         dumpType = DumpType::ARGS_EXCEPTION;
@@ -992,25 +991,23 @@ std::string DumpConfigConverter::DumpTypeToStr(const DumpType dumpType)
     }
 }
 
-bool DumpConfigConverter::NeedDump(const RawDumpConfig &rawDumpConfig) const
+bool DumpConfigConverter::NeedDump(const RawDumpConfig& rawDumpConfig) const
 {
-    if (dumpJs_.contains("dump_list") && dumpJs_["dump_list"].is_array() && !dumpJs_["dump_list"].empty())
-    {
+    if (dumpJs_.contains("dump_list") && dumpJs_["dump_list"].is_array() && !dumpJs_["dump_list"].empty()) {
         IDE_LOGI("Dump list size: %zu", dumpJs_["dump_list"].size());
         return true;
     }
     IDE_LOGI("Dump list is not an array or does not exist.");
     if ((rawDumpConfig.dumpOpSwitch == ADUMP_DUMP_STATUS_SWITCH_ON) ||
-        (rawDumpConfig.dumpDebug == ADUMP_DUMP_STATUS_SWITCH_ON) ||
-        (!rawDumpConfig.dumpScene.empty())) {
+        (rawDumpConfig.dumpDebug == ADUMP_DUMP_STATUS_SWITCH_ON) || (!rawDumpConfig.dumpScene.empty())) {
         return true;
     }
     IDE_LOGI("No dump config need to be set.");
     return false;
 }
 
-int32_t DumpConfigConverter::Convert(DumpType &dumpType, DumpConfig &dumpConfig, bool &needDump,
-    DumpDfxConfig &dumpDfxConfig)
+int32_t DumpConfigConverter::Convert(
+    DumpType& dumpType, DumpConfig& dumpConfig, bool& needDump, DumpDfxConfig& dumpDfxConfig)
 {
     nlohmann::json js;
     std::string errMsg;
@@ -1051,18 +1048,19 @@ int32_t DumpConfigConverter::Convert(DumpType &dumpType, DumpConfig &dumpConfig,
         dumpType = ConvertDumpType(rawDumpConfig);
         EnsureDefaultDfxType(dumpType, dumpDfxConfig);
         needDump = true;
-        IDE_LOGI("Success to convert dumpType[%d], dumpPath[%s], dumpMode[%s], "
-                 "dumpStatus[%s], dumpData[%s], dumpSwitch[%ld]",
-                 dumpType, dumpConfig.dumpPath.c_str(), dumpConfig.dumpMode.c_str(),
-                 dumpConfig.dumpStatus.c_str(), dumpConfig.dumpData.c_str(), dumpConfig.dumpSwitch);
-    } catch (const std::exception &e) {
+        IDE_LOGI(
+            "Success to convert dumpType[%d], dumpPath[%s], dumpMode[%s], "
+            "dumpStatus[%s], dumpData[%s], dumpSwitch[%ld]",
+            dumpType, dumpConfig.dumpPath.c_str(), dumpConfig.dumpMode.c_str(), dumpConfig.dumpStatus.c_str(),
+            dumpConfig.dumpData.c_str(), dumpConfig.dumpSwitch);
+    } catch (const std::exception& e) {
         REPORT_EP0004_PARSE_ERROR("Convert", std::string(e.what()), configPath_);
         return ADUMP_FAILED;
     }
     return ADUMP_SUCCESS;
 }
 
-bool DumpConfigConverter::GetEnvVariable(const std::string &env, std::string &value)
+bool DumpConfigConverter::GetEnvVariable(const std::string& env, std::string& value)
 {
     if (env.empty()) {
         return false;
@@ -1076,7 +1074,7 @@ bool DumpConfigConverter::GetEnvVariable(const std::string &env, std::string &va
     return false;
 }
 
-bool DumpConfigConverter::CheckDumpPath(const std::string &param, const std::string &dumpPath)
+bool DumpConfigConverter::CheckDumpPath(const std::string& param, const std::string& dumpPath)
 {
     Path path(dumpPath);
     if (!path.CreateDirectory(true)) {
@@ -1095,8 +1093,7 @@ bool DumpConfigConverter::CheckDumpPath(const std::string &param, const std::str
 
     constexpr uint32_t accessMode = static_cast<uint32_t>(M_R_OK) | static_cast<uint32_t>(M_W_OK);
     if (!path.Asccess(accessMode)) {
-        IDE_LOGW("The path [%s] for Env[%s] does not have read and write permission",
-            path.GetCString(), param.c_str());
+        IDE_LOGW("The path [%s] for Env[%s] does not have read and write permission", path.GetCString(), param.c_str());
         return false;
     }
 
@@ -1104,7 +1101,7 @@ bool DumpConfigConverter::CheckDumpPath(const std::string &param, const std::str
     return true;
 }
 
-bool DumpConfigConverter::GetEnvDumpPath(const std::string &env, std::string &envPath)
+bool DumpConfigConverter::GetEnvDumpPath(const std::string& env, std::string& envPath)
 {
     std::string tmpPath;
     if (GetEnvVariable(env, tmpPath)) {
@@ -1116,7 +1113,7 @@ bool DumpConfigConverter::GetEnvDumpPath(const std::string &env, std::string &en
     return false;
 }
 
-void DumpConfigConverter::LoadDumpEnvVariables(DumpEnvVariable &dumpEnvVariable)
+void DumpConfigConverter::LoadDumpEnvVariables(DumpEnvVariable& dumpEnvVariable)
 {
     std::string envAscendDumpScene;
     if (GetEnvVariable(ADUMP_ENV_ASCEND_DUMP_SCENE, envAscendDumpScene)) {
@@ -1124,8 +1121,9 @@ void DumpConfigConverter::LoadDumpEnvVariables(DumpEnvVariable &dumpEnvVariable)
             dumpEnvVariable.ascendDumpScene = envAscendDumpScene;
         } else {
             std::string optionStr = TransOptionsToStr(envDumpScenes);
-            IDE_LOGW("Value[%s] of Env[ASCEND_DUMP_SCENE] is invalid, it must be %s",
-                envAscendDumpScene.c_str(), optionStr.c_str());
+            IDE_LOGW(
+                "Value[%s] of Env[ASCEND_DUMP_SCENE] is invalid, it must be %s", envAscendDumpScene.c_str(),
+                optionStr.c_str());
         }
     }
 
@@ -1134,14 +1132,14 @@ void DumpConfigConverter::LoadDumpEnvVariables(DumpEnvVariable &dumpEnvVariable)
     (void)GetEnvDumpPath(ADUMP_ENV_ASCEND_WORK_PATH, dumpEnvVariable.ascendWorkPath);
 }
 
-bool DumpConfigConverter::EnableExceptionDumpWithEnv(DumpConfig &dumpConfig, DumpType &dumpType)
+bool DumpConfigConverter::EnableExceptionDumpWithEnv(DumpConfig& dumpConfig, DumpType& dumpType)
 {
     DumpEnvVariable dumpEnvVariable;
     LoadDumpEnvVariables(dumpEnvVariable);
     if (ConvertDumpScene(dumpEnvVariable.ascendDumpScene, dumpType)) {
-        dumpConfig.dumpPath = !dumpEnvVariable.ascendDumpPath.empty()
-            ? dumpEnvVariable.ascendDumpPath
-            : (dumpEnvVariable.ascendWorkPath.empty() ? "./": dumpEnvVariable.ascendWorkPath);
+        dumpConfig.dumpPath = !dumpEnvVariable.ascendDumpPath.empty() ?
+                                  dumpEnvVariable.ascendDumpPath :
+                                  (dumpEnvVariable.ascendWorkPath.empty() ? "./" : dumpEnvVariable.ascendWorkPath);
         dumpConfig.dumpStatus = ADUMP_DUMP_STATUS_SWITCH_ON;
         return true;
     } else if (!dumpEnvVariable.npuCollectPath.empty()) {
@@ -1155,19 +1153,19 @@ bool DumpConfigConverter::EnableExceptionDumpWithEnv(DumpConfig &dumpConfig, Dum
     }
 }
 
-bool DumpConfigConverter::EnableKernelDfxDumpWithEnv(DumpDfxConfig &config)
+bool DumpConfigConverter::EnableKernelDfxDumpWithEnv(DumpDfxConfig& config)
 {
     DumpEnvVariable dumpEnvVariable;
     LoadDumpEnvVariables(dumpEnvVariable);
     if (!dumpEnvVariable.ascendDumpPath.empty() || !dumpEnvVariable.ascendWorkPath.empty()) {
         // enable all(default, RT_KERNEL_DFX_INFO_DEFAULT) with env variable
         config.dfxTypes.push_back(ADUMP_DUMP_KERNEL_DATA_ALL);
-        std::string dumpPath = dumpEnvVariable.ascendDumpPath.empty()
-            ? dumpEnvVariable.ascendWorkPath : dumpEnvVariable.ascendDumpPath;
+        std::string dumpPath =
+            dumpEnvVariable.ascendDumpPath.empty() ? dumpEnvVariable.ascendWorkPath : dumpEnvVariable.ascendDumpPath;
         Path path = Path(dumpPath).Append("printf");
         config.dumpPath = path.GetString();
         return true;
     }
     return false;
 }
-}  // namespace Adx
+} // namespace Adx

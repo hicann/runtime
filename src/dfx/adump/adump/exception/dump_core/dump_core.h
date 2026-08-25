@@ -30,7 +30,7 @@ const std::string DEFAULT_KERNEL_NAME("unknow_kernel");
 
 class DumpCore {
 public:
-    explicit DumpCore(const std::string& path, uint32_t devId) : path_(path), devId_(devId) {};
+    explicit DumpCore(const std::string& path, uint32_t devId) : path_(path), devId_(devId){};
     ~DumpCore() = default;
     int32_t DumpCoreFile(const rtExceptionInfo& exception);
     void DumpV2Register(uint8_t coreType, uint16_t coreId);
@@ -59,8 +59,9 @@ private:
     void DumpTensorBuffer(const DumpArgs& args, std::vector<GlobalMemInfo>& memInfoList);
     void DumpWorkSpace(const DumpArgs& args, std::vector<GlobalMemInfo>& memInfoList);
     void DumpStack(const rtBinHandle& binHandle, std::vector<GlobalMemInfo>& memInfoList);
-    void DumpCoreStack(const rtBinHandle& binHandle, const uint8_t coreType, const uint16_t coreId, bool checkAddr,
-        const rtStackType_t rtStackType, DfxTensorType dumpStackType, std::vector<GlobalMemInfo> &memInfoList);
+    void DumpCoreStack(
+        const rtBinHandle& binHandle, const uint8_t coreType, const uint16_t coreId, bool checkAddr,
+        const rtStackType_t rtStackType, DfxTensorType dumpStackType, std::vector<GlobalMemInfo>& memInfoList);
     void DumpHostKernelBin(const rtExceptionKernelInfo_t& kernelInfo);
     void DumpDeviceKernelBin(const rtExceptionKernelInfo_t& kernelInfo, std::vector<GlobalMemInfo>& memInfoList);
     void DumpHostFile(const rtExceptionArgsInfo_t& argsInfo);
@@ -93,11 +94,13 @@ private:
         uint8_t coreType, uint16_t coreId, const std::vector<ErrorRegisterTable>& tables,
         std::vector<RegInfoWide>& regData) const;
     bool DumpReadDebugAICoreRegister(
-        uint8_t coreType, uint16_t coreId, RegisterType regType, const RegisterTable& table, std::vector<uint8_t>& data) const;
+        uint8_t coreType, uint16_t coreId, RegisterType regType, const RegisterTable& table,
+        std::vector<uint8_t>& data) const;
     std::string FormatRegisterData(const uint8_t* valAddr, uint8_t valSize) const;
     template <typename T>
     void DumpDebugRegisterImpl(
-        uint8_t coreType, uint16_t coreId, RegisterType regType, const std::vector<RegisterTable>& tables, std::vector<T>& regData) const;
+        uint8_t coreType, uint16_t coreId, RegisterType regType, const std::vector<RegisterTable>& tables,
+        std::vector<T>& regData) const;
     template <typename T>
     void DumpErrorRegisterImpl(
         uint8_t coreType, uint16_t coreId, const std::vector<ErrorRegisterTable>& tables,

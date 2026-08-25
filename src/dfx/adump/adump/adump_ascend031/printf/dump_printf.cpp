@@ -9,8 +9,8 @@
  */
 #include "dump_printf.h"
 
-void AdxPrintWorkSpace(const void *workSpaceAddr, const size_t dumpWorkSpaceSize, aclrtStream stream,
-    const char *opType, bool enableSync)
+void AdxPrintWorkSpace(
+    const void* workSpaceAddr, const size_t dumpWorkSpaceSize, aclrtStream stream, const char* opType, bool enableSync)
 {
     (void)workSpaceAddr;
     (void)dumpWorkSpaceSize;
@@ -19,8 +19,9 @@ void AdxPrintWorkSpace(const void *workSpaceAddr, const size_t dumpWorkSpaceSize
     (void)enableSync;
 }
 
-void AdxPrintTimeStamp(const void *workSpaceAddr, const size_t dumpWorkSpaceSize, aclrtStream stream,
-    const char *opType, std::vector<MsprofAicTimeStampInfo> &timeStampInfo)
+void AdxPrintTimeStamp(
+    const void* workSpaceAddr, const size_t dumpWorkSpaceSize, aclrtStream stream, const char* opType,
+    std::vector<MsprofAicTimeStampInfo>& timeStampInfo)
 {
     (void)workSpaceAddr;
     (void)dumpWorkSpaceSize;
@@ -29,7 +30,4 @@ void AdxPrintTimeStamp(const void *workSpaceAddr, const size_t dumpWorkSpaceSize
     (void)timeStampInfo;
 }
 
-void AdxPrintSetConfig(const Adx::AdumpPrintConfig &config)
-{
-    (void)config;
-}
+void AdxPrintSetConfig(const Adx::AdumpPrintConfig& config) { (void)config; }

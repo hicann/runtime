@@ -22,10 +22,7 @@ namespace Adx {
 
 static std::atomic<uint64_t> g_dumpNumber(0);
 
-uint64_t GetNextDumpNumber()
-{
-    return g_dumpNumber.fetch_add(1);
-}
+uint64_t GetNextDumpNumber() { return g_dumpNumber.fetch_add(1); }
 
 void DumpResourceSafeMap::WaitInterval(uint32_t intervalSec)
 {
@@ -102,10 +99,7 @@ void DumpResourceSafeMap::EnqueueCleanup(const std::string key)
     IDE_LOGI("Enqueued key for cleanup: %s", key.c_str());
 }
 
-bool DumpResourceSafeMap::IsCleanupThreadActive()
-{
-    return cleanupThreadActive_.load();
-}
+bool DumpResourceSafeMap::IsCleanupThreadActive() { return cleanupThreadActive_.load(); }
 
 int32_t DumpStreamCreate(DumpStreamInfo** ptr)
 {
@@ -141,7 +135,7 @@ int32_t DumpStreamCreate(DumpStreamInfo** ptr)
         IDE_LOGE("get current context failed, ret: %d", ret);
         rtEventDestroy(dumpPtr->mainStmEvt);
         rtEventDestroy(dumpPtr->dumpStmEvt);
-        delete dumpPtr;    // stm 尚未创建无需释放
+        delete dumpPtr; // stm 尚未创建无需释放
         return ret;
     }
 
@@ -233,9 +227,8 @@ void FillTensorProtoInfo(const std::vector<DumpTensor>& tensors, toolkit::dump::
         if (isInput) {
             auto* opInput = data.add_input();
             // Convert data type using DumpDataType helper
-            opInput->set_data_type(
-                static_cast<toolkit::dump::OutputDataType>(
-                    DumpDataType::GetIrDataType(static_cast<GeDataType>(item.GetDataType()))));
+            opInput->set_data_type(static_cast<toolkit::dump::OutputDataType>(
+                DumpDataType::GetIrDataType(static_cast<GeDataType>(item.GetDataType()))));
             opInput->set_format(static_cast<toolkit::dump::OutputFormat>(GetPrimaryFormat(format)));
             opInput->set_sub_format(GetSubFormat(format));
             // Address for input
@@ -254,9 +247,8 @@ void FillTensorProtoInfo(const std::vector<DumpTensor>& tensors, toolkit::dump::
         } else {
             auto* opOutput = data.add_output();
             // Convert data type using DumpDataType helper
-            opOutput->set_data_type(
-                static_cast<toolkit::dump::OutputDataType>(
-                    DumpDataType::GetIrDataType(static_cast<GeDataType>(item.GetDataType()))));
+            opOutput->set_data_type(static_cast<toolkit::dump::OutputDataType>(
+                DumpDataType::GetIrDataType(static_cast<GeDataType>(item.GetDataType()))));
             opOutput->set_format(static_cast<toolkit::dump::OutputFormat>(GetPrimaryFormat(format)));
             opOutput->set_sub_format(GetSubFormat(format));
             // Offset and address for output
@@ -470,7 +462,8 @@ void DumpTensorToQueue(DumpStreamInfo* dumpInfoPtr)
         (void)FlushCurrentChunk(ctx, 1);
     }
 
-    IDE_LOGI("%s dump success, total size: %zu", fileName.c_str(), 
+    IDE_LOGI(
+        "%s dump success, total size: %zu", fileName.c_str(),
         (sizeof(uint64_t) + protoSize + inputTensorSize + outputTensorSize));
 }
 
@@ -522,8 +515,9 @@ void DumpDataRecordInCaptureStream(void* fnArgs)
         return;
     }
 
-    IDE_LOGI("%s input tensor size : %d, output tensor size : %d", 
-        args->opName.c_str(), args->inputTensors.size(), args->outputTensors.size());
+    IDE_LOGI(
+        "%s input tensor size : %d, output tensor size : %d", args->opName.c_str(), args->inputTensors.size(),
+        args->outputTensors.size());
     DumpTensorToQueue(args.get());
 
     DumpResourceSafeMap::Instance().EnqueueCleanup(args->mainStreamKey);
@@ -535,13 +529,13 @@ int32_t SetupAsyncDump(
 {
     rtError_t ret = rtEventRecord(dumpInfoPtr->mainStmEvt, mainStream);
     IDE_CTRL_VALUE_FAILED(
-        ret == RT_ERROR_NONE, return ADUMP_FAILED, "%s(%s) main stream (%u) record event failed, ret: %d", opName.c_str(),
-        opType.c_str(), dumpInfoPtr->streamId, ret);
+        ret == RT_ERROR_NONE, return ADUMP_FAILED, "%s(%s) main stream (%u) record event failed, ret: %d",
+        opName.c_str(), opType.c_str(), dumpInfoPtr->streamId, ret);
 
     ret = rtStreamWaitEvent(dumpInfoPtr->stm, dumpInfoPtr->mainStmEvt);
     IDE_CTRL_VALUE_FAILED(
-        ret == RT_ERROR_NONE, return ADUMP_FAILED, "%s(%s) dump stream  (%u) wait event failed, ret: %d", opName.c_str(),
-        opType.c_str(), dumpInfoPtr->dumpStmId, ret);
+        ret == RT_ERROR_NONE, return ADUMP_FAILED, "%s(%s) dump stream  (%u) wait event failed, ret: %d",
+        opName.c_str(), opType.c_str(), dumpInfoPtr->dumpStmId, ret);
 
     // 创建指向 shared_ptr 的指针，确保DumpStreamInfo的引用计数不为0, 并通过unique_ptr来保证指针释放
     auto callbackArg = std::make_unique<std::shared_ptr<DumpStreamInfo>>(dumpInfoPtr);
@@ -550,16 +544,17 @@ int32_t SetupAsyncDump(
     ret = rtsLaunchHostFunc(
         dumpInfoPtr->stm, reinterpret_cast<rtCallback_t>(DumpDataRecordInCaptureStream), (void*)rawContext);
     if (ret != RT_ERROR_NONE) {
-        IDE_LOGE("%s(%s) launch host function register failed in dump stream (%u), ret: %d", opName.c_str(), 
-            opType.c_str(), dumpInfoPtr->dumpStmId, ret);
+        IDE_LOGE(
+            "%s(%s) launch host function register failed in dump stream (%u), ret: %d", opName.c_str(), opType.c_str(),
+            dumpInfoPtr->dumpStmId, ret);
         delete rawContext;
         return ADUMP_FAILED;
     }
 
     ret = rtEventRecord(dumpInfoPtr->dumpStmEvt, dumpInfoPtr->stm);
     IDE_CTRL_VALUE_FAILED(
-        ret == RT_ERROR_NONE, return ADUMP_FAILED, "%s(%s) dump stream (%u) record event failed, ret: %d", opName.c_str(),
-        opType.c_str(), dumpInfoPtr->dumpStmId, ret);
+        ret == RT_ERROR_NONE, return ADUMP_FAILED, "%s(%s) dump stream (%u) record event failed, ret: %d",
+        opName.c_str(), opType.c_str(), dumpInfoPtr->dumpStmId, ret);
 
     ret = rtStreamWaitEvent(mainStream, dumpInfoPtr->dumpStmEvt);
     IDE_CTRL_VALUE_FAILED(

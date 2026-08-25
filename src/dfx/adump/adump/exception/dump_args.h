@@ -32,10 +32,10 @@ namespace Adx {
 constexpr uint16_t TYPE_L0_EXCEPTION_DFX = 4U;
 constexpr uint16_t TYPE_L0_EXCEPTION_DFX_ARGS_INFO = 5U;
 constexpr uint16_t TYPE_L0_EXCEPTION_DFX_IS_TIK = 6U;
-constexpr uint64_t TENSOR_TYPE_MASK = 0x0FFFF;              // 0~15 bit
-constexpr uint64_t POINTER_TYPE_MASK = 0x0FFFF0000;         // 16~31 bit
-constexpr uint64_t TENSOR_COUNT_MASK = 0xFFFFFFFF00000000;  // high 32 bits
-constexpr uint64_t TENSOR_DIMENSION_MASK = 0x0FFFFFFFF;     // low 32 bits
+constexpr uint64_t TENSOR_TYPE_MASK = 0x0FFFF;             // 0~15 bit
+constexpr uint64_t POINTER_TYPE_MASK = 0x0FFFF0000;        // 16~31 bit
+constexpr uint64_t TENSOR_COUNT_MASK = 0xFFFFFFFF00000000; // high 32 bits
+constexpr uint64_t TENSOR_DIMENSION_MASK = 0x0FFFFFFFF;    // low 32 bits
 constexpr uint32_t TENSOR_COUNT_SHIFT_BITS = 32;
 constexpr uint32_t POINTER_TYPE_SHIFT_BITS = 16;
 constexpr int32_t ELF_DATA2MSB = 2;
@@ -50,24 +50,20 @@ enum class DfxPointerType : uint16_t {
 };
 
 struct InputBuffer {
-    InputBuffer(const void *argAddr, uint64_t len, uint32_t index) : addr(argAddr), length(len), argIndex(index) {}
-    const void *addr;
+    InputBuffer(const void* argAddr, uint64_t len, uint32_t index) : addr(argAddr), length(len), argIndex(index) {}
+    const void* addr;
     uint64_t length;
     uint32_t argIndex;
 };
 
 struct TensorBuffer {
-    TensorBuffer(const void *argAddr, uint32_t index, DfxTensorType dfxTensorType, DfxPointerType dfxPointerType)
-        : addr(argAddr),
-          argIndex(index),
-          tensorType(dfxTensorType),
-          pointerType(dfxPointerType)
-    {
-    }
-    const void *addr{nullptr};
+    TensorBuffer(const void* argAddr, uint32_t index, DfxTensorType dfxTensorType, DfxPointerType dfxPointerType)
+        : addr(argAddr), argIndex(index), tensorType(dfxTensorType), pointerType(dfxPointerType)
+    {}
+    const void* addr{nullptr};
     uint64_t size{0U};
-    uint64_t dataTypeSize{1U};  // 无data type size情况下，默认值为1，size为实际内存大小
-    bool isDataTypeSizeByte{true};  // 标记dataTypeSize以bit还是byte为单位
+    uint64_t dataTypeSize{1U};     // 无data type size情况下，默认值为1，size为实际内存大小
+    bool isDataTypeSizeByte{true}; // 标记dataTypeSize以bit还是byte为单位
     uint64_t dimension{0U};
     std::vector<uint64_t> shape;
     uint32_t argIndex;
@@ -79,7 +75,7 @@ struct TensorBuffer {
             return dataTypeSize * size;
         }
         uint64_t totalBits = dataTypeSize * size;
-        uint32_t remainder = totalBits % BITS_PER_BYTE == 0 ? 0 : 1;  // 向上取整
+        uint32_t remainder = totalBits % BITS_PER_BYTE == 0 ? 0 : 1; // 向上取整
         return totalBits / BITS_PER_BYTE + remainder;
     }
 };
@@ -101,40 +97,40 @@ public:
           exceptionDfxSize_(0),
           kernelCollector_(std::make_shared<KernelInfoCollector>()){};
     ~DumpArgs() = default;
-    int32_t LoadArgsExceptionInfo(const rtExceptionInfo &exception);
-    int32_t DumpArgsExceptionInfo(const uint32_t deviceId, const std::string &dumpPath);
+    int32_t LoadArgsExceptionInfo(const rtExceptionInfo& exception);
+    int32_t DumpArgsExceptionInfo(const uint32_t deviceId, const std::string& dumpPath);
 
     bool DumpArgsDumpWithDfxFlag() const;
-    const std::vector<InputBuffer> &DumpArgsGetInputBuffer() const;
-    const std::vector<TensorBuffer> &DumpArgsGetTensorBuffer() const;
-    const std::vector<DumpWorkspace> &DumpArgsGetWorkSpace() const;
+    const std::vector<InputBuffer>& DumpArgsGetInputBuffer() const;
+    const std::vector<TensorBuffer>& DumpArgsGetTensorBuffer() const;
+    const std::vector<DumpWorkspace>& DumpArgsGetWorkSpace() const;
 
 private:
-    int32_t DumpArgsExceptionFile(const uint32_t deviceId, const std::string &dumpPath);
-    std::string GetDumpFilePath(const std::string &dumpPath) const;
-    int32_t CheckParam(const rtExceptionArgsInfo_t &exceptionArgsInfo,
-                       const rtExceptionExpandInfo_t &exceptionExpandInfo) const;
-    int32_t InitAttributes(const rtExceptionArgsInfo_t &exceptionArgsInfo,
-                           const rtExceptionExpandInfo_t &exceptionExpandInfo);
-    int32_t InitTensorModeInfo(const uint8_t *exceptionDfxPtr);
-    int32_t InitTensorModeInfoInner(const uint8_t *exceptionDfxPtr, uint64_t &currDfxSize, uint32_t currArgsIndex);
-    int32_t LoadArgsInfoWithDfx(const rtExceptionArgsInfo_t &exceptionArgsInfo);
-    int32_t LoadArgsInfoWithSizeInfo(const rtExceptionArgsInfo_t &exceptionArgsInfo,
-                                     const rtExceptionExpandInfo_t &exceptionExpandInfo);
-    void LogArgsInfo(const void **argOnHost, uint32_t maxArgNum);
-    int32_t LoadInputBuffer(const void **argOnHost, const uint32_t argIndex, uint64_t &sizeInfoIdx);
-    int32_t LoadPointerTensor(const void **argOnHost, const uint32_t argIndex, uint64_t &sizeInfoIdx);
+    int32_t DumpArgsExceptionFile(const uint32_t deviceId, const std::string& dumpPath);
+    std::string GetDumpFilePath(const std::string& dumpPath) const;
+    int32_t CheckParam(
+        const rtExceptionArgsInfo_t& exceptionArgsInfo, const rtExceptionExpandInfo_t& exceptionExpandInfo) const;
+    int32_t InitAttributes(
+        const rtExceptionArgsInfo_t& exceptionArgsInfo, const rtExceptionExpandInfo_t& exceptionExpandInfo);
+    int32_t InitTensorModeInfo(const uint8_t* exceptionDfxPtr);
+    int32_t InitTensorModeInfoInner(const uint8_t* exceptionDfxPtr, uint64_t& currDfxSize, uint32_t currArgsIndex);
+    int32_t LoadArgsInfoWithDfx(const rtExceptionArgsInfo_t& exceptionArgsInfo);
+    int32_t LoadArgsInfoWithSizeInfo(
+        const rtExceptionArgsInfo_t& exceptionArgsInfo, const rtExceptionExpandInfo_t& exceptionExpandInfo);
+    void LogArgsInfo(const void** argOnHost, uint32_t maxArgNum);
+    int32_t LoadInputBuffer(const void** argOnHost, const uint32_t argIndex, uint64_t& sizeInfoIdx);
+    int32_t LoadPointerTensor(const void** argOnHost, const uint32_t argIndex, uint64_t& sizeInfoIdx);
     void LoadTilingData();
 
     template <typename T>
-    int32_t GetPointerValueByBigEndian(const uint8_t **ptr, T &value, uint64_t &currentDfxSize,
-                                       uint16_t totalDfxSize) const;
+    int32_t GetPointerValueByBigEndian(
+        const uint8_t** ptr, T& value, uint64_t& currentDfxSize, uint16_t totalDfxSize) const;
     template <typename T>
-    int32_t GetPointerValueByLittleEndian(const uint8_t **ptr, T &value, uint64_t &currentDfxSize,
-                                          uint16_t totalDfxSize) const;
-    int32_t FindExceptionDfx(const rtExceptionArgsInfo_t &exceptionArgsInfo);
-    int32_t CheckAddressOverArgs(const uint64_t *address, const void **argOnHost, uint64_t maxArgNum) const;
-    int32_t GetAddressBias(uint64_t &addrBias, const void *argAddr, void *baseAddr, uint64_t argsSize) const;
+    int32_t GetPointerValueByLittleEndian(
+        const uint8_t** ptr, T& value, uint64_t& currentDfxSize, uint16_t totalDfxSize) const;
+    int32_t FindExceptionDfx(const rtExceptionArgsInfo_t& exceptionArgsInfo);
+    int32_t CheckAddressOverArgs(const uint64_t* address, const void** argOnHost, uint64_t maxArgNum) const;
+    int32_t GetAddressBias(uint64_t& addrBias, const void* argAddr, void* baseAddr, uint64_t argsSize) const;
     void RecordCurrentLog();
     std::string taskId_;
     std::string streamId_;
@@ -143,19 +139,19 @@ private:
     std::vector<TensorBuffer> tensorBuffer_;
     std::vector<DumpWorkspace> workspace_;
     std::vector<DumpWorkspace> mc2Space_;
-    uint64_t *sizeInfo_;
+    uint64_t* sizeInfo_;
     uint32_t sizeBeginIndex_;
     uint32_t skipNum_;
     uint32_t inputNum_;
-    void *argAddr_;
+    void* argAddr_;
     uint64_t argSize_;
     bool dumpWithDfxFlag_;
     bool isTik_;
-    const uint8_t *exceptionDfxPtr_;
+    const uint8_t* exceptionDfxPtr_;
     uint16_t exceptionDfxSize_;
     std::shared_ptr<KernelInfoCollector> kernelCollector_;
     std::vector<std::string> logRecord_;
     std::ostringstream oss_;
 };
-}  // namespace Adx
+} // namespace Adx
 #endif

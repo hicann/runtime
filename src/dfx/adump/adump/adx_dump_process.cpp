@@ -21,15 +21,12 @@ void AdxDumpProcess::MessageCallbackRegister(const MessageCallback callbackFun)
     init_ = true;
 }
 
-const std::function<int32_t(const struct DumpChunk *, int32_t)>& AdxDumpProcess::GetCallbackFun() const
+const std::function<int32_t(const struct DumpChunk*, int32_t)>& AdxDumpProcess::GetCallbackFun() const
 {
     return messageCallback_;
 }
 
-bool AdxDumpProcess::IsRegistered() const
-{
-    return init_;
-}
+bool AdxDumpProcess::IsRegistered() const { return init_; }
 
 void AdxDumpProcess::MessageCallbackUnRegister()
 {
@@ -40,4 +37,4 @@ void AdxDumpProcess::MessageCallbackUnRegister()
     init_ = false;
     messageCallback_ = nullptr;
 }
-}
+} // namespace Adx

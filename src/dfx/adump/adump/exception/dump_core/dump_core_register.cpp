@@ -21,7 +21,7 @@ constexpr int32_t REG_FIELD_WIDTH = 2;
 
 void DumpCore::DumpRegister(uint8_t coreType, uint16_t coreId)
 {
-    auto *plat = CoredumpManager::Get();
+    auto* plat = CoredumpManager::Get();
     if (plat == nullptr) {
         IDE_LOGW("[DumpCore] Platform unavailable, register dump skipped.");
         return;
@@ -40,7 +40,8 @@ std::string DumpCore::FormatRegisterData(const uint8_t* valAddr, uint8_t valSize
 }
 
 bool DumpCore::DumpReadDebugAICoreRegister(
-    uint8_t coreType, uint16_t coreId, RegisterType regType, const RegisterTable& table, std::vector<uint8_t>& data) const
+    uint8_t coreType, uint16_t coreId, RegisterType regType, const RegisterTable& table,
+    std::vector<uint8_t>& data) const
 {
     data.resize(table.num * table.byteWidth);
     rtDebugMemoryType_t memType;
@@ -49,8 +50,7 @@ bool DumpCore::DumpReadDebugAICoreRegister(
     } else if (regType == RegisterType::AIC_DBG || regType == RegisterType::AIV_DBG) {
         memType = RT_MEM_TYPE_REGISTER;
     } else {
-        IDE_LOGE(
-            "Wrong regType. regType: %d", regType);
+        IDE_LOGE("Wrong regType. regType: %d", regType);
         return false;
     }
     rtDebugMemoryParam_t param = {coreType, 0, coreId, memType, 0, 0, 0, 0, 0};
@@ -71,7 +71,8 @@ bool DumpCore::DumpReadDebugAICoreRegister(
 
 template <typename T>
 void DumpCore::DumpDebugRegisterImpl(
-    uint8_t coreType, uint16_t coreId, RegisterType regType, const std::vector<RegisterTable>& tables, std::vector<T>& regData) const
+    uint8_t coreType, uint16_t coreId, RegisterType regType, const std::vector<RegisterTable>& tables,
+    std::vector<T>& regData) const
 {
     std::stringstream ss;
     for (const RegisterTable& table : tables) {
@@ -84,11 +85,12 @@ void DumpCore::DumpDebugRegisterImpl(
             if (dataValid) {
                 err = memcpy_s(&regInfo.value, sizeof(regInfo.value), dataPtr, table.byteWidth);
                 if (err != EOK) {
-                    IDE_LOGE("Failed to copy debug register data from cache buffer. "
+                    IDE_LOGE(
+                        "Failed to copy debug register data from cache buffer. "
                         "coreType: %hhu, coreId: %hu, addr: 0x%llx, ret: %d",
                         coreType, coreId, regInfo.addr, err);
                     regInfo.validFlag = REG_DATA_INVALID;
-                } 
+                }
             } else {
                 regInfo.validFlag = REG_DATA_INVALID;
             }
@@ -98,8 +100,8 @@ void DumpCore::DumpDebugRegisterImpl(
     }
     std::string dataStr = ss.str();
     if (!dataStr.empty()) {
-        IDE_LOGW("Debug register data. coreType=%d, coreId=%d.%s",
-            static_cast<int32_t>(coreType), coreId, dataStr.c_str());
+        IDE_LOGW(
+            "Debug register data. coreType=%d, coreId=%d.%s", static_cast<int32_t>(coreType), coreId, dataStr.c_str());
     }
 }
 
@@ -116,9 +118,11 @@ void DumpCore::DumpErrorRegisterImpl(
         }
         for (const auto& table : tables) {
             T regInfo{table.offsetAddr, REG_DATA_VALID, {0}, table.byteWidth, {0}};
-            errno_t err = memcpy_s(&regInfo.value, sizeof(regInfo.value), core.errReg + table.errIndex, table.byteWidth);
+            errno_t err =
+                memcpy_s(&regInfo.value, sizeof(regInfo.value), core.errReg + table.errIndex, table.byteWidth);
             if (err != EOK) {
-                IDE_LOGE("Failed to copy error register data from exception args. "
+                IDE_LOGE(
+                    "Failed to copy error register data from exception args. "
                     "coreType: %hhu, coreId: %hu, addr: 0x%llx, ret: %d",
                     coreType, coreId, regInfo.addr, err);
                 regInfo.validFlag = REG_DATA_INVALID;
@@ -131,8 +135,8 @@ void DumpCore::DumpErrorRegisterImpl(
     }
     std::string dataStr = ss.str();
     if (!dataStr.empty()) {
-        IDE_LOGW("Error register data. coreType=%d, coreId=%d. %s",
-            static_cast<int32_t>(coreType), coreId, dataStr.c_str());
+        IDE_LOGW(
+            "Error register data. coreType=%d, coreId=%d. %s", static_cast<int32_t>(coreType), coreId, dataStr.c_str());
     }
 }
 
@@ -210,7 +214,7 @@ void DumpCore::DumpV4ErrorRegister(
 
 uint16_t DumpCore::ConvertCoreId(uint8_t coreType, uint16_t coreId) const
 {
-    auto *plat = CoredumpManager::Get();
+    auto* plat = CoredumpManager::Get();
     if (plat == nullptr) {
         IDE_LOGW("[DumpCore] Platform unavailable, coreId not converted.");
         return coreId;

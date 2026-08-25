@@ -19,7 +19,7 @@
 #include "dump_core.h"
 
 namespace Adx {
-int32_t DumpCore::DumpCoreFile(const rtExceptionInfo &exception)
+int32_t DumpCore::DumpCoreFile(const rtExceptionInfo& exception)
 {
     if (ExceptionInfoCommon::GetExceptionRegInfo(exception, exceptionRegInfo_) == ADUMP_SUCCESS) {
         KernelSymbolLocator::DumpErrorSymbols(exception, exceptionRegInfo_, path_);
@@ -42,7 +42,7 @@ int32_t DumpCore::DumpCoreFile(const rtExceptionInfo &exception)
     return ADUMP_SUCCESS;
 }
 
-void DumpCore::DumpGlobalMemory(const rtExceptionInfo &exception)
+void DumpCore::DumpGlobalMemory(const rtExceptionInfo& exception)
 {
     std::vector<GlobalMemInfo> memInfoList;
 
@@ -78,22 +78,25 @@ void DumpCore::DumpResourceInit()
     IDE_CTRL_VALUE_FAILED(ret == RT_ERROR_NONE, return, "Failed to get soc version");
     const std::string socVersion(version);
 
-    IDE_CTRL_VALUE_FAILED(AdumpPlatformApi::GetAicoreSizeInfo(socVersion, bufferSize_),
-        return, "Failed to read platform info from fe api.");
-    IDE_LOGD("Get local buffer size: L0A: %llu, L0B: %llu, L0C: %llu, L1: %llu, UB: %llu",
-        bufferSize_.l0aSize, bufferSize_.l0bSize, bufferSize_.l0cSize, bufferSize_.l1Size, bufferSize_.ubSize);
+    IDE_CTRL_VALUE_FAILED(
+        AdumpPlatformApi::GetAicoreSizeInfo(socVersion, bufferSize_), return,
+        "Failed to read platform info from fe api.");
+    IDE_LOGD(
+        "Get local buffer size: L0A: %llu, L0B: %llu, L0C: %llu, L1: %llu, UB: %llu", bufferSize_.l0aSize,
+        bufferSize_.l0bSize, bufferSize_.l0cSize, bufferSize_.l1Size, bufferSize_.ubSize);
 }
 
 void DumpCore::DumpCoreInfo(uint32_t devId)
 {
     std::string data(sizeof(DevInfo), 0);
-    DevInfo *devInfo = reinterpret_cast<DevInfo *>(const_cast<char *>(data.data()));
+    DevInfo* devInfo = reinterpret_cast<DevInfo*>(const_cast<char*>(data.data()));
     devInfo->devId = devId;
     IDE_CTRL_VALUE_FAILED(AdumpDsmi::DrvGetPlatformType(devInfo->devType), return, "Get platform type failed.");
 
     rtError_t ret = rtDebugGetStalledCore(&devInfo->coreInfo);
     IDE_CTRL_VALUE_FAILED(ret == RT_ERROR_NONE, return, "Get core id failed, ret: %d", ret);
-    IDE_LOGD("get core info: aicBitmap: 0x%llx 0x%llx, aivBitmap: 0x%llx 0x%llx",  devInfo->coreInfo.aicBitmap0,
+    IDE_LOGD(
+        "get core info: aicBitmap: 0x%llx 0x%llx, aivBitmap: 0x%llx 0x%llx", devInfo->coreInfo.aicBitmap0,
         devInfo->coreInfo.aicBitmap1, devInfo->coreInfo.aivBitmap0, devInfo->coreInfo.aivBitmap1);
 
     for (uint16_t i = 0; i < CORE_ID_BIT_MAP_SIZE; ++i) {
@@ -118,7 +121,7 @@ void DumpCore::DumpCoreInfo(uint32_t devId)
 
 void DumpCore::DumpLocalMemory(uint8_t coreType, uint16_t coreId)
 {
-    std::string coreIdStr =  std::to_string(ConvertCoreId(coreType, coreId));
+    std::string coreIdStr = std::to_string(ConvertCoreId(coreType, coreId));
     std::string sectionName = ASCEND_SHNAME_LOCAL + "." + coreIdStr;
     std::vector<LocalMemInfo> localMemInfoList;
 
@@ -127,8 +130,8 @@ void DumpCore::DumpLocalMemory(uint8_t coreType, uint16_t coreId)
     DumpLocalAuxInfo(coreIdStr, localMemInfoList);
 }
 
-void DumpCore::DumpCache(uint8_t coreType, uint16_t coreId, const std::string &sectionName,
-    std::vector<LocalMemInfo> &localMemInfoList)
+void DumpCore::DumpCache(
+    uint8_t coreType, uint16_t coreId, const std::string& sectionName, std::vector<LocalMemInfo>& localMemInfoList)
 {
     // icache
     DumpCache(coreType, coreId, binParam_, sectionName, localMemInfoList);
@@ -137,22 +140,23 @@ void DumpCore::DumpCache(uint8_t coreType, uint16_t coreId, const std::string &s
     DumpCache(coreType, coreId, argsParam_, sectionName, localMemInfoList);
     DumpCache(coreType, coreId, tilingDataParam_, sectionName, localMemInfoList);
 
-    for (const auto &stackParam : stackParamList_) {
+    for (const auto& stackParam : stackParamList_) {
         if (stackParam.coreType == coreType && stackParam.coreId == coreId) {
             DumpCache(coreType, coreId, stackParam, sectionName, localMemInfoList);
         }
     }
 }
 
-void DumpCore::DumpCache(uint8_t coreType, uint16_t coreId, const CacheParam &cacheParam, const std::string &sectionName,
-    std::vector<LocalMemInfo> &localMemInfoList)
+void DumpCore::DumpCache(
+    uint8_t coreType, uint16_t coreId, const CacheParam& cacheParam, const std::string& sectionName,
+    std::vector<LocalMemInfo>& localMemInfoList)
 {
     if (cacheParam.memSize == 0) {
         return;
     }
     std::string cacheData(cacheParam.memSize, 0);
-    rtDebugMemoryParam_t param =
-        {coreType, 0, coreId, cacheParam.cacheType, 0, 0, cacheParam.memAddr, 0, cacheParam.memSize};
+    rtDebugMemoryParam_t param = {coreType,          0, coreId, cacheParam.cacheType, 0, 0, cacheParam.memAddr, 0,
+                                  cacheParam.memSize};
     param.dstAddr = reinterpret_cast<uint64_t>(cacheData.data());
     rtError_t ret = rtDebugReadAICore(&param);
     IDE_CTRL_VALUE_FAILED(ret == RT_ERROR_NONE, return, "Failed to copy icache data from device, ret: %d", ret);
@@ -165,21 +169,22 @@ void DumpCore::DumpCache(uint8_t coreType, uint16_t coreId, const CacheParam &ca
     localSec->SetData(cacheData);
     localSec->SetInfo(localMemInfoList.size() - 1);
 
-    IDE_LOGD("Dump cache data success, core type: %hhu, core id: %hu, cache type: %d, addr: %llx, size: %llu",
-        coreType, coreId, cacheParam.cacheType, cacheParam.memAddr, cacheParam.memSize);
+    IDE_LOGD(
+        "Dump cache data success, core type: %hhu, core id: %hu, cache type: %d, addr: %llx, size: %llu", coreType,
+        coreId, cacheParam.cacheType, cacheParam.memAddr, cacheParam.memSize);
 }
 
-void DumpCore::DumpBuffer(uint8_t coreType, uint16_t coreId, const std::string &sectionName,
-    std::vector<LocalMemInfo> &localMemInfoList)
+void DumpCore::DumpBuffer(
+    uint8_t coreType, uint16_t coreId, const std::string& sectionName, std::vector<LocalMemInfo>& localMemInfoList)
 {
     std::vector<rtDebugMemoryParam_t> memParamList = {
-        { CORE_TYPE_AIC, 0, coreId, RT_MEM_TYPE_L0A, 0, 0, 0, 0, bufferSize_.l0aSize },
-        { CORE_TYPE_AIC, 0, coreId, RT_MEM_TYPE_L0B, 0, 0, 0, 0, bufferSize_.l0bSize },
-        { CORE_TYPE_AIC, 0, coreId, RT_MEM_TYPE_L0C, 0, 0, 0, 0, bufferSize_.l0cSize },
-        { CORE_TYPE_AIC, 0, coreId, RT_MEM_TYPE_L1, 0, 0, 0, 0, bufferSize_.l1Size },
-        { CORE_TYPE_AIV, 0, coreId, RT_MEM_TYPE_UB, 0, 0, 0, 0, bufferSize_.ubSize },
+        {CORE_TYPE_AIC, 0, coreId, RT_MEM_TYPE_L0A, 0, 0, 0, 0, bufferSize_.l0aSize},
+        {CORE_TYPE_AIC, 0, coreId, RT_MEM_TYPE_L0B, 0, 0, 0, 0, bufferSize_.l0bSize},
+        {CORE_TYPE_AIC, 0, coreId, RT_MEM_TYPE_L0C, 0, 0, 0, 0, bufferSize_.l0cSize},
+        {CORE_TYPE_AIC, 0, coreId, RT_MEM_TYPE_L1, 0, 0, 0, 0, bufferSize_.l1Size},
+        {CORE_TYPE_AIV, 0, coreId, RT_MEM_TYPE_UB, 0, 0, 0, 0, bufferSize_.ubSize},
     };
-    for (auto &memParam : memParamList) {
+    for (auto& memParam : memParamList) {
         if (memParam.coreType != coreType) {
             continue;
         }
@@ -198,19 +203,20 @@ void DumpCore::DumpBuffer(uint8_t coreType, uint16_t coreId, const std::string &
         localSec->SetData(localData);
         localSec->SetInfo(localMemInfoList.size() - 1);
 
-        IDE_LOGD("Dump local memory success, core type: %hhu, core id: %hu, type: %d, size: %llu",
-            coreType, coreId, memParam.debugMemType, memParam.memLen);
+        IDE_LOGD(
+            "Dump local memory success, core type: %hhu, core id: %hu, type: %d, size: %llu", coreType, coreId,
+            memParam.debugMemType, memParam.memLen);
     }
 }
 
-void DumpCore::DumpLocalAuxInfo(const std::string &coreIdStr, std::vector<LocalMemInfo> &localMemInfoList)
+void DumpCore::DumpLocalAuxInfo(const std::string& coreIdStr, std::vector<LocalMemInfo>& localMemInfoList)
 {
     if (localMemInfoList.empty()) {
         return;
     }
 
     size_t totalSize = localMemInfoList.size() * sizeof(LocalMemInfo);
-    std::string localData(reinterpret_cast<const char *>(localMemInfoList.data()), totalSize);
+    std::string localData(reinterpret_cast<const char*>(localMemInfoList.data()), totalSize);
 
     std::string sectionName = ASCEND_SHNAME_AUXINFO_LOCAL + "." + coreIdStr;
     ELF::SectionPtr localSec = coreFile_.AddSection(ASCEND_SHTYPE_AUXINFO_LOCAL, sectionName);
@@ -218,15 +224,15 @@ void DumpCore::DumpLocalAuxInfo(const std::string &coreIdStr, std::vector<LocalM
 
     localSec->SetData(localData);
     localSec->SetEntSize(sizeof(LocalMemInfo));
-    for (const LocalMemInfo &localMemInfo : localMemInfoList) {
+    for (const LocalMemInfo& localMemInfo : localMemInfoList) {
         ELF::SectionPtr sec = coreFile_.GetSectionByIndex(localMemInfo.sectionIndex);
-        IDE_CTRL_VALUE_FAILED_NODO(sec != nullptr, continue, "Get section by index failed, index: %u",
-            localMemInfo.sectionIndex);
+        IDE_CTRL_VALUE_FAILED_NODO(
+            sec != nullptr, continue, "Get section by index failed, index: %u", localMemInfo.sectionIndex);
         sec->SetLink(localSec->GetIndex());
     }
 }
 
-void DumpCore::SaveCoreFile(const rtExceptionInfo &exception)
+void DumpCore::SaveCoreFile(const rtExceptionInfo& exception)
 {
     std::string kernelName;
     rtExceptionArgsInfo_t exceptionArgsInfo{};
@@ -234,31 +240,36 @@ void DumpCore::SaveCoreFile(const rtExceptionInfo &exception)
         IDE_LOGE("Get exception args info failed.");
         kernelName = DEFAULT_KERNEL_NAME;
     } else {
-        std::string rtKernelName(exceptionArgsInfo.exceptionKernelInfo.kernelName,
-            exceptionArgsInfo.exceptionKernelInfo.kernelNameSize);
+        std::string rtKernelName(
+            exceptionArgsInfo.exceptionKernelInfo.kernelName, exceptionArgsInfo.exceptionKernelInfo.kernelNameSize);
         kernelName = rtKernelName.empty() ? DEFAULT_KERNEL_NAME : rtKernelName;
     }
     std::string dumpFileName = kernelName + "." + std::to_string(exception.streamid) + "." +
-        std::to_string(exception.taskid) + "." + SysUtils::GetCurrentTimeWithMillisecond() + ".core";
+                               std::to_string(exception.taskid) + "." + SysUtils::GetCurrentTimeWithMillisecond() +
+                               ".core";
     // File names should not exceed the filesystem limits.
     dumpFileName = dumpFileName.length() > 255U ? dumpFileName.substr(dumpFileName.length() - 255U) : dumpFileName;
     Path dumpFilePath(path_);
-    IDE_CTRL_VALUE_FAILED(dumpFilePath.RealPath(), return, "Get path %s real path failed, strerr=%s.",
-        dumpFilePath.GetCString(), strerror(errno));
+    IDE_CTRL_VALUE_FAILED(
+        dumpFilePath.RealPath(), return, "Get path %s real path failed, strerr=%s.", dumpFilePath.GetCString(),
+        strerror(errno));
     std::string dir = dumpFilePath.GetString();
     dumpFilePath.Concat(dumpFileName);
-    IDE_CTRL_VALUE_FAILED(dumpFilePath.ParentPath().GetString() == dir, return,
-        "Check dump file path %s failed.", dumpFilePath.GetCString());
+    IDE_CTRL_VALUE_FAILED(
+        dumpFilePath.ParentPath().GetString() == dir, return, "Check dump file path %s failed.",
+        dumpFilePath.GetCString());
     coreFile_.Save(dumpFilePath.GetString());
 }
 
-int32_t DumpCore::D2HMemcpyWithNoCheck(const GlobalMemInfo &memInfo, std::string &data) const
+int32_t DumpCore::D2HMemcpyWithNoCheck(const GlobalMemInfo& memInfo, std::string& data) const
 {
     std::vector<char> buffer(memInfo.size);
-    rtError_t rtRet = rtMemcpyEx(static_cast<void *>(buffer.data()), memInfo.size,
-        reinterpret_cast<void *>(memInfo.devAddr), memInfo.size, RT_MEMCPY_DEVICE_TO_HOST);
+    rtError_t rtRet = rtMemcpyEx(
+        static_cast<void*>(buffer.data()), memInfo.size, reinterpret_cast<void*>(memInfo.devAddr), memInfo.size,
+        RT_MEMCPY_DEVICE_TO_HOST);
     if (rtRet != RT_ERROR_NONE) {
-        IDE_LOGE("Call rtMemcpyEx failed, data type: %d, addr: 0x%llx, size: %llu, ret: %d",
+        IDE_LOGE(
+            "Call rtMemcpyEx failed, data type: %d, addr: 0x%llx, size: %llu, ret: %d",
             static_cast<int32_t>(memInfo.type), memInfo.devAddr, memInfo.size, rtRet);
         return ADUMP_FAILED;
     } else {
@@ -267,11 +278,11 @@ int32_t DumpCore::D2HMemcpyWithNoCheck(const GlobalMemInfo &memInfo, std::string
     return ADUMP_SUCCESS;
 }
 
-int32_t DumpCore::D2HMemcpyWithCheck(const GlobalMemInfo &memInfo, std::string &data) const
+int32_t DumpCore::D2HMemcpyWithCheck(const GlobalMemInfo& memInfo, std::string& data) const
 {
     rtMemInfo_t info{};
-    uint64_t *deviceAddr[1] = {reinterpret_cast<uint64_t *>(memInfo.devAddr)};
-    info.addrInfo.addr = static_cast<uint64_t **>(deviceAddr);
+    uint64_t* deviceAddr[1] = {reinterpret_cast<uint64_t*>(memInfo.devAddr)};
+    info.addrInfo.addr = static_cast<uint64_t**>(deviceAddr);
     info.addrInfo.cnt = 1;
     info.addrInfo.memType = RT_MEM_MASK_DEV_TYPE | RT_MEM_MASK_RSVD_TYPE;
     info.addrInfo.flag = true;
@@ -282,10 +293,12 @@ int32_t DumpCore::D2HMemcpyWithCheck(const GlobalMemInfo &memInfo, std::string &
     }
 
     std::vector<char> buffer(memInfo.size);
-    rtRet = rtMemcpy(static_cast<void *>(buffer.data()), memInfo.size,
-        reinterpret_cast<void *>(memInfo.devAddr), memInfo.size, RT_MEMCPY_DEVICE_TO_HOST);
+    rtRet = rtMemcpy(
+        static_cast<void*>(buffer.data()), memInfo.size, reinterpret_cast<void*>(memInfo.devAddr), memInfo.size,
+        RT_MEMCPY_DEVICE_TO_HOST);
     if (rtRet != RT_ERROR_NONE) {
-        IDE_LOGE("Call rtMemcpy failed, data type: %d, addr: 0x%llx, size: %llu, ret: %d",
+        IDE_LOGE(
+            "Call rtMemcpy failed, data type: %d, addr: 0x%llx, size: %llu, ret: %d",
             static_cast<int32_t>(memInfo.type), memInfo.devAddr, memInfo.size, rtRet);
         return ADUMP_FAILED;
     } else {
@@ -294,7 +307,7 @@ int32_t DumpCore::D2HMemcpyWithCheck(const GlobalMemInfo &memInfo, std::string &
     return ADUMP_SUCCESS;
 }
 
-int32_t DumpCore::ProcessGlobalMemory(GlobalMemInfo &memInfo, std::vector<GlobalMemInfo> &memInfoList, bool checkAddr)
+int32_t DumpCore::ProcessGlobalMemory(GlobalMemInfo& memInfo, std::vector<GlobalMemInfo>& memInfoList, bool checkAddr)
 {
     IDE_LOGI("Dump device data. data type: %hu, addr: 0x%llx, size: %llu", memInfo.type, memInfo.devAddr, memInfo.size);
     std::string curData(memInfo.size, 0);
@@ -311,8 +324,8 @@ int32_t DumpCore::ProcessGlobalMemory(GlobalMemInfo &memInfo, std::vector<Global
     }
 
     ELF::SectionPtr curSection = coreFile_.AddSection(ASCEND_SHTYPE_GLOBAL, ASCEND_SHNAME_GLOBAL);
-    IDE_CTRL_VALUE_FAILED(curSection != nullptr, return ADUMP_FAILED, "Create %s section failed.",
-        ASCEND_SHNAME_GLOBAL.c_str());
+    IDE_CTRL_VALUE_FAILED(
+        curSection != nullptr, return ADUMP_FAILED, "Create %s section failed.", ASCEND_SHNAME_GLOBAL.c_str());
 
     memInfo.sectionIndex = curSection->GetIndex();
     memInfoList.emplace_back(memInfo);
@@ -322,7 +335,7 @@ int32_t DumpCore::ProcessGlobalMemory(GlobalMemInfo &memInfo, std::vector<Global
     return ADUMP_SUCCESS;
 }
 
-void DumpCore::DumpArgsInfo(const rtExceptionArgsInfo_t &exceptionArgsInfo, std::vector<GlobalMemInfo> &memInfoList)
+void DumpCore::DumpArgsInfo(const rtExceptionArgsInfo_t& exceptionArgsInfo, std::vector<GlobalMemInfo>& memInfoList)
 {
     GlobalMemInfo memInfo = {
         .devAddr = reinterpret_cast<uint64_t>(exceptionArgsInfo.argAddr),
@@ -330,20 +343,19 @@ void DumpCore::DumpArgsInfo(const rtExceptionArgsInfo_t &exceptionArgsInfo, std:
         .sectionIndex = 0,
         .type = DfxTensorType::ARGS,
         .reserve = 0,
-        .extraInfo = {.coreInfo = {.coreId = 0}}
-    };
+        .extraInfo = {.coreInfo = {.coreId = 0}}};
 
     int32_t ret = ProcessGlobalMemory(memInfo, memInfoList);
     IDE_CTRL_VALUE_FAILED(ret == ADUMP_SUCCESS, return, "Save args to section failed.");
     argsParam_ = {0, 0, exceptionArgsInfo.argsize, memInfo.devAddr, memInfo.sectionIndex, RT_MEM_TYPE_DCACHE};
 }
 
-void DumpCore::DumpInput(const DumpArgs &args, std::vector<GlobalMemInfo> &memInfoList)
+void DumpCore::DumpInput(const DumpArgs& args, std::vector<GlobalMemInfo>& memInfoList)
 {
     const std::vector<InputBuffer> inputBuffer = args.DumpArgsGetInputBuffer();
     int32_t ret = 0;
-    for (const auto &input : inputBuffer) {
-        if (input.addr == nullptr) {         // skip placeholder tensor
+    for (const auto& input : inputBuffer) {
+        if (input.addr == nullptr) { // skip placeholder tensor
             continue;
         }
         GlobalMemInfo memInfo = {
@@ -352,26 +364,27 @@ void DumpCore::DumpInput(const DumpArgs &args, std::vector<GlobalMemInfo> &memIn
             .sectionIndex = 0,
             .type = DfxTensorType::INPUT_TENSOR,
             .reserve = 0,
-            .extraInfo = {.shape = {.dim = 0, .dimSize = {0}}}
-        };
+            .extraInfo = {.shape = {.dim = 0, .dimSize = {0}}}};
 
         ret = ProcessGlobalMemory(memInfo, memInfoList);
-        IDE_CTRL_VALUE_FAILED_NODO(ret == ADUMP_SUCCESS, continue,
-            "Save input to section failed, addr: 0x%llx, size: %llu", memInfo.devAddr, memInfo.size);
+        IDE_CTRL_VALUE_FAILED_NODO(
+            ret == ADUMP_SUCCESS, continue, "Save input to section failed, addr: 0x%llx, size: %llu", memInfo.devAddr,
+            memInfo.size);
     }
 }
 
-void DumpCore::DumpTensorBuffer(const DumpArgs &args, std::vector<GlobalMemInfo> &memInfoList)
+void DumpCore::DumpTensorBuffer(const DumpArgs& args, std::vector<GlobalMemInfo>& memInfoList)
 {
     const std::vector<TensorBuffer> tensorBuffer = args.DumpArgsGetTensorBuffer();
     int32_t ret = 0;
-    for (const auto &tensor : tensorBuffer) {
-        if (tensor.addr == nullptr) {       // skip placeholder tensor
+    for (const auto& tensor : tensorBuffer) {
+        if (tensor.addr == nullptr) { // skip placeholder tensor
             continue;
         }
-        IDE_CTRL_VALUE_FAILED_NODO(tensor.dimension < MAX_DIM_SIZE, continue,
-            "Invalid dimension %llu, addr: %p, arg index: %u, tensor type %hu, pointer type: %hu",
-            tensor.dimension, tensor.addr, tensor.argIndex, tensor.tensorType, tensor.pointerType);
+        IDE_CTRL_VALUE_FAILED_NODO(
+            tensor.dimension < MAX_DIM_SIZE, continue,
+            "Invalid dimension %llu, addr: %p, arg index: %u, tensor type %hu, pointer type: %hu", tensor.dimension,
+            tensor.addr, tensor.argIndex, tensor.tensorType, tensor.pointerType);
 
         GlobalMemInfo memInfo = {
             .devAddr = reinterpret_cast<uint64_t>(tensor.addr),
@@ -379,14 +392,13 @@ void DumpCore::DumpTensorBuffer(const DumpArgs &args, std::vector<GlobalMemInfo>
             .sectionIndex = 0,
             .type = static_cast<DfxTensorType>(tensor.tensorType),
             .reserve = 0,
-            .extraInfo = {.shape = {.dim = static_cast<uint32_t>(tensor.dimension), .dimSize = {0}}}
-        };
+            .extraInfo = {.shape = {.dim = static_cast<uint32_t>(tensor.dimension), .dimSize = {0}}}};
         for (uint32_t i = 0; i < memInfo.extraInfo.shape.dim; ++i) {
             memInfo.extraInfo.shape.dimSize[i] = tensor.shape[i];
         }
         ret = ProcessGlobalMemory(memInfo, memInfoList);
-        IDE_CTRL_VALUE_FAILED_NODO(ret == ADUMP_SUCCESS, continue,
-            "Save tensor to section failed, addr: 0x%llx, size: %llu, type: %hu",
+        IDE_CTRL_VALUE_FAILED_NODO(
+            ret == ADUMP_SUCCESS, continue, "Save tensor to section failed, addr: 0x%llx, size: %llu, type: %hu",
             memInfo.devAddr, memInfo.size, memInfo.type);
 
         if (tensor.tensorType == DfxTensorType::TILING_DATA) {
@@ -395,49 +407,47 @@ void DumpCore::DumpTensorBuffer(const DumpArgs &args, std::vector<GlobalMemInfo>
     }
 }
 
-void DumpCore::DumpWorkSpace(const DumpArgs &args, std::vector<GlobalMemInfo> &memInfoList)
+void DumpCore::DumpWorkSpace(const DumpArgs& args, std::vector<GlobalMemInfo>& memInfoList)
 {
     const std::vector<DumpWorkspace> workSpace = args.DumpArgsGetWorkSpace();
     int32_t ret = 0;
-    for (const auto &ws : workSpace) {
+    for (const auto& ws : workSpace) {
         GlobalMemInfo memInfo = {
             .devAddr = reinterpret_cast<uint64_t>(ws.addr),
             .size = ws.bytes,
             .sectionIndex = 0,
             .type = DfxTensorType::WORKSPACE_TENSOR,
             .reserve = 0,
-            .extraInfo = {.shape = {.dim = 0, .dimSize = {0}}}
-        };
+            .extraInfo = {.shape = {.dim = 0, .dimSize = {0}}}};
 
         ret = ProcessGlobalMemory(memInfo, memInfoList);
-        IDE_CTRL_VALUE_FAILED_NODO(ret == ADUMP_SUCCESS, continue,
-            "Save input to section failed, addr: 0x%llx, size: %llu", memInfo.devAddr, memInfo.size);
+        IDE_CTRL_VALUE_FAILED_NODO(
+            ret == ADUMP_SUCCESS, continue, "Save input to section failed, addr: 0x%llx, size: %llu", memInfo.devAddr,
+            memInfo.size);
     }
 }
 
-void DumpCore::DumpStack(const rtBinHandle &binHandle, std::vector<GlobalMemInfo> &memInfoList)
+void DumpCore::DumpStack(const rtBinHandle& binHandle, std::vector<GlobalMemInfo>& memInfoList)
 {
     for (uint16_t aicId : aiCoreIds_) {
         IDE_LOGI("Dump core stack data. coreType: aic, coreId: %hu", aicId);
-        DumpCoreStack(
-            binHandle, CORE_TYPE_AIC, aicId, false, RT_STACK_TYPE_SCALAR, DfxTensorType::STACK, memInfoList);
+        DumpCoreStack(binHandle, CORE_TYPE_AIC, aicId, false, RT_STACK_TYPE_SCALAR, DfxTensorType::STACK, memInfoList);
         DumpCoreStack(
             binHandle, CORE_TYPE_AIC, aicId, true, RT_STACK_TYPE_SIMT, DfxTensorType::SIMT_STACK, memInfoList);
     }
     for (uint16_t aivId : aiVectorCoreIds_) {
         IDE_LOGI("Dump core stack data. coreType: aiv, coreId: %hu", aivId);
-        DumpCoreStack(
-            binHandle, CORE_TYPE_AIV, aivId, false, RT_STACK_TYPE_SCALAR, DfxTensorType::STACK, memInfoList);
+        DumpCoreStack(binHandle, CORE_TYPE_AIV, aivId, false, RT_STACK_TYPE_SCALAR, DfxTensorType::STACK, memInfoList);
         DumpCoreStack(
             binHandle, CORE_TYPE_AIV, aivId, true, RT_STACK_TYPE_SIMT, DfxTensorType::SIMT_STACK, memInfoList);
     }
 }
 
-void DumpCore::DumpCoreStack(const rtBinHandle& binHandle, const uint8_t coreType, const uint16_t coreId,
-    bool checkAddr, const rtStackType_t rtStackType, DfxTensorType dumpStackType,
-    std::vector<GlobalMemInfo> &memInfoList)
+void DumpCore::DumpCoreStack(
+    const rtBinHandle& binHandle, const uint8_t coreType, const uint16_t coreId, bool checkAddr,
+    const rtStackType_t rtStackType, DfxTensorType dumpStackType, std::vector<GlobalMemInfo>& memInfoList)
 {
-    const void *stackAddr = nullptr;
+    const void* stackAddr = nullptr;
     uint32_t stackSize = 0;
     rtError_t rtRet = rtGetStackBuffer(binHandle, 0U, rtStackType, coreType, coreId, &stackAddr, &stackSize);
     if (rtRet == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
@@ -445,8 +455,9 @@ void DumpCore::DumpCoreStack(const rtBinHandle& binHandle, const uint8_t coreTyp
         return;
     }
     if ((rtRet != RT_ERROR_NONE) || (stackAddr == nullptr)) {
-        IDE_LOGE("Call rtGetStackBuffer to get stack data failed, coreType: %hhu, coreId: %hu, ret: %d",
-            coreType, coreId, static_cast<int32_t>(rtRet));
+        IDE_LOGE(
+            "Call rtGetStackBuffer to get stack data failed, coreType: %hhu, coreId: %hu, ret: %d", coreType, coreId,
+            static_cast<int32_t>(rtRet));
         return;
     }
     GlobalMemInfo memInfo = {
@@ -455,40 +466,41 @@ void DumpCore::DumpCoreStack(const rtBinHandle& binHandle, const uint8_t coreTyp
         .sectionIndex = 0,
         .type = dumpStackType,
         .reserve = 0,
-        .extraInfo = {.coreInfo = {ConvertCoreId(coreType, coreId)}}
-    };
+        .extraInfo = {.coreInfo = {ConvertCoreId(coreType, coreId)}}};
 
     int32_t ret = ProcessGlobalMemory(memInfo, memInfoList, checkAddr);
-    IDE_CTRL_VALUE_FAILED(ret == ADUMP_SUCCESS, return,
-            "Save stack section failed, core type: %hhu, core id: %hu", coreType, coreId);
+    IDE_CTRL_VALUE_FAILED(
+        ret == ADUMP_SUCCESS, return, "Save stack section failed, core type: %hhu, core id: %hu", coreType, coreId);
 
     stackParamList_.emplace_back(
         coreType, coreId, stackSize, memInfo.devAddr, memInfo.sectionIndex, RT_MEM_TYPE_DCACHE);
 }
 
-void DumpCore::DumpHostKernelBin(const rtExceptionKernelInfo_t &kernelInfo)
+void DumpCore::DumpHostKernelBin(const rtExceptionKernelInfo_t& kernelInfo)
 {
-    void *binAddr = nullptr;
+    void* binAddr = nullptr;
     uint32_t binSize = 0;
     rtError_t rtRet = rtGetBinBuffer(kernelInfo.bin, RT_BIN_HOST_ADDR, &binAddr, &binSize);
-    IDE_CTRL_VALUE_FAILED((rtRet == RT_ERROR_NONE) && (binAddr != nullptr), return,
+    IDE_CTRL_VALUE_FAILED(
+        (rtRet == RT_ERROR_NONE) && (binAddr != nullptr), return,
         "Call rtGetBinBuffer get host kernel object failed, ret: %d", static_cast<int32_t>(rtRet));
 
     std::string hostBinData(static_cast<char*>(binAddr), binSize);
-    ELF::SectionPtr curSection = coreFile_.AddSection(ASCEND_SHTYPE_HOST_KERNEL_OBJECT,
-        ASCEND_SHNAME_HOST_KERNEL_OBJECT);
-    IDE_CTRL_VALUE_FAILED(curSection != nullptr, return, "Create %s section failed.",
-        ASCEND_SHNAME_HOST_KERNEL_OBJECT.c_str());
+    ELF::SectionPtr curSection =
+        coreFile_.AddSection(ASCEND_SHTYPE_HOST_KERNEL_OBJECT, ASCEND_SHNAME_HOST_KERNEL_OBJECT);
+    IDE_CTRL_VALUE_FAILED(
+        curSection != nullptr, return, "Create %s section failed.", ASCEND_SHNAME_HOST_KERNEL_OBJECT.c_str());
     curSection->SetData(hostBinData);
 }
 
-void DumpCore::DumpDeviceKernelBin(const rtExceptionKernelInfo_t &kernelInfo, std::vector<GlobalMemInfo> &memInfoList)
+void DumpCore::DumpDeviceKernelBin(const rtExceptionKernelInfo_t& kernelInfo, std::vector<GlobalMemInfo>& memInfoList)
 {
-    void *deviceBinAddr = nullptr;
+    void* deviceBinAddr = nullptr;
     uint32_t binSize = 0;
     rtError_t rtRet = rtGetBinBuffer(kernelInfo.bin, RT_BIN_DEVICE_ADDR, &deviceBinAddr, &binSize);
-    IDE_CTRL_VALUE_FAILED(rtRet == RT_ERROR_NONE, return,
-        "Call rtGetBinBuffer get device kernel object failed, ret: %d", static_cast<int32_t>(rtRet));
+    IDE_CTRL_VALUE_FAILED(
+        rtRet == RT_ERROR_NONE, return, "Call rtGetBinBuffer get device kernel object failed, ret: %d",
+        static_cast<int32_t>(rtRet));
 
     GlobalMemInfo memInfo = {
         .devAddr = reinterpret_cast<uint64_t>(deviceBinAddr),
@@ -496,17 +508,17 @@ void DumpCore::DumpDeviceKernelBin(const rtExceptionKernelInfo_t &kernelInfo, st
         .sectionIndex = 0,
         .type = DfxTensorType::DEVICE_KERNEL_OBJECT,
         .reserve = 0,
-        .extraInfo = {.shape = {.dim = 0, .dimSize = {0}}}
-    };
+        .extraInfo = {.shape = {.dim = 0, .dimSize = {0}}}};
 
     int32_t ret = ProcessGlobalMemory(memInfo, memInfoList);
-    IDE_CTRL_VALUE_FAILED(ret == ADUMP_SUCCESS, return,
-            "Save device kernel object section failed, addr: %p, size: %u", deviceBinAddr, binSize);
+    IDE_CTRL_VALUE_FAILED(
+        ret == ADUMP_SUCCESS, return, "Save device kernel object section failed, addr: %p, size: %u", deviceBinAddr,
+        binSize);
 
     binParam_ = {0, 0, binSize, memInfo.devAddr, memInfo.sectionIndex, RT_MEM_TYPE_ICACHE};
 }
 
-void DumpCore::DumpHostFile(const rtExceptionArgsInfo_t &argsInfo)
+void DumpCore::DumpHostFile(const rtExceptionArgsInfo_t& argsInfo)
 {
     KernelInfoCollector collector;
     collector.LoadKernelInfo(argsInfo);
@@ -516,7 +528,7 @@ void DumpCore::DumpHostFile(const rtExceptionArgsInfo_t &argsInfo)
     IDE_LOGI("kernel name: %s", kernelName.c_str());
     DumpKernelInfo(kernelName);
 
-    for (const auto &path : searchPath) {
+    for (const auto& path : searchPath) {
         std::string jsonFilePath = collector.SearchJsonFiles(path, kernelName);
         if (jsonFilePath.empty()) {
             continue;
@@ -528,11 +540,12 @@ void DumpCore::DumpHostFile(const rtExceptionArgsInfo_t &argsInfo)
     }
 }
 
-void DumpCore::DumpHostFile(const std::string &filePath, uint32_t sectionType, const std::string &sectionName)
+void DumpCore::DumpHostFile(const std::string& filePath, uint32_t sectionType, const std::string& sectionName)
 {
     char canonicalPath[PATH_MAX] = {0};
-    IDE_CTRL_VALUE_FAILED(realpath(filePath.c_str(), canonicalPath) != nullptr, return,
-        "Get file path %s realpath failed, strerr=%s", filePath.c_str(), strerror(errno));
+    IDE_CTRL_VALUE_FAILED(
+        realpath(filePath.c_str(), canonicalPath) != nullptr, return, "Get file path %s realpath failed, strerr=%s",
+        filePath.c_str(), strerror(errno));
     std::ifstream file(canonicalPath);
     IDE_CTRL_VALUE_FAILED(file.is_open(), return, "Open file failed, path: %s", canonicalPath);
 
@@ -549,36 +562,36 @@ void DumpCore::DumpHostFile(const std::string &filePath, uint32_t sectionType, c
     file.close();
 }
 
-void DumpCore::DumpKernelInfo(const std::string &kernelName)
+void DumpCore::DumpKernelInfo(const std::string& kernelName)
 {
     std::string content;
     uint32_t nameSize = static_cast<uint32_t>(kernelName.length());
-    content.append(reinterpret_cast<const char *>(&nameSize), sizeof(nameSize));
+    content.append(reinterpret_cast<const char*>(&nameSize), sizeof(nameSize));
     content.append(kernelName);
     ELF::SectionPtr curSection = coreFile_.AddSection(ASCEND_SHTYPE_KERNEL_INFO, ASCEND_SHNAME_KERNEL_INFO);
-    IDE_CTRL_VALUE_FAILED_NODO(curSection != nullptr, return,
-        "Create %s section failed.",ASCEND_SHNAME_KERNEL_INFO.c_str());
+    IDE_CTRL_VALUE_FAILED_NODO(
+        curSection != nullptr, return, "Create %s section failed.", ASCEND_SHNAME_KERNEL_INFO.c_str());
     curSection->SetData(content);
 }
 
-void DumpCore::DumpGlobalAuxInfo(const std::vector<GlobalMemInfo> &memInfoList)
+void DumpCore::DumpGlobalAuxInfo(const std::vector<GlobalMemInfo>& memInfoList)
 {
     ELF::SectionPtr infoSection = coreFile_.AddSection(ASCEND_SHTYPE_AUXINFO_GLOABL, ASCEND_SHNAME_AUXINFO_GLOABL);
-    IDE_CTRL_VALUE_FAILED(infoSection != nullptr, return,
-        "Create %s section failed.", ASCEND_SHNAME_AUXINFO_GLOABL.c_str());
+    IDE_CTRL_VALUE_FAILED(
+        infoSection != nullptr, return, "Create %s section failed.", ASCEND_SHNAME_AUXINFO_GLOABL.c_str());
 
     uint32_t index = infoSection->GetIndex();
-    for (const GlobalMemInfo &memInfo : memInfoList) {
+    for (const GlobalMemInfo& memInfo : memInfoList) {
         ELF::SectionPtr section = coreFile_.GetSectionByIndex(memInfo.sectionIndex);
-        IDE_CTRL_VALUE_FAILED_NODO(section != nullptr, continue, "Get section by index %u failed",
-            memInfo.sectionIndex);
+        IDE_CTRL_VALUE_FAILED_NODO(
+            section != nullptr, continue, "Get section by index %u failed", memInfo.sectionIndex);
         section->SetLink(index);
     }
 
     size_t perLen = sizeof(GlobalMemInfo);
     size_t totalSize = perLen * memInfoList.size();
     infoSection->SetEntSize(perLen);
-    std::string memInfoData(reinterpret_cast<const char *>(memInfoList.data()), totalSize);
+    std::string memInfoData(reinterpret_cast<const char*>(memInfoList.data()), totalSize);
     infoSection->SetData(memInfoData);
 }
-}  // namespace Adx
+} // namespace Adx

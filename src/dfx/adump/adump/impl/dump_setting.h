@@ -30,7 +30,7 @@ constexpr uint64_t DUMP_SWITCH_L1_MACK = 1U << 3;
 class DumpSetting {
 public:
     DumpSetting() = default;
-    int32_t Init(const DumpType type, const DumpConfig &dumpConfig);
+    int32_t Init(const DumpType type, const DumpConfig& dumpConfig);
     std::string GetDumpPath() const;
     const char* GetDumpCPath() const;
     uint32_t GetDumpMode() const;
@@ -38,7 +38,7 @@ public:
     bool GetDumpStatusEx() const;
     bool IsDumpDataStats() const;
     bool GetDumpDebugStatus() const;
-    bool InitDumpStatus(const std::string &dumpStatus, bool &status) const;
+    bool InitDumpStatus(const std::string& dumpStatus, bool& status) const;
     const std::string GetDumpData() const;
     uint64_t GetDumpSwitch() const;
     uint64_t GetDumpStatsItem() const;
@@ -46,21 +46,21 @@ public:
     void InitDumpSwitch(uint64_t dumpSwitch);
 
 private:
-    int32_t DumpOperatorInit(const DumpConfig &dumpConfig);
-    int32_t DumpOverflowInit(const DumpConfig &dumpConfig);
-    bool InitDumpPath(const std::string &dumpPath);
-    bool InitDumpMode(const std::string &dumpMode);
-    void InitDumpData(const std::string &dumpData);
-    bool InitDumpStatsItem(const std::vector<std::string> &dumpStatsItem);
+    int32_t DumpOperatorInit(const DumpConfig& dumpConfig);
+    int32_t DumpOverflowInit(const DumpConfig& dumpConfig);
+    bool InitDumpPath(const std::string& dumpPath);
+    bool InitDumpMode(const std::string& dumpMode);
+    void InitDumpData(const std::string& dumpData);
+    bool InitDumpStatsItem(const std::vector<std::string>& dumpStatsItem);
 
     Path dumpPath_;
-    uint32_t dumpMode_{ 0 };
-    bool dumpStatus_{ false };
-    bool dumpDebugStatus_{ false };
-    std::string dumpData_{ DUMP_TENSOR_DATA };
-    uint64_t dumpSwitch_{ 0 };
-    uint64_t dumpStatsItem_{ 0 };
-    uint32_t platformType_{ 0 };
+    uint32_t dumpMode_{0};
+    bool dumpStatus_{false};
+    bool dumpDebugStatus_{false};
+    std::string dumpData_{DUMP_TENSOR_DATA};
+    uint64_t dumpSwitch_{0};
+    uint64_t dumpStatsItem_{0};
+    uint32_t platformType_{0};
 };
-}  // namespace Adx
-#endif  // DUMP_SETTING_H
+} // namespace Adx
+#endif // DUMP_SETTING_H

@@ -21,7 +21,7 @@ namespace Adx {
 namespace {
 // Timeout Threshod For Fast Recovery
 constexpr uint32_t TIMEOUT_THRESHOLD = 500U;
-}  // namespace
+} // namespace
 
 int32_t ExceptionDumper::LoadTensorPluginLib()
 {
@@ -29,7 +29,7 @@ int32_t ExceptionDumper::LoadTensorPluginLib()
     return DumpTensorPlugin::Instance().InitPluginLib();
 }
 
-int32_t ExceptionDumper::DumpArgsException(const rtExceptionInfo &exception, const std::string &dumpPath)
+int32_t ExceptionDumper::DumpArgsException(const rtExceptionInfo& exception, const std::string& dumpPath)
 {
     // L0 exception dump: support fast recovery
     uint32_t timeout = 0;
@@ -47,18 +47,18 @@ int32_t ExceptionDumper::DumpArgsException(const rtExceptionInfo &exception, con
     return DumpArgsExceptionInner(exception, dumpPath);
 }
 
-int32_t ExceptionDumper::DumpArgsExceptionFastRecovery(const rtExceptionInfo &exception) const
+int32_t ExceptionDumper::DumpArgsExceptionFastRecovery(const rtExceptionInfo& exception) const
 {
-    IDE_CTRL_VALUE_WARN(ExceptionInfoCommon::IsSupportDefaultExceptionDump(exception),
-        return ADUMP_FAILED, "Exception is not support default dump.");
+    IDE_CTRL_VALUE_WARN(
+        ExceptionInfoCommon::IsSupportDefaultExceptionDump(exception), return ADUMP_FAILED,
+        "Exception is not support default dump.");
     // copy exception and other data for thread because of RTS free item after exception callback
-    void *exceptionCopy = DumpMemory::CopyHostToHost(&exception, sizeof(rtExceptionInfo));
+    void* exceptionCopy = DumpMemory::CopyHostToHost(&exception, sizeof(rtExceptionInfo));
     if (exceptionCopy == nullptr) {
         IDE_LOGE("Copy rtExceptionInfo failed.");
         return ADUMP_FAILED;
     }
-    std::thread([exceptionCopy]()
-    {
+    std::thread([exceptionCopy]() {
         DumpArgs args;
         rtExceptionInfo* exceptionPtr = static_cast<rtExceptionInfo*>(exceptionCopy);
         rtError_t ret = rtSetDevice(exceptionPtr->deviceid);
@@ -75,10 +75,11 @@ int32_t ExceptionDumper::DumpArgsExceptionFastRecovery(const rtExceptionInfo &ex
     return ADUMP_SUCCESS;
 }
 
-int32_t ExceptionDumper::DumpDetailException(const rtExceptionInfo &exception, const std::string &dumpPath)
+int32_t ExceptionDumper::DumpDetailException(const rtExceptionInfo& exception, const std::string& dumpPath)
 {
-    IDE_CTRL_VALUE_WARN(ExceptionInfoCommon::IsSupportDefaultExceptionDump(exception),
-        return ADUMP_FAILED, "Exception is not support default dump.");
+    IDE_CTRL_VALUE_WARN(
+        ExceptionInfoCommon::IsSupportDefaultExceptionDump(exception), return ADUMP_FAILED,
+        "Exception is not support default dump.");
     if (coredumpEnableComplete_) {
         std::lock_guard<std::mutex> lock(mutex_);
         DumpCore core(dumpPath, exception.deviceid);
@@ -88,11 +89,11 @@ int32_t ExceptionDumper::DumpDetailException(const rtExceptionInfo &exception, c
         // exit the process after detail exception dump
         Exit();
     } else {
-        IDE_CTRL_VALUE_WARN(LoadTensorPluginLib() == ADUMP_SUCCESS, return ADUMP_FAILED,
-            "Load tersor custom plugin failed.");
+        IDE_CTRL_VALUE_WARN(
+            LoadTensorPluginLib() == ADUMP_SUCCESS, return ADUMP_FAILED, "Load tersor custom plugin failed.");
         // detail exception dump downgrade to L0 exception dump
         return DumpArgsException(exception, dumpPath);
     }
     return ADUMP_SUCCESS;
 }
-}
+} // namespace Adx

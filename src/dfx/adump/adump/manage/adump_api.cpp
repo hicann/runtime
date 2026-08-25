@@ -22,9 +22,9 @@ constexpr uint64_t MAGIC_NUM = 0xA5A5A5A500000000;
 constexpr uint64_t FLIP_NUM_MASK = 0b01111111;
 constexpr uint16_t FLIP_NUM_SHIFT_BITS = 24;
 constexpr uint64_t STATIC_BUFFER_ID = 0x080000000;
-}  // namespace
+} // namespace
 
-void *AdumpGetDFXInfoAddrForDynamic(uint32_t space, uint64_t &atomicIndex)
+void* AdumpGetDFXInfoAddrForDynamic(uint32_t space, uint64_t& atomicIndex)
 {
     if (space > DFX_MAX_TENSOR_NUM || g_dynamicChunk == nullptr) {
         return nullptr;
@@ -39,7 +39,7 @@ void *AdumpGetDFXInfoAddrForDynamic(uint32_t space, uint64_t &atomicIndex)
     return g_dynamicChunk + offset + RESERVE_SPACE;
 }
 
-void *AdumpGetDFXInfoAddrForStatic(uint32_t space, uint64_t &atomicIndex)
+void* AdumpGetDFXInfoAddrForStatic(uint32_t space, uint64_t& atomicIndex)
 {
     if (space > DFX_MAX_TENSOR_NUM || g_staticChunk == nullptr) {
         return nullptr;
@@ -65,62 +65,58 @@ uint64_t AdumpGetDumpSwitch(const DumpType dumpType)
     return isEnable;
 }
 
-bool AdumpIsDumpEnable(DumpType dumpType)
-{
-    return DumpManager::Instance().IsEnableDump(dumpType);
-}
+bool AdumpIsDumpEnable(DumpType dumpType) { return DumpManager::Instance().IsEnableDump(dumpType); }
 
-bool AdumpIsDumpEnable(DumpType dumpType, uint64_t &dumpSwitch)
+bool AdumpIsDumpEnable(DumpType dumpType, uint64_t& dumpSwitch)
 {
     dumpSwitch = DumpManager::Instance().AdumpGetDumpSwitch();
     return DumpManager::Instance().IsEnableDump(dumpType);
 }
 
-int32_t AdumpSetDumpConfig(DumpType dumpType, const DumpConfig &dumpConfig)
+int32_t AdumpSetDumpConfig(DumpType dumpType, const DumpConfig& dumpConfig)
 {
     return DumpManager::Instance().SetDumpConfig(dumpType, dumpConfig);
 }
 
-int32_t AdumpSetDump(const char *dumpConfigData, size_t dumpConfigSize)
+int32_t AdumpSetDump(const char* dumpConfigData, size_t dumpConfigSize)
 {
     return DumpManager::Instance().SetDumpConfig(dumpConfigData, dumpConfigSize);
 }
 
 int32_t AdumpSetDumpConfig(const DumpConfigInfo configInfo)
 {
-    return DumpManager::Instance().SetDumpConfig(configInfo.dumpConfigData, configInfo.dumpConfigSize, configInfo.dumpConfigPath);
+    return DumpManager::Instance().SetDumpConfig(
+        configInfo.dumpConfigData, configInfo.dumpConfigSize, configInfo.dumpConfigPath);
 }
 
-int32_t AdumpUnSetDump()
-{
-    return DumpManager::Instance().UnSetDumpConfig();
-}
+int32_t AdumpUnSetDump() { return DumpManager::Instance().UnSetDumpConfig(); }
 
-int32_t AdumpDumpTensor(const std::string &opType, const std::string &opName, const std::vector<TensorInfo> &tensors,
-                        aclrtStream stream)
+int32_t AdumpDumpTensor(
+    const std::string& opType, const std::string& opName, const std::vector<TensorInfo>& tensors, aclrtStream stream)
 {
     return DumpManager::Instance().DumpOperator(opType, opName, tensors, stream);
 }
 
-int32_t AdumpDumpTensorV2(const std::string &opType, const std::string &opName, const std::vector<TensorInfoV2> &tensors,
-                        aclrtStream stream)
+int32_t AdumpDumpTensorV2(
+    const std::string& opType, const std::string& opName, const std::vector<TensorInfoV2>& tensors, aclrtStream stream)
 {
     return DumpManager::Instance().DumpOperatorV2(opType, opName, tensors, stream);
 }
 
-int32_t AdumpDumpTensorWithCfg(const std::string &opType, const std::string &opName,
-    const std::vector<TensorInfo> &tensors, aclrtStream stream, const DumpCfg& dumpCfg)
+int32_t AdumpDumpTensorWithCfg(
+    const std::string& opType, const std::string& opName, const std::vector<TensorInfo>& tensors, aclrtStream stream,
+    const DumpCfg& dumpCfg)
 {
     return DumpManager::Instance().DumpOperatorWithCfg(opType, opName, tensors, stream, dumpCfg);
 }
 
-int32_t AdumpAddExceptionOperatorInfo(const OperatorInfo &opInfo)
+int32_t AdumpAddExceptionOperatorInfo(const OperatorInfo& opInfo)
 {
     DumpManager::Instance().AddExceptionOp(opInfo);
     return ADUMP_SUCCESS;
 }
 
-int32_t AdumpAddExceptionOperatorInfoV2(const OperatorInfoV2 &opInfo)
+int32_t AdumpAddExceptionOperatorInfoV2(const OperatorInfoV2& opInfo)
 {
     DumpManager::Instance().AddExceptionOpV2(opInfo);
     return ADUMP_SUCCESS;
@@ -131,28 +127,26 @@ int32_t AdumpDelExceptionOperatorInfo(uint32_t deviceId, uint32_t streamId)
     return DumpManager::Instance().DelExceptionOp(deviceId, streamId);
 }
 
-void AdumpPrintWorkSpace(const void *workSpaceAddr, const size_t dumpWorkSpaceSize, aclrtStream stream,
-                         const char *opType)
+void AdumpPrintWorkSpace(
+    const void* workSpaceAddr, const size_t dumpWorkSpaceSize, aclrtStream stream, const char* opType)
 {
     AdxPrintWorkSpace(workSpaceAddr, dumpWorkSpaceSize, stream, opType, true);
 }
 
-void AdumpPrintWorkSpace(const void *workSpaceAddr, const size_t dumpWorkSpaceSize, aclrtStream stream,
-                         const char *opType, bool enableSync)
+void AdumpPrintWorkSpace(
+    const void* workSpaceAddr, const size_t dumpWorkSpaceSize, aclrtStream stream, const char* opType, bool enableSync)
 {
     AdxPrintWorkSpace(workSpaceAddr, dumpWorkSpaceSize, stream, opType, enableSync);
 }
 
-void AdumpPrintAndGetTimeStampInfo(const void *workSpaceAddr, const size_t dumpWorkSpaceSize, aclrtStream stream,
-    const char *opType, std::vector<MsprofAicTimeStampInfo> &timeStampInfo)
+void AdumpPrintAndGetTimeStampInfo(
+    const void* workSpaceAddr, const size_t dumpWorkSpaceSize, aclrtStream stream, const char* opType,
+    std::vector<MsprofAicTimeStampInfo>& timeStampInfo)
 {
     AdxPrintTimeStamp(workSpaceAddr, dumpWorkSpaceSize, stream, opType, timeStampInfo);
 }
 
-void AdumpPrintSetConfig(const AdumpPrintConfig &config)
-{
-    AdxPrintSetConfig(config);
-}
+void AdumpPrintSetConfig(const AdumpPrintConfig& config) { AdxPrintSetConfig(config); }
 
 int32_t AdumpRegExceptionDumpCallback(ExceptionDumpCallback callback)
 {
@@ -165,10 +159,7 @@ int32_t AdumpUnregExceptionDumpCallback(ExceptionDumpCallback callback)
 }
 
 #ifndef __ADUMP_LLT
-static void __attribute__((constructor)) AdumpInit(void)
-{
-    (void)DumpManager::Instance();
-}
+static void __attribute__((constructor)) AdumpInit(void) { (void)DumpManager::Instance(); }
 #endif
 
 // 内部接口
@@ -179,4 +170,4 @@ uint64_t GetDFXInfoChunkCursor(uint8_t bufferId)
     }
     return g_staticWriteIdx.load(std::memory_order_relaxed);
 }
-}  // namespace Adx
+} // namespace Adx

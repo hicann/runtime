@@ -20,33 +20,32 @@ namespace Adx {
 
 class KernelInfoCollector {
 public:
-    KernelInfoCollector()
-        : kernelBinHandle_(nullptr),
-          kernelBinSize_(0){};
+    KernelInfoCollector() : kernelBinHandle_(nullptr), kernelBinSize_(0){};
     ~KernelInfoCollector() = default;
-    void LoadKernelInfo(const rtExceptionArgsInfo &argsInfo);
-    int32_t InitFromBinHandle(rtBinHandle BinHandle, const std::string &kernelName);
+    void LoadKernelInfo(const rtExceptionArgsInfo& argsInfo);
+    int32_t InitFromBinHandle(rtBinHandle BinHandle, const std::string& kernelName);
     int32_t LoadKernelBinBuffer();
-    int32_t StartCollectKernel(const std::string &dumpPath) const;
+    int32_t StartCollectKernel(const std::string& dumpPath) const;
     // 快速同步落 _host.o（纯内存 buffer 写），从 StartCollectKernel 拆出、供调用方单独同步调用；
     // outHostOPath 回传落盘绝对路径，供后续 symbolize 使用。
-    int32_t DumpHostKernelBin(const std::string &dumpPath, std::string &outHostOPath) const;
+    int32_t DumpHostKernelBin(const std::string& dumpPath, std::string& outHostOPath) const;
     // 拼出 _host.o 落盘路径（不落盘），供回退/校验使用。
-    std::string GetHostOFilePath(const std::string &dumpPath) const;
+    std::string GetHostOFilePath(const std::string& dumpPath) const;
     std::string GetProcessedKernelName() const;
     std::vector<std::string> GetSearchPath() const;
-    std::string SearchJsonFiles(const std::string &rootPath, const std::string &targetString) const;
+    std::string SearchJsonFiles(const std::string& rootPath, const std::string& targetString) const;
+
 private:
-    bool ContainsString(const std::string &filePath, const std::string &targetString) const;
-    std::string GetFirstItem(const std::string &curLine, size_t& curPlace) const;
-    bool IsTargetLine(const std::string &currentLine, const std::string &key, const std::string &value) const;
-    int32_t CollectKernelFile(const std::string &kernelName, const std::string &dumpPath) const;
-    std::vector<std::string> SplitString(const std::string &str, char delimiter) const;
+    bool ContainsString(const std::string& filePath, const std::string& targetString) const;
+    std::string GetFirstItem(const std::string& curLine, size_t& curPlace) const;
+    bool IsTargetLine(const std::string& currentLine, const std::string& key, const std::string& value) const;
+    int32_t CollectKernelFile(const std::string& kernelName, const std::string& dumpPath) const;
+    std::vector<std::string> SplitString(const std::string& str, char delimiter) const;
     rtBinHandle kernelBinHandle_;
     std::string kernelBinData_;
     uint32_t kernelBinSize_;
     std::string kernelName_;
 };
-int32_t StartCollectKernelAsync(std::shared_ptr<KernelInfoCollector> collector, const std::string &dumpPath);
+int32_t StartCollectKernelAsync(std::shared_ptr<KernelInfoCollector> collector, const std::string& dumpPath);
 } // namespace Adx
 #endif // KERNEL_INFO_COLLECTOR_H

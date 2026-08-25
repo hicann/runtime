@@ -24,36 +24,32 @@ constexpr uint32_t TASK_ID_BITS_MASK = 0x0000FFFFU; // 16 bits, 1111,1111,1111,1
 constexpr int32_t TASK_ID_LEN_16 = 16;
 constexpr char DUMP_KERNAL_OP_NAME[] = "DumpDataInfo";
 // Dump开关的device内存
-void *g_devMemDumpSwitch{nullptr};
+void* g_devMemDumpSwitch{nullptr};
 // 静态图下发Dump算子proto的device内存
-std::vector<void *> g_devMemProtoInfo;
+std::vector<void*> g_devMemProtoInfo;
 constexpr uint32_t DUMP_SWITCH_DUMP_TENSOR = 0x1U;
 constexpr uint32_t DUMP_SWITCH_DUMP_STATS = 0x2U;
 constexpr uint32_t DUMP_SWITCH_DUMP_OVERFLOW = 0x4U;
 } // namespace
 
-OperatorDumper::OperatorDumper(const std::string &opType, const std::string &opName)
+OperatorDumper::OperatorDumper(const std::string& opType, const std::string& opName)
     : opType_(opType), opName_(opName), stream_(nullptr)
-{
-}
+{}
 
-OperatorDumper::OperatorDumper(const DumpSetting &setting)
-    : setting_(setting)
-{
-}
+OperatorDumper::OperatorDumper(const DumpSetting& setting) : setting_(setting) {}
 
-OperatorDumper &OperatorDumper::SetDumpSetting(const DumpSetting &setting)
+OperatorDumper& OperatorDumper::SetDumpSetting(const DumpSetting& setting)
 {
     setting_ = setting;
     return *this;
 }
 
-OperatorDumper &OperatorDumper::InputDumpTensor(const std::vector<DumpTensor> &inputTensors)
+OperatorDumper& OperatorDumper::InputDumpTensor(const std::vector<DumpTensor>& inputTensors)
 {
     inputTensors_ = inputTensors;
     return *this;
 }
-OperatorDumper &OperatorDumper::OutputDumpTensor(const std::vector<DumpTensor> &outputTensors)
+OperatorDumper& OperatorDumper::OutputDumpTensor(const std::vector<DumpTensor>& outputTensors)
 {
     outputTensors_ = outputTensors;
     return *this;
@@ -65,10 +61,9 @@ int32_t OperatorDumper::InitDevMemDumpSwitch()
         uint64_t dumpSwitchSize = static_cast<uint64_t>(sizeof(uint64_t));
         uint16_t moduleId = static_cast<uint16_t>(IDEDD);
         rtError_t rtRet = rtMalloc(&g_devMemDumpSwitch, dumpSwitchSize, RT_MEMORY_HBM, moduleId);
-        IDE_CTRL_VALUE_FAILED(rtRet == RT_ERROR_NONE, return ADUMP_FAILED,
-            "rtMalloc for dump switch on device failed! ret: 0x%X", rtRet);
-        IDE_LOGI("rtMalloc for dump switch on device success. addr: %p, size: %lu",
-            g_devMemDumpSwitch, dumpSwitchSize);
+        IDE_CTRL_VALUE_FAILED(
+            rtRet == RT_ERROR_NONE, return ADUMP_FAILED, "rtMalloc for dump switch on device failed! ret: 0x%X", rtRet);
+        IDE_LOGI("rtMalloc for dump switch on device success. addr: %p, size: %lu", g_devMemDumpSwitch, dumpSwitchSize);
 
         if (SetDevMemDumpSwitch() != ADUMP_SUCCESS) {
             IDE_LOGE("Init to set dump switch on device failed!");
@@ -84,10 +79,10 @@ int32_t OperatorDumper::SetDevMemDumpSwitch()
     if (g_devMemDumpSwitch != nullptr) {
         uint64_t dumpSwitch = GetDevMemDumpSwitch();
         uint64_t dumpSwitchSize = static_cast<uint64_t>(sizeof(uint64_t));
-        rtError_t rtRet = rtMemcpy(
-            g_devMemDumpSwitch, dumpSwitchSize, &dumpSwitch, dumpSwitchSize, RT_MEMCPY_HOST_TO_DEVICE);
-        IDE_CTRL_VALUE_FAILED(rtRet == RT_ERROR_NONE, return ADUMP_FAILED,
-            "rtMemcpy for dump switch on device failed! ret: 0x%X", rtRet);
+        rtError_t rtRet =
+            rtMemcpy(g_devMemDumpSwitch, dumpSwitchSize, &dumpSwitch, dumpSwitchSize, RT_MEMCPY_HOST_TO_DEVICE);
+        IDE_CTRL_VALUE_FAILED(
+            rtRet == RT_ERROR_NONE, return ADUMP_FAILED, "rtMemcpy for dump switch on device failed! ret: 0x%X", rtRet);
         IDE_LOGI("Set dump switch on device success. addr: %p, dump switch: %lu", g_devMemDumpSwitch, dumpSwitch);
     }
     return ADUMP_SUCCESS;
@@ -133,7 +128,7 @@ void OperatorDumper::FreeDevMemCache()
     FreeDevMemProtoCache();
 }
 
-OperatorDumper &OperatorDumper::RuntimeStream(aclrtStream stream)
+OperatorDumper& OperatorDumper::RuntimeStream(aclrtStream stream)
 {
     stream_ = stream;
     return *this;
@@ -141,38 +136,37 @@ OperatorDumper &OperatorDumper::RuntimeStream(aclrtStream stream)
 
 int32_t OperatorDumper::Launch()
 {
-    IDE_LOGI("Start to launch dump with cfg for op %s[%s], inputSize(%zu), outputSize(%zu).",
-        opName_.c_str(), opType_.c_str(), inputTensors_.size(), outputTensors_.size());
+    IDE_LOGI(
+        "Start to launch dump with cfg for op %s[%s], inputSize(%zu), outputSize(%zu).", opName_.c_str(),
+        opType_.c_str(), inputTensors_.size(), outputTensors_.size());
 
-    IDE_CTRL_VALUE_FAILED(FillOpMappingInfo() == ADUMP_SUCCESS, return ADUMP_FAILED,
-    "Fill op mapping info failed!");
+    IDE_CTRL_VALUE_FAILED(FillOpMappingInfo() == ADUMP_SUCCESS, return ADUMP_FAILED, "Fill op mapping info failed!");
 
-    IDE_CTRL_VALUE_FAILED(LaunchDumpKernel() == ADUMP_SUCCESS,
-        return ADUMP_FAILED, "Launch dump kernal failed!");
+    IDE_CTRL_VALUE_FAILED(LaunchDumpKernel() == ADUMP_SUCCESS, return ADUMP_FAILED, "Launch dump kernal failed!");
     return ADUMP_SUCCESS;
 }
 
-int32_t OperatorDumper::LaunchWithCfg(const DumpCfg &dumpCfg)
+int32_t OperatorDumper::LaunchWithCfg(const DumpCfg& dumpCfg)
 {
-    IDE_LOGI("Start to launch dump with cfg for op %s[%s], inputSize(%zu), outputSize(%zu).",
-        opName_.c_str(), opType_.c_str(), inputTensors_.size(), outputTensors_.size());
+    IDE_LOGI(
+        "Start to launch dump with cfg for op %s[%s], inputSize(%zu), outputSize(%zu).", opName_.c_str(),
+        opType_.c_str(), inputTensors_.size(), outputTensors_.size());
 
-    IDE_CTRL_VALUE_FAILED(InitDevMemDumpSwitch() == ADUMP_SUCCESS, return ADUMP_FAILED,
-        "Init dump switch on device failed!");
+    IDE_CTRL_VALUE_FAILED(
+        InitDevMemDumpSwitch() == ADUMP_SUCCESS, return ADUMP_FAILED, "Init dump switch on device failed!");
 
-    IDE_CTRL_VALUE_FAILED(FillOpMappingInfo() == ADUMP_SUCCESS, return ADUMP_FAILED,
-        "Fill op mapping info failed!");
+    IDE_CTRL_VALUE_FAILED(FillOpMappingInfo() == ADUMP_SUCCESS, return ADUMP_FAILED, "Fill op mapping info failed!");
 
     // 默认按静态图处理，下发算子后不执行同步流操作
     bool synchronize = false;
     FillOpMappingInfoWithCfg(dumpCfg, synchronize);
 
-    IDE_CTRL_VALUE_FAILED(LaunchDumpKernel(synchronize) == ADUMP_SUCCESS, return ADUMP_FAILED,
-        "Launch dump kernal with cfg failed!");
+    IDE_CTRL_VALUE_FAILED(
+        LaunchDumpKernel(synchronize) == ADUMP_SUCCESS, return ADUMP_FAILED, "Launch dump kernal with cfg failed!");
     return ADUMP_SUCCESS;
 }
 
-void OperatorDumper::FillOpMappingInfoWithCfg(const DumpCfg &dumpCfg, bool &synchronize)
+void OperatorDumper::FillOpMappingInfoWithCfg(const DumpCfg& dumpCfg, bool& synchronize)
 {
     for (size_t i = 0; i < dumpCfg.numAttrs; ++i) {
         DumpAttr* attr = &(dumpCfg.attrs[i]);
@@ -305,7 +299,7 @@ int32_t OperatorDumper::FillDumpTask(int32_t deviceId)
     return ADUMP_SUCCESS;
 }
 
-toolkitV2::aicpu::dump::AddressType OperatorDumper::ConvertAddressType(const DumpTensor &dumpTensor)
+toolkitV2::aicpu::dump::AddressType OperatorDumper::ConvertAddressType(const DumpTensor& dumpTensor)
 {
     AddressType addressType = dumpTensor.GetAddressType();
     if (addressType == AddressType::NOTILING) {
@@ -317,9 +311,9 @@ toolkitV2::aicpu::dump::AddressType OperatorDumper::ConvertAddressType(const Dum
     }
 }
 
-void OperatorDumper::DumpInput(toolkitV2::aicpu::dump::Task &task)
+void OperatorDumper::DumpInput(toolkitV2::aicpu::dump::Task& task)
 {
-    for (const auto &dumpTensor : inputTensors_) {
+    for (const auto& dumpTensor : inputTensors_) {
         toolkitV2::aicpu::dump::Input input;
         auto ir_data_type = DumpDataType::GetIrDataType(static_cast<GeDataType>(dumpTensor.GetDataType()));
         input.set_data_type(static_cast<int32_t>(ir_data_type));
@@ -335,7 +329,7 @@ void OperatorDumper::DumpInput(toolkitV2::aicpu::dump::Task &task)
         }
 
         size_t dumpSize = dumpTensor.GetSize();
-        const void *dumpAddr = dumpTensor.GetAddress();
+        const void* dumpAddr = dumpTensor.GetAddress();
         input.set_size(static_cast<uint64_t>(dumpSize));
         input.set_address(static_cast<uint64_t>(reinterpret_cast<uintptr_t>(dumpAddr)));
         IDE_LOGI("Dump op(%s) input addr(%p), size(%zu).", opName_.c_str(), dumpAddr, dumpSize);
@@ -344,9 +338,9 @@ void OperatorDumper::DumpInput(toolkitV2::aicpu::dump::Task &task)
     }
 }
 
-void OperatorDumper::DumpOutput(toolkitV2::aicpu::dump::Task &task)
+void OperatorDumper::DumpOutput(toolkitV2::aicpu::dump::Task& task)
 {
-    for (const auto &dumpTensor : outputTensors_) {
+    for (const auto& dumpTensor : outputTensors_) {
         toolkitV2::aicpu::dump::Output output;
         auto ir_data_type = DumpDataType::GetIrDataType(static_cast<GeDataType>(dumpTensor.GetDataType()));
         output.set_data_type(static_cast<int32_t>(ir_data_type));
@@ -361,7 +355,7 @@ void OperatorDumper::DumpOutput(toolkitV2::aicpu::dump::Task &task)
         }
 
         size_t dumpSize = dumpTensor.GetSize();
-        const void *dumpAddr = dumpTensor.GetAddress();
+        const void* dumpAddr = dumpTensor.GetAddress();
         output.set_size(static_cast<uint64_t>(dumpSize));
         output.set_address(static_cast<uint64_t>(reinterpret_cast<uintptr_t>(dumpAddr)));
         IDE_LOGI("Dump op(%s) output addr(%p), size(%zu).", opName_.c_str(), dumpAddr, dumpSize);
@@ -380,11 +374,11 @@ int32_t OperatorDumper::LaunchDumpKernel(bool synchronize) const
         return ADUMP_FAILED;
     }
 
-    void *protoMsgDevMem = DumpMemory::CopyHostToDevice(protoMsg.c_str(), static_cast<uint64_t>(protoSize));
-    IDE_CTRL_VALUE_FAILED(protoMsgDevMem != nullptr, return ADUMP_FAILED,
-        "Copy proto msg to device failed! size: %zu", protoSize);
+    void* protoMsgDevMem = DumpMemory::CopyHostToDevice(protoMsg.c_str(), static_cast<uint64_t>(protoSize));
+    IDE_CTRL_VALUE_FAILED(
+        protoMsgDevMem != nullptr, return ADUMP_FAILED, "Copy proto msg to device failed! size: %zu", protoSize);
 
-    void *protoMsgSizeDevMem = DumpMemory::CopyHostToDevice(&protoSize, static_cast<uint64_t>(sizeof(size_t)));
+    void* protoMsgSizeDevMem = DumpMemory::CopyHostToDevice(&protoSize, static_cast<uint64_t>(sizeof(size_t)));
     if (protoMsgSizeDevMem == nullptr) {
         DumpMemory::FreeDevice(protoMsgDevMem);
         IDE_LOGE("Copy proto msg size to device failed! size: %zu", protoSize);
@@ -401,15 +395,15 @@ int32_t OperatorDumper::LaunchDumpKernel(bool synchronize) const
     return ret;
 }
 
-int32_t OperatorDumper::LaunchDumpKernel(const void *const protoMsgDevMem,
-    const void *const protoMsgSizeDevMem, bool synchronize) const
+int32_t OperatorDumper::LaunchDumpKernel(
+    const void* const protoMsgDevMem, const void* const protoMsgSizeDevMem, bool synchronize) const
 {
     constexpr uint32_t ioAddrNum = 2U;
     constexpr uint32_t argSize = sizeof(aicpu::AicpuParamHead) + (ioAddrNum * sizeof(uint64_t));
     uint8_t args[argSize] = {};
 
     // fill head
-    aicpu::AicpuParamHead *paramHead = reinterpret_cast<aicpu::AicpuParamHead *>(args);
+    aicpu::AicpuParamHead* paramHead = reinterpret_cast<aicpu::AicpuParamHead*>(args);
     paramHead->length = argSize;
     paramHead->ioAddrNum = ioAddrNum;
 
@@ -432,7 +426,7 @@ int32_t OperatorDumper::LaunchDumpKernel(const void *const protoMsgDevMem,
     }
 
     rtArgsEx_t argsInfo = {};
-    argsInfo.args = reinterpret_cast<void *>(args);
+    argsInfo.args = reinterpret_cast<void*>(args);
     argsInfo.argsSize = argSize;
     // launch dump op
     rtError_t rtRet = rtCpuKernelLaunchWithFlag(nullptr, DUMP_KERNAL_OP_NAME, 1U, &argsInfo, nullptr, stream_, 0U);
@@ -443,8 +437,8 @@ int32_t OperatorDumper::LaunchDumpKernel(const void *const protoMsgDevMem,
 
     if (synchronize) {
         rtRet = rtStreamSynchronize(stream_);
-        IDE_CTRL_VALUE_FAILED(rtRet == RT_ERROR_NONE, return ADUMP_FAILED,
-            "rtStreamSynchronize failed, ret: 0x%X", rtRet);
+        IDE_CTRL_VALUE_FAILED(
+            rtRet == RT_ERROR_NONE, return ADUMP_FAILED, "rtStreamSynchronize failed, ret: 0x%X", rtRet);
     }
 
     IDE_LOGI("Kernel launch dump op %s success", opName_.c_str());

@@ -18,28 +18,29 @@
 namespace Adx {
 class StrUtils {
 public:
-    static std::string TrimLeft(const std::string &s);
-    static std::string TrimRight(const std::string &s);
-    static std::string Trim(const std::string &s);
-    static std::string Replace(const std::string &s, const std::set<char> &oldChars, char newChar);
-    static bool EndsWith(const std::string &s, const char *suffix);
-    static bool StartsWith(const std::string &s, const char *prefix);
+    static std::string TrimLeft(const std::string& s);
+    static std::string TrimRight(const std::string& s);
+    static std::string Trim(const std::string& s);
+    static std::string Replace(const std::string& s, const std::set<char>& oldChars, char newChar);
+    static bool EndsWith(const std::string& s, const char* suffix);
+    static bool StartsWith(const std::string& s, const char* prefix);
 
     template <typename T>
-    static std::string ToString(const std::vector<T> &v);
+    static std::string ToString(const std::vector<T>& v);
 
     template <typename T>
-    static bool ToInteger(const std::string &str, T &integer);
-    static std::vector<std::string> Split(const std::string &str, const char * const delimiter);
-    static std::string Format(const char *const fmt, ...);
+    static bool ToInteger(const std::string& str, T& integer);
+    static std::vector<std::string> Split(const std::string& str, const char* const delimiter);
+    static std::string Format(const char* const fmt, ...);
 };
 
-template <typename T> std::string StrUtils::ToString(const std::vector<T> &v)
+template <typename T>
+std::string StrUtils::ToString(const std::vector<T>& v)
 {
     std::stringstream ss;
     std::string delimeter = "";
     ss << '[';
-    for (const auto &e : v) {
+    for (const auto& e : v) {
         ss << delimeter << e;
         delimeter = ",";
     }
@@ -47,29 +48,26 @@ template <typename T> std::string StrUtils::ToString(const std::vector<T> &v)
     return ss.str();
 }
 
-template <typename T> struct ToIntegerTrait;
-template <> struct ToIntegerTrait<int32_t> {
-    static inline int32_t Invoke(const std::string &s)
-    {
-        return std::stoi(s);
-    }
+template <typename T>
+struct ToIntegerTrait;
+template <>
+struct ToIntegerTrait<int32_t> {
+    static inline int32_t Invoke(const std::string& s) { return std::stoi(s); }
 };
-template <> struct ToIntegerTrait<uint32_t> {
-    static inline uint32_t Invoke(const std::string &s)
-    {
-        return static_cast<uint32_t>(std::stoul(s));
-    }
+template <>
+struct ToIntegerTrait<uint32_t> {
+    static inline uint32_t Invoke(const std::string& s) { return static_cast<uint32_t>(std::stoul(s)); }
 };
 
 template <typename T>
-bool StrUtils::ToInteger(const std::string &str, T &integer)
+bool StrUtils::ToInteger(const std::string& str, T& integer)
 {
     auto stox = ToIntegerTrait<T>::Invoke;
     try {
         integer = stox(str);
-    } catch (std::invalid_argument &) {
+    } catch (std::invalid_argument&) {
         return false;
-    } catch (std::out_of_range &) {
+    } catch (std::out_of_range&) {
         return false;
     }
     return true;

@@ -10,7 +10,7 @@
 #include "fp16_t.h"
 #include "securec.h"
 #include "log/hdc_log.h"
- 
+
 namespace Adx {
 namespace {
 inline float uint32ToFloat(uint32_t val)
@@ -23,21 +23,21 @@ inline float uint32ToFloat(uint32_t val)
     }
     return result;
 }
-}
+} // namespace
 
 /**
  * @ingroup fp16_t global filed
  * @brief   round mode of last valid digital
  */
 const fp16RoundMode_t g_RoundMode = ROUND_TO_NEAREST;
- 
-void ExtractFP16(const uint16_t &val, uint16_t *s, int16_t *e, uint16_t *m)
+
+void ExtractFP16(const uint16_t& val, uint16_t* s, int16_t* e, uint16_t* m)
 {
     // 1.Extract
     *s = FP16_EXTRAC_SIGN(val);
     *e = FP16_EXTRAC_EXP(val);
     *m = FP16_EXTRAC_MAN(val);
- 
+
     // Denormal
     if (0 == (*e)) {
         *e = 1;
@@ -59,7 +59,7 @@ static bool IsRoundOne(uint64_t man, uint16_t truncLen)
     mask1 = mask1 << shiftOut;
     uint64_t mask2;
     mask2 = mask1 - 1;
- 
+
     bool lastBit = ((man & mask0) > 0);
     bool truncHigh = false;
     bool truncLeft = false;
@@ -76,7 +76,7 @@ static bool IsRoundOne(uint64_t man, uint16_t truncLen)
  * @brief   normalize fp16_t value
  * @return
  */
-static void Fp16Normalize(int16_t &exp, uint16_t &man)
+static void Fp16Normalize(int16_t& exp, uint16_t& man)
 {
     if (exp >= FP16_MAX_EXP) {
         exp = FP16_MAX_EXP - 1;
@@ -86,14 +86,14 @@ static void Fp16Normalize(int16_t &exp, uint16_t &man)
         man = 0;
     }
 }
- 
+
 /**
  * @ingroup fp16_t math conversion static method
  * @param [in] fpVal uint16_t value of fp16_t object
  * @brief   Convert fp16_t to float/fp32
  * @return  Return float/fp32 value of fpVal which is the value of fp16_t object
  */
-static float fp16ToFloat(const uint16_t &fpVal)
+static float fp16ToFloat(const uint16_t& fpVal)
 {
     uint16_t hfSign;
     uint16_t hfMan;
@@ -112,17 +112,17 @@ static float fp16ToFloat(const uint16_t &fpVal)
             return uint32ToFloat(fVal);
         }
     }
- 
+
     while (hfMan && !(hfMan & FP16_MAN_HIDE_BIT)) {
         hfMan <<= 1;
         hfExp--;
     }
- 
+
     uint32_t sRet;
     uint32_t eRet;
     uint32_t mRet;
     uint32_t fVal;
- 
+
     sRet = hfSign;
     if (!hfMan) {
         eRet = 0;
@@ -135,9 +135,9 @@ static float fp16ToFloat(const uint16_t &fpVal)
     fVal = FP32_CONSTRUCTOR(sRet, eRet, mRet);
     return uint32ToFloat(fVal);
 }
- 
+
 // evaluation
-fp16_t &fp16_t::operator=(const fp16_t &fp)
+fp16_t& fp16_t::operator=(const fp16_t& fp)
 {
     if (this == &fp) {
         return *this;
@@ -145,21 +145,21 @@ fp16_t &fp16_t::operator=(const fp16_t &fp)
     val = fp.val;
     return *this;
 }
-fp16_t &fp16_t::operator=(const float &fVal)
+fp16_t& fp16_t::operator=(const float& fVal)
 {
     uint16_t sRet;
     uint16_t mRet;
     int16_t eRet;
     uint32_t eF;
     uint32_t mF;
-    uint32_t ui32V = *(reinterpret_cast<const uint32_t *>(&fVal)); // 1:8:23bit sign:exp:man
+    uint32_t ui32V = *(reinterpret_cast<const uint32_t*>(&fVal)); // 1:8:23bit sign:exp:man
     uint32_t mLenDelta;
- 
+
     sRet = static_cast<uint16_t>((ui32V & FP32_SIGN_MASK) >> FP32_SIGN_INDEX); // 4Byte->2Byte
     eF = (ui32V & FP32_EXP_MASK) >> FP32_MAN_LEN;                              // 8 bit exponent
-    mF = (ui32V & FP32_MAN_MASK);                                              // 23 bit mantissa dont't need to care about denormal
+    mF = (ui32V & FP32_MAN_MASK); // 23 bit mantissa dont't need to care about denormal
     mLenDelta = FP32_MAN_LEN - FP16_MAN_LEN;
- 
+
     bool needRound = false;
     // Exponent overflow/NaN converts to signed inf/NaN
     if (eF > 0x8Fu) { // 0x8Fu:142=127+15
@@ -167,11 +167,11 @@ fp16_t &fp16_t::operator=(const float &fVal)
         mRet = FP16_MAX_MAN;
     } else if (eF <= 0x70u) { // 0x70u:112=127-15 Exponent underflow converts to denormalized half or signed zero
         eRet = 0;
-        if (eF >= 0x67) { // 0x67:103=127-24 Denormal
+        if (eF >= 0x67) {     // 0x67:103=127-24 Denormal
             mF = (mF | FP32_MAN_HIDE_BIT);
             uint16_t shiftOut = FP32_MAN_LEN;
-            uint64_t mTmp = ((uint64_t) mF) << (eF - 0x67);
- 
+            uint64_t mTmp = ((uint64_t)mF) << (eF - 0x67);
+
             needRound = IsRoundOne(mTmp, shiftOut);
             mRet = static_cast<uint16_t>(mTmp >> shiftOut);
             if (needRound) {
@@ -183,8 +183,8 @@ fp16_t &fp16_t::operator=(const float &fVal)
             mRet = 0;
         }
     } else { // Regular case with no overflow or underflow
-        eRet = (int16_t) (eF - 0x70u);
- 
+        eRet = (int16_t)(eF - 0x70u);
+
         needRound = IsRoundOne(mF, mLenDelta);
         mRet = static_cast<uint16_t>(mF >> mLenDelta);
         if (needRound) {
@@ -194,27 +194,27 @@ fp16_t &fp16_t::operator=(const float &fVal)
             eRet++;
         }
     }
- 
+
     Fp16Normalize(eRet, mRet);
-    val = FP16_CONSTRUCTOR(sRet, (uint16_t) eRet, mRet);
+    val = FP16_CONSTRUCTOR(sRet, (uint16_t)eRet, mRet);
     return *this;
 }
-fp16_t &fp16_t::operator=(const int8_t &iVal)
+fp16_t& fp16_t::operator=(const int8_t& iVal)
 {
     uint16_t sRet;
     uint16_t eRet;
     uint16_t mRet;
- 
-    sRet = (uint16_t) ((((uint8_t) iVal) & 0x80) >> DIM_7);
-    mRet = (uint16_t) ((((uint8_t) iVal) & INT8_T_MAX));
- 
+
+    sRet = (uint16_t)((((uint8_t)iVal) & 0x80) >> DIM_7);
+    mRet = (uint16_t)((((uint8_t)iVal) & INT8_T_MAX));
+
     if (mRet == 0) {
         eRet = 0;
     } else {
-        if (sRet) {                           // negative number(<0)
-            mRet = (uint16_t) std::abs(iVal); // complement
+        if (sRet) {                          // negative number(<0)
+            mRet = (uint16_t)std::abs(iVal); // complement
         }
- 
+
         eRet = FP16_MAN_LEN;
         while ((mRet & FP16_MAN_HIDE_BIT) == 0) {
             mRet = mRet << DIM_1;
@@ -222,11 +222,11 @@ fp16_t &fp16_t::operator=(const int8_t &iVal)
         }
         eRet = eRet + FP16_EXP_BIAS;
     }
- 
+
     val = FP16_CONSTRUCTOR(sRet, eRet, mRet);
     return *this;
 }
-fp16_t &fp16_t::operator=(const uint8_t &uiVal)
+fp16_t& fp16_t::operator=(const uint8_t& uiVal)
 {
     uint16_t sRet;
     uint16_t eRet;
@@ -242,26 +242,26 @@ fp16_t &fp16_t::operator=(const uint8_t &uiVal)
         }
         eRet = eRet + FP16_EXP_BIAS;
     }
- 
+
     val = FP16_CONSTRUCTOR(sRet, eRet, mRet);
     return *this;
 }
-fp16_t &fp16_t::operator=(const int16_t &iVal)
+fp16_t& fp16_t::operator=(const int16_t& iVal)
 {
     if (iVal == 0) {
         val = 0;
     } else {
         uint16_t sRet;
-        uint16_t uiVal = *(reinterpret_cast<const uint16_t *>(&iVal));
-        sRet = (uint16_t) (uiVal >> BitShift_15);
+        uint16_t uiVal = *(reinterpret_cast<const uint16_t*>(&iVal));
+        sRet = (uint16_t)(uiVal >> BitShift_15);
         if (sRet) {
             int16_t iValM = -iVal;
-            uiVal = *(reinterpret_cast<uint16_t *>(&iValM));
+            uiVal = *(reinterpret_cast<uint16_t*>(&iValM));
         }
         uint32_t mTmp = (uiVal & FP32_ABS_MAX);
         uint16_t mMin = FP16_MAN_HIDE_BIT;
         uint16_t mMax = mMin << 1;
-        uint16_t len = (uint16_t) GetManBitLength(mTmp);
+        uint16_t len = (uint16_t)GetManBitLength(mTmp);
         if (mTmp) {
             int16_t eRet;
             if (len > DIM_11) {
@@ -293,24 +293,24 @@ fp16_t &fp16_t::operator=(const int16_t &iVal)
                 mTmp = mTmp << (11 - len);
                 eRet = eRet + (len - 1);
             }
-            uint16_t mRet = (uint16_t) mTmp;
-            val = FP16_CONSTRUCTOR(sRet, (uint16_t) eRet, mRet);
+            uint16_t mRet = (uint16_t)mTmp;
+            val = FP16_CONSTRUCTOR(sRet, (uint16_t)eRet, mRet);
         }
     }
     return *this;
 }
-fp16_t &fp16_t::operator=(const uint16_t &uiVal)
+fp16_t& fp16_t::operator=(const uint16_t& uiVal)
 {
     if (uiVal == 0) {
         val = 0;
     } else {
         int16_t eRet;
         uint16_t mRet = uiVal;
- 
+
         uint16_t mMin = FP16_MAN_HIDE_BIT;
         uint16_t mMax = mMin << 1;
-        uint16_t len = (uint16_t) GetManBitLength(mRet);
- 
+        uint16_t len = (uint16_t)GetManBitLength(mRet);
+
         if (len > 11) {
             eRet = FP16_EXP_BIAS + FP16_MAN_LEN;
             uint32_t mTrunc;
@@ -344,26 +344,26 @@ fp16_t &fp16_t::operator=(const uint16_t &uiVal)
             mRet = mRet << (DIM_11 - len);
             eRet = eRet + (len - 1);
         }
-        val = FP16_CONSTRUCTOR(0u, (uint16_t) eRet, mRet);
+        val = FP16_CONSTRUCTOR(0u, (uint16_t)eRet, mRet);
     }
     return *this;
 }
-fp16_t &fp16_t::operator=(const int32_t &iVal)
+fp16_t& fp16_t::operator=(const int32_t& iVal)
 {
     if (iVal == 0) {
         val = 0;
     } else {
-        uint32_t uiVal = *(reinterpret_cast<const uint32_t *>(&iVal));
-        uint16_t sRet = (uint16_t) (uiVal >> BitShift_31);
+        uint32_t uiVal = *(reinterpret_cast<const uint32_t*>(&iVal));
+        uint16_t sRet = (uint16_t)(uiVal >> BitShift_31);
         if (sRet) {
             int32_t iValM = -iVal;
-            uiVal = *(reinterpret_cast<uint32_t *>(&iValM));
+            uiVal = *(reinterpret_cast<uint32_t*>(&iValM));
         }
         int16_t eRet;
         uint32_t mTmp = (uiVal & FP32_ABS_MAX);
         uint32_t mMin = FP16_MAN_HIDE_BIT;
         uint32_t mMax = mMin << 1;
-        uint16_t len = (uint16_t) GetManBitLength(mTmp);
+        uint16_t len = (uint16_t)GetManBitLength(mTmp);
         if (len > DIM_11) {
             eRet = FP16_EXP_BIAS + FP16_MAN_LEN;
             uint32_t mTrunc = 0;
@@ -398,23 +398,23 @@ fp16_t &fp16_t::operator=(const int32_t &iVal)
             mTmp = mTmp << (DIM_11 - len);
             eRet = eRet + (len - 1);
         }
-        uint16_t mRet = (uint16_t) mTmp;
-        val = FP16_CONSTRUCTOR(sRet, (uint16_t) eRet, mRet);
+        uint16_t mRet = (uint16_t)mTmp;
+        val = FP16_CONSTRUCTOR(sRet, (uint16_t)eRet, mRet);
     }
     return *this;
 }
-fp16_t &fp16_t::operator=(const uint32_t &uiVal)
+fp16_t& fp16_t::operator=(const uint32_t& uiVal)
 {
     if (uiVal == 0) {
         val = 0;
     } else {
         int16_t eRet;
         uint32_t mTmp = uiVal;
- 
+
         uint32_t mMin = FP16_MAN_HIDE_BIT;
         uint32_t mMax = mMin << 1;
-        uint16_t len = (uint16_t) GetManBitLength(mTmp);
- 
+        uint16_t len = (uint16_t)GetManBitLength(mTmp);
+
         if (len > DIM_11) {
             eRet = FP16_EXP_BIAS + FP16_MAN_LEN;
             uint32_t mTrunc = 0;
@@ -449,45 +449,45 @@ fp16_t &fp16_t::operator=(const uint32_t &uiVal)
             mTmp = mTmp << (DIM_11 - len);
             eRet = eRet + (len - 1);
         }
-        uint16_t mRet = (uint16_t) mTmp;
-        val = FP16_CONSTRUCTOR(0u, (uint16_t) eRet, mRet);
+        uint16_t mRet = (uint16_t)mTmp;
+        val = FP16_CONSTRUCTOR(0u, (uint16_t)eRet, mRet);
     }
     return *this;
 }
-fp16_t &fp16_t::operator=(const double &dVal)
+fp16_t& fp16_t::operator=(const double& dVal)
 {
     uint16_t sRet;
     uint16_t mRet;
     int16_t eRet;
     uint64_t eD;
     uint64_t mD;
-    uint64_t ui64V = *((uint64_t *) &dVal); // 1:11:52bit sign:exp:man
+    uint64_t ui64V = *((uint64_t*)&dVal); // 1:11:52bit sign:exp:man
     uint32_t mLenDelta;
- 
+
     sRet = static_cast<uint16_t>((ui64V & FP64_SIGN_MASK) >> FP64_SIGN_INDEX); // 4Byte
     eD = (ui64V & FP64_EXP_MASK) >> FP64_MAN_LEN;                              // 10 bit exponent
     mD = (ui64V & FP64_MAN_MASK);                                              // 52 bit mantissa
     mLenDelta = FP64_MAN_LEN - FP16_MAN_LEN;
- 
+
     bool needRound = false;
     // Exponent overflow/NaN converts to signed inf/NaN
     if (eD >= 0x410u) { // 0x410:1040=1023+16
         eRet = FP16_MAX_EXP - 1;
         mRet = FP16_MAX_MAN;
-        val = FP16_CONSTRUCTOR(sRet, (uint16_t) eRet, mRet);
+        val = FP16_CONSTRUCTOR(sRet, (uint16_t)eRet, mRet);
     } else if (eD <= 0x3F0u) { // Exponent underflow converts to denormalized half or signed zero
         // 0x3F0:1008=1023-15
         /**
-     * Signed zeros, denormalized floats, and floats with small
-     * exponents all convert to signed zero half precision.
-     */
+         * Signed zeros, denormalized floats, and floats with small
+         * exponents all convert to signed zero half precision.
+         */
         eRet = 0;
         if (eD >= 0x3E7u) { // 0x3E7u:999=1023-24 Denormal
             // Underflows to a denormalized value
             mD = (FP64_MAN_HIDE_BIT | mD);
             uint16_t shiftOut = FP64_MAN_LEN;
-            uint64_t mTmp = ((uint64_t) mD) << (eD - 0x3E7u);
- 
+            uint64_t mTmp = ((uint64_t)mD) << (eD - 0x3E7u);
+
             needRound = IsRoundOne(mTmp, shiftOut);
             mRet = static_cast<uint16_t>(mTmp >> shiftOut);
             if (needRound) {
@@ -499,8 +499,8 @@ fp16_t &fp16_t::operator=(const double &dVal)
             mRet = 0;
         }
     } else { // Regular case with no overflow or underflow
-        eRet = (int16_t) (eD - 0x3F0u);
- 
+        eRet = (int16_t)(eD - 0x3F0u);
+
         needRound = IsRoundOne(mD, mLenDelta);
         mRet = static_cast<uint16_t>(mD >> mLenDelta);
         if (needRound) {
@@ -510,23 +510,14 @@ fp16_t &fp16_t::operator=(const double &dVal)
             eRet++;
         }
     }
- 
+
     Fp16Normalize(eRet, mRet);
-    val = FP16_CONSTRUCTOR(sRet, (uint16_t) eRet, mRet);
+    val = FP16_CONSTRUCTOR(sRet, (uint16_t)eRet, mRet);
     return *this;
 }
- 
-tagFp16 &fp16_t::operator=(const int64_t &iVal)
-{
-    return *this = (static_cast<int32_t>(iVal));
-}
-tagFp16 &fp16_t::operator=(const uint64_t &uiVal)
-{
-    return *this = (static_cast<uint32_t>(uiVal));
-}
- 
-float fp16_t::toFloat()
-{
-    return fp16ToFloat(val);
-}
-} // namespace op
+
+tagFp16& fp16_t::operator=(const int64_t& iVal) { return *this = (static_cast<int32_t>(iVal)); }
+tagFp16& fp16_t::operator=(const uint64_t& uiVal) { return *this = (static_cast<uint32_t>(uiVal)); }
+
+float fp16_t::toFloat() { return fp16ToFloat(val); }
+} // namespace Adx

@@ -25,20 +25,20 @@ extern uint64_t g_chunk[RING_CHUNK_SIZE + MAX_TENSOR_NUM];
 extern "C" {
 #endif
 struct AdxBlockInfo {
-    uint32_t len = 0;        // 总长度
-    uint32_t core = 0;       // 当前核号
-    uint32_t blockNum = 0;   // 本次总共的核数
-    uint32_t remainLen = 0;  // 剩下的长度
-    uint32_t magic = 0;      // 信息校验数
+    uint32_t len = 0;       // 总长度
+    uint32_t core = 0;      // 当前核号
+    uint32_t blockNum = 0;  // 本次总共的核数
+    uint32_t remainLen = 0; // 剩下的长度
+    uint32_t magic = 0;     // 信息校验数
     uint32_t rsv = 0;
-    uint64_t dumpAddr = 0;   // 开始dump的地址
+    uint64_t dumpAddr = 0;  // 开始dump的地址
 };
 
 #pragma pack(push, 1)
 struct AdxDumpInfoHead {
-    uint32_t type = 0U;      // dump type, DUMP_SCALAR:1, DUMP_TENSOR:2
-    uint32_t infoLen = 0U;   // length for dump info
-    uint8_t  infoMsg[0U];    // extend value
+    uint32_t type = 0U;    // dump type, DUMP_SCALAR:1, DUMP_TENSOR:2
+    uint32_t infoLen = 0U; // length for dump info
+    uint8_t infoMsg[0U];   // extend value
 };
 #pragma pack(pop)
 
@@ -56,7 +56,7 @@ enum AdxDumpType {
 struct AdxDumpShapeMessageHead {
     uint32_t dim = 0;
     uint32_t shape[8U];
-    uint32_t rsv = 0;      // reserved information
+    uint32_t rsv = 0; // reserved information
 };
 
 struct AdxDumpMessageHead {
@@ -84,39 +84,24 @@ struct AdxSimtDumpMeta {
     uint32_t rsv = 0U;
 };
 
-enum AdxPosition {
-    ADX_GM = 0,
-    ADX_UB,
-    ADX_L1,
-    ADX_L0A,
-    ADX_L0B,
-    ADX_L0C,
-    ADX_BIAS,
-    ADX_FIXBUF,
-    ADX_MAX
+enum AdxPosition { ADX_GM = 0, ADX_UB, ADX_L1, ADX_L0A, ADX_L0B, ADX_L0C, ADX_BIAS, ADX_FIXBUF, ADX_MAX };
+
+const std::unordered_map<uint32_t, std::string> POSITION_MAP{
+    {ADX_GM, "GM"},   {ADX_UB, "UB"},   {ADX_L1, "L1"},     {ADX_L0A, "L0A"},
+    {ADX_L0B, "L0B"}, {ADX_L0C, "L0C"}, {ADX_BIAS, "BIAS"}, {ADX_FIXBUF, "FIXBUF"},
 };
 
-const std::unordered_map<uint32_t, std::string> POSITION_MAP {
-    {ADX_GM, "GM"},
-    {ADX_UB, "UB"},
-    {ADX_L1, "L1"},
-    {ADX_L0A, "L0A"},
-    {ADX_L0B, "L0B"},
-    {ADX_L0C, "L0C"},
-    {ADX_BIAS, "BIAS"},
-    {ADX_FIXBUF, "FIXBUF"},
-};
+void AdxAssertCallBack(rtExceptionInfo_t* exceptionInfo);
 
-void AdxAssertCallBack(rtExceptionInfo_t *exceptionInfo);
+void AdxPrintWorkSpace(
+    const void* workSpaceAddr, const size_t dumpWorkSpaceSize, aclrtStream stream, const char* opType, bool enableSync);
 
-void AdxPrintWorkSpace(const void *workSpaceAddr, const size_t dumpWorkSpaceSize,
-                       aclrtStream stream, const char *opType, bool enableSync);
+void AdxPrintTimeStamp(
+    const void* workSpaceAddr, const size_t dumpWorkSpaceSize, aclrtStream stream, const char* opType,
+    std::vector<MsprofAicTimeStampInfo>& timeStampInfo);
 
-void AdxPrintTimeStamp(const void *workSpaceAddr, const size_t dumpWorkSpaceSize, aclrtStream stream,
-    const char *opType, std::vector<MsprofAicTimeStampInfo> &timeStampInfo);
-
-void AdxPrintSetConfig(const Adx::AdumpPrintConfig &config);
-bool AdxCheckAtomicIndex(const rtExceptionArgsInfo_t &exceptionArgsInfo);
+void AdxPrintSetConfig(const Adx::AdumpPrintConfig& config);
+bool AdxCheckAtomicIndex(const rtExceptionArgsInfo_t& exceptionArgsInfo);
 
 #ifdef __cplusplus
 }

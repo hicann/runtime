@@ -27,4 +27,4 @@ int32_t AdumpRegTensorProcess(DfxTensorType tensorType, TensorProcess tensorProc
     IDE_LOGI("Received new tensor process registry for tensorType:%hu", tensorType);
     return 0;
 }
-}
+} // namespace Adx

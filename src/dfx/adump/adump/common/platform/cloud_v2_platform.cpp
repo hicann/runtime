@@ -44,23 +44,15 @@ uint64_t GetAscend910Mc2StructSize()
 }
 } // namespace
 
-bool CloudLegacyException::SupportMc2SpacesDump() const
-{
-    return true;
-}
+bool CloudLegacyException::SupportMc2SpacesDump() const { return true; }
 
-uint64_t CloudLegacyException::GetMc2StructSize() const
-{
-    return GetAscend910Mc2StructSize();
-}
+uint64_t CloudLegacyException::GetMc2StructSize() const { return GetAscend910Mc2StructSize(); }
 
 CloudV2Features::CloudV2Features()
 {
     supported_ = {
-        AdumpPlatformFeature::FEATURE_DATA_DUMP,
-        AdumpPlatformFeature::FEATURE_OVERFLOW_DUMP,
-        AdumpPlatformFeature::FEATURE_EXCEPTION_DUMP_L0,
-        AdumpPlatformFeature::FEATURE_EXCEPTION_DUMP_L1,
+        AdumpPlatformFeature::FEATURE_DATA_DUMP,         AdumpPlatformFeature::FEATURE_OVERFLOW_DUMP,
+        AdumpPlatformFeature::FEATURE_EXCEPTION_DUMP_L0, AdumpPlatformFeature::FEATURE_EXCEPTION_DUMP_L1,
         AdumpPlatformFeature::FEATURE_CORE_DUMP,
     };
 }
@@ -85,20 +77,11 @@ uint16_t CloudV2Coredump::ConvertCoreId(uint8_t coreType, uint16_t coreId) const
     return (coreType == CORE_TYPE_AIC) ? coreId : static_cast<uint16_t>(CORE_SIZE_AIC + coreId);
 }
 
-bool CloudV2Exception::SupportMc2SpacesDump() const
-{
-    return true;
-}
+bool CloudV2Exception::SupportMc2SpacesDump() const { return true; }
 
-uint64_t CloudV2Exception::GetMc2StructSize() const
-{
-    return GetAscend910Mc2StructSize();
-}
+uint64_t CloudV2Exception::GetMc2StructSize() const { return GetAscend910Mc2StructSize(); }
 
-bool CloudV2Exception::IsArgsDataTypeSizeByByte() const
-{
-    return true;
-}
+bool CloudV2Exception::IsArgsDataTypeSizeByByte() const { return true; }
 
 uint64_t CloudV2DataDump::GetKfcStackSize() const
 {
@@ -106,14 +89,8 @@ uint64_t CloudV2DataDump::GetKfcStackSize() const
     return CalcKfcStackSize(OP_STACK_910B);
 }
 
-std::string CloudV2DataDump::GetKfcBinName() const
-{
-    return "kfc_dump_stat_ascend910B.o";
-}
+std::string CloudV2DataDump::GetKfcBinName() const { return "kfc_dump_stat_ascend910B.o"; }
 
-bool CloudV2DataDump::IsUbFromAiCore() const
-{
-    return true;
-}
+bool CloudV2DataDump::IsUbFromAiCore() const { return true; }
 
 } // namespace Adx

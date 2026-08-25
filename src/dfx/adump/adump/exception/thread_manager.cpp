@@ -11,28 +11,30 @@
 #include "thread_manager.h"
 #include "log/adx_log.h"
 
-namespace Adx{
+namespace Adx {
 constexpr uint32_t WAIT_THREAD_TIMEOUT = 60;
-ThreadManager::~ThreadManager() {
-    WaitAll();
-}
+ThreadManager::~ThreadManager() { WaitAll(); }
 
-void ThreadManager::TaskAdd(int32_t tid) {
+void ThreadManager::TaskAdd(int32_t tid)
+{
     std::lock_guard<std::mutex> lock(mtx_);
     threads_.insert(tid);
     IDE_LOGD("Task: %d Added! %zu tasks are running.", tid, threads_.size());
     cv_.notify_all();
 }
 
-void ThreadManager::TaskDone(int32_t tid) {
+void ThreadManager::TaskDone(int32_t tid)
+{
     std::lock_guard<std::mutex> lock(mtx_);
     threads_.erase(tid);
-    IDE_LOGD( "Task: %d Done! %zu tasks remain.", tid, threads_.size());
+    IDE_LOGD("Task: %d Done! %zu tasks remain.", tid, threads_.size());
     cv_.notify_all();
 }
 
-void ThreadManager::WaitAll() {
+void ThreadManager::WaitAll()
+{
     std::unique_lock<std::mutex> lock(mtx_);
-    cv_.wait_for(lock, std::chrono::seconds(WAIT_THREAD_TIMEOUT * threads_.size()), [this]() { return threads_.empty(); });
+    cv_.wait_for(
+        lock, std::chrono::seconds(WAIT_THREAD_TIMEOUT * threads_.size()), [this]() { return threads_.empty(); });
 }
-}
+} // namespace Adx

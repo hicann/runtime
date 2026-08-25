@@ -28,18 +28,18 @@ namespace Adx {
 
 class DumpArgsCallback {
 public:
-    DumpArgsCallback(const rtExceptionInfo &exception, const ExceptionDumpInfo &info, const std::string &dumpPath);
+    DumpArgsCallback(const rtExceptionInfo& exception, const ExceptionDumpInfo& info, const std::string& dumpPath);
     int32_t DumpDfxArgs();
     int32_t DumpExtraTensors();
     int32_t Dump();
     int32_t DumpKernelBin();
-    int32_t DumpKernelErrorSymbols(ErrorLocation &outLocation);
+    int32_t DumpKernelErrorSymbols(ErrorLocation& outLocation);
 
 private:
-    int32_t QueryDfxInfo(std::vector<uint8_t> &dfxBuffer);
+    int32_t QueryDfxInfo(std::vector<uint8_t>& dfxBuffer);
     int32_t QueryDfxIsTikInfo(rtFuncHandle funcHandle);
-    void RecordDumpLog(const std::string &log);
-    
+    void RecordDumpLog(const std::string& log);
+
     rtExceptionInfo exception_;
     std::vector<std::string> logRecord_;
     std::vector<TensorBuffer> tensorBuffer_;

@@ -23,19 +23,19 @@ public:
     static std::string GetCurrentTime();
     static std::string GetCurrentTimeWithMillisecond();
     static std::string GetPid();
-    template<typename TO, typename TI>
-    static TO *ReinterpretCast(TI *ptr)
+    template <typename TO, typename TI>
+    static TO* ReinterpretCast(TI* ptr)
     {
-        return reinterpret_cast<TO *>(ptr);
+        return reinterpret_cast<TO*>(ptr);
     }
 };
 
 #define ADX_GET_ENV(IDNAME, envStr)        \
     do {                                   \
-        const char *env = nullptr;         \
+        const char* env = nullptr;         \
         MM_SYS_GET_ENV(IDNAME, env);       \
         envStr = SysUtils::HandleEnv(env); \
     } while (0)
 
-}  // namespace Adx
-#endif  // ADUMP_COMMON_SYS_UTILS_H
+} // namespace Adx
+#endif // ADUMP_COMMON_SYS_UTILS_H

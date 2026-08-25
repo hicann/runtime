@@ -25,7 +25,7 @@ IdeThreadArg AdxDataDumpServerProcess(const IdeThreadArg arg)
     UNUSED(arg);
     std::unique_ptr<AdxEpoll> epoll(CreateAdxEpoll(EpollType::EPOLL_HDC));
     IDE_CTRL_VALUE_FAILED(epoll != nullptr, return nullptr, "create epoll error");
-    std::unique_ptr<AdxComponent> cpn(new (std::nothrow)AdxDumpReceive());
+    std::unique_ptr<AdxComponent> cpn(new (std::nothrow) AdxDumpReceive());
     IDE_CTRL_VALUE_FAILED(cpn != nullptr, return nullptr, "create component error");
     std::unique_ptr<AdxCommOpt> opt(CreateAdxCommOpt(OptType::COMM_HDC));
     IDE_CTRL_VALUE_FAILED(opt != nullptr, return nullptr, "create commopt error");
@@ -52,7 +52,7 @@ static bool IsOnDeviceSide()
     }
     return false;
 }
-}
+} // namespace
 
 int32_t AdxDataDumpServerInit()
 {

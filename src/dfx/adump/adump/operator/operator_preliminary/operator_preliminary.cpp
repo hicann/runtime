@@ -28,19 +28,16 @@ constexpr uint32_t DCCI_SYNC_SIZE = 64;     // DCCI强制同步数据64B
 constexpr uint32_t MAX_STATS_NUM = 64;      // 最大统计项个数
 constexpr uint32_t INTEGER_KILOBYTE = 1024; // 表示1KB
 
-constexpr const char *const KFC_OPERATOR_STUB_NAME = "kfc_dump_stat_stub";
-constexpr const char *const KFC_OPERATOR_NAME = "kfc_dump_stat";
+constexpr const char* const KFC_OPERATOR_STUB_NAME = "kfc_dump_stat_stub";
+constexpr const char* const KFC_OPERATOR_NAME = "kfc_dump_stat";
 
 static const std::vector<PlatformType> AICORE_RELATED = {PlatformType::CHIP_DC_TYPE};
 
-OperatorPreliminary::OperatorPreliminary(const DumpSetting &setting, const uint32_t deviceId)
+OperatorPreliminary::OperatorPreliminary(const DumpSetting& setting, const uint32_t deviceId)
     : deviceId_(deviceId), setting_(setting), opData_({})
-{
-}
+{}
 
-OperatorPreliminary::~OperatorPreliminary()
-{
-}
+OperatorPreliminary::~OperatorPreliminary() {}
 
 uint64_t OperatorPreliminary::CalcWorkspaceSize(uint64_t statsCnt)
 {
@@ -67,54 +64,63 @@ int32_t OperatorPreliminary::GetStreamInfo()
 {
     IDE_LOGI("Start GetStreamInfo on device %u.", deviceId_);
     rtError_t ret = rtSetDevice(deviceId_);
-    IDE_CTRL_VALUE_FAILED(ret == RT_ERROR_NONE, return ADUMP_FAILED,
-        "Execute rtSetDevice on device %u failed with result %d", deviceId_, ret);
+    IDE_CTRL_VALUE_FAILED(
+        ret == RT_ERROR_NONE, return ADUMP_FAILED, "Execute rtSetDevice on device %u failed with result %d", deviceId_,
+        ret);
     opData_.setDevice = true;
 
     ret = rtStreamCreateWithFlags(&opData_.deviceStm, 0, RT_STREAM_CP_PROCESS_USE);
-    IDE_CTRL_VALUE_FAILED(ret == RT_ERROR_NONE, return ADUMP_FAILED,
-        "Execute rtStreamCreateWithFlags on device %u failed with result %d", deviceId_, ret);
+    IDE_CTRL_VALUE_FAILED(
+        ret == RT_ERROR_NONE, return ADUMP_FAILED, "Execute rtStreamCreateWithFlags on device %u failed with result %d",
+        deviceId_, ret);
 
     ret = rtGetStreamId(opData_.deviceStm, &opData_.streamId);
-    IDE_CTRL_VALUE_FAILED(ret == RT_ERROR_NONE, return ADUMP_FAILED,
-        "Execute rtGetStreamId on device %u failed with result %d", deviceId_, ret);
+    IDE_CTRL_VALUE_FAILED(
+        ret == RT_ERROR_NONE, return ADUMP_FAILED, "Execute rtGetStreamId on device %u failed with result %d",
+        deviceId_, ret);
 
     ret = rtStreamGetSqid(opData_.deviceStm, &opData_.sqId);
-    IDE_CTRL_VALUE_FAILED(ret == RT_ERROR_NONE, return ADUMP_FAILED,
-        "Execute rtStreamGetSqid on device %u failed with result %d", deviceId_, ret);
+    IDE_CTRL_VALUE_FAILED(
+        ret == RT_ERROR_NONE, return ADUMP_FAILED, "Execute rtStreamGetSqid on device %u failed with result %d",
+        deviceId_, ret);
 
     ret = rtStreamGetCqid(opData_.deviceStm, &opData_.cqIds, &opData_.logicCqIds);
-    IDE_CTRL_VALUE_FAILED(ret == RT_ERROR_NONE, return ADUMP_FAILED,
-        "Execute rtStreamGetCqid on device %u failed with result %d", deviceId_, ret);
+    IDE_CTRL_VALUE_FAILED(
+        ret == RT_ERROR_NONE, return ADUMP_FAILED, "Execute rtStreamGetCqid on device %u failed with result %d",
+        deviceId_, ret);
 
-    IDE_LOGI("Success to get stream id=%d, sqId=%u, cqId=%u, logic cqId=%u on device %u.", opData_.streamId,
-        opData_.sqId, opData_.cqIds, opData_.logicCqIds, deviceId_);
+    IDE_LOGI(
+        "Success to get stream id=%d, sqId=%u, cqId=%u, logic cqId=%u on device %u.", opData_.streamId, opData_.sqId,
+        opData_.cqIds, opData_.logicCqIds, deviceId_);
     return ADUMP_SUCCESS;
 }
 
 int32_t OperatorPreliminary::GetUBSizeAndCoreNum()
 {
     char version[SOC_VERSION_LEN] = {};
-    IDE_CTRL_VALUE_FAILED(rtGetSocVersion(version, SOC_VERSION_LEN) == RT_ERROR_NONE, return ADUMP_FAILED,
-        "Failed to get soc version");
+    IDE_CTRL_VALUE_FAILED(
+        rtGetSocVersion(version, SOC_VERSION_LEN) == RT_ERROR_NONE, return ADUMP_FAILED, "Failed to get soc version");
     const std::string socVersion(version);
 
     PlatformData platformData;
-    IDE_CTRL_VALUE_FAILED(AdumpPlatformApi::GetUBSizeAndCoreNum(socVersion, setting_.GetPlatformType(), platformData),
+    IDE_CTRL_VALUE_FAILED(
+        AdumpPlatformApi::GetUBSizeAndCoreNum(socVersion, setting_.GetPlatformType(), platformData),
         return ADUMP_FAILED, "Failed to read platform info from fe api.");
 
     opData_.ubSize = platformData.ubSize;
     opData_.aiCoreCnt = platformData.aiCoreCnt;
     opData_.vectCoreCnt = platformData.vectCoreCnt;
-    IDE_LOGI("Get ub size:%" PRIu64 ", ai core count:%" PRIu64 ", vector core count:%" PRIu64 " on device %u.",
+    IDE_LOGI(
+        "Get ub size:%" PRIu64 ", ai core count:%" PRIu64 ", vector core count:%" PRIu64 " on device %u.",
         opData_.ubSize, opData_.aiCoreCnt, opData_.vectCoreCnt, deviceId_);
     return ADUMP_SUCCESS;
 }
 
-std::unique_ptr<char[]> OperatorPreliminary::LoadBinFile(const std::string &filename, size_t &fileSize) const
+std::unique_ptr<char[]> OperatorPreliminary::LoadBinFile(const std::string& filename, size_t& fileSize) const
 {
     std::string realPath;
-    IDE_CTRL_VALUE_FAILED(FileUtils::FileNameIsReal(filename, realPath) == IDE_DAEMON_OK, return nullptr,
+    IDE_CTRL_VALUE_FAILED(
+        FileUtils::FileNameIsReal(filename, realPath) == IDE_DAEMON_OK, return nullptr,
         "LoadBinFile failed. The real path is %s.", filename.c_str());
 
     std::ifstream iFile(realPath, std::ios::binary | std::ios::ate);
@@ -127,11 +133,16 @@ std::unique_ptr<char[]> OperatorPreliminary::LoadBinFile(const std::string &file
     }
     fileSize = static_cast<size_t>(pos);
     iFile.seekg(0, std::ios::beg);
-    char* buffer = new(std::nothrow) char[fileSize];
+    char* buffer = new (std::nothrow) char[fileSize];
     IDE_CTRL_VALUE_FAILED(buffer != nullptr, return nullptr, "Failed to new file buffer");
-    IDE_CTRL_VALUE_FAILED(iFile.read(buffer, fileSize), {delete[] buffer; return nullptr;},
+    IDE_CTRL_VALUE_FAILED(
+        iFile.read(buffer, fileSize),
+        {
+            delete[] buffer;
+            return nullptr;
+        },
         "Failed to read file data. file: %s, size: %ld", filename.c_str(), fileSize);
-    return std::unique_ptr<char []>(buffer);
+    return std::unique_ptr<char[]>(buffer);
 }
 
 int32_t OperatorPreliminary::GetOperatorPCAddr()
@@ -144,29 +155,35 @@ int32_t OperatorPreliminary::GetOperatorPCAddr()
         IDE_CTRL_VALUE_FAILED(!opName.empty(), return ADUMP_FAILED, "Failed to find kfc operator file.");
 
         const std::string opPath = LibPath::Instance().GetTargetPath(opName);
-        IDE_CTRL_VALUE_FAILED(!opPath.empty(), return ADUMP_FAILED, "Received an empty path for file %s.", opName.c_str());
-        IDE_CTRL_VALUE_FAILED(FileUtils::IsFileExist(opPath), return ADUMP_FAILED,
-            "Failed to binary file from %s.", opPath.c_str());
+        IDE_CTRL_VALUE_FAILED(
+            !opPath.empty(), return ADUMP_FAILED, "Received an empty path for file %s.", opName.c_str());
+        IDE_CTRL_VALUE_FAILED(
+            FileUtils::IsFileExist(opPath), return ADUMP_FAILED, "Failed to binary file from %s.", opPath.c_str());
 
         size_t fileSize = 0;
         binData = LoadBinFile(opPath, fileSize);
         IDE_CTRL_VALUE_FAILED(binData != nullptr, return ADUMP_FAILED, "Get binary handle failed");
 
-        rtDevBinary_t bin{.magic = RT_DEV_BINARY_MAGIC_ELF_AIVEC, .version = 0,
-            .data = static_cast<void*>(binData.get()), .length = fileSize};
+        rtDevBinary_t bin{
+            .magic = RT_DEV_BINARY_MAGIC_ELF_AIVEC,
+            .version = 0,
+            .data = static_cast<void*>(binData.get()),
+            .length = fileSize};
 
         ret = rtDevBinaryRegister(&bin, &opData_.binHandle);
-        IDE_CTRL_VALUE_FAILED(ret == RT_ERROR_NONE, return ADUMP_FAILED,
-            "Failed to parse bin data into handle, ret is %d", ret);
+        IDE_CTRL_VALUE_FAILED(
+            ret == RT_ERROR_NONE, return ADUMP_FAILED, "Failed to parse bin data into handle, ret is %d", ret);
 
         ret = rtFunctionRegister(opData_.binHandle, KFC_OPERATOR_STUB_NAME, KFC_OPERATOR_NAME, KFC_OPERATOR_NAME, 0U);
-        IDE_CTRL_VALUE_FAILED(ret == RT_ERROR_NONE, return ADUMP_FAILED,
-            "Failed to register handle into stub kernel name %s, ret is %d", KFC_OPERATOR_STUB_NAME, ret);
+        IDE_CTRL_VALUE_FAILED(
+            ret == RT_ERROR_NONE, return ADUMP_FAILED, "Failed to register handle into stub kernel name %s, ret is %d",
+            KFC_OPERATOR_STUB_NAME, ret);
     }
 
     ret = rtGetAddrByFun(KFC_OPERATOR_STUB_NAME, &opData_.pcAddr);
-    IDE_CTRL_VALUE_FAILED(ret == RT_ERROR_NONE, return ADUMP_FAILED,
-        "Failed to get pc addr from stub kernel name %s, ret is %d", KFC_OPERATOR_STUB_NAME, ret);
+    IDE_CTRL_VALUE_FAILED(
+        ret == RT_ERROR_NONE, return ADUMP_FAILED, "Failed to get pc addr from stub kernel name %s, ret is %d",
+        KFC_OPERATOR_STUB_NAME, ret);
 
     IDE_LOGI("Success to get pc address %p on device %u.", opData_.pcAddr, deviceId_);
     return ADUMP_SUCCESS;
@@ -185,16 +202,18 @@ int32_t OperatorPreliminary::CreateMemory()
     opData_.workspaceSize = CalcWorkspaceSize(statsCnt);
     opData_.stackBaseSize = CalcStackSize();
 
-    IDE_CTRL_VALUE_FAILED(opData_.workspaceSize != 0 && opData_.stackBaseSize != 0, return ADUMP_FAILED,
+    IDE_CTRL_VALUE_FAILED(
+        opData_.workspaceSize != 0 && opData_.stackBaseSize != 0, return ADUMP_FAILED,
         "The size of the workspaceSize is 0");
-    IDE_LOGI("Calculate MsgQ Size:%" PRIu64 "Byte, output size:%" PRIu64 "Byte, workspace size:%" PRIu64 "Byte,"
-        "stack base size:%" PRIu64 "Byte on device %u.", opData_.msgQSize, opData_.outputSize,
-        opData_.workspaceSize, opData_.stackBaseSize, deviceId_);
+    IDE_LOGI(
+        "Calculate MsgQ Size:%" PRIu64 "Byte, output size:%" PRIu64 "Byte, workspace size:%" PRIu64 "Byte,"
+        "stack base size:%" PRIu64 "Byte on device %u.",
+        opData_.msgQSize, opData_.outputSize, opData_.workspaceSize, opData_.stackBaseSize, deviceId_);
 
-    rtError_t ret = rtMalloc(&opData_.memoryAddr, opData_.msgQSize + opData_.outputSize +
-        opData_.workspaceSize + opData_.stackBaseSize, RT_MEMORY_DEFAULT, AICPU);
-    IDE_CTRL_VALUE_FAILED(ret == RT_ERROR_NONE, return ADUMP_FAILED,
-        "Execute rtMalloc failed with result %d", ret);
+    rtError_t ret = rtMalloc(
+        &opData_.memoryAddr, opData_.msgQSize + opData_.outputSize + opData_.workspaceSize + opData_.stackBaseSize,
+        RT_MEMORY_DEFAULT, AICPU);
+    IDE_CTRL_VALUE_FAILED(ret == RT_ERROR_NONE, return ADUMP_FAILED, "Execute rtMalloc failed with result %d", ret);
     IDE_LOGI("Rt malloc success on device %u.", deviceId_);
     return ADUMP_SUCCESS;
 }
@@ -205,7 +224,7 @@ int32_t OperatorPreliminary::KFCKernelLaunch()
     KfcDumpOpInitParam kfcParam;
     kfcParam.kfcWorkSpace.msgQ = reinterpret_cast<uint64_t>(opData_.memoryAddr);
     kfcParam.kfcWorkSpace.msgQSize = opData_.msgQSize;
-    kfcParam.kfcWorkSpace.output = kfcParam.kfcWorkSpace.msgQ  + opData_.msgQSize;
+    kfcParam.kfcWorkSpace.output = kfcParam.kfcWorkSpace.msgQ + opData_.msgQSize;
     kfcParam.kfcWorkSpace.outputSize = opData_.outputSize;
     kfcParam.kfcWorkSpace.workspace = kfcParam.kfcWorkSpace.output + opData_.outputSize;
     kfcParam.kfcWorkSpace.workspaceSize = opData_.workspaceSize;
@@ -236,13 +255,13 @@ int32_t OperatorPreliminary::KFCKernelLaunch()
     argsInfo.kernelOffsetInfoNum = 0;
     argsInfo.isNoNeedH2DCopy = false;
 
-    rtError_t ret = rtAicpuKernelLaunchExWithArgs(KERNEL_TYPE_AICPU_KFC, "VectorStats", 1, &argsInfo, nullptr,
-        nullptr, 0);
-    IDE_CTRL_VALUE_FAILED(ret == RT_ERROR_NONE, return ADUMP_FAILED,
-        "Failed to launch kernel for KFC, ret is %d", ret);
+    rtError_t ret =
+        rtAicpuKernelLaunchExWithArgs(KERNEL_TYPE_AICPU_KFC, "VectorStats", 1, &argsInfo, nullptr, nullptr, 0);
+    IDE_CTRL_VALUE_FAILED(ret == RT_ERROR_NONE, return ADUMP_FAILED, "Failed to launch kernel for KFC, ret is %d", ret);
 
     ret = rtStreamSynchronize(nullptr); // Use the default flow to ensure successful execution.
-    IDE_CTRL_VALUE_FAILED(ret == RT_ERROR_NONE, return ADUMP_FAILED,
+    IDE_CTRL_VALUE_FAILED(
+        ret == RT_ERROR_NONE, return ADUMP_FAILED,
         "Execute rtStreamSynchronize for kernel launch failed with result %d", ret);
 
     IDE_LOGI("Success to init kfc kernel information on device %u.", deviceId_);
@@ -264,12 +283,12 @@ int32_t OperatorPreliminary::OperatorInit()
         IDE_CTRL_VALUE_FAILED_NODO(ret == ADUMP_SUCCESS, break, "OperatorInit fails at GetStreamInfo when executed.");
 
         ret = GetUBSizeAndCoreNum();
-        IDE_CTRL_VALUE_FAILED_NODO(ret == ADUMP_SUCCESS, break,
-            "OperatorInit fails at GetUBSizeAndCoreNum when executed.");
+        IDE_CTRL_VALUE_FAILED_NODO(
+            ret == ADUMP_SUCCESS, break, "OperatorInit fails at GetUBSizeAndCoreNum when executed.");
 
         ret = GetOperatorPCAddr();
-        IDE_CTRL_VALUE_FAILED_NODO(ret == ADUMP_SUCCESS, break,
-            "OperatorInit fails at GetOperatorPCAddr when executed.");
+        IDE_CTRL_VALUE_FAILED_NODO(
+            ret == ADUMP_SUCCESS, break, "OperatorInit fails at GetOperatorPCAddr when executed.");
 
         ret = CreateMemory();
         IDE_CTRL_VALUE_FAILED_NODO(ret == ADUMP_SUCCESS, break, "OperatorInit fails at CreateMemory when executed.");

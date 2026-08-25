@@ -20,7 +20,7 @@ namespace {
 constexpr uint64_t SEC_TO_USEC = 1000000UL;
 constexpr uint64_t SEC_TO_MSEC = 1000UL;
 constexpr uint32_t MILLI_S_FORMAT_LEN = 3;
-}  // namespace
+} // namespace
 
 std::string SysUtils::GetCurrentWorkDir()
 {
@@ -43,8 +43,9 @@ std::string SysUtils::HandleEnv(const char* env)
         return "";
     }
     char envValue[MMPA_MAX_PATH] = {0};
-    IDE_CTRL_VALUE_FAILED(memcpy_s(envValue, MMPA_MAX_PATH - 1, env, envLen) == EN_OK, return "",
-        "Failed to copy environment data %s.", env);
+    IDE_CTRL_VALUE_FAILED(
+        memcpy_s(envValue, MMPA_MAX_PATH - 1, env, envLen) == EN_OK, return "", "Failed to copy environment data %s.",
+        env);
 
     return envValue;
 }
@@ -62,7 +63,7 @@ uint64_t SysUtils::GetTimestamp()
 std::string SysUtils::GetCurrentTime()
 {
     const std::time_t now = std::time(nullptr);
-    const std::tm *const ptm = std::localtime(&now);
+    const std::tm* const ptm = std::localtime(&now);
     if (ptm == nullptr) {
         return "";
     }
@@ -100,4 +101,4 @@ std::string SysUtils::GetPid()
     }
     return "";
 }
-}  // namespace Adx
+} // namespace Adx

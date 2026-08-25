@@ -30,11 +30,7 @@ static const std::string KERNEL_DFX_TYPE_TENSOR = "tensor";
 static const std::string KERNEL_DFX_TYPE_ASSERT = "assert";
 static const std::string KERNEL_DFX_TYPE_TIMESTAMP = "timestamp";
 static const std::string KERNEL_DFX_TYPE_BLOCKINFO = "BlockInfo";
-static const std::map<uint32_t, std::string> DFX_CORE_TYPE_MAP = {
-    {0U, "aic"},
-    {1U, "aiv"},
-    {2U, "simt"}
-};
+static const std::map<uint32_t, std::string> DFX_CORE_TYPE_MAP = {{0U, "aic"}, {1U, "aiv"}, {2U, "simt"}};
 
 static const std::map<rtKernelDfxInfoType, std::string> DFX_TYPE_STR_MAP = {
     {rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_DEFAULT, KERNEL_DFX_TYPE_ALL},
@@ -42,16 +38,15 @@ static const std::map<rtKernelDfxInfoType, std::string> DFX_TYPE_STR_MAP = {
     {rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_TENSOR, KERNEL_DFX_TYPE_TENSOR},
     {rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_ASSERT, KERNEL_DFX_TYPE_ASSERT},
     {rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_TIME_STAMP, KERNEL_DFX_TYPE_TIMESTAMP},
-    {rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_BLOCK_INFO, KERNEL_DFX_TYPE_BLOCKINFO}
-};
+    {rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_BLOCK_INFO, KERNEL_DFX_TYPE_BLOCKINFO}};
 
-void DumpKernelDfxInfoCallback(rtKernelDfxInfoType dfxType, uint32_t coreType, uint32_t coreId,
-                               const uint8_t *buffer, size_t length)
+void DumpKernelDfxInfoCallback(
+    rtKernelDfxInfoType dfxType, uint32_t coreType, uint32_t coreId, const uint8_t* buffer, size_t length)
 {
     (void)KernelDfxDumper::Instance().DumpKernelDfxInfo(dfxType, coreType, coreId, buffer, length);
 }
 
-int32_t KernelDfxDumper::PushDfxInfoToQueue(DumpDfxInfo &dfxInfo)
+int32_t KernelDfxDumper::PushDfxInfoToQueue(DumpDfxInfo& dfxInfo)
 {
     IDE_CTRL_VALUE_WARN(taskInit_, return ADUMP_FAILED, "The dfx dump task is not started or has been stopped.");
     if (dumpDfxInfoQueue_->IsFull()) {
@@ -86,11 +81,12 @@ void KernelDfxDumper::RecordDfxInfo()
     IDE_LOGI("The dfx dump task is exit.");
 }
 
-void KernelDfxDumper::RecordDfxInfoToDisk(DumpDfxInfo &dfxInfo)
+void KernelDfxDumper::RecordDfxInfoToDisk(DumpDfxInfo& dfxInfo)
 {
     if (dfxInfo.path.empty() || dfxInfo.data == nullptr || dfxInfo.length == 0UL) {
-        IDE_LOGW("The dfx info item is invalid! path=%s, data=%p, length=%u",
-            dfxInfo.path.c_str(), dfxInfo.data.get(), dfxInfo.length);
+        IDE_LOGW(
+            "The dfx info item is invalid! path=%s, data=%p, length=%u", dfxInfo.path.c_str(), dfxInfo.data.get(),
+            dfxInfo.length);
         return;
     }
 
@@ -98,12 +94,12 @@ void KernelDfxDumper::RecordDfxInfoToDisk(DumpDfxInfo &dfxInfo)
     Path path = Path(dfxInfo.path);
     std::string fileName = path.GetFileName();
     path = path.ParentPath();
-    IDE_CTRL_VALUE_FAILED(path.CreateDirectory(true), return,
-        "Cannot create the dfx info directory for path[%s]", path.GetCString());
-    IDE_CTRL_VALUE_FAILED(path.RealPath(), return,
-        "Cannot get the real path for path[%s]", path.GetCString());
-    IDE_CTRL_VALUE_FAILED(!FileUtils::IsDiskFull(path.GetString(), static_cast<uint64_t>(dfxInfo.length)),
-        return, "Don't have enough free disk for %u bytes", dfxInfo.length);
+    IDE_CTRL_VALUE_FAILED(
+        path.CreateDirectory(true), return, "Cannot create the dfx info directory for path[%s]", path.GetCString());
+    IDE_CTRL_VALUE_FAILED(path.RealPath(), return, "Cannot get the real path for path[%s]", path.GetCString());
+    IDE_CTRL_VALUE_FAILED(
+        !FileUtils::IsDiskFull(path.GetString(), static_cast<uint64_t>(dfxInfo.length)), return,
+        "Don't have enough free disk for %u bytes", dfxInfo.length);
     path.Concat(fileName);
     IdeErrorT err = FileUtils::WriteFile(path.GetString(), dfxInfo.data.get(), dfxInfo.length, -1);
     if (err != IDE_DAEMON_NONE_ERROR) {
@@ -127,7 +123,7 @@ int32_t KernelDfxDumper::InitTask()
 
     IDE_LOGI("Begin to start the dfx dump task.");
     if (dumpDfxInfoQueue_ == nullptr) {
-        dumpDfxInfoQueue_.reset(new(std::nothrow) BoundQueueMemory<DumpDfxInfo>());
+        dumpDfxInfoQueue_.reset(new (std::nothrow) BoundQueueMemory<DumpDfxInfo>());
         if (dumpDfxInfoQueue_ == nullptr) {
             IDE_LOGE("Failed to new dumpDfxInfoQueue");
             return IDE_DAEMON_ERROR;
@@ -138,7 +134,7 @@ int32_t KernelDfxDumper::InitTask()
 
     try {
         taskThread_ = std::thread(&KernelDfxDumper::RecordDfxInfo, this);
-    } catch (std::exception &ex) {
+    } catch (std::exception& ex) {
         IDE_LOGE("Create the dfx dump task failed, message: %s", ex.what());
         taskInit_ = false;
         return IDE_DAEMON_ERROR;
@@ -181,19 +177,13 @@ void KernelDfxDumper::UnInit()
     }
 }
 
-void KernelDfxDumper::PrepareFork()
-{
-    Instance().mutex_.lock();
-}
+void KernelDfxDumper::PrepareFork() { Instance().mutex_.lock(); }
 
-void KernelDfxDumper::PostForkParent()
-{
-    Instance().mutex_.unlock();
-}
+void KernelDfxDumper::PostForkParent() { Instance().mutex_.unlock(); }
 
 void KernelDfxDumper::PostForkChild()
 {
-    auto &instance = Instance();
+    auto& instance = Instance();
     instance.taskInit_ = false;
     instance.taskRunning_ = false;
     instance.dumpPath_.clear();
@@ -212,20 +202,18 @@ void KernelDfxDumper::PostForkChild()
 
 KernelDfxDumper::KernelDfxDumper()
 {
-    int32_t ret = pthread_atfork(
-        KernelDfxDumper::PrepareFork, KernelDfxDumper::PostForkParent, KernelDfxDumper::PostForkChild);
+    int32_t ret =
+        pthread_atfork(KernelDfxDumper::PrepareFork, KernelDfxDumper::PostForkParent, KernelDfxDumper::PostForkChild);
     if (ret != 0) {
         IDE_LOGW("call pthread_atfork failed, ret: %d", ret);
     }
     EnableDfxDumper();
 }
 
-KernelDfxDumper::~KernelDfxDumper()
-{
-    UnInit();
-}
+KernelDfxDumper::~KernelDfxDumper() { UnInit(); }
 
-void KernelDfxDumper::EnableDfxDumper() {
+void KernelDfxDumper::EnableDfxDumper()
+{
     DumpDfxConfig dumpDfxConfig;
     if (DumpConfigConverter::EnableKernelDfxDumpWithEnv(dumpDfxConfig)) {
         if (EnableDfxDumper(dumpDfxConfig) != ADUMP_SUCCESS) {
@@ -234,11 +222,11 @@ void KernelDfxDumper::EnableDfxDumper() {
     }
 }
 
-bool KernelDfxDumper::InitDumpPath(const std::string &dumpPath)
+bool KernelDfxDumper::InitDumpPath(const std::string& dumpPath)
 {
     IDE_CTRL_VALUE_FAILED(!dumpPath.empty(), return false, "The dfx info dump path is empty!");
-    IDE_CTRL_VALUE_WARN(dumpPath_.empty(), return true,
-        "The dfx info dump path has been set with [%s]", dumpPath_.c_str());
+    IDE_CTRL_VALUE_WARN(
+        dumpPath_.empty(), return true, "The dfx info dump path has been set with [%s]", dumpPath_.c_str());
     Path path = Path(dumpPath).Append(SysUtils::GetCurrentTime());
     dumpPath_ = path.GetString();
     IDE_LOGI("Set the dfx info dump path with [%s]", dumpPath_.c_str());
@@ -269,7 +257,8 @@ int32_t KernelDfxDumper::EnableDfxDumper(const DumpDfxConfig config)
     for (auto& rtDfxType : rtDfxTypes) {
         if (!IsEnabled(rtDfxType)) {
             rtError_t ret = rtSetKernelDfxInfoCallback(rtDfxType, DumpKernelDfxInfoCallback);
-            IDE_CTRL_VALUE_FAILED(ret == RT_ERROR_NONE, return ADUMP_FAILED,
+            IDE_CTRL_VALUE_FAILED(
+                ret == RT_ERROR_NONE, return ADUMP_FAILED,
                 "Register the dfx info dump callback to RTS failed! dfxType=%d, ret=%d", rtDfxType, ret);
             enabledDfxTypes_.insert(rtDfxType);
             IDE_LOGI("Register the dfx info dump callback to RTS success. dfxType=%d", rtDfxType);
@@ -277,15 +266,15 @@ int32_t KernelDfxDumper::EnableDfxDumper(const DumpDfxConfig config)
             IDE_LOGI("The dfx info dump callback has been registered to RTS. dfxType=%d", rtDfxType);
         }
     }
-    IDE_CTRL_VALUE_FAILED(InitDumpPath(config.dumpPath), return ADUMP_FAILED,
-        "Set the dfx info dump path[%s] failed!", config.dumpPath.c_str());
-    IDE_CTRL_VALUE_FAILED(InitTask() == IDE_DAEMON_OK, return ADUMP_FAILED,
-        "Init the task of dump dfx info failed!");
+    IDE_CTRL_VALUE_FAILED(
+        InitDumpPath(config.dumpPath), return ADUMP_FAILED, "Set the dfx info dump path[%s] failed!",
+        config.dumpPath.c_str());
+    IDE_CTRL_VALUE_FAILED(InitTask() == IDE_DAEMON_OK, return ADUMP_FAILED, "Init the task of dump dfx info failed!");
     return ADUMP_SUCCESS;
 }
 
-void KernelDfxDumper::GetRegisterDfxTypes(const std::vector<std::string> &cfgDfxTypes,
-    std::set<rtKernelDfxInfoType> &rtDfxTypes)
+void KernelDfxDumper::GetRegisterDfxTypes(
+    const std::vector<std::string>& cfgDfxTypes, std::set<rtKernelDfxInfoType>& rtDfxTypes)
 {
     for (auto& dfxType : cfgDfxTypes) {
         // 非default场景，都要再注册RT_KERNEL_DFX_INFO_BLOCK_INFO类型。
@@ -293,17 +282,18 @@ void KernelDfxDumper::GetRegisterDfxTypes(const std::vector<std::string> &cfgDfx
         if (dfxType == "all") {
             rtDfxTypes.insert(rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_DEFAULT);
         } else if (dfxType == "printf") {
-            rtDfxTypes.insert({rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_PRINTF,
-                rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_BLOCK_INFO});
+            rtDfxTypes.insert(
+                {rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_PRINTF, rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_BLOCK_INFO});
         } else if (dfxType == "tensor") {
-            rtDfxTypes.insert({rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_TENSOR,
-                rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_BLOCK_INFO});
+            rtDfxTypes.insert(
+                {rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_TENSOR, rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_BLOCK_INFO});
         } else if (dfxType == "assert") {
-            rtDfxTypes.insert({rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_ASSERT,
-                rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_BLOCK_INFO});
+            rtDfxTypes.insert(
+                {rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_ASSERT, rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_BLOCK_INFO});
         } else if (dfxType == "timestamp") {
-            rtDfxTypes.insert({rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_TIME_STAMP,
-                rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_BLOCK_INFO});
+            rtDfxTypes.insert(
+                {rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_TIME_STAMP,
+                 rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_BLOCK_INFO});
         }
     }
 }
@@ -313,37 +303,37 @@ bool KernelDfxDumper::IsEnabled(const rtKernelDfxInfoType dfxType)
     return enabledDfxTypes_.find(dfxType) != enabledDfxTypes_.end();
 }
 
-bool KernelDfxDumper::IsEnabled()
-{
-    return !enabledDfxTypes_.empty();
-}
+bool KernelDfxDumper::IsEnabled() { return !enabledDfxTypes_.empty(); }
 
-std::string KernelDfxDumper::GetDfxInfoFilePath(uint32_t coreId, std::string &coreType)
+std::string KernelDfxDumper::GetDfxInfoFilePath(uint32_t coreId, std::string& coreType)
 {
     std::string fileName = "asc_kernel_data_" + coreType + "_" + std::to_string(coreId) + ".bin";
     return Path(dumpPath_).Concat(fileName).GetString();
 }
 
-int32_t KernelDfxDumper::DumpKernelDfxInfo(rtKernelDfxInfoType dfxType, uint32_t coreType, uint32_t coreId,
-    const uint8_t *buffer, size_t length)
+int32_t KernelDfxDumper::DumpKernelDfxInfo(
+    rtKernelDfxInfoType dfxType, uint32_t coreType, uint32_t coreId, const uint8_t* buffer, size_t length)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     IDE_CTRL_VALUE_WARN(!destructed_, return ADUMP_FAILED, "KernelDfxDumper has been destructed.");
 
     std::string dfxTypeStr = GetDfxTypeStr(dfxType);
     std::string coreTypeStr = GetCoreTypeStr(coreType);
-    IDE_CTRL_VALUE_WARN(IsEnabled(dfxType), return ADUMP_FAILED,
-        "dfxType=%d[%s] is not enabled, do not record the dfx info.", dfxType, dfxTypeStr.c_str());
-    if (buffer == nullptr || length == 0UL || length > std::numeric_limits<uint32_t>::max()
-        || dfxTypeStr.empty() || coreTypeStr.empty()) {
-        IDE_LOGW("The dfx info is invalid! dfxType=%d[%s], coreType=%u[%s], coreId=%u, buffer=%p, length=%zu",
-            dfxType, dfxTypeStr.c_str(), coreType, coreTypeStr.c_str(), coreId, buffer, length);
+    IDE_CTRL_VALUE_WARN(
+        IsEnabled(dfxType), return ADUMP_FAILED, "dfxType=%d[%s] is not enabled, do not record the dfx info.", dfxType,
+        dfxTypeStr.c_str());
+    if (buffer == nullptr || length == 0UL || length > std::numeric_limits<uint32_t>::max() || dfxTypeStr.empty() ||
+        coreTypeStr.empty()) {
+        IDE_LOGW(
+            "The dfx info is invalid! dfxType=%d[%s], coreType=%u[%s], coreId=%u, buffer=%p, length=%zu", dfxType,
+            dfxTypeStr.c_str(), coreType, coreTypeStr.c_str(), coreId, buffer, length);
         return ADUMP_FAILED;
     }
-    IDE_LOGI("Receive kernel dfx info. dfxType=%d[%s], coreType=%u[%s], coreId=%u, buffer=%p, length=%zu",
-        dfxType, dfxTypeStr.c_str(), coreType, coreTypeStr.c_str(), coreId, buffer, length);
+    IDE_LOGI(
+        "Receive kernel dfx info. dfxType=%d[%s], coreType=%u[%s], coreId=%u, buffer=%p, length=%zu", dfxType,
+        dfxTypeStr.c_str(), coreType, coreTypeStr.c_str(), coreId, buffer, length);
 
-    std::shared_ptr<uint8_t> data(new(std::nothrow) uint8_t[length], [](uint8_t* ptr) { delete[] ptr; });
+    std::shared_ptr<uint8_t> data(new (std::nothrow) uint8_t[length], [](uint8_t* ptr) { delete[] ptr; });
     IDE_CTRL_VALUE_FAILED(data.get() != nullptr, return ADUMP_FAILED, "Cannot create the new dfx info buffer!");
     auto err = memcpy_s(data.get(), length, buffer, length);
     if (err != EOK) {
@@ -353,4 +343,4 @@ int32_t KernelDfxDumper::DumpKernelDfxInfo(rtKernelDfxInfoType dfxType, uint32_t
     DumpDfxInfo dfxInfo{GetDfxInfoFilePath(coreId, coreTypeStr), data, static_cast<uint32_t>(length)};
     return PushDfxInfoToQueue(dfxInfo);
 }
-}
+} // namespace Adx

@@ -8,7 +8,6 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-
 #include <iostream>
 #include <unordered_map>
 #include <unordered_set>
@@ -56,7 +55,7 @@ static std::mutex g_adxPrintConfigMtx;
 constexpr uint32_t TIMEOUT_THRESHOLD = 500U;
 } // namespace
 
-template<typename T>
+template <typename T>
 std::string AdxToHex(T num)
 {
     std::stringstream stream;
@@ -64,7 +63,7 @@ std::string AdxToHex(T num)
     return stream.str();
 }
 
-template<typename T>
+template <typename T>
 std::string AdxToStr(T num)
 {
     std::stringstream stream;
@@ -72,67 +71,42 @@ std::string AdxToStr(T num)
     return stream.str();
 }
 
-template<typename T>
-inline T AdxParseParam(const uint8_t *beginAddr, const size_t paramIndex)
+template <typename T>
+inline T AdxParseParam(const uint8_t* beginAddr, const size_t paramIndex)
 {
-    const T *paramAddr = (const T *)(beginAddr + paramIndex * ADX_PRINT_ARG_LEN);
+    const T* paramAddr = (const T*)(beginAddr + paramIndex * ADX_PRINT_ARG_LEN);
     return *paramAddr;
 }
 
-inline int32_t AdxConvertToStd(uint8_t data)
-{
-    return static_cast<int32_t>(data);
-}
+inline int32_t AdxConvertToStd(uint8_t data) { return static_cast<int32_t>(data); }
 
-inline int32_t AdxConvertToStd(int8_t data)
-{
-    return static_cast<int32_t>(data);
-}
+inline int32_t AdxConvertToStd(int8_t data) { return static_cast<int32_t>(data); }
 
-template<typename T>
-inline T AdxConvertToStd(const T &data)
+template <typename T>
+inline T AdxConvertToStd(const T& data)
 {
     return data;
 }
 
-inline float AdxConvertToStd(Adx::fp16_t data)
-{
-    return data.toFloat();
-}
+inline float AdxConvertToStd(Adx::fp16_t data) { return data.toFloat(); }
 
-inline float AdxConvertToStd(Adx::BFloat16 data)
-{
-    return data.GetValue();
-}
+inline float AdxConvertToStd(Adx::BFloat16 data) { return data.GetValue(); }
 
-inline float AdxConvertToStd(Adx::HiFloat8 data)
-{
-    return data.GetValue();
-}
+inline float AdxConvertToStd(Adx::HiFloat8 data) { return data.GetValue(); }
 
-inline float AdxConvertToStd(Adx::Fp8E5M2 data)
-{
-    return data.GetValue();
-}
+inline float AdxConvertToStd(Adx::Fp8E5M2 data) { return data.GetValue(); }
 
-inline float AdxConvertToStd(Adx::Fp8E4M3 data)
-{
-    return data.GetValue();
-}
+inline float AdxConvertToStd(Adx::Fp8E4M3 data) { return data.GetValue(); }
 
-inline float AdxConvertToStd(Adx::Fp8E8M0 data)
-{
-    return data.GetValue();
-}
+inline float AdxConvertToStd(Adx::Fp8E8M0 data) { return data.GetValue(); }
 
-
-static void AdxPrintBoolTensor(const void *data, const size_t dataNum)
+static void AdxPrintBoolTensor(const void* data, const size_t dataNum)
 {
-    const uint8_t *nums = static_cast<const uint8_t *>(data);
+    const uint8_t* nums = static_cast<const uint8_t*>(data);
     std::cout << "[";
     std::string tensorData = "[";
     for (size_t i = 0U; i < dataNum; ++i) {
-        if(bool(nums[i])) {
+        if (bool(nums[i])) {
             std::cout << 1;
             tensorData += "1";
         } else {
@@ -155,10 +129,10 @@ static void AdxPrintBoolTensor(const void *data, const size_t dataNum)
     }
 }
 
-template<typename T>
-void AdxPrintTensor(const void *data, const size_t dataNum)
+template <typename T>
+void AdxPrintTensor(const void* data, const size_t dataNum)
 {
-    const T *nums = (const T *)data;
+    const T* nums = (const T*)data;
     std::cout << "[";
     std::string tensorData = "[";
     for (size_t i = 0U; i < dataNum; ++i) {
@@ -181,11 +155,12 @@ void AdxPrintTensor(const void *data, const size_t dataNum)
     }
 }
 
-template<typename T>
-static size_t AdumpPrintValidElems(const void *data, const size_t dataNum, const std::vector<size_t> &tmpShape,
-                                   std::string &tensorContent, const bool flag)
+template <typename T>
+static size_t AdumpPrintValidElems(
+    const void* data, const size_t dataNum, const std::vector<size_t>& tmpShape, std::string& tensorContent,
+    const bool flag)
 {
-    const T *dumpTensor = static_cast<const T *>(data);
+    const T* dumpTensor = static_cast<const T*>(data);
     size_t cnt = 0U;
     for (size_t i = 0; i < dataNum; i++) {
         cnt = 0U;
@@ -213,8 +188,9 @@ static size_t AdumpPrintValidElems(const void *data, const size_t dataNum, const
     return cnt;
 }
 
-static void AdxPrintExtraElems(const size_t totalEleNum, const size_t dataNum, size_t &cnt,
-                               const std::vector<size_t> &tmpShape, std::string &tensorContent)
+static void AdxPrintExtraElems(
+    const size_t totalEleNum, const size_t dataNum, size_t& cnt, const std::vector<size_t>& tmpShape,
+    std::string& tensorContent)
 {
     if (dataNum % tmpShape.back() == 0) {
         tensorContent += std::string(cnt, '[');
@@ -241,10 +217,11 @@ static void AdxPrintExtraElems(const size_t totalEleNum, const size_t dataNum, s
     }
 }
 
-static size_t AdumpPrintValidBoolElems(const void *data, const size_t dataNum, const std::vector<size_t> &tmpShape,
-                                   std::string &tensorContent, const bool flag)
+static size_t AdumpPrintValidBoolElems(
+    const void* data, const size_t dataNum, const std::vector<size_t>& tmpShape, std::string& tensorContent,
+    const bool flag)
 {
-    const uint8_t *dumpTensor = static_cast<const uint8_t *>(data);
+    const uint8_t* dumpTensor = static_cast<const uint8_t*>(data);
     size_t cnt = 0U;
     for (size_t i = 0; i < dataNum; i++) {
         cnt = 0U;
@@ -307,12 +284,12 @@ extern "C" {
 static std::string AdxGetCoreTypeId(const uint32_t core, const uint8_t coreType)
 {
     if (coreType == 1U) { // AIC场景
-        return  "AIC-" + std::to_string(core - AdxGetCoreTypeIDOffset());
+        return "AIC-" + std::to_string(core - AdxGetCoreTypeIDOffset());
     }
-    return "AIV-" + std::to_string(core);  // AIV+MIX场景
+    return "AIV-" + std::to_string(core); // AIV+MIX场景
 }
 
-static const std::unordered_map<GeDataType, std::function<void(const void *, const size_t)>> ADX_PRINT_CALLS {
+static const std::unordered_map<GeDataType, std::function<void(const void*, const size_t)>> ADX_PRINT_CALLS{
     {GeDataType::DT_UINT8, AdxPrintTensor<uint8_t>},
     {GeDataType::DT_INT8, AdxPrintTensor<int8_t>},
     {GeDataType::DT_INT16, AdxPrintTensor<int16_t>},
@@ -331,10 +308,11 @@ static const std::unordered_map<GeDataType, std::function<void(const void *, con
     {GeDataType::DT_BOOL, AdxPrintBoolTensor},
 };
 
-
-static const std::unordered_map<GeDataType,
-    std::function<size_t(const void *, const size_t, const std::vector<size_t> &, std::string &, const size_t)>>
-    ADX_PRINT_BY_SHAPE_CALLS{{GeDataType::DT_UINT8, AdumpPrintValidElems<uint8_t>},
+static const std::unordered_map<
+    GeDataType,
+    std::function<size_t(const void*, const size_t, const std::vector<size_t>&, std::string&, const size_t)>>
+    ADX_PRINT_BY_SHAPE_CALLS{
+        {GeDataType::DT_UINT8, AdumpPrintValidElems<uint8_t>},
         {GeDataType::DT_INT8, AdumpPrintValidElems<int8_t>},
         {GeDataType::DT_INT16, AdumpPrintValidElems<int16_t>},
         {GeDataType::DT_UINT16, AdumpPrintValidElems<uint16_t>},
@@ -351,8 +329,8 @@ static const std::unordered_map<GeDataType,
         {GeDataType::DT_FLOAT8_E4M3FN, AdumpPrintValidElems<Adx::Fp8E4M3>},
         {GeDataType::DT_FLOAT8_E8M0, AdumpPrintValidElems<Adx::Fp8E8M0>}};
 
-static void AdxPrintFormatD(const uint8_t *paramBegin, std::string &printInfo,
-                     const size_t paramIndex, const size_t maxLen)
+static void AdxPrintFormatD(
+    const uint8_t* paramBegin, std::string& printInfo, const size_t paramIndex, const size_t maxLen)
 {
     (void)maxLen;
     const int64_t paramInfo = AdxParseParam<int64_t>(paramBegin, paramIndex);
@@ -360,8 +338,8 @@ static void AdxPrintFormatD(const uint8_t *paramBegin, std::string &printInfo,
     printInfo += std::to_string(paramInfo);
 }
 
-static void AdxPrintFormatI(const uint8_t *paramBegin, std::string &printInfo,
-                     const size_t paramIndex, const size_t maxLen)
+static void AdxPrintFormatI(
+    const uint8_t* paramBegin, std::string& printInfo, const size_t paramIndex, const size_t maxLen)
 {
     (void)maxLen;
     const int64_t paramInfo = AdxParseParam<int64_t>(paramBegin, paramIndex);
@@ -369,8 +347,8 @@ static void AdxPrintFormatI(const uint8_t *paramBegin, std::string &printInfo,
     printInfo += std::to_string(paramInfo);
 }
 
-static void AdxPrintFormatF(const uint8_t *paramBegin, std::string &printInfo,
-                     const size_t paramIndex, const size_t maxLen)
+static void AdxPrintFormatF(
+    const uint8_t* paramBegin, std::string& printInfo, const size_t paramIndex, const size_t maxLen)
 {
     (void)maxLen;
     const float paramInfo = AdxParseParam<float>(paramBegin, paramIndex);
@@ -378,8 +356,8 @@ static void AdxPrintFormatF(const uint8_t *paramBegin, std::string &printInfo,
     printInfo += std::to_string(paramInfo);
 }
 
-static void AdxPrintFormatFUpper(const uint8_t *paramBegin, std::string &printInfo,
-                          const size_t paramIndex, const size_t maxLen)
+static void AdxPrintFormatFUpper(
+    const uint8_t* paramBegin, std::string& printInfo, const size_t paramIndex, const size_t maxLen)
 {
     (void)maxLen;
     const float paramInfo = AdxParseParam<float>(paramBegin, paramIndex);
@@ -387,8 +365,8 @@ static void AdxPrintFormatFUpper(const uint8_t *paramBegin, std::string &printIn
     printInfo += std::to_string(paramInfo);
 }
 
-static void AdxPrintFormatU(const uint8_t *paramBegin, std::string &printInfo,
-                     const size_t paramIndex, const size_t maxLen)
+static void AdxPrintFormatU(
+    const uint8_t* paramBegin, std::string& printInfo, const size_t paramIndex, const size_t maxLen)
 {
     (void)maxLen;
     const uint64_t paramInfo = AdxParseParam<uint64_t>(paramBegin, paramIndex);
@@ -396,17 +374,17 @@ static void AdxPrintFormatU(const uint8_t *paramBegin, std::string &printInfo,
     printInfo += std::to_string(paramInfo);
 }
 
-static void AdxPrintFormatP(const uint8_t *paramBegin, std::string &printInfo,
-                     const size_t paramIndex, const size_t maxLen)
+static void AdxPrintFormatP(
+    const uint8_t* paramBegin, std::string& printInfo, const size_t paramIndex, const size_t maxLen)
 {
     (void)maxLen;
-    const void *paramInfo = AdxParseParam<void *>(paramBegin, paramIndex);
+    const void* paramInfo = AdxParseParam<void*>(paramBegin, paramIndex);
     (void)printf("%p", paramInfo);
     printInfo += AdxToStr(paramInfo);
 }
 
-static void AdxPrintFormatX(const uint8_t *paramBegin, std::string &printInfo,
-                     const size_t paramIndex, const size_t maxLen)
+static void AdxPrintFormatX(
+    const uint8_t* paramBegin, std::string& printInfo, const size_t paramIndex, const size_t maxLen)
 {
     (void)maxLen;
     const int64_t paramInfo = AdxParseParam<int64_t>(paramBegin, paramIndex);
@@ -414,8 +392,8 @@ static void AdxPrintFormatX(const uint8_t *paramBegin, std::string &printInfo,
     printInfo += AdxToHex(paramInfo);
 }
 
-static void AdxPrintFormatXUpper(const uint8_t *paramBegin, std::string &printInfo,
-                          const size_t paramIndex, const size_t maxLen)
+static void AdxPrintFormatXUpper(
+    const uint8_t* paramBegin, std::string& printInfo, const size_t paramIndex, const size_t maxLen)
 {
     (void)maxLen;
     const int64_t paramInfo = AdxParseParam<int64_t>(paramBegin, paramIndex);
@@ -423,11 +401,11 @@ static void AdxPrintFormatXUpper(const uint8_t *paramBegin, std::string &printIn
     printInfo += AdxToHex(paramInfo);
 }
 
-static void AdxPrintFormatS(const uint8_t *paramBegin, std::string &printInfo,
-                     const size_t paramIndex, const size_t maxLen)
+static void AdxPrintFormatS(
+    const uint8_t* paramBegin, std::string& printInfo, const size_t paramIndex, const size_t maxLen)
 {
-    const uint64_t *offsetAddr = (const uint64_t *)(paramBegin + paramIndex * ADX_PRINT_ARG_LEN);
-    const char *data = ((const char *)offsetAddr) + (*offsetAddr);
+    const uint64_t* offsetAddr = (const uint64_t*)(paramBegin + paramIndex * ADX_PRINT_ARG_LEN);
+    const char* data = ((const char*)offsetAddr) + (*offsetAddr);
     const size_t dataLen = strnlen(data, ADX_MAX_STR_LEN);
     IDE_LOGD("Get string param length %zu bytes, max length is %zu bytes.", dataLen, maxLen);
     if (dataLen > maxLen) {
@@ -437,30 +415,17 @@ static void AdxPrintFormatS(const uint8_t *paramBegin, std::string &printInfo,
     printInfo += AdxToStr(data);
 }
 
-static const std::unordered_map<std::string, std::function<void(const uint8_t *,
-    std::string &, const size_t, const size_t)>> ADX_PRINT_FORMAT_CALLS {
-        {"d", AdxPrintFormatD},
-        {"ld", AdxPrintFormatD},
-        {"lld", AdxPrintFormatD},
-        {"i", AdxPrintFormatI},
-        {"li", AdxPrintFormatI},
-        {"lli", AdxPrintFormatI},
-        {"f", AdxPrintFormatF},
-        {"F", AdxPrintFormatFUpper},
-        {"u", AdxPrintFormatU},
-        {"lu", AdxPrintFormatU},
-        {"llu", AdxPrintFormatU},
-        {"p", AdxPrintFormatP},
-        {"x", AdxPrintFormatX},
-        {"lx", AdxPrintFormatX},
-        {"llx", AdxPrintFormatX},
-        {"X", AdxPrintFormatXUpper},
-        {"lX", AdxPrintFormatXUpper},
-        {"llX", AdxPrintFormatXUpper},
-        {"s", AdxPrintFormatS}
-};
- 
-static const std::unordered_map<GeDataType, uint16_t> ADX_DATA_TYPE_SIZE {
+static const std::unordered_map<
+    std::string, std::function<void(const uint8_t*, std::string&, const size_t, const size_t)>>
+    ADX_PRINT_FORMAT_CALLS{{"d", AdxPrintFormatD},      {"ld", AdxPrintFormatD},      {"lld", AdxPrintFormatD},
+                           {"i", AdxPrintFormatI},      {"li", AdxPrintFormatI},      {"lli", AdxPrintFormatI},
+                           {"f", AdxPrintFormatF},      {"F", AdxPrintFormatFUpper},  {"u", AdxPrintFormatU},
+                           {"lu", AdxPrintFormatU},     {"llu", AdxPrintFormatU},     {"p", AdxPrintFormatP},
+                           {"x", AdxPrintFormatX},      {"lx", AdxPrintFormatX},      {"llx", AdxPrintFormatX},
+                           {"X", AdxPrintFormatXUpper}, {"lX", AdxPrintFormatXUpper}, {"llX", AdxPrintFormatXUpper},
+                           {"s", AdxPrintFormatS}};
+
+static const std::unordered_map<GeDataType, uint16_t> ADX_DATA_TYPE_SIZE{
     {GeDataType::DT_UINT8, 1U},
     {GeDataType::DT_INT8, 1U},
     {GeDataType::DT_BOOL, 1U},
@@ -476,12 +441,11 @@ static const std::unordered_map<GeDataType, uint16_t> ADX_DATA_TYPE_SIZE {
     {GeDataType::DT_HIFLOAT8, 1U},
     {GeDataType::DT_FLOAT8_E5M2, 1U},
     {GeDataType::DT_FLOAT8_E4M3FN, 1U},
-    {GeDataType::DT_FLOAT8_E8M0, 1U}
-};
- 
-static void GetDataTypeSize(uint32_t dataType, uint16_t &size)
+    {GeDataType::DT_FLOAT8_E8M0, 1U}};
+
+static void GetDataTypeSize(uint32_t dataType, uint16_t& size)
 {
-    const auto &iter = ADX_DATA_TYPE_SIZE.find(static_cast<GeDataType>(dataType));
+    const auto& iter = ADX_DATA_TYPE_SIZE.find(static_cast<GeDataType>(dataType));
     if (iter != ADX_DATA_TYPE_SIZE.end()) {
         size = iter->second;
     } else {
@@ -490,13 +454,14 @@ static void GetDataTypeSize(uint32_t dataType, uint16_t &size)
     }
 }
 
-static void AdxDumpPrintTensorWithShape(const AdxDumpMessageHead *const tensorHead,
-                                        const std::vector<size_t> &shape, const size_t totalNum, const size_t elementsNum)
+static void AdxDumpPrintTensorWithShape(
+    const AdxDumpMessageHead* const tensorHead, const std::vector<size_t>& shape, const size_t totalNum,
+    const size_t elementsNum)
 {
     IDE_LOGI("print tensor by shape, totalNum is %zu, elementsNum is %zu.", totalNum, elementsNum);
-    const auto &iter = ADX_PRINT_BY_SHAPE_CALLS.find(static_cast<GeDataType>(tensorHead->dataType));
+    const auto& iter = ADX_PRINT_BY_SHAPE_CALLS.find(static_cast<GeDataType>(tensorHead->dataType));
     if (iter != ADX_PRINT_BY_SHAPE_CALLS.end()) {
-        const uint8_t *const data = (const uint8_t *)(tensorHead) + sizeof(AdxDumpMessageHead);
+        const uint8_t* const data = (const uint8_t*)(tensorHead) + sizeof(AdxDumpMessageHead);
         if (totalNum != 0) {
             std::vector<size_t> tmpShape = shape;
             for (int i = tmpShape.size() - 2; i >= 0 && shape.size() >= 2U; i--) {
@@ -505,9 +470,9 @@ static void AdxDumpPrintTensorWithShape(const AdxDumpMessageHead *const tensorHe
             std::string tensorContent = std::string(tmpShape.size(), '[');
             size_t cnt = 0U;
             if (totalNum == elementsNum) {
-                cnt = (iter->second)(static_cast<const void *>(data), elementsNum, tmpShape, tensorContent, false);
+                cnt = (iter->second)(static_cast<const void*>(data), elementsNum, tmpShape, tensorContent, false);
             } else {
-                cnt = (iter->second)(static_cast<const void *>(data), elementsNum, tmpShape, tensorContent, true);
+                cnt = (iter->second)(static_cast<const void*>(data), elementsNum, tmpShape, tensorContent, true);
                 AdxPrintExtraElems(totalNum, elementsNum, cnt, tmpShape, tensorContent);
             }
             std::cout << tensorContent << std::endl;
@@ -519,8 +484,8 @@ static void AdxDumpPrintTensorWithShape(const AdxDumpMessageHead *const tensorHe
     }
 }
 
-static void AdxDumpJugdeShape(const std::vector<size_t> &shape, const size_t actualDataNum,
-                              const AdxDumpMessageHead *const tensorHead)
+static void AdxDumpJugdeShape(
+    const std::vector<size_t>& shape, const size_t actualDataNum, const AdxDumpMessageHead* const tensorHead)
 {
     size_t totalNum = 1U;
     std::string shapeStr = "[";
@@ -545,26 +510,26 @@ static void AdxDumpJugdeShape(const std::vector<size_t> &shape, const size_t act
     return;
 }
 
-static void AdxDumpPrintTensorWithoutShape(const AdxDumpMessageHead *const tensorHead, const size_t dataNum)
+static void AdxDumpPrintTensorWithoutShape(const AdxDumpMessageHead* const tensorHead, const size_t dataNum)
 {
-    const auto &iter = ADX_PRINT_CALLS.find(static_cast<GeDataType>(tensorHead->dataType));
+    const auto& iter = ADX_PRINT_CALLS.find(static_cast<GeDataType>(tensorHead->dataType));
     if (iter != ADX_PRINT_CALLS.end()) {
-        const uint8_t *const data = (const uint8_t *)(tensorHead) + sizeof(AdxDumpMessageHead);
-        (iter->second)(static_cast<const void *>(data), dataNum);
+        const uint8_t* const data = (const uint8_t*)(tensorHead) + sizeof(AdxDumpMessageHead);
+        (iter->second)(static_cast<const void*>(data), dataNum);
     } else {
         const std::string dtype = AdumpToString((aclDataType)tensorHead->dataType);
         IDE_LOGW("Dump tensor doesn't support dtype of %s.", dtype.c_str());
     }
 }
 
-static void AdxPrintTensorInfo(const AdxDumpInfoHead *dumpHead, std::vector<size_t> &shape)
+static void AdxPrintTensorInfo(const AdxDumpInfoHead* dumpHead, std::vector<size_t>& shape)
 {
     IDE_LOGI("Dump tensor length %u bytes.", dumpHead->infoLen);
     if (static_cast<size_t>(dumpHead->infoLen) < sizeof(AdxDumpMessageHead)) {
         return;
     }
 
-    const AdxDumpMessageHead *const tensorHead = (const AdxDumpMessageHead *)dumpHead->infoMsg;
+    const AdxDumpMessageHead* const tensorHead = (const AdxDumpMessageHead*)dumpHead->infoMsg;
     const std::string dtype = AdumpToString((aclDataType)tensorHead->dataType);
     const uint32_t actualDumpNum = tensorHead->rsv;
     uint16_t dtypeSize = 0U;
@@ -574,16 +539,18 @@ static void AdxPrintTensorInfo(const AdxDumpInfoHead *dumpHead, std::vector<size
         IDE_LOGW("Dump tensor doesn't support dtype of %s.", dtype.c_str());
         return;
     }
-    const size_t actualDataNum = (actualDumpNum == 0U) ? 
-        (static_cast<size_t>(dumpHead->infoLen) - sizeof(AdxDumpMessageHead)) / dtypeSize : static_cast<size_t>(actualDumpNum);
-    const auto &positionIter = POSITION_MAP.find(tensorHead->position);
+    const size_t actualDataNum = (actualDumpNum == 0U) ?
+                                     (static_cast<size_t>(dumpHead->infoLen) - sizeof(AdxDumpMessageHead)) / dtypeSize :
+                                     static_cast<size_t>(actualDumpNum);
+    const auto& positionIter = POSITION_MAP.find(tensorHead->position);
     const std::string position =
         (positionIter != POSITION_MAP.end()) ? positionIter->second : std::to_string(tensorHead->position);
     const std::string addrToHex = AdxToHex(tensorHead->addr);
     std::cout << "DumpTensor: desc=" << std::dec << tensorHead->desc << ", addr=" << addrToHex;
     std::cout << ", data_type=" << dtype << ", position=" << position << ", dump_size=" << actualDataNum << std::endl;
-    IDE_LOGI("DumpTensor: desc=%u, addr=%s, data_type=%s, position=%s, dump_size=%zu.",
-        tensorHead->desc, addrToHex.c_str(), dtype.c_str(), position.c_str(), actualDataNum);
+    IDE_LOGI(
+        "DumpTensor: desc=%u, addr=%s, data_type=%s, position=%s, dump_size=%zu.", tensorHead->desc, addrToHex.c_str(),
+        dtype.c_str(), position.c_str(), actualDataNum);
 
     if (!shape.empty()) {
         AdxDumpJugdeShape(shape, actualDataNum, tensorHead);
@@ -593,12 +560,11 @@ static void AdxPrintTensorInfo(const AdxDumpInfoHead *dumpHead, std::vector<size
     }
 }
 
-static void AdxPrintToLog(std::string &printInfo, const bool isAssert)
+static void AdxPrintToLog(std::string& printInfo, const bool isAssert)
 {
     const size_t strLength = printInfo.size();
     for (size_t i = 0; i < strLength; i += ADX_MAX_LOG_LENGTH) {
-        const size_t subInfoLen =
-            (i + ADX_MAX_LOG_LENGTH) > strLength ? (strLength - i) : ADX_MAX_LOG_LENGTH;
+        const size_t subInfoLen = (i + ADX_MAX_LOG_LENGTH) > strLength ? (strLength - i) : ADX_MAX_LOG_LENGTH;
         if (isAssert) {
             IDE_LOGE("%s", printInfo.substr(i, subInfoLen).c_str());
         } else {
@@ -607,7 +573,7 @@ static void AdxPrintToLog(std::string &printInfo, const bool isAssert)
     }
 }
 
-static std::string AdxGetFormat(const char *format)
+static std::string AdxGetFormat(const char* format)
 {
     std::string temp;
     if ((*format) == 'l') {
@@ -629,21 +595,21 @@ static std::string AdxGetFormat(const char *format)
     return temp;
 }
 
-static void AdxPrint(const char *format, const uint8_t *paramBegin, const size_t maxLen,
-                     const size_t paramNum, const bool isAssert)
+static void AdxPrint(
+    const char* format, const uint8_t* paramBegin, const size_t maxLen, const size_t paramNum, const bool isAssert)
 {
     size_t paramIndex = 0U;
     std::string printInfo = "";
     while ((*format) != '\0') {
         if ((*format) == '%') {
             format++;
-            const std::string &tempFormat = AdxGetFormat(format);
-            const auto &iter = ADX_PRINT_FORMAT_CALLS.find(tempFormat);
+            const std::string& tempFormat = AdxGetFormat(format);
+            const auto& iter = ADX_PRINT_FORMAT_CALLS.find(tempFormat);
             if (iter != ADX_PRINT_FORMAT_CALLS.end()) {
                 paramIndex++;
                 if (paramIndex >= paramNum) {
-                    IDE_LOGW("Dump print formatting num %zu too much, must be smaller than %zu", paramIndex + 1U,
-                        paramNum);
+                    IDE_LOGW(
+                        "Dump print formatting num %zu too much, must be smaller than %zu", paramIndex + 1U, paramNum);
                     break;
                 }
                 (iter->second)(paramBegin, printInfo, paramIndex, maxLen);
@@ -664,35 +630,33 @@ static void AdxPrint(const char *format, const uint8_t *paramBegin, const size_t
     AdxPrintToLog(printInfo, isAssert);
 }
 
-static void AdxPrintPrintInfo(const AdxDumpInfoHead *dumpHead, const bool isAssert)
+static void AdxPrintPrintInfo(const AdxDumpInfoHead* dumpHead, const bool isAssert)
 {
     IDE_LOGD("Get dump print data length[%u bytes].", dumpHead->infoLen);
     if (static_cast<size_t>(dumpHead->infoLen) < ADX_PRINT_ARG_LEN) {
         return;
     }
-    const size_t strOffset = *((const size_t *)dumpHead->infoMsg);
+    const size_t strOffset = *((const size_t*)dumpHead->infoMsg);
     const size_t argsNum = strOffset / ADX_PRINT_ARG_LEN;
-    const char *str = (const char *)(dumpHead->infoMsg + strOffset);
+    const char* str = (const char*)(dumpHead->infoMsg + strOffset);
     const size_t strLen = strnlen(str, ADX_MAX_STR_LEN);
 
     IDE_LOGD("Get print str len[%zu bytes]", strLen);
     if (strLen > static_cast<size_t>(dumpHead->infoLen)) {
         return;
     }
-    AdxPrint(str, (const uint8_t *)dumpHead->infoMsg,
-        static_cast<size_t>(dumpHead->infoLen), argsNum, isAssert);
+    AdxPrint(str, (const uint8_t*)dumpHead->infoMsg, static_cast<size_t>(dumpHead->infoLen), argsNum, isAssert);
 }
 
-
-static void AdxGetShapeInfo(const AdxDumpInfoHead *dumpHead, std::vector<size_t> &shape)
+static void AdxGetShapeInfo(const AdxDumpInfoHead* dumpHead, std::vector<size_t>& shape)
 {
-    const AdxDumpShapeMessageHead *const shapeHead = (const AdxDumpShapeMessageHead *)dumpHead->infoMsg;
+    const AdxDumpShapeMessageHead* const shapeHead = (const AdxDumpShapeMessageHead*)dumpHead->infoMsg;
     for (size_t i = 0U; i < shapeHead->dim; i++) {
         shape.push_back(shapeHead->shape[i]);
     }
 }
 
-static void AdxPrintPrint(const AdxDumpInfoHead *dumpHead, const bool isAssert, std::vector<size_t> &shapeInfo)
+static void AdxPrintPrint(const AdxDumpInfoHead* dumpHead, const bool isAssert, std::vector<size_t>& shapeInfo)
 {
     if (!isAssert) {
         if (dumpHead->type == AdxDumpType::DUMP_SCALAR) {
@@ -715,9 +679,9 @@ static std::string AdxGetCoreType(const uint8_t coreType, const uint8_t mixFlag)
     static const std::map<uint8_t, std::string> CORE_TYPE_MAP{{1, "AIC"}, {2, "AIV"}};
     std::string strCoreType;
     if (mixFlag == 0U) {
-        const auto &iter = CORE_TYPE_MAP.find(coreType);
+        const auto& iter = CORE_TYPE_MAP.find(coreType);
         if (iter != CORE_TYPE_MAP.end()) {
-            strCoreType =  iter->second;
+            strCoreType = iter->second;
         }
     } else {
         strCoreType = "MIX";
@@ -725,9 +689,9 @@ static std::string AdxGetCoreType(const uint8_t coreType, const uint8_t mixFlag)
     return strCoreType;
 }
 
-static void AdxPrintTimeStampInfo(const AdxDumpInfoHead *dumpHead, MsprofAicTimeStampInfo *timeStampInfo)
+static void AdxPrintTimeStampInfo(const AdxDumpInfoHead* dumpHead, MsprofAicTimeStampInfo* timeStampInfo)
 {
-    const uint8_t *info = (const uint8_t *)(dumpHead->infoMsg);
+    const uint8_t* info = (const uint8_t*)(dumpHead->infoMsg);
     timeStampInfo->descId = *(reinterpret_cast<const uint32_t*>(info));
     info += sizeof(uint32_t);
     uint32_t rsv = *(reinterpret_cast<const uint32_t*>(info));
@@ -737,24 +701,20 @@ static void AdxPrintTimeStampInfo(const AdxDumpInfoHead *dumpHead, MsprofAicTime
     timeStampInfo->curPc = *(reinterpret_cast<const uint64_t*>(info));
 
     if (!g_adxPrintConfigFlag) {
-        (void)printf("descId is %u, rsv is %u, timeStamp is %" PRIu64 ", pcPtr is %" PRIu64 ".\n",
-            timeStampInfo->descId,
-            rsv,
-            timeStampInfo->syscyc,
-            timeStampInfo->curPc);
+        (void)printf(
+            "descId is %u, rsv is %u, timeStamp is %" PRIu64 ", pcPtr is %" PRIu64 ".\n", timeStampInfo->descId, rsv,
+            timeStampInfo->syscyc, timeStampInfo->curPc);
     }
-    IDE_LOGI("descId is %u, rsv is %u, timeStamp is %" PRIu64 ", pcPtr is %" PRIu64 ".",
-        timeStampInfo->descId,
-        rsv,
-        timeStampInfo->syscyc,
-        timeStampInfo->curPc);
+    IDE_LOGI(
+        "descId is %u, rsv is %u, timeStamp is %" PRIu64 ", pcPtr is %" PRIu64 ".", timeStampInfo->descId, rsv,
+        timeStampInfo->syscyc, timeStampInfo->curPc);
 }
 
-static void AdxPrintHeadInfo(const uint8_t *blockData, const char *opType, const bool isAssert)
+static void AdxPrintHeadInfo(const uint8_t* blockData, const char* opType, const bool isAssert)
 {
-    const AdxBlockInfo *blockInfo = (const AdxBlockInfo *)(blockData);
+    const AdxBlockInfo* blockInfo = (const AdxBlockInfo*)(blockData);
     const std::string magicToHex = AdxToHex(blockInfo->magic);
-    const AdxDumpMeta *dumpMeta = (const AdxDumpMeta *)(blockData + sizeof(AdxBlockInfo));
+    const AdxDumpMeta* dumpMeta = (const AdxDumpMeta*)(blockData + sizeof(AdxBlockInfo));
     const std::string coreTypeId = AdxGetCoreTypeId(blockInfo->core, dumpMeta->coreType);
     const std::string coreType = AdxGetCoreType(dumpMeta->coreType, dumpMeta->mixFlag);
     if (!isAssert) {
@@ -770,25 +730,28 @@ static void AdxPrintHeadInfo(const uint8_t *blockData, const char *opType, const
     std::cout << ", block_remain_len=" << blockInfo->remainLen << ", block_initial_space=" << blockInfo->len;
     std::cout << ", rsv=" << blockInfo->rsv << ", magic=" << magicToHex;
     std::cout << std::endl;
-    IDE_LOGI("PrintInfo: DumpHead: %s, CoreType=%s, block dim=%d, "
-             "total_block_num=%u, block_remain_len=%u, block_initial_space=%u, rsv=%u, magic=%s",
-             coreTypeId.c_str(), coreType.c_str(), dumpMeta->blockDim,
-             blockInfo->blockNum, blockInfo->remainLen, blockInfo->len, blockInfo->rsv, magicToHex.c_str());
+    IDE_LOGI(
+        "PrintInfo: DumpHead: %s, CoreType=%s, block dim=%d, "
+        "total_block_num=%u, block_remain_len=%u, block_initial_space=%u, rsv=%u, magic=%s",
+        coreTypeId.c_str(), coreType.c_str(), dumpMeta->blockDim, blockInfo->blockNum, blockInfo->remainLen,
+        blockInfo->len, blockInfo->rsv, magicToHex.c_str());
 }
 
-static void AdxPrintSimtHeadInfo(const uint8_t *blockData, const char *opType)
+static void AdxPrintSimtHeadInfo(const uint8_t* blockData, const char* opType)
 {
-    const AdxBlockInfo *blockInfo = Adx::SysUtils::ReinterpretCast<const AdxBlockInfo, const uint8_t>(blockData);
+    const AdxBlockInfo* blockInfo = Adx::SysUtils::ReinterpretCast<const AdxBlockInfo, const uint8_t>(blockData);
     const std::string magicToHex = AdxToHex(blockInfo->magic);
-    const AdxSimtDumpMeta *dumpMeta = Adx::SysUtils::ReinterpretCast<const AdxSimtDumpMeta, const uint8_t>(blockData + sizeof(AdxBlockInfo));
+    const AdxSimtDumpMeta* dumpMeta =
+        Adx::SysUtils::ReinterpretCast<const AdxSimtDumpMeta, const uint8_t>(blockData + sizeof(AdxBlockInfo));
     const uint32_t threadId = dumpMeta->threadId;
 
     std::cout << "opType=" << opType << ", blockId=" << blockInfo->core << ", threadId=" << threadId << std::endl;
     if (threadId == 0) {
-        IDE_LOGD("Simt print info: opType=%s, blockId: %d, threadId=%d, "
-                 "total_block_num=%u, block_remain_len=%u, block_initial_space=%u, rsv=%u, magic=%s",
-                 opType, blockInfo->core, threadId,
-                 blockInfo->blockNum, blockInfo->remainLen, blockInfo->len, blockInfo->rsv, magicToHex.c_str());
+        IDE_LOGD(
+            "Simt print info: opType=%s, blockId: %d, threadId=%d, "
+            "total_block_num=%u, block_remain_len=%u, block_initial_space=%u, rsv=%u, magic=%s",
+            opType, blockInfo->core, threadId, blockInfo->blockNum, blockInfo->remainLen, blockInfo->len,
+            blockInfo->rsv, magicToHex.c_str());
     }
 
     if (blockInfo->rsv == ADX_OFF_LIMIT_RSV) {
@@ -797,26 +760,27 @@ static void AdxPrintSimtHeadInfo(const uint8_t *blockData, const char *opType)
     }
 }
 
-static void AdxPrintBlockInfo(const uint8_t *blockData, size_t blockDataLen, const char *opType, const bool isAssert,
-    std::vector<MsprofAicTimeStampInfo> &timeStampInfo)
+static void AdxPrintBlockInfo(
+    const uint8_t* blockData, size_t blockDataLen, const char* opType, const bool isAssert,
+    std::vector<MsprofAicTimeStampInfo>& timeStampInfo)
 {
-    const AdxBlockInfo *blockInfo = (const AdxBlockInfo *)(blockData);
+    const AdxBlockInfo* blockInfo = (const AdxBlockInfo*)(blockData);
     const size_t maxDataLen = blockDataLen - sizeof(AdxBlockInfo) - sizeof(AdxDumpMeta);
     if (static_cast<size_t>(blockInfo->remainLen) > maxDataLen) {
-        IDE_LOGW("Block info remain length %u bytes illegal, must small than %zu bytes.",
-            blockInfo->remainLen, maxDataLen);
+        IDE_LOGW(
+            "Block info remain length %u bytes illegal, must small than %zu bytes.", blockInfo->remainLen, maxDataLen);
         return;
     }
 
     bool flag = false;
-    const uint8_t *beginAddr = blockData + sizeof(AdxBlockInfo) + sizeof(AdxDumpMeta);
+    const uint8_t* beginAddr = blockData + sizeof(AdxBlockInfo) + sizeof(AdxDumpMeta);
     const size_t dataLen = maxDataLen - static_cast<size_t>(blockInfo->remainLen);
     size_t offset = 0UL;
     std::vector<size_t> shape;
     while ((offset + sizeof(AdxDumpInfoHead)) <= dataLen) {
-        auto dumpHead = (const AdxDumpInfoHead *)(beginAddr + offset);
+        auto dumpHead = (const AdxDumpInfoHead*)(beginAddr + offset);
         if ((!flag) && ((dumpHead->type != AdxDumpType::DUMP_TIMESTAMP) ||
-                           ((dumpHead->type == AdxDumpType::DUMP_TIMESTAMP) && (!g_adxPrintConfigFlag)))) {
+                        ((dumpHead->type == AdxDumpType::DUMP_TIMESTAMP) && (!g_adxPrintConfigFlag)))) {
             AdxPrintHeadInfo(blockData, opType, isAssert);
             flag = true;
         }
@@ -840,16 +804,16 @@ static void AdxPrintBlockInfo(const uint8_t *blockData, size_t blockDataLen, con
     return;
 }
 
-static void AdxPrintSimtBlockInfo(const uint8_t *blockData, size_t blockDataLen, const char *opType)
+static void AdxPrintSimtBlockInfo(const uint8_t* blockData, size_t blockDataLen, const char* opType)
 {
-    const AdxBlockInfo *blockInfo = Adx::SysUtils::ReinterpretCast<const AdxBlockInfo, const uint8_t>(blockData);
+    const AdxBlockInfo* blockInfo = Adx::SysUtils::ReinterpretCast<const AdxBlockInfo, const uint8_t>(blockData);
     const size_t maxDataLen = blockDataLen - sizeof(AdxBlockInfo) - sizeof(AdxSimtDumpMeta);
     if (static_cast<size_t>(blockInfo->remainLen) > maxDataLen) {
         IDE_LOGW("Block info remainLen(%u) is illegal, must be small than %zu.", blockInfo->remainLen, maxDataLen);
         return;
     }
 
-    const uint8_t *beginAddr = blockData + sizeof(AdxBlockInfo) + sizeof(AdxSimtDumpMeta);
+    const uint8_t* beginAddr = blockData + sizeof(AdxBlockInfo) + sizeof(AdxSimtDumpMeta);
     const size_t dataLen = maxDataLen - static_cast<size_t>(blockInfo->remainLen);
     size_t offset = 0UL;
 
@@ -876,18 +840,19 @@ static void AdxPrintSimtBlockInfo(const uint8_t *blockData, size_t blockDataLen,
     }
 }
 
-static void AdxPrintDumpdata(const std::vector<uint8_t> &printData, size_t dumpWorkSpaceSize, const char *opType,
-    const bool isAssert, std::vector<MsprofAicTimeStampInfo> &timeStampInfo)
+static void AdxPrintDumpdata(
+    const std::vector<uint8_t>& printData, size_t dumpWorkSpaceSize, const char* opType, const bool isAssert,
+    std::vector<MsprofAicTimeStampInfo>& timeStampInfo)
 {
-    const uint8_t *const addr = printData.data();
-    const AdxBlockInfo *blockInfo = (const AdxBlockInfo *)(addr);
+    const uint8_t* const addr = printData.data();
+    const AdxBlockInfo* blockInfo = (const AdxBlockInfo*)(addr);
 
     size_t blockDataLen = blockInfo->len;
     IDE_LOGI("dumpWorkSpaceSize is %zu bytes, blockDataLen is %zu bytes.", dumpWorkSpaceSize, blockDataLen);
     if ((blockDataLen == 0U) || ((blockDataLen != ADX_MAX_STR_LEN) && (blockDataLen != ADX_ASSERT_LEN))) {
-        const uint32_t *dataAddr = (const uint32_t *)printData.data();
+        const uint32_t* dataAddr = (const uint32_t*)printData.data();
         for (size_t i = 0U; (i + 4) < dumpWorkSpaceSize / sizeof(uint32_t); i++) { // magic和len隔了4个uint32_t
-            if (*(dataAddr + i + 4) == ADX_DUMP_AND_PRINT_MAGIC_NUM) { // magic和len隔了4个uint32_t
+            if (*(dataAddr + i + 4) == ADX_DUMP_AND_PRINT_MAGIC_NUM) {             // magic和len隔了4个uint32_t
                 blockDataLen = *(dataAddr + i);
                 break;
             }
@@ -903,7 +868,7 @@ static void AdxPrintDumpdata(const std::vector<uint8_t> &printData, size_t dumpW
 
     size_t blockNum = AdxGetBlockNum();
     for (size_t i = 0U; i < blockNum; i++) {
-        const AdxBlockInfo *info = (const AdxBlockInfo *)(addr + blockDataLen * i);
+        const AdxBlockInfo* info = (const AdxBlockInfo*)(addr + blockDataLen * i);
         if (info->magic != ADX_DUMP_AND_PRINT_MAGIC_NUM) {
             IDE_LOGW("Block info[%zu] is illegal, magic is %u.", i, info->magic);
             continue;
@@ -915,8 +880,8 @@ static void AdxPrintDumpdata(const std::vector<uint8_t> &printData, size_t dumpW
         return;
     }
 
-    const uint8_t *const simtAddr = addr + blockNum * blockDataLen;
-    const AdxBlockInfo *simtBlockInfo = Adx::SysUtils::ReinterpretCast<const AdxBlockInfo, const uint8_t>(simtAddr);
+    const uint8_t* const simtAddr = addr + blockNum * blockDataLen;
+    const AdxBlockInfo* simtBlockInfo = Adx::SysUtils::ReinterpretCast<const AdxBlockInfo, const uint8_t>(simtAddr);
     size_t simtBlockDataLen = simtBlockInfo->len;
     if (simtBlockDataLen != ADX_SIMT_PRINT_LEN) {
         IDE_LOGW("Simt block info length %zu is illegal.", simtBlockDataLen);
@@ -926,7 +891,8 @@ static void AdxPrintDumpdata(const std::vector<uint8_t> &printData, size_t dumpW
     for (size_t i = 0U; i < ADX_SIMT_BLOCK_NUM; i++) {
         for (uint32_t j = 0U; j < ADX_SIMT_MAX_THREAD_NUM; j++) {
             uint32_t threadOffset = i * ADX_SIMT_MAX_THREAD_NUM + j;
-            const AdxBlockInfo *info = Adx::SysUtils::ReinterpretCast<const AdxBlockInfo, const uint8_t>(simtAddr + simtBlockDataLen * threadOffset);
+            const AdxBlockInfo* info = Adx::SysUtils::ReinterpretCast<const AdxBlockInfo, const uint8_t>(
+                simtAddr + simtBlockDataLen * threadOffset);
 
             if (info->magic != ADX_DUMP_AND_PRINT_MAGIC_NUM) {
                 continue;
@@ -937,64 +903,59 @@ static void AdxPrintDumpdata(const std::vector<uint8_t> &printData, size_t dumpW
     }
 }
 
-static rtError_t AdxGetWorkspaceData(void *printData, const void *workSpaceAddr,
-    const size_t dumpWorkSpaceSize, aclrtStream stream, bool enableSync = true)
+static rtError_t AdxGetWorkspaceData(
+    void* printData, const void* workSpaceAddr, const size_t dumpWorkSpaceSize, aclrtStream stream,
+    bool enableSync = true)
 {
     int32_t timeout = GetStreamSynchronizeTimeout();
     if (enableSync) {
         auto rtRet = rtStreamSynchronizeWithTimeout(stream, timeout);
         if (rtRet != RT_ERROR_NONE) {
             IDE_LOGE("Synchronize stream failed, error code is %d.", rtRet);
-            printf("ERROR: Synchronize stream failed, error code is %d, please check plog for more information.\n", rtRet);
+            printf(
+                "ERROR: Synchronize stream failed, error code is %d, please check plog for more information.\n", rtRet);
         }
     }
-    auto rtRet = rtMemcpy(printData, dumpWorkSpaceSize, workSpaceAddr,
-        dumpWorkSpaceSize, RT_MEMCPY_DEVICE_TO_HOST);
+    auto rtRet = rtMemcpy(printData, dumpWorkSpaceSize, workSpaceAddr, dumpWorkSpaceSize, RT_MEMCPY_DEVICE_TO_HOST);
     if (rtRet != RT_ERROR_NONE) {
-        IDE_LOGE("Call rtMemcpy failed, ret: 0x%X, ori[%p], dts[%p], size[%lu bytes]. ",
-            rtRet, workSpaceAddr, printData, dumpWorkSpaceSize);
+        IDE_LOGE(
+            "Call rtMemcpy failed, ret: 0x%X, ori[%p], dts[%p], size[%lu bytes]. ", rtRet, workSpaceAddr, printData,
+            dumpWorkSpaceSize);
     }
     return rtRet;
 }
 
 void AdxPrintWorkSpace(
-    const void *workSpaceAddr,
-    const size_t dumpWorkSpaceSize,
-    aclrtStream stream,
-    const char *opType, bool enableSync = true)
+    const void* workSpaceAddr, const size_t dumpWorkSpaceSize, aclrtStream stream, const char* opType,
+    bool enableSync = true)
 {
     std::vector<uint8_t> printData(dumpWorkSpaceSize);
-    if (AdxGetWorkspaceData(printData.data(), workSpaceAddr,
-        dumpWorkSpaceSize, stream, enableSync) == RT_ERROR_NONE) {
+    if (AdxGetWorkspaceData(printData.data(), workSpaceAddr, dumpWorkSpaceSize, stream, enableSync) == RT_ERROR_NONE) {
         std::vector<MsprofAicTimeStampInfo> timeStampInfo;
         AdxPrintDumpdata(printData, dumpWorkSpaceSize, opType, false, timeStampInfo);
     }
 }
 
-void AdxPrintSetConfig(const Adx::AdumpPrintConfig &config)
+void AdxPrintSetConfig(const Adx::AdumpPrintConfig& config)
 {
     const std::lock_guard<std::mutex> lock(g_adxPrintConfigMtx);
     g_adxPrintConfigFlag = config.printEnable;
 }
 
 void AdxPrintTimeStamp(
-    const void *workSpaceAddr,
-    const size_t dumpWorkSpaceSize,
-    aclrtStream stream,
-    const char *opType,
-    std::vector<MsprofAicTimeStampInfo> &timeStampInfo)
+    const void* workSpaceAddr, const size_t dumpWorkSpaceSize, aclrtStream stream, const char* opType,
+    std::vector<MsprofAicTimeStampInfo>& timeStampInfo)
 {
     std::vector<uint8_t> printData(dumpWorkSpaceSize);
-    if (AdxGetWorkspaceData(printData.data(), workSpaceAddr, dumpWorkSpaceSize, stream,
-        true) == RT_ERROR_NONE) {
+    if (AdxGetWorkspaceData(printData.data(), workSpaceAddr, dumpWorkSpaceSize, stream, true) == RT_ERROR_NONE) {
         AdxPrintDumpdata(printData, dumpWorkSpaceSize, opType, false, timeStampInfo);
     }
 }
 
-static bool AdxGetWorkspaceInfoForAssert(rtExceptionArgsInfo_t &argsInfo, rtArgsSizeInfo &sizeInfo,
-                                         void **workSpaceAddr, uint64_t &workSpaceSize)
+static bool AdxGetWorkspaceInfoForAssert(
+    rtExceptionArgsInfo_t& argsInfo, rtArgsSizeInfo& sizeInfo, void** workSpaceAddr, uint64_t& workSpaceSize)
 {
-    uint64_t *infoAddr = reinterpret_cast<uint64_t *>(sizeInfo.infoAddr); // atomic
+    uint64_t* infoAddr = reinterpret_cast<uint64_t*>(sizeInfo.infoAddr); // atomic
     IDE_LOGD("rtArgsSizeInfo is %p.", infoAddr);
     if (infoAddr == nullptr) {
         IDE_LOGW("Get sizeInfo addr is nullptr, unable to resolve assert info.");
@@ -1031,25 +992,25 @@ static bool AdxGetWorkspaceInfoForAssert(rtExceptionArgsInfo_t &argsInfo, rtArgs
         return false;
     }
     // 获取workspace地址  argsInfo.argAddr args的首地址
-    uint64_t *argsAddr = hasFftsAddr ? ((uint64_t *)argsInfo.argAddr + offset + 1U) :
-        ((uint64_t *)argsInfo.argAddr + offset);
+    uint64_t* argsAddr =
+        hasFftsAddr ? ((uint64_t*)argsInfo.argAddr + offset + 1U) : ((uint64_t*)argsInfo.argAddr + offset);
 
-    auto rtRet = rtMemcpy(workSpaceAddr, sizeof(uint64_t), argsAddr,
-        sizeof(uint64_t), RT_MEMCPY_DEVICE_TO_HOST);
+    auto rtRet = rtMemcpy(workSpaceAddr, sizeof(uint64_t), argsAddr, sizeof(uint64_t), RT_MEMCPY_DEVICE_TO_HOST);
     if (rtRet != RT_ERROR_NONE) {
-        IDE_LOGE("Call rtMemcpy failed, ret: 0x%X, ori[%p], dts[%p], size[%lu bytes].",
-            rtRet, argsAddr, workSpaceAddr, sizeof(uint64_t));
+        IDE_LOGE(
+            "Call rtMemcpy failed, ret: 0x%X, ori[%p], dts[%p], size[%lu bytes].", rtRet, argsAddr, workSpaceAddr,
+            sizeof(uint64_t));
         return false;
     }
     return true;
 }
 
-static void AdxPrintAssert(const void *workSpaceAddr, const size_t dumpWorkSpaceSize)
+static void AdxPrintAssert(const void* workSpaceAddr, const size_t dumpWorkSpaceSize)
 {
     IDE_LOGD("[Assert] workSpaceAddr[%p], dumpWorkSpaceSize[%llu].", workSpaceAddr, dumpWorkSpaceSize);
     std::vector<uint8_t> printData(dumpWorkSpaceSize);
-    auto rtRet = rtMemcpy(printData.data(), dumpWorkSpaceSize, workSpaceAddr,
-        dumpWorkSpaceSize, RT_MEMCPY_DEVICE_TO_HOST);
+    auto rtRet =
+        rtMemcpy(printData.data(), dumpWorkSpaceSize, workSpaceAddr, dumpWorkSpaceSize, RT_MEMCPY_DEVICE_TO_HOST);
     if (rtRet != RT_ERROR_NONE) {
         IDE_LOGW("Call rtMemcpy failed, ret: 0x%X", rtRet);
         return;
@@ -1058,12 +1019,12 @@ static void AdxPrintAssert(const void *workSpaceAddr, const size_t dumpWorkSpace
     AdxPrintDumpdata(printData, dumpWorkSpaceSize, "", true, timeStampInfo);
 }
 
-static bool AdxGetFftsWorkspaceInfoForAssert(uint16_t contextId, rtExceptionArgsInfo_t &argsInfo,
-                                             rtArgsSizeInfo &sizeInfos, void **workSpaceAddr,
-                                             uint64_t &workSpaceSize)
+static bool AdxGetFftsWorkspaceInfoForAssert(
+    uint16_t contextId, rtExceptionArgsInfo_t& argsInfo, rtArgsSizeInfo& sizeInfos, void** workSpaceAddr,
+    uint64_t& workSpaceSize)
 {
     constexpr uint32_t contextBeginIndex = 2u; // 2 is atomic + totalSize
-    uint64_t *sizeInfo = reinterpret_cast<uint64_t *>(sizeInfos.infoAddr);
+    uint64_t* sizeInfo = reinterpret_cast<uint64_t*>(sizeInfos.infoAddr);
     IDE_LOGD("rtArgsSizeInfo is %p.", sizeInfo);
     if (sizeInfo == nullptr) {
         IDE_LOGW("Get sizeInfo addr is nullptr, unable to resolve assert info.");
@@ -1072,15 +1033,15 @@ static bool AdxGetFftsWorkspaceInfoForAssert(uint16_t contextId, rtExceptionArgs
     const uint64_t totalContextSizeNum = sizeInfo[1];
     uint32_t sizeBeginIndex = 0U;
     for (uint64_t sizeInfoIdx = contextBeginIndex; sizeInfoIdx < (totalContextSizeNum + contextBeginIndex);
-        ++sizeInfoIdx) {
+         ++sizeInfoIdx) {
         if (sizeInfo[sizeInfoIdx] == contextId) {
             sizeBeginIndex = sizeInfoIdx + 3; // 3 - context id | args size | input num
             break;
         }
     }
- 
+
     uint64_t offset = 0U;
-    uint64_t *infoAddr = sizeInfo + sizeBeginIndex;
+    uint64_t* infoAddr = sizeInfo + sizeBeginIndex;
     bool hasWorkSpaceSizeFlag = false;
     for (size_t i = sizeBeginIndex; i < totalContextSizeNum; i++) {
         // 标记workspace
@@ -1098,47 +1059,48 @@ static bool AdxGetFftsWorkspaceInfoForAssert(uint16_t contextId, rtExceptionArgs
         offset += 1;
         ++infoAddr;
     }
-    IDE_LOGD("[Assert] sizeBeginIndex is %lu, offset is %lu, totalContextSizeNum is %lu.",
-        sizeBeginIndex, offset, totalContextSizeNum);
+    IDE_LOGD(
+        "[Assert] sizeBeginIndex is %lu, offset is %lu, totalContextSizeNum is %lu.", sizeBeginIndex, offset,
+        totalContextSizeNum);
     if (!hasWorkSpaceSizeFlag) {
         IDE_LOGE("[Assert] not find workSpaceSize.");
         return false;
     }
 
     // 获取workspace地址  argsInfo.argAddr args的首地址
-    uint64_t *argsAddr = (uint64_t *)argsInfo.argAddr + offset;
-    auto rtRet = rtMemcpy(workSpaceAddr, sizeof(uint64_t), argsAddr,
-        sizeof(uint64_t), RT_MEMCPY_DEVICE_TO_HOST);
+    uint64_t* argsAddr = (uint64_t*)argsInfo.argAddr + offset;
+    auto rtRet = rtMemcpy(workSpaceAddr, sizeof(uint64_t), argsAddr, sizeof(uint64_t), RT_MEMCPY_DEVICE_TO_HOST);
     if (rtRet != RT_ERROR_NONE) {
-        IDE_LOGE("Call rtMemcpy failed, ret: 0x%X, ori[%p], dts[%p], size[%lu].",
-            rtRet, argsAddr, workSpaceAddr, sizeof(uint64_t));
+        IDE_LOGE(
+            "Call rtMemcpy failed, ret: 0x%X, ori[%p], dts[%p], size[%lu].", rtRet, argsAddr, workSpaceAddr,
+            sizeof(uint64_t));
         return false;
     }
     return true;
 }
 
-bool AdxCheckAtomicIndex(const rtExceptionArgsInfo_t &exceptionArgsInfo)
+bool AdxCheckAtomicIndex(const rtExceptionArgsInfo_t& exceptionArgsInfo)
 {
     if (exceptionArgsInfo.sizeInfo.infoAddr == nullptr) {
         IDE_LOGE("infoAddr is null");
         return false;
     }
 
-    uint64_t *sizeInfo = static_cast<uint64_t *>(exceptionArgsInfo.sizeInfo.infoAddr);
+    uint64_t* sizeInfo = static_cast<uint64_t*>(exceptionArgsInfo.sizeInfo.infoAddr);
     if (sizeInfo < Adx::g_chunk || sizeInfo > (Adx::g_chunk + Adx::RING_CHUNK_SIZE - 1)) {
-        IDE_LOGE("[Assert] the size info[%p] address may out of the chunk[%p] address range.",
-            sizeInfo, Adx::g_chunk);
+        IDE_LOGE("[Assert] the size info[%p] address may out of the chunk[%p] address range.", sizeInfo, Adx::g_chunk);
         return false;
     }
     if (sizeInfo[0] != exceptionArgsInfo.sizeInfo.atomicIndex) {
-        IDE_LOGE("[Dump][Exception] args exception atomic index between %llu and %llu is different.",
-                sizeInfo[0], exceptionArgsInfo.sizeInfo.atomicIndex);
+        IDE_LOGE(
+            "[Dump][Exception] args exception atomic index between %llu and %llu is different.", sizeInfo[0],
+            exceptionArgsInfo.sizeInfo.atomicIndex);
         return false;
     }
     return true;
 }
 
-void AdxAssertCallBack(rtExceptionInfo_t *exceptionInfo)
+void AdxAssertCallBack(rtExceptionInfo_t* exceptionInfo)
 {
     uint32_t timeout = 0U;
     rtError_t ret = rtGetOpExecuteTimeoutV2(&timeout);
@@ -1147,12 +1109,12 @@ void AdxAssertCallBack(rtExceptionInfo_t *exceptionInfo)
     } else {
         IDE_LOGI("Get operator timeout %ums", timeout);
         if (timeout < TIMEOUT_THRESHOLD) {
-            IDE_LOGI("Operator timeout %ums, enable fast recovery, skip parsing printf/assert/DumpTensor content.",
-                timeout);
+            IDE_LOGI(
+                "Operator timeout %ums, enable fast recovery, skip parsing printf/assert/DumpTensor content.", timeout);
             return;
         }
     }
-    void *workSpaceAddr = nullptr;
+    void* workSpaceAddr = nullptr;
     uint64_t dumpWorkSpaceSize = 0U;
     bool res = false;
     if (exceptionInfo != nullptr) {
@@ -1175,11 +1137,9 @@ void AdxAssertCallBack(rtExceptionInfo_t *exceptionInfo)
 
         if (exceptionTaskType == RT_EXCEPTION_FFTS_PLUS) {
             IDE_LOGD("[Assert] opType is mix fftsplus.");
-            res = AdxGetFftsWorkspaceInfoForAssert(exceptionInfo->expandInfo.u.fftsPlusInfo.contextId,
-                exceptionArgsInfo,
-                exceptionArgsInfo.sizeInfo,
-                &workSpaceAddr,
-                dumpWorkSpaceSize);
+            res = AdxGetFftsWorkspaceInfoForAssert(
+                exceptionInfo->expandInfo.u.fftsPlusInfo.contextId, exceptionArgsInfo, exceptionArgsInfo.sizeInfo,
+                &workSpaceAddr, dumpWorkSpaceSize);
         } else {
             res = AdxGetWorkspaceInfoForAssert(
                 exceptionArgsInfo, exceptionArgsInfo.sizeInfo, &workSpaceAddr, dumpWorkSpaceSize);

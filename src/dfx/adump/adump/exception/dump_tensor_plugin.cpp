@@ -19,7 +19,7 @@ namespace Adx {
 DumpTensorPlugin::~DumpTensorPlugin()
 {
     // Close all plugin library and clear all map.
-    for (auto &handle : pluginLibHandles_) {
+    for (auto& handle : pluginLibHandles_) {
         if (handle != nullptr) {
             dlclose(handle);
             handle = nullptr;
@@ -37,7 +37,7 @@ DumpTensorPlugin::~DumpTensorPlugin()
  * @param handle    [IN] The handle of the loaded target so by dlopen.
  * @return void
  */
-void DumpTensorPlugin::ReceiveInitialFunc(void *handle) const
+void DumpTensorPlugin::ReceiveInitialFunc(void* handle) const
 {
     AdumpPluginInitFunc initFunc = SysUtils::ReinterpretCast<AdumpPluginInit, void>(dlsym(handle, "AdumpPluginInit"));
     IDE_CTRL_VALUE_WARN(initFunc != nullptr, return, "Cannot find symbol AdumpPluginInit in library mentioned above.");
@@ -61,20 +61,21 @@ int32_t DumpTensorPlugin::InitPluginLib()
 
     // Obtaining the absolute path of all plugin.so files
     std::vector<std::string> pluginList = LibPath::Instance().ObtainAllPluginSo(pluginPath);
-    for(const auto &plugin : pluginList) {
+    for (const auto& plugin : pluginList) {
         // Check whether the path is reasonable.
         std::string realFile;
-        IDE_CTRL_VALUE_WARN_NODO(FileUtils::FileNameIsReal(plugin, realFile) == IDE_DAEMON_OK, continue,
+        IDE_CTRL_VALUE_WARN_NODO(
+            FileUtils::FileNameIsReal(plugin, realFile) == IDE_DAEMON_OK, continue,
             "Unable to get real file %s and the search file is %s.", realFile.c_str(), plugin.c_str());
-        IDE_CTRL_VALUE_WARN_NODO(FileUtils::IsFileExist(realFile), continue,
-            "Unable to find plugin file from %s.", realFile.c_str());
+        IDE_CTRL_VALUE_WARN_NODO(
+            FileUtils::IsFileExist(realFile), continue, "Unable to find plugin file from %s.", realFile.c_str());
         IDE_LOGD("The file of the target plugin.so is %s.", realFile.c_str());
 
         // Load target plugin so by dlopen
         IDE_LOGD("Load plugin librairy from %s.", realFile.c_str());
-        void *handle = dlopen(realFile.c_str(), RTLD_NOW | RTLD_GLOBAL | RTLD_NODELETE);
-        IDE_CTRL_VALUE_WARN_NODO(handle != nullptr, continue, "Cannot open library %s, error: %s.",
-            realFile.c_str(), dlerror());
+        void* handle = dlopen(realFile.c_str(), RTLD_NOW | RTLD_GLOBAL | RTLD_NODELETE);
+        IDE_CTRL_VALUE_WARN_NODO(
+            handle != nullptr, continue, "Cannot open library %s, error: %s.", realFile.c_str(), dlerror());
 
         // Load initialization method and trigger it
         ReceiveInitialFunc(handle);
@@ -108,7 +109,7 @@ bool DumpTensorPlugin::IsTensorTypeRegistered(DfxTensorType tensorType)
 {
     std::lock_guard<std::mutex> lk(regMtx_);
     return (headProcessMap_.find(tensorType) != headProcessMap_.end()) &&
-        (tensorProcessMap_.find(tensorType) != tensorProcessMap_.end());
+           (tensorProcessMap_.find(tensorType) != tensorProcessMap_.end());
 }
 
 /**
@@ -120,8 +121,8 @@ bool DumpTensorPlugin::IsTensorTypeRegistered(DfxTensorType tensorType)
  * @param newHeaderSize [OUT] New header size after target size is added
  * @return exist: true, not exist: false
  */
-int32_t DumpTensorPlugin::NotifyHeadCallback(DfxTensorType tensorType, uint32_t devId, const void *addr,
-    uint64_t headerSize, uint64_t &newHeaderSize)
+int32_t DumpTensorPlugin::NotifyHeadCallback(
+    DfxTensorType tensorType, uint32_t devId, const void* addr, uint64_t headerSize, uint64_t& newHeaderSize)
 {
     // If neither of the two associated callbacks is registered, indicating that the default function is used.
     std::lock_guard<std::mutex> lk(regMtx_);
@@ -137,10 +138,10 @@ int32_t DumpTensorPlugin::NotifyHeadCallback(DfxTensorType tensorType, uint32_t 
  * @param fd         [IN] File descriptor
  * @return exist: true, not exist: false
  */
-int32_t DumpTensorPlugin::NotifyTensorCallback(DfxTensorType tensorType, uint32_t devId, const void *addr,
-    uint64_t size, int32_t fd)
+int32_t DumpTensorPlugin::NotifyTensorCallback(
+    DfxTensorType tensorType, uint32_t devId, const void* addr, uint64_t size, int32_t fd)
 {
     std::lock_guard<std::mutex> lk(regMtx_);
     return tensorProcessMap_[tensorType](devId, addr, size, fd);
 }
-}  // namespace Adx
+} // namespace Adx

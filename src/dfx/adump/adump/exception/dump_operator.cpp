@@ -24,9 +24,9 @@ namespace Adx {
 namespace {
 const std::set<char> INVALID_FILE_NAME_CHAR = {' ', '.', '/', '\\'};
 constexpr char REPLACE_FILE_NAME_CHAR = '_';
-}  // namespace
+} // namespace
 
-bool OpIdentity::operator==(const OpIdentity &rhs) const
+bool OpIdentity::operator==(const OpIdentity& rhs) const
 {
     return rhs.deviceId == deviceId && rhs.taskId == taskId && rhs.streamId == streamId && rhs.contextId == contextId;
 }
@@ -38,12 +38,9 @@ std::string OpIdentity::GetString() const
     return ss.str();
 }
 
-DumpOperator::DumpOperator(const OperatorInfoV2 &opInfo)
-{
-    Init(opInfo);
-}
+DumpOperator::DumpOperator(const OperatorInfoV2& opInfo) { Init(opInfo); }
 
-void DumpOperator::Init(const OperatorInfoV2 &opInfo)
+void DumpOperator::Init(const OperatorInfoV2& opInfo)
 {
     // init base info
     opName_ = opInfo.opName;
@@ -66,21 +63,19 @@ void DumpOperator::Init(const OperatorInfoV2 &opInfo)
     InitDeviceArgs();
 
     // init tensor or workspace
-    for (const auto &tensorInfo : opInfo.tensorInfos)
-    {
-        if (tensorInfo.tensorAddr == nullptr || tensorInfo.tensorSize == 0 || tensorInfo.placement != TensorPlacement::kOnDeviceHbm) {
+    for (const auto& tensorInfo : opInfo.tensorInfos) {
+        if (tensorInfo.tensorAddr == nullptr || tensorInfo.tensorSize == 0 ||
+            tensorInfo.placement != TensorPlacement::kOnDeviceHbm) {
             continue;
         }
 
         if (tensorInfo.type == TensorType::INPUT) {
             inputTensors_.emplace_back(tensorInfo);
-        }
-        else if (tensorInfo.type == TensorType::OUTPUT) {
+        } else if (tensorInfo.type == TensorType::OUTPUT) {
             outputTensors_.emplace_back(tensorInfo);
-        }
-        else if (tensorInfo.type == TensorType::WORKSPACE) {
-            workspaces_.emplace_back(tensorInfo.tensorAddr, static_cast<uint64_t>(tensorInfo.tensorSize),
-                                     tensorInfo.argsOffSet);
+        } else if (tensorInfo.type == TensorType::WORKSPACE) {
+            workspaces_.emplace_back(
+                tensorInfo.tensorAddr, static_cast<uint64_t>(tensorInfo.tensorSize), tensorInfo.argsOffSet);
         }
     }
     return;
@@ -88,14 +83,14 @@ void DumpOperator::Init(const OperatorInfoV2 &opInfo)
 
 void DumpOperator::InitDeviceArgs()
 {
-    for (const auto &deviceInfo : deviceInfos_) {
+    for (const auto& deviceInfo : deviceInfos_) {
         if (deviceInfo.name == DEVICE_INFO_NAME_ARGS) {
             if (deviceInfo.addr == nullptr) {
                 IDE_LOGW("The args before execute is null.");
                 break;
             }
-            void *argsAddr = nullptr;
-            void *argsMem = nullptr;
+            void* argsAddr = nullptr;
+            void* argsMem = nullptr;
             if (isHostArgs_ == "false") {
                 argsMem = DumpMemory::CopyDeviceToHost(deviceInfo.addr, deviceInfo.length);
                 if (argsMem == nullptr) {
@@ -110,19 +105,16 @@ void DumpOperator::InitDeviceArgs()
 
             uint64_t maxArgNum = deviceInfo.length / sizeof(uint64_t);
             for (uint64_t i = 0; i < maxArgNum; ++i) {
-                hostArgs_.emplace_back(static_cast<void **>(argsAddr)[i]);
+                hostArgs_.emplace_back(static_cast<void**>(argsAddr)[i]);
             }
             break;
         }
     }
 }
 
-bool DumpOperator::IsBelongTo(const OpIdentity &identity) const
-{
-    return identity == identity_;
-}
+bool DumpOperator::IsBelongTo(const OpIdentity& identity) const { return identity == identity_; }
 
-void DumpOperator::PrintAdditionInfo(const char *flag) const
+void DumpOperator::PrintAdditionInfo(const char* flag) const
 {
     std::string value;
     auto it = additions_.find(flag);
@@ -132,7 +124,7 @@ void DumpOperator::PrintAdditionInfo(const char *flag) const
     IDE_RUN_LOGI("[AIC_INFO] %s:%s", flag, value.c_str());
 }
 
-int32_t DumpOperator::LogExceptionInfo(const rtExceptionArgsInfo &argsInfo)
+int32_t DumpOperator::LogExceptionInfo(const rtExceptionArgsInfo& argsInfo)
 {
     kernelCollector_.LoadKernelInfo(argsInfo);
 
@@ -221,9 +213,9 @@ int32_t DumpOperator::CopyOpKernelFile() const
     return ADUMP_SUCCESS;
 }
 
-int32_t DumpOperator::RefreshAddrs(const rtExceptionArgsInfo &argsInfo)
+int32_t DumpOperator::RefreshAddrs(const rtExceptionArgsInfo& argsInfo)
 {
-    void *hostMem = DumpMemory::CopyDeviceToHost(argsInfo.argAddr, argsInfo.argsize);
+    void* hostMem = DumpMemory::CopyDeviceToHost(argsInfo.argAddr, argsInfo.argsize);
     if (hostMem == nullptr) {
         IDE_LOGE("Copy device args to host failed, ptr: %p, size: %lu bytes.", argsInfo.argAddr, argsInfo.argsize);
         return ADUMP_FAILED;
@@ -231,35 +223,37 @@ int32_t DumpOperator::RefreshAddrs(const rtExceptionArgsInfo &argsInfo)
     HOST_RT_MEMORY_GUARD(hostMem);
 
     IDE_LOGI("Op %s type %s refresh addr.", opName_.c_str(), opType_.c_str());
-    void **argsOnHost = static_cast<void **>(hostMem);
+    void** argsOnHost = static_cast<void**>(hostMem);
     size_t maxArgNum = argsInfo.argsize / sizeof(uint64_t);
     for (size_t i = 0U; i < inputTensors_.size(); i++) {
-        const void *oriAddr = inputTensors_[i].GetAddress();
+        const void* oriAddr = inputTensors_[i].GetAddress();
         if (maxArgNum <= inputTensors_[i].GetArgsOffSet()) {
-            IDE_LOGW("Tensor args offset[%u] is larger than max arg num[%llu].", inputTensors_[i].GetArgsOffSet(),
-                     maxArgNum);
+            IDE_LOGW(
+                "Tensor args offset[%u] is larger than max arg num[%llu].", inputTensors_[i].GetArgsOffSet(),
+                maxArgNum);
             continue;
         }
-        const void *refreshAddr = *(argsOnHost + inputTensors_[i].GetArgsOffSet());
+        const void* refreshAddr = *(argsOnHost + inputTensors_[i].GetArgsOffSet());
         IDE_LOGI("Input.%zu addr refresh from %p to %p.", i, oriAddr, refreshAddr);
         inputTensors_[i].SetAddress(refreshAddr);
     }
 
     for (size_t i = 0U; i < outputTensors_.size(); i++) {
-        const void *oriAddr = outputTensors_[i].GetAddress();
+        const void* oriAddr = outputTensors_[i].GetAddress();
         if (maxArgNum <= outputTensors_[i].GetArgsOffSet()) {
-            IDE_LOGW("Tensor args offset[%u] is larger than max arg num[%llu].", outputTensors_[i].GetArgsOffSet(),
-                     maxArgNum);
+            IDE_LOGW(
+                "Tensor args offset[%u] is larger than max arg num[%llu].", outputTensors_[i].GetArgsOffSet(),
+                maxArgNum);
             continue;
         }
-        const void *refreshAddr = *(argsOnHost + outputTensors_[i].GetArgsOffSet());
+        const void* refreshAddr = *(argsOnHost + outputTensors_[i].GetArgsOffSet());
         IDE_LOGI("Output.%zu addr refresh from %p to %p.", i, oriAddr, refreshAddr);
         outputTensors_[i].SetAddress(refreshAddr);
     }
     return ADUMP_SUCCESS;
 }
 
-int32_t DumpOperator::DumpExceptionFile(const uint32_t deviceId, const std::string &dumpPath)
+int32_t DumpOperator::DumpExceptionFile(const uint32_t deviceId, const std::string& dumpPath)
 {
     std::string dumpFilePath = GetDumpFilePath(dumpPath);
     IDE_LOGI("[Dump][Exception] The exception dump file path is %s", dumpFilePath.c_str());
@@ -281,13 +275,13 @@ int32_t DumpOperator::DumpExceptionFile(const uint32_t deviceId, const std::stri
     return ADUMP_SUCCESS;
 }
 
-int32_t DumpOperator::DumpException(const uint32_t deviceId, const std::string &dumpPath)
+int32_t DumpOperator::DumpException(const uint32_t deviceId, const std::string& dumpPath)
 {
     int32_t ret = ADUMP_SUCCESS;
     if (DumpExceptionFile(deviceId, dumpPath) != ADUMP_SUCCESS) {
         ret = ADUMP_FAILED;
     }
-    if (kernelCollector_.LoadKernelBinBuffer() != ADUMP_SUCCESS){
+    if (kernelCollector_.LoadKernelBinBuffer() != ADUMP_SUCCESS) {
         ret = ADUMP_FAILED;
     }
     // 先同步落 _host.o，再做慢的 kernel_meta 搜索拷贝。落盘失败需传播，保持与拆分前一致的错误可观测性。
@@ -316,7 +310,7 @@ bool DumpOperator::IsTvmOperator() const
     return static_cast<ImplyType>(implType) == ImplyType::TVM;
 }
 
-std::string DumpOperator::GetTensorString(const DumpTensor &tensor)
+std::string DumpOperator::GetTensorString(const DumpTensor& tensor)
 {
     std::stringstream content;
     content << "shape:" << StrUtils::ToString(tensor.GetShape()) << ";"
@@ -331,12 +325,12 @@ std::string DumpOperator::GetTensorString(const DumpTensor &tensor)
     return content.str();
 }
 
-int32_t DumpOperator::LogExceptionArgs(const rtExceptionArgsInfo &argsInfo) const
+int32_t DumpOperator::LogExceptionArgs(const rtExceptionArgsInfo& argsInfo) const
 {
     if (hostArgs_.size() == 0) {
         IDE_LOGI("Op %s args is empty, skip log args.", opName_.c_str());
     } else {
-        void *const *argsMem = hostArgs_.data();
+        void* const* argsMem = hostArgs_.data();
         PrintLog(argsMem, hostArgs_.size(), std::string(DEVICE_INFO_NAME_ARGS));
     }
 
@@ -344,20 +338,20 @@ int32_t DumpOperator::LogExceptionArgs(const rtExceptionArgsInfo &argsInfo) cons
         IDE_LOGE("exception callback argAddr is null");
         return ADUMP_SUCCESS;
     }
-    void *hostMem = DumpMemory::CopyDeviceToHost(argsInfo.argAddr, argsInfo.argsize);
+    void* hostMem = DumpMemory::CopyDeviceToHost(argsInfo.argAddr, argsInfo.argsize);
     if (hostMem == nullptr) {
         IDE_LOGE("Copy device args to host failed, addr: %p, size: %u.", argsInfo.argAddr, argsInfo.argsize);
         return ADUMP_FAILED;
     }
     HOST_RT_MEMORY_GUARD(hostMem);
-    void *const *argsOnHost = static_cast<void *const *>(hostMem);
+    void* const* argsOnHost = static_cast<void* const*>(hostMem);
     size_t argNum = argsInfo.argsize / sizeof(uint64_t);
     PrintLog(argsOnHost, argNum, "args after execute");
 
     return ADUMP_SUCCESS;
 }
 
-void DumpOperator::PrintLog(void *const *argsOnHost, size_t argNum, const std::string &tag) const
+void DumpOperator::PrintLog(void* const* argsOnHost, size_t argNum, const std::string& tag) const
 {
     std::stringstream strStream;
     const uint32_t printNumEachTime = 20;
@@ -384,7 +378,7 @@ void DumpOperator::PrintLog(void *const *argsOnHost, size_t argNum, const std::s
     }
 }
 
-std::string DumpOperator::GetDumpFilePath(const std::string &dumpPath) const
+std::string DumpOperator::GetDumpFilePath(const std::string& dumpPath) const
 {
     std::string opType = StrUtils::Replace(opType_, INVALID_FILE_NAME_CHAR, REPLACE_FILE_NAME_CHAR);
     std::string opName = StrUtils::Replace(opName_, INVALID_FILE_NAME_CHAR, REPLACE_FILE_NAME_CHAR);
@@ -396,10 +390,10 @@ std::string DumpOperator::GetDumpFilePath(const std::string &dumpPath) const
     return dumpFilePath.GetString();
 }
 
-void DumpOperator::RecordCurrentLog(std::ostringstream &oss)
+void DumpOperator::RecordCurrentLog(std::ostringstream& oss)
 {
     IDE_LOGE("%s", oss.str().c_str());
     logRecord_.emplace_back(oss.str() + "\n");
     oss.str("");
 }
-}  // namespace Adx
+} // namespace Adx

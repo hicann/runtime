@@ -16,15 +16,11 @@
 #endif
 
 namespace Adx {
-constexpr uint32_t DEFAULT_CHIP_TYPE    = 2;
+constexpr uint32_t DEFAULT_CHIP_TYPE = 2;
 constexpr int32_t SUPPORTED_DRV_VERSION = 467735; // 2024.5.16
-enum class SysPlatformType {
-    DEVICE = 0,
-    HOST = 1,
-    INVALID = 2
-};
+enum class SysPlatformType { DEVICE = 0, HOST = 1, INVALID = 2 };
 
-enum class PlatformType : uint32_t{
+enum class PlatformType : uint32_t {
     CHIP_MINI_TYPE = 0,
     CHIP_CLOUD_TYPE,
     CHIP_MDC_TYPE,
@@ -45,10 +41,10 @@ class AdumpDsmi {
 public:
     static uint32_t DrvGetDevNum();
     static std::vector<uint32_t> DrvGetDeviceList();
-    static bool DrvGetDevIds(uint32_t numDevices, std::vector<uint32_t> &devIds);
+    static bool DrvGetDevIds(uint32_t numDevices, std::vector<uint32_t>& devIds);
     static bool DrvGetDeviceStatus(const uint32_t deviceId);
-    static bool DrvGetPlatformType(uint32_t &platformType);
-    static bool DrvGetPlatformInfo(uint32_t &platformInfo);
+    static bool DrvGetPlatformType(uint32_t& platformType);
+    static bool DrvGetPlatformInfo(uint32_t& platformInfo);
 #if !defined(ADUMP_SOC_HOST) || ADUMP_SOC_HOST == 1
     static int32_t DrvGetAPIVersion();
 #endif

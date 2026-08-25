@@ -15,7 +15,7 @@
 #include "log/adx_log.h"
 #include "adx_dump_record.h"
 namespace Adx {
-int32_t AdxSocDataDumpInit(const std::string &hostPid)
+int32_t AdxSocDataDumpInit(const std::string& hostPid)
 {
     // soc case, pass host pid to record instance
     int ret = AdxDumpRecord::Instance().Init(hostPid);
@@ -37,7 +37,7 @@ int32_t AdxSocDataDumpUnInit()
     IDE_LOGI("start to do soc dump uninit");
     return AdxDumpRecord::Instance().UnInit();
 }
-}
+} // namespace Adx
 
 #if !defined(__IDE_UT) && !defined(__IDE_ST)
 /**
@@ -47,10 +47,7 @@ int32_t AdxSocDataDumpUnInit()
  * @return
  *      IDE_DAEMON_OK: datadump server init success
  */
-int32_t AdxDataDumpServerInit()
-{
-    return IDE_DAEMON_OK;
-}
+int32_t AdxDataDumpServerInit() { return IDE_DAEMON_OK; }
 
 /**
  * @brief      stub for uninit in soc case, real uninit
@@ -59,8 +56,5 @@ int32_t AdxDataDumpServerInit()
  * @return
  *      IDE_DAEMON_OK: datadump server uninit success
  */
-int32_t AdxDataDumpServerUnInit()
-{
-    return IDE_DAEMON_OK;
-}
+int32_t AdxDataDumpServerUnInit() { return IDE_DAEMON_OK; }
 #endif

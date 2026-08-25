@@ -10,12 +10,6 @@
 #include <cstdint>
 #include "adx_datadump_server.h"
 
-int32_t AdxDataDumpServerInit()
-{
-    return 0;
-}
+int32_t AdxDataDumpServerInit() { return 0; }
 
-int32_t AdxDataDumpServerUnInit()
-{
-    return 0;
-}
+int32_t AdxDataDumpServerUnInit() { return 0; }

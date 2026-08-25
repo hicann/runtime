@@ -13,25 +13,26 @@
 #include "adx_log.h"
 
 namespace Adx {
-inline bool GetPlatformInfo(const std::string socVersion, fe::PlatformInfo &platInfo, fe::OptionalInfo &optionalInfo)
+inline bool GetPlatformInfo(const std::string socVersion, fe::PlatformInfo& platInfo, fe::OptionalInfo& optionalInfo)
 {
-    IDE_CTRL_VALUE_FAILED(fe::PlatformInfoManager::GeInstance().InitializePlatformInfo() == 0U,
-        return false, "Init platform info failed.");
+    IDE_CTRL_VALUE_FAILED(
+        fe::PlatformInfoManager::GeInstance().InitializePlatformInfo() == 0U, return false,
+        "Init platform info failed.");
     uint32_t ret = fe::PlatformInfoManager::GeInstance().GetPlatformInfo(socVersion, platInfo, optionalInfo);
     IDE_CTRL_VALUE_FAILED(ret == 0U, return false, "Failed to get platform info, ret is %u", ret);
     return true;
 }
 
-bool AdumpPlatformApi::GetUBSizeAndCoreNum(const std::string &socVersion, PlatformType platform, PlatformData &data)
+bool AdumpPlatformApi::GetUBSizeAndCoreNum(const std::string& socVersion, PlatformType platform, PlatformData& data)
 {
     fe::PlatformInfo platInfo;
     fe::OptionalInfo optionalInfo;
-    IDE_CTRL_VALUE_FAILED(GetPlatformInfo(socVersion, platInfo, optionalInfo), return false,
-        "Failed to get ub size and core number.");
+    IDE_CTRL_VALUE_FAILED(
+        GetPlatformInfo(socVersion, platInfo, optionalInfo), return false, "Failed to get ub size and core number.");
 
     auto plat = PlatformReflection<DataDumpInterface>::CreatePlatform(platform);
-    IDE_CTRL_VALUE_FAILED(plat != nullptr, return false, "Current chip type %u is not adapted.",
-        static_cast<uint32_t>(platform));
+    IDE_CTRL_VALUE_FAILED(
+        plat != nullptr, return false, "Current chip type %u is not adapted.", static_cast<uint32_t>(platform));
     if (plat->IsUbFromAiCore()) {
         data.ubSize = platInfo.ai_core_spec.ub_size;
     } else {
@@ -42,11 +43,12 @@ bool AdumpPlatformApi::GetUBSizeAndCoreNum(const std::string &socVersion, Platfo
     return true;
 }
 
-bool AdumpPlatformApi::GetAicoreSizeInfo(const std::string &socVersion, BufferSize &bufferSize)
+bool AdumpPlatformApi::GetAicoreSizeInfo(const std::string& socVersion, BufferSize& bufferSize)
 {
     fe::PlatformInfo platInfo;
     fe::OptionalInfo optionalInfo;
-    IDE_CTRL_VALUE_FAILED(GetPlatformInfo(socVersion, platInfo, optionalInfo), return false,
+    IDE_CTRL_VALUE_FAILED(
+        GetPlatformInfo(socVersion, platInfo, optionalInfo), return false,
         "Failed to read size information from ge platform in GetAicoreSizeInfo.");
 
     bufferSize.l0aSize = platInfo.ai_core_spec.l0_a_size;
@@ -56,4 +58,4 @@ bool AdumpPlatformApi::GetAicoreSizeInfo(const std::string &socVersion, BufferSi
     bufferSize.ubSize = platInfo.ai_core_spec.ub_size;
     return true;
 }
-}
+} // namespace Adx

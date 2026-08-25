@@ -14,18 +14,15 @@
 namespace Adx {
 const std::map<PlatformType, std::string> BIN_NAME_MAP = {};
 
-OperatorPreliminary::OperatorPreliminary(const DumpSetting &setting, const uint32_t deviceId)
+OperatorPreliminary::OperatorPreliminary(const DumpSetting& setting, const uint32_t deviceId)
     : deviceId_(deviceId), setting_(setting)
-{
-}
+{}
 
-OperatorPreliminary::~OperatorPreliminary()
-{
-}
+OperatorPreliminary::~OperatorPreliminary() {}
 
 int32_t OperatorPreliminary::OperatorInit()
 {
     IDE_LOGW("Start to destroy rt api resources on device %u.", deviceId_);
     return ADUMP_SUCCESS;
 }
-}
+} // namespace Adx

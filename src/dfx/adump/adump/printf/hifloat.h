@@ -21,8 +21,8 @@ constexpr int32_t BASE_NUM = 2;
 class HiFloat8 {
 public:
     explicit HiFloat8(uint8_t v = 0) : val(v) {}
-    int32_t GetExponent(const std::string &binary) const;
-    float GetMantissaField(const std::string &binary) const;
+    int32_t GetExponent(const std::string& binary) const;
+    float GetMantissaField(const std::string& binary) const;
     float GetValue() const;
 
 private:
@@ -32,7 +32,8 @@ private:
 class FpaEbMc {
 public:
     explicit FpaEbMc(uint8_t v = 0) : val(v) {}
-    float Decode(const std::string &bitString, const std::string &exponentBit, const std::string &mantissaBit,
+    float Decode(
+        const std::string& bitString, const std::string& exponentBit, const std::string& mantissaBit,
         const uint32_t exponentBitNum) const;
 
 protected:
@@ -60,6 +61,6 @@ private:
     uint8_t val;
 };
 
-}; // namespace
- 
+}; // namespace Adx
+
 #endif

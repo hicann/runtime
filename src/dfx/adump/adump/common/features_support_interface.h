@@ -29,10 +29,7 @@ class FeaturesSupportInterface {
 public:
     virtual ~FeaturesSupportInterface() = default;
 
-    bool FeatureIsSupport(AdumpPlatformFeature feature) const
-    {
-        return supported_.count(feature) > 0;
-    }
+    bool FeatureIsSupport(AdumpPlatformFeature feature) const { return supported_.count(feature) > 0; }
 
 protected:
     std::set<AdumpPlatformFeature> supported_;

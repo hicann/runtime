@@ -34,15 +34,16 @@
 namespace Adx {
 namespace {
 const std::set<char> INVALID_FILE_NAME_CHAR = {' ', '.', '/', '\\'};
-constexpr uint64_t JSON_SUFFIX_LEN = 5;  // length of ".json"
-}  // namespace
+constexpr uint64_t JSON_SUFFIX_LEN = 5; // length of ".json"
+} // namespace
 
-int32_t StartCollectKernelAsync(std::shared_ptr<KernelInfoCollector> collector, const std::string &dumpPath) {
+int32_t StartCollectKernelAsync(std::shared_ptr<KernelInfoCollector> collector, const std::string& dumpPath)
+{
     int32_t ret = collector->LoadKernelBinBuffer();
     // _host.o 已由编排层（DumpHostKernelBinBeforeSymbolize）在符号化前无条件同步落盘，
     // 这里不再重复落盘，只把慢的 kernel_meta 搜索拷贝丢到异步线程。
     IDE_LOGD("Start collecting kernel file.");
-    std::thread collectKernel([collector, dumpPath](){
+    std::thread collectKernel([collector, dumpPath]() {
         int32_t tid = mmGetTid();
         ThreadManager::Instance().TaskAdd(tid);
         (void)collector->StartCollectKernel(dumpPath);
@@ -52,24 +53,25 @@ int32_t StartCollectKernelAsync(std::shared_ptr<KernelInfoCollector> collector, 
     return ret;
 }
 
-void KernelInfoCollector::LoadKernelInfo(const rtExceptionArgsInfo &argsInfo)
+void KernelInfoCollector::LoadKernelInfo(const rtExceptionArgsInfo& argsInfo)
 {
     kernelBinHandle_ = nullptr;
     kernelBinData_.clear();
     kernelBinSize_ = 0;
     kernelName_.clear();
 
-    kernelBinHandle_ = argsInfo.exceptionKernelInfo.bin;  // binHandle
+    kernelBinHandle_ = argsInfo.exceptionKernelInfo.bin; // binHandle
     kernelBinSize_ = argsInfo.exceptionKernelInfo.binSize;
     if ((argsInfo.exceptionKernelInfo.kernelName != nullptr) && (argsInfo.exceptionKernelInfo.kernelNameSize != 0)) {
         kernelName_ = std::string(argsInfo.exceptionKernelInfo.kernelName, argsInfo.exceptionKernelInfo.kernelNameSize);
     }
-    IDE_LOGI("Kernel handle: %p, kernel size: %u, name addr: %p, name size: %u, kernel name: %s", kernelBinHandle_,
-             kernelBinSize_, argsInfo.exceptionKernelInfo.kernelName, argsInfo.exceptionKernelInfo.kernelNameSize,
-             kernelName_.c_str());
+    IDE_LOGI(
+        "Kernel handle: %p, kernel size: %u, name addr: %p, name size: %u, kernel name: %s", kernelBinHandle_,
+        kernelBinSize_, argsInfo.exceptionKernelInfo.kernelName, argsInfo.exceptionKernelInfo.kernelNameSize,
+        kernelName_.c_str());
 }
 
-int32_t KernelInfoCollector::InitFromBinHandle(rtBinHandle BinHandle, const std::string &kernelName)
+int32_t KernelInfoCollector::InitFromBinHandle(rtBinHandle BinHandle, const std::string& kernelName)
 {
     kernelBinHandle_ = BinHandle;
     kernelName_ = kernelName;
@@ -99,7 +101,7 @@ std::string KernelInfoCollector::GetProcessedKernelName() const
     return ExceptionInfoCommon::GetKernelNameWithoutMixSuffix(kernelName_);
 }
 
-int32_t KernelInfoCollector::StartCollectKernel(const std::string &dumpPath) const
+int32_t KernelInfoCollector::StartCollectKernel(const std::string& dumpPath) const
 {
     if (kernelName_.empty() || kernelBinHandle_ == nullptr || kernelBinSize_ == 0) {
         IDE_LOGI("Kernel name or kernel bin is empty, skip dump kernel.");
@@ -117,7 +119,7 @@ int32_t KernelInfoCollector::StartCollectKernel(const std::string &dumpPath) con
     return ret;
 }
 
-bool KernelInfoCollector::ContainsString(const std::string &filePath, const std::string &targetString) const
+bool KernelInfoCollector::ContainsString(const std::string& filePath, const std::string& targetString) const
 {
     Path jsonFilePath(filePath);
     if (!jsonFilePath.RealPath()) {
@@ -144,8 +146,8 @@ bool KernelInfoCollector::ContainsString(const std::string &filePath, const std:
     return false;
 }
 
-bool KernelInfoCollector::IsTargetLine(const std::string &currentLine, const std::string &key,
-                                       const std::string &value) const
+bool KernelInfoCollector::IsTargetLine(
+    const std::string& currentLine, const std::string& key, const std::string& value) const
 {
     size_t curPlace = 0;
     if (GetFirstItem(currentLine, curPlace) != key) {
@@ -157,7 +159,7 @@ bool KernelInfoCollector::IsTargetLine(const std::string &currentLine, const std
     return true;
 }
 
-std::string KernelInfoCollector::GetFirstItem(const std::string &curLine, size_t &curPlace) const
+std::string KernelInfoCollector::GetFirstItem(const std::string& curLine, size_t& curPlace) const
 {
     size_t head = curLine.find_first_of('"', curPlace);
     if (head == std::string::npos) {
@@ -171,7 +173,7 @@ std::string KernelInfoCollector::GetFirstItem(const std::string &curLine, size_t
     return StrUtils::Trim(curLine.substr(head + 1, end - head - 1));
 }
 
-std::string KernelInfoCollector::SearchJsonFiles(const std::string &rootPath, const std::string &targetString) const
+std::string KernelInfoCollector::SearchJsonFiles(const std::string& rootPath, const std::string& targetString) const
 {
     std::stack<std::string> directories;
     directories.push(rootPath);
@@ -180,13 +182,13 @@ std::string KernelInfoCollector::SearchJsonFiles(const std::string &rootPath, co
         std::string currentDir = directories.top();
         directories.pop();
 
-        DIR *dir = opendir(currentDir.c_str());
+        DIR* dir = opendir(currentDir.c_str());
         if (!dir) {
             IDE_LOGW("Unable to open directory[%s].", currentDir.c_str());
             continue;
         }
 
-        struct dirent *entry;
+        struct dirent* entry;
         while ((entry = readdir(dir)) != nullptr) {
             std::string name = entry->d_name;
             if (name == "." || name == ".." ||
@@ -224,7 +226,7 @@ std::string KernelInfoCollector::SearchJsonFiles(const std::string &rootPath, co
     return "";
 }
 
-std::string KernelInfoCollector::GetHostOFilePath(const std::string &dumpPath) const
+std::string KernelInfoCollector::GetHostOFilePath(const std::string& dumpPath) const
 {
     std::string kernelName = GetProcessedKernelName();
     Path hostKernelBinPath(dumpPath);
@@ -240,7 +242,7 @@ std::string KernelInfoCollector::GetHostOFilePath(const std::string &dumpPath) c
  * @return      : ADUMP_SUCCESS succeed; ADUMP_FAILED failed
  * @note        : 从 StartCollectKernel 拆出，供调用方在慢搜索/修正 PC 之前单独同步落 _host.o。
  */
-int32_t KernelInfoCollector::DumpHostKernelBin(const std::string &dumpPath, std::string &outHostOPath) const
+int32_t KernelInfoCollector::DumpHostKernelBin(const std::string& dumpPath, std::string& outHostOPath) const
 {
     outHostOPath.clear();
     // 与拆分前 StartCollectKernel 入口保持一致的前置校验：kernelName 为空会退化成非唯一的 "_host.o"，
@@ -275,7 +277,8 @@ int32_t KernelInfoCollector::DumpHostKernelBin(const std::string &dumpPath, std:
     if (writeSize < 0) {
         // 不清理残留文件(与拆分前行为一致):M_TRUNC 已把文件截为 0,失败后盘上会留下空/截断的 _host.o。
         // 下次调用因大小不匹配会重写,不会误判为完整;但符号化阶段若在此期间读取会拿到残缺文件,故打印告警提醒。
-        IDE_LOGE("Write host kernel bin file[%s] failed, an incomplete _host.o may remain on disk.",
+        IDE_LOGE(
+            "Write host kernel bin file[%s] failed, an incomplete _host.o may remain on disk.",
             hostKernelBinPath.c_str());
         return ADUMP_FAILED;
     }
@@ -284,19 +287,20 @@ int32_t KernelInfoCollector::DumpHostKernelBin(const std::string &dumpPath, std:
     if (stat(hostKernelBinPath.c_str(), &hostBinStat) != 0 ||
         static_cast<uint64_t>(hostBinStat.st_size) != static_cast<uint64_t>(kernelBinSize_)) {
         // 同上:残留的截断文件不主动删除,靠下次大小校验重写;此处打印告警提醒盘上存在不完整的 _host.o。
-        IDE_LOGE("Write host kernel bin file[%s] incomplete, fileSize=%lld, expect=%u, "
+        IDE_LOGE(
+            "Write host kernel bin file[%s] incomplete, fileSize=%lld, expect=%u, "
             "an incomplete _host.o may remain on disk.",
             hostKernelBinPath.c_str(), static_cast<long long>(hostBinStat.st_size), kernelBinSize_);
         return ADUMP_FAILED;
     }
     IDE_LOGE("[Dump][Exception] dump host kernel to file, file: %s", hostKernelBinPath.c_str());
-    (void)mmChmod(hostKernelBinPath.c_str(), M_IRUSR);  // 安全要求,落盘文件置为最小权限:用户只读, 400
+    (void)mmChmod(hostKernelBinPath.c_str(), M_IRUSR); // 安全要求,落盘文件置为最小权限:用户只读, 400
     outHostOPath = hostKernelBinPath;
 
     return ADUMP_SUCCESS;
 }
 
-std::vector<std::string> KernelInfoCollector::SplitString(const std::string &str, char delimiter) const
+std::vector<std::string> KernelInfoCollector::SplitString(const std::string& str, char delimiter) const
 {
     std::vector<std::string> result;
     std::stringstream ss(str);
@@ -329,12 +333,12 @@ std::vector<std::string> KernelInfoCollector::GetSearchPath() const
         searchPath.emplace_back(envStr);
         IDE_LOGI("Add HOME[%s] to search path.", envStr.c_str());
     }
-    
+
     // custom install path
     ADX_GET_ENV(MM_ENV_ASCEND_CUSTOM_OPP_PATH, envStr);
     if (!envStr.empty()) {
         std::vector<std::string> customPaths = SplitString(envStr, ':');
-        for (const auto &customPath : customPaths) {
+        for (const auto& customPath : customPaths) {
             searchPath.emplace_back(customPath);
             IDE_LOGI("Add ASCEND_CUSTOM_OPP_PATH[%s] to search path.", customPath.c_str());
         }
@@ -365,12 +369,12 @@ std::vector<std::string> KernelInfoCollector::GetSearchPath() const
     return searchPath;
 }
 
-int32_t KernelInfoCollector::CollectKernelFile(const std::string &kernelName, const std::string &dumpPath) const
+int32_t KernelInfoCollector::CollectKernelFile(const std::string& kernelName, const std::string& dumpPath) const
 {
     std::vector<std::string> searchPath = GetSearchPath();
 
     bool failFlag = false;
-    for (const auto &path : searchPath) {
+    for (const auto& path : searchPath) {
         std::string jsonFilePath = SearchJsonFiles(path, kernelName);
         if (jsonFilePath.empty()) {
             continue;
@@ -386,7 +390,7 @@ int32_t KernelInfoCollector::CollectKernelFile(const std::string &kernelName, co
             failFlag = true;
         } else {
             IDE_LOGE("[Dump][Exception] dump kernel json to file, file: %s", dumpJsonPath.GetCString());
-            (void)mmChmod(dumpJsonPath.GetCString(), M_IRUSR);  // 安全要求,落盘文件置为最小权限:用户只读, 400
+            (void)mmChmod(dumpJsonPath.GetCString(), M_IRUSR); // 安全要求,落盘文件置为最小权限:用户只读, 400
         }
 
         std::string kernelBinPath = jsonFilePath.substr(0, jsonFilePath.size() - JSON_SUFFIX_LEN) + ".o";
@@ -394,12 +398,12 @@ int32_t KernelInfoCollector::CollectKernelFile(const std::string &kernelName, co
         Path dumpKernelPath(dumpPath);
         dumpKernelPath.Concat(kernelPath.GetFileName());
         if (File::Copy(kernelBinPath, dumpKernelPath.GetString()) != ADUMP_SUCCESS) {
-            IDE_LOGE("Copy kernel file[%s] to dump path[%s] failed.", kernelBinPath.c_str(),
-                     dumpKernelPath.GetCString());
+            IDE_LOGE(
+                "Copy kernel file[%s] to dump path[%s] failed.", kernelBinPath.c_str(), dumpKernelPath.GetCString());
             failFlag = true;
         } else {
             IDE_LOGE("[Dump][Exception] dump kernel to file, file: %s", dumpKernelPath.GetCString());
-            (void)mmChmod(dumpKernelPath.GetCString(), M_IRUSR);  // 安全要求,落盘文件置为最小权限:用户只读, 400
+            (void)mmChmod(dumpKernelPath.GetCString(), M_IRUSR); // 安全要求,落盘文件置为最小权限:用户只读, 400
         }
         break;
     }
@@ -410,4 +414,4 @@ int32_t KernelInfoCollector::CollectKernelFile(const std::string &kernelName, co
     return ADUMP_SUCCESS;
 }
 
-}  // namespace Adx
+} // namespace Adx

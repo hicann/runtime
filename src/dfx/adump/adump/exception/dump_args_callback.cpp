@@ -19,19 +19,18 @@
 
 namespace Adx {
 
-DumpArgsCallback::DumpArgsCallback(const rtExceptionInfo &exception, const ExceptionDumpInfo &info,
-                                     const std::string &dumpPath)
+DumpArgsCallback::DumpArgsCallback(
+    const rtExceptionInfo& exception, const ExceptionDumpInfo& info, const std::string& dumpPath)
     : exception_(exception),
       info_(info),
       dumpPath_(dumpPath),
-      dumpFilePath_(dumpPath + "/" +
-        std::string(info.kernelDisplayName[0] != '\0' ? info.kernelDisplayName : "exception_info") + "." +
-        std::to_string(exception.streamid) + "." + std::to_string(exception.taskid) + "." +
-        std::to_string(info.coreType) + "." + std::to_string(info.coreId) + "." +
-        SysUtils::GetCurrentTimeWithMillisecond()),
+      dumpFilePath_(
+          dumpPath + "/" + std::string(info.kernelDisplayName[0] != '\0' ? info.kernelDisplayName : "exception_info") +
+          "." + std::to_string(exception.streamid) + "." + std::to_string(exception.taskid) + "." +
+          std::to_string(info.coreType) + "." + std::to_string(info.coreId) + "." +
+          SysUtils::GetCurrentTimeWithMillisecond()),
       dumpFile_(exception.deviceid, dumpFilePath_)
-{
-}
+{}
 
 int32_t DumpArgsCallback::DumpKernelBin()
 {
@@ -42,30 +41,32 @@ int32_t DumpArgsCallback::DumpKernelBin()
     IDE_LOGI("Dump kernel bin file. bin=%p, kernelName=%s", info_.bin, kernelName.c_str());
     KernelInfoCollector collector;
     int32_t ret = collector.InitFromBinHandle(info_.bin, kernelName);
-    IDE_CTRL_VALUE_FAILED(ret == ADUMP_SUCCESS, return ADUMP_FAILED,
-        "Init for dump kernel bin failed. ret=%d, bin=%p, kernelName=%s.", ret, info_.bin, kernelName.c_str());
+    IDE_CTRL_VALUE_FAILED(
+        ret == ADUMP_SUCCESS, return ADUMP_FAILED, "Init for dump kernel bin failed. ret=%d, bin=%p, kernelName=%s.",
+        ret, info_.bin, kernelName.c_str());
 
     std::string hostOPath;
     ret = collector.DumpHostKernelBin(dumpPath_, hostOPath);
-    IDE_CTRL_VALUE_WARN(ret == ADUMP_SUCCESS, return ADUMP_FAILED,
-        "DumpHostKernelBin failed, kernelName=%s.", kernelName.c_str());
+    IDE_CTRL_VALUE_WARN(
+        ret == ADUMP_SUCCESS, return ADUMP_FAILED, "DumpHostKernelBin failed, kernelName=%s.", kernelName.c_str());
 
     ret = collector.StartCollectKernel(dumpPath_);
-    IDE_CTRL_VALUE_WARN(ret == ADUMP_SUCCESS, return ADUMP_FAILED,
-        "StartCollectKernel failed, kernelName=%s.", kernelName.c_str());
+    IDE_CTRL_VALUE_WARN(
+        ret == ADUMP_SUCCESS, return ADUMP_FAILED, "StartCollectKernel failed, kernelName=%s.", kernelName.c_str());
 
     IDE_LOGI("DumpKernelBin success, kernelName=%s.", kernelName.c_str());
     return ADUMP_SUCCESS;
 }
 
-int32_t DumpArgsCallback::DumpKernelErrorSymbols(ErrorLocation &outLocation)
+int32_t DumpArgsCallback::DumpKernelErrorSymbols(ErrorLocation& outLocation)
 {
     if (info_.bin == nullptr) {
         return ADUMP_SUCCESS;
     }
     KernelSymbolLocator locator;
     int32_t ret = locator.InitFromBinHandle(info_.bin);
-    IDE_CTRL_VALUE_FAILED(ret == ADUMP_SUCCESS, return ADUMP_FAILED,
+    IDE_CTRL_VALUE_FAILED(
+        ret == ADUMP_SUCCESS, return ADUMP_FAILED,
         "KernelSymbolLocator InitFromBinHandle failed for callback exception. ret=%d", ret);
     locator.UpdateStartPCFromDeviceAddr(info_.bin);
 
@@ -79,14 +80,16 @@ int32_t DumpArgsCallback::DumpKernelErrorSymbols(ErrorLocation &outLocation)
 
     ExceptionRegInfo exceptionRegInfo{0, nullptr};
     ret = ExceptionInfoCommon::GetExceptionRegInfo(exception_, exceptionRegInfo);
-    IDE_CTRL_VALUE_WARN(ret == ADUMP_SUCCESS, return ADUMP_FAILED,
+    IDE_CTRL_VALUE_WARN(
+        ret == ADUMP_SUCCESS, return ADUMP_FAILED,
         "Get exception register information failed for callback exception. ret=%d", ret);
 
     // 构建 ErrorLocation：LocateErrorSymbolsForCore 内部定位偏移后对该 .o 批量 symbolize 并回填 src。
     ret = locator.LocateErrorSymbolsForCore(info_.coreId, info_.coreType, exceptionRegInfo, outLocation);
-    IDE_CTRL_VALUE_WARN(ret == ADUMP_SUCCESS, return ADUMP_FAILED,
-        "LocateErrorSymbolsForCore failed for callback exception. ret=%d, coreId=%u, coreType=%u.",
-            ret, info_.coreId, info_.coreType);
+    IDE_CTRL_VALUE_WARN(
+        ret == ADUMP_SUCCESS, return ADUMP_FAILED,
+        "LocateErrorSymbolsForCore failed for callback exception. ret=%d, coreId=%u, coreType=%u.", ret, info_.coreId,
+        info_.coreType);
 
     return ADUMP_SUCCESS;
 }
@@ -96,17 +99,20 @@ int32_t DumpArgsCallback::QueryDfxIsTikInfo(rtFuncHandle funcHandle)
     size_t isTikSize = 0;
     rtError_t rtRet = rtFunctionGetMetaInfoSize(funcHandle, RT_FUNCTION_TYPE_L0_EXCEPTION_DFX_IS_TIK, &isTikSize);
     if (rtRet != RT_ERROR_NONE || isTikSize == 0 || isTikSize < sizeof(uint32_t)) {
-        IDE_LOGW("rtFunctionGetMetaInfoSize for dfxIsTik failed, will set dfxIsTik with false. "
-            "rtRet=%d, kernelName=%s", rtRet, info_.kernelName);
+        IDE_LOGW(
+            "rtFunctionGetMetaInfoSize for dfxIsTik failed, will set dfxIsTik with false. "
+            "rtRet=%d, kernelName=%s",
+            rtRet, info_.kernelName);
         return ADUMP_FAILED;
     }
 
     std::vector<uint8_t> isTikBuffer(isTikSize);
-    rtRet = rtFunctionGetMetaInfo(funcHandle, RT_FUNCTION_TYPE_L0_EXCEPTION_DFX_IS_TIK, 
-        isTikBuffer.data(), isTikSize);
+    rtRet = rtFunctionGetMetaInfo(funcHandle, RT_FUNCTION_TYPE_L0_EXCEPTION_DFX_IS_TIK, isTikBuffer.data(), isTikSize);
     if (rtRet != RT_ERROR_NONE) {
-        IDE_LOGW("rtFunctionGetMetaInfo for isTik failed, will set dfxIsTik with false. "
-            "ret=%d, kernelName=%s, isTikSize=%zu.",  rtRet, info_.kernelName, isTikSize);
+        IDE_LOGW(
+            "rtFunctionGetMetaInfo for isTik failed, will set dfxIsTik with false. "
+            "ret=%d, kernelName=%s, isTikSize=%zu.",
+            rtRet, info_.kernelName, isTikSize);
         return ADUMP_FAILED;
     }
 
@@ -117,42 +123,45 @@ int32_t DumpArgsCallback::QueryDfxIsTikInfo(rtFuncHandle funcHandle)
     return ADUMP_SUCCESS;
 }
 
-int32_t DumpArgsCallback::QueryDfxInfo(std::vector<uint8_t> &dfxBuffer)
+int32_t DumpArgsCallback::QueryDfxInfo(std::vector<uint8_t>& dfxBuffer)
 {
     rtFuncHandle funcHandle = nullptr;
     rtError_t rtRet = rtBinaryGetFunctionByName(info_.bin, info_.kernelName, &funcHandle);
-    IDE_CTRL_VALUE_FAILED(rtRet == RT_ERROR_NONE && funcHandle != nullptr, return ADUMP_FAILED,
+    IDE_CTRL_VALUE_FAILED(
+        rtRet == RT_ERROR_NONE && funcHandle != nullptr, return ADUMP_FAILED,
         "rtBinaryGetFunctionByName failed, ret=%d, bin=%p, kernelName=%s.", rtRet, info_.bin, info_.kernelName);
 
     size_t dfxSize = 0;
     rtRet = rtFunctionGetMetaInfoSize(funcHandle, RT_FUNCTION_TYPE_DFX_TYPE, &dfxSize);
-    IDE_CTRL_VALUE_FAILED(rtRet == RT_ERROR_NONE && dfxSize > 0, return ADUMP_FAILED,
+    IDE_CTRL_VALUE_FAILED(
+        rtRet == RT_ERROR_NONE && dfxSize > 0, return ADUMP_FAILED,
         "rtFunctionGetMetaInfoSize failed, ret=%d, kernelName=%s, dfxSize=%zu.", rtRet, info_.kernelName, dfxSize);
-    IDE_CTRL_VALUE_FAILED(dfxSize <= UINT16_MAX, return ADUMP_FAILED,
-        "Dfx size exceeds uint16_t max, dfxSize=%zu", dfxSize);
-    
+    IDE_CTRL_VALUE_FAILED(
+        dfxSize <= UINT16_MAX, return ADUMP_FAILED, "Dfx size exceeds uint16_t max, dfxSize=%zu", dfxSize);
+
     dfxBuffer.resize(dfxSize);
     rtRet = rtFunctionGetMetaInfo(funcHandle, RT_FUNCTION_TYPE_DFX_TYPE, dfxBuffer.data(), dfxSize);
-    IDE_CTRL_VALUE_FAILED(rtRet == RT_ERROR_NONE, return ADUMP_FAILED,
+    IDE_CTRL_VALUE_FAILED(
+        rtRet == RT_ERROR_NONE, return ADUMP_FAILED,
         "rtFunctionGetMetaInfo failed, ret=%d, kernelName=%s, dfxSize=%zu.", rtRet, info_.kernelName, dfxSize);
 
     (void)QueryDfxIsTikInfo(funcHandle);
 
-    IDE_LOGI("Query kernel dfx args info success. kernelName=%s, dfxSize=%zu, isTik=%d", 
-        info_.kernelName, dfxSize, isTik_);
+    IDE_LOGI(
+        "Query kernel dfx args info success. kernelName=%s, dfxSize=%zu, isTik=%d", info_.kernelName, dfxSize, isTik_);
     return ADUMP_SUCCESS;
 }
 
 int32_t DumpArgsCallback::DumpDfxArgs()
 {
     // kernelName 是定长数组成员，不会为 nullptr，直接判首字节是否为空串。
-    if (info_.argAddr == nullptr || info_.argSize == 0 || info_.bin == nullptr ||
-        info_.kernelName[0] == '\0') {
+    if (info_.argAddr == nullptr || info_.argSize == 0 || info_.bin == nullptr || info_.kernelName[0] == '\0') {
         return ADUMP_SUCCESS;
     }
 
-    IDE_LOGI("Begin to dump dfx args tensors. argAddr=%p, argSize=%u, bin=%p, kernelName=%s",
-             info_.argAddr, info_.argSize, info_.bin, info_.kernelName);
+    IDE_LOGI(
+        "Begin to dump dfx args tensors. argAddr=%p, argSize=%u, bin=%p, kernelName=%s", info_.argAddr, info_.argSize,
+        info_.bin, info_.kernelName);
 
     int32_t ret = QueryDfxInfo(dfxBuffer_);
     IDE_CTRL_VALUE_FAILED(ret == ADUMP_SUCCESS, return ADUMP_FAILED, "Query kernel dfx info failed.");
@@ -160,24 +169,25 @@ int32_t DumpArgsCallback::DumpDfxArgs()
     DfxArgsParser parser;
     ret = parser.Init(info_.argAddr, info_.argSize, dfxBuffer_.data(), static_cast<uint16_t>(dfxBuffer_.size()));
     IDE_CTRL_VALUE_FAILED(ret == ADUMP_SUCCESS, return ADUMP_FAILED, "Dfx args parser init failed.");
-    
+
     parser.SetIsTik(isTik_);
     ret = parser.InitTensorModeInfo();
     IDE_CHECK_RET(ret, return ADUMP_FAILED);
-    
+
     ret = parser.ParseAll();
     IDE_CHECK_RET(ret, return ADUMP_FAILED);
-    
+
     tensorBuffer_ = parser.GetTensors();
     workspaces_ = parser.GetWorkspaces();
     logRecord_ = parser.GetLogRecords();
-    
-    IDE_LOGI("Dfx args tensors are parsed finished. tensor size=%zu, workspace size=%zu.",
-        tensorBuffer_.size(), workspaces_.size());
-    
+
+    IDE_LOGI(
+        "Dfx args tensors are parsed finished. tensor size=%zu, workspace size=%zu.", tensorBuffer_.size(),
+        workspaces_.size());
+
     dumpFile_.SetTensorBuffer(tensorBuffer_);
     dumpFile_.SetWorkspaces(workspaces_);
-    
+
     IDE_LOGI("End to dump dfx args tensors.");
     return ADUMP_SUCCESS;
 }
@@ -188,8 +198,9 @@ int32_t DumpArgsCallback::DumpExtraTensors()
         return ADUMP_SUCCESS;
     }
     if (info_.extraTensorNum > EXCEPTION_DUMP_MAX_TENSOR_NUM) {
-        IDE_LOGE("Extra tensor size exceeds the maximum limit. realSize=%u, maxSize=%u",
-            info_.extraTensorNum, EXCEPTION_DUMP_MAX_TENSOR_NUM);
+        IDE_LOGE(
+            "Extra tensor size exceeds the maximum limit. realSize=%u, maxSize=%u", info_.extraTensorNum,
+            EXCEPTION_DUMP_MAX_TENSOR_NUM);
         return ADUMP_FAILED;
     }
 
@@ -209,15 +220,16 @@ int32_t DumpArgsCallback::DumpExtraTensors()
 int32_t DumpArgsCallback::Dump()
 {
     int32_t ret = dumpFile_.Dump(logRecord_);
-    IDE_CTRL_VALUE_FAILED(ret == ADUMP_SUCCESS, return ADUMP_FAILED,
+    IDE_CTRL_VALUE_FAILED(
+        ret == ADUMP_SUCCESS, return ADUMP_FAILED,
         "[Dump][Exception] Write callback exception to file failed, file: %s", dumpFilePath_.c_str());
 
-    (void)mmChmod(dumpFilePath_.c_str(), M_IRUSR);  // readonly, 400
+    (void)mmChmod(dumpFilePath_.c_str(), M_IRUSR); // readonly, 400
     IDE_LOGE("[Dump][Exception] dump exception to file, file: %s", dumpFilePath_.c_str());
     return ADUMP_SUCCESS;
 }
 
-void DumpArgsCallback::RecordDumpLog(const std::string &log)
+void DumpArgsCallback::RecordDumpLog(const std::string& log)
 {
     IDE_LOGE("%s", log.c_str());
     logRecord_.emplace_back(log + "\n");

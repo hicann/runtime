@@ -16,24 +16,24 @@
 namespace Adx {
 class DumpMemory {
 public:
-    static int32_t CheckDeviceMemory(int32_t deviceId, const void *addr);
-    static void *CopyHostToHost(const void *hostMem, uint64_t memSize);
-    static void *CopyHostToDevice(const void *hostMem, uint64_t memSize);
-    static void *CopyDeviceToHost(const void *devMem, uint64_t memSize);
-    static void *CopyDeviceToHostEx(const void *devMem, uint64_t memSize);
-    static void FreeHost(void *&hostMem);
-    static void FreeDevice(void *&devMem);
+    static int32_t CheckDeviceMemory(int32_t deviceId, const void* addr);
+    static void* CopyHostToHost(const void* hostMem, uint64_t memSize);
+    static void* CopyHostToDevice(const void* hostMem, uint64_t memSize);
+    static void* CopyDeviceToHost(const void* devMem, uint64_t memSize);
+    static void* CopyDeviceToHostEx(const void* devMem, uint64_t memSize);
+    static void FreeHost(void*& hostMem);
+    static void FreeDevice(void*& devMem);
 };
 
 #define HOST_RT_MEMORY_GUARD(var)        \
-    MAKE_CONTEXT_GUARD(var, [&var]() {      \
+    MAKE_CONTEXT_GUARD(var, [&var]() {   \
         if ((var) != nullptr) {          \
             DumpMemory::FreeHost((var)); \
         }                                \
     })
 
 #define DEVICE_RT_MEMORY_GUARD(var)        \
-    MAKE_CONTEXT_GUARD(var, [&var]() {        \
+    MAKE_CONTEXT_GUARD(var, [&var]() {     \
         if ((var) != nullptr) {            \
             DumpMemory::FreeDevice((var)); \
         }                                  \

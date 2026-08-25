@@ -20,17 +20,18 @@ class AdxDumpSocHelper : public Adx::Common::Singleton::Singleton<AdxDumpSocHelp
 public:
     AdxDumpSocHelper();
     ~AdxDumpSocHelper() override;
-    bool Init(const std::string &hostPid);
+    bool Init(const std::string& hostPid);
     void UnInit();
-    IdeErrorT ParseConnectInfo(const std::string &connectInfo) const;
-    IdeErrorT HandShake(const std::string &info, IDE_SESSION &session) const;
-    IdeErrorT DataProcess(const IDE_SESSION &session, const IdeDumpChunk &dumpChunk) const;
-    IdeErrorT Finish(IDE_SESSION &session) const;
+    IdeErrorT ParseConnectInfo(const std::string& connectInfo) const;
+    IdeErrorT HandShake(const std::string& info, IDE_SESSION& session) const;
+    IdeErrorT DataProcess(const IDE_SESSION& session, const IdeDumpChunk& dumpChunk) const;
+    IdeErrorT Finish(IDE_SESSION& session) const;
+
 private:
     std::atomic_flag init_ = ATOMIC_FLAG_INIT;
 };
-IDE_SESSION SocDumpStart(const char *connectInfo);
-IdeErrorT SocDumpData(const IDE_SESSION session, const IdeDumpChunk *dumpChunk);
+IDE_SESSION SocDumpStart(const char* connectInfo);
+IdeErrorT SocDumpData(const IDE_SESSION session, const IdeDumpChunk* dumpChunk);
 IdeErrorT SocDumpEnd(IDE_SESSION session);
-}
+} // namespace Adx
 #endif

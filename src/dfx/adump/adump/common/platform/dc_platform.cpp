@@ -27,10 +27,7 @@ DcFeatures::DcFeatures()
     };
 }
 
-bool DcException::IsArgsDataTypeSizeByByte() const
-{
-    return true;
-}
+bool DcException::IsArgsDataTypeSizeByByte() const { return true; }
 
 uint64_t DcDataDump::GetKfcStackSize() const
 {
@@ -38,9 +35,6 @@ uint64_t DcDataDump::GetKfcStackSize() const
     return CalcKfcStackSize(OP_STACK_310P);
 }
 
-std::string DcDataDump::GetKfcBinName() const
-{
-    return "kfc_dump_stat_ascend310p3.o";
-}
+std::string DcDataDump::GetKfcBinName() const { return "kfc_dump_stat_ascend310p3.o"; }
 
 } // namespace Adx

@@ -21,8 +21,8 @@
 
 namespace Adx {
 
-int32_t JsonParser::ParseJsonFromMemory(const char *dumpConfigData, size_t dumpConfigSize, 
-    nlohmann::json &js, std::string &errMsg)
+int32_t JsonParser::ParseJsonFromMemory(
+    const char* dumpConfigData, size_t dumpConfigSize, nlohmann::json& js, std::string& errMsg)
 {
     errMsg.clear();
     if ((dumpConfigData == nullptr) || (dumpConfigSize == 0U)) {
@@ -30,21 +30,16 @@ int32_t JsonParser::ParseJsonFromMemory(const char *dumpConfigData, size_t dumpC
         IDE_LOGD("Parse json from memory failed: invalid input parameters.");
         return ADUMP_INPUT_FAILED;
     }
-    try
-    {
+    try {
         std::string_view jsonString(dumpConfigData, dumpConfigSize);
         IDE_LOGI("Parse json string: %.*s", static_cast<int>(jsonString.size()), jsonString.data());
         js = nlohmann::json::parse(jsonString);
         IDE_LOGD("Parse json successfully.");
         return ADUMP_SUCCESS;
-    }
-    catch(const nlohmann::json::parse_error& e)
-    {
+    } catch (const nlohmann::json::parse_error& e) {
         errMsg = e.what();
         IDE_LOGE("JSON parse error: %s", e.what());
-    }
-    catch(const std::exception& e)
-    {
+    } catch (const std::exception& e) {
         errMsg = e.what();
         IDE_LOGE("Unexpected error while parsing JSON from memory: %s", e.what());
     }

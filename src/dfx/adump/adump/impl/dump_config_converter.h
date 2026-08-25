@@ -85,8 +85,7 @@ const std::string ADUMP_ENV_NPU_COLLECT_PATH = "NPU_COLLECT_PATH";
 // 设置dump路径(使能Kernel内DFX DUMP功能，优先级低于ASCEND_DUMP_PATH)
 const std::string ADUMP_ENV_ASCEND_WORK_PATH = "ASCEND_WORK_PATH";
 
-struct RawDumpConfig
-{
+struct RawDumpConfig {
     std::string dumpPath;
     std::string dumpMode;
     std::string dumpData;
@@ -98,20 +97,17 @@ struct RawDumpConfig
     std::string dumpScene;
 };
 
-struct AclDumpBlacklist
-{
+struct AclDumpBlacklist {
     std::string name;
     std::vector<std::string> pos;
 };
 
-struct OpNameRange
-{
+struct OpNameRange {
     std::string begin;
     std::string end;
 };
 
-struct AclModelDumpConfig
-{
+struct AclModelDumpConfig {
     std::string modelName;
     std::vector<std::string> layer;
     std::vector<std::string> watcherNodes;
@@ -135,16 +131,16 @@ struct DumpDfxConfig {
     std::vector<std::string> dfxTypes;
 };
 
-class DumpConfigConverter
-{
+class DumpConfigConverter {
 public:
-    DumpConfigConverter(const char *dumpConfigData, size_t dumpConfigSize, const char *dumpConfigPath = "null")
-        : dumpConfigData_(dumpConfigData), dumpConfigSize_(dumpConfigSize), configPath_(dumpConfigPath) {}
+    DumpConfigConverter(const char* dumpConfigData, size_t dumpConfigSize, const char* dumpConfigPath = "null")
+        : dumpConfigData_(dumpConfigData), dumpConfigSize_(dumpConfigSize), configPath_(dumpConfigPath)
+    {}
     ~DumpConfigConverter() = default;
 
-    int32_t Convert(DumpType &dumpType, DumpConfig &dumpConfig, bool &needDump, DumpDfxConfig &dumpDfxConfig);
-    static bool EnableExceptionDumpWithEnv(DumpConfig &dumpConfig, DumpType &dumpType);
-    static bool EnableKernelDfxDumpWithEnv(DumpDfxConfig &config);
+    int32_t Convert(DumpType& dumpType, DumpConfig& dumpConfig, bool& needDump, DumpDfxConfig& dumpDfxConfig);
+    static bool EnableExceptionDumpWithEnv(DumpConfig& dumpConfig, DumpType& dumpType);
+    static bool EnableKernelDfxDumpWithEnv(DumpDfxConfig& config);
     static std::string DumpTypeToStr(const DumpType dumpType);
 
 private:
@@ -153,66 +149,67 @@ private:
     bool CheckDumpConstraints() const;
     bool CheckDumpListFieldTypes() const;
 
-    bool CheckDumpScene(std::string &dumpScene) const;
-    bool CheckWatcherDumpScene(const std::string &dumpScene) const;
-    bool CheckExceptionDumpScene(const std::string &dumpScene) const;
+    bool CheckDumpScene(std::string& dumpScene) const;
+    bool CheckWatcherDumpScene(const std::string& dumpScene) const;
+    bool CheckExceptionDumpScene(const std::string& dumpScene) const;
 
     bool CheckDumpPath() const;
-    bool CheckDumpDebug(std::string &dumpDebug) const;
+    bool CheckDumpDebug(std::string& dumpDebug) const;
     bool CheckDumpStats() const;
     bool CheckDumpStep() const;
 
-    bool CheckDumplist(const std::string &dumpLevel) const;
-    
+    bool CheckDumplist(const std::string& dumpLevel) const;
+
     // dump_list 校验子函数
-    bool CheckModelNameAndLayer(const AclModelDumpConfig &item, const std::string &itemPath) const;
-    bool CheckWatcherSceneConstraints(const AclModelDumpConfig &item, const std::string &itemPath,
-        const std::string &dumpScene) const;
-    bool CheckBlacklistSize(const AclModelDumpConfig &item, const std::string &itemPath) const;
-    bool CheckBlacklistWithDumpLevel(const AclModelDumpConfig &item, const std::string &itemPath,
-        const std::string &dumpLevel) const;
-    bool CheckOpNameRange(const AclModelDumpConfig &item, const std::string &itemPath,
-        const std::string &dumpLevel) const;
-    bool CheckDumpListItems(const std::vector<AclModelDumpConfig> &dumpList, const std::string &dumpLevel,
-        const std::string &dumpScene, bool isSwitchOff) const;
+    bool CheckModelNameAndLayer(const AclModelDumpConfig& item, const std::string& itemPath) const;
+    bool CheckWatcherSceneConstraints(
+        const AclModelDumpConfig& item, const std::string& itemPath, const std::string& dumpScene) const;
+    bool CheckBlacklistSize(const AclModelDumpConfig& item, const std::string& itemPath) const;
+    bool CheckBlacklistWithDumpLevel(
+        const AclModelDumpConfig& item, const std::string& itemPath, const std::string& dumpLevel) const;
+    bool CheckOpNameRange(
+        const AclModelDumpConfig& item, const std::string& itemPath, const std::string& dumpLevel) const;
+    bool CheckDumpListItems(
+        const std::vector<AclModelDumpConfig>& dumpList, const std::string& dumpLevel, const std::string& dumpScene,
+        bool isSwitchOff) const;
 
-    bool CheckFieldValue(const nlohmann::json &js, const std::string &key) const;
-    bool CheckKernelDataValues(const std::string &kernelData) const;
+    bool CheckFieldValue(const nlohmann::json& js, const std::string& key) const;
+    bool CheckKernelDataValues(const std::string& kernelData) const;
     bool CheckDumpStatsValues() const;
-    bool CheckStringField(const nlohmann::json &js, const std::string &key, const std::string &basePath) const;
-    bool CheckDumpListItemFieldTypes(const nlohmann::json &item, const std::string &basePath) const;
-    bool CheckArrayOfString(const nlohmann::json &arr, const std::string &basePath) const;
-    bool CheckArrayOfObject(const nlohmann::json &arr, const std::string &basePath) const;
-    bool CheckArrayOfType(const nlohmann::json &arr, const std::string &basePath, bool isStringType) const;
-    bool CheckBlacklistFieldTypes(const nlohmann::json &blacklistArray, const std::string &basePath) const;
-    bool CheckBlacklistItemFieldTypes(const nlohmann::json &blacklistItem, const std::string &basePath) const;
-    bool CheckOpnameRangeFieldTypes(const nlohmann::json &rangeArray, const std::string &basePath) const;
-    bool CheckOpnameRangeItemFieldTypes(const nlohmann::json &rangeItem, const std::string &basePath) const;
+    bool CheckStringField(const nlohmann::json& js, const std::string& key, const std::string& basePath) const;
+    bool CheckDumpListItemFieldTypes(const nlohmann::json& item, const std::string& basePath) const;
+    bool CheckArrayOfString(const nlohmann::json& arr, const std::string& basePath) const;
+    bool CheckArrayOfObject(const nlohmann::json& arr, const std::string& basePath) const;
+    bool CheckArrayOfType(const nlohmann::json& arr, const std::string& basePath, bool isStringType) const;
+    bool CheckBlacklistFieldTypes(const nlohmann::json& blacklistArray, const std::string& basePath) const;
+    bool CheckBlacklistItemFieldTypes(const nlohmann::json& blacklistItem, const std::string& basePath) const;
+    bool CheckOpnameRangeFieldTypes(const nlohmann::json& rangeArray, const std::string& basePath) const;
+    bool CheckOpnameRangeItemFieldTypes(const nlohmann::json& rangeItem, const std::string& basePath) const;
 
-    void ParseDfxTypesFromJson(const RawDumpConfig &rawDumpConfig, DumpDfxConfig &dumpDfxConfig) const;
-    void EnsureDefaultDfxType(const DumpType &dumpType, DumpDfxConfig &dumpDfxConfig) const;
-    DumpConfig ConvertDumpConfig(const RawDumpConfig &rawDumpConfig) const;
-    DumpType ConvertDumpType(const RawDumpConfig &rawDumpConfig) const;
+    void ParseDfxTypesFromJson(const RawDumpConfig& rawDumpConfig, DumpDfxConfig& dumpDfxConfig) const;
+    void EnsureDefaultDfxType(const DumpType& dumpType, DumpDfxConfig& dumpDfxConfig) const;
+    DumpConfig ConvertDumpConfig(const RawDumpConfig& rawDumpConfig) const;
+    DumpType ConvertDumpType(const RawDumpConfig& rawDumpConfig) const;
 
-    std::string BuildIndexedPath(const std::string &base, size_t index) const;
-    std::string BuildPath(const std::string &base, const std::string &key) const;
-    void Split(const std::string &str, const char delim, std::vector<std::string> &elems) const;
-    bool IsDigit(const std::string &str) const;
-    bool IsValueValid(const std::string key, const std::string value, const std::string &errorPath = "") const;
+    std::string BuildIndexedPath(const std::string& base, size_t index) const;
+    std::string BuildPath(const std::string& base, const std::string& key) const;
+    void Split(const std::string& str, const char delim, std::vector<std::string>& elems) const;
+    bool IsDigit(const std::string& str) const;
+    bool IsValueValid(const std::string key, const std::string value, const std::string& errorPath = "") const;
     bool ConflictWith(const std::string key, const std::string value) const;
     bool CheckIpAddress(const std::string dumpPath) const;
-    bool NeedDump(const RawDumpConfig &rawDumpConfig) const;
-    static std::string TransOptionsToStr(const std::set<std::string> &options);
-    static bool ConvertDumpScene(const std::string dumpScene, DumpType &dumpType);
-    static bool GetEnvVariable(const std::string &env, std::string &value);
-    static bool CheckDumpPath(const std::string &param, const std::string &dumpPath);
-    static bool GetEnvDumpPath(const std::string &env, std::string &envPath);
-    static void LoadDumpEnvVariables(DumpEnvVariable &dumpEnvVariable);
+    bool NeedDump(const RawDumpConfig& rawDumpConfig) const;
+    static std::string TransOptionsToStr(const std::set<std::string>& options);
+    static bool ConvertDumpScene(const std::string dumpScene, DumpType& dumpType);
+    static bool GetEnvVariable(const std::string& env, std::string& value);
+    static bool CheckDumpPath(const std::string& param, const std::string& dumpPath);
+    static bool GetEnvDumpPath(const std::string& env, std::string& envPath);
+    static void LoadDumpEnvVariables(DumpEnvVariable& dumpEnvVariable);
 
     nlohmann::json dumpJs_;
-    const char *dumpConfigData_;
+    const char* dumpConfigData_;
     size_t dumpConfigSize_;
-    const char *configPath_;
+    const char* configPath_;
 };
 
 } // namespace Adx

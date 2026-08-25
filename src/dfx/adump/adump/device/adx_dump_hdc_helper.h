@@ -19,17 +19,18 @@ public:
     ~AdxDumpHdcHelper() override;
     bool Init();
     void UnInit();
-    IdeErrorT ParseConnectInfo(const std::string &connectInfo, std::map<std::string, std::string> &proto) const;
-    IdeErrorT HandShake(const std::string &info, IDE_SESSION &session) const;
-    IdeErrorT DataProcess(const IDE_SESSION &session, const IdeDumpChunk &dumpChunk);
-    IdeErrorT Finish(IDE_SESSION &session);
+    IdeErrorT ParseConnectInfo(const std::string& connectInfo, std::map<std::string, std::string>& proto) const;
+    IdeErrorT HandShake(const std::string& info, IDE_SESSION& session) const;
+    IdeErrorT DataProcess(const IDE_SESSION& session, const IdeDumpChunk& dumpChunk);
+    IdeErrorT Finish(IDE_SESSION& session);
+
 private:
     IdeErrorT SessionIsConnected(const CommHandle handle) const;
     bool init_;
     CommHandle client_;
 };
-IDE_SESSION HdcDumpStart(const char *connectInfo);
-IdeErrorT HdcDumpData(const IDE_SESSION session, const IdeDumpChunk *dumpChunk);
+IDE_SESSION HdcDumpStart(const char* connectInfo);
+IdeErrorT HdcDumpData(const IDE_SESSION session, const IdeDumpChunk* dumpChunk);
 IdeErrorT HdcDumpEnd(IDE_SESSION session);
-}
+} // namespace Adx
 #endif

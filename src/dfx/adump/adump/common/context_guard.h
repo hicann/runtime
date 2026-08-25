@@ -17,13 +17,13 @@ using OnExitFn = std::function<void()>;
 
 class ContextGuard {
 public:
-    explicit ContextGuard(const OnExitFn &onExit) : onExit_(onExit) {}
+    explicit ContextGuard(const OnExitFn& onExit) : onExit_(onExit) {}
     ~ContextGuard()
     {
         if (onExit_ != nullptr) {
             try {
                 onExit_();
-            } catch (std::bad_function_call &) {
+            } catch (std::bad_function_call&) {
                 // just catch exception
             } catch (...) {
                 // just catch exception
@@ -35,6 +35,6 @@ private:
     OnExitFn onExit_;
 };
 
-#define MAKE_CONTEXT_GUARD(var, cb) const ::Adx::ContextGuard ctxGuard_##var __attribute__((unused))(cb)
+#define MAKE_CONTEXT_GUARD(var, cb) const ::Adx::ContextGuard ctxGuard_##var __attribute__((unused)) (cb)
 } // namespace Adx
 #endif // ADUMP_COMMON_CONTEXT_GUARD_H

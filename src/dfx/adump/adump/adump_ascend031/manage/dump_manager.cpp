@@ -27,25 +27,20 @@
 namespace Adx {
 
 // AdumpGetDFXInfoAddr chunk
-uint64_t *g_dynamicChunk = nullptr;
-uint64_t *g_staticChunk = nullptr;
-    
-DumpManager::DumpManager()
-{
-}
+uint64_t* g_dynamicChunk = nullptr;
+uint64_t* g_staticChunk = nullptr;
 
-DumpManager &DumpManager::Instance()
+DumpManager::DumpManager() {}
+
+DumpManager& DumpManager::Instance()
 {
     static DumpManager instance;
     return instance;
 }
 
-void DumpManager::KFCResourceInit()
-{
-    isKFCInit_ = true;
-}
+void DumpManager::KFCResourceInit() { isKFCInit_ = true; }
 
-int32_t DumpManager::SetDumpConfig(DumpType dumpType, const DumpConfig &dumpConfig)
+int32_t DumpManager::SetDumpConfig(DumpType dumpType, const DumpConfig& dumpConfig)
 {
     UNUSED(dumpType);
     UNUSED(dumpConfig);
@@ -53,7 +48,7 @@ int32_t DumpManager::SetDumpConfig(DumpType dumpType, const DumpConfig &dumpConf
     return ADUMP_SUCCESS;
 }
 
-int32_t DumpManager::SetDumpConfig(const char *dumpConfigData, size_t dumpConfigSize, const char *dumpConfigPath)
+int32_t DumpManager::SetDumpConfig(const char* dumpConfigData, size_t dumpConfigSize, const char* dumpConfigPath)
 {
     std::lock_guard<std::mutex> lk(resourceMtx2_);
     if ((dumpConfigData == nullptr) || (dumpConfigSize == 0U) || (dumpConfigPath == nullptr)) {
@@ -77,7 +72,7 @@ int32_t DumpManager::SetDumpConfig(const char *dumpConfigData, size_t dumpConfig
     (void)dumpConfigInfo_.assign(dumpConfigData, dumpConfigSize);
     IDE_LOGI("Dump config info set: addr=%p, size=%zu", dumpConfigInfo_.data(), dumpConfigInfo_.size());
     ret = SetDumpConfig(dumpType, dumpConfig);
-    for (auto &item : enableCallbackFunc_) {
+    for (auto& item : enableCallbackFunc_) {
         IDE_LOGI("SetDumpConfig HandleDumpEvent start for module [%zu]", item.first);
         HandleDumpEvent(item.first, DumpEnableAction::ENABLE);
     }
@@ -95,8 +90,9 @@ int32_t DumpManager::UnSetDumpConfig()
         if (IsEnableDump(dumpType)) {
             const auto ret = SetDumpConfig(dumpType, config);
             if (ret != ADUMP_SUCCESS) {
-                IDE_LOGE("[Set][Dump]set dump off failed, dumpType:[%d], errorCode = %d",
-                         static_cast<int32_t>(dumpType), ret);
+                IDE_LOGE(
+                    "[Set][Dump]set dump off failed, dumpType:[%d], errorCode = %d", static_cast<int32_t>(dumpType),
+                    ret);
                 return ADUMP_FAILED;
             }
             IDE_LOGI("set dump off successfully, dumpType:[%d].", static_cast<int32_t>(dumpType));
@@ -112,15 +108,9 @@ int32_t DumpManager::UnSetDumpConfig()
     return ADUMP_SUCCESS;
 }
 
-std::string DumpManager::GetBinName() const
-{
-    return "";
-}
+std::string DumpManager::GetBinName() const { return ""; }
 
-bool DumpManager::CheckBinValidation()
-{
-    return false;
-}
+bool DumpManager::CheckBinValidation() { return false; }
 
 bool DumpManager::IsEnableDump(DumpType dumpType)
 {
@@ -135,8 +125,8 @@ bool DumpManager::IsEnableDump(DumpType dumpType)
     return false;
 }
 
-int32_t DumpManager::DumpOperator(const std::string &opType, const std::string &opName,
-                                  const std::vector<TensorInfo> &tensors, rtStream_t stream)
+int32_t DumpManager::DumpOperator(
+    const std::string& opType, const std::string& opName, const std::vector<TensorInfo>& tensors, rtStream_t stream)
 {
     UNUSED(opType);
     UNUSED(opName);
@@ -145,8 +135,8 @@ int32_t DumpManager::DumpOperator(const std::string &opType, const std::string &
     return ADUMP_SUCCESS;
 }
 
-int32_t DumpManager::DumpOperatorV2(const std::string &opType, const std::string &opName,
-                                const std::vector<TensorInfoV2> &tensors, rtStream_t stream)
+int32_t DumpManager::DumpOperatorV2(
+    const std::string& opType, const std::string& opName, const std::vector<TensorInfoV2>& tensors, rtStream_t stream)
 {
     UNUSED(opType);
     UNUSED(opName);
@@ -155,8 +145,9 @@ int32_t DumpManager::DumpOperatorV2(const std::string &opType, const std::string
     return ADUMP_SUCCESS;
 }
 
-int32_t DumpManager::DumpOperatorWithCfg(const std::string &opType, const std::string &opName,
-    const std::vector<TensorInfo> &tensors, aclrtStream stream, const DumpCfg &dumpCfg)
+int32_t DumpManager::DumpOperatorWithCfg(
+    const std::string& opType, const std::string& opName, const std::vector<TensorInfo>& tensors, aclrtStream stream,
+    const DumpCfg& dumpCfg)
 {
     UNUSED(opType);
     UNUSED(opName);
@@ -178,15 +169,9 @@ int32_t DumpManager::UnregisterExceptionDumpCallback(ExceptionDumpCallback callb
     return ADUMP_SUCCESS;
 }
 
-void DumpManager::AddExceptionOp(const OperatorInfo &opInfo)
-{
-    UNUSED(opInfo);
-}
+void DumpManager::AddExceptionOp(const OperatorInfo& opInfo) { UNUSED(opInfo); }
 
-void DumpManager::AddExceptionOpV2(const OperatorInfoV2 &opInfo)
-{
-    UNUSED(opInfo);
-}
+void DumpManager::AddExceptionOpV2(const OperatorInfoV2& opInfo) { UNUSED(opInfo); }
 
 int32_t DumpManager::DelExceptionOp(uint32_t deviceId, uint32_t streamId)
 {
@@ -195,19 +180,19 @@ int32_t DumpManager::DelExceptionOp(uint32_t deviceId, uint32_t streamId)
     return ADUMP_SUCCESS;
 }
 
-std::vector<TensorInfoV2> DumpManager::ConvertTensorInfoToDumpTensorV2(const std::vector<TensorInfo> &tensorInfos) const
+std::vector<TensorInfoV2> DumpManager::ConvertTensorInfoToDumpTensorV2(const std::vector<TensorInfo>& tensorInfos) const
 {
     std::vector<TensorInfoV2> tensors;
     tensors.reserve(tensorInfos.size());
     for (const auto& tensorInfo : tensorInfos) {
-        TensorInfoV2 tensor ={};
+        TensorInfoV2 tensor = {};
         ConvertTensorInfo(tensorInfo, tensor);
         tensors.emplace_back(tensor);
     }
     return tensors;
 }
 
-void DumpManager::ConvertTensorInfo(const TensorInfo &tensorInfo, TensorInfoV2 &tensor) const
+void DumpManager::ConvertTensorInfo(const TensorInfo& tensorInfo, TensorInfoV2& tensor) const
 {
     tensor.dataType = tensorInfo.dataType;
     tensor.format = tensorInfo.format;
@@ -227,7 +212,7 @@ void DumpManager::ConvertTensorInfo(const TensorInfo &tensorInfo, TensorInfoV2 &
     }
 }
 
-void DumpManager::ConvertOperatorInfo(const OperatorInfo &opInfo, OperatorInfoV2 &operatorInfoV2) const
+void DumpManager::ConvertOperatorInfo(const OperatorInfo& opInfo, OperatorInfoV2& operatorInfoV2) const
 {
     operatorInfoV2.agingFlag = opInfo.agingFlag;
     operatorInfoV2.taskId = opInfo.taskId;
@@ -247,10 +232,7 @@ uint64_t DumpManager::AdumpGetDumpSwitch()
     return dumpSetting_.GetDumpSwitch();
 }
 
-DumpSetting DumpManager::GetDumpSetting() const
-{
-    return dumpSetting_;
-}
+DumpSetting DumpManager::GetDumpSetting() const { return dumpSetting_; }
 
 int32_t DumpManager::RegisterCallback(uint32_t moduleId, AdumpCallback enableFunc, AdumpCallback disableFunc)
 {
@@ -295,10 +277,12 @@ int32_t DumpManager::HandleDumpEvent(uint32_t moduleId, DumpEnableAction action)
 
     IDE_LOGI("HandleDumpEvent callbackFunc start for module [%zu]", moduleId);
     IDE_LOGI("HandleDumpEvent callbackFunc switch [%" PRIu64 "]", dumpSwitch);
-    IDE_LOGI("HandleDumpEvent callbackFunc Dump config info: addr=%p, size=%zu", dumpConfigInfo_.data(), dumpConfigInfo_.size());
+    IDE_LOGI(
+        "HandleDumpEvent callbackFunc Dump config info: addr=%p, size=%zu", dumpConfigInfo_.data(),
+        dumpConfigInfo_.size());
     int32_t result = callbackFunc(dumpSwitch, dumpConfigInfo_.data(), dumpConfigInfo_.size());
     IDE_LOGI("callbackFunc returned: %d", result);
     return result;
 }
 
-}  // namespace Adx
+} // namespace Adx

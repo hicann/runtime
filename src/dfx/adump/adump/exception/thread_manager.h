@@ -15,18 +15,19 @@
 #include <condition_variable>
 #include "common/singleton.h"
 
-namespace Adx{
-class ThreadManager: public Adx::Common::Singleton::Singleton<ThreadManager> {
+namespace Adx {
+class ThreadManager : public Adx::Common::Singleton::Singleton<ThreadManager> {
 public:
     ThreadManager(){};
     ~ThreadManager() override;
     void TaskAdd(int32_t tid);
     void TaskDone(int32_t tid);
     void WaitAll();
+
 private:
     std::mutex mtx_;
     std::set<int32_t> threads_;
     std::condition_variable cv_;
 };
-}
+} // namespace Adx
 #endif

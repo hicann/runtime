@@ -32,9 +32,9 @@ enum class DumpEnableAction : int32_t {
 
 class DumpManager {
 public:
-    static DumpManager &Instance();
-    int32_t SetDumpConfig(DumpType dumpType, const DumpConfig &dumpConfig);
-    int32_t SetDumpConfig(const char *dumpConfigData, size_t dumpConfigSize, const char *dumpConfigPath = "null");
+    static DumpManager& Instance();
+    int32_t SetDumpConfig(DumpType dumpType, const DumpConfig& dumpConfig);
+    int32_t SetDumpConfig(const char* dumpConfigData, size_t dumpConfigSize, const char* dumpConfigPath = "null");
     int32_t UnSetDumpConfig();
     bool IsEnableDump(DumpType dumpType);
     int32_t DumpOperatorWithCapture(
@@ -55,22 +55,23 @@ public:
     int32_t StartDumpArgs(const std::string& dumpPath);
     int32_t StopDumpArgs();
     int32_t SaveFile(const char* data, size_t dataLen, const char* fileName, SaveType type);
-    int32_t SaveExceptionInfo(const std::string& fileName, const std::string& userTag,
-        const std::vector<TensorInfo>& tensors);
+    int32_t SaveExceptionInfo(
+        const std::string& fileName, const std::string& userTag, const std::vector<TensorInfo>& tensors);
     int32_t DumpOperatorV2(
         const std::string& opType, const std::string& opName, const std::vector<TensorInfoV2>& tensors,
         rtStream_t stream);
-    int32_t DumpOperatorWithCfg(const std::string &opType, const std::string &opName,
-        const std::vector<TensorInfo> &tensors, aclrtStream stream, const DumpCfg &dumpCfg);
+    int32_t DumpOperatorWithCfg(
+        const std::string& opType, const std::string& opName, const std::vector<TensorInfo>& tensors,
+        aclrtStream stream, const DumpCfg& dumpCfg);
     void AddExceptionOpV2(const OperatorInfoV2& opInfo);
     void ConvertOperatorInfo(const OperatorInfo& opInfo, OperatorInfoV2& operatorInfoV2) const;
     std::vector<TensorInfoV2> ConvertTensorInfoToDumpTensorV2(const std::vector<TensorInfo>& tensorInfos) const;
     const char* GetExtraExceptionDumpPath();
-    int32_t GetExceptionDumpPath(std::string &path);
+    int32_t GetExceptionDumpPath(std::string& path);
     const char* GetDataDumpPath();
     bool StartDataDumpServer();
     bool StopDataDumpServer();
-    
+
     int32_t RegisterExceptionDumpCallback(ExceptionDumpCallback callback);
     int32_t UnregisterExceptionDumpCallback(ExceptionDumpCallback callback);
 
