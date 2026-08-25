@@ -136,9 +136,7 @@ void OpTaskFailCallbackNotify(rtExceptionInfo_t* const exceptionInfo)
     rtBinHandle binHandle = nullptr;
     if (exceptionInfo->expandInfo.type == RT_EXCEPTION_AICORE) {
         binHandle = exceptionInfo->expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.bin;
-    } else if (
-        exceptionInfo->expandInfo.type == RT_EXCEPTION_FUSION &&
-        exceptionInfo->expandInfo.u.fusionInfo.type == RT_FUSION_AICORE_AICPU) {
+    } else if (exceptionInfo->expandInfo.type == RT_EXCEPTION_FUSION) {
         binHandle = exceptionInfo->expandInfo.u.fusionInfo.u.aicoreCcuInfo.exceptionArgs.exceptionKernelInfo.bin;
     }
 

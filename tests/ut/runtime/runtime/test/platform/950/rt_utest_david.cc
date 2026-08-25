@@ -82,6 +82,7 @@
 #include "task_info_base.hpp"
 #include "capture_model_utils.hpp"
 #include "aicpu_c.hpp"
+#include "task_fail_callback_manager.hpp"
 #undef protected
 #undef private
 
@@ -2839,6 +2840,42 @@ TEST_F(DavidTaskTest, ccu_task_dev_error_proc_for_fusion_128B)
     EXPECT_EQ(ret, RT_ERROR_NONE);
     GlobalMockObject::verify();
     delete errorProc;
+}
+
+TEST_F(DavidTaskTest, TaskFailCallBackForFusionKernelTask_KernelNameAllocAndFree)
+{
+    PlainProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    const std::string testKernelName = "test_kernel";
+    uint32_t nameOffset = program.AppendKernelName(testKernelName.c_str());
+    EXPECT_EQ(nameOffset, 0U);
+
+    Kernel kernel(testKernelName.c_str(), 0ULL, &program, RT_KERNEL_ATTR_TYPE_AICORE, 0U);
+    kernel.SetNameOffset(nameOffset);
+
+    TaskInfo taskInfo = {};
+    taskInfo.type = TS_TASK_TYPE_FUSION_KERNEL;
+    taskInfo.stream = stream_;
+    taskInfo.u.fusionKernelTask.aicPart.kernel = &kernel;
+
+    MOCKER(TaskFailCallBackNotify).stubs();
+
+    EXPECT_NO_THROW(TaskFailCallBackForFusionKernelTask(&taskInfo, dev_->Id_(), nullptr, RT_FUSION_AICORE_CCU));
+
+    GlobalMockObject::verify();
+}
+
+TEST_F(DavidTaskTest, TaskFailCallBackForFusionKernelTask_NullKernelNameNoFree)
+{
+    TaskInfo taskInfo = {};
+    taskInfo.type = TS_TASK_TYPE_FUSION_KERNEL;
+    taskInfo.stream = stream_;
+    taskInfo.u.fusionKernelTask.aicPart.kernel = nullptr;
+
+    MOCKER(TaskFailCallBackNotify).stubs();
+
+    EXPECT_NO_THROW(TaskFailCallBackForFusionKernelTask(&taskInfo, dev_->Id_(), nullptr, RT_FUSION_AICORE_CCU));
+
+    GlobalMockObject::verify();
 }
 
 TEST_F(DavidTaskTest, aic_task_dev_error_proc_for_fusion)

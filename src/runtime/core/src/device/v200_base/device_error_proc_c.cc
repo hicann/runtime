@@ -21,6 +21,7 @@
 #include "profiler_c.hpp"
 #include "acc_error_info.h"
 #include "error_code.h"
+#include "ccu_task.hpp"
 
 namespace cce {
 namespace runtime {
@@ -729,6 +730,9 @@ rtError_t ProcessDavidStarsCoreErrorInfo(
             &(info->u.davidCoreErrorInfo.info[coreIdx]), errorString, errorCode, dev->GetChipType());
         AddExceptionRegInfo(info, coreIdx, type, errTaskPtr);
         PrintDavidCoreInfo(info, coreIdx, errorNumber, errorString, errorCode, rasFaultDesc);
+    }
+    if ((errTaskPtr != nullptr) && (errTaskPtr->type == TS_TASK_TYPE_FUSION_KERNEL)) {
+        TaskFailCallBackForFusionKernelTask(errTaskPtr, dev->Id_(), nullptr, RT_FUSION_AICORE_CCU);
     }
     return RT_ERROR_NONE;
 }

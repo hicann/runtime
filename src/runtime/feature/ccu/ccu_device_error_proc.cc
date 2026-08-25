@@ -265,6 +265,9 @@ void TaskFailCallBackForFusionKernelTask(
         exceptionInfo.taskid, expandInfo->type, exceptionInfo.retcode);
 
     TaskFailCallBackNotify(&exceptionInfo);
+    if (fusionDetail->u.aicoreCcuInfo.exceptionArgs.exceptionKernelInfo.kernelName != nullptr) {
+        delete[] fusionDetail->u.aicoreCcuInfo.exceptionArgs.exceptionKernelInfo.kernelName;
+    }
 }
 
 static void TaskFailCallBackForCcuTask(
