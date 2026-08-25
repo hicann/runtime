@@ -767,6 +767,11 @@ rtError_t ApiErrorDecorator::BinaryGetFunctionByEntry(
     return impl_->BinaryGetFunctionByEntry(binHandle, funcEntry, funcHandle);
 }
 
+rtError_t ApiErrorDecorator::BinaryGetFunctionCount(const Program* const binHandle, uint32_t* const count)
+{
+    return impl_->BinaryGetFunctionCount(binHandle, count);
+}
+
 rtError_t ApiErrorDecorator::BinaryGetMetaNum(Program* const binHandle, const rtBinaryMetaType type, size_t* numOfMeta)
 {
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(

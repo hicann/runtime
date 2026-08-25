@@ -4818,6 +4818,30 @@ TEST_F(UTEST_ACL_Runtime, aclrtBinaryGetFunctionByEntry_success)
     binHandle = nullptr;
 }
 
+TEST_F(UTEST_ACL_Runtime, aclrtBinaryGetFunctionCount_failed_with_invalid_args)
+{
+    uint32_t count = 0U;
+    auto ret = aclrtBinaryGetFunctionCount(nullptr, &count);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+
+    auto binHandle = reinterpret_cast<aclrtBinHandle>(0x1000U);
+    ret = aclrtBinaryGetFunctionCount(binHandle, nullptr);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtBinaryGetFunctionCount(_, _))
+        .WillOnce(Return(ACL_ERROR_RT_PARAM_INVALID));
+    ret = aclrtBinaryGetFunctionCount(binHandle, &count);
+    EXPECT_EQ(ret, ACL_ERROR_RT_PARAM_INVALID);
+}
+
+TEST_F(UTEST_ACL_Runtime, aclrtBinaryGetFunctionCount_success)
+{
+    auto binHandle = reinterpret_cast<aclrtBinHandle>(0x1000U);
+    uint32_t count = 0U;
+    auto ret = aclrtBinaryGetFunctionCount(binHandle, &count);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+}
+
 TEST_F(UTEST_ACL_Runtime, aclrtGetFunctionAddr_failed_with_invalid_args)
 {
     void* aicAddr = nullptr;

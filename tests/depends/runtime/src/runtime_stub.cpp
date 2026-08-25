@@ -1353,6 +1353,13 @@ rtError_t aclStub::rtsFuncGetByEntry(const rtBinHandle binHandle, const uint64_t
     return RT_ERROR_NONE;
 }
 
+rtError_t aclStub::rtBinaryGetFunctionCount(const rtBinHandle binHandle, uint32_t* count)
+{
+    (void)binHandle;
+    (void)count;
+    return RT_ERROR_NONE;
+}
+
 rtError_t aclStub::rtsFuncGetAddr(const rtFuncHandle funcHandle, void** aicAddr, void** aivAddr)
 {
     return RT_ERROR_NONE;
@@ -3709,6 +3716,11 @@ rtError_t rtsBinaryGetDevAddress(const rtBinHandle binHandle, void** bin, uint32
 rtError_t rtsFuncGetByEntry(const rtBinHandle binHandle, const uint64_t funcEntry, rtFuncHandle* funcHandle)
 {
     return MockFunctionTest::aclStubInstance().rtsFuncGetByEntry(binHandle, funcEntry, funcHandle);
+}
+
+rtError_t rtBinaryGetFunctionCount(const rtBinHandle binHandle, uint32_t* count)
+{
+    return MockFunctionTest::aclStubInstance().rtBinaryGetFunctionCount(binHandle, count);
 }
 
 rtError_t rtsFuncGetAddr(const rtFuncHandle funcHandle, void** aicAddr, void** aivAddr)

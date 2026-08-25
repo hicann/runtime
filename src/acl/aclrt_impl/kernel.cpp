@@ -176,6 +176,16 @@ aclError aclrtBinaryGetFunctionByEntryImpl(aclrtBinHandle binHandle, uint64_t fu
     return ACL_SUCCESS;
 }
 
+aclError aclrtBinaryGetFunctionCountImpl(aclrtBinHandle binHandle, uint32_t* count)
+{
+    ACL_LOG_INFO("start to execute aclrtBinaryGetFunctionCount");
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(binHandle);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(count);
+
+    ACL_REQUIRES_RTS_OK(rtBinaryGetFunctionCount(binHandle, count));
+    return ACL_SUCCESS;
+}
+
 aclError aclrtBinaryGetGlobalImpl(aclrtBinHandle binHandle, const char* name, void** dptr, size_t* size)
 {
     ACL_LOG_INFO("start to execute aclrtBinaryGetGlobal");

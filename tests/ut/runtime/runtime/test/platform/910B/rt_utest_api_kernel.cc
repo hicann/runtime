@@ -147,6 +147,18 @@ TEST_F(CloudV2ApiKernelTest, TestRtsFuncGetByEntrySuccess)
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
+TEST_F(CloudV2ApiKernelTest, TestRtBinaryGetFunctionCount)
+{
+    ApiImpl apiImpl;
+    MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::BinaryGetFunctionCount).stubs().will(returnValue(RT_ERROR_NONE));
+    ElfProgram program;
+    Program* programBase = &program;
+    rtBinHandle binHandle = rt_ut::InitAndExportHandle<rtBinHandle>(programBase);
+    uint32_t count = 0;
+    rtError_t error = rtBinaryGetFunctionCount(binHandle, &count);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
 TEST_F(CloudV2ApiKernelTest, TestRtsGetNonCacheAddrOffset)
 {
     ApiImpl apiImpl;
@@ -283,6 +295,25 @@ TEST_F(CloudV2ApiKernelTest, TestFuncGetByEntry)
     ApiProfileLogDecorator apiProfileLogDecorator(&apiImpl, &profiler);
     error = apiProfileLogDecorator.BinaryGetFunctionByEntry(&program, 1024, &kernel);
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+}
+
+TEST_F(CloudV2ApiKernelTest, TestBinaryGetFunctionCount)
+{
+    ApiImpl apiImpl;
+    ElfProgram program;
+    uint32_t count = 0;
+
+    auto error = apiImpl.BinaryGetFunctionCount(&program, &count);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(count, 0U);
+
+    ApiDecorator apiDecorator(&apiImpl);
+    error = apiDecorator.BinaryGetFunctionCount(&program, &count);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    ApiErrorDecorator apiError(&apiImpl);
+    error = apiError.BinaryGetFunctionCount(&program, &count);
+    EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
 TEST_F(CloudV2ApiKernelTest, TestFuncGetAddrWithProgramNull)

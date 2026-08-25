@@ -236,6 +236,7 @@
     _(aclError, aclrtBinaryGetFunctionByEntry,                                                                         \
       (aclrtBinHandle binHandle, uint64_t funcEntry, aclrtFuncHandle * funcHandle),                                    \
       (binHandle, funcEntry, funcHandle))                                                                              \
+    _(aclError, aclrtBinaryGetFunctionCount, (aclrtBinHandle binHandle, uint32_t * count), (binHandle, count))         \
     _(aclError, aclrtBinaryGetGlobal, (aclrtBinHandle binHandle, const char* name, void** dptr, size_t* size),         \
       (binHandle, name, dptr, size))                                                                                   \
     _(aclError, aclrtGetFuncBySymbol, (const void* symbol, aclrtFuncHandle* funcHandle), (symbol, funcHandle))         \

@@ -411,6 +411,7 @@ public:
     virtual rtError_t rtsBinaryGetDevAddress(const rtBinHandle binHandle, void** bin, uint32_t* binSize);
     virtual rtError_t rtsFuncGetByEntry(
         const rtBinHandle binHandle, const uint64_t funcEntry, rtFuncHandle* funcHandle);
+    virtual rtError_t rtBinaryGetFunctionCount(const rtBinHandle binHandle, uint32_t* count);
     virtual rtError_t rtsFuncGetAddr(const rtFuncHandle funcHandle, void** aicAddr, void** aivAddr);
     virtual rtError_t rtFuncGetSize(const rtFuncHandle funcHandle, size_t* aicSize, size_t* aivSize);
 
@@ -1030,6 +1031,7 @@ public:
     MOCK_METHOD3(rtsBinaryGetDevAddress, rtError_t(const rtBinHandle binHandle, void** bin, uint32_t* binSize));
     MOCK_METHOD3(
         rtsFuncGetByEntry, rtError_t(const rtBinHandle binHandle, const uint64_t funcEntry, rtFuncHandle* funcHandle));
+    MOCK_METHOD2(rtBinaryGetFunctionCount, rtError_t(const rtBinHandle binHandle, uint32_t* count));
     MOCK_METHOD3(rtsFuncGetAddr, rtError_t(const rtFuncHandle funcHandle, void** aicAddr, void** aivAddr));
     MOCK_METHOD3(rtFuncGetSize, rtError_t(const rtFuncHandle funcHandle, size_t* aicSize, size_t* aivSize));
     MOCK_METHOD6(

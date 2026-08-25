@@ -13,6 +13,7 @@
 #include "api_handle_guard.h"
 #include "osal.hpp"
 #include "rts/rts.h"
+#include "runtime/inner_kernel.h"
 #include "global_state_manager.hpp"
 #include "program.hpp"
 
@@ -439,6 +440,17 @@ rtError_t rtsFuncGetByEntry(const rtBinHandle binHandle, const uint64_t funcEntr
     Kernel* const realKernel = RtPtrToPtr<Kernel*>(*funcHandle);
     InitEmbeddedInnerHandle<Kernel>(realKernel);
     *funcHandle = ExportEmbeddedHandle<rtFuncHandle>(realKernel);
+    return ACL_RT_SUCCESS;
+}
+
+VISIBILITY_DEFAULT
+rtError_t rtBinaryGetFunctionCount(const rtBinHandle binHandle, uint32_t* count)
+{
+    Api* const apiInstance = Api::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
+    RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(binHandle, Program, realProgram, ValidateProgramHandleForApi);
+    const rtError_t ret = apiInstance->BinaryGetFunctionCount(realProgram, count);
+    ERROR_RETURN_WITH_EXT_ERRCODE(ret);
     return ACL_RT_SUCCESS;
 }
 

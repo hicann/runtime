@@ -121,6 +121,15 @@ RTS_API rtError_t rtBinaryGetGlobal(const rtBinHandle binHandle, const char* nam
  */
 RTS_API rtError_t rtGetFuncBySymbol(const void* symbol, rtFuncHandle* funcHandle);
 
+/**
+ * @ingroup rts_kernel
+ * @brief Get the total number of kernel functions in the binary.
+ * @param [in] binHandle binary handle to query.
+ * @param [out] count output param: total number of kernel functions.
+ * @return RT_ERROR_NONE for ok
+ */
+RTS_API rtError_t rtBinaryGetFunctionCount(const rtBinHandle binHandle, uint32_t* count);
+
 #if defined(__cplusplus)
 }
 #endif

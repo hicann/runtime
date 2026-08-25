@@ -6,3 +6,4 @@
 
 - [0_launch_kernel](./0_launch_kernel/README.md)：演示 Kernel 二进制加载、参数组装和执行。
 - [1_launch_kernel_with_reslimit](./1_launch_kernel_with_reslimit/README.md)：演示在 Device 资源限制下的 Kernel 执行。
+- [3_binary_get_function_count](./3_binary_get_function_count/README.md)：演示查询 Kernel 二进制中的核函数数量。

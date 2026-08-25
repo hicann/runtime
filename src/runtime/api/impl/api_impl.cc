@@ -1018,6 +1018,13 @@ rtError_t ApiImpl::BinaryGetFunctionByEntry(
     return RT_ERROR_NONE;
 }
 
+rtError_t ApiImpl::BinaryGetFunctionCount(const Program* const binHandle, uint32_t* const count)
+{
+    *count = static_cast<uint32_t>(binHandle->GetKernelNameMap().size());
+    RT_LOG(RT_LOG_DEBUG, "BinaryGetFunctionCount prog=%p, count=%u", binHandle, *count);
+    return RT_ERROR_NONE;
+}
+
 rtError_t ApiImpl::GetFunctionBySymbol(const void* symbol, Kernel** const funcHandle)
 {
     const Kernel* kernelTmp = nullptr;

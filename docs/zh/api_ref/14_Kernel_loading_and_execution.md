@@ -9,6 +9,7 @@
 - [`aclError aclrtBinaryLoadFromData(const void *data, size_t length, const aclrtBinaryLoadOptions *options, aclrtBinHandle *binHandle)`](#aclrtBinaryLoadFromData)：从内存加载并解析算子二进制数据，输出指向算子二进制的binHandle。
 - [`aclError aclrtBinaryGetFunction(const aclrtBinHandle binHandle, const char *kernelName, aclrtFuncHandle *funcHandle)`](#aclrtBinaryGetFunction)：根据核函数名称，查找到对应的核函数，并使用funcHandle表达。
 - [`aclError aclrtBinaryGetFunctionByEntry(aclrtBinHandle binHandle, uint64_t funcEntry, aclrtFuncHandle *funcHandle)`](#aclrtBinaryGetFunctionByEntry)：根据Function Entry获取核函数句柄。
+- [`aclError aclrtBinaryGetFunctionCount(aclrtBinHandle binHandle, uint32_t *count)`](#aclrtBinaryGetFunctionCount)：获取算子二进制中核函数的总数。
 - [`aclError aclrtBinaryGetDevAddress(const aclrtBinHandle binHandle, void **binAddr, size_t *binSize)`](#aclrtBinaryGetDevAddress)：获取算子二进制数据在Device上的内存地址及内存大小。
 - [`aclError aclrtBinaryGetGlobal(aclrtBinHandle binHandle, const char *name, void **dptr, size_t *size)`](#aclrtBinaryGetGlobal)：根据全局变量名称获取Device侧全局变量的地址和大小。
 - [`aclError aclrtBinarySetExceptionCallback(aclrtBinHandle binHandle, aclrtOpExceptionCallback callback, void *userData)`](#aclrtBinarySetExceptionCallback)：调用本接口注册回调函数。若多次设置回调函数，以最后一次设置为准。
@@ -54,12 +55,7 @@
 
 ![](figures/operator_binary_and_kernel_function_relationship.png)
 
-- **算子二进制**：编译算子源码，可得到算子二进制文件\*.o。对于CANN内置算子，可从算子二进制包（包名为Ascend-cann-\*-ops-\*.run）中获取算子二进制文件。对于自定义算子，可在编译算子、发布二进制之后获取算子二进制文件。
-  
-  <!-- npu="950,A3,910b,910,310p,310b" id4 -->
-  自定义算子的开发、编译请参见[《Ascend C算子开发指南》](https://hiascend.com/document/redirect/CannCommunityOpdevAscendC)。
-  <!-- end id4 -->
-  <!-- @ref: runtime/res/docs/zh/api_ref/14_Kernel_loading_and_execution_res.md#id41 -->
+- **算子二进制**：编译算子源码，可得到算子二进制文件\*.o。对于CANN内置算子，可从算子二进制包（包名为Ascend-cann-\*-ops-\*.run）中获取算子二进制文件。对于自定义算子，可在编译算子、发布二进制之后获取算子二进制文件。自定义算子的开发、编译请参见[《Ascend C算子开发指南》](https://hiascend.com/document/redirect/CannCommunityOpdevAscendC)。
 - **核函数**：是算子设备侧实现的入口函数。当前允许使用C/C++函数的语法扩展来编写设备端的运行代码，用户在核函数中进行数据访问和计算操作，由此实现该算子的所有功能。
 
 ### Kernel加载与执行接口调用流程
@@ -305,6 +301,60 @@ aclError aclrtBinaryGetFunctionByEntry(aclrtBinHandle binHandle, uint64_t funcEn
 | binHandle | 输入 | 算子二进制句柄。类型定义请参见[aclrtBinHandle](25-05_Typedefs.md#aclrtBinHandle)。<br>调用[aclrtBinaryLoadFromFile](#aclrtBinaryLoadFromFile)接口或[aclrtBinaryLoadFromData](#aclrtBinaryLoadFromData)接口获取算子二进制句柄，再将其作为入参传入本接口。 |
 | funcEntry | 输入 | 标识核函数的关键字。 |
 | funcHandle | 输出 | 核函数句柄。类型定义请参见[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)。 |
+
+### 返回值说明
+
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
+
+<br>
+<br>
+<br>
+
+<a id="aclrtBinaryGetFunctionCount"></a>
+
+## aclrtBinaryGetFunctionCount
+
+```c
+aclError aclrtBinaryGetFunctionCount(aclrtBinHandle binHandle, uint32_t *count)
+```
+
+### 产品支持情况
+
+<!-- npu="950" id4001 -->
+- Ascend 950PR/Ascend 950DT：支持
+<!-- end id4001 -->
+<!-- npu="A3" id4002 -->
+- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+<!-- end id4002 -->
+<!-- npu="910b" id4003 -->
+- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+<!-- end id4003 -->
+<!-- npu="310b" id4004 -->
+- Atlas 200I/500 A2 推理产品：支持
+<!-- end id4004 -->
+<!-- npu="310p" id4005 -->
+- Atlas 推理系列产品：支持
+<!-- end id4005 -->
+<!-- npu="910" id4006 -->
+- Atlas 训练系列产品：支持
+<!-- end id4006 -->
+<!-- npu="IPV350" id4007 -->
+- IPV350：不支持
+<!-- end id4007 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id3 -->
+
+### 功能说明
+
+获取算子二进制中核函数的总数。
+
+用户通过[aclrtBinaryLoadFromFile](#aclrtBinaryLoadFromFile)或[aclrtBinaryLoadFromData](#aclrtBinaryLoadFromData)加载算子二进制后，可调用本接口获取该算子二进制包含的核函数数量。
+
+### 参数说明
+
+| 参数名 | 输入/输出 | 说明 |
+| --- | :---: | --- |
+| binHandle | 输入 | 算子二进制句柄。类型定义请参见[aclrtBinHandle](25-05_Typedefs.md#aclrtBinHandle)。<br>调用[aclrtBinaryLoadFromFile](#aclrtBinaryLoadFromFile)接口或[aclrtBinaryLoadFromData](#aclrtBinaryLoadFromData)接口获取算子二进制句柄，再将其作为入参传入本接口。 |
+| count | 输出 | 核函数的总数。 |
 
 ### 返回值说明
 
@@ -1684,9 +1734,9 @@ aclError aclrtLaunchKernelWithArgsArray(void *func, uint32_t numBlocks, aclrtStr
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| func | 输入 | 内核函数指针。此处可以是`__global__`声明的核函数名（比如myKernel，仅适用于Ascend C语言开发自定义算子并基于毕昇编译器进行Host和Device代码混合编译的场景），也可以是[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)类型的核函数句柄。 |
-| numBlocks | 输入 | 指定核函数将会在几个核上执行。 |
-| stream | 输入 | 指定执行任务的Stream。类型定义请参见[aclrtStream](25-05_Typedefs.md#aclrtStream)。 |
+| func | 输入 | 内核函数指针。此处可以是`__global__`声明的核函数名（比如myKernel），也可以是[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)类型的核函数句柄。 |
+| numBlocks | 输入 | 指定核函数将会在几个核上执行。                                                                                     |
+| stream | 输入 | 指定执行任务的Stream。类型定义请参见[aclrtStream](25-05_Typedefs.md#aclrtStream)。                                   |
 | cfg | 输入 | 任务下发的配置信息。类型定义请参见[aclrtLaunchKernelCfg](25-04_Structs.md#aclrtLaunchKernelCfg)。<br>不指定配置时，此处可传NULL。 |
 | args | 输入 | 参数数组指针。<br/>参数数组中的每个元素均指向核函数参数数据在Host侧的内存地址。                                                        |
 
@@ -1767,7 +1817,7 @@ Ascend RC形态或Control CPU开放形态下，data参数处需申请Device上�
 <!-- end id2 -->
 
 <!-- npu="IPV350" id3 -->
-对于IPV350，data参数处需申请Device上的内存。
+data参数处需申请Device上的内存。
 <!-- end id3 -->
 
 <!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id38 -->
@@ -2253,7 +2303,7 @@ aclError aclrtLaunchSIMTKernelWithArgsArray(void *func, dim3 gridDim, dim3 block
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| func | 输入 | 内核函数指针。此处可以是`__global__`声明的核函数名（比如myKernel，仅适用于Ascend C语言开发自定义算子并基于毕昇编译器进行Host和Device代码混合编译的场景），也可以是[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)类型的核函数句柄。 |
+| func | 输入 | 内核函数指针。此处可以是`__global__`声明的核函数名（比如myKernel），也可以是[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)类型的核函数句柄。 |
 | gridDim | 输入 | 线程块网格，由多个线程块（Thread Block）组成。Grid采用三维结构，其维度X、Y和Z分别表示不同维度下线程块的大小。类型定义请参见[dim3](25-04_Structs.md#dim3)。 |
 | blockDim | 输入 | 线程块（Thread Block），采用三维结构，其维度X、Y和Z分别表示线程块中三个维度的线程数。类型定义请参见[dim3](25-04_Structs.md#dim3)。 |
 | dynUbufSize | 输入 | 用于指定SIMT（Single Instruction Multiple Thread）算子执行时需要的UB（Unified Buffer，统一缓冲区）动态内存大小，单位Byte。若cfg中同时设置了ACL_RT_LAUNCH_KERNEL_ATTR_DYN_UBUF_SIZE属性，本参数的优先级更高。 |
@@ -2319,7 +2369,7 @@ aclError aclrtLaunchSIMTKernelWithHostArgs(void *func, dim3 gridDim, dim3 blockD
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| func | 输入 | 内核函数指针。此处可以是`__global__`声明的核函数名（比如myKernel，仅适用于Ascend C语言开发自定义算子并基于毕昇编译器进行Host和Device代码混合编译的场景），也可以是[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)类型的核函数句柄。 |
+| func | 输入 | 内核函数指针。此处可以是`__global__`声明的核函数名（比如myKernel），也可以是[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)类型的核函数句柄。 |
 | gridDim | 输入 | 线程块网格，由多个线程块（Thread Block）组成。Grid采用三维结构，其维度X、Y和Z分别表示不同维度下线程块的大小。类型定义请参见[dim3](25-04_Structs.md#dim3)。 |
 | blockDim | 输入 | 线程块（Thread Block），采用三维结构，其维度X、Y和Z分别表示线程块中三个维度的线程数。类型定义请参见[dim3](25-04_Structs.md#dim3)。 |
 | dynUbufSize | 输入 | 用于指定SIMT（Single Instruction Multiple Thread）算子执行时需要的UB（Unified Buffer，统一缓冲区）动态内存大小，单位Byte。若cfg中同时设置了ACL_RT_LAUNCH_KERNEL_ATTR_DYN_UBUF_SIZE属性，本参数的优先级更高。 |

@@ -3519,6 +3519,17 @@ ACL_FUNC_VISIBILITY aclError aclrtBinaryGetFunctionByEntry(
 
 /**
  * @ingroup AscendCL
+ * @brief Get the total number of kernel functions in the binary
+ * @param [in] binHandle  bin handle
+ * @param [out] count  total number of kernel functions
+ * @retval ACL_SUCCESS The function is successfully executed.
+ * @retval OtherValues Failure
+ */
+ACL_FUNC_VISIBILITY aclError aclrtBinaryGetFunctionCount(
+    aclrtBinHandle binHandle, uint32_t *count);
+
+/**
+ * @ingroup AscendCL
  * @brief Get global variable device address and size by name
  * @param [in] binHandle  bin handle
  * @param [in] name  global variable name
