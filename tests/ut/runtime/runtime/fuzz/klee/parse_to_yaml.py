@@ -13,7 +13,7 @@
 import sys
 import os
 import yaml
-import commands
+import subprocess
 
 THIS_FILE_NAME = __file__
 
@@ -48,7 +48,7 @@ TYPEDEF_DICT = {"ccHandle_t" : "struct tagCcContext *",
 
 def read_all(readfile):
     if not os.path.isfile(readfile):
-        print "read_all, File %s does NOT exist"%readfile
+        print("read_all, File %s does NOT exist"%readfile)
         return ""
     
     file_handle = open(readfile,'r')
@@ -69,7 +69,7 @@ def write_all(file_name, content):
     
         return True
     except:
-        print "write_all, failed to write"
+        print("write_all, failed to write")
     
     return False
         
@@ -118,7 +118,7 @@ def main():
         header = func_info.split("(")[0]
         func_name = header.split(" ")[-1].strip()
         if func_info.strip().startswith("//"):
-            print func_name + " should be ignore!"
+            print(func_name + " should be ignore!")
             continue
         yaml_content += func_name + ":\n    paras:\n"
         return_type = header[:-len(func_name)].strip()

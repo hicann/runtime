@@ -14,7 +14,7 @@ import os
 import re
 import sys
 import yaml
-import commands
+import subprocess
 
 THIS_FILE_NAME = __file__
 
@@ -106,22 +106,22 @@ def write_all(file_name, content):
     
         return True
     except:
-        print "write_all, failed to write"
+        print("write_all, failed to write")
     
     return False
     
 class test_func_conf(object):
     def __init__(self, config_file):
         if not os.path.exists(config_file):
-            print "config file: %s is not exist" % (config_file)
+            print("config file: %s is not exist" % (config_file))
             raise Exception("config file no exist!")
 
         try:
             stream = open(config_file, 'r')
-            self.all_func_config = yaml.load(stream)
+            self.all_func_config = yaml.load(stream, Loader=yaml.SafeLoader)
             stream.close()
-        except Exception, e:
-            print "exception happen:\n%s" % str(e)
+        except Exception as e:
+            print("exception happen:\n%s" % str(e))
             raise Exception("load config file failed!")
 
     def get_func_info(self):
@@ -171,7 +171,7 @@ def generate_test_file(func_obj, func_name):
         return_type = func_obj.get_return_type(func_name)
         main_code += "\nextern %s %s(" % (return_type, func_name) 
         for params_dict in params_list:
-            for para_name, param_info_dict in params_dict.items():
+            for para_name, param_info_dict in list(params_dict.items()):
                 para_type = param_info_dict.get(PARAM_TYPE_FLAG)
                 extern_func_param_list.append(para_type + " " + para_name)
         main_code += "%s);\n" % (", ".join(extern_func_param_list))
@@ -180,7 +180,7 @@ def generate_test_file(func_obj, func_name):
     # add params and symbolic
     para_name_list = []
     for params_dict in params_list:
-        for para_name, param_info_dict in params_dict.items():
+        for para_name, param_info_dict in list(params_dict.items()):
             para_type = param_info_dict.get(PARAM_TYPE_FLAG)
             typedef = param_info_dict.get(PARAM_TYPEDEF_FLAG)
             assume_list = param_info_dict.get(PARAM_ASSUME_FLAG, [])
@@ -214,7 +214,7 @@ def generate_test_file(func_obj, func_name):
                             main_code += "#ifdef DESC_CONSTRUCTION_DIRECTLY\n"
                         main_code += "    klee_make_symbolic(&ori_%s, sizeof(%s), \"%s\");\n" % (para_name, real_type, para_name)
                         if para_type in Descriptor_DICT:
-                            for descriptor_para, descriptor_type in Descriptor_DICT[para_type].items():
+                            for descriptor_para, descriptor_type in list(Descriptor_DICT[para_type].items()):
                                 main_code += "    klee_assume(%s->%s >= 0);\n" % (para_name, descriptor_para)
                                 main_code += "    klee_assume(%s->%s <= %s);\n" % (para_name, descriptor_para, ENUM_DICT[descriptor_type])
                         if set_func_name:
@@ -223,7 +223,7 @@ def generate_test_file(func_obj, func_name):
                             set_params_list = func_obj.get_params_list(set_func_name)
                             set_para_name_list = []
                             for set_set_params_dict in set_params_list:
-                                for set_para_name, set_param_info_dict in set_set_params_dict.items():
+                                for set_para_name, set_param_info_dict in list(set_set_params_dict.items()):
                                     set_para_type = set_param_info_dict.get(PARAM_TYPE_FLAG)
                                     set_typedef = set_param_info_dict.get(PARAM_TYPEDEF_FLAG)
                                     set_assume_list = set_param_info_dict.get(PARAM_ASSUME_FLAG, [])
@@ -258,12 +258,12 @@ def generate_test_file(func_obj, func_name):
                                             if not set_no_symbolic:
                                                 main_code += "    klee_make_symbolic(&ori_%s, sizeof(%s), \"%s\");\n" % (set_para_name, set_real_type, set_para_name)
                                                 if set_para_type in Descriptor_DICT:
-                                                    for descriptor_para, descriptor_type in Descriptor_DICT[set_para_type].items():
+                                                    for descriptor_para, descriptor_type in list(Descriptor_DICT[set_para_type].items()):
                                                         main_code += "    klee_assume(%s->%s >= 0);\n" % (set_para_name, descriptor_para)
                                                         main_code += "    klee_assume(%s->%s <= %s);\n" % (set_para_name, descriptor_para, ENUM_DICT[descriptor_type])
                                     # array type
                                     elif "[" in set_real_type:
-                                        print "found [ in func_name: %s" % func_name
+                                        print("found [ in func_name: %s" % func_name)
                                         main_code += "    %s %s[%s;\n" % (set_real_type.split("[")[0], set_para_name, set_real_type.split("[")[1])
                                         if not set_no_symbolic:
                                             main_code += "    klee_make_symbolic(%s, sizeof(%s), \"%s\");\n" % (set_para_name, set_para_name, set_para_name)
@@ -300,7 +300,7 @@ def generate_test_file(func_obj, func_name):
 
             # array type
             elif "[" in real_type:
-                print "found [ in func_name: %s" % func_name
+                print("found [ in func_name: %s" % func_name)
                 main_code += "    %s %s[%s;\n" % (real_type.split("[")[0], para_name, real_type.split("[")[1])
                 if not no_symbolic:
                     main_code += "    klee_make_symbolic(%s, sizeof(%s), \"%s\");\n" % (para_name, para_name, para_name)
@@ -331,16 +331,16 @@ def generate_test_file(func_obj, func_name):
     
     test_file = "./klee_test_%s.cc"%func_name
     write_all(test_file, main_code)
-    print "%s" % func_name
+    print("%s" % func_name)
 
 def add_test_file_mk(func_name):
     test_file = "klee_test_%s.cc"%func_name
     if not os.path.exists(test_file):
-        print("[error] test file :%s not exists"% test_file)
+        print(("[error] test file :%s not exists"% test_file))
         return False
     module_mk = "module.mk"
     if not os.path.exists(module_mk):
-        print("[error] mk file :%s not exists"% module_mk)
+        print(("[error] mk file :%s not exists"% module_mk))
         return False
     module_template = '''
 include $(CLEAR_VARS)
@@ -360,7 +360,7 @@ include $(BUILD_KLEE_TEST)
         #if "LOCAL_MODULE := klee_%s"%func_name in mf.read():
         for line in mf:
             if re.match("LOCAL_MODULE.*klee_%s"%func_name, line):
-                print(func_name,' is already in ',module_mk)
+                print((func_name,' is already in ',module_mk))
                 return True
         print(mk_str)
         mf.write(mk_str)
@@ -379,7 +379,7 @@ def main():
     #func_obj = test_func_conf("./test_func.yaml");
     #func_obj = test_func_conf("./klee/blas.h.yaml");
     #func_obj = test_func_conf("./klee/fp16_math.hpp.yaml");
-    for func_name, func_info in func_obj.all_func_config.items():
+    for func_name, func_info in list(func_obj.all_func_config.items()):
         # add head file
         generate_test_file(func_obj, func_name)
         if cmd_dict.get("add_to_mk", "false") == "true":
