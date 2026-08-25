@@ -74,7 +74,10 @@ Profiler::Profiler(Api* const apiObj)
 Profiler::~Profiler()
 {
     DELETE_O(apiProfileDecorator_);
-    DELETE_O(apiProfileLogDecorator_);
+    if (&DestroyApiProfileLogDecorator != nullptr) {
+        DestroyApiProfileLogDecorator(apiProfileLogDecorator_);
+    }
+    apiProfileLogDecorator_ = nullptr;
 }
 
 rtError_t Profiler::Init()
@@ -85,14 +88,20 @@ rtError_t Profiler::Init()
         std::to_string(sizeof(ApiProfileDecorator)).c_str(), "new");
     RT_LOG(RT_LOG_DEBUG, "new ApiProfileDecorator ok, size=%zu", sizeof(ApiProfileDecorator));
 
-    apiProfileLogDecorator_ = new (std::nothrow) ApiProfileLogDecorator(api_, this);
-    COND_RETURN_AND_MSG_OUTER(
-        apiProfileLogDecorator_ == nullptr, RT_ERROR_PROF_NEW, ErrorCode::EE1013,
-        std::to_string(sizeof(ApiProfileLogDecorator)).c_str(), "new");
-    RT_LOG(RT_LOG_DEBUG, "new ApiProfileLogDecorator ok, size=%zu", sizeof(ApiProfileLogDecorator));
+    if (&InitApiProfileLogDecorator != nullptr) {
+        InitApiProfileLogDecorator(api_, this, &apiProfileLogDecorator_);
+        const size_t logDecoratorSize =
+            (&GetApiProfileLogDecoratorSize != nullptr) ? GetApiProfileLogDecoratorSize() : 0U;
+        COND_RETURN_AND_MSG_OUTER(
+            apiProfileLogDecorator_ == nullptr, RT_ERROR_PROF_NEW, ErrorCode::EE1013,
+            std::to_string(logDecoratorSize).c_str(), "new");
+        RT_LOG(RT_LOG_DEBUG, "new ApiProfileLogDecorator ok, size=%zu", logDecoratorSize);
 
-    RT_LOG(
-        RT_LOG_INFO, "Init ok, Runtime_alloc_size %zu", sizeof(ApiProfileDecorator) + sizeof(ApiProfileLogDecorator));
+        RT_LOG(RT_LOG_INFO, "Init ok, Runtime_alloc_size %zu", sizeof(ApiProfileDecorator) + logDecoratorSize);
+    } else {
+        RT_LOG(RT_LOG_INFO, "ApiProfileLogDecorator not provided on this platform, skipped");
+        apiProfileLogDecorator_ = nullptr;
+    }
 
     return RT_ERROR_NONE;
 }

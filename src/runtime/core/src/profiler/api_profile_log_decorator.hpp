@@ -239,6 +239,11 @@ public:
 private:
     Profiler* profiler_;
 };
+
+__attribute__((weak)) void InitApiProfileLogDecorator(
+    Api* const impl, Profiler* const prof, ApiProfileLogDecorator** const obj);
+__attribute__((weak)) void DestroyApiProfileLogDecorator(ApiProfileLogDecorator* const obj);
+__attribute__((weak)) size_t GetApiProfileLogDecoratorSize();
 } // namespace runtime
 } // namespace cce
 

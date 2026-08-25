@@ -78,7 +78,6 @@ set(libruntime_src_files_include_for_arch5162
 
     ${TOP_DIR}/src/runtime/core/src/task/tiny/task_tiny_stub.cc
     ${TOP_DIR}/src/runtime/core/src/profiler/api_profile_decorator_tiny_stub.cc
-    ${TOP_DIR}/src/runtime/core/src/profiler/api_profile_log_decoratoc_tiny_stub.cc
 )
 
 set(runtimeut_src_api_list
@@ -160,11 +159,9 @@ set(runtimeut_src_stream_list
 
 set(runtimeut_src_profile_list
     ${TOP_DIR}/src/runtime/core/src/profiler/api_profile_decorator.cc
-    ${TOP_DIR}/src/runtime/core/src/profiler/api_profile_log_decorator.cc
     ${TOP_DIR}/src/runtime/core/src/profiler/npu_driver_record.cc
     ${TOP_DIR}/src/runtime/core/src/profiler/onlineprof.cc
     ${TOP_DIR}/src/runtime/core/src/profiler/prof_map_ge_model_device.cc
-    ${TOP_DIR}/src/runtime/core/src/profiler/profile_log_record.cc
     ${TOP_DIR}/src/runtime/core/src/profiler/profiler.cc
 )
 

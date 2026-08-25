@@ -899,5 +899,14 @@ rtError_t ApiProfileLogDecorator::GetP2PAtomicCapabilities(
     return error;
 }
 
+void InitApiProfileLogDecorator(Api* const impl, Profiler* const prof, ApiProfileLogDecorator** const obj)
+{
+    *obj = new (std::nothrow) ApiProfileLogDecorator(impl, prof);
+}
+
+void DestroyApiProfileLogDecorator(ApiProfileLogDecorator* const obj) { delete obj; }
+
+size_t GetApiProfileLogDecoratorSize() { return sizeof(ApiProfileLogDecorator); }
+
 } // namespace runtime
 } // namespace cce

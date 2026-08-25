@@ -157,11 +157,9 @@ set(libruntime_stream_src_files
 
 set(libruntime_profile_src_files
     ${RUNTIME_CORE_DIR}/src/profiler/api_profile_decorator.cc
-    ${RUNTIME_CORE_DIR}/src/profiler/api_profile_log_decorator.cc
     ${RUNTIME_CORE_DIR}/src/profiler/npu_driver_record.cc
     ${RUNTIME_CORE_DIR}/src/profiler/onlineprof.cc
     ${RUNTIME_CORE_DIR}/src/profiler/prof_map_ge_model_device.cc
-    ${RUNTIME_CORE_DIR}/src/profiler/profile_log_record.cc
     ${RUNTIME_CORE_DIR}/src/profiler/profiler.cc
 )
 
@@ -219,7 +217,6 @@ set(libruntime_src_files_include_for_arch5162
     ${RUNTIME_FEATURE_DIR}/snapshot/tiny/snapshot_process_helper_tiny_stub.cc
     ${RUNTIME_CORE_DIR}/src/task/tiny/task_tiny_stub.cc
     ${RUNTIME_CORE_DIR}/src/profiler/api_profile_decorator_tiny_stub.cc
-    ${RUNTIME_CORE_DIR}/src/profiler/api_profile_log_decoratoc_tiny_stub.cc
 )
 
 set(runtime_src_device_list
