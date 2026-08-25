@@ -1,8 +1,13 @@
+---
+name: errmsg-codegen
+description: "根据 Runtime error_code.json 中已有的错误码定义生成或更新错误码代码，包括 error_code_meta.h 中的 X-Macro 表行和 rt_error_code_test.cc 中的 UT 参数数据。当用户要求新增 EE/EH/W 类错误码、自动生成错误码代码、同步错误码元数据或补齐错误码 UT 数据时使用。"
+---
+
 # 错误码自动生成 Skill
 
 ## 触发场景
 
-用户说「新增错误码 EE1021」「自动生成错误码代码」→ 自动生成 X-Macro 表行 + UT 测试数据。
+用户说「新增错误码」「自动生成错误码代码」→ 自动生成 X-Macro 表行 + UT 测试数据。
 
 ## 输入
 
@@ -10,11 +15,11 @@
 
 ### Step 1: 查找 JSON
 
-```bash
-grep -A10 "\"ErrCode\": \"EE1021\"" src/dfx/error_manager/error_code.json src/conf/error_manager/error_code.json 2>/dev/null
-```
+使用 JSON 解析工具在 `src/dfx/error_manager/error_code.json` 中按 `ErrCode` 精确查找条目。仅当主配置不存在时，再检查 `src/conf/error_manager/error_code.json`。
 
 如果找不到 → 提示用户先在 `error_code.json` 中补充该错误码定义，然后重试。
+
+写入前检查目标错误码是否已存在于 X-Macro 表和 UT 数据中，避免生成重复条目。
 
 ### Step 2: 解析 JSON 条目
 
@@ -45,16 +50,18 @@ X(EEXXXX, "EEXXXX",                                                           \
 
 **规则**：
 - `Arglist` 中逗号分隔的参数名，每个用 `"param"` 包裹，整体用 `()` 包裹
+- `Arglist` 为空时生成零参数形式，UT 参数个数使用 `0`
 - `ErrMessage` 末尾追加 `. ErrorCode=EEXXXX.\n`
 - 如果 `ErrMessage` 末尾已有句号，不加额外句号
+- `ErrMessage` 中格式化占位符数量必须与 `Arglist` 参数数量一致
 
 ### Step 5: 插入表
 
-在 `src/runtime/core/inc/common/error_code_meta.h` 的 `RUNTIME_ERROR_CODE_TABLE` 宏中，按错误码编号顺序插入到合适位置。
+在 `src/runtime/core/inc/common/error_code_meta.h` 的 `RUNTIME_ERROR_CODE_TABLE` 宏中，按仓库现有错误码排序规则插入到合适位置。目标错误码已存在时更新现有条目，不得重复插入。
 
 ### Step 6: 更新 UT 数据
 
-在 `tests/ut/runtime/runtime/test/rt_error_code_test.cc` 的 `ErrorCodeTableParamCountMatchesMessageFormat` 测试的 `allCodes` 数组中追加一行：
+在 `tests/ut/runtime/runtime/test/rt_error_code_test.cc` 的 `ErrorCodeTableParamCountMatchesMessageFormat` 测试的 `allCodes` 数组中按现有顺序插入或更新一行：
 
 ```cpp
 {ErrorCode::EEXXXX, N},  // N = Arglist 中的参数个数

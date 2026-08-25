@@ -9,6 +9,7 @@
 - [ ] **superpowers** — Requirement development (generate software design documents, coding, generate test cases). Trigger command: `Develop requirement, requirements...`
 - [x] **runtime-code-review** — Review local code and GitCode PR following various coding standards and module software design constraints
 - [x] **runtime-errmsg-rectification** — Runtime Error Message rectification: review error codes, reporting macros, error messages, and reporting boundaries. Trigger command: `Perform Error Message rectification` or `Review Error Message reporting correctness`
+- [x] **errmsg-codegen** — Generate or update the error-code X-Macro table and UT parameter data from `error_code.json`. Trigger command: `Add error code` or `Automatically generate error-code code`
 - [x] **errmsg-ut-setup** — Set up an ErrMsg real-reporting UT verification framework, allowing `ErrorManager::ATCReportErrMessage` to call the real implementation and print formatted ErrMsg. Trigger command: `Verify ErrMsg reporting rectification result` or `Run ErrMsg UT verification`
 - [ ] **gitcode-pipeline** — Trigger pipeline tasks, query pipeline status, get failed task logs
 - [ ] **runtime-dt-runner** — Compile and execute UT/ST test cases

@@ -6,7 +6,7 @@
 
 **禁止主动发布评论**：在用户没有明确要求时，绝对不能向 GitCode 发布任何评论。
 
-详见 `SKILL.md` 中的"关键约束：禁止主动发布评论"章节。
+详见 [SKILL.md](SKILL.md) 中的"关键约束：禁止主动发布评论"章节。
 
 ## 输入参数
 
@@ -33,17 +33,17 @@
 
 可配合以下脚本使用：
 
-- `.claude/skills/runtime-code-review/scripts/fetch_pr_meta.py`
-- `.claude/skills/runtime-code-review/scripts/fetch_pr_files.py`
-- `.claude/skills/runtime-code-review/scripts/fetch_pr_raw_file.py`
-- `.claude/skills/runtime-code-review/scripts/classify_review_files.py`
-- `.claude/skills/runtime-code-review/scripts/should_skip_pr_review.py`
-- `.claude/skills/runtime-code-review/scripts/prepare_pr_review_context.py`
-- `.claude/skills/runtime-code-review/scripts/render_pr_review_summary.py`
-- `.claude/skills/runtime-code-review/scripts/post_pr_summary_comment.py`
-- `.claude/skills/runtime-code-review/scripts/post_pr_inline_comment.py`
-- `.claude/skills/runtime-code-review/scripts/run_pr_review.py`
-- `.claude/skills/runtime-code-review/review-result-schema.md`
+- [scripts/fetch_pr_meta.py](scripts/fetch_pr_meta.py)
+- [scripts/fetch_pr_files.py](scripts/fetch_pr_files.py)
+- [scripts/fetch_pr_raw_file.py](scripts/fetch_pr_raw_file.py)
+- [scripts/classify_review_files.py](scripts/classify_review_files.py)
+- [scripts/should_skip_pr_review.py](scripts/should_skip_pr_review.py)
+- [scripts/prepare_pr_review_context.py](scripts/prepare_pr_review_context.py)
+- [scripts/render_pr_review_summary.py](scripts/render_pr_review_summary.py)
+- [scripts/post_pr_summary_comment.py](scripts/post_pr_summary_comment.py)
+- [scripts/post_pr_inline_comment.py](scripts/post_pr_inline_comment.py)
+- [scripts/run_pr_review.py](scripts/run_pr_review.py)
+- [review-result-schema.md](review-result-schema.md)
 
 ## 环境准备
 
@@ -66,7 +66,7 @@ echo $GITCODE_API_TOKEN
 优先使用总控脚本：
 
 ```bash
-python3 .claude/skills/runtime-code-review/scripts/run_pr_review.py \
+python3 .agents/skills/runtime-code-review/scripts/run_pr_review.py \
   --owner <owner> \
   --repo <repo> \
   --pr <number>
@@ -75,7 +75,7 @@ python3 .claude/skills/runtime-code-review/scripts/run_pr_review.py \
 如果已经有结构化审查结果，并希望自动渲染 summary 或发布 summary comment，可使用：
 
 ```bash
-python3 .claude/skills/runtime-code-review/scripts/run_pr_review.py \
+python3 .agents/skills/runtime-code-review/scripts/run_pr_review.py \
   --owner <owner> \
   --repo <repo> \
   --pr <number> \
@@ -86,7 +86,7 @@ python3 .claude/skills/runtime-code-review/scripts/run_pr_review.py \
 如果还希望自动发布行内评论，可使用：
 
 ```bash
-python3 .claude/skills/runtime-code-review/scripts/run_pr_review.py \
+python3 .agents/skills/runtime-code-review/scripts/run_pr_review.py \
   --owner <owner> \
   --repo <repo> \
   --pr <number> \
@@ -97,21 +97,21 @@ python3 .claude/skills/runtime-code-review/scripts/run_pr_review.py \
 
 `review-result.json` 的结构要求见：
 
-- `.claude/skills/runtime-code-review/review-result-schema.md`
+- [review-result-schema.md](review-result-schema.md)
 
 ### 分步方式
 
 1. 获取 `GITCODE_API_TOKEN`
 2. 解析 PR 链接或 PR 编号
 3. 获取 PR 元信息、文件列表和 diff
-   - 推荐先调用 `fetch_pr_meta.py` 获取 PR 标题、描述、状态、base/head sha
-   - 再调用 `fetch_pr_files.py` 获取文件列表和 diff refs
-   - 必要时使用 `fetch_pr_raw_file.py` 获取 raw 文件校验具体行号
+   - 推荐先调用 [scripts/fetch_pr_meta.py](scripts/fetch_pr_meta.py) 获取 PR 标题、描述、状态、base/head sha
+   - 再调用 [scripts/fetch_pr_files.py](scripts/fetch_pr_files.py) 获取文件列表和 diff refs
+   - 必要时使用 [scripts/fetch_pr_raw_file.py](scripts/fetch_pr_raw_file.py) 获取 raw 文件校验具体行号
    - 推荐命令：
 
 ```bash
-python3 .claude/skills/runtime-code-review/scripts/fetch_pr_meta.py --owner <owner> --repo <repo> --pr <number>
-python3 .claude/skills/runtime-code-review/scripts/fetch_pr_files.py --owner <owner> --repo <repo> --pr <number>
+python3 .agents/skills/runtime-code-review/scripts/fetch_pr_meta.py --owner <owner> --repo <repo> --pr <number>
+python3 .agents/skills/runtime-code-review/scripts/fetch_pr_files.py --owner <owner> --repo <repo> --pr <number>
 ```
 4. 进行前置检查：
    - PR 是否已关闭
@@ -121,19 +121,19 @@ python3 .claude/skills/runtime-code-review/scripts/fetch_pr_files.py --owner <ow
    - 推荐命令：
 
 ```bash
-python3 .claude/skills/runtime-code-review/scripts/should_skip_pr_review.py --meta pr-meta.json
+python3 .agents/skills/runtime-code-review/scripts/should_skip_pr_review.py --meta pr-meta.json
 ```
-5. 读取共享规则文件：`.claude/skills/runtime-code-review/review-rules.md`
-6. 提取变更文件路径，并调用 `classify_review_files.py` 做文件分类：
+5. 读取共享规则文件：[review-rules.md](review-rules.md)
+6. 提取变更文件路径，并调用 [scripts/classify_review_files.py](scripts/classify_review_files.py) 做文件分类：
 
 ```bash
-jq -r '.file_paths[]' <pr-files.json> | python3 .claude/skills/runtime-code-review/scripts/classify_review_files.py
+jq -r '.file_paths[]' <pr-files.json> | python3 .agents/skills/runtime-code-review/scripts/classify_review_files.py
 ```
 
 7. 聚合审查上下文：
 
 ```bash
-python3 .claude/skills/runtime-code-review/scripts/prepare_pr_review_context.py \
+python3 .agents/skills/runtime-code-review/scripts/prepare_pr_review_context.py \
   --meta pr-meta.json \
   --files pr-files.json \
   --classified pr-classified.json
@@ -197,13 +197,13 @@ python3 .claude/skills/runtime-code-review/scripts/prepare_pr_review_context.py 
 推荐先渲染 summary，再发布 summary comment：
 
 ```bash
-python3 .claude/skills/runtime-code-review/scripts/render_pr_review_summary.py \
+python3 .agents/skills/runtime-code-review/scripts/render_pr_review_summary.py \
   --input review-result.json \
   --output summary.md
 ```
 
 ```bash
-python3 .claude/skills/runtime-code-review/scripts/post_pr_summary_comment.py \
+python3 .agents/skills/runtime-code-review/scripts/post_pr_summary_comment.py \
   --owner <owner> \
   --repo <repo> \
   --pr <number> \
@@ -213,7 +213,7 @@ python3 .claude/skills/runtime-code-review/scripts/post_pr_summary_comment.py \
 如果需要发布行内评论，可使用：
 
 ```bash
-python3 .claude/skills/runtime-code-review/scripts/post_pr_inline_comment.py \
+python3 .agents/skills/runtime-code-review/scripts/post_pr_inline_comment.py \
   --owner <owner> \
   --repo <repo> \
   --pr <number> \
@@ -229,13 +229,13 @@ python3 .claude/skills/runtime-code-review/scripts/post_pr_inline_comment.py \
 推荐顺序：
 
 1. 先通过 PR diff 定位大致 hunk
-2. 再使用 `fetch_pr_raw_file.py` 获取 raw 文件内容
+2. 再使用 [scripts/fetch_pr_raw_file.py](scripts/fetch_pr_raw_file.py) 获取 raw 文件内容
 3. 必要时用 `grep -n` 或等价方式确认目标代码的精确行号
 
 示例：
 
 ```bash
-python3 .claude/skills/runtime-code-review/scripts/fetch_pr_raw_file.py \
+python3 .agents/skills/runtime-code-review/scripts/fetch_pr_raw_file.py \
   --owner <owner> \
   --repo <repo> \
   --sha <head_sha> \
@@ -246,6 +246,6 @@ python3 .claude/skills/runtime-code-review/scripts/fetch_pr_raw_file.py \
 
 - 本模式只负责 PR 审查范围获取和 GitCode 交互。
 - 审查维度、严重程度定义和输出格式必须完全复用共享规则文件。
-- 如果用户只想看本地未提交改动，应切换到 `local-review.md`。
+- 如果用户只想看本地未提交改动，应切换到 [local-review.md](local-review.md)。
 - 如果后续需要发布行内评论，建议使用 raw 文件内容确认问题行号，而不要只依赖 patch hunk 的起始位置。
 - 不要在没有足够把握时发布低信号或猜测性评论。

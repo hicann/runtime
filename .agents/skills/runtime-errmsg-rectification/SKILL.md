@@ -1,22 +1,13 @@
 ---
 name: runtime-errmsg-rectification
-description: "用于 Runtime 错误信息整改、整改建议生成、EE/EH 错误码选择、ErrMsg 宏审查、错误文案优化、上报边界判断。当用户要求进行 Error Message 整改、输出整改建议、生成 rectification_suggestions.md、检视 Error Message 上报正确性、新增接口或新需求要求进行错误上报设计时触发。"
-argument-hint: "[整改范围或文件路径] [执行模式: 需要确认|无需确认]"
-allowed-tools:
-  - Read
-  - Write
-  - Edit
-  - MultiEdit
-  - Bash
-  - Glob
-  - Grep
+description: "用于 Runtime 错误信息整改、整改建议生成、EE/EH 错误码选择、ErrMsg 宏审查、错误文案优化和上报边界判断。当用户要求进行 Error Message 整改、输出整改建议、生成 rectification_suggestions.md、检视 Error Message 上报正确性，或为新增接口和新需求设计错误上报时使用。"
 ---
 
 # Runtime ErrMsg Rectification
 
 本 skill 是 Runtime Error Message 专项整改入口，负责完整审视和整改 Runtime 错误码、宏、文案和上报边界。正式规范维护在 docs/zh/guidelines/error_message_guide/目录下，本文件只保留工作流和按需读取规则。
 
-用户可通过参数指定整改范围和执行模式：**$ARGUMENTS**
+从用户请求中提取整改范围和执行模式。用户未明确指定执行模式时，按“需要确认模式”处理。
 
 ## 必读入口
 

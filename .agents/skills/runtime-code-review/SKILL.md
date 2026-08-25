@@ -14,9 +14,9 @@ description: |
 
 ## 共享规则
 
-无论进入哪种模式，都必须读取共享规则文件：
+无论进入哪种模式，都必须读取相对于本 `SKILL.md` 所在目录的共享规则文件：
 
-- `.claude/skills/runtime-code-review/review-rules.md`
+- [review-rules.md](review-rules.md)
 
 该规则文件定义：
 
@@ -30,14 +30,14 @@ description: |
 
 ### 进入 `local-review`
 
-满足以下任一情况时，使用 `local-review.md`：
+满足以下任一情况时，使用 [local-review.md](local-review.md)：
 
 - 用户要求审查当前分支、本地改动、最近提交、指定文件
 - 用户运行 `runtime-code-review`，但未提供 PR 链接或 PR 编号
 
 ### 进入 `pr-review`
 
-满足以下任一情况时，使用 `pr-review.md`：
+满足以下任一情况时，使用 [pr-review.md](pr-review.md)：
 
 - 用户提供 GitCode PR / MR 链接
 - 用户给出 PR 编号并要求审查
@@ -54,8 +54,8 @@ description: |
 - ❌ 向 GitCode PR 发布 summary comment
 - ❌ 向 GitCode PR 发布行内评论（inline comments）
 - ❌ 使用任何 GitCode API 进行 POST/DELETE 评论操作
-- ❌ 调用 `post_pr_summary_comment.py`
-- ❌ 调用 `post_pr_inline_comment.py`
+- ❌ 调用 [scripts/post_pr_summary_comment.py](scripts/post_pr_summary_comment.py)
+- ❌ 调用 [scripts/post_pr_inline_comment.py](scripts/post_pr_inline_comment.py)
 - ❌ 使用 `--comment` 或 `--post-inline-comments` 参数运行脚本
 
 ### 触发条件

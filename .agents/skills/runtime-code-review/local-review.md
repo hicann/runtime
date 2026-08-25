@@ -21,7 +21,7 @@ git diff origin/master...HEAD
 ## 执行流程
 
 1. 获取本地审查范围和变更文件列表
-2. 读取共享规则文件：`.claude/skills/runtime-code-review/review-rules.md`
+2. 读取共享规则文件：[review-rules.md](review-rules.md)
 3. 按文件分类加载规范文档：
     - 源码文件：`docs/zh/guidelines/coding-guidelines.md`
       - 涉及 Error Message 相关变更：在上面的基础上，额外读取
@@ -36,4 +36,4 @@ git diff origin/master...HEAD
 ## 注意事项
 
 - 本模式只负责本地 diff 的获取与审查，不处理 GitCode PR API。
-- 如果用户要求对 GitCode PR 进行审查，应切换到 `pr-review.md`。
+- 如果用户要求对 GitCode PR 进行审查，应切换到 [pr-review.md](pr-review.md)。

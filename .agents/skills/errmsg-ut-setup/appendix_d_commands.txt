@@ -71,7 +71,7 @@ cp src/dfx/error_manager/error_code.json src/conf/error_manager/
 
 **原因**：未修改 `stub/rt_utest_stub.h`，stub ErrorManager 与真实 ErrorManager 冲突。
 
-**解决**：按附录 B 修改 stub 头文件，添加条件编译。
+**解决**：按[附录 B](appendix_b_stub.txt)修改 stub 头文件，添加条件编译。
 
 ### 问题 2：ErrMsg 输出为空
 

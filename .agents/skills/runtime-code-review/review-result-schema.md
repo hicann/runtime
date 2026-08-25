@@ -1,6 +1,6 @@
 # Review Result Schema
 
-`run_pr_review.py` 接收的 `--review-result` 应满足以下 JSON 结构。
+[scripts/run_pr_review.py](scripts/run_pr_review.py) 接收的 `--review-result` 应满足以下 JSON 结构。
 
 ## 顶层结构
 

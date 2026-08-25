@@ -1,3 +1,8 @@
+---
+name: errmsg-ut-setup
+description: "为 Runtime 搭建 ErrMsg 真实上报 UT 验证框架，使 ErrorManager::ATCReportErrMessage 使用真实实现并输出格式化错误信息。当用户要求验证 ErrMsg 整改效果、编写真实 ErrorManager UT、测试 ErrMsg 格式化输出或运行 ErrMsg UT 验证时使用。"
+---
+
 # ErrMsg UT 验证框架快速搭建 Skill
 
 ## 触发场景
@@ -30,13 +35,13 @@
 - 排除 `error_manager_stub.cc`
 - 使用 `target_compile_options(... -UCFG_DEV_PLATFORM_PC)` 取消定义
 
-详见附录 A。
+详见[附录 A](appendix_a_cmake.txt)。
 
 ### Step 2: 修改 stub 头文件
 
 修改 `tests/ut/runtime/runtime/stub/rt_utest_stub.h`，将 stub `ErrorManager` 类用条件编译包裹。
 
-详见附录 B。
+详见[附录 B](appendix_b_stub.txt)。
 
 ### Step 3: 创建测试文件
 
@@ -46,7 +51,7 @@
 - 使用 lambda 包装宏调用（解决 void 函数 return value 问题）
 - 调用实际代码中的宏（如 `COND_RETURN_AND_MSG_OUTER`）
 
-详见附录 C。
+详见[附录 C](appendix_c_test.txt)。
 
 ### Step 4: 准备 error_code.json
 
@@ -96,12 +101,14 @@ Failed to allocate 1024 bytes host memory for Runtime.
 
 ## 附录文件
 
-- **附录 A**：`appendix_a_cmake.txt` - CMakeLists.txt 追加内容
-- **附录 B**：`appendix_b_stub.txt` - stub 头文件条件编译修改
-- **附录 C**：`appendix_c_test.txt` - 测试文件完整模板
+- **附录 A**：[appendix_a_cmake.txt](appendix_a_cmake.txt) - CMakeLists.txt 追加内容
+- **附录 B**：[appendix_b_stub.txt](appendix_b_stub.txt) - stub 头文件条件编译修改
+- **附录 C**：[appendix_c_test.txt](appendix_c_test.txt) - 测试文件完整模板
+- **附录 D**：[appendix_d_commands.txt](appendix_d_commands.txt) - 完整编译、运行命令与常见问题
 
 ## 注意事项
 
 1. 此测试目标仅用于本地验证，不提交到仓库
-2. 测试完成后可恢复 stub 文件原始状态
-3. 如需新增错误码测试，参考附录 C 中已有测试用例格式
+2. 修改前记录 worktree 中已有改动，不覆盖用户已修改的 CMake、stub 或测试文件
+3. 验证结束后只清理本次创建的临时内容；未经用户授权，不使用可能丢失已有改动的恢复命令
+4. 如需新增错误码测试，参考[附录 C](appendix_c_test.txt)中已有测试用例格式

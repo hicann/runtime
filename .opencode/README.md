@@ -9,6 +9,7 @@
 - [ ] **superpowers** — 需求开发（生成软件设计文档、编码、生成测试用例），触发指令`开发需求，要求……`
 - [x] **runtime-code-review** — 遵循各种编码规范、模块软件设计约束检视本地代码与 GitCode PR
 - [x] **runtime-errmsg-rectification** — Runtime Error Message 整改，审视错误码、上报宏、错误文案和上报边界，触发指令`进行Error Message整改` 或 `检视 Error Message 上报正确性`
+- [x] **errmsg-codegen** — 根据 `error_code.json` 生成或更新错误码 X-Macro 表和 UT 参数数据，触发指令`新增错误码` 或 `自动生成错误码代码`
 - [x] **errmsg-ut-setup** — 搭建 ErrMsg 真实上报 UT 验证框架，让 `ErrorManager::ATCReportErrMessage` 调用真实实现并打印格式化 ErrMsg，触发指令`验证ErrMsg上报整改效果` 或 `运行ErrMsg UT验证`
 - [ ] **gitcode-pipeline** — 触发流水线任务、查询流水线状态、获取失败任务日志
 - [ ] **runtime-dt-runner** — 编译和执行 UT/ST 用例
