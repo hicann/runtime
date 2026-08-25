@@ -28,11 +28,16 @@ STATIC uint32_t g_singleExportCounter = 0U;
 STATIC ToolMutex g_sessionMutex = TOOL_MUTEX_INITIALIZER;
 STATIC ToolMutex g_singleMutex = TOOL_MUTEX_INITIALIZER;
 STATIC ToolMutex g_continuousMutex = TOOL_MUTEX_INITIALIZER;
+STATIC bool g_contExpMonitorRun = false;
+STATIC ToolThread g_contExpMonitorTid = 0;
 #define MAX_SINGLE_EXPORT_SESSION 16U
 #define SESSION_ERROR_WAIT_TIMEOUT 16
 #define SESSION_RETRY_TIME 3
 #define ACK_LEN 64
 #define ACK_TIMEOUT 1000
+#define CONT_EXP_MONITOR_INTERVAL 1000U
+
+STATIC void* SessionMgrContExpMonitor(void* args);
 
 LogRt InitSessionList(void)
 {
@@ -41,11 +46,40 @@ LogRt InitSessionList(void)
         return MUTEX_INIT_ERR;
     }
 
+    // create continuous export monitor thread (lifecycle-long, polls every 1s to clean invalid sessions)
+    g_contExpMonitorRun = true;
+    ToolUserBlock monitorBlock;
+    monitorBlock.procFunc = SessionMgrContExpMonitor;
+    monitorBlock.pulArg = NULL;
+    ToolThreadAttr monitorAttr = {0, 0, 0, 0, 0, 1, 128 * 1024}; // joinable, 128KB stack
+    if (ToolCreateTaskWithThreadAttr(&g_contExpMonitorTid, &monitorBlock, &monitorAttr) != SYS_OK) {
+        SELF_LOG_ERROR("create contexp monitor thread failed, strerr=%s.", strerror(ToolGetErrorCode()));
+        g_contExpMonitorRun = false;
+        g_contExpMonitorTid = 0;
+        // monitor thread creation failure does not affect main flow, passive detection still works
+    }
+
     return SUCCESS;
 }
 
 void FreeSessionList(void)
 {
+    // stop monitor thread first
+    g_contExpMonitorRun = false;
+    if (g_contExpMonitorTid != 0) {
+        int32_t ret = ToolJoinTask(&g_contExpMonitorTid);
+        NO_ACT_WARN_LOG(ret != SYS_OK, "join contexp monitor thread failed, ret=%d.", ret);
+        g_contExpMonitorTid = 0;
+    }
+
+    // clean up continuous export session if any remains
+    LOCK_WARN_LOG(&g_continuousMutex);
+    if (g_continuousExportSession != NULL) {
+        AdxDestroyCommHandle(g_continuousExportSession);
+        g_continuousExportSession = NULL;
+    }
+    UNLOCK_WARN_LOG(&g_continuousMutex);
+
     LOCK_WARN_LOG(&g_sessionMutex);
     SessionNode* tmp = g_sessionPidDevIdList;
     SessionNode* node = NULL;
@@ -400,6 +434,49 @@ STATIC int32_t SessionMgrContExpGetSession(SessionItem* item)
 }
 
 /**
+ * @brief       : check if continuous export session is valid, destroy and detach from global if invalid
+ * @return      : true: valid; false: invalid
+ */
+STATIC bool SessionMgrContExpCheckValid(void)
+{
+    LOCK_WARN_LOG(&g_continuousMutex);
+    if (g_continuousExportSession == NULL) {
+        UNLOCK_WARN_LOG(&g_continuousMutex);
+        return false;
+    }
+
+    int32_t status = 0;
+    int32_t ret = AdxGetAttrByCommHandle(g_continuousExportSession, HDC_SESSION_ATTR_STATUS, &status);
+    if ((ret != LOG_SUCCESS) || (status == HDC_SESSION_STATUS_CLOSE)) {
+        SELF_LOG_ERROR("continuous session is invalid, ret=%d, status=%d.", ret, status);
+        AdxDestroyCommHandle(g_continuousExportSession);
+        g_continuousExportSession = NULL;
+        UNLOCK_WARN_LOG(&g_continuousMutex);
+        return false;
+    }
+    UNLOCK_WARN_LOG(&g_continuousMutex);
+    return true;
+}
+
+/**
+ * @brief       : monitor thread for continuous export session, periodically check and clean up invalid session
+ * @return      : NULL
+ */
+STATIC void* SessionMgrContExpMonitor(void* args)
+{
+    (void)args;
+    NO_ACT_WARN_LOG(ToolSetThreadName("ContExpMonitor") != SYS_OK, "can not set thread name(ContExpMonitor).");
+
+    while (g_contExpMonitorRun) {
+        (void)SessionMgrContExpCheckValid();
+        (void)ToolSleep(CONT_EXP_MONITOR_INTERVAL);
+    }
+
+    SELF_LOG_INFO("Thread(ContExpMonitor) quit.");
+    return NULL;
+}
+
+/**
  * @brief       : add session node to corresponding session manager
  * @param [in]  : item     struct of session handle and session type
  * @return      : LOG_SUCCESS: success; others: fail
@@ -470,11 +547,21 @@ int32_t SessionMgrSendMsg(const SessionItem* handle, const char* data, uint32_t 
     int32_t tryTimes = SESSION_RETRY_TIME;
     if (handle->type == SESSION_CONTINUES_EXPORT) {
         LOCK_WARN_LOG(&g_continuousMutex);
+        // verify handle is still current before sending, avoid UAF if monitor thread already cleaned it
+        if (g_continuousExportSession != (AdxCommHandle)handle->session) {
+            UNLOCK_WARN_LOG(&g_continuousMutex);
+            SELF_LOG_ERROR("send message failed, session already cleaned.");
+            return LOG_FAILURE;
+        }
     }
     do {
         ret = AdxSendMsg(comm, data, len);
         tryTimes--;
     } while ((ret == SESSION_ERROR_WAIT_TIMEOUT) && (tryTimes > 0));
+    // receive ack while still holding lock, prevent monitor thread from destroying handle during recv
+    if (ret == LOG_SUCCESS) {
+        SessionMgrGetRespond(handle);
+    }
     if (handle->type == SESSION_CONTINUES_EXPORT) {
         UNLOCK_WARN_LOG(&g_continuousMutex);
     }
@@ -482,13 +569,15 @@ int32_t SessionMgrSendMsg(const SessionItem* handle, const char* data, uint32_t 
         SELF_LOG_ERROR("send message failed, ret: %d.", ret);
         if (handle->type == SESSION_CONTINUES_EXPORT) {
             LOCK_WARN_LOG(&g_continuousMutex);
-            AdxDestroyCommHandle(g_continuousExportSession);
-            g_continuousExportSession = NULL;
+            // only destroy if global still holds the same handle, avoid destroying a newly registered session
+            if (g_continuousExportSession == (AdxCommHandle)handle->session) {
+                AdxDestroyCommHandle(g_continuousExportSession);
+                g_continuousExportSession = NULL;
+            }
             UNLOCK_WARN_LOG(&g_continuousMutex);
         }
         return LOG_FAILURE;
     }
-    SessionMgrGetRespond(handle);
     return LOG_SUCCESS;
 }
 
