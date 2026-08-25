@@ -442,7 +442,9 @@ void ContextManage::TryToRecycleCtxMdlPool()
     RT_LOG(RT_LOG_INFO, "start recycle ctx pool");
     const ReadProtect rp(&g_ctxMan.GetSetRwLock());
     for (Context* const ctx : g_ctxMan.GetSetObj()) {
-        COND_PROC(!ContextManage::HasAttachedDevice(ctx), continue);
+        COND_PROC(
+            (ctx == nullptr) || (ctx->Device_() == nullptr) || (ctx->GetState() != ContextState::CTX_STATE_ACTIVE),
+            continue);
         ctx->TryToRecycleModulePool();
     }
     RT_LOG(RT_LOG_INFO, "finish recycle ctx pool");
