@@ -290,7 +290,7 @@ LogRt LogConfParseLine(const char* lineBuf, char* confName, uint32_t nameLen, ch
  * @param [in] symbolLen: symbol vaulue string length
  * @return: SUCCEES: succeed; others: failed
  */
-STATIC LogRt ParseBlockSymbol(const char* buf, char* symbol, size_t symbolLen)
+STATIC LogRt ParseBlockSymbol(char* buf, char* symbol, size_t symbolLen)
 {
     char* bracketFront = strchr(buf, '[');
     char* bracketBack = strchr(buf, ']');

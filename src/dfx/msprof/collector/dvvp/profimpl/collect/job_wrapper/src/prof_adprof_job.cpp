@@ -142,7 +142,7 @@ void ProfAdprofJob::BuildSysProfCmdArg(ProcOpenArgs& procOpenArgs)
         cmdVec_.emplace_back(
             "pid_sampling_interval:" + std::to_string(collectionJobCfg_->comParams->params->pid_sampling_interval));
     }
-    params_.reserve(cmdVec_.size());
+    params_.resize(cmdVec_.size());
     for (uint32_t i = 0; i < cmdVec_.size(); i++) {
         params_[i].paramInfo = cmdVec_[i].c_str();
         params_[i].paramLen = cmdVec_[i].size();

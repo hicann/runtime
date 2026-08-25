@@ -365,7 +365,7 @@ static TraStatus ScdProcessCheckBinPath(const char* filePath, uint32_t len)
         SCD_DLOG_ERR("input path [%s] does not exist", filePath);
         return TRACE_INVALID_PARAM;
     }
-    char* suffix = strrchr(filePath, '.');
+    const char* suffix = strrchr(filePath, '.');
     if ((suffix != NULL) && strcmp(suffix, SCD_FILE_BIN_SUFFIX) == 0) {
         return TRACE_SUCCESS;
     } else {

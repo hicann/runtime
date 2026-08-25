@@ -41,6 +41,7 @@ void DecodeMsg(char* msg, unsigned int length);
 char GetChValue(char ch);
 int IsDigit(char c);
 int CheckProessBufParm(const char* msg, unsigned int length, char** heapBuf);
+bool LogCompressCheckUnzipSuffix(const char* fileName);
 }
 #include <getopt.h>
 
@@ -205,4 +206,12 @@ TEST_F(SlogdSklogd, KlogdLltMain4)
     EXPECT_EQ(1, KlogdLltMain(0, &pc));
     GlobalMockObject::reset();
     LogRecordSigNo(0);
+}
+
+TEST_F(SlogdSklogd, LogCompressCheckUnzipSuffixTest)
+{
+    EXPECT_TRUE(LogCompressCheckUnzipSuffix("test.log"));
+    EXPECT_FALSE(LogCompressCheckUnzipSuffix("test.gz"));
+    EXPECT_FALSE(LogCompressCheckUnzipSuffix("test.txt"));
+    EXPECT_FALSE(LogCompressCheckUnzipSuffix(NULL));
 }

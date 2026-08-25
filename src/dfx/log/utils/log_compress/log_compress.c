@@ -44,7 +44,7 @@ LogStatus LogCompressFile(const char* file)
 bool LogCompressCheckUnzipSuffix(const char* fileName)
 {
     ONE_ACT_WARN_LOG(fileName == NULL, return false, "fileName is null.");
-    char* suffix = strrchr(fileName, '.');
+    const char* suffix = strrchr(fileName, '.');
     if (suffix != NULL) {
         if (strcmp(suffix, GZIP_SUFFIX) == 0) {
             return false;
