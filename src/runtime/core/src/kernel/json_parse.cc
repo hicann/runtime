@@ -65,7 +65,7 @@ void GetCpuKernelFromJson(const nlohmann::json& jsonObj, std::vector<CpuKernelIn
                 kernelInfo.funcName = opInfo["functionName"].get<std::string>();
             } else {
                 // 当前识别TF算子可以没有functionName
-                RT_LOG(RT_LOG_WARNING, "functionName does not exist, key=%s.");
+                RT_LOG(RT_LOG_WARNING, "functionName does not exist, key=%s.", op.key().c_str());
             }
             if (opInfo.contains("kernelSo")) {
                 kernelInfo.kernelSo = opInfo["kernelSo"].get<std::string>();
@@ -83,7 +83,7 @@ void GetCpuKernelFromJson(const nlohmann::json& jsonObj, std::vector<CpuKernelIn
 
             kernelInfos.push_back(kernelInfo);
         } catch (nlohmann::json::exception& e) {
-            RT_LOG(RT_LOG_ERROR, "Parse kenerl json file failed, because %s.", e.what());
+            RT_LOG(RT_LOG_ERROR, "Parse kernel json file failed, because %s.", e.what());
         }
     }
     return;

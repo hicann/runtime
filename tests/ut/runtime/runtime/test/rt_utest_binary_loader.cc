@@ -45,7 +45,7 @@ protected:
     {
         Runtime* rtInstance = (Runtime*)Runtime::Instance();
 
-        std::cout << "BinaryLoaderTest test start start. disbale=%d. " << rtInstance->GetDisableThread() << std::endl;
+        std::cout << "BinaryLoaderTest test start start. disable=%d. " << rtInstance->GetDisableThread() << std::endl;
 
         // Create GatherV3.o binary file
         std::ifstream binaryTxtFile(binaryTxtFileName);

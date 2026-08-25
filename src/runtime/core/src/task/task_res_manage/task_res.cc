@@ -115,7 +115,7 @@ void* TaskResManage::MallocPcieBarBuffer(const uint32_t size, Device* const dev,
     ret = dev->Driver_()->PcieHostRegister(addr, static_cast<uint64_t>(size), dev->Id_(), outAddr);
     COND_PROC_RETURN_ERROR_MSG_INNER(
         ret != RT_ERROR_NONE, nullptr, (void)dev->Driver_()->DevMemFree(addr, dev->Id_()),
-        "PcieHostRegister falied, retCode=%#x, size=%u, dev_id=%u.", ret, size, dev->Id_());
+        "PcieHostRegister failed, retCode=%#x, size=%u, dev_id=%u.", ret, size, dev->Id_());
     return addr;
 }
 

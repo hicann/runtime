@@ -326,7 +326,7 @@ rtError_t ApiImpl::GetNotifyAddress(Notify* const notify, uint64_t* const notify
     NULL_STREAM_PTR_RETURN_MSG(curStm);
     const rtError_t error = curCtx->GetNotifyAddress(notify, addr, curStm);
     if (error != RT_ERROR_NONE) {
-        RT_LOG(RT_LOG_ERROR, "GetNotifyAddress failed, reCode=%#x", error);
+        RT_LOG(RT_LOG_ERROR, "GetNotifyAddress failed, retCode=%#x", error);
         return error;
     }
     RT_LOG(RT_LOG_INFO, "GetNotifyAddress ok, addr=%#" PRIx64, addr);
@@ -339,7 +339,7 @@ rtError_t ApiImpl::RegisterAllKernel(const rtDevBinary_t* const bin, Program** c
     Program* programPtr = nullptr;
     const rtError_t error = Runtime::Instance()->ProgramRegister(bin, &programPtr);
     if (error != RT_ERROR_NONE) {
-        RT_LOG(RT_LOG_WARNING, "register program failed, reCode=%#x", error);
+        RT_LOG(RT_LOG_WARNING, "register program failed, retCode=%#x", error);
         return error;
     }
 
@@ -905,7 +905,7 @@ rtError_t ApiImpl::BinaryLoad(const rtDevBinary_t* const bin, Program** const pr
     error = Runtime::Instance()->AllKernelRegister(programPtr);
     if (error != RT_ERROR_NONE) {
         delete programPtr;
-        RT_LOG(RT_LOG_WARNING, "AllKernelRegister failed, reCode=%#x", error);
+        RT_LOG(RT_LOG_WARNING, "AllKernelRegister failed, retCode=%#x", error);
         return error;
     }
 
@@ -1127,14 +1127,14 @@ rtError_t ApiImpl::BinaryUnLoad(Program* const binHandle)
         RT_LOG(RT_LOG_DEBUG, "BinaryUnLoad deviceId=%u, prog=0x%x.", dev->Id_(), binHandle);
         error = Runtime::Instance()->BinaryUnLoad(dev, binHandle);
         if (error != RT_ERROR_NONE) {
-            RT_LOG(RT_LOG_WARNING, "register program failed, reCode=%#x", error);
+            RT_LOG(RT_LOG_WARNING, "register program failed, retCode=%#x", error);
             return error;
         }
     } else {
         for (uint32_t i = 0U; i < RT_MAX_DEV_NUM; i++) {
             rtError_t tmpError = binHandle->FreeSoAndNameByDeviceId(i);
             if (tmpError != RT_ERROR_NONE) {
-                RT_LOG(RT_LOG_WARNING, "free program device_id=%u memory failed, reCode=%#x", i, error);
+                RT_LOG(RT_LOG_WARNING, "free program device_id=%u memory failed, retCode=%#x", i, error);
                 error = (error != RT_ERROR_NONE) ? tmpError : error;
             }
         }

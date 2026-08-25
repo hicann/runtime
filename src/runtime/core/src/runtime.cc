@@ -1177,7 +1177,7 @@ rtError_t Runtime::InitCbSubscribe()
         error = halTsdrvCtl(RT_DEV_ZERO, TSDRV_CTL_CMD_CB_GROUP_NUM_GET, nullptr, 0, &maxGrpNum, &outSize);
     }
     if (error != DRV_ERROR_NONE) {
-        RT_LOG(RT_LOG_INFO, "Get group num is not succeed, use default val");
+        RT_LOG(RT_LOG_INFO, "Failed to get group num, use default value");
         maxGrpNum = RT_THREAD_GROUP_ID_MAX;
     }
 
@@ -1885,7 +1885,7 @@ rtError_t Runtime::KernelRegister(
     if (kernelObj != nullptr) {
         PutProgram(kernelObj->Program_());
         RT_LOG(
-            RT_LOG_WARNING, "kernel is registerd, stubFunc=%p, stubName=%s, kernelInfoExt=%s.", (void*)stubFunc,
+            RT_LOG_WARNING, "kernel is registered, stubFunc=%p, stubName=%s, kernelInfoExt=%s.", (void*)stubFunc,
             stubName, kernelInfoExt);
         return RT_ERROR_KERNEL_DUPLICATE;
     }
@@ -5255,7 +5255,7 @@ rtError_t Runtime::GetEnvPath(std::string& binaryPath) const
     binaryPath = libPath.substr(findr + 1, diff - 1);
     binaryPath = binaryPath + "/";
 
-    RT_LOG(RT_LOG_INFO, "patch:%s", binaryPath.c_str());
+    RT_LOG(RT_LOG_INFO, "path:%s", binaryPath.c_str());
     return RT_ERROR_NONE;
 }
 
@@ -5985,7 +5985,7 @@ rtError_t Runtime::SetSimdPrintFifoSize(uint32_t val)
         "[" + std::to_string(SIMD_MIN_FIFO_PRINTF_SIZE) + ", " + std::to_string(MAX_FIFO_PRINTF_SIZE) + "]");
     uint32_t assignVal = (val + PRINTF_FIFO_ASSIGN - 1U) / PRINTF_FIFO_ASSIGN * PRINTF_FIFO_ASSIGN;
     printblockLen_ = assignVal;
-    RT_LOG(RT_LOG_DEBUG, "Set simd printf fifo size succ, origin val=%u, assgin val=%u", val, printblockLen_);
+    RT_LOG(RT_LOG_DEBUG, "Set simd printf fifo size succ, origin val=%u, assign val=%u", val, printblockLen_);
     return RT_ERROR_NONE;
 }
 
@@ -5997,7 +5997,7 @@ rtError_t Runtime::SetSimtPrintFifoSize(uint32_t val)
         "[" + std::to_string(SIMT_MIN_FIFO_PRINTF_SIZE) + ", " + std::to_string(MAX_FIFO_PRINTF_SIZE) + "]");
     uint32_t assignVal = (val + PRINTF_FIFO_ASSIGN - 1U) / PRINTF_FIFO_ASSIGN * PRINTF_FIFO_ASSIGN;
     simtPrintLen_ = assignVal;
-    RT_LOG(RT_LOG_DEBUG, "Set simt printf fifo size succ, origin val=%u, assgin val=%u", val, simtPrintLen_);
+    RT_LOG(RT_LOG_DEBUG, "Set simt printf fifo size succ, origin val=%u, assign val=%u", val, simtPrintLen_);
     return RT_ERROR_NONE;
 }
 

@@ -1077,7 +1077,7 @@ rtError_t Context::SyncStreamsWithTimeout(
         error = syncStream->Synchronize(false, remainTime);
         if (IsProcessTimeout(start, timeout, &remainTime)) {
             uint16_t taskId = MAX_UINT16_NUM;
-            const char_t* taskTypeName = "UNKOWN";
+            const char_t* taskTypeName = "UNKNOWN";
             tsTaskType_t taskType = TS_TASK_TYPE_RESERVED;
             syncStream->GetCurrentRunningTaskInfo(taskId, taskType, taskTypeName);
             RT_LOG_OUTER_MSG(

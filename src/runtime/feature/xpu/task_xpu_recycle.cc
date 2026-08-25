@@ -170,7 +170,7 @@ static void XpuProcCqReportException(
     const uint16_t pos = logicCq.sqHead;
     const uint8_t errType = logicCq.errorType;
     const uint32_t errBit = (errType == 0U) ? UINT32_BIT_NUM : static_cast<uint32_t>(CTZ(errType));
-    std::string errMsg = errBit < TprtCqeErrorDesc_.size() ? TprtCqeErrorDesc_[errBit] : "unknow";
+    std::string errMsg = errBit < TprtCqeErrorDesc_.size() ? TprtCqeErrorDesc_[errBit] : "unknown";
     if (static_cast<uint8_t>(logicCq.errorType & RT_STARS_EXIST_ERROR) == 0U) {
         return;
     }

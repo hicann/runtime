@@ -35,7 +35,7 @@ rtError_t ThreadLocalContainer::SetTaskTag(const char_t* const inTaskTag)
     }
 
     if (tagLen == TASK_TAG_MAX_LEN) {
-        RT_LOG(RT_LOG_WARNING, "inTaskTag must be less than %u, trunk it", TASK_TAG_MAX_LEN);
+        RT_LOG(RT_LOG_WARNING, "inTaskTag exceeds maximum length %u, truncating it", TASK_TAG_MAX_LEN);
         --tagLen;
     }
 

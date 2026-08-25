@@ -21,7 +21,7 @@ rtError_t FuncSymbolTable::Register(void* binHandle, const void* symbol, const c
 {
     Program* prog = static_cast<Program*>(binHandle);
     Kernel* kernel = const_cast<Kernel*>(prog->GetKernelByName(kernelName));
-    COND_RETURN_ERROR_MSG_INNER(kernel == nullptr, RT_ERROR_INVALID_VALUE, "can't get kernel in programe.");
+    COND_RETURN_ERROR_MSG_INNER(kernel == nullptr, RT_ERROR_INVALID_VALUE, "can't get kernel in program.");
     funcSymbolMapLock_.Lock();
     auto it = funcSymbolMap_.find(symbol);
     if (it != funcSymbolMap_.end()) {

@@ -458,7 +458,7 @@ rtError_t ModelLoadCompleteByStream(Model* const mdl)
 
     if (isNeedLoadAicpuModel) {
         RT_LOG(
-            RT_LOG_DEBUG, "packet model info for aicpu angine, model_id=%u, stream_id=%d.", mdl->Id_(), stream->Id_());
+            RT_LOG_DEBUG, "packet model info for aicpu engine, model_id=%u, stream_id=%d.", mdl->Id_(), stream->Id_());
         aicpuTask = nullptr;
         stream->StreamLock();
         error = AllocTaskInfo(&aicpuTask, stream, pos);

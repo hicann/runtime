@@ -329,6 +329,39 @@ TEST_F(ApiImplTest, dev_binary_register_test)
     free(program_);
 }
 
+TEST_F(ApiImplTest, ErrorLogBranches)
+{
+    constexpr rtError_t errorCode = RT_ERROR_INVALID_VALUE;
+    ApiImpl apiImpl;
+
+    MOCKER_CPP(&Context::GetNotifyAddress).stubs().will(returnValue(errorCode));
+    uint64_t notifyAddress = 0U;
+    EXPECT_EQ(apiImpl.GetNotifyAddress(nullptr, &notifyAddress), errorCode);
+
+    MOCKER_CPP(&Runtime::ProgramRegister).stubs().will(returnValue(errorCode));
+    Program* program = nullptr;
+    EXPECT_EQ(apiImpl.RegisterAllKernel(nullptr, &program), errorCode);
+
+    Program* loadedProgram = new PlainProgram();
+    MOCKER_CPP(&Runtime::MallocProgramAndReg)
+        .stubs()
+        .with(mockcpp::any(), outBoundP(&loadedProgram, sizeof(loadedProgram)))
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(&Runtime::AllKernelRegister).stubs().will(returnValue(errorCode));
+    rtDevBinary_t binary = {};
+    EXPECT_EQ(apiImpl.BinaryLoad(&binary, &program), errorCode);
+
+    MOCKER_CPP(&Runtime::BinaryUnLoad).stubs().will(returnValue(errorCode));
+    Program* legacyProgram = new PlainProgram();
+    EXPECT_EQ(apiImpl.BinaryUnLoad(legacyProgram), errorCode);
+    delete legacyProgram;
+
+    MOCKER_CPP(&Program::FreeSoAndNameByDeviceId).expects(exactly(RT_MAX_DEV_NUM)).will(returnValue(errorCode));
+    Program* newFlowProgram = new PlainProgram();
+    newFlowProgram->SetIsNewBinaryLoadFlow(true);
+    (void)apiImpl.BinaryUnLoad(newFlowProgram);
+}
+
 TEST_F(ApiImplTest, KERNEL_CONFIG_DUMP_TEST_2)
 {
     ApiImpl apiImpl;

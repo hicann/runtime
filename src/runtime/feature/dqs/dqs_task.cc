@@ -606,7 +606,7 @@ void PrintErrorInfoForDqsBatchDequeueTask(TaskInfo* taskInfo, const uint32_t dev
         dfx, sizeof(dfx), taskInfo->u.dqsBatchDequeueTask.dfxPtr, sizeof(dfx), RT_MEMCPY_DEVICE_TO_HOST);
     RT_LOG(
         RT_LOG_ERROR,
-        "dqs dqsBatchDequeueTask error, pop result=%u, stream_id=%d, task_id=%u, pop_result=%u, hadle_value=%u", devId,
+        "dqs dqsBatchDequeueTask error, device_id=%u, stream_id=%d, task_id=%u, pop_result=%u, handle_value=%u", devId,
         taskInfo->stream->Id_(), taskInfo->id, dfx[0U], dfx[1U]);
 
     return;
@@ -740,7 +740,7 @@ static rtError_t PrepareSqeInfoForDqsInterChipMemcpyTask(
     } else if (type == DqsInterChipTaskType::DQS_INTER_CHIP_TASK_MEMCPY_MBUF_DATA) {
         fieldOffset = offsetof(stars_dqs_inter_chip_space_t, mbuf_data_memcpy_sqe);
     } else {
-        RT_LOG(RT_LOG_ERROR, "Invaild type, streamId=%d, type=%d.", stm->Id_(), static_cast<int32_t>(type));
+        RT_LOG(RT_LOG_ERROR, "Invalid type, streamId=%d, type=%d.", stm->Id_(), static_cast<int32_t>(type));
         return RT_ERROR_INVALID_VALUE;
     }
 

@@ -24,7 +24,7 @@ ProfCtrlCallbackManager& ProfCtrlCallbackManager::Instance()
 void ProfCtrlCallbackManager::SaveProfSwitchData(const rtProfCommandHandle_t* const data, const uint32_t len)
 {
     if (len != sizeof(rtProfCommandHandle_t)) {
-        RT_LOG(RT_LOG_ERROR, "date len %u is invalid, valid value is %zu", len, sizeof(rtProfCommandHandle_t));
+        RT_LOG(RT_LOG_ERROR, "data len %u is invalid, valid value is %zu", len, sizeof(rtProfCommandHandle_t));
         return;
     }
     if ((data->type != PROF_COMMANDHANDLE_TYPE_STOP) && (data->type != PROF_COMMANDHANDLE_TYPE_FINALIZE) &&

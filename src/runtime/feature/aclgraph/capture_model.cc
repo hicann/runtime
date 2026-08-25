@@ -561,7 +561,7 @@ rtError_t CaptureModel::BuildActualExternalRecordTasks()
         const rtError_t error = InitExternalRecordTask(taskInfo, entryAddr);
         if (error != RT_ERROR_NONE) {
             ReleaseExternalRefreshTable();
-            ERROR_RETURN(error, "Build actual external record Ttasks failed, model_id=%u, retCode=%#x.", Id_(), error);
+            ERROR_RETURN(error, "Build actual external record tasks failed, model_id=%u, retCode=%#x.", Id_(), error);
         }
         taskInfo->u.memWriteValueTask.event = taskRef.event;
     }

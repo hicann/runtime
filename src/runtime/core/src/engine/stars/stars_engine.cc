@@ -1602,7 +1602,7 @@ void StarsEngine::ProcLogicCqReport(const rtCqReport_t& logicCq, const bool isSt
     const uint32_t errBit = (errType == 0U) ? UINT32_BIT_NUM : static_cast<uint32_t>(CTZ(errType));
     const char_t* const errMsg = static_cast<size_t>(errBit) < StarsCqeErrorDesc_.size() ?
                                      StarsCqeErrorDesc_[static_cast<size_t>(errBit)].c_str() :
-                                     "unknow";
+                                     "unknown";
     bool isExceptionFlag = false;
     TaskInfo* faultTaskPtr = nullptr;
 

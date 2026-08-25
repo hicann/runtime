@@ -137,7 +137,7 @@ def generate_function(header_files, inc_dir):
         includes.append(include_str)
 
     content = includes
-    print("include concent build success")
+    print("include content build success")
     total = 0
     content.append('\n')
     # generate implement
@@ -151,7 +151,7 @@ def generate_function(header_files, inc_dir):
         for func in functions:
             content.append("{}\n".format(implement_function(func)))
             content.append("\n")
-    print("implement concent build success")
+    print("implement content build success")
     print('total functions number is {}'.format(total))
     return content
 

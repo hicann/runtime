@@ -212,7 +212,7 @@ rtError_t Notify::Record(Stream* const streamIn)
     }
 
     RT_LOG(
-        RT_LOG_INFO, "refreash, lastLocalId=%u, lastBaseAddr_=0x%llx, lastIsPcie=%s, device_id=%u", lastLocalId_,
+        RT_LOG_INFO, "refresh, lastLocalId=%u, lastBaseAddr_=0x%llx, lastIsPcie=%s, device_id=%u", lastLocalId_,
         lastBaseAddr_, lastIsPcie_ ? "True" : "False", streamIn->Device_()->Id_());
 
     GET_THREAD_TASKID_AND_STREAMID(notifyTask, streamIn->Id_());

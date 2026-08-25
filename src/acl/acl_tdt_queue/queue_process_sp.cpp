@@ -68,7 +68,7 @@ aclError QueueProcessorSp::acltdtGrantQueue(
     const uint32_t qid, const int32_t pid, const uint32_t permission, const int32_t timeout)
 {
     ACL_LOG_INFO(
-        "start to acltdtGrantQueue, qid is %u, pid is %d, permisiion is %u, timeout is %d", qid, pid, permission,
+        "start to acltdtGrantQueue, qid is %u, pid is %d, permission is %u, timeout is %d", qid, pid, permission,
         timeout);
     constexpr int32_t deviceId = 0;
     rtMemQueueShareAttr_t attr = {0U, 0U, 0U, 0U};
@@ -78,7 +78,7 @@ aclError QueueProcessorSp::acltdtGrantQueue(
     const std::lock_guard<std::recursive_mutex> lk(muForQueueCtrl_);
     ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtMemQueueGrant(deviceId, qid, pid, &attr), rtMemQueueGrant);
     ACL_LOG_INFO(
-        "successfully execute acltdtGrantQueue, qid is %u, pid is %d, permisiion is %u, timeout is %d", qid, pid,
+        "successfully execute acltdtGrantQueue, qid is %u, pid is %d, permission is %u, timeout is %d", qid, pid,
         permission, timeout);
     return ACL_SUCCESS;
 }
@@ -86,7 +86,7 @@ aclError QueueProcessorSp::acltdtGrantQueue(
 aclError QueueProcessorSp::acltdtAttachQueue(const uint32_t qid, const int32_t timeout, uint32_t* const permission)
 {
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(permission);
-    ACL_LOG_INFO("start to acltdtAttachQueue, qid is %u, permisiion is %u, timeout is %d", qid, *permission, timeout);
+    ACL_LOG_INFO("start to acltdtAttachQueue, qid is %u, permission is %u, timeout is %d", qid, *permission, timeout);
     constexpr int32_t deviceId = 0;
     const std::lock_guard<std::recursive_mutex> lk(muForQueueCtrl_);
     ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtMemQueueAttach(deviceId, qid, timeout), rtMemQueueAttach);
@@ -99,7 +99,7 @@ aclError QueueProcessorSp::acltdtAttachQueue(const uint32_t qid, const int32_t t
     tmp = (attr.write != 0) ? (tmp | static_cast<uint32_t>(ACL_TDT_QUEUE_PERMISSION_ENQUEUE)) : tmp;
     *permission = tmp;
     ACL_LOG_INFO(
-        "successfully execute acltdtAttachQueue, qid is %u, permisiion is %u, timeout is %d", qid, *permission,
+        "successfully execute acltdtAttachQueue, qid is %u, permission is %u, timeout is %d", qid, *permission,
         timeout);
     return ACL_SUCCESS;
 }

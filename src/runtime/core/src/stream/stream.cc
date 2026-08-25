@@ -3641,7 +3641,7 @@ rtError_t Stream::UpdateAllPersistentTask()
                 break;
         }
         ERROR_RETURN(
-            error, "deal with task faield, stream_id=%d, task_id=%hu, task_type=%d(%s).", streamId_, workTask->id,
+            error, "deal with task failed, stream_id=%d, task_id=%hu, task_type=%d(%s).", streamId_, workTask->id,
             workTask->type, workTask->typeName);
     }
 
