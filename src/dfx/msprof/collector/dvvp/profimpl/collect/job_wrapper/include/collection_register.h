@@ -59,6 +59,7 @@ static const std::array<std::string, NR_MAX_COLLECTION_JOB> COLLECTION_JOB_FILEN
     fileNames[FFTS_PROFILE_COLLECTION_JOB] = "data/ffts_profile.data";
     fileNames[INSTR_PROFILING_COLLECTION_JOB] = "data/instr";
     fileNames[BIU_PERF_COLLECTION_JOB] = "data/instr";
+    fileNames[PC_SAMPLING_COLLECTION_JOB] = "data/instr";
     fileNames[ADPROF_COLLECTION_JOB] = "data/adprof.data";
     fileNames[CTRLCPU_PERF_COLLECTION_JOB] = "data/ai_ctrl_cpu.data";
     fileNames[NTS_PMU_COLLECTION_JOB] = "data/nts_pmu.data";

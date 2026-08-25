@@ -33,8 +33,12 @@ ProfDrvJob::~ProfDrvJob() {}
 void ProfDrvJob::AddReader(const std::string& key, int32_t devId, AI_DRV_CHANNEL channelId, const std::string& filePath)
 {
     std::string relativePath;
-    (void)analysis::dvvp::common::utils::Utils::RelativePath(
-        filePath, collectionJobCfg_->comParams->tmpResultDir, relativePath);
+    if (collectionJobCfg_->comParams->tmpResultDir.empty()) {
+        relativePath = filePath;
+    } else {
+        (void)analysis::dvvp::common::utils::Utils::RelativePath(
+            filePath, collectionJobCfg_->comParams->tmpResultDir, relativePath);
+    }
 
     SHARED_PTR_ALIA<ChannelReader> reader;
     MSVP_MAKE_SHARED4(

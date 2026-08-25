@@ -522,6 +522,8 @@ int32_t JobDeviceSoc::CreateTsCollectionJobArray()
     MSVP_MAKE_SHARED0(
         collectionJobV_[INSTR_PROFILING_COLLECTION_JOB].collectionJob, ProfInstrPerfJob, return PROFILING_FAILED);
     MSVP_MAKE_SHARED0(collectionJobV_[BIU_PERF_COLLECTION_JOB].collectionJob, ProfBiuPerfJob, return PROFILING_FAILED);
+    MSVP_MAKE_SHARED0(
+        collectionJobV_[PC_SAMPLING_COLLECTION_JOB].collectionJob, ProfBiuPerfJob, return PROFILING_FAILED);
     MSVP_MAKE_SHARED0(collectionJobV_[NTS_PMU_COLLECTION_JOB].collectionJob, ProfNtsPmuJob, return PROFILING_FAILED);
     MSVP_MAKE_SHARED0(collectionJobV_[NTS_TASK_COLLECTION_JOB].collectionJob, ProfNtsTaskJob, return PROFILING_FAILED);
 
@@ -563,8 +565,10 @@ int32_t JobDeviceSoc::CreateSysCollectionJobArray()
 
 int32_t JobDeviceSoc::DoCreateCollectionJobArray()
 {
-    std::string dataDir = tmpResultDir_ + MSVP_SLASH + "data";
-    if (!Platform::instance()->CheckIfRpcHelper() && !Platform::instance()->CheckIfSupport(PLATFORM_AOE_SUPPORT_FUNC)) {
+    const bool isComputeMode = IsComputeProfilingMode();
+    if (!isComputeMode && !Platform::instance()->CheckIfRpcHelper() &&
+        !Platform::instance()->CheckIfSupport(PLATFORM_AOE_SUPPORT_FUNC)) {
+        const std::string dataDir = tmpResultDir_ + MSVP_SLASH + "data";
         const int32_t ret = analysis::dvvp::common::utils::Utils::CreateDir(dataDir);
         if (ret != PROFILING_SUCCESS) {
             MSPROF_LOGE("Creating dir: %s err!", analysis::dvvp::common::utils::Utils::BaseName(dataDir).c_str());
@@ -576,12 +580,22 @@ int32_t JobDeviceSoc::DoCreateCollectionJobArray()
         collectionJobV_[cnt].jobTag = static_cast<ProfCollectionJobE>(cnt);
         collectionJobV_[cnt].jobCfg->jobParams.jobTag = static_cast<ProfCollectionJobE>(cnt);
         if (COLLECTION_JOB_FILENAME[cnt].size() > 0) {
-            collectionJobV_[cnt].jobCfg->jobParams.dataPath = tmpResultDir_ + MSVP_SLASH + COLLECTION_JOB_FILENAME[cnt];
+            const std::string& fileName = COLLECTION_JOB_FILENAME[cnt];
+            collectionJobV_[cnt].jobCfg->jobParams.dataPath =
+                isComputeMode ? fileName : tmpResultDir_ + MSVP_SLASH + fileName;
         }
         collectionJobV_[cnt].jobCfg->comParams = collectionJobCommCfg_;
     }
+    // BIU perf monitor and PC sampling share the instr driver path and are distinguished by driver mode.
+    collectionJobV_[BIU_PERF_COLLECTION_JOB].jobCfg->jobParams.biuPcSamplingMode = BIU_PERF_MONITOR_MODE;
+    collectionJobV_[PC_SAMPLING_COLLECTION_JOB].jobCfg->jobParams.biuPcSamplingMode = PC_SAMPLING_MODE;
 
     return PROFILING_SUCCESS;
+}
+
+bool JobDeviceSoc::IsComputeProfilingMode() const
+{
+    return params_ != nullptr && params_->profMode == MSVP_PROF_COMPUTE_MODE;
 }
 
 int32_t JobDeviceSoc::SendData(const std::string& fileName, const std::string& data)

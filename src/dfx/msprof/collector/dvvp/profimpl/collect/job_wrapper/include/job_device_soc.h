@@ -44,6 +44,7 @@ private:
     int32_t ParseDdrCpuConfig(SHARED_PTR_ALIA<PMUEventsConfig> cfg);
     int32_t ParsePmuConfig(SHARED_PTR_ALIA<PMUEventsConfig> cfg);
     int32_t ParseHbmConfig(SHARED_PTR_ALIA<PMUEventsConfig> cfg);
+    bool IsComputeProfilingMode() const;
     std::string GenerateFileName(const std::string& fileName);
     std::string GenerateDurationdata();
     void GetAndStoreStartTime(const int32_t& hostProfiling);

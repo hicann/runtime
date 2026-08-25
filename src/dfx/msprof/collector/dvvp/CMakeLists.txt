@@ -98,6 +98,7 @@ set(profimplCpp
     msprof/devprof/src/devprof_drv_aicpu.cpp
     msprof/devprof/src/devprof_common.cpp
     profimpl/adapter/src/command_handle.cpp
+    profimpl/adapter/src/compute_profiling_manager.cpp
     profimpl/adapter/src/msprofiler_impl.cpp
     profimpl/adapter/src/msprofiler_adaptor.cpp
     profimpl/adapter/src/msproftx_adaptor.cpp
@@ -121,6 +122,7 @@ set(profimplCpp
     transport/file_ageing.cpp
     transport/file_slice.cpp
     transport/file_transport.cpp
+    transport/injection_transport.cpp
     transport/pipe_transport.cpp
     transport/parser_transport.cpp
     transport/stats_transport.cpp

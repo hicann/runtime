@@ -88,6 +88,7 @@ target_include_directories(prof_api_utest PRIVATE
     ${MSPROF_SOURCE_DIR}/dvvp/depend/include/stub
     ${MSPROF_SOURCE_DIR}/dvvp/transport
     ${MSPROF_SOURCE_DIR}/dvvp/depend/include/wrapper
+    ${CMAKE_CURRENT_SOURCE_DIR}/stub
 )
 
 target_compile_options(prof_api_utest PRIVATE

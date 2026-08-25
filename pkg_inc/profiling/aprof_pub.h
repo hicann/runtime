@@ -190,6 +190,7 @@ enum MsprofErrorCode {
     MSPROF_ERROR_UNINITIALIZE,
 };
 
+// clang-format off
 /**
  * @name  MsprofCtrlCallbackType
  * @brief ctrl callback request type
@@ -202,9 +203,9 @@ enum MsprofCtrlCallbackType {
     MSPROF_CTRL_INIT_HELPER = 4,     // start profiling in helper device
     MSPROF_CTRL_INIT_PURE_CPU = 5,   // start profiling in pure cpu
     MSPROF_CTRL_INIT_AICPU = 6,      // start profiling with aicpu
+    MSPROF_CTRL_INIT_COMPUTE = 8,    // start compute profiling
     MSPROF_CTRL_INIT_DYNA = 0xFF,    // start profiling for dynamic profiling
 };
-
 /**
  * @name  MsprofCommandHandleType
  * @brief Identification codes representing various callback statuses
@@ -218,6 +219,10 @@ enum MsprofCommandHandleType {
     PROF_COMMANDHANDLE_TYPE_MODEL_UNSUBSCRIBE,
     PROF_COMMANDHANDLE_TYPE_MAX
 };
+
+enum MsprofInjectionFuncType { PROF_HOOK_SET = 0, PROF_HOOK_GET = 1, PROF_HOOK_INIT = 2 };
+
+enum MsprofDataCallbackType { PROF_DATA_CALLBACK_COMPUTE = 0 };
 
 enum MsprofGeTaskType {
     MSPROF_GE_TASK_TYPE_AI_CORE = 0,
@@ -657,6 +662,44 @@ MSVP_PROF_API int32_t MsprofFinalize(void);
  * @return 0:SUCCESS, !0:FAILED
  */
 MSVP_PROF_API int32_t MsprofRegisterCallback(uint32_t moduleId, ProfCommandHandle handle);
+
+/**
+ * @ingroup libprofapi
+ * @name  MsprofSetInjectionFunc
+ * @brief register runtime injection function for acl tool
+ * @param[in] type  MsprofInjectionFuncType
+ * @param[in] func  runtime injection function pointer
+ * @return 0:SUCCESS, !0:FAILED
+ */
+MSVP_PROF_API int32_t MsprofSetInjectionFunc(uint32_t type, void* func);
+
+/**
+ * @ingroup libprofapi
+ * @name  MsprofInjectionInitialize
+ * @brief initialize acl tool injection
+ * @return 0:SUCCESS, !0:FAILED
+ */
+MSVP_PROF_API int32_t MsprofInjectionInitialize(void);
+
+/**
+ * @ingroup libprofapi
+ * @name  MsprofGetInjectionFunc
+ * @brief get runtime injection function for acl tool
+ * @param[in] type  MsprofInjectionFuncType
+ * @return function pointer or NULL
+ */
+MSVP_PROF_API void* MsprofGetInjectionFunc(uint32_t type);
+
+/**
+ * @ingroup libprofapi
+ * @name  MsprofRegisterDataCallback
+ * @brief register raw data callback. One callback report is sliced independently,
+ *        and the last slice of each report is marked as last chunk.
+ * @param[in] type      MsprofDataCallbackType
+ * @param[in] callback  raw data callback function pointer
+ * @return 0:SUCCESS, !0:FAILED
+ */
+MSVP_PROF_API int32_t MsprofRegisterDataCallback(uint32_t type, void* callback);
 
 /**
  * @ingroup libprofapi

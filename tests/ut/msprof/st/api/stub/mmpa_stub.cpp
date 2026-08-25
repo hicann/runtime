@@ -36,9 +36,9 @@ rtError_t rtProfilerTraceExStub(uint64_t indexId, uint64_t modelId, uint16_t tag
 
 int32_t g_handle;
 extern "C" int32_t MsprofInit(uint32_t dataType, VOID_PTR data, uint32_t dataLen);
-extern "C" int32_t MsprofStart(uint32_t dataType, const void *data, uint32_t length);
-extern "C" int32_t MsprofStop(uint32_t dataType, const void *data, uint32_t length);
-extern "C" int32_t MsprofSetConfig(uint32_t configType, const char *config, size_t configLength);
+extern "C" int32_t MsprofStart(uint32_t dataType, const void* data, uint32_t length);
+extern "C" int32_t MsprofStop(uint32_t dataType, const void* data, uint32_t length);
+extern "C" int32_t MsprofSetConfig(uint32_t configType, const char* config, size_t configLength);
 extern "C" int32_t MsprofRegisterCallback(uint32_t moduleId, ProfCommandHandle handle);
 extern "C" int32_t MsprofReportData(uint32_t moduleId, uint32_t type, VOID_PTR data, uint32_t len);
 extern "C" size_t ProfImplGetImplInfo(ProfImplInfo& info);
@@ -46,8 +46,8 @@ extern "C" void ProfImplSetApiBufPop(const ProfApiBufPopCallback func);
 extern "C" void ProfImplSetCompactBufPop(const ProfCompactBufPopCallback func);
 extern "C" void ProfImplSetAdditionalBufPop(const ProfAdditionalBufPopCallback func);
 extern "C" void ProfImplIfReportBufEmpty(const ProfReportBufEmptyCallback func);
-extern "C" int32_t ProfImplReportRegTypeInfo(uint16_t level, uint32_t type, const std::string &typeName);
-extern "C" uint64_t ProfImplReportGetHashId(const std::string &info);
+extern "C" int32_t ProfImplReportRegTypeInfo(uint16_t level, uint32_t type, const std::string& typeName);
+extern "C" uint64_t ProfImplReportGetHashId(const std::string& info);
 extern "C" void ProfImplSetAdditionalBufPush(const ProfAdditionalBufPushCallback func);
 extern "C" void ProfImplSetBatchAddBufPop(const ProfBatchAddBufPopCallback func);
 extern "C" void ProfImplSetBatchAddBufIndexShift(const ProfBatchAddBufIndexShiftCallBack func);
@@ -59,15 +59,15 @@ extern "C" int32_t MsprofNotifySetDevice(uint32_t chipId, uint32_t deviceId, boo
 extern "C" int32_t MsprofFinalize();
 extern "C" int32_t MsprofUnsetDeviceIdByGeModelIdx(const uint32_t geModelIdx, const uint32_t deviceId);
 extern "C" void* ProfAclCreateStamp();
-extern "C" int32_t ProfAclMarkEx(const char *msg, size_t msgLen, aclrtStream stream);
-extern "C" int32_t ProfAclInit(ProfType type, const char *profilerPath, uint32_t length);
+extern "C" int32_t ProfAclMarkEx(const char* msg, size_t msgLen, aclrtStream stream);
+extern "C" int32_t ProfAclInit(ProfType type, const char* profilerPath, uint32_t length);
 extern "C" int32_t ProfAclStart(ProfType type, PROF_CONFIG_CONST_PTR profilerConfig);
 extern "C" int32_t ProfAclStop(ProfType type, PROF_CONFIG_CONST_PTR profilerConfig);
 extern "C" int32_t ProfAclFinalize(ProfType type);
-extern "C" int32_t ProfAclSetConfig(aclprofConfigType type, const char *config, size_t configLength);
-extern "C" int32_t ProfAclGetCompatibleFeatures(size_t *featuresSize, void **featuresData);
-extern "C" int32_t ProfAclGetCompatibleFeaturesV2(size_t *featuresSize, void **featuresData);
-extern "C" int32_t ProfAclSubscribe(ProfType type, uint32_t modelId, const aclprofSubscribeConfig *profSubscribeConfig);
+extern "C" int32_t ProfAclSetConfig(aclprofConfigType type, const char* config, size_t configLength);
+extern "C" int32_t ProfAclGetCompatibleFeatures(size_t* featuresSize, void** featuresData);
+extern "C" int32_t ProfAclGetCompatibleFeaturesV2(size_t* featuresSize, void** featuresData);
+extern "C" int32_t ProfAclSubscribe(ProfType type, uint32_t modelId, const aclprofSubscribeConfig* profSubscribeConfig);
 extern "C" Msprofiler::AclApi::ProfCreateTransportFunc ProfCreateParsertransport();
 extern "C" void ProfRegisterTransport(Msprofiler::AclApi::ProfCreateTransportFunc callback);
 extern "C" int32_t ProfAclUnSubscribe(ProfType type, uint32_t modelId);
@@ -76,91 +76,94 @@ extern "C" int32_t ProfOpUnSubscribe(uint32_t devId);
 extern "C" int32_t ProfAclDrvGetDevNum();
 extern "C" uint64_t ProfAclGetOpTime(uint32_t type, CONST_VOID_PTR opInfo, size_t opInfoLen, uint32_t index);
 extern "C" size_t ProfAclGetId(ProfType type, CONST_VOID_PTR opInfo, size_t opInfoLen, uint32_t index);
-extern "C" int32_t ProfAclGetOpVal(uint32_t type, CONST_VOID_PTR opInfo, size_t opInfoLen, uint32_t index, VOID_PTR data, size_t len);
-extern "C" const char *ProfAclGetOpAttriVal(uint32_t type, const void *opInfo, size_t opInfoLen, uint32_t index, uint32_t attri);
+extern "C" int32_t ProfAclGetOpVal(
+    uint32_t type, CONST_VOID_PTR opInfo, size_t opInfoLen, uint32_t index, VOID_PTR data, size_t len);
+extern "C" const char* ProfAclGetOpAttriVal(
+    uint32_t type, const void* opInfo, size_t opInfoLen, uint32_t index, uint32_t attri);
 extern "C" uint64_t ProfGetOpExecutionTime(CONST_VOID_PTR data, uint32_t len, uint32_t index);
 
+extern "C" __attribute__((weak)) int32_t acltoolInitialize() { return -1; }
+
 const std::map<std::string, void*> g_map = {
-    {"MsprofInit", (void *)MsprofInit},
-    {"MsprofSetConfig", (void *)MsprofSetConfig},
-    {"MsprofRegisterCallback", (void *)MsprofRegisterCallback},
-    {"MsprofReportData", (void *)MsprofReportData},
-    {"ProfImplGetImplInfo", (void *)ProfImplGetImplInfo},
-    {"ProfImplSetApiBufPop", (void *)ProfImplSetApiBufPop},
-    {"ProfImplSetCompactBufPop", (void *)ProfImplSetCompactBufPop},
-    {"ProfImplSetAdditionalBufPop", (void *)ProfImplSetAdditionalBufPop},
-    {"ProfImplIfReportBufEmpty", (void *)ProfImplIfReportBufEmpty},
-    {"ProfImplSetBatchAddBufPop", (void *)ProfImplSetBatchAddBufPop},
-    {"ProfImplSetBatchAddBufIndexShift", (void *)ProfImplSetBatchAddBufIndexShift},
-    {"ProfImplSetVarAddBlockBufBatchPop", (void *)ProfImplSetVarAddBlockBufBatchPop},
-    {"ProfImplSetVarAddBlockBufIndexShift", (void *)ProfImplSetVarAddBlockBufIndexShift},
-    {"ProfImplReportRegTypeInfo", (void *)ProfImplReportRegTypeInfo},
-    {"ProfImplReportGetHashId", (void *)ProfImplReportGetHashId},
-    {"ProfImplSetAdditionalBufPush", (void *)ProfImplSetAdditionalBufPush},
-    {"ProfImplSetMarkEx", (void *)ProfImplSetMarkEx},
-    {"MsprofSetDeviceIdByGeModelIdx", (void *)MsprofSetDeviceIdByGeModelIdx},
-    {"MsprofNotifySetDevice", (void *)MsprofNotifySetDevice},
-    {"MsprofFinalize", (void *)MsprofFinalize},
-    {"MsprofUnsetDeviceIdByGeModelIdx", (void *)MsprofUnsetDeviceIdByGeModelIdx},
-    {"ProfAclCreateStamp", (void *)ProfAclCreateStamp},
-    {"ProfAclMarkEx", (void *)ProfAclMarkEx},
-    {"ProfAclInit", (void *)ProfAclInit},
-    {"ProfAclStart", (void *)ProfAclStart},
-    {"ProfAclStop", (void *)ProfAclStop},
-    {"ProfAclFinalize", (void *)ProfAclFinalize},
-    {"ProfAclSetConfig", (void *)ProfAclSetConfig},
-    {"ProfAclGetCompatibleFeatures", (void *)ProfAclGetCompatibleFeatures},
-    {"ProfAclGetCompatibleFeaturesV2", (void *)ProfAclGetCompatibleFeaturesV2},
-    {"ProfAclSubscribe", (void *)ProfAclSubscribe},
-    {"ProfAclUnSubscribe", (void *)ProfAclUnSubscribe},
-    {"ProfOpSubscribe", (void *)ProfOpSubscribe},
-    {"ProfOpUnSubscribe", (void *)ProfOpUnSubscribe},
-    {"ProfAclDrvGetDevNum", (void *)ProfAclDrvGetDevNum},
-    {"ProfAclGetOpTime", (void *)ProfAclGetOpTime},
-    {"ProfAclGetId", (void *)ProfAclGetId},
-    {"ProfAclGetOpVal", (void *)ProfAclGetOpVal},
-    {"ProfGetOpExecutionTime", (void *)ProfGetOpExecutionTime},
-    {"ProfAclGetOpAttriVal", (void *)ProfAclGetOpAttriVal},
-    {"ProfCreateParsertransport", (void *)ProfCreateParsertransport},
-    {"ProfRegisterTransport", (void *)ProfRegisterTransport},
-    {"halGetAPIVersion", (void *)halGetAPIVersion},
-    {"drvGetDeviceSplitMode", (void *)drvGetDeviceSplitMode},
-    {"halGetDeviceInfoByBuff", (void *)halGetDeviceInfoByBuff},
-    {"halEschedQueryInfo", (void *)halEschedQueryInfo},
-    {"halEschedCreateGrpEx", (void *)halEschedCreateGrpEx},
+    {"MsprofInit", (void*)MsprofInit},
+    {"MsprofSetConfig", (void*)MsprofSetConfig},
+    {"MsprofRegisterCallback", (void*)MsprofRegisterCallback},
+    {"MsprofReportData", (void*)MsprofReportData},
+    {"ProfImplGetImplInfo", (void*)ProfImplGetImplInfo},
+    {"ProfImplSetApiBufPop", (void*)ProfImplSetApiBufPop},
+    {"ProfImplSetCompactBufPop", (void*)ProfImplSetCompactBufPop},
+    {"ProfImplSetAdditionalBufPop", (void*)ProfImplSetAdditionalBufPop},
+    {"ProfImplIfReportBufEmpty", (void*)ProfImplIfReportBufEmpty},
+    {"ProfImplSetBatchAddBufPop", (void*)ProfImplSetBatchAddBufPop},
+    {"ProfImplSetBatchAddBufIndexShift", (void*)ProfImplSetBatchAddBufIndexShift},
+    {"ProfImplSetVarAddBlockBufBatchPop", (void*)ProfImplSetVarAddBlockBufBatchPop},
+    {"ProfImplSetVarAddBlockBufIndexShift", (void*)ProfImplSetVarAddBlockBufIndexShift},
+    {"ProfImplReportRegTypeInfo", (void*)ProfImplReportRegTypeInfo},
+    {"ProfImplReportGetHashId", (void*)ProfImplReportGetHashId},
+    {"ProfImplSetAdditionalBufPush", (void*)ProfImplSetAdditionalBufPush},
+    {"ProfImplSetMarkEx", (void*)ProfImplSetMarkEx},
+    {"MsprofSetDeviceIdByGeModelIdx", (void*)MsprofSetDeviceIdByGeModelIdx},
+    {"MsprofNotifySetDevice", (void*)MsprofNotifySetDevice},
+    {"MsprofFinalize", (void*)MsprofFinalize},
+    {"MsprofUnsetDeviceIdByGeModelIdx", (void*)MsprofUnsetDeviceIdByGeModelIdx},
+    {"ProfAclCreateStamp", (void*)ProfAclCreateStamp},
+    {"ProfAclMarkEx", (void*)ProfAclMarkEx},
+    {"ProfAclInit", (void*)ProfAclInit},
+    {"ProfAclStart", (void*)ProfAclStart},
+    {"ProfAclStop", (void*)ProfAclStop},
+    {"ProfAclFinalize", (void*)ProfAclFinalize},
+    {"ProfAclSetConfig", (void*)ProfAclSetConfig},
+    {"ProfAclGetCompatibleFeatures", (void*)ProfAclGetCompatibleFeatures},
+    {"ProfAclGetCompatibleFeaturesV2", (void*)ProfAclGetCompatibleFeaturesV2},
+    {"ProfAclSubscribe", (void*)ProfAclSubscribe},
+    {"ProfAclUnSubscribe", (void*)ProfAclUnSubscribe},
+    {"ProfOpSubscribe", (void*)ProfOpSubscribe},
+    {"ProfOpUnSubscribe", (void*)ProfOpUnSubscribe},
+    {"ProfAclDrvGetDevNum", (void*)ProfAclDrvGetDevNum},
+    {"ProfAclGetOpTime", (void*)ProfAclGetOpTime},
+    {"ProfAclGetId", (void*)ProfAclGetId},
+    {"ProfAclGetOpVal", (void*)ProfAclGetOpVal},
+    {"ProfGetOpExecutionTime", (void*)ProfGetOpExecutionTime},
+    {"ProfAclGetOpAttriVal", (void*)ProfAclGetOpAttriVal},
+    {"ProfCreateParsertransport", (void*)ProfCreateParsertransport},
+    {"ProfRegisterTransport", (void*)ProfRegisterTransport},
+    {"acltoolInitialize", (void*)acltoolInitialize},
+    {"halGetAPIVersion", (void*)halGetAPIVersion},
+    {"drvGetDeviceSplitMode", (void*)drvGetDeviceSplitMode},
+    {"halGetDeviceInfoByBuff", (void*)halGetDeviceInfoByBuff},
+    {"halEschedQueryInfo", (void*)halEschedQueryInfo},
+    {"halEschedCreateGrpEx", (void*)halEschedCreateGrpEx},
     // MsprofDrvApi 通过 dlopen/dlsym 动态加载以下 DVVP 主路径驱动符号，
     // 由 device_drv_prof_stub.cpp 提供模拟实现，注册到桩表后 dlsym 才能命中。
-    {"drvGetDevNum", (void *)drvGetDevNum},
-    {"drvGetDevIDs", (void *)drvGetDevIDs},
-    {"drvGetPlatformInfo", (void *)drvGetPlatformInfo},
-    {"drvDeviceStatus", (void *)drvDeviceStatus},
-    {"halGetDeviceInfo", (void *)halGetDeviceInfo},
-    {"prof_drv_get_channels", (void *)prof_drv_get_channels},
-    {"prof_drv_start", (void *)prof_drv_start},
-    {"prof_stop", (void *)prof_stop},
-    {"prof_channel_read", (void *)prof_channel_read},
-    {"prof_channel_poll", (void *)prof_channel_poll},
-    {"halProfDataFlush", (void *)halProfDataFlush},
-    {"drvDeviceGetPhyIdByIndex", (void *)drvDeviceGetPhyIdByIndex},
-    {"halEschedSubmitEvent", (void *)halEschedSubmitEvent},
-    {"halProfSampleRegister", (void *)halProfSampleRegister},
-    {"halProfSampleRegisterEx", (void *)halProfSampleRegisterEx},
-    {"halProfQueryAvailBufLen", (void *)halProfQueryAvailBufLen},
-    {"halProfSampleDataReport", (void *)halProfSampleDataReport},
+    {"drvGetDevNum", (void*)drvGetDevNum},
+    {"drvGetDevIDs", (void*)drvGetDevIDs},
+    {"drvGetPlatformInfo", (void*)drvGetPlatformInfo},
+    {"drvDeviceStatus", (void*)drvDeviceStatus},
+    {"halGetDeviceInfo", (void*)halGetDeviceInfo},
+    {"prof_drv_get_channels", (void*)prof_drv_get_channels},
+    {"prof_drv_start", (void*)prof_drv_start},
+    {"prof_stop", (void*)prof_stop},
+    {"prof_channel_read", (void*)prof_channel_read},
+    {"prof_channel_poll", (void*)prof_channel_poll},
+    {"halProfDataFlush", (void*)halProfDataFlush},
+    {"drvDeviceGetPhyIdByIndex", (void*)drvDeviceGetPhyIdByIndex},
+    {"halEschedSubmitEvent", (void*)halEschedSubmitEvent},
+    {"halProfSampleRegister", (void*)halProfSampleRegister},
+    {"halProfSampleRegisterEx", (void*)halProfSampleRegisterEx},
+    {"halProfQueryAvailBufLen", (void*)halProfQueryAvailBufLen},
+    {"halProfSampleDataReport", (void*)halProfSampleDataReport},
     // drv event 线程路径的 5 个符号：随修复改为经 MsprofDrvApi dlopen/dlsym 调用，
     // 需注册到桩表，否则 dlsym 命中不到会降级导致 aicpu 采集路径异常。
-    {"halEschedAttachDevice", (void *)halEschedAttachDevice},
-    {"halEschedDettachDevice", (void *)halEschedDettachDevice},
-    {"halEschedSubscribeEvent", (void *)halEschedSubscribeEvent},
-    {"halQueryDevpid", (void *)halQueryDevpid},
-    {"halEschedWaitEvent", (void *)halEschedWaitEvent},
-    {"rtProfilerTraceEx", (void *)rtProfilerTraceExStub},
-    {"MsprofStart", (void *)MsprofStart},
-    {"MsprofStop", (void *)MsprofStop}
-};
+    {"halEschedAttachDevice", (void*)halEschedAttachDevice},
+    {"halEschedDettachDevice", (void*)halEschedDettachDevice},
+    {"halEschedSubscribeEvent", (void*)halEschedSubscribeEvent},
+    {"halQueryDevpid", (void*)halQueryDevpid},
+    {"halEschedWaitEvent", (void*)halEschedWaitEvent},
+    {"rtProfilerTraceEx", (void*)rtProfilerTraceExStub},
+    {"MsprofStart", (void*)MsprofStart},
+    {"MsprofStop", (void*)MsprofStop}};
 
-
-void *mmDlsym(void *handle, const char* funcName)
+void* mmDlsym(void* handle, const char* funcName)
 {
     auto it = g_map.find(funcName);
     if (it != g_map.end()) {
@@ -169,22 +172,15 @@ void *mmDlsym(void *handle, const char* funcName)
     return nullptr;
 }
 
-char *mmDlerror(void)
-{
-    return nullptr;
-}
+char* mmDlerror(void) { return nullptr; }
 
-void * mmDlopen(const char *fileName, int mode)
+void* mmDlopen(const char* fileName, int mode)
 {
-    if (strcmp(fileName, "libprofimpl.so") == 0 ||
-        strcmp(fileName, "libascend_hal.so") == 0 ||
-        strcmp(fileName, "libruntime.so") == 0) {
+    if (strcmp(fileName, "libprofimpl.so") == 0 || strcmp(fileName, "libascend_hal.so") == 0 ||
+        strcmp(fileName, "libruntime.so") == 0 || strcmp(fileName, "libacl_tool_injection_stub.so") == 0) {
         return &g_handle;
     }
     return nullptr;
 }
 
-int mmDlclose(void *handle)
-{
-    return 0;
-}
+int mmDlclose(void* handle) { return 0; }

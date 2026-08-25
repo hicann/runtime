@@ -40,6 +40,7 @@ public:
     int32_t UnRegisterPipeTransportCallback();
     void RegisterTransportGenHashIdFuncPtr(HashDataGenIdFuncPtr* ptr);
     void Flush() const;
+    int32_t Flush(uint32_t timeoutSec) const;
     void CloseTransport();
     SHARED_PTR_ALIA<ITransport> GetTransport();
 

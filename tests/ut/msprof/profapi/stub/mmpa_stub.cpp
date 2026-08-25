@@ -10,14 +10,12 @@
 #include <map>
 #include <string>
 #include "mmpa_api.h"
+#include "mmpa_stub.h"
 #include "prof_inner_api.h"
 #include "acl/acl_base.h"
 #include "runtime/base.h"
 
-rtError_t rtProfilerTraceEx(uint64_t id, uint64_t modelId, uint16_t tagId, rtStream_t stm)
-{
-    return ACL_RT_SUCCESS;
-}
+rtError_t rtProfilerTraceEx(uint64_t id, uint64_t modelId, uint16_t tagId, rtStream_t stm) { return ACL_RT_SUCCESS; }
 
 rtError_t rtProfilerTraceExStub(uint64_t indexId, uint64_t modelId, uint16_t tagId, rtStream_t stm)
 {
@@ -29,27 +27,29 @@ rtError_t rtProfilerTraceExStub(uint64_t indexId, uint64_t modelId, uint16_t tag
 }
 
 int32_t g_handle;
-std::map<std::string, void*> g_map = {
+static std::map<std::string, void*> g_map = {
 #ifndef MSPROF_C
-    {"ProfAclInit", (void *)ProfAclInit},
-    {"ProfAclStart", (void *)ProfAclStart},
-    {"ProfAclStop", (void *)ProfAclStop},
-    {"ProfAclFinalize", (void *)ProfAclFinalize},
-    {"ProfAclSubscribe", (void *)ProfAclSubscribe},
-    {"ProfAclUnSubscribe", (void *)ProfAclUnSubscribe},
-    {"ProfAclDrvGetDevNum", (void *)ProfAclDrvGetDevNum},
-    {"ProfAclGetOpTime", (void *)ProfAclGetOpTime},
-    {"ProfAclGetId", (void *)ProfAclGetId},
-    {"ProfAclGetOpVal", (void *)ProfAclGetOpVal},
-    {"ProfGetOpExecutionTime", (void *)ProfGetOpExecutionTime},
-    {"ProfOpUnSubscribe", (void *)ProfOpUnSubscribe},
-    {"ProfOpSubscribe", (void *)ProfOpSubscribe},
-    {"ProfAclGetOpAttriVal", (void *)ProfAclGetOpAttriVal},
-    {"rtProfilerTraceEx", (void *)rtProfilerTraceExStub}
+    {"ProfAclInit", (void*)ProfAclInit},
+    {"ProfAclStart", (void*)ProfAclStart},
+    {"ProfAclStop", (void*)ProfAclStop},
+    {"ProfAclFinalize", (void*)ProfAclFinalize},
+    {"ProfAclSubscribe", (void*)ProfAclSubscribe},
+    {"ProfAclUnSubscribe", (void*)ProfAclUnSubscribe},
+    {"ProfAclDrvGetDevNum", (void*)ProfAclDrvGetDevNum},
+    {"ProfAclGetOpTime", (void*)ProfAclGetOpTime},
+    {"ProfAclGetId", (void*)ProfAclGetId},
+    {"ProfAclGetOpVal", (void*)ProfAclGetOpVal},
+    {"ProfGetOpExecutionTime", (void*)ProfGetOpExecutionTime},
+    {"ProfOpUnSubscribe", (void*)ProfOpUnSubscribe},
+    {"ProfOpSubscribe", (void*)ProfOpSubscribe},
+    {"ProfAclGetOpAttriVal", (void*)ProfAclGetOpAttriVal},
+    {"rtProfilerTraceEx", (void*)rtProfilerTraceExStub}
 #endif
-    };
+};
 
-void *mmDlsym(void *handle, const char *funcName)
+void RegisterMmDlsymStub(const std::string& funcName, void* func) { g_map[funcName] = func; }
+
+void* mmDlsym(void* handle, const char* funcName)
 {
     auto it = g_map.find(funcName);
     if (it != g_map.end()) {
@@ -58,21 +58,14 @@ void *mmDlsym(void *handle, const char *funcName)
     return nullptr;
 }
 
-char *mmDlerror(void)
-{
-    return nullptr;
-}
+char* mmDlerror(void) { return nullptr; }
 
-void *mmDlopen(const char *fileName, int mode)
+void* mmDlopen(const char* fileName, int mode)
 {
-    if (strcmp(fileName, "libprofimpl.so") == 0 ||
-        strcmp(fileName, "libruntime.so") == 0) {
+    if (strcmp(fileName, "libprofimpl.so") == 0 || strcmp(fileName, "libruntime.so") == 0) {
         return &g_handle;
     }
     return nullptr;
 }
 
-int mmDlclose(void *handle)
-{
-    return 0;
-}
+int mmDlclose(void* handle) { return 0; }

@@ -39,73 +39,65 @@ using namespace Analysis::Dvvp::JobWrapper;
 using namespace Analysis::Dvvp::Common::Statistics;
 
 using namespace analysis::dvvp::device;
-class DEVICE_COLLECTION_ENTRY_TEST: public testing::Test {
+class DEVICE_COLLECTION_ENTRY_TEST : public testing::Test {
 protected:
     virtual void SetUp() {}
     virtual void TearDown() {}
 };
-TEST_F(DEVICE_COLLECTION_ENTRY_TEST, Init) {
+TEST_F(DEVICE_COLLECTION_ENTRY_TEST, Init)
+{
     GlobalMockObject::verify();
-    
+
     MOCKER_CPP(&ProfChannelManager::Init)
         .stubs()
         .will(returnValue(PROFILING_FAILED))
         .then(returnValue(PROFILING_SUCCESS));
-    MOCKER(analysis::dvvp::common::utils::Utils::IsFileExist)
-        .stubs()
-        .will(returnValue(true));
+    MOCKER(analysis::dvvp::common::utils::Utils::IsFileExist).stubs().will(returnValue(true));
     auto entry = analysis::dvvp::device::CollectionEntry::instance();
     EXPECT_EQ(PROFILING_SUCCESS, entry->Init());
     GlobalMockObject::verify();
-    
-    EXPECT_EQ(PROFILING_SUCCESS, entry->Init());
 
+    EXPECT_EQ(PROFILING_SUCCESS, entry->Init());
 }
 
-TEST_F(DEVICE_COLLECTION_ENTRY_TEST, Uinit) {
+TEST_F(DEVICE_COLLECTION_ENTRY_TEST, Uinit)
+{
     GlobalMockObject::verify();
-
 
     auto entry = analysis::dvvp::device::CollectionEntry::instance();
     entry->isInited_ = true;
 
-    MOCKER(mmCreateTaskWithThreadAttr)
-        .stubs()
-        .will(returnValue(EN_OK));
-	MOCKER(mmJoinTask)
-        .stubs()
-        .will(returnValue(EN_OK));
+    MOCKER(mmCreateTaskWithThreadAttr).stubs().will(returnValue(EN_OK));
+    MOCKER(mmJoinTask).stubs().will(returnValue(EN_OK));
     entry->Init();
 
     EXPECT_EQ(PROFILING_SUCCESS, entry->Uinit());
 }
 
-TEST_F(DEVICE_COLLECTION_ENTRY_TEST, GetChannelPoller) {
-
+TEST_F(DEVICE_COLLECTION_ENTRY_TEST, GetChannelPoller)
+{
     GlobalMockObject::verify();
     auto profChannelManager = ProfChannelManager::instance();
     EXPECT_EQ(nullptr, profChannelManager->GetChannelPoller());
 }
 
-TEST_F(DEVICE_COLLECTION_ENTRY_TEST, Handle) {
+TEST_F(DEVICE_COLLECTION_ENTRY_TEST, Handle)
+{
     GlobalMockObject::verify();
 
     HDC_SESSION session = (HDC_SESSION)0x12345678;
-    auto transport = std::shared_ptr<analysis::dvvp::transport::HDCTransport>(
-            new analysis::dvvp::transport::HDCTransport(session));
+    auto transport =
+        std::shared_ptr<analysis::dvvp::transport::HDCTransport>(new analysis::dvvp::transport::HDCTransport(session));
     std::shared_ptr<PerfCount> perfCount(new PerfCount("test"));
     transport->perfCount_ = perfCount;
 
-    std::shared_ptr<analysis::dvvp::proto::JobStartReq> start(
-        new analysis::dvvp::proto::JobStartReq);
+    std::shared_ptr<analysis::dvvp::proto::JobStartReq> start(new analysis::dvvp::proto::JobStartReq);
     std::string start_buffer = analysis::dvvp::message::EncodeMessage(start);
 
-    std::shared_ptr<analysis::dvvp::proto::CtrlChannelHandshake> ctrl(
-        new analysis::dvvp::proto::CtrlChannelHandshake);
+    std::shared_ptr<analysis::dvvp::proto::CtrlChannelHandshake> ctrl(new analysis::dvvp::proto::CtrlChannelHandshake);
     std::string ctrl_buffer = analysis::dvvp::message::EncodeMessage(ctrl);
 
-    std::shared_ptr<analysis::dvvp::proto::DataChannelHandshake> data(
-        new analysis::dvvp::proto::DataChannelHandshake);
+    std::shared_ptr<analysis::dvvp::proto::DataChannelHandshake> data(new analysis::dvvp::proto::DataChannelHandshake);
     std::string data_buffer = analysis::dvvp::message::EncodeMessage(data);
 
     std::string non_message("123456");
@@ -120,8 +112,9 @@ TEST_F(DEVICE_COLLECTION_ENTRY_TEST, Handle) {
         .will(returnValue(PROFILING_FAILED))
         .then(returnValue(PROFILING_SUCCESS));
 
-    MOCKER_CPP_VIRTUAL(*transport.get(), &analysis::dvvp::transport::HDCTransport::SendBuffer,
-        int(analysis::dvvp::transport::HDCTransport::*)(const void *, int))
+    MOCKER_CPP_VIRTUAL(
+        *transport.get(), &analysis::dvvp::transport::HDCTransport::SendBuffer,
+        int(analysis::dvvp::transport::HDCTransport::*)(const void*, int))
         .stubs()
         .will(returnValue(PROFILING_FAILED));
 
@@ -139,43 +132,38 @@ TEST_F(DEVICE_COLLECTION_ENTRY_TEST, Handle) {
     EXPECT_EQ(PROFILING_SUCCESS, entry->Handle(transport, data_buffer, 0));
 }
 
-TEST_F(DEVICE_COLLECTION_ENTRY_TEST, HandleCtrlSession) {
+TEST_F(DEVICE_COLLECTION_ENTRY_TEST, HandleCtrlSession)
+{
     GlobalMockObject::verify();
 
     HDC_SESSION session = (HDC_SESSION)0x12345678;
-    auto transport = std::shared_ptr<analysis::dvvp::transport::HDCTransport>(
-            new analysis::dvvp::transport::HDCTransport(session));
-    std::shared_ptr<analysis::dvvp::device::Receiver> receiver(
-        new analysis::dvvp::device::Receiver(transport));
+    auto transport =
+        std::shared_ptr<analysis::dvvp::transport::HDCTransport>(new analysis::dvvp::transport::HDCTransport(session));
+    std::shared_ptr<analysis::dvvp::device::Receiver> receiver(new analysis::dvvp::device::Receiver(transport));
 
-    std::shared_ptr<analysis::dvvp::proto::CtrlChannelHandshake> ctrl(
-        new analysis::dvvp::proto::CtrlChannelHandshake);
+    std::shared_ptr<analysis::dvvp::proto::CtrlChannelHandshake> ctrl(new analysis::dvvp::proto::CtrlChannelHandshake);
 
     MOCKER_CPP(&analysis::dvvp::device::Receiver::Init)
         .stubs()
         .will(returnValue(PROFILING_FAILED))
         .then(returnValue(PROFILING_SUCCESS));
 
-    //MOCKER_CPP(&analysis::dvvp::common::thread::Thread::Start)
-    //    .stubs()
-    //    .will(returnValue(PROFILING_SUCCESS));
-    MOCKER(mmCreateTaskWithThreadAttr)
-        .stubs()
-        .will(returnValue(EN_OK));
-	
+    // MOCKER_CPP(&analysis::dvvp::common::thread::Thread::Start)
+    //     .stubs()
+    //     .will(returnValue(PROFILING_SUCCESS));
+    MOCKER(mmCreateTaskWithThreadAttr).stubs().will(returnValue(EN_OK));
 
-    MOCKER_CPP(&analysis::dvvp::common::thread::Thread::Join)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&analysis::dvvp::common::thread::Thread::Join).stubs().will(returnValue(PROFILING_SUCCESS));
 
-    MOCKER_CPP_VIRTUAL(*transport.get(), &analysis::dvvp::transport::HDCTransport::SendBuffer,
-        int(analysis::dvvp::transport::HDCTransport::*)(const void *, int))
+    MOCKER_CPP_VIRTUAL(
+        *transport.get(), &analysis::dvvp::transport::HDCTransport::SendBuffer,
+        int(analysis::dvvp::transport::HDCTransport::*)(const void*, int))
         .stubs()
         .will(returnValue(PROFILING_FAILED));
 
     auto entry = analysis::dvvp::device::CollectionEntry::instance();
 
-     MOCKER(analysis::dvvp::common::utils::Utils::CheckStringIsNonNegativeIntNum)
+    MOCKER(analysis::dvvp::common::utils::Utils::CheckStringIsNonNegativeIntNum)
         .stubs()
         .will(returnValue(false))
         .then(returnValue(true))
@@ -187,32 +175,30 @@ TEST_F(DEVICE_COLLECTION_ENTRY_TEST, HandleCtrlSession) {
     EXPECT_EQ(PROFILING_SUCCESS, entry->HandleCtrlSession(receiver, ctrl, status_info, 0));
 }
 
-TEST_F(DEVICE_COLLECTION_ENTRY_TEST, HandleDataSession) {
+TEST_F(DEVICE_COLLECTION_ENTRY_TEST, HandleDataSession)
+{
     GlobalMockObject::verify();
 
     HDC_SESSION session = (HDC_SESSION)0x12345678;
-    auto transport = std::shared_ptr<analysis::dvvp::transport::HDCTransport>(
-            new analysis::dvvp::transport::HDCTransport(session));
-    std::shared_ptr<analysis::dvvp::transport::Uploader> uploader(
-        new analysis::dvvp::transport::Uploader(transport));
+    auto transport =
+        std::shared_ptr<analysis::dvvp::transport::HDCTransport>(new analysis::dvvp::transport::HDCTransport(session));
+    std::shared_ptr<analysis::dvvp::transport::Uploader> uploader(new analysis::dvvp::transport::Uploader(transport));
 
-    std::shared_ptr<analysis::dvvp::proto::DataChannelHandshake> data(
-        new analysis::dvvp::proto::DataChannelHandshake);
+    std::shared_ptr<analysis::dvvp::proto::DataChannelHandshake> data(new analysis::dvvp::proto::DataChannelHandshake);
 
     MOCKER_CPP(&analysis::dvvp::transport::Uploader::Init)
         .stubs()
         .will(returnValue(PROFILING_FAILED))
         .then(returnValue(PROFILING_SUCCESS));
 
-    //MOCKER_CPP(&analysis::dvvp::common::thread::Thread::Start)
-    //    .stubs()
-    //    .will(returnValue(PROFILING_SUCCESS));
-    MOCKER(mmCreateTaskWithThreadAttr)
-        .stubs()
-        .will(returnValue(EN_OK));
+    // MOCKER_CPP(&analysis::dvvp::common::thread::Thread::Start)
+    //     .stubs()
+    //     .will(returnValue(PROFILING_SUCCESS));
+    MOCKER(mmCreateTaskWithThreadAttr).stubs().will(returnValue(EN_OK));
 
-    MOCKER_CPP_VIRTUAL(*transport.get(), &analysis::dvvp::transport::HDCTransport::SendBuffer,
-        int(analysis::dvvp::transport::HDCTransport::*)(const void *, int))
+    MOCKER_CPP_VIRTUAL(
+        *transport.get(), &analysis::dvvp::transport::HDCTransport::SendBuffer,
+        int(analysis::dvvp::transport::HDCTransport::*)(const void*, int))
         .stubs()
         .will(returnValue(PROFILING_FAILED));
 
@@ -222,18 +208,20 @@ TEST_F(DEVICE_COLLECTION_ENTRY_TEST, HandleDataSession) {
     EXPECT_EQ(PROFILING_FAILED, entry->HandleDataSession(uploader, data, 0));
 }
 
-TEST_F(DEVICE_COLLECTION_ENTRY_TEST, FinishCollection) {
+TEST_F(DEVICE_COLLECTION_ENTRY_TEST, FinishCollection)
+{
     GlobalMockObject::verify();
-    MOCKER_CPP(&analysis::dvvp::transport::Uploader::Flush)
+    using UploaderFlushFunc = void (analysis::dvvp::transport::Uploader::*)() const;
+    MOCKER_CPP(static_cast<UploaderFlushFunc>(&analysis::dvvp::transport::Uploader::Flush))
         .stubs()
         .will(returnValue(PROFILING_SUCCESS));
     auto entry = analysis::dvvp::device::CollectionEntry::instance();
 
     HDC_SESSION session = (HDC_SESSION)0x12345678;
-    auto transport = std::shared_ptr<analysis::dvvp::transport::HDCTransport>(
-            new analysis::dvvp::transport::HDCTransport(session));
-    auto uploader = std::shared_ptr<analysis::dvvp::transport::Uploader>(
-            new analysis::dvvp::transport::Uploader(transport));
+    auto transport =
+        std::shared_ptr<analysis::dvvp::transport::HDCTransport>(new analysis::dvvp::transport::HDCTransport(session));
+    auto uploader =
+        std::shared_ptr<analysis::dvvp::transport::Uploader>(new analysis::dvvp::transport::Uploader(transport));
     analysis::dvvp::transport::UploaderMgr::instance()->AddUploader("0", uploader);
     analysis::dvvp::message::JobContext job_ctx;
     job_ctx.dev_id = "0";
@@ -245,21 +233,21 @@ TEST_F(DEVICE_COLLECTION_ENTRY_TEST, FinishCollection) {
     EXPECT_EQ(PROFILING_SUCCESS, entry->FinishCollection(0, job_ctx.ToString()));
 }
 
-TEST_F(DEVICE_COLLECTION_ENTRY_TEST, destrcutor) {
+TEST_F(DEVICE_COLLECTION_ENTRY_TEST, destrcutor)
+{
     GlobalMockObject::verify();
 
-    std::shared_ptr<analysis::dvvp::device::CollectionEntry> entry(
-        new analysis::dvvp::device::CollectionEntry());
+    std::shared_ptr<analysis::dvvp::device::CollectionEntry> entry(new analysis::dvvp::device::CollectionEntry());
     entry->isInited_ = false;
     EXPECT_EQ(PROFILING_SUCCESS, entry->Uinit());
     entry.reset();
 }
 
-TEST_F(DEVICE_COLLECTION_ENTRY_TEST, SendMsgByDevId) {
+TEST_F(DEVICE_COLLECTION_ENTRY_TEST, SendMsgByDevId)
+{
     GlobalMockObject::verify();
 
-    std::shared_ptr<analysis::dvvp::device::CollectionEntry> entry(
-        new analysis::dvvp::device::CollectionEntry());
+    std::shared_ptr<analysis::dvvp::device::CollectionEntry> entry(new analysis::dvvp::device::CollectionEntry());
 
     EXPECT_EQ(PROFILING_FAILED, entry->SendMsgByDevId("1231", 0, nullptr));
 }

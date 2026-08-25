@@ -30,6 +30,7 @@ namespace Msprofiler {
 namespace Api {
 using namespace analysis::dvvp::common::utils;
 
+// clang-format off
 enum class ProfConfigType {
     PROF_CONFIG_COMMAND_LINE = 0,
     PROF_CONFIG_ACL_JSON = 1,
@@ -38,6 +39,7 @@ enum class ProfConfigType {
     PROF_CONFIG_PURE_CPU = 5,
     PROF_CONFIG_ACL_API = 6,
     PROF_CONFIG_ACL_SUBSCRIBE = 7,
+    PROF_CONFIG_COMPUTE = 8,
     PROF_CONFIG_DYNAMIC = 0xFF,
 };
 

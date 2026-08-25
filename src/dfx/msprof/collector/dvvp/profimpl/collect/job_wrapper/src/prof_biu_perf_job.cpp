@@ -22,7 +22,7 @@ using namespace analysis::dvvp::common::error;
 using namespace Analysis::Dvvp::Common::Platform;
 using BiuPerfChannelInfo = ::Dvvp::Collect::Platform::BiuPerfChannelInfo;
 
-ProfBiuPerfJob::ProfBiuPerfJob() : groupNum_(BIU_PERF_LOWER_GROUP_NUM), biuPcSamplingMode_(0) {}
+ProfBiuPerfJob::ProfBiuPerfJob() : groupNum_(BIU_PERF_LOWER_GROUP_NUM), biuPcSamplingMode_(BIU_PERF_MONITOR_MODE) {}
 
 ProfBiuPerfJob::~ProfBiuPerfJob() {}
 
@@ -37,18 +37,29 @@ int32_t ProfBiuPerfJob::Init(const SHARED_PTR_ALIA<CollectionJobCfg> cfg)
         return PROFILING_FAILED;
     }
 
-    if ((cfg->comParams->params->instrProfiling.compare(MSVP_PROF_ON) != 0) &&
-        (cfg->comParams->params->pcSampling.compare(MSVP_PROF_ON) != 0)) {
+    const bool instrEnabled = (cfg->comParams->params->instrProfiling.compare(MSVP_PROF_ON) == 0);
+    const bool pcSamplingEnabled = (cfg->comParams->params->pcSampling.compare(MSVP_PROF_ON) == 0);
+    if (!instrEnabled && !pcSamplingEnabled) {
         MSPROF_LOGI("Biu perf job is not enabled.");
         return PROFILING_FAILED;
     }
 
-    if (cfg->comParams->params->pcSampling.compare(MSVP_PROF_ON) == 0) {
-        biuPcSamplingMode_ = 1;
+    if (cfg->jobParams.biuPcSamplingMode == BIU_PERF_MONITOR_MODE && !instrEnabled) {
+        MSPROF_LOGI("Biu perf monitor job is not enabled.");
+        return PROFILING_FAILED;
+    }
+    if (cfg->jobParams.biuPcSamplingMode == PC_SAMPLING_MODE && !pcSamplingEnabled) {
+        MSPROF_LOGI("Pc sampling job is not enabled.");
+        return PROFILING_FAILED;
+    }
+
+    if (cfg->jobParams.biuPcSamplingMode == PC_SAMPLING_MODE ||
+        (cfg->jobParams.biuPcSamplingMode == BIU_PC_SAMPLING_AUTO_MODE && pcSamplingEnabled)) {
+        biuPcSamplingMode_ = PC_SAMPLING_MODE;
         profBiuPerfJobName_ = "pc_sampling_";
         MSPROF_LOGI("Biu perf job is pc sampling.");
     } else {
-        biuPcSamplingMode_ = 0;
+        biuPcSamplingMode_ = BIU_PERF_MONITOR_MODE;
         profBiuPerfJobName_ = "biu_perf_";
         MSPROF_LOGI("Biu perf job is perf monitor.");
     }
@@ -94,7 +105,7 @@ uint32_t ProfBiuPerfJob::GenGroupVector(int64_t aiCoreNum)
 
 std::vector<BiuPerfChannelInfo> ProfBiuPerfJob::GetBiuChannelInfos() const
 {
-    if (biuPcSamplingMode_ == 0) {
+    if (biuPcSamplingMode_ == BIU_PERF_MONITOR_MODE) {
         auto platformChannelInfos = Platform::instance()->GetBiuPerfChannelInfos(groupVector_, groupNum_);
         if (!platformChannelInfos.empty()) {
             return platformChannelInfos;
@@ -104,7 +115,7 @@ std::vector<BiuPerfChannelInfo> ProfBiuPerfJob::GetBiuChannelInfos() const
     std::vector<BiuPerfChannelInfo> channelInfos;
     for (uint32_t groupId = 0; groupId < groupNum_; groupId++) {
         for (uint32_t groupType = 0; groupType < INSTR_PROFILING_GROUP_CHANNEL_NUM; groupType++) {
-            if (biuPcSamplingMode_ == 1 && groupType == 0) {
+            if (biuPcSamplingMode_ == PC_SAMPLING_MODE && groupType == 0) {
                 continue;
             }
             channelInfos.push_back(

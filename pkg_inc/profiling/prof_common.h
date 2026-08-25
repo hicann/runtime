@@ -23,12 +23,12 @@
 extern "C" {
 #endif // __cplusplus
 
-#define MSPROF_DATA_HEAD_MAGIC_NUM  0x5A5AU
-#define MSPROF_TASK_TIME_L0 0x00000800ULL  // mean PROF_TASK_TIME
+#define MSPROF_DATA_HEAD_MAGIC_NUM 0x5A5AU
+#define MSPROF_TASK_TIME_L0 0x00000800ULL // mean PROF_TASK_TIME
 typedef const void* ConstVoidPtr;
 typedef int32_t (*MsprofSetDeviceHandle)(VOID_PTR data, uint32_t len);
-typedef int32_t (*MsprofCtrlCallback)(uint32_t type, void *data, uint32_t len);
-typedef int32_t (*MsprofReporterCallback)(uint32_t moduleId, uint32_t type, void *data, uint32_t len);
+typedef int32_t (*MsprofCtrlCallback)(uint32_t type, void* data, uint32_t len);
+typedef int32_t (*MsprofReporterCallback)(uint32_t moduleId, uint32_t type, void* data, uint32_t len);
 
 enum ProfileCallbackType {
     PROFILE_CTRL_CALLBACK = 0,
@@ -60,14 +60,14 @@ enum MsprofDataTag {
     MSPROF_GE_DATA_TAG_STEP = 25,
     MSPROF_GE_DATA_TAG_ID_MAP = 26,
     MSPROF_GE_DATA_TAG_HOST_SCH = 27,
-    MSPROF_RUNTIME_DATA_TAG_API = 40,   // runtime data tag, range: 40~59
+    MSPROF_RUNTIME_DATA_TAG_API = 40, // runtime data tag, range: 40~59
     MSPROF_RUNTIME_DATA_TAG_TRACK = 41,
-    MSPROF_AICPU_DATA_TAG = 60,         // aicpu data tag, range: 60~79
+    MSPROF_AICPU_DATA_TAG = 60,       // aicpu data tag, range: 60~79
     MSPROF_AICPU_MODEL_TAG = 61,
-    MSPROF_HCCL_DATA_TAG = 80,          // hccl data tag, range: 80~99
-    MSPROF_DP_DATA_TAG = 100,           // dp data tag, range: 100~119
-    MSPROF_MSPROFTX_DATA_TAG = 120,     // hccl data tag, range: 120~139
-    MSPROF_DATA_TAG_MAX = 65536,        // data tag value type is uint16_t
+    MSPROF_HCCL_DATA_TAG = 80,        // hccl data tag, range: 80~99
+    MSPROF_DP_DATA_TAG = 100,         // dp data tag, range: 100~119
+    MSPROF_MSPROFTX_DATA_TAG = 120,   // hccl data tag, range: 120~139
+    MSPROF_DATA_TAG_MAX = 65536,      // data tag value type is uint16_t
 };
 
 enum MsprofMindsporeNodeTag {
@@ -84,7 +84,7 @@ enum MsprofMixDataType {
     MSPROF_MIX_DATA_STRING,
 };
 struct MsprofMixData {
-    uint8_t type;  // MsprofMixDataType
+    uint8_t type; // MsprofMixDataType
     uint8_t rsv[MSPROF_MIX_DATA_RESERVE_BYTES];
     union {
         uint64_t hashId;
@@ -95,8 +95,31 @@ struct MsprofMixData {
 /**
  * @brief profiling MsprofStart config
  */
-#define  MAX_DUMP_PATH_LEN 1024
-#define  MAX_SAMPLE_CONFIG_LEN 4096
+#define MAX_DUMP_PATH_LEN 1024
+#define MAX_SAMPLE_CONFIG_LEN 4096
+#define COMPUTE_AICORE_METRICS_NUM 10
+#define MSPROF_INVALID_AICORE_METRIC UINT32_MAX
+#define MSPROF_CONFIG_ATTR_MAX_NUM 16
+
+enum MsprofConfigAttrId { PROF_CONFIG_ATTR_AICORE_METRICS = 0, PROF_CONFIG_ATTR_INSTR = 1 };
+
+enum MsprofComputeInstrMode { PROF_COMPUTE_BIU_PERF = 1, PROF_COMPUTE_PC_SAMPLING = 2 };
+
+union MsprofConfigAttrValue {
+    uint32_t aicoreMetrics[COMPUTE_AICORE_METRICS_NUM];
+    uint32_t instrMode;
+};
+
+struct MsprofConfigAttr {
+    uint32_t id;
+    union MsprofConfigAttrValue value;
+};
+
+struct MsprofConfigInfo {
+    size_t numAttrs;
+    const struct MsprofConfigAttr* attrs;
+};
+
 struct MsprofConfig {
     uint64_t profSwitch;
     uint64_t profSwitchHi;
@@ -110,6 +133,7 @@ struct MsprofConfig {
     uintptr_t fd;
     char dumpPath[MAX_DUMP_PATH_LEN];
     char sampleConfig[MAX_SAMPLE_CONFIG_LEN];
+    struct MsprofConfigInfo configInfo;
 };
 
 /**
@@ -131,13 +155,13 @@ struct MsprofAclProfData {
     uint16_t magicNumber;
     uint16_t dataTag;
 #endif
-    uint32_t apiType;       // enum MsprofAclApiType
+    uint32_t apiType; // enum MsprofAclApiType
     uint64_t beginTime;
     uint64_t endTime;
     uint32_t processId;
     uint32_t threadId;
     char apiName[MSPROF_ACL_API_NAME_LEN];
-    uint8_t  reserve[MSPROF_ACL_DATA_RESERVE_BYTES];
+    uint8_t reserve[MSPROF_ACL_DATA_RESERVE_BYTES];
 };
 
 /**
@@ -156,7 +180,7 @@ struct MsprofGeProfModelLoadData {
     struct MsprofMixData modelName;
     uint64_t startTime;
     uint64_t endTime;
-    uint8_t  reserve[MSPROF_GE_MODELLOAD_DATA_RESERVE_BYTES];
+    uint8_t reserve[MSPROF_GE_MODELLOAD_DATA_RESERVE_BYTES];
 };
 
 #define MSPROF_GE_FUSION_DATA_RESERVE_BYTES 8
@@ -178,7 +202,7 @@ struct MsprofGeProfFusionData {
     uint64_t totalMemSize;
     uint64_t fusionOpNum;
     uint64_t fusionOp[MSPROF_GE_FUSION_OP_NUM];
-    uint8_t  reserve[MSPROF_GE_FUSION_DATA_RESERVE_BYTES];
+    uint8_t reserve[MSPROF_GE_FUSION_DATA_RESERVE_BYTES];
 };
 
 #define MSPROF_GE_INFER_DATA_RESERVE_BYTES 64
@@ -200,7 +224,7 @@ struct MsprofGeProfInferData {
     uint64_t inferEndTime;
     uint64_t outputDataStartTime;
     uint64_t outputDataEndTime;
-    uint8_t  reserve[MSPROF_GE_INFER_DATA_RESERVE_BYTES];
+    uint8_t reserve[MSPROF_GE_INFER_DATA_RESERVE_BYTES];
 };
 
 #define MSPROF_GE_TASK_DATA_RESERVE_BYTES 12
@@ -211,7 +235,7 @@ enum MsprofGeShapeType {
     MSPROF_GE_SHAPE_TYPE_DYNAMIC,
 };
 struct MsprofGeOpType {
-    uint8_t type;  // MsprofMixDataType
+    uint8_t type; // MsprofMixDataType
     uint8_t rsv[MSPROF_MIX_DATA_RESERVE_BYTES];
     union {
         uint64_t hashId;
@@ -226,24 +250,24 @@ struct MsprofGeProfTaskData {
     uint16_t magicNumber;
     uint16_t dataTag;
 #endif
-    uint32_t taskType;      // MsprofGeTaskType
+    uint32_t taskType; // MsprofGeTaskType
     struct MsprofMixData opName;
     struct MsprofGeOpType opType;
     uint64_t curIterNum;
     uint64_t timeStamp;
-    uint32_t shapeType;     // MsprofGeShapeType
+    uint32_t shapeType; // MsprofGeShapeType
     uint32_t blockDims;
     uint32_t modelId;
     uint32_t streamId;
     uint32_t taskId;
     uint32_t threadId;
     uint32_t contextId;
-    uint8_t  reserve[MSPROF_GE_TASK_DATA_RESERVE_BYTES];
+    uint8_t reserve[MSPROF_GE_TASK_DATA_RESERVE_BYTES];
 };
 
 #define MSPROF_GE_TENSOR_DATA_RESERVE_BYTES 8
 struct MsprofGeTensorData {
-    uint32_t tensorType;    // MsprofGeTensorType
+    uint32_t tensorType; // MsprofGeTensorType
     uint32_t format;
     uint32_t dataType;
     uint32_t shape[MSPROF_GE_TENSOR_DATA_SHAPE_LEN];
@@ -263,7 +287,7 @@ struct MsprofGeProfTensorData {
     uint32_t taskId;
     uint32_t tensorNum;
     struct MsprofGeTensorData tensorData[MSPROF_GE_TENSOR_DATA_NUM];
-    uint8_t  reserve[MSPROF_GE_TENSOR_DATA_RESERVE_BYTES];
+    uint8_t reserve[MSPROF_GE_TENSOR_DATA_RESERVE_BYTES];
 };
 
 #define MSPROF_GE_STEP_DATA_RESERVE_BYTES 27
@@ -285,8 +309,8 @@ struct MsprofGeProfStepData {
     uint64_t timeStamp;
     uint64_t curIterNum;
     uint32_t threadId;
-    uint8_t  tag;           // MsprofGeStepTag
-    uint8_t  reserve[MSPROF_GE_STEP_DATA_RESERVE_BYTES];
+    uint8_t tag; // MsprofGeStepTag
+    uint8_t reserve[MSPROF_GE_STEP_DATA_RESERVE_BYTES];
 };
 
 #define MSPROF_GE_ID_MAP_DATA_RESERVE_BYTES 6
@@ -303,7 +327,7 @@ struct MsprofGeProfIdMapData {
     uint32_t sessionId;
     uint64_t timeStamp;
     uint16_t mode;
-    uint8_t  reserve[MSPROF_GE_ID_MAP_DATA_RESERVE_BYTES];
+    uint8_t reserve[MSPROF_GE_ID_MAP_DATA_RESERVE_BYTES];
 };
 
 #define MSPROF_GE_HOST_SCH_DATA_RESERVE_BYTES 24
@@ -315,12 +339,12 @@ struct MsprofGeProfHostSchData {
     uint16_t magicNumber;
     uint16_t dataTag;
 #endif
-    uint32_t threadId;      // record in start event
+    uint32_t threadId; // record in start event
     uint64_t element;
     uint64_t event;
-    uint64_t startTime;     // record in start event
-    uint64_t endTime;       // record in end event
-    uint8_t  reserve[MSPROF_GE_HOST_SCH_DATA_RESERVE_BYTES];
+    uint64_t startTime; // record in start event
+    uint64_t endTime;   // record in end event
+    uint8_t reserve[MSPROF_GE_HOST_SCH_DATA_RESERVE_BYTES];
 };
 
 /**
@@ -354,8 +378,8 @@ struct MsprofAicpuProfData {
     uint32_t dispatchTime;
     uint32_t totalTime;
     uint16_t fftsThreadId;
-    uint8_t  version;
-    uint8_t  reserve[MSPROF_AICPU_DATA_RESERVE_BYTES];
+    uint8_t version;
+    uint8_t reserve[MSPROF_AICPU_DATA_RESERVE_BYTES];
 };
 
 struct MsprofAicpuModelProfData {
@@ -366,14 +390,14 @@ struct MsprofAicpuModelProfData {
     uint16_t magicNumber;
     uint16_t dataTag;
 #endif
-    uint32_t rsv;   // Ensure 8-byte alignment
+    uint32_t rsv; // Ensure 8-byte alignment
     uint64_t timeStamp;
     uint64_t indexId;
     uint32_t modelId;
     uint16_t tagId;
     uint16_t rsv1;
     uint64_t eventId;
-    uint8_t  reserve[24];
+    uint8_t reserve[24];
 };
 
 /**
@@ -391,13 +415,13 @@ struct MsprofDpProfData {
     uint16_t magicNumber;
     uint16_t dataTag;
 #endif
-    uint32_t rsv;   // Ensure 8-byte alignment
+    uint32_t rsv; // Ensure 8-byte alignment
     uint64_t timeStamp;
     char action[MSPROF_DP_DATA_ACTION_LEN];
     char source[MSPROF_DP_DATA_SOURCE_LEN];
     uint64_t index;
     uint64_t size;
-    uint8_t  reserve[MSPROF_DP_DATA_RESERVE_BYTES];
+    uint8_t reserve[MSPROF_DP_DATA_RESERVE_BYTES];
 };
 
 struct MsprofAicpuNodeAdditionalData {
@@ -442,7 +466,7 @@ struct MsprofAicpuDpAdditionalData {
 };
 
 struct MsprofAicpuMiAdditionalData {
-    uint32_t nodeTag;  // MsprofMindsporeNodeTag:1
+    uint32_t nodeTag; // MsprofMindsporeNodeTag:1
     uint32_t reserve;
     uint64_t queueSize;
     uint64_t runStartTime;
@@ -451,53 +475,53 @@ struct MsprofAicpuMiAdditionalData {
 
 // AICPU kfc算子执行时间
 struct AicpuKfcProfCommTurn {
-    uint64_t serverStartTime;      // 进入KFC流程
-    uint64_t waitMsgStartTime;     // 开始等待客户端消息
-    uint64_t kfcAlgExeStartTime;   // 开始通信算法执行
-    uint64_t sendTaskStartTime;    // 开始下发task
-    uint64_t sendSqeFinishTime;    // task下发完成
-    uint64_t rtsqExeEndTime;       // sq执行结束时间
-    uint64_t serverEndTime;        // KFC流程结束时间
-    uint64_t dataLen;              // 本轮通信数据长度
+    uint64_t serverStartTime;    // 进入KFC流程
+    uint64_t waitMsgStartTime;   // 开始等待客户端消息
+    uint64_t kfcAlgExeStartTime; // 开始通信算法执行
+    uint64_t sendTaskStartTime;  // 开始下发task
+    uint64_t sendSqeFinishTime;  // task下发完成
+    uint64_t rtsqExeEndTime;     // sq执行结束时间
+    uint64_t serverEndTime;      // KFC流程结束时间
+    uint64_t dataLen;            // 本轮通信数据长度
     uint32_t deviceId;
     uint16_t streamId;
     uint16_t taskId;
     uint8_t version;
-    uint8_t commTurn;  // 总通信轮次
+    uint8_t commTurn; // 总通信轮次
     uint8_t currentTurn;
     uint8_t reserve[5];
 };
 
 // Aicore算子执行时间
 struct AicpuKfcProfComputeTurn {
-    uint64_t waitComputeStartTime;  // 开始等待计算
-    uint64_t computeStartTime;      // 开始计算
-    uint64_t computeExeEndTime;     // 计算执行结束
-    uint64_t dataLen;               // 本轮计算数据长度
+    uint64_t waitComputeStartTime; // 开始等待计算
+    uint64_t computeStartTime;     // 开始计算
+    uint64_t computeExeEndTime;    // 计算执行结束
+    uint64_t dataLen;              // 本轮计算数据长度
     uint32_t deviceId;
     uint16_t streamId;
     uint16_t taskId;
     uint8_t version;
-    uint8_t computeTurn;  // 总计算轮次
+    uint8_t computeTurn; // 总计算轮次
     uint8_t currentTurn;
     uint8_t reserve[5];
 };
 
 // 翻转task的上报
 struct MsporfAicpuFlipTask {
-	uint16_t  streamId;
-	uint16_t  taskId; // 值无特殊要求
-	uint32_t  flipNum;
-	uint32_t reserve[2];
+    uint16_t streamId;
+    uint16_t taskId; // 值无特殊要求
+    uint32_t flipNum;
+    uint32_t reserve[2];
 };
 
 struct MsprofAicpuHcclMainStreamTask {
     uint16_t aicpuStreamId;
-	uint16_t aicpuTaskId;
-	uint16_t streamId;
-	uint16_t taskId;
+    uint16_t aicpuTaskId;
+    uint16_t streamId;
+    uint16_t taskId;
     uint16_t type; // 0是头 1是尾
-	uint16_t reserve[3];
+    uint16_t reserve[3];
 };
 
 /**
@@ -584,19 +608,22 @@ struct MsprofHcclInfo {
     double durationEstimated;
     uint64_t srcAddr;
     uint64_t dstAddr;
-    uint64_t dataSize; // bytes
-    uint32_t opType; // {0: sum, 1: mul, 2: max, 3: min}
-    uint32_t dataType; // data type {0: INT8, 1: INT16, 2: INT32, 3: FP16, 4:FP32, 5:INT64, 6:UINT64}
-    uint32_t linkType; // link type {0: 'OnChip', 1: 'HCCS', 2: 'PCIe', 3: 'RoCE'}
+    uint64_t dataSize;      // bytes
+    uint32_t opType;        // {0: sum, 1: mul, 2: max, 3: min}
+    uint32_t dataType;      // data type {0: INT8, 1: INT16, 2: INT32, 3: FP16, 4:FP32, 5:INT64, 6:UINT64}
+    uint32_t linkType;      // link type {0: 'OnChip', 1: 'HCCS', 2: 'PCIe', 3: 'RoCE'}
     uint32_t transportType; // transport type {0: SDMA, 1: RDMA, 2:LOCAL}
-    uint32_t rdmaType; // RDMA type {0: RDMASendNotify, 1:RDMASendPayload}
+    uint32_t rdmaType;      // RDMA type {0: RDMASendNotify, 1:RDMASendPayload}
     uint32_t reserve2;
 #ifdef __cplusplus
-    MsprofHcclInfo() : role(MSPROF_HCCL_INVALID_UINT), opType(MSPROF_HCCL_INVALID_UINT),
-        dataType(MSPROF_HCCL_INVALID_UINT), linkType(MSPROF_HCCL_INVALID_UINT),
-        transportType(MSPROF_HCCL_INVALID_UINT), rdmaType(MSPROF_HCCL_INVALID_UINT)
-    {
-    }
+    MsprofHcclInfo()
+        : role(MSPROF_HCCL_INVALID_UINT),
+          opType(MSPROF_HCCL_INVALID_UINT),
+          dataType(MSPROF_HCCL_INVALID_UINT),
+          linkType(MSPROF_HCCL_INVALID_UINT),
+          transportType(MSPROF_HCCL_INVALID_UINT),
+          rdmaType(MSPROF_HCCL_INVALID_UINT)
+    {}
 #endif
 };
 
@@ -616,24 +643,24 @@ struct MsprofAicpuMC2HcclInfo {
     double durationEstimated;
     uint64_t srcAddr;
     uint64_t dstAddr;
-    uint64_t dataSize; // bytes
-    uint32_t opType; // {0: sum, 1: mul, 2: max, 3: min}
-    uint32_t dataType; // data type {0: INT8, 1: INT16, 2: INT32, 3: FP16, 4:FP32, 5:INT64, 6:UINT64}
-    uint32_t linkType; // link type {0: 'OnChip', 1: 'HCCS', 2: 'PCIe', 3: 'RoCE'}
+    uint64_t dataSize;      // bytes
+    uint32_t opType;        // {0: sum, 1: mul, 2: max, 3: min}
+    uint32_t dataType;      // data type {0: INT8, 1: INT16, 2: INT32, 3: FP16, 4:FP32, 5:INT64, 6:UINT64}
+    uint32_t linkType;      // link type {0: 'OnChip', 1: 'HCCS', 2: 'PCIe', 3: 'RoCE'}
     uint32_t transportType; // transport type {0: SDMA, 1: RDMA, 2:LOCAL}
-    uint32_t rdmaType; // RDMA type {0: RDMASendNotify, 1:RDMASendPayload}
+    uint32_t rdmaType;      // RDMA type {0: RDMASendNotify, 1:RDMASendPayload}
     uint32_t taskId;
     uint16_t streamId;
     uint16_t reserve[3];
 };
 
 struct ProfilingDeviceCommResInfo {
-    uint64_t groupName; // 通信域
-    uint32_t rankSize; // 通信域内rank总数
-    uint32_t rankId; // 当前device rankId，通信域内编号
-    uint32_t usrRankId; // 当前device rankId，全局编号
+    uint64_t groupName;        // 通信域
+    uint32_t rankSize;         // 通信域内rank总数
+    uint32_t rankId;           // 当前device rankId，通信域内编号
+    uint32_t usrRankId;        // 当前device rankId，全局编号
     uint32_t aicpuKfcStreamId; // MC2中launch aicpu kfc算子的stream
-    uint32_t commStreamSize; // 当前device侧使用的通信stream数量
+    uint32_t commStreamSize;   // 当前device侧使用的通信stream数量
     uint32_t commStreamIds[8]; // 具体streamId
     uint32_t reserve;
 };
@@ -645,22 +672,21 @@ struct MsprofMultiThread {
 };
 #pragma pack()
 
-
 #pragma pack(1)
 
 struct MsprofAicpuHCCLOPInfo {
-    uint8_t relay : 1;     // 借轨通信
-    uint8_t retry : 1;     // 重传标识
-    uint8_t dataType;      // 跟HcclDataType类型保存一致
-    uint64_t algType;      // 通信算子使用的算法,hash的key,其值是以"-"分隔的字符串
-    uint64_t count;        // 发送数据个数
-    uint64_t groupName;    // group hash id
+    uint8_t relay : 1;  // 借轨通信
+    uint8_t retry : 1;  // 重传标识
+    uint8_t dataType;   // 跟HcclDataType类型保存一致
+    uint64_t algType;   // 通信算子使用的算法,hash的key,其值是以"-"分隔的字符串
+    uint64_t count;     // 发送数据个数
+    uint64_t groupName; // group hash id
     uint32_t ranksize;
     uint16_t streamId;
     uint32_t taskId;
 };
 
-struct MsprofAicpuHcclTaskInfo{
+struct MsprofAicpuHcclTaskInfo {
     uint64_t itemId;
     uint64_t cclTag;
     uint64_t groupName;
@@ -678,25 +704,25 @@ struct MsprofAicpuHcclTaskInfo{
     uint32_t reserve;
     uint16_t streamId;
     uint16_t planeID;
-    uint8_t opType; // {0: sum, 1: mul, 2: max, 3: min}
-    uint8_t dataType; // data type {0: INT8, 1: INT16, 2: INT32, 3: FP16, 4:FP32, 5:INT64, 6:UINT64}
-    uint8_t linkType; // link type {0: 'OnChip', 1: 'HCCS', 2: 'PCIe', 3: 'RoCE'}
+    uint8_t opType;        // {0: sum, 1: mul, 2: max, 3: min}
+    uint8_t dataType;      // data type {0: INT8, 1: INT16, 2: INT32, 3: FP16, 4:FP32, 5:INT64, 6:UINT64}
+    uint8_t linkType;      // link type {0: 'OnChip', 1: 'HCCS', 2: 'PCIe', 3: 'RoCE'}
     uint8_t transportType; // transport type {0: SDMA, 1: RDMA, 2:LOCAL}
-    uint8_t rdmaType; // RDMA type {0: RDMASendNotify, 1:RDMASendPayload}
-    uint8_t role; // role {0: dst, 1:src}
+    uint8_t rdmaType;      // RDMA type {0: RDMASendNotify, 1:RDMASendPayload}
+    uint8_t role;          // role {0: dst, 1:src}
     uint8_t workFlowMode;
     uint8_t reserves[9];
 };
 
 struct ProfFusionOpInfo {
-uint64_t opName;
-uint32_t fusionOpNum;
-uint64_t inputMemsize;
-uint64_t outputMemsize;
-uint64_t weightMemSize;
-uint64_t workspaceMemSize;
-uint64_t totalMemSize;
-uint64_t fusionOpId[MSPROF_GE_FUSION_OP_NUM];
+    uint64_t opName;
+    uint32_t fusionOpNum;
+    uint64_t inputMemsize;
+    uint64_t outputMemsize;
+    uint64_t weightMemSize;
+    uint64_t workspaceMemSize;
+    uint64_t totalMemSize;
+    uint64_t fusionOpId[MSPROF_GE_FUSION_OP_NUM];
 };
 
 struct MsprofGraphIdInfo {
@@ -726,7 +752,7 @@ struct MsprofStampInfo {
     uint16_t dataTag;
     uint32_t processId;
     uint32_t threadId;
-    uint32_t category;    // marker category
+    uint32_t category; // marker category
     uint32_t eventType;
     int32_t payloadType;
     union PayloadValue {
@@ -736,7 +762,7 @@ struct MsprofStampInfo {
         uint32_t uiValue[PAYLOAD_VALUE_LEN];
         int32_t iValue[PAYLOAD_VALUE_LEN];
         float fValue[PAYLOAD_VALUE_LEN];
-    } payload;            // payload info for marker
+    } payload; // payload info for marker
     uint64_t startTime;
     uint64_t endTime;
     uint64_t markId;
@@ -747,7 +773,7 @@ struct MsprofStampInfo {
 
 #define MSPROF_TX_VALUE_MAX_LEN 224 // 224 + 8 = 232: additional data len
 struct MsprofTxInfo {
-    uint16_t infoType; // 0: Mark; 1: MarkEx
+    uint16_t infoType;              // 0: Mark; 1: MarkEx
     uint16_t res0;
     uint32_t res1;
     union {
@@ -757,13 +783,13 @@ struct MsprofTxInfo {
 };
 
 struct MsprofStaticOpMem {
-    int64_t size;        // op memory size
-    uint64_t opName;     // op name hash id
-    uint64_t lifeStart;  // serial number of op memory used
-    uint64_t lifeEnd;    // serial number of op memory used
+    int64_t size;                 // op memory size
+    uint64_t opName;              // op name hash id
+    uint64_t lifeStart;           // serial number of op memory used
+    uint64_t lifeEnd;             // serial number of op memory used
     uint64_t totalAllocateMemory; // static graph total allocate memory
-    uint64_t dynOpName;  // 0: invalid， other： dynamic op name of root
-    uint32_t graphId;    // multipe model
+    uint64_t dynOpName;           // 0: invalid， other： dynamic op name of root
+    uint32_t graphId;             // multipe model
 };
 
 #define MSPROF_PHYSIC_STREAM_ID_MAX_NUM 56
@@ -787,10 +813,10 @@ struct MsprofExeomLoadInfo {
  * @brief struct of data to report
  */
 struct ReporterData {
-    char tag[MSPROF_ENGINE_MAX_TAG_LEN + 1];  // the sub-type of the module, data with different tag will be writen
-    int32_t deviceId;                         // the index of device
-    size_t dataLen;                           // the length of send data
-    uint8_t *data;                            // the data content
+    char tag[MSPROF_ENGINE_MAX_TAG_LEN + 1]; // the sub-type of the module, data with different tag will be writen
+    int32_t deviceId;                        // the index of device
+    size_t dataLen;                          // the length of send data
+    uint8_t* data;                           // the data content
 };
 
 /**
@@ -798,15 +824,15 @@ struct ReporterData {
  * @brief struct of data to hash
  */
 struct MsprofHashData {
-    int32_t deviceId;                         // the index of device
-    size_t dataLen;                           // the length of data
-    uint8_t *data;                            // the data content
-    uint64_t hashId;                          // the id of hashed data
+    int32_t deviceId; // the index of device
+    size_t dataLen;   // the length of data
+    uint8_t* data;    // the data content
+    uint64_t hashId;  // the id of hashed data
 };
 
 enum MsprofConfigParamType {
-    DEV_CHANNEL_RESOURCE = 0,          // device channel resource
-    HELPER_HOST_SERVER                 // helper host server
+    DEV_CHANNEL_RESOURCE = 0, // device channel resource
+    HELPER_HOST_SERVER        // helper host server
 };
 
 /**
@@ -814,9 +840,9 @@ enum MsprofConfigParamType {
  * @brief struct of set config
  */
 struct MsprofConfigParam {
-    uint32_t deviceId;                        // the index of device
-    uint32_t type;                            // DEV_CHANNEL_RESOURCE; HELPER_HOST_SERVER
-    uint32_t value;                           // DEV_CHANNEL_RESOURCE: 1 off; HELPER_HOST_SERVER: 1 on
+    uint32_t deviceId; // the index of device
+    uint32_t type;     // DEV_CHANNEL_RESOURCE; HELPER_HOST_SERVER
+    uint32_t value;    // DEV_CHANNEL_RESOURCE: 1 off; HELPER_HOST_SERVER: 1 on
 };
 
 /**
@@ -824,12 +850,12 @@ struct MsprofConfigParam {
  * @brief module id of data to report
  */
 enum MsprofReporterModuleId {
-    MSPROF_MODULE_DATA_PREPROCESS = 0,    // DATA_PREPROCESS
-    MSPROF_MODULE_HCCL,                   // HCCL
-    MSPROF_MODULE_ACL,                    // AclModule
-    MSPROF_MODULE_FRAMEWORK,              // Framework
-    MSPROF_MODULE_RUNTIME,                // runtime
-    MSPROF_MODULE_MSPROF                  // msprofTx
+    MSPROF_MODULE_DATA_PREPROCESS = 0, // DATA_PREPROCESS
+    MSPROF_MODULE_HCCL,                // HCCL
+    MSPROF_MODULE_ACL,                 // AclModule
+    MSPROF_MODULE_FRAMEWORK,           // Framework
+    MSPROF_MODULE_RUNTIME,             // runtime
+    MSPROF_MODULE_MSPROF               // msprofTx
 };
 
 /**
@@ -837,23 +863,19 @@ enum MsprofReporterModuleId {
  * @brief reporter callback request type
  */
 enum MsprofReporterCallbackType {
-    MSPROF_REPORTER_REPORT = 0,           // report data
-    MSPROF_REPORTER_INIT,                 // init reporter
-    MSPROF_REPORTER_UNINIT,               // uninit reporter
-    MSPROF_REPORTER_DATA_MAX_LEN,         // data max length for calling report callback
-    MSPROF_REPORTER_HASH                  // hash data to id
+    MSPROF_REPORTER_REPORT = 0,   // report data
+    MSPROF_REPORTER_INIT,         // init reporter
+    MSPROF_REPORTER_UNINIT,       // uninit reporter
+    MSPROF_REPORTER_DATA_MAX_LEN, // data max length for calling report callback
+    MSPROF_REPORTER_HASH          // hash data to id
 };
 
-enum MsprofConfigType {
-    MSPROF_CONFIG_HELPER_HOST = 0
-};
+enum MsprofConfigType { MSPROF_CONFIG_HELPER_HOST = 0 };
 
 /**
  * @brief   Prof Chip ID
  */
-enum Prof_Chip_ID {
-    PROF_CHIP_ID0 = 0
-};
+enum Prof_Chip_ID { PROF_CHIP_ID0 = 0 };
 
 /**
  * @brief  the struct of profiling set setp info
@@ -861,7 +883,7 @@ enum Prof_Chip_ID {
 typedef struct ProfStepInfoCmd {
     uint64_t index_id;
     uint16_t tag_id;
-    void *stream;
+    void* stream;
 } ProfStepInfoCmd_t;
 
 /**
@@ -872,12 +894,17 @@ enum RawDataType {
     EVENT_DATA_TYPE = 1,
     RUNTIMETRACK_DATA_TYPE = 3,
     PMU_DATA_TYPE = 4,
-    DEFAULT_DATA_TYPE = 5
+    DEFAULT_DATA_TYPE = 5,
+    LOG_DATA_TYPE = 7,
+    BIU_PERF_DATA_TYPE = 8,
+    PC_SAMPLING_DATA_TYPE = 9
 };
 
 #define RAW_DATA_MAXSIZE (256)
 
 typedef struct {
+    // Whether this raw data is the last 256-byte slice of the current ProfileFileChunk package.
+    // This flag does not indicate the end of a channel file or profiling session.
     bool isLastChunk;
     size_t offset;
     int32_t chunkModule;
@@ -887,9 +914,9 @@ typedef struct {
     char chunk[RAW_DATA_MAXSIZE];
 } MsprofRawData;
 
-typedef int32_t(*MsprofRawDataCallback)(MsprofRawData* rawData);
+typedef int32_t (*MsprofRawDataCallback)(MsprofRawData* rawData);
 
 #ifdef __cplusplus
 }
 #endif
-#endif  // MSPROFILER_PROF_COMMON_H_
+#endif // MSPROFILER_PROF_COMMON_H_

@@ -15,6 +15,7 @@ protobuf_generate(transport_proto
 
 set(profilerSrcFiles
     ${MSPROF_SOURCE_DIR}/dvvp/transport/file_transport.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/transport/injection_transport.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profhal/adx/wrapper/adx_prof_api.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/common/config/config_manager.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/common/utils/utils.cpp
@@ -81,6 +82,7 @@ set(localSrcFiles
     test/main.cpp
     test/transport_utest.cpp
     test/uploader_utest.cpp
+    test/injection_transport_utest.cpp
     test/prof_channel_utest.cpp
     test/hash_data_test.cpp
     test/file_manager_utest.cpp

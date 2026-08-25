@@ -41,6 +41,10 @@ int32_t ProfAdprofRegisterCallback(uint32_t moduleId, ProfCommandHandle callback
 int32_t ProfAdprofGetFeatureIsOn(uint64_t feature);
 int32_t MsptiSubscribeRawData(MsprofRawDataCallback callback);
 int32_t MsptiUnSubscribeRawData();
+int32_t ProfSetInjectionFunc(uint32_t type, void* func);
+int32_t ProfInjectionInitialize();
+void* ProfGetInjectionFunc(uint32_t type);
+int32_t ProfRegisterDataCallback(uint32_t type, void* callback);
 bool ProfCheckOpSwitch(uint32_t type, const char* op, size_t len);
 
 class FinalizeGuard {

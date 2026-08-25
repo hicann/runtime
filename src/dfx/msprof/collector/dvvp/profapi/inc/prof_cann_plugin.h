@@ -1,12 +1,12 @@
 /**
- * Copyright (c) 2025 Huawei Technologies Co., Ltd.
- * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
- * CANN Open Software License Agreement Version 2.0 (the "License").
- * Please refer to the License for details. You may not use this file except in compliance with the License.
- * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
- * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
- * See LICENSE in the root of the software repository for the full text of the License.
- */
+ * Copyright (c) 2025 Huawei Technologies Co., Ltd.
+ * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
+ * CANN Open Software License Agreement Version 2.0 (the "License").
+ * Please refer to the License for details. You may not use this file except in compliance with the License.
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+ * See LICENSE in the root of the software repository for the full text of the License.
+ */
 #ifndef PROF_CANN_PLUGIN_H
 #define PROF_CANN_PLUGIN_H
 #include <vector>
@@ -51,6 +51,10 @@ using ProfGetFeatureIsOnFunc = int32_t (*)(uint64_t feature);
 using ProfImplInitMstxInjectionFunc = void (*)(const ProfRegisterMstxFuncCallback func);
 using ProfSubscribeRawDataFunc = int32_t (*)(MsprofRawDataCallback callback);
 using ProfUnSubscribeRawDataFunc = int32_t (*)();
+using ProfSetInjectionFuncFunc = int32_t (*)(uint32_t type, void* func);
+using ProfInjectionInitializeFunc = int32_t (*)();
+using ProfGetInjectionFuncFunc = void* (*)(uint32_t type);
+using ProfRegisterDataCallbackFunc = int32_t (*)(uint32_t type, void* callback);
 
 using ProfVarAddBlockBufPopFunc = void* (*)(const ProfVarAddBlockBufPopCallback func);
 using ProfVarAddBufIndexShiftFunc = void* (*)(const ProfVarAddBufIndexShiftCallBack func);
@@ -110,6 +114,10 @@ public:
     int32_t ProfAdprofCheckFeatureIsOn(uint64_t feature) const;
     int32_t ProfSubscribeRawData(MsprofRawDataCallback callback) const;
     int32_t ProfUnSubscribeRawData() const;
+    int32_t ProfSetInjectionFunc(uint32_t type, void* func);
+    int32_t ProfInjectionInitialize();
+    void* ProfGetInjectionFunc(uint32_t type);
+    int32_t ProfRegisterDataCallback(uint32_t type, void* callback);
 
     int32_t ProfSetProfCommand(VOID_PTR command, uint32_t len);
     bool ProfCheckOpSwitch(uint32_t type, const char* op, size_t len);
@@ -129,6 +137,11 @@ private:
     std::mutex envMutex_;
 
     void LoadProfApi();
+    void LoadProfCoreApi();
+    void LoadProfReportApi();
+    void LoadProfBufferApi();
+    void LoadProfRawDataApi();
+    void LoadProfExtendedApi();
 
     int32_t RegisterProfileCallbackForAtls(int32_t callbackType, VOID_PTR callback);
     void ProfNotifyCachedDevice();
@@ -168,6 +181,10 @@ private:
     ProfImplInitMstxInjectionFunc profImplInitMstxInjection_{nullptr};
     ProfSubscribeRawDataFunc profSubscribeRawData_{nullptr};
     ProfUnSubscribeRawDataFunc profUnSubscribeRawData_{nullptr};
+    ProfSetInjectionFuncFunc profSetInjectionFunc_{nullptr};
+    ProfInjectionInitializeFunc profInjectionInitialize_{nullptr};
+    ProfGetInjectionFuncFunc profGetInjectionFunc_{nullptr};
+    ProfRegisterDataCallbackFunc profRegisterDataCallback_{nullptr};
 
     VariableBlockBuffer variableAdditionalBuffer_{};
     ProfVarAddBlockBufPopFunc profVarAddBlockBufPop_{nullptr};

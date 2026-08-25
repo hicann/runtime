@@ -9,6 +9,7 @@
  */
 #include "msprofiler_adaptor.h"
 #include "command_handle.h"
+#include "compute_profiling_manager.h"
 #include "prof_api_common.h"
 #include "msprofiler_impl.h"
 #include "platform/platform.h"
@@ -46,6 +47,26 @@ extern "C" MSVP_PROF_API int32_t MsprofRegisterCallback(uint32_t moduleId, ProfC
     return Analysis::Dvvp::ProfilerCommon::ProfRegisterCallback(moduleId, handle);
 }
 
+extern "C" MSVP_PROF_API int32_t MsprofSetInjectionFunc(uint32_t type, void* func)
+{
+    return Analysis::Dvvp::ProfilerCommon::ProfSetInjectionFunc(type, func);
+}
+
+extern "C" MSVP_PROF_API int32_t MsprofInjectionInitialize(void)
+{
+    return Analysis::Dvvp::ProfilerCommon::ProfInjectionInitialize();
+}
+
+extern "C" MSVP_PROF_API void* MsprofGetInjectionFunc(uint32_t type)
+{
+    return Analysis::Dvvp::ProfilerCommon::ProfGetInjectionFunc(type);
+}
+
+extern "C" MSVP_PROF_API int32_t MsprofRegisterDataCallback(uint32_t type, void* callback)
+{
+    return Analysis::Dvvp::ProfilerCommon::ProfRegisterDataCallback(type, callback);
+}
+
 extern "C" MSVP_PROF_API int32_t MsprofInit(uint32_t dataType, VOID_PTR data, uint32_t dataLen)
 {
     JsonParser::instance()->Init(PROF_JSON_PATH);
@@ -60,11 +81,17 @@ extern "C" MSVP_PROF_API int32_t MsprofInit(uint32_t dataType, VOID_PTR data, ui
 
 extern "C" MSVP_PROF_API int32_t MsprofStart(uint32_t dataType, const void* data, uint32_t length)
 {
+    if (dataType == MSPROF_CTRL_INIT_COMPUTE) {
+        return ComputeProfilingManager::instance()->Start(data, length);
+    }
     return Analysis::Dvvp::ProfilerCommon::ProfConfigStart(dataType, data, length);
 }
 
 extern "C" MSVP_PROF_API int32_t MsprofStop(uint32_t dataType, const void* data, uint32_t length)
 {
+    if (dataType == MSPROF_CTRL_INIT_COMPUTE) {
+        return ComputeProfilingManager::instance()->Stop(data, length);
+    }
     return Analysis::Dvvp::ProfilerCommon::ProfConfigStop(dataType, data, length);
 }
 

@@ -198,6 +198,7 @@ const char* const MSVP_LEVEL_L2 = "level2";
 const char* const MSVP_LEVEL_L3 = "level3";
 const char* const MSVP_PROF_EMPTY_STRING = "";
 const char* const MSVP_PROF_ACLAPI_MODE = "aclapi";
+const char* const MSVP_PROF_COMPUTE_MODE = "compute";
 const char* const MSVP_PROF_SUBSCRIBE_MODE = "subscribe";
 const char* const MSVP_PROF_SYSTEM_MODE = "system";
 const char* const MSVP_PROF_ALL = "all";

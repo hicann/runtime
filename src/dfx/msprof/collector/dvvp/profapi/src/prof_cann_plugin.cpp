@@ -1,12 +1,12 @@
 /**
- * Copyright (c) 2025 Huawei Technologies Co., Ltd.
- * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
- * CANN Open Software License Agreement Version 2.0 (the "License").
- * Please refer to the License for details. You may not use this file except in compliance with the License.
- * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
- * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
- * See LICENSE in the root of the software repository for the full text of the License.
- */
+ * Copyright (c) 2025 Huawei Technologies Co., Ltd.
+ * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
+ * CANN Open Software License Agreement Version 2.0 (the "License").
+ * Please refer to the License for details. You may not use this file except in compliance with the License.
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+ * See LICENSE in the root of the software repository for the full text of the License.
+ */
 #include "prof_cann_plugin.h"
 #include <dlfcn.h>
 #include "prof_acl_plugin.h"
@@ -70,17 +70,24 @@ void ProfCannPlugin::ProfApiInit()
 
 void ProfCannPlugin::LoadProfApi()
 {
+    LoadProfCoreApi();
+    LoadProfReportApi();
+    LoadProfBufferApi();
+    LoadProfRawDataApi();
+    LoadProfExtendedApi();
+    LoadProfInfo();
+    LoadProftxApiInit(msProfLibHandle_);
+    ProfAclPlugin::instance()->ProfAclApiInit(msProfLibHandle_);
+}
+
+void ProfCannPlugin::LoadProfCoreApi()
+{
     LOAD_MSPROF_API(profInit_, msProfLibHandle_, ProfInitFunc, "MsprofInit");
     LOAD_MSPROF_API(profStart_, msProfLibHandle_, ProfStartFunc, "MsprofStart");
     LOAD_MSPROF_API(profStop_, msProfLibHandle_, ProfStopFunc, "MsprofStop");
     LOAD_MSPROF_API(profSetConfig_, msProfLibHandle_, ProfSetConfigFunc, "MsprofSetConfig");
     LOAD_MSPROF_API(profRegisterCallback_, msProfLibHandle_, ProfRegisterCallbackFunc, "MsprofRegisterCallback");
     LOAD_MSPROF_API(profReportData_, msProfLibHandle_, ProfReportDataFunc, "MsprofReportData");
-    LOAD_MSPROF_API(profReportRegTypeInfo_, msProfLibHandle_, ProfReportRegTypeInfoFunc, "ProfImplReportRegTypeInfo");
-    LOAD_MSPROF_API(
-        profReportRegDataFormat_, msProfLibHandle_, ProfReportRegDataFormatFunc, "ProfImplReportDataFormat");
-    LOAD_MSPROF_API(profReportGetHashId_, msProfLibHandle_, ProfReportGetHashIdFunc, "ProfImplReportGetHashId");
-    LOAD_MSPROF_API(profReportGetHashInfo_, msProfLibHandle_, ProfReportGetHashInfoFunc, "ProfImplReportGetHashInfo");
     LOAD_MSPROF_API(profGetPath_, msProfLibHandle_, ProfGetPathFunc, "ProfImplGetOutputPath");
     LOAD_MSPROF_API(profSetDeviceId_, msProfLibHandle_, ProfSetDeviceIdFunc, "MsprofSetDeviceIdByGeModelIdx");
     LOAD_MSPROF_API(profNotifySetDevice_, msProfLibHandle_, ProfNotifySetDeviceFunc, "MsprofNotifySetDevice");
@@ -88,6 +95,19 @@ void ProfCannPlugin::LoadProfApi()
     LOAD_MSPROF_API(profUnSetDeviceId_, msProfLibHandle_, ProfSetDeviceIdFunc, "MsprofUnsetDeviceIdByGeModelIdx");
     LOAD_MSPROF_API(profHostFreqIsEnable_, msProfLibHandle_, ProfHostFreqIsEnableFunc, "ProfImplHostFreqIsEnable");
     LOAD_MSPROF_API(profGetImplInfo_, msProfLibHandle_, ProfGetImplInfoFunc, "ProfImplGetImplInfo");
+}
+
+void ProfCannPlugin::LoadProfReportApi()
+{
+    LOAD_MSPROF_API(profReportRegTypeInfo_, msProfLibHandle_, ProfReportRegTypeInfoFunc, "ProfImplReportRegTypeInfo");
+    LOAD_MSPROF_API(
+        profReportRegDataFormat_, msProfLibHandle_, ProfReportRegDataFormatFunc, "ProfImplReportDataFormat");
+    LOAD_MSPROF_API(profReportGetHashId_, msProfLibHandle_, ProfReportGetHashIdFunc, "ProfImplReportGetHashId");
+    LOAD_MSPROF_API(profReportGetHashInfo_, msProfLibHandle_, ProfReportGetHashInfoFunc, "ProfImplReportGetHashInfo");
+}
+
+void ProfCannPlugin::LoadProfBufferApi()
+{
     LOAD_MSPROF_API(profApiBufPop_, msProfLibHandle_, ProfApiBufPopFunc, "ProfImplSetApiBufPop");
     LOAD_MSPROF_API(profCompactBufPop_, msProfLibHandle_, ProfCompactBufPopFunc, "ProfImplSetCompactBufPop");
     LOAD_MSPROF_API(profAdditionalBufPop_, msProfLibHandle_, ProfAdditionalBufPopFunc, "ProfImplSetAdditionalBufPop");
@@ -100,12 +120,25 @@ void ProfCannPlugin::LoadProfApi()
         profBatchAddBufIndexShift_, msProfLibHandle_, ProfBatchAddBufIndexShiftFunc,
         "ProfImplSetBatchAddBufIndexShift");
     LOAD_MSPROF_API(profGetFeatureIsOn_, msProfLibHandle_, ProfGetFeatureIsOnFunc, "ProfImplGetFeatureIsOn");
+}
+
+void ProfCannPlugin::LoadProfRawDataApi()
+{
     LOAD_MSPROF_API(
         profImplInitMstxInjection_, msProfLibHandle_, ProfImplInitMstxInjectionFunc, "ProfImplInitMstxInjection");
     LOAD_MSPROF_API(profSubscribeRawData_, msProfLibHandle_, ProfSubscribeRawDataFunc, "ProfImplSubscribeRawData");
     LOAD_MSPROF_API(
         profUnSubscribeRawData_, msProfLibHandle_, ProfUnSubscribeRawDataFunc, "ProfImplUnSubscribeRawData");
+    LOAD_MSPROF_API(profSetInjectionFunc_, msProfLibHandle_, ProfSetInjectionFuncFunc, "MsprofSetInjectionFunc");
+    LOAD_MSPROF_API(
+        profInjectionInitialize_, msProfLibHandle_, ProfInjectionInitializeFunc, "MsprofInjectionInitialize");
+    LOAD_MSPROF_API(profGetInjectionFunc_, msProfLibHandle_, ProfGetInjectionFuncFunc, "MsprofGetInjectionFunc");
+    LOAD_MSPROF_API(
+        profRegisterDataCallback_, msProfLibHandle_, ProfRegisterDataCallbackFunc, "MsprofRegisterDataCallback");
+}
 
+void ProfCannPlugin::LoadProfExtendedApi()
+{
     LOAD_MSPROF_API(
         profVarAddBlockBufPop_, msProfLibHandle_, ProfVarAddBlockBufPopFunc, "ProfImplSetVarAddBlockBufBatchPop");
     LOAD_MSPROF_API(
@@ -113,9 +146,6 @@ void ProfCannPlugin::LoadProfApi()
         "ProfImplSetVarAddBlockBufIndexShift");
     LOAD_MSPROF_API(profSetProfCommand_, msProfLibHandle_, ProfSetCommandFunc, "ProfImplSetProfCommand");
     LOAD_MSPROF_API(profCheckOpSwitch_, msProfLibHandle_, ProfCheckOpSwitchFunc, "ProfCheckOpSwitch");
-    LoadProfInfo();
-    LoadProftxApiInit(msProfLibHandle_);
-    ProfAclPlugin::instance()->ProfAclApiInit(msProfLibHandle_);
 }
 
 void ProfCannPlugin::LoadProfInfo()
@@ -934,6 +964,46 @@ int32_t ProfCannPlugin::ProfUnSubscribeRawData() const
     }
     MSPROF_LOGW("profUnSubscribeRawData_ is null");
     return 0;
+}
+
+int32_t ProfCannPlugin::ProfSetInjectionFunc(uint32_t type, void* func)
+{
+    ProfApiInit();
+    if (profSetInjectionFunc_ != nullptr) {
+        return profSetInjectionFunc_(type, func);
+    }
+    MSPROF_LOGW("profSetInjectionFunc_ is null");
+    return PROFILING_FAILED;
+}
+
+int32_t ProfCannPlugin::ProfInjectionInitialize()
+{
+    ProfApiInit();
+    if (profInjectionInitialize_ != nullptr) {
+        return profInjectionInitialize_();
+    }
+    MSPROF_LOGW("profInjectionInitialize_ is null");
+    return PROFILING_FAILED;
+}
+
+void* ProfCannPlugin::ProfGetInjectionFunc(uint32_t type)
+{
+    ProfApiInit();
+    if (profGetInjectionFunc_ != nullptr) {
+        return profGetInjectionFunc_(type);
+    }
+    MSPROF_LOGW("profGetInjectionFunc_ is null");
+    return nullptr;
+}
+
+int32_t ProfCannPlugin::ProfRegisterDataCallback(uint32_t type, void* callback)
+{
+    ProfApiInit();
+    if (profRegisterDataCallback_ != nullptr) {
+        return profRegisterDataCallback_(type, callback);
+    }
+    MSPROF_LOGW("profRegisterDataCallback_ is null");
+    return PROFILING_FAILED;
 }
 
 bool ProfCannPlugin::ProfCheckOpSwitch(uint32_t type, const char* op, size_t len)

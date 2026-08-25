@@ -9,6 +9,7 @@
  */
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
+#include <chrono>
 #include "uploader.h"
 #include "transport/hdc/hdc_transport.h"
 #include "errno/error_code.h"
@@ -18,58 +19,66 @@ using namespace analysis::dvvp::common::utils;
 using namespace Analysis::Dvvp::Common::Statistics;
 using namespace Analysis::Dvvp::MsprofErrMgr;
 
-class UPLOADER_TEST: public testing::Test {
+namespace {
+constexpr uint32_t FLUSH_TIMEOUT_IMMEDIATE_SEC = 0U;
+constexpr uint32_t FLUSH_TIMEOUT_SHORT_SEC = 1U;
+} // namespace
+
+class UPLOADER_TEST : public testing::Test {
 protected:
-    virtual void SetUp() {
+    virtual void SetUp()
+    {
         HDC_SESSION session = (HDC_SESSION)0x12345678;
         analysis::dvvp::transport::HDCTransport hdcTransport(session);
         _transport = std::shared_ptr<analysis::dvvp::transport::HDCTransport>(
             new analysis::dvvp::transport::HDCTransport(session));
-        _transport->perfCount_ = std::shared_ptr<PerfCount> (new PerfCount("test"));
+        _transport->perfCount_ = std::shared_ptr<PerfCount>(new PerfCount("test"));
     }
-    virtual void TearDown() {
+    virtual void TearDown()
+    {
         GlobalMockObject::reset();
         _transport.reset();
     }
+
 public:
     std::shared_ptr<analysis::dvvp::transport::HDCTransport> _transport;
 };
 
-TEST_F(UPLOADER_TEST, Uploader_destructor) {
+TEST_F(UPLOADER_TEST, Uploader_destructor)
+{
     GlobalMockObject::verify();
 
-    std::shared_ptr<analysis::dvvp::transport::Uploader> uploader(
-        new analysis::dvvp::transport::Uploader(_transport));
+    std::shared_ptr<analysis::dvvp::transport::Uploader> uploader(new analysis::dvvp::transport::Uploader(_transport));
     uploader->isInited_ = false;
     EXPECT_EQ(PROFILING_SUCCESS, uploader->Uinit());
     uploader.reset();
 }
 
-TEST_F(UPLOADER_TEST, Init) {
+TEST_F(UPLOADER_TEST, Init)
+{
     GlobalMockObject::verify();
 
-    std::shared_ptr<analysis::dvvp::transport::Uploader> uploader(
-        new analysis::dvvp::transport::Uploader(_transport));
+    std::shared_ptr<analysis::dvvp::transport::Uploader> uploader(new analysis::dvvp::transport::Uploader(_transport));
 
     EXPECT_EQ(PROFILING_SUCCESS, uploader->Init());
     EXPECT_TRUE(uploader->isInited_);
 }
 
-TEST_F(UPLOADER_TEST, Uinit) {
+TEST_F(UPLOADER_TEST, Uinit)
+{
     GlobalMockObject::verify();
 
-    std::shared_ptr<analysis::dvvp::transport::Uploader> uploader(
-        new analysis::dvvp::transport::Uploader(_transport));
+    std::shared_ptr<analysis::dvvp::transport::Uploader> uploader(new analysis::dvvp::transport::Uploader(_transport));
 
     EXPECT_EQ(PROFILING_SUCCESS, uploader->Uinit());
     EXPECT_FALSE(uploader->isInited_);
 }
 
-TEST_F(UPLOADER_TEST, UploadData) {
+TEST_F(UPLOADER_TEST, UploadData)
+{
     GlobalMockObject::verify();
 
-    std::shared_ptr<analysis::dvvp::transport::Uploader> uploader(
-        new analysis::dvvp::transport::Uploader(_transport));
+    std::shared_ptr<analysis::dvvp::transport::Uploader> uploader(new analysis::dvvp::transport::Uploader(_transport));
 
     std::string buffer("123456");
 
@@ -79,24 +88,24 @@ TEST_F(UPLOADER_TEST, UploadData) {
     EXPECT_EQ(PROFILING_SUCCESS, uploader->UploadData(buffer.c_str(), buffer.size()));
 }
 
-TEST_F(UPLOADER_TEST, run_uploader_not_init) {
+TEST_F(UPLOADER_TEST, run_uploader_not_init)
+{
     GlobalMockObject::verify();
 
-    std::shared_ptr<analysis::dvvp::transport::Uploader> uploader(
-        new analysis::dvvp::transport::Uploader(_transport));
+    std::shared_ptr<analysis::dvvp::transport::Uploader> uploader(new analysis::dvvp::transport::Uploader(_transport));
     EXPECT_NE(nullptr, uploader);
     auto errorContext = MsprofErrorManager::instance()->GetErrorManagerContext();
     uploader->Run(errorContext);
 }
 
-TEST_F(UPLOADER_TEST, run_no_data) {
+TEST_F(UPLOADER_TEST, run_no_data)
+{
     GlobalMockObject::verify();
     using namespace analysis::dvvp::transport;
 
-    std::shared_ptr<Uploader> uploader(
-        new Uploader(_transport));
+    std::shared_ptr<Uploader> uploader(new Uploader(_transport));
 
-    MOCKER_CPP_VIRTUAL(*_transport.get(), &HDCTransport::SendBuffer, int(HDCTransport::*)(const void *, int))
+    MOCKER_CPP_VIRTUAL(*_transport.get(), &HDCTransport::SendBuffer, int(HDCTransport::*)(const void*, int))
         .stubs()
         .will(returnValue(PROFILING_FAILED));
 
@@ -110,12 +119,13 @@ TEST_F(UPLOADER_TEST, run_no_data) {
     GlobalMockObject::reset();
 }
 
-TEST_F(UPLOADER_TEST, run_with_data) {
+TEST_F(UPLOADER_TEST, run_with_data)
+{
     GlobalMockObject::verify();
     using namespace analysis::dvvp::transport;
 
     std::shared_ptr<Uploader> uploader(new Uploader(_transport));
-    MOCKER_CPP_VIRTUAL(*_transport.get(), &HDCTransport::SendBuffer, int(HDCTransport::*)(const void *, int))
+    MOCKER_CPP_VIRTUAL(*_transport.get(), &HDCTransport::SendBuffer, int(HDCTransport::*)(const void*, int))
         .stubs()
         .will(returnValue(PROFILING_FAILED));
 
@@ -130,11 +140,11 @@ TEST_F(UPLOADER_TEST, run_with_data) {
     GlobalMockObject::reset();
 }
 
-TEST_F(UPLOADER_TEST, Flush) {
+TEST_F(UPLOADER_TEST, Flush)
+{
     GlobalMockObject::verify();
 
-    std::shared_ptr<analysis::dvvp::transport::Uploader> uploader(
-        new analysis::dvvp::transport::Uploader(_transport));
+    std::shared_ptr<analysis::dvvp::transport::Uploader> uploader(new analysis::dvvp::transport::Uploader(_transport));
 
     MOCKER_CPP(&analysis::dvvp::transport::UploaderQueue::Size)
         .stubs()
@@ -143,4 +153,43 @@ TEST_F(UPLOADER_TEST, Flush) {
     EXPECT_EQ(uploader->Init(), PROFILING_SUCCESS);
     uploader->Flush();
     uploader->Flush();
+}
+
+TEST_F(UPLOADER_TEST, FlushWithTimeoutReturnsFailedWhenQueueNotEmpty)
+{
+    GlobalMockObject::verify();
+
+    std::shared_ptr<analysis::dvvp::transport::Uploader> uploader(new analysis::dvvp::transport::Uploader(_transport));
+
+    MOCKER_CPP(&analysis::dvvp::transport::UploaderQueue::Size).stubs().will(returnValue((unsigned long)1));
+    EXPECT_EQ(uploader->Init(), PROFILING_SUCCESS);
+    const auto waitBegin = std::chrono::steady_clock::now();
+    EXPECT_EQ(PROFILING_FAILED, uploader->Flush(FLUSH_TIMEOUT_IMMEDIATE_SEC));
+    const auto waitCost = std::chrono::steady_clock::now() - waitBegin;
+    EXPECT_LT(waitCost, std::chrono::seconds(FLUSH_TIMEOUT_SHORT_SEC));
+}
+
+TEST_F(UPLOADER_TEST, FlushWithTimeoutReturnsSuccessWhenQueueEmpty)
+{
+    GlobalMockObject::verify();
+
+    std::shared_ptr<analysis::dvvp::transport::Uploader> uploader(new analysis::dvvp::transport::Uploader(_transport));
+
+    MOCKER_CPP(&analysis::dvvp::transport::UploaderQueue::Size).stubs().will(returnValue((unsigned long)0));
+    EXPECT_EQ(uploader->Init(), PROFILING_SUCCESS);
+    EXPECT_EQ(PROFILING_SUCCESS, uploader->Flush(FLUSH_TIMEOUT_IMMEDIATE_SEC));
+}
+
+TEST_F(UPLOADER_TEST, FlushWithTimeoutReturnsSuccessAfterQueueDrained)
+{
+    GlobalMockObject::verify();
+
+    std::shared_ptr<analysis::dvvp::transport::Uploader> uploader(new analysis::dvvp::transport::Uploader(_transport));
+
+    MOCKER_CPP(&analysis::dvvp::transport::UploaderQueue::Size)
+        .stubs()
+        .will(returnValue((unsigned long)1))
+        .then(returnValue((unsigned long)0));
+    EXPECT_EQ(uploader->Init(), PROFILING_SUCCESS);
+    EXPECT_EQ(PROFILING_SUCCESS, uploader->Flush(FLUSH_TIMEOUT_SHORT_SEC));
 }

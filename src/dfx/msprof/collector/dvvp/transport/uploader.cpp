@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "uploader.h"
+#include <chrono>
 #include "config/config.h"
 #include "errno/error_code.h"
 #include "msprof_dlog.h"
@@ -19,6 +20,10 @@ namespace transport {
 using namespace analysis::dvvp::common::error;
 using namespace analysis::dvvp::common::config;
 using namespace Analysis::Dvvp::MsprofErrMgr;
+
+namespace {
+constexpr unsigned long UPLOADER_SLEEP_TIME_IN_US = 100000;
+}
 
 Uploader::Uploader(SHARED_PTR_ALIA<analysis::dvvp::transport::ITransport> transport)
     : transport_(transport), queue_(nullptr), isInited_(false), forceQuit_(false), isStopped_(false)
@@ -194,9 +199,26 @@ void Uploader::RegisterTransportGenHashIdFuncPtr(HashDataGenIdFuncPtr* ptr)
 void Uploader::Flush() const
 {
     while (queue_->Size() != 0) {
-        const unsigned long UPLOADER_SLEEP_TIME_IN_US = 100000;
         analysis::dvvp::common::utils::Utils::UsleepInterupt(UPLOADER_SLEEP_TIME_IN_US);
     }
+}
+
+int32_t Uploader::Flush(uint32_t timeoutSec) const
+{
+    if (queue_ == nullptr) {
+        MSPROF_LOGE("Uploader queue is nullptr.");
+        return PROFILING_FAILED;
+    }
+    const auto startTime = std::chrono::steady_clock::now();
+    const auto timeout = std::chrono::seconds(timeoutSec);
+    while (queue_->Size() != 0) {
+        if (timeoutSec == 0 || std::chrono::steady_clock::now() - startTime >= timeout) {
+            MSPROF_LOGE("Wait uploader queue empty timeout, timeoutSec:%u, remaining:%zu.", timeoutSec, queue_->Size());
+            return PROFILING_FAILED;
+        }
+        analysis::dvvp::common::utils::Utils::UsleepInterupt(UPLOADER_SLEEP_TIME_IN_US);
+    }
+    return PROFILING_SUCCESS;
 }
 
 SHARED_PTR_ALIA<analysis::dvvp::transport::ITransport> Uploader::GetTransport() { return transport_; }

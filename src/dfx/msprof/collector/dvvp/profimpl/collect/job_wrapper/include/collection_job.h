@@ -58,6 +58,7 @@ enum ProfCollectionJobE {
     FFTS_PROFILE_COLLECTION_JOB,
     INSTR_PROFILING_COLLECTION_JOB,
     BIU_PERF_COLLECTION_JOB,
+    PC_SAMPLING_COLLECTION_JOB,
     // system
     ADPROF_COLLECTION_JOB,
     CTRLCPU_PERF_COLLECTION_JOB,
@@ -80,6 +81,8 @@ enum ProfCollectionJobE {
     NR_MAX_COLLECTION_JOB
 };
 
+enum BiuPcSamplingMode { BIU_PC_SAMPLING_AUTO_MODE = -1, BIU_PERF_MONITOR_MODE = 0, PC_SAMPLING_MODE = 1 };
+
 struct CollectionJobParams {
     int32_t coreNum;
     ProfCollectionJobE jobTag;
@@ -88,6 +91,7 @@ struct CollectionJobParams {
     SHARED_PTR_ALIA<std::vector<std::string>> events;
     SHARED_PTR_ALIA<std::vector<int32_t>> aivCores;
     SHARED_PTR_ALIA<std::vector<std::string>> aivEvents;
+    int32_t biuPcSamplingMode = BIU_PC_SAMPLING_AUTO_MODE;
 };
 
 struct CollectionJobCommonParams {

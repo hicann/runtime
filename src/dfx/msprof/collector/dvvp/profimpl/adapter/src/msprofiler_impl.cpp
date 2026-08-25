@@ -9,6 +9,7 @@
  */
 #include "msprofiler_impl.h"
 #include "sys/sysinfo.h"
+#include "compute_profiling_manager.h"
 #include "errno/error_code.h"
 #include "msprof_reporter.h"
 #include "command_handle.h"
@@ -186,6 +187,20 @@ int32_t MsptiUnSubscribeRawData()
 {
     int32_t ret = UploaderMgr::instance()->SetAllUploaderUnRegisterPipeTransportCallback();
     return ret;
+}
+
+int32_t ProfSetInjectionFunc(uint32_t type, void* func)
+{
+    return ComputeProfilingManager::instance()->RegisterInjectionFunc(type, func);
+}
+
+int32_t ProfInjectionInitialize() { return ComputeProfilingManager::instance()->InitializeInjection(); }
+
+void* ProfGetInjectionFunc(uint32_t type) { return ComputeProfilingManager::instance()->GetInjectionFunc(type); }
+
+int32_t ProfRegisterDataCallback(uint32_t type, void* callback)
+{
+    return ComputeProfilingManager::instance()->RegisterDataCallback(type, callback);
 }
 
 int32_t ProfConfigStart(uint32_t dataType, const void* data, uint32_t length)

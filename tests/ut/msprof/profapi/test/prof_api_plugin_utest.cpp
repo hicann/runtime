@@ -9,13 +9,17 @@
  */
 #include "mockcpp/mockcpp.hpp"
 #include "gtest/gtest.h"
+#include <map>
+#include <string>
 #include "msprof_dlog.h"
 #include "prof_acl_plugin.h"
 #include "prof_cann_plugin.h"
 #include "prof_plugin_manager.h"
 #include "mmpa_api.h"
+#include "mmpa_stub.h"
 
 #include "prof_api.h"
+#include "aprof_pub.h"
 #include "queue/report_buffer.h"
 #include "prof_report_api.h"
 #include "prof_plugin.h"
@@ -23,9 +27,75 @@
 #ifdef PROF_API_STUB
 extern void profOstreamStub(void);
 #endif
+
+namespace {
+uint32_t setInjectionFuncCallCount = 0;
+uint32_t injectionInitializeCallCount = 0;
+uint32_t getInjectionFuncCallCount = 0;
+uint32_t registerDataCallbackCallCount = 0;
+void* injectionFuncStub = reinterpret_cast<void*>(&getInjectionFuncCallCount);
+
+int32_t ProfSetInjectionFuncStub(uint32_t type, void* func)
+{
+    (void)type;
+    (void)func;
+    setInjectionFuncCallCount++;
+    return 0;
+}
+
+int32_t ProfInjectionInitializeStub()
+{
+    injectionInitializeCallCount++;
+    return 0;
+}
+
+void* ProfGetInjectionFuncStub(uint32_t type)
+{
+    (void)type;
+    getInjectionFuncCallCount++;
+    return injectionFuncStub;
+}
+
+int32_t ProfRegisterDataCallbackStub(uint32_t type, void* callback)
+{
+    (void)type;
+    (void)callback;
+    registerDataCallbackCallCount++;
+    return 0;
+}
+
+void RegisterInjectionApiStubs()
+{
+    RegisterMmDlsymStub("MsprofSetInjectionFunc", reinterpret_cast<void*>(ProfSetInjectionFuncStub));
+    RegisterMmDlsymStub("MsprofInjectionInitialize", reinterpret_cast<void*>(ProfInjectionInitializeStub));
+    RegisterMmDlsymStub("MsprofGetInjectionFunc", reinterpret_cast<void*>(ProfGetInjectionFuncStub));
+    RegisterMmDlsymStub("MsprofRegisterDataCallback", reinterpret_cast<void*>(ProfRegisterDataCallbackStub));
+}
+
+void ResetInjectionApiStubCount()
+{
+    setInjectionFuncCallCount = 0;
+    injectionInitializeCallCount = 0;
+    getInjectionFuncCallCount = 0;
+    registerDataCallbackCallCount = 0;
+}
+
+void ResetProfApiLoadState()
+{
+    auto plugin = ProfAPI::ProfCannPlugin::instance();
+    plugin->msProfLibHandle_ = nullptr;
+    plugin->profApiLoadFlag_ = PTHREAD_ONCE_INIT;
+    plugin->profSetInjectionFunc_ = nullptr;
+    plugin->profInjectionInitialize_ = nullptr;
+    plugin->profGetInjectionFunc_ = nullptr;
+    plugin->profRegisterDataCallback_ = nullptr;
+}
+} // namespace
+
 class PROF_API_PLUGIN_UTTEST : public testing::Test {
 protected:
-    virtual void SetUp() {
+    virtual void SetUp()
+    {
         MOCKER(dlopen).stubs().will(invoke(mmDlopen));
         MOCKER(dlsym).stubs().will(invoke(mmDlsym));
         MOCKER(dlclose).stubs().will(invoke(mmDlclose));
@@ -40,13 +110,46 @@ int ProfApiInitStub(void)
     return 0;
 }
 
+TEST_F(PROF_API_PLUGIN_UTTEST, PROF_INJECTION_API_COLD_START)
+{
+    RegisterInjectionApiStubs();
+    ResetInjectionApiStubCount();
+    ResetProfApiLoadState();
+    EXPECT_EQ(
+        0, ProfAPI::ProfCannPlugin::instance()->ProfSetInjectionFunc(
+               PROF_HOOK_SET, reinterpret_cast<void*>(ProfSetInjectionFuncStub)));
+    EXPECT_EQ(1U, setInjectionFuncCallCount);
+    EXPECT_EQ(0, ProfAPI::ProfCannPlugin::instance()->ProfInjectionInitialize());
+    EXPECT_EQ(1U, injectionInitializeCallCount);
+    EXPECT_EQ(injectionFuncStub, ProfAPI::ProfCannPlugin::instance()->ProfGetInjectionFunc(PROF_HOOK_GET));
+    EXPECT_EQ(1U, getInjectionFuncCallCount);
+    EXPECT_EQ(
+        0, ProfAPI::ProfCannPlugin::instance()->ProfRegisterDataCallback(
+               PROF_DATA_CALLBACK_COMPUTE, reinterpret_cast<void*>(ProfRegisterDataCallbackStub)));
+    EXPECT_EQ(1U, registerDataCallbackCallCount);
+}
+
+TEST_F(PROF_API_PLUGIN_UTTEST, PROF_INJECTION_API_SYMBOL_NULL)
+{
+    ProfAPI::ProfCannPlugin::instance()->profSetInjectionFunc_ = nullptr;
+    ProfAPI::ProfCannPlugin::instance()->profInjectionInitialize_ = nullptr;
+    ProfAPI::ProfCannPlugin::instance()->profGetInjectionFunc_ = nullptr;
+    ProfAPI::ProfCannPlugin::instance()->profRegisterDataCallback_ = nullptr;
+    EXPECT_EQ(-1, ProfAPI::ProfCannPlugin::instance()->ProfSetInjectionFunc(PROF_HOOK_SET, nullptr));
+    EXPECT_EQ(-1, ProfAPI::ProfCannPlugin::instance()->ProfInjectionInitialize());
+    EXPECT_EQ(nullptr, ProfAPI::ProfCannPlugin::instance()->ProfGetInjectionFunc(PROF_HOOK_GET));
+    EXPECT_EQ(-1, ProfAPI::ProfCannPlugin::instance()->ProfRegisterDataCallback(PROF_DATA_CALLBACK_COMPUTE, nullptr));
+    RegisterInjectionApiStubs();
+    ProfAPI::ProfCannPlugin::instance()->LoadProfRawDataApi();
+}
+
 TEST_F(PROF_API_PLUGIN_UTTEST, PROF_API_INIT)
 {
     GlobalMockObject::verify();
     EXPECT_EQ(0, ProfApiInitStub());
 }
 
-static int32_t ProfStartFuncStub(uint32_t dataType, const void *data, uint32_t length)
+static int32_t ProfStartFuncStub(uint32_t dataType, const void* data, uint32_t length)
 {
     (void)dataType;
     (void)data;
@@ -54,7 +157,7 @@ static int32_t ProfStartFuncStub(uint32_t dataType, const void *data, uint32_t l
     return 0;
 }
 
-static int32_t ProfStopFuncStub(uint32_t dataType, const void *data, uint32_t length)
+static int32_t ProfStopFuncStub(uint32_t dataType, const void* data, uint32_t length)
 {
     (void)dataType;
     (void)data;
@@ -62,7 +165,7 @@ static int32_t ProfStopFuncStub(uint32_t dataType, const void *data, uint32_t le
     return 0;
 }
 
-static bool ProfCheckOpSwitchFuncStubTrue(uint32_t type, const char *op, size_t len)
+static bool ProfCheckOpSwitchFuncStubTrue(uint32_t type, const char* op, size_t len)
 {
     (void)type;
     (void)op;
@@ -70,7 +173,7 @@ static bool ProfCheckOpSwitchFuncStubTrue(uint32_t type, const char *op, size_t 
     return true;
 }
 
-static bool ProfCheckOpSwitchFuncStubFalse(uint32_t type, const char *op, size_t len)
+static bool ProfCheckOpSwitchFuncStubFalse(uint32_t type, const char* op, size_t len)
 {
     (void)type;
     (void)op;
@@ -99,7 +202,7 @@ TEST_F(PROF_API_PLUGIN_UTTEST, PROF_CHECKOPSWITCH_NULLPTR)
 
 TEST_F(PROF_API_PLUGIN_UTTEST, PROF_CHECKOPSWITCH_VALID_OP)
 {
-    const char *opName = "MatMul";
+    const char* opName = "MatMul";
     EXPECT_EQ(false, ProfAPI::ProfCannPlugin::instance()->ProfCheckOpSwitch(0, opName, 6));
     EXPECT_EQ(false, ProfAPI::ProfCannPlugin::instance()->ProfCheckOpSwitch(0, opName, 0));
     EXPECT_EQ(false, ProfAPI::ProfCannPlugin::instance()->ProfCheckOpSwitch(1, "Add", 3));
@@ -129,7 +232,7 @@ TEST_F(PROF_API_PLUGIN_UTTEST, PROF_INIT)
     EXPECT_EQ(0, ProfAPI::ProfCannPlugin::instance()->ProfInit(0, nullptr, 0));
 }
 
-int32_t fake_callback(uint32_t, void *, uint32_t) {return 0;};
+int32_t fake_callback(uint32_t, void*, uint32_t) { return 0; };
 TEST_F(PROF_API_PLUGIN_UTTEST, PROF_REGISTER_CALLBACK)
 {
     EXPECT_EQ(-1, ProfAPI::ProfCannPlugin::instance()->ProfRegisterCallback(0, nullptr));
@@ -177,13 +280,17 @@ TEST_F(PROF_API_PLUGIN_UTTEST, PROF_REPORT_EVENT)
 TEST_F(PROF_API_PLUGIN_UTTEST, PROF_REPORT_COMPACTINFO)
 {
     MsprofCompactInfo compact;
-    EXPECT_EQ(MSPROF_ERROR_UNINITIALIZE, ProfAPI::ProfCannPlugin::instance()->ProfReportCompactInfo(0, &compact, sizeof(compact)));
+    EXPECT_EQ(
+        MSPROF_ERROR_UNINITIALIZE,
+        ProfAPI::ProfCannPlugin::instance()->ProfReportCompactInfo(0, &compact, sizeof(compact)));
 }
 
 TEST_F(PROF_API_PLUGIN_UTTEST, PROF_REPORT_ADDINFO)
 {
     MsprofAdditionalInfo additional;
-    EXPECT_EQ(MSPROF_ERROR_UNINITIALIZE, ProfAPI::ProfCannPlugin::instance()->ProfReportAdditionalInfo(0, &additional, sizeof(additional)));
+    EXPECT_EQ(
+        MSPROF_ERROR_UNINITIALIZE,
+        ProfAPI::ProfCannPlugin::instance()->ProfReportAdditionalInfo(0, &additional, sizeof(additional)));
 }
 
 TEST_F(PROF_API_PLUGIN_UTTEST, PROF_GET_SYS_FREERAM)
@@ -193,29 +300,17 @@ TEST_F(PROF_API_PLUGIN_UTTEST, PROF_GET_SYS_FREERAM)
     EXPECT_NE(0, info.sysFreeRam);
 }
 
-static void ProfApiBufPopFuncStub(const ProfApiBufPopCallback func)
-{
-}
+static void ProfApiBufPopFuncStub(const ProfApiBufPopCallback func) {}
 
-static void ProfCompactBufPopFuncStub(const ProfCompactBufPopCallback func)
-{
-}
+static void ProfCompactBufPopFuncStub(const ProfCompactBufPopCallback func) {}
 
-static void ProfAdditionalBufPopFuncStub(const ProfAdditionalBufPopCallback func)
-{
-}
+static void ProfAdditionalBufPopFuncStub(const ProfAdditionalBufPopCallback func) {}
 
-static void ProfReportBufEmptyFuncStub(const ProfReportBufEmptyCallback func)
-{
-}
+static void ProfReportBufEmptyFuncStub(const ProfReportBufEmptyCallback func) {}
 
-static void ProfAdditionalBufPushFuncStub(const ProfAdditionalBufPushCallback func)
-{
-}
+static void ProfAdditionalBufPushFuncStub(const ProfAdditionalBufPushCallback func) {}
 
-static void ProfMarkExFuncStub(const ProfMarkExCallback func)
-{
-}
+static void ProfMarkExFuncStub(const ProfMarkExCallback func) {}
 
 TEST_F(PROF_API_PLUGIN_UTTEST, PROF_REPORT_BUF_SIMULATION)
 {
@@ -234,9 +329,11 @@ TEST_F(PROF_API_PLUGIN_UTTEST, PROF_REPORT_BUF_SIMULATION)
     EXPECT_EQ(true, ProfAPI::IsReportBufEmpty());
     ProfCannPlugin::instance()->ProfRegisterFunc(REPORT_API_POP, reinterpret_cast<VOID_PTR>(TryPopApiBuf));
     ProfCannPlugin::instance()->ProfRegisterFunc(REPORT_COMPACCT_POP, reinterpret_cast<VOID_PTR>(TryPopCompactBuf));
-    ProfCannPlugin::instance()->ProfRegisterFunc(REPORT_ADDITIONAL_POP, reinterpret_cast<VOID_PTR>(TryPopAdditionalBuf));
+    ProfCannPlugin::instance()->ProfRegisterFunc(
+        REPORT_ADDITIONAL_POP, reinterpret_cast<VOID_PTR>(TryPopAdditionalBuf));
     ProfCannPlugin::instance()->ProfRegisterFunc(REPORT_BUF_EMPTY, reinterpret_cast<VOID_PTR>(IsReportBufEmpty));
-    ProfCannPlugin::instance()->ProfRegisterFunc(REPORT_ADDITIONAL_PUSH, reinterpret_cast<VOID_PTR>(TryPushAdditionalBuf));
+    ProfCannPlugin::instance()->ProfRegisterFunc(
+        REPORT_ADDITIONAL_PUSH, reinterpret_cast<VOID_PTR>(TryPushAdditionalBuf));
     ProfCannPlugin::instance()->ProfRegisterFunc(PROF_MARK_EX, reinterpret_cast<VOID_PTR>(TryMarkEx));
     ProfCannPlugin::instance()->ProfReportApi(aging, &data1);
     ProfCannPlugin::instance()->ProfReportCompactInfo(aging, &data2, sizeof(data2));
