@@ -993,6 +993,8 @@ aclError aclrtKernelArgsInit(aclrtFuncHandle funcHandle, aclrtArgsHandle *argsHa
 
 与[aclrtKernelArgsInitByUserMem](#aclrtKernelArgsInitByUserMem)接口的区别在于，调用本接口表示由系统管理内存。
 
+参数列表初始化后，通过[aclrtKernelArgsAppend](#aclrtKernelArgsAppend)、[aclrtKernelArgsAppendPlaceHolder](#aclrtKernelArgsAppendPlaceHolder)等接口追加参数时，建议追加的参数个数与核函数所需的参数个数保持一致。为兼容旧版本中的算子核函数，Runtime校验的参数个数上限为128，追加的参数个数超过该上限值，则接口返回报错。
+
 ### 参数说明
 
 | 参数名 | 输入/输出 | 说明 |
@@ -1046,6 +1048,8 @@ aclError aclrtKernelArgsInitByUserMem(aclrtFuncHandle funcHandle, aclrtArgsHandl
 根据核函数句柄初始化参数列表，并获取标识参数列表的句柄。
 
 与[aclrtKernelArgsInit](#aclrtKernelArgsInit)接口的区别在于，调用本接口表示由用户管理内存。
+
+参数列表初始化后，通过[aclrtKernelArgsAppend](#aclrtKernelArgsAppend)、[aclrtKernelArgsAppendPlaceHolder](#aclrtKernelArgsAppendPlaceHolder)等接口追加参数时，建议追加的参数个数与核函数所需的参数个数保持一致。为兼容旧版本中的算子核函数，Runtime校验的参数个数上限为128，追加的参数个数超过该上限值，则接口返回报错。
 
 ### 参数说明
 

@@ -881,6 +881,7 @@ static void kernelInfoInit(rtElfData* const elfData, Elf_Internal_Shdr* section,
     kernelInfo->functionEntryFlag = KERNEL_FUNCTION_ENTRY_DISABLE;
     kernelInfo->isSupportFuncEntry = false;
     kernelInfo->schedMode = static_cast<uint32_t>(RT_SCHEM_MODE_NORMAL);
+    kernelInfo->userArgsNum = USER_ARGS_MAX_NUM;
     kernelInfo->paramCount = 0U;
     kernelInfo->paramTotalSize = 0ULL;
     kernelInfo->hasParamSummary = false;
