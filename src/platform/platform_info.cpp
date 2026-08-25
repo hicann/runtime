@@ -1327,9 +1327,13 @@ uint32_t PlatformInfoManager::GetRuntimePlatformInfosByDevice(
     const auto it = runtime_device_platform_infos_map_.find(device_id);
     PlatFormInfos device_platform_infos;
     if (it == runtime_device_platform_infos_map_.end()) {
-        PF_LOGD("Add new platform info with device_id %u.", device_id);
-        PlatformInfosUtils::GetInstance().Clone(device_platform_infos, runtime_platform_infos_);
-        runtime_device_platform_infos_map_[device_id] = device_platform_infos;
+        if (runtime_init_flag_) {
+            PF_LOGD("Add new platform info with device_id %u.", device_id);
+            PlatformInfosUtils::GetInstance().Clone(device_platform_infos, runtime_platform_infos_);
+            runtime_device_platform_infos_map_[device_id] = device_platform_infos;
+        } else {
+            PF_LOGW("Failed to update cache: runtime_platform has not been initialized.");
+        }
     } else {
         PF_LOGD("Return the platform infos with device_id %u.", device_id);
         device_platform_infos = it->second;
