@@ -15,6 +15,7 @@
 #define private public
 #define protected public
 #include "runtime.hpp"
+#include "task.hpp"
 #include "stream_c.hpp"
 #include "task_recycle.hpp"
 #include "ccu_task.hpp"

@@ -10,16 +10,13 @@
 #ifndef CCE_RUNTIME_EVENT_HPP
 #define CCE_RUNTIME_EVENT_HPP
 
+#include <cstdint>
+#include <mutex>
 #include <set>
-#include <string>
-#include <utility>
-#include <vector>
-#include <sstream>
 #include <unordered_map>
+#include <utility>
+#include "event.h"
 #include "reference.hpp"
-#include "context.hpp"
-#include "device.hpp"
-#include "task.hpp"
 #include "runtime_handle_guard.h"
 
 namespace cce {
@@ -29,7 +26,9 @@ class Context;
 class Device;
 class Notifier;
 class CaptureModel;
-class EventRecordTask;
+class Runtime;
+struct tagTaskInfoStru;
+typedef tagTaskInfoStru TaskInfo;
 
 constexpr int32_t INVALID_EVENT_ID = -1;
 constexpr int32_t TIMELINE_EVENT_ID = 1023;

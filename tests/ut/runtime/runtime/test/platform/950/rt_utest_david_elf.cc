@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <string>
 #include <iostream>
 #include "securec.h"
 #include <thread>
@@ -649,10 +650,10 @@ TEST_F(ELFTest, SymbolAddressTest)
     elfData->section_headers[0].sh_offset = 0;
     elfData->section_headers[0].sh_addr = 0;
 
-    string var1 = "g_sysFftsAddr";
-    string var2 = "g_opL2CacheHintCfg";
-    string var3 = "g_sysPrintFifoSpace";
-    string var4 = "g_sysSimtPrintFifoSpace";
+    std::string var1 = "g_sysFftsAddr";
+    std::string var2 = "g_opL2CacheHintCfg";
+    std::string var3 = "g_sysPrintFifoSpace";
+    std::string var4 = "g_sysSimtPrintFifoSpace";
     const uint64_t strSize = var1.size() + 1U + var2.size() + 1U + var3.size() + 1U + var4.size() + 1U;
     std::unique_ptr<char_t[]> strTbl(new (std::nothrow) char_t[strSize]);
     memcpy_s(

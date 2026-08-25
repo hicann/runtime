@@ -30,6 +30,7 @@
 #include "securec.h"
 #include "npu_driver.hpp"
 #include "../../rt_utest_config_define.hpp"
+#include "stars_david.hpp"
 #include "rt_unwrap.h"
 #include "runtime_dump_task.h"
 #include "model_maintaince_task.h"

@@ -7,6 +7,7 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include <vector>
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
 #include "securec.h"
@@ -120,7 +121,7 @@ TEST_F(MemoryPoolManagerTest, kernel_memory_pool_test)
     EXPECT_EQ(kernelMemPoolMng->numPools_, 2);
 
     // 申请超出五个内存池 并记录内存池地址
-    vector<void*> deviceAddrs;
+    std::vector<void*> deviceAddrs;
 
     size_t bigSize = 2 * 1024 * 1024;
     for (size_t i = 0; i < 10; i++) {

@@ -11,6 +11,7 @@
 #include "event.hpp"
 #include "scheduler.hpp"
 #include "gtest/gtest.h"
+#include "stars_david.hpp"
 #include "stars.hpp"
 #include "hwts.hpp"
 #include "npu_driver.hpp"

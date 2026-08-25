@@ -24,6 +24,7 @@
 
 #include <cstdio>
 #include <fstream>
+#include <string>
 #include <unistd.h>
 
 using namespace cce::runtime;
@@ -74,7 +75,7 @@ TEST_F(XpuDeviceTest, GetConfigIniValueDouble_FilePathNull)
 
 TEST_F(XpuDeviceTest, GetConfigIniValueDouble_OpenFailed)
 {
-    MOCKER(RealPath).stubs().will(returnValue(string("stub")));
+    MOCKER(RealPath).stubs().will(returnValue(std::string("stub")));
     const std::string fileName = "TestRuntimeConfig.ini";
     double val = 0;
     EXPECT_FALSE(GetConfigIniValueDouble(fileName, "ver1=", val));
@@ -86,7 +87,7 @@ TEST_F(XpuDeviceTest, ParseXpuConfigInfo_Success_01)
     MOCKER(mmSysGetEnv).stubs().will(returnValue(envpath));
     MOCKER(GetConfigIniValueDouble).stubs().will(returnValue(true));
     MOCKER(GetConfigIniValueInt32).stubs().will(returnValue(true));
-    MOCKER(RealPath).stubs().will(returnValue(string("stub")));
+    MOCKER(RealPath).stubs().will(returnValue(std::string("stub")));
     XpuDevice* xpuDev = new XpuDevice(0);
     rtError_t error = xpuDev->ParseXpuConfigInfo();
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -104,7 +105,7 @@ TEST_F(XpuDeviceTest, ParseXpuConfigInfo_Success_02)
         .stubs()
         .with(mockcpp::any(), mockcpp::any(), outBound(outParam))
         .will(returnValue(true));
-    MOCKER(RealPath).stubs().will(returnValue(string("stub")));
+    MOCKER(RealPath).stubs().will(returnValue(std::string("stub")));
     XpuDevice* xpuDev = new XpuDevice(0);
     rtError_t error = xpuDev->ParseXpuConfigInfo();
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -118,7 +119,7 @@ TEST_F(XpuDeviceTest, ParseXpuConfigInfo_Fail_01)
     MOCKER(mmSysGetEnv).stubs().will(returnValue(envpath));
     MOCKER(GetConfigIniValueDouble).stubs().will(returnValue(false)); // 第一步报错
     MOCKER(GetConfigIniValueInt32).stubs().will(returnValue(true));
-    MOCKER(RealPath).stubs().will(returnValue(string("stub")));
+    MOCKER(RealPath).stubs().will(returnValue(std::string("stub")));
     XpuDevice* xpuDev = new XpuDevice(0);
     rtError_t error = xpuDev->ParseXpuConfigInfo();
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
@@ -131,7 +132,7 @@ TEST_F(XpuDeviceTest, ParseXpuConfigInfo_Fail_02)
     MOCKER(mmSysGetEnv).stubs().will(returnValue(envpath));
     MOCKER(GetConfigIniValueDouble).stubs().will(returnValue(true));
     MOCKER(GetConfigIniValueInt32).defaults().will(returnValue(false)); // 第二步报错
-    MOCKER(RealPath).stubs().will(returnValue(string("stub")));
+    MOCKER(RealPath).stubs().will(returnValue(std::string("stub")));
     XpuDevice* xpuDev = new XpuDevice(0);
     rtError_t error = xpuDev->ParseXpuConfigInfo();
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
@@ -145,7 +146,7 @@ TEST_F(XpuDeviceTest, ParseXpuConfigInfo_Fail_03)
     MOCKER(mmSysGetEnv).stubs().will(returnValue(envpath));
     MOCKER(GetConfigIniValueDouble).stubs().will(returnValue(true));
     MOCKER(GetConfigIniValueInt32).stubs().will(returnObjectList(true, false, true, true));
-    MOCKER(RealPath).stubs().will(returnValue(string("stub")));
+    MOCKER(RealPath).stubs().will(returnValue(std::string("stub")));
     XpuDevice* xpuDev = new XpuDevice(0);
     rtError_t error = xpuDev->ParseXpuConfigInfo();
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
@@ -159,7 +160,7 @@ TEST_F(XpuDeviceTest, ParseXpuConfigInfo_Fail_04)
     MOCKER(mmSysGetEnv).stubs().will(returnValue(envpath));
     MOCKER(GetConfigIniValueDouble).stubs().will(returnValue(true));
     MOCKER(GetConfigIniValueInt32).stubs().will(returnObjectList(true, true, false, true));
-    MOCKER(RealPath).stubs().will(returnValue(string("stub")));
+    MOCKER(RealPath).stubs().will(returnValue(std::string("stub")));
     XpuDevice* xpuDev = new XpuDevice(0);
     rtError_t error = xpuDev->ParseXpuConfigInfo();
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
@@ -173,7 +174,7 @@ TEST_F(XpuDeviceTest, ParseXpuConfigInfo_Fail_05)
     MOCKER(mmSysGetEnv).stubs().will(returnValue(envpath));
     MOCKER(GetConfigIniValueDouble).stubs().will(returnValue(true));
     MOCKER(GetConfigIniValueInt32).stubs().will(returnObjectList(true, true, true, false));
-    MOCKER(RealPath).stubs().will(returnValue(string("stub")));
+    MOCKER(RealPath).stubs().will(returnValue(std::string("stub")));
     XpuDevice* xpuDev = new XpuDevice(0);
     rtError_t error = xpuDev->ParseXpuConfigInfo();
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);

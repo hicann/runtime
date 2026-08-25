@@ -12,6 +12,7 @@
 #define private public
 #include "config.h"
 #include "runtime.hpp"
+#include "context.hpp"
 #include "kernel.h"
 #include "rt_error_codes.h"
 #include "api_impl.hpp"

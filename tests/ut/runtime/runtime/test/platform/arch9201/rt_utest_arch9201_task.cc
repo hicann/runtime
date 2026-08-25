@@ -15,6 +15,7 @@
 #define private public
 #define protected public
 #include "runtime.hpp"
+#include "context.hpp"
 #include "raw_device.hpp"
 #include "module.hpp"
 #include "task_info.hpp"

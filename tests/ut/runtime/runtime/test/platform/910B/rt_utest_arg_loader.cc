@@ -7,6 +7,8 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include <string>
+
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
 #include "securec.h"
@@ -352,7 +354,7 @@ TEST_F(CloudV2ArgLoaderTest, uma_arg_loader_find_kernel_info_name)
     nameMap.emplace("TEST_KERNEL_01", addr1);
     nameMap.emplace("TEST_KERNEL_02", addr2);
 
-    string name;
+    std::string name;
     loader->GetKernelInfoFromAddr(name, MAX_NAME, NULL);
     loader->FindKernelInfoName(name, nameMap, addr1);
     EXPECT_EQ(name, "TEST_KERNEL_01");

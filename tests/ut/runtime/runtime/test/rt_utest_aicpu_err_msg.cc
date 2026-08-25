@@ -12,6 +12,7 @@
 #include "base.hpp"
 #include "aicpu_err_msg.hpp"
 #include "runtime.hpp"
+#include "program.hpp"
 #include "aicpu_sched/common/aicpu_task_struct.h"
 #include "arg_loader.hpp"
 #include "task_info.hpp"

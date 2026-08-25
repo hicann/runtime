@@ -17,6 +17,7 @@
 #include "mockcpp/mockcpp.hpp"
 #define private public
 #define protected public
+#include "context.hpp"
 #include "api.hpp"
 #include "runtime.hpp"
 #include "device.hpp"

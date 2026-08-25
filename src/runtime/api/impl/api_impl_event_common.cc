@@ -10,8 +10,12 @@
  * for the full text of the License.
  */
 
+#include <string>
 #include "api_impl_event.hpp"
 
+#include "context.hpp"
+#include "device.hpp"
+#include "error_message_manage.hpp"
 #include "event.hpp"
 #include "ipc_event.hpp"
 #include "npu_driver.hpp"

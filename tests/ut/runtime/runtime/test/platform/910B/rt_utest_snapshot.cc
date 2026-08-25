@@ -13,6 +13,7 @@
 #include "securec.h"
 #define private public
 #define protected public
+#include "context.hpp"
 #include "runtime.hpp"
 #include "raw_device.hpp"
 #include "thread_local_container.hpp"

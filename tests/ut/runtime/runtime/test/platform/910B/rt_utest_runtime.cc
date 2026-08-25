@@ -11,6 +11,7 @@
 #include "mockcpp/mockcpp.hpp"
 #define private public
 #include "runtime.hpp"
+#include "context_manage.hpp"
 #include "runtime_keeper.h"
 #include "npu_driver.hpp"
 #include "api_impl.hpp"

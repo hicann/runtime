@@ -17,6 +17,7 @@
 #include "runtime/event.h"
 #define private public
 #define protected public
+#include "context.hpp"
 #include "runtime.hpp"
 #include "api.hpp"
 #include "api_impl.hpp"
