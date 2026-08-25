@@ -45,7 +45,7 @@
 **“docs/zh”目录文档：**
 - **docs/zh目录下的md文件（如docs/zh/FAQ.md）**：存放在`docs/en/`目录下，保持原有目录层级
   - 文件命名：`<原文件名>.md`
-  - 示例：`docs/README.md` → `docs/en/README.md`
+  - 示例：`docs/zh/README.md` → `docs/en/README.md`
   - 示例：`docs/zh/FAQ.md` → `docs/en/FAQ.md`
   - 示例：`docs/zh/QUICKSTART.md` → `docs/en/QUICKSTART.md`
 
@@ -282,7 +282,7 @@ git diff HEAD~1 -- README.md
 扫描结果：
 ```
 待翻译文件：
-- docs/README.md → docs/en/README_en.md
+- docs/zh/README.md → docs/en/README.md
 - docs/zh/FAQ.md → docs/en/FAQ_en.md
 - docs/zh/Ascend_910B_DCMI_API/README.md → docs/en/Ascend_910B_DCMI_API/README.md
 总计：3个文件

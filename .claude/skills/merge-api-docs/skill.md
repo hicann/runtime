@@ -5,17 +5,17 @@ description: 合并和管理 CANN Runtime API 参考文档。当用户需要重�
 
 # CANN Runtime API 文档合并管理
 
-将 `docs/03_api_ref_bak/` 下 600+ 个独立 API 文档合并为按分类组织的 42 个 Markdown 文件，输出到 `docs/03_api_ref/`。
+将 `docs/zh/api_ref_bak/` 下 600+ 个独立 API 文档合并为按分类组织的 42 个 Markdown 文件，输出到 `docs/zh/api_ref/`。
 
 ## 项目结构
 
 | 路径 | 说明 |
 | --- | --- |
-| `docs/03_api_ref_bak/` | 源文件目录，每个 API 一个 .md 文件（如 `aclrtMalloc.md`） |
+| `docs/zh/api_ref_bak/` | 源文件目录，每个 API 一个 .md 文件（如 `aclrtMalloc.md`） |
 | `~/.claude/skills/merge-api-docs/merge_api_docs.py` | 合并脚本（核心文件，位于 skill 目录） |
-| `docs/03_api_ref/*.md` | 输出的分类合并文件（42 个） |
-| `docs/03_api_ref/api_ref.md` | 总索引文件 |
-| `docs/03_api_ref/figures/` | 图片资源（从源目录复制） |
+| `docs/zh/api_ref/*.md` | 输出的分类合并文件（42 个） |
+| `docs/zh/api_ref/README.md` | 总索引文件 |
+| `docs/zh/api_ref/figures/` | 图片资源（从源目录复制） |
 
 ## 文件命名规则
 
@@ -110,18 +110,18 @@ fix_internal_links()     将 (apiName.md) 解析为合并后的跨文件锚点�
 
 ### Step 1: 检测未注册的源文件
 
-运行脚本的检测功能，扫描 `docs/03_api_ref/` 中的 .md 源文件与 `CATEGORIES` 对比（此时尚未备份，源文件就在 `03_api_ref/` 中）：
+运行脚本的检测功能，扫描 `docs/zh/api_ref/` 中的 .md 源文件与 `CATEGORIES` 对比（此时尚未备份，源文件就在 `zh/api_ref/` 中）：
 
 ```bash
 python -X utf8 -c "
 import sys, os
 sys.path.insert(0, os.path.expanduser('~/.claude/skills/merge-api-docs'))
 from merge_api_docs import detect_unregistered_files
-detect_unregistered_files(scan_dir=os.path.abspath('docs/03_api_ref'))
+detect_unregistered_files(scan_dir=os.path.abspath('docs/zh/api_ref'))
 "
 ```
 
-> **说明**：脚本位于 `~/.claude/skills/merge-api-docs/merge_api_docs.py`，通过 `sys.path.insert` 导入。`detect_unregistered_files()` 接受 `scan_dir` 参数指定扫描目录。备份前传入 `docs/03_api_ref`，备份后自动扫描 `docs/03_api_ref_bak`。
+> **说明**：脚本位于 `~/.claude/skills/merge-api-docs/merge_api_docs.py`，通过 `sys.path.insert` 导入。`detect_unregistered_files()` 接受 `scan_dir` 参数指定扫描目录。备份前传入 `docs/zh/api_ref`，备份后自动扫描 `docs/zh/api_ref_bak`。
 
 将检测结果整理为报告，向用户展示：
 - 未注册的 API 接口列表（以 `acl`/`msprof` 开头的文件）
@@ -158,20 +158,20 @@ detect_unregistered_files(scan_dir=os.path.abspath('docs/03_api_ref'))
 **如果用户确认生成**，依次执行：
 
 ```bash
-# 1. 备份当前源文件目录（脚本从 03_api_ref_bak 读取，输出到 03_api_ref）
-mv docs/03_api_ref docs/03_api_ref_bak
+# 1. 备份当前源文件目录（脚本从 zh/api_ref_bak 读取，输出到 zh/api_ref）
+mv docs/zh/api_ref docs/zh/api_ref_bak
 
 # 2. 运行合并脚本（脚本位于 skill 目录，不受备份影响）
 python -X utf8 ~/.claude/skills/merge-api-docs/merge_api_docs.py
 ```
 
-> **注意**：脚本位于 `~/.claude/skills/merge-api-docs/`，与项目目录独立，备份操作不影响脚本路径。脚本基于当前工作目录读取 `docs/03_api_ref_bak/` 并输出到 `docs/03_api_ref/`。
+> **注意**：脚本位于 `~/.claude/skills/merge-api-docs/`，与项目目录独立，备份操作不影响脚本路径。脚本基于当前工作目录读取 `docs/zh/api_ref_bak/` 并输出到 `docs/zh/api_ref/`。
 
 脚本会：
 1. 读取 `CATEGORIES` 中定义的所有分类和 API
-2. 从 `docs/03_api_ref_bak/` 读取每个 API 的源文档
+2. 从 `docs/zh/api_ref_bak/` 读取每个 API 的源文档
 3. 执行合并管线处理
-4. 输出 42 个分类文件 + 1 个总索引到 `docs/03_api_ref/`
+4. 输出 42 个分类文件 + 1 个总索引到 `docs/zh/api_ref/`
 5. 再次运行未注册文件检测，确认无遗漏
 
 **如果用户取消**，结束流程。

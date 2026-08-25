@@ -1,23 +1,21 @@
 ---
 name: add-acl-api-doc
-description: 向 CANN Runtime 已合并的 API 参考文档中添加新接口或数据类型。Use when 用户要向 docs/03_api_ref/ 添加新接口、新数据类型，或说"添加接口"、"补充API"、"加个新函数"、"添加数据类型"。
+description: 向 CANN Runtime 已合并的 API 参考文档中添加新接口或数据类型。Use when 用户要向 docs/zh/api_ref/ 添加新接口、新数据类型，或说"添加接口"、"补充API"、"加个新函数"、"添加数据类型"。
 ---
 
 # 添加 ACL API 文档（V1）
 
-将新的 ACL 接口文档直接插入 `docs/03_api_ref/` 下已合并的 Markdown 文件中。
+将新的 ACL 接口文档直接插入 `docs/zh/api_ref/` 下已合并的 Markdown 文件中。
 
 ## 项目路径
 
 | 路径 | 说明 |
 | --- | --- |
-| `docs/03_api_ref/*.md` | 合并文档（42 个分类文件）— 编辑目标 |
-| `docs/03_api_ref/api_ref.md` | 总索引文件 |
-| `docs/03_api_ref/25_数据类型及其操作接口.md` | 数据类型文档 |
-| `docs/dataStructCase.md` | 数据类型排序定义 |
-| `scratch/reorder_docs.py` | 数据类型文档重排脚本 |
+| `docs/zh/api_ref/*.md` | 合并文档（42 个分类文件）— 编辑目标 |
+| `docs/zh/api_ref/README.md` | 总索引文件 |
+| `docs/zh/api_ref/25_data_types_and_operation_APIs.md` | 数据类型文档 |
 | `include/external/acl/` | 头文件目录（Doxygen 声明） |
-| `docs/03_api_ref/figures/` | 图片资源目录 |
+| `docs/zh/api_ref/figures/` | 图片资源目录 |
 
 ## Instructions
 
@@ -38,48 +36,48 @@ description: 向 CANN Runtime 已合并的 API 参考文档中添加新接口或
 
 | 前缀/模式 | 目标文件 |
 | --- | --- |
-| `aclInit`, `aclFinalize*` | `02_初始化与去初始化.md` |
-| `aclrtSetSysParamOpt`, `aclrt*ResLimit` | `03_运行时配置.md` |
-| `aclrtSetDevice`, `aclrtResetDevice`, `aclrtGetDevice*`, `aclrtSynchronizeDevice*` | `04_Device管理.md` |
-| `aclrtCreateContext`, `aclrtDestroyContext`, `aclrtCtx*` | `05_Context管理.md` |
-| `aclrtCreateStream`, `aclrtDestroyStream`, `aclrtStream*`, `aclrtSynchronizeStream*` | `06_Stream管理.md` |
-| `aclrtCreateEvent`, `aclrtDestroyEvent`, `aclrt*Event*` | `07_Event管理.md` |
-| `aclrtCreateNotify`, `aclrtDestroyNotify`, `aclrtNotify*` | `08_Notify管理.md` |
-| `aclrtCntNotify*` | `09_CntNotify管理.md` |
-| `aclrtCreateLabel`, `aclrtDestroyLabel`, `aclrtLabel*` | `10_Label管理.md` |
-| `aclrtMalloc`, `aclrtFree` (非Host) | `11-01_设备内存分配与释放.md` |
-| `aclrtMallocHost*`, `aclrtFreeHost*`, `aclrtHostRegister*` | `11-02_主机内存管理.md` |
-| `aclrtMemcpy*`, `aclrtMemset*` | `11-03_内存拷贝与设置.md` |
-| `aclrtMem*Reserve`, `aclrtMem*Map`, `aclrtMem*Physical*` | `11-04_虚拟内存管理.md` |
-| `aclrtMallocManaged*`, `aclrtMemManaged*` | `11-05_统一寻址.md` |
-| `aclrtCMO*`, `aclrtDCacheFlush*`, `aclrtBarrier*` | `11-06_CMO缓存操作.md` |
-| `aclrtIpc*` | `11-07_IPC进程间内存共享.md` |
-| `aclrtAllocator*` | `11-08_自定义内存分配器.md` |
-| `aclrtStreamMem*` | `11-09_流内存操作.md` |
-| `aclrtMemPool*` | `11-10_Stream有序内存分配.md` |
-| `aclrtLaunchCallback`, `aclrt*Report`, `aclrtReduceAsync` | `12_执行控制.md` |
-| `aclGetRecentErrMsg`, `aclrtSetExceptionInfoCallback` | `13_异常处理.md` |
-| `aclrtBinaryLoad*`, `aclrtLaunchKernel*`, `aclrtKernelArgs*`,`aclrtFunction*` | `14_Kernel加载与执行.md` |
-| `aclmdlRI*` | `15_模型运行实例管理.md` |
-| `aclrtSetGroup`, `aclrtGetGroup*` | `16_算力Group查询与设置.md` |
-| `acltdtSendTensor`, `acltdt*Channel*` | `17-01_Tensor数据传输.md` |
-| `acltdt*Queue*` | `17-02_共享队列管理.md` |
-| `acltdt*Buf*` | `17-03_共享Buffer管理.md` |
-| `aclmdlInitDump`, `acldump*` | `18_Dump配置.md` |
-| `aclprofInit`, `aclprofStart`, `aclprofStop` | `19-01_Profiling数据采集接口.md` |
-| `msproftx*`, `aclprofRangePush*`, `aclprofRangePop*` | `19-02_msproftx扩展接口.md` |
-| `aclprofSubscribe*` | `19-03_订阅算子信息.md` |
-| `aclprofSetStep*` | `19-04_PyTorch场景标记迭代时间.md` |
-| `aclrtSnapShot*` | `21_快照管理.md` |
-| `aclrt*ErrReport*`, `Register*ErrMsg`, `Report*ErrMsg` | `22_错误上报接口.md` |
-| `Alog*`, `aclApp*` | `23_日志接口.md` |
-| `aclsys*`, `aclDataTypeSize`, 其他杂项 | `24_其他接口.md` |
-| 枚举/结构体/typedef 数据类型 | `25_数据类型及其操作接口.md` |
+| `aclInit`, `aclFinalize*` | `02_initialization_and_deinitialization.md` |
+| `aclrtSetSysParamOpt`, `aclrt*ResLimit` | `03_runtime_configuration.md` |
+| `aclrtSetDevice`, `aclrtResetDevice`, `aclrtGetDevice*`, `aclrtSynchronizeDevice*` | `04_device_management.md` |
+| `aclrtCreateContext`, `aclrtDestroyContext`, `aclrtCtx*` | `05_context_management.md` |
+| `aclrtCreateStream`, `aclrtDestroyStream`, `aclrtStream*`, `aclrtSynchronizeStream*` | `06_stream_management.md` |
+| `aclrtCreateEvent`, `aclrtDestroyEvent`, `aclrt*Event*` | `07_event_management.md` |
+| `aclrtCreateNotify`, `aclrtDestroyNotify`, `aclrtNotify*` | `08_notify_management.md` |
+| `aclrtCntNotify*` | `09_cntNotify_management.md` |
+| `aclrtCreateLabel`, `aclrtDestroyLabel`, `aclrtLabel*` | `10_label_management.md` |
+| `aclrtMalloc`, `aclrtFree` (非Host) | `11-01_device_memory_malloc_and_free.md` |
+| `aclrtMallocHost*`, `aclrtFreeHost*`, `aclrtHostRegister*` | `11-02_host_memory_management.md` |
+| `aclrtMemcpy*`, `aclrtMemset*` | `11-03_memory_copy_and_set.md` |
+| `aclrtMem*Reserve`, `aclrtMem*Map`, `aclrtMem*Physical*` | `11-04_virtual_memory_management.md` |
+| `aclrtMallocManaged*`, `aclrtMemManaged*` | `11-05_unified_addressing.md` |
+| `aclrtCMO*`, `aclrtDCacheFlush*`, `aclrtBarrier*` | `11-06_CMO_memory_operation.md` |
+| `aclrtIpc*` | `11-07_IPC_memory_sharing.md` |
+| `aclrtAllocator*` | `11-08_custom_memory_allocator.md` |
+| `aclrtStreamMem*` | `11-09_stream_memory_operation.md` |
+| `aclrtMemPool*` | `11-10_ordered_stream_memory_allocation.md` |
+| `aclrtLaunchCallback`, `aclrt*Report`, `aclrtReduceAsync` | `12_execution_control.md` |
+| `aclGetRecentErrMsg`, `aclrtSetExceptionInfoCallback` | `13_exception_handling.md` |
+| `aclrtBinaryLoad*`, `aclrtLaunchKernel*`, `aclrtKernelArgs*`,`aclrtFunction*` | `14_Kernel_loading_and_execution.md` |
+| `aclmdlRI*` | `15_model_running_instance__management.md` |
+| `aclrtSetGroup`, `aclrtGetGroup*` | `16_group_management.md` |
+| `acltdtSendTensor`, `acltdt*Channel*` | `17-01_tensor_data_transfer.md` |
+| `acltdt*Queue*` | `17-02_shared_queue_management.md` |
+| `acltdt*Buf*` | `17-03_shared_buffer_management.md` |
+| `aclmdlInitDump`, `acldump*` | `18_dump_configuration.md` |
+| `aclprofInit`, `aclprofStart`, `aclprofStop` | `19-01_data_profiling_apis.md` |
+| `msproftx*`, `aclprofRangePush*`, `aclprofRangePop*` | `19-02_msproftx_extension_apis.md` |
+| `aclprofSubscribe*` | `19-03_subscription_to_operator_information.md` |
+| `aclprofSetStep*` | `19-04_setting_Iteration_time_in_pytorch_scenarios.md` |
+| `aclrtSnapShot*` | `21_snapshot_management.md` |
+| `aclrt*ErrReport*`, `Register*ErrMsg`, `Report*ErrMsg` | `22_error_reporting_APIs.md` |
+| `Alog*`, `aclApp*` | `23_log_APIs.md` |
+| `aclsys*`, `aclDataTypeSize`, 其他杂项 | `24_other_APIs.md` |
+| 枚举/结构体/typedef 数据类型 | `25_data_types_and_operation_APIs.md` |
 | 不确定时 | **必须询问用户** |
 
 ### Step 2: 插入 API 文档段落
 
-读取目标文件 `docs/03_api_ref/{target}.md`，按以下模板生成内容并使用 Edit 工具插入。
+读取目标文件 `docs/zh/api_ref/{target}.md`，按以下模板生成内容并使用 Edit 工具插入。
 
 #### 函数 API 插入模板
 
@@ -123,7 +121,7 @@ description: 向 CANN Runtime 已合并的 API 参考文档中添加新接口或
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 ```
 
 #### 数据类型（枚举）插入模板
@@ -258,26 +256,24 @@ API 段落之间使用以下分隔（精确到空行数量）：
 
 #### 4a. 新数据类型联动
 
-如果新增函数 API 的参数引用了一个**尚不存在**的数据类型（在 `25_数据类型及其操作接口.md` 中没有对应锚点），需要：
+如果新增函数 API 的参数引用了一个**尚不存在**的数据类型（在 `25_data_types_and_operation_APIs.md` 中没有对应锚点），需要：
 1. 提醒用户该数据类型尚无文档
 2. 使用 `AskUserQuestion` 询问用户是否同时添加该数据类型
-3. 如果用户确认，按数据类型模板同步插入到 `25_数据类型及其操作接口.md`
-4. 在 `docs/dataStructCase.md` 中按层级关系添加新条目
-5. 运行 `python scratch/reorder_docs.py` 确保排序一致
+3. 如果用户确认，按数据类型模板同步插入到 `25_data_types_and_operation_APIs.md`
 
 #### 4b. 新分类联动
 
 如果接口属于一个**全新分类**（当前 42 个分类文件均无法容纳），需要：
 1. 使用 `AskUserQuestion` 确认新分类名称和编号
-2. 创建新分类文件 `docs/03_api_ref/{NN}_{分类名}.md`
-3. 在 `docs/03_api_ref/api_ref.md` 总索引中添加对应条目
+2. 创建新分类文件 `docs/zh/api_ref/{NN}_{分类名}.md`
+3. 在 `docs/zh/api_ref/README.md` 总索引中添加对应条目
 
 #### 4c. 参数类型链接
 
-如果参数类型是已知的枚举/结构体（存在于 `25_数据类型及其操作接口.md` 中），在参数说明列中补充类型链接：
+如果参数类型是已知的枚举/结构体（存在于 `25_data_types_and_operation_APIs.md` 中），在参数说明列中补充类型链接：
 
 ```
-| policy | 输入 | 内存分配规则。类型定义请参见[aclrtMemMallocPolicy](25_数据类型及其操作接口.md#aclrtMemMallocPolicy)。 |
+| policy | 输入 | 内存分配规则。类型定义请参见[aclrtMemMallocPolicy](25_data_types_and_operation_APIs.md#aclrtMemMallocPolicy)。 |
 ```
 
 ### Step 5: 验证
@@ -309,7 +305,7 @@ API 段落之间使用以下分隔（精确到空行数量）：
 | 表格 `说明` 列 | `---` 左对齐 |
 | 同文件链接 | `[name](#name)` |
 | 跨文件链接 | `[name](targetFile.md#name)` |
-| aclError 引用 | `[aclError](25_数据类型及其操作接口.md#aclError)` |
+| aclError 引用 | `[aclError](25-01_aclError.md#aclError)` |
 | 产品支持行顺序 | 1. Ascend 950PR/950DT  2. Atlas A3  3. Atlas A2 |
 | `√` 字符 | Unicode U+221A |
 | 转义字符 | Markdown 中 `*` 需转义为 `\*`（如 `\*devPtr`） |
@@ -318,7 +314,7 @@ API 段落之间使用以下分隔（精确到空行数量）：
 
 | 返回类型 | 格式 |
 | --- | --- |
-| `aclError` | `返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。` |
+| `aclError` | `返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。` |
 | 指针类型 | `返回{typeName}类型的指针。返回NULL表示失败。` |
 | `void` | 不需要 `### 返回值说明` 章节 |
 | 其他值 | 根据头文件 `@retval` 描述翻译 |

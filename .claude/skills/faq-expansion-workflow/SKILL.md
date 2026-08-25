@@ -102,14 +102,14 @@ xxx failed, ret = xxx
 
 ### 阶段5：README 导航更新
 
-1. 在 `docs/README.md` "常见问题"章节更新表格
+1. 在 `docs/zh/README.md` "常见问题"章节更新表格
 2. 使用 Markdown 原生表格（禁止 HTML 表格）
 3. 按四行分类：入门阶段 · 基础开发 · 进阶场景 · 错误排查
 
 ## 输出物清单
 
-- FAQ 文档（docs/04_FAQ/，UTF-8 无 BOM，文件名无空格）
-- docs/README.md FAQ 导航表格更新
+- FAQ 文档（docs/zh/FAQ/，UTF-8 无 BOM，文件名无空格）
+- docs/zh/README.md FAQ 导航表格更新
 - 每个 FAQ 关联 issue 链接或写"暂无相关 Issue。"
 - 所有错误码已对照源码校验
 

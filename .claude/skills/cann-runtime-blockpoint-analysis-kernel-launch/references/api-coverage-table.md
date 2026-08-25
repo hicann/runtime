@@ -30,7 +30,7 @@
 ## 填写说明
 
 ### 文档位置
-- 记录具体文件路径，如 `docs/03_api_ref/aclInit.md`
+- 记录具体文件路径，如 `docs/zh/api_ref/02_initialization_and_deinitialization.md#aclInit`
 - 如无文档，填 `无`
 
 ### 参数说明完整度

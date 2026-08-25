@@ -38,7 +38,7 @@ Runtime 运行时模块，为算子开发者提供设备管理、内存管理、
 | 关键 API | $0GetWorkspaceSize → $0 | BinaryLoad → GetFunction → LaunchKernel |
 | 需要编译核函数 | 不需要 | 需要 |
 | 适用场景 | 快速使用已有算子 | 开发自定义算子 |
-| 参考示例 | 先搜索 `$0` 对应示例，若无则参考 `example/quickstart/` | `example/kernel/0_launch_kernel/` |
+| 参考示例 | 先搜索 `$0` 对应示例，若无则参考 `example/0_quickstart/` | `example/2_advanced_features/kernel/0_launch_kernel/` |
 
 **核心价值：** 断点分析发现的是开发者实际会撞上的阻塞问题，
 而不是理论上可能存在的文档缺陷。每个断点都对应一个真实的
@@ -119,7 +119,7 @@ git clone https://gitcode.com/cann/ops-math.git 2>/dev/null || (cd ops-math && g
 3. 查看 docs/ 结构：`tree docs/ -L 3`
 4. 查看 example/ 结构：`tree example/ -L 3`
 5. 确认根目录关键文件：`ls -la README* LICENSE* 2>/dev/null`
-6. 重点查看 quickstart 示例：`ls -la example/quickstart/`
+6. 重点查看 quickstart 示例：`ls -la example/0_quickstart/`
 7. 确保输出目录存在：`mkdir -p reports/`
 8. 查看外源知识仓库结构：`tree reference/ -L 2`
 
@@ -156,7 +156,7 @@ git clone https://gitcode.com/cann/ops-math.git 2>/dev/null || (cd ops-math && g
 **算子信息发现（在算子信息确认后执行）：**
 1. 在 `example/` 中搜索 `$0` 关键词，确认是否有对应示例
 2. 在 `docs/` 中搜索 `$0`，确认是否有 API 文档
-3. 如无专门示例，以 `example/quickstart/`（aclnnAdd）为参考模板
+3. 如无专门示例，以 `example/0_quickstart/`（aclnnAdd）为参考模板
 4. 记录 $0 的参数签名发现情况——如果仓库中找不到签名，这本身就是断点
 5. 将仓库中发现的信息与用户提供的算子信息进行对比，确认哪些属于 Runtime 职责、哪些属于外源知识
 
@@ -257,7 +257,7 @@ git clone https://gitcode.com/cann/ops-math.git 2>/dev/null || (cd ops-math && g
   - 首先查 `references/aclnn-two-phase-calling.md`（skill 内置参考文档）
   - 其次查 `reference/ops-math/docs/zh/context/两段式接口.md` 等 ops 仓库文档
 - 在 Runtime 仓库 docs/ 中搜索是否有 aclnn 相关的**指引或链接**（注意：Runtime 仓无义务提供两段式调用的概念文档，但可以提供指引）
-- 搜索 $0 对应示例，如无则参考 `example/quickstart/` 中的示例代码
+- 搜索 $0 对应示例，如无则参考 `example/0_quickstart/` 中的示例代码
 - **断点检查：**
   - **不得**将"Runtime docs/ 中没有两段式调用范式文档"记录为 Runtime 缺陷（这是 aclnn 知识，属于外源知识范畴）
   - Tensor/Scalar 的创建和使用文档是否完整？（Tensor/Scalar API 属于外源知识）
@@ -292,7 +292,7 @@ git clone https://gitcode.com/cann/ops-math.git 2>/dev/null || (cd ops-math && g
 - **断点检查：**
   - 需要链接哪些库？（libascendcl.so、libnnopbase.so、libopapi.so）
   - 需要包含哪些头文件路径？
-  - `docs/03_api_ref/头文件-库文件说明.md` 是否涵盖 aclnn 相关的库？（若不涵盖，属于外源知识缺失）
+  - `docs/zh/api_ref/01_overview.md` 是否涵盖 aclnn 相关的库？（若不涵盖，属于外源知识缺失）
 
 ### Step 8：运行验证
 - 确认如何执行和验证结果

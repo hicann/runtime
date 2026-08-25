@@ -18,12 +18,12 @@
 检查编码：
 ```bash
 # 检查文件是否包含 BOM
-head -c 3 docs/04_FAQ/xxx.md | xxd
+head -c 3 docs/zh/FAQ/xxx.md | xxd
 # BOM 文件会输出：efbb bf
 # 正常文件不会
 
 # 批量检查
-for f in docs/04_FAQ/*.md; do
+for f in docs/zh/FAQ/*.md; do
  bom=$(head -c 3 "$f" | xxd -p)
  if [ "$bom" = "efbbbf" ]; then
  echo "BOM detected: $f"
@@ -55,8 +55,8 @@ done
 
 ```bash
 # 检查行尾空格
-grep -rn ' $' docs/04_FAQ/*.md
+grep -rn ' $' docs/zh/FAQ/*.md
 
 # 清理（慎用，需确认后执行）
-# sed -i 's/[[:space:]]*$//' docs/04_FAQ/*.md
+# sed -i 's/[[:space:]]*$//' docs/zh/FAQ/*.md
 ```

@@ -1,14 +1,23 @@
 # -*- coding: utf-8 -*-
+# -----------------------------------------------------------------------------------------------------------
+# Copyright (c) 2026 Huawei Technologies Co., Ltd.
+# This program is free software, you can redistribute it and/or modify it under the terms and conditions of
+# CANN Open Software License Agreement Version 2.0 (the "License").
+# Please refer to the License for details. You may not use this file except in compliance with the License.
+# THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+# INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+# See LICENSE in the root of the software repository for the full text of the License.
+# -----------------------------------------------------------------------------------------------------------
 """
-根据 api_classification.md 的分类，将 03_api_ref 中的单个 API 文档合并为按分类组织的大文档。
+根据 api_classification.md 的分类，将 zh/api_ref 中的单个 API 文档合并为按分类组织的大文档。
 """
 import os
 import re
 import shutil
 
 # 基于当前工作目录（项目根）定位
-SRC_DIR = os.path.abspath(os.path.join("docs", "03_api_ref_bak"))
-DST_DIR = os.path.abspath(os.path.join("docs", "03_api_ref"))
+SRC_DIR = os.path.abspath(os.path.join("docs", "zh", "api_ref_bak"))
+DST_DIR = os.path.abspath(os.path.join("docs", "zh", "api_ref"))
 
 # ──────────────────────────────────────────────
 # 工具函数
@@ -1140,8 +1149,8 @@ def detect_unregistered_files(scan_dir=None):
     """检测指定目录中未在 CATEGORIES 中注册的 .md 文件。
 
     Args:
-        scan_dir: 要扫描的目录路径。默认为 SRC_DIR（03_api_ref_bak）。
-                  备份前可传入 03_api_ref 目录路径。
+        scan_dir: 要扫描的目录路径。默认为 SRC_DIR（zh/api_ref_bak）。
+                  备份前可传入 zh/api_ref 目录路径。
     """
     target_dir = scan_dir or SRC_DIR
     # 收集所有已注册的文件名
@@ -1243,7 +1252,7 @@ def main():
 
     # 写总索引
     index_text = build_index()
-    write_merged("api_ref.md", index_text)
+    write_merged("README.md", index_text)
     file_count += 1
 
     print(f"\n{'='*50}")

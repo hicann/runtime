@@ -59,7 +59,7 @@ aclnn 算子库与 Runtime 的交界处，按知识归属分别处理：
 - aclnn 头文件和链接库说明 → `references/aclnn-two-phase-calling.md` 或 `reference/ops-*/docs/`
 
 **属于 opbase 知识（非 Runtime 范畴），先查 Runtime example/ 再查 `reference/`：**
-- Tensor/Scalar 创建 API（aclCreateTensor、aclCreateScalar） → 先查 `example/quickstart/main.cpp` 获取用法示例，不足时查 `reference/`
+- Tensor/Scalar 创建 API（aclCreateTensor、aclCreateScalar） → 先查 `example/0_quickstart/0_hello_cann/main.cpp` 获取用法示例，不足时查 `reference/`
 
 **以上均不属于 Runtime 缺陷**，如果 Runtime 仓库中缺少这些内容的文档，记录为**外源知识缺失**（不计入整改项）。Runtime 仓库可以（但不是必须）提供指向外源文档的指引链接。
 
@@ -67,8 +67,8 @@ aclnn 算子库与 Runtime 的交界处，按知识归属分别处理：
 
 | 标注 | 含义 | 示例 |
 |------|------|------|
-| `[Runtime docs]` | 信息来自 Runtime 仓库文档 | `aclrtSetDevice(deviceId) [Runtime docs: docs/03_api_ref/aclrtSetDevice.md]` |
-| `[Runtime example]` | 信息来自 Runtime 仓库示例 | `参考 example/quickstart/main.cpp 第 42 行` |
+| `[Runtime docs]` | 信息来自 Runtime 仓库文档 | `aclrtSetDevice(deviceId) [Runtime docs: docs/zh/api_ref/04_device_management.md#aclrtSetDevice]` |
+| `[Runtime example]` | 信息来自 Runtime 仓库示例 | `参考 example/0_quickstart/0_hello_cann/main.cpp 第 42 行` |
 | `[reference: 仓库名/路径]` | 信息来自 reference/ 下的外源知识仓库 | `aclnnAdd 签名参考 [reference: ops-nn/docs/aclnn_add.md]` |
 | `[用户提供]` | 信息来自用户提供的外源知识 | `算子签名参考 [用户提供]` |
 | `[推测]` | 基于经验的推测 | `[推测] 类似 PyTorch 的 torch.add` |

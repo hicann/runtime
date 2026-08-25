@@ -129,7 +129,7 @@ aclnn 算子的 API 文档、示例代码和头文件**不在 Runtime 仓库中*
 | `acl/acl.h` | Runtime 基础 API | `libascendcl.so` |
 | `aclnnop/aclnn_<op>.h` | 具体 aclnn 算子 API | `libopapi.so` + `libnnopbase.so` |
 
-CMake 配置示例（来自 Runtime 仓库 `example/quickstart/CMakeLists.txt`）：
+CMake 配置示例（来自 Runtime 仓库 `example/0_quickstart/0_hello_cann/CMakeLists.txt`）：
 
 ```cmake
 include_directories(${ASCEND_CANN_PACKAGE_PATH}/include
@@ -148,7 +148,7 @@ target_link_libraries(main PRIVATE
 `aclCreateTensor` 和 `aclCreateScalar` 不属于 Runtime 仓库，
 由 opbase 组件提供。其用法可从以下来源获取：
 
-1. **Runtime quickstart 示例**：`example/quickstart/main.cpp` 中有完整调用示例
+1. **Runtime quickstart 示例**：`example/0_quickstart/0_hello_cann/main.cpp` 中有完整调用示例
 2. **ops 仓库示例**：各算子的 `examples/` 目录中有调用示例
 3. **opbase 仓库**：正式 API 文档（如有）
 

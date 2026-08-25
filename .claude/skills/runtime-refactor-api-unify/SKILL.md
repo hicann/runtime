@@ -364,5 +364,4 @@ rg -n "rtError_t (<统一函数名1>|<统一函数名2>)\(" src/runtime/core/inc
 
 ## 已完成的重构范例（供参考）
 
-- Cond & Label 重构 Prompt：`docs/cond_label_refactor_prompt.md`
-- CMO & Barrier 重构 Prompt：`docs/cmo_barrier_refactor_prompt.md`
+暂无。

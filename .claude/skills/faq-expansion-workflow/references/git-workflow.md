@@ -56,9 +56,9 @@ git merge origin/master
 ```bash
 git checkout -b doc/faq-clean origin/master
 # 从旧分支复制文件
-git checkout doc/old-messy-branch -- docs/04_FAQ/ docs/README.md
+git checkout doc/old-messy-branch -- docs/zh/FAQ/ docs/zh/README.md
 # 如有删除的旧文件
-git rm docs/04_FAQ/旧 FAQ 文件.md
+git rm docs/zh/FAQ/旧FAQ文件.md
 # 提交干净 commit
 git commit -m "docs: 新增常见 FAQ(#535)"
 git push -u fork doc/faq-clean

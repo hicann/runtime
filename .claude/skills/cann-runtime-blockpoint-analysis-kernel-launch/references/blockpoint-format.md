@@ -42,7 +42,7 @@
 必须列出实际查找过的文件路径，例如：
 - `docs/api_reference.md` — 未找到相关内容
 - `docs/quick_start.md` — 第 3 节提到了但不完整
-- `example/kernel/0_launch_kernel/main.cpp` — 有使用但无注释说明
+- `example/2_advanced_features/kernel/0_launch_kernel/main.cpp` — 有使用但无注释说明
 
 ### 期望补充
 
@@ -70,16 +70,16 @@
 | 问题描述：尝试使用 <<<>>> 内核调用符调用核函数，                        |
 |          但文档中未完整说明三个参数（blockDim, l2ctrl, stream）的含义   |
 | 查找过程：                                                            |
-|   - docs/zh/02_dev_guide/Kernel加载与执行.md — 有简单示例但参数说明不完整  |
+|   - docs/zh/dev_guide/03-03_kernel_loading_and_execution.md — 有简单示例但参数说明不完整  |
 |   - docs/zh/01_quick_start/Runtime_programming_model.md — 有使用但无详细解释        |
-|   - example/kernel/0_launch_kernel/main.cpp — 有使用但参数是硬编码的   |
+|   - example/2_advanced_features/kernel/0_launch_kernel/main.cpp — 有使用但参数是硬编码的   |
 | Runtime 文档中的相关内容：有语法示例，但参数含义不清晰                   |
 | 示例代码中的相关内容：有使用，可反推参数顺序                            |
 | 缺失资料：<<<>>> 内核调用符的完整参数说明                              |
 | 影响程度：优化点（可从示例代码反推，但不确定是否正确）                   |
 | [推测]：类似 CUDA 的 <<<gridDim, blockDim, sharedMem, stream>>>       |
 | 期望补充：                                                            |
-|   1. 在 docs/zh/02_dev_guide/ 中补充 <<<>>> 语法的完整说明               |
+|   1. 在 docs/zh/dev_guide/ 中补充 <<<>>> 语法的完整说明               |
 |   2. 包含每个参数的含义、取值范围、示例                                 |
 +---------------------------------------------------------------------+
 ```

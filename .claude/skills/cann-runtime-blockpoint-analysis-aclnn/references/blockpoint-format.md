@@ -41,15 +41,15 @@
 ### 查找过程
 
 必须列出实际查找过的文件路径，例如：
-- `docs/03_api_ref/` — 搜索 aclCreateTensor，未找到
-- `example/quickstart/main.cpp` — 有使用但参数含义不清楚
-- `example/quickstart/README.md` — 有 API 列表但无参数说明
+- `docs/zh/api_ref/` — 搜索 aclCreateTensor，未找到
+- `example/0_quickstart/0_hello_cann/main.cpp` — 有使用但参数含义不清楚
+- `example/0_quickstart/0_hello_cann/README.md` — 有 API 列表但无参数说明
 
 ### 期望补充
 
 明确指出：
 1. 理想情况下应该有什么资料
-2. 建议放在哪个位置（如 `docs/03_api_ref/aclCreateTensor.md`）
+2. 建议放在哪个位置（如 `docs/zh/api_ref/` 下对应分类文件）
 3. 是 Runtime 仓库应补充，还是属于 aclnn 算子库的文档范畴
 
 ## 衔接缺口的特别处理
@@ -71,9 +71,9 @@
 | 问题描述：尝试调用 aclCreateTensor 创建输入 Tensor，但不知道            |
 |          strides 参数如何计算，也不确定 aclFormat 应该传什么值           |
 | 查找过程：                                                            |
-|   - docs/03_api_ref/ — 搜索 aclCreateTensor，无专门文档               |
-|   - example/quickstart/main.cpp — 有使用，可看到参数但无注释            |
-|   - example/quickstart/README.md — API 表中有 aclCreateTensor         |
+|   - docs/zh/api_ref/ — 搜索 aclCreateTensor，无专门文档               |
+|   - example/0_quickstart/0_hello_cann/main.cpp — 有使用，可看到参数但无注释            |
+|   - example/0_quickstart/0_hello_cann/README.md — API 表中有 aclCreateTensor         |
 |     但仅一行说明"创建 Tensor"                                         |
 | Runtime 文档中的相关内容：无专门的 aclCreateTensor API 文档             |
 | quickstart 示例中的相关内容：有代码使用，可反推参数顺序                  |
@@ -81,7 +81,7 @@
 | 影响程度：半阻塞（可从示例代码反推，但不确定每个参数的含义）              |
 | [推测]：类似 PyTorch 的 tensor 构造，需要 shape + strides + dtype      |
 | 期望补充：                                                            |
-|   1. 在 docs/03_api_ref/ 中补充 aclCreateTensor 的完整 API 文档       |
+|   1. 在 docs/zh/api_ref/ 中补充 aclCreateTensor 的完整 API 文档       |
 |   2. 包含每个参数的含义、取值范围、示例                                 |
 +---------------------------------------------------------------------+
 ```

@@ -5,7 +5,7 @@
 **自定义核函数算子（$0）**（具体功能由用户提供的算子信息定义）
 - 输入/输出：需根据用户提供的算子信息确定
 - 调用方式：AscendC 自定义核函数 → `<<<>>>` 内核调用符语法（Kernel Launch 路径）
-- 参考：`example/kernel/0_launch_kernel/` 和 `docs/02_dev_guide/Kernel加载与执行.md` 中的示例
+- 参考：`example/2_advanced_features/kernel/0_launch_kernel/` 和 `docs/zh/dev_guide/03-03_kernel_loading_and_execution.md` 中的示例
 
 **算子信息发现：**
 在编写代码前，先在仓库中搜索 $0 的相关信息：

@@ -77,8 +77,8 @@ AscendC 与 Runtime 的交界处需要区分**语法定义**和**使用示例**�
 
 | 标注 | 含义 | 示例 |
 |------|------|------|
-| `[Runtime docs]` | 信息来自 Runtime 仓库文档 | `aclrtSetDevice(deviceId) [Runtime docs: docs/03_api_ref/aclrtSetDevice.md]` |
-| `[Runtime example]` | 信息来自 Runtime 仓库示例 | `参考 example/kernel/0_launch_kernel/main.cpp 第 15 行` |
+| `[Runtime docs]` | 信息来自 Runtime 仓库文档 | `aclrtSetDevice(deviceId) [Runtime docs: docs/zh/api_ref/04_device_management.md#aclrtSetDevice]` |
+| `[Runtime example]` | 信息来自 Runtime 仓库示例 | `参考 example/2_advanced_features/kernel/0_launch_kernel/main.cpp 第 15 行` |
 | `[reference: 仓库名/路径]` | 信息来自 reference/ 下的外源知识仓库 | `核函数编写参考 [reference: asc-devkit/docs/xxx.md]` |
 | `[用户提供]` | 信息来自用户提供的外源知识 | `核函数编写参考 [用户提供]` |
 | `[推测]` | 基于经验的推测 | `[推测] 类似 CUDA 的 <<<gridDim, blockDim, stream>>>` |

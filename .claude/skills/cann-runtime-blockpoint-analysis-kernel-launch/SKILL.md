@@ -38,7 +38,7 @@ Runtime 运行时模块，为算子开发者提供设备管理、内存管理、
 | 关键 API | `<<<>>>` 内核调用符语法 | GetWorkspaceSize → Execute |
 | 需要编译核函数 | 需要 | 不需要 |
 | 适用场景 | 开发自定义算子 | 快速使用已有算子 |
-| 参考示例 | `example/kernel/0_launch_kernel/` | `example/quickstart/` |
+| 参考示例 | `example/2_advanced_features/kernel/0_launch_kernel/` | `example/0_quickstart/` |
 
 **核心价值：** 断点分析发现的是开发者实际会撞上的阻塞问题，
 而不是理论上可能存在的文档缺陷。每个断点都对应一个真实的
@@ -145,7 +145,7 @@ git clone https://gitcode.com/cann/ops-math.git 2>/dev/null || (cd ops-math && g
 **算子信息发现（在算子信息确认后执行）：**
 1. 在 `example/` 中搜索 `$0` 关键词，确认是否有对应示例
 2. 在 `docs/` 中搜索 `$0`，确认是否有 API 文档
-3. 如无专门示例，以 `example/kernel/0_launch_kernel/` 为参考模板
+3. 如无专门示例，以 `example/2_advanced_features/kernel/0_launch_kernel/` 为参考模板
 4. 将仓库中发现的信息与用户提供的算子信息进行对比，确认哪些属于 Runtime 职责、哪些属于外源知识
 
 **⚠️ 外源知识前置判断（必须在进入 Step 1 之前完成）：**
