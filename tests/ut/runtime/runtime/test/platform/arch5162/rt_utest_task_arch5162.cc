@@ -36,7 +36,6 @@
 #include "device_error_proc.hpp"
 #include "cond_op_label_task.h"
 #include "model.hpp"
-#include "stars_cond_isa_helper.hpp"
 #include "cond_op_stream_task.h"
 #include "stream_task.h"
 #include "task_res.hpp"

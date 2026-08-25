@@ -19,7 +19,6 @@ generate_runtime_api_stubs(
 
 set(runtimeut_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/host_task.cc
-    ${TOP_DIR}/src/runtime/core/src/task/stars_cond_isa_helper.cc
     ${TOP_DIR}/src/runtime/core/src/task/task.cc
     ${TOP_DIR}/src/runtime/core/src/task/arch5162/task_execute_time.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/task_manager.cc
@@ -28,7 +27,6 @@ set(runtimeut_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/task_info/cond_op/cond_op_label_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/cond_op/cond_op_stream_task_base.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/cond_op/cond_op_manager.cc
-    ${TOP_DIR}/src/runtime/core/src/task/task_info/cond_op/stars_cond_isa_construct_common.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/davinci/davinci_task_arch5162.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/davinci/davinci_kernel_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/davinci/davinci_multiple_task.cc
@@ -348,7 +346,7 @@ add_executable(runtime_utest_arch5162
     rt_utest_task_arch5162.cc
     rt_utest_task_execute_time_arch5162.cc
     rt_utest_mem_arch5162.cc
-    ${TOP_DIR}/tests/ut/runtime/runtime/test/rt_utest_mbuf_stub.cc
+    ../../rt_utest_mbuf_stub.cc
     rt_utest_device_arch5162.cc
 )
 add_dependencies(runtime_utest_arch5162 runtime_api_stub_generator_ut)

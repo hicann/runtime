@@ -15,7 +15,6 @@
 #include "stream.hpp"
 #include "runtime.hpp"
 #include "model.hpp"
-#include "stars_cond_isa_helper.hpp"
 #include "runtime_task_manager.h"
 #include "cond_op_label_task.h"
 #include "kernel.hpp"

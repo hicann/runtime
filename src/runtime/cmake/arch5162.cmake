@@ -48,8 +48,6 @@ generate_runtime_api_stubs(
 
 set(libruntime_v100_task_src_files
     ${RUNTIME_CORE_DIR}/src/task/host_task.cc
-    ${RUNTIME_CORE_DIR}/src/task/stars_cond_isa_helper.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/cond_op/stars_cond_isa_construct_common.cc
     ${RUNTIME_CORE_DIR}/src/task/task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/task_manager.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/barrier/barrier_task.cc

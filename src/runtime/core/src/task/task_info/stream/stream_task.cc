@@ -10,12 +10,10 @@
 
 #include "thread_local_container.hpp"
 #include "inner_thread_local.hpp"
-#include "stars_cond_isa_helper.hpp"
 #include "runtime_task_manager.h"
 #include "stream_sqcq_manage.hpp"
 #include "stream_task.h"
 #include "stub_task.hpp"
-#include "cond_op_manager.hpp"
 #include "error_message_manage.hpp"
 #include "task.hpp"
 
@@ -23,33 +21,6 @@ namespace cce {
 namespace runtime {
 
 TIMESTAMP_EXTERN(rtStreamCreate_drvDeviceGetBareTgid);
-
-rtError_t ReConstructStreamActiveTaskFcDefault(TaskInfo* taskInfo)
-{
-    RtStarsStreamActiveFc fc = {};
-    rtStarsStreamActiveFcPara_t fcPara = {};
-
-    const rtChipType_t chipType = taskInfo->stream->Device_()->GetChipType();
-    rtError_t ret = InitFuncCallParaForStreamActiveTask(taskInfo, fcPara, chipType);
-    COND_RETURN_ERROR((ret != RT_ERROR_NONE), ret, "Init func call para failed,retCode=%#x.", ret);
-    ConstructStreamActiveFc(fc, fcPara, 0U);
-    const rtMemcpyKind_t kind = (taskInfo->stream->Device_()->IsSupportFeature(
-                                    RtOptionalFeatureType::RT_FEATURE_DEVICE_MEM_COPY_DOT_D2D_ONLY)) ?
-                                    RT_MEMCPY_DEVICE_TO_DEVICE :
-                                    RT_MEMCPY_HOST_TO_DEVICE;
-    ret = taskInfo->stream->Device_()->Driver_()->MemCopySync(
-        taskInfo->u.streamactiveTask.funcCallSvmMem, taskInfo->u.streamactiveTask.funCallMemSize, &fc,
-        sizeof(RtStarsStreamActiveFc), kind);
-    return ret;
-}
-
-rtError_t ReConstructStreamActiveTaskFc(TaskInfo* taskInfo)
-{
-    const CondIsaTaskFuncs* const funcs = GetCurrentCondIsaTaskFuncs();
-    return ((funcs != nullptr) && (funcs->reconstructStreamActive != nullptr)) ?
-               funcs->reconstructStreamActive(taskInfo) :
-               ReConstructStreamActiveTaskFcDefault(taskInfo);
-}
 
 rtError_t InitFuncCallParaForStreamActiveTask(
     TaskInfo* taskInfo, rtStarsStreamActiveFcPara_t& fcPara, const rtChipType_t chipType)
