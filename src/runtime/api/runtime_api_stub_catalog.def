@@ -1,0 +1,730 @@
+/*
+ * Copyright (c) 2026 Huawei Technologies Co., Ltd.
+ * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
+ * CANN Open Software License Agreement Version 2.0 (the "License").
+ * Please refer to the License for details. You may not use this file except in compliance with the License.
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+ * See LICENSE in the root of the software repository for the full text of the License.
+ */
+
+// Generated once from the legacy hand-written stubs; maintained as the canonical stub signature catalog.
+RUNTIME_API_CATALOG_VERSION(1)
+
+RUNTIME_API(david, rtError_t, rtCntNotifyCreate,
+    (const int32_t deviceId, rtCntNotify_t* const cntNotify),
+    (deviceId, cntNotify), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(david, rtError_t, rtCntNotifyCreateWithFlag,
+    (const int32_t deviceId, rtCntNotify_t* const cntNotify, const uint32_t flags),
+    (deviceId, cntNotify, flags), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtsPersistentTaskClean,
+    (rtStream_t stm),
+    (stm), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtMemcpyAsyncWithOffset,
+    ( void** dst, uint64_t dstMax, uint64_t dstDataOffset, const void** src, uint64_t cnt,
+    uint64_t srcDataOffset, rtMemcpyKind kind, rtStream_t stm),
+    (dst, dstMax, dstDataOffset, src, cnt, srcDataOffset, kind, stm), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtMemsetD32,
+    (void* dst, uint64_t destMax, uint32_t value, uint64_t count),
+    (dst, destMax, value, count), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtMemsetD32Async,
+    (void* dst, uint64_t destMax, uint32_t value, uint64_t count, rtStream_t stm),
+    (dst, destMax, value, count, stm), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtMemAdvise,
+    (void* devPtr, uint64_t count, uint32_t advise),
+    (devPtr, count, advise), SUCCESS_NOOP, EXPORT)
+
+RUNTIME_API(uvm, rtError_t, rtMemManagedAdvise,
+    (const void* const ptr, uint64_t size, uint16_t advise, rtMemManagedLocation location),
+    (ptr, size, advise, location), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(uvm, rtError_t, rtMemManagedGetAttr,
+    ( rtMemManagedRangeAttribute attribute, const void* ptr, size_t size, void* data, size_t dataSize),
+    (attribute, ptr, size, data, dataSize), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(uvm, rtError_t, rtMemManagedGetAttrs,
+    ( rtMemManagedRangeAttribute* attributes, size_t numAttributes, const void* ptr, size_t size, void** data,
+    size_t* dataSizes),
+    (attributes, numAttributes, ptr, size, data, dataSizes), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(david, rtError_t, rtsCntNotifyRecord,
+    (rtCntNotify_t cntNotify, rtStream_t stm, rtCntNotifyRecordInfo_t* info),
+    (cntNotify, stm, info), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtNotifyGetPhyInfo,
+    (rtNotify_t notify, uint32_t* phyDevId, uint32_t* tsId),
+    (notify, phyDevId, tsId), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtSetIpcNotifyPid,
+    (const char_t* name, int32_t pid[], int32_t num),
+    (name, pid, num), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtSetIpcMemPid,
+    (const char_t* name, int32_t pid[], int32_t num),
+    (name, pid, num), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtNpuGetFloatStatus,
+    (void* outputAddrPtr, uint64_t outputSize, uint32_t checkMode, rtStream_t stm),
+    (outputAddrPtr, outputSize, checkMode, stm), FEATURE_NOT_SUPPORT, HIDDEN)
+
+RUNTIME_API(standard_soc, rtError_t, rtGetDevArgsAddr,
+    (rtStream_t stm, rtArgsEx_t* argsInfo, void** devArgsAddr, void** argsHandle),
+    (stm, argsInfo, devArgsAddr, argsHandle), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtSetIpcNotifySuperPodPid,
+    (const char* name, uint32_t sdid, int32_t pid),
+    (name, sdid, pid), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtSetStreamTag,
+    (rtStream_t stm, uint32_t geOpTag),
+    (stm, geOpTag), SUCCESS_NOOP, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtNpuClearFloatStatus,
+    (uint32_t checkMode, rtStream_t stm),
+    (checkMode, stm), FEATURE_NOT_SUPPORT, HIDDEN)
+
+RUNTIME_API(standard_soc, rtError_t, rtsStreamBeginTaskUpdate,
+    (rtStream_t stm, rtTaskGrp_t handle),
+    (stm, handle), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtsStreamBeginTaskGrp,
+    (rtStream_t stm),
+    (stm), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtThreadExchangeCaptureMode,
+    (rtStreamCaptureMode* mode),
+    (mode), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtMemcpyD2DAddrAsync,
+    ( void* dst, uint64_t dstMax, uint64_t dstOffset, const void* src, uint64_t cnt, uint64_t srcOffset,
+    rtStream_t stm),
+    (dst, dstMax, dstOffset, src, cnt, srcOffset, stm), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtStartADCProfiler,
+    (void** addr, uint32_t length),
+    (addr, length), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtStopADCProfiler,
+    (void* addr),
+    (addr), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(david, rtError_t, rtsCntNotifyWaitWithTimeout,
+    (rtCntNotify_t cntNotify, rtStream_t stm, rtCntNotifyWaitInfo_t* info),
+    (cntNotify, stm, info), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(david, rtError_t, rtsCntNotifyReset,
+    (rtCntNotify_t cntNotify, rtStream_t stm),
+    (cntNotify, stm), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtIpcMemImportPidInterServer,
+    (const char* key, const rtServerPid* serverPids, size_t num),
+    (key, serverPids, num), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtGetSocSpec,
+    (const char* label, const char* key, char* val, const uint32_t maxLen),
+    (label, key, val, maxLen), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtNotifySetImportPidInterServer,
+    (rtNotify_t notify, const rtServerPid* serverPids, size_t num),
+    (notify, serverPids, num), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(david, rtError_t, rtCntNotifyCreateServer,
+    (rtCntNotify_t* const cntNotify, uint64_t flags),
+    (cntNotify, flags), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(david, rtError_t, rtCntNotifyRecord,
+    ( rtCntNotify_t const inCntNotify, rtStream_t const stm, const rtCntNtyRecordInfo_t* const info),
+    (inCntNotify, stm, info), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(david, rtError_t, rtsCntNotifyGetId,
+    (rtCntNotify_t cntNotify, uint32_t* notifyId),
+    (cntNotify, notifyId), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(david, rtError_t, rtCntNotifyWaitWithTimeout,
+    ( rtCntNotify_t const inCntNotify, rtStream_t const stm, const rtCntNtyWaitInfo_t* const info),
+    (inCntNotify, stm, info), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(david, rtError_t, rtCntNotifyReset,
+    (rtCntNotify_t const inCntNotify, rtStream_t const stm),
+    (inCntNotify, stm), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(david, rtError_t, rtCntNotifyDestroy,
+    (rtCntNotify_t const inCntNotify),
+    (inCntNotify), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(david, rtError_t, rtGetCntNotifyAddress,
+    ( rtCntNotify_t const inCntNotify, uint64_t* const cntNotifyAddress, rtNotifyType_t const regType),
+    (inCntNotify, cntNotifyAddress, regType), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(david, rtError_t, rtGetCntNotifyId,
+    (rtCntNotify_t inCntNotify, uint32_t* const notifyId),
+    (inCntNotify, notifyId), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtWriteValue,
+    (rtWriteValueInfo_t* const info, rtStream_t const stm),
+    (info, stm), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(david, rtError_t, rtCCULaunch,
+    (rtCcuTaskInfo_t* taskInfo, rtStream_t const stm),
+    (taskInfo, stm), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(david, rtError_t, rtUbDevQueryInfo,
+    (rtUbDevQueryCmd cmd, void* devInfo),
+    (cmd, devInfo), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(david, rtError_t, rtGetDevResAddress,
+    (rtDevResInfo* const resInfo, rtDevResAddrInfo* const addrInfo),
+    (resInfo, addrInfo), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(david, rtError_t, rtReleaseDevResAddress,
+    (rtDevResInfo* const resInfo),
+    (resInfo), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtWriteValuePtr,
+    (void* const writeValueInfo, rtStream_t const stm, void* const pointedAddr),
+    (writeValueInfo, stm, pointedAddr), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(david, rtError_t, rtUbDbSend,
+    (rtUbDbInfo_t* dbInfo, rtStream_t stm),
+    (dbInfo, stm), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(david, rtError_t, rtUbDirectSend,
+    (rtUbWqeInfo_t* wqeInfo, rtStream_t stm),
+    (wqeInfo, stm), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(david, rtError_t, rtFusionLaunch,
+    (void* const fusionInfo, rtStream_t const stm, rtFusionArgsEx_t* argsInfo),
+    (fusionInfo, stm, argsInfo), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtStreamTaskAbort,
+    (rtStream_t stm),
+    (stm), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtStreamRecover,
+    (rtStream_t stm),
+    (stm), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtStreamTaskClean,
+    (rtStream_t stm),
+    (stm), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtDeviceResourceClean,
+    (const int32_t devId),
+    (devId), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtGetBinaryDeviceBaseAddr,
+    (void* handle, void** deviceBase),
+    (handle, deviceBase), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtFftsPlusTaskLaunch,
+    (rtFftsPlusTaskInfo_t* fftsPlusTaskInfo, rtStream_t stm),
+    (fftsPlusTaskInfo, stm), FEATURE_NOT_SUPPORT, HIDDEN)
+
+RUNTIME_API(standard_soc, rtError_t, rtFftsPlusTaskLaunchWithFlag,
+    (rtFftsPlusTaskInfo_t* fftsPlusTaskInfo, rtStream_t stm, uint32_t flag),
+    (fftsPlusTaskInfo, stm, flag), FEATURE_NOT_SUPPORT, HIDDEN)
+
+RUNTIME_API(standard_soc, rtError_t, rtRDMASend,
+    (uint32_t sqIndex, uint32_t wqeIndex, rtStream_t stm),
+    (sqIndex, wqeIndex, stm), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtRDMADBSend,
+    (uint32_t dbIndex, uint64_t dbInfo, rtStream_t stm),
+    (dbIndex, dbInfo, stm), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtIpcSetMemoryName,
+    (const void* ptr, uint64_t byteCount, char_t* name, uint32_t len),
+    (ptr, byteCount, name, len), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtIpcSetMemoryAttr,
+    (const char* name, uint32_t type, uint64_t attr),
+    (name, type, attr), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtIpcDestroyMemoryName,
+    (const char_t* name),
+    (name), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtIpcOpenMemory,
+    (void** ptr, const char_t* name),
+    (ptr, name), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtIpcCloseMemory,
+    (const void* ptr),
+    (ptr), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtIpcSetNotifyName,
+    (rtNotify_t notify, char_t* name, uint32_t len),
+    (notify, name, len), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtIpcOpenNotify,
+    (rtNotify_t* notify, const char_t* name),
+    (notify, name), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtIpcOpenNotifyWithFlag,
+    (rtNotify_t* notify, const char_t* name, uint32_t flag),
+    (notify, name, flag), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtLaunchSqeUpdateTask,
+    (uint32_t streamId, uint32_t taskId, void* src, uint64_t cnt, rtStream_t stm),
+    (streamId, taskId, src, cnt, stm), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtRegKernelLaunchFillFunc,
+    (const char* symbol, rtKernelLaunchFillFunc callback),
+    (symbol, callback), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtUnRegKernelLaunchFillFunc,
+    (const char* symbol),
+    (symbol), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtsLaunchReduceAsyncTask,
+    (const rtReduceInfo_t* reduceInfo, const rtStream_t stm, const void* reserve),
+    (reduceInfo, stm, reserve), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtsLaunchUpdateTask,
+    (rtStream_t destStm, uint32_t destTaskId, rtStream_t stm, rtTaskUpdateCfg_t* cfg),
+    (destStm, destTaskId, stm, cfg), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtsGetCmoDescSize,
+    (size_t* size),
+    (size), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtsSetCmoDesc,
+    (rtCmoDesc_t cmoDesc, void* srcAddr, size_t srcLen),
+    (cmoDesc, srcAddr, srcLen), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtsLaunchCmoAddrTask,
+    (rtCmoDesc_t cmoDesc, rtStream_t stm, rtCmoOpCode cmoOpCode, const void* reserve),
+    (cmoDesc, stm, cmoOpCode, reserve), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtCmoAddrTaskLaunch,
+    ( void* cmoAddrInfo, uint64_t destMax, rtCmoOpCode_t cmoOpCode, rtStream_t stm, uint32_t flag),
+    (cmoAddrInfo, destMax, cmoOpCode, stm, flag), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtModelTaskUpdate,
+    (rtStream_t desStm, uint32_t desTaskId, rtStream_t sinkStm, rtMdlTaskUpdateInfo_t* para),
+    (desStm, desTaskId, sinkStm, para), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtReduceAsyncV2,
+    ( void* dst, uint64_t destMax, const void* src, uint64_t cnt, rtRecudeKind_t kind, rtDataType_t type,
+    rtStream_t stm, void* overflowAddr),
+    (dst, destMax, src, cnt, kind, type, stm, overflowAddr), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtStreamCreateWithFlagsExternal,
+    (rtStream_t* stm, int32_t priority, uint32_t flags),
+    (stm, priority, flags), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtModelGetNodes,
+    (rtModel_t mdl, uint32_t* const num),
+    (mdl, num), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtModelDebugDotPrint,
+    (rtModel_t mdl),
+    (mdl), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtModelDebugJsonPrint,
+    (rtModel_t mdl, const char* path, uint32_t flags),
+    (mdl, path, flags), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtModelDestroyRegisterCallback,
+    (rtModel_t const mdl, rtCallback_t fn, void* ptr),
+    (mdl, fn, ptr), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtModelDestroyUnregisterCallback,
+    (rtModel_t const mdl, rtCallback_t fn),
+    (mdl, fn), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtStreamAddToModel,
+    (rtStream_t stm, rtModel_t captureMdl),
+    (stm, captureMdl), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtStreamBeginCapture,
+    (rtStream_t stm, const rtStreamCaptureMode mode),
+    (stm, mode), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtStreamEndCapture,
+    (rtStream_t stm, rtModel_t* captureMdl),
+    (stm, captureMdl), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtStreamGetCaptureInfo,
+    (rtStream_t stm, rtStreamCaptureStatus* const status, rtModel_t* captureMdl),
+    (stm, status, captureMdl), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtModelCondHandleCreate,
+    ( rtModel_t mdl, uint32_t defaultLaunchValue, rtCondHandleFlag_t flag, rtCondHandle_t* handle),
+    (mdl, defaultLaunchValue, flag, handle), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtModelCondHandleGetCondPtr,
+    (rtCondHandle_t handle, uint64_t** devPtr),
+    (handle, devPtr), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtStreamAddCondTask,
+    (rtCondTaskParams params, rtStream_t stm, uint32_t flags),
+    (params, stm, flags), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtStreamBeginCaptureToModel,
+    (rtStream_t stm, rtModel_t mdl, const rtStreamCaptureMode mode),
+    (stm, mdl, mode), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(task, rtError_t, rtGetTaskBufferLen,
+    (const rtTaskBuffType_t type, uint32_t* const bufferLen),
+    (type, bufferLen), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(task, rtError_t, rtTaskBuild,
+    (const rtTaskInput_t* const taskInput, uint32_t* taskLen),
+    (taskInput, taskLen), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(task, rtError_t, rtGetElfOffset,
+    (void* const elfData, const uint32_t elfLen, uint32_t* offset),
+    (elfData, elfLen, offset), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(task, rtError_t, rtGetKernelBin,
+    (const char_t* const binFileName, char_t** const buffer, uint32_t* length),
+    (binFileName, buffer, length), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(task, rtError_t, rtFreeKernelBin,
+    (char_t* const buffer),
+    (buffer), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtCmoAsync,
+    (void* srcAddrPtr, size_t srcLen, rtCmoOpCode_t cmoType, rtStream_t stm),
+    (srcAddrPtr, srcLen, cmoType, stm), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtCmoTaskLaunch,
+    (rtCmoTaskInfo_t* taskInfo, rtStream_t stm, uint32_t flag),
+    (taskInfo, stm, flag), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtReduceAsync,
+    ( void* dst, uint64_t destMax, const void* src, uint64_t cnt, rtRecudeKind_t kind, rtDataType_t type,
+    rtStream_t stm),
+    (dst, destMax, src, cnt, kind, type, stm), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtReduceAsyncWithCfg,
+    ( void* dst, uint64_t destMax, const void* src, uint64_t cnt, rtRecudeKind_t kind, rtDataType_t type,
+    rtStream_t stm, uint32_t qosCfg),
+    (dst, destMax, src, cnt, kind, type, stm, qosCfg), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtReduceAsyncWithCfgV2,
+    ( void* dst, uint64_t destMax, const void* src, uint64_t cnt, rtRecudeKind_t kind, rtDataType_t type,
+    rtStream_t stm, const rtTaskCfgInfo_t* cfgInfo),
+    (dst, destMax, src, cnt, kind, type, stm, cfgInfo), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(snapshot, rtError_t, rtSnapShotProcessLock,
+    (),
+    (), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(snapshot, rtError_t, rtSnapShotProcessUnlock,
+    (),
+    (), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(snapshot, rtError_t, rtSnapShotProcessGetState,
+    (rtProcessState* state),
+    (state), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(snapshot, rtError_t, rtSnapShotProcessBackup,
+    (),
+    (), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(snapshot, rtError_t, rtSnapShotProcessRestore,
+    (),
+    (), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(snapshot, rtError_t, rtSnapShotCallbackRegister,
+    (rtSnapShotStage stage, rtSnapShotCallBack callback, void* args),
+    (stage, callback, args), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(snapshot, rtError_t, rtSnapShotCallbackUnregister,
+    (rtSnapShotStage stage, rtSnapShotCallBack callback),
+    (stage, callback), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtCacheLastTaskOpInfo,
+    (const void* const infoPtr, const size_t infoSize),
+    (infoPtr, infoSize), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtCacheLastTaskExtendInfo,
+    (const char* const extendInfoPtr, const size_t infoSize),
+    (extendInfoPtr, infoSize), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(xpu, rtError_t, rtSetXpuDevice,
+    (rtXpuDevType devType, const uint32_t devId),
+    (devType, devId), FEATURE_NOT_SUPPORT, HIDDEN)
+
+RUNTIME_API(xpu, rtError_t, rtResetXpuDevice,
+    (rtXpuDevType devType, const uint32_t devId),
+    (devType, devId), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtEventWorkModeSet,
+    (uint8_t mode),
+    (mode), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtEventWorkModeGet,
+    (uint8_t* mode),
+    (mode), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtIpcGetEventHandle,
+    (rtEvent_t event, rtIpcEventHandle_t* handle),
+    (event, handle), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtIpcOpenEventHandle,
+    (rtIpcEventHandle_t handle, rtEvent_t* event),
+    (event, handle), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(xpu, rtError_t, rtGetXpuDevCount,
+    (const rtXpuDevType devType, uint32_t* devCount),
+    (devType, devCount), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtFunctionGetAttribute,
+    (rtFuncHandle funcHandle, rtFuncAttribute attrType, int64_t* attrValue),
+    (funcHandle, attrType, attrValue), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtFunctionGetBinary,
+    (const rtFuncHandle funcHandle, rtBinHandle* binHandle),
+    (funcHandle, binHandle), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtGetFuncBySymbol,
+    (const void* symbol, rtFuncHandle* funcHandle),
+    (symbol, funcHandle), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtRegisterFuncSymbol,
+    (void* binHandle, const void* symbol, const char* kernelName, void* reserve),
+    (binHandle, symbol, kernelName, reserve), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtFunctionGetParamCount,
+    (const void* func, size_t* paramCount),
+    (func, paramCount), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtFunctionGetParamInfo,
+    (const void* func, size_t paramIndex, size_t* paramOffset, size_t* paramSize),
+    (func, paramIndex, paramOffset, paramSize), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtFunctionGetAvailDynUbufPerBlock,
+    (void* func, uint32_t flags, size_t* dynamicUbufSize),
+    (func, flags, dynamicUbufSize), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtLaunchKernelWithArgsArray,
+    ( void* func, uint32_t numBlocks, rtStream_t stm, rtKernelLaunchCfg_t* cfg, void** args),
+    (func, numBlocks, stm, cfg, args), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(task, rtError_t, rtModelTaskGetParams,
+    (rtTask_t task, rtTaskParams* params),
+    (task, params), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(task, rtError_t, rtModelTaskSetParams,
+    (rtTask_t task, rtTaskParams* params),
+    (task, params), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(task, rtError_t, rtModelKernelTaskGetAttribute,
+    (rtTask_t task, rtLaunchKernelAttrId attrId, rtLaunchKernelAttrVal_t* attrValue),
+    (task, attrId, attrValue), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtModelUpdate,
+    (rtModel_t mdl),
+    (mdl), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(task, rtError_t, rtModelTaskDisable,
+    (rtTask_t task),
+    (task), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtFuncGetSize,
+    (const rtFuncHandle funcHandle, size_t* aicSize, size_t* aivSize),
+    (funcHandle, aicSize, aivSize), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(dqs, rtError_t, rtLaunchDqsTask,
+    (const rtStream_t stm, const rtDqsTaskCfg_t* const taskCfg),
+    (stm, taskCfg), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtsNotifySetImportPid,
+    (rtNotify_t notify, int32_t pid[], int num),
+    (notify, pid, num), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(soma, rtError_t, rtMemPoolCreate,
+    (rtMemPool_t* memPool, const rtMemPoolProps* poolProps),
+    (memPool, poolProps), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(soma, rtError_t, rtMemPoolDestroy,
+    (const rtMemPool_t memPool),
+    (memPool), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(soma, rtError_t, rtMemPoolSetAttr,
+    (rtMemPool_t memPool, rtMemPoolAttr attr, void* value),
+    (memPool, attr, value), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(soma, rtError_t, rtMemPoolGetAttr,
+    (rtMemPool_t memPool, rtMemPoolAttr attr, void* value),
+    (memPool, attr, value), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(soma, rtError_t, rtMemPoolMallocAsync,
+    (void** ptr, const uint64_t size, const rtMemPool_t memPoolId, const rtStream_t stm),
+    (ptr, size, memPoolId, stm), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(soma, rtError_t, rtMemPoolFreeAsync,
+    (void* ptr, rtStream_t stm),
+    (ptr, stm), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(soma, rtError_t, rtMemPoolTrimTo,
+    (rtMemPool_t memPool, uint64_t minBytesToKeep),
+    (memPool, minBytesToKeep), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtModelGetStreams,
+    (rtModel_t const mdl, rtStream_t* streams, uint32_t* numStreams),
+    (mdl, streams, numStreams), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtStreamGetTasks,
+    (rtStream_t const stm, rtTask_t* tasks, uint32_t* numTasks),
+    (stm, tasks, numTasks), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(task, rtError_t, rtTaskGetType,
+    (rtTask_t task, rtTaskType* type),
+    (task, type), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(task, rtError_t, rtTaskGetSeqId,
+    (rtTask_t task, uint32_t* id),
+    (task, id), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtBinaryGetMetaNum,
+    (const rtBinHandle binHandle, const rtBinaryMetaType type, size_t* numOfMeta),
+    (binHandle, type, numOfMeta), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtBinaryGetMetaInfo,
+    ( const rtBinHandle binHandle, const rtBinaryMetaType type, const size_t numOfMeta, void** data,
+    const size_t* dataSize),
+    (binHandle, type, numOfMeta, data, dataSize), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(uvm, rtError_t, rtMemManagedPrefetchAsync,
+    ( const void* ptr, size_t size, rtMemManagedLocation location, uint32_t flags, rtStream_t stream),
+    (ptr, size, location, flags, stream), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(uvm, rtError_t, rtMemManagedPrefetchBatchAsync,
+    ( const void** ptrs, size_t* sizes, size_t count, rtMemManagedLocation* prefetchLocs,
+    size_t* prefetchLocIdxs, size_t numPrefetchLocs, uint64_t flags, rtStream_t stream),
+    (ptrs, sizes, count, prefetchLocs, prefetchLocIdxs, numPrefetchLocs, flags, stream), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, void, rtRegisterVariable,
+    ( void* binHandle, const void* hostVar, const char* deviceVarName, size_t size, uint32_t flags,
+    void* reserve),
+    (binHandle, hostVar, deviceVarName, size, flags, reserve), VOID_NOOP, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtSymbolLookup,
+    (const void* hostVar, void** devPtr, size_t* size),
+    (hostVar, devPtr, size), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtBinaryGetGlobal,
+    (const rtBinHandle binHandle, const char* name, void** dptr, size_t* size),
+    (binHandle, name, dptr, size), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtLaunchSIMTKernelWithArgsArray,
+    ( void* func, rtDim3 gridDim, rtDim3 blockDim, size_t dynUbufSize, rtStream_t stm, rtKernelLaunchCfg_t* cfg,
+    void** args),
+    (func, gridDim, blockDim, dynUbufSize, stm, cfg, args), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtNotifyReset,
+    (rtNotify_t notify),
+    (notify), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtSetOpExecuteTimeOut,
+    (uint32_t timeout),
+    (timeout), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtBarrierTaskLaunch,
+    (rtBarrierTaskInfo_t* taskInfo, rtStream_t stm, uint32_t flag),
+    (taskInfo, stm, flag), SUCCESS_NOOP, HIDDEN)
+
+RUNTIME_API(standard_soc, rtError_t, rtBinaryLoadWithoutTilingKey,
+    (const void* data, const uint64_t length, rtBinHandle* binHandle),
+    (data, length, binHandle), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtLaunchSIMTKernelWithHostArgs,
+    ( void* func, rtDim3 gridDim, rtDim3 blockDim, size_t dynUbufSize, rtStream_t stm, rtKernelLaunchCfg_t* cfg,
+    void* hostArgs, uint32_t argsSize, rtPlaceHolderInfo_t* placeHolderArray, uint32_t placeHolderNum),
+    (func, gridDim, blockDim, dynUbufSize, stm, cfg, hostArgs, argsSize, placeHolderArray, placeHolderNum), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtDeviceL2CacheFlush,
+    (void* rsv),
+    (rsv), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtRegisterParseDfxInfoFunc,
+    (rtParseDfxInfoFunc func),
+    (func), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(mbuf, rtError_t, rtMbufInit,
+    (rtMemBuffCfg_t* cfg),
+    (cfg), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(mbuf, rtError_t, rtMbufBuild,
+    (void* buff, const uint64_t size, rtMbufPtr_t* mbufPtr),
+    (buff, size, mbufPtr), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(mbuf, rtError_t, rtMbufAlloc,
+    (rtMbufPtr_t* memBuf, uint64_t size),
+    (memBuf, size), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(mbuf, rtError_t, rtMbufAllocEx,
+    (rtMbufPtr_t* memBuf, uint64_t size, uint64_t flag, int32_t grpId),
+    (memBuf, size, flag, grpId), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(mbuf, rtError_t, rtMbufUnBuild,
+    (const rtMbufPtr_t mbufPtr, void** buff, uint64_t* size),
+    (mbufPtr, buff, size), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(mbuf, rtError_t, rtBuffGet,
+    (const rtMbufPtr_t mbufPtr, void* buff, const uint64_t size),
+    (mbufPtr, buff, size), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(mbuf, rtError_t, rtBuffPut,
+    (const rtMbufPtr_t mbufPtr, void* buff),
+    (mbufPtr, buff), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(mbuf, rtError_t, rtMbufFree,
+    (rtMbufPtr_t memBuf),
+    (memBuf), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(mbuf, rtError_t, rtMbufSetDataLen,
+    (rtMbufPtr_t memBuf, uint64_t len),
+    (memBuf, len), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(mbuf, rtError_t, rtMbufGetDataLen,
+    (rtMbufPtr_t memBuf, uint64_t* len),
+    (memBuf, len), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(mbuf, rtError_t, rtMbufGetBuffAddr,
+    (rtMbufPtr_t memBuf, void** buf),
+    (memBuf, buf), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(mbuf, rtError_t, rtMbufGetBuffSize,
+    (rtMbufPtr_t memBuf, uint64_t* totalSize),
+    (memBuf, totalSize), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(mbuf, rtError_t, rtMbufGetPrivInfo,
+    (rtMbufPtr_t memBuf, void** priv, uint64_t* size),
+    (memBuf, priv, size), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(mbuf, rtError_t, rtMbufCopyBufRef,
+    (rtMbufPtr_t memBuf, rtMbufPtr_t* newMemBuf),
+    (memBuf, newMemBuf), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(mbuf, rtError_t, rtMbufChainAppend,
+    (rtMbufPtr_t memBufChainHead, rtMbufPtr_t memBuf),
+    (memBufChainHead, memBuf), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(mbuf, rtError_t, rtMbufChainGetMbufNum,
+    (rtMbufPtr_t memBufChainHead, uint32_t* num),
+    (memBufChainHead, num), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(mbuf, rtError_t, rtMbufChainGetMbuf,
+    (rtMbufPtr_t memBufChainHead, uint32_t index, rtMbufPtr_t* memBuf),
+    (memBufChainHead, index, memBuf), FEATURE_NOT_SUPPORT, EXPORT)
+
+// These providers were previously omitted with their complete source files.
+// Keep them hidden while providing a deterministic unsupported implementation.
+RUNTIME_API(standard_soc, rtError_t, rtSetKernelDfxInfoCallback,
+    (rtKernelDfxInfoType type, rtKernelDfxInfoProFunc func),
+    (type, func), FEATURE_NOT_SUPPORT, HIDDEN)
+
+RUNTIME_API(xpu, rtError_t, rtXpuSetTaskFailCallback,
+    (rtXpuDevType devType, const char_t* moduleName, rtTaskFailCallback callback),
+    (devType, moduleName, callback), FEATURE_NOT_SUPPORT, HIDDEN)

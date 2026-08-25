@@ -55,11 +55,19 @@ extern "C" {
 
 RT_RUNTIME_DEPRECATED_DECLS_BEGIN
 
+#ifndef RUNTIME_API_PROVIDER_ATTRIBUTE
+#if defined(RUNTIME_API_WEAK_PROVIDER) && defined(__GNUC__)
+#define RUNTIME_API_PROVIDER_ATTRIBUTE __attribute__((weak, noinline))
+#else
+#define RUNTIME_API_PROVIDER_ATTRIBUTE
+#endif
+#endif
+
 #ifndef RTS_API
 #ifdef RTS_DLL_EXPORT
 #define RTS_API __declspec(dllexport)
 #else
-#define RTS_API
+#define RTS_API RUNTIME_API_PROVIDER_ATTRIBUTE
 #endif
 #endif
 

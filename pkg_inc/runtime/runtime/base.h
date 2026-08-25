@@ -61,6 +61,15 @@ extern "C" {
 #define RT_STATIC_ASSERT(cond, msg) _Static_assert(cond, msg)
 #endif
 #endif
+
+#ifndef RUNTIME_API_PROVIDER_ATTRIBUTE
+#if defined(RUNTIME_API_WEAK_PROVIDER) && defined(__GNUC__)
+#define RUNTIME_API_PROVIDER_ATTRIBUTE __attribute__((weak, noinline))
+#else
+#define RUNTIME_API_PROVIDER_ATTRIBUTE
+#endif
+#endif
+
 enum { rt_base_common_begin_line_guard_ = __LINE__ }; // CCE_RUNTIME_BASE_COMMON_DATA BEGIN
 // clang-format off
 #ifndef CCE_RUNTIME_BASE_COMMON_DATA
@@ -70,7 +79,7 @@ enum { rt_base_common_begin_line_guard_ = __LINE__ }; // CCE_RUNTIME_BASE_COMMON
 #ifdef RTS_DLL_EXPORT
 #define RTS_API __declspec(dllexport)
 #else
-#define RTS_API
+#define RTS_API RUNTIME_API_PROVIDER_ATTRIBUTE
 #endif
 #endif
 

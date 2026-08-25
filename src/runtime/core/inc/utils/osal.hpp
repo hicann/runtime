@@ -40,7 +40,11 @@
 #define LIBRARY_NAME ".so"
 #define unlikely(x) (x)
 #define likely(x) (x)
+#ifdef RUNTIME_API_WEAK_PROVIDER
+#define VISIBILITY_DEFAULT __attribute__((visibility("default"), weak, noinline))
+#else
 #define VISIBILITY_DEFAULT __attribute__((visibility("default")))
+#endif
 #define __THREAD_LOCAL__ __thread
 #define CTZ(x) static_cast<uint32_t>(__builtin_ctz(x))
 #endif

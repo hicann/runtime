@@ -8,6 +8,14 @@
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
 set(BASE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+set(RUNTIME_API_DIR ${TOP_DIR}/src/runtime/api)
+include(${TOP_DIR}/src/runtime/cmake/runtime_api_stubs.cmake)
+
+generate_runtime_api_stubs(
+    arch5162
+    ${TOP_DIR}/src/runtime/cmake/arch5162_unsupported_runtime_api.def
+    RUNTIME_UT_ARCH5162_GENERATED_API_STUB_SOURCE
+)
 
 set(runtimeut_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/host_task.cc
@@ -79,13 +87,12 @@ set(runtimeut_src_api_list
     ${TOP_DIR}/src/runtime/api/api_c_context.cc
     ${TOP_DIR}/src/runtime/api/api_c_device.cc
     ${TOP_DIR}/src/runtime/api/api_c_event.cc
-    ${TOP_DIR}/src/runtime/api/api_c_mbuf_stub.cc
     ${TOP_DIR}/src/runtime/api/api_c_kernel.cc
     ${TOP_DIR}/src/runtime/api/api_c_memory.cc
     ${TOP_DIR}/src/runtime/api/api_c_model.cc
     ${TOP_DIR}/src/runtime/api/api_c_soc.cc
     ${TOP_DIR}/src/runtime/api/api_c_stream.cc
-    ${TOP_DIR}/src/runtime/api/api_c_stub.cc
+    ${RUNTIME_UT_ARCH5162_GENERATED_API_STUB_SOURCE}
     ${TOP_DIR}/src/runtime/api/api_c_arch5162.cc
     ${TOP_DIR}/src/runtime/api/api_global_err.cc
     ${TOP_DIR}/src/runtime/api/api_handle_guard.cc
@@ -347,6 +354,7 @@ add_executable(runtime_utest_arch5162
     ${TOP_DIR}/tests/ut/runtime/runtime/test/rt_utest_mbuf_stub.cc
     rt_utest_device_arch5162.cc
 )
+add_dependencies(runtime_utest_arch5162 runtime_api_stub_generator_ut)
 
 target_compile_definitions(runtime_utest_arch5162 PUBLIC
     TEMP_PERFORMANCE

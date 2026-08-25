@@ -9,6 +9,42 @@
 # -----------------------------------------------------------------------------------------------------------
 include_guard(GLOBAL)
 include(${RUNTIME_DIR}/pkg_inc/runtime/runtime/runtime_headers.cmake)
+include(${RUNTIME_CMAKE_DIR}/runtime_api_stubs.cmake)
+
+# Keep the arch5162 source boundary explicit. The first group was already
+# compiled as real providers before this migration.
+set(RUNTIME_API_WEAK_REAL_SRC_FILES
+    ${RUNTIME_API_DIR}/api_c.cc
+    ${RUNTIME_API_DIR}/api_c_context.cc
+    ${RUNTIME_API_DIR}/api_c_device.cc
+    ${RUNTIME_API_DIR}/api_c_event.cc
+    ${RUNTIME_API_DIR}/api_c_kernel.cc
+    ${RUNTIME_API_DIR}/api_c_memory.cc
+    ${RUNTIME_API_DIR}/api_c_model.cc
+    ${RUNTIME_API_DIR}/api_c_soc.cc
+    ${RUNTIME_API_DIR}/api_c_stream.cc
+
+    # These real providers are newly compiled only because their APIs replace
+    # definitions from the legacy api_c_stub/api_c_mbuf_stub files. Do not add
+    # another source unless its APIs have corresponding generated stubs.
+    ${RUNTIME_API_DIR}/api_c_dqs.cc          # 1 stub
+    ${RUNTIME_API_DIR}/api_c_mbuf.cc         # 17 stubs
+    ${RUNTIME_API_DIR}/api_c_snapshot.cc     # 7 stubs
+    ${RUNTIME_API_DIR}/api_c_soma.cc         # 7 stubs
+    ${RUNTIME_API_DIR}/api_c_standard_soc.cc # 104 stubs; rtMallocCached keeps the arch5162 strong provider
+    ${RUNTIME_API_DIR}/api_c_task.cc         # 6 stubs
+    ${RUNTIME_API_DIR}/api_c_uvm.cc          # 5 stubs
+    ${RUNTIME_API_DIR}/api_c_xpu.cc          # 4 stubs
+    ${RUNTIME_API_DIR}/api_david.cc          # 20 stubs
+    ${RUNTIME_API_DIR}/api_preload_task.cc   # 5 stubs
+)
+configure_runtime_api_weak_real_sources(arch5162 ${RUNTIME_API_WEAK_REAL_SRC_FILES})
+
+generate_runtime_api_stubs(
+    arch5162
+    ${RUNTIME_CMAKE_DIR}/arch5162_unsupported_runtime_api.def
+    RUNTIME_GENERATED_API_STUB_SOURCE
+)
 
 set(libruntime_v100_task_src_files
     ${RUNTIME_CORE_DIR}/src/task/host_task.cc
@@ -54,17 +90,8 @@ set(libruntime_v100_task_src_files
 
 set(libruntime_api_src_files
     ${RUNTIME_DIR}/src/runtime/api/api.cc
-    ${RUNTIME_DIR}/src/runtime/api/api_c.cc
-    ${RUNTIME_DIR}/src/runtime/api/api_c_context.cc
-    ${RUNTIME_DIR}/src/runtime/api/api_c_device.cc
-    ${RUNTIME_DIR}/src/runtime/api/api_c_event.cc
-    ${RUNTIME_DIR}/src/runtime/api/api_c_mbuf_stub.cc
-    ${RUNTIME_DIR}/src/runtime/api/api_c_kernel.cc
-    ${RUNTIME_DIR}/src/runtime/api/api_c_memory.cc
-    ${RUNTIME_DIR}/src/runtime/api/api_c_model.cc
-    ${RUNTIME_DIR}/src/runtime/api/api_c_soc.cc
-    ${RUNTIME_DIR}/src/runtime/api/api_c_stream.cc
-    ${RUNTIME_DIR}/src/runtime/api/api_c_stub.cc
+    ${RUNTIME_API_WEAK_REAL_SRC_FILES}
+    ${RUNTIME_GENERATED_API_STUB_SOURCE}
     ${RUNTIME_DIR}/src/runtime/api/api_c_arch5162.cc
     ${RUNTIME_DIR}/src/runtime/api/api_global_err.cc
     ${RUNTIME_DIR}/src/runtime/api/api_handle_guard.cc
@@ -452,6 +479,8 @@ macro(add_runtime_library target_name)
         -Wextra
         -Wfloat-equal
     )
+
+    enable_runtime_api_weak_override(${target_name})
 
     target_link_options(${target_name} PRIVATE
         -Wl,--no-undefined

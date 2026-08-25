@@ -17,7 +17,9 @@
 extern "C" {
 #endif
 
+#ifndef RTS_WEAK
 #define RTS_WEAK __attribute__((weak))
+#endif
 
 #define RT_DQS_MAX_INPUT_QUEUE_NUM 10U
 #define RT_DQS_MAX_OUTPUT_QUEUE_NUM 10U
