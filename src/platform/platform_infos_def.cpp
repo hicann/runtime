@@ -392,6 +392,8 @@ std::string PlatFormInfos::SaveToBuffer()
 bool PlatFormInfos::LoadFromBuffer(const char* bufPtr, const size_t bufLen)
 {
 #ifdef _OPEN_SOURCE_LLT_
+    (void)(bufPtr);
+    (void)(bufLen);
     return true;
 #else
     if (platform_infos_impl_ == nullptr) {

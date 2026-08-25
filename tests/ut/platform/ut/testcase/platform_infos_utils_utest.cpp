@@ -176,6 +176,14 @@ TEST_F(PlatformInfosUtilsUTest, GetSoFilePath_Success) { auto path = GetSoFilePa
 
 TEST_F(PlatformInfosUtilsUTest, GetConfigFilePath_Success) { auto path = GetConfigFilePath<PlatformManagerV2>(); }
 
+TEST_F(PlatformInfosUtilsUTest, GetConfigFilePath_SocVersion)
+{
+    MOCKER(GetSoFilePath<PlatformManagerV2>).stubs().will(returnValue(std::string("/kirin/test/path")));
+    MOCKER(RealSoFilePath).stubs().will(returnValue(std::string("")));
+    auto path = GetConfigFilePath<PlatformManagerV2>("kirin");
+    EXPECT_TRUE(path.empty());
+}
+
 // 新增测试：覆盖模板函数的所有分支
 TEST_F(PlatformInfosUtilsUTest, GetSoFilePath_WithValidPath)
 {

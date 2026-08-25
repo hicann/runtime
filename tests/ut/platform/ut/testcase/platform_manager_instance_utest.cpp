@@ -15,6 +15,7 @@
 #define protected public
 #define private public
 #include "platform_info.h"
+#include "platform_infos_utils.h"
 #undef protected
 #undef private
 
@@ -751,6 +752,26 @@ TEST_F(PlatformManagerUTest, platform_instance_UpdatePlatformInfos_no_soc_empty_
     EXPECT_EQ(ret, 0U);
     PlatFormInfos new_platform_infos;
     ret = instance.UpdatePlatformInfos(new_platform_infos);
+    EXPECT_NE(ret, 0U);
+}
+
+TEST_F(PlatformManagerUTest, platform_instance_init_with_soc_version_001)
+{
+    MOCKER(fe::GetConfigFilePath<PlatformInfoManager>, std::string(*)(std::string))
+        .stubs()
+        .will(returnValue(std::string("/kirin/test/path")));
+    PlatformInfoManager& instance = PlatformInfoManager::Instance();
+    uint32_t ret = instance.InitializePlatformInfo("KirinX90");
+    EXPECT_EQ(ret, 0U);
+}
+
+TEST_F(PlatformManagerUTest, platform_instance_init_with_soc_version_002)
+{
+    MOCKER(fe::GetConfigFilePath<PlatformInfoManager>, std::string(*)(std::string))
+        .stubs()
+        .will(returnValue(std::string("")));
+    PlatformInfoManager& instance = PlatformInfoManager::Instance();
+    uint32_t ret = instance.InitializePlatformInfo("KirinX90");
     EXPECT_NE(ret, 0U);
 }
 } // namespace fe

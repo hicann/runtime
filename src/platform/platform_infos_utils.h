@@ -14,6 +14,7 @@
 #include <mutex>
 #include <dlfcn.h>
 #include <climits>
+#include <algorithm>
 #include "platform/platform_infos_def.h"
 #include "platform_log.h"
 
@@ -21,6 +22,8 @@ namespace fe {
 extern std::mutex plt_info_mutex;
 extern std::mutex opt_info_mutex;
 const std::string PLATFORM_RELATIVE_PATH = "data/platform_config";
+const std::string PLATFORM_RELATIVE_PATH_KIRIN = "../data/platform_config";
+const std::string PLATFORM_RELATIVE_PATH_KIRIN_EXT = "../../platform/";
 
 class PlatformInfosUtils {
 public:
@@ -78,6 +81,33 @@ std::string GetConfigFilePath()
 
     return RealSoFilePath(so_file_path + PLATFORM_RELATIVE_PATH);
 }
-} // namespace fe
 
+template <typename ManagerType>
+std::string GetConfigFilePath(std::string socVersion)
+{
+    std::string so_file_path = GetSoFilePath<ManagerType>();
+    while (!so_file_path.empty() && so_file_path.back() == '/') {
+        so_file_path.pop_back();
+    }
+    size_t pos = so_file_path.find_last_of("/\\");
+    if (pos == std::string::npos) {
+        return "";
+    }
+    so_file_path = so_file_path.substr(0, pos + 1);
+    PF_LOGI("Current so file path is [%s].", so_file_path.c_str());
+
+    std::string config_file_path = "";
+    config_file_path = RealSoFilePath(so_file_path + PLATFORM_RELATIVE_PATH);
+    if (config_file_path.empty()) {
+        // kirin
+        config_file_path = RealSoFilePath(so_file_path + PLATFORM_RELATIVE_PATH_KIRIN);
+        if (config_file_path.empty()) {
+            // kirin ext
+            std::transform(socVersion.begin(), socVersion.end(), socVersion.begin(), ::tolower);
+            config_file_path = RealSoFilePath(so_file_path + PLATFORM_RELATIVE_PATH_KIRIN_EXT + socVersion + "/config");
+        }
+    }
+    return config_file_path;
+}
+} // namespace fe
 #endif // __PLATFORM_INFOS_UTILS_H__

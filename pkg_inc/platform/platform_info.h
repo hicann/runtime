@@ -32,6 +32,7 @@ public:
     static PlatformInfoManager& Instance();
     static PlatformInfoManager& GeInstance();
     uint32_t InitializePlatformInfo();
+    uint32_t InitializePlatformInfo(std::string socVersion);
     uint32_t Finalize();
 
     uint32_t GetPlatformInfo(

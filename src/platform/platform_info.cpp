@@ -180,8 +180,13 @@ uint32_t PlatformInfoManager::EnsureSocVersionLoaded(const std::string& soc_vers
     std::string ini_file_path = cfg_file_real_path_ + "/" + soc_version + ".ini";
     PF_LOGD("Begin to load ini file[%s].", ini_file_path.c_str());
     if (LoadIniFile(ini_file_path) != PLATFORM_SUCCESS) {
-        PF_LOGE("Failed to load ini file[%s].", ini_file_path.c_str());
-        return PLATFORM_FAILED;
+        std::string soc_version_ = soc_version;
+        std::transform(soc_version_.begin(), soc_version_.end(), soc_version_.begin(), ::tolower);
+        ini_file_path = cfg_file_real_path_ + "/" + soc_version_ + ".ini";
+        if (LoadIniFile(ini_file_path) != PLATFORM_SUCCESS) {
+            PF_LOGE("Failed to load ini file[%s].", ini_file_path.c_str());
+            return PLATFORM_FAILED;
+        }
     }
     loaded_ini_files_.insert(soc_version);
     return PLATFORM_SUCCESS;
@@ -1071,6 +1076,29 @@ __attribute__((visibility("default"))) uint32_t PlatformInfoManager::InitializeP
         return PLATFORM_SUCCESS;
     }
     cfg_file_real_path_ = fe::GetConfigFilePath<PlatformInfoManager>();
+    if (cfg_file_real_path_.empty()) {
+        PF_LOGE("File path[%s] is not valid.", cfg_file_real_path_.c_str());
+        return PLATFORM_FAILED;
+    }
+
+    if (!opti_compilation_infos_.Init()) {
+        PF_LOGE("Failed to initialize optional information.");
+        return PLATFORM_FAILED;
+    }
+
+    init_flag_ = true;
+
+    return PLATFORM_SUCCESS;
+}
+
+__attribute__((visibility("default"))) uint32_t PlatformInfoManager::InitializePlatformInfo(std::string socVersion)
+{
+    // add lock
+    std::lock_guard<std::mutex> lock_guard(pc_lock_);
+    if (init_flag_) {
+        return PLATFORM_SUCCESS;
+    }
+    cfg_file_real_path_ = fe::GetConfigFilePath<PlatformInfoManager>(socVersion);
     if (cfg_file_real_path_.empty()) {
         PF_LOGE("File path[%s] is not valid.", cfg_file_real_path_.c_str());
         return PLATFORM_FAILED;
