@@ -8953,6 +8953,33 @@ TEST_F(UTEST_ACL_Runtime, aclrtMemGetAddressRange_failed_with_rt_error)
     EXPECT_EQ(ret, ACL_ERROR_RT_PARAM_INVALID);
 }
 
+TEST_F(UTEST_ACL_Runtime, aclrtHostGetDevicePointerAddrRange)
+{
+    aclrtAddrRange addrRange;
+    uint32_t count = 1;
+
+    aclError ret = aclrtHostGetDevicePointerAddrRange(&addrRange, nullptr);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+
+    ret = aclrtHostGetDevicePointerAddrRange(&addrRange, &count);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+
+    ret = aclrtHostGetDevicePointerAddrRange(nullptr, &count);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+}
+
+TEST_F(UTEST_ACL_Runtime, aclrtHostGetDevicePointerAddrRange_failed_with_rt_error)
+{
+    aclrtAddrRange addrRange;
+    uint32_t count = 1;
+
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtHostGetDevicePointerAddrRange(_, _))
+        .WillOnce(Return(ACL_ERROR_RT_PARAM_INVALID));
+
+    aclError ret = aclrtHostGetDevicePointerAddrRange(&addrRange, &count);
+    EXPECT_EQ(ret, ACL_ERROR_RT_PARAM_INVALID);
+}
+
 TEST_F(UTEST_ACL_Runtime, aclrtMemPoolCreate)
 {
     aclrtMemPool memPool = 0;

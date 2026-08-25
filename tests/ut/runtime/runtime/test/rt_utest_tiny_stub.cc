@@ -217,6 +217,8 @@ TEST_F(TinyStubTest, api_c_stub)
     EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ret = rtDeviceL2CacheFlush(nullptr);
     EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    ret = rtHostGetDevicePointerAddrRange(nullptr, nullptr);
+    EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
 }
 
 TEST_F(TinyStubTest, api_error_stub)
@@ -294,6 +296,8 @@ TEST_F(TinyStubTest, api_error_stub)
     ret = api.MemManagedGetAttr(rtMemRangeAttributeReadMostly, nullptr, 0, nullptr, 0);
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
     ret = api.MemManagedGetAttrs(nullptr, 0, nullptr, 0, nullptr, 0);
+    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
+    ret = api.HostGetDevicePointerAddrRange(nullptr, nullptr);
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
 }
 
@@ -392,6 +396,8 @@ TEST_F(TinyStubTest, api_impl_stub)
     ret = impl.MemsetD32(nullptr, 0, 0, 0);
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
     ret = impl.MemsetD32Async(nullptr, 0, 0, 0, nullptr);
+    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
+    ret = impl.HostGetDevicePointerAddrRange(nullptr, nullptr);
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
 }
 
@@ -545,6 +551,10 @@ TEST_F(TinyStubTest, npu_driver_stub)
     ret = driver.GetTsegInfoByVa(0, 0, 0, 0, nullptr);
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
     ret = driver.PutTsegInfo(0, nullptr);
+    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
+    ret = NpuDriver::HostGetDevicePointerAddrCount(0, nullptr);
+    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
+    ret = NpuDriver::HostGetDevicePointerAddrRange(0, nullptr, nullptr);
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
 }
 

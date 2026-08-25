@@ -2082,6 +2082,17 @@ rtError_t rtDeviceL2CacheFlush(void* rsv)
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }
+
+VISIBILITY_DEFAULT
+rtError_t rtHostGetDevicePointerAddrRange(rtAddrRange* addrRange, uint32_t* count)
+{
+    Api* const apiInstance = Api::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
+    const rtError_t error = apiInstance->HostGetDevicePointerAddrRange(addrRange, count);
+    COND_RETURN_WITH_NOLOG(error == RT_ERROR_DRV_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    ERROR_RETURN_WITH_EXT_ERRCODE(error);
+    return ACL_RT_SUCCESS;
+}
 #ifdef __cplusplus
 }
 #endif // __cplusplus

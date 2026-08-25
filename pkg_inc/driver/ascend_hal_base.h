@@ -1925,6 +1925,11 @@ typedef UINT32 DVdevice;
 typedef UINT64 DVdeviceptr;
 typedef drvError_t DVresult;
 
+struct drv_addr_range {
+    void* start_addr;
+    void* end_addr;
+};
+
 #define DV_MEM_LOCK_HOST 0x0008
 #define DV_MEM_LOCK_DEV 0x0010
 #define DV_MEM_LOCK_DEV_DVPP 0x0020
@@ -5826,6 +5831,35 @@ DLLEXPORT DV_ONLINE drvError_t
 halMemPoolTrim(soma_mem_pool_t pool, uint64_t* size, uint64_t poolUsedSize, uint64_t poolFreeSize);
 
 DLLEXPORT DV_ONLINE drvError_t halMemPoolAsyncConfig(soma_mem_pool_t pool, uint64_t va, uint64_t size, bool flag);
+
+/**
+ * @ingroup driver
+ * @brief Get the count of PCIE TH VA address ranges
+ * @attention Only support A5/A6 pcie, the count is always 1 currently.
+ * @param [in] dev_id - Input: device id.
+ * @param [out] count - Output: count of PCIE TH VA address ranges.
+ * @return DRV_ERROR_NONE : success
+ * @return DV_ERROR_XXX : fail
+ */
+DLLEXPORT drvError_t halHostGetDevicePointerAddrCount(uint32_t dev_id, uint32_t* count);
+
+/**
+ * @ingroup driver
+ * @brief Get PCIE TH VA address ranges
+ * @attention Only support A5/A6 pcie.
+ * 1.User should call halHostGetDevicePointerCount to get the count first,
+ *   then allocate addr_range array with that count.
+ * 2.If the input count is greater than the actual count, only the actual count
+ *   of ranges will be filled, and the remaining entries will be set to NULL.
+ *   The count parameter will be returned with the actual count value.
+ * @param [in] dev_id - Input: device id;
+ * @param [in/out] addr_range - Address range array, allocated by caller
+ * @param [in/out] count - Input: array capacity;
+ * @return DRV_ERROR_NONE : success
+ * @return DV_ERROR_XXX : fail
+ */
+DLLEXPORT drvError_t
+halHostGetDevicePointerAddrRange(uint32_t dev_id, struct drv_addr_range* addr_range, uint32_t* count);
 
 #ifdef __cplusplus
 }

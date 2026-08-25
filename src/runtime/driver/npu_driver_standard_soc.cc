@@ -1098,5 +1098,44 @@ rtError_t NpuDriver::DevMemAllocManaged(
     return RT_ERROR_NONE;
 }
 
+rtError_t NpuDriver::HostGetDevicePointerAddrCount(uint32_t deviceId, uint32_t* count)
+{
+    COND_RETURN_WARN(
+        &halHostGetDevicePointerAddrCount == nullptr, RT_ERROR_DRV_NOT_SUPPORT,
+        "[drv api] halHostGetDevicePointerAddrCount does not exist");
+    const drvError_t drvRet = halHostGetDevicePointerAddrCount(deviceId, count);
+    COND_RETURN_WARN(
+        drvRet == DRV_ERROR_NOT_SUPPORT, RT_ERROR_DRV_NOT_SUPPORT,
+        "[drv api] halHostGetDevicePointerAddrCount does not support.");
+    if (drvRet != DRV_ERROR_NONE) {
+        DRV_ERROR_PROCESS(
+            drvRet, "Call driver api halHostGetDevicePointerAddrCount failed, drvRetCode=%d.",
+            static_cast<int32_t>(drvRet));
+        return RT_GET_DRV_ERRCODE(drvRet);
+    }
+
+    return RT_ERROR_NONE;
+}
+
+rtError_t NpuDriver::HostGetDevicePointerAddrRange(uint32_t deviceId, rtAddrRange* addrRange, uint32_t* count)
+{
+    COND_RETURN_WARN(
+        &halHostGetDevicePointerAddrRange == nullptr, RT_ERROR_DRV_NOT_SUPPORT,
+        "[drv api] halHostGetDevicePointerAddrRange does not exist");
+    const drvError_t drvRet =
+        halHostGetDevicePointerAddrRange(deviceId, reinterpret_cast<struct drv_addr_range*>(addrRange), count);
+    COND_RETURN_WARN(
+        drvRet == DRV_ERROR_NOT_SUPPORT, RT_ERROR_DRV_NOT_SUPPORT,
+        "[drv api] halHostGetDevicePointerAddrRange does not support.");
+    if (drvRet != DRV_ERROR_NONE) {
+        DRV_ERROR_PROCESS(
+            drvRet, "Call driver api halHostGetDevicePointerAddrRange failed, drvRetCode=%d.",
+            static_cast<int32_t>(drvRet));
+        return RT_GET_DRV_ERRCODE(drvRet);
+    }
+
+    return RT_ERROR_NONE;
+}
+
 } // namespace runtime
 } // namespace cce

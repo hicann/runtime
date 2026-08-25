@@ -5967,6 +5967,24 @@ ACL_FUNC_VISIBILITY aclError aclrtDeviceL2CacheFlush(void* rsv);
  * @retval OtherValues for other failure
  */
 ACL_FUNC_VISIBILITY aclError aclrtMemMapSetLink(aclrtDrvMemHandle handle, aclrtMemLinkType adviceLink);
+
+typedef struct aclrtAddrRange {
+    void *startAddr;
+    void *endAddr;
+} aclrtAddrRange;
+
+/**
+ * @ingroup AscendCL
+ * @brief Get pcie through va address ranges
+ * @param addrRange [OUT]  Array of pcie through va address ranges, allocated by caller
+ * @param count [IN/OUT]   Input: allocated array size; Output: actual count
+ *
+ * @retval ACL_SUCCESS The function is successfully executed.
+ * @retval ACL_ERROR_INVALID_PARAM count is nullptr.
+ * @retval ACL_ERROR_RT_FEATURE_NOT_SUPPORT The feature is not supported by driver.
+ * @retval OtherValues Failure
+ */
+ACL_FUNC_VISIBILITY aclError aclrtHostGetDevicePointerAddrRange(aclrtAddrRange *addrRange, uint32_t *count);
 #ifdef __cplusplus
 }
 #endif

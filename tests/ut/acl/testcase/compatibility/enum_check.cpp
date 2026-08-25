@@ -1080,6 +1080,8 @@ TEST_F(UTEST_ACL_compatibility_enum_check, AclProfType)
     value = (acl::AclProfType)0x300DDU;
     EXPECT_EQ(value, acl::AclrtMemSetPidToShareableHandleV2);
 
+    EXPECT_EQ(acl::AclrtHostGetDevicePointerAddrRange > acl::AclrtExceptionInfoCallbackUnregister, true);
+
     EXPECT_EQ(sizeof(acl::AclProfType), 4);
 }
 

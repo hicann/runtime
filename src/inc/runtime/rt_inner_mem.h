@@ -350,6 +350,23 @@ RTS_API rtError_t rtMemsetD32Async(void* dst, uint64_t destMax, uint32_t value, 
  * @return RT_ERROR_DRV_ERR for driver error
  */
 RTS_API rtError_t rtMemMapSetLink(rtDrvMemHandle handle, rtMemLinkType adviceLink);
+
+typedef struct rtAddrRange {
+    void* startAddr;
+    void* endAddr;
+} rtAddrRange;
+
+/**
+ * @ingroup rt_mem
+ * @brief  Get pcie through va address ranges
+ * @param  [out] addrRange Array of pcie through va address ranges
+ * @param  [in/out] count Input: allocated array size; Output: actual count
+ * @return RT_ERROR_NONE for ok
+ * @return RT_ERROR_INVALID_VALUE for error input
+ * @return RT_ERROR_FEATURE_NOT_SUPPORT for unsupported chip or driver interface not exist
+ * @return RT_ERROR_DRV_ERR for driver error
+ */
+RTS_API rtError_t rtHostGetDevicePointerAddrRange(rtAddrRange* addrRange, uint32_t* count);
 #if defined(__cplusplus)
 }
 #endif

@@ -449,5 +449,12 @@ rtError_t ApiErrorDecorator::StreamAddCondTask(rtCondTaskParams params, Stream* 
 
 rtError_t ApiErrorDecorator::DeviceL2CacheFlush() { return RT_ERROR_FEATURE_NOT_SUPPORT; }
 
+rtError_t ApiErrorDecorator::HostGetDevicePointerAddrRange(rtAddrRange* addrRange, uint32_t* count)
+{
+    UNUSED(addrRange);
+    UNUSED(count);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
 } // namespace runtime
 } // namespace cce

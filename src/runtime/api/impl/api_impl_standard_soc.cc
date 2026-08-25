@@ -853,5 +853,20 @@ rtError_t ApiImpl::InvalidCache(const uint64_t base, const size_t len)
 
     return RT_ERROR_NONE;
 }
+
+rtError_t ApiImpl::HostGetDevicePointerAddrRange(rtAddrRange* addrRange, uint32_t* count)
+{
+    Context* const curCtx = CurrentContext();
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+    const uint32_t deviceId = curCtx->Device_()->Id_();
+    RT_LOG(RT_LOG_INFO, "Start to HostGetDevicePointerAddrRange");
+    rtError_t error = RT_ERROR_NONE;
+    if (addrRange == nullptr) {
+        error = NpuDriver::HostGetDevicePointerAddrCount(deviceId, count);
+    } else {
+        error = NpuDriver::HostGetDevicePointerAddrRange(deviceId, addrRange, count);
+    }
+    return error;
+}
 } // namespace runtime
 } // namespace cce

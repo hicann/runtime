@@ -586,5 +586,11 @@ rtError_t ApiErrorDecorator::DeviceL2CacheFlush()
     return error;
 }
 
+rtError_t ApiErrorDecorator::HostGetDevicePointerAddrRange(rtAddrRange* addrRange, uint32_t* count)
+{
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(count, RT_ERROR_INVALID_VALUE, "Obtaining the device address range");
+    return impl_->HostGetDevicePointerAddrRange(addrRange, count);
+}
+
 } // namespace runtime
 } // namespace cce

@@ -637,5 +637,12 @@ rtError_t ApiImpl::IpcCloseMemoryByName(const char_t* const name)
     UNUSED(name);
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
+
+rtError_t ApiImpl::HostGetDevicePointerAddrRange(rtAddrRange* addrRange, uint32_t* count)
+{
+    UNUSED(addrRange);
+    UNUSED(count);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
 } // namespace runtime
 } // namespace cce

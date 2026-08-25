@@ -408,6 +408,7 @@ public:
     virtual rtError_t MemRetainAllocationHandle(void* virPtr, rtDrvMemHandle* handle) = 0;
     virtual rtError_t MemGetAllocationPropertiesFromHandle(rtDrvMemHandle handle, rtDrvMemProp_t* prop) = 0;
     virtual rtError_t MemGetAddressRange(void* ptr, void** pbase, size_t* psize) = 0;
+    virtual rtError_t HostGetDevicePointerAddrRange(rtAddrRange* addrRange, uint32_t* count) = 0;
     // new memory API
     virtual rtError_t DevMalloc(
         void** const devPtr, const uint64_t size, rtMallocPolicy policy, rtMallocAdvise advise,

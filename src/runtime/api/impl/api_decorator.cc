@@ -2239,6 +2239,11 @@ rtError_t ApiDecorator::MemGetAddressRange(void* ptr, void** pbase, size_t* psiz
     return impl_->MemGetAddressRange(ptr, pbase, psize);
 }
 
+rtError_t ApiDecorator::HostGetDevicePointerAddrRange(rtAddrRange* addrRange, uint32_t* count)
+{
+    return impl_->HostGetDevicePointerAddrRange(addrRange, count);
+}
+
 rtError_t ApiDecorator::MemMapSelectedLink(void* virPtrDst, size_t size, void* virPtrSrc, uint32_t linkIdx)
 {
     return impl_->MemMapSelectedLink(virPtrDst, size, virPtrSrc, linkIdx);

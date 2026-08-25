@@ -1399,6 +1399,14 @@ rtError_t rtDeviceL2CacheFlush(void* rsv)
 }
 
 VISIBILITY_DEFAULT
+rtError_t rtHostGetDevicePointerAddrRange(rtAddrRange* addrRange, uint32_t* count)
+{
+    UNUSED(addrRange);
+    UNUSED(count);
+    return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
+}
+
+VISIBILITY_DEFAULT
 rtError_t rtRegisterParseDfxInfoFunc(rtParseDfxInfoFunc func)
 {
     UNUSED(func);

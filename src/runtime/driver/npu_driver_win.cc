@@ -2057,5 +2057,20 @@ rtError_t NpuDriver::GetAddrModuleId(void* memcpyAddr, uint32_t* moduleId) const
     return RT_ERROR_NONE;
 }
 
+rtError_t NpuDriver::HostGetDevicePointerAddrCount(uint32_t deviceId, uint32_t* count)
+{
+    UNUSED(deviceId);
+    UNUSED(count);
+    return RT_ERROR_NONE;
+}
+
+rtError_t NpuDriver::HostGetDevicePointerAddrRange(uint32_t deviceId, rtAddrRange* addrRange, uint32_t* count)
+{
+    UNUSED(deviceId);
+    UNUSED(addrRange);
+    UNUSED(count);
+    return RT_ERROR_NONE;
+}
+
 } // namespace runtime
 } // namespace cce

@@ -309,6 +309,7 @@ public:
     rtError_t MemRetainAllocationHandle(void* virPtr, rtDrvMemHandle* handle) override;
     rtError_t MemGetAllocationPropertiesFromHandle(rtDrvMemHandle handle, rtDrvMemProp_t* prop) override;
     rtError_t MemGetAddressRange(void* ptr, void** pbase, size_t* psize) override;
+    rtError_t HostGetDevicePointerAddrRange(rtAddrRange* addrRange, uint32_t* count) override;
     // new memory api
     rtError_t DevMalloc(
         void** const devPtr, const uint64_t size, rtMallocPolicy policy, rtMallocAdvise advise,

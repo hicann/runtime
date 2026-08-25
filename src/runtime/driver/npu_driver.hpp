@@ -654,6 +654,8 @@ public:
     static rtError_t MemRetainAllocationHandle(void* virPtr, rtDrvMemHandle* handle);
     static rtError_t MemGetAllocationPropertiesFromHandle(rtDrvMemHandle handle, rtDrvMemProp_t* prop);
     static rtError_t MemGetAddressRange(void* ptr, void** pbase, size_t* psize);
+    static rtError_t HostGetDevicePointerAddrCount(uint32_t deviceId, uint32_t* count);
+    static rtError_t HostGetDevicePointerAddrRange(uint32_t deviceId, rtAddrRange* addrRange, uint32_t* count);
     static rtError_t MemHandleSetAttribute(rtDrvMemHandle handle, HandleAttrType type, rtHandleAttr& attr);
     static rtError_t MemHandleGetAttribute(rtDrvMemHandle handle, HandleAttrType type, rtHandleAttr* attr);
     static rtError_t MapMem(void* devPtr, size_t size, size_t offset, rtDrvMemHandle handle, uint64_t flags);

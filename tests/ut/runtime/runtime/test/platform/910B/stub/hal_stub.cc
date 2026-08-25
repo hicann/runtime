@@ -1600,6 +1600,13 @@ TraStatus AtraceEventReportSync(TraEventHandle eventHandle) { return TRACE_SUCCE
 
 drvError_t halMemGetAddressRange(DVdeviceptr ptr, DVdeviceptr* pbase, size_t* pszie) { return DRV_ERROR_NONE; }
 
+drvError_t halHostGetDevicePointerAddrCount(uint32_t dev_id, uint32_t* count) { return DRV_ERROR_NONE; }
+
+drvError_t halHostGetDevicePointerAddrRange(uint32_t dev_id, struct drv_addr_range* addr_range, uint32_t* count)
+{
+    return DRV_ERROR_NONE;
+}
+
 drvError_t halMemHandleSetAttribute(drv_mem_handle_t* handle, HandleAttrType type, HandleAttr attr)
 {
     return DRV_ERROR_NONE;

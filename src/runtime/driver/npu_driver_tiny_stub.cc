@@ -350,5 +350,20 @@ rtError_t NpuDriver::DevMemAllocManaged(
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
+rtError_t NpuDriver::HostGetDevicePointerAddrCount(uint32_t deviceId, uint32_t* count)
+{
+    UNUSED(deviceId);
+    UNUSED(count);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t NpuDriver::HostGetDevicePointerAddrRange(uint32_t deviceId, rtAddrRange* addrRange, uint32_t* count)
+{
+    UNUSED(deviceId);
+    UNUSED(addrRange);
+    UNUSED(count);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
 } // namespace runtime
 } // namespace cce

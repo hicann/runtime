@@ -332,6 +332,7 @@ const std::map<AclProfType, std::string> PROF_TYPE_TO_NAMES = {
     {AclProfType::AclrtDeviceL2CacheFlush, "aclrtDeviceL2CacheFlush"},
     {AclProfType::AclrtExceptionInfoCallbackRegister, "aclrtExceptionInfoCallbackRegister"},
     {AclProfType::AclrtExceptionInfoCallbackUnregister, "aclrtExceptionInfoCallbackUnregister"},
+    {AclProfType::AclrtHostGetDevicePointerAddrRange, "aclrtHostGetDevicePointerAddrRange"},
 };
 
 aclError RegisterType(const uint32_t index)

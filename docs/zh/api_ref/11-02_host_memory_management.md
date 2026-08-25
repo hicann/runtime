@@ -9,6 +9,7 @@
 - [`aclError aclrtHostRegister(void *ptr, uint64_t size, aclrtHostRegisterType type, void **devPtr)`](#aclrtHostRegister)：将Host内存映射注册为Device可访问的内存地址，并获取映射后的Device内存地址。映射后的Device内存地址不能用于内存操作，例如内存复制。
 - [`aclError aclrtHostRegisterV2(void *ptr, uint64_t size, uint32_t flag)`](#aclrtHostRegisterV2)：注册Host内存地址。
 - [`aclError aclrtHostGetDevicePointer(void *pHost, void **pDevice, uint32_t flag)`](#aclrtHostGetDevicePointer)：获取由aclrtHostRegister或aclrtHostRegisterV2接口注册映射的Device内存地址。映射后的Device内存地址不能用于内存操作，例如内存复制。
+- [`aclError aclrtHostGetDevicePointerAddrRange(aclrtAddrRange *addrRange, uint32_t *count)`](#aclrtHostGetDevicePointerAddrRange)：获取Host内存映射成的Device内存地址的地址范围。
 - [`aclError aclrtHostMemMapCapabilities(uint32_t deviceId, aclrtHacType hacType, aclrtHostMemMapCapability *capabilities)`](#aclrtHostMemMapCapabilities)：查询指定的硬件驱动加速器是否支持访问通过[aclrtHostRegister](#aclrtHostRegister)接口注册的内存。
 - [`aclError aclrtHostUnregister(void *ptr)`](#aclrtHostUnregister)：取消注册Host内存。
 
@@ -507,6 +508,59 @@ aclError aclrtHostUnregister(void *ptr)
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
 | ptr | 输入 | Host侧内存地址。 |
+
+### 返回值说明
+
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
+
+<br>
+<br>
+<br>
+
+<a id="aclrtHostGetDevicePointerAddrRange"></a>
+
+## aclrtHostGetDevicePointerAddrRange
+
+```c
+aclError aclrtHostGetDevicePointerAddrRange(aclrtAddrRange *addrRange, uint32_t *count)
+```
+
+### 产品支持情况
+
+<!-- npu="950" id974 -->
+- Ascend 950PR：支持
+- Ascend 950DT：不支持
+<!-- end id974 -->
+<!-- npu="A3" id975 -->
+- Atlas A3 训练系列产品/Atlas A3 推理系列产品：不支持
+<!-- end id975 -->
+<!-- npu="910b" id976 -->
+- Atlas A2 训练系列产品/Atlas A2 推理系列产品：不支持
+<!-- end id976 -->
+<!-- npu="310b" id977 -->
+- Atlas 200I/500 A2 推理产品：不支持
+<!-- end id977 -->
+<!-- npu="310p" id978 -->
+- Atlas 推理系列产品：不支持
+<!-- end id978 -->
+<!-- npu="910" id979 -->
+- Atlas 训练系列产品：不支持
+<!-- end id979 -->
+<!-- npu="IPV350" id980 -->
+- IPV350：不支持
+<!-- end id980 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/11-02_host_memory_management_res.md#id10 -->
+
+### 功能说明
+
+获取Host内存映射成的Device内存地址的地址范围。
+
+### 参数说明
+
+| 参数名 | 输入/输出 | 说明 |
+| --- | :---: | --- |
+| addrRange | 输出 | 地址范围数组，由调用方分配内存。<br>类型定义请参见[aclrtAddrRange](25-04_Structs.md#aclrtAddrRange)。 |
+| count | 输入/输出 | addrRange非空时作为输入，表示addrRange数组的长度; addrRange为空时作为输出，表示实际返回的数组长度。 |
 
 ### 返回值说明
 

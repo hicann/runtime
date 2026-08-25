@@ -14,6 +14,7 @@ struct 类型数据。
 - [aclmdlRITaskParams](#aclmdlRITaskParams)
 - [aclmdlRIValueWaitTaskParams](#aclmdlRIValueWaitTaskParams)
 - [aclmdlRIValueWriteTaskParams](#aclmdlRIValueWriteTaskParams)
+- [aclrtAddrRange](#aclrtAddrRange)
 - [aclrtAicAivTaskUpdateAttr](#aclrtAicAivTaskUpdateAttr)
 - [aclrtBarrierCmoInfo](#aclrtBarrierCmoInfo)
 - [aclrtBarrierTaskInfo](#aclrtBarrierTaskInfo)
@@ -54,6 +55,26 @@ struct 类型数据。
 - [aclrtUtilizationInfo](#aclrtUtilizationInfo)
 - [aclrtUuid](#aclrtUuid)
 - [dim3](#dim3)
+
+<br>
+
+<a id="aclrtAddrRange"></a>
+
+## aclrtAddrRange
+
+```c
+typedef struct aclrtAddrRange {
+    void *startAddr;
+    void *endAddr;
+} aclrtAddrRange;
+```
+
+### 成员说明
+
+| 成员名 | 说明 |
+| --- | --- |
+| startAddr | 地址范围的起始地址。 |
+| endAddr | 地址范围的结束地址。 |
 
 <br>
 

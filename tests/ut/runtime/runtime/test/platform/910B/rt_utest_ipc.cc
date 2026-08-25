@@ -421,6 +421,19 @@ TEST_F(CloudV2IpcApiTest, MemGetAddressRange)
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
+TEST_F(CloudV2IpcApiTest, HostGetDevicePointerAddrRange)
+{
+    rtAddrRange addrRange;
+    uint32_t count = 1;
+    MOCKER(halHostGetDevicePointerAddrCount).stubs().will(returnValue(DRV_ERROR_NONE));
+    MOCKER(halHostGetDevicePointerAddrRange).stubs().will(returnValue(DRV_ERROR_NONE));
+    rtError_t error = rtHostGetDevicePointerAddrRange(&addrRange, &count);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtHostGetDevicePointerAddrRange(nullptr, &count);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
 drvError_t halMemGetAddressRangeStub(DVdeviceptr ptr, DVdeviceptr* pbase, size_t* psize)
 {
     if (pbase) {

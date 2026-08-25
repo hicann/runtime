@@ -573,7 +573,8 @@
     _(aclError, aclrtMemMapSelectedLink, (void* virPtrDst, size_t size, void* virPtrSrc, uint32_t linkIdx),            \
       (virPtrDst, size, virPtrSrc, linkIdx))                                                                           \
     _(aclError, aclrtDeviceL2CacheFlush, (void* rsv), (rsv))                                                           \
-    _(aclError, aclrtMemMapSetLink, (aclrtDrvMemHandle handle, aclrtMemLinkType adviceLink), (handle, adviceLink))
+    _(aclError, aclrtMemMapSetLink, (aclrtDrvMemHandle handle, aclrtMemLinkType adviceLink), (handle, adviceLink))     \
+    _(aclError, aclrtHostGetDevicePointerAddrRange, (aclrtAddrRange * addrRange, uint32_t * count), (addrRange, count))
 
 // aclrtAllocator interface map list
 #define ACL_RT_ALLOCATOR_FUNC_MAP(_)                                                                                \

@@ -2494,6 +2494,18 @@ aclError aclrtMemMapSetLinkImpl(aclrtDrvMemHandle handle, aclrtMemLinkType advic
     }
     return ACL_GET_ERRCODE_RTS(rtErr);
 }
+
+aclError aclrtHostGetDevicePointerAddrRangeImpl(aclrtAddrRange* addrRange, uint32_t* count)
+{
+    ACL_PROFILING_REG(acl::AclProfType::AclrtHostGetDevicePointerAddrRange);
+    ACL_LOG_DEBUG("start to execute aclrtHostGetDevicePointerAddrRange");
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(count);
+    ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(
+        rtHostGetDevicePointerAddrRange(reinterpret_cast<rtAddrRange*>(addrRange), count),
+        rtHostGetDevicePointerAddrRange);
+    ACL_LOG_INFO("successfully execute aclrtHostGetDevicePointerAddrRange");
+    return ACL_SUCCESS;
+}
 #ifdef __cplusplus
 }
 #endif // __cplusplus

@@ -337,6 +337,7 @@ enum AclProfType {
     AclrtDeviceL2CacheFlush,
     AclrtExceptionInfoCallbackRegister,
     AclrtExceptionInfoCallbackUnregister,
+    AclrtHostGetDevicePointerAddrRange,
     // this is the end, can not add after AclRtProfTypeEnd
     AclRtProfTypeEnd
 };
