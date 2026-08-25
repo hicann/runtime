@@ -9,6 +9,7 @@
  */
 #ifndef PROF_ACL_PLUGIN_H
 #define PROF_ACL_PLUGIN_H
+#include <atomic>
 #include <stdint.h>
 #include "singleton/singleton.h"
 #include "prof_utils.h"
@@ -70,7 +71,7 @@ public:
     std::string GetResultPath();
 
 private:
-    VOID_PTR msProfLibHandle_{nullptr};
+    std::atomic<VOID_PTR> msProfLibHandle_{nullptr};
 
     PTHREAD_ONCE_T profAclInitFlag_;
     PTHREAD_ONCE_T profAclWarmupFlag_;
@@ -91,7 +92,6 @@ private:
     PTHREAD_ONCE_T profAclGetCompatibleFeaturesFlags_;
     PTHREAD_ONCE_T profAclGetCompatibleFeaturesV2Flags_;
     PTHREAD_ONCE_T profAclRegisterDeviceCallbackFlag_;
-    PTHREAD_ONCE_T profIsInitedFlag_;
     PTHREAD_ONCE_T profGetResultPathFlag_;
 
     ProfAclInitFunc profAclInit_;
@@ -115,7 +115,7 @@ private:
     ProfAclGetCompatibleFeaturesFunc profAclGetCompatibleFeatures_;
     ProfAclGetCompatibleFeaturesV2Func profAclGetCompatibleFeaturesV2_;
     ProfAclRegisterDeviceCallbackFunc profAclRegisterDeviceCallback_;
-    ProfIsInitedFunc profIsInited_{nullptr};
+    std::atomic<ProfIsInitedFunc> profIsInited_{nullptr};
     ProfGetResultPathFunc profGetResultPath_{nullptr};
 
     void LoadProfAclInit();

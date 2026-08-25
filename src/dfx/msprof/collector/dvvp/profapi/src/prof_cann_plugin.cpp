@@ -41,8 +41,9 @@ struct ProfSetDevPara {
 
 ProfCannPlugin::~ProfCannPlugin()
 {
-    if (msProfLibHandle_ != nullptr) {
-        dlclose(msProfLibHandle_);
+    void* handle = msProfLibHandle_.load(std::memory_order_acquire);
+    if (handle != nullptr) {
+        dlclose(handle);
     }
     ProfUnInitReportBuf();
 }
@@ -57,10 +58,19 @@ ProfCannPlugin::~ProfCannPlugin()
  */
 void ProfCannPlugin::ProfApiInit()
 {
-    if (msProfLibHandle_ == nullptr) {
-        msProfLibHandle_ = dlopen(MSPROFILER_LIB_PATH.c_str(), RTLD_LAZY | RTLD_NODELETE);
+    void* handle = msProfLibHandle_.load(std::memory_order_acquire);
+    if (handle == nullptr) {
+        void* loadedHandle = dlopen(MSPROFILER_LIB_PATH.c_str(), RTLD_LAZY | RTLD_NODELETE);
+        if (loadedHandle != nullptr) {
+            if (msProfLibHandle_.compare_exchange_strong(
+                    handle, loadedHandle, std::memory_order_acq_rel, std::memory_order_acquire)) {
+                handle = loadedHandle;
+            } else {
+                dlclose(loadedHandle);
+            }
+        }
     }
-    if (msProfLibHandle_ != nullptr) {
+    if (handle != nullptr) {
         PthreadOnce(&profApiLoadFlag_, []() -> void { ProfCannPlugin::instance()->LoadProfApi(); });
     } else {
         MSPROF_LOGW("Unable to open MSPROF API from %s, return code: %s\n", MSPROFILER_LIB_PATH.c_str(), dlerror());

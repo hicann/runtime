@@ -9,6 +9,7 @@
  */
 #ifndef PROF_CANN_PLUGIN_H
 #define PROF_CANN_PLUGIN_H
+#include <atomic>
 #include <vector>
 #include <map>
 #include <functional>
@@ -127,7 +128,7 @@ public:
 private:
     void ProfRegisterFunc(uint32_t type, void* func);
     void LoadProfInfo();
-    void* msProfLibHandle_;
+    std::atomic<void*> msProfLibHandle_{nullptr};
     std::map<uint32_t, uint32_t> deviceIdMaps_;   // (moduleId, deviceId)
     std::mutex deviceMapsMutex_;
     std::map<uint64_t, bool> deviceStates_;       // id is deviceid << 32 | chipid;

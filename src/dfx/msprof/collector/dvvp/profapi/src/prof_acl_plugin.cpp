@@ -12,7 +12,7 @@
 #include "errno/error_code.h"
 using namespace analysis::dvvp::common::error;
 namespace ProfAPI {
-void ProfAclPlugin::ProfAclApiInit(VOID_PTR handle) { msProfLibHandle_ = handle; }
+void ProfAclPlugin::ProfAclApiInit(VOID_PTR handle) { msProfLibHandle_.store(handle, std::memory_order_release); }
 
 int32_t ProfAclPlugin::ProfAclInit(uint32_t type, const char* profilerPath, uint32_t len)
 {
@@ -212,11 +212,12 @@ int32_t ProfAclPlugin::ProfAclRegisterDeviceCallback()
 
 bool ProfAclPlugin::IsInited()
 {
-    PthreadOnce(&profIsInitedFlag_, []() -> void { ProfAclPlugin::instance()->LoadProfIsInited(); });
-    if (profIsInited_ != nullptr) {
-        return profIsInited_();
+    ProfIsInitedFunc profIsInited = profIsInited_.load(std::memory_order_acquire);
+    if (profIsInited == nullptr && msProfLibHandle_.load(std::memory_order_acquire) != nullptr) {
+        LoadProfIsInited();
+        profIsInited = profIsInited_.load(std::memory_order_acquire);
     }
-    return false;
+    return profIsInited != nullptr ? profIsInited() : false;
 }
 
 std::string ProfAclPlugin::GetResultPath()
@@ -387,8 +388,12 @@ void ProfAclPlugin::LoadProfAclRegisterDeviceCallback()
 
 void ProfAclPlugin::LoadProfIsInited()
 {
-    if (msProfLibHandle_ != nullptr) {
-        profIsInited_ = reinterpret_cast<ProfIsInitedFunc>(dlsym(msProfLibHandle_, "ProfIsInited"));
+    VOID_PTR handle = msProfLibHandle_.load(std::memory_order_acquire);
+    if (handle != nullptr) {
+        ProfIsInitedFunc profIsInited = reinterpret_cast<ProfIsInitedFunc>(dlsym(handle, "ProfIsInited"));
+        if (profIsInited != nullptr) {
+            profIsInited_.store(profIsInited, std::memory_order_release);
+        }
     }
 }
 

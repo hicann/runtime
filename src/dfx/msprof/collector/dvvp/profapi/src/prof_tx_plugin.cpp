@@ -7,8 +7,12 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include <atomic>
+#include <unistd.h>
 #include "prof_tx_plugin.h"
 #include "errno/error_code.h"
+#include "prof_acl_plugin.h"
+#include "prof_cann_plugin.h"
 #include "utils/utils.h"
 #include "runtime/rts/rts_stream.h"
 
@@ -16,6 +20,9 @@ using namespace analysis::dvvp::common::error;
 using namespace analysis::dvvp::common::utils;
 
 namespace ProfAPI {
+thread_local ACLPROF_EVENT_ATTR_PTR ProfTxPlugin::attr_ = nullptr;
+thread_local uint64_t ProfTxPlugin::timeStampPush_ = 0;
+
 void ProfTxPlugin::ProftxApiInit(VOID_PTR handle) { loadApi_.ProfLoadApiInit(handle); }
 
 VOID_PTR ProfTxPlugin::ProftxCreateStamp()
@@ -200,9 +207,19 @@ int32_t ProfTxPlugin::ProftxRangePop()
     }
     if (static_cast<bool>(value.cacheOpInfoSwitch)) {
         return ReportCacheOpInfo2RT(tensorInfo);
-    } else {
-        return ReportCustomTensorInfo(tensorInfo, timeStampPush, timeStampPop);
     }
+    ProfCannPlugin::instance()->ProfApiInit();
+    if (!ProfAclPlugin::instance()->IsInited()) {
+        static std::atomic<pid_t> skipLogProcessId{0};
+        const pid_t currentProcessId = getpid();
+        if (skipLogProcessId.exchange(currentProcessId, std::memory_order_relaxed) != currentProcessId) {
+            MSPROF_LOGW("Profiling is not initialized, skip reporting custom tensor info.");
+        } else {
+            MSPROF_LOGD("Profiling is not initialized, skip reporting custom tensor info.");
+        }
+        return PROFILING_SUCCESS;
+    }
+    return ReportCustomTensorInfo(tensorInfo, timeStampPush, timeStampPop);
 }
 
 int32_t ProfTxPlugin::CopyTensorData(

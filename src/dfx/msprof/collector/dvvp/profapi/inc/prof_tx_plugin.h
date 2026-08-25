@@ -69,8 +69,8 @@ public:
     int32_t ReportCacheOpInfo2RT(const ProfTensorInfo* tensorInfo);
 
 private:
-    ACLPROF_EVENT_ATTR_PTR attr_;
-    uint64_t timeStampPush_;
+    static thread_local ACLPROF_EVENT_ATTR_PTR attr_;
+    static thread_local uint64_t timeStampPush_;
     ProfLoadApi loadApi_;
     ProftxCreateStampFunc proftxCreateStamp_{nullptr};
     ProftxDestroyStampFunc proftxDestroyStamp_{nullptr};
