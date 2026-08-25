@@ -210,10 +210,8 @@ static void ConstructPlaceHolderSqe(TaskInfo* const taskInfo, rtStarsSqe_t* cons
     sqe->header.preP = RT_STARS_SQE_INT_DIR_TO_TSCPU;
     sqe->header.postP = RT_STARS_SQE_INT_DIR_NO;
 
-    sqe->u.memcpyAsyncWithoutSdmaInfo.src =
-        static_cast<uint64_t>(reinterpret_cast<uintptr_t>(memcpyAsyncTaskInfo->src));
-    sqe->u.memcpyAsyncWithoutSdmaInfo.dest =
-        static_cast<uint64_t>(reinterpret_cast<uintptr_t>(memcpyAsyncTaskInfo->destPtr));
+    sqe->u.memcpyAsyncWithoutSdmaInfo.src = RtPtrToValue(memcpyAsyncTaskInfo->src);
+    sqe->u.memcpyAsyncWithoutSdmaInfo.dest = RtPtrToValue(memcpyAsyncTaskInfo->destPtr);
     sqe->u.memcpyAsyncWithoutSdmaInfo.size = memcpyAsyncTaskInfo->size;
     sqe->u.memcpyAsyncWithoutSdmaInfo.pid = static_cast<uint32_t>(drvDeviceGetBareTgid());
     PrintSqe(command, "MemCopyAsyncByPlaceHolder");

@@ -155,7 +155,7 @@ fp16_t& fp16_t::operator=(const float& fVal)
     int16_t eRet;
     uint32_t eF;
     uint32_t mF;
-    uint32_t ui32V = *(reinterpret_cast<const uint32_t*>(&fVal)); // 1:8:23bit sign:exp:man
+    uint32_t ui32V = *(RtPtrToPtr<const uint32_t*>(&fVal)); // 1:8:23bit sign:exp:man
     uint32_t mLenDelta;
 
     sRet = static_cast<uint16_t>((ui32V & FP32_SIGN_MASK) >> FP32_SIGN_INDEX); // 4Byte->2Byte
@@ -255,11 +255,11 @@ fp16_t& fp16_t::operator=(const int16_t& iVal)
         val = 0;
     } else {
         uint16_t sRet;
-        uint16_t uiVal = *(reinterpret_cast<const uint16_t*>(&iVal));
+        uint16_t uiVal = *(RtPtrToPtr<const uint16_t*>(&iVal));
         sRet = (uint16_t)(uiVal >> BitShift_15);
         if (sRet) {
             int16_t iValM = -iVal;
-            uiVal = *(reinterpret_cast<uint16_t*>(&iValM));
+            uiVal = *(RtPtrToPtr<uint16_t*>(&iValM));
         }
         uint32_t mTmp = (uiVal & FP32_ABS_MAX);
         uint16_t mMin = FP16_MAN_HIDE_BIT;
@@ -307,11 +307,11 @@ fp16_t& fp16_t::operator=(const int32_t& iVal)
     if (iVal == 0) {
         val = 0;
     } else {
-        uint32_t uiVal = *(reinterpret_cast<const uint32_t*>(&iVal));
+        uint32_t uiVal = *(RtPtrToPtr<const uint32_t*>(&iVal));
         uint16_t sRet = (uint16_t)(uiVal >> BitShift_31);
         if (sRet) {
             int32_t iValM = -iVal;
-            uiVal = *(reinterpret_cast<uint32_t*>(&iValM));
+            uiVal = *(RtPtrToPtr<uint32_t*>(&iValM));
         }
         int16_t eRet;
         uint32_t mTmp = (uiVal & FP32_ABS_MAX);

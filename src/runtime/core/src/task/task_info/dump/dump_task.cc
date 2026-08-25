@@ -32,7 +32,7 @@ rtError_t FusionDumpAddrSetTaskInit(
     taskInfo->typeName = "FUSIONDUMP_ADDR_SET";
     fusionDumpAddrSet->dumpSize = dumpDataSize;
     fusionDumpAddrSet->modelId = modelIndex;
-    fusionDumpAddrSet->addr = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(address));
+    fusionDumpAddrSet->addr = RtPtrToValue(address);
     fusionDumpAddrSet->flag = static_cast<uint8_t>(fusionFlag);
     fusionDumpAddrSet->combAddr = 0U;
     return RT_ERROR_NONE;
@@ -64,7 +64,7 @@ rtError_t DataDumpLoadInfoTaskInit(
     TaskCommonInfoInit(taskInfo);
     taskInfo->type = TS_TASK_TYPE_DATADUMP_LOADINFO;
     taskInfo->typeName = "DATADUMP_LOADINFO";
-    taskInfo->u.dataDumpLoadInfoTask.dumpInfo = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(dumpInfoPtr));
+    taskInfo->u.dataDumpLoadInfoTask.dumpInfo = RtPtrToValue(dumpInfoPtr);
     taskInfo->u.dataDumpLoadInfoTask.length = len;
     taskInfo->u.dataDumpLoadInfoTask.kernelType = kernelType;
     RT_LOG(
@@ -98,13 +98,12 @@ rtError_t DebugRegisterTaskInit(
     TaskInfo* taskInfo, const uint32_t mdlId, const void* const address, const uint32_t curFlag)
 {
     TaskCommonInfoInit(taskInfo);
-    taskInfo->u.debugRegisterTask.addr = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(address));
+    taskInfo->u.debugRegisterTask.addr = RtPtrToValue(address);
     auto dev = taskInfo->stream->Device_();
     rtError_t error = RT_ERROR_NONE;
     if (!dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_TASK_DEBUG_REGISTER_WITH_VA_ADDR)) {
         uint64_t pptr;
-        error = dev->Driver_()->MemAddressTranslate(
-            static_cast<int32_t>(dev->Id_()), static_cast<uint64_t>(reinterpret_cast<uintptr_t>(address)), &pptr);
+        error = dev->Driver_()->MemAddressTranslate(static_cast<int32_t>(dev->Id_()), RtPtrToValue(address), &pptr);
         COND_RETURN_ERROR((error != RT_ERROR_NONE), error, "Convert memory from virtual to dma physical failed.");
         RT_LOG(RT_LOG_DEBUG, "pptr offset=%#" PRIx64 ".", pptr);
         taskInfo->u.debugRegisterTask.addr = pptr;
@@ -157,13 +156,12 @@ rtError_t DebugRegisterForStreamTaskInit(
     TaskInfo* taskInfo, const uint32_t stmId, const void* const address, const uint32_t curFlag)
 {
     TaskCommonInfoInit(taskInfo);
-    taskInfo->u.debugRegisterForStreamTask.addr = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(address));
+    taskInfo->u.debugRegisterForStreamTask.addr = RtPtrToValue(address);
     auto dev = taskInfo->stream->Device_();
     rtError_t error = RT_ERROR_NONE;
     if (!dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_TASK_DEBUG_REGISTER_WITH_VA_ADDR)) {
         uint64_t pptr = 0ULL;
-        error = dev->Driver_()->MemAddressTranslate(
-            static_cast<int32_t>(dev->Id_()), static_cast<uint64_t>(reinterpret_cast<uintptr_t>(address)), &pptr);
+        error = dev->Driver_()->MemAddressTranslate(static_cast<int32_t>(dev->Id_()), RtPtrToValue(address), &pptr);
         COND_RETURN_ERROR(
             (error != RT_ERROR_NONE), error, "Convert memory address from virtual to dma physical failed.");
         RT_LOG(RT_LOG_DEBUG, "pptr offset=%#" PRIx64, pptr);
@@ -236,7 +234,7 @@ rtError_t AicpuInfoLoadTaskInit(TaskInfo* taskInfo, const void* const aicpuInfo,
     TaskCommonInfoInit(taskInfo);
     taskInfo->type = TS_TASK_TYPE_AICPU_INFO_LOAD;
     taskInfo->typeName = "AICPU_LOADINFO";
-    taskInfo->u.aicpuInfoLoadTask.aicpuInfo = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(aicpuInfo));
+    taskInfo->u.aicpuInfoLoadTask.aicpuInfo = RtPtrToValue(aicpuInfo);
     taskInfo->u.aicpuInfoLoadTask.length = len;
     RT_LOG(
         RT_LOG_DEBUG, "aicpu task load info,stream_id=%d,task_id=%hu,length=%u,task_type=%d(%s)",

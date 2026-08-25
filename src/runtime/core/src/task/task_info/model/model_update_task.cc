@@ -59,15 +59,13 @@ rtError_t SetMixDescBufOffset(
     if (destTask->type == TS_TASK_TYPE_FFTS_PLUS) {
         RT_LOG(RT_LOG_INFO, "ffts plus senario, desStreamId=%u, destaskId=%u", desStreamId, destaskId);
         error = taskInfo->stream->Device_()->Driver_()->MemAddressTranslate(
-            static_cast<int32_t>(dev->Id_()), reinterpret_cast<uintptr_t>(destTask->u.fftsPlusTask.descAlignBuf),
-            descBufOffset);
+            static_cast<int32_t>(dev->Id_()), RtPtrToValue(destTask->u.fftsPlusTask.descAlignBuf), descBufOffset);
     } else if (
         (destTask->type == TS_TASK_TYPE_KERNEL_AICORE) && (destTask->u.aicTaskInfo.kernel != nullptr) &&
         (destTask->u.aicTaskInfo.kernel->GetMixType() != NO_MIX)) {
         RT_LOG(RT_LOG_INFO, "aicore mix senario, desStreamId=%u, destaskId=%u", desStreamId, destaskId);
         error = taskInfo->stream->Device_()->Driver_()->MemAddressTranslate(
-            static_cast<int32_t>(dev->Id_()), reinterpret_cast<uintptr_t>(destTask->u.aicTaskInfo.descAlignBuf),
-            descBufOffset);
+            static_cast<int32_t>(dev->Id_()), RtPtrToValue(destTask->u.aicTaskInfo.descAlignBuf), descBufOffset);
     } else {
         RT_LOG(
             RT_LOG_INFO, "no mix senario. taskType=%u, desStreamId=%u, destaskId=%u", destTask->type, desStreamId,
@@ -107,24 +105,23 @@ rtError_t ModelTaskUpdateInit(
         uint64_t tilingKeyOffset = 0ULL;
         uint64_t blockDimOffset = 0ULL;
         rtError_t error = taskInfo->stream->Device_()->Driver_()->MemAddressTranslate(
-            static_cast<int32_t>(taskInfo->stream->Device_()->Id_()), reinterpret_cast<uintptr_t>(para->tilingKeyAddr),
+            static_cast<int32_t>(taskInfo->stream->Device_()->Id_()), RtPtrToValue(para->tilingKeyAddr),
             &tilingKeyOffset);
         COND_RETURN_ERROR((error != RT_ERROR_NONE), error, "MemAddressTranslate failed, error=%d.", error);
 
         error = taskInfo->stream->Device_()->Driver_()->MemAddressTranslate(
-            static_cast<int32_t>(taskInfo->stream->Device_()->Id_()), reinterpret_cast<uintptr_t>(para->blockDimAddr),
+            static_cast<int32_t>(taskInfo->stream->Device_()->Id_()), RtPtrToValue(para->blockDimAddr),
             &blockDimOffset);
         COND_RETURN_ERROR((error != RT_ERROR_NONE), error, "MemAddressTranslate failed, error=%d.", error);
 
         error = taskInfo->stream->Device_()->Driver_()->MemAddressTranslate(
-            static_cast<int32_t>(taskInfo->stream->Device_()->Id_()), reinterpret_cast<uintptr_t>(devCopyMem),
-            &tilingTaboffset);
+            static_cast<int32_t>(taskInfo->stream->Device_()->Id_()), RtPtrToValue(devCopyMem), &tilingTaboffset);
         COND_RETURN_ERROR((error != RT_ERROR_NONE), error, "MemAddressTranslate failed, error=%d.", error);
 
         if ((para->fftsPlusTaskInfo != nullptr) && (para->fftsPlusTaskInfo->descBuf != nullptr)) {
             error = taskInfo->stream->Device_()->Driver_()->MemAddressTranslate(
-                static_cast<int32_t>(taskInfo->stream->Device_()->Id_()),
-                reinterpret_cast<uintptr_t>(para->fftsPlusTaskInfo->descBuf), &descBufOffset);
+                static_cast<int32_t>(taskInfo->stream->Device_()->Id_()), RtPtrToValue(para->fftsPlusTaskInfo->descBuf),
+                &descBufOffset);
             mdlUpdateTaskInfo->fftsPlusTaskDescBuf = RtPtrToUnConstPtr<void*>(para->fftsPlusTaskInfo->descBuf);
         } else {
             error = SetMixDescBufOffset(taskInfo, desStreamId, destaskId, &descBufOffset);
@@ -140,9 +137,9 @@ rtError_t ModelTaskUpdateInit(
         return RT_ERROR_NONE;
     }
     // david process
-    mdlUpdateTaskInfo->tilingKeyOffset = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(para->tilingKeyAddr));
-    mdlUpdateTaskInfo->blockDimOffset = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(para->blockDimAddr));
-    mdlUpdateTaskInfo->tilingTabOffset = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(devCopyMem));
+    mdlUpdateTaskInfo->tilingKeyOffset = RtPtrToValue(para->tilingKeyAddr);
+    mdlUpdateTaskInfo->blockDimOffset = RtPtrToValue(para->blockDimAddr);
+    mdlUpdateTaskInfo->tilingTabOffset = RtPtrToValue(devCopyMem);
     return RT_ERROR_NONE;
 }
 #endif

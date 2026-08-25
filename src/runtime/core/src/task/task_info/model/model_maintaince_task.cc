@@ -61,12 +61,10 @@ rtError_t ModelMaintainceTaskInit(
         uint16_t* const execTimesSvm = modelMaintainceTaskInfo->opStream->GetExecutedTimesSvm();
         rtError_t error = RT_ERROR_NONE;
         if (dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_TASK_MODEL_MAINTAINCE_WITH_VA)) {
-            modelMaintainceTaskInfo->execTimesSvmOffset =
-                static_cast<uint64_t>(reinterpret_cast<uintptr_t>(execTimesSvm));
+            modelMaintainceTaskInfo->execTimesSvmOffset = RtPtrToValue(execTimesSvm);
         } else {
             error = driver->MemAddressTranslate(
-                static_cast<int32_t>(modelMaintainceTaskInfo->opStream->Device_()->Id_()),
-                static_cast<uint64_t>(reinterpret_cast<uintptr_t>(execTimesSvm)),
+                static_cast<int32_t>(modelMaintainceTaskInfo->opStream->Device_()->Id_()), RtPtrToValue(execTimesSvm),
                 &(modelMaintainceTaskInfo->execTimesSvmOffset));
         }
         return error;
