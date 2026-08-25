@@ -195,7 +195,7 @@ FsmStatus ClientEntity::DoSendData(Mbuf* const mbuf)
     try {
         InvokeEnqueThread(mbuf);
     } catch (std::exception& e) {
-        DGW_LOG_ERROR("create aync mem buff thread object failed, %s", e.what());
+        DGW_LOG_ERROR("create async mem buff thread object failed, %s", e.what());
         asyncDataState_ = AsyncDataState::FSM_ASYNC_DATA_INIT;
         return FsmStatus::FSM_FAILED;
     }

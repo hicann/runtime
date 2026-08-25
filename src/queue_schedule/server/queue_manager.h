@@ -203,7 +203,7 @@ private:
     std::atomic<bool> f2nfQueueEmptyFlagExtra_;
     bool isTriggeredByAsyncMemDequeue_;
     bool isTriggeredByAsyncMemEnqueue_;
-    bool ayncMemBuffEventQInitialized_;
+    bool asyncMemBuffEventQInitialized_;
     bool initializedExtra_;
 };
 } // namespace bqs

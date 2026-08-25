@@ -57,7 +57,7 @@ QueueManager::QueueManager()
       f2nfQueueEmptyFlagExtra_(true),
       isTriggeredByAsyncMemDequeue_(false),
       isTriggeredByAsyncMemEnqueue_(false),
-      ayncMemBuffEventQInitialized_(false),
+      asyncMemBuffEventQInitialized_(false),
       initializedExtra_(false)
 {}
 
@@ -302,7 +302,7 @@ BqsStatus QueueManager::InitQueue()
         BQS_LOG_ERROR("Create and subscribe AsyncMemBuff queue error, ret=[%d]", static_cast<int32_t>(bqsRet));
         return bqsRet;
     }
-    ayncMemBuffEventQInitialized_ = true;
+    asyncMemBuffEventQInitialized_ = true;
 
     BQS_LOG_INFO("InitQueue success, deviceId[%u]", deviceId_);
     return BQS_STATUS_OK;
@@ -361,10 +361,10 @@ void QueueManager::Clear()
         fullToNotFullEventQInitializedExtra_ = false;
     }
 
-    if (ayncMemBuffEventQInitialized_) {
+    if (asyncMemBuffEventQInitialized_) {
         ClearQueue(asyncMemDequeueBuffQId_, QUEUE_ENQUE_EVENT);
         ClearQueue(asyncMemEnqueueBuffQId_, QUEUE_ENQUE_EVENT);
-        ayncMemBuffEventQInitialized_ = false;
+        asyncMemBuffEventQInitialized_ = false;
     }
 }
 
