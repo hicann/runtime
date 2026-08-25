@@ -158,8 +158,8 @@ aclrtDestroyEvent(event);
 |------|---------|---------|
 | 仅多Stream同步 | `ACL_EVENT_SYNC` | 多Stream间依赖 |
 | 仅计时 | `ACL_EVENT_TIME_LINE` | 性能测量 |
-| 同步 + 计时 | `ACL_EVENT_SYNC | ACL_EVENT_TIME_LINE` | 同步并计时 |
-| 同步 + 进度跟踪 | `ACL_EVENT_SYNC | ACL_EVENT_CAPTURE_STREAM_PROGRESS` | 同步并查询进度 |
+| 同步 + 计时 | `ACL_EVENT_SYNC \| ACL_EVENT_TIME_LINE` | 同步并计时 |
+| 同步 + 进度跟踪 | `ACL_EVENT_SYNC \| ACL_EVENT_CAPTURE_STREAM_PROGRESS` | 同步并查询进度 |
 | 跨进程同步 | `ACL_EVENT_IPC`（单独使用，不可组合） | IPC跨进程同步 |
 | 仅进度跟踪 | `ACL_EVENT_CAPTURE_STREAM_PROGRESS` | 非阻塞状态查询 |
 
@@ -666,7 +666,7 @@ aclError aclrtHostRegisterV2(void *ptr, uint64_t size, uint32_t flag)
 | 对比项 | `aclrtHostRegister` | `aclrtHostRegisterV2` |
 |------|---------------------|----------------------|
 | 锁页能力 | 无，只能处理已有的锁页内存 | 支持 `ACL_HOST_REG_PINNED`，可将malloc内存注册为锁页 |
-| flag组合 | 单个枚举值（Mapped/IOmemory/ReadOnly） | 支持位或组合（`PINNED | MAPPED` 等） |
+| flag组合 | 单个枚举值（Mapped/IOmemory/ReadOnly） | 支持位或组合（`PINNED \| MAPPED` 等） |
 | Device地址获取 | 接口内直接输出devPtr | 需额外调用 `aclrtHostGetDevicePointer`（两步操作更灵活） |
 | 编程指南推荐 | 仅在VA一致性场景提及 | **编程指南明确推荐用于锁页+映射场景** |
 
@@ -746,10 +746,10 @@ aclrtHostUnregister(ioPtr);
 
 | 需求 | flag参数 | 适用场景 |
 |------|---------|---------|
-| 锁页 + 映射到Device | `ACL_HOST_REG_PINNED | ACL_HOST_REG_MAPPED` | malloc内存供Device直接访问（最常用） |
+| 锁页 + 映射到Device | `ACL_HOST_REG_PINNED \| ACL_HOST_REG_MAPPED` | malloc内存供Device直接访问（最常用） |
 | 仅锁页 | `ACL_HOST_REG_PINNED` | 提升H2D/D2H拷贝性能 |
 | 仅映射（已有锁页内存） | `ACL_HOST_REG_MAPPED` | aclrtMallocHost申请的内存映射到Device |
-| PCIe IO space映射 | `ACL_HOST_REG_IOMEMORY | ACL_HOST_REG_MAPPED` | 第三方设备寄存器映射 |
+| PCIe IO space映射 | `ACL_HOST_REG_IOMEMORY \| ACL_HOST_REG_MAPPED` | 第三方设备寄存器映射 |
 
 ### 约束说明
 
