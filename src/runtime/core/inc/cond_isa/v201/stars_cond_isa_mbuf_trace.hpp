@@ -48,6 +48,12 @@ struct DstMemValInitFc {
     RtStarsCondOpStore initVal;
 };
 
+struct MbufHandleValInitFc {
+    RtStarsCondOpLLWI llwiHandleVal;
+    RtStarsCondOpLHWI lhwiHandleVal;
+    DstMemValInitFc freeHandleInit;
+};
+
 struct CondMbufTraceFc {
     RtStarsCondOpLLWI llwiBlkIdMask;
     RtStarsCondOpLHWI lhwiBlkIdMask;

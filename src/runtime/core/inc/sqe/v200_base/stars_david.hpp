@@ -443,12 +443,15 @@ struct RtDavidStarsDqsSchedEndSqe {
     // 用于确定性调度mbuf统计快照信息重置
     RtStarsCondOpLHWI lhwiMbufOpSnapshotAddr;
     RtStarsCondOpLLWI llwiMbufOpSnapshotAddr;
+
     RtStarsCondOpStore resetSnapShot;
+    RtStarsCondOpImm addiGetBatchDequeDotAddr;
+    RtStarsCondOpLLWI llwiLoadDeaultDotVal;
+    RtStarsCondOpStore resetBatchDequeueDot;
 
     RtStarsCondOpLLWI llwi;
     RtStarsCondOpLHWI lhwi;
     RtStarsCondOpStreamGotoR gotor;
-    RtStarsCondOpNop nop[4];
 };
 
 union rtDavidSqe_t {

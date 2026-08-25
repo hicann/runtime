@@ -69,7 +69,13 @@ struct RtStarsDqsBatchDeqFcPara {
     uint64_t mbufFreeAddr; // 存放mbuf pool寄存器的地址
     uint64_t cntNotifyReadAddr;
     uint64_t cntNotifyClearAddr;
-    uint64_t dequeuePostDotAddr;
+
+    uint64_t batchDequeuePreDotAddr;
+    uint64_t batchDequeuePostDotAddr;
+    uint64_t batchDequeueFreePreDotAddr;
+    uint64_t batchDequeueFreePostDotAddr;
+    uint64_t fullFreeHandleAddr;
+
     uint32_t sqId;
     uint8_t cntOffset;
     uint8_t sizeofHandleCache;

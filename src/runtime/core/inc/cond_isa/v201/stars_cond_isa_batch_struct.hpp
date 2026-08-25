@@ -22,7 +22,13 @@ namespace runtime {
 #pragma pack(1)
 
 struct RtStarsDqsBatchDequeueFc {
-    MbufOpDotInitFc dequeuePostDotInitFc;
+    RtStarsCondOpLLWI llwiDotDefaultVal;
+    RtStarsCondOpLHWI lhwiDotDefaultVal;
+    DstMemValInitFc batchDequePreDotInit;
+    DstMemValInitFc batchDequePostDotInit;
+    DstMemValInitFc batchDequeFreePreDotInit;
+    DstMemValInitFc batchDequeFreePostInit;
+
     RtStarsCondOpLLWI llwiGqmAddr;
     RtStarsCondOpLHWI lhwiGqmAddr;
 
@@ -63,6 +69,8 @@ struct RtStarsDqsBatchDequeueFc {
     RtStarsCondOpStore swClearNotify;
 
     RtStarsCondOpLoad ldrGqmRealAddr;
+
+    DstMemValInitFc batchDequePreDotIdx;
     RtStarsCondGqm gqm;
 
     RtStarsCondOpLLWI llwiDfxAddr;
@@ -77,9 +85,6 @@ struct RtStarsDqsBatchDequeueFc {
     RtStarsSetCsrJumpPc jumpPcHandleErr;
     RtStarsCondOpImmSLLI srliHandleValue;
     RtStarsCondOpBranch bneErrHandle;
-
-    MbufOpCntFc dequePostDotFc;
-    CondMbufTraceFc dequeMbufTracefc;
 
     RtStarsCondOpImm ldrHandleCacheAddr;
     RtStarsCondOpLLWI llwiHandleCnt;
@@ -100,6 +105,7 @@ struct RtStarsDqsBatchDequeueFc {
     RtStarsCondOpImm left4;
     RtStarsCondOpImm right4;
     RtStarsCondOpStore swNew;
+    DstMemValInitFc fullFreeHandleStore;
 
     RtStarsCondOpLLWI llwiHandleCacheDeep;
     RtStarsCondOpLHWI lhwiHandleCacheDeep;
@@ -107,16 +113,22 @@ struct RtStarsDqsBatchDequeueFc {
     RtStarsCondOpBranch bneCacheSize1;
 
     RtStarsCondOpStore swHandle;
+    DstMemValInitFc batchDequePostDotIdx;
+    CondMbufTraceFc dequeMbufTracefc;
 
     RtStarsSetCsrJumpPc jumpFreeHandle;
     RtStarsCondOpBranch beqFreeHandle;
 
+    RtStarsCondOpNop notCacheFullProcStart;
+    MbufHandleValInitFc initFreeHandleForNotFull;
     RtStarsCondOpLLWI llwiHandleCnt1;
     RtStarsCondOpLHWI lhwiHandleCnt1;
     RtStarsCondOpOp AddQueueStatus1;
     RtStarsCondOpImm addi1CntAdd;
     RtStarsCondOpStore swNew1;
     RtStarsCondOpStore swHandle1;
+    DstMemValInitFc batchDequePostDotIdx1;
+    CondMbufTraceFc dequeMbufTracefc1;
 
     RtStarsSetCsrJumpPc jumpNextIteration1;
     RtStarsCondOpBranch eqNoDataPorcess;
@@ -126,9 +138,12 @@ struct RtStarsDqsBatchDequeueFc {
     RtStarsCondOpLoad ldrMbuffMangAddr;
     RtStarsCondOpLLWI llwiAddrMask1;
     RtStarsCondOpLHWI lhwiAddrMask1;
+    DstMemValInitFc batchDequeFreePreDotIdx;
     RtStarsCondOpSystemCsr csrrcMbufManag;
     RtStarsCondOpStore swHanleForFree;
     RtStarsCondOpSystemCsr csrrsMbufManag;
+    MbufHandleValInitFc initFreeHandle;
+    DstMemValInitFc batchDequeFreePostDotIdx;
 
     RtStarsCondOpImm addi1UpdateGqmAddr;
     RtStarsCondOpImm addi1UpdateInputMbufHandleAddr;

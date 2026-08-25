@@ -284,6 +284,12 @@ typedef struct {
     uint8_t enqueue_post_dot;
     uint8_t free_pre_dot;
     uint8_t free_post_dot;
+
+    // batch deque可能为乱序处理，前后打点代表当前处理的索引或者已经处理完成的索引
+    uint8_t batch_deque_pre_dot;
+    uint8_t batch_deque_post_dot;
+    uint8_t batch_deque_free_pre_dot;
+    uint8_t batch_deque_free_post_dot;
 } mbuf_list_op_snapshot_info;
 
 typedef struct {
@@ -340,6 +346,7 @@ typedef struct {
     uint64_t default_input_addr[STARS_DQS_MAX_INPUT_QUEUE_NUM];
     uint64_t align_res; // 1 success, 0 fail
     mbuf_list_op_snapshot_info mbuf_list_op_snapshot;
+    uint32_t full_free_handle;
     dqs_task_error_code_t task_error_code;
 } stars_dqs_ctrl_space_t;
 

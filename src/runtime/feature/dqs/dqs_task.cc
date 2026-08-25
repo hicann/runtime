@@ -339,7 +339,12 @@ static rtError_t InitFuncCallParaForDqsBatchDequeueTask(TaskInfo* taskInfo, RtSt
     fcPara.sizeofHandleCache = static_cast<uint8_t>(sizeof(input_mbuf_cache_t));
 
     fcPara.mbufPoolIndexMax = static_cast<uint16_t>(ctrlSpacePtr->input_queue_num);
-    fcPara.dequeuePostDotAddr = RtPtrToValue(&(ctrlSpacePtr->mbuf_list_op_snapshot.deque_post_dot));
+
+    fcPara.batchDequeuePreDotAddr = RtPtrToValue(&(ctrlSpacePtr->mbuf_list_op_snapshot.batch_deque_pre_dot));
+    fcPara.batchDequeuePostDotAddr = RtPtrToValue(&(ctrlSpacePtr->mbuf_list_op_snapshot.batch_deque_post_dot));
+    fcPara.batchDequeueFreePreDotAddr = RtPtrToValue(&(ctrlSpacePtr->mbuf_list_op_snapshot.batch_deque_free_pre_dot));
+    fcPara.batchDequeueFreePostDotAddr = RtPtrToValue(&(ctrlSpacePtr->mbuf_list_op_snapshot.batch_deque_free_post_dot));
+    fcPara.fullFreeHandleAddr = RtPtrToValue(&(ctrlSpacePtr->full_free_handle));
 
     const uint32_t streamId = static_cast<uint32_t>(stm->Id_());
     InitDequeMbufTracePara(fcPara.dequeMbufTracePara, RtPtrToValue(ctrlSpacePtr), streamId);
@@ -1312,10 +1317,16 @@ static void ResetMbufListOpSnapshot(
     const rtStarsCondIsaRegister_t dstReg, uint64_t mbufListOpSnapshotAddr, RtDavidStarsDqsSchedEndSqe& sqe)
 {
     constexpr rtStarsCondIsaRegister_t r0 = RT_STARS_COND_ISA_REGISTER_R0;
+    constexpr rtStarsCondIsaRegister_t r3 = RT_STARS_COND_ISA_REGISTER_R3;
 
     ConstructLLWI(dstReg, mbufListOpSnapshotAddr, sqe.llwiMbufOpSnapshotAddr);
     ConstructLHWI(dstReg, mbufListOpSnapshotAddr, sqe.lhwiMbufOpSnapshotAddr);
+    // 前8个字节
     ConstructStore(dstReg, r0, 0U, RT_STARS_COND_ISA_STORE_FUNC3_SD, sqe.resetSnapShot);
+    // 偏移8个字节，写4个字节初始化batch deque dot为全F
+    ConstructOpImmAndi(dstReg, dstReg, 8U, RT_STARS_COND_ISA_OP_IMM_FUNC3_ADDI, sqe.addiGetBatchDequeDotAddr);
+    ConstructLLWI(r3, UINT32_MAX, sqe.llwiLoadDeaultDotVal);
+    ConstructStore(dstReg, r3, 0U, RT_STARS_COND_ISA_STORE_FUNC3_SW, sqe.resetBatchDequeueDot);
 
     return;
 }
@@ -1334,10 +1345,7 @@ static void ConstructDqsSchedEndInstr(
     ConstructLLWI(r2, sqId, sqe.llwi);
     ConstructGotoR(r2, r0, sqe.gotor);
 
-    // NOP
-    for (RtStarsCondOpNop& nop : sqe.nop) {
-        ConstructNop(nop);
-    }
+    return;
 }
 
 void ConstructSqeForDqsSchedEndTask(TaskInfo* const taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo)

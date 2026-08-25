@@ -15,7 +15,6 @@
 
 namespace cce {
 namespace runtime {
-
 #pragma pack(push)
 #pragma pack(1)
 
