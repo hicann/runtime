@@ -8,10 +8,11 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include <array>
+#include <cstdint>
 #include <fstream>
 #include <climits>
 #include <cstdlib>
-#include <cerrno>
 #include <securec.h>
 #include "ascend_hal_define.h"
 #include "aicpusd_util.h"
@@ -22,8 +23,9 @@
 namespace AicpuSchedule {
 namespace {
 // Field names expected in each memzone cfg entry of the json file.
-const char_t* const CFG_FIELD_NAMES[] = {"cfg_id", "total_size", "blk_size", "max_buf_size", "page_type"};
-const size_t CFG_FIELD_COUNT = sizeof(CFG_FIELD_NAMES) / sizeof(CFG_FIELD_NAMES[0]);
+const std::array<const char_t* const, 5> CFG_FIELD_NAMES = {
+    "cfg_id", "total_size", "blk_size", "max_buf_size", "page_type"};
+constexpr size_t CFG_FIELD_COUNT = 5U;
 
 // Forward declarations of internal helpers (definitions below).
 size_t SkipWhiteSpace(const std::string& s, size_t pos);
@@ -105,8 +107,8 @@ bool ReadJsonString(const std::string& s, size_t& pos, std::string& out)
 }
 
 // Read an unsigned/signed integer literal starting at pos. On success, return true and
-// store the value in outVal (unsigned long long). Caller validates range as needed.
-bool ReadJsonInteger(const std::string& s, size_t& pos, unsigned long long& outVal)
+// store the value in outVal (uint64_t). Caller validates range as needed.
+bool ReadJsonInteger(const std::string& s, size_t& pos, uint64_t& outVal)
 {
     size_t p = SkipWhiteSpace(s, pos);
     if (p >= s.size()) {
@@ -129,16 +131,13 @@ bool ReadJsonInteger(const std::string& s, size_t& pos, unsigned long long& outV
     if ((s[p] < '0') || (s[p] > '9')) {
         return false;
     }
-    errno = 0;
     char_t* endPtr = nullptr;
-    const unsigned long long v = strtoull(s.c_str() + p, &endPtr, 10);
-    if (errno != 0) {
+    const uint64_t v = strtoull(&s[p], &endPtr, 10);
+    const ptrdiff_t consumedDiff = endPtr - &s[p];
+    if (consumedDiff <= 0) {
         return false;
     }
-    const size_t consumed = static_cast<size_t>(endPtr - (s.c_str() + p));
-    if (consumed == 0U) {
-        return false;
-    }
+    const size_t consumed = static_cast<size_t>(consumedDiff);
     // strtoull silently accepts trailing garbage; we require the number to be followed
     // by whitespace, comma, } or end-of-buffer — anything else is a syntax error.
     const size_t after = p + consumed;
@@ -158,7 +157,10 @@ bool ReadJsonInteger(const std::string& s, size_t& pos, unsigned long long& outV
 bool ParseOneEntry(const std::string& s, size_t objStart, size_t objEnd, memZoneCfg& cfg)
 {
     cfg = {};
-    bool found[CFG_FIELD_COUNT] = {false, false, false, false, false};
+    std::array<bool, CFG_FIELD_COUNT> found = {false, false, false, false, false};
+    if (objStart >= s.size()) {
+        return false;
+    }
     size_t pos = objStart + 1U;
     while (pos < objEnd) {
         pos = SkipWhiteSpace(s, pos);
@@ -194,25 +196,36 @@ bool ParseOneEntry(const std::string& s, size_t objStart, size_t objEnd, memZone
                 return false;
             }
         } else {
-            unsigned long long v = 0ULL;
+            uint64_t v = 0ULL;
             if (!ReadJsonInteger(s, pos, v)) {
                 return false;
             }
+            // Validate v fits in uint32_t before narrowing cast
+            constexpr uint64_t uint32Max = static_cast<uint64_t>(UINT32_MAX);
             switch (fieldIdx) {
                 case 0U:
-                    cfg.cfg_id = static_cast<unsigned int>(v);
+                    if (v > uint32Max) {
+                        return false;
+                    }
+                    cfg.cfg_id = static_cast<uint32_t>(v);
                     break;
                 case 1U:
                     cfg.total_size = v;
                     break;
                 case 2U:
-                    cfg.blk_size = static_cast<unsigned int>(v);
+                    if (v > uint32Max) {
+                        return false;
+                    }
+                    cfg.blk_size = static_cast<uint32_t>(v);
                     break;
                 case 3U:
                     cfg.max_buf_size = v;
                     break;
                 case 4U:
-                    cfg.page_type = static_cast<unsigned int>(v);
+                    if (v > uint32Max) {
+                        return false;
+                    }
+                    cfg.page_type = static_cast<uint32_t>(v);
                     break;
                 default:
                     return false;
@@ -235,8 +248,8 @@ bool ParseOneEntry(const std::string& s, size_t objStart, size_t objEnd, memZone
             }
         }
     }
-    for (size_t i = 0U; i < CFG_FIELD_COUNT; ++i) {
-        if (!found[i]) {
+    for (const auto& item : found) {
+        if (!item) {
             return false;
         }
     }
@@ -251,7 +264,7 @@ size_t FindMatchingBrace(const std::string& s, size_t openPos)
         return std::string::npos;
     }
     size_t pos = openPos + 1U;
-    int depth = 1;
+    int32_t depth = 1;
     while (pos < s.size()) {
         const char_t c = s[pos];
         if (c == '"') {
@@ -284,7 +297,7 @@ size_t FindMatchingBracket(const std::string& s, size_t openPos)
         return std::string::npos;
     }
     size_t pos = openPos + 1U;
-    int depth = 1;
+    int32_t depth = 1;
     while (pos < s.size()) {
         const char_t c = s[pos];
         if (c == '"') {
@@ -406,7 +419,7 @@ StatusCode AicpuMemInfoProcess::LoadMemCfgFromFile(const std::string& filePath, 
         aicpusd_run_info("Invalid json: top-level object expected in [%s].", filePath.c_str());
         return AICPU_SCHEDULE_ERROR_READ_JSON_FAILED;
     }
-    size_t topEnd = FindMatchingBrace(content, pos);
+    const size_t topEnd = FindMatchingBrace(content, pos);
     if (topEnd == std::string::npos) {
         aicpusd_run_info("Unbalanced braces in json [%s].", filePath.c_str());
         return AICPU_SCHEDULE_ERROR_READ_JSON_FAILED;
@@ -452,7 +465,7 @@ StatusCode AicpuMemInfoProcess::LoadMemCfgFromFile(const std::string& filePath, 
             aicpusd_run_info("Expected object value for key [%s] in [%s].", key.c_str(), filePath.c_str());
             return AICPU_SCHEDULE_ERROR_READ_JSON_FAILED;
         }
-        size_t entryEnd = FindMatchingBrace(content, pos);
+        const size_t entryEnd = FindMatchingBrace(content, pos);
         if (entryEnd == std::string::npos) {
             aicpusd_run_info("Unbalanced entry object for key [%s] in [%s].", key.c_str(), filePath.c_str());
             return AICPU_SCHEDULE_ERROR_READ_JSON_FAILED;

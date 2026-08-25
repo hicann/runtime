@@ -61,22 +61,22 @@ AicpuEventProcess& AicpuEventProcess::GetInstance()
 /**
  * @ingroup AicpuEventProcess
  * @brief it use to process the AICPU event.
- * @param [in] eventInfo : the event information from ts.
+ * @param [in] drvEventInfo : the event information from ts.
  * @return AICPU_SCHEDULE_OK: success, other: error code
  */
-int32_t AicpuEventProcess::ProcessAICPUEvent(const event_info& eventInfo)
+int32_t AicpuEventProcess::ProcessAICPUEvent(const event_info& drvEventInfo)
 {
-    aicpusd_info("Begin to process the aicpu event, eventId[%d].", eventInfo.comm.subevent_id);
+    aicpusd_info("Begin to process the aicpu event, eventId[%d].", drvEventInfo.comm.subevent_id);
 
     int32_t ret = AICPU_SCHEDULE_OK;
     // find process function of the subevent id.
-    const AICPUCustSubEvent custEventId = static_cast<AICPUCustSubEvent>(eventInfo.comm.subevent_id);
+    const AICPUCustSubEvent custEventId = static_cast<AICPUCustSubEvent>(drvEventInfo.comm.subevent_id);
     const auto it = eventTaskProcess_.find(custEventId);
     if (it != eventTaskProcess_.end()) {
         const EventProcess pFunction = it->second;
-        ret = (this->*pFunction)(eventInfo.priv);
+        ret = (this->*pFunction)(drvEventInfo.priv);
     } else {
-        aicpusd_err("The subevent id is invalid, id[%u].", eventInfo.comm.subevent_id);
+        aicpusd_err("The subevent id is invalid, id[%u].", drvEventInfo.comm.subevent_id);
         return AICPU_SCHEDULE_ERROR_UNKNOW_AICPU_EVENT;
     }
     // Failed to execute the task , it needs to handle error.
@@ -169,13 +169,13 @@ int32_t AicpuEventProcess::AICPUEventOpenCustomSo(const event_info_priv& privEve
     return AICPU_SCHEDULE_OK;
 }
 
-int32_t AicpuEventProcess::AICPUEventCustCloseMonitor(const TsdSubEventInfo* const eventInfo)
+int32_t AicpuEventProcess::AICPUEventCustCloseMonitor(const TsdSubEventInfo* const drvEventInfo)
 {
-    if (eventInfo == nullptr) {
+    if (drvEventInfo == nullptr) {
         aicpusd_err("Close monitor event info is nullptr.");
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
-    const auto msg = PtrToPtr<const char_t, const AICPUCloseMonitorEventMsg>(eventInfo->priMsg);
+    const auto msg = PtrToPtr<const char_t, const AICPUCloseMonitorEventMsg>(drvEventInfo->priMsg);
     AicpuMonitor::GetInstance().SetCloseMonitorFlag(msg->closeFlag == 1U);
     aicpusd_info("Cust receive close monitor event, closeFlag[%u].", msg->closeFlag);
     return AICPU_SCHEDULE_OK;

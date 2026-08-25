@@ -46,7 +46,7 @@ void RegOpenCustSoCallBack()
 void RegCloseMonitorCallBack()
 {
     SubProcEventCallBackInfo closeMonitorInfo = {};
-    closeMonitorInfo.callBackFunc = AicpuEventProcess::AICPUEventCustCloseMonitor;
+    closeMonitorInfo.callBackFunc = &AicpuEventProcess::AICPUEventCustCloseMonitor;
     closeMonitorInfo.eventType = AICPU_SUB_EVENT_CUST_CLOSE_MONITOR;
     const int32_t ret = RegEventMsgCallBackFunc(&closeMonitorInfo);
     if (ret != 0) {

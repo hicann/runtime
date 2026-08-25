@@ -30,10 +30,10 @@ public:
     /**
      * @ingroup AicpuEventProcess
      * @brief it use to process the AICPU event.
-     * @param [in] eventInfo : the event information from ts.
+     * @param [in] drvEventInfo : the event information from ts.
      * @return AICPU_SCHEDULE_OK: success, other: error code
      */
-    int32_t ProcessAICPUEvent(const event_info& eventInfo);
+    int32_t ProcessAICPUEvent(const event_info& drvEventInfo);
 
     /**
      * @ingroup AicpuEventProcess
@@ -85,7 +85,7 @@ public:
      */
     int32_t ProcessMsgVersionEvent(AicpuSqeAdapter& aicpuSqeAdapter) const;
 
-    static int32_t AICPUEventCustCloseMonitor(const TsdSubEventInfo* const eventInfo);
+    static int32_t AICPUEventCustCloseMonitor(const TsdSubEventInfo* const drvEventInfo);
 
 private:
     AicpuEventProcess();
