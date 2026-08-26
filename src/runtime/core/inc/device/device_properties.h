@@ -189,7 +189,6 @@ struct DevProperties final {
     uint32_t pthreadStackSize; // 0: Use the default stack size. others: Custom Stack Size
     EventWaitTimeoutType eventWaitTimeout;
     uint32_t tsCount;
-    uint32_t defaultTaskRatio;
     uint16_t sqTailOffset;
     int32_t maxGroupId;
     ReduceOverflowType reduceOverflow;
@@ -205,8 +204,12 @@ struct DevProperties final {
     uint32_t mc2FeatureFlag;
     uint64_t stackPhyBase;
     uint32_t maxCustomerStackSize;
-    uint32_t aicNum;      // 目前是宏定义，后续需要去 ini 里面去读
-    uint32_t aivNum;      // 目前是宏定义，后续需要去 ini 里面去读
+    uint32_t ioDieNum;
+    uint32_t defaultTaskRatio;
+    uint32_t aicNum; // 目前是宏定义，后续需要去 ini 里面去读
+    uint32_t aivNum; // 目前是宏定义，后续需要去 ini 里面去读
+    uint32_t aicNumPerDie;
+    uint32_t aivNumPerDie;
     uint32_t ringbufSize; // 0: do not need new DeviceErrorProc. others: Custom DeviceErrorProc ringBufferSize
     uint32_t hugeManagedFlag;
     uint32_t memInfoType;
@@ -271,7 +274,6 @@ struct DevProperties final {
     SupportCreateTaskRes supportCreateTaskRes;
     PhysicalMemTypePolicy physicalMemTypePolicy;
     uint32_t aicNumForCoreStack;
-    uint32_t aivNumPerDie;
     uint64_t engineWaitCompletionTImeout;
     int32_t reportWaitTimeout;
     std::array<uint32_t, RT_ATOMIC_OPERATION_MAX_VAL> hostAtomicCapabilities;
@@ -307,7 +309,6 @@ struct DevProperties final {
     DeviceCvArchType cvArchType;
     int64_t npuArch;
     uint32_t sqDisableStatPollingCycleNum;
-    uint32_t ioDieNum;
     uint64_t swapBufferBaseAddr;
     uint64_t swapBufferUpdateRegOffset;
     uint32_t sqSwapShift;
