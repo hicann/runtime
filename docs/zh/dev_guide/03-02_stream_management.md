@@ -21,7 +21,7 @@ Runtime中的Stream均为非阻塞式Stream，默认Stream不会跟显式创建�
 
 以下是创建Stream并在Stream上下发计算任务的代码示例，不可以直接拷贝编译运行，仅供参考。完整样例代码请参见[Link](https://gitcode.com/cann/runtime/tree/9.2.0-beta.2/example/1_basic_features/stream/0_simple_stream)。
 
-```
+```c
 // 显式创建一个Stream
 aclrtStream stream;
 aclrtCreateStream(&stream);
@@ -48,7 +48,7 @@ aclrtDestroyStream(stream);
 
 以下是在默认Stream上下发计算任务的代码示例，不可以直接拷贝编译运行，仅供参考。
 
-```
+```c
 // 指定Device（接口内部自动创建默认Stream）
 aclrtSetDevice(0);
 
@@ -77,7 +77,7 @@ aclrtResetDevice(0);
 
 以下是设备同步代码示例，不可以直接拷贝编译运行，仅供参考。
 
-```
+```c
 // 指定Device
 aclrtSetDevice(0);
 
@@ -102,7 +102,7 @@ aclrtResetDevice(0);
 
 以下是流同步的代码示例，不可以直接拷贝编译运行，仅供参考。
 
-```
+```c
 // 创建Stream
 aclrtStream stream;
 aclrtCreateStream(&stream);
@@ -131,7 +131,7 @@ CANN为CPU和NPU之间的异步协作提供了灵活的方式。用户可以使�
 
 以下是在Stream上插入一个Host回调任务的代码示例，不可以直接拷贝编译运行，仅供参考。完整样例代码请参见[Link](https://gitcode.com/cann/runtime/tree/9.2.0-beta.2/example/2_advanced_features/callback/1_callback_hostfunc)。
 
-```
+```c
 // Host回调任务
 void myHostCallback(void *args)
 {
@@ -173,7 +173,7 @@ Stream的优先级主要用于影响任务的调度顺序，而非强制规定�
 
 以下为示例代码，不可以直接拷贝编译运行，仅供参考。
 
-```
+```c
 // 查询当前设备支持的Stream最小、最大优先级
 aclrtDeviceGetStreamPriorityRange(&leastPriority, &greatestPriority);
 
@@ -198,7 +198,7 @@ CANN支持遇错即停模式（ACL\_STOP\_ON\_FAILURE）和遇错继续模式（
 
 调用aclrtSetStreamFailureMode接口指定调度模式的示例代码如下，不可以直接拷贝编译运行，仅供参考：
 
-```
+```c
 aclrtStream stream;
 aclrtCreateStream(&stream);
 
@@ -209,7 +209,7 @@ aclrtSetStreamFailureMode(stream, ACL_STOP_ON_FAILURE);
 
 也可以调用aclrtSetStreamAttribute接口指定调度模式的示例代码如下，不可以直接拷贝编译运行，仅供参考：
 
-```
+```c
 aclrtStream stream;
 aclrtCreateStream(&stream);
 
@@ -229,7 +229,7 @@ Runtime提供了Persistent流支持任务的持久化。在Persistent流上下�
 
 调用aclrtCreateStreamWithConfig接口创建Persistent流，Persistent流需要与模型运行实例创建绑定，支持模型的反复执行。以下为示例代码，不可以直接拷贝编译运行，仅供参考：
 
-```
+```c
 // 创建Persistent stream
 aclrtStream stream;
 aclrtCreateStreamWithConfig(&stream, 0, ACL_STREAM_PERSISTENT);

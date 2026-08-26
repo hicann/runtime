@@ -10,7 +10,7 @@
 
 以下示例用两个stream为例演示跨流捕获，其中stream1是主流，stream2是子流。
 
-```
+```c
 #include <stdio.h>
 #include <vector>
 #include "acl/acl.h"

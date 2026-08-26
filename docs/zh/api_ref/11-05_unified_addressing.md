@@ -273,7 +273,7 @@ aclError aclrtMemManagedPrefetchAsync(const void* ptr, size_t size, aclrtMemMana
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| ptr      |   输入    | 待预取的内存地址，地址范围必须在UVM内存范围内存，即[0x90000000000ULL, 0x90000000000ULL+3TB)。 |
+| ptr      |   输入    | 待预取的内存地址，地址范围必须在UVM内存范围内，即[0x90000000000ULL, 0x90000000000ULL+3TB)。 |
 | size     |   输入    | 待预取的内存长度，单位Byte，要求2MB对齐。取值范围为(0, 3TB]。 |
 | location |   输入    | 物理内存的位置信息，location参数包含id和type两个成员。类型定义请参见[aclrtMemManagedLocation](25-04_Structs.md#aclrtMemManagedLocation)。 |
 | flags    |   输入    | 预留参数。当前固定配置为0。                                  |
@@ -343,7 +343,7 @@ aclError aclrtMemManagedPrefetchBatchAsync(const void** ptrs, size_t* sizes, siz
 ### 约束说明
 
 - 将ptrs中指定的数据预取到prefetchLocs中指定的物理内存区域，每个预取操作的大小由sizes指定，ptrs、sizes这两个数组必须具有count指定的相同长度。
-- 在预取批处理操作中，prefetchLocs数组中的每个条目可应用与多个预取操作，具体通过prefetchLocIdxs数组指定对应物理地址区域需要预取的起始UVM地址索引。prefetchLocs和prefetchLocIdxs这两个数组必须具有numPrefetchLocs指定的相同长度。例如：若批处理包含ptrs/sizes列出的10个预取操作，其中前6个需要被预取到同一块物理内存区域，后4个需要被预取到另一块物理内存区域，则numPrefetchLocs为2，prefetchLocIdxs为\{0,6\}，prefetchLocs包含两组物理内存的位置信息。注意，prefetchLocIdxs的首个条目必须为0，且每个条目必须大于前一个条目，最后一个条目应小于count。此外numPrefetchLocs必须小于等于count。
+- 在预取批处理操作中，prefetchLocs数组中的每个条目可应用于多个预取操作，具体通过prefetchLocIdxs数组指定对应物理地址区域需要预取的起始UVM地址索引。prefetchLocs和prefetchLocIdxs这两个数组必须具有numPrefetchLocs指定的相同长度。例如：若批处理包含ptrs/sizes列出的10个预取操作，其中前6个需要被预取到同一块物理内存区域，后4个需要被预取到另一块物理内存区域，则numPrefetchLocs为2，prefetchLocIdxs为\{0,6\}，prefetchLocs包含两组物理内存的位置信息。注意，prefetchLocIdxs的首个条目必须为0，且每个条目必须大于前一个条目，最后一个条目应小于count。此外numPrefetchLocs必须小于等于count。
 
 <br>
 <br>

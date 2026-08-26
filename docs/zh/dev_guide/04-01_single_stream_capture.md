@@ -21,7 +21,7 @@
 
 以下是单流捕获add算子计算的示例代码。
 
-```
+```c
 #include <stdio.h>
 #include <vector>
 #include "acl/acl.h"

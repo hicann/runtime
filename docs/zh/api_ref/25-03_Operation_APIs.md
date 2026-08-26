@@ -432,7 +432,7 @@ aclprofConfig类型数据可以只创建一次、多处使用，用户需要保�
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| deviceIdList | 输入 | Device ID列表。须根据实际环境的Device ID配置。<br>类型定义请参见[aclprofConfig](#aclprofConfig)和[aclprofAicoreMetrics](25-02_Enumerations.md#aclprofAicoreMetrics)。 |
+| deviceIdList | 输入 | Device ID列表。须根据实际环境的Device ID配置。 |
 | deviceNums | 输入 | Device的个数。需由用户保证deviceIdList中的Device个数与deviceNums参数值一致，否则可能会导致后续业务异常。 |
 | aicoreMetrics | 输入 | 表示AI Core性能指标采集项。请参见[aclprofAicoreMetrics](25-02_Enumerations.md#aclprofAicoreMetrics)。 |
 | aicoreEvents | 输入 | 表示AI Core事件，目前配置为NULL。 |
@@ -2419,7 +2419,7 @@ aclError acltdtGetQueueRoute(const acltdtQueueRouteList *routeList, size_t index
 | --- | :---: | --- |
 | routeList | 输入 | 队列路由配置数组。<br>需提前调用[acltdtCreateQueueRouteList](#acltdtCreateQueueRouteList)接口创建acltdtQueueRouteList类型的数据。 |
 | index | 输入 | 指定获取哪一个队列路由配置信息，index编号从0开始。 |
-| route | 输入&输出 | 需添加的队列路由配置信息的指针。类型定义请参见[acltdtQueueRoute](#acltdtQueueRoute)。 |
+| route | 输入&输出 | 队列路由配置信息的指针。类型定义请参见[acltdtQueueRoute](#acltdtQueueRoute)。 |
 
 ### 返回值说明
 

@@ -657,7 +657,7 @@ aclError aclrtHostRegisterV2(void *ptr, uint64_t size, uint32_t flag)
 
 | 参数 | 说明 |
 |------|------|
-| `ptr` | 输入，Host内存地址，需4K页对齐 |
+| `ptr` | 输入，Host内存地址，需4k页对齐 |
 | `size` | 输入，内存大小，单位Byte |
 | `flag` | 输入，注册类型，支持位或组合 |
 

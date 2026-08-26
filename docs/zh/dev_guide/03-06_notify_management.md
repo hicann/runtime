@@ -14,7 +14,7 @@ Notify与Event功能区别在于，Notify Wait完成后，Notify状态会自动�
 
 Notify相关接口的调用代码示例如下：
 
-```
+```c
 // 创建Stream
 aclrtStream stream1;
 aclrtStream stream2;

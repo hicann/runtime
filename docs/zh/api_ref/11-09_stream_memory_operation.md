@@ -43,7 +43,7 @@ aclError aclrtValueWrite(void* devAddr, uint64_t value, uint32_t flag, aclrtStre
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| devAddr | 输入 | Device侧内存地址。<br>此处需用户提前申请Device内存（例如调用aclrtMalloc接口），devAddr要求8字节对齐，有效内存位宽为64bit。 |
+| devAddr | 输入 | Device侧内存地址。<br>此处需用户提前申请Device内存（例如调用aclrtMalloc接口），devAddr要求8Byte对齐，有效内存位宽为64bit。 |
 | value | 输入 | 需向内存中写入的数据。 |
 | flag | 输入 | 预留参数，当前固定设置为0。 |
 | stream | 输入 | 执行写数据任务的stream。类型定义请参见[aclrtStream](25-05_Typedefs.md#aclrtStream)。<br>此处支持传NULL，表示使用默认Stream。 |

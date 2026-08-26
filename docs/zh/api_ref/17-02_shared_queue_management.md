@@ -371,7 +371,7 @@ aclError acltdtBindQueueRoutes(acltdtQueueRouteList *qRouteList)
 
 ### 约束说明
 
-- 系统内部会对添加的队列路由关系的进行是否成环校验，不允许成环。
+- 系统内部会校验添加的队列路由关系是否成环，不允许成环。
 - 不支持多线程并发调用。
 
 <br>
@@ -416,7 +416,7 @@ aclError acltdtUnbindQueueRoutes(acltdtQueueRouteList *qRouteList)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| qRouteList | 输入/输出 | 路由关系数组的指针，接口调用完成后返回路由去绑定结果。类型定义请参见[acltdtQueueRouteList](25-03_Operation_APIs.md#acltdtQueueRouteList)。<br>可先通过[acltdtQueryQueueRoutes](#acltdtQueryQueueRoutes)获取路由关系数组。 |
+| qRouteList | 输入/输出 | 路由关系数组的指针，接口调用完成后返回路由解绑定结果。类型定义请参见[acltdtQueueRouteList](25-03_Operation_APIs.md#acltdtQueueRouteList)。<br>可先通过[acltdtQueryQueueRoutes](#acltdtQueryQueueRoutes)获取路由关系数组。 |
 
 ### 返回值说明
 
@@ -509,7 +509,7 @@ aclError acltdtGrantQueue(uint32_t qid, int32_t pid, uint32_t permission, int32_
 
 ### 功能说明
 
-进程间需要共享队列信息时，可以调用本接口给其它进程授予队列相关的权限，例如Enqueue（指向队列中添加数据）权限、Dequeue（指从队列中获取数据）权限等。
+进程间需要共享队列信息时，可以调用本接口给其它进程授予队列相关的权限，例如Enqueue（向队列中添加数据）权限、Dequeue（从队列中获取数据）权限等。
 
 进程间传递队列相关信息时，安全性由用户保证。
 

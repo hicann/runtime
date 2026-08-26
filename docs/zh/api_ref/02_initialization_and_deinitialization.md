@@ -394,7 +394,7 @@ default\_device参数处设置Device ID，Device ID可设置为0或十进制正�
 <!-- npu="950,A3,910b,310b" id16 -->
 ### AI Core栈空间大小配置示例
 
-**AI Core栈空间大小配置**，用于控制进程中Kernel执行时为每个AI Core分配的栈空间大小，**默认为32K字节**。
+**AI Core栈空间大小配置**，用于控制进程中Kernel执行时为每个AI Core分配的栈空间大小，**默认为32KB字节**。
 
 <!-- npu="950" id17 -->
 Ascend 950PR/Ascend 950DT支持该配置，在编译AI Core算子时，无需打开O0开关。
@@ -410,20 +410,20 @@ Atlas 200I/500 A2 推理产品支持该配置，但在编译AI Core算子时，�
 
 aicore\_stack\_size参数处设置栈空间大小，单位Byte，取值有以下要求：
 
-- aicore\_stack\_size是16K的整数倍，若传入aicore\_stack\_size不是16K的整数倍，则会向上取整，确保其为16K的整数倍。
-- aicore\_stack\_size最小值为32K，若传入的aicore\_stack\_size小于32K，则按默认配置32K处理。
+- aicore\_stack\_size是16KB的整数倍，若传入aicore\_stack\_size不是16KB的整数倍，则会向上取整，确保其为16KB的整数倍。
+- aicore\_stack\_size最小值为32KB，若传入的aicore\_stack\_size小于32KB，则按默认配置32KB处理。
 - 各产品的aicore\_stack\_size最大值如下：
 
     <!-- npu="950" id20 -->
-    在Ascend 950PR/Ascend 950DT上，aicore\_stack\_size最大值为128K。
+    在Ascend 950PR/Ascend 950DT上，aicore\_stack\_size最大值为128KB。
     <!-- end id20 -->
 
     <!-- npu="A3,910b" id21 -->
-    在Atlas A3 训练系列产品/Atlas A3 推理系列产品、Atlas A2 训练系列产品/Atlas A2 推理系列产品上，aicore\_stack\_size最大值为192K。
+    在Atlas A3 训练系列产品/Atlas A3 推理系列产品、Atlas A2 训练系列产品/Atlas A2 推理系列产品上，aicore\_stack\_size最大值为192KB。
     <!-- end id21 -->
 
     <!-- npu="310b" id22 -->
-    在Atlas 200I/500 A2 推理产品上，aicore\_stack\_size最大值为7680K。
+    在Atlas 200I/500 A2 推理产品上，aicore\_stack\_size最大值为7680KB。
     <!-- end id22 -->
 
 配置文件中的示例内容如下：

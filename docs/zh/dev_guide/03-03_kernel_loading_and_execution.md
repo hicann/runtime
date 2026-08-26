@@ -26,7 +26,7 @@
 
 编译时，Kernel源码会作为工程的一部分参与构建。例如样例中可使用Ascend C CMake能力将Kernel源码编译为静态库，再链接到Host可执行文件：
 
-```
+```text
 include(${ASCENDC_CMAKE_DIR}/ascendc.cmake)
 ascendc_library(kernels STATIC kernel_print.cpp)
 
@@ -38,7 +38,7 @@ target_link_libraries(main PRIVATE kernels ${ASCEND_CANN_PACKAGE_PATH}/lib64/lib
 
 关键代码示例如下，不可以直接拷贝编译运行，仅供参考。
 
-```
+```c
 // Device code
 extern "C" __global__ __aicore__ void add_custom(GM_ADDR x, GM_ADDR y, GM_ADDR z)
 {
@@ -93,7 +93,7 @@ int main()
 
 编译时，Kernel源码和Host程序可以分开构建。例如样例中可使用ascendc_fatbin_library生成算子二进制文件，再由Host程序在运行时加载：
 
-```
+```text
 include(${ASCENDC_CMAKE_DIR}/ascendc.cmake)
 ascendc_fatbin_library(ascendc_kernels_simple add_custom.cpp)
 
@@ -111,7 +111,7 @@ target_link_libraries(ascendc_kernels_bbit PRIVATE ${ASCEND_CANN_PACKAGE_PATH}/l
 
 以下是使用LaunchKernel接口的关键代码示例，不可以直接拷贝编译运行，仅供参考。
 
-```
+```c
 // Device code，编译为独立算子二进制文件。
 extern "C" __global__ __aicore__ void add_custom(GM_ADDR x, GM_ADDR y, GM_ADDR z)
 {

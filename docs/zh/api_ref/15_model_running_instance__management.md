@@ -1396,7 +1396,7 @@ aclError aclmdlRITaskGetSeqId(aclmdlRITask task, uint32_t *id)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| tasks | 输入 | 指定任务。类型定义请参见[aclmdlRITask](25-05_Typedefs.md#aclmdlRITask)。 |
+| task | 输入 | 指定任务。类型定义请参见[aclmdlRITask](25-05_Typedefs.md#aclmdlRITask)。 |
 | id | 输出 | 任务序列ID。 |
 
 ### 返回值说明
@@ -1453,7 +1453,7 @@ aclError aclmdlRITaskGetParams(aclmdlRITask task, aclmdlRITaskParams* params)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| tasks | 输入 | 指定任务。类型定义请参见[aclmdlRITask](25-05_Typedefs.md#aclmdlRITask)。 |
+| task | 输入 | 指定任务。类型定义请参见[aclmdlRITask](25-05_Typedefs.md#aclmdlRITask)。 |
 | params | 输出 | 参数信息。类型定义请参见[aclmdlRITaskParams](25-04_Structs.md#aclmdlRITaskParams)。 |
 
 ### 返回值说明
@@ -1510,7 +1510,7 @@ aclError aclmdlRITaskSetParams(aclmdlRITask task, aclmdlRITaskParams* params)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| tasks | 输入 | 指定任务。类型定义请参见[aclmdlRITask](25-05_Typedefs.md#aclmdlRITask)。 |
+| task | 输入 | 指定任务。类型定义请参见[aclmdlRITask](25-05_Typedefs.md#aclmdlRITask)。 |
 | params | 输入 | 参数信息。类型定义请参见[aclmdlRITaskParams](25-04_Structs.md#aclmdlRITaskParams)。 |
 
 ### 返回值说明
@@ -1568,7 +1568,7 @@ aclError aclmdlRIKernelTaskGetAttribute(aclmdlRITask task, aclrtLaunchKernelAttr
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| tasks | 输入 | 指定任务。类型定义请参见[aclmdlRITask](25-05_Typedefs.md#aclmdlRITask)。 |
+| task | 输入 | 指定任务。类型定义请参见[aclmdlRITask](25-05_Typedefs.md#aclmdlRITask)。 |
 | attrId | 输入 | 要查询的属性ID。类型定义请参见[aclrtLaunchKernelAttrId](25-02_Enumerations.md#aclrtLaunchKernelAttrId)。<br>不支持查询：<br>ACL_RT_LAUNCH_KERNEL_ATTR_ENGINE_TYPE(表示算子执行引擎);<br>ACL_RT_LAUNCH_KERNEL_ATTR_BLOCKDIM_OFFSET(表示numBlocks偏移量)；<br>ACL_RT_LAUNCH_KERNEL_ATTR_BLOCK_TASK_PREFETCH(表示任务下发时是否阻止硬件预取本任务的信息)。 |
 | attrValue | 输出 | 查询出的属性值。类型定义请参见[aclrtLaunchKernelAttrValue](25-04_Structs.md#aclrtLaunchKernelAttrValue)。 |
 
@@ -1626,7 +1626,7 @@ aclError aclmdlRITaskDisable(aclmdlRITask task)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| tasks | 输入 | 指定任务。类型定义请参见[aclmdlRITask](25-05_Typedefs.md#aclmdlRITask)。 |
+| task | 输入 | 指定任务。类型定义请参见[aclmdlRITask](25-05_Typedefs.md#aclmdlRITask)。 |
 
 ### 返回值说明
 
@@ -1680,7 +1680,7 @@ aclError aclmdlRIUpdate(aclmdlRI modelRI)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| modelRI | 输入 | 指定任务。类型定义请参见[aclmdlRI](25-05_Typedefs.md#aclmdlRI)。 |
+| modelRI | 输入 | 模型运行实例。类型定义请参见[aclmdlRI](25-05_Typedefs.md#aclmdlRI)。 |
 
 ### 返回值说明
 

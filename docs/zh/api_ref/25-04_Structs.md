@@ -301,7 +301,7 @@ typedef struct aclmdlRIValueWriteTaskParams {
 
 | 成员名称 | 描述 |
 | --- | --- |
-| devAddr | Device侧内存地址。<br>此处需用户提前申请Device内存（例如调用aclrtMalloc接口），devAddr要求8字节对齐，有效内存位宽为64bit。 |
+| devAddr | Device侧内存地址。<br>此处需用户提前申请Device内存（例如调用aclrtMalloc接口），devAddr要求8Byte对齐，有效内存位宽为64bit。 |
 | value | 需向内存中写入的数据。 |
 
 <br>
@@ -959,7 +959,7 @@ typedef struct {
 | 成员名称 | 说明 |
 | --- | --- |
 | isAddr | 取值：0，表示存放参数值；1，表示存放指向参数值的内存地址。 |
-| valueOrAddr | 存放参数值或者存放指向参数值的内存地址。<br>当isAddr=0，请根据数据类型填充相应字节数，例如fp16,、bf16，填充前2个字节；fp32、uint32、int32，填充前4个字节；uint64、int64，填充8个字节。<br>当isAddr=1时，则填充8字节的内存地址值。 |
+| valueOrAddr | 存放参数值或者存放指向参数值的内存地址。<br>当isAddr=0，请根据数据类型填充相应字节数，例如fp16,、bf16，填充前2个字节；fp32、uint32、int32，填充前4个字节；uint64、int64，填充8个字节。<br>当isAddr=1时，则填充8Byte的内存地址值。 |
 | size | 对valueOrAddr实际填充的字节数。 |
 | rsv | 预留参数。当前固定配置为0。 |
 
@@ -1036,7 +1036,7 @@ typedef struct aclrtSnapShotRestoreArgs {
 
 | 成员名称 | 说明 |
 | --- | --- |
-| restoreFlags | 备份标志位。 |
+| restoreFlags | 恢复标志位。 |
 | reserved | 预留字段。 |
 
 <br>

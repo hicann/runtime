@@ -81,7 +81,8 @@ int32_t ReportInnerErrMsg(const char_t *file_name, const char_t *func, uint32_t 
 
 ### 返回值
 
-无
+- 0：成功。
+- -1：失败。
 
 <br>
 <br>

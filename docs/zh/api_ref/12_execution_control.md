@@ -396,7 +396,7 @@ aclError aclrtSetOpExecuteTimeOut(uint32_t timeout)
 
 - 由于不同产品型号的架构差异，AI Core算子、AI CPU算子的最大超时时间有所不同：
     <!-- npu="950,A3,910b" id18 -->
-    - 对于Ascend 950PR/Ascend 950DT、Atlas A3 训练系列产品/Atlas A3 推理系列产品、Atlas A2 训练系列产品/Atlas A2 推理系列产品，AI Core算子、AI CPU算子最大超时时间为interval \* 254，单位是微秒，interval可通过aclrtGetOpTimeoutInterval接口获取。
+    - 对于Ascend 950PR/Ascend 950DT、Atlas A3 训练系列产品/Atlas A3 推理系列产品、Atlas A2 训练系列产品/Atlas A2 推理系列产品，AI Core算子、AI CPU算子最大超时时间为interval \* 254，单位是微秒，interval可通过aclrtGetOpTimeOutInterval接口获取。
     <!-- end id18 -->   
     <!-- npu="310b" id19 -->
     - 对于Atlas 200I/500 A2 推理产品，AI Core算子、AI CPU算子最大超时时间为1091秒。
@@ -451,7 +451,7 @@ aclError aclrtSetOpExecuteTimeOutV2(uint64_t timeout,  uint64_t *actualTimeout)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| timeout | 输入 | 设置超时时间，单位为微秒。<br>将该参数设置为0时，表示使用最大超时时间。<br> 当调用aclrtGetOpTimeOutInterval接口获取的时间间隔小于100000微妙，并且timeout参数设置为0时，表示AI Core算子将永不超时。 |
+| timeout | 输入 | 设置超时时间，单位为微秒。<br>将该参数设置为0时，表示使用最大超时时间。<br> 当调用aclrtGetOpTimeOutInterval接口获取的时间间隔小于100000微秒，并且timeout参数设置为0时，表示AI Core算子将永不超时。 |
 | actualTimeout | 输出 | 返回实际生效的超时时间，单位为微秒。<br> 如果AI Core算子永不超时，则该参数输出的值为uint64_t的最大值。 |
 
 ### 返回值说明
@@ -461,7 +461,7 @@ aclError aclrtSetOpExecuteTimeOutV2(uint64_t timeout,  uint64_t *actualTimeout)
 ### 约束说明
 
 <!-- npu="950,A3,910b" id22 -->
-对于Ascend 950PR/Ascend 950DT、Atlas A3 训练系列产品/Atlas A3 推理系列产品、Atlas A2 训练系列产品/Atlas A2 推理系列产品，当调用aclrtGetOpTimeoutInterval接口获取的时间间隔小于100000微秒，并且将timeout参数值设置为0时，表示AI Core算子将永不超时，AI CPU算子同样适用。此时，actualTimeout参数输出的值为uint64\_t的最大值。
+对于Ascend 950PR/Ascend 950DT、Atlas A3 训练系列产品/Atlas A3 推理系列产品、Atlas A2 训练系列产品/Atlas A2 推理系列产品，当调用aclrtGetOpTimeOutInterval接口获取的时间间隔小于100000微秒，并且将timeout参数值设置为0时，表示AI Core算子将永不超时，AI CPU算子同样适用。此时，actualTimeout参数输出的值为uint64\_t的最大值。
 <!-- end id22 -->
 
 <!-- npu="310b" id32 -->
@@ -680,7 +680,7 @@ aclError aclrtReduceAsync(void *dst, const void *src, uint64_t count, aclrtReduc
 
 ### 约束说明
 
-dts、src必须跟stream所在的Device是同一个设备。
+dst、src必须跟stream所在的Device是同一个设备。
 
 <!-- npu="950" id25 -->
 Ascend 950PR/Ascend 950DT支持如下数据类型：int8、int16、int32、uint32、fp16、fp32、bf16。

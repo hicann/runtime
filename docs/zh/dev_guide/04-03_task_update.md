@@ -26,7 +26,7 @@
 
         以任务并发执行的场景为例，以下是更新aclnnAdd算子输入参数的关键代码示例。
 
-        ```
+        ```c
         #include <stdio.h>
         #include <vector>
         #include "acl/acl.h"

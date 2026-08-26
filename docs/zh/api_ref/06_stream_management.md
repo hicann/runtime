@@ -138,7 +138,7 @@ aclError aclrtCreateStreamWithConfig(aclrtStream *stream, uint32_t priority, uin
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
 | stream | 输出 | Stream的指针。类型定义请参见[aclrtStream](25-05_Typedefs.md#aclrtStream)。 |
-| priority | 输入 | 优先级。<br>该参数为预留参数，暂不使用。 |
+| priority | 输入 | 优先级。<br>该参数取值范围：[0, 7]，最多支持8个优先级，数字越小代表优先级越高，其中，0的优先级最高，7的优先级最低。如果设置的优先级超过取值范围，则就近修正为边界值。 |
 | flag | 输入 | Stream指针的flag。<br>flag既支持配置单个宏，也支持配置多个宏位或。对于不支持位或的宏，本接口会返回报错。配置其他值创建出来的Stream等同于通过aclrtCreateStream接口创建出来的Stream。<br>flag参数值请参见“flag取值说明”。 |
 
 ### flag取值说明
@@ -834,15 +834,14 @@ aclError aclrtSetStreamAttribute(aclrtStream stream, aclrtStreamAttr stmAttrType
 
 返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
-## 约束说明
+### 约束说明
 
 - 溢出检测属性：调用该接口打开或关闭溢出检测开关后，仅对后续新下发的任务生效，已下发的任务仍维持原样。
-- Failure Mode：不支持对Context中的默认Stream设置Failure Mode。
 <!-- npu="950,A3,910b,910,310p,310b" id15 -->
 - 当Stream上设置了遇错即停模式，该Stream所在的Context下的其它Stream也是遇错即停。
 <!-- end id15 -->
 <!-- npu="950,A3,910b" id16 -->
-- 对于Ascend 950PR/Ascend 950DT、Atlas A3 训练系列产品/Atlas A3 推理系列产品、Atlas A2 训练系列产品/Atlas A2 推理系列产品，支持指定默认Stream（即stream参数传入NULL）。
+- 对于Ascend 950PR/Ascend 950DT、Atlas A3 训练系列产品/Atlas A3 推理系列产品、Atlas A2 训练系列产品/Atlas A2 推理系列产品，支持指定默认Stream（即stream参数传入NULL）。但不支持对默认Stream设置Failure Mode。
 <!-- end id16 -->
 <!-- npu="910,310p,310b" id17 -->
 - 对于Atlas 200I/500 A2 推理产品、Atlas 推理系列产品、Atlas 训练系列产品，不支持指定默认Stream（即stream参数传入NULL）。

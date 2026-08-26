@@ -10,7 +10,7 @@
 
 -   **Device示例代码**（算子核函数实现代码）
 
-    ```
+    ```c
     extern "C" __global__ __aicore__ void myKernel1(GM_ADDR syncMem)
     {
         // 算子逻辑
@@ -39,7 +39,7 @@
 
 -   **Host示例代码**
 
-    ```
+    ```c
     // 创建Stream
     aclrtStream stream1;
     aclrtStream stream2;

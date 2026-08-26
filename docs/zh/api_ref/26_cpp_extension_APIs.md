@@ -788,7 +788,7 @@ aclError aclrtMemAllocManaged(T **devPtr, size_t size, uint32_t flags = ACL_RT_M
 
 ### 功能说明
 
-申请统一虚拟内存（Unified Virtual Memory, UVM），通过\*ptr返回已申请内存的指针，且申请的内存大小会根据用户指定的size向上按2M对齐。使用本接口申请的内存，若需释放内存，需调用[aclrtFree](11-01_device_memory_malloc_and_free.md#aclrtFree)接口。
+申请统一虚拟内存（Unified Virtual Memory, UVM），通过\*ptr返回已申请内存的指针，且申请的内存大小会根据用户指定的size向上按2MB对齐。使用本接口申请的内存，若需释放内存，需调用[aclrtFree](11-01_device_memory_malloc_and_free.md#aclrtFree)接口。
 
 本接口为封装接口，仅适用于C++程序，接口内部调用C接口[aclrtMemAllocManaged](11-05_unified_addressing.md#aclrtMemAllocManaged)。
 

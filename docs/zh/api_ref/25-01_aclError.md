@@ -70,7 +70,7 @@ typedef int aclError;
 | static const int ACL_ERROR_NOT_STATIC_AIPP = 100038;<br>须知：此返回码后续版本会废弃，请使用[ACL_ERROR_GE_AIPP_NOT_EXIST](#table153902340461)返回码。 | 静态AIPP配置信息不存在。 | 调用aclmdlGetFirstAippInfo接口时，请传入正确的index值。 |
 | static const int ACL_ERROR_COMPILING_STUB_MODE = 100039; | 运行应用前配置的动态库路径是编译桩的路径，不是正确的动态库路径。 | 请检查动态库路径的配置，确保使用运行模式的动态库。 |
 | static const int ACL_ERROR_GROUP_NOT_SET = 100040;<br>须知：此返回码后续版本会废弃，请使用[ACL_ERROR_RT_GROUP_NOT_SET](#table1089051917356)返回码。 | 未设置Group。 | 请检查是否已调用aclrtSetGroup接口。 |
-| static const int  ACL_ERROR_GROUP_NOT_CREATE = 100041;<br>须知：此返回码后续版本会废弃，请使用[ACL_ERROR_RT_GROUP_NOT_CREATE](#table1089051917356)返回码。 | 未创建对应的Group。 | 请检查调用接口时设置的Group ID是否在支持的范围内，Group ID的取值范围：[0, (Group数量-1)]，用户可调用aclrtGetGroupCount接口获取Group数量。 |
+| static const int ACL_ERROR_GROUP_NOT_CREATE = 100041;<br>须知：此返回码后续版本会废弃，请使用[ACL_ERROR_RT_GROUP_NOT_CREATE](#table1089051917356)返回码。 | 未创建对应的Group。 | 请检查调用接口时设置的Group ID是否在支持的范围内，Group ID的取值范围：[0, (Group数量-1)]，用户可调用aclrtGetGroupCount接口获取Group数量。 |
 | static const int ACL_ERROR_PROF_ALREADY_RUN = 100042; | 已存在采集Profiling数据的任务。 | - 请检查代码逻辑，“通过调用AscendCL API方式采集Profiling数据”的配置不能与其它方式的Profiling配置并存，只能保留一种。<br>  - 请检查是否对同一个Device重复下发了多次Profiling配置。 |
 | static const int ACL_ERROR_PROF_NOT_RUN = 100043; | 未使用aclprofInit接口先进行Profiling初始化。 | 请检查接口调用顺序。 |
 | static const int ACL_ERROR_DUMP_ALREADY_RUN = 100044; | 已存在获取Dump数据的任务。 | 请检查在调用aclmdlInitDump接口、aclmdlSetDump接口、aclmdlFinalizeDump接口配置Dump信息前，是否已调用aclInit接口配置Dump信息，如是，请调整代码逻辑，保留一种方式配置Dump信息即可。 |
@@ -90,7 +90,7 @@ typedef int aclError;
 | static const int ACL_ERROR_RESOURCE_NOT_MATCH = 200004; | 资源不匹配。 | 请检查调用接口时，是否传入正确的Stream、Context等资源。 |
 | static const int ACL_ERROR_INVALID_RESOURCE_HANDLE = 200005; | 无效的资源句柄。 | 请检查调用接口时，传入的Stream、Context等资源是否已被销毁或占用。 |
 | static const int ACL_ERROR_FEATURE_UNSUPPORTED = 200006; | 特性不支持。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| static ACL_ERROR_PROF_MODULES_UNSUPPORTED = 200007; | 下发了不支持的Profiling配置。 | 请参见aclprofCreateConfig中的说明检查Profiling的配置是否正确。 |
+| static const ACL_ERROR_PROF_MODULES_UNSUPPORTED = 200007; | 下发了不支持的Profiling配置。 | 请参见aclprofCreateConfig中的说明检查Profiling的配置是否正确。 |
 | static const int ACL_ERROR_STORAGE_OVER_LIMIT = 300000; | 超出存储上限。 | 请检查硬件环境上的存储剩余情况。 |
 | static const int ACL_ERROR_INTERNAL_ERROR = 500000; | 未知内部错误。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
 | static const int ACL_ERROR_FAILURE = 500001; | 内部错误。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
@@ -165,7 +165,7 @@ typedef int aclError;
 | #define  ACL_ERROR_RT_QUEUE_EMPTY  207013 | 队列为空。 | 不能从空队列中获取数据，请先向队列中添加数据，再获取。 |
 | #define  ACL_ERROR_RT_QUEUE_FULL  207014 | 队列已满。 | 不能向已满的队列中添加数据，请先从队列中获取数据，再添加。 |
 | #define  ACL_ERROR_RT_REPEATED_INIT  207015 | 队列重复初始化。 | 建议初始化一次队列即可，不要重复初始化。 |
-| #define  ACL_ERROR_RT_DEVIDE_OOM  207018 | Device侧内存耗尽。 | 排查Device上的内存使用情况，并根据Device上的内存规格合理规划内存的使用。 |
+| #define  ACL_ERROR_RT_DEVICE_OOM  207018 | Device侧内存耗尽。 | 排查Device上的内存使用情况，并根据Device上的内存规格合理规划内存的使用。 |
 | #define  ACL_ERROR_RT_FEATURE_NOT_SUPPORT_UPDATE_OP  207019 | 当前驱动版本不支持更新该算子。 | 请检查驱动版本。<br>您可以单击[Link](https://www.hiascend.com/hardware/firmware-drivers/commercial)，在“固件与驱动”页面下载Ascend HDK 25.0.RC1或更高版本的驱动安装包，并参考相应版本的文档进行安装、升级。 |
 | #define  ACL_ERROR_RT_LINK_TYPE_NOT_SUPPORTED  207021 | 指定的连接类型不支持。 | 排查使用的连接类型硬件是否支持。 |
 | #define  ACL_ERROR_RT_INTERNAL_ERROR  507000 | runtime模块内部错误。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
@@ -228,7 +228,7 @@ typedef int aclError;
 | #define  ACL_ERROR_RT_SUSPECT_REMOTE_ERROR  507057 | 多进程、多Device场景下，对端Device内存可能出现故障，或者当前Device内存访问越界。 | 用户需排查对端Device进程的错误信息或当前Device的内存访问情况。 |
 | #define  ACL_ERROR_RT_DRV_INTERNAL_ERROR  507899 | Driver模块内部错误。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
 | #define  ACL_ERROR_RT_AICPU_INTERNAL_ERROR  507900 | AI CPU模块内部错误。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| #define  ACL_ERROR_RT_SOCKET_CLOSE  507901 | 内部HDC（Host Device Communication）会话链接断开。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
+| #define  ACL_ERROR_RT_SOCKET_CLOSE  507901 | 内部HDC（Host Device Communication）会话连接断开。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
 | #define  ACL_ERROR_RT_AICPU_INFO_LOAD_RSP_ERR  507902 | AI CPU调度处理失败。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
 | #define  ACL_ERROR_RT_STREAM_CAPTURE_INVALIDATED  507903 | 模型捕获异常。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
 | #define ACL_ERROR_RT_COMM_OP_RETRY_FAIL  507904 | 通信算子重执行失败 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
@@ -240,7 +240,7 @@ typedef int aclError;
 | #define  ACL_ERROR_HOST_MEMORY_ALREADY_REGISTERED  507910 | Host内存已经被注册。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
 | #define  ACL_ERROR_HOST_MEMORY_NOT_REGISTERED  507911 | 待取消注册的Host内存未曾注册。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
 | #define  ACL_ERROR_SNAPSHOT_CALLBACK_FAILED  507912 | 快照某个阶段，执行回调函数失败。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| #define  ACL_ERROR_SNAPSHOT_REGISTER_CALLBACK_FAILED<br>507913 | 注册回调函数失败。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
+| #define  ACL_ERROR_SNAPSHOT_REGISTER_CALLBACK_FAILED  507913 | 注册回调函数失败。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
 | #define  ACL_ERROR_RT_L3_PORT_ERROR  507914 | L3端口错误。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
 | #define  ACL_ERROR_RT_CCU_TIMEOUT  507915 | CCU执行超时。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
 | #define  ACL_ERROR_RT_CCU_EXCEPTION  507916 | CCU执行异常。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |

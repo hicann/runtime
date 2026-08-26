@@ -13,7 +13,7 @@
 
 此外，Runtime会为每个Host线程维护一个错误变量，该变量初始化为ACL\_RT\_SUCCESS，并在每次发生错误（无论是参数校验错误还是异步错误）时被错误码覆盖。`aclrtPeekAtLastError`接口仅返回该变量的值，`aclrtGetLastError`接口同样返回该变量的值，但同时会将其重置为ACL\_RT\_SUCCESS。
 
-```
+```c
 // 指定Device
 aclError error = aclrtSetDevice(0);
 
@@ -61,7 +61,7 @@ error = aclrtResetDevice(0);
 
 **无需调用流同步接口**，直接校验返回值即可。
 
-```
+```c
 // 指定Device
 aclError error = aclrtSetDevice(0);
 

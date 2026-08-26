@@ -4,7 +4,7 @@
 
 - [`aclError aclrtMalloc(void **devPtr, size_t size, aclrtMemMallocPolicy policy)`](#aclrtMalloc)：在Device上分配size大小的线性内存，并通过\*devPtr返回已分配内存的指针，且内存首地址64字节对齐。
 - [`aclError aclrtMallocAlign32(void **devPtr, size_t size, aclrtMemMallocPolicy policy)`](#aclrtMallocAlign32)：在Device上分配size大小的线性内存，并通过\*devPtr返回已分配内存的指针。
-- [`aclError aclrtMallocCached(void **devPtr, size_t size, aclrtMemMallocPolicy policy)`](#aclrtMallocCached)：在Device上申请size大小的线性内存，通过\*devPtr返回已分配内存的指针，该接口在任何场景下申请的内存都是支持Cache缓存。
+- [`aclError aclrtMallocCached(void **devPtr, size_t size, aclrtMemMallocPolicy policy)`](#aclrtMallocCached)：在Device上申请size大小的线性内存，通过\*devPtr返回已分配内存的指针，该接口在任何场景下申请的内存都支持Cache缓存。
 - [`aclError aclrtMemFlush(void *devPtr, size_t size)`](#aclrtMemFlush)：将Cache中的数据刷新到DDR中，并将Cache中的内容设置成无效。
 - [`aclError aclrtMemInvalidate(void *devPtr, size_t size)`](#aclrtMemInvalidate)：将Cache中的数据设置成无效。
 - [`aclError aclrtMallocWithCfg(void **devPtr, size_t size, aclrtMemMallocPolicy policy, aclrtMallocConfig *cfg)`](#aclrtMallocWithCfg)：在Device上分配size大小的线性内存，并通过\*devPtr返回已分配内存的指针，且内存首地址64字节对齐。
@@ -57,7 +57,7 @@ aclError aclrtMalloc(void **devPtr, size_t size, aclrtMemMallocPolicy policy)
 - 对于Ascend 950PR/Ascend 950DT，本接口分配的内存，会进行字节对齐，会对用户申请的size向上对齐成32字节整数倍。
 <!-- end id2 -->
 <!-- npu="A3,910b,910,310p,310b" id3 -->
-- 对于以下产品型号，本接口分配的内存，会进行字节对齐，会对用户申请的size向上对齐成32字节整数倍后再多加32字节。但对于内存申请粒度为1G的大页内存，为节省大页内存，本接口会对用户申请的size仅向上对齐成32字节整数倍，不会再增加32字节。
+- 对于以下产品型号，本接口分配的内存，会进行字节对齐，会对用户申请的size向上对齐成32字节整数倍后再多加32字节。但对于内存申请粒度为1GB的大页内存，为节省大页内存，本接口会对用户申请的size仅向上对齐成32字节整数倍，不会再增加32字节。
     <!-- npu="A3" id4 -->
     - Atlas A3 训练系列产品/Atlas A3 推理系列产品
     <!-- end id4 -->
@@ -83,7 +83,7 @@ aclError aclrtMalloc(void **devPtr, size_t size, aclrtMemMallocPolicy policy)
 | --- | :---: | --- |
 | devPtr | 输出 | “Device上已分配内存的指针”的指针。 |
 | size | 输入 | 申请内存的大小，单位Byte。<br>size不能为0。 |
-| policy | 输入 | 内存分配规则。类型定义请参见[aclrtMemMallocPolicy](25-02_Enumerations.md#aclrtMemMallocPolicy)。<br>若配置的内存分配规则超出[aclrtMemMallocPolicy](25-02_Enumerations.md#aclrtMemMallocPolicy)取值范围，size≥2M时，按大页申请内存，否则按普通页申请内存。 |
+| policy | 输入 | 内存分配规则。类型定义请参见[aclrtMemMallocPolicy](25-02_Enumerations.md#aclrtMemMallocPolicy)。<br>若配置的内存分配规则超出[aclrtMemMallocPolicy](25-02_Enumerations.md#aclrtMemMallocPolicy)取值范围，size≥2MB时，按大页申请内存，否则按普通页申请内存。 |
 
 ### 返回值说明
 
@@ -201,7 +201,7 @@ aclError aclrtMallocAlign32(void **devPtr, size_t size, aclrtMemMallocPolicy pol
 | --- | :---: | --- |
 | devPtr | 输出 | “Device上已分配内存的指针”的指针。 |
 | size | 输入 | 申请内存的大小，单位Byte。<br>size不能为0。 |
-| policy | 输入 | 内存分配规则。类型定义请参见[aclrtMemMallocPolicy](25-02_Enumerations.md#aclrtMemMallocPolicy)。<br>若配置的内存分配规则超出[aclrtMemMallocPolicy](25-02_Enumerations.md#aclrtMemMallocPolicy)取值范围，size≥2M时，按大页申请内存，否则按普通页申请内存。 |
+| policy | 输入 | 内存分配规则。类型定义请参见[aclrtMemMallocPolicy](25-02_Enumerations.md#aclrtMemMallocPolicy)。<br>若配置的内存分配规则超出[aclrtMemMallocPolicy](25-02_Enumerations.md#aclrtMemMallocPolicy)取值范围，size≥2MB时，按大页申请内存，否则按普通页申请内存。 |
 
 ### 返回值说明
 
@@ -286,7 +286,7 @@ aclError aclrtMallocCached(void **devPtr, size_t size, aclrtMemMallocPolicy poli
 
 ### 功能说明
 
-在Device上申请size大小的线性内存，通过\*devPtr返回已分配内存的指针，该接口在任何场景下申请的内存都是支持Cache缓存。
+在Device上申请size大小的线性内存，通过\*devPtr返回已分配内存的指针，该接口在任何场景下申请的内存都支持Cache缓存。
 
 使用aclrtMallocCached接口申请的内存与使用[aclrtMalloc](#aclrtMalloc)接口申请的内存是等价的，都支持Cache缓存，不需要用户处理CPU与NPU之间的Cache一致性。
 
@@ -296,7 +296,7 @@ aclError aclrtMallocCached(void **devPtr, size_t size, aclrtMemMallocPolicy poli
 | --- | :---: | --- |
 | devPtr | 输出 | “Device上已分配内存的指针”的指针。 |
 | size | 输入 | 申请内存的大小，单位Byte。<br>size不能为0。 |
-| policy | 输入 | 内存分配规则。类型定义请参见[aclrtMemMallocPolicy](25-02_Enumerations.md#aclrtMemMallocPolicy)。<br>若配置的内存分配规则超出[aclrtMemMallocPolicy](25-02_Enumerations.md#aclrtMemMallocPolicy)取值范围，size≥2M时，按大页申请内存，否则按普通页申请内存。 |
+| policy | 输入 | 内存分配规则。类型定义请参见[aclrtMemMallocPolicy](25-02_Enumerations.md#aclrtMemMallocPolicy)。<br>若配置的内存分配规则超出[aclrtMemMallocPolicy](25-02_Enumerations.md#aclrtMemMallocPolicy)取值范围，size≥2MB时，按大页申请内存，否则按普通页申请内存。 |
 
 ### 返回值说明
 
@@ -456,7 +456,7 @@ aclError aclrtMallocWithCfg(void **devPtr, size_t size, aclrtMemMallocPolicy pol
 | --- | :---: | --- |
 | devPtr | 输出 | “Device上已分配内存的指针”的指针。 |
 | size | 输入 | 申请内存的大小，单位Byte。<br>size不能为0。 |
-| policy | 输入 | 内存分配规则。类型定义请参见[aclrtMemMallocPolicy](25-02_Enumerations.md#aclrtMemMallocPolicy)。<br>若配置的内存分配规则超出[aclrtMemMallocPolicy](25-02_Enumerations.md#aclrtMemMallocPolicy)取值范围，size≥2M时，按大页申请内存，否则按普通页申请内存。 |
+| policy | 输入 | 内存分配规则。类型定义请参见[aclrtMemMallocPolicy](25-02_Enumerations.md#aclrtMemMallocPolicy)。<br>若配置的内存分配规则超出[aclrtMemMallocPolicy](25-02_Enumerations.md#aclrtMemMallocPolicy)取值范围，size≥2MB时，按大页申请内存，否则按普通页申请内存。 |
 | cfg | 输入 | 内存配置信息。类型定义请参见[aclrtMallocConfig](25-04_Structs.md#aclrtMallocConfig)。<br>不指定配置时，此处可传NULL。 |
 
 ### 返回值说明
@@ -518,7 +518,7 @@ aclError aclrtMallocForTaskScheduler(void **devPtr, size_t size, aclrtMemMallocP
 | --- | :---: | --- |
 | devPtr | 输出 | “Device上已分配内存的指针”的指针。 |
 | size | 输入 | 申请内存的大小，单位Byte。<br>size不能为0。 |
-| policy | 输入 | 内存分配规则。类型定义请参见[aclrtMemMallocPolicy](25-02_Enumerations.md#aclrtMemMallocPolicy)。<br>若配置的内存分配规则超出[aclrtMemMallocPolicy](25-02_Enumerations.md#aclrtMemMallocPolicy)取值范围，size≥2M时，按大页申请内存，否则按普通页申请内存。 |
+| policy | 输入 | 内存分配规则。类型定义请参见[aclrtMemMallocPolicy](25-02_Enumerations.md#aclrtMemMallocPolicy)。<br>若配置的内存分配规则超出[aclrtMemMallocPolicy](25-02_Enumerations.md#aclrtMemMallocPolicy)取值范围，size≥2MB时，按大页申请内存，否则按普通页申请内存。 |
 | cfg | 输入 | 内存配置信息。类型定义请参见[aclrtMallocConfig](25-04_Structs.md#aclrtMallocConfig)。<br>不指定配置时，此处可传NULL。 |
 
 ### 返回值说明
@@ -577,7 +577,7 @@ aclError aclrtFree(void *devPtr)
 
 ### 约束说明
 
-[aclrtFree](#aclrtFree)接口只能释放通过[aclrtMalloc](#aclrtMalloc)接口或[aclrtMallocCached](#aclrtMallocCached)接口或[aclrtMallocAlign32](#aclrtMallocAlign32)接口申请的内存。
+[aclrtFree](#aclrtFree)接口只能释放通过[aclrtMalloc](#aclrtMalloc)接口、[aclrtMallocAlign32](#aclrtMallocAlign32)等Runtime接口申请的Device内存。
 
 <br>
 <br>
