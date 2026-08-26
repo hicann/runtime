@@ -1,6 +1,10 @@
 # adump
 
-`adump` 目录聚焦 Dump 相关能力，当前按“参数Dump -> 回调Dump -> 配置式Dump -> 异常Dump”递进组织：
+`adump`目录聚焦Dump相关能力，当前按“参数Dump -> 回调Dump -> 配置式Dump -> 异常Dump”递进组织：
+
+## 产物解读
+
+Dump产物路径、转换命令和字段含义请参见[Dump产物解读](../../../docs/zh/dump_ref/dump_artifact_analysis.md)。
 
 ## 样例列表
 
