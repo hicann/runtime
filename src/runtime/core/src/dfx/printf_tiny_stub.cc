@@ -9,6 +9,7 @@
  */
 
 #include "printf.hpp"
+#include "parse_kernel_dfx_info.hpp"
 
 namespace cce {
 namespace runtime {
@@ -62,6 +63,14 @@ rtError_t ParseSimtPrintfV2(void* addr, const size_t blockSize, Driver* curDrv, 
     UNUSED(userDeviceId);
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
+
+rtError_t ParseKernelDfxInfo::SetCallback(rtParseDfxInfoFunc func)
+{
+    UNUSED(func);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtParseDfxInfoFunc ParseKernelDfxInfo::GetCallback() { return nullptr; }
 
 } // namespace runtime
 } // namespace cce

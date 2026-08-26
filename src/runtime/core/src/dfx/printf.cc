@@ -1333,8 +1333,9 @@ rtError_t ParsePrintfV2(void* addr, const size_t blockSize, Driver* curDrv, uint
             cb(&param, &consumedLen);
             RT_LOG(
                 RT_LOG_INFO,
-                "block[%zu] callback consumedLen=%" PRIu64 ", readIdx=%" PRIu64 ", coreType=%u, coreId=%u, deviceId=%u",
-                i, consumedLen, readIdx, blockInfo->flag, blockInfo->coreId, userDeviceId);
+                "block[%zu] callback consumedLen=%" PRIu64 ", readIdx=%" PRIu64 ", writeIdx=%" PRIu64
+                ", coreType=%u, coreId=%u, deviceId=%u",
+                i, consumedLen, readIdx, writeInfo->writeIdx, blockInfo->flag, blockInfo->coreId, userDeviceId);
         } else {
             RT_LOG(
                 RT_LOG_WARNING,
@@ -1395,6 +1396,11 @@ rtError_t ParseSimtPrintfV2(void* addr, const size_t blockSize, Driver* curDrv, 
         uint64_t availableData;
         if (writeInfo->writeIdx - readIdx > blockInfo->remainLen) {
             availableData = blockInfo->remainLen;
+            RT_LOG(
+                RT_LOG_WARNING,
+                "ring buffer overflow, data may be lost. readIdx=%" PRIu64 ", writeIdx=%" PRIu64
+                ", remainLen=%u, availableData=%" PRIu64 ", deviceId=%u",
+                readIdx, writeInfo->writeIdx, blockInfo->remainLen, availableData, userDeviceId);
         } else {
             const uint64_t writeIdxMod = writeInfo->writeIdx % blockInfo->remainLen;
             if (readIdxMod > writeIdxMod) {
@@ -1435,8 +1441,9 @@ rtError_t ParseSimtPrintfV2(void* addr, const size_t blockSize, Driver* curDrv, 
 
         RT_LOG(
             RT_LOG_INFO,
-            "cleared consumedLen=%" PRIu64 " bytes, readIdx=%" PRIu64 ", coreType=%u, coreId=%u, deviceId=%u",
-            consumedLen, readIdx, RT_KERNEL_DFX_INFO_CORE_TYPE_SIMT, 0U, userDeviceId);
+            "cleared consumedLen=%" PRIu64 " bytes, readIdx=%" PRIu64 ", writeIdx=%" PRIu64
+            ", coreType=%u, coreId=%u, deviceId=%u",
+            consumedLen, readIdx, writeInfo->writeIdx, RT_KERNEL_DFX_INFO_CORE_TYPE_SIMT, 0U, userDeviceId);
 
         // 更新读指针
         readInfo->readIdx = readIdx + consumedLen;

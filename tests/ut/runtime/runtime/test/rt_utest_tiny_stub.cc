@@ -35,6 +35,7 @@
 #include "rt_unwrap.h"
 #include "dqs/task_dqs.hpp"
 #include "printf.hpp"
+#include "parse_kernel_dfx_info.hpp"
 #include "engine_factory.hpp"
 #include "stars_engine.hpp"
 #include "binary_loader.hpp"
@@ -1473,4 +1474,16 @@ TEST_F(TinyStubTest, rtRegisterParseDfxInfoFunc_ExpectFeatureNotSupport)
 {
     rtError_t error = rtRegisterParseDfxInfoFunc(nullptr);
     EXPECT_EQ(error, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+}
+
+TEST_F(TinyStubTest, ParseKernelDfxInfo_SetCallback_ExpectFeatureNotSupport)
+{
+    rtError_t error = ParseKernelDfxInfo::Instance()->SetCallback(nullptr);
+    EXPECT_EQ(error, RT_ERROR_FEATURE_NOT_SUPPORT);
+}
+
+TEST_F(TinyStubTest, ParseKernelDfxInfo_GetCallback_ExpectNullptr)
+{
+    rtParseDfxInfoFunc cb = ParseKernelDfxInfo::Instance()->GetCallback();
+    EXPECT_EQ(cb, nullptr);
 }

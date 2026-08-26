@@ -422,6 +422,7 @@ set(runtimeut_src_tiny_exclude_list
     ${TOP_DIR}/src/runtime/core/src/dfx/fp16_t.cpp
     ${TOP_DIR}/src/runtime/core/src/dfx/hifloat.cpp
     ${TOP_DIR}/src/runtime/core/src/dfx/printf.cc
+    ${TOP_DIR}/src/runtime/core/src/dfx/parse_kernel_dfx_info.cc
     ${TOP_DIR}/src/runtime/feature/cntnotify/count_notify.cc
     ${TOP_DIR}/src/runtime/core/src/profiler/api_profile_decorator_standard_soc.cc
     ${TOP_DIR}/src/runtime/core/src/profiler/api_profile_log_decorator_standard_soc.cc
@@ -478,7 +479,6 @@ set(runtimeut_src_tiny_include_list
     ${TOP_DIR}/src/runtime/feature/ffts/context_ffts_tiny_stub.cc
     ${TOP_DIR}/src/runtime/core/src/dfx/printf_tiny_stub.cc
     ${TOP_DIR}/src/runtime/core/src/dfx/kernel_dfx_info.cc
-    ${TOP_DIR}/src/runtime/core/src/dfx/parse_kernel_dfx_info.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_tiny_stub.cc
     ${TOP_DIR}/src/runtime/core/src/engine/engine_factory_tiny_stub.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/binary_loader_tiny_stub.cc
