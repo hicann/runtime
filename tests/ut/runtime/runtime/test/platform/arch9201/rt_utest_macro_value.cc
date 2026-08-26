@@ -32,17 +32,25 @@ TEST_F(UpdateDevPropertiesValueTest, UpdateDevPropertiesValue)
     DevProperties props;
     EXPECT_EQ(GET_DEV_PROPERTIES(CHIP_CLOUD_V5, props), RT_ERROR_NONE);
     EXPECT_EQ(props.maxPersistTaskNum, 60000U);
-    EXPECT_EQ(props.maxSupportTaskNum, 1000000U);
+    EXPECT_EQ(props.maxSupportTaskNum, 134215680U);
     EXPECT_EQ(props.stubEventCount, 131072U);
     EXPECT_EQ(props.maxReportTimeoutCnt, 36);
     EXPECT_EQ(props.rtcqDepth, 2049U);
-    EXPECT_EQ(props.baseAicpuStreamId, 1024U);
-    EXPECT_EQ(props.expandStreamRsvTaskNum, 0U);
-    EXPECT_EQ(props.expandStreamSqDepthAdapt, 0U);
-    EXPECT_EQ(props.expandStreamAdditionalSqeNum, 0U);
+    EXPECT_EQ(props.baseAicpuStreamId, 65536U);
+    EXPECT_EQ(props.expandStreamRsvTaskNum, 8U);
+    EXPECT_EQ(props.expandStreamSqDepthAdapt, 7U);
+    EXPECT_EQ(props.expandStreamAdditionalSqeNum, 8U);
     EXPECT_EQ(props.rsvAicpuStreamNum, 0U);
     EXPECT_EQ(props.maxPhysicalStreamNum, 2016U);
-    EXPECT_EQ(props.maxAllocStreamNum, 2016U);
+    EXPECT_EQ(props.maxAllocStreamNum, 65535U);
     EXPECT_EQ(props.rtsqDepth, 2049U);
     EXPECT_EQ(props.rtsqReservedTaskNum, 35U);
+}
+
+TEST_F(UpdateDevPropertiesValueTest, AclGraphStreamExpansionFeatures)
+{
+    EXPECT_TRUE(
+        IS_SUPPORT_CHIP_FEATURE(CHIP_CLOUD_V5, RtOptionalFeatureType::RT_FEATURE_MODEL_ACL_GRAPH_SOFTWARE_ENABLE));
+    EXPECT_TRUE(IS_SUPPORT_CHIP_FEATURE(
+        CHIP_CLOUD_V5, RtOptionalFeatureType::RT_FEATURE_MODEL_PERSISTENT_STREAM_UNLIMITED_DEPTH));
 }
