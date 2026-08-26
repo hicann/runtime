@@ -1,4 +1,4 @@
-# 27. API Hook接口
+# 27. API Hook
 
 本章节描述CANN Runtime的API Hook接口，用于支持性能分析工具（如Profiling）通过注入Hook函数的方式拦截部分Runtime接口（这里指aclrt、aclmdlRI开头的接口，但不包含本章中的接口）。
 
@@ -36,7 +36,7 @@ aclError aclrtApiInjectionSetFunc(const char* name, aclrtApiFunc func)
 <!-- npu="IPV350" id3556 -->
 - IPV350：不支持
 <!-- end id3556 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/27_api_hook_res.md#id1 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/27_api_hook_interfaces_res.md#id1 -->
 
 ### 功能说明
 
@@ -58,7 +58,7 @@ aclError aclrtApiInjectionSetFunc(const char* name, aclrtApiFunc func)
 ### 约束说明
 
 - 本接口建议在调用对应的Runtime接口之前调用，需由用户保证接口调用的时序。
-- aclrtApiInjectionSetFunc接口和aclrtApiInjectionGetFunc接口调用时，需由用户保证多线程调用时序。
+- 调用aclrtApiInjectionSetFunc接口和aclrtApiInjectionGetFunc接口时，需由用户保证多线程调用时序。
 - 当前支持Hook的接口范围为aclrt接口和aclmdlRI开头的接口，不支持aclInit、aclFinalize等接口。
 - 对于不支持Hook功能的产品型号，本接口返回`ACL_ERROR_FEATURE_UNSUPPORTED`。
 
@@ -97,13 +97,13 @@ aclError aclrtApiInjectionGetFunc(const char* name, aclrtApiFunc* originFunc, ac
 <!-- npu="IPV350" id3563 -->
 - IPV350：不支持
 <!-- end id3563 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/27_api_hook_res.md#id2 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/27_api_hook_interfaces_res.md#id2 -->
 
 ### 功能说明
 
 获取指定名称的Runtime接口的原始实现函数指针和当前实现函数指针。
 
-在运行时初始化阶段，原始实现指针（`originFunc`）与当前实现指针（`currentFunc`）相等。当工具调用[aclrtApiInjectionSetFunc](#aclrtApiInjectionSetFunc)注入Hook函数后，`currentFunc`指向Hook函数，`originFunc`保持不变。当查询`originFunc`和`currentFunc`不一致时，表示该接口实现已被Hook函数替换。
+在运行时初始化阶段，原始实现指针（`originFunc`）与当前实现指针（`currentFunc`）相等。当调用[aclrtApiInjectionSetFunc](#aclrtApiInjectionSetFunc)注入Hook函数后，`currentFunc`指向Hook函数，`originFunc`保持不变。当查询`originFunc`和`currentFunc`不一致时，表示该接口实现已被Hook函数替换。
 
 ### 参数说明
 
@@ -120,7 +120,7 @@ aclError aclrtApiInjectionGetFunc(const char* name, aclrtApiFunc* originFunc, ac
 ### 约束说明
 
 - 对于不支持Hook功能的产品型号，本接口返回`ACL_ERROR_FEATURE_UNSUPPORTED`。
-- aclrtApiInjectionSetFunc接口和aclrtApiInjectionGetFunc接口调用时，需由用户保证多线程调用时序。
+- 调用aclrtApiInjectionSetFunc接口和aclrtApiInjectionGetFunc接口时，需由用户保证多线程调用时序。
 
 <br>
 <br>
