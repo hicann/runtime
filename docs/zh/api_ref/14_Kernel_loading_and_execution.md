@@ -310,60 +310,6 @@ aclError aclrtBinaryGetFunctionByEntry(aclrtBinHandle binHandle, uint64_t funcEn
 <br>
 <br>
 
-<a id="aclrtBinaryGetFunctionCount"></a>
-
-## aclrtBinaryGetFunctionCount
-
-```c
-aclError aclrtBinaryGetFunctionCount(aclrtBinHandle binHandle, uint32_t *count)
-```
-
-### 产品支持情况
-
-<!-- npu="950" id4001 -->
-- Ascend 950PR/Ascend 950DT：支持
-<!-- end id4001 -->
-<!-- npu="A3" id4002 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
-<!-- end id4002 -->
-<!-- npu="910b" id4003 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
-<!-- end id4003 -->
-<!-- npu="310b" id4004 -->
-- Atlas 200I/500 A2 推理产品：支持
-<!-- end id4004 -->
-<!-- npu="310p" id4005 -->
-- Atlas 推理系列产品：支持
-<!-- end id4005 -->
-<!-- npu="910" id4006 -->
-- Atlas 训练系列产品：支持
-<!-- end id4006 -->
-<!-- npu="IPV350" id4007 -->
-- IPV350：不支持
-<!-- end id4007 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id3 -->
-
-### 功能说明
-
-获取算子二进制中核函数的总数。
-
-用户通过[aclrtBinaryLoadFromFile](#aclrtBinaryLoadFromFile)或[aclrtBinaryLoadFromData](#aclrtBinaryLoadFromData)加载算子二进制后，可调用本接口获取该算子二进制包含的核函数数量。
-
-### 参数说明
-
-| 参数名 | 输入/输出 | 说明 |
-| --- | :---: | --- |
-| binHandle | 输入 | 算子二进制句柄。类型定义请参见[aclrtBinHandle](25-05_Typedefs.md#aclrtBinHandle)。<br>调用[aclrtBinaryLoadFromFile](#aclrtBinaryLoadFromFile)接口或[aclrtBinaryLoadFromData](#aclrtBinaryLoadFromData)接口获取算子二进制句柄，再将其作为入参传入本接口。 |
-| count | 输出 | 核函数的总数。 |
-
-### 返回值说明
-
-返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
-
-<br>
-<br>
-<br>
-
 <a id="aclrtBinaryGetDevAddress"></a>
 
 ## aclrtBinaryGetDevAddress
@@ -2396,3 +2342,57 @@ aclError aclrtLaunchSIMTKernelWithHostArgs(void *func, dim3 gridDim, dim3 blockD
 ### 参考资源
 
 各Launch接口的功能和使用方式对比请参见[Launch接口对比表](#launch_kernel_comparison)。
+
+<br>
+<br>
+<br>
+
+<a id="aclrtBinaryGetFunctionCount"></a>
+
+## aclrtBinaryGetFunctionCount
+
+```c
+aclError aclrtBinaryGetFunctionCount(aclrtBinHandle binHandle, uint32_t *count)
+```
+
+### 产品支持情况
+
+<!-- npu="950" id4001 -->
+- Ascend 950PR/Ascend 950DT：支持
+<!-- end id4001 -->
+<!-- npu="A3" id4002 -->
+- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+<!-- end id4002 -->
+<!-- npu="910b" id4003 -->
+- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+<!-- end id4003 -->
+<!-- npu="310b" id4004 -->
+- Atlas 200I/500 A2 推理产品：支持
+<!-- end id4004 -->
+<!-- npu="310p" id4005 -->
+- Atlas 推理系列产品：支持
+<!-- end id4005 -->
+<!-- npu="910" id4006 -->
+- Atlas 训练系列产品：支持
+<!-- end id4006 -->
+<!-- npu="IPV350" id4007 -->
+- IPV350：不支持
+<!-- end id4007 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id41 -->
+
+### 功能说明
+
+获取算子二进制中核函数数量。
+
+用户通过[aclrtBinaryLoadFromFile](#aclrtBinaryLoadFromFile)或[aclrtBinaryLoadFromData](#aclrtBinaryLoadFromData)加载算子二进制后，可调用本接口获取该算子二进制包含的核函数数量。
+
+### 参数说明
+
+| 参数名 | 输入/输出 | 说明 |
+| --- | :---: | --- |
+| binHandle | 输入 | 算子二进制句柄。类型定义请参见[aclrtBinHandle](25-05_Typedefs.md#aclrtBinHandle)。<br>调用[aclrtBinaryLoadFromFile](#aclrtBinaryLoadFromFile)接口或[aclrtBinaryLoadFromData](#aclrtBinaryLoadFromData)接口获取算子二进制句柄，再将其作为入参传入本接口。 |
+| count | 输出 | 核函数数量。 |
+
+### 返回值说明
+
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
