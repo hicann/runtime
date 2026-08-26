@@ -788,6 +788,17 @@ aclError aclrtMemsetD32Impl(void* ptr, size_t memSize, uint32_t value, size_t N)
         return ACL_ERROR_INVALID_PARAM;
     }
 
+    // 乘法前检查 N * 4 是否溢出，避免回绕为 0 绕过 memSize 校验
+    if (N > (SIZE_MAX / sizeof(uint32_t))) {
+        ACL_LOG_ERROR("[Check][PARAM]N × 4 overflow, N=%zu, memSize=%zu", N, memSize);
+        const std::string nVal = std::to_string(N);
+        std::string errMsg = acl::AclErrorLogManager::FormatStr(
+            "N × 4 overflows, N (%zu) is too large, which does not meet the requirement", N);
+        acl::AclErrorLogManager::ReportInputError(
+            acl::INVALID_PARAM_REASON_MSG, std::vector<const char*>({"func", "value", "param", "reason"}),
+            std::vector<const char*>({"aclrtMemsetD32", nVal.c_str(), "N", errMsg.c_str()}));
+        return ACL_ERROR_INVALID_PARAM;
+    }
     const size_t requiredBytes = N * sizeof(uint32_t);
     if (memSize < requiredBytes) {
         ACL_LOG_ERROR(
@@ -842,6 +853,17 @@ aclError aclrtMemsetD32AsyncImpl(void* ptr, size_t memSize, uint32_t value, size
         return ACL_ERROR_INVALID_PARAM;
     }
 
+    // 乘法前检查 N * 4 是否溢出，避免回绕为 0 绕过 memSize 校验
+    if (N > (SIZE_MAX / sizeof(uint32_t))) {
+        ACL_LOG_ERROR("[Check][PARAM]N × 4 overflow, N=%zu, memSize=%zu", N, memSize);
+        const std::string nVal = std::to_string(N);
+        std::string errMsg = acl::AclErrorLogManager::FormatStr(
+            "N × 4 overflows, N (%zu) is too large, which does not meet the requirement", N);
+        acl::AclErrorLogManager::ReportInputError(
+            acl::INVALID_PARAM_REASON_MSG, std::vector<const char*>({"func", "value", "param", "reason"}),
+            std::vector<const char*>({"aclrtMemsetD32Async", nVal.c_str(), "N", errMsg.c_str()}));
+        return ACL_ERROR_INVALID_PARAM;
+    }
     const size_t requiredBytes = N * sizeof(uint32_t);
     if (memSize < requiredBytes) {
         ACL_LOG_ERROR(
