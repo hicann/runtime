@@ -254,6 +254,7 @@ set(runtimeut_910b_src_list
     ${TOP_DIR}/src/runtime/api/api.cc
     ${TOP_DIR}/src/runtime/api/impl/api_decorator.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_kernel_args.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_mbuf.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_standard_soc.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_soma.cc

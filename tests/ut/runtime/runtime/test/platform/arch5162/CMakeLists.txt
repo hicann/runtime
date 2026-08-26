@@ -101,6 +101,7 @@ set(runtimeut_src_api_impl_list
     ${TOP_DIR}/src/runtime/api/impl/api_decorator_tiny_stub.cc
     ${TOP_DIR}/src/runtime/api/impl/api_error.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_kernel_args_stub.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_creator.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_event_common.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_mbuf_stub.cc
@@ -346,6 +347,7 @@ add_executable(runtime_utest_arch5162
     rt_utest_task_execute_time_arch5162.cc
     rt_utest_mem_arch5162.cc
     ../../rt_utest_mbuf_stub.cc
+    rt_utest_api_arch5162.cc
     rt_utest_device_arch5162.cc
 )
 add_dependencies(runtime_utest_arch5162 runtime_api_stub_generator_ut)

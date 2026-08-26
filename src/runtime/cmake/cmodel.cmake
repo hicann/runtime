@@ -397,6 +397,7 @@ set(libruntime_cmodel_src_files
     ${RUNTIME_API_DIR}/impl/api_error.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/api_error_aclgraph.cc
     ${RUNTIME_API_DIR}/impl/api_impl.cc
+    ${RUNTIME_API_DIR}/impl/api_impl_kernel_args.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/v100/api_impl_aclgraph.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/v100/api_impl_capture_event.cc
     ${RUNTIME_API_DIR}/impl/api_impl_mbuf.cc
@@ -526,6 +527,7 @@ set(libruntime_cmodel_v200_src_files
     ${RUNTIME_API_DIR}/impl/api_error.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/api_error_aclgraph.cc
     ${RUNTIME_API_DIR}/impl/api_impl.cc
+    ${RUNTIME_API_DIR}/impl/api_impl_kernel_args.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/v100/api_impl_aclgraph.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/v100/api_impl_capture_event.cc
     ${RUNTIME_API_DIR}/impl/api_impl_mbuf.cc

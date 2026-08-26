@@ -101,6 +101,7 @@ set(libruntime_api_impl_src_files
     ${RUNTIME_API_DIR}/impl/api_decorator_tiny_stub.cc
     ${RUNTIME_API_DIR}/impl/api_error.cc
     ${RUNTIME_API_DIR}/impl/api_impl.cc
+    ${RUNTIME_API_DIR}/impl/api_impl_kernel_args_stub.cc
     ${RUNTIME_API_DIR}/impl/api_impl_creator.cc
     ${RUNTIME_API_DIR}/impl/api_impl_mbuf_stub.cc
     ${RUNTIME_API_DIR}/impl/api_impl_event_common.cc

@@ -264,6 +264,7 @@ set(libruntime_v200_v201_common_src_files
     ${RUNTIME_API_DIR}/impl/api_impl_david.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/v200/api_impl_david_capture_event.cc
     ${RUNTIME_API_DIR}/impl/api_impl.cc
+    ${RUNTIME_API_DIR}/impl/api_impl_kernel_args.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/v100/api_impl_aclgraph.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/v100/api_impl_capture_event.cc
     ${RUNTIME_API_DIR}/impl/api_impl_mbuf.cc
