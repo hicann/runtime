@@ -11,23 +11,13 @@ cmake_minimum_required(VERSION 3.12)
 project(tsdclient)
 
 set(BASE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/..)
+set(RUNTIME_TSD_DIR ${BASE_DIR})
+set(RUNTIME_DIR ${BASE_DIR}/../..)
+
+include(${BASE_DIR}/tsdclient_sources.cmake)
 
 set(PROTO_LIST
     ${BASE_DIR}/pub_facility/proto/tsd_message.proto
-)
-
-set(tdt_common_files
-    ${BASE_DIR}/basic_component/device_comm/hdc_common.cpp
-    ${BASE_DIR}/basic_component/message_rsp_handler/message_parse_interface.cpp
-    ${BASE_DIR}/pub_facility/util_func/tsd_util_func.cpp
-    ${BASE_DIR}/pub_facility/util_func/tsd_sha256.cpp
-    ${BASE_DIR}/basic_component/device_comm/device_comm.cpp
-    ${BASE_DIR}/basic_component/device_comm/device_comm_agent.cpp
-    ${BASE_DIR}/basic_component/device_comm/hdc_client.cpp
-    ${BASE_DIR}/basic_component/message_builder/hdc_message_builder.cpp
-    ${BASE_DIR}/basic_component/capability/capability_manager.cpp
-    ${BASE_DIR}/basic_component/message_rsp_handler/message_parse_client.cpp
-    ${BASE_DIR}/basic_component/device_comm/version_verify.cpp
 )
 
 # SHA256 ARM加速路径需要 -march=armv8-a+crypto，仅对该文件生效，避免影响其他代码
@@ -41,60 +31,16 @@ endif()
 protobuf_generate(tsd_host_proto PROTO_SRCS PROTO_HDRS ${PROTO_LIST} TARGET)
     
 add_library(tsdclient SHARED
-    ${BASE_DIR}/interface/tsd_client.cpp
-    src/client_manager.cpp
-    src/process_mode_manager.cpp
-    src/response_msg_dispatcher.cpp
-    src/sub_process_controller.cpp
-    src/tsd_process_controller.cpp
-    src/thread_mode_manager.cpp
-    ${BASE_DIR}/pub_facility/env_manager/env_internal_api.cpp
-    ${BASE_DIR}/basic_component/package_manager/src/package_manager.cpp
-    ${BASE_DIR}/basic_component/package_manager/src/package_loader.cpp
-    ${BASE_DIR}/basic_component/package_manager/src/package_check_code_service.cpp
-    ${BASE_DIR}/basic_component/package_manager/src/package_sender.cpp
-    ${BASE_DIR}/basic_component/package_manager/src/package_env_info.cpp
-    ${BASE_DIR}/basic_component/package_manager/src/package_hash_store.cpp
-    ${BASE_DIR}/basic_component/package_manager/src/plugin_version_manager.cpp
-    ${BASE_DIR}/basic_component/package_manager/src/plugin_pkg_version.cpp
-    ${BASE_DIR}/basic_component/package_manager/src/package_worker.cpp
-    ${BASE_DIR}/basic_component/package_manager/src/package_worker_utils.cpp
-    ${BASE_DIR}/basic_component/package_manager/src/package_worker_factory.cpp
-    ${BASE_DIR}/basic_component/package_manager/src/package_verify.cpp
-    ${BASE_DIR}/basic_component/package_manager/src/base_package_worker.cpp
-    ${BASE_DIR}/basic_component/package_manager/src/aicpu_thread_package_worker.cpp
-    ${BASE_DIR}/basic_component/package_manager/src/aicpu_package_process.cpp
-    ${BASE_DIR}/basic_component/package_manager/src/package_process_config.cpp
-    ${BASE_DIR}/basic_component/package_manager/src/tsd_path_mgr.cpp
-    $<$<NOT:$<OR:$<STREQUAL:${PRODUCT},ascend610>,$<STREQUAL:${PRODUCT},ascend610Lite>>>:${BASE_DIR}/common/stub/stub_dc.cpp>
-    ${tdt_common_files}
+    ${tsdclient_all_sources}
+    ${BASE_DIR}/common/stub/stub_dc.cpp
     ${PROTO_SRCS}
 )
 
 add_dependencies(tsdclient tsd_host_proto)
 
 target_include_directories(tsdclient PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/../common/
-    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${tsdclient_include_dirs}
     ${CMAKE_BINARY_DIR}/proto/tsd_host_proto/
-    ${CMAKE_CURRENT_SOURCE_DIR}/inc/
-    ${CMAKE_CURRENT_SOURCE_DIR}/../basic_component/package_manager/inc/
-    ${RUNTIME_DIR}/include/
-    ${RUNTIME_DIR}/src/tsd/
-    ${RUNTIME_DIR}/src/tsd/pub_facility/tsdlog/
-    ${RUNTIME_DIR}/src/tsd/pub_facility/util_func/
-    ${RUNTIME_DIR}/src/tsd/pub_facility/env_manager/
-    ${RUNTIME_DIR}/src/tsd/basic_component/device_comm/
-    ${RUNTIME_DIR}/src/tsd/basic_component/message_builder/
-    ${RUNTIME_DIR}/src/tsd/basic_component/capability/
-    ${RUNTIME_DIR}/src/tsd/basic_component/message_rsp_handler/
-    ${RUNTIME_DIR}/src/tsd/client/common/inc/
-    ${RUNTIME_DIR}/src/tsd/client/common/inc/stub/
-    ${RUNTIME_DIR}/src/inc/
-    ${RUNTIME_DIR}/pkg_inc/profiling
-    ${RUNTIME_DIR}/pkg_inc/platform
-    ${RUNTIME_DIR}/src/dfx/error_manager/
-    ${RUNTIME_DIR}/pkg_inc/aicpu_sched/
 )
 
 target_compile_options(tsdclient PRIVATE

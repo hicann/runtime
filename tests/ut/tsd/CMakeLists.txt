@@ -35,7 +35,12 @@ target_link_libraries(intf_tsd_llt_pub INTERFACE
 )
 
 add_subdirectory(tsdclient)
+add_subdirectory(stub_external_deps)
+# 编译 tsd_client_utest 时连带编译 stub_external_deps_utest，
+# 使流水线命令 --target=tsd_client_utest 也能覆盖桩文件 UT
+add_dependencies(tsd_client_utest stub_external_deps_utest)
 set(TSD_UT_TARGET
   tsd_client_utest
+  stub_external_deps_utest
 )
 add_custom_target(tsd_ut DEPENDS ${TSD_UT_TARGET})

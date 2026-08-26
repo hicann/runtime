@@ -68,6 +68,15 @@
         }                                             \
     } while (false)
 
+#define TSD_CHECK_RET_VOID(condition, log, ...) \
+    do {                                        \
+        const bool cond = (condition);          \
+        if (!cond) {                            \
+            TSD_ERROR(log, ##__VA_ARGS__);      \
+            return;                             \
+        }                                       \
+    } while (false)
+
 #define TSD_BITMAP_GET(val, pos) (((val) >> (pos)) & 0x01U)
 
 #define TSD_BITMAP_SET(val, pos) ((val) |= (1ULL << (pos)))
