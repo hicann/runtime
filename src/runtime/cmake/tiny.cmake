@@ -180,7 +180,7 @@ set(libruntime_src_files_include_for_tiny
     ${RUNTIME_FEATURE_DIR}/ffts/ffts_task_tiny_stub.cc
     ${RUNTIME_CORE_DIR}/src/task/tiny/task_tiny_stub.cc
     ${RUNTIME_CORE_DIR}/src/profiler/api_profile_decorator_tiny_stub.cc
-    ${RUNTIME_CORE_DIR}/src/profiler/api_profile_log_decoratoc_tiny_stub.cc
+    ${RUNTIME_CORE_DIR}/src/profiler/api_profile_log_decorator_tiny_stub.cc
     ${RUNTIME_CORE_DIR}/src/launch/xpu_aicpu_c_stub.cc
     ${RUNTIME_FEATURE_DIR}/snapshot/tiny/device_snapshot_tiny_stub.cc
     ${RUNTIME_FEATURE_DIR}/snapshot/tiny/snapshot_process_helper_tiny_stub.cc

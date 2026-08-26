@@ -156,7 +156,7 @@ set(runtimeut_src_profile_list
     ${TOP_DIR}/src/runtime/core/src/profiler/api_profile_decorator.cc
     ${TOP_DIR}/src/runtime/core/src/profiler/api_profile_log_decorator.cc
     ${TOP_DIR}/src/runtime/core/src/profiler/api_profile_decorator_standard_soc.cc
-    ${TOP_DIR}/src/runtime/core/src/profiler/api_profile_log_decoratoc_standard_soc.cc
+    ${TOP_DIR}/src/runtime/core/src/profiler/api_profile_log_decorator_standard_soc.cc
     ${TOP_DIR}/src/runtime/core/src/profiler/prof_map_ge_model_device.cc
     ${TOP_DIR}/src/runtime/core/src/profiler/profile_log_record.cc
     ${TOP_DIR}/src/runtime/core/src/profiler/npu_driver_record.cc

@@ -354,7 +354,7 @@ set(libruntime_cmodel_src_files_optional
     ${RUNTIME_CORE_DIR}/src/kernel/binary_loader.cc
     ${RUNTIME_CORE_DIR}/src/kernel/json_parse.cc
     ${RUNTIME_CORE_DIR}/src/profiler/api_profile_decorator_standard_soc.cc
-    ${RUNTIME_CORE_DIR}/src/profiler/api_profile_log_decoratoc_standard_soc.cc
+    ${RUNTIME_CORE_DIR}/src/profiler/api_profile_log_decorator_standard_soc.cc
     ${RUNTIME_CORE_DIR}/src/task/task_to_sqe.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/dma/rdma_task.cc
     ${RUNTIME_FEATURE_DIR}/ffts/rdma_task.cc

@@ -327,7 +327,7 @@ set(runtimeut_src_profile_list
     ${TOP_DIR}/src/runtime/core/src/profiler/api_profile_decorator.cc
     ${TOP_DIR}/src/runtime/core/src/profiler/api_profile_log_decorator.cc
     ${TOP_DIR}/src/runtime/core/src/profiler/api_profile_decorator_standard_soc.cc
-    ${TOP_DIR}/src/runtime/core/src/profiler/api_profile_log_decoratoc_standard_soc.cc
+    ${TOP_DIR}/src/runtime/core/src/profiler/api_profile_log_decorator_standard_soc.cc
     ${TOP_DIR}/src/runtime/core/src/profiler/prof_map_ge_model_device.cc
     ${TOP_DIR}/src/runtime/core/src/profiler/profile_log_record.cc
     ${TOP_DIR}/src/runtime/core/src/profiler/npu_driver_record.cc
@@ -424,7 +424,7 @@ set(runtimeut_src_tiny_exclude_list
     ${TOP_DIR}/src/runtime/core/src/dfx/printf.cc
     ${TOP_DIR}/src/runtime/feature/cntnotify/count_notify.cc
     ${TOP_DIR}/src/runtime/core/src/profiler/api_profile_decorator_standard_soc.cc
-    ${TOP_DIR}/src/runtime/core/src/profiler/api_profile_log_decoratoc_standard_soc.cc
+    ${TOP_DIR}/src/runtime/core/src/profiler/api_profile_log_decorator_standard_soc.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_to_sqe.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/dma/rdma_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/dma/rdma_task_v100.cc
@@ -486,7 +486,7 @@ set(runtimeut_src_tiny_include_list
     ${TOP_DIR}/src/runtime/core/src/kernel/symbol_table_tiny_stub.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/kernel_utils.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/funcsymbol_table_tiny_stub.cc
-    ${TOP_DIR}/src/runtime/core/src/profiler/api_profile_log_decoratoc_tiny_stub.cc
+    ${TOP_DIR}/src/runtime/core/src/profiler/api_profile_log_decorator_tiny_stub.cc
     ${TOP_DIR}/src/runtime/core/src/profiler/api_profile_decorator_tiny_stub.cc
     ${TOP_DIR}/src/runtime/core/src/task/tiny/rdma_task_tiny_stub.cc
     ${TOP_DIR}/src/runtime/feature/ffts/ffts_task_tiny_stub.cc
