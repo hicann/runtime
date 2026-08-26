@@ -5996,6 +5996,41 @@ typedef struct aclrtAddrRange {
  * @retval OtherValues Failure
  */
 ACL_FUNC_VISIBILITY aclError aclrtHostGetDevicePointerAddrRange(aclrtAddrRange *addrRange, uint32_t *count);
+
+/**
+ * @ingroup AscendCL
+ * @brief Generic aclrt api function pointer type used for api hook.
+ */
+typedef int (*aclrtApiFunc)(void);
+
+/**
+ * @ingroup AscendCL
+ * @brief Hook the aclrt/aclmdlRI api identified by name with the given function.
+ *        The api name must match an existing, non-deprecated runtime api.
+ *        An invalid or non-hookable api name returns ACL_ERROR_INVALID_PARAM.
+ * @param [in] name     api name, e.g. "aclrtMemcpy"
+ * @param [in] func     hook function pointer; pass the original func to restore
+ *
+ * @retval ACL_SUCCESS The function is successfully executed.
+ * @retval ACL_ERROR_INVALID_PARAM null name or null func or api not hookable.
+ * @retval ACL_ERROR_FEATURE_UNSUPPORTED hook feature disabled at build time.
+ */
+ACL_FUNC_VISIBILITY aclError aclrtApiInjectionSetFunc(const char* name, aclrtApiFunc func);
+/**
+ * @ingroup AscendCL
+ * @brief Get the original and current function pointer of the api identified by name.
+ *        At runtime initialization, currentFunc equals originFunc. After a tool
+ *        calls aclrtApiInjectionSetFunc, currentFunc points to the hook function.
+ * @param [in]  name        api name, e.g. "aclrtMemcpy"
+ * @param [out] originFunc  original function pointer, may be nullptr if not needed
+ * @param [out] currentFunc current function pointer, may be nullptr if not needed
+ *
+ * @retval ACL_SUCCESS The function is successfully executed.
+ * @retval ACL_ERROR_INVALID_PARAM null name or api not hookable.
+ * @retval ACL_ERROR_FEATURE_UNSUPPORTED hook feature disabled at build time.
+ */
+ACL_FUNC_VISIBILITY aclError aclrtApiInjectionGetFunc(
+    const char* name, aclrtApiFunc* originFunc, aclrtApiFunc* currentFunc);
 #ifdef __cplusplus
 }
 #endif

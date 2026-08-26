@@ -37,13 +37,30 @@ __attribute__((constructor)) void InitializeAscendDump()
 
 ACL_FUNC_MAP(ACL_RT_CPP)
 
-ACL_RT_FUNC_MAP(ACL_RT_CPP)
+#ifdef ACL_RT_API_HOOK_ENABLE
 
+#if __GNUC__ >= 8
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-function-type"
+#endif // __GNUC__ >= 8
+
+ACL_RT_FUNC_MAP(ACL_RT_CPP_HOOKABLE)
+ACL_RT_ALLOCATOR_FUNC_MAP(ACL_RT_CPP_HOOKABLE)
+ACL_MDLRI_FUNC_MAP(ACL_RT_CPP_HOOKABLE)
+
+#if __GNUC__ >= 8
+#pragma GCC diagnostic pop
+#endif // __GNUC__ >= 8
+
+#else  // ACL_RT_API_HOOK_ENABLE
+
+ACL_RT_FUNC_MAP(ACL_RT_CPP)
+ACL_RT_ALLOCATOR_FUNC_MAP(ACL_RT_CPP)
 ACL_MDLRI_FUNC_MAP(ACL_RT_CPP)
 
-ACL_MDL_FUNC_MAP(ACL_RT_CPP)
+#endif // ACL_RT_API_HOOK_ENABLE
 
-ACL_RT_ALLOCATOR_FUNC_MAP(ACL_RT_CPP)
+ACL_MDL_FUNC_MAP(ACL_RT_CPP)
 
 void aclAppLog(aclLogLevel logLevel, const char* func, const char* file, uint32_t line, const char* fmt, ...)
 {
@@ -57,4 +74,15 @@ extern "C" ACL_FUNC_VISIBILITY void aclAppLogWithArgs(
     aclLogLevel logLevel, const char* func, const char* file, uint32_t line, const char* fmt, va_list args)
 {
     aclAppLogImpl(logLevel, func, file, line, fmt, args);
+}
+
+ACL_FUNC_VISIBILITY aclError aclrtApiInjectionSetFunc(const char* name, aclrtApiFunc func)
+{
+    return aclrtApiInjectionSetFuncImpl(name, func);
+}
+
+ACL_FUNC_VISIBILITY aclError
+aclrtApiInjectionGetFunc(const char* name, aclrtApiFunc* originFunc, aclrtApiFunc* currentFunc)
+{
+    return aclrtApiInjectionGetFuncImpl(name, originFunc, currentFunc);
 }

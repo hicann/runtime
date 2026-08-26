@@ -11,6 +11,7 @@ typedef 类型数据。
 - [aclrtAllocator](#aclrtAllocator)
 - [aclrtAllocatorAddr](#aclrtAllocatorAddr)
 - [aclrtAllocatorBlock](#aclrtAllocatorBlock)
+- [aclrtApiFunc](#aclrtApiFunc)
 - [aclrtArgsHandle](#aclrtArgsHandle)
 - [aclrtBinHandle](#aclrtBinHandle)
 - [aclrtCntNotify](#aclrtCntNotify)
@@ -98,6 +99,16 @@ typedef void *aclrtAllocatorAddr;
 
 ```c
 typedef void *aclrtAllocatorBlock;
+```
+
+<br>
+
+<a id="aclrtApiFunc"></a>
+
+## aclrtApiFunc
+
+```c
+typedef int (*aclrtApiFunc)(void);
 ```
 
 <br>

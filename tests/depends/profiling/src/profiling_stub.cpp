@@ -11,59 +11,39 @@
 #include "aprof_pub.h"
 #include "acl_stub.h"
 
+int32_t MsprofRegisterCallback(uint32_t moduleId, ProfCommandHandle handle) { return 1; }
 
-int32_t MsprofRegisterCallback(uint32_t moduleId, ProfCommandHandle handle)
-{
-    return 1;
-}
+int32_t ProfAclCfgToSampleCfg(const std::string& aclCfg, std::string& sampleCfg) { return 0; }
 
-int32_t ProfAclCfgToSampleCfg(const std::string &aclCfg, std::string &sampleCfg)
-{
-    return 0;
-}
+int32_t aclStub::MsprofFinalize() { return 0; }
 
-int32_t aclStub::MsprofFinalize()
-{
-    return 0;
-}
+int32_t aclStub::MsprofInit(uint32_t aclDataType, void* data, uint32_t dataLen) { return 0; }
 
-int32_t aclStub::MsprofInit(uint32_t aclDataType, void *data, uint32_t dataLen)
-{
-    return 0;
-}
+int32_t aclStub::MsprofRegTypeInfo(uint16_t level, uint32_t typeId, const char* typeName) { return 0; }
 
+int32_t MsprofFinalize() { return MockFunctionTest::aclStubInstance().MsprofFinalize(); }
 
-int32_t aclStub::MsprofRegTypeInfo(uint16_t level, uint32_t typeId, const char *typeName)
-{
-    return 0;
-}
-
-int32_t MsprofFinalize()
-{
-    return MockFunctionTest::aclStubInstance().MsprofFinalize(); 
-}
-
-int32_t MsprofInit(uint32_t aclDataType, void *data, uint32_t dataLen)
+int32_t MsprofInit(uint32_t aclDataType, void* data, uint32_t dataLen)
 {
     return MockFunctionTest::aclStubInstance().MsprofInit(aclDataType, data, dataLen);
 }
 
-int32_t MsprofReportApi(uint32_t agingFlag, const MsprofApi *api)
-{
-    return 0;
-}
+int32_t MsprofReportApi(uint32_t agingFlag, const MsprofApi* api) { return 0; }
 
-int32_t MsprofRegTypeInfo(uint16_t level, uint32_t typeId, const char *typeName)
+int32_t MsprofRegTypeInfo(uint16_t level, uint32_t typeId, const char* typeName)
 {
     return MockFunctionTest::aclStubInstance().MsprofRegTypeInfo(level, typeId, typeName);
 }
 
-uint64_t MsprofSysCycleTime()
+uint64_t MsprofSysCycleTime() { return 0; }
+
+int32_t MsprofReportEvent(uint32_t agingFlag, const MsprofEvent* event) { return 0; }
+
+int32_t MsprofSetInjectionFunc(uint32_t funcType, void* func)
 {
-    return 0;
+    (void)funcType;
+    (void)func;
+    return 1;
 }
 
-int32_t MsprofReportEvent(uint32_t agingFlag, const MsprofEvent *event)
-{
-    return 0;
-}
+int32_t MsprofInjectionInitialize() { return 1; }

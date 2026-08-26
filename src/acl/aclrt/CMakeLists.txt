@@ -32,6 +32,14 @@ target_compile_definitions(acl_rt PRIVATE
     FUNC_VISIBILITY
 )
 
+# Enable aclrt api hook on all platforms except embedded (ascend031/ascend035/ascend5162a)
+# When disabled, aclrtApiInjectionSetFunc/GetFunc are compiled as error-returning
+# stubs and aclrt apis fall back to direct forwarding with zero hook overhead.
+if(NOT "${PRODUCT}" STREQUAL "ascend031" AND NOT "${PRODUCT}" STREQUAL "ascend035"
+   AND NOT "${PRODUCT}" STREQUAL "ascend5162a")
+    target_compile_definitions(acl_rt PRIVATE ACL_RT_API_HOOK_ENABLE=1)
+endif()
+
 target_link_options(acl_rt PRIVATE
     -rdynamic
     -Wl,-Bsymbolic

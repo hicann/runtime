@@ -49,3 +49,4 @@
   - [Typedefs](25-05_Typedefs.md)
   - [数据类型的操作接口](25-03_Operation_APIs.md)
 - [26. C++扩展接口](26_cpp_extension_APIs.md)
+- [27. API Hook接口](27_api_hook_interfaces.md)

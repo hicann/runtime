@@ -39,6 +39,21 @@ ACL_RT_ALLOCATOR_FUNC_MAP(ACL_RT_IMPL_HEADER)
 ACL_FUNC_VISIBILITY void aclAppLogImpl(
     aclLogLevel logLevel, const char* func, const char* file, uint32_t line, const char* fmt, va_list args);
 
+typedef struct {
+    aclrtApiFunc originalFunc;
+    aclrtApiFunc currentFunc;
+} aclrtApiEntry;
+
+#ifdef ACL_RT_API_HOOK_ENABLE
+ACL_RT_FUNC_MAP(ACL_HOOK_DECL)
+ACL_RT_ALLOCATOR_FUNC_MAP(ACL_HOOK_DECL)
+ACL_MDLRI_FUNC_MAP(ACL_HOOK_DECL)
+#endif // ACL_RT_API_HOOK_ENABLE
+
+ACL_FUNC_VISIBILITY aclError aclrtApiInjectionSetFuncImpl(const char* name, aclrtApiFunc func);
+ACL_FUNC_VISIBILITY aclError
+aclrtApiInjectionGetFuncImpl(const char* name, aclrtApiFunc* originFunc, aclrtApiFunc* currentFunc);
+
 #ifdef __cplusplus
 }
 #endif

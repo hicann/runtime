@@ -606,6 +606,9 @@ macro(add_runtime_api_library target_name)
         -DSTATIC_RT_LIB=0  # set 1 when not split so
         -DRUNTIME_API=1  # set 1 when split so and in libruntime.so
     )
+    if(NOT "${PRODUCT}" STREQUAL "ascend031" AND NOT "${PRODUCT}" STREQUAL "ascend035")
+        target_compile_definitions(${target_name} PRIVATE ACL_RT_API_HOOK_ENABLE=1)
+    endif()
 
     set_target_properties(${target_name}
         PROPERTIES

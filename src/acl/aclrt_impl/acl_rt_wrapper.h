@@ -11,6 +11,19 @@
 #ifndef RUNTIME_ACL_RT_WRAPPER_H_
 #define RUNTIME_ACL_RT_WRAPPER_H_
 
+// Declare one named global entry per hookable api, e.g. g_hook_aclrtMemcpy.
+#define ACL_HOOK_DECL(ret, name, sig, args) extern ACL_FUNC_VISIBILITY aclrtApiEntry g_hook_##name;
+#define ACL_HOOK_DEF(ret, name, sig, args)              \
+    ACL_FUNC_VISIBILITY aclrtApiEntry g_hook_##name = { \
+        reinterpret_cast<aclrtApiFunc>(&name##Impl), reinterpret_cast<aclrtApiFunc>(&name##Impl)};
+
+// Hookable forwarding: load currentFunc from the named global, then indirect call.
+// No enum, no table index: the symbol name encodes the mapping.
+// decltype(&name##Impl) derives the exact function pointer type from the real
+// implementation, avoiding manual type assembly and signature drift.
+#define ACL_RT_CPP_HOOKABLE(ret, name, sig, args) \
+    ret name sig { return ((decltype(&name##Impl))(g_hook_##name.currentFunc))args; }
+
 // used to generate impl header functions
 #define ACL_RT_IMPL_HEADER(ret, name, sig, args) ACL_FUNC_VISIBILITY ret name##Impl sig;
 

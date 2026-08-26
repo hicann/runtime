@@ -51,6 +51,7 @@ set(UT_FILES
     "acl_tensorDataTransfer_unittest.cpp"
     "acl_queue_unittest.cpp"
     "acl_mdlri_unittest.cpp"
+    "acl_rt_api_hook_unittest.cpp"
 )
 
 set(SRC_FILES
@@ -120,6 +121,7 @@ target_compile_definitions(ut_ascendcl_src PRIVATE
     google=ascend_private
     ENABLE_DVPP_INTERFACE
     RUN_TEST
+    ACL_RT_API_HOOK_ENABLE=1
     $<$<BOOL:${ENABLE_OPEN_SRC}>:ONLY_COMPILE_OPEN_SRC>
     $<$<BOOL:${ENABLE_UT}>:ONLY_ENABLE_ACL_UT>
 )
@@ -159,6 +161,7 @@ target_compile_definitions(ascendcl_cpp_utest PRIVATE
     google=ascend_private
     ENABLE_DVPP_INTERFACE
     ACL_BASE_DIR=\"${BASE_DIR}\"
+    ACL_RT_API_HOOK_ENABLE=1
 )
 
 target_link_libraries(ascendcl_cpp_utest PRIVATE
