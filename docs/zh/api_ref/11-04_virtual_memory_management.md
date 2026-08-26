@@ -519,10 +519,16 @@ aclError aclrtMemMapNoAccess(void *virPtr, size_t size, size_t offset, aclrtDrvM
 
 返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
-<!-- npu="310b" id34 -->
+<!-- npu="950,A3,910b,310b" id34 -->
 ### 约束说明
 
+<!-- npu="310b" id33 -->
 对于Atlas 200I/500 A2 推理产品，Ascend RC形态下，不支持调用本接口。
+<!-- end id33 -->
+
+<!-- npu="950,A3,910b" id35 -->
+对于Atlas A2 训练系列产品/Atlas A2 推理系列产品、Atlas A3 训练系列产品/Atlas A3 推理系列产品、Ascend 950PR/Ascend 950DT，本接口不支持PCIe互连形态的设备。
+<!-- end id35 -->
 <!-- end id34 -->
 
 <br>
