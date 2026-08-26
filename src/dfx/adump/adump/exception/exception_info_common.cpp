@@ -83,7 +83,7 @@ bool ExceptionInfoCommon::IsSupportExceptionDump(const rtExceptionInfo& exceptio
         // Hardware faults do not need dump.
         exception.retcode == ACL_ERROR_RT_DEVICE_MEM_ERROR || exception.retcode == ACL_ERROR_RT_SUSPECT_REMOTE_ERROR ||
         exception.retcode == ACL_ERROR_RT_LINK_ERROR) {
-        IDE_LOGE("Not support exception dump, rts retcode=%u.", exception.retcode);
+        IDE_RUN_LOGI("Not support exception dump, rts retcode=%u.", exception.retcode);
         return false;
     }
 
@@ -95,7 +95,7 @@ bool ExceptionInfoCommon::IsSupportExceptionDump(const rtExceptionInfo& exceptio
         return true;
     }
 
-    IDE_LOGE(
+    IDE_RUN_LOGI(
         "Not support exception dump, type=%d(%s)", static_cast<int32_t>(exceptionType),
         GetExceptionTaskTypeName(exception).c_str());
     return false;
