@@ -48,6 +48,9 @@
 #include "inner_thread_local.hpp"
 #include "soma.hpp"
 #include "memset_common.h"
+#include "memory_c.hpp"
+#include "aicpu_c.hpp"
+#include "enum_desc.hpp"
 
 namespace cce {
 namespace runtime {
@@ -805,6 +808,247 @@ rtError_t ApiImpl::IpcCloseMemoryByName(const char_t* const name)
 
     RT_LOG(RT_LOG_DEBUG, "close ipc memory by CloseIpcMem, name=%s.", ipcName.c_str());
     return RT_ERROR_NONE;
+}
+
+rtError_t ApiImpl::LaunchSqeUpdateTask(
+    uint32_t streamId, uint32_t taskId, void* src, uint64_t cnt, Stream* const stm, bool needCpuTask)
+{
+    Context* const curCtx = CurrentContext();
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+    Stream* curStm = const_cast<Stream*>(stm);
+    if (curStm == nullptr) {
+        curStm = curCtx->DefaultStream_();
+        NULL_STREAM_PTR_RETURN_MSG(curStm);
+    }
+
+    COND_RETURN_AND_MSG_OUTER(
+        curStm->GetBindFlag() == true, RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, "Updating task information", "stream",
+        RtFmtMsg("Stream (stream_id=%d) should be a single-operator flow stream", curStm->Id_()));
+
+    COND_RETURN_AND_MSG_OUTER(
+        curStm->IsCapturing() == true, RT_ERROR_STREAM_CAPTURED, ErrorCode::EE1016, "Updating task information",
+        RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", curStm->Id_()));
+
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        curStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Delivering the Submission Queue Entry (SQE) update task");
+
+    Device* const dev = curCtx->Device_();
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
+        dev, RT_ERROR_INVALID_VALUE, "Delivering the Submission Queue Entry (SQE) update task");
+
+    StreamSqCqManage* const streamSqCqManagePtr = dev->GetStreamSqCqManage();
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
+        streamSqCqManagePtr, RT_ERROR_INVALID_VALUE, "Delivering the Submission Queue Entry (SQE) update task");
+
+    TaskFactory* const devTaskFactory = dev->GetTaskFactory();
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
+        devTaskFactory, RT_ERROR_INVALID_VALUE, "Delivering the Submission Queue Entry (SQE) update task");
+
+    Stream* modelStream = nullptr;
+    rtError_t error = streamSqCqManagePtr->GetStreamById(streamId, &modelStream);
+    COND_RETURN_ERROR_MSG_INNER(
+        ((error != RT_ERROR_NONE) || (modelStream == nullptr)), error,
+        "Query stream failed, dev_id=%d, stream_id=%u, retCode=%#x.", dev->Id_(), streamId,
+        static_cast<uint32_t>(error));
+
+    if ((modelStream->GetBindFlag() == false) || (!modelStream->IsModelStream())) {
+        RT_LOG_CALL_MSG(ERR_MODULE_GE, "Invalid dev_id=%d, stream_id=%u, stream is not in model", dev->Id_(), streamId);
+        return RT_ERROR_INVALID_VALUE;
+    }
+
+    TaskInfo* task = devTaskFactory->GetTask(static_cast<int32_t>(streamId), taskId);
+
+    COND_RETURN_AND_MSG_OUTER(
+        task == nullptr, RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, "Updating task information",
+        "stream ID and task ID",
+        "The corresponding task cannot be found through the device ID " + std::to_string(dev->Id_()) + ", stream ID " +
+            std::to_string(streamId) + ", task ID " + std::to_string(taskId));
+    COND_RETURN_AND_MSG_OUTER(
+        (task->type != TS_TASK_TYPE_STARS_COMMON ||
+         task->u.starsCommTask.commonStarsSqe.commonSqe.sqeHeader.type != RT_STARS_SQE_TYPE_DSA),
+        RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, "Updating task information", "stream ID and task ID",
+        "Only the random number generation task supports this update operation");
+
+    const uint32_t sqId = modelStream->GetSqId();
+    const uint32_t pos = task->pos;
+
+    if (needCpuTask == false) {
+        if (task->u.starsCommTask.srcDevAddr == nullptr) {
+            task->u.starsCommTask.srcDevAddr = src;
+        } else {
+            const uint64_t dsaSrcDevAddr = RtPtrToValue(task->u.starsCommTask.srcDevAddr);
+            const uint64_t currentSrcDevAddr = RtPtrToValue(src);
+            COND_RETURN_AND_MSG_OUTER(
+                dsaSrcDevAddr != currentSrcDevAddr, RT_ERROR_INVALID_VALUE, ErrorCode::EE1017,
+                "Updating task information", "info",
+                "The device memory address " + std::to_string(dsaSrcDevAddr) +
+                    " for storing the data to be updated in the configuration is inconsistent with the currently "
+                    "specified device memory address " +
+                    std::to_string(currentSrcDevAddr) +
+                    ". Ensure that the same device memory address is used for multiple task updates.");
+        }
+        return curCtx->LaunchSqeUpdateTask(src, cnt, sqId, pos, curStm);
+    } else {
+        COND_RETURN_ERROR_MSG_INNER(
+            task->u.starsCommTask.randomDevAddr == nullptr, RT_ERROR_INVALID_VALUE, "randomDevAddr is null.");
+        // randomDevAddr + RANDOM_INPUT_PARAM_SIZE bytes used as dsa update aicpu op's output sqe addr
+        constexpr uint32_t randomIuputParamSize = 16U;
+        void* outputSqeAddr = RtPtrToPtr<void*, uint8_t*>(
+            static_cast<uint8_t*>(task->u.starsCommTask.randomDevAddr) + randomIuputParamSize);
+
+        // built aicpu task param
+        const std::string soName = "libaicpu_extend_kernels.so";
+        const std::string kernelName = "RuntimeAicpuKernel";
+        constexpr uint32_t argsSize = 96U;
+        uint8_t args[argsSize];
+
+        uint64_t offset = 0U;
+
+        // append RtAicpuKernelArgs, refer to RtAicpuKernelArgs.
+        constexpr uint32_t kernelType = 0U;
+        errno_t ret = memcpy_s(args + offset, sizeof(kernelType), &kernelType, sizeof(kernelType));
+        COND_RETURN_ERROR_MSG_INNER(
+            ret != EOK, RT_ERROR_SEC_HANDLE,
+            "Failed to call Memcpy_s function to copy kernelType, destAddr=%p, srcAddr=%p, maxLen=%zu, actualLen=%zu, "
+            "retCode=%#x",
+            args + offset, &kernelType, sizeof(kernelType), sizeof(kernelType), static_cast<uint32_t>(ret));
+
+        offset += sizeof(kernelType);
+        constexpr uint32_t paramLength = 24U; // DsaUpdateParam size
+        ret = memcpy_s(args + offset, sizeof(paramLength), &paramLength, sizeof(paramLength));
+        COND_RETURN_ERROR_MSG_INNER(
+            ret != EOK, RT_ERROR_SEC_HANDLE,
+            "Failed to call Memcpy_s function to copy paramLength, destAddr=%p, srcAddr=%p, maxLen=%zu, actualLen=%zu, "
+            "retCode=%#x",
+            args + offset, &paramLength, sizeof(paramLength), sizeof(paramLength), static_cast<uint32_t>(ret));
+        offset += sizeof(paramLength);
+        // append DsaUpdateParam, refer to DsaUpdateParam struct
+        ret = memcpy_s(args + offset, sizeof(src), &src, sizeof(src));
+        COND_RETURN_ERROR_MSG_INNER(
+            ret != EOK, RT_ERROR_SEC_HANDLE,
+            "Failed to call Memcpy_s function to copy src, destAddr=%p, srcAddr=%p, maxLen=%zu, actualLen=%zu, "
+            "retCode=%#x",
+            args + offset, &src, sizeof(src), sizeof(src), static_cast<uint32_t>(ret));
+        offset += sizeof(src);
+        ret = memcpy_s(args + offset, sizeof(outputSqeAddr), &outputSqeAddr, sizeof(outputSqeAddr));
+        COND_RETURN_ERROR_MSG_INNER(
+            ret != EOK, RT_ERROR_SEC_HANDLE,
+            "Failed to call Memcpy_s function to copy outputSqeAddr, destAddr=%p, srcAddr=%p, maxLen=%zu, "
+            "actualLen=%zu, retCode=%#x",
+            args + offset, &outputSqeAddr, sizeof(outputSqeAddr), sizeof(outputSqeAddr), static_cast<uint32_t>(ret));
+        offset += sizeof(outputSqeAddr);
+        void* dsaCfgParam = task->u.starsCommTask.randomDevAddr;
+        ret = memcpy_s(args + offset, sizeof(dsaCfgParam), &dsaCfgParam, sizeof(dsaCfgParam));
+        COND_RETURN_ERROR_MSG_INNER(
+            ret != EOK, RT_ERROR_SEC_HANDLE,
+            "Failed to call Memcpy_s function to copy dsaCfgParam, destAddr=%p, srcAddr=%p, maxLen=%zu, actualLen=%zu, "
+            "retCode=%#x",
+            args + offset, &dsaCfgParam, sizeof(dsaCfgParam), sizeof(dsaCfgParam), static_cast<uint32_t>(ret));
+
+        offset += sizeof(dsaCfgParam);
+        // append soName
+        const uint32_t soNameAddrOffset = static_cast<uint32_t>(offset);
+        const size_t soNameLen = soName.length() + 1U;
+        ret = memcpy_s(args + offset, soNameLen, soName.c_str(), soNameLen);
+        COND_RETURN_ERROR_MSG_INNER(
+            ret != EOK, RT_ERROR_SEC_HANDLE,
+            "Failed to call Memcpy_s function to copy soName, destAddr=%p, srcAddr=%p, maxLen=%zu, actualLen=%zu, "
+            "retCode=%#x",
+            args + offset, soName.c_str(), soNameLen, soNameLen, static_cast<uint32_t>(ret));
+        offset += soNameLen;
+
+        // append kernelName
+        const uint32_t kernelNameAddrOffset = static_cast<uint32_t>(offset);
+        const size_t kernelNameLen = kernelName.length() + 1U;
+        ret = memcpy_s(args + offset, kernelNameLen, kernelName.c_str(), kernelNameLen);
+        COND_RETURN_ERROR_MSG_INNER(
+            ret != EOK, RT_ERROR_SEC_HANDLE,
+            "Failed to call Memcpy_s function to copy kernelName, destAddr=%p, srcAddr=%p, maxLen=%zu, actualLen=%zu, "
+            "retCode=%#x",
+            args + offset, kernelName.c_str(), kernelNameLen, kernelNameLen, static_cast<uint32_t>(ret));
+
+        // launch aicpu task to update dsa.
+        rtAicpuArgsEx_t argsInfo = {};
+        argsInfo.hostInputInfoPtr = nullptr;
+        argsInfo.kernelOffsetInfoPtr = nullptr;
+        argsInfo.hostInputInfoNum = 0U;
+        argsInfo.kernelOffsetInfoNum = 0U;
+        argsInfo.soNameAddrOffset = soNameAddrOffset;
+        argsInfo.kernelNameAddrOffset = kernelNameAddrOffset;
+        argsInfo.timeout = 0U;
+        argsInfo.isNoNeedH2DCopy = false;
+        argsInfo.argsSize = argsSize;
+        argsInfo.args = args;
+
+        error = StreamLaunchCpuKernelExWithArgs(
+            1U, &argsInfo, nullptr, curStm, RT_KERNEL_DEFAULT, KERNEL_TYPE_AICPU_KFC, nullptr);
+        COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error, "update dsa failed, due to launch cpu task failed.");
+        RT_LOG(RT_LOG_INFO, "launch dsa update cpu task success.");
+        // LaunchSqeUpdateTask only update sqe from offset=DSA_SQE_UPDATE_OFFSET, so need add offset.
+        constexpr uint32_t dsaSqeUpdateOffset = 16U;
+        constexpr uint32_t dsaSqeUpdateSize = 40U; // SqeUpdateTask only can copy 40 bytes;
+        void* copySqeAddr = RtPtrToPtr<void*, uint8_t*>(static_cast<uint8_t*>(outputSqeAddr) + dsaSqeUpdateOffset);
+        return curCtx->LaunchSqeUpdateTask(copySqeAddr, dsaSqeUpdateSize, sqId, pos, curStm);
+    }
+}
+
+rtError_t ApiImpl::ReduceAsync(
+    void* const dst, const void* const src, const uint64_t cnt, const rtRecudeKind_t kind, const rtDataType_t type,
+    Stream* const stm, const rtTaskCfgInfo_t* const cfgInfo)
+{
+    RT_LOG(RT_LOG_INFO, "ReduceAsync, count=%" PRIu64 ", kind=%s.", cnt, ReduceKindToString(kind).c_str());
+    Context* const curCtx = CurrentContext();
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+
+    Stream* curStm = stm;
+    if (curStm == nullptr) {
+        curStm = curCtx->DefaultStream_();
+        NULL_STREAM_PTR_RETURN_MSG(curStm);
+    }
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        curStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Asynchronously performing the Reduce operation");
+
+    return cce::runtime::ReduceAsync(dst, src, cnt, kind, type, curStm, cfgInfo);
+}
+
+rtError_t ApiImpl::ReduceAsyncV2(
+    void* const dst, const void* const src, const uint64_t cnt, const rtRecudeKind_t kind, const rtDataType_t type,
+    Stream* const stm, void* const overflowAddr)
+{
+    RT_LOG(RT_LOG_INFO, "ReduceAsyncV2, count=%" PRIu64 ", kind=%s.", cnt, ReduceKindToString(kind).c_str());
+    Context* const curCtx = CurrentContext();
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+
+    Stream* curStm = const_cast<Stream*>(stm);
+    if (curStm == nullptr) {
+        curStm = curCtx->DefaultStream_();
+        NULL_STREAM_PTR_RETURN_MSG(curStm);
+    }
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        curStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Performing asynchronous Reduce operations");
+
+    Device* const dev = curCtx->Device_();
+    const uint32_t tsVersion = dev->GetTschVersion() & 0xFFFFU; // low 16bit means tschversion
+    const auto reduceOverflowProp = dev->GetDevProperties().reduceOverflow;
+    if ((reduceOverflowProp == ReduceOverflowType::REDUCE_OVERFLOW_TS_VERSION_REDUCE_V2_ID) &&
+        (tsVersion >= static_cast<uint32_t>(TS_VERSION_REDUCE_V2_ID))) {
+        return cce::runtime::ReduceAsyncV2(dst, src, cnt, kind, type, curStm, overflowAddr);
+    } else if (
+        (reduceOverflowProp == ReduceOverflowType::REDUCE_OVERFLOW_TS_VERSION_REDUCV2_SUPPORT_DC) &&
+        (tsVersion >= static_cast<uint32_t>(TS_VERSION_REDUCV2_SUPPORT_DC))) {
+        return cce::runtime::ReduceAsyncV2(dst, src, cnt, kind, type, curStm, overflowAddr);
+    } else {
+        return cce::runtime::ReduceAsync(dst, src, cnt, kind, type, curStm, nullptr);
+    }
+}
+
+rtError_t ApiImpl::ModelTaskUpdate(Stream* desStm, uint32_t desTaskId, Stream* sinkStm, rtMdlTaskUpdateInfo_t* para)
+{
+    RT_LOG(RT_LOG_INFO, "ModelTaskUpdate, desStm=%d.desTaskId=%u,sinkStm=%d", desStm->Id_(), desTaskId, sinkStm->Id_());
+    Context* const curCtx = CurrentContext();
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+
+    return curCtx->ModelTaskUpdate(desStm, desTaskId, sinkStm, para);
 }
 
 rtError_t ApiImpl::DeviceL2CacheFlush()

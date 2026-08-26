@@ -624,6 +624,56 @@ rtError_t ApiImpl::IpcOpenMemory(void** const ptr, const char_t* const name, con
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
+rtError_t ApiImpl::LaunchSqeUpdateTask(
+    uint32_t streamId, uint32_t taskId, void* src, uint64_t cnt, Stream* const stm, bool needCpuTask)
+{
+    UNUSED(streamId);
+    UNUSED(taskId);
+    UNUSED(src);
+    UNUSED(cnt);
+    UNUSED(stm);
+    UNUSED(needCpuTask);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t ApiImpl::ReduceAsync(
+    void* const dst, const void* const src, const uint64_t cnt, const rtRecudeKind_t kind, const rtDataType_t type,
+    Stream* const stm, const rtTaskCfgInfo_t* const cfgInfo)
+{
+    UNUSED(dst);
+    UNUSED(src);
+    UNUSED(cnt);
+    UNUSED(kind);
+    UNUSED(type);
+    UNUSED(stm);
+    UNUSED(cfgInfo);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t ApiImpl::ReduceAsyncV2(
+    void* const dst, const void* const src, const uint64_t cnt, const rtRecudeKind_t kind, const rtDataType_t type,
+    Stream* const stm, void* const overflowAddr)
+{
+    UNUSED(dst);
+    UNUSED(src);
+    UNUSED(cnt);
+    UNUSED(kind);
+    UNUSED(type);
+    UNUSED(stm);
+    UNUSED(overflowAddr);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t ApiImpl::ModelTaskUpdate(
+    Stream* const desStm, const uint32_t desTaskId, Stream* const sinkStm, rtMdlTaskUpdateInfo_t* const para)
+{
+    UNUSED(desStm);
+    UNUSED(desTaskId);
+    UNUSED(sinkStm);
+    UNUSED(para);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
 rtError_t ApiImpl::DeviceL2CacheFlush() { return RT_ERROR_FEATURE_NOT_SUPPORT; }
 
 rtError_t ApiImpl::IpcCloseMemory(const void* const ptr)

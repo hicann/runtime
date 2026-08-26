@@ -12,6 +12,7 @@
 #define TESTS_UT_RUNTIME_RUNTIME_TEST_COMMON_RT_UTEST_API_CONTEXT_CASES_HPP_
 
 #include <iostream>
+#include <thread>
 
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
@@ -22,6 +23,8 @@
 #include "rt_error_codes.h"
 #include "rt_utest_context_reset_helper.hpp"
 #undef private
+
+#include "inner_thread_local.hpp"
 
 namespace cce {
 namespace runtime {
@@ -198,6 +201,33 @@ inline void RunContextThreadRefCountTracksBindingCase()
     // rtDeviceReset on the ref-count release path, so leaving an unmatched
     // SetDevice would leak a primary reference into subsequent cases.
     EXPECT_EQ(rtDeviceReset(devId), RT_ERROR_NONE);
+}
+
+inline void RunContextThreadRefReleasedWhenThreadExitsCase()
+{
+    rtContext_t ctx = nullptr;
+    int32_t devId = 0;
+    ASSERT_EQ(rtGetDevice(&devId), RT_ERROR_NONE);
+    ASSERT_EQ(rtsCtxCreate(&ctx, 0, devId), RT_ERROR_NONE);
+
+    Context* const ctxPtr = static_cast<Context*>(ctx);
+    ASSERT_NE(ctxPtr, nullptr);
+    InnerThreadLocalContainer::SetCurCtx(nullptr);
+    ASSERT_EQ(ctxPtr->GetThreadRefCount(), 0U);
+
+    rtError_t setCurrentResult = RT_ERROR_NONE;
+    std::thread worker([&setCurrentResult, ctx]() { setCurrentResult = rtsCtxSetCurrent(ctx); });
+    worker.join();
+
+    EXPECT_EQ(setCurrentResult, RT_ERROR_NONE);
+    const uint64_t remainingThreadRef = ctxPtr->GetThreadRefCount();
+    EXPECT_EQ(remainingThreadRef, 0U);
+
+    if (remainingThreadRef != 0U) {
+        (void)ctxPtr->ContextThreadUnbind();
+    }
+    EXPECT_EQ(rtCtxDestroy(ctx), RT_ERROR_NONE);
+    EXPECT_FALSE(ContextManage::IsContextTracked(ctxPtr));
 }
 
 inline void RunDestroyedContextHandleRejectedCase()
@@ -398,6 +428,11 @@ inline void RunDeviceResetDoesNotDestroyExplicitContextCase()
     TEST_F(test_fixture, TestContextThreadRefCountTracksBinding)                                                    \
     {                                                                                                               \
         cce::runtime::ut::RunContextThreadRefCountTracksBindingCase();                                              \
+    }                                                                                                               \
+                                                                                                                    \
+    TEST_F(test_fixture, TestContextThreadRefReleasedWhenThreadExits)                                               \
+    {                                                                                                               \
+        cce::runtime::ut::RunContextThreadRefReleasedWhenThreadExitsCase();                                         \
     }                                                                                                               \
                                                                                                                     \
     TEST_F(test_fixture, TestDestroyedContextHandleRejected)                                                        \
