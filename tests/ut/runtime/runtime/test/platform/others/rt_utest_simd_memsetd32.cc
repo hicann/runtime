@@ -22,6 +22,7 @@
 #include "api.hpp"
 #include "cmodel_driver.h"
 #include "thread_local_container.hpp"
+#include "../../common/rt_utest_context_reset_helper.hpp"
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
@@ -34,7 +35,17 @@
 using namespace cce::runtime;
 
 // 测试 MemsetD32Optimized 对齐地址填充
-class MemsetTaskTest : public testing::Test {};
+class MemsetTaskTest : public testing::Test {
+protected:
+    virtual void SetUp() { (void)rtSetDevice(0); }
+
+    virtual void TearDown()
+    {
+        GlobalMockObject::verify();
+        GlobalMockObject::reset();
+        ut::ForceResetPrimaryDeviceIfActive();
+    }
+};
 
 TEST(SimdUtilsTest, OptimizedAligned)
 {
@@ -163,3 +174,132 @@ TEST_F(MemsetTaskTest, MemsetD32OnDevice_totalBytes_exceeds_destMax)
     rtError_t error = MemsetD32OnDevice(nullptr, 8U, 0xABABABABU, 10U, nullptr, false);
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
 }
+
+// 场景：D8 MemsetOnDeviceByBatch 已移除，D8 回退 V1 baseline 全走 drvMemsetD8
+
+// 场景：ExpandByteToU32 字节扩展正确性
+// 验证最低字节被正确复制到 4 个字节位置
+TEST_F(MemsetTaskTest, ExpandByteToU32_correctness)
+{
+    EXPECT_EQ(ExpandByteToU32(0x00000000U), 0x00000000U);
+    EXPECT_EQ(ExpandByteToU32(0x000000FFU), 0xFFFFFFFFU);
+    EXPECT_EQ(ExpandByteToU32(0x000000A5U), 0xA5A5A5A5U);
+    EXPECT_EQ(ExpandByteToU32(0x00000012U), 0x12121212U);
+}
+
+// 场景：同步路径下 totalBytes < 2MB，直接走 ByMemcpy，不进入 batch 路径
+TEST_F(MemsetTaskTest, MemsetD32OnDevice_sync_small_size_skip_batch)
+{
+    if (Runtime::Instance()->CurrentContext() == nullptr) {
+        GTEST_SKIP() << "No device context";
+    }
+    rtError_t error = MemsetD32OnDevice(nullptr, 1024U, 0xABABABABU, 4U, nullptr, false);
+    EXPECT_NE(error, RT_ERROR_NONE);
+}
+
+// Async path does not enter batch optimization
+TEST_F(MemsetTaskTest, MemsetD32OnDevice_async_path_unchanged)
+{
+    if (Runtime::Instance()->CurrentContext() == nullptr) {
+        GTEST_SKIP() << "No device context";
+    }
+    rtError_t error = MemsetD32OnDevice(nullptr, 1024U, 0xABABABABU, 4U, nullptr, true);
+    EXPECT_NE(error, RT_ERROR_NONE);
+}
+
+// Sync path with totalBytes >= 2MB goes ByBatch, count=0 returns NONE (while loop not entered)
+TEST_F(MemsetTaskTest, MemsetD32OnDeviceByBatch_count_zero)
+{
+    if (Runtime::Instance()->CurrentContext() == nullptr) {
+        GTEST_SKIP() << "No device context";
+    }
+    rtError_t error = MemsetD32OnDeviceByBatch(nullptr, 0U, 0xABABABABU, 0U, 0U);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+// ByBatch with mock HostMemAlloc failure returns alloc error
+TEST_F(MemsetTaskTest, MemsetD32OnDeviceByBatch_host_alloc_fail)
+{
+    Context* curCtx = Runtime::Instance()->CurrentContext();
+    if (curCtx == nullptr) {
+        GTEST_SKIP() << "No device context";
+    }
+    Driver* driver = curCtx->Device_()->Driver_();
+    MOCKER_CPP_VIRTUAL(driver, &Driver::HostMemAlloc).stubs().will(returnValue(RT_ERROR_MEMORY_ALLOCATION));
+
+    const uint64_t count = MEMSET_BATCH_BUF_SIZE / sizeof(uint32_t);
+    rtError_t error = MemsetD32OnDeviceByBatch(nullptr, MEMSET_BATCH_BUF_SIZE, 0xABABABABU, count, 0U);
+    EXPECT_EQ(error, RT_ERROR_MEMORY_ALLOCATION);
+}
+
+// ByBatch with mock MemcpyBatch failure returns error code
+TEST_F(MemsetTaskTest, MemsetD32OnDeviceByBatch_memcpy_batch_fail)
+{
+    Context* curCtx = Runtime::Instance()->CurrentContext();
+    if (curCtx == nullptr) {
+        GTEST_SKIP() << "No device context";
+    }
+    MOCKER(halMemcpyBatch).stubs().will(returnValue(static_cast<drvError_t>(1)));
+
+    const uint64_t count = MEMSET_BATCH_BUF_SIZE / sizeof(uint32_t);
+    rtError_t error = MemsetD32OnDeviceByBatch(nullptr, MEMSET_BATCH_BUF_SIZE, 0xABABABABU, count, 0U);
+    EXPECT_NE(error, RT_ERROR_NONE);
+}
+
+// Sync path with totalBytes exactly at threshold goes ByBatch
+TEST_F(MemsetTaskTest, MemsetD32OnDevice_sync_threshold_goes_batch)
+{
+    if (Runtime::Instance()->CurrentContext() == nullptr) {
+        GTEST_SKIP() << "No device context";
+    }
+    MOCKER(halMemcpyBatch).stubs().will(returnValue(DRV_ERROR_NONE));
+
+    const uint64_t count = MEMSET_D32_THRESHOLD / sizeof(uint32_t);
+    rtError_t error = MemsetD32OnDevice(nullptr, MEMSET_D32_THRESHOLD, 0xABABABABU, count, nullptr, false);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+// Sync path with totalBytes just below threshold goes ByMemcpy (not ByBatch)
+TEST_F(MemsetTaskTest, MemsetD32OnDevice_sync_below_threshold_goes_bymemcpy)
+{
+    if (Runtime::Instance()->CurrentContext() == nullptr) {
+        GTEST_SKIP() << "No device context";
+    }
+    const uint64_t belowThreshold = MEMSET_D32_THRESHOLD - 4U;
+    const uint64_t count = belowThreshold / sizeof(uint32_t);
+    // Below threshold, ByMemcpy path is taken, which will fail with nullptr dst
+    rtError_t error = MemsetD32OnDevice(nullptr, belowThreshold, 0xABABABABU, count, nullptr, false);
+    EXPECT_NE(error, RT_ERROR_NONE);
+}
+
+// Parameterized test for various sizes through ByBatch path (mock MemcpyBatch success)
+struct BatchSizeParam {
+    uint64_t totalBytes;
+    std::string name;
+};
+
+class MemsetBatchSizeTest : public MemsetTaskTest, public testing::WithParamInterface<BatchSizeParam> {};
+
+TEST_P(MemsetBatchSizeTest, ByBatch_various_sizes)
+{
+    Context* curCtx = Runtime::Instance()->CurrentContext();
+    if (curCtx == nullptr) {
+        GTEST_SKIP() << "No device context";
+    }
+    MOCKER(halMemcpyBatch).stubs().will(returnValue(DRV_ERROR_NONE));
+
+    const auto& p = GetParam();
+    const uint64_t count = p.totalBytes / sizeof(uint32_t);
+    rtError_t error = MemsetD32OnDeviceByBatch(nullptr, p.totalBytes, 0xABABABABU, count, 0U);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    ByBatchSizes, MemsetBatchSizeTest,
+    testing::Values(
+        BatchSizeParam{MEMSET_BATCH_BUF_SIZE, "exactly_2MB"}, BatchSizeParam{MEMSET_BATCH_BUF_SIZE + 4U, "2MB_plus_4B"},
+        BatchSizeParam{MEMSET_BATCH_BUF_SIZE * 2U, "4MB"},
+        BatchSizeParam{MEMSET_BATCH_BUF_SIZE * 3U + 100U, "6MB_plus"},
+        BatchSizeParam{MEMSET_BATCH_BUF_SIZE * MEMSET_BATCH_MAX_COUNT, "8GB_single_round_max"},
+        BatchSizeParam{MEMSET_BATCH_BUF_SIZE * (MEMSET_BATCH_MAX_COUNT + 1U), "8GB_plus_multi_round"},
+        BatchSizeParam{MEMSET_BATCH_BUF_SIZE * (MEMSET_BATCH_MAX_COUNT * 2U + 5U), "16GB_plus"}));

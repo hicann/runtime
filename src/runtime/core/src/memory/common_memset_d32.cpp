@@ -11,14 +11,20 @@
 #include "memset_common.h"
 #include "api_impl_david.hpp"
 #include "api_impl.hpp"
-#include "api.hpp"
 #include "memcpy_c.hpp"
 #include "context.hpp"
 #include "error_message_manage.hpp"
+#include "npu_driver.hpp"
+#include <algorithm>
+#include <cstring>
+#include <memory>
+#include <vector>
 
 namespace cce {
 namespace runtime {
 
+// Perform 32-bit fill on Host memory (using SIMD acceleration).
+// Boundary check is done by caller, destMax is for interface compatibility only.
 rtError_t MemsetD32OnHost(void* dst, uint64_t destMax, uint32_t value, uint64_t count)
 {
     (void)destMax; // Boundary check already done by caller
@@ -28,12 +34,13 @@ rtError_t MemsetD32OnHost(void* dst, uint64_t destMax, uint32_t value, uint64_t 
     return RT_ERROR_NONE;
 }
 
+// Single block: HostMemAlloc -> SIMD fill -> DMA copy -> HostMemFree.
+// sync uses MemCopySync, async uses MemcopyAsync with shared_ptr deferred release.
 static rtError_t MemsetD32OnDeviceSingleBlock(
     void* curDst, uint64_t remainingMax, uint32_t value, uint64_t curCount, Stream* stm, bool isAsync, Device* device)
 {
-    uint64_t curBytes = curCount * sizeof(uint32_t);
+    const uint64_t curBytes = curCount * sizeof(uint32_t);
 
-    // Allocate temporary memory
     void* tempHostBuf = nullptr;
     const rtError_t allocError = device->Driver_()->HostMemAlloc(&tempHostBuf, curBytes, device->Id_(), 0, 0);
     if (allocError != RT_ERROR_NONE) {
@@ -46,12 +53,11 @@ static rtError_t MemsetD32OnDeviceSingleBlock(
     uint32_t* tempPtr = static_cast<uint32_t*>(tempHostBuf);
     MemsetD32Optimized(tempPtr, value, curCount);
 
-    // Copy to target device
     rtError_t copyError = RT_ERROR_NONE;
     if (isAsync) {
         uint64_t realSize = 0;
         std::shared_ptr<void> tempHostBufGuard(
-            tempHostBuf, [device](void* ptr) { device->Driver_()->HostMemFree(ptr); });
+            tempHostBuf, [device](void* ptr) { (void)device->Driver_()->HostMemFree(ptr); });
         copyError = MemcopyAsync(
             curDst, remainingMax, tempHostBuf, curBytes, RT_MEMCPY_HOST_TO_DEVICE, stm, &realSize, tempHostBufGuard);
     } else {
@@ -67,6 +73,9 @@ static rtError_t MemsetD32OnDeviceSingleBlock(
     return RT_ERROR_NONE;
 }
 
+// D32 memset block-by-block ByMemcpy path: split by hardware single DMA limit,
+// each block is SIMD-filled on host side then DMA-copied to device.
+// Block size is from MemcpyAsync single max copy size.
 rtError_t MemsetD32OnDeviceByMemcpy(
     void* dst, uint64_t destMax, uint32_t value, uint64_t count, Stream* stm, bool isAsync)
 {
@@ -90,7 +99,6 @@ rtError_t MemsetD32OnDeviceByMemcpy(
         const uint64_t curCount = (remainingCount >= blockCount) ? blockCount : remainingCount;
         const uint64_t curBytes = curCount * sizeof(uint32_t);
 
-        // Calculate current block's target address and remaining size
         void* curDst = static_cast<char*>(dst) + doneBytes;
         uint64_t remainingMax = destMax - doneBytes;
 
@@ -106,6 +114,73 @@ rtError_t MemsetD32OnDeviceByMemcpy(
     return RT_ERROR_NONE;
 }
 
+rtError_t MemsetD32OnDeviceByBatch(void* dst, uint64_t destMax, uint32_t value, uint64_t count, uint32_t memDevId)
+{
+    (void)memDevId;
+    (void)destMax;
+    const uint64_t totalBytes = count * sizeof(uint32_t);
+
+    Context* curCtx = Runtime::Instance()->CurrentContext();
+    Device* device = curCtx->Device_();
+
+    void* fillBuf = nullptr;
+    const rtError_t allocError = device->Driver_()->HostMemAlloc(&fillBuf, MEMSET_BATCH_BUF_SIZE, device->Id_(), 0, 0);
+    if (allocError != RT_ERROR_NONE) {
+        RT_LOG(
+            RT_LOG_ERROR, "Failed to allocate host buffer for batch memset, size=%" PRIu64 ", retCode=%#x.",
+            MEMSET_BATCH_BUF_SIZE, static_cast<uint32_t>(allocError));
+        return allocError;
+    }
+    const ScopeGuard freeGuard([&device, &fillBuf]() { (void)device->Driver_()->HostMemFree(fillBuf); });
+
+    const uint64_t fillCount = MEMSET_BATCH_BUF_SIZE / sizeof(uint32_t);
+    MemsetD32Optimized(static_cast<uint32_t*>(fillBuf), value, fillCount);
+
+    const uint64_t fillBufAddr = reinterpret_cast<uint64_t>(fillBuf);
+
+    // Dispatch MemcpyBatch in 2MB chunks, each batch up to hal max descriptor count (4096).
+    // Single batch covers up to 2MB x 4096 = 8GB, larger sizes split into multiple rounds.
+    uint64_t done = 0U;
+    while (done < totalBytes) {
+        const uint64_t remain = totalBytes - done;
+        // Ceiling division without overflow: use quotient + remainder instead of (remain + size - 1) / size
+        const uint64_t batchCnt = remain / MEMSET_BATCH_BUF_SIZE + ((remain % MEMSET_BATCH_BUF_SIZE != 0U) ? 1U : 0U);
+        const uint64_t realBatch = std::min(batchCnt, MEMSET_BATCH_MAX_COUNT);
+        if (realBatch == 0U) {
+            RT_LOG(
+                RT_LOG_ERROR, "Invalid batch count, remain=%" PRIu64 ", fillBytes=%" PRIu64 ".", remain,
+                MEMSET_BATCH_BUF_SIZE);
+            return RT_ERROR_INVALID_VALUE;
+        }
+
+        // Build batch DMA descriptor table: src addresses point to the same template, dst addresses advance by offset
+        std::vector<uint64_t> dsts(realBatch);
+        std::vector<uint64_t> srcs(realBatch, fillBufAddr);
+        std::vector<size_t> sizes(realBatch);
+
+        for (uint64_t i = 0U; i < realBatch; ++i) {
+            const uint64_t cur = std::min(MEMSET_BATCH_BUF_SIZE, totalBytes - done);
+            dsts[i] = reinterpret_cast<uint64_t>(static_cast<char*>(dst) + done);
+            sizes[i] = cur;
+            done += cur;
+        }
+
+        RT_LOG(
+            RT_LOG_DEBUG, "MemsetD32OnDeviceByBatch: batch=%" PRIu64 ", done=%" PRIu64 ", total=%" PRIu64 ".",
+            realBatch, done, totalBytes);
+
+        const rtError_t ret = NpuDriver::MemcpyBatch(dsts.data(), srcs.data(), sizes.data(), realBatch);
+        if (ret != RT_ERROR_NONE) {
+            RT_LOG(RT_LOG_ERROR, "MemcpyBatch failed, retCode=%#x.", static_cast<uint32_t>(ret));
+            return ret;
+        }
+    }
+    return RT_ERROR_NONE;
+}
+
+// D32 memset Device unified entry, dispatches by sync/async and data size:
+// - Async: try hardware SDMA Memset task first, fallback to ByMemcpy if not supported
+// - Sync: >= 2MB goes ByBatch, < 2MB goes ByMemcpy
 rtError_t MemsetD32OnDevice(
     void* dst, uint64_t destMax, uint32_t value, uint64_t count, Stream* stm, bool isAsync, uint32_t memDevId)
 {
@@ -125,6 +200,11 @@ rtError_t MemsetD32OnDevice(
         if (IsSupportMemsetTask(memDevId, device->Id_(), props)) {
             return DevMemSetAsyncByMemset(stm, dst, destMax, value, totalBytes);
         }
+    }
+
+    // Sync path: >= 2MB goes ByBatch, < 2MB goes ByMemcpy
+    if (!isAsync && (totalBytes >= MEMSET_D32_THRESHOLD)) {
+        return MemsetD32OnDeviceByBatch(dst, destMax, value, count, memDevId);
     }
 
     // Fallback path (sync or async without memset task support)

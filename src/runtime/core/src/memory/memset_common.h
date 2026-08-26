@@ -22,14 +22,28 @@ class Stream;
 void MemsetD32Optimized(uint32_t* dst, uint32_t value, size_t count);
 // Perform 32-bit fill on Host memory (using SIMD acceleration)
 rtError_t MemsetD32OnHost(void* dst, uint64_t destMax, uint32_t value, uint64_t count);
-// Perform 32-bit fill on Device memory (temporary Host memory + asynchronous copy)
+// Perform 32-bit fill on Device memory: unified entry, dispatches by sync/async and data size
 rtError_t MemsetD32OnDevice(
     void* dst, uint64_t destMax, uint32_t value, uint64_t count, Stream* stm, bool isAsync, uint32_t memDevId = 0U);
+// Perform 32-bit fill on Device memory via block-by-block Host→Device DMA copy
 rtError_t MemsetD32OnDeviceByMemcpy(
     void* dst, uint64_t destMax, uint32_t value, uint64_t count, Stream* stm, bool isAsync);
 rtError_t DevMemSetAsyncByMemcpy(Stream* stm, void* ptr, uint64_t destMax, uint32_t fillVal, uint64_t fillCount);
 rtError_t DevMemSetAsyncByMemset(Stream* stm, void* ptr, uint64_t destMax, uint32_t fillVal, uint64_t fillCount);
 
+// Host fill template size for batch memset, empirically 2MB is the performance crossover point:
+// below 2MB the fixed overhead of host alloc/free + SIMD fill exceeds batch benefit
+constexpr uint64_t MEMSET_BATCH_BUF_SIZE = 2ULL * 1024ULL * 1024ULL;
+// Max descriptor count per MemcpyBatch call, limited by hal layer
+constexpr uint64_t MEMSET_BATCH_MAX_COUNT = 4096ULL;
+// Batch dispatch threshold for D32 memset sync path
+constexpr uint32_t MEMSET_D32_THRESHOLD = 2U * 1024U * 1024U;
+
+// D32 memset sync batch path: allocate 2MB template + SIMD fill + MemcpyBatch batch DMA copy
+rtError_t MemsetD32OnDeviceByBatch(void* dst, uint64_t destMax, uint32_t value, uint64_t count, uint32_t memDevId);
+
+// Expand the lowest byte of a 32-bit value to 4 identical bytes.
+// e.g. 0x000000A5 -> 0xA5A5A5A5. Used by DevMemSetAsyncByMemcpy for D8 fallback fill value.
 inline uint32_t ExpandByteToU32(uint32_t fillVal)
 {
     const uint8_t byteValue = static_cast<uint8_t>(fillVal);
