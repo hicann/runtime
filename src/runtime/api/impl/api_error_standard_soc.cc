@@ -586,6 +586,37 @@ rtError_t ApiErrorDecorator::DeviceL2CacheFlush()
     return error;
 }
 
+rtError_t ApiErrorDecorator::GetDevicePCIBusId(const int32_t devId, char* pciBusId, const int32_t len)
+{
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+        (devId < 0), RT_ERROR_DEVICE_ID, "Obtaining the device PCI bus id", devId, "greater than or equal to 0");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(pciBusId, RT_ERROR_INVALID_VALUE, "Obtaining the device PCI bus id");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+        (len < static_cast<int32_t>(RT_PCI_BUS_ID_MIN_LEN)), RT_ERROR_INVALID_VALUE, "Obtaining the device PCI bus id",
+        len, "greater than or equal to " + std::to_string(RT_PCI_BUS_ID_MIN_LEN));
+
+    int32_t drvDeviceId;
+    rtError_t error =
+        Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(devId), RtPtrToPtr<uint32_t*>(&drvDeviceId));
+    COND_RETURN_ERROR(
+        error != RT_ERROR_NONE, error, "Failed to convert the user device ID %d to driver device ID.", devId);
+
+    error = CheckDeviceIdIsValid(drvDeviceId);
+    COND_RETURN_ERROR_MSG_INNER(
+        error != RT_ERROR_NONE, error, "drvDeviceId is invalid, drvDeviceId=%d, ErrorCode=%#x", drvDeviceId,
+        static_cast<uint32_t>(error));
+
+    return impl_->GetDevicePCIBusId(drvDeviceId, pciBusId, len);
+}
+
+rtError_t ApiErrorDecorator::GetDeviceByPCIBusId(const char* pciBusId, int32_t* devId)
+{
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(pciBusId, RT_ERROR_INVALID_VALUE, "Obtaining the device by PCI bus id");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(devId, RT_ERROR_INVALID_VALUE, "Obtaining the device by PCI bus id");
+
+    return impl_->GetDeviceByPCIBusId(pciBusId, devId);
+}
+
 rtError_t ApiErrorDecorator::HostGetDevicePointerAddrRange(rtAddrRange* addrRange, uint32_t* count)
 {
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(count, RT_ERROR_INVALID_VALUE, "Obtaining the device address range");

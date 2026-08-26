@@ -45,5 +45,12 @@ rtError_t ApiImpl::InvalidCache(const uint64_t base, const size_t len)
     COND_PROC((error == RT_ERROR_DEVICE_TASK_ABORT), return error);
     return curCtx->Device_()->Driver_()->DevMemInvalidCache(base, len);
 }
+
+rtError_t ApiImpl::GetDeviceByPCIBusId(const char* pciBusId, int32_t* devId)
+{
+    UNUSED(pciBusId);
+    UNUSED(devId);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
 } // namespace runtime
 } // namespace cce

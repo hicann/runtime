@@ -1098,6 +1098,49 @@ rtError_t ApiImpl::InvalidCache(const uint64_t base, const size_t len)
     return RT_ERROR_NONE;
 }
 
+rtError_t ApiImpl::GetDeviceByPCIBusId(const char* pciBusId, int32_t* devId)
+{
+    RT_LOG(RT_LOG_DEBUG, "Get device by PCI bus id, pciBusId=%s.", pciBusId);
+
+    Runtime* const rt = Runtime::Instance();
+    uint32_t devCnt = rt->deviceCnt;
+    if (devCnt == 0U) {
+        FacadeDriver& curDrv = rt->FacadeDriver_();
+        int32_t drvDeviceCnt = 0;
+        const rtError_t error = curDrv.GetDeviceCount(&drvDeviceCnt);
+        if (error != RT_ERROR_NONE) {
+            RT_LOG(RT_LOG_ERROR, "GetDeviceCount failed, error=%#x.", static_cast<uint32_t>(error));
+            return error;
+        }
+        devCnt = static_cast<uint32_t>(drvDeviceCnt);
+    }
+    for (uint32_t logicalDevId = 0U; logicalDevId < devCnt; ++logicalDevId) {
+        char curBdf[RT_PCI_BUS_ID_MIN_LEN] = {0};
+        rtError_t error = NpuDriver::GetDevicePCIBusId(logicalDevId, curBdf, static_cast<int32_t>(sizeof(curBdf)));
+        if (error != RT_ERROR_NONE) {
+            RT_LOG(
+                RT_LOG_DEBUG, "GetDevicePCIBusId failed for logicalDevId=%u, error=%#x.", logicalDevId,
+                static_cast<uint32_t>(error));
+            continue;
+        }
+        if (strcmp(pciBusId, curBdf) == 0) {
+            error = rt->GetUserDevIdByDeviceId(logicalDevId, reinterpret_cast<uint32_t*>(devId));
+            if (error != RT_ERROR_NONE) {
+                RT_LOG(
+                    RT_LOG_ERROR, "GetUserDevIdByDeviceId failed for logicalDevId=%u, error=%#x.", logicalDevId,
+                    static_cast<uint32_t>(error));
+                return error;
+            }
+            return RT_ERROR_NONE;
+        }
+    }
+    RT_LOG(RT_LOG_ERROR, "No device matched PCI bus id: %s.", pciBusId);
+    RT_LOG_OUTER_MSG_WITH_FUNC_DESC(
+        ErrorCode::EE1003, "Obtaining the device by PCI bus id", std::string(pciBusId), "pciBusId",
+        "a valid PCI bus id string (e.g., 0000:86:00.0)");
+    return RT_ERROR_INVALID_VALUE;
+}
+
 rtError_t ApiImpl::HostGetDevicePointerAddrRange(rtAddrRange* addrRange, uint32_t* count)
 {
     Context* const curCtx = CurrentContext();
@@ -1112,5 +1155,6 @@ rtError_t ApiImpl::HostGetDevicePointerAddrRange(rtAddrRange* addrRange, uint32_
     }
     return error;
 }
+
 } // namespace runtime
 } // namespace cce

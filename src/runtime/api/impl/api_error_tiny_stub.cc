@@ -449,6 +449,21 @@ rtError_t ApiErrorDecorator::StreamAddCondTask(rtCondTaskParams params, Stream* 
 
 rtError_t ApiErrorDecorator::DeviceL2CacheFlush() { return RT_ERROR_FEATURE_NOT_SUPPORT; }
 
+rtError_t ApiErrorDecorator::GetDevicePCIBusId(const int32_t devId, char* pciBusId, const int32_t len)
+{
+    UNUSED(devId);
+    UNUSED(pciBusId);
+    UNUSED(len);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t ApiErrorDecorator::GetDeviceByPCIBusId(const char* pciBusId, int32_t* devId)
+{
+    UNUSED(pciBusId);
+    UNUSED(devId);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
 rtError_t ApiErrorDecorator::HostGetDevicePointerAddrRange(rtAddrRange* addrRange, uint32_t* count)
 {
     UNUSED(addrRange);
