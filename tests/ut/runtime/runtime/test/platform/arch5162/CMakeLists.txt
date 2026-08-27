@@ -107,6 +107,7 @@ set(runtimeut_src_api_impl_list
     ${TOP_DIR}/src/runtime/api/impl/api_impl_mbuf_stub.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_stub.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_arch5162.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_memory_stub.cc
     ${TOP_DIR}/src/runtime/api/impl/v100/api_impl_creator_c.cc
 )
 

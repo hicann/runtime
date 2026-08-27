@@ -568,6 +568,7 @@ set(runtimeut_src_list
     ${TOP_DIR}/src/runtime/api/impl/v100/api_impl_v100.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_kernel_args.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_memory.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_mbuf.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_standard_soc.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_soma.cc
@@ -704,6 +705,7 @@ set(runtimeut_david_src_list
     ${TOP_DIR}/src/runtime/api/impl/api_decorator.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_kernel_args.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_memory.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_mbuf.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_event.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_event_common.cc
@@ -1606,6 +1608,7 @@ set(runtimeut_v201_src_list
     ${TOP_DIR}/src/runtime/api/impl/api_decorator.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_kernel_args.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_memory.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_mbuf.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_event.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_event_common.cc

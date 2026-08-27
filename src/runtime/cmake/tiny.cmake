@@ -223,6 +223,7 @@ set(libruntime_common_src_files
     ${RUNTIME_API_DIR}/impl/api_error.cc
     ${RUNTIME_API_DIR}/impl/api_impl.cc
     ${RUNTIME_API_DIR}/impl/api_impl_kernel_args.cc
+    ${RUNTIME_API_DIR}/impl/api_impl_memory.cc
     ${RUNTIME_API_DIR}/impl/api_impl_mbuf.cc
     ${RUNTIME_CORE_DIR}/src/launch/cond_stars.cc
     ${RUNTIME_CORE_DIR}/src/launch/label_common.cc
@@ -370,6 +371,7 @@ set(libruntime_v100_src_files
     ${RUNTIME_API_DIR}/impl/api_decorator.cc
     ${RUNTIME_API_DIR}/impl/api_impl.cc
     ${RUNTIME_API_DIR}/impl/api_impl_kernel_args.cc
+    ${RUNTIME_API_DIR}/impl/api_impl_memory.cc
     ${RUNTIME_API_DIR}/impl/api_error.cc
     ${RUNTIME_API_DIR}/impl/api_impl_creator.cc
     ${RUNTIME_API_DIR}/impl/api_impl_mbuf.cc
