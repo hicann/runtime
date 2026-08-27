@@ -1897,6 +1897,9 @@ TEST_F(JOB_WRAPPER_PROF_L2_CACHE_JOB_TEST, Init)
     EXPECT_EQ(PROFILING_SUCCESS, profL2CacheJob->Init(collectionJobCfg_));
     collectionJobCfg_->comParams->params->l2CacheTaskProfilingEvents = "0x5b, 0x59, 0x5c";
     EXPECT_EQ(PROFILING_SUCCESS, profL2CacheJob->Init(collectionJobCfg_));
+    collectionJobCfg_->comParams->params->l2CacheTaskProfilingEvents = "0x5b,0x59,0x5c,0x5d,0x5e,0x5f,0x60,0x61,0x62";
+    EXPECT_EQ(PROFILING_FAILED, profL2CacheJob->Init(collectionJobCfg_));
+    collectionJobCfg_->comParams->params->l2CacheTaskProfilingEvents = "0x5b, 0x59, 0x5c";
     collectionJobCfg_->comParams->params->hostProfiling = true;
     EXPECT_EQ(PROFILING_FAILED, profL2CacheJob->Init(collectionJobCfg_));
 }

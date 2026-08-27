@@ -328,7 +328,7 @@ int32_t AcpManager::GetAndCheckParams(int32_t devId)
     }
 
     if (params_ != nullptr) {
-        MSPROF_LOGI("Acp params has already inited.");
+        MSPROF_LOGI("Acp parameters have already been initialized.");
         params_->job_id = std::to_string(devId);
         params_->devices = std::to_string(devId); // update device id
         return PROFILING_SUCCESS;

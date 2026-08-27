@@ -159,7 +159,7 @@ void JsonParser::ParseJsonChannels(const ProfJsonRoot& profJsonRootFile)
         } else if (
             channelsArray[i][MSPORF_PERIOD_STRING].GetValue<int32_t>() < MIN_CHANNEL_PEROID ||
             channelsArray[i][MSPORF_PERIOD_STRING].GetValue<int32_t>() > MAX_CHANNEL_PEROID) {
-            MSPROF_LOGW("The peroid of Channel %d is out of range", tempChannel.channelId);
+            MSPROF_LOGW("The period of Channel %d is out of range", tempChannel.channelId);
             tempChannel.peroid = 0;
         } else {
             tempChannel.peroid = (channelsArray[i])[MSPORF_PERIOD_STRING].GetValue<int32_t>();
@@ -187,7 +187,7 @@ void JsonParser::CheckModuleReportBufferLen(JsonValue temp, ProfJsonReporters& t
         tempReporter.reportBufferLen = 0;
     } else if ((temp[MSPORF_REPORT_BUFFER_LEN_STRING].GetValue<int32_t>() < MIN_REPORT_BUFFER_LEN ||
                 temp[MSPORF_REPORT_BUFFER_LEN_STRING].GetValue<int32_t>() > MAX_REPORT_BUFFER_LEN)) {
-        MSPROF_LOGW("The reporter buffer len of Repoter %d is out of range", tempReporter.reporterId);
+        MSPROF_LOGW("The reporter buffer len of Reporter %d is out of range", tempReporter.reporterId);
         tempReporter.reportBufferLen = 0;
     } else {
         tempReporter.reportBufferLen = (temp)[MSPORF_REPORT_BUFFER_LEN_STRING].GetValue<int32_t>();

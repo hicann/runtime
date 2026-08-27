@@ -33,11 +33,11 @@ StatsAnalyzer::~StatsAnalyzer() {}
 void StatsAnalyzer::OnApiData(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunkReq)
 {
     if (!inited_) {
-        MSPROF_LOGE("StatsAnalyzer is not been inited!");
+        MSPROF_LOGE("StatsAnalyzer has not been initialized!");
         return;
     }
     if (fileChunkReq == nullptr || fileChunkReq->fileName.empty()) {
-        MSPROF_LOGW("StatsAnalyzer OnOptimizeData is not data for analyzing.");
+        MSPROF_LOGW("No data is available for StatsAnalyzer::OnApiData.");
         return;
     }
     if (fileChunkReq->chunkModule == FileChunkDataModule::PROFILING_IS_CTRL_DATA) {

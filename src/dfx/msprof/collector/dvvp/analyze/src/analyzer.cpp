@@ -323,7 +323,7 @@ void Analyzer::ConstructAndUploadData(const std::string& opId, OpTime& opTime)
 {
     if (opTime.start > opTime.end || opTime.startAicore > opTime.endAicore) {
         MSPROF_LOGE(
-            "End timestamp is less then start. op:%s start:%" PRIu64 " end:%" PRIu64 " startAicore:%" PRIu64
+            "End timestamp is less than start. op:%s start:%" PRIu64 " end:%" PRIu64 " startAicore:%" PRIu64
             " endAicore:%" PRIu64,
             opId.c_str(), opTime.start, opTime.end, opTime.startAicore, opTime.endAicore);
         return;
@@ -374,11 +374,11 @@ void Analyzer::ConstructAndUploadData(const std::string& opId, OpTime& opTime)
 void Analyzer::OnOptimizeData(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunkReq)
 {
     if (!inited_) {
-        MSPROF_LOGE("Analyzer is not been inited!");
+        MSPROF_LOGE("Analyzer has not been initialized!");
         return;
     }
     if (fileChunkReq == nullptr || fileChunkReq->fileName.empty()) {
-        MSPROF_LOGW("Analyzer OnOptimizeData is not data for analyzing.");
+        MSPROF_LOGW("No data is available for Analyzer::OnOptimizeData.");
         return;
     }
     if (fileChunkReq->chunkModule == FileChunkDataModule::PROFILING_IS_CTRL_DATA) {

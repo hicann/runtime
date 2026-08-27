@@ -23,15 +23,10 @@
 #include "transport/uploader.h"
 #include "utils/utils.h"
 
-class HashDicUtest: public testing::Test {
+class HashDicUtest : public testing::Test {
 protected:
-    virtual void SetUp()
-    {
-    }
-    virtual void TearDown()
-    {
-        GlobalMockObject::verify();
-    }
+    virtual void SetUp() {}
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 TEST_F(HashDicUtest, MsprofGetHashId)
@@ -49,15 +44,19 @@ TEST_F(HashDicUtest, MsprofGetHashId)
     // hashData not init
     hashId = MsprofGetHashId(hashData, dataSize);
     EXPECT_EQ(hashId, std::numeric_limits<uint64_t>::max());
-    
+}
+
+TEST_F(HashDicUtest, SaveHashDataBeforeInit)
+{
+    HashDataUninit();
+    MOCKER(OsalCalloc).expects(never());
+    SaveHashData(false);
 }
 
 TEST_F(HashDicUtest, HashDataInit)
 {
     // init hashData
-    MOCKER(OsalCalloc)
-        .stubs()
-        .will(returnValue((void*)nullptr));
+    MOCKER(OsalCalloc).stubs().will(returnValue((void*)nullptr));
     int32_t ret = HashDataInit();
     EXPECT_EQ(ret, PROFILING_FAILED);
 
@@ -71,7 +70,7 @@ TEST_F(HashDicUtest, HashDataInit)
     HashDataUninit();
 }
 
-int32_t UploaderUploadDataStub(ProfFileChunk *chunk)
+int32_t UploaderUploadDataStub(ProfFileChunk* chunk)
 {
     OsalFree(chunk->chunk);
     OsalFree(chunk);

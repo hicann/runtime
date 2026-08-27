@@ -159,7 +159,7 @@ int32_t DynProfServer::DynProfSrvRecvParams()
         return PROFILING_FAILED;
     }
     dynProfParams_ = std::string(params.data, params.dataLen);
-    MSPROF_LOGD("recv parmas, size:%zu", dynProfParams_.size());
+    MSPROF_LOGD("recv params, size:%zu", dynProfParams_.size());
     DynProfSrvRsqMsg(DynProfMsgType::DYN_PROF_PARAMS_RSQ, DynProfMsgRsqCode::DYN_PROF_RSQ_SUCCESS);
     return PROFILING_SUCCESS;
 }

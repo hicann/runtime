@@ -190,8 +190,8 @@ int32_t MsprofTxManager::SetStampTraceMessage(ACL_PROF_STAMP_PTR stamp, CONST_CH
 
     static const int32_t MAX_MSG_LEN = 128;
     if (msgLen >= MAX_MSG_LEN) {
-        MSPROF_LOGE("[SetStampTraceMessage]msg len(%u) is invalid, must less then 128 bytes", msgLen);
-        std::string errorReason = "msg len should be less than" + std::to_string(MAX_MSG_LEN);
+        MSPROF_LOGE("[SetStampTraceMessage]msg len(%u) is invalid, must be less than 128 bytes", msgLen);
+        std::string errorReason = "msg len should be less than " + std::to_string(MAX_MSG_LEN);
         MSPROF_INPUT_ERROR(
             "EK0006", std::vector<std::string>({"api", "param"}),
             std::vector<std::string>({"aclprofSetStampTraceMessage", "stamp"}));

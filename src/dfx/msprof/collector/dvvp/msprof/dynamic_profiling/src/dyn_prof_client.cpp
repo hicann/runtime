@@ -188,11 +188,11 @@ int32_t DynProfClient::DynProfCliSendParams() const
     DynProfMsg rsqMsg;
     auto ret = LocalSocket::Recv(cliSockFd_, &rsqMsg, sizeof(rsqMsg), 0);
     if (ret == SOCKET_ERR_EAGAIN) {
-        CmdLog::CmdErrorLog("recv parmas timeout, server has been connected to another client.");
-        MSPROF_LOGE("recv parmas timeout, server has been connected to another client.");
+        CmdLog::CmdErrorLog("recv params timeout, server has been connected to another client.");
+        MSPROF_LOGE("recv params timeout, server has been connected to another client.");
         return PROFILING_FAILED;
     } else if (ret != sizeof(rsqMsg)) {
-        MSPROF_LOGE("recv parmas rsq failed.");
+        MSPROF_LOGE("recv params rsq failed.");
         return PROFILING_FAILED;
     }
     MSPROF_LOGI("recv params rsq: %d,%d", rsqMsg.msgType, rsqMsg.statusCode);

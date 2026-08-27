@@ -293,7 +293,7 @@ void SaveHashData(bool isLastChunk)
 {
     (void)OsalMutexLock(&g_regHashMtx);
     if (!g_hashInit || g_hashStop) {
-        MSPROF_LOGW("HashData not inited or stopted");
+        MSPROF_LOGW("HashData not inited or stopped");
         (void)OsalMutexUnlock(&g_regHashMtx);
         return;
     }

@@ -36,7 +36,7 @@ int32_t ProfDrvEvent::SubscribeEventThreadInit(struct TaskEventAttr* eventAttr) 
     int32_t ret = OsalCreateTaskWithThreadAttr(&eventAttr->handle, &userBlock, &threadAttr);
     if (ret != OSAL_EN_OK) {
         MSPROF_LOGE(
-            "Start task wait event thread for device %u failed, strerr : %s", eventAttr->deviceId,
+            "Start task wait event thread for device %u failed, error message: %s", eventAttr->deviceId,
             strerror(OsalGetErrorCode()));
         return PROFILING_FAILED;
     }

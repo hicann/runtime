@@ -76,7 +76,7 @@ int32_t AnalyzerBase::InitFrequency()
     std::string freq = Analysis::Dvvp::Common::Config::ConfigManager::instance()->GetFrequency();
     frequency_ = std::stod(freq) / 1000; // 1000: mhz to ghz, syscnt * (1 / ghz) = ns
     if (frequency_ <= 0) {
-        MSPROF_LOGE("init freqency failed. freq %s mhz, frequency_ %f ghz", freq.c_str(), frequency_);
+        MSPROF_LOGE("init frequency failed. freq %s mhz, frequency_ %f ghz", freq.c_str(), frequency_);
         return PROFILING_FAILED;
     } else {
         MSPROF_LOGD("InitFrequency success. frequency: %f ghz", frequency_);

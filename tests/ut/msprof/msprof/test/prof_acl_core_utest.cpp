@@ -4300,6 +4300,8 @@ TEST_F(MSPROF_ACL_CORE_UTEST, StatsAnalyzerFlushesApiStatsOnEndInfo)
     std::string apiData(reinterpret_cast<const char*>(&api), sizeof(MsprofApi));
 
     StatsAnalyzer analyzer(dir);
+    analyzer.OnApiData(nullptr);
+    analyzer.OnApiData(std::make_shared<analysis::dvvp::ProfileFileChunk>());
     analyzer.OnApiData(MakeStatsChunk(
         "host.api_event.data", apiData,
         analysis::dvvp::common::config::FileChunkDataModule::PROFILING_IS_FROM_MSPROF_HOST));

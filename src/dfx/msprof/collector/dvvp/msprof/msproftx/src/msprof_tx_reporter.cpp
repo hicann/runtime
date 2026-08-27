@@ -43,7 +43,7 @@ int32_t MsprofTxReporter::UnInit()
     }
 
     isInit_ = false;
-    MSPROF_LOGI("[UnInit]ReporetCallback UnInit success.");
+    MSPROF_LOGI("[UnInit]ReporterCallback UnInit success.");
     return PROFILING_SUCCESS;
 }
 

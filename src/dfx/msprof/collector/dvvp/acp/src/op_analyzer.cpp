@@ -99,7 +99,7 @@ void OpAnalyzer::InitAnalyzerByDeviceId(const std::string& deviceId)
 void OpAnalyzer::OnOpData(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunkReq)
 {
     if (!inited_) {
-        MSPROF_LOGE("OpAnalyzer is not been inited!");
+        MSPROF_LOGE("OpAnalyzer has not been initialized!");
         return;
     }
     if (fileChunkReq == nullptr || fileChunkReq->fileName.empty()) {
