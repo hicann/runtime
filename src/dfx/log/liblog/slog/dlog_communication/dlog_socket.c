@@ -168,12 +168,6 @@ void CloseLogInternal(void)
     SetSocketConnectedStatus(FALSE);
 }
 
-void SigPipeHandler(int32_t signo)
-{
-    (void)signo;
-    CloseLogInternal();
-}
-
 /**
  * @brief : strcat filename to directory
  * @param [out]path: the full path

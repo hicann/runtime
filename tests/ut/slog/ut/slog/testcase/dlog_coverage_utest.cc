@@ -9,12 +9,15 @@
  */
 
 #include "gtest/gtest.h"
+#include "mockcpp/mockcpp.hpp"
 
 #include <cstring>
 #include <cstdlib>
 #include <unistd.h>
+#include <fcntl.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>
+#include <signal.h>
 #include <errno.h>
 
 extern "C" {
@@ -34,6 +37,8 @@ extern "C" {
 #include "log_file_info.h"
 #include "log_error_code.h"
 #include "slogd_collect_log.h"
+
+void DlogWriteToSocket(LogMsg* logMsg, const LogMsgArg* msgArg);
 }
 
 /* controllable hooks exported by slogd_utest_stub.c */
@@ -76,6 +81,10 @@ int32_t CallWrite(LogMsgArg* arg, const char* fmt, ...)
     va_end(v);
     return ret;
 }
+
+static void SigPipeTestHandler(int32_t signo) { (void)signo; }
+
+static int32_t ToolWriteStub(int32_t fd, const void* buf, uint32_t len) { return (int32_t)write(fd, buf, (size_t)len); }
 
 /* ---- write/flush/fork/atfork callbacks used by dlog_core tests ---- */
 extern "C" int32_t CovWriteOkCb(const char* content, uint32_t len, int32_t type)
@@ -359,16 +368,6 @@ TEST_F(DlogSocketUtest, CloseLogInternalWhenConnected)
     EXPECT_EQ(INVALID, GetSocketFd());
 }
 
-TEST_F(DlogSocketUtest, SigPipeHandlerClosesLog)
-{
-    int32_t fd = CreatSocket(0);
-    ASSERT_GE(fd, 0);
-    SetSocketFd(fd);
-    SetSocketConnectedStatus(TRUE);
-    SigPipeHandler(SIGPIPE);
-    EXPECT_EQ(FALSE, IsSocketConnected());
-}
-
 TEST_F(DlogSocketUtest, CreatSocketPfidSystemPath)
 {
     /* default slog process type is SYSTEM -> GetSocketPathByPfid early return */
@@ -472,6 +471,7 @@ protected:
         SetToolErrno(0);
         SetToolSocketFail(0);
         CloseLogInternal();
+        GlobalMockObject::reset();
     }
 };
 
@@ -481,6 +481,60 @@ TEST_F(DlogCoreUtest, WriteToSocketWhenNoCallback)
 {
     LogMsgArg arg = MakeMsgArg(SLOG, DEBUG_LOG_MASK, DLOG_ERROR);
     EXPECT_EQ(LOG_SUCCESS, CallWrite(&arg, "socket log %d", 1));
+}
+
+TEST_F(DlogCoreUtest, WriteToPoolingSocketRestoresSigPipeAction)
+{
+    int32_t fd = open("/dev/null", O_WRONLY);
+    ASSERT_GE(fd, 0);
+
+    struct sigaction customAction;
+    struct sigaction originalAction;
+    (void)memset_s(&customAction, sizeof(customAction), 0, sizeof(customAction));
+    (void)memset_s(&originalAction, sizeof(originalAction), 0, sizeof(originalAction));
+    customAction.sa_handler = SigPipeTestHandler;
+    ASSERT_EQ(0, sigemptyset(&customAction.sa_mask));
+    ASSERT_EQ(0, sigaction(SIGPIPE, &customAction, &originalAction));
+
+    MOCKER(DlogIsPoolingDevice).stubs().will(returnValue(true));
+    MOCKER(GetRsyslogSocketFd).stubs().will(returnValue(fd));
+    MOCKER(ToolWrite).stubs().will(invoke(ToolWriteStub));
+
+    LogMsg logMsg = {};
+    logMsg.type = RUN_LOG;
+    logMsg.level = DLOG_ERROR;
+    logMsg.moduleId = SLOG;
+    ASSERT_GT(snprintf_s(logMsg.msg, sizeof(logMsg.msg), sizeof(logMsg.msg) - 1U, "pooling socket %d", 1), 0);
+    logMsg.msgLength = LogStrlen(logMsg.msg);
+    logMsg.logContent = logMsg.msg;
+    logMsg.contentLength = logMsg.msgLength;
+
+    LogMsgArg arg = MakeMsgArg(SLOG, RUN_LOG_MASK, DLOG_ERROR);
+    arg.attr.type = SYSTEM;
+    DlogWriteToSocket(&logMsg, &arg);
+
+    struct sigaction currentAction;
+    (void)memset_s(&currentAction, sizeof(currentAction), 0, sizeof(currentAction));
+    ASSERT_EQ(0, sigaction(SIGPIPE, NULL, &currentAction));
+    EXPECT_EQ(SigPipeTestHandler, currentAction.sa_handler);
+
+    ASSERT_EQ(0, sigaction(SIGPIPE, &originalAction, NULL));
+    (void)close(fd);
+    GlobalMockObject::verify();
+}
+
+TEST_F(DlogCoreUtest, WriteFailureClosesSocketOnEpipe)
+{
+    SetToolWriteFail(1);
+    SetToolErrno(EPIPE);
+
+    LogMsgArg arg = MakeMsgArg(SLOG, DEBUG_LOG_MASK, DLOG_ERROR);
+    EXPECT_EQ(LOG_SUCCESS, CallWrite(&arg, "epipe write %d", 2));
+    EXPECT_EQ(FALSE, IsSocketConnected());
+    EXPECT_EQ(INVALID, GetSocketFd());
+
+    SetToolWriteFail(0);
+    SetToolErrno(0);
 }
 
 TEST_F(DlogCoreUtest, WriteFallsBackToConsoleWhenSocketCreateFails)

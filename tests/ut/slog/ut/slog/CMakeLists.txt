@@ -193,6 +193,7 @@ target_link_libraries(log_slogd_utest PRIVATE
     $<BUILD_INTERFACE:adump_headers>
     mmpa
     c_sec
+    mockcpp
     -Wl,-rpath
     -ldl
 )

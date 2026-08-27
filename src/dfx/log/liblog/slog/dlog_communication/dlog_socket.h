@@ -24,7 +24,6 @@ toolSockHandle GetRsyslogSocketFd(uint32_t typeMask);
 toolSockHandle CreatSocket(uint32_t devId);
 int32_t CloseSocket(void);
 void CloseLogInternal(void);
-void SigPipeHandler(int32_t signo);
 
 #ifdef __cplusplus
 }

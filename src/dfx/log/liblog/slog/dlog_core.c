@@ -342,7 +342,7 @@ STATIC void DlogWriteToSocket(LogMsg* logMsg, const LogMsgArg* msgArg)
     (void)memset_s(&oldaction, sizeof(oldaction), 0, sizeof(oldaction));
     (void)memset_s(&action, sizeof(action), 0, sizeof(action));
 
-    action.sa_handler = SigPipeHandler;
+    action.sa_handler = SIG_IGN;
     int32_t result = sigemptyset(&action.sa_mask);
     ONE_ACT_ERR_LOG(
         result < 0, return, "call sigemptyset failed, result=%d, strerr=%s.", result, strerror(ToolGetErrorCode()));
@@ -353,10 +353,11 @@ STATIC void DlogWriteToSocket(LogMsg* logMsg, const LogMsgArg* msgArg)
     if (DlogIsPoolingDevice() && msgArg->attr.type != APPLICATION) {
         result =
             snprintf_s(buffer, sizeof(buffer), sizeof(buffer) - 1U, "<7>%s", logMsg->msg); // priority 7 means debug
-        ONE_ACT_ERR_LOG(result == -1, return, "snprintf_s failed, strerr=%s.", strerror(ToolGetErrorCode()));
+        ONE_ACT_ERR_LOG(
+            result == -1, goto RESTORE_SIGPIPE, "snprintf_s failed, strerr=%s.", strerror(ToolGetErrorCode()));
         (void)FullWrites(
             GetRsyslogSocketFd(msgArg->typeMask), buffer, LogStrlen(buffer), logMsg->moduleId, logMsg->level);
-        return;
+        goto RESTORE_SIGPIPE;
     }
     // construct message for socket
     if (DlogGetMsgType() == MSGTYPE_STRUCT) {
@@ -366,13 +367,14 @@ STATIC void DlogWriteToSocket(LogMsg* logMsg, const LogMsgArg* msgArg)
     }
 
     ONE_ACT_ERR_LOG(
-        result != LOG_SUCCESS, return, "set message failed before write to socket, result=%d, strerr=%s.", result,
-        strerror(ToolGetErrorCode()));
+        result != LOG_SUCCESS, goto RESTORE_SIGPIPE, "set message failed before write to socket, result=%d, strerr=%s.",
+        result, strerror(ToolGetErrorCode()));
 
     result = FullWrites(GetSocketFd(), buffer, logMsg->msgLength, logMsg->moduleId, logMsg->level);
     if (result < 0) {
         CloseLogInternal();
     }
+RESTORE_SIGPIPE:
     if (sigpipe == 0) {
         if (sigaction(SIGPIPE, &oldaction, (struct sigaction*)NULL) < 0) {
             SELF_LOG_ERROR(
@@ -497,7 +499,9 @@ STATIC CONSTRUCTOR void DllMain(void)
 
 STATIC DESTRUCTOR void DlogFree(void)
 {
+    SlogLock();
     CloseLogInternal();
+    SlogUnlock();
     AlogCloseSlogLib();
     AlogCloseDrvLib();
     DlogSetInited(false);
