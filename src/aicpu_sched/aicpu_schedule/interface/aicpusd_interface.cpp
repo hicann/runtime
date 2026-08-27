@@ -136,7 +136,7 @@ int32_t InitAICPUScheduler(const uint32_t deviceId, const pid_t hostPid, const P
 
     const std::string envNameAicpuAppLogSwitch = "AICPU_APP_LOG_SWITCH";
     if (AicpuSchedule::AicpuUtil::IsEnvValEqual(envNameAicpuAppLogSwitch, "0")) {
-        aicpusd_info("%s is setted to 0 to switch off applog", envNameAicpuAppLogSwitch.c_str());
+        aicpusd_info("%s is set to 0 to switch off applog", envNameAicpuAppLogSwitch.c_str());
     } else {
         LogAttr logInfo = {};
         logInfo.type = APPLICATION;
@@ -265,7 +265,7 @@ int32_t AicpuSetMsprofReporterCallback(MsprofReporterCallback reportCallback)
  */
 int32_t InitCpuScheduler(const CpuSchedInitParam* const initParam)
 {
-    aicpusd_run_info("InitAICPUScheduler in heterogeneo1us mode.");
+    aicpusd_run_info("InitAICPUScheduler in heterogeneous mode.");
     AicpuSchedule::SetCpuMode(true);
     if (initParam == nullptr) {
         aicpusd_err("Init Param is null. Please check!");

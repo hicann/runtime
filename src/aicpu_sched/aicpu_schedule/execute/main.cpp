@@ -90,7 +90,7 @@ bool AttachHostGroup(const std::vector<std::string>& groupNameVec, const uint32_
     }
     if (static_cast<uint32_t>(groupNameVec.size()) != grpNameNum) {
         aicpusd_err(
-            "Aicpu start failed. parse group name num[%d] is consistence with num[%u] in parameter",
+            "Aicpu start failed. parse group name num[%zu] is not consistent with num[%u] in parameter",
             groupNameVec.size(), grpNameNum);
         return false;
     }
@@ -384,7 +384,7 @@ int32_t ComputeProcessMain(int32_t argc, char* argv[])
         // wait for shutdown
         const int32_t waitRet = WaitForShutDown(deviceVec[0U]);
         if (waitRet != AicpuSchedule::SUCCESS_VALUE) {
-            aicpusd_err("wait for shut down return not ok return not ok, error code[%d].", waitRet);
+            aicpusd_err("wait for shut down return not ok, error code[%d].", waitRet);
             ret = -1;
         } else {
             aicpusd_info("wait for shut down return successfully.");

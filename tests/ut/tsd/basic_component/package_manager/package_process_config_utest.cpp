@@ -81,7 +81,7 @@ bool WriteConfigFile(const std::string fileName, const std::vector<std::string> 
 {
     std::ofstream outFile(fileName);
     if (!outFile) {
-        std::cout << "Can not creat file." << std::endl;
+        std::cout << "Can not create file." << std::endl;
         return false;
     }
     for (auto& item : itemVec) {

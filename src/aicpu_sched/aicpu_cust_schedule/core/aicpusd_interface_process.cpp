@@ -317,7 +317,7 @@ bool AicpuScheduleInterface::AttachHostGroup(
 
     if (static_cast<uint32_t>(groupNameVec.size()) != grpNameNum) {
         aicpusd_err(
-            "Aicpu start failed. parse group name num[%u] is consistence with num[%u] in parameter",
+            "Aicpu start failed. parse group name num[%u] is not consistent with num[%u] in parameter",
             groupNameVec.size(), grpNameNum);
         return false;
     }

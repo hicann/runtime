@@ -94,6 +94,15 @@ TEST_F(AiCPUThreadDatadumpSt, DatadumpInitAICPUDatadumpStSuccess)
     EXPECT_EQ(ret, 0);
 }
 
+TEST_F(AiCPUThreadDatadumpSt, InitAICPUDatadumpSt_AppLogSwitchOff)
+{
+    MOCKER_CPP(AicpuSchedule::AicpuUtil::IsEnvValEqual).stubs().will(returnValue(true));
+    MOCKER_CPP(&GetAicpuDeployContext).stubs().will(returnValue(AICPU_SCHEDULE_FAIL));
+    int32_t ret = InitAICPUDatadump(0, 0);
+    EXPECT_EQ(ret, AICPU_SCHEDULE_FAIL);
+    GlobalMockObject::verify();
+}
+
 TEST_F(AiCPUThreadDatadumpSt, InitAICPUDatadumpStSuccess)
 {
     aicpu::dump::OpMappingInfo opMappingInfo;

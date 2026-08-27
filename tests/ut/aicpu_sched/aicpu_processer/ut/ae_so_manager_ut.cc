@@ -554,6 +554,13 @@ TEST_F(SoManagerUTest, MultiSoManager_CreateSingleSoMgr_GetSoPathFail)
     EXPECT_EQ(AE_STATUS_INNER_ERROR, ret);
 }
 
+TEST_F(SoManagerUTest, MultiSoManager_CreateSingleSoMgr_InvalidSoName)
+{
+    SingleSoManager* sinsoMgr = nullptr;
+    aeStatus_t ret = soMngr_.CreateSingleSoMgr(aicpu::KERNEL_TYPE_AICPU, "libtest@invalid.so", sinsoMgr);
+    EXPECT_EQ(AE_STATUS_BAD_PARAM, ret);
+}
+
 TEST_F(SoManagerUTest, GetThreadModeSoPathSuccess01)
 {
     // for root

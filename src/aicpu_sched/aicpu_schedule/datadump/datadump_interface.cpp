@@ -29,7 +29,7 @@ extern "C" {
 int32_t InitAICPUDatadump(const uint32_t deviceId, const pid_t hostPid)
 {
     if (AicpuSchedule::AicpuUtil::IsEnvValEqual("AICPU_APP_LOG_SWITCH", "0")) {
-        aicpusd_info("AICPU_APP_LOG_SWITCH is setted to 0 to switch off applog");
+        aicpusd_info("AICPU_APP_LOG_SWITCH is set to 0 to switch off applog");
     } else {
         LogAttr logAttr = {};
         logAttr.type = APPLICATION;

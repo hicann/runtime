@@ -562,7 +562,7 @@ aeStatus_t MultiSoManager::CreateSingleSoMgr(
 {
     // check so name
     if (soName.find_first_not_of(PATTERN_FOR_SO_NAME) != std::string::npos) {
-        AE_ERR_LOG(AE_MODULE_ID, "So name %s is not invalid. Please check!", soName.c_str());
+        AE_ERR_LOG(AE_MODULE_ID, "So name %s is invalid. Please check!", soName.c_str());
         return AE_STATUS_BAD_PARAM;
     }
     // get so real path

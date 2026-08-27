@@ -32,7 +32,7 @@ namespace {
 void PipBrokenException(int fd, void* data)
 {
     if (data == nullptr) {
-        BQS_LOG_ERROR("Pip of client and server has been closed. fd:%d\n", fd);
+        BQS_LOG_ERROR("Pipe of client and server has been closed. fd:%d\n", fd);
     }
 }
 } // namespace
