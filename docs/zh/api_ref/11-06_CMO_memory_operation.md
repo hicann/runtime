@@ -108,7 +108,7 @@ aclError aclrtCmoAsyncWithBarrier(void *src, size_t size, aclrtCmoType cmoType, 
 | size | 输入 | 待操作的Device内存大小，单位Byte。 |
 | cmoType | 输入 | Cache内存操作类型。类型定义请参见[aclrtCmoType](25-02_Enumerations.md#aclrtCmoType)。 |
 | barrierId | 输入 | 屏障标识。<br>当cmoType为ACL_RT_CMO_TYPE_INVALID时，barrierId有效，支持传入大于0的数字，配合[aclrtCmoWaitBarrier](#aclrtCmoWaitBarrier)接口使用，等待具有指定barrierId的Invalid内存操作任务执行完成。当cmoType为其它值时，barrierId固定传0。 |
-| stream | 输入 | 执行内存操作任务的Stream。类型定义请参见[aclrtStream](25-05_Typedefs.md#aclrtStream)。<br>此处只支持与模型绑定过的Stream，绑定模型与Stream需调用[aclmdlRIBindStream](15_model_running_instance__management.md#aclmdlRIBindStream)接口。 |
+| stream | 输入 | 执行内存操作任务的Stream。类型定义请参见[aclrtStream](25-05_Typedefs.md#aclrtStream)。<br>此处只支持与模型绑定过的Stream，绑定模型与Stream需调用[aclmdlRIBindStream](15_model_running_instance_management.md#aclmdlRIBindStream)接口。 |
 
 ### 返回值说明
 
@@ -160,7 +160,7 @@ aclError aclrtCmoWaitBarrier(aclrtBarrierTaskInfo *taskInfo, aclrtStream stream,
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
 | taskInfo | 输入 | Cache内存操作的任务信息。类型定义请参见[aclrtBarrierTaskInfo](25-04_Structs.md#aclrtBarrierTaskInfo)。<br>任务信息中的cmoType当前仅支持ACL_RT_CMO_TYPE_INVALID。 |
-| stream | 输入 | 执行等待任务的Stream。类型定义请参见[aclrtStream](25-05_Typedefs.md#aclrtStream)。<br>此处只支持与模型绑定过的Stream，绑定模型与Stream需调用[aclmdlRIBindStream](15_model_running_instance__management.md#aclmdlRIBindStream)接口。 |
+| stream | 输入 | 执行等待任务的Stream。类型定义请参见[aclrtStream](25-05_Typedefs.md#aclrtStream)。<br>此处只支持与模型绑定过的Stream，绑定模型与Stream需调用[aclmdlRIBindStream](15_model_running_instance_management.md#aclmdlRIBindStream)接口。 |
 | flag | 输入 | 预留参数。当前固定配置为0。 |
 
 ### 返回值说明

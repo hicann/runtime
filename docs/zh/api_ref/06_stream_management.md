@@ -161,7 +161,7 @@ aclError aclrtCreateStreamWithConfig(aclrtStream *stream, uint32_t priority, uin
 
     宏定义：`#define ACL_STREAM_FAST_SYNC 0x00000002U`
 
-- **ACL\_STREAM\_PERSISTENT**：使用该flag创建出来的Stream，在该Stream上下发的任务不会立即执行、任务执行完成后也不会立即销毁，在销毁Stream时才会销毁任务相关的资源。该方式下创建的Stream用于与模型绑定，适用于模型构建场景，模型构建相关接口的说明请参见[aclmdlRIBindStream](15_model_running_instance__management.md#aclmdlRIBindStream)。
+- **ACL\_STREAM\_PERSISTENT**：使用该flag创建出来的Stream，在该Stream上下发的任务不会立即执行、任务执行完成后也不会立即销毁，在销毁Stream时才会销毁任务相关的资源。该方式下创建的Stream用于与模型绑定，适用于模型构建场景，模型构建相关接口的说明请参见[aclmdlRIBindStream](15_model_running_instance_management.md#aclmdlRIBindStream)。
 
     宏定义：`#define ACL_STREAM_PERSISTENT 0x00000004U`
 
@@ -712,7 +712,7 @@ aclError aclrtStreamAbort(aclrtStream stream)
 
 ### 约束说明
 
-- 不支持使用[aclmdlRIBindStream](15_model_running_instance__management.md#aclmdlRIBindStream)接口来绑定模型运行实例的Stream。
+- 不支持使用[aclmdlRIBindStream](15_model_running_instance_management.md#aclmdlRIBindStream)接口来绑定模型运行实例的Stream。
 - 如果有其它Stream依赖本接口中指定的Stream（例如通过[aclrtRecordEvent](07_event_management.md#aclrtRecordEvent)、[aclrtStreamWaitEvent](07_event_management.md#aclrtStreamWaitEvent)等接口实现两个Stream间同步等待），则其它Stream执行可能会卡住，此时您需要显式调用本接口清除其它Stream上的任务。
 - 如果调用本接口清除指定Stream上的任务时，再调用同步等待接口（例如[aclrtSynchronizeStream](#aclrtSynchronizeStream)、[aclrtSynchronizeEvent](07_event_management.md#aclrtSynchronizeEvent)等），同步等待接口会退出并返回ACL\_ERROR\_RT\_STREAM\_ABORT的报错。
 <!-- npu="950" id14 -->
@@ -1004,8 +1004,8 @@ aclError aclrtActiveStream(aclrtStream activeStream, aclrtStream stream)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| activeStream | 输入 | 待激活的Stream。类型定义请参见[aclrtStream](25-05_Typedefs.md#aclrtStream)。<br>此处只支持与模型绑定过的Stream，绑定模型与Stream需调用[aclmdlRIBindStream](15_model_running_instance__management.md#aclmdlRIBindStream)接口。 |
-| stream | 输入 | 执行激活任务的Stream。类型定义请参见[aclrtStream](25-05_Typedefs.md#aclrtStream)。<br>此处只支持与模型绑定过的Stream，绑定模型与Stream需调用[aclmdlRIBindStream](15_model_running_instance__management.md#aclmdlRIBindStream)接口。 |
+| activeStream | 输入 | 待激活的Stream。类型定义请参见[aclrtStream](25-05_Typedefs.md#aclrtStream)。<br>此处只支持与模型绑定过的Stream，绑定模型与Stream需调用[aclmdlRIBindStream](15_model_running_instance_management.md#aclmdlRIBindStream)接口。 |
+| stream | 输入 | 执行激活任务的Stream。类型定义请参见[aclrtStream](25-05_Typedefs.md#aclrtStream)。<br>此处只支持与模型绑定过的Stream，绑定模型与Stream需调用[aclmdlRIBindStream](15_model_running_instance_management.md#aclmdlRIBindStream)接口。 |
 
 ### 返回值说明
 
@@ -1188,7 +1188,7 @@ aclError aclrtStreamStop(aclrtStream stream)
 
 ### 约束说明
 
-- 不支持使用[aclmdlRIBindStream](15_model_running_instance__management.md#aclmdlRIBindStream)接口来绑定模型运行实例的Stream。
+- 不支持使用[aclmdlRIBindStream](15_model_running_instance_management.md#aclmdlRIBindStream)接口来绑定模型运行实例的Stream。
 - 不支持默认Stream（即stream参数传入NULL）。
 
 <br>

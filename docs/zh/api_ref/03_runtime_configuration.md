@@ -234,7 +234,7 @@ Device资源限制的优先级为：Stream级别的Device资源限制 \> 进程�
 
 ### 约束说明
 
-本接口的设置仅对后续下发的任务有效。例如在调用[aclmdlRICaptureBegin](15_model_running_instance__management.md#aclmdlRICaptureBegin)、[aclmdlRICaptureEnd](15_model_running_instance__management.md#aclmdlRICaptureEnd)等接口捕获Stream任务到模型中、再执行模型推理的场景下，则需要在捕获之前调用本接口设置Device资源。
+本接口的设置仅对后续下发的任务有效。例如在调用[aclmdlRICaptureBegin](15_model_running_instance_management.md#aclmdlRICaptureBegin)、[aclmdlRICaptureEnd](15_model_running_instance_management.md#aclmdlRICaptureEnd)等接口捕获Stream任务到模型中、再执行模型推理的场景下，则需要在捕获之前调用本接口设置Device资源。
 
 <br>
 <br>

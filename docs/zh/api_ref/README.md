@@ -25,7 +25,7 @@
 - [12. 执行控制](12_execution_control.md)
 - [13. 异常处理](13_exception_handling.md)
 - [14. Kernel加载与执行](14_Kernel_loading_and_execution.md)
-- [15. 模型运行实例管理](15_model_running_instance__management.md)
+- [15. 模型运行实例管理](15_model_running_instance_management.md)
 - [16. 算力Group查询与设置](16_group_management.md)
 - [17. 数据传输](17_data_transmission.md)
   - [17-01 Tensor数据传输](17-01_tensor_data_transfer.md)

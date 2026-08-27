@@ -570,7 +570,7 @@ aclError aclrtCacheLastTaskOpInfo(const void * const infoPtr, const size_t infoS
 
 本接口需与以下其它关键接口配合使用，以便控制后续采集性能数据时附带算子信息：
 
-1. 调用[aclmdlRICaptureBegin](15_model_running_instance__management.md#aclmdlRICaptureBegin)接口开始捕获任务。
+1. 调用[aclmdlRICaptureBegin](15_model_running_instance_management.md#aclmdlRICaptureBegin)接口开始捕获任务。
 2. 调用[aclrtSetStreamAttribute](06_stream_management.md#aclrtSetStreamAttribute)接口开启算子信息缓存开关。
 3. 下发算子执行任务，例如调用[aclrtLaunchKernelWithConfig](14_Kernel_loading_and_execution.md#aclrtLaunchKernelWithConfig)接口。
 4. 调用[aclrtGetStreamAttribute](06_stream_management.md#aclrtGetStreamAttribute)接口获取算子信息缓存开关是否开启。
@@ -579,12 +579,12 @@ aclError aclrtCacheLastTaskOpInfo(const void * const infoPtr, const size_t infoS
 
 5. 调用[aclrtCacheLastTaskOpInfo](#aclrtCacheLastTaskOpInfo)接口缓存算子信息。
 6. 再次调用[aclrtSetStreamAttribute](06_stream_management.md#aclrtSetStreamAttribute)接口关闭算子信息缓存开关。
-7. 调用[aclmdlRICaptureEnd](15_model_running_instance__management.md#aclmdlRICaptureEnd)接口结束任务捕获。
-8. 开启采集性能数据（参见[Profiling数据采集接口](19-01_data_profiling_apis.md)章节下的接口）后，调用[aclmdlRIExecuteAsync](15_model_running_instance__management.md#aclmdlRIExecuteAsync)接口执行推理。
+7. 调用[aclmdlRICaptureEnd](15_model_running_instance_management.md#aclmdlRICaptureEnd)接口结束任务捕获。
+8. 开启采集性能数据（参见[Profiling数据采集接口](19-01_data_profiling_apis.md)章节下的接口）后，调用[aclmdlRIExecuteAsync](15_model_running_instance_management.md#aclmdlRIExecuteAsync)接口执行推理。
 
     在此过程中，采集的性能数据会附带算子信息。
 
-9. 最后，调用[aclmdlRIDestroy](15_model_running_instance__management.md#aclmdlRIDestroy)接口销毁模型运行实例时，算子缓存信息也会被一并释放。
+9. 最后，调用[aclmdlRIDestroy](15_model_running_instance_management.md#aclmdlRIDestroy)接口销毁模型运行实例时，算子缓存信息也会被一并释放。
 
 <br>
 <br>
@@ -625,14 +625,14 @@ aclError aclrtCacheLastTaskExtendInfo(const char* const extendInfoPtr, const siz
 
 ### 功能说明
 
-将指定内存中的自定义扩展信息按照infoSize大小缓存到当前线程中最后下发的任务上。后续可以通过调用[aclmdlRIDebugJsonPrint](15_model_running_instance__management.md#aclmdlRIDebugJsonPrint)接口将自定义扩展信息以JSON格式导出到文件中，然后，通过tracing方式（例如chrome://tracing/）查看。
-当前仅支持在捕获模型（请参见[aclmdlRICaptureBegin](15_model_running_instance__management.md#aclmdlRICaptureBegin)接口）或构建模型运行实例（请参见[aclmdlRIBuildBegin](15_model_running_instance__management.md#aclmdlRIBuildBegin)接口）的场景下使用。
+将指定内存中的自定义扩展信息按照infoSize大小缓存到当前线程中最后下发的任务上。后续可以通过调用[aclmdlRIDebugJsonPrint](15_model_running_instance_management.md#aclmdlRIDebugJsonPrint)接口将自定义扩展信息以JSON格式导出到文件中，然后，通过tracing方式（例如chrome://tracing/）查看。
+当前仅支持在捕获模型（请参见[aclmdlRICaptureBegin](15_model_running_instance_management.md#aclmdlRICaptureBegin)接口）或构建模型运行实例（请参见[aclmdlRIBuildBegin](15_model_running_instance_management.md#aclmdlRIBuildBegin)接口）的场景下使用。
 
 ### 参数说明
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| extendInfoPtr | 输入 | 指向自定义扩展信息内存地址的指针，此处是Host内存。`extendInfoPtr`指向的内存中的内容应为使用UTF-8编码的JSON格式字符串。非UTF-8编码的JSON格式字符串在后续调用[aclmdlRIDebugJsonPrint](15_model_running_instance__management.md#aclmdlRIDebugJsonPrint)接口时可能导致未定义的行为。 |
+| extendInfoPtr | 输入 | 指向自定义扩展信息内存地址的指针，此处是Host内存。`extendInfoPtr`指向的内存中的内容应为使用UTF-8编码的JSON格式字符串。非UTF-8编码的JSON格式字符串在后续调用[aclmdlRIDebugJsonPrint](15_model_running_instance_management.md#aclmdlRIDebugJsonPrint)接口时可能导致未定义的行为。 |
 | infoSize | 输入 | 自定义扩展信息内存大小，单位Byte。取值范围：(0, 4K]，当`infoSize`大于4K时，仅缓存前4K字节。 |
 
 ### 返回值说明

@@ -73,7 +73,7 @@ aclError aclmdlRICaptureBegin(aclrtStream stream, aclmdlRICaptureMode mode)
 <!-- npu="IPV350" id1015 -->
 - IPV350：不支持
 <!-- end id1015 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id1 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id1 -->
 
 ### 功能说明
 
@@ -133,7 +133,7 @@ aclError aclmdlRICaptureGetInfo(aclrtStream stream, aclmdlRICaptureStatus *statu
 <!-- npu="IPV350" id756 -->
 - IPV350：不支持
 <!-- end id756 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id2 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id2 -->
 
 ### 功能说明
 
@@ -186,7 +186,7 @@ aclError aclmdlRICaptureThreadExchangeMode(aclmdlRICaptureMode *mode)
 <!-- npu="IPV350" id2394 -->
 - IPV350：不支持
 <!-- end id2394 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id3 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id3 -->
 
 ### 功能说明
 
@@ -245,7 +245,7 @@ aclError aclmdlRICaptureEnd(aclrtStream stream, aclmdlRI *modelRI)
 <!-- npu="IPV350" id3073 -->
 - IPV350：不支持
 <!-- end id3073 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id4 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id4 -->
 
 ### 功能说明
 
@@ -301,7 +301,7 @@ aclError aclmdlRICaptureTaskGrpBegin(aclrtStream stream)
 <!-- npu="IPV350" id350 -->
 - IPV350：不支持
 <!-- end id350 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id5 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id5 -->
 
 ### 功能说明
 
@@ -356,7 +356,7 @@ aclError aclmdlRICaptureTaskGrpEnd(aclrtStream stream, aclrtTaskGrp *handle)
 <!-- npu="IPV350" id1043 -->
 - IPV350：不支持
 <!-- end id1043 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id6 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id6 -->
 
 ### 功能说明
 
@@ -410,7 +410,7 @@ aclError aclmdlRICaptureTaskUpdateBegin(aclrtStream stream, aclrtTaskGrp handle)
 <!-- npu="IPV350" id1435 -->
 - IPV350：不支持
 <!-- end id1435 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id7 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id7 -->
 
 ### 功能说明
 
@@ -481,7 +481,7 @@ aclError aclmdlRICaptureTaskUpdateEnd(aclrtStream stream)
 <!-- npu="IPV350" id21 -->
 - IPV350：不支持
 <!-- end id21 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id8 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id8 -->
 
 ### 功能说明
 
@@ -540,7 +540,7 @@ aclError aclmdlRIDebugJsonPrint(aclmdlRI modelRI, const char *path, uint32_t fla
 <!-- npu="IPV350" id308 -->
 - IPV350：不支持
 <!-- end id308 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id9 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id9 -->
 
 ### 功能说明
 
@@ -593,7 +593,7 @@ aclError aclmdlRIDebugPrint(aclmdlRI modelRI)
 <!-- npu="IPV350" id3521 -->
 - IPV350：不支持
 <!-- end id3521 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id10 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id10 -->
 
 ### 功能说明
 
@@ -644,7 +644,7 @@ aclError aclmdlRIBuildBegin(aclmdlRI *modelRI, uint32_t flag)
 <!-- npu="IPV350" id2408 -->
 - IPV350：不支持
 <!-- end id2408 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id11 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id11 -->
 
 ### 功能说明
 
@@ -700,7 +700,7 @@ aclError aclmdlRIBindStream(aclmdlRI modelRI, aclrtStream stream, uint32_t flag)
 <!-- npu="IPV350" id1631 -->
 - IPV350：不支持
 <!-- end id1631 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id12 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id12 -->
 
 ### 功能说明
 
@@ -753,7 +753,7 @@ aclError aclmdlRIEndTask(aclmdlRI modelRI, aclrtStream stream)
 <!-- npu="IPV350" id2905 -->
 - IPV350：不支持
 <!-- end id2905 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id13 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id13 -->
 
 ### 功能说明
 
@@ -805,7 +805,7 @@ aclError aclmdlRIBuildEnd(aclmdlRI modelRI, void *reserve)
 <!-- npu="IPV350" id35 -->
 - IPV350：不支持
 <!-- end id35 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id14 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id14 -->
 
 ### 功能说明
 
@@ -861,7 +861,7 @@ aclError aclmdlRIUnbindStream(aclmdlRI modelRI, aclrtStream stream)
 <!-- npu="IPV350" id728 -->
 - IPV350：不支持
 <!-- end id728 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id15 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id15 -->
 
 ### 功能说明
 
@@ -913,7 +913,7 @@ aclError aclmdlRIExecute(aclmdlRI modelRI, int32_t timeout)
 <!-- npu="IPV350" id588 -->
 - IPV350：不支持
 <!-- end id588 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id16 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id16 -->
 
 ### 功能说明
 
@@ -965,7 +965,7 @@ aclError aclmdlRIExecuteAsync(aclmdlRI modelRI, aclrtStream stream)
 <!-- npu="IPV350" id2912 -->
 - IPV350：不支持
 <!-- end id2912 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id17 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id17 -->
 
 ### 功能说明
 
@@ -1017,7 +1017,7 @@ aclError aclmdlRIDestroy(aclmdlRI modelRI)
 <!-- npu="IPV350" id105 -->
 - IPV350：不支持
 <!-- end id105 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id18 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id18 -->
 
 ### 功能说明
 
@@ -1068,7 +1068,7 @@ aclError aclmdlRISetName(aclmdlRI modelRI, const char *name)
 <!-- npu="IPV350" id2177 -->
 - IPV350：不支持
 <!-- end id2177 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id19 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id19 -->
 
 ### 功能说明
 
@@ -1120,7 +1120,7 @@ aclError aclmdlRIGetName(aclmdlRI modelRI, uint32_t maxLen, char *name)
 <!-- npu="IPV350" id2765 -->
 - IPV350：不支持
 <!-- end id2765 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id20 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id20 -->
 
 ### 功能说明
 
@@ -1175,7 +1175,7 @@ aclError aclmdlRIGetId(aclmdlRI modelRI, uint32_t *modelRIId)
 <!-- npu="IPV350" id875 -->
 - IPV350：不支持
 <!-- end id875 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id21 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id21 -->
 
 ### 功能说明
 
@@ -1227,7 +1227,7 @@ aclError aclrtCheckArchCompatibility(const char *socVersion, int32_t *canCompati
 <!-- npu="IPV350" id2933 -->
 - IPV350：不支持
 <!-- end id2933 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id22 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id22 -->
 
 ### 功能说明
 
@@ -1281,7 +1281,7 @@ aclError aclmdlRIAbort(aclmdlRI modelRI)
 <!-- npu="IPV350" id2030 -->
 - IPV350：不支持
 <!-- end id2030 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id23 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id23 -->
 
 ### 功能说明
 
@@ -1340,7 +1340,7 @@ aclError aclmdlRIGetStreams(aclmdlRI modelRI, aclrtStream *streams, uint32_t *nu
 <!-- npu="IPV350" id2604 -->
 - IPV350：不支持
 <!-- end id2604 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id24 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id24 -->
 
 ### 功能说明
 
@@ -1400,7 +1400,7 @@ aclError aclmdlRIGetTasksByStream(aclrtStream stream, aclmdlRITask *tasks, uint3
 <!-- npu="IPV350" id1722 -->
 - IPV350：不支持
 <!-- end id1722 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id25 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id25 -->
 
 ### 功能说明
 
@@ -1462,7 +1462,7 @@ aclError aclmdlRITaskGetSeqId(aclmdlRITask task, uint32_t *id)
 <!-- npu="IPV350" id777 -->
 - IPV350：不支持
 <!-- end id777 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id26 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id26 -->
 
 ### 功能说明
 
@@ -1522,7 +1522,7 @@ aclError aclmdlRITaskGetParams(aclmdlRITask task, aclmdlRITaskParams* params)
 <!-- npu="IPV350" id2366 -->
 - IPV350：不支持
 <!-- end id2366 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id27 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id27 -->
 
 ### 功能说明
 
@@ -1582,7 +1582,7 @@ aclError aclmdlRITaskSetParams(aclmdlRITask task, aclmdlRITaskParams* params)
 <!-- npu="IPV350" id154 -->
 - IPV350：不支持
 <!-- end id154 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id28 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id28 -->
 
 ### 功能说明
 
@@ -1643,7 +1643,7 @@ aclError aclmdlRIKernelTaskGetAttribute(aclmdlRITask task, aclrtLaunchKernelAttr
 <!-- npu="IPV350" id1022 -->
 - IPV350：不支持
 <!-- end id1022 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id29 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id29 -->
 
 ### 功能说明
 
@@ -1704,7 +1704,7 @@ aclError aclmdlRITaskDisable(aclmdlRITask task)
 <!-- npu="IPV350" id511 -->
 - IPV350：不支持
 <!-- end id511 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id30 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id30 -->
 
 ### 功能说明
 
@@ -1763,7 +1763,7 @@ aclError aclmdlRIUpdate(aclmdlRI modelRI)
 <!-- npu="IPV350" id1190 -->
 - IPV350：不支持
 <!-- end id1190 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id31 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id31 -->
 
 ### 功能说明
 
@@ -1820,7 +1820,7 @@ aclError aclmdlRITaskGetType(aclmdlRITask task, aclmdlRITaskType *type)
 <!-- npu="IPV350" id1225 -->
 - IPV350：不支持
 <!-- end id1225 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id32 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id32 -->
 
 ### 功能说明
 
@@ -1876,7 +1876,7 @@ aclError aclmdlRIDestroyRegisterCallback(aclmdlRI modelRI, aclrtCallback func, v
 <!-- npu="IPV350" id1876 -->
 - IPV350：不支持
 <!-- end id1876 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id33 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id33 -->
 
 ### 功能说明
 
@@ -1931,7 +1931,7 @@ aclError aclmdlRIDestroyUnregisterCallback(aclmdlRI modelRI, aclrtCallback func)
 <!-- npu="IPV350" id2884 -->
 - IPV350：不支持
 <!-- end id2884 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id34 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id34 -->
 
 ### 功能说明
 
@@ -1985,7 +1985,7 @@ aclError aclmdlRICondHandleCreate(aclmdlRI modelRI, uint32_t defaultLaunchValue,
 <!-- npu="IPV350" id140 -->
 - IPV350：不支持
 <!-- end id140 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id35 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id35 -->
 
 ### 功能说明
 
@@ -2043,7 +2043,7 @@ aclError aclmdlRICondHandleGetCondPtr(aclmdlRICondHandle handle, uint64_t **ptr)
 <!-- npu="IPV350" id742 -->
 - IPV350：不支持
 <!-- end id742 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id36 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id36 -->
 
 ### 功能说明
 
@@ -2099,7 +2099,7 @@ aclError aclmdlRIAddCondTask(aclmdlRICondTaskParams params, aclrtStream stream, 
 <!-- npu="IPV350" id2695 -->
 - IPV350：不支持
 <!-- end id2695 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id37 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id37 -->
 
 ### 功能说明
 
@@ -2156,7 +2156,7 @@ aclError aclmdlRICaptureToModelRIBegin(aclrtStream stream, aclmdlRI modelRI, acl
 <!-- npu="IPV350" id3318 -->
 - IPV350：不支持
 <!-- end id3318 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance__management_res.md#id38 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id38 -->
 
 ### 功能说明
 

@@ -104,7 +104,7 @@ aclError aclrtSetLabel(aclrtLabel label, aclrtStream stream)
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
 | label | 输入 | 标签。类型定义请参见[aclrtLabel](25-05_Typedefs.md#aclrtLabel)。<br>通过aclrtCreateLabel接口创建的标签作为此处的输入。 |
-| stream | 输入 | 需设置标签的Stream。类型定义请参见[aclrtStream](25-05_Typedefs.md#aclrtStream)。<br>此处只支持通过[aclmdlRIBindStream](15_model_running_instance__management.md#aclmdlRIBindStream)接口绑定过模型运行实例的Stream。 |
+| stream | 输入 | 需设置标签的Stream。类型定义请参见[aclrtStream](25-05_Typedefs.md#aclrtStream)。<br>此处只支持通过[aclmdlRIBindStream](15_model_running_instance_management.md#aclmdlRIBindStream)接口绑定过模型运行实例的Stream。 |
 
 ### 返回值说明
 

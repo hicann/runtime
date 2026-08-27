@@ -900,7 +900,7 @@ aclError aclrtTaskUpdateAsync(aclrtStream taskStream, uint32_t taskId, aclrtTask
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| taskStream | 输入 | 目标任务所在的Stream。类型定义请参见[aclrtStream](25-05_Typedefs.md#aclrtStream)。<br>此处只支持与模型绑定过的Stream，绑定模型与Stream需调用[aclmdlRIBindStream](15_model_running_instance__management.md#aclmdlRIBindStream)接口。 |
+| taskStream | 输入 | 目标任务所在的Stream。类型定义请参见[aclrtStream](25-05_Typedefs.md#aclrtStream)。<br>此处只支持与模型绑定过的Stream，绑定模型与Stream需调用[aclmdlRIBindStream](15_model_running_instance_management.md#aclmdlRIBindStream)接口。 |
 | taskId | 输入 | 目标任务ID。<br>可调用[aclrtGetThreadLastTaskId](#aclrtGetThreadLastTaskId)接口获取任务ID。 |
 | info | 输入 | 配置信息。类型定义请参见[aclrtTaskUpdateInfo](25-04_Structs.md#aclrtTaskUpdateInfo)。 |
 | execStream | 输入 | 执行刷新任务的Stream。类型定义请参见[aclrtStream](25-05_Typedefs.md#aclrtStream)。 |
