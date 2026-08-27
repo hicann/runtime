@@ -759,36 +759,3 @@ TEST_F(CloudV2ApiKernelTest, TestApiImplBinaryGetGlobal_BaseAddrNull)
     rtError_t ret = apiImpl.BinaryGetGlobal(static_cast<const Program*>(&prog), "test_global_var", &dptr, &size);
     EXPECT_EQ(ret, 0x7090001);
 }
-
-TEST_F(CloudV2ApiKernelTest, TestRtBinaryEnumerateFunctionsSuccess)
-{
-    ElfProgram program;
-    Program* programBase = &program;
-    // Kernel 所有权归属 Program，析构时由 Program 统一释放，必须堆分配
-    Kernel* kernelA = new Kernel("kernel_a", 1, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
-    Kernel* kernelB = new Kernel("kernel_b", 2, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
-    program.kernelNameMap_["kernel_a"] = kernelA;
-    program.kernelNameMap_["kernel_b"] = kernelB;
-
-    rtBinHandle binHandle = rt_ut::InitAndExportHandle<rtBinHandle>(programBase);
-    rtFuncHandle funcHandles[2] = {nullptr, nullptr};
-    rtError_t error = rtBinaryEnumerateFunctions(binHandle, funcHandles, 2U);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    EXPECT_EQ(rt_ut::UnwrapOrNull<Kernel>(funcHandles[0]), kernelA);
-    EXPECT_EQ(rt_ut::UnwrapOrNull<Kernel>(funcHandles[1]), kernelB);
-}
-
-TEST_F(CloudV2ApiKernelTest, TestRtBinaryEnumerateFunctionsCopyToDeviceFailed)
-{
-    ElfProgram program;
-    Program* programBase = &program;
-    Kernel* kernel = new Kernel("kernel_a", 1, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
-    program.kernelNameMap_["kernel_a"] = kernel;
-    MOCKER_CPP(&Program::CopySoAndNameToCurrentDevice).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
-
-    rtBinHandle binHandle = rt_ut::InitAndExportHandle<rtBinHandle>(programBase);
-    rtFuncHandle funcHandles[2] = {nullptr, nullptr};
-    rtError_t error = rtBinaryEnumerateFunctions(binHandle, funcHandles, 2U);
-    // C 接口层通过 ERROR_RETURN_WITH_EXT_ERRCODE 将内部错误码映射为外层错误码
-    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
-}

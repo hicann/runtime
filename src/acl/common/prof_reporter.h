@@ -338,7 +338,6 @@ enum AclProfType {
     AclrtExceptionInfoCallbackRegister,
     AclrtExceptionInfoCallbackUnregister,
     AclrtHostGetDevicePointerAddrRange,
-    AclrtBinaryEnumerateFunctions,
     // this is the end, can not add after AclRtProfTypeEnd
     AclRtProfTypeEnd
 };
