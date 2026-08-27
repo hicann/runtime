@@ -485,10 +485,6 @@ aclError aclrtSetOpExecuteTimeOutV2(uint64_t timeout,  uint64_t *actualTimeout)
 对于Ascend 950PR/Ascend 950DT、Atlas A3 训练系列产品/Atlas A3 推理系列产品、Atlas A2 训练系列产品/Atlas A2 推理系列产品，当调用aclrtGetOpTimeoutInterval接口获取的时间间隔小于100000微秒，并且将timeout参数值设置为0时，表示AI Core算子将永不超时。此时，actualTimeout参数输出的值为uint64\_t的最大值。
 <!-- end id22 -->
 
-<!-- npu="310b" id32 -->
-对于Atlas 200I/500 A2 推理产品，调用本接口可以设置AI Core算子、AI CPU算子执行的超时时间。
-<!-- end id32 -->
-
 <!-- npu="910,310p" id23 -->
 对于Atlas 推理系列产品、Atlas 训练系列产品，调用本接口只能设置AI Core算子执行的超时时间。
 <!-- end id23 -->
