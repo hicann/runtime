@@ -251,6 +251,7 @@ target_include_directories(runtime_platform_arch5162 PRIVATE
 target_compile_options(runtime_platform_arch5162 PRIVATE
         $<$<CONFIG:Debug>:-O0>
         $<$<NOT:$<CONFIG:Debug>>:-O3>
+        -ffunction-sections
         -fvisibility=hidden
         -fno-common
         -fno-strict-aliasing

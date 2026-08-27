@@ -468,6 +468,7 @@ macro(add_runtime_library target_name)
 
     target_compile_options(${target_name} PRIVATE
         -O2
+        -ffunction-sections
         -fvisibility=hidden
         -fno-common
         -fno-strict-aliasing
@@ -480,6 +481,7 @@ macro(add_runtime_library target_name)
 
     target_link_options(${target_name} PRIVATE
         -Wl,--no-undefined
+        -Wl,--gc-sections
     )
 
     target_include_directories(${target_name} PRIVATE
