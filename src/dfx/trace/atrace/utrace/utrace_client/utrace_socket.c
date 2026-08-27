@@ -9,23 +9,36 @@
  */
 
 #include "utrace_socket.h"
+#include "adiag_lock.h"
 #include "adiag_utils.h"
 #include "adiag_print.h"
+#include "trace_recorder.h"
 #include "trace_system_api.h"
 
 STATIC int32_t g_clientSockFd = -1;
+STATIC AdiagLock g_clientSockLock = TRACE_MUTEX_INITIALIZER;
 
-void UtraceSetSocketFd(int32_t fd) { g_clientSockFd = fd; }
+void UtraceSetSocketFd(int32_t fd)
+{
+    (void)AdiagLockGet(&g_clientSockLock);
+    g_clientSockFd = fd;
+    (void)AdiagLockRelease(&g_clientSockLock);
+}
 
-int32_t UtraceGetSocketFd(void) { return g_clientSockFd; }
+int32_t UtraceGetSocketFd(void)
+{
+    (void)AdiagLockGet(&g_clientSockLock);
+    int32_t fd = g_clientSockFd;
+    (void)AdiagLockRelease(&g_clientSockLock);
+    return fd;
+}
 
 bool UtraceIsSocketFdValid(void)
 {
-    if (g_clientSockFd < 0) {
-        return false;
-    } else {
-        return true;
-    }
+    (void)AdiagLockGet(&g_clientSockLock);
+    bool isValid = (g_clientSockFd >= 0);
+    (void)AdiagLockRelease(&g_clientSockLock);
+    return isValid;
 }
 
 STATIC TraStatus TraceGetSocketPathByVfid(uint32_t vfid, char* socketPath, uint32_t pathLen)
@@ -120,8 +133,42 @@ int32_t UtraceCreateSocket(uint32_t devId)
 
 void UtraceCloseSocket(void)
 {
-    if (UtraceIsSocketFdValid()) {
-        TraceCloseSocket(g_clientSockFd);
-        UtraceSetSocketFd(-1);
+    int32_t fd = -1;
+    (void)AdiagLockGet(&g_clientSockLock);
+    if (g_clientSockFd >= 0) {
+        fd = g_clientSockFd;
+        g_clientSockFd = -1;
     }
+    (void)AdiagLockRelease(&g_clientSockLock);
+    if (fd >= 0) {
+        (void)TraceCloseSocket(fd);
+    }
+}
+
+TraStatus UtraceWriteSocket(uint32_t devId, const char* buffer, uint32_t len)
+{
+    if ((buffer == NULL) || (len == 0U)) {
+        return TRACE_FAILURE;
+    }
+
+    int32_t fd = -1;
+    (void)AdiagLockGet(&g_clientSockLock);
+    if (g_clientSockFd < 0) {
+        fd = UtraceCreateSocket(devId);
+        if (fd == TRACE_FAILURE) {
+            (void)AdiagLockRelease(&g_clientSockLock);
+            return TRACE_FAILURE;
+        }
+        g_clientSockFd = fd;
+    }
+    fd = g_clientSockFd;
+    TraStatus ret = TraceRecorderWrite(fd, buffer, len);
+    if (ret != TRACE_SUCCESS) {
+        g_clientSockFd = -1;
+    }
+    (void)AdiagLockRelease(&g_clientSockLock);
+    if ((ret != TRACE_SUCCESS) && (fd >= 0)) {
+        (void)TraceCloseSocket(fd);
+    }
+    return ret;
 }

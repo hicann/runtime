@@ -21,6 +21,7 @@ void UtraceSetSocketFd(int32_t fd);
 int32_t UtraceGetSocketFd(void);
 int32_t UtraceCreateSocket(uint32_t devId);
 bool UtraceIsSocketFdValid(void);
+TraStatus UtraceWriteSocket(uint32_t devId, const char* buffer, uint32_t len);
 void UtraceCloseSocket(void);
 
 #ifdef __cplusplus

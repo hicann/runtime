@@ -7,6 +7,8 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include <future>
+#include <unistd.h>
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
 #include "atrace_types.h"
@@ -17,13 +19,13 @@
 #include "utrace_api.h"
 #include "trace_session_mgr.h"
 #include "trace_server_socket.h"
-#include "utrace_socket.h"
 #include "adx_component_api_c.h"
 #include "ascend_hal_stub.h"
 
 extern "C" {
 void TraceInit(void);
 void TraceExit(void);
+TraStatus TraceRecorderWrite(int32_t fd, const char* msg, uint32_t len);
 }
 
 class TraceServerUtest : public testing::Test {
@@ -39,6 +41,7 @@ protected:
     void Clear() { system("rm -rf " LLT_TEST_DIR "/*"); }
     virtual void TearDown()
     {
+        UtraceSetSocketFd(-1);
         system("echo [DBG][TEST][`date +%Y-%m-%d-%H-%M-%S`] End test case");
         GlobalMockObject::verify();
         system("rm -rf " LLT_TEST_DIR);
@@ -47,8 +50,35 @@ protected:
     static void SetUpTestCase() {}
 
     static void TearDownTestCase() {}
+
+    static void WaitSocketFileRemoved(const char* socketPath)
+    {
+        constexpr int maxRetry = 100;
+        constexpr useconds_t waitIntervalUs = 10000;
+        for (int i = 0; i < maxRetry; ++i) {
+            if (access(socketPath, F_OK) != 0) {
+                return;
+            }
+            usleep(waitIntervalUs);
+        }
+    }
+
+    static void WakeSocketThreadAndWait(const char* socketPath, uint32_t devId)
+    {
+        if (access(socketPath, F_OK) == 0) {
+            int32_t sockFd = UtraceCreateSocket(devId);
+            if (sockFd != TRACE_FAILURE) {
+                char wakeMsg[] = "wake";
+                (void)TraceRecorderWrite(sockFd, wakeMsg, (uint32_t)sizeof(wakeMsg));
+                (void)TraceCloseSocket(sockFd);
+            }
+        }
+        WaitSocketFileRemoved(socketPath);
+        EXPECT_NE(0, access(socketPath, F_OK));
+    }
 };
 extern "C" int32_t TraceServerGetDevId(void);
+
 TEST_F(TraceServerUtest, TraceServerInitPf)
 {
     TraceServerInit(-1);
@@ -201,6 +231,93 @@ TEST_F(TraceServerUtest, UtraceSocket)
     EXPECT_EQ(true, UtraceIsSocketFdValid());
     UtraceCloseSocket();
     TraceServerExit();
+}
+
+TEST_F(TraceServerUtest, UtraceWriteSocketUsesCurrentFd)
+{
+    char buffer[] = "abc";
+    UtraceSetSocketFd(10);
+    MOCKER(TraceRecorderWrite)
+        .expects(once())
+        .with(eq(10), any(), eq((uint32_t)sizeof(buffer)))
+        .will(returnValue(TRACE_SUCCESS));
+    EXPECT_EQ(TRACE_SUCCESS, UtraceWriteSocket(0, buffer, (uint32_t)sizeof(buffer)));
+    UtraceSetSocketFd(-1);
+}
+
+TEST_F(TraceServerUtest, UtraceWriteSocketCreateWhenFdInvalid)
+{
+    TraceServerInit(-1);
+    EXPECT_EQ(TRACE_SUCCESS, TraceServerProcess());
+    UtraceSetSocketFd(-1);
+
+    char buffer[] = "abc";
+    EXPECT_EQ(TRACE_SUCCESS, UtraceWriteSocket(0, buffer, (uint32_t)sizeof(buffer)));
+    EXPECT_EQ(true, UtraceIsSocketFdValid());
+
+    UtraceCloseSocket();
+    TraceServerExit();
+    WakeSocketThreadAndWait(SOCKET_FILE_DIR SOCKET_FILE, 0U);
+}
+
+TEST_F(TraceServerUtest, UtraceWriteSocketCreateFailed)
+{
+    char buffer[] = "abc";
+    UtraceSetSocketFd(-1);
+    MOCKER(UtraceCreateSocket).expects(once()).with(eq(0U)).will(returnValue(TRACE_FAILURE));
+    MOCKER(TraceRecorderWrite).expects(never());
+
+    EXPECT_EQ(TRACE_FAILURE, UtraceWriteSocket(0, buffer, (uint32_t)sizeof(buffer)));
+    EXPECT_EQ(false, UtraceIsSocketFdValid());
+}
+
+TEST_F(TraceServerUtest, UtraceWriteSocketInvalidInput)
+{
+    char buffer[] = "abc";
+    UtraceSetSocketFd(-1);
+    MOCKER(UtraceCreateSocket).expects(never());
+    MOCKER(TraceRecorderWrite).expects(never());
+
+    EXPECT_EQ(TRACE_FAILURE, UtraceWriteSocket(0, NULL, (uint32_t)sizeof(buffer)));
+    EXPECT_EQ(TRACE_FAILURE, UtraceWriteSocket(0, buffer, 0));
+    EXPECT_EQ(false, UtraceIsSocketFdValid());
+}
+
+TEST_F(TraceServerUtest, UtraceWriteSocketResetFdOnWriteFailed)
+{
+    char buffer[] = "abc";
+    UtraceSetSocketFd(10);
+    MOCKER(TraceRecorderWrite)
+        .expects(once())
+        .with(eq(10), any(), eq((uint32_t)sizeof(buffer)))
+        .will(returnValue(TRACE_FAILURE));
+    MOCKER(mmCloseSocket).expects(once()).with(eq((mmSockHandle)10)).will(returnValue(0));
+
+    EXPECT_EQ(TRACE_FAILURE, UtraceWriteSocket(0, buffer, (uint32_t)sizeof(buffer)));
+    EXPECT_EQ(false, UtraceIsSocketFdValid());
+}
+
+TEST_F(TraceServerUtest, UtraceWriteSocketConcurrentWrites)
+{
+    TraceServerInit(-1);
+    EXPECT_EQ(TRACE_SUCCESS, TraceServerProcess());
+    UtraceSetSocketFd(-1);
+
+    const char buffer[] = "abc";
+    const char* msg = buffer;
+    const uint32_t len = (uint32_t)sizeof(buffer);
+    constexpr int threadNum = 4;
+    std::future<TraStatus> futures[threadNum];
+    for (int i = 0; i < threadNum; ++i) {
+        futures[i] = std::async(std::launch::async, [msg, len]() { return UtraceWriteSocket(0, msg, len); });
+    }
+    for (int i = 0; i < threadNum; ++i) {
+        EXPECT_EQ(TRACE_SUCCESS, futures[i].get());
+    }
+
+    UtraceCloseSocket();
+    TraceServerExit();
+    WakeSocketThreadAndWait(SOCKET_FILE_DIR SOCKET_FILE, 0U);
 }
 
 TEST_F(TraceServerUtest, UtraceSocketConnectFailed)

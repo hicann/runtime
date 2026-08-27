@@ -113,17 +113,8 @@ void TracerScheduleSaveObjData(struct RbLog* newRb, const char* timeStr, const c
     }
     buffer->dataLength = pos;
 
-    if (!UtraceIsSocketFdValid()) {
-        int32_t fd = UtraceCreateSocket(TraceAttrGetGlobalDevId());
-        if (fd != TRACE_FAILURE) {
-            UtraceSetSocketFd(fd);
-        } else {
-            ADIAG_SAFE_FREE(buffer);
-            ADIAG_ERR("create socket failed, objName = %s, device id = %d.", objName, TraceAttrGetGlobalDevId());
-            return;
-        }
-    }
-    if (TraceRecorderWrite(UtraceGetSocketFd(), (char*)buffer, (uint32_t)sizeof(UtraceMsg) + pos) != TRACE_SUCCESS) {
+    if (UtraceWriteSocket(TraceAttrGetGlobalDevId(), (char*)buffer, (uint32_t)sizeof(UtraceMsg) + pos) !=
+        TRACE_SUCCESS) {
         ADIAG_SAFE_FREE(buffer);
         ADIAG_ERR(
             "write trace data to socket failed, objName = %s. strerror %s.", objName, strerror(AdiagGetErrorCode()));
@@ -315,17 +306,8 @@ void TracerScheduleSaveObjBinData(struct RbLog* newRb, const char* timeStr, cons
     }
     buffer->dataLength = pos;
 
-    if (!UtraceIsSocketFdValid()) {
-        int32_t fd = UtraceCreateSocket(TraceAttrGetGlobalDevId());
-        if (fd != TRACE_FAILURE) {
-            UtraceSetSocketFd(fd);
-        } else {
-            ADIAG_SAFE_FREE(buffer);
-            ADIAG_ERR("create socket failed, objName = %s, device id = %d.", objName, TraceAttrGetGlobalDevId());
-            return;
-        }
-    }
-    if (TraceRecorderWrite(UtraceGetSocketFd(), (char*)buffer, (uint32_t)sizeof(UtraceMsg) + pos) != TRACE_SUCCESS) {
+    if (UtraceWriteSocket(TraceAttrGetGlobalDevId(), (char*)buffer, (uint32_t)sizeof(UtraceMsg) + pos) !=
+        TRACE_SUCCESS) {
         ADIAG_SAFE_FREE(buffer);
         ADIAG_ERR("write trace data to socket failed, objName = %s.", objName);
         return;
