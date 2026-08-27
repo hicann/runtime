@@ -144,7 +144,7 @@ private:
 
     std::atomic<bool> recycleThreadAlive_{false};
     std::atomic<int32_t> inFlightWakeUps_{0};
-    volatile bool monitorThreadRunFlag_ = false;
+    std::atomic<bool> monitorThreadRunFlag_ = false;
 
     mmSem_t recycleThreadSem_;
 
