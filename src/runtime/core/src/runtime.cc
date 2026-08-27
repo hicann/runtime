@@ -4615,7 +4615,7 @@ rtError_t Runtime::SetTimeoutConfig(
     } else {
         taskTimeout = opExcTaskTimeout / RT_TIMEOUT_S_TO_US;  // s
     }
-    /* avoid deadlock when multi thread call the fuction frequently */
+    /* avoid deadlock when multi thread call the function frequently */
     static uint32_t cnt = 0U;
     if ((cnt % 100U) == 0U) {
         (void)mmSleep(1U);

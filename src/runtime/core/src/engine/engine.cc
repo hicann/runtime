@@ -237,7 +237,7 @@ bool Engine::TaskRecycleProcess(TaskInfo* const recycleTsk, const uint32_t devId
     if (!stm->IsCtrlStream()) {
         pendingNum_.Sub(1U);
     }
-    // don't recycle persisten task now, delete it after stream destroy
+    // don't recycle persistent task now, delete it after stream destroy
     if (recycleTsk->bindFlag == 0U) {
         (void)device_->GetTaskFactory()->Recycle(recycleTsk);
     }

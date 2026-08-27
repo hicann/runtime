@@ -353,7 +353,7 @@ void AsyncHwtsEngine::ProcessTaskReport(const rtTsReport_t& taskReport)
             "task_type=%d (%s), bind=%d.",
             streamId, sqId, taskId, sqHead, static_cast<int32_t>(reportTask->type), reportTask->typeName,
             static_cast<int32_t>(reportTask->bindFlag));
-        /* Real CQE of Stars sink stream does't need to be processed again, which was processed in simulate CQE */
+        /* Real CQE of Stars sink stream doesn't need to be processed again, which was processed in simulate CQE */
         if (reportTask->bindFlag && (taskReport.msgType == tsReportType_t::TS_REPORT_MSG_TYPE_STARS_CQE)) {
             reportCount_--;
             return;

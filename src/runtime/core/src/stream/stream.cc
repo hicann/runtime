@@ -3400,7 +3400,7 @@ rtError_t Stream::PrintStmDfxAndCheckDevice(
     return RT_ERROR_NONE;
 }
 
-// taskPersistentTail_/taskPosTail_ save the postion of rtsq tail
+// taskPersistentTail_/taskPosTail_ save the position of rtsq tail
 rtError_t Stream::StarsAddTaskToStream(TaskInfo* const tsk, const uint32_t sendSqeNum)
 {
     NULL_PTR_RETURN_MSG(tsk, RT_ERROR_TASK_NULL);
@@ -3465,7 +3465,7 @@ rtError_t Stream::StarsAddTaskToStream(TaskInfo* const tsk, const uint32_t sendS
     return RT_ERROR_NONE;
 }
 
-// taskPersistentTail_/taskPosTail_ save the postion of rtsq tail
+// taskPersistentTail_/taskPosTail_ save the position of rtsq tail
 rtError_t Stream::StarsAddTaskToStreamForModelUpdate(TaskInfo* const tsk, const uint32_t sendSqeNum)
 {
     const uint32_t posTail = taskPersistentTail_.Value();
@@ -3884,7 +3884,7 @@ rtError_t Stream::ModelWaitForTask(const uint32_t taskId, const bool isNeedWaitS
             return RT_ERROR_NONE;
         }
 
-        // eg: prePos is loadCompleteTask's postion of occupy, sqTail is the postion of rtsq's tail
+        // eg: prePos is loadCompleteTask's position of occupy, sqTail is the position of rtsq's tail
         NULL_PTR_RETURN_MSG(preTask, RT_ERROR_TASK_NULL);
         uint32_t prePos = preTask->pos;
         if (TASK_ID_GEQ(sqTail, prePos)) {
@@ -4163,7 +4163,7 @@ rtError_t Stream::GetLastTaskIdFromRtsq(uint32_t& lastTaskId)
     COND_RETURN_ERROR_MSG_INNER(
         error != RT_ERROR_NONE, error, "Query sq head failed, retCode=%#x", static_cast<uint32_t>(error));
 
-    // get taskId by postion, sqHead is executing Currently, pos has been executed.
+    // get taskId by position, sqHead is executing Currently, pos has been executed.
     const rtChipType_t chipType = Runtime::Instance()->GetChipType();
     uint16_t pos = 0U;
     if (IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_STREAM_EXECUTED_POS_INIT_DOT_STATIC)) {

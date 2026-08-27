@@ -162,7 +162,7 @@ static rtError_t SyncTaskProcCqReport(
         "Task Wait: error=%u.", error);
 
     IsSyncTaskFinish(stm, taskResPos);
-    // proccess logic cq report
+    // process logic cq report
     isFinished = (stm->isForceRecycle_ && (error == RT_ERROR_REPORT_TIMEOUT)) ? true : isFinished;
     bool hasCqeReportErr = false;
     (void)ProcReport(dev, streamId, taskResPos, cnt, &logicReport, isFinished, hasCqeReportErr);

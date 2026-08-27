@@ -686,11 +686,11 @@ void ConstructSqeForFftsPlusTask(TaskInfo* taskInfo, rtStarsSqe_t* const command
 {
     FftsPlusTaskInfo* fftsPlusTask = &taskInfo->u.fftsPlusTask;
     if ((fftsPlusTask->kernelFlag & RT_KERNEL_FFTSPLUS_DYNAMIC_SHAPE_DUMPFLAG) != 0U) {
-        // fisrt is load dump info sqe
+        // first is load dump info sqe
         ConstructFftsPlusDumpInfoSqe(taskInfo, command, fftsPlusTask->loadDumpInfo, fftsPlusTask->loadDumpInfoLen, 0U);
 
         UpdateSqeSubTypeForMix(taskInfo);
-        // sencond is fftsplus sqe, offset is 1
+        // second is fftsplus sqe, offset is 1
         ConstructFftsPlusSqe(taskInfo, command + 1);
         // task_id must be different for different stream in hccl(ffts+).
         SqeTaskUpdateForFftsPlus(taskInfo, command + 1);

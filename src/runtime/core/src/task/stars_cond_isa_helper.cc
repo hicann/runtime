@@ -33,7 +33,7 @@ void ConvertConditionToBranchFunc3(
 {
     /*
      * stars cond op is not same as runtime.
-     * attention-1: when condition is true, it jump to end adn do nothing, but runtime is need jump to true stream.
+     * attention-1: when condition is true, it jump to end and do nothing, but runtime is need jump to true stream.
      * attention-2: some op is not exits.
      */
     const rtCondition_t notCondition = GetNotCondition(condition);
@@ -366,10 +366,10 @@ void ConstrucModelExeCheckSqDisable(
     ConstructLHWI(r4, funcCallPara.sqVirtualAddr, checkSqDisable.lhwi1);
     ConstructLLWI(r4, funcCallPara.sqVirtualAddr, checkSqDisable.llwi1);
 
-    // ADD : get "sq virtual addr" addr:  virtual addr arry head + sqid * 8
+    // ADD : get "sq virtual addr" addr:  virtual addr array head + sqid * 8
     ConstructOpOp(r4, r5, r4, RT_STARS_COND_ISA_OP_FUNC3_ADD, RT_STARS_COND_ISA_OP_FUNC7_ADD, checkSqDisable.add1);
 
-    // LD_R: read sq simple virutual addr from R4 to R4
+    // LD_R: read sq simple virtual addr from R4 to R4
     ConstructLoad(r4, 0U, r4, RT_STARS_COND_ISA_LOAD_FUNC3_LDR, checkSqDisable.ldr1);
 
     // LHWI/LLWI: load goto instr num as a immediate to R5
@@ -812,12 +812,12 @@ void ConstructSwitchGetSqVirtualAddrFcI(
     ConstructLHWI(sqVirtualAddrReg, deviceMemForVirAddr, getVirAddr.lhwi1);
     ConstructLLWI(sqVirtualAddrReg, deviceMemForVirAddr, getVirAddr.llwi1);
 
-    // ADD : get "sq virtual addr" addr:  virtual addr arry head + sqid * 8
+    // ADD : get "sq virtual addr" addr:  virtual addr array head + sqid * 8
     ConstructOpOp(
         sqVirtualAddrReg, r4, sqVirtualAddrReg, RT_STARS_COND_ISA_OP_FUNC3_ADD, RT_STARS_COND_ISA_OP_FUNC7_ADD,
         getVirAddr.add1);
 
-    // LD_R: read sq simple virutual addr from R5 to R5
+    // LD_R: read sq simple virtual addr from R5 to R5
     ConstructLoad(sqVirtualAddrReg, 0U, sqVirtualAddrReg, RT_STARS_COND_ISA_LOAD_FUNC3_LDR, getVirAddr.ldr1);
 
     // LHWI/LLWI: load goto instr num as a immediate to R4
@@ -911,7 +911,7 @@ void ConstructLabelSwitchByIndexFc(
     offset = offset / sizeof(uint32_t);
     ConstructSetJumpPcFc(r3, offset, fc.jumpPc1);
     ConstructBranch(r5, RT_STARS_COND_ISA_REGISTER_R0, RT_STARS_COND_ISA_BRANCH_FUNC3_BEQ, offset, fc.beq1);
-    /* Accroding to sqid, get virtual addr to R5 */
+    /* According to sqid, get virtual addr to R5 */
     ConstructSwitchGetSqVirtualAddrFcI(r2, r5, fcPara.sqVirtualAddr, fc);
 
     /* if not same sqid, get enable flag. r4: enable flag, r5: virtual addr base */

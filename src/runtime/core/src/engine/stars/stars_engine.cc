@@ -1303,7 +1303,7 @@ rtError_t StarsEngine::SyncTask(
             "Failed to wait task, retCode=%u.", error);
 
         IsSyncTaskFinish(stm, taskId);
-        // proccess logic cq report
+        // process logic cq report
         isFinished = (stm->isForceRecycle_ && (error == RT_ERROR_REPORT_TIMEOUT)) ? true : false;
         ProcReport(taskId, isStreamSync, cnt, logicReport, isFinished, logicCqId);
         COND_RETURN_WARN(
