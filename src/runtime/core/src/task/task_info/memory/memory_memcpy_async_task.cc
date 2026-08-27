@@ -315,6 +315,8 @@ rtError_t MemcpyAsyncTaskCommonInit(TaskInfo* const taskInfo)
     memcpyAsyncTaskInfo->isSqeUpdateH2D = false;
     memcpyAsyncTaskInfo->isSqeUpdateD2H = false;
     memcpyAsyncTaskInfo->isConcernedRecycle = false;
+    memcpyAsyncTaskInfo->ubDma.wqePtr = nullptr;
+    memcpyAsyncTaskInfo->ubDma.wqeLen = 0U;
 
     memcpyAsyncTaskInfo->dmaAddr.phyAddr.flag = 0U;
     memcpyAsyncTaskInfo->dmaAddr.phyAddr.len = 0U;

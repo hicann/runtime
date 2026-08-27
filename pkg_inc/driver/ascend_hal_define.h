@@ -1305,12 +1305,13 @@ struct halAsyncDmaInput2DPara {
     unsigned int rsv[TRS_ASYNC_CPY_2D_IN_RSV_LEN];
 };
 
-#define TRS_ASYNC_CPY_2D_DESTROY_RSV_LEN 8
+#define TRS_ASYNC_CPY_2D_DESTROY_RSV_LEN 6
 struct halAsyncDmaDestroy2DPara {
     drvSqCqType_t type;
     unsigned int tsId;
     unsigned int sqId;
     unsigned int ci; /* current jetty ci */
+    uint8_t* wqe;
     unsigned int rsv[TRS_ASYNC_CPY_2D_DESTROY_RSV_LEN];
 };
 

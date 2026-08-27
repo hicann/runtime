@@ -748,6 +748,23 @@ rtError_t ApiImplDavid::SetMemcpyDesc(
     return RT_ERROR_NONE;
 }
 
+static rtError_t GetUbMemcpyFlag(
+    void* const dst, const void* const src, const rtMemcpyKind_t kind, Stream* const stm, bool& isUbMemcpy)
+{
+    if (kind != RT_MEMCPY_DEVICE_TO_DEVICE) {
+        isUbMemcpy = Runtime::Instance()->GetConnectUbFlag();
+        return RT_ERROR_NONE;
+    }
+
+    // D2D用地址的attr判断互联类型
+    uint8_t transType = 0U;
+    const rtError_t error =
+        stm->Device_()->Driver_()->GetTransWayByAddr(RtPtrToUnConstPtr<void*>(src), dst, &transType);
+    COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
+    isUbMemcpy = (transType == RT_MEMCPY_CHANNEL_TYPE_UB);
+    return RT_ERROR_NONE;
+}
+
 rtError_t ApiImplDavid::MemCopy2DAsync(
     void* const dst, const uint64_t dstPitch, const void* const src, const uint64_t srcPitch, const uint64_t width,
     const uint64_t height, Stream* const stm, const rtMemcpyKind_t kind, const rtMemcpyKind newKind)
@@ -776,26 +793,43 @@ rtError_t ApiImplDavid::MemCopy2DAsync(
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
         curStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Asynchronous 2D memory copy");
 
+    bool isUbMemcpy = false;
+    error = GetUbMemcpyFlag(dst, src, kind, curStm, isUbMemcpy);
+    COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
+    const bool needHandlePitch = (kind == RT_MEMCPY_DEVICE_TO_DEVICE) && (!isUbMemcpy);
+
     while (remainSize > 0UL) {
-        if (kind == RT_MEMCPY_DEVICE_TO_DEVICE) {
+        if (needHandlePitch) {
+            // 非UB互联的D2D由Runtime按pitch推进源、目的地址偏移
             error = Memcpy2DAsync(
                 (static_cast<char_t*>(dst)) + dstoffset, dstPitch, (static_cast<const char_t*>(src)) + srcoffset,
                 srcPitch, width, height, kind, &realSize, curStm, fixedSize);
             dstoffset += dstPitch;
             srcoffset += srcPitch;
         } else {
+            // UB互联的H2D/D2H/D2D、非UB的H2D/D2H，由Driver根据pitch和fixedSize处理偏移
             error = Memcpy2DAsync(dst, dstPitch, src, srcPitch, width, height, kind, &realSize, curStm, fixedSize);
         }
         COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error);
-        if (Runtime::Instance()->GetConnectUbFlag() && (kind != RT_MEMCPY_DEVICE_TO_DEVICE)) {
+        if (isUbMemcpy) {
+            // UB互联的H2D/D2H/D2D场景，realSize表示从二维拷贝起点累计处理的字节数
+            COND_RETURN_ERROR(
+                realSize > totalSize, RT_ERROR_DRV_ERR,
+                "Cumulative memcpy2d size exceeds total size, realSize=%" PRIu64 ", totalSize=%" PRIu64 ".", realSize,
+                totalSize);
             fixedSize = realSize;
             remainSize = totalSize - fixedSize;
-            if (remainSize > 0UL && !(curStm->IsCapturing())) {
+            if (remainSize > 0UL && (!curStm->IsCapturing()) && (!curStm->GetBindFlag())) {
                 error = curStm->Synchronize();
                 ERROR_RETURN_MSG_INNER(
                     error, "Failed to synchronize stream, retCode=%#x.", static_cast<uint32_t>(error));
             }
         } else {
+            // 非UB的H2D/D2H/D2D场景，realSize表示本轮处理的字节数
+            COND_RETURN_ERROR(
+                realSize > remainSize, RT_ERROR_DRV_ERR,
+                "Current memcpy2d size exceeds remaining size, realSize=%" PRIu64 ", remainSize=%" PRIu64 ".", realSize,
+                remainSize);
             fixedSize += realSize;
             remainSize -= realSize;
         }
@@ -865,11 +899,14 @@ rtError_t ApiImplDavid::BatchMemcpyAsync(
                                        remainCnt,        fixedCnt,         fixedSize};
         error = MemcopyBatchAsync(batchInfo, &realCnt, &realSize, curStm);
         COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error);
+        COND_RETURN_ERROR(
+            realCnt > remainCnt, RT_ERROR_DRV_ERR,
+            "Invalid memcpy batch progress, realCnt=%" PRIu64 ", remainCnt=%" PRIu64 ".", realCnt, remainCnt);
         // realCnt 本次处理的
         fixedCnt = realCnt;
         fixedSize = realSize;
         remainCnt -= fixedCnt;
-        if (remainCnt > 0UL && !(curStm->IsCapturing())) {
+        if (remainCnt > 0UL && (!curStm->IsCapturing()) && (!curStm->GetBindFlag())) {
             error = curStm->Synchronize();
             ERROR_RETURN_MSG_INNER(error, "Failed to synchronize stream, retCode=%#x.", static_cast<uint32_t>(error));
         }

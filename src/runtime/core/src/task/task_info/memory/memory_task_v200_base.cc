@@ -345,6 +345,7 @@ static void AsyncDmaWqe2DProc(MemcpyAsyncTaskInfo* memcpyAsyncTaskInfo, const St
     destroyParm.tsId = stream->Device_()->DevGetTsId();
     destroyParm.sqId = stream->GetSqId();
     destroyParm.ci = memcpyAsyncTaskInfo->ubDma.pi;
+    destroyParm.wqe = memcpyAsyncTaskInfo->ubDma.wqePtr;
 
     const rtError_t error = stream->Device_()->Driver_()->DestroyAsyncDmaWqe2D(stream->Device_()->Id_(), &destroyParm);
     COND_RETURN_VOID(error != RT_ERROR_NONE, "drv destroy asyncDmaWqe2d failed, retCode=%#x.", error);

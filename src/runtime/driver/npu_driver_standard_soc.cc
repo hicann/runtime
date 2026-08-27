@@ -148,6 +148,7 @@ rtError_t NpuDriver::DestroyAsyncDmaWqe2D(uint32_t devId, struct AsyncDmaWqeDest
     para.tsId = destroyPara->tsId;
     para.sqId = destroyPara->sqId;
     para.ci = destroyPara->ci;
+    para.wqe = destroyPara->wqe;
 
     const drvError_t drvRet = halAsyncDmaDestroy2D(devId, &para);
     if (drvRet != DRV_ERROR_NONE) {

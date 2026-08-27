@@ -10169,6 +10169,118 @@ TEST_F(ApiDavidTest, memcpy2d_async_success_d2d)
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
+struct Memcpy2DCallRecord {
+    void* dst;
+    const void* src;
+};
+
+static std::vector<Memcpy2DCallRecord> g_memcpy2DCallRecords;
+static std::vector<uint64_t> g_memcpy2DRealSizes;
+
+static rtError_t Memcpy2DAsyncPitchStub(
+    void* const dst, const uint64_t dstPitch, const void* const src, const uint64_t srcPitch, const uint64_t width,
+    const uint64_t height, const rtMemcpyKind_t kind, uint64_t* const realSize, Stream* const stm,
+    const uint64_t fixedSize)
+{
+    UNUSED(dstPitch);
+    UNUSED(srcPitch);
+    UNUSED(width);
+    UNUSED(height);
+    UNUSED(kind);
+    UNUSED(stm);
+    UNUSED(fixedSize);
+    const size_t callIndex = g_memcpy2DCallRecords.size();
+    if (callIndex >= g_memcpy2DRealSizes.size()) {
+        return RT_ERROR_INVALID_VALUE;
+    }
+    g_memcpy2DCallRecords.push_back({dst, src});
+    *realSize = g_memcpy2DRealSizes[callIndex];
+    return RT_ERROR_NONE;
+}
+
+TEST_F(ApiDavidTest, memcpy2d_async_d2d_ub_driver_handles_pitch)
+{
+    ApiImplDavid impl;
+    uint8_t dst[512] = {};
+    uint8_t src[512] = {};
+    constexpr uint64_t pitch = 150U;
+    constexpr uint64_t width = 10U;
+    constexpr uint64_t height = 2U;
+
+    drv_trans_type = RT_MEMCPY_CHANNEL_TYPE_UB;
+    g_memcpy2DCallRecords.clear();
+    g_memcpy2DRealSizes = {15U, width * height};
+    MOCKER(Memcpy2DAsync).stubs().will(invoke(Memcpy2DAsyncPitchStub));
+    MOCKER_CPP_VIRTUAL(stream_, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
+
+    const rtError_t error =
+        impl.MemCopy2DAsync(dst, pitch, src, pitch, width, height, stream_, RT_MEMCPY_DEVICE_TO_DEVICE);
+    drv_trans_type = 0;
+
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    ASSERT_EQ(g_memcpy2DCallRecords.size(), 2U);
+    EXPECT_EQ(g_memcpy2DCallRecords[0].dst, dst);
+    EXPECT_EQ(g_memcpy2DCallRecords[0].src, src);
+    EXPECT_EQ(g_memcpy2DCallRecords[1].dst, dst);
+    EXPECT_EQ(g_memcpy2DCallRecords[1].src, src);
+}
+
+TEST_F(ApiDavidTest, memcpy2d_async_rejects_invalid_progress)
+{
+    ApiImplDavid impl;
+    uint8_t dst[512] = {};
+    uint8_t src[512] = {};
+    constexpr uint64_t pitch = 150U;
+    constexpr uint64_t width = 10U;
+    constexpr uint64_t height = 2U;
+    constexpr uint64_t totalSize = width * height;
+
+    MOCKER(Memcpy2DAsync).stubs().will(invoke(Memcpy2DAsyncPitchStub));
+    MOCKER_CPP_VIRTUAL(stream_, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
+
+    drv_trans_type = RT_MEMCPY_CHANNEL_TYPE_UB;
+    g_memcpy2DCallRecords.clear();
+    g_memcpy2DRealSizes = {totalSize + 1U};
+    EXPECT_EQ(
+        impl.MemCopy2DAsync(dst, pitch, src, pitch, width, height, stream_, RT_MEMCPY_DEVICE_TO_DEVICE),
+        RT_ERROR_DRV_ERR);
+
+    drv_trans_type = RT_MEMCPY_CHANNEL_TYPE_PCIe;
+    g_memcpy2DCallRecords.clear();
+    g_memcpy2DRealSizes = {totalSize + 1U};
+    EXPECT_EQ(
+        impl.MemCopy2DAsync(dst, pitch, src, pitch, width, height, stream_, RT_MEMCPY_DEVICE_TO_DEVICE),
+        RT_ERROR_DRV_ERR);
+    drv_trans_type = 0;
+}
+
+TEST_F(ApiDavidTest, memcpy2d_async_d2d_pcie_runtime_handles_pitch)
+{
+    ApiImplDavid impl;
+    uint8_t dst[512] = {};
+    uint8_t src[512] = {};
+    constexpr uint64_t dstPitch = 150U;
+    constexpr uint64_t srcPitch = 160U;
+    constexpr uint64_t width = 10U;
+    constexpr uint64_t height = 2U;
+
+    drv_trans_type = RT_MEMCPY_CHANNEL_TYPE_PCIe;
+    g_memcpy2DCallRecords.clear();
+    g_memcpy2DRealSizes = {width, width};
+    MOCKER(Memcpy2DAsync).stubs().will(invoke(Memcpy2DAsyncPitchStub));
+
+    const rtError_t error =
+        impl.MemCopy2DAsync(dst, dstPitch, src, srcPitch, width, height, stream_, RT_MEMCPY_DEVICE_TO_DEVICE);
+    drv_trans_type = 0;
+
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    ASSERT_EQ(g_memcpy2DCallRecords.size(), 2U);
+    EXPECT_EQ(g_memcpy2DCallRecords[0].dst, dst);
+    EXPECT_EQ(g_memcpy2DCallRecords[0].src, src);
+    EXPECT_EQ(g_memcpy2DCallRecords[1].dst, dst + dstPitch);
+    EXPECT_EQ(g_memcpy2DCallRecords[1].src, src + srcPitch);
+}
+
 TaskInfo* CreateTask(
     TaskResManageDavid* taskResMng, uint32_t& pos, tsTaskType_t type, const char* typeName, uint32_t sqeNum = 1)
 {
@@ -10400,7 +10512,31 @@ TEST_F(ApiDavidTest, GetNotifyAddressApi)
     MarkPrimaryContextReset();
 }
 
-TEST_F(ApiDavidTest, test_memcpy_batch_async_batch_path)
+static std::vector<uint64_t> g_memcpyBatchRealCnts;
+static size_t g_memcpyBatchCallIndex = 0U;
+
+static rtError_t MemcopyBatchAsyncProgressStub(
+    AsyncDmaBatchInfo& batchInfo, uint64_t* const realCnt, uint64_t* const realSize, Stream* const stm)
+{
+    UNUSED(batchInfo);
+    UNUSED(stm);
+    if (g_memcpyBatchCallIndex >= g_memcpyBatchRealCnts.size()) {
+        return RT_ERROR_INVALID_VALUE;
+    }
+    *realCnt = g_memcpyBatchRealCnts[g_memcpyBatchCallIndex];
+    *realSize = 0UL;
+    ++g_memcpyBatchCallIndex;
+    return RT_ERROR_NONE;
+}
+
+static DVresult DrvMemGetAttributeBatchStub(DVdeviceptr vptr, struct DVattribute* attr)
+{
+    constexpr uintptr_t deviceAddressBase = 0x10000000U;
+    attr->memType = (static_cast<uintptr_t>(vptr) >= deviceAddressBase) ? DV_MEM_LOCK_DEV : DV_MEM_LOCK_HOST;
+    return DRV_ERROR_NONE;
+}
+
+TEST_F(ApiDavidTest, test_memcpy_batch_async_progress)
 {
     ApiImplDavid apiImpl;
 
@@ -10420,23 +10556,19 @@ TEST_F(ApiDavidTest, test_memcpy_batch_async_batch_path)
     stream_->Device_()->SetChipType(CHIP_DAVID);
     stream_->SetBindFlag(false);
 
-    MOCKER(drvMemGetAttribute)
-        .stubs()
-        .will(invoke(drvMemGetAttribute_2))
-        .then(invoke(drvMemGetAttribute_2))
-        .then(invoke(drvMemGetAttribute_1))
-        .then(invoke(drvMemGetAttribute_2))
-        .then(invoke(drvMemGetAttribute_1));
+    MOCKER(drvMemGetAttribute).stubs().will(invoke(DrvMemGetAttributeBatchStub));
     MOCKER(NpuDriver::CheckIsSupportFeature).stubs().will(returnValue(false));
-    uint64_t realSize = 2;
-    MOCKER(MemcopyBatchAsync)
-        .stubs()
-        .with(mockcpp::any(), outBoundP(&realSize, sizeof(realSize)), mockcpp::any())
-        .will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP_VIRTUAL(stream_, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(MemcopyBatchAsync).stubs().will(invoke(MemcopyBatchAsyncProgressStub));
 
+    g_memcpyBatchRealCnts = {2U};
+    g_memcpyBatchCallIndex = 0U;
     rtError_t error = apiImpl.MemcpyBatchAsync(dsts, destMaxs, srcs, sizes, 2, attrs, attrsIdxs, 2, &failIdx, stream_);
     EXPECT_EQ(error, RT_ERROR_NONE);
+
+    g_memcpyBatchRealCnts = {3U};
+    g_memcpyBatchCallIndex = 0U;
+    error = apiImpl.MemcpyBatchAsync(dsts, destMaxs, srcs, sizes, 2, attrs, attrsIdxs, 2, &failIdx, stream_);
+    EXPECT_EQ(error, RT_ERROR_DRV_ERR);
 }
 
 TEST_F(ApiDavidTest, test_memcpy2d_async_david_ub_path)

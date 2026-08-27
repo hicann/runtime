@@ -2219,8 +2219,18 @@ static drvError_t stubHalAsyncDmaCreate2D(
     out->functionId = 10;
     out->jettyId = 12;
     out->size = 64;
+    out->wqe = reinterpret_cast<uint8_t*>(0x3000);
     out->pi = 1;
     out->fixedSize = 1000;
+    return DRV_ERROR_NONE;
+}
+
+static uint8_t* g_destroy2DWqe = nullptr;
+
+static drvError_t stubHalAsyncDmaDestroy2D(uint32_t devId, struct halAsyncDmaDestroy2DPara* para)
+{
+    UNUSED(devId);
+    g_destroy2DWqe = para->wqe;
     return DRV_ERROR_NONE;
 }
 
@@ -2243,15 +2253,21 @@ TEST_F(TaskTestDavid, memcpy2d_async_ub_dma_h2d_test)
     Stream* stm = rt_ut::UnwrapOrNull<Stream>(stream);
 
     MOCKER(halAsyncDmaCreate2D).stubs().will(invoke(stubHalAsyncDmaCreate2D));
+    MOCKER(halAsyncDmaDestroy2D).stubs().will(invoke(stubHalAsyncDmaDestroy2D));
+    g_destroy2DWqe = nullptr;
 
     rtStarsSqe_t sqe;
     InitByStream(&task, stm);
     MemcpyAsyncTaskInitV2(&task, dst, size, src, size, size, 1, kind, size);
+    task.u.memcpyAsyncTaskInfo.copyMethod = static_cast<uint8_t>(rtAsyncCpyMethod::RT_ASYNC_CPY_2D);
     EXPECT_EQ(task.u.memcpyAsyncTaskInfo.dmaKernelConvertFlag, true);
+    EXPECT_EQ(task.u.memcpyAsyncTaskInfo.ubDma.wqePtr, reinterpret_cast<uint8_t*>(0x3000));
+    EXPECT_EQ(task.u.memcpyAsyncTaskInfo.ubDma.wqeLen, 64);
     ToConstructSqe(&task, &sqe);
 
     Complete(&task, 0);
     TaskUnInitProc(&task);
+    EXPECT_EQ(g_destroy2DWqe, reinterpret_cast<uint8_t*>(0x3000));
     rtStreamDestroy(stream);
     rtInstance->SetConnectUbFlag(false);
     GlobalMockObject::verify();

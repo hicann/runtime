@@ -17,7 +17,7 @@
 #include "driver/ascend_hal_define.h"
 
 #define ASYNC_CPY_2D_IN_RSV_LEN 8
-#define ASYNC_CPY_2D_DESTROY_RSV_LEN 8
+#define ASYNC_CPY_2D_DESTROY_RSV_LEN 6
 #define ASYNC_CPY_BATCH_IN_RSV_LEN 8
 #define ASYNC_CPY_BATCH_DESTROY_RSV_LEN 8
 
@@ -107,6 +107,7 @@ struct AsyncDmaWqeDestroyInfo2D {
     uint32_t tsId;
     uint32_t sqId;
     uint32_t ci;
+    uint8_t* wqe;
     std::array<uint32_t, ASYNC_CPY_2D_DESTROY_RSV_LEN> rsv;
 };
 

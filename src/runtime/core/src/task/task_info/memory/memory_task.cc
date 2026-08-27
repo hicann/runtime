@@ -108,6 +108,8 @@ rtError_t ConvertAsyncDma2D(
     memcpyAsyncTaskInfo->ubDma.dieId = output.dieId;
     memcpyAsyncTaskInfo->ubDma.pi = output.pi;
     memcpyAsyncTaskInfo->ubDma.fixedSize = output.fixedSize;
+    memcpyAsyncTaskInfo->ubDma.wqePtr = output.wqe;
+    memcpyAsyncTaskInfo->ubDma.wqeLen = output.wqeLen;
     memcpyAsyncTaskInfo->size = output.fixedSize;
 
     return RT_ERROR_NONE;

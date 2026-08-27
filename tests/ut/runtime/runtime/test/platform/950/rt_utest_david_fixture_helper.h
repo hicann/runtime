@@ -17,14 +17,24 @@
  *   - runtime/rt.h
  */
 
+static rtError_t MockDavidGetDevInfo(
+    Driver* const driver, const uint32_t deviceId, const int32_t moduleType, const int32_t infoType,
+    int64_t* const value)
+{
+    UNUSED(driver);
+    UNUSED(deviceId);
+    if ((moduleType == MODULE_TYPE_SYSTEM) && (infoType == INFO_TYPE_HD_CONNECT_TYPE)) {
+        *value = Runtime::Instance()->GetConnectUbFlag() ? HOST_DEVICE_CONNECT_TYPE_UB : HOST_DEVICE_CONNECT_TYPE_PCIE;
+    } else {
+        *value = ((ARCH_V100 << 16) | (CHIP_DAVID << 8) | (VER_NA));
+    }
+    return RT_ERROR_NONE;
+}
+
 static Driver* MockDavidDriverSetup()
 {
-    int64_t hardwareVersion = ((ARCH_V100 << 16) | (CHIP_DAVID << 8) | (VER_NA));
     Driver* driver = ((Runtime*)Runtime::Instance())->driverFactory_.GetDriver(NPU_DRIVER);
-    MOCKER_CPP_VIRTUAL(driver, &Driver::GetDevInfo)
-        .stubs()
-        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBoundP(&hardwareVersion, sizeof(hardwareVersion)))
-        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::GetDevInfo).stubs().will(invoke(MockDavidGetDevInfo));
     char* socVer = "Ascend950PR_9599";
     MOCKER(halGetSocVersion)
         .stubs()
