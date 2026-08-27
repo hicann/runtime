@@ -28,6 +28,8 @@ public:
 
     void PostSem(const uint32_t threadIndex);
 
+    static size_t GetWorkerNum();
+
     ThreadPool(const ThreadPool&) = delete;
     ThreadPool& operator=(const ThreadPool&) = delete;
     ThreadPool(const ThreadPool&&) = delete;
@@ -39,6 +41,7 @@ private:
     int32_t CreateOneWorker(const uint32_t threadIndex);
     static void Work(const uint32_t threadIndex);
     int32_t SetAffinity(const size_t threadIndex, const uint32_t deviceId);
+    uint32_t GetNoAicpuCcpuPhysIndex(const size_t threadIndex) const;
     int32_t WriteTidForAffinity(const size_t threadIndex);
     int32_t AddPidToTask(const size_t threadIndex);
     int32_t SecureCompute(const uint32_t threadIndex);
@@ -52,6 +55,7 @@ private:
     uint32_t semInitedNum_;
     std::vector<ThreadStatus> threadStatus_;
     std::unordered_set<int32_t> expandedSystemCalls_;
+    bool hasAicpu_ = true;
 };
 } // namespace AicpuSchedule
 #endif // AICPUSD_WORKER_H

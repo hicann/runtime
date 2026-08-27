@@ -101,7 +101,11 @@ int32_t AicpuDrvManager::InitDrvMgr(
             aicpusd_err("GetNormalAicpuInfo error, ret[%d]", ret);
             return AICPU_SCHEDULE_ERROR_INIT_FAILED;
         }
-        GetCcpuInfo(deviceId);
+        ret = GetCcpuInfo(deviceId);
+        if ((ret != AICPU_SCHEDULE_OK) && (GetAicpuNum() == 0U)) {
+            aicpusd_err("GetCcpuInfo error, ret[%d]", ret);
+            return AICPU_SCHEDULE_ERROR_INIT_FAILED;
+        }
     }
 
     uint32_t deviceIdTmp = deviceId;
@@ -207,8 +211,9 @@ int32_t AicpuDrvManager::InitDrvSchedModule(const uint32_t grpId)
         return AICPU_SCHEDULE_ERROR_INIT_FAILED;
     }
 
-    aicpusd_info("Create group[%u], type[%d]", grpId, GRP_TYPE_BIND_DP_CPU);
-    ret = halEschedCreateGrp(deviceId_, grpId, GRP_TYPE_BIND_DP_CPU);
+    const GROUP_TYPE cpuGrpType = (GetAicpuNum() == 0U) ? GRP_TYPE_BIND_CP_CPU : GRP_TYPE_BIND_DP_CPU;
+    aicpusd_info("Create group[%u], type[%d]", grpId, cpuGrpType);
+    ret = halEschedCreateGrp(deviceId_, grpId, cpuGrpType);
     if (ret != DRV_ERROR_NONE) {
         (void)halEschedDettachDevice(deviceId_);
         aicpusd_err("Failed to attach device in drv, result[%d].", ret);

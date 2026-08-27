@@ -363,6 +363,7 @@ TEST_F(AICPUCustScheduleTEST, AddToCgroup_ERROR)
 
 TEST_F(AICPUCustScheduleTEST, ComputeProcessStartSuccNoEvent)
 {
+    MOCKER_CPP(&AicpuCustDumpProcess::InitDumpProcess).stubs().will(returnValue(0));
     MOCKER_CPP(&AicpuCustDumpProcess::LoopProcessEvent).stubs().will(returnValue(0));
     MOCKER_CPP(&ThreadPool::CreateWorker).stubs().will(returnValue(0));
     MOCKER(halEschedSubmitEvent).stubs().will(returnValue(0));
@@ -374,6 +375,7 @@ TEST_F(AICPUCustScheduleTEST, ComputeProcessStartSuccNoEvent)
 
 TEST_F(AICPUCustScheduleTEST, ComputeProcessStartDealError)
 {
+    MOCKER_CPP(&AicpuCustDumpProcess::InitDumpProcess).stubs().will(returnValue(0));
     MOCKER_CPP(&AicpuCustDumpProcess::LoopProcessEvent).stubs().will(returnValue(0));
     MOCKER_CPP(&ThreadPool::CreateWorker).stubs().will(returnValue(0));
     MOCKER(halEschedSubmitEvent).stubs().will(returnValue(0));
@@ -385,6 +387,7 @@ TEST_F(AICPUCustScheduleTEST, ComputeProcessStartDealError)
 
 TEST_F(AICPUCustScheduleTEST, ComputeProcessStartSucc)
 {
+    MOCKER_CPP(&AicpuCustDumpProcess::InitDumpProcess).expects(once()).with(eq(0U), eq(2U)).will(returnValue(0));
     MOCKER_CPP(&AicpuCustDumpProcess::LoopProcessEvent).stubs().will(returnValue(0));
     MOCKER_CPP(&ThreadPool::CreateWorker).stubs().will(returnValue(0));
     MOCKER(halEschedSubmitEvent).stubs().will(returnValue(0));
@@ -417,6 +420,7 @@ TEST_F(AICPUCustScheduleTEST, ComputeProcessStartFail_002)
 
 TEST_F(AICPUCustScheduleTEST, ComputeProcessStart_MemorySvmDevice)
 {
+    MOCKER_CPP(&AicpuCustDumpProcess::InitDumpProcess).stubs().will(returnValue(0));
     MOCKER(drvHdcGetCapacity).stubs().will(invoke(drvHdcGetCapacityPCIE));
     MOCKER_CPP(&ThreadPool::CreateWorker).stubs().will(returnValue(0));
     int ret =
@@ -621,10 +625,31 @@ TEST_F(AICPUCustScheduleTEST, CheckBindHostPid005)
 TEST_F(AICPUCustScheduleTEST, InitDrvSchedModule_Succ)
 {
     AicpuDrvManager& drvMgr = AicpuDrvManager::GetInstance();
+    const uint32_t oldAicpuNum = drvMgr.aicpuNum_;
+    drvMgr.aicpuNum_ = 0U;
     MOCKER(halEschedAttachDevice).stubs().will(returnValue(DRV_ERROR_NONE));
-    MOCKER(halEschedCreateGrp).stubs().will(returnValue(DRV_ERROR_NONE));
+    MOCKER(halEschedCreateGrp)
+        .expects(once())
+        .with(eq(drvMgr.deviceId_), eq(0U), eq(GRP_TYPE_BIND_CP_CPU))
+        .will(returnValue(DRV_ERROR_NONE));
     int32_t Ret = drvMgr.InitDrvSchedModule(0U);
     EXPECT_EQ(Ret, AICPU_SCHEDULE_OK);
+    drvMgr.aicpuNum_ = oldAicpuNum;
+}
+
+TEST_F(AICPUCustScheduleTEST, InitDrvSchedModuleWithAicpuBindsDpCpu)
+{
+    AicpuDrvManager& drvMgr = AicpuDrvManager::GetInstance();
+    const uint32_t oldAicpuNum = drvMgr.aicpuNum_;
+    drvMgr.aicpuNum_ = 1U;
+    MOCKER(halEschedAttachDevice).stubs().will(returnValue(DRV_ERROR_NONE));
+    MOCKER(halEschedCreateGrp)
+        .expects(once())
+        .with(eq(drvMgr.deviceId_), eq(0U), eq(GRP_TYPE_BIND_DP_CPU))
+        .will(returnValue(DRV_ERROR_NONE));
+
+    EXPECT_EQ(drvMgr.InitDrvSchedModule(0U), AICPU_SCHEDULE_OK);
+    drvMgr.aicpuNum_ = oldAicpuNum;
 }
 
 TEST_F(AICPUCustScheduleTEST, AicpuScheduleInterface_InitAICPUScheduler_Succ)
@@ -1655,6 +1680,7 @@ TEST_F(AICPUCustScheduleTEST, AicpuScheduleInterface_InitAICPUSchedulerVF_Succ)
 
 TEST_F(AICPUCustScheduleTEST, ComputeProcessStartWithProfilingSucc)
 {
+    MOCKER_CPP(&AicpuCustDumpProcess::InitDumpProcess).stubs().will(returnValue(0));
     MOCKER_CPP(&ThreadPool::CreateWorker).stubs().will(returnValue(0));
     MOCKER(halEschedSubmitEvent).stubs().will(returnValue(0));
     int ret = ComputeProcess::GetInstance().Start(0, 100, 7, 100, 0, aicpu::AicpuRunMode::PROCESS_SOCKET_MODE);

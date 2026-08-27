@@ -40,6 +40,10 @@
 using namespace AicpuSchedule;
 
 namespace {
+std::vector<uint32_t> g_recordedCoreAffinity;
+ThreadPool* g_workerPool = nullptr;
+size_t g_waitWorkerIndex = 0UL;
+
 void WaitAndStopThread(uint32_t time)
 {
     std::this_thread::sleep_for(std::chrono::milliseconds(time));
@@ -59,6 +63,21 @@ void CreateSyscallFile(const std::string& fileName)
     outFile << "recvmsg" << std::endl;
     outFile.close();
 }
+
+uint32_t ProcMgrBindThreadRecordStub(pid_t threadId, const std::vector<uint32_t>& coreAffinity)
+{
+    (void)threadId;
+    g_recordedCoreAffinity = coreAffinity;
+    return 0U;
+}
+
+int SemWaitMarkWorkerRunningStub(sem_t* sem)
+{
+    (void)sem;
+    g_workerPool->threadStatus_[g_waitWorkerIndex++] = ThreadStatus::THREAD_RUNNING;
+    return 0;
+}
+
 } // namespace
 
 class AICPUCusWorkerTEST : public testing::Test {
@@ -114,10 +133,93 @@ TEST_F(AICPUCusWorkerTEST, CreateWorkTest)
 TEST_F(AICPUCusWorkerTEST, CreateWorkTest_aicpu_no_0)
 {
     ThreadPool tp;
-    AicpuDrvManager::GetInstance().aicpuNum_ = 0;
-    AicpuSchedule::AicpuMonitor::GetInstance().done_ = false;
-    int32_t ret = tp.CreateWorker();
-    EXPECT_EQ(ret, 0);
+    auto& drvMgr = AicpuDrvManager::GetInstance();
+    const uint32_t oldAicpuNum = drvMgr.aicpuNum_;
+    drvMgr.aicpuNum_ = 0U;
+    g_workerPool = &tp;
+    g_waitWorkerIndex = 0UL;
+    MOCKER(sem_init).stubs().will(returnValue(0));
+    MOCKER(sem_wait).stubs().will(invoke(SemWaitMarkWorkerRunningStub));
+    MOCKER(sem_destroy).stubs().will(returnValue(0));
+    MOCKER(signal).stubs().will(returnValue(sighandler_t(1)));
+    MOCKER_CPP(&ThreadPool::CreateOneWorker).expects(exactly(2)).will(returnValue(AICPU_SCHEDULE_OK));
+    MOCKER_CPP(&AicpuMonitor::Run).stubs().will(returnValue(AICPU_SCHEDULE_OK));
+
+    EXPECT_EQ(tp.CreateWorker(), AICPU_SCHEDULE_OK);
+    EXPECT_FALSE(tp.hasAicpu_);
+    EXPECT_EQ(tp.sems_.size(), 2UL);
+    EXPECT_EQ(tp.threadStatus_.size(), 2UL);
+    EXPECT_EQ(g_waitWorkerIndex, 2UL);
+    drvMgr.aicpuNum_ = oldAicpuNum;
+}
+
+TEST_F(AICPUCusWorkerTEST, GetWorkerNum)
+{
+    MOCKER_CPP(&AicpuDrvManager::GetAicpuNum).stubs().will(returnValue(0U)).then(returnValue(6U));
+    EXPECT_EQ(ThreadPool::GetWorkerNum(), 2UL);
+    EXPECT_EQ(ThreadPool::GetWorkerNum(), 6UL);
+}
+
+TEST_F(AICPUCusWorkerTEST, GetNoAicpuCcpuPhysIndex)
+{
+    ThreadPool tp;
+    auto& drvMgr = AicpuDrvManager::GetInstance();
+    const auto oldDeviceId = drvMgr.deviceId_;
+    const auto oldCoreNumPerDev = drvMgr.coreNumPerDev_;
+    const auto oldCcpuIdVec = drvMgr.ccpuIdVec_;
+    drvMgr.deviceId_ = 1U;
+    drvMgr.coreNumPerDev_ = 16U;
+    drvMgr.ccpuIdVec_ = {1U, 4U, 7U};
+
+    EXPECT_EQ(tp.GetNoAicpuCcpuPhysIndex(0UL), 23U);
+    EXPECT_EQ(tp.GetNoAicpuCcpuPhysIndex(1UL), 20U);
+    EXPECT_EQ(tp.GetNoAicpuCcpuPhysIndex(5UL), 17U);
+    drvMgr.deviceId_ = oldDeviceId;
+    drvMgr.coreNumPerDev_ = oldCoreNumPerDev;
+    drvMgr.ccpuIdVec_ = oldCcpuIdVec;
+}
+
+TEST_F(AICPUCusWorkerTEST, SetAffinityByPmNoAicpuBindsLargestTwoCcpu)
+{
+    ThreadPool tp;
+    auto& drvMgr = AicpuDrvManager::GetInstance();
+    const auto oldDeviceId = drvMgr.deviceId_;
+    const auto oldCoreNumPerDev = drvMgr.coreNumPerDev_;
+    const auto oldCcpuIdVec = drvMgr.ccpuIdVec_;
+    drvMgr.deviceId_ = 0U;
+    drvMgr.coreNumPerDev_ = 0U;
+    drvMgr.ccpuIdVec_ = {0U, 2U, 5U, 9U};
+    tp.hasAicpu_ = false;
+    tp.threadStatus_ = std::move(std::vector<ThreadStatus>(2, ThreadStatus::THREAD_INIT));
+    MOCKER(ProcMgrBindThread).stubs().will(invoke(ProcMgrBindThreadRecordStub));
+
+    EXPECT_EQ(tp.SetAffinityByPm(0UL), AICPU_SCHEDULE_OK);
+    ASSERT_EQ(g_recordedCoreAffinity.size(), 1UL);
+    EXPECT_EQ(g_recordedCoreAffinity[0], 9U);
+    EXPECT_EQ(tp.SetAffinityByPm(1UL), AICPU_SCHEDULE_OK);
+    ASSERT_EQ(g_recordedCoreAffinity.size(), 1UL);
+    EXPECT_EQ(g_recordedCoreAffinity[0], 5U);
+    drvMgr.deviceId_ = oldDeviceId;
+    drvMgr.coreNumPerDev_ = oldCoreNumPerDev;
+    drvMgr.ccpuIdVec_ = oldCcpuIdVec;
+}
+
+TEST_F(AICPUCusWorkerTEST, SetAffinityNoAicpuWithoutCcpuSkipsBinding)
+{
+    ThreadPool tp;
+    auto& drvMgr = AicpuDrvManager::GetInstance();
+    const auto oldCcpuIdVec = drvMgr.ccpuIdVec_;
+    drvMgr.ccpuIdVec_.clear();
+    tp.hasAicpu_ = false;
+    tp.threadStatus_ = std::move(std::vector<ThreadStatus>(1, ThreadStatus::THREAD_INIT));
+    MOCKER(ProcMgrBindThread).expects(never());
+    MOCKER_CPP(&ThreadPool::AddPidToTask).expects(never());
+    MOCKER(pthread_setaffinity_np).expects(never());
+
+    EXPECT_EQ(tp.SetAffinityByPm(0UL), AICPU_SCHEDULE_OK);
+    EXPECT_EQ(tp.SetAffinityBySelf(0UL), AICPU_SCHEDULE_OK);
+    EXPECT_EQ(tp.threadStatus_[0], ThreadStatus::THREAD_RUNNING);
+    drvMgr.ccpuIdVec_ = oldCcpuIdVec;
 }
 
 TEST_F(AICPUCusWorkerTEST, CreateWorkTest_sem_init_fail)
@@ -362,6 +464,15 @@ TEST_F(AICPUCusWorkerTEST, InitDrvMgr_001)
     MOCKER_CPP(&FeatureCtrl::IsAosCore).stubs().will(returnValue(true));
     auto ret = AicpuDrvManager::GetInstance().InitDrvMgr(1, 0, 0, true);
     EXPECT_EQ(ret, 0);
+}
+
+TEST_F(AICPUCusWorkerTEST, InitDrvMgrNoAicpuGetCcpuInfoFail)
+{
+    MOCKER_CPP(&AicpuDrvManager::GetNormalAicpuInfo).stubs().will(returnValue(AICPU_SCHEDULE_OK));
+    MOCKER_CPP(&AicpuDrvManager::GetCcpuInfo).stubs().will(returnValue(AICPU_SCHEDULE_ERROR_INIT_FAILED));
+    MOCKER_CPP(&AicpuDrvManager::GetAicpuNum).stubs().will(returnValue(0U));
+
+    EXPECT_EQ(AicpuDrvManager::GetInstance().InitDrvMgr(0U, 0, 0U, true), AICPU_SCHEDULE_ERROR_INIT_FAILED);
 }
 
 TEST_F(AICPUCusWorkerTEST, InitDrvMgr_002)

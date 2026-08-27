@@ -25,6 +25,7 @@
 #include "aicpusd_info.h"
 #include "status.h"
 #include "feature_ctrl.h"
+#include "aicpusd_worker.h"
 
 namespace {
 // aicpu task timeout
@@ -78,7 +79,7 @@ int32_t AicpuMonitor::InitAicpuMonitor(const uint32_t deviceId, const bool onlin
         return AICPU_SCHEDULE_OK;
     }
     deviceId_ = deviceId;
-    aicpuCoreNum_ = AicpuSchedule::AicpuDrvManager::GetInstance().GetAicpuNum();
+    aicpuCoreNum_ = static_cast<uint32_t>(AicpuSchedule::ThreadPool::GetWorkerNum());
     if (aicpuCoreNum_ != 0U) {
         taskInfo_.reset(new (std::nothrow) TaskInfoForMonitor[aicpuCoreNum_]);
         if (taskInfo_ == nullptr) {

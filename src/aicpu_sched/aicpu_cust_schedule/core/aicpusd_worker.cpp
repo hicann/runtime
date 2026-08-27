@@ -35,6 +35,8 @@ constexpr uint32_t EVENT_MASK = (static_cast<uint32_t>(1U) << static_cast<uint32
                                 (static_cast<uint32_t>(1U) << static_cast<uint32_t>(EVENT_SPLIT_KERNEL)) |
                                 (static_cast<uint32_t>(1U) << static_cast<uint32_t>(EVENT_FFTS_PLUS_MSG));
 constexpr const char_t* SYSCALL_WHITE_LIST = "/var/aicpu_custom_syscall_whitelist";
+constexpr size_t NO_AICPU_WORKER_NUM = 2UL;
+constexpr uint32_t INVALID_CPU_ID = UINT32_MAX;
 } // namespace
 
 namespace AicpuSchedule {
@@ -53,62 +55,67 @@ ThreadPool::~ThreadPool()
     }
 }
 
+size_t ThreadPool::GetWorkerNum()
+{
+    const size_t aicpuNum = static_cast<size_t>(AicpuDrvManager::GetInstance().GetAicpuNum());
+    return (aicpuNum == 0UL) ? NO_AICPU_WORKER_NUM : aicpuNum;
+}
+
 int32_t ThreadPool::CreateWorker()
 {
-    const uint32_t aicpuNum = AicpuDrvManager::GetInstance().GetAicpuNum();
-    if (aicpuNum == 0U) {
-        aicpusd_run_info("aicpu num[0], not need create aicpu worker");
-    } else {
-        try {
-            sems_ = std::move(std::vector<sem_t>(static_cast<size_t>(aicpuNum)));
-        } catch (std::exception& e) {
-            aicpusd_err("create sems failed, %s", e.what());
-            return AICPU_SCHEDULE_ERROR_INIT_FAILED;
-        }
-        for (uint32_t threadIndex = 0U; threadIndex < aicpuNum; ++threadIndex) {
-            const int32_t semInitRet = sem_init(&(sems_[static_cast<size_t>(threadIndex)]), 0, 0U);
-            if (semInitRet == -1) {
-                aicpusd_err("sem[%u] init failed, %s", threadIndex, strerror(errno));
-                return AICPU_SCHEDULE_ERROR_INIT_FAILED;
-            }
-            semInitedNum_ = threadIndex + 1U;
-        }
-        try {
-            threadStatus_ =
-                std::move(std::vector<ThreadStatus>(static_cast<size_t>(aicpuNum), ThreadStatus::THREAD_INIT));
-        } catch (std::exception& e) {
-            aicpusd_err("create ThreadStatus failed, %s", e.what());
-            return AICPU_SCHEDULE_ERROR_INIT_FAILED;
-        }
-        int32_t ret = AICPU_SCHEDULE_OK;
-        const sighandler_t oldHandler = signal(SIGCHLD, SIG_DFL);
-        aicpusd_info("Set SIGCHLD to %d, old sighandler[%d]", SIG_DFL, oldHandler);
-        GetExpandedSysCalls(SYSCALL_WHITE_LIST);
-        for (uint32_t threadIndex = 0U; threadIndex < aicpuNum; ++threadIndex) {
-            ret = CreateOneWorker(threadIndex);
-            if (ret != AICPU_SCHEDULE_OK) {
-                (void)signal(SIGCHLD, oldHandler);
-                return ret;
-            }
-        }
-        for (size_t threadIndex = 0UL; threadIndex < static_cast<size_t>(aicpuNum); threadIndex++) {
-            const int32_t semWaitRet = sem_wait(&(sems_[threadIndex]));
-            if (semWaitRet == -1) {
-                (void)signal(SIGCHLD, oldHandler);
-                aicpusd_err("sem[%zu] wait failed, %s", threadIndex, strerror(errno));
-                return AICPU_SCHEDULE_ERROR_INIT_FAILED;
-            }
-            if (threadStatus_[threadIndex] != ThreadStatus::THREAD_RUNNING) {
-                (void)signal(SIGCHLD, oldHandler);
-                aicpusd_err("create thread[%zu] failed, status[%d]", threadIndex, threadStatus_[threadIndex]);
-                return AICPU_SCHEDULE_ERROR_INIT_FAILED;
-            }
-        }
-        aicpusd_info("set SIGCHLD to old sighandler[%d]", oldHandler);
-        (void)signal(SIGCHLD, oldHandler);
+    const size_t workerNum = GetWorkerNum();
+    hasAicpu_ = AicpuDrvManager::GetInstance().GetAicpuNum() != 0U;
+    if (!hasAicpu_) {
+        aicpusd_run_info("aicpu num[0], create [%zu] aicpu workers", workerNum);
     }
+    try {
+        sems_ = std::move(std::vector<sem_t>(workerNum));
+    } catch (std::exception& e) {
+        aicpusd_err("create sems failed, %s", e.what());
+        return AICPU_SCHEDULE_ERROR_INIT_FAILED;
+    }
+    for (size_t threadIndex = 0UL; threadIndex < workerNum; ++threadIndex) {
+        const int32_t semInitRet = sem_init(&(sems_[threadIndex]), 0, 0U);
+        if (semInitRet == -1) {
+            aicpusd_err("sem[%zu] init failed, %s", threadIndex, strerror(errno));
+            return AICPU_SCHEDULE_ERROR_INIT_FAILED;
+        }
+        semInitedNum_ = static_cast<uint32_t>(threadIndex + 1UL);
+    }
+    try {
+        threadStatus_ = std::move(std::vector<ThreadStatus>(workerNum, ThreadStatus::THREAD_INIT));
+    } catch (std::exception& e) {
+        aicpusd_err("create ThreadStatus failed, %s", e.what());
+        return AICPU_SCHEDULE_ERROR_INIT_FAILED;
+    }
+    int32_t ret = AICPU_SCHEDULE_OK;
+    const sighandler_t oldHandler = signal(SIGCHLD, SIG_DFL);
+    aicpusd_info("Set SIGCHLD to %d, old sighandler[%d]", SIG_DFL, oldHandler);
+    GetExpandedSysCalls(SYSCALL_WHITE_LIST);
+    for (size_t threadIndex = 0UL; threadIndex < workerNum; ++threadIndex) {
+        ret = CreateOneWorker(static_cast<uint32_t>(threadIndex));
+        if (ret != AICPU_SCHEDULE_OK) {
+            (void)signal(SIGCHLD, oldHandler);
+            return ret;
+        }
+    }
+    for (size_t threadIndex = 0UL; threadIndex < workerNum; ++threadIndex) {
+        const int32_t semWaitRet = sem_wait(&(sems_[threadIndex]));
+        if (semWaitRet == -1) {
+            (void)signal(SIGCHLD, oldHandler);
+            aicpusd_err("sem[%zu] wait failed, %s", threadIndex, strerror(errno));
+            return AICPU_SCHEDULE_ERROR_INIT_FAILED;
+        }
+        if (threadStatus_[threadIndex] != ThreadStatus::THREAD_RUNNING) {
+            (void)signal(SIGCHLD, oldHandler);
+            aicpusd_err("create thread[%zu] failed, status[%d]", threadIndex, threadStatus_[threadIndex]);
+            return AICPU_SCHEDULE_ERROR_INIT_FAILED;
+        }
+    }
+    aicpusd_info("set SIGCHLD to old sighandler[%d]", oldHandler);
+    (void)signal(SIGCHLD, oldHandler);
     // GetInstance is not null, checked in InitAICPUScheduler
-    auto ret = AicpuSchedule::AicpuMonitor::GetInstance().Run();
+    ret = AicpuSchedule::AicpuMonitor::GetInstance().Run();
     if (ret != AICPU_SCHEDULE_OK) {
         aicpusd_err("aicpu monitor run failed, ret[%d]", ret);
         return ret;
@@ -278,6 +285,23 @@ void ThreadPool::Work(const uint32_t threadIndex)
     aicpusd_info("Aicpu device[%u]:thread[%u] stopped.", deviceId, threadIndex);
 }
 
+uint32_t ThreadPool::GetNoAicpuCcpuPhysIndex(const size_t threadIndex) const
+{
+    const uint32_t ccpuNum = AicpuDrvManager::GetInstance().GetCcpuNum();
+    if (ccpuNum == 0U) {
+        aicpusd_err("no ctrlcpu core available for no-aicpu worker[%zu]", threadIndex);
+        return INVALID_CPU_ID;
+    }
+    uint32_t ccpuLogIndex = 0U;
+    if (static_cast<size_t>(ccpuNum) > threadIndex) {
+        ccpuLogIndex = ccpuNum - 1U - static_cast<uint32_t>(threadIndex);
+    }
+    const uint32_t physIndex = AicpuDrvManager::GetInstance().GetCcpuPhysIndex(ccpuLogIndex);
+    aicpusd_info(
+        "no aicpu worker[%zu] bind to ctrlcpu logIndex[%u], physIndex[%u]", threadIndex, ccpuLogIndex, physIndex);
+    return physIndex;
+}
+
 int32_t ThreadPool::WriteTidForAffinity(const size_t threadIndex)
 {
     if (threadIndex >= threadStatus_.size()) {
@@ -336,7 +360,13 @@ int32_t ThreadPool::AddPidToTask(const size_t threadIndex)
 
 int32_t ThreadPool::SetAffinityByPm(const size_t threadIndex)
 {
-    const uint32_t physIndex = AicpuDrvManager::GetInstance().GetAicpuPhysIndex(static_cast<uint32_t>(threadIndex));
+    const uint32_t physIndex =
+        hasAicpu_ ? AicpuDrvManager::GetInstance().GetAicpuPhysIndex(static_cast<uint32_t>(threadIndex)) :
+                    GetNoAicpuCcpuPhysIndex(threadIndex);
+    if (physIndex == INVALID_CPU_ID) {
+        threadStatus_[threadIndex] = ThreadStatus::THREAD_RUNNING;
+        return AICPU_SCHEDULE_OK;
+    }
     const pid_t tid = static_cast<pid_t>(GetTid());
 
     std::vector<uint32_t> coreAffinity;
@@ -359,7 +389,7 @@ int32_t ThreadPool::SetAffinityByPm(const size_t threadIndex)
 
 int32_t ThreadPool::SetAffinityBySelf(const size_t threadIndex)
 {
-    if (AddPidToTask(threadIndex) != AICPU_SCHEDULE_OK) {
+    if (hasAicpu_ && (AddPidToTask(threadIndex) != AICPU_SCHEDULE_OK)) {
         aicpusd_err("AddPidToTask failed");
         return AICPU_SCHEDULE_ERROR_INIT_FAILED;
     }
@@ -369,14 +399,16 @@ int32_t ThreadPool::SetAffinityBySelf(const size_t threadIndex)
 
     uint32_t physIndex = 0;
     uint32_t devNum = 0U;
-    if (&halGetVdevNum != nullptr) {
+    if (hasAicpu_ && (&halGetVdevNum != nullptr)) {
         int32_t result = halGetVdevNum(&devNum);
         if (result != 0) {
             aicpusd_err("custom halGetVdevNum, failed result[%d]", result);
             return AICPU_SCHEDULE_ERROR_INIT_FAILED;
         }
     }
-    if (devNum > 0U) {
+    if (!hasAicpu_) {
+        physIndex = GetNoAicpuCcpuPhysIndex(threadIndex);
+    } else if (devNum > 0U) {
         physIndex = AicpuDrvManager::GetInstance().GetAicpuPhysIndexInVfMode(
             static_cast<uint32_t>(threadIndex), AicpuDrvManager::GetInstance().GetDeviceId());
     } else {
@@ -385,6 +417,11 @@ int32_t ThreadPool::SetAffinityBySelf(const size_t threadIndex)
     aicpusd_info(
         "[custom]SetAffinityBySelf, threadIndex[%u], physIndex[%u], devNum[%u]", static_cast<uint32_t>(threadIndex),
         physIndex, devNum);
+
+    if (physIndex == INVALID_CPU_ID) {
+        threadStatus_[threadIndex] = ThreadStatus::THREAD_RUNNING;
+        return AICPU_SCHEDULE_OK;
+    }
 
     // cannot overflow, aicpu num < 65535, max [64=4*16]
     CPU_SET(static_cast<int32_t>(physIndex), &mask);

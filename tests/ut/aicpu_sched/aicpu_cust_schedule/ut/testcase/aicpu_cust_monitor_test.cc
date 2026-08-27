@@ -22,6 +22,7 @@
 
 #define private public
 #include "aicpusd_monitor.h"
+#include "core/aicpusd_drv_manager.h"
 #undef private
 
 using namespace AicpuSchedule;
@@ -72,6 +73,29 @@ TEST_F(AICPUCustMonitorTEST, Init_Succ_offline)
     AicpuMonitor monitor;
     int32_t ret = monitor.InitAicpuMonitor(0, false);
     EXPECT_EQ(ret, AICPU_SCHEDULE_OK);
+}
+
+TEST_F(AICPUCustMonitorTEST, InitNoAicpuUsesWorkerThreadNum)
+{
+    AicpuMonitor monitor;
+    MOCKER(aicpu::GetSystemTickFreq).stubs().will(returnValue(1));
+    MOCKER_CPP(&AicpuDrvManager::GetAicpuNum).stubs().will(returnValue(0U));
+
+    EXPECT_EQ(monitor.InitAicpuMonitor(0U, true), AICPU_SCHEDULE_OK);
+    EXPECT_EQ(monitor.aicpuCoreNum_, 2U);
+    EXPECT_NE(monitor.taskInfo_, nullptr);
+    EXPECT_NE(monitor.taskTimer_, nullptr);
+}
+
+TEST_F(AICPUCustMonitorTEST, InitWithAicpuUsesCoreNum)
+{
+    AicpuMonitor monitor;
+    MOCKER(aicpu::GetSystemTickFreq).stubs().will(returnValue(1));
+    MOCKER_CPP(&AicpuDrvManager::GetAicpuNum).stubs().will(returnValue(4U));
+
+    EXPECT_EQ(monitor.InitAicpuMonitor(0U, true), AICPU_SCHEDULE_OK);
+    EXPECT_EQ(monitor.aicpuCoreNum_, 4U);
+    EXPECT_NE(monitor.taskInfo_, nullptr);
 }
 
 TEST_F(AICPUCustMonitorTEST, Init_setFlag_fail)

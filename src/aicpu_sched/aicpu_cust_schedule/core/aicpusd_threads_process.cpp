@@ -121,7 +121,8 @@ int32_t ComputeProcess::Start(
         aicpusd_err("Drv create aicpu work tasks failed, ret[%d].", aicpuStartRet);
         return static_cast<int32_t>(ComputProcessRetCode::CP_RET_COMMON_ERROR);
     }
-    AicpuCustDumpProcess::GetInstance().InitDumpProcess(deviceId, AicpuDrvManager::GetInstance().GetAicpuNum());
+    AicpuCustDumpProcess::GetInstance().InitDumpProcess(
+        deviceId, static_cast<uint32_t>(AicpuSchedule::ThreadPool::GetWorkerNum()));
     aicpusd_info(
         "Aicpu custom scheduler start succeed, deviceId[%u], hostpid[%d], profilingMode[%u], runMode[%d].", deviceId,
         hostPid, profilingMode, runMode_);

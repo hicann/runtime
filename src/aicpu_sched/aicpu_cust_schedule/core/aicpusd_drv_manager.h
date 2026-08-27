@@ -92,6 +92,13 @@ public:
 
     std::vector<uint32_t> GetCcpuList() { return ccpuIdVec_; }
 
+    uint32_t GetCcpuNum() const { return static_cast<uint32_t>(ccpuIdVec_.size()); }
+
+    uint32_t GetCcpuPhysIndex(const uint32_t ccpuLogIndex) const
+    {
+        return (coreNumPerDev_ * deviceId_) + ccpuIdVec_[ccpuLogIndex];
+    }
+
     bool GetSafeVerifyFlag() const { return needSafeVerify_; }
 
 private:
