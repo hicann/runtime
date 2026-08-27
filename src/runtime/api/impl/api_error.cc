@@ -1917,6 +1917,13 @@ rtError_t ApiErrorDecorator::HostRegisterV2(void* ptr, uint64_t size, uint32_t f
         "The valid flag is an OR combination of RT_MEM_HOST_REGISTER_MAPPED(0x2U), RT_MEM_HOST_REGISTER_IOMEMORY(0x4U),"
         " RT_MEM_HOST_REGISTER_READONLY(0x8U), and RT_MEM_HOST_REGISTER_PINNED(0x10000000U)");
 
+    constexpr uint32_t invalidIOAndPin = RT_MEM_HOST_REGISTER_IOMEMORY | RT_MEM_HOST_REGISTER_PINNED;
+    COND_RETURN_AND_MSG_OUTER(
+        ((flag & invalidIOAndPin) == invalidIOAndPin), RT_ERROR_INVALID_VALUE, ErrorCode::EE1011,
+        "Host memory address registration", flag, "flag",
+        "IOMemory type memory does not support PIN, ACL_HOST_REG_IOMEMORY(0x4UL) and "
+        "ACL_HOST_REG_PINNED(0x10000000UL) cannot be combined");
+
     const rtError_t error = impl_->HostRegisterV2(ptr, size, flag);
     COND_RETURN_AND_MSG_OUTER(
         error == RT_ERROR_HOST_MEMORY_ALREADY_REGISTERED, error, ErrorCode::EE1018, "Host memory address registration",

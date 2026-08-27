@@ -996,9 +996,7 @@ TEST_F(RtMemRegisterApiTest, host_register_v2_forall_withpin)
     MOCKER(halHostUnregister).stubs().will(returnValue(DRV_ERROR_NONE));
 
     error = rtHostRegisterV2(ptr.get(), sizeof(uint32_t), RT_MEM_HOST_REGISTER_IOMEMORY | RT_MEM_HOST_REGISTER_PINNED);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    checkRegisterStatus(static_cast<UINT32>(HOST_IO_MAP_DEV), ptr.get(), false, false);
-    (void)rtsHostUnregister(ptr.get());
+    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
     error = rtHostRegisterV2(ptr.get(), sizeof(uint32_t), RT_MEM_HOST_REGISTER_READONLY | RT_MEM_HOST_REGISTER_PINNED);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -1011,10 +1009,7 @@ TEST_F(RtMemRegisterApiTest, host_register_v2_forall_withpin)
     error = rtHostRegisterV2(
         ptr.get(), sizeof(uint32_t),
         RT_MEM_HOST_REGISTER_IOMEMORY | RT_MEM_HOST_REGISTER_READONLY | RT_MEM_HOST_REGISTER_PINNED);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    checkRegisterStatus(
-        static_cast<UINT32>(HOST_IO_MAP_DEV) | static_cast<UINT32>(MEM_REGISTER_READ_ONLY), ptr.get(), false, false);
-    (void)rtsHostUnregister(ptr.get());
+    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
     error = rtHostRegisterV2(
         ptr.get(), sizeof(uint32_t),
@@ -1029,18 +1024,13 @@ TEST_F(RtMemRegisterApiTest, host_register_v2_forall_withpin)
     error = rtHostRegisterV2(
         ptr.get(), sizeof(uint32_t),
         RT_MEM_HOST_REGISTER_MAPPED | RT_MEM_HOST_REGISTER_IOMEMORY | RT_MEM_HOST_REGISTER_PINNED);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    checkRegisterStatus(static_cast<UINT32>(HOST_IO_MAP_DEV), ptr.get(), false, false);
-    (void)rtsHostUnregister(ptr.get());
+    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
     error = rtHostRegisterV2(
         ptr.get(), sizeof(uint32_t),
         RT_MEM_HOST_REGISTER_MAPPED | RT_MEM_HOST_REGISTER_IOMEMORY | RT_MEM_HOST_REGISTER_READONLY |
             RT_MEM_HOST_REGISTER_PINNED);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    checkRegisterStatus(
-        static_cast<UINT32>(HOST_IO_MAP_DEV) | static_cast<UINT32>(MEM_REGISTER_READ_ONLY), ptr.get(), false, false);
-    (void)rtsHostUnregister(ptr.get());
+    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
     GlobalMockObject::verify();
 }
@@ -1107,9 +1097,7 @@ TEST_F(RtMemRegisterApiTest, host_register_v2_forall_olddrv_withpin)
     MOCKER(halHostUnregisterEx).stubs().will(returnValue(DRV_ERROR_NONE));
 
     error = rtHostRegisterV2(ptr.get(), sizeof(uint32_t), RT_MEM_HOST_REGISTER_IOMEMORY | RT_MEM_HOST_REGISTER_PINNED);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    checkRegisterStatus(static_cast<UINT32>(HOST_IO_MAP_DEV), ptr.get(), true, true);
-    (void)rtsHostUnregister(ptr.get());
+    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
     error = rtHostRegisterV2(ptr.get(), sizeof(uint32_t), RT_MEM_HOST_REGISTER_READONLY | RT_MEM_HOST_REGISTER_PINNED);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -1121,10 +1109,7 @@ TEST_F(RtMemRegisterApiTest, host_register_v2_forall_olddrv_withpin)
     error = rtHostRegisterV2(
         ptr.get(), sizeof(uint32_t),
         RT_MEM_HOST_REGISTER_IOMEMORY | RT_MEM_HOST_REGISTER_READONLY | RT_MEM_HOST_REGISTER_PINNED);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    checkRegisterStatus(
-        static_cast<UINT32>(HOST_IO_MAP_DEV) | static_cast<UINT32>(MEM_REGISTER_READ_ONLY), ptr.get(), true, true);
-    (void)rtsHostUnregister(ptr.get());
+    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
     error = rtHostRegisterV2(
         ptr.get(), sizeof(uint32_t),
@@ -1138,18 +1123,13 @@ TEST_F(RtMemRegisterApiTest, host_register_v2_forall_olddrv_withpin)
     error = rtHostRegisterV2(
         ptr.get(), sizeof(uint32_t),
         RT_MEM_HOST_REGISTER_MAPPED | RT_MEM_HOST_REGISTER_IOMEMORY | RT_MEM_HOST_REGISTER_PINNED);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    checkRegisterStatus(static_cast<UINT32>(HOST_IO_MAP_DEV), ptr.get(), true, true);
-    (void)rtsHostUnregister(ptr.get());
+    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
     error = rtHostRegisterV2(
         ptr.get(), sizeof(uint32_t),
         RT_MEM_HOST_REGISTER_MAPPED | RT_MEM_HOST_REGISTER_IOMEMORY | RT_MEM_HOST_REGISTER_READONLY |
             RT_MEM_HOST_REGISTER_PINNED);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    checkRegisterStatus(
-        static_cast<UINT32>(HOST_IO_MAP_DEV) | static_cast<UINT32>(MEM_REGISTER_READ_ONLY), ptr.get(), true, true);
-    (void)rtsHostUnregister(ptr.get());
+    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
     GlobalMockObject::verify();
 }
