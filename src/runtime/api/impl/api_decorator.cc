@@ -233,6 +233,13 @@ rtError_t ApiDecorator::BinaryGetFunctionByEntry(
     return impl_->BinaryGetFunctionByEntry(binHandle, funcEntry, funcHandle);
 }
 
+rtError_t ApiDecorator::BinaryEnumerateFunctions(
+    const Program* const binHandle, Kernel** const funcHandles, const uint32_t numFunctions,
+    uint32_t* const actualCount)
+{
+    return impl_->BinaryEnumerateFunctions(binHandle, funcHandles, numFunctions, actualCount);
+}
+
 rtError_t ApiDecorator::BinaryGetFunctionCount(const Program* const binHandle, uint32_t* const count)
 {
     return impl_->BinaryGetFunctionCount(binHandle, count);

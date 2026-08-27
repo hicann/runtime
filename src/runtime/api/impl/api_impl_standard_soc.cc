@@ -7,6 +7,7 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include <map>
 #include "api_impl.hpp"
 #include "runtime_handle_guard.h"
 #include "maintenance_task.h"
@@ -54,6 +55,56 @@
 
 namespace cce {
 namespace runtime {
+
+rtError_t ApiImpl::BinaryEnumerateFunctions(
+    const Program* const binHandle, Kernel** const funcHandles, const uint32_t numFunctions,
+    uint32_t* const actualCount)
+{
+    *actualCount = 0U;
+    Program* const program = const_cast<Program*>(binHandle);
+    const rtChipType_t chipType = Runtime::Instance()->GetChipType();
+    const bool isXpu = IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_XPU);
+    Context* const curCtx = CurrentContext();
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+    const Device* const dev = curCtx->Device_();
+    NULL_PTR_RETURN_MSG(dev, RT_ERROR_DEVICE_NULL);
+    const uint32_t deviceId = static_cast<uint32_t>(dev->Id_());
+    if (!isXpu) {
+        // 其他平台需要先将program的so和name拷贝到device
+        const rtError_t error = program->CopySoAndNameToCurrentDevice();
+        if (error != RT_ERROR_NONE) {
+            RT_LOG(
+                RT_LOG_ERROR, "Failed to copy the binary module to the current device, deviceId=%u, retCode=%#x.",
+                deviceId, static_cast<uint32_t>(error));
+            return error;
+        }
+    }
+
+    const std::map<std::string, Kernel*>& kernelNameMap = binHandle->GetKernelNameMap();
+    uint32_t count = 0U;
+    for (const auto& iter : kernelNameMap) {
+        if (count >= numFunctions) {
+            break;
+        }
+        if (isXpu) {
+            const rtError_t error = program->XpuSetKernelLiteralNameDevAddr(iter.second, deviceId);
+            if (error != RT_ERROR_NONE) {
+                RT_LOG_INNER_MSG(
+                    RT_LOG_ERROR, "Failed to set literal name device address for kernel=%s, deviceId=%u, retCode=%#x.",
+                    iter.first.c_str(), deviceId, static_cast<uint32_t>(error));
+                return error;
+            }
+        }
+        funcHandles[count] = iter.second;
+        count++;
+    }
+
+    *actualCount = count;
+    RT_LOG(
+        RT_LOG_DEBUG, "deviceId=%u, prog=%p, numFunctions=%u, actualCount=%u.", deviceId, binHandle, numFunctions,
+        *actualCount);
+    return RT_ERROR_NONE;
+}
 
 rtError_t ApiImpl::CntNotifyCreate(const int32_t deviceId, CountNotify** const retCntNotify, const uint32_t flag)
 {

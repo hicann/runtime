@@ -296,6 +296,8 @@ public:
     virtual rtError_t rtBinaryUnLoad(rtBinHandle binHandle);
     virtual rtError_t rtsFuncGetByName(const rtBinHandle binHandle, const char_t* kernelName, rtFuncHandle* funcHandle);
     virtual rtError_t rtBinaryGetGlobal(const rtBinHandle binHandle, const char_t* name, void** dptr, size_t* size);
+    virtual rtError_t rtBinaryEnumerateFunctions(
+        const rtBinHandle binHandle, rtFuncHandle* funcHandles, uint32_t numFunctions);
     virtual rtError_t rtGetFuncBySymbol(const void* symbol, rtFuncHandle* funcHandle);
     virtual rtError_t rtSymbolLookup(const void* hostVar, void** devPtr, size_t* size);
     virtual rtError_t rtCreateLaunchArgs(
@@ -910,6 +912,9 @@ public:
     MOCK_METHOD2(rtGetFuncBySymbol, rtError_t(const void* symbol, rtFuncHandle* funcHandle));
     MOCK_METHOD4(
         rtBinaryGetGlobal, rtError_t(const rtBinHandle binHandle, const char_t* name, void** dptr, size_t* size));
+    MOCK_METHOD3(
+        rtBinaryEnumerateFunctions,
+        rtError_t(const rtBinHandle binHandle, rtFuncHandle* funcHandles, uint32_t numFunctions));
     MOCK_METHOD5(
         rtCreateLaunchArgs, rtError_t(
                                 size_t argsSize, size_t hostInfoTotalSize, size_t hostInfoNum, void* argsData,

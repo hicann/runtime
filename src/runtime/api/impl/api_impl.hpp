@@ -45,6 +45,9 @@ public:
         const Program* const binHandle, const char_t* kernelName, Kernel** const funcHandle) override;
     rtError_t BinaryGetFunctionByEntry(
         const Program* const binHandle, const uint64_t funcEntry, Kernel** const funcHandle) override;
+    rtError_t BinaryEnumerateFunctions(
+        const Program* const binHandle, Kernel** const funcHandles, const uint32_t numFunctions,
+        uint32_t* const actualCount) override;
     rtError_t BinaryGetFunctionCount(const Program* const binHandle, uint32_t* const count) override;
     rtError_t BinaryGetMetaNum(Program* const binHandle, const rtBinaryMetaType type, size_t* numOfMeta) override;
     rtError_t BinaryGetMetaInfo(
