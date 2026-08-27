@@ -972,6 +972,7 @@ TEST_F(DavidStreamTest, TestSeparateSendAndRecycle3)
     rtError_t ret;
     MOCKER_CPP(&Stream::IsSeparateSendAndRecycle).stubs().will(returnValue(true));
     stream->SetBindFlag(false);
+    stream->SetExecuteEndTaskId(0);
     ret = SubmitTaskPostProc(stream, 0, true, 100);
 
     EXPECT_EQ(ret, RT_ERROR_NONE);
@@ -1008,6 +1009,7 @@ TEST_F(DavidStreamTest, TestSeparateSendAndRecycle4)
     rtError_t ret;
     MOCKER_CPP(&Stream::IsSeparateSendAndRecycle).stubs().will(returnValue(true));
     stream->SetBindFlag(false);
+    stream->SetExecuteEndTaskId(0);
     ret = SubmitTaskPostProc(stream, 0, true, 100);
     EXPECT_EQ(ret, RT_ERROR_NONE);
 }
