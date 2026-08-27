@@ -3468,6 +3468,47 @@ TEST_F(UTEST_ACL_Runtime, binary_get_func_failed_with_rt_func_failed)
     EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
 }
 
+TEST_F(UTEST_ACL_Runtime, binary_enumerate_funcs_failed_with_nullptr_input)
+{
+    aclrtBinHandle binHandle = nullptr;
+    aclrtFuncHandle funcHandles[2] = {nullptr, nullptr};
+    aclError ret = aclrtBinaryEnumerateFunctions(binHandle, funcHandles, 2U);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+
+    binHandle = (aclrtBinHandle)0x01U;
+    ret = aclrtBinaryEnumerateFunctions(binHandle, nullptr, 2U);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+}
+
+TEST_F(UTEST_ACL_Runtime, binary_enumerate_funcs_zero_num_with_nullptr_handles)
+{
+    aclrtBinHandle binHandle = (aclrtBinHandle)0x01U;
+    // numFunctions 为 0 时 acl 层直接返回成功，不再调用 rt 层
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtBinaryEnumerateFunctions(_, _, _)).Times(0);
+    aclError ret = aclrtBinaryEnumerateFunctions(binHandle, nullptr, 0U);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+}
+
+TEST_F(UTEST_ACL_Runtime, binary_enumerate_funcs_successful)
+{
+    aclrtBinHandle binHandle = (aclrtBinHandle)0x01U;
+    aclrtFuncHandle funcHandles[2] = {nullptr, nullptr};
+    aclError ret = aclrtBinaryEnumerateFunctions(binHandle, funcHandles, 2U);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+    EXPECT_NE(funcHandles[0], nullptr);
+}
+
+TEST_F(UTEST_ACL_Runtime, binary_enumerate_funcs_failed_with_rt_func_failed)
+{
+    aclrtBinHandle binHandle = (aclrtBinHandle)0x01U;
+    aclrtFuncHandle funcHandles[2] = {nullptr, nullptr};
+
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtBinaryEnumerateFunctions(_, _, _))
+        .WillOnce(Return(ACL_ERROR_RT_PARAM_INVALID));
+    aclError ret = aclrtBinaryEnumerateFunctions(binHandle, funcHandles, 2U);
+    EXPECT_EQ(ret, ACL_ERROR_RT_PARAM_INVALID);
+}
+
 TEST_F(UTEST_ACL_Runtime, launch_kernel_failed_with_nullptr_input)
 {
     aclrtFuncHandle funcHandle = nullptr;

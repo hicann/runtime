@@ -46,6 +46,7 @@
 - [`aclError aclrtGetFuncBySymbol(const void *symbol, aclrtFuncHandle *funcHandle)`](#aclrtGetFuncBySymbol)：根据核函数名获取核函数句柄。
 - [`aclError aclrtLaunchSIMTKernelWithArgsArray(void *func, dim3 gridDim, dim3 blockDim, size_t dynUbufSize, aclrtStream stream, aclrtLaunchKernelCfg *cfg, void **args)`](#aclrtLaunchSIMTKernelWithArgsArray)：使用参数数组启动SIMT核函数计算任务，异步接口。
 - [`aclError aclrtLaunchSIMTKernelWithHostArgs(void *func, dim3 gridDim, dim3 blockDim, size_t dynUbufSize, aclrtStream stream, aclrtLaunchKernelCfg *cfg, void *hostArgs, size_t argsSize, aclrtPlaceHolderInfo *placeHolderArray, size_t placeHolderNum)`](#aclrtLaunchSIMTKernelWithHostArgs)：使用Host参数启动SIMT核函数计算任务，异步接口。
+- [`aclError aclrtBinaryEnumerateFunctions(const aclrtBinHandle binHandle, aclrtFuncHandle *funcHandles, uint32_t numFunctions)`](#aclrtBinaryEnumerateFunctions)：获取算子二进制中指定数量的核函数句柄。
 
 ## 概念及使用说明
 
@@ -2396,3 +2397,58 @@ aclError aclrtBinaryGetFunctionCount(aclrtBinHandle binHandle, uint32_t *count)
 ### 返回值说明
 
 返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
+
+<br>
+<br>
+<br>
+<a id="aclrtBinaryEnumerateFunctions"></a>
+
+## aclrtBinaryEnumerateFunctions
+
+```c
+aclError aclrtBinaryEnumerateFunctions(const aclrtBinHandle binHandle, aclrtFuncHandle *funcHandles, uint32_t numFunctions)
+```
+
+### 产品支持情况
+
+<!-- npu="950" id84247 -->
+- Ascend 950PR/Ascend 950DT：支持
+<!-- end id84247 -->
+<!-- npu="A3" id84248 -->
+- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+<!-- end id84248 -->
+<!-- npu="910b" id84249 -->
+- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+<!-- end id84249 -->
+<!-- npu="310b" id84250 -->
+- Atlas 200I/500 A2 推理产品：支持
+<!-- end id84250 -->
+<!-- npu="310p" id84251 -->
+- Atlas 推理系列产品：支持
+<!-- end id84251 -->
+<!-- npu="910" id84252 -->
+- Atlas 训练系列产品：支持
+<!-- end id84252 -->
+<!-- npu="IPV350" id84253 -->
+- IPV350：不支持
+<!-- end id84253 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id42 -->
+### 功能说明
+
+获取算子二进制中指定数量的核函数句柄。
+
+### 参数说明
+
+| 参数名 | 输入/输出 | 说明 |
+| --- | :---: | --- |
+| binHandle | 输入 | 算子二进制句柄。类型定义请参见[aclrtBinHandle](25-05_Typedefs.md#aclrtBinHandle)。<br>调用[aclrtBinaryLoadFromFile](#aclrtBinaryLoadFromFile)接口或[aclrtBinaryLoadFromData](#aclrtBinaryLoadFromData)接口获取算子二进制句柄，再将其作为入参传入本接口。 |
+| funcHandles | 输出 | 核函数句柄数组。类型定义请参见[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)。 |
+| numFunctions | 输入 | 需要获取的核函数句柄数量，可先调用[aclrtBinaryGetFunctionCount](#aclrtBinaryGetFunctionCount)获取。<br>当numFunctions==0，表示不需要获取核函数句柄。<br>当numFunctions≤len(funcHandles),返回numFunctions个核函数句柄。<br>当numFunctions>len(funcHandles),返回len(funcHandles)个核函数句柄。
+|
+
+
+### 返回值说明
+
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
+
+

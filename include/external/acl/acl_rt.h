@@ -3543,6 +3543,21 @@ ACL_FUNC_VISIBILITY aclError aclrtBinaryGetGlobal(
 
 /**
  * @ingroup AscendCL
+ * @brief Enumerate function handles in the binary module
+ * @note The binary data is copied to the device of the current context when
+ * this API first accesses the binary handle.
+ * @param [in] binHandle  bin handle
+ * @param [out] funcHandles  array to receive function handles, filled with
+ * min(numFunctions, actual function count) entries
+ * @param [in] numFunctions  size of the funcHandles array
+ * @retval ACL_SUCCESS The function is successfully executed.
+ * @retval OtherValues Failure
+ */
+ACL_FUNC_VISIBILITY aclError aclrtBinaryEnumerateFunctions(
+    const aclrtBinHandle binHandle, aclrtFuncHandle* funcHandles, uint32_t numFunctions);
+
+/**
+ * @ingroup AscendCL
  * @brief Get function handle by function symbol
  * @param [in] symbol  Pointer to kernel function to search for
  * @param [out] funcHandle  function handle

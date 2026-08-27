@@ -104,6 +104,25 @@ aclError aclrtBinaryGetFunctionImpl(const aclrtBinHandle binHandle, const char* 
     return ACL_SUCCESS;
 }
 
+aclError aclrtBinaryEnumerateFunctionsImpl(
+    const aclrtBinHandle binHandle, aclrtFuncHandle* const funcHandles, const uint32_t numFunctions)
+{
+    ACL_PROFILING_REG(acl::AclProfType::AclrtBinaryEnumerateFunctions);
+    ACL_LOG_INFO("start to execute aclrtBinaryEnumerateFunctions");
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(binHandle);
+    // when numFunctions is 0, no function handle is written and funcHandles can be null
+    if (numFunctions == 0U) {
+        ACL_LOG_INFO("successfully execute aclrtBinaryEnumerateFunctions, numFunctions is 0");
+        return ACL_SUCCESS;
+    }
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(funcHandles);
+
+    ACL_REQUIRES_RTS_OK(rtBinaryEnumerateFunctions(binHandle, funcHandles, numFunctions));
+
+    ACL_LOG_INFO("successfully execute aclrtBinaryEnumerateFunctions");
+    return ACL_SUCCESS;
+}
+
 aclError aclmdlRITaskDisableImpl(aclmdlRITask task)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclmdlRITaskDisable);

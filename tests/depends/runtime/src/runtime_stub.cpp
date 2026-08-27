@@ -849,6 +849,15 @@ rtError_t aclStub::rtBinaryGetGlobal(const rtBinHandle binHandle, const char_t* 
     return RT_ERROR_NONE;
 }
 
+rtError_t aclStub::rtBinaryEnumerateFunctions(
+    const rtBinHandle binHandle, rtFuncHandle* funcHandles, uint32_t numFunctions)
+{
+    (void)binHandle;
+    (void)funcHandles;
+    (void)numFunctions;
+    return RT_ERROR_NONE;
+}
+
 rtError_t aclStub::rtGetFuncBySymbol(const void* symbol, rtFuncHandle* funcHandle)
 {
     (void)symbol;
@@ -3378,6 +3387,14 @@ rtError_t rtsFuncGetByName(const rtBinHandle binHandle, const char_t* kernelName
 rtError_t rtBinaryGetGlobal(const rtBinHandle binHandle, const char_t* name, void** dptr, size_t* size)
 {
     return MockFunctionTest::aclStubInstance().rtBinaryGetGlobal(binHandle, name, dptr, size);
+}
+
+rtError_t rtBinaryEnumerateFunctions(const rtBinHandle binHandle, rtFuncHandle* funcHandles, uint32_t numFunctions)
+{
+    if ((funcHandles != nullptr) && (numFunctions > 0U)) {
+        funcHandles[0] = (rtFuncHandle)0x01U;
+    }
+    return MockFunctionTest::aclStubInstance().rtBinaryEnumerateFunctions(binHandle, funcHandles, numFunctions);
 }
 
 rtError_t rtGetFuncBySymbol(const void* symbol, rtFuncHandle* funcHandle)

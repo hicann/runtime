@@ -2032,6 +2032,31 @@ rtError_t rtBinaryLoadWithoutTilingKey(const void* data, const uint64_t length, 
 }
 
 VISIBILITY_DEFAULT
+rtError_t rtBinaryEnumerateFunctions(
+    const rtBinHandle binHandle, rtFuncHandle* const funcHandles, const uint32_t numFunctions)
+{
+    GLOBAL_STATE_WAIT_IF_LOCKED();
+    Api* const apiInstance = Api::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
+    PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(binHandle, RT_ERROR_INVALID_VALUE);
+    RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(binHandle, Program, realProgram, ValidateProgramHandleForApi);
+    if (numFunctions == 0U) {
+        return ACL_RT_SUCCESS;
+    }
+    PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(funcHandles, RT_ERROR_INVALID_VALUE);
+    uint32_t actualCount = 0U;
+    const rtError_t ret = apiInstance->BinaryEnumerateFunctions(
+        realProgram, RtPtrToPtr<Kernel**>(funcHandles), numFunctions, &actualCount);
+    ERROR_RETURN_WITH_EXT_ERRCODE(ret);
+    for (uint32_t i = 0U; i < actualCount; i++) {
+        Kernel* const realKernel = RtPtrToPtr<Kernel*>(funcHandles[i]);
+        InitEmbeddedInnerHandle<Kernel>(realKernel);
+        funcHandles[i] = ExportEmbeddedHandle<rtFuncHandle>(realKernel);
+    }
+    return ACL_RT_SUCCESS;
+}
+
+VISIBILITY_DEFAULT
 rtError_t rtLaunchSIMTKernelWithArgsArray(
     void* func, rtDim3 gridDim, rtDim3 blockDim, size_t dynUbufSize, rtStream_t stm, rtKernelLaunchCfg_t* cfg,
     void** args)
