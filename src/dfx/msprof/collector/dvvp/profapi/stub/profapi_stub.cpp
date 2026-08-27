@@ -156,6 +156,15 @@ int32_t MsprofUnsetDeviceIdByGeModelIdx(const uint32_t geModelIdx, const uint32_
     return 0;
 }
 
+int32_t MsprofSetInjectionFunc(uint32_t funcType, void* func)
+{
+    (void)funcType;
+    (void)func;
+    return 1;
+}
+
+int32_t MsprofInjectionInitialize() { return 1; }
+
 int32_t MsprofFinalize() { return 0; }
 
 uint64_t MsprofSysCycleTime() { return 0; }

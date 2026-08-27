@@ -808,6 +808,7 @@ target_compile_definitions(runtime_model PRIVATE
     CFG_DEV_PLATFORM_PC
     -DSTATIC_RT_LIB=1
     -DRUNTIME_API=0
+    -DACL_RT_API_HOOK_ENABLE=1
 )
 
 target_compile_options(runtime_model PRIVATE
@@ -873,6 +874,7 @@ target_compile_definitions(runtime_model_v200 PRIVATE
     CFG_DEV_PLATFORM_PC
     -DSTATIC_RT_LIB=1
     -DRUNTIME_API=0
+    -DACL_RT_API_HOOK_ENABLE=1
 )
 
 target_compile_options(runtime_model_v200 PRIVATE
