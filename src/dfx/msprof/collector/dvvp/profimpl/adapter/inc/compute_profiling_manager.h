@@ -38,6 +38,8 @@ struct ComputeProfileConfig {
     bool enableInstr = false;
     bool enableBiuPerf = false;
     bool enablePcSampling = false;
+    bool enableBlock = false;
+    uint32_t blockMode = 0;
 };
 
 class ComputeProfilingManager : public analysis::dvvp::common::singleton::Singleton<ComputeProfilingManager> {
@@ -57,6 +59,7 @@ private:
     int32_t ParseConfig(const MsprofConfig& config, ComputeProfileConfig& outConfig) const;
     int32_t ParseConfigAttrs(const MsprofConfigInfo& configInfo, ComputeProfileConfig& outConfig) const;
     int32_t ParseInstrMode(uint32_t instrMode, ComputeProfileConfig& outConfig) const;
+    int32_t ParseBlockMode(uint32_t blockMode, ComputeProfileConfig& outConfig) const;
     int32_t InitRuntime();
     int32_t CreateComputeUploader(const std::string& devIdStr);
     void RegisterComputeUploaderMap(uint32_t devId, const std::string& jobId) const;

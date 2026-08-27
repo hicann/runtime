@@ -236,6 +236,17 @@ int32_t ComputeProfilingManager::ParseInstrMode(uint32_t instrMode, ComputeProfi
     return PROFILING_SUCCESS;
 }
 
+int32_t ComputeProfilingManager::ParseBlockMode(uint32_t blockMode, ComputeProfileConfig& outConfig) const
+{
+    if (blockMode != PROF_COMPUTE_ALL_BLOCK && blockMode != PROF_COMPUTE_BLOCK_SHRINK) {
+        MSPROF_LOGE("Invalid compute task block mode:%u.", blockMode);
+        return PROFILING_FAILED;
+    }
+    outConfig.enableBlock = true;
+    outConfig.blockMode = blockMode;
+    return PROFILING_SUCCESS;
+}
+
 int32_t ComputeProfilingManager::ParseConfigAttrs(
     const MsprofConfigInfo& configInfo, ComputeProfileConfig& outConfig) const
 {
@@ -259,6 +270,11 @@ int32_t ComputeProfilingManager::ParseConfigAttrs(
                 break;
             case PROF_CONFIG_ATTR_INSTR:
                 (void)ParseInstrMode(attr.value.instrMode, outConfig);
+                break;
+            case PROF_CONFIG_ATTR_TASK_BLOCK:
+                if (ParseBlockMode(attr.value.taskBlockMode, outConfig) != PROFILING_SUCCESS) {
+                    return PROFILING_FAILED;
+                }
                 break;
             default:
                 MSPROF_LOGW("Ignore unknown compute config attr id:%u.", attr.id);
@@ -291,7 +307,7 @@ int32_t ComputeProfilingManager::ParseConfig(const MsprofConfig& config, Compute
         MSPROF_LOGE("Instr mode is required when PROF_INSTR_MASK is enabled.");
         return PROFILING_FAILED;
     }
-    if (!outConfig.enableLog && !outConfig.enablePmu && !outConfig.enableInstr) {
+    if (!outConfig.enableLog && !outConfig.enablePmu && !outConfig.enableInstr && !outConfig.enableBlock) {
         MSPROF_LOGE("No compute profiling item is enabled.");
         return PROFILING_FAILED;
     }
@@ -362,6 +378,10 @@ SHARED_PTR_ALIA<ProfileParams> ComputeProfilingManager::BuildProfileParams(
     if (config.enableInstr) {
         params->instrProfiling = config.enableBiuPerf ? MSVP_PROF_ON : MSVP_PROF_OFF;
         params->pcSampling = config.enablePcSampling ? MSVP_PROF_ON : MSVP_PROF_OFF;
+    }
+    if (config.enableBlock) {
+        params->taskBlock = MSVP_PROF_ON;
+        params->taskBlockShink = config.blockMode == PROF_COMPUTE_BLOCK_SHRINK ? MSVP_PROF_ON : MSVP_PROF_OFF;
     }
     return params;
 }

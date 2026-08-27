@@ -27,6 +27,8 @@
 using namespace analysis::dvvp::common::error;
 using namespace Cann::Dvvp::Test;
 
+extern "C" int32_t acltoolInitialize();
+
 namespace {
 constexpr char ACL_API_INJECTION_STUB[] = "libacl_tool_injection_stub.so";
 constexpr char COMPUTE_RESULT_DIR_PREFIX[] = "PROF_COMPUTE_";
@@ -134,6 +136,15 @@ void FillComputeConfig(const std::string& dumpPath, MsprofConfigAttr& metricAttr
     (void)strncpy_s(config.dumpPath, MAX_DUMP_PATH_LEN, dumpPath.c_str(), MAX_DUMP_PATH_LEN - 1);
 }
 
+void FillComputeBlockConfig(uint32_t blockMode, MsprofConfigAttr attrs[], MsprofConfig& config)
+{
+    FillComputeConfig("", attrs[0], config);
+    attrs[1].id = PROF_CONFIG_ATTR_TASK_BLOCK;
+    attrs[1].value.taskBlockMode = blockMode;
+    config.configInfo.attrs = attrs;
+    config.configInfo.numAttrs = 2;
+}
+
 void RegisterComputeSetGetHooks()
 {
     EXPECT_EQ(PROFILING_SUCCESS, MsprofSetInjectionFunc(PROF_HOOK_SET, reinterpret_cast<void*>(RuntimeSetHookStub)));
@@ -189,11 +200,15 @@ void ExpectComputeInjectionInitialized()
     EXPECT_TRUE(computeInitSawGetHook.load());
 }
 
-void RunComputeProfilingStartStop(const std::string& aclProfPath)
+void RunComputeProfilingStartStop(const std::string& aclProfPath, uint32_t blockMode = 0)
 {
-    MsprofConfigAttr metricAttr = {};
+    MsprofConfigAttr attrs[2] = {};
     MsprofConfig config = {};
-    FillComputeConfig("", metricAttr, config);
+    if (blockMode == 0) {
+        FillComputeConfig("", attrs[0], config);
+    } else {
+        FillComputeBlockConfig(blockMode, attrs, config);
+    }
     EXPECT_EQ('\0', config.dumpPath[0]);
     EXPECT_EQ(PROFILING_SUCCESS, MsprofRegisterCallback(COMPUTE_CALLBACK_MODULE_ID, ComputeControlCallback));
     ResetComputeControlCallbackState();
@@ -205,6 +220,16 @@ void RunComputeProfilingStartStop(const std::string& aclProfPath)
     EXPECT_EQ(1U, computeStartCallbackCount.load());
     EXPECT_EQ(1U, computeStopCallbackCount.load());
     EXPECT_FALSE(HasComputeResultDir(aclProfPath));
+}
+
+void RunComputeProfilingWithInitHook(const std::string& aclProfPath, uint32_t blockMode = 0)
+{
+    ResetComputeInjectionStState();
+    RegisterComputeSetGetHooks();
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofSetInjectionFunc(PROF_HOOK_INIT, reinterpret_cast<void*>(acltoolInitialize)));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofInjectionInitialize());
+    ExpectComputeInjectionInitialized();
+    RunComputeProfilingStartStop(aclProfPath, blockMode);
 }
 } // namespace
 
@@ -253,15 +278,7 @@ protected:
     }
 };
 
-TEST_F(AclApiDavidStest, ComputeProfilingApiInitHookEndToEnd)
-{
-    ResetComputeInjectionStState();
-    RegisterComputeSetGetHooks();
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofSetInjectionFunc(PROF_HOOK_INIT, reinterpret_cast<void*>(acltoolInitialize)));
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofInjectionInitialize());
-    ExpectComputeInjectionInitialized();
-    RunComputeProfilingStartStop(aclProfPath);
-}
+TEST_F(AclApiDavidStest, ComputeProfilingApiInitHookEndToEnd) { RunComputeProfilingWithInitHook(aclProfPath); }
 
 TEST_F(AclApiDavidStest, ComputeProfilingAclApiInjectionEndToEnd)
 {
@@ -271,6 +288,16 @@ TEST_F(AclApiDavidStest, ComputeProfilingAclApiInjectionEndToEnd)
     EXPECT_EQ(PROFILING_SUCCESS, MsprofInjectionInitialize());
     ExpectComputeInjectionInitialized();
     RunComputeProfilingStartStop(aclProfPath);
+}
+
+TEST_F(AclApiDavidStest, ComputeProfilingAllBlockEndToEnd)
+{
+    RunComputeProfilingWithInitHook(aclProfPath, PROF_COMPUTE_ALL_BLOCK);
+}
+
+TEST_F(AclApiDavidStest, ComputeProfilingBlockShinkEndToEnd)
+{
+    RunComputeProfilingWithInitHook(aclProfPath, PROF_COMPUTE_BLOCK_SHRINK);
 }
 
 TEST_F(AclApiDavidStest, AclApiDefault)

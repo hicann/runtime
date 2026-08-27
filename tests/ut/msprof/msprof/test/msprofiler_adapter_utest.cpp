@@ -188,6 +188,39 @@ void FillInvalidComputeMetrics(MsprofConfigAttr& attr)
         attr.value.aicoreMetrics[index] = MSPROF_INVALID_AICORE_METRIC;
     }
 }
+
+MsprofConfig MakeComputeBlockConfig(MsprofConfigAttr& attr, uint32_t blockMode)
+{
+    MsprofConfig config = MakeComputeConfig(0);
+    attr.id = PROF_CONFIG_ATTR_TASK_BLOCK;
+    attr.value.taskBlockMode = blockMode;
+    config.configInfo.attrs = &attr;
+    config.configInfo.numAttrs = 1;
+    return config;
+}
+
+MsprofConfig MakeComputeBlockConfig(MsprofConfigAttr attrs[], size_t numAttrs, uint64_t profSwitch)
+{
+    MsprofConfig config = MakeComputeConfig(profSwitch);
+    config.configInfo.attrs = attrs;
+    config.configInfo.numAttrs = numAttrs;
+    return config;
+}
+
+void ExpectComputeBlockParams(uint32_t blockMode, const std::string& expectedBlockShink)
+{
+    MsprofConfigAttr attr = {};
+    MsprofConfig config = MakeComputeBlockConfig(attr, blockMode);
+    Analysis::Dvvp::ProfilerCommon::ComputeProfileConfig computeConfig;
+    auto manager = Analysis::Dvvp::ProfilerCommon::ComputeProfilingManager::instance();
+    EXPECT_EQ(PROFILING_SUCCESS, manager->ParseConfig(config, computeConfig));
+    EXPECT_TRUE(computeConfig.enableBlock);
+    EXPECT_EQ(blockMode, computeConfig.blockMode);
+    auto params = manager->BuildProfileParams(computeConfig, "0");
+    ASSERT_NE(nullptr, params);
+    EXPECT_EQ(analysis::dvvp::common::config::MSVP_PROF_ON, params->taskBlock);
+    EXPECT_EQ(expectedBlockShink, params->taskBlockShink);
+}
 } // namespace
 
 class MSPROFILER_ADAPTER_UTEST : public testing::Test {
@@ -417,6 +450,66 @@ TEST_F(MSPROFILER_ADAPTER_UTEST, COMPUTE_KEEP_ZERO_AICORE_METRIC)
     ASSERT_NE(nullptr, params);
     EXPECT_EQ("Custom:0x0,0x501,0x301", params->ai_core_metrics);
     EXPECT_EQ(params->ai_core_metrics, params->aiv_metrics);
+}
+
+TEST_F(MSPROFILER_ADAPTER_UTEST, COMPUTE_PARSE_ALL_BLOCK_MODE)
+{
+    ExpectComputeBlockParams(PROF_COMPUTE_ALL_BLOCK, analysis::dvvp::common::config::MSVP_PROF_OFF);
+}
+
+TEST_F(MSPROFILER_ADAPTER_UTEST, COMPUTE_PARSE_BLOCK_SHRINK_MODE)
+{
+    ExpectComputeBlockParams(PROF_COMPUTE_BLOCK_SHRINK, analysis::dvvp::common::config::MSVP_PROF_ON);
+}
+
+TEST_F(MSPROFILER_ADAPTER_UTEST, COMPUTE_PARSE_INVALID_BLOCK_MODE)
+{
+    constexpr uint32_t invalidBlockMode = 0;
+    MsprofConfigAttr attr = {};
+    MsprofConfig config = MakeComputeBlockConfig(attr, invalidBlockMode);
+    Analysis::Dvvp::ProfilerCommon::ComputeProfileConfig computeConfig;
+    auto manager = Analysis::Dvvp::ProfilerCommon::ComputeProfilingManager::instance();
+    EXPECT_EQ(PROFILING_FAILED, manager->ParseConfig(config, computeConfig));
+}
+
+TEST_F(MSPROFILER_ADAPTER_UTEST, COMPUTE_PARSE_BLOCK_AND_INSTR_MODE)
+{
+    MsprofConfigAttr attrs[2] = {};
+    attrs[0].id = PROF_CONFIG_ATTR_INSTR;
+    attrs[0].value.instrMode = PROF_COMPUTE_BIU_PERF;
+    attrs[1].id = PROF_CONFIG_ATTR_TASK_BLOCK;
+    attrs[1].value.taskBlockMode = PROF_COMPUTE_BLOCK_SHRINK;
+    MsprofConfig config = MakeComputeBlockConfig(attrs, 2, PROF_INSTR_MASK);
+
+    Analysis::Dvvp::ProfilerCommon::ComputeProfileConfig computeConfig;
+    auto manager = Analysis::Dvvp::ProfilerCommon::ComputeProfilingManager::instance();
+    EXPECT_EQ(PROFILING_SUCCESS, manager->ParseConfig(config, computeConfig));
+    EXPECT_TRUE(computeConfig.enableInstr);
+    EXPECT_TRUE(computeConfig.enableBiuPerf);
+    EXPECT_TRUE(computeConfig.enableBlock);
+    EXPECT_EQ(PROF_COMPUTE_BLOCK_SHRINK, computeConfig.blockMode);
+
+    auto params = manager->BuildProfileParams(computeConfig, "0");
+    ASSERT_NE(nullptr, params);
+    EXPECT_EQ(analysis::dvvp::common::config::MSVP_PROF_ON, params->instrProfiling);
+    EXPECT_EQ(analysis::dvvp::common::config::MSVP_PROF_ON, params->taskBlock);
+    EXPECT_EQ(analysis::dvvp::common::config::MSVP_PROF_ON, params->taskBlockShink);
+}
+
+TEST_F(MSPROFILER_ADAPTER_UTEST, COMPUTE_PARSE_REPEAT_TASK_BLOCK_ATTR_LAST_WINS)
+{
+    MsprofConfigAttr attrs[2] = {};
+    attrs[0].id = PROF_CONFIG_ATTR_TASK_BLOCK;
+    attrs[0].value.taskBlockMode = PROF_COMPUTE_ALL_BLOCK;
+    attrs[1].id = PROF_CONFIG_ATTR_TASK_BLOCK;
+    attrs[1].value.taskBlockMode = PROF_COMPUTE_BLOCK_SHRINK;
+    MsprofConfig config = MakeComputeBlockConfig(attrs, 2, 0);
+
+    Analysis::Dvvp::ProfilerCommon::ComputeProfileConfig computeConfig;
+    auto manager = Analysis::Dvvp::ProfilerCommon::ComputeProfilingManager::instance();
+    EXPECT_EQ(PROFILING_SUCCESS, manager->ParseConfig(config, computeConfig));
+    EXPECT_TRUE(computeConfig.enableBlock);
+    EXPECT_EQ(PROF_COMPUTE_BLOCK_SHRINK, computeConfig.blockMode);
 }
 
 TEST_F(MSPROFILER_ADAPTER_UTEST, COMPUTE_START_JOB_REJECTS_NULL_PARAMS)
