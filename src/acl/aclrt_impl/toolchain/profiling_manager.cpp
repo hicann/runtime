@@ -333,7 +333,6 @@ const std::map<AclProfType, std::string> PROF_TYPE_TO_NAMES = {
     {AclProfType::AclrtExceptionInfoCallbackRegister, "aclrtExceptionInfoCallbackRegister"},
     {AclProfType::AclrtExceptionInfoCallbackUnregister, "aclrtExceptionInfoCallbackUnregister"},
     {AclProfType::AclrtHostGetDevicePointerAddrRange, "aclrtHostGetDevicePointerAddrRange"},
-    {AclProfType::AclrtBinaryEnumerateFunctions, "aclrtBinaryEnumerateFunctions"},
 };
 
 aclError RegisterType(const uint32_t index)

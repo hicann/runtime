@@ -1374,16 +1374,6 @@ rtError_t rtBinaryLoadWithoutTilingKey(const void* data, const uint64_t length, 
 }
 
 VISIBILITY_DEFAULT
-rtError_t rtBinaryEnumerateFunctions(
-    const rtBinHandle binHandle, rtFuncHandle* const funcHandles, const uint32_t numFunctions)
-{
-    UNUSED(binHandle);
-    UNUSED(funcHandles);
-    UNUSED(numFunctions);
-    return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
-}
-
-VISIBILITY_DEFAULT
 rtError_t rtLaunchSIMTKernelWithHostArgs(
     void* func, rtDim3 gridDim, rtDim3 blockDim, size_t dynUbufSize, rtStream_t stm, rtKernelLaunchCfg_t* cfg,
     void* hostArgs, uint32_t argsSize, rtPlaceHolderInfo_t* placeHolderArray, uint32_t placeHolderNum)

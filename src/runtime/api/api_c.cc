@@ -11,7 +11,6 @@
 #include "api_c.h"
 #include "api.hpp"
 #include "api_event.hpp"
-#include "runtime/inner_kernel.h"
 #include "api_handle_guard.h"
 #include "stream.hpp"
 #include "event.hpp"

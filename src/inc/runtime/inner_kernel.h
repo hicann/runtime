@@ -122,20 +122,6 @@ RTS_API rtError_t rtBinaryGetGlobal(const rtBinHandle binHandle, const char* nam
 RTS_API rtError_t rtGetFuncBySymbol(const void* symbol, rtFuncHandle* funcHandle);
 
 /**
- * @ingroup rt_kernel
- * @brief Enumerate all function handles in the binary module.
- * @param [in] binHandle    binary handle
- * @param [out] funcHandles array to receive function handles, filled with
- *                          min(numFunctions, actual function count) entries in internal storage order
- * @param [in] numFunctions size of the funcHandles array; if 0, no function handle is
- *                          written and RT_ERROR_NONE is returned
- * @return RT_ERROR_NONE for ok
- * @return RT_ERROR_INVALID_VALUE for error input
- */
-RTS_API rtError_t
-rtBinaryEnumerateFunctions(const rtBinHandle binHandle, rtFuncHandle* funcHandles, uint32_t numFunctions);
-
-/**
  * @ingroup rts_kernel
  * @brief Get the total number of kernel functions in the binary.
  * @param [in] binHandle binary handle to query.

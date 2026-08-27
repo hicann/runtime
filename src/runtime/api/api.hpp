@@ -137,9 +137,6 @@ public:
         const Program* const binHandle, const char* kernelName, Kernel** const funcHandle) = 0;
     virtual rtError_t BinaryGetFunctionByEntry(
         const Program* const binHandle, const uint64_t funcEntry, Kernel** const funcHandle) = 0;
-    virtual rtError_t BinaryEnumerateFunctions(
-        const Program* const binHandle, Kernel** const funcHandles, const uint32_t numFunctions,
-        uint32_t* const actualCount) = 0;
     virtual rtError_t BinaryGetFunctionCount(const Program* const binHandle, uint32_t* const count) = 0;
     virtual rtError_t BinaryGetMetaNum(Program* const binHandle, const rtBinaryMetaType type, size_t* numOfMeta) = 0;
     virtual rtError_t BinaryGetMetaInfo(
