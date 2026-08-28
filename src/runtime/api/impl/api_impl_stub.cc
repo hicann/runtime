@@ -15,6 +15,40 @@
 namespace cce {
 namespace runtime {
 
+rtError_t ApiImpl::SnapShotProcessLock() { return RT_ERROR_FEATURE_NOT_SUPPORT; }
+
+rtError_t ApiImpl::SnapShotProcessUnlock() { return RT_ERROR_FEATURE_NOT_SUPPORT; }
+
+rtError_t ApiImpl::SnapShotProcessBackup() { return RT_ERROR_FEATURE_NOT_SUPPORT; }
+
+rtError_t ApiImpl::SnapShotProcessRestore() { return RT_ERROR_FEATURE_NOT_SUPPORT; }
+
+rtError_t ApiImpl::SnapShotCallbackRegister(rtSnapShotStage stage, rtSnapShotCallBack callback, void* args)
+{
+    UNUSED(stage);
+    UNUSED(callback);
+    UNUSED(args);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t ApiImpl::SnapShotCallbackUnregister(rtSnapShotStage stage, rtSnapShotCallBack callback)
+{
+    UNUSED(stage);
+    UNUSED(callback);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t ApiImpl::BinaryEnumerateFunctions(
+    const Program* const binHandle, Kernel** const funcHandles, const uint32_t numFunctions,
+    uint32_t* const actualCount)
+{
+    UNUSED(binHandle);
+    UNUSED(funcHandles);
+    UNUSED(numFunctions);
+    UNUSED(actualCount);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
 rtError_t ApiImpl::CntNotifyCreate(const int32_t deviceId, CountNotify** const retCntNotify, const uint32_t flag)
 {
     UNUSED(deviceId);

@@ -740,6 +740,20 @@ TEST_F(TinyStubTest, npu_snapshot_stub)
     EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ret = rtSnapShotCallbackUnregister(RT_SNAPSHOT_LOCK_PRE, nullptr);
     EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+
+    ApiImpl impl;
+    ret = impl.SnapShotProcessLock();
+    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
+    ret = impl.SnapShotProcessUnlock();
+    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
+    ret = impl.SnapShotProcessBackup();
+    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
+    ret = impl.SnapShotProcessRestore();
+    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
+    ret = impl.SnapShotCallbackRegister(RT_SNAPSHOT_LOCK_PRE, nullptr, nullptr);
+    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
+    ret = impl.SnapShotCallbackUnregister(RT_SNAPSHOT_LOCK_PRE, nullptr);
+    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
 }
 
 TEST_F(TinyStubTest, printf_stub)

@@ -70,7 +70,6 @@
 #include "soc_info.h"
 #include "task_execute_time.h"
 #include "register_memory.hpp"
-#include "global_state_manager.hpp"
 #include "mem_type.hpp"
 #include "inner_kernel.h"
 #include "rt_inner_model.h"
@@ -91,8 +90,6 @@
 #include "xpu_aicpu_c.hpp"
 #include "fast_recover.hpp"
 #include "kernel/symbol_table.hpp"
-#include "snapshot_callback_manager.hpp"
-#include "snapshot_process_helper.hpp"
 #include "task_to_sqe.hpp"
 
 #define RT_DRV_FAULT_CNT 25U
@@ -3251,56 +3248,6 @@ rtError_t ApiImpl::DeviceTaskAbort(const int32_t devId, const uint32_t timeout)
     const rtError_t error = ContextManage::DeviceTaskAbort(devId, timeout);
     ERROR_RETURN(error, "Device task abort failed.");
     return error;
-}
-
-rtError_t ApiImpl::SnapShotProcessLock()
-{
-    rtError_t error = SnapshotCallbackManager::GetInstance().InvokeCallbacks(RT_SNAPSHOT_LOCK_PRE);
-    COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error);
-    error = GlobalStateManager::GetInstance().Locked();
-    return error;
-}
-
-rtError_t ApiImpl::SnapShotProcessUnlock()
-{
-    rtError_t error = GlobalStateManager::GetInstance().Unlocked();
-    COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error);
-    error = SnapshotCallbackManager::GetInstance().InvokeCallbacks(RT_SNAPSHOT_UNLOCK_POST);
-    return error;
-}
-
-rtError_t ApiImpl::SnapShotProcessBackup()
-{
-    rtError_t error = SnapshotCallbackManager::GetInstance().InvokeCallbacks(RT_SNAPSHOT_BACKUP_PRE);
-    COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error);
-    error = cce::runtime::SnapShotProcessBackup();
-    COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error);
-    error = SnapshotCallbackManager::GetInstance().InvokeCallbacks(RT_SNAPSHOT_BACKUP_POST);
-    COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error);
-    GlobalStateManager::GetInstance().SetCurrentState(RT_PROCESS_STATE_BACKED_UP);
-    return RT_ERROR_NONE;
-}
-
-rtError_t ApiImpl::SnapShotProcessRestore()
-{
-    rtError_t error = SnapshotCallbackManager::GetInstance().InvokeCallbacks(RT_SNAPSHOT_RESTORE_PRE);
-    COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error);
-    error = cce::runtime::SnapShotProcessRestore();
-    COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error);
-    error = SnapshotCallbackManager::GetInstance().InvokeCallbacks(RT_SNAPSHOT_RESTORE_POST);
-    COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error);
-    GlobalStateManager::GetInstance().SetCurrentState(RT_PROCESS_STATE_LOCKED);
-    return RT_ERROR_NONE;
-}
-
-rtError_t ApiImpl::SnapShotCallbackRegister(rtSnapShotStage stage, rtSnapShotCallBack callback, void* args)
-{
-    return SnapshotCallbackManager::GetInstance().RegisterCallback(stage, callback, args);
-}
-
-rtError_t ApiImpl::SnapShotCallbackUnregister(rtSnapShotStage stage, rtSnapShotCallBack callback)
-{
-    return SnapshotCallbackManager::GetInstance().UnregisterCallback(stage, callback);
 }
 
 rtError_t ApiImpl::DeviceSetTsId(const uint32_t tsId)
