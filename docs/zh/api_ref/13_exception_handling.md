@@ -920,6 +920,10 @@ aclError aclrtDeviceTaskAbort(int32_t deviceId, uint32_t timeout)
 
 返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
+### 约束说明
+
+当前接口仅支持遇错即停场景下使用，否则会出现不可预知的异常问题。默认模式为遇错继续模式，如需调用本接口，请先设置遇错即停模式，具体可参考接口[aclrtSetStreamFailureMode](06_stream_management.md#aclrtSetStreamFailureMode)。
+
 <br>
 <br>
 <br>
