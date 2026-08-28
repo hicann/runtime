@@ -159,7 +159,9 @@ void JsonParser::ParseJsonChannels(const ProfJsonRoot& profJsonRootFile)
         } else if (
             channelsArray[i][MSPORF_PERIOD_STRING].GetValue<int32_t>() < MIN_CHANNEL_PEROID ||
             channelsArray[i][MSPORF_PERIOD_STRING].GetValue<int32_t>() > MAX_CHANNEL_PEROID) {
-            MSPROF_LOGW("The period of Channel %d is out of range", tempChannel.channelId);
+            MSPROF_LOGW(
+                "The period of Channel %d is out of range, current=%d, validRange=[%d, %d].", tempChannel.channelId,
+                channelsArray[i][MSPORF_PERIOD_STRING].GetValue<int32_t>(), MIN_CHANNEL_PEROID, MAX_CHANNEL_PEROID);
             tempChannel.peroid = 0;
         } else {
             tempChannel.peroid = (channelsArray[i])[MSPORF_PERIOD_STRING].GetValue<int32_t>();
@@ -187,7 +189,10 @@ void JsonParser::CheckModuleReportBufferLen(JsonValue temp, ProfJsonReporters& t
         tempReporter.reportBufferLen = 0;
     } else if ((temp[MSPORF_REPORT_BUFFER_LEN_STRING].GetValue<int32_t>() < MIN_REPORT_BUFFER_LEN ||
                 temp[MSPORF_REPORT_BUFFER_LEN_STRING].GetValue<int32_t>() > MAX_REPORT_BUFFER_LEN)) {
-        MSPROF_LOGW("The reporter buffer len of Reporter %d is out of range", tempReporter.reporterId);
+        MSPROF_LOGW(
+            "The reporter buffer len of Reporter %d is out of range, current=%d bytes, validRange=[%d, %d] bytes.",
+            tempReporter.reporterId, temp[MSPORF_REPORT_BUFFER_LEN_STRING].GetValue<int32_t>(), MIN_REPORT_BUFFER_LEN,
+            MAX_REPORT_BUFFER_LEN);
         tempReporter.reportBufferLen = 0;
     } else {
         tempReporter.reportBufferLen = (temp)[MSPORF_REPORT_BUFFER_LEN_STRING].GetValue<int32_t>();
@@ -233,7 +238,10 @@ void JsonParser::CheckChannelReportBufferLen(JsonValue temp, ProfJsonChannels& t
     } else if (
         temp[MSPORF_CHANNEL_BUFFER_SIZE_STRING].GetValue<int32_t>() < MIN_CHANNEL_BUFFER_SIZE ||
         temp[MSPORF_CHANNEL_BUFFER_SIZE_STRING].GetValue<int32_t>() > MAX_CHANNEL_BUFFER_SIZE) {
-        MSPROF_LOGW("The channel buffer size of Channel %d is out of range", tempChannel.channelId);
+        MSPROF_LOGW(
+            "Channel buffer size is out of range, channelId=%d, current=%d bytes, validRange=[%d, %d] bytes.",
+            tempChannel.channelId, temp[MSPORF_CHANNEL_BUFFER_SIZE_STRING].GetValue<int32_t>(), MIN_CHANNEL_BUFFER_SIZE,
+            MAX_CHANNEL_BUFFER_SIZE);
         tempChannel.reportBufferLen = 0;
     } else {
         tempChannel.reportBufferLen = (temp)[MSPORF_CHANNEL_BUFFER_SIZE_STRING].GetValue<int32_t>();
@@ -249,7 +257,9 @@ void JsonParser::CheckChannelThreshold(JsonValue temp, ProfJsonChannels& tempCha
          temp[MSPORF_THRESHOLD_STRING].GetValue<int32_t>() > MAX_HWTS_THRESHOLD) &&
         (tempChannel.channelId == static_cast<int32_t>(AI_DRV_CHANNEL::PROF_CHANNEL_HWTS_LOG) ||
          tempChannel.channelId == static_cast<int32_t>(AI_DRV_CHANNEL::PROF_CHANNEL_AIV_HWTS_LOG))) {
-        MSPROF_LOGW("The threshold of Channel %d is out of range", tempChannel.channelId);
+        MSPROF_LOGW(
+            "Channel threshold is out of range, channelId=%d, current=%d, validRange=[%d, %d].", tempChannel.channelId,
+            temp[MSPORF_THRESHOLD_STRING].GetValue<int32_t>(), MIN_HWTS_THRESHOLD, MAX_HWTS_THRESHOLD);
         tempChannel.threshold = 0;
     } else {
         tempChannel.threshold = (temp)[MSPORF_THRESHOLD_STRING].GetValue<int32_t>();

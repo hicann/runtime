@@ -217,7 +217,9 @@ void FileAgeing::AppendAgeingFile(
         Utils::BaseName(doneFilePath).c_str());
     constexpr uint64_t maxStoragedFileSize = static_cast<uint64_t>(1) << 50; // (2^50)Byte = 1024T
     if (storagedFileSize_ >= maxStoragedFileSize) {
-        MSPROF_LOGE("storagedFileSize_:%" PRIu64 " is over normal range", storagedFileSize_);
+        MSPROF_LOGE(
+            "Stored file size is out of range, current=%" PRIu64 " bytes, validRange=[0, %" PRIu64 ") bytes.",
+            storagedFileSize_, maxStoragedFileSize);
         return;
     }
     if (filePath.empty() || doneFilePath.empty()) {

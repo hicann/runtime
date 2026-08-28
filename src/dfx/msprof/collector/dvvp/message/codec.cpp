@@ -135,7 +135,9 @@ SHARED_PTR_ALIA<std::string> EncodeMessageShared(SHARED_PTR_ALIA<google::protobu
 SHARED_PTR_ALIA<google::protobuf::Message> DecodeMessage(const std::string& buf)
 {
     if (buf.size() > analysis::dvvp::common::config::MSVP_DECODE_MESSAGE_MAX_LEN) {
-        MSPROF_LOGE("[DecodeMessage] buf size(%zu) is too big.", buf.size());
+        MSPROF_LOGE(
+            "Decode message buffer size exceeds the maximum, current=%zu bytes, maximum=%d bytes.", buf.size(),
+            analysis::dvvp::common::config::MSVP_DECODE_MESSAGE_MAX_LEN);
         return nullptr;
     }
     SHARED_PTR_ALIA<google::protobuf::Message> message = nullptr;
@@ -150,7 +152,9 @@ SHARED_PTR_ALIA<google::protobuf::Message> DecodeMessage(const std::string& buf)
     }
     uint32_t nameLen = ::ntohl(*(reinterpret_cast<const uint32_t*>(buf.c_str())));
     if (nameLen > analysis::dvvp::common::config::MSVP_MESSAGE_TYPE_NAME_MAX_LEN + 1) { // 1 :typename + \0
-        MSPROF_LOGE("[DecodeMessage] buf size(%u) is too big.", nameLen);
+        MSPROF_LOGE(
+            "Message type name length exceeds the maximum, current=%u bytes, maximum=%d bytes.", nameLen,
+            analysis::dvvp::common::config::MSVP_MESSAGE_TYPE_NAME_MAX_LEN + 1);
         return nullptr;
     }
     currLen += sizeof(uint32_t);
