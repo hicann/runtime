@@ -4836,11 +4836,6 @@ rtError_t Runtime::GetUserDevIdByDeviceId(
                 "Get userDevId failed, "
                 "input deviceId:%u real deviceCnt:%u isSetVisibleDev:%d ASCEND_RT_VISIBLE_DEVICES:[%s].",
                 deviceId, deviceCnt, isSetVisibleDev, inputDeviceStr);
-            RT_LOG_INNER_MSG(
-                RT_LOG_ERROR,
-                "Failed to convert the driver device ID %u to user device ID. Reason: driver device ID is invalid, "
-                "valid range is [0, %u).",
-                deviceId, deviceCnt);
         }
         return RT_ERROR_DEVICE_ID;
     }

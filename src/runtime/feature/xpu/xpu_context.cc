@@ -55,6 +55,7 @@ rtError_t XpuContext::Setup()
     SetState(ContextState::CTX_STATE_INITIALIZING);
     SetCtxMode(STOP_ON_FAILURE);
     SetState(ContextState::CTX_STATE_ACTIVE);
+    SetUserDeviceId(device_->Id_());
     return RT_ERROR_NONE;
 }
 

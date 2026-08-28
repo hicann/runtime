@@ -526,6 +526,7 @@ private:
 
 protected:
     std::list<Stream*> TakeOwnedStreamsForTearDown();
+    void SetUserDeviceId(const uint32_t id) { userDeviceId_ = id; }
     Device* device_;
 
 private:

@@ -268,12 +268,7 @@ Context::Context(Device* const ctxDevice, const bool primaryCtx)
       lastErr_(ACL_RT_SUCCESS),
       callBackThreadExist_(false),
       userDeviceId_(MAX_UINT32_NUM)
-{
-    Runtime* const rtInstance = Runtime::Instance();
-    if (rtInstance != nullptr && device_ != nullptr) {
-        (void)rtInstance->GetUserDevIdByDeviceId(device_->Id_(), &userDeviceId_);
-    }
-}
+{}
 
 Context::~Context() { ReleaseResourcesAfterTearDown(); }
 
@@ -630,6 +625,8 @@ rtError_t Context::Setup()
     rtError_t error;
     const rtChipType_t chipType = device_->GetChipType();
     SetState(ContextState::CTX_STATE_INITIALIZING, "ContextSetupBegin");
+    (void)Runtime::Instance()->GetUserDevIdByDeviceId(device_->Id_(), &userDeviceId_, false, true);
+    RT_LOG(RT_LOG_INFO, "device_id=%u, user_device_id=%u.", device_->Id_(), userDeviceId_);
 
     error = Init();
     ERROR_RETURN(error, "Failed to init context, retCode=%#x.", error);
