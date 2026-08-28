@@ -129,7 +129,9 @@ rtError_t AicpuTimeoutManager::TryCloseAicpuMonitor(Device* const dev)
     bool isSupported = false;
     rtError_t ret = AicpuTimeoutControl::CheckKernelSupported(dev, "tsKernel:CloseAicpuMonitor", isSupported);
     if (ret != RT_ERROR_NONE) {
-        RT_LOG(RT_LOG_ERROR, "CheckKernelSupported failed, deviceId=%u, ret=%u", devId, ret);
+        RT_LOG_INNER_MSG(
+            RT_LOG_ERROR, "Failed to check support for the AI CPU monitor control kernel, deviceId=%u, retCode=%#x.",
+            devId, static_cast<uint32_t>(ret));
         return ret;
     }
     if (!isSupported) {

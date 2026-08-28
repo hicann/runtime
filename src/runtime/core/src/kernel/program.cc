@@ -352,7 +352,9 @@ rtError_t Program::KernelNameMapAdd(Kernel*& addKernel)
     kernelMapLock_.Lock();
     const auto iter = kernelNameMap_.find(addKernel->Name_());
     if (iter != kernelNameMap_.end()) {
-        RT_LOG(RT_LOG_ERROR, "Add kernel repeatedly, kernel_name=%s", addKernel->Name_().c_str());
+        RT_LOG_OUTER_MSG_IMPL(
+            ErrorCode::EE1014,
+            RtFmtMsg("The operator binary file contains duplicate kernel name %s", addKernel->Name_().c_str()));
         kernelMapLock_.Unlock();
         return RT_ERROR_KERNEL_DUPLICATE;
     }
@@ -1768,6 +1770,9 @@ rtError_t ElfProgram::MergeKernel(const RtKernel* const elfkernelInfo, Kernel* o
             "current kernel name=[%s], kernelAttrType=%s, mixType=%hu",
             oldKernel->Name_().c_str(), KernelAttrTypeToString(oldKernelAttrType).c_str(), oldMixType,
             oldKernel->Offset2_(), elfkernelInfo->name, KernelAttrTypeToString(kernelAttrType).c_str(), mixType);
+        RT_LOG_OUTER_MSG_IMPL(
+            ErrorCode::EE1014,
+            RtFmtMsg("The mix kernel %s conflicts with another kernel of the same name", elfkernelInfo->name));
         return RT_ERROR_INVALID_VALUE;
     }
 
@@ -1836,7 +1841,9 @@ rtError_t ElfProgram::RegisterAllKernelCommon(void)
         /* 去掉kernelName的_mix_aic/_mix_aiv的后缀 */
         rtError_t error;
         const std::string tripKernelName = AdjustKernelName(elfKernelInfo->name);
-        COND_RETURN_ERROR(tripKernelName.empty(), RT_ERROR_INVALID_VALUE, "KernelName cannot be empty.");
+        COND_RETURN_AND_MSG_OUTER(
+            tripKernelName.empty(), RT_ERROR_INVALID_VALUE, ErrorCode::EE1014,
+            "The kernel name in the operator binary file is empty");
 
         Kernel* kernelTmp = const_cast<Kernel*>(GetKernelByName(tripKernelName.c_str()));
         if (kernelTmp != nullptr) {

@@ -883,11 +883,9 @@ rtError_t ApiImpl::BinaryGetFunction(const Program* const prog, const uint64_t t
 
     const rtError_t error = Runtime::Instance()->BinaryGetFunction(prog, tilingKey, &kerneltmp);
     if (error != RT_ERROR_NONE) {
-        RT_LOG_INNER_MSG(
-            RT_LOG_ERROR,
-            "BinaryGetFunction failed, programId=%u, "
-            "tilingKey=%" PRIu64 ", retCode=%#x.",
-            prog->Id_(), tilingKey, static_cast<uint32_t>(error));
+        RT_LOG(
+            RT_LOG_ERROR, "BinaryGetFunction failed, programId=%u, tilingKey=%" PRIu64 ", retCode=%#x.", prog->Id_(),
+            tilingKey, static_cast<uint32_t>(error));
         return RT_ERROR_INVALID_VALUE;
     }
 
@@ -941,9 +939,15 @@ rtError_t ApiImpl::BinaryGetFunctionByName(
     *funcHandle = nullptr;
     const rtError_t error = Runtime::Instance()->BinaryGetFunctionByName(binHandle, kernelName, &kerneltmp);
     if (error != RT_ERROR_NONE) {
-        RT_LOG_INNER_MSG(
-            RT_LOG_ERROR, "BinaryGetFunction failed, kernel_name=%s, retCode=%#x.", kernelName,
-            static_cast<uint32_t>(error));
+        if (error == RT_ERROR_KERNEL_NULL) {
+            RT_LOG_OUTER_MSG_IMPL(
+                ErrorCode::EE1011, "Kernel function query", kernelName, "kernelName",
+                "The kernel function with this kernelName does not exist");
+        } else {
+            RT_LOG(
+                RT_LOG_ERROR, "BinaryGetFunction failed, kernel_name=%s, retCode=%#x.", kernelName,
+                static_cast<uint32_t>(error));
+        }
         return RT_ERROR_INVALID_VALUE;
     }
 
@@ -7364,6 +7368,11 @@ static rtError_t BinaryGetFunctionByExceptionKernelName(
     const std::string adjustedName = GetAdjustedMixKernelName(kernelName);
     if (adjustedName.compare(kernelName) != 0) {
         error = Runtime::Instance()->BinaryGetFunctionByName(binHandle, adjustedName.c_str(), funcHandle);
+    }
+    if (error == RT_ERROR_KERNEL_NULL) {
+        RT_LOG_OUTER_MSG_IMPL(
+            ErrorCode::EE1011, "Kernel function query", kernelName, "kernelName",
+            "The kernel function with this kernelName does not exist");
     }
     return error;
 }

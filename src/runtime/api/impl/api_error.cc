@@ -125,7 +125,9 @@ rtError_t ApiErrorDecorator::FunctionRegister(
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(stubName, RT_ERROR_INVALID_VALUE, "Operator kernel registration");
 
     const rtError_t error = impl_->FunctionRegister(prog, stubFunc, stubName, kernelInfoExt, funcMode);
-    COND_PROC((error == RT_ERROR_KERNEL_DUPLICATE), return error;);
+    COND_RETURN_AND_MSG_OUTER(
+        error == RT_ERROR_KERNEL_DUPLICATE, error, ErrorCode::EE1018, "Registering an operator kernel function",
+        RtFmtMsg("The kernel function %s has already been registered and cannot be registered again", stubName));
     ERROR_RETURN(error, "Register function failed, funcName=%s.", ((stubName != nullptr) ? stubName : "(none)"));
     return error;
 }

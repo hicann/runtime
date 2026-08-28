@@ -113,6 +113,7 @@ PrimaryContextInitInfo PreparePrimaryContext(
     if (!initInfo.reusedCtx) {
         initInfo.ctx = new (std::nothrow) Context(initInfo.dev, true);
         if (initInfo.ctx == nullptr) {
+            RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1013, sizeof(Context), "new");
             initInfo.err = RT_ERROR_CONTEXT_NEW;
             return initInfo;
         }
@@ -1410,8 +1411,7 @@ static rtError_t GetDavidDcacheLockMixPath(std::string& binaryPath)
     const char_t* getPath = nullptr;
     MM_SYS_GET_ENV(MM_ENV_LD_LIBRARY_PATH, getPath);
     if (getPath == nullptr) {
-        RT_LOG_OUTER_MSG_IMPL(
-            ErrorCode::EE2002, "NULL", "LD_LIBRARY_PATH", "a valid path containing \"runtime/lib64\"");
+        RT_LOG(RT_LOG_ERROR, "LD_LIBRARY_PATH is not set, skip locating the optional dcache lock operator.");
         return RT_ERROR_INVALID_VALUE;
     }
 
@@ -1936,7 +1936,9 @@ rtError_t Runtime::KernelRegister(
 
         /* 去掉kernelName的_mix_aic/_mix_aiv的后缀 */
         const std::string tripKName = elfProg->AdjustKernelName(elfKernelInfo->name);
-        COND_RETURN_ERROR_MSG_INNER(tripKName.empty(), RT_ERROR_INVALID_VALUE, "KernelName cannot be empty.");
+        COND_RETURN_AND_MSG_OUTER(
+            tripKName.empty(), RT_ERROR_INVALID_VALUE, ErrorCode::EE1014,
+            "The kernel name in the operator binary file is empty");
         return RegisterKernelByStubFunc(elfProg, stubFunc, stubName, kernelInfoExt, funcMode, tripKName.c_str());
     }
 
@@ -2369,6 +2371,7 @@ rtError_t Runtime::InitAicpuFlowGw(const uint32_t devId, const rtInitFlowGwInfo_
     }
 
     if (!isHaveDevice_) {
+        RT_LOG_OUTER_MSG_WITH_FUNC_DESC(ErrorCode::EE1005, "initializing the Flow Gateway");
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
     InitFlowGwInfo info = {};
@@ -2377,7 +2380,8 @@ rtError_t Runtime::InitAicpuFlowGw(const uint32_t devId, const rtInitFlowGwInfo_
     }
 #if (!defined CFG_DEV_PLATFORM_PC)
     if (tsdInitFlowGw_ == nullptr) {
-        RT_LOG_INNER_MSG(RT_LOG_WARNING, "TsdInitFlowGw is null.");
+        RT_LOG_OUTER_MSG_WITH_FUNC_DESC(
+            ErrorCode::EE1015, "Initializing the Flow Gateway", "The TsdInitFlowGw symbol is unavailable.");
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
 
@@ -2739,7 +2743,10 @@ RefObject<Context*>* Runtime::PrimaryContextRetain(const uint32_t devId)
         if (i == RT_TSV_ID) {
             RestorePrimaryContextRef(priCtxs_[devId][RT_TSC_ID]);
         }
-        RT_LOG(RT_LOG_ERROR, "Primary context retain failed, ctx is null, devId=%u, ts_id=%u.", devId, i);
+        RT_LOG_INNER_MSG(
+            RT_LOG_ERROR,
+            "Primary context retain failed because context is null, devId=%u, tsId=%u, refCount=%#" PRIx64 ".", devId,
+            i, refObjValue);
         return nullptr;
     }
 
@@ -2758,7 +2765,7 @@ rtError_t Runtime::GetPrimaryCtxState(const int32_t devId, uint32_t* flags, int3
     *active = 0;
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
         (static_cast<uint32_t>(devId) >= RT_MAX_DEV_NUM || devId < 0), RT_ERROR_DEVICE_ID,
-        "Obtaining the status of the default context", devId, "[0, " + std::to_string(RT_MAX_DEV_NUM) + ")");
+        "Obtaining the status of the default context", devId, RtFmtMsg("[0, %u)", RT_MAX_DEV_NUM));
 
     COND_RETURN_ERROR_MSG_INNER(
         (tsNum_ == 0U) || (tsNum_ > RT_MAX_TS_NUM), RT_ERROR_DEVICE_ID,
@@ -2933,7 +2940,7 @@ rtError_t Runtime::PrimaryContextRelease(const uint32_t devId, const bool isForc
     bool ret = false;
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
         devId >= RT_MAX_DEV_NUM, RT_ERROR_DEVICE_ID, "Releasing the main context of the device", devId,
-        "[0, " + std::to_string(RT_MAX_DEV_NUM) + ")");
+        RtFmtMsg("[0, %u)", RT_MAX_DEV_NUM));
     COND_RETURN_ERROR_MSG_INNER(
         (tsNum_ == 0U) || (tsNum_ > RT_MAX_TS_NUM), RT_ERROR_CONTEXT_DEL,
         "PrimaryContextRelease failed because value %u for tsNum is invalid, valid range is [1, %u].", tsNum_,
@@ -4266,7 +4273,9 @@ rtError_t Runtime::ProfilerStop(
     const bool bConfig4Log = isConfigForProfileLog(profConfig);
     const bool bProfileLog = bConfig4Log && (!bTaskTrack);
     if (bProfileLog != profileLogModeEnable_) {
-        RT_LOG_INNER_MSG(RT_LOG_ERROR, "Profiler stop failed because ProfileLog config does not match.");
+        RT_LOG_OUTER_MSG_IMPL(
+            ErrorCode::EE1018, "Stopping profiling analysis",
+            "The ProfileLog mode does not match the mode used to start profiling");
         return RT_ERROR_PROF_STATUS;
     }
 
@@ -4325,7 +4334,7 @@ rtError_t Runtime::SetTaskAbortCallBack(const char_t* regName, void* callback, v
         COND_RETURN_AND_MSG_OUTER(
             taskAbortCallbackMap_.count(regName) > 0, RT_ERROR_INVALID_VALUE, ErrorCode::EE1017,
             "Registering the aborting callback function of a task", "regName",
-            "The regName " + std::string(regName) + " has been registered and cannot be registered again.");
+            RtFmtMsg("The regName %s has been registered and cannot be registered again", regName));
         taskAbortCallbackMap_[regName].callback = nullptr;
         taskAbortCallbackMap_[regName].callbackV2 = RtPtrToPtr<rtsDeviceTaskAbortCallback>(callback);
         taskAbortCallbackMap_[regName].args = args;
@@ -4835,7 +4844,7 @@ rtError_t Runtime::ChgUserDevIdToDeviceId(
             userDevId, userDeviceCnt, deviceCnt, isSetVisibleDev, inputDeviceStr, availableDeviceStr);
         RT_LOG_OUTER_MSG_WITH_FUNC_DESC(
             ErrorCode::EE1003, "Obtaining the logical device ID based on the user device ID", userDevId, "userDevId",
-            "[0, " + std::to_string(userDeviceCnt) + ")");
+            RtFmtMsg("[0, %u)", userDeviceCnt));
         return RT_ERROR_DEVICE_ID;
     }
     (*deviceId) = deviceInfo[userDevId];
@@ -5092,8 +5101,9 @@ rtError_t Runtime::BinaryGetFunction(
 {
     Program* const progTmp = const_cast<Program*>(prog);
     const Kernel* kernel = progTmp->GetKernelByTillingKey(tilingKey);
-    COND_RETURN_ERROR_MSG_INNER(
-        kernel == nullptr, RT_ERROR_KERNEL_NULL, "Cannot find kernel by tilingKey[%" PRIu64 "].", tilingKey);
+    COND_RETURN_AND_MSG_OUTER(
+        kernel == nullptr, RT_ERROR_KERNEL_NULL, ErrorCode::EE1011, "Querying the kernel function by tiling key",
+        tilingKey, "tilingKey", "The kernel function corresponding to tilingKey does not exist");
     *funcHandle = const_cast<Kernel*>(kernel);
     return RT_ERROR_NONE;
 }
@@ -5116,7 +5126,7 @@ rtError_t Runtime::BinaryGetFunctionByName(
 
     Kernel* kernel = const_cast<Kernel*>(progTmp->GetKernelByName(kernelName));
     const uint32_t devId = static_cast<uint32_t>(dev->Id_());
-    COND_RETURN_ERROR_MSG_INNER(kernel == nullptr, RT_ERROR_KERNEL_NULL, "Cannot find kernel by name %s.", kernelName);
+    COND_RETURN_WITH_NOLOG(kernel == nullptr, RT_ERROR_KERNEL_NULL);
 
     *funcHandle = kernel;
     if (IS_SUPPORT_CHIP_FEATURE(dev->GetChipType(), RtOptionalFeatureType::RT_FEATURE_XPU)) {
@@ -5216,9 +5226,10 @@ rtError_t Runtime::GetKernelBinByFileName(
 {
     *length = 0U;
     std::ifstream file(binFileName, std::ios::binary | std::ios::in);
-    COND_RETURN_ERROR_MSG_INNER(
-        !file.is_open(), RT_ERROR_INVALID_VALUE, "File %s does not exist or is inaccessible. errno=%d, reason=%s.",
-        binFileName, errno, strerror(errno))
+    COND_RETURN_AND_MSG_OUTER(
+        !file.is_open(), RT_ERROR_INVALID_VALUE, ErrorCode::EE1012, "Reading the operator binary file", binFileName,
+        "binary file path",
+        RtFmtMsg("The file does not exist or cannot be accessed, errno=%d, reason=%s", errno, strerror(errno)))
 
     const std::streampos begin = file.tellg();
     (void)file.seekg(0, std::ios::end);
@@ -5226,7 +5237,7 @@ rtError_t Runtime::GetKernelBinByFileName(
     const uint64_t filelength = static_cast<uint64_t>(end - begin);
     if (filelength == 0U) {
         file.close();
-        RT_LOG_INNER_MSG(RT_LOG_ERROR, "File %s is empty.", binFileName);
+        RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1014, RtFmtMsg("The operator binary file %s is empty", binFileName));
         return RT_ERROR_INVALID_VALUE;
     }
 
@@ -5289,7 +5300,9 @@ rtError_t Runtime::GetKernelBin(const char_t* const binFileName, char_t** const 
     binaryPath = binaryPath + binFileName;
     const std::string binRealPath = RealPath(binaryPath);
     if (binRealPath.empty()) {
-        RT_LOG_INNER_MSG(RT_LOG_ERROR, "Binary file path is invalid, path=%s.", binaryPath.c_str());
+        RT_LOG_OUTER_MSG_IMPL(
+            ErrorCode::EE1012, "Reading the operator binary file", binaryPath, "binary file path",
+            "The path does not exist or cannot be accessed");
         return RT_ERROR_INVALID_VALUE;
     }
 
@@ -6000,7 +6013,7 @@ rtError_t Runtime::SetSimdPrintFifoSize(uint32_t val)
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
         (val < SIMD_MIN_FIFO_PRINTF_SIZE || val > MAX_FIFO_PRINTF_SIZE), RT_ERROR_INVALID_VALUE,
         "Setting the size of the printf space for the AI Core in SIMD scenarios", val,
-        "[" + std::to_string(SIMD_MIN_FIFO_PRINTF_SIZE) + ", " + std::to_string(MAX_FIFO_PRINTF_SIZE) + "]");
+        RtFmtMsg("[%u, %u]", SIMD_MIN_FIFO_PRINTF_SIZE, MAX_FIFO_PRINTF_SIZE));
     uint32_t assignVal = (val + PRINTF_FIFO_ASSIGN - 1U) / PRINTF_FIFO_ASSIGN * PRINTF_FIFO_ASSIGN;
     printblockLen_ = assignVal;
     RT_LOG(RT_LOG_DEBUG, "Set simd printf fifo size succ, origin val=%u, assign val=%u", val, printblockLen_);
@@ -6012,7 +6025,7 @@ rtError_t Runtime::SetSimtPrintFifoSize(uint32_t val)
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
         (val < SIMT_MIN_FIFO_PRINTF_SIZE || val > MAX_FIFO_PRINTF_SIZE), RT_ERROR_INVALID_VALUE,
         "Setting the size of the printf space for the AI Core in SIMT scenarios", val,
-        "[" + std::to_string(SIMT_MIN_FIFO_PRINTF_SIZE) + ", " + std::to_string(MAX_FIFO_PRINTF_SIZE) + "]");
+        RtFmtMsg("[%u, %u]", SIMT_MIN_FIFO_PRINTF_SIZE, MAX_FIFO_PRINTF_SIZE));
     uint32_t assignVal = (val + PRINTF_FIFO_ASSIGN - 1U) / PRINTF_FIFO_ASSIGN * PRINTF_FIFO_ASSIGN;
     simtPrintLen_ = assignVal;
     RT_LOG(RT_LOG_DEBUG, "Set simt printf fifo size succ, origin val=%u, assign val=%u", val, simtPrintLen_);

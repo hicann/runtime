@@ -69,7 +69,7 @@
       DLOG_ERROR)                                                                                                  \
     /* EE1013 - Resource_Error_Insufficient_Host_Memory */                                                         \
     X(EE1013, "EE1013", ("buf_size", "alloc_interface"),                                                           \
-      "Failed to allocate %s bytes host memory via %s for Runtime. "                                               \
+      "Failed to allocate %s bytes of host memory via %s to Runtime. "                                             \
       "ErrorCode=EE1013.\n",                                                                                       \
       DLOG_ERROR)                                                                                                  \
     /* EE1014 - File_Operation_Error_Parse */                                                                      \
