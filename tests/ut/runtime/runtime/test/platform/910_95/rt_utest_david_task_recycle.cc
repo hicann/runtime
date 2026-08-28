@@ -291,6 +291,7 @@ TEST_F(DavidTaskRecycleTest, SyncTaskRecycleBySqHead)
         task->stream = static_cast<Stream *>(stream);
         task->sqeNum = 1U;
         task->type = TS_TASK_TYPE_KERNEL_AICORE;
+        rt_ut::UnwrapOrNull<Stream>(stream)->SetLastTaskId(task->id);
         EXPECT_EQ(error, RT_ERROR_NONE);
         EXPECT_EQ(pos, i);
     }
@@ -342,6 +343,7 @@ TEST_F(DavidTaskRecycleTest, SyncTaskRecycleBySqHeadV2)
         task->stream = static_cast<Stream *>(stream);
         task->sqeNum = 1U;
         task->type = TS_TASK_TYPE_KERNEL_AICORE;
+        rt_ut::UnwrapOrNull<Stream>(stream)->SetLastTaskId(task->id);
         EXPECT_EQ(error, RT_ERROR_NONE);
         EXPECT_EQ(pos, i);
     }

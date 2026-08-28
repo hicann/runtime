@@ -1536,9 +1536,10 @@ rtError_t Stream::GetFinishedTaskIdBySqHead(uint16_t &sqHead, uint32_t &finished
     // sqHead indicates the current position of execution; it has not yet been completed.
     const uint32_t rtsqDepth = (((flags_ & RT_STREAM_HUGE) != 0U) && (Runtime::macroValue_.maxTaskNumPerHugeStream != 0)) ?
                                Runtime::macroValue_.maxTaskNumPerHugeStream : Runtime::macroValue_.rtsqDepth;
+    const uint16_t lastId = lastTaskId_;
     const uint32_t posTail = GetTaskPosTail();
     const uint32_t posHead = GetTaskPosHead();
-    rtError_t error = device_->Driver_()->GetSqHead(Device_()->Id_(), Device_()->DevGetTsId(), sqId_, sqHead);
+    rtError_t error = device_->Driver_()->GetSqHead(device_->Id_(), device_->DevGetTsId(), sqId_, sqHead);
     COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "Query sq head failed, retCode=%#x.",
                                 static_cast<uint32_t>(error));
     if (((posTail + rtsqDepth - sqHead) % rtsqDepth) >= (posTail + rtsqDepth - posHead) % rtsqDepth) {
@@ -1550,11 +1551,27 @@ rtError_t Stream::GetFinishedTaskIdBySqHead(uint16_t &sqHead, uint32_t &finished
 
     const uint16_t finishedPos = static_cast<uint16_t>((sqHead + rtsqDepth - 1) % rtsqDepth);
     (void)GetTaskIdByPos(finishedPos, endTaskId); // sqhead-1 is finished pos.
-    RT_LOG(RT_LOG_INFO, "sqHead=%u, nextTaskId=%u, finishedPos=%u, endTaskId=%u", sqHead, nextTaskId, finishedPos, endTaskId);
+    const uint32_t reReadPosTail = GetTaskPosTail();
+    // tail未变化但最新任务已变化，说明本次读取的taskId可能属于新下发任务。
+    if (reReadPosTail == posTail && lastTaskId_ != lastId) {
+        return RT_ERROR_NONE;
+    }
+    // tail已发生变化且新tail到达sqHead，sqHead - 1位置可能读到新下发任务。
+    if ((reReadPosTail + rtsqDepth - sqHead) % rtsqDepth < ((reReadPosTail + rtsqDepth - posTail) % rtsqDepth)) {
+        return RT_ERROR_NONE;
+    }
+    // sqHead - 1位置读到的任务不能比入口时的最新任务更新。
+    if ((endTaskId != MAX_UINT16_NUM) && TASK_ID_GT(endTaskId, lastId)) {
+        return RT_ERROR_NONE;
+    }
+    RT_LOG(
+        RT_LOG_INFO, "stream_id=%d, sq_id=%u, sqHead=%u, nextTaskId=%u, finishedPos=%u, endTaskId=%u", streamId_, sqId_,
+        sqHead, nextTaskId, finishedPos, endTaskId);
 
     // In scenarios with multiple SQEs, ffts+, mem wait, determine whether a task has been completed.
     // If the task IDs before and after are the same, it is considered that the task has not been completed.
-    if (sqHead == posTail || nextTaskId != endTaskId) { // In the multi-task scenario, the task is reclaimed after all the tasks are executed.
+    // In the multi-task scenario, the task is reclaimed after all the tasks are executed.
+    if ((sqHead == posTail) || (nextTaskId != endTaskId)) {
         finishedId = endTaskId;
     }
 
@@ -1578,7 +1595,7 @@ bool Stream::SynchronizeDelayTime(const uint16_t finishedId, const uint16_t task
         uint32_t tryCount = 0U;
         const uint64_t beginTime = GetWallUs();
         while (GetWallUs() - beginTime < SLEEP_UNIT) {
-            if (TASK_ID_GEQ(executeEndTaskid_.Value(), taskId)) {
+            if ((executeEndTaskid_.Value() != MAX_UINT16_NUM) && (TASK_ID_GEQ(executeEndTaskid_.Value(), taskId))) {
                 return true;
             }
             tryCount++;
@@ -1614,8 +1631,9 @@ rtError_t Stream::SynchronizeExecutedTask(const uint32_t taskId, const mmTimespe
         COND_RETURN_ERROR((GetStreamStatus() != StreamStatus::NORMAL), RT_ERROR_STREAM_SYNC,
  	        "stream status is %u, device_id=%u, stream_id=%d.", GetStreamStatus(), device_->Id_(), Id_());
         error = CheckContextStatus(false);
-        COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "context is abort, status=%#x.", static_cast<uint32_t>(error));
-        if ((IsTaskExcuted(GetExecuteEndTaskId(), taskId)) || (sqHead == posTail)) {
+        COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "Context is abort, status=%#x.", static_cast<uint32_t>(error));
+        const uint16_t exeEndTaskId = GetExecuteEndTaskId();
+        if (((exeEndTaskId != MAX_UINT16_NUM) && IsTaskExcuted(exeEndTaskId, taskId)) || (sqHead == posTail)) {
             return RT_ERROR_NONE;
         }
         if (!device_->GetIsDoingRecycling()) {
@@ -1646,7 +1664,8 @@ rtError_t Stream::WaitConcernedTaskRecycled(const uint16_t taskId, const mmTimes
          COND_RETURN_ERROR((IsProcessTimeout(beginTime, timeout)), RT_ERROR_STREAM_SYNC_TIMEOUT,
                            "Stream recycle timeout, device_id=%u, stream_id=%d, timeout=%dms, tryCount=%u",
                            device_->Id_(), streamId_, timeout, tryCount);
-         COND_RETURN_ERROR((abortStatus_ == RT_ERROR_STREAM_ABORT), RT_ERROR_STREAM_ABORT, "stream_id=%d is abort.", streamId_);
+        COND_RETURN_ERROR((abortStatus_ == RT_ERROR_STREAM_ABORT), RT_ERROR_STREAM_ABORT,
+                          "The stream is in abort state, stream_id=%d.", streamId_);
          error = CheckContextStatus(false);
          COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "context is abort, status=%#x.", static_cast<uint32_t>(error));
          if (IsTaskExcuted(recycleEndTaskId_.Value(), taskId)) {
