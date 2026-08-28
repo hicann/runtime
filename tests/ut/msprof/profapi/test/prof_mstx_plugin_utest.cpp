@@ -39,62 +39,47 @@ void ResetCounters()
     g_domainRangeEndCalled = 0;
 }
 
-void StubMstxMarkA(const char *, aclrtStream)
-{
-    g_markACalled++;
-}
+void StubMstxMarkA(const char*, aclrtStream) { g_markACalled++; }
 
-mstxRangeId StubMstxRangeStartA(const char *, aclrtStream)
+mstxRangeId StubMstxRangeStartA(const char*, aclrtStream)
 {
     g_rangeStartACalled++;
     return 42;
 }
 
-void StubMstxRangeEnd(mstxRangeId)
-{
-    g_rangeEndCalled++;
-}
+void StubMstxRangeEnd(mstxRangeId) { g_rangeEndCalled++; }
 
-mstxDomainHandle_t StubMstxDomainCreate(const char *)
+mstxDomainHandle_t StubMstxDomainCreate(const char*)
 {
     g_domainCreateCalled++;
     return &g_fakeDomain;
 }
 
-void StubMstxDomainDestroy(mstxDomainHandle_t)
-{
-    g_domainDestroyCalled++;
-}
+void StubMstxDomainDestroy(mstxDomainHandle_t) { g_domainDestroyCalled++; }
 
-void StubMstxDomainMarkA(mstxDomainHandle_t, const char *, aclrtStream)
-{
-    g_domainMarkACalled++;
-}
+void StubMstxDomainMarkA(mstxDomainHandle_t, const char*, aclrtStream) { g_domainMarkACalled++; }
 
-mstxRangeId StubMstxDomainRangeStartA(mstxDomainHandle_t, const char *, aclrtStream)
+mstxRangeId StubMstxDomainRangeStartA(mstxDomainHandle_t, const char*, aclrtStream)
 {
     g_domainRangeStartCalled++;
     return 99;
 }
 
-void StubMstxDomainRangeEnd(mstxDomainHandle_t, mstxRangeId)
-{
-    g_domainRangeEndCalled++;
-}
+void StubMstxDomainRangeEnd(mstxDomainHandle_t, mstxRangeId) { g_domainRangeEndCalled++; }
 
 // Simulated mstx init: pulls the func tables and writes our stub pointers into them.
 int FakeMstxInit(MstxGetModuleFuncTableFunc getFuncTable)
 {
     MstxFuncTable outTable = nullptr;
     unsigned int outSize = 0;
-    if (getFuncTable(MSTX_API_MODULE_CORE, &outTable, &outSize) == MSTX_SUCCESS &&
-        outTable != nullptr && outSize > MSTX_FUNC_RANGE_END) {
+    if (getFuncTable(MSTX_API_MODULE_CORE, &outTable, &outSize) == MSTX_SUCCESS && outTable != nullptr &&
+        outSize > MSTX_FUNC_RANGE_END) {
         *(outTable[MSTX_FUNC_MARKA]) = reinterpret_cast<MstxFuncPointer>(StubMstxMarkA);
         *(outTable[MSTX_FUNC_RANGE_STARTA]) = reinterpret_cast<MstxFuncPointer>(StubMstxRangeStartA);
         *(outTable[MSTX_FUNC_RANGE_END]) = reinterpret_cast<MstxFuncPointer>(StubMstxRangeEnd);
     }
-    if (getFuncTable(MSTX_API_MODULE_CORE_DOMAIN, &outTable, &outSize) == MSTX_SUCCESS &&
-        outTable != nullptr && outSize > MSTX_FUNC_DOMAIN_RANGE_END) {
+    if (getFuncTable(MSTX_API_MODULE_CORE_DOMAIN, &outTable, &outSize) == MSTX_SUCCESS && outTable != nullptr &&
+        outSize > MSTX_FUNC_DOMAIN_RANGE_END) {
         *(outTable[MSTX_FUNC_DOMAIN_CREATEA]) = reinterpret_cast<MstxFuncPointer>(StubMstxDomainCreate);
         *(outTable[MSTX_FUNC_DOMAIN_DESTROY]) = reinterpret_cast<MstxFuncPointer>(StubMstxDomainDestroy);
         *(outTable[MSTX_FUNC_DOMAIN_MARKA]) = reinterpret_cast<MstxFuncPointer>(StubMstxDomainMarkA);
@@ -104,19 +89,13 @@ int FakeMstxInit(MstxGetModuleFuncTableFunc getFuncTable)
     return MSTX_SUCCESS;
 }
 
-int FakeMstxInitFail(MstxGetModuleFuncTableFunc)
-{
-    return MSTX_FAIL;
-}
+int FakeMstxInitFail(MstxGetModuleFuncTableFunc) { return MSTX_FAIL; }
 
 // A getFuncTable that always fails.
-int FakeGetTableFail(MstxFuncModule, MstxFuncTable *, unsigned int *)
-{
-    return MSTX_FAIL;
-}
+int FakeGetTableFail(MstxFuncModule, MstxFuncTable*, unsigned int*) { return MSTX_FAIL; }
 
 // A getFuncTable that returns MSTX_SUCCESS but with null/zero outputs.
-int FakeGetTableEmpty(MstxFuncModule, MstxFuncTable *outTable, unsigned int *outSize)
+int FakeGetTableEmpty(MstxFuncModule, MstxFuncTable* outTable, unsigned int* outSize)
 {
     *outTable = nullptr;
     *outSize = 0;
@@ -127,14 +106,8 @@ int FakeGetTableEmpty(MstxFuncModule, MstxFuncTable *outTable, unsigned int *out
 
 class PROF_MSTX_PLUGIN_UTEST : public testing::Test {
 protected:
-    virtual void SetUp()
-    {
-        ResetCounters();
-    }
-    virtual void TearDown()
-    {
-        GlobalMockObject::verify();
-    }
+    virtual void SetUp() { ResetCounters(); }
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 TEST_F(PROF_MSTX_PLUGIN_UTEST, ProfRegisterMstxFunc_NullInitFunc)
@@ -241,10 +214,7 @@ TEST_F(PROF_MSTX_PLUGIN_UTEST, MsptiMstxGetModuleFuncTable_Variants)
     EXPECT_EQ(MSTX_FAIL, MsptiMstxGetModuleFuncTable(MSTX_API_MODULE_INVALID, &outTable, &outSize));
 }
 
-TEST_F(PROF_MSTX_PLUGIN_UTEST, InitInjectionMstx_Null)
-{
-    EXPECT_EQ(MSTX_FAIL, ::InitInjectionMstx(nullptr));
-}
+TEST_F(PROF_MSTX_PLUGIN_UTEST, InitInjectionMstx_Null) { EXPECT_EQ(MSTX_FAIL, ::InitInjectionMstx(nullptr)); }
 
 TEST_F(PROF_MSTX_PLUGIN_UTEST, InitInjectionMstx_GetTableFail)
 {

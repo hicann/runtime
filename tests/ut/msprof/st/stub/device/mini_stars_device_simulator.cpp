@@ -13,7 +13,7 @@
 namespace Cann {
 namespace Dvvp {
 namespace Test {
-int32_t MiniStarsDeviceSimulator::ProfDrvGetChannels(ChannelList &channels)
+int32_t MiniStarsDeviceSimulator::ProfDrvGetChannels(ChannelList& channels)
 {
     std::string channelStr = "4,6,7,8,10,44,47,50,52,53,54,130,131,132,134,135,137";
     std::string pattern = ",";
@@ -40,26 +40,23 @@ int32_t MiniStarsDeviceSimulator::ProfDrvGetChannels(ChannelList &channels)
     return 0;
 }
 
-int32_t MiniStarsDeviceSimulator::GetDeviceInfo(int32_t moduleType, int32_t infoType, int64_t *value)
+int32_t MiniStarsDeviceSimulator::GetDeviceInfo(int32_t moduleType, int32_t infoType, int64_t* value)
 {
-    if (moduleType == MODULE_TYPE_SYSTEM &&
-        infoType == INFO_TYPE_VERSION) {
+    if (moduleType == MODULE_TYPE_SYSTEM && infoType == INFO_TYPE_VERSION) {
         *value = (int64_t)platformType_ << 8;
     }
 
-    if (moduleType == MODULE_TYPE_AICORE &&
-        infoType == INFO_TYPE_CORE_NUM) {
+    if (moduleType == MODULE_TYPE_AICORE && infoType == INFO_TYPE_CORE_NUM) {
         *value = 25;
     }
 
-    if (moduleType == MODULE_TYPE_VECTOR_CORE &&
-        infoType == INFO_TYPE_CORE_NUM) {
+    if (moduleType == MODULE_TYPE_VECTOR_CORE && infoType == INFO_TYPE_CORE_NUM) {
         *value = 25;
     }
 
     return 0;
 }
 
-}
-}
-}
+} // namespace Test
+} // namespace Dvvp
+} // namespace Cann

@@ -15,8 +15,7 @@
 extern std::map<std::string, void*> g_map_drv;
 extern "C" {
 
-
-void *mmDlsym(void *handle, const char* funcName)
+void* mmDlsym(void* handle, const char* funcName)
 {
     auto it = g_map_drv.find(funcName);
     if (it != g_map_drv.end()) {
@@ -25,12 +24,9 @@ void *mmDlsym(void *handle, const char* funcName)
     return nullptr;
 }
 
-char *mmDlerror(void)
-{
-    return nullptr;
-}
+char* mmDlerror(void) { return nullptr; }
 int32_t g_handle;
-void * mmDlopen(const char *fileName, int mode)
+void* mmDlopen(const char* fileName, int mode)
 {
     if (strcmp(fileName, "libascend_hal.so") == 0) {
         return &g_handle;
@@ -38,8 +34,5 @@ void * mmDlopen(const char *fileName, int mode)
     return nullptr;
 }
 
-int mmDlclose(void *handle)
-{
-    return 0;
-}
+int mmDlclose(void* handle) { return 0; }
 }

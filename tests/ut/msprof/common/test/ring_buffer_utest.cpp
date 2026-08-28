@@ -25,32 +25,34 @@
 
 using namespace analysis::dvvp::common::queue;
 
-class COMMON_QUEUE_RING_BUFFER_TEST: public testing::Test {
+class COMMON_QUEUE_RING_BUFFER_TEST : public testing::Test {
 protected:
-    virtual void SetUp() {
-    }
-    virtual void TearDown() {
-    }
+    virtual void SetUp() {}
+    virtual void TearDown() {}
+
 private:
     std::string _log_file;
 };
 
-TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, RingBuffer) {
-    std::shared_ptr<RingBuffer<int> > bq(new RingBuffer<int>(-1));
+TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, RingBuffer)
+{
+    std::shared_ptr<RingBuffer<int>> bq(new RingBuffer<int>(-1));
     EXPECT_NE(nullptr, bq);
     bq.reset();
 }
 
-TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, RingBuffer_Init) {
-    std::shared_ptr<RingBuffer<int> > bq(new RingBuffer<int>(-1));
+TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, RingBuffer_Init)
+{
+    std::shared_ptr<RingBuffer<int>> bq(new RingBuffer<int>(-1));
     EXPECT_NE(nullptr, bq);
     std::string name;
     bq->Init(2, name);
     bq.reset();
 }
 
-TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, RingBuffer_UnInit) {
-    std::shared_ptr<RingBuffer<int> > bq(new RingBuffer<int>(-1));
+TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, RingBuffer_UnInit)
+{
+    std::shared_ptr<RingBuffer<int>> bq(new RingBuffer<int>(-1));
     EXPECT_NE(nullptr, bq);
     std::string name;
     bq->Init(2, name);
@@ -58,8 +60,9 @@ TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, RingBuffer_UnInit) {
     bq.reset();
 }
 
-TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, RingBuffer_SetQuit) {
-    std::shared_ptr<RingBuffer<int> > bq(new RingBuffer<int>(-1));
+TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, RingBuffer_SetQuit)
+{
+    std::shared_ptr<RingBuffer<int>> bq(new RingBuffer<int>(-1));
     EXPECT_NE(nullptr, bq);
     std::string name;
     bq->Init(2, name);
@@ -68,45 +71,47 @@ TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, RingBuffer_SetQuit) {
     bq.reset();
 }
 
-TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, RingBuffer_TryPush) {
-    std::shared_ptr<RingBuffer<int> > bq(new RingBuffer<int>(-1));
+TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, RingBuffer_TryPush)
+{
+    std::shared_ptr<RingBuffer<int>> bq(new RingBuffer<int>(-1));
 
-    //not inited
+    // not inited
     EXPECT_EQ(false, bq->TryPush(1));
 
     std::string name;
     bq->Init(2, name);
 
-    //exceeded max cycles
+    // exceeded max cycles
     bq->maxCycles_ = 0;
     EXPECT_EQ(false, bq->TryPush(1));
 
-    //not exceed max cycles
+    // not exceed max cycles
     bq->maxCycles_ = 1024;
     EXPECT_EQ(true, bq->TryPush(1));
 
-    //queue is full
+    // queue is full
     EXPECT_EQ(false, bq->TryPush(1));
 
-    //queue quits
+    // queue quits
     bq->SetQuit();
     EXPECT_EQ(false, bq->TryPush(1));
 
     bq.reset();
 }
 
-TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, RingBuffer_TryPop) {
-    std::shared_ptr<RingBuffer<int> > bq(new RingBuffer<int>(-1));
+TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, RingBuffer_TryPop)
+{
+    std::shared_ptr<RingBuffer<int>> bq(new RingBuffer<int>(-1));
     int data = -1;
-    //not inited
+    // not inited
     EXPECT_EQ(false, bq->TryPop(data));
 
     std::string name;
     bq->Init(2, name);
-    //queue is empty
+    // queue is empty
     EXPECT_EQ(false, bq->TryPop(data));
     bq->TryPush(1);
-    //not ready
+    // not ready
     bq->dataAvails_[0] = static_cast<int>(DataStatus::DATA_STATUS_NOT_READY);
     EXPECT_EQ(false, bq->TryPop(data));
 
@@ -117,8 +122,9 @@ TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, RingBuffer_TryPop) {
     bq.reset();
 }
 
-TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, RingBuffer_GetUsedSize) {
-    std::shared_ptr<RingBuffer<int> > bq(new RingBuffer<int>(-1));
+TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, RingBuffer_GetUsedSize)
+{
+    std::shared_ptr<RingBuffer<int>> bq(new RingBuffer<int>(-1));
 
     std::string name;
     bq->Init(4, name);
@@ -194,8 +200,9 @@ TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, RingBuffer_GetUsedSize) {
     EXPECT_EQ(5, bq->GetUsedSize());
 }
 
-TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, ReportBuffer_GetUsedSize) {
-    std::shared_ptr<ReportBuffer<int> > bq(new ReportBuffer<int>(-1));
+TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, ReportBuffer_GetUsedSize)
+{
+    std::shared_ptr<ReportBuffer<int>> bq(new ReportBuffer<int>(-1));
 
     std::string name = "test";
     bq->Init(4, name);
@@ -226,7 +233,8 @@ TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, ReportBuffer_GetUsedSize) {
     bq->UnInit();
 }
 
-TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, ReportBuffer_MultiPushPopTest) {
+TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, ReportBuffer_MultiPushPopTest)
+{
     std::shared_ptr<ReportBuffer<MsprofCompactInfo>> bq(new ReportBuffer<MsprofCompactInfo>(MsprofCompactInfo{}));
     std::string name = "multiTest";
     bq->Init(COM_RING_BUFF_CAPACITY, name);
@@ -250,7 +258,7 @@ TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, ReportBuffer_MultiPushPopTest) {
     }));
 
     MsprofCompactInfo data;
-    MsprofNodeBasicInfo *nodeInfo = reinterpret_cast<MsprofNodeBasicInfo *>(&data.data);
+    MsprofNodeBasicInfo* nodeInfo = reinterpret_cast<MsprofNodeBasicInfo*>(&data.data);
     nodeInfo->opName = 123456789;
     nodeInfo->opType = 12345678910;
     data.level = 10000;
@@ -268,7 +276,8 @@ TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, ReportBuffer_MultiPushPopTest) {
     bq->UnInit();
 }
 
-TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, BlockBuffer_BasePushPopTest) {
+TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, BlockBuffer_BasePushPopTest)
+{
     std::shared_ptr<BlockBuffer<MsprofAdditionalInfo>> bq(new BlockBuffer<MsprofAdditionalInfo>());
     std::string name = "BaseBlockBufferTest";
     EXPECT_EQ(false, bq->Init(name, 0));
@@ -288,14 +297,14 @@ TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, BlockBuffer_BasePushPopTest) {
     bq->BatchPush(&data, sizeof(MsprofAdditionalInfo));
     EXPECT_EQ(2, bq->GetUsedSize());
     // init prof_drv buffer
-    void *drvBufPtr = malloc(1024); // 1024byte
+    void* drvBufPtr = malloc(1024); // 1024byte
     (void)memset_s(drvBufPtr, 1024, 0, 1024);
     // pop 1024 data, offset 0byte, buffer only 512byte data
     size_t outSize = 1024;
     EXPECT_EQ(nullptr, bq->BatchPop(outSize, false)); // pop 0 additional data
     // pop 512byte data, offset 512byte
     outSize = 512;
-    void *outPtr = bq->BatchPop(outSize, false);
+    void* outPtr = bq->BatchPop(outSize, false);
     EXPECT_NE(nullptr, outPtr); // pop 2 additional data
     (void)memcpy_s(drvBufPtr + 512, outSize, outPtr, outSize);
     bq->BatchPopBufferIndexShift(outPtr, outSize);
@@ -321,18 +330,19 @@ TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, BlockBuffer_BasePushPopTest) {
     bq->UnInit();
 }
 
-TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, BlockBuffer_TimeTest) {
+TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, BlockBuffer_TimeTest)
+{
     MsprofAdditionalInfo data;
     data.level = 5500; // hccl
     data.type = 10;
     data.timeStamp = 131313131;
-    MsprofHcclInfo *hcclInfo = reinterpret_cast<MsprofHcclInfo *>(&data.data);
+    MsprofHcclInfo* hcclInfo = reinterpret_cast<MsprofHcclInfo*>(&data.data);
     hcclInfo->dataType = 1;
     hcclInfo->opType = 1;
 
-    void *hcclBufPtr = malloc(131072);
+    void* hcclBufPtr = malloc(131072);
     (void)memset_s(hcclBufPtr, 131072, 0, 131072);
-    MsprofAdditionalInfo *addInfo = reinterpret_cast<MsprofAdditionalInfo *>(hcclBufPtr);
+    MsprofAdditionalInfo* addInfo = reinterpret_cast<MsprofAdditionalInfo*>(hcclBufPtr);
     for (auto i = 0; i < 512; i++) {
         *(addInfo + i) = data;
     }
@@ -347,7 +357,8 @@ TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, BlockBuffer_TimeTest) {
     EXPECT_EQ(512, bq->GetUsedSize());
     bq->UnInit();
 
-    std::shared_ptr<ReportBuffer<MsprofAdditionalInfo>> rq(new ReportBuffer<MsprofAdditionalInfo>(MsprofAdditionalInfo{}));
+    std::shared_ptr<ReportBuffer<MsprofAdditionalInfo>> rq(
+        new ReportBuffer<MsprofAdditionalInfo>(MsprofAdditionalInfo{}));
     std::string name2 = "TimeReportBufferTest";
     rq->Init(ADD_RING_BUFF_CAPACITY, name2);
     startRawTime = analysis::dvvp::common::utils::Utils::GetClockMonotonicRaw();
@@ -361,18 +372,19 @@ TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, BlockBuffer_TimeTest) {
     free(hcclBufPtr);
 }
 
-TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, BlockBuffer_LargePushPopTest) {
+TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, BlockBuffer_LargePushPopTest)
+{
     MsprofAdditionalInfo data;
     data.level = 5500; // hccl
     data.type = 10;
     data.timeStamp = 131313131;
-    MsprofHcclInfo *hcclInfo = reinterpret_cast<MsprofHcclInfo *>(&data.data);
+    MsprofHcclInfo* hcclInfo = reinterpret_cast<MsprofHcclInfo*>(&data.data);
     hcclInfo->dataType = 1;
     hcclInfo->opType = 1;
 
-    void *hcclBufPtr = malloc(262144);
+    void* hcclBufPtr = malloc(262144);
     (void)memset_s(hcclBufPtr, 262144, 0, 262144);
-    MsprofAdditionalInfo *addInfo = reinterpret_cast<MsprofAdditionalInfo *>(hcclBufPtr);
+    MsprofAdditionalInfo* addInfo = reinterpret_cast<MsprofAdditionalInfo*>(hcclBufPtr);
     for (auto i = 0; i < 1024; i++) {
         *(addInfo + i) = data;
     }
@@ -385,7 +397,7 @@ TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, BlockBuffer_LargePushPopTest) {
     bq->BatchPush(addInfo, 1024 * sizeof(MsprofAdditionalInfo));
     EXPECT_EQ(2048, bq->GetUsedSize());
     size_t outSize = 1024 * sizeof(MsprofAdditionalInfo);
-    void *outPtr = bq->BatchPop(outSize, false);
+    void* outPtr = bq->BatchPop(outSize, false);
     EXPECT_TRUE(1024 * sizeof(MsprofAdditionalInfo) == outSize);
     bq->BatchPopBufferIndexShift(outPtr, outSize);
     outPtr = bq->BatchPop(outSize, false);
@@ -417,7 +429,8 @@ TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, BlockBuffer_LargePushPopTest) {
 // Cycle overflow: when the CAS retry loop exceeds maxCycles, BatchPush returns
 // MSPROF_ERROR_NONE without pushing data. With maxCycles=1 the overflow triggers
 // on the first iteration.
-TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, BlockBuffer_CycleOverflowReturnsSuccessWithoutData) {
+TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, BlockBuffer_CycleOverflowReturnsSuccessWithoutData)
+{
     std::shared_ptr<BlockBuffer<MsprofAdditionalInfo>> bq(new BlockBuffer<MsprofAdditionalInfo>(1));
     std::string name = "CycleOverflowTest";
     EXPECT_EQ(true, bq->Init(name, 4096));
@@ -437,7 +450,8 @@ TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, BlockBuffer_CycleOverflowReturnsSuccessWit
 // Cycle overflow on a full buffer: fill the buffer to the overflow threshold,
 // then push more data. With a small maxCycles the retry loop exhausts quickly
 // and returns MSPROF_ERROR_NONE without pushing additional data.
-TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, BlockBuffer_CycleOverflowOnFullBuffer) {
+TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, BlockBuffer_CycleOverflowOnFullBuffer)
+{
     std::shared_ptr<BlockBuffer<MsprofAdditionalInfo>> bq(new BlockBuffer<MsprofAdditionalInfo>(10));
     std::string name = "FullBufferOverflowTest";
     EXPECT_EQ(true, bq->Init(name, 4096));
@@ -449,9 +463,9 @@ TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, BlockBuffer_CycleOverflowOnFullBuffer) {
 
     // fill buffer to the overflow threshold: capacity(4096) - packSize(2047) = 2049 entries
     const size_t threshold = 2049;
-    void *buf = malloc(threshold * sizeof(MsprofAdditionalInfo));
+    void* buf = malloc(threshold * sizeof(MsprofAdditionalInfo));
     EXPECT_NE(nullptr, buf);
-    MsprofAdditionalInfo *addInfo = reinterpret_cast<MsprofAdditionalInfo *>(buf);
+    MsprofAdditionalInfo* addInfo = reinterpret_cast<MsprofAdditionalInfo*>(buf);
     for (size_t i = 0; i < threshold; i++) {
         *(addInfo + i) = data;
     }
@@ -468,7 +482,8 @@ TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, BlockBuffer_CycleOverflowOnFullBuffer) {
 
 // Re-Init resets the cycle overflow flag: after UnInit + Init, the overflow
 // path can be triggered again, confirming the flag was reset to false.
-TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, BlockBuffer_ReInitResetsOverflowFlag) {
+TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, BlockBuffer_ReInitResetsOverflowFlag)
+{
     std::shared_ptr<BlockBuffer<MsprofAdditionalInfo>> bq(new BlockBuffer<MsprofAdditionalInfo>(1));
     std::string name = "ReInitOverflowTest";
     EXPECT_EQ(true, bq->Init(name, 4096));
@@ -494,7 +509,8 @@ TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, BlockBuffer_ReInitResetsOverflowFlag) {
 
 // Init / UnInit and not-initialized guards: capacity below the minimum is rejected, a valid
 // capacity succeeds, repeat init is a no-op, and push/pop on an uninitialized buffer are safe.
-TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, VariableBlockBuffer_InitAndUnInit) {
+TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, VariableBlockBuffer_InitAndUnInit)
+{
     // push/pop before init are rejected without crashing
     std::shared_ptr<VariableBlockBuffer> uninit(new VariableBlockBuffer());
     const char data[16] = {0};
@@ -515,7 +531,8 @@ TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, VariableBlockBuffer_InitAndUnInit) {
 
 // Push/pop behaviour: single round-trip, multi-segment contiguous pop in order, data cleared after
 // shift, plus defensive early-returns (pop with size 0, index-shift with null ptr / zero size).
-TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, VariableBlockBuffer_PushPopTest) {
+TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, VariableBlockBuffer_PushPopTest)
+{
     std::shared_ptr<VariableBlockBuffer> bq(new VariableBlockBuffer());
     EXPECT_EQ(true, bq->Init("VbbPushPop", 4096));
 
@@ -532,7 +549,7 @@ TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, VariableBlockBuffer_PushPopTest) {
     EXPECT_EQ(MSPROF_ERROR_NONE, bq->BatchPush(msg, len));
     EXPECT_EQ(len, bq->GetUsedSize());
     size_t popSize = 1;
-    void *outPtr = bq->BatchPop(popSize);
+    void* outPtr = bq->BatchPop(popSize);
     EXPECT_NE(nullptr, outPtr);
     EXPECT_EQ(len, popSize);
     EXPECT_EQ(0, memcmp(outPtr, msg, len));
@@ -546,7 +563,7 @@ TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, VariableBlockBuffer_PushPopTest) {
     EXPECT_EQ(MSPROF_ERROR_NONE, bq->BatchPush(b, sizeof(b)));
     EXPECT_EQ(sizeof(a) + sizeof(b), bq->GetUsedSize());
     size_t popSize2 = 1;
-    void *outPtr2 = bq->BatchPop(popSize2);
+    void* outPtr2 = bq->BatchPop(popSize2);
     EXPECT_NE(nullptr, outPtr2);
     EXPECT_EQ(sizeof(a) + sizeof(b), popSize2);
     const char expect[] = {1, 2, 3, 4, 5, 6, 7, 8};
@@ -559,7 +576,8 @@ TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, VariableBlockBuffer_PushPopTest) {
 // Ring boundary behaviour: a single pop never crosses the ring end (the wrapped tail is returned
 // on the next pop), and when the buffer is full and never drained BatchPush bails out at maxCycles_
 // returning MSPROF_ERROR_NONE instead of hanging.
-TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, VariableBlockBuffer_WrapAndOverflow) {
+TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, VariableBlockBuffer_WrapAndOverflow)
+{
     std::shared_ptr<VariableBlockBuffer> bq(new VariableBlockBuffer());
     const size_t cap = 4096;
     EXPECT_EQ(true, bq->Init("VbbWrap", cap));
@@ -569,7 +587,7 @@ TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, VariableBlockBuffer_WrapAndOverflow) {
     for (int i = 0; i < 3; ++i) {
         EXPECT_EQ(MSPROF_ERROR_NONE, bq->BatchPush(chunk.data(), chunk.size()));
         size_t popSize = 1;
-        void *p = bq->BatchPop(popSize);
+        void* p = bq->BatchPop(popSize);
         EXPECT_NE(nullptr, p);
         bq->BatchPopBufferIndexShift(p, popSize);
     }
@@ -583,7 +601,7 @@ TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, VariableBlockBuffer_WrapAndOverflow) {
 
     // first pop returns only the contiguous tail (cap - 3072 = 1024 bytes)
     size_t popSize = 1;
-    void *outPtr = bq->BatchPop(popSize);
+    void* outPtr = bq->BatchPop(popSize);
     EXPECT_NE(nullptr, outPtr);
     EXPECT_EQ(cap - 3072, popSize);
     EXPECT_EQ(0, memcmp(outPtr, big.data(), popSize));
@@ -592,7 +610,7 @@ TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, VariableBlockBuffer_WrapAndOverflow) {
     // second pop returns the wrapped remainder
     size_t remain = big.size() - (cap - 3072);
     size_t popSize2 = 1;
-    void *outPtr2 = bq->BatchPop(popSize2);
+    void* outPtr2 = bq->BatchPop(popSize2);
     EXPECT_NE(nullptr, outPtr2);
     EXPECT_EQ(remain, popSize2);
     EXPECT_EQ(0, memcmp(outPtr2, big.data() + (cap - 3072), remain));
@@ -612,7 +630,8 @@ TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, VariableBlockBuffer_WrapAndOverflow) {
 
 // Concurrency: multiple producers + one consumer. Verifies the ordered-commit fix guarantees that
 // BatchPop never observes a region whose memcpy has not finished (no torn/partial records).
-TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, VariableBlockBuffer_ConcurrentProducers) {
+TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, VariableBlockBuffer_ConcurrentProducers)
+{
     // each record: [producerId][seq][payload bytes all equal to (id ^ seq) & 0xFF], fixed size
     struct Rec {
         uint32_t id;
@@ -631,13 +650,13 @@ TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, VariableBlockBuffer_ConcurrentProducers) {
     std::thread consumer([&]() {
         while (!stop.load() || bq->GetUsedSize() != 0) {
             size_t popSize = 1;
-            void *p = bq->BatchPop(popSize);
+            void* p = bq->BatchPop(popSize);
             if (p == nullptr) {
                 continue;
             }
-            char *base = static_cast<char *>(p);
+            char* base = static_cast<char*>(p);
             for (size_t off = 0; off + recSize <= popSize; off += recSize) {
-                Rec *r = reinterpret_cast<Rec *>(base + off);
+                Rec* r = reinterpret_cast<Rec*>(base + off);
                 char expect = static_cast<char>((r->id ^ r->seq) & 0xFF);
                 for (size_t k = 0; k < sizeof(r->pad); ++k) {
                     if (r->pad[k] != expect) {
@@ -660,7 +679,7 @@ TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, VariableBlockBuffer_ConcurrentProducers) {
             r.seq = s;
             char v = static_cast<char>((id ^ s) & 0xFF);
             (void)memset_s(r.pad, sizeof(r.pad), v, sizeof(r.pad));
-            (void)bq->BatchPush(reinterpret_cast<const char *>(&r), recSize);
+            (void)bq->BatchPush(reinterpret_cast<const char*>(&r), recSize);
         }
     };
 
@@ -668,7 +687,7 @@ TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, VariableBlockBuffer_ConcurrentProducers) {
     for (uint32_t i = 0; i < 4; ++i) {
         producers.emplace_back(producer, i + 1);
     }
-    for (auto &t : producers) {
+    for (auto& t : producers) {
         t.join();
     }
     stop.store(true);

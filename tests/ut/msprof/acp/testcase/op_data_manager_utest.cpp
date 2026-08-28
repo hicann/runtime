@@ -33,12 +33,8 @@ using namespace analysis::dvvp::common::utils;
 using namespace Dvvp::Collect::Platform;
 class OP_DATA_MANAGER_UTEST : public testing::Test {
 protected:
-    virtual void SetUp()
-    {}
-    virtual void TearDown()
-    {
-        GlobalMockObject::verify();
-    }
+    virtual void SetUp() {}
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 TEST_F(OP_DATA_MANAGER_UTEST, DataManagerBase)
@@ -102,14 +98,17 @@ TEST_F(OP_DATA_MANAGER_UTEST, DataManagerBase)
     OpDataManager::instance()->UnInit();
 }
 
-drvError_t halGetDeviceInfoTransOpStub(uint32_t devId, int32_t moduleType, int32_t infoType, int64_t *value) {
+drvError_t halGetDeviceInfoTransOpStub(uint32_t devId, int32_t moduleType, int32_t infoType, int64_t* value)
+{
     if (moduleType == static_cast<int32_t>(MODULE_TYPE_AICORE) &&
         (infoType == static_cast<int32_t>(INFO_TYPE_CORE_NUM))) {
         *value = 20;
-    } else if (moduleType == static_cast<int32_t>(MODULE_TYPE_VECTOR_CORE) &&
+    } else if (
+        moduleType == static_cast<int32_t>(MODULE_TYPE_VECTOR_CORE) &&
         (infoType == static_cast<int32_t>(INFO_TYPE_CORE_NUM))) {
         *value = 40;
-    } else if (moduleType == static_cast<int32_t>(MODULE_TYPE_SYSTEM) &&
+    } else if (
+        moduleType == static_cast<int32_t>(MODULE_TYPE_SYSTEM) &&
         (infoType == static_cast<int32_t>(INFO_TYPE_DEV_OSC_FREQUE))) {
         *value = 50000;
     }
@@ -122,9 +121,7 @@ TEST_F(OP_DATA_MANAGER_UTEST, OpAnalyzerDavidBase)
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
         .stubs()
         .will(returnValue(Analysis::Dvvp::Common::Config::PlatformType::CHIP_CLOUD_V3));
-    MOCKER(halGetDeviceInfo)
-        .stubs()
-        .will(invoke(halGetDeviceInfoTransOpStub));
+    MOCKER(halGetDeviceInfo).stubs().will(invoke(halGetDeviceInfoTransOpStub));
     Platform::instance()->Uninit();
     Platform::instance()->Init();
     // init analyzer object
@@ -180,14 +177,8 @@ TEST_F(OP_DATA_MANAGER_UTEST, OpAnalyzerDavidBase)
     EXPECT_EQ(1, summaryVec2.size());
     EXPECT_EQ(true, OpDataManager::instance()->CheckSummaryInfoData(1));
 
-    MOCKER_CPP(&OpAnalyzerBiu::IsBiuMode)
-        .stubs()
-        .will(returnValue(true))
-        .then(returnValue(false));
-    MOCKER_CPP(&OpAnalyzerPcSampling::IsPcSamplingMode)
-        .stubs()
-        .will(returnValue(true))
-        .then(returnValue(false));
+    MOCKER_CPP(&OpAnalyzerBiu::IsBiuMode).stubs().will(returnValue(true)).then(returnValue(false));
+    MOCKER_CPP(&OpAnalyzerPcSampling::IsPcSamplingMode).stubs().will(returnValue(true)).then(returnValue(false));
     // IsBiuMode
     for (uint32_t i = 0; i < 5; i++) {
         analyzer_->OnOpData(fileChunk);
@@ -207,9 +198,7 @@ TEST_F(OP_DATA_MANAGER_UTEST, OpAnalyzerMilanBase)
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
         .stubs()
         .will(returnValue(Analysis::Dvvp::Common::Config::PlatformType::CHIP_V4_1_0));
-    MOCKER(halGetDeviceInfo)
-        .stubs()
-        .will(invoke(halGetDeviceInfoTransOpStub));
+    MOCKER(halGetDeviceInfo).stubs().will(invoke(halGetDeviceInfoTransOpStub));
     Platform::instance()->Uninit();
     Platform::instance()->Init();
     // init analyzer object
@@ -298,12 +287,8 @@ TEST_F(OP_DATA_MANAGER_UTEST, PcSampling_ParsePcSamplingData_AndAnalyze)
     pc.ParsePcSamplingData(fileChunk2);
 
     // Analyze: stub AnalyzeBinaryObject + DumpFile so we do not depend on llvm-objdump.
-    MOCKER_CPP(&Utils::ExecCmd)
-        .stubs()
-        .will(returnValue(static_cast<int32_t>(PROFILING_FAILED)));
-    MOCKER_CPP(&Utils::DumpFile)
-        .stubs()
-        .will(returnValue(static_cast<int32_t>(PROFILING_SUCCESS)));
+    MOCKER_CPP(&Utils::ExecCmd).stubs().will(returnValue(static_cast<int32_t>(PROFILING_FAILED)));
+    MOCKER_CPP(&Utils::DumpFile).stubs().will(returnValue(static_cast<int32_t>(PROFILING_SUCCESS)));
     pc.AnalyzePcSamplingDataAndSaveSummary("/tmp/pc_sampling_out");
     // After analyze, sampling enable cleared
     // (no public getter; we just verify subsequent call is the early-return branch)
@@ -360,9 +345,7 @@ TEST_F(OP_DATA_MANAGER_UTEST, OpAnalyzer_OnOpData_EndInfo_ConvertFail)
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
         .stubs()
         .will(returnValue(Analysis::Dvvp::Common::Config::PlatformType::CHIP_CLOUD_V3));
-    MOCKER(halGetDeviceInfo)
-        .stubs()
-        .will(invoke(halGetDeviceInfoTransOpStub));
+    MOCKER(halGetDeviceInfo).stubs().will(invoke(halGetDeviceInfoTransOpStub));
     Platform::instance()->Uninit();
     Platform::instance()->Init();
 

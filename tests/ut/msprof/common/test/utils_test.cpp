@@ -28,7 +28,7 @@
 #include <errno.h>
 #include <algorithm>
 #include <fstream>
-//mac
+// mac
 #include <net/if.h>
 #include <sys/prctl.h>
 #include "utils/utils.h"
@@ -39,28 +39,30 @@
 using namespace analysis::dvvp::common::utils;
 using namespace analysis::dvvp::common::error;
 
-class COMMON_UTILS_UTILS_TEST: public testing::Test {
+class COMMON_UTILS_UTILS_TEST : public testing::Test {
 protected:
-    virtual void SetUp() {
-    }
-    virtual void TearDown() {
-    }
+    virtual void SetUp() {}
+    virtual void TearDown() {}
+
 private:
     std::string _log_file;
 };
 
-TEST_F(COMMON_UTILS_UTILS_TEST, GetCPUCycleCounter) {
+TEST_F(COMMON_UTILS_UTILS_TEST, GetCPUCycleCounter)
+{
     GlobalMockObject::verify();
     EXPECT_NE((unsigned long long)0, Utils::GetCPUCycleCounter());
 }
 
-TEST_F(COMMON_UTILS_UTILS_TEST, GetClockRealtime) {
+TEST_F(COMMON_UTILS_UTILS_TEST, GetClockRealtime)
+{
     GlobalMockObject::verify();
 
     EXPECT_NE((unsigned long long)0, Utils::GetClockRealtime());
 }
 
-TEST_F(COMMON_UTILS_UTILS_TEST, GetClockMonotonicRaw) {
+TEST_F(COMMON_UTILS_UTILS_TEST, GetClockMonotonicRaw)
+{
     GlobalMockObject::verify();
 
     EXPECT_NE((unsigned long long)0, Utils::GetClockMonotonicRaw());
@@ -70,23 +72,24 @@ TEST_F(COMMON_UTILS_UTILS_TEST, GetCoresStr)
 {
     GlobalMockObject::verify();
     std::vector<int> cores(10, 5);
-    std::string ret = Utils::GetCoresStr(cores); 
+    std::string ret = Utils::GetCoresStr(cores);
     EXPECT_STREQ("5,5,5,5,5,5,5,5,5,5", ret.c_str());
-    std::cout<<ret<<std::endl;
+    std::cout << ret << std::endl;
 }
 
 TEST_F(COMMON_UTILS_UTILS_TEST, GetEventsStr)
 {
     GlobalMockObject::verify();
-   
+
     std::vector<std::string> cores(10, "123");
-    
+
     std::string ret = Utils::GetEventsStr(cores);
     EXPECT_STREQ("123,123,123,123,123,123,123,123,123,123", ret.c_str());
-    std::cout<<ret<<std::endl;
+    std::cout << ret << std::endl;
 }
 
-TEST_F(COMMON_UTILS_UTILS_TEST, GetFileSize) {
+TEST_F(COMMON_UTILS_UTILS_TEST, GetFileSize)
+{
     GlobalMockObject::verify();
 
     std::string path = "./not_exist/path";
@@ -103,25 +106,24 @@ TEST_F(COMMON_UTILS_UTILS_TEST, GetFileSize) {
     ::remove(path.c_str());
 }
 
-TEST_F(COMMON_UTILS_UTILS_TEST, IsDir) {
+TEST_F(COMMON_UTILS_UTILS_TEST, IsDir)
+{
     GlobalMockObject::verify();
 
-    //empty path
+    // empty path
     std::string path;
     EXPECT_FALSE(Utils::IsDir(path));
 
     path = "/path/to/fake_dir";
 
-    MOCKER(mmIsDir)
-        .stubs()
-        .will(returnValue(-1))
-        .then(returnValue(0));
+    MOCKER(mmIsDir).stubs().will(returnValue(-1)).then(returnValue(0));
 
     EXPECT_FALSE(Utils::IsDir(path));
     EXPECT_TRUE(Utils::IsDir(path));
 }
 
-TEST_F(COMMON_UTILS_UTILS_TEST, IsFileExist) {
+TEST_F(COMMON_UTILS_UTILS_TEST, IsFileExist)
+{
     GlobalMockObject::verify();
     std::string path;
     EXPECT_FALSE(Utils::IsFileExist(path));
@@ -138,32 +140,24 @@ TEST_F(COMMON_UTILS_UTILS_TEST, IsFileExist) {
     ::remove(path.c_str());
 }
 
-TEST_F(COMMON_UTILS_UTILS_TEST, SplitPath) {
+TEST_F(COMMON_UTILS_UTILS_TEST, SplitPath)
+{
     GlobalMockObject::verify();
 
     std::string path = "path/to/file";
     std::string dir;
     std::string base;
 
-    MOCKER(strdup)
-        .stubs()
-        .with(any())
-        .will(returnValue((char*)NULL));
+    MOCKER(strdup).stubs().with(any()).will(returnValue((char*)NULL));
 
     EXPECT_EQ(PROFILING_FAILED, Utils::SplitPath(path, dir, base));
 
     GlobalMockObject::verify();
-    MOCKER(dirname)
-        .stubs()
-        .with(any())
-        .will(returnValue((char*)NULL));
+    MOCKER(dirname).stubs().with(any()).will(returnValue((char*)NULL));
     EXPECT_EQ(PROFILING_FAILED, Utils::SplitPath(path, dir, base));
 
     GlobalMockObject::verify();
-    MOCKER(basename)
-        .stubs()
-        .with(any())
-        .will(returnValue((char*)NULL));
+    MOCKER(basename).stubs().with(any()).will(returnValue((char*)NULL));
     EXPECT_EQ(PROFILING_FAILED, Utils::SplitPath(path, dir, base));
 
     GlobalMockObject::verify();
@@ -178,7 +172,8 @@ TEST_F(COMMON_UTILS_UTILS_TEST, SplitPath) {
     EXPECT_STREQ(base.c_str(), "file");
 }
 
-TEST_F(COMMON_UTILS_UTILS_TEST, RelativePath) {
+TEST_F(COMMON_UTILS_UTILS_TEST, RelativePath)
+{
     GlobalMockObject::verify();
 
     std::string path = "path/to/file";
@@ -192,7 +187,8 @@ TEST_F(COMMON_UTILS_UTILS_TEST, RelativePath) {
     EXPECT_EQ(PROFILING_FAILED, Utils::RelativePath(path, dir, relative_path));
 }
 
-TEST_F(COMMON_UTILS_UTILS_TEST, get_files_empty_path) {
+TEST_F(COMMON_UTILS_UTILS_TEST, get_files_empty_path)
+{
     GlobalMockObject::verify();
 
     std::string path;
@@ -201,7 +197,8 @@ TEST_F(COMMON_UTILS_UTILS_TEST, get_files_empty_path) {
     EXPECT_EQ(0, files.size());
 }
 
-TEST_F(COMMON_UTILS_UTILS_TEST, get_files_out_range_of_depth) {
+TEST_F(COMMON_UTILS_UTILS_TEST, get_files_out_range_of_depth)
+{
     GlobalMockObject::verify();
     std::string path = "/path/to/dir";
     std::vector<std::string> files;
@@ -209,21 +206,20 @@ TEST_F(COMMON_UTILS_UTILS_TEST, get_files_out_range_of_depth) {
     EXPECT_EQ(0, files.size());
 }
 
-TEST_F(COMMON_UTILS_UTILS_TEST, get_files_scan_dir_fail) {
+TEST_F(COMMON_UTILS_UTILS_TEST, get_files_scan_dir_fail)
+{
     GlobalMockObject::verify();
 
     std::string path = "/path/to/dir";
     std::vector<std::string> files;
-    MOCKER(mmScandir)
-        .stubs()
-        .with(any(), any(), any(), any())
-        .will(returnValue(0));
+    MOCKER(mmScandir).stubs().with(any(), any(), any(), any()).will(returnValue(0));
 
     Utils::GetFiles(path, true, files, 0);
     EXPECT_EQ(0, files.size());
 }
 
-TEST_F(COMMON_UTILS_UTILS_TEST, get_files_recur) {
+TEST_F(COMMON_UTILS_UTILS_TEST, get_files_recur)
+{
     GlobalMockObject::verify();
 
     std::string path = "/path/to/dir";
@@ -246,17 +242,14 @@ TEST_F(COMMON_UTILS_UTILS_TEST, get_files_recur) {
     entry4.d_name[0] = 'd';
     entry4.d_name[1] = '\0';
 
-    mmDirent *name_list[4];
+    mmDirent* name_list[4];
     name_list[0] = &entry1;
     name_list[1] = &entry2;
     name_list[2] = &entry3;
     name_list[3] = &entry4;
-    mmDirent **p_name_list = name_list;
+    mmDirent** p_name_list = name_list;
 
-    MOCKER(mmScandir)
-        .stubs()
-        .with(any(), outBoundP(&p_name_list), any(), any())
-        .will(returnValue(4));
+    MOCKER(mmScandir).stubs().with(any(), outBoundP(&p_name_list), any(), any()).will(returnValue(4));
 
     MOCKER(Utils::IsDir)
         .stubs()
@@ -266,16 +259,14 @@ TEST_F(COMMON_UTILS_UTILS_TEST, get_files_recur) {
         .then(returnValue(true))
         .then(returnValue(false));
 
-    MOCKER(mmScandirFree)
-        .stubs()
-        .with(any(), any())
-        .will(returnValue(0));
+    MOCKER(mmScandirFree).stubs().with(any(), any()).will(returnValue(0));
 
     Utils::GetFiles(path, true, files, 0);
     EXPECT_EQ(5, files.size());
 }
 
-TEST_F(COMMON_UTILS_UTILS_TEST, get_files_non_recur) {
+TEST_F(COMMON_UTILS_UTILS_TEST, get_files_non_recur)
+{
     GlobalMockObject::verify();
 
     std::string path = "/path/to/dir";
@@ -298,17 +289,14 @@ TEST_F(COMMON_UTILS_UTILS_TEST, get_files_non_recur) {
     entry4.d_name[0] = 'd';
     entry4.d_name[1] = '\0';
 
-    mmDirent *name_list[4];
+    mmDirent* name_list[4];
     name_list[0] = &entry1;
     name_list[1] = &entry2;
     name_list[2] = &entry3;
     name_list[3] = &entry4;
-    mmDirent **p_name_list = name_list;
+    mmDirent** p_name_list = name_list;
 
-    MOCKER(mmScandir)
-        .stubs()
-        .with(any(), outBoundP(&p_name_list), any(), any())
-        .will(returnValue(4));
+    MOCKER(mmScandir).stubs().with(any(), outBoundP(&p_name_list), any(), any()).will(returnValue(4));
 
     MOCKER(Utils::IsDir)
         .stubs()
@@ -318,37 +306,30 @@ TEST_F(COMMON_UTILS_UTILS_TEST, get_files_non_recur) {
         .then(returnValue(true))
         .then(returnValue(false));
 
-    MOCKER(mmScandirFree)
-        .stubs()
-        .with(any(), any())
-        .will(returnValue(0));
+    MOCKER(mmScandirFree).stubs().with(any(), any()).will(returnValue(0));
 
     Utils::GetFiles(path, false, files, 0);
     EXPECT_EQ(1, files.size());
 }
 
-TEST_F(COMMON_UTILS_UTILS_TEST, CreateDir_exist) {
+TEST_F(COMMON_UTILS_UTILS_TEST, CreateDir_exist)
+{
     GlobalMockObject::verify();
 
     std::string path;
     EXPECT_EQ(PROFILING_FAILED, Utils::CreateDir(path));
 
     path = "/path/to/dir/sub-dir";
-    MOCKER(access)
-        .stubs()
-        .with(any(), any())
-        .will(returnValue(0));
+    MOCKER(access).stubs().with(any(), any()).will(returnValue(0));
 
     EXPECT_EQ(PROFILING_SUCCESS, Utils::CreateDir(path));
 }
 
-TEST_F(COMMON_UTILS_UTILS_TEST, CreateDir_exist_fail) {
+TEST_F(COMMON_UTILS_UTILS_TEST, CreateDir_exist_fail)
+{
     GlobalMockObject::verify();
 
-    MOCKER(Utils::IsFileExist)
-        .stubs()
-        .will(returnValue(false))
-        .then(returnValue(true));
+    MOCKER(Utils::IsFileExist).stubs().will(returnValue(false)).then(returnValue(true));
 
     std::string path;
     path = "/tmp/profiling-CreateDir_exist_fail";
@@ -357,7 +338,8 @@ TEST_F(COMMON_UTILS_UTILS_TEST, CreateDir_exist_fail) {
     Utils::RemoveDir(path);
 }
 
-TEST_F(COMMON_UTILS_UTILS_TEST, CreateDir_not_exist_fail) {
+TEST_F(COMMON_UTILS_UTILS_TEST, CreateDir_not_exist_fail)
+{
     GlobalMockObject::verify();
 
     std::string path;
@@ -365,25 +347,18 @@ TEST_F(COMMON_UTILS_UTILS_TEST, CreateDir_not_exist_fail) {
 
     path = "./path/to/dir/sub-dir";
 
-    MOCKER(Utils::SplitPath)
-        .stubs()
-        .will(returnValue(PROFILING_FAILED))
-        .then(returnValue(PROFILING_SUCCESS));
+    MOCKER(Utils::SplitPath).stubs().will(returnValue(PROFILING_FAILED)).then(returnValue(PROFILING_SUCCESS));
 
-    MOCKER(mmMkdir)
-        .stubs()
-        .with(any(), any())
-        .will(returnValue(-1));
-    MOCKER(mmChmod)
-        .stubs()
-        .will(returnValue(-1));
+    MOCKER(mmMkdir).stubs().with(any(), any()).will(returnValue(-1));
+    MOCKER(mmChmod).stubs().will(returnValue(-1));
 
     EXPECT_EQ(PROFILING_FAILED, Utils::CreateDir(path));
     EXPECT_EQ(PROFILING_FAILED, Utils::CreateDir(path));
     EXPECT_EQ(PROFILING_FAILED, Utils::CreateDir(path));
 }
 
-TEST_F(COMMON_UTILS_UTILS_TEST, CreateDir_mkdir_fail) {
+TEST_F(COMMON_UTILS_UTILS_TEST, CreateDir_mkdir_fail)
+{
     GlobalMockObject::verify();
 
     std::string path;
@@ -391,37 +366,28 @@ TEST_F(COMMON_UTILS_UTILS_TEST, CreateDir_mkdir_fail) {
 
     path = "./path_CreateDir";
 
-    MOCKER(mmMkdir)
-        .stubs()
-        .with(any(), any())
-        .will(returnValue(-1));
+    MOCKER(mmMkdir).stubs().with(any(), any()).will(returnValue(-1));
 
     EXPECT_EQ(PROFILING_FAILED, Utils::CreateDir(path));
 }
 
-TEST_F(COMMON_UTILS_UTILS_TEST, CreateDir_not_exist_success) {
+TEST_F(COMMON_UTILS_UTILS_TEST, CreateDir_not_exist_success)
+{
     GlobalMockObject::verify();
 
     std::string path;
     EXPECT_EQ(PROFILING_FAILED, Utils::CreateDir(path));
 
     path = "/path/to/dir/sub-dir";
-    MOCKER(access)
-        .stubs()
-        .with(any(), any())
-        .will(returnValue(-1))
-        .then(returnValue(0));
+    MOCKER(access).stubs().with(any(), any()).will(returnValue(-1)).then(returnValue(0));
 
-    MOCKER(mmMkdir)
-        .stubs()
-        .with(any(), any())
-        .will(returnValue(0));
+    MOCKER(mmMkdir).stubs().with(any(), any()).will(returnValue(0));
 
     EXPECT_EQ(PROFILING_SUCCESS, Utils::CreateDir(path));
 }
 
 int32_t g_rmDir = 0;
-INT32 mmRmdirStub(const CHAR *lpPathName)
+INT32 mmRmdirStub(const CHAR* lpPathName)
 {
     g_rmDir++;
     if (g_rmDir == 1) {
@@ -430,7 +396,8 @@ INT32 mmRmdirStub(const CHAR *lpPathName)
     return 0;
 }
 
-TEST_F(COMMON_UTILS_UTILS_TEST, RemoveDir) {
+TEST_F(COMMON_UTILS_UTILS_TEST, RemoveDir)
+{
     GlobalMockObject::verify();
 
     std::string path;
@@ -440,10 +407,7 @@ TEST_F(COMMON_UTILS_UTILS_TEST, RemoveDir) {
     Utils::RemoveDir(path);
 
     path = "/path/to/dir";
-    MOCKER(mmRmdir)
-        .stubs()
-        .with(any())
-        .will(invoke(mmRmdirStub));
+    MOCKER(mmRmdir).stubs().with(any()).will(invoke(mmRmdirStub));
 
     Utils::RemoveDir(path);
     EXPECT_EQ(g_rmDir, 1);
@@ -453,15 +417,13 @@ TEST_F(COMMON_UTILS_UTILS_TEST, RemoveDir) {
     Utils::RemoveDir(path, false);
     EXPECT_EQ(g_rmDir, 2);
     // nameList is nullptr
-    MOCKER(OsalScandir)
-        .stubs()
-        .with(any(), any(), any(), any())
-        .will(returnValue(0));
+    MOCKER(OsalScandir).stubs().with(any(), any(), any(), any()).will(returnValue(0));
     Utils::RemoveDir(path, false);
     EXPECT_EQ(g_rmDir, 2);
 }
 
-TEST_F(COMMON_UTILS_UTILS_TEST, RemoveDir_not_rm_top_dir) {
+TEST_F(COMMON_UTILS_UTILS_TEST, RemoveDir_not_rm_top_dir)
+{
     GlobalMockObject::verify();
 
     std::string path = "/path/to/dir";
@@ -482,12 +444,12 @@ TEST_F(COMMON_UTILS_UTILS_TEST, RemoveDir_not_rm_top_dir) {
     entry4.d_name[0] = 'd';
     entry4.d_name[1] = '\0';
 
-    mmDirent *name_list[4];
+    mmDirent* name_list[4];
     name_list[0] = &entry1;
     name_list[1] = &entry2;
     name_list[2] = &entry3;
     name_list[3] = &entry4;
-    mmDirent **p_name_list = name_list;
+    mmDirent** p_name_list = name_list;
 
     MOCKER(mmScandir)
         .stubs()
@@ -495,24 +457,13 @@ TEST_F(COMMON_UTILS_UTILS_TEST, RemoveDir_not_rm_top_dir) {
         .will(returnValue(-1))
         .then(returnValue(4));
 
-    MOCKER(Utils::IsDir)
-        .stubs()
-        .with(any())
-        .will(returnValue(true))
-        .then(returnValue(false));
+    MOCKER(Utils::IsDir).stubs().with(any()).will(returnValue(true)).then(returnValue(false));
 
-    MOCKER(mmScandirFree)
-        .stubs()
-        .with(any(), any())
-        .will(returnValue(0));
+    MOCKER(mmScandirFree).stubs().with(any(), any()).will(returnValue(0));
 
-    MOCKER(mmRmdir)
-        .stubs()
-        .will(invoke(mmRmdirStub));
+    MOCKER(mmRmdir).stubs().will(invoke(mmRmdirStub));
 
-    MOCKER(mmUnlink)
-        .stubs()
-        .will(returnValue(0));
+    MOCKER(mmUnlink).stubs().will(returnValue(0));
 
     Utils::RemoveDir(path, false);
     EXPECT_EQ(g_rmDir, 2);
@@ -520,18 +471,19 @@ TEST_F(COMMON_UTILS_UTILS_TEST, RemoveDir_not_rm_top_dir) {
     EXPECT_EQ(g_rmDir, 3);
 }
 
-TEST_F(COMMON_UTILS_UTILS_TEST, CanonicalizePath) {
+TEST_F(COMMON_UTILS_UTILS_TEST, CanonicalizePath)
+{
     GlobalMockObject::verify();
 
-    //empty path
+    // empty path
     std::string path;
     EXPECT_STREQ("", Utils::CanonicalizePath(path).c_str());
 
-    //max len
+    // max len
     path.append(PATH_MAX + 1, 'a');
     EXPECT_STREQ("", Utils::CanonicalizePath(path).c_str());
 
-    //realpath
+    // realpath
     path = "/path/to/fake";
     std::string real_path = "/path/to/real";
     char* real_path_buffer = (char*)malloc(4096);
@@ -549,13 +501,14 @@ TEST_F(COMMON_UTILS_UTILS_TEST, CanonicalizePath) {
     free(real_path_buffer);
 }
 
-TEST_F(COMMON_UTILS_UTILS_TEST, IsSoftLink) {
+TEST_F(COMMON_UTILS_UTILS_TEST, IsSoftLink)
+{
     GlobalMockObject::verify();
 
     system("touch /tmp/test_file");
     system("ln -s /tmp/test_file /tmp/softlink_test_file ");
 
-    //empty path
+    // empty path
     std::string path;
     EXPECT_EQ(true, Utils::IsSoftLink(path));
     EXPECT_EQ(false, Utils::IsSoftLink("/tmp/test_file"));
@@ -565,7 +518,8 @@ TEST_F(COMMON_UTILS_UTILS_TEST, IsSoftLink) {
     system("rm /tmp/softlink_test_file");
 }
 
-TEST_F(COMMON_UTILS_UTILS_TEST, exec_cmd_cpp_failed) {
+TEST_F(COMMON_UTILS_UTILS_TEST, exec_cmd_cpp_failed)
+{
     GlobalMockObject::verify();
 
     std::string cmd = "ls";
@@ -573,7 +527,7 @@ TEST_F(COMMON_UTILS_UTILS_TEST, exec_cmd_cpp_failed) {
     std::vector<std::string> argv;
     argv.push_back("/");
 
-    std::vector<std::string> envp(1024*1024+1);
+    std::vector<std::string> envp(1024 * 1024 + 1);
 
     pid_t child;
 
@@ -583,7 +537,8 @@ TEST_F(COMMON_UTILS_UTILS_TEST, exec_cmd_cpp_failed) {
     EXPECT_EQ(PROFILING_FAILED, Utils::ExecCmd(execCmdParams, argv, envp, exitCode, child));
 }
 
-TEST_F(COMMON_UTILS_UTILS_TEST, exec_cmd_cpp) {
+TEST_F(COMMON_UTILS_UTILS_TEST, exec_cmd_cpp)
+{
     GlobalMockObject::verify();
 
     std::string cmd = "ls";
@@ -594,9 +549,7 @@ TEST_F(COMMON_UTILS_UTILS_TEST, exec_cmd_cpp) {
     std::vector<std::string> envp;
     envp.push_back("PATH=/usr/bin:/usr/sbin");
 
-    MOCKER(mmCreateProcess)
-        .stubs()
-        .will(returnValue(-1));
+    MOCKER(mmCreateProcess).stubs().will(returnValue(-1));
 
     pid_t child;
     int exitCode = -1;
@@ -608,13 +561,14 @@ TEST_F(COMMON_UTILS_UTILS_TEST, exec_cmd_cpp) {
     EXPECT_EQ(PROFILING_FAILED, Utils::ExecCmd(execCmdParams1, argv, envp, exitCode, child));
 }
 
-TEST_F(COMMON_UTILS_UTILS_TEST, exec_cmd_c) {
+TEST_F(COMMON_UTILS_UTILS_TEST, exec_cmd_c)
+{
     GlobalMockObject::verify();
 
     const std::string filename = "/path/to/cmd";
     int exit_code = 0;
-    char * argv[1];
-    char * envp[1];
+    char* argv[1];
+    char* envp[1];
     ExecCmdParams execCmdParams("", false, "");
     ExecCmdArgv execCmdArgv(argv, 1, envp, 1);
     EXPECT_EQ(PROFILING_FAILED, Utils::ExecCmdC(execCmdArgv, execCmdParams, exit_code));
@@ -635,20 +589,11 @@ TEST_F(COMMON_UTILS_UTILS_TEST, exec_cmd_c) {
 
     std::string stdout_redirect_file = "./exec_cmd_c_child_redirect_file";
 
-    MOCKER(mmCreateProcess)
-        .stubs()
-        .will(returnValue(-1))
-        .then(returnValue(0));
+    MOCKER(mmCreateProcess).stubs().will(returnValue(-1)).then(returnValue(0));
 
-    MOCKER(mmWaitPid)
-        .stubs()
-        .will(returnValue(-1))
-        .then(returnValue(0));
+    MOCKER(mmWaitPid).stubs().will(returnValue(-1)).then(returnValue(0));
 
-    MOCKER(Utils::WaitProcess)
-        .stubs()
-        .will(returnValue(-1))
-        .then(returnValue(0));
+    MOCKER(Utils::WaitProcess).stubs().will(returnValue(-1)).then(returnValue(0));
 
     ExecCmdParams execCmdParams2(filename, false, stdout_redirect_file);
     ExecCmdArgv execCmdArgv4(argv, 1, envp, 1);
@@ -658,12 +603,13 @@ TEST_F(COMMON_UTILS_UTILS_TEST, exec_cmd_c) {
     EXPECT_EQ(PROFILING_SUCCESS, Utils::ExecCmdC(execCmdArgv4, execCmdParams2, exit_code));
 }
 
-TEST_F(COMMON_UTILS_UTILS_TEST, exec_cmd_async_c) {
+TEST_F(COMMON_UTILS_UTILS_TEST, exec_cmd_async_c)
+{
     GlobalMockObject::verify();
 
     const std::string filename = "/path/to/cmd";
-    char * argv[1];
-    char * envp[1];
+    char* argv[1];
+    char* envp[1];
     pid_t child = 0;
     ExecCmdParams execCmdParams("", true, "");
     ExecCmdArgv execCmdArgv(argv, 1, envp, 1);
@@ -680,10 +626,7 @@ TEST_F(COMMON_UTILS_UTILS_TEST, exec_cmd_async_c) {
 
     std::string stdout_redirect_file = "./exec_cmd_c_child_redirect_file";
 
-    MOCKER(mmCreateProcess)
-        .stubs()
-        .will(returnValue(0))
-        .then(returnValue(-1));
+    MOCKER(mmCreateProcess).stubs().will(returnValue(0)).then(returnValue(-1));
 
     ExecCmdParams execCmdParams2(filename, true, "");
     ExecCmdArgv execCmdArgv4(argv, 1, envp, 1);
@@ -693,7 +636,8 @@ TEST_F(COMMON_UTILS_UTILS_TEST, exec_cmd_async_c) {
     EXPECT_EQ(PROFILING_FAILED, Utils::ExecCmdCAsync(execCmdArgv4, execCmdParams3, child));
 }
 
-TEST_F(COMMON_UTILS_UTILS_TEST, wait_process_no_hang) {
+TEST_F(COMMON_UTILS_UTILS_TEST, wait_process_no_hang)
+{
     GlobalMockObject::verify();
 
     pid_t process = 0;
@@ -701,24 +645,20 @@ TEST_F(COMMON_UTILS_UTILS_TEST, wait_process_no_hang) {
     int exit_code = 0;
     bool hang = false;
 
-    MOCKER(mmWaitPid)
-        .stubs()
-        .will(returnValue(0))
-        .then(returnValue(-1));
+    MOCKER(mmWaitPid).stubs().will(returnValue(0)).then(returnValue(-1));
 
     EXPECT_EQ(PROFILING_SUCCESS, Utils::WaitProcess(process, is_exited, exit_code, hang));
     EXPECT_EQ(PROFILING_FAILED, Utils::WaitProcess(process, is_exited, exit_code, hang));
 
     GlobalMockObject::verify();
 
-    MOCKER(mmWaitPid)
-        .stubs()
-        .will(returnValue(EN_ERR));
+    MOCKER(mmWaitPid).stubs().will(returnValue(EN_ERR));
 
     EXPECT_EQ(PROFILING_SUCCESS, Utils::WaitProcess(process, is_exited, exit_code, hang));
 }
 
-TEST_F(COMMON_UTILS_UTILS_TEST, wait_process_hang) {
+TEST_F(COMMON_UTILS_UTILS_TEST, wait_process_hang)
+{
     GlobalMockObject::verify();
 
     pid_t process = 1234;
@@ -726,90 +666,89 @@ TEST_F(COMMON_UTILS_UTILS_TEST, wait_process_hang) {
     int exit_code = 0;
     bool hang = true;
 
-    //WIFEXITED
+    // WIFEXITED
     int wait_status = 0;
-    MOCKER(mmWaitPid)
-        .stubs()
-        .with(any(), outBoundP(&wait_status), any())
-        .will(returnValue(1234));
+    MOCKER(mmWaitPid).stubs().with(any(), outBoundP(&wait_status), any()).will(returnValue(1234));
 
     EXPECT_EQ(PROFILING_FAILED, Utils::WaitProcess(process, is_exited, exit_code, hang));
 }
 
-TEST_F(COMMON_UTILS_UTILS_TEST, ProcessIsRuning) {
+TEST_F(COMMON_UTILS_UTILS_TEST, ProcessIsRuning)
+{
     GlobalMockObject::verify();
 
     pid_t process = 1234;
 
-    MOCKER(mmWaitPid)
-        .stubs()
-        .will(returnValue(-1))
-        .then(returnValue(0));
+    MOCKER(mmWaitPid).stubs().will(returnValue(-1)).then(returnValue(0));
 
     EXPECT_EQ(false, Utils::ProcessIsRuning(process));
     EXPECT_EQ(true, Utils::ProcessIsRuning(process));
 }
 
-TEST_F(COMMON_UTILS_UTILS_TEST, JoinPath) {
+TEST_F(COMMON_UTILS_UTILS_TEST, JoinPath)
+{
     GlobalMockObject::verify();
 
     std::vector<std::string> paths;
-    //size = 0
+    // size = 0
     EXPECT_STREQ("", Utils::JoinPath(paths).c_str());
 
-    //size = 1
+    // size = 1
     paths.push_back("/p1");
     EXPECT_STREQ("/p1", Utils::JoinPath(paths).c_str());
 
-    //size = 2
+    // size = 2
     paths.push_back("p2");
     EXPECT_STREQ("/p1/p2", Utils::JoinPath(paths).c_str());
 }
 
-TEST_F(COMMON_UTILS_UTILS_TEST, LeftTrim) {
+TEST_F(COMMON_UTILS_UTILS_TEST, LeftTrim)
+{
     GlobalMockObject::verify();
 
-    //size = 0
+    // size = 0
     std::string str0;
     EXPECT_STREQ("", Utils::LeftTrim(str0, "\r\n").c_str());
 
-    //size != 0
+    // size != 0
     std::string str1 = "\r\nabc";
     EXPECT_STREQ("abc", Utils::LeftTrim(str1, "\r\n").c_str());
 
-    //size != 0
+    // size != 0
     std::string str2 = "\r\n";
     EXPECT_STREQ("", Utils::LeftTrim(str2, "\r\n").c_str());
 
-    //size != 0
+    // size != 0
     std::string str3 = "abc";
     EXPECT_STREQ("abc", Utils::LeftTrim(str3, "\r\n").c_str());
 }
 
-TEST_F(COMMON_UTILS_UTILS_TEST, Trim) {
+TEST_F(COMMON_UTILS_UTILS_TEST, Trim)
+{
     GlobalMockObject::verify();
 
-    //size = 0
+    // size = 0
     std::string str0;
     EXPECT_STREQ("", Utils::Trim(str0).c_str());
 
-    //size != 0
+    // size != 0
     std::string str1 = "    ";
     EXPECT_STREQ("", Utils::Trim(str1).c_str());
 
-    //size != 0
+    // size != 0
     std::string str2 = "   abc   ";
     EXPECT_STREQ("abc", Utils::Trim(str2).c_str());
 
-    //size != 0
+    // size != 0
     std::string str3 = "  a b c ";
     EXPECT_STREQ("a b c", Utils::Trim(str3).c_str());
 }
 
-TEST_F(COMMON_UTILS_UTILS_TEST, Split) {
+TEST_F(COMMON_UTILS_UTILS_TEST, Split)
+{
     GlobalMockObject::verify();
 
-    //filter = true
+    // filter = true
     std::string str0 = "a,b,c";
     std::vector<std::string> out0 = Utils::Split(str0, true, "b", ",");
 
@@ -824,65 +763,67 @@ TEST_F(COMMON_UTILS_UTILS_TEST, Split) {
     EXPECT_STREQ("c", out1[2].c_str());
 }
 
-TEST_F(COMMON_UTILS_UTILS_TEST, ToUpper) {
+TEST_F(COMMON_UTILS_UTILS_TEST, ToUpper)
+{
     GlobalMockObject::verify();
 
     EXPECT_STREQ("ABC", Utils::ToUpper("aBc").c_str());
     EXPECT_STREQ("", Utils::ToUpper("").c_str());
 }
 
-TEST_F(COMMON_UTILS_UTILS_TEST, ToLower) {
+TEST_F(COMMON_UTILS_UTILS_TEST, ToLower)
+{
     GlobalMockObject::verify();
 
     EXPECT_STREQ("abc", Utils::ToLower("aBc").c_str());
     EXPECT_STREQ("", Utils::ToLower("").c_str());
 }
 
-TEST_F(COMMON_UTILS_UTILS_TEST, UsleepInterupt) {
+TEST_F(COMMON_UTILS_UTILS_TEST, UsleepInterupt)
+{
     GlobalMockObject::verify();
 
     EXPECT_EQ(0, Utils::UsleepInterupt(1));
 }
 
-TEST_F(COMMON_UTILS_UTILS_TEST, UtilsStringBuilder) {
+TEST_F(COMMON_UTILS_UTILS_TEST, UtilsStringBuilder)
+{
     GlobalMockObject::verify();
 
     UtilsStringBuilder<std::string> builder;
     std::vector<std::string> elems;
     std::string sep = ",";
 
-    //no elements
+    // no elements
     EXPECT_STREQ("", builder.Join(elems, sep).c_str());
 
-    //one elements
+    // one elements
     elems.push_back("a");
     EXPECT_STREQ("a", builder.Join(elems, sep).c_str());
 
-    //multiple elements
+    // multiple elements
     elems.push_back("b");
     EXPECT_STREQ("a,b", builder.Join(elems, sep).c_str());
 }
 
 ///////////////////////////////////////////////////////////
 
-TEST_F(COMMON_UTILS_UTILS_TEST, get_child_dirs_scan_dir_fail) {
+TEST_F(COMMON_UTILS_UTILS_TEST, get_child_dirs_scan_dir_fail)
+{
     GlobalMockObject::verify();
 
     std::string dir("/tmp/get_child_dirs_scan_dir_fail");
     bool is_recur = false;
     std::vector<std::string> child_dir;
 
-    MOCKER(mmScandir)
-        .stubs()
-        .with(any(), any(), any(), any())
-        .will(returnValue(0));
+    MOCKER(mmScandir).stubs().with(any(), any(), any(), any()).will(returnValue(0));
 
     Utils::GetChildDirs(dir, is_recur, child_dir, 0);
     EXPECT_EQ(0, child_dir.size());
-
 }
 
-TEST_F(COMMON_UTILS_UTILS_TEST, get_child_dirs_out_range_of_depth) {
+TEST_F(COMMON_UTILS_UTILS_TEST, get_child_dirs_out_range_of_depth)
+{
     GlobalMockObject::verify();
     std::string dir("/tmp/get_child_dirs_scan_dir_fail");
     bool is_recur = false;
@@ -891,7 +832,8 @@ TEST_F(COMMON_UTILS_UTILS_TEST, get_child_dirs_out_range_of_depth) {
     EXPECT_EQ(0, child_dir.size());
 }
 
-TEST_F(COMMON_UTILS_UTILS_TEST, get_child_dirs_recur) {
+TEST_F(COMMON_UTILS_UTILS_TEST, get_child_dirs_recur)
+{
     GlobalMockObject::verify();
 
     std::string path = "/path/to/dir";
@@ -915,17 +857,14 @@ TEST_F(COMMON_UTILS_UTILS_TEST, get_child_dirs_recur) {
     entry4.d_name[0] = 'd';
     entry4.d_name[1] = '\0';
 
-    mmDirent *name_list[4];
+    mmDirent* name_list[4];
     name_list[0] = &entry1;
     name_list[1] = &entry2;
     name_list[2] = &entry3;
     name_list[3] = &entry4;
-    mmDirent **p_name_list = name_list;
+    mmDirent** p_name_list = name_list;
 
-    MOCKER(mmScandir)
-        .stubs()
-        .with(any(), outBoundP(&p_name_list), any(), any())
-        .will(returnValue(4));
+    MOCKER(mmScandir).stubs().with(any(), outBoundP(&p_name_list), any(), any()).will(returnValue(4));
 
     MOCKER(Utils::IsDir)
         .stubs()
@@ -935,16 +874,14 @@ TEST_F(COMMON_UTILS_UTILS_TEST, get_child_dirs_recur) {
         .then(returnValue(true))
         .then(returnValue(false));
 
-    MOCKER(mmScandirFree)
-        .stubs()
-        .with(any(), any())
-        .will(returnValue(0));
+    MOCKER(mmScandirFree).stubs().with(any(), any()).will(returnValue(0));
 
     Utils::GetChildDirs(path, is_recur, child_dirs, 0);
     EXPECT_EQ(1, child_dirs.size());
 }
 
-TEST_F(COMMON_UTILS_UTILS_TEST, get_child_dirs_no_recur) {
+TEST_F(COMMON_UTILS_UTILS_TEST, get_child_dirs_no_recur)
+{
     GlobalMockObject::verify();
 
     std::string path = "/path/to/dir";
@@ -968,17 +905,14 @@ TEST_F(COMMON_UTILS_UTILS_TEST, get_child_dirs_no_recur) {
     entry4.d_name[0] = 'd';
     entry4.d_name[1] = '\0';
 
-    mmDirent *name_list[4];
+    mmDirent* name_list[4];
     name_list[0] = &entry1;
     name_list[1] = &entry2;
     name_list[2] = &entry3;
     name_list[3] = &entry4;
-    mmDirent **p_name_list = name_list;
+    mmDirent** p_name_list = name_list;
 
-    MOCKER(mmScandir)
-        .stubs()
-        .with(any(), outBoundP(&p_name_list), any(), any())
-        .will(returnValue(4));
+    MOCKER(mmScandir).stubs().with(any(), outBoundP(&p_name_list), any(), any()).will(returnValue(4));
 
     MOCKER(Utils::IsDir)
         .stubs()
@@ -988,33 +922,28 @@ TEST_F(COMMON_UTILS_UTILS_TEST, get_child_dirs_no_recur) {
         .then(returnValue(true))
         .then(returnValue(false));
 
-    MOCKER(mmScandirFree)
-        .stubs()
-        .with(any(), any())
-        .will(returnValue(0));
+    MOCKER(mmScandirFree).stubs().with(any(), any()).will(returnValue(0));
 
     Utils::GetChildDirs(path, is_recur, child_dirs, 0);
     EXPECT_EQ(1, child_dirs.size());
 }
 
 ///////////////////////////////////////////////////////////
-TEST_F(COMMON_UTILS_UTILS_TEST, get_child_filenames_scan_dir_fail) {
+TEST_F(COMMON_UTILS_UTILS_TEST, get_child_filenames_scan_dir_fail)
+{
     GlobalMockObject::verify();
 
     std::string dir("/tmp/get_child_filenames_scan_dir_fail");
     std::vector<std::string> child_filename;
 
-    MOCKER(mmScandir)
-        .stubs()
-        .with(any(), any(), any(), any())
-        .will(returnValue(0));
+    MOCKER(mmScandir).stubs().with(any(), any(), any(), any()).will(returnValue(0));
 
     Utils::GetChildFilenames(dir, child_filename);
     EXPECT_EQ(0, child_filename.size());
-
 }
 
-TEST_F(COMMON_UTILS_UTILS_TEST, get_child_filenames_scan_dir_success) {
+TEST_F(COMMON_UTILS_UTILS_TEST, get_child_filenames_scan_dir_success)
+{
     GlobalMockObject::verify();
 
     std::string dir("/tmp/get_child_filenames_scan_dir_success");
@@ -1037,29 +966,24 @@ TEST_F(COMMON_UTILS_UTILS_TEST, get_child_filenames_scan_dir_success) {
     entry4.d_name[0] = 'd';
     entry4.d_name[1] = '\0';
 
-    mmDirent *name_list[4];
+    mmDirent* name_list[4];
     name_list[0] = &entry1;
     name_list[1] = &entry2;
     name_list[2] = &entry3;
     name_list[3] = &entry4;
-    mmDirent **p_name_list = name_list;
+    mmDirent** p_name_list = name_list;
 
-    MOCKER(mmScandir)
-        .stubs()
-        .with(any(), outBoundP(&p_name_list), any(), any())
-        .will(returnValue(4));
+    MOCKER(mmScandir).stubs().with(any(), outBoundP(&p_name_list), any(), any()).will(returnValue(4));
 
-    MOCKER(mmScandirFree)
-        .stubs()
-        .with(any(), any())
-        .will(returnValue(0));
+    MOCKER(mmScandirFree).stubs().with(any(), any()).will(returnValue(0));
 
     Utils::GetChildFilenames(dir, child_filename);
     EXPECT_EQ(2, child_filename.size());
 }
 
 ///////////////////////////////////////////////////////////
-TEST_F(COMMON_UTILS_UTILS_TEST, TimestampToTime) {
+TEST_F(COMMON_UTILS_UTILS_TEST, TimestampToTime)
+{
     GlobalMockObject::verify();
     std::stringstream end_time;
     struct timeval tv;
@@ -1069,9 +993,10 @@ TEST_F(COMMON_UTILS_UTILS_TEST, TimestampToTime) {
     EXPECT_STREQ("0", Utils::TimestampToTime("", 1000000).c_str());
     EXPECT_STRNE("0", Utils::TimestampToTime(end_time.str(), 1000000).c_str());
 }
-TEST_F(COMMON_UTILS_UTILS_TEST, TimestampToTime2){
+TEST_F(COMMON_UTILS_UTILS_TEST, TimestampToTime2)
+{
     const int timeLen = 32;
-    char timeStr[timeLen] = { 0 };
+    char timeStr[timeLen] = {0};
 
     (void)memset_s(timeStr, sizeof(timeStr), 0, sizeof(timeStr));
     int ret = sprintf_s(timeStr, sizeof(timeStr), "%06u", 100);
@@ -1079,18 +1004,16 @@ TEST_F(COMMON_UTILS_UTILS_TEST, TimestampToTime2){
         MSPROF_LOGI("[XXX] %d", __LINE__);
     }
 
-
     GlobalMockObject::verify();
-    MOCKER(localtime_r)
-        .stubs()
-        .will(returnValue((struct tm *)0x123456));
+    MOCKER(localtime_r).stubs().will(returnValue((struct tm*)0x123456));
 
     std::string time = Utils::TimestampToTime("1000100", 1000);
     int len = time.size();
     EXPECT_NE(1, len);
 }
 
-TEST_F(COMMON_UTILS_UTILS_TEST, HandleEnvString){
+TEST_F(COMMON_UTILS_UTILS_TEST, HandleEnvString)
+{
     GlobalMockObject::verify();
     std::string envStr;
     CONST_CHAR_PTR env = nullptr;
@@ -1099,7 +1022,8 @@ TEST_F(COMMON_UTILS_UTILS_TEST, HandleEnvString){
     EXPECT_STREQ(getenv("HOME"), envStr.c_str());
 }
 
-TEST_F(COMMON_UTILS_UTILS_TEST, IdeReplaceWaveWithHomedir){
+TEST_F(COMMON_UTILS_UTILS_TEST, IdeReplaceWaveWithHomedir)
+{
     GlobalMockObject::verify();
     std::string str = "~/profiler-app";
     std::string result;
@@ -1108,16 +1032,16 @@ TEST_F(COMMON_UTILS_UTILS_TEST, IdeReplaceWaveWithHomedir){
     std::cout << result << std::endl;
 }
 
-TEST_F(COMMON_UTILS_UTILS_TEST, ProfMalloc){
+TEST_F(COMMON_UTILS_UTILS_TEST, ProfMalloc)
+{
     GlobalMockObject::verify();
-    MOCKER(memset_s)
-        .stubs()
-        .will(returnValue(-1));
+    MOCKER(memset_s).stubs().will(returnValue(-1));
     EXPECT_EQ(nullptr, Utils::ProfMalloc(0));
     EXPECT_EQ(nullptr, Utils::ProfMalloc(1));
 }
 
-TEST_F(COMMON_UTILS_UTILS_TEST, RemoveEndCharacter){
+TEST_F(COMMON_UTILS_UTILS_TEST, RemoveEndCharacter)
+{
     GlobalMockObject::verify();
     std::string input = "mm\n";
     std::string empty = "";
@@ -1129,17 +1053,19 @@ TEST_F(COMMON_UTILS_UTILS_TEST, RemoveEndCharacter){
     EXPECT_EQ(input, "mm");
 }
 
-int GetDiskFreeSpaceStub(const char *path, mmDiskSize *diskSize) {
+int GetDiskFreeSpaceStub(const char* path, mmDiskSize* diskSize)
+{
     std::string paths(path);
     try {
         diskSize->availSize = std::stoi(paths);
-    } catch(...) {
+    } catch (...) {
         return -1;
     }
     return EN_OK;
 }
 
-TEST_F(COMMON_UTILS_UTILS_TEST, CreateTaskId) {
+TEST_F(COMMON_UTILS_UTILS_TEST, CreateTaskId)
+{
     GlobalMockObject::verify();
     std::string dirName = Utils::CreateProfDir(0);
     dirName = Utils::CreateProfDir(200);
@@ -1150,96 +1076,79 @@ TEST_F(COMMON_UTILS_UTILS_TEST, CreateTaskId) {
     EXPECT_EQ(46, dirName.size()); // length of prof dir
 }
 
-TEST_F(COMMON_UTILS_UTILS_TEST, CreateHelperDir) {
+TEST_F(COMMON_UTILS_UTILS_TEST, CreateHelperDir)
+{
     GlobalMockObject::verify();
     std::string dirName = Utils::CreateHelperDir(0, "15151");
     // sample: PROF_000001_20231012104049447_hostPid + 00015151
     EXPECT_EQ(46, dirName.size()); // length of prof dir
 }
 
-TEST_F(COMMON_UTILS_UTILS_TEST, WriteFile0) {
+TEST_F(COMMON_UTILS_UTILS_TEST, WriteFile0)
+{
     GlobalMockObject::verify();
     std::string profName = "PROF_000001_20220222182700493_BABQCAKDOMCOLMJB\n";
     EXPECT_EQ(PROFILING_FAILED, analysis::dvvp::common::utils::WriteFile("", "", profName));
 }
 
-TEST_F(COMMON_UTILS_UTILS_TEST, WriteFile2) {
+TEST_F(COMMON_UTILS_UTILS_TEST, WriteFile2)
+{
     GlobalMockObject::verify();
-    FILE *file = (FILE *)0x12345;
+    FILE* file = (FILE*)0x12345;
     std::string profName = "PROF_000001_20220222182700493_BABQCAKDOMCOLMJB\n";
 
-    MOCKER_CPP(fopen)
-        .stubs()
-        .will(returnValue(file));
+    MOCKER_CPP(fopen).stubs().will(returnValue(file));
 
-    MOCKER_CPP(fileno)
-        .stubs()
-        .will(returnValue(2));
+    MOCKER_CPP(fileno).stubs().will(returnValue(2));
 
-    MOCKER_CPP(flock)
-        .stubs()
-        .will(returnValue(0)); //success
+    MOCKER_CPP(flock).stubs().will(returnValue(0)); // success
 
-    MOCKER_CPP(fwrite)
-        .stubs()
-        .will(returnValue(profName.length() - 1)); //failed. 2 is not equal to the lenth of PROF_000001_20220222182700493_BABQCAKDOMCOLMJB\n
+    MOCKER_CPP(fwrite).stubs().will(returnValue(
+        profName.length() -
+        1)); // failed. 2 is not equal to the lenth of PROF_000001_20220222182700493_BABQCAKDOMCOLMJB\n
 
-    MOCKER_CPP(fclose)
-        .stubs()
-        .will(returnValue(2));
+    MOCKER_CPP(fclose).stubs().will(returnValue(2));
 
     EXPECT_EQ(PROFILING_FAILED, analysis::dvvp::common::utils::WriteFile("", "", profName));
 }
 
-TEST_F(COMMON_UTILS_UTILS_TEST, WriteFile4) {
+TEST_F(COMMON_UTILS_UTILS_TEST, WriteFile4)
+{
     GlobalMockObject::verify();
-    FILE *file = (FILE *)0x12345;
+    FILE* file = (FILE*)0x12345;
     std::string profName = "PROF_000001_20220222182700493_BABQCAKDOMCOLMJB\n";
 
-    MOCKER_CPP(fopen)
-        .stubs()
-        .will(returnValue(file));
+    MOCKER_CPP(fopen).stubs().will(returnValue(file));
 
-    MOCKER_CPP(fileno)
-        .stubs()
-        .will(returnValue(2));
+    MOCKER_CPP(fileno).stubs().will(returnValue(2));
 
-    MOCKER_CPP(flock)
-        .stubs()
-        .will(returnValue(0)); //success
+    MOCKER_CPP(flock).stubs().will(returnValue(0));                  // success
 
-    MOCKER_CPP(fwrite)
-        .stubs()
-        .will(returnValue(profName.length())); //success. 47 is not equal to the lenth of PROF_000001_20220222182700493_BABQCAKDOMCOLMJB\n
+    MOCKER_CPP(fwrite).stubs().will(returnValue(profName.length())); // success. 47 is not equal to the lenth of
+                                                                     // PROF_000001_20220222182700493_BABQCAKDOMCOLMJB\n
 
-    MOCKER_CPP(fclose)
-        .stubs()
-        .will(returnValue(2));
+    MOCKER_CPP(fclose).stubs().will(returnValue(2));
 
     EXPECT_EQ(PROFILING_SUCCESS, analysis::dvvp::common::utils::WriteFile("", "", profName));
 }
 
-TEST_F(COMMON_UTILS_UTILS_TEST, WriteFile_fileno_failed) {
+TEST_F(COMMON_UTILS_UTILS_TEST, WriteFile_fileno_failed)
+{
     GlobalMockObject::verify();
-    FILE *file = (FILE *)0x12345;
+    FILE* file = (FILE*)0x12345;
     std::string profName = "PROF_000001_20220222182700493_BABQCAKDOMCOLMJB\n";
 
-    MOCKER_CPP(fopen)
-        .stubs()
-        .will(returnValue(file));
+    MOCKER_CPP(fopen).stubs().will(returnValue(file));
 
-    MOCKER_CPP(fileno)
-        .stubs()
-        .will(returnValue(-1));
+    MOCKER_CPP(fileno).stubs().will(returnValue(-1));
 
-    MOCKER_CPP(fclose)
-        .stubs()
-        .will(returnValue(2));
+    MOCKER_CPP(fclose).stubs().will(returnValue(2));
     // fileno failed
     EXPECT_EQ(PROFILING_FAILED, analysis::dvvp::common::utils::WriteFile("", "test", profName));
 }
 
-TEST_F(COMMON_UTILS_UTILS_TEST, CheckStringIsUnsignedIntNum) {
+TEST_F(COMMON_UTILS_UTILS_TEST, CheckStringIsUnsignedIntNum)
+{
     // check type is uint32_t
     std::string numberStr = "4294967295";
     bool ret = Utils::CheckStringIsUnsignedIntNum(numberStr);
@@ -1251,7 +1160,7 @@ TEST_F(COMMON_UTILS_UTILS_TEST, CheckStringIsUnsignedIntNum) {
     }
     try {
         uerror = std::stoi(numberStr);
-    } catch(...) {
+    } catch (...) {
         uerror = 1;
     }
     EXPECT_TRUE(uerror == 1);
@@ -1260,7 +1169,8 @@ TEST_F(COMMON_UTILS_UTILS_TEST, CheckStringIsUnsignedIntNum) {
     EXPECT_FALSE(Utils::CheckStringIsUnsignedIntNum("-1"));
 }
 
-TEST_F(COMMON_UTILS_UTILS_TEST, CheckStringIsNonNegativeIntNum) {
+TEST_F(COMMON_UTILS_UTILS_TEST, CheckStringIsNonNegativeIntNum)
+{
     // check type is int32_t
     std::string numberStr = "2147483647";
     bool ret = Utils::CheckStringIsNonNegativeIntNum(numberStr);
@@ -1274,7 +1184,8 @@ TEST_F(COMMON_UTILS_UTILS_TEST, CheckStringIsNonNegativeIntNum) {
     EXPECT_FALSE(Utils::CheckStringIsNonNegativeIntNum("-1"));
 }
 
-TEST_F(COMMON_UTILS_UTILS_TEST, CheckStrToInt32Failed) {
+TEST_F(COMMON_UTILS_UTILS_TEST, CheckStrToInt32Failed)
+{
     int32_t value = 0;
     bool ret = Utils::StrToInt32(value, "2147483647");
     EXPECT_EQ(value, 2147483647);
@@ -1300,7 +1211,8 @@ TEST_F(COMMON_UTILS_UTILS_TEST, CheckStrToInt32Failed) {
     EXPECT_EQ(value, 1123);
 }
 
-TEST_F(COMMON_UTILS_UTILS_TEST, CheckStrToStrToUint32Failed) {
+TEST_F(COMMON_UTILS_UTILS_TEST, CheckStrToStrToUint32Failed)
+{
     uint32_t value = 0;
     bool ret = Utils::StrToUint32(value, "4294967295");
     EXPECT_EQ(value, 4294967295);
@@ -1318,7 +1230,8 @@ TEST_F(COMMON_UTILS_UTILS_TEST, CheckStrToStrToUint32Failed) {
     EXPECT_TRUE(value == 0);
 }
 
-TEST_F(COMMON_UTILS_UTILS_TEST, IsDirAccessible) {
+TEST_F(COMMON_UTILS_UTILS_TEST, IsDirAccessible)
+{
     std::string path = "/notDir";
     EXPECT_EQ(false, Utils::IsDirAccessible(path));
 

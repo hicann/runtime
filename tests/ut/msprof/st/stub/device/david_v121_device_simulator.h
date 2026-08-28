@@ -21,23 +21,22 @@
 #include "device_simulator.h"
 #include "data_manager.h"
 
-
 namespace Cann {
 namespace Dvvp {
 namespace Test {
 class DavidV121DeviceSimulator : public DeviceSimulator {
 public:
     DavidV121DeviceSimulator() {}
-    explicit DavidV121DeviceSimulator(uint32_t platformType) :
-        platformType_(platformType) {}
+    explicit DavidV121DeviceSimulator(uint32_t platformType) : platformType_(platformType) {}
     virtual ~DavidV121DeviceSimulator() {}
-    virtual int32_t ProfDrvGetChannels(ChannelList &channels) override;
-    virtual int32_t GetDeviceInfo(int32_t moduleType, int32_t infoType, int64_t *value) override;
-    virtual int32_t ProfDrvStart(uint32_t channelId, const ProfStartPara &para) override;
+    virtual int32_t ProfDrvGetChannels(ChannelList& channels) override;
+    virtual int32_t GetDeviceInfo(int32_t moduleType, int32_t infoType, int64_t* value) override;
+    virtual int32_t ProfDrvStart(uint32_t channelId, const ProfStartPara& para) override;
+
 private:
     uint32_t platformType_;
 };
-}
-}
-}
+} // namespace Test
+} // namespace Dvvp
+} // namespace Cann
 #endif

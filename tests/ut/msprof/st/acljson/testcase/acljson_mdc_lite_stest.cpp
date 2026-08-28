@@ -27,7 +27,7 @@ static const char MDCLITE_RM_RF[] = "rm -rf ./acljsonMdcLitestest_workspace";
 static const char MDCLITE_MKDIR[] = "mkdir ./acljsonMdcLitestest_workspace";
 static const char MDCLITE_OUTPUT_DIR[] = "./acljsonMdcLitestest_workspace/output";
 
-class AclJsonMdcLiteStest: public testing::Test {
+class AclJsonMdcLiteStest : public testing::Test {
 protected:
     virtual void SetUp()
     {
@@ -66,8 +66,8 @@ TEST_F(AclJsonMdcLiteStest, AclJsonDefault)
     std::vector<std::string> deviceDataList = {"hwts.data", "ts_track.data", "aicore.data"};
     MsprofMgr().SetDeviceCheckList(deviceDataList);
     std::vector<std::string> hostDataList = {
-        "unaging.api_event.data", "unaging.compact.node_basic_info", "unaging.compact.task_track", "unaging.additional.context_id_info"
-    };
+        "unaging.api_event.data", "unaging.compact.node_basic_info", "unaging.compact.task_track",
+        "unaging.additional.context_id_info"};
     MsprofMgr().SetHostCheckList(hostDataList);
     std::vector<uint64_t> bitList = {PROF_ACL_API, PROF_TASK_TIME_L1, PROF_AICORE_METRICS};
     MsprofMgr().SetBitSwitchCheckList(bitList);
@@ -83,8 +83,8 @@ TEST_F(AclJsonMdcLiteStest, AclJsonPipeUtilizationAicMetrics)
     std::vector<std::string> deviceDataList = {"hwts.data", "ts_track.data", "aicore.data"};
     MsprofMgr().SetDeviceCheckList(deviceDataList);
     std::vector<std::string> hostDataList = {
-        "unaging.api_event.data", "unaging.compact.node_basic_info", "unaging.compact.task_track", "unaging.additional.context_id_info"
-    };
+        "unaging.api_event.data", "unaging.compact.node_basic_info", "unaging.compact.task_track",
+        "unaging.additional.context_id_info"};
     MsprofMgr().SetHostCheckList(hostDataList);
     std::vector<uint64_t> bitList = {PROF_ACL_API, PROF_TASK_TIME_L1, PROF_AICORE_METRICS};
     MsprofMgr().SetBitSwitchCheckList(bitList);
@@ -100,8 +100,8 @@ TEST_F(AclJsonMdcLiteStest, AclJsonPipelineExecuteUtilizationAicMetrics)
     std::vector<std::string> deviceDataList = {"hwts.data", "ts_track.data", "aicore.data"};
     MsprofMgr().SetDeviceCheckList(deviceDataList);
     std::vector<std::string> hostDataList = {
-        "unaging.api_event.data", "unaging.compact.node_basic_info", "unaging.compact.task_track", "unaging.additional.context_id_info"
-    };
+        "unaging.api_event.data", "unaging.compact.node_basic_info", "unaging.compact.task_track",
+        "unaging.additional.context_id_info"};
     MsprofMgr().SetHostCheckList(hostDataList);
     std::vector<uint64_t> bitList = {PROF_ACL_API, PROF_TASK_TIME_L1, PROF_AICORE_METRICS};
     MsprofMgr().SetBitSwitchCheckList(bitList);
@@ -117,8 +117,8 @@ TEST_F(AclJsonMdcLiteStest, AclJsonArithmeticUtilizationAicMetrics)
     std::vector<std::string> deviceDataList = {"hwts.data", "ts_track.data", "aicore.data"};
     MsprofMgr().SetDeviceCheckList(deviceDataList);
     std::vector<std::string> hostDataList = {
-        "unaging.api_event.data", "unaging.compact.node_basic_info", "unaging.compact.task_track", "unaging.additional.context_id_info"
-    };
+        "unaging.api_event.data", "unaging.compact.node_basic_info", "unaging.compact.task_track",
+        "unaging.additional.context_id_info"};
     MsprofMgr().SetHostCheckList(hostDataList);
     std::vector<uint64_t> bitList = {PROF_ACL_API, PROF_TASK_TIME_L1, PROF_AICORE_METRICS};
     MsprofMgr().SetBitSwitchCheckList(bitList);
@@ -134,8 +134,8 @@ TEST_F(AclJsonMdcLiteStest, AclJsonMemoryAicMetrics)
     std::vector<std::string> deviceDataList = {"hwts.data", "ts_track.data", "aicore.data"};
     MsprofMgr().SetDeviceCheckList(deviceDataList);
     std::vector<std::string> hostDataList = {
-        "unaging.api_event.data", "unaging.compact.node_basic_info", "unaging.compact.task_track", "unaging.additional.context_id_info"
-    };
+        "unaging.api_event.data", "unaging.compact.node_basic_info", "unaging.compact.task_track",
+        "unaging.additional.context_id_info"};
     MsprofMgr().SetHostCheckList(hostDataList);
     std::vector<uint64_t> bitList = {PROF_ACL_API, PROF_TASK_TIME_L1, PROF_AICORE_METRICS};
     MsprofMgr().SetBitSwitchCheckList(bitList);
@@ -151,8 +151,8 @@ TEST_F(AclJsonMdcLiteStest, AclJsonMemoryL0AicMetrics)
     std::vector<std::string> deviceDataList = {"hwts.data", "ts_track.data", "aicore.data"};
     MsprofMgr().SetDeviceCheckList(deviceDataList);
     std::vector<std::string> hostDataList = {
-        "unaging.api_event.data", "unaging.compact.node_basic_info", "unaging.compact.task_track", "unaging.additional.context_id_info"
-    };
+        "unaging.api_event.data", "unaging.compact.node_basic_info", "unaging.compact.task_track",
+        "unaging.additional.context_id_info"};
     MsprofMgr().SetHostCheckList(hostDataList);
     std::vector<uint64_t> bitList = {PROF_ACL_API, PROF_TASK_TIME_L1, PROF_AICORE_METRICS};
     MsprofMgr().SetBitSwitchCheckList(bitList);
@@ -168,8 +168,8 @@ TEST_F(AclJsonMdcLiteStest, AclJsonMemoryUBAicMetrics)
     std::vector<std::string> deviceDataList = {"hwts.data", "ts_track.data", "aicore.data"};
     MsprofMgr().SetDeviceCheckList(deviceDataList);
     std::vector<std::string> hostDataList = {
-        "unaging.api_event.data", "unaging.compact.node_basic_info", "unaging.compact.task_track", "unaging.additional.context_id_info"
-    };
+        "unaging.api_event.data", "unaging.compact.node_basic_info", "unaging.compact.task_track",
+        "unaging.additional.context_id_info"};
     MsprofMgr().SetHostCheckList(hostDataList);
     std::vector<uint64_t> bitList = {PROF_ACL_API, PROF_TASK_TIME_L1, PROF_AICORE_METRICS};
     MsprofMgr().SetBitSwitchCheckList(bitList);
@@ -185,8 +185,8 @@ TEST_F(AclJsonMdcLiteStest, AclJsonResourceConflictRatioAicMetrics)
     std::vector<std::string> deviceDataList = {"hwts.data", "ts_track.data", "aicore.data"};
     MsprofMgr().SetDeviceCheckList(deviceDataList);
     std::vector<std::string> hostDataList = {
-        "unaging.api_event.data", "unaging.compact.node_basic_info", "unaging.compact.task_track", "unaging.additional.context_id_info"
-    };
+        "unaging.api_event.data", "unaging.compact.node_basic_info", "unaging.compact.task_track",
+        "unaging.additional.context_id_info"};
     MsprofMgr().SetHostCheckList(hostDataList);
     std::vector<uint64_t> bitList = {PROF_ACL_API, PROF_TASK_TIME_L1, PROF_AICORE_METRICS};
     MsprofMgr().SetBitSwitchCheckList(bitList);

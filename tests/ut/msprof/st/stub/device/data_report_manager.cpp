@@ -17,7 +17,7 @@
 namespace Cann {
 namespace Dvvp {
 namespace Test {
-DataReportManager &DataReportManager::GetInstance()
+DataReportManager& DataReportManager::GetInstance()
 {
     static DataReportManager manager;
     return manager;
@@ -54,11 +54,12 @@ int32_t DataReportManager::SimulateReport()
 
 int32_t DataReportManager::ModuleReport()
 {
-    for (auto &report : reports_) {
+    for (auto& report : reports_) {
         th_.push_back(std::thread([this, report]() -> void {
             if (this->ReportData(report.second) != REPORT_SUCCESS) {
                 this->rt_ = false;
-        }}));
+            }
+        }));
     }
 
     for_each(th_.begin(), th_.end(), std::mem_fn(&std::thread::join));
@@ -96,7 +97,7 @@ int32_t DataReportManager::ReportData(std::shared_ptr<DataReport> report_)
     return REPORT_SUCCESS;
 }
 
-int32_t DataReportManager::ProcessSwitch(SwitchProcessCb callback, void *const data, const uint32_t len)
+int32_t DataReportManager::ProcessSwitch(SwitchProcessCb callback, void* const data, const uint32_t len)
 {
     if (data == nullptr) {
         MSPROF_LOGE("Process switch data is nullptr.");
@@ -109,36 +110,40 @@ int32_t DataReportManager::ProcessSwitch(SwitchProcessCb callback, void *const d
         return REPORT_FAILED;
     }
 
-    MsprofCommandHandle *const profilerConfig = static_cast<MsprofCommandHandle *>(data);
+    MsprofCommandHandle* const profilerConfig = static_cast<MsprofCommandHandle*>(data);
     const uint64_t profSwitch = profilerConfig->profSwitch;
     const uint32_t type = profilerConfig->type;
 
     return callback(profSwitch, type);
 }
 
-int32_t DataReportManager::ProcessAclSwitch(void *const data, const uint32_t len)
+int32_t DataReportManager::ProcessAclSwitch(void* const data, const uint32_t len)
 {
-    return ProcessSwitch([this](uint64_t profSwitch, uint32_t type){
-        if (((profSwitch & PROF_ACL_API) != 0U) && (type == 1U)) {
-            this->modules_.emplace_back(REPORT_MODULE_MAP.at("Acl"));
-            MSPROF_EVENT("modules_ insert, Acl.");
-        }
-        return REPORT_SUCCESS;
-    }, data, len);
+    return ProcessSwitch(
+        [this](uint64_t profSwitch, uint32_t type) {
+            if (((profSwitch & PROF_ACL_API) != 0U) && (type == 1U)) {
+                this->modules_.emplace_back(REPORT_MODULE_MAP.at("Acl"));
+                MSPROF_EVENT("modules_ insert, Acl.");
+            }
+            return REPORT_SUCCESS;
+        },
+        data, len);
 }
 
-int32_t DataReportManager::ProcessGeSwitch(void *const data, const uint32_t len)
+int32_t DataReportManager::ProcessGeSwitch(void* const data, const uint32_t len)
 {
-    int32_t ret = ProcessSwitch([this](uint64_t profSwitch, uint32_t type){
-        if (((profSwitch & PROF_GE_API_L1) != 0U) && (type == 1U)) {
-            this->modules_.emplace_back(REPORT_MODULE_MAP.at("Ge"));
-            MSPROF_EVENT("modules_ insert, Ge.");
-        }
-        return REPORT_SUCCESS;
-    }, data, len);
-    // simulate UDF save profiling callback switch 
+    int32_t ret = ProcessSwitch(
+        [this](uint64_t profSwitch, uint32_t type) {
+            if (((profSwitch & PROF_GE_API_L1) != 0U) && (type == 1U)) {
+                this->modules_.emplace_back(REPORT_MODULE_MAP.at("Ge"));
+                MSPROF_EVENT("modules_ insert, Ge.");
+            }
+            return REPORT_SUCCESS;
+        },
+        data, len);
+    // simulate UDF save profiling callback switch
     if (ret == REPORT_SUCCESS && msprofConfig_ != StProfConfigType::PROF_CONFIG_DYNAMIC) {
-        MsprofCommandHandle *const profilerConfig = static_cast<MsprofCommandHandle *>(data);
+        MsprofCommandHandle* const profilerConfig = static_cast<MsprofCommandHandle*>(data);
         cfg_.profSwitch = profilerConfig->profSwitch;
         cfg_.profSwitchHi = profilerConfig->profSwitch;
         cfg_.type = profilerConfig->type;
@@ -150,37 +155,43 @@ int32_t DataReportManager::ProcessGeSwitch(void *const data, const uint32_t len)
     return ret;
 }
 
-int32_t DataReportManager::ProcessAicpuSwitch(void *const data, const uint32_t len)
+int32_t DataReportManager::ProcessAicpuSwitch(void* const data, const uint32_t len)
 {
-    return ProcessSwitch([this](uint64_t profSwitch, uint32_t type){
-        if (((profSwitch & PROF_AICPU_TRACE) != 0U) && (type == 1U)) {
-            this->modules_.emplace_back(REPORT_MODULE_MAP.at("Aicpu"));
-            MSPROF_EVENT("modules_ insert, Aicpu.");
-        }
-        return REPORT_SUCCESS;
-    }, data, len);
+    return ProcessSwitch(
+        [this](uint64_t profSwitch, uint32_t type) {
+            if (((profSwitch & PROF_AICPU_TRACE) != 0U) && (type == 1U)) {
+                this->modules_.emplace_back(REPORT_MODULE_MAP.at("Aicpu"));
+                MSPROF_EVENT("modules_ insert, Aicpu.");
+            }
+            return REPORT_SUCCESS;
+        },
+        data, len);
 }
 
-int32_t DataReportManager::ProcessHcclSwitch(void *const data, const uint32_t len)
+int32_t DataReportManager::ProcessHcclSwitch(void* const data, const uint32_t len)
 {
-    return ProcessSwitch([this](uint64_t profSwitch, uint32_t type){
-        if (((profSwitch & PROF_HCCL_TRACE) != 0U) && (type == 1U)) {
-            this->modules_.emplace_back(REPORT_MODULE_MAP.at("Hccl"));
-            MSPROF_EVENT("modules_ insert, Hccl.");
-        }
-        return REPORT_SUCCESS;
-    }, data, len);
+    return ProcessSwitch(
+        [this](uint64_t profSwitch, uint32_t type) {
+            if (((profSwitch & PROF_HCCL_TRACE) != 0U) && (type == 1U)) {
+                this->modules_.emplace_back(REPORT_MODULE_MAP.at("Hccl"));
+                MSPROF_EVENT("modules_ insert, Hccl.");
+            }
+            return REPORT_SUCCESS;
+        },
+        data, len);
 }
 
-int32_t DataReportManager::ProcessRuntimeSwitch(void *const data, const uint32_t len)
+int32_t DataReportManager::ProcessRuntimeSwitch(void* const data, const uint32_t len)
 {
-    return ProcessSwitch([this](uint64_t profSwitch, uint32_t type){
-        if (((profSwitch & PROF_RUNTIME_API) != 0U) && (type == 1U)) {
-            this->modules_.emplace_back(REPORT_MODULE_MAP.at("Runtime"));
-            MSPROF_EVENT("modules_ insert, Runtime.");
-        }
-        return REPORT_SUCCESS;
-    }, data, len);
+    return ProcessSwitch(
+        [this](uint64_t profSwitch, uint32_t type) {
+            if (((profSwitch & PROF_RUNTIME_API) != 0U) && (type == 1U)) {
+                this->modules_.emplace_back(REPORT_MODULE_MAP.at("Runtime"));
+                MSPROF_EVENT("modules_ insert, Runtime.");
+            }
+            return REPORT_SUCCESS;
+        },
+        data, len);
 }
 
 void DataReportManager::ProcessMsprofTxSwitch()
@@ -189,78 +200,50 @@ void DataReportManager::ProcessMsprofTxSwitch()
     MSPROF_EVENT("modules_ insert, MsprofTx.");
 }
 
-void DataReportManager::SetPcSampling(bool pcSample)
-{
-    pcSampling_ = pcSample;
-}
+void DataReportManager::SetPcSampling(bool pcSample) { pcSampling_ = pcSample; }
 
-bool DataReportManager::GetPcSampling()
-{
-    return pcSampling_;
-}
+bool DataReportManager::GetPcSampling() { return pcSampling_; }
 
-void DataReportManager::SetMsprofTx(bool msprofTx)
-{
-    msprofTx_ = msprofTx;
-}
+void DataReportManager::SetMsprofTx(bool msprofTx) { msprofTx_ = msprofTx; }
 
-bool DataReportManager::GetMsprofTx()
-{
-    return msprofTx_;
-}
+bool DataReportManager::GetMsprofTx() { return msprofTx_; }
 
-void DataReportManager::SetSleepTime(int32_t sleepTime)
-{
-    sleepTime_ = sleepTime;
-}
+void DataReportManager::SetSleepTime(int32_t sleepTime) { sleepTime_ = sleepTime; }
 
-int32_t DataReportManager::GetSleepTime(void)
-{
-    return sleepTime_;
-}
+int32_t DataReportManager::GetSleepTime(void) { return sleepTime_; }
 
-int32_t DataReportManager::ProcessBitSwitch(void *const data, const uint32_t len)
+int32_t DataReportManager::ProcessBitSwitch(void* const data, const uint32_t len)
 {
-    return ProcessSwitch([this](uint64_t profSwitch, uint32_t type){
-        if (type == 1U) {
-            bitSwitch_ = profSwitch;
-            MSPROF_EVENT("Set bitSwitch: %llx ULL when type is 1.", profSwitch);
-        } else if (type == 2U) {
-            uint64_t dataSwtich = 1;
-            while (true) {
-                if ((profSwitch & dataSwtich) && (bitSwitch_ & dataSwtich)) {
-                    bitSwitch_ ^= dataSwtich;
+    return ProcessSwitch(
+        [this](uint64_t profSwitch, uint32_t type) {
+            if (type == 1U) {
+                bitSwitch_ = profSwitch;
+                MSPROF_EVENT("Set bitSwitch: %llx ULL when type is 1.", profSwitch);
+            } else if (type == 2U) {
+                uint64_t dataSwtich = 1;
+                while (true) {
+                    if ((profSwitch & dataSwtich) && (bitSwitch_ & dataSwtich)) {
+                        bitSwitch_ ^= dataSwtich;
+                    }
+                    if (dataSwtich == PROF_MODEL_LOAD_MASK) {
+                        break;
+                    }
+                    dataSwtich <<= 1;
                 }
-                if (dataSwtich == PROF_MODEL_LOAD_MASK) {
-                    break;
-                }
-                dataSwtich <<= 1;
+                MSPROF_EVENT("Set bitSwitch to: %llx ULL when type is 1.", profSwitch);
             }
-            MSPROF_EVENT("Set bitSwitch to: %llx ULL when type is 1.", profSwitch);
-        }
-        return REPORT_SUCCESS;
-    }, data, len);
+            return REPORT_SUCCESS;
+        },
+        data, len);
 }
 
-uint64_t DataReportManager::GetBitSwitch()
-{
-    return bitSwitch_;
-}
+uint64_t DataReportManager::GetBitSwitch() { return bitSwitch_; }
 
-void DataReportManager::SetMsprofConfig(StProfConfigType type)
-{
-    msprofConfig_ = type;
-}
- 
-StProfConfigType DataReportManager::GetMsprofConfig()
-{
-    return msprofConfig_;
-}
- 
-MsprofConfig * DataReportManager::GetMsprofConfigData()
-{
-    return &cfg_;
-}
-}
-}
-}
+void DataReportManager::SetMsprofConfig(StProfConfigType type) { msprofConfig_ = type; }
+
+StProfConfigType DataReportManager::GetMsprofConfig() { return msprofConfig_; }
+
+MsprofConfig* DataReportManager::GetMsprofConfigData() { return &cfg_; }
+} // namespace Test
+} // namespace Dvvp
+} // namespace Cann

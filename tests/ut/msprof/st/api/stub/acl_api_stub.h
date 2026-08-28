@@ -20,15 +20,16 @@
 namespace Cann {
 namespace Dvvp {
 namespace Test {
-int32_t AclApiStart(aclprofConfig *config, uint64_t dataTypeConfig);
-int32_t AclApiRepeatStart(aclprofConfig *config, uint64_t dataTypeConfig);
-int32_t AclApiStartWithSetDeviceBehind(aclprofConfig *config, uint64_t dataTypeConfig);
-int32_t CheckFiles(std::string &path, std::vector<std::string> deviceDataList, std::vector<std::string> hostDataList);
-int32_t CheckAllFiles(std::string &path, std::vector<std::string> deviceDataList, std::vector<std::string> hostDataList);
+int32_t AclApiStart(aclprofConfig* config, uint64_t dataTypeConfig);
+int32_t AclApiRepeatStart(aclprofConfig* config, uint64_t dataTypeConfig);
+int32_t AclApiStartWithSetDeviceBehind(aclprofConfig* config, uint64_t dataTypeConfig);
+int32_t CheckFiles(std::string& path, std::vector<std::string> deviceDataList, std::vector<std::string> hostDataList);
+int32_t CheckAllFiles(
+    std::string& path, std::vector<std::string> deviceDataList, std::vector<std::string> hostDataList);
 void ClearApiSingleton();
 void InitApiSingleton();
-}
-}
-}
+} // namespace Test
+} // namespace Dvvp
+} // namespace Cann
 
 #endif

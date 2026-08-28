@@ -19,36 +19,29 @@ using namespace analysis::dvvp::driver;
 using namespace analysis::dvvp::common::error;
 using namespace analysis::dvvp::transport;
 
-class JOB_WRAPPER_PROF_MANAGER_UTEST: public testing::Test {
+class JOB_WRAPPER_PROF_MANAGER_UTEST : public testing::Test {
 protected:
-    virtual void SetUp() {
-    }
-    virtual void TearDown() {
-    }
+    virtual void SetUp() {}
+    virtual void TearDown() {}
 };
 
-TEST_F(JOB_WRAPPER_PROF_MANAGER_UTEST, Handle_IdeCloudProfileProcess) {
+TEST_F(JOB_WRAPPER_PROF_MANAGER_UTEST, Handle_IdeCloudProfileProcess)
+{
     GlobalMockObject::verify();
-    MOCKER_CPP(&ProfManager::CheckIfDevicesOnline)
-        .stubs()
-        .will(returnValue(false))
-        .then(returnValue(true));
+    MOCKER_CPP(&ProfManager::CheckIfDevicesOnline).stubs().will(returnValue(false)).then(returnValue(true));
 
-    MOCKER_CPP(&ProfManager::CheckHandleSuc)
-        .stubs()
-        .will(returnValue(true))
-        .then(returnValue(false));
+    MOCKER_CPP(&ProfManager::CheckHandleSuc).stubs().will(returnValue(true)).then(returnValue(false));
 
-    MOCKER_CPP(&ProfManager::ProcessHandleFailed)
-        .stubs()
-        .will(returnValue(PROFILING_FAILED));
+    MOCKER_CPP(&ProfManager::ProcessHandleFailed).stubs().will(returnValue(PROFILING_FAILED));
 
     auto entry = analysis::dvvp::host::ProfManager::instance();
     entry->isInited_ = true;
     EXPECT_EQ(PROFILING_FAILED, entry->Handle(nullptr));
 
     std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams());
-    params->FromString("{\"result_dir\":\"/tmp/\", \"devices\":\"1\",\"is_cancel\":true,\"profiling_mode\":\"def_mode\",\"host_profiling\":\"false\"}");
+    params->FromString(
+        "{\"result_dir\":\"/tmp/\", "
+        "\"devices\":\"1\",\"is_cancel\":true,\"profiling_mode\":\"def_mode\",\"host_profiling\":\"false\"}");
     entry->isInited_ = false;
     EXPECT_EQ(PROFILING_FAILED, entry->Handle(params));
 
@@ -58,15 +51,18 @@ TEST_F(JOB_WRAPPER_PROF_MANAGER_UTEST, Handle_IdeCloudProfileProcess) {
     EXPECT_EQ(PROFILING_FAILED, entry->Handle(params));  // Failed to ProcessHandleFailed
 }
 
-TEST_F(JOB_WRAPPER_PROF_MANAGER_UTEST, ProcessHandleFailed) {
+TEST_F(JOB_WRAPPER_PROF_MANAGER_UTEST, ProcessHandleFailed)
+{
     GlobalMockObject::verify();
 
     std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams());
     auto entry = analysis::dvvp::host::ProfManager::instance();
 
-    params->FromString("{\"result_dir\":\"/tmp/\", \"devices\":\"aa\", \"job_id\":\"cloud\", \"profiling_mode\":\"system-wide\"}");
+    params->FromString(
+        "{\"result_dir\":\"/tmp/\", \"devices\":\"aa\", \"job_id\":\"cloud\", \"profiling_mode\":\"system-wide\"}");
     EXPECT_EQ(PROFILING_FAILED, entry->ProcessHandleFailed(params));
 
-    params->FromString("{\"result_dir\":\"/tmp/\", \"devices\":\"1\", \"job_id\":\"cloud\", \"profiling_mode\":\"def_mode\"}");
+    params->FromString(
+        "{\"result_dir\":\"/tmp/\", \"devices\":\"1\", \"job_id\":\"cloud\", \"profiling_mode\":\"def_mode\"}");
     EXPECT_EQ(PROFILING_SUCCESS, entry->ProcessHandleFailed(params));
 }

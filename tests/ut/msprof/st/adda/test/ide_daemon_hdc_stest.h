@@ -15,4 +15,4 @@
 #include "ide_daemon_hdc.h"
 #include "ide_daemon_stub.h"
 
-#endif  //__IDE_DAEMON_HDC_TEST_H
+#endif //__IDE_DAEMON_HDC_TEST_H

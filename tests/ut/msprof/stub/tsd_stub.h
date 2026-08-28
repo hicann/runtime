@@ -10,12 +10,12 @@
 #ifndef _TSD_STUB_H_
 #define _TSD_STUB_H_
 
-void *mmDlsymTsd(void *handle, const char *funcName);
-void *mmDlsymTsdError(void *handle, const char *funcName);
-int32_t mmDlclose(void *handle);
-void *mmDlopen(const char *fileName, int mode);
+void* mmDlsymTsd(void* handle, const char* funcName);
+void* mmDlsymTsdError(void* handle, const char* funcName);
+int32_t mmDlclose(void* handle);
+void* mmDlopen(const char* fileName, int mode);
 uint32_t TsdCapabilityGetStubError(const uint32_t logicDeviceId, const int32_t type, const uint64_t ptr);
-uint32_t TsdProcessOpenStubError(const uint32_t logicDeviceId, ProcOpenArgs *openArgs);
-uint32_t TsdGetProcListStatusError(const uint32_t logicDeviceId, ProcStatusParam *pidInfo, const uint32_t arrayLen);
+uint32_t TsdProcessOpenStubError(const uint32_t logicDeviceId, ProcOpenArgs* openArgs);
+uint32_t TsdGetProcListStatusError(const uint32_t logicDeviceId, ProcStatusParam* pidInfo, const uint32_t arrayLen);
 
 #endif

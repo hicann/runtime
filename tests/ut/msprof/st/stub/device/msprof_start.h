@@ -25,33 +25,37 @@ namespace Test {
 
 class MsprofStart {
 public:
-    ~MsprofStart() {
+    ~MsprofStart()
+    {
         deviceCheckList_.clear();
         hostCheckList_.clear();
         inputSwitch_.erase(inputSwitch_.begin(), inputSwitch_.end());
     }
-    static MsprofStart &GetInstance();
+    static MsprofStart& GetInstance();
     void UnInit();
     void ClearSingleton();
-    void GetProfilingInput(std::map<std::string, std::string> &sv);
-    void DivideMsprofInput(int32_t argc, const char *argv[]);
-    int32_t MsprofStartByAppMode(int subArgvCount, const char **subArgv);
-    int32_t MsprofStartByAppModeTwo(int subArgvCount, const char **subArgv);
-    int32_t MsprofStartBySysMode(int subArgvCount, const char **subArgv);
-    int32_t AcpProfileStartByAppMode(int subArgvCount, const char **subArgv);
+    void GetProfilingInput(std::map<std::string, std::string>& sv);
+    void DivideMsprofInput(int32_t argc, const char* argv[]);
+    int32_t MsprofStartByAppMode(int subArgvCount, const char** subArgv);
+    int32_t MsprofStartByAppModeTwo(int subArgvCount, const char** subArgv);
+    int32_t MsprofStartBySysMode(int subArgvCount, const char** subArgv);
+    int32_t AcpProfileStartByAppMode(int subArgvCount, const char** subArgv);
     void DivideProtoJsonInput(int argvCount, nlohmann::json argv);
     int32_t AclJsonStart(int argvCount, nlohmann::json argv);
     int32_t GeOptionStart(int argvCount, nlohmann::json argv);
     void SetPcSampling(bool pcSample);
     void SetMsprofTx(bool ret);
-    void GetCheckList(std::vector<std::string> &dataList, std::vector<std::string> &blackDataList, std::string dataType);
-    void SetDeviceCheckList(const std::vector<std::string> &dataList,
-        const std::vector<std::string> &blackDataList = std::vector<std::string>());
-    void SetHostCheckList(const std::vector<std::string> &dataList,
-        const std::vector<std::string> &blackDataList = std::vector<std::string>());
-    void SetBitSwitchCheckList(const std::vector<uint64_t> &dataList,
-        const std::vector<uint64_t> &blackDataList = std::vector<uint64_t>());
-    void GetBitSwitch(std::vector<uint64_t> &dataList, uint64_t &bitSwitch, std::vector<uint64_t> &blackDataList);
+    void GetCheckList(
+        std::vector<std::string>& dataList, std::vector<std::string>& blackDataList, std::string dataType);
+    void SetDeviceCheckList(
+        const std::vector<std::string>& dataList,
+        const std::vector<std::string>& blackDataList = std::vector<std::string>());
+    void SetHostCheckList(
+        const std::vector<std::string>& dataList,
+        const std::vector<std::string>& blackDataList = std::vector<std::string>());
+    void SetBitSwitchCheckList(
+        const std::vector<uint64_t>& dataList, const std::vector<uint64_t>& blackDataList = std::vector<uint64_t>());
+    void GetBitSwitch(std::vector<uint64_t>& dataList, uint64_t& bitSwitch, std::vector<uint64_t>& blackDataList);
     void SetProfDir(std::string dir);
     std::string GetProfDir();
     void SetMsprofConfig(StProfConfigType type);
@@ -59,12 +63,13 @@ public:
 
 private:
     MsprofStart() {}
-    void SetCheckList(const std::vector<std::string> &srcDataList, const std::vector<std::string> &srcBlackDataList,
-        std::vector<std::string> &dstDataList, std::vector<std::string> &dstBlackDataList);
+    void SetCheckList(
+        const std::vector<std::string>& srcDataList, const std::vector<std::string>& srcBlackDataList,
+        std::vector<std::string>& dstDataList, std::vector<std::string>& dstBlackDataList);
     int32_t RunModelLifecycle();
-    void WriteJsonToFile(const std::string &filePath, const nlohmann::json &argv);
-    int32_t PrepareAndInitAclJson(nlohmann::json &argv, std::string &acljsonPath);
-    int32_t PrepareAndInitGeOption(nlohmann::json &argv);
+    void WriteJsonToFile(const std::string& filePath, const nlohmann::json& argv);
+    int32_t PrepareAndInitAclJson(nlohmann::json& argv, std::string& acljsonPath);
+    int32_t PrepareAndInitGeOption(nlohmann::json& argv);
     std::unordered_map<std::string, std::string> inputSwitch_;
     std::vector<std::string> deviceCheckList_;
     std::vector<std::string> deviceBlackCheckList_;
@@ -75,12 +80,9 @@ private:
     std::string profDir_;
 };
 
-}
-}
-}
+} // namespace Test
+} // namespace Dvvp
+} // namespace Cann
 
-inline Cann::Dvvp::Test::MsprofStart &MsprofMgr()
-{
-    return Cann::Dvvp::Test::MsprofStart::GetInstance();
-}
+inline Cann::Dvvp::Test::MsprofStart& MsprofMgr() { return Cann::Dvvp::Test::MsprofStart::GetInstance(); }
 #endif

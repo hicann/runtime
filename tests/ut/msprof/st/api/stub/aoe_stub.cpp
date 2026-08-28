@@ -22,12 +22,20 @@
 #include "aprof_pub.h"
 
 // Forward declarations for transport registration
-namespace analysis { namespace dvvp { namespace transport { class ITransport; } } }
-namespace Msprofiler { namespace AclApi {
-    using ProfCreateTransportFunc = std::shared_ptr<analysis::dvvp::transport::ITransport> (*)();
-    void ProfRegisterTransport(ProfCreateTransportFunc callback);
-    std::shared_ptr<analysis::dvvp::transport::ITransport> CreateParserTransport();
-} }
+namespace analysis {
+namespace dvvp {
+namespace transport {
+class ITransport;
+}
+} // namespace dvvp
+} // namespace analysis
+namespace Msprofiler {
+namespace AclApi {
+using ProfCreateTransportFunc = std::shared_ptr<analysis::dvvp::transport::ITransport> (*)();
+void ProfRegisterTransport(ProfCreateTransportFunc callback);
+std::shared_ptr<analysis::dvvp::transport::ITransport> CreateParserTransport();
+} // namespace AclApi
+} // namespace Msprofiler
 
 using namespace std;
 
@@ -40,15 +48,14 @@ static void EnsureProfCannPluginInited()
     ProfAPI::ProfCannPlugin::instance()->ProfTxInit();
 }
 
-const uint32_t WAIT_FOR_DURATION        = 1;
-const uint32_t OP_NAME_LENGTH           = 512;
-const uint32_t OP_TYPE_LENGTH           = 512;
-const uint32_t SELECT_TIMEOUT           = 1000;
+const uint32_t WAIT_FOR_DURATION = 1;
+const uint32_t OP_NAME_LENGTH = 512;
+const uint32_t OP_TYPE_LENGTH = 512;
+const uint32_t SELECT_TIMEOUT = 1000;
 
-bool CheckRunModelResult(std::future<bool> &fret, bool &flag)
+bool CheckRunModelResult(std::future<bool>& fret, bool& flag)
 {
-    if (fret.valid() &&
-        fret.wait_for(std::chrono::microseconds(WAIT_FOR_DURATION)) == std::future_status::ready) {
+    if (fret.valid() && fret.wait_for(std::chrono::microseconds(WAIT_FOR_DURATION)) == std::future_status::ready) {
         auto readRetCode = fret.get();
         if (readRetCode != true) {
             MSPROF_LOGE("Run model failed, skip waiting for profiling data");
@@ -64,7 +71,7 @@ bool CheckRunModelResult(std::future<bool> &fret, bool &flag)
     return true;
 }
 
-bool GetModelOpInfo(const void *data, const uint32_t len, std::set<RunnerOpInfo> &modelOpInfo)
+bool GetModelOpInfo(const void* data, const uint32_t len, std::set<RunnerOpInfo>& modelOpInfo)
 {
     uint32_t opNumber = 0;
     char opNameBuffer[OP_NAME_LENGTH] = {0};
@@ -106,17 +113,19 @@ bool GetModelOpInfo(const void *data, const uint32_t len, std::set<RunnerOpInfo>
         const auto modelId = aclprofGetModelId(data, len, i);
         const auto aicoreCostTime = ProfGetOpExecutionTime(data, len, i);
         const auto opCostTime = aclprofGetOpDuration(data, len, i);
-        MSPROF_LOGD("ModelId %zu, name %s, type %s, aicore cost time %llu, op cost time %llu, op start %llu, op end %llu",
+        MSPROF_LOGD(
+            "ModelId %zu, name %s, type %s, aicore cost time %llu, op cost time %llu, op start %llu, op end %llu",
             modelId, opName.c_str(), opType.c_str(), aicoreCostTime, opCostTime, opStartTime, opEndTime);
-        const RunnerOpInfo opInfo = {0, 0, opName, opCostTime, aicoreCostTime, to_string(modelId), opType, opStartTime,
-            opEndTime};
+        const RunnerOpInfo opInfo = {0,      0,           opName,   opCostTime, aicoreCostTime, to_string(modelId),
+                                     opType, opStartTime, opEndTime};
 
         modelOpInfo.insert(opInfo);
     }
     return true;
 }
 
-bool ReadProfilingData(const int32_t epFd, const int32_t fd, std::future<bool> &fret, std::set<RunnerOpInfo> &modelOpInfo)
+bool ReadProfilingData(
+    const int32_t epFd, const int32_t fd, std::future<bool>& fret, std::set<RunnerOpInfo>& modelOpInfo)
 {
     const int maxevents = 1;
     struct epoll_event epEvent[maxevents];
@@ -177,7 +186,7 @@ bool ReadProfilingData(const int32_t epFd, const int32_t fd, std::future<bool> &
     return true;
 }
 
-bool ProfDataRead(int32_t fd, std::future<bool> &fret, std::set<RunnerOpInfo> &modelOpInfo)
+bool ProfDataRead(int32_t fd, std::future<bool>& fret, std::set<RunnerOpInfo>& modelOpInfo)
 {
     const int epSize = 1; // The epSize is just for epoll-create api, no practical meaning in others.
     int epFd = epoll_create(epSize);
@@ -203,14 +212,14 @@ bool ProfDataRead(int32_t fd, std::future<bool> &fret, std::set<RunnerOpInfo> &m
     }
     close(epFd);
     return ret;
-
 }
 
 bool RunModel(int32_t fd)
 {
     int8_t opTimeSwitch = 1;
     aclprofAicoreMetrics aicoreMetrics = ACL_AICORE_NONE;
-    aclprofSubscribeConfig *profSubscribeConfig = aclprofCreateSubscribeConfig(opTimeSwitch, aicoreMetrics, reinterpret_cast<void *>(&fd));
+    aclprofSubscribeConfig* profSubscribeConfig =
+        aclprofCreateSubscribeConfig(opTimeSwitch, aicoreMetrics, reinterpret_cast<void*>(&fd));
     if (profSubscribeConfig == nullptr) {
         MSPROF_LOGE("Create subscribe config failed.");
         return false;
@@ -260,7 +269,8 @@ bool RunOp(int32_t fd)
 {
     int8_t opTimeSwitch = 1;
     aclprofAicoreMetrics aicoreMetrics = ACL_AICORE_NONE;
-    aclprofSubscribeConfig *profSubscribeConfig = aclprofCreateSubscribeConfig(opTimeSwitch, aicoreMetrics, reinterpret_cast<void *>(&fd));
+    aclprofSubscribeConfig* profSubscribeConfig =
+        aclprofCreateSubscribeConfig(opTimeSwitch, aicoreMetrics, reinterpret_cast<void*>(&fd));
     if (profSubscribeConfig == nullptr) {
         MSPROF_LOGE("Create subscribe config failed.");
         return false;
@@ -296,7 +306,7 @@ bool RunOp(int32_t fd)
     return true;
 }
 
-bool RunInfer(std::set<RunnerOpInfo> &modelOpInfo, RunFunc func)
+bool RunInfer(std::set<RunnerOpInfo>& modelOpInfo, RunFunc func)
 {
     aclInit(nullptr);
     aclrtSetDevice(0);
@@ -322,8 +332,9 @@ bool RunInfer(std::set<RunnerOpInfo> &modelOpInfo, RunFunc func)
     return ret;
 }
 
-aclError RunInferWithApi(std::string &aclProfPath, uint32_t devId, aclprofAicoreMetrics aicoreMetrics,
-    const aclprofAicoreEvents *aicoreEvents, uint64_t dataTypeConfig)
+aclError RunInferWithApi(
+    std::string& aclProfPath, uint32_t devId, aclprofAicoreMetrics aicoreMetrics,
+    const aclprofAicoreEvents* aicoreEvents, uint64_t dataTypeConfig)
 {
     aclInit(nullptr);
     aclrtSetDevice(devId);

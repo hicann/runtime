@@ -34,11 +34,12 @@ public:
     int32_t HashReport();
     int32_t MaxLenReport();
     int32_t StopReport();
+
 private:
     MsprofReporterModuleId moduleId_;
 };
 
-}
-}
-}
+} // namespace Test
+} // namespace Dvvp
+} // namespace Cann
 #endif

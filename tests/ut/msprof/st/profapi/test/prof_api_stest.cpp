@@ -21,174 +21,82 @@ extern void profOstreamStub(void);
 #endif
 class PROF_API_STTEST : public testing::Test {
 public:
-    void mockReportBufInit() {
-      MOCKER_CPP(&analysis::dvvp::common::queue::ReportBuffer<MsprofApi>::Init)
-        .stubs();
-      MOCKER_CPP(&analysis::dvvp::common::queue::ReportBuffer<MsprofCompactInfo>::Init)
-        .stubs();
-      MOCKER_CPP(&analysis::dvvp::common::queue::ReportBuffer<MsprofAdditionalInfo>::Init)
-        .stubs();
+    void mockReportBufInit()
+    {
+        MOCKER_CPP(&analysis::dvvp::common::queue::ReportBuffer<MsprofApi>::Init).stubs();
+        MOCKER_CPP(&analysis::dvvp::common::queue::ReportBuffer<MsprofCompactInfo>::Init).stubs();
+        MOCKER_CPP(&analysis::dvvp::common::queue::ReportBuffer<MsprofAdditionalInfo>::Init).stubs();
     }
+
 protected:
     virtual void SetUp() {}
     virtual void TearDown() {}
 };
 
-int32_t profRegisterCallbackStub(uint32_t moduleId, ProfCommandHandle handle)
+int32_t profRegisterCallbackStub(uint32_t moduleId, ProfCommandHandle handle) { return 0; }
+
+int32_t profStartStub(uint32_t deviceId, bool isOpen) { return 0; }
+
+int32_t profSetDeviceIdByGeModelIdxStub(const uint32_t geModelIdx, const uint32_t deviceId) { return 0; }
+
+int32_t profUnsetDeviceIdByGeModelIdxStub(const uint32_t geModelIdx, const uint32_t deviceId) { return 0; }
+
+int32_t profNotifySetDeviceStub(uint32_t chipId, uint32_t deviceId, bool isOpen) { return 0; }
+
+int32_t profFinalizeStub() { return 0; }
+
+int32_t profAclInitStub(uint32_t type, const char* profilerPath, uint32_t len) { return 0; }
+
+int32_t profAclStartStub(uint32_t type, PROFAPI_CONFIG_CONST_PTR profilerConfig) { return 0; }
+
+int32_t profAclStopStub(uint32_t type, PROFAPI_CONFIG_CONST_PTR profilerConfig) { return 0; }
+
+int32_t profAclFinalizeStub(uint32_t type) { return 0; }
+
+int32_t ProfAclSetConfigStub(uint32_t configType, const char* config, size_t configLength) { return 0; }
+
+int32_t profAclSubscribeStub(uint32_t type, uint32_t modelId, PROFAPI_SUBSCRIBECONFIG_CONST_PTR config) { return 0; }
+
+int32_t profAclUnSubscribeStub(uint32_t type, uint32_t modelId) { return 0; }
+
+int32_t profAclDrvGetDevNumStub() { return 0; }
+
+int64_t profAclGetOpTimeStub(uint32_t type, const void* opInfo, size_t opInfoLen, uint32_t index) { return 0; }
+
+int32_t profAclGetIdStub(uint32_t type, const void* opInfo, size_t opInfoLen, uint32_t index) { return 0; }
+
+int32_t profAclGetOpValStub(uint32_t type, const void* opInfo, size_t opInfoLen, uint32_t index, void* data, size_t len)
 {
     return 0;
 }
 
-int32_t profStartStub(uint32_t deviceId, bool isOpen)
-{
-    return 0;
-}
+uint64_t ProfGetOpExecutionTimeStub(const void* data, uint32_t len, uint32_t index) { return 0; }
 
-int32_t profSetDeviceIdByGeModelIdxStub(const uint32_t geModelIdx, const uint32_t deviceId)
-{
-    return 0;
-}
+void* profAclCreateStampStub() { return nullptr; }
 
-int32_t profUnsetDeviceIdByGeModelIdxStub(const uint32_t geModelIdx, const uint32_t deviceId)
-{
-    return 0;
-}
+int32_t profAclDestroyStampStub(VOID_PTR stamp) { return 0; }
 
-int32_t profNotifySetDeviceStub(uint32_t chipId, uint32_t deviceId, bool isOpen)
-{
-    return 0;
-}
+int32_t profAclPushStub(VOID_PTR stamp) { return 0; }
 
-int32_t profFinalizeStub()
-{
-    return 0;
-}
+int32_t profAclPopStub() { return 0; }
 
-int32_t profAclInitStub(uint32_t type, const char *profilerPath, uint32_t len)
-{
-    return 0;
-}
+int32_t profAclRangeStartStub(VOID_PTR stamp, uint32_t* rangeId) { return 0; }
 
-int32_t profAclStartStub(uint32_t type, PROFAPI_CONFIG_CONST_PTR profilerConfig)
-{
-    return 0;
-}
+int32_t profAclRangeStopStub(uint32_t rangeId) { return 0; }
 
-int32_t profAclStopStub(uint32_t type, PROFAPI_CONFIG_CONST_PTR profilerConfig)
-{
-    return 0;
-}
+int32_t profAclSetStampTraceMessageStub(VOID_PTR stamp, const char* msg, uint32_t msgLen) { return 0; }
 
-int32_t profAclFinalizeStub(uint32_t type)
-{
-    return 0;
-}
+int32_t profAclMarkStub(VOID_PTR stamp) { return 0; }
 
-int32_t ProfAclSetConfigStub(uint32_t configType, const char *config, size_t configLength)
-{
-    return 0;
-}
+int32_t profAclSetCategoryNameStub(uint32_t category, const char* categoryName) { return 0; }
 
-int32_t profAclSubscribeStub(uint32_t type, uint32_t modelId, PROFAPI_SUBSCRIBECONFIG_CONST_PTR config)
-{
-    return 0;
-}
+int32_t profAclSetStampCategoryStub(VOID_PTR stamp, uint32_t category) { return 0; }
 
-int32_t profAclUnSubscribeStub(uint32_t type, uint32_t modelId)
-{
-    return 0;
-}
+int32_t profAclSetStampPayloadStub(VOID_PTR stamp, const int32_t type, VOID_PTR value) { return 0; }
 
-int32_t profAclDrvGetDevNumStub()
-{
-    return 0;
-}
+int32_t profAclGetCompatibleFeatureStub(size_t* featuresSize, void** featuresData) { return 0; }
 
-int64_t profAclGetOpTimeStub(uint32_t type, const void *opInfo, size_t opInfoLen, uint32_t index)
-{
-    return 0;
-}
-
-int32_t profAclGetIdStub(uint32_t type, const void *opInfo, size_t opInfoLen, uint32_t index)
-{
-    return 0;
-}
-
-int32_t profAclGetOpValStub(uint32_t type, const void *opInfo, size_t opInfoLen,
-                                      uint32_t index, void *data, size_t len)
-{
-    return 0;
-}
-
-uint64_t ProfGetOpExecutionTimeStub(const void *data, uint32_t len, uint32_t index)
-{
-    return 0;
-}
-
-void* profAclCreateStampStub()
-{
-    return nullptr;
-}
-
-int32_t profAclDestroyStampStub(VOID_PTR stamp)
-{
-    return 0;
-}
-
-int32_t profAclPushStub(VOID_PTR stamp)
-{
-    return 0;
-}
-
-int32_t profAclPopStub()
-{
-    return 0;
-}
-
-int32_t profAclRangeStartStub(VOID_PTR stamp, uint32_t *rangeId)
-{
-    return 0;
-}
-
-int32_t profAclRangeStopStub(uint32_t rangeId)
-{
-    return 0;
-}
-
-int32_t profAclSetStampTraceMessageStub(VOID_PTR stamp, const char *msg, uint32_t msgLen)
-{
-    return 0;
-}
-
-int32_t profAclMarkStub(VOID_PTR stamp)
-{
-    return 0;
-}
-
-int32_t profAclSetCategoryNameStub(uint32_t category, const char *categoryName)
-{
-    return 0;
-}
-
-int32_t profAclSetStampCategoryStub(VOID_PTR stamp, uint32_t category)
-{
-    return 0;
-}
-
-int32_t profAclSetStampPayloadStub(VOID_PTR stamp, const int32_t type, VOID_PTR value)
-{
-    return 0;
-}
-
-int32_t profAclGetCompatibleFeatureStub(size_t *featuresSize, void **featuresData)
-{
-    return 0;
-}
-
-int32_t profAclGetCompatibleFeatureV2Stub(size_t *featuresSize, void **featuresData)
-{
-    return 0;
-}
+int32_t profAclGetCompatibleFeatureV2Stub(size_t* featuresSize, void** featuresData) { return 0; }
 
 #ifdef PROF_API_STUB
 int ProfApiSutb(void)
@@ -207,7 +115,7 @@ int ProfApiInitStub(void)
 TEST_F(PROF_API_STTEST, PROF_API_INIT)
 {
     GlobalMockObject::verify();
-    MOCKER_CPP(mmDlopen).stubs().will(returnValue((void*) 0));
+    MOCKER_CPP(mmDlopen).stubs().will(returnValue((void*)0));
     EXPECT_EQ(0, ProfApiInitStub());
 }
 
@@ -217,51 +125,51 @@ TEST_F(PROF_API_STTEST, PROF_API)
     mockReportBufInit();
     EXPECT_EQ(0, MsprofInit(0xff, nullptr, 0));
     const std::string data = "{\"switch\":\"on\"}";
-    const char *p = data.c_str();
+    const char* p = data.c_str();
     const std::string data1 = "{\"switch\":\"on\"},";
-    const char *p1 = data1.c_str();
+    const char* p1 = data1.c_str();
     int32_t stub = 123456;
     uint32_t devid = 0;
-    void *handle = (void*)&stub;
+    void* handle = (void*)&stub;
 #ifdef PROF_API_STUB
     EXPECT_EQ(0, ProfApiSutb());
-#endif 
+#endif
     MOCKER(mmDlopen).stubs().will(returnValue(handle));
     MOCKER(mmDlclose).stubs().will(returnValue(0));
     MOCKER(dlopen).stubs().will(returnValue(handle));
     MOCKER(dlclose).stubs().will(returnValue(0));
-    MOCKER(mmDlsym).times(1).will(returnValue((void *)profInitStub));
-    MOCKER(mmDlsym).times(2).will(returnValue((void *)profRegisterCallbackStub));
-    MOCKER(mmDlsym).times(3).will(returnValue((void *)profReportDataStub));
-    MOCKER(mmDlsym).times(4).will(returnValue((void *)profSetDeviceIdByGeModelIdxStub));
-    MOCKER(mmDlsym).times(5).will(returnValue((void *)profNotifySetDeviceStub));
-    MOCKER(mmDlsym).times(6).will(returnValue((void *)profFinalizeStub));
-    MOCKER(mmDlsym).times(7).will(returnValue((void *)profUnsetDeviceIdByGeModelIdxStub));
-    MOCKER(mmDlsym).times(8).will(returnValue((void *)profAclInitStub));
-    MOCKER(mmDlsym).times(9).will(returnValue((void *)profAclStartStub));
-    MOCKER(mmDlsym).times(10).will(returnValue((void *)profAclStopStub));
-    MOCKER(mmDlsym).times(11).will(returnValue((void *)profAclFinalizeStub));
-    MOCKER(mmDlsym).times(11).will(returnValue((void *)ProfAclSetConfigStub));
-    MOCKER(mmDlsym).times(12).will(returnValue((void *)profAclSubscribeStub));
-    MOCKER(mmDlsym).times(13).will(returnValue((void *)profAclDrvGetDevNumStub));
-    MOCKER(mmDlsym).times(14).will(returnValue((void *)profAclGetOpTimeStub));
-    MOCKER(mmDlsym).times(14).will(returnValue((void *)profAclGetIdStub));
-    MOCKER(mmDlsym).times(14).will(returnValue((void *)profAclGetOpValStub));
-    MOCKER(mmDlsym).times(14).will(returnValue((void *)ProfGetOpExecutionTimeStub));
-    MOCKER(mmDlsym).times(14).will(returnValue((void *)profAclUnSubscribeStub));
-    MOCKER(dlsym).times(1).will(returnValue((void *)profAclCreateStampStub));
-    MOCKER(dlsym).times(2).will(returnValue((void *)profAclDestroyStampStub));
-    MOCKER(dlsym).times(3).will(returnValue((void *)profAclPushStub));
-    MOCKER(dlsym).times(4).will(returnValue((void *)profAclPopStub));
-    MOCKER(dlsym).times(5).will(returnValue((void *)profAclRangeStartStub));
-    MOCKER(dlsym).times(6).will(returnValue((void *)profAclRangeStopStub));
-    MOCKER(dlsym).times(7).will(returnValue((void *)profAclSetStampTraceMessageStub));
-    MOCKER(dlsym).times(8).will(returnValue((void *)profAclMarkStub));
-    MOCKER(dlsym).times(9).will(returnValue((void *)profAclSetCategoryNameStub));
-    MOCKER(dlsym).times(10).will(returnValue((void *)profAclSetStampCategoryStub));
-    MOCKER(dlsym).times(11).will(returnValue((void *)profAclSetStampPayloadStub));
-    MOCKER(dlsym).times(12).will(returnValue((void *)profAclGetCompatibleFeatureStub));
-    MOCKER(dlsym).times(13).will(returnValue((void *)profAclGetCompatibleFeatureV2Stub));
+    MOCKER(mmDlsym).times(1).will(returnValue((void*)profInitStub));
+    MOCKER(mmDlsym).times(2).will(returnValue((void*)profRegisterCallbackStub));
+    MOCKER(mmDlsym).times(3).will(returnValue((void*)profReportDataStub));
+    MOCKER(mmDlsym).times(4).will(returnValue((void*)profSetDeviceIdByGeModelIdxStub));
+    MOCKER(mmDlsym).times(5).will(returnValue((void*)profNotifySetDeviceStub));
+    MOCKER(mmDlsym).times(6).will(returnValue((void*)profFinalizeStub));
+    MOCKER(mmDlsym).times(7).will(returnValue((void*)profUnsetDeviceIdByGeModelIdxStub));
+    MOCKER(mmDlsym).times(8).will(returnValue((void*)profAclInitStub));
+    MOCKER(mmDlsym).times(9).will(returnValue((void*)profAclStartStub));
+    MOCKER(mmDlsym).times(10).will(returnValue((void*)profAclStopStub));
+    MOCKER(mmDlsym).times(11).will(returnValue((void*)profAclFinalizeStub));
+    MOCKER(mmDlsym).times(11).will(returnValue((void*)ProfAclSetConfigStub));
+    MOCKER(mmDlsym).times(12).will(returnValue((void*)profAclSubscribeStub));
+    MOCKER(mmDlsym).times(13).will(returnValue((void*)profAclDrvGetDevNumStub));
+    MOCKER(mmDlsym).times(14).will(returnValue((void*)profAclGetOpTimeStub));
+    MOCKER(mmDlsym).times(14).will(returnValue((void*)profAclGetIdStub));
+    MOCKER(mmDlsym).times(14).will(returnValue((void*)profAclGetOpValStub));
+    MOCKER(mmDlsym).times(14).will(returnValue((void*)ProfGetOpExecutionTimeStub));
+    MOCKER(mmDlsym).times(14).will(returnValue((void*)profAclUnSubscribeStub));
+    MOCKER(dlsym).times(1).will(returnValue((void*)profAclCreateStampStub));
+    MOCKER(dlsym).times(2).will(returnValue((void*)profAclDestroyStampStub));
+    MOCKER(dlsym).times(3).will(returnValue((void*)profAclPushStub));
+    MOCKER(dlsym).times(4).will(returnValue((void*)profAclPopStub));
+    MOCKER(dlsym).times(5).will(returnValue((void*)profAclRangeStartStub));
+    MOCKER(dlsym).times(6).will(returnValue((void*)profAclRangeStopStub));
+    MOCKER(dlsym).times(7).will(returnValue((void*)profAclSetStampTraceMessageStub));
+    MOCKER(dlsym).times(8).will(returnValue((void*)profAclMarkStub));
+    MOCKER(dlsym).times(9).will(returnValue((void*)profAclSetCategoryNameStub));
+    MOCKER(dlsym).times(10).will(returnValue((void*)profAclSetStampCategoryStub));
+    MOCKER(dlsym).times(11).will(returnValue((void*)profAclSetStampPayloadStub));
+    MOCKER(dlsym).times(12).will(returnValue((void*)profAclGetCompatibleFeatureStub));
+    MOCKER(dlsym).times(13).will(returnValue((void*)profAclGetCompatibleFeatureV2Stub));
 
     EXPECT_EQ(-1, MsprofRegisterCallback(0, nullptr));
     EXPECT_EQ(0, MsprofNotifySetDevice(0, 0, true));
@@ -295,7 +203,7 @@ TEST_F(PROF_API_STTEST, PROF_API)
 
     EXPECT_EQ(0, ProfAclInit(0, nullptr, 0));
     EXPECT_EQ(0, ProfAclStart(0, 0));
-    EXPECT_EQ(0, MsprofReportData (0, 0, nullptr, 0));
+    EXPECT_EQ(0, MsprofReportData(0, 0, nullptr, 0));
     EXPECT_EQ(0, ProfAclStart(0, nullptr));
     EXPECT_EQ(0, ProfAclStop(0, nullptr));
     EXPECT_EQ(0, ProfAclFinalize(0));
@@ -338,6 +246,6 @@ TEST_F(PROF_API_STTEST, PROF_API)
     EXPECT_EQ(false, MsprofCheckOpSwitch(0, nullptr, 0));
     EXPECT_EQ(false, MsprofCheckOpSwitch(1, "MatMul", 6));
     EXPECT_EQ(false, MsprofCheckOpSwitch(0, "MatMul", 0));
-    const char *op = "MatMul";
+    const char* op = "MatMul";
     EXPECT_EQ(false, MsprofCheckOpSwitch(0, op, 6));
 }

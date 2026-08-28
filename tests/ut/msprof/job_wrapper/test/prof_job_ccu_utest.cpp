@@ -40,8 +40,7 @@ protected:
     std::shared_ptr<Analysis::Dvvp::JobWrapper::CollectionJobCfg> collectionJobCfg_;
 };
 
-class JOB_WRAPPER_CCU_INSTRUCTION_JOB_TEST : public JOB_WRAPPER_CCU_BASE_JOB_TEST {
-};
+class JOB_WRAPPER_CCU_INSTRUCTION_JOB_TEST : public JOB_WRAPPER_CCU_BASE_JOB_TEST {};
 
 TEST_F(JOB_WRAPPER_CCU_INSTRUCTION_JOB_TEST, Init)
 {
@@ -91,14 +90,13 @@ TEST_F(JOB_WRAPPER_CCU_INSTRUCTION_JOB_TEST, Uninit)
     EXPECT_EQ(PROFILING_SUCCESS, ccuInstrJob->Uninit());
 }
 
-class JOB_WRAPPER_CCU_STATISTIC_JOB_TEST : public JOB_WRAPPER_CCU_BASE_JOB_TEST {
-};
+class JOB_WRAPPER_CCU_STATISTIC_JOB_TEST : public JOB_WRAPPER_CCU_BASE_JOB_TEST {};
 
 TEST_F(JOB_WRAPPER_CCU_STATISTIC_JOB_TEST, Init)
 {
     auto ccuStatJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfCcuStatJob>();
     auto params = std::make_shared<analysis::dvvp::message::ProfileParams>();
-    MOCKER_CPP(&Platform::CheckIfSupport, bool (Platform::*)(const PlatformFeature) const)
+    MOCKER_CPP(&Platform::CheckIfSupport, bool(Platform::*)(const PlatformFeature) const)
         .stubs()
         .will(returnValue(false))
         .then(returnValue(true));

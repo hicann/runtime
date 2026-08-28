@@ -21,18 +21,13 @@
 #include "transport/uploader.h"
 #include "report/start_time.h"
 
-class TimeFileUtest: public testing::Test {
+class TimeFileUtest : public testing::Test {
 protected:
-    virtual void SetUp()
-    {
-    }
-    virtual void TearDown()
-    {
-        GlobalMockObject::verify();
-    }
+    virtual void SetUp() {}
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
-static int32_t UploadDataStub(ProfFileChunk *chunk)
+static int32_t UploadDataStub(ProfFileChunk* chunk)
 {
     OSAL_MEM_FREE(chunk->chunk);
     OSAL_MEM_FREE(chunk);
@@ -48,7 +43,7 @@ TEST_F(TimeFileUtest, CreateStartTimeFile)
     EXPECT_EQ(CreateStartTimeFile(deviceId), PROFILING_SUCCESS);
 }
 
-static int32_t UploadDataFailedStub(ProfFileChunk *chunk)
+static int32_t UploadDataFailedStub(ProfFileChunk* chunk)
 {
     OSAL_MEM_FREE(chunk->chunk);
     OSAL_MEM_FREE(chunk);

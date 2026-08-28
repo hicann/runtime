@@ -12,7 +12,7 @@
 extern "C" {
 #endif
 
-void ReportErrMessage(const char *errorCode, char **keys, char **values, unsigned long argNum)
+void ReportErrMessage(const char* errorCode, char** keys, char** values, unsigned long argNum)
 {
     (void)errorCode;
     (void)keys;

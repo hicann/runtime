@@ -10,34 +10,25 @@
 #include "ascend_hal.h"
 #include "ide_daemon_monitor.h"
 
-void appmon_client_exit(client_info_t *clnt)
-{
-    return;
-}
+void appmon_client_exit(client_info_t* clnt) { return; }
 
-int appmon_client_init(client_info_t *clnt, const char *serv_addr)
-{
-    return 0;
-}
+int appmon_client_init(client_info_t* clnt, const char* serv_addr) { return 0; }
 
-int appmon_client_deregister(client_info_t *clnt, const char *reason)
-{
-    return 0;
-}
+int appmon_client_deregister(client_info_t* clnt, const char* reason) { return 0; }
 
 static int flag = 0;
-int appmon_client_register(client_info_t *clnt, unsigned long timeout, const char *timeout_action)
+int appmon_client_register(client_info_t* clnt, unsigned long timeout, const char* timeout_action)
 {
     if (flag == 0) {
         flag++;
         return -1;
-    } 
+    }
 
     return 0;
 }
 
 static int heartbeat = 0;
-int appmon_client_heartbeat(client_info_t *clnt)
+int appmon_client_heartbeat(client_info_t* clnt)
 {
     heartbeat++;
     if (heartbeat <= 2) {
@@ -45,4 +36,3 @@ int appmon_client_heartbeat(client_info_t *clnt)
     }
     return 0;
 }
-

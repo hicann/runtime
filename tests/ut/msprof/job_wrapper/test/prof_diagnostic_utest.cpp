@@ -28,32 +28,29 @@ using namespace analysis::dvvp::common::utils;
 using namespace Analysis::Dvvp::MsprofErrMgr;
 using namespace Analysis::Dvvp::Common::Platform;
 
-class JOB_WRAPPER_PROF_DIAGNOSTIC_JOB_TEST: public testing::Test {
+class JOB_WRAPPER_PROF_DIAGNOSTIC_JOB_TEST : public testing::Test {
 protected:
-    virtual void SetUp() {
+    virtual void SetUp()
+    {
         collectionJobCfg_ = std::make_shared<Analysis::Dvvp::JobWrapper::CollectionJobCfg>();
-        std::shared_ptr<analysis::dvvp::message::ProfileParams> params(
-            new analysis::dvvp::message::ProfileParams);
-        std::shared_ptr<analysis::dvvp::message::JobContext> jobCtx(
-            new analysis::dvvp::message::JobContext);
+        std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams);
+        std::shared_ptr<analysis::dvvp::message::JobContext> jobCtx(new analysis::dvvp::message::JobContext);
         auto comParams = std::make_shared<Analysis::Dvvp::JobWrapper::CollectionJobCommonParams>();
         comParams->params = params;
         comParams->jobCtx = jobCtx;
         collectionJobCfg_->comParams = comParams;
         collectionJobCfg_->jobParams.events = std::make_shared<std::vector<std::string> >(0);
     }
-    virtual void TearDown() {
-        collectionJobCfg_.reset();
-    }
+    virtual void TearDown() { collectionJobCfg_.reset(); }
+
 public:
     std::shared_ptr<Analysis::Dvvp::JobWrapper::CollectionJobCfg> collectionJobCfg_;
 };
 
-TEST_F(JOB_WRAPPER_PROF_DIAGNOSTIC_JOB_TEST, Init) {
+TEST_F(JOB_WRAPPER_PROF_DIAGNOSTIC_JOB_TEST, Init)
+{
     GlobalMockObject::verify();
-    MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::GetPlatformType)
-        .stubs()
-        .will(returnValue(5));
+    MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::GetPlatformType).stubs().will(returnValue(5));
     Platform::instance()->Init();
     auto ProfDiagnostic = std::make_shared<Analysis::Dvvp::JobWrapper::ProfDiagnostic>();
     do {
@@ -67,13 +64,10 @@ TEST_F(JOB_WRAPPER_PROF_DIAGNOSTIC_JOB_TEST, Init) {
     } while (0);
 }
 
-int32_t UtDlcloseStub(void *handle)
-{
-    return 0;
-}
+int32_t UtDlcloseStub(void* handle) { return 0; }
 
 int32_t g_cliDlopenStubs;
-void * UtDlopenStub(const char *fileName, int mode)
+void* UtDlopenStub(const char* fileName, int mode)
 {
     if (strcmp(fileName, "libdrvdsmi_host.so") == 0) {
         return &g_cliDlopenStubs;
@@ -82,8 +76,8 @@ void * UtDlopenStub(const char *fileName, int mode)
 }
 
 int32_t g_faultCount = 0;
-int32_t dsmiReadFaultEventStub(int32_t device_id, int timeout, struct dsmi_event_filter filter,
-    struct dsmi_event *event)
+int32_t dsmiReadFaultEventStub(
+    int32_t device_id, int timeout, struct dsmi_event_filter filter, struct dsmi_event* event)
 {
     usleep(5); // 5us
     if (g_faultCount == 2) {
@@ -106,28 +100,26 @@ int32_t dsmiReadFaultEventStub(int32_t device_id, int timeout, struct dsmi_event
     return DRV_ERROR_NONE;
 }
 
-static void *UtDlsymStub(void *handle, const char *symbol) {
+static void* UtDlsymStub(void* handle, const char* symbol)
+{
     std::string symbol_str = symbol;
     if (symbol_str == "dsmi_read_fault_event") {
-        return (void *)dsmiReadFaultEventStub;
+        return (void*)dsmiReadFaultEventStub;
     }
-    return (void *)0x87654321;
+    return (void*)0x87654321;
 }
 
-TEST_F(JOB_WRAPPER_PROF_DIAGNOSTIC_JOB_TEST, Start) {
+TEST_F(JOB_WRAPPER_PROF_DIAGNOSTIC_JOB_TEST, Start)
+{
     GlobalMockObject::verify();
-    MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::GetPlatformType)
-        .stubs()
-        .will(returnValue(5));
+    MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::GetPlatformType).stubs().will(returnValue(5));
     MOCKER(dlclose).stubs().will(invoke(UtDlcloseStub));
     MOCKER(dlopen).stubs().will(invoke(UtDlopenStub));
     MOCKER(dlsym).stubs().will(invoke(UtDlsymStub));
 
     std::shared_ptr<FILETransport> trans(new FILETransport("./tmp", "200MB"));
     auto uploader = std::make_shared<analysis::dvvp::transport::Uploader>(trans);
-    MOCKER_CPP(&analysis::dvvp::transport::UploaderMgr::GetUploader)
-        .stubs()
-        .with(any(), outBound(uploader));
+    MOCKER_CPP(&analysis::dvvp::transport::UploaderMgr::GetUploader).stubs().with(any(), outBound(uploader));
     MOCKER_CPP(&Uploader::UploadData, int(Uploader::*)(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk>))
         .stubs()
         .will(returnValue(PROFILING_SUCCESS));

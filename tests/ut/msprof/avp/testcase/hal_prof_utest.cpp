@@ -19,15 +19,10 @@
 #include "hal/hal_dsmi.h"
 #include "ascend_hal.h"
 
-class HalProfUtest: public testing::Test {
+class HalProfUtest : public testing::Test {
 protected:
-    virtual void SetUp()
-    {
-    }
-    virtual void TearDown()
-    {
-        GlobalMockObject::verify();
-    }
+    virtual void SetUp() {}
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 TEST_F(HalProfUtest, HalGetApiVersionBase)
@@ -47,10 +42,7 @@ TEST_F(HalProfUtest, HalGetApiVersionBase)
 TEST_F(HalProfUtest, HalGetPlatformInfoBase)
 {
     uint32_t* platformInfo;
-    MOCKER(drvGetPlatformInfo)
-        .stubs()
-        .will(returnValue(DRV_ERROR_NONE))
-        .then(returnValue(DRV_ERROR_NOT_SUPPORT));
+    MOCKER(drvGetPlatformInfo).stubs().will(returnValue(DRV_ERROR_NONE)).then(returnValue(DRV_ERROR_NOT_SUPPORT));
     EXPECT_EQ(PROFILING_SUCCESS, HalGetPlatformInfo(platformInfo));
     EXPECT_EQ(PROFILING_SUCCESS, HalGetPlatformInfo(platformInfo));
 }
@@ -58,17 +50,11 @@ TEST_F(HalProfUtest, HalGetPlatformInfoBase)
 TEST_F(HalProfUtest, HalGetDeviceNumberBase)
 {
     uint32_t devNum = 1;
-    MOCKER(drvGetDevNum)
-        .stubs()
-        .with(outBoundP(&devNum, sizeof(uint32_t)))
-        .will(returnValue(DRV_ERROR_NONE));
+    MOCKER(drvGetDevNum).stubs().with(outBoundP(&devNum, sizeof(uint32_t))).will(returnValue(DRV_ERROR_NONE));
     EXPECT_EQ(1, HalGetDeviceNumber());
     GlobalMockObject::verify();
     uint32_t devNums = 65;
-    MOCKER(drvGetDevNum)
-        .stubs()
-        .with(outBoundP(&devNums, sizeof(uint32_t)))
-        .will(returnValue(DRV_ERROR_NONE));
+    MOCKER(drvGetDevNum).stubs().with(outBoundP(&devNums, sizeof(uint32_t))).will(returnValue(DRV_ERROR_NONE));
     EXPECT_EQ(0, HalGetDeviceNumber());
 }
 
@@ -78,10 +64,7 @@ TEST_F(HalProfUtest, HalGetDeviceIdsBase)
     EXPECT_EQ(0, HalGetDeviceIds(65, NULL, 64));
 
     uint32_t devIds[64] = {0};
-    MOCKER(drvGetDevIDs)
-        .stubs()
-        .will(returnValue(DRV_ERROR_NONE))
-        .then(returnValue(DRV_ERROR_NOT_SUPPORT));
+    MOCKER(drvGetDevIDs).stubs().will(returnValue(DRV_ERROR_NONE)).then(returnValue(DRV_ERROR_NOT_SUPPORT));
     EXPECT_EQ(1, HalGetDeviceIds(1, devIds, 64));
     EXPECT_EQ(0, HalGetDeviceIds(1, devIds, 64));
 }
@@ -89,10 +72,7 @@ TEST_F(HalProfUtest, HalGetDeviceIdsBase)
 TEST_F(HalProfUtest, HalGetDeviceInfoBase)
 {
     int64_t value[64] = {0};
-    MOCKER(halGetDeviceInfo)
-        .stubs()
-        .will(returnValue(DRV_ERROR_NONE))
-        .then(returnValue(DRV_ERROR_NOT_SUPPORT));
+    MOCKER(halGetDeviceInfo).stubs().will(returnValue(DRV_ERROR_NONE)).then(returnValue(DRV_ERROR_NOT_SUPPORT));
     EXPECT_EQ(PROFILING_SUCCESS, HalGetDeviceInfo(SYSTEM_SYS_COUNT, 0, value));
     EXPECT_EQ(PROFILING_SUCCESS, HalGetDeviceInfo(SYSTEM_HOST_OSC_FREQUE, 0, value));
 }
@@ -111,9 +91,7 @@ TEST_F(HalProfUtest, HalGetHostFreqBase)
 
 TEST_F(HalProfUtest, HalGetChipVersionBase)
 {
-    MOCKER(HalGetDeviceInfo)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER(HalGetDeviceInfo).stubs().will(returnValue(PROFILING_SUCCESS));
     EXPECT_EQ(0, HalGetChipVersion());
 }
 
@@ -140,10 +118,7 @@ TEST_F(HalProfUtest, HalGetDeviceFreqBase)
 TEST_F(HalProfUtest, HalProfChannelStartBase)
 {
     ChannelStartPara para[10] = {};
-    MOCKER(prof_drv_start)
-        .stubs()
-        .will(returnValue(PROF_ERROR))
-        .then(returnValue(PROF_OK));
+    MOCKER(prof_drv_start).stubs().will(returnValue(PROF_ERROR)).then(returnValue(PROF_OK));
     EXPECT_EQ(PROFILING_FAILED, HalProfChannelStart(0, 0, para));
     EXPECT_EQ(PROFILING_SUCCESS, HalProfChannelStart(0, 0, para));
 }
@@ -151,10 +126,7 @@ TEST_F(HalProfUtest, HalProfChannelStartBase)
 TEST_F(HalProfUtest, HalProfChannelPollBase)
 {
     ChannelPollInfo info[10] = {};
-    MOCKER(prof_channel_poll)
-        .stubs()
-        .will(returnValue(2))
-        .then(returnValue(1));
+    MOCKER(prof_channel_poll).stubs().will(returnValue(2)).then(returnValue(1));
     EXPECT_EQ(-1, HalProfChannelPoll(info, 1, 1));
     EXPECT_EQ(1, HalProfChannelPoll(info, 1, 1));
 }
@@ -174,12 +146,9 @@ TEST_F(HalProfUtest, HalProfChannelReadBase)
 TEST_F(HalProfUtest, HalProfGetChannelListBase)
 {
     ChannelList chanList[100] = {};
-    MOCKER(prof_drv_get_channels)
-        .stubs()
-        .will(returnValue(PROFILING_FAILED))
-        .then(returnValue(PROFILING_SUCCESS));
-    EXPECT_EQ(PROFILING_FAILED,  HalProfGetChannelList(0, chanList));
-    EXPECT_EQ(PROFILING_SUCCESS,  HalProfGetChannelList(0, chanList));
+    MOCKER(prof_drv_get_channels).stubs().will(returnValue(PROFILING_FAILED)).then(returnValue(PROFILING_SUCCESS));
+    EXPECT_EQ(PROFILING_FAILED, HalProfGetChannelList(0, chanList));
+    EXPECT_EQ(PROFILING_SUCCESS, HalProfGetChannelList(0, chanList));
 }
 
 TEST_F(HalProfUtest, HalGetEnvTypeBase)
@@ -190,8 +159,8 @@ TEST_F(HalProfUtest, HalGetEnvTypeBase)
         .with(any(), any(), outBoundP(&envType, sizeof(int64_t)))
         .will(returnValue(PROFILING_FAILED))
         .then(returnValue(PROFILING_SUCCESS));
-    EXPECT_EQ(PROFILING_FAILED,  HalGetEnvType(0));
-    EXPECT_EQ(1,  HalGetEnvType(0));
+    EXPECT_EQ(PROFILING_FAILED, HalGetEnvType(0));
+    EXPECT_EQ(1, HalGetEnvType(0));
 }
 
 TEST_F(HalProfUtest, HalGetCtrlCpuIdBase)
@@ -202,8 +171,8 @@ TEST_F(HalProfUtest, HalGetCtrlCpuIdBase)
         .with(any(), any(), outBoundP(&ctrlCpuId, sizeof(int64_t)))
         .will(returnValue(PROFILING_FAILED))
         .then(returnValue(PROFILING_SUCCESS));
-    EXPECT_EQ(PROFILING_FAILED,  HalGetCtrlCpuId(0));
-    EXPECT_EQ(1,  HalGetCtrlCpuId(0));
+    EXPECT_EQ(PROFILING_FAILED, HalGetCtrlCpuId(0));
+    EXPECT_EQ(1, HalGetCtrlCpuId(0));
 }
 
 TEST_F(HalProfUtest, HalGetCtrlCpuCoreNumBase)
@@ -214,8 +183,8 @@ TEST_F(HalProfUtest, HalGetCtrlCpuCoreNumBase)
         .with(any(), any(), outBoundP(&ctrlCpuCoreNum, sizeof(int64_t)))
         .will(returnValue(PROFILING_FAILED))
         .then(returnValue(PROFILING_SUCCESS));
-    EXPECT_EQ(PROFILING_FAILED,  HalGetCtrlCpuCoreNum(0));
-    EXPECT_EQ(1,  HalGetCtrlCpuCoreNum(0));
+    EXPECT_EQ(PROFILING_FAILED, HalGetCtrlCpuCoreNum(0));
+    EXPECT_EQ(1, HalGetCtrlCpuCoreNum(0));
 }
 
 TEST_F(HalProfUtest, HalGetCtrlCpuEndianLittleBase)
@@ -226,8 +195,8 @@ TEST_F(HalProfUtest, HalGetCtrlCpuEndianLittleBase)
         .with(any(), any(), outBoundP(&ctrlCpuEndianLittle, sizeof(int64_t)))
         .will(returnValue(PROFILING_FAILED))
         .then(returnValue(PROFILING_SUCCESS));
-    EXPECT_EQ(PROFILING_FAILED,  HalGetCtrlCpuEndianLittle(0));
-    EXPECT_EQ(1,  HalGetCtrlCpuEndianLittle(0));
+    EXPECT_EQ(PROFILING_FAILED, HalGetCtrlCpuEndianLittle(0));
+    EXPECT_EQ(1, HalGetCtrlCpuEndianLittle(0));
 }
 
 TEST_F(HalProfUtest, HalGetAiCpuCoreNumBase)
@@ -238,8 +207,8 @@ TEST_F(HalProfUtest, HalGetAiCpuCoreNumBase)
         .with(any(), any(), outBoundP(&aiCpuCoreNum, sizeof(int64_t)))
         .will(returnValue(PROFILING_FAILED))
         .then(returnValue(PROFILING_SUCCESS));
-    EXPECT_EQ(PROFILING_FAILED,  HalGetAiCpuCoreNum(0));
-    EXPECT_EQ(1,  HalGetAiCpuCoreNum(0));
+    EXPECT_EQ(PROFILING_FAILED, HalGetAiCpuCoreNum(0));
+    EXPECT_EQ(1, HalGetAiCpuCoreNum(0));
 }
 
 TEST_F(HalProfUtest, HalGetAiCpuCoreIdBase)
@@ -250,8 +219,8 @@ TEST_F(HalProfUtest, HalGetAiCpuCoreIdBase)
         .with(any(), any(), outBoundP(&aiCpuCoreId, sizeof(int64_t)))
         .will(returnValue(PROFILING_FAILED))
         .then(returnValue(PROFILING_SUCCESS));
-    EXPECT_EQ(PROFILING_FAILED,  HalGetAiCpuCoreId(0));
-    EXPECT_EQ(1,  HalGetAiCpuCoreId(0));
+    EXPECT_EQ(PROFILING_FAILED, HalGetAiCpuCoreId(0));
+    EXPECT_EQ(1, HalGetAiCpuCoreId(0));
 }
 
 TEST_F(HalProfUtest, HalGetAiCpuOccupyBitmapBase)
@@ -262,8 +231,8 @@ TEST_F(HalProfUtest, HalGetAiCpuOccupyBitmapBase)
         .with(any(), any(), outBoundP(&aiCpuOccupyBitmap, sizeof(int64_t)))
         .will(returnValue(PROFILING_FAILED))
         .then(returnValue(PROFILING_SUCCESS));
-    EXPECT_EQ(PROFILING_FAILED,  HalGetAiCpuOccupyBitmap(0));
-    EXPECT_EQ(1,  HalGetAiCpuOccupyBitmap(0));
+    EXPECT_EQ(PROFILING_FAILED, HalGetAiCpuOccupyBitmap(0));
+    EXPECT_EQ(1, HalGetAiCpuOccupyBitmap(0));
 }
 
 TEST_F(HalProfUtest, HalGetTsCpuCoreNumBase)
@@ -274,8 +243,8 @@ TEST_F(HalProfUtest, HalGetTsCpuCoreNumBase)
         .with(any(), any(), outBoundP(&tsCpuCoreNum, sizeof(int64_t)))
         .will(returnValue(PROFILING_FAILED))
         .then(returnValue(PROFILING_SUCCESS));
-    EXPECT_EQ(PROFILING_FAILED,  HalGetTsCpuCoreNum(0));
-    EXPECT_EQ(1,  HalGetTsCpuCoreNum(0));
+    EXPECT_EQ(PROFILING_FAILED, HalGetTsCpuCoreNum(0));
+    EXPECT_EQ(1, HalGetTsCpuCoreNum(0));
 }
 
 TEST_F(HalProfUtest, HalGetAiCoreIdBase)
@@ -286,8 +255,8 @@ TEST_F(HalProfUtest, HalGetAiCoreIdBase)
         .with(any(), any(), outBoundP(&aiCoreId, sizeof(int64_t)))
         .will(returnValue(PROFILING_FAILED))
         .then(returnValue(PROFILING_SUCCESS));
-    EXPECT_EQ(PROFILING_FAILED,  HalGetAiCoreId(0));
-    EXPECT_EQ(1,  HalGetAiCoreId(0));
+    EXPECT_EQ(PROFILING_FAILED, HalGetAiCoreId(0));
+    EXPECT_EQ(1, HalGetAiCoreId(0));
 }
 
 TEST_F(HalProfUtest, HalGetAiCoreNumBase)
@@ -298,8 +267,8 @@ TEST_F(HalProfUtest, HalGetAiCoreNumBase)
         .with(any(), any(), outBoundP(&aiCoreNum, sizeof(int64_t)))
         .will(returnValue(PROFILING_FAILED))
         .then(returnValue(PROFILING_SUCCESS));
-    EXPECT_EQ(PROFILING_FAILED,  HalGetAiCoreNum(0));
-    EXPECT_EQ(1,  HalGetAiCoreNum(0));
+    EXPECT_EQ(PROFILING_FAILED, HalGetAiCoreNum(0));
+    EXPECT_EQ(1, HalGetAiCoreNum(0));
 }
 
 TEST_F(HalProfUtest, HalGetAicFrqBase)
@@ -310,8 +279,8 @@ TEST_F(HalProfUtest, HalGetAicFrqBase)
         .with(any(), any(), outBoundP(&aiCoreFreq, sizeof(int64_t)))
         .will(returnValue(PROFILING_FAILED))
         .then(returnValue(PROFILING_SUCCESS));
-    EXPECT_EQ(PROFILING_FAILED,  HalGetAicFrq(0));
-    EXPECT_EQ(1000,  HalGetAicFrq(0));
+    EXPECT_EQ(PROFILING_FAILED, HalGetAicFrq(0));
+    EXPECT_EQ(1000, HalGetAicFrq(0));
 }
 
 TEST_F(HalProfUtest, HalGetAiVectorCoreNumBase)
@@ -322,8 +291,8 @@ TEST_F(HalProfUtest, HalGetAiVectorCoreNumBase)
         .with(any(), any(), outBoundP(&aiVecCoreNum, sizeof(int64_t)))
         .will(returnValue(PROFILING_FAILED))
         .then(returnValue(PROFILING_SUCCESS));
-    EXPECT_EQ(PROFILING_FAILED,  HalGetAiVectorCoreNum(0));
-    EXPECT_EQ(1,  HalGetAiVectorCoreNum(0));
+    EXPECT_EQ(PROFILING_FAILED, HalGetAiVectorCoreNum(0));
+    EXPECT_EQ(1, HalGetAiVectorCoreNum(0));
 }
 
 TEST_F(HalProfUtest, HalGetAivFeqBase)
@@ -334,6 +303,6 @@ TEST_F(HalProfUtest, HalGetAivFeqBase)
         .with(any(), any(), outBoundP(&aiVecCoreFreq, sizeof(int64_t)))
         .will(returnValue(PROFILING_FAILED))
         .then(returnValue(PROFILING_SUCCESS));
-    EXPECT_EQ(PROFILING_FAILED,  HalGetAivFeq(0));
-    EXPECT_EQ(1000,  HalGetAivFeq(0));
+    EXPECT_EQ(PROFILING_FAILED, HalGetAivFeq(0));
+    EXPECT_EQ(1000, HalGetAivFeq(0));
 }

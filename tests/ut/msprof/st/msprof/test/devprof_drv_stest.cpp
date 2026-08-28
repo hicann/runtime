@@ -24,42 +24,27 @@ using namespace analysis::dvvp::common::config;
 
 class DEVPROF_DRV_STEST : public testing::Test {
 protected:
-    virtual void SetUp()
-    {
-        GlobalMockObject::verify();
-    }
-    virtual void TearDown()
-    {
-        GlobalMockObject::verify();
-    }
+    virtual void SetUp() { GlobalMockObject::verify(); }
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
-extern int32_t ProfStartAicpu(struct prof_sample_start_para *para);
-extern int32_t ProfStopAicpu(struct prof_sample_stop_para *para);
+extern int32_t ProfStartAicpu(struct prof_sample_start_para* para);
+extern int32_t ProfStopAicpu(struct prof_sample_stop_para* para);
 
-extern int32_t ProfStartAdprof(struct prof_sample_start_para *para);
-extern int32_t ProfSampleAdprof(struct prof_sample_para *para);
-extern int32_t ProfStopAdprof(struct prof_sample_stop_para *para);
+extern int32_t ProfStartAdprof(struct prof_sample_start_para* para);
+extern int32_t ProfSampleAdprof(struct prof_sample_para* para);
+extern int32_t ProfStopAdprof(struct prof_sample_stop_para* para);
 
-static int32_t ProfStartFailed()
-{
-    return PROFILING_FAILED;
-}
+static int32_t ProfStartFailed() { return PROFILING_FAILED; }
 
-static int32_t ProfStartSuccess()
-{
-    return PROFILING_SUCCESS;
-}
+static int32_t ProfStartSuccess() { return PROFILING_SUCCESS; }
 
-static void AdprofExit()
-{
-    return;
-}
+static void AdprofExit() { return; }
 
 static uint32_t totalReportSize = 0;
 
-static int halProfSampleDataReportStub(unsigned int dev_id, unsigned int chan_id, unsigned int sub_chan_id,
-    struct prof_data_report_para *para)
+static int halProfSampleDataReportStub(
+    unsigned int dev_id, unsigned int chan_id, unsigned int sub_chan_id, struct prof_data_report_para* para)
 {
     totalReportSize += para->data_len;
     usleep(2);
@@ -80,7 +65,7 @@ TEST_F(DEVPROF_DRV_STEST, AdprofBatchReportAdditionalInfoBase)
     data.level = 6000; // aicpu
     data.type = 2;
     data.timeStamp = 151515151;
-    void *addPtr = malloc(1024); // 1024byte
+    void* addPtr = malloc(1024); // 1024byte
     (void)memset_s(addPtr, 1024, 0, 1024);
     (void)memcpy_s(addPtr, 256, &data, 256);
     (void)memcpy_s(addPtr + 256, 256, &data, 256);
@@ -92,13 +77,8 @@ TEST_F(DEVPROF_DRV_STEST, AdprofBatchReportAdditionalInfoBase)
         .stubs()
         .with(any(), any(), outBoundP(&bufLen, sizeof(bufLen)))
         .then(returnValue(static_cast<int32_t>(DRV_ERROR_NONE)));
-    MOCKER_CPP(&AicpuReportHdc::Init)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS))
-        .then(returnValue(PROFILING_FAILED));
-    MOCKER(halProfSampleDataReport)
-        .stubs()
-        .will(returnValue(static_cast<int32_t>(DRV_ERROR_NONE)));
+    MOCKER_CPP(&AicpuReportHdc::Init).stubs().will(returnValue(PROFILING_SUCCESS)).then(returnValue(PROFILING_FAILED));
+    MOCKER(halProfSampleDataReport).stubs().will(returnValue(static_cast<int32_t>(DRV_ERROR_NONE)));
 
     AicpuStartPara aicpuStartPara = {0, 1111, 143, 2};
     EXPECT_EQ(PROFILING_SUCCESS, AdprofAicpuStartRegister(ProfStartSuccess, &aicpuStartPara));
@@ -114,9 +94,7 @@ TEST_F(DEVPROF_DRV_STEST, AdprofBatchReportAdditionalInfoBase)
 
 TEST_F(DEVPROF_DRV_STEST, DevprofDrvAicpuStress)
 {
-    MOCKER_CPP(&AicpuReportHdc::Init)
-        .stubs()
-        .will(returnValue(PROFILING_FAILED));
+    MOCKER_CPP(&AicpuReportHdc::Init).stubs().will(returnValue(PROFILING_FAILED));
     MOCKER(halProfSampleDataReport).stubs().will(invoke(halProfSampleDataReportStub));
     AicpuStartPara aicpuStartPara = {0, 111, 143, 2};
     int32_t ret = AdprofAicpuStartRegister(ProfStartSuccess, &aicpuStartPara);
@@ -127,14 +105,14 @@ TEST_F(DEVPROF_DRV_STEST, DevprofDrvAicpuStress)
 
     MsprofAdditionalInfo additionalInfo;
     for (int i = 0; i < 10; i++) {
-        threads.emplace_back(std::async(std::launch::async, [&additionalInfo]()->void {
+        threads.emplace_back(std::async(std::launch::async, [&additionalInfo]() -> void {
             for (int j = 0; j < 10000; j++) {
-                AdprofReportAdditionalInfo(0, static_cast<void *>(&additionalInfo), sizeof(MsprofAdditionalInfo));
+                AdprofReportAdditionalInfo(0, static_cast<void*>(&additionalInfo), sizeof(MsprofAdditionalInfo));
             }
         }));
     }
 
-    for (auto &it : threads) {
+    for (auto& it : threads) {
         it.wait();
     }
 
@@ -148,12 +126,9 @@ TEST_F(DEVPROF_DRV_STEST, DevprofDrvAicpu)
     AicpuStartPara aicpuStartPara = {0, 111, 143, 0};
     int32_t ret = AdprofAicpuStartRegister(ProfStartSuccess, &aicpuStartPara);
     EXPECT_EQ(PROFILING_SUCCESS, ret);
-    aicpuStartPara.profConfig = 2;  // aicpu = on
+    aicpuStartPara.profConfig = 2; // aicpu = on
 
-    MOCKER_CPP(&AicpuReportHdc::Init)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS))
-        .then(returnValue(PROFILING_FAILED));
+    MOCKER_CPP(&AicpuReportHdc::Init).stubs().will(returnValue(PROFILING_SUCCESS)).then(returnValue(PROFILING_FAILED));
     ret = AdprofAicpuStartRegister(ProfStartSuccess, &aicpuStartPara);
     EXPECT_EQ(PROFILING_SUCCESS, ret);
 
@@ -173,10 +148,10 @@ TEST_F(DEVPROF_DRV_STEST, DevprofDrvAicpu)
     memset(additionalInfo.data, 0, MSPROF_ADDTIONAL_INFO_DATA_LENGTH);
     memcpy(additionalInfo.data, "test", additionalInfo.dataLen);
 
-    ret = AdprofReportAdditionalInfo(0, static_cast<void *>(&additionalInfo), sizeof(MsprofAdditionalInfo) - 1);
+    ret = AdprofReportAdditionalInfo(0, static_cast<void*>(&additionalInfo), sizeof(MsprofAdditionalInfo) - 1);
     EXPECT_EQ(PROFILING_FAILED, ret);
 
-    ret = AdprofReportAdditionalInfo(0, static_cast<void *>(&additionalInfo), sizeof(MsprofAdditionalInfo));
+    ret = AdprofReportAdditionalInfo(0, static_cast<void*>(&additionalInfo), sizeof(MsprofAdditionalInfo));
     EXPECT_EQ(PROFILING_SUCCESS, ret);
 
     prof_sample_stop_para stopPara = {0};
@@ -198,33 +173,28 @@ TEST_F(DEVPROF_DRV_STEST, DevprofDrvAicpuError)
         .then(returnValue(-1));
 
     MsprofAdditionalInfo additionalInfo;
-    AdprofReportAdditionalInfo(1, static_cast<void *>(&additionalInfo), sizeof(MsprofAdditionalInfo));
+    AdprofReportAdditionalInfo(1, static_cast<void*>(&additionalInfo), sizeof(MsprofAdditionalInfo));
     prof_sample_start_para startPara = {0};
-    EXPECT_EQ(PROFILING_SUCCESS, ProfStartAicpu(&startPara));   // halProfSampleDataReport error
+    EXPECT_EQ(PROFILING_SUCCESS, ProfStartAicpu(&startPara)); // halProfSampleDataReport error
     prof_sample_stop_para stopPara = {0};
     EXPECT_EQ(PROFILING_SUCCESS, ProfStopAicpu(&stopPara));
 
-    AdprofReportAdditionalInfo(1, static_cast<void *>(&additionalInfo), sizeof(MsprofAdditionalInfo));
-    EXPECT_EQ(PROFILING_SUCCESS, ProfStartAicpu(&startPara));   // halProfQueryAvailBufLen 2 error
+    AdprofReportAdditionalInfo(1, static_cast<void*>(&additionalInfo), sizeof(MsprofAdditionalInfo));
+    EXPECT_EQ(PROFILING_SUCCESS, ProfStartAicpu(&startPara)); // halProfQueryAvailBufLen 2 error
     EXPECT_EQ(PROFILING_SUCCESS, ProfStopAicpu(&stopPara));
 
-    EXPECT_EQ(PROFILING_SUCCESS, ProfStartAicpu(&startPara));   // halProfQueryAvailBufLen 1 error
+    EXPECT_EQ(PROFILING_SUCCESS, ProfStartAicpu(&startPara)); // halProfQueryAvailBufLen 1 error
     EXPECT_EQ(PROFILING_SUCCESS, ProfStopAicpu(&stopPara));
 
     MOCKER(OsalCreateTaskWithThreadAttr).stubs().will(returnValue(-1));
-    EXPECT_EQ(PROFILING_FAILED, ProfStartAicpu(&startPara));    // create thread error
+    EXPECT_EQ(PROFILING_FAILED, ProfStartAicpu(&startPara)); // create thread error
 }
 
 TEST_F(DEVPROF_DRV_STEST, DevprofDrvAdprof)
 {
     AdprofCallBack adprofCallBack = {ProfStartFailed, ProfStartFailed, AdprofExit};
-    MOCKER(halProfSampleRegister)
-        .stubs()
-        .will(returnValue(1))
-        .then(returnValue((int)DRV_ERROR_NONE));
-    MOCKER(halProfSampleRegisterEx)
-        .stubs()
-        .will(returnValue((int)DRV_ERROR_NONE));
+    MOCKER(halProfSampleRegister).stubs().will(returnValue(1)).then(returnValue((int)DRV_ERROR_NONE));
+    MOCKER(halProfSampleRegisterEx).stubs().will(returnValue((int)DRV_ERROR_NONE));
     EXPECT_EQ(PROFILING_FAILED, AdprofStartRegister(adprofCallBack, 0, 123));
     EXPECT_EQ(PROFILING_SUCCESS, AdprofStartRegister(adprofCallBack, 0, 123));
 
@@ -244,7 +214,7 @@ TEST_F(DEVPROF_DRV_STEST, DevprofDrvAdprof)
     fileChunk.fileName = "test_file";
     fileChunk.extraInfo = "test_info";
     fileChunk.id = "test_id";
-    EXPECT_EQ(PROFILING_SUCCESS, ReportAdprofFileChunk(static_cast<void *>(&fileChunk)));
+    EXPECT_EQ(PROFILING_SUCCESS, ReportAdprofFileChunk(static_cast<void*>(&fileChunk)));
 
     prof_sample_para samplePara = {0};
     samplePara.dev_id = 0;
@@ -256,17 +226,15 @@ TEST_F(DEVPROF_DRV_STEST, DevprofDrvAdprof)
     EXPECT_EQ(sizeof(ProfTlv), samplePara.report_len);
     free(samplePara.buff);
 
-    EXPECT_EQ(PROFILING_SUCCESS, ReportAdprofFileChunk(static_cast<void *>(&fileChunk)));
+    EXPECT_EQ(PROFILING_SUCCESS, ReportAdprofFileChunk(static_cast<void*>(&fileChunk)));
     prof_sample_stop_para stopPara = {0};
     EXPECT_EQ(PROFILING_SUCCESS, ProfStopAdprof(&stopPara));
-    EXPECT_EQ(PROFILING_FAILED, ReportAdprofFileChunk(static_cast<void *>(&fileChunk)));
+    EXPECT_EQ(PROFILING_FAILED, ReportAdprofFileChunk(static_cast<void*>(&fileChunk)));
 }
 
 TEST_F(DEVPROF_DRV_STEST, CheckFeatureIsOn)
 {
-    MOCKER_CPP(&AicpuReportHdc::Init)
-        .stubs()
-        .will(returnValue(PROFILING_FAILED));
+    MOCKER_CPP(&AicpuReportHdc::Init).stubs().will(returnValue(PROFILING_FAILED));
     prof_sample_start_para startPara = {0};
     EXPECT_EQ(PROFILING_SUCCESS, ProfStartAicpu(&startPara));
     AicpuStartPara aicpuStartPara = {0, 111, 143, ADPROF_TASK_TIME_L0 | ADPROF_TASK_TIME_L1 | ADPROF_TASK_TIME_L2};
@@ -290,23 +258,23 @@ TEST_F(DEVPROF_DRV_STEST, AdprofGetHashId)
     MOCKER_CPP(&AicpuReportHdc::Init).stubs().will(returnValue(PROFILING_FAILED));
     MOCKER(Devprof::ProfSendEvent).stubs().will(returnValue(PROFILING_SUCCESS));
 
-    AicpuStartPara aicpuStartPara = {0, 111, 143, 2};   // aicpu = on
+    AicpuStartPara aicpuStartPara = {0, 111, 143, 2}; // aicpu = on
     EXPECT_EQ(PROFILING_SUCCESS, AdprofAicpuStartRegister(ProfStartSuccess, &aicpuStartPara));
     EXPECT_EQ(PROFILING_FAILED, AdprofGetHashId(nullptr, 0));
     std::string test("test");
     EXPECT_NE(PROFILING_FAILED, AdprofGetHashId(test.c_str(), test.length()));
 }
 
-static int halProfQueryAvailBufLenStub(unsigned int dev_id, unsigned int chan_id, unsigned int *buff_avail_len)
+static int halProfQueryAvailBufLenStub(unsigned int dev_id, unsigned int chan_id, unsigned int* buff_avail_len)
 {
     static int count = 0;
     if (count == 0) {
         *buff_avail_len = 1024 * 1024;
-    } else if (count == 1) {    // aicpu
+    } else if (count == 1) { // aicpu
         *buff_avail_len = 0;
     } else if (count == 2) {
         *buff_avail_len = 1024 * 1024;
-    } else if (count == 3) {    // adprof
+    } else if (count == 3) { // adprof
         *buff_avail_len = 0;
     } else {
         *buff_avail_len = 1024 * 1024;
@@ -326,18 +294,14 @@ TEST_F(DEVPROF_DRV_STEST, BufLenZero)
     EXPECT_EQ(PROFILING_SUCCESS, ProfStartAicpu(&startPara));
     OsalSleep(15);
     MsprofAdditionalInfo additionalInfo;
-    AdprofReportAdditionalInfo(1, static_cast<void *>(&additionalInfo), sizeof(MsprofAdditionalInfo));
+    AdprofReportAdditionalInfo(1, static_cast<void*>(&additionalInfo), sizeof(MsprofAdditionalInfo));
     OsalSleep(5);
     prof_sample_stop_para stopPara = {0};
     EXPECT_EQ(PROFILING_SUCCESS, ProfStopAicpu(&stopPara));
 
     AdprofCallBack adprofCallBack = {ProfStartSuccess, ProfStartSuccess, AdprofExit};
-    MOCKER(halProfSampleRegister)
-        .stubs()
-        .will(returnValue((int)DRV_ERROR_NONE));
-    MOCKER(halProfSampleRegisterEx)
-        .stubs()
-        .will(returnValue((int)DRV_ERROR_NONE));
+    MOCKER(halProfSampleRegister).stubs().will(returnValue((int)DRV_ERROR_NONE));
+    MOCKER(halProfSampleRegisterEx).stubs().will(returnValue((int)DRV_ERROR_NONE));
     EXPECT_EQ(PROFILING_SUCCESS, AdprofStartRegister(adprofCallBack, 0, 123));
     EXPECT_EQ(PROFILING_SUCCESS, ProfStartAdprof(&startPara));
     analysis::dvvp::ProfileFileChunk fileChunk;
@@ -349,13 +313,13 @@ TEST_F(DEVPROF_DRV_STEST, BufLenZero)
     fileChunk.fileName = "test_file";
     fileChunk.extraInfo = "test_info";
     fileChunk.id = "test_id";
-    EXPECT_EQ(PROFILING_SUCCESS, ReportAdprofFileChunk(static_cast<void *>(&fileChunk)));
+    EXPECT_EQ(PROFILING_SUCCESS, ReportAdprofFileChunk(static_cast<void*>(&fileChunk)));
     OsalSleep(1);
     EXPECT_EQ(PROFILING_SUCCESS, ProfStopAdprof(&stopPara));
 }
 
 int32_t g_callbackHandle = 0;
-static int32_t AicpuCallbackFunc(uint32_t type, void *data, uint32_t len)
+static int32_t AicpuCallbackFunc(uint32_t type, void* data, uint32_t len)
 {
     (void)type;
     (void)data;
@@ -370,12 +334,9 @@ TEST_F(DEVPROF_DRV_STEST, DevprofDrvAicpuWithNewApi)
     int32_t ret = AdprofRegisterCallback(10086, &AicpuCallbackFunc);
     ret = AdprofInit(&aicpuStartPara);
     EXPECT_EQ(PROFILING_SUCCESS, ret);
-    aicpuStartPara.profConfig = 2;  // aicpu = on
+    aicpuStartPara.profConfig = 2; // aicpu = on
 
-    MOCKER_CPP(&AicpuReportHdc::Init)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS))
-        .then(returnValue(PROFILING_FAILED));
+    MOCKER_CPP(&AicpuReportHdc::Init).stubs().will(returnValue(PROFILING_SUCCESS)).then(returnValue(PROFILING_FAILED));
     ret = AdprofInit(&aicpuStartPara);
     EXPECT_EQ(PROFILING_SUCCESS, ret);
     // AdprofInit no longer calls CommandHandleLaunch, callbacks not triggered here
@@ -401,10 +362,10 @@ TEST_F(DEVPROF_DRV_STEST, DevprofDrvAicpuWithNewApi)
     memset(additionalInfo.data, 0, MSPROF_ADDTIONAL_INFO_DATA_LENGTH);
     memcpy(additionalInfo.data, "test", additionalInfo.dataLen);
 
-    ret = AdprofReportAdditionalInfo(0, static_cast<void *>(&additionalInfo), sizeof(MsprofAdditionalInfo) - 1);
+    ret = AdprofReportAdditionalInfo(0, static_cast<void*>(&additionalInfo), sizeof(MsprofAdditionalInfo) - 1);
     EXPECT_EQ(PROFILING_FAILED, ret);
 
-    ret = AdprofReportAdditionalInfo(0, static_cast<void *>(&additionalInfo), sizeof(MsprofAdditionalInfo));
+    ret = AdprofReportAdditionalInfo(0, static_cast<void*>(&additionalInfo), sizeof(MsprofAdditionalInfo));
     EXPECT_EQ(PROFILING_SUCCESS, ret);
 
     EXPECT_EQ(PROFILING_SUCCESS, AdprofFinalize());

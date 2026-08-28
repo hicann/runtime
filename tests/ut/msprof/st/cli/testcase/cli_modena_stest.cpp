@@ -37,7 +37,7 @@ protected:
     void SetUp() override
     {
         DlStub();
-        const ::testing::TestInfo *curTest = ::testing::UnitTest::GetInstance()->current_test_info();
+        const ::testing::TestInfo* curTest = ::testing::UnitTest::GetInstance()->current_test_info();
         DataMgr().Init("david", curTest->name());
         optind = 1;
         system(MODENA_MKDIR);
@@ -68,20 +68,20 @@ protected:
 
 TEST_F(CliModenaStest, CliTaskTime)
 {
-    const char *argv[] = {MODENA_OUTPUT_DIR, "--task-time=on"};
+    const char* argv[] = {MODENA_OUTPUT_DIR, "--task-time=on"};
     std::vector<std::string> dataList = {"ffts_profile.data", "stars_soc.data", "ts_track.data"};
     MsprofMgr().SetDeviceCheckList(dataList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliModenaStest, CliBasicAicMetrics)
 {
     const std::vector<std::string> metrics = {
         "PipeUtilization", "Memory", "MemoryUB", "ArithmeticUtilization", "ResourceConflictRatio"};
-    for (const auto &metric : metrics) {
+    for (const auto& metric : metrics) {
         std::string option = "--aic-metrics=" + metric;
-        const char *argv[] = {MODENA_OUTPUT_DIR, option.c_str()};
-        EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+        const char* argv[] = {MODENA_OUTPUT_DIR, option.c_str()};
+        EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
         MsprofMgr().UnInit();
         optind = 1;
     }
@@ -89,25 +89,28 @@ TEST_F(CliModenaStest, CliBasicAicMetrics)
 
 TEST_F(CliModenaStest, CliCustomAicMetrics)
 {
-    const char *customOneEventArgv[] = {MODENA_OUTPUT_DIR, "--aic-metrics=Custom:0x0"};
-    EXPECT_EQ(PROFILING_SUCCESS,
-              MsprofMgr().MsprofStartByAppMode(sizeof(customOneEventArgv) / sizeof(char *), customOneEventArgv));
+    const char* customOneEventArgv[] = {MODENA_OUTPUT_DIR, "--aic-metrics=Custom:0x0"};
+    EXPECT_EQ(
+        PROFILING_SUCCESS,
+        MsprofMgr().MsprofStartByAppMode(sizeof(customOneEventArgv) / sizeof(char*), customOneEventArgv));
 
     MsprofMgr().UnInit();
     optind = 1;
-    const char *customEightEventsArgv[] = {MODENA_OUTPUT_DIR, MODENA_CUSTOM_EIGHT_EVENTS};
-    EXPECT_EQ(PROFILING_SUCCESS,
-              MsprofMgr().MsprofStartByAppMode(sizeof(customEightEventsArgv) / sizeof(char *), customEightEventsArgv));
+    const char* customEightEventsArgv[] = {MODENA_OUTPUT_DIR, MODENA_CUSTOM_EIGHT_EVENTS};
+    EXPECT_EQ(
+        PROFILING_SUCCESS,
+        MsprofMgr().MsprofStartByAppMode(sizeof(customEightEventsArgv) / sizeof(char*), customEightEventsArgv));
 }
 
 TEST_F(CliModenaStest, CliUnsupportedAicMetrics)
 {
-    const char *customNineEventsArgv[] = {MODENA_OUTPUT_DIR, MODENA_CUSTOM_NINE_EVENTS};
-    EXPECT_EQ(PROFILING_FAILED,
-              MsprofMgr().MsprofStartByAppMode(sizeof(customNineEventsArgv) / sizeof(char *), customNineEventsArgv));
+    const char* customNineEventsArgv[] = {MODENA_OUTPUT_DIR, MODENA_CUSTOM_NINE_EVENTS};
+    EXPECT_EQ(
+        PROFILING_FAILED,
+        MsprofMgr().MsprofStartByAppMode(sizeof(customNineEventsArgv) / sizeof(char*), customNineEventsArgv));
 
     MsprofMgr().UnInit();
     optind = 1;
-    const char *l2CacheArgv[] = {MODENA_OUTPUT_DIR, "--aic-metrics=L2Cache"};
-    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartByAppMode(sizeof(l2CacheArgv) / sizeof(char *), l2CacheArgv));
+    const char* l2CacheArgv[] = {MODENA_OUTPUT_DIR, "--aic-metrics=L2Cache"};
+    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartByAppMode(sizeof(l2CacheArgv) / sizeof(char*), l2CacheArgv));
 }

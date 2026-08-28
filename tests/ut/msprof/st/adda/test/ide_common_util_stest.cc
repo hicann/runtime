@@ -16,39 +16,33 @@
 #include "ide_platform_util.h"
 #include "impl_utils.h"
 #include "ide_task_register.h"
-extern "C"{
+extern "C" {
 #include "dsmi_common_interface.h"
 }
 
-using std::vector;
 using std::string;
+using std::vector;
 using namespace Adx;
 using namespace Analysis::Dvvp::Adx;
 
-extern FILE *log_fd;
+extern FILE* log_fd;
 extern struct IdeComponentsFuncs g_ideComponentsFuncs;
 extern vector<mmSockHandle> g_vec_sock;
 extern int g_getpkg_len_stub_flag;
 extern int g_sprintf_s_flag;
 extern int IdeInitSock();
 extern int SetSystemTimeByStr(const std::string date);
-extern bool IdeInsertSock(const std::string &ip, mmSockHandle sock);
+extern bool IdeInsertSock(const std::string& ip, mmSockHandle sock);
 extern string get_current_system_time(void);
-extern int IdeSendFrontData(struct IdeData &pdata, int handler, struct IdeSockHandle handle,
-                            uint32_t perSendSize, long int& len);
-extern int IdeSendLastData(struct IdeData &pdata, int handler, struct IdeSockHandle handle,
-                           uint32_t perSendSize, uint32_t remain);
+extern int IdeSendFrontData(
+    struct IdeData& pdata, int handler, struct IdeSockHandle handle, uint32_t perSendSize, long int& len);
+extern int IdeSendLastData(
+    struct IdeData& pdata, int handler, struct IdeSockHandle handle, uint32_t perSendSize, uint32_t remain);
 
 namespace {
-int InitOk()
-{
-    return IDE_DAEMON_OK;
-}
+int InitOk() { return IDE_DAEMON_OK; }
 
-int InitFailed()
-{
-    return IDE_DAEMON_ERROR;
-}
+int InitFailed() { return IDE_DAEMON_ERROR; }
 
 void ResetIdeComponentsFuncs()
 {
@@ -62,12 +56,11 @@ void ResetIdeComponentsFuncs()
 
 } // namespace
 
-class IDE_DAEMON_COMMON_UTIL_STEST: public testing::Test {
+class IDE_DAEMON_COMMON_UTIL_STEST : public testing::Test {
 protected:
-    virtual void SetUp() {
-        g_getpkg_len_stub_flag = 0;
-    }
-    virtual void TearDown() {
+    virtual void SetUp() { g_getpkg_len_stub_flag = 0; }
+    virtual void TearDown()
+    {
         ResetIdeComponentsFuncs();
         GlobalMockObject::verify();
     }
@@ -80,25 +73,25 @@ TEST_F(IDE_DAEMON_COMMON_UTIL_STEST, IdeGetCompontName)
 
 TEST_F(IDE_DAEMON_COMMON_UTIL_STEST, IdeXmalloc)
 {
-    void *ptr = IdeXmalloc(0);
+    void* ptr = IdeXmalloc(0);
     EXPECT_TRUE(ptr == NULL);
 }
 
 TEST_F(IDE_DAEMON_COMMON_UTIL_STEST, IdeXmalloc_failed)
 {
-    void *ptr = IdeXmalloc(SIZE_MAX);
+    void* ptr = IdeXmalloc(SIZE_MAX);
     EXPECT_EQ(nullptr, ptr);
 }
 
 TEST_F(IDE_DAEMON_COMMON_UTIL_STEST, IdeXmalloc_memset_s_failed)
 {
-    void *ptr = IdeXmalloc(SIZE_MAX);
+    void* ptr = IdeXmalloc(SIZE_MAX);
     EXPECT_EQ(nullptr, ptr);
 }
 
 TEST_F(IDE_DAEMON_COMMON_UTIL_STEST, IdeXfree)
 {
-    void *ptr = nullptr;
+    void* ptr = nullptr;
     IdeXfree(ptr);
     EXPECT_EQ(ptr, nullptr);
 
@@ -111,8 +104,7 @@ TEST_F(IDE_DAEMON_COMMON_UTIL_STEST, IdeReqFree)
 {
     struct tlv_req req;
 
-    MOCKER(IdeXfree)
-        .stubs();
+    MOCKER(IdeXfree).stubs();
 
     IdeReqFree(NULL);
     IdeReqFree(&req);
@@ -140,44 +132,44 @@ TEST_F(IDE_DAEMON_COMMON_UTIL_STEST, IdeRegisterModule)
     ide_funcs.init = hdc_init_mock;
     ide_funcs.destroy = hdc_destroy_mock;
     ide_funcs.sockProcess = NULL;
-    ide_funcs.hdcProcess = NULL; 
+    ide_funcs.hdcProcess = NULL;
     IdeRegisterModule(IDE_COMPONENT_HDC, ide_funcs);
 
     ide_funcs.init = debug_init_mock;
     ide_funcs.destroy = debug_destroy_mock;
     ide_funcs.sockProcess = NULL;
-    ide_funcs.hdcProcess = NULL; 
+    ide_funcs.hdcProcess = NULL;
     IdeRegisterModule(IDE_COMPONENT_DEBUG, ide_funcs);
 
     ide_funcs.init = bbox_init_mock;
     ide_funcs.destroy = bbox_destroy_mock;
     ide_funcs.sockProcess = NULL;
-    ide_funcs.hdcProcess = NULL;     
+    ide_funcs.hdcProcess = NULL;
     IdeRegisterModule(IDE_COMPONENT_BBOX, ide_funcs);
 
     ide_funcs.init = log_init_mock;
     ide_funcs.destroy = log_destroy_mock;
     ide_funcs.sockProcess = NULL;
-    ide_funcs.hdcProcess = NULL;  
+    ide_funcs.hdcProcess = NULL;
     IdeRegisterModule(IDE_COMPONENT_LOG, ide_funcs);
 
     ide_funcs.init = profile_init_mock;
     ide_funcs.destroy = profile_destroy_mock;
     ide_funcs.sockProcess = NULL;
-    ide_funcs.hdcProcess = NULL;   
+    ide_funcs.hdcProcess = NULL;
     IdeRegisterModule(IDE_COMPONENT_PROFILING, ide_funcs);
 
-    EXPECT_EQ((void *)g_ideComponentsFuncs.init[IDE_COMPONENT_HDC], (void *)hdc_init_mock);
-    EXPECT_EQ((void *)g_ideComponentsFuncs.init[IDE_COMPONENT_DEBUG], (void *)debug_init_mock);
-    EXPECT_EQ((void *)g_ideComponentsFuncs.init[IDE_COMPONENT_BBOX], (void *)bbox_init_mock);
-    EXPECT_EQ((void *)g_ideComponentsFuncs.init[IDE_COMPONENT_LOG], (void *)log_init_mock);
-    EXPECT_EQ((void *)g_ideComponentsFuncs.init[IDE_COMPONENT_PROFILING], (void *)profile_init_mock);
+    EXPECT_EQ((void*)g_ideComponentsFuncs.init[IDE_COMPONENT_HDC], (void*)hdc_init_mock);
+    EXPECT_EQ((void*)g_ideComponentsFuncs.init[IDE_COMPONENT_DEBUG], (void*)debug_init_mock);
+    EXPECT_EQ((void*)g_ideComponentsFuncs.init[IDE_COMPONENT_BBOX], (void*)bbox_init_mock);
+    EXPECT_EQ((void*)g_ideComponentsFuncs.init[IDE_COMPONENT_LOG], (void*)log_init_mock);
+    EXPECT_EQ((void*)g_ideComponentsFuncs.init[IDE_COMPONENT_PROFILING], (void*)profile_init_mock);
 
-    EXPECT_EQ((void *)g_ideComponentsFuncs.destroy[IDE_COMPONENT_HDC], (void *)hdc_destroy_mock);
-    EXPECT_EQ((void *)g_ideComponentsFuncs.destroy[IDE_COMPONENT_DEBUG], (void *)debug_destroy_mock);
-    EXPECT_EQ((void *)g_ideComponentsFuncs.destroy[IDE_COMPONENT_BBOX], (void *)bbox_destroy_mock);
-    EXPECT_EQ((void *)g_ideComponentsFuncs.destroy[IDE_COMPONENT_LOG], (void *)log_destroy_mock);
-    EXPECT_EQ((void *)g_ideComponentsFuncs.destroy[IDE_COMPONENT_PROFILING], (void *)profile_destroy_mock);
+    EXPECT_EQ((void*)g_ideComponentsFuncs.destroy[IDE_COMPONENT_HDC], (void*)hdc_destroy_mock);
+    EXPECT_EQ((void*)g_ideComponentsFuncs.destroy[IDE_COMPONENT_DEBUG], (void*)debug_destroy_mock);
+    EXPECT_EQ((void*)g_ideComponentsFuncs.destroy[IDE_COMPONENT_BBOX], (void*)bbox_destroy_mock);
+    EXPECT_EQ((void*)g_ideComponentsFuncs.destroy[IDE_COMPONENT_LOG], (void*)log_destroy_mock);
+    EXPECT_EQ((void*)g_ideComponentsFuncs.destroy[IDE_COMPONENT_PROFILING], (void*)profile_destroy_mock);
 }
 
 TEST_F(IDE_DAEMON_COMMON_UTIL_STEST, IdeComponentsInit)
@@ -246,25 +238,23 @@ TEST_F(IDE_DAEMON_COMMON_UTIL_STEST, IdeGetCompontNameByReq)
 
 TEST_F(IDE_DAEMON_COMMON_UTIL_STEST, IdeXrmalloc)
 {
-    void *ptr = IdeXmalloc(5);
-    void *ret_ptr = NULL;
+    void* ptr = IdeXmalloc(5);
+    void* ret_ptr = NULL;
 
-    //size == 0
+    // size == 0
     ret_ptr = IdeXrmalloc(NULL, 0, 0);
     IdeXfree(ret_ptr);
 
-    //size == 1
+    // size == 1
     ret_ptr = IdeXrmalloc(NULL, 0, 1);
     IdeXfree(ret_ptr);
 
-    //remalloc
+    // remalloc
     ret_ptr = IdeXrmalloc(ptr, 5, 10);
     IdeXfree(ret_ptr);
 
-    //memcpy_s failed
-    MOCKER(memcpy_s)
-        .stubs()
-        .will(returnValue(-1));
+    // memcpy_s failed
+    MOCKER(memcpy_s).stubs().will(returnValue(-1));
     ret_ptr = IdeXrmalloc(ptr, 5, 10);
     EXPECT_TRUE(ret_ptr == NULL);
     IdeXfree(ptr);
@@ -272,14 +262,11 @@ TEST_F(IDE_DAEMON_COMMON_UTIL_STEST, IdeXrmalloc)
 
 TEST_F(IDE_DAEMON_COMMON_UTIL_STEST, IdeRegisterSig)
 {
-    MOCKER(memset_s)
-        .stubs()
-        .will(returnValue(-1))
-        .then(returnValue(0));
+    MOCKER(memset_s).stubs().will(returnValue(-1)).then(returnValue(0));
 
-    //memset_s failed
+    // memset_s failed
     EXPECT_EQ(IdeDaemonSubInit(), IDE_DAEMON_OK);
 
-    //succ
+    // succ
     EXPECT_EQ(IdeDaemonSubInit(), IDE_DAEMON_OK);
 }

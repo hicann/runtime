@@ -29,7 +29,8 @@ protected:
     virtual void TearDown() {}
 };
 
-TEST_F(JSON_PARSER_UTEST, JsonParserInit) {
+TEST_F(JSON_PARSER_UTEST, JsonParserInit)
+{
     uint32_t moduleId = ASCENDCL;
     uint32_t reporterId1 = API_EVENT;
     uint32_t reporterId2 = COMPACT;
@@ -50,7 +51,8 @@ TEST_F(JSON_PARSER_UTEST, JsonParserInit) {
     JsonParser::instance()->UnInit();
 }
 
-TEST_F(JSON_PARSER_UTEST, JsonParserInit2) {
+TEST_F(JSON_PARSER_UTEST, JsonParserInit2)
+{
     uint32_t moduleId = GE;
     uint32_t channelId = AI_DRV_CHANNEL::PROF_CHANNEL_DDR;
 
@@ -59,7 +61,8 @@ TEST_F(JSON_PARSER_UTEST, JsonParserInit2) {
     EXPECT_EQ(0, JsonParser::instance()->GetJsonChannelPeroid(channelId));
 }
 
-TEST_F(JSON_PARSER_UTEST, JsonParserInit3) {
+TEST_F(JSON_PARSER_UTEST, JsonParserInit3)
+{
     uint32_t moduleId = RUNTIME;
     uint32_t channelId = AI_DRV_CHANNEL::PROF_CHANNEL_HWTS_LOG;
 
@@ -70,14 +73,8 @@ TEST_F(JSON_PARSER_UTEST, JsonParserInit3) {
 
 class JSON_PARSER_JSON_NANO_UTEST : public testing::Test {
 protected:
-    virtual void SetUp()
-    {
-        JsonParser::instance()->UnInit();
-    }
-    virtual void TearDown()
-    {
-        system("rm -rf ./prof_nano_test.json");
-    }
+    virtual void SetUp() { JsonParser::instance()->UnInit(); }
+    virtual void TearDown() { system("rm -rf ./prof_nano_test.json"); }
     void JsonGenerate(std::string str)
     {
         std::ofstream jsonFile("./prof_nano_test.json");
@@ -88,9 +85,10 @@ protected:
     }
 };
 
-TEST_F(JSON_PARSER_JSON_NANO_UTEST, JsonParserInitWithEmptyJson) {
+TEST_F(JSON_PARSER_JSON_NANO_UTEST, JsonParserInitWithEmptyJson)
+{
     std::string str = "{}";
-    JsonGenerate(str); 
+    JsonGenerate(str);
     JsonParser::instance()->Init("./prof_nano_test.json");
     EXPECT_EQ(0, JsonParser::instance()->channelParams_.size());
     EXPECT_EQ(0, JsonParser::instance()->moduleParams_.size());
@@ -137,7 +135,7 @@ const std::string JsonParserCannStr = "{\n\
 
 TEST_F(JSON_PARSER_JSON_NANO_UTEST, JsonParserInitWithCann)
 {
-    JsonGenerate(JsonParserCannStr); 
+    JsonGenerate(JsonParserCannStr);
     JsonParser::instance()->Init("./prof_nano_test.json");
     EXPECT_EQ(0, JsonParser::instance()->channelParams_.size());
     EXPECT_EQ(3, JsonParser::instance()->moduleParams_.size());
@@ -196,7 +194,7 @@ const std::string JsonParserDeviceStr = "{\n\
 
 TEST_F(JSON_PARSER_JSON_NANO_UTEST, JsonParserInitWithDevice)
 {
-    JsonGenerate(JsonParserDeviceStr); 
+    JsonGenerate(JsonParserDeviceStr);
     JsonParser::instance()->Init("./prof_nano_test.json");
     EXPECT_EQ(3, JsonParser::instance()->channelParams_.size());
     EXPECT_EQ(0, JsonParser::instance()->moduleParams_.size());
@@ -209,17 +207,27 @@ TEST_F(JSON_PARSER_JSON_NANO_UTEST, JsonParserInitWithDevice)
     EXPECT_EQ(0, JsonParser::instance()->GetJsonChannelPeroid((uint32_t)AI_DRV_CHANNEL::PROF_CHANNEL_DVPP));
     EXPECT_EQ(0, JsonParser::instance()->GetJsonChannelThreshold((uint32_t)AI_DRV_CHANNEL::PROF_CHANNEL_DVPP));
 
-    EXPECT_EQ(false, JsonParser::instance()->GetJsonChannelReporterSwitch((uint32_t)AI_DRV_CHANNEL::PROF_CHANNEL_HWTS_LOG));
+    EXPECT_EQ(
+        false, JsonParser::instance()->GetJsonChannelReporterSwitch((uint32_t)AI_DRV_CHANNEL::PROF_CHANNEL_HWTS_LOG));
     EXPECT_EQ(false, JsonParser::instance()->GetJsonChannelProfSwitch((uint32_t)AI_DRV_CHANNEL::PROF_CHANNEL_HWTS_LOG));
-    EXPECT_EQ(0, JsonParser::instance()->GetJsonChannelReportBufferLen((uint32_t)AI_DRV_CHANNEL::PROF_CHANNEL_HWTS_LOG));
-    EXPECT_EQ(10, JsonParser::instance()->GetJsonChannelDriverBufferLen((uint32_t)AI_DRV_CHANNEL::PROF_CHANNEL_HWTS_LOG));
+    EXPECT_EQ(
+        0, JsonParser::instance()->GetJsonChannelReportBufferLen((uint32_t)AI_DRV_CHANNEL::PROF_CHANNEL_HWTS_LOG));
+    EXPECT_EQ(
+        10, JsonParser::instance()->GetJsonChannelDriverBufferLen((uint32_t)AI_DRV_CHANNEL::PROF_CHANNEL_HWTS_LOG));
     EXPECT_EQ(0, JsonParser::instance()->GetJsonChannelPeroid((uint32_t)AI_DRV_CHANNEL::PROF_CHANNEL_HWTS_LOG));
     EXPECT_EQ(0, JsonParser::instance()->GetJsonChannelThreshold((uint32_t)AI_DRV_CHANNEL::PROF_CHANNEL_HWTS_LOG));
 
-    EXPECT_EQ(true, JsonParser::instance()->GetJsonChannelReporterSwitch((uint32_t)AI_DRV_CHANNEL::PROF_CHANNEL_AIV_HWTS_LOG));
-    EXPECT_EQ(true, JsonParser::instance()->GetJsonChannelProfSwitch((uint32_t)AI_DRV_CHANNEL::PROF_CHANNEL_AIV_HWTS_LOG));
-    EXPECT_EQ(2097152, JsonParser::instance()->GetJsonChannelReportBufferLen((uint32_t)AI_DRV_CHANNEL::PROF_CHANNEL_AIV_HWTS_LOG));
-    EXPECT_EQ(100, JsonParser::instance()->GetJsonChannelDriverBufferLen((uint32_t)AI_DRV_CHANNEL::PROF_CHANNEL_AIV_HWTS_LOG));
+    EXPECT_EQ(
+        true,
+        JsonParser::instance()->GetJsonChannelReporterSwitch((uint32_t)AI_DRV_CHANNEL::PROF_CHANNEL_AIV_HWTS_LOG));
+    EXPECT_EQ(
+        true, JsonParser::instance()->GetJsonChannelProfSwitch((uint32_t)AI_DRV_CHANNEL::PROF_CHANNEL_AIV_HWTS_LOG));
+    EXPECT_EQ(
+        2097152,
+        JsonParser::instance()->GetJsonChannelReportBufferLen((uint32_t)AI_DRV_CHANNEL::PROF_CHANNEL_AIV_HWTS_LOG));
+    EXPECT_EQ(
+        100,
+        JsonParser::instance()->GetJsonChannelDriverBufferLen((uint32_t)AI_DRV_CHANNEL::PROF_CHANNEL_AIV_HWTS_LOG));
     EXPECT_EQ(20, JsonParser::instance()->GetJsonChannelPeroid((uint32_t)AI_DRV_CHANNEL::PROF_CHANNEL_AIV_HWTS_LOG));
     EXPECT_EQ(20, JsonParser::instance()->GetJsonChannelThreshold((uint32_t)AI_DRV_CHANNEL::PROF_CHANNEL_AIV_HWTS_LOG));
 }

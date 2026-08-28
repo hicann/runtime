@@ -13,16 +13,13 @@
 #include <unistd.h>
 
 const std::map<int, std::string> LOG_LEVEL_INFO = {
-    {DLOG_DEBUG, "DEBUG"},
-    {DLOG_INFO,  "INFO"},
-    {DLOG_WARN,  "WARING"},
-    {DLOG_ERROR, "ERROR"},
-    {DLOG_EVENT, "EVENT"},
+    {DLOG_DEBUG, "DEBUG"}, {DLOG_INFO, "INFO"}, {DLOG_WARN, "WARING"}, {DLOG_ERROR, "ERROR"}, {DLOG_EVENT, "EVENT"},
 };
 
 int g_log_level = DLOG_INFO;
 
-void DlogErrorInner(int moduleId, const char *format, ...) {
+void DlogErrorInner(int moduleId, const char* format, ...)
+{
     (void)moduleId;
     va_list args;
 
@@ -34,7 +31,8 @@ void DlogErrorInner(int moduleId, const char *format, ...) {
     va_end(args);
 }
 
-void DlogInfoInner(int moduleId, const char *format, ...) {
+void DlogInfoInner(int moduleId, const char* format, ...)
+{
     (void)moduleId;
     va_list args;
 
@@ -46,7 +44,8 @@ void DlogInfoInner(int moduleId, const char *format, ...) {
     va_end(args);
 }
 
-void DlogWarnInner(int moduleId, const char *format, ...) {
+void DlogWarnInner(int moduleId, const char* format, ...)
+{
     (void)moduleId;
     va_list args;
 
@@ -58,7 +57,8 @@ void DlogWarnInner(int moduleId, const char *format, ...) {
     va_end(args);
 }
 
-void DlogDebugInner(int moduleId, const char *format, ...) {
+void DlogDebugInner(int moduleId, const char* format, ...)
+{
     (void)moduleId;
     va_list args;
 
@@ -70,12 +70,12 @@ void DlogDebugInner(int moduleId, const char *format, ...) {
     va_end(args);
 }
 
-void DlogRecord(int module_id, int level, const char *fmt, ...){
+void DlogRecord(int module_id, int level, const char* fmt, ...)
+{
     (void)module_id;
     auto iter = LOG_LEVEL_INFO.find(level);
     std::string levelStr;
-    if (iter != LOG_LEVEL_INFO.end())
-    {
+    if (iter != LOG_LEVEL_INFO.end()) {
         levelStr = iter->second;
     }
 
@@ -87,7 +87,8 @@ void DlogRecord(int module_id, int level, const char *fmt, ...){
     va_end(args);
 }
 
-void ide_log(int priority, const char *format, ...) {
+void ide_log(int priority, const char* format, ...)
+{
     (void)priority;
     va_list args;
 
@@ -99,14 +100,14 @@ void ide_log(int priority, const char *format, ...) {
     va_end(args);
 }
 
-void RecordLog(int level, char *buffer)
+void RecordLog(int level, char* buffer)
 {
     (void)level;
     (void)buffer;
     return;
 }
 
-void DlogInnerForC(int moduleId, int level, const char *fmt, ...)
+void DlogInnerForC(int moduleId, int level, const char* fmt, ...)
 {
     (void)moduleId;
     va_list args;
@@ -118,17 +119,15 @@ void DlogInnerForC(int moduleId, int level, const char *fmt, ...)
     auto iter = LOG_LEVEL_INFO.find(level);
     std::string levelStr;
 
-    if(iter != LOG_LEVEL_INFO.end())
-    {
+    if (iter != LOG_LEVEL_INFO.end()) {
         levelStr = iter->second;
     }
     RecordLog(level, buffer);
     printf("[%s][pid:%d]%s", levelStr.c_str(), getpid(), buffer);
     va_end(args);
-
 }
 
-void DlogRecordForC(int moduleId, int level, const char *fmt, ...)
+void DlogRecordForC(int moduleId, int level, const char* fmt, ...)
 {
     (void)moduleId;
     va_list args;
@@ -140,8 +139,7 @@ void DlogRecordForC(int moduleId, int level, const char *fmt, ...)
     auto iter = LOG_LEVEL_INFO.find(level);
     std::string levelStr;
 
-    if(iter != LOG_LEVEL_INFO.end())
-    {
+    if (iter != LOG_LEVEL_INFO.end()) {
         levelStr = iter->second;
     }
     RecordLog(level, buffer);
@@ -149,9 +147,7 @@ void DlogRecordForC(int moduleId, int level, const char *fmt, ...)
     va_end(args);
 }
 
-void DlogFlush(void)
-{
-}
+void DlogFlush(void) {}
 
 int CheckLogLevelForC(int moduleId, int level)
 {

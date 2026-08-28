@@ -13,9 +13,9 @@
 
 #include "ascend_hal.h"
 #include "ascend_inpackage_hal.h"
-extern "C" drvError_t halGetDeviceInfoByBuff(uint32_t devId,
-    int32_t moduleType, int32_t infoType, void *value, int32_t *len);
-extern "C" drvError_t drvGetDeviceSplitMode(unsigned int dev_id, unsigned int *mode);
+extern "C" drvError_t halGetDeviceInfoByBuff(
+    uint32_t devId, int32_t moduleType, int32_t infoType, void* value, int32_t* len);
+extern "C" drvError_t drvGetDeviceSplitMode(unsigned int dev_id, unsigned int* mode);
 
-extern "C" int halProfDataFlush(unsigned int deviceId, unsigned int channelId, unsigned int *bufSize);
+extern "C" int halProfDataFlush(unsigned int deviceId, unsigned int channelId, unsigned int* bufSize);
 #endif

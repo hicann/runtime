@@ -26,15 +26,10 @@
 #include "cstl/cstl_public.h"
 #include "cstl/cstl_list.h"
 
-class ThreadPoolUtest: public testing::Test {
+class ThreadPoolUtest : public testing::Test {
 protected:
-    virtual void SetUp()
-    {
-    }
-    virtual void TearDown()
-    {
-        GlobalMockObject::verify();
-    }
+    virtual void SetUp() {}
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 OsalVoidPtr taskFunction(OsalVoidPtr arg)
@@ -50,13 +45,12 @@ TEST_F(ThreadPoolUtest, ThreadPoolBase)
     EXPECT_EQ(reti, PROFILING_SUCCESS);
     int32_t* num = (int32_t*)malloc(sizeof(int32_t) * 20);
     for (int32_t i = 0; i < 20; ++i) {
-
         if (i < 10) {
             int32_t rete = ProfThreadPoolExpand(1);
             EXPECT_EQ(rete, PROFILING_SUCCESS);
         }
 
-        if (i%2 == 0) {
+        if (i % 2 == 0) {
             ThreadTask task = {taskFunction, (OsalVoidPtr)&num[i]};
             int32_t ret = ProfThreadPoolDispatch(&task, 1);
             EXPECT_EQ(ret, PROFILING_SUCCESS);
@@ -74,9 +68,7 @@ TEST_F(ThreadPoolUtest, ThreadPoolBase)
 
 TEST_F(ThreadPoolUtest, ThreadPoolForChannelManager)
 {
-    MOCKER(PlatformGetDevNum)
-        .stubs()
-        .will(returnValue(uint32_t(1)));
+    MOCKER(PlatformGetDevNum).stubs().will(returnValue(uint32_t(1)));
     int reti = ProfThreadPoolInit(1000, 10, 20);
     EXPECT_EQ(reti, PROFILING_SUCCESS);
 
@@ -98,9 +90,7 @@ TEST_F(ThreadPoolUtest, ThreadPoolForChannelManager)
 TEST_F(ThreadPoolUtest, ThreadPoolInitFailed)
 {
     GlobalMockObject::verify();
-    MOCKER(memset_s)
-        .stubs()
-        .will(returnValue(-1));
+    MOCKER(memset_s).stubs().will(returnValue(-1));
 
     int ret = ProfThreadPoolInit(1000, 10, 20);
     EXPECT_EQ(ret, PROFILING_FAILED);
@@ -120,7 +110,7 @@ TEST_F(ThreadPoolUtest, ThreadPoolDispatchBlock)
 
     int32_t* num = (int32_t*)malloc(sizeof(int32_t) * 20);
     for (int32_t i = 0; i < 20; ++i) {
-        if (i%2 == 0) {
+        if (i % 2 == 0) {
             ThreadTask task = {taskFunction, (OsalVoidPtr)&num[i]};
             int32_t retf = ProfThreadPoolDispatch(&task, 1);
             EXPECT_EQ(retf, PROFILING_SUCCESS);
@@ -165,10 +155,7 @@ TEST_F(ThreadPoolUtest, ThreadPoolExpandFailed)
     GlobalMockObject::verify();
     ret = ProfThreadPoolInit(10, 2, 10);
     EXPECT_EQ(ret, PROFILING_SUCCESS);
-    MOCKER(OsalCreateThread)
-        .stubs()
-        .will(returnValue(OSAL_EN_INVALID_PARAM))
-        .then(returnValue(OSAL_EN_ERROR));
+    MOCKER(OsalCreateThread).stubs().will(returnValue(OSAL_EN_INVALID_PARAM)).then(returnValue(OSAL_EN_ERROR));
     ret = ProfThreadPoolExpand(1);
     EXPECT_EQ(ret, PROFILING_FAILED);
     ret = ProfThreadPoolExpand(1);
@@ -178,9 +165,7 @@ TEST_F(ThreadPoolUtest, ThreadPoolExpandFailed)
 
 TEST_F(ThreadPoolUtest, ChannelManagerBasic)
 {
-    MOCKER(PlatformGetDevNum)
-        .stubs()
-        .will(returnValue(uint32_t(1)));
+    MOCKER(PlatformGetDevNum).stubs().will(returnValue(uint32_t(1)));
     int32_t ret = ProfThreadPoolInit(10, 0, 20);
     EXPECT_EQ(ret, PROFILING_SUCCESS);
     ret = ChannelMgrInitialize(0);
@@ -190,13 +175,8 @@ TEST_F(ThreadPoolUtest, ChannelManagerBasic)
     ret = ChannelMgrFinalize();
     EXPECT_EQ(ret, PROFILING_SUCCESS);
 
-    MOCKER(ProfThreadPoolExpand)
-        .stubs()
-        .will(returnValue(PROFILING_FAILED))
-        .then(returnValue(PROFILING_SUCCESS));
-    MOCKER(ProfThreadPoolDispatch)
-        .stubs()
-        .will(returnValue(PROFILING_FAILED));
+    MOCKER(ProfThreadPoolExpand).stubs().will(returnValue(PROFILING_FAILED)).then(returnValue(PROFILING_SUCCESS));
+    MOCKER(ProfThreadPoolDispatch).stubs().will(returnValue(PROFILING_FAILED));
     ret = ChannelMgrInitialize(0);
     EXPECT_EQ(ret, PROFILING_FAILED);
     ret = ChannelMgrFinalize();
@@ -213,11 +193,9 @@ TEST_F(ThreadPoolUtest, ChannelManagerBasic)
 TEST_F(ThreadPoolUtest, ChannelMgrFlushUnInit)
 {
     GlobalMockObject::verify();
-    MOCKER(PlatformGetDevNum)
-        .stubs()
-        .will(returnValue(uint32_t(1)));
+    MOCKER(PlatformGetDevNum).stubs().will(returnValue(uint32_t(1)));
     int32_t ret = ProfThreadPoolInit(10, 0, 20);
-    ret =ChannelMgrInitialize(0);
+    ret = ChannelMgrInitialize(0);
     EXPECT_EQ(GetChannelNum(0), CHANNEL_NUM);
     EXPECT_EQ(GetChannelIdByIndex(0, 0), 0);
     ChannelMgrFinalize();
@@ -226,9 +204,7 @@ TEST_F(ThreadPoolUtest, ChannelMgrFlushUnInit)
 
 TEST_F(ThreadPoolUtest, ChannelReadBasic)
 {
-    MOCKER(PlatformGetDevNum)
-        .stubs()
-        .will(returnValue(uint32_t(1)));
+    MOCKER(PlatformGetDevNum).stubs().will(returnValue(uint32_t(1)));
     ChannelReader* reader = (ChannelReader*)malloc(sizeof(ChannelReader));
     memset_s(reader, sizeof(ChannelReader), 0, sizeof(ChannelReader));
     ChannelMgChannelRead(NULL);
@@ -241,10 +217,7 @@ TEST_F(ThreadPoolUtest, ChannelReadBasic)
     ChannelMgChannelRead(reader);
     EXPECT_EQ(0, reader->dispatchCount);
 
-    MOCKER(HalProfChannelRead)
-        .stubs()
-        .will(returnValue(1024 * 1024 * 1))
-        .then(returnValue(0));
+    MOCKER(HalProfChannelRead).stubs().will(returnValue(1024 * 1024 * 1)).then(returnValue(0));
     reader->quit = 0;
     reader->dispatchCount = 1;
     ChannelMgChannelRead(reader);
@@ -263,47 +236,33 @@ TEST_F(ThreadPoolUtest, ChannelManagerBasicFailed)
     EXPECT_EQ(ret, PROFILING_SUCCESS);
 
     GlobalMockObject::verify();
-    MOCKER(PlatformGetDevNum)
-        .stubs()
-        .will(returnValue(uint32_t(0)));
+    MOCKER(PlatformGetDevNum).stubs().will(returnValue(uint32_t(0)));
     ret = ChannelMgrInitialize(0);
     EXPECT_EQ(ret, PROFILING_FAILED);
     ChannelMgrFinalize();
 
     GlobalMockObject::verify();
-    MOCKER(PlatformGetDevNum)
-        .stubs()
-        .will(returnValue(uint32_t(1)));
-    MOCKER(CstlListInit)
-        .stubs()
-        .will(returnValue(CSTL_ERR));
+    MOCKER(PlatformGetDevNum).stubs().will(returnValue(uint32_t(1)));
+    MOCKER(CstlListInit).stubs().will(returnValue(CSTL_ERR));
     ret = ChannelMgrInitialize(0);
     EXPECT_EQ(ret, PROFILING_FAILED);
     ChannelMgrFinalize();
 
     GlobalMockObject::verify();
-    MOCKER(PlatformGetDevNum)
-        .stubs()
-        .will(returnValue(uint32_t(1)));
-    MOCKER(HalProfGetChannelList)
-        .stubs()
-        .will(returnValue(PROFILING_FAILED));
+    MOCKER(PlatformGetDevNum).stubs().will(returnValue(uint32_t(1)));
+    MOCKER(HalProfGetChannelList).stubs().will(returnValue(PROFILING_FAILED));
     ret = ChannelMgrInitialize(0);
     EXPECT_EQ(ret, PROFILING_FAILED);
     ChannelMgrFinalize();
 
     GlobalMockObject::verify();
-    MOCKER(ProfThreadPoolExpand)
-        .stubs()
-        .will(returnValue(PROFILING_FAILED));
+    MOCKER(ProfThreadPoolExpand).stubs().will(returnValue(PROFILING_FAILED));
     ret = ChannelMgrInitialize(0);
     EXPECT_EQ(ret, PROFILING_FAILED);
     ChannelMgrFinalize();
 
     GlobalMockObject::verify();
-    MOCKER(ProfThreadPoolDispatch)
-        .stubs()
-        .will(returnValue(PROFILING_FAILED));
+    MOCKER(ProfThreadPoolDispatch).stubs().will(returnValue(PROFILING_FAILED));
     ret = ChannelMgrInitialize(0);
     EXPECT_EQ(ret, PROFILING_FAILED);
     ChannelMgrFinalize();
@@ -311,34 +270,27 @@ TEST_F(ThreadPoolUtest, ChannelManagerBasicFailed)
     ProfThreadPoolFinalize();
 }
 
-void* MallocStub(int32_t size)
-{
-    return malloc(size);
-}
+void* MallocStub(int32_t size) { return malloc(size); }
 int32_t g_mallocSuccessCnt = 0;
 void* MallocTest(int32_t size)
 {
     void* ret = nullptr;
     if (g_mallocSuccessCnt > 0) {
         ret = MallocStub(size);
-    } 
+    }
     g_mallocSuccessCnt--;
     return ret;
 }
 
 TEST_F(ThreadPoolUtest, ChannelReadMallocFailed)
 {
-    MOCKER(PlatformGetDevNum)
-        .stubs()
-        .will(returnValue(uint32_t(1)));
+    MOCKER(PlatformGetDevNum).stubs().will(returnValue(uint32_t(1)));
     int32_t ret = ProfThreadPoolInit(10, 0, 50);
     EXPECT_EQ(ret, PROFILING_SUCCESS);
     ret = ChannelMgrInitialize(0);
     EXPECT_EQ(ret, PROFILING_SUCCESS);
 
-    MOCKER(OsalMalloc)
-        .stubs()
-        .will(invoke(MallocTest));
+    MOCKER(OsalMalloc).stubs().will(invoke(MallocTest));
     int32_t successCnt = 2;
     g_mallocSuccessCnt = successCnt;
     EXPECT_EQ(PROFILING_FAILED, ChannelMgrCreateReader(0, 150));
@@ -362,9 +314,7 @@ TEST_F(ThreadPoolUtest, ChannelReadMallocFailed)
 TEST_F(ThreadPoolUtest, UploadChannelDataMallocFailed)
 {
     ChannelReader reader = {0, 0, 0, 0, NULL, 0, 1, 0, 0, 0};
-    MOCKER(OsalMalloc)
-        .stubs()
-        .will(invoke(MallocTest));
+    MOCKER(OsalMalloc).stubs().will(invoke(MallocTest));
     int32_t successCnt = 1;
     g_mallocSuccessCnt = successCnt--;
     // reader buffer failed

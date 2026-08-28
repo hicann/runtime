@@ -30,15 +30,14 @@ using namespace analysis::dvvp::common::utils;
 
 class MSPROF_MANAGER_STEST : public testing::Test {
 protected:
-  virtual void SetUp() {}
-  virtual void TearDown() {}
+    virtual void SetUp() {}
+    virtual void TearDown() {}
 };
 
-
-TEST_F(MSPROF_MANAGER_STEST, Init) { 
+TEST_F(MSPROF_MANAGER_STEST, Init)
+{
     GlobalMockObject::verify();
-    std::shared_ptr<analysis::dvvp::message::ProfileParams> params(
-    new analysis::dvvp::message::ProfileParams);   
+    std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams);
     EXPECT_EQ(PROFILING_FAILED, MsprofManager::instance()->Init(nullptr));
 
     EXPECT_EQ(PROFILING_FAILED, MsprofManager::instance()->Init(params));
@@ -56,7 +55,8 @@ TEST_F(MSPROF_MANAGER_STEST, Init) {
     params->usedParams = {ARGS_SYS_DEVICES, ARGS_OUTPUT, ARGS_HOST_SYS, ARGS_HOST_SYS_PID};
     EXPECT_EQ(PROFILING_FAILED, MsprofManager::instance()->Init(params));
     params->profiling_period = 100;
-    params->usedParams = {ARGS_PYTHON_PATH, ARGS_SYS_DEVICES, ARGS_OUTPUT, ARGS_HOST_SYS, ARGS_HOST_SYS_PID, ARGS_SYS_PERIOD};
+    params->usedParams = {ARGS_PYTHON_PATH, ARGS_SYS_DEVICES,  ARGS_OUTPUT,
+                          ARGS_HOST_SYS,    ARGS_HOST_SYS_PID, ARGS_SYS_PERIOD};
     EXPECT_EQ(PROFILING_SUCCESS, MsprofManager::instance()->Init(params));
     EXPECT_EQ("system", MsprofManager::instance()->rMode_->modeName_);
 
@@ -95,7 +95,8 @@ TEST_F(MSPROF_MANAGER_STEST, Init) {
     params->exportIterationId = 1;
     params->exportModelId = 1;
     params->exportSummaryFormat = "json";
-    params->usedParams = {ARGS_EXPORT, ARGS_OUTPUT, ARGS_SUMMARY_FORMAT, ARGS_EXPORT_ITERATION_ID, ARGS_EXPORT_MODEL_ID};
+    params->usedParams = {
+        ARGS_EXPORT, ARGS_OUTPUT, ARGS_SUMMARY_FORMAT, ARGS_EXPORT_ITERATION_ID, ARGS_EXPORT_MODEL_ID};
     EXPECT_EQ(PROFILING_SUCCESS, MsprofManager::instance()->Init(params));
 
     params->devices = "";
@@ -111,12 +112,11 @@ TEST_F(MSPROF_MANAGER_STEST, Init) {
     EXPECT_EQ(PROFILING_SUCCESS, MsprofManager::instance()->Init(params));
 }
 
-TEST_F(MSPROF_MANAGER_STEST, GetTask) {
+TEST_F(MSPROF_MANAGER_STEST, GetTask)
+{
     GlobalMockObject::verify();
-    std::shared_ptr<analysis::dvvp::message::ProfileParams> params(
-    new analysis::dvvp::message::ProfileParams);
-    std::shared_ptr<Collector::Dvvp::Msprofbin::AppMode> rMode(
-    new Collector::Dvvp::Msprofbin::AppMode("app", params));
+    std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams);
+    std::shared_ptr<Collector::Dvvp::Msprofbin::AppMode> rMode(new Collector::Dvvp::Msprofbin::AppMode("app", params));
     auto msprofManager = MsprofManager::instance();
     msprofManager->UnInit();
     EXPECT_EQ(nullptr, msprofManager->GetTask("1"));
@@ -126,12 +126,11 @@ TEST_F(MSPROF_MANAGER_STEST, GetTask) {
     EXPECT_EQ(info, msprofManager->GetTask("1"));
 }
 
-TEST_F(MSPROF_MANAGER_STEST, NotifyStop) {
+TEST_F(MSPROF_MANAGER_STEST, NotifyStop)
+{
     GlobalMockObject::verify();
-    std::shared_ptr<analysis::dvvp::message::ProfileParams> params(
-    new analysis::dvvp::message::ProfileParams);
-    std::shared_ptr<Collector::Dvvp::Msprofbin::AppMode> rMode(
-    new Collector::Dvvp::Msprofbin::AppMode("app", params));
+    std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams);
+    std::shared_ptr<Collector::Dvvp::Msprofbin::AppMode> rMode(new Collector::Dvvp::Msprofbin::AppMode("app", params));
     auto msprofManager = MsprofManager::instance();
     msprofManager->UnInit();
     msprofManager->rMode_ = rMode;
@@ -139,12 +138,12 @@ TEST_F(MSPROF_MANAGER_STEST, NotifyStop) {
     EXPECT_EQ(true, msprofManager->rMode_->isQuit_);
 }
 
-TEST_F(MSPROF_MANAGER_STEST, MsProcessCmd) {
+TEST_F(MSPROF_MANAGER_STEST, MsProcessCmd)
+{
     GlobalMockObject::verify();
-    std::shared_ptr<analysis::dvvp::message::ProfileParams> params(
-    new analysis::dvvp::message::ProfileParams);
+    std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams);
     std::shared_ptr<Collector::Dvvp::Msprofbin::AppMode> appMode(
-    new Collector::Dvvp::Msprofbin::AppMode("app", params));
+        new Collector::Dvvp::Msprofbin::AppMode("app", params));
 
     std::string dirName2 = "/tmp";
     Utils::CreateDir(dirName2 + "/profiler_tool");
@@ -162,24 +161,22 @@ TEST_F(MSPROF_MANAGER_STEST, MsProcessCmd) {
     std::string result_dir = "/tmp/msprof_manager_stest";
     Utils::CreateDir(result_dir);
     out.open(result_dir + '/' + "1_" + OUTPUT_RECORD);
-    out << "PROF_000001_20211211194055303_DANEQIJKACHMDGNB" << std::endl << "JOB44444444444" <<  std::endl;
+    out << "PROF_000001_20211211194055303_DANEQIJKACHMDGNB" << std::endl << "JOB44444444444" << std::endl;
     out.close();
     std::cout << "Create fake record log" << std::endl;
-    
+
     std::ofstream test_file("/tmp/msprof_manager_stest_main");
     test_file << "echo test" << std::endl;
     test_file.close();
-    chmod("/tmp/msprof_manager_stest_main",
-        S_IRUSR|S_IWUSR|S_IXUSR|S_IRGRP|S_IWGRP|S_IXGRP|S_IROTH|S_IWOTH|S_IXOTH);
+    chmod(
+        "/tmp/msprof_manager_stest_main",
+        S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IWGRP | S_IXGRP | S_IROTH | S_IWOTH | S_IXOTH);
 
-    
     auto msprofManager = MsprofManager::instance();
     msprofManager->UnInit();
     EXPECT_EQ(PROFILING_FAILED, msprofManager->MsProcessCmd());
 
-    MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::RunSocSide)
-        .stubs()
-        .will(returnValue(false));
+    MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::RunSocSide).stubs().will(returnValue(false));
 
     params->app = "msprof_manager_stest_main";
     params->result_dir = result_dir;
@@ -193,12 +190,12 @@ TEST_F(MSPROF_MANAGER_STEST, MsProcessCmd) {
 
     Utils::CreateDir(result_dir);
     out.open(result_dir + '/' + "1_" + OUTPUT_RECORD);
-    out << "PROF_000001_20211211194055303_DANEQIJKACHMDGNB" << std::endl << "JOB44444444444" <<  std::endl;
+    out << "PROF_000001_20211211194055303_DANEQIJKACHMDGNB" << std::endl << "JOB44444444444" << std::endl;
     out.close();
     std::cout << "Create fake record log" << std::endl;
 
     std::shared_ptr<Collector::Dvvp::Msprofbin::SystemMode> systemMode(
-    new Collector::Dvvp::Msprofbin::SystemMode("system", params));
+        new Collector::Dvvp::Msprofbin::SystemMode("system", params));
     msprofManager->UnInit();
     EXPECT_EQ(PROFILING_FAILED, msprofManager->MsProcessCmd());
     params->app = "";
@@ -231,7 +228,7 @@ TEST_F(MSPROF_MANAGER_STEST, MsProcessCmd) {
 
     Utils::CreateDir(result_dir);
     std::shared_ptr<Collector::Dvvp::Msprofbin::ParseMode> parseMode(
-    new Collector::Dvvp::Msprofbin::ParseMode("parse", params));
+        new Collector::Dvvp::Msprofbin::ParseMode("parse", params));
     msprofManager->UnInit();
     EXPECT_EQ(PROFILING_FAILED, msprofManager->MsProcessCmd());
     params->app = "";
@@ -243,7 +240,7 @@ TEST_F(MSPROF_MANAGER_STEST, MsProcessCmd) {
     EXPECT_EQ(PROFILING_SUCCESS, msprofManager->MsProcessCmd());
 
     std::shared_ptr<Collector::Dvvp::Msprofbin::QueryMode> queryMode(
-    new Collector::Dvvp::Msprofbin::QueryMode("query", params));
+        new Collector::Dvvp::Msprofbin::QueryMode("query", params));
     msprofManager->UnInit();
     EXPECT_EQ(PROFILING_FAILED, msprofManager->MsProcessCmd());
     msprofManager->params_ = params;
@@ -251,7 +248,7 @@ TEST_F(MSPROF_MANAGER_STEST, MsProcessCmd) {
     EXPECT_EQ(PROFILING_SUCCESS, msprofManager->MsProcessCmd());
 
     std::shared_ptr<Collector::Dvvp::Msprofbin::ExportMode> exportMode(
-    new Collector::Dvvp::Msprofbin::ExportMode("export", params));
+        new Collector::Dvvp::Msprofbin::ExportMode("export", params));
     msprofManager->UnInit();
     EXPECT_EQ(PROFILING_FAILED, msprofManager->MsProcessCmd());
     msprofManager->params_ = params;

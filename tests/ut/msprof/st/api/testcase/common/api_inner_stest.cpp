@@ -29,8 +29,7 @@ using namespace analysis::dvvp::common::error;
 using namespace Cann::Dvvp::Test;
 using namespace ge;
 
-class ApiTest: public testing::Test {
-
+class ApiTest : public testing::Test {
 protected:
     int32_t deviceNum;
     virtual void SetUp()
@@ -38,11 +37,12 @@ protected:
         const ::testing::TestInfo* curTest = ::testing::UnitTest::GetInstance()->current_test_info();
         DataMgr().Init(SOC_TYPE, curTest->name());
         deviceNum = 2;
-        EXPECT_EQ(deviceNum, SimulatorMgr().CreateDeviceSimulator(deviceNum, static_cast<StPlatformType>(PLATFORM_TYPE)));
+        EXPECT_EQ(
+            deviceNum, SimulatorMgr().CreateDeviceSimulator(deviceNum, static_cast<StPlatformType>(PLATFORM_TYPE)));
     }
     virtual void TearDown()
     {
-        DevprofDrvAicpu::instance()->isRegister_ = false;   // 重置aicpu注册状态，使单进程内能多次注册
+        DevprofDrvAicpu::instance()->isRegister_ = false; // 重置aicpu注册状态，使单进程内能多次注册
         EXPECT_EQ(deviceNum, SimulatorMgr().DelDeviceSimulator(deviceNum, static_cast<StPlatformType>(PLATFORM_TYPE)));
         DataMgr().UnInit();
         GlobalMockObject::verify();
@@ -67,7 +67,7 @@ TEST_F(ApiTest, SubscribeModelNotLoaded)
     int8_t opTimeSwitch = 1;
     aclprofAicoreMetrics aicoreMetrics = ACL_AICORE_NONE;
     uint32_t fd = 1;
-    auto *config = aclprofCreateSubscribeConfig(opTimeSwitch, aicoreMetrics, reinterpret_cast<void *>(&fd));
+    auto* config = aclprofCreateSubscribeConfig(opTimeSwitch, aicoreMetrics, reinterpret_cast<void*>(&fd));
     EXPECT_NE(config, nullptr);
 
     uint32_t modelId = 1;
@@ -103,7 +103,7 @@ TEST_F(ApiTest, UnsubscribeModelNotSubscribed)
 TEST_F(ApiTest, TestAclUnmatchedDataConfig)
 {
     aclprofAicoreMetrics aicoreMetrics = ACL_AICORE_ARITHMETIC_UTILIZATION;
-    aclprofAicoreEvents *aicoreEvents = nullptr;
+    aclprofAicoreEvents* aicoreEvents = nullptr;
     aclInit(nullptr);
     uint32_t devId = 0;
     aclrtSetDevice(devId);
@@ -127,7 +127,7 @@ TEST_F(ApiTest, TestAclUnmatchedDataConfig)
 TEST_F(ApiTest, TestAclGraphUnmatchedDataConfig)
 {
     aclprofAicoreMetrics aicoreMetrics = ACL_AICORE_ARITHMETIC_UTILIZATION;
-    aclprofAicoreEvents *aicoreEvents = nullptr;
+    aclprofAicoreEvents* aicoreEvents = nullptr;
     aclInit(nullptr);
     uint32_t devId = 0;
     aclrtSetDevice(devId);
@@ -135,12 +135,14 @@ TEST_F(ApiTest, TestAclGraphUnmatchedDataConfig)
     EXPECT_EQ(aclprofInit(aclProfPath.c_str(), aclProfPath.size()), ACL_ERROR_NONE);
     uint32_t deviceIdList[1] = {devId};
     uint64_t dataTypeConfig = ACL_PROF_ACL_API;
-    auto config1 = aclgrphProfCreateConfig(deviceIdList, 1, (ge::ProfilingAicoreMetrics)aicoreMetrics, nullptr, dataTypeConfig);
+    auto config1 =
+        aclgrphProfCreateConfig(deviceIdList, 1, (ge::ProfilingAicoreMetrics)aicoreMetrics, nullptr, dataTypeConfig);
     EXPECT_NE(config1, nullptr);
     uint32_t graphId = 0;
     EXPECT_EQ(aclgrphProfStart(config1), ACL_ERROR_NONE);
     dataTypeConfig = 0;
-    auto config2 = aclgrphProfCreateConfig(deviceIdList, 1, (ge::ProfilingAicoreMetrics)aicoreMetrics, nullptr, dataTypeConfig);
+    auto config2 =
+        aclgrphProfCreateConfig(deviceIdList, 1, (ge::ProfilingAicoreMetrics)aicoreMetrics, nullptr, dataTypeConfig);
     EXPECT_NE(config2, nullptr);
     EXPECT_EQ(aclgrphProfStop(config2), GE_PROF_FAILED);
     EXPECT_EQ(aclgrphProfDestroyConfig(config1), ACL_ERROR_NONE);
@@ -156,7 +158,8 @@ TEST_F(ApiTest, TestUnmatchedDataConfig)
     int8_t opTimeSwitch = 1;
     aclprofAicoreMetrics aicoreMetrics = ACL_AICORE_NONE;
 
-    aclprofSubscribeConfig *profSubscribeConfig = aclprofCreateSubscribeConfig(opTimeSwitch, aicoreMetrics, reinterpret_cast<void *>(&fd[0]));
+    aclprofSubscribeConfig* profSubscribeConfig =
+        aclprofCreateSubscribeConfig(opTimeSwitch, aicoreMetrics, reinterpret_cast<void*>(&fd[0]));
     EXPECT_NE(profSubscribeConfig, nullptr);
     uint32_t modelId1 = 0;
     DataMgr().SetModelId(0);
@@ -168,7 +171,7 @@ TEST_F(ApiTest, TestUnmatchedDataConfig)
     EXPECT_EQ(err, ACL_ERROR_NONE);
 
     aicoreMetrics = ACL_AICORE_PIPE_UTILIZATION;
-    profSubscribeConfig = aclprofCreateSubscribeConfig(opTimeSwitch, aicoreMetrics, reinterpret_cast<void *>(&fd[1]));
+    profSubscribeConfig = aclprofCreateSubscribeConfig(opTimeSwitch, aicoreMetrics, reinterpret_cast<void*>(&fd[1]));
     EXPECT_NE(profSubscribeConfig, nullptr);
     uint32_t modelId2 = 1;
     DataMgr().SetModelId(1);
@@ -186,5 +189,3 @@ TEST_F(ApiTest, TestUnmatchedDataConfig)
     err = aclmdlUnload(modelId2);
     EXPECT_EQ(err, ACL_ERROR_NONE);
 }
-
-

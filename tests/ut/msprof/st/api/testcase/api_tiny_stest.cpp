@@ -18,7 +18,7 @@
 #include "../stub/aoe_stub.h"
 #include "data_manager.h"
 
-class ApiTinyTest: public testing::Test {
+class ApiTinyTest : public testing::Test {
 protected:
     int32_t deviceNum;
     virtual void SetUp()
@@ -30,7 +30,8 @@ protected:
         const ::testing::TestInfo* curTest = ::testing::UnitTest::GetInstance()->current_test_info();
         DataMgr().Init(SOC_TYPE, curTest->name());
         deviceNum = 1;
-        EXPECT_EQ(deviceNum, SimulatorMgr().CreateDeviceSimulator(deviceNum, static_cast<StPlatformType>(PLATFORM_TYPE)));
+        EXPECT_EQ(
+            deviceNum, SimulatorMgr().CreateDeviceSimulator(deviceNum, static_cast<StPlatformType>(PLATFORM_TYPE)));
     }
     virtual void TearDown()
     {

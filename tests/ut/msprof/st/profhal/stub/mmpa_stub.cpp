@@ -15,15 +15,15 @@
 int32_t g_handle;
 
 std::map<std::string, void*> g_map = {
-    {"ProfHalGetVersion", (void *)ProfHalGetVersion},
-    {"ProfHalModuleInitialize", (void *)ProfHalModuleInitialize},
-    {"ProfHalModuleFinalize", (void *)ProfHalModuleFinalize},
-    {"ProfHalSetFlushModuleCallback", (void *)ProfHalSetFlushModuleCallback},
-    {"ProfHalSetSendDataCallback", (void *)ProfHalSetSendDataCallback},
-    {"ProfHalSetHelperDirCallback", (void *)ProfHalSetHelperDirCallback},
+    {"ProfHalGetVersion", (void*)ProfHalGetVersion},
+    {"ProfHalModuleInitialize", (void*)ProfHalModuleInitialize},
+    {"ProfHalModuleFinalize", (void*)ProfHalModuleFinalize},
+    {"ProfHalSetFlushModuleCallback", (void*)ProfHalSetFlushModuleCallback},
+    {"ProfHalSetSendDataCallback", (void*)ProfHalSetSendDataCallback},
+    {"ProfHalSetHelperDirCallback", (void*)ProfHalSetHelperDirCallback},
 };
 
-void *mmDlsym(void *handle, const char* funcName)
+void* mmDlsym(void* handle, const char* funcName)
 {
     auto it = g_map.find(funcName);
     if (it != g_map.end()) {
@@ -32,12 +32,9 @@ void *mmDlsym(void *handle, const char* funcName)
     return nullptr;
 }
 
-char *mmDlerror(void)
-{
-    return nullptr;
-}
+char* mmDlerror(void) { return nullptr; }
 
-void * mmDlopen(const char *fileName, int mode)
+void* mmDlopen(const char* fileName, int mode)
 {
     if (strcmp(fileName, "libascendprofhal.so") == 0) {
         return &g_handle;
@@ -45,7 +42,4 @@ void * mmDlopen(const char *fileName, int mode)
     return nullptr;
 }
 
-int mmDlclose(void *handle)
-{
-    return 0;
-}
+int mmDlclose(void* handle) { return 0; }

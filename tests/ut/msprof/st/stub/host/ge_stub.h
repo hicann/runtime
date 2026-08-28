@@ -10,11 +10,10 @@
 #ifndef GE_STUB_H
 #define GE_STUB_H
 namespace ge {
-int32_t ProfCtrlHandle(uint32_t dataType, void *data, uint32_t dataLen);
+int32_t ProfCtrlHandle(uint32_t dataType, void* data, uint32_t dataLen);
 int32_t ExecuteModel(uint32_t modelId);
 int32_t ExecuteOp();
-int32_t LoadModel(uint32_t *modelId);
+int32_t LoadModel(uint32_t* modelId);
 int32_t UnloadModel(uint32_t modelId);
-}
+} // namespace ge
 #endif
-

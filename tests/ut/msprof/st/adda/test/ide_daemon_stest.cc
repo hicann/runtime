@@ -15,20 +15,16 @@
 #include "ide_platform_util.h"
 
 using namespace Adx;
-extern int IdeDaemonTestMain(int argc, char *argv[]);
-extern int SingleProcessStart(std::string &lock);
+extern int IdeDaemonTestMain(int argc, char* argv[]);
+extern int SingleProcessStart(std::string& lock);
 extern int AdxStartUpInit();
 extern int IdeDaemonStartUp();
 
-class IDE_DAEMON_TEST_STEST: public testing::Test {
+class IDE_DAEMON_TEST_STEST : public testing::Test {
 protected:
-    virtual void SetUp() {
-    }
-    virtual void TearDown() {
-        GlobalMockObject::verify();
-    }
+    virtual void SetUp() {}
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
-
 
 TEST_F(IDE_DAEMON_TEST_STEST, IdeDaemonRegisterModules)
 {
@@ -57,20 +53,9 @@ TEST_F(IDE_DAEMON_TEST_STEST, SingleProcessStart)
 {
     GlobalMockObject::verify();
     std::string lock;
-    MOCKER(mmOpen2)
-        .stubs()
-        .will(returnValue(-1))
-        .then(returnValue(0));
-    MOCKER(IdeLockFcntl)
-        .stubs()
-        .will(returnValue(-1))
-        .then(returnValue(0));
-    MOCKER(IdeFcntl)
-        .stubs()
-        .will(returnValue(-1))
-        .then(returnValue(0))
-        .then(returnValue(-1))
-        .then(returnValue(0));
+    MOCKER(mmOpen2).stubs().will(returnValue(-1)).then(returnValue(0));
+    MOCKER(IdeLockFcntl).stubs().will(returnValue(-1)).then(returnValue(0));
+    MOCKER(IdeFcntl).stubs().will(returnValue(-1)).then(returnValue(0)).then(returnValue(-1)).then(returnValue(0));
 
     EXPECT_EQ(-1, SingleProcessStart(lock));
     EXPECT_EQ(-1, SingleProcessStart(lock));
@@ -83,13 +68,8 @@ TEST_F(IDE_DAEMON_TEST_STEST, AdxStartUpInit)
 {
     GlobalMockObject::verify();
     std::string lock;
-    MOCKER(DaemonInit)
-        .stubs()
-        .will(returnValue(IDE_DAEMON_ERROR))
-        .then(returnValue(IDE_DAEMON_OK));
-    MOCKER(HdcCreateHdcServerProc)
-        .stubs()
-        .will(returnValue((void*)0));
+    MOCKER(DaemonInit).stubs().will(returnValue(IDE_DAEMON_ERROR)).then(returnValue(IDE_DAEMON_OK));
+    MOCKER(HdcCreateHdcServerProc).stubs().will(returnValue((void*)0));
 
     EXPECT_EQ(IDE_DAEMON_ERROR, AdxStartUpInit());
     EXPECT_EQ(IDE_DAEMON_OK, AdxStartUpInit());
@@ -99,16 +79,9 @@ TEST_F(IDE_DAEMON_TEST_STEST, IdeDaemonStartUp)
 {
     GlobalMockObject::verify();
 
-    MOCKER(SingleProcessStart)
-        .stubs()
-        .will(returnValue(-1))
-        .then(returnValue(1))
-        .then(returnValue(1));
+    MOCKER(SingleProcessStart).stubs().will(returnValue(-1)).then(returnValue(1)).then(returnValue(1));
 
-    MOCKER(AdxStartUpInit)
-        .stubs()
-        .will(returnValue(IDE_DAEMON_ERROR))
-        .then(returnValue(IDE_DAEMON_OK));
+    MOCKER(AdxStartUpInit).stubs().will(returnValue(IDE_DAEMON_ERROR)).then(returnValue(IDE_DAEMON_OK));
 
     EXPECT_EQ(IDE_DAEMON_ERROR, IdeDaemonStartUp());
     EXPECT_EQ(IDE_DAEMON_ERROR, IdeDaemonStartUp());
@@ -119,17 +92,11 @@ TEST_F(IDE_DAEMON_TEST_STEST, IdeDaemonStartUp_open_failed)
 {
     GlobalMockObject::verify();
 
-    MOCKER(mmUmask)
-        .stubs()
-        .will(returnValue(0));
+    MOCKER(mmUmask).stubs().will(returnValue(0));
 
-    MOCKER(mmOpen2)
-        .stubs()
-        .will(returnValue(-1));
+    MOCKER(mmOpen2).stubs().will(returnValue(-1));
 
-    MOCKER(IdeRealFileRemove)
-        .stubs()
-        .will(returnValue(IDE_DAEMON_OK));
+    MOCKER(IdeRealFileRemove).stubs().will(returnValue(IDE_DAEMON_OK));
 
     EXPECT_EQ(IDE_DAEMON_ERROR, IdeDaemonStartUp());
 }

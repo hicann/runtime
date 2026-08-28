@@ -45,7 +45,7 @@ protected:
     }
     virtual void TearDown()
     {
-        DevprofDrvAicpu::instance()->isRegister_ = false;   // 重置aicpu注册状态，使单进程内能多次注册
+        DevprofDrvAicpu::instance()->isRegister_ = false; // 重置aicpu注册状态，使单进程内能多次注册
         EXPECT_EQ(deviceNum, SimulatorMgr().DelDeviceSimulator(deviceNum, StPlatformType::CHIP_V4_1_0));
         aclProfPath.insert(0, "rm -rf ");
         system(aclProfPath.c_str());
@@ -65,11 +65,11 @@ TEST_F(AclApiMilanStest, AclApiDefault)
 {
     uint32_t deviceIdList[1] = {devId};
     aclprofAicoreMetrics aicoreMetrics = ACL_AICORE_ARITHMETIC_UTILIZATION;
-    aclprofAicoreEvents *aicoreEvents = nullptr;
+    aclprofAicoreEvents* aicoreEvents = nullptr;
     uint64_t dataTypeConfig = ACL_PROF_ACL_API | ACL_PROF_TASK_TIME | ACL_PROF_AICORE_METRICS | ACL_PROF_AICPU |
                               ACL_PROF_L2CACHE | ACL_PROF_HCCL_TRACE | ACL_PROF_TRAINING_TRACE | ACL_PROF_MSPROFTX |
-                              ACL_PROF_RUNTIME_API | ACL_PROF_GE_API_L0 | ACL_PROF_TASK_TIME_L0 |
-                              ACL_PROF_TASK_MEMORY | ACL_PROF_GE_API_L1 | ACL_PROF_TASK_TIME_L2;
+                              ACL_PROF_RUNTIME_API | ACL_PROF_GE_API_L0 | ACL_PROF_TASK_TIME_L0 | ACL_PROF_TASK_MEMORY |
+                              ACL_PROF_GE_API_L1 | ACL_PROF_TASK_TIME_L2;
     auto config = aclprofCreateConfig(deviceIdList, 1, aicoreMetrics, aicoreEvents, dataTypeConfig);
     EXPECT_NE(nullptr, config);
 
@@ -84,11 +84,11 @@ TEST_F(AclApiMilanStest, AclApiL3)
 {
     uint32_t deviceIdList[1] = {devId};
     aclprofAicoreMetrics aicoreMetrics = ACL_AICORE_ARITHMETIC_UTILIZATION;
-    aclprofAicoreEvents *aicoreEvents = nullptr;
+    aclprofAicoreEvents* aicoreEvents = nullptr;
     uint64_t dataTypeConfig = ACL_PROF_ACL_API | ACL_PROF_TASK_TIME | ACL_PROF_AICORE_METRICS | ACL_PROF_AICPU |
                               ACL_PROF_L2CACHE | ACL_PROF_HCCL_TRACE | ACL_PROF_TRAINING_TRACE | ACL_PROF_MSPROFTX |
-                              ACL_PROF_RUNTIME_API | ACL_PROF_GE_API_L0 | ACL_PROF_TASK_TIME_L0 |
-                              ACL_PROF_TASK_MEMORY | ACL_PROF_GE_API_L1 | ACL_PROF_TASK_TIME_L2 | ACL_PROF_TASK_TIME_L3;
+                              ACL_PROF_RUNTIME_API | ACL_PROF_GE_API_L0 | ACL_PROF_TASK_TIME_L0 | ACL_PROF_TASK_MEMORY |
+                              ACL_PROF_GE_API_L1 | ACL_PROF_TASK_TIME_L2 | ACL_PROF_TASK_TIME_L3;
     auto config = aclprofCreateConfig(deviceIdList, 1, aicoreMetrics, aicoreEvents, dataTypeConfig);
     EXPECT_NE(nullptr, config);
 
@@ -103,11 +103,11 @@ TEST_F(AclApiMilanStest, AclApiRepeat)
 {
     uint32_t deviceIdList[1] = {devId};
     aclprofAicoreMetrics aicoreMetrics = ACL_AICORE_ARITHMETIC_UTILIZATION;
-    aclprofAicoreEvents *aicoreEvents = nullptr;
+    aclprofAicoreEvents* aicoreEvents = nullptr;
     uint64_t dataTypeConfig = ACL_PROF_ACL_API | ACL_PROF_TASK_TIME | ACL_PROF_AICORE_METRICS | ACL_PROF_AICPU |
                               ACL_PROF_L2CACHE | ACL_PROF_HCCL_TRACE | ACL_PROF_TRAINING_TRACE | ACL_PROF_MSPROFTX |
-                              ACL_PROF_RUNTIME_API | ACL_PROF_GE_API_L0 | ACL_PROF_TASK_TIME_L0 |
-                              ACL_PROF_TASK_MEMORY | ACL_PROF_GE_API_L1 | ACL_PROF_TASK_TIME_L2;
+                              ACL_PROF_RUNTIME_API | ACL_PROF_GE_API_L0 | ACL_PROF_TASK_TIME_L0 | ACL_PROF_TASK_MEMORY |
+                              ACL_PROF_GE_API_L1 | ACL_PROF_TASK_TIME_L2;
     auto config = aclprofCreateConfig(deviceIdList, 1, aicoreMetrics, aicoreEvents, dataTypeConfig);
     EXPECT_NE(nullptr, config);
 
@@ -122,7 +122,7 @@ TEST_F(AclApiMilanStest, AclApiSetConfig)
 {
     uint32_t deviceIdList[1] = {devId};
     aclprofAicoreMetrics aicoreMetrics = ACL_AICORE_ARITHMETIC_UTILIZATION;
-    aclprofAicoreEvents *aicoreEvents = nullptr;
+    aclprofAicoreEvents* aicoreEvents = nullptr;
     uint64_t dataTypeConfig = 0;
     auto config = aclprofCreateConfig(deviceIdList, 1, aicoreMetrics, aicoreEvents, dataTypeConfig);
     EXPECT_NE(nullptr, config);
@@ -172,8 +172,12 @@ TEST_F(AclApiMilanStest, AclApiSetConfig)
 
     EXPECT_EQ(PROFILING_SUCCESS, AclApiStart(config, 0));
 
-    std::vector<std::string> deviceDataList = {"npu_mem.data", "npu_module_mem.data", "hbm.data", "llc.data", "nic.data", "roce.data", "pcie.data", "hccs.data", "dvpp.data", "stars_soc_profile.data"};
-    std::vector<std::string> hostDataList = {"host_cpu.data", "host_mem.data", "host_network.data"/*, "host_disk.data", "host_pthreadcall.data", "host_syscall.data"*/};
+    std::vector<std::string> deviceDataList = {
+        "npu_mem.data", "npu_module_mem.data", "hbm.data",  "llc.data",  "nic.data",
+        "roce.data",    "pcie.data",           "hccs.data", "dvpp.data", "stars_soc_profile.data"};
+    std::vector<std::string> hostDataList = {
+        "host_cpu.data", "host_mem.data",
+        "host_network.data" /*, "host_disk.data", "host_pthreadcall.data", "host_syscall.data"*/};
     EXPECT_EQ(0, CheckFiles(aclProfPath, deviceDataList, hostDataList));
 }
 
@@ -181,7 +185,7 @@ TEST_F(AclApiMilanStest, AclApiSetConfigHostSysUsage)
 {
     uint32_t deviceIdList[1] = {devId};
     aclprofAicoreMetrics aicoreMetrics = ACL_AICORE_ARITHMETIC_UTILIZATION;
-    aclprofAicoreEvents *aicoreEvents = nullptr;
+    aclprofAicoreEvents* aicoreEvents = nullptr;
     uint64_t dataTypeConfig = 0;
     auto config = aclprofCreateConfig(deviceIdList, 1, aicoreMetrics, aicoreEvents, dataTypeConfig);
     EXPECT_NE(nullptr, config);
@@ -230,7 +234,7 @@ TEST_F(AclApiMilanStest, AclApiStatsDefault)
 {
     uint32_t deviceIdList[1] = {devId};
     aclprofAicoreMetrics aicoreMetrics = ACL_AICORE_ARITHMETIC_UTILIZATION;
-    aclprofAicoreEvents *aicoreEvents = nullptr;
+    aclprofAicoreEvents* aicoreEvents = nullptr;
     uint64_t dataTypeConfig = ACL_PROF_API_STATS;
     auto config = aclprofCreateConfig(deviceIdList, 1, aicoreMetrics, aicoreEvents, dataTypeConfig);
     EXPECT_NE(nullptr, config);

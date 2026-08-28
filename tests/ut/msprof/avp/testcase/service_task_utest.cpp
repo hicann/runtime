@@ -20,46 +20,38 @@
 #include "osal/osal.h"
 
 extern "C" {
-    #define MAX_REPORT_MODULE     20U // 支持总共20个组件的数据上报
-    typedef struct {
-        uint32_t regModuleCount;
-        enum MsprofCommandHandleType handleType;
-        uint32_t moduleId[MAX_REPORT_MODULE];
-        ProfCommandHandle handle[MAX_REPORT_MODULE];
-    } ReportAttribute;
-    typedef enum {
-        FILE_TRANSPORT,
-        FLSH_TRANSPORT
-    } TransportType;
-    int32_t TaskPoolInitialize();
-    int32_t TaskPoolFinalize();
-    int32_t UploaderInitialize(uint32_t deviceId, TransportType type);
-    int32_t UploaderFinalize();
-    int32_t ReportManagerInitialize();
-    int32_t ReportManagerCollectStart(const uint32_t deviceId, ReportAttribute *reportAttr, uint64_t dataTypeConfig);
-    int32_t ReportManagerCollectStop(const uint32_t deviceId, ReportAttribute *reportAttr, uint64_t dataTypeConfig);
-    int32_t ReportManagerFinalize(ReportAttribute *reportAttr, uint64_t dataTypeConfig);
-    int32_t ReportManagerStartDeviceReporters(ReportAttribute *reportAttr);
-    int32_t ReportManagerStopDeviceReporters(ReportAttribute *reportAttr);
-    int32_t TaskManagerStart(TaskSlotAttribute *attr);
-    int32_t TaskManagerStop(ProfileParam *params, TaskSlotAttribute *attr);
-    int32_t TaskManagerFinalize();
-    int32_t PlatformInitialize(uint32_t *repeatCount);
-    int32_t PlatformFinalize(uint32_t *repeatCount);
+#define MAX_REPORT_MODULE 20U // 支持总共20个组件的数据上报
+typedef struct {
+    uint32_t regModuleCount;
+    enum MsprofCommandHandleType handleType;
+    uint32_t moduleId[MAX_REPORT_MODULE];
+    ProfCommandHandle handle[MAX_REPORT_MODULE];
+} ReportAttribute;
+typedef enum { FILE_TRANSPORT, FLSH_TRANSPORT } TransportType;
+int32_t TaskPoolInitialize();
+int32_t TaskPoolFinalize();
+int32_t UploaderInitialize(uint32_t deviceId, TransportType type);
+int32_t UploaderFinalize();
+int32_t ReportManagerInitialize();
+int32_t ReportManagerCollectStart(const uint32_t deviceId, ReportAttribute* reportAttr, uint64_t dataTypeConfig);
+int32_t ReportManagerCollectStop(const uint32_t deviceId, ReportAttribute* reportAttr, uint64_t dataTypeConfig);
+int32_t ReportManagerFinalize(ReportAttribute* reportAttr, uint64_t dataTypeConfig);
+int32_t ReportManagerStartDeviceReporters(ReportAttribute* reportAttr);
+int32_t ReportManagerStopDeviceReporters(ReportAttribute* reportAttr);
+int32_t TaskManagerStart(TaskSlotAttribute* attr);
+int32_t TaskManagerStop(ProfileParam* params, TaskSlotAttribute* attr);
+int32_t TaskManagerFinalize();
+int32_t PlatformInitialize(uint32_t* repeatCount);
+int32_t PlatformFinalize(uint32_t* repeatCount);
 }
 
-class ServiceTaskUtest: public testing::Test {
+class ServiceTaskUtest : public testing::Test {
 protected:
-    virtual void SetUp()
-    {
-    }
-    virtual void TearDown()
-    {
-        GlobalMockObject::verify();
-    }
+    virtual void SetUp() {}
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
-extern int32_t CallbackStub(uint32_t, void *, uint32_t);
+extern int32_t CallbackStub(uint32_t, void*, uint32_t);
 TEST_F(ServiceTaskUtest, TestMsprofNotifySetDeviceInvalidParam)
 {
     uint32_t chipId = 0;
@@ -89,9 +81,12 @@ TEST_F(ServiceTaskUtest, TestMsprofNotifySetDevice)
     MOCKER(ReportManagerInitialize).stubs().will(returnValue(PROFILING_FAILED)).then(returnValue(PROFILING_SUCCESS));
     EXPECT_EQ(MsprofNotifySetDevice(chipId, deviceId, true), PROFILING_FAILED);
 
-    MOCKER(ReportManagerStartDeviceReporters).stubs().will(returnValue(PROFILING_FAILED)).then(returnValue(PROFILING_SUCCESS));
+    MOCKER(ReportManagerStartDeviceReporters)
+        .stubs()
+        .will(returnValue(PROFILING_FAILED))
+        .then(returnValue(PROFILING_SUCCESS));
     EXPECT_EQ(MsprofNotifySetDevice(chipId, deviceId, true), PROFILING_FAILED);
-    
+
     MOCKER(TaskManagerStart).stubs().will(returnValue(PROFILING_FAILED)).then(returnValue(PROFILING_SUCCESS));
     EXPECT_EQ(MsprofNotifySetDevice(chipId, deviceId, true), PROFILING_FAILED);
 
@@ -110,12 +105,15 @@ TEST_F(ServiceTaskUtest, TestMsprofFinalize)
     EXPECT_EQ(MsprofFinalize(), PROFILING_FAILED);
 
     MOCKER(UploaderFinalize).stubs().will(returnValue(PROFILING_FAILED)).then(returnValue(PROFILING_SUCCESS));
-    EXPECT_EQ(MsprofFinalize(), PROFILING_FAILED); 
+    EXPECT_EQ(MsprofFinalize(), PROFILING_FAILED);
 
     MOCKER(TaskPoolFinalize).stubs().will(returnValue(PROFILING_FAILED)).then(returnValue(PROFILING_SUCCESS));
-    EXPECT_EQ(MsprofFinalize(), PROFILING_SUCCESS); 
+    EXPECT_EQ(MsprofFinalize(), PROFILING_SUCCESS);
 
-    MOCKER(ReportManagerStopDeviceReporters).stubs().will(returnValue(PROFILING_FAILED)).then(returnValue(PROFILING_SUCCESS));
+    MOCKER(ReportManagerStopDeviceReporters)
+        .stubs()
+        .will(returnValue(PROFILING_FAILED))
+        .then(returnValue(PROFILING_SUCCESS));
     EXPECT_EQ(MsprofFinalize(), PROFILING_FAILED);
     EXPECT_EQ(MsprofFinalize(), PROFILING_SUCCESS);
 }

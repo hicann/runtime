@@ -23,7 +23,7 @@
 using namespace analysis::dvvp::common::error;
 using namespace Cann::Dvvp::Test;
 
-class ApiTest: public testing::Test {
+class ApiTest : public testing::Test {
 protected:
     int32_t deviceNum;
     uint32_t devId;
@@ -40,14 +40,15 @@ protected:
         aclProfPath = "api_test_" SOC_TYPE "_output";
         deviceNum = 1;
         devId = 0;
-        EXPECT_EQ(deviceNum, SimulatorMgr().CreateDeviceSimulator(deviceNum, static_cast<StPlatformType>(PLATFORM_TYPE)));
+        EXPECT_EQ(
+            deviceNum, SimulatorMgr().CreateDeviceSimulator(deviceNum, static_cast<StPlatformType>(PLATFORM_TYPE)));
     }
     virtual void TearDown()
     {
-        DevprofDrvAicpu::instance()->isRegister_ = false;   // 重置aicpu注册状态，使单进程内能多次注册
+        DevprofDrvAicpu::instance()->isRegister_ = false; // 重置aicpu注册状态，使单进程内能多次注册
         EXPECT_EQ(deviceNum, SimulatorMgr().DelDeviceSimulator(deviceNum, static_cast<StPlatformType>(PLATFORM_TYPE)));
         DataMgr().UnInit();
-        std::string cmd = "rm -rf "  + aclProfPath;
+        std::string cmd = "rm -rf " + aclProfPath;
         system(cmd.c_str());
         GlobalMockObject::verify();
     }
@@ -56,7 +57,7 @@ protected:
 TEST_F(ApiTest, AclApiTest)
 {
     aclprofAicoreMetrics aicoreMetrics = ACL_AICORE_ARITHMETIC_UTILIZATION;
-    aclprofAicoreEvents *aicoreEvents = nullptr;
+    aclprofAicoreEvents* aicoreEvents = nullptr;
     uint64_t dataTypeConfig = 0;
 
     auto ret = RunInferWithApi(aclProfPath, devId, aicoreMetrics, aicoreEvents, dataTypeConfig);
@@ -68,7 +69,7 @@ TEST_F(ApiTest, AclApiTest)
 TEST_F(ApiTest, AclApiTestError)
 {
     aclprofAicoreMetrics aicoreMetrics = ACL_AICORE_ARITHMETIC_UTILIZATION;
-    aclprofAicoreEvents *aicoreEvents = nullptr;
+    aclprofAicoreEvents* aicoreEvents = nullptr;
     uint64_t dataTypeConfig = 0;
 
     aclInit(nullptr);

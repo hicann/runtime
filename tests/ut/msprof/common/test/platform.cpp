@@ -39,16 +39,14 @@ using namespace analysis::dvvp::common::validation;
 using namespace Analysis::Dvvp::Common::Platform;
 using namespace Dvvp::Collect::Platform;
 
-class COMMON_PLATFORM_TEST: public testing::Test {
+class COMMON_PLATFORM_TEST : public testing::Test {
 protected:
-    virtual void SetUp() {
-        GlobalMockObject::verify();
-    }
-    virtual void TearDown() {
-    }
+    virtual void SetUp() { GlobalMockObject::verify(); }
+    virtual void TearDown() {}
 };
 
-TEST_F(COMMON_PLATFORM_TEST, DrvGetApiVersion) {
+TEST_F(COMMON_PLATFORM_TEST, DrvGetApiVersion)
+{
     auto platform = Platform::instance();
     EXPECT_EQ(PROFILING_SUCCESS, platform->Init());
     EXPECT_EQ(0x071905, platform->DrvGetApiVersion());
@@ -56,9 +54,10 @@ TEST_F(COMMON_PLATFORM_TEST, DrvGetApiVersion) {
     EXPECT_EQ(0, platform->DrvGetApiVersion());
 }
 
-extern "C" drvError_t drvGetDeviceSplitMode(unsigned int dev_id, unsigned int *mode);
+extern "C" drvError_t drvGetDeviceSplitMode(unsigned int dev_id, unsigned int* mode);
 
-TEST_F(COMMON_PLATFORM_TEST, CheckIfSupportAdprof) {
+TEST_F(COMMON_PLATFORM_TEST, CheckIfSupportAdprof)
+{
     constexpr uint32_t SUPPORT_ADPROF_VERSION = 0x72316;
 
     auto platform = Platform::instance();
@@ -68,9 +67,7 @@ TEST_F(COMMON_PLATFORM_TEST, CheckIfSupportAdprof) {
         .will(returnValue(SUPPORT_ADPROF_VERSION - 1))
         .then(returnValue(SUPPORT_ADPROF_VERSION));
     EXPECT_EQ(false, platform->CheckIfSupportAdprof(0));
-    MOCKER_CPP(&Platform::GetPlatformType)
-        .stubs()
-        .will(returnValue(CHIP_CLOUD));
+    MOCKER_CPP(&Platform::GetPlatformType).stubs().will(returnValue(CHIP_CLOUD));
     uint32_t mode = 0;
     MOCKER(drvGetDeviceSplitMode)
         .stubs()
@@ -81,7 +78,8 @@ TEST_F(COMMON_PLATFORM_TEST, CheckIfSupportAdprof) {
     EXPECT_EQ(true, platform->CheckIfSupportAdprof(0));
 }
 
-TEST_F(COMMON_PLATFORM_TEST, AscendHal) {
+TEST_F(COMMON_PLATFORM_TEST, AscendHal)
+{
     auto platform = Platform::instance();
 
     uint32_t devId = 0;
@@ -95,10 +93,11 @@ TEST_F(COMMON_PLATFORM_TEST, AscendHal) {
     EXPECT_EQ(0, platform->HalEschedCreateGrpEx(devId, &grpPara, &grpId));
 }
 
-drvError_t halGetDeviceInfoStub(uint32_t devId, int32_t moduleType, int32_t infoType, int64_t *value) {
+drvError_t halGetDeviceInfoStub(uint32_t devId, int32_t moduleType, int32_t infoType, int64_t* value)
+{
     if (moduleType == static_cast<int32_t>(MODULE_TYPE_SYSTEM) &&
         (infoType == static_cast<int32_t>(INFO_TYPE_DEV_OSC_FREQUE) ||
-        infoType == static_cast<int32_t>(INFO_TYPE_HOST_OSC_FREQUE))) {
+         infoType == static_cast<int32_t>(INFO_TYPE_HOST_OSC_FREQUE))) {
         *value = 1000;
     } else {
         *value = 1000; // 2500 >> 8 = 9  nano type
@@ -106,7 +105,8 @@ drvError_t halGetDeviceInfoStub(uint32_t devId, int32_t moduleType, int32_t info
     return DRV_ERROR_NONE;
 }
 
-TEST_F(COMMON_PLATFORM_TEST, PlatformInterfaceTest) {
+TEST_F(COMMON_PLATFORM_TEST, PlatformInterfaceTest)
+{
     GlobalMockObject::verify();
     std::shared_ptr<PlatformInterface> platformInterface(new PlatformInterface());
     EXPECT_EQ(EMPTY_FREQUENCY, platformInterface->GetDeviceOscDefaultFreq());
@@ -129,11 +129,10 @@ TEST_F(COMMON_PLATFORM_TEST, PlatformInterfaceTest) {
 }
 
 #ifndef BUILD_PROFILING_OPEN_PROJECT
-TEST_F(COMMON_PLATFORM_TEST, NanoPlatformTest) {
+TEST_F(COMMON_PLATFORM_TEST, NanoPlatformTest)
+{
     GlobalMockObject::verify();
-    MOCKER(halGetDeviceInfo)
-        .stubs()
-        .will(invoke(halGetDeviceInfoStub));
+    MOCKER(halGetDeviceInfo).stubs().will(invoke(halGetDeviceInfoStub));
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
         .stubs()
         .will(returnValue(Analysis::Dvvp::Common::Config::PlatformType::CHIP_NANO_V1));
@@ -192,11 +191,10 @@ TEST_F(COMMON_PLATFORM_TEST, NanoPlatformTest) {
 #endif
 
 #ifndef BUILD_PROFILING_OPEN_PROJECT
-TEST_F(COMMON_PLATFORM_TEST, MdcMiniV3PlatformTest) {
+TEST_F(COMMON_PLATFORM_TEST, MdcMiniV3PlatformTest)
+{
     GlobalMockObject::verify();
-    MOCKER(halGetDeviceInfo)
-        .stubs()
-        .will(invoke(halGetDeviceInfoStub));
+    MOCKER(halGetDeviceInfo).stubs().will(invoke(halGetDeviceInfoStub));
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
         .stubs()
         .will(returnValue(Analysis::Dvvp::Common::Config::PlatformType::CHIP_MDC_MINI_V3));
@@ -296,13 +294,12 @@ TEST_F(COMMON_PLATFORM_TEST, MdcMiniV3PlatformTest) {
     std::string npuEvent = "";
     platform->L2CacheAdaptor(npuEvent, l2Switch, l2Events);
     EXPECT_EQ("0xF6,0xFB,0xFC,0xBF,0x90,0x91,0x9C,0x9D", l2Events);
-    EXPECT_EQ("HA:0xF6,0xFB,0xFC,0xBF,0x90,0x91,0x9C,0x9D;SMMU:0x2,0x8a,0x8b,0x8c,0x8d",
-        npuEvent);
+    EXPECT_EQ("HA:0xF6,0xFB,0xFC,0xBF,0x90,0x91,0x9C,0x9D;SMMU:0x2,0x8a,0x8b,0x8c,0x8d", npuEvent);
 }
 #endif
 
-TEST_F(COMMON_PLATFORM_TEST, CloudV2PlatformTest) {
-
+TEST_F(COMMON_PLATFORM_TEST, CloudV2PlatformTest)
+{
     Dvvp::Collect::Platform::CloudV2Platform platform;
 
     // pmu
@@ -355,8 +352,8 @@ TEST_F(COMMON_PLATFORM_TEST, CloudV2PlatformTest) {
     EXPECT_EQ("0xF6,0xFB,0xFC,0xBF,0x90,0x91,0x9C,0x9D", platform.GetL2CacheEvents());
 }
 
-TEST_F(COMMON_PLATFORM_TEST, CloudPlatformTest) {
-
+TEST_F(COMMON_PLATFORM_TEST, CloudPlatformTest)
+{
     Dvvp::Collect::Platform::CloudPlatform platform;
 
     // pmu
@@ -388,8 +385,8 @@ TEST_F(COMMON_PLATFORM_TEST, CloudPlatformTest) {
     EXPECT_EQ("0x5b,0x59,0x5c,0x7d,0x7e,0x71,0x79,0x7c", platform.GetL2CacheEvents());
 }
 
-TEST_F(COMMON_PLATFORM_TEST, DcPlatformTest) {
-
+TEST_F(COMMON_PLATFORM_TEST, DcPlatformTest)
+{
     Dvvp::Collect::Platform::DcPlatform platform;
 
     // pmu
@@ -422,8 +419,8 @@ TEST_F(COMMON_PLATFORM_TEST, DcPlatformTest) {
 }
 
 #ifndef BUILD_PROFILING_OPEN_PROJECT
-TEST_F(COMMON_PLATFORM_TEST, MiniPlatformTest) {
-
+TEST_F(COMMON_PLATFORM_TEST, MiniPlatformTest)
+{
     Dvvp::Collect::Platform::MiniPlatform platform;
 
     // pmu
@@ -446,7 +443,8 @@ TEST_F(COMMON_PLATFORM_TEST, MiniPlatformTest) {
     EXPECT_EQ(PROFILING_SUCCESS, platform.GetAiPmuMetrics("ResourceConflictRatio", aicEvent));
     EXPECT_EQ("0x64,0x65,0x66", aicEvent);
 
-    EXPECT_EQ(PROFILING_SUCCESS, platform.GetAiPmuMetrics("Custom:0x500,0x502,0x504,0x506,0x508,0x50a,0xc,0xd", aicEvent));
+    EXPECT_EQ(
+        PROFILING_SUCCESS, platform.GetAiPmuMetrics("Custom:0x500,0x502,0x504,0x506,0x508,0x50a,0xc,0xd", aicEvent));
     EXPECT_EQ(PROFILING_FAILED, platform.GetAiPmuMetrics("PipeUtilizationExct", aicEvent));
     EXPECT_EQ(PROFILING_FAILED, platform.GetAiPmuMetrics("PipelineExecuteUtilization", aicEvent));
     EXPECT_EQ(PROFILING_FAILED, platform.GetAiPmuMetrics("PipeStallCycle", aicEvent));
@@ -458,8 +456,8 @@ TEST_F(COMMON_PLATFORM_TEST, MiniPlatformTest) {
 #endif
 
 #ifndef BUILD_PROFILING_OPEN_PROJECT
-TEST_F(COMMON_PLATFORM_TEST, MdcPlatformTest) {
-
+TEST_F(COMMON_PLATFORM_TEST, MdcPlatformTest)
+{
     Dvvp::Collect::Platform::MdcPlatform platform;
 
     // pmu
@@ -518,8 +516,8 @@ TEST_F(COMMON_PLATFORM_TEST, MdcPlatformTest) {
 #endif
 
 #ifndef BUILD_PROFILING_OPEN_PROJECT
-TEST_F(COMMON_PLATFORM_TEST, TinyV1PlatformTest) {
-
+TEST_F(COMMON_PLATFORM_TEST, TinyV1PlatformTest)
+{
     Dvvp::Collect::Platform::TinyV1Platform platform;
 
     // pmu
@@ -597,11 +595,10 @@ TEST_F(COMMON_PLATFORM_TEST, TinyV1PlatformTest) {
 #endif
 
 #ifndef BUILD_PROFILING_OPEN_PROJECT
-TEST_F(COMMON_PLATFORM_TEST, MdcLitePlatformTest) {
+TEST_F(COMMON_PLATFORM_TEST, MdcLitePlatformTest)
+{
     GlobalMockObject::verify();
-    MOCKER(halGetDeviceInfo)
-        .stubs()
-        .will(invoke(halGetDeviceInfoStub));
+    MOCKER(halGetDeviceInfo).stubs().will(invoke(halGetDeviceInfoStub));
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
         .stubs()
         .will(returnValue(Analysis::Dvvp::Common::Config::PlatformType::CHIP_MDC_LITE));
@@ -697,110 +694,108 @@ TEST_F(COMMON_PLATFORM_TEST, MdcLitePlatformTest) {
     std::string npuEvent = "";
     platform->L2CacheAdaptor(npuEvent, l2Switch, l2Events);
     EXPECT_EQ("0x78,0x79,0x77,0x71,0x6a,0x6c,0x74,0x62", l2Events);
-    EXPECT_EQ("HA:0x78,0x79,0x77,0x71,0x6a,0x6c,0x74,0x62;SMMU:0x2,0x8a,0x8b,0x8c,0x8d",
-        npuEvent);
+    EXPECT_EQ("HA:0x78,0x79,0x77,0x71,0x6a,0x6c,0x74,0x62;SMMU:0x2,0x8a,0x8b,0x8c,0x8d", npuEvent);
 }
 #endif
 
-TEST_F(COMMON_PLATFORM_TEST, MiniV3PlatformTest) {
+TEST_F(COMMON_PLATFORM_TEST, MiniV3PlatformTest)
+{
     GlobalMockObject::verify();
-    MOCKER(halGetDeviceInfo)
-        .stubs()
-        .will(invoke(halGetDeviceInfoStub));
+    MOCKER(halGetDeviceInfo).stubs().will(invoke(halGetDeviceInfoStub));
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
         .stubs()
         .will(returnValue(Analysis::Dvvp::Common::Config::PlatformType::MINI_V3_TYPE));
- 
+
     auto platform = Analysis::Dvvp::Common::Platform::Platform::instance();
- 
+
     EXPECT_EQ(PROFILING_SUCCESS, platform->Uninit());
     EXPECT_EQ(PROFILING_SUCCESS, platform->Init());
     platform->SetPlatformSoc();
     EXPECT_EQ(Analysis::Dvvp::Common::Platform::SysPlatformType::DEVICE, platform->GetPlatform());
- 
+
     // pmu
     std::string pmuType = "ArithmeticUtilization";
     std::string aicEvent;
     EXPECT_EQ(PROFILING_SUCCESS, platform->GetAicoreEvents(pmuType, aicEvent));
     EXPECT_EQ("0x49,0x4a,0x4b,0x4c,0x4d,0x4e,0x4f", aicEvent);
- 
+
     pmuType = "PipeUtilization";
     EXPECT_EQ(PROFILING_SUCCESS, platform->GetAicoreEvents(pmuType, aicEvent));
     EXPECT_EQ("0x8,0xa,0x9,0xb,0xc,0xd,0x54,0x55", aicEvent);
- 
+
     pmuType = "PipelineExecuteUtilization";
     EXPECT_EQ(PROFILING_SUCCESS, platform->GetAicoreEvents(pmuType, aicEvent));
     EXPECT_EQ("0x12c,0x49,0x4a,0x9,0x302,0xc,0xd,0x303", aicEvent);
- 
+
     pmuType = "Memory";
     EXPECT_EQ(PROFILING_SUCCESS, platform->GetAicoreEvents(pmuType, aicEvent));
     EXPECT_EQ("0x15,0x16,0x31,0x32,0xf,0x10,0x12,0x13", aicEvent);
- 
+
     pmuType = "MemoryL0";
     EXPECT_EQ(PROFILING_SUCCESS, platform->GetAicoreEvents(pmuType, aicEvent));
     EXPECT_EQ("0x1b,0x1c,0x21,0x22,0x27,0x28,0x29,0x2a", aicEvent);
- 
+
     pmuType = "MemoryUB";
     EXPECT_EQ(PROFILING_SUCCESS, platform->GetAicoreEvents(pmuType, aicEvent));
     EXPECT_EQ("0x37,0x38,0x1a5,0x1a6,0x17f,0x180,0x191", aicEvent);
- 
+
     pmuType = "L2Cache";
     EXPECT_EQ(PROFILING_SUCCESS, platform->GetAicoreEvents(pmuType, aicEvent));
     EXPECT_EQ("0x500,0x502,0x504,0x506,0x508,0x50a", aicEvent);
- 
+
     pmuType = "ResourceConflictRatio";
     EXPECT_EQ(PROFILING_SUCCESS, platform->GetAicoreEvents(pmuType, aicEvent));
     EXPECT_EQ("0x64,0x65,0x66", aicEvent);
- 
+
     pmuType = "PipeStallCycle";
     EXPECT_EQ(PROFILING_FAILED, platform->GetAicoreEvents(pmuType, aicEvent));
- 
+
     pmuType = "ScalarRatio";
     EXPECT_EQ(PROFILING_FAILED, platform->GetAicoreEvents(pmuType, aicEvent));
- 
+
     // feature
     std::string featureType = "switch";
     EXPECT_EQ(true, platform->CheckIfSupport(featureType));
- 
+
     featureType = "ge_api";
     EXPECT_EQ(true, platform->CheckIfSupport(featureType));
- 
+
     featureType = "task_trace";
     EXPECT_EQ(true, platform->CheckIfSupport(featureType));
- 
+
     featureType = "aicpu";
     EXPECT_EQ(true, platform->CheckIfSupport(featureType));
- 
+
     featureType = "l2";
     EXPECT_EQ(true, platform->CheckIfSupport(featureType));
- 
+
     featureType = "hccl";
     EXPECT_EQ(true, platform->CheckIfSupport(featureType));
- 
+
     featureType = "msproftx";
     EXPECT_EQ(true, platform->CheckIfSupport(featureType));
- 
+
     featureType = "instr_profiling";
     EXPECT_EQ(false, platform->CheckIfSupport(featureType));
- 
+
     featureType = "task_tsfw";
     EXPECT_EQ(true, platform->CheckIfSupport(featureType));
- 
+
     featureType = "task_framework";
     EXPECT_EQ(false, platform->CheckIfSupport(featureType));
- 
+
     featureType = "runtime_api";
     EXPECT_EQ(true, platform->CheckIfSupport(featureType));
- 
+
     featureType = "ascendcl";
     EXPECT_EQ(true, platform->CheckIfSupport(featureType));
- 
+
     featureType = "task_block";
     EXPECT_EQ(true, platform->CheckIfSupport(featureType));
- 
+
     featureType = "sys_lp_freq";
     EXPECT_EQ(false, platform->CheckIfSupport(featureType));
- 
+
     featureType = "training_trace";
     EXPECT_EQ(true, platform->CheckIfSupport(featureType));
 
@@ -812,11 +807,10 @@ TEST_F(COMMON_PLATFORM_TEST, MiniV3PlatformTest) {
 }
 
 #ifndef BUILD_PROFILING_OPEN_PROJECT
-TEST_F(COMMON_PLATFORM_TEST, DavidPlatformTest) {
+TEST_F(COMMON_PLATFORM_TEST, DavidPlatformTest)
+{
     GlobalMockObject::verify();
-    MOCKER(halGetDeviceInfo)
-        .stubs()
-        .will(invoke(halGetDeviceInfoStub));
+    MOCKER(halGetDeviceInfo).stubs().will(invoke(halGetDeviceInfoStub));
 
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
         .stubs()
@@ -906,17 +900,15 @@ TEST_F(COMMON_PLATFORM_TEST, DavidPlatformTest) {
     std::string npuEvent = "";
     platform->L2CacheAdaptor(npuEvent, l2Switch, l2Events);
     EXPECT_EQ("0x00,0x81,0x82,0x83,0x74,0x75", l2Events);
-    EXPECT_EQ("HA:0x00,0x81,0x82,0x83,0x74,0x75;SMMU:0x2,0x8a,0x8b,0x8c,0x8d;SMMU_DFX:",
-        npuEvent);
+    EXPECT_EQ("HA:0x00,0x81,0x82,0x83,0x74,0x75;SMMU:0x2,0x8a,0x8b,0x8c,0x8d;SMMU_DFX:", npuEvent);
 }
 #endif
 
 #ifndef BUILD_PROFILING_OPEN_PROJECT
-TEST_F(COMMON_PLATFORM_TEST, DavidV121PlatformTest) {
+TEST_F(COMMON_PLATFORM_TEST, DavidV121PlatformTest)
+{
     GlobalMockObject::verify();
-    MOCKER(halGetDeviceInfo)
-        .stubs()
-        .will(invoke(halGetDeviceInfoStub));
+    MOCKER(halGetDeviceInfo).stubs().will(invoke(halGetDeviceInfoStub));
 
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
         .stubs()
@@ -1006,20 +998,18 @@ TEST_F(COMMON_PLATFORM_TEST, DavidV121PlatformTest) {
     std::string npuEvent = "";
     platform->L2CacheAdaptor(npuEvent, l2Switch, l2Events);
     EXPECT_EQ("0x00,0x81,0x82,0x83,0x74,0x75", l2Events);
-    EXPECT_EQ("HA:0x00,0x81,0x82,0x83,0x74,0x75;SMMU:0x2,0x8a,0x8b,0x8c,0x8d",
-        npuEvent);
+    EXPECT_EQ("HA:0x00,0x81,0x82,0x83,0x74,0x75;SMMU:0x2,0x8a,0x8b,0x8c,0x8d", npuEvent);
 }
 #endif
 
-TEST_F(COMMON_PLATFORM_TEST, PlatformAnalyzerBase) {
+TEST_F(COMMON_PLATFORM_TEST, PlatformAnalyzerBase)
+{
     GlobalMockObject::verify();
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
         .stubs()
         .will(returnValue(PlatformType::CHIP_V4_1_0))
         .then(returnValue(15));
-    MOCKER_CPP(&Analysis::Dvvp::Common::Platform::AscendHalAdaptor::Init)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&Analysis::Dvvp::Common::Platform::AscendHalAdaptor::Init).stubs().will(returnValue(PROFILING_SUCCESS));
     Platform::instance()->Uninit();
     Platform::instance()->Init();
     std::string pmu = "ArithmeticUtilization";
@@ -1064,15 +1054,14 @@ TEST_F(COMMON_PLATFORM_TEST, PlatformAnalyzerBase) {
 }
 
 #ifndef BUILD_PROFILING_OPEN_PROJECT
-TEST_F(COMMON_PLATFORM_TEST, PlatformAnalyzerDavid) {
+TEST_F(COMMON_PLATFORM_TEST, PlatformAnalyzerDavid)
+{
     GlobalMockObject::verify();
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
         .stubs()
         .will(returnValue(PlatformType::CHIP_CLOUD_V3))
         .then(returnValue(17));
-    MOCKER_CPP(&Analysis::Dvvp::Common::Platform::AscendHalAdaptor::Init)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&Analysis::Dvvp::Common::Platform::AscendHalAdaptor::Init).stubs().will(returnValue(PROFILING_SUCCESS));
     Platform::instance()->Init();
     std::string pmu = "L2Cache";
     // check analyzer not init

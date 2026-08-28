@@ -26,87 +26,86 @@ using namespace analysis::dvvp::common::error;
 using namespace analysis::dvvp::message;
 using namespace Collector::Dvvp::DynProf;
 
-class PROF_APPLICATION_TEST: public testing::Test {
+class PROF_APPLICATION_TEST : public testing::Test {
 protected:
-    virtual void SetUp() {
-    }
-    virtual void TearDown() {
-    }
+    virtual void SetUp() {}
+    virtual void TearDown() {}
 };
 
 /////////////////////////////////////////////////////////////
-TEST_F(PROF_APPLICATION_TEST, PrepareLaunchAppCmd) {
-	GlobalMockObject::verify();
-	std::shared_ptr<analysis::dvvp::message::ProfileParams> params(
-		new analysis::dvvp::message::ProfileParams());
+TEST_F(PROF_APPLICATION_TEST, PrepareLaunchAppCmd)
+{
+    GlobalMockObject::verify();
+    std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams());
 
-	std::stringstream ss_perf_cmd_app;
-	params->app_dir = "";
-	EXPECT_EQ(PROFILING_FAILED, analysis::dvvp::app::Application::PrepareLaunchAppCmd(ss_perf_cmd_app, params));
-	params->app = "$$$";
-	EXPECT_EQ(PROFILING_FAILED, analysis::dvvp::app::Application::PrepareLaunchAppCmd(ss_perf_cmd_app, params));
+    std::stringstream ss_perf_cmd_app;
+    params->app_dir = "";
+    EXPECT_EQ(PROFILING_FAILED, analysis::dvvp::app::Application::PrepareLaunchAppCmd(ss_perf_cmd_app, params));
+    params->app = "$$$";
+    EXPECT_EQ(PROFILING_FAILED, analysis::dvvp::app::Application::PrepareLaunchAppCmd(ss_perf_cmd_app, params));
 
-	params->app_dir = "/appdir";
-	EXPECT_EQ(PROFILING_FAILED, analysis::dvvp::app::Application::PrepareLaunchAppCmd(ss_perf_cmd_app, params));
-	params->app_parameters = "rm -rf";
-	EXPECT_EQ(PROFILING_FAILED, analysis::dvvp::app::Application::PrepareLaunchAppCmd(ss_perf_cmd_app, params));
-	params->cmdPath = "/appdir/bash";
-	params->app = "test";
-	params->app_parameters = "";
+    params->app_dir = "/appdir";
+    EXPECT_EQ(PROFILING_FAILED, analysis::dvvp::app::Application::PrepareLaunchAppCmd(ss_perf_cmd_app, params));
+    params->app_parameters = "rm -rf";
+    EXPECT_EQ(PROFILING_FAILED, analysis::dvvp::app::Application::PrepareLaunchAppCmd(ss_perf_cmd_app, params));
+    params->cmdPath = "/appdir/bash";
+    params->app = "test";
+    params->app_parameters = "";
 
-	EXPECT_EQ(PROFILING_SUCCESS, analysis::dvvp::app::Application::PrepareLaunchAppCmd(ss_perf_cmd_app, params));
+    EXPECT_EQ(PROFILING_SUCCESS, analysis::dvvp::app::Application::PrepareLaunchAppCmd(ss_perf_cmd_app, params));
 
-	EXPECT_EQ(PROFILING_SUCCESS, analysis::dvvp::app::Application::PrepareLaunchAppCmd(ss_perf_cmd_app, params));
+    EXPECT_EQ(PROFILING_SUCCESS, analysis::dvvp::app::Application::PrepareLaunchAppCmd(ss_perf_cmd_app, params));
 
-	EXPECT_EQ(PROFILING_SUCCESS, analysis::dvvp::app::Application::PrepareLaunchAppCmd(ss_perf_cmd_app, params));
+    EXPECT_EQ(PROFILING_SUCCESS, analysis::dvvp::app::Application::PrepareLaunchAppCmd(ss_perf_cmd_app, params));
 
-	params->app_parameters = "app_parameters";
-	EXPECT_EQ(PROFILING_SUCCESS, analysis::dvvp::app::Application::PrepareLaunchAppCmd(ss_perf_cmd_app, params));
+    params->app_parameters = "app_parameters";
+    EXPECT_EQ(PROFILING_SUCCESS, analysis::dvvp::app::Application::PrepareLaunchAppCmd(ss_perf_cmd_app, params));
 }
 
 /////////////////////////////////////////////////////////////
-TEST_F(PROF_APPLICATION_TEST, PrepareAppArgs) {
-	GlobalMockObject::verify();
+TEST_F(PROF_APPLICATION_TEST, PrepareAppArgs)
+{
+    GlobalMockObject::verify();
 
-	std::vector<std::string> params;
-	params.push_back("params1");
-	params.push_back("params2");
-	std::vector<std::string> args_v;
-	analysis::dvvp::app::Application::PrepareAppArgs(params, args_v);
-	std::string newStr = args_v[0];
-	EXPECT_STREQ("params2", newStr.c_str());
+    std::vector<std::string> params;
+    params.push_back("params1");
+    params.push_back("params2");
+    std::vector<std::string> args_v;
+    analysis::dvvp::app::Application::PrepareAppArgs(params, args_v);
+    std::string newStr = args_v[0];
+    EXPECT_STREQ("params2", newStr.c_str());
 }
 
 /////////////////////////////////////////////////////////////
-TEST_F(PROF_APPLICATION_TEST, PrepareAppEnvs) {
-	GlobalMockObject::verify();
-	
-	std::string result_dir("./");
-	std::shared_ptr<analysis::dvvp::message::ProfileParams> params(
-		new analysis::dvvp::message::ProfileParams());
-	EXPECT_NE(nullptr, params);
-	std::string cmd("/path/to/exe");
-	std::string ai_core_events_str("ai_core_events_str");
-	std::string dev_id("0");
+TEST_F(PROF_APPLICATION_TEST, PrepareAppEnvs)
+{
+    GlobalMockObject::verify();
 
-	std::vector<std::string> envs_v;
+    std::string result_dir("./");
+    std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams());
+    EXPECT_NE(nullptr, params);
+    std::string cmd("/path/to/exe");
+    std::string ai_core_events_str("ai_core_events_str");
+    std::string dev_id("0");
 
-	params->result_dir = "/tmp/PrepareAppEnvs";
+    std::vector<std::string> envs_v;
+
+    params->result_dir = "/tmp/PrepareAppEnvs";
 
     int ret = analysis::dvvp::app::Application::PrepareAppEnvs(nullptr, envs_v);
     EXPECT_EQ(PROFILING_FAILED, ret);
-	ret = analysis::dvvp::app::Application::PrepareAppEnvs(params, envs_v);
-	EXPECT_EQ(PROFILING_SUCCESS, ret);
-	params->profiling_options = "task_trace";
-	ret = analysis::dvvp::app::Application::PrepareAppEnvs(params, envs_v);
-	EXPECT_EQ(PROFILING_SUCCESS, ret);
-	ret = analysis::dvvp::app::Application::PrepareAppEnvs(params, envs_v);
-	EXPECT_EQ(PROFILING_SUCCESS, ret);
+    ret = analysis::dvvp::app::Application::PrepareAppEnvs(params, envs_v);
+    EXPECT_EQ(PROFILING_SUCCESS, ret);
+    params->profiling_options = "task_trace";
+    ret = analysis::dvvp::app::Application::PrepareAppEnvs(params, envs_v);
+    EXPECT_EQ(PROFILING_SUCCESS, ret);
+    ret = analysis::dvvp::app::Application::PrepareAppEnvs(params, envs_v);
+    EXPECT_EQ(PROFILING_SUCCESS, ret);
 }
 
 int launchAppCmdCnt = 0;
 
-int PrepareLaunchAppCmdStub(std::stringstream &ssCmdApp, SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params)
+int PrepareLaunchAppCmdStub(std::stringstream& ssCmdApp, SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params)
 {
     ssCmdApp << "test";
     launchAppCmdCnt++;
@@ -118,131 +117,121 @@ int PrepareLaunchAppCmdStub(std::stringstream &ssCmdApp, SHARED_PTR_ALIA<analysi
 
 int CanonicalizePathStubCnt = 0;
 
-std::string CanonicalizePathStub(const std::string &path)
+std::string CanonicalizePathStub(const std::string& path)
 {
-	std::string tmp;
+    std::string tmp;
     CanonicalizePathStubCnt++;
     if (CanonicalizePathStubCnt == 1) {
         return tmp;
     }
-	tmp = "test";
+    tmp = "test";
     return tmp;
 }
 
 /////////////////////////////////////////////////////////////
-TEST_F(PROF_APPLICATION_TEST, LaunchApp) {
-	GlobalMockObject::verify();
-	
-	std::string ai_core_events_str("ai_core_events_str");
-	std::string result_dir("./");
-	std::shared_ptr<analysis::dvvp::message::ProfileParams> params(
-		new analysis::dvvp::message::ProfileParams());
-	std::string resultDir = "/tmp";
-	params->app = "ls";
-	pid_t app_process;
+TEST_F(PROF_APPLICATION_TEST, LaunchApp)
+{
+    GlobalMockObject::verify();
 
-	MOCKER(analysis::dvvp::app::Application::PrepareLaunchAppCmd)
-		.stubs()
-		.will(invoke(PrepareLaunchAppCmdStub));
+    std::string ai_core_events_str("ai_core_events_str");
+    std::string result_dir("./");
+    std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams());
+    std::string resultDir = "/tmp";
+    params->app = "ls";
+    pid_t app_process;
 
-	MOCKER(analysis::dvvp::app::Application::PrepareAppArgs)
-		.stubs()
-		.will(ignoreReturnValue());
+    MOCKER(analysis::dvvp::app::Application::PrepareLaunchAppCmd).stubs().will(invoke(PrepareLaunchAppCmdStub));
 
-	MOCKER(analysis::dvvp::app::Application::PrepareAppEnvs)
-		.stubs()
-		.will(returnValue(PROFILING_FAILED))
-		.then(returnValue(PROFILING_SUCCESS));
-	FILE *fp = (FILE *)0x12345;
+    MOCKER(analysis::dvvp::app::Application::PrepareAppArgs).stubs().will(ignoreReturnValue());
 
-	MOCKER(analysis::dvvp::common::utils::Utils::CanonicalizePath)
+    MOCKER(analysis::dvvp::app::Application::PrepareAppEnvs)
         .stubs()
-        .will(invoke(CanonicalizePathStub));
+        .will(returnValue(PROFILING_FAILED))
+        .then(returnValue(PROFILING_SUCCESS));
+    FILE* fp = (FILE*)0x12345;
 
-    MOCKER(analysis::dvvp::common::utils::Utils::IsFileExist)
-        .stubs()
-        .will(returnValue(true));
+    MOCKER(analysis::dvvp::common::utils::Utils::CanonicalizePath).stubs().will(invoke(CanonicalizePathStub));
 
-    MOCKER(analysis::dvvp::common::utils::Utils::IsSoftLink)
-        .stubs()
-        .will(returnValue(false));
+    MOCKER(analysis::dvvp::common::utils::Utils::IsFileExist).stubs().will(returnValue(true));
 
-	EXPECT_EQ(PROFILING_FAILED, analysis::dvvp::app::Application::LaunchApp(nullptr, app_process));
-	EXPECT_EQ(PROFILING_FAILED, analysis::dvvp::app::Application::LaunchApp(params, app_process));
+    MOCKER(analysis::dvvp::common::utils::Utils::IsSoftLink).stubs().will(returnValue(false));
 
-	params->app_dir = resultDir;
-	EXPECT_EQ(PROFILING_FAILED, analysis::dvvp::app::Application::LaunchApp(params, app_process));
+    EXPECT_EQ(PROFILING_FAILED, analysis::dvvp::app::Application::LaunchApp(nullptr, app_process));
+    EXPECT_EQ(PROFILING_FAILED, analysis::dvvp::app::Application::LaunchApp(params, app_process));
 
-	EXPECT_EQ(PROFILING_FAILED, analysis::dvvp::app::Application::LaunchApp(params, app_process));
-	//check file path failed
-	EXPECT_EQ(PROFILING_SUCCESS, analysis::dvvp::app::Application::LaunchApp(params, app_process));
-	EXPECT_EQ(PROFILING_SUCCESS, analysis::dvvp::app::Application::LaunchApp(params, app_process));
+    params->app_dir = resultDir;
+    EXPECT_EQ(PROFILING_FAILED, analysis::dvvp::app::Application::LaunchApp(params, app_process));
 
-	EXPECT_EQ(PROFILING_SUCCESS, analysis::dvvp::app::Application::LaunchApp(params, app_process));
+    EXPECT_EQ(PROFILING_FAILED, analysis::dvvp::app::Application::LaunchApp(params, app_process));
+    // check file path failed
+    EXPECT_EQ(PROFILING_SUCCESS, analysis::dvvp::app::Application::LaunchApp(params, app_process));
+    EXPECT_EQ(PROFILING_SUCCESS, analysis::dvvp::app::Application::LaunchApp(params, app_process));
 
-	std::vector<std::string> paramsCmd;
-	MOCKER(analysis::dvvp::common::utils::Utils::Split)
-		.stubs()
-		.will(returnValue(paramsCmd));
-	EXPECT_EQ(PROFILING_FAILED, analysis::dvvp::app::Application::LaunchApp(params, app_process));
+    EXPECT_EQ(PROFILING_SUCCESS, analysis::dvvp::app::Application::LaunchApp(params, app_process));
+
+    std::vector<std::string> paramsCmd;
+    MOCKER(analysis::dvvp::common::utils::Utils::Split).stubs().will(returnValue(paramsCmd));
+    EXPECT_EQ(PROFILING_FAILED, analysis::dvvp::app::Application::LaunchApp(params, app_process));
 }
 
-
-TEST_F(PROF_APPLICATION_TEST, SetAppEnv) {
+TEST_F(PROF_APPLICATION_TEST, SetAppEnv)
+{
     constexpr size_t envCount = 6;
     constexpr size_t dynProfCliEnvCount = 12;
     GlobalMockObject::verify();
-    std::shared_ptr<analysis::dvvp::message::ProfileParams> params(
-        new analysis::dvvp::message::ProfileParams());
+    std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams());
     std::vector<std::string> envs;
     params->app_env = "LD_LIBRARY_PATH=123;asd=1;PATH=123;PROFILING_MODE=true";
-	params->delayTime = "1";
+    params->delayTime = "1";
     analysis::dvvp::app::Application::SetAppEnv(params, envs);
-	EXPECT_EQ(envs.size(), envCount);
-	if (envs.size() == envCount) {
-		EXPECT_EQ(envs[0], "LD_LIBRARY_PATH=123");
-		EXPECT_EQ(envs[envCount - 1], "PROFILING_MODE=delay_or_duration");
-	}
+    EXPECT_EQ(envs.size(), envCount);
+    if (envs.size() == envCount) {
+        EXPECT_EQ(envs[0], "LD_LIBRARY_PATH=123");
+        EXPECT_EQ(envs[envCount - 1], "PROFILING_MODE=delay_or_duration");
+    }
     DynProfCliMgr::instance()->EnableDynProfCli();
     analysis::dvvp::app::Application::SetAppEnv(params, envs);
-	EXPECT_EQ(envs.size(), dynProfCliEnvCount);
-	if (envs.size() == dynProfCliEnvCount) {
-		EXPECT_EQ(envs[envCount], "LD_LIBRARY_PATH=123");
-		EXPECT_EQ(envs[dynProfCliEnvCount - 1], "PROFILING_MODE=delay_or_duration");
-	}
+    EXPECT_EQ(envs.size(), dynProfCliEnvCount);
+    if (envs.size() == dynProfCliEnvCount) {
+        EXPECT_EQ(envs[envCount], "LD_LIBRARY_PATH=123");
+        EXPECT_EQ(envs[dynProfCliEnvCount - 1], "PROFILING_MODE=delay_or_duration");
+    }
 }
 
-TEST_F(PROF_APPLICATION_TEST, SetGlobalEnv) {
-	GlobalMockObject::verify();
-	std::vector<std::string> envList;
-	envList.push_back("LD_LIBRARY_PATH=runtime.so");
-	Analysis::Dvvp::App::EnvManager::instance()->SetGlobalEnv(envList);
-	std::vector<std::string> envs = Analysis::Dvvp::App::EnvManager::instance()->GetGlobalEnv();
-	EXPECT_EQ(envs.size(), 1);
-	if (envs.size() == 1) {
-		EXPECT_EQ(envList[0], envs[0]);
-	}
+TEST_F(PROF_APPLICATION_TEST, SetGlobalEnv)
+{
+    GlobalMockObject::verify();
+    std::vector<std::string> envList;
+    envList.push_back("LD_LIBRARY_PATH=runtime.so");
+    Analysis::Dvvp::App::EnvManager::instance()->SetGlobalEnv(envList);
+    std::vector<std::string> envs = Analysis::Dvvp::App::EnvManager::instance()->GetGlobalEnv();
+    EXPECT_EQ(envs.size(), 1);
+    if (envs.size() == 1) {
+        EXPECT_EQ(envList[0], envs[0]);
+    }
 }
 
-TEST_F(PROF_APPLICATION_TEST, GetAppPath) {
-	GlobalMockObject::verify();
-	std::vector<std::string> paramsCmd;
-	EXPECT_EQ("", analysis::dvvp::app::Application::GetAppPath(paramsCmd));
+TEST_F(PROF_APPLICATION_TEST, GetAppPath)
+{
+    GlobalMockObject::verify();
+    std::vector<std::string> paramsCmd;
+    EXPECT_EQ("", analysis::dvvp::app::Application::GetAppPath(paramsCmd));
 
-	paramsCmd.push_back("first");
-	paramsCmd.push_back("second");
-	paramsCmd.push_back("third");
-	EXPECT_EQ("first", analysis::dvvp::app::Application::GetAppPath(paramsCmd));
+    paramsCmd.push_back("first");
+    paramsCmd.push_back("second");
+    paramsCmd.push_back("third");
+    EXPECT_EQ("first", analysis::dvvp::app::Application::GetAppPath(paramsCmd));
 
     paramsCmd[0] = "bash";
     EXPECT_EQ("second", analysis::dvvp::app::Application::GetAppPath(paramsCmd));
 }
 
-TEST_F(PROF_APPLICATION_TEST, GetCmdString) {
+TEST_F(PROF_APPLICATION_TEST, GetCmdString)
+{
     GlobalMockObject::verify();
-	std::string paramsCmd;
+    std::string paramsCmd;
     EXPECT_EQ("", analysis::dvvp::app::Application::GetCmdString(paramsCmd));
 
     paramsCmd = "bash";
-	EXPECT_EQ(paramsCmd, analysis::dvvp::app::Application::GetCmdString(paramsCmd));
+    EXPECT_EQ(paramsCmd, analysis::dvvp::app::Application::GetCmdString(paramsCmd));
 }

@@ -9,7 +9,4 @@
  */
 #include "prof_api.h"
 
-int32_t profSetStepInfo(const uint64_t indexId, const uint16_t tagId, void* const stream)
-{
-    return 0;
-}
+int32_t profSetStepInfo(const uint64_t indexId, const uint16_t tagId, void* const stream) { return 0; }

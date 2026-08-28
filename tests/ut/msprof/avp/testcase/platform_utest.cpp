@@ -24,23 +24,15 @@
 #include "platform_feature.h"
 #include "chip/chip_nano_v1.h"
 
-class PlatformUtest: public testing::Test {
+class PlatformUtest : public testing::Test {
 protected:
-    virtual void SetUp()
-    {
-    }
-    virtual void TearDown()
-    {
-        GlobalMockObject::verify();
-    }
+    virtual void SetUp() {}
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 TEST_F(PlatformUtest, PlatformBaseFeature)
 {
-    MOCKER(HalGetChipVersion)
-        .stubs()
-        .will(returnValue(uint32_t(CHIP_DC)))
-        .then(returnValue(uint32_t(CHIP_NANO_V1)));
+    MOCKER(HalGetChipVersion).stubs().will(returnValue(uint32_t(CHIP_DC))).then(returnValue(uint32_t(CHIP_NANO_V1)));
     uint32_t count = 0;
     int32_t ret = PlatformInitialize(&count);
     EXPECT_EQ(ret, PROFILING_FAILED);
@@ -101,14 +93,12 @@ TEST_F(PlatformUtest, PlatformBaseFeature)
 
 TEST_F(PlatformUtest, PlatformBaseMetrics)
 {
-    MOCKER(HalGetChipVersion)
-        .stubs()
-        .will(returnValue(uint32_t(CHIP_NANO_V1)));
+    MOCKER(HalGetChipVersion).stubs().will(returnValue(uint32_t(CHIP_NANO_V1)));
     uint32_t count = 0;
     int32_t ret = PlatformInitialize(&count);
     EXPECT_EQ(ret, PROFILING_SUCCESS);
     // support
-    char events[PMU_EVENT_LENGTH] = { 0 };
+    char events[PMU_EVENT_LENGTH] = {0};
     bool retVal = PlatformGetMetricsEvents("ScalarRatio", events, PMU_EVENT_LENGTH);
     EXPECT_EQ(retVal, true);
     EXPECT_EQ(0, strcmp(events, "0x103,0x104,0x105"));
@@ -136,14 +126,11 @@ TEST_F(PlatformUtest, PlatformBaseMetrics)
     // not init
     retVal = PlatformGetMetricsEvents("MemoryUB", events, PMU_EVENT_LENGTH);
     EXPECT_EQ(retVal, false);
-
 }
 
 TEST_F(PlatformUtest, PlatformBaseOther)
 {
-    MOCKER(HalGetChipVersion)
-        .stubs()
-        .will(returnValue(uint32_t(CHIP_NANO_V1)));
+    MOCKER(HalGetChipVersion).stubs().will(returnValue(uint32_t(CHIP_NANO_V1)));
     uint32_t count = 0;
     int32_t ret = PlatformInitialize(&count);
     EXPECT_EQ(ret, PROFILING_SUCCESS);
@@ -165,9 +152,7 @@ TEST_F(PlatformUtest, PlatformBaseOther)
 
 TEST_F(PlatformUtest, PlatformGetDefaultMetricsBase)
 {
-    MOCKER(HalGetChipVersion)
-        .stubs()
-        .will(returnValue(uint32_t(CHIP_NANO_V1)));
+    MOCKER(HalGetChipVersion).stubs().will(returnValue(uint32_t(CHIP_NANO_V1)));
     uint32_t count = 0;
     int32_t ret = PlatformInitialize(&count);
     EXPECT_EQ(ret, PROFILING_SUCCESS);
@@ -181,9 +166,7 @@ TEST_F(PlatformUtest, PlatformGetDefaultMetricsBase)
 
 TEST_F(PlatformUtest, PlatformGetDefaultDevFreqBase)
 {
-    MOCKER(HalGetChipVersion)
-        .stubs()
-        .will(returnValue(uint32_t(CHIP_NANO_V1)));
+    MOCKER(HalGetChipVersion).stubs().will(returnValue(uint32_t(CHIP_NANO_V1)));
     uint32_t count = 0;
     int32_t ret = PlatformInitialize(&count);
     EXPECT_EQ(ret, PROFILING_SUCCESS);
@@ -197,16 +180,11 @@ TEST_F(PlatformUtest, PlatformGetDefaultDevFreqBase)
 
 TEST_F(PlatformUtest, PlatformGetDevFreqBase)
 {
-    MOCKER(HalGetChipVersion)
-        .stubs()
-        .will(returnValue(uint32_t(CHIP_NANO_V1)));
+    MOCKER(HalGetChipVersion).stubs().will(returnValue(uint32_t(CHIP_NANO_V1)));
     uint32_t count = 0;
     int32_t ret = PlatformInitialize(&count);
     EXPECT_EQ(ret, PROFILING_SUCCESS);
-    MOCKER(HalGetDeviceFreq)
-        .stubs()
-        .will(returnValue((uint64_t)50000))
-        .then(returnValue((uint64_t)0));
+    MOCKER(HalGetDeviceFreq).stubs().will(returnValue((uint64_t)50000)).then(returnValue((uint64_t)0));
     uint64_t devFreq = PlatformGetDevFreq(0);
     EXPECT_EQ(devFreq, 50);
     devFreq = PlatformGetDevFreq(0);
@@ -219,12 +197,8 @@ TEST_F(PlatformUtest, PlatformGetDevFreqBase)
 
 TEST_F(PlatformUtest, PlatformGetHostFreqBase)
 {
-    MOCKER(HalGetChipVersion)
-        .stubs()
-        .will(returnValue(uint32_t(CHIP_NANO_V1)));
-    MOCKER(HalGetHostFreq)
-        .stubs()
-        .will(returnValue((uint64_t)10000));
+    MOCKER(HalGetChipVersion).stubs().will(returnValue(uint32_t(CHIP_NANO_V1)));
+    MOCKER(HalGetHostFreq).stubs().will(returnValue((uint64_t)10000));
     uint32_t count = 0;
     int32_t ret = PlatformInitialize(&count);
     EXPECT_EQ(ret, PROFILING_SUCCESS);
@@ -238,15 +212,13 @@ TEST_F(PlatformUtest, PlatformGetHostFreqBase)
 
 TEST_F(PlatformUtest, PlatformGetVersionInfoBase)
 {
-    const char *versionInfo = PlatformGetVersionInfo();
+    const char* versionInfo = PlatformGetVersionInfo();
     EXPECT_EQ(strcmp(versionInfo, "1.0"), 0);
 }
 
 TEST_F(PlatformUtest, IsSupportBitBase)
 {
-    MOCKER(HalGetChipVersion)
-        .stubs()
-        .will(returnValue(uint32_t(CHIP_NANO_V1)));
+    MOCKER(HalGetChipVersion).stubs().will(returnValue(uint32_t(CHIP_NANO_V1)));
     uint32_t count = 0;
     int32_t ret = PlatformInitialize(&count);
     EXPECT_EQ(ret, PROFILING_SUCCESS);

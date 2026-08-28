@@ -26,10 +26,10 @@ class CloudDeviceSimulator : public DeviceSimulator {
 public:
     CloudDeviceSimulator() {}
     virtual ~CloudDeviceSimulator() {}
-    virtual int32_t ProfDrvGetChannels(ChannelList &channels) override;
-    virtual int32_t GetDeviceInfo(int32_t moduleType, int32_t infoType, int64_t *value) override;
+    virtual int32_t ProfDrvGetChannels(ChannelList& channels) override;
+    virtual int32_t GetDeviceInfo(int32_t moduleType, int32_t infoType, int64_t* value) override;
 };
-}
-}
-}
+} // namespace Test
+} // namespace Dvvp
+} // namespace Cann
 #endif

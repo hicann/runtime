@@ -27,7 +27,7 @@ static const char MDCMINIV3_RM_RF[] = "rm -rf ./acljsonMdcMiniV3stest_workspace"
 static const char MDCMINIV3_MKDIR[] = "mkdir ./acljsonMdcMiniV3stest_workspace";
 static const char MDCMINIV3_OUTPUT_DIR[] = "./acljsonMdcMiniV3stest_workspace/output";
 
-class AclJsonMdcMiniV3Stest: public testing::Test {
+class AclJsonMdcMiniV3Stest : public testing::Test {
 protected:
     virtual void SetUp()
     {
@@ -62,11 +62,12 @@ TEST_F(AclJsonMdcMiniV3Stest, AclJsonDefault)
     // mdc_mini_v3: TaskTime
     nlohmann::json data;
     data["output"] = MDCMINIV3_OUTPUT_DIR;
-    std::vector<std::string> dataList = {"ffts_profile.data", "ts_track.data", "stars_soc.data", "stars_soc_profile.data"};
+    std::vector<std::string> dataList = {
+        "ffts_profile.data", "ts_track.data", "stars_soc.data", "stars_soc_profile.data"};
     MsprofMgr().SetDeviceCheckList(dataList);
     std::vector<std::string> hostDataList = {
-        "unaging.api_event.data", "unaging.compact.node_basic_info", "unaging.compact.task_track", "unaging.additional.context_id_info"
-    };
+        "unaging.api_event.data", "unaging.compact.node_basic_info", "unaging.compact.task_track",
+        "unaging.additional.context_id_info"};
     MsprofMgr().SetHostCheckList(hostDataList);
     std::vector<uint64_t> bitList = {PROF_ACL_API, PROF_TASK_TIME_L1, PROF_AICORE_METRICS};
     MsprofMgr().SetBitSwitchCheckList(bitList);

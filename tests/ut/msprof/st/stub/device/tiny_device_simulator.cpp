@@ -17,7 +17,7 @@ namespace Cann {
 namespace Dvvp {
 namespace Test {
 
-int32_t TinyDeviceSimulator::ProfDrvGetChannels(ChannelList &channels)
+int32_t TinyDeviceSimulator::ProfDrvGetChannels(ChannelList& channels)
 {
     int32_t channles_ids[] = {50, 53};
     channels.channel_num = sizeof(channles_ids) / sizeof(int32_t);
@@ -27,10 +27,9 @@ int32_t TinyDeviceSimulator::ProfDrvGetChannels(ChannelList &channels)
     return 0;
 }
 
-int32_t TinyDeviceSimulator::GetDeviceInfo(int32_t moduleType, int32_t infoType, int64_t *value)
+int32_t TinyDeviceSimulator::GetDeviceInfo(int32_t moduleType, int32_t infoType, int64_t* value)
 {
-    if (moduleType == MODULE_TYPE_SYSTEM &&
-        infoType == INFO_TYPE_VERSION) {
+    if (moduleType == MODULE_TYPE_SYSTEM && infoType == INFO_TYPE_VERSION) {
 #ifndef BUILD_PROFILING_OPEN_PROJECT
         *value = (int64_t)StPlatformType::CHIP_TINY_V1 << 8;
 #else
@@ -38,19 +37,17 @@ int32_t TinyDeviceSimulator::GetDeviceInfo(int32_t moduleType, int32_t infoType,
 #endif
     }
 
-    if (moduleType == MODULE_TYPE_AICORE &&
-        infoType == INFO_TYPE_CORE_NUM) {
+    if (moduleType == MODULE_TYPE_AICORE && infoType == INFO_TYPE_CORE_NUM) {
         *value = 8;
     }
 
-    if (moduleType == MODULE_TYPE_VECTOR_CORE &&
-        infoType == INFO_TYPE_CORE_NUM) {
+    if (moduleType == MODULE_TYPE_VECTOR_CORE && infoType == INFO_TYPE_CORE_NUM) {
         *value = 8;
     }
 
     return 0;
 }
 
-}
-}
-}
+} // namespace Test
+} // namespace Dvvp
+} // namespace Cann

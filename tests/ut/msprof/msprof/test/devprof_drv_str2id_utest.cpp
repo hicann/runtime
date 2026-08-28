@@ -31,10 +31,7 @@ protected:
 #endif
         analysis::dvvp::transport::HashData::instance()->Init();
     }
-    virtual void TearDown()
-    {
-        DevprofDrvAicpu::instance()->Stop();
-    }
+    virtual void TearDown() { DevprofDrvAicpu::instance()->Stop(); }
 };
 
 TEST_F(DEVPROF_DRV_STR2ID_UTEST, ReportStr2IdInfoToHost_Normal)
@@ -44,9 +41,7 @@ TEST_F(DEVPROF_DRV_STR2ID_UTEST, ReportStr2IdInfoToHost_Normal)
         .stubs()
         .with(any(), any(), outBoundP(&bufLen, sizeof(bufLen)))
         .will(returnValue(static_cast<int32_t>(DRV_ERROR_NONE)));
-    MOCKER(halProfSampleDataReport)
-        .stubs()
-        .will(returnValue(static_cast<int32_t>(DRV_ERROR_NONE)));
+    MOCKER(halProfSampleDataReport).stubs().will(returnValue(static_cast<int32_t>(DRV_ERROR_NONE)));
 
     std::string dataStr = "key1,key2,key3";
     int32_t ret = DevprofDrvAicpu::instance()->ReportStr2IdInfoToHost(dataStr);
@@ -60,9 +55,7 @@ TEST_F(DEVPROF_DRV_STR2ID_UTEST, ReportStr2IdInfoToHost_MultiStruct)
         .stubs()
         .with(any(), any(), outBoundP(&bufLen, sizeof(bufLen)))
         .will(returnValue(static_cast<int32_t>(DRV_ERROR_NONE)));
-    MOCKER(halProfSampleDataReport)
-        .stubs()
-        .will(returnValue(static_cast<int32_t>(DRV_ERROR_NONE)));
+    MOCKER(halProfSampleDataReport).stubs().will(returnValue(static_cast<int32_t>(DRV_ERROR_NONE)));
 
     std::string dataStr;
     for (int i = 0; i < 30; ++i) {
@@ -82,9 +75,7 @@ TEST_F(DEVPROF_DRV_STR2ID_UTEST, ReportStr2IdInfoToHost_KeyTooLong)
         .stubs()
         .with(any(), any(), outBoundP(&bufLen, sizeof(bufLen)))
         .will(returnValue(static_cast<int32_t>(DRV_ERROR_NONE)));
-    MOCKER(halProfSampleDataReport)
-        .stubs()
-        .will(returnValue(static_cast<int32_t>(DRV_ERROR_NONE)));
+    MOCKER(halProfSampleDataReport).stubs().will(returnValue(static_cast<int32_t>(DRV_ERROR_NONE)));
 
     std::string longKey(MSPROF_ADDTIONAL_INFO_DATA_LENGTH + 1, 'x');
     std::string dataStr = longKey + ",short_key";
@@ -108,9 +99,7 @@ TEST_F(DEVPROF_DRV_STR2ID_UTEST, ReportStr2IdInfoToHost_KeyExactly232)
         .stubs()
         .with(any(), any(), outBoundP(&bufLen, sizeof(bufLen)))
         .will(returnValue(static_cast<int32_t>(DRV_ERROR_NONE)));
-    MOCKER(halProfSampleDataReport)
-        .stubs()
-        .will(returnValue(static_cast<int32_t>(DRV_ERROR_NONE)));
+    MOCKER(halProfSampleDataReport).stubs().will(returnValue(static_cast<int32_t>(DRV_ERROR_NONE)));
 
     std::string key232(MSPROF_ADDTIONAL_INFO_DATA_LENGTH, 'x');
     std::string dataStr = key232 + ",short";
@@ -125,9 +114,7 @@ TEST_F(DEVPROF_DRV_STR2ID_UTEST, ReportStr2IdInfoToHost_BoundarySplit)
         .stubs()
         .with(any(), any(), outBoundP(&bufLen, sizeof(bufLen)))
         .will(returnValue(static_cast<int32_t>(DRV_ERROR_NONE)));
-    MOCKER(halProfSampleDataReport)
-        .stubs()
-        .will(returnValue(static_cast<int32_t>(DRV_ERROR_NONE)));
+    MOCKER(halProfSampleDataReport).stubs().will(returnValue(static_cast<int32_t>(DRV_ERROR_NONE)));
 
     std::string key231(MSPROF_ADDTIONAL_INFO_DATA_LENGTH - 1, 'a');
     std::string dataStr = key231 + ",b";
@@ -142,9 +129,7 @@ TEST_F(DEVPROF_DRV_STR2ID_UTEST, ReportStr2IdInfoToHost_EmptyInput)
         .stubs()
         .with(any(), any(), outBoundP(&bufLen, sizeof(bufLen)))
         .will(returnValue(static_cast<int32_t>(DRV_ERROR_NONE)));
-    MOCKER(halProfSampleDataReport)
-        .stubs()
-        .will(returnValue(static_cast<int32_t>(DRV_ERROR_NONE)));
+    MOCKER(halProfSampleDataReport).stubs().will(returnValue(static_cast<int32_t>(DRV_ERROR_NONE)));
 
     std::string dataStr = "";
     int32_t ret = DevprofDrvAicpu::instance()->ReportStr2IdInfoToHost(dataStr);

@@ -22,8 +22,8 @@ struct aclmdlDataset {
     uint64_t requestId;
 };
 
-aclError aclmdlLoadFromFile(const char * /* modelPath */, uint32_t *modelId);
+aclError aclmdlLoadFromFile(const char* /* modelPath */, uint32_t* modelId);
 aclError aclmdlUnload(uint32_t modelId);
-aclError aclmdlExecute(uint32_t modelId, const aclmdlDataset * /* input */, aclmdlDataset * /* output */);
+aclError aclmdlExecute(uint32_t modelId, const aclmdlDataset* /* input */, aclmdlDataset* /* output */);
 
 #endif

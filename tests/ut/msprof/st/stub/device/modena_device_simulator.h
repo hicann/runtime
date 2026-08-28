@@ -21,9 +21,9 @@ public:
     ModenaDeviceSimulator() {}
     explicit ModenaDeviceSimulator(uint32_t platformType) : DavidV121DeviceSimulator(platformType) {}
     ~ModenaDeviceSimulator() override {}
-    int32_t GetDeviceInfo(int32_t moduleType, int32_t infoType, int64_t *value) override;
+    int32_t GetDeviceInfo(int32_t moduleType, int32_t infoType, int64_t* value) override;
 };
-}
-}
-}
+} // namespace Test
+} // namespace Dvvp
+} // namespace Cann
 #endif

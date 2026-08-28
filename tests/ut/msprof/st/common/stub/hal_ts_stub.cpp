@@ -9,7 +9,7 @@
  */
 #include "hal_ts.h"
 
-int32_t halHostMemAlloc(void **pp, unsigned long long size, unsigned long long flag)
+int32_t halHostMemAlloc(void** pp, unsigned long long size, unsigned long long flag)
 {
     if (size <= 0 || flag != 0) {
         return -1;
@@ -18,7 +18,4 @@ int32_t halHostMemAlloc(void **pp, unsigned long long size, unsigned long long f
     return 0;
 }
 
-void halHostMemFree(void *p)
-{
-    free(p);
-}
+void halHostMemFree(void* p) { free(p); }

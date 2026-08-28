@@ -31,7 +31,8 @@ protected:
         DataMgr().Init("", "acljson");
         devId = 0;
         int32_t random_number = std::rand() % 100 + 1;
-        aclProfPath = "api_test_david_v121_output" + std::to_string(random_number);;
+        aclProfPath = "api_test_david_v121_output" + std::to_string(random_number);
+        ;
         mkdir(aclProfPath.c_str(), 0750);
         EXPECT_EQ(2, SimulatorMgr().CreateDeviceSimulator(2, StPlatformType::CHIP_CLOUD_V4));
         SimulatorMgr().SetSocSide(SocType::HOST);
@@ -43,7 +44,7 @@ protected:
     }
     virtual void TearDown()
     {
-        DevprofDrvAicpu::instance()->isRegister_ = false;   // 重置aicpu注册状态，使单进程内能多次注册
+        DevprofDrvAicpu::instance()->isRegister_ = false; // 重置aicpu注册状态，使单进程内能多次注册
         EXPECT_EQ(2, SimulatorMgr().DelDeviceSimulator(2, StPlatformType::CHIP_CLOUD_V4));
         aclProfPath.insert(0, "rm -rf ");
         system(aclProfPath.c_str());
@@ -63,17 +64,18 @@ TEST_F(AclApiDavidV121Stest, AclApiDefault)
 {
     uint32_t deviceIdList[1] = {devId};
     aclprofAicoreMetrics aicoreMetrics = ACL_AICORE_ARITHMETIC_UTILIZATION;
-    aclprofAicoreEvents *aicoreEvents = nullptr;
+    aclprofAicoreEvents* aicoreEvents = nullptr;
     uint64_t dataTypeConfig = ACL_PROF_ACL_API | ACL_PROF_TASK_TIME | ACL_PROF_AICORE_METRICS | ACL_PROF_AICPU |
                               ACL_PROF_L2CACHE | ACL_PROF_HCCL_TRACE | ACL_PROF_TRAINING_TRACE | ACL_PROF_MSPROFTX |
-                              ACL_PROF_RUNTIME_API | ACL_PROF_GE_API_L0 | ACL_PROF_TASK_TIME_L0 |
-                              ACL_PROF_TASK_MEMORY | ACL_PROF_GE_API_L1 | ACL_PROF_TASK_TIME_L2;
+                              ACL_PROF_RUNTIME_API | ACL_PROF_GE_API_L0 | ACL_PROF_TASK_TIME_L0 | ACL_PROF_TASK_MEMORY |
+                              ACL_PROF_GE_API_L1 | ACL_PROF_TASK_TIME_L2;
     auto config = aclprofCreateConfig(deviceIdList, 1, aicoreMetrics, aicoreEvents, dataTypeConfig);
     EXPECT_NE(nullptr, config);
 
     EXPECT_EQ(PROFILING_SUCCESS, AclApiStart(config, dataTypeConfig));
 
-    std::vector<std::string> deviceDataList = {"stars_soc.data", "ffts_profile.data", "ccu0.instr", "ccu1.instr", "socpmu.data"};
+    std::vector<std::string> deviceDataList = {
+        "stars_soc.data", "ffts_profile.data", "ccu0.instr", "ccu1.instr", "socpmu.data"};
     std::vector<std::string> hostDataList = {"aging.additional.msproftx"};
     EXPECT_EQ(0, CheckFiles(aclProfPath, deviceDataList, hostDataList));
 }
@@ -119,7 +121,7 @@ TEST_F(AclApiDavidV121Stest, AclApiSetConfig)
 {
     uint32_t deviceIdList[1] = {devId};
     aclprofAicoreMetrics aicoreMetrics = ACL_AICORE_ARITHMETIC_UTILIZATION;
-    aclprofAicoreEvents *aicoreEvents = nullptr;
+    aclprofAicoreEvents* aicoreEvents = nullptr;
     uint64_t dataTypeConfig = 0;
     auto config = aclprofCreateConfig(deviceIdList, 1, aicoreMetrics, aicoreEvents, dataTypeConfig);
     EXPECT_NE(nullptr, config);

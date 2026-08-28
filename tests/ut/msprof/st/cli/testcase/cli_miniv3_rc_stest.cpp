@@ -29,7 +29,7 @@ static const char MINIV3_RM_RF[] = "rm -rf ./cliMiniV3stest_workspace";
 static const char MINIV3_MKDIR[] = "mkdir ./cliMiniV3stest_workspace";
 static const char MINIV3_OUTPUT_DIR[] = "--output=./cliMiniV3stest_workspace/output";
 
-class CliMiniV3RcStest: public testing::Test {
+class CliMiniV3RcStest : public testing::Test {
 protected:
     virtual void SetUp()
     {
@@ -46,7 +46,7 @@ protected:
     virtual void TearDown()
     {
         GlobalMockObject::verify();
-        DevprofDrvAicpu::instance()->isRegister_ = false;   // 重置aicpu注册状态，使单进程内能多次注册
+        DevprofDrvAicpu::instance()->isRegister_ = false; // 重置aicpu注册状态，使单进程内能多次注册
         EXPECT_EQ(2, SimulatorMgr().DelDeviceSimulator(2, StPlatformType::MINI_V3_TYPE));
         system(MINIV3_RM_RF);
         system("rm -rf ./cli");
@@ -65,31 +65,36 @@ protected:
 TEST_F(CliMiniV3RcStest, CliDefault)
 {
     // miniv3_rc: TaskTime
-    const char* argv[] = {MINIV3_OUTPUT_DIR,};
+    const char* argv[] = {
+        MINIV3_OUTPUT_DIR,
+    };
     std::vector<std::string> dataList = {"ffts_profile.data", "ts_track.data", "stars_soc.data", "lpmFreqConv.data"};
     MsprofMgr().SetDeviceCheckList(dataList);
     std::vector<std::string> hostDataList = {
-        "unaging.api_event.data", "unaging.compact.node_basic_info", "unaging.compact.task_track", "unaging.additional.context_id_info"
-    };
+        "unaging.api_event.data", "unaging.compact.node_basic_info", "unaging.compact.task_track",
+        "unaging.additional.context_id_info"};
     MsprofMgr().SetHostCheckList(hostDataList);
     std::vector<uint64_t> bitList = {PROF_ACL_API, PROF_TASK_TIME_L1, PROF_AICORE_METRICS};
     MsprofMgr().SetBitSwitchCheckList(bitList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliMiniV3RcStest, CliMemoryUB)
 {
     // miniv3_rc: aic-metrics=MemoryUB
-    const char* argv[] = {MINIV3_OUTPUT_DIR, "--aic-metrics=MemoryUB",};
+    const char* argv[] = {
+        MINIV3_OUTPUT_DIR,
+        "--aic-metrics=MemoryUB",
+    };
     std::vector<std::string> dataList = {"ffts_profile.data", "ts_track.data", "stars_soc.data"};
     MsprofMgr().SetDeviceCheckList(dataList);
     std::vector<std::string> hostDataList = {
-        "unaging.api_event.data", "unaging.compact.node_basic_info", "unaging.compact.task_track", "unaging.additional.context_id_info"
-    };
+        "unaging.api_event.data", "unaging.compact.node_basic_info", "unaging.compact.task_track",
+        "unaging.additional.context_id_info"};
     MsprofMgr().SetHostCheckList(hostDataList);
     std::vector<uint64_t> bitList = {PROF_ACL_API, PROF_TASK_TIME_L1, PROF_AICORE_METRICS};
     MsprofMgr().SetBitSwitchCheckList(bitList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliMiniV3RcStest, CliL2)
@@ -99,5 +104,5 @@ TEST_F(CliMiniV3RcStest, CliL2)
     std::vector<std::string> dataList = {"l2_cache.data"};
     std::vector<std::string> blackDataList = {"socpmu.data"};
     MsprofMgr().SetDeviceCheckList(dataList, blackDataList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }

@@ -24,7 +24,7 @@ namespace Cann {
 namespace Dvvp {
 namespace Test {
 
-DataManager &DataManager::GetInstance()
+DataManager& DataManager::GetInstance()
 {
     static DataManager manager;
     return manager;
@@ -35,7 +35,7 @@ std::string DataManager::GetCaseName(const char* testcase)
     size_t len = strlen(testcase);
     std::string casename;
     for (size_t i = 0; i < len; i++) {
-        if(std::isupper(testcase[i])) {
+        if (std::isupper(testcase[i])) {
             if (i != 0) {
                 casename += "_";
             }
@@ -61,32 +61,19 @@ void DataManager::SetDataDir(const char* dirName)
     MSPROF_LOGD("Set data dir : %s", dataDir_.c_str());
 }
 
-
 void DataManager::UnInit()
 {
     dataDir_ = "";
     MSPROF_LOGD("UnInit data manager");
 }
 
-void DataManager::SetModelId(uint32_t modelId)
-{
-    modelId_ = modelId;
-}
+void DataManager::SetModelId(uint32_t modelId) { modelId_ = modelId; }
 
-void DataManager::SetStreamId(uint32_t streamId)
-{
-    streamId_ = streamId;
-}
+void DataManager::SetStreamId(uint32_t streamId) { streamId_ = streamId; }
 
-uint32_t DataManager::GetModelId()
-{
-    return modelId_;
-}
+uint32_t DataManager::GetModelId() { return modelId_; }
 
-uint32_t DataManager::GetStreamId()
-{
-    return streamId_;
-}
+uint32_t DataManager::GetStreamId() { return streamId_; }
 
 int32_t DataManager::ReadFile(std::string filename, ReportDataCallback callback, bool needExist, bool once)
 {
@@ -106,7 +93,7 @@ int32_t DataManager::ReadFile(std::string filename, ReportDataCallback callback,
         return 0;
     }
 
-    while(!ifs.eof()) {
+    while (!ifs.eof()) {
         if (callback(ifs) != 0) {
             return -1;
         }
@@ -117,14 +104,13 @@ int32_t DataManager::ReadFile(std::string filename, ReportDataCallback callback,
     return 0;
 }
 
-
-int32_t DataManager::ReportTsTimelineData(std::queue<struct Buff> &channelData)
+int32_t DataManager::ReportTsTimelineData(std::queue<struct Buff>& channelData)
 {
-    return ReadFile("device_ts_timeline_data.txt", [&channelData](ifstream &ifs){
+    return ReadFile("device_ts_timeline_data.txt", [&channelData](ifstream& ifs) {
         struct Buff buffer;
         buffer.len = sizeof(TsProfileTimeline);
         buffer.data = malloc(buffer.len);
-        auto  tsData = (TsProfileTimeline *)buffer.data;
+        auto tsData = (TsProfileTimeline*)buffer.data;
 
         // bit0-2:Type, bit3:Res0, bit4-7:Cnt
         ifs >> tsData->taskState;
@@ -142,13 +128,13 @@ int32_t DataManager::ReportTsTimelineData(std::queue<struct Buff> &channelData)
     });
 }
 
-int32_t DataManager::ReportTsKeypointData(std::queue<struct Buff> &channelData)
+int32_t DataManager::ReportTsKeypointData(std::queue<struct Buff>& channelData)
 {
-    return ReadFile("device_ts_keypoint_data.txt", [&channelData](ifstream &ifs){
+    return ReadFile("device_ts_keypoint_data.txt", [&channelData](ifstream& ifs) {
         struct Buff buffer;
         buffer.len = sizeof(TsProfileKeypoint);
         buffer.data = malloc(buffer.len);
-        auto  tsData = (TsProfileKeypoint *)buffer.data;
+        auto tsData = (TsProfileKeypoint*)buffer.data;
         ifs >> tsData->tagId;
         ifs >> tsData->indexId;
         ifs >> tsData->modelId;
@@ -163,13 +149,13 @@ int32_t DataManager::ReportTsKeypointData(std::queue<struct Buff> &channelData)
     });
 }
 
-int32_t DataManager::ReportHwtsData(std::queue<struct Buff> &channelData)
+int32_t DataManager::ReportHwtsData(std::queue<struct Buff>& channelData)
 {
-    return ReadFile("device_hwts_data.txt", [&channelData](ifstream &ifs){
+    return ReadFile("device_hwts_data.txt", [&channelData](ifstream& ifs) {
         struct Buff buffer;
         buffer.len = sizeof(HwtsProfileType01);
         buffer.data = malloc(buffer.len);
-        HwtsProfileType01* hwtsData = (HwtsProfileType01 *)buffer.data;
+        HwtsProfileType01* hwtsData = (HwtsProfileType01*)buffer.data;
 
         // bit0-2:Type, bit3:Res0, bit4-7:Cnts
         uint8_t cnt = 1;
@@ -186,32 +172,35 @@ int32_t DataManager::ReportHwtsData(std::queue<struct Buff> &channelData)
     });
 }
 
-int32_t DataManager::ReportFftsAcsqData(std::queue<struct Buff> &channelData)
+int32_t DataManager::ReportFftsAcsqData(std::queue<struct Buff>& channelData)
 {
-    return ReadFile("device_ffts_acsq_data.txt", [&channelData](ifstream &ifs){
-        struct Buff buffer;
-        buffer.len = sizeof(StarsAcsqLog);
-        buffer.data = malloc(buffer.len);
-        StarsAcsqLog* acsqData = (StarsAcsqLog *)buffer.data;
-        uint16_t logType;
-        ifs >> logType;
-        acsqData->head.logType = logType;
-        ifs >> acsqData->taskId;
-        ifs >> acsqData->streamId;
-        ifs >> acsqData->sysCountHigh;
-        ifs >> acsqData->sysCountLow;
-        channelData.push(buffer);
-        return 0;
-    }, false, false);
+    return ReadFile(
+        "device_ffts_acsq_data.txt",
+        [&channelData](ifstream& ifs) {
+            struct Buff buffer;
+            buffer.len = sizeof(StarsAcsqLog);
+            buffer.data = malloc(buffer.len);
+            StarsAcsqLog* acsqData = (StarsAcsqLog*)buffer.data;
+            uint16_t logType;
+            ifs >> logType;
+            acsqData->head.logType = logType;
+            ifs >> acsqData->taskId;
+            ifs >> acsqData->streamId;
+            ifs >> acsqData->sysCountHigh;
+            ifs >> acsqData->sysCountLow;
+            channelData.push(buffer);
+            return 0;
+        },
+        false, false);
 }
 
-int32_t DataManager::ReportFftsCtxData(std::queue<struct Buff> &channelData)
+int32_t DataManager::ReportFftsCtxData(std::queue<struct Buff>& channelData)
 {
-    return ReadFile("device_ffts_ctx_data.txt", [&channelData](ifstream &ifs){
+    return ReadFile("device_ffts_ctx_data.txt", [&channelData](ifstream& ifs) {
         struct Buff buffer;
         buffer.len = sizeof(StarsCxtLog);
         buffer.data = malloc(buffer.len);
-        StarsCxtLog* ctxData = (StarsCxtLog *)buffer.data;
+        StarsCxtLog* ctxData = (StarsCxtLog*)buffer.data;
         uint16_t logType;
         ifs >> logType;
         ctxData->head.logType = logType;
@@ -224,100 +213,110 @@ int32_t DataManager::ReportFftsCtxData(std::queue<struct Buff> &channelData)
     });
 }
 
-int32_t DataManager::ReportOpStarsAcsqData(std::queue<struct Buff> &channelData)
+int32_t DataManager::ReportOpStarsAcsqData(std::queue<struct Buff>& channelData)
 {
-    return ReadFile("device_stars_acsq_data.txt", [&channelData](ifstream &ifs){
-        struct Buff buffer;
-        buffer.len = sizeof(StarsAcsqLog);
-        buffer.data = malloc(buffer.len);
-        StarsAcsqLog* acsqData = (StarsAcsqLog *)buffer.data;
-        uint16_t logType;
-        ifs >> logType;
-        acsqData->head.logType = logType;
-        ifs >> acsqData->taskId;
-        ifs >> acsqData->streamId;
-        ifs >> acsqData->sysCountHigh;
-        ifs >> acsqData->sysCountLow;
-        channelData.push(buffer);
-        return 0;
-    }, false, false);
+    return ReadFile(
+        "device_stars_acsq_data.txt",
+        [&channelData](ifstream& ifs) {
+            struct Buff buffer;
+            buffer.len = sizeof(StarsAcsqLog);
+            buffer.data = malloc(buffer.len);
+            StarsAcsqLog* acsqData = (StarsAcsqLog*)buffer.data;
+            uint16_t logType;
+            ifs >> logType;
+            acsqData->head.logType = logType;
+            ifs >> acsqData->taskId;
+            ifs >> acsqData->streamId;
+            ifs >> acsqData->sysCountHigh;
+            ifs >> acsqData->sysCountLow;
+            channelData.push(buffer);
+            return 0;
+        },
+        false, false);
 }
 
-int32_t DataManager::ReportOpFftsPmuData(std::queue<struct Buff> &channelData)
+int32_t DataManager::ReportOpFftsPmuData(std::queue<struct Buff>& channelData)
 {
-    return ReadFile("device_ffts_pmu_data.txt", [&channelData](ifstream &ifs){
-        struct Buff buffer;
-        buffer.len = sizeof(Analysis::Dvvp::Analyze::FftsSubProfile);
-        buffer.data = malloc(buffer.len);
-        Analysis::Dvvp::Analyze::FftsSubProfile* subData = (Analysis::Dvvp::Analyze::FftsSubProfile *)buffer.data;
-        uint16_t funcType;
-        ifs >> funcType;
-        subData->head.funcType = funcType;
-        MSPROF_LOGE("ReportOpFftsPmuData funcType = %u", subData->head.funcType);
-        ifs >> subData->taskId;
-        ifs >> subData->streamId;
-        ifs >> subData->contextId;
-        uint16_t fftsType;
-        ifs >> fftsType;
-        subData->fftsType = fftsType;
-        subData->contextType = 0;
-        ifs >> subData->totalCycle;
-        ifs >> subData->pmu[0];
-        ifs >> subData->pmu[1];
-        ifs >> subData->pmu[2];
-        ifs >> subData->pmu[3];
-        ifs >> subData->pmu[4];
-        ifs >> subData->pmu[5];
-        ifs >> subData->pmu[6];
-        ifs >> subData->pmu[7];
-        channelData.push(buffer);
-        return 0;
-    }, false, true);
+    return ReadFile(
+        "device_ffts_pmu_data.txt",
+        [&channelData](ifstream& ifs) {
+            struct Buff buffer;
+            buffer.len = sizeof(Analysis::Dvvp::Analyze::FftsSubProfile);
+            buffer.data = malloc(buffer.len);
+            Analysis::Dvvp::Analyze::FftsSubProfile* subData = (Analysis::Dvvp::Analyze::FftsSubProfile*)buffer.data;
+            uint16_t funcType;
+            ifs >> funcType;
+            subData->head.funcType = funcType;
+            MSPROF_LOGE("ReportOpFftsPmuData funcType = %u", subData->head.funcType);
+            ifs >> subData->taskId;
+            ifs >> subData->streamId;
+            ifs >> subData->contextId;
+            uint16_t fftsType;
+            ifs >> fftsType;
+            subData->fftsType = fftsType;
+            subData->contextType = 0;
+            ifs >> subData->totalCycle;
+            ifs >> subData->pmu[0];
+            ifs >> subData->pmu[1];
+            ifs >> subData->pmu[2];
+            ifs >> subData->pmu[3];
+            ifs >> subData->pmu[4];
+            ifs >> subData->pmu[5];
+            ifs >> subData->pmu[6];
+            ifs >> subData->pmu[7];
+            channelData.push(buffer);
+            return 0;
+        },
+        false, true);
 }
 
-int32_t DataManager::ReportOpDavidPmuData(std::queue<struct Buff> &channelData)
+int32_t DataManager::ReportOpDavidPmuData(std::queue<struct Buff>& channelData)
 {
-    return ReadFile("device_david_pmu_data.txt", [&channelData](ifstream &ifs){
-        struct Buff buffer;
-        buffer.len = sizeof(Analysis::Dvvp::Analyze::DavidProfile);
-        buffer.data = malloc(buffer.len);
-        Analysis::Dvvp::Analyze::DavidProfile* subData = (Analysis::Dvvp::Analyze::DavidProfile *)buffer.data;
-        uint16_t funcType;
-        ifs >> funcType;
-        subData->head.funcType = funcType;
-        ifs >> subData->taskId;
-        ifs >> subData->streamId;
-        ifs >> subData->contextId;
-        ifs >> subData->startCnt;
-        ifs >> subData->endCnt;
-        subData->contextType = 0;
-        ifs >> subData->totalCycle;
-        ifs >> subData->pmu[0];
-        ifs >> subData->pmu[1];
-        ifs >> subData->pmu[2];
-        ifs >> subData->pmu[3];
-        ifs >> subData->pmu[4];
-        ifs >> subData->pmu[5];
-        ifs >> subData->pmu[6];
-        ifs >> subData->pmu[7];
-        ifs >> subData->pmu[8];
-        ifs >> subData->pmu[9];
-        channelData.push(buffer);
-        return 0;
-    }, false, true);
+    return ReadFile(
+        "device_david_pmu_data.txt",
+        [&channelData](ifstream& ifs) {
+            struct Buff buffer;
+            buffer.len = sizeof(Analysis::Dvvp::Analyze::DavidProfile);
+            buffer.data = malloc(buffer.len);
+            Analysis::Dvvp::Analyze::DavidProfile* subData = (Analysis::Dvvp::Analyze::DavidProfile*)buffer.data;
+            uint16_t funcType;
+            ifs >> funcType;
+            subData->head.funcType = funcType;
+            ifs >> subData->taskId;
+            ifs >> subData->streamId;
+            ifs >> subData->contextId;
+            ifs >> subData->startCnt;
+            ifs >> subData->endCnt;
+            subData->contextType = 0;
+            ifs >> subData->totalCycle;
+            ifs >> subData->pmu[0];
+            ifs >> subData->pmu[1];
+            ifs >> subData->pmu[2];
+            ifs >> subData->pmu[3];
+            ifs >> subData->pmu[4];
+            ifs >> subData->pmu[5];
+            ifs >> subData->pmu[6];
+            ifs >> subData->pmu[7];
+            ifs >> subData->pmu[8];
+            ifs >> subData->pmu[9];
+            channelData.push(buffer);
+            return 0;
+        },
+        false, true);
 }
 
-int32_t DataManager::ReportBiuPerfData(std::queue<struct Buff> &channelData)
+int32_t DataManager::ReportBiuPerfData(std::queue<struct Buff>& channelData)
 {
-    const std::vector<std::vector<uint16_t>> biuData = {{0b1110, 0b000000010111, 0b0000000000001110},
+    const std::vector<std::vector<uint16_t>> biuData = {
+        {0b1110, 0b000000010111, 0b0000000000001110}, {0b1110, 0b000000010110, 0b0000000000001000},
         {0b1110, 0b000000010110, 0b0000000000001000}, {0b1110, 0b000000010110, 0b0000000000001000},
-        {0b1110, 0b000000010110, 0b0000000000001000}, {0b0011, 0b000000010101, 0b1000000100001111},
-        {0b1111, 0b000001111111, 0b1000000000111111}, {0b1111, 0b000000000000, 0b1000000000111111}};
+        {0b0011, 0b000000010101, 0b1000000100001111}, {0b1111, 0b000001111111, 0b1000000000111111},
+        {0b1111, 0b000000000000, 0b1000000000111111}};
     for (auto row : biuData) {
         struct Buff buffer;
         buffer.len = sizeof(Analysis::Dvvp::Analyze::BiuPerfProfile);
         buffer.data = malloc(buffer.len);
-        Analysis::Dvvp::Analyze::BiuPerfProfile* biuperf = (Analysis::Dvvp::Analyze::BiuPerfProfile *)buffer.data;
+        Analysis::Dvvp::Analyze::BiuPerfProfile* biuperf = (Analysis::Dvvp::Analyze::BiuPerfProfile*)buffer.data;
         biuperf->ctrlType = row[0];
         biuperf->events = row[1];
         biuperf->timeData = row[2];
@@ -326,11 +325,8 @@ int32_t DataManager::ReportBiuPerfData(std::queue<struct Buff> &channelData)
     return 0;
 }
 
-int32_t DataManager::ReportStarsNanoData(std::queue<struct Buff> & /* channelData */)
-{
-    return 0;
-}
-int32_t DataManager::ReportDefaultData(std::queue<struct Buff> &channelData)
+int32_t DataManager::ReportStarsNanoData(std::queue<struct Buff>& /* channelData */) { return 0; }
+int32_t DataManager::ReportDefaultData(std::queue<struct Buff>& channelData)
 {
     struct Buff buffer;
     buffer.len = 1024;
@@ -340,37 +336,45 @@ int32_t DataManager::ReportDefaultData(std::queue<struct Buff> &channelData)
     return 0;
 }
 
-int32_t DataManager::CheckSubscribeResult(std::set<RunnerOpInfo> &modelOpInfo, std::string resultFile)
+int32_t DataManager::CheckSubscribeResult(std::set<RunnerOpInfo>& modelOpInfo, std::string resultFile)
 {
-    auto ret = ReadFile(resultFile, [&](ifstream &ifs){
-        RunnerOpInfo opInfo;
-        ifs >> opInfo.flag;
-        ifs >> opInfo.threadId;
-        ifs >> opInfo.opName;
-        ifs >> opInfo.opType;
-        ifs >> opInfo.opCostTime;
-        ifs >> opInfo.start;
-        ifs >> opInfo.end;
-        ifs >> opInfo.aicoreCostTime;
-        MSPROF_LOGD("[Expect] opName : %s, opType : %s, opCostTime : %llu, start ： %llu, end :%llu, aicoreCostTime: %llu",
-            opInfo.opName.c_str(), opInfo.opType.c_str(), opInfo.opCostTime, opInfo.start, opInfo.end, opInfo.aicoreCostTime);
-        if (modelOpInfo.find(opInfo) == modelOpInfo.end()) {
-            MSPROF_LOGE("Cannot find expcet op info");
-            for (auto &iter : modelOpInfo) {
-                MSPROF_LOGD("[Unmatched] opName : %s, opType : %s, opCostTime : %llu, start ： %llu, end :%llu, aicoreCostTime: %llu",
-                    iter.opName.c_str(), iter.opType.c_str(), iter.opCostTime, iter.start, iter.end, iter.aicoreCostTime);
+    auto ret = ReadFile(
+        resultFile,
+        [&](ifstream& ifs) {
+            RunnerOpInfo opInfo;
+            ifs >> opInfo.flag;
+            ifs >> opInfo.threadId;
+            ifs >> opInfo.opName;
+            ifs >> opInfo.opType;
+            ifs >> opInfo.opCostTime;
+            ifs >> opInfo.start;
+            ifs >> opInfo.end;
+            ifs >> opInfo.aicoreCostTime;
+            MSPROF_LOGD(
+                "[Expect] opName : %s, opType : %s, opCostTime : %llu, start ： %llu, end :%llu, aicoreCostTime: %llu",
+                opInfo.opName.c_str(), opInfo.opType.c_str(), opInfo.opCostTime, opInfo.start, opInfo.end,
+                opInfo.aicoreCostTime);
+            if (modelOpInfo.find(opInfo) == modelOpInfo.end()) {
+                MSPROF_LOGE("Cannot find expcet op info");
+                for (auto& iter : modelOpInfo) {
+                    MSPROF_LOGD(
+                        "[Unmatched] opName : %s, opType : %s, opCostTime : %llu, start ： %llu, end :%llu, "
+                        "aicoreCostTime: %llu",
+                        iter.opName.c_str(), iter.opType.c_str(), iter.opCostTime, iter.start, iter.end,
+                        iter.aicoreCostTime);
+                }
+                return -1;
             }
-            return -1;
-        }
-        modelOpInfo.erase(opInfo);
-        return 0;
-    }, true);
+            modelOpInfo.erase(opInfo);
+            return 0;
+        },
+        true);
     if (ret != 0) {
         return ret;
     }
     return 0;
 }
 
-}
-}
-}
+} // namespace Test
+} // namespace Dvvp
+} // namespace Cann

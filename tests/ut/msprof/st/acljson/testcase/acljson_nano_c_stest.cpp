@@ -46,7 +46,7 @@ static const char NANOC_RM_RF[] = "rm -rf ./acljsonnanostest_workspace";
 static const char NANOC_MKDIR[] = "mkdir ./acljsonnanostest_workspace";
 static const char NANOC_OUTPUT_DIR[] = "./acljsonnanostest_workspace/output";
 
-class AclJsonNanoCStest: public testing::Test {
+class AclJsonNanoCStest : public testing::Test {
 protected:
     virtual void SetUp()
     {
@@ -77,34 +77,29 @@ protected:
 };
 
 extern "C" {
-    typedef struct {
-        bool isStart;
-        bool quit;
-        uint32_t deviceId;
-        const ProfileParam *params;
-        ICollectionJob* collectionJobs[1];
-    } JobManagerAttribute;
-    int32_t JobManagerStart(JobManagerAttribute *attr);
-    int32_t JobManagerStop(JobManagerAttribute *attr);
+typedef struct {
+    bool isStart;
+    bool quit;
+    uint32_t deviceId;
+    const ProfileParam* params;
+    ICollectionJob* collectionJobs[1];
+} JobManagerAttribute;
+int32_t JobManagerStart(JobManagerAttribute* attr);
+int32_t JobManagerStop(JobManagerAttribute* attr);
 }
 
 TEST_F(AclJsonNanoCStest, TestStartThreadFailed)
 {
     nlohmann::json data;
     data["output"] = NANOC_OUTPUT_DIR;
-    MOCKER(pthread_attr_init)
-        .stubs().
-        will(returnValue(1));
+    MOCKER(pthread_attr_init).stubs().will(returnValue(1));
     EXPECT_EQ(-1, MsprofMgr().AclJsonStart(0, data));
 }
 
 uint32_t g_osalJoinTime = 0;
-uint32_t GetJoinCount()
-{
-    return g_osalJoinTime;
-}
+uint32_t GetJoinCount() { return g_osalJoinTime; }
 
-int32_t LinuxJoinTaskStub(OsalThread *threadHandle)
+int32_t LinuxJoinTaskStub(OsalThread* threadHandle)
 {
     g_osalJoinTime++;
     pthread_join(*threadHandle, NULL);
@@ -115,25 +110,23 @@ TEST_F(AclJsonNanoCStest, TestJoinThreadFailed)
 {
     nlohmann::json data;
     data["output"] = NANOC_OUTPUT_DIR;
-    MOCKER(LinuxJoinTask)
-        .stubs().
-        will(invoke(LinuxJoinTaskStub));
+    MOCKER(LinuxJoinTask).stubs().will(invoke(LinuxJoinTaskStub));
     EXPECT_EQ(0, MsprofMgr().AclJsonStart(0, data));
     EXPECT_EQ(0, GetJoinCount());
 }
 
-int MemsetStub(void *dest, int dest_max, int c, int count)
+int MemsetStub(void* dest, int dest_max, int c, int count)
 {
     memset(dest, 0, count);
     return 0;
 }
 int g_memsetSuccessCnt = 0;
-int MemsetTest(void *dest, int dest_max, int c, int count)
+int MemsetTest(void* dest, int dest_max, int c, int count)
 {
     int32_t ret = -1;
     if (g_memsetSuccessCnt != 0) {
         ret = MemsetStub(dest, dest_max, c, count);
-    } 
+    }
     g_memsetSuccessCnt--;
     return ret;
 }
@@ -170,33 +163,30 @@ TEST_F(AclJsonNanoCStest, TestMemsetFailed)
     EXPECT_EQ(-1, MsprofMgr().AclJsonStart(0, data));
 }
 
-void* MallocStub(int size)
-{
-    return malloc(size);
-}
+void* MallocStub(int size) { return malloc(size); }
 int g_mallocSuccessCnt = 0;
 void* MallocTest(int size)
 {
     void* ret = nullptr;
     if (g_mallocSuccessCnt != 0) {
         ret = MallocStub(size);
-    } 
+    }
     g_mallocSuccessCnt--;
     return ret;
 }
- 
-int StrcpyStub(char* strDest,int destMax,const char* strSrc)
+
+int StrcpyStub(char* strDest, int destMax, const char* strSrc)
 {
     strcpy(strDest, strSrc);
     return 0;
 }
 int g_strcpySuccessCnt = 0;
-int StrcpyTest(char* strDest,int destMax,const char* strSrc)
+int StrcpyTest(char* strDest, int destMax, const char* strSrc)
 {
     int ret = -1;
     if (g_strcpySuccessCnt != 0) {
         ret = StrcpyStub(strDest, destMax, strSrc);
-    } 
+    }
     g_strcpySuccessCnt--;
     return ret;
 }
@@ -305,7 +295,7 @@ TEST_F(AclJsonNanoCStest, TestOsalMallocFailed)
     EXPECT_EQ(-1, MsprofMgr().AclJsonStart(0, data));
     printf("18 test============================================\n");
     // Failed to transfer to char for timeSinceEpoch
-    g_mallocSuccessCnt = successCnt++; 
+    g_mallocSuccessCnt = successCnt++;
     EXPECT_EQ(-1, MsprofMgr().AclJsonStart(0, data));
     printf("19 test============================================\n");
     // Failed to transfer to char for timeStamp
@@ -313,15 +303,15 @@ TEST_F(AclJsonNanoCStest, TestOsalMallocFailed)
     EXPECT_EQ(-1, MsprofMgr().AclJsonStart(0, data));
     printf("20 test============================================\n");
     // Failed to calloc for uploader, device: 64
-    g_mallocSuccessCnt = successCnt++; 
+    g_mallocSuccessCnt = successCnt++;
     EXPECT_EQ(-1, MsprofMgr().AclJsonStart(0, data));
     printf("21 test============================================\n");
     // Failed to malloc transport for uploader, device: 64
-    g_mallocSuccessCnt = successCnt++; 
+    g_mallocSuccessCnt = successCnt++;
     EXPECT_EQ(-1, MsprofMgr().AclJsonStart(0, data));
     printf("22 test============================================\n");
     // Failed to malloc data queue for uploader, device: 64
-    g_mallocSuccessCnt = successCnt++; 
+    g_mallocSuccessCnt = successCnt++;
     EXPECT_EQ(-1, MsprofMgr().AclJsonStart(0, data));
 }
 
@@ -329,10 +319,7 @@ TEST_F(AclJsonNanoCStest, TestOsalCreateThreadFailed)
 {
     nlohmann::json data;
     data["output"] = NANOC_OUTPUT_DIR;
-    MOCKER(OsalCreateThread)
-        .stubs()
-        .will(returnValue(OSAL_EN_INVALID_PARAM))
-        .then(returnValue(OSAL_EN_ERROR));
+    MOCKER(OsalCreateThread).stubs().will(returnValue(OSAL_EN_INVALID_PARAM)).then(returnValue(OSAL_EN_ERROR));
     EXPECT_EQ(-1, MsprofMgr().AclJsonStart(0, data));
     EXPECT_EQ(-1, MsprofMgr().AclJsonStart(0, data));
 }
@@ -341,9 +328,7 @@ TEST_F(AclJsonNanoCStest, TestHalGetDeviceNumberFailed)
 {
     nlohmann::json data;
     data["output"] = NANOC_OUTPUT_DIR;
-    MOCKER(HalGetDeviceNumber)
-        .stubs()
-        .will(returnValue(uint32_t(0)));
+    MOCKER(HalGetDeviceNumber).stubs().will(returnValue(uint32_t(0)));
     EXPECT_EQ(-1, MsprofMgr().AclJsonStart(0, data));
 }
 
@@ -351,9 +336,7 @@ TEST_F(AclJsonNanoCStest, TestCstlListInitFailed)
 {
     nlohmann::json data;
     data["output"] = NANOC_OUTPUT_DIR;
-    MOCKER(CstlListInit)
-        .stubs()
-        .will(returnValue(CSTL_ERR));
+    MOCKER(CstlListInit).stubs().will(returnValue(CSTL_ERR));
     EXPECT_EQ(-1, MsprofMgr().AclJsonStart(0, data));
 }
 
@@ -361,9 +344,7 @@ TEST_F(AclJsonNanoCStest, TestHalProfGetChannelListFailed)
 {
     nlohmann::json data;
     data["output"] = NANOC_OUTPUT_DIR;
-    MOCKER(HalProfGetChannelList)
-        .stubs()
-        .will(returnValue(PROFILING_FAILED));
+    MOCKER(HalProfGetChannelList).stubs().will(returnValue(PROFILING_FAILED));
     EXPECT_EQ(-1, MsprofMgr().AclJsonStart(0, data));
 }
 
@@ -371,9 +352,7 @@ TEST_F(AclJsonNanoCStest, TestOsalMutexInitFailed)
 {
     nlohmann::json data;
     data["output"] = NANOC_OUTPUT_DIR;
-    MOCKER(OsalMutexInit)
-        .stubs()
-        .will(returnValue(-1));
+    MOCKER(OsalMutexInit).stubs().will(returnValue(-1));
     EXPECT_EQ(-1, MsprofMgr().AclJsonStart(0, data));
 }
 
@@ -381,9 +360,7 @@ TEST_F(AclJsonNanoCStest, TestOsalCondInitFailed)
 {
     nlohmann::json data;
     data["output"] = NANOC_OUTPUT_DIR;
-    MOCKER(OsalCondInit)
-        .stubs()
-        .will(returnValue(-1));
+    MOCKER(OsalCondInit).stubs().will(returnValue(-1));
     EXPECT_EQ(-1, MsprofMgr().AclJsonStart(0, data));
 }
 
@@ -391,9 +368,7 @@ TEST_F(AclJsonNanoCStest, TestCreateDirectoryFailed)
 {
     nlohmann::json data;
     data["output"] = NANOC_OUTPUT_DIR;
-    MOCKER(OsalMkdir)
-        .stubs()
-        .will(returnValue(OSAL_EN_ERR));
+    MOCKER(OsalMkdir).stubs().will(returnValue(OSAL_EN_ERR));
     EXPECT_EQ(-1, MsprofMgr().AclJsonStart(0, data));
 }
 
@@ -401,9 +376,7 @@ TEST_F(AclJsonNanoCStest, TestOsalGetLocalTimeFailed)
 {
     nlohmann::json data;
     data["output"] = NANOC_OUTPUT_DIR;
-    MOCKER(OsalGetLocalTime)
-        .stubs()
-        .will(returnValue(OSAL_EN_ERROR));
+    MOCKER(OsalGetLocalTime).stubs().will(returnValue(OSAL_EN_ERROR));
     EXPECT_EQ(-1, MsprofMgr().AclJsonStart(0, data));
 }
 
@@ -413,7 +386,7 @@ TEST_F(AclJsonNanoCStest, ReapeatInitFinalizeBase)
     data["output"] = NANOC_OUTPUT_DIR;
     data["task_trace"] = "on";
     std::string aclJson = data.dump();
-    auto jsonData = (void *)(const_cast<char *>(aclJson.c_str()));
+    auto jsonData = (void*)(const_cast<char*>(aclJson.c_str()));
     int32_t ret = MsprofInit(MSPROF_CTRL_INIT_ACL_JSON, jsonData, aclJson.size());
     EXPECT_EQ(ret, PROFILING_SUCCESS);
     ret = MsprofInit(MSPROF_CTRL_INIT_ACL_JSON, jsonData, aclJson.size());
@@ -444,7 +417,7 @@ extern "C" {
 int32_t UploadCollectionTimeInfo(uint32_t deviceId, char* content, size_t contentLen, const char* fileName);
 }
 
-static int32_t UploaderUploadDataStub2(ProfFileChunk *chunk)
+static int32_t UploaderUploadDataStub2(ProfFileChunk* chunk)
 {
     OSAL_MEM_FREE(chunk->chunk);
     OSAL_MEM_FREE(chunk);
@@ -453,13 +426,9 @@ static int32_t UploaderUploadDataStub2(ProfFileChunk *chunk)
 
 TEST_F(AclJsonNanoCStest, UploadCollectionTimeInfoTest)
 {
-    MOCKER(UploaderUploadData)
-        .stubs()
-        .will(invoke(UploaderUploadDataStub2));
-    MOCKER(strcpy_s)
-        .stubs()
-        .will(returnValue(-1));
-    char *content = (char *)OsalMalloc(100);
+    MOCKER(UploaderUploadData).stubs().will(invoke(UploaderUploadDataStub2));
+    MOCKER(strcpy_s).stubs().will(returnValue(-1));
+    char* content = (char*)OsalMalloc(100);
     int ret = UploadCollectionTimeInfo(1, content, 100, "test");
     EXPECT_EQ(ret, PROFILING_FAILED);
 }
@@ -468,24 +437,22 @@ TEST_F(AclJsonNanoCStest, ToHeapStrMemoryLeakTest)
 {
     testing::internal::CaptureStdout();
 
-    JsonObj *dstObj = JsonInit();
-    JsonObj *obj = JsonInit();
+    JsonObj* dstObj = JsonInit();
+    JsonObj* obj = JsonInit();
     obj->SetValueByKey(obj, "s", {"abc", CJSON_STRING});
-    MOCKER(memcpy_s)
-        .stubs()
-        .will(returnValue(-1));
+    MOCKER(memcpy_s).stubs().will(returnValue(-1));
 
     JsonCopy(dstObj, obj);
     JsonFree(obj);
     JsonFree(dstObj);
 
     std::string outputLog = testing::internal::GetCapturedStdout();
-    EXPECT_NE(outputLog.find("memcpy_s failed"), std::string::npos); 
+    EXPECT_NE(outputLog.find("memcpy_s failed"), std::string::npos);
 }
 
-void TestNumber(double expect, char *json)
+void TestNumber(double expect, char* json)
 {
-    JsonObj *jsonObj = JsonParse(json);
+    JsonObj* jsonObj = JsonParse(json);
     EXPECT_EQ(true, jsonObj != NULL);
     EXPECT_EQ(true, JsonIsDouble(jsonObj));
     EXPECT_EQ(expect, GetJsonDouble(jsonObj));
@@ -507,10 +474,7 @@ typedef struct {
     uint32_t value;
 } StubPair;
 
-int StubPairCmp(void *a, void *b, void *appInfo)
-{
-    return ((StubPair *)a)->key - ((StubPair *)b)->key;
-}
+int StubPairCmp(void* a, void* b, void* appInfo) { return ((StubPair*)a)->key - ((StubPair*)b)->key; }
 
 TEST_F(AclJsonNanoCStest, SortVectorCaseBasic)
 {
@@ -522,31 +486,31 @@ TEST_F(AclJsonNanoCStest, SortVectorCaseBasic)
     EXPECT_EQ(CSortVectorSize(&a), 1);
     size_t index = FindCSortVector(&a, &pair);
     EXPECT_EQ(index, 0);
-    EXPECT_EQ(((StubPair *)CSortVectorAt(&a, index))->key, 10);
-    EXPECT_EQ(((StubPair *)CSortVectorAt(&a, index))->value, 1);
+    EXPECT_EQ(((StubPair*)CSortVectorAt(&a, index))->key, 10);
+    EXPECT_EQ(((StubPair*)CSortVectorAt(&a, index))->value, 1);
 
     pair.key++;
     EmplaceCSortVector(&a, &pair);
     EXPECT_EQ(CSortVectorSize(&a), 2);
     index = FindCSortVector(&a, &pair);
     EXPECT_EQ(index, 1);
-    EXPECT_EQ(((StubPair *)CSortVectorAt(&a, index))->key, 11);
-    EXPECT_EQ(((StubPair *)CSortVectorAt(&a, index))->value, 1);
+    EXPECT_EQ(((StubPair*)CSortVectorAt(&a, index))->key, 11);
+    EXPECT_EQ(((StubPair*)CSortVectorAt(&a, index))->value, 1);
 
     pair.key -= 2;
     EmplaceCSortVector(&a, &pair);
     EXPECT_EQ(CSortVectorSize(&a), 3);
     index = FindCSortVector(&a, &pair);
     EXPECT_EQ(index, 0);
-    EXPECT_EQ(((StubPair *)CSortVectorAt(&a, index))->key, 9);
-    EXPECT_EQ(((StubPair *)CSortVectorAt(&a, index))->value, 1);
+    EXPECT_EQ(((StubPair*)CSortVectorAt(&a, index))->key, 9);
+    EXPECT_EQ(((StubPair*)CSortVectorAt(&a, index))->value, 1);
 
     EmplaceCSortVector(&a, &pair);
     EXPECT_EQ(CSortVectorSize(&a), 3);
     index = FindCSortVector(&a, &pair);
     EXPECT_EQ(index, 0);
-    EXPECT_EQ(((StubPair *)CSortVectorAt(&a, index))->key, 9);
-    EXPECT_EQ(((StubPair *)CSortVectorAt(&a, index))->value, 1);
+    EXPECT_EQ(((StubPair*)CSortVectorAt(&a, index))->key, 9);
+    EXPECT_EQ(((StubPair*)CSortVectorAt(&a, index))->value, 1);
 
     RemoveCSortVector(&a, 0);
     EXPECT_EQ(CSortVectorSize(&a), 2);
@@ -587,7 +551,7 @@ TEST_F(AclJsonNanoCStest, SortVectorCaseBasic)
 
 TEST_F(AclJsonNanoCStest, SortVectorCaseNewDestroy)
 {
-    SortVector *a = NewSortVector(StubPair, StubPairCmp, NULL);
+    SortVector* a = NewSortVector(StubPair, StubPairCmp, NULL);
     StubPair pair = {10, 1};
     EXPECT_EQ(FindCSortVector(a, &pair), CSortVectorSize(a));
     InitCSortVector(a, sizeof(StubPair), StubPairCmp, NULL);
@@ -595,8 +559,8 @@ TEST_F(AclJsonNanoCStest, SortVectorCaseNewDestroy)
     EXPECT_EQ(CSortVectorSize(a), 1);
     size_t index = FindCSortVector(a, &pair);
     EXPECT_EQ(index, 0);
-    EXPECT_EQ(((StubPair *)CSortVectorAt(a, index))->key, 10);
-    EXPECT_EQ(((StubPair *)CSortVectorAt(a, index))->value, 1);
+    EXPECT_EQ(((StubPair*)CSortVectorAt(a, index))->key, 10);
+    EXPECT_EQ(((StubPair*)CSortVectorAt(a, index))->value, 1);
     DestroyCSortVector(a);
 }
 
@@ -604,37 +568,37 @@ TEST_F(AclJsonNanoCStest, SortVectorCaseDefaultCmp)
 {
     SortVector a;
     StubPair pair = {10, 1};
-    InitCSortVector(&a, sizeof(StubPair), NULL, (void *)&pair);  // appInfo 无效测试
+    InitCSortVector(&a, sizeof(StubPair), NULL, (void*)&pair); // appInfo 无效测试
     EXPECT_EQ(FindCSortVector(&a, &pair), CSortVectorSize(&a));
     EmplaceCSortVector(&a, &pair);
     EXPECT_EQ(CSortVectorSize(&a), 1);
     size_t index = FindCSortVector(&a, &pair);
     EXPECT_EQ(index, 0);
-    EXPECT_EQ(((StubPair *)CSortVectorAt(&a, index))->key, 10);
-    EXPECT_EQ(((StubPair *)CSortVectorAt(&a, index))->value, 1);
+    EXPECT_EQ(((StubPair*)CSortVectorAt(&a, index))->key, 10);
+    EXPECT_EQ(((StubPair*)CSortVectorAt(&a, index))->value, 1);
 
     pair.key++;
     EmplaceCSortVector(&a, &pair);
     EXPECT_EQ(CSortVectorSize(&a), 2);
     index = FindCSortVector(&a, &pair);
     EXPECT_EQ(index, 1);
-    EXPECT_EQ(((StubPair *)CSortVectorAt(&a, index))->key, 11);
-    EXPECT_EQ(((StubPair *)CSortVectorAt(&a, index))->value, 1);
+    EXPECT_EQ(((StubPair*)CSortVectorAt(&a, index))->key, 11);
+    EXPECT_EQ(((StubPair*)CSortVectorAt(&a, index))->value, 1);
 
     pair.key -= 2;
     EmplaceCSortVector(&a, &pair);
     EXPECT_EQ(CSortVectorSize(&a), 3);
     index = FindCSortVector(&a, &pair);
     EXPECT_EQ(index, 0);
-    EXPECT_EQ(((StubPair *)CSortVectorAt(&a, index))->key, 9);
-    EXPECT_EQ(((StubPair *)CSortVectorAt(&a, index))->value, 1);
+    EXPECT_EQ(((StubPair*)CSortVectorAt(&a, index))->key, 9);
+    EXPECT_EQ(((StubPair*)CSortVectorAt(&a, index))->value, 1);
 
     EmplaceCSortVector(&a, &pair);
     EXPECT_EQ(CSortVectorSize(&a), 3);
     index = FindCSortVector(&a, &pair);
     EXPECT_EQ(index, 0);
-    EXPECT_EQ(((StubPair *)CSortVectorAt(&a, index))->key, 9);
-    EXPECT_EQ(((StubPair *)CSortVectorAt(&a, index))->value, 1);
+    EXPECT_EQ(((StubPair*)CSortVectorAt(&a, index))->key, 9);
+    EXPECT_EQ(((StubPair*)CSortVectorAt(&a, index))->value, 1);
 
     RemoveCSortVector(&a, 0);
     EXPECT_EQ(CSortVectorSize(&a), 2);
@@ -683,13 +647,13 @@ TEST_F(AclJsonNanoCStest, VectorCaseBasic)
     EmplaceBackCVector(&a, &value);
     value++;
     EXPECT_EQ(ReSizeCVector(&a, 0), 1);
-    EXPECT_EQ(*(uint8_t *)CVectorAt(&a, 0), 1);
+    EXPECT_EQ(*(uint8_t*)CVectorAt(&a, 0), 1);
     EXPECT_EQ(ReSizeCVector(&a, 2), 2);
 
-    EXPECT_EQ((uint8_t *)CVectorAt(&a, 1), ((uint8_t *)CVectorAt(&a, 0)) + 1);
-    *(uint8_t *)CVectorAt(&a, 1) = 2;
+    EXPECT_EQ((uint8_t*)CVectorAt(&a, 1), ((uint8_t*)CVectorAt(&a, 0)) + 1);
+    *(uint8_t*)CVectorAt(&a, 1) = 2;
     RemoveCVector(&a, 0);
-    EXPECT_EQ(*(uint8_t *)CVectorAt(&a, 0), 2);
+    EXPECT_EQ(*(uint8_t*)CVectorAt(&a, 0), 2);
     EXPECT_EQ(ReSizeCVector(&a, 0), 1);
     DeInitCVector(&a);
     EXPECT_EQ((a.data == NULL), true);
@@ -705,23 +669,23 @@ TEST_F(AclJsonNanoCStest, VectorCaseBasic_capacity)
     InitCVector(&a, sizeof(uint8_t));
     EXPECT_EQ(ReSizeCVector(&a, 1), 1);
     EXPECT_EQ(CapacityCVector(&a, 0), 1);
-    *(uint8_t *)CVectorAt(&a, 0) = value;
+    *(uint8_t*)CVectorAt(&a, 0) = value;
     EmplaceBackCVector(&a, &value);
     EXPECT_EQ(CapacityCVector(&a, 0), VECTOR_BASIC_STEP);
     EXPECT_EQ(ReSizeCVector(&a, 0), 2);
-    EXPECT_EQ(*(uint8_t *)CVectorAt(&a, 0), value);
-    EXPECT_EQ(*(uint8_t *)CVectorAt(&a, 1), value);
+    EXPECT_EQ(*(uint8_t*)CVectorAt(&a, 0), value);
+    EXPECT_EQ(*(uint8_t*)CVectorAt(&a, 1), value);
 
     for (int i = 2; i < VECTOR_BASIC_STEP + 1; i++) {
         value = (uint8_t)i;
         EmplaceBackCVector(&a, &value);
     }
     value = 1;
-    EXPECT_EQ(*(uint8_t *)CVectorAt(&a, 0), value);
-    EXPECT_EQ(*(uint8_t *)CVectorAt(&a, 1), value);
+    EXPECT_EQ(*(uint8_t*)CVectorAt(&a, 0), value);
+    EXPECT_EQ(*(uint8_t*)CVectorAt(&a, 1), value);
     for (int i = 2; i < VECTOR_BASIC_STEP + 1; i++) {
         value = (uint8_t)i;
-        EXPECT_EQ(*(uint8_t *)CVectorAt(&a, i), value);
+        EXPECT_EQ(*(uint8_t*)CVectorAt(&a, i), value);
     }
     EXPECT_EQ(CapacityCVector(&a, 0), VECTOR_BASIC_STEP * 2);
 
@@ -734,47 +698,47 @@ TEST_F(AclJsonNanoCStest, VectorCaseBasic_Emplace)
     uint8_t value = 1;
     InitCVector(&a, sizeof(uint8_t));
     EmplaceCVector(&a, 0, &value);
-    EXPECT_EQ(*(uint8_t *)CVectorAt(&a, 0), value);
+    EXPECT_EQ(*(uint8_t*)CVectorAt(&a, 0), value);
     value++;
     EmplaceCVector(&a, 1, &value);
-    EXPECT_EQ(*(uint8_t *)CVectorAt(&a, 1), value);
+    EXPECT_EQ(*(uint8_t*)CVectorAt(&a, 1), value);
     value++;
     EmplaceCVector(&a, 0, &value);
-    EXPECT_EQ(*(uint8_t *)CVectorAt(&a, 0), value);
-    EXPECT_EQ(*(uint8_t *)CVectorAt(&a, 1), 1);
-    EXPECT_EQ(*(uint8_t *)CVectorAt(&a, 2), 2);
+    EXPECT_EQ(*(uint8_t*)CVectorAt(&a, 0), value);
+    EXPECT_EQ(*(uint8_t*)CVectorAt(&a, 1), 1);
+    EXPECT_EQ(*(uint8_t*)CVectorAt(&a, 2), 2);
     value++;
 
     EmplaceHeadCVector(&a, &value);
-    EXPECT_EQ(*(uint8_t *)CVectorAt(&a, 0), value);
+    EXPECT_EQ(*(uint8_t*)CVectorAt(&a, 0), value);
     EXPECT_EQ(ReSizeCVector(&a, 0), 4);
     DeInitCVector(&a);
 }
 
 TEST_F(AclJsonNanoCStest, VectorCaseBasic_new)
 {
-    Vector *a = NewVector(uint8_t);
+    Vector* a = NewVector(uint8_t);
     uint8_t value = 1;
     InitCVector(a, sizeof(uint8_t));
     EXPECT_EQ(ReSizeCVector(a, 1), 1);
     EXPECT_EQ(CapacityCVector(a, 0), 1);
-    *(uint8_t *)CVectorAt(a, 0) = value;
+    *(uint8_t*)CVectorAt(a, 0) = value;
     EmplaceBackCVector(a, &value);
     EXPECT_EQ(CapacityCVector(a, 0), VECTOR_BASIC_STEP);
     EXPECT_EQ(ReSizeCVector(a, 0), 2);
-    EXPECT_EQ(*(uint8_t *)CVectorAt(a, 0), value);
-    EXPECT_EQ(*(uint8_t *)CVectorAt(a, 1), value);
+    EXPECT_EQ(*(uint8_t*)CVectorAt(a, 0), value);
+    EXPECT_EQ(*(uint8_t*)CVectorAt(a, 1), value);
 
     for (int i = 2; i < VECTOR_BASIC_STEP + 1; i++) {
         value = (uint8_t)i;
         EmplaceBackCVector(a, &value);
     }
     value = 1;
-    EXPECT_EQ(*(uint8_t *)CVectorAt(a, 0), value);
-    EXPECT_EQ(*(uint8_t *)CVectorAt(a, 1), value);
+    EXPECT_EQ(*(uint8_t*)CVectorAt(a, 0), value);
+    EXPECT_EQ(*(uint8_t*)CVectorAt(a, 1), value);
     for (int i = 2; i < VECTOR_BASIC_STEP + 1; i++) {
         value = (uint8_t)i;
-        EXPECT_EQ(*(uint8_t *)CVectorAt(a, i), value);
+        EXPECT_EQ(*(uint8_t*)CVectorAt(a, i), value);
     }
     EXPECT_EQ(CapacityCVector(a, 0), VECTOR_BASIC_STEP * 2);
 
@@ -787,8 +751,8 @@ TEST_F(AclJsonNanoCStest, VectorCaseBasic_ConstVector)
     uint8_t value = 1;
     InitCVector(&a, sizeof(uint8_t));
     EmplaceBackCVector(&a, &value);
-    EXPECT_EQ(*(const uint8_t *)ConstCVectorAt(&a, 0), 1);
-    EXPECT_EQ(((const uint8_t *)ConstCVectorAt(&a, 1) == NULL), true);
+    EXPECT_EQ(*(const uint8_t*)ConstCVectorAt(&a, 0), 1);
+    EXPECT_EQ(((const uint8_t*)ConstCVectorAt(&a, 1) == NULL), true);
 
     DeInitCVector(&a);
     EXPECT_EQ((a.data == NULL), true);
@@ -803,20 +767,20 @@ TEST_F(AclJsonNanoCStest, VectorCaseBasic_ClearVector)
     uint8_t value = 1;
     InitCVector(&a, sizeof(uint8_t));
     EmplaceCVector(&a, 0, &value);
-    EXPECT_EQ(*(uint8_t *)CVectorAt(&a, 0), 1);
+    EXPECT_EQ(*(uint8_t*)CVectorAt(&a, 0), 1);
     value++;
     EmplaceCVector(&a, 1, &value);
-    EXPECT_EQ(*(uint8_t *)CVectorAt(&a, 1), 2);
+    EXPECT_EQ(*(uint8_t*)CVectorAt(&a, 1), 2);
     ClearCVector(&a);
     EXPECT_EQ(CVectorSize(&a), 0);
 
     value++;
     EmplaceCVector(&a, 0, &value);
-    EXPECT_EQ(*(uint8_t *)CVectorAt(&a, 0), 3);
+    EXPECT_EQ(*(uint8_t*)CVectorAt(&a, 0), 3);
     value++;
     EmplaceHeadCVector(&a, &value);
-    EXPECT_EQ(*(uint8_t *)CVectorAt(&a, 0), 4);
-    EXPECT_EQ(*(uint8_t *)CVectorAt(&a, 1), 3);
+    EXPECT_EQ(*(uint8_t*)CVectorAt(&a, 0), 4);
+    EXPECT_EQ(*(uint8_t*)CVectorAt(&a, 1), 3);
     EXPECT_EQ(ReSizeCVector(&a, 0), 2);
 
     DeInitCVector(&a);

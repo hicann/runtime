@@ -28,10 +28,7 @@ using namespace analysis::dvvp::common::error;
 class OP_ANALYZER_PMU_UTEST : public testing::Test {
 protected:
     virtual void SetUp() {}
-    virtual void TearDown()
-    {
-        GlobalMockObject::verify();
-    }
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 // IsStarsData / IsFftsData
@@ -58,7 +55,7 @@ TEST_F(OP_ANALYZER_PMU_UTEST, IsExtPmu_Branches)
 TEST_F(OP_ANALYZER_PMU_UTEST, IsAic_NonExtPmu)
 {
     OpAnalyzerPmu pmu;
-    pmu.pmuNum_ = 8;  // non-ext
+    pmu.pmuNum_ = 8; // non-ext
     EXPECT_TRUE(pmu.IsAic(FFTS_TYPE_FFTS, SUB_TASK_TYPE_AIC, 0));
     EXPECT_TRUE(pmu.IsAic(FFTS_TYPE_TRADITION_AIC, 99, 0));
     EXPECT_TRUE(pmu.IsAic(FFTS_TYPE_FFTS, SUB_TASK_TYPE_MIXAIC, 0));
@@ -133,7 +130,7 @@ TEST_F(OP_ANALYZER_PMU_UTEST, ParseStarsData_RemainingTooSmall)
     SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> chunk;
     MSVP_MAKE_SHARED0(chunk, analysis::dvvp::ProfileFileChunk, return);
     chunk->fileName = "stars_soc.data";
-    chunk->chunk = std::string(10, '\x00');  // < STARS_DATA_SIZE
+    chunk->chunk = std::string(10, '\x00'); // < STARS_DATA_SIZE
     chunk->chunkSize = 10;
     pmu.ParseStarsData(chunk);
     EXPECT_EQ(0u, pmu.starsBytes_);
@@ -143,18 +140,18 @@ TEST_F(OP_ANALYZER_PMU_UTEST, ParseStarsData_StarsAcsqStartEnd)
 {
     OpAnalyzerPmu pmu;
     pmu.frequency_ = 1.0;
-    pmu.pmuNum_ = 8;  // non-ext
+    pmu.pmuNum_ = 8; // non-ext
     // Build a buffer with 2 records (start + end) of size STARS_DATA_SIZE each
     std::string buf;
-    buf.resize(STARS_DATA_SIZE * 2 + 5, '\x00');  // tail bytes for "remains unparsed"
-    auto *rec0 = reinterpret_cast<StarsAcsqLog *>(&buf[0]);
+    buf.resize(STARS_DATA_SIZE * 2 + 5, '\x00'); // tail bytes for "remains unparsed"
+    auto* rec0 = reinterpret_cast<StarsAcsqLog*>(&buf[0]);
     rec0->head.logType = ACSQ_TASK_START_FUNC_TYPE;
-    rec0->head.sqeType = 1;  // not control sqe
+    rec0->head.sqeType = 1; // not control sqe
     rec0->streamId = 5;
     rec0->taskId = 7;
     rec0->sysCountHigh = 0;
     rec0->sysCountLow = 100;
-    auto *rec1 = reinterpret_cast<StarsAcsqLog *>(&buf[STARS_DATA_SIZE]);
+    auto* rec1 = reinterpret_cast<StarsAcsqLog*>(&buf[STARS_DATA_SIZE]);
     rec1->head.logType = ACSQ_TASK_END_FUNC_TYPE;
     rec1->head.sqeType = 1;
     rec1->streamId = 5;
@@ -183,7 +180,7 @@ TEST_F(OP_ANALYZER_PMU_UTEST, ParseStarsData_StarsAcsq_RepeatBeginEnd)
     std::string buf;
     buf.resize(STARS_DATA_SIZE * 4, '\x00');
     auto build = [&](size_t idx, uint16_t logType, uint32_t timeLow) {
-        auto *rec = reinterpret_cast<StarsAcsqLog *>(&buf[idx * STARS_DATA_SIZE]);
+        auto* rec = reinterpret_cast<StarsAcsqLog*>(&buf[idx * STARS_DATA_SIZE]);
         rec->head.logType = logType;
         rec->head.sqeType = 1;
         rec->streamId = 1;
@@ -192,9 +189,9 @@ TEST_F(OP_ANALYZER_PMU_UTEST, ParseStarsData_StarsAcsq_RepeatBeginEnd)
         rec->sysCountLow = timeLow;
     };
     build(0, ACSQ_TASK_START_FUNC_TYPE, 100);
-    build(1, ACSQ_TASK_START_FUNC_TYPE, 150);  // repeat begin
+    build(1, ACSQ_TASK_START_FUNC_TYPE, 150); // repeat begin
     build(2, ACSQ_TASK_END_FUNC_TYPE, 200);
-    build(3, ACSQ_TASK_END_FUNC_TYPE, 250);  // repeat end -> creates new entry
+    build(3, ACSQ_TASK_END_FUNC_TYPE, 250);   // repeat end -> creates new entry
 
     SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> chunk;
     MSVP_MAKE_SHARED0(chunk, analysis::dvvp::ProfileFileChunk, return);
@@ -209,16 +206,16 @@ TEST_F(OP_ANALYZER_PMU_UTEST, ParseStarsData_DavidAcsq)
 {
     OpAnalyzerPmu pmu;
     pmu.frequency_ = 1.0;
-    pmu.pmuNum_ = DAVID_PMU_NUM;  // ext
+    pmu.pmuNum_ = DAVID_PMU_NUM; // ext
     std::string buf;
     buf.resize(DAVID_LOG_DATA_SIZE * 2, '\x00');
-    auto *rec0 = reinterpret_cast<DavidAcsqLog *>(&buf[0]);
+    auto* rec0 = reinterpret_cast<DavidAcsqLog*>(&buf[0]);
     rec0->head.logType = ACSQ_TASK_START_FUNC_TYPE;
     rec0->head.sqeType = 1;
     rec0->streamId = 3;
     rec0->taskId = 4;
     rec0->sysCountLow = 11;
-    auto *rec1 = reinterpret_cast<DavidAcsqLog *>(&buf[DAVID_LOG_DATA_SIZE]);
+    auto* rec1 = reinterpret_cast<DavidAcsqLog*>(&buf[DAVID_LOG_DATA_SIZE]);
     rec1->head.logType = ACSQ_TASK_END_FUNC_TYPE;
     rec1->head.sqeType = 1;
     rec1->streamId = 3;
@@ -243,7 +240,7 @@ TEST_F(OP_ANALYZER_PMU_UTEST, ParseStarsData_SkipControlSqe)
     pmu.frequency_ = 1.0;
     pmu.pmuNum_ = 8;
     std::string buf(STARS_DATA_SIZE, '\x00');
-    auto *rec = reinterpret_cast<StarsAcsqLog *>(&buf[0]);
+    auto* rec = reinterpret_cast<StarsAcsqLog*>(&buf[0]);
     rec->head.logType = ACSQ_TASK_START_FUNC_TYPE;
     rec->head.sqeType = PLACE_HOLER_SQE;
     SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> chunk;
@@ -261,10 +258,10 @@ TEST_F(OP_ANALYZER_PMU_UTEST, ParseStarsData_SubTaskThread_AndUnknown)
     pmu.frequency_ = 1.0;
     pmu.pmuNum_ = 8;
     std::string buf(STARS_DATA_SIZE * 2, '\x00');
-    auto *rec0 = reinterpret_cast<StarsAcsqLog *>(&buf[0]);
+    auto* rec0 = reinterpret_cast<StarsAcsqLog*>(&buf[0]);
     rec0->head.logType = FFTS_SUBTASK_THREAD_START_FUNC_TYPE;
-    auto *rec1 = reinterpret_cast<StarsAcsqLog *>(&buf[STARS_DATA_SIZE]);
-    rec1->head.logType = 50;  // unknown type
+    auto* rec1 = reinterpret_cast<StarsAcsqLog*>(&buf[STARS_DATA_SIZE]);
+    rec1->head.logType = 50; // unknown type
     SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> chunk;
     MSVP_MAKE_SHARED0(chunk, analysis::dvvp::ProfileFileChunk, return);
     chunk->fileName = "stars_soc.data";
@@ -287,7 +284,7 @@ TEST_F(OP_ANALYZER_PMU_UTEST, ParseFftsData_RemainingTooSmall)
     SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> chunk;
     MSVP_MAKE_SHARED0(chunk, analysis::dvvp::ProfileFileChunk, return);
     chunk->fileName = "ffts_profile.data";
-    chunk->chunk = std::string(50, '\x00');  // < PMU_DATA_SIZE
+    chunk->chunk = std::string(50, '\x00'); // < PMU_DATA_SIZE
     chunk->chunkSize = 50;
     pmu.ParseFftsData(chunk);
     EXPECT_EQ(0u, pmu.fftsSubBytes_);
@@ -298,8 +295,8 @@ TEST_F(OP_ANALYZER_PMU_UTEST, ParseFftsData_FftsSubAndBlock)
     OpAnalyzerPmu pmu;
     pmu.pmuNum_ = 8;
     std::string buf;
-    buf.resize(PMU_DATA_SIZE * 2 + 10, '\x00');  // trailing bytes for "remains" branch
-    auto *sub = reinterpret_cast<FftsSubProfile *>(&buf[0]);
+    buf.resize(PMU_DATA_SIZE * 2 + 10, '\x00'); // trailing bytes for "remains" branch
+    auto* sub = reinterpret_cast<FftsSubProfile*>(&buf[0]);
     sub->head.funcType = FUNC_TYPE_SUBTASK;
     sub->streamId = 5;
     sub->taskId = 6;
@@ -307,7 +304,7 @@ TEST_F(OP_ANALYZER_PMU_UTEST, ParseFftsData_FftsSubAndBlock)
     sub->fftsType = FFTS_TYPE_FFTS;
     sub->contextType = SUB_TASK_TYPE_AIC;
     sub->totalCycle = 1234;
-    auto *blk = reinterpret_cast<FftsBlockProfile *>(&buf[PMU_DATA_SIZE]);
+    auto* blk = reinterpret_cast<FftsBlockProfile*>(&buf[PMU_DATA_SIZE]);
     blk->head.funcType = FUNC_TYPE_BLOCK;
     blk->streamId = 1;
     blk->taskId = 1;
@@ -333,9 +330,9 @@ TEST_F(OP_ANALYZER_PMU_UTEST, ParseFftsData_FftsSubAndBlock)
 TEST_F(OP_ANALYZER_PMU_UTEST, ParseFftsData_DavidTaskAndBlock)
 {
     OpAnalyzerPmu pmu;
-    pmu.pmuNum_ = DAVID_PMU_NUM;  // ext
+    pmu.pmuNum_ = DAVID_PMU_NUM; // ext
     std::string buf(PMU_DATA_SIZE * 2, '\x00');
-    auto *task = reinterpret_cast<DavidProfile *>(&buf[0]);
+    auto* task = reinterpret_cast<DavidProfile*>(&buf[0]);
     task->head.funcType = FUNC_TYPE_DAVID_TASK;
     task->streamId = 1;
     task->taskId = 2;
@@ -345,7 +342,7 @@ TEST_F(OP_ANALYZER_PMU_UTEST, ParseFftsData_DavidTaskAndBlock)
     task->totalCycle = 5000;
     task->endCnt = 100;
     task->startCnt = 0;
-    auto *blk = reinterpret_cast<DavidProfile *>(&buf[PMU_DATA_SIZE]);
+    auto* blk = reinterpret_cast<DavidProfile*>(&buf[PMU_DATA_SIZE]);
     blk->head.funcType = FUNC_TYPE_DAVID_BLOCK;
     blk->streamId = 1;
     blk->taskId = 1;
@@ -370,8 +367,8 @@ TEST_F(OP_ANALYZER_PMU_UTEST, ParseFftsData_UnknownFuncType)
     OpAnalyzerPmu pmu;
     pmu.pmuNum_ = 8;
     std::string buf(PMU_DATA_SIZE, '\x00');
-    auto *head = reinterpret_cast<StarsPmuHead *>(&buf[0]);
-    head->funcType = 0b111111;  // unknown
+    auto* head = reinterpret_cast<StarsPmuHead*>(&buf[0]);
+    head->funcType = 0b111111; // unknown
     SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> chunk;
     MSVP_MAKE_SHARED0(chunk, analysis::dvvp::ProfileFileChunk, return);
     chunk->fileName = "ffts_profile.data";
@@ -399,7 +396,7 @@ TEST_F(OP_ANALYZER_PMU_UTEST, HandleBlockPmu_NotMixType_EarlyReturn)
     OpAnalyzerPmu pmu;
     pmu.pmuNum_ = 8;
     FftsBlockProfile data{};
-    data.contextType = 0;  // not mix
+    data.contextType = 0; // not mix
     pmu.HandleBlockPmu(&data);
     EXPECT_TRUE(pmu.blockInfo_.empty());
 }
@@ -410,7 +407,7 @@ TEST_F(OP_ANALYZER_PMU_UTEST, HandleBlockPmu_MixButNotSlave)
     pmu.pmuNum_ = 8;
     FftsBlockProfile data{};
     data.contextType = SUB_TASK_TYPE_MIXAIC;
-    data.coreType = CORE_TYPE_AIC;  // master core, not slave
+    data.coreType = CORE_TYPE_AIC; // master core, not slave
     pmu.HandleBlockPmu(&data);
     EXPECT_TRUE(pmu.blockInfo_.empty());
 }

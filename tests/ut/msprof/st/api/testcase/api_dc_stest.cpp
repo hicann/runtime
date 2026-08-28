@@ -20,7 +20,7 @@
 #include "aicpu_report_hdc.h"
 #include "devprof_drv_aicpu.h"
 
-class ApiDcTest: public testing::Test {
+class ApiDcTest : public testing::Test {
 protected:
     int32_t deviceNum;
     virtual void SetUp()
@@ -33,11 +33,12 @@ protected:
         const ::testing::TestInfo* curTest = ::testing::UnitTest::GetInstance()->current_test_info();
         DataMgr().Init(SOC_TYPE, curTest->name());
         deviceNum = 1;
-        EXPECT_EQ(deviceNum, SimulatorMgr().CreateDeviceSimulator(deviceNum, static_cast<StPlatformType>(PLATFORM_TYPE)));
+        EXPECT_EQ(
+            deviceNum, SimulatorMgr().CreateDeviceSimulator(deviceNum, static_cast<StPlatformType>(PLATFORM_TYPE)));
     }
     virtual void TearDown()
     {
-        DevprofDrvAicpu::instance()->isRegister_ = false;   // 重置aicpu注册状态，使单进程内能多次注册
+        DevprofDrvAicpu::instance()->isRegister_ = false; // 重置aicpu注册状态，使单进程内能多次注册
         EXPECT_EQ(deviceNum, SimulatorMgr().DelDeviceSimulator(deviceNum, static_cast<StPlatformType>(PLATFORM_TYPE)));
         DataMgr().UnInit();
         GlobalMockObject::verify();
@@ -61,4 +62,3 @@ TEST_F(ApiDcTest, SubscribeOpTest)
     EXPECT_TRUE(RunInfer(modelOpInfo, RunOp));
     EXPECT_EQ(DataMgr().CheckSubscribeResult(modelOpInfo, "thread_result.txt"), 0);
 }
-

@@ -16,10 +16,10 @@
 
 namespace MsprofUtestStub {
 void ResetMsprofLastInputErrorCode();
-void RecordMsprofInputErrorCode(const std::string &errorCode);
-void RecordMsprofInputErrorCode(const std::string &errorCode, const std::vector<std::string> &values);
-const std::string &GetMsprofLastInputErrorCode();
-const std::vector<std::string> &GetMsprofLastInputErrorValues();
+void RecordMsprofInputErrorCode(const std::string& errorCode);
+void RecordMsprofInputErrorCode(const std::string& errorCode, const std::vector<std::string>& values);
+const std::string& GetMsprofLastInputErrorCode();
+const std::vector<std::string>& GetMsprofLastInputErrorValues();
 } // namespace MsprofUtestStub
 
 #ifdef MSPROF_INPUT_ERROR

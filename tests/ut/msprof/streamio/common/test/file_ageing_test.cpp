@@ -28,7 +28,7 @@
 #include <errno.h>
 #include <algorithm>
 #include <fstream>
-//mac
+// mac
 #include <net/if.h>
 #include <sys/prctl.h>
 #define protected public
@@ -44,23 +44,21 @@ using namespace analysis::dvvp::common::thread;
 using namespace analysis::dvvp::common::error;
 using namespace analysis::dvvp::transport;
 
-#define BYTE_TO_MB(byte)        (byte >> 20)
-#define MB_TO_BYTE(mb)          (mb << 20)
-#define STORAGE_LIMIT_DOWN_THD  200
+#define BYTE_TO_MB(byte) (byte >> 20)
+#define MB_TO_BYTE(mb) (mb << 20)
+#define STORAGE_LIMIT_DOWN_THD 200
 #define STORAGE_RESERVED_VOLUME (MB_TO_BYTE(STORAGE_LIMIT_DOWN_THD / 10))
 
-class COMMON_FILE_AGEING_TEST: public testing::Test {
+class COMMON_FILE_AGEING_TEST : public testing::Test {
 protected:
-    virtual void SetUp() {
-    }
-    virtual void TearDown() {
-        GlobalMockObject::verify();
-    }
+    virtual void SetUp() {}
+    virtual void TearDown() { GlobalMockObject::verify(); }
+
 private:
 };
 
-int32_t GetLowVolumeSize(const std::string &path, unsigned long long &size,
-    analysis::dvvp::common::utils::VolumeSize sizeType)
+int32_t GetLowVolumeSize(
+    const std::string& path, unsigned long long& size, analysis::dvvp::common::utils::VolumeSize sizeType)
 {
     (void)path;
     if (sizeType == analysis::dvvp::common::utils::VolumeSize::TOTAL_SIZE) {
@@ -75,7 +73,8 @@ int32_t GetLowVolumeSize(const std::string &path, unsigned long long &size,
     return PROFILING_SUCCESS;
 }
 
-TEST_F(COMMON_FILE_AGEING_TEST, Init) {
+TEST_F(COMMON_FILE_AGEING_TEST, Init)
+{
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
         .stubs()
         .will(returnValue(Analysis::Dvvp::Common::Config::PlatformType::MINI_TYPE))
@@ -104,14 +103,13 @@ TEST_F(COMMON_FILE_AGEING_TEST, Init) {
     EXPECT_EQ(PROFILING_FAILED, ageingObj2.Init());
 }
 
-TEST_F(COMMON_FILE_AGEING_TEST, InitDiskSpaceInsufficient) {
+TEST_F(COMMON_FILE_AGEING_TEST, InitDiskSpaceInsufficient)
+{
     GlobalMockObject::verify();
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
         .stubs()
         .will(returnValue(Analysis::Dvvp::Common::Config::PlatformType::DC_TYPE));
-    MOCKER(analysis::dvvp::common::utils::Utils::GetVolumeSize)
-        .stubs()
-        .will(invoke(GetLowVolumeSize));
+    MOCKER(analysis::dvvp::common::utils::Utils::GetVolumeSize).stubs().will(invoke(GetLowVolumeSize));
 
     std::string storageDir = "/tmp/prof_disk_full_path";
     std::string storageLimit = "0MB";
@@ -119,7 +117,8 @@ TEST_F(COMMON_FILE_AGEING_TEST, InitDiskSpaceInsufficient) {
     EXPECT_EQ(PROFILING_FAILED, ageingObj.Init());
 }
 
-TEST_F(COMMON_FILE_AGEING_TEST, Init2) {
+TEST_F(COMMON_FILE_AGEING_TEST, Init2)
+{
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
         .stubs()
         .will(returnValue(Analysis::Dvvp::Common::Config::PlatformType::DC_TYPE));
@@ -133,7 +132,8 @@ TEST_F(COMMON_FILE_AGEING_TEST, Init2) {
     ageingObj2.AppendAgeingFile("111_hash_dic_222", "111_hash_dic_222", 1000, 1000);
 }
 
-TEST_F(COMMON_FILE_AGEING_TEST, GetStorageLimit) {
+TEST_F(COMMON_FILE_AGEING_TEST, GetStorageLimit)
+{
     std::string storageDir = "/tmp";
 
     FileAgeing ageingObj_1(storageDir, "");
@@ -142,10 +142,11 @@ TEST_F(COMMON_FILE_AGEING_TEST, GetStorageLimit) {
 
     FileAgeing ageingObj_2(storageDir, "350MB");
     ret = ageingObj_2.GetStorageLimit();
-    EXPECT_EQ(175*1024*1024, ret);
+    EXPECT_EQ(175 * 1024 * 1024, ret);
 }
 
-TEST_F(COMMON_FILE_AGEING_TEST, IsNeedAgeingFile) {
+TEST_F(COMMON_FILE_AGEING_TEST, IsNeedAgeingFile)
+{
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
         .stubs()
         .will(returnValue(Analysis::Dvvp::Common::Config::PlatformType::DC_TYPE));
@@ -161,20 +162,17 @@ TEST_F(COMMON_FILE_AGEING_TEST, IsNeedAgeingFile) {
     ret = ageingObj.IsNeedAgeingFile();
     EXPECT_EQ(true, ret); // UINT32_MAX
 
-    MOCKER(analysis::dvvp::common::utils::Utils::GetVolumeSize)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER(analysis::dvvp::common::utils::Utils::GetVolumeSize).stubs().will(returnValue(PROFILING_SUCCESS));
     ageingObj.storageVolumeUpThd_ = 1002;
     ageingObj.storageVolumeDownThd_ = UINT64_MAX;
     ret = ageingObj.IsNeedAgeingFile();
     EXPECT_EQ(true, ret); // UINT32_MAX
 }
 
-TEST_F(COMMON_FILE_AGEING_TEST, AppendAgeingFile) {
+TEST_F(COMMON_FILE_AGEING_TEST, AppendAgeingFile)
+{
     GlobalMockObject::verify();
-    MOCKER(analysis::dvvp::common::utils::Utils::GetFileSize)
-        .stubs()
-        .will(returnValue(1000));    
+    MOCKER(analysis::dvvp::common::utils::Utils::GetFileSize).stubs().will(returnValue(1000));
     std::string storageDir = "/tmp";
     std::string storageLimit = "1000MBxxx";
     // empty
@@ -185,19 +183,19 @@ TEST_F(COMMON_FILE_AGEING_TEST, AppendAgeingFile) {
     EXPECT_EQ(0, ageingObj.ageingFileList_.size());
     // IsCtrlFile
     ageingObj.AppendAgeingFile("/tmp/fileName", "doneFilePath", 1000, 1000);
-    EXPECT_EQ(0, ageingObj.ageingFileList_.size());    
+    EXPECT_EQ(0, ageingObj.ageingFileList_.size());
     ageingObj.AppendAgeingFile("/tmp/data/fileName-hash_dic", "/tmp/data/doneFilePath-hash_dic", 1000, 1000);
-    EXPECT_EQ(0, ageingObj.ageingFileList_.size());    
+    EXPECT_EQ(0, ageingObj.ageingFileList_.size());
     // IsNoAgeingFile
     ageingObj.AppendAgeingFile("/tmp/data/fileName", "/tmp/data/doneFilePath", 1000, 1000);
-    EXPECT_EQ(0, ageingObj.ageingFileList_.size());        
+    EXPECT_EQ(0, ageingObj.ageingFileList_.size());
     // CutSliceNum
     ageingObj.AppendAgeingFile("/tmp/data/fileName", "/tmp/data/doneFilePath", 1000, 1000);
     EXPECT_EQ(0, ageingObj.ageingFileList_.size());
     // normal , no need paired
     ageingObj.AppendAgeingFile("/tmp/data/fileName.slice1", "/tmp/data/doneFilePath", 1000, 1000);
-    EXPECT_EQ(1, ageingObj.ageingFileList_.size());  
-    EXPECT_EQ(1, ageingObj.fileCount_.size()); 
+    EXPECT_EQ(1, ageingObj.ageingFileList_.size());
+    EXPECT_EQ(1, ageingObj.fileCount_.size());
 
     // append paired : hwts.data
     ageingObj.AppendAgeingFile("/tmp/data/fileName.slice2", "/tmp/data/doneFilePath", 1000, 1000);
@@ -229,15 +227,16 @@ TEST_F(COMMON_FILE_AGEING_TEST, AppendAgeingFile) {
     ageingObj.AppendAgeingFile("/tmp/data/aicore.data.slice2", "/tmp/data/doneFilePath", 1000, 1000);
     ageingObj.PrintAgeingFile();
     EXPECT_EQ(8, ageingObj.ageingFileList_.size());
-    EXPECT_EQ(3, ageingObj.fileCount_.size());    
+    EXPECT_EQ(3, ageingObj.fileCount_.size());
     EXPECT_EQ(ageingObj.ageingFileList_.back().fileName, "aicore.data.slice2");
     EXPECT_EQ(ageingObj.ageingFileList_.back().isPaired, false);
 }
 
-TEST_F(COMMON_FILE_AGEING_TEST, AppendAgeingFile2) {
+TEST_F(COMMON_FILE_AGEING_TEST, AppendAgeingFile2)
+{
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
         .stubs()
-        .will(returnValue(Analysis::Dvvp::Common::Config::PlatformType::DC_TYPE));      
+        .will(returnValue(Analysis::Dvvp::Common::Config::PlatformType::DC_TYPE));
     std::string storageDir = "/tmp";
     std::string storageLimit = "4294967296MB";
     uint64_t fileSize = (uint64_t)1 << 48;
@@ -250,20 +249,18 @@ TEST_F(COMMON_FILE_AGEING_TEST, AppendAgeingFile2) {
 
     ageingObj.AppendAgeingFile("/tmp/data/aicore.data.slice2", "/tmp/data/aicore.data.slice1.done", fileSize, fileSize);
     EXPECT_EQ(2, ageingObj.ageingFileList_.size());
-    EXPECT_EQ(fileSize * 4, ageingObj.storagedFileSize_);    
+    EXPECT_EQ(fileSize * 4, ageingObj.storagedFileSize_);
 
     ageingObj.AppendAgeingFile("/tmp/data/aicore.data.slice3", "/tmp/data/aicore.data.slice1.done", fileSize, fileSize);
     EXPECT_EQ(2, ageingObj.ageingFileList_.size());
-    EXPECT_EQ(fileSize * 4, ageingObj.storagedFileSize_);   
+    EXPECT_EQ(fileSize * 4, ageingObj.storagedFileSize_);
 }
 
-TEST_F(COMMON_FILE_AGEING_TEST, PairInsertList) 
+TEST_F(COMMON_FILE_AGEING_TEST, PairInsertList)
 {
     GlobalMockObject::verify();
-    MOCKER(analysis::dvvp::common::utils::Utils::GetFileSize)
-        .stubs()
-        .will(returnValue(1000));
- 
+    MOCKER(analysis::dvvp::common::utils::Utils::GetFileSize).stubs().will(returnValue(1000));
+
     std::string storageDir = "/tmp";
     std::string storageLimit = "1000MB";
     FileAgeing ageingObj(storageDir, storageLimit);
@@ -286,7 +283,7 @@ TEST_F(COMMON_FILE_AGEING_TEST, PairInsertList)
     EXPECT_EQ(ageingObj.ageingFileList_.back().isPaired, false);
 }
 
-TEST_F(COMMON_FILE_AGEING_TEST, IsLastFile) 
+TEST_F(COMMON_FILE_AGEING_TEST, IsLastFile)
 {
     std::string storageDir = "/tmp";
     std::string storageLimit = "1000MB";
@@ -299,16 +296,12 @@ TEST_F(COMMON_FILE_AGEING_TEST, IsLastFile)
     EXPECT_EQ(false, ageingObj.IsLastFile("name1.xxx"));
 }
 
-TEST_F(COMMON_FILE_AGEING_TEST, RemoveAgeingFile) 
+TEST_F(COMMON_FILE_AGEING_TEST, RemoveAgeingFile)
 {
     GlobalMockObject::verify();
-    MOCKER(analysis::dvvp::common::utils::Utils::GetFileSize)
-        .stubs()
-        .will(returnValue(1000));
+    MOCKER(analysis::dvvp::common::utils::Utils::GetFileSize).stubs().will(returnValue(1000));
 
-    MOCKER(remove)
-        .stubs()
-        .will(returnValue(0));
+    MOCKER(remove).stubs().will(returnValue(0));
 
     std::string storageDir = "/tmp";
     std::string storageLimit = "1000MB";
@@ -341,16 +334,12 @@ TEST_F(COMMON_FILE_AGEING_TEST, RemoveAgeingFile)
     ageingObj.RemoveAgeingFile();
 }
 
-TEST_F(COMMON_FILE_AGEING_TEST, RemoveAgeingFile2) 
+TEST_F(COMMON_FILE_AGEING_TEST, RemoveAgeingFile2)
 {
     GlobalMockObject::verify();
-    MOCKER(analysis::dvvp::common::utils::Utils::GetFileSize)
-        .stubs()
-        .will(returnValue(1000));
+    MOCKER(analysis::dvvp::common::utils::Utils::GetFileSize).stubs().will(returnValue(1000));
 
-    MOCKER(remove)
-        .stubs()
-        .will(returnValue(0));
+    MOCKER(remove).stubs().will(returnValue(0));
 
     std::string storageDir = "/tmp";
     std::string storageLimit = "1000MB";

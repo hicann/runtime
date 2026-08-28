@@ -36,7 +36,7 @@ rtError_t rtProfilerTraceExStub3(uint64_t indexId, uint64_t modelId, uint16_t ta
     (void)stm;
     return -1;
 }
- 
+
 TEST_F(PROF_API_PLUGIN_STTEST, RuntimePluginBase)
 {
     std::shared_ptr<ProfRuntimePlugin> plugin;
@@ -44,15 +44,13 @@ TEST_F(PROF_API_PLUGIN_STTEST, RuntimePluginBase)
     // Failed to get api stub[rtProfilerTraceEx] func
     EXPECT_EQ(PROFILING_SUCCESS, plugin->RuntimeApiInit());
     EXPECT_EQ(PROFILING_FAILED, plugin->ProfMarkEx(0, 0, 0, nullptr));
-    MOCKER(&ProfRuntimePlugin::GetPluginApiFunc)
-        .stubs()
-        .will(returnValue((void *)&rtProfilerTraceExStub3));
+    MOCKER(&ProfRuntimePlugin::GetPluginApiFunc).stubs().will(returnValue((void*)&rtProfilerTraceExStub3));
     EXPECT_EQ(PROFILING_FAILED, plugin->ProfMarkEx(0, 0, 0, nullptr));
     plugin->runtimeLibHandle_ = nullptr;
     plugin->runtimeApiInfoMap_.clear();
 }
 
-static int32_t ProfStartFuncStub(uint32_t dataType, const void *data, uint32_t length)
+static int32_t ProfStartFuncStub(uint32_t dataType, const void* data, uint32_t length)
 {
     (void)dataType;
     (void)data;
@@ -60,7 +58,7 @@ static int32_t ProfStartFuncStub(uint32_t dataType, const void *data, uint32_t l
     return 0;
 }
 
-static int32_t ProfStopFuncStub(uint32_t dataType, const void *data, uint32_t length)
+static int32_t ProfStopFuncStub(uint32_t dataType, const void* data, uint32_t length)
 {
     (void)dataType;
     (void)data;

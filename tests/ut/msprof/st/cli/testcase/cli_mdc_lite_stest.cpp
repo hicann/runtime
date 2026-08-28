@@ -29,7 +29,7 @@ static const char MDCLITE_RM_RF[] = "rm -rf ./cliMdcLitestest_workspace";
 static const char MDCLITE_MKDIR[] = "mkdir ./cliMdcLitestest_workspace";
 static const char MDCLITE_OUTPUT_DIR[] = "--output=./cliMdcLitestest_workspace/output";
 
-class CliMdcLiteStest: public testing::Test {
+class CliMdcLiteStest : public testing::Test {
 protected:
     virtual void SetUp()
     {
@@ -46,7 +46,7 @@ protected:
     virtual void TearDown()
     {
         GlobalMockObject::verify();
-        DevprofDrvAicpu::instance()->isRegister_ = false;   // 重置aicpu注册状态，使单进程内能多次注册
+        DevprofDrvAicpu::instance()->isRegister_ = false; // 重置aicpu注册状态，使单进程内能多次注册
         EXPECT_EQ(2, SimulatorMgr().DelDeviceSimulator(2, StPlatformType::CHIP_MDC_LITE));
         system(MDCLITE_RM_RF);
         system("rm -rf ./cli");
@@ -65,134 +65,160 @@ protected:
 TEST_F(CliMdcLiteStest, CliDefault)
 {
     // mdc: TaskTime
-    const char* argv[] = {MDCLITE_OUTPUT_DIR,};
+    const char* argv[] = {
+        MDCLITE_OUTPUT_DIR,
+    };
     std::vector<std::string> deviceDataList = {"hwts.data", "ts_track.data", "aicore.data"};
     MsprofMgr().SetDeviceCheckList(deviceDataList);
     std::vector<std::string> hostDataList = {
-        "unaging.api_event.data", "unaging.compact.node_basic_info", "unaging.compact.task_track", "unaging.additional.context_id_info"
-    };
+        "unaging.api_event.data", "unaging.compact.node_basic_info", "unaging.compact.task_track",
+        "unaging.additional.context_id_info"};
     MsprofMgr().SetHostCheckList(hostDataList);
     std::vector<uint64_t> bitList = {PROF_ACL_API, PROF_TASK_TIME_L1, PROF_AICORE_METRICS};
     MsprofMgr().SetBitSwitchCheckList(bitList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliMdcLiteStest, CliPipeUtilizationTask)
 {
     // milan: Task-based AI core/vector metrics: PipeUtilization
-    const char* argv[] = {MDCLITE_OUTPUT_DIR, "--aic-metrics=PipeUtilization",};
+    const char* argv[] = {
+        MDCLITE_OUTPUT_DIR,
+        "--aic-metrics=PipeUtilization",
+    };
     std::vector<std::string> deviceDataList = {"hwts.data", "ts_track.data", "aicore.data"};
     MsprofMgr().SetDeviceCheckList(deviceDataList);
     std::vector<std::string> hostDataList = {
-        "unaging.api_event.data", "unaging.compact.node_basic_info", "unaging.compact.task_track", "unaging.additional.context_id_info"
-    };
+        "unaging.api_event.data", "unaging.compact.node_basic_info", "unaging.compact.task_track",
+        "unaging.additional.context_id_info"};
     MsprofMgr().SetHostCheckList(hostDataList);
     std::vector<uint64_t> bitList = {PROF_ACL_API, PROF_TASK_TIME_L1, PROF_AICORE_METRICS};
     MsprofMgr().SetBitSwitchCheckList(bitList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliMdcLiteStest, CliPipelineExecuteUtilizationTask)
 {
     // milan: Task-based AI core/vector metrics: PipelineExecuteUtilization
-    const char* argv[] = {MDCLITE_OUTPUT_DIR, "--aic-metrics=PipelineExecuteUtilization",};
+    const char* argv[] = {
+        MDCLITE_OUTPUT_DIR,
+        "--aic-metrics=PipelineExecuteUtilization",
+    };
     std::vector<std::string> deviceDataList = {"hwts.data", "ts_track.data", "aicore.data"};
     MsprofMgr().SetDeviceCheckList(deviceDataList);
     std::vector<std::string> hostDataList = {
-        "unaging.api_event.data", "unaging.compact.node_basic_info", "unaging.compact.task_track", "unaging.additional.context_id_info"
-    };
+        "unaging.api_event.data", "unaging.compact.node_basic_info", "unaging.compact.task_track",
+        "unaging.additional.context_id_info"};
     MsprofMgr().SetHostCheckList(hostDataList);
     std::vector<uint64_t> bitList = {PROF_ACL_API, PROF_TASK_TIME_L1, PROF_AICORE_METRICS};
     MsprofMgr().SetBitSwitchCheckList(bitList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliMdcLiteStest, CliArithmeticUtilizationTask)
 {
     // milan: Task-based AI core/vector metrics: ArithmeticUtilization
-    const char* argv[] = {MDCLITE_OUTPUT_DIR, "--aic-metrics=ArithmeticUtilization",};
+    const char* argv[] = {
+        MDCLITE_OUTPUT_DIR,
+        "--aic-metrics=ArithmeticUtilization",
+    };
     std::vector<std::string> deviceDataList = {"hwts.data", "ts_track.data", "aicore.data"};
     MsprofMgr().SetDeviceCheckList(deviceDataList);
     std::vector<std::string> hostDataList = {
-        "unaging.api_event.data", "unaging.compact.node_basic_info", "unaging.compact.task_track", "unaging.additional.context_id_info"
-    };
+        "unaging.api_event.data", "unaging.compact.node_basic_info", "unaging.compact.task_track",
+        "unaging.additional.context_id_info"};
     MsprofMgr().SetHostCheckList(hostDataList);
     std::vector<uint64_t> bitList = {PROF_ACL_API, PROF_TASK_TIME_L1, PROF_AICORE_METRICS};
     MsprofMgr().SetBitSwitchCheckList(bitList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliMdcLiteStest, CliMemoryTask)
 {
     // milan: Task-based AI core/vector metrics: Memory
-    const char* argv[] = {MDCLITE_OUTPUT_DIR, "--aic-metrics=Memory",};
+    const char* argv[] = {
+        MDCLITE_OUTPUT_DIR,
+        "--aic-metrics=Memory",
+    };
     std::vector<std::string> deviceDataList = {"hwts.data", "ts_track.data", "aicore.data"};
     MsprofMgr().SetDeviceCheckList(deviceDataList);
     std::vector<std::string> hostDataList = {
-        "unaging.api_event.data", "unaging.compact.node_basic_info", "unaging.compact.task_track", "unaging.additional.context_id_info"
-    };
+        "unaging.api_event.data", "unaging.compact.node_basic_info", "unaging.compact.task_track",
+        "unaging.additional.context_id_info"};
     MsprofMgr().SetHostCheckList(hostDataList);
     std::vector<uint64_t> bitList = {PROF_ACL_API, PROF_TASK_TIME_L1, PROF_AICORE_METRICS};
     MsprofMgr().SetBitSwitchCheckList(bitList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliMdcLiteStest, CliMemoryL0Task)
 {
     // milan: Task-based AI core/vector metrics: MemoryL0
-    const char* argv[] = {MDCLITE_OUTPUT_DIR, "--aic-metrics=MemoryL0",};
+    const char* argv[] = {
+        MDCLITE_OUTPUT_DIR,
+        "--aic-metrics=MemoryL0",
+    };
     std::vector<std::string> deviceDataList = {"hwts.data", "ts_track.data", "aicore.data"};
     MsprofMgr().SetDeviceCheckList(deviceDataList);
     std::vector<std::string> hostDataList = {
-        "unaging.api_event.data", "unaging.compact.node_basic_info", "unaging.compact.task_track", "unaging.additional.context_id_info"
-    };
+        "unaging.api_event.data", "unaging.compact.node_basic_info", "unaging.compact.task_track",
+        "unaging.additional.context_id_info"};
     MsprofMgr().SetHostCheckList(hostDataList);
     std::vector<uint64_t> bitList = {PROF_ACL_API, PROF_TASK_TIME_L1, PROF_AICORE_METRICS};
     MsprofMgr().SetBitSwitchCheckList(bitList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliMdcLiteStest, CliMemoryUBTask)
 {
     // milan: Task-based AI core/vector metrics: MemoryUB
-    const char* argv[] = {MDCLITE_OUTPUT_DIR, "--aic-metrics=MemoryUB",};
+    const char* argv[] = {
+        MDCLITE_OUTPUT_DIR,
+        "--aic-metrics=MemoryUB",
+    };
     std::vector<std::string> deviceDataList = {"hwts.data", "ts_track.data", "aicore.data"};
     MsprofMgr().SetDeviceCheckList(deviceDataList);
     std::vector<std::string> hostDataList = {
-        "unaging.api_event.data", "unaging.compact.node_basic_info", "unaging.compact.task_track", "unaging.additional.context_id_info"
-    };
+        "unaging.api_event.data", "unaging.compact.node_basic_info", "unaging.compact.task_track",
+        "unaging.additional.context_id_info"};
     MsprofMgr().SetHostCheckList(hostDataList);
     std::vector<uint64_t> bitList = {PROF_ACL_API, PROF_TASK_TIME_L1, PROF_AICORE_METRICS};
     MsprofMgr().SetBitSwitchCheckList(bitList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliMdcLiteStest, CliResourceConflictRatioTask)
 {
     // milan: Task-based AI core/vector metrics: ResourceConflictRatio
-    const char* argv[] = {MDCLITE_OUTPUT_DIR, "--aic-metrics=ResourceConflictRatio",};
+    const char* argv[] = {
+        MDCLITE_OUTPUT_DIR,
+        "--aic-metrics=ResourceConflictRatio",
+    };
     std::vector<std::string> deviceDataList = {"hwts.data", "ts_track.data", "aicore.data"};
     MsprofMgr().SetDeviceCheckList(deviceDataList);
     std::vector<std::string> hostDataList = {
-        "unaging.api_event.data", "unaging.compact.node_basic_info", "unaging.compact.task_track", "unaging.additional.context_id_info"
-    };
+        "unaging.api_event.data", "unaging.compact.node_basic_info", "unaging.compact.task_track",
+        "unaging.additional.context_id_info"};
     MsprofMgr().SetHostCheckList(hostDataList);
     std::vector<uint64_t> bitList = {PROF_ACL_API, PROF_TASK_TIME_L1, PROF_AICORE_METRICS};
     MsprofMgr().SetBitSwitchCheckList(bitList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliMdcLiteStest, CliL2CacheTask)
 {
     // milan: Task-based AI core/vector metrics: L2Cache
-    const char* argv[] = {MDCLITE_OUTPUT_DIR, "--aic-metrics=L2Cache",};
+    const char* argv[] = {
+        MDCLITE_OUTPUT_DIR,
+        "--aic-metrics=L2Cache",
+    };
     std::vector<std::string> deviceDataList = {"hwts.data", "ts_track.data", "aicore.data"};
     MsprofMgr().SetDeviceCheckList(deviceDataList);
     std::vector<std::string> hostDataList = {
-        "unaging.api_event.data", "unaging.compact.node_basic_info", "unaging.compact.task_track", "unaging.additional.context_id_info"
-    };
+        "unaging.api_event.data", "unaging.compact.node_basic_info", "unaging.compact.task_track",
+        "unaging.additional.context_id_info"};
     MsprofMgr().SetHostCheckList(hostDataList);
     std::vector<uint64_t> bitList = {PROF_ACL_API, PROF_TASK_TIME_L1, PROF_AICORE_METRICS};
     MsprofMgr().SetBitSwitchCheckList(bitList);
-    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }

@@ -7,26 +7,25 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
-#include<iostream>
-#include<stdint.h>
-#include<unistd.h>
-#include"gtest/gtest.h"
-#include"mockcpp/mockcpp.hpp"
-#include"select_operation.h"
+#include <iostream>
+#include <stdint.h>
+#include <unistd.h>
+#include "gtest/gtest.h"
+#include "mockcpp/mockcpp.hpp"
+#include "select_operation.h"
 
 using namespace analysis::dvvp::streamio::common;
 
-class SELECT_OPERATION_TEST:public testing::Test {
+class SELECT_OPERATION_TEST : public testing::Test {
 protected:
-	virtual void SetUp() {
-	}
-	virtual void TearDown() {
-	}
+    virtual void SetUp() {}
+    virtual void TearDown() {}
 };
 
-TEST_F(SELECT_OPERATION_TEST, SelectIsSet) {
-	GlobalMockObject::verify();
-	SelectOperation select_fd;
+TEST_F(SELECT_OPERATION_TEST, SelectIsSet)
+{
+    GlobalMockObject::verify();
+    SelectOperation select_fd;
 
     select_fd.SelectAdd(-1);
     EXPECT_EQ(false, select_fd.SelectIsSet(-1));

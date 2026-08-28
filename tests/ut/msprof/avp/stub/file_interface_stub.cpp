@@ -9,12 +9,6 @@
  */
 #include "file_interface.h"
 
-int32_t ProfInitTransport(uint32_t deviceId, const char *flushDir, const char *storageLimit)
-{
-    return 0;
-}
+int32_t ProfInitTransport(uint32_t deviceId, const char* flushDir, const char* storageLimit) { return 0; }
 
-int32_t ProfSendBuffer(ProfFileChunk* chunk, const char* dir)
-{
-    return 0;
-}
+int32_t ProfSendBuffer(ProfFileChunk* chunk, const char* dir) { return 0; }

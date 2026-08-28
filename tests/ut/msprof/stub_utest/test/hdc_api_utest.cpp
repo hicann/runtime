@@ -16,22 +16,21 @@
 #include "memory_utils.h"
 #include "securec.h"
 
-
 using namespace analysis::dvvp::common::error;
 using namespace Analysis::Dvvp::Adx;
 
 extern int g_sprintf_s_flag;
-static char *g_hdcReadBuf = nullptr;
+static char* g_hdcReadBuf = nullptr;
 static int g_hdcReadBufLen = 0;
 static int g_hdcReadRecvBufCount = 1;
 
-static char *PrepareHdcReadPacket(IdeDaemonPackageType type, int8_t isLast, int &bufLen, int &recvBufCount)
+static char* PrepareHdcReadPacket(IdeDaemonPackageType type, int8_t isLast, int& bufLen, int& recvBufCount)
 {
     recvBufCount = 1;
     bufLen = 100;
-    char *bufTmp = static_cast<char *>(malloc(bufLen));
+    char* bufTmp = static_cast<char*>(malloc(bufLen));
     memset(bufTmp, 0, bufLen);
-    struct IdeHdcPacket *packet = reinterpret_cast<struct IdeHdcPacket *>(bufTmp);
+    struct IdeHdcPacket* packet = reinterpret_cast<struct IdeHdcPacket*>(bufTmp);
     packet->type = type;
     packet->isLast = isLast;
     packet->len = bufLen - sizeof(struct IdeHdcPacket);
@@ -41,12 +40,11 @@ static char *PrepareHdcReadPacket(IdeDaemonPackageType type, int8_t isLast, int 
     return bufTmp;
 }
 
-class HDC_API_UTEST: public testing::Test {
+class HDC_API_UTEST : public testing::Test {
 protected:
-    virtual void SetUp() {
-        GlobalMockObject::reset();
-    }
-    virtual void TearDown() {
+    virtual void SetUp() { GlobalMockObject::reset(); }
+    virtual void TearDown()
+    {
         GlobalMockObject::verify();
         GlobalMockObject::reset();
     }
@@ -56,16 +54,13 @@ TEST_F(HDC_API_UTEST, HdcClientDestroy)
 {
     HDC_CLIENT client = (HDC_CLIENT)0x123456;
 
-    MOCKER(drvHdcClientDestroy)
-        .stubs()
-        .will(returnValue(DRV_ERROR_NO_DEVICE))
-        .then(returnValue(DRV_ERROR_NONE));
+    MOCKER(drvHdcClientDestroy).stubs().will(returnValue(DRV_ERROR_NO_DEVICE)).then(returnValue(DRV_ERROR_NONE));
 
-    //drvHdcClientDestroy failed
+    // drvHdcClientDestroy failed
     EXPECT_EQ(IDE_DAEMON_ERROR, HdcClientDestroy(client));
 
-    //HdcClientDestroy success
- 
+    // HdcClientDestroy success
+
     EXPECT_EQ(IDE_DAEMON_OK, HdcClientDestroy(client));
 }
 
@@ -91,7 +86,7 @@ TEST_F(HDC_API_UTEST, HdcServerDestroy)
         .will(returnValue(DRV_ERROR_CLIENT_BUSY))
         .then(returnValue(DRV_ERROR_NO_DEVICE))
         .then(returnValue(DRV_ERROR_NONE));
-    
+
     HdcServerDestroy(nullptr);
     HdcServerDestroy(server);
     HdcServerDestroy(server);
@@ -102,9 +97,7 @@ TEST_F(HDC_API_UTEST, HdcServerAccept)
 {
     HDC_SERVER server = (HDC_SERVER)(0x12345678);
 
-    MOCKER(drvHdcSessionAccept)
-        .stubs()
-        .will(returnValue(DRV_ERROR_NONE));
+    MOCKER(drvHdcSessionAccept).stubs().will(returnValue(DRV_ERROR_NONE));
     HDC_SESSION session = HdcServerAccept(server);
     EXPECT_TRUE(session == nullptr);
 }
@@ -118,12 +111,10 @@ TEST_F(HDC_API_UTEST, HdcRead_invalid_parameters)
 TEST_F(HDC_API_UTEST, HdcReadAllocMsgFailed)
 {
     HDC_SESSION session = (HDC_SESSION)(0x12345678);
-    void *buf = nullptr;
+    void* buf = nullptr;
     int recv_len = 100;
 
-    MOCKER(drvHdcAllocMsg)
-        .stubs()
-        .will(returnValue(DRV_ERROR_NO_DEVICE));
+    MOCKER(drvHdcAllocMsg).stubs().will(returnValue(DRV_ERROR_NO_DEVICE));
 
     EXPECT_EQ(IDE_DAEMON_ERROR, HdcRead(session, &buf, &recv_len, 0));
 }
@@ -131,15 +122,11 @@ TEST_F(HDC_API_UTEST, HdcReadAllocMsgFailed)
 TEST_F(HDC_API_UTEST, HdcReadRecvFailed)
 {
     HDC_SESSION session = (HDC_SESSION)(0x12345678);
-    void *buf = nullptr;
+    void* buf = nullptr;
     int recv_len = 100;
 
-    MOCKER(halHdcRecv)
-        .stubs()
-        .will(returnValue(DRV_ERROR_NO_DEVICE));
-    MOCKER(drvHdcFreeMsg)
-        .stubs()
-        .will(returnValue(DRV_ERROR_NONE));
+    MOCKER(halHdcRecv).stubs().will(returnValue(DRV_ERROR_NO_DEVICE));
+    MOCKER(drvHdcFreeMsg).stubs().will(returnValue(DRV_ERROR_NONE));
 
     EXPECT_EQ(IDE_DAEMON_ERROR, HdcRead(session, &buf, &recv_len));
 }
@@ -147,14 +134,10 @@ TEST_F(HDC_API_UTEST, HdcReadRecvFailed)
 TEST_F(HDC_API_UTEST, HdcReadRecvNoData)
 {
     HDC_SESSION session = (HDC_SESSION)(0x12345678);
-    void *buf = nullptr;
+    void* buf = nullptr;
     int recv_len = 100;
-    MOCKER(halHdcRecv)
-        .stubs()
-        .will(returnValue(DRV_ERROR_NON_BLOCK));
-    MOCKER(drvHdcFreeMsg)
-        .stubs()
-        .will(returnValue(DRV_ERROR_NONE));
+    MOCKER(halHdcRecv).stubs().will(returnValue(DRV_ERROR_NON_BLOCK));
+    MOCKER(drvHdcFreeMsg).stubs().will(returnValue(DRV_ERROR_NONE));
 
     EXPECT_EQ(IDE_DAEMON_RECV_NODATA, HdcRead(session, &buf, &recv_len));
 }
@@ -162,15 +145,11 @@ TEST_F(HDC_API_UTEST, HdcReadRecvNoData)
 TEST_F(HDC_API_UTEST, HdcReadSocketClose)
 {
     HDC_SESSION session = (HDC_SESSION)(0x12345678);
-    void *buf = nullptr;
+    void* buf = nullptr;
     int recv_len = 100;
 
-    MOCKER(halHdcRecv)
-        .stubs()
-        .will(returnValue(DRV_ERROR_SOCKET_CLOSE));
-    MOCKER(drvHdcFreeMsg)
-        .stubs()
-        .will(returnValue(DRV_ERROR_NONE));
+    MOCKER(halHdcRecv).stubs().will(returnValue(DRV_ERROR_SOCKET_CLOSE));
+    MOCKER(drvHdcFreeMsg).stubs().will(returnValue(DRV_ERROR_NONE));
 
     EXPECT_EQ(IDE_DAEMON_SOCK_CLOSE, HdcRead(session, &buf, &recv_len));
 }
@@ -178,7 +157,7 @@ TEST_F(HDC_API_UTEST, HdcReadSocketClose)
 TEST_F(HDC_API_UTEST, HdcReadGetMsgBufferFailed)
 {
     HDC_SESSION session = (HDC_SESSION)(0x12345678);
-    void *buf = nullptr;
+    void* buf = nullptr;
     int recv_len = 100;
     int recvBufCount = 1;
     g_hdcReadRecvBufCount = recvBufCount;
@@ -187,12 +166,8 @@ TEST_F(HDC_API_UTEST, HdcReadGetMsgBufferFailed)
         .stubs()
         .with(any(), any(), any(), any(), outBoundP(&g_hdcReadRecvBufCount, sizeof(g_hdcReadRecvBufCount)), any())
         .will(returnValue(DRV_ERROR_NONE));
-    MOCKER(drvHdcGetMsgBuffer)
-        .stubs()
-        .will(returnValue(DRV_ERROR_NO_DEVICE));
-    MOCKER(drvHdcFreeMsg)
-        .stubs()
-        .will(returnValue(DRV_ERROR_NONE));
+    MOCKER(drvHdcGetMsgBuffer).stubs().will(returnValue(DRV_ERROR_NO_DEVICE));
+    MOCKER(drvHdcFreeMsg).stubs().will(returnValue(DRV_ERROR_NONE));
 
     EXPECT_EQ(IDE_DAEMON_ERROR, HdcRead(session, &buf, &recv_len));
 }
@@ -200,11 +175,11 @@ TEST_F(HDC_API_UTEST, HdcReadGetMsgBufferFailed)
 TEST_F(HDC_API_UTEST, HdcReadFreeMsgFailed)
 {
     HDC_SESSION session = (HDC_SESSION)(0x12345678);
-    void *buf = nullptr;
+    void* buf = nullptr;
     int recv_len = 100;
     int bufLen = 0;
     int recvBufCount = 0;
-    char *bufTmp = PrepareHdcReadPacket(IDE_DAEMON_LITTLE_PACKAGE, 1, bufLen, recvBufCount);
+    char* bufTmp = PrepareHdcReadPacket(IDE_DAEMON_LITTLE_PACKAGE, 1, bufLen, recvBufCount);
 
     MOCKER(halHdcRecv)
         .stubs()
@@ -212,12 +187,11 @@ TEST_F(HDC_API_UTEST, HdcReadFreeMsgFailed)
         .will(returnValue(DRV_ERROR_NONE));
     MOCKER(drvHdcGetMsgBuffer)
         .stubs()
-        .with(any(), any(), outBoundP(&g_hdcReadBuf, sizeof(g_hdcReadBuf)),
+        .with(
+            any(), any(), outBoundP(&g_hdcReadBuf, sizeof(g_hdcReadBuf)),
             outBoundP(&g_hdcReadBufLen, sizeof(g_hdcReadBufLen)))
         .will(returnValue(DRV_ERROR_NONE));
-    MOCKER(drvHdcFreeMsg)
-        .stubs()
-        .will(returnValue(DRV_ERROR_NO_DEVICE));
+    MOCKER(drvHdcFreeMsg).stubs().will(returnValue(DRV_ERROR_NO_DEVICE));
 
     EXPECT_EQ(IDE_DAEMON_ERROR, HdcRead(session, &buf, &recv_len));
     free(bufTmp);
@@ -226,11 +200,11 @@ TEST_F(HDC_API_UTEST, HdcReadFreeMsgFailed)
 TEST_F(HDC_API_UTEST, HdcReadReuseMsgFailed)
 {
     HDC_SESSION session = (HDC_SESSION)(0x12345678);
-    void *buf = nullptr;
+    void* buf = nullptr;
     int recv_len = 100;
     int bufLen = 0;
     int recvBufCount = 0;
-    char *bufTmp = PrepareHdcReadPacket(IDE_DAEMON_LITTLE_PACKAGE, 0, bufLen, recvBufCount);
+    char* bufTmp = PrepareHdcReadPacket(IDE_DAEMON_LITTLE_PACKAGE, 0, bufLen, recvBufCount);
 
     MOCKER(halHdcRecv)
         .stubs()
@@ -238,15 +212,12 @@ TEST_F(HDC_API_UTEST, HdcReadReuseMsgFailed)
         .will(returnValue(DRV_ERROR_NONE));
     MOCKER(drvHdcGetMsgBuffer)
         .stubs()
-        .with(any(), any(), outBoundP(&g_hdcReadBuf, sizeof(g_hdcReadBuf)),
+        .with(
+            any(), any(), outBoundP(&g_hdcReadBuf, sizeof(g_hdcReadBuf)),
             outBoundP(&g_hdcReadBufLen, sizeof(g_hdcReadBufLen)))
         .will(returnValue(DRV_ERROR_NONE));
-    MOCKER(drvHdcReuseMsg)
-        .stubs()
-        .will(returnValue(DRV_ERROR_NO_DEVICE));
-    MOCKER(drvHdcFreeMsg)
-        .stubs()
-        .will(returnValue(DRV_ERROR_NONE));
+    MOCKER(drvHdcReuseMsg).stubs().will(returnValue(DRV_ERROR_NO_DEVICE));
+    MOCKER(drvHdcFreeMsg).stubs().will(returnValue(DRV_ERROR_NONE));
 
     EXPECT_EQ(IDE_DAEMON_ERROR, HdcRead(session, &buf, &recv_len));
     free(bufTmp);
@@ -255,11 +226,11 @@ TEST_F(HDC_API_UTEST, HdcReadReuseMsgFailed)
 TEST_F(HDC_API_UTEST, HdcReadStorePackageFailed)
 {
     HDC_SESSION session = (HDC_SESSION)(0x12345678);
-    void *buf = nullptr;
+    void* buf = nullptr;
     int recv_len = 100;
     int bufLen = 0;
     int recvBufCount = 0;
-    char *bufTmp = PrepareHdcReadPacket(IDE_DAEMON_BIG_PACKAGE, 1, bufLen, recvBufCount);
+    char* bufTmp = PrepareHdcReadPacket(IDE_DAEMON_BIG_PACKAGE, 1, bufLen, recvBufCount);
 
     MOCKER(halHdcRecv)
         .stubs()
@@ -267,12 +238,11 @@ TEST_F(HDC_API_UTEST, HdcReadStorePackageFailed)
         .will(returnValue(DRV_ERROR_NONE));
     MOCKER(drvHdcGetMsgBuffer)
         .stubs()
-        .with(any(), any(), outBoundP(&g_hdcReadBuf, sizeof(g_hdcReadBuf)),
+        .with(
+            any(), any(), outBoundP(&g_hdcReadBuf, sizeof(g_hdcReadBuf)),
             outBoundP(&g_hdcReadBufLen, sizeof(g_hdcReadBufLen)))
         .will(returnValue(DRV_ERROR_NONE));
-    MOCKER(drvHdcFreeMsg)
-        .stubs()
-        .will(returnValue(DRV_ERROR_NONE));
+    MOCKER(drvHdcFreeMsg).stubs().will(returnValue(DRV_ERROR_NONE));
 
     EXPECT_EQ(IDE_DAEMON_ERROR, HdcRead(session, &buf, &recv_len));
     free(bufTmp);
@@ -281,11 +251,11 @@ TEST_F(HDC_API_UTEST, HdcReadStorePackageFailed)
 TEST_F(HDC_API_UTEST, HdcRead)
 {
     HDC_SESSION session = (HDC_SESSION)(0x12345678);
-    void *buf = nullptr;
+    void* buf = nullptr;
     int recv_len = 100;
     int bufLen = 0;
     int recvBufCount = 0;
-    char *bufTmp = PrepareHdcReadPacket(IDE_DAEMON_LITTLE_PACKAGE, 1, bufLen, recvBufCount);
+    char* bufTmp = PrepareHdcReadPacket(IDE_DAEMON_LITTLE_PACKAGE, 1, bufLen, recvBufCount);
 
     MOCKER(halHdcRecv)
         .stubs()
@@ -293,12 +263,11 @@ TEST_F(HDC_API_UTEST, HdcRead)
         .will(returnValue(DRV_ERROR_NONE));
     MOCKER(drvHdcGetMsgBuffer)
         .stubs()
-        .with(any(), any(), outBoundP(&g_hdcReadBuf, sizeof(g_hdcReadBuf)),
+        .with(
+            any(), any(), outBoundP(&g_hdcReadBuf, sizeof(g_hdcReadBuf)),
             outBoundP(&g_hdcReadBufLen, sizeof(g_hdcReadBufLen)))
         .will(returnValue(DRV_ERROR_NONE));
-    MOCKER(drvHdcFreeMsg)
-        .stubs()
-        .will(returnValue(DRV_ERROR_NONE));
+    MOCKER(drvHdcFreeMsg).stubs().will(returnValue(DRV_ERROR_NONE));
 
     EXPECT_EQ(DRV_ERROR_NONE, HdcRead(session, &buf, &recv_len));
     free(buf);
@@ -308,12 +277,10 @@ TEST_F(HDC_API_UTEST, HdcRead)
 TEST_F(HDC_API_UTEST, HdcReadNb)
 {
     HDC_SESSION session = (HDC_SESSION)(0x12345678);
-    void *recv_buf;
+    void* recv_buf;
     int recv_len;
 
-    MOCKER(drvHdcAllocMsg)
-        .stubs()
-        .will(returnValue(DRV_ERROR_NO_DEVICE));
+    MOCKER(drvHdcAllocMsg).stubs().will(returnValue(DRV_ERROR_NO_DEVICE));
 
     EXPECT_EQ(IDE_DAEMON_ERROR, HdcReadNb(session, &recv_buf, &recv_len));
 }
@@ -321,7 +288,7 @@ TEST_F(HDC_API_UTEST, HdcReadNb)
 TEST_F(HDC_API_UTEST, HdcWrite_invalid_parameter)
 {
     HDC_SESSION session = (HDC_SESSION)(0x12345678);
-    void *buf = (void *)malloc(100);
+    void* buf = (void*)malloc(100);
     int len = 100;
 
     EXPECT_EQ(IDE_DAEMON_ERROR, HdcWrite(NULL, buf, len));
@@ -330,16 +297,16 @@ TEST_F(HDC_API_UTEST, HdcWrite_invalid_parameter)
     EXPECT_EQ(IDE_DAEMON_ERROR, HdcSessionWrite(session, buf, 0, 0));
 
     free(buf);
-    buf=NULL;
+    buf = NULL;
 }
 
 TEST_F(HDC_API_UTEST, HdcWrite)
 {
     HDC_SESSION session = (HDC_SESSION)(0x12345678);
     uint32_t maxSegment = 100;
-    void *buf = (void *)malloc(100);
+    void* buf = (void*)malloc(100);
     int len = 100;
-    struct drvHdcMsg *pmsg = (struct drvHdcMsg*)(0x1234567);
+    struct drvHdcMsg* pmsg = (struct drvHdcMsg*)(0x1234567);
 
     MOCKER(HdcCapacity)
         .stubs()
@@ -353,80 +320,64 @@ TEST_F(HDC_API_UTEST, HdcWrite)
         .will(returnValue(DRV_ERROR_NO_DEVICE))
         .then(returnValue(DRV_ERROR_NONE));
 
-    MOCKER(drvHdcAddMsgBuffer)
-        .stubs()
-        .will(returnValue(DRV_ERROR_NO_DEVICE))
-        .then(returnValue(DRV_ERROR_NONE));
+    MOCKER(drvHdcAddMsgBuffer).stubs().will(returnValue(DRV_ERROR_NO_DEVICE)).then(returnValue(DRV_ERROR_NONE));
 
-    MOCKER(halHdcSend)
-        .stubs()
-        .will(returnValue(DRV_ERROR_NO_DEVICE))
-        .then(returnValue(DRV_ERROR_NONE));
+    MOCKER(halHdcSend).stubs().will(returnValue(DRV_ERROR_NO_DEVICE)).then(returnValue(DRV_ERROR_NONE));
 
-    MOCKER(drvHdcReuseMsg)
-        .stubs()
-        .will(returnValue(DRV_ERROR_NO_DEVICE))
-        .then(returnValue(DRV_ERROR_NONE));
+    MOCKER(drvHdcReuseMsg).stubs().will(returnValue(DRV_ERROR_NO_DEVICE)).then(returnValue(DRV_ERROR_NONE));
 
     MOCKER(drvHdcFreeMsg)
         .stubs()
         .will(repeat(DRV_ERROR_NONE, 3))
         .then(returnValue(DRV_ERROR_INVALID_VALUE))
         .then(returnValue(DRV_ERROR_NONE));
-    MOCKER(memcpy_s)
-        .stubs()
-        .will(returnValue(EOK - 1))
-        .then(returnValue(EOK));
-    //1. drvHdcGetCapacity return error
-    EXPECT_EQ(IDE_DAEMON_ERROR, HdcWrite(session, buf, len)); //drvHdcGetCapacity´·ז§
+    MOCKER(memcpy_s).stubs().will(returnValue(EOK - 1)).then(returnValue(EOK));
+    // 1. drvHdcGetCapacity return error
+    EXPECT_EQ(IDE_DAEMON_ERROR, HdcWrite(session, buf, len)); // drvHdcGetCapacity´·ז§
 
-    //2. drvHdcAllocMsg return error
-    EXPECT_EQ(IDE_DAEMON_ERROR, HdcWrite(session, buf, len)); //drvHdcAllocMsg´·ז§
+    // 2. drvHdcAllocMsg return error
+    EXPECT_EQ(IDE_DAEMON_ERROR, HdcWrite(session, buf, len)); // drvHdcAllocMsg´·ז§
 
-    //3. drvHdcAddMsgBuffer return error
-    EXPECT_EQ(IDE_DAEMON_ERROR, HdcWrite(session, buf, len)); //drvHdcAddMsgBuffer´·ז§
+    // 3. drvHdcAddMsgBuffer return error
+    EXPECT_EQ(IDE_DAEMON_ERROR, HdcWrite(session, buf, len)); // drvHdcAddMsgBuffer´·ז§
 
-    //4. drvHdcSend return error
-    EXPECT_EQ(IDE_DAEMON_ERROR, HdcWrite(session, buf, len)); //drvHdcSend´·ז§
+    // 4. drvHdcSend return error
+    EXPECT_EQ(IDE_DAEMON_ERROR, HdcWrite(session, buf, len)); // drvHdcSend´·ז§
 
-    //5. drvHdcReuseMsg return error
-    EXPECT_EQ(IDE_DAEMON_ERROR, HdcWrite(session, buf, len)); //drvHdcReuseMsg´·ז§
+    // 5. drvHdcReuseMsg return error
+    EXPECT_EQ(IDE_DAEMON_ERROR, HdcWrite(session, buf, len)); // drvHdcReuseMsg´·ז§
 
-    //6. drvHdcFreeMsg return error
-    EXPECT_EQ(IDE_DAEMON_ERROR, HdcWrite(session, buf, len)); //drvHdcFreeMsg´·ז§
+    // 6. drvHdcFreeMsg return error
+    EXPECT_EQ(IDE_DAEMON_ERROR, HdcWrite(session, buf, len)); // drvHdcFreeMsg´·ז§
 
-    //7. HdcWrite succ
-    EXPECT_EQ(IDE_DAEMON_OK, HdcWrite(session, buf, len)); //ֽȷ·ז§
+    // 7. HdcWrite succ
+    EXPECT_EQ(IDE_DAEMON_OK, HdcWrite(session, buf, len)); // ֽȷ·ז§
     free(buf);
-    buf=NULL;
+    buf = NULL;
 }
 
 TEST_F(HDC_API_UTEST, HdcWriteNb)
 {
     HDC_SESSION session = (HDC_SESSION)(0x12345678);
     uint32_t maxSegment = 100;
-    void *buf = (void *)malloc(100);
+    void* buf = (void*)malloc(100);
     int len = 100;
 
-    MOCKER(HdcSessionWrite)
-        .stubs()
-        .will(returnValue(IDE_DAEMON_OK));
+    MOCKER(HdcSessionWrite).stubs().will(returnValue(IDE_DAEMON_OK));
 
     EXPECT_EQ(IDE_DAEMON_OK, HdcWriteNb(session, buf, len));
 
     free(buf);
-    buf=NULL;
+    buf = NULL;
 }
 
 TEST_F(HDC_API_UTEST, HdcWrite_get_capacity_size_too_small)
 {
     HDC_SESSION session = (HDC_SESSION)(0x12345678);
-    void *buf = (void *)malloc(100);
+    void* buf = (void*)malloc(100);
     int len = 100;
 
-    MOCKER(HdcCapacity)
-        .stubs()
-        .will(returnValue(IDE_DAEMON_ERROR));
+    MOCKER(HdcCapacity).stubs().will(returnValue(IDE_DAEMON_ERROR));
 
     EXPECT_EQ(IDE_DAEMON_ERROR, HdcWrite(session, buf, len));
     free(buf);
@@ -437,19 +388,14 @@ TEST_F(HDC_API_UTEST, HdcWrite_xmalloc_failed)
 {
     HDC_SESSION session = (HDC_SESSION)(0x12345678);
     uint32_t maxSegment = 1024;
-    char *buf = (char *)"test";
+    char* buf = (char*)"test";
     int len = strlen(buf);
 
-    MOCKER(HdcCapacity)
-        .stubs()
-        .with(outBoundP(&maxSegment, sizeof(maxSegment)))
-        .will(returnValue(IDE_DAEMON_OK));
+    MOCKER(HdcCapacity).stubs().with(outBoundP(&maxSegment, sizeof(maxSegment))).will(returnValue(IDE_DAEMON_OK));
 
-    MOCKER(IdeXmalloc)
-        .stubs()
-        .will(returnValue((void *)NULL));
+    MOCKER(IdeXmalloc).stubs().will(returnValue((void*)NULL));
 
-    //IdeXmalloc failed
+    // IdeXmalloc failed
     EXPECT_EQ(IDE_DAEMON_ERROR, HdcWrite(session, buf, len));
 }
 
@@ -457,19 +403,14 @@ TEST_F(HDC_API_UTEST, HdcWrite_memcpy_s_failed)
 {
     HDC_SESSION session = (HDC_SESSION)(0x12345678);
     uint32_t maxSegment = 1024;
-    char *buf = (char *)"test";
+    char* buf = (char*)"test";
     int len = strlen(buf);
 
-    MOCKER(HdcCapacity)
-        .stubs()
-        .with(outBoundP(&maxSegment, sizeof(maxSegment)))
-        .will(returnValue(IDE_DAEMON_OK));
+    MOCKER(HdcCapacity).stubs().with(outBoundP(&maxSegment, sizeof(maxSegment))).will(returnValue(IDE_DAEMON_OK));
 
-    MOCKER(memcpy_s)
-        .stubs()
-        .will(returnValue(-1));
+    MOCKER(memcpy_s).stubs().will(returnValue(-1));
 
-    //memcpy_s failed
+    // memcpy_s failed
     EXPECT_EQ(IDE_DAEMON_ERROR, HdcWrite(session, buf, len));
 }
 
@@ -480,19 +421,15 @@ TEST_F(HDC_API_UTEST, HdcSessionConnect)
     HDC_CLIENT client = (HDC_CLIENT)(0x87654321);
     HDC_SESSION session = (HDC_SESSION)(0x12345678);
 
-    MOCKER(drvHdcSessionConnect)
-        .stubs()
-        .then(returnValue(DRV_ERROR_NO_DEVICE))
-        .then(returnValue(DRV_ERROR_NONE));
+    MOCKER(drvHdcSessionConnect).stubs().then(returnValue(DRV_ERROR_NO_DEVICE)).then(returnValue(DRV_ERROR_NONE));
 
-    MOCKER(drvHdcSetSessionReference)
-        .stubs()
-        .then(returnValue(DRV_ERROR_NO_DEVICE))
-        .then(returnValue(DRV_ERROR_NONE));
+    MOCKER(drvHdcSetSessionReference).stubs().then(returnValue(DRV_ERROR_NO_DEVICE)).then(returnValue(DRV_ERROR_NONE));
 
-    EXPECT_EQ(IDE_DAEMON_ERROR, HdcSessionConnect(-1, -1, NULL, NULL));//invalid parameters
-    EXPECT_EQ(IDE_DAEMON_ERROR, HdcSessionConnect(peer_node, peer_devid, client, &session)); //drvHdcSessionConnect
-    EXPECT_EQ(IDE_DAEMON_ERROR, HdcSessionConnect(peer_node, peer_devid, client, &session)); //drvHdcSetSessionReference failed
+    EXPECT_EQ(IDE_DAEMON_ERROR, HdcSessionConnect(-1, -1, NULL, NULL));                      // invalid parameters
+    EXPECT_EQ(IDE_DAEMON_ERROR, HdcSessionConnect(peer_node, peer_devid, client, &session)); // drvHdcSessionConnect
+    EXPECT_EQ(
+        IDE_DAEMON_ERROR,
+        HdcSessionConnect(peer_node, peer_devid, client, &session)); // drvHdcSetSessionReference failed
     EXPECT_EQ(DRV_ERROR_NONE, HdcSessionConnect(peer_node, peer_devid, client, &session));
 }
 
@@ -504,22 +441,19 @@ TEST_F(HDC_API_UTEST, HalHdcSessionConnect)
     HDC_CLIENT client = (HDC_CLIENT)(0x87654321);
     HDC_SESSION session = (HDC_SESSION)(0x12345678);
 
-    MOCKER(halHdcSessionConnectEx)
-        .stubs()
-        .then(returnValue(DRV_ERROR_NO_DEVICE))
-        .then(returnValue(DRV_ERROR_NONE));
+    MOCKER(halHdcSessionConnectEx).stubs().then(returnValue(DRV_ERROR_NO_DEVICE)).then(returnValue(DRV_ERROR_NONE));
 
-    MOCKER(drvHdcSetSessionReference)
-        .stubs()
-        .then(returnValue(DRV_ERROR_NO_DEVICE))
-        .then(returnValue(DRV_ERROR_NONE));
+    MOCKER(drvHdcSetSessionReference).stubs().then(returnValue(DRV_ERROR_NO_DEVICE)).then(returnValue(DRV_ERROR_NONE));
 
-    EXPECT_EQ(IDE_DAEMON_ERROR, HalHdcSessionConnect(-1, -1, -1, NULL, NULL));//invalid parameters
-    EXPECT_EQ(IDE_DAEMON_ERROR, HalHdcSessionConnect(peer_node, peer_devid, host_pid, client, &session)); //drvHdcSessionConnect
-    EXPECT_EQ(IDE_DAEMON_ERROR, HalHdcSessionConnect(peer_node, peer_devid, host_pid, client, &session)); //drvHdcSetSessionReference failed
+    EXPECT_EQ(IDE_DAEMON_ERROR, HalHdcSessionConnect(-1, -1, -1, NULL, NULL)); // invalid parameters
+    EXPECT_EQ(
+        IDE_DAEMON_ERROR,
+        HalHdcSessionConnect(peer_node, peer_devid, host_pid, client, &session)); // drvHdcSessionConnect
+    EXPECT_EQ(
+        IDE_DAEMON_ERROR,
+        HalHdcSessionConnect(peer_node, peer_devid, host_pid, client, &session)); // drvHdcSetSessionReference failed
     EXPECT_EQ(DRV_ERROR_NONE, HalHdcSessionConnect(peer_node, peer_devid, host_pid, client, &session));
 }
-
 
 TEST_F(HDC_API_UTEST, HdcSessionDestroy)
 {
@@ -527,12 +461,12 @@ TEST_F(HDC_API_UTEST, HdcSessionDestroy)
 
     MOCKER(drvHdcSessionClose)
         .stubs()
-        .then(returnValue(DRV_ERROR_NO_DEVICE))    //ؔ¼ºµĴ·ז§µ
-        .then(returnValue(DRV_ERROR_NONE));    //ֽȷƜΪ
+        .then(returnValue(DRV_ERROR_NO_DEVICE))              // ؔ¼ºµĴ·ז§µ
+        .then(returnValue(DRV_ERROR_NONE));                  // ֽȷƜΪ
 
-    EXPECT_EQ(IDE_DAEMON_ERROR, HdcSessionDestroy(NULL));//invalid parameter
-    EXPECT_EQ(IDE_DAEMON_ERROR, HdcSessionDestroy(session)); //drvHdcSessionDestroy´·ז§
-    EXPECT_EQ(DRV_ERROR_NONE, HdcSessionDestroy(session)); //ֽȷƜΪ
+    EXPECT_EQ(IDE_DAEMON_ERROR, HdcSessionDestroy(NULL));    // invalid parameter
+    EXPECT_EQ(IDE_DAEMON_ERROR, HdcSessionDestroy(session)); // drvHdcSessionDestroy´·ז§
+    EXPECT_EQ(DRV_ERROR_NONE, HdcSessionDestroy(session));   // ֽȷƜΪ
 }
 
 TEST_F(HDC_API_UTEST, HdcSessionClose)
@@ -541,24 +475,23 @@ TEST_F(HDC_API_UTEST, HdcSessionClose)
 
     MOCKER(drvHdcSessionClose)
         .stubs()
-        .then(returnValue(DRV_ERROR_NO_DEVICE))    //ؔ¼ºµĴ·ז§µ
-        .then(returnValue(DRV_ERROR_NONE));    //ֽȷƜΪ
+        .then(returnValue(DRV_ERROR_NO_DEVICE))            // ؔ¼ºµĴ·ז§µ
+        .then(returnValue(DRV_ERROR_NONE));                // ֽȷƜΪ
 
-    EXPECT_EQ(IDE_DAEMON_ERROR, HdcSessionClose(NULL));//invalid parameter
-    EXPECT_EQ(IDE_DAEMON_ERROR, HdcSessionClose(session)); //drvHdcSessionClose´·ז§
-    EXPECT_EQ(DRV_ERROR_NONE, HdcSessionClose(session)); //ֽȷƜΪ
+    EXPECT_EQ(IDE_DAEMON_ERROR, HdcSessionClose(NULL));    // invalid parameter
+    EXPECT_EQ(IDE_DAEMON_ERROR, HdcSessionClose(session)); // drvHdcSessionClose´·ז§
+    EXPECT_EQ(DRV_ERROR_NONE, HdcSessionClose(session));   // ֽȷƜΪ
 }
-
 
 TEST_F(HDC_API_UTEST, HdcStorePackage)
 {
     struct IoVec ioVec;
-    char *buf_tmp = (char *)malloc(100);
+    char* buf_tmp = (char*)malloc(100);
     unsigned int buf_len = 100 - sizeof(struct IdeHdcPacket);
     ioVec.base = buf_tmp;
     ioVec.len = buf_len;
-    struct IdeHdcPacket *packet = (struct IdeHdcPacket*)buf_tmp;
-    memset(buf_tmp,0,100);
+    struct IdeHdcPacket* packet = (struct IdeHdcPacket*)buf_tmp;
+    memset(buf_tmp, 0, 100);
     packet->type = IDE_DAEMON_BIG_PACKAGE;
     packet->isLast = 1;
     packet->len = buf_len;
@@ -569,12 +502,12 @@ TEST_F(HDC_API_UTEST, HdcStorePackage)
 TEST_F(HDC_API_UTEST, HdcStorePackage_data_too_big)
 {
     struct IoVec ioVec;
-    char *buf_tmp = (char *)malloc(100);
+    char* buf_tmp = (char*)malloc(100);
     unsigned int buf_len = 100 - sizeof(struct IdeHdcPacket);
     ioVec.base = buf_tmp;
     ioVec.len = buf_len;
-    struct IdeHdcPacket *packet = (struct IdeHdcPacket*)buf_tmp;
-    memset(buf_tmp,0,100);
+    struct IdeHdcPacket* packet = (struct IdeHdcPacket*)buf_tmp;
+    memset(buf_tmp, 0, 100);
     packet->type = IDE_DAEMON_LITTLE_PACKAGE;
     packet->isLast = 1;
     packet->len = UINT32_MAX;
@@ -585,8 +518,8 @@ TEST_F(HDC_API_UTEST, HdcStorePackage_data_too_big)
 TEST_F(HDC_API_UTEST, HdcStorePackage_IdeXrmalloc_failed)
 {
     struct IoVec ioVec;
-    char *buf_tmp = (char *)malloc(100);
-    struct IdeHdcPacket *packet = (struct IdeHdcPacket*)buf_tmp;
+    char* buf_tmp = (char*)malloc(100);
+    struct IdeHdcPacket* packet = (struct IdeHdcPacket*)buf_tmp;
     unsigned int buf_len = 100 - sizeof(struct IdeHdcPacket);
     ioVec.base = buf_tmp;
     ioVec.len = buf_len;
@@ -595,9 +528,7 @@ TEST_F(HDC_API_UTEST, HdcStorePackage_IdeXrmalloc_failed)
     packet->isLast = 1;
     packet->len = 100 - buf_len;
 
-    MOCKER(IdeXrmalloc)
-        .stubs()
-        .will(returnValue((void *)NULL));
+    MOCKER(IdeXrmalloc).stubs().will(returnValue((void*)NULL));
 
     EXPECT_EQ(IDE_DAEMON_ERROR, HdcStorePackage(*packet, ioVec));
     free(buf_tmp);
@@ -606,9 +537,9 @@ TEST_F(HDC_API_UTEST, HdcStorePackage_IdeXrmalloc_failed)
 TEST_F(HDC_API_UTEST, HdcStorePackage_memcpy_s_failed)
 {
     struct IoVec ioVec;
-    char *buf_tmp = (char *)malloc(100);
-    void *new_buf = (char *)malloc(100);
-    struct IdeHdcPacket *packet = (struct IdeHdcPacket*)buf_tmp;
+    char* buf_tmp = (char*)malloc(100);
+    void* new_buf = (char*)malloc(100);
+    struct IdeHdcPacket* packet = (struct IdeHdcPacket*)buf_tmp;
     unsigned int buf_len = 100 - sizeof(struct IdeHdcPacket);
     memset(buf_tmp, 0, 100);
     packet->type = IDE_DAEMON_LITTLE_PACKAGE;
@@ -618,19 +549,14 @@ TEST_F(HDC_API_UTEST, HdcStorePackage_memcpy_s_failed)
     ioVec.len = buf_len;
 
     memset(new_buf, 0, 100);
-    struct IdeHdcPacket *packet1 = (struct IdeHdcPacket*)new_buf;
+    struct IdeHdcPacket* packet1 = (struct IdeHdcPacket*)new_buf;
     packet1->type = IDE_DAEMON_LITTLE_PACKAGE;
     packet1->isLast = 1;
     packet1->len = 100 - buf_len;
 
+    MOCKER(IdeXrmalloc).stubs().will(returnValue(new_buf));
 
-    MOCKER(IdeXrmalloc)
-        .stubs()
-        .will(returnValue(new_buf));
-
-    MOCKER(memcpy_s)
-        .stubs()
-        .will(returnValue(-1));
+    MOCKER(memcpy_s).stubs().will(returnValue(-1));
 
     EXPECT_EQ(IDE_DAEMON_ERROR, HdcStorePackage(*packet1, ioVec));
 }
@@ -660,10 +586,7 @@ TEST_F(HDC_API_UTEST, HdcCapacity_invalid_segment)
     struct drvHdcCapacity capacity;
     capacity.maxSegment = 32;
 
-    MOCKER(drvHdcGetCapacity)
-        .stubs()
-        .with(outBoundP(&capacity, sizeof(capacity)))
-        .will(returnValue(DRV_ERROR_NONE));
+    MOCKER(drvHdcGetCapacity).stubs().with(outBoundP(&capacity, sizeof(capacity))).will(returnValue(DRV_ERROR_NONE));
 
     EXPECT_EQ(IDE_DAEMON_ERROR, HdcCapacity(&segment));
 }
@@ -676,9 +599,7 @@ TEST_F(HDC_API_UTEST, IdeGetDevIdBySession)
     EXPECT_EQ(IDE_DAEMON_ERROR, IdeGetDevIdBySession(session, NULL));
     EXPECT_EQ(IDE_DAEMON_ERROR, IdeGetDevIdBySession(NULL, &devId));
 
-    MOCKER(halHdcGetSessionAttr)
-        .stubs()
-        .will(returnValue(DRV_ERROR_NO_DEVICE));
+    MOCKER(halHdcGetSessionAttr).stubs().will(returnValue(DRV_ERROR_NO_DEVICE));
     EXPECT_EQ(IDE_DAEMON_ERROR, IdeGetDevIdBySession(session, &devId));
     GlobalMockObject::verify();
 
@@ -692,9 +613,7 @@ TEST_F(HDC_API_UTEST, IdeGetVfIdBySession)
     int vfId = -1;
     EXPECT_EQ(IDE_DAEMON_ERROR, IdeGetVfIdBySession(NULL, vfId));
 
-    MOCKER(halHdcGetSessionAttr)
-        .stubs()
-        .will(returnValue(DRV_ERROR_NO_DEVICE));
+    MOCKER(halHdcGetSessionAttr).stubs().will(returnValue(DRV_ERROR_NO_DEVICE));
     EXPECT_EQ(IDE_DAEMON_ERROR, IdeGetVfIdBySession(session, vfId));
     GlobalMockObject::verify();
 
@@ -704,32 +623,22 @@ TEST_F(HDC_API_UTEST, IdeGetVfIdBySession)
 
 TEST_F(HDC_API_UTEST, IdeCreatePacket)
 {
-    MOCKER(memcpy_s)
-        .stubs()
-        .will(returnValue(EOK - 1))
-        .then(returnValue(EOK));
+    MOCKER(memcpy_s).stubs().will(returnValue(EOK - 1)).then(returnValue(EOK));
 
     HDC_SESSION session = (HDC_SESSION)0x1234567;
     int bufLen = 4;
     EXPECT_EQ(IDE_DAEMON_ERROR, IdeCreatePacket(IDE_EXEC_COMMAND_REQ, nullptr, 0, nullptr, nullptr));
-    EXPECT_EQ(IDE_DAEMON_ERROR, IdeCreatePacket(IDE_EXEC_COMMAND_REQ, "test", 0xffffffff, (void **)0x123456, &bufLen));
-    EXPECT_EQ(IDE_DAEMON_ERROR, IdeCreatePacket(IDE_EXEC_COMMAND_REQ, "test", bufLen, (void **)0x123456, &bufLen));
+    EXPECT_EQ(IDE_DAEMON_ERROR, IdeCreatePacket(IDE_EXEC_COMMAND_REQ, "test", 0xffffffff, (void**)0x123456, &bufLen));
+    EXPECT_EQ(IDE_DAEMON_ERROR, IdeCreatePacket(IDE_EXEC_COMMAND_REQ, "test", bufLen, (void**)0x123456, &bufLen));
 }
 
 TEST_F(HDC_API_UTEST, IdeXrmalloc)
 {
-    MOCKER(memcpy_s)
-        .stubs()
-        .will(returnValue(EOK - 1))
-        .then(returnValue(EOK));
-    MOCKER(IdeXmalloc)
-        .stubs()
-        .will(returnValue((void *)123));
-    MOCKER(IdeXfree)
-        .stubs()
-        .will(ignoreReturnValue());
+    MOCKER(memcpy_s).stubs().will(returnValue(EOK - 1)).then(returnValue(EOK));
+    MOCKER(IdeXmalloc).stubs().will(returnValue((void*)123));
+    MOCKER(IdeXfree).stubs().will(ignoreReturnValue());
 
     char ptr[4] = "aa";
 
-    EXPECT_EQ(nullptr, IdeXrmalloc((void *)ptr, 4, 4));
+    EXPECT_EQ(nullptr, IdeXrmalloc((void*)ptr, 4, 4));
 }

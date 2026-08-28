@@ -17,26 +17,24 @@ using namespace analysis::dvvp::common::thread;
 using namespace analysis::dvvp::common::error;
 using namespace Analysis::Dvvp::MsprofErrMgr;
 
-class COMMON_THREAD_POOL_TEST: public testing::Test {
+class COMMON_THREAD_POOL_TEST : public testing::Test {
 protected:
-    virtual void SetUp() {
-    }
-    virtual void TearDown() {
-    }
+    virtual void SetUp() {}
+    virtual void TearDown() {}
 };
 
 class TaskClass : public Task {
 public:
-    virtual int Execute() {
+    virtual int Execute()
+    {
         std::cout << "Execute task" << std::endl;
         return 0;
     }
-    virtual size_t HashId() {
-        return 12;
-    }
+    virtual size_t HashId() { return 12; }
 };
 
-TEST_F(COMMON_THREAD_POOL_TEST, start) {
+TEST_F(COMMON_THREAD_POOL_TEST, start)
+{
     GlobalMockObject::verify();
 
     std::shared_ptr<ThreadPool> pool(new ThreadPool());
@@ -44,22 +42,20 @@ TEST_F(COMMON_THREAD_POOL_TEST, start) {
     pool->threadNum_ = 0;
     EXPECT_EQ(PROFILING_FAILED, pool->Start());
 
-    //MOCKER_CPP(&analysis::dvvp::common::thread::Thread::Start)
-    //    .stubs()
-    //    .will(returnValue(PROFILING_FAILED))
-    //    .then(returnValue(PROFILING_SUCCESS));
-    MOCKER(mmCreateTaskWithThreadAttr)
-        .stubs()
-        .will(returnValue(EN_ERROR))
-	    .then(returnValue(EN_OK));
-		
+    // MOCKER_CPP(&analysis::dvvp::common::thread::Thread::Start)
+    //     .stubs()
+    //     .will(returnValue(PROFILING_FAILED))
+    //     .then(returnValue(PROFILING_SUCCESS));
+    MOCKER(mmCreateTaskWithThreadAttr).stubs().will(returnValue(EN_ERROR)).then(returnValue(EN_OK));
+
     pool->threadNum_ = 2;
     EXPECT_EQ(PROFILING_SUCCESS, pool->Start());
 
     pool.reset();
 }
 
-TEST_F(COMMON_THREAD_POOL_TEST, stop) {
+TEST_F(COMMON_THREAD_POOL_TEST, stop)
+{
     GlobalMockObject::verify();
 
     std::shared_ptr<ThreadPool> pool(new ThreadPool());
@@ -72,16 +68,14 @@ TEST_F(COMMON_THREAD_POOL_TEST, stop) {
     pool.reset();
 }
 
-TEST_F(COMMON_THREAD_POOL_TEST, InnnerThread_run) {
+TEST_F(COMMON_THREAD_POOL_TEST, InnnerThread_run)
+{
     GlobalMockObject::verify();
 
     std::shared_ptr<ThreadPool::InnnerThread> thread(new ThreadPool::InnnerThread(64));
     EXPECT_NE(nullptr, thread);
 
-    MOCKER_CPP(&Thread::IsQuit)
-        .stubs()
-        .will(returnValue(false))
-        .then(returnValue(true));
+    MOCKER_CPP(&Thread::IsQuit).stubs().will(returnValue(false)).then(returnValue(true));
 
     static const size_t s_queue_size = 64;
     thread->queue_ = std::make_shared<TaskQueue>(s_queue_size);
@@ -92,7 +86,8 @@ TEST_F(COMMON_THREAD_POOL_TEST, InnnerThread_run) {
     thread.reset();
 }
 
-TEST_F(COMMON_THREAD_POOL_TEST, Dispatch) {
+TEST_F(COMMON_THREAD_POOL_TEST, Dispatch)
+{
     GlobalMockObject::verify();
 
     std::shared_ptr<ThreadPool> pool(new ThreadPool());

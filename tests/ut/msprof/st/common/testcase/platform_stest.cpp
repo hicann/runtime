@@ -30,24 +30,20 @@ using namespace analysis::dvvp::common::error;
 using namespace Analysis::Dvvp::Common::Platform;
 using namespace Dvvp::Collect::Platform;
 
-class COMMON_PLATFORM_STEST: public testing::Test {
+class COMMON_PLATFORM_STEST : public testing::Test {
 protected:
-    virtual void SetUp() {
-        GlobalMockObject::verify();
-    }
-    virtual void TearDown() {
-    }
+    virtual void SetUp() { GlobalMockObject::verify(); }
+    virtual void TearDown() {}
 };
 
-TEST_F(COMMON_PLATFORM_STEST, PlatformAnalyzerBase) {
+TEST_F(COMMON_PLATFORM_STEST, PlatformAnalyzerBase)
+{
     GlobalMockObject::verify();
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
         .stubs()
         .will(returnValue(PlatformType::CHIP_V4_1_0))
         .then(returnValue(15));
-    MOCKER_CPP(&Analysis::Dvvp::Common::Platform::AscendHalAdaptor::Init)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&Analysis::Dvvp::Common::Platform::AscendHalAdaptor::Init).stubs().will(returnValue(PROFILING_SUCCESS));
     Platform::instance()->Init();
     std::string pmu = "ArithmeticUtilization";
     // check analyzer not init

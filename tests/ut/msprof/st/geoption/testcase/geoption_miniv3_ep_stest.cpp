@@ -28,7 +28,7 @@ static const char MINIV3_RM_RF[] = "rm -rf ./geoptionMiniV3stest_workspace";
 static const char MINIV3_MKDIR[] = "mkdir ./geoptionMiniV3stest_workspace";
 static const char MINIV3_OUTPUT_DIR[] = "./geoptionMiniV3stest_workspace/output";
 
-class GeOptionMiniV3EpStest: public testing::Test {
+class GeOptionMiniV3EpStest : public testing::Test {
 protected:
     virtual void SetUp()
     {
@@ -44,7 +44,7 @@ protected:
     virtual void TearDown()
     {
         GlobalMockObject::verify();
-        DevprofDrvAicpu::instance()->isRegister_ = false;   // 重置aicpu注册状态，使单进程内能多次注册
+        DevprofDrvAicpu::instance()->isRegister_ = false; // 重置aicpu注册状态，使单进程内能多次注册
         EXPECT_EQ(2, SimulatorMgr().DelDeviceSimulator(2, StPlatformType::MINI_V3_TYPE));
         system(MINIV3_RM_RF);
         system("rm -rf ./geoption.json");
@@ -68,8 +68,8 @@ TEST_F(GeOptionMiniV3EpStest, GeOptionDefault)
     std::vector<std::string> dataList = {"ffts_profile.data", "ts_track.data", "stars_soc.data"};
     MsprofMgr().SetDeviceCheckList(dataList);
     std::vector<std::string> hostDataList = {
-        "unaging.api_event.data", "unaging.compact.node_basic_info", "unaging.compact.task_track", "unaging.additional.context_id_info"
-    };
+        "unaging.api_event.data", "unaging.compact.node_basic_info", "unaging.compact.task_track",
+        "unaging.additional.context_id_info"};
     MsprofMgr().SetHostCheckList(hostDataList);
     std::vector<uint64_t> bitList = {PROF_ACL_API, PROF_TASK_TIME_L1, PROF_AICORE_METRICS};
     MsprofMgr().SetBitSwitchCheckList(bitList);

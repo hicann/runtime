@@ -38,14 +38,16 @@ int32_t DataReport::InitReport()
 
 int32_t DataReport::StartReport()
 {
-    const char* testStr[] = {"report","test"};
+    const char* testStr[] = {"report", "test"};
     std::string tagStr = "test";
     ReportDataTest reporterData{};
-    reporterData.dataLen = sizeof(testStr) / sizeof(char *);
-    reporterData.data = reinterpret_cast<uint8_t *>(const_cast<char **>(testStr));
+    reporterData.dataLen = sizeof(testStr) / sizeof(char*);
+    reporterData.data = reinterpret_cast<uint8_t*>(const_cast<char**>(testStr));
     strcpy(reporterData.tag, tagStr.c_str());
 
-    int32_t ret = MsprofReportData(moduleId_, MSPROF_REPORTER_REPORT, static_cast<void *>(&reporterData), static_cast<uint32_t>(sizeof(ReportDataTest)));
+    int32_t ret = MsprofReportData(
+        moduleId_, MSPROF_REPORTER_REPORT, static_cast<void*>(&reporterData),
+        static_cast<uint32_t>(sizeof(ReportDataTest)));
     if (!CheckPoint(ret)) {
         MSPROF_LOGE("MSPROF_REPORTER_REPORT Failed, ret = %d.", ret);
         return REPORT_FAILED;
@@ -56,12 +58,13 @@ int32_t DataReport::StartReport()
 
 int32_t DataReport::HashReport()
 {
-    const std::string &hashStr = std::to_string(moduleId_);
+    const std::string& hashStr = std::to_string(moduleId_);
     HashDataTest hashData{};
     hashData.dataLen = hashStr.size();
-    hashData.data = reinterpret_cast<uint8_t *>(const_cast<char *>(hashStr.c_str()));
+    hashData.data = reinterpret_cast<uint8_t*>(const_cast<char*>(hashStr.c_str()));
 
-    int32_t ret = MsprofReportData(moduleId_, MSPROF_REPORTER_HASH, static_cast<void *>(&hashData), static_cast<uint32_t>(sizeof(HashDataTest)));
+    int32_t ret = MsprofReportData(
+        moduleId_, MSPROF_REPORTER_HASH, static_cast<void*>(&hashData), static_cast<uint32_t>(sizeof(HashDataTest)));
     if (!CheckPoint(ret)) {
         MSPROF_LOGE("MSPROF_REPORTER_REPORT Failed, ret = %d.", ret);
         return REPORT_FAILED;
@@ -74,7 +77,8 @@ int32_t DataReport::MaxLenReport()
 {
     uint32_t reporter_max_len_{1U};
 
-    int32_t ret = MsprofReportData(moduleId_, MSPROF_REPORTER_DATA_MAX_LEN, &reporter_max_len_, static_cast<uint32_t>(sizeof(uint32_t)));
+    int32_t ret = MsprofReportData(
+        moduleId_, MSPROF_REPORTER_DATA_MAX_LEN, &reporter_max_len_, static_cast<uint32_t>(sizeof(uint32_t)));
     if (!CheckPoint(ret)) {
         MSPROF_LOGE("MSPROF_REPORTER_DATA_MAX_LEN Failed, ret = %d.", ret);
         return REPORT_FAILED;
@@ -92,6 +96,6 @@ int32_t DataReport::StopReport()
     return REPORT_SUCCESS;
 }
 
-}
-}
-}
+} // namespace Test
+} // namespace Dvvp
+} // namespace Cann

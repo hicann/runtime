@@ -22,20 +22,18 @@ using namespace Analysis::Dvvp::Msprof;
 
 class PROF_PARAM_ADAPTER_UTEST : public testing::Test {
 protected:
-  virtual void SetUp() {}
-  virtual void TearDown() {}
+    virtual void SetUp() {}
+    virtual void TearDown() {}
 };
 
-TEST_F(PROF_PARAM_ADAPTER_UTEST, GenerateLlcEvents) {
+TEST_F(PROF_PARAM_ADAPTER_UTEST, GenerateLlcEvents)
+{
     GlobalMockObject::verify();
     std::shared_ptr<Analysis::Dvvp::Msprof::MsprofParamsAdapter> paramsAdapter(
         new Analysis::Dvvp::Msprof::MsprofParamsAdapter);
-    std::shared_ptr<analysis::dvvp::message::ProfileParams> srcParams(
-            new analysis::dvvp::message::ProfileParams);
+    std::shared_ptr<analysis::dvvp::message::ProfileParams> srcParams(new analysis::dvvp::message::ProfileParams);
 
-    MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
-            .stubs()
-            .will(returnValue(0));
+    MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType).stubs().will(returnValue(0));
     srcParams->llc_profiling = "";
     srcParams->hardware_mem = "on";
     paramsAdapter->GenerateLlcEvents(nullptr);
@@ -47,25 +45,22 @@ TEST_F(PROF_PARAM_ADAPTER_UTEST, GenerateLlcEvents) {
     paramsAdapter->GenerateLlcEvents(srcParams);
     srcParams->llc_profiling = "bandwidth";
     paramsAdapter->GenerateLlcEvents(srcParams);
-    srcParams->llc_profiling = "read";                                                      
+    srcParams->llc_profiling = "read";
     paramsAdapter->GenerateLlcEvents(srcParams);
     srcParams->llc_profiling = "write";
     paramsAdapter->GenerateLlcEvents(srcParams);
     GlobalMockObject::verify();
-    MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
-            .stubs()
-            .will(returnValue(1));
+    MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType).stubs().will(returnValue(1));
     paramsAdapter->GenerateLlcEvents(srcParams);
     EXPECT_EQ(srcParams->llc_profiling_events, "write");
 }
 
-
-TEST_F(PROF_PARAM_ADAPTER_UTEST, UpdateParams) {
+TEST_F(PROF_PARAM_ADAPTER_UTEST, UpdateParams)
+{
     GlobalMockObject::verify();
     std::shared_ptr<Analysis::Dvvp::Msprof::MsprofParamsAdapter> paramsAdapter(
         new Analysis::Dvvp::Msprof::MsprofParamsAdapter);
-    std::shared_ptr<analysis::dvvp::message::ProfileParams> srcParams(
-            new analysis::dvvp::message::ProfileParams);
+    std::shared_ptr<analysis::dvvp::message::ProfileParams> srcParams(new analysis::dvvp::message::ProfileParams);
 
     srcParams->io_profiling = "on";
     srcParams->interconnection_profiling = "on";
@@ -73,5 +68,4 @@ TEST_F(PROF_PARAM_ADAPTER_UTEST, UpdateParams) {
     srcParams->cpu_profiling = "on";
     EXPECT_EQ(PROFILING_FAILED, paramsAdapter->UpdateParams(nullptr));
     EXPECT_EQ(PROFILING_SUCCESS, paramsAdapter->UpdateParams(srcParams));
-
 }

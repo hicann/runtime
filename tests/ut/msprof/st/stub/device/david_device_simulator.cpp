@@ -16,7 +16,7 @@
 namespace Cann {
 namespace Dvvp {
 namespace Test {
-int32_t DavidDeviceSimulator::ProfDrvGetChannels(ChannelList &channels)
+int32_t DavidDeviceSimulator::ProfDrvGetChannels(ChannelList& channels)
 {
     const std::vector<int> blackList = {2, 5, 7, 43, 45, 46, 48, 49, 51, 85, 150};
     std::string channelStr = "";
@@ -79,10 +79,9 @@ int32_t DavidDeviceSimulator::ProfDrvGetChannels(ChannelList &channels)
     return 0;
 }
 
-int32_t DavidDeviceSimulator::GetDeviceInfo(int32_t moduleType, int32_t infoType, int64_t *value)
+int32_t DavidDeviceSimulator::GetDeviceInfo(int32_t moduleType, int32_t infoType, int64_t* value)
 {
-    if (moduleType == MODULE_TYPE_SYSTEM &&
-        infoType == INFO_TYPE_VERSION) {
+    if (moduleType == MODULE_TYPE_SYSTEM && infoType == INFO_TYPE_VERSION) {
 #ifndef BUILD_PROFILING_OPEN_PROJECT
         *value = (int64_t)StPlatformType::CHIP_CLOUD_V3 << 8;
 #else
@@ -97,7 +96,7 @@ int32_t DavidDeviceSimulator::GetDeviceInfo(int32_t moduleType, int32_t infoType
     return 0;
 }
 
-int32_t DavidDeviceSimulator::ProfDrvStart(uint32_t channelId, const ProfStartPara &para)
+int32_t DavidDeviceSimulator::ProfDrvStart(uint32_t channelId, const ProfStartPara& para)
 {
     prof_sample_start_para profPara = {0};
     profPara.dev_id = 0;
@@ -122,16 +121,17 @@ int32_t DavidDeviceSimulator::ProfDrvStart(uint32_t channelId, const ProfStartPa
         case CHANNEL_BIU_GROUP2_AIC:
         case CHANNEL_BIU_GROUP2_AIV0:
         case CHANNEL_BIU_GROUP2_AIV1:
-            if (!(profPara.user_data_len == 16 && (reinterpret_cast<uint32_t *>(para.user_data))[1] == 1)) {
+            if (!(profPara.user_data_len == 16 && (reinterpret_cast<uint32_t*>(para.user_data))[1] == 1)) {
                 DataMgr().ReportBiuPerfData(dataQueue);
             }
             break;
-        #if defined (MSPROF_C) || defined (API_STEST)
-        #else
+#if defined(MSPROF_C) || defined(API_STEST)
+#else
         case CHANNEL_AICPU:
         case CHANNEL_CUS_AICPU: {
             MSPROF_EVENT("driver call aicpu start_func");
-            DeviceSimulator::profSampleOps_[channelId].start_func(&profPara); // 驱动调用 devprof 注册的 start_fun，devprof 会调用aicpu注册的 start
+            DeviceSimulator::profSampleOps_[channelId].start_func(
+                &profPara); // 驱动调用 devprof 注册的 start_fun，devprof 会调用aicpu注册的 start
             MsprofAdditionalInfo info;
             for (int32_t i = 0; i < 1024; i++) {
                 (void)AdprofReportAdditionalInfo(1, &info, sizeof(MsprofAdditionalInfo));
@@ -143,11 +143,11 @@ int32_t DavidDeviceSimulator::ProfDrvStart(uint32_t channelId, const ProfStartPa
             DeviceSimulator::profSampleOps_[channelId].start_func(&profPara);
             SampleData(channelId, dataQueue);
             break;
-        #endif
+#endif
         case CHANNEL_BIU_GROUP0_AIC:
         case CHANNEL_BIU_GROUP0_AIV0:
         case CHANNEL_BIU_GROUP0_AIV1:
-            if (profPara.user_data_len == 16 && (reinterpret_cast<uint32_t *>(para.user_data))[1] == 1) {
+            if (profPara.user_data_len == 16 && (reinterpret_cast<uint32_t*>(para.user_data))[1] == 1) {
                 DeviceSimulator::channelName_ = "pc_sampling";
                 MSPROF_EVENT("driver call pc sampling start_func");
             } else {
@@ -163,10 +163,10 @@ int32_t DavidDeviceSimulator::ProfDrvStart(uint32_t channelId, const ProfStartPa
     }
     std::unique_lock<std::mutex> lk(DeviceSimulator::channelDataMtx_);
     DeviceSimulator::channelData_[channelId] = dataQueue;
-    
+
     DeviceSimulator::profReadStatus_[channelId] = false;
     return 0;
 }
-}
-}
-}
+} // namespace Test
+} // namespace Dvvp
+} // namespace Cann

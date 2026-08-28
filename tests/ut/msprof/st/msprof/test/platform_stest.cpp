@@ -18,43 +18,46 @@ using namespace Analysis::Dvvp::Common::Platform;
 using namespace analysis::dvvp::common::error;
 using namespace Dvvp::Collect::Platform;
 
-class PLATFORM_STEST: public testing::Test {
+class PLATFORM_STEST : public testing::Test {
 protected:
-    virtual void SetUp() {
-    }
-    virtual void TearDown() {
-    }
+    virtual void SetUp() {}
+    virtual void TearDown() {}
 };
 
-TEST_F(PLATFORM_STEST, Init) {
+TEST_F(PLATFORM_STEST, Init)
+{
     GlobalMockObject::verify();
     auto platform = std::make_shared<Platform>();
 
     EXPECT_EQ(PROFILING_SUCCESS, platform->Init());
 }
 
-TEST_F(PLATFORM_STEST, Uninit) {
+TEST_F(PLATFORM_STEST, Uninit)
+{
     GlobalMockObject::verify();
     auto platform = std::make_shared<Platform>();
 
     EXPECT_EQ(PROFILING_SUCCESS, platform->Uninit());
 }
 
-TEST_F(PLATFORM_STEST, PlatformIsRpcSide) {
+TEST_F(PLATFORM_STEST, PlatformIsRpcSide)
+{
     GlobalMockObject::verify();
     auto platform = std::make_shared<Platform>();
 
     EXPECT_EQ(false, platform->PlatformIsRpcSide());
 }
 
-TEST_F(PLATFORM_STEST, GetPlatform) {
+TEST_F(PLATFORM_STEST, GetPlatform)
+{
     GlobalMockObject::verify();
     auto platform = std::make_shared<Platform>();
 
     EXPECT_EQ(SysPlatformType::INVALID, platform->GetPlatform());
 }
 
-TEST_F(PLATFORM_STEST, DavidV121PlatformL2CacheMetrics) {
+TEST_F(PLATFORM_STEST, DavidV121PlatformL2CacheMetrics)
+{
     GlobalMockObject::verify();
     DavidV121Platform platform;
     std::string aicEvent;

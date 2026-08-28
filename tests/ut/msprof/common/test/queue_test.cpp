@@ -16,22 +16,21 @@
 
 using namespace analysis::dvvp::common::queue;
 
-class COMMON_QUEUE_BOUND_QUEUE_TEST: public testing::Test {
+class COMMON_QUEUE_BOUND_QUEUE_TEST : public testing::Test {
 protected:
-    virtual void SetUp() {
-    }
-    virtual void TearDown() {
-    }
-
+    virtual void SetUp() {}
+    virtual void TearDown() {}
 };
 
-TEST_F(COMMON_QUEUE_BOUND_QUEUE_TEST, BoundQueue) {
+TEST_F(COMMON_QUEUE_BOUND_QUEUE_TEST, BoundQueue)
+{
     std::shared_ptr<BoundQueue<int> > bq(new BoundQueue<int>(2));
     EXPECT_NE(nullptr, bq);
     bq.reset();
 }
 
-TEST_F(COMMON_QUEUE_BOUND_QUEUE_TEST, Push) {
+TEST_F(COMMON_QUEUE_BOUND_QUEUE_TEST, Push)
+{
     std::shared_ptr<BoundQueue<int> > bq(new BoundQueue<int>(2));
 
     EXPECT_TRUE(bq->Push(1));
@@ -40,14 +39,15 @@ TEST_F(COMMON_QUEUE_BOUND_QUEUE_TEST, Push) {
     EXPECT_FALSE(bq->Push(2));
 }
 
-
-TEST_F(COMMON_QUEUE_BOUND_QUEUE_TEST, TryPush) {
+TEST_F(COMMON_QUEUE_BOUND_QUEUE_TEST, TryPush)
+{
     std::shared_ptr<BoundQueue<int> > bq(new BoundQueue<int>(1));
     EXPECT_EQ(true, bq->TryPush(1));
     EXPECT_EQ(false, bq->TryPush(1));
 }
 
-TEST_F(COMMON_QUEUE_BOUND_QUEUE_TEST, TryPop) {
+TEST_F(COMMON_QUEUE_BOUND_QUEUE_TEST, TryPop)
+{
     std::shared_ptr<BoundQueue<int> > bq(new BoundQueue<int>(2));
 
     int data;
@@ -65,7 +65,8 @@ TEST_F(COMMON_QUEUE_BOUND_QUEUE_TEST, TryPop) {
     EXPECT_EQ((size_t)1, bq->Size());
 }
 
-TEST_F(COMMON_QUEUE_BOUND_QUEUE_TEST, Pop) {
+TEST_F(COMMON_QUEUE_BOUND_QUEUE_TEST, Pop)
+{
     std::shared_ptr<BoundQueue<int> > bq(new BoundQueue<int>(2));
 
     int data;
@@ -82,13 +83,15 @@ TEST_F(COMMON_QUEUE_BOUND_QUEUE_TEST, Pop) {
     EXPECT_FALSE(bq->Pop(data));
 }
 
-TEST_F(COMMON_QUEUE_BOUND_QUEUE_TEST, Quit) {
+TEST_F(COMMON_QUEUE_BOUND_QUEUE_TEST, Quit)
+{
     std::shared_ptr<BoundQueue<int> > bq(new BoundQueue<int>(2));
     EXPECT_NE(nullptr, bq);
     bq->Quit();
 }
 
-TEST_F(COMMON_QUEUE_BOUND_QUEUE_TEST, Size) {
+TEST_F(COMMON_QUEUE_BOUND_QUEUE_TEST, Size)
+{
     std::shared_ptr<BoundQueue<int> > bq(new BoundQueue<int>(2));
 
     EXPECT_EQ((size_t)0, bq->Size());

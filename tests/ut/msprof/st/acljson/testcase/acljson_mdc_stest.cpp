@@ -27,7 +27,7 @@ static const char MDC_RM_RF[] = "rm -rf ./acljsonMdcstest_workspace";
 static const char MDC_MKDIR[] = "mkdir ./acljsonMdcstest_workspace";
 static const char MDC_OUTPUT_DIR[] = "./acljsonMdcstest_workspace/output";
 
-class AclJsonMdcStest: public testing::Test {
+class AclJsonMdcStest : public testing::Test {
 protected:
     virtual void SetUp()
     {
@@ -66,8 +66,8 @@ TEST_F(AclJsonMdcStest, AclJsonDefault)
     std::vector<std::string> deviceDataList = {"hwts.data", "ts_track.data", "aicore.data", "aiVectorCore.data"};
     MsprofMgr().SetDeviceCheckList(deviceDataList);
     std::vector<std::string> hostDataList = {
-        "unaging.api_event.data", "unaging.compact.node_basic_info", "unaging.compact.task_track", "unaging.additional.context_id_info"
-    };
+        "unaging.api_event.data", "unaging.compact.node_basic_info", "unaging.compact.task_track",
+        "unaging.additional.context_id_info"};
     MsprofMgr().SetHostCheckList(hostDataList);
     std::vector<uint64_t> bitList = {PROF_ACL_API, PROF_TASK_TIME_L1, PROF_AICORE_METRICS};
     MsprofMgr().SetBitSwitchCheckList(bitList);

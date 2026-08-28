@@ -10,10 +10,11 @@
 #include <stdio.h>
 #include "gtest/gtest.h"
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv)
+{
     testing::InitGoogleTest(&argc, argv);
 
-    // Runs all tests using Google Test. 
+    // Runs all tests using Google Test.
     // testing::GTEST_FLAG(filter) = "MSPROF_ACL_CORE_STEST.ProfAclStartMultiDevice";
-    return RUN_ALL_TESTS(); 
+    return RUN_ALL_TESTS();
 }

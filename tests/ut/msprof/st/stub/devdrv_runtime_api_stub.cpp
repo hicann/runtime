@@ -15,14 +15,15 @@
 函数功能	获取当前平台信息
 输入说明
 输出说明
-		0 : 表示当前在Device侧
-		1 : 表示当前在Host侧
+        0 : 表示当前在Device侧
+        1 : 表示当前在Host侧
 返回值说明	见drvError_t定义
 使用说明
 注意事项
 */
-drvError_t drvGetPlatformInfo(uint32_t *info) {
-	*info = 1;
+drvError_t drvGetPlatformInfo(uint32_t* info)
+{
+    *info = 1;
     return DRV_ERROR_NONE;
 }
 
@@ -35,7 +36,8 @@ drvError_t drvGetPlatformInfo(uint32_t *info) {
 使用说明
 注意事项
 */
-drvError_t drvGetDevNum(uint32_t *num_dev) {
+drvError_t drvGetDevNum(uint32_t* num_dev)
+{
     *num_dev = (uint32_t)1;
     return DRV_ERROR_NONE;
 }
@@ -49,18 +51,20 @@ drvError_t drvGetDevNum(uint32_t *num_dev) {
 使用说明
 注意事项
 */
-drvError_t drvGetDevIDs(uint32_t *devices, uint32_t len) {
+drvError_t drvGetDevIDs(uint32_t* devices, uint32_t len)
+{
     devices[0] = 0;
     return DRV_ERROR_NONE;
 }
 
-drvError_t halGetDeviceInfo(uint32_t devId, int32_t moduleType, int32_t infoType, int64_t *value) {
+drvError_t halGetDeviceInfo(uint32_t devId, int32_t moduleType, int32_t infoType, int64_t* value)
+{
     return DRV_ERROR_NONE;
 }
 
-drvError_t halGetAPIVersion(int32_t *ver)
+drvError_t halGetAPIVersion(int32_t* ver)
 {
-    *ver=0x72316;
+    *ver = 0x72316;
     return DRV_ERROR_NONE;
 }
 /*
@@ -72,7 +76,8 @@ drvError_t halGetAPIVersion(int32_t *ver)
 使用说明
 注意事项
 */
-drvError_t drvDeviceGetPhyIdByIndex(uint32_t index, uint32_t *phyId) {
+drvError_t drvDeviceGetPhyIdByIndex(uint32_t index, uint32_t* phyId)
+{
     *phyId = index;
     return DRV_ERROR_NONE;
 }
@@ -86,7 +91,8 @@ drvError_t drvDeviceGetPhyIdByIndex(uint32_t index, uint32_t *phyId) {
 使用说明
 注意事项
 */
-drvError_t drvDeviceGetIndexByPhyId(uint32_t phyId, uint32_t *index) {
+drvError_t drvDeviceGetIndexByPhyId(uint32_t phyId, uint32_t* index)
+{
     *index = phyId;
     return DRV_ERROR_NONE;
 }
@@ -100,12 +106,13 @@ drvError_t drvDeviceGetIndexByPhyId(uint32_t phyId, uint32_t *index) {
 使用说明
 注意事项
 */
-drvError_t drvGetDevIDByLocalDevID(uint32_t index, uint32_t *phyId) {
+drvError_t drvGetDevIDByLocalDevID(uint32_t index, uint32_t* phyId)
+{
     *phyId = index;
     return DRV_ERROR_NONE;
 }
 
-drvError_t drvDeviceStatus(uint32_t devId, drvStatus_t *status)
+drvError_t drvDeviceStatus(uint32_t devId, drvStatus_t* status)
 {
     (void)devId;
     (void)status;
@@ -116,54 +123,42 @@ drvError_t drvDeviceStatus(uint32_t devId, drvStatus_t *status)
 extern "C" {
 #endif
 
-drvError_t halEschedAttachDevice(uint32_t devId)
-{
-    return DRV_ERROR_NONE;
-}
+drvError_t halEschedAttachDevice(uint32_t devId) { return DRV_ERROR_NONE; }
 
-drvError_t halEschedCreateGrpEx(uint32_t devId, struct esched_grp_para *grpPara, unsigned int *grpId)
+drvError_t halEschedCreateGrpEx(uint32_t devId, struct esched_grp_para* grpPara, unsigned int* grpId)
 {
     *grpId = 32;
     return DRV_ERROR_NONE;
 }
 
-drvError_t halEschedDettachDevice(unsigned int devId)
+drvError_t halEschedDettachDevice(unsigned int devId) { return DRV_ERROR_NONE; }
+
+drvError_t halEschedSubscribeEvent(
+    unsigned int devId, unsigned int grpId, unsigned int threadId, unsigned long long eventBitmap)
 {
     return DRV_ERROR_NONE;
 }
 
-drvError_t halEschedSubscribeEvent(unsigned int devId, unsigned int grpId, unsigned int threadId,
-    unsigned long long eventBitmap)
-{
-    return DRV_ERROR_NONE;
-}
-
-drvError_t halEschedWaitEvent(unsigned int devId, unsigned int grpId, unsigned int threadId, int timeout,
-    struct event_info *event)
+drvError_t halEschedWaitEvent(
+    unsigned int devId, unsigned int grpId, unsigned int threadId, int timeout, struct event_info* event)
 {
     event->comm.event_id = EVENT_USR_START;
     return DRV_ERROR_NONE;
 }
 
-drvError_t halEschedQueryInfo(unsigned int devId, ESCHED_QUERY_TYPE type, struct esched_input_info *inPut,
-    struct esched_output_info *outPut)
+drvError_t halEschedQueryInfo(
+    unsigned int devId, ESCHED_QUERY_TYPE type, struct esched_input_info* inPut, struct esched_output_info* outPut)
 {
-    struct esched_query_gid_output *gidOut = (struct esched_query_gid_output *)outPut->outBuff;
+    struct esched_query_gid_output* gidOut = (struct esched_query_gid_output*)outPut->outBuff;
     gidOut->grp_id = 32;
     return DRV_ERROR_NONE;
 }
 
-drvError_t halQueryDevpid(struct halQueryDevpidInfo info, pid_t *dev_pid)
-{
-    return DRV_ERROR_NONE;
-}
+drvError_t halQueryDevpid(struct halQueryDevpidInfo info, pid_t* dev_pid) { return DRV_ERROR_NONE; }
 
-drvError_t halEschedSubmitEvent(uint32_t devId, struct event_summary *event)
-{
-    return DRV_ERROR_NONE;
-}
+drvError_t halEschedSubmitEvent(uint32_t devId, struct event_summary* event) { return DRV_ERROR_NONE; }
 
-int halProfQueryAvailBufLen(unsigned int dev_id, unsigned int chan_id, unsigned int *buff_avail_len)
+int halProfQueryAvailBufLen(unsigned int dev_id, unsigned int chan_id, unsigned int* buff_avail_len)
 {
     (void)dev_id;
     (void)chan_id;
@@ -171,24 +166,24 @@ int halProfQueryAvailBufLen(unsigned int dev_id, unsigned int chan_id, unsigned 
     return 0;
 }
 
-int halProfSampleDataReport(unsigned int dev_id, unsigned int chan_id, unsigned int sub_chan_id,
-    struct prof_data_report_para *para)
+int halProfSampleDataReport(
+    unsigned int dev_id, unsigned int chan_id, unsigned int sub_chan_id, struct prof_data_report_para* para)
 {
     return 0;
 }
 
-int halProfSampleRegister(unsigned int dev_id, unsigned int chan_id, struct prof_sample_register_para *ops)
+int halProfSampleRegister(unsigned int dev_id, unsigned int chan_id, struct prof_sample_register_para* ops)
 {
     return 0;
 }
 
-int halProfSampleRegisterEx(unsigned int dev_id, unsigned int chan_id, struct prof_sample_register_para *ops)
+int halProfSampleRegisterEx(unsigned int dev_id, unsigned int chan_id, struct prof_sample_register_para* ops)
 {
     return 0;
 }
 
-drvError_t drvQueryProcessHostPid(int pid, unsigned int *chip_id, unsigned int *vfid,
-                                  unsigned int *host_pid, unsigned int *cp_type)
+drvError_t drvQueryProcessHostPid(
+    int pid, unsigned int* chip_id, unsigned int* vfid, unsigned int* host_pid, unsigned int* cp_type)
 {
     (void)pid;
     (void)chip_id;
@@ -198,55 +193,39 @@ drvError_t drvQueryProcessHostPid(int pid, unsigned int *chip_id, unsigned int *
     return DRV_ERROR_NONE;
 }
 
-drvError_t halDrvEventThreadInit(unsigned int devId)
-{
-    return DRV_ERROR_NONE;
-}
+drvError_t halDrvEventThreadInit(unsigned int devId) { return DRV_ERROR_NONE; }
 
-drvError_t halDrvEventThreadUninit(unsigned int devId)
-{
-    return DRV_ERROR_NONE;
-}
+drvError_t halDrvEventThreadUninit(unsigned int devId) { return DRV_ERROR_NONE; }
 
-int rtGetDeviceIdByGeModelIdx(uint32_t geModelIdx, uint32_t *deviceId)
-{
-    return 0;
-}
+int rtGetDeviceIdByGeModelIdx(uint32_t geModelIdx, uint32_t* deviceId) { return 0; }
 
-int rtProfSetProSwitch(void* data, uint32_t len)
-{
-    return 0;
-}
+int rtProfSetProSwitch(void* data, uint32_t len) { return 0; }
 
-int rtRegDeviceStateCallback(const char *regName, rtDeviceStateCallback callback)
-{
-    return 0;
-}
+int rtRegDeviceStateCallback(const char* regName, rtDeviceStateCallback callback) { return 0; }
 
-int dsmi_get_device_info(unsigned int device_id, unsigned int main_cmd, unsigned int sub_cmd,
-    void *buf, unsigned int *size) {
+int dsmi_get_device_info(
+    unsigned int device_id, unsigned int main_cmd, unsigned int sub_cmd, void* buf, unsigned int* size)
+{
     *(int*)buf = 1;
     return 0;
 }
 
-rtError_t rtGetStreamId(rtStream_t stream, int32_t *streamId)
+rtError_t rtGetStreamId(rtStream_t stream, int32_t* streamId)
 {
-    *streamId = *((int32_t *)(void *)stream);
+    *streamId = *((int32_t*)(void*)stream);
     return RT_ERROR_NONE;
 }
 
-drvError_t drvGetDeviceSplitMode(unsigned int dev_id, unsigned int *mode)
+drvError_t drvGetDeviceSplitMode(unsigned int dev_id, unsigned int* mode)
 {
     *mode = 0;
     return DRV_ERROR_NONE;
 }
 
 std::map<std::string, void*> g_map_drv = {
-    {"halGetAPIVersion", (void *)halGetAPIVersion},
-    {"drvGetDeviceSplitMode", (void *)drvGetDeviceSplitMode}
-};
+    {"halGetAPIVersion", (void*)halGetAPIVersion}, {"drvGetDeviceSplitMode", (void*)drvGetDeviceSplitMode}};
 
-int halProfDataFlush(unsigned int deviceId, unsigned int channelId, unsigned int *bufSize)
+int halProfDataFlush(unsigned int deviceId, unsigned int channelId, unsigned int* bufSize)
 {
     (void)deviceId;
     (void)channelId;
@@ -257,4 +236,3 @@ int halProfDataFlush(unsigned int deviceId, unsigned int channelId, unsigned int
 #ifdef __cplusplus
 }
 #endif
-

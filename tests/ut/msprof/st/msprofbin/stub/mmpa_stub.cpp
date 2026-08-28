@@ -12,17 +12,17 @@
 #include "mmpa_api.h"
 #include "ascend_hal.h"
 
-extern "C" drvError_t drvGetDeviceSplitMode(unsigned int dev_id, unsigned int *mode);
+extern "C" drvError_t drvGetDeviceSplitMode(unsigned int dev_id, unsigned int* mode);
 
 int32_t g_handle;
 const std::map<std::string, void*> g_map = {
-    {"halGetAPIVersion", (void *)halGetAPIVersion},
-    {"drvGetDeviceSplitMode", (void *)drvGetDeviceSplitMode},
-    {"halEschedQueryInfo", (void *)halEschedQueryInfo},
-    {"halEschedCreateGrpEx", (void *)halEschedCreateGrpEx},
+    {"halGetAPIVersion", (void*)halGetAPIVersion},
+    {"drvGetDeviceSplitMode", (void*)drvGetDeviceSplitMode},
+    {"halEschedQueryInfo", (void*)halEschedQueryInfo},
+    {"halEschedCreateGrpEx", (void*)halEschedCreateGrpEx},
 };
 
-void *mmDlsym(void *handle, const char *funcName)
+void* mmDlsym(void* handle, const char* funcName)
 {
     auto it = g_map.find(funcName);
     if (it != g_map.end()) {
@@ -31,12 +31,9 @@ void *mmDlsym(void *handle, const char *funcName)
     return nullptr;
 }
 
-int32_t mmDlclose(void *handle)
-{
-    return 0;
-}
+int32_t mmDlclose(void* handle) { return 0; }
 
-void *mmDlopen(const char *fileName, int mode)
+void* mmDlopen(const char* fileName, int mode)
 {
     if (strcmp(fileName, "libascend_hal.so") == 0) {
         return &g_handle;
@@ -44,7 +41,4 @@ void *mmDlopen(const char *fileName, int mode)
     return nullptr;
 }
 
-char *mmDlerror(void)
-{
-    return nullptr;
-}
+char* mmDlerror(void) { return nullptr; }

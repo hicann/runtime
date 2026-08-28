@@ -25,7 +25,7 @@ static const char NANO_RM_RF[] = "rm -rf ./acljsonnanostest_workspace";
 static const char NANO_MKDIR[] = "mkdir ./acljsonnanostest_workspace";
 static const char NANO_OUTPUT_DIR[] = "./acljsonnanostest_workspace/output";
 static const char NANO_DIR_WITHOUT_CREATE[] = "./acljsonnanostest_workspace/output/test_dir_test/test_second";
-class AclJsonNanoStest: public testing::Test {
+class AclJsonNanoStest : public testing::Test {
 protected:
     virtual void SetUp()
     {

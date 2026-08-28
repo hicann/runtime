@@ -10,9 +10,9 @@
 #include "ascend_hal.h"
 
 extern "C" {
-drvError_t halGetAPIVersion(int32_t *ver)
+drvError_t halGetAPIVersion(int32_t* ver)
 {
-    *ver=0x071905;
+    *ver = 0x071905;
     return DRV_ERROR_NONE;
 }
 }

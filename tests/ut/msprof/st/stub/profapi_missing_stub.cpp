@@ -37,4 +37,4 @@ int32_t MsprofReportAdditionalInfo(uint32_t, const void*, uint32_t) { return 0; 
 } // extern "C"
 
 // C++ linkage stub for ProfImplReportGetHashId (loaded via dlopen in prod, stubbed in tests)
-uint64_t ProfImplReportGetHashId(const std::string &) { return 0; }
+uint64_t ProfImplReportGetHashId(const std::string&) { return 0; }

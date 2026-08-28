@@ -34,11 +34,12 @@ extern int g_mmCreateTaskWithDetachThreahHold;
 extern int g_HdcStorePackage_is_not_last;
 extern int g_sprintf_s_flag;
 extern enum cmd_class g_ide_daemon_device_req_type;
-extern int SingleProcessStart(std::string &lockInfo);
+extern int SingleProcessStart(std::string& lockInfo);
 
-class IDE_DAEMON_DEVICE_STEST: public testing::Test {
+class IDE_DAEMON_DEVICE_STEST : public testing::Test {
 protected:
-    virtual void SetUp() {
+    virtual void SetUp()
+    {
         g_ide_cmd_write_time = 0;
         g_ide_cmd_read_time = 0;
         g_ide_recv_time = 0;
@@ -51,63 +52,36 @@ protected:
         g_mmCreateTaskWithDetachTime = 0;
         g_mmCreateTaskWithDetachThreahHold = 0;
         g_HdcStorePackage_is_not_last = 0;
-        MOCKER(SingleProcessStart)
-        .stubs()
-        .will(returnValue(0));
+        MOCKER(SingleProcessStart).stubs().will(returnValue(0));
     }
-    virtual void TearDown() {
-        GlobalMockObject::verify();
-    }
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 static void device_mocker_common()
 {
     g_mmSemwait_time = 0;
 
-    MOCKER(IdeFork)
-        .stubs()
-        .will(returnValue(IDE_DAEMON_OK));
+    MOCKER(IdeFork).stubs().will(returnValue(IDE_DAEMON_OK));
 
-    MOCKER(setsid)
-        .stubs()
-        .will(returnValue(IDE_DAEMON_OK));
+    MOCKER(setsid).stubs().will(returnValue(IDE_DAEMON_OK));
 
-    MOCKER(setsockopt)
-        .stubs()
-        .will(returnValue(0));
+    MOCKER(setsockopt).stubs().will(returnValue(0));
 
-    MOCKER(chdir)
-        .stubs()
-        .will(returnValue(0));
+    MOCKER(chdir).stubs().will(returnValue(0));
 
-    MOCKER(getifaddrs)
-        .stubs()
-        .will(invoke(getifaddrs_stub));
+    MOCKER(getifaddrs).stubs().will(invoke(getifaddrs_stub));
 
-    MOCKER(freeifaddrs)
-        .stubs()
-        .will(invoke(freeifaddrs_stub));
+    MOCKER(freeifaddrs).stubs().will(invoke(freeifaddrs_stub));
 
-    MOCKER(getnameinfo)
-        .stubs()
-        .will(invoke(getnameinfo_stub));
+    MOCKER(getnameinfo).stubs().will(invoke(getnameinfo_stub));
 
-    MOCKER(drvHdcServerCreate)
-        .stubs()
-        .will(invoke(drvHdcServerCreate_stub));
+    MOCKER(drvHdcServerCreate).stubs().will(invoke(drvHdcServerCreate_stub));
 
-    MOCKER(drvHdcSessionAccept)
-        .stubs()
-        .will(invoke(drvHdcSessionAccept_failed));
+    MOCKER(drvHdcSessionAccept).stubs().will(invoke(drvHdcSessionAccept_failed));
 
-    MOCKER(mmSemWait)
-        .stubs()
-        .will(invoke(mmSemWait_stub));
+    MOCKER(mmSemWait).stubs().will(invoke(mmSemWait_stub));
 
-    MOCKER(select)
-        .stubs()
-        .will(returnValue(1))
-        .then(returnValue(-1));
+    MOCKER(select).stubs().will(returnValue(1)).then(returnValue(-1));
 
     std::vector<uint32_t> dev_list{0};
     HdcDaemonServerRegister(1, dev_list);
@@ -119,9 +93,7 @@ TEST_F(IDE_DAEMON_DEVICE_STEST, HdcRead_drvHdcAllocMsg_failed)
     g_ide_create_task_time = 1;
     device_mocker_common();
 
-    MOCKER(drvHdcAllocMsg)
-        .stubs()
-        .will(returnValue(DRV_ERROR_INVALID_DEVICE));
+    MOCKER(drvHdcAllocMsg).stubs().will(returnValue(DRV_ERROR_INVALID_DEVICE));
 
     EXPECT_EQ(0, IdeDaemonTestMain(0, NULL));
     g_ide_create_task_time = 0;
@@ -133,9 +105,7 @@ TEST_F(IDE_DAEMON_DEVICE_STEST, HdcRead_drvHdcRecv_failed)
     g_ide_create_task_time = 1;
     device_mocker_common();
 
-    MOCKER(halHdcRecv)
-        .stubs()
-        .will(returnValue(DRV_ERROR_INVALID_DEVICE));
+    MOCKER(halHdcRecv).stubs().will(returnValue(DRV_ERROR_INVALID_DEVICE));
 
     EXPECT_EQ(0, IdeDaemonTestMain(0, NULL));
     g_ide_create_task_time = 0;
@@ -147,9 +117,7 @@ TEST_F(IDE_DAEMON_DEVICE_STEST, HdcRead_drvHdcGetMsgBuffer_failed)
     g_ide_create_task_time = 1;
     device_mocker_common();
 
-    MOCKER(drvHdcGetMsgBuffer)
-        .stubs()
-        .will(returnValue(hdcError_t(DRV_ERROR_INVALID_DEVICE)));
+    MOCKER(drvHdcGetMsgBuffer).stubs().will(returnValue(hdcError_t(DRV_ERROR_INVALID_DEVICE)));
 
     EXPECT_EQ(0, IdeDaemonTestMain(0, NULL));
     g_ide_create_task_time = 0;
@@ -161,17 +129,11 @@ TEST_F(IDE_DAEMON_DEVICE_STEST, HdcRead_HdcStorePackage_failed)
     g_ide_create_task_time = 1;
     device_mocker_common();
 
-    MOCKER(drvHdcGetMsgBuffer)
-        .stubs()
-        .will(invoke(ide_hdc_host_drvHdcGetMsgBuffer_stub));
+    MOCKER(drvHdcGetMsgBuffer).stubs().will(invoke(ide_hdc_host_drvHdcGetMsgBuffer_stub));
 
-    MOCKER(drvHdcFreeMsg)
-        .stubs()
-        .will(invoke(ide_hdc_host_drvHdcFreeMsg_stub));
+    MOCKER(drvHdcFreeMsg).stubs().will(invoke(ide_hdc_host_drvHdcFreeMsg_stub));
 
-    MOCKER(HdcStorePackage)
-        .stubs()
-        .will(returnValue(IDE_DAEMON_ERROR));
+    MOCKER(HdcStorePackage).stubs().will(returnValue(IDE_DAEMON_ERROR));
 
     EXPECT_EQ(0, IdeDaemonTestMain(0, NULL));
     g_ide_create_task_time = 0;
@@ -185,17 +147,11 @@ TEST_F(IDE_DAEMON_DEVICE_STEST, HdcRead_drvHdcReuseMsg_failed)
 
     device_mocker_common();
 
-    MOCKER(drvHdcGetMsgBuffer)
-        .stubs()
-        .will(invoke(ide_hdc_host_drvHdcGetMsgBuffer_stub));
+    MOCKER(drvHdcGetMsgBuffer).stubs().will(invoke(ide_hdc_host_drvHdcGetMsgBuffer_stub));
 
-    MOCKER(drvHdcFreeMsg)
-        .stubs()
-        .will(invoke(ide_hdc_host_drvHdcFreeMsg_stub));
+    MOCKER(drvHdcFreeMsg).stubs().will(invoke(ide_hdc_host_drvHdcFreeMsg_stub));
 
-    MOCKER(drvHdcReuseMsg)
-        .stubs()
-        .will(returnValue(DRV_ERROR_INVALID_DEVICE));
+    MOCKER(drvHdcReuseMsg).stubs().will(returnValue(DRV_ERROR_INVALID_DEVICE));
 
     EXPECT_EQ(0, IdeDaemonTestMain(0, NULL));
     g_ide_create_task_time = 0;

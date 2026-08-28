@@ -33,7 +33,8 @@ protected:
         devId = 0;
         deviceNum = 1;
         int32_t random_number = std::rand() % 100 + 1;
-        aclProfPath = "api_test_mdc_output" + std::to_string(random_number);;
+        aclProfPath = "api_test_mdc_output" + std::to_string(random_number);
+        ;
         mkdir(aclProfPath.c_str(), 0750);
         EXPECT_EQ(deviceNum, SimulatorMgr().CreateDeviceSimulator(deviceNum, StPlatformType::MDC_TYPE));
         SimulatorMgr().SetSocSide(SocType::DEVICE);
@@ -45,7 +46,7 @@ protected:
     }
     virtual void TearDown()
     {
-        DevprofDrvAicpu::instance()->isRegister_ = false;   // 重置aicpu注册状态，使单进程内能多次注册
+        DevprofDrvAicpu::instance()->isRegister_ = false; // 重置aicpu注册状态，使单进程内能多次注册
         EXPECT_EQ(deviceNum, SimulatorMgr().DelDeviceSimulator(deviceNum, StPlatformType::MDC_TYPE));
         aclProfPath.insert(0, "rm -rf ");
         system(aclProfPath.c_str());
@@ -65,11 +66,11 @@ TEST_F(AclApiMdcStest, AclApiDefault)
 {
     uint32_t deviceIdList[1] = {devId};
     aclprofAicoreMetrics aicoreMetrics = ACL_AICORE_ARITHMETIC_UTILIZATION;
-    aclprofAicoreEvents *aicoreEvents = nullptr;
-    uint64_t dataTypeConfig = ACL_PROF_ACL_API | ACL_PROF_TASK_TIME | ACL_PROF_AICORE_METRICS |
-                              ACL_PROF_L2CACHE | ACL_PROF_HCCL_TRACE | ACL_PROF_TRAINING_TRACE | ACL_PROF_MSPROFTX |
-                              ACL_PROF_RUNTIME_API | ACL_PROF_GE_API_L0 | ACL_PROF_TASK_TIME_L0 |
-                              ACL_PROF_TASK_MEMORY | ACL_PROF_GE_API_L1 | ACL_PROF_TASK_TIME_L2;
+    aclprofAicoreEvents* aicoreEvents = nullptr;
+    uint64_t dataTypeConfig = ACL_PROF_ACL_API | ACL_PROF_TASK_TIME | ACL_PROF_AICORE_METRICS | ACL_PROF_L2CACHE |
+                              ACL_PROF_HCCL_TRACE | ACL_PROF_TRAINING_TRACE | ACL_PROF_MSPROFTX | ACL_PROF_RUNTIME_API |
+                              ACL_PROF_GE_API_L0 | ACL_PROF_TASK_TIME_L0 | ACL_PROF_TASK_MEMORY | ACL_PROF_GE_API_L1 |
+                              ACL_PROF_TASK_TIME_L2;
     auto config = aclprofCreateConfig(deviceIdList, 1, aicoreMetrics, aicoreEvents, dataTypeConfig);
     EXPECT_NE(nullptr, config);
 
@@ -83,7 +84,7 @@ TEST_F(AclApiMdcStest, AclApiSetConfig)
 {
     uint32_t deviceIdList[1] = {devId};
     aclprofAicoreMetrics aicoreMetrics = ACL_AICORE_ARITHMETIC_UTILIZATION;
-    aclprofAicoreEvents *aicoreEvents = nullptr;
+    aclprofAicoreEvents* aicoreEvents = nullptr;
     uint64_t dataTypeConfig = 0;
     auto config = aclprofCreateConfig(deviceIdList, 1, aicoreMetrics, aicoreEvents, dataTypeConfig);
     EXPECT_NE(nullptr, config);

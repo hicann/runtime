@@ -17,7 +17,4 @@
 #include <linux/netlink.h>
 #include <linux/rtnetlink.h>
 
-int ide_daemon_cmd_process_stub(HDC_SESSION session, IdeTlvConReq req)
-{
-	return IDE_DAEMON_OK;
-}
+int ide_daemon_cmd_process_stub(HDC_SESSION session, IdeTlvConReq req) { return IDE_DAEMON_OK; }

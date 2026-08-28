@@ -21,12 +21,13 @@
 #include "acl/acl.h"
 #include "acl_prof.h"
 
-using RunFunc = bool (*) (int32_t fd);
-bool RunInfer(std::set<RunnerOpInfo> &modelInfo, RunFunc func);
+using RunFunc = bool (*)(int32_t fd);
+bool RunInfer(std::set<RunnerOpInfo>& modelInfo, RunFunc func);
 bool RunModel(int32_t fd);
 bool RunOp(int32_t fd);
-void SetModelId(uint32_t &modelId);
-void SetStreamId(uint32_t &streamId);
-aclError RunInferWithApi(std::string &aclProfPath, uint32_t devId, aclprofAicoreMetrics aicoreMetrics,
-    const aclprofAicoreEvents *aicoreEvents, uint64_t dataTypeConfig);
+void SetModelId(uint32_t& modelId);
+void SetStreamId(uint32_t& streamId);
+aclError RunInferWithApi(
+    std::string& aclProfPath, uint32_t devId, aclprofAicoreMetrics aicoreMetrics,
+    const aclprofAicoreEvents* aicoreEvents, uint64_t dataTypeConfig);
 #endif

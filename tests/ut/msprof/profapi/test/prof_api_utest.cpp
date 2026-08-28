@@ -24,53 +24,39 @@
 using namespace analysis::dvvp::common::error;
 class PROF_API_UTTEST : public testing::Test {
 public:
-    void mockReportBufInit() {
-        MOCKER_CPP(&analysis::dvvp::common::queue::ReportBuffer<MsprofApi>::Init)
-          .stubs();
-        MOCKER_CPP(&analysis::dvvp::common::queue::ReportBuffer<MsprofCompactInfo>::Init)
-          .stubs();
-        MOCKER_CPP(&analysis::dvvp::common::queue::ReportBuffer<MsprofAdditionalInfo>::Init)
-          .stubs();
+    void mockReportBufInit()
+    {
+        MOCKER_CPP(&analysis::dvvp::common::queue::ReportBuffer<MsprofApi>::Init).stubs();
+        MOCKER_CPP(&analysis::dvvp::common::queue::ReportBuffer<MsprofCompactInfo>::Init).stubs();
+        MOCKER_CPP(&analysis::dvvp::common::queue::ReportBuffer<MsprofAdditionalInfo>::Init).stubs();
     }
+
 protected:
-    virtual void SetUp() {
-        MOCKER(dlsym).stubs().will(returnValue((void *)nullptr));
-    }
-    virtual void TearDown() {
-        GlobalMockObject::verify();
-    }
+    virtual void SetUp() { MOCKER(dlsym).stubs().will(returnValue((void*)nullptr)); }
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 TEST_F(PROF_API_UTTEST, PROF_INIT)
 {
-  mockReportBufInit();
-  EXPECT_EQ(0, MsprofInit(0, nullptr, 0));
-  void *handle = (void *)0x1;
-  MOCKER(mmDlopen).stubs().will(returnValue(handle));
-  EXPECT_EQ(0, MsprofInit(0, nullptr, 0));
+    mockReportBufInit();
+    EXPECT_EQ(0, MsprofInit(0, nullptr, 0));
+    void* handle = (void*)0x1;
+    MOCKER(mmDlopen).stubs().will(returnValue(handle));
+    EXPECT_EQ(0, MsprofInit(0, nullptr, 0));
 }
 
-TEST_F(PROF_API_UTTEST, PROF_SET_CONFIG)
-{
-    EXPECT_EQ(0, MsprofSetConfig(0, nullptr, 0));
-}
+TEST_F(PROF_API_UTTEST, PROF_SET_CONFIG) { EXPECT_EQ(0, MsprofSetConfig(0, nullptr, 0)); }
 
-int32_t fake_callback2(uint32_t, void *, uint32_t) {return 0;};
+int32_t fake_callback2(uint32_t, void*, uint32_t) { return 0; };
 TEST_F(PROF_API_UTTEST, PROF_REGISTER_CALLBACK)
 {
-  EXPECT_EQ(-1, MsprofRegisterCallback(0, nullptr));
-  EXPECT_EQ(0, MsprofRegisterCallback(0, &fake_callback2));
+    EXPECT_EQ(-1, MsprofRegisterCallback(0, nullptr));
+    EXPECT_EQ(0, MsprofRegisterCallback(0, &fake_callback2));
 }
 
-TEST_F(PROF_API_UTTEST, PROF_NOTIFY_SETDEVICE)
-{
-  EXPECT_EQ(0, MsprofNotifySetDevice(0, 0, true));
-}
+TEST_F(PROF_API_UTTEST, PROF_NOTIFY_SETDEVICE) { EXPECT_EQ(0, MsprofNotifySetDevice(0, 0, true)); }
 
-TEST_F(PROF_API_UTTEST, PROF_REPORT_DATA)
-{
-  EXPECT_EQ(0, MsprofReportData(0, 0, nullptr, 0));
-}
+TEST_F(PROF_API_UTTEST, PROF_REPORT_DATA) { EXPECT_EQ(0, MsprofReportData(0, 0, nullptr, 0)); }
 
 TEST_F(PROF_API_UTTEST, PROF_REPORT_API)
 {
@@ -122,20 +108,11 @@ TEST_F(PROF_API_UTTEST, PROF_REPORT_GET_HASH_ID_Str_2_Id)
     EXPECT_EQ(std::numeric_limits<uint64_t>::max(), MsprofStr2Id(nullptr, 0));
 }
 
-TEST_F(PROF_API_UTTEST, PROF_SET_DEVICEID)
-{
-  EXPECT_EQ(0, MsprofSetDeviceIdByGeModelIdx(0, 0));
-}
+TEST_F(PROF_API_UTTEST, PROF_SET_DEVICEID) { EXPECT_EQ(0, MsprofSetDeviceIdByGeModelIdx(0, 0)); }
 
-TEST_F(PROF_API_UTTEST, PROF_UNSET_DEVICEID)
-{
-  EXPECT_EQ(0, MsprofUnsetDeviceIdByGeModelIdx (0, 0));
-}
+TEST_F(PROF_API_UTTEST, PROF_UNSET_DEVICEID) { EXPECT_EQ(0, MsprofUnsetDeviceIdByGeModelIdx(0, 0)); }
 
-TEST_F(PROF_API_UTTEST, PROF_FINALIZE)
-{
-  EXPECT_EQ(0, MsprofFinalize());
-}
+TEST_F(PROF_API_UTTEST, PROF_FINALIZE) { EXPECT_EQ(0, MsprofFinalize()); }
 
 TEST_F(PROF_API_UTTEST, PROF_START_STOP)
 {
@@ -143,163 +120,109 @@ TEST_F(PROF_API_UTTEST, PROF_START_STOP)
     EXPECT_EQ(0, MsprofStop(0, nullptr, 0));
 }
 
-TEST_F(PROF_API_UTTEST, PROF_ACLSTART)
-{
-  EXPECT_EQ(0, ProfAclStart(0, nullptr));
-}
+TEST_F(PROF_API_UTTEST, PROF_ACLSTART) { EXPECT_EQ(0, ProfAclStart(0, nullptr)); }
 
-TEST_F(PROF_API_UTTEST, PROF_ACLSTOP)
-{
-  EXPECT_EQ(0, ProfAclStop(0, nullptr));
-}
+TEST_F(PROF_API_UTTEST, PROF_ACLSTOP) { EXPECT_EQ(0, ProfAclStop(0, nullptr)); }
 
-TEST_F(PROF_API_UTTEST, PROF_ACLFINALIZE)
-{
-  EXPECT_EQ(0, ProfAclFinalize(0));
-}
+TEST_F(PROF_API_UTTEST, PROF_ACLFINALIZE) { EXPECT_EQ(0, ProfAclFinalize(0)); }
 
 TEST_F(PROF_API_UTTEST, PROF_ACLSETCONFIG)
 {
-  aclprofConfigType configType = ACL_PROF_SYS_HARDWARE_MEM_FREQ;
-  std::string config("50");
-  EXPECT_EQ(0, ProfAclSetConfig(configType, config.c_str(), config.size()));
+    aclprofConfigType configType = ACL_PROF_SYS_HARDWARE_MEM_FREQ;
+    std::string config("50");
+    EXPECT_EQ(0, ProfAclSetConfig(configType, config.c_str(), config.size()));
 }
 
 TEST_F(PROF_API_UTTEST, PROF_ACLGETCOMPATIBLEFEATURES)
 {
-  size_t size = 0;
-  void* dataPtr = nullptr;
-  EXPECT_EQ(0, ProfAclGetCompatibleFeatures(&size, &dataPtr));
+    size_t size = 0;
+    void* dataPtr = nullptr;
+    EXPECT_EQ(0, ProfAclGetCompatibleFeatures(&size, &dataPtr));
 }
 
 TEST_F(PROF_API_UTTEST, PROF_ACLGETCOMPATIBLEFEATURESV2)
 {
-  size_t size = 0;
-  void* dataPtr = nullptr;
-  EXPECT_EQ(0, ProfAclGetCompatibleFeaturesV2(&size, &dataPtr));
+    size_t size = 0;
+    void* dataPtr = nullptr;
+    EXPECT_EQ(0, ProfAclGetCompatibleFeaturesV2(&size, &dataPtr));
 }
 
-TEST_F(PROF_API_UTTEST, PROF_ACLSUBSCRIBE)
-{
-  EXPECT_EQ(0, ProfAclSubscribe(0, 0, nullptr));
-}
+TEST_F(PROF_API_UTTEST, PROF_ACLSUBSCRIBE) { EXPECT_EQ(0, ProfAclSubscribe(0, 0, nullptr)); }
 
-TEST_F(PROF_API_UTTEST, PROF_ACLUNSUBSCRIBE)
-{
-  EXPECT_EQ(0, ProfAclUnSubscribe(0, 0));
-}
+TEST_F(PROF_API_UTTEST, PROF_ACLUNSUBSCRIBE) { EXPECT_EQ(0, ProfAclUnSubscribe(0, 0)); }
 
-TEST_F(PROF_API_UTTEST, PROF_OPSUBSCRIBE)
-{
-  EXPECT_EQ(0, ProfOpSubscribe(0, nullptr));
-}
+TEST_F(PROF_API_UTTEST, PROF_OPSUBSCRIBE) { EXPECT_EQ(0, ProfOpSubscribe(0, nullptr)); }
 
-TEST_F(PROF_API_UTTEST, PROF_OPUNSUBSCRIBE)
-{
-  EXPECT_EQ(0, ProfOpUnSubscribe(0));
-}
+TEST_F(PROF_API_UTTEST, PROF_OPUNSUBSCRIBE) { EXPECT_EQ(0, ProfOpUnSubscribe(0)); }
 
-TEST_F(PROF_API_UTTEST, PROF_ACLDRVGETDEVNUM)
-{
-  EXPECT_EQ(-1, ProfAclDrvGetDevNum());
-}
+TEST_F(PROF_API_UTTEST, PROF_ACLDRVGETDEVNUM) { EXPECT_EQ(-1, ProfAclDrvGetDevNum()); }
 
-TEST_F(PROF_API_UTTEST, PROF_ACLGETOPTIME)
-{
-  EXPECT_EQ(0, ProfAclGetOpTime(0, nullptr, 0, 0));
-}
+TEST_F(PROF_API_UTTEST, PROF_ACLGETOPTIME) { EXPECT_EQ(0, ProfAclGetOpTime(0, nullptr, 0, 0)); }
 
-TEST_F(PROF_API_UTTEST, PROF_ACLGETID)
-{
-  EXPECT_EQ(0, ProfAclGetId(0, nullptr, 0, 0));
-}
+TEST_F(PROF_API_UTTEST, PROF_ACLGETID) { EXPECT_EQ(0, ProfAclGetId(0, nullptr, 0, 0)); }
 
-TEST_F(PROF_API_UTTEST, PROF_ACLGETOPVAL)
-{
-  EXPECT_EQ(0, ProfAclGetOpVal(0, nullptr, 0, 0, nullptr, 0));
-}
+TEST_F(PROF_API_UTTEST, PROF_ACLGETOPVAL) { EXPECT_EQ(0, ProfAclGetOpVal(0, nullptr, 0, 0, nullptr, 0)); }
 
-TEST_F(PROF_API_UTTEST, PROF_ACLGETOPEXECTIME)
-{
-  EXPECT_EQ(0, ProfGetOpExecutionTime(nullptr, 0, 0));
-}
+TEST_F(PROF_API_UTTEST, PROF_ACLGETOPEXECTIME) { EXPECT_EQ(0, ProfGetOpExecutionTime(nullptr, 0, 0)); }
 
-TEST_F(PROF_API_UTTEST, PROF_PROFACLCREATESTAMP)
-{
-  EXPECT_EQ(nullptr, ProfAclCreateStamp());
-}
+TEST_F(PROF_API_UTTEST, PROF_PROFACLCREATESTAMP) { EXPECT_EQ(nullptr, ProfAclCreateStamp()); }
 
-TEST_F(PROF_API_UTTEST, PROF_PROFACLMARKEX)
-{
-    EXPECT_EQ(PROFILING_FAILED, ProfAclMarkEx(nullptr, 0, nullptr));
-}
+TEST_F(PROF_API_UTTEST, PROF_PROFACLMARKEX) { EXPECT_EQ(PROFILING_FAILED, ProfAclMarkEx(nullptr, 0, nullptr)); }
 
-TEST_F(PROF_API_UTTEST, PROF_PROFACLPUSH)
-{
-  EXPECT_EQ(PROFILING_FAILED, ProfAclPush(nullptr));
-}
+TEST_F(PROF_API_UTTEST, PROF_PROFACLPUSH) { EXPECT_EQ(PROFILING_FAILED, ProfAclPush(nullptr)); }
 
-TEST_F(PROF_API_UTTEST, PROF_PROFACLPOP)
-{
-  EXPECT_EQ(PROFILING_FAILED, ProfAclPop());
-}
+TEST_F(PROF_API_UTTEST, PROF_PROFACLPOP) { EXPECT_EQ(PROFILING_FAILED, ProfAclPop()); }
 
 TEST_F(PROF_API_UTTEST, PROF_PROFACLRANGESTART)
 {
-  uint32_t a = 0;
-  EXPECT_EQ(PROFILING_FAILED, ProfAclRangeStart(nullptr, &a));
+    uint32_t a = 0;
+    EXPECT_EQ(PROFILING_FAILED, ProfAclRangeStart(nullptr, &a));
 }
 
 TEST_F(PROF_API_UTTEST, PROF_PROFACLRANGESTOP)
 {
-  uint32_t a = 0;
-  EXPECT_EQ(PROFILING_FAILED, ProfAclRangeStop(a));
+    uint32_t a = 0;
+    EXPECT_EQ(PROFILING_FAILED, ProfAclRangeStop(a));
 }
 
 TEST_F(PROF_API_UTTEST, PROF_PROFACLSETSTAMPTRACEMESSAGE)
 {
-  const char *p = "hello";
-  uint32_t len = 6;
-  EXPECT_EQ(PROFILING_FAILED, ProfAclSetStampTraceMessage(nullptr, p, len));
+    const char* p = "hello";
+    uint32_t len = 6;
+    EXPECT_EQ(PROFILING_FAILED, ProfAclSetStampTraceMessage(nullptr, p, len));
 }
 
-TEST_F(PROF_API_UTTEST, PROF_PROFACLMARK)
-{
-  EXPECT_EQ(PROFILING_FAILED, ProfAclMark(nullptr));
-}
+TEST_F(PROF_API_UTTEST, PROF_PROFACLMARK) { EXPECT_EQ(PROFILING_FAILED, ProfAclMark(nullptr)); }
 
 TEST_F(PROF_API_UTTEST, PROF_PROFACLSETCATEGORYNAME)
 {
-  uint32_t category = 0;
-  const char *categoryName = "zero";
-  EXPECT_EQ(PROFILING_FAILED, ProfAclSetCategoryName(category, categoryName));
+    uint32_t category = 0;
+    const char* categoryName = "zero";
+    EXPECT_EQ(PROFILING_FAILED, ProfAclSetCategoryName(category, categoryName));
 }
 
 TEST_F(PROF_API_UTTEST, PROF_PROFACLSETSTAMPCATEGORY)
 {
-  uint32_t category = 0;
-  EXPECT_EQ(PROFILING_FAILED, ProfAclSetStampCategory(nullptr, category));
+    uint32_t category = 0;
+    EXPECT_EQ(PROFILING_FAILED, ProfAclSetStampCategory(nullptr, category));
 }
 
 TEST_F(PROF_API_UTTEST, PROF_PROFACLSETSTAMPPAYLOAD)
 {
-  EXPECT_EQ(PROFILING_FAILED, ProfAclSetStampPayload(nullptr, 0, nullptr));
+    EXPECT_EQ(PROFILING_FAILED, ProfAclSetStampPayload(nullptr, 0, nullptr));
 }
 
-int32_t profHandleStub(void *data, uint32_t len)
-{
-  return 0;
-}
+int32_t profHandleStub(void* data, uint32_t len) { return 0; }
 
 TEST_F(PROF_API_UTTEST, PROF_PROFSETPROFCOMMAND)
 {
-  MsprofCommandHandle command;
-  command.type = PROF_COMMANDHANDLE_TYPE_MAX;
-  auto data = reinterpret_cast<void *>(&command);
-  EXPECT_EQ(PROFILING_FAILED, profSetProfCommand(data, 0));
+    MsprofCommandHandle command;
+    command.type = PROF_COMMANDHANDLE_TYPE_MAX;
+    auto data = reinterpret_cast<void*>(&command);
+    EXPECT_EQ(PROFILING_FAILED, profSetProfCommand(data, 0));
 }
 
-static bool MsprofCheckOpSwitchCallbackStubTrue(uint32_t type, const char *op, size_t len)
+static bool MsprofCheckOpSwitchCallbackStubTrue(uint32_t type, const char* op, size_t len)
 {
     (void)type;
     (void)op;
@@ -307,7 +230,7 @@ static bool MsprofCheckOpSwitchCallbackStubTrue(uint32_t type, const char *op, s
     return true;
 }
 
-static bool MsprofCheckOpSwitchCallbackStubFalse(uint32_t type, const char *op, size_t len)
+static bool MsprofCheckOpSwitchCallbackStubFalse(uint32_t type, const char* op, size_t len)
 {
     (void)type;
     (void)op;
@@ -332,7 +255,7 @@ TEST_F(PROF_API_UTTEST, PROF_MSPROFCHECKOPSWITCH_OPTYPE_NULLPTR)
 
 TEST_F(PROF_API_UTTEST, PROF_MSPROFCHECKOPSWITCH_OPTYPE_VALID_OP)
 {
-    const char *op = "MatMul";
+    const char* op = "MatMul";
     EXPECT_EQ(false, MsprofCheckOpSwitch(MSPROF_OPTYPE, op, 6));
     EXPECT_EQ(false, MsprofCheckOpSwitch(MSPROF_OPTYPE, "Add", 3));
     EXPECT_EQ(false, MsprofCheckOpSwitch(MSPROF_OPTYPE, op, 0));

@@ -48,15 +48,9 @@ namespace {
 template <typename BaseJob>
 class TestCollectionJobBase : public BaseJob {
 public:
-    int32_t Process() override
-    {
-        return PROFILING_SUCCESS;
-    }
+    int32_t Process() override { return PROFILING_SUCCESS; }
 
-    int32_t Uninit() override
-    {
-        return PROFILING_SUCCESS;
-    }
+    int32_t Uninit() override { return PROFILING_SUCCESS; }
 };
 
 class TestProfDrvJob : public TestCollectionJobBase<ProfDrvJob> {
@@ -67,13 +61,11 @@ public:
         return PROFILING_SUCCESS;
     }
 
-    void InitForTest(const std::shared_ptr<CollectionJobCfg> &cfg)
-    {
-        collectionJobCfg_ = cfg;
-    }
+    void InitForTest(const std::shared_ptr<CollectionJobCfg>& cfg) { collectionJobCfg_ = cfg; }
 
-    void AddReaderForTest(const std::string &key, int32_t devId,
-        analysis::dvvp::driver::AI_DRV_CHANNEL channelId, const std::string &filePath)
+    void AddReaderForTest(
+        const std::string& key, int32_t devId, analysis::dvvp::driver::AI_DRV_CHANNEL channelId,
+        const std::string& filePath)
     {
         AddReader(key, devId, channelId, filePath);
     }
@@ -87,42 +79,38 @@ public:
         return PROFILING_SUCCESS;
     }
 
-    void InitForTest(const std::shared_ptr<CollectionJobCfg> &cfg)
-    {
-        cfg_ = cfg;
-    }
+    void InitForTest(const std::shared_ptr<CollectionJobCfg>& cfg) { cfg_ = cfg; }
 
-    void AddReaderForTest(int32_t devId, int32_t channelId, const std::string &filePath)
+    void AddReaderForTest(int32_t devId, int32_t channelId, const std::string& filePath)
     {
         AddReader(devId, channelId, filePath);
     }
 };
-}
+} // namespace
 
-class JOB_WRAPPER_PROF_PERIPHERAL_JOB_TEST: public testing::Test {
+class JOB_WRAPPER_PROF_PERIPHERAL_JOB_TEST : public testing::Test {
 protected:
-    virtual void SetUp() {
+    virtual void SetUp()
+    {
         collectionJobCfg_ = std::make_shared<Analysis::Dvvp::JobWrapper::CollectionJobCfg>();
-        std::shared_ptr<analysis::dvvp::message::ProfileParams> params(
-            new analysis::dvvp::message::ProfileParams);
-        std::shared_ptr<analysis::dvvp::message::JobContext> jobCtx(
-            new analysis::dvvp::message::JobContext);
+        std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams);
+        std::shared_ptr<analysis::dvvp::message::JobContext> jobCtx(new analysis::dvvp::message::JobContext);
         auto comParams = std::make_shared<Analysis::Dvvp::JobWrapper::CollectionJobCommonParams>();
         comParams->params = params;
         comParams->jobCtx = jobCtx;
         comParams->jobCtx = std::make_shared<analysis::dvvp::message::JobContext>();
         collectionJobCfg_->comParams = comParams;
-        collectionJobCfg_->jobParams.events = std::make_shared<std::vector<std::string> >(0);
-        collectionJobCfg_->jobParams.cores = std::make_shared<std::vector<int> >(0);
+        collectionJobCfg_->jobParams.events = std::make_shared<std::vector<std::string>>(0);
+        collectionJobCfg_->jobParams.cores = std::make_shared<std::vector<int>>(0);
     }
-    virtual void TearDown() {
-        collectionJobCfg_.reset();
-    }
+    virtual void TearDown() { collectionJobCfg_.reset(); }
+
 public:
     std::shared_ptr<Analysis::Dvvp::JobWrapper::CollectionJobCfg> collectionJobCfg_;
 };
 
-TEST_F(JOB_WRAPPER_PROF_PERIPHERAL_JOB_TEST, Init) {
+TEST_F(JOB_WRAPPER_PROF_PERIPHERAL_JOB_TEST, Init)
+{
     GlobalMockObject::verify();
 
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
@@ -136,7 +124,8 @@ TEST_F(JOB_WRAPPER_PROF_PERIPHERAL_JOB_TEST, Init) {
     EXPECT_EQ(PROFILING_SUCCESS, profPeripheralJob->Init(collectionJobCfg_));
 }
 
-TEST_F(JOB_WRAPPER_PROF_PERIPHERAL_JOB_TEST, Process) {
+TEST_F(JOB_WRAPPER_PROF_PERIPHERAL_JOB_TEST, Process)
+{
     GlobalMockObject::verify();
     auto profPeripheralJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfPeripheralJob>();
     profPeripheralJob->Init(collectionJobCfg_);
@@ -149,47 +138,47 @@ TEST_F(JOB_WRAPPER_PROF_PERIPHERAL_JOB_TEST, Process) {
     EXPECT_EQ(PROFILING_SUCCESS, profPeripheralJob->Process());
 }
 
-TEST_F(JOB_WRAPPER_PROF_PERIPHERAL_JOB_TEST, Uninit) {
+TEST_F(JOB_WRAPPER_PROF_PERIPHERAL_JOB_TEST, Uninit)
+{
     GlobalMockObject::verify();
 
     auto profPeripheralJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfPeripheralJob>();
     collectionJobCfg_->comParams->params->nicProfiling = "on";
     collectionJobCfg_->comParams->params->dvpp_profiling = "on";
     profPeripheralJob->Init(collectionJobCfg_);
-    //profPeripheralJob->peripheralIds_.push_back(analysis::dvvp::driver::PROF_CHANNEL_NIC);
-    //profPeripheralJob->peripheralIds_.push_back(analysis::dvvp::driver::PROF_CHANNEL_DVPP);
-    EXPECT_EQ(PROFILING_SUCCESS,profPeripheralJob->Uninit());
+    // profPeripheralJob->peripheralIds_.push_back(analysis::dvvp::driver::PROF_CHANNEL_NIC);
+    // profPeripheralJob->peripheralIds_.push_back(analysis::dvvp::driver::PROF_CHANNEL_DVPP);
+    EXPECT_EQ(PROFILING_SUCCESS, profPeripheralJob->Uninit());
 }
 
-class JOB_WRAPPER_PROF_DDR_JOB_TEST: public testing::Test {
+class JOB_WRAPPER_PROF_DDR_JOB_TEST : public testing::Test {
 protected:
-    virtual void SetUp() {
+    virtual void SetUp()
+    {
         collectionJobCfg_ = std::make_shared<Analysis::Dvvp::JobWrapper::CollectionJobCfg>();
-        std::shared_ptr<analysis::dvvp::message::ProfileParams> params(
-            new analysis::dvvp::message::ProfileParams);
-        std::shared_ptr<analysis::dvvp::message::JobContext> jobCtx(
-            new analysis::dvvp::message::JobContext);
+        std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams);
+        std::shared_ptr<analysis::dvvp::message::JobContext> jobCtx(new analysis::dvvp::message::JobContext);
         auto comParams = std::make_shared<Analysis::Dvvp::JobWrapper::CollectionJobCommonParams>();
         comParams->params = params;
         comParams->jobCtx = jobCtx;
         collectionJobCfg_->comParams = comParams;
-        collectionJobCfg_->jobParams.events = std::make_shared<std::vector<std::string> >(0);
+        collectionJobCfg_->jobParams.events = std::make_shared<std::vector<std::string>>(0);
         collectionJobCfg_->jobParams.events->push_back("0x11");
     }
-    virtual void TearDown() {
-        collectionJobCfg_.reset();
-    }
+    virtual void TearDown() { collectionJobCfg_.reset(); }
+
 public:
     std::shared_ptr<Analysis::Dvvp::JobWrapper::CollectionJobCfg> collectionJobCfg_;
 };
 
-TEST_F(JOB_WRAPPER_PROF_DDR_JOB_TEST, Init) {
+TEST_F(JOB_WRAPPER_PROF_DDR_JOB_TEST, Init)
+{
     GlobalMockObject::verify();
 
     auto proDdrJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfDdrJob>();
     collectionJobCfg_->jobParams.events = nullptr;
     EXPECT_EQ(PROFILING_FAILED, proDdrJob->Init(collectionJobCfg_));
-    collectionJobCfg_->jobParams.events = std::make_shared<std::vector<std::string> >(0);
+    collectionJobCfg_->jobParams.events = std::make_shared<std::vector<std::string>>(0);
     collectionJobCfg_->jobParams.events->push_back("write");
     collectionJobCfg_->jobParams.events->push_back("read");
     collectionJobCfg_->comParams->params->ddr_interval = 30;
@@ -202,32 +191,28 @@ TEST_F(JOB_WRAPPER_PROF_DDR_JOB_TEST, Init) {
     EXPECT_EQ(PROFILING_FAILED, proDdrJob->Init(collectionJobCfg_));
 }
 
-TEST_F(JOB_WRAPPER_PROF_DDR_JOB_TEST, Process) {
+TEST_F(JOB_WRAPPER_PROF_DDR_JOB_TEST, Process)
+{
     GlobalMockObject::verify();
 
     auto proDdrJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfDdrJob>();
     proDdrJob->Init(collectionJobCfg_);
     auto poller = std::make_shared<analysis::dvvp::transport::ChannelPoll>();
-    MOCKER_CPP(&ProfChannelManager::GetChannelPoller)
-        .stubs()
-        .will(returnValue(poller));
+    MOCKER_CPP(&ProfChannelManager::GetChannelPoller).stubs().will(returnValue(poller));
     EXPECT_EQ(PROFILING_SUCCESS, proDdrJob->Process());
-    MOCKER_CPP(&analysis::dvvp::driver::DrvPeripheralStart)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&analysis::dvvp::driver::DrvPeripheralStart).stubs().will(returnValue(PROFILING_SUCCESS));
     EXPECT_EQ(PROFILING_SUCCESS, proDdrJob->Process());
 }
 
-TEST_F(JOB_WRAPPER_PROF_DDR_JOB_TEST, SetPeripheralConfig) {
+TEST_F(JOB_WRAPPER_PROF_DDR_JOB_TEST, SetPeripheralConfig)
+{
     GlobalMockObject::verify();
     unsigned char tmp[100] = {0};
     auto proDdrJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfDdrJob>();
     collectionJobCfg_->comParams->params->ddr_profiling = "on";
     proDdrJob->Init(collectionJobCfg_);
-    MOCKER(analysis::dvvp::common::utils::Utils::ProfMalloc)
-        .stubs()
-        .will(returnValue((void*)tmp));
-    collectionJobCfg_->jobParams.events = std::make_shared<std::vector<std::string> >(0);
+    MOCKER(analysis::dvvp::common::utils::Utils::ProfMalloc).stubs().will(returnValue((void*)tmp));
+    collectionJobCfg_->jobParams.events = std::make_shared<std::vector<std::string>>(0);
     collectionJobCfg_->jobParams.events->push_back("write");
     collectionJobCfg_->jobParams.events->push_back("read");
     collectionJobCfg_->jobParams.events->push_back("master_id");
@@ -235,8 +220,8 @@ TEST_F(JOB_WRAPPER_PROF_DDR_JOB_TEST, SetPeripheralConfig) {
     EXPECT_EQ(PROFILING_SUCCESS, proDdrJob->SetPeripheralConfig());
 }
 
-
-TEST_F(JOB_WRAPPER_PROF_DDR_JOB_TEST, AddReader) {
+TEST_F(JOB_WRAPPER_PROF_DDR_JOB_TEST, AddReader)
+{
     GlobalMockObject::verify();
 
     auto proDdrJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfDdrJob>();
@@ -247,13 +232,12 @@ TEST_F(JOB_WRAPPER_PROF_DDR_JOB_TEST, AddReader) {
     analysis::dvvp::driver::AI_DRV_CHANNEL channel_id = analysis::dvvp::driver::PROF_CHANNEL_AI_CORE;
     std::string file_path = "test";
     proDdrJob->Init(collectionJobCfg_);
-    MOCKER_CPP(&ProfChannelManager::GetChannelPoller)
-        .stubs()
-        .will(returnValue(poller));
+    MOCKER_CPP(&ProfChannelManager::GetChannelPoller).stubs().will(returnValue(poller));
     proDdrJob->AddReader("jobId", dev_id, channel_id, file_path);
 }
 
-TEST_F(JOB_WRAPPER_PROF_DDR_JOB_TEST, AddReaderNoPoller) {
+TEST_F(JOB_WRAPPER_PROF_DDR_JOB_TEST, AddReaderNoPoller)
+{
     GlobalMockObject::verify();
 
     TestProfDrvJob profDrvJob;
@@ -268,7 +252,8 @@ TEST_F(JOB_WRAPPER_PROF_DDR_JOB_TEST, AddReaderNoPoller) {
     profDrvJob.AddReaderForTest("jobId", devId, channelId, filePath);
 }
 
-TEST_F(JOB_WRAPPER_PROF_DDR_JOB_TEST, ChannelJobAddReaderNoPoller) {
+TEST_F(JOB_WRAPPER_PROF_DDR_JOB_TEST, ChannelJobAddReaderNoPoller)
+{
     GlobalMockObject::verify();
 
     TestChannelJob channelJob;
@@ -283,49 +268,47 @@ TEST_F(JOB_WRAPPER_PROF_DDR_JOB_TEST, ChannelJobAddReaderNoPoller) {
     channelJob.AddReaderForTest(devId, channelId, filePath);
 }
 
-TEST_F(JOB_WRAPPER_PROF_DDR_JOB_TEST, Uninit) {
+TEST_F(JOB_WRAPPER_PROF_DDR_JOB_TEST, Uninit)
+{
     GlobalMockObject::verify();
 
     auto proDdrJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfDdrJob>();
     auto poller = std::make_shared<analysis::dvvp::transport::ChannelPoll>();
-    MOCKER_CPP(&ProfChannelManager::GetChannelPoller)
-        .stubs()
-        .will(returnValue(poller));
+    MOCKER_CPP(&ProfChannelManager::GetChannelPoller).stubs().will(returnValue(poller));
     proDdrJob->Init(collectionJobCfg_);
     EXPECT_EQ(PROFILING_SUCCESS, proDdrJob->Uninit());
 }
 
 class JOB_WRAPPER_PROF_HBM_JOB_TEST : public testing::Test {
 protected:
-    virtual void SetUp() {
-        collectionJobCfg_ = std::make_shared<Analysis::Dvvp::JobWrapper::CollectionJobCfg>();\
-        std::shared_ptr<analysis::dvvp::message::ProfileParams> params(
-            new analysis::dvvp::message::ProfileParams);
-        std::shared_ptr<analysis::dvvp::message::JobContext> jobCtx(
-            new analysis::dvvp::message::JobContext);
+    virtual void SetUp()
+    {
+        collectionJobCfg_ = std::make_shared<Analysis::Dvvp::JobWrapper::CollectionJobCfg>();
+        std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams);
+        std::shared_ptr<analysis::dvvp::message::JobContext> jobCtx(new analysis::dvvp::message::JobContext);
         auto comParams = std::make_shared<Analysis::Dvvp::JobWrapper::CollectionJobCommonParams>();
         comParams->params = params;
         comParams->jobCtx = jobCtx;
         collectionJobCfg_->comParams = comParams;
-        collectionJobCfg_->jobParams.events = std::make_shared<std::vector<std::string> >(0);
-        collectionJobCfg_->comParams->params->hbmInterval =30;
+        collectionJobCfg_->jobParams.events = std::make_shared<std::vector<std::string>>(0);
+        collectionJobCfg_->comParams->params->hbmInterval = 30;
         collectionJobCfg_->jobParams.events->push_back("write");
         collectionJobCfg_->jobParams.events->push_back("read");
     }
-    virtual void TearDown() {
-        collectionJobCfg_.reset();
-    }
+    virtual void TearDown() { collectionJobCfg_.reset(); }
+
 public:
     std::shared_ptr<Analysis::Dvvp::JobWrapper::CollectionJobCfg> collectionJobCfg_;
 };
 
-TEST_F(JOB_WRAPPER_PROF_HBM_JOB_TEST, Init) {
+TEST_F(JOB_WRAPPER_PROF_HBM_JOB_TEST, Init)
+{
     GlobalMockObject::verify();
 
     auto profHbmJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfHbmJob>();
     collectionJobCfg_->jobParams.events = nullptr;
     profHbmJob->Init(collectionJobCfg_);
-    collectionJobCfg_->jobParams.events = std::make_shared<std::vector<std::string> >(0);
+    collectionJobCfg_->jobParams.events = std::make_shared<std::vector<std::string>>(0);
     EXPECT_EQ(PROFILING_FAILED, profHbmJob->Init(nullptr));
     collectionJobCfg_->jobParams.events->push_back("write");
     collectionJobCfg_->jobParams.events->push_back("read");
@@ -337,19 +320,19 @@ TEST_F(JOB_WRAPPER_PROF_HBM_JOB_TEST, Init) {
     EXPECT_EQ(PROFILING_FAILED, profHbmJob->Init(collectionJobCfg_));
 }
 
-TEST_F(JOB_WRAPPER_PROF_HBM_JOB_TEST, Process) {
+TEST_F(JOB_WRAPPER_PROF_HBM_JOB_TEST, Process)
+{
     GlobalMockObject::verify();
 
     auto proHbmJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfHbmJob>();
     proHbmJob->Init(collectionJobCfg_);
     EXPECT_EQ(PROFILING_SUCCESS, proHbmJob->Process());
-    MOCKER_CPP(&analysis::dvvp::driver::DrvPeripheralStart)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&analysis::dvvp::driver::DrvPeripheralStart).stubs().will(returnValue(PROFILING_SUCCESS));
     EXPECT_EQ(PROFILING_SUCCESS, proHbmJob->Process());
 }
 
-TEST_F(JOB_WRAPPER_PROF_HBM_JOB_TEST, Uninit) {
+TEST_F(JOB_WRAPPER_PROF_HBM_JOB_TEST, Uninit)
+{
     GlobalMockObject::verify();
 
     auto proHbmJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfHbmJob>();
@@ -359,26 +342,25 @@ TEST_F(JOB_WRAPPER_PROF_HBM_JOB_TEST, Uninit) {
 
 class JOB_WRAPPER_PROF_QOS_JOB_TEST : public testing::Test {
 protected:
-    virtual void SetUp() {
-        collectionJobCfg_ = std::make_shared<Analysis::Dvvp::JobWrapper::CollectionJobCfg>();\
-        std::shared_ptr<analysis::dvvp::message::ProfileParams> params(
-            new analysis::dvvp::message::ProfileParams);
-        std::shared_ptr<analysis::dvvp::message::JobContext> jobCtx(
-            new analysis::dvvp::message::JobContext);
+    virtual void SetUp()
+    {
+        collectionJobCfg_ = std::make_shared<Analysis::Dvvp::JobWrapper::CollectionJobCfg>();
+        std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams);
+        std::shared_ptr<analysis::dvvp::message::JobContext> jobCtx(new analysis::dvvp::message::JobContext);
         auto comParams = std::make_shared<Analysis::Dvvp::JobWrapper::CollectionJobCommonParams>();
         comParams->params = params;
         comParams->jobCtx = jobCtx;
         collectionJobCfg_->comParams = comParams;
-        collectionJobCfg_->comParams->params->hardware_mem_sampling_interval =20;
+        collectionJobCfg_->comParams->params->hardware_mem_sampling_interval = 20;
     }
-    virtual void TearDown() {
-        collectionJobCfg_.reset();
-    }
+    virtual void TearDown() { collectionJobCfg_.reset(); }
+
 public:
     std::shared_ptr<Analysis::Dvvp::JobWrapper::CollectionJobCfg> collectionJobCfg_;
 };
 
-TEST_F(JOB_WRAPPER_PROF_QOS_JOB_TEST, Init) {
+TEST_F(JOB_WRAPPER_PROF_QOS_JOB_TEST, Init)
+{
     GlobalMockObject::verify();
 
     auto profQosJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfQosJob>();
@@ -392,10 +374,10 @@ TEST_F(JOB_WRAPPER_PROF_QOS_JOB_TEST, Init) {
     EXPECT_EQ(PROFILING_SUCCESS, profQosJob->Init(collectionJobCfg_));
     collectionJobCfg_->comParams->params->hostProfiling = true;
     EXPECT_EQ(PROFILING_FAILED, profQosJob->Init(collectionJobCfg_));
-
 }
 
-TEST_F(JOB_WRAPPER_PROF_QOS_JOB_TEST, SetPeripheralConfig) {
+TEST_F(JOB_WRAPPER_PROF_QOS_JOB_TEST, SetPeripheralConfig)
+{
     GlobalMockObject::verify();
     unsigned char tmp[100] = {0};
     auto profQosJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfQosJob>();
@@ -413,19 +395,19 @@ TEST_F(JOB_WRAPPER_PROF_QOS_JOB_TEST, SetPeripheralConfig) {
     EXPECT_EQ(PROFILING_FAILED, profQosJob->SetPeripheralConfig());
 }
 
-TEST_F(JOB_WRAPPER_PROF_QOS_JOB_TEST, Process) {
+TEST_F(JOB_WRAPPER_PROF_QOS_JOB_TEST, Process)
+{
     GlobalMockObject::verify();
 
     auto profQosJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfQosJob>();
     profQosJob->Init(collectionJobCfg_);
     EXPECT_EQ(PROFILING_SUCCESS, profQosJob->Process());
-    MOCKER_CPP(&analysis::dvvp::driver::DrvPeripheralStart)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&analysis::dvvp::driver::DrvPeripheralStart).stubs().will(returnValue(PROFILING_SUCCESS));
     EXPECT_EQ(PROFILING_SUCCESS, profQosJob->Process());
 }
 
-TEST_F(JOB_WRAPPER_PROF_QOS_JOB_TEST, Uninit) {
+TEST_F(JOB_WRAPPER_PROF_QOS_JOB_TEST, Uninit)
+{
     GlobalMockObject::verify();
 
     auto profQosJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfQosJob>();
@@ -435,27 +417,26 @@ TEST_F(JOB_WRAPPER_PROF_QOS_JOB_TEST, Uninit) {
 
 class JOB_WRAPPER_PROF_LPM_FREQ_CONV_TEST : public testing::Test {
 protected:
-    virtual void SetUp() {
+    virtual void SetUp()
+    {
         collectionJobCfg_ = std::make_shared<Analysis::Dvvp::JobWrapper::CollectionJobCfg>();
-        std::shared_ptr<analysis::dvvp::message::ProfileParams> params(
-            new analysis::dvvp::message::ProfileParams);
-        std::shared_ptr<analysis::dvvp::message::JobContext> jobCtx(
-            new analysis::dvvp::message::JobContext);
+        std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams);
+        std::shared_ptr<analysis::dvvp::message::JobContext> jobCtx(new analysis::dvvp::message::JobContext);
         auto comParams = std::make_shared<Analysis::Dvvp::JobWrapper::CollectionJobCommonParams>();
         comParams->params = params;
         comParams->jobCtx = jobCtx;
         collectionJobCfg_->comParams = comParams;
-        collectionJobCfg_->jobParams.events = std::make_shared<std::vector<std::string> >(0);
+        collectionJobCfg_->jobParams.events = std::make_shared<std::vector<std::string>>(0);
         collectionJobCfg_->comParams->params->ai_core_lpm = "on";
     }
-    virtual void TearDown() {
-        collectionJobCfg_.reset();
-    }
+    virtual void TearDown() { collectionJobCfg_.reset(); }
+
 public:
     std::shared_ptr<Analysis::Dvvp::JobWrapper::CollectionJobCfg> collectionJobCfg_;
 };
 
-TEST_F(JOB_WRAPPER_PROF_LPM_FREQ_CONV_TEST, Init) {
+TEST_F(JOB_WRAPPER_PROF_LPM_FREQ_CONV_TEST, Init)
+{
     GlobalMockObject::verify();
 
     auto profFreqConvJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfLpmFreqConvJob>();
@@ -473,7 +454,8 @@ TEST_F(JOB_WRAPPER_PROF_LPM_FREQ_CONV_TEST, Init) {
     EXPECT_EQ(PROFILING_SUCCESS, profFreqConvJob->Init(collectionJobCfg_));
 }
 
-TEST_F(JOB_WRAPPER_PROF_LPM_FREQ_CONV_TEST, SetPeripheralConfig) {
+TEST_F(JOB_WRAPPER_PROF_LPM_FREQ_CONV_TEST, SetPeripheralConfig)
+{
     GlobalMockObject::verify();
     unsigned char tmp[100] = {0};
     auto profFreqConvJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfLpmFreqConvJob>();
@@ -493,28 +475,27 @@ TEST_F(JOB_WRAPPER_PROF_LPM_FREQ_CONV_TEST, SetPeripheralConfig) {
 
 class JOB_WRAPPER_PROF_MEM_APP_JOB_TEST : public testing::Test {
 protected:
-    virtual void SetUp() {
-        collectionJobCfg_ = std::make_shared<Analysis::Dvvp::JobWrapper::CollectionJobCfg>();\
-        std::shared_ptr<analysis::dvvp::message::ProfileParams> params(
-            new analysis::dvvp::message::ProfileParams);
-        std::shared_ptr<analysis::dvvp::message::JobContext> jobCtx(
-            new analysis::dvvp::message::JobContext);
+    virtual void SetUp()
+    {
+        collectionJobCfg_ = std::make_shared<Analysis::Dvvp::JobWrapper::CollectionJobCfg>();
+        std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams);
+        std::shared_ptr<analysis::dvvp::message::JobContext> jobCtx(new analysis::dvvp::message::JobContext);
         auto comParams = std::make_shared<Analysis::Dvvp::JobWrapper::CollectionJobCommonParams>();
         comParams->params = params;
         comParams->jobCtx = jobCtx;
         collectionJobCfg_->comParams = comParams;
-        collectionJobCfg_->jobParams.events = std::make_shared<std::vector<std::string> >(0);
+        collectionJobCfg_->jobParams.events = std::make_shared<std::vector<std::string>>(0);
         collectionJobCfg_->comParams->params->memInterval = 20;
         collectionJobCfg_->comParams->params->app = "test";
     }
-    virtual void TearDown() {
-        collectionJobCfg_.reset();
-    }
+    virtual void TearDown() { collectionJobCfg_.reset(); }
+
 public:
     std::shared_ptr<Analysis::Dvvp::JobWrapper::CollectionJobCfg> collectionJobCfg_;
 };
 
-TEST_F(JOB_WRAPPER_PROF_MEM_APP_JOB_TEST, Init) {
+TEST_F(JOB_WRAPPER_PROF_MEM_APP_JOB_TEST, Init)
+{
     GlobalMockObject::verify();
 
     auto profMemJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfAppMemJob>();
@@ -531,24 +512,22 @@ TEST_F(JOB_WRAPPER_PROF_MEM_APP_JOB_TEST, Init) {
     EXPECT_EQ(PROFILING_FAILED, profMemJob->Init(collectionJobCfg_));
 }
 
-TEST_F(JOB_WRAPPER_PROF_MEM_APP_JOB_TEST, Process) {
+TEST_F(JOB_WRAPPER_PROF_MEM_APP_JOB_TEST, Process)
+{
     GlobalMockObject::verify();
 
-    MOCKER_CPP(&analysis::dvvp::driver::DrvChannelsMgr::ChannelIsValid)
-        .stubs()
-        .will(returnValue(true));
+    MOCKER_CPP(&analysis::dvvp::driver::DrvChannelsMgr::ChannelIsValid).stubs().will(returnValue(true));
 
     auto profMemJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfAppMemJob>();
     collectionJobCfg_->comParams->params->memProfiling = "on";
     profMemJob->Init(collectionJobCfg_);
     EXPECT_EQ(PROFILING_SUCCESS, profMemJob->Process());
-    MOCKER_CPP(&analysis::dvvp::driver::DrvPeripheralStart)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&analysis::dvvp::driver::DrvPeripheralStart).stubs().will(returnValue(PROFILING_SUCCESS));
     EXPECT_EQ(PROFILING_SUCCESS, profMemJob->Process());
 }
 
-TEST_F(JOB_WRAPPER_PROF_MEM_APP_JOB_TEST, Uninit) {
+TEST_F(JOB_WRAPPER_PROF_MEM_APP_JOB_TEST, Uninit)
+{
     GlobalMockObject::verify();
 
     auto profMemJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfAppMemJob>();
@@ -558,27 +537,26 @@ TEST_F(JOB_WRAPPER_PROF_MEM_APP_JOB_TEST, Uninit) {
 
 class JOB_WRAPPER_PROF_MEM_JOB_TEST : public testing::Test {
 protected:
-    virtual void SetUp() {
-        collectionJobCfg_ = std::make_shared<Analysis::Dvvp::JobWrapper::CollectionJobCfg>();\
-        std::shared_ptr<analysis::dvvp::message::ProfileParams> params(
-            new analysis::dvvp::message::ProfileParams);
-        std::shared_ptr<analysis::dvvp::message::JobContext> jobCtx(
-            new analysis::dvvp::message::JobContext);
+    virtual void SetUp()
+    {
+        collectionJobCfg_ = std::make_shared<Analysis::Dvvp::JobWrapper::CollectionJobCfg>();
+        std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams);
+        std::shared_ptr<analysis::dvvp::message::JobContext> jobCtx(new analysis::dvvp::message::JobContext);
         auto comParams = std::make_shared<Analysis::Dvvp::JobWrapper::CollectionJobCommonParams>();
         comParams->params = params;
         comParams->jobCtx = jobCtx;
         collectionJobCfg_->comParams = comParams;
-        collectionJobCfg_->jobParams.events = std::make_shared<std::vector<std::string> >(0);
+        collectionJobCfg_->jobParams.events = std::make_shared<std::vector<std::string>>(0);
         collectionJobCfg_->comParams->params->memInterval = 20;
     }
-    virtual void TearDown() {
-        collectionJobCfg_.reset();
-    }
+    virtual void TearDown() { collectionJobCfg_.reset(); }
+
 public:
     std::shared_ptr<Analysis::Dvvp::JobWrapper::CollectionJobCfg> collectionJobCfg_;
 };
 
-TEST_F(JOB_WRAPPER_PROF_MEM_JOB_TEST, Init) {
+TEST_F(JOB_WRAPPER_PROF_MEM_JOB_TEST, Init)
+{
     GlobalMockObject::verify();
 
     auto profMemJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfDevMemJob>();
@@ -591,24 +569,22 @@ TEST_F(JOB_WRAPPER_PROF_MEM_JOB_TEST, Init) {
     EXPECT_EQ(PROFILING_FAILED, profMemJob->Init(collectionJobCfg_));
 }
 
-TEST_F(JOB_WRAPPER_PROF_MEM_JOB_TEST, Process) {
+TEST_F(JOB_WRAPPER_PROF_MEM_JOB_TEST, Process)
+{
     GlobalMockObject::verify();
 
-    MOCKER_CPP(&analysis::dvvp::driver::DrvChannelsMgr::ChannelIsValid)
-        .stubs()
-        .will(returnValue(true));
+    MOCKER_CPP(&analysis::dvvp::driver::DrvChannelsMgr::ChannelIsValid).stubs().will(returnValue(true));
 
     auto profMemJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfDevMemJob>();
     collectionJobCfg_->comParams->params->memProfiling = "on";
     profMemJob->Init(collectionJobCfg_);
     EXPECT_EQ(PROFILING_SUCCESS, profMemJob->Process());
-    MOCKER_CPP(&analysis::dvvp::driver::DrvPeripheralStart)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&analysis::dvvp::driver::DrvPeripheralStart).stubs().will(returnValue(PROFILING_SUCCESS));
     EXPECT_EQ(PROFILING_SUCCESS, profMemJob->Process());
 }
 
-TEST_F(JOB_WRAPPER_PROF_MEM_JOB_TEST, Uninit) {
+TEST_F(JOB_WRAPPER_PROF_MEM_JOB_TEST, Uninit)
+{
     GlobalMockObject::verify();
 
     auto profMemJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfDevMemJob>();
@@ -618,27 +594,26 @@ TEST_F(JOB_WRAPPER_PROF_MEM_JOB_TEST, Uninit) {
 
 class JOB_WRAPPER_PROF_AI_STACK_MEM_JOB_UTEST : public testing::Test {
 protected:
-    virtual void SetUp() {
-        collectionJobCfg_ = std::make_shared<Analysis::Dvvp::JobWrapper::CollectionJobCfg>();\
-        std::shared_ptr<analysis::dvvp::message::ProfileParams> params(
-            new analysis::dvvp::message::ProfileParams);
-        std::shared_ptr<analysis::dvvp::message::JobContext> jobCtx(
-            new analysis::dvvp::message::JobContext);
+    virtual void SetUp()
+    {
+        collectionJobCfg_ = std::make_shared<Analysis::Dvvp::JobWrapper::CollectionJobCfg>();
+        std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams);
+        std::shared_ptr<analysis::dvvp::message::JobContext> jobCtx(new analysis::dvvp::message::JobContext);
         auto comParams = std::make_shared<Analysis::Dvvp::JobWrapper::CollectionJobCommonParams>();
         comParams->params = params;
         comParams->jobCtx = jobCtx;
         collectionJobCfg_->comParams = comParams;
-        collectionJobCfg_->jobParams.events = std::make_shared<std::vector<std::string> >(0);
+        collectionJobCfg_->jobParams.events = std::make_shared<std::vector<std::string>>(0);
         collectionJobCfg_->comParams->params->memInterval = 20;
     }
-    virtual void TearDown() {
-        collectionJobCfg_.reset();
-    }
+    virtual void TearDown() { collectionJobCfg_.reset(); }
+
 public:
     std::shared_ptr<Analysis::Dvvp::JobWrapper::CollectionJobCfg> collectionJobCfg_;
 };
 
-TEST_F(JOB_WRAPPER_PROF_AI_STACK_MEM_JOB_UTEST, Init) {
+TEST_F(JOB_WRAPPER_PROF_AI_STACK_MEM_JOB_UTEST, Init)
+{
     GlobalMockObject::verify();
 
     auto profMemJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfAiStackMemJob>();
@@ -651,24 +626,22 @@ TEST_F(JOB_WRAPPER_PROF_AI_STACK_MEM_JOB_UTEST, Init) {
     EXPECT_EQ(PROFILING_FAILED, profMemJob->Init(collectionJobCfg_));
 }
 
-TEST_F(JOB_WRAPPER_PROF_AI_STACK_MEM_JOB_UTEST, Process) {
+TEST_F(JOB_WRAPPER_PROF_AI_STACK_MEM_JOB_UTEST, Process)
+{
     GlobalMockObject::verify();
 
-    MOCKER_CPP(&analysis::dvvp::driver::DrvChannelsMgr::ChannelIsValid)
-        .stubs()
-        .will(returnValue(true));
+    MOCKER_CPP(&analysis::dvvp::driver::DrvChannelsMgr::ChannelIsValid).stubs().will(returnValue(true));
 
     auto profMemJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfAiStackMemJob>();
     collectionJobCfg_->comParams->params->memProfiling = "on";
     profMemJob->Init(collectionJobCfg_);
     EXPECT_EQ(PROFILING_SUCCESS, profMemJob->Process());
-    MOCKER_CPP(&analysis::dvvp::driver::DrvPeripheralStart)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&analysis::dvvp::driver::DrvPeripheralStart).stubs().will(returnValue(PROFILING_SUCCESS));
     EXPECT_EQ(PROFILING_SUCCESS, profMemJob->Process());
 }
 
-TEST_F(JOB_WRAPPER_PROF_AI_STACK_MEM_JOB_UTEST, Uninit) {
+TEST_F(JOB_WRAPPER_PROF_AI_STACK_MEM_JOB_UTEST, Uninit)
+{
     GlobalMockObject::verify();
 
     auto profMemJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfAiStackMemJob>();
@@ -676,14 +649,13 @@ TEST_F(JOB_WRAPPER_PROF_AI_STACK_MEM_JOB_UTEST, Uninit) {
     EXPECT_EQ(PROFILING_SUCCESS, profMemJob->Uninit());
 }
 
-class JOB_WRAPPER_PROF_LLC_JOB_TEST: public testing::Test {
+class JOB_WRAPPER_PROF_LLC_JOB_TEST : public testing::Test {
 protected:
-    virtual void SetUp() {
+    virtual void SetUp()
+    {
         collectionJobCfg_ = std::make_shared<Analysis::Dvvp::JobWrapper::CollectionJobCfg>();
-        std::shared_ptr<analysis::dvvp::message::ProfileParams> params(
-            new analysis::dvvp::message::ProfileParams);
-        std::shared_ptr<analysis::dvvp::message::JobContext> jobCtx(
-            new analysis::dvvp::message::JobContext);
+        std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams);
+        std::shared_ptr<analysis::dvvp::message::JobContext> jobCtx(new analysis::dvvp::message::JobContext);
         auto comParams = std::make_shared<Analysis::Dvvp::JobWrapper::CollectionJobCommonParams>();
         comParams->devIdOnHost = 64;
         comParams->params = params;
@@ -691,14 +663,14 @@ protected:
         collectionJobCfg_->comParams = comParams;
         collectionJobCfg_->jobParams.events = std::make_shared<std::vector<std::string>>(0);
     }
-    virtual void TearDown() {
-        collectionJobCfg_.reset();
-    }
+    virtual void TearDown() { collectionJobCfg_.reset(); }
+
 public:
     std::shared_ptr<Analysis::Dvvp::JobWrapper::CollectionJobCfg> collectionJobCfg_;
 };
 
-TEST_F(JOB_WRAPPER_PROF_LLC_JOB_TEST, LlcJobInit) {
+TEST_F(JOB_WRAPPER_PROF_LLC_JOB_TEST, LlcJobInit)
+{
     GlobalMockObject::verify();
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
         .stubs()
@@ -726,19 +698,19 @@ TEST_F(JOB_WRAPPER_PROF_LLC_JOB_TEST, LlcJobInit) {
     EXPECT_EQ(PROFILING_FAILED, profLlcJob->Init(collectionJobCfg_));
 }
 
-TEST_F(JOB_WRAPPER_PROF_LLC_JOB_TEST, LlcJobIsGlobalJobLevel) {
+TEST_F(JOB_WRAPPER_PROF_LLC_JOB_TEST, LlcJobIsGlobalJobLevel)
+{
     GlobalMockObject::verify();
     auto profLlcJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfLlcJob>();
     EXPECT_EQ(false, profLlcJob->IsGlobalJobLevel());
 }
 
-TEST_F(JOB_WRAPPER_PROF_LLC_JOB_TEST, SetPeripheralConfig) {
+TEST_F(JOB_WRAPPER_PROF_LLC_JOB_TEST, SetPeripheralConfig)
+{
     GlobalMockObject::verify();
     unsigned char tmp[100] = {0};
 
-    MOCKER(analysis::dvvp::common::utils::Utils::ProfMalloc)
-        .stubs()
-        .will(returnValue((void*)tmp));
+    MOCKER(analysis::dvvp::common::utils::Utils::ProfMalloc).stubs().will(returnValue((void*)tmp));
 
     collectionJobCfg_->jobParams.events = std::make_shared<std::vector<std::string>>(0);
     collectionJobCfg_->jobParams.events->push_back("read");
@@ -753,14 +725,13 @@ TEST_F(JOB_WRAPPER_PROF_LLC_JOB_TEST, SetPeripheralConfig) {
 }
 
 /* **************************************************************** */
-class JOB_WRAPPER_PROF_HSCB_JOB_TEST: public testing::Test {
+class JOB_WRAPPER_PROF_HSCB_JOB_TEST : public testing::Test {
 protected:
-    virtual void SetUp() {
+    virtual void SetUp()
+    {
         collectionJobCfg_ = std::make_shared<Analysis::Dvvp::JobWrapper::CollectionJobCfg>();
-        std::shared_ptr<analysis::dvvp::message::ProfileParams> params(
-            new analysis::dvvp::message::ProfileParams);
-        std::shared_ptr<analysis::dvvp::message::JobContext> jobCtx(
-            new analysis::dvvp::message::JobContext);
+        std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams);
+        std::shared_ptr<analysis::dvvp::message::JobContext> jobCtx(new analysis::dvvp::message::JobContext);
         auto comParams = std::make_shared<Analysis::Dvvp::JobWrapper::CollectionJobCommonParams>();
         comParams->devId = 0;
         comParams->devIdOnHost = 0;
@@ -769,15 +740,15 @@ protected:
         collectionJobCfg_->comParams = comParams;
         collectionJobCfg_->jobParams.events = std::make_shared<std::vector<std::string>>(0);
     }
-    virtual void TearDown() {
-        collectionJobCfg_.reset();
-    }
+    virtual void TearDown() { collectionJobCfg_.reset(); }
+
 public:
     std::shared_ptr<Analysis::Dvvp::JobWrapper::CollectionJobCfg> collectionJobCfg_;
 };
 
 #ifndef BUILD_PROFILING_OPEN_PROJECT
-TEST_F(JOB_WRAPPER_PROF_HSCB_JOB_TEST, AicpuHscbInit) {
+TEST_F(JOB_WRAPPER_PROF_HSCB_JOB_TEST, AicpuHscbInit)
+{
     GlobalMockObject::verify();
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
         .stubs()
@@ -793,12 +764,7 @@ TEST_F(JOB_WRAPPER_PROF_HSCB_JOB_TEST, AicpuHscbInit) {
         .then(returnValue(true));
     collectionJobCfg_->jobParams.events = std::make_shared<std::vector<std::string>>(0);
     *(collectionJobCfg_->jobParams.events) = {
-        "cpu-cycles",
-        "HSCB_BUS_ACCESS_RD_PERCYC",
-        "HSCB_BUS_ACCESS_WR_PERCYC",
-        "HSCB_BUS_REQ_RD",
-        "HSCB_BUS_REQ_WR"
-    };
+        "cpu-cycles", "HSCB_BUS_ACCESS_RD_PERCYC", "HSCB_BUS_ACCESS_WR_PERCYC", "HSCB_BUS_REQ_RD", "HSCB_BUS_REQ_WR"};
     collectionJobCfg_->comParams->params->cpu_profiling = "on";
     collectionJobCfg_->comParams->params->hostProfiling = false;
     EXPECT_EQ(PROFILING_FAILED, profAicpuHscb->Init(collectionJobCfg_));
@@ -812,13 +778,14 @@ TEST_F(JOB_WRAPPER_PROF_HSCB_JOB_TEST, AicpuHscbInit) {
     EXPECT_EQ(PROFILING_FAILED, profAicpuHscb->Init(collectionJobCfg_));
 }
 
-TEST_F(JOB_WRAPPER_PROF_HSCB_JOB_TEST, AicpuHscbSendData) {
+TEST_F(JOB_WRAPPER_PROF_HSCB_JOB_TEST, AicpuHscbSendData)
+{
     GlobalMockObject::verify();
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
         .stubs()
         .will(returnValue(Analysis::Dvvp::Common::Config::PlatformType::CHIP_CLOUD_V3));
     auto profAicpuHscb = std::make_shared<Analysis::Dvvp::JobWrapper::ProfAicpuHscbJob>();
- 
+
     std::ofstream outfile;
     outfile.open("./hscb.data.0");
     outfile << "Writing to the file" << std::endl;
@@ -826,8 +793,8 @@ TEST_F(JOB_WRAPPER_PROF_HSCB_JOB_TEST, AicpuHscbSendData) {
     collectionJobCfg_->comParams->params->cpu_profiling = "on";
     profAicpuHscb->collectionJobCfg_ = collectionJobCfg_;
     profAicpuHscb->collectionJobCfg_->jobParams.dataPath = "./hscb.data";
-    MOCKER_CPP(&analysis::dvvp::transport::Uploader::UploadData,
-        int(analysis::dvvp::transport::Uploader::*)(const void *, int))
+    MOCKER_CPP(
+        &analysis::dvvp::transport::Uploader::UploadData, int(analysis::dvvp::transport::Uploader::*)(const void*, int))
         .stubs()
         .will(returnValue(PROFILING_SUCCESS));
     profAicpuHscb->SendData();
@@ -843,29 +810,21 @@ TEST_F(JOB_WRAPPER_PROF_HSCB_JOB_TEST, AicpuHscbSendData) {
     EXPECT_EQ(PROFILING_FAILED, profAicpuHscb->GetAicpuHscbCmd(0, events, profHscb));
 }
 
-TEST_F(JOB_WRAPPER_PROF_HSCB_JOB_TEST, AicpuHscbProcess) {
+TEST_F(JOB_WRAPPER_PROF_HSCB_JOB_TEST, AicpuHscbProcess)
+{
     GlobalMockObject::verify();
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
         .stubs()
         .will(returnValue(Analysis::Dvvp::Common::Config::PlatformType::CHIP_CLOUD_V3));
-    MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::RunSocSide)
-        .stubs()
-        .will(returnValue(true));
+    MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::RunSocSide).stubs().will(returnValue(true));
     MOCKER(analysis::dvvp::common::utils::Utils::CreateDir)
         .stubs()
         .will(returnValue(PROFILING_FAILED))
         .then(returnValue(PROFILING_SUCCESS));
-    MOCKER(analysis::dvvp::common::utils::Utils::ExecCmd)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER(analysis::dvvp::common::utils::Utils::ExecCmd).stubs().will(returnValue(PROFILING_SUCCESS));
     collectionJobCfg_->comParams->params->cpu_profiling = "on";
     *(collectionJobCfg_->jobParams.events) = {
-        "cpu-cycles",
-        "HSCB_BUS_ACCESS_RD_PERCYC",
-        "HSCB_BUS_ACCESS_WR_PERCYC",
-        "HSCB_BUS_REQ_RD",
-        "HSCB_BUS_REQ_WR"
-    };
+        "cpu-cycles", "HSCB_BUS_ACCESS_RD_PERCYC", "HSCB_BUS_ACCESS_WR_PERCYC", "HSCB_BUS_REQ_RD", "HSCB_BUS_REQ_WR"};
     collectionJobCfg_->comParams->devIdOnHost = 0;
     auto profAicpuHscb = std::make_shared<Analysis::Dvvp::JobWrapper::ProfAicpuHscbJob>();
     profAicpuHscb->Init(collectionJobCfg_);
@@ -874,25 +833,22 @@ TEST_F(JOB_WRAPPER_PROF_HSCB_JOB_TEST, AicpuHscbProcess) {
     const std::string dir = "AicpuHscbProcess_test";
     std::string cmd = "mkdir " + dir;
     system(cmd.c_str());
-    MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPerfDataDir)
-        .stubs()
-        .will(returnValue(dir));
+    MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPerfDataDir).stubs().will(returnValue(dir));
     EXPECT_EQ(PROFILING_SUCCESS, profAicpuHscb->Process());
 }
 
-TEST_F(JOB_WRAPPER_PROF_HSCB_JOB_TEST, AicpuHscbUninit) {
+TEST_F(JOB_WRAPPER_PROF_HSCB_JOB_TEST, AicpuHscbUninit)
+{
     GlobalMockObject::verify();
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
         .stubs()
         .will(returnValue(Analysis::Dvvp::Common::Config::PlatformType::CHIP_CLOUD_V3));
-    MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::RunSocSide)
-        .stubs()
-        .will(returnValue(true));
+    MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::RunSocSide).stubs().will(returnValue(true));
     MOCKER(analysis::dvvp::common::utils::Utils::ExecCmd)
         .stubs()
         .will(returnValue(PROFILING_FAILED))
         .then(returnValue(PROFILING_SUCCESS));
- 
+
     MOCKER(analysis::dvvp::common::utils::Utils::WaitProcess)
         .stubs()
         .will(returnValue(PROFILING_FAILED))
@@ -902,12 +858,7 @@ TEST_F(JOB_WRAPPER_PROF_HSCB_JOB_TEST, AicpuHscbUninit) {
     collectionJobCfg_->comParams->params->cpu_profiling = "on";
     collectionJobCfg_->comParams->devIdOnHost = 0;
     *(collectionJobCfg_->jobParams.events) = {
-        "cpu-cycles",
-        "HSCB_BUS_ACCESS_RD_PERCYC",
-        "HSCB_BUS_ACCESS_WR_PERCYC",
-        "HSCB_BUS_REQ_RD",
-        "HSCB_BUS_REQ_WR"
-    };
+        "cpu-cycles", "HSCB_BUS_ACCESS_RD_PERCYC", "HSCB_BUS_ACCESS_WR_PERCYC", "HSCB_BUS_REQ_RD", "HSCB_BUS_REQ_WR"};
     collectionJobCfg_->jobParams.dataPath = "./hscb.data";
     profAicpuHscb->Init(collectionJobCfg_);
     EXPECT_EQ(PROFILING_FAILED, profAicpuHscb->Uninit());
@@ -918,35 +869,34 @@ TEST_F(JOB_WRAPPER_PROF_HSCB_JOB_TEST, AicpuHscbUninit) {
 
 class JOB_WRAPPER_PROF_HCCS_JOB_TEST : public testing::Test {
 protected:
-    virtual void SetUp() {
-        collectionJobCfg_ = std::make_shared<Analysis::Dvvp::JobWrapper::CollectionJobCfg>();\
-        std::shared_ptr<analysis::dvvp::message::ProfileParams> params(
-            new analysis::dvvp::message::ProfileParams);
-        std::shared_ptr<analysis::dvvp::message::JobContext> jobCtx(
-            new analysis::dvvp::message::JobContext);
+    virtual void SetUp()
+    {
+        collectionJobCfg_ = std::make_shared<Analysis::Dvvp::JobWrapper::CollectionJobCfg>();
+        std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams);
+        std::shared_ptr<analysis::dvvp::message::JobContext> jobCtx(new analysis::dvvp::message::JobContext);
         auto comParams = std::make_shared<Analysis::Dvvp::JobWrapper::CollectionJobCommonParams>();
         comParams->params = params;
         comParams->jobCtx = jobCtx;
         collectionJobCfg_->comParams = comParams;
-        collectionJobCfg_->jobParams.events = std::make_shared<std::vector<std::string> >(0);
-        collectionJobCfg_->comParams->params->hccsInterval =30;
+        collectionJobCfg_->jobParams.events = std::make_shared<std::vector<std::string>>(0);
+        collectionJobCfg_->comParams->params->hccsInterval = 30;
         collectionJobCfg_->jobParams.events->push_back("write");
         collectionJobCfg_->jobParams.events->push_back("read");
     }
-    virtual void TearDown() {
-        collectionJobCfg_.reset();
-    }
+    virtual void TearDown() { collectionJobCfg_.reset(); }
+
 public:
     std::shared_ptr<Analysis::Dvvp::JobWrapper::CollectionJobCfg> collectionJobCfg_;
 };
 
-TEST_F(JOB_WRAPPER_PROF_HCCS_JOB_TEST, Init) {
+TEST_F(JOB_WRAPPER_PROF_HCCS_JOB_TEST, Init)
+{
     GlobalMockObject::verify();
 
     auto profJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfHccsJob>();
     collectionJobCfg_->jobParams.events = nullptr;
     profJob->Init(collectionJobCfg_);
-    collectionJobCfg_->jobParams.events = std::make_shared<std::vector<std::string> >(0);
+    collectionJobCfg_->jobParams.events = std::make_shared<std::vector<std::string>>(0);
     EXPECT_EQ(PROFILING_FAILED, profJob->Init(nullptr));
     collectionJobCfg_->jobParams.events->push_back("write");
     collectionJobCfg_->jobParams.events->push_back("read");
@@ -958,7 +908,8 @@ TEST_F(JOB_WRAPPER_PROF_HCCS_JOB_TEST, Init) {
     EXPECT_EQ(PROFILING_FAILED, profJob->Init(collectionJobCfg_));
 }
 
-TEST_F(JOB_WRAPPER_PROF_HCCS_JOB_TEST, Process) {
+TEST_F(JOB_WRAPPER_PROF_HCCS_JOB_TEST, Process)
+{
     GlobalMockObject::verify();
 
     auto proJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfHccsJob>();
@@ -967,7 +918,8 @@ TEST_F(JOB_WRAPPER_PROF_HCCS_JOB_TEST, Process) {
     EXPECT_EQ(PROFILING_SUCCESS, proJob->Process());
 }
 
-TEST_F(JOB_WRAPPER_PROF_HCCS_JOB_TEST, Uninit) {
+TEST_F(JOB_WRAPPER_PROF_HCCS_JOB_TEST, Uninit)
+{
     GlobalMockObject::verify();
 
     auto proJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfHccsJob>();
@@ -977,35 +929,34 @@ TEST_F(JOB_WRAPPER_PROF_HCCS_JOB_TEST, Uninit) {
 
 class JOB_WRAPPER_PROF_PCIE_JOB_TEST : public testing::Test {
 protected:
-    virtual void SetUp() {
-        collectionJobCfg_ = std::make_shared<Analysis::Dvvp::JobWrapper::CollectionJobCfg>();\
-        std::shared_ptr<analysis::dvvp::message::ProfileParams> params(
-            new analysis::dvvp::message::ProfileParams);
-        std::shared_ptr<analysis::dvvp::message::JobContext> jobCtx(
-            new analysis::dvvp::message::JobContext);
+    virtual void SetUp()
+    {
+        collectionJobCfg_ = std::make_shared<Analysis::Dvvp::JobWrapper::CollectionJobCfg>();
+        std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams);
+        std::shared_ptr<analysis::dvvp::message::JobContext> jobCtx(new analysis::dvvp::message::JobContext);
         auto comParams = std::make_shared<Analysis::Dvvp::JobWrapper::CollectionJobCommonParams>();
         comParams->params = params;
         comParams->jobCtx = jobCtx;
         collectionJobCfg_->comParams = comParams;
-        collectionJobCfg_->jobParams.events = std::make_shared<std::vector<std::string> >(0);
-        collectionJobCfg_->comParams->params->pcieInterval =30;
+        collectionJobCfg_->jobParams.events = std::make_shared<std::vector<std::string>>(0);
+        collectionJobCfg_->comParams->params->pcieInterval = 30;
         collectionJobCfg_->jobParams.events->push_back("write");
         collectionJobCfg_->jobParams.events->push_back("read");
     }
-    virtual void TearDown() {
-        collectionJobCfg_.reset();
-    }
+    virtual void TearDown() { collectionJobCfg_.reset(); }
+
 public:
     std::shared_ptr<Analysis::Dvvp::JobWrapper::CollectionJobCfg> collectionJobCfg_;
 };
 
-TEST_F(JOB_WRAPPER_PROF_PCIE_JOB_TEST, Init) {
+TEST_F(JOB_WRAPPER_PROF_PCIE_JOB_TEST, Init)
+{
     GlobalMockObject::verify();
 
     auto profJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfPcieJob>();
     collectionJobCfg_->jobParams.events = nullptr;
     profJob->Init(collectionJobCfg_);
-    collectionJobCfg_->jobParams.events = std::make_shared<std::vector<std::string> >(0);
+    collectionJobCfg_->jobParams.events = std::make_shared<std::vector<std::string>>(0);
     EXPECT_EQ(PROFILING_FAILED, profJob->Init(nullptr));
     collectionJobCfg_->jobParams.events->push_back("write");
     collectionJobCfg_->jobParams.events->push_back("read");
@@ -1017,7 +968,8 @@ TEST_F(JOB_WRAPPER_PROF_PCIE_JOB_TEST, Init) {
     EXPECT_EQ(PROFILING_FAILED, profJob->Init(collectionJobCfg_));
 }
 
-TEST_F(JOB_WRAPPER_PROF_PCIE_JOB_TEST, Process) {
+TEST_F(JOB_WRAPPER_PROF_PCIE_JOB_TEST, Process)
+{
     GlobalMockObject::verify();
 
     auto proJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfPcieJob>();
@@ -1025,7 +977,8 @@ TEST_F(JOB_WRAPPER_PROF_PCIE_JOB_TEST, Process) {
     EXPECT_EQ(PROFILING_SUCCESS, proJob->Process());
 }
 
-TEST_F(JOB_WRAPPER_PROF_PCIE_JOB_TEST, Uninit) {
+TEST_F(JOB_WRAPPER_PROF_PCIE_JOB_TEST, Uninit)
+{
     GlobalMockObject::verify();
 
     auto proJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfPcieJob>();
@@ -1035,35 +988,34 @@ TEST_F(JOB_WRAPPER_PROF_PCIE_JOB_TEST, Uninit) {
 
 class JOB_WRAPPER_PROF_UB_JOB_TEST : public testing::Test {
 protected:
-    virtual void SetUp() {
+    virtual void SetUp()
+    {
         collectionJobCfg_ = std::make_shared<Analysis::Dvvp::JobWrapper::CollectionJobCfg>();
-        std::shared_ptr<analysis::dvvp::message::ProfileParams> params(
-            new analysis::dvvp::message::ProfileParams);
-        std::shared_ptr<analysis::dvvp::message::JobContext> jobCtx(
-            new analysis::dvvp::message::JobContext);
+        std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams);
+        std::shared_ptr<analysis::dvvp::message::JobContext> jobCtx(new analysis::dvvp::message::JobContext);
         auto comParams = std::make_shared<Analysis::Dvvp::JobWrapper::CollectionJobCommonParams>();
         comParams->params = params;
         comParams->jobCtx = jobCtx;
         collectionJobCfg_->comParams = comParams;
         collectionJobCfg_->jobParams.events = std::make_shared<std::vector<std::string>>(0);
-        collectionJobCfg_->comParams->params->ubInterval =20;
+        collectionJobCfg_->comParams->params->ubInterval = 20;
         collectionJobCfg_->jobParams.events->push_back("write");
         collectionJobCfg_->jobParams.events->push_back("read");
     }
-    virtual void TearDown() {
-        collectionJobCfg_.reset();
-    }
+    virtual void TearDown() { collectionJobCfg_.reset(); }
+
 public:
     std::shared_ptr<Analysis::Dvvp::JobWrapper::CollectionJobCfg> collectionJobCfg_;
 };
 
-TEST_F(JOB_WRAPPER_PROF_UB_JOB_TEST, Init) {
+TEST_F(JOB_WRAPPER_PROF_UB_JOB_TEST, Init)
+{
     GlobalMockObject::verify();
 
     auto profJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfUbJob>();
     collectionJobCfg_->jobParams.events = nullptr;
     profJob->Init(collectionJobCfg_);
-    collectionJobCfg_->jobParams.events = std::make_shared<std::vector<std::string> >(0);
+    collectionJobCfg_->jobParams.events = std::make_shared<std::vector<std::string>>(0);
     EXPECT_EQ(PROFILING_FAILED, profJob->Init(nullptr));
     collectionJobCfg_->jobParams.events->push_back("write");
     collectionJobCfg_->jobParams.events->push_back("read");
@@ -1075,7 +1027,8 @@ TEST_F(JOB_WRAPPER_PROF_UB_JOB_TEST, Init) {
     EXPECT_EQ(PROFILING_FAILED, profJob->Init(collectionJobCfg_));
 }
 
-TEST_F(JOB_WRAPPER_PROF_UB_JOB_TEST, Process) {
+TEST_F(JOB_WRAPPER_PROF_UB_JOB_TEST, Process)
+{
     GlobalMockObject::verify();
 
     auto proJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfUbJob>();
@@ -1083,7 +1036,8 @@ TEST_F(JOB_WRAPPER_PROF_UB_JOB_TEST, Process) {
     EXPECT_EQ(PROFILING_SUCCESS, proJob->Process());
 }
 
-TEST_F(JOB_WRAPPER_PROF_UB_JOB_TEST, Uninit) {
+TEST_F(JOB_WRAPPER_PROF_UB_JOB_TEST, Uninit)
+{
     GlobalMockObject::verify();
 
     auto proJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfUbJob>();
@@ -1093,35 +1047,34 @@ TEST_F(JOB_WRAPPER_PROF_UB_JOB_TEST, Uninit) {
 
 class JOB_WRAPPER_PROF_NIC_JOB_TEST : public testing::Test {
 protected:
-    virtual void SetUp() {
-        collectionJobCfg_ = std::make_shared<Analysis::Dvvp::JobWrapper::CollectionJobCfg>();\
-        std::shared_ptr<analysis::dvvp::message::ProfileParams> params(
-            new analysis::dvvp::message::ProfileParams);
-        std::shared_ptr<analysis::dvvp::message::JobContext> jobCtx(
-            new analysis::dvvp::message::JobContext);
+    virtual void SetUp()
+    {
+        collectionJobCfg_ = std::make_shared<Analysis::Dvvp::JobWrapper::CollectionJobCfg>();
+        std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams);
+        std::shared_ptr<analysis::dvvp::message::JobContext> jobCtx(new analysis::dvvp::message::JobContext);
         auto comParams = std::make_shared<Analysis::Dvvp::JobWrapper::CollectionJobCommonParams>();
         comParams->params = params;
         comParams->jobCtx = jobCtx;
         collectionJobCfg_->comParams = comParams;
-        collectionJobCfg_->jobParams.events = std::make_shared<std::vector<std::string> >(0);
-        collectionJobCfg_->comParams->params->nicInterval =30;
+        collectionJobCfg_->jobParams.events = std::make_shared<std::vector<std::string>>(0);
+        collectionJobCfg_->comParams->params->nicInterval = 30;
         collectionJobCfg_->jobParams.events->push_back("write");
         collectionJobCfg_->jobParams.events->push_back("read");
     }
-    virtual void TearDown() {
-        collectionJobCfg_.reset();
-    }
+    virtual void TearDown() { collectionJobCfg_.reset(); }
+
 public:
     std::shared_ptr<Analysis::Dvvp::JobWrapper::CollectionJobCfg> collectionJobCfg_;
 };
 
-TEST_F(JOB_WRAPPER_PROF_NIC_JOB_TEST, Init) {
+TEST_F(JOB_WRAPPER_PROF_NIC_JOB_TEST, Init)
+{
     GlobalMockObject::verify();
 
     auto profJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfNicJob>();
     collectionJobCfg_->jobParams.events = nullptr;
     profJob->Init(collectionJobCfg_);
-    collectionJobCfg_->jobParams.events = std::make_shared<std::vector<std::string> >(0);
+    collectionJobCfg_->jobParams.events = std::make_shared<std::vector<std::string>>(0);
     EXPECT_EQ(PROFILING_FAILED, profJob->Init(nullptr));
     collectionJobCfg_->jobParams.events->push_back("write");
     collectionJobCfg_->jobParams.events->push_back("read");
@@ -1136,7 +1089,8 @@ TEST_F(JOB_WRAPPER_PROF_NIC_JOB_TEST, Init) {
     EXPECT_EQ(PROFILING_FAILED, profJob->Init(collectionJobCfg_));
 }
 
-TEST_F(JOB_WRAPPER_PROF_NIC_JOB_TEST, Process) {
+TEST_F(JOB_WRAPPER_PROF_NIC_JOB_TEST, Process)
+{
     GlobalMockObject::verify();
 
     auto proJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfNicJob>();
@@ -1144,7 +1098,8 @@ TEST_F(JOB_WRAPPER_PROF_NIC_JOB_TEST, Process) {
     EXPECT_EQ(PROFILING_SUCCESS, proJob->Process());
 }
 
-TEST_F(JOB_WRAPPER_PROF_NIC_JOB_TEST, Uninit) {
+TEST_F(JOB_WRAPPER_PROF_NIC_JOB_TEST, Uninit)
+{
     GlobalMockObject::verify();
 
     auto proJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfNicJob>();
@@ -1154,44 +1109,40 @@ TEST_F(JOB_WRAPPER_PROF_NIC_JOB_TEST, Uninit) {
 
 class JOB_WRAPPER_PROF_DVPP_JOB_TEST : public testing::Test {
 protected:
-    virtual void SetUp() {
-        collectionJobCfg_ = std::make_shared<Analysis::Dvvp::JobWrapper::CollectionJobCfg>();\
-        std::shared_ptr<analysis::dvvp::message::ProfileParams> params(
-            new analysis::dvvp::message::ProfileParams);
-        std::shared_ptr<analysis::dvvp::message::JobContext> jobCtx(
-            new analysis::dvvp::message::JobContext);
+    virtual void SetUp()
+    {
+        collectionJobCfg_ = std::make_shared<Analysis::Dvvp::JobWrapper::CollectionJobCfg>();
+        std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams);
+        std::shared_ptr<analysis::dvvp::message::JobContext> jobCtx(new analysis::dvvp::message::JobContext);
         auto comParams = std::make_shared<Analysis::Dvvp::JobWrapper::CollectionJobCommonParams>();
         comParams->params = params;
         comParams->jobCtx = jobCtx;
         collectionJobCfg_->comParams = comParams;
-        collectionJobCfg_->jobParams.events = std::make_shared<std::vector<std::string> >(0);
-        collectionJobCfg_->comParams->params->dvpp_sampling_interval =30;
+        collectionJobCfg_->jobParams.events = std::make_shared<std::vector<std::string>>(0);
+        collectionJobCfg_->comParams->params->dvpp_sampling_interval = 30;
         collectionJobCfg_->jobParams.events->push_back("write");
         collectionJobCfg_->jobParams.events->push_back("read");
     }
-    virtual void TearDown() {
-        collectionJobCfg_.reset();
-    }
+    virtual void TearDown() { collectionJobCfg_.reset(); }
+
 public:
     std::shared_ptr<Analysis::Dvvp::JobWrapper::CollectionJobCfg> collectionJobCfg_;
 };
 
-TEST_F(JOB_WRAPPER_PROF_DVPP_JOB_TEST, Init) {
+TEST_F(JOB_WRAPPER_PROF_DVPP_JOB_TEST, Init)
+{
     GlobalMockObject::verify();
 
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
         .stubs()
         .will(returnValue(Analysis::Dvvp::Common::Config::PlatformType::DC_TYPE));
 
-    MOCKER_CPP(&analysis::dvvp::driver::DrvChannelsMgr::ChannelIsValid)
-        .stubs()
-        .will(returnValue(true));
-
+    MOCKER_CPP(&analysis::dvvp::driver::DrvChannelsMgr::ChannelIsValid).stubs().will(returnValue(true));
 
     auto profJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfDvppJob>();
     collectionJobCfg_->jobParams.events = nullptr;
     profJob->Init(collectionJobCfg_);
-    collectionJobCfg_->jobParams.events = std::make_shared<std::vector<std::string> >(0);
+    collectionJobCfg_->jobParams.events = std::make_shared<std::vector<std::string>>(0);
     EXPECT_EQ(PROFILING_FAILED, profJob->Init(nullptr));
     collectionJobCfg_->jobParams.events->push_back("write");
     collectionJobCfg_->jobParams.events->push_back("read");
@@ -1203,43 +1154,41 @@ TEST_F(JOB_WRAPPER_PROF_DVPP_JOB_TEST, Init) {
     EXPECT_EQ(PROFILING_FAILED, profJob->Init(collectionJobCfg_));
 }
 
-TEST_F(JOB_WRAPPER_PROF_DVPP_JOB_TEST, Process) {
+TEST_F(JOB_WRAPPER_PROF_DVPP_JOB_TEST, Process)
+{
     GlobalMockObject::verify();
-    MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::CheckIfSupport,
-        bool (Analysis::Dvvp::Common::Platform::Platform::*)(const Dvvp::Collect::Platform::PlatformFeature) const)
+    MOCKER_CPP(
+        &Analysis::Dvvp::Common::Platform::Platform::CheckIfSupport,
+        bool(Analysis::Dvvp::Common::Platform::Platform::*)(const Dvvp::Collect::Platform::PlatformFeature) const)
         .stubs()
         .will(returnValue(false))
         .then(returnValue(false))
         .then(returnValue(true));
 
-    MOCKER_CPP(&analysis::dvvp::driver::DrvChannelsMgr::ChannelIsValid)
-        .stubs()
-        .will(returnValue(true));
+    MOCKER_CPP(&analysis::dvvp::driver::DrvChannelsMgr::ChannelIsValid).stubs().will(returnValue(true));
 
     auto proJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfDvppJob>();
     proJob->Init(collectionJobCfg_);
     EXPECT_EQ(PROFILING_SUCCESS, proJob->Process());
     EXPECT_EQ(PROFILING_SUCCESS, proJob->Process());
 
-    MOCKER(&analysis::dvvp::driver::DrvPeripheralStart)
-        .stubs()
-        .will(returnValue(PROFILING_FAILED));
+    MOCKER(&analysis::dvvp::driver::DrvPeripheralStart).stubs().will(returnValue(PROFILING_FAILED));
     EXPECT_EQ(PROFILING_FAILED, proJob->Process());
 }
 
-TEST_F(JOB_WRAPPER_PROF_DVPP_JOB_TEST, Uninit) {
+TEST_F(JOB_WRAPPER_PROF_DVPP_JOB_TEST, Uninit)
+{
     GlobalMockObject::verify();
 
-    MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::CheckIfSupport,
-        bool (Analysis::Dvvp::Common::Platform::Platform::*)(const Dvvp::Collect::Platform::PlatformFeature) const)
+    MOCKER_CPP(
+        &Analysis::Dvvp::Common::Platform::Platform::CheckIfSupport,
+        bool(Analysis::Dvvp::Common::Platform::Platform::*)(const Dvvp::Collect::Platform::PlatformFeature) const)
         .stubs()
         .will(returnValue(true))
         .then(returnValue(true))
         .then(returnValue(false));
 
-    MOCKER_CPP(&analysis::dvvp::driver::DrvChannelsMgr::ChannelIsValid)
-        .stubs()
-        .will(returnValue(true));
+    MOCKER_CPP(&analysis::dvvp::driver::DrvChannelsMgr::ChannelIsValid).stubs().will(returnValue(true));
     auto proJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfDvppJob>();
     EXPECT_EQ(PROFILING_FAILED, proJob->Init(collectionJobCfg_));
     EXPECT_EQ(PROFILING_SUCCESS, proJob->Uninit());
@@ -1248,35 +1197,34 @@ TEST_F(JOB_WRAPPER_PROF_DVPP_JOB_TEST, Uninit) {
 
 class JOB_WRAPPER_PROF_ROCE_JOB_TEST : public testing::Test {
 protected:
-    virtual void SetUp() {
-        collectionJobCfg_ = std::make_shared<Analysis::Dvvp::JobWrapper::CollectionJobCfg>();\
-        std::shared_ptr<analysis::dvvp::message::ProfileParams> params(
-            new analysis::dvvp::message::ProfileParams);
-        std::shared_ptr<analysis::dvvp::message::JobContext> jobCtx(
-            new analysis::dvvp::message::JobContext);
+    virtual void SetUp()
+    {
+        collectionJobCfg_ = std::make_shared<Analysis::Dvvp::JobWrapper::CollectionJobCfg>();
+        std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams);
+        std::shared_ptr<analysis::dvvp::message::JobContext> jobCtx(new analysis::dvvp::message::JobContext);
         auto comParams = std::make_shared<Analysis::Dvvp::JobWrapper::CollectionJobCommonParams>();
         comParams->params = params;
         comParams->jobCtx = jobCtx;
         collectionJobCfg_->comParams = comParams;
-        collectionJobCfg_->jobParams.events = std::make_shared<std::vector<std::string> >(0);
-        collectionJobCfg_->comParams->params->roceInterval =30;
+        collectionJobCfg_->jobParams.events = std::make_shared<std::vector<std::string>>(0);
+        collectionJobCfg_->comParams->params->roceInterval = 30;
         collectionJobCfg_->jobParams.events->push_back("write");
         collectionJobCfg_->jobParams.events->push_back("read");
     }
-    virtual void TearDown() {
-        collectionJobCfg_.reset();
-    }
+    virtual void TearDown() { collectionJobCfg_.reset(); }
+
 public:
     std::shared_ptr<Analysis::Dvvp::JobWrapper::CollectionJobCfg> collectionJobCfg_;
 };
 
-TEST_F(JOB_WRAPPER_PROF_ROCE_JOB_TEST, Init) {
+TEST_F(JOB_WRAPPER_PROF_ROCE_JOB_TEST, Init)
+{
     GlobalMockObject::verify();
 
     auto profJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfRoceJob>();
     collectionJobCfg_->jobParams.events = nullptr;
     profJob->Init(collectionJobCfg_);
-    collectionJobCfg_->jobParams.events = std::make_shared<std::vector<std::string> >(0);
+    collectionJobCfg_->jobParams.events = std::make_shared<std::vector<std::string>>(0);
     EXPECT_EQ(PROFILING_FAILED, profJob->Init(nullptr));
     collectionJobCfg_->jobParams.events->push_back("write");
     collectionJobCfg_->jobParams.events->push_back("read");
@@ -1305,10 +1253,7 @@ protected:
         collectionJobCfg->jobParams.events = std::make_shared<std::vector<std::string>>(0);
     }
 
-    virtual void TearDown()
-    {
-        collectionJobCfg.reset();
-    }
+    virtual void TearDown() { collectionJobCfg.reset(); }
 };
 
 TEST_F(JOB_WRAPPER_PROF_NETDEV_STAT_JOB_TEST, InitWillReturnFailedWhenHostProfilingIsTrue)

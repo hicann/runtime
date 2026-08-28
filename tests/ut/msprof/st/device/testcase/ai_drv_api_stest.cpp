@@ -29,15 +29,14 @@ using namespace analysis::dvvp::common::utils;
 #define CHANNEL_STR(s) #s
 
 ///////////////////////////////////////////////////////////////////
-class DRIVER_AI_DRV_API_TEST: public testing::Test {
+class DRIVER_AI_DRV_API_TEST : public testing::Test {
 protected:
-    virtual void SetUp() {
-    }
-    virtual void TearDown() {
-    }
+    virtual void SetUp() {}
+    virtual void TearDown() {}
 };
 
-TEST_F(DRIVER_AI_DRV_API_TEST, DrvGetDeviceStatusTest) {
+TEST_F(DRIVER_AI_DRV_API_TEST, DrvGetDeviceStatusTest)
+{
     GlobalMockObject::verify();
 
     drvStatus_t deviceStatus = DRV_STATUS_COMMUNICATION_LOST;
@@ -54,7 +53,8 @@ TEST_F(DRIVER_AI_DRV_API_TEST, DrvGetDeviceStatusTest) {
     EXPECT_EQ(false, analysis::dvvp::driver::DrvGetDeviceStatus(0));
 }
 
-TEST_F(DRIVER_AI_DRV_API_TEST, DrvGetDevNumTest) {
+TEST_F(DRIVER_AI_DRV_API_TEST, DrvGetDevNumTest)
+{
     GlobalMockObject::verify();
 
     uint32_t num_dev = 0;
@@ -71,13 +71,14 @@ TEST_F(DRIVER_AI_DRV_API_TEST, DrvGetDevNumTest) {
     EXPECT_EQ((int)num_dev, analysis::dvvp::driver::DrvGetDevNum());
 }
 
-TEST_F(DRIVER_AI_DRV_API_TEST, DrvFftsProfileStart) {
+TEST_F(DRIVER_AI_DRV_API_TEST, DrvFftsProfileStart)
+{
     GlobalMockObject::verify();
 
     analysis::dvvp::driver::AI_DRV_CHANNEL prof_channel = analysis::dvvp::driver::PROF_CHANNEL_FFTS_PROFILE_TASK;
-    std::vector<int>  prof_cores;
+    std::vector<int> prof_cores;
     std::vector<std::string> prof_events;
-    std::vector<int>  prof_aivCores;
+    std::vector<int> prof_aivCores;
     std::vector<std::string> prof_aivEvents;
     std::string prof_data_file_path = "/path/to/data";
 
@@ -94,8 +95,8 @@ TEST_F(DRIVER_AI_DRV_API_TEST, DrvFftsProfileStart) {
     drvPeripheralProfileCfg.aicMode = 1;
     drvPeripheralProfileCfg.aivMode = 1;
 
-    StarsAccProfileConfigT *configP = static_cast<StarsAccProfileConfigT*>(
-        Utils::ProfMalloc(sizeof(StarsAccProfileConfigT)));
+    StarsAccProfileConfigT* configP =
+        static_cast<StarsAccProfileConfigT*>(Utils::ProfMalloc(sizeof(StarsAccProfileConfigT)));
     EXPECT_NE(configP, nullptr);
     if (configP == nullptr) {
         return;
@@ -103,22 +104,22 @@ TEST_F(DRIVER_AI_DRV_API_TEST, DrvFftsProfileStart) {
     configP->aicScale = 1;
     drvPeripheralProfileCfg.configP = configP;
 
-    MOCKER(prof_drv_start)
-        .stubs()
-        .will(returnValue(PROF_ERROR))
-        .then(returnValue(PROF_OK));
+    MOCKER(prof_drv_start).stubs().will(returnValue(PROF_ERROR)).then(returnValue(PROF_OK));
 
-    EXPECT_EQ(PROFILING_FAILED, analysis::dvvp::driver::DrvFftsProfileStart(drvPeripheralProfileCfg,
-                prof_cores, prof_events, prof_aivCores, prof_aivEvents));
+    EXPECT_EQ(
+        PROFILING_FAILED, analysis::dvvp::driver::DrvFftsProfileStart(
+                              drvPeripheralProfileCfg, prof_cores, prof_events, prof_aivCores, prof_aivEvents));
 
-    EXPECT_EQ(PROFILING_SUCCESS, analysis::dvvp::driver::DrvFftsProfileStart(drvPeripheralProfileCfg,
-                prof_cores, prof_events, prof_aivCores, prof_aivEvents));
-    void *configVoid = static_cast<void *>(configP);
+    EXPECT_EQ(
+        PROFILING_SUCCESS, analysis::dvvp::driver::DrvFftsProfileStart(
+                               drvPeripheralProfileCfg, prof_cores, prof_events, prof_aivCores, prof_aivEvents));
+    void* configVoid = static_cast<void*>(configP);
     Utils::ProfFree(configVoid);
     EXPECT_EQ(configVoid, nullptr);
 }
 
-TEST_F(DRIVER_AI_DRV_API_TEST, DrvTsFwStart) {
+TEST_F(DRIVER_AI_DRV_API_TEST, DrvTsFwStart)
+{
     GlobalMockObject::verify();
 
     analysis::dvvp::driver::DrvPeripheralProfileCfg peripheralCfg;
@@ -137,10 +138,7 @@ TEST_F(DRIVER_AI_DRV_API_TEST, DrvTsFwStart) {
     profileParams->ai_core_status = "on";
     profileParams->ai_vector_status = "on";
     profileParams->taskTsfw = "on";
-    MOCKER(prof_drv_start)
-        .stubs()
-        .will(returnValue(PROF_ERROR))
-        .then(returnValue(PROF_OK));
+    MOCKER(prof_drv_start).stubs().will(returnValue(PROF_ERROR)).then(returnValue(PROF_OK));
 
     EXPECT_EQ(PROFILING_FAILED, analysis::dvvp::driver::DrvTsFwStart(peripheralCfg, profileParams));
 

@@ -23,22 +23,22 @@ extern "C" {
 #endif
 extern int snprintf_s(char* strDest, size_t destMax, size_t count, const char* format, ...);
 extern INT32 mmMutexDestroy(mmMutex_t* mutex);
-extern INT32 mmSemWait_stub(mmSem_t *sem);
-extern INT32 mmCreateTaskWithDetach_stub(mmThread *pstThreadHandle, mmUserBlock_t *pstFuncBlock);
-extern INT32 mmCreateTask_stub(mmThread *pstThreadHandle, mmUserBlock_t *pstFuncBlock);
-extern INT32 mmCreateTask_stub1( mmThread *pstThreadHandle, mmUserBlock_t *pstFuncBlock);
-extern INT32 mmSetThreadName(mmThread *threadHandle, const CHAR* name);
-extern INT32 mmCreateTaskWithThreadAttr_stub(mmThread *threadHandle, const mmUserBlock_t *funcBlock,
-                                             const mmThreadAttr *threadAttr);
-extern INT32 mmCreateTaskWithThreadAttr_stub2(mmThread *threadHandle, const mmUserBlock_t *funcBlock,
-                                              const mmThreadAttr *threadAttr);
-extern INT32 mmCreateTaskWithThreadAttr_stub3(mmThread *threadHandle, const mmUserBlock_t *funcBlock,
-                                              const mmThreadAttr *threadAttr);
-extern INT32 mmCreateTaskWithThreadAttr_stub4(mmThread *threadHandle, const mmUserBlock_t *funcBlock,
-                                              const mmThreadAttr *threadAttr);
-extern CHAR *mmGetErrorFormatMessage(mmErrorMsg errnum, CHAR *buf, mmSize size);
+extern INT32 mmSemWait_stub(mmSem_t* sem);
+extern INT32 mmCreateTaskWithDetach_stub(mmThread* pstThreadHandle, mmUserBlock_t* pstFuncBlock);
+extern INT32 mmCreateTask_stub(mmThread* pstThreadHandle, mmUserBlock_t* pstFuncBlock);
+extern INT32 mmCreateTask_stub1(mmThread* pstThreadHandle, mmUserBlock_t* pstFuncBlock);
+extern INT32 mmSetThreadName(mmThread* threadHandle, const CHAR* name);
+extern INT32 mmCreateTaskWithThreadAttr_stub(
+    mmThread* threadHandle, const mmUserBlock_t* funcBlock, const mmThreadAttr* threadAttr);
+extern INT32 mmCreateTaskWithThreadAttr_stub2(
+    mmThread* threadHandle, const mmUserBlock_t* funcBlock, const mmThreadAttr* threadAttr);
+extern INT32 mmCreateTaskWithThreadAttr_stub3(
+    mmThread* threadHandle, const mmUserBlock_t* funcBlock, const mmThreadAttr* threadAttr);
+extern INT32 mmCreateTaskWithThreadAttr_stub4(
+    mmThread* threadHandle, const mmUserBlock_t* funcBlock, const mmThreadAttr* threadAttr);
+extern CHAR* mmGetErrorFormatMessage(mmErrorMsg errnum, CHAR* buf, mmSize size);
 #ifdef __cplusplus
 }
 #endif
 
-#endif//__IDE_MMPA_STUB_H
+#endif //__IDE_MMPA_STUB_H

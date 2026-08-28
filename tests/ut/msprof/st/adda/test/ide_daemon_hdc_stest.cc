@@ -22,9 +22,9 @@ extern int g_sprintf_s_flag;
 extern int g_sprintf_s_flag2;
 extern struct IdeGlobalCtrlInfo g_ideGlobalInfo;
 
-extern int HdcDaemonServerRegister(uint32_t num, const std::vector<uint32_t> &dev);
-extern int IdeDaemonHdcProcessEventOne(const struct DevSession &devSession);
-extern int GetDevCount(uint32_t &devCount, std::vector<uint32_t> &devs);
+extern int HdcDaemonServerRegister(uint32_t num, const std::vector<uint32_t>& dev);
+extern int IdeDaemonHdcProcessEventOne(const struct DevSession& devSession);
+extern int GetDevCount(uint32_t& devCount, std::vector<uint32_t>& devs);
 extern int IdeHdcCheckRunEnv(HDC_SESSION session);
 extern void IdeInitGlobalCtrlInfoDev();
 extern void IdeDestroyGlobalCtrlInfoDev();
@@ -32,36 +32,25 @@ extern int HdcDaemonDestroy();
 extern void IdeDestroyGlobalCtrlInfo();
 extern IdeThreadArg HdcCreateHdcServerProc(IdeThreadArg args);
 extern void IdeInitGlobalCtrlInfo();
-extern int IdeDaemonReadReq(const struct IdeTransChannel &handle, IdeTlvReqAddr req);
+extern int IdeDaemonReadReq(const struct IdeTransChannel& handle, IdeTlvReqAddr req);
 
 using DevInfoT = struct IdeDevInfo;
 
-class IDE_DAEMON_HDC_STEST: public testing::Test {
+class IDE_DAEMON_HDC_STEST : public testing::Test {
 protected:
-    virtual void SetUp() {
-    }
-    virtual void TearDown() {
-        GlobalMockObject::verify();
-    }
+    virtual void SetUp() {}
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
-int devStartupNotifier(uint32_t num, uint32_t *dev)
-{
-    return 0;
-}
+int devStartupNotifier(uint32_t num, uint32_t* dev) { return 0; }
 
 TEST_F(IDE_DAEMON_HDC_STEST, HdcDaemonInit_get_dev_num_error)
 {
     uint32_t count = DEVICE_NUM_MAX + 1;
 
-    MOCKER(mmCreateTaskWithThreadAttr)
-        .stubs()
-        .will(returnValue(EN_OK));
+    MOCKER(mmCreateTaskWithThreadAttr).stubs().will(returnValue(EN_OK));
 
-    MOCKER(drvGetDevNum)
-        .stubs()
-        .with(outBoundP(&count, sizeof(uint32_t)))
-        .will(returnValue(DRV_ERROR_NONE));
+    MOCKER(drvGetDevNum).stubs().with(outBoundP(&count, sizeof(uint32_t))).will(returnValue(DRV_ERROR_NONE));
 
     EXPECT_EQ(IDE_DAEMON_ERROR, HdcDaemonInit());
 }
@@ -70,18 +59,11 @@ TEST_F(IDE_DAEMON_HDC_STEST, HdcDaemonInit)
 {
     uint32_t count = 1;
 
-    MOCKER(mmCreateTaskWithThreadAttr)
-        .stubs()
-        .will(returnValue(EN_OK));
+    MOCKER(mmCreateTaskWithThreadAttr).stubs().will(returnValue(EN_OK));
 
-    MOCKER(drvHdcClientCreate)
-        .stubs()
-        .will(returnValue(DRV_ERROR_NONE));
+    MOCKER(drvHdcClientCreate).stubs().will(returnValue(DRV_ERROR_NONE));
 
-    MOCKER(drvGetDevNum)
-        .stubs()
-        .with(outBoundP(&count, sizeof(uint32_t)))
-        .will(returnValue(DRV_ERROR_NONE));
+    MOCKER(drvGetDevNum).stubs().with(outBoundP(&count, sizeof(uint32_t))).will(returnValue(DRV_ERROR_NONE));
 
     EXPECT_EQ(IDE_DAEMON_ERROR, HdcDaemonInit());
 }
@@ -91,14 +73,9 @@ TEST_F(IDE_DAEMON_HDC_STEST, GetDevCount)
     uint32_t devCount = 0;
     std::vector<uint32_t> devs(DEVICE_NUM_MAX, 0);
 
-    MOCKER(mmCreateTaskWithThreadAttr)
-        .stubs()
-        .will(returnValue(EN_OK));
+    MOCKER(mmCreateTaskWithThreadAttr).stubs().will(returnValue(EN_OK));
 
-    MOCKER(drvGetDevNum)
-        .stubs()
-        .with(outBoundP(&devCount, sizeof(uint32_t)))
-        .will(returnValue(DRV_ERROR_NONE));
+    MOCKER(drvGetDevNum).stubs().with(outBoundP(&devCount, sizeof(uint32_t))).will(returnValue(DRV_ERROR_NONE));
 
     EXPECT_EQ(IDE_DAEMON_OK, GetDevCount(devCount, devs));
 }
@@ -124,13 +101,9 @@ TEST_F(IDE_DAEMON_HDC_STEST, IdeDestroyGlobalCtrlInfo)
 
     g_ideGlobalInfo.mapDevInfo.insert(std::pair<int, DevInfoT>(phyDevId, devInfo));
 
-    MOCKER(drvHdcServerDestroy)
-        .stubs()
-        .will(returnValue(DRV_ERROR_NONE));
+    MOCKER(drvHdcServerDestroy).stubs().will(returnValue(DRV_ERROR_NONE));
 
-    MOCKER(drvHdcClientDestroy)
-        .stubs()
-        .will(returnValue(DRV_ERROR_NONE));
+    MOCKER(drvHdcClientDestroy).stubs().will(returnValue(DRV_ERROR_NONE));
 
     EXPECT_EQ(IDE_DAEMON_OK, HdcDaemonDestroy());
 
@@ -160,15 +133,9 @@ TEST_F(IDE_DAEMON_HDC_STEST, HdcCreateHdcServerProc)
     devInfo.phyDevId = phyDevId;
     g_ideGlobalInfo.mapDevInfo.insert(std::pair<int, DevInfoT>(phyDevId, devInfo));
 
-    MOCKER(mmCreateTaskWithThreadAttr)
-        .stubs()
-        .will(returnValue(EN_OK))
-        .then(returnValue(EN_ERR));
+    MOCKER(mmCreateTaskWithThreadAttr).stubs().will(returnValue(EN_OK)).then(returnValue(EN_ERR));
 
-    MOCKER(drvGetDevNum)
-        .stubs()
-        .with(outBoundP(&devCount, sizeof(uint32_t)))
-        .will(returnValue(DRV_ERROR_NONE));
+    MOCKER(drvGetDevNum).stubs().with(outBoundP(&devCount, sizeof(uint32_t))).will(returnValue(DRV_ERROR_NONE));
 
     IdeInitGlobalCtrlInfo();
     EXPECT_EQ(nullptr, HdcCreateHdcServerProc(args));
@@ -182,10 +149,10 @@ TEST_F(IDE_DAEMON_HDC_STEST, HdcCreateHdcServerProc)
 
 TEST_F(IDE_DAEMON_HDC_STEST, IdeDestroyGlobalCtrlInfoDev)
 {
-    std::vector<uint32_t> dev{1,2};
-    uint32_t  num = 2;
+    std::vector<uint32_t> dev{1, 2};
+    uint32_t num = 2;
 
-    EXPECT_EQ(IDE_DAEMON_OK, HdcDaemonServerRegister(2,dev));
+    EXPECT_EQ(IDE_DAEMON_OK, HdcDaemonServerRegister(2, dev));
     EXPECT_EQ(IDE_DAEMON_ERROR, HdcDaemonServerRegister(0, dev));
     EXPECT_EQ(IDE_DAEMON_ERROR, HdcDaemonServerRegister(1125, dev));
     EXPECT_EQ(IDE_DAEMON_OK, HdcDaemonDestroy());

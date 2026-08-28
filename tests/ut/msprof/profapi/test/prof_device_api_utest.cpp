@@ -19,12 +19,8 @@ using analysis::dvvp::common::error::PROFILING_FAILED;
 
 class PROF_DEVICE_API_UTEST : public testing::Test {
 protected:
-    virtual void SetUp() {
-        MOCKER(dlsym).stubs().will(returnValue((void *)nullptr));
-    }
-    virtual void TearDown() {
-        GlobalMockObject::verify();
-    }
+    virtual void SetUp() { MOCKER(dlsym).stubs().will(returnValue((void*)nullptr)); }
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 TEST_F(PROF_DEVICE_API_UTEST, ProfInit_func_nullptr)
@@ -34,7 +30,7 @@ TEST_F(PROF_DEVICE_API_UTEST, ProfInit_func_nullptr)
 
 TEST_F(PROF_DEVICE_API_UTEST, ProfRegisterCallback_func_nullptr)
 {
-    auto handle = [](uint32_t, void *, uint32_t) -> int32_t { return 0; };
+    auto handle = [](uint32_t, void*, uint32_t) -> int32_t { return 0; };
     EXPECT_EQ(PROFILING_FAILED, ProfDevApi::instance()->ProfRegisterCallback(0, handle));
 }
 
@@ -63,26 +59,17 @@ TEST_F(PROF_DEVICE_API_UTEST, ProfGetBatchReportMaxSize_func_nullptr)
     EXPECT_EQ(SIZE_MAX, ProfDevApi::instance()->ProfGetBatchReportMaxSize(0));
 }
 
-TEST_F(PROF_DEVICE_API_UTEST, MsprofInit_c_api)
-{
-    EXPECT_EQ(PROFILING_FAILED, MsprofInit(0, nullptr, 0));
-}
+TEST_F(PROF_DEVICE_API_UTEST, MsprofInit_c_api) { EXPECT_EQ(PROFILING_FAILED, MsprofInit(0, nullptr, 0)); }
 
 TEST_F(PROF_DEVICE_API_UTEST, MsprofRegisterCallback_c_api)
 {
-    auto handle = [](uint32_t, void *, uint32_t) -> int32_t { return 0; };
+    auto handle = [](uint32_t, void*, uint32_t) -> int32_t { return 0; };
     EXPECT_EQ(PROFILING_FAILED, MsprofRegisterCallback(0, handle));
 }
 
-TEST_F(PROF_DEVICE_API_UTEST, MsprofFinalize_c_api)
-{
-    EXPECT_EQ(PROFILING_FAILED, MsprofFinalize());
-}
+TEST_F(PROF_DEVICE_API_UTEST, MsprofFinalize_c_api) { EXPECT_EQ(PROFILING_FAILED, MsprofFinalize()); }
 
-TEST_F(PROF_DEVICE_API_UTEST, MsprofStr2Id_c_api)
-{
-    EXPECT_EQ(PROFILING_FAILED, MsprofStr2Id("test", 4));
-}
+TEST_F(PROF_DEVICE_API_UTEST, MsprofStr2Id_c_api) { EXPECT_EQ(PROFILING_FAILED, MsprofStr2Id("test", 4)); }
 
 TEST_F(PROF_DEVICE_API_UTEST, MsprofReportAdditionalInfo_c_api)
 {

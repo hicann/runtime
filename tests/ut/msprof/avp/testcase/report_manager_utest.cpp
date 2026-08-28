@@ -24,20 +24,14 @@
 #include "transport/uploader.h"
 #include "utils/utils.h"
 
-class TypeInfoUtest: public testing::Test {
+class TypeInfoUtest : public testing::Test {
 protected:
-    virtual void SetUp()
-    {
-    }
-    virtual void TearDown()
-    {
-        GlobalMockObject::verify();
-    }
+    virtual void SetUp() {}
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 TEST_F(TypeInfoUtest, RegisterTypeInfo)
 {
-    
     int16_t level = 5000;
     int32_t typeId = 1133;
     char hashData[] = "EventCreateEx";

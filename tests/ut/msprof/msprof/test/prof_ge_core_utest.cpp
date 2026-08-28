@@ -23,13 +23,13 @@ using namespace ge;
 
 extern "C" {
 extern int ProfAclDrvGetDevNum();
-extern int32_t ProfAclSubscribe(uint32_t type, uint32_t modelId, const aclprofSubscribeConfig *cfg);
+extern int32_t ProfAclSubscribe(uint32_t type, uint32_t modelId, const aclprofSubscribeConfig* cfg);
 extern int32_t ProfAclUnSubscribe(uint32_t type, uint32_t modelId);
-extern size_t ProfAclGetId(uint32_t type, const void *opInfo, size_t opInfoLen, uint32_t index);
-extern int32_t ProfAclInit(uint32_t type, const char *profilerPath, uint32_t length);
+extern size_t ProfAclGetId(uint32_t type, const void* opInfo, size_t opInfoLen, uint32_t index);
+extern int32_t ProfAclInit(uint32_t type, const char* profilerPath, uint32_t length);
 extern int32_t ProfAclFinalize(uint32_t type);
-extern int32_t ProfAclStart(uint32_t type, const ProfConfig *cfg);
-extern int32_t ProfAclStop(uint32_t type, const ProfConfig *cfg);
+extern int32_t ProfAclStart(uint32_t type, const ProfConfig* cfg);
+extern int32_t ProfAclStop(uint32_t type, const ProfConfig* cfg);
 }
 
 namespace prof_ge_core_stub {
@@ -38,7 +38,7 @@ namespace prof_ge_core_stub {
 // mockcpp signature deduction does not always reconcile cleanly, so we drive
 // branches via returnValue() of the int32_t status only.
 static const int32_t kVisibleDevId = 0;
-}  // namespace prof_ge_core_stub
+} // namespace prof_ge_core_stub
 
 class PROF_GE_CORE_UTEST : public testing::Test {
 protected:
@@ -73,20 +73,14 @@ TEST_F(PROF_GE_CORE_UTEST, AclProfGetGraphId_Smoke)
 // ge::aclgrphProfInit branches (lines 40-49)
 TEST_F(PROF_GE_CORE_UTEST, AclgrphProfInit_DynProfMode_Unsupported)
 {
-    MOCKER_CPP(&analysis::dvvp::common::utils::Utils::IsDynProfMode)
-        .stubs()
-        .will(returnValue(true));
+    MOCKER_CPP(&analysis::dvvp::common::utils::Utils::IsDynProfMode).stubs().will(returnValue(true));
     EXPECT_EQ(ACL_ERROR_FEATURE_UNSUPPORTED, ge::aclgrphProfInit("/tmp/ge_init", 12));
 }
 
 TEST_F(PROF_GE_CORE_UTEST, AclgrphProfInit_ProfAclInitFail)
 {
-    MOCKER_CPP(&analysis::dvvp::common::utils::Utils::IsDynProfMode)
-        .stubs()
-        .will(returnValue(false));
-    MOCKER(ProfAclInit)
-        .stubs()
-        .will(returnValue(static_cast<int32_t>(ACL_ERROR_PROFILING_FAILURE)));
+    MOCKER_CPP(&analysis::dvvp::common::utils::Utils::IsDynProfMode).stubs().will(returnValue(false));
+    MOCKER(ProfAclInit).stubs().will(returnValue(static_cast<int32_t>(ACL_ERROR_PROFILING_FAILURE)));
     EXPECT_EQ(ge::GE_PROF_FAILED, ge::aclgrphProfInit("/tmp/ge_init_fail", 16));
 }
 
@@ -94,9 +88,7 @@ TEST_F(PROF_GE_CORE_UTEST, AclgrphProfInit_Success)
 {
     // Mock the extern "C" ProfAclInit free function so the success path returns
     // without actually starting the engine (which would interfere with subsequent tests).
-    MOCKER_CPP(&analysis::dvvp::common::utils::Utils::IsDynProfMode)
-        .stubs()
-        .will(returnValue(false));
+    MOCKER_CPP(&analysis::dvvp::common::utils::Utils::IsDynProfMode).stubs().will(returnValue(false));
     MOCKER(ProfAclInit).stubs().will(returnValue(static_cast<int32_t>(0)));
     EXPECT_EQ(ge::GE_PROF_SUCCESS, ge::aclgrphProfInit("/tmp/ge_init_ok", 15));
 }
@@ -109,10 +101,7 @@ TEST_F(PROF_GE_CORE_UTEST, AclgrphProfFinalize_Smoke)
 }
 
 // IsProfConfigValid: nullptr deviceIdList (line 60-65)
-TEST_F(PROF_GE_CORE_UTEST, IsProfConfigValid_NullDeviceIdList)
-{
-    EXPECT_FALSE(ge::IsProfConfigValid(nullptr, 1));
-}
+TEST_F(PROF_GE_CORE_UTEST, IsProfConfigValid_NullDeviceIdList) { EXPECT_FALSE(ge::IsProfConfigValid(nullptr, 1)); }
 
 // IsProfConfigValid: deviceNums == 0 (line 66-71)
 TEST_F(PROF_GE_CORE_UTEST, IsProfConfigValid_ZeroDeviceNums)
@@ -176,7 +165,7 @@ TEST_F(PROF_GE_CORE_UTEST, AclgrphProfCreateConfig_VisibleDevNotSupport)
         .will(returnValue(static_cast<int32_t>(PROFILING_NOTSUPPORT)));
     MOCKER(ProfAclDrvGetDevNum).stubs().will(returnValue(8));
     uint32_t devList[1] = {0};
-    auto *cfg = ge::aclgrphProfCreateConfig(devList, 1, (ge::ProfilingAicoreMetrics)PROF_AICORE_NONE, nullptr, 0);
+    auto* cfg = ge::aclgrphProfCreateConfig(devList, 1, (ge::ProfilingAicoreMetrics)PROF_AICORE_NONE, nullptr, 0);
     EXPECT_NE(nullptr, cfg);
     EXPECT_EQ(ge::GE_PROF_SUCCESS, ge::aclgrphProfDestroyConfig(cfg));
 }
@@ -189,7 +178,7 @@ TEST_F(PROF_GE_CORE_UTEST, AclgrphProfCreateConfig_VisibleDevFailed)
         .will(returnValue(static_cast<int32_t>(PROFILING_FAILED)));
     MOCKER(ProfAclDrvGetDevNum).stubs().will(returnValue(8));
     uint32_t devList[1] = {0};
-    auto *cfg = ge::aclgrphProfCreateConfig(devList, 1, (ge::ProfilingAicoreMetrics)PROF_AICORE_NONE, nullptr, 0);
+    auto* cfg = ge::aclgrphProfCreateConfig(devList, 1, (ge::ProfilingAicoreMetrics)PROF_AICORE_NONE, nullptr, 0);
     EXPECT_EQ(nullptr, cfg);
 }
 
@@ -201,7 +190,8 @@ TEST_F(PROF_GE_CORE_UTEST, AclgrphProfCreateConfig_TaskTimeL1Propagation)
         .will(returnValue(static_cast<int32_t>(PROFILING_SUCCESS)));
     MOCKER(ProfAclDrvGetDevNum).stubs().will(returnValue(8));
     uint32_t devList[1] = {0};
-    auto *cfg = ge::aclgrphProfCreateConfig(devList, 1, (ge::ProfilingAicoreMetrics)PROF_AICORE_NONE, nullptr, PROF_TASK_TIME_L1);
+    auto* cfg = ge::aclgrphProfCreateConfig(
+        devList, 1, (ge::ProfilingAicoreMetrics)PROF_AICORE_NONE, nullptr, PROF_TASK_TIME_L1);
     EXPECT_NE(nullptr, cfg);
     EXPECT_EQ(ge::GE_PROF_SUCCESS, ge::aclgrphProfDestroyConfig(cfg));
 }
@@ -213,7 +203,8 @@ TEST_F(PROF_GE_CORE_UTEST, AclgrphProfCreateConfig_TaskTimeL2Propagation)
         .will(returnValue(static_cast<int32_t>(PROFILING_SUCCESS)));
     MOCKER(ProfAclDrvGetDevNum).stubs().will(returnValue(8));
     uint32_t devList[1] = {0};
-    auto *cfg = ge::aclgrphProfCreateConfig(devList, 1, (ge::ProfilingAicoreMetrics)PROF_AICORE_NONE, nullptr, PROF_TASK_TIME_L2);
+    auto* cfg = ge::aclgrphProfCreateConfig(
+        devList, 1, (ge::ProfilingAicoreMetrics)PROF_AICORE_NONE, nullptr, PROF_TASK_TIME_L2);
     EXPECT_NE(nullptr, cfg);
     EXPECT_EQ(ge::GE_PROF_SUCCESS, ge::aclgrphProfDestroyConfig(cfg));
 }
@@ -225,7 +216,8 @@ TEST_F(PROF_GE_CORE_UTEST, AclgrphProfCreateConfig_TaskTimeL3Propagation)
         .will(returnValue(static_cast<int32_t>(PROFILING_SUCCESS)));
     MOCKER(ProfAclDrvGetDevNum).stubs().will(returnValue(8));
     uint32_t devList[1] = {0};
-    auto *cfg = ge::aclgrphProfCreateConfig(devList, 1, (ge::ProfilingAicoreMetrics)PROF_AICORE_NONE, nullptr, PROF_TASK_TIME_L3);
+    auto* cfg = ge::aclgrphProfCreateConfig(
+        devList, 1, (ge::ProfilingAicoreMetrics)PROF_AICORE_NONE, nullptr, PROF_TASK_TIME_L3);
     EXPECT_NE(nullptr, cfg);
     EXPECT_EQ(ge::GE_PROF_SUCCESS, ge::aclgrphProfDestroyConfig(cfg));
 }
@@ -237,7 +229,8 @@ TEST_F(PROF_GE_CORE_UTEST, AclgrphProfCreateConfig_OpAttrPropagation)
         .will(returnValue(static_cast<int32_t>(PROFILING_SUCCESS)));
     MOCKER(ProfAclDrvGetDevNum).stubs().will(returnValue(8));
     uint32_t devList[1] = {0};
-    auto *cfg = ge::aclgrphProfCreateConfig(devList, 1, (ge::ProfilingAicoreMetrics)PROF_AICORE_NONE, nullptr, PROF_OP_ATTR);
+    auto* cfg =
+        ge::aclgrphProfCreateConfig(devList, 1, (ge::ProfilingAicoreMetrics)PROF_AICORE_NONE, nullptr, PROF_OP_ATTR);
     EXPECT_NE(nullptr, cfg);
     EXPECT_EQ(ge::GE_PROF_SUCCESS, ge::aclgrphProfDestroyConfig(cfg));
 }
@@ -256,11 +249,9 @@ TEST_F(PROF_GE_CORE_UTEST, AclgrphProfStart_Fail)
         .will(returnValue(static_cast<int32_t>(PROFILING_SUCCESS)));
     MOCKER(ProfAclDrvGetDevNum).stubs().will(returnValue(8));
     uint32_t devList[1] = {0};
-    auto *cfg = ge::aclgrphProfCreateConfig(devList, 1, (ge::ProfilingAicoreMetrics)PROF_AICORE_NONE, nullptr, 0);
+    auto* cfg = ge::aclgrphProfCreateConfig(devList, 1, (ge::ProfilingAicoreMetrics)PROF_AICORE_NONE, nullptr, 0);
     ASSERT_NE(nullptr, cfg);
-    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::ProfStartPrecheck)
-        .stubs()
-        .will(returnValue(ACL_ERROR_PROFILING_FAILURE));
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::ProfStartPrecheck).stubs().will(returnValue(ACL_ERROR_PROFILING_FAILURE));
     EXPECT_EQ(ge::GE_PROF_FAILED, ge::aclgrphProfStart(cfg));
     EXPECT_EQ(ge::GE_PROF_SUCCESS, ge::aclgrphProfDestroyConfig(cfg));
 }
@@ -273,16 +264,12 @@ TEST_F(PROF_GE_CORE_UTEST, AclgrphProfStop_Fail)
         .will(returnValue(static_cast<int32_t>(PROFILING_SUCCESS)));
     MOCKER(ProfAclDrvGetDevNum).stubs().will(returnValue(8));
     uint32_t devList[1] = {0};
-    auto *cfg = ge::aclgrphProfCreateConfig(devList, 1, (ge::ProfilingAicoreMetrics)PROF_AICORE_NONE, nullptr, 0);
+    auto* cfg = ge::aclgrphProfCreateConfig(devList, 1, (ge::ProfilingAicoreMetrics)PROF_AICORE_NONE, nullptr, 0);
     ASSERT_NE(nullptr, cfg);
     // PrepareStopAclApi short-circuits to success when !IsInited(), so force IsInited() to
     // return true to reach the ProfStopPrecheck failure path under test.
-    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::IsInited)
-        .stubs()
-        .will(returnValue(true));
-    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::ProfStopPrecheck)
-        .stubs()
-        .will(returnValue(ACL_ERROR_PROFILING_FAILURE));
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::IsInited).stubs().will(returnValue(true));
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::ProfStopPrecheck).stubs().will(returnValue(ACL_ERROR_PROFILING_FAILURE));
     EXPECT_EQ(ge::GE_PROF_FAILED, ge::aclgrphProfStop(cfg));
     EXPECT_EQ(ge::GE_PROF_SUCCESS, ge::aclgrphProfDestroyConfig(cfg));
 }

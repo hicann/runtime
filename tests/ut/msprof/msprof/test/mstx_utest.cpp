@@ -1,12 +1,12 @@
 /**
-* Copyright (c) 2026 Huawei Technologies Co., Ltd.
-* This program is free software, you can redistribute it and/or modify it under the terms and conditions of
-* CANN Open Software License Agreement Version 2.0 (the "License").
-* Please refer to the License for details. You may not use this file except in compliance with the License.
-* THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
-* INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
-* See LICENSE in the root of the software repository for the full text of the License.
-*/
+ * Copyright (c) 2026 Huawei Technologies Co., Ltd.
+ * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
+ * CANN Open Software License Agreement Version 2.0 (the "License").
+ * Please refer to the License for details. You may not use this file except in compliance with the License.
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+ * See LICENSE in the root of the software repository for the full text of the License.
+ */
 
 #include <thread>
 #include "gtest/gtest.h"
@@ -28,25 +28,26 @@ std::vector<MsprofAdditionalInfo> g_txdataList_;
 
 int32_t MstxAdditionalInfoReportCallbackStub(uint32_t agingFlag, const VOID_PTR data, uint32_t len)
 {
-    g_txdataList_.push_back(*(reinterpret_cast<const MsprofAdditionalInfo *>(data)));
+    g_txdataList_.push_back(*(reinterpret_cast<const MsprofAdditionalInfo*>(data)));
     return PROFILING_SUCCESS;
 }
 
 class MstxUtest : public testing::Test {
 protected:
-virtual void SetUp()
-{
-    g_txdataList_.clear();
-    MsprofTxManager::instance()->RegisterReporterCallback(MstxAdditionalInfoReportCallbackStub);
-    MsprofTxManager::instance()->Init();
-}
-virtual void TearDown()
-{
-    MsprofTxManager::instance()->UnInit();
-    MsprofTxManager::instance()->reporter_.reset();
-    MsprofTxManager::instance()->stampPool_.reset();
-    g_txdataList_.clear();
-}
+    virtual void SetUp()
+    {
+        g_txdataList_.clear();
+        MsprofTxManager::instance()->RegisterReporterCallback(MstxAdditionalInfoReportCallbackStub);
+        MsprofTxManager::instance()->Init();
+    }
+    virtual void TearDown()
+    {
+        MsprofTxManager::instance()->UnInit();
+        MsprofTxManager::instance()->reporter_.reset();
+        MsprofTxManager::instance()->stampPool_.reset();
+        g_txdataList_.clear();
+    }
+
 private:
     std::string emptyMstxDomainInclude = "";
     std::string emptyMstxDomainExclude = "";
@@ -68,22 +69,14 @@ struct MstxContext {
 
 struct MstxContext g_ctx = {
     {
-      0,
-      &g_mstxMarkAPtr,
-      &g_mstxRangeStartAPtr,
-      &g_mstxRangeEndPtr,
-      0,
+        0,
+        &g_mstxMarkAPtr,
+        &g_mstxRangeStartAPtr,
+        &g_mstxRangeEndPtr,
+        0,
     },
-    {
-      0,
-      &g_mstxDomainCreateAPtr,
-      &g_mstxDomainDestroyPtr,
-      &g_mstxDomainMarkAPtr,
-      &g_mstxDomainRangeStartAPtr,
-      &g_mstxDomainRangeEndPtr,
-      0
-    }
-};
+    {0, &g_mstxDomainCreateAPtr, &g_mstxDomainDestroyPtr, &g_mstxDomainMarkAPtr, &g_mstxDomainRangeStartAPtr,
+     &g_mstxDomainRangeEndPtr, 0}};
 
 void MstxApiThreadFunc()
 {
@@ -91,16 +84,16 @@ void MstxApiThreadFunc()
     uint64_t markEventId = 1;
     uint64_t rangeEventId = 2;
     MstxDataHandler::instance()->SaveMstxData("test_mark", markEventId, MstxDataType::DATA_MARK, testDomain);
-    MstxDataHandler::instance()->SaveMstxData("test_range_start", rangeEventId, MstxDataType::DATA_RANGE_START,
-                                            testDomain);
+    MstxDataHandler::instance()->SaveMstxData(
+        "test_range_start", rangeEventId, MstxDataType::DATA_RANGE_START, testDomain);
     MstxDataHandler::instance()->SaveMstxData(nullptr, rangeEventId, MstxDataType::DATA_RANGE_END);
 }
 
-uint64_t CalculateHash(const std::string &str)
+uint64_t CalculateHash(const std::string& str)
 {
-    const uint32_t uint32Bits = 32;   // the number of uint32_t bits
-    uint32_t prime[2] = { 29, 131 };  // hash step size,
-    uint32_t hash[2] = { 0 };
+    const uint32_t uint32Bits = 32; // the number of uint32_t bits
+    uint32_t prime[2] = {29, 131};  // hash step size,
+    uint32_t hash[2] = {0};
 
     for (const char d : str) {
         hash[0] = hash[0] * prime[0] + static_cast<uint32_t>(d);
@@ -110,29 +103,29 @@ uint64_t CalculateHash(const std::string &str)
     return (((static_cast<uint64_t>(hash[0])) << uint32Bits) | hash[1]);
 }
 
-int GetFuncTableReturnFailStub(MstxFuncModule module, MstxFuncTable *outTable, unsigned int *outSize)
+int GetFuncTableReturnFailStub(MstxFuncModule module, MstxFuncTable* outTable, unsigned int* outSize)
 {
     return MSTX_FAIL;
 }
 
-int GetFuncTableReturnInvalidOutsizeStub(MstxFuncModule module, MstxFuncTable *outTable, unsigned int *outSize)
+int GetFuncTableReturnInvalidOutsizeStub(MstxFuncModule module, MstxFuncTable* outTable, unsigned int* outSize)
 {
     return MSTX_SUCCESS;
 }
 
-int GetFuncTableReturnValidOutsizeStub(MstxFuncModule module, MstxFuncTable *outTable, unsigned int *outSize)
+int GetFuncTableReturnValidOutsizeStub(MstxFuncModule module, MstxFuncTable* outTable, unsigned int* outSize)
 {
     switch (module) {
-      case MSTX_API_MODULE_CORE:
-          *outTable = g_ctx.mstxCoreFuncTable;
-          *outSize = MSTX_FUNC_END;
-          break;
-      case MSTX_API_MODULE_CORE_DOMAIN:
-          *outTable = g_ctx.mstxCore2FuncTable;
-          *outSize = MSTX_FUNC_DOMAIN_END;
-          break;
-      default:
-          return MSTX_FAIL;
+        case MSTX_API_MODULE_CORE:
+            *outTable = g_ctx.mstxCoreFuncTable;
+            *outSize = MSTX_FUNC_END;
+            break;
+        case MSTX_API_MODULE_CORE_DOMAIN:
+            *outTable = g_ctx.mstxCore2FuncTable;
+            *outSize = MSTX_FUNC_DOMAIN_END;
+            break;
+        default:
+            return MSTX_FAIL;
     }
     return MSTX_SUCCESS;
 }
@@ -179,8 +172,8 @@ TEST_F(MstxUtest, MstxDataHandlerReturnFailWhileSaveInvalidRangeEndId)
 {
     GlobalMockObject::verify();
     uint64_t invalidId = 10;
-    EXPECT_EQ(PROFILING_FAILED, MstxDataHandler::instance()->SaveMstxData("test", invalidId,
-                                                                        MstxDataType::DATA_RANGE_END));
+    EXPECT_EQ(
+        PROFILING_FAILED, MstxDataHandler::instance()->SaveMstxData("test", invalidId, MstxDataType::DATA_RANGE_END));
 }
 
 TEST_F(MstxUtest, MstxMarkAFuncWillReturnWhenMstxDataHandlerNotStartYet)
@@ -227,10 +220,10 @@ TEST_F(MstxUtest, MstxMarkAFuncWillSaveDataInputCommunicationDataMsgLengthLarger
     GlobalMockObject::verify();
     EXPECT_EQ(PROFILING_SUCCESS, MstxDataHandler::instance()->Start(emptyMstxDomainInclude, emptyMstxDomainExclude));
     std::string msg = "{\\\"count\\\": \\\"16\\\", \\\"dataType\\\": \\\"fp32\\\","
-                    "\\\"groupName\\\": \\\"hccl_world_groupxxxxxxxx\\\", \\\"op_name\\\": \\\"HcclSend\\\", "
-                    "\\\"DstRank\\\": \\\"100\\\", \\\"streamId\\\": \\\"5\\\", \\\"taskId\\\": \\\"1\\\", "
-                    "\\\"opType\\\": \\\"SUM\\\", \\\"linkType\\\": \\\"ub\\\", \\\"transportType\\\": "
-                    "\\\"SDMA\\\", \\\"SrcRank\\\": \\\"50\\\" }";
+                      "\\\"groupName\\\": \\\"hccl_world_groupxxxxxxxx\\\", \\\"op_name\\\": \\\"HcclSend\\\", "
+                      "\\\"DstRank\\\": \\\"100\\\", \\\"streamId\\\": \\\"5\\\", \\\"taskId\\\": \\\"1\\\", "
+                      "\\\"opType\\\": \\\"SUM\\\", \\\"linkType\\\": \\\"ub\\\", \\\"transportType\\\": "
+                      "\\\"SDMA\\\", \\\"SrcRank\\\": \\\"50\\\" }";
     MsprofMstxApi::MstxMarkAFunc(msg.c_str(), nullptr);
     EXPECT_EQ(PROFILING_SUCCESS, MstxDataHandler::instance()->Stop());
     EXPECT_EQ(2, g_txdataList_.size());
@@ -242,8 +235,8 @@ TEST_F(MstxUtest, MstxMarkAFuncWillSaveDataInputCommunicationDataMsgLengthSmalle
     GlobalMockObject::verify();
     EXPECT_EQ(PROFILING_SUCCESS, MstxDataHandler::instance()->Start(emptyMstxDomainInclude, emptyMstxDomainExclude));
     std::string msg = "{\\\"count\\\": \\\"16\\\", \\\"dataType\\\": \\\"fp32\\\","
-                    "\\\"groupName\\\": \\\"hccl_world_groupxxxxxxxx\\\", \\\"op_name\\\": \\\"HcclSend\\\","
-                    "\\\"streamId\\\": \\\"5\\\"}";
+                      "\\\"groupName\\\": \\\"hccl_world_groupxxxxxxxx\\\", \\\"op_name\\\": \\\"HcclSend\\\","
+                      "\\\"streamId\\\": \\\"5\\\"}";
     MsprofMstxApi::MstxMarkAFunc(msg.c_str(), nullptr);
     EXPECT_EQ(PROFILING_SUCCESS, MstxDataHandler::instance()->Stop());
     EXPECT_EQ(1, g_txdataList_.size());
@@ -255,9 +248,7 @@ TEST_F(MstxUtest, MstxMarkAFuncWillReturnWhenProfilerMarkExFail)
     EXPECT_EQ(PROFILING_SUCCESS, MstxDataHandler::instance()->Start(emptyMstxDomainInclude, emptyMstxDomainExclude));
     aclrtStream stream = (aclrtStream)0x12345678;
     const char* msg = "record";
-    MOCKER_CPP(&MsprofTxManager::LaunchDeviceTxTask)
-        .stubs()
-        .will(returnValue(PROFILING_FAILED));
+    MOCKER_CPP(&MsprofTxManager::LaunchDeviceTxTask).stubs().will(returnValue(PROFILING_FAILED));
     MsprofMstxApi::MstxMarkAFunc(msg, stream);
     EXPECT_EQ(PROFILING_SUCCESS, MstxDataHandler::instance()->Stop());
     EXPECT_EQ(0, g_txdataList_.size());
@@ -269,12 +260,8 @@ TEST_F(MstxUtest, MstxMarkAFuncWillReturnWhenSaveMstxDataFail)
     EXPECT_EQ(PROFILING_SUCCESS, MstxDataHandler::instance()->Start(emptyMstxDomainInclude, emptyMstxDomainExclude));
     aclrtStream stream = (aclrtStream)0x12345678;
     const char* msg = "record";
-    MOCKER_CPP(&MsprofTxManager::LaunchDeviceTxTask)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
-    MOCKER_CPP(&Collector::Dvvp::Mstx::MstxDataHandler::SaveMstxData)
-        .stubs()
-        .will(returnValue(PROFILING_FAILED));
+    MOCKER_CPP(&MsprofTxManager::LaunchDeviceTxTask).stubs().will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&Collector::Dvvp::Mstx::MstxDataHandler::SaveMstxData).stubs().will(returnValue(PROFILING_FAILED));
     MsprofMstxApi::MstxMarkAFunc(msg, stream);
     EXPECT_EQ(PROFILING_SUCCESS, MstxDataHandler::instance()->Stop());
     EXPECT_EQ(0, g_txdataList_.size());
@@ -286,9 +273,7 @@ TEST_F(MstxUtest, MstxMarkAFuncWillSaveMstxDataWhenSaveMstxDataSuccWithInputStre
     EXPECT_EQ(PROFILING_SUCCESS, MstxDataHandler::instance()->Start(emptyMstxDomainInclude, emptyMstxDomainExclude));
     aclrtStream stream = (aclrtStream)0x12345678;
     const char* msg = "record";
-    MOCKER_CPP(&MsprofTxManager::LaunchDeviceTxTask)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&MsprofTxManager::LaunchDeviceTxTask).stubs().will(returnValue(PROFILING_SUCCESS));
     MsprofMstxApi::MstxMarkAFunc(msg, stream);
     EXPECT_EQ(PROFILING_SUCCESS, MstxDataHandler::instance()->Stop());
     EXPECT_EQ(1, g_txdataList_.size());
@@ -334,9 +319,7 @@ TEST_F(MstxUtest, MstxRangeStartAFuncWillReturnZeroWhenProfilerMarkExFail)
     EXPECT_EQ(PROFILING_SUCCESS, MstxDataHandler::instance()->Start(emptyMstxDomainInclude, emptyMstxDomainExclude));
     aclrtStream stream = (aclrtStream)0x12345678;
     const char* msg = "record";
-    MOCKER_CPP(&MsprofTxManager::LaunchDeviceTxTask)
-        .stubs()
-        .will(returnValue(PROFILING_FAILED));
+    MOCKER_CPP(&MsprofTxManager::LaunchDeviceTxTask).stubs().will(returnValue(PROFILING_FAILED));
     EXPECT_EQ(MSTX_INVALID_RANGE_ID, MsprofMstxApi::MstxRangeStartAFunc(msg, stream));
     EXPECT_EQ(PROFILING_SUCCESS, MstxDataHandler::instance()->Stop());
 }
@@ -347,12 +330,8 @@ TEST_F(MstxUtest, MstxRangeStartAFuncWillReturnZeroWhenSaveMstxDataFail)
     EXPECT_EQ(PROFILING_SUCCESS, MstxDataHandler::instance()->Start(emptyMstxDomainInclude, emptyMstxDomainExclude));
     aclrtStream stream = (aclrtStream)0x87654321;
     const char* msg = "test";
-    MOCKER_CPP(&Collector::Dvvp::Mstx::MstxDataHandler::SaveMstxData)
-        .stubs()
-        .will(returnValue(PROFILING_FAILED));
-    MOCKER_CPP(&MsprofTxManager::LaunchDeviceTxTask)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&Collector::Dvvp::Mstx::MstxDataHandler::SaveMstxData).stubs().will(returnValue(PROFILING_FAILED));
+    MOCKER_CPP(&MsprofTxManager::LaunchDeviceTxTask).stubs().will(returnValue(PROFILING_SUCCESS));
     EXPECT_EQ(MSTX_INVALID_RANGE_ID, MsprofMstxApi::MstxRangeStartAFunc(msg, stream));
     EXPECT_EQ(PROFILING_SUCCESS, MstxDataHandler::instance()->Stop());
 }
@@ -363,9 +342,7 @@ TEST_F(MstxUtest, MstxRangeStartAFuncWillNotSaveMstxDataWhenMstxRangeEndIsNotCal
     EXPECT_EQ(PROFILING_SUCCESS, MstxDataHandler::instance()->Start(emptyMstxDomainInclude, emptyMstxDomainExclude));
     aclrtStream stream = (aclrtStream)0x12345678;
     const char* msg = "record";
-    MOCKER_CPP(&MsprofTxManager::LaunchDeviceTxTask)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&MsprofTxManager::LaunchDeviceTxTask).stubs().will(returnValue(PROFILING_SUCCESS));
     EXPECT_NE(MSTX_INVALID_RANGE_ID, MsprofMstxApi::MstxRangeStartAFunc(msg, stream));
     EXPECT_EQ(PROFILING_SUCCESS, MstxDataHandler::instance()->Stop());
     EXPECT_EQ(0, g_txdataList_.size());
@@ -376,9 +353,7 @@ TEST_F(MstxUtest, MstxRangeStartAFuncWillNotSaveMstxDataWhenMstxRangeEndIsNotCal
     GlobalMockObject::verify();
     EXPECT_EQ(PROFILING_SUCCESS, MstxDataHandler::instance()->Start(emptyMstxDomainInclude, emptyMstxDomainExclude));
     const char* msg = "record";
-    MOCKER_CPP(&MsprofTxManager::LaunchDeviceTxTask)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&MsprofTxManager::LaunchDeviceTxTask).stubs().will(returnValue(PROFILING_SUCCESS));
     EXPECT_NE(MSTX_INVALID_RANGE_ID, MsprofMstxApi::MstxRangeStartAFunc(msg, nullptr));
     EXPECT_EQ(PROFILING_SUCCESS, MstxDataHandler::instance()->Stop());
     EXPECT_EQ(0, g_txdataList_.size());
@@ -390,9 +365,7 @@ TEST_F(MstxUtest, MstxRangeStartAFuncWillSaveMstxDataWhenMstxRangeEndIsCalledWit
     EXPECT_EQ(PROFILING_SUCCESS, MstxDataHandler::instance()->Start(emptyMstxDomainInclude, emptyMstxDomainExclude));
     aclrtStream stream = (aclrtStream)0x12345678;
     const char* msg = "record";
-    MOCKER_CPP(&MsprofTxManager::LaunchDeviceTxTask)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&MsprofTxManager::LaunchDeviceTxTask).stubs().will(returnValue(PROFILING_SUCCESS));
     uint64_t id = MsprofMstxApi::MstxRangeStartAFunc(msg, stream);
     EXPECT_NE(MSTX_INVALID_RANGE_ID, id);
     MsprofMstxApi::MstxRangeEndFunc(id);
@@ -438,7 +411,7 @@ TEST_F(MstxUtest, MstxRangeEndFuncWillNotSaveMstxDataWhenSaveMstxDataFail)
         .stubs()
         .will(returnValue(PROFILING_SUCCESS)) // for range start
         .then(returnValue(PROFILING_FAILED)); // for range end
-    const char *msg = "record";
+    const char* msg = "record";
     uint64_t id = MsprofMstxApi::MstxRangeStartAFunc(msg, nullptr);
     EXPECT_NE(MSTX_INVALID_RANGE_ID, id);
 
@@ -451,7 +424,7 @@ TEST_F(MstxUtest, MstxRangeEndFuncWillSaveMstxDataWhenSaveMstxDataSuccWithNotInp
 {
     GlobalMockObject::verify();
     EXPECT_EQ(PROFILING_SUCCESS, MstxDataHandler::instance()->Start(emptyMstxDomainInclude, emptyMstxDomainExclude));
-    const char *msg = "record";
+    const char* msg = "record";
     uint64_t id = MsprofMstxApi::MstxRangeStartAFunc(msg, nullptr);
     EXPECT_NE(MSTX_INVALID_RANGE_ID, id);
 
@@ -464,13 +437,11 @@ TEST_F(MstxUtest, MstxRangeEndFuncWillNotSaveMstxDataWhenDefaultDomainIsNotEnabl
 {
     GlobalMockObject::verify();
     EXPECT_EQ(PROFILING_SUCCESS, MstxDataHandler::instance()->Start(emptyMstxDomainInclude, emptyMstxDomainExclude));
-    const char *msg = "record";
+    const char* msg = "record";
     uint64_t id = MsprofMstxApi::MstxRangeStartAFunc(msg, nullptr);
     EXPECT_NE(MSTX_INVALID_RANGE_ID, id);
 
-    MOCKER_CPP(&MstxDomainMgr::IsDomainEnabled)
-        .stubs()
-        .will(returnValue(false));
+    MOCKER_CPP(&MstxDomainMgr::IsDomainEnabled).stubs().will(returnValue(false));
     MsprofMstxApi::MstxRangeEndFunc(id);
     EXPECT_EQ(PROFILING_SUCCESS, MstxDataHandler::instance()->Stop());
     EXPECT_EQ(0, g_txdataList_.size());
@@ -481,10 +452,8 @@ TEST_F(MstxUtest, MstxRangeEndFuncWillSaveMstxDataWhenSaveMstxDataSuccWithInputS
     GlobalMockObject::verify();
     EXPECT_EQ(PROFILING_SUCCESS, MstxDataHandler::instance()->Start(emptyMstxDomainInclude, emptyMstxDomainExclude));
     aclrtStream stream = (aclrtStream)0x12345678;
-    const char *msg = "record";
-    MOCKER_CPP(&MsprofTxManager::LaunchDeviceTxTask)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    const char* msg = "record";
+    MOCKER_CPP(&MsprofTxManager::LaunchDeviceTxTask).stubs().will(returnValue(PROFILING_SUCCESS));
     uint64_t id = MsprofMstxApi::MstxRangeStartAFunc(msg, stream);
     EXPECT_NE(MSTX_INVALID_RANGE_ID, id);
 
@@ -499,7 +468,7 @@ TEST_F(MstxUtest, MstxRangeEndFuncWillNotSaveMstxDataWhenInputDomainDifferFromIn
     EXPECT_EQ(PROFILING_SUCCESS, MstxDataHandler::instance()->Start(emptyMstxDomainInclude, emptyMstxDomainExclude));
     auto domainHandler = MsprofMstxApi::MstxDomainCreateAFunc("domain");
     EXPECT_NE(nullptr, domainHandler);
-    const char *msg = "record";
+    const char* msg = "record";
     uint64_t id = MsprofMstxApi::MstxRangeStartAFunc(msg, nullptr);
     EXPECT_NE(MSTX_INVALID_RANGE_ID, id);
     MsprofMstxApi::MstxDomainRangeEndFunc(domainHandler, id);
@@ -622,9 +591,7 @@ TEST_F(MstxUtest, MstxDomainMarkAFuncWillNotMarkWhenInputInvalidDomain)
 TEST_F(MstxUtest, MstxDomainMarkAFuncWillNotMarkWhenSaveMstxDataFail)
 {
     GlobalMockObject::verify();
-    MOCKER_CPP(&Collector::Dvvp::Mstx::MstxDataHandler::SaveMstxData)
-        .stubs()
-        .will(returnValue(PROFILING_FAILED));
+    MOCKER_CPP(&Collector::Dvvp::Mstx::MstxDataHandler::SaveMstxData).stubs().will(returnValue(PROFILING_FAILED));
     auto handle = MsprofMstxApi::MstxDomainCreateAFunc("test");
     EXPECT_EQ(PROFILING_SUCCESS, MstxDataHandler::instance()->Start(emptyMstxDomainInclude, emptyMstxDomainExclude));
     MsprofMstxApi::MstxDomainMarkAFunc(handle, "test", nullptr);
@@ -648,9 +615,7 @@ TEST_F(MstxUtest, MstxDomainMarkAFuncWillNotMarkWhenProfilerMarkExFail)
 {
     GlobalMockObject::verify();
     aclrtStream stream = (aclrtStream)0x12345678;
-    MOCKER_CPP(&MsprofTxManager::LaunchDeviceTxTask)
-        .stubs()
-        .will(returnValue(PROFILING_FAILED));
+    MOCKER_CPP(&MsprofTxManager::LaunchDeviceTxTask).stubs().will(returnValue(PROFILING_FAILED));
     auto handle = MsprofMstxApi::MstxDomainCreateAFunc("test");
     EXPECT_EQ(PROFILING_SUCCESS, MstxDataHandler::instance()->Start(emptyMstxDomainInclude, emptyMstxDomainExclude));
     MsprofMstxApi::MstxDomainMarkAFunc(handle, "test", stream);
@@ -663,9 +628,7 @@ TEST_F(MstxUtest, MstxDomainMarkAFuncWillMarkWhenProfilerMarkExSucc)
 {
     GlobalMockObject::verify();
     aclrtStream stream = (aclrtStream)0x12345678;
-    MOCKER_CPP(&MsprofTxManager::LaunchDeviceTxTask)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&MsprofTxManager::LaunchDeviceTxTask).stubs().will(returnValue(PROFILING_SUCCESS));
     auto handle = MsprofMstxApi::MstxDomainCreateAFunc("test");
     EXPECT_EQ(PROFILING_SUCCESS, MstxDataHandler::instance()->Start(emptyMstxDomainInclude, emptyMstxDomainExclude));
     MsprofMstxApi::MstxDomainMarkAFunc(handle, "test", stream);

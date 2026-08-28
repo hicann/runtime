@@ -19,16 +19,14 @@ using namespace analysis::dvvp::common::error;
 using namespace analysis::dvvp::message;
 using namespace Analysis::Dvvp::JobWrapper;
 
-class JOB_FACTORY_UTEST: public testing::Test {
+class JOB_FACTORY_UTEST : public testing::Test {
 protected:
-    virtual void SetUp() {
-    }
-    virtual void TearDown() {
-
-    }
+    virtual void SetUp() {}
+    virtual void TearDown() {}
 };
 
-TEST_F(JOB_FACTORY_UTEST, JobSocFactory_CreateJobAdapter) {
+TEST_F(JOB_FACTORY_UTEST, JobSocFactory_CreateJobAdapter)
+{
     std::shared_ptr<JobSocFactory> jobFactory;
     MSVP_MAKE_SHARED0(jobFactory, JobSocFactory, return);
     EXPECT_NE(nullptr, jobFactory);

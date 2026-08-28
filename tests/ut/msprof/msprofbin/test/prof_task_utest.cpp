@@ -22,19 +22,18 @@ using namespace Analysis::Dvvp::Msprof;
 
 class PROF_TASK_UTEST : public testing::Test {
 protected:
-  virtual void SetUp() {}
-  virtual void TearDown() {}
+    virtual void SetUp() {}
+    virtual void TearDown() {}
 };
 
-TEST_F(PROF_TASK_UTEST, RpcTaskTest) {
+TEST_F(PROF_TASK_UTEST, RpcTaskTest)
+{
     GlobalMockObject::verify();
 
-    std::shared_ptr<analysis::dvvp::message::ProfileParams> params(
-    new analysis::dvvp::message::ProfileParams);   
+    std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams);
     SHARED_PTR_ALIA<ProfRpcTask> task(new ProfRpcTask(0, params));
     EXPECT_EQ(task->Init(), PROFILING_FAILED);
     EXPECT_EQ(task->Stop(), PROFILING_SUCCESS);
     task->PostSyncDataCtrl();
     EXPECT_EQ(task->UnInit(), PROFILING_SUCCESS);
-
 }

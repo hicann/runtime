@@ -32,7 +32,7 @@ static const char DAVID_V121_RM_RF[] = "rm -rf ./cliDavidV121stest_workspace";
 static const char DAVID_V121_MKDIR[] = "mkdir ./cliDavidV121stest_workspace";
 static const char DAVID_V121_OUTPUT_DIR[] = "--output=./cliDavidV121stest_workspace/output";
 
-class CliDavidV121Stest: public testing::Test {
+class CliDavidV121Stest : public testing::Test {
 protected:
     virtual void SetUp()
     {
@@ -48,7 +48,7 @@ protected:
     virtual void TearDown()
     {
         GlobalMockObject::verify();
-        DevprofDrvAicpu::instance()->isRegister_ = false;   // 重置aicpu注册状态，使单进程内能多次注册
+        DevprofDrvAicpu::instance()->isRegister_ = false; // 重置aicpu注册状态，使单进程内能多次注册
         EXPECT_EQ(2, SimulatorMgr().DelDeviceSimulator(2, StPlatformType::CHIP_CLOUD_V4));
         system(DAVID_V121_RM_RF);
         system("rm -rf ./cli");
@@ -74,102 +74,134 @@ TEST_F(CliDavidV121Stest, CliTaskTime)
 {
     // TaskTime
     const char* argv[] = {DAVID_V121_OUTPUT_DIR, "--task-time=on"};
-    std::vector<std::string> dataList = {"ffts_profile.data", "stars_soc.data", "ts_track.data", "ccu0.instr",
-        "ccu1.instr", "stars_soc_profile.data"};
+    std::vector<std::string> dataList = {"ffts_profile.data", "stars_soc.data", "ts_track.data",
+                                         "ccu0.instr",        "ccu1.instr",     "stars_soc_profile.data"};
     std::vector<std::string> blackDataList = {};
     MsprofMgr().SetDeviceCheckList(dataList, blackDataList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliDavidV121Stest, CliTaskTimeTwo)
 {
     // TaskTime
-    const char* argv[] = {DAVID_V121_OUTPUT_DIR, "cli",};
-    std::vector<std::string> dataList = {"ffts_profile.data", "stars_soc.data","ts_track.data", "lpmFreqConv.data",
-        "ccu0.instr", "ccu1.instr", "stars_soc_profile.data"};
+    const char* argv[] = {
+        DAVID_V121_OUTPUT_DIR,
+        "cli",
+    };
+    std::vector<std::string> dataList = {"ffts_profile.data",     "stars_soc.data", "ts_track.data",
+                                         "lpmFreqConv.data",      "ccu0.instr",     "ccu1.instr",
+                                         "stars_soc_profile.data"};
     std::vector<std::string> blackDataList = {};
     MsprofMgr().SetDeviceCheckList(dataList, blackDataList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppModeTwo(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppModeTwo(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliDavidV121Stest, CliPipeUtilizationTask)
 {
     // Task-based AI core/vector metrics: PipeUtilization
-    const char* argv[] = {DAVID_V121_OUTPUT_DIR, "--aic-metrics=PipeUtilization",};
+    const char* argv[] = {
+        DAVID_V121_OUTPUT_DIR,
+        "--aic-metrics=PipeUtilization",
+    };
     std::vector<std::string> dataList = {"ffts_profile.data", "lpmFreqConv.data", "ccu0.instr", "ccu1.instr"};
     MsprofMgr().SetDeviceCheckList(dataList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliDavidV121Stest, CliArithmeticUtilizationTask)
 {
     // Task-based AI core/vector metrics: ArithmeticUtilization
-    const char* argv[] = {DAVID_V121_OUTPUT_DIR, "--aic-metrics=ArithmeticUtilization",};
+    const char* argv[] = {
+        DAVID_V121_OUTPUT_DIR,
+        "--aic-metrics=ArithmeticUtilization",
+    };
     std::vector<std::string> dataList = {"ffts_profile.data", "lpmFreqConv.data", "ccu0.instr", "ccu1.instr"};
     MsprofMgr().SetDeviceCheckList(dataList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliDavidV121Stest, CliMemoryTask)
 {
     // Task-based AI core/vector metrics: Memory
-    const char* argv[] = {DAVID_V121_OUTPUT_DIR, "--aic-metrics=Memory",};
+    const char* argv[] = {
+        DAVID_V121_OUTPUT_DIR,
+        "--aic-metrics=Memory",
+    };
     std::vector<std::string> dataList = {"ffts_profile.data", "lpmFreqConv.data", "ccu0.instr", "ccu1.instr"};
     MsprofMgr().SetDeviceCheckList(dataList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliDavidV121Stest, CliMemoryL0Task)
 {
     // Task-based AI core/vector metrics: MemoryL0
-    const char* argv[] = {DAVID_V121_OUTPUT_DIR, "--aic-metrics=MemoryL0",};
+    const char* argv[] = {
+        DAVID_V121_OUTPUT_DIR,
+        "--aic-metrics=MemoryL0",
+    };
     std::vector<std::string> dataList = {"ffts_profile.data", "lpmFreqConv.data", "ccu0.instr", "ccu1.instr"};
     MsprofMgr().SetDeviceCheckList(dataList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliDavidV121Stest, CliMemoryUBTask)
 {
     // Task-based AI core/vector metrics: MemoryUB
-    const char* argv[] = {DAVID_V121_OUTPUT_DIR, "--aic-metrics=MemoryUB",};
+    const char* argv[] = {
+        DAVID_V121_OUTPUT_DIR,
+        "--aic-metrics=MemoryUB",
+    };
     std::vector<std::string> dataList = {"ffts_profile.data", "lpmFreqConv.data", "ccu0.instr", "ccu1.instr"};
     MsprofMgr().SetDeviceCheckList(dataList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliDavidV121Stest, CliResourceConflictRatioTask)
 {
     // Task-based AI core/vector metrics: ResourceConflictRatio
-    const char* argv[] = {DAVID_V121_OUTPUT_DIR, "--aic-metrics=ResourceConflictRatio",};
+    const char* argv[] = {
+        DAVID_V121_OUTPUT_DIR,
+        "--aic-metrics=ResourceConflictRatio",
+    };
     std::vector<std::string> dataList = {"ffts_profile.data", "lpmFreqConv.data", "ccu0.instr", "ccu1.instr"};
     MsprofMgr().SetDeviceCheckList(dataList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliDavidV121Stest, CliL2CacheTask)
 {
     // Task-based AI core/vector metrics: L2Cache
-    const char* argv[] = {DAVID_V121_OUTPUT_DIR, "--aic-metrics=L2Cache",};
+    const char* argv[] = {
+        DAVID_V121_OUTPUT_DIR,
+        "--aic-metrics=L2Cache",
+    };
     std::vector<std::string> dataList = {"ffts_profile.data", "lpmFreqConv.data", "ccu0.instr", "ccu1.instr"};
     MsprofMgr().SetDeviceCheckList(dataList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliDavidV121Stest, CliCustomTask)
 {
     // david: Custom pmu events
-    const char* argv[] = {DAVID_V121_OUTPUT_DIR, "--aic-metrics=Custom:0x0,0x1,0x2,0x711,0x712,0x713,0x714,0x715,0x716,0x717",};
+    const char* argv[] = {
+        DAVID_V121_OUTPUT_DIR,
+        "--aic-metrics=Custom:0x0,0x1,0x2,0x711,0x712,0x713,0x714,0x715,0x716,0x717",
+    };
     std::vector<std::string> dataList = {"ffts_profile.data", "lpmFreqConv.data", "ccu0.instr", "ccu1.instr"};
     MsprofMgr().SetDeviceCheckList(dataList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliDavidV121Stest, CliMemServiceflow)
 {
-    const char* argv[] = {DAVID_V121_OUTPUT_DIR, "--sys-mem-serviceflow=aaa,bbb,ccc", "--sys-hardware-mem=on",};
+    const char* argv[] = {
+        DAVID_V121_OUTPUT_DIR,
+        "--sys-mem-serviceflow=aaa,bbb,ccc",
+        "--sys-hardware-mem=on",
+    };
     std::vector<std::string> dataList = {"stars_soc_profile.data"};
     MsprofMgr().SetDeviceCheckList(dataList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliDavidV121Stest, CliSysCpuProfiling)
@@ -179,21 +211,21 @@ TEST_F(CliDavidV121Stest, CliSysCpuProfiling)
     const char* argv[] = {DAVID_V121_OUTPUT_DIR, "--sys-cpu-profiling=on"};
     std::vector<std::string> dataList = {"ai_ctrl_cpu.data"};
     MsprofMgr().SetDeviceCheckList(dataList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartBySysMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartBySysMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliDavidV121Stest, CliScale)
 {
     // david: scale normal
     const char* argv[] = {DAVID_V121_OUTPUT_DIR, "--optype=MatMulV3,Index"};
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliDavidV121Stest, CliScaleEmptyItem)
 {
     // david: scale empty item
     const char* argv[] = {DAVID_V121_OUTPUT_DIR, "--optype=MatMulV3,,Index"};
-    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliDavidV121Stest, CliScaleOverFlow)
@@ -202,7 +234,7 @@ TEST_F(CliDavidV121Stest, CliScaleOverFlow)
     std::string opType(257, 't');
     std::string scaleCmd = "--optype=" + opType;
     const char* argv[] = {DAVID_V121_OUTPUT_DIR, scaleCmd.c_str()};
-    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliDavidV121Stest, CliScaleCritical)
@@ -211,7 +243,7 @@ TEST_F(CliDavidV121Stest, CliScaleCritical)
     std::string opType(256, 't');
     std::string scaleCmd = "--optype=" + opType;
     const char* argv[] = {DAVID_V121_OUTPUT_DIR, scaleCmd.c_str()};
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliDavidV121Stest, CliScaleDuplicate)
@@ -225,5 +257,5 @@ TEST_F(CliDavidV121Stest, CliScaleDuplicate)
     }
     scaleCmd.pop_back();
     const char* argv[] = {DAVID_V121_OUTPUT_DIR, scaleCmd.c_str()};
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }

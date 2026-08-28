@@ -18,14 +18,12 @@ using namespace Analysis::Dvvp::MsprofErrMgr;
 class C_BASE_ERR_MGR_UTEST : public testing::Test {
 protected:
     virtual void SetUp() {}
-    virtual void TearDown() {
-        GlobalMockObject::verify();
-    }
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 TEST_F(C_BASE_ERR_MGR_UTEST, GetErrorManagerContext)
 {
-    auto &ctx = MsprofErrorManager::instance()->GetErrorManagerContext();
+    auto& ctx = MsprofErrorManager::instance()->GetErrorManagerContext();
     EXPECT_EQ(0UL, ctx.work_stream_id);
 }
 

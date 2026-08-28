@@ -14,14 +14,10 @@
 #include "param/profile_param.h"
 #include "hal/hal_prof.h"
 
-class JobManagerUtest: public testing::Test {
+class JobManagerUtest : public testing::Test {
 protected:
-    virtual void SetUp()
-    {
-    }
-    virtual void TearDown()
-    {
-    }
+    virtual void SetUp() {}
+    virtual void TearDown() {}
 };
 
 extern "C" {
@@ -29,7 +25,7 @@ typedef struct ICollectionJob {
     int32_t channelId;
     int32_t devId;
     int32_t jobId;
-    const ProfileParam *params;
+    const ProfileParam* params;
     int32_t (*Init)(struct ICollectionJob*);
     int32_t (*Process)(struct ICollectionJob*);
     int32_t (*Uninit)(struct ICollectionJob*);
@@ -38,55 +34,50 @@ typedef struct {
     bool isStart;
     bool quit;
     uint32_t deviceId;
-    const ProfileParam *params;
+    const ProfileParam* params;
     ICollectionJob* collectionJobs[PROF_CHANNEL_MAX];
 } JobManagerAttribute;
 #define NANO_PMU_EVENT_MAX_NUM 10
 typedef struct {
-    uint32_t tag;                                  // 0-enable immediately, 1-enable delay
-    uint32_t eventNum;                             // PMU count
-    uint16_t event[NANO_PMU_EVENT_MAX_NUM];        // PMU value
+    uint32_t tag;                           // 0-enable immediately, 1-enable delay
+    uint32_t eventNum;                      // PMU count
+    uint16_t event[NANO_PMU_EVENT_MAX_NUM]; // PMU value
 } TagNanoStarsProfileConfig;
 typedef struct {
     ICollectionJob baseJob;
 } NanoStarsJobAttribute;
 
 ICollectionJob* FactoryCreateJob(int32_t channelId);
-int32_t JobManagerStart(JobManagerAttribute *attr);
-int32_t JobManagerStop(JobManagerAttribute *attr);
-int32_t NanoJobInit(ICollectionJob *attr);
-int32_t NanoJobProcess(ICollectionJob *attr);
-int32_t NanoJobUninit(ICollectionJob *attr);
+int32_t JobManagerStart(JobManagerAttribute* attr);
+int32_t JobManagerStop(JobManagerAttribute* attr);
+int32_t NanoJobInit(ICollectionJob* attr);
+int32_t NanoJobProcess(ICollectionJob* attr);
+int32_t NanoJobUninit(ICollectionJob* attr);
 }
 
 TEST_F(JobManagerUtest, JobManager)
 {
     ParmasList config = {
-        .features = {0}, 
+        .features = {0},
         .aicSamplingInterval = 100,
         .aivSamplingInterval = 100,
         .hostPid = 1,
         .jobId = 1,
-        "1",              
-        "on",  //taskTrace
-        "/output", //resultDir
-        "", //aiCoreMetrics
-        "0x103,0x104,0x105", //aicEvents
-        "", //aiCoreProfilingMode
-        "", //aiVectMetrics
-        "", //aivEvents
-        "", //aiVectProfilingMode
-        "", //profLevel
+        "1",
+        "on",                // taskTrace
+        "/output",           // resultDir
+        "",                  // aiCoreMetrics
+        "0x103,0x104,0x105", // aicEvents
+        "",                  // aiCoreProfilingMode
+        "",                  // aiVectMetrics
+        "",                  // aivEvents
+        "",                  // aiVectProfilingMode
+        "",                  // profLevel
     };
-    ProfileParam myParam = {
-        .hostProfiling = false,
-        .deviceProfiling = true,
-        .dataTypeConfig = 0,
-        .config = config
-    };
+    ProfileParam myParam = {.hostProfiling = false, .deviceProfiling = true, .dataTypeConfig = 0, .config = config};
     MOCKER(prof_drv_start).stubs().will(returnValue(PROF_OK));
     MOCKER(prof_stop).stubs().will(returnValue(PROFILING_SUCCESS));
-    JobManagerAttribute* jobManager = (JobManagerAttribute*) malloc (sizeof (JobManagerAttribute));
+    JobManagerAttribute* jobManager = (JobManagerAttribute*)malloc(sizeof(JobManagerAttribute));
     jobManager->isStart = false;
     jobManager->quit = true;
     jobManager->deviceId = 0;
@@ -110,28 +101,23 @@ TEST_F(JobManagerUtest, JobManager)
 TEST_F(JobManagerUtest, NanoStarsJob)
 {
     ParmasList config = {
-        .features = {0}, 
+        .features = {0},
         .aicSamplingInterval = 100,
         .aivSamplingInterval = 100,
         .hostPid = 1,
         .jobId = 1,
-        "1",              
-        "on",  //taskTrace
-        "/output", //resultDir
-        "", //aiCoreMetrics
-        "0x103,0x104,0x105", //aicEvents
-        "", //aiCoreProfilingMode
-        "", //aiVectMetrics
-        "", //aivEvents
-        "", //aiVectProfilingMode
-        "", //profLevel
+        "1",
+        "on",                // taskTrace
+        "/output",           // resultDir
+        "",                  // aiCoreMetrics
+        "0x103,0x104,0x105", // aicEvents
+        "",                  // aiCoreProfilingMode
+        "",                  // aiVectMetrics
+        "",                  // aivEvents
+        "",                  // aiVectProfilingMode
+        "",                  // profLevel
     };
-    ProfileParam myParam = {
-        .hostProfiling = false,
-        .deviceProfiling = true,
-        .dataTypeConfig = 0,
-        .config = config
-    };
+    ProfileParam myParam = {.hostProfiling = false, .deviceProfiling = true, .dataTypeConfig = 0, .config = config};
 
     ICollectionJob* job = FactoryCreateJob(150);
     job->params = &myParam;

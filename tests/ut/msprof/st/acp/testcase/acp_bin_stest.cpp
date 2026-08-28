@@ -22,25 +22,23 @@ using namespace Collector::Dvvp::Acp;
 class ACP_BIN_STEST : public testing::Test {
 protected:
     Argparser acpCommand = AcpCommandBuild("acp");
-    virtual void SetUp()
-    {}
-    virtual void TearDown()
-    {}
+    virtual void SetUp() {}
+    virtual void TearDown() {}
 };
 
-extern int LltAcpMain(int argc, const char *argv[], const char **envp);
+extern int LltAcpMain(int argc, const char* argv[], const char** envp);
 extern int32_t PreCheckPlatform();
 
 TEST_F(ACP_BIN_STEST, AcpPipeReadWriteTest)
 {
-    SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params = 
+    SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params =
         std::make_shared<analysis::dvvp::message::ProfileParams>();
     params->ai_core_metrics = "Memory";
     params->result_dir = "./aaa/bbb/ccc/ddd/eee";
     int32_t fd0;
     Collector::Dvvp::Acp::AcpPipeWrite(params, fd0);
     setenv("ACP_PIPE_FD", std::to_string(fd0).c_str(), 1);
-    auto  paramsRead = Collector::Dvvp::Acp::AcpPipeRead();
+    auto paramsRead = Collector::Dvvp::Acp::AcpPipeRead();
     EXPECT_EQ("Memory", paramsRead->ai_core_metrics);
     EXPECT_EQ("./aaa/bbb/ccc/ddd/eee", paramsRead->result_dir);
 }
@@ -58,13 +56,14 @@ void EXPECT_TestAcp(std::vector<std::string> args, const int expectedRet, std::v
     const char* envp[1] = {nullptr};
     EXPECT_EQ(expectedRet, LltAcpMain(argc, (const char**)argv.data(), envp));
     std::cout.rdbuf(oldCoutBuffer);
-    for (auto expectedPrint: expectedList) {
-        EXPECT_NE(output.str().find(expectedPrint), std::string::npos)
-            <<"Screen print:" << std::endl << output.str() << std::endl << "Missing expected: " + expectedPrint;
+    for (auto expectedPrint : expectedList) {
+        EXPECT_NE(output.str().find(expectedPrint), std::string::npos) << "Screen print:" << std::endl
+                                                                       << output.str() << std::endl
+                                                                       << "Missing expected: " + expectedPrint;
     }
 }
 
-TEST_F(ACP_BIN_STEST, AcpBin) 
+TEST_F(ACP_BIN_STEST, AcpBin)
 {
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
         .stubs()
@@ -72,72 +71,47 @@ TEST_F(ACP_BIN_STEST, AcpBin)
     EXPECT_TestAcp({"acp", "--help"}, PROFILING_FAILED, {"Usage:"});
     EXPECT_TestAcp({"acp", "-h"}, PROFILING_FAILED, {"Usage:"});
     EXPECT_TestAcp(
-        {"acp", "profile", "-h"}, PROFILING_FAILED, {"Usage:", "./acp profile [--options]", "--aic-metrics", "--output"}
-    );
+        {"acp", "profile", "-h"}, PROFILING_FAILED,
+        {"Usage:", "./acp profile [--options]", "--aic-metrics", "--output"});
     EXPECT_TestAcp(
-        {"acp", "profile", "--help"}, 
-        PROFILING_FAILED, 
-        {"Usage:", "./acp profile [--options]", "--aic-metrics", "--output"}
-    );
+        {"acp", "profile", "--help"}, PROFILING_FAILED,
+        {"Usage:", "./acp profile [--options]", "--aic-metrics", "--output"});
     EXPECT_TestAcp(
-        {"acp", "profile", "--aic-metrics"},
-        PROFILING_FAILED, 
-        {"[ERROR] Argument --aic-metrics: expected one argument"}
-    );
+        {"acp", "profile", "--aic-metrics"}, PROFILING_FAILED,
+        {"[ERROR] Argument --aic-metrics: expected one argument"});
     EXPECT_TestAcp(
-        {"acp", "profile", "--aic-metrics="},
-        PROFILING_FAILED, 
-        {std::string("[ERROR] Argument --aic-metrics input is empty.")}
-    );
+        {"acp", "profile", "--aic-metrics="}, PROFILING_FAILED,
+        {std::string("[ERROR] Argument --aic-metrics input is empty.")});
     EXPECT_TestAcp(
-        {"acp", "profile", "--output"},
-        PROFILING_FAILED, 
-        {"[ERROR] Argument --output: expected one argument"}
-    );
+        {"acp", "profile", "--output"}, PROFILING_FAILED, {"[ERROR] Argument --output: expected one argument"});
     EXPECT_TestAcp(
-        {"acp", "profile", "--output="},
-        PROFILING_FAILED, 
-        {"[ERROR] Argument --output: expected one argument"}
-    );
+        {"acp", "profile", "--output="}, PROFILING_FAILED, {"[ERROR] Argument --output: expected one argument"});
     EXPECT_TestAcp(
-        {"acp", "profile", "--aic-metrics=aaa"}, 
-        PROFILING_FAILED, 
-        {"Argument --aic-metrics aaa is invalid in this platform, please check input range in help message."}
-    );
+        {"acp", "profile", "--aic-metrics=aaa"}, PROFILING_FAILED,
+        {"Argument --aic-metrics aaa is invalid in this platform, please check input range in help message."});
     EXPECT_TestAcp(
-        {"acp", "subcommandx"},
-        PROFILING_FAILED, 
-        {"[ERROR] acp: unrecognized subcommand subcommandx", "Usage:"}
-    );
+        {"acp", "subcommandx"}, PROFILING_FAILED, {"[ERROR] acp: unrecognized subcommand subcommandx", "Usage:"});
 
-    MOCKER_CPP(&Platform::CheckIfPlatformExist, bool (Platform::*)(void) const)
+    MOCKER_CPP(&Platform::CheckIfPlatformExist, bool(Platform::*)(void) const)
         .stubs()
         .will(returnValue(true))
         .then(returnValue(false));
     EXPECT_TestAcp(
-        {"acp", "profile", "--aic-metrics=PipeUtilization", "--output=./acp_bin_stest", "test.sh"}, 
-        PROFILING_FAILED,
-        {"Start profiling...."}
-    );
+        {"acp", "profile", "--aic-metrics=PipeUtilization", "--output=./acp_bin_stest", "test.sh"}, PROFILING_FAILED,
+        {"Start profiling...."});
     EXPECT_TestAcp(
-        {"acp", "profile", "--aic-metrics=PipeUtilization", "--output=./acp_bin_stest", "test.sh"}, 
-        PROFILING_FAILED,
-        {"[ERROR] Acp is not supported on the current platform type."}
-    );
+        {"acp", "profile", "--aic-metrics=PipeUtilization", "--output=./acp_bin_stest", "test.sh"}, PROFILING_FAILED,
+        {"[ERROR] Acp is not supported on the current platform type."});
     EXPECT_TestAcp(
-        {"acp", "profile", "--help"}, 
-        PROFILING_FAILED,
-        {"[Warning] Acp is not supported on the current platform type."}
-    );
+        {"acp", "profile", "--help"}, PROFILING_FAILED,
+        {"[Warning] Acp is not supported on the current platform type."});
     EXPECT_TestAcp(
-        {"acp", "profile", "--aic-metrics=PipeUtilization,Custom:0xab"}, 
-        PROFILING_FAILED,
-        {"[ERROR] Argument --aic-metrics PipeUtilization,Custom:0xab is invalid because of invalid value before custom events. Please noted that custom function can not be used with metrics groups."}
-    );
+        {"acp", "profile", "--aic-metrics=PipeUtilization,Custom:0xab"}, PROFILING_FAILED,
+        {"[ERROR] Argument --aic-metrics PipeUtilization,Custom:0xab is invalid because of invalid value before custom "
+         "events. Please noted that custom function can not be used with metrics groups."});
     EXPECT_TestAcp(
-        {"acp", "profile", "--aic-metrics=Custom:0xab,PipeUtilization"}, 
-        PROFILING_FAILED,
-        {"[ERROR] Argument --aic-metrics pipeutilization (lower) is invalid, hexadecimal or decimal parameters are allowed in custom mode."}
-    );
+        {"acp", "profile", "--aic-metrics=Custom:0xab,PipeUtilization"}, PROFILING_FAILED,
+        {"[ERROR] Argument --aic-metrics pipeutilization (lower) is invalid, hexadecimal or decimal parameters are "
+         "allowed in custom mode."});
     rmdir("acp_bin_stest");
 }

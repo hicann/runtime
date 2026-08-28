@@ -9,10 +9,11 @@
  */
 #include "gtest/gtest.h"
 
-int main(int argc, char** argv) { 
-    testing::InitGoogleTest(&argc, argv); 
+int main(int argc, char** argv)
+{
+    testing::InitGoogleTest(&argc, argv);
 
     // Runs all tests using Google Test.
     // testing::GTEST_FLAG(filter) = "COMMON_QUEUE_RING_BUFFER_TEST.BlockBuffer_BasePushPopTest";
-    return RUN_ALL_TESTS(); 
+    return RUN_ALL_TESTS();
 }

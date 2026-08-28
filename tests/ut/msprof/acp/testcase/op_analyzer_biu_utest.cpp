@@ -27,33 +27,21 @@ using namespace analysis::dvvp::common::utils;
 using namespace analysis::dvvp::common::error;
 
 namespace op_analyzer_biu_stub {
-static std::string DrvGeAivFrqOk(int32_t)
-{
-    return "1000";
-}
+static std::string DrvGeAivFrqOk(int32_t) { return "1000"; }
 
-static std::string DrvGeAivFrqBad(int32_t)
-{
-    return "abc";
-}
+static std::string DrvGeAivFrqBad(int32_t) { return "abc"; }
 
-static std::string DrvGeAivFrqZero(int32_t)
-{
-    return "0";
-}
-}  // namespace op_analyzer_biu_stub
+static std::string DrvGeAivFrqZero(int32_t) { return "0"; }
+} // namespace op_analyzer_biu_stub
 
 class OP_ANALYZER_BIU_UTEST : public testing::Test {
 protected:
     virtual void SetUp() {}
-    virtual void TearDown()
-    {
-        GlobalMockObject::verify();
-    }
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 // Pack a BiuPerfProfile into 4 bytes for ParseBiuData input.
-static void AppendBiuRecord(std::string &buf, uint16_t timeData, uint16_t events, uint16_t ctrlType)
+static void AppendBiuRecord(std::string& buf, uint16_t timeData, uint16_t events, uint16_t ctrlType)
 {
     BiuPerfProfile rec;
     rec.timeData = timeData;
@@ -94,9 +82,7 @@ TEST_F(OP_ANALYZER_BIU_UTEST, SetDeviceInfo_AicFreqInvalid)
 
 TEST_F(OP_ANALYZER_BIU_UTEST, SetDeviceInfo_DrvAivFreqBadStr)
 {
-    MOCKER_CPP(&Analysis::Dvvp::Driver::DrvGeAivFrq)
-        .stubs()
-        .will(invoke(op_analyzer_biu_stub::DrvGeAivFrqBad));
+    MOCKER_CPP(&Analysis::Dvvp::Driver::DrvGeAivFrq).stubs().will(invoke(op_analyzer_biu_stub::DrvGeAivFrqBad));
     OpAnalyzerBiu biu;
     biu.SetDeviceInfo(0, 1.0, 100.0);
     EXPECT_FALSE(biu.inited_);
@@ -104,9 +90,7 @@ TEST_F(OP_ANALYZER_BIU_UTEST, SetDeviceInfo_DrvAivFreqBadStr)
 
 TEST_F(OP_ANALYZER_BIU_UTEST, SetDeviceInfo_DrvAivFreqZero)
 {
-    MOCKER_CPP(&Analysis::Dvvp::Driver::DrvGeAivFrq)
-        .stubs()
-        .will(invoke(op_analyzer_biu_stub::DrvGeAivFrqZero));
+    MOCKER_CPP(&Analysis::Dvvp::Driver::DrvGeAivFrq).stubs().will(invoke(op_analyzer_biu_stub::DrvGeAivFrqZero));
     OpAnalyzerBiu biu;
     biu.SetDeviceInfo(0, 1.0, 100.0);
     EXPECT_FALSE(biu.inited_);
@@ -114,9 +98,7 @@ TEST_F(OP_ANALYZER_BIU_UTEST, SetDeviceInfo_DrvAivFreqZero)
 
 TEST_F(OP_ANALYZER_BIU_UTEST, SetDeviceInfo_Success)
 {
-    MOCKER_CPP(&Analysis::Dvvp::Driver::DrvGeAivFrq)
-        .stubs()
-        .will(invoke(op_analyzer_biu_stub::DrvGeAivFrqOk));
+    MOCKER_CPP(&Analysis::Dvvp::Driver::DrvGeAivFrq).stubs().will(invoke(op_analyzer_biu_stub::DrvGeAivFrqOk));
     OpAnalyzerBiu biu;
     biu.SetDeviceInfo(0, 1.0, 100.0);
     EXPECT_TRUE(biu.inited_);
@@ -226,21 +208,21 @@ TEST_F(OP_ANALYZER_BIU_UTEST, ParseBiuData_AllCtrlTypes)
 
     std::string buf;
     // 4 syscnt records to satisfy initTimes==SYSCNT_DATA_TIMES
-    AppendBiuRecord(buf, 0x1111, 0xAA, 14);   // CTRL_START_STAMP
+    AppendBiuRecord(buf, 0x1111, 0xAA, 14); // CTRL_START_STAMP
     AppendBiuRecord(buf, 0x2222, 0xBB, 14);
     AppendBiuRecord(buf, 0x3333, 0xCC, 14);
     AppendBiuRecord(buf, 0x4444, 0xDD, 14);
     // stamp data for ctrl types 0..5 and 10
-    AppendBiuRecord(buf, 100, 1, 0);   // CTRL_SU
-    AppendBiuRecord(buf, 100, 1, 1);   // CTRL_VEC
-    AppendBiuRecord(buf, 100, 1, 2);   // CTRL_CUBE
-    AppendBiuRecord(buf, 100, 1, 3);   // CTRL_MTE1
-    AppendBiuRecord(buf, 100, 1, 4);   // CTRL_MTE2
-    AppendBiuRecord(buf, 100, 1, 5);   // CTRL_MTE3
-    AppendBiuRecord(buf, 100, 1, 10);  // CTRL_FIXP
+    AppendBiuRecord(buf, 100, 1, 0);  // CTRL_SU
+    AppendBiuRecord(buf, 100, 1, 1);  // CTRL_VEC
+    AppendBiuRecord(buf, 100, 1, 2);  // CTRL_CUBE
+    AppendBiuRecord(buf, 100, 1, 3);  // CTRL_MTE1
+    AppendBiuRecord(buf, 100, 1, 4);  // CTRL_MTE2
+    AppendBiuRecord(buf, 100, 1, 5);  // CTRL_MTE3
+    AppendBiuRecord(buf, 100, 1, 10); // CTRL_FIXP
     // status data
-    AppendBiuRecord(buf, 100, 0x3, 15);  // CTRL_STATE - bits 0,1 set
-    AppendBiuRecord(buf, 100, 0x0, 15);  // CTRL_STATE - all clear (stop)
+    AppendBiuRecord(buf, 100, 0x3, 15); // CTRL_STATE - bits 0,1 set
+    AppendBiuRecord(buf, 100, 0x0, 15); // CTRL_STATE - all clear (stop)
     // unknown ctrl type
     AppendBiuRecord(buf, 100, 1, 7);
     // trailing odd byte to hit "remaining bytes unparsed" branch
@@ -295,12 +277,12 @@ TEST_F(OP_ANALYZER_BIU_UTEST, HandleStampData_AivBranch)
     biu.aicFreq_ = 100.0;
     biu.aivFreq_ = 200.0;
     biu.group_ = 1;
-    biu.groupTag_ = 1;  // aiv
+    biu.groupTag_ = 1; // aiv
     biu.biuData_[1][1].initTimes = SYSCNT_DATA_TIMES;
     BiuPerfProfile data{};
     data.timeData = 100;
     data.events = 1;
-    data.ctrlType = 1;  // CTRL_VEC -> tid=1
+    data.ctrlType = 1; // CTRL_VEC -> tid=1
     biu.HandleStampData(&data);
     EXPECT_FALSE(biu.biuData_[1][1].data.empty());
 }
@@ -355,11 +337,11 @@ TEST_F(OP_ANALYZER_BIU_UTEST, HandleStatusData_AivBranchUsesAivFreq)
     biu.aicFreq_ = 100.0;
     biu.aivFreq_ = 200.0;
     biu.group_ = 0;
-    biu.groupTag_ = 1;  // aiv branch
+    biu.groupTag_ = 1; // aiv branch
     biu.biuData_[0][1].initTimes = SYSCNT_DATA_TIMES;
     BiuPerfProfile data{};
     data.timeData = 100;
-    data.events = 0x0;  // nothing changes
+    data.events = 0x0; // nothing changes
     data.ctrlType = 15;
     biu.HandleStatusData(&data);
 }
@@ -372,7 +354,7 @@ TEST_F(OP_ANALYZER_BIU_UTEST, HandleInstrStop_TimeBefore)
     biu.aivFreq_ = 100.0;
     biu.biuData_[0][0].initTimes = SYSCNT_DATA_TIMES;
     biu.biuData_[0][0].instrMap[0].timeStart = 1000;
-    biu.biuData_[0][0].baseTime = 100;  // less than timeStart
+    biu.biuData_[0][0].baseTime = 100; // less than timeStart
     biu.HandleInstrStop(0);
     EXPECT_TRUE(biu.biuData_[0][0].data.empty());
 }
@@ -380,7 +362,7 @@ TEST_F(OP_ANALYZER_BIU_UTEST, HandleInstrStop_TimeBefore)
 TEST_F(OP_ANALYZER_BIU_UTEST, CheckBitsAndCheckNumberExist)
 {
     OpAnalyzerBiu biu;
-    auto bits = biu.CheckBits(0x5);  // bits 0 and 2
+    auto bits = biu.CheckBits(0x5); // bits 0 and 2
     ASSERT_EQ(2u, bits.size());
     EXPECT_EQ(0u, bits[0]);
     EXPECT_EQ(2u, bits[1]);
@@ -401,17 +383,15 @@ TEST_F(OP_ANALYZER_BIU_UTEST, ConvCtrlToInstr)
 TEST_F(OP_ANALYZER_BIU_UTEST, SaveDataToFile_Empty)
 {
     OpAnalyzerBiu biu;
-    biu.SaveDataToFile("/tmp/biu_empty_");  // all data empty -> early return
+    biu.SaveDataToFile("/tmp/biu_empty_"); // all data empty -> early return
 }
 
 TEST_F(OP_ANALYZER_BIU_UTEST, SaveDataToFile_WithData)
 {
-    MOCKER_CPP(&Utils::GenTimeLineJsonFile)
-        .stubs()
-        .will(returnValue(static_cast<int32_t>(PROFILING_SUCCESS)));
+    MOCKER_CPP(&Utils::GenTimeLineJsonFile).stubs().will(returnValue(static_cast<int32_t>(PROFILING_SUCCESS)));
     OpAnalyzerBiu biu;
     biu.biuData_[0][0].data = "{\"foo\":1},";
-    biu.biuData_[1][2].data = "{\"bar\":2}";  // no trailing comma path
+    biu.biuData_[1][2].data = "{\"bar\":2}"; // no trailing comma path
     biu.SaveDataToFile("/tmp/biu_data_");
 }
 
@@ -421,7 +401,7 @@ TEST_F(OP_ANALYZER_BIU_UTEST, IsBiuModeAndPrintStats)
     EXPECT_FALSE(biu.IsBiuMode());
     biu.countTimes_ = 5;
     EXPECT_TRUE(biu.IsBiuMode());
-    biu.PrintStats();  // smoke
+    biu.PrintStats(); // smoke
 }
 
 TEST_F(OP_ANALYZER_BIU_UTEST, SaveCntData_FillsMetadata)

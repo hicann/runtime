@@ -20,15 +20,10 @@
 using namespace analysis::dvvp::common::error;
 using namespace Msprof::Engine;
 
-AicpuReportHdc::AicpuReportHdc()
-{
-}
-AicpuReportHdc::~AicpuReportHdc()
-{
-    UnInit();
-}
+AicpuReportHdc::AicpuReportHdc() {}
+AicpuReportHdc::~AicpuReportHdc() { UnInit(); }
 
-int32_t AicpuReportHdc::Init(std::string &moduleName)
+int32_t AicpuReportHdc::Init(std::string& moduleName)
 {
     std::lock_guard<std::mutex> lk(mtx_);
     if (started_) {

@@ -15,10 +15,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-void *IdeXmalloc (int size);
-void IdeXfree (void *ptr);
+void* IdeXmalloc(int size);
+void IdeXfree(void* ptr);
 #ifdef __cplusplus
 }
 #endif
 #endif
-

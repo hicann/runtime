@@ -9,22 +9,10 @@
  */
 #include "mmpa_api.h"
 
-void *mmDlsym(void *handle, const char *funcName)
-{
-    return NULL;
-}
+void* mmDlsym(void* handle, const char* funcName) { return NULL; }
 
-int32_t mmDlclose(void *handle)
-{
-    return 0;
-}
+int32_t mmDlclose(void* handle) { return 0; }
 
-void *mmDlopen(const char *fileName, int mode)
-{
-    return nullptr;
-}
+void* mmDlopen(const char* fileName, int mode) { return nullptr; }
 
-char *mmDlerror(void)
-{
-    return nullptr;
-}
+char* mmDlerror(void) { return nullptr; }

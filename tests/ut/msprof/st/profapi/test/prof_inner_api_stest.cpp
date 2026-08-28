@@ -24,15 +24,12 @@ protected:
     virtual void TearDown() {}
 };
 
-
 int32_t ProfOpSubscribeStub(uint32_t devId, const PROFAPI_SUBSCRIBECONFIG_CONST_PTR profSubscribeConfig) { return 0; }
 int32_t ProfOpUnSubscribeStub(uint32_t devId, const PROFAPI_SUBSCRIBECONFIG_CONST_PTR profSubscribeConfig) { return 0; }
 std::map<std::string, void*> g_SubscribeMap = {
-    {"ProfOpUnSubscribe", (void *)ProfOpUnSubscribeStub},
-    {"ProfOpSubscribe", (void *)ProfOpSubscribeStub}
-};
+    {"ProfOpUnSubscribe", (void*)ProfOpUnSubscribeStub}, {"ProfOpSubscribe", (void*)ProfOpSubscribeStub}};
 
-void *mmDlsymStub(void *handle, const char* funcName)
+void* mmDlsymStub(void* handle, const char* funcName)
 {
     auto it = g_SubscribeMap.find(funcName);
     if (it != g_SubscribeMap.end()) {
@@ -43,9 +40,9 @@ void *mmDlsymStub(void *handle, const char* funcName)
 
 TEST_F(PROF_INNER_API_STEST, PROF_INNER_API)
 {
-  MOCKER(dlsym).stubs().will(invoke(mmDlsymStub));
-  uint32_t devId = 0;
-  uint32_t streamId = 1;
-  EXPECT_EQ(0, ProfOpSubscribe(devId, nullptr));
-  EXPECT_EQ(0, ProfOpUnSubscribe(devId));
+    MOCKER(dlsym).stubs().will(invoke(mmDlsymStub));
+    uint32_t devId = 0;
+    uint32_t streamId = 1;
+    EXPECT_EQ(0, ProfOpSubscribe(devId, nullptr));
+    EXPECT_EQ(0, ProfOpUnSubscribe(devId));
 }

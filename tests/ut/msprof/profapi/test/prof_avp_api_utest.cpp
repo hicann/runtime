@@ -21,24 +21,17 @@ using analysis::dvvp::common::error::PROFILING_FAILED;
 
 class PROF_AVP_PLUGIN_UTEST : public testing::Test {
 protected:
-    virtual void SetUp() {
-        MOCKER(dlsym).stubs().will(returnValue((void *)nullptr));
-    }
-    virtual void TearDown() {
-        GlobalMockObject::verify();
-    }
+    virtual void SetUp() { MOCKER(dlsym).stubs().will(returnValue((void*)nullptr)); }
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 TEST_F(PROF_AVP_PLUGIN_UTEST, ProfApiInit_dlopen_fail)
 {
-    MOCKER(dlopen).stubs().will(returnValue((void *)nullptr));
+    MOCKER(dlopen).stubs().will(returnValue((void*)nullptr));
     ProfAvpPlugin::instance()->ProfApiInit();
 }
 
-TEST_F(PROF_AVP_PLUGIN_UTEST, ProfInit)
-{
-    EXPECT_EQ(0, ProfAvpPlugin::instance()->ProfInit(0, nullptr, 0));
-}
+TEST_F(PROF_AVP_PLUGIN_UTEST, ProfInit) { EXPECT_EQ(0, ProfAvpPlugin::instance()->ProfInit(0, nullptr, 0)); }
 
 TEST_F(PROF_AVP_PLUGIN_UTEST, ProfRegisterCallback_nullptr_handle)
 {
@@ -47,7 +40,7 @@ TEST_F(PROF_AVP_PLUGIN_UTEST, ProfRegisterCallback_nullptr_handle)
 
 TEST_F(PROF_AVP_PLUGIN_UTEST, ProfRegisterCallback_valid_handle)
 {
-    auto handle = [](uint32_t, void *, uint32_t) -> int32_t { return 0; };
+    auto handle = [](uint32_t, void*, uint32_t) -> int32_t { return 0; };
     EXPECT_EQ(0, ProfAvpPlugin::instance()->ProfRegisterCallback(1, handle));
 }
 
@@ -88,44 +81,25 @@ TEST_F(PROF_AVP_PLUGIN_UTEST, ProfNotifySetDevice)
     EXPECT_EQ(0, ProfAvpPlugin::instance()->ProfNotifySetDevice(1, 2, true));
 }
 
-TEST_F(PROF_AVP_PLUGIN_UTEST, ProfFinalize)
-{
-    EXPECT_EQ(0, ProfAvpPlugin::instance()->ProfFinalize());
-}
+TEST_F(PROF_AVP_PLUGIN_UTEST, ProfFinalize) { EXPECT_EQ(0, ProfAvpPlugin::instance()->ProfFinalize()); }
 
-TEST_F(PROF_AVP_PLUGIN_UTEST, ProfSysCycleTime)
-{
-    EXPECT_EQ(0U, ProfAvpPlugin::instance()->ProfSysCycleTime());
-}
+TEST_F(PROF_AVP_PLUGIN_UTEST, ProfSysCycleTime) { EXPECT_EQ(0U, ProfAvpPlugin::instance()->ProfSysCycleTime()); }
 
 class PROF_AVP_INNER_API_UTEST : public testing::Test {
 protected:
-    virtual void SetUp() {
-        MOCKER(dlsym).stubs().will(returnValue((void *)nullptr));
-    }
-    virtual void TearDown() {
-        GlobalMockObject::verify();
-    }
+    virtual void SetUp() { MOCKER(dlsym).stubs().will(returnValue((void*)nullptr)); }
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
-TEST_F(PROF_AVP_INNER_API_UTEST, MsprofInit)
-{
-    EXPECT_EQ(0, MsprofInit(0, nullptr, 0));
-}
+TEST_F(PROF_AVP_INNER_API_UTEST, MsprofInit) { EXPECT_EQ(0, MsprofInit(0, nullptr, 0)); }
 
-TEST_F(PROF_AVP_INNER_API_UTEST, MsprofFinalize)
-{
-    EXPECT_EQ(0, MsprofFinalize());
-}
+TEST_F(PROF_AVP_INNER_API_UTEST, MsprofFinalize) { EXPECT_EQ(0, MsprofFinalize()); }
 
-TEST_F(PROF_AVP_INNER_API_UTEST, MsprofNotifySetDevice)
-{
-    EXPECT_EQ(0, MsprofNotifySetDevice(1, 2, true));
-}
+TEST_F(PROF_AVP_INNER_API_UTEST, MsprofNotifySetDevice) { EXPECT_EQ(0, MsprofNotifySetDevice(1, 2, true)); }
 
 TEST_F(PROF_AVP_INNER_API_UTEST, MsprofRegisterCallback)
 {
-    auto handle = [](uint32_t, void *, uint32_t) -> int32_t { return 0; };
+    auto handle = [](uint32_t, void*, uint32_t) -> int32_t { return 0; };
     EXPECT_EQ(0, MsprofRegisterCallback(0, handle));
 }
 
@@ -140,10 +114,7 @@ TEST_F(PROF_AVP_INNER_API_UTEST, MsprofReportEvent_valid)
     EXPECT_EQ(0, MsprofReportEvent(0, &event));
 }
 
-TEST_F(PROF_AVP_INNER_API_UTEST, MsprofReportApi_nullptr)
-{
-    EXPECT_EQ(PROFILING_FAILED, MsprofReportApi(0, nullptr));
-}
+TEST_F(PROF_AVP_INNER_API_UTEST, MsprofReportApi_nullptr) { EXPECT_EQ(PROFILING_FAILED, MsprofReportApi(0, nullptr)); }
 
 TEST_F(PROF_AVP_INNER_API_UTEST, MsprofReportApi_valid)
 {
@@ -176,22 +147,13 @@ TEST_F(PROF_AVP_INNER_API_UTEST, MsprofRegTypeInfo_nullptr)
     EXPECT_EQ(PROFILING_FAILED, MsprofRegTypeInfo(0, 1, nullptr));
 }
 
-TEST_F(PROF_AVP_INNER_API_UTEST, MsprofRegTypeInfo_valid)
-{
-    EXPECT_EQ(0, MsprofRegTypeInfo(0, 1, "type"));
-}
+TEST_F(PROF_AVP_INNER_API_UTEST, MsprofRegTypeInfo_valid) { EXPECT_EQ(0, MsprofRegTypeInfo(0, 1, "type")); }
 
 TEST_F(PROF_AVP_INNER_API_UTEST, MsprofGetHashId_nullptr)
 {
     EXPECT_EQ(std::numeric_limits<uint64_t>::max(), MsprofGetHashId(nullptr, 0));
 }
 
-TEST_F(PROF_AVP_INNER_API_UTEST, MsprofGetHashId_valid)
-{
-    EXPECT_EQ(0U, MsprofGetHashId("hash", 4));
-}
+TEST_F(PROF_AVP_INNER_API_UTEST, MsprofGetHashId_valid) { EXPECT_EQ(0U, MsprofGetHashId("hash", 4)); }
 
-TEST_F(PROF_AVP_INNER_API_UTEST, MsprofSysCycleTime)
-{
-    EXPECT_EQ(0U, MsprofSysCycleTime());
-}
+TEST_F(PROF_AVP_INNER_API_UTEST, MsprofSysCycleTime) { EXPECT_EQ(0U, MsprofSysCycleTime()); }

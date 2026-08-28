@@ -11,9 +11,7 @@
 #include <cstdlib>
 #include <memory>
 
-int CommandRes(int sock, int cmd_or_file) {
-    return 0;
-}
+int CommandRes(int sock, int cmd_or_file) { return 0; }
 
 void* IdeXmalloc(size_t size)
 {

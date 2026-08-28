@@ -22,22 +22,13 @@ int pfDevMgrInitStub(std::string /* jobId */, int /* devId */, std::string /* mo
     return PROFILING_SUCCESS;
 }
 
-int pfDevMgrUnInitStub()
-{
-    return PROFILING_SUCCESS;
-}
+int pfDevMgrUnInitStub() { return PROFILING_SUCCESS; }
 
-int pfDevMgrCloseDevTransStub(std::string /* jobId */, int /* devId */)
-{
-    return PROFILING_SUCCESS;
-}
+int pfDevMgrCloseDevTransStub(std::string /* jobId */, int /* devId */) { return PROFILING_SUCCESS; }
 
-std::shared_ptr<IDeviceTransport> pfDevMgrGetDevTransStub(std::string /* jobId */, int /* devId */)
-{
-    return nullptr;
-}
+std::shared_ptr<IDeviceTransport> pfDevMgrGetDevTransStub(std::string /* jobId */, int /* devId */) { return nullptr; }
 
-void LoadDevMgrAPI(DevMgrAPI &devMgrAPI)
+void LoadDevMgrAPI(DevMgrAPI& devMgrAPI)
 {
     MSPROF_LOGI("LoadDevMgrAPI init begin");
     devMgrAPI.pfDevMgrInit = &pfDevMgrInitStub;
@@ -46,6 +37,6 @@ void LoadDevMgrAPI(DevMgrAPI &devMgrAPI)
     devMgrAPI.pfDevMgrGetDevTrans = &pfDevMgrGetDevTransStub;
     MSPROF_LOGI("LoadDevMgrAPI init end");
 }
-}
-}
-}
+} // namespace transport
+} // namespace dvvp
+} // namespace analysis

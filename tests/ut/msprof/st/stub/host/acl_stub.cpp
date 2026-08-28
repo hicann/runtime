@@ -27,7 +27,7 @@
 #include "osal.h"
 #include "utils.h"
 
-int32_t BitCallbackHandle(uint32_t dataType, void *data, uint32_t dataLen)
+int32_t BitCallbackHandle(uint32_t dataType, void* data, uint32_t dataLen)
 {
     MSPROF_LOGD("start to execute ProcessBitSwitch");
     if (dataType == PROF_CTRL_SWITCH) {
@@ -38,7 +38,7 @@ int32_t BitCallbackHandle(uint32_t dataType, void *data, uint32_t dataLen)
     return 0;
 };
 
-int32_t AclCallbackHandle(uint32_t dataType, void *data, uint32_t dataLen)
+int32_t AclCallbackHandle(uint32_t dataType, void* data, uint32_t dataLen)
 {
     MSPROF_LOGD("start to execute ProcessAclSwitch");
     if (dataType == PROF_CTRL_SWITCH) {
@@ -53,7 +53,7 @@ int32_t AclCallbackHandle(uint32_t dataType, void *data, uint32_t dataLen)
     return 0;
 };
 
-int32_t GeCallbackHandle(uint32_t dataType, void *data, uint32_t dataLen)
+int32_t GeCallbackHandle(uint32_t dataType, void* data, uint32_t dataLen)
 {
     MSPROF_LOGD("start to execute ProcessGeSwitch");
     if (dataType == PROF_CTRL_SWITCH) {
@@ -68,7 +68,7 @@ int32_t GeCallbackHandle(uint32_t dataType, void *data, uint32_t dataLen)
     return 0;
 };
 
-int32_t AicpuCallbackHandle(uint32_t dataType, void *data, uint32_t dataLen)
+int32_t AicpuCallbackHandle(uint32_t dataType, void* data, uint32_t dataLen)
 {
     MSPROF_LOGD("start to execute ProcessAicpuSwitch");
     if (dataType == PROF_CTRL_SWITCH) {
@@ -83,7 +83,7 @@ int32_t AicpuCallbackHandle(uint32_t dataType, void *data, uint32_t dataLen)
     return 0;
 };
 
-int32_t HcclCallbackHandle(uint32_t dataType, void *data, uint32_t dataLen)
+int32_t HcclCallbackHandle(uint32_t dataType, void* data, uint32_t dataLen)
 {
     MSPROF_LOGD("start to execute ProcessHcclSwitch");
     if (dataType == PROF_CTRL_SWITCH) {
@@ -100,7 +100,7 @@ int32_t HcclCallbackHandle(uint32_t dataType, void *data, uint32_t dataLen)
 
 #ifndef MSPROF_C
 // devprof 注册完驱动通道后回调此函数，aicpu 开始上报数据
-static int32_t AicpuCallbackFunc(uint32_t type, void *data, uint32_t len)
+static int32_t AicpuCallbackFunc(uint32_t type, void* data, uint32_t len)
 {
     (void)type;
     (void)data;
@@ -117,35 +117,32 @@ static int32_t AicpuCallbackFunc(uint32_t type, void *data, uint32_t len)
     uint32_t length = sizeof(MsprofAdditionalInfo);
 
     for (uint32_t i = 0; i < 100; i++) {
-        AdprofReportAdditionalInfo(agingFlag, static_cast<void *>(&additionalInfo), length);
+        AdprofReportAdditionalInfo(agingFlag, static_cast<void*>(&additionalInfo), length);
         additionalInfo.type = MSPROF_REPORT_AICPU_DP_TYPE;
-        AdprofReportAdditionalInfo(agingFlag, static_cast<void *>(&additionalInfo), length);
+        AdprofReportAdditionalInfo(agingFlag, static_cast<void*>(&additionalInfo), length);
         additionalInfo.type = MSPROF_REPORT_AICPU_MODEL_TYPE;
-        AdprofReportAdditionalInfo(agingFlag, static_cast<void *>(&additionalInfo), length);
+        AdprofReportAdditionalInfo(agingFlag, static_cast<void*>(&additionalInfo), length);
         additionalInfo.type = MSPROF_REPORT_AICPU_MI_TYPE;
-        AdprofReportAdditionalInfo(agingFlag, static_cast<void *>(&additionalInfo), length);
+        AdprofReportAdditionalInfo(agingFlag, static_cast<void*>(&additionalInfo), length);
     }
     return 0;
 }
 
-static int32_t AicpuStart()
-{
-    return 0;
-}
+static int32_t AicpuStart() { return 0; }
 
-int32_t HandleAicpu(void *data, uint32_t dataLen)
+int32_t HandleAicpu(void* data, uint32_t dataLen)
 {
     (void)dataLen;
-    constexpr uint32_t PROFILING_FEATURE_SWITCH = 0U;       // bit0 means profiling start or profiling stop
-    constexpr uint32_t PROFILING_FEATURE_KERNEL_MODE = 1U;  // bit1 means profiling mode of kernel
-    constexpr uint32_t PROFILING_FEATURE_MODEL_MODE = 2U;   // bit2 means profiling mode of model 
-    constexpr uint32_t PROFILING_FEATURE_TIME = 3U;         // bit3 means l0
-    constexpr uint32_t PROFILING_FEATURE_TIME_L1 = 4U;      // bit4 means l1
-    constexpr uint32_t PROFILING_FEATURE_TIME_L2 = 5U;      // bit5 means l2
+    constexpr uint32_t PROFILING_FEATURE_SWITCH = 0U;      // bit0 means profiling start or profiling stop
+    constexpr uint32_t PROFILING_FEATURE_KERNEL_MODE = 1U; // bit1 means profiling mode of kernel
+    constexpr uint32_t PROFILING_FEATURE_MODEL_MODE = 2U;  // bit2 means profiling mode of model
+    constexpr uint32_t PROFILING_FEATURE_TIME = 3U;        // bit3 means l0
+    constexpr uint32_t PROFILING_FEATURE_TIME_L1 = 4U;     // bit4 means l1
+    constexpr uint32_t PROFILING_FEATURE_TIME_L2 = 5U;     // bit5 means l2
 
     constexpr uint64_t HIGH16_MASK = 0xFFFF000000000000U;
 
-    MsprofCommandHandle *const profilerConfig = static_cast<MsprofCommandHandle *>(data);
+    MsprofCommandHandle* const profilerConfig = static_cast<MsprofCommandHandle*>(data);
     const uint64_t profConfig = profilerConfig->profSwitch;
     uint64_t profSwitchHi = profilerConfig->profSwitchHi & HIGH16_MASK;
     uint32_t high16 = (uint32_t)(profSwitchHi >> 32);
@@ -183,7 +180,7 @@ int32_t HandleAicpu(void *data, uint32_t dataLen)
 }
 #endif
 
-int32_t RuntimeCallbackHandle(uint32_t dataType, void *data, uint32_t dataLen)
+int32_t RuntimeCallbackHandle(uint32_t dataType, void* data, uint32_t dataLen)
 {
     MSPROF_LOGD("start to execute ProcessRuntimeSwitch");
     if (dataType == PROF_CTRL_SWITCH) {
@@ -192,9 +189,9 @@ int32_t RuntimeCallbackHandle(uint32_t dataType, void *data, uint32_t dataLen)
             MSPROF_LOGE("Failed to call ProcessRuntimeSwitch, ret = %d", ret);
             return ret;
         }
-        #ifndef MSPROF_C
+#ifndef MSPROF_C
         return HandleAicpu(data, dataLen);
-        #endif
+#endif
     } else {
         MSPROF_LOGI("ProcessRuntimeSwitch get Unsupported dataType = %u", dataType);
     }
@@ -202,26 +199,26 @@ int32_t RuntimeCallbackHandle(uint32_t dataType, void *data, uint32_t dataLen)
 };
 
 #ifndef MSPROF_C
-static int32_t MsprofStartByPureCpu(const MsprofConfig *cfg)
+static int32_t MsprofStartByPureCpu(const MsprofConfig* cfg)
 {
-    int32_t ret = MsprofStart(MSPROF_CTRL_INIT_PURE_CPU, static_cast<const void *>(cfg), sizeof(MsprofConfig));
+    int32_t ret = MsprofStart(MSPROF_CTRL_INIT_PURE_CPU, static_cast<const void*>(cfg), sizeof(MsprofConfig));
     if (ret != MSPROF_ERROR_NONE) {
         MSPROF_LOGE("Failed to MsprofStart by MSPROF_CTRL_INIT_PURE_CPU.");
         return -1;
     }
- 
+
     MsprofRegisterCallback(GE, &GeCallbackHandle);
     MsprofCompactInfo data;
     data.type = MSPROF_REPORT_NODE_BASIC_INFO_TYPE;
     data.level = MSPROF_REPORT_NODE_LEVEL;
-    MsprofRegTypeInfo(MSPROF_REPORT_NODE_LEVEL, data.type,  "node_basic_info");
-    ret = MsprofReportCompactInfo(0, (void *)&data, sizeof(MsprofCompactInfo));
+    MsprofRegTypeInfo(MSPROF_REPORT_NODE_LEVEL, data.type, "node_basic_info");
+    ret = MsprofReportCompactInfo(0, (void*)&data, sizeof(MsprofCompactInfo));
     if (ret != 0) {
         MSPROF_LOGE("Failed to report fake node_basic_info data.");
         return -1;
     }
- 
-    ret = MsprofStop(MSPROF_CTRL_INIT_PURE_CPU, static_cast<const void *>(cfg), sizeof(MsprofConfig));
+
+    ret = MsprofStop(MSPROF_CTRL_INIT_PURE_CPU, static_cast<const void*>(cfg), sizeof(MsprofConfig));
     if (ret != MSPROF_ERROR_NONE) {
         MSPROF_LOGE("Failed to MsprofStop by MSPROF_CTRL_INIT_PURE_CPU.");
         return -1;
@@ -230,7 +227,7 @@ static int32_t MsprofStartByPureCpu(const MsprofConfig *cfg)
 }
 #endif
 
-static aclError InitMsprofByConfig(const char *configPath)
+static aclError InitMsprofByConfig(const char* configPath)
 {
     if (configPath == nullptr) {
         uint32_t dataLen = 0;
@@ -252,14 +249,14 @@ static aclError InitMsprofByConfig(const char *configPath)
         for (size_t i = 0; i < geOption.size(); i++) {
             options.options[i] = geOption.at(i);
         }
-        auto jsonData = (void *)&options;
+        auto jsonData = (void*)&options;
         if (MsprofInit(MSPROF_CTRL_INIT_GE_OPTIONS, jsonData, sizeof(options)) != 0) {
             (void)MsprofFinalize();
             return static_cast<aclError>(-1);
         }
     } else {
         std::string aclJson = data.dump();
-        auto jsonData = (void *)(const_cast<char *>(aclJson.c_str()));
+        auto jsonData = (void*)(const_cast<char*>(aclJson.c_str()));
         if (MsprofInit(MSPROF_CTRL_INIT_ACL_JSON, jsonData, aclJson.size()) != 0) {
             (void)MsprofFinalize();
             return static_cast<aclError>(-1);
@@ -288,7 +285,7 @@ static void RegisterAllCallbacks()
     MsprofRegisterCallback(RUNTIME, &RuntimeCallbackHandle);
 }
 
-aclError aclInit(const char *configPath)
+aclError aclInit(const char* configPath)
 {
     aclError ret = InitMsprofByConfig(configPath);
     if (ret != ACL_ERROR_NONE) {
@@ -311,7 +308,7 @@ aclError aclInit(const char *configPath)
 
 aclError aclrtSetDevice(int32_t deviceId)
 {
-    if (MsprofNotifySetDevice(0, deviceId, true) != 0){
+    if (MsprofNotifySetDevice(0, deviceId, true) != 0) {
         (void)MsprofFinalize();
         return ACL_ERROR_INVALID_PARAM;
     }
@@ -320,18 +317,18 @@ aclError aclrtSetDevice(int32_t deviceId)
 
 aclError aclrtResetDevice(int32_t deviceId)
 {
-    if (MsprofNotifySetDevice(0, deviceId, false) != 0){
+    if (MsprofNotifySetDevice(0, deviceId, false) != 0) {
         (void)MsprofFinalize();
         return ACL_ERROR_INVALID_PARAM;
     }
     return ACL_ERROR_NONE;
 }
 
-aclError aclmdlLoadFromFile(const char * /* modelPath */, uint32_t *modelId)
+aclError aclmdlLoadFromFile(const char* /* modelPath */, uint32_t* modelId)
 {
     *modelId = DataMgr().GetModelId();
     auto ret = ge::LoadModel(modelId);
-    if (ret != 0) {   
+    if (ret != 0) {
         return ACL_ERROR_INVALID_PARAM;
     }
     return ACL_ERROR_NONE;
@@ -346,15 +343,12 @@ aclError aclmdlUnload(uint32_t modelId)
     return ACL_ERROR_NONE;
 }
 
-aclError aclmdlExecute(uint32_t modelId, const aclmdlDataset * /* input */, aclmdlDataset * /* output */)
+aclError aclmdlExecute(uint32_t modelId, const aclmdlDataset* /* input */, aclmdlDataset* /* output */)
 {
     return ge::ExecuteModel(modelId);
 }
 
-aclError aclnnGlu()
-{
-    return ge::ExecuteOp();
-}
+aclError aclnnGlu() { return ge::ExecuteOp(); }
 
 aclError aclFinalize()
 {
@@ -365,7 +359,7 @@ aclError aclFinalize()
     if (DataReportMgr().GetMsprofConfig() == StProfConfigType::PROF_CONFIG_PURE_CPU) {
         MSPROF_EVENT("Begin to start with msprof config.");
         ClearSingleton();
-        MsprofConfig *cfg = DataReportMgr().GetMsprofConfigData();
+        MsprofConfig* cfg = DataReportMgr().GetMsprofConfigData();
         if (MsprofStartByPureCpu(cfg) != 0) {
             MSPROF_LOGE("Failed to MsprofStartByPureCpu.");
             return ACL_ERROR_INVALID_PARAM;

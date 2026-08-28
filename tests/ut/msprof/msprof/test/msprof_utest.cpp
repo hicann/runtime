@@ -40,27 +40,26 @@
 static uint8_t g_device_id = 0;
 static bool createPluginTrue = true;
 static bool pluginInitTrue = true;
-static std::string moduleName= "counter";
+static std::string moduleName = "counter";
 using namespace analysis::dvvp::common::error;
 using namespace Msprof::Engine;
 using namespace Msprof::MsprofTx;
 using namespace analysis::dvvp::proto;
 
-class MSPROF_TEST: public testing::Test {
+class MSPROF_TEST : public testing::Test {
 protected:
-    virtual void SetUp() {
-    }
-    virtual void TearDown() {
-    }
+    virtual void SetUp() {}
+    virtual void TearDown() {}
 };
 
-void func_counter(Reporter* reporter) {
+void func_counter(Reporter* reporter)
+{
     uint64_t loop = 0;
     std::string data_str = "This is func counter test, second send data test.\n";
 
     while (loop < 5) {
         loop++;
-        unsigned char * data = (unsigned char *)malloc(1024);
+        unsigned char* data = (unsigned char*)malloc(1024);
         memset(data, '\0', 1024);
         memcpy(data, data_str.c_str(), data_str.size());
         ReporterData r_data;
@@ -76,42 +75,40 @@ void func_counter(Reporter* reporter) {
     reporter->Flush();
 }
 
-class PluginImpl: public PluginIntf {
+class PluginImpl : public PluginIntf {
 public:
-    explicit PluginImpl(const std::string & module)
-    : reporter_(nullptr)
-    , module_(module) {
-
-    }
-    virtual ~PluginImpl() {
-    }
+    explicit PluginImpl(const std::string& module) : reporter_(nullptr), module_(module) {}
+    virtual ~PluginImpl() {}
 
 public:
-    virtual int Init(const Reporter* reporter) {
+    virtual int Init(const Reporter* reporter)
+    {
         if (pluginInitTrue) {
             reporter_ = const_cast<Reporter*>(reporter);
             t1_ = std::make_shared<std::thread>(&func_counter, reporter_);
-            return 0; //PROFILING_SUCCESS;
+            return 0;  // PROFILING_SUCCESS;
         } else {
-            return -1; //PROFILING_FAILED
+            return -1; // PROFILING_FAILED
         }
     }
 
-    int OnNewConfig(const ModuleJobConfig * config) {
+    int OnNewConfig(const ModuleJobConfig* config)
+    {
         if (config == nullptr) {
             printf("Input parameter is null\n");
             return -1;
         }
 
-        std::cout<<"==> Module Started:"<<module_<<std::endl;
+        std::cout << "==> Module Started:" << module_ << std::endl;
         for (auto iter = config->switches.begin(); iter != config->switches.end(); ++iter) {
-            std::cout<<iter->first<<"="<<iter->second<<std::endl;
+            std::cout << iter->first << "=" << iter->second << std::endl;
         }
         return 0;
     }
 
-    virtual int UnInit() {
-        std::cout<<"==> Module Ended:"<<module_<<std::endl;
+    virtual int UnInit()
+    {
+        std::cout << "==> Module Ended:" << module_ << std::endl;
         t1_->join();
         t1_.reset();
         printf("OnJobEnd finished\n\n");
@@ -130,7 +127,8 @@ public:
     virtual ~EngineImpl_0() {}
 
 public:
-    virtual PluginIntf * CreatePlugin() {
+    virtual PluginIntf* CreatePlugin()
+    {
         if (createPluginTrue) {
             return new PluginImpl(moduleName);
         } else {
@@ -138,7 +136,8 @@ public:
         }
     }
 
-    virtual int ReleasePlugin(PluginIntf * plugin) {
+    virtual int ReleasePlugin(PluginIntf* plugin)
+    {
         if (plugin) {
             delete plugin;
             plugin = nullptr;
@@ -147,20 +146,21 @@ public:
     }
 };
 
-int GetDiskFreeSpaceStub(const char *path, mmDiskSize *diskSize) {
+int GetDiskFreeSpaceStub(const char* path, mmDiskSize* diskSize)
+{
     std::string paths(path);
     try {
-        diskSize->availSize = 6*1024*1024;
-    } catch(...) {
+        diskSize->availSize = 6 * 1024 * 1024;
+    } catch (...) {
         return -1;
     }
     return EN_OK;
 }
 
-TEST_F(MSPROF_TEST, init_engine) {
+TEST_F(MSPROF_TEST, init_engine)
+{
     GlobalMockObject::verify();
-    MOCKER_CPP(&ReceiveData::WaitAllBufferEmptyEvent)
-        .stubs();
+    MOCKER_CPP(&ReceiveData::WaitAllBufferEmptyEvent).stubs();
     static EngineImpl_0 engine_0;
     MOCKER_CPP(&Msprof::Engine::RpcDataHandle::TryToConnect).stubs().will(returnValue(PROFILING_SUCCESS));
     moduleName = "DATA_PREPROCESS";
@@ -174,20 +174,20 @@ TEST_F(MSPROF_TEST, init_engine) {
     ret = Msprof::Engine::Init("aaa", &engine_0);
     EXPECT_EQ(PROFILING_FAILED, ret);
 
-    ret = EngineMgr::instance()->ProfStart("DATA_PREPROCESS"); //start the module again
+    ret = EngineMgr::instance()->ProfStart("DATA_PREPROCESS"); // start the module again
     EXPECT_EQ(PROFILING_FAILED, ret);
 
-    ret = EngineMgr::instance()->ProfStop("DATA_PREPROCESS"); //stop the registered module
+    ret = EngineMgr::instance()->ProfStop("DATA_PREPROCESS"); // stop the registered module
     EXPECT_EQ(PROFILING_SUCCESS, ret);
 
     ret = EngineMgr::instance()->UnInit("DATA_PREPROCESS");
     EXPECT_EQ(PROFILING_SUCCESS, ret);
 }
 
-TEST_F(MSPROF_TEST, uninit_engine) {
+TEST_F(MSPROF_TEST, uninit_engine)
+{
     GlobalMockObject::verify();
-    MOCKER_CPP(&ReceiveData::WaitAllBufferEmptyEvent)
-        .stubs();
+    MOCKER_CPP(&ReceiveData::WaitAllBufferEmptyEvent).stubs();
     static EngineImpl_0 engine_0;
 
     MOCKER_CPP(&Msprof::Engine::RpcDataHandle::TryToConnect).stubs().will(returnValue(PROFILING_SUCCESS));
@@ -217,8 +217,7 @@ TEST_F(MSPROF_TEST, ConfigHandler)
 TEST_F(MSPROF_TEST, ModuleJob)
 {
     GlobalMockObject::verify();
-    MOCKER_CPP(&ReceiveData::WaitAllBufferEmptyEvent)
-        .stubs();
+    MOCKER_CPP(&ReceiveData::WaitAllBufferEmptyEvent).stubs();
     static EngineImpl_0 engine_0;
 
     MOCKER_CPP(&Msprof::Engine::RpcDataHandle::TryToConnect).stubs().will(returnValue(PROFILING_SUCCESS));
@@ -257,7 +256,7 @@ TEST_F(MSPROF_TEST, DISABLED_MsprofTxMemPool)
     ret = stampPool->Init(-1);
     EXPECT_EQ(PROFILING_FAILED, ret);
 
-    MsprofStampInstance *instance = stampPool->CreateStamp();
+    MsprofStampInstance* instance = stampPool->CreateStamp();
     EXPECT_NE(nullptr, instance);
 
     ret = stampPool->MsprofStampPush(instance);
@@ -269,7 +268,7 @@ TEST_F(MSPROF_TEST, DISABLED_MsprofTxMemPool)
     int id = stampPool->GetIdByStamp(instance);
     EXPECT_EQ(0, id);
 
-    MsprofStampInstance *instanceTmp = stampPool->GetStampById(id);
+    MsprofStampInstance* instanceTmp = stampPool->GetStampById(id);
     EXPECT_EQ(instance, instanceTmp);
 
     id = stampPool->GetIdByStamp(nullptr);
@@ -293,10 +292,7 @@ TEST_F(MSPROF_TEST, DISABLED_MsprofTxMemPool)
     EXPECT_EQ(PROFILING_SUCCESS, ret);
 }
 
-int32_t MsprofAdditionalBufPushCallbackStub(uint32_t aging, const VOID_PTR data, uint32_t len)
-{
-    return 0;
-}
+int32_t MsprofAdditionalBufPushCallbackStub(uint32_t aging, const VOID_PTR data, uint32_t len) { return 0; }
 
 TEST_F(MSPROF_TEST, MsprofTxManager_FAIL)
 {
@@ -371,7 +367,7 @@ TEST_F(MSPROF_TEST, MsprofTxManager)
 
     ret = manager->SetStampCategory(stamp, 1);
     EXPECT_EQ(PROFILING_SUCCESS, ret);
-    
+
     ret = manager->SetStampTraceMessage(stamp, msg.c_str(), 129);
     EXPECT_EQ(PROFILING_FAILED, ret);
 
@@ -411,7 +407,7 @@ TEST_F(MSPROF_TEST, MsprofTxReportBase)
     std::shared_ptr<MsprofTxReporter> report;
     MSVP_MAKE_SHARED0(report, MsprofTxReporter, return);
 
-    MsprofTxInfo data = { 0 };
+    MsprofTxInfo data = {0};
     // ReporterCallback_ is nullptr
     int32_t ret = report->Report(data);
     EXPECT_EQ(MSPROF_ERROR, ret);
@@ -426,11 +422,7 @@ TEST_F(MSPROF_TEST, MsprofTxReportBase)
     report->UnInit();
 }
 
-int32_t MsprofMarkExCallbackStub(uint64_t indexId, uint64_t modelId, uint16_t tagId, VOID_PTR stm)
-{
-    return 0;
-}
-
+int32_t MsprofMarkExCallbackStub(uint64_t indexId, uint64_t modelId, uint16_t tagId, VOID_PTR stm) { return 0; }
 
 TEST_F(MSPROF_TEST, MarkExBase)
 {
@@ -454,28 +446,24 @@ TEST_F(MSPROF_TEST, MarkExBase)
     ret = manager->MarkEx("abc", 1, stream);
     EXPECT_EQ(ret, PROFILING_FAILED);
     // The length of input message should be in range of 1~127
-    const char *msg128 = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+    const char* msg128 = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                         "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
     ret = manager->MarkEx(msg128, 128, stream);
     EXPECT_EQ(ret, PROFILING_FAILED);
     ret = manager->MarkEx("", 0, stream);
     EXPECT_EQ(ret, PROFILING_FAILED);
     // Failed to call nullptr rtProfilerTraceEx
-    const char *msg127 = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+    const char* msg127 = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                         "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
     ret = manager->MarkEx(msg127, 127, stream);
     EXPECT_EQ(ret, PROFILING_FAILED);
     // Failed to call rtProfilerTraceEx
     manager->RegisterRuntimeTxCallback(MsprofMarkExCallbackStub);
-    MOCKER(MsprofMarkExCallbackStub)
-        .stubs()
-        .will(returnValue(-1))
-        .then(returnValue(0));
+    MOCKER(MsprofMarkExCallbackStub).stubs().will(returnValue(-1)).then(returnValue(0));
     ret = manager->MarkEx(msg127, 127, stream);
     EXPECT_EQ(ret, PROFILING_FAILED);
     // Report profiling data failed
-    MOCKER_CPP(&Msprof::MsprofTx::MsprofTxReporter::Report)
-        .stubs()
-        .will(returnValue(-1))
-        .then(returnValue(0));
+    MOCKER_CPP(&Msprof::MsprofTx::MsprofTxReporter::Report).stubs().will(returnValue(-1)).then(returnValue(0));
     ret = manager->MarkEx(msg127, 127, stream);
     EXPECT_EQ(ret, PROFILING_FAILED);
     // success
@@ -490,11 +478,10 @@ public:
     virtual ~EngineImplFmk() {}
 
 public:
-    PluginIntf * CreatePlugin() {
-        return new PluginImpl("runtime");
-    }
+    PluginIntf* CreatePlugin() { return new PluginImpl("runtime"); }
 
-    int ReleasePlugin(PluginIntf * plugin) {
+    int ReleasePlugin(PluginIntf* plugin)
+    {
         if (plugin) {
             delete plugin;
             plugin = nullptr;
@@ -542,9 +529,7 @@ TEST_F(MSPROF_TEST, RpcDumper_Start_GetNameAndIdFailed)
 TEST_F(MSPROF_TEST, RpcDumper_Start_TryToConnectFailed)
 {
     GlobalMockObject::verify();
-    MOCKER_CPP(&Msprof::Engine::RpcDataHandle::TryToConnect)
-        .stubs()
-        .will(returnValue(PROFILING_FAILED));
+    MOCKER_CPP(&Msprof::Engine::RpcDataHandle::TryToConnect).stubs().will(returnValue(PROFILING_FAILED));
     RpcDumper dumper("DATA_PREPROCESS-100-2");
     EXPECT_EQ(PROFILING_FAILED, dumper.Start());
 }

@@ -14,6 +14,6 @@
 #include "ascend_hal.h"
 #include "securec.h"
 
-extern int IdeDaemonTestMain(int argc, char *argv[]);
+extern int IdeDaemonTestMain(int argc, char* argv[]);
 
-#endif  //__IDE_DAEMON_DEVICE_STEST_H
+#endif //__IDE_DAEMON_DEVICE_STEST_H

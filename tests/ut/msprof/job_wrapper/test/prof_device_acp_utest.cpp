@@ -29,10 +29,8 @@ using namespace Collector::Dvvp::Acp;
 
 class PROF_DEVICE_ACP_UTEST : public testing::Test {
 protected:
-    virtual void SetUp()
-    {}
-    virtual void TearDown()
-    {}
+    virtual void SetUp() {}
+    virtual void TearDown() {}
 
 public:
 };
@@ -149,7 +147,8 @@ TEST_F(PROF_DEVICE_ACP_UTEST, GenerateFileName)
     EXPECT_EQ(genName, "/tmp/PROF_DEVICE_SOC_UTEST/GenerateFileName.0");
 }
 
-TEST_F(PROF_DEVICE_ACP_UTEST, ParseAiCoreConfig) {
+TEST_F(PROF_DEVICE_ACP_UTEST, ParseAiCoreConfig)
+{
     GlobalMockObject::verify();
 
     MOCKER_CPP(&analysis::dvvp::common::validation::ParamValidation::CheckAiCoreEventsIsValid)
@@ -170,8 +169,7 @@ TEST_F(PROF_DEVICE_ACP_UTEST, ParseAiCoreConfig) {
     tmpAiCoreEventsCoreIds->push_back(1);
     cfg->aiCoreEvents = *tsCpuEvents;
     cfg->aiCoreEventsCoreIds = *tmpAiCoreEventsCoreIds;
-    std::shared_ptr<analysis::dvvp::message::ProfileParams> params(
-        new analysis::dvvp::message::ProfileParams);
+    std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams);
     acpComputeDeviceJob->params_ = params;
     acpComputeDeviceJob->params_->taskBlock = "on";
     std::shared_ptr<CollectionJobCfg> jobCfg1;
@@ -182,9 +180,9 @@ TEST_F(PROF_DEVICE_ACP_UTEST, ParseAiCoreConfig) {
     MSVP_MAKE_SHARED0(jobCfg2, CollectionJobCfg, return);
     acpComputeDeviceJob->collectionJobV_[AI_CORE_TASK_DRV_COLLECTION_JOB].jobCfg = jobCfg2;
     acpComputeDeviceJob->collectionJobV_[FFTS_PROFILE_COLLECTION_JOB].jobCfg = jobCfg2;
-    EXPECT_EQ(PROFILING_FAILED,acpComputeDeviceJob->ParseAiCoreConfig(cfg));
-    EXPECT_EQ(PROFILING_FAILED,acpComputeDeviceJob->ParseAiCoreConfig(cfg));
-    EXPECT_EQ(PROFILING_SUCCESS,acpComputeDeviceJob->ParseAiCoreConfig(cfg));
+    EXPECT_EQ(PROFILING_FAILED, acpComputeDeviceJob->ParseAiCoreConfig(cfg));
+    EXPECT_EQ(PROFILING_FAILED, acpComputeDeviceJob->ParseAiCoreConfig(cfg));
+    EXPECT_EQ(PROFILING_SUCCESS, acpComputeDeviceJob->ParseAiCoreConfig(cfg));
 }
 
 TEST_F(PROF_DEVICE_ACP_UTEST, ParsePmuConfig)

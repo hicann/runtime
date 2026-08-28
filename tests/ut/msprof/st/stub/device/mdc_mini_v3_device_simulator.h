@@ -27,16 +27,16 @@ namespace Test {
 class MdcMiniV3DeviceSimulator : public DeviceSimulator {
 public:
     MdcMiniV3DeviceSimulator() {}
-    explicit MdcMiniV3DeviceSimulator(uint32_t platformType) :
-        platformType_(platformType) {}
+    explicit MdcMiniV3DeviceSimulator(uint32_t platformType) : platformType_(platformType) {}
     virtual ~MdcMiniV3DeviceSimulator() {}
-    virtual int32_t ProfDrvGetChannels(ChannelList &channels) override;
-    virtual int32_t GetDeviceInfo(int32_t moduleType, int32_t infoType, int64_t *value) override;
+    virtual int32_t ProfDrvGetChannels(ChannelList& channels) override;
+    virtual int32_t GetDeviceInfo(int32_t moduleType, int32_t infoType, int64_t* value) override;
+
 private:
     uint32_t platformType_;
 };
-}
-}
-}
+} // namespace Test
+} // namespace Dvvp
+} // namespace Cann
 
 #endif

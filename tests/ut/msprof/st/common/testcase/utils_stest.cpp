@@ -28,7 +28,7 @@
 #include <errno.h>
 #include <algorithm>
 #include <fstream>
-//mac
+// mac
 #include <net/if.h>
 #include <sys/prctl.h>
 #include "utils/utils.h"
@@ -39,50 +39,44 @@
 using namespace analysis::dvvp::common::utils;
 using namespace analysis::dvvp::common::error;
 
-class COMMON_UTILS_UTILS_STEST: public testing::Test {
+class COMMON_UTILS_UTILS_STEST : public testing::Test {
 protected:
-    virtual void SetUp() {
-    }
-    virtual void TearDown() {
-    }
+    virtual void SetUp() {}
+    virtual void TearDown() {}
 };
 
 int32_t g_scanDir = 0;
-int32_t OsalScandirStub(const char *filePath, OsalDirent ***namelist)
+int32_t OsalScandirStub(const char* filePath, OsalDirent*** namelist)
 {
     g_scanDir++;
     return 0;
 }
-TEST_F(COMMON_UTILS_UTILS_STEST, RemoveDir) {
+TEST_F(COMMON_UTILS_UTILS_STEST, RemoveDir)
+{
     GlobalMockObject::verify();
     std::string path = "/path/to/dir";
     // OsalScandir failed
     Utils::RemoveDir(path, false);
     // nameList is nullptr
-    MOCKER(OsalScandir)
-        .stubs()
-        .with(any(), any(), any(), any())
-        .will(invoke(OsalScandirStub));
+    MOCKER(OsalScandir).stubs().with(any(), any(), any(), any()).will(invoke(OsalScandirStub));
     Utils::RemoveDir(path, false);
     EXPECT_EQ(g_scanDir, 1);
 }
 
-TEST_F(COMMON_UTILS_UTILS_STEST, WriteFile_fileno_failed) {
+TEST_F(COMMON_UTILS_UTILS_STEST, WriteFile_fileno_failed)
+{
     GlobalMockObject::verify();
     std::string profName = "test\n";
     system("touch ./writeFile_test");
-    MOCKER_CPP(fileno)
-        .stubs()
-        .will(returnValue(-1));
-    MOCKER_CPP(fclose)
-        .stubs()
-        .will(returnValue(2));
+    MOCKER_CPP(fileno).stubs().will(returnValue(-1));
+    MOCKER_CPP(fclose).stubs().will(returnValue(2));
     // fileno failed
     EXPECT_EQ(PROFILING_FAILED, analysis::dvvp::common::utils::WriteFile("./test", "test", profName));
     system("rm -rf ./writeFile_test");
 }
 
-TEST_F(COMMON_UTILS_UTILS_STEST, get_child_dirs_out_range_of_depth) {
+TEST_F(COMMON_UTILS_UTILS_STEST, get_child_dirs_out_range_of_depth)
+{
     GlobalMockObject::verify();
     std::string dir("/tmp/get_child_dirs_scan_dir_fail");
     bool is_recur = false;
@@ -91,7 +85,8 @@ TEST_F(COMMON_UTILS_UTILS_STEST, get_child_dirs_out_range_of_depth) {
     EXPECT_EQ(0, child_dir.size());
 }
 
-TEST_F(COMMON_UTILS_UTILS_STEST, get_files_out_range_of_depth) {
+TEST_F(COMMON_UTILS_UTILS_STEST, get_files_out_range_of_depth)
+{
     GlobalMockObject::verify();
     std::string path = "/path/to/dir";
     std::vector<std::string> files;
@@ -99,7 +94,8 @@ TEST_F(COMMON_UTILS_UTILS_STEST, get_files_out_range_of_depth) {
     EXPECT_EQ(0, files.size());
 }
 
-TEST_F(COMMON_UTILS_UTILS_STEST, CheckStrToInt32Failed) {
+TEST_F(COMMON_UTILS_UTILS_STEST, CheckStrToInt32Failed)
+{
     int32_t value = 0;
     bool ret = Utils::StrToInt32(value, "2147483647");
     EXPECT_EQ(value, 2147483647);
@@ -125,7 +121,8 @@ TEST_F(COMMON_UTILS_UTILS_STEST, CheckStrToInt32Failed) {
     EXPECT_EQ(value, 1123);
 }
 
-TEST_F(COMMON_UTILS_UTILS_STEST, CheckStrToStrToUint32Failed) {
+TEST_F(COMMON_UTILS_UTILS_STEST, CheckStrToStrToUint32Failed)
+{
     uint32_t value = 0;
     bool ret = Utils::StrToUint32(value, "4294967295");
     EXPECT_EQ(value, 4294967295);
@@ -143,7 +140,8 @@ TEST_F(COMMON_UTILS_UTILS_STEST, CheckStrToStrToUint32Failed) {
     EXPECT_TRUE(value == 0);
 }
 
-TEST_F(COMMON_UTILS_UTILS_STEST, IsDirAccessible) {
+TEST_F(COMMON_UTILS_UTILS_STEST, IsDirAccessible)
+{
     std::string path = "/notDir";
     EXPECT_EQ(false, Utils::IsDirAccessible(path));
 

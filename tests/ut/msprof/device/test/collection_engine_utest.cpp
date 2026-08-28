@@ -39,61 +39,59 @@ using namespace analysis::dvvp::driver;
 using namespace analysis::dvvp::message;
 using namespace Analysis::Dvvp::JobWrapper;
 
-class DEVICE_COLLECTION_ENGINE_TEST: public testing::Test {
+class DEVICE_COLLECTION_ENGINE_TEST : public testing::Test {
 protected:
-    virtual void SetUp() {
+    virtual void SetUp()
+    {
         HDC_SESSION session = (HDC_SESSION)0x12345678;
         _transport = std::shared_ptr<analysis::dvvp::transport::HDCTransport>(
             new analysis::dvvp::transport::HDCTransport(session));
     }
-    virtual void TearDown() {
-        _transport.reset();
-    }
+    virtual void TearDown() { _transport.reset(); }
+
 public:
     std::shared_ptr<analysis::dvvp::transport::HDCTransport> _transport;
 };
 
-TEST_F(DEVICE_COLLECTION_ENGINE_TEST, CollectEngine_destructor) {
+TEST_F(DEVICE_COLLECTION_ENGINE_TEST, CollectEngine_destructor)
+{
     GlobalMockObject::verify();
 
-    std::shared_ptr<analysis::dvvp::device::CollectEngine> engine(
-            new analysis::dvvp::device::CollectEngine());
+    std::shared_ptr<analysis::dvvp::device::CollectEngine> engine(new analysis::dvvp::device::CollectEngine());
     EXPECT_EQ(PROFILING_SUCCESS, engine->Init());
     EXPECT_EQ(PROFILING_SUCCESS, engine->Uinit());
     engine.reset();
 }
 
-
-TEST_F(DEVICE_COLLECTION_ENGINE_TEST, Init) {
+TEST_F(DEVICE_COLLECTION_ENGINE_TEST, Init)
+{
     GlobalMockObject::verify();
 
-    std::shared_ptr<analysis::dvvp::device::CollectEngine> engine(
-            new analysis::dvvp::device::CollectEngine());
+    std::shared_ptr<analysis::dvvp::device::CollectEngine> engine(new analysis::dvvp::device::CollectEngine());
 
     EXPECT_EQ(PROFILING_SUCCESS, engine->Init());
 }
 
-TEST_F(DEVICE_COLLECTION_ENGINE_TEST, SetDevIdOnHost) {
+TEST_F(DEVICE_COLLECTION_ENGINE_TEST, SetDevIdOnHost)
+{
     GlobalMockObject::verify();
 
-    std::shared_ptr<analysis::dvvp::device::CollectEngine> engine(
-            new analysis::dvvp::device::CollectEngine());
+    std::shared_ptr<analysis::dvvp::device::CollectEngine> engine(new analysis::dvvp::device::CollectEngine());
 
     EXPECT_EQ(PROFILING_SUCCESS, engine->Init());
 
-    engine->collectionJobCommCfg_ =
-        std::shared_ptr<Analysis::Dvvp::JobWrapper::CollectionJobCommonParams>(
+    engine->collectionJobCommCfg_ = std::shared_ptr<Analysis::Dvvp::JobWrapper::CollectionJobCommonParams>(
         new Analysis::Dvvp::JobWrapper::CollectionJobCommonParams());
 
     engine->SetDevIdOnHost(0);
     EXPECT_EQ(PROFILING_SUCCESS, engine->Uinit());
 }
 
-TEST_F(DEVICE_COLLECTION_ENGINE_TEST, Uinit) {
+TEST_F(DEVICE_COLLECTION_ENGINE_TEST, Uinit)
+{
     GlobalMockObject::verify();
 
-    std::shared_ptr<analysis::dvvp::device::CollectEngine> engine(
-            new analysis::dvvp::device::CollectEngine());
+    std::shared_ptr<analysis::dvvp::device::CollectEngine> engine(new analysis::dvvp::device::CollectEngine());
 
     MOCKER_CPP(&analysis::dvvp::device::CollectEngine::CollectStop)
         .stubs()
@@ -106,7 +104,8 @@ TEST_F(DEVICE_COLLECTION_ENGINE_TEST, Uinit) {
     EXPECT_EQ(PROFILING_SUCCESS, engine->Uinit());
 }
 
-static int _drv_get_dev_ids(int num_devices, std::vector<int> & dev_ids) {
+static int _drv_get_dev_ids(int num_devices, std::vector<int>& dev_ids)
+{
     static int phase = 0;
     if (phase == 0) {
         phase++;
@@ -119,19 +118,19 @@ static int _drv_get_dev_ids(int num_devices, std::vector<int> & dev_ids) {
     }
 }
 
-TEST_F(DEVICE_COLLECTION_ENGINE_TEST, CollectStart) {
+TEST_F(DEVICE_COLLECTION_ENGINE_TEST, CollectStart)
+{
     GlobalMockObject::verify();
 
-    std::shared_ptr<analysis::dvvp::device::CollectEngine> engine(
-            new analysis::dvvp::device::CollectEngine());
+    std::shared_ptr<analysis::dvvp::device::CollectEngine> engine(new analysis::dvvp::device::CollectEngine());
     std::string sampleConfig;
     analysis::dvvp::message::StatusInfo status;
 
     engine->Init(0);
-    engine->isInited_  = true;
+    engine->isInited_ = true;
     engine->tmpResultDir_ = "./tmp/to/project_dir";
-    engine->collectionJobCommCfg_->params = std::shared_ptr<analysis::dvvp::message::ProfileParams>(
-        new analysis::dvvp::message::ProfileParams());
+    engine->collectionJobCommCfg_->params =
+        std::shared_ptr<analysis::dvvp::message::ProfileParams>(new analysis::dvvp::message::ProfileParams());
 
     MOCKER_CPP(&analysis::dvvp::device::CollectEngine::InitBeforeCollectStart)
         .stubs()
@@ -140,27 +139,25 @@ TEST_F(DEVICE_COLLECTION_ENGINE_TEST, CollectStart) {
     EXPECT_EQ(PROFILING_SUCCESS, engine->CollectStart(sampleConfig, status));
 }
 
-TEST_F(DEVICE_COLLECTION_ENGINE_TEST, CollectStop) {
+TEST_F(DEVICE_COLLECTION_ENGINE_TEST, CollectStop)
+{
     GlobalMockObject::verify();
 
-    std::shared_ptr<analysis::dvvp::device::CollectEngine> engine(
-            new analysis::dvvp::device::CollectEngine());
+    std::shared_ptr<analysis::dvvp::device::CollectEngine> engine(new analysis::dvvp::device::CollectEngine());
     analysis::dvvp::message::StatusInfo status;
     EXPECT_EQ(PROFILING_FAILED, engine->CollectStop(status));
     engine->Init(0);
     engine->_is_started = true;
     engine->tmpResultDir_ = "./tmp/to/project_dir";
-    engine->collectionJobCommCfg_->params = std::shared_ptr<analysis::dvvp::message::ProfileParams>(
-        new analysis::dvvp::message::ProfileParams());
+    engine->collectionJobCommCfg_->params =
+        std::shared_ptr<analysis::dvvp::message::ProfileParams>(new analysis::dvvp::message::ProfileParams());
 
     MOCKER_CPP(&analysis::dvvp::device::CollectEngine::CollectStopReplay)
         .stubs()
         .will(returnValue(PROFILING_FAILED))
         .then(returnValue(PROFILING_SUCCESS));
 
-    MOCKER(analysis::dvvp::common::utils::Utils::RemoveDir)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER(analysis::dvvp::common::utils::Utils::RemoveDir).stubs().will(returnValue(PROFILING_SUCCESS));
 
     MOCKER_CPP(&analysis::dvvp::device::CollectionEntry::FinishCollection)
         .stubs()
@@ -175,11 +172,11 @@ TEST_F(DEVICE_COLLECTION_ENGINE_TEST, CollectStop) {
     EXPECT_EQ(PROFILING_SUCCESS, engine->CollectStop(status));
 }
 
-TEST_F(DEVICE_COLLECTION_ENGINE_TEST, CollectStartReplay) {
+TEST_F(DEVICE_COLLECTION_ENGINE_TEST, CollectStartReplay)
+{
     GlobalMockObject::verify();
 
-    std::shared_ptr<analysis::dvvp::device::CollectEngine> engine(
-            new analysis::dvvp::device::CollectEngine());
+    std::shared_ptr<analysis::dvvp::device::CollectEngine> engine(new analysis::dvvp::device::CollectEngine());
     engine->Init(1);
     auto ctrl_cpu_event = std::make_shared<std::vector<std::string>>();
     auto ts_cpu_event = std::make_shared<std::vector<std::string>>();
@@ -188,9 +185,9 @@ TEST_F(DEVICE_COLLECTION_ENGINE_TEST, CollectStartReplay) {
     auto aiv_event = std::make_shared<std::vector<std::string>>();
     auto aiv_event_cores = std::make_shared<std::vector<int>>();
     analysis::dvvp::message::StatusInfo status;
-    //llc
+    // llc
     auto llc_event = std::make_shared<std::vector<std::string>>();
-    //ddr
+    // ddr
     auto ddr_event = std::make_shared<std::vector<std::string>>();
 
     ctrl_cpu_event->push_back("0x11");
@@ -204,8 +201,7 @@ TEST_F(DEVICE_COLLECTION_ENGINE_TEST, CollectStartReplay) {
     ddr_event->push_back("write");
     ddr_event->push_back("master_id");
 
-    std::shared_ptr<analysis::dvvp::message::ProfileParams> params(
-        new analysis::dvvp::message::ProfileParams);
+    std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams);
     params->ai_core_profiling = "on";
     params->ai_core_profiling_mode = "sample-based";
     engine->collectionJobCommCfg_->params = params;
@@ -216,31 +212,21 @@ TEST_F(DEVICE_COLLECTION_ENGINE_TEST, CollectStartReplay) {
     engine->collectionJobCommCfg_->params->hbmProfiling = "on";
     engine->collectionJobCommCfg_->params->hbm_profiling_events = "read,write";
 
-    MOCKER(analysis::dvvp::common::utils::Utils::ExecCmd)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER(analysis::dvvp::common::utils::Utils::ExecCmd).stubs().will(returnValue(PROFILING_SUCCESS));
 
-    MOCKER(mmCreateTaskWithThreadAttr)
-        .stubs()
-        .will(returnValue(EN_OK));
+    MOCKER(mmCreateTaskWithThreadAttr).stubs().will(returnValue(EN_OK));
 
     engine->_is_started = false;
-    EXPECT_EQ(PROFILING_FAILED, engine->CollectStartReplay(
-            ctrl_cpu_event,
-            status,
-            llc_event));
+    EXPECT_EQ(PROFILING_FAILED, engine->CollectStartReplay(ctrl_cpu_event, status, llc_event));
     engine->_is_started = true;
-    EXPECT_EQ(PROFILING_FAILED, engine->CollectStartReplay(
-            ctrl_cpu_event,
-            status,
-            llc_event));
+    EXPECT_EQ(PROFILING_FAILED, engine->CollectStartReplay(ctrl_cpu_event, status, llc_event));
 }
 
-TEST_F(DEVICE_COLLECTION_ENGINE_TEST, CollectStopReplay) {
+TEST_F(DEVICE_COLLECTION_ENGINE_TEST, CollectStopReplay)
+{
     GlobalMockObject::verify();
 
-    std::shared_ptr<analysis::dvvp::device::CollectEngine> engine(
-            new analysis::dvvp::device::CollectEngine());
+    std::shared_ptr<analysis::dvvp::device::CollectEngine> engine(new analysis::dvvp::device::CollectEngine());
 
     auto ctrl_cpu_event = std::make_shared<std::vector<std::string>>();
     auto ts_cpu_event = std::make_shared<std::vector<std::string>>();
@@ -255,21 +241,17 @@ TEST_F(DEVICE_COLLECTION_ENGINE_TEST, CollectStopReplay) {
     ai_core_event->push_back("0x11");
     ai_core_event_cores->push_back(1);
 
-    engine->collectionJobCommCfg_ =
-        std::shared_ptr<Analysis::Dvvp::JobWrapper::CollectionJobCommonParams>(
+    engine->collectionJobCommCfg_ = std::shared_ptr<Analysis::Dvvp::JobWrapper::CollectionJobCommonParams>(
         new Analysis::Dvvp::JobWrapper::CollectionJobCommonParams());
     engine->collectionJobCommCfg_->devId = 0;
     engine->CreateCollectionJobArray();
 
-    std::shared_ptr<analysis::dvvp::message::ProfileParams> params(
-        new analysis::dvvp::message::ProfileParams);
+    std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams);
     engine->collectionJobCommCfg_->params = params;
     engine->collectionJobCommCfg_->params->dvpp_profiling = "on";
     engine->collectionJobCommCfg_->params->nicProfiling = "on";
 
-    MOCKER(analysis::dvvp::common::utils::Utils::ExecCmd)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER(analysis::dvvp::common::utils::Utils::ExecCmd).stubs().will(returnValue(PROFILING_SUCCESS));
 
     engine->_is_started = false;
     EXPECT_EQ(PROFILING_FAILED, engine->CollectStopReplay(status));
@@ -283,12 +265,10 @@ TEST_F(DEVICE_COLLECTION_ENGINE_TEST, CollectStopReplay) {
     engine->_is_started = true;
     engine->tmpResultDir_ = "./tmp_result_dir";
 
-    //MOCKER_CPP(&analysis::dvvp::common::thread::Thread::Stop)
-    //    .stubs()
-    //    .will(returnValue(PROFILING_SUCCESS));
-    MOCKER(mmJoinTask)
-        .stubs()
-        .will(returnValue(EN_OK));
+    // MOCKER_CPP(&analysis::dvvp::common::thread::Thread::Stop)
+    //     .stubs()
+    //     .will(returnValue(PROFILING_SUCCESS));
+    MOCKER(mmJoinTask).stubs().will(returnValue(EN_OK));
 
     EXPECT_EQ(PROFILING_SUCCESS, engine->CollectStopReplay(status));
     EXPECT_EQ(analysis::dvvp::message::SUCCESS, status.status);
@@ -301,26 +281,27 @@ TEST_F(DEVICE_COLLECTION_ENGINE_TEST, CollectStopReplay) {
     analysis::dvvp::common::utils::Utils::RemoveDir(engine->tmpResultDir_);
 }
 
-void fake_get_files(const std::string & dir, bool is_recur, std::vector<std::string>& files) {
+void fake_get_files(const std::string& dir, bool is_recur, std::vector<std::string>& files)
+{
     std::string ctrl_cpu_data_path = "./path/to/ctrl_cpu_data_path";
     files.push_back(ctrl_cpu_data_path + ".1");
     files.push_back(ctrl_cpu_data_path + ".2");
     files.push_back("./not_data");
 }
 
-int DrvGetDevIds(int num_devices, std::vector<int> & dev_ids) {
+int DrvGetDevIds(int num_devices, std::vector<int>& dev_ids)
+{
     dev_ids.push_back(0);
     return PROFILING_SUCCESS;
 }
 
-TEST_F(DEVICE_COLLECTION_ENGINE_TEST, CreateTmpDir) {
+TEST_F(DEVICE_COLLECTION_ENGINE_TEST, CreateTmpDir)
+{
     GlobalMockObject::verify();
 
-    std::shared_ptr<analysis::dvvp::device::CollectEngine> engine(
-            new analysis::dvvp::device::CollectEngine());
+    std::shared_ptr<analysis::dvvp::device::CollectEngine> engine(new analysis::dvvp::device::CollectEngine());
 
-    engine->collectionJobCommCfg_ =
-        std::shared_ptr<Analysis::Dvvp::JobWrapper::CollectionJobCommonParams>(
+    engine->collectionJobCommCfg_ = std::shared_ptr<Analysis::Dvvp::JobWrapper::CollectionJobCommonParams>(
         new Analysis::Dvvp::JobWrapper::CollectionJobCommonParams());
 
     auto app_dirs = std::make_shared<std::vector<std::string>>();
@@ -329,8 +310,7 @@ TEST_F(DEVICE_COLLECTION_ENGINE_TEST, CreateTmpDir) {
     app_dirs->push_back("./tmp/path/to/app/bin");
     app_dirs->push_back("./tmp/path/to/app/conf/1.conf");
 
-    std::shared_ptr<analysis::dvvp::message::ProfileParams> params(
-        new analysis::dvvp::message::ProfileParams);
+    std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams);
     engine->collectionJobCommCfg_->params = params;
     engine->collectionJobCommCfg_->params->job_id = "123";
     std::string tmp;
@@ -347,20 +327,18 @@ TEST_F(DEVICE_COLLECTION_ENGINE_TEST, CreateTmpDir) {
     EXPECT_EQ(PROFILING_SUCCESS, engine->CreateTmpDir(tmp));
 }
 
-TEST_F(DEVICE_COLLECTION_ENGINE_TEST, CleanupResults) {
+TEST_F(DEVICE_COLLECTION_ENGINE_TEST, CleanupResults)
+{
     GlobalMockObject::verify();
-    std::shared_ptr<analysis::dvvp::device::CollectEngine> engine(
-            new analysis::dvvp::device::CollectEngine());
-    engine->collectionJobCommCfg_ =
-        std::shared_ptr<Analysis::Dvvp::JobWrapper::CollectionJobCommonParams>(
+    std::shared_ptr<analysis::dvvp::device::CollectEngine> engine(new analysis::dvvp::device::CollectEngine());
+    engine->collectionJobCommCfg_ = std::shared_ptr<Analysis::Dvvp::JobWrapper::CollectionJobCommonParams>(
         new Analysis::Dvvp::JobWrapper::CollectionJobCommonParams());
 
-        //on
-    std::shared_ptr<analysis::dvvp::message::ProfileParams> params(
-        new analysis::dvvp::message::ProfileParams);
+    // on
+    std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams);
     engine->collectionJobCommCfg_->params = params;
     engine->collectionJobCommCfg_->params->job_id = "123";
-    //null param
+    // null param
     EXPECT_EQ(PROFILING_SUCCESS, engine->CleanupResults());
     engine->tmpResultDir_ = "./tmp/folder";
     EXPECT_EQ(PROFILING_SUCCESS, engine->CleanupResults());
@@ -371,50 +349,44 @@ TEST_F(DEVICE_COLLECTION_ENGINE_TEST, CleanupResults) {
     app_dirs->push_back("./tmp/path/to/app/bin");
     app_dirs->push_back("./tmp/path/to/app/conf/1.conf");
 
-
-
-
-    MOCKER(&analysis::dvvp::common::utils::Utils::RemoveDir)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER(&analysis::dvvp::common::utils::Utils::RemoveDir).stubs().will(returnValue(PROFILING_SUCCESS));
 
     engine->tmpResultDir_ = "./tmp/folder";
     EXPECT_EQ(PROFILING_SUCCESS, engine->CleanupResults());
 }
 
-TEST_F(DEVICE_COLLECTION_ENGINE_TEST, BindFileWithChannel) {
+TEST_F(DEVICE_COLLECTION_ENGINE_TEST, BindFileWithChannel)
+{
     GlobalMockObject::verify();
 
-    std::shared_ptr<analysis::dvvp::device::CollectEngine> engine(
-            new analysis::dvvp::device::CollectEngine());
+    std::shared_ptr<analysis::dvvp::device::CollectEngine> engine(new analysis::dvvp::device::CollectEngine());
 
     std::string org_file = "1.data";
     EXPECT_STREQ("1.data.1", engine->BindFileWithChannel(org_file, 1).c_str());
 }
 
-TEST_F(DEVICE_COLLECTION_ENGINE_TEST, CreateCollectionJobArray) {
+TEST_F(DEVICE_COLLECTION_ENGINE_TEST, CreateCollectionJobArray)
+{
     GlobalMockObject::verify();
 
-    std::shared_ptr<analysis::dvvp::device::CollectEngine> engine(
-            new analysis::dvvp::device::CollectEngine());
+    std::shared_ptr<analysis::dvvp::device::CollectEngine> engine(new analysis::dvvp::device::CollectEngine());
     EXPECT_NE(nullptr, engine);
-     engine->CreateCollectionJobArray();
+    engine->CreateCollectionJobArray();
 }
 
-TEST_F(DEVICE_COLLECTION_ENGINE_TEST, CheckPmuEventIsValid) {
+TEST_F(DEVICE_COLLECTION_ENGINE_TEST, CheckPmuEventIsValid)
+{
     GlobalMockObject::verify();
 
-    std::shared_ptr<analysis::dvvp::device::CollectEngine> engine(
-            new analysis::dvvp::device::CollectEngine());
+    std::shared_ptr<analysis::dvvp::device::CollectEngine> engine(new analysis::dvvp::device::CollectEngine());
     EXPECT_NE(nullptr, engine);
 
     auto ctrl_cpu_event = std::make_shared<std::vector<std::string>>();
-    //llc
+    // llc
     auto llc_event = std::make_shared<std::vector<std::string>>();
 
     ctrl_cpu_event->push_back("0x11");
     llc_event->push_back("e1,e2");
-
 
     MOCKER_CPP(&analysis::dvvp::common::validation::ParamValidation::CheckCtrlCpuEventIsValid)
         .stubs()
@@ -429,4 +401,3 @@ TEST_F(DEVICE_COLLECTION_ENGINE_TEST, CheckPmuEventIsValid) {
     EXPECT_EQ(PROFILING_FAILED, engine->CheckPmuEventIsValid(ctrl_cpu_event, llc_event));
     EXPECT_EQ(PROFILING_SUCCESS, engine->CheckPmuEventIsValid(ctrl_cpu_event, llc_event));
 }
-

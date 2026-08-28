@@ -28,7 +28,7 @@ static const char CLOUD_RM_RF[] = "rm -rf ./acljsonCloudstest_workspace";
 static const char CLOUD_MKDIR[] = "mkdir ./acljsonCloudstest_workspace";
 static const char CLOUD_OUTPUT_DIR[] = "./acljsonCloudstest_workspace/output";
 
-class AclJsonCloudStest: public testing::Test {
+class AclJsonCloudStest : public testing::Test {
 protected:
     virtual void SetUp()
     {
@@ -67,8 +67,8 @@ TEST_F(AclJsonCloudStest, AclJsonDefault)
     std::vector<std::string> deviceDataList = {"hwts.data", "ts_track.data", "aicore.data"};
     MsprofMgr().SetDeviceCheckList(deviceDataList);
     std::vector<std::string> hostDataList = {
-        "unaging.api_event.data", "unaging.compact.node_basic_info", "unaging.compact.task_track", "unaging.additional.context_id_info"
-    };
+        "unaging.api_event.data", "unaging.compact.node_basic_info", "unaging.compact.task_track",
+        "unaging.additional.context_id_info"};
     MsprofMgr().SetHostCheckList(hostDataList);
     std::vector<uint64_t> bitList = {PROF_ACL_API, PROF_TASK_TIME_L1, PROF_AICORE_METRICS};
     MsprofMgr().SetBitSwitchCheckList(bitList);
@@ -86,7 +86,7 @@ TEST_F(AclJsonCloudStest, AclJsonHardwareMem)
     EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().AclJsonStart(1, data));
 }
 namespace ge {
-    extern int32_t HandleProfStartCommand(const MsprofCommandHandle * command);
+extern int32_t HandleProfStartCommand(const MsprofCommandHandle* command);
 }
 TEST_F(AclJsonCloudStest, AclJsonDefaultCallBackFailed)
 {
@@ -110,8 +110,8 @@ TEST_F(AclJsonCloudStest, AclJsonTaskMemory)
     std::vector<std::string> deviceDataList = {"hwts.data", "ts_track.data", "aicore.data"};
     MsprofMgr().SetDeviceCheckList(deviceDataList);
     std::vector<std::string> hostDataList = {
-        "unaging.api_event.data", "unaging.compact.node_basic_info", "unaging.compact.task_track", "unaging.additional.context_id_info"
-    };
+        "unaging.api_event.data", "unaging.compact.node_basic_info", "unaging.compact.task_track",
+        "unaging.additional.context_id_info"};
     MsprofMgr().SetHostCheckList(hostDataList);
     std::vector<uint64_t> bitList = {PROF_ACL_API, PROF_TASK_TIME_L1, PROF_AICORE_METRICS, PROF_TASK_MEMORY};
     MsprofMgr().SetBitSwitchCheckList(bitList);

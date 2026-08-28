@@ -10,22 +10,10 @@
 #include "prof_api.h"
 #include "prof_inner_api.h"
 
-int32_t profSetStepInfo(const uint64_t indexId, const uint16_t tagId, void* const stream)
-{
-    return 0;
-}
+int32_t profSetStepInfo(const uint64_t indexId, const uint16_t tagId, void* const stream) { return 0; }
 
-MSVP_PROF_API uint64_t ProfStr2Id(const char *hashInfo, size_t length)
-{
-    return 0;
-}
+MSVP_PROF_API uint64_t ProfStr2Id(const char* hashInfo, size_t length) { return 0; }
 
-MSVP_PROF_API int32_t ProfAclRangePushEx(ACLPROF_EVENT_ATTR_PTR attr)
-{
-    return 0;
-}
+MSVP_PROF_API int32_t ProfAclRangePushEx(ACLPROF_EVENT_ATTR_PTR attr) { return 0; }
 
-MSVP_PROF_API int32_t ProfAclRangePop()
-{
-    return 0;
-}
+MSVP_PROF_API int32_t ProfAclRangePop() { return 0; }

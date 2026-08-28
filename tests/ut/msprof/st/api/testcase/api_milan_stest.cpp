@@ -20,7 +20,7 @@
 #include "prof_acl_api.h"
 #include "devprof_drv_aicpu.h"
 
-class ApiMilanTest: public testing::Test {
+class ApiMilanTest : public testing::Test {
 protected:
     int32_t deviceNum;
     virtual void SetUp()
@@ -32,11 +32,12 @@ protected:
         const ::testing::TestInfo* curTest = ::testing::UnitTest::GetInstance()->current_test_info();
         DataMgr().Init(SOC_TYPE, curTest->name());
         deviceNum = 1;
-        EXPECT_EQ(deviceNum, SimulatorMgr().CreateDeviceSimulator(deviceNum, static_cast<StPlatformType>(PLATFORM_TYPE)));
+        EXPECT_EQ(
+            deviceNum, SimulatorMgr().CreateDeviceSimulator(deviceNum, static_cast<StPlatformType>(PLATFORM_TYPE)));
     }
     virtual void TearDown()
     {
-        DevprofDrvAicpu::instance()->isRegister_ = false;   // 重置aicpu注册状态，使单进程内能多次注册
+        DevprofDrvAicpu::instance()->isRegister_ = false; // 重置aicpu注册状态，使单进程内能多次注册
         EXPECT_EQ(deviceNum, SimulatorMgr().DelDeviceSimulator(deviceNum, static_cast<StPlatformType>(PLATFORM_TYPE)));
         DataMgr().UnInit();
         GlobalMockObject::verify();
@@ -76,7 +77,7 @@ TEST_F(ApiMilanTest, SubscribeOpGetThreadIdFailed)
     int8_t opTimeSwitch = 1;
     aclprofAicoreMetrics aicoreMetrics = ACL_AICORE_NONE;
     uint32_t fd = 1;
-    auto *config = aclprofCreateSubscribeConfig(opTimeSwitch, aicoreMetrics, reinterpret_cast<void *>(&fd));
+    auto* config = aclprofCreateSubscribeConfig(opTimeSwitch, aicoreMetrics, reinterpret_cast<void*>(&fd));
     EXPECT_NE(config, nullptr);
 
     uint32_t devId = 0;

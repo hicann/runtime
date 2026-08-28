@@ -21,23 +21,23 @@
 extern "C" {
 #endif /* __cplusplus */
 #endif /* __cplusplus */
-typedef signed long long   INT64;
-typedef unsigned char      UINT8;
-typedef unsigned short     UINT16;
-typedef unsigned int       UINT32;
-typedef signed char        INT8;
-typedef signed short       INT16;
-typedef signed int         INT32;
-typedef float              FLOAT;
-typedef double             DOUBLE;
-typedef char               CHAR;
-typedef UINT32             BOOL;
-typedef volatile INT32     Atomic;
-typedef volatile INT64     Atomic64;
-#define STATIC             static
-#define INLINE             inline
+typedef signed long long INT64;
+typedef unsigned char UINT8;
+typedef unsigned short UINT16;
+typedef unsigned int UINT32;
+typedef signed char INT8;
+typedef signed short INT16;
+typedef signed int INT32;
+typedef float FLOAT;
+typedef double DOUBLE;
+typedef char CHAR;
+typedef UINT32 BOOL;
+typedef volatile INT32 Atomic;
+typedef volatile INT64 Atomic64;
+#define STATIC static
+#define INLINE inline
 
-STATIC INLINE BOOL LOS_AtomicCmpXchg32bits(Atomic *v, INT32 val, INT32 oldVal)
+STATIC INLINE BOOL LOS_AtomicCmpXchg32bits(Atomic* v, INT32 val, INT32 oldVal)
 {
     INT32 prevVal;
     prevVal = *v;
@@ -47,22 +47,15 @@ STATIC INLINE BOOL LOS_AtomicCmpXchg32bits(Atomic *v, INT32 val, INT32 oldVal)
     return (prevVal != oldVal);
 }
 
-STATIC INLINE INT32 LOS_AtomicRead(const Atomic *v)
-{
-    return *v;
-}
+STATIC INLINE INT32 LOS_AtomicRead(const Atomic* v) { return *v; }
 
-STATIC INLINE void LOS_AtomicSet(Atomic *v, INT32 setVal)
-{
-    *v = setVal;
-}
+STATIC INLINE void LOS_AtomicSet(Atomic* v, INT32 setVal) { *v = setVal; }
 
-STATIC INLINE INT32 LOS_AtomicAdd(Atomic *v, INT32 addVal)
+STATIC INLINE INT32 LOS_AtomicAdd(Atomic* v, INT32 addVal)
 {
     *v += addVal;
     return *v;
 }
-
 
 #ifdef __cplusplus
 #if __cplusplus

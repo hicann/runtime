@@ -32,31 +32,27 @@ using namespace Analysis::Dvvp::Adx;
 using DevInfoT = struct IdeDevInfo;
 extern struct IdeGlobalCtrlInfo g_ideGlobalInfo;
 extern struct IdeComponentsFuncs g_ideComponentsFuncs;
-extern int IdeDaemonHdcProcessEventOne(struct IdeSock &clientFd);
-extern int IdeDaemonReadReq(const struct IdeTransChannel &handle, IdeTlvReqAddr req);
-extern int IdeDaemonHdcProcessEventOne(const struct DevSession &devSession);
-extern void IdeDaemonCreateHdcServer(DevInfoT *devInfo);
-extern int IdeCreateHdcHandleThread(HDC_SESSION session, const DevInfoT &devInfo);
-extern int IdeHdcDistroyDevice(const DevInfoT &devInfo);
+extern int IdeDaemonHdcProcessEventOne(struct IdeSock& clientFd);
+extern int IdeDaemonReadReq(const struct IdeTransChannel& handle, IdeTlvReqAddr req);
+extern int IdeDaemonHdcProcessEventOne(const struct DevSession& devSession);
+extern void IdeDaemonCreateHdcServer(DevInfoT* devInfo);
+extern int IdeCreateHdcHandleThread(HDC_SESSION session, const DevInfoT& devInfo);
+extern int IdeHdcDistroyDevice(const DevInfoT& devInfo);
 extern IdeThreadArg IdeDaemonHdcHandleEvent(IdeThreadArg args);
 extern int IdeHdcCheckRunEnv(HDC_SESSION session);
 
-class IDE_HANDLE_STEST: public testing::Test {
+class IDE_HANDLE_STEST : public testing::Test {
 protected:
     HDC_SESSION session = (HDC_SESSION)0x12345678;
-    virtual void SetUp() {
-        g_ideGlobalInfo.mapDevInfo.clear();
-    }
-    virtual void TearDown() {
-        GlobalMockObject::verify();
-    }
+    virtual void SetUp() { g_ideGlobalInfo.mapDevInfo.clear(); }
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 TEST_F(IDE_HANDLE_STEST, IdeDaemonReadReq_recv_len_failed)
 {
     int buf_len = UINT32_MAX;
-    void *sock_desc = (void *)0x12345678;
-    struct tlv_req *req = NULL;
+    void* sock_desc = (void*)0x12345678;
+    struct tlv_req* req = NULL;
 
     MOCKER(IdeRead)
         .stubs()
@@ -65,10 +61,10 @@ TEST_F(IDE_HANDLE_STEST, IdeDaemonReadReq_recv_len_failed)
         .then(returnValue(IDE_DAEMON_OK));
 
     struct IdeTransChannel handle = {IdeChannel::IDE_CHANNEL_SOCK, sock_desc};
-    //IdeRead failed
+    // IdeRead failed
     EXPECT_EQ(IDE_DAEMON_ERROR, IdeDaemonReadReq(handle, &req));
     EXPECT_TRUE(req == NULL);
-    //IdeXmalloc failed
+    // IdeXmalloc failed
     EXPECT_EQ(IDE_DAEMON_ERROR, IdeDaemonReadReq(handle, &req));
     EXPECT_TRUE(req == NULL);
 }
@@ -76,20 +72,18 @@ TEST_F(IDE_HANDLE_STEST, IdeDaemonReadReq_recv_len_failed)
 TEST_F(IDE_HANDLE_STEST, IdeDaemonReadReq_IdeXmalloc_failed)
 {
     int buf_len = 4;
-    char *buf = (char *)IdeXmalloc(buf_len);
-    void *sock_desc = (void *)0x12345678;
-    struct tlv_req *req = NULL;
+    char* buf = (char*)IdeXmalloc(buf_len);
+    void* sock_desc = (void*)0x12345678;
+    struct tlv_req* req = NULL;
 
-    MOCKER(IdeXmalloc)
-        .stubs()
-        .will(returnValue((void *)NULL));
+    MOCKER(IdeXmalloc).stubs().will(returnValue((void*)NULL));
 
     MOCKER(IdeRead)
         .stubs()
-        .with(any(), outBoundP((void **)&buf, sizeof(void *)), outBoundP(&buf_len, sizeof(int)), any())
+        .with(any(), outBoundP((void**)&buf, sizeof(void*)), outBoundP(&buf_len, sizeof(int)), any())
         .will(returnValue(IDE_DAEMON_OK));
 
-    //IdeXmalloc failed
+    // IdeXmalloc failed
     struct IdeTransChannel handle = {IdeChannel::IDE_CHANNEL_SOCK, sock_desc};
     EXPECT_EQ(IDE_DAEMON_ERROR, IdeDaemonReadReq(handle, &req));
     EXPECT_TRUE(req == NULL);
@@ -98,57 +92,55 @@ TEST_F(IDE_HANDLE_STEST, IdeDaemonReadReq_IdeXmalloc_failed)
 TEST_F(IDE_HANDLE_STEST, IdeDaemonReadReq_memcpy_s_failed)
 {
     int buf_len = 4;
-    char *buf = (char *)IdeXmalloc(buf_len);
-    void *sock_desc = (void *)0x12345678;
-    struct tlv_req *req = NULL;
+    char* buf = (char*)IdeXmalloc(buf_len);
+    void* sock_desc = (void*)0x12345678;
+    struct tlv_req* req = NULL;
 
-    MOCKER(memcpy_s)
-        .stubs()
-        .will(returnValue(-1));
+    MOCKER(memcpy_s).stubs().will(returnValue(-1));
 
     MOCKER(IdeRead)
         .stubs()
-        .with(any(), outBoundP((void **)&buf, sizeof(void *)), outBoundP(&buf_len, sizeof(int)), any())
+        .with(any(), outBoundP((void**)&buf, sizeof(void*)), outBoundP(&buf_len, sizeof(int)), any())
         .will(returnValue(IDE_DAEMON_OK));
 
-    //IdeXmalloc failed
+    // IdeXmalloc failed
     struct IdeTransChannel handle = {IdeChannel::IDE_CHANNEL_SOCK, sock_desc};
     EXPECT_EQ(IDE_DAEMON_ERROR, IdeDaemonReadReq(handle, &req));
 }
 
 TEST_F(IDE_HANDLE_STEST, IdeDaemonReadReqLenFailed)
 {
-     int buf_len = 24;
-     char *buf = (char *)IdeXmalloc(buf_len);
-     struct tlv_req * ceq = (struct tlv_req *)buf;
-     ceq->len = buf_len - sizeof(struct tlv_req) - 1;
-     void *sock_desc = (void *)0x12345678;
-     struct tlv_req *req = NULL;
+    int buf_len = 24;
+    char* buf = (char*)IdeXmalloc(buf_len);
+    struct tlv_req* ceq = (struct tlv_req*)buf;
+    ceq->len = buf_len - sizeof(struct tlv_req) - 1;
+    void* sock_desc = (void*)0x12345678;
+    struct tlv_req* req = NULL;
 
     MOCKER(IdeRead)
-         .stubs()
-         .with(any(), outBoundP((void **)&buf, sizeof(void *)), outBoundP(&buf_len, sizeof(int)), any())
-         .will(returnValue(IDE_DAEMON_OK));
-     //succ failed
-     struct IdeTransChannel handle = {IdeChannel::IDE_CHANNEL_SOCK, sock_desc};
-     EXPECT_EQ(IDE_DAEMON_ERROR, IdeDaemonReadReq(handle, &req));
+        .stubs()
+        .with(any(), outBoundP((void**)&buf, sizeof(void*)), outBoundP(&buf_len, sizeof(int)), any())
+        .will(returnValue(IDE_DAEMON_OK));
+    // succ failed
+    struct IdeTransChannel handle = {IdeChannel::IDE_CHANNEL_SOCK, sock_desc};
+    EXPECT_EQ(IDE_DAEMON_ERROR, IdeDaemonReadReq(handle, &req));
 }
 
 TEST_F(IDE_HANDLE_STEST, IdeDaemonReadReqSucc)
 {
     int buf_len = 24;
-    char *buf = (char *)IdeXmalloc(buf_len);
-    struct tlv_req * ceq = (struct tlv_req *)buf;
+    char* buf = (char*)IdeXmalloc(buf_len);
+    struct tlv_req* ceq = (struct tlv_req*)buf;
     ceq->len = buf_len - sizeof(struct tlv_req);
-    void *sock_desc = (void *)0x12345678;
-    struct tlv_req *req = NULL;
+    void* sock_desc = (void*)0x12345678;
+    struct tlv_req* req = NULL;
 
-   MOCKER(IdeRead)
+    MOCKER(IdeRead)
         .stubs()
-        .with(any(), outBoundP((void **)&buf, sizeof(void *)), outBoundP(&buf_len, sizeof(int)), any())
+        .with(any(), outBoundP((void**)&buf, sizeof(void*)), outBoundP(&buf_len, sizeof(int)), any())
         .will(returnValue(IDE_DAEMON_OK));
 
-    //succ failed
+    // succ failed
     struct IdeTransChannel handle = {IdeChannel::IDE_CHANNEL_SOCK, sock_desc};
     EXPECT_EQ(IDE_DAEMON_OK, IdeDaemonReadReq(handle, &req));
     IdeXfree(req);
@@ -156,10 +148,10 @@ TEST_F(IDE_HANDLE_STEST, IdeDaemonReadReqSucc)
 
 TEST_F(IDE_HANDLE_STEST, IdeDaemonHdcProcessEventOneTest)
 {
-    HDC_SESSION  session = (HDC_SESSION)0x12345678;
-    struct DevSession *devSession = (struct DevSession *)IdeXmalloc(sizeof(struct DevSession));
-    TlvReqT *req = (TlvReqT *)IdeXmalloc(sizeof(TlvReqT));
-    devSession->session  = session;
+    HDC_SESSION session = (HDC_SESSION)0x12345678;
+    struct DevSession* devSession = (struct DevSession*)IdeXmalloc(sizeof(struct DevSession));
+    TlvReqT* req = (TlvReqT*)IdeXmalloc(sizeof(TlvReqT));
+    devSession->session = session;
     req->type = IDE_INVALID_REQ;
     req->dev_id = 0;
 
@@ -167,37 +159,30 @@ TEST_F(IDE_HANDLE_STEST, IdeDaemonHdcProcessEventOneTest)
 
     MOCKER(IdeDaemonReadReq)
         .stubs()
-        .with(any(), outBoundP(&req, sizeof(struct tlv_req *)), any())
+        .with(any(), outBoundP(&req, sizeof(struct tlv_req*)), any())
         .will(returnValue(IDE_DAEMON_ERROR))
         .then(returnValue(IDE_DAEMON_OK));
 
-    MOCKER(IdeGetComponentType)
-        .stubs()
-        .will(returnValue(IDE_COMPONENT_CMD))
-        .then(returnValue(NR_IDE_COMPONENTS));
+    MOCKER(IdeGetComponentType).stubs().will(returnValue(IDE_COMPONENT_CMD)).then(returnValue(NR_IDE_COMPONENTS));
 
-    //3.IdeDaemonHdcProcessEventOne success
-    MOCKER(ide_daemon_cmd_process_stub)
-        .stubs()
-        .will(returnValue(IDE_DAEMON_ERROR))
-        .then(returnValue(IDE_DAEMON_OK));
+    // 3.IdeDaemonHdcProcessEventOne success
+    MOCKER(ide_daemon_cmd_process_stub).stubs().will(returnValue(IDE_DAEMON_ERROR)).then(returnValue(IDE_DAEMON_OK));
 
-    MOCKER(IdeReqFree)
-        .stubs();
+    MOCKER(IdeReqFree).stubs();
 
-    //1.ide_daemon_sock_read_req failed
+    // 1.ide_daemon_sock_read_req failed
     EXPECT_EQ(IDE_DAEMON_ERROR, IdeDaemonHdcProcessEventOne(*devSession));
 
-    //2.ide_daemon_cmd_process_stub failed
+    // 2.ide_daemon_cmd_process_stub failed
     EXPECT_EQ(IDE_DAEMON_ERROR, IdeDaemonHdcProcessEventOne(*devSession));
 
-    //3.ide_daemon_cmd_process_stub success
+    // 3.ide_daemon_cmd_process_stub success
     EXPECT_EQ(nullptr, IdeDaemonHdcProcessEvent(devSession));
     IdeXfree(req);
 }
 
 int32_t g_drvHdcServ = 0;
-hdcError_t drvHdcServerCreateStub(int devid, int serviceType, HDC_SERVER *pServer)
+hdcError_t drvHdcServerCreateStub(int devid, int serviceType, HDC_SERVER* pServer)
 {
     *pServer = (HDC_SERVER)0x12345678;
     g_drvHdcServ++;
@@ -213,19 +198,14 @@ hdcError_t drvHdcServerCreateStub(int devid, int serviceType, HDC_SERVER *pServe
 TEST_F(IDE_HANDLE_STEST, IdeDaemonCreateHdcServerTest)
 {
     struct IdeDevInfo devInfo;
-    devInfo.phyDevId  = 1;
+    devInfo.phyDevId = 1;
     devInfo.serviceType = (drvHdcServiceType)0x1;
 
     g_ideGlobalInfo.hdcHandleEventFlag = true;
 
-    MOCKER(IdeGetLogIdByPhyId)
-        .stubs()
-        .will(returnValue(IDE_DAEMON_ERROR))
-        .then(returnValue(IDE_DAEMON_OK));
+    MOCKER(IdeGetLogIdByPhyId).stubs().will(returnValue(IDE_DAEMON_ERROR)).then(returnValue(IDE_DAEMON_OK));
 
-    MOCKER(drvHdcServerCreate)
-        .stubs()
-        .will(invoke(drvHdcServerCreateStub));
+    MOCKER(drvHdcServerCreate).stubs().will(invoke(drvHdcServerCreateStub));
 
     IdeDaemonCreateHdcServer(&devInfo);
     EXPECT_EQ(devInfo.server, (HDC_SERVER)0x12345678);
@@ -233,35 +213,28 @@ TEST_F(IDE_HANDLE_STEST, IdeDaemonCreateHdcServerTest)
 
 TEST_F(IDE_HANDLE_STEST, IdeCreateHdcHandleThread)
 {
-    HDC_SESSION  session = (HDC_SESSION)0x12345678;
+    HDC_SESSION session = (HDC_SESSION)0x12345678;
     struct DevSession devSession;
     struct IdeDevInfo devInfo;
     uintptr_t server_id = 0x12345678;
     HDC_SERVER server = (HDC_SERVER)server_id;
-    devInfo.phyDevId  = 1;
+    devInfo.phyDevId = 1;
     devInfo.server = server;
     devInfo.serviceType = (drvHdcServiceType)0x1;
 
     g_ideGlobalInfo.hdcHandleEventFlag = true;
 
-    MOCKER(IdeXmalloc)
-        .stubs()
-        .will(returnValue((void*)NULL))
-        .then(returnValue((void*)&devSession));
+    MOCKER(IdeXmalloc).stubs().will(returnValue((void*)NULL)).then(returnValue((void*)&devSession));
 
-    MOCKER(mmCreateTaskWithThreadAttr)
-        .stubs()
-        .will(returnValue(EN_ERROR))
-        .then(returnValue(EN_OK));
+    MOCKER(mmCreateTaskWithThreadAttr).stubs().will(returnValue(EN_ERROR)).then(returnValue(EN_OK));
 
-    MOCKER(IdeXfree)
-        .stubs();
+    MOCKER(IdeXfree).stubs();
 
-    //1.IdeCreateHdcHandleThread failed
+    // 1.IdeCreateHdcHandleThread failed
     EXPECT_EQ(IDE_DAEMON_ERROR, IdeCreateHdcHandleThread(session, devInfo));
-    //2.IdeCreateHdcHandleThread failed
+    // 2.IdeCreateHdcHandleThread failed
     EXPECT_EQ(IDE_DAEMON_ERROR, IdeCreateHdcHandleThread(session, devInfo));
-    //3.IdeCreateHdcHandleThread success
+    // 3.IdeCreateHdcHandleThread success
     EXPECT_EQ(IDE_DAEMON_OK, IdeCreateHdcHandleThread(session, devInfo));
 }
 
@@ -287,7 +260,6 @@ TEST_F(IDE_HANDLE_STEST, IdeHdcDistroyDeviceTest)
     EXPECT_EQ(IDE_DAEMON_ERROR, IdeHdcDistroyDevice(devInfo));
     devInfo.devDisable = false;
     EXPECT_EQ(IDE_DAEMON_OK, IdeHdcDistroyDevice(devInfo));
-
 }
 
 TEST_F(IDE_HANDLE_STEST, IdeDaemonHdcHandleEventTest)
@@ -306,8 +278,7 @@ TEST_F(IDE_HANDLE_STEST, IdeDaemonHdcHandleEventTest)
     devInfo.devDisable = true;
     devInfo.serviceType = HDC_SERVICE_TYPE_IDE2;
 
-    MOCKER(IdeDaemonCreateHdcServer)
-        .stubs();
+    MOCKER(IdeDaemonCreateHdcServer).stubs();
 
     MOCKER(drvHdcSessionAccept)
         .stubs()
@@ -316,41 +287,25 @@ TEST_F(IDE_HANDLE_STEST, IdeDaemonHdcHandleEventTest)
         .then(returnValue(DRV_ERROR_DEVICE_NOT_READY))
         .then(returnValue(DRV_ERROR_NONE));
 
-    MOCKER(mmGetErrorCode)
-        .stubs()
-        .will(returnValue(EINTR))
-        .then(returnValue(EINTR+1));
+    MOCKER(mmGetErrorCode).stubs().will(returnValue(EINTR)).then(returnValue(EINTR + 1));
 
-    MOCKER(drvHdcServerDestroy)
-        .stubs()
-        .will(returnValue(DRV_ERROR_DEVICE_NOT_READY))
-        .then(returnValue(DRV_ERROR_NONE));
+    MOCKER(drvHdcServerDestroy).stubs().will(returnValue(DRV_ERROR_DEVICE_NOT_READY)).then(returnValue(DRV_ERROR_NONE));
 
-    MOCKER(IdeHdcDistroyDevice)
-        .stubs()
-        .will(returnValue(IDE_DAEMON_ERROR))
-        .then(returnValue(IDE_DAEMON_OK));
+    MOCKER(IdeHdcDistroyDevice).stubs().will(returnValue(IDE_DAEMON_ERROR)).then(returnValue(IDE_DAEMON_OK));
 
     MOCKER(drvHdcSetSessionReference)
         .stubs()
         .will(returnValue(DRV_ERROR_DEVICE_NOT_READY))
         .then(returnValue(DRV_ERROR_NONE));
 
-    MOCKER(IdeHdcCheckRunEnv)
-        .stubs()
-        .will(returnValue(IDE_DAEMON_OK));
+    MOCKER(IdeHdcCheckRunEnv).stubs().will(returnValue(IDE_DAEMON_OK));
 
-    MOCKER(IdeCreateHdcHandleThread)
-        .stubs()
-        .will(returnValue(IDE_DAEMON_ERROR))
-        .then(returnValue(IDE_DAEMON_OK));
+    MOCKER(IdeCreateHdcHandleThread).stubs().will(returnValue(IDE_DAEMON_ERROR)).then(returnValue(IDE_DAEMON_OK));
 
-    MOCKER(HdcSessionClose)
-        .stubs()
-        .will(returnValue(IDE_DAEMON_OK));
+    MOCKER(HdcSessionClose).stubs().will(returnValue(IDE_DAEMON_OK));
 
-    //1.IdeDaemonHdcHandleEvent first break
+    // 1.IdeDaemonHdcHandleEvent first break
     EXPECT_EQ(nullptr, IdeDaemonHdcHandleEvent(IdeThreadArg(&devInfo)));
-    //2.IdeDaemonHdcHandleEvent second break
+    // 2.IdeDaemonHdcHandleEvent second break
     EXPECT_EQ(nullptr, IdeDaemonHdcHandleEvent(IdeThreadArg(&devInfo)));
 }

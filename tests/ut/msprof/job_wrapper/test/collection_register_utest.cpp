@@ -13,12 +13,10 @@
 #include "errno/error_code.h"
 #include "collection_register.h"
 
-
 using namespace analysis::dvvp::common::error;
 using namespace analysis::dvvp::message;
 
-class UtestCollectionJob : public Analysis::Dvvp::JobWrapper::ICollectionJob
-{
+class UtestCollectionJob : public Analysis::Dvvp::JobWrapper::ICollectionJob {
 public:
     UtestCollectionJob();
     virtual ~UtestCollectionJob();
@@ -27,47 +25,33 @@ public:
     int Uninit();
 };
 
-UtestCollectionJob::UtestCollectionJob()
-{
-}
+UtestCollectionJob::UtestCollectionJob() {}
 
-UtestCollectionJob::~UtestCollectionJob()
-{
-}
+UtestCollectionJob::~UtestCollectionJob() {}
 
 int UtestCollectionJob::Init(const std::shared_ptr<Analysis::Dvvp::JobWrapper::CollectionJobCfg> cfg)
 {
     return PROFILING_SUCCESS;
 }
 
-int UtestCollectionJob::Process()
-{
-    return PROFILING_SUCCESS;
-}
+int UtestCollectionJob::Process() { return PROFILING_SUCCESS; }
 
-int UtestCollectionJob::Uninit()
-{
-    return PROFILING_SUCCESS;
-}
+int UtestCollectionJob::Uninit() { return PROFILING_SUCCESS; }
 
-class JOB_WRAPPER_COLLECTION_REGISTRT_UTEST: public testing::Test {
+class JOB_WRAPPER_COLLECTION_REGISTRT_UTEST : public testing::Test {
 protected:
-    virtual void SetUp() {
-        
-    }
-    virtual void TearDown() {
-        GlobalMockObject::verify();
-    }
-
+    virtual void SetUp() {}
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
-TEST_F(JOB_WRAPPER_COLLECTION_REGISTRT_UTEST, CollectionRegisterMgr) {
+TEST_F(JOB_WRAPPER_COLLECTION_REGISTRT_UTEST, CollectionRegisterMgr)
+{
     Analysis::Dvvp::JobWrapper::CollectionRegisterMgr mgr;
     std::shared_ptr<Analysis::Dvvp::JobWrapper::ICollectionJob> instance = std::make_shared<UtestCollectionJob>();
-    //CollectionJobRegisterAndRun param error 
+    // CollectionJobRegisterAndRun param error
     int ret = mgr.CollectionJobRegisterAndRun(0, Analysis::Dvvp::JobWrapper::NR_MAX_COLLECTION_JOB, instance);
     EXPECT_EQ(PROFILING_FAILED, ret);
-    //CollectionJobRegisterAndRun param error 
+    // CollectionJobRegisterAndRun param error
     ret = mgr.CollectionJobRegisterAndRun(-1, Analysis::Dvvp::JobWrapper::DDR_DRV_COLLECTION_JOB, instance);
     EXPECT_EQ(PROFILING_FAILED, ret);
 
@@ -77,53 +61,54 @@ TEST_F(JOB_WRAPPER_COLLECTION_REGISTRT_UTEST, CollectionRegisterMgr) {
     ret = mgr.CollectionJobRegisterAndRun(0, Analysis::Dvvp::JobWrapper::DDR_DRV_COLLECTION_JOB, instance);
     EXPECT_EQ(PROFILING_FAILED, ret);
 
-    //CollectionJobUnregisterAndStop param error 
+    // CollectionJobUnregisterAndStop param error
     ret = mgr.CollectionJobUnregisterAndStop(0, Analysis::Dvvp::JobWrapper::NR_MAX_COLLECTION_JOB);
     EXPECT_EQ(PROFILING_FAILED, ret);
-    //CollectionJobUnregisterAndStop param error 
+    // CollectionJobUnregisterAndStop param error
     ret = mgr.CollectionJobUnregisterAndStop(-1, Analysis::Dvvp::JobWrapper::DDR_DRV_COLLECTION_JOB);
     EXPECT_EQ(PROFILING_FAILED, ret);
 
     ret = mgr.CollectionJobUnregisterAndStop(0, Analysis::Dvvp::JobWrapper::DDR_DRV_COLLECTION_JOB);
     EXPECT_EQ(PROFILING_SUCCESS, ret);
 
-    //delete the job and register
+    // delete the job and register
     ret = mgr.CollectionJobRegisterAndRun(0, Analysis::Dvvp::JobWrapper::DDR_DRV_COLLECTION_JOB, instance);
     EXPECT_EQ(PROFILING_SUCCESS, ret);
 
-    //stop the job and unregister
+    // stop the job and unregister
     ret = mgr.CollectionJobUnregisterAndStop(0, Analysis::Dvvp::JobWrapper::DDR_DRV_COLLECTION_JOB);
     EXPECT_EQ(PROFILING_SUCCESS, ret);
 
-    //stop the job and unregister
+    // stop the job and unregister
     ret = mgr.CollectionJobUnregisterAndStop(0, Analysis::Dvvp::JobWrapper::DDR_DRV_COLLECTION_JOB);
     EXPECT_EQ(PROFILING_FAILED, ret);
 
-    //CheckCollectionJobIsNoRegister param error 
+    // CheckCollectionJobIsNoRegister param error
     int a = 0;
     bool rets = mgr.CheckCollectionJobIsNoRegister(a, Analysis::Dvvp::JobWrapper::NR_MAX_COLLECTION_JOB);
     EXPECT_EQ(false, rets);
-    //CheckCollectionJobIsNoRegister param error 
+    // CheckCollectionJobIsNoRegister param error
     a = -1;
     rets = mgr.CheckCollectionJobIsNoRegister(a, Analysis::Dvvp::JobWrapper::DDR_DRV_COLLECTION_JOB);
     EXPECT_EQ(false, rets);
 
-    //InsertCollectionJob param error 
+    // InsertCollectionJob param error
     rets = mgr.InsertCollectionJob(0, Analysis::Dvvp::JobWrapper::NR_MAX_COLLECTION_JOB, instance);
     EXPECT_EQ(false, rets);
-    //InsertCollectionJob param error 
+    // InsertCollectionJob param error
     rets = mgr.InsertCollectionJob(-1, Analysis::Dvvp::JobWrapper::DDR_DRV_COLLECTION_JOB, instance);
     EXPECT_EQ(false, rets);
 
-    //GetAndDelCollectionJob param error 
+    // GetAndDelCollectionJob param error
     rets = mgr.GetAndDelCollectionJob(0, Analysis::Dvvp::JobWrapper::NR_MAX_COLLECTION_JOB, instance);
     EXPECT_EQ(false, rets);
-    //GetAndDelCollectionJob param error 
+    // GetAndDelCollectionJob param error
     rets = mgr.GetAndDelCollectionJob(-1, Analysis::Dvvp::JobWrapper::DDR_DRV_COLLECTION_JOB, instance);
     EXPECT_EQ(false, rets);
 }
 
-TEST_F(JOB_WRAPPER_COLLECTION_REGISTRT_UTEST, CollectionJobRun) {
+TEST_F(JOB_WRAPPER_COLLECTION_REGISTRT_UTEST, CollectionJobRun)
+{
     Analysis::Dvvp::JobWrapper::CollectionRegisterMgr mgr;
     std::shared_ptr<Analysis::Dvvp::JobWrapper::ICollectionJob> instance = std::make_shared<UtestCollectionJob>();
     EXPECT_EQ(PROFILING_FAILED, mgr.CollectionJobRun(0, Analysis::Dvvp::JobWrapper::NR_MAX_COLLECTION_JOB));
@@ -131,13 +116,15 @@ TEST_F(JOB_WRAPPER_COLLECTION_REGISTRT_UTEST, CollectionJobRun) {
     EXPECT_EQ(PROFILING_SUCCESS, mgr.CollectionJobRun(0, Analysis::Dvvp::JobWrapper::AICPU_COLLECTION_JOB));
 }
 
-TEST_F(JOB_WRAPPER_COLLECTION_REGISTRT_UTEST, CollectionJobFilenameMatchesJobTag) {
-    EXPECT_EQ("", Analysis::Dvvp::JobWrapper::COLLECTION_JOB_FILENAME[
-        Analysis::Dvvp::JobWrapper::HOST_CCA_MS_JOB]);
-    EXPECT_EQ("", Analysis::Dvvp::JobWrapper::COLLECTION_JOB_FILENAME[
-        Analysis::Dvvp::JobWrapper::DIAGNOSTIC_COLLECTION_JOB]);
-    EXPECT_EQ("data/nts_pmu.data", Analysis::Dvvp::JobWrapper::COLLECTION_JOB_FILENAME[
-        Analysis::Dvvp::JobWrapper::NTS_PMU_COLLECTION_JOB]);
-    EXPECT_EQ("data/nts_task.data", Analysis::Dvvp::JobWrapper::COLLECTION_JOB_FILENAME[
-        Analysis::Dvvp::JobWrapper::NTS_TASK_COLLECTION_JOB]);
+TEST_F(JOB_WRAPPER_COLLECTION_REGISTRT_UTEST, CollectionJobFilenameMatchesJobTag)
+{
+    EXPECT_EQ("", Analysis::Dvvp::JobWrapper::COLLECTION_JOB_FILENAME[Analysis::Dvvp::JobWrapper::HOST_CCA_MS_JOB]);
+    EXPECT_EQ(
+        "", Analysis::Dvvp::JobWrapper::COLLECTION_JOB_FILENAME[Analysis::Dvvp::JobWrapper::DIAGNOSTIC_COLLECTION_JOB]);
+    EXPECT_EQ(
+        "data/nts_pmu.data",
+        Analysis::Dvvp::JobWrapper::COLLECTION_JOB_FILENAME[Analysis::Dvvp::JobWrapper::NTS_PMU_COLLECTION_JOB]);
+    EXPECT_EQ(
+        "data/nts_task.data",
+        Analysis::Dvvp::JobWrapper::COLLECTION_JOB_FILENAME[Analysis::Dvvp::JobWrapper::NTS_TASK_COLLECTION_JOB]);
 }

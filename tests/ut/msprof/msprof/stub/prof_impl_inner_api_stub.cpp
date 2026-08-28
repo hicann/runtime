@@ -10,12 +10,6 @@
 
 #include "aprof_pub.h"
 
-int32_t MsprofReportApi(uint32_t agingFlag, const MsprofApi *api)
-{
-    return 0;
-}
+int32_t MsprofReportApi(uint32_t agingFlag, const MsprofApi* api) { return 0; }
 
-uint64_t MsprofSysCycleTime()
-{
-    return 0;
-}
+uint64_t MsprofSysCycleTime() { return 0; }

@@ -18,9 +18,9 @@ extern "C" void ProfImplSetCompactBufPop(const ProfCompactBufPopCallback func);
 extern "C" void ProfImplSetAdditionalBufPop(const ProfAdditionalBufPopCallback func);
 extern "C" void ProfImplIfReportBufEmpty(const ProfReportBufEmptyCallback func);
 
-static bool apiTryPop(uint32_t &aging, MsprofApi& data) {return false;}
-static bool compactTryPop(uint32_t &aging, MsprofCompactInfo& data) {return false;}
-static bool additionalTryPop(uint32_t &aging, MsprofAdditionalInfo& data) {return false;}
-static bool ifReportBufEmpty() {return true;}
+static bool apiTryPop(uint32_t& aging, MsprofApi& data) { return false; }
+static bool compactTryPop(uint32_t& aging, MsprofCompactInfo& data) { return false; }
+static bool additionalTryPop(uint32_t& aging, MsprofAdditionalInfo& data) { return false; }
+static bool ifReportBufEmpty() { return true; }
 
 #endif

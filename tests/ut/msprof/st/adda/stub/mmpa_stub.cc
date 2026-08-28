@@ -22,7 +22,7 @@ int g_mmCreateTaskWithDetachThreahHold = 0;
 int g_ide_create_task_time_threadhold = 0;
 int g_count = 0;
 
-INT32 mmCreateTask(mmThread *pstThreadHandle, mmUserBlock_t *pstFuncBlock)
+INT32 mmCreateTask(mmThread* pstThreadHandle, mmUserBlock_t* pstFuncBlock)
 {
     if (g_ide_create_task_time == 1) {
         pstFuncBlock->procFunc(pstFuncBlock->pulArg);
@@ -32,7 +32,7 @@ INT32 mmCreateTask(mmThread *pstThreadHandle, mmUserBlock_t *pstFuncBlock)
     return 0;
 }
 
-INT32 mmCreateTaskWithDetach(mmThread *pstThreadHandle, mmUserBlock_t *pstFuncBlock)
+INT32 mmCreateTaskWithDetach(mmThread* pstThreadHandle, mmUserBlock_t* pstFuncBlock)
 {
     if (g_mmCreateTaskWitchDeatchFlag == 1) {
         pstFuncBlock->procFunc(pstFuncBlock->pulArg);
@@ -43,14 +43,14 @@ INT32 mmCreateTaskWithDetach(mmThread *pstThreadHandle, mmUserBlock_t *pstFuncBl
     return 0;
 }
 
-INT32 mmCreateProcess(const CHAR *fileName, const mmArgvEnv *env, const CHAR *stdoutRedirectFile, mmProcess *id)
+INT32 mmCreateProcess(const CHAR* fileName, const mmArgvEnv* env, const CHAR* stdoutRedirectFile, mmProcess* id)
 {
     if (id == nullptr) {
         return EN_INVALID_PARAM;
     }
     pid_t child = 0;
-    CHAR **argv = nullptr;
-    CHAR **envp = nullptr;
+    CHAR** argv = nullptr;
+    CHAR** envp = nullptr;
     child = fork();
     if (child == EN_ERROR) {
         return EN_ERROR;
@@ -86,7 +86,7 @@ INT32 mmCreateProcess(const CHAR *fileName, const mmArgvEnv *env, const CHAR *st
     return EN_OK;
 }
 
-INT32 mmWaitPid(mmProcess pid, INT32 *status, INT32 options)
+INT32 mmWaitPid(mmProcess pid, INT32* status, INT32 options)
 {
     if ((options != MMPA_ZERO) && (options != M_WAIT_NOHANG) && (options != M_WAIT_UNTRACED)) {
         return EN_INVALID_PARAM;
@@ -94,18 +94,18 @@ INT32 mmWaitPid(mmProcess pid, INT32 *status, INT32 options)
 
     INT32 ret = waitpid(pid, status, options);
     if (ret == EN_ERROR) {
-        ret = EN_ERROR;                          // 调用异常
-    } else if (ret > MMPA_ZERO && ret == pid) {  // 返回了子进程ID
-        return EN_ERR;                           // 进程结束
+        ret = EN_ERROR;                         // 调用异常
+    } else if (ret > MMPA_ZERO && ret == pid) { // 返回了子进程ID
+        return EN_ERR;                          // 进程结束
     }
     return EN_OK;
 }
 
-INT32 mmGetEnv(const CHAR *name, CHAR *value, UINT32 len)
+INT32 mmGetEnv(const CHAR* name, CHAR* value, UINT32 len)
 {
     INT32 result;
     UINT32 envLen = 0;
-    CHAR *envPtr = nullptr;
+    CHAR* envPtr = nullptr;
     if (name == nullptr || value == nullptr || len == 0) {
         return EN_INVALID_PARAM;
     }
@@ -122,7 +122,7 @@ INT32 mmGetEnv(const CHAR *name, CHAR *value, UINT32 len)
     if (envLen != 0 && len < envLen) {
         return EN_INVALID_PARAM;
     } else {
-        result = memcpy_s(value, len, envPtr, envLen);  // lint !e613
+        result = memcpy_s(value, len, envPtr, envLen); // lint !e613
         if (result != EN_OK) {
             return EN_ERROR;
         }
@@ -130,7 +130,7 @@ INT32 mmGetEnv(const CHAR *name, CHAR *value, UINT32 len)
     return EN_OK;
 }
 
-INT32 mmGetLocalTime(mmSystemTime_t *sysTime)
+INT32 mmGetLocalTime(mmSystemTime_t* sysTime)
 {
     if (sysTime == nullptr) {
         return EN_INVALID_PARAM;
@@ -153,7 +153,7 @@ INT32 mmGetLocalTime(mmSystemTime_t *sysTime)
     sysTime->wMinute = nowTime.tm_min;
     sysTime->wHour = nowTime.tm_hour;
     sysTime->wDay = nowTime.tm_mday;
-    sysTime->wMonth = nowTime.tm_mon + 1;  // in localtime month is [0,11],but in fact month is [1,12]
+    sysTime->wMonth = nowTime.tm_mon + 1; // in localtime month is [0,11],but in fact month is [1,12]
     sysTime->wYear = nowTime.tm_year + MMPA_COMPUTER_BEGIN_YEAR;
     sysTime->wDayOfWeek = nowTime.tm_wday;
     sysTime->tm_yday = nowTime.tm_yday;
@@ -175,62 +175,32 @@ INT32 mmDup2(INT32 oldFd, INT32 newFd)
     return EN_OK;
 }
 
-INT32 mmMutexInit(mmMutex_t *mutex)
-{
-    return 0;
-}
+INT32 mmMutexInit(mmMutex_t* mutex) { return 0; }
 
-INT32 mmMutexLock(mmMutex_t *mutex)
-{
-    return 0;
-}
+INT32 mmMutexLock(mmMutex_t* mutex) { return 0; }
 
-INT32 mmMutexUnLock(mmMutex_t *mutex)
-{
-    return 0;
-}
+INT32 mmMutexUnLock(mmMutex_t* mutex) { return 0; }
 
-INT32 mmMutexDestroy(mmMutex_t *mutex)
-{
-    return 0;
-}
+INT32 mmMutexDestroy(mmMutex_t* mutex) { return 0; }
 
-INT32 mmSemInit(mmSem_t *sem, UINT32 value)
-{
-    return 0;
-}
+INT32 mmSemInit(mmSem_t* sem, UINT32 value) { return 0; }
 
-INT32 mmSemWait(mmSem_t *sem)
-{
-    return 0;
-}
+INT32 mmSemWait(mmSem_t* sem) { return 0; }
 
-INT32 mmSemPost(mmSem_t *sem)
-{
-    return 0;
-}
+INT32 mmSemPost(mmSem_t* sem) { return 0; }
 
-INT32 mmSemDestroy(mmSem_t *sem)
-{
-    return 0;
-}
+INT32 mmSemDestroy(mmSem_t* sem) { return 0; }
 
-INT32 mmJoinTask(mmThread *pstThreadHandle)
-{
-    return 0;
-}
+INT32 mmJoinTask(mmThread* pstThreadHandle) { return 0; }
 
-INT32 mmChdir(const CHAR *path)
-{
-    return 0;
-}
+INT32 mmChdir(const CHAR* path) { return 0; }
 
-INT32 mmGetCwd(CHAR *buffer, INT32 maxLen)
+INT32 mmGetCwd(CHAR* buffer, INT32 maxLen)
 {
     if ((buffer == nullptr) || (maxLen < MMPA_ZERO)) {
         return EN_INVALID_PARAM;
     }
-    CHAR *ptr = getcwd(buffer, (UINT32)maxLen);
+    CHAR* ptr = getcwd(buffer, (UINT32)maxLen);
     if (ptr != nullptr) {
         return EN_OK;
     } else {
@@ -240,142 +210,61 @@ INT32 mmGetCwd(CHAR *buffer, INT32 maxLen)
     return 0;
 }
 
-INT32 mmRmdir(const CHAR *lpPathName)
-{
-    return 0;
-}
+INT32 mmRmdir(const CHAR* lpPathName) { return 0; }
 
-INT32 mmMkdir(const CHAR *lpPathName, mmMode_t mode)
-{
-    return 0;
-}
+INT32 mmMkdir(const CHAR* lpPathName, mmMode_t mode) { return 0; }
 
-INT32 mmAccess2(const CHAR *pathName, INT32 mode)
-{
-    return 0;
-}
+INT32 mmAccess2(const CHAR* pathName, INT32 mode) { return 0; }
 
-INT32 mmAccess(CHAR *pathName)
-{
-    return 0;
-}
+INT32 mmAccess(CHAR* pathName) { return 0; }
 
-INT32 mmSleep(UINT32 millseconds)
-{
-    return 0;
-}
+INT32 mmSleep(UINT32 millseconds) { return 0; }
 
-LONG mmLseek(INT32 fd, INT64 offset, INT32 seekFlag)
-{
-    return 0;
-}
+LONG mmLseek(INT32 fd, INT64 offset, INT32 seekFlag) { return 0; }
 
-INT32 mmFtruncate(mmProcess fd, UINT32 length)
-{
-    return 0;
-}
+INT32 mmFtruncate(mmProcess fd, UINT32 length) { return 0; }
 
-INT32 mmClose(INT32 fd)
-{
-    return 0;
-}
+INT32 mmClose(INT32 fd) { return 0; }
 
-INT32 mmOpen2(const CHAR *pathName, INT32 flags, MODE mode)
-{
-    return 1;
-}
+INT32 mmOpen2(const CHAR* pathName, INT32 flags, MODE mode) { return 1; }
 
-mmSsize_t mmWrite(INT32 fd, VOID *mmBuf, UINT32 mmCount)
-{
-    return mmCount;
-}
+mmSsize_t mmWrite(INT32 fd, VOID* mmBuf, UINT32 mmCount) { return mmCount; }
 
-mmSsize_t mmRead(INT32 fd, VOID *mmBuf, UINT32 mmCount)
-{
-    return mmCount;
-}
+mmSsize_t mmRead(INT32 fd, VOID* mmBuf, UINT32 mmCount) { return mmCount; }
 
-INT32 mmUnlink(const CHAR *pathName)
-{
-    return 0;
-}
+INT32 mmUnlink(const CHAR* pathName) { return 0; }
 
-mmSockHandle mmSocket(INT32 sockFamily, INT32 type, INT32 protocol)
-{
-    return 1;
-}
+mmSockHandle mmSocket(INT32 sockFamily, INT32 type, INT32 protocol) { return 1; }
 
-INT32 mmBind(mmSockHandle sockfd, mmSockAddr *addr, mmSocklen_t addrlen)
-{
-    return 0;
-}
+INT32 mmBind(mmSockHandle sockfd, mmSockAddr* addr, mmSocklen_t addrlen) { return 0; }
 
-INT32 mmListen(mmSockHandle sockfd, INT32 backlog)
-{
-    return 0;
-}
+INT32 mmListen(mmSockHandle sockfd, INT32 backlog) { return 0; }
 
-mmSockHandle mmAccept(mmSockHandle sockfd, mmSockAddr *addr, mmSocklen_t *addrlen)
-{
-    return 1;
-}
+mmSockHandle mmAccept(mmSockHandle sockfd, mmSockAddr* addr, mmSocklen_t* addrlen) { return 1; }
 
-INT32 mmConnect(mmSockHandle sockfd, mmSockAddr *addr, mmSocklen_t addrlen)
-{
-    return 0;
-}
+INT32 mmConnect(mmSockHandle sockfd, mmSockAddr* addr, mmSocklen_t addrlen) { return 0; }
 
-INT32 mmCloseSocket(mmSockHandle sockfd)
-{
-    return 0;
-}
+INT32 mmCloseSocket(mmSockHandle sockfd) { return 0; }
 
-INT32 mmSAStartup()
-{
-    return 0;
-}
+INT32 mmSAStartup() { return 0; }
 
-INT32 mmSACleanup()
-{
-    return 0;
-}
+INT32 mmSACleanup() { return 0; }
 
-mmSsize_t mmSocketSend(mmSockHandle sockfd, VOID *pstSendBuf, INT32 sendLen, INT32 sendFlag)
-{
-    return 0;
-}
+mmSsize_t mmSocketSend(mmSockHandle sockfd, VOID* pstSendBuf, INT32 sendLen, INT32 sendFlag) { return 0; }
 
-mmSsize_t mmSocketRecv(mmSockHandle sockfd, VOID *pstRecvBuf, INT32 recvLen, INT32 recvFlag)
-{
-    return 1;
-}
+mmSsize_t mmSocketRecv(mmSockHandle sockfd, VOID* pstRecvBuf, INT32 recvLen, INT32 recvFlag) { return 1; }
 
-mmProcess mmOpenFile(const CHAR *Filename, UINT32 access, mmCreateFlag createFlag)
-{
-    return 1;
-}
+mmProcess mmOpenFile(const CHAR* Filename, UINT32 access, mmCreateFlag createFlag) { return 1; }
 
-INT32 mmFsync(mmProcess fd)
-{
-    return EN_OK;
-}
+INT32 mmFsync(mmProcess fd) { return EN_OK; }
 
-mmSsize_t mmReadFile(mmProcess fileId, VOID *buffer, INT32 len)
-{
-    return len;
-}
+mmSsize_t mmReadFile(mmProcess fileId, VOID* buffer, INT32 len) { return len; }
 
-mmSsize_t mmWriteFile(mmProcess fileId, VOID *buffer, INT32 len)
-{
-    return len;
-}
+mmSsize_t mmWriteFile(mmProcess fileId, VOID* buffer, INT32 len) { return len; }
 
-INT32 mmCloseFile(mmProcess fileId)
-{
-    return 0;
-}
+INT32 mmCloseFile(mmProcess fileId) { return 0; }
 
-INT32 mmSemWait_stub(mmSem_t *sem)
+INT32 mmSemWait_stub(mmSem_t* sem)
 {
     g_mmSemwait_time++;
     if (g_mmSemwait_time == 1) {
@@ -387,7 +276,7 @@ INT32 mmSemWait_stub(mmSem_t *sem)
     return 0;
 }
 
-INT32 mmCreateTask_stub(mmThread *pstThreadHandle, mmUserBlock_t *pstFuncBlock)
+INT32 mmCreateTask_stub(mmThread* pstThreadHandle, mmUserBlock_t* pstFuncBlock)
 {
     g_ide_create_task_time++;
     if (g_ide_create_task_time < g_ide_create_task_time_threadhold) {
@@ -398,7 +287,7 @@ INT32 mmCreateTask_stub(mmThread *pstThreadHandle, mmUserBlock_t *pstFuncBlock)
     }
 }
 
-INT32 mmCreateTaskWithDetach_stub(mmThread *pstThreadHandle, mmUserBlock_t *pstFuncBlock)
+INT32 mmCreateTaskWithDetach_stub(mmThread* pstThreadHandle, mmUserBlock_t* pstFuncBlock)
 {
     g_mmCreateTaskWithDetachTime++;
     if (g_mmCreateTaskWithDetachTime < g_mmCreateTaskWithDetachThreahHold) {
@@ -409,28 +298,22 @@ INT32 mmCreateTaskWithDetach_stub(mmThread *pstThreadHandle, mmUserBlock_t *pstF
     }
 }
 
-INT32 mmIoctl(mmProcess fd, INT32 ioctlCode, mmIoctlBuf *bufPtr)
-{
-    return 0;
-}
+INT32 mmIoctl(mmProcess fd, INT32 ioctlCode, mmIoctlBuf* bufPtr) { return 0; }
 
-INT32 mmRealPath(const CHAR *path, CHAR *realPath, INT32 realPathLen)
+INT32 mmRealPath(const CHAR* path, CHAR* realPath, INT32 realPathLen)
 {
     strcpy(realPath, path);
     return EN_OK;
 }
 
-INT32 mmUmask(INT32 pmode)
-{
-    return 0;
-}
+INT32 mmUmask(INT32 pmode) { return 0; }
 
-CHAR *mmStrTokR(CHAR *str, const CHAR *delim, CHAR **saveptr)
+CHAR* mmStrTokR(CHAR* str, const CHAR* delim, CHAR** saveptr)
 {
     if (delim == nullptr) {
         return nullptr;
     }
-    char *ptr = strtok_r(str, delim, saveptr);
+    char* ptr = strtok_r(str, delim, saveptr);
     if (ptr != nullptr) {
         return ptr;
     } else {
@@ -438,7 +321,7 @@ CHAR *mmStrTokR(CHAR *str, const CHAR *delim, CHAR **saveptr)
     }
 }
 
-INT32 mmLocalTimeR(const time_t *timep, struct tm *result)
+INT32 mmLocalTimeR(const time_t* timep, struct tm* result)
 {
     if (timep == nullptr || result == nullptr) {
         return EN_INVALID_PARAM;
@@ -458,41 +341,28 @@ INT32 mmLocalTimeR(const time_t *timep, struct tm *result)
     return EN_OK;
 }
 
-INT32 mmGetOptLong(INT32 argc, CHAR *const *argv, const CHAR *opts, const mmStructOption *longopts, INT32 *longindex)
+INT32 mmGetOptLong(INT32 argc, CHAR* const* argv, const CHAR* opts, const mmStructOption* longopts, INT32* longindex)
 {
     return getopt_long(argc, argv, opts, longopts, longindex);
 }
 
-INT32 mmAccess(const CHAR *pathName)
-{
-    return EN_OK;
-}
+INT32 mmAccess(const CHAR* pathName) { return EN_OK; }
 
-INT32 mmGetDiskFreeSpace(const char *path, mmDiskSize *diskSize)
+INT32 mmGetDiskFreeSpace(const char* path, mmDiskSize* diskSize)
 {
     diskSize->availSize = 2048576;
     diskSize->freeSize = 2048576;
     return EN_OK;
 }
 
-CHAR *mmDirName(CHAR *path)
-{
-    return dirname(path);
-}
+CHAR* mmDirName(CHAR* path) { return dirname(path); }
 
-CHAR *mmBaseName(CHAR *path)
-{
-    return basename(path);
-}
+CHAR* mmBaseName(CHAR* path) { return basename(path); }
 
-INT32 mmSetCurrentThreadName(const CHAR *name)
-{
-    return EN_OK;
-}
+INT32 mmSetCurrentThreadName(const CHAR* name) { return EN_OK; }
 
-INT32 mmCreateTaskWithThreadAttr(mmThread *threadHandle, const mmUserBlock_t *funcBlock, const mmThreadAttr *threadAttr)
+INT32 mmCreateTaskWithThreadAttr(mmThread* threadHandle, const mmUserBlock_t* funcBlock, const mmThreadAttr* threadAttr)
 {
-
     if (g_ide_create_task_time == 1) {
         funcBlock->procFunc(funcBlock->pulArg);
         return 0;
@@ -500,13 +370,10 @@ INT32 mmCreateTaskWithThreadAttr(mmThread *threadHandle, const mmUserBlock_t *fu
     return 0;
 }
 
-INT32 mmSetThreadName(mmThread *threadHandle, const CHAR *name)
-{
-    return 0;
-}
+INT32 mmSetThreadName(mmThread* threadHandle, const CHAR* name) { return 0; }
 
 INT32 mmCreateTaskWithThreadAttr_stub(
-    mmThread *threadHandle, const mmUserBlock_t *funcBlock, const mmThreadAttr *threadAttr)
+    mmThread* threadHandle, const mmUserBlock_t* funcBlock, const mmThreadAttr* threadAttr)
 {
     g_ide_create_task_time++;
     if (g_ide_create_task_time < g_ide_create_task_time_threadhold) {
@@ -516,7 +383,7 @@ INT32 mmCreateTaskWithThreadAttr_stub(
     }
 }
 INT32 mmCreateTaskWithThreadAttr_stub2(
-    mmThread *threadHandle, const mmUserBlock_t *funcBlock, const mmThreadAttr *threadAttr)
+    mmThread* threadHandle, const mmUserBlock_t* funcBlock, const mmThreadAttr* threadAttr)
 {
     g_count++;
     if (g_count < 4) {
@@ -526,7 +393,7 @@ INT32 mmCreateTaskWithThreadAttr_stub2(
 }
 
 INT32 mmCreateTaskWithThreadAttr_stub3(
-    mmThread *threadHandle, const mmUserBlock_t *funcBlock, const mmThreadAttr *threadAttr)
+    mmThread* threadHandle, const mmUserBlock_t* funcBlock, const mmThreadAttr* threadAttr)
 {
     g_count++;
     if (g_count <= 4) {
@@ -536,7 +403,7 @@ INT32 mmCreateTaskWithThreadAttr_stub3(
 }
 
 INT32 mmCreateTaskWithThreadAttr_stub4(
-    mmThread *threadHandle, const mmUserBlock_t *funcBlock, const mmThreadAttr *threadAttr)
+    mmThread* threadHandle, const mmUserBlock_t* funcBlock, const mmThreadAttr* threadAttr)
 {
     g_count++;
     if (g_count < 4 || g_count > 4) {
@@ -545,20 +412,11 @@ INT32 mmCreateTaskWithThreadAttr_stub4(
     return 0;
 }
 
-INT32 mmGetErrorCode()
-{
-    return 0;
-}
+INT32 mmGetErrorCode() { return 0; }
 
-CHAR *mmGetErrorFormatMessage(mmErrorMsg errnum, CHAR *buf, mmSize size)
-{
-    return "unknow error!";
-}
+CHAR* mmGetErrorFormatMessage(mmErrorMsg errnum, CHAR* buf, mmSize size) { return "unknow error!"; }
 
-INT32 mmChmod(const CHAR *filename, INT32 mode)
-{
-    return 0;
-}
+INT32 mmChmod(const CHAR* filename, INT32 mode) { return 0; }
 
 mmTimespec mmGetTickCount()
 {
@@ -570,7 +428,7 @@ mmTimespec mmGetTickCount()
     return rts;
 }
 
-INT32 mmIsDir(const char *fileName)
+INT32 mmIsDir(const char* fileName)
 {
     if (fileName == nullptr) {
         return EN_INVALID_PARAM;
@@ -588,38 +446,23 @@ INT32 mmIsDir(const char *fileName)
     return EN_OK;
 }
 
-INT32 mmGetFileSize(const CHAR *fileName, ULONGLONG *length)
+INT32 mmGetFileSize(const CHAR* fileName, ULONGLONG* length)
 {
     *length = 1024;
     return 0;
 }
 
-int mmGetPid()
-{
-    return getpid();
-}
+int mmGetPid() { return getpid(); }
 
-int mmGetTid()
-{
-    return syscall(SYS_gettid);
-}
+int mmGetTid() { return syscall(SYS_gettid); }
 
-int mmGetOsType()
-{
-    return 0;
-}
+int mmGetOsType() { return 0; }
 
-INT32 mmGetOptInd()
-{
-    return optind;
-}
+INT32 mmGetOptInd() { return optind; }
 
-CHAR *mmGetOptArg()
-{
-    return optarg;
-}
+CHAR* mmGetOptArg() { return optarg; }
 
-int mmScandir(const CHAR *path, mmDirent ***entryList, mmFilter filterFunc, mmSort sort)
+int mmScandir(const CHAR* path, mmDirent*** entryList, mmFilter filterFunc, mmSort sort)
 {
     if ((path == nullptr) || (entryList == nullptr)) {
         return EN_INVALID_PARAM;
@@ -631,7 +474,7 @@ int mmScandir(const CHAR *path, mmDirent ***entryList, mmFilter filterFunc, mmSo
     return count;
 }
 
-void mmScandirFree(mmDirent **entryList, INT32 count)
+void mmScandirFree(mmDirent** entryList, INT32 count)
 {
     if (entryList == nullptr) {
         return;
@@ -647,7 +490,7 @@ void mmScandirFree(mmDirent **entryList, INT32 count)
     entryList = nullptr;
 }
 
-INT32 mmStatGet(const CHAR *path, mmStat_t *buffer)
+INT32 mmStatGet(const CHAR* path, mmStat_t* buffer)
 {
     if ((path == nullptr) || (buffer == nullptr)) {
         return EN_INVALID_PARAM;
@@ -660,54 +503,30 @@ INT32 mmStatGet(const CHAR *path, mmStat_t *buffer)
     return EN_OK;
 }
 
-INT32 mmGetTimeOfDay(mmTimeval *timeVal, mmTimezone *timeZone)
+INT32 mmGetTimeOfDay(mmTimeval* timeVal, mmTimezone* timeZone)
 {
     if (timeVal == nullptr) {
         return EN_INVALID_PARAM;
     }
-    INT32 ret = gettimeofday((struct timeval *)timeVal, (struct timezone *)timeZone);
+    INT32 ret = gettimeofday((struct timeval*)timeVal, (struct timezone*)timeZone);
     if (ret != EN_OK) {
         ret = EN_ERROR;
     }
     return ret;
 }
 
-void *mmDlsym(void *handle, const char *funcName)
-{
-    return nullptr;
-}
+void* mmDlsym(void* handle, const char* funcName) { return nullptr; }
 
-int32_t mmDlclose(void *handle)
-{
-    return 0;
-}
+int32_t mmDlclose(void* handle) { return 0; }
 
-void *mmDlopen(const char *fileName, int mode)
-{
-    return nullptr;
-}
+void* mmDlopen(const char* fileName, int mode) { return nullptr; }
 
-char *mmDlerror(void)
-{
-    return nullptr;
-}
+char* mmDlerror(void) { return nullptr; }
 
-INT32 mmGetOsName(CHAR *name, INT32 nameSize)
-{
-    return EN_OK;
-}
+INT32 mmGetOsName(CHAR* name, INT32 nameSize) { return EN_OK; }
 
-INT32 mmGetOsVersion(CHAR *versionInfo, INT32 versionLength)
-{
-    return EN_OK;
-}
+INT32 mmGetOsVersion(CHAR* versionInfo, INT32 versionLength) { return EN_OK; }
 
-INT32 mmGetCpuInfo(mmCpuDesc **cpuInfo, INT32 *count)
-{
-    return EN_OK;
-}
+INT32 mmGetCpuInfo(mmCpuDesc** cpuInfo, INT32* count) { return EN_OK; }
 
-INT32 mmCpuInfoFree(mmCpuDesc *cpuInfo, INT32 count)
-{
-    return EN_OK;
-}
+INT32 mmCpuInfoFree(mmCpuDesc* cpuInfo, INT32 count) { return EN_OK; }

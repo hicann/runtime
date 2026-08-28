@@ -13,15 +13,16 @@
 #include "data_dumper.h"
 #include "receive_data.h"
 
-
 class AicpuReportHdc : public analysis::dvvp::common::singleton::Singleton<AicpuReportHdc> {
 public:
     AicpuReportHdc();
     ~AicpuReportHdc() override;
+
 public:
-    int32_t Init(std::string &moduleName);
+    int32_t Init(std::string& moduleName);
     int32_t UnInit();
     int32_t Report(Msprof::Engine::CONST_REPORT_DATA_PTR rData) const;
+
 private:
     bool started_{false};
     SHARED_PTR_ALIA<Msprof::Engine::DataDumper> reporter_;

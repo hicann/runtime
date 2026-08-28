@@ -50,17 +50,17 @@ MsprofEvent CreateEventData(uint32_t hashName, uint64_t timeStamp, uint64_t item
     return event;
 }
 
-void AppendApiData(std::string &buffer, const MsprofApi &api)
+void AppendApiData(std::string& buffer, const MsprofApi& api)
 {
-    buffer.append(reinterpret_cast<const char *>(&api), sizeof(MsprofApi));
+    buffer.append(reinterpret_cast<const char*>(&api), sizeof(MsprofApi));
 }
 
-void AppendEventData(std::string &buffer, const MsprofEvent &event)
+void AppendEventData(std::string& buffer, const MsprofEvent& event)
 {
-    buffer.append(reinterpret_cast<const char *>(&event), sizeof(MsprofEvent));
+    buffer.append(reinterpret_cast<const char*>(&event), sizeof(MsprofEvent));
 }
 
-SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> CreateApiEventChunk(const std::string &buffer)
+SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> CreateApiEventChunk(const std::string& buffer)
 {
     SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> chunk = std::make_shared<analysis::dvvp::ProfileFileChunk>();
     chunk->fileName = "unaging.api_event.data";
@@ -68,7 +68,7 @@ SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> CreateApiEventChunk(const std:
     chunk->chunkSize = buffer.size();
     return chunk;
 }
-}
+} // namespace
 
 class STATS_ANALYZER_API_UTEST : public testing::Test {
 protected:
@@ -194,7 +194,7 @@ TEST_F(STATS_ANALYZER_API_UTEST, ParseSplitApiDataKeepsRemainingBytes)
 {
     StatsAnalyzerApi analyzer;
     MsprofApi api = CreateApiData(NORMAL_API_HASH, 10, 25);
-    std::string apiBytes(reinterpret_cast<const char *>(&api), sizeof(MsprofApi));
+    std::string apiBytes(reinterpret_cast<const char*>(&api), sizeof(MsprofApi));
 
     const size_t splitPos = sizeof(MsprofApi) / 2;
     analyzer.Parse(CreateApiEventChunk(apiBytes.substr(0, splitPos)));

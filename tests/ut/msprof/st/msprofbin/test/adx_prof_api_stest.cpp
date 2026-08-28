@@ -16,17 +16,14 @@
 using namespace analysis::dvvp::common::error;
 using namespace Analysis::Dvvp::Adx;
 
-class ADX_PROF_API_STEST: public testing::Test {
+class ADX_PROF_API_STEST : public testing::Test {
 protected:
-    virtual void SetUp() {
-
-    }
-    virtual void TearDown() {
-        GlobalMockObject::verify();
-    }
+    virtual void SetUp() {}
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
-TEST_F(ADX_PROF_API_STEST, AdxIdeGetVfIdBySession) {
+TEST_F(ADX_PROF_API_STEST, AdxIdeGetVfIdBySession)
+{
     GlobalMockObject::verify();
     HDC_SESSION session = (HDC_SESSION)0x12345678;
     int32_t vfId = 0;

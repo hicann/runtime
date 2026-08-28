@@ -27,7 +27,7 @@ static const char MINIV3_RM_RF[] = "rm -rf ./acljsonMiniV3stest_workspace";
 static const char MINIV3_MKDIR[] = "mkdir ./acljsonMiniV3stest_workspace";
 static const char MINIV3_OUTPUT_DIR[] = "./acljsonMiniV3stest_workspace/output";
 
-class AclJsonMiniV3EpStest: public testing::Test {
+class AclJsonMiniV3EpStest : public testing::Test {
 protected:
     virtual void SetUp()
     {
@@ -66,8 +66,8 @@ TEST_F(AclJsonMiniV3EpStest, AclJsonDefault)
     std::vector<std::string> dataList = {"ffts_profile.data", "ts_track.data", "stars_soc.data"};
     MsprofMgr().SetDeviceCheckList(dataList);
     std::vector<std::string> hostDataList = {
-        "unaging.api_event.data", "unaging.compact.node_basic_info", "unaging.compact.task_track", "unaging.additional.context_id_info"
-    };
+        "unaging.api_event.data", "unaging.compact.node_basic_info", "unaging.compact.task_track",
+        "unaging.additional.context_id_info"};
     MsprofMgr().SetHostCheckList(hostDataList);
     std::vector<uint64_t> bitList = {PROF_ACL_API, PROF_TASK_TIME_L1, PROF_AICORE_METRICS};
     MsprofMgr().SetBitSwitchCheckList(bitList);

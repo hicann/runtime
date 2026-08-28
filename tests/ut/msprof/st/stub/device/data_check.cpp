@@ -21,7 +21,7 @@ namespace Dvvp {
 namespace Test {
 int32_t DataCheck::PreParamsChecker(std::string env)
 {
-    std::cout<< "Start to pre-check params by msprof input switch" << std::endl;
+    std::cout << "Start to pre-check params by msprof input switch" << std::endl;
     MsprofMgr().GetProfilingInput(PreCheckSwitch_);
 
     if (PreCheckSwitch_.empty()) {
@@ -35,22 +35,26 @@ int32_t DataCheck::PreParamsChecker(std::string env)
 
     for (auto iter = PreCheckSwitch_.begin(); iter != PreCheckSwitch_.end(); iter++) {
         if (PreCheckOnOff(iter->first, iter->second, env) != PRE_PARAMS_CHECK_SUCCESS) {
-            MSPROF_LOGE("Coin Switch[%s:%s]: Fail to pass the pre-params-check", iter->first.c_str(), iter->second.c_str());
+            MSPROF_LOGE(
+                "Coin Switch[%s:%s]: Fail to pass the pre-params-check", iter->first.c_str(), iter->second.c_str());
             return PRE_PARAMS_CHECK_FAILED;
         }
 
         if (PreCheckBound(iter->first, iter->second, env) != PRE_PARAMS_CHECK_SUCCESS) {
-            MSPROF_LOGE("Bound Switch[%s:%s]: Fail to pass the pre-params-check", iter->first.c_str(), iter->second.c_str());
+            MSPROF_LOGE(
+                "Bound Switch[%s:%s]: Fail to pass the pre-params-check", iter->first.c_str(), iter->second.c_str());
             return PRE_PARAMS_CHECK_FAILED;
         }
 
         if (PreCheckMapping(env) != PRE_PARAMS_CHECK_SUCCESS) {
-            MSPROF_LOGE("Mapping Switch[%s:%s]: Fail to pass the pre-params-check", iter->first.c_str(), iter->second.c_str());
+            MSPROF_LOGE(
+                "Mapping Switch[%s:%s]: Fail to pass the pre-params-check", iter->first.c_str(), iter->second.c_str());
             return PRE_PARAMS_CHECK_FAILED;
         }
 
         if (PreCheckStorageLimit(iter->first, iter->second, env) != PRE_PARAMS_CHECK_SUCCESS) {
-            MSPROF_LOGE("Storage Switch[%s:%s]: Fail to pass the pre-params-check", iter->first.c_str(), iter->second.c_str());
+            MSPROF_LOGE(
+                "Storage Switch[%s:%s]: Fail to pass the pre-params-check", iter->first.c_str(), iter->second.c_str());
             return PRE_PARAMS_CHECK_FAILED;
         }
         MSPROF_LOGD("Success to pre-check switch[%s:%s].", iter->first.c_str(), iter->second.c_str());
@@ -188,7 +192,7 @@ int32_t DataCheck::bitSwitchChecker()
         return -1;
     }
 
-    for (auto &it : bitSwitchCheckList){
+    for (auto& it : bitSwitchCheckList) {
         MSPROF_LOGI("Start to check bitSwitch: %llx", it);
         if ((bitSwitch & it) == 0U) {
             MSPROF_LOGE("bitSwitch: %llx not match %llx", bitSwitch, it);
@@ -196,7 +200,7 @@ int32_t DataCheck::bitSwitchChecker()
         }
     }
 
-    for (auto &it : bitSwitchBlackList){
+    for (auto& it : bitSwitchBlackList) {
         MSPROF_LOGI("Start to check black bitSwitch: %llx", it);
         if ((bitSwitch & it) != 0U) {
             MSPROF_LOGE("bitSwitch: %llx match %llx", bitSwitch, it);
@@ -208,20 +212,18 @@ int32_t DataCheck::bitSwitchChecker()
     return 0;
 }
 
-int32_t DataCheck::flushDataChecker(std::string path, std::string mode)
-{
-    return HandleDataCheck(path);
-}
+int32_t DataCheck::flushDataChecker(std::string path, std::string mode) { return HandleDataCheck(path); }
 
-int32_t DataCheck::CheckData(std::vector<std::string> &dataList, std::vector<std::string> &blackDataList,
-    std::string dataPath, std::string dataType)
+int32_t DataCheck::CheckData(
+    std::vector<std::string>& dataList, std::vector<std::string>& blackDataList, std::string dataPath,
+    std::string dataType)
 {
     int32_t ret = ReadDataDir(dataPath, dataType, DATA_DIR);
     if (ret != FLUSH_DATA_CHECK_SUCCESS) {
         MSPROF_LOGE("Fail to get %s data path.", dataType.c_str());
         return FLUSH_DATA_CHECK_FAILED;
     }
-    for (auto &data : dataList) {
+    for (auto& data : dataList) {
         MSPROF_LOGI("Data path: %s.", data.c_str());
         MSPROF_LOGI("Start to search flush data for %s.", data.c_str());
         ret = CheckIfFileExist(dataPath, data, true);
@@ -229,7 +231,7 @@ int32_t DataCheck::CheckData(std::vector<std::string> &dataList, std::vector<std
             return ret;
         }
     }
-    for (auto &data : blackDataList) {
+    for (auto& data : blackDataList) {
         MSPROF_LOGI("Start to search flush data for %s.", data.c_str());
         ret = CheckIfFileExist(dataPath, data, false);
         if (ret != FLUSH_DATA_CHECK_SUCCESS) {
@@ -239,7 +241,7 @@ int32_t DataCheck::CheckData(std::vector<std::string> &dataList, std::vector<std
     return FLUSH_DATA_CHECK_SUCCESS;
 }
 
-int32_t DataCheck::HandleDataCheck(std::string &dataPath, std::string dataType)
+int32_t DataCheck::HandleDataCheck(std::string& dataPath, std::string dataType)
 {
     std::vector<std::string> dataList;
     std::vector<std::string> blackDataList;
@@ -254,7 +256,7 @@ int32_t DataCheck::HandleDataCheck(std::string &dataPath, std::string dataType)
     return FLUSH_DATA_CHECK_SUCCESS;
 }
 
-int32_t DataCheck::HandleDataCheck(std::string &dataPath)
+int32_t DataCheck::HandleDataCheck(std::string& dataPath)
 {
     auto ret = HandleDataCheck(dataPath, DEVICE_DIR);
     if (ret != FLUSH_DATA_CHECK_SUCCESS) {
@@ -267,9 +269,9 @@ int32_t DataCheck::HandleDataCheck(std::string &dataPath)
     return FLUSH_DATA_CHECK_SUCCESS;
 }
 
-int32_t DataCheck::ReadDataDir(std::string &path, std::string dirType, std::string inType)
+int32_t DataCheck::ReadDataDir(std::string& path, std::string dirType, std::string inType)
 {
-    std::string profDir = MsprofMgr().GetProfDir().empty()? PROF_DIR: MsprofMgr().GetProfDir();
+    std::string profDir = MsprofMgr().GetProfDir().empty() ? PROF_DIR : MsprofMgr().GetProfDir();
     if (ReadNextDir(path, profDir) != FLUSH_DATA_CHECK_SUCCESS) {
         MSPROF_LOGE("Failed to read prof dir: %s", path.c_str());
         return FLUSH_DATA_CHECK_FAILED;
@@ -290,25 +292,25 @@ int32_t DataCheck::ReadDataDir(std::string &path, std::string dirType, std::stri
     return FLUSH_DATA_CHECK_SUCCESS;
 }
 
-int32_t DataCheck::ReadNextDir(std::string &path, std::string pattern)
+int32_t DataCheck::ReadNextDir(std::string& path, std::string pattern)
 {
     bool isExist = false;
-    DIR *dir = NULL;
-    struct dirent *item = NULL;
+    DIR* dir = NULL;
+    struct dirent* item = NULL;
 
     if (path.empty()) {
         MSPROF_LOGE("Failed to find input path");
         return FLUSH_DATA_CHECK_FAILED;
     }
 
-    const char *nextPath = const_cast<char *>(path.c_str());
-    if(nextPath != nullptr && nextPath[0] == '\0') {
+    const char* nextPath = const_cast<char*>(path.c_str());
+    if (nextPath != nullptr && nextPath[0] == '\0') {
         MSPROF_LOGE("Failed to find input path");
         return FLUSH_DATA_CHECK_FAILED;
     }
     dir = opendir(nextPath);
 
-    while(true) {
+    while (true) {
         if (dir == nullptr) {
             MSPROF_LOGE("Failed to find input path");
             return FLUSH_DATA_CHECK_FAILED;
@@ -319,8 +321,10 @@ int32_t DataCheck::ReadNextDir(std::string &path, std::string pattern)
         }
 
         std::string filename = item->d_name;
-        MSPROF_LOGI("filename: %s, filename length %d, pattern length: %d", filename.c_str(), filename.length(), pattern.length());
-        if (filename.compare(0, pattern.length(), pattern) == 0) { //0: ".";1: "..";2: "PROF*"
+        MSPROF_LOGI(
+            "filename: %s, filename length %d, pattern length: %d", filename.c_str(), filename.length(),
+            pattern.length());
+        if (filename.compare(0, pattern.length(), pattern) == 0) { // 0: ".";1: "..";2: "PROF*"
             isExist = true;
             std::string currentDir = std::string(item->d_name);
             path += "/" + currentDir;
@@ -337,7 +341,7 @@ int32_t DataCheck::ReadNextDir(std::string &path, std::string pattern)
     return FLUSH_DATA_CHECK_SUCCESS;
 }
 
-std::string DataCheck::Ltrim(const std::string &str, const std::string &tripString)
+std::string DataCheck::Ltrim(const std::string& str, const std::string& tripString)
 {
     size_t start = str.find_first_not_of(tripString);
     return (start == std::string::npos) ? "" : str.substr(start);
@@ -346,18 +350,18 @@ std::string DataCheck::Ltrim(const std::string &str, const std::string &tripStri
 int32_t DataCheck::CheckIfFileExist(std::string path, std::string pattern, bool exist)
 {
     bool isExist = false;
-    DIR *dir = NULL;
-    struct dirent *item = NULL;
+    DIR* dir = NULL;
+    struct dirent* item = NULL;
     const std::string tripString = "0123456789-";
 
-    const char *checkPath = const_cast<char *>(path.c_str());
+    const char* checkPath = const_cast<char*>(path.c_str());
     dir = opendir(checkPath);
     if (dir == nullptr) {
-        MSPROF_LOGE("Open path %s faild", path.c_str());        
+        MSPROF_LOGE("Open path %s faild", path.c_str());
         return FLUSH_DATA_CHECK_FAILED;
     }
 
-    while(true) {
+    while (true) {
         item = readdir(dir);
         if (item == NULL) {
             break;
@@ -383,10 +387,7 @@ int32_t DataCheck::CheckIfFileExist(std::string path, std::string pattern, bool 
     return FLUSH_DATA_CHECK_SUCCESS;
 }
 
-uint32_t DataCheck::GetPlatformType()
-{
-    return SimulatorMgr().GetPlatformType();
-}
-}
-}
-}
+uint32_t DataCheck::GetPlatformType() { return SimulatorMgr().GetPlatformType(); }
+} // namespace Test
+} // namespace Dvvp
+} // namespace Cann

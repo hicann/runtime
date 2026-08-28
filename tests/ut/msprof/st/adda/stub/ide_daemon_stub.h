@@ -23,13 +23,9 @@
 extern int g_getpkg_len_stub_flag;
 extern int g_ide_create_task_time;
 extern int g_nv_type;
-enum host_type
-{
-    HOST_SOCK,
-    HOST_HDC
-};
+enum host_type { HOST_SOCK, HOST_HDC };
 
-#define HDC_END_MSG                      ("###[HDC_MSG]hdc_end_msg_used_by_framework###")
+#define HDC_END_MSG ("###[HDC_MSG]hdc_end_msg_used_by_framework###")
 
 #ifdef __cplusplus
 extern "C" {
@@ -38,20 +34,21 @@ typedef struct IdeSockDesc sock_desc_t;
 typedef mmSockHandle ssl_handle_t;
 typedef struct IdeDevInfo dev_info_t;
 typedef struct IdeCmdInfo cmd_info_t;
-hdcError_t ide_hdc_host_drvHdcGetMsgBuffer_dump_stub(struct drvHdcMsg *msg, int index,
-        char **pBuf, int *pLen);
+hdcError_t ide_hdc_host_drvHdcGetMsgBuffer_dump_stub(struct drvHdcMsg* msg, int index, char** pBuf, int* pLen);
 
-extern hdcError_t ide_hdc_host_drvHdcRecv_stub(HDC_SESSION session, struct drvHdcMsg *msg, int bufLen,
-                                               unsigned long long flag, int *recvBufCount, unsigned int timeout);
-extern hdcError_t ide_hdc_host_drvHdcRecv_stub1(HDC_SESSION session, struct drvHdcMsg *msg, int bufLen,
-                                                unsigned long long flag, int *recvBufCount, unsigned int timeout);
-extern hdcError_t ide_hdc_host_drvHdcGetMsgBuffer_stub(struct drvHdcMsg *msg, int index, char **pBuf, int *pLen);
-extern hdcError_t ide_hdc_host_drvHdcGetMsgBuffer_stub1(struct drvHdcMsg *msg, int index, char **pBuf, int *pLen);
-extern hdcError_t ide_hdc_host_drvHdcGetMsgBuffer_stub2(struct drvHdcMsg *msg, int index, char **pBuf, int *pLen);
-extern hdcError_t ide_hdc_host_drvHdcGetMsgBuffer_stub_nv(struct drvHdcMsg *msg, int index, char **pBuf, int *pLen);
+extern hdcError_t ide_hdc_host_drvHdcRecv_stub(
+    HDC_SESSION session, struct drvHdcMsg* msg, int bufLen, unsigned long long flag, int* recvBufCount,
+    unsigned int timeout);
+extern hdcError_t ide_hdc_host_drvHdcRecv_stub1(
+    HDC_SESSION session, struct drvHdcMsg* msg, int bufLen, unsigned long long flag, int* recvBufCount,
+    unsigned int timeout);
+extern hdcError_t ide_hdc_host_drvHdcGetMsgBuffer_stub(struct drvHdcMsg* msg, int index, char** pBuf, int* pLen);
+extern hdcError_t ide_hdc_host_drvHdcGetMsgBuffer_stub1(struct drvHdcMsg* msg, int index, char** pBuf, int* pLen);
+extern hdcError_t ide_hdc_host_drvHdcGetMsgBuffer_stub2(struct drvHdcMsg* msg, int index, char** pBuf, int* pLen);
+extern hdcError_t ide_hdc_host_drvHdcGetMsgBuffer_stub_nv(struct drvHdcMsg* msg, int index, char** pBuf, int* pLen);
 
-extern hdcError_t ide_hdc_host_drvHdcFreeMsg_stub(struct drvHdcMsg *msg);
-extern hdcError_t IdeHdcDeviceDrvHdcGetMsgBufferStub(struct drvHdcMsg *msg, int index, char **pBuf, int *pLen);
+extern hdcError_t ide_hdc_host_drvHdcFreeMsg_stub(struct drvHdcMsg* msg);
+extern hdcError_t IdeHdcDeviceDrvHdcGetMsgBufferStub(struct drvHdcMsg* msg, int index, char** pBuf, int* pLen);
 
 extern int hdc_init_mock(void);
 extern int debug_init_mock(void);
@@ -65,22 +62,23 @@ extern int bbox_destroy_mock(void);
 extern int log_destroy_mock(void);
 extern int profile_destroy_mock(void);
 
-extern int debug_dev_process_stub(HDC_SESSION session, const struct tlv_req *req);
-extern int debug_host_process_stub(void *sock_desc, HDC_CLIENT client, const struct tlv_req *req);
-extern int ide_host_sock_cmd_process_stub(void *sock_desc, HDC_CLIENT client, const struct tlv_req *req);
+extern int debug_dev_process_stub(HDC_SESSION session, const struct tlv_req* req);
+extern int debug_host_process_stub(void* sock_desc, HDC_CLIENT client, const struct tlv_req* req);
+extern int ide_host_sock_cmd_process_stub(void* sock_desc, HDC_CLIENT client, const struct tlv_req* req);
 extern void _exit_stub(int exit_code);
 extern pid_t fork_stub(void);
-extern INT32 mmCreateTaskWithDetach_Stub(mmThread *pstThreadHandle, mmUserBlock_t *pstFuncBlock);
+extern INT32 mmCreateTaskWithDetach_Stub(mmThread* pstThreadHandle, mmUserBlock_t* pstFuncBlock);
 INT32 mmReadFile_stub(mmProcess fileId, VOID* buffer, INT32 len);
-extern int getifaddrs_stub(struct ifaddrs **ifap);
-extern int freeifaddrs_stub(struct ifaddrs *ifa);
-extern int getnameinfo_stub(const struct sockaddr *addr, socklen_t addrlen, char *host, socklen_t hostlen,
-                            char *serv, socklen_t servlen, int flags);
-extern drvError_t drvGetDevNum(uint32_t *devices);
-extern drvError_t drvGetDevIDs(uint32_t *devices, uint32_t len);
-extern ssize_t recvmsg_stub(int sockfd, struct msghdr *msg, int flags);
+extern int getifaddrs_stub(struct ifaddrs** ifap);
+extern int freeifaddrs_stub(struct ifaddrs* ifa);
+extern int getnameinfo_stub(
+    const struct sockaddr* addr, socklen_t addrlen, char* host, socklen_t hostlen, char* serv, socklen_t servlen,
+    int flags);
+extern drvError_t drvGetDevNum(uint32_t* devices);
+extern drvError_t drvGetDevIDs(uint32_t* devices, uint32_t len);
+extern ssize_t recvmsg_stub(int sockfd, struct msghdr* msg, int flags);
 extern INT32 mmSleep_stub(UINT32 millseconds);
-extern int gettimeofday_stub(struct  timeval*tv,struct  timezone *tz );
+extern int gettimeofday_stub(struct timeval* tv, struct timezone* tz);
 
 extern int scanf_s_ret;
 extern int close_stub(int fd);

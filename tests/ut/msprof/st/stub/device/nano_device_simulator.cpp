@@ -13,7 +13,7 @@
 namespace Cann {
 namespace Dvvp {
 namespace Test {
-int32_t NanoDeviceSimulator::ProfDrvGetChannels(ChannelList &channels)
+int32_t NanoDeviceSimulator::ProfDrvGetChannels(ChannelList& channels)
 {
     std::string::size_type pos;
     std::vector<std::string> res;
@@ -38,25 +38,22 @@ int32_t NanoDeviceSimulator::ProfDrvGetChannels(ChannelList &channels)
     return 0;
 }
 
-int32_t NanoDeviceSimulator::GetDeviceInfo(int32_t moduleType, int32_t infoType, int64_t *value)
+int32_t NanoDeviceSimulator::GetDeviceInfo(int32_t moduleType, int32_t infoType, int64_t* value)
 {
-    if (moduleType == MODULE_TYPE_SYSTEM &&
-        infoType == INFO_TYPE_VERSION) {
+    if (moduleType == MODULE_TYPE_SYSTEM && infoType == INFO_TYPE_VERSION) {
         *value = (uint64_t)platformType_ << 8;
     }
 
-    if (moduleType == MODULE_TYPE_AICORE &&
-        infoType == INFO_TYPE_CORE_NUM) {
+    if (moduleType == MODULE_TYPE_AICORE && infoType == INFO_TYPE_CORE_NUM) {
         *value = 1;
     }
 
-    if (moduleType == MODULE_TYPE_VECTOR_CORE &&
-        infoType == INFO_TYPE_CORE_NUM) {
+    if (moduleType == MODULE_TYPE_VECTOR_CORE && infoType == INFO_TYPE_CORE_NUM) {
         *value = 0;
     }
 
     return 0;
 }
-}
-}
-}
+} // namespace Test
+} // namespace Dvvp
+} // namespace Cann

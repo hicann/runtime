@@ -25,25 +25,21 @@ using namespace analysis::dvvp::common::error;
 using namespace analysis::dvvp::common::config;
 using namespace Devprof;
 
-extern int32_t ProfStartAicpu(struct prof_sample_start_para *para);
-extern int32_t ProfStopAicpu(struct prof_sample_stop_para *para);
+extern int32_t ProfStartAicpu(struct prof_sample_start_para* para);
+extern int32_t ProfStopAicpu(struct prof_sample_stop_para* para);
 
-extern int32_t ProfStartAdprof(struct prof_sample_start_para *para);
-extern int32_t ProfSampleAdprof(struct prof_sample_para *para);
-extern int32_t ProfStopAdprof(struct prof_sample_stop_para *para);
+extern int32_t ProfStartAdprof(struct prof_sample_start_para* para);
+extern int32_t ProfSampleAdprof(struct prof_sample_para* para);
+extern int32_t ProfStopAdprof(struct prof_sample_stop_para* para);
 
 class DEVPROF_DRV_UTEST : public testing::Test {
 protected:
-    virtual void SetUp()
-    {
-        GlobalMockObject::verify();
-    }
-    virtual void TearDown()
-    {}
+    virtual void SetUp() { GlobalMockObject::verify(); }
+    virtual void TearDown() {}
 };
 
-static void SetupHostMoveBufferInfo(Devprof::AicpuUserProfileBufferInfo &info,
-    uint8_t *buffer, uint32_t bufferSize, uint32_t *wptr, uint32_t *rptr)
+static void SetupHostMoveBufferInfo(
+    Devprof::AicpuUserProfileBufferInfo& info, uint8_t* buffer, uint32_t bufferSize, uint32_t* wptr, uint32_t* rptr)
 {
     info.buffer_size = bufferSize;
     info.buffer_base_user_va = reinterpret_cast<uint64_t>(buffer);
@@ -115,7 +111,7 @@ TEST_F(DEVPROF_DRV_UTEST, ProfStartHostMove_Success)
     MOCKER(OsalCreateTaskWithThreadAttr).stubs().will(returnValue(0));
     MOCKER(OsalJoinTask).stubs().will(returnValue(0));
 
-    uint8_t *buffer = new uint8_t[4 * 1024 * 1024];
+    uint8_t* buffer = new uint8_t[4 * 1024 * 1024];
     uint32_t wptrVal = 0;
     uint32_t rptrVal = 0;
     Devprof::AicpuUserProfileBufferInfo info;
@@ -134,40 +130,25 @@ TEST_F(DEVPROF_DRV_UTEST, ProfStartHostMove_Success)
     GlobalMockObject::verify();
 }
 
-static int32_t ProfStartFailed()
-{
-    return PROFILING_FAILED;
-}
+static int32_t ProfStartFailed() { return PROFILING_FAILED; }
 
-static int32_t ProfStartSuccess()
-{
-    return PROFILING_SUCCESS;
-}
+static int32_t ProfStartSuccess() { return PROFILING_SUCCESS; }
 
-static void AdprofExit()
-{
-    return;
-}
+static void AdprofExit() { return; }
 
 TEST_F(DEVPROF_DRV_UTEST, AdprofAicpuStartRegister)
 {
     AicpuStartPara aicpuStartPara = {0, 111, 1, 0};
     EXPECT_EQ(PROFILING_SUCCESS, AdprofAicpuStartRegister(ProfStartSuccess, &aicpuStartPara));
-    aicpuStartPara.profConfig = 2;  // aicpu = on
+    aicpuStartPara.profConfig = 2; // aicpu = on
 
     EXPECT_EQ(PROFILING_FAILED, AdprofAicpuStartRegister(ProfStartSuccess, &aicpuStartPara));
     aicpuStartPara.channelId = 143;
 
-    MOCKER(halProfSampleRegister)
-        .stubs()
-        .will(returnValue(1))
-        .then(returnValue((int)DRV_ERROR_NONE));
+    MOCKER(halProfSampleRegister).stubs().will(returnValue(1)).then(returnValue((int)DRV_ERROR_NONE));
     EXPECT_EQ(PROFILING_FAILED, AdprofAicpuStartRegister(ProfStartSuccess, &aicpuStartPara));
 
-    MOCKER(ProfSendEvent)
-        .stubs()
-        .will(returnValue(PROFILING_FAILED))
-        .then(returnValue(PROFILING_SUCCESS));
+    MOCKER(ProfSendEvent).stubs().will(returnValue(PROFILING_FAILED)).then(returnValue(PROFILING_SUCCESS));
     EXPECT_EQ(PROFILING_FAILED, AdprofAicpuStartRegister(ProfStartSuccess, &aicpuStartPara));
     EXPECT_EQ(PROFILING_SUCCESS, AdprofAicpuStartRegister(ProfStartSuccess, &aicpuStartPara));
 
@@ -184,19 +165,12 @@ TEST_F(DEVPROF_DRV_UTEST, AdprofAicpuStartRegister)
     EXPECT_EQ(1, AdprofCheckFeatureIsOn(ADPROF_TASK_TIME_L2));
 }
 
-TEST_F(DEVPROF_DRV_UTEST, AdprofAicpuStartRegister_Multi) {
-    MOCKER(halProfSampleRegister)
-        .stubs()
-        .will(returnValue((int)DRV_ERROR_NONE))
-        .then(returnValue(-1));
-    MOCKER(halProfSampleRegisterEx)
-        .stubs()
-        .will(returnValue((int)DRV_ERROR_NONE));
+TEST_F(DEVPROF_DRV_UTEST, AdprofAicpuStartRegister_Multi)
+{
+    MOCKER(halProfSampleRegister).stubs().will(returnValue((int)DRV_ERROR_NONE)).then(returnValue(-1));
+    MOCKER(halProfSampleRegisterEx).stubs().will(returnValue((int)DRV_ERROR_NONE));
 
-    MOCKER(ProfSendEvent)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS))
-        .then(returnValue(PROFILING_FAILED));
+    MOCKER(ProfSendEvent).stubs().will(returnValue(PROFILING_SUCCESS)).then(returnValue(PROFILING_FAILED));
 
     AicpuStartPara aicpuStartPara = {0, 111, 143, 2};
     std::vector<std::thread> th;
@@ -208,32 +182,26 @@ TEST_F(DEVPROF_DRV_UTEST, AdprofAicpuStartRegister_Multi) {
     for_each(th.begin(), th.end(), std::mem_fn(&std::thread::join));
 }
 
-TEST_F(DEVPROF_DRV_UTEST, ProfSendEvent) {
+TEST_F(DEVPROF_DRV_UTEST, ProfSendEvent)
+{
     uint32_t devId = 0;
     int32_t hostPid = 123;
-    char *grpName = "aicpu_grp";
+    char* grpName = "aicpu_grp";
 
-    MOCKER(halEschedQueryInfo)
-        .stubs()
-        .will(repeat(1, 10))
-        .then(returnValue(DRV_ERROR_NONE));
+    MOCKER(halEschedQueryInfo).stubs().will(repeat(1, 10)).then(returnValue(DRV_ERROR_NONE));
     EXPECT_EQ(PROFILING_FAILED, ProfSendEvent(devId, hostPid, grpName));
-    
-    MOCKER(halEschedSubmitEvent)
-        .stubs()
-        .will(returnValue(1))
-        .then(returnValue(DRV_ERROR_NONE));
+
+    MOCKER(halEschedSubmitEvent).stubs().will(returnValue(1)).then(returnValue(DRV_ERROR_NONE));
     EXPECT_EQ(PROFILING_FAILED, ProfSendEvent(devId, hostPid, grpName));
     EXPECT_EQ(PROFILING_SUCCESS, ProfSendEvent(devId, hostPid, grpName));
 }
 
-TEST_F(DEVPROF_DRV_UTEST, ReportData) {
+TEST_F(DEVPROF_DRV_UTEST, ReportData)
+{
     AicpuStartPara aicpuStartPara = {0, 111, 143, 0};
     EXPECT_EQ(PROFILING_SUCCESS, AdprofAicpuStartRegister(ProfStartSuccess, &aicpuStartPara));
-    aicpuStartPara.profConfig = 2U | 1U | ADPROF_TASK_TIME_L0;  // aicpu = on
-    MOCKER(ProfSendEvent)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    aicpuStartPara.profConfig = 2U | 1U | ADPROF_TASK_TIME_L0; // aicpu = on
+    MOCKER(ProfSendEvent).stubs().will(returnValue(PROFILING_SUCCESS));
     EXPECT_EQ(PROFILING_SUCCESS, AdprofAicpuStartRegister(ProfStartSuccess, &aicpuStartPara));
     EXPECT_EQ(1, AdprofCheckFeatureIsOn(ADPROF_TASK_TIME_L0));
 
@@ -250,15 +218,15 @@ TEST_F(DEVPROF_DRV_UTEST, ReportData) {
     memset(additionalInfo.data, 0, MSPROF_ADDTIONAL_INFO_DATA_LENGTH);
     memcpy(additionalInfo.data, "test", additionalInfo.dataLen);
 
-    int32_t ret = AdprofReportAdditionalInfo(0, static_cast<void *>(&additionalInfo), sizeof(MsprofAdditionalInfo) - 1);
+    int32_t ret = AdprofReportAdditionalInfo(0, static_cast<void*>(&additionalInfo), sizeof(MsprofAdditionalInfo) - 1);
     EXPECT_EQ(PROFILING_FAILED, ret);
 
-    ret = AdprofReportAdditionalInfo(0, static_cast<void *>(&additionalInfo), sizeof(MsprofAdditionalInfo));
+    ret = AdprofReportAdditionalInfo(0, static_cast<void*>(&additionalInfo), sizeof(MsprofAdditionalInfo));
     EXPECT_EQ(PROFILING_SUCCESS, ret);
 
     uint32_t maxCount = REPORT_BUFF_SIZE / sizeof(MsprofAdditionalInfo);
     for (uint32_t i = 0; i < maxCount + 2; i++) {
-        AdprofReportAdditionalInfo(0, static_cast<void *>(&additionalInfo), sizeof(MsprofAdditionalInfo));
+        AdprofReportAdditionalInfo(0, static_cast<void*>(&additionalInfo), sizeof(MsprofAdditionalInfo));
     }
 
     prof_sample_stop_para stopPara = {0};
@@ -281,33 +249,28 @@ TEST_F(DEVPROF_DRV_UTEST, ProfStartAicpuError)
         .then(returnValue(-1));
 
     MsprofAdditionalInfo additionalInfo;
-    AdprofReportAdditionalInfo(1, static_cast<void *>(&additionalInfo), sizeof(MsprofAdditionalInfo));
+    AdprofReportAdditionalInfo(1, static_cast<void*>(&additionalInfo), sizeof(MsprofAdditionalInfo));
     prof_sample_start_para startPara = {0};
-    EXPECT_EQ(PROFILING_SUCCESS, ProfStartAicpu(&startPara));   // halProfSampleDataReport error
+    EXPECT_EQ(PROFILING_SUCCESS, ProfStartAicpu(&startPara)); // halProfSampleDataReport error
     prof_sample_stop_para stopPara = {0};
     EXPECT_EQ(PROFILING_SUCCESS, ProfStopAicpu(&stopPara));
 
-    AdprofReportAdditionalInfo(1, static_cast<void *>(&additionalInfo), sizeof(MsprofAdditionalInfo));
-    EXPECT_EQ(PROFILING_SUCCESS, ProfStartAicpu(&startPara));   // halProfQueryAvailBufLen 2 error
+    AdprofReportAdditionalInfo(1, static_cast<void*>(&additionalInfo), sizeof(MsprofAdditionalInfo));
+    EXPECT_EQ(PROFILING_SUCCESS, ProfStartAicpu(&startPara)); // halProfQueryAvailBufLen 2 error
     EXPECT_EQ(PROFILING_SUCCESS, ProfStopAicpu(&stopPara));
 
-    EXPECT_EQ(PROFILING_SUCCESS, ProfStartAicpu(&startPara));   // halProfQueryAvailBufLen 1 error
+    EXPECT_EQ(PROFILING_SUCCESS, ProfStartAicpu(&startPara)); // halProfQueryAvailBufLen 1 error
     EXPECT_EQ(PROFILING_SUCCESS, ProfStopAicpu(&stopPara));
 
     MOCKER(OsalCreateTaskWithThreadAttr).stubs().will(returnValue(-1));
-    EXPECT_EQ(PROFILING_FAILED, ProfStartAicpu(&startPara));    // create thread error
+    EXPECT_EQ(PROFILING_FAILED, ProfStartAicpu(&startPara)); // create thread error
 }
 
 TEST_F(DEVPROF_DRV_UTEST, DevprofDrvAdprof)
 {
     AdprofCallBack adprofCallBack = {ProfStartFailed, ProfStartFailed, AdprofExit};
-    MOCKER(halProfSampleRegister)
-        .stubs()
-        .will(returnValue((int)DRV_ERROR_NONE));
-    MOCKER(ProfSendEvent)
-        .stubs()
-        .will(returnValue(PROFILING_FAILED))
-        .then(returnValue(PROFILING_SUCCESS));
+    MOCKER(halProfSampleRegister).stubs().will(returnValue((int)DRV_ERROR_NONE));
+    MOCKER(ProfSendEvent).stubs().will(returnValue(PROFILING_FAILED)).then(returnValue(PROFILING_SUCCESS));
     EXPECT_EQ(PROFILING_FAILED, AdprofStartRegister(adprofCallBack, 0, 123));
     EXPECT_EQ(PROFILING_SUCCESS, AdprofStartRegister(adprofCallBack, 0, 123));
 
@@ -327,7 +290,7 @@ TEST_F(DEVPROF_DRV_UTEST, DevprofDrvAdprof)
     fileChunk.fileName = "test_file";
     fileChunk.extraInfo = "test_info";
     fileChunk.id = "test_id";
-    EXPECT_EQ(PROFILING_SUCCESS, ReportAdprofFileChunk(static_cast<void *>(&fileChunk)));
+    EXPECT_EQ(PROFILING_SUCCESS, ReportAdprofFileChunk(static_cast<void*>(&fileChunk)));
 
     prof_sample_para samplePara = {0};
     samplePara.dev_id = 0;
@@ -341,19 +304,19 @@ TEST_F(DEVPROF_DRV_UTEST, DevprofDrvAdprof)
 
     uint32_t maxCount = REPORT_BUFF_SIZE / sizeof(ProfTlv);
     for (uint32_t i = 0; i < maxCount + 2; i++) {
-        ReportAdprofFileChunk(static_cast<void *>(&fileChunk));
+        ReportAdprofFileChunk(static_cast<void*>(&fileChunk));
     }
 
     prof_sample_stop_para stopPara = {0};
     EXPECT_EQ(PROFILING_SUCCESS, ProfStopAdprof(&stopPara));
-    EXPECT_EQ(PROFILING_FAILED, ReportAdprofFileChunk(static_cast<void *>(&fileChunk)));
+    EXPECT_EQ(PROFILING_FAILED, ReportAdprofFileChunk(static_cast<void*>(&fileChunk)));
 }
 
 TEST_F(DEVPROF_DRV_UTEST, AdprofGetHashId)
 {
     MOCKER(Devprof::ProfSendEvent).stubs().will(returnValue(PROFILING_SUCCESS));
 
-    AicpuStartPara aicpuStartPara = {0, 111, 143, 2};  // aicpu = on
+    AicpuStartPara aicpuStartPara = {0, 111, 143, 2}; // aicpu = on
     EXPECT_EQ(PROFILING_SUCCESS, AdprofAicpuStartRegister(ProfStartSuccess, &aicpuStartPara));
     EXPECT_EQ(PROFILING_FAILED, AdprofGetHashId(nullptr, 0));
     std::string test("test");
@@ -367,18 +330,18 @@ TEST_F(DEVPROF_DRV_UTEST, AdprofStr2Id)
     EXPECT_EQ(AdprofGetHashId(test.c_str(), test.length()), AdprofStr2Id(test.c_str(), test.length()));
 }
 
-static int halProfQueryAvailBufLenStub(unsigned int dev_id, unsigned int chan_id, unsigned int *buff_avail_len)
+static int halProfQueryAvailBufLenStub(unsigned int dev_id, unsigned int chan_id, unsigned int* buff_avail_len)
 {
     static int count = 0;
     if (count == 0) {
         *buff_avail_len = 1024 * 1024;
     } else if (count == 1) {
         *buff_avail_len = 1024 * 1024;
-    } else if (count == 2) {    // aicpu
+    } else if (count == 2) { // aicpu
         *buff_avail_len = 0;
     } else if (count == 3) {
         *buff_avail_len = 1024 * 1024;
-    } else if (count == 4) {    // adprof
+    } else if (count == 4) { // adprof
         *buff_avail_len = 0;
     } else {
         *buff_avail_len = 1024 * 1024;
@@ -397,18 +360,14 @@ TEST_F(DEVPROF_DRV_UTEST, BufLenZero)
     EXPECT_EQ(PROFILING_SUCCESS, ProfStartAicpu(&startPara));
     OsalSleep(15);
     MsprofAdditionalInfo additionalInfo;
-    AdprofReportAdditionalInfo(1, static_cast<void *>(&additionalInfo), sizeof(MsprofAdditionalInfo));
+    AdprofReportAdditionalInfo(1, static_cast<void*>(&additionalInfo), sizeof(MsprofAdditionalInfo));
     OsalSleep(5);
     prof_sample_stop_para stopPara = {0};
     EXPECT_EQ(PROFILING_SUCCESS, ProfStopAicpu(&stopPara));
 
     AdprofCallBack adprofCallBack = {ProfStartSuccess, ProfStartSuccess, AdprofExit};
-    MOCKER(halProfSampleRegister)
-        .stubs()
-        .will(returnValue((int)DRV_ERROR_NONE));
-    MOCKER(halProfSampleRegisterEx)
-        .stubs()
-        .will(returnValue((int)DRV_ERROR_NONE));
+    MOCKER(halProfSampleRegister).stubs().will(returnValue((int)DRV_ERROR_NONE));
+    MOCKER(halProfSampleRegisterEx).stubs().will(returnValue((int)DRV_ERROR_NONE));
     EXPECT_EQ(PROFILING_SUCCESS, AdprofStartRegister(adprofCallBack, 0, 123));
     EXPECT_EQ(PROFILING_SUCCESS, ProfStartAdprof(&startPara));
     analysis::dvvp::ProfileFileChunk fileChunk;
@@ -420,7 +379,7 @@ TEST_F(DEVPROF_DRV_UTEST, BufLenZero)
     fileChunk.fileName = "test_file";
     fileChunk.extraInfo = "test_info";
     fileChunk.id = "test_id";
-    EXPECT_EQ(PROFILING_SUCCESS, ReportAdprofFileChunk(static_cast<void *>(&fileChunk)));
+    EXPECT_EQ(PROFILING_SUCCESS, ReportAdprofFileChunk(static_cast<void*>(&fileChunk)));
     OsalSleep(1);
     EXPECT_EQ(PROFILING_SUCCESS, ProfStopAdprof(&stopPara));
 }
@@ -432,7 +391,6 @@ TEST_F(DEVPROF_DRV_UTEST, AdprofGetBatchReportMaxSizeBase)
     EXPECT_EQ(131072, AdprofGetBatchReportMaxSize(ADPROF_ADDITIONAL_INFO));
 }
 
-
 TEST_F(DEVPROF_DRV_UTEST, AdprofBatchReportAdditionalInfoBase)
 {
     MsprofAdditionalInfo data;
@@ -440,7 +398,7 @@ TEST_F(DEVPROF_DRV_UTEST, AdprofBatchReportAdditionalInfoBase)
     data.level = 6000; // aicpu
     data.type = 2;
     data.timeStamp = 151515151;
-    void *addPtr = malloc(1024); // 1024byte
+    void* addPtr = malloc(1024); // 1024byte
     (void)memset_s(addPtr, 1024, 0, 1024);
     (void)memcpy_s(addPtr, 256, &data, 256);
     (void)memcpy_s(addPtr + 256, 256, &data, 256);
@@ -452,9 +410,7 @@ TEST_F(DEVPROF_DRV_UTEST, AdprofBatchReportAdditionalInfoBase)
         .stubs()
         .with(any(), any(), outBoundP(&bufLen, sizeof(bufLen)))
         .then(returnValue(static_cast<int32_t>(DRV_ERROR_NONE)));
-    MOCKER(halProfSampleDataReport)
-        .stubs()
-        .will(returnValue(static_cast<int32_t>(DRV_ERROR_NONE)));
+    MOCKER(halProfSampleDataReport).stubs().will(returnValue(static_cast<int32_t>(DRV_ERROR_NONE)));
 
     AicpuStartPara aicpuStartPara = {0, 1111, 143, 2};
     EXPECT_EQ(PROFILING_SUCCESS, AdprofAicpuStartRegister(ProfStartSuccess, &aicpuStartPara));
@@ -497,7 +453,7 @@ TEST_F(DEVPROF_DRV_UTEST, RecordHostMoveBufferAddresses)
     invalidInfo.buffer_base_user_va = 0;
     EXPECT_EQ(PROFILING_FAILED, DevprofDrvAicpu::instance()->RecordHostMoveBufferAddresses(&invalidInfo));
 
-    uint8_t *buffer = new uint8_t[4 * 1024 * 1024];
+    uint8_t* buffer = new uint8_t[4 * 1024 * 1024];
     // wptr/rptr user va must be valid (non-zero), otherwise the shared pointers cannot be initialized.
     invalidInfo.buffer_base_user_va = reinterpret_cast<uint64_t>(buffer);
     invalidInfo.buffer_write_ptr_user_va = 0;
@@ -519,7 +475,8 @@ TEST_F(DEVPROF_DRV_UTEST, RecordHostMoveBufferAddresses)
 
     MsprofAdditionalInfo data;
     data.magicNumber = MSPROF_REPORT_DATA_MAGIC_NUM;
-    EXPECT_EQ(PROFILING_SUCCESS, DevprofDrvAicpu::instance()->WriteToHostMoveBuffer(&data, sizeof(MsprofAdditionalInfo)));
+    EXPECT_EQ(
+        PROFILING_SUCCESS, DevprofDrvAicpu::instance()->WriteToHostMoveBuffer(&data, sizeof(MsprofAdditionalInfo)));
     EXPECT_EQ(1U, wptrVal);
 
     DevprofDrvAicpu::instance()->Release();
@@ -533,28 +490,28 @@ TEST_F(DEVPROF_DRV_UTEST, WriteBatchToHostMoveBuffer_Basic)
     DevprofDrvAicpu::instance()->SetSupportHostMove(true);
     uint32_t wptrVal = 0;
     uint32_t rptrVal = 0;
-    uint8_t *buffer = new uint8_t[4 * 1024 * 1024];
+    uint8_t* buffer = new uint8_t[4 * 1024 * 1024];
     Devprof::AicpuUserProfileBufferInfo info;
     SetupHostMoveBufferInfo(info, buffer, 4 * 1024 * 1024, &wptrVal, &rptrVal);
     EXPECT_EQ(PROFILING_SUCCESS, DevprofDrvAicpu::instance()->RecordHostMoveBufferAddresses(&info));
- 
+
     // invalid inputs
     EXPECT_EQ(PROFILING_FAILED, DevprofDrvAicpu::instance()->WriteBatchToHostMoveBuffer(nullptr, 1));
     MsprofAdditionalInfo records[4];
-    for (auto &r : records) {
+    for (auto& r : records) {
         r.magicNumber = MSPROF_REPORT_DATA_MAGIC_NUM;
     }
     EXPECT_EQ(PROFILING_FAILED, DevprofDrvAicpu::instance()->WriteBatchToHostMoveBuffer(records, 0));
- 
+
     // write a batch of 4 records, wptr advances by 4
     EXPECT_EQ(PROFILING_SUCCESS, DevprofDrvAicpu::instance()->WriteBatchToHostMoveBuffer(records, 4));
     EXPECT_EQ(4U, wptrVal);
- 
+
     DevprofDrvAicpu::instance()->Release();
     delete[] buffer;
     GlobalMockObject::verify();
 }
- 
+
 TEST_F(DEVPROF_DRV_UTEST, WriteBatchToHostMoveBuffer_Wrap)
 {
     DevprofDrvAicpu::instance()->Reset();
@@ -564,13 +521,13 @@ TEST_F(DEVPROF_DRV_UTEST, WriteBatchToHostMoveBuffer_Wrap)
     // small ring of 4 records so the batch wraps the ring end
     const size_t recordSize = sizeof(MsprofAdditionalInfo);
     const uint32_t ringRecords = 4;
-    uint8_t *buffer = new uint8_t[recordSize * ringRecords];
+    uint8_t* buffer = new uint8_t[recordSize * ringRecords];
     Devprof::AicpuUserProfileBufferInfo info;
     SetupHostMoveBufferInfo(info, buffer, recordSize * ringRecords, &wptrVal, &rptrVal);
     EXPECT_EQ(PROFILING_SUCCESS, DevprofDrvAicpu::instance()->RecordHostMoveBufferAddresses(&info));
- 
+
     MsprofAdditionalInfo records[3];
-    for (auto &r : records) {
+    for (auto& r : records) {
         r.magicNumber = MSPROF_REPORT_DATA_MAGIC_NUM;
     }
     // start near the ring end so a 3-record batch wraps: write 3 at idx 0 -> wptr=3
@@ -586,39 +543,39 @@ TEST_F(DEVPROF_DRV_UTEST, WriteBatchToHostMoveBuffer_Wrap)
     // writeIdx and the consumer reads wptr == rptr (empty), silently dropping the whole batch.
     MsprofAdditionalInfo full[4];
     EXPECT_EQ(PROFILING_FAILED, DevprofDrvAicpu::instance()->WriteBatchToHostMoveBuffer(full, ringRecords));
- 
+
     DevprofDrvAicpu::instance()->Release();
     delete[] buffer;
     GlobalMockObject::verify();
 }
- 
+
 TEST_F(DEVPROF_DRV_UTEST, DrainBufferToHostMove_MultiRecord)
 {
     DevprofDrvAicpu::instance()->Reset();
     DevprofDrvAicpu::instance()->aicpuAdditionalBuffer_.UnInit();
     DevprofDrvAicpu::instance()->aicpuAdditionalBuffer_.Init("AicpuBuffer");
-    uint8_t *buffer = new uint8_t[4 * 1024 * 1024];
+    uint8_t* buffer = new uint8_t[4 * 1024 * 1024];
     uint32_t wptrVal = 0;
     uint32_t rptrVal = 0;
     Devprof::AicpuUserProfileBufferInfo info;
     SetupHostMoveBufferInfo(info, buffer, 4 * 1024 * 1024, &wptrVal, &rptrVal);
     DevprofDrvAicpu::instance()->RecordHostMoveBufferAddresses(&info);
     DevprofDrvAicpu::instance()->isSupportHostMove_ = true;
- 
+
     // push several records, then drain them all in a single batch
     const uint32_t pushCount = 8;
     for (uint32_t i = 0; i < pushCount; ++i) {
         MsprofAdditionalInfo data;
         data.magicNumber = MSPROF_REPORT_DATA_MAGIC_NUM;
-        AdprofReportAdditionalInfo(0, static_cast<void *>(&data), sizeof(MsprofAdditionalInfo));
+        AdprofReportAdditionalInfo(0, static_cast<void*>(&data), sizeof(MsprofAdditionalInfo));
     }
- 
+
     MOCKER(OsalSleep).stubs().will(returnValue(0));
     DevprofDrvAicpu::instance()->stopped_ = true;
     EXPECT_EQ(PROFILING_SUCCESS, DevprofDrvAicpu::instance()->DrainBufferToHostMove());
     // all pushed records moved to the host ring: wptr advanced by pushCount
     EXPECT_EQ(pushCount, wptrVal);
- 
+
     DevprofDrvAicpu::instance()->Release();
     delete[] buffer;
     GlobalMockObject::verify();
@@ -645,7 +602,7 @@ TEST_F(DEVPROF_DRV_UTEST, RunHostMoveMode_WriteFailed)
     DevprofDrvAicpu::instance()->Reset();
     DevprofDrvAicpu::instance()->aicpuAdditionalBuffer_.UnInit();
     DevprofDrvAicpu::instance()->aicpuAdditionalBuffer_.Init("AicpuBuffer");
-    uint8_t *buffer = new uint8_t[4 * 1024 * 1024];
+    uint8_t* buffer = new uint8_t[4 * 1024 * 1024];
     uint32_t wptrVal = 0;
     uint32_t rptrVal = 0;
     Devprof::AicpuUserProfileBufferInfo info;
@@ -654,7 +611,7 @@ TEST_F(DEVPROF_DRV_UTEST, RunHostMoveMode_WriteFailed)
     DevprofDrvAicpu::instance()->isSupportHostMove_ = true;
 
     MsprofAdditionalInfo data;
-    AdprofReportAdditionalInfo(0, static_cast<void *>(&data), sizeof(MsprofAdditionalInfo));
+    AdprofReportAdditionalInfo(0, static_cast<void*>(&data), sizeof(MsprofAdditionalInfo));
 
     MOCKER(OsalSleep).stubs().will(returnValue(0));
     DevprofDrvAicpu::instance()->stopped_ = true;
@@ -679,7 +636,7 @@ TEST_F(DEVPROF_DRV_UTEST, ReleaseAndSupportHostMove)
 
     DevprofDrvAicpu::instance()->Reset();
     DevprofDrvAicpu::instance()->SetSupportHostMove(true);
-    uint8_t *buffer = new uint8_t[4 * 1024 * 1024];
+    uint8_t* buffer = new uint8_t[4 * 1024 * 1024];
     uint32_t wptrVal = 0;
     uint32_t rptrVal = 0;
     Devprof::AicpuUserProfileBufferInfo info;
@@ -707,7 +664,7 @@ TEST_F(DEVPROF_DRV_UTEST, ProfStartAicpu_HostMove)
     EXPECT_EQ(PROFILING_FAILED, ProfStartAicpu(&startPara));
     free(startPara.out_data);
 
-    uint8_t *buffer = new uint8_t[4 * 1024 * 1024];
+    uint8_t* buffer = new uint8_t[4 * 1024 * 1024];
     uint32_t wptrVal = 0;
     uint32_t rptrVal = 0;
     Devprof::AicpuUserProfileBufferInfo info;
@@ -737,7 +694,7 @@ TEST_F(DEVPROF_DRV_UTEST, ProfStopAicpu_ReleaseFlag)
     MOCKER(OsalCreateTaskWithThreadAttr).stubs().will(returnValue(0));
     MOCKER(OsalJoinTask).stubs().will(returnValue(0));
 
-    uint8_t *buffer = new uint8_t[4 * 1024 * 1024];
+    uint8_t* buffer = new uint8_t[4 * 1024 * 1024];
     uint32_t wptrVal = 0;
     uint32_t rptrVal = 0;
     Devprof::AicpuUserProfileBufferInfo info;
@@ -766,24 +723,28 @@ TEST_F(DEVPROF_DRV_UTEST, WriteToHostMoveBuffer)
 {
     DevprofDrvAicpu::instance()->Reset();
     MsprofAdditionalInfo data;
-    EXPECT_EQ(PROFILING_FAILED, DevprofDrvAicpu::instance()->WriteToHostMoveBuffer(&data, sizeof(MsprofAdditionalInfo)));
+    EXPECT_EQ(
+        PROFILING_FAILED, DevprofDrvAicpu::instance()->WriteToHostMoveBuffer(&data, sizeof(MsprofAdditionalInfo)));
 
     DevprofDrvAicpu::instance()->SetSupportHostMove(true);
-    uint8_t *buffer = new uint8_t[4 * 1024 * 1024];
+    uint8_t* buffer = new uint8_t[4 * 1024 * 1024];
     uint32_t wptrVal = 0;
     uint32_t rptrVal = 0;
     Devprof::AicpuUserProfileBufferInfo info;
     SetupHostMoveBufferInfo(info, buffer, 4 * 1024 * 1024, &wptrVal, &rptrVal);
     DevprofDrvAicpu::instance()->RecordHostMoveBufferAddresses(&info);
 
-    EXPECT_EQ(PROFILING_FAILED, DevprofDrvAicpu::instance()->WriteToHostMoveBuffer(nullptr, sizeof(MsprofAdditionalInfo)));
+    EXPECT_EQ(
+        PROFILING_FAILED, DevprofDrvAicpu::instance()->WriteToHostMoveBuffer(nullptr, sizeof(MsprofAdditionalInfo)));
     EXPECT_EQ(PROFILING_FAILED, DevprofDrvAicpu::instance()->WriteToHostMoveBuffer(&data, 0));
     EXPECT_EQ(PROFILING_FAILED, DevprofDrvAicpu::instance()->WriteToHostMoveBuffer(&data, 300));
 
     data.magicNumber = MSPROF_REPORT_DATA_MAGIC_NUM;
-    EXPECT_EQ(PROFILING_SUCCESS, DevprofDrvAicpu::instance()->WriteToHostMoveBuffer(&data, sizeof(MsprofAdditionalInfo)));
+    EXPECT_EQ(
+        PROFILING_SUCCESS, DevprofDrvAicpu::instance()->WriteToHostMoveBuffer(&data, sizeof(MsprofAdditionalInfo)));
     for (int i = 0; i < 10; i++) {
-        EXPECT_EQ(PROFILING_SUCCESS, DevprofDrvAicpu::instance()->WriteToHostMoveBuffer(&data, sizeof(MsprofAdditionalInfo)));
+        EXPECT_EQ(
+            PROFILING_SUCCESS, DevprofDrvAicpu::instance()->WriteToHostMoveBuffer(&data, sizeof(MsprofAdditionalInfo)));
     }
 
     DevprofDrvAicpu::instance()->Release();
@@ -794,7 +755,7 @@ TEST_F(DEVPROF_DRV_UTEST, WriteToHostMoveBuffer)
 TEST_F(DEVPROF_DRV_UTEST, WriteToHostMoveBuffer_WriteOffsetOverflow)
 {
     DevprofDrvAicpu::instance()->Reset();
-    uint8_t *buffer = new uint8_t[4 * 1024 * 1024];
+    uint8_t* buffer = new uint8_t[4 * 1024 * 1024];
     uint32_t wptrVal = 0;
     uint32_t rptrVal = 0;
     Devprof::AicpuUserProfileBufferInfo info;
@@ -804,7 +765,8 @@ TEST_F(DEVPROF_DRV_UTEST, WriteToHostMoveBuffer_WriteOffsetOverflow)
     MsprofAdditionalInfo data;
     data.magicNumber = MSPROF_REPORT_DATA_MAGIC_NUM;
     DevprofDrvAicpu::instance()->hostMoveWriteIndex_.store(16384);
-    EXPECT_EQ(PROFILING_FAILED, DevprofDrvAicpu::instance()->WriteToHostMoveBuffer(&data, sizeof(MsprofAdditionalInfo)));
+    EXPECT_EQ(
+        PROFILING_FAILED, DevprofDrvAicpu::instance()->WriteToHostMoveBuffer(&data, sizeof(MsprofAdditionalInfo)));
     EXPECT_EQ(0u, wptrVal);
 
     DevprofDrvAicpu::instance()->Release();
@@ -815,7 +777,7 @@ TEST_F(DEVPROF_DRV_UTEST, WriteToHostMoveBuffer_WriteOffsetOverflow)
 TEST_F(DEVPROF_DRV_UTEST, WriteToHostMoveBuffer_NullWptr)
 {
     DevprofDrvAicpu::instance()->Reset();
-    uint8_t *buffer = new uint8_t[4 * 1024 * 1024];
+    uint8_t* buffer = new uint8_t[4 * 1024 * 1024];
     uint32_t wptrVal = 0;
     uint32_t rptrVal = 0;
     Devprof::AicpuUserProfileBufferInfo info;
@@ -826,7 +788,8 @@ TEST_F(DEVPROF_DRV_UTEST, WriteToHostMoveBuffer_NullWptr)
 
     MsprofAdditionalInfo data;
     data.magicNumber = MSPROF_REPORT_DATA_MAGIC_NUM;
-    EXPECT_EQ(PROFILING_FAILED, DevprofDrvAicpu::instance()->WriteToHostMoveBuffer(&data, sizeof(MsprofAdditionalInfo)));
+    EXPECT_EQ(
+        PROFILING_FAILED, DevprofDrvAicpu::instance()->WriteToHostMoveBuffer(&data, sizeof(MsprofAdditionalInfo)));
     EXPECT_EQ(0u, wptrVal);
 
     DevprofDrvAicpu::instance()->Release();
@@ -840,7 +803,7 @@ TEST_F(DEVPROF_DRV_UTEST, UninitHostMoveBuffer)
     DevprofDrvAicpu::instance()->UninitHostMoveBuffer();
 
     DevprofDrvAicpu::instance()->SetSupportHostMove(true);
-    uint8_t *buffer = new uint8_t[4 * 1024 * 1024];
+    uint8_t* buffer = new uint8_t[4 * 1024 * 1024];
     uint32_t wptrVal = 0;
     uint32_t rptrVal = 0;
     Devprof::AicpuUserProfileBufferInfo info;
@@ -905,7 +868,7 @@ TEST_F(DEVPROF_DRV_UTEST, RunHostMoveMode_NullPointers)
 TEST_F(DEVPROF_DRV_UTEST, RunHostMoveMode_InvalidBufferSize)
 {
     DevprofDrvAicpu::instance()->Reset();
-    uint8_t *buffer = new uint8_t[4 * 1024 * 1024];
+    uint8_t* buffer = new uint8_t[4 * 1024 * 1024];
     uint32_t wptrVal = 0;
     uint32_t rptrVal = 0;
     Devprof::AicpuUserProfileBufferInfo info;
@@ -931,7 +894,7 @@ TEST_F(DEVPROF_DRV_UTEST, RunHostMoveMode_StoppedNoData)
     DevprofDrvAicpu::instance()->aicpuAdditionalBuffer_.UnInit();
     DevprofDrvAicpu::instance()->aicpuAdditionalBuffer_.Init("AicpuBuffer");
     analysis::dvvp::transport::HashData::instance()->hashVector_.clear();
-    uint8_t *buffer = new uint8_t[4 * 1024 * 1024];
+    uint8_t* buffer = new uint8_t[4 * 1024 * 1024];
     uint32_t wptrVal = 0;
     uint32_t rptrVal = 0;
     Devprof::AicpuUserProfileBufferInfo info;
@@ -953,7 +916,7 @@ TEST_F(DEVPROF_DRV_UTEST, RunHostMoveMode_InvalidWptrRptr)
     DevprofDrvAicpu::instance()->Reset();
     DevprofDrvAicpu::instance()->aicpuAdditionalBuffer_.UnInit();
     DevprofDrvAicpu::instance()->aicpuAdditionalBuffer_.Init("AicpuBuffer");
-    uint8_t *buffer = new uint8_t[4 * 1024 * 1024];
+    uint8_t* buffer = new uint8_t[4 * 1024 * 1024];
     uint32_t wptrVal = 0;
     uint32_t rptrVal = 0;
     Devprof::AicpuUserProfileBufferInfo info;
@@ -966,7 +929,7 @@ TEST_F(DEVPROF_DRV_UTEST, RunHostMoveMode_InvalidWptrRptr)
 
     MsprofAdditionalInfo data;
     data.magicNumber = MSPROF_REPORT_DATA_MAGIC_NUM;
-    AdprofReportAdditionalInfo(0, static_cast<void *>(&data), sizeof(MsprofAdditionalInfo));
+    AdprofReportAdditionalInfo(0, static_cast<void*>(&data), sizeof(MsprofAdditionalInfo));
 
     MOCKER(OsalSleep).stubs().will(returnValue(0));
     DevprofDrvAicpu::instance()->stopped_ = true;
@@ -983,7 +946,7 @@ TEST_F(DEVPROF_DRV_UTEST, RunHostMoveMode_RingBufferFull)
     DevprofDrvAicpu::instance()->Reset();
     DevprofDrvAicpu::instance()->aicpuAdditionalBuffer_.UnInit();
     DevprofDrvAicpu::instance()->aicpuAdditionalBuffer_.Init("AicpuBuffer");
-    uint8_t *buffer = new uint8_t[4 * 1024 * 1024];
+    uint8_t* buffer = new uint8_t[4 * 1024 * 1024];
     uint32_t wptrVal = 0;
     uint32_t rptrVal = 0;
     Devprof::AicpuUserProfileBufferInfo info;
@@ -993,7 +956,7 @@ TEST_F(DEVPROF_DRV_UTEST, RunHostMoveMode_RingBufferFull)
 
     MsprofAdditionalInfo data;
     data.magicNumber = MSPROF_REPORT_DATA_MAGIC_NUM;
-    AdprofReportAdditionalInfo(0, static_cast<void *>(&data), sizeof(MsprofAdditionalInfo));
+    AdprofReportAdditionalInfo(0, static_cast<void*>(&data), sizeof(MsprofAdditionalInfo));
 
     DevprofDrvAicpu::instance()->hostMoveWriteIndex_.store(16383);
     MOCKER(OsalSleep).stubs().will(returnValue(0));
@@ -1013,7 +976,7 @@ TEST_F(DEVPROF_DRV_UTEST, RunHostMoveMode_WriteSuccess)
     DevprofDrvAicpu::instance()->aicpuAdditionalBuffer_.Init("AicpuBuffer");
     // Clear leaked str2id keys so only the single pushed record is written to the ring buffer.
     analysis::dvvp::transport::HashData::instance()->hashVector_.clear();
-    uint8_t *buffer = new uint8_t[4 * 1024 * 1024];
+    uint8_t* buffer = new uint8_t[4 * 1024 * 1024];
     uint32_t wptrVal = 0;
     uint32_t rptrVal = 0;
     Devprof::AicpuUserProfileBufferInfo info;
@@ -1023,7 +986,7 @@ TEST_F(DEVPROF_DRV_UTEST, RunHostMoveMode_WriteSuccess)
 
     MsprofAdditionalInfo data;
     data.magicNumber = MSPROF_REPORT_DATA_MAGIC_NUM;
-    AdprofReportAdditionalInfo(0, static_cast<void *>(&data), sizeof(MsprofAdditionalInfo));
+    AdprofReportAdditionalInfo(0, static_cast<void*>(&data), sizeof(MsprofAdditionalInfo));
 
     MOCKER(OsalSleep).stubs().will(returnValue(0));
     DevprofDrvAicpu::instance()->stopped_ = true;
@@ -1043,7 +1006,7 @@ TEST_F(DEVPROF_DRV_UTEST, RunHostMoveMode_ReportStr2Id)
     DevprofDrvAicpu::instance()->aicpuAdditionalBuffer_.UnInit();
     DevprofDrvAicpu::instance()->aicpuAdditionalBuffer_.Init("AicpuBuffer");
     analysis::dvvp::transport::HashData::instance()->hashVector_.clear();
-    uint8_t *buffer = new uint8_t[4 * 1024 * 1024];
+    uint8_t* buffer = new uint8_t[4 * 1024 * 1024];
     uint32_t wptrVal = 0;
     uint32_t rptrVal = 0;
     Devprof::AicpuUserProfileBufferInfo info;
@@ -1062,8 +1025,8 @@ TEST_F(DEVPROF_DRV_UTEST, RunHostMoveMode_ReportStr2Id)
     // 采样 buffer 为空，主排空不写入；str2id flush 后环形缓冲区应至少有一条记录
     EXPECT_GT(wptrVal, 0U);
     // 校验首条记录的 data 以 STR2ID_MARK 开头
-    const MsprofAdditionalInfo *record = reinterpret_cast<const MsprofAdditionalInfo *>(buffer);
-    EXPECT_EQ(0, strncmp(reinterpret_cast<const char *>(record->data), STR2ID_MARK, strlen(STR2ID_MARK)));
+    const MsprofAdditionalInfo* record = reinterpret_cast<const MsprofAdditionalInfo*>(buffer);
+    EXPECT_EQ(0, strncmp(reinterpret_cast<const char*>(record->data), STR2ID_MARK, strlen(STR2ID_MARK)));
 
     analysis::dvvp::transport::HashData::instance()->hashVector_.clear();
     DevprofDrvAicpu::instance()->Release();
@@ -1076,7 +1039,7 @@ TEST_F(DEVPROF_DRV_UTEST, AcquireHostMoveFreeSlots_RingFull_LogOnce)
     DevprofDrvAicpu::instance()->Reset();
     const size_t recordSize = sizeof(MsprofAdditionalInfo);
     const uint32_t ringRecords = 4;
-    uint8_t *buffer = new uint8_t[recordSize * ringRecords];
+    uint8_t* buffer = new uint8_t[recordSize * ringRecords];
     uint32_t wptrVal = 0;
     uint32_t rptrVal = 0;
     Devprof::AicpuUserProfileBufferInfo info;
@@ -1089,8 +1052,7 @@ TEST_F(DEVPROF_DRV_UTEST, AcquireHostMoveFreeSlots_RingFull_LogOnce)
     ResetDlogRecordCount();
 
     uint32_t freeSlots = 0;
-    EXPECT_EQ(DevprofDrvAicpu::HostMoveStep::RETRY,
-              DevprofDrvAicpu::instance()->AcquireHostMoveFreeSlots(freeSlots));
+    EXPECT_EQ(DevprofDrvAicpu::HostMoveStep::RETRY, DevprofDrvAicpu::instance()->AcquireHostMoveFreeSlots(freeSlots));
     EXPECT_EQ(0U, freeSlots);
     EXPECT_EQ(1, GetDlogRecordCount());
 
@@ -1104,7 +1066,7 @@ TEST_F(DEVPROF_DRV_UTEST, AcquireHostMoveFreeSlots_RingFull_LogOnlyOnceOnRetry)
     DevprofDrvAicpu::instance()->Reset();
     const size_t recordSize = sizeof(MsprofAdditionalInfo);
     const uint32_t ringRecords = 4;
-    uint8_t *buffer = new uint8_t[recordSize * ringRecords];
+    uint8_t* buffer = new uint8_t[recordSize * ringRecords];
     uint32_t wptrVal = 0;
     uint32_t rptrVal = 0;
     Devprof::AicpuUserProfileBufferInfo info;
@@ -1117,16 +1079,13 @@ TEST_F(DEVPROF_DRV_UTEST, AcquireHostMoveFreeSlots_RingFull_LogOnlyOnceOnRetry)
     ResetDlogRecordCount();
 
     uint32_t freeSlots = 0;
-    EXPECT_EQ(DevprofDrvAicpu::HostMoveStep::RETRY,
-              DevprofDrvAicpu::instance()->AcquireHostMoveFreeSlots(freeSlots));
+    EXPECT_EQ(DevprofDrvAicpu::HostMoveStep::RETRY, DevprofDrvAicpu::instance()->AcquireHostMoveFreeSlots(freeSlots));
     EXPECT_EQ(1, GetDlogRecordCount());
 
-    EXPECT_EQ(DevprofDrvAicpu::HostMoveStep::RETRY,
-              DevprofDrvAicpu::instance()->AcquireHostMoveFreeSlots(freeSlots));
+    EXPECT_EQ(DevprofDrvAicpu::HostMoveStep::RETRY, DevprofDrvAicpu::instance()->AcquireHostMoveFreeSlots(freeSlots));
     EXPECT_EQ(1, GetDlogRecordCount());
 
-    EXPECT_EQ(DevprofDrvAicpu::HostMoveStep::RETRY,
-              DevprofDrvAicpu::instance()->AcquireHostMoveFreeSlots(freeSlots));
+    EXPECT_EQ(DevprofDrvAicpu::HostMoveStep::RETRY, DevprofDrvAicpu::instance()->AcquireHostMoveFreeSlots(freeSlots));
     EXPECT_EQ(1, GetDlogRecordCount());
 
     DevprofDrvAicpu::instance()->Release();
@@ -1139,7 +1098,7 @@ TEST_F(DEVPROF_DRV_UTEST, AcquireHostMoveFreeSlots_RingNotFull_NoLog)
     DevprofDrvAicpu::instance()->Reset();
     const size_t recordSize = sizeof(MsprofAdditionalInfo);
     const uint32_t ringRecords = 8;
-    uint8_t *buffer = new uint8_t[recordSize * ringRecords];
+    uint8_t* buffer = new uint8_t[recordSize * ringRecords];
     uint32_t wptrVal = 0;
     uint32_t rptrVal = 0;
     Devprof::AicpuUserProfileBufferInfo info;
@@ -1152,8 +1111,7 @@ TEST_F(DEVPROF_DRV_UTEST, AcquireHostMoveFreeSlots_RingNotFull_NoLog)
     ResetDlogRecordCount();
 
     uint32_t freeSlots = 0;
-    EXPECT_EQ(DevprofDrvAicpu::HostMoveStep::OK,
-              DevprofDrvAicpu::instance()->AcquireHostMoveFreeSlots(freeSlots));
+    EXPECT_EQ(DevprofDrvAicpu::HostMoveStep::OK, DevprofDrvAicpu::instance()->AcquireHostMoveFreeSlots(freeSlots));
     EXPECT_GT(freeSlots, 0U);
     EXPECT_EQ(0, GetDlogRecordCount());
 

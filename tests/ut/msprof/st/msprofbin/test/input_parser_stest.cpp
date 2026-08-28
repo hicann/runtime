@@ -23,25 +23,21 @@ using namespace Analysis::Dvvp::Common::Config;
 using namespace Collector::Dvvp::DynProf;
 using namespace Analysis::Dvvp::Common::Platform;
 
-constexpr int MSPROF_DAEMON_ERROR       = -1;
-constexpr int MSPROF_DAEMON_OK          = 0;
+constexpr int MSPROF_DAEMON_ERROR = -1;
+constexpr int MSPROF_DAEMON_OK = 0;
 
 class INPUT_PARSER_STEST : public testing::Test {
 protected:
     virtual void SetUp() {}
-    virtual void TearDown()
-    {
-        GlobalMockObject::verify();
-    }
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
-TEST_F(INPUT_PARSER_STEST, MsprofHostCheckValid) {
+TEST_F(INPUT_PARSER_STEST, MsprofHostCheckValid)
+{
     GlobalMockObject::verify();
-    MOCKER(analysis::dvvp::common::utils::Utils::ExecCmd)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER(analysis::dvvp::common::utils::Utils::ExecCmd).stubs().will(returnValue(PROFILING_SUCCESS));
     InputParser parser = InputParser();
-    struct MsprofCmdInfo cmdInfo = { {nullptr} };
+    struct MsprofCmdInfo cmdInfo = {{nullptr}};
     // invalid options
     EXPECT_EQ(PROFILING_FAILED, parser.MsprofHostCheckValid(cmdInfo, 999));
 
@@ -67,13 +63,11 @@ TEST_F(INPUT_PARSER_STEST, MsprofHostCheckValid) {
     EXPECT_EQ(PROFILING_FAILED, parser.MsprofHostCheckValid(cmdInfo, ARGS_HOST_SYS_PID));
 }
 
-
-TEST_F(INPUT_PARSER_STEST, CheckHostSysCmdOutIsExist) {
+TEST_F(INPUT_PARSER_STEST, CheckHostSysCmdOutIsExist)
+{
     GlobalMockObject::verify();
 
-    MOCKER(analysis::dvvp::common::utils::Utils::ExecCmd)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER(analysis::dvvp::common::utils::Utils::ExecCmd).stubs().will(returnValue(PROFILING_SUCCESS));
     InputParser parser = InputParser();
     std::string tempFile = "./CheckHostSysCmdOutIsExist";
     std::ofstream file(tempFile);
@@ -85,10 +79,11 @@ TEST_F(INPUT_PARSER_STEST, CheckHostSysCmdOutIsExist) {
     EXPECT_EQ(PROFILING_FAILED, parser.CheckHostSysCmdOutIsExist(tempFile, toolName, tmpProcess));
 }
 
-TEST_F(INPUT_PARSER_STEST, CheckOutputValid) {
+TEST_F(INPUT_PARSER_STEST, CheckOutputValid)
+{
     GlobalMockObject::verify();
     InputParser parser = InputParser();
-    struct MsprofCmdInfo cmdInfo = { {nullptr} };
+    struct MsprofCmdInfo cmdInfo = {{nullptr}};
 
     EXPECT_EQ(PROFILING_FAILED, parser.CheckOutputValid(cmdInfo));
     cmdInfo.args[ARGS_OUTPUT] = "";
@@ -97,10 +92,11 @@ TEST_F(INPUT_PARSER_STEST, CheckOutputValid) {
     EXPECT_EQ(PROFILING_SUCCESS, parser.CheckOutputValid(cmdInfo));
 }
 
-TEST_F(INPUT_PARSER_STEST, CheckStorageLimitValid) {
+TEST_F(INPUT_PARSER_STEST, CheckStorageLimitValid)
+{
     GlobalMockObject::verify();
     InputParser parser = InputParser();
-    struct MsprofCmdInfo cmdInfo = { {nullptr} };
+    struct MsprofCmdInfo cmdInfo = {{nullptr}};
 
     EXPECT_EQ(PROFILING_SUCCESS, parser.CheckStorageLimitValid(cmdInfo));
     cmdInfo.args[ARGS_STORAGE_LIMIT] = "";
@@ -111,10 +107,10 @@ TEST_F(INPUT_PARSER_STEST, CheckStorageLimitValid) {
     EXPECT_EQ(PROFILING_FAILED, parser.CheckStorageLimitValid(cmdInfo));
 }
 
-TEST_F(INPUT_PARSER_STEST, CheckStorageLimit) {
+TEST_F(INPUT_PARSER_STEST, CheckStorageLimit)
+{
     using namespace analysis::dvvp::common::validation;
-    std::shared_ptr<analysis::dvvp::message::ProfileParams> params(
-    new analysis::dvvp::message::ProfileParams);
+    std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams);
 
     params->storageLimit = "MB";
     bool ret = ParamValidation::instance()->CheckStorageLimit(params);
@@ -153,7 +149,8 @@ TEST_F(INPUT_PARSER_STEST, CheckStorageLimit) {
     EXPECT_EQ(true, ret);
 }
 
-TEST_F(INPUT_PARSER_STEST, GetAppParam) {
+TEST_F(INPUT_PARSER_STEST, GetAppParam)
+{
     GlobalMockObject::verify();
     InputParser parser = InputParser();
     std::remove("./GetAppParam");
@@ -165,22 +162,19 @@ TEST_F(INPUT_PARSER_STEST, GetAppParam) {
     file << "command not found" << std::endl;
     file.close();
     EXPECT_EQ(PROFILING_SUCCESS, parser.GetAppParam("./GetAppParam a"));
-    MOCKER_CPP(&analysis::dvvp::common::utils::Utils::SplitPath)
-        .stubs()
-        .will(returnValue(PROFILING_FAILED));
+    MOCKER_CPP(&analysis::dvvp::common::utils::Utils::SplitPath).stubs().will(returnValue(PROFILING_FAILED));
     EXPECT_EQ(PROFILING_FAILED, parser.GetAppParam("./GetAppParam a"));
 }
 
-TEST_F(INPUT_PARSER_STEST, CheckAppValid) {
+TEST_F(INPUT_PARSER_STEST, CheckAppValid)
+{
     GlobalMockObject::verify();
     InputParser parser = InputParser();
-    struct MsprofCmdInfo cmdInfo = { {nullptr} };
+    struct MsprofCmdInfo cmdInfo = {{nullptr}};
 
     std::remove("./INPUT_PARSER_STEST-CheckAppValid");
     EXPECT_EQ(PROFILING_FAILED, parser.CheckAppValid(cmdInfo));
-    MOCKER_CPP(&Analysis::Dvvp::Msprof::InputParser::GetAppParam)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&Analysis::Dvvp::Msprof::InputParser::GetAppParam).stubs().will(returnValue(PROFILING_SUCCESS));
     cmdInfo.args[ARGS_APPLICATION] = "bash";
     EXPECT_EQ(PROFILING_SUCCESS, parser.CheckAppValid(cmdInfo));
     cmdInfo.args[ARGS_APPLICATION] = "";
@@ -193,19 +187,82 @@ TEST_F(INPUT_PARSER_STEST, CheckAppValid) {
     file << "command not found" << std::endl;
     file.close();
     EXPECT_EQ(PROFILING_SUCCESS, parser.CheckAppValid(cmdInfo));
-    MOCKER_CPP(&analysis::dvvp::common::utils::Utils::SplitPath)
-        .stubs()
-        .will(returnValue(PROFILING_FAILED));
+    MOCKER_CPP(&analysis::dvvp::common::utils::Utils::SplitPath).stubs().will(returnValue(PROFILING_FAILED));
     EXPECT_EQ(PROFILING_FAILED, parser.CheckAppValid(cmdInfo));
     remove(".INPUT_PARSER_STEST-CheckAppValid");
-    cmdInfo.args[ARGS_APPLICATION] = "./libs/xaclfk/xaclfk -m /home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_L1_fp16_32768_1_32768_1_32768_1_TF_32768_b41d37.om -o /home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/out_ID2940_WideDeep_L1_fp16_32768_1_32768_1_32768_1_TF_32768_b41d37 -i /home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_00_ad_advertiser_input_0,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_01_ad_id_input_1,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_02_ad_views_log_01scaled_input_2,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_03_doc_ad_category_id_input_3,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_04_doc_ad_days_since_published_log_01scaled_input_4,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_05_doc_ad_entity_id_input_5,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_06_doc_ad_publisher_id_input_6,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_07_doc_ad_source_id_input_7,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_08_doc_ad_topic_id_input_8,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_09_doc_event_category_id_input_9,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_10_doc_event_days_since_published_log_01scaled_input_10,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_11_doc_event_doc_ad_sim_categories_log_01scaled_input_11,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_12_doc_event_doc_ad_sim_entities_log_01scaled_input_12,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_13_doc_event_doc_ad_sim_topics_log_01scaled_input_13,xrunfk//home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_14_doc_event_entity_id_input_14,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_15_doc_event_hour_log_01scaled_input_15,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_16_doc_event_id_input_16,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_17_doc_event_publisher_id_input_17,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_18_doc_event_source_id_input_18,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_19_doc_event_topic_id_input_19,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_20_doc_id_input_20,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_21_doc_views_log_01scaled_input_21,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_22_event_country_input_22,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_23_event_country_state_input_23,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_24_event_geo_location_input_24,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_25_event_hour_input_25,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_26_event_platform_input_26,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_27_event_weekend_input_27,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_28_pop_ad_id_conf_input_28,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_29_pop_ad_id_log_01scaled_input_29,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_30_pop_advertiser_id_conf_input_30,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_31_pop_advertiser_id_log_01scaled_input_31,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_32_pop_campain_id_conf_multipl_log_01scaled_input_32,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_33_pop_campain_id_log_01scaled_input_33,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_34_pop_category_id_conf_input_34,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_35_pop_category_id_log_01scaled_input_35,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_36_pop_document_id_conf_input_36,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_37_pop_document_id_log_01scaled_input_37,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_38_pop_entity_id_conf_input_38,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_39_pop_entity_id_log_01scaled_input_39,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_40_pop_publisher_id_conf_input_40,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_41_pop_publisher_id_log_01scaled_input_41,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_42_pop_source_id_conf_input_42,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_43_pop_source_id_log_01scaled_input_43,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_44_pop_topic_id_conf_input_44,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_45_pop_topic_id_log_01scaled_input_45,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_46_traffic_source_input_46,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_47_user_doc_ad_sim_categories_conf_input_47,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_48_user_doc_ad_sim_categories_log_01scaled_input_48,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_49_user_doc_ad_sim_entities_log_01scaled_input_49,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_50_user_doc_ad_sim_topics_conf_input_50,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_51_user_doc_ad_sim_topics_log_01scaled_input_51,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_52_user_has_already_viewed_doc_input_52,/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_53_user_views_log_01scaled_input_53 -n 0 -l 800";
+    cmdInfo.args[ARGS_APPLICATION] =
+        "./libs/xaclfk/xaclfk -m "
+        "/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/"
+        "ID2940_WideDeep_L1_fp16_32768_1_32768_1_32768_1_TF_32768_b41d37.om -o "
+        "/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/"
+        "out_ID2940_WideDeep_L1_fp16_32768_1_32768_1_32768_1_TF_32768_b41d37 -i "
+        "/home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_00_ad_advertiser_input_0,/home/"
+        "swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_01_ad_id_input_1,/home/swx1026645/xrunfk/"
+        "testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_02_ad_views_log_01scaled_input_2,/home/swx1026645/xrunfk/"
+        "testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_03_doc_ad_category_id_input_3,/home/swx1026645/xrunfk/"
+        "testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_04_doc_ad_days_since_published_log_01scaled_input_4,/home/"
+        "swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_05_doc_ad_entity_id_input_5,/home/"
+        "swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_06_doc_ad_publisher_id_input_6,/home/"
+        "swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_07_doc_ad_source_id_input_7,/home/"
+        "swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_08_doc_ad_topic_id_input_8,/home/"
+        "swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_09_doc_event_category_id_input_9,/home/"
+        "swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/"
+        "ID2940_WideDeep_10_doc_event_days_since_published_log_01scaled_input_10,/home/swx1026645/xrunfk/testcase/"
+        "model_tf/ID2940_WideDeep/ID2940_WideDeep_11_doc_event_doc_ad_sim_categories_log_01scaled_input_11,/home/"
+        "swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/"
+        "ID2940_WideDeep_12_doc_event_doc_ad_sim_entities_log_01scaled_input_12,/home/swx1026645/xrunfk/testcase/"
+        "model_tf/ID2940_WideDeep/ID2940_WideDeep_13_doc_event_doc_ad_sim_topics_log_01scaled_input_13,xrunfk//home/"
+        "swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_14_doc_event_entity_id_input_14,/home/"
+        "swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_15_doc_event_hour_log_01scaled_input_15,/"
+        "home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_16_doc_event_id_input_16,/home/"
+        "swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_17_doc_event_publisher_id_input_17,/home/"
+        "swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_18_doc_event_source_id_input_18,/home/"
+        "swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_19_doc_event_topic_id_input_19,/home/"
+        "swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_20_doc_id_input_20,/home/swx1026645/"
+        "xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_21_doc_views_log_01scaled_input_21,/home/swx1026645/"
+        "xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_22_event_country_input_22,/home/swx1026645/xrunfk/"
+        "testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_23_event_country_state_input_23,/home/swx1026645/xrunfk/"
+        "testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_24_event_geo_location_input_24,/home/swx1026645/xrunfk/"
+        "testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_25_event_hour_input_25,/home/swx1026645/xrunfk/testcase/"
+        "model_tf/ID2940_WideDeep/ID2940_WideDeep_26_event_platform_input_26,/home/swx1026645/xrunfk/testcase/model_tf/"
+        "ID2940_WideDeep/ID2940_WideDeep_27_event_weekend_input_27,/home/swx1026645/xrunfk/testcase/model_tf/"
+        "ID2940_WideDeep/ID2940_WideDeep_28_pop_ad_id_conf_input_28,/home/swx1026645/xrunfk/testcase/model_tf/"
+        "ID2940_WideDeep/ID2940_WideDeep_29_pop_ad_id_log_01scaled_input_29,/home/swx1026645/xrunfk/testcase/model_tf/"
+        "ID2940_WideDeep/ID2940_WideDeep_30_pop_advertiser_id_conf_input_30,/home/swx1026645/xrunfk/testcase/model_tf/"
+        "ID2940_WideDeep/ID2940_WideDeep_31_pop_advertiser_id_log_01scaled_input_31,/home/swx1026645/xrunfk/testcase/"
+        "model_tf/ID2940_WideDeep/ID2940_WideDeep_32_pop_campain_id_conf_multipl_log_01scaled_input_32,/home/"
+        "swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_33_pop_campain_id_log_01scaled_input_33,/"
+        "home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_34_pop_category_id_conf_input_34,/"
+        "home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/"
+        "ID2940_WideDeep_35_pop_category_id_log_01scaled_input_35,/home/swx1026645/xrunfk/testcase/model_tf/"
+        "ID2940_WideDeep/ID2940_WideDeep_36_pop_document_id_conf_input_36,/home/swx1026645/xrunfk/testcase/model_tf/"
+        "ID2940_WideDeep/ID2940_WideDeep_37_pop_document_id_log_01scaled_input_37,/home/swx1026645/xrunfk/testcase/"
+        "model_tf/ID2940_WideDeep/ID2940_WideDeep_38_pop_entity_id_conf_input_38,/home/swx1026645/xrunfk/testcase/"
+        "model_tf/ID2940_WideDeep/ID2940_WideDeep_39_pop_entity_id_log_01scaled_input_39,/home/swx1026645/xrunfk/"
+        "testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_40_pop_publisher_id_conf_input_40,/home/swx1026645/xrunfk/"
+        "testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_41_pop_publisher_id_log_01scaled_input_41,/home/swx1026645/"
+        "xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_42_pop_source_id_conf_input_42,/home/swx1026645/"
+        "xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_43_pop_source_id_log_01scaled_input_43,/home/"
+        "swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_44_pop_topic_id_conf_input_44,/home/"
+        "swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_45_pop_topic_id_log_01scaled_input_45,/"
+        "home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_46_traffic_source_input_46,/home/"
+        "swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/"
+        "ID2940_WideDeep_47_user_doc_ad_sim_categories_conf_input_47,/home/swx1026645/xrunfk/testcase/model_tf/"
+        "ID2940_WideDeep/ID2940_WideDeep_48_user_doc_ad_sim_categories_log_01scaled_input_48,/home/swx1026645/xrunfk/"
+        "testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_49_user_doc_ad_sim_entities_log_01scaled_input_49,/home/"
+        "swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/ID2940_WideDeep_50_user_doc_ad_sim_topics_conf_input_50,/"
+        "home/swx1026645/xrunfk/testcase/model_tf/ID2940_WideDeep/"
+        "ID2940_WideDeep_51_user_doc_ad_sim_topics_log_01scaled_input_51,/home/swx1026645/xrunfk/testcase/model_tf/"
+        "ID2940_WideDeep/ID2940_WideDeep_52_user_has_already_viewed_doc_input_52,/home/swx1026645/xrunfk/testcase/"
+        "model_tf/ID2940_WideDeep/ID2940_WideDeep_53_user_views_log_01scaled_input_53 -n 0 -l 800";
     EXPECT_EQ(PROFILING_FAILED, parser.CheckAppValid(cmdInfo));
 }
 
-TEST_F(INPUT_PARSER_STEST, CheckEnvironmentValid) {
+TEST_F(INPUT_PARSER_STEST, CheckEnvironmentValid)
+{
     GlobalMockObject::verify();
     InputParser parser = InputParser();
-    struct MsprofCmdInfo cmdInfo = { {nullptr} };
+    struct MsprofCmdInfo cmdInfo = {{nullptr}};
 
     EXPECT_EQ(PROFILING_FAILED, parser.CheckEnvironmentValid(cmdInfo));
     cmdInfo.args[ARGS_ENVIRONMENT] = "";
@@ -215,19 +272,20 @@ TEST_F(INPUT_PARSER_STEST, CheckEnvironmentValid) {
     EXPECT_EQ(PROFILING_SUCCESS, parser.CheckEnvironmentValid(cmdInfo));
 }
 
-TEST_F(INPUT_PARSER_STEST, CheckPythonPathValid) {
+TEST_F(INPUT_PARSER_STEST, CheckPythonPathValid)
+{
     GlobalMockObject::verify();
     InputParser parser = InputParser();
-    struct MsprofCmdInfo cmdInfo = { {nullptr} };
+    struct MsprofCmdInfo cmdInfo = {{nullptr}};
 
     EXPECT_EQ(PROFILING_FAILED, parser.CheckPythonPathValid(cmdInfo));
     cmdInfo.args[ARGS_PYTHON_PATH] = "";
 
     EXPECT_EQ(PROFILING_FAILED, parser.CheckPythonPathValid(cmdInfo));
-    
+
     parser.params_->pythonPath.clear();
     std::string tests = std::string(1025, 'c');
-    char* test = const_cast<char*>(tests.c_str()); 
+    char* test = const_cast<char*>(tests.c_str());
     cmdInfo.args[ARGS_PYTHON_PATH] = test;
     EXPECT_EQ(PROFILING_FAILED, parser.CheckPythonPathValid(cmdInfo));
 
@@ -236,7 +294,7 @@ TEST_F(INPUT_PARSER_STEST, CheckPythonPathValid) {
 
     cmdInfo.args[ARGS_PYTHON_PATH] = "testpython";
     EXPECT_EQ(PROFILING_FAILED, parser.CheckPythonPathValid(cmdInfo));
-    
+
     MOCKER(mmAccess2).stubs().will(returnValue(-1)).then(returnValue(0));
     cmdInfo.args[ARGS_PYTHON_PATH] = "TestPython";
     EXPECT_EQ(PROFILING_FAILED, parser.CheckPythonPathValid(cmdInfo));
@@ -253,15 +311,11 @@ TEST_F(INPUT_PARSER_STEST, CheckPythonPathValid) {
 
 TEST_F(INPUT_PARSER_STEST, CheckDynProfValid)
 {
-    struct MsprofCmdInfo cmdInfo = { {nullptr} };
+    struct MsprofCmdInfo cmdInfo = {{nullptr}};
     cmdInfo.args[ARGS_DYNAMIC_PROF] = "on";
 
-    MOCKER_CPP(&DynProfCliMgr::SetKeyPid)
-        .stubs()
-        .will(ignoreReturnValue());
-    MOCKER_CPP(&DynProfCliMgr::EnableDynProfCli)
-        .stubs()
-        .will(ignoreReturnValue());
+    MOCKER_CPP(&DynProfCliMgr::SetKeyPid).stubs().will(ignoreReturnValue());
+    MOCKER_CPP(&DynProfCliMgr::EnableDynProfCli).stubs().will(ignoreReturnValue());
 
     InputParser parser = InputParser();
     parser.params_->app = "";
@@ -297,21 +351,22 @@ TEST_F(INPUT_PARSER_STEST, CheckDynProfValid)
     EXPECT_EQ(MSPROF_DAEMON_ERROR, parser.CheckDynProfValid(cmdInfo));
 }
 
-TEST_F(INPUT_PARSER_STEST, ParamsCheck) {
+TEST_F(INPUT_PARSER_STEST, ParamsCheck)
+{
     GlobalMockObject::verify();
     InputParser parser = InputParser();
     auto pp = parser.params_;
     parser.params_.reset();
     EXPECT_EQ(PROFILING_FAILED, parser.ParamsCheck());
     parser.params_ = pp;
-    parser.params_->app_dir="./test";
-    parser.params_->result_dir="./profiling_data";
+    parser.params_->app_dir = "./test";
+    parser.params_->result_dir = "./profiling_data";
     EXPECT_EQ(PROFILING_SUCCESS, parser.ParamsCheck());
-    parser.params_->result_dir="";
+    parser.params_->result_dir = "";
     EXPECT_EQ(PROFILING_SUCCESS, parser.ParamsCheck());
     EXPECT_EQ(parser.params_->app_dir, parser.params_->result_dir);
 
-    parser.params_->result_dir="";
+    parser.params_->result_dir = "";
     std::string work_path = "/tmp/ascend_work_path/";
     std::string profiling_path = "profiling_data";
     std::string result_path = work_path + profiling_path;
@@ -340,7 +395,7 @@ TEST_F(INPUT_PARSER_STEST, ASCEND_WORK_PATH)
 {
     std::string resultDir("/tmp/test/profiling");
     setenv("ASCEND_WORK_PATH", resultDir.c_str(), 1);
-    char *argv[] = {"msprof", "--aicpu=on", "python3", "test.py", nullptr};
+    char* argv[] = {"msprof", "--aicpu=on", "python3", "test.py", nullptr};
     optind = 1;
     InputParser parser = InputParser();
     auto params = parser.MsprofGetOpts(4, (const char**)argv);
@@ -350,7 +405,7 @@ TEST_F(INPUT_PARSER_STEST, ASCEND_WORK_PATH)
 
 TEST_F(INPUT_PARSER_STEST, DefaultOutput)
 {
-    char *argv[] = {"msprof", "--aicpu=on", "python3", "test.py", nullptr};
+    char* argv[] = {"msprof", "--aicpu=on", "python3", "test.py", nullptr};
     optind = 1;
     InputParser parser = InputParser();
     auto params = parser.MsprofGetOpts(4, (const char**)argv);
@@ -358,7 +413,8 @@ TEST_F(INPUT_PARSER_STEST, DefaultOutput)
     EXPECT_EQ(true, params->result_dir == result);
 }
 
-TEST_F(INPUT_PARSER_STEST, SetHostSysParam) {
+TEST_F(INPUT_PARSER_STEST, SetHostSysParam)
+{
     GlobalMockObject::verify();
     InputParser parser = InputParser();
     parser.SetHostSysParam("123");
@@ -366,15 +422,17 @@ TEST_F(INPUT_PARSER_STEST, SetHostSysParam) {
     EXPECT_EQ(parser.params_->host_osrt_profiling, "on");
 }
 
-TEST_F(INPUT_PARSER_STEST, CheckBaseOrder) {
+TEST_F(INPUT_PARSER_STEST, CheckBaseOrder)
+{
     EXPECT_EQ(ARGS_INSTR_PROFILING, LONG_OPTIONS[ARGS_INSTR_PROFILING].val);
     EXPECT_EQ(ARGS_INSTR_PROFILING_FREQ, LONG_OPTIONS[ARGS_INSTR_PROFILING_FREQ].val);
 }
 
-TEST_F(INPUT_PARSER_STEST, CheckBaseInfo) {
+TEST_F(INPUT_PARSER_STEST, CheckBaseInfo)
+{
     GlobalMockObject::verify();
     InputParser parser = InputParser();
-    struct MsprofCmdInfo cmdInfo = { {nullptr} };
+    struct MsprofCmdInfo cmdInfo = {{nullptr}};
     auto configManger = Analysis::Dvvp::Common::Config::ConfigManager::instance();
 
     EXPECT_EQ(PROFILING_FAILED, parser.CheckSampleModeValid(cmdInfo, ARGS_AIV_MODE));
@@ -483,14 +541,14 @@ TEST_F(INPUT_PARSER_STEST, CheckBaseInfo) {
     EXPECT_EQ(PROFILING_FAILED, parser.CheckArgOnOff(cmdInfo, ARGS_ASCENDCL));
 
     // check arg range
-    EXPECT_EQ(PROFILING_FAILED, parser.CheckArgRange(cmdInfo,ARGS_INTERCONNECTION_PROFILING, 1, 100));
+    EXPECT_EQ(PROFILING_FAILED, parser.CheckArgRange(cmdInfo, ARGS_INTERCONNECTION_PROFILING, 1, 100));
 
     cmdInfo.args[ARGS_INTERCONNECTION_PROFILING] = "A";
-    EXPECT_EQ(PROFILING_FAILED, parser.CheckArgRange(cmdInfo,ARGS_INTERCONNECTION_PROFILING, 1, 100));
+    EXPECT_EQ(PROFILING_FAILED, parser.CheckArgRange(cmdInfo, ARGS_INTERCONNECTION_PROFILING, 1, 100));
     cmdInfo.args[ARGS_INTERCONNECTION_PROFILING] = "111";
-    EXPECT_EQ(PROFILING_FAILED, parser.CheckArgRange(cmdInfo,ARGS_INTERCONNECTION_PROFILING, 1, 100));
+    EXPECT_EQ(PROFILING_FAILED, parser.CheckArgRange(cmdInfo, ARGS_INTERCONNECTION_PROFILING, 1, 100));
     cmdInfo.args[ARGS_INTERCONNECTION_PROFILING] = "1";
-    EXPECT_EQ(PROFILING_SUCCESS, parser.CheckArgRange(cmdInfo,ARGS_INTERCONNECTION_PROFILING, 1, 100));
+    EXPECT_EQ(PROFILING_SUCCESS, parser.CheckArgRange(cmdInfo, ARGS_INTERCONNECTION_PROFILING, 1, 100));
 
     // check args is number
     EXPECT_EQ(PROFILING_FAILED, parser.CheckArgsIsNumber(cmdInfo, ARGS_EXPORT_ITERATION_ID));
@@ -565,9 +623,10 @@ TEST_F(INPUT_PARSER_STEST, CheckBaseInfo) {
     parser.ParamsSwitchValid2(cmdInfo, ARGS_CLEAR);
 }
 
-TEST_F(INPUT_PARSER_STEST, MsprofFreqCheckValid) {
+TEST_F(INPUT_PARSER_STEST, MsprofFreqCheckValid)
+{
     InputParser parser = InputParser();
-    struct MsprofCmdInfo cmdInfo = { {nullptr} };
+    struct MsprofCmdInfo cmdInfo = {{nullptr}};
     EXPECT_EQ(PROFILING_FAILED, parser.MsprofFreqCheckValid(cmdInfo, 100));
     cmdInfo.args[ARGS_SYS_PERIOD] = "100";
     cmdInfo.args[ARGS_SYS_SAMPLING_FREQ] = "1";
@@ -596,40 +655,40 @@ TEST_F(INPUT_PARSER_STEST, MsprofFreqCheckValid) {
     EXPECT_EQ(PROFILING_SUCCESS, parser.MsprofFreqCheckValid(cmdInfo, ARGS_EXPORT_ITERATION_ID));
     EXPECT_EQ(PROFILING_SUCCESS, parser.MsprofFreqCheckValid(cmdInfo, ARGS_EXPORT_MODEL_ID));
     EXPECT_EQ(PROFILING_SUCCESS, parser.MsprofFreqCheckValid(cmdInfo, ARGS_INSTR_PROFILING_FREQ));
-
 }
 
-TEST_F(INPUT_PARSER_STEST, GetAppPath) {
+TEST_F(INPUT_PARSER_STEST, GetAppPath)
+{
     GlobalMockObject::verify();
-	std::vector<std::string> paramsCmd;
-	EXPECT_EQ("", analysis::dvvp::app::Application::GetAppPath(paramsCmd));
+    std::vector<std::string> paramsCmd;
+    EXPECT_EQ("", analysis::dvvp::app::Application::GetAppPath(paramsCmd));
 
-	paramsCmd.push_back("first");
-	paramsCmd.push_back("second");
-	paramsCmd.push_back("third");
-	EXPECT_EQ("first", analysis::dvvp::app::Application::GetAppPath(paramsCmd));
+    paramsCmd.push_back("first");
+    paramsCmd.push_back("second");
+    paramsCmd.push_back("third");
+    EXPECT_EQ("first", analysis::dvvp::app::Application::GetAppPath(paramsCmd));
 
     paramsCmd[0] = "bash";
     EXPECT_EQ("second", analysis::dvvp::app::Application::GetAppPath(paramsCmd));
 }
 
-TEST_F(INPUT_PARSER_STEST, GetCmdString) {
+TEST_F(INPUT_PARSER_STEST, GetCmdString)
+{
     GlobalMockObject::verify();
-	std::string paramsCmd;
+    std::string paramsCmd;
     EXPECT_EQ("", analysis::dvvp::app::Application::GetCmdString(paramsCmd));
 
     paramsCmd = "bash";
-	EXPECT_EQ(paramsCmd, analysis::dvvp::app::Application::GetCmdString(paramsCmd));
+    EXPECT_EQ(paramsCmd, analysis::dvvp::app::Application::GetCmdString(paramsCmd));
 }
 
-TEST_F(INPUT_PARSER_STEST, MsprofCmdCheckValid) {
+TEST_F(INPUT_PARSER_STEST, MsprofCmdCheckValid)
+{
     InputParser parser = InputParser();
-    struct MsprofCmdInfo cmdInfo = { {nullptr} };
+    struct MsprofCmdInfo cmdInfo = {{nullptr}};
     cmdInfo.args[ARGS_DYNAMIC_PROF] = "on";
     cmdInfo.args[ARGS_DYNAMIC_PROF_PID] = "123";
-    MOCKER(mmGetOptInd)
-        .stubs()
-        .will(returnValue(1));
+    MOCKER(mmGetOptInd).stubs().will(returnValue(1));
     EXPECT_EQ(MSPROF_DAEMON_OK, parser.MsprofCmdCheckValid(cmdInfo, ARGS_DYNAMIC_PROF));
     EXPECT_EQ(MSPROF_DAEMON_OK, parser.MsprofCmdCheckValid(cmdInfo, ARGS_DYNAMIC_PROF_PID));
 }

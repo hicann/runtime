@@ -21,26 +21,32 @@
 #ifndef MSPROF_C_CPP
 #define MSPROF_MODULE_NAME PROFILING
 
-#define MSPROF_LOGD(format, ...) do {                                                                      \
-    dlog_debug(MSPROF_MODULE_NAME, " >>> (tid:%ld) " format "\n", syscall(SYS_gettid), ##__VA_ARGS__);    \
-} while (0)
+#define MSPROF_LOGD(format, ...)                                                                           \
+    do {                                                                                                   \
+        dlog_debug(MSPROF_MODULE_NAME, " >>> (tid:%ld) " format "\n", syscall(SYS_gettid), ##__VA_ARGS__); \
+    } while (0)
 
-#define MSPROF_LOGI(format, ...) do {                                                                      \
-    dlog_info(MSPROF_MODULE_NAME, " >>> (tid:%ld) " format "\n", syscall(SYS_gettid), ##__VA_ARGS__);     \
-} while (0)
+#define MSPROF_LOGI(format, ...)                                                                          \
+    do {                                                                                                  \
+        dlog_info(MSPROF_MODULE_NAME, " >>> (tid:%ld) " format "\n", syscall(SYS_gettid), ##__VA_ARGS__); \
+    } while (0)
 
-#define MSPROF_LOGW(format, ...) do {                                                                      \
-    dlog_warn(MSPROF_MODULE_NAME, " >>> (tid:%ld) " format "\n", syscall(SYS_gettid), ##__VA_ARGS__);     \
-} while (0)
+#define MSPROF_LOGW(format, ...)                                                                          \
+    do {                                                                                                  \
+        dlog_warn(MSPROF_MODULE_NAME, " >>> (tid:%ld) " format "\n", syscall(SYS_gettid), ##__VA_ARGS__); \
+    } while (0)
 
-#define MSPROF_LOGE(format, ...) do {                                                                      \
-    dlog_error(MSPROF_MODULE_NAME, " >>> (tid:%ld) " format "\n", syscall(SYS_gettid), ##__VA_ARGS__);    \
-} while (0)
+#define MSPROF_LOGE(format, ...)                                                                           \
+    do {                                                                                                   \
+        dlog_error(MSPROF_MODULE_NAME, " >>> (tid:%ld) " format "\n", syscall(SYS_gettid), ##__VA_ARGS__); \
+    } while (0)
 
-#define MSPROF_EVENT(format, ...) do {                                                                     \
-    dlog_info(static_cast<int>(static_cast<unsigned int>(MSPROF_MODULE_NAME) | RUN_LOG_MASK),             \
-        " >>> (tid:%ld) " format "\n", syscall(SYS_gettid), ##__VA_ARGS__);                               \
-} while (0)
+#define MSPROF_EVENT(format, ...)                                                           \
+    do {                                                                                    \
+        dlog_info(                                                                          \
+            static_cast<int>(static_cast<unsigned int>(MSPROF_MODULE_NAME) | RUN_LOG_MASK), \
+            " >>> (tid:%ld) " format "\n", syscall(SYS_gettid), ##__VA_ARGS__);             \
+    } while (0)
 #endif
 #endif
 
@@ -78,27 +84,21 @@ enum class StProfConfigType {
 };
 
 const std::map<uint32_t, std::string> CLI_CHECK_OUTPUT = {
-    {0, "cliMinistest_workspace/output"},
-    {1, "cliCloudstest_workspace/output"},
+    {0, "cliMinistest_workspace/output"},       {1, "cliCloudstest_workspace/output"},
 #ifndef BUILD_PROFILING_OPEN_PROJECT
     {2, "cliMdcstest_workspace/output"},
 #endif
-    {4, "cliDcstest_workspace/output"},
-    {5, "cliMilanstest_workspace/output"},
+    {4, "cliDcstest_workspace/output"},         {5, "cliMilanstest_workspace/output"},
     {7, "cliMiniV3stest_workspace/output"},
 #ifndef BUILD_PROFILING_OPEN_PROJECT
-    {8, "cliTinystest_workspace/output"},
-    {9, "cliNanostest_workspace/output"},
-    {11, "cliMdcMiniV3stest_workspace/output"},
-    {12, "cliMdcLitestest_workspace/output"},
-    {15, "cliDavidstest_workspace/output"},
-    {16, "cliDavidV121stest_workspace/output"},
-    {18, "cliMdcLiteV2stest_workspace/output"},
-    {21, "cliModenastest_workspace/output"},
+    {8, "cliTinystest_workspace/output"},       {9, "cliNanostest_workspace/output"},
+    {11, "cliMdcMiniV3stest_workspace/output"}, {12, "cliMdcLitestest_workspace/output"},
+    {15, "cliDavidstest_workspace/output"},     {16, "cliDavidV121stest_workspace/output"},
+    {18, "cliMdcLiteV2stest_workspace/output"}, {21, "cliModenastest_workspace/output"},
 #endif
 };
 
 void ClearSingleton();
-void MockPerfDir(std::string &dir);
+void MockPerfDir(std::string& dir);
 
 #endif

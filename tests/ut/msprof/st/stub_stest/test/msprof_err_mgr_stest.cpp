@@ -14,15 +14,11 @@
 
 #include "msprof_error_manager.h"
 using namespace Analysis::Dvvp::MsprofErrMgr;
-class ERR_MGR_STEST: public testing::Test {
+class ERR_MGR_STEST : public testing::Test {
 protected:
-    virtual void SetUp() {
-
-    }
-    virtual void TearDown() {
-    }
+    virtual void SetUp() {}
+    virtual void TearDown() {}
 };
-
 
 TEST_F(ERR_MGR_STEST, GetErrorManagerContext)
 {
@@ -36,9 +32,7 @@ TEST_F(ERR_MGR_STEST, GetErrorManagerContext)
     // error_message::GetErrMgrContext(). Mock that free function -- the ErrorManager singleton it
     // used to call no longer exists. Returning a non-zero id proves the value is really passed
     // through rather than the assertion passing on a default-constructed context.
-    MOCKER(error_message::GetErrMgrContext)
-        .stubs()
-        .will(returnValue(context));
+    MOCKER(error_message::GetErrMgrContext).stubs().will(returnValue(context));
     auto err_message = MsprofErrorManager::instance()->GetErrorManagerContext();
     EXPECT_EQ(42UL, err_message.work_stream_id);
 }

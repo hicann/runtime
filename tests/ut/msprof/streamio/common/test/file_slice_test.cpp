@@ -28,7 +28,7 @@
 #include <errno.h>
 #include <algorithm>
 #include <fstream>
-//mac
+// mac
 #include <net/if.h>
 #include <sys/prctl.h>
 #include "file_slice.h"
@@ -39,17 +39,16 @@ using namespace analysis::dvvp::common::thread;
 using namespace analysis::dvvp::common::error;
 using namespace analysis::dvvp::transport;
 
-class COMMON_FILE_SLICE_TEST: public testing::Test {
+class COMMON_FILE_SLICE_TEST : public testing::Test {
 protected:
-    virtual void SetUp() {
-    }
-    virtual void TearDown() {
-        GlobalMockObject::verify();
-    }
+    virtual void SetUp() {}
+    virtual void TearDown() { GlobalMockObject::verify(); }
+
 private:
 };
 
-TEST_F(COMMON_FILE_SLICE_TEST, GetSliceKey) {
+TEST_F(COMMON_FILE_SLICE_TEST, GetSliceKey)
+{
     std::string dir = "/tmp";
     std::string limit = "500MB";
     FileSlice wfTransport(128, dir, limit);
@@ -58,18 +57,18 @@ TEST_F(COMMON_FILE_SLICE_TEST, GetSliceKey) {
     EXPECT_STREQ("/tmp/hwts.log.slice_", key.c_str());
 }
 
-TEST_F(COMMON_FILE_SLICE_TEST, Init_failed) {
+TEST_F(COMMON_FILE_SLICE_TEST, Init_failed)
+{
     std::string dir = "";
     std::string limit = "500MB";
     FileSlice wfTransport(128, dir, limit);
     EXPECT_EQ(PROFILING_FAILED, wfTransport.Init());
 
     FileSlice wfTransport1(128, "/tmp/../../aaa/b", limit);
-
 }
 
-TEST_F(COMMON_FILE_SLICE_TEST, SetChunkTime) {
-    
+TEST_F(COMMON_FILE_SLICE_TEST, SetChunkTime)
+{
     std::string dir = "/tmp";
     std::string limit = "500MB";
     FileSlice wfTransport(128, dir, limit);
@@ -77,23 +76,19 @@ TEST_F(COMMON_FILE_SLICE_TEST, SetChunkTime) {
     int ret = wfTransport.SetChunkTime("", 0, 1);
     EXPECT_EQ(PROFILING_FAILED, ret);
 
-    MOCKER(analysis::dvvp::common::utils::Utils::IsFileExist)
-        .stubs()
-        .will(returnValue(false));
-    
-    MOCKER(analysis::dvvp::common::utils::Utils::GetFileSize)
-        .stubs()
-        .will(returnValue(0));
+    MOCKER(analysis::dvvp::common::utils::Utils::IsFileExist).stubs().will(returnValue(false));
+
+    MOCKER(analysis::dvvp::common::utils::Utils::GetFileSize).stubs().will(returnValue(0));
 
     ret = wfTransport.SetChunkTime("hwts.log.slice_", 0, 1);
     EXPECT_EQ(PROFILING_SUCCESS, ret);
 }
 
-TEST_F(COMMON_FILE_SLICE_TEST, WriteToLocalFiles) {
-
+TEST_F(COMMON_FILE_SLICE_TEST, WriteToLocalFiles)
+{
     std::string key = "hwts.log.slice_";
     std::string fileName = "hwts.log";
-    char *data = "test";
+    char* data = "test";
     int dataLen = strlen(data);
     int offset = -1;
     bool isLastChunk = true;
@@ -112,36 +107,36 @@ TEST_F(COMMON_FILE_SLICE_TEST, WriteToLocalFiles) {
         .stubs()
         .will(returnValue(127 * 1024 + 1))
         .then(returnValue(128 * 1024 + 1));
-    
-    MOCKER_CPP(&analysis::dvvp::transport::FileSlice::CreateDoneFile)
-            .stubs()
-            .will(returnValue(false))
-            .then(returnValue(true));
 
-    //key.length() = 0
+    MOCKER_CPP(&analysis::dvvp::transport::FileSlice::CreateDoneFile)
+        .stubs()
+        .will(returnValue(false))
+        .then(returnValue(true));
+
+    // key.length() = 0
     int ret = wfTransport.WriteToLocalFiles("", data, dataLen, offset, isLastChunk, fileName);
     EXPECT_EQ(PROFILING_FAILED, ret);
-    //Failed to create file:hwts.log.slice_
+    // Failed to create file:hwts.log.slice_
     ret = wfTransport.WriteToLocalFiles(key, data, dataLen, offset, isLastChunk, fileName);
     EXPECT_EQ(PROFILING_FAILED, ret);
 
-    //open failed
+    // open failed
     isLastChunk = false;
     key = "/tmp/not_exist_dir/hwts.log";
     ret = wfTransport.WriteToLocalFiles(key, data, dataLen, offset, isLastChunk, fileName);
     EXPECT_EQ(PROFILING_FAILED, ret);
 
-    //diskFull return true
+    // diskFull return true
     key = "hwts.log.slice_";
     ret = wfTransport.WriteToLocalFiles(key, data, dataLen, offset, isLastChunk, fileName);
     EXPECT_EQ(PROFILING_SUCCESS, ret);
-    
-    //open file failed 
+
+    // open file failed
     key = "/tmp/not_exist_dir/hwts.log";
     ret = wfTransport.WriteToLocalFiles(key, data, dataLen, offset, isLastChunk, fileName);
     EXPECT_EQ(PROFILING_FAILED, ret);
 
-    //create done file failed
+    // create done file failed
     key = "hwts.log.slice_";
     ret = wfTransport.WriteToLocalFiles(key, data, dataLen, 0, isLastChunk, fileName);
     EXPECT_EQ(PROFILING_SUCCESS, ret);
@@ -150,9 +145,9 @@ TEST_F(COMMON_FILE_SLICE_TEST, WriteToLocalFiles) {
     EXPECT_EQ(PROFILING_SUCCESS, ret);
 }
 
-TEST_F(COMMON_FILE_SLICE_TEST, CheckDirAndMessage) {
-    std::shared_ptr<analysis::dvvp::ProfileFileChunk> message(
-        new analysis::dvvp::ProfileFileChunk());
+TEST_F(COMMON_FILE_SLICE_TEST, CheckDirAndMessage)
+{
+    std::shared_ptr<analysis::dvvp::ProfileFileChunk> message(new analysis::dvvp::ProfileFileChunk());
     message->fileName = "test";
     message->offset = -1;
     message->chunk = "123";
@@ -192,12 +187,11 @@ TEST_F(COMMON_FILE_SLICE_TEST, CheckDirAndMessage) {
     EXPECT_EQ(PROFILING_SUCCESS, ret);
 }
 
-TEST_F(COMMON_FILE_SLICE_TEST, SaveDataToLocalFiles) {
-
+TEST_F(COMMON_FILE_SLICE_TEST, SaveDataToLocalFiles)
+{
     std::string dir = "/home/test";
     std::string limit = "500MB";
-    std::shared_ptr<analysis::dvvp::ProfileFileChunk> message(
-        new analysis::dvvp::ProfileFileChunk());
+    std::shared_ptr<analysis::dvvp::ProfileFileChunk> message(new analysis::dvvp::ProfileFileChunk());
     message->fileName = "test";
     message->offset = -1;
     message->chunk = "123";
@@ -219,9 +213,7 @@ TEST_F(COMMON_FILE_SLICE_TEST, SaveDataToLocalFiles) {
         .stubs()
         .will(returnValue(PROFILING_FAILED))
         .then(returnValue(PROFILING_SUCCESS));
-    MOCKER_CPP(&FileSlice::WriteCtrlDataToFile)
-            .stubs()
-            .will(returnValue(PROFILING_FAILED));
+    MOCKER_CPP(&FileSlice::WriteCtrlDataToFile).stubs().will(returnValue(PROFILING_FAILED));
 
     FileSlice wfTransport(128, dir, limit);
     wfTransport.Init();
@@ -250,41 +242,36 @@ TEST_F(COMMON_FILE_SLICE_TEST, SaveDataToLocalFiles) {
     message->chunkModule = analysis::dvvp::common::config::FileChunkDataModule::PROFILING_IS_FROM_MSPROF_HOST;
     std::string invalidKey = "";
     std::string key = "hwts.log.slice_";
-    MOCKER_CPP(&FileSlice::GetSliceKey)
-            .stubs()
-            .will(returnValue(invalidKey))
-            .then(returnValue(key));
+    MOCKER_CPP(&FileSlice::GetSliceKey).stubs().will(returnValue(invalidKey)).then(returnValue(key));
 
     MOCKER_CPP(&FileSlice::SetChunkTime)
-            .stubs()
-            .will(returnValue(PROFILING_FAILED))
-            .then(returnValue(PROFILING_SUCCESS));
+        .stubs()
+        .will(returnValue(PROFILING_FAILED))
+        .then(returnValue(PROFILING_SUCCESS));
     MOCKER_CPP(&FileSlice::WriteToLocalFiles)
-            .stubs()
-            .will(returnValue(PROFILING_FAILED))
-            .then(returnValue(PROFILING_SUCCESS));
+        .stubs()
+        .will(returnValue(PROFILING_FAILED))
+        .then(returnValue(PROFILING_SUCCESS));
 
-    //GetSliceKey return length 0
+    // GetSliceKey return length 0
     ret = wfTransport.SaveDataToLocalFiles(message, dir);
     EXPECT_EQ(PROFILING_FAILED, ret);
 
-    //SetChunkTime return Failed
+    // SetChunkTime return Failed
     message->fileName = "/home/test/test.log";
     ret = wfTransport.SaveDataToLocalFiles(message, dir);
     EXPECT_EQ(PROFILING_FAILED, ret);
 
-    //WriteToLocalFiles Failed
+    // WriteToLocalFiles Failed
     ret = wfTransport.SaveDataToLocalFiles(message, dir);
     EXPECT_EQ(PROFILING_FAILED, ret);
 }
 
-
-TEST_F(COMMON_FILE_SLICE_TEST, CreateDoneFile) {
+TEST_F(COMMON_FILE_SLICE_TEST, CreateDoneFile)
+{
     GlobalMockObject::verify();
-    MOCKER(analysis::dvvp::common::utils::Utils::GetFileSize)
-        .stubs()
-        .will(returnValue(1000));
-    
+    MOCKER(analysis::dvvp::common::utils::Utils::GetFileSize).stubs().will(returnValue(1000));
+
     std::string absolutePath = "";
     std::string fileSize = "1000";
     std::string startTime = "0";
@@ -295,27 +282,24 @@ TEST_F(COMMON_FILE_SLICE_TEST, CreateDoneFile) {
     wfTransport.Init();
     bool ret = wfTransport.CreateDoneFile(absolutePath, fileSize, startTime, endTime, absolutePath);
     EXPECT_EQ(true, ret);
-    
+
     std::string fileName = "hwts.log";
     absolutePath = "hwts.log.slice_";
-    MOCKER(analysis::dvvp::common::utils::Utils::IsFileExist)
-        .stubs()
-        .will(returnValue(false));
+    MOCKER(analysis::dvvp::common::utils::Utils::IsFileExist).stubs().will(returnValue(false));
     wfTransport.GetSliceKey(dir, fileName);
-    wfTransport.SetChunkTime(dir+fileName+".slice_", 0, 0);
+    wfTransport.SetChunkTime(dir + fileName + ".slice_", 0, 0);
     ret = wfTransport.CreateDoneFile(absolutePath, fileSize, startTime, endTime, "/home/test/hwts.log.slice_0");
-    EXPECT_EQ(true, ret);    
+    EXPECT_EQ(true, ret);
 
-    MOCKER(analysis::dvvp::common::utils::Utils::IsFileExist)
-        .stubs()
-        .will(returnValue(true));
+    MOCKER(analysis::dvvp::common::utils::Utils::IsFileExist).stubs().will(returnValue(true));
     wfTransport.GetSliceKey(dir, fileName);
-    wfTransport.SetChunkTime(dir+fileName+".slice_", 0, 0);
+    wfTransport.SetChunkTime(dir + fileName + ".slice_", 0, 0);
     ret = wfTransport.CreateDoneFile(absolutePath, fileSize, startTime, endTime, "/home/test/hwts.log.slice_0");
     EXPECT_EQ(true, ret);
 }
 
-TEST_F(COMMON_FILE_SLICE_TEST, CreateDoneFileForFail) {
+TEST_F(COMMON_FILE_SLICE_TEST, CreateDoneFileForFail)
+{
     std::string absolutePath = "";
     std::string fileSize = "1000";
     std::string startTime = "0";
@@ -327,27 +311,24 @@ TEST_F(COMMON_FILE_SLICE_TEST, CreateDoneFileForFail) {
     wfTransport.Init();
     bool ret = wfTransport.CreateDoneFile(absolutePath, fileSize, startTime, endTime, absolutePath);
     EXPECT_EQ(true, ret);
-    
+
     std::string fileName = "hwts.log";
     absolutePath = "hwts.log.slice_";
-    MOCKER(analysis::dvvp::common::utils::Utils::IsFileExist)
-        .stubs()
-        .will(returnValue(false));
+    MOCKER(analysis::dvvp::common::utils::Utils::IsFileExist).stubs().will(returnValue(false));
     wfTransport.GetSliceKey(dir, fileName);
-    wfTransport.SetChunkTime(dir+fileName+".slice_", 0, 0);
+    wfTransport.SetChunkTime(dir + fileName + ".slice_", 0, 0);
     ret = wfTransport.CreateDoneFile(absolutePath, fileSize, startTime, endTime, "/home/test/hwts.log.slice_0");
-    EXPECT_EQ(true, ret);    
+    EXPECT_EQ(true, ret);
 
-    MOCKER(analysis::dvvp::common::utils::Utils::IsFileExist)
-        .stubs()
-        .will(returnValue(true));
+    MOCKER(analysis::dvvp::common::utils::Utils::IsFileExist).stubs().will(returnValue(true));
     wfTransport.GetSliceKey(dir, fileName);
-    wfTransport.SetChunkTime(dir+fileName+".slice_", 0, 0);
+    wfTransport.SetChunkTime(dir + fileName + ".slice_", 0, 0);
     ret = wfTransport.CreateDoneFile(absolutePath, fileSize, startTime, endTime, "/home/test/hwts.log.slice_0");
     EXPECT_EQ(true, ret);
 }
 
-TEST_F(COMMON_FILE_SLICE_TEST, CreateDoneFileForOpenFail) {
+TEST_F(COMMON_FILE_SLICE_TEST, CreateDoneFileForOpenFail)
+{
     std::string absolutePath = "./data/host_start.log";
     std::string dir = "/home/test/";
     std::string limit = "500MB";
@@ -358,8 +339,8 @@ TEST_F(COMMON_FILE_SLICE_TEST, CreateDoneFileForOpenFail) {
     EXPECT_EQ(false, ret);
 }
 
-TEST_F(COMMON_FILE_SLICE_TEST, FileSliceFlush) {
-    
+TEST_F(COMMON_FILE_SLICE_TEST, FileSliceFlush)
+{
     std::string dir = "/home/test";
     std::string limit = "500MB";
 
@@ -369,61 +350,54 @@ TEST_F(COMMON_FILE_SLICE_TEST, FileSliceFlush) {
     wfTransport.GetSliceKey(dir, fileName);
 
     MOCKER_CPP(&analysis::dvvp::transport::FileSlice::CreateDoneFile)
-            .stubs()
-            .will(returnValue(false))
-            .then(returnValue(true));
+        .stubs()
+        .will(returnValue(false))
+        .then(returnValue(true));
 
-    MOCKER(analysis::dvvp::common::utils::Utils::IsFileExist)
-        .stubs()
-        .will(returnValue(true));
-    
-    MOCKER(analysis::dvvp::common::utils::Utils::GetFileSize)
-        .stubs()
-        .will(returnValue(128 * 1024));
+    MOCKER(analysis::dvvp::common::utils::Utils::IsFileExist).stubs().will(returnValue(true));
+
+    MOCKER(analysis::dvvp::common::utils::Utils::GetFileSize).stubs().will(returnValue(128 * 1024));
 
     int ret = wfTransport.FileSliceFlush();
-    EXPECT_EQ(false, ret);    
+    EXPECT_EQ(false, ret);
     ret = wfTransport.FileSliceFlush();
-    EXPECT_EQ(true, ret);    
+    EXPECT_EQ(true, ret);
 }
 
-TEST_F(COMMON_FILE_SLICE_TEST, FileSliceFlushPolymorphism) {
-    
+TEST_F(COMMON_FILE_SLICE_TEST, FileSliceFlushPolymorphism)
+{
     std::string dir = "/home/test/1234";
     std::string limit = "500MB";
     FileSlice wfTransport(128, dir, limit);
 
     wfTransport.Init();
-    
+
     std::string fileName = "test.log";
     wfTransport.GetSliceKey(dir, fileName);
 
     MOCKER_CPP(&analysis::dvvp::transport::FileSlice::CreateDoneFile)
-            .stubs()
-            .will(returnValue(false))
-            .then(returnValue(true));
+        .stubs()
+        .will(returnValue(false))
+        .then(returnValue(true));
 
-    MOCKER(analysis::dvvp::common::utils::Utils::IsFileExist)
-        .stubs()
-        .will(returnValue(true));
-    
-    MOCKER(analysis::dvvp::common::utils::Utils::GetFileSize)
-        .stubs()
-        .will(returnValue(128 * 1024));
+    MOCKER(analysis::dvvp::common::utils::Utils::IsFileExist).stubs().will(returnValue(true));
+
+    MOCKER(analysis::dvvp::common::utils::Utils::GetFileSize).stubs().will(returnValue(128 * 1024));
 
     std::string jobIDRelative = "1234";
     std::string devID = "0";
     std::string fileSliceName = "";
     fileSliceName.append(".").append(devID).append(".slice_");
     wfTransport.GetSliceKey(dir, fileSliceName);
-    
+
     int ret = wfTransport.FileSliceFlushByJobID(jobIDRelative, devID);
     EXPECT_EQ(PROFILING_FAILED, ret);
     ret = wfTransport.FileSliceFlushByJobID(jobIDRelative, devID);
-    EXPECT_EQ(PROFILING_SUCCESS, ret);    
+    EXPECT_EQ(PROFILING_SUCCESS, ret);
 }
 
-TEST_F(COMMON_FILE_SLICE_TEST, WriteCtrlDataToFile) {
+TEST_F(COMMON_FILE_SLICE_TEST, WriteCtrlDataToFile)
+{
     std::string absolutePath = "/tmp";
     std::string data = "test";
     std::string limit = "500MB";
@@ -435,14 +409,13 @@ TEST_F(COMMON_FILE_SLICE_TEST, WriteCtrlDataToFile) {
     wfTransport.WriteCtrlDataToFile(absolutePath, "", data.size());
     wfTransport.WriteCtrlDataToFile("/tmp/ctrl_data.txt", "test", data.size());
     remove("/tmp/ctrl_data.txt");
-
-
 }
 
 // stars_soc.data must finalize each slice on a 64-byte boundary; the chunk that crosses the slice
 // threshold is split so the head fills the current slice to a 64-byte multiple and the unaligned
 // remainder is carried into the next slice.
-TEST_F(COMMON_FILE_SLICE_TEST, WriteStarsSliceAligned_split_and_carry) {
+TEST_F(COMMON_FILE_SLICE_TEST, WriteStarsSliceAligned_split_and_carry)
+{
     const std::string dir = "/tmp";
     const std::string slice0 = "/tmp/stars_soc.data.slice_0";
     const std::string slice1 = "/tmp/stars_soc.data.slice_1";
@@ -454,9 +427,7 @@ TEST_F(COMMON_FILE_SLICE_TEST, WriteStarsSliceAligned_split_and_carry) {
     EXPECT_EQ(PROFILING_SUCCESS, wfTransport.Init());
 
     // Avoid exercising the .done/ageing machinery; only the slice rollover behaviour matters here.
-    MOCKER_CPP(&analysis::dvvp::transport::FileSlice::CreateDoneFile)
-        .stubs()
-        .will(returnValue(true));
+    MOCKER_CPP(&analysis::dvvp::transport::FileSlice::CreateDoneFile).stubs().will(returnValue(true));
 
     std::string keyName = "stars_soc.data";
     const std::string key = wfTransport.GetSliceKey(dir, keyName); // key -> /tmp/stars_soc.data.slice_
@@ -468,8 +439,7 @@ TEST_F(COMMON_FILE_SLICE_TEST, WriteStarsSliceAligned_split_and_carry) {
 
     // 11 chunks of 100 bytes: the 11th crosses 1024 and triggers the split.
     for (int i = 0; i < 11; ++i) {
-        EXPECT_EQ(PROFILING_SUCCESS,
-            wfTransport.WriteToLocalFiles(key, chunk, chunkLen, -1, false, fileName));
+        EXPECT_EQ(PROFILING_SUCCESS, wfTransport.WriteToLocalFiles(key, chunk, chunkLen, -1, false, fileName));
     }
 
     // slice_0 filled to the first 64-aligned size >= 1024: 1100 - (1100 % 64) = 1088.

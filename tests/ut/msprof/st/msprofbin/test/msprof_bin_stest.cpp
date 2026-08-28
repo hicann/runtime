@@ -23,13 +23,13 @@ using namespace analysis::dvvp::common::utils;
 
 class MSPROF_BIN_UTEST : public testing::Test {
 protected:
-  virtual void SetUp() {}
-  virtual void TearDown() {}
+    virtual void SetUp() {}
+    virtual void TearDown() {}
 };
 
-extern int LltMain(int argc, const char **argv, const char **envp);
-extern int WlltMain(int argc, const char **argv, const char **envp);
-extern void SetEnvList(const char* &envp, std::vector<std::string> &envpList);
+extern int LltMain(int argc, const char** argv, const char** envp);
+extern int WlltMain(int argc, const char** argv, const char** envp);
+extern void SetEnvList(const char*& envp, std::vector<std::string>& envpList);
 extern std::atomic<uint32_t> g_exitType;
 
 void createMsprofpy()
@@ -42,7 +42,8 @@ void createMsprofpy()
     test_file2.close();
 }
 
-TEST_F(MSPROF_BIN_UTEST, LltMain) {
+TEST_F(MSPROF_BIN_UTEST, LltMain)
+{
     GlobalMockObject::verify();
     optind = 1;
     char* argv[15];
@@ -53,8 +54,7 @@ TEST_F(MSPROF_BIN_UTEST, LltMain) {
     envp[0] = "test=a";
     envp[1] = "a=b";
 
-    MOCKER(&SetEnvList)
-        .stubs();
+    MOCKER(&SetEnvList).stubs();
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
         .stubs()
         .will(returnValue(15))
@@ -104,7 +104,8 @@ TEST_F(MSPROF_BIN_UTEST, LltMain) {
     Utils::RemoveDir(dirName2 + "/profiler_tool");
 }
 
-TEST_F(MSPROF_BIN_UTEST, SetEnvList) {
+TEST_F(MSPROF_BIN_UTEST, SetEnvList)
+{
     GlobalMockObject::verify();
     char* envp[4097];
     char str[] = "a=a";
@@ -120,7 +121,8 @@ TEST_F(MSPROF_BIN_UTEST, SetEnvList) {
     }
 }
 
-TEST_F(MSPROF_BIN_UTEST, WlltMain) {
+TEST_F(MSPROF_BIN_UTEST, WlltMain)
+{
     GlobalMockObject::verify();
     char* argv[10];
     argv[0] = "--help";
@@ -129,7 +131,6 @@ TEST_F(MSPROF_BIN_UTEST, WlltMain) {
     envp[0] = "test=a";
     envp[1] = "a=b";
 
-    MOCKER(&SetEnvList)
-        .stubs();
+    MOCKER(&SetEnvList).stubs();
     EXPECT_EQ(0, WlltMain(1, (const char**)argv, (const char**)envp));
 }

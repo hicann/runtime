@@ -24,7 +24,7 @@ namespace Dvvp {
 namespace Test {
 using namespace analysis::dvvp::common::utils;
 
-int32_t AclApiStart(aclprofConfig *config, uint64_t dataTypeConfig)
+int32_t AclApiStart(aclprofConfig* config, uint64_t dataTypeConfig)
 {
     auto ret = aclprofStart(config);
     if (ret != ACL_ERROR_NONE) {
@@ -32,7 +32,7 @@ int32_t AclApiStart(aclprofConfig *config, uint64_t dataTypeConfig)
         return ret;
     }
     uint32_t modelId = 0;
-    void *stream = &modelId; // fake stream
+    void* stream = &modelId; // fake stream
     if (((dataTypeConfig & PROF_MSPROFTX) != 0) &&
         aclprofMarkEx("model execute start", strlen("model execute start"), stream) != 0) {
         MSPROF_LOGE("aclprofMarkEx failed");
@@ -45,7 +45,7 @@ int32_t AclApiStart(aclprofConfig *config, uint64_t dataTypeConfig)
         return ret;
     }
     if (dataTypeConfig | ACL_PROF_AICPU != 0) {
-        usleep(100 * 1000);     // sleep 100ms for aicpu
+        usleep(100 * 1000); // sleep 100ms for aicpu
     }
     ret = aclprofStop(config);
     if (ret != ACL_ERROR_NONE) {
@@ -58,7 +58,7 @@ int32_t AclApiStart(aclprofConfig *config, uint64_t dataTypeConfig)
     return 0;
 }
 
-int32_t AclApiRepeatStart(aclprofConfig *config, uint64_t dataTypeConfig)
+int32_t AclApiRepeatStart(aclprofConfig* config, uint64_t dataTypeConfig)
 {
     // first time
     auto ret = aclprofStart(config);
@@ -67,7 +67,7 @@ int32_t AclApiRepeatStart(aclprofConfig *config, uint64_t dataTypeConfig)
         return ret;
     }
     uint32_t modelId = 0;
-    void *stream = &modelId; // fake stream
+    void* stream = &modelId; // fake stream
     if (((dataTypeConfig & PROF_MSPROFTX) != 0) &&
         aclprofMarkEx("model execute start", strlen("model execute start"), stream) != 0) {
         MSPROF_LOGE("aclprofMarkEx failed");
@@ -80,7 +80,7 @@ int32_t AclApiRepeatStart(aclprofConfig *config, uint64_t dataTypeConfig)
         return ret;
     }
     if (dataTypeConfig | ACL_PROF_AICPU != 0) {
-        usleep(100 * 1000);     // sleep 100ms for aicpu
+        usleep(100 * 1000); // sleep 100ms for aicpu
     }
     ret = aclprofStop(config);
     if (ret != ACL_ERROR_NONE) {
@@ -99,7 +99,7 @@ int32_t AclApiRepeatStart(aclprofConfig *config, uint64_t dataTypeConfig)
         return ret;
     }
     if (dataTypeConfig | ACL_PROF_AICPU != 0) {
-        usleep(100 * 1000);     // sleep 100ms for aicpu
+        usleep(100 * 1000); // sleep 100ms for aicpu
     }
     ret = aclprofStop(config);
     if (ret != ACL_ERROR_NONE) {
@@ -113,7 +113,7 @@ int32_t AclApiRepeatStart(aclprofConfig *config, uint64_t dataTypeConfig)
     return 0;
 }
 
-int32_t AclApiStartWithSetDeviceBehind(aclprofConfig *config, uint64_t dataTypeConfig)
+int32_t AclApiStartWithSetDeviceBehind(aclprofConfig* config, uint64_t dataTypeConfig)
 {
     auto ret = aclprofStart(config);
     if (ret != ACL_ERROR_NONE) {
@@ -123,7 +123,7 @@ int32_t AclApiStartWithSetDeviceBehind(aclprofConfig *config, uint64_t dataTypeC
 
     aclrtSetDevice(0);
     uint32_t modelId = 0;
-    void *stream = &modelId; // fake stream
+    void* stream = &modelId; // fake stream
     if (((dataTypeConfig & PROF_MSPROFTX) != 0) &&
         aclprofMarkEx("model execute start", strlen("model execute start"), stream) != 0) {
         MSPROF_LOGE("aclprofMarkEx failed");
@@ -136,7 +136,7 @@ int32_t AclApiStartWithSetDeviceBehind(aclprofConfig *config, uint64_t dataTypeC
         return ret;
     }
     if (dataTypeConfig | ACL_PROF_AICPU != 0) {
-        usleep(100 * 1000);     // sleep 100ms for aicpu
+        usleep(100 * 1000); // sleep 100ms for aicpu
     }
     aclrtResetDevice(0);
     ret = aclprofStop(config);
@@ -150,13 +150,13 @@ int32_t AclApiStartWithSetDeviceBehind(aclprofConfig *config, uint64_t dataTypeC
     return 0;
 }
 
-int32_t CheckDataFiles(std::string &absolutePath, std::vector<std::string> dataList)
+int32_t CheckDataFiles(std::string& absolutePath, std::vector<std::string> dataList)
 {
     std::vector<std::string> files;
     Utils::GetFiles(absolutePath, true, files, 1);
-    for (const std::string &dataFile : dataList) {
+    for (const std::string& dataFile : dataList) {
         bool isFinded = false;
-        for (const std::string &file : files) {
+        for (const std::string& file : files) {
             if (file.find(dataFile) != std::string::npos) {
                 isFinded = true;
                 break;
@@ -170,11 +170,11 @@ int32_t CheckDataFiles(std::string &absolutePath, std::vector<std::string> dataL
     return 0;
 }
 
-int32_t CheckFiles(std::string &path, std::vector<std::string> deviceDataList, std::vector<std::string> hostDataList)
+int32_t CheckFiles(std::string& path, std::vector<std::string> deviceDataList, std::vector<std::string> hostDataList)
 {
     bool isExist = false;
-    DIR *dir = opendir(path.c_str());
-    struct dirent *entry;
+    DIR* dir = opendir(path.c_str());
+    struct dirent* entry;
     std::string profPath;
     if (dir != nullptr) {
         while ((entry = readdir(dir)) != NULL) {
@@ -213,11 +213,11 @@ int32_t CheckFiles(std::string &path, std::vector<std::string> deviceDataList, s
     return 0;
 }
 
-int32_t CheckAllFiles(std::string &path, std::vector<std::string> deviceDataList, std::vector<std::string> hostDataList)
+int32_t CheckAllFiles(std::string& path, std::vector<std::string> deviceDataList, std::vector<std::string> hostDataList)
 {
     bool isExist = false;
-    DIR *dir = opendir(path.c_str());
-    struct dirent *entry;
+    DIR* dir = opendir(path.c_str());
+    struct dirent* entry;
     std::vector<std::string> profPath;
     if (dir != nullptr) {
         while ((entry = readdir(dir)) != NULL) {
@@ -236,7 +236,7 @@ int32_t CheckAllFiles(std::string &path, std::vector<std::string> deviceDataList
         return -1;
     }
 
-    for (auto &pathStr : profPath) {
+    for (auto& pathStr : profPath) {
         std::string deviceDataPath = pathStr + "/device_0/data";
         std::string absoluteDevicePath = Utils::RelativePathToAbsolutePath(deviceDataPath);
         if (CheckDataFiles(absoluteDevicePath, deviceDataList) != 0) {
@@ -251,7 +251,6 @@ int32_t CheckAllFiles(std::string &path, std::vector<std::string> deviceDataList
     }
     return 0;
 }
-
 
 void ClearApiSingleton()
 {
@@ -269,7 +268,6 @@ void InitApiSingleton()
     Analysis::Dvvp::Common::Platform::Platform::instance()->Init();
 }
 
-}
-}
-}
-
+} // namespace Test
+} // namespace Dvvp
+} // namespace Cann

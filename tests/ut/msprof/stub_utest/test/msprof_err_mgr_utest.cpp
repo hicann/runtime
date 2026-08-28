@@ -14,15 +14,11 @@
 
 #include "msprof_error_manager.h"
 using namespace Analysis::Dvvp::MsprofErrMgr;
-class ERR_MGR_UTEST: public testing::Test {
+class ERR_MGR_UTEST : public testing::Test {
 protected:
-    virtual void SetUp() {
-
-    }
-    virtual void TearDown() {
-    }
+    virtual void SetUp() {}
+    virtual void TearDown() {}
 };
-
 
 TEST_F(ERR_MGR_UTEST, GetErrorManagerContext)
 {

@@ -20,14 +20,10 @@ using namespace analysis::dvvp::common::error;
 using namespace analysis::dvvp::common::utils;
 using namespace analysis::dvvp::common::socket;
 
-class LOCAL_SOCKET_STEST: public testing::Test {
+class LOCAL_SOCKET_STEST : public testing::Test {
 protected:
-    virtual void SetUp() {
-    }
-    virtual void TearDown()
-    {
-        GlobalMockObject::verify();
-    }
+    virtual void SetUp() {}
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 TEST_F(LOCAL_SOCKET_STEST, LocalSocket_create)
@@ -50,26 +46,13 @@ TEST_F(LOCAL_SOCKET_STEST, LocalSocket_create)
     ret = localSocket->Create(key, backlog);
     EXPECT_EQ(ret, PROFILING_FAILED);
 
-    MOCKER(mmBind)
-        .stubs()
-        .will(returnValue(EN_ERROR))
-        .then(returnValue(EN_OK))
-        .then(returnValue(EN_OK));
-    MOCKER_CPP(&LocalSocket::Close)
-        .stubs()
-        .will(ignoreReturnValue())
-        .then(ignoreReturnValue());
+    MOCKER(mmBind).stubs().will(returnValue(EN_ERROR)).then(returnValue(EN_OK)).then(returnValue(EN_OK));
+    MOCKER_CPP(&LocalSocket::Close).stubs().will(ignoreReturnValue()).then(ignoreReturnValue());
     ret = localSocket->Create(key, backlog);
     EXPECT_EQ(ret, PROFILING_FAILED);
 
-    MOCKER(mmChmod)
-        .stubs()
-        .will(returnValue(EN_ERROR))
-        .then(returnValue(EN_OK));
-    MOCKER(mmListen)
-        .stubs()
-        .will(returnValue(EN_ERROR))
-        .then(returnValue(EN_OK));
+    MOCKER(mmChmod).stubs().will(returnValue(EN_ERROR)).then(returnValue(EN_OK));
+    MOCKER(mmListen).stubs().will(returnValue(EN_ERROR)).then(returnValue(EN_OK));
     EXPECT_EQ(LocalSocket::Create(key, backlog), PROFILING_FAILED);
     EXPECT_EQ(LocalSocket::Create(key, backlog), PROFILING_FAILED);
 
@@ -77,21 +60,20 @@ TEST_F(LOCAL_SOCKET_STEST, LocalSocket_create)
     EXPECT_EQ(ret, EN_OK);
 }
 
-TEST_F(LOCAL_SOCKET_STEST, LocalSocket_Open) {
+TEST_F(LOCAL_SOCKET_STEST, LocalSocket_Open)
+{
     GlobalMockObject::verify();
     SHARED_PTR_ALIA<LocalSocket> localSocket;
     localSocket = std::make_shared<LocalSocket>();
-    MOCKER(mmSocket)
-        .stubs()
-        .will(returnValue(EN_ERROR))
-        .then(returnValue(EN_OK));
+    MOCKER(mmSocket).stubs().will(returnValue(EN_ERROR)).then(returnValue(EN_OK));
     int ret = localSocket->Open();
     EXPECT_EQ(ret, PROFILING_FAILED);
     ret = localSocket->Open();
     EXPECT_EQ(ret, EN_OK);
 }
 
-TEST_F(LOCAL_SOCKET_STEST, LocalSocket_Accept) {
+TEST_F(LOCAL_SOCKET_STEST, LocalSocket_Accept)
+{
     GlobalMockObject::verify();
     SHARED_PTR_ALIA<LocalSocket> localSocket;
     localSocket = std::make_shared<LocalSocket>();
@@ -99,10 +81,7 @@ TEST_F(LOCAL_SOCKET_STEST, LocalSocket_Accept) {
     int ret = localSocket->Accept(fd);
     EXPECT_EQ(ret, PROFILING_FAILED);
     fd = 1;
-    MOCKER(mmAccept)
-        .stubs()
-        .will(returnValue(-1))
-        .then(returnValue(10));
+    MOCKER(mmAccept).stubs().will(returnValue(-1)).then(returnValue(10));
     ret = localSocket->Accept(fd);
     EXPECT_EQ(ret, PROFILING_FAILED);
 
@@ -110,7 +89,8 @@ TEST_F(LOCAL_SOCKET_STEST, LocalSocket_Accept) {
     EXPECT_EQ(ret, 10);
 }
 
-TEST_F(LOCAL_SOCKET_STEST, LocalSocket_Connect) {
+TEST_F(LOCAL_SOCKET_STEST, LocalSocket_Connect)
+{
     GlobalMockObject::verify();
     SHARED_PTR_ALIA<LocalSocket> localSocket;
     localSocket = std::make_shared<LocalSocket>();
@@ -120,54 +100,46 @@ TEST_F(LOCAL_SOCKET_STEST, LocalSocket_Connect) {
     EXPECT_EQ(ret, PROFILING_FAILED);
 
     key = "socket";
-    MOCKER(mmConnect)
-        .stubs()
-        .will(returnValue(EN_ERROR))
-        .then(returnValue(EN_OK));
-    MOCKER_CPP(&LocalSocket::Close)
-        .stubs()
-        .will(ignoreReturnValue());
+    MOCKER(mmConnect).stubs().will(returnValue(EN_ERROR)).then(returnValue(EN_OK));
+    MOCKER_CPP(&LocalSocket::Close).stubs().will(ignoreReturnValue());
     ret = localSocket->Connect(fd, key);
     EXPECT_EQ(ret, PROFILING_FAILED);
     ret = localSocket->Connect(fd, key);
     EXPECT_EQ(ret, PROFILING_SUCCESS);
 }
 
-TEST_F(LOCAL_SOCKET_STEST, LocalSocket_SetRecvTimeOut) {
+TEST_F(LOCAL_SOCKET_STEST, LocalSocket_SetRecvTimeOut)
+{
     GlobalMockObject::verify();
     SHARED_PTR_ALIA<LocalSocket> localSocket;
     localSocket = std::make_shared<LocalSocket>();
     int fd = 1;
     long sec = 1;
     long usec = 1;
-    MOCKER(setsockopt)
-        .stubs()
-        .will(returnValue(-1))
-        .then(returnValue(10));
+    MOCKER(setsockopt).stubs().will(returnValue(-1)).then(returnValue(10));
     int ret = localSocket->SetRecvTimeOut(fd, sec, usec);
     EXPECT_EQ(ret, PROFILING_FAILED);
     ret = localSocket->SetRecvTimeOut(fd, sec, usec);
     EXPECT_EQ(ret, PROFILING_SUCCESS);
 }
 
-TEST_F(LOCAL_SOCKET_STEST, LocalSocket_SetSendTimeOut) {
+TEST_F(LOCAL_SOCKET_STEST, LocalSocket_SetSendTimeOut)
+{
     GlobalMockObject::verify();
     SHARED_PTR_ALIA<LocalSocket> localSocket;
     localSocket = std::make_shared<LocalSocket>();
     int fd = 1;
     long sec = 1;
     long usec = 1;
-    MOCKER(setsockopt)
-        .stubs()
-        .will(returnValue(-1))
-        .then(returnValue(10));
+    MOCKER(setsockopt).stubs().will(returnValue(-1)).then(returnValue(10));
     int ret = localSocket->SetSendTimeOut(fd, sec, usec);
     EXPECT_EQ(ret, PROFILING_FAILED);
     ret = localSocket->SetSendTimeOut(fd, sec, usec);
     EXPECT_EQ(ret, PROFILING_SUCCESS);
 }
 
-TEST_F(LOCAL_SOCKET_STEST, LocalSocket_Recv) {
+TEST_F(LOCAL_SOCKET_STEST, LocalSocket_Recv)
+{
     GlobalMockObject::verify();
     SHARED_PTR_ALIA<LocalSocket> localSocket;
     localSocket = std::make_shared<LocalSocket>();
@@ -177,14 +149,13 @@ TEST_F(LOCAL_SOCKET_STEST, LocalSocket_Recv) {
     EXPECT_EQ(ret, PROFILING_FAILED);
 
     len = 1;
-    MOCKER(mmSocketRecv)
-        .stubs()
-        .will(returnValue(-1));
+    MOCKER(mmSocketRecv).stubs().will(returnValue(-1));
     ret = localSocket->Recv(fd, &fd, len, fd);
     EXPECT_EQ(ret, PROFILING_FAILED);
 }
 
-TEST_F(LOCAL_SOCKET_STEST, LocalSocket_Send) {
+TEST_F(LOCAL_SOCKET_STEST, LocalSocket_Send)
+{
     GlobalMockObject::verify();
     SHARED_PTR_ALIA<LocalSocket> localSocket;
     localSocket = std::make_shared<LocalSocket>();
@@ -194,21 +165,18 @@ TEST_F(LOCAL_SOCKET_STEST, LocalSocket_Send) {
     EXPECT_EQ(ret, PROFILING_FAILED);
 
     len = 1;
-    MOCKER(mmSocketSend)
-        .stubs()
-        .will(returnValue(-1));
+    MOCKER(mmSocketSend).stubs().will(returnValue(-1));
     ret = localSocket->Send(fd, &fd, len, fd);
     EXPECT_EQ(ret, PROFILING_FAILED);
 }
 
-TEST_F(LOCAL_SOCKET_STEST, LocalSocket_Close) {
+TEST_F(LOCAL_SOCKET_STEST, LocalSocket_Close)
+{
     GlobalMockObject::verify();
     SHARED_PTR_ALIA<LocalSocket> localSocket;
     localSocket = std::make_shared<LocalSocket>();
     int fd = 0;
-    MOCKER(mmClose)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(mmClose).stubs().will(returnValue(EN_ERROR));
     localSocket->Close(fd);
     EXPECT_EQ(fd, -1);
 }

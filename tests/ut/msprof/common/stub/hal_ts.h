@@ -14,13 +14,12 @@
 
 #if __cplusplus
 extern "C" {
-#endif  // __cpluscplus
+#endif // __cpluscplus
 
-int32_t halHostMemAlloc(void **pp, unsigned long long size, unsigned long long flag);
-void halHostMemFree(void *p);
-
+int32_t halHostMemAlloc(void** pp, unsigned long long size, unsigned long long flag);
+void halHostMemFree(void* p);
 
 #if __cplusplus
 }
-#endif  // __cpluscplus
+#endif // __cpluscplus
 #endif

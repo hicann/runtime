@@ -16,16 +16,13 @@
 #include <string>
 
 const std::map<int, std::string> LOG_LEVEL_INFO = {
-    {DLOG_DEBUG, "DEBUG"},
-    {DLOG_INFO,  "INFO"},
-    {DLOG_WARN,  "WARING"},
-    {DLOG_ERROR, "ERROR"},
-    {DLOG_EVENT, "EVENT"},
+    {DLOG_DEBUG, "DEBUG"}, {DLOG_INFO, "INFO"}, {DLOG_WARN, "WARING"}, {DLOG_ERROR, "ERROR"}, {DLOG_EVENT, "EVENT"},
 };
 
 int g_log_level = DLOG_ERROR;
 
-void DlogErrorInner(int moduleId, const char *format, ...) {
+void DlogErrorInner(int moduleId, const char* format, ...)
+{
     va_list args;
 
     char buffer[4096] = {0};
@@ -36,7 +33,8 @@ void DlogErrorInner(int moduleId, const char *format, ...) {
     va_end(args);
 }
 
-void DlogInfoInner(int moduleId, const char *format, ...) {
+void DlogInfoInner(int moduleId, const char* format, ...)
+{
     va_list args;
 
     char buffer[4096] = {0};
@@ -47,7 +45,8 @@ void DlogInfoInner(int moduleId, const char *format, ...) {
     va_end(args);
 }
 
-void DlogWarnInner(int moduleId, const char *format, ...) {
+void DlogWarnInner(int moduleId, const char* format, ...)
+{
     va_list args;
 
     char buffer[4096] = {0};
@@ -58,7 +57,8 @@ void DlogWarnInner(int moduleId, const char *format, ...) {
     va_end(args);
 }
 
-void DlogEventInner(int moduleId, const char *format, ...) {
+void DlogEventInner(int moduleId, const char* format, ...)
+{
     va_list args;
 
     char buffer[4096] = {0};
@@ -69,7 +69,8 @@ void DlogEventInner(int moduleId, const char *format, ...) {
     va_end(args);
 }
 
-void DlogDebugInner(int moduleId, const char *format, ...) {
+void DlogDebugInner(int moduleId, const char* format, ...)
+{
     va_list args;
 
     char buffer[4096] = {0};
@@ -80,11 +81,11 @@ void DlogDebugInner(int moduleId, const char *format, ...) {
     va_end(args);
 }
 
-void DlogRecord(int module_id, int level, const char *fmt, ...){
+void DlogRecord(int module_id, int level, const char* fmt, ...)
+{
     auto iter = LOG_LEVEL_INFO.find(level);
     std::string levelStr;
-    if (iter != LOG_LEVEL_INFO.end())
-    {
+    if (iter != LOG_LEVEL_INFO.end()) {
         levelStr = iter->second;
     }
 
@@ -96,11 +97,10 @@ void DlogRecord(int module_id, int level, const char *fmt, ...){
     va_end(args);
 }
 
-void DlogFlush(void)
-{
-}
+void DlogFlush(void) {}
 
-void ide_log(int priority, const char *format, ...) {
+void ide_log(int priority, const char* format, ...)
+{
     va_list args;
 
     char buffer[4096] = {0};

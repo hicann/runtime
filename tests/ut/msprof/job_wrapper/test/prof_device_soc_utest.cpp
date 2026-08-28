@@ -26,15 +26,12 @@ using namespace analysis::dvvp::message;
 using namespace Analysis::Dvvp::JobWrapper;
 using namespace analysis::dvvp::common::validation;
 
-class PROF_DEVICE_SOC_UTEST: public testing::Test {
+class PROF_DEVICE_SOC_UTEST : public testing::Test {
 protected:
-    virtual void SetUp() {
-    }
-    virtual void TearDown() {
+    virtual void SetUp() {}
+    virtual void TearDown() {}
 
-    }
 public:
-
 };
 
 TEST_F(PROF_DEVICE_SOC_UTEST, StartProf)
@@ -45,16 +42,9 @@ TEST_F(PROF_DEVICE_SOC_UTEST, StartProf)
     params->hardware_mem = "on";
     auto jobDeviceSoc = std::make_shared<Analysis::Dvvp::JobWrapper::JobDeviceSoc>(0);
     std::string fileName = "/tmp/test";
-    MOCKER_CPP(&Analysis::Dvvp::JobWrapper::JobDeviceSoc::GenerateFileName)
-        .stubs()
-        .will(returnValue(fileName));
-    MOCKER_CPP(&Analysis::Dvvp::JobWrapper::JobDeviceSoc::SendData)
-        .stubs()
-        .will(returnValue(0));
-    MOCKER(analysis::dvvp::driver::DrvGetDevNum)
-        .stubs()
-        .will(returnValue(2))
-        .then(returnValue(2));
+    MOCKER_CPP(&Analysis::Dvvp::JobWrapper::JobDeviceSoc::GenerateFileName).stubs().will(returnValue(fileName));
+    MOCKER_CPP(&Analysis::Dvvp::JobWrapper::JobDeviceSoc::SendData).stubs().will(returnValue(0));
+    MOCKER(analysis::dvvp::driver::DrvGetDevNum).stubs().will(returnValue(2)).then(returnValue(2));
     MOCKER(analysis::dvvp::driver::DrvGetDevIds)
         .stubs()
         .will(returnValue(PROFILING_SUCCESS))
@@ -70,9 +60,7 @@ TEST_F(PROF_DEVICE_SOC_UTEST, StartProf)
         .will(returnValue(PROFILING_SUCCESS))
         .then(returnValue(PROFILING_SUCCESS));
 
-    MOCKER_CPP(&Analysis::Dvvp::JobWrapper::JobDeviceSoc::GetAndStoreStartTime)
-        .stubs()
-        .will(ignoreReturnValue());
+    MOCKER_CPP(&Analysis::Dvvp::JobWrapper::JobDeviceSoc::GetAndStoreStartTime).stubs().will(ignoreReturnValue());
 
     EXPECT_EQ(PROFILING_SUCCESS, jobDeviceSoc->StartProf(params));
     jobDeviceSoc->isStarted_ = true;
@@ -86,8 +74,7 @@ TEST_F(PROF_DEVICE_SOC_UTEST, StartProf1)
 {
     GlobalMockObject::verify();
 
-    std::shared_ptr<analysis::dvvp::message::ProfileParams> params(
-        new analysis::dvvp::message::ProfileParams);
+    std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams);
     params->ai_ctrl_cpu_profiling_events = "0x11";
     params->ts_cpu_profiling_events = "0x11";
     params->llc_profiling_events = "read";
@@ -96,17 +83,12 @@ TEST_F(PROF_DEVICE_SOC_UTEST, StartProf1)
     params->devices = "0";
     params->sysLp = "on";
 
-    MOCKER_CPP(&Analysis::Dvvp::JobWrapper::ProfChannelManager::UnInit)
-        .stubs()
-        .will(ignoreReturnValue());
+    MOCKER_CPP(&Analysis::Dvvp::JobWrapper::ProfChannelManager::UnInit).stubs().will(ignoreReturnValue());
     auto jobDeviceSoc = std::make_shared<Analysis::Dvvp::JobWrapper::JobDeviceSoc>(0);
     jobDeviceSoc->isStarted_ = true;
     EXPECT_EQ(PROFILING_FAILED, jobDeviceSoc->StartProf(params));
 
-
-    MOCKER_CPP(&Analysis::Dvvp::JobWrapper::JobDeviceSoc::GetAndStoreStartTime)
-        .stubs()
-        .will(ignoreReturnValue());
+    MOCKER_CPP(&Analysis::Dvvp::JobWrapper::JobDeviceSoc::GetAndStoreStartTime).stubs().will(ignoreReturnValue());
 
     std::shared_ptr<CollectionJobCfg> jobCfg;
     MSVP_MAKE_SHARED0(jobCfg, CollectionJobCfg, return);
@@ -126,17 +108,12 @@ TEST_F(PROF_DEVICE_SOC_UTEST, StartProf1)
 
     jobDeviceSoc->collectionJobCommCfg_->devIdOnHost = 0;
 
-    MOCKER_CPP(&Analysis::Dvvp::JobWrapper::JobDeviceSoc::RegisterCollectionJobs)
-        .stubs()
-        .will(returnValue(0));
+    MOCKER_CPP(&Analysis::Dvvp::JobWrapper::JobDeviceSoc::RegisterCollectionJobs).stubs().will(returnValue(0));
     MOCKER_CPP(&Analysis::Dvvp::JobWrapper::JobDeviceSoc::ParsePmuConfig)
         .stubs()
         .will(returnValue(-1))
         .then(returnValue(0));
-    MOCKER(analysis::dvvp::driver::DrvGetDevNum)
-        .stubs()
-        .will(returnValue(PROFILING_FAILED))
-        .then(returnValue(1));
+    MOCKER(analysis::dvvp::driver::DrvGetDevNum).stubs().will(returnValue(PROFILING_FAILED)).then(returnValue(1));
     jobDeviceSoc->isStarted_ = false;
     EXPECT_EQ(PROFILING_FAILED, jobDeviceSoc->StartProf(params));
     EXPECT_EQ(PROFILING_SUCCESS, jobDeviceSoc->StartProf(params));
@@ -145,11 +122,9 @@ TEST_F(PROF_DEVICE_SOC_UTEST, StartProf1)
 TEST_F(PROF_DEVICE_SOC_UTEST, StopProf)
 {
     GlobalMockObject::verify();
-    MOCKER_CPP(&Analysis::Dvvp::JobWrapper::ProfChannelManager::UnInit)
-        .stubs()
-        .will(ignoreReturnValue());
+    MOCKER_CPP(&Analysis::Dvvp::JobWrapper::ProfChannelManager::UnInit).stubs().will(ignoreReturnValue());
     auto jobDeviceSoc = std::make_shared<Analysis::Dvvp::JobWrapper::JobDeviceSoc>(0);
-    EXPECT_EQ(PROFILING_FAILED,jobDeviceSoc->StopProf());
+    EXPECT_EQ(PROFILING_FAILED, jobDeviceSoc->StopProf());
     jobDeviceSoc->isStarted_ = true;
 
     std::shared_ptr<PMUEventsConfig> cfg = std::make_shared<PMUEventsConfig>();
@@ -159,21 +134,19 @@ TEST_F(PROF_DEVICE_SOC_UTEST, StopProf)
     cfg->tsCPUEvents = *tsCpuEvents;
     cfg->llcEvents = *tsCpuEvents;
     cfg->aiCoreEvents = *tsCpuEvents;
-    std::shared_ptr<analysis::dvvp::message::ProfileParams> params(
-        new analysis::dvvp::message::ProfileParams);
+    std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams);
 
     MSVP_MAKE_SHARED0(jobDeviceSoc->collectionJobCommCfg_, CollectionJobCommonParams, return);
     jobDeviceSoc->collectionJobCommCfg_->params = params;
     jobDeviceSoc->CreateCollectionJobArray();
     jobDeviceSoc->params_ = params;
-    MOCKER(mmJoinTask)
-        .stubs()
-        .will(returnValue(EN_OK));
+    MOCKER(mmJoinTask).stubs().will(returnValue(EN_OK));
 
-    EXPECT_EQ(PROFILING_SUCCESS,jobDeviceSoc->StopProf());
+    EXPECT_EQ(PROFILING_SUCCESS, jobDeviceSoc->StopProf());
 }
 
-TEST_F(PROF_DEVICE_SOC_UTEST, SendData) {
+TEST_F(PROF_DEVICE_SOC_UTEST, SendData)
+{
     GlobalMockObject::verify();
 
     MOCKER_CPP(&analysis::dvvp::transport::UploaderMgr::UploadCtrlFileData)
@@ -183,21 +156,21 @@ TEST_F(PROF_DEVICE_SOC_UTEST, SendData) {
 
     auto jobDeviceSoc = std::make_shared<Analysis::Dvvp::JobWrapper::JobDeviceSoc>(0);
     jobDeviceSoc->isStarted_ = true;
-    std::shared_ptr<analysis::dvvp::message::ProfileParams> params(
-        new analysis::dvvp::message::ProfileParams);
+    std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams);
     jobDeviceSoc->params_ = params;
     const std::string fileName = "/tmp/PROF_DEVICE_SOC_UTEST/SendData";
     std::string data;
     jobDeviceSoc->params_->hostProfiling = true;
-    EXPECT_EQ(PROFILING_SUCCESS,jobDeviceSoc->SendData(fileName, data));
+    EXPECT_EQ(PROFILING_SUCCESS, jobDeviceSoc->SendData(fileName, data));
     jobDeviceSoc->params_->hostProfiling = false;
-    EXPECT_EQ(PROFILING_FAILED,jobDeviceSoc->SendData(fileName, data));
+    EXPECT_EQ(PROFILING_FAILED, jobDeviceSoc->SendData(fileName, data));
     data = "tmpTestSenData";
-    EXPECT_EQ(PROFILING_FAILED,jobDeviceSoc->SendData(fileName, data));
-    EXPECT_EQ(PROFILING_SUCCESS,jobDeviceSoc->SendData(fileName, data));
+    EXPECT_EQ(PROFILING_FAILED, jobDeviceSoc->SendData(fileName, data));
+    EXPECT_EQ(PROFILING_SUCCESS, jobDeviceSoc->SendData(fileName, data));
 }
 
-TEST_F(PROF_DEVICE_SOC_UTEST, GenerateFileName) {
+TEST_F(PROF_DEVICE_SOC_UTEST, GenerateFileName)
+{
     GlobalMockObject::verify();
 
     const std::string fileName = "/tmp/PROF_DEVICE_SOC_UTEST/GenerateFileName";
@@ -208,7 +181,8 @@ TEST_F(PROF_DEVICE_SOC_UTEST, GenerateFileName) {
 }
 
 #ifndef BUILD_PROFILING_OPEN_PROJECT
-TEST_F(PROF_DEVICE_SOC_UTEST, ParseAiCoreConfig) {
+TEST_F(PROF_DEVICE_SOC_UTEST, ParseAiCoreConfig)
+{
     GlobalMockObject::verify();
 
     MOCKER_CPP(&analysis::dvvp::common::validation::ParamValidation::CheckAiCoreEventsIsValid)
@@ -232,8 +206,7 @@ TEST_F(PROF_DEVICE_SOC_UTEST, ParseAiCoreConfig) {
     tmpAiCoreEventsCoreIds->push_back(1);
     cfg->aiCoreEvents = *tsCpuEvents;
     cfg->aiCoreEventsCoreIds = *tmpAiCoreEventsCoreIds;
-    std::shared_ptr<analysis::dvvp::message::ProfileParams> params(
-        new analysis::dvvp::message::ProfileParams);
+    std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams);
     jobDeviceSoc->params_ = params;
     jobDeviceSoc->params_->taskBlock = "on";
     std::shared_ptr<CollectionJobCfg> jobCfg1;
@@ -244,12 +217,13 @@ TEST_F(PROF_DEVICE_SOC_UTEST, ParseAiCoreConfig) {
     MSVP_MAKE_SHARED0(jobCfg2, CollectionJobCfg, return);
     jobDeviceSoc->collectionJobV_[AI_CORE_TASK_DRV_COLLECTION_JOB].jobCfg = jobCfg2;
     jobDeviceSoc->collectionJobV_[FFTS_PROFILE_COLLECTION_JOB].jobCfg = jobCfg2;
-    EXPECT_EQ(PROFILING_FAILED,jobDeviceSoc->ParseAiCoreConfig(cfg));
-    EXPECT_EQ(PROFILING_FAILED,jobDeviceSoc->ParseAiCoreConfig(cfg));
-    EXPECT_EQ(PROFILING_SUCCESS,jobDeviceSoc->ParseAiCoreConfig(cfg));
+    EXPECT_EQ(PROFILING_FAILED, jobDeviceSoc->ParseAiCoreConfig(cfg));
+    EXPECT_EQ(PROFILING_FAILED, jobDeviceSoc->ParseAiCoreConfig(cfg));
+    EXPECT_EQ(PROFILING_SUCCESS, jobDeviceSoc->ParseAiCoreConfig(cfg));
 }
 #endif
-TEST_F(PROF_DEVICE_SOC_UTEST, ParsePmuConfig) {
+TEST_F(PROF_DEVICE_SOC_UTEST, ParsePmuConfig)
+{
     GlobalMockObject::verify();
 
     MOCKER_CPP(&Analysis::Dvvp::JobWrapper::JobDeviceSoc::ParseTsCpuConfig)
@@ -289,16 +263,17 @@ TEST_F(PROF_DEVICE_SOC_UTEST, ParsePmuConfig) {
 
     auto jobDeviceSoc = std::make_shared<Analysis::Dvvp::JobWrapper::JobDeviceSoc>(0);
     std::shared_ptr<PMUEventsConfig> cfg = std::make_shared<PMUEventsConfig>();
-    EXPECT_EQ(PROFILING_FAILED,jobDeviceSoc->ParsePmuConfig(cfg));
-    EXPECT_EQ(PROFILING_FAILED,jobDeviceSoc->ParsePmuConfig(cfg));
-    EXPECT_EQ(PROFILING_FAILED,jobDeviceSoc->ParsePmuConfig(cfg));
-    EXPECT_EQ(PROFILING_FAILED,jobDeviceSoc->ParsePmuConfig(cfg));
-    EXPECT_EQ(PROFILING_FAILED,jobDeviceSoc->ParsePmuConfig(cfg));
-    EXPECT_EQ(PROFILING_FAILED,jobDeviceSoc->ParsePmuConfig(cfg));
-    EXPECT_EQ(PROFILING_FAILED,jobDeviceSoc->ParsePmuConfig(cfg));
+    EXPECT_EQ(PROFILING_FAILED, jobDeviceSoc->ParsePmuConfig(cfg));
+    EXPECT_EQ(PROFILING_FAILED, jobDeviceSoc->ParsePmuConfig(cfg));
+    EXPECT_EQ(PROFILING_FAILED, jobDeviceSoc->ParsePmuConfig(cfg));
+    EXPECT_EQ(PROFILING_FAILED, jobDeviceSoc->ParsePmuConfig(cfg));
+    EXPECT_EQ(PROFILING_FAILED, jobDeviceSoc->ParsePmuConfig(cfg));
+    EXPECT_EQ(PROFILING_FAILED, jobDeviceSoc->ParsePmuConfig(cfg));
+    EXPECT_EQ(PROFILING_FAILED, jobDeviceSoc->ParsePmuConfig(cfg));
 }
 
-TEST_F(PROF_DEVICE_SOC_UTEST, GetAndStoreStartTime) {
+TEST_F(PROF_DEVICE_SOC_UTEST, GetAndStoreStartTime)
+{
     GlobalMockObject::verify();
 
     auto jobDeviceSoc = std::make_shared<Analysis::Dvvp::JobWrapper::JobDeviceSoc>(0);
@@ -317,22 +292,20 @@ TEST_F(PROF_DEVICE_SOC_UTEST, GetAndStoreStartTime) {
     jobDeviceSoc->GetAndStoreStartTime(false);
 }
 
-TEST_F(PROF_DEVICE_SOC_UTEST, StoreTime) {
+TEST_F(PROF_DEVICE_SOC_UTEST, StoreTime)
+{
     GlobalMockObject::verify();
 
     auto jobDeviceSoc = std::make_shared<Analysis::Dvvp::JobWrapper::JobDeviceSoc>(0);
     MSVP_MAKE_SHARED0(jobDeviceSoc->collectionJobCommCfg_, CollectionJobCommonParams, return);
 
-    MOCKER_CPP(&analysis::dvvp::transport::UploaderMgr::UploadCtrlFileData)
-        .stubs()
-        .will(returnValue(PROFILING_FAILED));
-    std::shared_ptr<analysis::dvvp::message::ProfileParams> params(
-        new analysis::dvvp::message::ProfileParams);
+    MOCKER_CPP(&analysis::dvvp::transport::UploaderMgr::UploadCtrlFileData).stubs().will(returnValue(PROFILING_FAILED));
+    std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams);
     jobDeviceSoc->params_ = params;
 
     std::string fileName = "tmp/PROF_DEVICE_SOC_UTEST/StoreTime";
     std::string startTime = "123456";
-    EXPECT_EQ(PROFILING_FAILED,jobDeviceSoc->StoreTime(fileName, startTime));
+    EXPECT_EQ(PROFILING_FAILED, jobDeviceSoc->StoreTime(fileName, startTime));
 }
 
 TEST_F(PROF_DEVICE_SOC_UTEST, StartProfFailed)
@@ -373,12 +346,12 @@ TEST_F(PROF_DEVICE_SOC_UTEST, StartProfFailed)
         .stubs()
         .will(returnValue(PROFILING_FAILED))
         .then(returnValue(PROFILING_SUCCESS));
-    EXPECT_EQ(PROFILING_FAILED,jobDeviceSoc->StartProf(params));
-    EXPECT_EQ(PROFILING_FAILED,jobDeviceSoc->StartProf(params));
+    EXPECT_EQ(PROFILING_FAILED, jobDeviceSoc->StartProf(params));
+    EXPECT_EQ(PROFILING_FAILED, jobDeviceSoc->StartProf(params));
     jobDeviceSoc->params_->hostProfiling = false;
-    EXPECT_EQ(PROFILING_FAILED,jobDeviceSoc->StartProf(params));
+    EXPECT_EQ(PROFILING_FAILED, jobDeviceSoc->StartProf(params));
     jobDeviceSoc->params_->hostProfiling = true;
-    EXPECT_EQ(PROFILING_FAILED,jobDeviceSoc->StartProf(params));
+    EXPECT_EQ(PROFILING_FAILED, jobDeviceSoc->StartProf(params));
 }
 
 TEST_F(PROF_DEVICE_SOC_UTEST, ParseTsCpuConfig)
@@ -393,7 +366,7 @@ TEST_F(PROF_DEVICE_SOC_UTEST, ParseTsCpuConfig)
     auto tsCpuEvents = std::make_shared<std::vector<std::string>>();
     tsCpuEvents->push_back("0xa,0xb");
     cfg->tsCPUEvents = *tsCpuEvents;
-    EXPECT_EQ(PROFILING_FAILED,jobDeviceSoc->ParseTsCpuConfig(cfg));
+    EXPECT_EQ(PROFILING_FAILED, jobDeviceSoc->ParseTsCpuConfig(cfg));
 }
 
 TEST_F(PROF_DEVICE_SOC_UTEST, ParseHbmConfig)
@@ -408,7 +381,7 @@ TEST_F(PROF_DEVICE_SOC_UTEST, ParseHbmConfig)
     auto tsCpuEvents = std::make_shared<std::vector<std::string>>();
     tsCpuEvents->push_back("0xa,0xb");
     cfg->hbmEvents = *tsCpuEvents;
-    EXPECT_EQ(PROFILING_FAILED,jobDeviceSoc->ParseHbmConfig(cfg));
+    EXPECT_EQ(PROFILING_FAILED, jobDeviceSoc->ParseHbmConfig(cfg));
 }
 
 TEST_F(PROF_DEVICE_SOC_UTEST, ParseAivConfig)
@@ -429,8 +402,8 @@ TEST_F(PROF_DEVICE_SOC_UTEST, ParseAivConfig)
     cfg->aivEvents = *tsCpuEvents;
     std::vector<int> aivEventsCoreIds(3, 1);
     cfg->aivEventsCoreIds = aivEventsCoreIds;
-    EXPECT_EQ(PROFILING_FAILED,jobDeviceSoc->ParseAivConfig(cfg));
-    EXPECT_EQ(PROFILING_FAILED,jobDeviceSoc->ParseAivConfig(cfg));
+    EXPECT_EQ(PROFILING_FAILED, jobDeviceSoc->ParseAivConfig(cfg));
+    EXPECT_EQ(PROFILING_FAILED, jobDeviceSoc->ParseAivConfig(cfg));
 }
 
 TEST_F(PROF_DEVICE_SOC_UTEST, ParseControlCpuConfig)
@@ -445,7 +418,7 @@ TEST_F(PROF_DEVICE_SOC_UTEST, ParseControlCpuConfig)
     auto tsCpuEvents = std::make_shared<std::vector<std::string>>();
     tsCpuEvents->push_back("0xa,0xb");
     cfg->ctrlCPUEvents = *tsCpuEvents;
-    EXPECT_EQ(PROFILING_FAILED,jobDeviceSoc->ParseControlCpuConfig(cfg));
+    EXPECT_EQ(PROFILING_FAILED, jobDeviceSoc->ParseControlCpuConfig(cfg));
 }
 
 TEST_F(PROF_DEVICE_SOC_UTEST, ParseDdrCpuConfig)
@@ -460,7 +433,7 @@ TEST_F(PROF_DEVICE_SOC_UTEST, ParseDdrCpuConfig)
     auto tsCpuEvents = std::make_shared<std::vector<std::string>>();
     tsCpuEvents->push_back("0xa,0xb");
     cfg->ddrEvents = *tsCpuEvents;
-    EXPECT_EQ(PROFILING_FAILED,jobDeviceSoc->ParseDdrCpuConfig(cfg));
+    EXPECT_EQ(PROFILING_FAILED, jobDeviceSoc->ParseDdrCpuConfig(cfg));
 }
 
 TEST_F(PROF_DEVICE_SOC_UTEST, ParseLlcConfig)
@@ -475,7 +448,7 @@ TEST_F(PROF_DEVICE_SOC_UTEST, ParseLlcConfig)
     auto tsCpuEvents = std::make_shared<std::vector<std::string>>();
     tsCpuEvents->push_back("0xa,0xb");
     cfg->llcEvents = *tsCpuEvents;
-    EXPECT_EQ(PROFILING_FAILED,jobDeviceSoc->ParseLlcConfig(cfg));
+    EXPECT_EQ(PROFILING_FAILED, jobDeviceSoc->ParseLlcConfig(cfg));
 }
 
 TEST_F(PROF_DEVICE_SOC_UTEST, CreateCollectionJobArray)
@@ -484,11 +457,8 @@ TEST_F(PROF_DEVICE_SOC_UTEST, CreateCollectionJobArray)
 
     auto jobDeviceSoc = std::make_shared<Analysis::Dvvp::JobWrapper::JobDeviceSoc>(0);
     MSVP_MAKE_SHARED0(jobDeviceSoc->collectionJobCommCfg_, CollectionJobCommonParams, return);
-    MOCKER(analysis::dvvp::common::utils::Utils::CreateDir)
-        .stubs()
-        .will(returnValue(PROFILING_FAILED));
-    std::shared_ptr<analysis::dvvp::message::ProfileParams> params(
-        new analysis::dvvp::message::ProfileParams);
+    MOCKER(analysis::dvvp::common::utils::Utils::CreateDir).stubs().will(returnValue(PROFILING_FAILED));
+    std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams);
     jobDeviceSoc->collectionJobCommCfg_->params = params;
     EXPECT_EQ(jobDeviceSoc->CreateCollectionJobArray(), PROFILING_SUCCESS);
 }

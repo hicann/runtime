@@ -32,7 +32,7 @@ static const char MDC_LITE_V2_RM_RF[] = "rm -rf ./cliMdcLiteV2stest_workspace";
 static const char MDC_LITE_V2_MKDIR[] = "mkdir ./cliMdcLiteV2stest_workspace";
 static const char MDC_LITE_V2_OUTPUT_DIR[] = "--output=./cliMdcLiteV2stest_workspace/output";
 
-class CliMdcLiteV2Stest: public testing::Test {
+class CliMdcLiteV2Stest : public testing::Test {
 protected:
     virtual void SetUp()
     {
@@ -48,7 +48,7 @@ protected:
     virtual void TearDown()
     {
         GlobalMockObject::verify();
-        DevprofDrvAicpu::instance()->isRegister_ = false;   // 重置aicpu注册状态，使单进程内能多次注册
+        DevprofDrvAicpu::instance()->isRegister_ = false; // 重置aicpu注册状态，使单进程内能多次注册
         EXPECT_EQ(2, SimulatorMgr().DelDeviceSimulator(2, StPlatformType::CHIP_MDC_LITE_V2));
         system(MDC_LITE_V2_RM_RF);
         system("rm -rf ./cli");
@@ -74,11 +74,11 @@ TEST_F(CliMdcLiteV2Stest, CliTaskTime)
 {
     // TaskTime
     const char* argv[] = {MDC_LITE_V2_OUTPUT_DIR, "--task-time=on"};
-    std::vector<std::string> dataList = {"ffts_profile.data", "stars_soc.data","ts_track.data",
-        "stars_soc_profile.data"};
+    std::vector<std::string> dataList = {
+        "ffts_profile.data", "stars_soc.data", "ts_track.data", "stars_soc_profile.data"};
     std::vector<std::string> blackDataList = {};
     MsprofMgr().SetDeviceCheckList(dataList, blackDataList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliMdcLiteV2Stest, CliTaskBlockOn)
@@ -86,7 +86,7 @@ TEST_F(CliMdcLiteV2Stest, CliTaskBlockOn)
     const char* argv[] = {MDC_LITE_V2_OUTPUT_DIR, "--task-block=on"};
     std::vector<std::string> dataList = {"ffts_profile.data"};
     MsprofMgr().SetDeviceCheckList(dataList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliMdcLiteV2Stest, CliL2CacheTask)
@@ -94,11 +94,11 @@ TEST_F(CliMdcLiteV2Stest, CliL2CacheTask)
     const char* argv[] = {MDC_LITE_V2_OUTPUT_DIR, "--aic-metrics=L2Cache"};
     std::vector<std::string> dataList = {"ffts_profile.data"};
     MsprofMgr().SetDeviceCheckList(dataList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliMdcLiteV2Stest, CliAivNotSupport)
 {
     const char* argv[] = {MDC_LITE_V2_OUTPUT_DIR, "--aiv=on"};
-    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }

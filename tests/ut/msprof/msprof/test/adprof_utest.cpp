@@ -14,7 +14,7 @@
 #include "utils.h"
 #include "adprof_collector.h"
 #include "adprof_collector_proxy.h"
-//#include "aicpu_report_hdc.h"
+// #include "aicpu_report_hdc.h"
 #include "prof_perf_job.h"
 #include "prof_sys_info_job.h"
 #include "platform/platform.h"
@@ -26,12 +26,12 @@
 using namespace analysis::dvvp::common::error;
 using namespace Analysis::Dvvp::JobWrapper;
 
-extern int32_t CheckBindHostPid(const char *arg);
+extern int32_t CheckBindHostPid(const char* arg);
 extern int32_t StartAdprof();
 extern "C" bool GetIsExit(void);
-extern int32_t ProfStopAdprof(struct prof_sample_stop_para *para);
+extern int32_t ProfStopAdprof(struct prof_sample_stop_para* para);
 
-drvError_t drvGetLocalDevIDByHostDevID(uint32_t devIndex, uint32_t *hostDeviceId)
+drvError_t drvGetLocalDevIDByHostDevID(uint32_t devIndex, uint32_t* hostDeviceId)
 {
     *hostDeviceId = devIndex;
     return DRV_ERROR_NONE;
@@ -39,12 +39,8 @@ drvError_t drvGetLocalDevIDByHostDevID(uint32_t devIndex, uint32_t *hostDeviceId
 
 class ADPROF_UTEST : public testing::Test {
 protected:
-    virtual void SetUp()
-    {}
-    virtual void TearDown()
-    {
-        GlobalMockObject::verify();
-    }
+    virtual void SetUp() {}
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 TEST_F(ADPROF_UTEST, CheckBindHostPid)
@@ -87,7 +83,7 @@ TEST_F(ADPROF_UTEST, AdprofInit)
     EXPECT_EQ(false, AdprofCollector::instance()->AdprofStarted());
 }
 
-TEST_F(ADPROF_UTEST, AdprofCollectorProxy) 
+TEST_F(ADPROF_UTEST, AdprofCollectorProxy)
 {
     analysis::dvvp::ProfileFileChunk dataChunk1;
     dataChunk1.isLastChunk = false;
@@ -107,16 +103,11 @@ TEST_F(ADPROF_UTEST, AdprofCollectorProxy)
 
     AdprofCollectorProxy::instance()->BindFunction(
         std::bind(&AdprofCollector::Report, AdprofCollector::instance(), std::placeholders::_1),
-        std::bind(&AdprofCollector::AdprofStarted, AdprofCollector::instance())
-    );
-    std::map<std::string, std::string> kvPairs = {
-        {"host_pid", "123"}, {"dev_id", "0"}, {"sys_profiling", "on"}
-    };
+        std::bind(&AdprofCollector::AdprofStarted, AdprofCollector::instance()));
+    std::map<std::string, std::string> kvPairs = {{"host_pid", "123"}, {"dev_id", "0"}, {"sys_profiling", "on"}};
     AdprofCollector::instance()->Init(kvPairs);
     EXPECT_EQ(true, AdprofCollectorProxy::instance()->AdprofStarted());
-    MOCKER_CPP(ReportAdprofFileChunk)
-    .stubs()
-    .will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(ReportAdprofFileChunk).stubs().will(returnValue(PROFILING_SUCCESS));
     EXPECT_EQ(PROFILING_SUCCESS, AdprofCollectorProxy::instance()->Report(dataChunkPtr1));
     AdprofStop();
 }
@@ -131,16 +122,15 @@ TEST_F(ADPROF_UTEST, AdprofBinFunc)
     EXPECT_EQ(PROFILING_SUCCESS, ProfStopAdprof(&stopPara));
 }
 
-TEST_F(ADPROF_UTEST, StartAdprof) 
+TEST_F(ADPROF_UTEST, StartAdprof)
 {
     std::map<std::string, std::string> kvPairs = {
-        {"host_pid", "123"}, {"job_id", "1"}, {"dev_id", "0"}, {"profiling_period", "1"} 
-    };
+        {"host_pid", "123"}, {"job_id", "1"}, {"dev_id", "0"}, {"profiling_period", "1"}};
     AdprofCollector::instance()->Init(kvPairs);
     EXPECT_EQ(PROFILING_SUCCESS, StartAdprof());
 }
 
-extern int LltMain(int argc, const char *argv[]);
+extern int LltMain(int argc, const char* argv[]);
 TEST_F(ADPROF_UTEST, AdprofBin)
 {
     constexpr int argc = 2;
@@ -150,9 +140,9 @@ TEST_F(ADPROF_UTEST, AdprofBin)
     EXPECT_EQ(PROFILING_FAILED, LltMain(argc, (const char**)argv));
 }
 
-TEST_F(ADPROF_UTEST, AdprofBinGetHostPidFailed) 
+TEST_F(ADPROF_UTEST, AdprofBinGetHostPidFailed)
 {
-    char* argv [] = {"adprof", "profiling_period:10", "0", "", ""};
+    char* argv[] = {"adprof", "profiling_period:10", "0", "", ""};
     // get host pid failed
     EXPECT_EQ(PROFILING_FAILED, LltMain(sizeof(argv) / sizeof(argv[0]), (const char**)argv));
 }
@@ -191,20 +181,14 @@ TEST_F(ADPROF_UTEST, AdprofBinDlsymFailed)
 {
     uint32_t getHostPid = 12345;
     char* argv[] = {"adprof", "host_pid:12345", "dev_id:0", "", ""};
-    void *handle = (void*)1;
+    void* handle = (void*)1;
     MOCKER(drvQueryProcessHostPid)
         .stubs()
         .with(any(), any(), any(), outBoundP(&getHostPid, sizeof(uint32_t)), any())
         .will(returnValue(DRV_ERROR_NONE));
-    MOCKER(mmDlopen)
-        .stubs()
-        .will(returnValue(handle));
-    MOCKER(mmDlclose)
-        .stubs()
-        .will(returnValue(0));
-    MOCKER(mmDlsym)
-        .stubs()
-        .will(returnValue((void*)nullptr));
+    MOCKER(mmDlopen).stubs().will(returnValue(handle));
+    MOCKER(mmDlclose).stubs().will(returnValue(0));
+    MOCKER(mmDlsym).stubs().will(returnValue((void*)nullptr));
     EXPECT_EQ(PROFILING_SUCCESS, LltMain(sizeof(argv) / sizeof(argv[0]), (const char**)argv));
 }
 
@@ -214,21 +198,14 @@ TEST_F(ADPROF_UTEST, AdprofBinDlsymGetIsExitFailed)
 {
     uint32_t getHostPid = 12345;
     char* argv[] = {"adprof", "host_pid:12345", "dev_id:0", "", ""};
-    void *handle = (void*)1;
+    void* handle = (void*)1;
     MOCKER(drvQueryProcessHostPid)
         .stubs()
         .with(any(), any(), any(), outBoundP(&getHostPid, sizeof(uint32_t)), any())
         .will(returnValue(DRV_ERROR_NONE));
-    MOCKER(mmDlopen)
-        .stubs()
-        .will(returnValue(handle));
-    MOCKER(mmDlclose)
-        .stubs()
-        .will(returnValue(0));
-    MOCKER(mmDlsym)
-        .stubs()
-        .will(returnValue((void*)&AdprofStartStub))
-        .then(returnValue((void*)nullptr));
+    MOCKER(mmDlopen).stubs().will(returnValue(handle));
+    MOCKER(mmDlclose).stubs().will(returnValue(0));
+    MOCKER(mmDlsym).stubs().will(returnValue((void*)&AdprofStartStub)).then(returnValue((void*)nullptr));
     EXPECT_EQ(PROFILING_SUCCESS, LltMain(sizeof(argv) / sizeof(argv[0]), (const char**)argv));
 }
 
@@ -236,21 +213,14 @@ TEST_F(ADPROF_UTEST, AdprofBinSuccess)
 {
     uint32_t getHostPid = 12345;
     char* argv[] = {"adprof", "host_pid:12345", "dev_id:0", "", ""};
-    void *handle = (void*)1;
+    void* handle = (void*)1;
     MOCKER(drvQueryProcessHostPid)
         .stubs()
         .with(any(), any(), any(), outBoundP(&getHostPid, sizeof(uint32_t)), any())
         .will(returnValue(DRV_ERROR_NONE));
-    MOCKER(mmDlopen)
-        .stubs()
-        .will(returnValue(handle));
-    MOCKER(mmDlclose)
-        .stubs()
-        .will(returnValue(0));
-    MOCKER(mmDlsym)
-        .stubs()
-        .will(returnValue((void*)&AdprofStartStub))
-        .then(returnValue((void*)&GetIsExitStub));
+    MOCKER(mmDlopen).stubs().will(returnValue(handle));
+    MOCKER(mmDlclose).stubs().will(returnValue(0));
+    MOCKER(mmDlsym).stubs().will(returnValue((void*)&AdprofStartStub)).then(returnValue((void*)&GetIsExitStub));
     EXPECT_EQ(PROFILING_SUCCESS, LltMain(sizeof(argv) / sizeof(argv[0]), (const char**)argv));
 }
 
@@ -310,18 +280,21 @@ TEST_F(ADPROF_UTEST, AdprofSpilitChunk)
 class AnotherClass {
 public:
     AnotherClass(
-        std::function<int(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk>)> reportFunc=nullptr,
-        std::function<bool()> AdprofStartedFunc=nullptr
-    ) : ReportFunctionPointer(reportFunc),  AdprofStartedFunctionPointer(AdprofStartedFunc) {}
+        std::function<int(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk>)> reportFunc = nullptr,
+        std::function<bool()> AdprofStartedFunc = nullptr)
+        : ReportFunctionPointer(reportFunc), AdprofStartedFunctionPointer(AdprofStartedFunc)
+    {}
 
-    int Report(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunk) {
+    int Report(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunk)
+    {
         if (ReportFunctionPointer == nullptr) {
             return PROFILING_FAILED;
-        } 
+        }
         return ReportFunctionPointer(fileChunk);
     }
 
-    bool AdprofStarted() {
+    bool AdprofStarted()
+    {
         if (AdprofStartedFunctionPointer == nullptr) {
             return false;
         }
@@ -345,11 +318,10 @@ TEST_F(ADPROF_UTEST, FuncBind)
     dataChunk1.extraInfo = "";
     dataChunk1.id = "";
     auto dataChunkPtr1 = std::make_shared<analysis::dvvp::ProfileFileChunk>(dataChunk1);
- 
+
     AnotherClass aclass(
         std::bind(&AdprofCollector::Report, AdprofCollector::instance(), std::placeholders::_1),
-        std::bind(&AdprofCollector::AdprofStarted, AdprofCollector::instance())
-    );
+        std::bind(&AdprofCollector::AdprofStarted, AdprofCollector::instance()));
     aclass.Report(dataChunkPtr1);
     AdprofCollector::instance()->UnInit();
     auto ret = aclass.AdprofStarted();

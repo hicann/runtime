@@ -27,15 +27,10 @@ static const char C_RM_RF[] = "rm -rf ./acljsonLiteOsstest_workspace";
 static const char C_MKDIR[] = "mkdir ./acljsonLiteOsstest_workspace";
 static const char C_OUTPUT_DIR[] = "./acljsonLiteOsstest_workspace/output";
 
-class BasicCStest: public testing::Test {
+class BasicCStest : public testing::Test {
 protected:
-    virtual void SetUp()
-    {
-    }
-    virtual void TearDown()
-    {
-        GlobalMockObject::verify();
-    }
+    virtual void SetUp() {}
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 void* OsalMalloc(size_t size)
@@ -73,14 +68,14 @@ void OsalFree(OsalVoidPtr ptr)
 void OsalConstFree(const void* ptr)
 {
     if (ptr != nullptr) {
-        void *ptr_l = (void *)ptr;
+        void* ptr_l = (void*)ptr;
         free(ptr_l);
     }
 }
 
-ProfFileChunk * CreateChunkLiteOs(uint8_t deviceId, uint32_t chunkSize, FileChunkType type)
+ProfFileChunk* CreateChunkLiteOs(uint8_t deviceId, uint32_t chunkSize, FileChunkType type)
 {
-    ProfFileChunk *chunk = (ProfFileChunk *)OsalMalloc(sizeof(ProfFileChunk));
+    ProfFileChunk* chunk = (ProfFileChunk*)OsalMalloc(sizeof(ProfFileChunk));
     chunk->deviceId = deviceId;
     chunk->chunkSize = chunkSize;
     chunk->chunkType = type;
@@ -95,40 +90,33 @@ ProfFileChunk * CreateChunkLiteOs(uint8_t deviceId, uint32_t chunkSize, FileChun
 TEST_F(BasicCStest, FlashSendBufferTest)
 {
     const char* dir = "./";
-    ProfFileChunk *chunk = CreateChunkLiteOs(0, 1, PROF_DEVICE_DATA);
+    ProfFileChunk* chunk = CreateChunkLiteOs(0, 1, PROF_DEVICE_DATA);
     EXPECT_EQ(FlashSendBuffer(chunk, dir), PROFILING_SUCCESS);
 
-    ProfFileChunk *chunk2 = CreateChunkLiteOs(64, 1, PROF_HOST_DATA);
+    ProfFileChunk* chunk2 = CreateChunkLiteOs(64, 1, PROF_HOST_DATA);
     EXPECT_EQ(FlashSendBuffer(chunk2, dir), PROFILING_SUCCESS);
 
-    ProfFileChunk *chunk3 = CreateChunkLiteOs(64, 1, PROF_CTRL_DATA);
+    ProfFileChunk* chunk3 = CreateChunkLiteOs(64, 1, PROF_CTRL_DATA);
     EXPECT_EQ(FlashSendBuffer(chunk3, dir), PROFILING_SUCCESS);
 
-    ProfFileChunk *chunk4 = CreateChunkLiteOs(0, 1024 * 10, PROF_DEVICE_DATA);
+    ProfFileChunk* chunk4 = CreateChunkLiteOs(0, 1024 * 10, PROF_DEVICE_DATA);
     EXPECT_EQ(FlashSendBuffer(chunk4, dir), PROFILING_SUCCESS);
 }
 
 TEST_F(BasicCStest, ProfileParamBase)
 {
     GlobalMockObject::verify();
-    MOCKER(HalGetChipVersion)
-        .stubs()
-        .will(returnValue(uint32_t(PlatformType::CHIP_NANO_V1)));
-    MOCKER(HalGetHostFreq)
-        .stubs()
-        .will(returnValue((uint64_t)10000));
-    MOCKER(HalGetDeviceFreq)
-        .stubs()
-        .will(returnValue((uint64_t)50000));
+    MOCKER(HalGetChipVersion).stubs().will(returnValue(uint32_t(PlatformType::CHIP_NANO_V1)));
+    MOCKER(HalGetHostFreq).stubs().will(returnValue((uint64_t)10000));
+    MOCKER(HalGetDeviceFreq).stubs().will(returnValue((uint64_t)50000));
     uint32_t count = 0;
     int32_t ret = PlatformInitialize(&count);
-    ProfileParam ut_profileParam = { 0 };
+    ProfileParam ut_profileParam = {0};
     uint32_t errorType = 100;
     const int32_t DEFSIZE = 4096;
-    char data[DEFSIZE] = "{\"aic_metrics\":\"PipeUtilization\",\"output\":\"./output_dir\",\"switch\":\"on\",\"task_trace\":\"on\",\"storage_limit\":\"200MB\"}";
-    MOCKER(IsSupportSwitch)
-        .stubs()
-        .will(returnValue(true));
+    char data[DEFSIZE] = "{\"aic_metrics\":\"PipeUtilization\",\"output\":\"./"
+                         "output_dir\",\"switch\":\"on\",\"task_trace\":\"on\",\"storage_limit\":\"200MB\"}";
+    MOCKER(IsSupportSwitch).stubs().will(returnValue(true));
     EXPECT_EQ(GenProfileParam(MSPROF_CTRL_INIT_ACL_JSON, data, sizeof(data), &ut_profileParam), PROFILING_SUCCESS);
     PlatformFinalize(&count);
 }
@@ -138,23 +126,13 @@ TEST_F(BasicCStest, ThreadCreateBase)
     GlobalMockObject::verify();
     OsalThread th;
     UserProcFunc fc;
-    MOCKER(pthread_attr_init)
-        .stubs()
-        .will(returnValue(OSAL_EN_ERROR))
-        .then(returnValue(OSAL_EN_OK));
+    MOCKER(pthread_attr_init).stubs().will(returnValue(OSAL_EN_ERROR)).then(returnValue(OSAL_EN_OK));
     EXPECT_EQ(OSAL_EN_ERROR, OsalCreateThread(&th, fc));
 
-    MOCKER(pthread_attr_setstacksize)
-        .stubs()
-        .will(returnValue(OSAL_EN_ERROR))
-        .then(returnValue(OSAL_EN_OK));
+    MOCKER(pthread_attr_setstacksize).stubs().will(returnValue(OSAL_EN_ERROR)).then(returnValue(OSAL_EN_OK));
     EXPECT_EQ(OSAL_EN_ERROR, OsalCreateThread(&th, fc));
 
-    MOCKER(pthread_create)
-        .stubs()
-        .will(returnValue(OSAL_EN_OK));
-    MOCKER(pthread_attr_destroy)
-        .stubs()
-        .will(returnValue(OSAL_EN_OK));
+    MOCKER(pthread_create).stubs().will(returnValue(OSAL_EN_OK));
+    MOCKER(pthread_attr_destroy).stubs().will(returnValue(OSAL_EN_OK));
     EXPECT_EQ(OSAL_EN_OK, OsalCreateThread(&th, fc));
 }

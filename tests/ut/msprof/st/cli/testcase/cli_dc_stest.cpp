@@ -30,7 +30,7 @@ static const char DC_RM_RF[] = "rm -rf ./cliDcstest_workspace";
 static const char DC_MKDIR[] = "mkdir ./cliDcstest_workspace";
 static const char DC_OUTPUT_DIR[] = "--output=./cliDcstest_workspace/output";
 
-class CliDcStest: public testing::Test {
+class CliDcStest : public testing::Test {
 protected:
     virtual void SetUp()
     {
@@ -47,7 +47,7 @@ protected:
     virtual void TearDown()
     {
         GlobalMockObject::verify();
-        DevprofDrvAicpu::instance()->isRegister_ = false;   // 重置aicpu注册状态，使单进程内能多次注册
+        DevprofDrvAicpu::instance()->isRegister_ = false; // 重置aicpu注册状态，使单进程内能多次注册
         EXPECT_EQ(2, SimulatorMgr().DelDeviceSimulator(2, StPlatformType::DC_TYPE));
         system(DC_RM_RF);
         system("rm -rf ./cli");
@@ -66,16 +66,18 @@ protected:
 TEST_F(CliDcStest, CliDefault)
 {
     // dc: TaskTime
-    const char* argv[] = {DC_OUTPUT_DIR,};
+    const char* argv[] = {
+        DC_OUTPUT_DIR,
+    };
     std::vector<std::string> deviceDataList = {"hwts.data", "ts_track.data", "aicore.data"};
     MsprofMgr().SetDeviceCheckList(deviceDataList);
     std::vector<std::string> hostDataList = {
-        "unaging.api_event.data", "unaging.compact.node_basic_info", "unaging.compact.task_track", "unaging.additional.context_id_info"
-    };
+        "unaging.api_event.data", "unaging.compact.node_basic_info", "unaging.compact.task_track",
+        "unaging.additional.context_id_info"};
     MsprofMgr().SetHostCheckList(hostDataList);
     std::vector<uint64_t> bitList = {PROF_ACL_API, PROF_TASK_TIME_L1, PROF_AICORE_METRICS};
     MsprofMgr().SetBitSwitchCheckList(bitList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliDcStest, CliTx)
@@ -85,30 +87,34 @@ TEST_F(CliDcStest, CliTx)
     std::vector<std::string> hostDataList = {"aging.additional.msproftx"};
     MsprofMgr().SetHostCheckList(hostDataList);
     MsprofMgr().SetMsprofTx(true);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
     MsprofMgr().SetMsprofTx(false);
 }
 
 TEST_F(CliDcStest, CliDataAicpuReportDataMC2)
 {
     // milan: Collect aicpu report data
-    const char* argv[] = {DC_OUTPUT_DIR, "--task-time=l1",};
+    const char* argv[] = {
+        DC_OUTPUT_DIR,
+        "--task-time=l1",
+    };
     std::vector<std::string> dataList = {"aicpu.data"};
     MsprofMgr().SetDeviceCheckList(dataList);
     MsprofMgr().SetSleepTime(100);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
     GlobalMockObject::verify();
 }
 
 TEST_F(CliDcStest, CliDynamicError)
 {
     // dc: Collect dynamic, when check failed
-    const char* argv[] = {DC_OUTPUT_DIR, "--dynamic=on",};
-    MOCKER_CPP(&Analysis::Dvvp::Msprof::InputParser::CheckDynProfValid)
-        .stubs()
-        .will(returnValue(-1));
+    const char* argv[] = {
+        DC_OUTPUT_DIR,
+        "--dynamic=on",
+    };
+    MOCKER_CPP(&Analysis::Dvvp::Msprof::InputParser::CheckDynProfValid).stubs().will(returnValue(-1));
     MsprofMgr().SetSleepTime(100);
-    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
     GlobalMockObject::verify();
 }
 
@@ -116,7 +122,7 @@ TEST_F(CliDcStest, CliDynamicSysDevice)
 {
     // dc: dynamic mode, checking sys-devices
     const char* argv[] = {DC_OUTPUT_DIR, "--dynamic=on", "--sys-devices=0"};
-    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
     GlobalMockObject::verify();
 }
 
@@ -124,7 +130,7 @@ TEST_F(CliDcStest, CliDynamicSysPeriod)
 {
     // dc: dynamic mode, checking sys-period
     const char* argv[] = {DC_OUTPUT_DIR, "--dynamic=on", "--sys-period=10"};
-    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
     GlobalMockObject::verify();
 }
 
@@ -132,7 +138,7 @@ TEST_F(CliDcStest, CliDynamicSysCpuProfiling)
 {
     // dc: dynamic mode, checking sys-cpu-profiling
     const char* argv[] = {DC_OUTPUT_DIR, "--dynamic=on", "--sys-cpu-profiling=on"};
-    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
     GlobalMockObject::verify();
 }
 
@@ -143,6 +149,6 @@ TEST_F(CliDcStest, CliL2)
     std::vector<std::string> dataList = {"l2_cache.data"};
     std::vector<std::string> blackDataList = {"socpmu.data"};
     MsprofMgr().SetDeviceCheckList(dataList, blackDataList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
     GlobalMockObject::verify();
 }

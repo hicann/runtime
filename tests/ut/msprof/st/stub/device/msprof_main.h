@@ -12,7 +12,7 @@
 #define MSPROF_MAIN_H
 #include <iomanip>
 
-extern int LltMain(int argc, const char **argv, const char **envp);
-extern int LltAcpMain(int argc, const char **argv, const char **envp);
-extern void SetEnvList(const char* &envp, std::vector<std::string> &envpList);
+extern int LltMain(int argc, const char** argv, const char** envp);
+extern int LltAcpMain(int argc, const char** argv, const char** envp);
+extern void SetEnvList(const char*& envp, std::vector<std::string>& envpList);
 #endif

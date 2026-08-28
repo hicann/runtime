@@ -14,7 +14,8 @@ extern "C" void __gcov_dump(void) __attribute__((weak));
 extern "C" void __gcov_exit(void) __attribute__((weak));
 #endif
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv)
+{
     testing::InitGoogleTest(&argc, argv);
 
     // Runs all tests using Google Test.

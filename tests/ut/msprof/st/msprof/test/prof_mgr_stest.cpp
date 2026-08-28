@@ -23,18 +23,16 @@
 using namespace Msprof::Engine;
 using namespace analysis::dvvp::common::error;
 
-static const std::string feature="{\"startCfg\":[{\"deviceID\":\"1\",\"features\":[{\"name\":\"training_trace\"},{\"name\":\"task_trace\"}]}, \
+static const std::string feature =
+    "{\"startCfg\":[{\"deviceID\":\"1\",\"features\":[{\"name\":\"training_trace\"},{\"name\":\"task_trace\"}]}, \
 {\"deviceID\":\"0\",\"features\":[{\"name\":\"training_trace\"},{\"name\":\"task_trace\"}]}]}";
 
 void DO_NOTHING() {}
 
-class PROF_MGR_CORE_STEST: public testing::Test {
+class PROF_MGR_CORE_STEST : public testing::Test {
 protected:
-    virtual void SetUp() {
-    }
-    virtual void TearDown() {
-        GlobalMockObject::verify();
-    }
+    virtual void SetUp() {}
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 TEST_F(PROF_MGR_CORE_STEST, ProfMgrStartUp)
@@ -43,24 +41,14 @@ TEST_F(PROF_MGR_CORE_STEST, ProfMgrStartUp)
     cfg.startCfg = "{\"startCfg\":[{\"deviceID\":\"1\", \
                                     \"jobID\":\"10086abc-def-ghi\", \
                                     \"features\":[{\"name\":\"training_trace\"}]}]}";
-    MOCKER_CPP(&Msprof::Engine::ProfMgr::CreateUuidFile)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&Msprof::Engine::ProfMgr::CreateUuidFile).stubs().will(returnValue(PROFILING_SUCCESS));
 
     int test = 1;
-    MOCKER_CPP(&Msprof::Engine::ProfMgr::NotifyHostStart)
-        .stubs()
-        .will(returnValue((void*)&test));
+    MOCKER_CPP(&Msprof::Engine::ProfMgr::NotifyHostStart).stubs().will(returnValue((void*)&test));
 
-    MOCKER_CPP(&Msprof::Engine::ProfMgr::StopParseCfgByFeature)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
-    MOCKER_CPP(&Msprof ::Engine::ProfMgr::WriteCfgToFile)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
-    MOCKER_CPP(&Msprof ::Engine::ProfMgr::InotifyCheckResponse)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&Msprof::Engine::ProfMgr::StopParseCfgByFeature).stubs().will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&Msprof ::Engine::ProfMgr::WriteCfgToFile).stubs().will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&Msprof ::Engine::ProfMgr::InotifyCheckResponse).stubs().will(returnValue(PROFILING_SUCCESS));
 
     void* handle;
     // nullptr
@@ -76,36 +64,28 @@ TEST_F(PROF_MGR_CORE_STEST, ProfMgrStartUp)
 
 TEST_F(PROF_MGR_CORE_STEST, ProfMgrGetConf)
 {
-    ProfMgrConf *cfg = nullptr;
+    ProfMgrConf* cfg = nullptr;
     ProfMgrGetConf("test", cfg);
     EXPECT_EQ(PROFILING_FAILED, ProfMgrGetConf("test", cfg));
 }
 
-class PROF_MGR_STEST: public testing::Test {
+class PROF_MGR_STEST : public testing::Test {
 protected:
-    virtual void SetUp() {
-    }
-    virtual void TearDown() {
-        GlobalMockObject::verify();
-    }
+    virtual void SetUp() {}
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 TEST_F(PROF_MGR_STEST, InotifyCheckResponse)
 {
-    std::shared_ptr<Msprof::Engine::ProfMgr> profMgr(
-        new Msprof::Engine::ProfMgr);
+    std::shared_ptr<Msprof::Engine::ProfMgr> profMgr(new Msprof::Engine::ProfMgr);
 
     char event_buf[MAX_EVENT_BUFFER_SIZE] = {0};
-    struct inotify_event *event = (struct inotify_event*)(event_buf);
+    struct inotify_event* event = (struct inotify_event*)(event_buf);
     event->len = strlen("test") + 4;
     event->mask = IN_CLOSE_WRITE;
     strcpy(event->name, "test");
     int len = sizeof(struct inotify_event) + event->len;
-    MOCKER(read)
-        .stubs()
-        .with(any(), outBoundP((void *)event, len), any())
-        .will(returnValue(0))
-        .then(returnValue(len));
+    MOCKER(read).stubs().with(any(), outBoundP((void*)event, len), any()).will(returnValue(0)).then(returnValue(len));
 
     std::string response = "0";
     MOCKER_CPP(&ProfMgr::ReadCfgToFile)
@@ -119,22 +99,17 @@ TEST_F(PROF_MGR_STEST, InotifyCheckResponse)
     EXPECT_EQ(PROFILING_FAILED, profMgr->InotifyCheckResponse(name, responseRet));
     EXPECT_EQ(PROFILING_SUCCESS, profMgr->InotifyCheckResponse(name, responseRet));
     EXPECT_EQ(PROFILING_SUCCESS, profMgr->InotifyCheckResponse(name, responseRet));
-
 }
 
 TEST_F(PROF_MGR_STEST, InotifyCheckResponseFail)
 {
-    std::shared_ptr<Msprof::Engine::ProfMgr> profMgr(
-        new Msprof::Engine::ProfMgr);
+    std::shared_ptr<Msprof::Engine::ProfMgr> profMgr(new Msprof::Engine::ProfMgr);
 
     char event_buf[MAX_EVENT_BUFFER_SIZE] = {0};
-    struct inotify_event *event = (struct inotify_event*)(event_buf);
+    struct inotify_event* event = (struct inotify_event*)(event_buf);
     event->len = 0;
     int len = sizeof(struct inotify_event) + event->len;
-    MOCKER(read)
-        .stubs()
-        .with(any(), outBoundP((void *)event, len), any())
-        .will(returnValue(len));
+    MOCKER(read).stubs().with(any(), outBoundP((void*)event, len), any()).will(returnValue(len));
 
     std::string name = "test";
     int responseRet = PROFILING_FAILED;
@@ -143,19 +118,11 @@ TEST_F(PROF_MGR_STEST, InotifyCheckResponseFail)
 
 TEST_F(PROF_MGR_STEST, InotifyResponse)
 {
-    MOCKER(inotify_init)
-        .stubs()
-        .will(returnValue(-1))
-        .then(returnValue(0));
+    MOCKER(inotify_init).stubs().will(returnValue(-1)).then(returnValue(0));
 
-    MOCKER(select)
-        .stubs()
-        .will(returnValue(-1))
-        .then(returnValue(1));
+    MOCKER(select).stubs().will(returnValue(-1)).then(returnValue(1));
 
-    MOCKER(inotify_rm_watch)
-        .stubs()
-        .will(returnValue(-1));
+    MOCKER(inotify_rm_watch).stubs().will(returnValue(-1));
 
     int responseRet = PROFILING_SUCCESS;
     MOCKER_CPP(&Msprof::Engine::ProfMgr::InotifyCheckResponse)
@@ -164,8 +131,7 @@ TEST_F(PROF_MGR_STEST, InotifyResponse)
         .will(returnValue(PROFILING_FAILED))
         .then(returnValue(PROFILING_SUCCESS));
 
-    std::shared_ptr<Msprof::Engine::ProfMgr> profMgr(
-        new Msprof::Engine::ProfMgr);
+    std::shared_ptr<Msprof::Engine::ProfMgr> profMgr(new Msprof::Engine::ProfMgr);
 
     std::string name = "test";
 
@@ -185,8 +151,7 @@ TEST_F(PROF_MGR_STEST, InotifyResponse)
 
 TEST_F(PROF_MGR_STEST, WriteCfgToFileFailed)
 {
-    std::shared_ptr<Msprof::Engine::ProfMgr> profMgr(
-        new Msprof::Engine::ProfMgr);
+    std::shared_ptr<Msprof::Engine::ProfMgr> profMgr(new Msprof::Engine::ProfMgr);
 
     std::string file = "/home/test/test_profiling.log";
     std::string context = "";
@@ -196,19 +161,13 @@ TEST_F(PROF_MGR_STEST, WriteCfgToFileFailed)
 
 TEST_F(PROF_MGR_STEST, ProcessResultDir)
 {
-    std::shared_ptr<Msprof::Engine::ProfMgr> profMgr(
-        new Msprof::Engine::ProfMgr);
+    std::shared_ptr<Msprof::Engine::ProfMgr> profMgr(new Msprof::Engine::ProfMgr);
 
-    std::shared_ptr<analysis::dvvp::proto::MsProfStartReq> feature(
-        new analysis::dvvp::proto::MsProfStartReq);
+    std::shared_ptr<analysis::dvvp::proto::MsProfStartReq> feature(new analysis::dvvp::proto::MsProfStartReq);
 
     std::string path("/tmp/default/profiler");
-    MOCKER(analysis::dvvp::common::utils::Utils::GetSelfPath)
-        .stubs()
-        .will(returnValue(path));
-    MOCKER(analysis::dvvp::common::utils::Utils::IsDir)
-        .stubs()
-        .will(returnValue(1));
+    MOCKER(analysis::dvvp::common::utils::Utils::GetSelfPath).stubs().will(returnValue(path));
+    MOCKER(analysis::dvvp::common::utils::Utils::IsDir).stubs().will(returnValue(1));
 
     // use default
     EXPECT_EQ(PROFILING_SUCCESS, profMgr->ProcessResultDir("", feature));
@@ -225,20 +184,17 @@ TEST_F(PROF_MGR_STEST, ProcessResultDir)
 
 TEST_F(PROF_MGR_STEST, StartParseCfgByFeature)
 {
-    MOCKER_CPP(&Msprof::Engine::ProfMgr::ProcessByFeature)
-        .stubs()
-        .will(returnValue(PROFILING_FAILED));
+    MOCKER_CPP(&Msprof::Engine::ProfMgr::ProcessByFeature).stubs().will(returnValue(PROFILING_FAILED));
 
     Msprof::Engine::MsprofStartCfg cfg;
     cfg.startCfg = "test";
 
-    std::shared_ptr<Msprof::Engine::ProfMgr> profMgr(
-        new Msprof::Engine::ProfMgr);
+    std::shared_ptr<Msprof::Engine::ProfMgr> profMgr(new Msprof::Engine::ProfMgr);
 
     std::vector<std::string> feat;
     feat.push_back("0");
     feat.push_back("test");
-    Msprof::Engine::MsprofStartCfg *ptr = profMgr->StartParseCfgByFeature(feat);
+    Msprof::Engine::MsprofStartCfg* ptr = profMgr->StartParseCfgByFeature(feat);
     EXPECT_TRUE(ptr != nullptr);
 
     delete ptr;
@@ -246,10 +202,7 @@ TEST_F(PROF_MGR_STEST, StartParseCfgByFeature)
 
 TEST_F(PROF_MGR_STEST, StopParseCfgByFeature)
 {
-    MOCKER_CPP(&Msprof::Engine::ProfMgr::ProcessByFeature)
-        .stubs()
-        .will(returnValue(PROFILING_FAILED));
-
+    MOCKER_CPP(&Msprof::Engine::ProfMgr::ProcessByFeature).stubs().will(returnValue(PROFILING_FAILED));
 
     Msprof::Engine::MsprofStartCfg cfg;
     cfg.startCfg = "{}";
@@ -258,8 +211,7 @@ TEST_F(PROF_MGR_STEST, StopParseCfgByFeature)
     cfg.feature.push_back("default_path");
     cfg.feature.push_back("task_trace");
 
-    std::shared_ptr<Msprof::Engine::ProfMgr> profMgr(
-        new Msprof::Engine::ProfMgr);
+    std::shared_ptr<Msprof::Engine::ProfMgr> profMgr(new Msprof::Engine::ProfMgr);
 
     int ret = profMgr->StopParseCfgByFeature(cfg);
     EXPECT_EQ(PROFILING_SUCCESS, ret);
@@ -267,8 +219,7 @@ TEST_F(PROF_MGR_STEST, StopParseCfgByFeature)
 
 TEST_F(PROF_MGR_STEST, ReadCfgToFile)
 {
-    std::shared_ptr<Msprof::Engine::ProfMgr> profMgr(
-        new Msprof::Engine::ProfMgr);
+    std::shared_ptr<Msprof::Engine::ProfMgr> profMgr(new Msprof::Engine::ProfMgr);
 
     std::string file = "/home/no_exist_dir/file_name";
     std::string context = "test1234";
@@ -292,8 +243,7 @@ TEST_F(PROF_MGR_STEST, ReadCfgToFile)
 
 TEST_F(PROF_MGR_STEST, ReadCfgToFileEmpty)
 {
-    std::shared_ptr<Msprof::Engine::ProfMgr> profMgr(
-        new Msprof::Engine::ProfMgr);
+    std::shared_ptr<Msprof::Engine::ProfMgr> profMgr(new Msprof::Engine::ProfMgr);
 
     std::string file = "hwts.log.xxxxx";
     std::string context = "";
@@ -304,20 +254,18 @@ TEST_F(PROF_MGR_STEST, ReadCfgToFileEmpty)
 TEST_F(PROF_MGR_STEST, GetConf)
 {
     GlobalMockObject::verify();
-    std::shared_ptr<Msprof::Engine::ProfMgr> profMgr(
-        new Msprof::Engine::ProfMgr);
+    std::shared_ptr<Msprof::Engine::ProfMgr> profMgr(new Msprof::Engine::ProfMgr);
     ProfMgrConf profMgrconf = {};
     EXPECT_EQ(PROFILING_FAILED, profMgr->GetConf("", &profMgrconf));
     const std::string profPath("./profile.cfg");
-    std::string cfg ="events={\"events\":[{\"ai_core_events\":\"asd\",\"L2_cache_events\":\"asd\"},{\"ai_core_events\":\"asd\"}]}";
+    std::string cfg =
+        "events={\"events\":[{\"ai_core_events\":\"asd\",\"L2_cache_events\":\"asd\"},{\"ai_core_events\":\"asd\"}]}";
 
     std::ofstream ifs(profPath);
     ifs << cfg;
     ifs.close();
 
-    MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetProfCfgPath)
-        .stubs()
-        .will(returnValue(profPath));
+    MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetProfCfgPath).stubs().will(returnValue(profPath));
     int ret = profMgr->GetConf("test", &profMgrconf);
     EXPECT_EQ(PROFILING_FAILED, ret);
     ::remove(profPath.c_str());
@@ -326,9 +274,7 @@ TEST_F(PROF_MGR_STEST, GetConf)
 TEST_F(PROF_MGR_STEST, ProfRunBeat)
 {
     std::shared_ptr<Msprof::Engine::ProfMgr> profMgr(new Msprof::Engine::ProfMgr);
-    MOCKER(mmCreateTaskWithThreadAttr)
-        .stubs()
-        .will(returnValue(EN_OK));
+    MOCKER(mmCreateTaskWithThreadAttr).stubs().will(returnValue(EN_OK));
 
     EXPECT_EQ(PROFILING_SUCCESS, profMgr->ProfRunBeat("JOBXXX", "0"));
 }
@@ -350,9 +296,7 @@ TEST_F(PROF_MGR_STEST, NotifyHostStart)
         .stubs()
         .will(returnValue(PROFILING_FAILED))
         .then(returnValue(PROFILING_SUCCESS));
-    MOCKER(mmCreateTaskWithThreadAttr)
-        .stubs()
-        .will(returnValue(EN_OK));
+    MOCKER(mmCreateTaskWithThreadAttr).stubs().will(returnValue(EN_OK));
 
     std::vector<std::string> fes;
     std::string taskId = "JOBXXX";

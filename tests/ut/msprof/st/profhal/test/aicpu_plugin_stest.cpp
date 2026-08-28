@@ -24,13 +24,12 @@ protected:
 
 TEST_F(PROF_AICPU_PLUGIN_STTEST, PROF_AICPU_INIT_FINAL)
 {
-    uint32_t configSize =
-        static_cast<uint32_t>(sizeof(ProfHalModuleConfig) + sizeof(uint32_t));
-    auto moduleConfigP = static_cast<ProfHalModuleConfig *>(malloc(configSize));
+    uint32_t configSize = static_cast<uint32_t>(sizeof(ProfHalModuleConfig) + sizeof(uint32_t));
+    auto moduleConfigP = static_cast<ProfHalModuleConfig*>(malloc(configSize));
     EXPECT_NE(nullptr, moduleConfigP);
     (void)memset_s(moduleConfigP, configSize, 0, configSize);
     const uint32_t devIdList[2] = {64, 0};
-    moduleConfigP->devIdList = const_cast<uint32_t *>(devIdList);
+    moduleConfigP->devIdList = const_cast<uint32_t*>(devIdList);
     moduleConfigP->devIdListNums = 2;
     EXPECT_EQ(0, ProfAPI::ProfHalPlugin::instance()->ProfHalInit(PROF_HAL_AICPU, moduleConfigP, sizeof(moduleConfigP)));
     ProfAPI::ProfHalPlugin::instance()->ProfHalFlushModuleRegister(Msprof::Engine::FlushModule);
@@ -48,12 +47,13 @@ TEST_F(PROF_AICPU_PLUGIN_STTEST, PROF_AICPU_GETVERSION)
 
 TEST_F(PROF_AICPU_PLUGIN_STTEST, PROF_AICPU_GETVERSION_NULLPTR)
 {
-    uint32_t *version = nullptr;
+    uint32_t* version = nullptr;
     EXPECT_EQ(-1, ProfAPI::ProfHalPlugin::instance()->ProfHalGetVersion(version));
 }
 
 TEST_F(PROF_AICPU_PLUGIN_STTEST, PROF_AICPU_INIT_NULLPTR)
 {
-    ProfHalModuleConfig *moduleConfigP = nullptr;
-    EXPECT_EQ(-1, ProfAPI::ProfHalPlugin::instance()->ProfHalInit(PROF_HAL_AICPU, moduleConfigP, sizeof(moduleConfigP)));
+    ProfHalModuleConfig* moduleConfigP = nullptr;
+    EXPECT_EQ(
+        -1, ProfAPI::ProfHalPlugin::instance()->ProfHalInit(PROF_HAL_AICPU, moduleConfigP, sizeof(moduleConfigP)));
 }

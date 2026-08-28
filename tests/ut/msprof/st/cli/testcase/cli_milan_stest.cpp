@@ -33,7 +33,7 @@ static const char MILAN_MKDIR[] = "mkdir ./cliMilanstest_workspace";
 static const char MILAN_OUTPUT_DIR[] = "--output=./cliMilanstest_workspace/output";
 
 static uint32_t g_multiCallbackCnt_ = 0;
-int32_t MultiCallbackHandle(uint32_t dataType, void *data, uint32_t dataLen)
+int32_t MultiCallbackHandle(uint32_t dataType, void* data, uint32_t dataLen)
 {
     (void)dataType;
     (void)data;
@@ -42,7 +42,7 @@ int32_t MultiCallbackHandle(uint32_t dataType, void *data, uint32_t dataLen)
     return 0;
 };
 
-class CliMilanStest: public testing::Test {
+class CliMilanStest : public testing::Test {
 protected:
     virtual void SetUp()
     {
@@ -58,7 +58,7 @@ protected:
     virtual void TearDown()
     {
         GlobalMockObject::verify();
-        DevprofDrvAicpu::instance()->isRegister_ = false;   // 重置aicpu注册状态，使单进程内能多次注册
+        DevprofDrvAicpu::instance()->isRegister_ = false; // 重置aicpu注册状态，使单进程内能多次注册
         EXPECT_EQ(2, SimulatorMgr().DelDeviceSimulator(2, StPlatformType::CHIP_V4_1_0));
         system(MILAN_RM_RF);
         system("rm -rf ./cli");
@@ -93,159 +93,218 @@ TEST_F(CliMilanStest, CliTaskTime)
     // multi aclInit aclFinalize include callback
     MsprofRegisterCallback(HSS, &MultiCallbackHandle);
     // milan: TaskTime
-    const char* argv[] = {MILAN_OUTPUT_DIR,};
-    std::vector<std::string> dataList = {"ffts_profile.data", "stars_soc.data", "stars_soc_profile.data","ts_track.data", "lpmInfoConv.data"};
+    const char* argv[] = {
+        MILAN_OUTPUT_DIR,
+    };
+    std::vector<std::string> dataList = {
+        "ffts_profile.data", "stars_soc.data", "stars_soc_profile.data", "ts_track.data", "lpmInfoConv.data"};
     MsprofMgr().SetDeviceCheckList(dataList);
     std::vector<std::string> hostDataList = {"unaging.additional.diagnostic"};
     MsprofMgr().SetHostCheckList(hostDataList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
     EXPECT_EQ(false, CheckMultiCallback());
 }
 
 TEST_F(CliMilanStest, CliTaskTimeTwo)
 {
     // milan: TaskTime
-    const char* argv[] = {MILAN_OUTPUT_DIR, "cli",};
-    std::vector<std::string> dataList = {"ffts_profile.data", "stars_soc.data", "stars_soc_profile.data","ts_track.data", "lpmInfoConv.data"};
+    const char* argv[] = {
+        MILAN_OUTPUT_DIR,
+        "cli",
+    };
+    std::vector<std::string> dataList = {
+        "ffts_profile.data", "stars_soc.data", "stars_soc_profile.data", "ts_track.data", "lpmInfoConv.data"};
     MsprofMgr().SetDeviceCheckList(dataList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppModeTwo(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppModeTwo(sizeof(argv) / sizeof(char*), argv));
     EXPECT_EQ(true, CheckMultiCallback());
 }
 
 TEST_F(CliMilanStest, CliPipeUtilizationTask)
 {
     // milan: Task-based AI core/vector metrics: PipeUtilization
-    const char* argv[] = {MILAN_OUTPUT_DIR, "--aic-metrics=PipeUtilization",};
+    const char* argv[] = {
+        MILAN_OUTPUT_DIR,
+        "--aic-metrics=PipeUtilization",
+    };
     std::vector<std::string> dataList = {"ffts_profile.data", "lpmInfoConv.data"};
     MsprofMgr().SetDeviceCheckList(dataList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliMilanStest, CliArithmeticUtilizationTask)
 {
     // milan: Task-based AI core/vector metrics: ArithmeticUtilization
-    const char* argv[] = {MILAN_OUTPUT_DIR, "--aic-metrics=ArithmeticUtilization",};
+    const char* argv[] = {
+        MILAN_OUTPUT_DIR,
+        "--aic-metrics=ArithmeticUtilization",
+    };
     std::vector<std::string> dataList = {"ffts_profile.data", "lpmInfoConv.data"};
     MsprofMgr().SetDeviceCheckList(dataList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliMilanStest, CliMemoryTask)
 {
     // milan: Task-based AI core/vector metrics: Memory
-    const char* argv[] = {MILAN_OUTPUT_DIR, "--aic-metrics=Memory",};
+    const char* argv[] = {
+        MILAN_OUTPUT_DIR,
+        "--aic-metrics=Memory",
+    };
     std::vector<std::string> dataList = {"ffts_profile.data", "lpmInfoConv.data"};
     MsprofMgr().SetDeviceCheckList(dataList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliMilanStest, CliMemoryL0Task)
 {
     // milan: Task-based AI core/vector metrics: MemoryL0
-    const char* argv[] = {MILAN_OUTPUT_DIR, "--aic-metrics=MemoryL0",};
+    const char* argv[] = {
+        MILAN_OUTPUT_DIR,
+        "--aic-metrics=MemoryL0",
+    };
     std::vector<std::string> dataList = {"ffts_profile.data", "lpmInfoConv.data"};
     MsprofMgr().SetDeviceCheckList(dataList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliMilanStest, CliMemoryUBTask)
 {
     // milan: Task-based AI core/vector metrics: MemoryUB
-    const char* argv[] = {MILAN_OUTPUT_DIR, "--aic-metrics=MemoryUB",};
+    const char* argv[] = {
+        MILAN_OUTPUT_DIR,
+        "--aic-metrics=MemoryUB",
+    };
     std::vector<std::string> dataList = {"ffts_profile.data", "lpmInfoConv.data"};
     MsprofMgr().SetDeviceCheckList(dataList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliMilanStest, CliResourceConflictRatioTask)
 {
     // milan: Task-based AI core/vector metrics: ResourceConflictRatio
-    const char* argv[] = {MILAN_OUTPUT_DIR, "--aic-metrics=ResourceConflictRatio",};
+    const char* argv[] = {
+        MILAN_OUTPUT_DIR,
+        "--aic-metrics=ResourceConflictRatio",
+    };
     std::vector<std::string> dataList = {"ffts_profile.data", "lpmInfoConv.data"};
     MsprofMgr().SetDeviceCheckList(dataList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliMilanStest, CliL2CacheTask)
 {
     // milan: Task-based AI core/vector metrics: L2Cache
-    const char* argv[] = {MILAN_OUTPUT_DIR, "--aic-metrics=L2Cache",};
+    const char* argv[] = {
+        MILAN_OUTPUT_DIR,
+        "--aic-metrics=L2Cache",
+    };
     std::vector<std::string> dataList = {"ffts_profile.data", "lpmInfoConv.data"};
     MsprofMgr().SetDeviceCheckList(dataList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliMilanStest, CliPipeUtilizationSample)
 {
     // milan: Sample-based AI core/vector metrics: PipeUtilization
-    const char* argv[] = {MILAN_OUTPUT_DIR, "--aic-metrics=PipeUtilization", "--aic-mode=sample-based",};
+    const char* argv[] = {
+        MILAN_OUTPUT_DIR,
+        "--aic-metrics=PipeUtilization",
+        "--aic-mode=sample-based",
+    };
     std::vector<std::string> dataList = {"ffts_profile.data"};
     MsprofMgr().SetDeviceCheckList(dataList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliMilanStest, CliArithmeticUtilizationSample)
 {
     // milan: Sample-based AI core/vector metrics: ArithmeticUtilization
-    const char* argv[] = {MILAN_OUTPUT_DIR, "--aic-metrics=ArithmeticUtilization", "--aic-mode=sample-based",};
+    const char* argv[] = {
+        MILAN_OUTPUT_DIR,
+        "--aic-metrics=ArithmeticUtilization",
+        "--aic-mode=sample-based",
+    };
     std::vector<std::string> dataList = {"ffts_profile.data"};
     MsprofMgr().SetDeviceCheckList(dataList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliMilanStest, CliMemorySample)
 {
     // milan: Sample-based AI core/vector metrics: Memory
-    const char* argv[] = {MILAN_OUTPUT_DIR, "--aic-metrics=Memory", "--aic-mode=sample-based",};
+    const char* argv[] = {
+        MILAN_OUTPUT_DIR,
+        "--aic-metrics=Memory",
+        "--aic-mode=sample-based",
+    };
     std::vector<std::string> dataList = {"ffts_profile.data"};
     MsprofMgr().SetDeviceCheckList(dataList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliMilanStest, CliMemoryL0Sample)
 {
     // milan: Sample-based AI core/vector metrics: MemoryL0
-    const char* argv[] = {MILAN_OUTPUT_DIR, "--aic-metrics=MemoryL0", "--aic-mode=sample-based",};
+    const char* argv[] = {
+        MILAN_OUTPUT_DIR,
+        "--aic-metrics=MemoryL0",
+        "--aic-mode=sample-based",
+    };
     std::vector<std::string> dataList = {"ffts_profile.data"};
     MsprofMgr().SetDeviceCheckList(dataList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliMilanStest, CliMemoryUBSample)
 {
     // milan: Sample-based AI core/vector metrics: MemoryUB
-    const char* argv[] = {MILAN_OUTPUT_DIR, "--aic-metrics=MemoryUB", "--aic-mode=sample-based",};
+    const char* argv[] = {
+        MILAN_OUTPUT_DIR,
+        "--aic-metrics=MemoryUB",
+        "--aic-mode=sample-based",
+    };
     std::vector<std::string> dataList = {"ffts_profile.data"};
     MsprofMgr().SetDeviceCheckList(dataList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliMilanStest, CliResourceConflictRatioSample)
 {
     // milan: Sample-based AI core/vector metrics: ResourceConflictRatio
-    const char* argv[] = {MILAN_OUTPUT_DIR, "--aic-metrics=ResourceConflictRatio", "--aic-mode=sample-based",};
+    const char* argv[] = {
+        MILAN_OUTPUT_DIR,
+        "--aic-metrics=ResourceConflictRatio",
+        "--aic-mode=sample-based",
+    };
     std::vector<std::string> dataList = {"ffts_profile.data"};
     MsprofMgr().SetDeviceCheckList(dataList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliMilanStest, CliL2CacheSample)
 {
     // milan: Sample-based AI core/vector metrics: L2Cache
-    const char* argv[] = {MILAN_OUTPUT_DIR, "--aic-metrics=L2Cache", "--aic-mode=sample-based",};
+    const char* argv[] = {
+        MILAN_OUTPUT_DIR,
+        "--aic-metrics=L2Cache",
+        "--aic-mode=sample-based",
+    };
     std::vector<std::string> dataList = {"ffts_profile.data"};
     MsprofMgr().SetDeviceCheckList(dataList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliMilanStest, CliInstrProfiling)
 {
     // milan: instr-profiling collect perf monitor data
-    const char* argv[] = {MILAN_OUTPUT_DIR, "--instr-profiling=on",};
+    const char* argv[] = {
+        MILAN_OUTPUT_DIR,
+        "--instr-profiling=on",
+    };
     std::vector<std::string> dataList = {"instr.group_"};
     std::vector<std::string> blackDataList = {"instr.biu_perf_group"};
     MsprofMgr().SetDeviceCheckList(dataList, blackDataList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliMilanStest, CliSysProfiling)
@@ -257,7 +316,7 @@ TEST_F(CliMilanStest, CliSysProfiling)
     std::vector<std::string> dataList = {"SystemCpuUsage.data", "Memory.data"};
     std::vector<std::string> blackDataList = {"stars_soc.data"};
     MsprofMgr().SetDeviceCheckList(dataList, blackDataList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartBySysMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartBySysMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliMilanStest, CliSysCpuProfiling)
@@ -268,7 +327,7 @@ TEST_F(CliMilanStest, CliSysCpuProfiling)
     const char* argv[] = {MILAN_OUTPUT_DIR, "--sys-cpu-profiling=on"};
     std::vector<std::string> dataList = {"tscpu.data", "ai_ctrl_cpu.data"};
     MsprofMgr().SetDeviceCheckList(dataList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartBySysMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartBySysMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliMilanStest, CliSysPidProfiling)
@@ -279,21 +338,21 @@ TEST_F(CliMilanStest, CliSysPidProfiling)
     const char* argv[] = {MILAN_OUTPUT_DIR, "--sys-pid-profiling=on"};
     std::vector<std::string> dataList = {"CpuUsage.data", "Memory.data"};
     MsprofMgr().SetDeviceCheckList(dataList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartBySysMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartBySysMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliMilanStest, CliLlcProfilingRead)
 {
     // milan: Collect llc data by adda
     const char* argv[] = {MILAN_OUTPUT_DIR, "--llc-profiling=read", "--sys-devices=0"};
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartBySysMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartBySysMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliMilanStest, CliLlcProfilingWrite)
 {
     // milan: Collect llc data by adda
     const char* argv[] = {MILAN_OUTPUT_DIR, "--llc-profiling=write", "--sys-devices=0"};
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartBySysMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartBySysMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliMilanStest, CliSysHardwareMem)
@@ -302,7 +361,7 @@ TEST_F(CliMilanStest, CliSysHardwareMem)
     const char* argv[] = {MILAN_OUTPUT_DIR, "--sys-hardware-mem=on", "--sys-devices=0"};
     std::vector<std::string> dataList = {"hbm.data", "llc.data", "qos.data", "npu_mem.data", "npu_module_mem.data"};
     MsprofMgr().SetDeviceCheckList(dataList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartBySysMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartBySysMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliMilanStest, CliSysInterconnectionProfiling)
@@ -311,7 +370,7 @@ TEST_F(CliMilanStest, CliSysInterconnectionProfiling)
     const char* argv[] = {MILAN_OUTPUT_DIR, "--sys-interconnection-profiling=on", "--sys-devices=0"};
     std::vector<std::string> dataList = {"pcie.data", "hccs.data"};
     MsprofMgr().SetDeviceCheckList(dataList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartBySysMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartBySysMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliMilanStest, CliSysIoProfiling)
@@ -320,16 +379,17 @@ TEST_F(CliMilanStest, CliSysIoProfiling)
     const char* argv[] = {MILAN_OUTPUT_DIR, "--sys-io-profiling=on", "--sys-devices=0"};
     std::vector<std::string> dataList = {"nic.data", "roce.data"};
     MsprofMgr().SetDeviceCheckList(dataList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartBySysMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartBySysMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliMilanStest, CliDvvpProfiling)
 {
     // milan: Collect dvvp data
     const char* argv[] = {MILAN_OUTPUT_DIR, "--dvpp-profiling=on", "--sys-devices=0"};
-    std::vector<std::string> dataList = {"dvpp.data", "dvpp.venc", "dvpp.jpege", "dvpp.vdec", "dvpp.jpegd", "dvpp.vpc", "dvpp.png", "dvpp.scd"};
+    std::vector<std::string> dataList = {"dvpp.data",  "dvpp.venc", "dvpp.jpege", "dvpp.vdec",
+                                         "dvpp.jpegd", "dvpp.vpc",  "dvpp.png",   "dvpp.scd"};
     MsprofMgr().SetDeviceCheckList(dataList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartBySysMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartBySysMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliMilanStest, CliHostSys)
@@ -340,221 +400,299 @@ TEST_F(CliMilanStest, CliHostSys)
     const char* argv[] = {MILAN_OUTPUT_DIR, "--host-sys=cpu,mem,network", hostPid.c_str(), "--sys-devices=0"};
     std::vector<std::string> dataList = {"host_cpu.data", "host_mem.data", "host_network.data"};
     MsprofMgr().SetHostCheckList(dataList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartBySysMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartBySysMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliMilanStest, CliHostSysUsage)
 {
     // milan: Collect data in host side
-    const char* argv[] = {MILAN_OUTPUT_DIR, "--host-sys-usage=cpu,mem","--host-sys-usage-freq=20"};
+    const char* argv[] = {MILAN_OUTPUT_DIR, "--host-sys-usage=cpu,mem", "--host-sys-usage-freq=20"};
     std::vector<std::string> dataList = {"CpuUsage.data", "Memory.data"};
     MsprofMgr().SetHostCheckList(dataList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartBySysMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartBySysMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliMilanStest, CliL2)
 {
     // milan: Collect l2 data
-    const char* argv[] = {MILAN_OUTPUT_DIR, "--l2=on",};
+    const char* argv[] = {
+        MILAN_OUTPUT_DIR,
+        "--l2=on",
+    };
     std::vector<std::string> dataList = {"socpmu.data"};
     MsprofMgr().SetDeviceCheckList(dataList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliMilanStest, NpuEvents)
 {
     // milan: Collect npu-events data
-    const char* argv[] = {MILAN_OUTPUT_DIR, "--npu-events=0x1,0x2,0x3,0x4,0x5",};
+    const char* argv[] = {
+        MILAN_OUTPUT_DIR,
+        "--npu-events=0x1,0x2,0x3,0x4,0x5",
+    };
     std::vector<std::string> dataList = {"socpmu.data"};
     MsprofMgr().SetDeviceCheckList(dataList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliMilanStest, SocPmuEvents)
 {
     // david: Collect npu-events data
-    const char* argv[] = {MILAN_OUTPUT_DIR, "--npu-events=HA:0x1,0x2,0x3,0x4,0x5;SMMU:0x1,0x2,0x3",};
+    const char* argv[] = {
+        MILAN_OUTPUT_DIR,
+        "--npu-events=HA:0x1,0x2,0x3,0x4,0x5;SMMU:0x1,0x2,0x3",
+    };
     std::vector<std::string> dataList = {"socpmu.data"};
     MsprofMgr().SetDeviceCheckList(dataList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliMilanStest, SocPmuEventsHaRepeat)
 {
     // david: Collect npu-events data
-    const char* argv[] = {MILAN_OUTPUT_DIR, "--npu-events=HA:0x1,0x2,0x3,0x4,0x5;HA:0x1,0x2,0x3",};
-    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    const char* argv[] = {
+        MILAN_OUTPUT_DIR,
+        "--npu-events=HA:0x1,0x2,0x3,0x4,0x5;HA:0x1,0x2,0x3",
+    };
+    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliMilanStest, SocPmuEventsSmmuRepeat)
 {
     // david: Collect npu-events data
-    const char* argv[] = {MILAN_OUTPUT_DIR, "--npu-events=SMMU:0x1,0x2,0x3,0x4,0x5;SMMU:0x1,0x2,0x3",};
-    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    const char* argv[] = {
+        MILAN_OUTPUT_DIR,
+        "--npu-events=SMMU:0x1,0x2,0x3,0x4,0x5;SMMU:0x1,0x2,0x3",
+    };
+    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliMilanStest, SocPmuEventsNocNotAllow)
 {
     // david: Collect npu-events data
-    const char* argv[] = {MILAN_OUTPUT_DIR, "--npu-events=NOC:0x1,0x2,0x3",};
-    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    const char* argv[] = {
+        MILAN_OUTPUT_DIR,
+        "--npu-events=NOC:0x1,0x2,0x3",
+    };
+    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliMilanStest, SocPmuEventsHaOverFlow)
 {
     // david: Collect npu-events data
-    const char* argv[] = {MILAN_OUTPUT_DIR, "--npu-events=HA:0x1,0x2,0x3,0x4,0x5,0x6,0x7,0x8,0x9;SMMU:0x1,0x2,0x3",};
-    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    const char* argv[] = {
+        MILAN_OUTPUT_DIR,
+        "--npu-events=HA:0x1,0x2,0x3,0x4,0x5,0x6,0x7,0x8,0x9;SMMU:0x1,0x2,0x3",
+    };
+    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliMilanStest, SocPmuEventsSmmuOverFlow)
 {
     // david: Collect npu-events data
-    const char* argv[] = {MILAN_OUTPUT_DIR, "--npu-events=HA:0x1,0x2,0x3;SMMU:0x1,0x2,0x3,0x4,0x5,0x6,0x7,0x8,0x9",};
-    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    const char* argv[] = {
+        MILAN_OUTPUT_DIR,
+        "--npu-events=HA:0x1,0x2,0x3;SMMU:0x1,0x2,0x3,0x4,0x5,0x6,0x7,0x8,0x9",
+    };
+    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliMilanStest, SocPmuEventsSmmuOverFlowEvent)
 {
     // david: Collect npu-events data
-    const char* argv[] = {MILAN_OUTPUT_DIR, "--npu-events=HA:0x1,0x2,0x3,0x4,0x5;SMMU:0x1,0x2,0x3,0x809",};
-    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    const char* argv[] = {
+        MILAN_OUTPUT_DIR,
+        "--npu-events=HA:0x1,0x2,0x3,0x4,0x5;SMMU:0x1,0x2,0x3,0x809",
+    };
+    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliMilanStest, SocPmuEventsHaOverFlowEvent)
 {
     // david: Collect npu-events data
-    const char* argv[] = {MILAN_OUTPUT_DIR, "--npu-events=HA:0x1,0x2,0x3,0x4,0x256;SMMU:0x1,0x2,0x3,0x809",};
-    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    const char* argv[] = {
+        MILAN_OUTPUT_DIR,
+        "--npu-events=HA:0x1,0x2,0x3,0x4,0x256;SMMU:0x1,0x2,0x3,0x809",
+    };
+    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliMilanStest, CliDataAicpuReportData)
 {
     // milan: Collect DATAPREPROCESS report data
-    const char* argv[] = {MILAN_OUTPUT_DIR, "--aicpu=on",};
+    const char* argv[] = {
+        MILAN_OUTPUT_DIR,
+        "--aicpu=on",
+    };
     std::vector<std::string> dataList = {"DATA_PREPROCESS.hash_dic"};
     MsprofMgr().SetHostCheckList(dataList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliMilanStest, CliMsproftxReportAdditionalInfo)
 {
     // milan: Collect tx data
-    const char* argv[] = {MILAN_OUTPUT_DIR, "--msproftx=on",};
+    const char* argv[] = {
+        MILAN_OUTPUT_DIR,
+        "--msproftx=on",
+    };
     std::vector<std::string> dataList = {"aging.additional.msproftx"};
     MsprofMgr().SetHostCheckList(dataList);
     MsprofMgr().SetMsprofTx(true);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
     MsprofMgr().SetMsprofTx(false);
 }
 
 TEST_F(CliMilanStest, CliMemVisualization)
 {
     // milan: Collect mem data
-    const char* argv[] = {MILAN_OUTPUT_DIR, "--sys-hardware-mem=on",};
+    const char* argv[] = {
+        MILAN_OUTPUT_DIR,
+        "--sys-hardware-mem=on",
+    };
     std::vector<std::string> dataList = {"npu_mem.app"};
     MsprofMgr().SetDeviceCheckList(dataList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliMilanStest, CliSysHardwareMemOverflow)
 {
-    const char* argv[] = {MILAN_OUTPUT_DIR, "--sys-hardware-mem=on", "--sys-hardware-mem-freq=101",};
-    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartBySysMode(sizeof(argv) / sizeof(char *), argv));
+    const char* argv[] = {
+        MILAN_OUTPUT_DIR,
+        "--sys-hardware-mem=on",
+        "--sys-hardware-mem-freq=101",
+    };
+    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartBySysMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliMilanStest, CliDvvpProfilingApp)
 {
     // milan: Collect dvvp data
-    const char* argv[] = {MILAN_OUTPUT_DIR, "--dvpp-profiling=on",};
-    std::vector<std::string> dataList = {"dvpp.data", "dvpp.venc", "dvpp.jpege", "dvpp.vdec", "dvpp.jpegd", "dvpp.vpc", "dvpp.png", "dvpp.scd"};
+    const char* argv[] = {
+        MILAN_OUTPUT_DIR,
+        "--dvpp-profiling=on",
+    };
+    std::vector<std::string> dataList = {"dvpp.data",  "dvpp.venc", "dvpp.jpege", "dvpp.vdec",
+                                         "dvpp.jpegd", "dvpp.vpc",  "dvpp.png",   "dvpp.scd"};
     MsprofMgr().SetDeviceCheckList(dataList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliMilanStest, CliFreqConvAicoreOff)
 {
     // milan: Task-based AI core/vector metrics: ArithmeticUtilization
-    const char* argv[] = {MILAN_OUTPUT_DIR, "--ai-core=off",};
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    const char* argv[] = {
+        MILAN_OUTPUT_DIR,
+        "--ai-core=off",
+    };
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliMilanStest, CliTaskTimeOff)
 {
     // milan: Task-based AI core/vector metrics: ArithmeticUtilization
-    const char* argv[] = {MILAN_OUTPUT_DIR, "--task-time=off", };
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    const char* argv[] = {
+        MILAN_OUTPUT_DIR,
+        "--task-time=off",
+    };
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliMilanStest, CliTaskTimeOn)
 {
     // milan: Task-based AI core/vector metrics: ArithmeticUtilization
-    const char* argv[] = {MILAN_OUTPUT_DIR, "--task-time=l0", };
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    const char* argv[] = {
+        MILAN_OUTPUT_DIR,
+        "--task-time=l0",
+    };
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliMilanStest, CliTaskTimeL3)
 {
     // milan: Task-based AI core/vector metrics: ArithmeticUtilization
-    const char* argv[] = {MILAN_OUTPUT_DIR, "--task-time=l3", };
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    const char* argv[] = {
+        MILAN_OUTPUT_DIR,
+        "--task-time=l3",
+    };
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliMilanStest, CliFwkScheduleOff)
 {
     // milan: Task-based AI core/vector metrics: ArithmeticUtilization
-    const char* argv[] = {MILAN_OUTPUT_DIR, "--ge-api=off", };
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    const char* argv[] = {
+        MILAN_OUTPUT_DIR,
+        "--ge-api=off",
+    };
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliMilanStest, CliFwkScheduleOn)
 {
     // milan: Task-based AI core/vector metrics: ArithmeticUtilization
-    const char* argv[] = {MILAN_OUTPUT_DIR, "--ge-api=l0", };
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    const char* argv[] = {
+        MILAN_OUTPUT_DIR,
+        "--ge-api=l0",
+    };
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliMilanStest, CliFwkScheduleERROR)
 {
     // milan: Task-based AI core/vector metrics: ArithmeticUtilization
-    const char* argv[] = {MILAN_OUTPUT_DIR, "--ge-api=L1", };
-    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    const char* argv[] = {
+        MILAN_OUTPUT_DIR,
+        "--ge-api=L1",
+    };
+    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliMilanStest, CliTaskTimeERROR)
 {
     // milan: Task-based AI core/vector metrics: ArithmeticUtilization
-    const char* argv[] = {MILAN_OUTPUT_DIR, "--task-time=L0", };
-    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    const char* argv[] = {
+        MILAN_OUTPUT_DIR,
+        "--task-time=L0",
+    };
+    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliMilanStest, CliDataAicpuReportDataNew)
 {
     // milan: Collect aicpu report data
-    const char* argv[] = {MILAN_OUTPUT_DIR, "--aicpu=on",};
+    const char* argv[] = {
+        MILAN_OUTPUT_DIR,
+        "--aicpu=on",
+    };
     std::vector<std::string> dataList = {"aicpu.data"};
     MsprofMgr().SetDeviceCheckList(dataList);
     MsprofMgr().SetSleepTime(100);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
     optind = 1;
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
     GlobalMockObject::verify();
 }
 
 TEST_F(CliMilanStest, CliDataAicpuReportDataMC2HCCL)
 {
     // milan: Collect aicpu report data
-    const char* argv[] = {MILAN_OUTPUT_DIR, "--task-time=l0",};
+    const char* argv[] = {
+        MILAN_OUTPUT_DIR,
+        "--task-time=l0",
+    };
     std::vector<std::string> dataList = {"aicpu.data"};
     MsprofMgr().SetDeviceCheckList(dataList);
     MsprofMgr().SetSleepTime(100);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
     GlobalMockObject::verify();
 }
 
 int32_t g_StubCnt = 0;
-hdcError_t halHdcRecvStub(HDC_SESSION session, struct drvHdcMsg *msg, int bufLen,
-    unsigned long long flag, int *recvBufCount, unsigned int timeout)
+hdcError_t halHdcRecvStub(
+    HDC_SESSION session, struct drvHdcMsg* msg, int bufLen, unsigned long long flag, int* recvBufCount,
+    unsigned int timeout)
 {
     if (g_StubCnt >= 1) {
         return DRV_ERROR_NO_DEVICE;
@@ -574,7 +712,7 @@ TEST_F(CliMilanStest, CliAddaStuck)
         .will(returnValue(SUPPORT_ADPROF_VERSION - 1));
     int32_t recvBufCount = 1;
     uint32_t platformInfo = 1; // device type
-    struct drvHdcMsg *hdcMsg = (struct drvHdcMsg *)0x12345678;
+    struct drvHdcMsg* hdcMsg = (struct drvHdcMsg*)0x12345678;
     SimulatorMgr().SetSocSide(SocType::DEVICE);
     MOCKER(halHdcRecv)
         .stubs()
@@ -588,26 +726,30 @@ TEST_F(CliMilanStest, CliAddaStuck)
         .stubs()
         .with(outBoundP(&platformInfo, sizeof(platformInfo)))
         .will(returnValue(DRV_ERROR_NONE));
-    MOCKER_CPP(&Analysis::Dvvp::Adx::HdcSessionWrite)
-        .stubs()
-        .will(returnValue(IDE_DAEMON_OK));
+    MOCKER_CPP(&Analysis::Dvvp::Adx::HdcSessionWrite).stubs().will(returnValue(IDE_DAEMON_OK));
     const char* argv[] = {MILAN_OUTPUT_DIR, "--sys-profiling=on", "--sys-period=1"};
-    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartBySysMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartBySysMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliMilanStest, CliMemServiceflow)
 {
-    const char* argv[] = {MILAN_OUTPUT_DIR, "--sys-mem-serviceflow=,aaa,,bbb,ccc", "--sys-hardware-mem=on",};
+    const char* argv[] = {
+        MILAN_OUTPUT_DIR,
+        "--sys-mem-serviceflow=,aaa,,bbb,ccc",
+        "--sys-hardware-mem=on",
+    };
     std::vector<std::string> dataList = {"stars_soc_profile.data"};
     MsprofMgr().SetDeviceCheckList(dataList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliMilanStest, CliHelperPureCpu)
 {
     // milan: pure cpu in hostcpu-ps slave process
     MsprofMgr().SetMsprofConfig(StProfConfigType::PROF_CONFIG_PURE_CPU);
-    const char* argv[] = {MILAN_OUTPUT_DIR,};
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    const char* argv[] = {
+        MILAN_OUTPUT_DIR,
+    };
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
     MsprofMgr().SetMsprofConfig(StProfConfigType::PROF_CONFIG_DYNAMIC);
 }

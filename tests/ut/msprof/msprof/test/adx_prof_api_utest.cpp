@@ -15,15 +15,14 @@
 
 using namespace Analysis::Dvvp::Adx;
 
-class COMMON_ADX_PROF_API_STEST: public testing::Test {
+class COMMON_ADX_PROF_API_STEST : public testing::Test {
 protected:
-    virtual void SetUp() {
-    }
-    virtual void TearDown() {
-    }
+    virtual void SetUp() {}
+    virtual void TearDown() {}
 };
 
-TEST_F(COMMON_ADX_PROF_API_STEST, AdxIdeCreatePacket) {
+TEST_F(COMMON_ADX_PROF_API_STEST, AdxIdeCreatePacket)
+{
     GlobalMockObject::verify();
 
     IdeBuffT outPut;
@@ -32,32 +31,37 @@ TEST_F(COMMON_ADX_PROF_API_STEST, AdxIdeCreatePacket) {
     AdxIdeFreePacket(outPut);
 }
 
-TEST_F(COMMON_ADX_PROF_API_STEST, AdxIdeSockReadData) {
+TEST_F(COMMON_ADX_PROF_API_STEST, AdxIdeSockReadData)
+{
     GlobalMockObject::verify();
     int outLen = 0;
     EXPECT_EQ(IDE_DAEMON_ERROR, AdxIdeSockReadData(NULL, NULL, outLen));
 }
 
-TEST_F(COMMON_ADX_PROF_API_STEST, AdxIdeSockWriteData) {
+TEST_F(COMMON_ADX_PROF_API_STEST, AdxIdeSockWriteData)
+{
     GlobalMockObject::verify();
     IdeBuffT outPut;
     int outLen = 0;
     EXPECT_EQ(IDE_DAEMON_ERROR, AdxIdeSockWriteData(NULL, outPut, outLen));
 }
 
-TEST_F(COMMON_ADX_PROF_API_STEST, AdxIdeSockDupCreate) {
+TEST_F(COMMON_ADX_PROF_API_STEST, AdxIdeSockDupCreate)
+{
     GlobalMockObject::verify();
     EXPECT_EQ(nullptr, AdxIdeSockDupCreate(NULL));
     AdxIdeSockDestroy(NULL);
     AdxIdeSockDupDestroy(NULL);
 }
 
-TEST_F(COMMON_ADX_PROF_API_STEST, AdxGetAdxWorkPath) {
+TEST_F(COMMON_ADX_PROF_API_STEST, AdxGetAdxWorkPath)
+{
     GlobalMockObject::verify();
     EXPECT_STREQ("./", AdxGetAdxWorkPath().c_str());
 }
 
-TEST_F(COMMON_ADX_PROF_API_STEST, AdxIdeGetVfIdBySession) {
+TEST_F(COMMON_ADX_PROF_API_STEST, AdxIdeGetVfIdBySession)
+{
     GlobalMockObject::verify();
     HDC_SESSION session = (HDC_SESSION)0x12345678;
     int32_t vfId = 0;

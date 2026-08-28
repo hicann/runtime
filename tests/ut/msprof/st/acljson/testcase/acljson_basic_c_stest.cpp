@@ -37,11 +37,9 @@ static const char C_RM_RF[] = "rm -rf ./acljsonCstest_workspace";
 static const char C_MKDIR[] = "mkdir ./acljsonCstest_workspace";
 static const char C_OUTPUT_DIR[] = "./acljsonCstest_workspace/output";
 
-class BasicCStest: public testing::Test {
+class BasicCStest : public testing::Test {
 protected:
-    virtual void SetUp()
-    {
-    }
+    virtual void SetUp() {}
     virtual void TearDown()
     {
         GlobalMockObject::verify();
@@ -51,19 +49,12 @@ protected:
 
 TEST_F(BasicCStest, PlatformBase)
 {
-    MOCKER(HalGetChipVersion)
-        .stubs()
-        .will(returnValue(uint32_t(PlatformType::CHIP_NANO_V1)));
-    MOCKER(HalGetHostFreq)
-        .stubs()
-        .will(returnValue((uint64_t)10000));
+    MOCKER(HalGetChipVersion).stubs().will(returnValue(uint32_t(PlatformType::CHIP_NANO_V1)));
+    MOCKER(HalGetHostFreq).stubs().will(returnValue((uint64_t)10000));
     uint32_t count = 0;
     int32_t ret = PlatformInitialize(&count);
     EXPECT_EQ(ret, PROFILING_SUCCESS);
-    MOCKER(HalGetDeviceFreq)
-        .stubs()
-        .will(returnValue((uint64_t)50000))
-        .then(returnValue((uint64_t)0));
+    MOCKER(HalGetDeviceFreq).stubs().will(returnValue((uint64_t)50000)).then(returnValue((uint64_t)0));
     // default device freq
     EXPECT_EQ(PlatformGetDefaultDevFreq(), (uint64_t)NANO_HWTS_DEFAULT_FREQ);
     // device freq
@@ -75,7 +66,7 @@ TEST_F(BasicCStest, PlatformBase)
     EXPECT_EQ(IsSupportBit(PROF_AICORE_METRICS), true);
     EXPECT_EQ(IsSupportBit(PROF_AICPU_TRACE), false);
     // version info
-    const char *versionInfo = PlatformGetVersionInfo();
+    const char* versionInfo = PlatformGetVersionInfo();
     EXPECT_EQ(strcmp(versionInfo, "1.0"), 0);
     // default metrics
     char* metrics = PlatformGetDefaultMetrics();
@@ -92,31 +83,21 @@ TEST_F(BasicCStest, PlatformBase)
 
 TEST_F(BasicCStest, MsprofSysCycleTimeBase)
 {
-    MOCKER(HalGetChipVersion)
-        .stubs()
-        .will(returnValue(uint32_t(PlatformType::CHIP_NANO_V1)));
-    MOCKER(HalGetHostFreq)
-        .stubs()
-        .will(returnValue((uint32_t)10000));
+    MOCKER(HalGetChipVersion).stubs().will(returnValue(uint32_t(PlatformType::CHIP_NANO_V1)));
+    MOCKER(HalGetHostFreq).stubs().will(returnValue((uint32_t)10000));
     uint32_t count = 0;
     int32_t ret = PlatformInitialize(&count);
     EXPECT_EQ(ret, PROFILING_SUCCESS);
     EXPECT_EQ(PlatformHostFreqIsEnable(), true);
 
-    MOCKER(PlatformHostFreqIsEnable)
-        .stubs()
-        .will(returnValue(true))
-        .then(returnValue(false));
+    MOCKER(PlatformHostFreqIsEnable).stubs().will(returnValue(true)).then(returnValue(false));
     uint64_t cycleTime = MsprofSysCycleTime();
     EXPECT_EQ((cycleTime > 0), true);
     cycleTime = MsprofSysCycleTime();
     EXPECT_EQ((cycleTime > 0), true);
 }
 
-void* MallocStubC(int size)
-{
-    return malloc(size);
-}
+void* MallocStubC(int size) { return malloc(size); }
 int32_t g_mallocCCnt = 0;
 void* MallocTestC(int size)
 {
@@ -135,9 +116,7 @@ TEST_F(BasicCStest, ThreadPoolBase)
     EXPECT_EQ(ret, PROFILING_SUCCESS);
     ProfThreadPoolFinalize();
 
-    MOCKER(OsalMalloc)
-        .stubs()
-        .will(invoke(MallocTestC));
+    MOCKER(OsalMalloc).stubs().will(invoke(MallocTestC));
     int32_t successCnt = 0;
     g_mallocCCnt = successCnt++;
     ret = ProfThreadPoolInit(1000, 5, 20);
@@ -164,7 +143,7 @@ typedef struct ICollectionJob {
     int32_t channelId;
     int32_t devId;
     int32_t jobId;
-    const ProfileParam *params;
+    const ProfileParam* params;
     int32_t (*Init)(struct ICollectionJob*);
     int32_t (*Process)(struct ICollectionJob*);
     int32_t (*Uninit)(struct ICollectionJob*);
@@ -173,25 +152,25 @@ typedef struct {
     bool isStart;
     bool quit;
     uint32_t deviceId;
-    const ProfileParam *params;
+    const ProfileParam* params;
     ICollectionJob* collectionJobs[PROF_CHANNEL_MAX];
 } JobManagerAttribute;
 #define NANO_PMU_EVENT_MAX_NUM 10
 typedef struct {
-    uint32_t tag;                                  // 0-enable immediately, 1-enable delay
-    uint32_t eventNum;                             // PMU count
-    uint16_t event[NANO_PMU_EVENT_MAX_NUM];        // PMU value
+    uint32_t tag;                           // 0-enable immediately, 1-enable delay
+    uint32_t eventNum;                      // PMU count
+    uint16_t event[NANO_PMU_EVENT_MAX_NUM]; // PMU value
 } TagNanoStarsProfileConfig;
 typedef struct {
     ICollectionJob baseJob;
 } NanoStarsJobAttribute;
 
 ICollectionJob* FactoryCreateJob(int32_t channelId);
-int32_t JobManagerStart(JobManagerAttribute *attr);
-int32_t JobManagerStop(JobManagerAttribute *attr);
-int32_t NanoJobInit(ICollectionJob *attr);
-int32_t NanoJobProcess(ICollectionJob *attr);
-int32_t NanoJobUninit(ICollectionJob *attr);
+int32_t JobManagerStart(JobManagerAttribute* attr);
+int32_t JobManagerStop(JobManagerAttribute* attr);
+int32_t NanoJobInit(ICollectionJob* attr);
+int32_t NanoJobProcess(ICollectionJob* attr);
+int32_t NanoJobUninit(ICollectionJob* attr);
 }
 
 TEST_F(BasicCStest, FactoryCreateJobError)
@@ -219,10 +198,11 @@ TEST_F(BasicCStest, SliceBase)
 TEST_F(BasicCStest, CheckDataTypeBase)
 {
     GlobalMockObject::verify();
-    ProfileParam ut_profileParam = { 0 };
+    ProfileParam ut_profileParam = {0};
     uint32_t errorType = 100;
     const int32_t DEFSIZE = 4096;
-    char data[DEFSIZE] = "{\"aic_metrics\":\"PipeStallCycle\",\"output\":\"./output_dir\",\"switch\":\"on\",\"task_trace\":\"off\"}";
+    char data[DEFSIZE] =
+        "{\"aic_metrics\":\"PipeStallCycle\",\"output\":\"./output_dir\",\"switch\":\"on\",\"task_trace\":\"off\"}";
     EXPECT_EQ(GenProfileParam(MSPROF_CTRL_INIT_ACL_JSON, data, sizeof(data), &ut_profileParam), PROFILING_SUCCESS);
     EXPECT_EQ(GenProfileParam(MSPROF_CTRL_INIT_GE_OPTIONS, data, sizeof(data), &ut_profileParam), PROFILING_SUCCESS);
     EXPECT_EQ(GenProfileParam(MSPROF_CTRL_INIT_HELPER, data, sizeof(data), &ut_profileParam), PROFILING_SUCCESS);
@@ -233,14 +213,13 @@ TEST_F(BasicCStest, CheckDataTypeBase)
 TEST_F(BasicCStest, StorageLimitBase)
 {
     GlobalMockObject::verify();
-    ProfileParam ut_profileParam = { 0 };
+    ProfileParam ut_profileParam = {0};
     uint32_t errorType = 100;
     const int32_t DEFSIZE = 4096;
-    char data[DEFSIZE] = "{\"aic_metrics\":\"PipeUtilization\",\"output\":\"./output_dir\",\"switch\":\"on\",\"task_trace\":\"on\",\"storage_limit\":\"200MB\"}";
+    char data[DEFSIZE] = "{\"aic_metrics\":\"PipeUtilization\",\"output\":\"./"
+                         "output_dir\",\"switch\":\"on\",\"task_trace\":\"on\",\"storage_limit\":\"200MB\"}";
     EXPECT_EQ(GenProfileParam(MSPROF_CTRL_INIT_ACL_JSON, data, sizeof(data), &ut_profileParam), PROFILING_FAILED);
-    MOCKER(IsSupportSwitch)
-        .stubs()
-        .will(returnValue(true));
+    MOCKER(IsSupportSwitch).stubs().will(returnValue(true));
     EXPECT_EQ(GenProfileParam(MSPROF_CTRL_INIT_ACL_JSON, data, sizeof(data), &ut_profileParam), PROFILING_SUCCESS);
 }
 
@@ -274,9 +253,9 @@ TEST_F(BasicCStest, HalGetDeviceFreqBase)
     EXPECT_EQ(1, HalGetDeviceFreq(0));
 }
 
-ProfFileChunk * CreateChunk(uint8_t deviceId, uint32_t chunkSize, FileChunkType type)
+ProfFileChunk* CreateChunk(uint8_t deviceId, uint32_t chunkSize, FileChunkType type)
 {
-    ProfFileChunk *chunk = (ProfFileChunk *)OsalMalloc(sizeof(ProfFileChunk));
+    ProfFileChunk* chunk = (ProfFileChunk*)OsalMalloc(sizeof(ProfFileChunk));
     chunk->deviceId = deviceId;
     chunk->chunkSize = chunkSize;
     chunk->chunkType = type;
@@ -291,47 +270,42 @@ ProfFileChunk * CreateChunk(uint8_t deviceId, uint32_t chunkSize, FileChunkType 
 TEST_F(BasicCStest, FlashSendBufferTest)
 {
     const char* dir = "./";
-    ProfFileChunk *chunk = CreateChunk(0, 1, PROF_DEVICE_DATA);
+    ProfFileChunk* chunk = CreateChunk(0, 1, PROF_DEVICE_DATA);
     EXPECT_EQ(FlashSendBuffer(chunk, dir), PROFILING_SUCCESS);
 
-    ProfFileChunk *chunk2 = CreateChunk(64, 1, PROF_HOST_DATA);
+    ProfFileChunk* chunk2 = CreateChunk(64, 1, PROF_HOST_DATA);
     EXPECT_EQ(FlashSendBuffer(chunk2, dir), PROFILING_SUCCESS);
 
-    ProfFileChunk *chunk3 = CreateChunk(64, 1, PROF_CTRL_DATA);
+    ProfFileChunk* chunk3 = CreateChunk(64, 1, PROF_CTRL_DATA);
     EXPECT_EQ(FlashSendBuffer(chunk3, dir), PROFILING_SUCCESS);
 }
 
 TEST_F(BasicCStest, GetSelfPathTest)
 {
-    MOCKER(readlink)
-        .stubs()
-        .will(returnValue(-1))
-        .then(returnValue(4097));
-    MOCKER(strcpy_s)
-        .stubs()
-        .will(returnValue(0));
+    MOCKER(readlink).stubs().will(returnValue(-1)).then(returnValue(4097));
+    MOCKER(strcpy_s).stubs().will(returnValue(0));
     EXPECT_EQ(false, GetSelfPath("./"));
 }
 
 TEST_F(BasicCStest, TestJsonMakeString)
 {
-    JsonObj *emptyObj = JsonInit();
-    char *emptyStr = JsonToString(emptyObj);
+    JsonObj* emptyObj = JsonInit();
+    char* emptyStr = JsonToString(emptyObj);
     EXPECT_EQ(0, strcmp("null", emptyStr));
     JsonFree(emptyObj);
     free(emptyStr);
 
-    JsonObj *subObj = JsonInit();
+    JsonObj* subObj = JsonInit();
     subObj->SetValueByKey(subObj, "1", {"1", CJSON_STRING})
         ->SetValueByKey(subObj, "2", {"2", CJSON_STRING})
         ->SetValueByKey(subObj, "3", {"3", CJSON_STRING});
 
-    JsonObj *arr = JsonInit();
+    JsonObj* arr = JsonInit();
     arr->AddArrayItem(arr, {{.intValue = 1}, .type = CJSON_INT})
         ->AddArrayItem(arr, {{.intValue = 2}, .type = CJSON_INT})
         ->AddArrayItem(arr, {{.intValue = 3}, .type = CJSON_INT});
 
-    JsonObj *obj = JsonInit();
+    JsonObj* obj = JsonInit();
     obj->SetValueByKey(obj, "s", {"abc", CJSON_STRING})
         ->SetValueByKey(obj, "t", {{.boolValue = true}, .type = CJSON_BOOL})
         ->SetValueByKey(obj, "f", {{.boolValue = false}, .type = CJSON_BOOL})
@@ -340,12 +314,12 @@ TEST_F(BasicCStest, TestJsonMakeString)
         ->SetValueByKey(obj, "a", *arr)
         ->SetValueByKey(obj, "o", *subObj);
 
-    JsonObj *objPtr = obj;
+    JsonObj* objPtr = obj;
     objPtr->TravelByKey(&objPtr, "o")->SetValueByKey(objPtr, "1", {{.intValue = 111}, .type = CJSON_INT});
     EXPECT_EQ(CJSON_OBJ, objPtr->type);
 
-    char *json3 = JsonToString(obj);
-    char *expectJson = "{\"a\":[1,2,3],\"d\":1.5,\"f\":false,\"i\":123,\"o\":{\"1\":111,\"2\":\"2\",\"3\":\"3\"},\"s\":"
+    char* json3 = JsonToString(obj);
+    char* expectJson = "{\"a\":[1,2,3],\"d\":1.5,\"f\":false,\"i\":123,\"o\":{\"1\":111,\"2\":\"2\",\"3\":\"3\"},\"s\":"
                        "\"abc\",\"t\":true}";
     EXPECT_EQ(0, strcmp(expectJson, json3));
 
@@ -354,9 +328,9 @@ TEST_F(BasicCStest, TestJsonMakeString)
     EXPECT_EQ(false, obj->Contains(obj, "not_exist"));
 
     // test GetValueByKey
-    void *notExist = obj->GetValueByKey(obj, "not_exist");
+    void* notExist = obj->GetValueByKey(obj, "not_exist");
     EXPECT_EQ(NULL, notExist);
-    const char *gotStr = obj->GetValueByKey(obj, "s")->stringValue;
+    const char* gotStr = obj->GetValueByKey(obj, "s")->stringValue;
     EXPECT_EQ(0, strcmp("abc", gotStr));
     int64_t gotInt = obj->GetValueByKey(obj, "i")->intValue;
     EXPECT_EQ(123, gotInt);

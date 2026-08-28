@@ -19,27 +19,17 @@
 #include "hal/hal_dsmi.h"
 #include "platform_interface.h"
 
-class AclJsonNanoUtest: public testing::Test {
+class AclJsonNanoUtest : public testing::Test {
 protected:
-    virtual void SetUp()
-    {
-    }
-    virtual void TearDown()
-    {
-        GlobalMockObject::verify();
-    }
+    virtual void SetUp() {}
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
-int32_t CallbackStub(uint32_t, void *, uint32_t) {return 0;};
-int32_t CallbackHandle(uint32_t dataType, void *data, uint32_t dataLen)
-{
-    return 0;
-}
+int32_t CallbackStub(uint32_t, void*, uint32_t) { return 0; };
+int32_t CallbackHandle(uint32_t dataType, void* data, uint32_t dataLen) { return 0; }
 TEST_F(AclJsonNanoUtest, AclJsonDefault)
 {
-    MOCKER(HalGetChipVersion)
-        .stubs()
-        .will(returnValue(uint32_t(CHIP_NANO_V1)));
+    MOCKER(HalGetChipVersion).stubs().will(returnValue(uint32_t(CHIP_NANO_V1)));
     uint32_t dataType = MSPROF_CTRL_INIT_ACL_JSON;
     char data[] = "{\"aic_metrics\":\"PipeUtilization\",\"output\":\"./output_dir\",\"switch\":\"on\"}";
     EXPECT_EQ(MsprofInit(dataType, data, sizeof(data)), PROFILING_SUCCESS);
@@ -89,5 +79,5 @@ TEST_F(AclJsonNanoUtest, AclJsonDefault)
     EXPECT_EQ(MsprofReportCompactInfo(agingFlag, &compactData, 20), PROFILING_SUCCESS);
 
     EXPECT_EQ(MsprofNotifySetDevice(dataType, deviceId, false), PROFILING_SUCCESS);
-    EXPECT_EQ(MsprofFinalize(), PROFILING_SUCCESS);   
+    EXPECT_EQ(MsprofFinalize(), PROFILING_SUCCESS);
 }

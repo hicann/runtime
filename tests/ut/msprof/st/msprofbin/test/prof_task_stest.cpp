@@ -26,42 +26,41 @@ using namespace analysis::dvvp::common::utils;
 
 class PROF_TASK_UTEST : public testing::Test {
 protected:
-    virtual void SetUp() {
-      GlobalMockObject::verify();
+    virtual void SetUp()
+    {
+        GlobalMockObject::verify();
         result_dir = (".");
         start_time = ("1539226807454372");
         end_time = ("1539226807454372");
     }
     virtual void TearDown() {}
+
 public:
     std::string result_dir;
     std::string start_time;
     std::string end_time;
 };
 
-TEST_F(PROF_TASK_UTEST, RpcTaskTest) {
+TEST_F(PROF_TASK_UTEST, RpcTaskTest)
+{
     GlobalMockObject::verify();
 
-    std::shared_ptr<analysis::dvvp::message::ProfileParams> params(
-    new analysis::dvvp::message::ProfileParams);
+    std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams);
     SHARED_PTR_ALIA<ProfRpcTask> task(new ProfRpcTask(0, params));
-    EXPECT_EQ(task->Init(), PROFILING_FAILED);;
+    EXPECT_EQ(task->Init(), PROFILING_FAILED);
+    ;
     EXPECT_EQ(task->Stop(), PROFILING_SUCCESS);
     task->PostSyncDataCtrl();
     EXPECT_EQ(task->UnInit(), PROFILING_SUCCESS);
 }
 
-TEST_F(PROF_TASK_UTEST, GetRankId) {
+TEST_F(PROF_TASK_UTEST, GetRankId)
+{
     GlobalMockObject::verify();
     InfoJson infoJson(start_time, end_time, 1);
     const std::string rankId = "100";
-    MOCKER_CPP(&Utils::IsAllDigit)
-        .stubs()
-        .will(returnValue(false))
-        .then(returnValue(true));
-    MOCKER_CPP(&Utils::HandleEnvString)
-        .stubs()
-        .will(returnValue(rankId));
+    MOCKER_CPP(&Utils::IsAllDigit).stubs().will(returnValue(false)).then(returnValue(true));
+    MOCKER_CPP(&Utils::HandleEnvString).stubs().will(returnValue(rankId));
     EXPECT_EQ(-1, infoJson.GetRankId());
     EXPECT_EQ(100, infoJson.GetRankId());
 }

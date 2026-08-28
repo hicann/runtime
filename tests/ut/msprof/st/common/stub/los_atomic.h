@@ -15,15 +15,15 @@
 
 #if __cplusplus
 extern "C" {
-#endif  // __cpluscplus
+#endif // __cpluscplus
 
-void LOS_AtomicSet(volatile int32_t *ptr, int32_t val);
-int32_t LOS_AtomicRead(volatile int32_t *ptr);
-bool LOS_AtomicCmpXchg32bits(volatile int32_t *ptr, int32_t desired, int32_t expected);
-int32_t LOS_AtomicAdd(volatile int32_t *ptr,int32_t val);
+void LOS_AtomicSet(volatile int32_t* ptr, int32_t val);
+int32_t LOS_AtomicRead(volatile int32_t* ptr);
+bool LOS_AtomicCmpXchg32bits(volatile int32_t* ptr, int32_t desired, int32_t expected);
+int32_t LOS_AtomicAdd(volatile int32_t* ptr, int32_t val);
 
 #if __cplusplus
 }
-#endif  // __cpluscplus
+#endif // __cpluscplus
 
 #endif

@@ -24,46 +24,49 @@ namespace Cann {
 namespace Dvvp {
 namespace Test {
 using SwitchProcessCb = std::function<int32_t(uint64_t, uint32_t)>;
-using ProfApiBufPopBind = std::function<bool(uint32_t &, MsprofApi&)>;
-using ProfCompactBufPopBind = std::function<bool(uint32_t &, MsprofCompactInfo&)>;
-using ProfAdditionalBufPopBind = std::function<bool(uint32_t &, MsprofAdditionalInfo&)>;
+using ProfApiBufPopBind = std::function<bool(uint32_t&, MsprofApi&)>;
+using ProfCompactBufPopBind = std::function<bool(uint32_t&, MsprofCompactInfo&)>;
+using ProfAdditionalBufPopBind = std::function<bool(uint32_t&, MsprofAdditionalInfo&)>;
 const std::unordered_map<std::string, MsprofReporterModuleId> REPORT_MODULE_MAP = {
-    {"Acl",      MSPROF_MODULE_ACL},
-    {"Aicpu",    MSPROF_MODULE_DATA_PREPROCESS},
-    {"Ge",       MSPROF_MODULE_FRAMEWORK},
-    {"Hccl",     MSPROF_MODULE_HCCL},
-    {"MsprofTx", MSPROF_MODULE_MSPROF},
-    {"Runtime",  MSPROF_MODULE_RUNTIME},
+    {"Acl", MSPROF_MODULE_ACL},   {"Aicpu", MSPROF_MODULE_DATA_PREPROCESS}, {"Ge", MSPROF_MODULE_FRAMEWORK},
+    {"Hccl", MSPROF_MODULE_HCCL}, {"MsprofTx", MSPROF_MODULE_MSPROF},       {"Runtime", MSPROF_MODULE_RUNTIME},
 };
 
 class DataReportManager {
 public:
     ~DataReportManager() {}
-    static DataReportManager &GetInstance();
+    static DataReportManager& GetInstance();
     int32_t SimulateReport();
-    int32_t ProcessAclSwitch(void *const data, const uint32_t len);
-    int32_t ProcessGeSwitch(void *const data, const uint32_t len);
-    int32_t ProcessAicpuSwitch(void *const data, const uint32_t len);
-    int32_t ProcessHcclSwitch(void *const data, const uint32_t len);
-    int32_t ProcessRuntimeSwitch(void *const data, const uint32_t len);
+    int32_t ProcessAclSwitch(void* const data, const uint32_t len);
+    int32_t ProcessGeSwitch(void* const data, const uint32_t len);
+    int32_t ProcessAicpuSwitch(void* const data, const uint32_t len);
+    int32_t ProcessHcclSwitch(void* const data, const uint32_t len);
+    int32_t ProcessRuntimeSwitch(void* const data, const uint32_t len);
     void SetPcSampling(bool pcSample);
     bool GetPcSampling();
     void SetMsprofTx(bool msprofTx);
     bool GetMsprofTx();
-    int32_t ProcessBitSwitch(void *const data, const uint32_t len);
+    int32_t ProcessBitSwitch(void* const data, const uint32_t len);
     uint64_t GetBitSwitch();
     void SetMsprofConfig(StProfConfigType type);
     StProfConfigType GetMsprofConfig();
-    MsprofConfig *GetMsprofConfigData();
+    MsprofConfig* GetMsprofConfigData();
     void SetSleepTime(int32_t sleepTime);
     int32_t GetSleepTime(void);
 
 private:
     int32_t ModuleReport();
     int32_t ReportData(std::shared_ptr<DataReport> report_);
-    int32_t ProcessSwitch(SwitchProcessCb callback, void *const data, const uint32_t len);
+    int32_t ProcessSwitch(SwitchProcessCb callback, void* const data, const uint32_t len);
     void ProcessMsprofTxSwitch();
-    DataReportManager(): rt_(true), pcSampling_(false), msprofTx_(false), msprofConfig_(StProfConfigType::PROF_CONFIG_DYNAMIC), cfg_({}), bitSwitch_(0) {}
+    DataReportManager()
+        : rt_(true),
+          pcSampling_(false),
+          msprofTx_(false),
+          msprofConfig_(StProfConfigType::PROF_CONFIG_DYNAMIC),
+          cfg_({}),
+          bitSwitch_(0)
+    {}
 
     bool rt_;
     bool pcSampling_;
@@ -78,11 +81,11 @@ private:
 };
 
 bool ReportBufEmpty();
-}
-}
-}
+} // namespace Test
+} // namespace Dvvp
+} // namespace Cann
 
-inline Cann::Dvvp::Test::DataReportManager &DataReportMgr()
+inline Cann::Dvvp::Test::DataReportManager& DataReportMgr()
 {
     return Cann::Dvvp::Test::DataReportManager::GetInstance();
 }

@@ -27,9 +27,9 @@ const std::string TS_TRACK_DATA = "ts_track.data";
 const std::string COMMA = ",";
 const std::string CROSSBAR = "--";
 const std::string EQAL = "=";
-const std::string SLASH= "\"";
-const std::string COLON= "\":\"";
-const std::string COLONBOUND= ":";
+const std::string SLASH = "\"";
+const std::string COLON = "\":\"";
+const std::string COLONBOUND = ":";
 const std::string APPLICATION = "application";
 const std::string OUTPUT = "output";
 const std::string SWITCH = "switch";
@@ -82,14 +82,14 @@ const std::unordered_map<std::string, std::string> INTERNAL_SWITCH_MAP = {
     {"iteration-id", "exportIterationId"},
     {"instr-profiling-freq", "instrProfilingFreq"},
     {"model-id", "exportModelId"},
-    {"storage-limit","storageLimit"}, // mapping
-    {"aic-mode","ai_core_profiling_mode"},
-    {"aic-metrics","ai_core_metrics"},
-    {"aiv-mode","aiv_profiling_mode"},
-    {"aiv-metrics","aiv_metrics"},
-    {"llc-profiling","llc_profiling"},
-    {"delay","delayTime"},
-    {"duration","durationTime"},
+    {"storage-limit", "storageLimit"}, // mapping
+    {"aic-mode", "ai_core_profiling_mode"},
+    {"aic-metrics", "ai_core_metrics"},
+    {"aiv-mode", "aiv_profiling_mode"},
+    {"aiv-metrics", "aiv_metrics"},
+    {"llc-profiling", "llc_profiling"},
+    {"delay", "delayTime"},
+    {"duration", "durationTime"},
 };
 
 const std::unordered_map<std::string, std::vector<int64_t>> BOUND_MAP = {
@@ -127,14 +127,10 @@ const std::map<std::string, std::string> DEFAULT_MAP = {
 };
 
 const std::map<StPlatformType, std::string> DEFAULT_PLATFORM_MAP = {
-    {StPlatformType::MINI_TYPE, "ts_timeline"},
-    {StPlatformType::CLOUD_TYPE, "hwts_log"},
-    {StPlatformType::MDC_TYPE, "hwts_log"},
-    {StPlatformType::DC_TYPE, "hwts_log"},
-    {StPlatformType::CHIP_V4_1_0, "stars_acsq_task"},
-    {StPlatformType::MINI_V3_TYPE, "stars_acsq_task"},
-    {StPlatformType::CHIP_MDC_LITE, "hwts_log"},
-    {StPlatformType::CHIP_CLOUD_V3, "stars_acsq_task"},
+    {StPlatformType::MINI_TYPE, "ts_timeline"},       {StPlatformType::CLOUD_TYPE, "hwts_log"},
+    {StPlatformType::MDC_TYPE, "hwts_log"},           {StPlatformType::DC_TYPE, "hwts_log"},
+    {StPlatformType::CHIP_V4_1_0, "stars_acsq_task"}, {StPlatformType::MINI_V3_TYPE, "stars_acsq_task"},
+    {StPlatformType::CHIP_MDC_LITE, "hwts_log"},      {StPlatformType::CHIP_CLOUD_V3, "stars_acsq_task"},
 };
 
 class DataCheck {
@@ -149,25 +145,26 @@ public:
     int32_t PreCheckStorageLimit(std::string sw, std::string val, std::string env);
     int32_t PreCheckIfNumberSwitch(std::string sw, std::string val);
 
-    int32_t ReadNextDir(std::string &path, std::string pattern);
-    int32_t ReadDataDir(std::string &dataPath, std::string dirType, std::string inType);
+    int32_t ReadNextDir(std::string& path, std::string pattern);
+    int32_t ReadDataDir(std::string& dataPath, std::string dirType, std::string inType);
     int32_t CheckIfFileExist(std::string dataPath, std::string pattern, bool mustExist = true);
 
     int32_t flushDataChecker(std::string path, std::string mode);
     int32_t DeviceDataCheck(std::string deviceDataPath);
-    int32_t CheckData(std::vector<std::string> &dataList, std::vector<std::string> &blackDataList,
-        std::string dataPath, std::string dataType);
-    int32_t HandleDataCheck(std::string &dataPath);
-    int32_t HandleDataCheck(std::string &dataPath, std::string dataType);
+    int32_t CheckData(
+        std::vector<std::string>& dataList, std::vector<std::string>& blackDataList, std::string dataPath,
+        std::string dataType);
+    int32_t HandleDataCheck(std::string& dataPath);
+    int32_t HandleDataCheck(std::string& dataPath, std::string dataType);
     int32_t bitSwitchChecker();
     uint32_t GetPlatformType();
 
 private:
     std::map<std::string, std::string> PreCheckSwitch_;
-    std::string Ltrim(const std::string &str, const std::string &tripString);
+    std::string Ltrim(const std::string& str, const std::string& tripString);
 };
 
-}
-}
-}
+} // namespace Test
+} // namespace Dvvp
+} // namespace Cann
 #endif

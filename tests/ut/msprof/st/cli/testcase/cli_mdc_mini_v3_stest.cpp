@@ -28,7 +28,7 @@ static const char MDCMINIV3_RM_RF[] = "rm -rf ./cliMdcMiniV3stest_workspace";
 static const char MDCMINIV3_MKDIR[] = "mkdir ./cliMdcMiniV3stest_workspace";
 static const char MDCMINIV3_OUTPUT_DIR[] = "--output=./cliMdcMiniV3stest_workspace/output";
 
-class CliMdcMiniV3Stest: public testing::Test {
+class CliMdcMiniV3Stest : public testing::Test {
 protected:
     virtual void SetUp()
     {
@@ -45,7 +45,7 @@ protected:
     virtual void TearDown()
     {
         GlobalMockObject::verify();
-        DevprofDrvAicpu::instance()->isRegister_ = false;   // 重置aicpu注册状态，使单进程内能多次注册
+        DevprofDrvAicpu::instance()->isRegister_ = false; // 重置aicpu注册状态，使单进程内能多次注册
         EXPECT_EQ(2, SimulatorMgr().DelDeviceSimulator(2, StPlatformType::CHIP_MDC_MINI_V3));
         system(MDCMINIV3_RM_RF);
         system("rm -rf ./cli");
@@ -64,45 +64,61 @@ protected:
 TEST_F(CliMdcMiniV3Stest, CliPipelineExecuteUtilizationTask)
 {
     // mdc_mini_v3: Task-based AI core/vector metrics: PipelineExecuteUtilization
-    const char* argv[] = {MDCMINIV3_OUTPUT_DIR, "--aic-metrics=PipelineExecuteUtilization",};
+    const char* argv[] = {
+        MDCMINIV3_OUTPUT_DIR,
+        "--aic-metrics=PipelineExecuteUtilization",
+    };
     std::vector<std::string> dataList = {"ffts_profile.data"};
     MsprofMgr().SetDeviceCheckList(dataList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliMdcMiniV3Stest, CliPipelineExecuteUtilizationSample)
 {
     // mdc_mini_v3: Sample-based AI core/vector metrics: PipelineExecuteUtilization
-    const char* argv[] = {MDCMINIV3_OUTPUT_DIR, "--aic-metrics=PipelineExecuteUtilization", "--aic-mode=sample-based",};
+    const char* argv[] = {
+        MDCMINIV3_OUTPUT_DIR,
+        "--aic-metrics=PipelineExecuteUtilization",
+        "--aic-mode=sample-based",
+    };
     std::vector<std::string> dataList = {"ffts_profile.data"};
     MsprofMgr().SetDeviceCheckList(dataList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliMdcMiniV3Stest, CliSysIoProfiling)
 {
     // mdc_mini_v3: Collect NIC and ROCE data
     const char* argv[] = {MDCMINIV3_OUTPUT_DIR, "--sys-io-profiling=on", "--sys-devices=0"};
-    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartBySysMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartBySysMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliMdcMiniV3Stest, CliHostSys)
 {
     // mdc_mini_v3: Collect data in host side
-    const char* argv[] = {MDCMINIV3_OUTPUT_DIR, "--host-sys=cpu,mem,disk,network",};
-    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartBySysMode(sizeof(argv) / sizeof(char *), argv));
+    const char* argv[] = {
+        MDCMINIV3_OUTPUT_DIR,
+        "--host-sys=cpu,mem,disk,network",
+    };
+    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartBySysMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliMdcMiniV3Stest, CliDataAicpuReportData)
 {
     // mdc_mini_v3: Collect DATAPREPROCESS report data
-    const char* argv[] = {MDCMINIV3_OUTPUT_DIR, "--aicpu=on",};
-    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    const char* argv[] = {
+        MDCMINIV3_OUTPUT_DIR,
+        "--aicpu=on",
+    };
+    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliMdcMiniV3Stest, CliModelExecution)
 {
     // mdc_mini_v3: check --model-execution option is not available
-    const char* argv[] = {MDCMINIV3_OUTPUT_DIR, "--model-execution=on",};
-    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    const char* argv[] = {
+        MDCMINIV3_OUTPUT_DIR,
+        "--model-execution=on",
+    };
+    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }

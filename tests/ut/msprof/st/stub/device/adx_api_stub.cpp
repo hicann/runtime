@@ -22,6 +22,6 @@ HDC_CLIENT AdxHdcClientCreate(drvHdcServiceType type)
     return (HDC_CLIENT)0x12345678;
 }
 
-}
-}
-}
+} // namespace Adx
+} // namespace Dvvp
+} // namespace Analysis

@@ -17,4 +17,3 @@
 extern "C" int snprintf_s(char* strDest, size_t destMax, size_t count, const char* format, ...);
 std::string GetAdxWorkPath();
 #endif
-

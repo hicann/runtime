@@ -28,7 +28,7 @@ static const char CLOUD_RM_RF[] = "rm -rf ./cliCloudstest_workspace";
 static const char CLOUD_MKDIR[] = "mkdir ./cliCloudstest_workspace";
 static const char CLOUD_OUTPUT_DIR[] = "--output=./cliCloudstest_workspace/output";
 
-class CliCloudStest: public testing::Test {
+class CliCloudStest : public testing::Test {
 protected:
     virtual void SetUp()
     {
@@ -45,7 +45,7 @@ protected:
     virtual void TearDown()
     {
         GlobalMockObject::verify();
-        DevprofDrvAicpu::instance()->isRegister_ = false;   // 重置aicpu注册状态，使单进程内能多次注册
+        DevprofDrvAicpu::instance()->isRegister_ = false; // 重置aicpu注册状态，使单进程内能多次注册
         EXPECT_EQ(2, SimulatorMgr().DelDeviceSimulator(2, StPlatformType::CLOUD_TYPE));
         system(CLOUD_RM_RF);
         system("rm -rf ./cli");
@@ -64,115 +64,158 @@ protected:
 TEST_F(CliCloudStest, CliTaskTime)
 {
     // cloud: TaskTime
-    const char* argv[] = {CLOUD_OUTPUT_DIR,};
-    std::vector<std::string> dataList = {"aicore.data", "hwts.data","ts_track.data"};
+    const char* argv[] = {
+        CLOUD_OUTPUT_DIR,
+    };
+    std::vector<std::string> dataList = {"aicore.data", "hwts.data", "ts_track.data"};
     MsprofMgr().SetDeviceCheckList(dataList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliCloudStest, CliSampleTime)
 {
     // cloud: SampleTime
-    const char* argv[] = {CLOUD_OUTPUT_DIR, "--aic-metrics=PipeUtilization", "--aic-mode=sample-based",};
-    std::vector<std::string> dataList = {"aicore.data", "hwts.data","ts_track.data"};
+    const char* argv[] = {
+        CLOUD_OUTPUT_DIR,
+        "--aic-metrics=PipeUtilization",
+        "--aic-mode=sample-based",
+    };
+    std::vector<std::string> dataList = {"aicore.data", "hwts.data", "ts_track.data"};
     MsprofMgr().SetDeviceCheckList(dataList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliCloudStest, CliL2CacheTask)
 {
     // cloud: Task-based AI core/vector metrics: L2Cache
-    const char* argv[] = {CLOUD_OUTPUT_DIR, "--aic-metrics=L2Cache",};
+    const char* argv[] = {
+        CLOUD_OUTPUT_DIR,
+        "--aic-metrics=L2Cache",
+    };
     std::vector<std::string> dataList = {"l2_cache.data"};
     MsprofMgr().SetDeviceCheckList(dataList);
-    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliCloudStest, CliDelayDurationUtilTaskOn)
 {
     // cloud: delay 1s before start and duration 1s before stop
-    const char* argv[] = {CLOUD_OUTPUT_DIR, "--delay=1", "--duration=1",};
-    std::vector<std::string> dataList = {"aicore.data", "hwts.data","ts_track.data"};
+    const char* argv[] = {
+        CLOUD_OUTPUT_DIR,
+        "--delay=1",
+        "--duration=1",
+    };
+    std::vector<std::string> dataList = {"aicore.data", "hwts.data", "ts_track.data"};
     MsprofMgr().SetDeviceCheckList(dataList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliCloudStest, CliDelayUtilTaskOn)
 {
     // cloud: delay 1s start and wait task stop
-    const char* argv[] = {CLOUD_OUTPUT_DIR, "--delay=1",};
-    std::vector<std::string> dataList = {"aicore.data", "hwts.data","ts_track.data"};
+    const char* argv[] = {
+        CLOUD_OUTPUT_DIR,
+        "--delay=1",
+    };
+    std::vector<std::string> dataList = {"aicore.data", "hwts.data", "ts_track.data"};
     MsprofMgr().SetDeviceCheckList(dataList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliCloudStest, CliDelayUtilTaskOff)
 {
     // cloud: delay 111s start and task is already stop
-    const char* argv[] = {CLOUD_OUTPUT_DIR, "--delay=111",}; // use a particular num 111 to simulate that task do not need to wait: cli_stub.cpp: delayTime != 111
-    std::vector<std::string> dataList = {"aicore.data", "hwts.data","ts_track.data"};
+    const char* argv[] = {
+        CLOUD_OUTPUT_DIR,
+        "--delay=111",
+    }; // use a particular num 111 to simulate that task do not need to wait: cli_stub.cpp: delayTime != 111
+    std::vector<std::string> dataList = {"aicore.data", "hwts.data", "ts_track.data"};
     MsprofMgr().SetDeviceCheckList(dataList);
-    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliCloudStest, CliDurationUtilTaskOff)
 {
     // cloud: wait task stop and notify in duration waiting
-    const char* argv[] = {CLOUD_OUTPUT_DIR, "--duration=1",};
-    std::vector<std::string> dataList = {"aicore.data", "hwts.data","ts_track.data"};
+    const char* argv[] = {
+        CLOUD_OUTPUT_DIR,
+        "--duration=1",
+    };
+    std::vector<std::string> dataList = {"aicore.data", "hwts.data", "ts_track.data"};
     MsprofMgr().SetDeviceCheckList(dataList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliCloudStest, CliDelayOutRange)
 {
     // cloud: delay out of range 1~4294967295s
-    const char* argv[] = {CLOUD_OUTPUT_DIR, "--delay=4294967296",};
-    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    const char* argv[] = {
+        CLOUD_OUTPUT_DIR,
+        "--delay=4294967296",
+    };
+    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliCloudStest, CliDelaylowRange)
 {
     // cloud: delay out of range 1~4294967295s
-    const char* argv[] = {CLOUD_OUTPUT_DIR, "--delay=0.1",};
-    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    const char* argv[] = {
+        CLOUD_OUTPUT_DIR,
+        "--delay=0.1",
+    };
+    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliCloudStest, CliDelayNegtive)
 {
     // cloud: delay out of range 1~4294967295s
-    const char* argv[] = {CLOUD_OUTPUT_DIR, "--delay=-1",};
-    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    const char* argv[] = {
+        CLOUD_OUTPUT_DIR,
+        "--delay=-1",
+    };
+    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliCloudStest, CliDurationOutRange)
 {
     // cloud: duration out of range 1~4294967295s
-    const char* argv[] = {CLOUD_OUTPUT_DIR, "--duration=4294967296",};
-    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    const char* argv[] = {
+        CLOUD_OUTPUT_DIR,
+        "--duration=4294967296",
+    };
+    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliCloudStest, CliDurationlowRange)
 {
     // cloud: duration out of range 1~4294967295s
-    const char* argv[] = {CLOUD_OUTPUT_DIR, "--duration=0.1",};
-    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    const char* argv[] = {
+        CLOUD_OUTPUT_DIR,
+        "--duration=0.1",
+    };
+    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliCloudStest, CliDurationNegtive)
 {
     // cloud: duration out of range 1~4294967295s
-    const char* argv[] = {CLOUD_OUTPUT_DIR, "--duration=-1",};
-    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    const char* argv[] = {
+        CLOUD_OUTPUT_DIR,
+        "--duration=-1",
+    };
+    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliCloudStest, CliTaskMemory)
 {
     // cloud: TaskMemory
-    const char* argv[] = {CLOUD_OUTPUT_DIR, "--task-memory=on",};
+    const char* argv[] = {
+        CLOUD_OUTPUT_DIR,
+        "--task-memory=on",
+    };
     std::vector<uint64_t> bitList = {PROF_TASK_MEMORY};
     MsprofMgr().SetBitSwitchCheckList(bitList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliCloudStest, CliTx)
@@ -182,7 +225,7 @@ TEST_F(CliCloudStest, CliTx)
     std::vector<std::string> hostDataList = {"aging.additional.msproftx"};
     MsprofMgr().SetHostCheckList(hostDataList);
     MsprofMgr().SetMsprofTx(true);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
     MsprofMgr().SetMsprofTx(false);
 }
 
@@ -193,6 +236,5 @@ TEST_F(CliCloudStest, CliL2)
     std::vector<std::string> dataList = {"l2_cache.data"};
     std::vector<std::string> blackDataList = {"socpmu.data"};
     MsprofMgr().SetDeviceCheckList(dataList, blackDataList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char *), argv));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
-

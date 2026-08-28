@@ -13,6 +13,6 @@
 #include "ascend_hal.h"
 #include "runtime/base.h"
 
-extern "C" int halProfDataFlush(unsigned int deviceId, unsigned int channelId, unsigned int *bufSize);
+extern "C" int halProfDataFlush(unsigned int deviceId, unsigned int channelId, unsigned int* bufSize);
 
 #endif

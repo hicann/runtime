@@ -26,7 +26,7 @@ static void EnsureProfCannPluginInited()
     ProfAPI::ProfCannPlugin::instance()->ProfTxInit();
 }
 
-MSVP_PROF_API aclError aclprofMarkEx(const char *msg, size_t msgLen, aclrtStream stream)
+MSVP_PROF_API aclError aclprofMarkEx(const char* msg, size_t msgLen, aclrtStream stream)
 {
     EnsureProfCannPluginInited();
     (void)Msprof::MsprofTx::MsprofTxManager::instance()->Init();
@@ -40,7 +40,7 @@ MSVP_PROF_API void* aclprofCreateStamp()
     return Msprof::MsprofTx::MsprofTxManager::instance()->CreateStamp();
 }
 
-MSVP_PROF_API int32_t MsprofRegTypeInfo(uint16_t level, uint32_t typeId, const char *typeName)
+MSVP_PROF_API int32_t MsprofRegTypeInfo(uint16_t level, uint32_t typeId, const char* typeName)
 {
     if (typeName == nullptr) {
         return PROFILING_FAILED;
@@ -57,7 +57,7 @@ MSVP_PROF_API int32_t MsprofReportCompactInfo(uint32_t nonPersistantFlag, const 
     return ProfAPI::ProfCannPlugin::instance()->ProfReportCompactInfo(nonPersistantFlag, data, length);
 }
 
-MSVP_PROF_API int32_t MsprofReportApi(uint32_t nonPersistantFlag, const struct MsprofApi *api)
+MSVP_PROF_API int32_t MsprofReportApi(uint32_t nonPersistantFlag, const struct MsprofApi* api)
 {
     if (api == nullptr) {
         return PROFILING_FAILED;
@@ -66,7 +66,7 @@ MSVP_PROF_API int32_t MsprofReportApi(uint32_t nonPersistantFlag, const struct M
     return ProfAPI::ProfCannPlugin::instance()->ProfReportApi(nonPersistantFlag, api);
 }
 
-MSVP_PROF_API int32_t MsprofReportEvent(uint32_t nonPersistantFlag, const struct MsprofEvent *event)
+MSVP_PROF_API int32_t MsprofReportEvent(uint32_t nonPersistantFlag, const struct MsprofEvent* event)
 {
     if (event == nullptr) {
         return PROFILING_FAILED;
@@ -84,7 +84,7 @@ MSVP_PROF_API int32_t MsprofReportAdditionalInfo(uint32_t nonPersistantFlag, con
     return ProfAPI::ProfCannPlugin::instance()->ProfReportAdditionalInfo(nonPersistantFlag, data, length);
 }
 
-MSVP_PROF_API uint64_t MsprofGetHashId(const char *hashInfo, size_t length)
+MSVP_PROF_API uint64_t MsprofGetHashId(const char* hashInfo, size_t length)
 {
     if (hashInfo == nullptr || length == 0) {
         return 0;

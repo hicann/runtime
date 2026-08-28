@@ -9,11 +9,10 @@
  */
 #include "mdc_mini_v3_device_simulator.h"
 
-
 namespace Cann {
 namespace Dvvp {
 namespace Test {
-int32_t MdcMiniV3DeviceSimulator::ProfDrvGetChannels(ChannelList &channels)
+int32_t MdcMiniV3DeviceSimulator::ProfDrvGetChannels(ChannelList& channels)
 {
     int32_t channles_ids[] = {6, 7, 8, 10, 44, 47, 50, 52, 53, 54, 130, 131, 135, 137, 142};
     channels.channel_num = sizeof(channles_ids) / sizeof(int32_t);
@@ -23,26 +22,23 @@ int32_t MdcMiniV3DeviceSimulator::ProfDrvGetChannels(ChannelList &channels)
     return 0;
 }
 
-int32_t MdcMiniV3DeviceSimulator::GetDeviceInfo(int32_t moduleType, int32_t infoType, int64_t *value)
+int32_t MdcMiniV3DeviceSimulator::GetDeviceInfo(int32_t moduleType, int32_t infoType, int64_t* value)
 {
-    if (moduleType == MODULE_TYPE_SYSTEM &&
-        infoType == INFO_TYPE_VERSION) {
+    if (moduleType == MODULE_TYPE_SYSTEM && infoType == INFO_TYPE_VERSION) {
         *value = (int64_t)platformType_ << 8;
     }
 
-    if (moduleType == MODULE_TYPE_AICORE &&
-        infoType == INFO_TYPE_CORE_NUM) {
+    if (moduleType == MODULE_TYPE_AICORE && infoType == INFO_TYPE_CORE_NUM) {
         *value = 1;
     }
 
-    if (moduleType == MODULE_TYPE_VECTOR_CORE &&
-        infoType == INFO_TYPE_CORE_NUM) {
+    if (moduleType == MODULE_TYPE_VECTOR_CORE && infoType == INFO_TYPE_CORE_NUM) {
         *value = 1;
     }
 
     return 0;
 }
 
-}
-}
-}
+} // namespace Test
+} // namespace Dvvp
+} // namespace Cann

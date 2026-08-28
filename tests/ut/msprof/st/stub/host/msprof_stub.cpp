@@ -54,43 +54,26 @@ void ClearSingleton()
     return;
 }
 
-void MockPerfDir(std::string &dir)
+void MockPerfDir(std::string& dir)
 {
 #ifndef MSPROF_C
-        std::string cmd = "mkdir " + dir;
-        system(cmd.c_str());
-        MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPerfDataDir)
-            .stubs()
-            .will(returnValue(dir));
+    std::string cmd = "mkdir " + dir;
+    system(cmd.c_str());
+    MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPerfDataDir).stubs().will(returnValue(dir));
 #endif
     return;
 }
 
 #ifdef MSPROF_C
 // to be implement by c
-int LltMain(int argc, const char **argv, const char **envp)
-{
-    return 0;
-}
+int LltMain(int argc, const char** argv, const char** envp) { return 0; }
 
-int LltAcpMain(int argc, const char **argv, const char **envp)
-{
-    return 0;
-}
+int LltAcpMain(int argc, const char** argv, const char** envp) { return 0; }
 
-int32_t MsprofReportData(uint32_t moduleId, uint32_t type, VOID_PTR data, uint32_t len)
-{
-    return 0;
-}
+int32_t MsprofReportData(uint32_t moduleId, uint32_t type, VOID_PTR data, uint32_t len) { return 0; }
 
-void *aclprofCreateStamp()
-{
-    return NULL;
-}
+void* aclprofCreateStamp() { return NULL; }
 
-int32_t MsprofSetDeviceIdByGeModelIdx(const uint32_t geModelIdx, const uint32_t deviceId)
-{
-    return 0;
-}
+int32_t MsprofSetDeviceIdByGeModelIdx(const uint32_t geModelIdx, const uint32_t deviceId) { return 0; }
 
 #endif

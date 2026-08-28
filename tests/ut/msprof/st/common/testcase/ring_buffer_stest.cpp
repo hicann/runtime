@@ -16,15 +16,14 @@
 
 using namespace analysis::dvvp::common::queue;
 
-class COMMON_QUEUE_RING_BUFFER_STEST: public testing::Test {
+class COMMON_QUEUE_RING_BUFFER_STEST : public testing::Test {
 protected:
-    virtual void SetUp() {
-    }
-    virtual void TearDown() {
-    }
+    virtual void SetUp() {}
+    virtual void TearDown() {}
 };
 
-TEST_F(COMMON_QUEUE_RING_BUFFER_STEST, ReportBuffer_GetUsedSize) {
+TEST_F(COMMON_QUEUE_RING_BUFFER_STEST, ReportBuffer_GetUsedSize)
+{
     std::shared_ptr<ReportBuffer<int> > bq(new ReportBuffer<int>(-1));
 
     std::string name = "test";

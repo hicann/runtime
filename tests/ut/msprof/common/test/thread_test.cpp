@@ -17,32 +17,25 @@
 using namespace analysis::dvvp::common::thread;
 using namespace analysis::dvvp::common::error;
 
-class COMMON_THREAD_TEST: public testing::Test {
+class COMMON_THREAD_TEST : public testing::Test {
 protected:
-    virtual void SetUp() {
-    }
-    virtual void TearDown() {
-    }
+    virtual void SetUp() {}
+    virtual void TearDown() {}
 };
 
 class ThreadClass : public Thread {
 public:
-    virtual void Run(const error_message::ErrorManagerContext &errorContext) {
-    }
+    virtual void Run(const error_message::ErrorManagerContext& errorContext) {}
 };
 
-TEST_F(COMMON_THREAD_TEST, start_stop) {
+TEST_F(COMMON_THREAD_TEST, start_stop)
+{
     GlobalMockObject::verify();
 
     ThreadClass my_thread;
-    MOCKER(mmCreateTaskWithThreadAttr)
-        .stubs()
-        .will(returnValue(EN_ERROR))
-        .then(returnValue(EN_OK));
+    MOCKER(mmCreateTaskWithThreadAttr).stubs().will(returnValue(EN_ERROR)).then(returnValue(EN_OK));
 
-    MOCKER(mmJoinTask)
-        .stubs()
-        .will(returnValue(EN_OK));
+    MOCKER(mmJoinTask).stubs().will(returnValue(EN_OK));
 
     EXPECT_EQ(PROFILING_FAILED, my_thread.Start());
     EXPECT_EQ(PROFILING_SUCCESS, my_thread.Start());
@@ -50,19 +43,15 @@ TEST_F(COMMON_THREAD_TEST, start_stop) {
     EXPECT_EQ(PROFILING_SUCCESS, my_thread.Stop());
 }
 
-TEST_F(COMMON_THREAD_TEST, join) {
+TEST_F(COMMON_THREAD_TEST, join)
+{
     GlobalMockObject::verify();
 
     ThreadClass my_thread;
 
-    MOCKER(mmCreateTaskWithThreadAttr)
-        .stubs()
-        .will(returnValue(EN_OK));
+    MOCKER(mmCreateTaskWithThreadAttr).stubs().will(returnValue(EN_OK));
 
-    MOCKER(mmJoinTask)
-        .stubs()
-        .will(returnValue(EN_ERROR))
-        .then(returnValue(EN_OK));
+    MOCKER(mmJoinTask).stubs().will(returnValue(EN_ERROR)).then(returnValue(EN_OK));
 
     my_thread.Start();
     my_thread.tid_ = 1;
@@ -71,18 +60,15 @@ TEST_F(COMMON_THREAD_TEST, join) {
     EXPECT_EQ(PROFILING_SUCCESS, my_thread.Join());
 }
 
-TEST_F(COMMON_THREAD_TEST, IsQuit) {
+TEST_F(COMMON_THREAD_TEST, IsQuit)
+{
     GlobalMockObject::verify();
 
     ThreadClass my_thread;
 
-    MOCKER(mmCreateTaskWithThreadAttr)
-        .stubs()
-        .will(returnValue(EN_OK));
+    MOCKER(mmCreateTaskWithThreadAttr).stubs().will(returnValue(EN_OK));
 
-    MOCKER(mmJoinTask)
-        .stubs()
-        .will(returnValue(EN_OK));
+    MOCKER(mmJoinTask).stubs().will(returnValue(EN_OK));
 
     my_thread.Start();
     EXPECT_FALSE(my_thread.IsQuit());
@@ -90,10 +76,11 @@ TEST_F(COMMON_THREAD_TEST, IsQuit) {
     EXPECT_TRUE(my_thread.IsQuit());
 }
 
-TEST_F(COMMON_THREAD_TEST, ThrProcess) {
+TEST_F(COMMON_THREAD_TEST, ThrProcess)
+{
     GlobalMockObject::verify();
 
-    ThreadClass *my_thread = new ThreadClass;
+    ThreadClass* my_thread = new ThreadClass;
 
     EXPECT_EQ(NULL, ThreadClass::ThrProcess((void*)my_thread));
     EXPECT_EQ(NULL, ThreadClass::ThrProcess((void*)my_thread));

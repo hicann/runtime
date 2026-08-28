@@ -24,67 +24,67 @@
 using namespace analysis::dvvp::common::error;
 using namespace Analysis::Dvvp::Common::Statistics;
 
-class PROF_TASK_TEST: public testing::Test {
+class PROF_TASK_TEST : public testing::Test {
 protected:
-    virtual void SetUp() {
+    virtual void SetUp()
+    {
         HDC_SESSION session = (HDC_SESSION)0x12345678;
         _transport = std::shared_ptr<analysis::dvvp::transport::HDCTransport>(
             new analysis::dvvp::transport::HDCTransport(session));
     }
-    virtual void TearDown() {
-        _transport.reset();
-    }
+    virtual void TearDown() { _transport.reset(); }
+
 public:
     std::shared_ptr<analysis::dvvp::transport::HDCTransport> _transport;
 };
 
 /////////////////////////////////////////////////////////////
-TEST_F(PROF_TASK_TEST, ProfJobHandler_destructor) {
+TEST_F(PROF_TASK_TEST, ProfJobHandler_destructor)
+{
     GlobalMockObject::verify();
 
-    std::shared_ptr<analysis::dvvp::device::ProfJobHandler> job(
-        new analysis::dvvp::device::ProfJobHandler());
+    std::shared_ptr<analysis::dvvp::device::ProfJobHandler> job(new analysis::dvvp::device::ProfJobHandler());
     EXPECT_EQ(PROFILING_SUCCESS, job->Init(0, "0x12345678", _transport));
     EXPECT_EQ(PROFILING_SUCCESS, job->Uinit());
     job.reset();
 }
 
 /////////////////////////////////////////////////////////////
-TEST_F(PROF_TASK_TEST, Init) {
+TEST_F(PROF_TASK_TEST, Init)
+{
     GlobalMockObject::verify();
 
-    std::shared_ptr<analysis::dvvp::device::ProfJobHandler> job(
-        new analysis::dvvp::device::ProfJobHandler());
+    std::shared_ptr<analysis::dvvp::device::ProfJobHandler> job(new analysis::dvvp::device::ProfJobHandler());
 
     EXPECT_EQ(PROFILING_SUCCESS, job->Init(0, "0x12345678", _transport));
 }
 
-TEST_F(PROF_TASK_TEST, Uinit) {
+TEST_F(PROF_TASK_TEST, Uinit)
+{
     GlobalMockObject::verify();
 
-    std::shared_ptr<analysis::dvvp::device::ProfJobHandler> job(
-        new analysis::dvvp::device::ProfJobHandler());
+    std::shared_ptr<analysis::dvvp::device::ProfJobHandler> job(new analysis::dvvp::device::ProfJobHandler());
 
     EXPECT_EQ(PROFILING_SUCCESS, job->Init(0, "0x12345678", _transport));
     EXPECT_EQ(PROFILING_SUCCESS, job->Uinit());
 }
 
-TEST_F(PROF_TASK_TEST, ResetTask) {
+TEST_F(PROF_TASK_TEST, ResetTask)
+{
     GlobalMockObject::verify();
 
-    std::shared_ptr<analysis::dvvp::device::ProfJobHandler> job(
-        new analysis::dvvp::device::ProfJobHandler());
+    std::shared_ptr<analysis::dvvp::device::ProfJobHandler> job(new analysis::dvvp::device::ProfJobHandler());
     EXPECT_EQ(PROFILING_SUCCESS, job->Init(0, "0x12345678", _transport));
     job->_is_started = true;
     job->ResetTask();
     EXPECT_EQ(PROFILING_SUCCESS, job->Uinit());
 }
 
-TEST_F(PROF_TASK_TEST, OnJobStart) {
+TEST_F(PROF_TASK_TEST, OnJobStart)
+{
     GlobalMockObject::verify();
 
-    std::shared_ptr<analysis::dvvp::device::ProfJobHandler> job(
-        new analysis::dvvp::device::ProfJobHandler());
+    std::shared_ptr<analysis::dvvp::device::ProfJobHandler> job(new analysis::dvvp::device::ProfJobHandler());
 
     MOCKER_CPP(&analysis::dvvp::device::CollectEngine::Init)
         .stubs()
@@ -97,9 +97,11 @@ TEST_F(PROF_TASK_TEST, OnJobStart) {
         .then(returnValue(PROFILING_SUCCESS));
 
     std::shared_ptr<analysis::dvvp::transport::AdxTransport> transport_invalid;
-    std::shared_ptr<analysis::dvvp::transport::AdxTransport> transport(new analysis::dvvp::transport::HDCTransport(nullptr));
+    std::shared_ptr<analysis::dvvp::transport::AdxTransport> transport(
+        new analysis::dvvp::transport::HDCTransport(nullptr));
     std::shared_ptr<analysis::dvvp::device::Receiver> receive_invalid;
-    std::shared_ptr<analysis::dvvp::device::Receiver> receive_invalid_transport(new analysis::dvvp::device::Receiver(transport_invalid));
+    std::shared_ptr<analysis::dvvp::device::Receiver> receive_invalid_transport(
+        new analysis::dvvp::device::Receiver(transport_invalid));
     std::shared_ptr<analysis::dvvp::device::Receiver> receive(new analysis::dvvp::device::Receiver(transport));
 
     MOCKER_CPP(&analysis::dvvp::device::CollectionEntry::GetReceiver)
@@ -110,53 +112,46 @@ TEST_F(PROF_TASK_TEST, OnJobStart) {
 
     job->Init(0, "0x12345678", _transport);
 
-    std::shared_ptr<analysis::dvvp::proto::JobStartReq> req(
-        new analysis::dvvp::proto::JobStartReq);
+    std::shared_ptr<analysis::dvvp::proto::JobStartReq> req(new analysis::dvvp::proto::JobStartReq);
     analysis::dvvp::message::StatusInfo status_info;
 
     // nullptr
     EXPECT_EQ(PROFILING_FAILED, job->OnJobStart(nullptr, status_info));
 
-    //CollectEngine init failed
+    // CollectEngine init failed
     EXPECT_EQ(PROFILING_FAILED, job->OnJobStart(req, status_info));
     EXPECT_FALSE(job->_is_started);
 
-    //GetReceiver failed
+    // GetReceiver failed
     EXPECT_EQ(PROFILING_FAILED, job->OnJobStart(req, status_info));
     EXPECT_FALSE(job->_is_started);
 
-    //GetTransport failed
+    // GetTransport failed
     EXPECT_EQ(PROFILING_SUCCESS, job->OnJobStart(req, status_info));
     EXPECT_TRUE(job->_is_started);
 
-    //CollectStart failed
+    // CollectStart failed
     EXPECT_EQ(PROFILING_FAILED, job->OnJobStart(req, status_info));
     EXPECT_TRUE(job->_is_started);
 
-    //succ
+    // succ
     EXPECT_EQ(PROFILING_FAILED, job->OnJobStart(req, status_info));
     EXPECT_TRUE(job->_is_started);
 
-    //set again
+    // set again
     EXPECT_EQ(PROFILING_FAILED, job->OnJobStart(req, status_info));
 }
 
-TEST_F(PROF_TASK_TEST, OnJobEnd) {
+TEST_F(PROF_TASK_TEST, OnJobEnd)
+{
     GlobalMockObject::verify();
 
-    std::shared_ptr<analysis::dvvp::device::ProfJobHandler> job(
-        new analysis::dvvp::device::ProfJobHandler());
+    std::shared_ptr<analysis::dvvp::device::ProfJobHandler> job(new analysis::dvvp::device::ProfJobHandler());
 
-    MOCKER_CPP(&analysis::dvvp::device::CollectEngine::CollectStop)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
-    MOCKER_CPP(&analysis::dvvp::device::CollectEngine::Init)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&analysis::dvvp::device::CollectEngine::CollectStop).stubs().will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&analysis::dvvp::device::CollectEngine::Init).stubs().will(returnValue(PROFILING_SUCCESS));
 
-    MOCKER_CPP(&analysis::dvvp::device::CollectEngine::SetDevIdOnHost)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&analysis::dvvp::device::CollectEngine::SetDevIdOnHost).stubs().will(returnValue(PROFILING_SUCCESS));
 
     job->Init(0, "0x12345678", _transport);
 
@@ -171,11 +166,11 @@ TEST_F(PROF_TASK_TEST, OnJobEnd) {
     EXPECT_EQ(PROFILING_SUCCESS, job->OnJobEnd(status_info));
 }
 
-TEST_F(PROF_TASK_TEST, OnReplayStart) {
+TEST_F(PROF_TASK_TEST, OnReplayStart)
+{
     GlobalMockObject::verify();
 
-    std::shared_ptr<analysis::dvvp::device::ProfJobHandler> job(
-        new analysis::dvvp::device::ProfJobHandler());
+    std::shared_ptr<analysis::dvvp::device::ProfJobHandler> job(new analysis::dvvp::device::ProfJobHandler());
 
     MOCKER_CPP(&analysis::dvvp::device::CollectEngine::CollectStartReplay)
         .stubs()
@@ -184,8 +179,7 @@ TEST_F(PROF_TASK_TEST, OnReplayStart) {
 
     job->Init(0, "0x12345678", _transport);
 
-    std::shared_ptr<analysis::dvvp::proto::ReplayStartReq> req(
-        new analysis::dvvp::proto::ReplayStartReq);
+    std::shared_ptr<analysis::dvvp::proto::ReplayStartReq> req(new analysis::dvvp::proto::ReplayStartReq);
     analysis::dvvp::message::StatusInfo status_info;
 
     job->_is_started = false;
@@ -209,14 +203,13 @@ TEST_F(PROF_TASK_TEST, OnReplayStart) {
         .then(returnValue(PROFILING_SUCCESS));
     EXPECT_EQ(PROFILING_FAILED, job->OnReplayStart(req, status_info));
     EXPECT_EQ(PROFILING_FAILED, job->OnReplayStart(req, status_info));
-
 }
 
-TEST_F(PROF_TASK_TEST, OnReplayEnd) {
+TEST_F(PROF_TASK_TEST, OnReplayEnd)
+{
     GlobalMockObject::verify();
 
-    std::shared_ptr<analysis::dvvp::device::ProfJobHandler> job(
-        new analysis::dvvp::device::ProfJobHandler());
+    std::shared_ptr<analysis::dvvp::device::ProfJobHandler> job(new analysis::dvvp::device::ProfJobHandler());
 
     MOCKER_CPP(&analysis::dvvp::device::CollectEngine::CollectStopReplay)
         .stubs()
@@ -225,8 +218,7 @@ TEST_F(PROF_TASK_TEST, OnReplayEnd) {
 
     job->Init(0, "0x12345678", _transport);
 
-    std::shared_ptr<analysis::dvvp::proto::ReplayStopReq> req(
-        new analysis::dvvp::proto::ReplayStopReq);
+    std::shared_ptr<analysis::dvvp::proto::ReplayStopReq> req(new analysis::dvvp::proto::ReplayStopReq);
     analysis::dvvp::message::StatusInfo status_info;
 
     EXPECT_EQ(PROFILING_FAILED, job->OnReplayEnd(nullptr, status_info));
@@ -240,11 +232,11 @@ TEST_F(PROF_TASK_TEST, OnReplayEnd) {
     EXPECT_EQ(PROFILING_FAILED, job->OnReplayEnd(req, status_info));
 }
 
-TEST_F(PROF_TASK_TEST, OnConnectionReset) {
+TEST_F(PROF_TASK_TEST, OnConnectionReset)
+{
     GlobalMockObject::verify();
 
-    std::shared_ptr<analysis::dvvp::device::ProfJobHandler> job(
-        new analysis::dvvp::device::ProfJobHandler());
+    std::shared_ptr<analysis::dvvp::device::ProfJobHandler> job(new analysis::dvvp::device::ProfJobHandler());
 
     MOCKER_CPP(&analysis::dvvp::device::CollectEngine::CollectStop)
         .stubs()
@@ -262,25 +254,24 @@ TEST_F(PROF_TASK_TEST, OnConnectionReset) {
     EXPECT_EQ(PROFILING_SUCCESS, job->OnConnectionReset());
 }
 
-TEST_F(PROF_TASK_TEST, GetDevId) {
+TEST_F(PROF_TASK_TEST, GetDevId)
+{
     GlobalMockObject::verify();
 
-    std::shared_ptr<analysis::dvvp::device::ProfJobHandler> job(
-        new analysis::dvvp::device::ProfJobHandler());
+    std::shared_ptr<analysis::dvvp::device::ProfJobHandler> job(new analysis::dvvp::device::ProfJobHandler());
 
     job->Init(0, "0x12345", _transport);
     EXPECT_EQ(0, job->GetDevId());
 }
 
-TEST_F(PROF_TASK_TEST, CheckEventValid_faile1) {
+TEST_F(PROF_TASK_TEST, CheckEventValid_faile1)
+{
     GlobalMockObject::verify();
 
-    std::shared_ptr<analysis::dvvp::device::ProfJobHandler> job(
-        new analysis::dvvp::device::ProfJobHandler());
+    std::shared_ptr<analysis::dvvp::device::ProfJobHandler> job(new analysis::dvvp::device::ProfJobHandler());
     EXPECT_NE(nullptr, job);
 
-    std::shared_ptr<analysis::dvvp::proto::ReplayStartReq> req(
-        new analysis::dvvp::proto::ReplayStartReq);
+    std::shared_ptr<analysis::dvvp::proto::ReplayStartReq> req(new analysis::dvvp::proto::ReplayStartReq);
 
     MOCKER_CPP(&analysis::dvvp::common::validation::ParamValidation::CheckPmuEventSizeIsValid)
         .stubs()
@@ -288,15 +279,14 @@ TEST_F(PROF_TASK_TEST, CheckEventValid_faile1) {
     job->CheckEventValid(req);
 }
 
-TEST_F(PROF_TASK_TEST, CheckEventValid_faile2) {
+TEST_F(PROF_TASK_TEST, CheckEventValid_faile2)
+{
     GlobalMockObject::verify();
 
-    std::shared_ptr<analysis::dvvp::device::ProfJobHandler> job(
-        new analysis::dvvp::device::ProfJobHandler());
+    std::shared_ptr<analysis::dvvp::device::ProfJobHandler> job(new analysis::dvvp::device::ProfJobHandler());
     EXPECT_NE(nullptr, job);
 
-    std::shared_ptr<analysis::dvvp::proto::ReplayStartReq> req(
-        new analysis::dvvp::proto::ReplayStartReq);
+    std::shared_ptr<analysis::dvvp::proto::ReplayStartReq> req(new analysis::dvvp::proto::ReplayStartReq);
 
     MOCKER_CPP(&analysis::dvvp::common::validation::ParamValidation::CheckPmuEventSizeIsValid)
         .stubs()
@@ -305,15 +295,14 @@ TEST_F(PROF_TASK_TEST, CheckEventValid_faile2) {
     job->CheckEventValid(req);
 }
 
-TEST_F(PROF_TASK_TEST, CheckEventValid_faile8) {
+TEST_F(PROF_TASK_TEST, CheckEventValid_faile8)
+{
     GlobalMockObject::verify();
 
-    std::shared_ptr<analysis::dvvp::device::ProfJobHandler> job(
-        new analysis::dvvp::device::ProfJobHandler());
+    std::shared_ptr<analysis::dvvp::device::ProfJobHandler> job(new analysis::dvvp::device::ProfJobHandler());
     EXPECT_NE(nullptr, job);
 
-    std::shared_ptr<analysis::dvvp::proto::ReplayStartReq> req(
-        new analysis::dvvp::proto::ReplayStartReq);
+    std::shared_ptr<analysis::dvvp::proto::ReplayStartReq> req(new analysis::dvvp::proto::ReplayStartReq);
 
     MOCKER_CPP(&analysis::dvvp::common::validation::ParamValidation::CheckPmuEventSizeIsValid)
         .stubs()
@@ -323,15 +312,14 @@ TEST_F(PROF_TASK_TEST, CheckEventValid_faile8) {
     job->CheckEventValid(req);
 }
 
-TEST_F(PROF_TASK_TEST, CheckEventValid_faile3) {
+TEST_F(PROF_TASK_TEST, CheckEventValid_faile3)
+{
     GlobalMockObject::verify();
 
-    std::shared_ptr<analysis::dvvp::device::ProfJobHandler> job(
-        new analysis::dvvp::device::ProfJobHandler());
+    std::shared_ptr<analysis::dvvp::device::ProfJobHandler> job(new analysis::dvvp::device::ProfJobHandler());
     EXPECT_NE(nullptr, job);
 
-    std::shared_ptr<analysis::dvvp::proto::ReplayStartReq> req(
-        new analysis::dvvp::proto::ReplayStartReq);
+    std::shared_ptr<analysis::dvvp::proto::ReplayStartReq> req(new analysis::dvvp::proto::ReplayStartReq);
 
     MOCKER_CPP(&analysis::dvvp::common::validation::ParamValidation::CheckPmuEventSizeIsValid)
         .stubs()
@@ -342,15 +330,14 @@ TEST_F(PROF_TASK_TEST, CheckEventValid_faile3) {
     job->CheckEventValid(req);
 }
 
-TEST_F(PROF_TASK_TEST, CheckEventValid_faile4) {
+TEST_F(PROF_TASK_TEST, CheckEventValid_faile4)
+{
     GlobalMockObject::verify();
 
-    std::shared_ptr<analysis::dvvp::device::ProfJobHandler> job(
-        new analysis::dvvp::device::ProfJobHandler());
+    std::shared_ptr<analysis::dvvp::device::ProfJobHandler> job(new analysis::dvvp::device::ProfJobHandler());
     EXPECT_NE(nullptr, job);
 
-    std::shared_ptr<analysis::dvvp::proto::ReplayStartReq> req(
-        new analysis::dvvp::proto::ReplayStartReq);
+    std::shared_ptr<analysis::dvvp::proto::ReplayStartReq> req(new analysis::dvvp::proto::ReplayStartReq);
 
     MOCKER_CPP(&analysis::dvvp::common::validation::ParamValidation::CheckPmuEventSizeIsValid)
         .stubs()
@@ -364,15 +351,14 @@ TEST_F(PROF_TASK_TEST, CheckEventValid_faile4) {
     job->CheckEventValid(req);
 }
 
-TEST_F(PROF_TASK_TEST, CheckEventValid_faile5) {
+TEST_F(PROF_TASK_TEST, CheckEventValid_faile5)
+{
     GlobalMockObject::verify();
 
-    std::shared_ptr<analysis::dvvp::device::ProfJobHandler> job(
-        new analysis::dvvp::device::ProfJobHandler());
+    std::shared_ptr<analysis::dvvp::device::ProfJobHandler> job(new analysis::dvvp::device::ProfJobHandler());
     EXPECT_NE(nullptr, job);
 
-    std::shared_ptr<analysis::dvvp::proto::ReplayStartReq> req(
-        new analysis::dvvp::proto::ReplayStartReq);
+    std::shared_ptr<analysis::dvvp::proto::ReplayStartReq> req(new analysis::dvvp::proto::ReplayStartReq);
 
     MOCKER_CPP(&analysis::dvvp::common::validation::ParamValidation::CheckPmuEventSizeIsValid)
         .stubs()
@@ -387,15 +373,14 @@ TEST_F(PROF_TASK_TEST, CheckEventValid_faile5) {
     job->CheckEventValid(req);
 }
 
-TEST_F(PROF_TASK_TEST, CheckEventValid_faile6) {
+TEST_F(PROF_TASK_TEST, CheckEventValid_faile6)
+{
     GlobalMockObject::verify();
 
-    std::shared_ptr<analysis::dvvp::device::ProfJobHandler> job(
-        new analysis::dvvp::device::ProfJobHandler());
+    std::shared_ptr<analysis::dvvp::device::ProfJobHandler> job(new analysis::dvvp::device::ProfJobHandler());
     EXPECT_NE(nullptr, job);
 
-    std::shared_ptr<analysis::dvvp::proto::ReplayStartReq> req(
-        new analysis::dvvp::proto::ReplayStartReq);
+    std::shared_ptr<analysis::dvvp::proto::ReplayStartReq> req(new analysis::dvvp::proto::ReplayStartReq);
 
     MOCKER_CPP(&analysis::dvvp::common::validation::ParamValidation::CheckPmuEventSizeIsValid)
         .stubs()
@@ -411,15 +396,14 @@ TEST_F(PROF_TASK_TEST, CheckEventValid_faile6) {
     job->CheckEventValid(req);
 }
 
-TEST_F(PROF_TASK_TEST, CheckEventValid_faile9) {
+TEST_F(PROF_TASK_TEST, CheckEventValid_faile9)
+{
     GlobalMockObject::verify();
 
-    std::shared_ptr<analysis::dvvp::device::ProfJobHandler> job(
-        new analysis::dvvp::device::ProfJobHandler());
+    std::shared_ptr<analysis::dvvp::device::ProfJobHandler> job(new analysis::dvvp::device::ProfJobHandler());
     EXPECT_NE(nullptr, job);
 
-    std::shared_ptr<analysis::dvvp::proto::ReplayStartReq> req(
-        new analysis::dvvp::proto::ReplayStartReq);
+    std::shared_ptr<analysis::dvvp::proto::ReplayStartReq> req(new analysis::dvvp::proto::ReplayStartReq);
 
     MOCKER_CPP(&analysis::dvvp::common::validation::ParamValidation::CheckPmuEventSizeIsValid)
         .stubs()
@@ -436,15 +420,14 @@ TEST_F(PROF_TASK_TEST, CheckEventValid_faile9) {
     job->CheckEventValid(req);
 }
 
-TEST_F(PROF_TASK_TEST, CheckEventValid_faile7) {
+TEST_F(PROF_TASK_TEST, CheckEventValid_faile7)
+{
     GlobalMockObject::verify();
 
-    std::shared_ptr<analysis::dvvp::device::ProfJobHandler> job(
-        new analysis::dvvp::device::ProfJobHandler());
+    std::shared_ptr<analysis::dvvp::device::ProfJobHandler> job(new analysis::dvvp::device::ProfJobHandler());
     EXPECT_NE(nullptr, job);
 
-    std::shared_ptr<analysis::dvvp::proto::ReplayStartReq> req(
-        new analysis::dvvp::proto::ReplayStartReq);
+    std::shared_ptr<analysis::dvvp::proto::ReplayStartReq> req(new analysis::dvvp::proto::ReplayStartReq);
 
     MOCKER_CPP(&analysis::dvvp::common::validation::ParamValidation::CheckPmuEventSizeIsValid)
         .stubs()
@@ -462,42 +445,42 @@ TEST_F(PROF_TASK_TEST, CheckEventValid_faile7) {
     job->CheckEventValid(req);
 }
 
-TEST_F(PROF_TASK_TEST, Receiver_SendMessage) {
+TEST_F(PROF_TASK_TEST, Receiver_SendMessage)
+{
     GlobalMockObject::verify();
 
     analysis::dvvp::message::StatusInfo status("1", analysis::dvvp::message::SUCCESS, "test");
-    std::shared_ptr<analysis::dvvp::proto::Response> response(
-        new analysis::dvvp::proto::Response);
+    std::shared_ptr<analysis::dvvp::proto::Response> response(new analysis::dvvp::proto::Response);
     response->set_message(status.ToString());
-    std::shared_ptr<analysis::dvvp::transport::HDCTransport> transport(new analysis::dvvp::transport::HDCTransport(nullptr));
+    std::shared_ptr<analysis::dvvp::transport::HDCTransport> transport(
+        new analysis::dvvp::transport::HDCTransport(nullptr));
     std::shared_ptr<PerfCount> perfCount(new PerfCount("test"));
     transport->perfCount_ = perfCount;
     std::shared_ptr<analysis::dvvp::device::Receiver> receive(new analysis::dvvp::device::Receiver(transport));
     EXPECT_NE(nullptr, receive);
-    MOCKER_CPP_VIRTUAL(*transport.get(), &analysis::dvvp::transport::HDCTransport::SendBuffer,
-        int(analysis::dvvp::transport::HDCTransport::*)(const void *, int))
+    MOCKER_CPP_VIRTUAL(
+        *transport.get(), &analysis::dvvp::transport::HDCTransport::SendBuffer,
+        int(analysis::dvvp::transport::HDCTransport::*)(const void*, int))
         .stubs()
         .will(returnValue(PROFILING_SUCCESS));
     receive->SendMessage(response);
 }
 
-TEST_F(PROF_TASK_TEST, GetControlCpuEvent) {
+TEST_F(PROF_TASK_TEST, GetControlCpuEvent)
+{
     GlobalMockObject::verify();
-    std::shared_ptr<analysis::dvvp::device::ProfJobHandler> job(
-        new analysis::dvvp::device::ProfJobHandler());
-    std::shared_ptr<analysis::dvvp::proto::ReplayStartReq> req(
-        new analysis::dvvp::proto::ReplayStartReq);
+    std::shared_ptr<analysis::dvvp::device::ProfJobHandler> job(new analysis::dvvp::device::ProfJobHandler());
+    std::shared_ptr<analysis::dvvp::proto::ReplayStartReq> req(new analysis::dvvp::proto::ReplayStartReq);
 
     req->add_ctrl_cpu_events("0x1");
     EXPECT_EQ(req->ctrl_cpu_events(0), job->GetControlCpuEvent(req)->begin()[0]);
 }
 
-TEST_F(PROF_TASK_TEST, GetLlcEvent) {
+TEST_F(PROF_TASK_TEST, GetLlcEvent)
+{
     GlobalMockObject::verify();
-    std::shared_ptr<analysis::dvvp::device::ProfJobHandler> job(
-        new analysis::dvvp::device::ProfJobHandler());
-    std::shared_ptr<analysis::dvvp::proto::ReplayStartReq> req(
-        new analysis::dvvp::proto::ReplayStartReq);
+    std::shared_ptr<analysis::dvvp::device::ProfJobHandler> job(new analysis::dvvp::device::ProfJobHandler());
+    std::shared_ptr<analysis::dvvp::proto::ReplayStartReq> req(new analysis::dvvp::proto::ReplayStartReq);
 
     req->add_llc_events("l1");
     EXPECT_EQ(req->llc_events(0), job->GetLlcEvent(req)->begin()[0]);

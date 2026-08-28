@@ -16,11 +16,11 @@
 #include "prof_dev_api.h"
 
 namespace {
-    uint32_t devId;
-    pid_t pid = 12345;
-}
+uint32_t devId;
+pid_t pid = 12345;
+} // namespace
 
-uint32_t TsdProcessOpen(const uint32_t logicDeviceId, ProcOpenArgs *openArgs)
+uint32_t TsdProcessOpen(const uint32_t logicDeviceId, ProcOpenArgs* openArgs)
 {
     if (openArgs->procType != TSD_SUB_PROC_ADPROF) {
         return 1;
@@ -37,8 +37,8 @@ uint32_t TsdProcessOpen(const uint32_t logicDeviceId, ProcOpenArgs *openArgs)
     return tsd::TSD_OK;
 }
 
-uint32_t ProcessCloseSubProcList(const uint32_t logicDeviceId, const ProcStatusParam *closeList,
-                                 const uint32_t listSize)
+uint32_t ProcessCloseSubProcList(
+    const uint32_t logicDeviceId, const ProcStatusParam* closeList, const uint32_t listSize)
 {
     if (logicDeviceId != devId || closeList->pid != pid) {
         return 1;
@@ -47,7 +47,7 @@ uint32_t ProcessCloseSubProcList(const uint32_t logicDeviceId, const ProcStatusP
     return tsd::TSD_OK;
 }
 
-uint32_t TsdGetProcListStatus(const uint32_t logicDeviceId, ProcStatusParam *pidInfo, const uint32_t arrayLen)
+uint32_t TsdGetProcListStatus(const uint32_t logicDeviceId, ProcStatusParam* pidInfo, const uint32_t arrayLen)
 {
     if (logicDeviceId != devId || pidInfo->pid != pid) {
         return 1;
@@ -58,7 +58,7 @@ uint32_t TsdGetProcListStatus(const uint32_t logicDeviceId, ProcStatusParam *pid
 
 uint32_t TsdCapabilityGet(const uint32_t logicDeviceId, const int32_t type, const uint64_t ptr)
 {
-    uint64_t *supportLevel = (uint64_t *)(ptr);
+    uint64_t* supportLevel = (uint64_t*)(ptr);
     constexpr uint32_t TSD_SUPPORT_ADPROF_BIT = 3U;
     *supportLevel = 1U << TSD_SUPPORT_ADPROF_BIT;
     return tsd::TSD_OK;

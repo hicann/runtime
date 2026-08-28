@@ -17,17 +17,14 @@
 
 using namespace Analysis::Dvvp::Adx;
 
-class ADX_PROF_API_UTEST: public testing::Test {
+class ADX_PROF_API_UTEST : public testing::Test {
 protected:
-    virtual void SetUp() {
-    }
-    virtual void TearDown() {
-
-    }
+    virtual void SetUp() {}
+    virtual void TearDown() {}
 };
 
-
-TEST_F(ADX_PROF_API_UTEST, AdxIdeCreatePacket) {
+TEST_F(ADX_PROF_API_UTEST, AdxIdeCreatePacket)
+{
     GlobalMockObject::verify();
 
     IdeBuffT outPut;
@@ -38,10 +35,10 @@ TEST_F(ADX_PROF_API_UTEST, AdxIdeCreatePacket) {
     AdxIdeFreePacket(outPut);
 }
 
-TEST_F(ADX_PROF_API_UTEST, AdxIdeFreePacket) {
+TEST_F(ADX_PROF_API_UTEST, AdxIdeFreePacket)
+{
     GlobalMockObject::verify();
     IdeBuffT outPut = (IdeBuffT)malloc(16);
     AdxIdeFreePacket(outPut);
     EXPECT_EQ(outPut, nullptr);
 }
-

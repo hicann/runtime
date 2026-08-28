@@ -28,14 +28,46 @@ int g_atlsHashIdCalled = 0;
 int g_atlsHostFreqCalled = 0;
 int g_atlsSetDeviceCalled = 0;
 
-int32_t StubAtlsReportApi(uint32_t, const MsprofApi*) { ++g_atlsReportApi; return 0; }
-int32_t StubAtlsReportEvent(uint32_t, const MsprofEvent*) { ++g_atlsReportEvent; return 0; }
-int32_t StubAtlsReportCompact(uint32_t, const VOID_PTR, uint32_t) { ++g_atlsReportCompact; return 0; }
-int32_t StubAtlsReportAdditional(uint32_t, const VOID_PTR, uint32_t) { ++g_atlsReportAdditional; return 0; }
-int32_t StubAtlsReportRegType(uint16_t, uint32_t, const char*, size_t) { ++g_atlsReportRegType; return 0; }
-uint64_t StubAtlsGetHashId(const char*, size_t) { ++g_atlsHashIdCalled; return 0xABCDEF12U; }
-int8_t StubAtlsHostFreq() { ++g_atlsHostFreqCalled; return 1; }
-int32_t StubAtlsSetDevice(VOID_PTR, uint32_t) { ++g_atlsSetDeviceCalled; return 0; }
+int32_t StubAtlsReportApi(uint32_t, const MsprofApi*)
+{
+    ++g_atlsReportApi;
+    return 0;
+}
+int32_t StubAtlsReportEvent(uint32_t, const MsprofEvent*)
+{
+    ++g_atlsReportEvent;
+    return 0;
+}
+int32_t StubAtlsReportCompact(uint32_t, const VOID_PTR, uint32_t)
+{
+    ++g_atlsReportCompact;
+    return 0;
+}
+int32_t StubAtlsReportAdditional(uint32_t, const VOID_PTR, uint32_t)
+{
+    ++g_atlsReportAdditional;
+    return 0;
+}
+int32_t StubAtlsReportRegType(uint16_t, uint32_t, const char*, size_t)
+{
+    ++g_atlsReportRegType;
+    return 0;
+}
+uint64_t StubAtlsGetHashId(const char*, size_t)
+{
+    ++g_atlsHashIdCalled;
+    return 0xABCDEF12U;
+}
+int8_t StubAtlsHostFreq()
+{
+    ++g_atlsHostFreqCalled;
+    return 1;
+}
+int32_t StubAtlsSetDevice(VOID_PTR, uint32_t)
+{
+    ++g_atlsSetDeviceCalled;
+    return 0;
+}
 
 int32_t StubProfReportRegDataFormat(uint16_t, uint32_t, const std::string&) { return 7; }
 std::string StubProfReportGetHashInfo(uint64_t) { return "stub-hash-info"; }
@@ -90,7 +122,7 @@ void ClearProfHooks()
     plugin->profBatchAddBufIndexShift_ = nullptr;
 }
 
-}  // namespace
+} // namespace
 
 class PROF_CANN_PLUGIN_UTEST : public testing::Test {
 protected:
@@ -119,7 +151,7 @@ TEST_F(PROF_CANN_PLUGIN_UTEST, ProfReportRegDataFormat_Variants)
 TEST_F(PROF_CANN_PLUGIN_UTEST, ProfReportGetHashInfo_Variants)
 {
     auto plugin = ProfCannPlugin::instance();
-    char *p = plugin->ProfReportGetHashInfo(123);
+    char* p = plugin->ProfReportGetHashInfo(123);
     EXPECT_NE(nullptr, p);
     plugin->profReportGetHashInfo_ = StubProfReportGetHashInfo;
     p = plugin->ProfReportGetHashInfo(456);
@@ -129,7 +161,7 @@ TEST_F(PROF_CANN_PLUGIN_UTEST, ProfReportGetHashInfo_Variants)
 TEST_F(PROF_CANN_PLUGIN_UTEST, ProfGetPath_Variants)
 {
     auto plugin = ProfCannPlugin::instance();
-    char *p = plugin->profGetPath();
+    char* p = plugin->profGetPath();
     EXPECT_NE(nullptr, p);
     plugin->profGetPath_ = StubProfGetPath;
     p = plugin->profGetPath();
@@ -220,29 +252,41 @@ TEST_F(PROF_CANN_PLUGIN_UTEST, RegisterProfileCallback_AtlsTypes)
     EXPECT_EQ(PROFILING_SUCCESS, plugin->RegisterProfileCallback(PROFILE_REPORT_REG_DATA_FORMAT_CALLBACK, nullptr, 0));
     EXPECT_EQ(PROFILING_SUCCESS, plugin->RegisterProfileCallback(PROFILE_REPORT_GET_HASH_ID_CALLBACK, nullptr, 0));
     EXPECT_EQ(PROFILING_SUCCESS, plugin->RegisterProfileCallback(PROFILE_HOST_FREQ_IS_ENABLE_CALLBACK, nullptr, 0));
-    EXPECT_EQ(PROFILING_SUCCESS, plugin->RegisterProfileCallback(PROFILE_REPORT_COMPACT_CALLBACK,
-        reinterpret_cast<VOID_PTR>(StubAtlsReportCompact), 0));
-    EXPECT_EQ(PROFILING_SUCCESS, plugin->RegisterProfileCallback(PROFILE_REPORT_ADDITIONAL_CALLBACK,
-        reinterpret_cast<VOID_PTR>(StubAtlsReportAdditional), 0));
+    EXPECT_EQ(
+        PROFILING_SUCCESS, plugin->RegisterProfileCallback(
+                               PROFILE_REPORT_COMPACT_CALLBACK, reinterpret_cast<VOID_PTR>(StubAtlsReportCompact), 0));
+    EXPECT_EQ(
+        PROFILING_SUCCESS,
+        plugin->RegisterProfileCallback(
+            PROFILE_REPORT_ADDITIONAL_CALLBACK, reinterpret_cast<VOID_PTR>(StubAtlsReportAdditional), 0));
 }
 
 TEST_F(PROF_CANN_PLUGIN_UTEST, RegisterProfileCallback_AtlsForkCases)
 {
     auto plugin = ProfCannPlugin::instance();
-    EXPECT_EQ(PROFILING_SUCCESS, plugin->RegisterProfileCallback(PROFILE_REPORT_API_C_CALLBACK,
-        reinterpret_cast<VOID_PTR>(StubAtlsReportApi), 0));
-    EXPECT_EQ(PROFILING_SUCCESS, plugin->RegisterProfileCallback(PROFILE_REPORT_EVENT_C_CALLBACK,
-        reinterpret_cast<VOID_PTR>(StubAtlsReportEvent), 0));
-    EXPECT_EQ(PROFILING_SUCCESS, plugin->RegisterProfileCallback(PROFILE_REPORT_REG_TYPE_INFO_C_CALLBACK,
-        reinterpret_cast<VOID_PTR>(StubAtlsReportRegType), 0));
-    EXPECT_EQ(PROFILING_SUCCESS, plugin->RegisterProfileCallback(PROFILE_REPORT_REG_DATA_FORMAT_C_CALLBACK,
-        nullptr, 0));
-    EXPECT_EQ(PROFILING_SUCCESS, plugin->RegisterProfileCallback(PROFILE_REPORT_GET_HASH_ID_C_CALLBACK,
-        reinterpret_cast<VOID_PTR>(StubAtlsGetHashId), 0));
-    EXPECT_EQ(PROFILING_SUCCESS, plugin->RegisterProfileCallback(PROFILE_HOST_FREQ_IS_ENABLE_C_CALLBACK,
-        reinterpret_cast<VOID_PTR>(StubAtlsHostFreq), 0));
-    EXPECT_EQ(PROFILING_SUCCESS, plugin->RegisterProfileCallback(PROFILE_DEVICE_STATE_C_CALLBACK,
-        reinterpret_cast<VOID_PTR>(StubAtlsSetDevice), 0));
+    EXPECT_EQ(
+        PROFILING_SUCCESS, plugin->RegisterProfileCallback(
+                               PROFILE_REPORT_API_C_CALLBACK, reinterpret_cast<VOID_PTR>(StubAtlsReportApi), 0));
+    EXPECT_EQ(
+        PROFILING_SUCCESS, plugin->RegisterProfileCallback(
+                               PROFILE_REPORT_EVENT_C_CALLBACK, reinterpret_cast<VOID_PTR>(StubAtlsReportEvent), 0));
+    EXPECT_EQ(
+        PROFILING_SUCCESS,
+        plugin->RegisterProfileCallback(
+            PROFILE_REPORT_REG_TYPE_INFO_C_CALLBACK, reinterpret_cast<VOID_PTR>(StubAtlsReportRegType), 0));
+    EXPECT_EQ(
+        PROFILING_SUCCESS, plugin->RegisterProfileCallback(PROFILE_REPORT_REG_DATA_FORMAT_C_CALLBACK, nullptr, 0));
+    EXPECT_EQ(
+        PROFILING_SUCCESS,
+        plugin->RegisterProfileCallback(
+            PROFILE_REPORT_GET_HASH_ID_C_CALLBACK, reinterpret_cast<VOID_PTR>(StubAtlsGetHashId), 0));
+    EXPECT_EQ(
+        PROFILING_SUCCESS,
+        plugin->RegisterProfileCallback(
+            PROFILE_HOST_FREQ_IS_ENABLE_C_CALLBACK, reinterpret_cast<VOID_PTR>(StubAtlsHostFreq), 0));
+    EXPECT_EQ(
+        PROFILING_SUCCESS, plugin->RegisterProfileCallback(
+                               PROFILE_DEVICE_STATE_C_CALLBACK, reinterpret_cast<VOID_PTR>(StubAtlsSetDevice), 0));
     EXPECT_EQ(PROFILING_FAILED, plugin->RegisterProfileCallback(0xFFFF, nullptr, 0));
 }
 
@@ -346,7 +390,7 @@ TEST_F(PROF_CANN_PLUGIN_UTEST, BatchReport_PopAndIndexShift)
     EXPECT_EQ(static_cast<size_t>(131072), plugin->ProfGetBatchReportMaxSize(MSPROF_BATCH_ADDITIONAL_INFO));
     EXPECT_EQ(static_cast<size_t>(0), plugin->ProfGetBatchReportMaxSize(0xFFFF));
     size_t popSize = 0;
-    void *ptr = TryPopAdprofBuf(popSize, true);
+    void* ptr = TryPopAdprofBuf(popSize, true);
     if (ptr != nullptr) {
         TryIndexShiftAdprofBuf(ptr, popSize);
     }
@@ -361,7 +405,7 @@ TEST_F(PROF_CANN_PLUGIN_UTEST, VariableAdditional_PopAndIndexShift)
     auto plugin = ProfCannPlugin::instance();
     plugin->ProfInitReportBuf(MSPROF_CTRL_INIT_ACL_ENV);
     size_t popSize = 0;
-    void *ptr = TryPopVariableAdditionalBuf(popSize);
+    void* ptr = TryPopVariableAdditionalBuf(popSize);
     if (ptr != nullptr) {
         TryIndexShiftVariableAddBuf(ptr, popSize);
     }
@@ -372,10 +416,9 @@ TEST_F(PROF_CANN_PLUGIN_UTEST, ProfRegisterFunc_AllBranches)
 {
     auto plugin = ProfCannPlugin::instance();
     plugin->ProfRegisterFunc(0xDEADBEEF, nullptr);
-    plugin->ProfRegisterFunc(REPORT_VARIABLE_ADDITIONAL_POP,
-        reinterpret_cast<VOID_PTR>(TryPopVariableAdditionalBuf));
-    plugin->ProfRegisterFunc(REPORT_VARIABLE_ADDITIONAL_INDEX_SHIFT,
-        reinterpret_cast<VOID_PTR>(TryIndexShiftVariableAddBuf));
+    plugin->ProfRegisterFunc(REPORT_VARIABLE_ADDITIONAL_POP, reinterpret_cast<VOID_PTR>(TryPopVariableAdditionalBuf));
+    plugin->ProfRegisterFunc(
+        REPORT_VARIABLE_ADDITIONAL_INDEX_SHIFT, reinterpret_cast<VOID_PTR>(TryIndexShiftVariableAddBuf));
 }
 
 TEST_F(PROF_CANN_PLUGIN_UTEST, ProfSetProfCommand_NullAndCb)

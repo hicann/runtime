@@ -11,36 +11,35 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
-class NANO_JSON_TEST: public testing::Test {
+class NANO_JSON_TEST : public testing::Test {
 protected:
-    virtual void SetUp() {
-    }
-    virtual void TearDown() {
-    }
+    virtual void SetUp() {}
+    virtual void TearDown() {}
 };
 using namespace NanoJson;
 
-TEST_F(NANO_JSON_TEST, json_insert_test) {
+TEST_F(NANO_JSON_TEST, json_insert_test)
+{
     NanoJson::Json json;
     EXPECT_EQ(json.End(), json.Begin());
-    json["name"]="LeBorn James";
+    json["name"] = "LeBorn James";
     EXPECT_EQ(true, json.Contains("name"));
-    json["number"] = (const uint32_t)23;         //整数
+    json["number"] = (const uint32_t)23;                                                                  // 整数
     EXPECT_EQ(true, json.Contains("number"));
-    json["salary(m)"] = 50.1;  // double
+    json["salary(m)"] = 50.1;                                                                             // double
     EXPECT_EQ(true, json.Contains("salary(m)"));
-    json["man"]=true;          //布尔值
+    json["man"] = true;                                                                                   // 布尔值
     EXPECT_EQ(true, json.Contains("man"));
-    json["children"]={(std::string)"LeBorn Jr",(std::string)"Bryce Maximus",(std::string)"Zhuri"};//数组
+    json["children"] = {(std::string) "LeBorn Jr", (std::string) "Bryce Maximus", (std::string) "Zhuri"}; // 数组
     EXPECT_EQ(true, json.Contains("children"));
-    json["behavior"]["funny"]={1,2,3};              //对象中元素值
+    json["behavior"]["funny"] = {1, 2, 3}; // 对象中元素值
     EXPECT_EQ(true, json.Contains("behavior"));
     EXPECT_EQ(true, json["behavior"].Contains("funny"));
     std::vector<int> array = {1, 2, 3, 4};
     json["champion"] = array;
     EXPECT_EQ(true, json.Contains("champion"));
 
-    std::unordered_map<std::string, std::string> map = {{"name","Wade"}, {"age","38"}};
+    std::unordered_map<std::string, std::string> map = {{"name", "Wade"}, {"age", "38"}};
     json["friends"] = map;
 
     EXPECT_STREQ("LeBorn James", json["name"].GetValue<std::string>().c_str());
@@ -79,8 +78,10 @@ TEST_F(NANO_JSON_TEST, json_insert_test) {
     EXPECT_NE(std::string::npos, str.find("\"number\":23"));
 }
 
-TEST_F(NANO_JSON_TEST, json_parse_test) {
-    const std::string str = "{\"people\":{\"name\":\"lyh\"},\"number\":10,\"isMale\":[true,true,false,false,true,true,true,false,false,true],\"age\": 20.1, \"president\": null}";
+TEST_F(NANO_JSON_TEST, json_parse_test)
+{
+    const std::string str = "{\"people\":{\"name\":\"lyh\"},\"number\":10,\"isMale\":[true,true,false,false,true,true,"
+                            "true,false,false,true],\"age\": 20.1, \"president\": null}";
     NanoJson::Json json;
     json.Parse(str);
     json["people"]["age"] = 100;
@@ -102,7 +103,8 @@ TEST_F(NANO_JSON_TEST, json_parse_test) {
     EXPECT_EQ(20.1, json["age"].GetValue<double>());
 }
 
-TEST_F(NANO_JSON_TEST, json_getvalue_test) {
+TEST_F(NANO_JSON_TEST, json_getvalue_test)
+{
     NanoJson::JsonValue val;
     NanoJson::Json json;
     val.type = NanoJson::JsonValueType::OBJECT;
@@ -195,7 +197,7 @@ TEST_F(NANO_JSON_TEST, json_getvalue_test) {
 
     NanoJson::JsonValue val1;
     EXPECT_EQ(val1.type, NanoJson::JsonValueType::INVALID);
-    ASSERT_NO_THROW(val1.GetValue<bool>());  // Invalid时不抛出异常
+    ASSERT_NO_THROW(val1.GetValue<bool>()); // Invalid时不抛出异常
     EXPECT_EQ(false, val1.GetValue<bool>());
 
     ASSERT_NO_THROW(val1.GetValue<double>());
@@ -217,7 +219,8 @@ TEST_F(NANO_JSON_TEST, json_getvalue_test) {
     EXPECT_STREQ("", val1.GetValue<std::string>().c_str());
 }
 
-TEST_F(NANO_JSON_TEST, json_error_test) {
+TEST_F(NANO_JSON_TEST, json_error_test)
+{
     std::string str = "{ \"}";
 
     ASSERT_ANY_THROW(NanoJson::Json json(str));
@@ -240,13 +243,13 @@ TEST_F(NANO_JSON_TEST, json_error_test) {
     ASSERT_ANY_THROW(json.Parse("{ name\" : \"Zhang san\"}"));
     ASSERT_ANY_THROW(json.Parse("{ \"name : \"Zhang san\"}"));
     ASSERT_ANY_THROW(json.Parse("{ \"name\" : Zhang san\"}"));
-    ASSERT_ANY_THROW(json.Parse("123"));   
+    ASSERT_ANY_THROW(json.Parse("123"));
     ASSERT_ANY_THROW(json.Parse("{\"123\"}"));
     ASSERT_ANY_THROW(json.Parse("{123}"));
 }
 
-TEST_F(NANO_JSON_TEST, json_pushback_test) {
-
+TEST_F(NANO_JSON_TEST, json_pushback_test)
+{
     NanoJson::JsonValue val;
     val.type = NanoJson::JsonValueType::OBJECT;
     val.value.objectValue = new std::unordered_map<std::string, JsonValue>;
@@ -280,8 +283,13 @@ TEST_F(NANO_JSON_TEST, json_pushback_test) {
     EXPECT_STREQ("Intel(R) Core(TM) i5-7500 CPU @ 3.40GHz", json["CPU"][0]["Type"].GetValue<std::string>().c_str());
 }
 
-TEST_F(NANO_JSON_TEST, json_obj_test) {
-    std::string str = "{\"profiler\": \"on\",\"cann\": {\"modules\": [{\"module\": \"ACL\",\"prof_switch\": \"on\"},{\"module\": \"FRAMEWORK\",\"prof_switch\": \"on\"},{\"module\": \"RUNTIME\",\"prof_switch\": \"on\"},{\"module\": \"API\",\"reporter_switch\": \"on\"},{\"module\": \"COMPACT\",\"reporter_switch\": \"on\"},{\"module\": \"ADDITIONAL\",\"reporter_switch\": \"on\"}]}}";
+TEST_F(NANO_JSON_TEST, json_obj_test)
+{
+    std::string str =
+        "{\"profiler\": \"on\",\"cann\": {\"modules\": [{\"module\": \"ACL\",\"prof_switch\": \"on\"},{\"module\": "
+        "\"FRAMEWORK\",\"prof_switch\": \"on\"},{\"module\": \"RUNTIME\",\"prof_switch\": \"on\"},{\"module\": "
+        "\"API\",\"reporter_switch\": \"on\"},{\"module\": \"COMPACT\",\"reporter_switch\": \"on\"},{\"module\": "
+        "\"ADDITIONAL\",\"reporter_switch\": \"on\"}]}}";
     NanoJson::Json json(str);
     EXPECT_EQ(false, json["profiler"].Contains("channels"));
     EXPECT_EQ(false, json.Contains("channels"));

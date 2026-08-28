@@ -22,12 +22,10 @@ using namespace analysis::dvvp::common::error;
 using namespace Analysis::Dvvp::Common::Config;
 using namespace analysis::dvvp::common::validation;
 
-class DRV_DSMI_API_STEST: public testing::Test {
+class DRV_DSMI_API_STEST : public testing::Test {
 protected:
-    virtual void SetUp() {
-    }
-    virtual void TearDown() {
-    }
+    virtual void SetUp() {}
+    virtual void TearDown() {}
 };
 
 TEST_F(DRV_DSMI_API_STEST, DrvGetAicoreInfo)
@@ -39,13 +37,9 @@ TEST_F(DRV_DSMI_API_STEST, DrvGetAicoreInfo)
     EXPECT_EQ(PROFILING_FAILED, DrvGetAicoreInfo(deviceId, freq));
     deviceId = 0;
     freq = 1;
-    MOCKER(halGetDeviceInfo)
-        .stubs()
-        .will(returnValue(deviceId))
-        .then(returnValue(freq));
+    MOCKER(halGetDeviceInfo).stubs().will(returnValue(deviceId)).then(returnValue(freq));
     EXPECT_EQ(deviceId, DrvGetAicoreInfo(deviceId, freq));
     EXPECT_EQ(freq, DrvGetAicoreInfo(deviceId, freq));
-
 }
 
 TEST_F(DRV_DSMI_API_STEST, DrvGeAicFrq)

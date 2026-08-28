@@ -39,7 +39,7 @@ static void EnsureCannPluginReportBufInited()
     ProfAPI::ProfCannPlugin::instance()->ProfTxInit();
 }
 
-MsprofStart &MsprofStart::GetInstance()
+MsprofStart& MsprofStart::GetInstance()
 {
     static MsprofStart manager;
     return manager;
@@ -53,12 +53,9 @@ void MsprofStart::UnInit()
     bitCheckList_.clear();
 }
 
-void MsprofStart::ClearSingleton()
-{
-    ::ClearSingleton();
-}
+void MsprofStart::ClearSingleton() { ::ClearSingleton(); }
 
-void MsprofStart::GetProfilingInput(map<string, string> &sv)
+void MsprofStart::GetProfilingInput(map<string, string>& sv)
 {
     if (inputSwitch_.empty()) {
         MSPROF_LOGE("Failed to get msprof input switch which is empty");
@@ -77,13 +74,12 @@ void MsprofStart::DivideProtoJsonInput(int argvCount, nlohmann::json argv)
 {
     std::set<string> digital = {
         "sys_hardware_mem_freq", "sys_io_sampling_freq", "sys_interconnection_freq", "dvpp_freq",
-        "host_sys_usage_freq", "sys_cpu_freq", "instr_profiling_freq"
-    };
+        "host_sys_usage_freq",   "sys_cpu_freq",         "instr_profiling_freq"};
     if (argvCount == 0) {
         return;
     }
     inputSwitch_.erase(inputSwitch_.begin(), inputSwitch_.end());
-    for (auto &it : argv.items()) {
+    for (auto& it : argv.items()) {
         if (digital.find(it.key()) != digital.end()) {
             inputSwitch_[it.key()] = to_string(it.value());
             MSPROF_LOGI("Success to divide json input switch[%s: %s]", it.key().c_str(), to_string(it.value()));
@@ -96,10 +92,10 @@ void MsprofStart::DivideProtoJsonInput(int argvCount, nlohmann::json argv)
     MSPROF_EVENT("Success to divide all json input switch");
 }
 
-void MsprofStart::DivideMsprofInput(int32_t argc, const char *argv[])
+void MsprofStart::DivideMsprofInput(int32_t argc, const char* argv[])
 {
     inputSwitch_.erase(inputSwitch_.begin(), inputSwitch_.end());
-    for(int i = 1; i < argc; i++) {
+    for (int i = 1; i < argc; i++) {
         string argd(argv[i]);
         if (argd.compare(CROSSBAR.length(), APPLICATION.length(), APPLICATION) == 0 ||
             argd.compare(CROSSBAR.length(), OUTPUT.length(), OUTPUT) == 0) {
@@ -120,88 +116,80 @@ void MsprofStart::DivideMsprofInput(int32_t argc, const char *argv[])
     MSPROF_EVENT("Success to divide all msprof input switch");
 }
 
-void MsprofStart::SetPcSampling(bool pcSample)
-{
-    DataReportMgr().SetPcSampling(pcSample);
-}
+void MsprofStart::SetPcSampling(bool pcSample) { DataReportMgr().SetPcSampling(pcSample); }
 
-void MsprofStart::SetMsprofTx(bool ret)
-{
-    DataReportMgr().SetMsprofTx(ret);
-}
+void MsprofStart::SetMsprofTx(bool ret) { DataReportMgr().SetMsprofTx(ret); }
 
-void MsprofStart::SetSleepTime(int32_t sleepTime)
-{
-    DataReportMgr().SetSleepTime(sleepTime);
-}
+void MsprofStart::SetSleepTime(int32_t sleepTime) { DataReportMgr().SetSleepTime(sleepTime); }
 
-void MsprofStart::GetCheckList(vector<string> &dataList, vector<string> &blackDataList, string dataType)
+void MsprofStart::GetCheckList(vector<string>& dataList, vector<string>& blackDataList, string dataType)
 {
     dataList.clear();
     if (dataType == DEVICE_DIR) {
-        for (auto &it : deviceCheckList_) {
+        for (auto& it : deviceCheckList_) {
             dataList.emplace_back(it);
         }
         deviceCheckList_.clear();
-        for (auto &it : deviceBlackCheckList_) {
+        for (auto& it : deviceBlackCheckList_) {
             blackDataList.emplace_back(it);
         }
         deviceBlackCheckList_.clear();
     } else if (dataType == HOST_DIR) {
-        for (auto &it : hostCheckList_) {
+        for (auto& it : hostCheckList_) {
             dataList.emplace_back(it);
         }
         hostCheckList_.clear();
-        for (auto &it : hostBlackCheckList_) {
+        for (auto& it : hostBlackCheckList_) {
             blackDataList.emplace_back(it);
         }
         hostBlackCheckList_.clear();
     }
 }
 
-void MsprofStart::SetCheckList(const vector<string> &srcDataList, const vector<string> &srcBlackDataList,
-    vector<string> &dstDataList, vector<string> &dstBlackDataList)
+void MsprofStart::SetCheckList(
+    const vector<string>& srcDataList, const vector<string>& srcBlackDataList, vector<string>& dstDataList,
+    vector<string>& dstBlackDataList)
 {
     dstDataList.clear();
-    for (auto &it : srcDataList) {
+    for (auto& it : srcDataList) {
         dstDataList.emplace_back(it);
     }
     dstBlackDataList.clear();
-    for (auto &it : srcBlackDataList) {
+    for (auto& it : srcBlackDataList) {
         dstBlackDataList.emplace_back(it);
     }
 }
 
-void MsprofStart::SetDeviceCheckList(const vector<string> &dataList, const vector<string> &blackDataList)
+void MsprofStart::SetDeviceCheckList(const vector<string>& dataList, const vector<string>& blackDataList)
 {
     SetCheckList(dataList, blackDataList, deviceCheckList_, deviceBlackCheckList_);
 }
 
-void MsprofStart::SetHostCheckList(const vector<string> &dataList, const vector<string> &blackDataList)
+void MsprofStart::SetHostCheckList(const vector<string>& dataList, const vector<string>& blackDataList)
 {
     SetCheckList(dataList, blackDataList, hostCheckList_, hostBlackCheckList_);
 }
 
-void MsprofStart::SetBitSwitchCheckList(const vector<uint64_t> &dataList, const vector<uint64_t> &blackDataList)
+void MsprofStart::SetBitSwitchCheckList(const vector<uint64_t>& dataList, const vector<uint64_t>& blackDataList)
 {
     bitCheckList_.clear();
     bitBlackCheckList_.clear();
-    for (auto &it : dataList) {
+    for (auto& it : dataList) {
         bitCheckList_.emplace_back(it);
     }
-    for (auto &it : blackDataList) {
+    for (auto& it : blackDataList) {
         bitBlackCheckList_.emplace_back(it);
     }
 }
 
-void MsprofStart::GetBitSwitch(vector<uint64_t> &dataList, uint64_t &bitSwitch, vector<uint64_t> &blackDataList)
+void MsprofStart::GetBitSwitch(vector<uint64_t>& dataList, uint64_t& bitSwitch, vector<uint64_t>& blackDataList)
 {
     dataList.clear();
     blackDataList.clear();
-    for (auto &it : bitCheckList_) {
+    for (auto& it : bitCheckList_) {
         dataList.emplace_back(it);
     }
-    for (auto &it : bitBlackCheckList_) {
+    for (auto& it : bitBlackCheckList_) {
         blackDataList.emplace_back(it);
     }
     bitSwitch = DataReportMgr().GetBitSwitch();
@@ -210,11 +198,15 @@ void MsprofStart::GetBitSwitch(vector<uint64_t> &dataList, uint64_t &bitSwitch, 
 /*
  * @berif  : Start profiling by Commandline type
  */
-int32_t MsprofStart::MsprofStartByAppMode(int subArgvCount, const char **subArgv)
+int32_t MsprofStart::MsprofStartByAppMode(int subArgvCount, const char** subArgv)
 {
     const char* envp[1] = {nullptr};
-    const char* BaseArgv[] = {"msprof", "--application=./cli", "--output=./clistest_workspace/output",};
-    int BaseArgvLenth = sizeof(BaseArgv) / sizeof(char *);
+    const char* BaseArgv[] = {
+        "msprof",
+        "--application=./cli",
+        "--output=./clistest_workspace/output",
+    };
+    int BaseArgvLenth = sizeof(BaseArgv) / sizeof(char*);
 
     ClearSingleton();
 
@@ -223,7 +215,7 @@ int32_t MsprofStart::MsprofStartByAppMode(int subArgvCount, const char **subArgv
         return LltMain(BaseArgvLenth, BaseArgv, envp);
     }
 
-    int MergeArgvLenth = sizeof(BaseArgv) / sizeof(char *) + subArgvCount;
+    int MergeArgvLenth = sizeof(BaseArgv) / sizeof(char*) + subArgvCount;
     const char* MergeArv[MergeArgvLenth];
     for (int i = 0; i < MergeArgvLenth; i++) {
         if (i < BaseArgvLenth) {
@@ -238,11 +230,11 @@ int32_t MsprofStart::MsprofStartByAppMode(int subArgvCount, const char **subArgv
     return LltMain(MergeArgvLenth, MergeArv, envp);
 }
 
-int32_t MsprofStart::MsprofStartByAppModeTwo(int subArgvCount, const char **subArgv)
+int32_t MsprofStart::MsprofStartByAppModeTwo(int subArgvCount, const char** subArgv)
 {
     const char* envp[1] = {nullptr};
     const char* BaseArgv[] = {"msprof", "--output=./clistest_workspace/output"}; // use cli at rear in subArgv
-    int BaseArgvLenth = sizeof(BaseArgv) / sizeof(char *);
+    int BaseArgvLenth = sizeof(BaseArgv) / sizeof(char*);
 
     ClearSingleton();
 
@@ -251,7 +243,7 @@ int32_t MsprofStart::MsprofStartByAppModeTwo(int subArgvCount, const char **subA
         return LltMain(BaseArgvLenth, BaseArgv, envp);
     }
 
-    int MergeArgvLenth = sizeof(BaseArgv) / sizeof(char *) + subArgvCount;
+    int MergeArgvLenth = sizeof(BaseArgv) / sizeof(char*) + subArgvCount;
     const char* MergeArv[MergeArgvLenth];
     for (int i = 0; i < MergeArgvLenth; i++) {
         if (i < BaseArgvLenth) {
@@ -266,11 +258,11 @@ int32_t MsprofStart::MsprofStartByAppModeTwo(int subArgvCount, const char **subA
     return LltMain(MergeArgvLenth, MergeArv, envp);
 }
 
-int32_t MsprofStart::MsprofStartBySysMode(int subArgvCount, const char **subArgv)
+int32_t MsprofStart::MsprofStartBySysMode(int subArgvCount, const char** subArgv)
 {
     const char* envp[1] = {nullptr};
     const char* BaseArgv[] = {"msprof", "--output=./clistest_workspace/output", "--sys-period=1", "--sys-devices=0"};
-    int BaseArgvLenth = sizeof(BaseArgv) / sizeof(char *);
+    int BaseArgvLenth = sizeof(BaseArgv) / sizeof(char*);
 
     ClearSingleton();
 
@@ -279,7 +271,7 @@ int32_t MsprofStart::MsprofStartBySysMode(int subArgvCount, const char **subArgv
         return LltMain(BaseArgvLenth, BaseArgv, envp);
     }
 
-    int MergeArgvLenth = sizeof(BaseArgv) / sizeof(char *) + subArgvCount;
+    int MergeArgvLenth = sizeof(BaseArgv) / sizeof(char*) + subArgvCount;
     const char* MergeArv[MergeArgvLenth];
     for (int i = 0; i < MergeArgvLenth; i++) {
         if (i < BaseArgvLenth) {
@@ -314,7 +306,7 @@ int32_t MsprofStart::RunModelLifecycle()
         return ACL_ERROR_INVALID_PARAM;
     }
 #ifndef MSPROF_C
-    void *stream = &modelId; // fake stream
+    void* stream = &modelId; // fake stream
     if (DataReportMgr().GetMsprofTx() &&
         aclprofMarkEx("model execute start", strlen("model execute start"), stream) != 0) {
         MSPROF_LOGE("aclprofMarkEx failed");
@@ -336,7 +328,7 @@ int32_t MsprofStart::RunModelLifecycle()
 /*
  * @berif  : Write profiling argv as JSON to file
  */
-void MsprofStart::WriteJsonToFile(const std::string &filePath, const nlohmann::json &argv)
+void MsprofStart::WriteJsonToFile(const std::string& filePath, const nlohmann::json& argv)
 {
     ofstream jsonFile;
     jsonFile.open(filePath, ios::out | ios::app);
@@ -350,7 +342,7 @@ void MsprofStart::WriteJsonToFile(const std::string &filePath, const nlohmann::j
 /*
  * @berif  : Prepare acl.json file path and call aclInit
  */
-int32_t MsprofStart::PrepareAndInitAclJson(nlohmann::json &argv, std::string &acljsonPath)
+int32_t MsprofStart::PrepareAndInitAclJson(nlohmann::json& argv, std::string& acljsonPath)
 {
     acljsonPath = argv["output"];
     // test_dir_test folder for test iterations will not be created
@@ -363,7 +355,7 @@ int32_t MsprofStart::PrepareAndInitAclJson(nlohmann::json &argv, std::string &ac
     acljsonPath += "/acl.json";
     WriteJsonToFile(acljsonPath, argv);
 
-    const char *aclConfigPath = static_cast<const char *>(acljsonPath.c_str());
+    const char* aclConfigPath = static_cast<const char*>(acljsonPath.c_str());
     if (aclInit(aclConfigPath) != ACL_SUCCESS) {
         return -1;
     }
@@ -423,7 +415,7 @@ int32_t MsprofStart::AclJsonStart(int argvCount, nlohmann::json argv)
 /*
  * @berif  : Prepare geoption.json file and call aclInit
  */
-int32_t MsprofStart::PrepareAndInitGeOption(nlohmann::json &argv)
+int32_t MsprofStart::PrepareAndInitGeOption(nlohmann::json& argv)
 {
     argv["aic_metrics"] = "ArithmeticUtilization";
     argv["fp_point"] = "";
@@ -434,7 +426,7 @@ int32_t MsprofStart::PrepareAndInitGeOption(nlohmann::json &argv)
 
     WriteJsonToFile("./geoption.json", argv);
 
-    const char *geConfigPath = "./geoption.json";
+    const char* geConfigPath = "./geoption.json";
     if (aclInit(geConfigPath) != ACL_SUCCESS) {
         return -1;
     }
@@ -495,11 +487,15 @@ int32_t MsprofStart::GeOptionStart(int argvCount, nlohmann::json argv)
     return 0;
 }
 
-int32_t MsprofStart::AcpProfileStartByAppMode(int subArgvCount, const char **subArgv)
+int32_t MsprofStart::AcpProfileStartByAppMode(int subArgvCount, const char** subArgv)
 {
     const char* envp[1] = {nullptr};
-    const char* BaseArgv[] = {"acp", "profile", "--output=./cliAcpStest_workspace/output",};
-    int BaseArgvLenth = sizeof(BaseArgv) / sizeof(char *);
+    const char* BaseArgv[] = {
+        "acp",
+        "profile",
+        "--output=./cliAcpStest_workspace/output",
+    };
+    int BaseArgvLenth = sizeof(BaseArgv) / sizeof(char*);
 
     ClearSingleton();
 
@@ -508,7 +504,7 @@ int32_t MsprofStart::AcpProfileStartByAppMode(int subArgvCount, const char **sub
         return LltAcpMain(BaseArgvLenth, BaseArgv, envp);
     }
 
-    int MergeArgvLenth = sizeof(BaseArgv) / sizeof(char *) + subArgvCount + 1;
+    int MergeArgvLenth = sizeof(BaseArgv) / sizeof(char*) + subArgvCount + 1;
     const char* MergeArv[MergeArgvLenth];
     for (int i = 0; i < MergeArgvLenth - 1; i++) {
         if (i < BaseArgvLenth) {
@@ -523,20 +519,11 @@ int32_t MsprofStart::AcpProfileStartByAppMode(int subArgvCount, const char **sub
     return LltAcpMain(MergeArgvLenth, MergeArv, envp);
 }
 
-void MsprofStart::SetProfDir(std::string dir)
-{
-    profDir_ = dir;
-}
- 
-std::string MsprofStart::GetProfDir()
-{
-    return profDir_;
-}
+void MsprofStart::SetProfDir(std::string dir) { profDir_ = dir; }
 
-void MsprofStart::SetMsprofConfig(StProfConfigType type)
-{
-    DataReportMgr().SetMsprofConfig(type);
-}
-}
-}
-}
+std::string MsprofStart::GetProfDir() { return profDir_; }
+
+void MsprofStart::SetMsprofConfig(StProfConfigType type) { DataReportMgr().SetMsprofConfig(type); }
+} // namespace Test
+} // namespace Dvvp
+} // namespace Cann

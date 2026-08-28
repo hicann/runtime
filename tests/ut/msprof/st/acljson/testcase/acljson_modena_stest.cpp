@@ -70,7 +70,7 @@ TEST_F(AclJsonModenaStest, AclJsonBasicAicMetrics)
 {
     const std::vector<std::string> metrics = {
         "PipeUtilization", "Memory", "MemoryUB", "ArithmeticUtilization", "ResourceConflictRatio"};
-    for (const auto &metric : metrics) {
+    for (const auto& metric : metrics) {
         nlohmann::json data;
         data["output"] = MODENA_ACLJSON_OUTPUT_DIR;
         data["aic_metrics"] = metric;

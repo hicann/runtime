@@ -24,16 +24,14 @@ using namespace analysis::dvvp::common::error;
 using namespace Analysis::Dvvp::Common::Platform;
 using namespace Analysis::Dvvp::Common::Config;
 
-class COMMON_VALIDATION_PARAM_VALIDATION_STEST: public testing::Test {
+class COMMON_VALIDATION_PARAM_VALIDATION_STEST : public testing::Test {
 protected:
-    virtual void SetUp() {
-    }
-    virtual void TearDown() {
-    }
-
+    virtual void SetUp() {}
+    virtual void TearDown() {}
 };
 
-static int _drv_get_dev_ids(int num_devices, std::vector<int> & dev_ids) {
+static int _drv_get_dev_ids(int num_devices, std::vector<int>& dev_ids)
+{
     static int phase = 0;
     if (phase == 0) {
         phase++;
@@ -46,22 +44,23 @@ static int _drv_get_dev_ids(int num_devices, std::vector<int> & dev_ids) {
     }
 }
 
-TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_STEST, CheckProfilingParams) {
+TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_STEST, CheckProfilingParams)
+{
     std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams());
     auto entry = analysis::dvvp::common::validation::ParamValidation::instance();
     params->devices = "all";
-    //jobStartReq == nullptr
+    // jobStartReq == nullptr
     EXPECT_EQ(false, entry->CheckProfilingParams(nullptr));
-    //job_id is empty
+    // job_id is empty
     EXPECT_EQ(true, entry->CheckProfilingParams(params));
     params->host_sys = "cpu";
     EXPECT_EQ(true, entry->CheckProfilingParams(params));
-    //job_id is illegal
+    // job_id is illegal
     params->job_id = "0aA-$";
     EXPECT_EQ(true, entry->CheckProfilingParams(params));
     params->job_id = "0aA-";
     EXPECT_EQ(true, entry->CheckProfilingParams(params));
-    //profiling_mode is empty
+    // profiling_mode is empty
     EXPECT_EQ(true, entry->CheckProfilingParams(params));
     params->profiling_mode = "def_mode";
     params->devices = "0,1";
@@ -80,7 +79,8 @@ TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_STEST, CheckProfilingParams) {
     EXPECT_EQ(true, entry->CheckProfilingParams(params));
 }
 
-TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_STEST, CheckProfilingIntervalIsValid) {
+TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_STEST, CheckProfilingIntervalIsValid)
+{
     std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams());
     auto entry = analysis::dvvp::common::validation::ParamValidation::instance();
     EXPECT_EQ(false, entry->CheckProfilingIntervalIsValid(nullptr));
@@ -96,32 +96,33 @@ TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_STEST, CheckProfilingIntervalIsValid) 
     params->aicore_sampling_interval = 10;
     EXPECT_EQ(false, entry->CheckProfilingIntervalIsValid(params));
     params->aiv_sampling_interval = 10;
-    params->hccsInterval  = 0;
+    params->hccsInterval = 0;
     EXPECT_EQ(false, entry->CheckProfilingIntervalIsValid(params));
     params->hccsInterval = 10;
-    params->pcieInterval  = 0;
+    params->pcieInterval = 0;
     EXPECT_EQ(false, entry->CheckProfilingIntervalIsValid(params));
     params->pcieInterval = 10;
-    params->roceInterval  = 0;
+    params->roceInterval = 0;
     EXPECT_EQ(false, entry->CheckProfilingIntervalIsValid(params));
     params->roceInterval = 10;
-    params->llc_interval  = 0;
+    params->llc_interval = 0;
     EXPECT_EQ(false, entry->CheckProfilingIntervalIsValid(params));
     params->llc_interval = 10;
-    params->ddr_interval  = 0;
+    params->ddr_interval = 0;
     EXPECT_EQ(false, entry->CheckProfilingIntervalIsValid(params));
     params->ddr_interval = 10;
-    params->hbmInterval  = 0;
+    params->hbmInterval = 0;
     EXPECT_EQ(false, entry->CheckProfilingIntervalIsValid(params));
     params->hbmInterval = 10;
-    params->hardware_mem_sampling_interval   = 0;
+    params->hardware_mem_sampling_interval = 0;
     EXPECT_EQ(false, entry->CheckProfilingIntervalIsValid(params));
     params->hardware_mem_sampling_interval = 10;
-    params->profiling_period    = 0;
+    params->profiling_period = 0;
     EXPECT_EQ(true, entry->CheckProfilingIntervalIsValid(params));
 }
 
-TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_STEST, CheckSystemTraceSwitchProfiling) {
+TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_STEST, CheckSystemTraceSwitchProfiling)
+{
     std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams());
     auto entry = analysis::dvvp::common::validation::ParamValidation::instance();
     EXPECT_EQ(false, entry->CheckSystemTraceSwitchProfiling(nullptr));
@@ -161,14 +162,16 @@ TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_STEST, CheckSystemTraceSwitchProfiling
     EXPECT_EQ(true, entry->CheckSystemTraceSwitchProfiling(params));
 }
 
-TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_STEST, CheckControlSwitchProfiling) {
+TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_STEST, CheckControlSwitchProfiling)
+{
     std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams());
     auto entry = analysis::dvvp::common::validation::ParamValidation::instance();
     params->taskTsfw = "asd";
     EXPECT_EQ(true, entry->CheckControlSwitchProfiling(params));
 }
 
-TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_STEST, CheckTsSwitchProfiling) {
+TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_STEST, CheckTsSwitchProfiling)
+{
     std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams());
     auto entry = analysis::dvvp::common::validation::ParamValidation::instance();
     params->ts_task_track = "asd";
@@ -201,7 +204,8 @@ TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_STEST, CheckTsSwitchProfiling) {
     EXPECT_EQ(true, entry->CheckTsSwitchProfiling(params));
 }
 
-TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_STEST, CheckPmuSwitchProfiling) {
+TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_STEST, CheckPmuSwitchProfiling)
+{
     std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams());
     auto entry = analysis::dvvp::common::validation::ParamValidation::instance();
     params->ai_core_profiling = "asd";
@@ -211,9 +215,9 @@ TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_STEST, CheckPmuSwitchProfiling) {
     EXPECT_EQ(false, entry->CheckPmuSwitchProfiling(params));
     params->aiv_profiling = "on";
     params->llc_profiling = "on";
-    params->ddr_profiling="asd";
+    params->ddr_profiling = "asd";
     EXPECT_EQ(false, entry->CheckPmuSwitchProfiling(params));
-    params->ddr_profiling="on";
+    params->ddr_profiling = "on";
     params->hccsProfiling = "asd";
     EXPECT_EQ(false, entry->CheckPmuSwitchProfiling(params));
     params->pcieProfiling = "asd";
@@ -226,57 +230,65 @@ TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_STEST, CheckPmuSwitchProfiling) {
     EXPECT_EQ(true, entry->CheckPmuSwitchProfiling(params));
 }
 
-TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_STEST, CheckAivEventCoresIsValid) {
+TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_STEST, CheckAivEventCoresIsValid)
+{
     auto entry = analysis::dvvp::common::validation::ParamValidation::instance();
-    const std::vector<int> coreId = {0,1,2,3,4,5,6,7,8};
+    const std::vector<int> coreId = {0, 1, 2, 3, 4, 5, 6, 7, 8};
     EXPECT_EQ(true, entry->CheckAivEventCoresIsValid(coreId));
-    const std::vector<int> coreId1 = {0,1,2,3,-4};
+    const std::vector<int> coreId1 = {0, 1, 2, 3, -4};
     EXPECT_EQ(false, entry->CheckAivEventCoresIsValid(coreId1));
-    const std::vector<int> coreId2 = {0,1,2,3,4};
+    const std::vector<int> coreId2 = {0, 1, 2, 3, 4};
     EXPECT_EQ(true, entry->CheckAivEventCoresIsValid(coreId2));
     const std::vector<int> coreId3(81);
     EXPECT_EQ(false, entry->CheckAivEventCoresIsValid(coreId3));
 }
 
-TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_STEST, CheckTsCpuEventIsValid) {
+TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_STEST, CheckTsCpuEventIsValid)
+{
     auto entry = analysis::dvvp::common::validation::ParamValidation::instance();
-    std::vector<std::string> events = {"read","write","read","write","read", "asd","write","read","write"};
+    std::vector<std::string> events = {"read", "write", "read", "write", "read", "asd", "write", "read", "write"};
     EXPECT_EQ(false, entry->CheckTsCpuEventIsValid(events));
-    std::vector<std::string> events1 = {"read","write","read","write"};
+    std::vector<std::string> events1 = {"read", "write", "read", "write"};
     EXPECT_EQ(false, entry->CheckTsCpuEventIsValid(events1));
     std::vector<std::string> events2 = {"0xa"};
     EXPECT_EQ(true, entry->CheckTsCpuEventIsValid(events2));
 }
 
-TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_STEST, CheckDdrEventsIsValid) {
+TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_STEST, CheckDdrEventsIsValid)
+{
     auto entry = analysis::dvvp::common::validation::ParamValidation::instance();
-    std::vector<std::string> events = {"read","write","read","write","read","write","read","write","read","write"};
+    std::vector<std::string> events = {"read",  "write", "read",  "write", "read",
+                                       "write", "read",  "write", "read",  "write"};
     EXPECT_EQ(false, entry->CheckDdrEventsIsValid(events));
-    events = {"read","write1"};
+    events = {"read", "write1"};
     EXPECT_EQ(false, entry->CheckDdrEventsIsValid(events));
-    events = {"read","write"};
+    events = {"read", "write"};
     EXPECT_EQ(true, entry->CheckDdrEventsIsValid(events));
     events = {"master_id"};
     EXPECT_EQ(true, entry->CheckDdrEventsIsValid(events));
 }
 
-TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_STEST, CheckHbmEventsIsValid) {
+TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_STEST, CheckHbmEventsIsValid)
+{
     auto entry = analysis::dvvp::common::validation::ParamValidation::instance();
-    std::vector<std::string> events = {"read","write","read","write","read","write","read","write","read","write"};
+    std::vector<std::string> events = {"read",  "write", "read",  "write", "read",
+                                       "write", "read",  "write", "read",  "write"};
     EXPECT_EQ(false, entry->CheckHbmEventsIsValid(events));
-    events = {"read","write1"};
+    events = {"read", "write1"};
     EXPECT_EQ(false, entry->CheckHbmEventsIsValid(events));
-    events = {"read","write"};
+    events = {"read", "write"};
     EXPECT_EQ(true, entry->CheckHbmEventsIsValid(events));
 }
 
-TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_STEST, CheckAivEventsIsValid) {
+TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_STEST, CheckAivEventsIsValid)
+{
     auto entry = analysis::dvvp::common::validation::ParamValidation::instance();
     const std::vector<std::string> aiv;
     EXPECT_EQ(true, entry->CheckAivEventsIsValid(aiv));
 }
 
-TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_STEST, CheckAppNameIsValid) {
+TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_STEST, CheckAppNameIsValid)
+{
     auto entry = analysis::dvvp::common::validation::ParamValidation::instance();
     EXPECT_EQ(false, entry->CheckAppNameIsValid(""));
 
@@ -287,27 +299,32 @@ TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_STEST, CheckAppNameIsValid) {
     EXPECT_EQ(false, entry->CheckAppNameIsValid(invalidAppName));
 }
 
-TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_STEST, CheckProfilingParams1) {
+TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_STEST, CheckProfilingParams1)
+{
     std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams());
     std::shared_ptr<analysis::dvvp::proto::JobStartReq> start(new analysis::dvvp::proto::JobStartReq);
     auto entry = analysis::dvvp::common::validation::ParamValidation::instance();
-    //profiling_mode is illegal
-    std::string sampleConfig = "{\"result_dir\":\"/tmp/\", \"job_id\":\"aaaZZZZ000-\", \"profiling_mode\":\"system-wide\", \"devices\":\"1\"}";
+    // profiling_mode is illegal
+    std::string sampleConfig =
+        "{\"result_dir\":\"/tmp/\", \"job_id\":\"aaaZZZZ000-\", \"profiling_mode\":\"system-wide\", \"devices\":\"1\"}";
     params->FromString(sampleConfig);
     EXPECT_EQ(true, entry->CheckProfilingParams(params));
 }
 
-TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_STEST, Init) {
+TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_STEST, Init)
+{
     GlobalMockObject::verify();
     EXPECT_EQ(0, analysis::dvvp::common::validation::ParamValidation::instance()->Init());
 }
 
-TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_STEST, UnInit) {
+TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_STEST, UnInit)
+{
     GlobalMockObject::verify();
     EXPECT_EQ(0, analysis::dvvp::common::validation::ParamValidation::instance()->Uninit());
 }
 
-TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_STEST, CheckLlcEventsIsValid) {
+TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_STEST, CheckLlcEventsIsValid)
+{
     GlobalMockObject::verify();
 
     std::string llcEvents;
@@ -329,7 +346,8 @@ TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_STEST, CheckEventsSize)
     EXPECT_EQ(PROFILING_FAILED, entry->CheckEventsSize("0x1,0x2,0x3,0x4,0x5,0x6,0x7,0x8,0x9"));
 }
 
-TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_STEST, CheckAicoreMetricsIsValid) {
+TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_STEST, CheckAicoreMetricsIsValid)
+{
     GlobalMockObject::verify();
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
         .stubs()
@@ -350,7 +368,8 @@ TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_STEST, CheckAicoreMetricsIsValid) {
     Platform::instance()->Uninit();
 }
 
-TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_STEST, CheckSocPmuEventsValid) {
+TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_STEST, CheckSocPmuEventsValid)
+{
     using namespace analysis::dvvp::common::validation;
     GlobalMockObject::verify();
 #ifndef BUILD_PROFILING_OPEN_PROJECT
@@ -359,14 +378,14 @@ TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_STEST, CheckSocPmuEventsValid) {
         .will(returnValue(PlatformType::CHIP_CLOUD_V3));
     Platform::instance()->Uninit();
     Platform::instance()->Init();
-    std::vector<std::string> events = {"0x00","0x01","0x02","0x03","0x04","0x05","0x06","0x07","0x08"};
+    std::vector<std::string> events = {"0x00", "0x01", "0x02", "0x03", "0x04", "0x05", "0x06", "0x07", "0x08"};
     auto entry = analysis::dvvp::common::validation::ParamValidation::instance();
     EXPECT_EQ(false, entry->CheckSocPmuEventsValid(ProfSocPmuType::PMU_TYPE_HA, events));
-    events = {"0x90","0x01","0x02","0x03","0x04","0x05","0x06","0x07"};
+    events = {"0x90", "0x01", "0x02", "0x03", "0x04", "0x05", "0x06", "0x07"};
     EXPECT_EQ(true, entry->CheckSocPmuEventsValid(ProfSocPmuType::PMU_TYPE_HA, events));
-    events = {" 0x00","0x01 "," 0x02 ","  0x03 "," 0x04   ","0x05    ","     0x06"};
+    events = {" 0x00", "0x01 ", " 0x02 ", "  0x03 ", " 0x04   ", "0x05    ", "     0x06"};
     EXPECT_EQ(true, entry->CheckSocPmuEventsValid(ProfSocPmuType::PMU_TYPE_HA, events));
-    events = {"0x 00","0x01","0x02","0x03","0x04","0x05","0x06"};
+    events = {"0x 00", "0x01", "0x02", "0x03", "0x04", "0x05", "0x06"};
     EXPECT_EQ(false, entry->CheckSocPmuEventsValid(ProfSocPmuType::PMU_TYPE_HA, events));
     events = {"0x78", "0x79", "0x77", "0x71", "0x6a", "0x6c", "0x74", "0x62"};
     EXPECT_EQ(true, entry->CheckSocPmuEventsValid(ProfSocPmuType::PMU_TYPE_HA, events));
@@ -403,7 +422,8 @@ TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_STEST, CheckSocPmuEventsValid) {
     Platform::instance()->Uninit();
 }
 
-TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_STEST, IsValidSleepPeriod) {
+TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_STEST, IsValidSleepPeriod)
+{
     GlobalMockObject::verify();
 
     auto entry = analysis::dvvp::common::validation::ParamValidation::instance();
@@ -411,7 +431,8 @@ TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_STEST, IsValidSleepPeriod) {
     EXPECT_EQ(1, entry->IsValidSleepPeriod(1));
 }
 
-TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_STEST, CheckHostSysOptionsIsValid) {
+TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_STEST, CheckHostSysOptionsIsValid)
+{
     GlobalMockObject::verify();
 
     auto entry = analysis::dvvp::common::validation::ParamValidation::instance();
@@ -423,7 +444,8 @@ TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_STEST, CheckHostSysOptionsIsValid) {
     EXPECT_EQ(true, entry->CheckHostSysOptionsIsValid(hostSysOptions));
 }
 
-TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_STEST, CheckHostSysPidIsValid) {
+TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_STEST, CheckHostSysPidIsValid)
+{
     GlobalMockObject::verify();
 
     auto entry = analysis::dvvp::common::validation::ParamValidation::instance();
@@ -435,10 +457,10 @@ TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_STEST, CheckHostSysPidIsValid) {
     EXPECT_EQ(1, entry->CheckHostSysPidIsValid(hostSysPid));
 }
 
-TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_STEST, CheckStorageLimit) {
+TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_STEST, CheckStorageLimit)
+{
     using namespace analysis::dvvp::common::validation;
-    std::shared_ptr<analysis::dvvp::message::ProfileParams> params(
-    new analysis::dvvp::message::ProfileParams);
+    std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams);
 
     params->storageLimit = "MB";
     bool ret = ParamValidation::instance()->CheckStorageLimit(params);
@@ -477,7 +499,8 @@ TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_STEST, CheckStorageLimit) {
     EXPECT_EQ(true, ret);
 }
 
-TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_STEST, CheckInstrProfilingFreqValid) {
+TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_STEST, CheckInstrProfilingFreqValid)
+{
     GlobalMockObject::verify();
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
         .stubs()

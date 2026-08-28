@@ -25,28 +25,27 @@ using namespace Analysis::Dvvp::Common::Statistics;
 using namespace Analysis::Dvvp::MsprofErrMgr;
 #define MAX_BUFFER_SIZE (1024 * 1024 * 2)
 #define MAX_THRESHOLD_SIZE (MAX_BUFFER_SIZE * 0.8)
-class TRANSPORT_PROF_CHANNELREADER_UTEST: public testing::Test {
+class TRANSPORT_PROF_CHANNELREADER_UTEST : public testing::Test {
 protected:
-    virtual void SetUp() {
-        std::shared_ptr<analysis::dvvp::message::JobContext> jobCtx(
-            new analysis::dvvp::message::JobContext);
+    virtual void SetUp()
+    {
+        std::shared_ptr<analysis::dvvp::message::JobContext> jobCtx(new analysis::dvvp::message::JobContext);
         _job_ctx = jobCtx;
     }
-    virtual void TearDown() {
-    }
+    virtual void TearDown() {}
+
 public:
     std::shared_ptr<analysis::dvvp::message::JobContext> _job_ctx;
-    void EXPECT_HashIdDiff(analysis::dvvp::driver::AI_DRV_CHANNEL channel1,
-        analysis::dvvp::driver::AI_DRV_CHANNEL channel2);
+    void EXPECT_HashIdDiff(
+        analysis::dvvp::driver::AI_DRV_CHANNEL channel1, analysis::dvvp::driver::AI_DRV_CHANNEL channel2);
 };
 
-TEST_F(TRANSPORT_PROF_CHANNELREADER_UTEST, Execute) {
+TEST_F(TRANSPORT_PROF_CHANNELREADER_UTEST, Execute)
+{
     GlobalMockObject::verify();
 
-    std::shared_ptr<analysis::dvvp::transport::ChannelReader> reader(
-        new analysis::dvvp::transport::ChannelReader(
-            0, analysis::dvvp::driver::PROF_CHANNEL_TS_CPU, "data/ts.12.0.0",
-            _job_ctx));
+    std::shared_ptr<analysis::dvvp::transport::ChannelReader> reader(new analysis::dvvp::transport::ChannelReader(
+        0, analysis::dvvp::driver::PROF_CHANNEL_TS_CPU, "data/ts.12.0.0", _job_ctx));
 
     reader->Init();
     MOCKER(&analysis::dvvp::driver::DrvChannelRead)
@@ -55,8 +54,9 @@ TEST_F(TRANSPORT_PROF_CHANNELREADER_UTEST, Execute) {
         .then(returnValue(64))
         .then(returnValue(0));
 
-    MOCKER_CPP(&analysis::dvvp::transport::UploaderMgr::UploadData,
-        int(analysis::dvvp::transport::UploaderMgr::*)(const std::string &, const void *, uint32_t))
+    MOCKER_CPP(
+        &analysis::dvvp::transport::UploaderMgr::UploadData,
+        int(analysis::dvvp::transport::UploaderMgr::*)(const std::string&, const void*, uint32_t))
         .stubs()
         .will(returnValue(PROFILING_FAILED));
 
@@ -74,13 +74,12 @@ TEST_F(TRANSPORT_PROF_CHANNELREADER_UTEST, Execute) {
     reader.reset();
 }
 
-TEST_F(TRANSPORT_PROF_CHANNELREADER_UTEST, HashId) {
+TEST_F(TRANSPORT_PROF_CHANNELREADER_UTEST, HashId)
+{
     GlobalMockObject::verify();
 
-    std::shared_ptr<analysis::dvvp::transport::ChannelReader> reader(
-        new analysis::dvvp::transport::ChannelReader(
-            0, analysis::dvvp::driver::PROF_CHANNEL_TS_CPU, "data/ts.12.0.0",
-            _job_ctx));
+    std::shared_ptr<analysis::dvvp::transport::ChannelReader> reader(new analysis::dvvp::transport::ChannelReader(
+        0, analysis::dvvp::driver::PROF_CHANNEL_TS_CPU, "data/ts.12.0.0", _job_ctx));
     reader->Init();
 
     EXPECT_NE((size_t)0, reader->HashId());
@@ -88,8 +87,8 @@ TEST_F(TRANSPORT_PROF_CHANNELREADER_UTEST, HashId) {
     reader.reset();
 }
 
-void TRANSPORT_PROF_CHANNELREADER_UTEST::EXPECT_HashIdDiff(analysis::dvvp::driver::AI_DRV_CHANNEL channel1,
-    analysis::dvvp::driver::AI_DRV_CHANNEL channel2)
+void TRANSPORT_PROF_CHANNELREADER_UTEST::EXPECT_HashIdDiff(
+    analysis::dvvp::driver::AI_DRV_CHANNEL channel1, analysis::dvvp::driver::AI_DRV_CHANNEL channel2)
 {
     std::shared_ptr<analysis::dvvp::transport::ChannelReader> reader1(
         new analysis::dvvp::transport::ChannelReader(0, channel1, "tmp", _job_ctx));
@@ -97,49 +96,48 @@ void TRANSPORT_PROF_CHANNELREADER_UTEST::EXPECT_HashIdDiff(analysis::dvvp::drive
         new analysis::dvvp::transport::ChannelReader(0, channel2, "tmp", _job_ctx));
     reader1->Init();
     reader2->Init();
-    uint32_t threadNum = 4;  // default
+    uint32_t threadNum = 4; // default
     EXPECT_NE(reader1->HashId() % threadNum, reader2->HashId() % threadNum);
-    threadNum = 8;  // ai server
+    threadNum = 8;          // ai server
     EXPECT_NE(reader1->HashId() % threadNum, reader2->HashId() % threadNum);
 }
 
-TEST_F(TRANSPORT_PROF_CHANNELREADER_UTEST, HashIdDifferent) {
+TEST_F(TRANSPORT_PROF_CHANNELREADER_UTEST, HashIdDifferent)
+{
     // milan
-    EXPECT_HashIdDiff(analysis::dvvp::driver::PROF_CHANNEL_STARS_SOC_LOG, analysis::dvvp::driver::PROF_CHANNEL_FFTS_PROFILE_TASK);
+    EXPECT_HashIdDiff(
+        analysis::dvvp::driver::PROF_CHANNEL_STARS_SOC_LOG, analysis::dvvp::driver::PROF_CHANNEL_FFTS_PROFILE_TASK);
     EXPECT_HashIdDiff(analysis::dvvp::driver::PROF_CHANNEL_STARS_SOC_LOG, analysis::dvvp::driver::PROF_CHANNEL_TS_FW);
     EXPECT_HashIdDiff(analysis::dvvp::driver::PROF_CHANNEL_STARS_SOC_LOG, analysis::dvvp::driver::PROF_CHANNEL_LP);
-    EXPECT_HashIdDiff(analysis::dvvp::driver::PROF_CHANNEL_FFTS_PROFILE_TASK, analysis::dvvp::driver::PROF_CHANNEL_TS_FW);
+    EXPECT_HashIdDiff(
+        analysis::dvvp::driver::PROF_CHANNEL_FFTS_PROFILE_TASK, analysis::dvvp::driver::PROF_CHANNEL_TS_FW);
     EXPECT_HashIdDiff(analysis::dvvp::driver::PROF_CHANNEL_FFTS_PROFILE_TASK, analysis::dvvp::driver::PROF_CHANNEL_LP);
     GlobalMockObject::verify();
 }
 
 ////////////////////////////////////////////////////////////////////
-TEST_F(TRANSPORT_PROF_CHANNELREADER_UTEST, SetChannelStopped) {
+TEST_F(TRANSPORT_PROF_CHANNELREADER_UTEST, SetChannelStopped)
+{
     GlobalMockObject::verify();
 
-    MOCKER_CPP(&analysis::dvvp::transport::ChannelReader::UploadData)
-        .stubs();
+    MOCKER_CPP(&analysis::dvvp::transport::ChannelReader::UploadData).stubs();
 
-    std::shared_ptr<analysis::dvvp::transport::ChannelReader> reader(
-        new analysis::dvvp::transport::ChannelReader(
-            0, analysis::dvvp::driver::PROF_CHANNEL_TS_CPU, "data/ts.12.0.0",
-            _job_ctx));
+    std::shared_ptr<analysis::dvvp::transport::ChannelReader> reader(new analysis::dvvp::transport::ChannelReader(
+        0, analysis::dvvp::driver::PROF_CHANNEL_TS_CPU, "data/ts.12.0.0", _job_ctx));
     EXPECT_EQ(PROFILING_SUCCESS, reader->Init());
     reader->dataSize_ = 10;
     reader->SetChannelStopped();
     reader.reset();
 }
 
-TEST_F(TRANSPORT_PROF_CHANNELREADER_UTEST, UploadData) {
+TEST_F(TRANSPORT_PROF_CHANNELREADER_UTEST, UploadData)
+{
     GlobalMockObject::verify();
 
-    MOCKER_CPP(&analysis::dvvp::transport::ChannelReader::UploadData)
-        .stubs();
+    MOCKER_CPP(&analysis::dvvp::transport::ChannelReader::UploadData).stubs();
 
-    std::shared_ptr<analysis::dvvp::transport::ChannelReader> reader(
-        new analysis::dvvp::transport::ChannelReader(
-            0, analysis::dvvp::driver::PROF_CHANNEL_TS_CPU, "data/ts.12.0.0",
-            _job_ctx));
+    std::shared_ptr<analysis::dvvp::transport::ChannelReader> reader(new analysis::dvvp::transport::ChannelReader(
+        0, analysis::dvvp::driver::PROF_CHANNEL_TS_CPU, "data/ts.12.0.0", _job_ctx));
     EXPECT_EQ(PROFILING_SUCCESS, reader->Init());
     reader->dataSize_ = 0;
     reader->UploadData();
@@ -148,21 +146,19 @@ TEST_F(TRANSPORT_PROF_CHANNELREADER_UTEST, UploadData) {
     reader->UploadData();
 }
 
-TEST_F(TRANSPORT_PROF_CHANNELREADER_UTEST, FlushDrvBuff) {
+TEST_F(TRANSPORT_PROF_CHANNELREADER_UTEST, FlushDrvBuff)
+{
     GlobalMockObject::verify();
 
-    MOCKER_CPP(&analysis::dvvp::transport::ChannelReader::UploadData)
-        .stubs();
+    MOCKER_CPP(&analysis::dvvp::transport::ChannelReader::UploadData).stubs();
 
     MOCKER(&analysis::dvvp::driver::DrvProfFlush)
         .stubs()
         .will(returnValue(PROFILING_FAILED))
         .then(returnValue(PROFILING_SUCCESS));
-    
-    std::shared_ptr<analysis::dvvp::transport::ChannelReader> reader(
-        new analysis::dvvp::transport::ChannelReader(
-            0, analysis::dvvp::driver::PROF_CHANNEL_TS_CPU, "data/ts.12.0.0",
-            _job_ctx));
+
+    std::shared_ptr<analysis::dvvp::transport::ChannelReader> reader(new analysis::dvvp::transport::ChannelReader(
+        0, analysis::dvvp::driver::PROF_CHANNEL_TS_CPU, "data/ts.12.0.0", _job_ctx));
     EXPECT_EQ(PROFILING_SUCCESS, reader->Init());
     reader->FlushDrvBuff();
     reader->channelId_ = analysis::dvvp::driver::PROF_CHANNEL_HWTS_LOG;
@@ -172,54 +168,50 @@ TEST_F(TRANSPORT_PROF_CHANNELREADER_UTEST, FlushDrvBuff) {
     reader->CheckIfSendFlush(0);
 }
 
-TEST_F(TRANSPORT_PROF_CHANNELREADER_UTEST, FlushDrvBuffDoesNotSupportNtsPmu) {
+TEST_F(TRANSPORT_PROF_CHANNELREADER_UTEST, FlushDrvBuffDoesNotSupportNtsPmu)
+{
     GlobalMockObject::verify();
 
-    MOCKER_CPP(&analysis::dvvp::transport::ChannelReader::UploadData)
-        .stubs();
+    MOCKER_CPP(&analysis::dvvp::transport::ChannelReader::UploadData).stubs();
     uint32_t flushsize = 0;
     MOCKER(&analysis::dvvp::driver::DrvProfFlush)
         .expects(never())
         .with(eq(0U), eq(static_cast<uint32_t>(analysis::dvvp::driver::PROF_CHANNEL_NTS_PMU)), outBound(flushsize))
         .will(returnValue(PROFILING_SUCCESS));
 
-    std::shared_ptr<analysis::dvvp::transport::ChannelReader> reader(
-        new analysis::dvvp::transport::ChannelReader(
-            0, analysis::dvvp::driver::PROF_CHANNEL_NTS_PMU, "data/nts_pmu.data",
-            _job_ctx));
+    std::shared_ptr<analysis::dvvp::transport::ChannelReader> reader(new analysis::dvvp::transport::ChannelReader(
+        0, analysis::dvvp::driver::PROF_CHANNEL_NTS_PMU, "data/nts_pmu.data", _job_ctx));
     EXPECT_EQ(PROFILING_SUCCESS, reader->Init());
     EXPECT_FALSE(reader->IsSupportFlushDrvBuff());
     reader->FlushDrvBuff();
 }
 
-TEST_F(TRANSPORT_PROF_CHANNELREADER_UTEST, FlushDrvBuffDoesNotSupportNtsTask) {
+TEST_F(TRANSPORT_PROF_CHANNELREADER_UTEST, FlushDrvBuffDoesNotSupportNtsTask)
+{
     GlobalMockObject::verify();
 
-    MOCKER_CPP(&analysis::dvvp::transport::ChannelReader::UploadData)
-        .stubs();
+    MOCKER_CPP(&analysis::dvvp::transport::ChannelReader::UploadData).stubs();
     uint32_t flushsize = 0;
     MOCKER(&analysis::dvvp::driver::DrvProfFlush)
         .expects(never())
         .with(eq(0U), eq(static_cast<uint32_t>(analysis::dvvp::driver::PROF_CHANNEL_NTS_TASK)), outBound(flushsize))
         .will(returnValue(PROFILING_SUCCESS));
 
-    std::shared_ptr<analysis::dvvp::transport::ChannelReader> reader(
-        new analysis::dvvp::transport::ChannelReader(
-            0, analysis::dvvp::driver::PROF_CHANNEL_NTS_TASK, "data/nts_task.data",
-            _job_ctx));
+    std::shared_ptr<analysis::dvvp::transport::ChannelReader> reader(new analysis::dvvp::transport::ChannelReader(
+        0, analysis::dvvp::driver::PROF_CHANNEL_NTS_TASK, "data/nts_task.data", _job_ctx));
     EXPECT_EQ(PROFILING_SUCCESS, reader->Init());
     EXPECT_FALSE(reader->IsSupportFlushDrvBuff());
     reader->FlushDrvBuff();
 }
 
 struct FlushThreadData {
-    analysis::dvvp::transport::ChannelReader *reader;
+    analysis::dvvp::transport::ChannelReader* reader;
     bool stop;
 };
 
-void *ThreadRun(void *data)
+void* ThreadRun(void* data)
 {
-    auto threadData = reinterpret_cast<FlushThreadData *>(data);
+    auto threadData = reinterpret_cast<FlushThreadData*>(data);
     auto reader = threadData->reader;
     bool stop = false;
     while (!stop) {
@@ -238,26 +230,24 @@ void *ThreadRun(void *data)
     return nullptr;
 }
 
-TEST_F(TRANSPORT_PROF_CHANNELREADER_UTEST, FlushDrvBuff2) {
+TEST_F(TRANSPORT_PROF_CHANNELREADER_UTEST, FlushDrvBuff2)
+{
     GlobalMockObject::verify();
 
-    MOCKER_CPP(&analysis::dvvp::transport::ChannelReader::UploadData)
-        .stubs();
+    MOCKER_CPP(&analysis::dvvp::transport::ChannelReader::UploadData).stubs();
     unsigned int flushsize = 100;
     MOCKER(&analysis::dvvp::driver::DrvProfFlush)
         .stubs()
         .with(any(), any(), outBound(flushsize))
         .will(returnValue(PROFILING_SUCCESS));
-    std::shared_ptr<analysis::dvvp::transport::ChannelReader> reader(
-        new analysis::dvvp::transport::ChannelReader(
-            0, analysis::dvvp::driver::PROF_CHANNEL_TS_CPU, "data/ts.12.0.0",
-            _job_ctx));
+    std::shared_ptr<analysis::dvvp::transport::ChannelReader> reader(new analysis::dvvp::transport::ChannelReader(
+        0, analysis::dvvp::driver::PROF_CHANNEL_TS_CPU, "data/ts.12.0.0", _job_ctx));
     EXPECT_EQ(PROFILING_SUCCESS, reader->Init());
     reader->flushBufSize_ = 0;
     reader->channelId_ = analysis::dvvp::driver::PROF_CHANNEL_HWTS_LOG;
     FlushThreadData threadData = {reader.get(), false};
     pthread_t threadId;
-    ASSERT_EQ(0, pthread_create(&threadId, NULL, ThreadRun, reinterpret_cast<void *>(&threadData)));
+    ASSERT_EQ(0, pthread_create(&threadId, NULL, ThreadRun, reinterpret_cast<void*>(&threadData)));
     reader->FlushDrvBuff();
     {
         std::unique_lock<std::mutex> guard(reader->flushMutex_);
@@ -266,27 +256,23 @@ TEST_F(TRANSPORT_PROF_CHANNELREADER_UTEST, FlushDrvBuff2) {
     ASSERT_EQ(0, pthread_join(threadId, nullptr));
 }
 
-class TRANSPORT_PROF_CHANNELPOLL_UTEST: public testing::Test {
+class TRANSPORT_PROF_CHANNELPOLL_UTEST : public testing::Test {
 protected:
-    virtual void SetUp() {
-        _job_ctx = std::make_shared<analysis::dvvp::message::JobContext>();
-    }
-    virtual void TearDown() {
-    }
+    virtual void SetUp() { _job_ctx = std::make_shared<analysis::dvvp::message::JobContext>(); }
+    virtual void TearDown() {}
+
 public:
     std::shared_ptr<analysis::dvvp::message::JobContext> _job_ctx;
 };
 
-TEST_F(TRANSPORT_PROF_CHANNELPOLL_UTEST, AddReader) {
+TEST_F(TRANSPORT_PROF_CHANNELPOLL_UTEST, AddReader)
+{
     GlobalMockObject::verify();
 
-    std::shared_ptr<analysis::dvvp::transport::ChannelPoll> poll(
-        new analysis::dvvp::transport::ChannelPoll());
+    std::shared_ptr<analysis::dvvp::transport::ChannelPoll> poll(new analysis::dvvp::transport::ChannelPoll());
 
-    std::shared_ptr<analysis::dvvp::transport::ChannelReader> reader(
-        new analysis::dvvp::transport::ChannelReader(
-            0, analysis::dvvp::driver::PROF_CHANNEL_TS_CPU, "data/ts.12.0.0",
-            _job_ctx));
+    std::shared_ptr<analysis::dvvp::transport::ChannelReader> reader(new analysis::dvvp::transport::ChannelReader(
+        0, analysis::dvvp::driver::PROF_CHANNEL_TS_CPU, "data/ts.12.0.0", _job_ctx));
     reader->Init();
 
     EXPECT_EQ(PROFILING_SUCCESS, poll->AddReader(0, analysis::dvvp::driver::PROF_CHANNEL_TS_CPU, reader));
@@ -295,16 +281,14 @@ TEST_F(TRANSPORT_PROF_CHANNELPOLL_UTEST, AddReader) {
     poll.reset();
 }
 
-TEST_F(TRANSPORT_PROF_CHANNELPOLL_UTEST, RemoveReader) {
+TEST_F(TRANSPORT_PROF_CHANNELPOLL_UTEST, RemoveReader)
+{
     GlobalMockObject::verify();
 
-    std::shared_ptr<analysis::dvvp::transport::ChannelPoll> poll(
-        new analysis::dvvp::transport::ChannelPoll());
+    std::shared_ptr<analysis::dvvp::transport::ChannelPoll> poll(new analysis::dvvp::transport::ChannelPoll());
 
-    std::shared_ptr<analysis::dvvp::transport::ChannelReader> reader(
-        new analysis::dvvp::transport::ChannelReader(
-            0, analysis::dvvp::driver::PROF_CHANNEL_TS_CPU, "data/ts.12.0.0",
-            _job_ctx));
+    std::shared_ptr<analysis::dvvp::transport::ChannelReader> reader(new analysis::dvvp::transport::ChannelReader(
+        0, analysis::dvvp::driver::PROF_CHANNEL_TS_CPU, "data/ts.12.0.0", _job_ctx));
     reader->Init();
 
     EXPECT_EQ(PROFILING_SUCCESS, poll->AddReader(0, analysis::dvvp::driver::PROF_CHANNEL_TS_CPU, reader));
@@ -316,27 +300,23 @@ TEST_F(TRANSPORT_PROF_CHANNELPOLL_UTEST, RemoveReader) {
     poll.reset();
 }
 
-TEST_F(TRANSPORT_PROF_CHANNELPOLL_UTEST, DispatchChannel) {
+TEST_F(TRANSPORT_PROF_CHANNELPOLL_UTEST, DispatchChannel)
+{
     GlobalMockObject::verify();
 
-    //not start
-    std::shared_ptr<analysis::dvvp::transport::ChannelPoll> poll(
-        new analysis::dvvp::transport::ChannelPoll());
+    // not start
+    std::shared_ptr<analysis::dvvp::transport::ChannelPoll> poll(new analysis::dvvp::transport::ChannelPoll());
 
     EXPECT_EQ(PROFILING_FAILED, poll->DispatchChannel(0, analysis::dvvp::driver::PROF_CHANNEL_TS_CPU));
 
-    MOCKER(&analysis::dvvp::driver::DrvGetDevNum)
-        .stubs()
-        .will(returnValue(1));
-    //post start
+    MOCKER(&analysis::dvvp::driver::DrvGetDevNum).stubs().will(returnValue(1));
+    // post start
     poll->Start();
     EXPECT_EQ(PROFILING_FAILED, poll->DispatchChannel(0, analysis::dvvp::driver::PROF_CHANNEL_TS_CPU));
 
-    //find reader
-    std::shared_ptr<analysis::dvvp::transport::ChannelReader> reader(
-        new analysis::dvvp::transport::ChannelReader(
-            0, analysis::dvvp::driver::PROF_CHANNEL_TS_CPU, "data/ts.12.0.0",
-            _job_ctx));
+    // find reader
+    std::shared_ptr<analysis::dvvp::transport::ChannelReader> reader(new analysis::dvvp::transport::ChannelReader(
+        0, analysis::dvvp::driver::PROF_CHANNEL_TS_CPU, "data/ts.12.0.0", _job_ctx));
     reader->Init();
     poll->AddReader(0, analysis::dvvp::driver::PROF_CHANNEL_TS_CPU, reader);
     reader->SetSchedulingStatus(true);
@@ -346,23 +326,19 @@ TEST_F(TRANSPORT_PROF_CHANNELPOLL_UTEST, DispatchChannel) {
     poll.reset();
 }
 
-TEST_F(TRANSPORT_PROF_CHANNELPOLL_UTEST, FlushAllChannels) {
+TEST_F(TRANSPORT_PROF_CHANNELPOLL_UTEST, FlushAllChannels)
+{
     GlobalMockObject::verify();
 
-        //not start
-    std::shared_ptr<analysis::dvvp::transport::ChannelPoll> poll(
-        new analysis::dvvp::transport::ChannelPoll());
+    // not start
+    std::shared_ptr<analysis::dvvp::transport::ChannelPoll> poll(new analysis::dvvp::transport::ChannelPoll());
 
-    MOCKER(&analysis::dvvp::driver::DrvGetDevNum)
-        .stubs()
-        .will(returnValue(1));
-    //post start
+    MOCKER(&analysis::dvvp::driver::DrvGetDevNum).stubs().will(returnValue(1));
+    // post start
     poll->Start();
 
-    std::shared_ptr<analysis::dvvp::transport::ChannelReader> reader(
-        new analysis::dvvp::transport::ChannelReader(
-            0, analysis::dvvp::driver::PROF_CHANNEL_TS_CPU, "data/ts.12.0.0",
-            _job_ctx));
+    std::shared_ptr<analysis::dvvp::transport::ChannelReader> reader(new analysis::dvvp::transport::ChannelReader(
+        0, analysis::dvvp::driver::PROF_CHANNEL_TS_CPU, "data/ts.12.0.0", _job_ctx));
     reader->Init();
 
     EXPECT_EQ(PROFILING_SUCCESS, poll->AddReader(0, analysis::dvvp::driver::PROF_CHANNEL_TS_CPU, reader));
@@ -371,11 +347,11 @@ TEST_F(TRANSPORT_PROF_CHANNELPOLL_UTEST, FlushAllChannels) {
     poll.reset();
 }
 
-TEST_F(TRANSPORT_PROF_CHANNELPOLL_UTEST, start) {
+TEST_F(TRANSPORT_PROF_CHANNELPOLL_UTEST, start)
+{
     GlobalMockObject::verify();
 
-    std::shared_ptr<analysis::dvvp::transport::ChannelPoll> poll(
-        new analysis::dvvp::transport::ChannelPoll());
+    std::shared_ptr<analysis::dvvp::transport::ChannelPoll> poll(new analysis::dvvp::transport::ChannelPoll());
 
     EXPECT_EQ(PROFILING_SUCCESS, poll->Start());
     EXPECT_TRUE(poll->isStart_);
@@ -383,11 +359,11 @@ TEST_F(TRANSPORT_PROF_CHANNELPOLL_UTEST, start) {
     poll.reset();
 }
 
-TEST_F(TRANSPORT_PROF_CHANNELPOLL_UTEST, stop) {
+TEST_F(TRANSPORT_PROF_CHANNELPOLL_UTEST, stop)
+{
     GlobalMockObject::verify();
 
-    std::shared_ptr<analysis::dvvp::transport::ChannelPoll> poll(
-        new analysis::dvvp::transport::ChannelPoll());
+    std::shared_ptr<analysis::dvvp::transport::ChannelPoll> poll(new analysis::dvvp::transport::ChannelPoll());
 
     poll->Start();
     EXPECT_EQ(PROFILING_SUCCESS, poll->Stop());
@@ -396,26 +372,24 @@ TEST_F(TRANSPORT_PROF_CHANNELPOLL_UTEST, stop) {
     poll.reset();
 }
 
-TEST_F(TRANSPORT_PROF_CHANNELPOLL_UTEST, run) {
+TEST_F(TRANSPORT_PROF_CHANNELPOLL_UTEST, run)
+{
     GlobalMockObject::verify();
 
-    std::shared_ptr<analysis::dvvp::transport::ChannelPoll> poll(
-        new analysis::dvvp::transport::ChannelPoll());
+    std::shared_ptr<analysis::dvvp::transport::ChannelPoll> poll(new analysis::dvvp::transport::ChannelPoll());
     EXPECT_NE(nullptr, poll);
 
-    poll->isStart_= true;
+    poll->isStart_ = true;
     MOCKER(&analysis::dvvp::driver::DrvChannelPoll)
         .stubs()
         .will(returnValue(-4))
         .then(returnValue(6))
         .then(returnValue(-1));
 
-    MOCKER_CPP(&analysis::dvvp::transport::ChannelPoll::DispatchChannel)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&analysis::dvvp::transport::ChannelPoll::DispatchChannel).stubs().will(returnValue(PROFILING_SUCCESS));
     auto errorContext = MsprofErrorManager::instance()->GetErrorManagerContext();
     poll->Run(errorContext);
-    poll->isStart_=false;
+    poll->isStart_ = false;
     EXPECT_EQ(3, poll->pollCount_);
     EXPECT_EQ(1, poll->pollSleepCount_);
     EXPECT_EQ(1, poll->dispatchCount_);
@@ -423,15 +397,13 @@ TEST_F(TRANSPORT_PROF_CHANNELPOLL_UTEST, run) {
     poll.reset();
 }
 
-TEST_F(TRANSPORT_PROF_CHANNELPOLL_UTEST, run_quit) {
+TEST_F(TRANSPORT_PROF_CHANNELPOLL_UTEST, run_quit)
+{
     GlobalMockObject::verify();
 
-    std::shared_ptr<analysis::dvvp::transport::ChannelPoll> poll(
-        new analysis::dvvp::transport::ChannelPoll());
+    std::shared_ptr<analysis::dvvp::transport::ChannelPoll> poll(new analysis::dvvp::transport::ChannelPoll());
 
-    MOCKER(&analysis::dvvp::driver::DrvChannelPoll)
-        .stubs()
-        .will(returnValue(0));
+    MOCKER(&analysis::dvvp::driver::DrvChannelPoll).stubs().will(returnValue(0));
 
     EXPECT_EQ(PROFILING_SUCCESS, poll->Start());
     EXPECT_EQ(PROFILING_SUCCESS, poll->Stop());
@@ -439,7 +411,8 @@ TEST_F(TRANSPORT_PROF_CHANNELPOLL_UTEST, run_quit) {
     poll.reset();
 }
 
-TEST_F(TRANSPORT_PROF_CHANNELPOLL_UTEST, ChannelBufferBase) {
+TEST_F(TRANSPORT_PROF_CHANNELPOLL_UTEST, ChannelBufferBase)
+{
     GlobalMockObject::verify();
     std::shared_ptr<analysis::dvvp::transport::ChannelBuffer> threadBuffer(
         new analysis::dvvp::transport::ChannelBuffer());

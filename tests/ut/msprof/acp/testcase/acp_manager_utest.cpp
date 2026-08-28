@@ -29,12 +29,8 @@ using namespace Analysis::Dvvp::Common::Config;
 using namespace analysis::dvvp::common::utils;
 class ACP_MANAGER_UTEST : public testing::Test {
 protected:
-    virtual void SetUp()
-    {}
-    virtual void TearDown()
-    {
-        GlobalMockObject::verify();
-    }
+    virtual void SetUp() {}
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 int32_t rtStreamSynchronizeStub(rtStream_t stream)
@@ -43,27 +39,27 @@ int32_t rtStreamSynchronizeStub(rtStream_t stream)
     return ACL_RT_SUCCESS;
 }
 
-int32_t rtSetDeviceStub(int32_t devId) {
+int32_t rtSetDeviceStub(int32_t devId)
+{
     UNUSED(devId);
     return ACL_RT_SUCCESS;
 }
 
-rtError_t rtDevBinaryRegisterStub(const rtDevBinary_t *bin, void **hdl)
+rtError_t rtDevBinaryRegisterStub(const rtDevBinary_t* bin, void** hdl)
 {
     UNUSED(bin);
     UNUSED(hdl);
     return ACL_RT_SUCCESS;
 }
 
-rtError_t rtDevBinaryUnRegisterStub(void *hdl)
+rtError_t rtDevBinaryUnRegisterStub(void* hdl)
 {
     UNUSED(hdl);
     return ACL_RT_SUCCESS;
 }
 
-rtError_t rtFunctionRegisterStub(void *binHandle, const void *stubFunc,
-                             const char_t *stubName, const void *kernelInfoExt,
-                             uint32_t funcMode)
+rtError_t rtFunctionRegisterStub(
+    void* binHandle, const void* stubFunc, const char_t* stubName, const void* kernelInfoExt, uint32_t funcMode)
 {
     UNUSED(binHandle);
     UNUSED(stubFunc);
@@ -74,7 +70,7 @@ rtError_t rtFunctionRegisterStub(void *binHandle, const void *stubFunc,
 }
 
 // dynamic operator register
-rtError_t rtRegisterAllKernelStub(const rtDevBinary_t *bin, void **hdl)
+rtError_t rtRegisterAllKernelStub(const rtDevBinary_t* bin, void** hdl)
 {
     UNUSED(bin);
     UNUSED(hdl);
@@ -88,8 +84,8 @@ rtError_t rtGetBinaryDeviceBaseAddrStub(void* handle, void** launchBase)
     return ACL_RT_SUCCESS;
 }
 
-int32_t rtKernelLaunchStub(const void *stubFunc, uint32_t blockDim, void *args, uint32_t argsSize, rtSmDesc_t *smDesc,
-    rtStream_t stm)
+int32_t rtKernelLaunchStub(
+    const void* stubFunc, uint32_t blockDim, void* args, uint32_t argsSize, rtSmDesc_t* smDesc, rtStream_t stm)
 {
     UNUSED(stubFunc);
     UNUSED(blockDim);
@@ -100,8 +96,9 @@ int32_t rtKernelLaunchStub(const void *stubFunc, uint32_t blockDim, void *args, 
     return ACL_RT_SUCCESS;
 }
 
-int32_t rtKernelLaunchWithHandleStub(void *hdl, const uint64_t tilingKey, uint32_t blockDim, rtArgsEx_t *argsInfo,
-    rtSmDesc_t *smDesc, rtStream_t stm, const void *kernelInfo)
+int32_t rtKernelLaunchWithHandleStub(
+    void* hdl, const uint64_t tilingKey, uint32_t blockDim, rtArgsEx_t* argsInfo, rtSmDesc_t* smDesc, rtStream_t stm,
+    const void* kernelInfo)
 {
     UNUSED(hdl);
     UNUSED(tilingKey);
@@ -113,8 +110,9 @@ int32_t rtKernelLaunchWithHandleStub(void *hdl, const uint64_t tilingKey, uint32
     return ACL_RT_SUCCESS;
 }
 
-int32_t rtKernelLaunchWithHandleV2Stub(void *hdl, const uint64_t tilingKey, uint32_t blockDim, rtArgsEx_t *argsInfo,
-    rtSmDesc_t *smDesc, rtStream_t stm, const rtTaskCfgInfo_t *cfgInfo)
+int32_t rtKernelLaunchWithHandleV2Stub(
+    void* hdl, const uint64_t tilingKey, uint32_t blockDim, rtArgsEx_t* argsInfo, rtSmDesc_t* smDesc, rtStream_t stm,
+    const rtTaskCfgInfo_t* cfgInfo)
 {
     UNUSED(hdl);
     UNUSED(tilingKey);
@@ -126,8 +124,8 @@ int32_t rtKernelLaunchWithHandleV2Stub(void *hdl, const uint64_t tilingKey, uint
     return ACL_RT_SUCCESS;
 }
 
-int32_t rtKernelLaunchWithFlagStub(const void *stubFunc, uint32_t blockDim, rtArgsEx_t *argsInfo, rtSmDesc_t *smDesc,
-    rtStream_t stm, uint32_t flags)
+int32_t rtKernelLaunchWithFlagStub(
+    const void* stubFunc, uint32_t blockDim, rtArgsEx_t* argsInfo, rtSmDesc_t* smDesc, rtStream_t stm, uint32_t flags)
 {
     UNUSED(stubFunc);
     UNUSED(blockDim);
@@ -137,8 +135,9 @@ int32_t rtKernelLaunchWithFlagStub(const void *stubFunc, uint32_t blockDim, rtAr
     return ACL_RT_SUCCESS;
 }
 
-int32_t rtKernelLaunchWithFlagV2Stub(const void *stubFunc, uint32_t blockDim, rtArgsEx_t *argsInfo, rtSmDesc_t *smDesc,
-    rtStream_t stm, uint32_t flags, const rtTaskCfgInfo_t *cfgInfo)
+int32_t rtKernelLaunchWithFlagV2Stub(
+    const void* stubFunc, uint32_t blockDim, rtArgsEx_t* argsInfo, rtSmDesc_t* smDesc, rtStream_t stm, uint32_t flags,
+    const rtTaskCfgInfo_t* cfgInfo)
 {
     UNUSED(stubFunc);
     UNUSED(blockDim);
@@ -150,20 +149,17 @@ int32_t rtKernelLaunchWithFlagV2Stub(const void *stubFunc, uint32_t blockDim, rt
     return ACL_RT_SUCCESS;
 }
 
-rtError_t rtProfSetProSwitchStub(void *data, uint32_t len)
+rtError_t rtProfSetProSwitchStub(void* data, uint32_t len)
 {
     UNUSED(data);
     UNUSED(len);
     return ACL_RT_SUCCESS;
 }
 
-int32_t dlcloseStub(void *handle)
-{
-    return 0;
-}
+int32_t dlcloseStub(void* handle) { return 0; }
 
 int32_t g_dlopenStubs;
-void * dlopenStub(const char *fileName, int mode)
+void* dlopenStub(const char* fileName, int mode)
 {
     if (strcmp(fileName, "libruntime.so") == 0) {
         return &g_dlopenStubs;
@@ -171,22 +167,22 @@ void * dlopenStub(const char *fileName, int mode)
     return nullptr;
 }
 
-static int32_t rtMallocStub(void **devPtr, uint64_t size, rtMemType_t type, const uint16_t moduleId)
+static int32_t rtMallocStub(void** devPtr, uint64_t size, rtMemType_t type, const uint16_t moduleId)
 {
     (void)type;
     (void)moduleId;
     *devPtr = malloc(size);
     return ACL_RT_SUCCESS;
 }
- 
-static int32_t rtFreeStub(void *devPtr)
+
+static int32_t rtFreeStub(void* devPtr)
 {
     free(devPtr);
     return ACL_RT_SUCCESS;
 }
- 
-static int32_t rtMemcpyAsyncStub(void *dst, uint64_t destMax, const void *src, uint64_t cnt,
-    rtMemcpyKind_t kind, rtStream_t stm)
+
+static int32_t rtMemcpyAsyncStub(
+    void* dst, uint64_t destMax, const void* src, uint64_t cnt, rtMemcpyKind_t kind, rtStream_t stm)
 {
     (void)kind;
     (void)stm;
@@ -196,42 +192,43 @@ static int32_t rtMemcpyAsyncStub(void *dst, uint64_t destMax, const void *src, u
 
 static int32_t rtSetDeviceCount = 0;
 
-static void *dlsymStub(void *handle, const char *symbol) {
+static void* dlsymStub(void* handle, const char* symbol)
+{
     std::string symbolString = symbol;
     if (symbolString == "rtSetDevice") {
-        return (void *)rtSetDeviceStub;
+        return (void*)rtSetDeviceStub;
     } else if (symbolString == "rtKernelLaunch") {
-        return (void *)rtKernelLaunchStub;
+        return (void*)rtKernelLaunchStub;
     } else if (symbolString == "rtStreamSynchronize") {
-        return (void *)rtStreamSynchronizeStub;
+        return (void*)rtStreamSynchronizeStub;
     } else if (symbolString == "rtKernelLaunchWithHandle") {
-        return (void *)rtKernelLaunchWithHandleStub;
+        return (void*)rtKernelLaunchWithHandleStub;
     } else if (symbolString == "rtKernelLaunchWithHandleV2") {
-        return (void *)rtKernelLaunchWithHandleV2Stub;
+        return (void*)rtKernelLaunchWithHandleV2Stub;
     } else if (symbolString == "rtKernelLaunchWithFlag") {
-        return (void *)rtKernelLaunchWithFlagStub;
+        return (void*)rtKernelLaunchWithFlagStub;
     } else if (symbolString == "rtKernelLaunchWithFlagV2") {
-        return (void *)rtKernelLaunchWithFlagV2Stub;
+        return (void*)rtKernelLaunchWithFlagV2Stub;
     } else if (symbolString == "rtProfSetProSwitch") {
-        return (void *)rtProfSetProSwitchStub;
+        return (void*)rtProfSetProSwitchStub;
     } else if (symbolString == "rtDevBinaryRegister") {
-        return (void *)rtDevBinaryRegisterStub;
+        return (void*)rtDevBinaryRegisterStub;
     } else if (symbolString == "rtDevBinaryUnRegister") {
-        return (void *)rtDevBinaryUnRegisterStub;
+        return (void*)rtDevBinaryUnRegisterStub;
     } else if (symbolString == "rtFunctionRegister") {
-        return (void *)rtFunctionRegisterStub;
+        return (void*)rtFunctionRegisterStub;
     } else if (symbolString == "rtRegisterAllKernel") {
-        return (void *)rtRegisterAllKernelStub;
+        return (void*)rtRegisterAllKernelStub;
     } else if (symbolString == "rtGetBinaryDeviceBaseAddr") {
-        return (void *)rtGetBinaryDeviceBaseAddrStub;
+        return (void*)rtGetBinaryDeviceBaseAddrStub;
     } else if (symbolString == "rtMalloc") {
-        return (void *)rtMallocStub;
+        return (void*)rtMallocStub;
     } else if (symbolString == "rtFree") {
-        return (void *)rtFreeStub;
+        return (void*)rtFreeStub;
     } else if (symbolString == "rtMemcpyAsync") {
-        return (void *)rtMemcpyAsyncStub;
+        return (void*)rtMemcpyAsyncStub;
     }
-    return (void *)0x87654321;
+    return (void*)0x87654321;
 }
 
 TEST_F(ACP_MANAGER_UTEST, AcpRtSetDeviceTest)
@@ -240,35 +237,29 @@ TEST_F(ACP_MANAGER_UTEST, AcpRtSetDeviceTest)
     MOCKER(dlclose).stubs().will(invoke(dlcloseStub));
     MOCKER(dlopen).stubs().will(invoke(dlopenStub));
     MOCKER(dlsym).stubs().will(invoke(dlsymStub));
-    MOCKER_CPP(&AcpManager::TaskStart)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
-    MOCKER_CPP(&AcpManager::TaskStop)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
-    MOCKER_CPP(&AcpManager::PcSamplingIsEnable)
-        .stubs()
-        .will(returnValue(true));
-    
+    MOCKER_CPP(&AcpManager::TaskStart).stubs().will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&AcpManager::TaskStop).stubs().will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&AcpManager::PcSamplingIsEnable).stubs().will(returnValue(true));
+
     int32_t devId = 0;
     EXPECT_EQ(ACL_RT_SUCCESS, rtSetDevice(devId));
 
-    void *ptr = nullptr;
-    void **upPtr = reinterpret_cast<void **>(&ptr);
+    void* ptr = nullptr;
+    void** upPtr = reinterpret_cast<void**>(&ptr);
     uint64_t size = static_cast<uint64_t>(sizeof(uint32_t));
     rtMalloc(upPtr, size, 0, 0);
 
-    void *hdl = (void*)0x12345678;
-    void *kernelInfo = nullptr;
-    void *stubFunc = nullptr;
+    void* hdl = (void*)0x12345678;
+    void* kernelInfo = nullptr;
+    void* stubFunc = nullptr;
     uint64_t tilingKey = 0;
     uint32_t flags = 0;
     uint32_t blockDim = 8;
-    void *args = nullptr;
+    void* args = nullptr;
     uint32_t argsSize = 10;
-    rtSmDesc_t *smDesc = nullptr;
-    rtArgsEx_t *argsInfo = { 0 };
-    rtTaskCfgInfo_t *cfgInfo = { 0 };
+    rtSmDesc_t* smDesc = nullptr;
+    rtArgsEx_t* argsInfo = {0};
+    rtTaskCfgInfo_t* cfgInfo = {0};
     rtStream_t stm = nullptr;
     uint8_t data = 7;
     rtDevBinary_t bin;
@@ -277,7 +268,7 @@ TEST_F(ACP_MANAGER_UTEST, AcpRtSetDeviceTest)
     rtDevBinary_t bin2;
     bin2.length = 1;
     bin2.data = &data;
-    char_t *stubName = "stubName";
+    char_t* stubName = "stubName";
     EXPECT_EQ(ACL_RT_SUCCESS, rtDevBinaryRegister(&bin, &hdl));
     EXPECT_EQ(ACL_RT_SUCCESS, rtDevBinaryRegister(&bin2, &hdl));
     EXPECT_EQ(ACL_RT_SUCCESS, rtDevBinaryUnRegister(&hdl));
@@ -286,8 +277,7 @@ TEST_F(ACP_MANAGER_UTEST, AcpRtSetDeviceTest)
     EXPECT_EQ(ACL_RT_SUCCESS, rtKernelLaunch(stubFunc, blockDim, args, argsSize, smDesc, stm));
     rtFree(ptr);
     rtMalloc(upPtr, size, 0, 0);
-    EXPECT_EQ(ACL_RT_SUCCESS, rtKernelLaunchWithHandle(hdl, tilingKey, blockDim, argsInfo, smDesc, stm,
-        kernelInfo));
+    EXPECT_EQ(ACL_RT_SUCCESS, rtKernelLaunchWithHandle(hdl, tilingKey, blockDim, argsInfo, smDesc, stm, kernelInfo));
     rtFree(ptr);
     rtMalloc(upPtr, size, 0, 0);
     EXPECT_EQ(ACL_RT_SUCCESS, rtKernelLaunchWithHandleV2(hdl, tilingKey, blockDim, argsInfo, smDesc, stm, cfgInfo));
@@ -321,9 +311,7 @@ TEST_F(ACP_MANAGER_UTEST, AcpManagerTest)
         params->ai_core_metrics = "PipeUtilization";
         params->instrProfiling = "on";
         params->devices = "0";
-        MOCKER_CPP(AcpPipeRead)
-            .stubs()
-            .will(returnValue(params));
+        MOCKER_CPP(AcpPipeRead).stubs().will(returnValue(params));
     } while (0);
 
     MOCKER(dlopen).stubs().will(invoke(dlopenStub));
@@ -332,9 +320,7 @@ TEST_F(ACP_MANAGER_UTEST, AcpManagerTest)
     Platform::instance()->Uninit();
     Platform::instance()->Init();
     params->ai_core_metrics = "PipeUtilization,ArithmeticUtilization,Memory";
-    MOCKER(AcpPipeRead)
-        .stubs()
-        .will(returnValue(params));
+    MOCKER(AcpPipeRead).stubs().will(returnValue(params));
     AcpManager::instance()->UnInit();
     EXPECT_EQ(PROFILING_SUCCESS, AcpManager::instance()->Init(0));
     AcpManager::instance()->SetKernelReplayMetrics(0);
@@ -354,14 +340,17 @@ TEST_F(ACP_MANAGER_UTEST, AcpManagerTest)
     EXPECT_EQ(PROFILING_SUCCESS, AcpManager::instance()->TaskStop());
 }
 
-drvError_t halGetDeviceInfoSamplingStub(uint32_t devId, int32_t moduleType, int32_t infoType, int64_t *value) {
+drvError_t halGetDeviceInfoSamplingStub(uint32_t devId, int32_t moduleType, int32_t infoType, int64_t* value)
+{
     if (moduleType == static_cast<int32_t>(MODULE_TYPE_AICORE) &&
         (infoType == static_cast<int32_t>(INFO_TYPE_CORE_NUM))) {
         *value = 20;
-    } else if (moduleType == static_cast<int32_t>(MODULE_TYPE_VECTOR_CORE) &&
+    } else if (
+        moduleType == static_cast<int32_t>(MODULE_TYPE_VECTOR_CORE) &&
         (infoType == static_cast<int32_t>(INFO_TYPE_CORE_NUM))) {
         *value = 40;
-    } else if (moduleType == static_cast<int32_t>(MODULE_TYPE_SYSTEM) &&
+    } else if (
+        moduleType == static_cast<int32_t>(MODULE_TYPE_SYSTEM) &&
         (infoType == static_cast<int32_t>(INFO_TYPE_DEV_OSC_FREQUE))) {
         *value = 50000;
     }
@@ -376,20 +365,15 @@ TEST_F(ACP_MANAGER_UTEST, ParseDavidPcSamplingData)
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
         .stubs()
         .will(returnValue(PlatformType::CHIP_CLOUD_V3));
-    MOCKER_CPP(&Analysis::Dvvp::Common::Platform::AscendHalAdaptor::Init)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
-    MOCKER(halGetDeviceInfo)
-        .stubs()
-        .will(invoke(halGetDeviceInfoSamplingStub));
+    MOCKER_CPP(&Analysis::Dvvp::Common::Platform::AscendHalAdaptor::Init).stubs().will(returnValue(PROFILING_SUCCESS));
+    MOCKER(halGetDeviceInfo).stubs().will(invoke(halGetDeviceInfoSamplingStub));
     Platform::instance()->Init();
     using namespace Analysis::Dvvp::Analyze;
     std::string deviceId = "0";
     auto trans = OpTransportFactory().CreateOpTransport(deviceId);
     EXPECT_NE((ITransport*)NULL, trans.get());
     // stars_soc.data
-    std::shared_ptr<analysis::dvvp::ProfileFileChunk> chunk(
-        new analysis::dvvp::ProfileFileChunk());
+    std::shared_ptr<analysis::dvvp::ProfileFileChunk> chunk(new analysis::dvvp::ProfileFileChunk());
     chunk->chunkModule = analysis::dvvp::common::config::FileChunkDataModule::PROFILING_IS_FROM_MSPROF_DEVICE;
     chunk->fileName = "pc_sampling_group0_aic.data";
     chunk->extraInfo = "./.0";
@@ -418,15 +402,13 @@ TEST_F(ACP_MANAGER_UTEST, ParseDavidPcSamplingData)
 TEST_F(ACP_MANAGER_UTEST, DumpBinary)
 {
     GlobalMockObject::verify();
-    void *hdl = (void*)0x12345678;
+    void* hdl = (void*)0x12345678;
     uint8_t data = 7;
     rtDevBinary_t bin;
     bin.length = 1;
     bin.data = &data;
     AcpManager::instance()->AddBinary(hdl, bin);
-    MOCKER(Utils::CanonicalizePath)
-        .stubs()
-        .will(returnValue(std::string("./")));
+    MOCKER(Utils::CanonicalizePath).stubs().will(returnValue(std::string("./")));
     AcpManager::instance()->DumpBinary(hdl);
     remove(AcpManager::instance()->GetBinaryObjectPath().c_str());
     EXPECT_EQ(hdl, AcpManager::instance()->GetBinaryHandle());
@@ -436,13 +418,13 @@ TEST_F(ACP_MANAGER_UTEST, DumpBinary)
 TEST_F(ACP_MANAGER_UTEST, AddBinaryBaseAddr)
 {
     GlobalMockObject::verify();
-    void *hdl = (void*)0x12345678;
+    void* hdl = (void*)0x12345678;
     uint8_t data = 7;
     rtDevBinary_t bin;
     bin.length = 1;
     bin.data = &data;
     AcpManager::instance()->AddBinary(hdl, bin);
-    AcpManager::instance()->AddBinaryBaseAddr(hdl, (void *)0x123456);
+    AcpManager::instance()->AddBinaryBaseAddr(hdl, (void*)0x123456);
     EXPECT_EQ(hdl, AcpManager::instance()->GetBinaryHandle());
     AcpManager::instance()->UnInit();
 }
@@ -467,10 +449,9 @@ TEST_F(ACP_MANAGER_UTEST, AcpManagerCustomBase)
     MSVP_MAKE_SHARED0(params, analysis::dvvp::message::ProfileParams, return);
     Platform::instance()->Uninit();
     Platform::instance()->Init();
-    params->ai_core_metrics = "Custom:0x1,0x2,0x3,0x4,0x5,0x6,0x7,0x8,0x9,0x10,0x11,0x12,0x13,0x14,0x15,0x16,0x17,0x18,0x19,0x20,0x21,0x22,0x23,0x24,0x25,0x26,0x27,0x28";
-    MOCKER(AcpPipeRead)
-        .stubs()
-        .will(returnValue(params));
+    params->ai_core_metrics = "Custom:0x1,0x2,0x3,0x4,0x5,0x6,0x7,0x8,0x9,0x10,0x11,0x12,0x13,0x14,0x15,0x16,0x17,0x18,"
+                              "0x19,0x20,0x21,0x22,0x23,0x24,0x25,0x26,0x27,0x28";
+    MOCKER(AcpPipeRead).stubs().will(returnValue(params));
     AcpManager::instance()->Init(0);
     AcpManager::instance()->SetKernelReplayMetrics(0);
     AcpManager::instance()->SetKernelReplayMetrics(1);

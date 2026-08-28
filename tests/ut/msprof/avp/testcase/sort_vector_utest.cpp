@@ -15,11 +15,9 @@ using namespace testing;
 
 class UtestSortVectorTest : public testing::Test {
 protected:
-    void SetUp()
-    {}
+    void SetUp() {}
 
-    void TearDown()
-    {}
+    void TearDown() {}
 };
 
 typedef struct {
@@ -27,10 +25,7 @@ typedef struct {
     uint32_t value;
 } StubPair;
 
-int StubPairCmp(void *a, void *b, void *appInfo)
-{
-    return ((StubPair *)a)->key - ((StubPair *)b)->key;
-}
+int StubPairCmp(void* a, void* b, void* appInfo) { return ((StubPair*)a)->key - ((StubPair*)b)->key; }
 
 TEST_F(UtestSortVectorTest, SortVectorCaseBasic)
 {
@@ -42,31 +37,31 @@ TEST_F(UtestSortVectorTest, SortVectorCaseBasic)
     EXPECT_EQ(CSortVectorSize(&a), 1);
     size_t index = FindCSortVector(&a, &pair);
     EXPECT_EQ(index, 0);
-    EXPECT_EQ(((StubPair *)CSortVectorAt(&a, index))->key, 10);
-    EXPECT_EQ(((StubPair *)CSortVectorAt(&a, index))->value, 1);
+    EXPECT_EQ(((StubPair*)CSortVectorAt(&a, index))->key, 10);
+    EXPECT_EQ(((StubPair*)CSortVectorAt(&a, index))->value, 1);
 
     pair.key++;
     EmplaceCSortVector(&a, &pair);
     EXPECT_EQ(CSortVectorSize(&a), 2);
     index = FindCSortVector(&a, &pair);
     EXPECT_EQ(index, 1);
-    EXPECT_EQ(((StubPair *)CSortVectorAt(&a, index))->key, 11);
-    EXPECT_EQ(((StubPair *)CSortVectorAt(&a, index))->value, 1);
+    EXPECT_EQ(((StubPair*)CSortVectorAt(&a, index))->key, 11);
+    EXPECT_EQ(((StubPair*)CSortVectorAt(&a, index))->value, 1);
 
     pair.key -= 2;
     EmplaceCSortVector(&a, &pair);
     EXPECT_EQ(CSortVectorSize(&a), 3);
     index = FindCSortVector(&a, &pair);
     EXPECT_EQ(index, 0);
-    EXPECT_EQ(((StubPair *)CSortVectorAt(&a, index))->key, 9);
-    EXPECT_EQ(((StubPair *)CSortVectorAt(&a, index))->value, 1);
+    EXPECT_EQ(((StubPair*)CSortVectorAt(&a, index))->key, 9);
+    EXPECT_EQ(((StubPair*)CSortVectorAt(&a, index))->value, 1);
 
     EmplaceCSortVector(&a, &pair);
     EXPECT_EQ(CSortVectorSize(&a), 3);
     index = FindCSortVector(&a, &pair);
     EXPECT_EQ(index, 0);
-    EXPECT_EQ(((StubPair *)CSortVectorAt(&a, index))->key, 9);
-    EXPECT_EQ(((StubPair *)CSortVectorAt(&a, index))->value, 1);
+    EXPECT_EQ(((StubPair*)CSortVectorAt(&a, index))->key, 9);
+    EXPECT_EQ(((StubPair*)CSortVectorAt(&a, index))->value, 1);
 
     RemoveCSortVector(&a, 0);
     EXPECT_EQ(CSortVectorSize(&a), 2);
@@ -107,7 +102,7 @@ TEST_F(UtestSortVectorTest, SortVectorCaseBasic)
 
 TEST_F(UtestSortVectorTest, SortVectorCaseNewDestroy)
 {
-    SortVector *a = NewSortVector(StubPair, StubPairCmp, NULL);
+    SortVector* a = NewSortVector(StubPair, StubPairCmp, NULL);
     StubPair pair = {10, 1};
     EXPECT_EQ(FindCSortVector(a, &pair), CSortVectorSize(a));
     InitCSortVector(a, sizeof(StubPair), StubPairCmp, NULL);
@@ -115,8 +110,8 @@ TEST_F(UtestSortVectorTest, SortVectorCaseNewDestroy)
     EXPECT_EQ(CSortVectorSize(a), 1);
     size_t index = FindCSortVector(a, &pair);
     EXPECT_EQ(index, 0);
-    EXPECT_EQ(((StubPair *)CSortVectorAt(a, index))->key, 10);
-    EXPECT_EQ(((StubPair *)CSortVectorAt(a, index))->value, 1);
+    EXPECT_EQ(((StubPair*)CSortVectorAt(a, index))->key, 10);
+    EXPECT_EQ(((StubPair*)CSortVectorAt(a, index))->value, 1);
     DestroyCSortVector(a);
 }
 
@@ -124,37 +119,37 @@ TEST_F(UtestSortVectorTest, SortVectorCaseDefaultCmp)
 {
     SortVector a;
     StubPair pair = {10, 1};
-    InitCSortVector(&a, sizeof(StubPair), NULL, (void *)&pair);  // appInfo 无效测试
+    InitCSortVector(&a, sizeof(StubPair), NULL, (void*)&pair); // appInfo 无效测试
     EXPECT_EQ(FindCSortVector(&a, &pair), CSortVectorSize(&a));
     EmplaceCSortVector(&a, &pair);
     EXPECT_EQ(CSortVectorSize(&a), 1);
     size_t index = FindCSortVector(&a, &pair);
     EXPECT_EQ(index, 0);
-    EXPECT_EQ(((StubPair *)CSortVectorAt(&a, index))->key, 10);
-    EXPECT_EQ(((StubPair *)CSortVectorAt(&a, index))->value, 1);
+    EXPECT_EQ(((StubPair*)CSortVectorAt(&a, index))->key, 10);
+    EXPECT_EQ(((StubPair*)CSortVectorAt(&a, index))->value, 1);
 
     pair.key++;
     EmplaceCSortVector(&a, &pair);
     EXPECT_EQ(CSortVectorSize(&a), 2);
     index = FindCSortVector(&a, &pair);
     EXPECT_EQ(index, 1);
-    EXPECT_EQ(((StubPair *)CSortVectorAt(&a, index))->key, 11);
-    EXPECT_EQ(((StubPair *)CSortVectorAt(&a, index))->value, 1);
+    EXPECT_EQ(((StubPair*)CSortVectorAt(&a, index))->key, 11);
+    EXPECT_EQ(((StubPair*)CSortVectorAt(&a, index))->value, 1);
 
     pair.key -= 2;
     EmplaceCSortVector(&a, &pair);
     EXPECT_EQ(CSortVectorSize(&a), 3);
     index = FindCSortVector(&a, &pair);
     EXPECT_EQ(index, 0);
-    EXPECT_EQ(((StubPair *)CSortVectorAt(&a, index))->key, 9);
-    EXPECT_EQ(((StubPair *)CSortVectorAt(&a, index))->value, 1);
+    EXPECT_EQ(((StubPair*)CSortVectorAt(&a, index))->key, 9);
+    EXPECT_EQ(((StubPair*)CSortVectorAt(&a, index))->value, 1);
 
     EmplaceCSortVector(&a, &pair);
     EXPECT_EQ(CSortVectorSize(&a), 3);
     index = FindCSortVector(&a, &pair);
     EXPECT_EQ(index, 0);
-    EXPECT_EQ(((StubPair *)CSortVectorAt(&a, index))->key, 9);
-    EXPECT_EQ(((StubPair *)CSortVectorAt(&a, index))->value, 1);
+    EXPECT_EQ(((StubPair*)CSortVectorAt(&a, index))->key, 9);
+    EXPECT_EQ(((StubPair*)CSortVectorAt(&a, index))->value, 1);
 
     RemoveCSortVector(&a, 0);
     EXPECT_EQ(CSortVectorSize(&a), 2);

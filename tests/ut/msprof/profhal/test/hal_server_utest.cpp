@@ -30,15 +30,14 @@ using namespace analysis::dvvp::common::error;
 
 class HAL_SERVER_UTEST : public testing::Test {
 protected:
-    virtual void SetUp() {
-    }
-    virtual void TearDown() {
-    }
+    virtual void SetUp() {}
+    virtual void TearDown() {}
 };
 
 void flushModule() {}
-int32_t sendAicpuData(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunkReq) {return PROFILING_FAILED;}
-TEST_F(HAL_SERVER_UTEST, Simulate_ReceiveStreamData) {
+int32_t sendAicpuData(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunkReq) { return PROFILING_FAILED; }
+TEST_F(HAL_SERVER_UTEST, Simulate_ReceiveStreamData)
+{
     GlobalMockObject::verify();
     auto aicpu = std::make_shared<ProfHdcServer>();
     aicpu->logicDevId_ = 1;
@@ -50,8 +49,7 @@ TEST_F(HAL_SERVER_UTEST, Simulate_ReceiveStreamData) {
     std::string message = "test";
     EXPECT_EQ(PROFILING_FAILED, aicpu->ReceiveStreamData(message.c_str(), message.size()));
 
-    std::shared_ptr<analysis::dvvp::proto::FileChunkReq> req(
-        new analysis::dvvp::proto::FileChunkReq());
+    std::shared_ptr<analysis::dvvp::proto::FileChunkReq> req(new analysis::dvvp::proto::FileChunkReq());
     std::string encode = analysis::dvvp::message::EncodeMessage(req);
     EXPECT_EQ(PROFILING_FAILED, aicpu->ReceiveStreamData(encode.c_str(), encode.size()));
 
@@ -68,7 +66,8 @@ TEST_F(HAL_SERVER_UTEST, Simulate_ReceiveStreamData) {
     EXPECT_EQ(PROFILING_FAILED, aicpu->ReceiveStreamData(encode.c_str(), encode.size()));
 }
 
-TEST_F(HAL_SERVER_UTEST, Simulate_ProfHdcServer) {
+TEST_F(HAL_SERVER_UTEST, Simulate_ProfHdcServer)
+{
     GlobalMockObject::verify();
     MOCKER_CPP(&analysis::dvvp::common::utils::Utils::CheckStringIsNonNegativeIntNum)
         .stubs()
@@ -88,15 +87,15 @@ TEST_F(HAL_SERVER_UTEST, Simulate_ProfHdcServer) {
     device_aicpu.reset();
 }
 
-TEST_F(HAL_SERVER_UTEST, Simulate_HelperServerManager) {
+TEST_F(HAL_SERVER_UTEST, Simulate_HelperServerManager)
+{
     GlobalMockObject::verify();
-    uint32_t configSize =
-        static_cast<uint32_t>(sizeof(ProfHalModuleConfig) + sizeof(uint32_t));
-    auto moduleConfigP = static_cast<ProfHalModuleConfig *>(malloc(configSize));
+    uint32_t configSize = static_cast<uint32_t>(sizeof(ProfHalModuleConfig) + sizeof(uint32_t));
+    auto moduleConfigP = static_cast<ProfHalModuleConfig*>(malloc(configSize));
     EXPECT_NE(nullptr, moduleConfigP);
     (void)memset_s(moduleConfigP, configSize, 0, configSize);
     const uint32_t devIdList[2] = {64, 0};
-    moduleConfigP->devIdList = const_cast<uint32_t *>(devIdList);
+    moduleConfigP->devIdList = const_cast<uint32_t*>(devIdList);
     moduleConfigP->devIdListNums = 2;
     ProfHalModuleInitialize(PROF_HAL_HELPER, moduleConfigP, 512);
     ProfHalModuleInitialize(PROF_HAL_HELPER, moduleConfigP, sizeof(moduleConfigP));
@@ -110,22 +109,20 @@ TEST_F(HAL_SERVER_UTEST, Simulate_HelperServerManager) {
     EXPECT_EQ(1, ServerManager::instance()->helperDevMap_.size());
     ProfHalModuleFinalize();
     EXPECT_EQ(0, ServerManager::instance()->helperDevMap_.size());
-    MOCKER_CPP(&Dvvp::Hal::Server::ProfHelperServer::Init)
-        .stubs()
-        .will(returnValue(PROFILING_FAILED));
+    MOCKER_CPP(&Dvvp::Hal::Server::ProfHelperServer::Init).stubs().will(returnValue(PROFILING_FAILED));
     EXPECT_EQ(PROFILING_FAILED, ProfHalModuleInitialize(PROF_HAL_HELPER, moduleConfigP, sizeof(moduleConfigP)));
     free(moduleConfigP);
 }
 
-TEST_F(HAL_SERVER_UTEST, Simulate_Multi_ServerManager) {
+TEST_F(HAL_SERVER_UTEST, Simulate_Multi_ServerManager)
+{
     GlobalMockObject::verify();
-    uint32_t configSize =
-        static_cast<uint32_t>(sizeof(ProfHalModuleConfig) + sizeof(uint32_t));
-    auto moduleConfigP = static_cast<ProfHalModuleConfig *>(malloc(configSize));
+    uint32_t configSize = static_cast<uint32_t>(sizeof(ProfHalModuleConfig) + sizeof(uint32_t));
+    auto moduleConfigP = static_cast<ProfHalModuleConfig*>(malloc(configSize));
     EXPECT_NE(nullptr, moduleConfigP);
     (void)memset_s(moduleConfigP, configSize, 0, configSize);
     const uint32_t devIdList[2] = {64, 0};
-    moduleConfigP->devIdList = const_cast<uint32_t *>(devIdList);
+    moduleConfigP->devIdList = const_cast<uint32_t*>(devIdList);
     moduleConfigP->devIdListNums = 2;
 
     MOCKER_CPP(&Dvvp::Hal::Server::ProfHelperServer::Init)
@@ -136,7 +133,8 @@ TEST_F(HAL_SERVER_UTEST, Simulate_Multi_ServerManager) {
     std::vector<std::thread> th;
     for (int i = 0; i < 10; i++) {
         th.push_back(std::thread([this, moduleConfigP]() -> void {
-            EXPECT_EQ(PROFILING_SUCCESS, ProfHalModuleInitialize(PROF_HAL_HELPER, moduleConfigP, sizeof(moduleConfigP)));
+            EXPECT_EQ(
+                PROFILING_SUCCESS, ProfHalModuleInitialize(PROF_HAL_HELPER, moduleConfigP, sizeof(moduleConfigP)));
         }));
     }
     for_each(th.begin(), th.end(), std::mem_fn(&std::thread::join));
@@ -144,10 +142,11 @@ TEST_F(HAL_SERVER_UTEST, Simulate_Multi_ServerManager) {
     free(moduleConfigP);
 }
 
-TEST_F(HAL_SERVER_UTEST, Simulate_ProfHalGetVersion) {
+TEST_F(HAL_SERVER_UTEST, Simulate_ProfHalGetVersion)
+{
     GlobalMockObject::verify();
     uint32_t address = 1;
-    uint32_t *version = &address;
+    uint32_t* version = &address;
     ProfHalGetVersion(version);
     EXPECT_EQ(65536, *version);
 }
@@ -158,22 +157,17 @@ int AdxHdcReadStub(HDC_SESSION session, IdeRecvBuffT recvBuf, IdeI32Pt recvLen)
     return 0;
 }
 
-TEST_F(HAL_SERVER_UTEST, ProfHdcServerRun) {
+TEST_F(HAL_SERVER_UTEST, ProfHdcServerRun)
+{
     GlobalMockObject::verify();
-    MOCKER(Analysis::Dvvp::Adx::AdxHdcServerCreate)
-        .stubs()
-        .will(returnValue((HDC_SERVER)0x12345678));
+    MOCKER(Analysis::Dvvp::Adx::AdxHdcServerCreate).stubs().will(returnValue((HDC_SERVER)0x12345678));
     MOCKER(Analysis::Dvvp::Adx::AdxHdcServerAccept)
         .stubs()
         .will(returnValue((HDC_SERVER)0x12345678))
-        .then(returnValue((HDC_SERVER)nullptr));
+        .then(returnValue((HDC_SERVER) nullptr));
 
-    MOCKER(Analysis::Dvvp::Adx::AdxHdcRead)
-        .stubs()
-        .will(invoke(AdxHdcReadStub));
-    MOCKER_CPP(&ProfHdcServer::ReceiveStreamData)
-        .stubs()
-        .will(returnValue(PROFILING_FAILED));
+    MOCKER(Analysis::Dvvp::Adx::AdxHdcRead).stubs().will(invoke(AdxHdcReadStub));
+    MOCKER_CPP(&ProfHdcServer::ReceiveStreamData).stubs().will(returnValue(PROFILING_FAILED));
 
     auto device_aicpu = std::make_shared<ProfHdcServer>();
     EXPECT_EQ(PROFILING_SUCCESS, device_aicpu->Init(0));
@@ -183,7 +177,8 @@ TEST_F(HAL_SERVER_UTEST, ProfHdcServerRun) {
     device_aicpu.reset();
 }
 
-TEST_F(HAL_SERVER_UTEST, Simulate_ProfHelperServer) {
+TEST_F(HAL_SERVER_UTEST, Simulate_ProfHelperServer)
+{
     GlobalMockObject::verify();
     MOCKER_CPP(&analysis::dvvp::common::utils::Utils::CheckStringIsNonNegativeIntNum)
         .stubs()
@@ -196,22 +191,17 @@ TEST_F(HAL_SERVER_UTEST, Simulate_ProfHelperServer) {
     EXPECT_EQ(PROFILING_SUCCESS, helperServer->UnInit());
 }
 
-TEST_F(HAL_SERVER_UTEST, Simulate_InitHelperServer) {
+TEST_F(HAL_SERVER_UTEST, Simulate_InitHelperServer)
+{
     GlobalMockObject::verify();
-    MOCKER(Analysis::Dvvp::Adx::AdxHdcServerCreate)
-        .stubs()
-        .will(returnValue((HDC_SERVER)0x12345666));
+    MOCKER(Analysis::Dvvp::Adx::AdxHdcServerCreate).stubs().will(returnValue((HDC_SERVER)0x12345666));
     MOCKER(Analysis::Dvvp::Adx::AdxHdcServerAccept)
         .stubs()
         .will(returnValue((HDC_SERVER)0x12345666))
-        .then(returnValue((HDC_SERVER)nullptr));
+        .then(returnValue((HDC_SERVER) nullptr));
 
-    MOCKER(Analysis::Dvvp::Adx::AdxHdcRead)
-        .stubs()
-        .will(invoke(AdxHdcReadStub));
-    MOCKER_CPP(&ProfHelperServer::ReceiveStreamData)
-        .stubs()
-        .will(returnValue(PROFILING_FAILED));
+    MOCKER(Analysis::Dvvp::Adx::AdxHdcRead).stubs().will(invoke(AdxHdcReadStub));
+    MOCKER_CPP(&ProfHelperServer::ReceiveStreamData).stubs().will(returnValue(PROFILING_FAILED));
 
     auto helperServer = std::make_shared<ProfHelperServer>();
     EXPECT_EQ(PROFILING_SUCCESS, helperServer->Init(0));
@@ -223,8 +213,9 @@ TEST_F(HAL_SERVER_UTEST, Simulate_InitHelperServer) {
 }
 
 analysis::dvvp::ProfileFileChunk g_result = {0};
-ProfHalTlv GenerateProfHalStruct (bool isLastChunk, int32_t chunkModule, size_t offset,
-    std::string chunk, std::string fileName, std::string extraInfo, std::string id)
+ProfHalTlv GenerateProfHalStruct(
+    bool isLastChunk, int32_t chunkModule, size_t offset, std::string chunk, std::string fileName,
+    std::string extraInfo, std::string id)
 {
     ProfHalStruct data;
     data.isLastChunk = isLastChunk;
@@ -246,9 +237,9 @@ ProfHalTlv GenerateProfHalStruct (bool isLastChunk, int32_t chunkModule, size_t 
     return tlv;
 }
 
-void SetFlushModuleCallbackStub () {}
+void SetFlushModuleCallbackStub() {}
 
-int32_t SendHelperDataCallbackStub (SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunk)
+int32_t SendHelperDataCallbackStub(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunk)
 {
     g_result.isLastChunk = fileChunk->isLastChunk;
     g_result.fileName = fileChunk->fileName;
@@ -257,13 +248,14 @@ int32_t SendHelperDataCallbackStub (SHARED_PTR_ALIA<analysis::dvvp::ProfileFileC
     return PROFILING_SUCCESS;
 }
 
-int32_t SetHelperDirStub (const std::string helperDir)
+int32_t SetHelperDirStub(const std::string helperDir)
 {
     EXPECT_EQ(helperDir, ".123456");
     return PROFILING_SUCCESS;
 }
 
-TEST_F(HAL_SERVER_UTEST, Simulate_HelperReceiveStreamData) {
+TEST_F(HAL_SERVER_UTEST, Simulate_HelperReceiveStreamData)
+{
     GlobalMockObject::verify();
     ProfHalTlv tlv_normal = GenerateProfHalStruct(false, 0, 0, "12345", "normal.file", "no extra", "123456");
     ProfHalTlv tlv_filename = GenerateProfHalStruct(false, 0, 0, "12345", "helper_device_pid", "no extra", "123456");

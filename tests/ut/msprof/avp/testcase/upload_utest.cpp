@@ -30,20 +30,15 @@
 #include "transport/flash_transport.h"
 #include "file_interface.h"
 
-class UploadUtest: public testing::Test {
+class UploadUtest : public testing::Test {
 protected:
-    virtual void SetUp()
-    {
-    }
-    virtual void TearDown()
-    {
-        GlobalMockObject::verify();
-    }
+    virtual void SetUp() {}
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
-ProfFileChunk * CreateChunk(uint8_t deviceId, uint32_t chunkSize, FileChunkType type)
+ProfFileChunk* CreateChunk(uint8_t deviceId, uint32_t chunkSize, FileChunkType type)
 {
-    ProfFileChunk *chunk = (ProfFileChunk *)OsalMalloc(sizeof(ProfFileChunk));
+    ProfFileChunk* chunk = (ProfFileChunk*)OsalMalloc(sizeof(ProfFileChunk));
     chunk->deviceId = deviceId;
     chunk->chunkSize = chunkSize;
     chunk->chunkType = type;
@@ -65,9 +60,7 @@ TEST_F(UploadUtest, UploaderInitializeBasic)
     ret = UploaderFinalize();
     EXPECT_EQ(ret, PROFILING_SUCCESS);
 
-    MOCKER(HalGetDeviceNumber)
-        .stubs()
-        .will(returnValue(uint32_t(0)));
+    MOCKER(HalGetDeviceNumber).stubs().will(returnValue(uint32_t(0)));
     ret = UploaderInitialize();
     EXPECT_EQ(ret, PROFILING_FAILED);
 }
@@ -80,7 +73,7 @@ int32_t FileSendBufferStub(ProfFileChunk* chunk, const char* dir)
     return PROFILING_SUCCESS;
 }
 
-int32_t FileInitTransportStub(uint32_t deviceId, const char *flushDir, const char *storageLimit)
+int32_t FileInitTransportStub(uint32_t deviceId, const char* flushDir, const char* storageLimit)
 {
     (void)deviceId;
     (void)flushDir;
@@ -90,23 +83,15 @@ int32_t FileInitTransportStub(uint32_t deviceId, const char *flushDir, const cha
 
 TEST_F(UploadUtest, UploaderBasic)
 {
-    MOCKER(ProfSendBuffer)
-        .stubs()
-        .will(invoke(FileSendBufferStub));
-    MOCKER(ProfInitTransport)
-        .stubs()
-        .will(invoke(FileInitTransportStub));
+    MOCKER(ProfSendBuffer).stubs().will(invoke(FileSendBufferStub));
+    MOCKER(ProfInitTransport).stubs().will(invoke(FileInitTransportStub));
     int32_t ret = ProfThreadPoolInit(10, 0, 5);
     EXPECT_EQ(ret, PROFILING_SUCCESS);
     ProfileParam param;
     (void)memset_s(param.config.resultDir, sizeof(param.config.resultDir), 0, sizeof(param.config.resultDir));
     (void)strcpy_s(param.config.resultDir, sizeof(param.config.resultDir), "./test");
-    MOCKER(CreateDirectory)
-        .stubs()
-        .will(returnValue(true));
-    MOCKER(IsDirAccessible)
-        .stubs()
-        .will(returnValue(true));
+    MOCKER(CreateDirectory).stubs().will(returnValue(true));
+    MOCKER(IsDirAccessible).stubs().will(returnValue(true));
 
     ret = UploaderInitialize();
     EXPECT_EQ(ret, PROFILING_SUCCESS);
@@ -132,16 +117,11 @@ TEST_F(UploadUtest, UploaderBasic)
 
 TEST_F(UploadUtest, UploaderInitializeFail)
 {
-    MOCKER(CstlListInit)
-        .stubs()
-        .will(returnValue(CSTL_ERR))
-        .then(returnValue(CSTL_OK));
+    MOCKER(CstlListInit).stubs().will(returnValue(CSTL_ERR)).then(returnValue(CSTL_OK));
     int32_t ret = UploaderInitialize();
     EXPECT_EQ(ret, PROFILING_FAILED);
 
-    MOCKER(OsalCalloc)
-        .stubs()
-        .will(returnValue((void *)NULL));
+    MOCKER(OsalCalloc).stubs().will(returnValue((void*)NULL));
     ret = UploaderInitialize();
     EXPECT_EQ(ret, PROFILING_FAILED);
 }
@@ -158,27 +138,21 @@ TEST_F(UploadUtest, UploaderFinalizeBasic)
     EXPECT_EQ(ret, PROFILING_SUCCESS);
 }
 
-void* MallocStub2(int size)
-{
-    return malloc(size);
-}
+void* MallocStub2(int size) { return malloc(size); }
 int g_osalmallocSuccessCnt = 0;
 void* MallocTest2(int size)
 {
     void* ret = nullptr;
     if (g_osalmallocSuccessCnt != 0) {
         ret = MallocStub2(size);
-    } 
+    }
     g_osalmallocSuccessCnt--;
     return ret;
 }
 
 TEST_F(UploadUtest, CreateDataUploaderBasic)
 {
-    MOCKER(OsalMkdir)
-        .stubs()
-        .will(returnValue(OSAL_EN_OK))
-        .then(returnValue(OSAL_EN_ERR));
+    MOCKER(OsalMkdir).stubs().will(returnValue(OSAL_EN_OK)).then(returnValue(OSAL_EN_ERR));
     ProfileParam param;
     (void)memset_s(param.config.resultDir, sizeof(param.config.resultDir), 0, sizeof(param.config.resultDir));
     (void)strcpy_s(param.config.resultDir, sizeof(param.config.resultDir), "./test");
@@ -200,31 +174,20 @@ TEST_F(UploadUtest, CreateDataUploaderBasic)
     ret = CreateDataUploader(&param, FILE_TRANSPORT, 0, UPLOADER_CAPACITY);
     EXPECT_EQ(ret, PROFILING_FAILED);
     // StartDataUploaderThread
-    MOCKER(CstlListPushBack)
-        .stubs()
-        .will(returnValue(CSTL_ERR))
-        .then(returnValue(CSTL_OK));
+    MOCKER(CstlListPushBack).stubs().will(returnValue(CSTL_ERR)).then(returnValue(CSTL_OK));
     ret = CreateDataUploader(&param, FILE_TRANSPORT, 0, UPLOADER_CAPACITY);
     EXPECT_EQ(ret, PROFILING_FAILED);
 
-    MOCKER(ProfThreadPoolExpand)
-        .stubs()
-        .will(returnValue(PROFILING_FAILED))
-        .then(returnValue(PROFILING_SUCCESS));
+    MOCKER(ProfThreadPoolExpand).stubs().will(returnValue(PROFILING_FAILED)).then(returnValue(PROFILING_SUCCESS));
     ret = CreateDataUploader(&param, FILE_TRANSPORT, 0, UPLOADER_CAPACITY);
     EXPECT_EQ(ret, PROFILING_FAILED);
 
-    MOCKER(ProfThreadPoolDispatch)
-        .stubs()
-        .will(returnValue(PROFILING_FAILED))
-        .then(returnValue(PROFILING_SUCCESS));
+    MOCKER(ProfThreadPoolDispatch).stubs().will(returnValue(PROFILING_FAILED)).then(returnValue(PROFILING_SUCCESS));
     ret = CreateDataUploader(&param, FILE_TRANSPORT, 0, UPLOADER_CAPACITY);
     EXPECT_EQ(ret, PROFILING_FAILED);
     // InitDataUploaderBaisc
     int32_t successCnt = 0;
-    MOCKER(OsalMalloc)
-        .stubs()
-        .will(invoke(MallocTest2));
+    MOCKER(OsalMalloc).stubs().will(invoke(MallocTest2));
     g_osalmallocSuccessCnt = successCnt++;
     ret = CreateDataUploader(&param, FILE_TRANSPORT, 0, UPLOADER_CAPACITY);
     EXPECT_EQ(ret, PROFILING_FAILED);
@@ -254,9 +217,7 @@ TEST_F(UploadUtest, CreateProfMainDirBasic)
     ret = CreateProfMainDir(&index, flushDir);
     EXPECT_EQ(ret, PROFILING_SUCCESS);
 
-    MOCKER(OsalGetLocalTime)
-        .stubs()
-        .will(returnValue(OSAL_EN_ERROR));
+    MOCKER(OsalGetLocalTime).stubs().will(returnValue(OSAL_EN_ERROR));
     (void)memset_s(flushDir, sizeof(flushDir), 0, sizeof(flushDir));
     (void)sprintf_s(flushDir, sizeof(flushDir), "./test");
     ret = CreateProfMainDir(&index, flushDir);
@@ -265,9 +226,7 @@ TEST_F(UploadUtest, CreateProfMainDirBasic)
 
 TEST_F(UploadUtest, OsalMutexInitFail)
 {
-    MOCKER(OsalCondInit)
-        .stubs()
-        .will(returnValue(-1));
+    MOCKER(OsalCondInit).stubs().will(returnValue(-1));
     ProfileParam param;
     (void)memset_s(param.config.resultDir, sizeof(param.config.resultDir), 0, sizeof(param.config.resultDir));
     (void)strcpy_s(param.config.resultDir, sizeof(param.config.resultDir), "./test");
@@ -286,12 +245,12 @@ TEST_F(UploadUtest, OsalMutexInitFail)
 TEST_F(UploadUtest, FlashSendBufferTest)
 {
     const char* dir = "./";
-    ProfFileChunk *chunk = CreateChunk(0, 1, PROF_DEVICE_DATA);
+    ProfFileChunk* chunk = CreateChunk(0, 1, PROF_DEVICE_DATA);
     EXPECT_EQ(FlashSendBuffer(chunk, dir), PROFILING_SUCCESS);
 
-    ProfFileChunk *chunk2 = CreateChunk(64, 1, PROF_HOST_DATA);
+    ProfFileChunk* chunk2 = CreateChunk(64, 1, PROF_HOST_DATA);
     EXPECT_EQ(FlashSendBuffer(chunk2, dir), PROFILING_SUCCESS);
 
-    ProfFileChunk *chunk3 = CreateChunk(64, 1, PROF_CTRL_DATA);
+    ProfFileChunk* chunk3 = CreateChunk(64, 1, PROF_CTRL_DATA);
     EXPECT_EQ(FlashSendBuffer(chunk3, dir), PROFILING_SUCCESS);
 }

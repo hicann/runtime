@@ -14,7 +14,8 @@ extern "C" void __gcov_dump(void) __attribute__((weak));
 extern "C" void __gcov_exit(void) __attribute__((weak));
 #endif
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv)
+{
     testing::InitGoogleTest(&argc, argv);
     int ret = RUN_ALL_TESTS();
 #if defined(__GNUC__)

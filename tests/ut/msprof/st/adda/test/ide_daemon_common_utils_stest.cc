@@ -18,13 +18,10 @@
 
 using namespace IdeDaemon::Common::Utils;
 
-class IDE_COMMON_UTILS_STEST: public testing::Test {
+class IDE_COMMON_UTILS_STEST : public testing::Test {
 protected:
-    virtual void SetUp() {
-    }
-    virtual void TearDown() {
-        GlobalMockObject::verify();
-    }
+    virtual void SetUp() {}
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 TEST_F(IDE_COMMON_UTILS_STEST, Split)
@@ -36,7 +33,7 @@ TEST_F(IDE_COMMON_UTILS_STEST, Split)
     EXPECT_EQ(res[1], "hig");
 }
 
-TEST_F(IDE_COMMON_UTILS_STEST,  LeftTrim)
+TEST_F(IDE_COMMON_UTILS_STEST, LeftTrim)
 {
     EXPECT_EQ("abc", LeftTrim(" abc", " "));
     EXPECT_EQ("", LeftTrim("    ", " "));

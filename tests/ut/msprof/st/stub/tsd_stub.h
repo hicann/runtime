@@ -10,9 +10,9 @@
 #ifndef _TSD_STUB_H_
 #define _TSD_STUB_H_
 
-void *mmDlsymTsdError(void *handle, const char *funcName);
-void *mmDlsymTsd(void *handle, const char *funcName);
-int32_t mmDlclose(void *handle);
-void *mmDlopen(const char *fileName, int mode);
+void* mmDlsymTsdError(void* handle, const char* funcName);
+void* mmDlsymTsd(void* handle, const char* funcName);
+int32_t mmDlclose(void* handle);
+void* mmDlopen(const char* fileName, int mode);
 
 #endif

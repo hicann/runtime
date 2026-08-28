@@ -13,7 +13,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-//int CommandRes(int sock, int cmd_or_file);
+// int CommandRes(int sock, int cmd_or_file);
 int CommandRes(struct IdeSockHandle, int cmd_or_file);
 #ifdef __cplusplus
 }

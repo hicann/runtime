@@ -7,16 +7,16 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
-#include<iostream>
-#include<stdint.h>
-#include<unistd.h>
-#include<sys/socket.h>
+#include <iostream>
+#include <stdint.h>
+#include <unistd.h>
+#include <sys/socket.h>
 #include <errno.h>
-#include"gtest/gtest.h"
-#include"mockcpp/mockcpp.hpp"
+#include "gtest/gtest.h"
+#include "mockcpp/mockcpp.hpp"
 #include "platform/platform.h"
-#include"errno/error_code.h"
-#include"select_operation.h"
+#include "errno/error_code.h"
+#include "select_operation.h"
 #include "message/prof_params.h"
 #include "securec.h"
 #include "sender.h"
@@ -26,24 +26,22 @@ using namespace analysis::dvvp::streamio::client;
 using namespace analysis::dvvp::streamio::common;
 using namespace analysis::dvvp::common::error;
 
-class PROFILER_SENDER_TEST: public testing::Test {
-
+class PROFILER_SENDER_TEST : public testing::Test {
 public:
     std::string engine_name = "profiling";
     std::string address = "profiling";
-    string job_ctx_json = "{\"dev_id\":\"0\",\"job_id\":\"c835ed1c-7575-11e8-a10d-0242ac110002\",\"result_dir\":\"/tmp/profiler/c835ed1c-7575-11e8-a10d-0242ac110002\",\"tag\":\"\"}";
-    string job_ctx_json_file_mode = "{\"dev_id\":\"0\",\"job_id\":\"c835ed1c-7575-11e8-a10d-0242ac110002\",\"result_dir\":\"/tmp/profiler/c835ed1c-7575-11e8-a10d-0242ac110002\",\"tag\":\"\",\"stream_enabled\":\"off\"}";
+    string job_ctx_json = "{\"dev_id\":\"0\",\"job_id\":\"c835ed1c-7575-11e8-a10d-0242ac110002\",\"result_dir\":\"/tmp/"
+                          "profiler/c835ed1c-7575-11e8-a10d-0242ac110002\",\"tag\":\"\"}";
+    string job_ctx_json_file_mode =
+        "{\"dev_id\":\"0\",\"job_id\":\"c835ed1c-7575-11e8-a10d-0242ac110002\",\"result_dir\":\"/tmp/profiler/"
+        "c835ed1c-7575-11e8-a10d-0242ac110002\",\"tag\":\"\",\"stream_enabled\":\"off\"}";
+
 protected:
-    virtual void SetUp() {
-    }
-    virtual void TearDown() {
-    }
+    virtual void SetUp() {}
+    virtual void TearDown() {}
 };
 
-void mock_return_void()
-{
-    return;
-}
+void mock_return_void() { return; }
 
 TEST_F(PROFILER_SENDER_TEST, Init)
 {
@@ -69,17 +67,11 @@ TEST_F(PROFILER_SENDER_TEST, Flush)
     Sender sender(nullptr, "profiling", chunkPool);
     EXPECT_EQ(PROFILING_SUCCESS, sender.Init());
 
-    MOCKER_CPP(&Sender::FlushFileCache)
-        .stubs()
-        .will(ignoreReturnValue());
+    MOCKER_CPP(&Sender::FlushFileCache).stubs().will(ignoreReturnValue());
 
-    MOCKER_CPP(&Sender::WaitEmpty)
-        .stubs()
-        .will(ignoreReturnValue());
+    MOCKER_CPP(&Sender::WaitEmpty).stubs().will(ignoreReturnValue());
 
-    MOCKER_CPP(&Sender::CloseFileFds)
-        .stubs()
-        .will(ignoreReturnValue());
+    MOCKER_CPP(&Sender::CloseFileFds).stubs().will(ignoreReturnValue());
 
     sender.Flush();
     sender.Uninit();
@@ -96,9 +88,7 @@ TEST_F(PROFILER_SENDER_TEST, FlushFileCache)
     Sender sender(nullptr, "profiling", chunkPool);
     EXPECT_EQ(PROFILING_SUCCESS, sender.Init());
 
-    MOCKER_CPP(&Sender::DispatchFile)
-        .stubs()
-        .will(invoke(mock_return_void));
+    MOCKER_CPP(&Sender::DispatchFile).stubs().will(invoke(mock_return_void));
 
     sender.FlushFileCache();
     file->Uinit();
@@ -136,22 +126,17 @@ TEST_F(PROFILER_SENDER_TEST, DispatchFile)
     auto sender = std::make_shared<Sender>(nullptr, "profiling", chunkPool);
     EXPECT_EQ(PROFILING_SUCCESS, sender->Init());
 
-    MOCKER_CPP(&FileQueue::Push)
-        .stubs()
-        .will(returnValue(true));
+    MOCKER_CPP(&FileQueue::Push).stubs().will(returnValue(true));
 
-    MOCKER_CPP(&SenderPool::Dispatch)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&SenderPool::Dispatch).stubs().will(returnValue(PROFILING_SUCCESS));
 
-    MOCKER_CPP(&Sender::WaitEmpty)
-        .stubs();
+    MOCKER_CPP(&Sender::WaitEmpty).stubs();
 
     sender->DispatchFile(file);
     sender->isFinished_ = true;
-    //file->Uinit();
-    //sender.Uninit();
-    //chunkPool->Uninit();
+    // file->Uinit();
+    // sender.Uninit();
+    // chunkPool->Uninit();
 }
 
 TEST_F(PROFILER_SENDER_TEST, WaitEmpty)
@@ -213,14 +198,9 @@ TEST_F(PROFILER_SENDER_TEST, SaveFileData)
     data.dataBuf = buf;
     data.bufLen = 8;
 
-    MOCKER_CPP(&Sender::DispatchFile)
-        .stubs()
-        .will(invoke(mock_return_void));
+    MOCKER_CPP(&Sender::DispatchFile).stubs().will(invoke(mock_return_void));
 
-    MOCKER(memcpy_s)
-        .stubs()
-        .will(returnValue(EOF))
-        .then(returnValue(EOK));
+    MOCKER(memcpy_s).stubs().will(returnValue(EOF)).then(returnValue(EOK));
 
     EXPECT_EQ(PROFILING_FAILED, sender.SaveFileData(job_ctx_json, data));
     EXPECT_EQ(PROFILING_SUCCESS, sender.SaveFileData(job_ctx_json, data));
@@ -256,14 +236,9 @@ TEST_F(PROFILER_SENDER_TEST, save_file_data_not_enough)
     data.dataBuf = buf;
     data.bufLen = 24;
 
-    MOCKER_CPP(&Sender::DispatchFile)
-        .stubs()
-        .will(invoke(mock_return_void));
+    MOCKER_CPP(&Sender::DispatchFile).stubs().will(invoke(mock_return_void));
 
-    MOCKER(memcpy_s)
-        .stubs()
-        .will(returnValue(EOF))
-        .then(returnValue(EOK));
+    MOCKER(memcpy_s).stubs().will(returnValue(EOF)).then(returnValue(EOK));
 
     EXPECT_EQ(PROFILING_FAILED, sender.SaveFileData(job_ctx_json, data));
     EXPECT_EQ(PROFILING_SUCCESS, sender.SaveFileData(job_ctx_json, data));
@@ -282,9 +257,7 @@ TEST_F(PROFILER_SENDER_TEST, CloseFileFds)
     EXPECT_EQ(PROFILING_SUCCESS, sender.Init());
     sender.fileFdMap_["file_name"] = 5;
 
-    MOCKER(mmClose)
-        .stubs()
-        .will(returnValue(EN_OK));
+    MOCKER(mmClose).stubs().will(returnValue(EN_OK));
 
     sender.CloseFileFds();
     sender.Uninit();
@@ -305,10 +278,7 @@ TEST_F(PROFILER_SENDER_TEST, OpenWriteFile)
         .will(returnValue(PROFILING_FAILED))
         .then(returnValue(PROFILING_SUCCESS));
 
-    MOCKER(mmOpen2)
-        .stubs()
-        .will(returnValue(-1))
-        .then(returnValue(7));
+    MOCKER(mmOpen2).stubs().will(returnValue(-1)).then(returnValue(7));
 
     EXPECT_EQ(-1, sender.OpenWriteFile("file_name"));
     EXPECT_EQ(-1, sender.OpenWriteFile("file_name"));
@@ -342,9 +312,7 @@ TEST_F(PROFILER_SENDER_TEST, Send)
     EXPECT_EQ(PROFILING_FAILED, sender.Send(job_ctx_json, data));
     sender.Init();
 
-    MOCKER_CPP(&Sender::SaveFileData)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&Sender::SaveFileData).stubs().will(returnValue(PROFILING_SUCCESS));
 
     EXPECT_EQ(PROFILING_SUCCESS, sender.Send(job_ctx_json, data));
     sender.Uninit();
@@ -361,10 +329,7 @@ TEST_F(PROFILER_SENDER_TEST, SendData)
 
     char buf[24] = {0};
 
-    MOCKER(mmSocketSend)
-        .stubs()
-        .will(returnValue(-1))
-        .then(returnValue(7));
+    MOCKER(mmSocketSend).stubs().will(returnValue(-1)).then(returnValue(7));
 
     EXPECT_EQ(0, sender.SendData(buf, 7));
     EXPECT_EQ(0, sender.SendData(buf, 7));
@@ -403,14 +368,9 @@ TEST_F(PROFILER_SENDER_TEST, ExecuteStreamMode)
     std::shared_ptr<std::string> encode;
     encode = std::make_shared<std::string>("1234567890");
 
-    MOCKER_CPP(&Sender::EncodeData)
-        .stubs()
-        .will(returnValue(encode));
+    MOCKER_CPP(&Sender::EncodeData).stubs().will(returnValue(encode));
 
-    MOCKER_CPP(&Sender::SendData)
-        .stubs()
-        .will(returnValue(0))
-        .then(returnValue(9));
+    MOCKER_CPP(&Sender::SendData).stubs().will(returnValue(0)).then(returnValue(9));
 
     sender.ExecuteStreamMode(file);
     sender.ExecuteStreamMode(file);
@@ -431,18 +391,12 @@ TEST_F(PROFILER_SENDER_TEST, Execute_stream_mode_not_enough)
     auto file = std::make_shared<File>(chunkPool, chunk, job_ctx_json, "file_name");
     EXPECT_EQ(PROFILING_SUCCESS, file->Init());
 
-	std::shared_ptr<std::string> encode;
-	encode = std::make_shared<std::string>("1234567890");
+    std::shared_ptr<std::string> encode;
+    encode = std::make_shared<std::string>("1234567890");
 
-    MOCKER_CPP(&Sender::EncodeData)
-        .stubs()
-        .will(returnValue(encode));
+    MOCKER_CPP(&Sender::EncodeData).stubs().will(returnValue(encode));
 
-    MOCKER_CPP(&Sender::SendData)
-        .stubs()
-        .will(returnValue(0))
-        .then(returnValue(0))
-        .then(returnValue(8));
+    MOCKER_CPP(&Sender::SendData).stubs().will(returnValue(0)).then(returnValue(0)).then(returnValue(8));
 
     sender.ExecuteStreamMode(file);
     sender.ExecuteStreamMode(file);
@@ -462,19 +416,11 @@ TEST_F(PROFILER_SENDER_TEST, ExecuteFileMode)
     auto file = std::make_shared<File>(chunkPool, chunk, job_ctx_json, "file_name");
     EXPECT_EQ(PROFILING_SUCCESS, file->Init());
 
-    MOCKER_CPP(&Sender::GetFileFd)
-        .stubs()
-        .will(returnValue(-1))
-        .then(returnValue(7));
+    MOCKER_CPP(&Sender::GetFileFd).stubs().will(returnValue(-1)).then(returnValue(7));
 
-    MOCKER_CPP(&Sender::OpenWriteFile)
-        .stubs()
-        .will(returnValue(-1))
-        .then(returnValue(7));
+    MOCKER_CPP(&Sender::OpenWriteFile).stubs().will(returnValue(-1)).then(returnValue(7));
 
-    MOCKER(mmWrite)
-        .stubs()
-        .will(returnValue(-1));
+    MOCKER(mmWrite).stubs().will(returnValue(-1));
 
     sender.ExecuteFileMode(file);
     sender.ExecuteFileMode(file);
@@ -497,18 +443,11 @@ TEST_F(PROFILER_SENDER_TEST, Execute)
 
     EXPECT_EQ(PROFILING_FAILED, sender.Execute());
 
-    MOCKER_CPP(&File::IsStreamMode)
-        .stubs()
-        .will(returnValue(true))
-        .then(returnValue(false));
+    MOCKER_CPP(&File::IsStreamMode).stubs().will(returnValue(true)).then(returnValue(false));
 
-    MOCKER_CPP(&Sender::ExecuteStreamMode)
-        .stubs()
-        .will(invoke(mock_return_void));
+    MOCKER_CPP(&Sender::ExecuteStreamMode).stubs().will(invoke(mock_return_void));
 
-    MOCKER_CPP(&Sender::ExecuteFileMode)
-        .stubs()
-        .will(invoke(mock_return_void));
+    MOCKER_CPP(&Sender::ExecuteFileMode).stubs().will(invoke(mock_return_void));
 
     file->mode_ = analysis::dvvp::streamio::common::STREAM_MODE;
     sender.fileQueue_->Push(file);
@@ -557,9 +496,7 @@ TEST_F(PROFILER_SENDER_TEST, sender_pool_dispatch)
 {
     GlobalMockObject::verify();
 
-    MOCKER_CPP(&analysis::dvvp::common::thread::ThreadPool::Dispatch)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&analysis::dvvp::common::thread::ThreadPool::Dispatch).stubs().will(returnValue(PROFILING_SUCCESS));
 
     std::shared_ptr<Sender> sender;
     auto sener_pool = std::make_shared<SenderPool>();
@@ -568,7 +505,6 @@ TEST_F(PROFILER_SENDER_TEST, sender_pool_dispatch)
     EXPECT_EQ(PROFILING_SUCCESS, sener_pool->Dispatch(sender));
 
     sener_pool->Uninit();
-
 }
 
 TEST_F(PROFILER_SENDER_TEST, file_init)

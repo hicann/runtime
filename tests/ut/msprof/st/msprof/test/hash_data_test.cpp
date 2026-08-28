@@ -28,7 +28,7 @@
 #include <errno.h>
 #include <algorithm>
 #include <fstream>
-//mac
+// mac
 #include <net/if.h>
 #include <sys/prctl.h>
 #define protected public
@@ -44,23 +44,24 @@ using namespace analysis::dvvp::common::thread;
 using namespace analysis::dvvp::common::error;
 using namespace analysis::dvvp::transport;
 
-
-class COMMON_HASH_DATA_TEST: public testing::Test {
+class COMMON_HASH_DATA_TEST : public testing::Test {
 protected:
-    virtual void SetUp() {
-    }
-    virtual void TearDown() {
+    virtual void SetUp() {}
+    virtual void TearDown()
+    {
         GlobalMockObject::verify();
         HashData::instance()->Uninit();
     }
+
 private:
 };
 
-TEST_F(COMMON_HASH_DATA_TEST, Init) {
-    int32_t ret  = HashData::instance()->Init();
+TEST_F(COMMON_HASH_DATA_TEST, Init)
+{
+    int32_t ret = HashData::instance()->Init();
     EXPECT_EQ(PROFILING_SUCCESS, ret);
 
-    ret  = HashData::instance()->Init();
+    ret = HashData::instance()->Init();
     EXPECT_EQ(PROFILING_SUCCESS, ret);
 
     auto iter = HashData::instance()->hashMapMutex_.find("DATA_PREPROCESS");
@@ -68,24 +69,27 @@ TEST_F(COMMON_HASH_DATA_TEST, Init) {
     HashData::instance()->Uninit();
 }
 
-TEST_F(COMMON_HASH_DATA_TEST, Uninit) {
-    int32_t ret  = HashData::instance()->Uninit();
+TEST_F(COMMON_HASH_DATA_TEST, Uninit)
+{
+    int32_t ret = HashData::instance()->Uninit();
     EXPECT_EQ(PROFILING_SUCCESS, ret);
 }
 
-TEST_F(COMMON_HASH_DATA_TEST, IsInit) {
+TEST_F(COMMON_HASH_DATA_TEST, IsInit)
+{
     HashData::instance()->Init();
     EXPECT_EQ(true, HashData::instance()->IsInit());
     HashData::instance()->Uninit();
-    EXPECT_EQ(false, HashData::instance()->IsInit());    
+    EXPECT_EQ(false, HashData::instance()->IsInit());
 }
 
-TEST_F(COMMON_HASH_DATA_TEST, GenHashId) {
+TEST_F(COMMON_HASH_DATA_TEST, GenHashId)
+{
     HashData::instance()->Init();
 
     EXPECT_EQ(0, HashData::instance()->GenHashId("xxx", nullptr, 0));
 
-    const char *data = "ABCDEFGHIJK";
+    const char* data = "ABCDEFGHIJK";
     uint64_t hashId = 4667050837169873462;
     EXPECT_EQ(hashId, HashData::instance()->GenHashId("DATA_PREPROCESS", data, strlen(data)));
 
@@ -97,17 +101,19 @@ TEST_F(COMMON_HASH_DATA_TEST, GenHashId) {
     HashData::instance()->Uninit();
 }
 
-TEST_F(COMMON_HASH_DATA_TEST, SaveHashData) {
+TEST_F(COMMON_HASH_DATA_TEST, SaveHashData)
+{
     GlobalMockObject::verify();
-    MOCKER_CPP(&analysis::dvvp::transport::UploaderMgr::UploadData,
-        int(analysis::dvvp::transport::UploaderMgr::*)(const std::string &, const void *, uint32_t))
+    MOCKER_CPP(
+        &analysis::dvvp::transport::UploaderMgr::UploadData,
+        int(analysis::dvvp::transport::UploaderMgr::*)(const std::string&, const void*, uint32_t))
         .stubs()
         .will(returnValue(PROFILING_FAILED))
         .then(returnValue(PROFILING_SUCCESS));
-    
+
     HashData::instance()->SaveHashData(0);
     HashData::instance()->Init();
-    const char *data = "ABCDEFGHIJK";
+    const char* data = "ABCDEFGHIJK";
     HashData::instance()->GenHashId("DATA_PREPROCESS", data, strlen(data));
     HashData::instance()->GenHashId("AclModule", data, strlen(data));
     HashData::instance()->SaveHashData(0);

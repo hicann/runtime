@@ -28,7 +28,7 @@ struct RunnerOpInfo {
     std::string opType;
     uint64_t start;
     uint64_t end;
-    bool operator < (const struct RunnerOpInfo &other) const
+    bool operator<(const struct RunnerOpInfo& other) const
     {
         if (opCostTime != other.opCostTime) {
             return opCostTime < other.opCostTime;
@@ -57,7 +57,7 @@ namespace Cann {
 namespace Dvvp {
 namespace Test {
 struct Buff {
-    void *data;
+    void* data;
     size_t len;
 };
 
@@ -69,43 +69,41 @@ public:
         modelId_ = 0;
         streamId_ = 0;
     }
-    static DataManager &GetInstance();
+    static DataManager& GetInstance();
     void Init(std::string socType, const char* testcase);
     void UnInit();
     void SetDataDir(const char* dirName);
-    int32_t ReadFile(std::string filename, ReportDataCallback callback,  bool needExist = false, bool once = false);
+    int32_t ReadFile(std::string filename, ReportDataCallback callback, bool needExist = false, bool once = false);
     // report device data
-    int32_t ReportTsTimelineData(std::queue<struct Buff> &channelData);
-    int32_t ReportTsKeypointData(std::queue<struct Buff> &channelData);
-    int32_t ReportHwtsData(std::queue<struct Buff> &channelData);
-    int32_t ReportFftsAcsqData(std::queue<struct Buff> &channelData);
-    int32_t ReportFftsCtxData(std::queue<struct Buff> &channelData);
-    int32_t ReportOpStarsAcsqData(std::queue<struct Buff> &channelData);
-    int32_t ReportOpFftsPmuData(std::queue<struct Buff> &channelData);
-    int32_t ReportOpDavidPmuData(std::queue<struct Buff> &channelData);
-    int32_t ReportStarsNanoData(std::queue<struct Buff> &channelData);
-    int32_t ReportDefaultData(std::queue<struct Buff> &channelData);
-    int32_t ReportBiuPerfData(std::queue<struct Buff> &channelData);
+    int32_t ReportTsTimelineData(std::queue<struct Buff>& channelData);
+    int32_t ReportTsKeypointData(std::queue<struct Buff>& channelData);
+    int32_t ReportHwtsData(std::queue<struct Buff>& channelData);
+    int32_t ReportFftsAcsqData(std::queue<struct Buff>& channelData);
+    int32_t ReportFftsCtxData(std::queue<struct Buff>& channelData);
+    int32_t ReportOpStarsAcsqData(std::queue<struct Buff>& channelData);
+    int32_t ReportOpFftsPmuData(std::queue<struct Buff>& channelData);
+    int32_t ReportOpDavidPmuData(std::queue<struct Buff>& channelData);
+    int32_t ReportStarsNanoData(std::queue<struct Buff>& channelData);
+    int32_t ReportDefaultData(std::queue<struct Buff>& channelData);
+    int32_t ReportBiuPerfData(std::queue<struct Buff>& channelData);
     // check result
-    int32_t CheckSubscribeResult(std::set<RunnerOpInfo> &modelOpInfo, std::string resultFile = "result.txt");
+    int32_t CheckSubscribeResult(std::set<RunnerOpInfo>& modelOpInfo, std::string resultFile = "result.txt");
     void SetModelId(uint32_t modelId);
     void SetStreamId(uint32_t stramId);
     uint32_t GetModelId();
     uint32_t GetStreamId();
+
 private:
     std::string socType_;
     std::string dataDir_;
-    std::string GetCaseName(const char *testcase);
+    std::string GetCaseName(const char* testcase);
     uint32_t modelId_;
     uint32_t streamId_;
 };
-}
-}
-}
+} // namespace Test
+} // namespace Dvvp
+} // namespace Cann
 
-inline Cann::Dvvp::Test::DataManager &DataMgr()
-{
-    return Cann::Dvvp::Test::DataManager::GetInstance();
-}
+inline Cann::Dvvp::Test::DataManager& DataMgr() { return Cann::Dvvp::Test::DataManager::GetInstance(); }
 
 #endif

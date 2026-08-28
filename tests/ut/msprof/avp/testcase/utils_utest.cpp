@@ -24,15 +24,10 @@
 #include "hal/hal_dsmi.h"
 #include "utils/utils.h"
 
-class UtilsUtest: public testing::Test {
+class UtilsUtest : public testing::Test {
 protected:
-    virtual void SetUp()
-    {
-    }
-    virtual void TearDown()
-    {
-        GlobalMockObject::verify();
-    }
+    virtual void SetUp() {}
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 TEST_F(UtilsUtest, MsprofRealloc)
@@ -65,7 +60,7 @@ TEST_F(UtilsUtest, RelativePathToAbsolutePath)
     bool boolStatus = true;
     char* path = "/home/testDir";
     int32_t resLen = 100;
-    char* resultDir = (char *)OsalMalloc(resLen);
+    char* resultDir = (char*)OsalMalloc(resLen);
     RelativePathToAbsolutePath(path, resultDir, resLen);
     if (strcmp(resultDir, "/home/testDir") != 0) {
         boolStatus = false;
@@ -111,7 +106,8 @@ TEST_F(UtilsUtest, CheckUint64ToChar)
     free(str);
 }
 
-TEST_F(UtilsUtest, IsDirAccessible) {
+TEST_F(UtilsUtest, IsDirAccessible)
+{
     std::string path = "/notDir";
     EXPECT_EQ(false, IsDirAccessible(path.c_str()));
 
@@ -122,21 +118,14 @@ TEST_F(UtilsUtest, IsDirAccessible) {
 
 TEST_F(UtilsUtest, MsprofSysCycleTimeBase)
 {
-    MOCKER(HalGetChipVersion)
-        .stubs()
-        .will(returnValue(uint32_t(CHIP_NANO_V1)));
-    MOCKER(HalGetHostFreq)
-        .stubs()
-        .will(returnValue((uint32_t)1000));
+    MOCKER(HalGetChipVersion).stubs().will(returnValue(uint32_t(CHIP_NANO_V1)));
+    MOCKER(HalGetHostFreq).stubs().will(returnValue((uint32_t)1000));
     uint32_t count = 0;
     int32_t ret = PlatformInitialize(&count);
     EXPECT_EQ(ret, PROFILING_SUCCESS);
     EXPECT_EQ(PlatformHostFreqIsEnable(), true);
 
-    MOCKER(PlatformHostFreqIsEnable)
-        .stubs()
-        .will(returnValue(true))
-        .then(returnValue(false));
+    MOCKER(PlatformHostFreqIsEnable).stubs().will(returnValue(true)).then(returnValue(false));
     uint64_t cycleTime = MsprofSysCycleTime();
     EXPECT_EQ((cycleTime > 0), true);
     cycleTime = MsprofSysCycleTime();
@@ -147,12 +136,7 @@ TEST_F(UtilsUtest, MsprofSysCycleTimeBase)
 
 TEST_F(UtilsUtest, GetSelfPathTest)
 {
-    MOCKER(readlink)
-        .stubs()
-        .will(returnValue(-1))
-        .then(returnValue(4097));
-    MOCKER(strcpy_s)
-        .stubs()
-        .will(returnValue(0));
+    MOCKER(readlink).stubs().will(returnValue(-1)).then(returnValue(4097));
+    MOCKER(strcpy_s).stubs().will(returnValue(0));
     EXPECT_EQ(false, GetSelfPath("./"));
 }

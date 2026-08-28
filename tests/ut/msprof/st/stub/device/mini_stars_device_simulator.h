@@ -21,22 +21,21 @@
 #include "device_simulator.h"
 #include "data_manager.h"
 
-
 namespace Cann {
 namespace Dvvp {
 namespace Test {
 class MiniStarsDeviceSimulator : public DeviceSimulator {
 public:
     MiniStarsDeviceSimulator() {}
-    explicit MiniStarsDeviceSimulator(uint32_t platformType) :
-        platformType_(platformType) {}
+    explicit MiniStarsDeviceSimulator(uint32_t platformType) : platformType_(platformType) {}
     virtual ~MiniStarsDeviceSimulator() {}
-    virtual int32_t ProfDrvGetChannels(ChannelList &channels) override;
-    virtual int32_t GetDeviceInfo(int32_t moduleType, int32_t infoType, int64_t *value) override;
+    virtual int32_t ProfDrvGetChannels(ChannelList& channels) override;
+    virtual int32_t GetDeviceInfo(int32_t moduleType, int32_t infoType, int64_t* value) override;
+
 private:
     uint32_t platformType_;
 };
-}
-}
-}
+} // namespace Test
+} // namespace Dvvp
+} // namespace Cann
 #endif

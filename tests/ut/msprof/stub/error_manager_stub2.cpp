@@ -17,36 +17,30 @@
 namespace {
 std::string g_msprofLastInputErrorCode;
 std::vector<std::string> g_msprofLastInputErrorValues;
-}  // namespace
+} // namespace
 
 namespace MsprofUtestStub {
 void ResetMsprofLastInputErrorCode()
 {
-  g_msprofLastInputErrorCode.clear();
-  g_msprofLastInputErrorValues.clear();
+    g_msprofLastInputErrorCode.clear();
+    g_msprofLastInputErrorValues.clear();
 }
 
-void RecordMsprofInputErrorCode(const std::string &errorCode)
+void RecordMsprofInputErrorCode(const std::string& errorCode)
 {
-  g_msprofLastInputErrorCode = errorCode;
-  g_msprofLastInputErrorValues.clear();
+    g_msprofLastInputErrorCode = errorCode;
+    g_msprofLastInputErrorValues.clear();
 }
 
-void RecordMsprofInputErrorCode(const std::string &errorCode, const std::vector<std::string> &values)
+void RecordMsprofInputErrorCode(const std::string& errorCode, const std::vector<std::string>& values)
 {
-  g_msprofLastInputErrorCode = errorCode;
-  g_msprofLastInputErrorValues = values;
+    g_msprofLastInputErrorCode = errorCode;
+    g_msprofLastInputErrorValues = values;
 }
 
-const std::string &GetMsprofLastInputErrorCode()
-{
-  return g_msprofLastInputErrorCode;
-}
+const std::string& GetMsprofLastInputErrorCode() { return g_msprofLastInputErrorCode; }
 
-const std::vector<std::string> &GetMsprofLastInputErrorValues()
-{
-  return g_msprofLastInputErrorValues;
-}
+const std::vector<std::string>& GetMsprofLastInputErrorValues() { return g_msprofLastInputErrorValues; }
 } // namespace MsprofUtestStub
 
 ///
@@ -63,13 +57,10 @@ ErrorManagerContext GetErrMgrContext()
     return errorContext;
 }
 
-void SetErrMgrContext(ErrorManagerContext errorContext)
-{
-    (void)(errorContext);
-}
+void SetErrMgrContext(ErrorManagerContext errorContext) { (void)(errorContext); }
 
-int32_t ReportInnerErrMsg(const char *fileName, const char *func, uint32_t line, const char *errorCode,
-                          const char *format, ...)
+int32_t ReportInnerErrMsg(
+    const char* fileName, const char* func, uint32_t line, const char* errorCode, const char* format, ...)
 {
     (void)fileName;
     (void)func;
@@ -79,36 +70,36 @@ int32_t ReportInnerErrMsg(const char *fileName, const char *func, uint32_t line,
     return 0;
 }
 
-int32_t ReportPredefinedErrMsg(const char *errorCode, const std::vector<const char *> &key,
-                               const std::vector<const char *> &value)
+int32_t ReportPredefinedErrMsg(
+    const char* errorCode, const std::vector<const char*>& key, const std::vector<const char*>& value)
 {
     (void)key;
     std::vector<std::string> values;
     values.reserve(value.size());
-    for (const auto *v : value) {
+    for (const auto* v : value) {
         values.emplace_back((v == nullptr) ? "" : v);
     }
     MsprofUtestStub::RecordMsprofInputErrorCode((errorCode == nullptr) ? "" : errorCode, values);
     return 0;
 }
 
-int32_t ReportPredefinedErrMsg(const char *errorCode)
+int32_t ReportPredefinedErrMsg(const char* errorCode)
 {
     MsprofUtestStub::RecordMsprofInputErrorCode((errorCode == nullptr) ? "" : errorCode);
     return 0;
 }
 
-int32_t ReportUserDefinedErrMsg(const char *errorCode, const char *format, ...)
+int32_t ReportUserDefinedErrMsg(const char* errorCode, const char* format, ...)
 {
     (void)errorCode;
     (void)format;
     return 0;
 }
 
-int32_t RegisterFormatErrorMessage(const char *errorMsg, size_t errorMsgLen)
+int32_t RegisterFormatErrorMessage(const char* errorMsg, size_t errorMsgLen)
 {
     (void)errorMsg;
     (void)errorMsgLen;
     return 0;
 }
-}  // namespace error_message
+} // namespace error_message

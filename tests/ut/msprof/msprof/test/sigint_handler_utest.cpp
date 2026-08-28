@@ -22,10 +22,7 @@ using namespace Msprofiler::Api;
 using ProfSignalHandler = void (*)(int);
 
 // 用于把 watcher 线程的 grace loop 加速跑完，避免真睡 2s
-static int32_t OsalSleepNoopStub(uint32_t /*ms*/)
-{
-    return 0;
-}
+static int32_t OsalSleepNoopStub(uint32_t /*ms*/) { return 0; }
 
 static int32_t OsalSleepFastStub(uint32_t /*ms*/)
 {
@@ -52,22 +49,16 @@ private:
     ProfSignalHandler savedSigintHandler_ = SIG_DFL;
 };
 
-static void CustomerSigHandler(int signum)
-{
-    (void)signum;
-}
+static void CustomerSigHandler(int signum) { (void)signum; }
 
 static std::atomic<bool> g_customSigHandlerCalled{false};
-static void CustomerSigHandlerWithFlag(int /*signum*/)
-{
-    g_customSigHandlerCalled = true;
-}
+static void CustomerSigHandlerWithFlag(int /*signum*/) { g_customSigHandlerCalled = true; }
 
 TEST_F(SigintHandlerUtest, RegisterSignalHandlerTwice)
 {
     signal(SIGINT, CustomerSigHandler);
 
-    auto *mgr = ProfAclMgr::instance();
+    auto* mgr = ProfAclMgr::instance();
     mgr->isReady_ = true;
 
     mgr->Init();
@@ -91,11 +82,9 @@ TEST_F(SigintHandlerUtest, SigintWatcherThreadCallsMsprofFinalize)
     g_customSigHandlerCalled = false;
     signal(SIGINT, CustomerSigHandlerWithFlag);
 
-    MOCKER_CPP(&ProfAclMgr::MsprofFinalizeHandle)
-        .stubs()
-        .will(returnValue(0));
+    MOCKER_CPP(&ProfAclMgr::MsprofFinalizeHandle).stubs().will(returnValue(0));
 
-    auto *mgr = ProfAclMgr::instance();
+    auto* mgr = ProfAclMgr::instance();
     mgr->isReady_ = true;
     mgr->Init();
 
@@ -115,7 +104,7 @@ TEST_F(SigintHandlerUtest, UnregisterSigalHandlerRestoresOldHandler)
 {
     signal(SIGINT, CustomerSigHandler);
 
-    auto *mgr = ProfAclMgr::instance();
+    auto* mgr = ProfAclMgr::instance();
     mgr->isReady_ = true;
     mgr->Init();
     mgr->UnInit();
@@ -128,7 +117,7 @@ TEST_F(SigintHandlerUtest, SigintWatcherThreadExitsOnUnregister)
 {
     signal(SIGINT, CustomerSigHandler);
 
-    auto *mgr = ProfAclMgr::instance();
+    auto* mgr = ProfAclMgr::instance();
     mgr->isReady_ = true;
     mgr->Init();
     mgr->UnInit();
@@ -139,13 +128,10 @@ TEST_F(SigintHandlerUtest, SigintWatcherThreadExitsOnUnregister)
 TEST_F(SigintHandlerUtest, ProfNotifySetDeviceSkipsCmdlineRestartWhenSigintShuttingDown)
 {
     signal(SIGINT, CustomerSigHandler);
-    MOCKER_CPP(&ProfAclMgr::MsprofFinalizeHandle)
-        .stubs()
-        .will(returnValue(0));
-    MOCKER_CPP(&Analysis::Dvvp::ProfilerCommon::ProfInitIfCommandLine)
-        .expects(never());
+    MOCKER_CPP(&ProfAclMgr::MsprofFinalizeHandle).stubs().will(returnValue(0));
+    MOCKER_CPP(&Analysis::Dvvp::ProfilerCommon::ProfInitIfCommandLine).expects(never());
 
-    auto *mgr = ProfAclMgr::instance();
+    auto* mgr = ProfAclMgr::instance();
     mgr->isReady_ = true;
     mgr->Init();
 
@@ -163,7 +149,7 @@ TEST_F(SigintHandlerUtest, UnregisterSignalHandlerRestoresSIGIGN)
 
     signal(SIGINT, SIG_IGN);
 
-    auto *mgr = ProfAclMgr::instance();
+    auto* mgr = ProfAclMgr::instance();
     mgr->isReady_ = true;
     mgr->Init();
 
@@ -180,7 +166,7 @@ TEST_F(SigintHandlerUtest, UnregisterSignalHandlerRestoresSIGDFL)
 
     signal(SIGINT, SIG_DFL);
 
-    auto *mgr = ProfAclMgr::instance();
+    auto* mgr = ProfAclMgr::instance();
     mgr->isReady_ = true;
     mgr->Init();
 
@@ -197,7 +183,7 @@ TEST_F(SigintHandlerUtest, NewSigHandlerSkipsForwardingForSIG_IGN)
     signal(SIGINT, SIG_IGN);
     MOCKER_CPP(&ProfAclMgr::MsprofFinalizeHandle).stubs().will(returnValue(0));
 
-    auto *mgr = ProfAclMgr::instance();
+    auto* mgr = ProfAclMgr::instance();
     mgr->isReady_ = true;
     mgr->Init();
 
@@ -217,7 +203,7 @@ TEST_F(SigintHandlerUtest, NewSigHandlerSkipsForwardingForSIG_DFL)
     signal(SIGINT, SIG_DFL);
     MOCKER_CPP(&ProfAclMgr::MsprofFinalizeHandle).stubs().will(returnValue(0));
 
-    auto *mgr = ProfAclMgr::instance();
+    auto* mgr = ProfAclMgr::instance();
     mgr->isReady_ = true;
     mgr->Init();
 
@@ -234,7 +220,7 @@ TEST_F(SigintHandlerUtest, IsSigintShutdownInProgressGatesDrainBranch)
 {
     signal(SIGINT, CustomerSigHandler);
 
-    auto *mgr = ProfAclMgr::instance();
+    auto* mgr = ProfAclMgr::instance();
     mgr->isReady_ = true;
     mgr->Init();
 
@@ -262,16 +248,14 @@ TEST_F(SigintHandlerUtest, WatcherFallbackInvokesMsprofFinalizeWhenAppDoesNotTea
 
     // 关键：把 OsalSleep stub 成立即返回，watcher 线程的 wait + grace 循环
     // 共 ~210 圈在毫秒级内自然走完，不会被 UnInit 提前唤醒
-    MOCKER(OsalSleep)
-        .stubs()
-        .will(invoke(OsalSleepNoopStub));
+    MOCKER(OsalSleep).stubs().will(invoke(OsalSleepNoopStub));
     // expects(atLeast(1)) 断言 fallback 路径调到了 MsprofFinalizeHandle，
     // 在 TearDown 的 GlobalMockObject::verify() 校验失败
     MOCKER_CPP(&ProfAclMgr::MsprofFinalizeHandle)
         .expects(atLeast(1))
         .will(returnValue(static_cast<int32_t>(MSPROF_ERROR_NONE)));
 
-    auto *mgr = ProfAclMgr::instance();
+    auto* mgr = ProfAclMgr::instance();
     mgr->isReady_ = true;
     mgr->Init();
 
@@ -293,16 +277,13 @@ TEST_F(SigintHandlerUtest, MsprofFinalizeHandleRunsDrainBranchUnderSigintShutdow
     signal(SIGINT, SIG_IGN);
 
     // 防止 drain 分支真睡 1s，同时也让 watcher 线程不真睡
-    MOCKER(OsalSleep)
-        .stubs()
-        .will(invoke(OsalSleepFastStub));
+    MOCKER(OsalSleep).stubs().will(invoke(OsalSleepFastStub));
     // FlushAllModule 在 DoFinalizeHandle 末尾调 1 次（line 2178），
     // drain body 再调 1 次（line 2196），加上 watcher 触发的 fallback finalize
     // 也会再走一遍 finalize（再 +2），所以这里用 atLeast(2)
-    MOCKER_CPP(&Msprof::Engine::FlushAllModule)
-        .expects(atLeast(2));
+    MOCKER_CPP(&Msprof::Engine::FlushAllModule).expects(atLeast(2));
 
-    auto *mgr = ProfAclMgr::instance();
+    auto* mgr = ProfAclMgr::instance();
     mgr->isReady_ = true;
     mgr->Init();
 

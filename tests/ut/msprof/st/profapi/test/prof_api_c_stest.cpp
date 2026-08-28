@@ -16,14 +16,8 @@
 #include "mmpa_api.h"
 class PROF_API_C_STEST : public testing::Test {
 protected:
-    virtual void SetUp()
-    {
-        DlStub();
-    }
-    virtual void TearDown()
-    {
-        GlobalMockObject::verify();
-    }
+    virtual void SetUp() { DlStub(); }
+    virtual void TearDown() { GlobalMockObject::verify(); }
     void DlStub()
     {
         MOCKER(dlopen).stubs().will(invoke(mmDlopen));
@@ -36,8 +30,8 @@ protected:
 TEST_F(PROF_API_C_STEST, AvpInnerBase)
 {
     const std::string data = "{\"switch\":\"on\"}";
-    const char *p = data.c_str();
-    EXPECT_EQ(0, MsprofInit(0, (void *)p, data.size()));
+    const char* p = data.c_str();
+    EXPECT_EQ(0, MsprofInit(0, (void*)p, data.size()));
     EXPECT_EQ(0, MsprofFinalize());
     EXPECT_EQ(0, MsprofNotifySetDevice(0, 0, 1));
     EXPECT_EQ(-1, MsprofRegisterCallback(0, nullptr));

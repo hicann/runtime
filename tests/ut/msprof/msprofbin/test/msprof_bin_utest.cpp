@@ -23,15 +23,16 @@ using namespace Analysis::Dvvp::Common::Platform;
 
 class MSPROF_BIN_UTEST : public testing::Test {
 protected:
-  virtual void SetUp() {}
-  virtual void TearDown() {}
+    virtual void SetUp() {}
+    virtual void TearDown() {}
 };
 
-extern int LltMain(int argc, const char **argv, const char **envp);
-extern int WlltMain(int argc, const char **argv, const char **envp);
-extern void SetEnvList(const char* &envp, std::vector<std::string> &envpList);
+extern int LltMain(int argc, const char** argv, const char** envp);
+extern int WlltMain(int argc, const char** argv, const char** envp);
+extern void SetEnvList(const char*& envp, std::vector<std::string>& envpList);
 extern std::atomic<uint32_t> g_exitType;
-TEST_F(MSPROF_BIN_UTEST, LltMain) {
+TEST_F(MSPROF_BIN_UTEST, LltMain)
+{
     GlobalMockObject::verify();
     char* argv[10];
     argv[0] = "--help";
@@ -40,11 +41,8 @@ TEST_F(MSPROF_BIN_UTEST, LltMain) {
     envp[0] = "test=a";
     envp[1] = "a=b";
 
-    MOCKER(&SetEnvList)
-        .stubs();
-    MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
-        .stubs()
-        .will(returnValue(5));
+    MOCKER(&SetEnvList).stubs();
+    MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType).stubs().will(returnValue(5));
     Platform::instance()->Init();
 
     EXPECT_EQ(PROFILING_FAILED, LltMain(1, (const char**)argv, (const char**)envp));
@@ -64,7 +62,8 @@ TEST_F(MSPROF_BIN_UTEST, LltMain) {
     EXPECT_EQ(PROFILING_FAILED, LltMain(8, (const char**)argv, (const char**)envp));
 }
 
-TEST_F(MSPROF_BIN_UTEST, SetEnvList) {
+TEST_F(MSPROF_BIN_UTEST, SetEnvList)
+{
     GlobalMockObject::verify();
     char* envp[4097];
     char str[] = "a=a";
@@ -80,7 +79,8 @@ TEST_F(MSPROF_BIN_UTEST, SetEnvList) {
     }
 }
 
-TEST_F(MSPROF_BIN_UTEST, WlltMain) {
+TEST_F(MSPROF_BIN_UTEST, WlltMain)
+{
     GlobalMockObject::verify();
     char* argv[10];
     argv[0] = "--help";
@@ -88,7 +88,6 @@ TEST_F(MSPROF_BIN_UTEST, WlltMain) {
     char* envp[2];
     envp[0] = "test=a";
     envp[1] = "a=b";
-    MOCKER(&SetEnvList)
-        .stubs();
+    MOCKER(&SetEnvList).stubs();
     EXPECT_EQ(PROFILING_SUCCESS, WlltMain(1, (const char**)argv, (const char**)envp));
 }

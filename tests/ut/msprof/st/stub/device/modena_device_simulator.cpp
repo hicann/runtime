@@ -13,7 +13,7 @@
 namespace Cann {
 namespace Dvvp {
 namespace Test {
-int32_t ModenaDeviceSimulator::GetDeviceInfo(int32_t moduleType, int32_t infoType, int64_t *value)
+int32_t ModenaDeviceSimulator::GetDeviceInfo(int32_t moduleType, int32_t infoType, int64_t* value)
 {
 #ifndef BUILD_PROFILING_OPEN_PROJECT
     if (moduleType == MODULE_TYPE_SYSTEM && infoType == INFO_TYPE_VERSION) {
@@ -27,6 +27,6 @@ int32_t ModenaDeviceSimulator::GetDeviceInfo(int32_t moduleType, int32_t infoTyp
 
     return 0;
 }
-}
-}
-}
+} // namespace Test
+} // namespace Dvvp
+} // namespace Cann

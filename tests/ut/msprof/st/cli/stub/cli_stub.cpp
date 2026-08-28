@@ -32,23 +32,23 @@ const std::string PROF_DELAY_SWITCH = "delayTime";
 const std::string PROF_DURATION_SWITCH = "durationTime";
 
 const uint32_t PROF_WAIT_START = 2;
-INT32 mmCreateProcessStub(const CHAR* fileName, const mmArgvEnv *env, const CHAR* stdoutRedirectFile, mmProcess *id)
+INT32 mmCreateProcessStub(const CHAR* fileName, const mmArgvEnv* env, const CHAR* stdoutRedirectFile, mmProcess* id)
 {
-    if(id == NULL) {
+    if (id == NULL) {
         return EN_INVALID_PARAM;
     }
 
     int32_t argvCount = 0;
     int32_t envpCount = 0;
-    char **argv = nullptr;
-    char **envp = nullptr;
-    if(env != NULL) {
-        if(env->argv) {
+    char** argv = nullptr;
+    char** envp = nullptr;
+    if (env != NULL) {
+        if (env->argv) {
             argv = env->argv;
             argvCount = env->argvCount;
         }
 
-        if(env->envp) {
+        if (env->envp) {
             envp = env->envp;
             envpCount = env->envpCount;
         }
@@ -59,7 +59,8 @@ INT32 mmCreateProcessStub(const CHAR* fileName, const mmArgvEnv *env, const CHAR
         std::string argv0(argv[0]);
         std::string argv1(argv[1]);
         std::string argv2(argv[2]);
-        MSPROF_LOGI("mmCreateProcessStub argv[0]: %s, mmCreateProcessStub argv[1]: %s, mmCreateProcessStub argv[2]: %s",
+        MSPROF_LOGI(
+            "mmCreateProcessStub argv[0]: %s, mmCreateProcessStub argv[1]: %s, mmCreateProcessStub argv[2]: %s",
             argv0.c_str(), argv1.c_str(), argv2.c_str());
         if (PerfSimulator(argv0, argv1, argv2, stdoutRedirectFile) != -1) {
             return 0;
@@ -69,65 +70,65 @@ INT32 mmCreateProcessStub(const CHAR* fileName, const mmArgvEnv *env, const CHAR
     return Application(argvCount, argv, envpCount, envp);
 }
 
-INT32 mmCreateProcessAcpStub(const CHAR* fileName, const mmArgvEnv *env, const CHAR* stdoutRedirectFile, mmProcess *id)
+INT32 mmCreateProcessAcpStub(const CHAR* fileName, const mmArgvEnv* env, const CHAR* stdoutRedirectFile, mmProcess* id)
 {
-    if(id == nullptr) {
+    if (id == nullptr) {
         return EN_INVALID_PARAM;
     }
     if (std::string("llvm-objdump").compare(fileName) == 0) {
         std::ofstream file;
-        file.open(stdoutRedirectFile, std::ios::out | std::ios::trunc |std::ios::binary);
+        file.open(stdoutRedirectFile, std::ios::out | std::ios::trunc | std::ios::binary);
         if (!file.is_open()) {
             MSPROF_LOGE("Failed to open %s", stdoutRedirectFile);
             return 0;
         }
-        file<<"0000000000001149 <main>:"<<std::endl;
-        file<<"; main():"<<std::endl;
-        file<<"; /mnt/wk/demo/hello.c:4"<<std::endl;
-        file<<"; {"<<std::endl;
-        file<<"    1149: f3 0f 1e fa                    endbr64"<<std::endl;
-        file<<"    1151: 48 83 ec 10                    subq    $16, %rsp"<<std::endl;
-        file<<"    1155: 89 7d fc                       movl    %edi, -4(%rbp)"<<std::endl;
-        file<<std::flush;
+        file << "0000000000001149 <main>:" << std::endl;
+        file << "; main():" << std::endl;
+        file << "; /mnt/wk/demo/hello.c:4" << std::endl;
+        file << "; {" << std::endl;
+        file << "    1149: f3 0f 1e fa                    endbr64" << std::endl;
+        file << "    1151: 48 83 ec 10                    subq    $16, %rsp" << std::endl;
+        file << "    1155: 89 7d fc                       movl    %edi, -4(%rbp)" << std::endl;
+        file << std::flush;
         MSPROF_LOGI("mmCreateProcessStub llvm-objdump %s.", stdoutRedirectFile);
         file.close();
         return 0;
     }
     int32_t argvCount = 0;
     int32_t envpCount = 0;
-    char **argv = nullptr;
-    char **envp = nullptr;
-    if(env != nullptr) {
-        if(env->argv) {
+    char** argv = nullptr;
+    char** envp = nullptr;
+    if (env != nullptr) {
+        if (env->argv) {
             argv = env->argv;
             argvCount = env->argvCount;
         }
- 
-        if(env->envp) {
+
+        if (env->envp) {
             envp = env->envp;
             envpCount = env->envpCount;
         }
     }
- 
+
     *id = INT32_MAX;
     if (argvCount >= 3) {
         std::string argv0(argv[0]);
         std::string argv1(argv[1]);
         std::string argv2(argv[2]);
-        MSPROF_LOGI("mmCreateProcessStub argv[0]: %s, mmCreateProcessStub argv[1]: %s, mmCreateProcessStub argv[2]: %s",
+        MSPROF_LOGI(
+            "mmCreateProcessStub argv[0]: %s, mmCreateProcessStub argv[1]: %s, mmCreateProcessStub argv[2]: %s",
             argv0.c_str(), argv1.c_str(), argv2.c_str());
         if (PerfSimulator(argv0, argv1, argv2, stdoutRedirectFile) != -1) {
             return 0;
         }
     }
- 
+
     return ApplicationAcp(argvCount, argv, envpCount, envp);
 }
 
 int32_t PerfSimulator(std::string argv0, std::string argv1, std::string argv2, const CHAR* stdoutRedirectFile)
 {
-    if (argv0 == PROF_SCRIPT_PROF_STUB || argv1 == PROF_SCRIPT_PROF_STUB)
-    {
+    if (argv0 == PROF_SCRIPT_PROF_STUB || argv1 == PROF_SCRIPT_PROF_STUB) {
         if (argv2 == PROF_VERSION_STUB) {
             std::string stdoutRedirectFileStr(stdoutRedirectFile);
             std::string cmd = "touch " + stdoutRedirectFileStr;
@@ -174,7 +175,7 @@ int32_t PerfSimulator(std::string argv0, std::string argv1, std::string argv2, c
     return -1;
 }
 
-int32_t Application(int32_t argc, char *argv[], int32_t envc, char *envp[])
+int32_t Application(int32_t argc, char* argv[], int32_t envc, char* envp[])
 {
     unsetenv("PROFILING_MODE");
     unsetenv("PROFILER_SAMPLECONFIG");
@@ -206,7 +207,7 @@ int32_t Application(int32_t argc, char *argv[], int32_t envc, char *envp[])
         if (aclrtResetDevice(1) != ACL_SUCCESS) { // check dynamic map if deduplicate
             return -1;
         }
-        sleep(delayTime + PROF_WAIT_START);   // sleep add 2s to make sure profiling is start
+        sleep(delayTime + PROF_WAIT_START); // sleep add 2s to make sure profiling is start
     }
 
     if (DataReportMgr().SimulateReport() != 0) {
@@ -224,8 +225,9 @@ int32_t Application(int32_t argc, char *argv[], int32_t envc, char *envp[])
         return ACL_ERROR_INVALID_PARAM;
     }
 
-    void *stream = &modelId; // fake stream
-    if (DataReportMgr().GetMsprofTx() && aclprofMarkEx("model execute start", strlen("model execute start"), stream) != 0) {
+    void* stream = &modelId; // fake stream
+    if (DataReportMgr().GetMsprofTx() &&
+        aclprofMarkEx("model execute start", strlen("model execute start"), stream) != 0) {
         MSPROF_LOGE("aclprofMarkEx failed");
         return ACL_ERROR_INVALID_PARAM;
     }
@@ -253,16 +255,16 @@ int32_t Application(int32_t argc, char *argv[], int32_t envc, char *envp[])
     return 0;
 }
 
-int32_t ApplicationAcp(int32_t argc, char *argv[], int32_t envc, char*envp[])
+int32_t ApplicationAcp(int32_t argc, char* argv[], int32_t envc, char* envp[])
 {
     // clear acp manager singleton
     Collector::Dvvp::Acp::AcpManager::instance()->UnInit();
     Dvvp::Acp::Analyze::OpDataManager::instance()->UnInit();
     // simulate malloc device memory
-    void *ptr = nullptr;
-    void **upPtr = reinterpret_cast<void **>(&ptr);
-    void *ptr2 = nullptr;
-    void **upPtr2 = reinterpret_cast<void **>(&ptr2);
+    void* ptr = nullptr;
+    void** upPtr = reinterpret_cast<void**>(&ptr);
+    void* ptr2 = nullptr;
+    void** upPtr2 = reinterpret_cast<void**>(&ptr2);
     uint64_t size = static_cast<uint64_t>(sizeof(uint32_t));
     rtMalloc(upPtr, size, 0, 0);
     *reinterpret_cast<uint32_t*>(*upPtr) = 999;
@@ -273,20 +275,20 @@ int32_t ApplicationAcp(int32_t argc, char *argv[], int32_t envc, char*envp[])
     int32_t devId = 0;
     rtSetDevice(devId);
     // simulate execute kernel
-    void *stubFunc = nullptr;
+    void* stubFunc = nullptr;
     uint32_t blockDim = 8;
-    rtSmDesc_t *smDesc = nullptr;
+    rtSmDesc_t* smDesc = nullptr;
     rtStream_t stm = nullptr;
-    rtArgsEx_t *argsInfo = { 0 };
-    rtTaskCfgInfo_t *cfgInfo = { 0 };
+    rtArgsEx_t* argsInfo = {0};
+    rtTaskCfgInfo_t* cfgInfo = {0};
     uint32_t flags = 0;
     uint8_t data = 7;
     rtDevBinary_t bin;
     bin.length = 1;
     bin.data = &data;
-    void *hdl = (void*)0x12345678;
-    void *kernelInfo = nullptr;
-    char_t *stubName = "stubName";
+    void* hdl = (void*)0x12345678;
+    void* kernelInfo = nullptr;
+    char_t* stubName = "stubName";
     rtRegisterAllKernel(&bin, &hdl);
     // simulate free device memory middle
     rtFree(ptr2);
@@ -318,7 +320,7 @@ int32_t ApplicationAcp(int32_t argc, char *argv[], int32_t envc, char*envp[])
     return 0;
 }
 
-uint32_t GetDynParams(const std::string str, std::string &env, int32_t envc, char * envp[])
+uint32_t GetDynParams(const std::string str, std::string& env, int32_t envc, char* envp[])
 {
     for (auto i = 0; i < envc; i++) {
         std::string envpDyn(envp[i]);

@@ -12,9 +12,9 @@
 
 #include "mmpa_api.h"
 #include <string>
-extern INT32 mmCreateTaskWithThreadAttrStub(mmThread *threadHandle, const mmUserBlock_t *funcBlock,
-                                         const mmThreadAttr *threadAttr);
-extern INT32 mmCreateTaskWithThreadAttrNormalStub(mmThread *threadHandle, const mmUserBlock_t *funcBlock,
-                                         const mmThreadAttr *threadAttr);
-std::string GetAdxWorkPath();                                         
+extern INT32 mmCreateTaskWithThreadAttrStub(
+    mmThread* threadHandle, const mmUserBlock_t* funcBlock, const mmThreadAttr* threadAttr);
+extern INT32 mmCreateTaskWithThreadAttrNormalStub(
+    mmThread* threadHandle, const mmUserBlock_t* funcBlock, const mmThreadAttr* threadAttr);
+std::string GetAdxWorkPath();
 #endif

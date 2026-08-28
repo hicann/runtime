@@ -28,7 +28,7 @@ static const char DC_RM_RF[] = "rm -rf ./geoptionDcstest_workspace";
 static const char DC_MKDIR[] = "mkdir ./geoptionDcstest_workspace";
 static const char DC_OUTPUT_DIR[] = "./geoptionDcstest_workspace/output";
 
-class GeOptionDcStest: public testing::Test {
+class GeOptionDcStest : public testing::Test {
 protected:
     virtual void SetUp()
     {
@@ -44,7 +44,7 @@ protected:
     virtual void TearDown()
     {
         GlobalMockObject::verify();
-        DevprofDrvAicpu::instance()->isRegister_ = false;   // 重置aicpu注册状态，使单进程内能多次注册
+        DevprofDrvAicpu::instance()->isRegister_ = false; // 重置aicpu注册状态，使单进程内能多次注册
         EXPECT_EQ(2, SimulatorMgr().DelDeviceSimulator(2, StPlatformType::DC_TYPE));
         system(DC_RM_RF);
         system("rm -rf ./geoption.json");
@@ -68,8 +68,8 @@ TEST_F(GeOptionDcStest, GeOptionDefault)
     std::vector<std::string> deviceDataList = {"hwts.data", "ts_track.data", "aicore.data"};
     MsprofMgr().SetDeviceCheckList(deviceDataList);
     std::vector<std::string> hostDataList = {
-        "unaging.api_event.data", "unaging.compact.node_basic_info", "unaging.compact.task_track", "unaging.additional.context_id_info"
-    };
+        "unaging.api_event.data", "unaging.compact.node_basic_info", "unaging.compact.task_track",
+        "unaging.additional.context_id_info"};
     MsprofMgr().SetHostCheckList(hostDataList);
     std::vector<uint64_t> bitList = {PROF_ACL_API, PROF_TASK_TIME_L1, PROF_AICORE_METRICS};
     MsprofMgr().SetBitSwitchCheckList(bitList);

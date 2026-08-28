@@ -18,20 +18,15 @@
 #include "osal/osal_mem.h"
 #include "utils/utils.h"
 
-class FileManagerUtest: public testing::Test {
+class FileManagerUtest : public testing::Test {
 protected:
-    virtual void SetUp()
-    {
-    }
-    virtual void TearDown()
-    {
-        GlobalMockObject::verify();
-    }
+    virtual void SetUp() {}
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
-ProfFileChunk * CreateCFileChunk(uint8_t deviceId, uint32_t chunkSize, int32_t type)
+ProfFileChunk* CreateCFileChunk(uint8_t deviceId, uint32_t chunkSize, int32_t type)
 {
-    ProfFileChunk *chunk = (ProfFileChunk *)OsalMalloc(sizeof(ProfFileChunk));
+    ProfFileChunk* chunk = (ProfFileChunk*)OsalMalloc(sizeof(ProfFileChunk));
     chunk->deviceId = deviceId;
     chunk->chunkSize = chunkSize;
     chunk->chunkType = type;

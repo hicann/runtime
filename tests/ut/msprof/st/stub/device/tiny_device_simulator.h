@@ -29,13 +29,13 @@ class TinyDeviceSimulator : public DeviceSimulator {
 public:
     TinyDeviceSimulator() {}
     ~TinyDeviceSimulator() {}
-    virtual int32_t ProfDrvGetChannels(ChannelList &channels) override;
-    virtual int32_t GetDeviceInfo(int32_t moduleType, int32_t infoType, int64_t *value) override;
+    virtual int32_t ProfDrvGetChannels(ChannelList& channels) override;
+    virtual int32_t GetDeviceInfo(int32_t moduleType, int32_t infoType, int64_t* value) override;
+
 private:
     std::map<uint32_t, std::queue<struct Buff>> channelData_;
-
 };
-}
-}
-}
+} // namespace Test
+} // namespace Dvvp
+} // namespace Cann
 #endif

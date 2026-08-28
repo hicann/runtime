@@ -19,35 +19,27 @@
 #include "domain/transport/uploader.h"
 #include "platform.h"
 
-class InfoJsonNanoUtest: public testing::Test {
+class InfoJsonNanoUtest : public testing::Test {
 protected:
-    virtual void SetUp()
-    {
-    }
-    virtual void TearDown()
-    {
-        GlobalMockObject::verify();
-    }
+    virtual void SetUp() {}
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
-static int32_t UploaderUploadDataStub2(ProfFileChunk *chunk)
+static int32_t UploaderUploadDataStub2(ProfFileChunk* chunk)
 {
     OSAL_MEM_FREE(chunk->chunk);
     OSAL_MEM_FREE(chunk);
     return PROFILING_SUCCESS;
 }
 
-static void* MallocStub3(int size)
-{
-    return malloc(size);
-}
+static void* MallocStub3(int size) { return malloc(size); }
 int g_infoMallocSuccessCnt = 0;
 static void* MallocTest3(int size)
 {
     void* ret = nullptr;
     if (g_infoMallocSuccessCnt != 0) {
         ret = MallocStub3(size);
-    } 
+    }
     g_infoMallocSuccessCnt--;
     return ret;
 }
@@ -55,16 +47,10 @@ static void* MallocTest3(int size)
 TEST_F(InfoJsonNanoUtest, CreateInfoJsonBase)
 {
     EXPECT_EQ(CreateInfoJson(0), PROFILING_FAILED);
-    MOCKER(UploaderUploadData)
-        .stubs()
-        .will(invoke(UploaderUploadDataStub2));
+    MOCKER(UploaderUploadData).stubs().will(invoke(UploaderUploadDataStub2));
     EXPECT_EQ(CreateInfoJson(0), PROFILING_SUCCESS);
-    MOCKER(OsalMalloc)
-        .stubs()
-        .will(invoke(MallocTest3));
-    MOCKER(PlatformGetHostFreq)
-        .stubs()
-        .will(returnValue(10));
+    MOCKER(OsalMalloc).stubs().will(invoke(MallocTest3));
+    MOCKER(PlatformGetHostFreq).stubs().will(returnValue(10));
     int successCnt = 0;
     printf("2 test==========================================\n");
     // Failed to calloc info attribute
@@ -119,13 +105,9 @@ TEST_F(InfoJsonNanoUtest, CreateInfoJsonBase)
 TEST_F(InfoJsonNanoUtest, CreateCollectionTimeInfoTest)
 {
     EXPECT_EQ(CreateCollectionTimeInfo(0, true), PROFILING_FAILED);
-    MOCKER(UploaderUploadData)
-        .stubs()
-        .will(invoke(UploaderUploadDataStub2));
+    MOCKER(UploaderUploadData).stubs().will(invoke(UploaderUploadDataStub2));
     EXPECT_EQ(CreateCollectionTimeInfo(0, true), PROFILING_SUCCESS);
-    MOCKER(OsalMalloc)
-        .stubs()
-        .will(invoke(MallocTest3));
+    MOCKER(OsalMalloc).stubs().will(invoke(MallocTest3));
     int successCnt = 0;
     printf("2 test==========================================\n");
     // Failed to malloc hostTimeStr

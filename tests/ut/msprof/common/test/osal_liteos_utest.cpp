@@ -15,9 +15,7 @@
 
 class OSAL_LITEOS_UTEST : public testing::Test {
 protected:
-    virtual void SetUp()
-    {
-    }
+    virtual void SetUp() {}
     virtual void TearDown()
     {
         GlobalMockObject::verify();
@@ -27,13 +25,11 @@ protected:
 
 TEST_F(OSAL_LITEOS_UTEST, CallocTest)
 {
-    char *str = (char*)OsalCalloc(sizeof(char) * 10);
+    char* str = (char*)OsalCalloc(sizeof(char) * 10);
     EXPECT_EQ((str == NULL), false);
     OSAL_MEM_FREE(str);
-    MOCKER(OsalMalloc)
-        .stubs()
-        .will(returnValue((void*)NULL));
-    char *str2 = (char*)OsalCalloc(sizeof(char) * 10);
+    MOCKER(OsalMalloc).stubs().will(returnValue((void*)NULL));
+    char* str2 = (char*)OsalCalloc(sizeof(char) * 10);
     EXPECT_EQ((str2 == NULL), true);
 }
 

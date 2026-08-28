@@ -52,13 +52,8 @@ protected:
 
 TEST_F(MSPROF_DYNAMIC_STEST, dynamic_socket_connect)
 {
-    MOCKER(Utils::HandleEnvString)
-        .stubs()
-        .will(returnValue(std::string("dynamic")))
-        .then(returnValue(std::string("")));
-    MOCKER(LocalSocket::SetSendTimeOut)
-        .stubs()
-        .will(returnValue(PROFILING_FAILED));
+    MOCKER(Utils::HandleEnvString).stubs().will(returnValue(std::string("dynamic"))).then(returnValue(std::string("")));
+    MOCKER(LocalSocket::SetSendTimeOut).stubs().will(returnValue(PROFILING_FAILED));
     EXPECT_EQ(PROFILING_SUCCESS, DynProfMgr::instance()->StartDynProf());
     EXPECT_EQ(true, DynProfMgr::instance()->IsDynStarted());
 
@@ -90,12 +85,8 @@ TEST_F(MSPROF_DYNAMIC_CLIENT_STEST, DynProfClient_RunSetSendTimeOutFail)
     error_message::ErrorManagerContext errorContext;
     SHARED_PTR_ALIA<DynProfClient> dynProfClient = std::make_shared<DynProfClient>();
     dynProfClient->cliStarted_ = true;
-    MOCKER(LocalSocket::SetRecvTimeOut)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
-    MOCKER(LocalSocket::SetSendTimeOut)
-        .stubs()
-        .will(returnValue(PROFILING_FAILED));
+    MOCKER(LocalSocket::SetRecvTimeOut).stubs().will(returnValue(PROFILING_SUCCESS));
+    MOCKER(LocalSocket::SetSendTimeOut).stubs().will(returnValue(PROFILING_FAILED));
     dynProfClient->Run(errorContext);
     EXPECT_EQ(false, dynProfClient->cliStarted_);
 }
@@ -104,21 +95,11 @@ TEST_F(MSPROF_DYNAMIC_CLIENT_STEST, DynProfClient_DynProfCliCreate_AppModeTimeOu
 {
     SHARED_PTR_ALIA<DynProfClient> dynProfClient = std::make_shared<DynProfClient>();
 
-    MOCKER_CPP(&DynProfCliMgr::IsAppMode)
-        .stubs()
-        .will(returnValue(true));
-    MOCKER(LocalSocket::Open)
-        .stubs()
-        .will(returnValue(1));
-    MOCKER(LocalSocket::Connect)
-        .stubs()
-        .will(returnValue(PROFILING_FAILED));
-    MOCKER(LocalSocket::Close)
-        .stubs()
-        .will(ignoreReturnValue());
-    MOCKER(Utils::UsleepInterupt)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&DynProfCliMgr::IsAppMode).stubs().will(returnValue(true));
+    MOCKER(LocalSocket::Open).stubs().will(returnValue(1));
+    MOCKER(LocalSocket::Connect).stubs().will(returnValue(PROFILING_FAILED));
+    MOCKER(LocalSocket::Close).stubs().will(ignoreReturnValue());
+    MOCKER(Utils::UsleepInterupt).stubs().will(returnValue(PROFILING_SUCCESS));
     EXPECT_EQ(PROFILING_FAILED, dynProfClient->DynProfCliCreate());
 }
 
@@ -130,16 +111,15 @@ TEST_F(MSPROF_DYNAMIC_CLIENT_STEST, DynProfClient_DynProfCliSendCmd)
     EXPECT_EQ(DynProfMsgRsqCode::DYN_PROF_RSQ_FAIL, dynProfClient->DynProfCliSendCmd(req));
 
     dynProfClient->cliSockFd_ = 10;
-    MOCKER(LocalSocket::Send, int(int, const void *, int, int)).stubs().will(returnValue(PROFILING_SUCCESS));
+    MOCKER(LocalSocket::Send, int(int, const void*, int, int)).stubs().will(returnValue(PROFILING_SUCCESS));
     DynProfMsg rsqMsg;
-    void *v = &rsqMsg;
-    MOCKER(LocalSocket::Recv, int(int, void *, int, int))
+    void* v = &rsqMsg;
+    MOCKER(LocalSocket::Recv, int(int, void*, int, int))
         .stubs()
         .with(any(), outBoundP(v, sizeof(DynProfMsg)), any(), any())
         .will(returnValue(PROFILING_FAILED));
     EXPECT_EQ(DynProfMsgRsqCode::DYN_PROF_RSQ_FAIL, dynProfClient->DynProfCliSendCmd(req));
 }
-
 
 TEST_F(MSPROF_DYNAMIC_CLIENT_STEST, DynProfClient_DynProfCliProcStart)
 {
@@ -225,28 +205,17 @@ protected:
 TEST_F(MSPROF_DYNAMIC_SERVER_STEST, DynProfServer_DynProfSrvCreate_appMode)
 {
     SHARED_PTR_ALIA<DynProfServer> dynProfServer = std::make_shared<DynProfServer>();
-    MOCKER(Utils::HandleEnvString)
-        .stubs()
-        .will(returnValue(std::string("123")));
-    MOCKER(Utils::GetPid)
-        .stubs()
-        .will(returnValue(321));
-    MOCKER_CPP(&LocalSocket::Create)
-        .stubs()
-        .will(returnValue(SOCKET_ERR_EADDRINUSE))
-        .then(returnValue(1));
-    MOCKER_CPP(&LocalSocket::SetRecvTimeOut)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER(Utils::HandleEnvString).stubs().will(returnValue(std::string("123")));
+    MOCKER(Utils::GetPid).stubs().will(returnValue(321));
+    MOCKER_CPP(&LocalSocket::Create).stubs().will(returnValue(SOCKET_ERR_EADDRINUSE)).then(returnValue(1));
+    MOCKER_CPP(&LocalSocket::SetRecvTimeOut).stubs().will(returnValue(PROFILING_SUCCESS));
 
     EXPECT_EQ(PROFILING_SUCCESS, dynProfServer->DynProfSrvCreate());
 }
 
 TEST_F(MSPROF_DYNAMIC_SERVER_STEST, DynProfServer_DynProfSrvProcStart)
 {
-    MOCKER(&Msprofiler::Api::ProfAclMgr::StartUploaderDumper)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER(&Msprofiler::Api::ProfAclMgr::StartUploaderDumper).stubs().will(returnValue(PROFILING_SUCCESS));
     SHARED_PTR_ALIA<DynProfServer> dynProfServer;
     dynProfServer = std::make_shared<DynProfServer>();
     dynProfServer->profStarted_ = true;
@@ -317,10 +286,7 @@ TEST_F(MSPROF_DYNAMIC_SERVER_STEST, DynProfServer_DynProfSrvProcQuit)
 
 TEST_F(MSPROF_DYNAMIC_SERVER_STEST, DynProfServer_deviceInfo)
 {
-    MOCKER(Utils::HandleEnvString)
-        .stubs()
-        .will(returnValue(std::string("dynamic")))
-        .then(returnValue(std::string("")));
+    MOCKER(Utils::HandleEnvString).stubs().will(returnValue(std::string("dynamic"))).then(returnValue(std::string("")));
     EXPECT_EQ(PROFILING_SUCCESS, DynProfMgr::instance()->StartDynProf());
     DynProfMgr::instance()->SaveDevicesInfo(1, 2, true);
     EXPECT_EQ(1, DynProfMgr::instance()->dynProfSrv_->devicesInfo_.size());

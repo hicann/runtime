@@ -22,15 +22,10 @@
 #include "task/task_manager.h"
 #include "job/job_manager.h"
 
-class TaskManagerUtest: public testing::Test {
+class TaskManagerUtest : public testing::Test {
 protected:
-    virtual void SetUp()
-    {
-    }
-    virtual void TearDown()
-    {
-        GlobalMockObject::verify();
-    }
+    virtual void SetUp() {}
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 TEST_F(TaskManagerUtest, TestTaskManagerInitialize)
@@ -42,7 +37,7 @@ TEST_F(TaskManagerUtest, TestTaskManagerInitialize)
     TaskManagerFinalize(&attr);
 }
 
-static int32_t UploadDataStub(ProfFileChunk *chunk)
+static int32_t UploadDataStub(ProfFileChunk* chunk)
 {
     OSAL_MEM_FREE(chunk->chunk);
     OSAL_MEM_FREE(chunk);
@@ -53,7 +48,7 @@ TEST_F(TaskManagerUtest, TestTaskManagerStart)
 {
     ProfileParam params;
     TransportType transType = FILE_TRANSPORT;
-    TaskSlotAttribute attr = { 0 };
+    TaskSlotAttribute attr = {0};
     uint32_t deviceId = 0;
     params.hostProfiling = false;
     MOCKER(DestroyDataUploader).stubs();

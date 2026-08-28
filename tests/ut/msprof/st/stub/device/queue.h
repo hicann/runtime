@@ -16,11 +16,11 @@
 namespace Cann {
 namespace Dvvp {
 namespace Test {
-template<class T>
+template <class T>
 class Queue {
 public:
-    Queue(): quit_(false) {}
-    void Push(T &value)
+    Queue() : quit_(false) {}
+    void Push(T& value)
     {
         std::lock_guard<std::mutex> lk(mtx_);
         queue_.push(value);
@@ -33,10 +33,10 @@ public:
         return queue_.empty();
     }
 
-    int32_t Pop(T *value, int32_t num)
+    int32_t Pop(T* value, int32_t num)
     {
         std::unique_lock<std::mutex> lk(mtx_);
-        cond_.wait(lk, [this]{ return !queue_.empty() || quit_; });
+        cond_.wait(lk, [this] { return !queue_.empty() || quit_; });
         int32_t count = 0;
         for (; count < num; ++count) {
             if (queue_.empty()) {
@@ -48,7 +48,7 @@ public:
         return count;
     }
 
-    bool TryPop(T &value)
+    bool TryPop(T& value)
     {
         std::lock_guard<std::mutex> lk(mtx_);
         if (queue_.empty()) {
@@ -75,7 +75,7 @@ private:
     mutable std::mutex mtx_;
     std::queue<T> queue_;
 };
-}
-}
-}
+} // namespace Test
+} // namespace Dvvp
+} // namespace Cann
 #endif
