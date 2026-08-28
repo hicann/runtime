@@ -945,6 +945,21 @@ TEST_F(EntityUTest, EntityManager_CreateEntity_Fail_For_AllocEntity)
     EXPECT_EQ(entityManager.CreateEntity(material), nullptr);
 }
 
+TEST_F(EntityUTest, EntityManager_InsertCommChannel_ResizesRequestBuffers)
+{
+    EntityManager entityManager(0U);
+    EntityMaterial material = {};
+    material.eType = dgw::EntityType::ENTITY_TAG;
+    auto entity = std::make_shared<dgw::ChannelEntity>(material, 0U);
+
+    EXPECT_EQ(entityManager.InsertCommChannel(entity, true), FsmStatus::FSM_SUCCESS);
+
+    const auto& channels = entityManager.GetCommChannels(true);
+    EXPECT_GE(channels.requests.size(), channels.entities.size());
+    EXPECT_GE(channels.compIndices.size(), channels.entities.size());
+    EXPECT_GE(channels.compStatus.size(), channels.entities.size());
+}
+
 TEST_F(EntityUTest, EntityManager_SupplyEvent)
 {
     EntityManager entityManager(1U);

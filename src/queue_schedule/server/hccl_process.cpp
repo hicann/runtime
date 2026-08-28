@@ -189,9 +189,9 @@ FsmStatus HcclProcess::TestSomeCommChannels(
     auto& entities = channels.entities;
     auto& requests = channels.requests;
     // check request count
-    if (entities.size() > requests.capacity()) {
+    if (entities.size() > requests.size()) {
         DGW_LOG_ERROR(
-            "WARNING: Please check requests capacity[%zu] which is less than entities size[%zu].", requests.capacity(),
+            "WARNING: Please check requests size[%zu] which is less than entities size[%zu].", requests.size(),
             entities.size());
         return FsmStatus::FSM_FAILED;
     }

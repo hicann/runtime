@@ -373,13 +373,13 @@ FsmStatus EntityManager::InsertCommChannel(const ChannelEntityPtr& entity, const
     CommChannels& channels = isSrc ? srcCommChannels_ : dstCommChannels_;
     (void)pthread_rwlock_wrlock(&channels.lock);
     (void)channels.entities.push_back(entity);
-    const size_t curCapacity = channels.requests.capacity();
-    if (curCapacity < channels.entities.size()) {
-        const size_t newCapacity = curCapacity + DEFAULT_CHANNEL_CAPACITY;
-        channels.requests.reserve(newCapacity);
-        channels.compIndices.reserve(newCapacity);
-        channels.compStatus.reserve(newCapacity);
-        DGW_LOG_INFO("Success to reserve requests capacity, primary:[%zu], current:[%zu]", curCapacity, newCapacity);
+    const size_t curSize = channels.requests.size();
+    if (curSize < channels.entities.size()) {
+        const size_t newSize = curSize + DEFAULT_CHANNEL_CAPACITY;
+        channels.requests.resize(newSize);
+        channels.compIndices.resize(newSize);
+        channels.compStatus.resize(newSize);
+        DGW_LOG_INFO("Success to resize request buffers, primary:[%zu], current:[%zu]", curSize, newSize);
     }
     (void)pthread_rwlock_unlock(&channels.lock);
 

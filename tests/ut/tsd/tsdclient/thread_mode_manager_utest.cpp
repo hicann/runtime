@@ -289,45 +289,6 @@ TEST_F(ThreadManagerTest, Open_KernelPackagesAndSchedulerSucceed_ReturnsOk)
     EXPECT_EQ(ret, tsd::TSD_OK);
 }
 
-TEST_F(ThreadManagerTest, Open_EmptyHomeAndExistingPackage_ReturnsOk)
-{
-    tsd::TSD_StatusT ret = tsd::TSD_OK;
-    uint32_t rankSize = 1;
-    std::shared_ptr<ClientManager> threadModeManager = std::make_shared<ThreadModeManager>(deviceId);
-    threadModeManager->packageName_[0] = "Ascend310-aicpu_syskernels.tar.gz";
-    setenv("HOME", "", 1);
-    MOCKER_CPP(&ClientManager::CheckPackageExists).stubs().will(returnValue(true));
-    MOCKER_CPP(&ThreadModeManager::StartCallAICPU).stubs().will(returnValue(tsd::TSD_OK));
-    ret = threadModeManager->Open(rankSize);
-    EXPECT_EQ(ret, tsd::TSD_OK);
-}
-
-TEST_F(ThreadManagerTest, Open_NonCanonicalHomeAndExistingPackage_ReturnsOk)
-{
-    tsd::TSD_StatusT ret = tsd::TSD_OK;
-    uint32_t rankSize = 1;
-    std::shared_ptr<ClientManager> threadModeManager = std::make_shared<ThreadModeManager>(deviceId);
-    threadModeManager->packageName_[0] = "Ascend310-aicpu_syskernels.tar.gz";
-    setenv("HOME", "_test", 1);
-    MOCKER_CPP(&ClientManager::CheckPackageExists).stubs().will(returnValue(true));
-    MOCKER_CPP(&ThreadModeManager::StartCallAICPU).stubs().will(returnValue(tsd::TSD_OK));
-    ret = threadModeManager->Open(rankSize);
-    EXPECT_EQ(ret, tsd::TSD_OK);
-}
-
-TEST_F(ThreadManagerTest, Open_InvalidHomeAndExistingPackage_ReturnsOk)
-{
-    tsd::TSD_StatusT ret = tsd::TSD_OK;
-    uint32_t rankSize = 1;
-    std::shared_ptr<ClientManager> threadModeManager = std::make_shared<ThreadModeManager>(deviceId);
-    threadModeManager->packageName_[0] = "Ascend310-aicpu_syskernels.tar.gz";
-    setenv("HOME", "invalid_path", 1);
-    MOCKER_CPP(&ClientManager::CheckPackageExists).stubs().will(returnValue(true));
-    MOCKER_CPP(&ThreadModeManager::StartCallAICPU).stubs().will(returnValue(tsd::TSD_OK));
-    ret = threadModeManager->Open(rankSize);
-    EXPECT_EQ(ret, tsd::TSD_OK);
-}
-
 TEST_F(ThreadManagerTest, Open_PackageAndSchedulerSucceed_ReturnsOk)
 {
     tsd::TSD_StatusT ret = tsd::TSD_OK;

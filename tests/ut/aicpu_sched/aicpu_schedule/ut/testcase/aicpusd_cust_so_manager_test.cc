@@ -28,6 +28,13 @@ using namespace AicpuSchedule;
 using namespace aicpu;
 
 namespace {
+char* RealpathSuccessStub(const char*, char* resolvedPath)
+{
+    resolvedPath[0] = '/';
+    resolvedPath[1] = '\0';
+    return resolvedPath;
+}
+
 std::string MakeTempDir()
 {
     char tmpDir[] = "/tmp/aicpu_cust_so_test_XXXXXX";
@@ -244,7 +251,7 @@ TEST_F(AicpuCustSoManagerTEST, CheckSoFullPathValidSuccess)
 {
     AicpuCustSoManager soManager;
     std::string dirName("/");
-    MOCKER(realpath).stubs().will(returnValue(const_cast<char*>(dirName.data())));
+    MOCKER(realpath).stubs().will(invoke(RealpathSuccessStub));
     const int32_t ret = soManager.CheckSoFullPathValid(dirName);
     EXPECT_EQ(ret, AICPU_SCHEDULE_OK);
 }

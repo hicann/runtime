@@ -236,6 +236,23 @@ public:
     }
 };
 
+TEST_F(QueueScheduleUTest, HcclProcess_TestSomeCommChannels_FailForInsufficientRequestsSize)
+{
+    dgw::EntityMaterial material = {};
+    material.eType = dgw::EntityType::ENTITY_TAG;
+    auto entity = std::make_shared<dgw::ChannelEntity>(material, 0U);
+    dgw::CommChannels channels;
+    channels.entities.push_back(entity);
+    channels.requests.resize(1U);
+    channels.compIndices.resize(1U);
+    channels.compStatus.resize(1U);
+    uint32_t totalCompCount = 0U;
+    const auto& hcclProcess = dgw::HcclProcess::GetInstance();
+
+    channels.requests.clear();
+    EXPECT_EQ(hcclProcess.TestSomeCommChannels(channels, true, totalCompCount, 0U), dgw::FsmStatus::FSM_FAILED);
+}
+
 TEST_F(QueueScheduleUTest, drvGetCpuInfo_success)
 {
     MOCKER(bqs::GetRunContext).stubs().will(returnValue(bqs::RunContext::DEVICE));
