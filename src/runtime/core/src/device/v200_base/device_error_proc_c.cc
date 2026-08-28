@@ -22,6 +22,7 @@
 #include "acc_error_info.h"
 #include "error_code.h"
 #include "ccu_task.hpp"
+#include "arch920x.hpp"
 
 namespace cce {
 namespace runtime {
@@ -1033,7 +1034,7 @@ static bool RegisterDavidErrorMap()
 {
     const auto& chips = GetDavidChips();
     for (const auto chip : chips) {
-        if (chip != CHIP_CLOUD_V5) {
+        if (!IsArch920xChip(chip)) {
             RegDavidErrorBitMask(chip, &g_davidErrorBitMask);
         }
     }

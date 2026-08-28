@@ -11,13 +11,14 @@
 #include "stars_david.hpp"
 #include "stream.hpp"
 #include "runtime_task_manager.h"
+#include "arch920x.hpp"
 
 namespace cce {
 namespace runtime {
 
 #pragma pack(push)
 #pragma pack(1)
-struct RtDavidStarsCmoSqeArch9201 {
+struct RtDavidStarsCmoSqeArch920x {
     /* word0-1 */
     rtDavidStarsSqeHeader_t header;
 
@@ -67,11 +68,11 @@ struct RtDavidStarsCmoSqeArch9201 {
 };
 #pragma pack(pop)
 
-static void ConstructDavidArch9201CmoSqe(TaskInfo* const taskInfo, rtDavidSqe_t* const davidSqe, uint64_t sqBaseAddr)
+static void ConstructDavidArch920xCmoSqe(TaskInfo* const taskInfo, rtDavidSqe_t* const davidSqe, uint64_t sqBaseAddr)
 {
     UNUSED(sqBaseAddr);
     ConstructDavidSqeForHeadCommon(taskInfo, davidSqe);
-    RtDavidStarsCmoSqeArch9201* const sqe = reinterpret_cast<RtDavidStarsCmoSqeArch9201*>(&davidSqe->cmoSqe);
+    RtDavidStarsCmoSqeArch920x* const sqe = reinterpret_cast<RtDavidStarsCmoSqeArch920x*>(&davidSqe->cmoSqe);
     SetCommonCmoParameters(sqe, taskInfo);
     sqe->allocate = 0U;
     sqe->victimHint = 0U;
@@ -87,9 +88,9 @@ static void ConstructDavidArch9201CmoSqe(TaskInfo* const taskInfo, rtDavidSqe_t*
     PrintDavidSqe(davidSqe, "CmoTask");
 }
 
-static void ConstructDavidSqeForArch9201CmoTask(TaskInfo* const taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo)
+static void ConstructDavidSqeForArch920xCmoTask(TaskInfo* const taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo)
 {
-    ConstructDavidSqeForCmoTaskCommon(taskInfo, sqe, sqeInfo, &ConstructDavidArch9201CmoSqe);
+    ConstructDavidSqeForCmoTaskCommon(taskInfo, sqe, sqeInfo, &ConstructDavidArch920xCmoSqe);
 }
 
 static bool CmoTaskRegister()
@@ -105,9 +106,10 @@ static bool CmoTaskRegister()
         .setStarsResultFunc = &SetStarsResultCommonForDavid,
     };
 
-    RegTaskFunc(CHIP_CLOUD_V5, TS_TASK_TYPE_CMO, funcs);
-    RegDavidSqeFunc(CHIP_CLOUD_V5, TS_TASK_TYPE_CMO, &ConstructDavidSqeForArch9201CmoTask);
-
+    for (const auto chip : GetArch920xChips()) {
+        RegTaskFunc(chip, TS_TASK_TYPE_CMO, funcs);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_CMO, &ConstructDavidSqeForArch920xCmoTask);
+    }
     return true;
 }
 

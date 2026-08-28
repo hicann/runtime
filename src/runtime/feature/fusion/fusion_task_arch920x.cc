@@ -15,28 +15,29 @@
 #include "runtime_task_manager.h"
 #include "aic_aiv_sqe_common.hpp"
 #include "ccu_sqe.hpp"
-#include "arch9201/aic_aiv_sqe.h"
-#include "arch9201/arch9201_sqe_utils.hpp"
+#include "arch920x.hpp"
+#include "arch920x/aic_aiv_sqe.h"
+#include "arch920x/arch920x_sqe_utils.hpp"
 
 namespace cce {
 namespace runtime {
 
-static void ConstructArch9201SqeHeadForFusionTask(
-    const TaskInfo* taskInfo, RtArch9201StarsAicAivKernelSqe* const davidSqe)
+static void ConstructArch920xSqeHeadForFusionTask(
+    const TaskInfo* taskInfo, RtArch920xStarsAicAivKernelSqe* const davidSqe)
 {
     const Stream* const stream = taskInfo->stream;
-    (void)memset_s(davidSqe, sizeof(RtArch9201StarsAicAivKernelSqe), 0, sizeof(RtArch9201StarsAicAivKernelSqe));
+    (void)memset_s(davidSqe, sizeof(RtArch920xStarsAicAivKernelSqe), 0, sizeof(RtArch920xStarsAicAivKernelSqe));
     davidSqe->header.wrCqe = stream->GetStarsWrCqeFlag();
     davidSqe->header.taskId = taskInfo->taskSn;
-    ConfigArch9201SqeHeaderTaskProfiling(&(davidSqe->header));
+    ConfigArch920xSqeHeaderTaskProfiling(&(davidSqe->header));
 }
 
-static void ConstructArch9201CommonSqeForFusionTask(const TaskInfo* taskInfo, RtArch9201StarsAicAivKernelSqe* const sqe)
+static void ConstructArch920xCommonSqeForFusionTask(const TaskInfo* taskInfo, RtArch920xStarsAicAivKernelSqe* const sqe)
 {
     Stream* const stm = taskInfo->stream;
     const FusionTaskInfo* const fusionKernelTask = &(taskInfo->u.fusionKernelTask);
     const FusionTaskInfoAicPart* aicPart = &(fusionKernelTask->aicPart);
-    ConstructArch9201SqeHeadForFusionTask(taskInfo, sqe);
+    ConstructArch920xSqeHeadForFusionTask(taskInfo, sqe);
     ConstructCommonAicAivSqeWord(aicPart, sqe, taskInfo, stm);
 
     /* word 4*/
@@ -73,8 +74,8 @@ static void ConstructMixSubSqe(
     const FusionTaskInfo* const fusionKernelTask = &(taskInfo->u.fusionKernelTask);
     const FusionTaskInfoAicPart* aicPart = &(fusionKernelTask->aicPart);
 
-    RtArch9201StarsAicAivKernelSqe* sqe = static_cast<RtArch9201StarsAicAivKernelSqe*>(static_cast<void*>(sqeAddr));
-    ConstructArch9201CommonSqeForFusionTask(taskInfo, sqe);
+    RtArch920xStarsAicAivKernelSqe* sqe = static_cast<RtArch920xStarsAicAivKernelSqe*>(static_cast<void*>(sqeAddr));
+    ConstructArch920xCommonSqeForFusionTask(taskInfo, sqe);
 
     uint8_t taskRation = 0U;
     uint8_t mixType = static_cast<uint8_t>(NO_MIX);
@@ -97,7 +98,7 @@ static void ConstructMixSubSqe(
     }
     /* dcache preload cnt */
     GetDcachePrefetchCnt(taskInfo, sqe);
-    ConfigArch9201OstEnable(aicPart->kernel, sqe);
+    ConfigArch920xOstEnable(aicPart->kernel, sqe);
     RT_LOG(
         RT_LOG_INFO,
         "sqeIndex=%u, mixType=%u, cfgInfo schemMode=%u, sqe_schem=%hu, ratio=%hhu, loose=%u, piMix=%u, "
@@ -115,8 +116,8 @@ static void ConstructAicSubSqe(
         const uint32_t pos = taskInfo->id + idx;
         sqeAddr = GetSqPosAddr(sqBaseAddr, pos);
     }
-    RtArch9201StarsAicAivKernelSqe* sqe = static_cast<RtArch9201StarsAicAivKernelSqe*>(static_cast<void*>(sqeAddr));
-    ConstructArch9201CommonSqeForFusionTask(taskInfo, sqe);
+    RtArch920xStarsAicAivKernelSqe* sqe = static_cast<RtArch920xStarsAicAivKernelSqe*>(static_cast<void*>(sqeAddr));
+    ConstructArch920xCommonSqeForFusionTask(taskInfo, sqe);
 
     const FusionTaskInfo* const fusionKernelTask = &(taskInfo->u.fusionKernelTask);
     const uint64_t addr = RtPtrToValue(fusionKernelTask->args);
@@ -126,7 +127,7 @@ static void ConstructAicSubSqe(
     sqe->aivPreAllocateDisable = 1U;
     /* dcache preload cnt */
     GetDcachePrefetchCnt(taskInfo, sqe);
-    ConfigArch9201OstEnable(fusionKernelTask->aicPart.kernel, sqe);
+    ConfigArch920xOstEnable(fusionKernelTask->aicPart.kernel, sqe);
     PrintDavidSqe(sqe, "FusionKernelTask-Aic");
 }
 
@@ -138,8 +139,8 @@ static void ConstructAivSubSqe(
         const uint32_t pos = taskInfo->id + idx;
         sqeAddr = GetSqPosAddr(sqBaseAddr, pos);
     }
-    RtArch9201StarsAicAivKernelSqe* sqe = static_cast<RtArch9201StarsAicAivKernelSqe*>(static_cast<void*>(sqeAddr));
-    ConstructArch9201CommonSqeForFusionTask(taskInfo, sqe);
+    RtArch920xStarsAicAivKernelSqe* sqe = static_cast<RtArch920xStarsAicAivKernelSqe*>(static_cast<void*>(sqeAddr));
+    ConstructArch920xCommonSqeForFusionTask(taskInfo, sqe);
 
     const FusionTaskInfo* const fusionKernelTask = &(taskInfo->u.fusionKernelTask);
     const uint64_t addr = RtPtrToValue(fusionKernelTask->args);
@@ -149,11 +150,11 @@ static void ConstructAivSubSqe(
     sqe->aivPreAllocateDisable = 0U;
     /* dcache preload cnt */
     GetDcachePrefetchCnt(taskInfo, sqe);
-    ConfigArch9201OstEnable(fusionKernelTask->aicPart.kernel, sqe);
+    ConfigArch920xOstEnable(fusionKernelTask->aicPart.kernel, sqe);
     PrintDavidSqe(sqe, "FusionKernelTask-Aiv");
 }
 
-static void UpdateArch9201HeaderForFusionKernel(
+static void UpdateArch920xHeaderForFusionKernel(
     const TaskInfo* const taskInfo, rtDavidSqe_t* const davidSqe, const uint32_t sqeIndex, const uint64_t sqBaseAddr)
 {
     rtDavidSqe_t* sqeHeadAddr = &davidSqe[0];
@@ -163,8 +164,8 @@ static void UpdateArch9201HeaderForFusionKernel(
         sqeAixAddr = GetSqPosAddr(sqBaseAddr, static_cast<uint32_t>(taskInfo->id) + sqeIndex);
     }
     rtDavidStarsCommonSqe_t* sqeHead = &(sqeHeadAddr->commonSqe);
-    RtArch9201StarsAicAivKernelSqe* sqeAix =
-        static_cast<RtArch9201StarsAicAivKernelSqe*>(static_cast<void*>(sqeAixAddr));
+    RtArch920xStarsAicAivKernelSqe* sqeAix =
+        static_cast<RtArch920xStarsAicAivKernelSqe*>(static_cast<void*>(sqeAixAddr));
     if ((sqeAix->featureFlag & SQE_BIZ_FLAG_DATADUMP) != 0U) {
         sqeHead->sqeHeader.preP = sqeAix->header.preP;
         sqeHead->sqeHeader.postP = sqeAix->header.postP;
@@ -172,8 +173,8 @@ static void UpdateArch9201HeaderForFusionKernel(
     }
 
     if ((sqeHead->sqeHeader.preP == 0U) && (sqeHead->sqeHeader.postP == 0U) && (sqeAix->ost == 1U)) {
-        RtArch9201StarsAicAivKernelSqe* const firstSqe =
-            static_cast<RtArch9201StarsAicAivKernelSqe*>(static_cast<void*>(sqeHeadAddr));
+        RtArch920xStarsAicAivKernelSqe* const firstSqe =
+            static_cast<RtArch920xStarsAicAivKernelSqe*>(static_cast<void*>(sqeHeadAddr));
         firstSqe->ost = 1U;
         RT_LOG(RT_LOG_DEBUG, "ost=%u", firstSqe->ost);
     }
@@ -198,11 +199,11 @@ static void ConstructAicAivSubSqe(
         RT_LOG_INFO, "sqeIndex=%u, mixType=%hhu, aicAivType=%hhu.", sqeIndex, mixType,
         taskInfo->u.fusionKernelTask.aicAivType);
 
-    UpdateArch9201HeaderForFusionKernel(taskInfo, davidSqe, sqeIndex, sqBaseAddr);
+    UpdateArch920xHeaderForFusionKernel(taskInfo, davidSqe, sqeIndex, sqBaseAddr);
     sqeIndex++;
 }
 
-void ConstructArch9201SqeForFusionKernelTask(TaskInfo* const taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo)
+void ConstructArch920xSqeForFusionKernelTask(TaskInfo* const taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo)
 {
     rtDavidSqe_t* const davidSqe = static_cast<rtDavidSqe_t*>(sqe);
     uint64_t sqBaseAddr = sqeInfo.sqBaseAddr;
@@ -252,8 +253,10 @@ static bool FusionKernelTaskRegister()
         .setStarsResultFunc = &SetStarsResultForFusionKernelTask,
     };
 
-    RegTaskFunc(CHIP_CLOUD_V5, TS_TASK_TYPE_FUSION_KERNEL, funcs);
-    RegDavidSqeFunc(CHIP_CLOUD_V5, TS_TASK_TYPE_FUSION_KERNEL, &ConstructArch9201SqeForFusionKernelTask);
+    for (const auto chip : GetArch920xChips()) {
+        RegTaskFunc(chip, TS_TASK_TYPE_FUSION_KERNEL, funcs);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_FUSION_KERNEL, &ConstructArch920xSqeForFusionKernelTask);
+    }
     return true;
 }
 

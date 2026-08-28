@@ -30,8 +30,8 @@
 #include "rt_unwrap.h"
 #include "../../rt_utest_config_define.hpp"
 #include "../../task_test_helper.h"
-#include "arch9201/aic_aiv_sqe.h"
-#include "arch9201/arch9201_sqe_utils.hpp"
+#include "arch920x/aic_aiv_sqe.h"
+#include "arch920x/arch920x_sqe_utils.hpp"
 #include "fusion_c.hpp"
 #undef private
 #undef protected
@@ -132,7 +132,7 @@ static void ExpectArch9201AixSqeReservedByProfiling(
     Stream* const stream, const rtKernelAttrType kernelAttrType, const uint8_t mixType)
 {
     TaskInfo task = {};
-    RtArch9201StarsAicAivKernelSqe sqe = {};
+    RtArch920xStarsAicAivKernelSqe sqe = {};
     TaskSqeInfo sqeInfo = {0ULL, 0ULL};
     InitByStream(&task, stream);
 
@@ -164,7 +164,7 @@ static void ExpectArch9201AixSqeReservedWithTaskCfg(
     const uint32_t expectedReserved)
 {
     TaskInfo task = {};
-    RtArch9201StarsAicAivKernelSqe sqe = {};
+    RtArch920xStarsAicAivKernelSqe sqe = {};
     TaskSqeInfo sqeInfo = {0ULL, 0ULL};
     InitByStream(&task, stream);
 
@@ -203,18 +203,18 @@ TEST_F(Arch9201TaskProfilingTest, ConstructDavidHeadCommonSetsArch9201CommonTask
     RefreshDavidSqeRunningFunc(CHIP_CLOUD_V5);
 }
 
-TEST_F(Arch9201TaskProfilingTest, ConfigArch9201SqeHeaderTaskProfilingFollowsRuntimeSwitch)
+TEST_F(Arch9201TaskProfilingTest, ConfigArch920xSqeHeaderTaskProfilingFollowsRuntimeSwitch)
 {
     rtDavidStarsSqeHeader_t header = {};
 
     Runtime::Instance()->SetTaskLevelProfFlag(true);
     header.reserved = 1U;
-    ConfigArch9201SqeHeaderTaskProfiling(&header);
+    ConfigArch920xSqeHeaderTaskProfiling(&header);
     EXPECT_EQ(header.reserved, 0U);
 
     Runtime::Instance()->SetTaskLevelProfFlag(false);
     header.reserved = 0U;
-    ConfigArch9201SqeHeaderTaskProfiling(&header);
+    ConfigArch920xSqeHeaderTaskProfiling(&header);
     EXPECT_EQ(header.reserved, 1U);
 }
 
@@ -467,15 +467,15 @@ TEST_F(Arch9201TaskProfilingTest, ConstructArch9201FusionSqeTaskProfilingFollows
     EXPECT_EQ(sqe[0].aicpuSqe.header.type, RT_DAVID_SQE_TYPE_FUSION);
     EXPECT_EQ(sqe[0].aicpuSqe.header.reserved, 1U);
     EXPECT_EQ(sqe[1].aicAivSqe.header.reserved, 1U);
-    EXPECT_EQ(static_cast<RtArch9201StarsAicAivKernelSqe*>(static_cast<void*>(&sqe[0]))->ost, 1U);
-    EXPECT_EQ(static_cast<RtArch9201StarsAicAivKernelSqe*>(static_cast<void*>(&sqe[1]))->ost, 1U);
+    EXPECT_EQ(static_cast<RtArch920xStarsAicAivKernelSqe*>(static_cast<void*>(&sqe[0]))->ost, 1U);
+    EXPECT_EQ(static_cast<RtArch920xStarsAicAivKernelSqe*>(static_cast<void*>(&sqe[1]))->ost, 1U);
 
     Runtime::Instance()->SetTaskLevelProfFlag(true);
     ToConstructDavidSqe(&task, static_cast<void*>(sqe), sqeInfo);
     EXPECT_EQ(sqe[0].aicpuSqe.header.reserved, 0U);
     EXPECT_EQ(sqe[1].aicAivSqe.header.reserved, 0U);
-    EXPECT_EQ(static_cast<RtArch9201StarsAicAivKernelSqe*>(static_cast<void*>(&sqe[0]))->ost, 1U);
-    EXPECT_EQ(static_cast<RtArch9201StarsAicAivKernelSqe*>(static_cast<void*>(&sqe[1]))->ost, 1U);
+    EXPECT_EQ(static_cast<RtArch920xStarsAicAivKernelSqe*>(static_cast<void*>(&sqe[0]))->ost, 1U);
+    EXPECT_EQ(static_cast<RtArch920xStarsAicAivKernelSqe*>(static_cast<void*>(&sqe[1]))->ost, 1U);
 
     TaskUnInitProc(&task);
     delete kernel;

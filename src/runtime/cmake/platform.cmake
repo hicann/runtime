@@ -87,7 +87,7 @@ set(RUNTIME_INC_DIR_COMMON_PLATFORM
     ${RUNTIME_DIR}/src/dfx/adump/inc/metadef
     ${RUNTIME_DIR}/src/platform
     ${RUNTIME_DIR}/include/external/acl/error_codes
-    ${RUNTIME_DIR}/src/runtime/core/inc/sqe/arch9201
+    ${RUNTIME_DIR}/src/runtime/core/inc/sqe/arch920x
 )
 
 #------------------------- runtime platform -------------------------
@@ -177,6 +177,7 @@ macro(runtime_platform_others_obj target_name)
         ${RUNTIME_DIR}/src/runtime/config/nano/dev_info_reg.cc
         ${RUNTIME_DIR}/src/runtime/config/tiny/dev_info_reg.cc
         ${RUNTIME_DIR}/src/runtime/config/arch9201/dev_info_reg.cc
+        ${RUNTIME_DIR}/src/runtime/config/arch9202/dev_info_reg.cc
         ${RUNTIME_DIR}/src/runtime/config/xpu/dev_info_reg.cc
     )
 

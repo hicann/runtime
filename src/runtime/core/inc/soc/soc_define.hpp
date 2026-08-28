@@ -38,6 +38,7 @@ typedef enum tagRtChipType {
     CHIP_ASCEND_350 = 19, /* Ascend350 */
     CHIP_XPU = 20,        /* XPU，无驱动值，但是有task处理，值不需要固定，无ini配置文件 */
     CHIP_5162A = 21,
+    CHIP_CLOUD_V6 = 22,
     CHIP_END, /* 常规芯片类型结束边界（运行时涉及芯片，除 XPU 外，和驱动定义的值一致） */
 
     /* 扩展芯片类型段（值大于 CHIP_END，仅用于离线编译，运行时不使用） */

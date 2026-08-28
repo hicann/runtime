@@ -31,8 +31,8 @@
 #include "runtime_task_manager.h"
 #include "../../rt_utest_config_define.hpp"
 #include "../../task_test_helper.h"
-#include "arch9201/aic_aiv_sqe.h"
-#include "arch9201/arch9201_sqe_utils.hpp"
+#include "arch920x/aic_aiv_sqe.h"
+#include "arch920x/arch920x_sqe_utils.hpp"
 #include "fusion_c.hpp"
 #undef private
 #undef protected
@@ -126,8 +126,8 @@ TEST_F(Arch9201TaskTest, check_prefetch_cnt_on_construct_arch9201_sqe_for_aic_mi
     kernel->SetMixType(MIX_AIC);
     stubProg.SetIsDcacheLockOp(true);
     ToConstructDavidSqe(&task, static_cast<void*>(&sqe), sqeInfo);
-    RtArch9201StarsAicAivKernelSqe* arch9201Sqe =
-        static_cast<RtArch9201StarsAicAivKernelSqe*>(static_cast<void*>(&sqe));
+    RtArch920xStarsAicAivKernelSqe* arch9201Sqe =
+        static_cast<RtArch920xStarsAicAivKernelSqe*>(static_cast<void*>(&sqe));
     EXPECT_EQ(arch9201Sqe->header.type, RT_DAVID_SQE_TYPE_AIC);
     EXPECT_EQ(arch9201Sqe->aicIcachePrefetchCnt, 0x2);
 
@@ -155,7 +155,7 @@ TEST_F(Arch9201TaskTest, check_prefetch_cnt_on_construct_arch9201_sqe_for_aic_mi
 TEST_F(Arch9201TaskTest, check_prefetch_cnt_on_construct_arch9201_sqe_for_aicaiv_nomix_task)
 {
     TaskInfo task = {};
-    RtArch9201StarsAicAivKernelSqe sqe;
+    RtArch920xStarsAicAivKernelSqe sqe;
     TaskSqeInfo sqeInfo = {0ULL, 0ULL};
     InitByStream(&task, stream_);
 
@@ -203,7 +203,7 @@ TEST_F(Arch9201TaskTest, check_prefetch_cnt_on_construct_arch9201_sqe_for_aicaiv
 TEST_F(Arch9201TaskTest, check_dcache_prefetch_cnt_for_aic_mix_task)
 {
     TaskInfo task = {};
-    RtArch9201StarsAicAivKernelSqe sqe;
+    RtArch920xStarsAicAivKernelSqe sqe;
 
     const void* stubFunc = (void*)0x02;
     const char* stubName = "abc";

@@ -12,14 +12,15 @@
 #include "runtime_task_manager.h"
 #include "davinci_kernel_task.h"
 #include "aic_aiv_sqe_common.hpp"
-#include "arch9201/aic_aiv_sqe.h"
-#include "arch9201/arch9201_sqe_utils.hpp"
+#include "arch920x.hpp"
+#include "arch920x/aic_aiv_sqe.h"
+#include "arch920x/arch920x_sqe_utils.hpp"
 
 namespace cce {
 namespace runtime {
 
 #if F_DESC("DavinciKernelTask")
-static void ConfigArch9201AixTaskProfiling(const TaskInfo* taskInfo, rtDavidStarsSqeHeader_t* const header)
+static void ConfigArch920xAixTaskProfiling(const TaskInfo* taskInfo, rtDavidStarsSqeHeader_t* const header)
 {
     if (Runtime::Instance()->GetTaskLevelProfFlag()) {
         header->reserved = taskInfo->enableProfiling;
@@ -28,19 +29,19 @@ static void ConfigArch9201AixTaskProfiling(const TaskInfo* taskInfo, rtDavidStar
     }
 }
 
-static void ConstructArch9201SqeForHeadCommon(const TaskInfo* taskInfo, void* const sqe)
+static void ConstructArch920xSqeForHeadCommon(const TaskInfo* taskInfo, void* const sqe)
 {
     const Stream* const stream = taskInfo->stream;
     // Performance-sensitive paths, internally controllable addresses
     // and security functions are not required for evaluation.
-    RtArch9201StarsAicAivKernelSqe* davidSqe = static_cast<RtArch9201StarsAicAivKernelSqe*>(sqe);
-    (void)memset_s(davidSqe, sizeof(RtArch9201StarsAicAivKernelSqe), 0, sizeof(RtArch9201StarsAicAivKernelSqe));
+    RtArch920xStarsAicAivKernelSqe* davidSqe = static_cast<RtArch920xStarsAicAivKernelSqe*>(sqe);
+    (void)memset_s(davidSqe, sizeof(RtArch920xStarsAicAivKernelSqe), 0, sizeof(RtArch920xStarsAicAivKernelSqe));
     davidSqe->header.wrCqe = stream->GetStarsWrCqeFlag();
     davidSqe->header.taskId = taskInfo->taskSn;
-    ConfigArch9201AixTaskProfiling(taskInfo, &(davidSqe->header));
+    ConfigArch920xAixTaskProfiling(taskInfo, &(davidSqe->header));
 }
 
-void ConfigArch9201OstEnable(const Kernel* kernel, RtArch9201StarsAicAivKernelSqe* const sqe)
+void ConfigArch920xOstEnable(const Kernel* kernel, RtArch920xStarsAicAivKernelSqe* const sqe)
 {
     if ((sqe->header.preP == 0U) && (sqe->header.postP == 0U)) {
         sqe->ost = (kernel != nullptr) ? kernel->GetEarlyStartEnable() : 0U;
@@ -48,7 +49,7 @@ void ConfigArch9201OstEnable(const Kernel* kernel, RtArch9201StarsAicAivKernelSq
     return;
 }
 
-void ConfigArch9201SqeHeaderTaskProfiling(rtDavidStarsSqeHeader_t* const header)
+void ConfigArch920xSqeHeaderTaskProfiling(rtDavidStarsSqeHeader_t* const header)
 {
     if (Runtime::Instance()->GetTaskLevelProfFlag()) {
         header->reserved = 0U;
@@ -59,11 +60,11 @@ void ConfigArch9201SqeHeaderTaskProfiling(rtDavidStarsSqeHeader_t* const header)
     return;
 }
 
-static void ConstructDavidCommonSqeForDavinciTask(TaskInfo* taskInfo, RtArch9201StarsAicAivKernelSqe* const sqe)
+static void ConstructDavidCommonSqeForDavinciTask(TaskInfo* taskInfo, RtArch920xStarsAicAivKernelSqe* const sqe)
 {
     Stream* const stm = taskInfo->stream;
     AicTaskInfo* aicTaskInfo = &(taskInfo->u.aicTaskInfo);
-    ConstructArch9201SqeForHeadCommon(taskInfo, sqe);
+    ConstructArch920xSqeForHeadCommon(taskInfo, sqe);
     ConstructCommonAicAivSqeWord(&(aicTaskInfo->comm), sqe, taskInfo, stm);
 
     /* word 4*/
@@ -88,7 +89,7 @@ static void ConstructDavidCommonSqeForDavinciTask(TaskInfo* taskInfo, RtArch9201
     return;
 }
 
-void GetDcachePrefetchCnt(const TaskInfo* taskInfo, RtArch9201StarsAicAivKernelSqe* const sqe)
+void GetDcachePrefetchCnt(const TaskInfo* taskInfo, RtArch920xStarsAicAivKernelSqe* const sqe)
 {
     uint32_t argsSize = 0U;
     // 4KB, K=1024, aix args size can prefetch 4KB at most.
@@ -140,7 +141,7 @@ void GetDcachePrefetchCnt(const TaskInfo* taskInfo, RtArch9201StarsAicAivKernelS
     return;
 }
 
-static void ConstructDavidMixSqeForDavinciTask(TaskInfo* taskInfo, RtArch9201StarsAicAivKernelSqe* const sqe)
+static void ConstructDavidMixSqeForDavinciTask(TaskInfo* taskInfo, RtArch920xStarsAicAivKernelSqe* const sqe)
 {
     ConstructDavidCommonSqeForDavinciTask(taskInfo, sqe);
     ConstructMixSqeCommonForDavinciTask(taskInfo, sqe);
@@ -167,12 +168,12 @@ static void ConstructDavidMixSqeForDavinciTask(TaskInfo* taskInfo, RtArch9201Sta
     }
     /* dcache preload cnt*/
     GetDcachePrefetchCnt(taskInfo, sqe);
-    ConfigArch9201OstEnable(aicTaskInfo->kernel, sqe);
+    ConfigArch920xOstEnable(aicTaskInfo->kernel, sqe);
     PrintDavidSqe(sqe, "MIX Task");
     return;
 }
 
-static void ConstructDavidAICoreSqeForDavinciTask(TaskInfo* taskInfo, RtArch9201StarsAicAivKernelSqe* const sqe)
+static void ConstructDavidAICoreSqeForDavinciTask(TaskInfo* taskInfo, RtArch920xStarsAicAivKernelSqe* const sqe)
 {
     ConstructDavidCommonSqeForDavinciTask(taskInfo, sqe);
     AicTaskInfo* aicTaskInfo = &(taskInfo->u.aicTaskInfo);
@@ -183,12 +184,12 @@ static void ConstructDavidAICoreSqeForDavinciTask(TaskInfo* taskInfo, RtArch9201
     sqe->aivPreAllocateDisable = 1U;
     /* dcache preload cnt */
     GetDcachePrefetchCnt(taskInfo, sqe);
-    ConfigArch9201OstEnable(aicTaskInfo->kernel, sqe);
+    ConfigArch920xOstEnable(aicTaskInfo->kernel, sqe);
     PrintDavidSqe(sqe, "AICore Task");
     return;
 }
 
-static void ConstructDavidAivSqeForDavinciTask(TaskInfo* taskInfo, RtArch9201StarsAicAivKernelSqe* const sqe)
+static void ConstructDavidAivSqeForDavinciTask(TaskInfo* taskInfo, RtArch920xStarsAicAivKernelSqe* const sqe)
 {
     ConstructDavidCommonSqeForDavinciTask(taskInfo, sqe);
     AicTaskInfo* aicTaskInfo = &(taskInfo->u.aicTaskInfo);
@@ -199,16 +200,16 @@ static void ConstructDavidAivSqeForDavinciTask(TaskInfo* taskInfo, RtArch9201Sta
     sqe->aivPreAllocateDisable = 0U;
     /* dcache preload cnt */
     GetDcachePrefetchCnt(taskInfo, sqe);
-    ConfigArch9201OstEnable(aicTaskInfo->kernel, sqe);
+    ConfigArch920xOstEnable(aicTaskInfo->kernel, sqe);
     PrintDavidSqe(sqe, "AIV Task");
     return;
 }
 
-static void ConstructArch9201AicAivSqeForDavinciTask(
+static void ConstructArch920xAicAivSqeForDavinciTask(
     TaskInfo* const taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo)
 {
     UNUSED(sqeInfo);
-    RtArch9201StarsAicAivKernelSqe* davidSqe = static_cast<RtArch9201StarsAicAivKernelSqe*>(sqe);
+    RtArch920xStarsAicAivKernelSqe* davidSqe = static_cast<RtArch920xStarsAicAivKernelSqe*>(sqe);
     AicTaskInfo* aicTaskInfo = &(taskInfo->u.aicTaskInfo);
     const uint8_t mixType =
         (aicTaskInfo->kernel != nullptr) ? aicTaskInfo->kernel->GetMixType() : static_cast<uint8_t>(NO_MIX);
@@ -279,14 +280,15 @@ static bool DavinciKernelTaskRegister()
         .setStarsResultFunc = &StarsV2SetStarsResultForDavinciTask,
     };
 
-    RegTaskFunc(CHIP_CLOUD_V5, TS_TASK_TYPE_KERNEL_AICPU, aicpuFuncs);
-    RegTaskFunc(CHIP_CLOUD_V5, TS_TASK_TYPE_KERNEL_AICORE, aicAivFuncs);
-    RegTaskFunc(CHIP_CLOUD_V5, TS_TASK_TYPE_KERNEL_AIVEC, aicAivFuncs);
-    RegDavidSqeFunc(CHIP_CLOUD_V5, TS_TASK_TYPE_KERNEL_AICPU, &ConstructDavidAICpuSqeForDavinciTask);
-    RegDavidSqeFunc(CHIP_CLOUD_V5, TS_TASK_TYPE_KERNEL_AICORE, &ConstructArch9201AicAivSqeForDavinciTask);
-    RegDavidSqeFunc(CHIP_CLOUD_V5, TS_TASK_TYPE_KERNEL_AIVEC, &ConstructArch9201AicAivSqeForDavinciTask);
-    RegDavidSqeHeaderPostProcFunc(CHIP_CLOUD_V5, &ConfigArch9201SqeHeaderTaskProfiling);
-
+    for (const auto chip : GetArch920xChips()) {
+        RegTaskFunc(chip, TS_TASK_TYPE_KERNEL_AICPU, aicpuFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_KERNEL_AICORE, aicAivFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_KERNEL_AIVEC, aicAivFuncs);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_KERNEL_AICPU, &ConstructDavidAICpuSqeForDavinciTask);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_KERNEL_AICORE, &ConstructArch920xAicAivSqeForDavinciTask);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_KERNEL_AIVEC, &ConstructArch920xAicAivSqeForDavinciTask);
+        RegDavidSqeHeaderPostProcFunc(chip, &ConfigArch920xSqeHeaderTaskProfiling);
+    }
     return true;
 }
 

@@ -10,6 +10,7 @@
 
 #include "cond_op_manager.hpp"
 #include "stars_cond_isa_define.hpp"
+#include "arch920x.hpp"
 
 namespace cce {
 namespace runtime {
@@ -18,7 +19,7 @@ namespace {
 #pragma pack(push)
 #pragma pack(1)
 
-struct RtStarsCondOpLoadArch9201 {
+struct RtStarsCondOpLoadArch920x {
     uint32_t opCode : 7;
     uint32_t rd : 4;
     uint32_t reserved0 : 1;
@@ -28,7 +29,7 @@ struct RtStarsCondOpLoadArch9201 {
     uint32_t immd : 12;
 };
 
-struct RtStarsCondOpLoadImmArch9201 {
+struct RtStarsCondOpLoadImmArch920x {
     uint32_t opCode : 7;
     uint32_t rd : 4;
     uint32_t reserved : 1;
@@ -37,7 +38,7 @@ struct RtStarsCondOpLoadImmArch9201 {
     uint32_t immdAddrLow;
 };
 
-struct RtStarsCondOpStoreArch9201 {
+struct RtStarsCondOpStoreArch920x {
     uint32_t opCode : 7;
     uint32_t immdLow : 5;
     uint32_t func3 : 3;
@@ -48,7 +49,7 @@ struct RtStarsCondOpStoreArch9201 {
     uint32_t immdHigh : 7;
 };
 
-struct RtStarsCondOpImmArch9201 {
+struct RtStarsCondOpImmArch920x {
     uint32_t opCode : 7;
     uint32_t rd : 4;
     uint32_t reserved0 : 1;
@@ -58,7 +59,7 @@ struct RtStarsCondOpImmArch9201 {
     uint32_t immd : 12;
 };
 
-struct RtStarsCondOpImmSLLIArch9201 {
+struct RtStarsCondOpImmSLLIArch920x {
     uint32_t opCode : 7;
     uint32_t rd : 4;
     uint32_t reserved0 : 1;
@@ -69,7 +70,7 @@ struct RtStarsCondOpImmSLLIArch9201 {
     uint32_t func7 : 6;
 };
 
-struct RtStarsCondOpOpArch9201 {
+struct RtStarsCondOpOpArch920x {
     uint32_t opCode : 7;
     uint32_t rd : 4;
     uint32_t reserved0 : 1;
@@ -81,9 +82,9 @@ struct RtStarsCondOpOpArch9201 {
     uint32_t func7 : 7;
 };
 
-using RtStarsCondOpNopArch9201 = RtStarsCondOpImmArch9201;
+using RtStarsCondOpNopArch920x = RtStarsCondOpImmArch920x;
 
-struct RtStarsCondOpLHWIArch9201 {
+struct RtStarsCondOpLHWIArch920x {
     uint32_t opCode : 7;
     uint32_t rd : 4;
     uint32_t reserved0 : 1;
@@ -92,7 +93,7 @@ struct RtStarsCondOpLHWIArch9201 {
     uint32_t immd : 15;
 };
 
-struct RtStarsCondOpLLWIArch9201 {
+struct RtStarsCondOpLLWIArch920x {
     uint32_t opCode : 7;
     uint32_t rd : 4;
     uint32_t reserved0 : 1;
@@ -101,7 +102,7 @@ struct RtStarsCondOpLLWIArch9201 {
     uint32_t immdLow : 32;
 };
 
-struct RtStarsCondOpBranchArch9201 {
+struct RtStarsCondOpBranchArch920x {
     uint32_t opCode : 7;
     uint32_t jumpInstrOffset : 4;
     uint32_t rsvd : 1;
@@ -113,7 +114,7 @@ struct RtStarsCondOpBranchArch9201 {
     uint32_t rsvd3 : 7;
 };
 
-struct RtStarsCondOpStreamActiveIArch9201 {
+struct RtStarsCondOpStreamActiveIArch920x {
     uint32_t opCode : 7;
     uint32_t rd : 4;
     uint32_t reserved0 : 1;
@@ -122,9 +123,9 @@ struct RtStarsCondOpStreamActiveIArch9201 {
     uint32_t sqId : 12;
 };
 
-using RtStarsCondOpStreamDeActiveIArch9201 = RtStarsCondOpStreamActiveIArch9201;
+using RtStarsCondOpStreamDeActiveIArch920x = RtStarsCondOpStreamActiveIArch920x;
 
-struct RtStarsCondOpStreamActiveRArch9201 {
+struct RtStarsCondOpStreamActiveRArch920x {
     uint32_t opCode : 7;
     uint32_t rd : 4;
     uint32_t reserved0 : 1;
@@ -134,9 +135,9 @@ struct RtStarsCondOpStreamActiveRArch9201 {
     uint32_t reserved2 : 12;
 };
 
-using RtStarsCondOpStreamDeActiveRArch9201 = RtStarsCondOpStreamActiveRArch9201;
+using RtStarsCondOpStreamDeActiveRArch920x = RtStarsCondOpStreamActiveRArch920x;
 
-struct RtStarsCondOpStreamGotoIArch9201 {
+struct RtStarsCondOpStreamGotoIArch920x {
     uint32_t opCode : 7;
     uint32_t rd : 4;
     uint32_t reserved0 : 1;
@@ -147,7 +148,7 @@ struct RtStarsCondOpStreamGotoIArch9201 {
     uint32_t sqHead : 16;
 };
 
-struct RtStarsCondOpStreamGotoRArch9201 {
+struct RtStarsCondOpStreamGotoRArch920x {
     uint32_t opCode : 7;
     uint32_t rd : 4;
     uint32_t reserved0 : 1;
@@ -157,7 +158,7 @@ struct RtStarsCondOpStreamGotoRArch9201 {
     uint32_t reserved2 : 12;
 };
 
-struct RtStarsCondOpLoopArch9201 {
+struct RtStarsCondOpLoopArch920x {
     uint32_t opCode : 7;
     uint32_t jumpInstrOffset : 4;
     uint32_t rsvd : 1;
@@ -166,7 +167,7 @@ struct RtStarsCondOpLoopArch9201 {
     uint32_t delayCycle : 13;
 };
 
-struct RtStarsCondOpSystemCsrArch9201 {
+struct RtStarsCondOpSystemCsrArch920x {
     uint32_t opCode : 7;
     uint32_t rd : 4;
     uint32_t reserved0 : 1;
@@ -176,7 +177,7 @@ struct RtStarsCondOpSystemCsrArch9201 {
     uint32_t csrReg : 12;
 };
 
-struct RtStarsCondOpFuncCallArch9201 {
+struct RtStarsCondOpFuncCallArch920x {
     uint32_t opCode : 7;
     uint32_t reserved0 : 3;
     uint32_t reserved1 : 2;
@@ -188,47 +189,47 @@ struct RtStarsCondOpFuncCallArch9201 {
     uint32_t reserved4 : 7;
 };
 
-struct RtStarsCondOpErrorInstrArch9201 {
+struct RtStarsCondOpErrorInstrArch920x {
     uint32_t err;
 };
 
 #pragma pack(pop)
 
-static_assert(sizeof(RtStarsCondOpLoadArch9201) == sizeof(RtStarsCondOpLoad), "RtStarsCondOpLoad size mismatch");
+static_assert(sizeof(RtStarsCondOpLoadArch920x) == sizeof(RtStarsCondOpLoad), "RtStarsCondOpLoad size mismatch");
 static_assert(
-    sizeof(RtStarsCondOpLoadImmArch9201) == sizeof(RtStarsCondOpLoadImm), "RtStarsCondOpLoadImm size mismatch");
-static_assert(sizeof(RtStarsCondOpStoreArch9201) == sizeof(RtStarsCondOpStore), "RtStarsCondOpStore size mismatch");
-static_assert(sizeof(RtStarsCondOpImmArch9201) == sizeof(RtStarsCondOpImm), "RtStarsCondOpImm size mismatch");
+    sizeof(RtStarsCondOpLoadImmArch920x) == sizeof(RtStarsCondOpLoadImm), "RtStarsCondOpLoadImm size mismatch");
+static_assert(sizeof(RtStarsCondOpStoreArch920x) == sizeof(RtStarsCondOpStore), "RtStarsCondOpStore size mismatch");
+static_assert(sizeof(RtStarsCondOpImmArch920x) == sizeof(RtStarsCondOpImm), "RtStarsCondOpImm size mismatch");
 static_assert(
-    sizeof(RtStarsCondOpImmSLLIArch9201) == sizeof(RtStarsCondOpImmSLLI), "RtStarsCondOpImmSLLI size mismatch");
-static_assert(sizeof(RtStarsCondOpOpArch9201) == sizeof(RtStarsCondOpOp), "RtStarsCondOpOp size mismatch");
-static_assert(sizeof(RtStarsCondOpLHWIArch9201) == sizeof(RtStarsCondOpLHWI), "RtStarsCondOpLHWI size mismatch");
-static_assert(sizeof(RtStarsCondOpLLWIArch9201) == sizeof(RtStarsCondOpLLWI), "RtStarsCondOpLLWI size mismatch");
-static_assert(sizeof(RtStarsCondOpBranchArch9201) == sizeof(RtStarsCondOpBranch), "RtStarsCondOpBranch size mismatch");
+    sizeof(RtStarsCondOpImmSLLIArch920x) == sizeof(RtStarsCondOpImmSLLI), "RtStarsCondOpImmSLLI size mismatch");
+static_assert(sizeof(RtStarsCondOpOpArch920x) == sizeof(RtStarsCondOpOp), "RtStarsCondOpOp size mismatch");
+static_assert(sizeof(RtStarsCondOpLHWIArch920x) == sizeof(RtStarsCondOpLHWI), "RtStarsCondOpLHWI size mismatch");
+static_assert(sizeof(RtStarsCondOpLLWIArch920x) == sizeof(RtStarsCondOpLLWI), "RtStarsCondOpLLWI size mismatch");
+static_assert(sizeof(RtStarsCondOpBranchArch920x) == sizeof(RtStarsCondOpBranch), "RtStarsCondOpBranch size mismatch");
 static_assert(
-    sizeof(RtStarsCondOpStreamActiveIArch9201) == sizeof(RtStarsCondOpStreamActiveI),
+    sizeof(RtStarsCondOpStreamActiveIArch920x) == sizeof(RtStarsCondOpStreamActiveI),
     "RtStarsCondOpStreamActiveI size mismatch");
 static_assert(
-    sizeof(RtStarsCondOpStreamActiveRArch9201) == sizeof(RtStarsCondOpStreamActiveR),
+    sizeof(RtStarsCondOpStreamActiveRArch920x) == sizeof(RtStarsCondOpStreamActiveR),
     "RtStarsCondOpStreamActiveR size mismatch");
 static_assert(
-    sizeof(RtStarsCondOpStreamGotoIArch9201) == sizeof(RtStarsCondOpStreamGotoI),
+    sizeof(RtStarsCondOpStreamGotoIArch920x) == sizeof(RtStarsCondOpStreamGotoI),
     "RtStarsCondOpStreamGotoI size mismatch");
 static_assert(
-    sizeof(RtStarsCondOpStreamGotoRArch9201) == sizeof(RtStarsCondOpStreamGotoR),
+    sizeof(RtStarsCondOpStreamGotoRArch920x) == sizeof(RtStarsCondOpStreamGotoR),
     "RtStarsCondOpStreamGotoR size mismatch");
-static_assert(sizeof(RtStarsCondOpLoopArch9201) == sizeof(RtStarsCondOpLoop), "RtStarsCondOpLoop size mismatch");
+static_assert(sizeof(RtStarsCondOpLoopArch920x) == sizeof(RtStarsCondOpLoop), "RtStarsCondOpLoop size mismatch");
 static_assert(
-    sizeof(RtStarsCondOpSystemCsrArch9201) == sizeof(RtStarsCondOpSystemCsr), "RtStarsCondOpSystemCsr size mismatch");
+    sizeof(RtStarsCondOpSystemCsrArch920x) == sizeof(RtStarsCondOpSystemCsr), "RtStarsCondOpSystemCsr size mismatch");
 static_assert(
-    sizeof(RtStarsCondOpFuncCallArch9201) == sizeof(RtStarsCondOpFuncCall), "RtStarsCondOpFuncCall size mismatch");
+    sizeof(RtStarsCondOpFuncCallArch920x) == sizeof(RtStarsCondOpFuncCall), "RtStarsCondOpFuncCall size mismatch");
 static_assert(
-    sizeof(RtStarsCondOpErrorInstrArch9201) == sizeof(RtStarsCondOpErrorInstr),
+    sizeof(RtStarsCondOpErrorInstrArch920x) == sizeof(RtStarsCondOpErrorInstr),
     "RtStarsCondOpErrorInstr size mismatch");
 
 static void ConstructNop(void* const nopAddr)
 {
-    auto* const nop = static_cast<RtStarsCondOpNopArch9201*>(nopAddr);
+    auto* const nop = static_cast<RtStarsCondOpNopArch920x*>(nopAddr);
     nop->opCode = RT_STARS_COND_ISA_OP_CODE_NOP;
     nop->rd = RT_STARS_COND_ISA_REGISTER_R0;
     nop->func3 = RT_STARS_COND_ISA_OP_IMM_FUNC3_NOP;
@@ -240,7 +241,7 @@ static void ConstructLoad(
     const rtStarsCondIsaRegister_t rs1Reg, const uint16_t imd, const rtStarsCondIsaRegister_t dstReg,
     const rtStarsCondIsaLoadFunc3_t func3, void* const loadAddr)
 {
-    auto* const load = static_cast<RtStarsCondOpLoadArch9201*>(loadAddr);
+    auto* const load = static_cast<RtStarsCondOpLoadArch920x*>(loadAddr);
     load->opCode = RT_STARS_COND_ISA_OP_CODE_LOAD;
     load->rd = dstReg;
     load->func3 = func3;
@@ -252,7 +253,7 @@ static void ConstructLoadImm(
     const rtStarsCondIsaRegister_t dstReg, const uint64_t addr, const rtStarsCondIsaLoadImmFunc3_t func3,
     void* const loadImmAddr)
 {
-    auto* const loadImm = static_cast<RtStarsCondOpLoadImmArch9201*>(loadImmAddr);
+    auto* const loadImm = static_cast<RtStarsCondOpLoadImmArch920x*>(loadImmAddr);
     loadImm->opCode = RT_STARS_COND_ISA_OP_CODE_LOAD_IMM;
     loadImm->rd = dstReg;
     loadImm->func3 = func3;
@@ -264,7 +265,7 @@ static void ConstructOpImmAndi(
     const rtStarsCondIsaRegister_t rs1Reg, const rtStarsCondIsaRegister_t dstReg, const uint32_t immd,
     const RtStarsCondIsaOpImmFunc3 func3, void* const opImmAndiAddr)
 {
-    auto* const opImmAndi = static_cast<RtStarsCondOpImmArch9201*>(opImmAndiAddr);
+    auto* const opImmAndi = static_cast<RtStarsCondOpImmArch920x*>(opImmAndiAddr);
     opImmAndi->opCode = RT_STARS_COND_ISA_OP_CODE_OP_IMM;
     opImmAndi->rd = dstReg;
     opImmAndi->func3 = func3;
@@ -276,7 +277,7 @@ static void ConstructOpImmSlli(
     const rtStarsCondIsaRegister_t rs1Reg, const rtStarsCondIsaRegister_t dstReg, const uint8_t shamt,
     const RtStarsCondIsaOpImmFunc3 func3, const rtStarsCondIsaOpImmFunc7_t func7, void* const opImmSlliAddr)
 {
-    auto* const opImmSlli = static_cast<RtStarsCondOpImmSLLIArch9201*>(opImmSlliAddr);
+    auto* const opImmSlli = static_cast<RtStarsCondOpImmSLLIArch920x*>(opImmSlliAddr);
     opImmSlli->opCode = RT_STARS_COND_ISA_OP_CODE_OP_IMM;
     opImmSlli->rd = dstReg;
     opImmSlli->func3 = func3;
@@ -289,7 +290,7 @@ static void ConstructOpOp(
     const rtStarsCondIsaRegister_t rs1Reg, const rtStarsCondIsaRegister_t rs2Reg, const rtStarsCondIsaRegister_t dstReg,
     const rtStarsCondIsaOpFunc3_t func3, const RtStarsCondIsaOpFunc7 func7, void* const opOpAddr)
 {
-    auto* const opOp = static_cast<RtStarsCondOpOpArch9201*>(opOpAddr);
+    auto* const opOp = static_cast<RtStarsCondOpOpArch920x*>(opOpAddr);
     opOp->opCode = RT_STARS_COND_ISA_OP_CODE_OP;
     opOp->rd = dstReg;
     opOp->func3 = func3;
@@ -300,7 +301,7 @@ static void ConstructOpOp(
 
 static void ConstructLhwi(const rtStarsCondIsaRegister_t dstReg, const uint64_t immd, void* const opLHWIAddr)
 {
-    auto* const opLHWI = static_cast<RtStarsCondOpLHWIArch9201*>(opLHWIAddr);
+    auto* const opLHWI = static_cast<RtStarsCondOpLHWIArch920x*>(opLHWIAddr);
     opLHWI->opCode = RT_STARS_COND_ISA_OP_CODE_LWI;
     opLHWI->func3 = RT_STARS_COND_ISA_LWI_FUNC3_LHWI;
     opLHWI->rd = dstReg;
@@ -309,7 +310,7 @@ static void ConstructLhwi(const rtStarsCondIsaRegister_t dstReg, const uint64_t 
 
 static void ConstructLlwi(const rtStarsCondIsaRegister_t dstReg, const uint64_t immd, void* const opLLWIAddr)
 {
-    auto* const opLLWI = static_cast<RtStarsCondOpLLWIArch9201*>(opLLWIAddr);
+    auto* const opLLWI = static_cast<RtStarsCondOpLLWIArch920x*>(opLLWIAddr);
     opLLWI->opCode = RT_STARS_COND_ISA_OP_CODE_LWI;
     opLLWI->func3 = RT_STARS_COND_ISA_LWI_FUNC3_LLWI;
     opLLWI->rd = dstReg;
@@ -321,7 +322,7 @@ static void ConstructBranch(
     const rtStarsCondIsaRegister_t rs1Reg, const rtStarsCondIsaRegister_t rs2Reg,
     const rtStarsCondIsaBranchFunc3_t func3, const uint8_t instrOffset, void* const opBranchAddr)
 {
-    auto* const opBranch = static_cast<RtStarsCondOpBranchArch9201*>(opBranchAddr);
+    auto* const opBranch = static_cast<RtStarsCondOpBranchArch920x*>(opBranchAddr);
     opBranch->opCode = RT_STARS_COND_ISA_OP_CODE_BRANCH;
     opBranch->func3 = func3;
     opBranch->rs1 = rs1Reg;
@@ -332,7 +333,7 @@ static void ConstructBranch(
 static void ConstructLoop(
     const rtStarsCondIsaRegister_t rs1Reg, const uint16_t delayCycle, const uint8_t instrOffset, void* const opLoopAddr)
 {
-    auto* const opLoop = static_cast<RtStarsCondOpLoopArch9201*>(opLoopAddr);
+    auto* const opLoop = static_cast<RtStarsCondOpLoopArch920x*>(opLoopAddr);
     opLoop->opCode = RT_STARS_COND_ISA_OP_CODE_LOOP;
     opLoop->func3 = 0U;
     opLoop->rs1 = rs1Reg;
@@ -343,7 +344,7 @@ static void ConstructLoop(
 static void ConstructActiveI(
     const rtStarsCondIsaRegister_t dstReg, const uint16_t activeStreamSqId, void* const opActiveIAddr)
 {
-    auto* const opActiveI = static_cast<RtStarsCondOpStreamActiveIArch9201*>(opActiveIAddr);
+    auto* const opActiveI = static_cast<RtStarsCondOpStreamActiveIArch920x*>(opActiveIAddr);
     opActiveI->opCode = RT_STARS_COND_ISA_OP_CODE_STREAM;
     opActiveI->func3 = RT_STARS_COND_ISA_STREAM_FUNC3_ACTIVE_I;
     opActiveI->rd = dstReg;
@@ -353,7 +354,7 @@ static void ConstructActiveI(
 static void ConstructDeActiveI(
     const rtStarsCondIsaRegister_t dstReg, const uint16_t deActiveStreamSqId, void* const opDeActiveIAddr)
 {
-    auto* const opDeActiveI = static_cast<RtStarsCondOpStreamDeActiveIArch9201*>(opDeActiveIAddr);
+    auto* const opDeActiveI = static_cast<RtStarsCondOpStreamDeActiveIArch920x*>(opDeActiveIAddr);
     opDeActiveI->opCode = RT_STARS_COND_ISA_OP_CODE_STREAM;
     opDeActiveI->func3 = RT_STARS_COND_ISA_STREAM_FUNC3_DEACTIVE_I;
     opDeActiveI->rd = dstReg;
@@ -363,7 +364,7 @@ static void ConstructDeActiveI(
 static void ConstructActiveR(
     const rtStarsCondIsaRegister_t rs1Reg, const rtStarsCondIsaRegister_t dstReg, void* const opActiveRAddr)
 {
-    auto* const opActiveR = static_cast<RtStarsCondOpStreamActiveRArch9201*>(opActiveRAddr);
+    auto* const opActiveR = static_cast<RtStarsCondOpStreamActiveRArch920x*>(opActiveRAddr);
     opActiveR->opCode = RT_STARS_COND_ISA_OP_CODE_STREAM;
     opActiveR->rd = dstReg;
     opActiveR->func3 = RT_STARS_COND_ISA_STREAM_FUNC3_ACTIVE_R;
@@ -373,7 +374,7 @@ static void ConstructActiveR(
 static void ConstructDeActiveR(
     const rtStarsCondIsaRegister_t rs1Reg, const rtStarsCondIsaRegister_t dstReg, void* const opDeActiveRAddr)
 {
-    auto* const opDeActiveR = static_cast<RtStarsCondOpStreamDeActiveRArch9201*>(opDeActiveRAddr);
+    auto* const opDeActiveR = static_cast<RtStarsCondOpStreamDeActiveRArch920x*>(opDeActiveRAddr);
     opDeActiveR->opCode = RT_STARS_COND_ISA_OP_CODE_STREAM;
     opDeActiveR->rd = dstReg;
     opDeActiveR->func3 = RT_STARS_COND_ISA_STREAM_FUNC3_DEACTIVE_R;
@@ -384,7 +385,7 @@ static void ConstructGotoI(
     const rtStarsCondIsaRegister_t dstReg, const uint16_t activeStreamSqId, const uint16_t head,
     void* const opGotoIAddr)
 {
-    auto* const opGotoI = static_cast<RtStarsCondOpStreamGotoIArch9201*>(opGotoIAddr);
+    auto* const opGotoI = static_cast<RtStarsCondOpStreamGotoIArch920x*>(opGotoIAddr);
     opGotoI->opCode = RT_STARS_COND_ISA_OP_CODE_STREAM;
     opGotoI->rd = dstReg;
     opGotoI->func3 = RT_STARS_COND_ISA_STREAM_FUNC3_GOTO_I;
@@ -395,7 +396,7 @@ static void ConstructGotoI(
 static void ConstructGotoR(
     const rtStarsCondIsaRegister_t sr1Reg, const rtStarsCondIsaRegister_t dstReg, void* const opGotoRAddr)
 {
-    auto* const opGotoR = static_cast<RtStarsCondOpStreamGotoRArch9201*>(opGotoRAddr);
+    auto* const opGotoR = static_cast<RtStarsCondOpStreamGotoRArch920x*>(opGotoRAddr);
     opGotoR->opCode = RT_STARS_COND_ISA_OP_CODE_STREAM;
     opGotoR->rd = dstReg;
     opGotoR->func3 = RT_STARS_COND_ISA_STREAM_FUNC3_GOTO_R;
@@ -406,7 +407,7 @@ static void ConstructStore(
     const rtStarsCondIsaRegister_t addrReg, const rtStarsCondIsaRegister_t valReg, const uint16_t immdOffset,
     const RtStarsCondIsaStoreFunc3 func3, void* const opStoreAddr)
 {
-    auto* const opStore = static_cast<RtStarsCondOpStoreArch9201*>(opStoreAddr);
+    auto* const opStore = static_cast<RtStarsCondOpStoreArch920x*>(opStoreAddr);
     opStore->opCode = RT_STARS_COND_ISA_OP_CODE_STORE;
     opStore->immdLow = static_cast<uint8_t>(immdOffset & 0x1FU);
     opStore->func3 = func3;
@@ -419,7 +420,7 @@ static void ConstructSystemCsr(
     const rtStarsCondIsaRegister_t srReg, const rtStarsCondIsaRegister_t dstReg, const rtStarsCondCsrRegister_t csrReg,
     const rtStarsCondIsaSystemFunc3_t func3, void* const opCsrAddr)
 {
-    auto* const opCsr = static_cast<RtStarsCondOpSystemCsrArch9201*>(opCsrAddr);
+    auto* const opCsr = static_cast<RtStarsCondOpSystemCsrArch920x*>(opCsrAddr);
     opCsr->opCode = RT_STARS_COND_ISA_OP_CODE_SYSTEM;
     opCsr->rd = dstReg;
     opCsr->func3 = func3;
@@ -430,7 +431,7 @@ static void ConstructSystemCsr(
 static void ConstructFuncCall(
     const rtStarsCondIsaRegister_t rs1Reg, const rtStarsCondIsaRegister_t rs2Reg, void* const opFuncCallAddr)
 {
-    auto* const opFuncCall = static_cast<RtStarsCondOpFuncCallArch9201*>(opFuncCallAddr);
+    auto* const opFuncCall = static_cast<RtStarsCondOpFuncCallArch920x*>(opFuncCallAddr);
     opFuncCall->opCode = RT_STARS_COND_ISA_OP_CODE_FUNC_CALL;
     opFuncCall->func3 = RT_STARS_COND_FUNC_CALL_FUNC3;
     opFuncCall->rs1 = rs1Reg;
@@ -439,7 +440,7 @@ static void ConstructFuncCall(
 
 static void ConstructErrorInstr(void* const opErrInstrAddr)
 {
-    static_cast<RtStarsCondOpErrorInstrArch9201*>(opErrInstrAddr)->err = 0U;
+    static_cast<RtStarsCondOpErrorInstrArch920x*>(opErrInstrAddr)->err = 0U;
 }
 
 static bool CondIsaConstructRegister()
@@ -450,7 +451,10 @@ static bool CondIsaConstructRegister()
         &ConstructActiveI, &ConstructDeActiveI, &ConstructActiveR,   &ConstructDeActiveR, &ConstructGotoI,
         &ConstructGotoR,   &ConstructStore,     &ConstructSystemCsr, &ConstructFuncCall,  &ConstructErrorInstr,
     };
-    RegCondIsaConstructFunc(CHIP_CLOUD_V5, funcs);
+
+    for (const auto chip : GetArch920xChips()) {
+        RegCondIsaConstructFunc(chip, funcs);
+    }
     return true;
 }
 

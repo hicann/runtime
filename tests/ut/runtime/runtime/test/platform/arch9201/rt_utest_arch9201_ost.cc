@@ -16,8 +16,8 @@
 #include "feature_type.h"
 #include "runtime.hpp"
 #include "kernel.hpp"
-#include "arch9201/aic_aiv_sqe.h"
-#include "arch9201/arch9201_sqe_utils.hpp"
+#include "arch920x/aic_aiv_sqe.h"
+#include "arch920x/arch920x_sqe_utils.hpp"
 
 using namespace cce::runtime;
 
@@ -79,53 +79,53 @@ TEST_F(Ost960Test, SetOstRejectsInvalidSysParamValueAndKeepsFlag)
     EXPECT_TRUE(Runtime::Instance()->GetEnableOstFlag());
 }
 
-TEST_F(Ost960Test, ConfigArch9201OstEnableWithKernelEarlyStart)
+TEST_F(Ost960Test, ConfigArch920xOstEnableWithKernelEarlyStart)
 {
     Kernel kernel("ost_kernel", 0ULL, nullptr, RT_KERNEL_ATTR_TYPE_AICORE, 0U);
-    RtArch9201StarsAicAivKernelSqe sqe = {};
+    RtArch920xStarsAicAivKernelSqe sqe = {};
 
     kernel.SetEarlyStartEnable(false);
-    ConfigArch9201OstEnable(&kernel, &sqe);
+    ConfigArch920xOstEnable(&kernel, &sqe);
     EXPECT_EQ(sqe.ost, 0U);
 
     kernel.SetEarlyStartEnable(true);
-    ConfigArch9201OstEnable(&kernel, &sqe);
+    ConfigArch920xOstEnable(&kernel, &sqe);
     EXPECT_EQ(sqe.ost, 1U);
 }
 
-TEST_F(Ost960Test, ConfigArch9201OstEnableWithNullKernel)
+TEST_F(Ost960Test, ConfigArch920xOstEnableWithNullKernel)
 {
-    RtArch9201StarsAicAivKernelSqe sqe = {};
+    RtArch920xStarsAicAivKernelSqe sqe = {};
     sqe.ost = 1U;
 
-    ConfigArch9201OstEnable(nullptr, &sqe);
+    ConfigArch920xOstEnable(nullptr, &sqe);
     EXPECT_EQ(sqe.ost, 0U);
 }
 
-TEST_F(Ost960Test, ConfigArch9201OstEnableKeepsOstWhenPreOrPostPExists)
+TEST_F(Ost960Test, ConfigArch920xOstEnableKeepsOstWhenPreOrPostPExists)
 {
     Kernel kernel("ost_kernel", 0ULL, nullptr, RT_KERNEL_ATTR_TYPE_AICORE, 0U);
     kernel.SetEarlyStartEnable(true);
 
-    RtArch9201StarsAicAivKernelSqe sqe = {};
+    RtArch920xStarsAicAivKernelSqe sqe = {};
     sqe.header.preP = RT_STARS_SQE_INT_DIR_TO_TSCPU;
-    ConfigArch9201OstEnable(&kernel, &sqe);
+    ConfigArch920xOstEnable(&kernel, &sqe);
     EXPECT_EQ(sqe.ost, 0U);
 
     sqe = {};
     sqe.header.postP = RT_STARS_SQE_INT_DIR_TO_TSCPU;
-    ConfigArch9201OstEnable(&kernel, &sqe);
+    ConfigArch920xOstEnable(&kernel, &sqe);
     EXPECT_EQ(sqe.ost, 0U);
 
     sqe = {};
     sqe.ost = 1U;
     sqe.header.preP = RT_STARS_SQE_INT_DIR_TO_TSCPU;
-    ConfigArch9201OstEnable(&kernel, &sqe);
+    ConfigArch920xOstEnable(&kernel, &sqe);
     EXPECT_EQ(sqe.ost, 1U);
 
     sqe = {};
     sqe.ost = 1U;
     sqe.header.postP = RT_STARS_SQE_INT_DIR_TO_TSCPU;
-    ConfigArch9201OstEnable(&kernel, &sqe);
+    ConfigArch920xOstEnable(&kernel, &sqe);
     EXPECT_EQ(sqe.ost, 1U);
 }

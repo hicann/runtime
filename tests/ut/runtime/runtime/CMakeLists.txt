@@ -152,15 +152,15 @@ set(runtimeut_david_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/task_info/event/notify_task_v200.cc
     ${TOP_DIR}/src/runtime/core/src/task/v200/memory_corruption_checker.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/cmo/cmo_task_v200.cc
-    ${TOP_DIR}/src/runtime/core/src/task/task_info/cmo/cmo_task_arch9201.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/cmo/cmo_task_arch920x.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/memory/memory_task_v200.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/davinci/davinci_kernel_task_v200.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/cond_op/stars_cond_isa_construct_v200.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/cond_op/stars_cond_isa_construct_v200_base.cc
-    ${TOP_DIR}/src/runtime/core/src/task/task_info/cond_op/stars_cond_isa_construct_arch9201.cc
-    ${TOP_DIR}/src/runtime/core/src/task/task_info/cond_op/cond_isa_task_arch9201.cc
-    ${TOP_DIR}/src/runtime/feature/fusion/fusion_task_arch9201.cc
-    ${TOP_DIR}/src/runtime/core/src/task/task_info/davinci/davinci_kernel_task_arch9201.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/cond_op/stars_cond_isa_construct_arch920x.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/cond_op/cond_isa_task_arch920x.cc
+    ${TOP_DIR}/src/runtime/feature/fusion/fusion_task_arch920x.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/davinci/davinci_kernel_task_arch920x.cc
 )
 
 set(runtimeut_src_api_list
@@ -262,6 +262,7 @@ set(runtimeut_platform_list
     ${TOP_DIR}/src/runtime/config/nano/dev_info_reg.cc
     ${TOP_DIR}/src/runtime/config/tiny/dev_info_reg.cc
     ${TOP_DIR}/src/runtime/config/arch9201/dev_info_reg.cc
+    ${TOP_DIR}/src/runtime/config/arch9202/dev_info_reg.cc
     ${TOP_DIR}/src/runtime/config/xpu/dev_info_reg.cc
     ${TOP_DIR}/src/runtime/config/kirinx90/dev_info_reg.cc
     ${TOP_DIR}/src/runtime/config/kirin9030/dev_info_reg.cc
@@ -796,7 +797,7 @@ set(runtimeut_david_src_list
     ${TOP_DIR}/src/runtime/core/src/profiler/onlineprof.cc
     ${TOP_DIR}/src/runtime/core/src/device/device_error_proc.cc
     ${TOP_DIR}/src/runtime/core/src/device/v200_base/device_error_proc.cc
-    ${TOP_DIR}/src/runtime/core/src/device/v200_base/device_error_proc_arch9201.cc
+    ${TOP_DIR}/src/runtime/core/src/device/v200_base/device_error_proc_arch920x.cc
     ${TOP_DIR}/src/runtime/core/src/device/device_error_core_proc.cc
     ${TOP_DIR}/src/runtime/core/src/task/stars_cond_isa_helper.cc
     ${TOP_DIR}/src/runtime/core/src/task/stars_external_event_cond_isa_helper.cc
@@ -1957,6 +1958,7 @@ set(RUNTIME_TARGET_DAVID
     runtime_utest_task_david
     runtime_utest_xpu
     runtime_utest_arch9201
+    runtime_utest_arch9202
 )
 
 set(RUNTIME_TARGET_910B
@@ -1991,6 +1993,7 @@ set(RUNTIME_TARGET
     runtime_utest_mini_v3
     runtime_utest_arch5162
     runtime_utest_arch9201
+    runtime_utest_arch9202
 )
 
 set(RUNTIME_TARGET_COMMON ${RUNTIME_TARGET})

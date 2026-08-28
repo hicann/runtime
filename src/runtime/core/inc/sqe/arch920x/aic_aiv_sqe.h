@@ -8,8 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#ifndef CCE_RUNTIME_ARCH9201_AIC_AIV_SQE_H
-#define CCE_RUNTIME_ARCH9201_AIC_AIV_SQE_H
+#ifndef CCE_RUNTIME_ARCH920X_AIC_AIV_SQE_H
+#define CCE_RUNTIME_ARCH920X_AIC_AIV_SQE_H
 
 #include "starsv2_base.hpp"
 
@@ -17,7 +17,7 @@ namespace cce {
 namespace runtime {
 #pragma pack(push)
 #pragma pack(1)
-struct RtArch9201StarsAicAivKernelSqe {
+struct RtArch920xStarsAicAivKernelSqe {
     /* word 0-1 */
     rtDavidStarsSqeHeader_t header;
 

@@ -177,17 +177,17 @@ set(libruntime_cmodel_v200_task_src_files
     # david & solomon 专用差异化文件
     ${RUNTIME_CORE_DIR}/src/task/v200/task_checker.cc
     ${RUNTIME_FEATURE_DIR}/fusion/fusion_task_v200.cc
-    ${RUNTIME_FEATURE_DIR}/fusion/fusion_task_arch9201.cc
+    ${RUNTIME_FEATURE_DIR}/fusion/fusion_task_arch920x.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/event/notify_task_v200.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/cond_op/stars_cond_isa_construct_arch9201.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/cond_op/cond_isa_task_arch9201.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/cond_op/stars_cond_isa_construct_arch920x.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/cond_op/cond_isa_task_arch920x.cc
     ${RUNTIME_CORE_DIR}/src/task/v200/memory_corruption_checker.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/cmo/cmo_task_v200.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/cmo/cmo_task_arch9201.cc
-    ${RUNTIME_CORE_DIR}/src/device/v200_base/device_error_proc_arch9201.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/cmo/cmo_task_arch920x.cc
+    ${RUNTIME_CORE_DIR}/src/device/v200_base/device_error_proc_arch920x.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/memory/memory_task_v200.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/davinci/davinci_kernel_task_v200.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/davinci/davinci_kernel_task_arch9201.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/davinci/davinci_kernel_task_arch920x.cc
 )
 
 set(libruntime_cmodel_api_src_files_cmodel
@@ -757,7 +757,7 @@ set(RUNTIME_CMODEL_INC_DIR_COMMON
     ${RUNTIME_DIR}/include
     ${RUNTIME_DIR}/src/dfx/adump/inc/metadef
     ${RUNTIME_DIR}/src/platform
-    ${RUNTIME_DIR}/src/runtime/core/inc/sqe/arch9201
+    ${RUNTIME_DIR}/src/runtime/core/inc/sqe/arch920x
 )
 
 set(RUNTIME_CMODEL_INC_DIR

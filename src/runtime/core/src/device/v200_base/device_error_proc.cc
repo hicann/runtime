@@ -13,6 +13,7 @@
 #include "context.hpp"
 #include "task_recycle.hpp"
 #include "runtime_task_manager.h"
+#include "arch920x.hpp"
 
 namespace cce {
 namespace runtime {
@@ -40,7 +41,7 @@ static bool RegisterDavidErrorProcFunc()
 {
     const auto& chips = GetDavidChips();
     for (const auto chip : chips) {
-        if (chip == CHIP_CLOUD_V5) {
+        if (IsArch920xChip(chip)) {
             continue;
         }
         RegErrorProcFunc(chip, AICORE_ERROR, &ProcessDavidStarsCoreErrorInfo);

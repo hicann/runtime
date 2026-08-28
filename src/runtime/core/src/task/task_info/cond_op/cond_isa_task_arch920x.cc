@@ -19,6 +19,7 @@
 #include "stream.hpp"
 #include "stream_task.h"
 #include "error_message_manage.hpp"
+#include "arch920x.hpp"
 
 namespace cce {
 namespace runtime {
@@ -32,7 +33,7 @@ struct RtStarsGetSqStateI {
     RtStarsCondOpLoadImm loadState;
 };
 
-struct RtStarsStreamActiveFcArch9201 {
+struct RtStarsStreamActiveFcArch920x {
     RtStarsGetSqStateI getSqFsmState;
     RtStarsSetCqeStatus dfxFsm;
     RtStarsCondOpLLWI llwiDfx0;
@@ -67,23 +68,23 @@ struct RtStarsStreamActiveFcArch9201 {
     RtStarsCondOpNop end;
 };
 
-struct rtStarsStreamSwitchFcArch9201_t {
+struct rtStarsStreamSwitchFcArch920x_t {
     RtStarsCondOpLoadImm loadVar;
     RtStarsCondOpLHWI lhwiValue;
     RtStarsCondOpLLWI llwiValue;
     RtStarsSetCsrJumpPc jumpEnd;
     RtStarsCondOpBranch branchEnd;
-    RtStarsStreamActiveFcArch9201 streamActiveFc;
+    RtStarsStreamActiveFcArch920x streamActiveFc;
     RtStarsCondOpStreamDeActiveI deactiveCurrentSq;
     RtStarsCondOpNop end;
 };
 
-struct rtStarsStreamSwitchExFcArch9201_t {
+struct rtStarsStreamSwitchExFcArch920x_t {
     RtStarsCondOpLoadImm loadVar;
     RtStarsCondOpLoadImm loadValue;
     RtStarsSetCsrJumpPc jumpEnd;
     RtStarsCondOpBranch branchEnd;
-    RtStarsStreamActiveFcArch9201 streamActiveFc;
+    RtStarsStreamActiveFcArch920x streamActiveFc;
     RtStarsCondOpStreamDeActiveI deactiveCurrentSq;
     RtStarsCondOpNop end;
 };
@@ -102,7 +103,7 @@ struct RtStarsModelExeCheckSqState {
     RtStarsCondOpBranch branchError;
 };
 
-struct RtStarsModelExeFuncCallArch9201 {
+struct RtStarsModelExeFuncCallArch920x {
     RtStarsModelExeScanSq scanSq;
     RtStarsModelExeCheckSqState checkSqState;
     RtStarsModelExeCheckSqDisable checkSqDisable;
@@ -117,7 +118,7 @@ struct RtStarsModelExeFuncCallArch9201 {
 
 #pragma pack(pop)
 
-static void ConstrucModelExeCheckSqStateArch9201(
+static void ConstrucModelExeCheckSqStateArch920x(
     rtStarsModelExeFuncCallPara_t& funcCallPara, RtStarsModelExeCheckSqState& checkSqState)
 {
     constexpr rtStarsCondIsaRegister_t r0 = RT_STARS_COND_ISA_REGISTER_R0;
@@ -153,11 +154,11 @@ static void ConstrucModelExeCheckSqStateArch9201(
     }
 }
 
-static void ConstrucModelExeFuncCallArch9201(
-    rtStarsModelExeFuncCallPara_t& funcCallPara, RtStarsModelExeFuncCallArch9201& funcCall)
+static void ConstrucModelExeFuncCallArch920x(
+    rtStarsModelExeFuncCallPara_t& funcCallPara, RtStarsModelExeFuncCallArch920x& funcCall)
 {
     ConstrucModelExeScanSq(funcCallPara, funcCall.scanSq);
-    ConstrucModelExeCheckSqStateArch9201(funcCallPara, funcCall.checkSqState);
+    ConstrucModelExeCheckSqStateArch920x(funcCallPara, funcCall.checkSqState);
     ConstrucModelExeCheckSqDisable(funcCallPara, funcCall.checkSqDisable);
     ConstrucModelExeCheckSqHeadTail(funcCallPara, funcCall.checkSqHeadTail);
     ConstrucModelExeDeactiveSq(funcCall.deactiveSq);
@@ -168,7 +169,7 @@ static void ConstrucModelExeFuncCallArch9201(
     ConstrucModelExeEndInstrr(funcCall.endInstr);
 }
 
-static void ConstructGetSqStateArch9201(const rtStarsStreamActiveFcPara_t& fcPara, RtStarsStreamActiveFcArch9201& fc)
+static void ConstructGetSqStateArch920x(const rtStarsStreamActiveFcPara_t& fcPara, RtStarsStreamActiveFcArch920x& fc)
 {
     constexpr rtStarsCondIsaRegister_t r0 = RT_STARS_COND_ISA_REGISTER_R0;
     constexpr rtStarsCondIsaRegister_t r1 = RT_STARS_COND_ISA_REGISTER_R1;
@@ -183,8 +184,8 @@ static void ConstructGetSqStateArch9201(const rtStarsStreamActiveFcPara_t& fcPar
     ConstructOpImmAndi(r1, r1, 0xFU, RT_STARS_COND_ISA_OP_IMM_FUNC3_ANDI, fc.andiState);
 }
 
-static void ConstructStreamActiveFcArch9201(
-    RtStarsStreamActiveFcArch9201& fc, const rtStarsStreamActiveFcPara_t& fcPara, const uint32_t offsetStart)
+static void ConstructStreamActiveFcArch920x(
+    RtStarsStreamActiveFcArch920x& fc, const rtStarsStreamActiveFcPara_t& fcPara, const uint32_t offsetStart)
 {
     constexpr rtStarsCondIsaRegister_t r0 = RT_STARS_COND_ISA_REGISTER_R0;
     constexpr rtStarsCondIsaRegister_t r1 = RT_STARS_COND_ISA_REGISTER_R1;
@@ -193,22 +194,22 @@ static void ConstructStreamActiveFcArch9201(
     constexpr rtStarsCondIsaRegister_t r4 = RT_STARS_COND_ISA_REGISTER_R4;
     constexpr rtStarsCondIsaRegister_t r5 = RT_STARS_COND_ISA_REGISTER_R5;
 
-    ConstructGetSqStateArch9201(fcPara, fc);
+    ConstructGetSqStateArch920x(fcPara, fc);
 
-    uint64_t offset = (offsetof(RtStarsStreamActiveFcArch9201, err) + offsetStart) / sizeof(uint32_t);
+    uint64_t offset = (offsetof(RtStarsStreamActiveFcArch920x, err) + offsetStart) / sizeof(uint32_t);
     ConstructOpImmAndi(r1, r5, 0x9U, RT_STARS_COND_ISA_OP_IMM_FUNC3_XORI, fc.xoriState9);
     /* if fsm is 9 go to error */
     ConstructSetJumpPcFc(r4, offset, fc.jumpErr);
     ConstructBranch(r5, r0, RT_STARS_COND_ISA_BRANCH_FUNC3_BEQ, static_cast<uint8_t>(offset), fc.branchErr);
 
-    offset = (offsetof(RtStarsStreamActiveFcArch9201, getSqFsmState) + offsetStart) / sizeof(uint32_t);
+    offset = (offsetof(RtStarsStreamActiveFcArch920x, getSqFsmState) + offsetStart) / sizeof(uint32_t);
     ConstructSetJumpPcFc(r4, offset, fc.jumpRetry);
     constexpr uint16_t cycle = 10000U;
     /* else fsm is not 0 go to back */
     ConstructLoop(r1, cycle, static_cast<uint8_t>(offset), fc.retryLoop);
     /* get rtsq enable value */
     ConstructGetSqEnableFcI(r1, fcPara.rtSqEnableAddr, fc.getSqEnable);
-    offset = (offsetof(RtStarsStreamActiveFcArch9201, gotoHead) + offsetStart) / sizeof(uint32_t);
+    offset = (offsetof(RtStarsStreamActiveFcArch920x, gotoHead) + offsetStart) / sizeof(uint32_t);
     ConstructSetJumpPcFc(r4, offset, fc.jumpResetHead);
     // Load dfx ptr and store enable flag
     ConstructLLWI(r3, fcPara.dfxAddr, fc.llwiDfx1);
@@ -218,7 +219,7 @@ static void ConstructStreamActiveFcArch9201(
     ConstructBranch(r1, r0, RT_STARS_COND_ISA_BRANCH_FUNC3_BEQ, static_cast<uint8_t>(offset), fc.branchResetHead);
     /* get rtsq head and tail */
     ConstructGetSqHeadAndTailFcI(r1, r2, fcPara.rtSqTailAddr, fcPara.rtSqHeadAddr, fc.getSqHeadAndTail);
-    offset = (offsetof(RtStarsStreamActiveFcArch9201, err) + offsetStart) / sizeof(uint32_t);
+    offset = (offsetof(RtStarsStreamActiveFcArch920x, err) + offsetStart) / sizeof(uint32_t);
     ConstructSetJumpPcFc(r4, offset, fc.jumpHeadTailErr);
     // Load dfx ptr and store enable flag
     ConstructLLWI(r3, fcPara.dfxAddr, fc.llwiDfx2);
@@ -235,15 +236,15 @@ static void ConstructStreamActiveFcArch9201(
     ConstructAddStreamActiveTimesFcI(r1, r2, fcPara.streamExecTimesAddr, fc.addStreamActiveTimes);
     /* active stream */
     ConstructActiveI(r0, static_cast<uint16_t>(fcPara.sqId), fc.activeSq);
-    offset = (offsetof(RtStarsStreamActiveFcArch9201, end) + offsetStart) / sizeof(uint32_t);
+    offset = (offsetof(RtStarsStreamActiveFcArch920x, end) + offsetStart) / sizeof(uint32_t);
     ConstructSetJumpPcFc(r4, offset, fc.jumpEnd);
     ConstructBranch(r0, r0, RT_STARS_COND_ISA_BRANCH_FUNC3_BEQ, static_cast<uint8_t>(offset), fc.branchEnd);
     ConstructErrorInstr(fc.err);
     ConstructNop(fc.end);
 }
 
-static void ConstructStreamSwitchFcArch9201(
-    rtStarsStreamSwitchFcArch9201_t& fc, const rtStarsStreamSwitchFcPara_t& fcPara)
+static void ConstructStreamSwitchFcArch920x(
+    rtStarsStreamSwitchFcArch920x_t& fc, const rtStarsStreamSwitchFcPara_t& fcPara)
 {
     constexpr rtStarsCondIsaRegister_t r1 = RT_STARS_COND_ISA_REGISTER_R1;
     constexpr rtStarsCondIsaRegister_t r2 = RT_STARS_COND_ISA_REGISTER_R2;
@@ -256,7 +257,7 @@ static void ConstructStreamSwitchFcArch9201(
     ConstructLHWI(r2, static_cast<uint64_t>(fcPara.val), fc.lhwiValue);
     ConstructLLWI(r2, static_cast<uint64_t>(fcPara.val), fc.llwiValue);
 
-    uint64_t offset = offsetof(rtStarsStreamSwitchFcArch9201_t, end) / sizeof(uint32_t);
+    uint64_t offset = offsetof(rtStarsStreamSwitchFcArch920x_t, end) / sizeof(uint32_t);
     ConstructSetJumpPcFc(r3, offset, fc.jumpEnd);
     if (reverseRegisters) {
         ConstructBranch(r2, r1, func3, static_cast<uint8_t>(offset), fc.branchEnd);
@@ -272,14 +273,14 @@ static void ConstructStreamSwitchFcArch9201(
     streamActivePara.rtSqTailAddr = fcPara.rtSqTailAddr;
     streamActivePara.rtSqHeadAddr = fcPara.rtSqHeadAddr;
     streamActivePara.dfxAddr = fcPara.dfxAddr;
-    offset = offsetof(rtStarsStreamSwitchFcArch9201_t, streamActiveFc);
-    ConstructStreamActiveFcArch9201(fc.streamActiveFc, streamActivePara, static_cast<uint32_t>(offset));
+    offset = offsetof(rtStarsStreamSwitchFcArch920x_t, streamActiveFc);
+    ConstructStreamActiveFcArch920x(fc.streamActiveFc, streamActivePara, static_cast<uint32_t>(offset));
     ConstructDeActiveI(r2, fcPara.currentSqId, fc.deactiveCurrentSq);
     ConstructNop(fc.end);
 }
 
-static void ConstructStreamSwitchExFcArch9201(
-    rtStarsStreamSwitchExFcArch9201_t& fc, const rtStarsStreamSwitchExFcPara_t& fcPara)
+static void ConstructStreamSwitchExFcArch920x(
+    rtStarsStreamSwitchExFcArch920x_t& fc, const rtStarsStreamSwitchExFcPara_t& fcPara)
 {
     constexpr rtStarsCondIsaRegister_t r1 = RT_STARS_COND_ISA_REGISTER_R1;
     constexpr rtStarsCondIsaRegister_t r2 = RT_STARS_COND_ISA_REGISTER_R2;
@@ -294,7 +295,7 @@ static void ConstructStreamSwitchExFcArch9201(
     ConstructLoadImm(r1, fcPara.varPtr, loadFunc, fc.loadVar);
     ConstructLoadImm(r2, fcPara.valPtr, loadFunc, fc.loadValue);
 
-    uint64_t offset = offsetof(rtStarsStreamSwitchExFcArch9201_t, end) / sizeof(uint32_t);
+    uint64_t offset = offsetof(rtStarsStreamSwitchExFcArch920x_t, end) / sizeof(uint32_t);
     ConstructSetJumpPcFc(r3, offset, fc.jumpEnd);
     if (reverseRegisters) {
         ConstructBranch(r2, r1, func3, static_cast<uint8_t>(offset), fc.branchEnd);
@@ -310,8 +311,8 @@ static void ConstructStreamSwitchExFcArch9201(
     streamActivePara.rtSqTailAddr = fcPara.rtSqTailAddr;
     streamActivePara.rtSqHeadAddr = fcPara.rtSqHeadAddr;
     streamActivePara.dfxAddr = fcPara.dfxAddr;
-    offset = offsetof(rtStarsStreamSwitchExFcArch9201_t, streamActiveFc);
-    ConstructStreamActiveFcArch9201(fc.streamActiveFc, streamActivePara, static_cast<uint32_t>(offset));
+    offset = offsetof(rtStarsStreamSwitchExFcArch920x_t, streamActiveFc);
+    ConstructStreamActiveFcArch920x(fc.streamActiveFc, streamActivePara, static_cast<uint32_t>(offset));
     ConstructDeActiveI(r2, fcPara.currentSqId, fc.deactiveCurrentSq);
     ConstructNop(fc.end);
 }
@@ -360,7 +361,7 @@ static rtError_t PrepareSqeInfoForStreamSwitchTask(TaskInfo* taskInfo)
     rtError_t ret;
     StreamSwitchTaskInfo* const streamSwitchTask = &(taskInfo->u.streamswitchTask);
     if (streamSwitchTask->isCondEx) {
-        rtStarsStreamSwitchExFcArch9201_t fc = {};
+        rtStarsStreamSwitchExFcArch920x_t fc = {};
         rtStarsStreamSwitchExFcPara_t fcPara = {};
         streamSwitchTask->funCallMemSize = sizeof(fc);
         ret = InitFuncCallParaForStreamSwitchTaskV2(taskInfo, fcPara);
@@ -370,12 +371,12 @@ static rtError_t PrepareSqeInfoForStreamSwitchTask(TaskInfo* taskInfo)
         fcPara.dataType = streamSwitchTask->dataType;
         fcPara.valPtr = streamSwitchTask->valuePtr;
         fcPara.dfxAddr = RtPtrToValue(streamSwitchTask->dfxPtr);
-        ConstructStreamSwitchExFcArch9201(fc, fcPara);
+        ConstructStreamSwitchExFcArch920x(fc, fcPara);
         ret = taskInfo->stream->Device_()->Driver_()->MemCopySync(
             streamSwitchTask->funcCallSvmMem, streamSwitchTask->funCallMemSize, &fc, sizeof(fc),
             RT_MEMCPY_HOST_TO_DEVICE);
     } else {
-        rtStarsStreamSwitchFcArch9201_t fc = {};
+        rtStarsStreamSwitchFcArch920x_t fc = {};
         rtStarsStreamSwitchFcPara_t fcPara = {};
         streamSwitchTask->funCallMemSize = sizeof(fc);
         ret = InitFuncCallParaForStreamSwitchTaskV1(taskInfo, fcPara);
@@ -384,7 +385,7 @@ static rtError_t PrepareSqeInfoForStreamSwitchTask(TaskInfo* taskInfo)
         ERROR_RETURN(ret, "Alloc func call svm failed,retCode=%#x.", ret);
         fcPara.val = static_cast<uint64_t>(streamSwitchTask->value);
         fcPara.dfxAddr = RtPtrToValue(streamSwitchTask->dfxPtr);
-        ConstructStreamSwitchFcArch9201(fc, fcPara);
+        ConstructStreamSwitchFcArch920x(fc, fcPara);
         ret = taskInfo->stream->Device_()->Driver_()->MemCopySync(
             streamSwitchTask->funcCallSvmMem, streamSwitchTask->funCallMemSize, &fc, sizeof(fc),
             RT_MEMCPY_HOST_TO_DEVICE);
@@ -414,7 +415,7 @@ static rtError_t InitFuncCallParaForStreamActiveTask(TaskInfo* taskInfo, rtStars
 
 static rtError_t PrepareSqeInfoForStreamActiveTask(TaskInfo* taskInfo)
 {
-    RtStarsStreamActiveFcArch9201 fc = {};
+    RtStarsStreamActiveFcArch920x fc = {};
     rtStarsStreamActiveFcPara_t fcPara = {};
     StreamActiveTaskInfo* const streamActiveTask = &(taskInfo->u.streamactiveTask);
     streamActiveTask->funCallMemSize = sizeof(fc);
@@ -434,25 +435,25 @@ static rtError_t PrepareSqeInfoForStreamActiveTask(TaskInfo* taskInfo)
     }
     ret = InitFuncCallParaForStreamActiveTask(taskInfo, fcPara);
     ERROR_RETURN(ret, "Init func call para failed,retCode=%#x.", ret);
-    ConstructStreamActiveFcArch9201(fc, fcPara, 0U);
+    ConstructStreamActiveFcArch920x(fc, fcPara, 0U);
     return taskInfo->stream->Device_()->Driver_()->MemCopySync(
         streamActiveTask->funcCallSvmMem, streamActiveTask->funCallMemSize, &fc, sizeof(fc), RT_MEMCPY_HOST_TO_DEVICE);
 }
 
 static rtError_t ReConstructStreamActiveTaskFc(TaskInfo* taskInfo)
 {
-    RtStarsStreamActiveFcArch9201 fc = {};
+    RtStarsStreamActiveFcArch920x fc = {};
     rtStarsStreamActiveFcPara_t fcPara = {};
     rtError_t ret = InitFuncCallParaForStreamActiveTask(taskInfo, fcPara);
     ERROR_RETURN(ret, "Init func call para failed,retCode=%#x.", ret);
     fcPara.dfxAddr = RtPtrToValue(taskInfo->u.streamactiveTask.dfxPtr);
-    ConstructStreamActiveFcArch9201(fc, fcPara, 0U);
+    ConstructStreamActiveFcArch920x(fc, fcPara, 0U);
     return taskInfo->stream->Device_()->Driver_()->MemCopySync(
         taskInfo->u.streamactiveTask.funcCallSvmMem, taskInfo->u.streamactiveTask.funCallMemSize, &fc, sizeof(fc),
         RT_MEMCPY_HOST_TO_DEVICE);
 }
 
-static rtError_t ConstructFuncCallParaForModelExecuteTaskArch9201(
+static rtError_t ConstructFuncCallParaForModelExecuteTaskArch920x(
     TaskInfo* const taskInfo, rtStarsModelExeFuncCallPara_t& funcCallPara)
 {
     Stream* const stream = taskInfo->stream;
@@ -470,7 +471,7 @@ static rtError_t ConstructFuncCallParaForModelExecuteTaskArch9201(
 
 static rtError_t PrepareModelExecuteFuncCall(TaskInfo* taskInfo)
 {
-    RtStarsModelExeFuncCallArch9201 funcCall = {};
+    RtStarsModelExeFuncCallArch920x funcCall = {};
     rtStarsModelExeFuncCallPara_t funcCallPara = {};
     funcCallPara.funcCallInstrSize = sizeof(funcCall);
     funcCallPara.checkSqStateInstrSize = sizeof(funcCall.checkSqState);
@@ -485,16 +486,16 @@ static rtError_t PrepareModelExecuteFuncCall(TaskInfo* taskInfo)
     funcCallPara.errInstrDistance = RtPtrToValue(&(funcCall.errInstr.err)) - RtPtrToValue(&funcCall);
     funcCallPara.deactiveSqGotoRInstrDistance = RtPtrToValue(&(funcCall.deactiveSq.gotoR)) - RtPtrToValue(&funcCall);
 
-    rtError_t ret = ConstructFuncCallParaForModelExecuteTaskArch9201(taskInfo, funcCallPara);
+    rtError_t ret = ConstructFuncCallParaForModelExecuteTaskArch920x(taskInfo, funcCallPara);
     ERROR_RETURN(ret, "construct func call para failed, retCode=%#x.", ret);
-    ConstrucModelExeFuncCallArch9201(funcCallPara, funcCall);
+    ConstrucModelExeFuncCallArch920x(funcCallPara, funcCall);
 
     Model* const model = taskInfo->u.modelExecuteTaskInfo.model;
     ret = memcpy_s(model->GetFuncCallHostMem(), sizeof(funcCall), &funcCall, sizeof(funcCall));
     if (ret != EOK) {
         (void)FreeFuncCallHostMemAndSvmMem(taskInfo);
         RT_LOG(
-            RT_LOG_ERROR, "Failed to copy arch9201 model execute funcCall, size=%zu, retCode=%#x.", sizeof(funcCall),
+            RT_LOG_ERROR, "Failed to copy arch920x model execute funcCall, size=%zu, retCode=%#x.", sizeof(funcCall),
             ret);
         return RT_ERROR_SEC_HANDLE;
     }
@@ -509,7 +510,9 @@ static bool CondIsaTaskRegister()
         &ReConstructStreamActiveTaskFc,
         &PrepareModelExecuteFuncCall,
     };
-    RegCondIsaTaskFuncs(CHIP_CLOUD_V5, &funcs);
+    for (const auto chip : GetArch920xChips()) {
+        RegCondIsaTaskFuncs(chip, &funcs);
+    }
     return true;
 }
 

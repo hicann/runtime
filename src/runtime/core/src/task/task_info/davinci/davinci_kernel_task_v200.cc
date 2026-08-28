@@ -11,7 +11,7 @@
 #include "stars_david.hpp"
 #include "runtime_task_manager.h"
 #include "davinci_kernel_task.h"
-#include "arch9201/aic_aiv_sqe.h"
+#include "arch920x/aic_aiv_sqe.h"
 
 namespace cce {
 namespace runtime {
@@ -107,8 +107,8 @@ static bool DavinciKernelTaskRegister()
 static bool g_davinciKernelTaskRegister = DavinciKernelTaskRegister();
 template void ConfigSqeDieFriendly<RtDavidStarsAicAivKernelSqe>(
     RtDavidStarsAicAivKernelSqe* const, const Stream* const);
-template void ConfigSqeDieFriendly<RtArch9201StarsAicAivKernelSqe>(
-    RtArch9201StarsAicAivKernelSqe* const, const Stream* const);
+template void ConfigSqeDieFriendly<RtArch920xStarsAicAivKernelSqe>(
+    RtArch920xStarsAicAivKernelSqe* const, const Stream* const);
 #endif
 
 } // namespace runtime

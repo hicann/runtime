@@ -237,6 +237,7 @@ set(runtimeut_platform_list
     ${TOP_DIR}/src/runtime/config/nano/dev_info_reg.cc
     ${TOP_DIR}/src/runtime/config/tiny/dev_info_reg.cc
     ${TOP_DIR}/src/runtime/config/arch9201/dev_info_reg.cc
+    ${TOP_DIR}/src/runtime/config/arch9202/dev_info_reg.cc
     ${TOP_DIR}/src/runtime/config/910_B_93/dev_info_proc_func.cc
 )
 

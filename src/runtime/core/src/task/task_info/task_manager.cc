@@ -981,14 +981,14 @@ const std::vector<rtChipType_t>& GetV100Chips()
 
 const std::vector<rtChipType_t>& GetDavidChips()
 {
-    static const std::vector<rtChipType_t> chips = {
-        CHIP_DAVID, CHIP_CLOUD_V5, CHIP_MC62CM12A, CHIP_MC32DM11A, CHIP_ASCEND_350};
+    static const std::vector<rtChipType_t> chips = {CHIP_DAVID,     CHIP_CLOUD_V5,   CHIP_MC62CM12A,
+                                                    CHIP_MC32DM11A, CHIP_ASCEND_350, CHIP_CLOUD_V6};
     return chips;
 }
 
 const std::vector<rtChipType_t>& GetV200Chips()
 {
-    static const std::vector<rtChipType_t> chips = {CHIP_DAVID, CHIP_CLOUD_V5, CHIP_ASCEND_350};
+    static const std::vector<rtChipType_t> chips = {CHIP_DAVID, CHIP_CLOUD_V5, CHIP_ASCEND_350, CHIP_CLOUD_V6};
     return chips;
 }
 
