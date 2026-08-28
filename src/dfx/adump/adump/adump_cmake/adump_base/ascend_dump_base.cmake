@@ -53,7 +53,6 @@ set(ascendDumpBaseSrcList
     ${ADUMP_ADUMP_DIR}/manage/dump_manager/dump_manager_platform.cpp
     ${ADUMP_ADUMP_DIR}/operator/operator_dumper.cpp
     ${ADUMP_ADUMP_DIR}/operator/kernel_dfx_dumper.cpp
-    ${ADUMP_ADUMP_DIR}/operator/dfx_info_parser.cpp
     ${ADUMP_ADUMP_DIR}/printf/dump_printf/dump_printf.cpp
     ${ADUMP_ADUMP_DIR}/printf/dump_printf/dump_printf_platform.cpp
     ${ADUMP_ADUMP_DIR}/printf/fp16_t.cpp
@@ -91,7 +90,6 @@ set(ascendDumpBaseHeaderList
     ${ADUMP_ADUMP_DIR}/manage/dump_manager/
     ${ADUMP_ADUMP_DIR}/operator/
     ${ADUMP_ADUMP_DIR}/operator/operator_preliminary/
-    ${RUNTIME_DIR}/src/runtime/core/inc/dfx
     ${ADUMP_ADUMP_DIR}/printf/
     ${ADUMP_ADUMP_DIR}/printf/dump_printf/
     ${LIBC_SEC_HEADER}
