@@ -25,7 +25,7 @@ typedef struct HcomOpParamDef {
     const char* opType = nullptr;                                  // 算子类型
     HcclDataType datatype = HcclDataType::HCCL_DATA_TYPE_RESERVED; // 数据类型
 
-    HcclReduceOp reduceOp = HcclReduceOp::HCCL_REDUCE_RESERVED;    // 规约类型
+    HcclReduceOp reduceOp = HcclReduceOp::HCCL_REDUCE_RESERVED;    // 归约类型
     u8 deterministic;                                              // 是否为确定性计算
 
     const char* socVersion = nullptr;                              // soc字符串，用于查询devType

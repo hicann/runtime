@@ -2,7 +2,7 @@
 
 ## Overview
 
-This sample demonstrates how to use CANN Runtime `aclrtReduceAsync` API to execute reduction (Reduce) operation. Reduction is a common operation in parallel computing, used to perform sum, maximum, and other operations on array elements.
+This sample demonstrates how to use the CANN Runtime `aclrtReduceAsync` API to perform a reduction (Reduce) operation. Reduction is a common operation in parallel computing, used to perform sum, maximum, and other operations on array elements.
 
 ## Product Support
 

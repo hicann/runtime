@@ -2,7 +2,7 @@
 
 ## 概述
 
-本示例展示了如何使用 CANN Runtime 的 `aclrtReduceAsync` API 执行规约（Reduce）操作。规约是并行计算中的常见操作，用于对数组元素进行求和、求最大值等操作。
+本示例展示了如何使用 CANN Runtime 的 `aclrtReduceAsync` API 执行归约（Reduce）操作。归约是并行计算中的常见操作，用于对数组元素进行求和、求最大值等操作。
 
 ## 产品支持情况
 
