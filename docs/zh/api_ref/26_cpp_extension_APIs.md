@@ -729,7 +729,7 @@ aclError aclrtHostUnregister(T *ptr)
 - Atlas 推理系列产品：不支持
 <!-- end id852 -->
 <!-- npu="910" id853 -->
-- Atlas 训练系列产品：支持
+- Atlas 训练系列产品：不支持
 <!-- end id853 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/26_cpp_extension_APIs_res.md#id13 -->
 
