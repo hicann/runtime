@@ -1283,7 +1283,7 @@ TEST_F(DavidStreamTest, ExternalTaskSqeBuildRejectsInvalidTaskAndSkipsNullSqeBuf
     oldSqeBuffer = stream_->sqeBuffer_;
     taskInfo.stream = stream_;
     stream_->sqeBuffer_ = nullptr;
-    EXPECT_EQ(RebuildExternalTaskSqe(&taskInfo), RT_ERROR_NONE);
+    EXPECT_EQ(RebuildExternalTaskSqe(&taskInfo), RT_ERROR_INVALID_VALUE);
     stream_->sqeBuffer_ = oldSqeBuffer;
     taskInfo.stream = oldStream;
 

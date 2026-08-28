@@ -1690,7 +1690,7 @@ rtError_t DavidStream::HandleTaskUpdate(
     model->SetKernelTaskId(static_cast<uint32_t>(workTask->id), streamId_);
     uint8_t sqeBuffer[SQE_SIZE_MAX] = {};
     TaskSqeInfo sqeInfo = {0ULL, 0ULL};
-    ToConstructDavidSqe(workTask, static_cast<void*>(sqeBuffer), sqeInfo);
+    ToConstructDavidSqe(workTask, RtPtrToPtr<void*>(sqeBuffer), sqeInfo);
 
     // Update the host-side head and tail
     // 这里的pending num再发生错误的时候不需要减1
@@ -1698,14 +1698,14 @@ rtError_t DavidStream::HandleTaskUpdate(
     ERROR_RETURN_MSG_INNER(error, "Add task to stream failed, stream_id=%d, task_id=%u.", streamId_, workTask->id);
 
     const uint64_t sqeSize = static_cast<uint64_t>(sendSqeNum) * SQE_SIZE_UNIT;
+    uint32_t taskPos = workTask->pos;
     const auto ret = memcpy_s(
-        RtPtrToPtr<void*>(sqeBufferBackup + SQE_SIZE_UNIT * workTask->pos), sqeSize, static_cast<void*>(sqeBuffer),
-        sqeSize);
+        RtPtrToPtr<void*>(sqeBufferBackup + SQE_SIZE_UNIT * taskPos), sqeSize, RtPtrToPtr<void*>(sqeBuffer), sqeSize);
     COND_RETURN_ERROR_MSG_INNER(
         ret != EOK, RT_ERROR_INVALID_VALUE,
         "Failed to call memcpy_s, dest=%p, dest_max=%lu, src=%p, sqe_num=%u, retCode=%d, device_id=%u, stream_id=%d, "
         "task_id=%hu, task_type=%d(%s).",
-        sqeBufferBackup + SQE_SIZE_UNIT * workTask->pos, sqeSize, sqeBuffer, sendSqeNum, ret, device_->Id_(), streamId_,
+        sqeBufferBackup + SQE_SIZE_UNIT * taskPos, sqeSize, sqeBuffer, sendSqeNum, ret, device_->Id_(), streamId_,
         workTask->id, workTask->type, workTask->typeName);
 
     RT_LOG(
@@ -1731,14 +1731,15 @@ rtError_t DavidStream::HandleTaskDefault(
     TaskInfo* workTask, CaptureModel* model, uint8_t* sqeBufferBackup, uint32_t sendSqeNum)
 {
     model->SetKernelTaskId(static_cast<uint32_t>(workTask->id), streamId_);
-    // 获取老的sqe
-    uint8_t* oldhostSqeAddr = GetSqeBuffer() + sizeof(rtStarsSqe_t) * workTask->pos;
+    uint8_t* oldhostSqeAddr = GetHostSqeAddrByPos(workTask->pos);
     uint8_t sqeBuffer[SQE_SIZE_MAX] = {};
     TaskSqeInfo sqeInfo = {0ULL, 0ULL};
     if (NeedReBuildSqe(workTask)) {
         ToConstructDavidSqe(workTask, static_cast<void*>(sqeBuffer), sqeInfo);
         oldhostSqeAddr = sqeBuffer;
     }
+    COND_PROC((oldhostSqeAddr == nullptr), return RT_ERROR_INVALID_VALUE);
+
     // Update the host-side head and tail
     rtError_t error = StarsAddTaskToStreamForModelUpdate(workTask, sendSqeNum);
     ERROR_RETURN_MSG_INNER(error, "Add task to stream failed, stream_id=%d, task_id=%u.", streamId_, workTask->id);

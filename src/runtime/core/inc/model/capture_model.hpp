@@ -17,6 +17,7 @@
 #include "stars.hpp"
 #include "device_sq_cq_pool.hpp"
 #include "cond_handle.hpp"
+#include "logic_sq.hpp"
 #include <unordered_set>
 #include <tuple>
 
@@ -24,6 +25,12 @@ namespace cce {
 namespace runtime {
 class Event;
 struct EventResource;
+
+struct StreamRange {
+    uint32_t streamId{UINT32_MAX};
+    uint32_t beginPos{UINT32_MAX};
+    uint32_t num{0U};
+};
 
 enum class RtCaptureModelStatus {
     NONE = 0,            // init status
@@ -224,8 +231,12 @@ public:
     bool IsSoftwareSqEnable(void) const { return isSoftwareSqEnable_; }
 
     void SetSoftwareSqEnable(void) { isSoftwareSqEnable_ = true; }
-
     std::vector<EventResource>* GetCurReplayExternalEventsRes() const { return curReplayExternalEventsRes_; }
+
+    rtError_t BuildLogicSqs();
+    rtError_t AllocAllLogicSqDeviceAddr(const uint32_t additionalSqeNum);
+    std::list<LogicSq*>& GetLogicSqs() { return logicSqs_; }
+    void CollectSourceStreams(std::vector<std::vector<StreamRange>>& sourceGroups) const;
 
     bool IsCaptureModelRunning(void) const { return (refCount_ != 0U); }
 
@@ -272,7 +283,7 @@ public:
     void CaptureModelExecuteFinish(const uint32_t errCode);
 
     // 子模型资源管理相关方法
-    void GetSqCqTotalNum(uint32_t& streamNum);
+    void GetSqCqTotalNum(uint32_t& logicSqNum);
     rtError_t ModelEndGraph();
     rtError_t SendLoadCompleteEndGraph();
     rtError_t AllocSqCqAndBindInternal();
@@ -305,10 +316,10 @@ public:
     rtError_t EndCaptureAdapterProc();
 
 private:
-    rtError_t AllocSqAddr(void) const; // alloc sq addr
-    rtError_t AllocSqCqProc(const uint32_t streamNum) const;
+    rtError_t AllocSqCqProc(const uint32_t logicSqNum) const;
     rtError_t BindSqCq(void);
     rtError_t UnBindSqCq(void);
+    rtError_t ConfigLogicSqTail(void) const;
     rtError_t UpdateStreamActiveTaskFuncCallMem(void);
     void ClearStreamActiveTask(void);
     void ReleaseNotifyListOnDestroy(std::vector<Notify*>& notifyList);
@@ -394,6 +405,7 @@ private:
     rtCondHandle_t condHandle_{nullptr};            // 模型归属的condHandle
     uint16_t rootExeStreamId_{UINT16_MAX};
     uint32_t loadCompleteNotifyId_{0U};             // 用于子模型task error等异常场景
+    std::list<LogicSq*> logicSqs_;                  // 归属本model；模型执行/释放随本model
 };
 } // namespace runtime
 } // namespace cce

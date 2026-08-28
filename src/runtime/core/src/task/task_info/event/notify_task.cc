@@ -462,6 +462,7 @@ void DoCompleteSuccessForNotifyWaitTask(TaskInfo* taskInfo, const uint32_t devId
 
     if ((taskInfo->u.notifywaitTask.isEndGraphNotify) && (taskInfo->u.notifywaitTask.captureModel != nullptr)) {
         ReleaseExternalEventsRes(taskInfo);
+        // 当前 stream均为单算子执行流的 pos，不需要转换为 logicSq hwPos。
         taskInfo->stream->Device_()->DeleteEndGraphNotifyInfo(
             taskInfo->stream->Id_(), taskInfo->u.notifywaitTask.captureModel, taskInfo->pos, taskInfo->errorCode);
     }

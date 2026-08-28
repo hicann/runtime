@@ -27,6 +27,8 @@
 #include "kernel_utils.hpp"
 #include "task.hpp"
 #include "enum_desc.hpp"
+#include "capture_model.hpp"
+#include "logic_sq.hpp"
 
 namespace cce {
 namespace runtime {
@@ -361,23 +363,31 @@ ERROR_RECYCLE:
 rtError_t InternalUpdateNormalKernelTaskForSoftwareSq(
     const Context* const ctx, TaskInfo* const updateTask, Stream* const stm, void* const updateArgHandle)
 {
-    if (updateTask->stream->GetSqBaseAddr() == 0ULL) {
+    if (updateTask->stream->GetDeviceSqeAddrByPos(updateTask->pos) == 0U) {
         /*
-         * normal capture mode场景：SqBaseAddr在CaptureModel::SendSqe()函数中申请，即在CaptureModel执行前申请SqMem
+         * normal capture
+         * mode场景：deviceSqeAddr_在CaptureModel::AllocLogicSqDeviceSqe()函数中申请，即在CaptureModel执行前申请SqMem
          * 但存在update task在capture mode执行前下发的场景，需要提前申请SqMem
          * 预留的CAPTURE_TASK_RESERVED_NUM(32)个SQE用于CaptureModel执行时申请的LoadComplete等SQE
          */
-        const rtError_t ret = updateTask->stream->AllocSoftwareSqAddr(
+
+        LogicSq* const logicSq = updateTask->stream->GetLogicSqByPos(updateTask->pos);
+        COND_RETURN_ERROR(
+            logicSq == nullptr, RT_ERROR_INVALID_VALUE, "Get logic sq failed, device_id=%u, stream_id=%d, task_pos=%u.",
+            ctx->Device_()->Id_(), updateTask->stream->Id_(), updateTask->pos);
+        const rtError_t ret = logicSq->AllocDeviceSqeAddr(
             CAPTURE_TASK_RESERVED_NUM + ctx->Device_()->GetDevProperties().expandStreamRsvTaskNum);
         COND_RETURN_ERROR(
             (ret != RT_ERROR_NONE), ret,
-            "AllocSoftwareSqAddr failed. device_id=%u, stream_id=%d, "
+            "Alloc logic sq device addr failed. device_id=%u, stream_id=%d, "
             "retCode=%#x,",
             ctx->Device_()->Id_(), updateTask->stream->Id_(), ret);
     }
 
-    void* targetAddrOfUpdatedSqe =
-        RtValueToPtr<void*>(updateTask->stream->GetSqBaseAddr() + (updateTask->pos * sizeof(rtStarsSqe_t)));
+    void* targetAddrOfUpdatedSqe = updateTask->stream->GetDeviceSqeAddrByPos(updateTask->pos);
+    COND_RETURN_ERROR(
+        targetAddrOfUpdatedSqe == nullptr, RT_ERROR_INVALID_VALUE,
+        "Get device sqe addr failed, stream_id=%d, task_pos=%u.", updateTask->stream->Id_(), updateTask->pos);
     return InternalUpdateNormalKernelTaskH2DSubmitComm(ctx, updateTask, stm, targetAddrOfUpdatedSqe, updateArgHandle);
 }
 

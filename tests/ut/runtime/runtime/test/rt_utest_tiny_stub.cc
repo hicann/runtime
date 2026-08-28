@@ -50,6 +50,8 @@
 #include "capture_model.hpp"
 #include "capture_adapt.hpp"
 #include "capture_model_utils.hpp"
+#include "logic_sq.hpp"
+#include "logic_sq_manage.hpp"
 #include "jetty_manager.h"
 #include "jetty_pool.h"
 #include "stream_jetty_handler.h"
@@ -1009,7 +1011,6 @@ TEST_F(TinyStubTest, capture_model_sqcq_bind_stub)
     EXPECT_EQ(captureModel.BindSqCq(), RT_ERROR_FEATURE_NOT_SUPPORT);
     EXPECT_EQ(captureModel.BindStreamToModel(), RT_ERROR_FEATURE_NOT_SUPPORT);
     EXPECT_EQ(captureModel.UnBindSqCq(), RT_ERROR_FEATURE_NOT_SUPPORT);
-    EXPECT_EQ(captureModel.AllocSqAddr(), RT_ERROR_FEATURE_NOT_SUPPORT);
     EXPECT_EQ(captureModel.AllocSqCqProc(0), RT_ERROR_FEATURE_NOT_SUPPORT);
 }
 
@@ -1021,6 +1022,39 @@ TEST_F(TinyStubTest, capture_model_execute_common_stub)
     EXPECT_EQ(captureModel.ExecuteCommon(nullptr, 0, 0), RT_ERROR_FEATURE_NOT_SUPPORT);
     EXPECT_EQ(captureModel.GetOriginalCaptureStream(), nullptr);
     captureModel.ReportCacheTrackData();
+}
+
+TEST_F(TinyStubTest, logic_sq_stub)
+{
+    CaptureModel captureModel(RT_MODEL_NORMAL);
+    EXPECT_EQ(captureModel.BuildLogicSqs(), RT_ERROR_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(captureModel.AllocAllLogicSqDeviceAddr(1U), RT_ERROR_FEATURE_NOT_SUPPORT);
+    std::vector<std::vector<StreamRange>> sourceGroups(1U);
+    captureModel.CollectSourceStreams(sourceGroups);
+    EXPECT_TRUE(sourceGroups.empty());
+
+    LogicSq logicSq(nullptr);
+    uint32_t streamId = 0U;
+    uint32_t pos = 0U;
+    EXPECT_FALSE(logicSq.GetStreamIdAndPosByHwPos(0U, streamId, pos));
+    logicSq.SetHwPosMapping(0U, 0U, 0U);
+    EXPECT_EQ(logicSq.SetUp(0U, 0U), RT_ERROR_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(logicSq.AllocDeviceSqeAddr(0U), RT_ERROR_FEATURE_NOT_SUPPORT);
+
+    LogicSqManage manager(nullptr);
+    LogicSq* managedSq = nullptr;
+    EXPECT_EQ(manager.CreateLogicSq(managedSq), RT_ERROR_FEATURE_NOT_SUPPORT);
+    manager.FreeLogicSq(0U);
+    EXPECT_EQ(manager.BindRtsqToLogicSq(0U, 0U), RT_ERROR_NONE);
+    manager.UnbindRtsqFromLogicSq(0U);
+    uint32_t logicSqId = 0U;
+    EXPECT_EQ(manager.GetLogicSqIdByRtsqId(0U, logicSqId), RT_ERROR_STREAM_INVALID);
+    EXPECT_EQ(manager.GetLogicSqById(0U, managedSq), RT_ERROR_STREAM_INVALID);
+
+    uint32_t activeStreamSqId = 0U;
+    EXPECT_EQ(GetActiveStreamSqId(nullptr, activeStreamSqId), RT_ERROR_FEATURE_NOT_SUPPORT);
+    Notify* notify = nullptr;
+    EXPECT_EQ(GetCaptureModelEndGraphNotify(nullptr, nullptr, notify), RT_ERROR_FEATURE_NOT_SUPPORT);
 }
 
 TEST_F(TinyStubTest, stream_capture_stub)

@@ -10,6 +10,10 @@
 #include "capture_model.hpp"
 #include "capture_model_enum_desc.hpp"
 #include "capture_model_utils.hpp"
+#include "cond_handle.hpp"
+#include "logic_sq.hpp"
+#include "logic_sq_utils.hpp"
+#include "logic_sq_manage.hpp"
 #include "context.hpp"
 #include "stream_sqcq_manage.hpp"
 #include "event.hpp"
@@ -125,6 +129,12 @@ CaptureModel::~CaptureModel() noexcept
     condHandles_.clear();
 
     cachedAllSubModels_.clear();
+
+    LogicSqManage* mgr = Context_()->Device_()->GetLogicSqManage();
+    for (LogicSq* sq : logicSqs_) {
+        mgr->FreeLogicSq(sq->Id_());
+    }
+    logicSqs_.clear();
 }
 
 rtError_t CaptureModel::SetNotifyBeforeExecute(Stream* const exeStm, CaptureModel* const captureMdl)
@@ -186,7 +196,6 @@ rtError_t CaptureModel::SetNotifyAfterExecute(Stream* const exeStm, CaptureModel
                 (error != RT_ERROR_NONE), error,
                 "Notify record failed, exe stream_id=%d, notify_id=%d, add stream_id=%d, retCode=%#x.", exeStm->Id_(),
                 notify->GetNotifyId(), streamObj.first->Id_(), error);
-            // added-stream is currently only used in hccl scenarios.
             error = NtyWait(notify, streamObj.first, MAX_UINT32_NUM);
             COND_RETURN_ERROR(
                 (error != RT_ERROR_NONE), error,
@@ -945,7 +954,7 @@ rtError_t CaptureModel::ReleaseNotifyId(uint32_t& releaseNum)
 
     return error;
 }
-rtError_t CaptureModel::AllocSqCqProc(const uint32_t streamNum) const
+rtError_t CaptureModel::AllocSqCqProc(const uint32_t logicSqNum) const
 {
     rtError_t error = RT_ERROR_NONE;
     uint32_t totalResNum = 0U;
@@ -954,18 +963,18 @@ rtError_t CaptureModel::AllocSqCqProc(const uint32_t streamNum) const
     do {
         error = Context_()->CheckStatus();
         ERROR_RETURN(error, "context is abort, status=%#x.", static_cast<uint32_t>(error));
-        error = Context_()->Device_()->GetDeviceSqCqManage()->AllocSqCq(streamNum, sqCqArray_);
+        error = Context_()->Device_()->GetDeviceSqCqManage()->AllocSqCq(logicSqNum, sqCqArray_);
         totalResNum = Context_()->Device_()->GetDeviceSqCqManage()->GetSqCqPoolTotalResNum();
-        COND_PROC(error != RT_ERROR_NONE, errorTmp = Context_()->TryRecycleCaptureModelResource(streamNum, 0U, this));
+        COND_PROC(error != RT_ERROR_NONE, errorTmp = Context_()->TryRecycleCaptureModelResource(logicSqNum, 0U, this));
         COND_RETURN_ERROR(
             (errorTmp != RT_ERROR_NONE), errorTmp, "release resource failed, model_id=%u, retCode=%#x.", Id_(),
             static_cast<uint32_t>(errorTmp));
         COND_PROC(error != RT_ERROR_NONE, (void)mmSleep(1U)); // sleep 1ms
-    } while (((error != RT_ERROR_NONE) && (streamNum <= totalResNum)));
+    } while (((error != RT_ERROR_NONE) && (logicSqNum <= totalResNum)));
 
     COND_RETURN_ERROR(
         (error != RT_ERROR_NONE), error,
-        "sq cq res alloc failed, model_id=%u, alloc num=%u, total res num=%u, retCode=%#x.", Id_(), streamNum,
+        "sq cq res alloc failed, model_id=%u, alloc num=%u, total res num=%u, retCode=%#x.", Id_(), logicSqNum,
         totalResNum, static_cast<uint32_t>(error));
 
     return RT_ERROR_NONE;
@@ -997,13 +1006,13 @@ rtError_t CaptureModel::UpdateNotifyId(Stream* const exeStream)
     return context->UpdateEndGraphTask(origCaptureStream, exeStream, ntf);
 }
 
-void CaptureModel::GetSqCqTotalNum(uint32_t& streamNum)
+void CaptureModel::GetSqCqTotalNum(uint32_t& logicSqNum)
 {
-    streamNum = static_cast<uint32_t>(StreamList_().size());
+    logicSqNum = static_cast<uint32_t>(GetLogicSqs().size());
 
     auto& allSubModels = GetAllSubCaptureModels();
     for (CaptureModel* subModel : allSubModels) {
-        streamNum += static_cast<uint32_t>(subModel->StreamList_().size());
+        logicSqNum += static_cast<uint32_t>(subModel->GetLogicSqs().size());
     }
 
     return;
@@ -1042,14 +1051,7 @@ rtError_t CaptureModel::BuildSqCq(Stream* const exeStream)
             totalSqcqNum, sqcqPoolResNum),
         "Check Stream resource capacity", "Too many streams are captured to the ACL Graph");
 
-    // 阶段一：Notify申请
-    error = SendLoadCompleteEndGraph();
-    if (error != RT_ERROR_NONE) {
-        RT_LOG(
-            RT_LOG_ERROR, "alloc all notify failed, stream_id=%d, model_id=%u, retCode=%#x.", exeStream->Id_(), Id_(),
-            static_cast<uint32_t>(error));
-        return error;
-    }
+    // 阶段一：Notify申请，发送endgraph挪到了endcapture阶段
 
     // 阶段二：SqCq申请
     error = AllocAllSqCq();
@@ -1166,12 +1168,12 @@ rtError_t CaptureModel::BindSqCq(void)
 {
     rtError_t error = RT_ERROR_NONE;
     uint32_t index = 0U;
-    const uint32_t streamNum = static_cast<uint32_t>(StreamList_().size());
+    const uint32_t logicSqNum = static_cast<uint32_t>(logicSqs_.size());
     Device* const dev = Context_()->Device_();
 
     COND_RETURN_ERROR_MSG_INNER(
-        (sqCqNum_ != streamNum), RT_ERROR_INVALID_VALUE,
-        "SQ/CQ numbers must be equal to stream numbers, sq num=%u, stream num=%u.", sqCqNum_, streamNum);
+        (sqCqNum_ != logicSqNum), RT_ERROR_INVALID_VALUE,
+        "SQ/CQ numbers must be equal to logic sq numbers, sq num=%u, logic sq num=%u.", sqCqNum_, logicSqNum);
 
     if (switchInfo_ == nullptr) {
         switchInfo_ = new (std::nothrow) struct sq_switch_stream_info[sqCqNum_]();
@@ -1180,29 +1182,47 @@ rtError_t CaptureModel::BindSqCq(void)
             "new");
     }
 
-    /* bind sq to stream */
-    for (auto stm : StreamList_()) {
+    /* bind sq to logic sq */
+    for (LogicSq* logicSq : logicSqs_) {
+        COND_RETURN_ERROR(
+            logicSq == nullptr, RT_ERROR_INVALID_VALUE, "logic sq is null, device_id=%u, model_id=%u.", dev->Id_(),
+            Id_());
+        Stream* stm = nullptr;
+        error = dev->GetStreamSqCqManage()->GetStreamById(logicSq->GetStreamId(), &stm);
+        COND_RETURN_ERROR(
+            (error != RT_ERROR_NONE) || (stm == nullptr), RT_ERROR_STREAM_NULL,
+            "Get stream by logic sq failed, device_id=%u, model_id=%u, stream_id=%u, logic_sq_id=%u, retCode=%#x.",
+            dev->Id_(), Id_(), logicSq->GetStreamId(), logicSq->Id_(), static_cast<uint32_t>(error));
+
         /* update sq cq info */
         stm->UpdateSqCq(&(sqCqArray_[index]));
+        logicSq->SetRtsqId(static_cast<uint16_t>(sqCqArray_[index].sqId));
+        uint64_t sqIdTmp = logicSq->GetRtsqId();
 
         /* prepare sq switch Info */
         switchInfo_[index].stream_id = static_cast<uint32_t>(stm->Id_());
-        switchInfo_[index].sq_id = stm->GetSqId();
-        switchInfo_[index].sq_depth = stm->GetSqDepth();
-        uint64_t sqIdTmp = stm->GetSqId();
+        switchInfo_[index].sq_id = logicSq->GetRtsqId();
+        switchInfo_[index].sq_depth = logicSq->GetLogicSqDepth();
         // only for A5
-        switchInfo_[index].stream_mem = RtValueToPtr<void*>(stm->GetSqBaseAddr());
+        switchInfo_[index].stream_mem = logicSq->GetDeviceSqeAddr();
+        // sqIdMemAddr_ 已转移给 LogicSq（endcap 时 BuildOneLogicSq 中转移）。
+        LogicSqManage* mgr = dev->GetLogicSqManage();
+        // rtsqId_ 已设置，绑定到 logicSqId（供 CQE 回收路径经 report.sqId 查 logicSq）
+        (void)mgr->BindRtsqToLogicSq(logicSq->GetRtsqId(), logicSq->Id_());
         error = dev->Driver_()->MemCopySync(
-            RtValueToPtr<void*>(stm->GetSqIdMemAddr()), sizeof(uint64_t), RtPtrToPtr<void*>(&(sqIdTmp)),
+            RtValueToPtr<void*>(logicSq->GetSqIdMemAddr()), sizeof(uint64_t), RtPtrToPtr<void*>(&(sqIdTmp)),
             sizeof(uint64_t), RT_MEMCPY_HOST_TO_DEVICE);
         COND_RETURN_ERROR(
             (error != RT_ERROR_NONE), error,
-            "stream set sq id failed, device_id=%u, model_id=%u, stream_id=%u, sqId=%u, retCode=%#x.", dev->Id_(),
-            Id_(), stm->Id_(), stm->GetSqId(), static_cast<uint32_t>(error));
+            "stream set sq id failed, device_id=%u, model_id=%u, stream_id=%u, sqId=%u, logic_sq_id=%u, retCode=%#x.",
+            dev->Id_(), Id_(), stm->Id_(), logicSq->GetRtsqId(), logicSq->Id_(), static_cast<uint32_t>(error));
         index++;
         RT_LOG(
-            RT_LOG_INFO, "stream bind sq, device_id=%u, model_id=%u, stream_id=%d, sqId=%u, sqTail=%u, sqDepth=%u.",
-            dev->Id_(), Id_(), stm->Id_(), stm->GetSqId(), stm->GetCurSqPos(), stm->GetSqDepth());
+            RT_LOG_INFO,
+            "logic sq bind sq, device_id=%u, model_id=%u, stream_id=%d, logic_sq_id=%u, sqId=%u, sqe_num=%u, "
+            "sqDepth=%u.",
+            dev->Id_(), Id_(), stm->Id_(), logicSq->Id_(), stm->GetSqId(), logicSq->GetSqeNum(),
+            logicSq->GetLogicSqDepth());
     }
 
     /* switch stream to sq */
@@ -1215,6 +1235,26 @@ rtError_t CaptureModel::BindSqCq(void)
 
     return error;
 }
+
+rtError_t CaptureModel::ConfigLogicSqTail(void) const
+{
+    rtError_t error = RT_ERROR_NONE;
+    Device* const dev = Context_()->Device_();
+    for (LogicSq* logicSq : logicSqs_) {
+        COND_RETURN_ERROR(
+            logicSq->GetRtsqId() == UINT16_MAX, RT_ERROR_INVALID_VALUE,
+            "Invalid logic sq rtsq id, device_id=%u, model_id=%u, logic_sq_id=%u.", dev->Id_(), Id_(), logicSq->Id_());
+        error = dev->Driver_()->SetSqTail(dev->Id_(), dev->DevGetTsId(), logicSq->GetRtsqId(), logicSq->GetSqeNum());
+        COND_RETURN_ERROR(
+            (error != RT_ERROR_NONE), error,
+            "set logic sq tail failed, device_id=%u, model_id=%u, stream_id=%u, logic_sq_id=%u, sq_id=%u, sq_tail=%u, "
+            "retCode=%#x.",
+            dev->Id_(), Id_(), logicSq->GetStreamId(), logicSq->Id_(), logicSq->GetRtsqId(), logicSq->GetSqeNum(),
+            static_cast<uint32_t>(error));
+    }
+    return RT_ERROR_NONE;
+}
+
 rtError_t CaptureModel::UnBindSqCq(void)
 {
     rtError_t error = RT_ERROR_NONE;
@@ -1246,6 +1286,14 @@ rtError_t CaptureModel::UnBindSqCq(void)
 
     RT_LOG(RT_LOG_INFO, "stream unbind sq success, device_id=%u, model_id=%u, num=%u.", dev->Id_(), Id_(), sqCqNum_);
 
+    LogicSqManage* mgr = dev->GetLogicSqManage();
+    for (LogicSq* logicSq : logicSqs_) {
+        if ((logicSq != nullptr) && (logicSq->GetRtsqId() != UINT16_MAX)) {
+            mgr->UnbindRtsqFromLogicSq(logicSq->GetRtsqId());
+            logicSq->SetRtsqId(UINT16_MAX);
+        }
+    }
+
     /* stream reset sq cq info */
     for (auto stm : StreamList_()) {
         stm->ResetSqCq();
@@ -1274,19 +1322,16 @@ rtError_t CaptureModel::UpdateStreamActiveTaskFuncCallMem(void)
         }
 
         COND_PROC((task->type != TS_TASK_TYPE_STREAM_ACTIVE), return RT_ERROR_TASK_BASE);
-
         StreamActiveTaskInfo* streamActiveTask = &(task->u.streamactiveTask);
-        if (streamActiveTask->activeStream != nullptr) {
-            streamActiveTask->activeStreamSqId = streamActiveTask->activeStream->GetSqId();
-            error = ReConstructStreamActiveTaskFc(task);
-            if (error != RT_ERROR_NONE) {
-                RT_LOG(
-                    RT_LOG_ERROR,
-                    "reconstruct stream active task failed, device_id=%u, "
-                    "model_id=%u, retCode=%#x,.",
-                    Context_()->Device_()->Id_(), Id_(), static_cast<uint32_t>(error));
-                break;
-            }
+        COND_PROC((streamActiveTask->activeStream == nullptr), continue;);
+        error = GetActiveStreamSqId(task, streamActiveTask->activeStreamSqId);
+        COND_PROC(error != RT_ERROR_NONE, break);
+        error = ReConstructStreamActiveTaskFc(task);
+        if (error != RT_ERROR_NONE) {
+            RT_LOG(
+                RT_LOG_ERROR, "reconstruct stream active task failed, device_id=%u, model_id=%u, retCode=%#x.",
+                Context_()->Device_()->Id_(), Id_(), static_cast<uint32_t>(error));
+            break;
         }
     }
 
@@ -1353,23 +1398,6 @@ void CaptureModel::CaptureModelExecuteFinish(const uint32_t errCode)
     return;
 }
 
-rtError_t CaptureModel::AllocSqAddr(void) const
-{
-    const uint32_t deviceId = Context_()->Device_()->Id_();
-
-    for (auto stm : StreamList_()) {
-        rtError_t ret =
-            stm->AllocSoftwareSqAddr(Context_()->Device_()->GetDevProperties().expandStreamAdditionalSqeNum);
-        COND_RETURN_ERROR(
-            (ret != RT_ERROR_NONE), ret,
-            "AllocSoftwareSqAddr failed. device_id=%u, stream_id=%d, "
-            "model_id=%u, retCode=%#x.",
-            deviceId, stm->Id_(), Id_(), static_cast<uint32_t>(ret));
-    }
-
-    return RT_ERROR_NONE;
-}
-
 void CaptureModel::BackupArgHandle(const uint16_t streamId, const uint16_t taskId)
 {
     void* argHandle = GetAndEraseArgHandle(streamId, taskId);
@@ -1385,12 +1413,27 @@ rtError_t CaptureModel::Update(void)
     rtError_t error = ReleaseSqCqAndNotifyId(releaseSqNum, releaseNtyNum);
     ERROR_RETURN(error, "release sq cq failed, model_id=%d.", Id_());
     for (Stream* stm : StreamList_()) {
-        const int32_t streamId = stm->Id_();
         error = stm->ReBuildDriverStreamResource();
-        ERROR_RETURN(error, "free stream id and realloc stream id failed, stream_id=%d, model_id=%d.", streamId, Id_());
+        ERROR_RETURN(
+            error, "free stream id and realloc stream id failed, stream_id=%d, model_id=%d.", stm->Id_(), Id_());
         error = stm->UpdateAllPersistentTask();
-        ERROR_RETURN(error, "stream update failed, stream_id=%d, model_id=%d.", streamId, Id_());
+        ERROR_RETURN(error, "stream update failed, stream_id=%d, model_id=%d.", stm->Id_(), Id_());
+
+        LogicSq* logicSq = stm->GetLogicSqByPos(0U);
+        COND_PROC(logicSq == nullptr, return RT_ERROR_INVALID_VALUE);
+        const uint64_t sqIdMemAddr = logicSq->GetSqIdMemAddr();
+        stm->SetSqIdMemAddr(sqIdMemAddr);
+        logicSq->SetSqIdMemAddr(0UL);
     }
+
+    LogicSqManage* const mgr = Context_()->Device_()->GetLogicSqManage();
+    for (LogicSq* logicSq : logicSqs_) {
+        COND_PROC(logicSq == nullptr, continue);
+        mgr->FreeLogicSq(logicSq->Id_());
+    }
+    logicSqs_.clear();
+    error = BuildLogicSqs();
+    ERROR_RETURN(error, "rebuild logic sq failed, device_id=%u, model_id=%d.", Context_()->Device_()->Id_(), Id_());
 
     SetIsSendSqe(false);
     RT_LOG(
@@ -1585,6 +1628,35 @@ rtError_t CaptureModel::RestoreForSoftwareSqForOneModels(Device* const dev)
             (error != RT_ERROR_NONE), error, "Restore capture stream failed, streamId=%d, deviceId=%u, retCode=%#x.",
             stream->Id_(), dev->Id_(), error);
     }
+
+    SqAddrMemoryOrder* sqAddrMemoryManage = dev->GetSqAddrMemoryManage();
+    LogicSqManage* mgr = dev->GetLogicSqManage();
+    for (LogicSq* logicSq : logicSqs_) {
+        const uint64_t sqIdMemAddr = logicSq->GetSqIdMemAddr();
+        if (sqIdMemAddr != 0UL) {
+            const rtError_t error =
+                dev->Driver_()->MemSetSync(RtValueToPtr<void*>(sqIdMemAddr), sizeof(uint64_t), 0U, sizeof(uint64_t));
+            COND_RETURN_ERROR(
+                (error != RT_ERROR_NONE), error,
+                "Set logic sq id to invalid value failed, modelId=%u, logicSqId=%u, device_id=%u, retCode=%#x.", Id_(),
+                logicSq->Id_(), dev->Id_(), static_cast<uint32_t>(error));
+        }
+        if (logicSq->GetRtsqId() != UINT16_MAX) {
+            mgr->UnbindRtsqFromLogicSq(logicSq->GetRtsqId());
+            logicSq->SetRtsqId(UINT16_MAX);
+        }
+        if (logicSq->GetDeviceSqeAddr() != nullptr) {
+            const rtError_t error = sqAddrMemoryManage->FreeSqAddr(
+                RtPtrToPtr<uint64_t*>(logicSq->GetDeviceSqeAddr()), logicSq->GetSqMemOrderType());
+            COND_RETURN_ERROR(
+                (error != RT_ERROR_NONE), error,
+                "Free logic sq device sqe addr failed, modelId=%u, logicSqId=%u, device_id=%u, retCode=%#x.", Id_(),
+                logicSq->Id_(), dev->Id_(), static_cast<uint32_t>(error));
+            logicSq->SetDeviceSqeAddr(nullptr);
+            logicSq->SetSqMemOrderType(UINT32_MAX);
+        }
+    }
+
     DELETE_A(sqCqArray_);
     sqCqNum_ = 0U;
     DELETE_A(switchInfo_);
@@ -1716,25 +1788,25 @@ rtError_t CaptureModel::SendLoadCompleteEndGraph()
 
 rtError_t CaptureModel::AllocSqCqAndBindInternal()
 {
-    const uint32_t streamNum = static_cast<uint32_t>(StreamList_().size());
-    COND_RETURN_ERROR(streamNum == 0U, RT_ERROR_INVALID_VALUE, "stream num is 0, model_id=%u.", Id_());
+    const uint32_t logicSqNum = static_cast<uint32_t>(GetLogicSqs().size());
+    COND_RETURN_ERROR(logicSqNum == 0U, RT_ERROR_INVALID_VALUE, "logic sq num is 0, model_id=%u.", Id_());
 
     COND_RETURN_INFO(
-        (sqCqArray_ != nullptr) && (sqCqNum_ != 0U), RT_ERROR_NONE, "model_id=%u, sqCqNum_=%u, stream num=%u", Id_(),
-        sqCqNum_, streamNum);
+        (sqCqArray_ != nullptr) && (sqCqNum_ != 0U), RT_ERROR_NONE, "model_id=%u, sqCqNum_=%u, logic sq num=%u", Id_(),
+        sqCqNum_, logicSqNum);
 
-    sqCqArray_ = new (std::nothrow) rtDeviceSqCqInfo_t[streamNum];
+    sqCqArray_ = new (std::nothrow) rtDeviceSqCqInfo_t[logicSqNum];
     COND_RETURN_AND_MSG_OUTER(
         sqCqArray_ == nullptr, RT_ERROR_STREAM_NEW, ErrorCode::EE1013,
-        std::to_string(sizeof(rtDeviceSqCqInfo_t) * streamNum), "new");
+        std::to_string(sizeof(rtDeviceSqCqInfo_t) * logicSqNum), "new");
 
-    rtError_t error = AllocSqCqProc(streamNum);
+    rtError_t error = AllocSqCqProc(logicSqNum);
     if (error != RT_ERROR_NONE) {
         RT_LOG(
             RT_LOG_ERROR,
             "alloc sq resource failed, model_id=%u, required number=%u, current available number=%u, "
             "maximum number=%u, retCode=%#x.",
-            Id_(), streamNum, Context_()->Device_()->GetDeviceSqCqManage()->GetSqCqPoolFreeResNum(),
+            Id_(), logicSqNum, Context_()->Device_()->GetDeviceSqCqManage()->GetSqCqPoolFreeResNum(),
             Context_()->Device_()->GetDeviceSqCqManage()->GetSqCqPoolTotalResNum(), static_cast<uint32_t>(error));
         if ((error == RT_ERROR_DRV_NO_RESOURCES) || (error == RT_ERROR_DEVICE_SQCQ_POOL_RESOURCE_FULL)) {
             RT_LOG_OUTER_MSG_IMPL(
@@ -1744,8 +1816,10 @@ rtError_t CaptureModel::AllocSqCqAndBindInternal()
         return error;
     }
 
-    sqCqNum_ = streamNum;
-    error = AllocSqAddr();
+    sqCqNum_ = logicSqNum;
+    // 走到这里必然是 software-sq（BuildSqCq 入口已过滤），用 AllocAllLogicSqDeviceAddr 替代原 AllocSqAddr
+    // 原 AllocSqAddr 为 stream 级别分配 sqAddr_；software-sq 场景 sqe 在 LogicSq 中，改为给 LogicSq 分配 deviceSqeAddr_
+    error = AllocAllLogicSqDeviceAddr(Context_()->Device_()->GetDevProperties().expandStreamAdditionalSqeNum);
     ERROR_PROC_RETURN_MSG_INNER(error, DELETE_A(sqCqArray_); sqCqNum_ = 0U;
                                 , "alloc sq addr failed, model_id=%u, retCode=%#x.", Id_(),
                                 static_cast<uint32_t>(error));
@@ -1980,6 +2054,96 @@ rtError_t CaptureModel::EndCaptureAdapterProc()
     COND_RETURN_ERROR(
         error != RT_ERROR_NONE, error, "Failed to finalize external refresh table, retCode=%#x.",
         static_cast<uint32_t>(error));
+    const rtError_t logicSqError = BuildLogicSqs();
+    COND_RETURN_ERROR(
+        logicSqError != RT_ERROR_NONE, logicSqError, "Failed to build logic sqs, retCode=%#x.",
+        static_cast<uint32_t>(logicSqError));
+    return RT_ERROR_NONE;
+}
+
+/**
+ * @brief 当前版本：仅遍历当前 model 自身的 headStreams_ + 子级联链收集级联流
+ *        headStreams_ 只含 RT_HEAD_STREAM 流（capture 原始流），级联流用 RT_INVALID_FLAG 不进 headStreams_
+ *        经 childCaptureStream_ 链递归收集级联流，按父→子序排布到一个 sourceGroup
+ * @param sourceGroups 输出的流区间分组，外层=每次级联，内层=该次级联涉及的流区间
+ * @note   Capture 阶段通过 parentCaptureStream_/childCaptureStream_ 保存分段关系，
+ *         父 CaptureStream 末尾已包含级联 Active
+ */
+void CaptureModel::CollectSourceStreams(std::vector<std::vector<StreamRange>>& sourceGroups) const
+{
+    for (Stream* headStm : GetHeadStreamList_()) {
+        std::vector<StreamRange> ranges;
+        Stream* cur = headStm;
+        while (cur != nullptr) {
+            // software-sq下应收集stream上实际下发的sqe数量
+            // 部分任务（如endcapture阶段，在stream add流上下发的notify record）会直接下发到capture stream
+            // 不经过AllocCaptureTaskWithoutLock，captureSqeNum_没包含这部分task
+            const uint32_t sqeNum = cur->GetDelayRecycleTaskSqeNum();
+            StreamRange range;
+            range.streamId = static_cast<uint32_t>(cur->Id_());
+            range.beginPos = 0U;
+            range.num = sqeNum;
+            ranges.push_back(range);
+            cur = cur->GetChildCaptureStream(); // 递归子级联链（父→子方向）
+        }
+        sourceGroups.push_back(std::move(ranges));
+    }
+}
+
+/**
+ * @brief endcap 入口：为当前 model 构造 logicSqs_
+ *        内部分两步：CollectSourceStreams（收集级联流）+ BuildOneLogicSq（排布 sqe + 建双向 map + 级联）
+ *        完成后释放所有 stream 的 sqeBuffer_（sqe 内容已拷贝到 logicSq.hostSqeAddr_）
+ * @note   非 software-sq 场景直接返回（capture 非 software-sq 不走解耦路径）
+ */
+rtError_t CaptureModel::BuildLogicSqs()
+{
+    COND_PROC(!IsSoftwareSqEnable(), return RT_ERROR_NONE);
+    Device* dev = Context_()->Device_();
+    std::vector<std::vector<StreamRange>> sourceGroups;
+    CollectSourceStreams(sourceGroups);
+    for (const auto& streamRanges : sourceGroups) {
+        const rtError_t ret = BuildOneLogicSq(streamRanges, this, dev);
+        if (ret != RT_ERROR_NONE) {
+            RT_LOG(
+                RT_LOG_ERROR, "build logic sq failed, device_id=%u, retCode=%#x.", dev->Id_(),
+                static_cast<uint32_t>(ret));
+            return ret;
+        }
+    }
+    // sqe 内容已拷贝到 logicSq.hostSqeAddr_，释放 stream 的 sqeBuffer_（后续访问改用 hostSqeAddr_）
+    for (Stream* stm : StreamList_()) {
+        uint8_t* buf = stm->GetSqeBuffer();
+        if (buf != nullptr) {
+            delete[] buf;
+            stm->SetSqeBuffer(nullptr);
+        }
+    }
+    return RT_ERROR_NONE;
+}
+
+/**
+ * @brief 为每个 LogicSq 分配 device SQE 内存（deviceSqeAddr_）
+ *        替代原 AllocSqAddr（原为 stream 级别分配 sqAddr_，software-sq 场景 sqe 在 LogicSq 中）
+ *        不做 H2D——H2D 由 SendSqe 的 StreamTaskFill 完成（驱动将 host sqe 填到 device sqe）
+ *        不注册 LogicSqManage——注册推迟到 BindSqCq（此时 rtsqId_ 已设置）
+ * @note   走到这里必然是 software-sq（BuildSqCq 入口已过滤）
+ */
+rtError_t CaptureModel::AllocAllLogicSqDeviceAddr(const uint32_t additionalSqeNum)
+{
+    for (LogicSq* sq : logicSqs_) {
+        if (sq == nullptr) {
+            continue;
+        }
+        const rtError_t ret = sq->AllocDeviceSqeAddr(additionalSqeNum);
+        if (ret != RT_ERROR_NONE) {
+            RT_LOG(
+                RT_LOG_ERROR, "Alloc logic sq device sqe addr failed, device_id=%u, logic_sq_id=%u, retCode=%#x.",
+                Context_()->Device_()->Id_(), sq->Id_(), static_cast<uint32_t>(ret));
+            return ret;
+        }
+    }
+
     return RT_ERROR_NONE;
 }
 

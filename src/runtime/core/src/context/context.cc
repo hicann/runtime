@@ -2111,17 +2111,14 @@ rtError_t Context::ModelAddEndGraph(Model* const mdl, Stream* const stm, const u
             "Adding an EndGraph flag to the stream bound to the model", "stream",
             "Stream " + std::to_string(stm->Id_()) + " must be bound to the model " + std::to_string(mdl->Id_()));
 
-        Notify* notify = const_cast<Notify*>(mdl->GetEndGraphNotify());
-        if (notify == nullptr) {
-            RT_LOG(RT_LOG_INFO, "create notify, stream_id=%d", stm->Id_());
-            notify = new (std::nothrow) Notify(device_->Id_(), device_->DevGetTsId());
-            COND_RETURN_AND_MSG_OUTER(notify == nullptr, RT_ERROR_NOTIFY_NEW, ErrorCode::EE1013, sizeof(Notify), "new");
-            error = notify->Setup();
-            COND_PROC_RETURN_WARN(error != RT_ERROR_NONE, error, DELETE_O(notify), "Notify setup, retCode=%#x", error);
-        } else {
-            error = AllocNotifyIdForSubModel(mdl, notify);
-            COND_RETURN_WARN(error != RT_ERROR_NONE, error, "Alloc notify Id, retCode=%#x", error);
-        }
+        Notify* notify = nullptr;
+        error = GetCaptureModelEndGraphNotify(mdl, stm, notify);
+        COND_RETURN_ERROR(
+            error != RT_ERROR_NONE, error, "Failed to get capture model endgraph notify, model_id=%u, stream_id=%d",
+            mdl->Id_(), stm->Id_());
+        COND_RETURN_ERROR(
+            notify == nullptr, RT_ERROR_NOTIFY_NEW, "Endgraph notify id is null, model_id=%u, stream_id=%d", mdl->Id_(),
+            stm->Id_());
 
         error = notify->Record(stm);
         if (error != RT_ERROR_NONE) {

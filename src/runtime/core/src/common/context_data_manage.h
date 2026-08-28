@@ -23,8 +23,12 @@ class Context;
 
 class ContextDataManage {
 public:
-    ContextDataManage() = default;
-    ~ContextDataManage() { set_.clear(); }
+    ContextDataManage() { (void)mmRWLockInit(&setLock_); }
+    ~ContextDataManage()
+    {
+        set_.clear();
+        (void)mmRWLockDestroy(&setLock_);
+    }
 
     static ContextDataManage& Instance();
 

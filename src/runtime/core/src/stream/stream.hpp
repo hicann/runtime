@@ -14,6 +14,7 @@
 #include <vector>
 #include <mutex>
 #include <set>
+#include <map>
 #include <fstream>
 #include <sstream>
 #include "base.hpp"
@@ -78,6 +79,7 @@ class StreamSqCqManage;
 class EngineStreamObserver;
 class TaskAllocator;
 class CaptureModel;
+class LogicSq;
 
 enum class TagtsSqAllocType : std::uint32_t { SQ_ALLOC_TYPE_RT_DEFAULT = 0U };
 using RtSqAllocType = TagtsSqAllocType;
@@ -767,6 +769,17 @@ public:
 
     void SetParentCaptureStream(Stream* stm) { parentCaptureStream_ = stm; }
 
+    Stream* GetChildCaptureStream() const { return childCaptureStream_; }
+    void SetChildCaptureStream(Stream* const stm) { childCaptureStream_ = stm; }
+
+    uint32_t GetHwPosByPos(const uint32_t pos) const;
+    uint8_t* GetHostSqeAddrByPos(const uint32_t pos) const;
+    void* GetDeviceSqeAddrByPos(const uint32_t pos) const;
+    uint64_t GetSqIdMemAddrByPos(const uint32_t pos) const;
+    LogicSq* GetLogicSqByPos(const uint32_t pos) const;
+    bool GetHwPosByPos(const uint32_t pos, uint32_t& logicSqId, uint32_t& hwPos) const;
+    void SetPosToHwPos(const uint32_t pos, const uint32_t logicSqId, const uint32_t hwPos);
+
     uint32_t GetDavinciTaskHead(void) const { return davinciTaskHead_; }
 
     uint32_t GetDavinciTaskTail(void) const { return davinciTaskTail_; }
@@ -836,7 +849,6 @@ public:
     rtError_t AllocCaptureTaskWithoutLock(tsTaskType_t taskType, uint32_t sqeNum, TaskInfo** task);
     rtError_t AllocCaptureTask(tsTaskType_t taskType, uint32_t sqeNum, TaskInfo** task, bool isNeedLock = true);
     void GetTaskEventIdOrNotifyId(TaskInfo* taskInfo, int32_t& eventId, uint32_t& notifyId, uint64_t& devAddr) const;
-    rtError_t AllocSoftwareSqAddr(uint32_t additionalSqeNum);
     rtError_t AllocAutoSplitSqAddr();
 
     uint64_t GetSqBaseAddr(void) const { return sqAddr_; }
@@ -1121,7 +1133,9 @@ private:
     std::mutex captureLock_;                       // used to mutually exclusive alloc task between begin/end capture
     bool isOrigCaptureStream_{false};
     bool isLastLevelCaptureStream_{true};
-    Stream* parentCaptureStream_{nullptr};                               // 级联场景下的上级流
+    Stream* parentCaptureStream_{nullptr}; // 级联场景下的上级流
+    Stream* childCaptureStream_{nullptr};  // 级联场景下的下级流（与 parentCaptureStream_ 对称）
+    std::map<uint32_t, std::pair<uint32_t, uint32_t>> posToHwPos_;       // pos -> (logicSqId, hwPos)
     rtStreamCaptureMode streamCaptureMode_{RT_STREAM_CAPTURE_MODE_MAX};
     StreamTaskGroupStatus taskGroupStatus_{StreamTaskGroupStatus::NONE}; // only for single-operator stream
     std::unique_ptr<TaskGroup> taskGroup_ = nullptr;                     // only for capture stream

@@ -164,7 +164,7 @@ TEST_F(CloudV2CaptureModelUpdateTest, rtModelTaskSetParams_Success)
     ret = rtModelGetStreams(model, inputStreams, &numStreams);
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
-    uint32_t numTask = 1;
+    uint32_t numTask = 2;
     rtTask_t inputTasks[numTask];
     ret = rtStreamGetTasks(inputStreams[0], inputTasks, &numTask);
     EXPECT_EQ(ret, RT_ERROR_NONE);
@@ -496,7 +496,7 @@ TEST_F(CloudV2CaptureModelUpdateTest, rtModelUpdate_Success)
     ret = rtModelGetStreams(model, inputStreams, &numStreams);
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
-    uint32_t numTask = 1;
+    uint32_t numTask = 2;
     rtTask_t inputTasks[numTask];
     ret = rtStreamGetTasks(inputStreams[0], inputTasks, &numTask);
     EXPECT_EQ(ret, RT_ERROR_NONE);
@@ -553,7 +553,7 @@ TEST_F(CloudV2CaptureModelUpdateTest, rtModelTaskDisable_Success)
     ret = rtModelGetStreams(model, inputStreams, &numStreams);
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
-    uint32_t numTask = 1;
+    uint32_t numTask = 2;
     rtTask_t inputTasks[numTask];
     ret = rtStreamGetTasks(inputStreams[0], inputTasks, &numTask);
     EXPECT_EQ(ret, RT_ERROR_NONE);
@@ -629,7 +629,7 @@ TEST_F(CloudV2CaptureModelUpdateTest, rtModelTaskDisable_failed)
     ret = rtModelGetStreams(model, inputStreams, &numStreams);
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
-    uint32_t numTask = 2;
+    uint32_t numTask = 3;
     rtTask_t inputTasks[numTask];
     ret = rtStreamGetTasks(inputStreams[0], inputTasks, &numTask);
     EXPECT_EQ(ret, RT_ERROR_NONE);
@@ -686,7 +686,7 @@ TEST_F(CloudV2CaptureModelUpdateTest, rtModelTaskDefault_Success)
     ret = rtModelGetStreams(model, inputStreams, &numStreams);
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
-    uint32_t numTask = 2;
+    uint32_t numTask = 3;
     rtTask_t inputTasks[numTask];
     ret = rtStreamGetTasks(inputStreams[0], inputTasks, &numTask);
     EXPECT_EQ(ret, RT_ERROR_NONE);
@@ -765,7 +765,7 @@ TEST_F(CloudV2CaptureModelUpdateTest, rtModelTaskEventParam001)
     EXPECT_EQ(ret, RT_ERROR_NONE);
     EXPECT_EQ(numStreams, 2);
 
-    uint32_t numTask = 4;
+    uint32_t numTask = 5;
     rtTask_t inputTasks[numTask];
     ret = rtStreamGetTasks(inputStreams[1], inputTasks, &numTask);
     EXPECT_EQ(ret, RT_ERROR_NONE);
@@ -841,7 +841,7 @@ TEST_F(CloudV2CaptureModelUpdateTest, rtModelTaskGetValueParam001)
     ret = rtModelGetStreams(model, inputStreams, &numStreams);
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
-    uint32_t numTask = 2;
+    uint32_t numTask = 3;
     rtTask_t inputTasks[numTask];
     ret = rtStreamGetTasks(inputStreams[0], inputTasks, &numTask);
     EXPECT_EQ(ret, RT_ERROR_NONE);
@@ -887,7 +887,7 @@ TEST_F(CloudV2CaptureModelUpdateTest, rtModelTaskSetValueParam001)
     ret = rtModelGetStreams(model, inputStreams, &numStreams);
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
-    uint32_t numTask = 2;
+    uint32_t numTask = 3;
     rtTask_t inputTasks[numTask];
     ret = rtStreamGetTasks(inputStreams[0], inputTasks, &numTask);
     EXPECT_EQ(ret, RT_ERROR_NONE);
@@ -947,7 +947,7 @@ TEST_F(CloudV2CaptureModelUpdateTest, rtModelTaskSetValueParam002)
     ret = rtModelUpdate(model);
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
-    uint32_t numTask = 2;
+    uint32_t numTask = 3;
     rtTask_t inputTasks[numTask];
     ret = rtStreamGetTasks(inputStreams[0], inputTasks, &numTask);
     EXPECT_EQ(ret, RT_ERROR_NONE);

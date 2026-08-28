@@ -46,14 +46,18 @@ rtError_t Context::UpdateEndGraphTask(Stream* const origCaptureStream, Stream* c
     COND_RETURN_ERROR(rtNotifyRecord == nullptr, RT_ERROR_STREAM_CAPTURED, "EndGraph task is NULL");
 
     COND_RETURN_ERROR(
-        rtNotifyRecord->type != TS_TASK_TYPE_NOTIFY_RECORD, RT_ERROR_STREAM_INVALID, "EndGraph task type=%u",
+        rtNotifyRecord->type != TS_TASK_TYPE_NOTIFY_RECORD, RT_ERROR_STREAM_INVALID,
+        "EndGraph stream_id=%d, task_id=%u, task type=%u", rtNotifyRecord->stream->Id_(), rtNotifyRecord->id,
         rtNotifyRecord->type);
     rtNotifyRecord->u.notifyrecordTask.notifyId = ntf->GetNotifyId();
     uint8_t sqeMem[RT_STARS_SQE_LEN] = {0};
     ConstructStarsSqeForNotifyRecordTask(rtNotifyRecord, sqeMem);
 
-    void* targetAddrOfUpdatedSqe =
-        RtValueToPtr<void*>(origCaptureStream->GetSqBaseAddr() + (rtNotifyRecord->pos * sizeof(rtStarsSqe_t)));
+    void* targetAddrOfUpdatedSqe = origCaptureStream->GetDeviceSqeAddrByPos(rtNotifyRecord->pos);
+    COND_RETURN_ERROR(
+        targetAddrOfUpdatedSqe == nullptr, RT_ERROR_INVALID_VALUE,
+        "Get device sqe addr failed, device_id=%u, stream_id=%d, task_pos=%u.", origCaptureStream->Device_()->Id_(),
+        origCaptureStream->Id_(), rtNotifyRecord->pos);
     uint64_t realSize = 0U;
     const rtError_t error = MemcopyAsync(
         targetAddrOfUpdatedSqe, sizeof(rtStarsSqe_t), sqeMem, sizeof(sqeMem), RT_MEMCPY_HOST_TO_DEVICE_EX, exeStream,
@@ -69,9 +73,14 @@ rtError_t Context::UpdateSuModelExeStreamNotifyWaitSqe(TaskInfo* taskInfo, Strea
 {
     Notify* ntf = taskInfo->u.captureConditionTask.condHandle->GetSubModelNotify();
     rtStarsSqe_t sqeMem = {};
+
     ConstructStarsSqeForConditionNotifyWait(taskInfo, RtPtrToPtr<uint8_t*>(&sqeMem));
-    void* targetAddrOfUpdatedSqe =
-        RtValueToPtr<void*>(taskInfo->stream->GetSqBaseAddr() + ((taskInfo->pos + 1U) * sizeof(rtStarsSqe_t)));
+    void* condTaskAddr = taskInfo->stream->GetDeviceSqeAddrByPos(taskInfo->pos);
+    COND_RETURN_ERROR(
+        condTaskAddr == nullptr, RT_ERROR_INVALID_VALUE,
+        "Get device sqe addr failed, device_id=%u, stream_id=%d, task_pos=%u.", taskInfo->stream->Device_()->Id_(),
+        taskInfo->stream->Id_(), taskInfo->pos);
+    void* targetAddrOfUpdatedSqe = RtPtrToPtr<uint8_t*>(condTaskAddr) + SQE_SIZE_UNIT;
 
     uint64_t realSize = 0U;
     auto error = MemcopyAsync(
@@ -602,19 +611,23 @@ rtError_t Context::StreamEndCapture(Stream* const stm, Model** const captureMdl)
         error != RT_ERROR_NONE, error, ClearCaptureModel(this, stm, captureModel),
         "Failed to reset capture events, retCode=%#x.", static_cast<uint32_t>(error));
 
+    Api* const apiObj = Runtime::Instance()->ApiImpl_();
+    // 重新取一下capture 流，前面可能会在capture 流上下任务，导致级联
+    captureStream = stm->GetCaptureStream();
+    NULL_PTR_PROC_RETURN_ERROR(captureStream, RT_ERROR_STREAM_NULL, ClearCaptureModel(this, stm, captureModel));
+    error = apiObj->ModelEndGraph(captureModel, captureStream, 0U);
+    COND_PROC_RETURN_ERROR(
+        error != RT_ERROR_NONE, error, ClearCaptureModel(this, stm, captureModel),
+        "capture model end graph failed, device_id=%u, origin stream_id=%d, "
+        "capture model_id=%u, stream_id=%d, retCode=%#x.",
+        device_->Id_(), stm->Id_(), captureModel->Id_(), captureStream->Id_(), error);
+
     error = captureModelTmp->EndCaptureAdapterProc();
     COND_PROC_RETURN_ERROR(
         error != RT_ERROR_NONE, error, ClearCaptureModel(this, stm, captureModel),
         "Failed to run end capture proc, retCode=%#x.", static_cast<uint32_t>(error));
 
     if (!captureModelTmp->IsSoftwareSqEnable()) {
-        Api* const apiObj = Runtime::Instance()->ApiImpl_();
-        error = apiObj->ModelEndGraph(captureModel, captureStream, 0U);
-        COND_PROC_RETURN_ERROR(
-            error != RT_ERROR_NONE, error, ClearCaptureModel(this, stm, captureModel),
-            "capture model end graph failed, device_id=%u, origin stream_id=%d, "
-            "capture model_id=%u, stream_id=%d, retCode=%#x.",
-            device_->Id_(), stm->Id_(), captureModel->Id_(), captureStream->Id_(), error);
         error = captureModel->LoadComplete();
         COND_PROC_RETURN_ERROR(
             error != RT_ERROR_NONE, error, ClearCaptureModel(this, stm, captureModel),

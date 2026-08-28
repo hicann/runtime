@@ -16,6 +16,8 @@
 #include "aclgraph_cond_task.h"
 #include "model.hpp"
 #include "notify.hpp"
+#include "logic_sq.hpp"
+#include "logic_sq_manage.hpp"
 #include <cstring>
 
 namespace cce {
@@ -334,8 +336,9 @@ void ConstructCaptureConditionJumpBackFc(TaskInfo* const taskInfo, RtStarsCaptur
     // load sqHead to r4
     ConstructLHWI(r4, sqHeadPre, fc.lhwi);
     ConstructLLWI(r4, sqHeadPre, fc.llwi);
-    // load sqid from virtual addr to r3
-    ConstructLoadImm(r3, stm->GetSqIdMemAddr(), RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LD, fc.loadSqId);
+    // capture构造期 logicSq 尚未建立，GetSqIdMemAddrByPos 回退使用 stream 上的 sqIdMemAddr；
+    // 执行前重构时 logicSq 已建立，sqIdMemAddr 已转移到 logicSq，按 logicPos 从 logicSq 获取。
+    ConstructLoadImm(r3, stm->GetSqIdMemAddrByPos(taskInfo->pos), RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LD, fc.loadSqId);
 
     // r4 = r4 < 16
     ConstructOpImmSlli(r4, r4, 16U, RT_STARS_COND_ISA_OP_IMM_FUNC3_SLLI, RT_STARS_COND_ISA_OP_IMM_FUNC7_SLLI, fc.slli);
@@ -409,7 +412,7 @@ rtError_t ConstructCaptureCondTaskPara(TaskInfo* taskInfo, CondHandle* condHandl
     Device* dev = stream->Device_();
 
     para.devAddr = RtPtrToValue(condHandle->GetDevAddr());
-    para.sqIdMemAddr = stream->GetSqIdMemAddr();
+    para.sqIdMemAddr = stream->GetSqIdMemAddrByPos(taskInfo->pos);
     para.headSqArrPtrArrAddr = RtPtrToValue(condTaskInfo->headSqArrPtrArrSvmMem);
     para.modelSqCountArrAddr = RtPtrToValue(condTaskInfo->modelSqCountArrSvmMem);
     para.modelCount = condHandle->GetSubCaptureModels().size();
@@ -437,7 +440,9 @@ rtError_t ConstructCaptureCondTaskPara(TaskInfo* taskInfo, CondHandle* condHandl
     para.sqHeadOffset = STARS_SIMPLE_SQ_HEAD_OFFSET;
     para.sqTailOffset = props.sqTailOffset;
     para.streamSvmPtrArrAddr = RtPtrToValue(condTaskInfo->streamSvmPtrArrSvmMem);
-    const uint32_t taskPos = taskInfo->pos;
+    // software-sq 场景用 hwPos 算 sqHeadNext（endcap 后 logicPosToHwPos_ map 已建立，经 map 转 hwPos）
+    // capture 阶段 map 未建立时回退用 pos（当前版 pos==hwPos，不影响正确性）
+    uint32_t taskPos = stream->GetHwPosByPos(taskInfo->pos);
     const uint32_t sqDepth = stream->GetSqDepth();
     const uint32_t nextTaskPos = taskPos + taskInfo->sqeNum;
     para.sqHeadNext = nextTaskPos % sqDepth;

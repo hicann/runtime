@@ -6313,7 +6313,10 @@ TEST_F(DavidTaskTest, UpdateUbdmaSqeWithJettyInfo_JettyInfoFieldsUpdated)
     taskInfo.u.memcpyAsyncTaskInfo.size = 64;
 
     uint8_t sqeBuffer[SQE_SIZE_MAX] = {};
+    const bool oldSoftwareSqEnable = stream_->isSoftwareSqEnable_;
+    stream_->isSoftwareSqEnable_ = false;
     stream_->sqeBuffer_ = sqeBuffer;
+    stream_->sqeBufferSize_ = sizeof(sqeBuffer);
 
     StreamJettyContext context;
     context.taskWqeCounts.push_back({&taskInfo, 1});
@@ -6329,6 +6332,8 @@ TEST_F(DavidTaskTest, UpdateUbdmaSqeWithJettyInfo_JettyInfoFieldsUpdated)
     EXPECT_EQ(taskInfo.u.memcpyAsyncTaskInfo.ubDma.functionId, 3);
     EXPECT_EQ(taskInfo.u.memcpyAsyncTaskInfo.ubDma.pi, 1);
     stream_->sqeBuffer_ = nullptr;
+    stream_->sqeBufferSize_ = 0U;
+    stream_->isSoftwareSqEnable_ = oldSoftwareSqEnable;
 }
 
 TEST_F(DavidTaskTest, UpdateUbdmaSqeWithJettyInfo_MultipleTasks)
@@ -6342,7 +6347,10 @@ TEST_F(DavidTaskTest, UpdateUbdmaSqeWithJettyInfo_MultipleTasks)
     taskInfo0.u.memcpyAsyncTaskInfo.size = 64;
 
     uint8_t sqeBuffer[SQE_SIZE_MAX] = {};
+    const bool oldSoftwareSqEnable = stream_->isSoftwareSqEnable_;
+    stream_->isSoftwareSqEnable_ = false;
     stream_->sqeBuffer_ = sqeBuffer;
+    stream_->sqeBufferSize_ = sizeof(sqeBuffer);
 
     StreamJettyContext context;
     context.taskWqeCounts.push_back({&taskInfo0, 2});
@@ -6359,6 +6367,8 @@ TEST_F(DavidTaskTest, UpdateUbdmaSqeWithJettyInfo_MultipleTasks)
     EXPECT_EQ(taskInfo0.u.memcpyAsyncTaskInfo.ubDma.functionId, 7);
     EXPECT_EQ(taskInfo0.u.memcpyAsyncTaskInfo.ubDma.pi, 3);
     stream_->sqeBuffer_ = nullptr;
+    stream_->sqeBufferSize_ = 0U;
+    stream_->isSoftwareSqEnable_ = oldSoftwareSqEnable;
 }
 
 TEST_F(DavidTaskTest, UpdateUbdmaSqeWithJettyInfo_PartialNullTaskInfo)
@@ -6371,7 +6381,10 @@ TEST_F(DavidTaskTest, UpdateUbdmaSqeWithJettyInfo_PartialNullTaskInfo)
     taskInfo0.u.memcpyAsyncTaskInfo.copyType = RT_MEMCPY_DIR_H2D;
 
     uint8_t sqeBuffer[SQE_SIZE_MAX] = {};
+    const bool oldSoftwareSqEnable = stream_->isSoftwareSqEnable_;
+    stream_->isSoftwareSqEnable_ = false;
     stream_->sqeBuffer_ = sqeBuffer;
+    stream_->sqeBufferSize_ = sizeof(sqeBuffer);
 
     StreamJettyContext context;
     context.taskWqeCounts.push_back({&taskInfo0, 1});
@@ -6388,6 +6401,8 @@ TEST_F(DavidTaskTest, UpdateUbdmaSqeWithJettyInfo_PartialNullTaskInfo)
     EXPECT_EQ(taskInfo0.u.memcpyAsyncTaskInfo.ubDma.functionId, 2);
     EXPECT_EQ(taskInfo0.u.memcpyAsyncTaskInfo.ubDma.pi, 1);
     stream_->sqeBuffer_ = nullptr;
+    stream_->sqeBufferSize_ = 0U;
+    stream_->isSoftwareSqEnable_ = oldSoftwareSqEnable;
 }
 
 TEST_F(DavidTaskTest, UpdateUbdmaSqeWithJettyInfo_SqBaseAddrUsed)
@@ -6401,7 +6416,10 @@ TEST_F(DavidTaskTest, UpdateUbdmaSqeWithJettyInfo_SqBaseAddrUsed)
     taskInfo.u.memcpyAsyncTaskInfo.size = 64;
 
     uint8_t sqeBuffer[SQE_SIZE_MAX] = {};
+    const bool oldSoftwareSqEnable = stream_->isSoftwareSqEnable_;
+    stream_->isSoftwareSqEnable_ = false;
     stream_->sqeBuffer_ = sqeBuffer;
+    stream_->sqeBufferSize_ = sizeof(sqeBuffer);
     uint64_t sqBaseAddr = stream_->GetSqBaseAddr();
 
     StreamJettyContext context;
@@ -6417,4 +6435,6 @@ TEST_F(DavidTaskTest, UpdateUbdmaSqeWithJettyInfo_SqBaseAddrUsed)
     EXPECT_EQ(taskInfo.u.memcpyAsyncTaskInfo.ubDma.dieId, 1);
     EXPECT_EQ(taskInfo.u.memcpyAsyncTaskInfo.ubDma.functionId, 1);
     stream_->sqeBuffer_ = nullptr;
+    stream_->sqeBufferSize_ = 0U;
+    stream_->isSoftwareSqEnable_ = oldSoftwareSqEnable;
 }

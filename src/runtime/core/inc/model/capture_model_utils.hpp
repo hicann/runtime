@@ -61,6 +61,9 @@ rtError_t SubmitExternalEventRefreshInfo(
 void CommitExternalEventRecords(ExternalEventRefreshInfo* refreshInfo);
 rtError_t SubmitExternalEventTaskCommon(
     Event* evt, Stream* stm, bool isRecord, ExternalPlaceholderSubmitter submitPlaceholder);
+rtError_t GetActiveStreamSqId(TaskInfo* const task, uint32_t& activeStreamSqId);
+rtError_t GetCaptureModelEndGraphNotify(Model* const mdl, Stream* const stm, Notify*& ntf);
+
 } // namespace runtime
 } // namespace cce
 

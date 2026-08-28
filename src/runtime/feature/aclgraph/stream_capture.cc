@@ -56,6 +56,7 @@ void Stream::UpdateCascadeCaptureStreamInfo(Stream* newCaptureStream, Stream* cu
     newCaptureStream->MarkOrigCaptureStream(curCaptureStream->IsOrigCaptureStream());
     newCaptureStream->UpdateCurrentTaskGroup(curCaptureStream->GetCurrentTaskGroup());
     newCaptureStream->SetParentCaptureStream(curCaptureStream);
+    curCaptureStream->SetChildCaptureStream(newCaptureStream);
     curCaptureStream->ResetTaskGroup();
     CaptureModel* captureModel = static_cast<CaptureModel*>(curCaptureStream->Model_());
     if (captureModel != nullptr) {

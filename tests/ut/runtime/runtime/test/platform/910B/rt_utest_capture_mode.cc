@@ -39,6 +39,8 @@
 #include "thread_local_container.hpp"
 #include "runtime/rt_inner_model.h"
 #include "capture_model_utils.hpp"
+#include "logic_sq.hpp"
+#include "logic_sq_manage.hpp"
 #include "stream_jetty_handler.h"
 #undef private
 #undef protected
@@ -2108,6 +2110,9 @@ TEST_F(CloudV2CaptureModelTest, cascade_stream)
     ret = rtStreamEndCapture(stream, &model);
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
+    MOCKER_CPP(&CaptureModel::UpdateNotifyIdAll).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(&CaptureModel::UpdateStreamActiveTaskFuncCallMemAll).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(&CaptureModel::UpdateCondTaskFuncCallMemAll).stubs().will(returnValue(RT_ERROR_NONE));
     ret = rtModelExecute(model, streamExe, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
@@ -2296,13 +2301,13 @@ TEST_F(CloudV2CaptureModelTest, stream_get_tasks_normal)
     uint32_t numTasks = 0;
     error = rtStreamGetTasks(inputStreams[1], nullptr, &numTasks);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    EXPECT_EQ(numTasks, 1);
+    EXPECT_EQ(numTasks, 2);
 
     // input numTasks = actual task num
     rtTask_t* tasks = (rtTask_t*)malloc(sizeof(rtTask_t) * numTasks);
     error = rtStreamGetTasks(inputStreams[1], tasks, &numTasks);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    EXPECT_EQ(numTasks, 1);
+    EXPECT_EQ(numTasks, 2);
 
     // input numTasks < actual task num
     uint32_t numTasksLess = 0;
@@ -2316,7 +2321,7 @@ TEST_F(CloudV2CaptureModelTest, stream_get_tasks_normal)
     rtTask_t* inputTasksLarger = (rtTask_t*)malloc(sizeof(rtTask_t) * numTasksLarger);
     error = rtStreamGetTasks(inputStreams[1], inputTasksLarger, &numTasksLarger);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    EXPECT_EQ(numTasksLarger, 1);
+    EXPECT_EQ(numTasksLarger, 2);
 
     error = rtModelDestroy(model);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -2751,14 +2756,46 @@ TEST_F(CloudV2CaptureModelTest, BuildSqCqStreamResourceCapacityExceeded)
     Stream exeStream(static_cast<Device*>(nullptr), 0U);
     exeStream.streamId_ = 1;
     exeStream.SetContext(ctx);
+    model.streams_.push_back(&exeStream);
+    LogicSq logicSq(device);
     for (uint32_t i = 0U; i <= RT_DEVICE_SQCQ_RES_MAX_NUM; ++i) {
-        model.streams_.push_back(&exeStream);
+        model.logicSqs_.push_back(&logicSq);
     }
     MOCKER_CPP(&CaptureModel::BindJettyForUbdma).stubs().will(returnValue(RT_ERROR_NONE));
 
     EXPECT_EQ(model.BuildSqCq(&exeStream), RT_ERROR_DRV_NO_RESOURCES);
 
     model.streams_.clear();
+    model.logicSqs_.clear();
+}
+
+TEST_F(CloudV2CaptureModelTest, LogicSqHwPosMapping)
+{
+    Context* ctx = Runtime::Instance()->CurrentContext();
+    ASSERT_NE(ctx, nullptr);
+    Device* device = ctx->Device_();
+    ASSERT_NE(device, nullptr);
+    LogicSq logicSq(device);
+    uint32_t streamId = 0U;
+    uint32_t pos = 0U;
+
+    EXPECT_FALSE(logicSq.GetStreamIdAndPosByHwPos(1U, streamId, pos));
+    logicSq.SetHwPosMapping(1U, 2U, 3U);
+    EXPECT_TRUE(logicSq.GetStreamIdAndPosByHwPos(1U, streamId, pos));
+    EXPECT_EQ(streamId, 2U);
+    EXPECT_EQ(pos, 3U);
+
+    LogicSqManage manager(device);
+    LogicSq* managedSq = nullptr;
+    ASSERT_EQ(manager.CreateLogicSq(managedSq), RT_ERROR_NONE);
+    ASSERT_NE(managedSq, nullptr);
+    uint32_t logicSqId = 0U;
+    EXPECT_EQ(manager.BindRtsqToLogicSq(4U, managedSq->Id_()), RT_ERROR_NONE);
+    EXPECT_EQ(manager.GetLogicSqIdByRtsqId(4U, logicSqId), RT_ERROR_NONE);
+    EXPECT_EQ(logicSqId, managedSq->Id_());
+    manager.UnbindRtsqFromLogicSq(4U);
+    EXPECT_EQ(manager.GetLogicSqIdByRtsqId(4U, logicSqId), RT_ERROR_INVALID_VALUE);
+    manager.FreeLogicSq(managedSq->Id_());
 }
 
 TEST_F(CloudV2CaptureModelTest, AllocSqCqAndBindInternalNoResource)
@@ -2773,9 +2810,12 @@ TEST_F(CloudV2CaptureModelTest, AllocSqCqAndBindInternalNoResource)
     Stream stream(static_cast<Device*>(nullptr), 0U);
     stream.SetContext(ctx);
     model.streams_.push_back(&stream);
+    LogicSq logicSq(device);
+    model.logicSqs_.push_back(&logicSq);
     MOCKER_CPP(&CaptureModel::AllocSqCqProc).stubs().will(returnValue(RT_ERROR_DRV_NO_RESOURCES));
 
     EXPECT_EQ(model.AllocSqCqAndBindInternal(), RT_ERROR_DRV_NO_RESOURCES);
 
     model.streams_.clear();
+    model.logicSqs_.clear();
 }

@@ -32,6 +32,8 @@
 #include "engine.hpp"
 #include "task_res_da.hpp"
 #include "stream_sqcq_manage.hpp"
+#include "logic_sq.hpp"
+#include "logic_sq_manage.hpp"
 #include "inner_thread_local.hpp"
 #include "task.hpp"
 #include "aicpu_timeout_manager.h"

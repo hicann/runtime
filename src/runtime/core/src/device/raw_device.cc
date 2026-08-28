@@ -18,6 +18,7 @@
 #include "context_manage.hpp"
 #include "ctrl_stream.hpp"
 #include "stream_sqcq_manage.hpp"
+#include "logic_sq_manage.hpp"
 #include "program.hpp"
 #include "module.hpp"
 #include "api.hpp"
@@ -126,7 +127,6 @@ void RawDevice::ReleaseOwnedObjectsOnDestroy() noexcept
 {
     DELETE_O(eventExpandingPool_);
     DELETE_O(deviceSqCqPool_);
-    DELETE_O(sqAddrMemoryOrder_);
     DELETE_O(eventPool_); // need free all id, may send task.
     DeleteStream(ctrlStream_);
     DELETE_O(ctrlRes_);
@@ -136,6 +136,8 @@ void RawDevice::ReleaseOwnedObjectsOnDestroy() noexcept
     DELETE_O(ubArgLoader_);
     DELETE_O(spmPool_);
     DELETE_O(streamSqCqManage_);
+    DELETE_O(logicSqManage_);
+    DELETE_O(sqAddrMemoryOrder_);
     DELETE_O(kernelMemPoolMng_);
     DELETE_O(taskFactory_);
     DELETE_O(modulesAllocator_);
@@ -724,9 +726,21 @@ rtError_t RawDevice::Init()
         sizeof(StreamSqCqManage), "new");
     RT_LOG(RT_LOG_INFO, "new StreamSqCqManage ok, Runtime_alloc_size %zu(bytes)", sizeof(StreamSqCqManage));
 
+    if (IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_MODEL_ACL_GRAPH_SOFTWARE_ENABLE)) {
+        logicSqManage_ = new (std::nothrow) LogicSqManage(this);
+        COND_GOTO_MSG_OUTER(
+            logicSqManage_ == nullptr, STREAM_TABLE_FREE, error, RT_ERROR_MEMORY_ALLOCATION, ErrorCode::EE1013,
+            sizeof(LogicSqManage), "new");
+        RT_LOG(
+            RT_LOG_INFO, "new LogicSqManage ok, device_id=%u, Runtime_alloc_size %zu(bytes)", Id_(),
+            sizeof(LogicSqManage));
+    } else {
+        logicSqManage_ = nullptr;
+    }
+
     taskFactory_ = new (std::nothrow) TaskFactory(this);
     COND_GOTO_MSG_OUTER(
-        taskFactory_ == nullptr, STREAM_TABLE_FREE, error, RT_ERROR_MEMORY_ALLOCATION, ErrorCode::EE1013,
+        taskFactory_ == nullptr, LOGIC_SQ_FREE, error, RT_ERROR_MEMORY_ALLOCATION, ErrorCode::EE1013,
         sizeof(TaskFactory), "new");
     RT_LOG(RT_LOG_INFO, "New taskFactory ok, Runtime_alloc_size %zu(bytes)", sizeof(TaskFactory));
 
@@ -797,6 +811,8 @@ KERNEL_POOL_FREE:
     DELETE_O(kernelMemPoolMng_);
 TASK_FACTORY_FREE:
     DELETE_O(taskFactory_);
+LOGIC_SQ_FREE:
+    DELETE_O(logicSqManage_);
 STREAM_TABLE_FREE:
     DELETE_O(streamSqCqManage_);
 LOADER_FREE:

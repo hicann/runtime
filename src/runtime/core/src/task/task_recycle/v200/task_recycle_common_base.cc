@@ -34,6 +34,8 @@
 #include "stream.hpp"
 #include "stream_david.hpp"
 #include "task.hpp"
+#include "logic_sq_manage.hpp"
+#include "logic_sq.hpp"
 
 namespace cce {
 namespace runtime {

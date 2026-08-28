@@ -641,5 +641,79 @@ rtError_t SubmitExternalEventTaskCommon(
     return RT_ERROR_NONE;
 }
 
+rtError_t GetActiveStreamSqId(TaskInfo* const task, uint32_t& activeStreamSqId)
+{
+    uint32_t logicSqId = UINT32_MAX;
+    uint32_t activeSqeHwPos = UINT32_MAX;
+    COND_RETURN_ERROR(
+        !task->stream->GetHwPosByPos(task->pos, logicSqId, activeSqeHwPos), RT_ERROR_INVALID_VALUE,
+        "No logic sq mapping for stream active task, stream_id=%d, task_id=%hu, task_pos=%u.", task->stream->Id_(),
+        task->id, task->pos);
+
+    LogicSqManage* mgr = task->stream->Context_()->Device_()->GetLogicSqManage();
+    LogicSq* logicSq = nullptr;
+    COND_RETURN_ERROR(
+        (mgr->GetLogicSqById(logicSqId, logicSq) != RT_ERROR_NONE) || (logicSq == nullptr), RT_ERROR_INVALID_VALUE,
+        "Get logic sq failed, stream_id=%d, task_id=%hu, task_pos=%u, logic_sq_id=%u.", task->stream->Id_(), task->id,
+        task->pos, logicSqId);
+
+    COND_RETURN_ERROR(
+        !logicSq->HasActiveSqe(), RT_ERROR_INVALID_VALUE,
+        "Check stream active task failed, stream_id=%d, task_id=%hu, task_pos=%u, logic_sq_id=%u, "
+        "next logic_sq_id=%u, hw_pos=%u.",
+        task->stream->Id_(), task->id, task->pos, logicSqId, logicSq->GetNextLogicSqId(), activeSqeHwPos);
+
+    LogicSq* nextLogicSq = nullptr;
+    const uint32_t nextLogicSqId = logicSq->GetNextLogicSqId();
+    COND_RETURN_ERROR(
+        (mgr->GetLogicSqById(nextLogicSqId, nextLogicSq) != RT_ERROR_NONE) || (nextLogicSq == nullptr) ||
+            (nextLogicSq->GetRtsqId() == UINT16_MAX),
+        RT_ERROR_INVALID_VALUE, "Get next logic sq failed, logic_sq_id=%u, next_logic_sq_id=%u.", logicSqId,
+        nextLogicSqId);
+    activeStreamSqId = nextLogicSq->GetRtsqId();
+
+    return RT_ERROR_NONE;
+}
+
+rtError_t GetCaptureModelEndGraphNotify(Model* const mdl, Stream* const stm, Notify*& ntf)
+{
+    rtError_t error = RT_ERROR_NONE;
+    CaptureModel* const captureModel = dynamic_cast<CaptureModel*>(mdl);
+    Notify* notify = mdl->GetEndGraphNotify();
+    if (notify == nullptr) {
+        RT_LOG(
+            RT_LOG_INFO, "create notify, device_id=%u, model_id=%u, stream_id=%d", stm->Device_()->Id_(), mdl->Id_(),
+            stm->Id_());
+        notify = new (std::nothrow) Notify(stm->Device_()->Id_(), stm->Device_()->DevGetTsId());
+        COND_RETURN_AND_MSG_OUTER(notify == nullptr, RT_ERROR_NOTIFY_NEW, ErrorCode::EE1013, sizeof(Notify), "new");
+
+        COND_PROC_RETURN_ERROR(
+            (mdl->GetModelType() != RT_MODEL_NORMAL) && (captureModel == nullptr), RT_ERROR_INVALID_VALUE,
+            DELETE_O(notify), "Invalid capture model, device_id=%u, model_id=%u, stream_id=%d", stm->Device_()->Id_(),
+            mdl->Id_(), stm->Id_());
+
+        const bool isSoftwareSqCaptureModel = (captureModel != nullptr) && captureModel->IsSoftwareSqEnable();
+        if (isSoftwareSqCaptureModel) {
+            // software-sq capture model只申请创建notify实例，不申请id资源。
+            error = notify->SetupWithoutAllocNtyId();
+            COND_PROC_RETURN_WARN(
+                error != RT_ERROR_NONE, error, DELETE_O(notify),
+                "Notify setup without alloc id, device_id=%u, model_id=%u, stream_id=%d, retCode=%#x",
+                stm->Device_()->Id_(), mdl->Id_(), stm->Id_(), error);
+        } else {
+            error = notify->Setup();
+            COND_PROC_RETURN_WARN(
+                error != RT_ERROR_NONE, error, DELETE_O(notify),
+                "Notify setup, device_id=%u, model_id=%u, stream_id=%d, retCode=%#x", stm->Device_()->Id_(), mdl->Id_(),
+                stm->Id_(), error);
+        }
+    }
+
+    COND_PROC(captureModel != nullptr, captureModel->SetIsNeedUpdateEndGraph(true););
+
+    ntf = notify;
+    return error;
+}
+
 } // namespace runtime
 } // namespace cce

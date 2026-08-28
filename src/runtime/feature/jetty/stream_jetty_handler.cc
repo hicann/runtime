@@ -335,18 +335,24 @@ rtError_t StreamJettyHandler::UpdateUbdmaSqeWithJettyInfo(
         taskInfo->isNoRingbuffer = 1U;
         ConstructDavidAsyncUbDbSqe(taskInfo, davidSqe);
         davidSqe->phSqe.header.headUpdate = GetHeadUpdateFlag(taskId);
-        const errno_t rc = memcpy_s(
-            RtPtrToPtr<void*>(RtPtrToValue(stream->GetSqeBuffer()) + SQE_SIZE_UNIT * taskInfo->pos), SQE_SIZE_UNIT,
-            RtPtrToPtr<void*>(davidSqe), SQE_SIZE_UNIT);
+        uint8_t* hostSqeAddr = stream->GetHostSqeAddrByPos(taskInfo->pos);
+        COND_RETURN_ERROR(
+            hostSqeAddr == nullptr, RT_ERROR_INVALID_VALUE,
+            "Get host sqe addr failed, stream_id=%d, task_id=%u, task_pos=%u.", stream->Id_(), taskId, taskInfo->pos);
+        const errno_t rc = memcpy_s(hostSqeAddr, SQE_SIZE_UNIT, RtPtrToPtr<void*>(davidSqe), SQE_SIZE_UNIT);
         COND_RETURN_ERROR(
             rc != EOK, RT_ERROR_SEC_HANDLE, "memcpy_s failed for SQE update, stream_id=%d, task_id=%u, rc=%d.",
             stream->Id_(), taskId, static_cast<int32_t>(rc));
 
         // sqe已经拷贝到device场景下,需要做同步拷贝
         if (stream->Model_() != nullptr && stream->Model_()->IsSendSqe()) {
+            void* deviceSqeAddr = stream->GetDeviceSqeAddrByPos(taskInfo->pos);
+            COND_RETURN_ERROR(
+                deviceSqeAddr == nullptr, RT_ERROR_INVALID_VALUE,
+                "Get device sqe addr failed, stream_id=%d, task_id=%u, task_pos=%u.", stream->Id_(), taskId,
+                taskInfo->pos);
             error = driver->MemCopySync(
-                RtValueToPtr<void*>(stream->GetSqBaseAddr() + (taskInfo->pos * SQE_SIZE_UNIT)), SQE_SIZE_UNIT,
-                RtPtrToPtr<void*>(davidSqe), SQE_SIZE_UNIT, RT_MEMCPY_HOST_TO_DEVICE);
+                deviceSqeAddr, SQE_SIZE_UNIT, RtPtrToPtr<void*>(davidSqe), SQE_SIZE_UNIT, RT_MEMCPY_HOST_TO_DEVICE);
             COND_RETURN_ERROR(
                 error != RT_ERROR_NONE, error, "Copy sqe to device failed, stream_id=%d, retCode=%#x.", stream->Id_(),
                 error);

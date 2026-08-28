@@ -301,6 +301,9 @@ set(libruntime_v200_v201_common_src_files
     ${RUNTIME_FEATURE_DIR}/aclgraph/v200/capture_adapt_v200.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/v200/capture_model_adapt_v200.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/capture_model.cc
+    ${RUNTIME_FEATURE_DIR}/aclgraph/logic_sq.cc
+    ${RUNTIME_FEATURE_DIR}/aclgraph/logic_sq_utils.cc
+    ${RUNTIME_FEATURE_DIR}/aclgraph/logic_sq_manage.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/cond_handle.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/capture_model_utils.cc
     ${RUNTIME_CORE_DIR}/src/kernel/arg_loader/arg_loader_ub.cc

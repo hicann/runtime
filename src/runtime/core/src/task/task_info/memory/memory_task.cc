@@ -488,7 +488,8 @@ rtError_t UpdateTaskD2HSubmit(const TaskInfo* const updateTask, void* sqeAddr, S
     rtError_t errorReason;
     const size_t allocSize = sizeof(rtStarsSqe_t);
     const uint32_t sqId = updateTask->stream->GetSqId();
-    const uint32_t pos = updateTask->pos;
+    // software-sq 场景用 hwPos
+    uint32_t pos = updateTask->stream->GetHwPosByPos(updateTask->pos);
 
     TaskInfo* rtMemcpyAsyncTask = stm->AllocTask(&submitTask, TS_TASK_TYPE_MEMCPY, errorReason);
     NULL_PTR_RETURN_MSG(rtMemcpyAsyncTask, errorReason);

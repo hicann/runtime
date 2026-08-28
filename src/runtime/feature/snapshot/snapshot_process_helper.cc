@@ -19,6 +19,7 @@
 #include "model.hpp"
 #include "jetty_manager.h"
 #include "aicpu_timeout_manager.h"
+#include "logic_sq_manage.hpp"
 
 namespace cce {
 namespace runtime {
@@ -178,7 +179,6 @@ rtError_t SnapShotAclGraphRestore(Device* const dev)
         }
         modelLock.Unlock();
     }
-
     err = dev->RestoreSqCqPool();
     ERROR_RETURN(err, "Restore SqCqPool failed, deviceId=%u, retCode=%#x!", deviceId, static_cast<uint32_t>(err));
     return RT_ERROR_NONE;

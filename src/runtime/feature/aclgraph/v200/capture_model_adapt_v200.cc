@@ -17,6 +17,8 @@
 #include "stream_c.hpp"
 #include "stream_jetty_handler.h"
 #include "drv/driver.hpp"
+#include "logic_sq.hpp"
+#include "logic_sq_manage.hpp"
 #include <securec.h>
 #include <vector>
 #include <algorithm>
@@ -40,7 +42,7 @@ rtError_t CaptureModel::BindSqCqAndSendSqe(void)
     ERROR_RETURN(
         error, "Failed to bind stream to model, model_id=%u, retCode=%#x.", Id_(), static_cast<uint32_t>(error));
 
-    error = ConfigSqTail();
+    error = ConfigLogicSqTail();
     ERROR_RETURN(error, "Failed to configure SQ tail, model_id=%u, retCode=%#x.", Id_(), static_cast<uint32_t>(error));
 
     return error;
@@ -166,20 +168,21 @@ rtError_t RebuildExternalTaskSqe(TaskInfo* const task)
     if ((task == nullptr) || (task->stream == nullptr)) {
         return RT_ERROR_INVALID_VALUE;
     }
-    if (task->stream->GetSqeBuffer() == nullptr) {
-        return RT_ERROR_NONE;
-    }
-    const uint32_t sendSqeNum = GetSendDavidSqeNum(task);
-    const size_t sqeOffset = sizeof(rtDavidSqe_t) * static_cast<size_t>(task->pos);
-    const size_t sqeSize = sizeof(rtDavidSqe_t) * static_cast<size_t>(sendSqeNum);
-    if ((sqeOffset + sqeSize) > task->stream->GetSqeBufferSize()) {
+
+    uint8_t* sqeAddr = task->stream->GetHostSqeAddrByPos(task->pos);
+    if (sqeAddr == nullptr) {
+        RT_LOG(
+            RT_LOG_ERROR, "Get host sqe addr failed, stream_id=%d, task_id=%u, task_pos=%u", task->stream->Id_(),
+            task->id, task->pos);
         return RT_ERROR_INVALID_VALUE;
     }
+
+    const uint32_t sendSqeNum = GetSendDavidSqeNum(task);
+    const size_t sqeSize = sizeof(rtDavidSqe_t) * static_cast<size_t>(sendSqeNum);
     std::vector<rtDavidSqe_t> sqes(sendSqeNum);
     TaskSqeInfo sqeInfo = {0ULL, 0ULL};
     ToConstructDavidSqe(task, sqes.data(), sqeInfo);
-    void* const sqeBuffer = RtValueToPtr<void*>(RtPtrToValue(task->stream->GetSqeBuffer()) + sqeOffset);
-    const errno_t ret = memcpy_s(sqeBuffer, sqeSize, sqes.data(), sqeSize);
+    const errno_t ret = memcpy_s(sqeAddr, sqeSize, sqes.data(), sqeSize);
     if (ret != EOK) {
         return RT_ERROR_INVALID_VALUE;
     }

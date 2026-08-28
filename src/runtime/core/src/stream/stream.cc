@@ -37,6 +37,8 @@
 #include "stream_task.h"
 #include "error_code.h"
 #include "capture_model.hpp"
+#include "logic_sq.hpp"
+#include "logic_sq_manage.hpp"
 #include "task_david.hpp"
 #include "stub_task.hpp"
 #include "device_error_info.hpp"
@@ -3425,10 +3427,10 @@ rtError_t Stream::StarsAddTaskToStream(TaskInfo* const tsk, const uint32_t sendS
             device_->GetDevProperties().maxTaskNumPerHugeStream :
             GetSqDepth();
     const uint32_t newPosTail = (posTail + sendSqeNum) % rtsqDepth;
-
     if (bind) {
         // If model stream is already full, return STREAM_FULL. PendingNum add 1 in TaskSubmited. Because the task will
         // not be sent, pendingNum sub 1 is performed.
+
         COND_PROC_RETURN_AND_MSG_OUTER(
             posTail + sendSqeNum >= rtsqDepth, RT_ERROR_STREAM_FULL, ErrorCode::EE1019, pendingNum_.Sub(1),
             "Adding task to stream",
@@ -3558,25 +3560,27 @@ rtError_t Stream::HandleTaskDefault(
 {
     model->SetKernelTaskId(static_cast<uint32_t>(workTask->id), streamId_);
     // 获取老的sqe
-    uint8_t* oldhostSqeAddr = sqeBuffer_ + sizeof(rtStarsSqe_t) * workTask->pos;
+    uint8_t* oldhostSqeAddr = GetHostSqeAddrByPos(workTask->pos);
     rtTsCommand_t cmdLocal = {};
     if (NeedReBuildSqe(workTask)) {
         cmdLocal.cmdType = RT_TASK_COMMAND_TYPE_STARS_SQE;
         ToConstructSqe(workTask, cmdLocal.cmdBuf.u.starsSqe);
         oldhostSqeAddr = RtPtrToPtr<uint8_t*, rtStarsSqe_t*>(cmdLocal.cmdBuf.u.starsSqe);
     }
+    COND_PROC((oldhostSqeAddr == nullptr), return RT_ERROR_INVALID_VALUE);
     // Update the host-side head and tail
     const rtError_t error = StarsAddTaskToStreamForModelUpdate(workTask, sendSqeNum);
     ERROR_RETURN_MSG_INNER(error, "Add task to stream failed, stream_id=%d, task_id=%u.", streamId_, workTask->id);
 
+    const uint32_t taskPos = workTask->pos;
     const auto ret = memcpy_s(
-        RtPtrToPtr<void*>(sqeBufferBackup + sizeof(rtStarsSqe_t) * workTask->pos), sendSqeNum * sizeof(rtStarsSqe_t),
+        RtPtrToPtr<void*>(sqeBufferBackup + sizeof(rtStarsSqe_t) * taskPos), sendSqeNum * sizeof(rtStarsSqe_t),
         RtPtrToPtr<void*>(oldhostSqeAddr), sendSqeNum * sizeof(rtStarsSqe_t));
     COND_RETURN_ERROR_MSG_INNER(
         ret != EOK, RT_ERROR_INVALID_VALUE,
         "Failed to call memcpy_s, dest=%p, dest_max=%zu, src=%p, count=%zu, retCode=%d, device_id=%u, stream_id=%d, "
         "task_id=%hu, task_type=%d(%s).",
-        sqeBufferBackup + sizeof(rtStarsSqe_t) * workTask->pos, sendSqeNum * sizeof(rtStarsSqe_t), oldhostSqeAddr,
+        sqeBufferBackup + sizeof(rtStarsSqe_t) * taskPos, sendSqeNum * sizeof(rtStarsSqe_t), oldhostSqeAddr,
         sendSqeNum * sizeof(rtStarsSqe_t), ret, device_->Id_(), streamId_, workTask->id, workTask->type,
         workTask->typeName);
     RT_LOG(
@@ -3600,8 +3604,11 @@ rtError_t Stream::UpdateAllPersistentTask()
     Model* mdl = Model_();
     CaptureModel* captureModel = dynamic_cast<CaptureModel*>(mdl);
     // 存在融合后sqe变多的场景，这里的buffer是按内存64字节逐个访问，为了提升性能不做memset
-    std::unique_ptr<uint8_t[]> sqeBufferBackup(new (std::nothrow) uint8_t[sqeBufferSize_]);
-    COND_RETURN_AND_MSG_OUTER(!sqeBufferBackup, RT_ERROR_STREAM_NEW, ErrorCode::EE1013, sqeBufferSize_, "new");
+    if (sqeBuffer_ == nullptr) {
+        sqeBufferSize_ = STREAM_SQE_BUFFER_MAX_SIZE;
+        sqeBuffer_ = new (std::nothrow) uint8_t[sqeBufferSize_];
+        COND_RETURN_AND_MSG_OUTER(sqeBuffer_ == nullptr, RT_ERROR_STREAM_NEW, ErrorCode::EE1013, sqeBufferSize_, "new");
+    }
 
     uint32_t totalSendSqeNum = 0U;
     rtError_t error = RT_ERROR_NONE;
@@ -3637,14 +3644,14 @@ rtError_t Stream::UpdateAllPersistentTask()
         }
         switch (workTask->updateFlag) {
             case static_cast<uint8_t>(TaskUpdateFlag::RT_TASK_UPDATE):
-                error = HandleTaskUpdate(workTask, captureModel, sqeBufferBackup.get(), sendSqeNum);
+                error = HandleTaskUpdate(workTask, captureModel, RtPtrToPtr<uint8_t*>(sqeBuffer_), sendSqeNum);
                 totalSendSqeNum += sendSqeNum;
                 break;
             case static_cast<uint8_t>(TaskUpdateFlag::RT_TASK_DISABLE):
                 error = HandleTaskDisable(workTask, captureModel);
                 break;
             case static_cast<uint8_t>(TaskUpdateFlag::RT_TASK_KEEP):
-                error = HandleTaskDefault(workTask, captureModel, sqeBufferBackup.get(), sendSqeNum);
+                error = HandleTaskDefault(workTask, captureModel, RtPtrToPtr<uint8_t*>(sqeBuffer_), sendSqeNum);
                 totalSendSqeNum += sendSqeNum;
                 break;
             default:
@@ -3667,27 +3674,7 @@ rtError_t Stream::UpdateAllPersistentTask()
         return RT_ERROR_NONE;
     }
 
-    if (totalSendSqeNum > 0U) {
-        ret = memcpy_s(
-            RtPtrToPtr<void*>(sqeBuffer_), totalSendSqeNum * sizeof(rtStarsSqe_t), sqeBufferBackup.get(),
-            totalSendSqeNum * sizeof(rtStarsSqe_t));
-        COND_RETURN_ERROR_MSG_INNER(
-            ret != EOK, RT_ERROR_STREAM_NEW,
-            "Failed to call memcpy_s to copy sqebuffer, dest=%p, dest_max=%zu, src=%p, count=%zu, retCode=%d, "
-            "device_id=%u, stream_id=%d, totalSendSqeNum=%u.",
-            sqeBuffer_, totalSendSqeNum * sizeof(rtStarsSqe_t), sqeBufferBackup.get(),
-            totalSendSqeNum * sizeof(rtStarsSqe_t), ret, device_->Id_(), streamId_, totalSendSqeNum);
-
-        taskPersistentHead_.Set(taskPersistentTail_.Value());
-    } else {
-        ret = memset_s(sqeBuffer_, sqeBufferSize_, 0U, sqeBufferSize_);
-        COND_RETURN_ERROR_MSG_INNER(
-            ret != EOK, RT_ERROR_STREAM_NEW,
-            "Failed to call memset_s to set sqeBuffer_, dest=%p, dest_max=%u, c=0, count=%u, retCode=%d.", sqeBuffer_,
-            sqeBufferSize_, sqeBufferSize_, ret);
-        taskPersistentHead_.Set(0U);
-        taskPersistentTail_.Set(0U);
-    }
+    taskPersistentHead_.Set(taskPersistentTail_.Value());
     RT_LOG(RT_LOG_INFO, "update all task finish, stream_id=%d, totalSendSqeNum=%u.", streamId_, totalSendSqeNum);
     return RT_ERROR_NONE;
 }
@@ -4121,6 +4108,192 @@ rtError_t Stream::GetTaskIdByPos(const uint16_t recycleHead, uint32_t& taskId)
     taskId = posToTaskIdMap_[recycleHead];
     posToTaskIdMapLock_.unlock();
     return RT_ERROR_NONE;
+}
+
+bool Stream::GetHwPosByPos(const uint32_t pos, uint32_t& logicSqId, uint32_t& hwPos) const
+{
+    const auto it = posToHwPos_.find(pos);
+    if (it == posToHwPos_.end()) {
+        return false;
+    }
+    logicSqId = it->second.first;
+    hwPos = it->second.second;
+
+    RT_LOG(
+        RT_LOG_DEBUG, "get pos success. device_id=%u, logicSqId=%u, pos=%u, hwPos=%u.", device_->Id_(), logicSqId, pos,
+        hwPos);
+    return true;
+}
+
+LogicSq* Stream::GetLogicSqByPos(const uint32_t pos) const
+{
+    uint32_t logicSqId = 0U;
+    uint32_t hwPos = 0U;
+    if (!GetHwPosByPos(pos, logicSqId, hwPos)) {
+        return nullptr;
+    }
+
+    LogicSq* sq = nullptr;
+    if ((device_->GetLogicSqManage()->GetLogicSqById(logicSqId, sq) != RT_ERROR_NONE) || (sq == nullptr)) {
+        return nullptr;
+    }
+    return sq;
+}
+
+void Stream::SetPosToHwPos(const uint32_t pos, const uint32_t logicSqId, const uint32_t hwPos)
+{
+    posToHwPos_[pos] = std::make_pair(logicSqId, hwPos);
+}
+
+uint8_t* Stream::GetHostSqeAddrByPos(const uint32_t pos) const
+{
+    const uint32_t sqeSize = SQE_SIZE_UNIT;
+    Model* mdl = Model_();
+    CaptureModel* captureModel = dynamic_cast<CaptureModel*>(mdl);
+
+    // 非capture stream，或者capture model还没finish capture
+    if ((!IsSoftwareSqEnable()) || (captureModel == nullptr) || (!captureModel->IsCaptureFinish())) {
+        const uint64_t offset = static_cast<uint64_t>(pos) * static_cast<uint64_t>(sqeSize);
+        if ((sqeBuffer_ == nullptr) || ((offset + sqeSize) > sqeBufferSize_)) {
+            return nullptr;
+        }
+        return sqeBuffer_ + offset;
+    }
+
+    uint32_t logicSqId = 0U;
+    uint32_t hwPos = 0U;
+    if (!GetHwPosByPos(pos, logicSqId, hwPos)) {
+        RT_LOG(
+            RT_LOG_WARNING, "no hwPos, device_id=%u, model_id=%u, stream_id=%d, task_pos=%u", device_->Id_(),
+            captureModel->Id_(), Id_(), pos);
+        return nullptr;
+    }
+
+    LogicSq* sq = nullptr;
+    if ((device_->GetLogicSqManage()->GetLogicSqById(logicSqId, sq) != RT_ERROR_NONE) || (sq == nullptr)) {
+        RT_LOG(
+            RT_LOG_WARNING,
+            "Get logicSq failed, device_id=%u, model_id=%u, stream_id=%d, task_pos=%u, logic_sq_id=%u, hwPos=%u.",
+            device_->Id_(), captureModel->Id_(), Id_(), pos, logicSqId, hwPos);
+        return nullptr;
+    }
+
+    void* hostSqeAddr = sq->GetHostSqeAddr();
+    const uint64_t offset = static_cast<uint64_t>(hwPos) * static_cast<uint64_t>(sqeSize);
+    if ((hostSqeAddr == nullptr) || ((offset + sqeSize) > sq->GetHostSqeSize())) {
+        RT_LOG(
+            RT_LOG_WARNING,
+            "Invalid logicSq host sqe addr, device_id=%u, model_id=%u, stream_id=%d, task_pos=%u, logic_sq_id=%u, "
+            "hw_pos=%u.",
+            device_->Id_(), captureModel->Id_(), Id_(), pos, logicSqId, hwPos);
+        return nullptr;
+    }
+    return RtPtrToPtr<uint8_t*>(hostSqeAddr) + offset;
+}
+
+void* Stream::GetDeviceSqeAddrByPos(const uint32_t pos) const
+{
+    const uint32_t sqeSize = SQE_SIZE_UNIT;
+    Model* mdl = Model_();
+    CaptureModel* captureModel = dynamic_cast<CaptureModel*>(mdl);
+    if ((!IsSoftwareSqEnable()) || (captureModel == nullptr) || (!captureModel->IsCaptureFinish())) {
+        const uint64_t offset = static_cast<uint64_t>(pos) * static_cast<uint64_t>(sqeSize);
+        if ((GetSqBaseAddr() == 0ULL) || (pos >= GetSqDepth())) {
+            return nullptr;
+        }
+        return RtValueToPtr<void*>(GetSqBaseAddr() + offset);
+    }
+
+    uint32_t logicSqId = 0U;
+    uint32_t hwPos = 0U;
+    if (!GetHwPosByPos(pos, logicSqId, hwPos)) {
+        RT_LOG(
+            RT_LOG_WARNING, "no hwPos, device_id=%u, model_id=%u, stream_id=%d, task_pos=%u", device_->Id_(),
+            captureModel->Id_(), Id_(), pos);
+        return nullptr;
+    }
+
+    LogicSq* sq = nullptr;
+    if ((device_->GetLogicSqManage()->GetLogicSqById(logicSqId, sq) != RT_ERROR_NONE) || (sq == nullptr)) {
+        RT_LOG(
+            RT_LOG_WARNING, "Get logicSq failed, device_id=%u, model_id=%u, stream_id=%d, task_pos=%u, logic_sq_id=%u.",
+            device_->Id_(), captureModel->Id_(), Id_(), pos, logicSqId);
+        return nullptr;
+    }
+
+    void* deviceSqeAddr = sq->GetDeviceSqeAddr();
+    if ((deviceSqeAddr == nullptr) || (hwPos >= sq->GetLogicSqDepth())) {
+        RT_LOG(
+            RT_LOG_WARNING,
+            "Invalid logicSq device sqe addr, device_id=%u, model_id=%u, stream_id=%d, task_pos=%u, logic_sq_id=%u, "
+            "hw_pos=%u.",
+            device_->Id_(), captureModel->Id_(), Id_(), pos, logicSqId, hwPos);
+        return nullptr;
+    }
+    return RtPtrToPtr<uint8_t*>(deviceSqeAddr) + static_cast<uint64_t>(hwPos) * static_cast<uint64_t>(sqeSize);
+}
+
+uint64_t Stream::GetSqIdMemAddrByPos(const uint32_t pos) const
+{
+    Model* mdl = Model_();
+    CaptureModel* captureModel = dynamic_cast<CaptureModel*>(mdl);
+    if ((!IsSoftwareSqEnable()) || (captureModel == nullptr) || (!captureModel->IsCaptureFinish())) {
+        return GetSqIdMemAddr();
+    }
+
+    COND_PROC(GetSqIdMemAddr() != 0UL,
+              RT_LOG(
+                  RT_LOG_WARNING,
+                  "sqIdMemAddr should be transferred to logicSq, device_id=%u, model_id=%u, stream_id=%d, task_pos=%u, "
+                  "sqIdMemAddr=%#lx.",
+                  device_->Id_(), captureModel->Id_(), Id_(), pos, GetSqIdMemAddr()););
+
+    uint32_t logicSqId = 0U;
+    uint32_t hwPos = 0U;
+    if (!GetHwPosByPos(pos, logicSqId, hwPos)) {
+        RT_LOG(
+            RT_LOG_WARNING, "no hwPos, device_id=%u, model_id=%u, stream_id=%d, task_pos=%u", device_->Id_(),
+            captureModel->Id_(), Id_(), pos);
+        return 0UL;
+    }
+
+    LogicSq* sq = nullptr;
+    if ((device_->GetLogicSqManage()->GetLogicSqById(logicSqId, sq) != RT_ERROR_NONE) || (sq == nullptr)) {
+        RT_LOG(
+            RT_LOG_WARNING, "Get logicSq failed, device_id=%u, model_id=%u, stream_id=%d, task_pos=%u, logic_sq_id=%u.",
+            device_->Id_(), captureModel->Id_(), Id_(), pos, logicSqId);
+        return 0UL;
+    }
+
+    return sq->GetSqIdMemAddr();
+}
+
+uint32_t Stream::GetHwPosByPos(const uint32_t pos) const
+{
+    // 非aclgraph扩流场景，task info里面的pos就是实际的硬件执行的pos
+    uint32_t realPos = pos;
+
+    // 单算子场景
+    Model* mdl = Model_();
+    COND_PROC(mdl == nullptr, return realPos;);
+
+    // 非aclgraph场景
+    CaptureModel* captureModel = dynamic_cast<CaptureModel*>(mdl);
+    COND_PROC(captureModel == nullptr, return realPos;);
+
+    if (IsSoftwareSqEnable() && captureModel->IsCaptureFinish()) {
+        uint32_t logicSqId = 0U;
+        uint32_t hwPos = 0U;
+        if (GetHwPosByPos(pos, logicSqId, hwPos)) {
+            return hwPos;
+        }
+
+        RT_LOG(
+            RT_LOG_EVENT, "no hwPos, device_id=%u, model_id=%u, stream_id=%d, task_pos=%u", device_->Id_(),
+            captureModel->Id_(), Id_(), pos);
+    }
+
+    return realPos;
 }
 
 rtError_t Stream::AllocLogicCq(
@@ -4839,40 +5012,6 @@ void Stream::GetTaskEventIdOrNotifyId(TaskInfo* taskInfo, int32_t& eventId, uint
     }
 }
 
-rtError_t Stream::AllocSoftwareSqAddr(uint32_t additionalSqeNum)
-{
-    rtError_t ret = RT_ERROR_NONE;
-    if (GetSqBaseAddr() == 0ULL) {
-        const uint32_t deviceId = Context_()->Device_()->Id_();
-        SqAddrMemoryOrder* sqAddrMemoryManage = Context_()->Device_()->GetSqAddrMemoryManage();
-        COND_RETURN_ERROR(
-            (sqAddrMemoryManage == nullptr), RT_ERROR_INVALID_VALUE, "sqAddrMemoryManage is null, device_id=%u.",
-            deviceId);
-
-        uint64_t* sqBaseAddr = nullptr;
-        const uint32_t allocMemSize = (GetDelayRecycleTaskSqeNum() + additionalSqeNum) * sizeof(rtStarsSqe_t);
-        const uint32_t memOrderType = sqAddrMemoryManage->GetMemOrderTypeByMemSize(allocMemSize);
-        const uint32_t memOrderSize = sqAddrMemoryManage->GetMemOrderSizeByMemOrderType(memOrderType);
-        uint32_t sqDepthAfterUpdate = memOrderSize / sizeof(rtStarsSqe_t);
-
-        ret = Context_()->Device_()->GetSqAddrMemoryManage()->AllocSqAddr(memOrderType, &sqBaseAddr);
-        COND_RETURN_ERROR(
-            (ret != RT_ERROR_NONE), ret,
-            "AllocSqAddr failed. device_id=%u, stream_id=%d, "
-            "retCode=%#x.",
-            deviceId, Id_(), ret);
-
-        SetSqBaseAddr(RtPtrToValue(sqBaseAddr));
-        SetSqMemOrderType(memOrderType);
-
-        // stars v2要求sq深度必须是8的整数倍+1，调用者给additionalSqeNum加了8个，结合sq addr mem pool的各个内存梯度，
-        // 可以保证这里再减7也能放的下全部的sqe，同时满足stars v2的要求。
-        SetSqDepth(sqDepthAfterUpdate - device_->GetDevProperties().expandStreamSqDepthAdapt);
-    }
-
-    return ret;
-}
-
 rtError_t Stream::AllocAutoSplitSqAddr()
 {
     rtError_t ret = RT_ERROR_NONE;
@@ -5468,11 +5607,14 @@ rtError_t Stream::RestoreForSoftwareSq()
     // SqId_恢复默认值、cqId_恢复默认值、sqRegVirtualAddr恢复默认值
     ResetSqCq();
 
-    // sqIdMemAddr内存重置
-    error = drv->MemSetSync(RtValueToPtr<void*>(sqIdMemAddr_), sizeof(uint64_t), 0U, sizeof(uint64_t));
-    COND_RETURN_ERROR(
-        (error != RT_ERROR_NONE), error, "Set sq id to invalid value failed, streamId=%d, deviceId=%u, ret=%d.",
-        streamId_, deviceId, error);
+    // 仅重置stream自身仍持有的sqIdMemAddr，典型如activeSQEStream；已转移到logicSq的地址由CaptureModel处理。
+    const uint64_t sqIdMemAddr = GetSqIdMemAddr();
+    if (sqIdMemAddr != 0UL) {
+        error = drv->MemSetSync(RtValueToPtr<void*>(sqIdMemAddr), sizeof(uint64_t), 0U, sizeof(uint64_t));
+        COND_RETURN_ERROR(
+            (error != RT_ERROR_NONE), error, "Set sq id to invalid value failed, streamId=%d, deviceId=%u, ret=%d.",
+            streamId_, deviceId, error);
+    }
 
     // sqDepth_恢复默认值
     SetSqDepth(STREAM_SQ_MAX_DEPTH);

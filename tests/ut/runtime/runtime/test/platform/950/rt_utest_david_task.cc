@@ -1988,14 +1988,20 @@ TEST_F(TaskTestDavid, CaptureModeExecute)
     MOCKER_CPP_VIRTUAL(rawDrv, &NpuDriver::StreamTaskFill).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP(&Model::BindSqPerStream).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP(&Model::UnBindSqPerStream).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP(&CaptureModel::ConfigSqTail).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    MOCKER_CPP(&CaptureModel::ConfigLogicSqTail).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    MOCKER_CPP_VIRTUAL(rt_ut::UnwrapOrNull<Stream>(stream1), &Stream::Synchronize)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(rt_ut::UnwrapOrNull<Stream>(stream2), &Stream::Synchronize)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
 
     CaptureModel* captureMdl1 = static_cast<CaptureModel*>(rt_ut::UnwrapOrNull<Model>(model1));
     captureMdl1->CaptureModelExecuteFinish(RT_ERROR_NONE);
     uint32_t releaseSqNum = 0U;
     uint32_t releaseNtyNum = 0;
     captureMdl1->ReleaseSqCqAndNotifyId(releaseSqNum, releaseNtyNum);
-    captureMdl1->BuildSqCq(rt_ut::UnwrapOrNull<Stream>(streamExe));
+    EXPECT_EQ(captureMdl1->BuildSqCq(rt_ut::UnwrapOrNull<Stream>(streamExe)), RT_ERROR_INVALID_VALUE);
 
     error = rtModelDestroy(model1);
     EXPECT_EQ(error, RT_ERROR_NONE);

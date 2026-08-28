@@ -15,6 +15,9 @@
 #include "error_message_manage.hpp"
 #include "task_submit.hpp"
 #include "stream.hpp"
+#include "capture_model.hpp"
+#include "logic_sq.hpp"
+#include "logic_sq_manage.hpp"
 #include "thread_local_container.hpp"
 #include "inner_thread_local.hpp"
 #include "profiler_c.hpp"
@@ -178,7 +181,7 @@ static rtError_t UpdateDavidKernelPrepare(TaskInfo* const updateTask, void** con
 
     /* 同时适用于AIC、AIV、MIX(AIC + AIV) kernel */
     sqeInfo.sqBaseAddr = 0ULL;
-    ToConstructDavidSqe(updateTask, static_cast<void*>(sqeBuffer), sqeInfo);
+    ToConstructDavidSqe(updateTask, RtPtrToPtr<void*>(sqeBuffer), sqeInfo);
     error = driver->MemCopySync(
         *hostAddr, allocSize, static_cast<const void*>(sqeBuffer), allocSize, RT_MEMCPY_HOST_TO_HOST);
     COND_PROC_RETURN_ERROR(error != RT_ERROR_NONE, error, (void)driver->HostMemFree(*hostAddr); *hostAddr = nullptr;
@@ -186,10 +189,14 @@ static rtError_t UpdateDavidKernelPrepare(TaskInfo* const updateTask, void** con
 
     if (dstStream->IsSoftwareSqEnable()) {
         CaptureModel* captureModel = dynamic_cast<CaptureModel*>(dstStream->Model_());
-        if ((captureModel != nullptr) && (!captureModel->IsSendSqe())) {
-            error = memcpy_s(
-                RtPtrToPtr<void*>(RtPtrToValue(dstStream->GetSqeBuffer()) + SQE_SIZE_UNIT * updateTask->pos), allocSize,
-                *hostAddr, allocSize);
+        if ((captureModel != nullptr)) {
+            uint8_t* hostSqeAddr = dstStream->GetHostSqeAddrByPos(updateTask->pos);
+            COND_PROC_RETURN_ERROR(
+                (hostSqeAddr == nullptr), RT_ERROR_INVALID_VALUE, (void)driver->HostMemFree(*hostAddr);
+                *hostAddr = nullptr;
+                , "Failed to get host sqe addr, stream_id=%d, task_pos=%u.", dstStream->Id_(), updateTask->pos);
+
+            error = memcpy_s(RtPtrToPtr<void*>(hostSqeAddr), allocSize, *hostAddr, allocSize);
             COND_PROC_RETURN_ERROR_MSG_INNER(
                 error != EOK, RT_ERROR_SEC_HANDLE, (void)driver->HostMemFree(*hostAddr); *hostAddr = nullptr;
                 , "Failed to call memcpy_s, size=%" PRIu64 ", retCode=%#x.", allocSize, static_cast<uint32_t>(error));

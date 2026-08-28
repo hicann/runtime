@@ -326,9 +326,9 @@ void RecycleThreadDoForStarsV2(Device* deviceInfo)
         stream.get()->StreamRecycleLock();
         stream.get()->SetThreadProcFlag(true);
         stream.get()->ProcArgRecycleList();
-
-        COND_PROC((stream.get()->Flags() & (RT_STREAM_AICPU | RT_STREAM_CP_PROCESS_USE | RT_STREAM_PERSISTENT)) != 0,
-                  stream.get()->SetThreadProcFlag(false);
+        bool noProcessFlag =
+            ((stream.get()->Flags() & (RT_STREAM_AICPU | RT_STREAM_CP_PROCESS_USE | RT_STREAM_PERSISTENT)) != 0);
+        COND_PROC(noProcessFlag || (stream.get()->Model_() != nullptr), stream.get()->SetThreadProcFlag(false);
                   stream.get()->StreamRecycleUnlock(); stream.reset(); continue);
 
         COND_PROC((((dynamic_cast<TaskResManageDavid*>(stream.get()->taskResMang_))->IsEmpty()) ||

@@ -308,6 +308,7 @@ public:
 
     rtError_t BuildSqCqForAutoSplit();
     rtError_t SendSqe(void); // copy sqe to sqe addr
+    rtError_t SendSqeForAutoSplit(void);
     rtError_t ConfigSqTail(void) const;
     bool IsSendSqe(void) const { return isSqeSendFinish_; }
 

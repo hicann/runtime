@@ -706,7 +706,7 @@ TEST_F(ExternalEventTaskTest910B, ExternalTaskSqeBuildRejectsInvalidTaskRefs)
     EXPECT_EQ(RebuildExternalTaskSqe(nullptr), RT_ERROR_INVALID_VALUE);
     EXPECT_EQ(RebuildExternalTaskSqe(&taskInfo), RT_ERROR_INVALID_VALUE);
     taskInfo.stream = streamObj;
-    EXPECT_EQ(RebuildExternalTaskSqe(&taskInfo), RT_ERROR_NONE);
+    EXPECT_EQ(RebuildExternalTaskSqe(&taskInfo), RT_ERROR_INVALID_VALUE);
     model->externalRecordEventItems_.push_back({nullptr, streamObj->Id_(), 0U});
     EXPECT_EQ(model->RebuildAllExternalTaskSqes(), RT_ERROR_INVALID_VALUE);
     model->externalRecordEventItems_.clear();

@@ -20,6 +20,8 @@
 #include "davinci_kernel_task.h"
 #include "stars_cond_isa_helper.hpp"
 #include "inner_thread_local.hpp"
+#include "logic_sq.hpp"
+#include "logic_sq_manage.hpp"
 #include "model_update_task.h"
 #include "event.hpp"
 #include "event_task.h"
@@ -637,7 +639,9 @@ void InitFuncCallParaForMemWaitTask(TaskInfo* taskInfo, RtStarsMemWaitValueInstr
     const uint32_t rtsqDepth = stream->GetSqDepth();
     const uint32_t taskPosTail = stream->GetBindFlag() ? stream->GetCurSqPos() : stream->GetTaskPosTail();
     // external wait task的SQE构造在capture end阶段，其pos不能使用GetCurSqPos()，需要使用capture时已经占位的pos
-    const uint32_t firstSqePos = (taskInfo->type == TS_TASK_TYPE_CAPTURE_WAIT_EXTERNAL) ? taskInfo->pos : taskPosTail;
+    // external 任务，是在buildsqcq之前， 不应该装
+    uint32_t firstSqePos =
+        (taskInfo->type == TS_TASK_TYPE_CAPTURE_WAIT_EXTERNAL) ? stream->GetHwPosByPos(taskInfo->pos) : taskPosTail;
     const uint32_t sqeNum = GetSendSqeNumForMemWaitTask(taskInfo);
     const uint32_t sqDepth = stream->GetSqDepth();
 
@@ -646,7 +650,7 @@ void InitFuncCallParaForMemWaitTask(TaskInfo* taskInfo, RtStarsMemWaitValueInstr
     fcPara.flag = memWaitValueTask->flag;
     fcPara.maxLoop = 15ULL; /* the max loop num */
     fcPara.sqId = stream->GetSqId();
-    fcPara.sqIdMemAddr = stream->GetSqIdMemAddr();
+    fcPara.sqIdMemAddr = stream->GetSqIdMemAddrByPos(taskInfo->pos);
     fcPara.sqHeadPre = (firstSqePos + 1U) % rtsqDepth;
     fcPara.awSize = memWaitValueTask->awSize;
     fcPara.sqHeadNext = (firstSqePos + sqeNum) % sqDepth;
@@ -851,18 +855,20 @@ rtError_t NormalKernelUpdatePrepare(TaskInfo* const updateTask, void** const hos
     ConstructAICoreSqeForDavinciTask(updateTask, &sqe);
 
     if (stream->IsSoftwareSqEnable() && (captureModel != nullptr)) {
-        if (!captureModel->IsSendSqe()) {
-            (void)memcpy_s(
-                RtPtrToPtr<void*>(RtPtrToValue(stream->GetSqeBuffer()) + sizeof(rtStarsSqe_t) * updateTask->pos),
-                sizeof(rtStarsSqe_t), RtPtrToPtr<void*, rtStarsSqe_t*>(&sqe), sizeof(rtStarsSqe_t));
-        }
+        uint8_t* hostSqeAddr = stream->GetHostSqeAddrByPos(updateTask->pos);
+        COND_PROC_RETURN_ERROR((hostSqeAddr == nullptr), RT_ERROR_INVALID_VALUE, (void)driver->HostMemFree(*hostAddr);
+                               *hostAddr = nullptr;
+                               , "host sqe addr is nullptr, device_id=%u, stream_id=%d, task_pos=%u.", devId,
+                               stream->Id_(), updateTask->pos);
+        (void)memcpy_s(
+            RtPtrToPtr<void*>(hostSqeAddr), sizeof(rtStarsSqe_t), RtPtrToPtr<void*, rtStarsSqe_t*>(&sqe),
+            sizeof(rtStarsSqe_t));
     }
 
     error =
         driver->MemCopySync(*hostAddr, allocSize, static_cast<const void*>(&sqe), sizeof(sqe), RT_MEMCPY_HOST_TO_HOST);
-    COND_PROC_RETURN_ERROR(
-        error != RT_ERROR_NONE, error, (void)driver->HostMemFree(*hostAddr), "MemCopySync failed, retCode=%#x.",
-        static_cast<uint32_t>(error));
+    COND_PROC_RETURN_ERROR(error != RT_ERROR_NONE, error, (void)driver->HostMemFree(*hostAddr); *hostAddr = nullptr;
+                           , "MemCopySync failed, retCode=%#x.", static_cast<uint32_t>(error));
 
     return RT_ERROR_NONE;
 }

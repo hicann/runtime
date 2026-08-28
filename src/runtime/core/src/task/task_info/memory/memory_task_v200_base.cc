@@ -23,6 +23,8 @@
 #include "task_execute_time.h"
 #include "stream_jetty_handler.h"
 #include "ipc_event.hpp"
+#include "logic_sq.hpp"
+#include "logic_sq_manage.hpp"
 
 #include <cstdint>
 
@@ -577,7 +579,8 @@ void ConstructDavidSqeForMemWaitValueTask(TaskInfo* taskInfo, void* const sqe, c
     uint32_t taskPosTail =
         (stream->taskResMang_ == nullptr) ? (static_cast<Stream*>(stream))->GetCurSqPos() : taskInfo->id;
     // external wait task的SQE构造在capture end阶段，其pos不能使用GetCurSqPos()，需要使用capture时已经占位的pos
-    taskPosTail = (taskInfo->type == TS_TASK_TYPE_CAPTURE_WAIT_EXTERNAL) ? taskInfo->pos : taskPosTail;
+    taskPosTail =
+        (taskInfo->type == TS_TASK_TYPE_CAPTURE_WAIT_EXTERNAL) ? stream->GetHwPosByPos(taskInfo->pos) : taskPosTail;
     fcPara.devAddr = memWaitValueTask->devAddr;
     fcPara.value = memWaitValueTask->value;
     fcPara.flag = memWaitValueTask->flag;
@@ -585,7 +588,7 @@ void ConstructDavidSqeForMemWaitValueTask(TaskInfo* taskInfo, void* const sqe, c
     fcPara.sqId = stream->GetSqId();
     fcPara.sqHeadPre = (taskPosTail + 1) % stream->GetSqDepth();
     fcPara.awSize = memWaitValueTask->awSize;
-    fcPara.sqIdMemAddr = stream->GetSqIdMemAddr();
+    fcPara.sqIdMemAddr = stream->GetSqIdMemAddrByPos(taskInfo->pos);
     fcPara.profSwitchAddr = stream->Device_()->GetProfSwitchAddr();
     fcPara.profSwitchValue = 0x1ULL;
     fcPara.profDisableAddr = memWaitValueTask->profDisableStatusAddr;
@@ -813,8 +816,11 @@ static rtError_t ConvertUBDmaForModel(TaskInfo* const taskInfo, const TaskInfo* 
         input.src = memcpyAsyncTaskInfo->src;
         input.size = memcpyAsyncTaskInfo->size;
         input.cpyType = memcpyAsyncTaskInfo->copyType;
-        input.destPtr =
-            RtValueToPtr<void*>(updateTask->stream->GetSqBaseAddr() + (updateTask->pos) * sizeof(rtDavidSqe_t));
+        input.destPtr = updateTask->stream->GetDeviceSqeAddrByPos(updateTask->pos);
+        COND_RETURN_ERROR(
+            input.destPtr == nullptr, RT_ERROR_INVALID_VALUE,
+            "Get device sqe addr failed, device_id=%u, stream_id=%d, task_pos=%u.",
+            updateTask->stream->Device_()->Id_(), updateTask->stream->Id_(), updateTask->pos);
         AsyncDmaWqeOutputInfo output = {};
         Driver* const driver = stream->Device_()->Driver_();
         const rtError_t error = driver->CreateAsyncDmaWqe(devId, input, &output, true, false);
@@ -832,8 +838,11 @@ static rtError_t ConvertUBDmaForModel(TaskInfo* const taskInfo, const TaskInfo* 
     input.normal.src = RtPtrToPtr<uint8_t*>(memcpyAsyncTaskInfo->src);
     rtError_t error = RT_ERROR_NONE;
     if (isSqeUpdate) {
-        void* sqeDeviceAddr =
-            RtValueToPtr<void*>(updateTask->stream->GetSqBaseAddr() + (updateTask->pos) * sizeof(rtDavidSqe_t));
+        void* sqeDeviceAddr = updateTask->stream->GetDeviceSqeAddrByPos(updateTask->pos);
+        COND_RETURN_ERROR(
+            sqeDeviceAddr == nullptr, RT_ERROR_INVALID_VALUE,
+            "Get device sqe addr failed, device_id=%u, stream_id=%d, task_pos=%u.",
+            updateTask->stream->Device_()->Id_(), updateTask->stream->Id_(), updateTask->pos);
         input.normal.dst = RtPtrToPtr<uint8_t*>(sqeDeviceAddr);
     }
     input.normal.len = memcpyAsyncTaskInfo->size;
@@ -850,7 +859,11 @@ static rtError_t ConvertAsyncDmaForSoftWareSqPcie(MemcpyAsyncTaskInfo* const cpy
     Stream* updateStm = updateTask->stream;
     Driver* const curDrv = updateStm->Device_()->Driver_();
     cpyAsyncTask->dmaAddr.offsetAddr.devid = static_cast<uint32_t>(updateStm->Device_()->Id_());
-    void* sqeDeviceAddr = RtValueToPtr<void*>(updateStm->GetSqBaseAddr() + (updateTask->pos) * sizeof(rtDavidSqe_t));
+    void* sqeDeviceAddr = updateStm->GetDeviceSqeAddrByPos(updateTask->pos);
+    COND_RETURN_ERROR(
+        sqeDeviceAddr == nullptr, RT_ERROR_INVALID_VALUE,
+        "Get device sqe addr failed, device_id=%u, stream_id=%d, task_pos=%u.", updateStm->Device_()->Id_(),
+        updateStm->Id_(), updateTask->pos);
     error = curDrv->MemConvertAddr(
         RtPtrToValue(cpyAsyncTask->src), RtPtrToValue(sqeDeviceAddr), cpyAsyncTask->size, &(cpyAsyncTask->dmaAddr));
     COND_RETURN_ERROR(
@@ -913,13 +926,17 @@ rtError_t ConvertAsyncDmaForTaskUpdate(TaskInfo* const taskInfo, TaskInfo* const
     // task update目标流为扩流的流
     if (updateTaskInfo->stream->IsSoftwareSqEnable()) {
         Stream* updateStm = updateTaskInfo->stream;
-        if (updateStm->GetSqBaseAddr() == 0ULL) {
-            const rtError_t err = updateStm->AllocSoftwareSqAddr(
+        if (updateStm->GetDeviceSqeAddrByPos(updateTaskInfo->pos) == 0U) {
+            LogicSq* const logicSq = updateStm->GetLogicSqByPos(updateTaskInfo->pos);
+            COND_RETURN_ERROR(
+                logicSq == nullptr, RT_ERROR_INVALID_VALUE, "Get logic sq failed, device_id=%u, stream_id=%d, pos=%u.",
+                updateStm->Device_()->Id_(), updateStm->Id_(), updateTaskInfo->pos);
+            const rtError_t ret = logicSq->AllocDeviceSqeAddr(
                 CAPTURE_TASK_RESERVED_NUM + updateStm->Device_()->GetDevProperties().expandStreamRsvTaskNum);
             COND_RETURN_ERROR(
-                err != RT_ERROR_NONE, err,
-                "Failed to allocate software SQ address, device_id=%d, stream_id=%d, retCode=%#x.",
-                updateStm->Device_()->Id_(), updateStm->Id_(), static_cast<uint32_t>(err));
+                ret != RT_ERROR_NONE, ret,
+                "Failed to allocate software SQ address, device_id=%u, stream_id=%d, retCode=%#x.",
+                updateStm->Device_()->Id_(), updateStm->Id_(), static_cast<uint32_t>(ret));
         }
         if (isUbMode) {
             return ConvertUBDmaForModel(taskInfo, updateTaskInfo, true);

@@ -13,6 +13,8 @@
 #include "capture_model_utils.hpp"
 #include "internal_error_define.hpp"
 #include "stars.hpp"
+#include "logic_sq.hpp"
+#include "logic_sq_manage.hpp"
 #include <securec.h>
 #include <vector>
 
@@ -35,7 +37,7 @@ rtError_t CaptureModel::BindSqCqAndSendSqe(void)
     ERROR_RETURN_MSG_INNER(
         error, "Bind stream to model failed, model_id=%u, retCode=%#x.", Id_(), static_cast<uint32_t>(error));
 
-    error = ConfigSqTail();
+    error = ConfigLogicSqTail();
     ERROR_RETURN_MSG_INNER(
         error, "Config sq tail failed, model_id=%u, retCode=%#x.", Id_(), static_cast<uint32_t>(error));
     return error;
@@ -46,18 +48,18 @@ rtError_t RebuildExternalTaskSqe(TaskInfo* const task)
     if ((task == nullptr) || (task->stream == nullptr)) {
         return RT_ERROR_INVALID_VALUE;
     }
-    if (task->stream->GetSqeBuffer() == nullptr) {
-        return RT_ERROR_NONE;
-    }
-    const uint32_t sendSqeNum = GetSendSqeNum(task);
-    const size_t sqeOffset = sizeof(rtStarsSqe_t) * static_cast<size_t>(task->pos);
-    const size_t sqeSize = sizeof(rtStarsSqe_t) * static_cast<size_t>(sendSqeNum);
-    if ((sqeOffset + sqeSize) > task->stream->GetSqeBufferSize()) {
+    uint8_t* sqeAddr = task->stream->GetHostSqeAddrByPos(task->pos);
+    if (sqeAddr == nullptr) {
+        RT_LOG(
+            RT_LOG_ERROR, "Get host sqe addr failed, stream_id=%d, task_id=%u, task_pos=%u", task->stream->Id_(),
+            task->id, task->pos);
         return RT_ERROR_INVALID_VALUE;
     }
+    const uint32_t sendSqeNum = GetSendSqeNum(task);
+    const size_t sqeSize = sizeof(rtStarsSqe_t) * static_cast<size_t>(sendSqeNum);
     std::vector<rtStarsSqe_t> sqes(sendSqeNum);
     ToConstructSqe(task, sqes.data());
-    const errno_t ret = memcpy_s(task->stream->GetSqeBuffer() + sqeOffset, sqeSize, sqes.data(), sqeSize);
+    const errno_t ret = memcpy_s(sqeAddr, sqeSize, sqes.data(), sqeSize);
     if (ret != EOK) {
         return RT_ERROR_INVALID_VALUE;
     }

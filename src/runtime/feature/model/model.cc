@@ -39,6 +39,8 @@
 #include "inner_thread_local.hpp"
 #include "runtime.hpp"
 #include "task_david.hpp"
+#include "capture_model.hpp"
+#include "logic_sq.hpp"
 
 namespace cce {
 namespace runtime {
@@ -765,6 +767,39 @@ rtError_t Model::SendSqe(void)
     COND_PROC((IsSendSqe() == true), return RT_ERROR_NONE);
     const uint32_t deviceId = Context_()->Device_()->Id_();
 
+    // capture software-sq 场景：sqe 在 logicSq.hostSqeAddr_ 中，按 logicSqs_ 遍历
+    // 原 SendSqe 遍历 StreamList_() 用 stm->GetSqeBuffer() 传驱动 StreamTaskFill
+    // software-sq 场景 sqeBuffer_ 已释放，改为遍历 logicSqs_ 用 logicSq->hostSqeAddr_ 传驱动
+    // StreamTaskFill 第2参数用 streamId（非 rtsqId），驱动通过 streamId 定位 stream
+    auto* capMdl = dynamic_cast<CaptureModel*>(this);
+    COND_RETURN_ERROR(
+        (capMdl == nullptr) || (!capMdl->IsSoftwareSqEnable()), RT_ERROR_INVALID_VALUE,
+        "Invalid capture model, device_id=%u, model_id=%u, model_type=%u, isCaptureModel=%u", deviceId, Id_(),
+        GetModelType(), (capMdl != nullptr));
+
+    for (LogicSq* logicSq : capMdl->GetLogicSqs()) {
+        if (logicSq->GetSqeNum() == 0U) {
+            continue;
+        }
+
+        const rtError_t ret = Context_()->Device_()->Driver_()->StreamTaskFill(
+            deviceId, logicSq->GetStreamId(), logicSq->GetDeviceSqeAddr(),
+            RtPtrToPtr<uint8_t*>(logicSq->GetHostSqeAddr()), logicSq->GetSqeNum());
+        COND_RETURN_ERROR(
+            (ret != RT_ERROR_NONE), ret,
+            "fill stream task for logicSq failed. device_id=%u, logicSqId=%u, streamId=%u, sqe_num=%u, retCode=%#x.",
+            deviceId, logicSq->Id_(), logicSq->GetStreamId(), logicSq->GetSqeNum(), static_cast<uint32_t>(ret));
+    }
+
+    SetIsSendSqe(true);
+    return RT_ERROR_NONE;
+}
+
+rtError_t Model::SendSqeForAutoSplit(void)
+{
+    COND_PROC((IsSendSqe() == true), return RT_ERROR_NONE);
+    const uint32_t deviceId = Context_()->Device_()->Id_();
+
     for (auto stm : StreamList_()) {
         COND_PROC(((stm->Flags() & RT_STREAM_AICPU) != 0U), continue);
         const uint32_t totalSqeNum = stm->GetDelayRecycleTaskSqeNum();
@@ -868,7 +903,7 @@ rtError_t Model::BuildSqCqForAutoSplit()
         (error != RT_ERROR_NONE), error,
         "stream bind sq failed, device_id=%u, model_id=%u, auto_split_sq=%d, sq_num=%u, retCode=%#x.", dev->Id_(),
         Id_(), IsAutoSplitSq(), streamNum, static_cast<uint32_t>(error));
-    error = SendSqe();
+    error = SendSqeForAutoSplit();
     ERROR_RETURN_MSG_INNER(
         error, "Send sqe failed, model_id=%u, auto_split_sq=%d, retCode=%#x.", Id_(), IsAutoSplitSq(),
         static_cast<uint32_t>(error));

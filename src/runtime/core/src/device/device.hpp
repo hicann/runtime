@@ -38,6 +38,7 @@ namespace runtime {
 
 class JettyPool;
 class JettyManager;
+class LogicSqManage;
 constexpr uint32_t DMA_CPY_NUM_DEVICE_MAX = 5 * 1024U;
 constexpr uint32_t RT_DEFAULT_STACK_SIZE_32K = 32U * 1024U;
 constexpr uint32_t RT_DEFAULT_STACK_SIZE_16K = 16U * 1024U;
@@ -292,6 +293,7 @@ public:
     virtual rtError_t GetGroupCount(uint32_t* const cnt) = 0;
     virtual int32_t DefaultGroup() const = 0;
     virtual StreamSqCqManage* GetStreamSqCqManage() const = 0;
+    virtual LogicSqManage* GetLogicSqManage() const = 0;
     virtual TaskFactory* GetTaskFactory() const = 0;
     virtual MemoryPoolManager* GetKernelMemoryPool() const = 0;
     virtual JettyManager* GetJettyManager() const = 0;

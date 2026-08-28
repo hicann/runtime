@@ -22,6 +22,7 @@
 #include "program.hpp"
 #include "soma.hpp"
 #include "jetty_manager.h"
+#include "logic_sq_manage.hpp"
 namespace cce {
 namespace runtime {
 
@@ -216,6 +217,8 @@ public:
     rtError_t AicpuModelAbort(const uint32_t modelId) override;
 
     StreamSqCqManage* GetStreamSqCqManage() const override { return streamSqCqManage_; }
+
+    LogicSqManage* GetLogicSqManage() const override { return logicSqManage_; }
 
     TaskFactory* GetTaskFactory() const override { return taskFactory_; }
 
@@ -618,6 +621,7 @@ private:
     MemoryPoolManager* kernelMemPoolMng_;
     uint64_t devProfStatus_;
     StreamSqCqManage* streamSqCqManage_;
+    LogicSqManage* logicSqManage_{nullptr};
     std::unique_ptr<JettyManager> jettyManager_;
     uint32_t tschVersion_{static_cast<uint32_t>(TS_VERSION_LATEST)};
     uint32_t isSupportHcomcpu_{0U};
