@@ -39,17 +39,17 @@ rtError_t ApiImplEvent::EventQueryWaitStatus(Event* const evt, rtEventWaitStatus
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
-rtError_t ApiImplEvent::EventElapsedTime(float32_t* const retTime, Event* const startEvt, Event* const endEvt)
+rtError_t ApiImplEvent::EventElapsedTime(float32_t* const timeInterval, Event* const startEvent, Event* const endEvent)
 {
-    UNUSED(retTime);
-    UNUSED(startEvt);
-    UNUSED(endEvt);
+    UNUSED(timeInterval);
+    UNUSED(startEvent);
+    UNUSED(endEvent);
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
-rtError_t ApiImplEvent::EventGetTimeStamp(uint64_t* const retTime, Event* const evt)
+rtError_t ApiImplEvent::EventGetTimeStamp(uint64_t* const timeStamp, Event* const evt)
 {
-    UNUSED(retTime);
+    UNUSED(timeStamp);
     UNUSED(evt);
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }

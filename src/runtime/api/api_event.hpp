@@ -39,10 +39,11 @@ public:
     virtual rtError_t EventQuery(Event* const evt) = 0;
     virtual rtError_t EventQueryStatus(Event* const evt, rtEventStatus_t* const status) = 0;
     virtual rtError_t EventQueryWaitStatus(Event* const evt, rtEventWaitStatus_t* const status) = 0;
-    virtual rtError_t EventElapsedTime(float32_t* const retTime, Event* const startEvt, Event* const endEvt) = 0;
-    virtual rtError_t EventGetTimeStamp(uint64_t* const retTime, Event* const evt) = 0;
+    virtual rtError_t EventElapsedTime(
+        float32_t* const timeInterval, Event* const startEvent, Event* const endEvent) = 0;
+    virtual rtError_t EventGetTimeStamp(uint64_t* const timeStamp, Event* const evt) = 0;
     virtual rtError_t IpcOpenEventHandle(rtIpcEventHandle_t* handle, IpcEvent** const event) = 0;
-    virtual rtError_t IpcGetEventHandle(IpcEvent* const evt, rtIpcEventHandle_t* handle) = 0;
+    virtual rtError_t IpcGetEventHandle(IpcEvent* const event, rtIpcEventHandle_t* handle) = 0;
 };
 
 } // namespace runtime

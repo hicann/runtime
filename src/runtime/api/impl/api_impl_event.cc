@@ -64,16 +64,16 @@ rtError_t ApiImplEvent::IpcOpenEventHandle(rtIpcEventHandle_t* handle, IpcEvent*
     return error;
 }
 
-rtError_t ApiImplEvent::IpcGetEventHandle(IpcEvent* const evt, rtIpcEventHandle_t* handle)
+rtError_t ApiImplEvent::IpcGetEventHandle(IpcEvent* const event, rtIpcEventHandle_t* handle)
 {
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(handle, RT_ERROR_INVALID_VALUE, "Obtaining the IPC event handle");
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(evt, RT_ERROR_INVALID_VALUE, "Obtaining the IPC event handle");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(event, RT_ERROR_INVALID_VALUE, "Obtaining the IPC event handle");
     COND_RETURN_AND_MSG_OUTER(
-        evt->GetEventFlag() != RT_EVENT_IPC, RT_ERROR_INVALID_VALUE, ErrorCode::EE1006,
-        "Obtaining the IPC event handle", RtFmtMsg("Parameter evt.eventFlag_ value %" PRIu64, evt->GetEventFlag()),
+        event->GetEventFlag() != RT_EVENT_IPC, RT_ERROR_INVALID_VALUE, ErrorCode::EE1006,
+        "Obtaining the IPC event handle", RtFmtMsg("Parameter event.eventFlag_ value %" PRIu64, event->GetEventFlag()),
         "Only IPC events are supported");
     Runtime::Instance()->CallApiBegin(RT_PROF_API_GET_EVENT_HANDLE);
-    const rtError_t error = evt->IpcGetEventHandle(handle);
+    const rtError_t error = event->IpcGetEventHandle(handle);
     Runtime::Instance()->CallApiEnd(error);
     return error;
 }

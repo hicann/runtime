@@ -126,35 +126,36 @@ rtError_t ApiImplEvent::EventQueryWaitStatus(Event* const evt, rtEventWaitStatus
     return error;
 }
 
-rtError_t ApiImplEvent::EventElapsedTime(float32_t* const retTime, Event* const startEvt, Event* const endEvt)
+rtError_t ApiImplEvent::EventElapsedTime(float32_t* const timeInterval, Event* const startEvent, Event* const endEvent)
 {
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        retTime, RT_ERROR_INVALID_VALUE, "Computing the elapsed time between two events");
+        timeInterval, RT_ERROR_INVALID_VALUE, "Computing the elapsed time between two events");
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        startEvt, RT_ERROR_INVALID_VALUE, "Computing the elapsed time between two events");
+        startEvent, RT_ERROR_INVALID_VALUE, "Computing the elapsed time between two events");
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        endEvt, RT_ERROR_INVALID_VALUE, "Computing the elapsed time between two events");
+        endEvent, RT_ERROR_INVALID_VALUE, "Computing the elapsed time between two events");
     COND_RETURN_AND_MSG_OUTER(
-        startEvt->IsCapturing(), RT_ERROR_EVENT_CAPTURED, ErrorCode::EE1016,
+        startEvent->IsCapturing(), RT_ERROR_EVENT_CAPTURED, ErrorCode::EE1016,
         "Computing the elapsed time between two events",
-        RtFmtMsg("StartEvent %d during the capture stage is not supported", startEvt->EventId_()));
+        RtFmtMsg("StartEvent %d during the capture stage is not supported", startEvent->EventId_()));
     COND_RETURN_AND_MSG_OUTER(
-        endEvt->IsCapturing(), RT_ERROR_EVENT_CAPTURED, ErrorCode::EE1016,
+        endEvent->IsCapturing(), RT_ERROR_EVENT_CAPTURED, ErrorCode::EE1016,
         "Computing the elapsed time between two events",
-        RtFmtMsg("EndEvent %d during the capture stage is not supported", endEvt->EventId_()));
+        RtFmtMsg("EndEvent %d during the capture stage is not supported", endEvent->EventId_()));
     COND_RETURN_WARN(
-        (startEvt->GetEventFlag() == RT_EVENT_EXTERNAL || endEvt->GetEventFlag() == RT_EVENT_EXTERNAL),
+        (startEvent->GetEventFlag() == RT_EVENT_EXTERNAL || endEvent->GetEventFlag() == RT_EVENT_EXTERNAL),
         RT_ERROR_FEATURE_NOT_SUPPORT, "The external event does not support getting elapsed time.");
     COND_RETURN_WARN(
-        (startEvt->GetEventFlag() == static_cast<uint32_t>(RT_EVENT_IPC) ||
-         endEvt->GetEventFlag() == static_cast<uint32_t>(RT_EVENT_IPC)),
+        (startEvent->GetEventFlag() == static_cast<uint32_t>(RT_EVENT_IPC) ||
+         endEvent->GetEventFlag() == static_cast<uint32_t>(RT_EVENT_IPC)),
         RT_ERROR_FEATURE_NOT_SUPPORT, "IPC events are not supported by the rtEventElapsedTime API");
-    return endEvt->ElapsedTime(retTime, startEvt);
+    return endEvent->ElapsedTime(timeInterval, startEvent);
 }
 
-rtError_t ApiImplEvent::EventGetTimeStamp(uint64_t* const retTime, Event* const evt)
+rtError_t ApiImplEvent::EventGetTimeStamp(uint64_t* const timeStamp, Event* const evt)
 {
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(retTime, RT_ERROR_INVALID_VALUE, "Obtaining the event execution end time");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
+        timeStamp, RT_ERROR_INVALID_VALUE, "Obtaining the event execution end time");
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(evt, RT_ERROR_INVALID_VALUE, "Obtaining the event execution end time");
     COND_RETURN_WARN(
         evt->GetEventFlag() == RT_EVENT_EXTERNAL, RT_ERROR_FEATURE_NOT_SUPPORT,
@@ -165,7 +166,7 @@ rtError_t ApiImplEvent::EventGetTimeStamp(uint64_t* const retTime, Event* const 
     COND_RETURN_AND_MSG_OUTER(
         evt->IsCapturing(), RT_ERROR_EVENT_CAPTURED, ErrorCode::EE1016, "Obtaining the event execution end time",
         RtFmtMsg("Event %d during the capture stage is not supported", evt->EventId_()));
-    return evt->GetTimeStamp(retTime);
+    return evt->GetTimeStamp(timeStamp);
 }
 
 } // namespace runtime

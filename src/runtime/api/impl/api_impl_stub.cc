@@ -243,9 +243,9 @@ rtError_t ApiImpl::EventWorkModeGet(uint8_t* mode)
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
-rtError_t ApiImplEvent::IpcGetEventHandle(IpcEvent* const evt, rtIpcEventHandle_t* handle)
+rtError_t ApiImplEvent::IpcGetEventHandle(IpcEvent* const event, rtIpcEventHandle_t* handle)
 {
-    UNUSED(evt);
+    UNUSED(event);
     UNUSED(handle);
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
