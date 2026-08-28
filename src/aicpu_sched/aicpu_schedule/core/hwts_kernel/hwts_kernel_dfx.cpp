@@ -63,7 +63,7 @@ int32_t DumpDataInfoTsKernel::Compute(const aicpu::HwtsTsKernel& tsKernelInfo)
     }
 
     if (static_cast<size_t>(paramHead->length) != len) {
-        aicpusd_err("data dump param length[%u] shoulf be [%zu]", paramHead->length, len);
+        aicpusd_err("data dump param length[%u] should be [%zu]", paramHead->length, len);
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
 

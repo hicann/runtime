@@ -512,6 +512,19 @@ TEST_F(ThreadManagerTest, ProcessOpenSubProc_AdprofStartSucceeds_ReturnsOk)
     threadModeManager->Destroy();
 }
 
+TEST_F(ThreadManagerTest, ProcessOpenSubProc_ExtParamCntTooLarge_ReturnsError)
+{
+    tsd::TSD_StatusT ret = tsd::TSD_OK;
+    std::shared_ptr<ClientManager> threadModeManager = std::make_shared<ThreadModeManager>(deviceId);
+    ProcOpenArgs openArgs;
+    openArgs.procType = TSD_SUB_PROC_ADPROF;
+    openArgs.extParamCnt = 129U; // SUB_PROC_PARAM_LIST_MAX_COUNT(128) + 1
+    MOCKER(mmDlsym).stubs().will(invoke(mmDlsymFakeAdprofStart));
+    ret = threadModeManager->ProcessOpenSubProc(&openArgs);
+    EXPECT_EQ(ret, tsd::TSD_INTERNAL_ERROR);
+    threadModeManager->Destroy();
+}
+
 TEST_F(ThreadManagerTest, ProcessCloseSubProcList_NullList_ReturnsError)
 {
     tsd::TSD_StatusT ret = tsd::TSD_OK;

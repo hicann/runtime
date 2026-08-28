@@ -39,7 +39,7 @@ int32_t OperatorKernelActiveEntryStream::Compute(const AicpuTaskInfo& kernelTask
 
 int32_t OperatorKernelActiveEntryStream::DoCompute(const uint32_t streamId, const RunContext& taskContext) const
 {
-    aicpusd_info("Begin to active ModeId[%u] streamId[%u].", taskContext.modelId, streamId);
+    aicpusd_info("Begin to active modelId[%u] streamId[%u].", taskContext.modelId, streamId);
     uint32_t streamFlag = 0U;
     auto ret = ModelStreamManager::GetInstance().GetStreamFlag(streamId, streamFlag);
     if (ret != AICPU_SCHEDULE_OK) {

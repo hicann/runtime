@@ -216,7 +216,7 @@ void AicpuMsgSend::SendAicpuRecordMsg(const void* const notifyParam, const uint3
     const aicpu::AsyncNotifyInfo* const notifyInfo = reinterpret_cast<const aicpu::AsyncNotifyInfo*>(notifyParam);
     if ((notifyInfo->retCode != 0U) && (notifyInfo->retCode != AICPU_KERNEL_END_OF_SEQUENCE_FLAG)) {
         aicpusd_err(
-            "Aicpu recevied error code, wait_type[%u], wait_id[%u], task_id[%lu], stream_id[%u], ret_code[%u].",
+            "Aicpu received error code, wait_type[%u], wait_id[%u], task_id[%lu], stream_id[%u], ret_code[%u].",
             notifyInfo->waitType, notifyInfo->waitId, notifyInfo->taskId, notifyInfo->streamId, notifyInfo->retCode);
     } else {
         aicpusd_info(

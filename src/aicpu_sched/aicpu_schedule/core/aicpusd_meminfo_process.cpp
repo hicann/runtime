@@ -405,7 +405,7 @@ StatusCode AicpuMemInfoProcess::LoadMemCfgFromFile(const std::string& filePath, 
     aicpusd_info("Read [%s] file", filePath.c_str());
     std::ifstream ifs(filePath);
     if (!ifs.is_open()) {
-        aicpusd_run_info("Cant not open [%s], please check!", filePath.c_str());
+        aicpusd_run_info("Cannot open [%s], please check!", filePath.c_str());
         return AICPU_SCHEDULE_ERROR_READ_JSON_FAILED;
     }
     std::string content((std::istreambuf_iterator<char_t>(ifs)), std::istreambuf_iterator<char_t>());
@@ -501,7 +501,7 @@ StatusCode AicpuMemInfoProcess::LoadMemCfgFromFile(const std::string& filePath, 
 StatusCode AicpuMemInfoProcess::CheckPathValid(const std::string& cfgFullPath)
 {
     if (cfgFullPath.length() >= static_cast<size_t>(PATH_MAX)) {
-        aicpusd_run_info("cfgFullPath file length[%zu] must less than PATH_MAX[%u]", cfgFullPath.length(), PATH_MAX);
+        aicpusd_run_info("cfgFullPath file length[%zu] must be less than PATH_MAX[%u]", cfgFullPath.length(), PATH_MAX);
         return AICPU_SCHEDULE_ERROR_GET_PATH_FAILED;
     }
 

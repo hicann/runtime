@@ -61,7 +61,7 @@ int32_t CustOperationCommon::GetGroupNameInfo(std::vector<std::string>& groupNam
     std::map<std::string, GroupShareAttr> buffGrpInfo = {};
     const int32_t ret = AicpuDrvManager::GetInstance().QueryProcBuffInfo(static_cast<uint32_t>(curPid), buffGrpInfo);
     if (ret != AICPU_SCHEDULE_OK) {
-        aicpusd_err("Fail to get group info of acipusd[%d]", curPid);
+        aicpusd_err("Fail to get group info of aicpusd[%d]", curPid);
         return ret;
     }
 

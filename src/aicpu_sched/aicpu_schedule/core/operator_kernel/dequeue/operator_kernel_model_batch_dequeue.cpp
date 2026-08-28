@@ -31,7 +31,7 @@ int32_t OperatorKernelModelBatchDequeue::Compute(const AicpuTaskInfo& kernelTask
     aicpusd_info("batch dequeue for %u queues.", batchDeqInfo.inputNums);
     for (uint32_t i = 0U; i < batchDeqInfo.inputNums; ++i) {
         if (inputsIsDequeue[i]) {
-            aicpusd_info("the [%u]th queue has been dequed successfully", i);
+            aicpusd_info("the [%u]th queue has been dequeued successfully", i);
             continue;
         }
         BufEnQueueInfo queueInfo = {batchDeqInfo.queueIds[i], batchDeqInfo.mbufAddrs[i]};

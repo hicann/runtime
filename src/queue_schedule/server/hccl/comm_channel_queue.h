@@ -64,7 +64,7 @@ public:
             BQS_LOG_ERROR("Failed to kzalloc memory for queue, depth=[%u].", depth_);
             return FsmStatus::FSM_FAILED;
         }
-        BQS_LOG_DEBUG("Succes to alloc memory[%zu].", sizeof(T) * depth_);
+        BQS_LOG_DEBUG("Success to alloc memory[%zu].", sizeof(T) * depth_);
 
         head_ = 0U;
         tail_ = 0U;

@@ -256,3 +256,18 @@ TEST_F(OperatorKernelModelBatchDequeueTest, AlignTimestamp_003)
         kernel_.AlignTimestamp(batchDeqInfo, runContextT, maxAlignTimestamp, minAlignTimestamp, minTimestampIndex);
     EXPECT_EQ(ret, AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID);
 }
+
+TEST_F(OperatorKernelModelBatchDequeueTest, ModelBatchDequeue_AlreadyDequeued_ReturnsOk)
+{
+    MOCKER_CPP(&OperatorKernelModelBatchDequeue::CheckAndParseBatchDequeueParams)
+        .stubs()
+        .will(invoke(CheckAndParseBatchDequeueParamsStub));
+    AicpuModel aicpuModel;
+    auto& inputsIsDequeue = aicpuModel.MutableInputsIsDequeue();
+    inputsIsDequeue.resize(1, true);
+    MOCKER_CPP(&AicpuModelManager::GetModel).stubs().will(returnValue(&aicpuModel));
+    const AicpuTaskInfo task = {};
+    int32_t ret = kernel_.Compute(task, runContextT);
+    EXPECT_EQ(ret, 0);
+    GlobalMockObject::verify();
+}

@@ -69,6 +69,8 @@ protected:
 };
 
 namespace {
+int pthread_create_fail(pthread_t*, const pthread_attr_t*, void* (*)(void*), void*) { return 1; }
+
 constexpr uint64_t CHIP_ADC = 2U;
 constexpr uint64_t CHIP_ASCEND_910B = 5U;
 drvError_t halGetDeviceInfoFake1(uint32_t devId, int32_t moduleType, int32_t infoType, int64_t* value)
@@ -678,6 +680,21 @@ TEST_F(AICPUCustScheduleTEST, AICPUEventCustUpdateProfilingMode)
     memcpy_s(eventInfoPriv.msg, sizeof(subEventInfo), &subEventInfo, sizeof(subEventInfo));
     int ret = AicpuEventProcess::GetInstance().AICPUEventCustUpdateProfilingMode(eventInfoPriv);
     EXPECT_EQ(ret, AICPU_SCHEDULE_OK);
+}
+
+TEST_F(AICPUCustScheduleTEST, AICPUEventCustUpdateProfilingMode_SendRspFail)
+{
+    event_info_priv eventInfoPriv;
+    AICPUSubEventInfo subEventInfo = {0U};
+    subEventInfo.modelId = 0U;
+    subEventInfo.para.modeInfo.deviceId = 0U;
+    subEventInfo.para.modeInfo.hostpId = static_cast<pid_t>(12345);
+    subEventInfo.para.modeInfo.flag = 7U;
+    memcpy_s(eventInfoPriv.msg, sizeof(subEventInfo), &subEventInfo, sizeof(subEventInfo));
+    MOCKER(SendUpdateProfilingRspToTsd).stubs().will(returnValue(static_cast<int32_t>(-1)));
+    int ret = AicpuEventProcess::GetInstance().AICPUEventCustUpdateProfilingMode(eventInfoPriv);
+    EXPECT_EQ(ret, AICPU_SCHEDULE_ERROR_TASK_EXECUTE_FAILED);
+    GlobalMockObject::verify();
 }
 
 TEST_F(AICPUCustScheduleTEST, GetCurrentRunModeThread)
@@ -2249,6 +2266,12 @@ aicpu::status_t GetAicpuRunModeSOCKET(aicpu::AicpuRunMode& runMode)
     runMode = aicpu::AicpuRunMode::PROCESS_SOCKET_MODE;
     return aicpu::AICPU_ERROR_NONE;
 }
+
+aicpu::status_t GetAicpuRunModePCIE(aicpu::AicpuRunMode& runMode)
+{
+    runMode = aicpu::AicpuRunMode::PROCESS_PCIE_MODE;
+    return aicpu::AICPU_ERROR_NONE;
+}
 TEST_F(AICPUCustScheduleTEST, InitDumpProcess_test1)
 {
     int32_t ret = 0;
@@ -2286,6 +2309,21 @@ TEST_F(AICPUCustScheduleTEST, InitDumpProcess_test2)
     AicpuCustDumpProcess::GetInstance().initFlag_ = false;
     ret = AicpuCustDumpProcess::GetInstance().InitDumpProcess(2, 0);
     EXPECT_EQ(ret, AICPU_SCHEDULE_ERROR_INNER_ERROR);
+}
+
+TEST_F(AICPUCustScheduleTEST, InitDumpProcess_CreateThreadFail)
+{
+    AicpuCustDumpProcess::GetInstance().initFlag_ = false;
+    MOCKER(aicpu::GetAicpuRunMode).stubs().will(invoke(GetAicpuRunModePCIE));
+    MOCKER_CPP(&AicpuCustDumpProcess::InitWaitConVec).stubs().will(returnValue(AICPU_SCHEDULE_OK));
+    MOCKER(sem_init).stubs().will(returnValue(0));
+    MOCKER(sem_post).stubs().will(returnValue(0));
+    MOCKER(sem_wait).stubs().will(returnValue(0));
+    MOCKER(sem_destroy).stubs().will(returnValue(0));
+    MOCKER(pthread_create).stubs().will(invoke(pthread_create_fail));
+    auto ret = AicpuCustDumpProcess::GetInstance().InitDumpProcess(2, 2);
+    EXPECT_EQ(ret, AICPU_SCHEDULE_ERROR_INIT_FAILED);
+    GlobalMockObject::verify();
 }
 
 TEST_F(AICPUCustScheduleTEST, GetAicpuPhyIndexSucc)
@@ -2638,6 +2676,15 @@ TEST_F(AICPUCustScheduleTEST, CreateMc2MaintenanceThread_Start_thread_multiple_t
         AicpuSchedule::AicpuCustMc2MaintenanceThread::GetInstance(0).processThread_.join();
     }
     EXPECT_EQ(ret, AICPU_SCHEDULE_OK);
+}
+
+TEST_F(AICPUCustScheduleTEST, CreateCustMc2MaintenanceThread_CreateThreadFail)
+{
+    AicpuSchedule::AicpuCustMc2MaintenanceThread::GetInstance(0).initFlag_ = false;
+    MOCKER(pthread_create).stubs().will(invoke(pthread_create_fail));
+    auto ret = AicpuSchedule::AicpuCustMc2MaintenanceThread::GetInstance(0).CreateCustMc2MaintenanceThread();
+    EXPECT_EQ(ret, AICPU_SCHEDULE_ERROR_INIT_FAILED);
+    GlobalMockObject::verify();
 }
 
 TEST_F(AICPUCustScheduleTEST, CreateMc2MaintenanceThread_destructor_St)

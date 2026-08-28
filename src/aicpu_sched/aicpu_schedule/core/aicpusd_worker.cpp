@@ -105,7 +105,7 @@ int32_t ThreadPool::CreateWorker(const AicpuSchedMode schedMode)
     size_t aicpuNum = GetWorkerNum();
     const std::vector<uint32_t> deviceVec = AicpuDrvManager::GetInstance().GetDeviceList();
     if (AicpuDrvManager::GetInstance().GetAicpuNum() == 0UL) {
-        aicpusd_run_info("aicpu total num=[0], create [%zu] aicpu workers", aicpuNum);
+        aicpusd_run_info("aicpu total num=[%zu], create [%zu] aicpu workers", aicpuNum, aicpuNum);
         hasAicpu_ = false;
     }
     sems_ = std::vector<sem_t>(static_cast<size_t>(aicpuNum));
@@ -474,7 +474,7 @@ void ThreadPool::SetThreadSchedModeByTsd()
 {
     const size_t relationSize = threadIdLists_.size();
     if (relationSize > MAX_THREAD_ID_CNT) {
-        aicpusd_err("current list to long size:%zu", relationSize);
+        aicpusd_err("current list is too long, size:%zu", relationSize);
         return;
     }
     SubProcScheduleModeInfo curInfo = {};

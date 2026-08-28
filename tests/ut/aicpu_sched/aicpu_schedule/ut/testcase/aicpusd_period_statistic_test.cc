@@ -9,6 +9,7 @@
  */
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
+#include <pthread.h>
 #define private public
 #include "aicpusd_proc_mem_statistic.h"
 #include "aicpusd_period_statistic.h"
@@ -16,6 +17,10 @@
 #undef private
 using namespace AicpuSchedule;
 using namespace aicpu;
+
+namespace {
+int pthread_create_fail(pthread_t*, const pthread_attr_t*, void* (*)(void*), void*) { return 1; }
+} // namespace
 class AicpuSdPeriodStatisticTest : public testing::Test {
 protected:
     static void SetUpTestCase() { std::cout << "AicpuSdPeriodStatisticTest SetUpTestCase" << std::endl; }
@@ -56,5 +61,15 @@ TEST_F(AicpuSdPeriodStatisticTest, SetThreadAffinity_Failed1)
 {
     MOCKER(&pthread_setaffinity_np).stubs().will(returnValue(1));
     EXPECT_EQ(AicpuSdPeriodStatistic::GetInstance().SetThreadAffinity(), AICPU_SCHEDULE_ERROR_INNER_ERROR);
+    GlobalMockObject::verify();
+}
+
+TEST_F(AicpuSdPeriodStatisticTest, InitStatistic_CreateThreadFail)
+{
+    AicpuSdPeriodStatistic::GetInstance().initFlag_ = false;
+    MOCKER_CPP(&AicpuSdProcMemStatistic::InitProcMemStatistic).stubs().will(returnValue(true));
+    MOCKER(pthread_create).stubs().will(invoke(pthread_create_fail));
+    AicpuSdPeriodStatistic::GetInstance().InitStatistic(0U, 123U, 0U);
+    EXPECT_EQ(AicpuSdPeriodStatistic::GetInstance().initFlag_, false);
     GlobalMockObject::verify();
 }

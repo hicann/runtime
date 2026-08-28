@@ -662,3 +662,22 @@ TEST_F(AicpuCustSoManagerTEST, UpdateCacheWithRealFile)
 
     RemoveTempDir(tempDir);
 }
+
+TEST_F(AicpuCustSoManagerTEST, GenerateFileHashInfo_FileTooLarge_ReturnsError)
+{
+    const std::string tempDir = MakeTempDir();
+    ASSERT_FALSE(tempDir.empty());
+    const std::string filePath = tempDir + "/libbig.so";
+    {
+        std::ofstream file(filePath, std::ios::binary);
+        file.seekp(201 * 1024 * 1024 - 1, std::ios::beg);
+        file.put('\0');
+    }
+
+    HashCalculator calculator;
+    FileHashInfo fileInfo = {};
+    const int32_t ret = calculator.GenerateFileHashInfo(filePath, fileInfo);
+    EXPECT_EQ(ret, AICPU_SCHEDULE_ERROR_INNER_ERROR);
+
+    RemoveTempDir(tempDir);
+}

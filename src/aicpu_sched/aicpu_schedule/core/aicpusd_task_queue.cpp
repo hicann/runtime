@@ -27,7 +27,7 @@ bool TaskMap::BatchAddTask(const AICPUSharderTaskInfo& taskInfo, const std::queu
 
     if (!iter->second.empty()) {
         aicpusd_err(
-            "Try to add new task queue, but last queue is not been consumed. parallelId=%u, "
+            "Try to add new task queue, but last queue has not been consumed. parallelId=%u, "
             "size=%lu, shardNum=%ld",
             taskInfo.parallelId, iter->second.size(), taskInfo.shardNum);
         return false;
@@ -92,7 +92,7 @@ bool TaskQueue::Enqueue(const aicpu::Closure& closure)
 {
     const std::lock_guard<std::mutex> queLock(mtxQue_);
     if (taskQueue_.size() >= MAX_TASK_QUEUE_SIZE) {
-        aicpusd_err("Queue is too large");
+        aicpusd_err("Queue is too large, currentSize[%zu], maxSize[%zu]", taskQueue_.size(), MAX_TASK_QUEUE_SIZE);
         return false;
     }
     taskQueue_.push(closure);

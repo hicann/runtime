@@ -264,6 +264,19 @@ TEST_F(PackageCheckCodeServiceComponentTest, SaveDeviceCheckCode_NormalPackageTy
     EXPECT_EQ(processModeManager.GetPackageManager().ctx_.deviceIdle, false);
 }
 
+TEST_F(PackageCheckCodeServiceComponentTest, SaveDeviceCheckCode_NormalPackageDeviceNotIdle_SetsIdleFalse)
+{
+    HDCMessage msg;
+    msg.set_type(HDCMessage::TSD_GET_DEVICE_PACKAGE_CHECKCODE_NORMAL_RSP);
+    msg.set_check_code(1);
+    msg.set_tsd_rsp_code(0);
+    msg.set_package_type(static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_DRIVER_EXTEND));
+    msg.set_device_idle(false);
+    ProcessModeManager processModeManager(deviceId, 0);
+    processModeManager.GetPackageManager().SaveDeviceCheckCode(msg);
+    EXPECT_EQ(processModeManager.GetPackageManager().ctx_.deviceIdle, false);
+}
+
 TEST_F(PackageCheckCodeServiceComponentTest, GetDeviceCheckCodeRetry_CallsReleaseDeviceConnection)
 {
     ProcessModeManager processModeManager(deviceId, 0);

@@ -738,7 +738,7 @@ int32_t AicpuQueueEventProcess::AttachGroupForSlave(
     BuffCfg buffConfig = {};
     drvRet = halBuffInit(&buffConfig);
     if (drvRet != DRV_ERROR_NONE) {
-        aicpusd_err("Buffer initial failed for slave aicpusd[%d] ret[%d", curPid_, drvRet);
+        aicpusd_err("Buffer initial failed for slave aicpusd[%d] ret[%d]", curPid_, drvRet);
         return drvRet;
     }
     aicpusd_info("Attach group[%s] for slave aicpusd[%d] success", outGroupName.c_str(), curPid_);

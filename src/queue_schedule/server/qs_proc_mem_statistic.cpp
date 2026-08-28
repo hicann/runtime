@@ -35,7 +35,7 @@ bool QsProcMemStatistic::GetSvmInfoFromFile(uint64_t& svmValue)
 {
     std::ifstream svmFile(svmMemCfgFile_);
     if (!svmFile) {
-        BQS_LOG_INFO(
+        BQS_LOG_WARN(
             "open svmMem file not success, pid=%d, errno=%d, strerror=%s", static_cast<int32_t>(curPid_), errno,
             strerror(errno));
         return false;
@@ -62,7 +62,7 @@ bool QsProcMemStatistic::GetSvmInfoFromFile(uint64_t& svmValue)
         sscanf_s(svmStrInfo.c_str(), "peak_page_cnt=%llu; peak_hpage_cnt=%llu", &normalPkgCnt, &hugePkgCnt);
     if (ret < SVM_VALUE_CNT) {
         BQS_LOG_WARN(
-            "get svmStrInfo:%s failed, ret:%d, peakHPgCnt:%lu, peakHPgCnt:%lu", svmStrInfo.c_str(), ret, normalPkgCnt,
+            "get svmStrInfo:%s failed, ret:%d, peakPgCnt:%lu, peakHPgCnt:%lu", svmStrInfo.c_str(), ret, normalPkgCnt,
             hugePkgCnt);
         return false;
     }
@@ -95,7 +95,7 @@ bool QsProcMemStatistic::GetXsMemInfoFromFile(uint64_t& xsMemValue)
 {
     std::ifstream inFile(xsMemCfgFile_);
     if (!inFile) {
-        BQS_LOG_INFO(
+        BQS_LOG_WARN(
             "open xsMem file not success, pid=%d, errno=%d, strerror=%s", static_cast<int32_t>(curPid_), errno,
             strerror(errno));
         return false;
@@ -150,7 +150,7 @@ bool QsProcMemStatistic::GetOsMemInfoFromFile(uint64_t& rssValue, uint64_t& hwmV
 {
     std::ifstream ifFile(rssMemCfgFile_);
     if (!ifFile) {
-        BQS_LOG_INFO(
+        BQS_LOG_WARN(
             "open rss file not success, pid=%d, errno=%d, strerror=%s", static_cast<int32_t>(curPid_), errno,
             strerror(errno));
         return false;
@@ -178,12 +178,12 @@ bool QsProcMemStatistic::GetOsMemInfoFromFile(uint64_t& rssValue, uint64_t& hwmV
     }
 
     if (!bqs::TransStrToull(vmRssStr.substr(strlen(VM_RSS_NAME)), rssValue)) {
-        BQS_LOG_INFO("get vmRssError:%s nok", vmRssStr.c_str());
+        BQS_LOG_WARN("get vmRssError:%s nok", vmRssStr.c_str());
         return false;
     }
 
     if (!bqs::TransStrToull(vmHwmStr.substr(strlen(VM_HWM_NAME)), hwmValue)) {
-        BQS_LOG_INFO("get vmHwmError:%s nok", vmRssStr.c_str());
+        BQS_LOG_WARN("get vmHwmError:%s nok", vmRssStr.c_str());
         return false;
     }
     BQS_LOG_INFO("vmRss:%lu KB, vmHwm:%lu KB.", rssValue, hwmValue);
@@ -195,7 +195,7 @@ void QsProcMemStatistic::StatisticProcOsMemInfo()
     uint64_t rssValue = 0UL;
     uint64_t hwmValue = 0UL;
     if (!GetOsMemInfoFromFile(rssValue, hwmValue)) {
-        BQS_LOG_INFO("get os meminfo nok");
+        BQS_LOG_WARN("get os meminfo nok");
         return;
     }
     rssMem_.memHwm = hwmValue;

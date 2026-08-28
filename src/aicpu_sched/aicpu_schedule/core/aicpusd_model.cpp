@@ -117,7 +117,7 @@ int32_t AicpuStream::ExecuteNextTask(const RunContext& runContext, bool& streamE
     const std::unique_lock<std::mutex> lockForSteam(mutexForStream_);
     if (nextTaskIndex_ >= tasks_.size()) {
         aicpusd_err(
-            "Model[%u] stream[%u] has reach task end, total taskNum[%zu], nextTaskIndex[%zu].", runContext.modelId,
+            "Model[%u] stream[%u] has reached task end, total taskNum[%zu], nextTaskIndex[%zu].", runContext.modelId,
             streamId_, tasks_.size(), nextTaskIndex_);
         streamEnd = true;
         return AICPU_SCHEDULE_OK;
@@ -1020,7 +1020,7 @@ int32_t AicpuModel::LoadQueueInfo(const AicpuModelInfo* const modelInfo)
     for (int32_t i = 0; i < static_cast<int32_t>(modelInfo->queueSize); i++) {
         if (infoPtr[i].flag == static_cast<uint32_t>(QueueDirectionFlag::QUEUE_CLIENT_INPUT_FLAG) ||
             infoPtr[i].flag == static_cast<uint32_t>(QueueDirectionFlag::QUEUE_CLIENT_OUTPUT_FLAG)) {
-            aicpusd_info("it is qlient qs flag[%d] = [%u]", i, infoPtr[i].flag);
+            aicpusd_info("it is client queue flag[%d] = [%u]", i, infoPtr[i].flag);
             continue;
         }
         if (infoPtr[i].flag == static_cast<uint32_t>(QueueDirectionFlag::QUEUE_INPUT_FLAG)) {

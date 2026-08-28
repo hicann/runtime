@@ -44,7 +44,7 @@ int32_t OperatorKernelLockTable::Compute(const AicpuTaskInfo& kernelTaskInfo, co
     const auto triedTable = model->GetTableTryLock();
     if ((triedTable != INVALID_TABLE_ID) && (triedTable != static_cast<int64_t>(tableId))) {
         aicpusd_err(
-            "model[%u] was tring to lock table[%d], cannot try to lock table[%u]", taskContext.modelId, triedTable,
+            "model[%u] was trying to lock table[%d], cannot try to lock table[%u]", taskContext.modelId, triedTable,
             tableId);
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }

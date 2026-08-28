@@ -89,7 +89,7 @@ TSD_StatusT HdcCommon::SendNormalShortMsg(const HDCMessage& msg, const uint32_t 
     }
 
     if (size > (MAX_HEAP_BUFF_BYTE - HDC_MSG_SHORT_HEAD_SIZE)) {
-        TSD_ERROR("Message size[%u] must less than %u", size, MAX_HEAP_BUFF_BYTE - HDC_MSG_SHORT_HEAD_SIZE);
+        TSD_ERROR("Message size[%u] must be less than %u", size, MAX_HEAP_BUFF_BYTE - HDC_MSG_SHORT_HEAD_SIZE);
         return TSD_INTERGER_REVERSED;
     }
 

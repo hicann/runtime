@@ -179,7 +179,7 @@ int32_t AicpuSqeAdapter::ResponseToTs(
         static_cast<uint32_t>(sizeof(TsAicpuSqe)), handleId);
     AICPUSD_CHECK(
         (ret == DRV_ERROR_NONE), AICPU_SCHEDULE_ERROR_INNER_ERROR,
-        "Response to ts use"
+        "Response to ts use "
         "tsDevSendMsgAsync failed, ret[%d]",
         ret);
     aicpusd_info("Finished to response use TsAicpuSqe.");
@@ -195,7 +195,7 @@ int32_t AicpuSqeAdapter::ResponseToTs(
         static_cast<uint32_t>(sizeof(TsAicpuMsgInfo)), handleId);
     AICPUSD_CHECK(
         (ret == DRV_ERROR_NONE), AICPU_SCHEDULE_ERROR_INNER_ERROR,
-        "Response to ts use"
+        "Response to ts use "
         "tsDevSendMsgAsync failed, ret[%d]",
         ret);
     aicpusd_info("Finished to response use TsAicpuMsgInfo.");
@@ -210,7 +210,7 @@ int32_t AicpuSqeAdapter::ResponseToTs(hwts_response_t& hwtsResp, uint32_t devId,
         static_cast<uint32_t>(sizeof(hwts_response_t)));
     AICPUSD_CHECK(
         (ret == DRV_ERROR_NONE), AICPU_SCHEDULE_ERROR_INNER_ERROR,
-        "Response to ts use"
+        "Response to ts use "
         "halEschedAckEvent failed, ret[%d]",
         ret);
     aicpusd_info("Finished to response use hwtsResp.");

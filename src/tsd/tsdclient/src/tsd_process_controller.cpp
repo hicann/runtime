@@ -185,7 +185,7 @@ TSD_StatusT TsdProcessController::WaitRsp(const uint32_t timeout, const bool ign
     const TSD_StatusT ret = commAgent_.RecvData(ignoreRecvErr, timeout);
     if (!sharedCtx_.isAdcEnv) {
         if (isClose && (ret == TSD_HDC_SERVER_CLIENT_SOCKET_CLOSED)) {
-            TSD_RUN_INFO("close rsp not receive, server close the session");
+            TSD_RUN_INFO("close rsp not received, server closed the session");
             return TSD_OK;
         }
     }
@@ -262,7 +262,9 @@ MessageContext TsdProcessController::BuildBaseMessageContext() const
     ctx.aicpuDeviceMode = aicpuDeviceMode_;
     if (sharedCtx_.aicpuSchedMode >= static_cast<uint64_t>(AICPU_SCHED_MODE_INVALID)) {
         TSD_RUN_WARN(
-            "[TsdClient] invalid aicpuSchedMode:%llu", static_cast<unsigned long long>(sharedCtx_.aicpuSchedMode));
+            "[TsdClient] invalid aicpuSchedMode:%llu, valid range is [0-%llu]",
+            static_cast<unsigned long long>(sharedCtx_.aicpuSchedMode),
+            static_cast<unsigned long long>(AICPU_SCHED_MODE_INVALID));
         ctx.aicpuSchedMode = AICPU_SCHED_MODE_INTERRUPT;
     } else {
         ctx.aicpuSchedMode = static_cast<SchedMode>(sharedCtx_.aicpuSchedMode);
@@ -496,7 +498,9 @@ TSD_StatusT TsdProcessController::ProcessQueueGrant(
         return TSD_OK;
     }
     if ((outLen % sizeof(queueInfoList->queQueryQuesOfProcInfo[0U])) != 0U) {
-        TSD_ERROR("[TsdClient] QueueInfo outbuff size[%d] is invalid", outLen);
+        TSD_ERROR(
+            "[TsdClient] QueueInfo outbuff size[%d] is invalid, must be a multiple of %zu", outLen,
+            sizeof(queueInfoList->queQueryQuesOfProcInfo[0U]));
         return TSD_INTERNAL_ERROR;
     }
     const uint32_t queueNum = static_cast<uint32_t>(outLen / sizeof(queueInfoList->queQueryQuesOfProcInfo[0U]));
@@ -586,7 +590,7 @@ TSD_StatusT TsdProcessController::GetAicpusdPid(pid_t& aicpusdPid) const
         return TSD_INTERNAL_ERROR;
     }
     TSD_RUN_INFO(
-        "Get aicpusd[%d] from host[%d] success.", static_cast<int32_t>(srcPid), static_cast<int32_t>(aicpusdPid));
+        "Get aicpusd[%d] from host[%d] success.", static_cast<int32_t>(aicpusdPid), static_cast<int32_t>(srcPid));
     return TSD_OK;
 }
 

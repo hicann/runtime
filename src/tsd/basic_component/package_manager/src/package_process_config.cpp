@@ -71,7 +71,7 @@ bool PackageProcessConfig::SetConfigDataOnServer(const SinkPackageConfig& hdcCon
             configMap_[pkgName] = tempNode;
             TSD_RUN_INFO("insert package:%s config", pkgName.c_str());
         } catch (...) {
-            TSD_ERROR("");
+            TSD_ERROR("insert package config to map failed");
             return false;
         }
     }

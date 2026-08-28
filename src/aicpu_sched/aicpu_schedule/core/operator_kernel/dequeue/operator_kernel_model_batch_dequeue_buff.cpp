@@ -44,7 +44,7 @@ int32_t OperatorKernelModelBatchDequeueBuff::Compute(const AicpuTaskInfo& kernel
             batchDeqBufInfo.queueIds[i], batchDeqBufInfo.deviceIds[i], batchDeqBufInfo.mbufAddrs[i]};
         const auto res = ModelAttachAndDequeueBuff(queueInfo, taskContext);
         if (res == AICPU_SCHEDULE_ERROR_MODEL_UNLOAD) {
-            aicpusd_warn("model is destroy");
+            aicpusd_warn("model is destroyed");
             bool* const pending = const_cast<bool*>(&taskContext.pending);
             *pending = true;
             return AICPU_SCHEDULE_OK;

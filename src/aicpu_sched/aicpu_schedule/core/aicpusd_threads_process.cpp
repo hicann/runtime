@@ -238,7 +238,7 @@ void ComputeProcess::StopTdtServer() const
         return;
     }
     if (!isStartTdtFlag_) {
-        aicpusd_info("It don`t need to stop tdt server.");
+        aicpusd_info("It doesn't need to stop tdt server.");
         return;
     }
     aicpusd_info("Stop tdt server, deviceId=%u.", deviceVec_[0]);

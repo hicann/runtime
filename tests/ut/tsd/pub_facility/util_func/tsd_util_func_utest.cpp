@@ -436,3 +436,10 @@ TEST_F(TsdUtilFuncTest, GetHostSoPath_AbsoluteBinaryPath_ReturnsParentDirectory)
     std::string path = tsd::GetHostSoPath();
     EXPECT_EQ(path, "/home/");
 }
+
+TEST_F(TsdUtilFuncTest, CheckRealPath_PathTooLong_ReturnsFalse)
+{
+    string longPath(static_cast<size_t>(PATH_MAX), 'a');
+    bool ret = CheckRealPath(longPath);
+    EXPECT_EQ(ret, false);
+}

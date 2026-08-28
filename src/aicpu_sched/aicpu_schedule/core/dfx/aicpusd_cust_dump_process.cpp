@@ -64,7 +64,7 @@ int32_t AicpuSdCustDumpProcess::InitCustDumpProcess(const uint32_t deviceId, con
     try {
         msgThread_ = std::thread(&AicpuSdCustDumpProcess::StartProcessEvent, this);
     } catch (std::exception& e) {
-        aicpusd_err("create thread file:%s", e.what());
+        aicpusd_err("create thread failed:%s", e.what());
         return AICPU_SCHEDULE_ERROR_INIT_FAILED;
     }
     const int32_t semWaitRet = sem_wait(&workerSme_);

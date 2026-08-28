@@ -339,7 +339,7 @@ BqsStatus ConfigInfoOperator::CreateHcomHandle(const uintptr_t mbufData, const u
                 HcclFinalizeComm(hcomHandle);
                 break;
             }
-            BQS_LOG_INFO("Register meomory size[%lu]", memorySize);
+            BQS_LOG_INFO("Register memory size[%lu]", memorySize);
         }
         if (result == BQS_STATUS_OK) {
             info->hcomHandle = PtrToValue(hcomHandle);
@@ -800,7 +800,7 @@ EntityInfoPtr ConfigInfoOperator::CreateEntityInfo(const Endpoint& endpoint, con
         }
         BQS_LOG_INFO(
             "[CreateEntityInfo] qid=%u, endpoint.resId=%u, isHostQueue=%d, "
-            "onwerDeviceId=%u, localDeviceId=%u, queueType=%u",
+            "ownerDeviceId=%u, localDeviceId=%u, queueType=%u",
             id, endpoint.resId, isHostQueue, onwerDeviceId, localDeviceId, queueType);
     }
 
@@ -1147,7 +1147,7 @@ BqsStatus ConfigInfoOperator::CheckAndRecordAddGrpInfo() const
             return BQS_STATUS_PARAM_INVALID;
         }
         if (entity->GetType() == dgw::EntityType::ENTITY_GROUP) {
-            BQS_LOG_ERROR("Not allowd group[%s] exist in group.", entity->ToString().c_str());
+            BQS_LOG_ERROR("Not allowed group[%s] exist in group.", entity->ToString().c_str());
             return BQS_STATUS_PARAM_INVALID;
         }
         entityVec.emplace_back(entity);
@@ -1393,7 +1393,7 @@ BqsStatus ConfigInfoOperator::ProcessInitDynamicSched() const
              resIndex, true) != BQS_STATUS_OK)) {
         BQS_LOG_ERROR(
             "Fail to subscribe enque event of [qid:%u-deviceId:%u-isclientQ:%d] or "
-            "subscribe f2nf of [qid:%u-deviceId:%u-isclientQ:%d]",
+            "subscribe full-to-notfull event of [qid:%u-deviceId:%u-isclientQ:%d]",
             schedCfgInfo.responseQue.queueId, schedCfgInfo.responseQue.deviceId, schedCfgInfo.responseQue.isClientQ,
             schedCfgInfo.requestQue.queueId, schedCfgInfo.requestQue.deviceId, schedCfgInfo.responseQue.isClientQ);
         resultVec[0UL]->retCode = static_cast<int32_t>(BQS_STATUS_INNER_ERROR);

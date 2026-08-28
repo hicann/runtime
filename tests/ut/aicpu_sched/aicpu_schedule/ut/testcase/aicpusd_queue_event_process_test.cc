@@ -1091,6 +1091,18 @@ TEST_F(AicpusdQueueEventProcessTest, AttachGroupForSlaveFail)
     EXPECT_EQ(ret, DRV_ERROR_INNER_ERR);
 }
 
+TEST_F(AicpusdQueueEventProcessTest, AttachGroupForSlave_BuffInitFail)
+{
+    MOCKER(halGrpAttach).stubs().will(returnValue(int32_t(DRV_ERROR_NONE)));
+    MOCKER(halBuffInit).stubs().will(returnValue(int32_t(DRV_ERROR_INNER_ERR)));
+
+    std::map<std::string, GroupShareAttr> grpInfos = {{"aicpusd_1", {0}}};
+
+    std::string outGroupName;
+    auto ret = AicpuQueueEventProcess::GetInstance().AttachGroupForSlave(grpInfos, outGroupName);
+    EXPECT_EQ(ret, DRV_ERROR_INNER_ERR);
+}
+
 TEST_F(AicpusdQueueEventProcessTest, AddQueueAuthToQs_Success_01)
 {
     MOCKER(halQueueGrant).stubs().will(returnValue(int32_t(DRV_ERROR_NONE)));

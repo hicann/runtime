@@ -273,7 +273,7 @@ void AicpuSqeAdapter::GetAicpuDumpTaskInfoV0(AicpuOpMappingDumpTaskInfo& opmappi
 {
     opmappingInfo.proto_info_task_id &= 0xFFFF;
     aicpusd_info(
-        "Dump data from proto: task id[%u], stream id[%u], form adaper: task id[%u], stream id[%u]",
+        "Dump data from proto: task id[%u], stream id[%u], from adapter: task id[%u], stream id[%u]",
         opmappingInfo.proto_info_task_id, opmappingInfo.proto_info_stream_id, opmappingInfo.task_id,
         opmappingInfo.stream_id);
     dumpTaskInfo.task_id =
@@ -287,7 +287,7 @@ void AicpuSqeAdapter::GetAicpuDumpTaskInfoV0(AicpuOpMappingDumpTaskInfo& opmappi
 void AicpuSqeAdapter::GetAicpuDumpTaskInfoV1(AicpuOpMappingDumpTaskInfo& opmappingInfo, AicpuDumpTaskInfo& dumpTaskInfo)
 {
     aicpusd_info(
-        "Dump data from proto: task id[%u], stream id[%u], form adaper: task id[%u], stream id[%u]",
+        "Dump data from proto: task id[%u], stream id[%u], from adapter: task id[%u], stream id[%u]",
         opmappingInfo.proto_info_task_id, opmappingInfo.proto_info_stream_id, opmappingInfo.task_id,
         opmappingInfo.stream_id);
     dumpTaskInfo.task_id = opmappingInfo.proto_info_task_id;
@@ -871,7 +871,7 @@ int32_t AicpuSqeAdapter::ResponseToTs(
         static_cast<uint32_t>(sizeof(TsAicpuSqe)), handleId);
     AICPUSD_CHECK(
         (ret == DRV_ERROR_NONE), AICPU_SCHEDULE_ERROR_INNER_ERROR,
-        "Response to ts use"
+        "Response to ts use "
         "tsDevSendMsgAsync failed, ret[%d]",
         ret);
     if (FeatureCtrl::GetAicpuSchedMode() == SCHED_MODE_MSGQ) {
@@ -890,7 +890,7 @@ int32_t AicpuSqeAdapter::ResponseToTs(
         static_cast<uint32_t>(sizeof(TsAicpuMsgInfo)), handleId);
     AICPUSD_CHECK(
         (ret == DRV_ERROR_NONE), AICPU_SCHEDULE_ERROR_INNER_ERROR,
-        "Response to ts use"
+        "Response to ts use "
         "tsDevSendMsgAsync failed, ret[%d]",
         ret);
     if (FeatureCtrl::GetAicpuSchedMode() == SCHED_MODE_MSGQ) {
@@ -913,7 +913,7 @@ int32_t AicpuSqeAdapter::ResponseToTs(
         static_cast<uint32_t>(sizeof(hwts_response_t)));
     AICPUSD_CHECK(
         (ret == DRV_ERROR_NONE), AICPU_SCHEDULE_ERROR_INNER_ERROR,
-        "Response to ts use"
+        "Response to ts use "
         "halEschedAckEvent failed, ret[%d]",
         ret);
     aicpusd_info("Finished to response use hwtsResp.");

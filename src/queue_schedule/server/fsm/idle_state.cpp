@@ -29,7 +29,7 @@ FsmStatus IdleState::ProcessMessage(Entity& entity, const InnerMessage& msg)
     (void)msg;
     entity.ResetScheduleCount();
     if (entity.GetWaitDecisionState()) {
-        DGW_LOG_INFO("Enitity[%s] ProcessWaitingData", entity.ToString().c_str());
+        DGW_LOG_INFO("Entity[%s] ProcessWaitingData", entity.ToString().c_str());
         const auto processRet = ProcessWaitingData(entity);
         if ((processRet != FsmStatus::FSM_SUCCESS) || (entity.GetSendDataObjs().size() > DYNAMIC_SCHEDULE_THRESHOLD)) {
             DGW_LOG_WARN(
@@ -116,7 +116,7 @@ FsmStatus GroupIdleState::ProcessMessage(Entity& entity, const InnerMessage& msg
     (void)msg;
     entity.ResetScheduleCount();
     if (entity.GetWaitDecisionState()) {
-        DGW_LOG_INFO("Enitity[%s] ProcessWaitingData", entity.ToString().c_str());
+        DGW_LOG_INFO("Entity[%s] ProcessWaitingData", entity.ToString().c_str());
         const auto processRet = ProcessWaitingData(entity);
         if ((processRet != FsmStatus::FSM_SUCCESS) || (entity.GetSendDataObjs().size() > DYNAMIC_SCHEDULE_THRESHOLD)) {
             DGW_LOG_WARN(

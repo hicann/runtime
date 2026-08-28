@@ -72,7 +72,7 @@ int32_t AicpuCustDumpProcess::InitDumpProcess(const uint32_t deviceId, const uin
     try {
         msgThread_ = std::thread(&AicpuCustDumpProcess::StartProcessEvent, this);
     } catch (std::exception& e) {
-        aicpusd_err("create thread file:%s", e.what());
+        aicpusd_err("create thread failed:%s", e.what());
         return AICPU_SCHEDULE_ERROR_INIT_FAILED;
     }
     const int32_t semWaitRet = sem_wait(&workerSme_);
@@ -209,7 +209,7 @@ int32_t AicpuCustDumpProcess::ProcessDumpMessage(const event_info& drvEventInfo)
             }
         } else {
             aicpusd_err(
-                "threadinex:%u, basestreamid:%u, basetaskid:%u, infostreamId:%u, infotaskId:%u", threadIndex,
+                "threadindex:%u, basestreamid:%u, basetaskid:%u, infostreamId:%u, infotaskId:%u", threadIndex,
                 waitCondVec_[threadIndex].streamId, waitCondVec_[threadIndex].taskId, streamId, taskId);
             return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
         }

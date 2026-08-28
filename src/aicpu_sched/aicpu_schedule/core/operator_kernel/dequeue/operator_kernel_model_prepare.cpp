@@ -232,7 +232,7 @@ int32_t OperatorKernelModelPrepare::DequeueMbufList(
             return AICPU_SCHEDULE_ERROR_FROM_DRV;
         }
         if (mbufListNum == 0U) {
-            aicpusd_err("Get error number form mbuf, ret[%d].", ret);
+            aicpusd_err("Get error number from mbuf, ret[%d].", ret);
             return AICPU_SCHEDULE_ERROR_FROM_DRV;
         }
         for (uint32_t mbufRangeIndex = 0U; mbufRangeIndex < mbufListNum; mbufRangeIndex++) {
@@ -335,7 +335,7 @@ int32_t OperatorKernelModelPrepare::GetDataPtrsFromMbufs(
             return AICPU_SCHEDULE_ERROR_FROM_DRV;
         }
         if (mbufListNum == 0U) {
-            aicpusd_err("Get error number form mbuf, ret[%d].", ret);
+            aicpusd_err("Get error number from mbuf, ret[%d].", ret);
             return AICPU_SCHEDULE_ERROR_FROM_DRV;
         }
         for (uint32_t i = 0U; i < mbufListNum; i++) {

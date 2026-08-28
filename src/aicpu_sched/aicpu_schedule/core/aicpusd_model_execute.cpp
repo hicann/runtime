@@ -270,7 +270,7 @@ StatusCode AicpuModelManager::CheckModelConfigShape(
     const uint32_t type, const uint32_t tlvLen, int32_t& unparseLen) const
 {
     if (type != TLV_WITH_SHAPE) {
-        aicpusd_err("it is should be shape type, but not. type[%u]", type);
+        aicpusd_err("type should be shape type, but it is not. type[%u]", type);
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
     const int64_t shapeSize = static_cast<int64_t>(tlvLen) / static_cast<int64_t>(sizeof(int64_t));
@@ -297,7 +297,7 @@ StatusCode AicpuModelManager::CheckModelConfigDtype(const TlvHead tlvHeadAddr, i
     const uint32_t type = tlvHeadAddr.type;
     const uint32_t len = tlvHeadAddr.len;
     if (type != TLV_WITH_DTYPE) {
-        aicpusd_err("it is should be dtype type, but not. type[%u]", type);
+        aicpusd_err("type should be dtype type, but it is not. type[%u]", type);
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
     // check unparse length

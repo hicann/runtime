@@ -86,7 +86,7 @@ int32_t AicpuCustMc2MaintenanceThread::CreateCustMc2MaintenanceThread()
         }
         processThread_ = std::thread(&AicpuCustMc2MaintenanceThread::StartProcessEvent, this);
     } catch (std::exception& e) {
-        aicpusd_err("create thread file:%s", e.what());
+        aicpusd_err("create thread failed:%s", e.what());
         return AICPU_SCHEDULE_ERROR_INIT_FAILED;
     }
     return AICPU_SCHEDULE_OK;

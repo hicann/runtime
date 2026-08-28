@@ -409,7 +409,7 @@ void BqsServer::ParseUnbindMsg(BQSMsg& requestMsg, BQSMsg& responseMsg) const
  */
 void BqsServer::SerializeGetBindRspBySrc(const uint32_t srcId, BQSMsg& responseMsg) const
 {
-    BQS_LOG_INFO("BqsServer serialize get bind rsponse by src begin, srcId:%u", srcId);
+    BQS_LOG_INFO("BqsServer serialize get bind response by src begin, srcId:%u", srcId);
     const EntityInfo src(srcId, deviceId_);
     auto& relationInstance = BindRelation::GetInstance();
 
@@ -461,7 +461,7 @@ void BqsServer::FillGetBindRspBySrc(
  */
 void BqsServer::SerializeGetBindRspByDst(const uint32_t dstId, BQSMsg& responseMsg) const
 {
-    BQS_LOG_INFO("BqsServer serialize get bind rsponse by dst begin, dstId:%u", dstId);
+    BQS_LOG_INFO("BqsServer serialize get bind response by dst begin, dstId:%u", dstId);
     auto& relationInstance = BindRelation::GetInstance();
     const EntityInfo dst(dstId, deviceId_);
 

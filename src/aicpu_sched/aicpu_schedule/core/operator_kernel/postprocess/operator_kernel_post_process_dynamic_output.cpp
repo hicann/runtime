@@ -196,7 +196,7 @@ int32_t OperatorKernelPostProcessDynamicOutput::GetMbufHeadFromResp(
         Mbuf* const respMbuf = *respMbufPtr;
         const auto ret = halMbufGetPrivInfo(respMbuf, customBufPtr, customBufSizePtr);
         if ((ret != static_cast<int32_t>(DRV_ERROR_NONE)) || (*customBufPtr == nullptr)) {
-            aicpusd_err("Failed to get customBuf from reponse Mbuf for model[%u], ret[%d].", taskContext.modelId, ret);
+            aicpusd_err("Failed to get customBuf from response Mbuf for model[%u], ret[%d].", taskContext.modelId, ret);
             return AICPU_SCHEDULE_ERROR_FROM_DRV;
         }
     }

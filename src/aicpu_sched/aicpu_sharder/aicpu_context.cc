@@ -118,7 +118,7 @@ void GetSqeId(const uint32_t num, uint32_t& start, uint32_t& end)
             g_sqeId = INITIAL_SQE_IQ;
             return;
         }
-        AICPUE_LOGW("The num[%u] exceeds the max, start will begin form initial value.", num);
+        AICPUE_LOGW("The num[%u] exceeds the max, start will begin from initial value.", num);
     }
     return;
 }
@@ -141,7 +141,7 @@ status_t InitTaskMonitorContext(uint32_t aicpuCoreCnt)
     AICPUE_LOGI("aicpu core count[%u]", aicpuCoreCnt);
     g_opsname.reset(new (std::nothrow) std::string[aicpuCoreCnt]);
     if (g_opsname == nullptr) {
-        AICPUE_LOGE("malloc ops name momery for task monitor failed");
+        AICPUE_LOGE("malloc ops name memory for task monitor failed");
         return AICPU_ERROR_FAILED;
     }
     for (uint32_t idx = 0U; idx < aicpuCoreCnt; ++idx) {
@@ -285,7 +285,7 @@ status_t RegisterEventCallback(
     const auto it = subMap.insert({subeventId, {func, isNeedClear}});
     if (!it.second) {
         AICPUE_LOGE(
-            "register event call function failed, repulicate register callback "
+            "register event call function failed, duplicate register callback "
             "function by eventId[%u] subeventId[%u]",
             eventId, subeventId);
         return AICPU_ERROR_FAILED;

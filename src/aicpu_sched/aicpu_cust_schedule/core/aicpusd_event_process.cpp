@@ -200,7 +200,7 @@ int32_t AicpuEventProcess::AICPUEventCustUpdateProfilingMode(const event_info_pr
             AicpuDrvManager::GetInstance().GetDeviceId(), static_cast<uint32_t>(TsdWaitType::TSD_CUSTOM_COMPUTE),
             static_cast<uint32_t>(AicpuDrvManager::GetInstance().GetHostPid()),
             AicpuDrvManager::GetInstance().GetVfId()) != AICPU_SCHEDULE_OK) {
-        aicpusd_err("send profilling response to tsd failed");
+        aicpusd_err("send profiling response to tsd failed");
         return AICPU_SCHEDULE_ERROR_TASK_EXECUTE_FAILED;
     }
     return AICPU_SCHEDULE_OK;

@@ -204,7 +204,7 @@ TSD_StatusT PackageLoader::LoadHsPkgToDevice(
     }
     if (checkCode != checkCodeSvc_.GetPeerCheckCode(static_cast<uint32_t>(pkgType))) {
         TSD_ERROR(
-            "checode verify is failed checkCode:%u, peerCheckCode:%u", checkCode,
+            "check code verify failed, checkCode:%u, peerCheckCode:%u", checkCode,
             checkCodeSvc_.GetPeerCheckCode(static_cast<uint32_t>(pkgType)));
         return TSD_INTERNAL_ERROR;
     }
@@ -382,7 +382,8 @@ TSD_StatusT PackageLoader::LoadPackageConfigInfoToDevice(const bool hasPluginVer
 
     if (hasSendConfigFile_) {
         TSD_RUN_INFO(
-            "The package config file has send to device, no need send again. deviceId=%u", envInfo_.GetLogicDeviceId());
+            "The package config file has been sent to device, no need to send again. deviceId=%u",
+            envInfo_.GetLogicDeviceId());
         return TSD_OK;
     }
 

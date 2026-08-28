@@ -496,12 +496,12 @@ int32_t AicpuDrvManager::BindHostPid(
         "Begin to bind host pid, device id[%u], host pid[%d], mode[%d], vfId[%u], cp type[%d]", deviceVec_[FIRST_INDEX],
         hostPid_, mode, vfId, cpType);
     if (mode >= static_cast<int32_t>(AicpuPlat::AICPU_MAX_PLAT)) {
-        aicpusd_err("plat mode[%d] should less than %d", mode, AicpuPlat::AICPU_MAX_PLAT);
+        aicpusd_err("plat mode[%d] should be less than %d", mode, AicpuPlat::AICPU_MAX_PLAT);
         return AICPU_SCHEDULE_ERROR_INNER_ERROR;
     }
 
     if (cpType >= DEVDRV_PROCESS_CPTYPE_MAX) {
-        aicpusd_err("cp type[%d] should less than %d", cpType, DEVDRV_PROCESS_CPTYPE_MAX);
+        aicpusd_err("cp type[%d] should be less than %d", cpType, DEVDRV_PROCESS_CPTYPE_MAX);
         return AICPU_SCHEDULE_ERROR_INNER_ERROR;
     }
 

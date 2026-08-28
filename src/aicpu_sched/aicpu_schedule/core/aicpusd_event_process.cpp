@@ -404,7 +404,7 @@ int32_t AicpuEventProcess::ProcessSetTimeoutEvent(AicpuSqeAdapter& aicpuSqeAdapt
 
     if (!validTimeoutParam) {
         aicpusd_err(
-            "valid Timeout Param opTimeoutEnable[%u] value[%u] waitTimeoutEnable[%u] value[%u]", excTimeoutEnable,
+            "Invalid timeout param: opTimeoutEnable[%u] value[%u] waitTimeoutEnable[%u] value[%u]", excTimeoutEnable,
             excTimeoutVal, waitTimeoutEnable, waitTimeoutVal);
         ret = static_cast<uint32_t>(AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID);
     }

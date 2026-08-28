@@ -292,7 +292,7 @@ void ThreadModeManager::Destroy()
     }
     if (adprofHandle_ != nullptr) {
         (void)mmDlclose(adprofHandle_);
-        TSD_INFO("[TsdClient] close adporf so");
+        TSD_INFO("[TsdClient] close adprof so");
         adprofHandle_ = nullptr;
         startAdprof_ = nullptr;
         stopAdprof_ = nullptr;
@@ -403,7 +403,9 @@ TSD_StatusT ThreadModeManager::ProcessOpenSubProc(ProcOpenArgs* openArgs)
     }
 
     if (openArgs->extParamCnt > SUB_PROC_PARAM_LIST_MAX_COUNT) {
-        TSD_ERROR("extParamList too long, extParamCnt:%u", static_cast<uint32_t>(openArgs->extParamCnt));
+        TSD_ERROR(
+            "extParamList too long, extParamCnt:%u, max:%u", static_cast<uint32_t>(openArgs->extParamCnt),
+            static_cast<uint32_t>(SUB_PROC_PARAM_LIST_MAX_COUNT));
         return TSD_INTERNAL_ERROR;
     }
 

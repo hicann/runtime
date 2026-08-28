@@ -148,7 +148,7 @@ int32_t BqsMsprofManager::ProfCallback(uint32_t type, void* data, uint32_t dataL
     DGW_LOG_RUN_INFO("[Prof]Queue schedule start process profiling callback, type=%u.", type);
 
     if ((data == nullptr) || (dataLen < sizeof(MsprofCommandHandle))) {
-        DGW_LOG_ERROR("[Prof]Prorfiling callback data is nullptr or dataLen is invalid, dataLen=%u.", dataLen);
+        DGW_LOG_ERROR("[Prof]Profiling callback data is nullptr or dataLen is invalid, dataLen=%u.", dataLen);
         return static_cast<int32_t>(ProfStatus::PROF_INVALID_PARA);
     }
 

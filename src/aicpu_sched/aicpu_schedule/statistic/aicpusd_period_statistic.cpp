@@ -99,7 +99,7 @@ void AicpuSdPeriodStatistic::InitStatistic(
     try {
         statThread_ = std::thread(&AicpuSdPeriodStatistic::DoStatistic, this);
     } catch (std::exception& e) {
-        aicpusd_err("create thread file:%s", e.what());
+        aicpusd_err("create thread failed:%s", e.what());
         return;
     }
     initFlag_ = true;

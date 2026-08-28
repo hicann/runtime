@@ -140,7 +140,7 @@ private:
 #define BQS_LOG_RUN_INFO(fmt, ...) \
     printf("[INFO] [%s][%s:%d][tid:%lu]:" fmt "\n", __FILE__, &__FUNCTION__[0], __LINE__, bqs::GetTid(), ##__VA_ARGS__)
 #define BQS_LOG_RUN_WARN(fmt, ...) \
-    printf("[INFO] [%s][%s:%d][tid:%lu]:" fmt "\n", __FILE__, &__FUNCTION__[0], __LINE__, bqs::GetTid(), ##__VA_ARGS__)
+    printf("[WARN] [%s][%s:%d][tid:%lu]:" fmt "\n", __FILE__, &__FUNCTION__[0], __LINE__, bqs::GetTid(), ##__VA_ARGS__)
 #endif
 #define DGW_LOG_DEBUG BQS_LOG_DEBUG
 #define DGW_LOG_INFO BQS_LOG_INFO

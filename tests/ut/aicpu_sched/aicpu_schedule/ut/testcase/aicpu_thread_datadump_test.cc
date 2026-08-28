@@ -93,6 +93,24 @@ TEST_F(AiCPUThreadDatadumpUt, DatadumpInitAICPUDatadumpUtSuccess)
     EXPECT_EQ(ret, 0);
 }
 
+TEST_F(AiCPUThreadDatadumpUt, InitAICPUDatadump_AppLogSwitchOff_ReturnsSuccess)
+{
+    setenv("AICPU_APP_LOG_SWITCH", "0", 1);
+    MOCKER_CPP(&ThreadPool::CreateOneWorker).stubs().will(returnValue(0));
+    MOCKER(sem_init).stubs().will(returnValue(0));
+    MOCKER(sem_wait).stubs().will(returnValue(0));
+    MOCKER(sem_destroy).stubs().will(returnValue(0));
+    MOCKER(signal).stubs().will(returnValue(sighandler_t(1)));
+    MOCKER_CPP(&ThreadPool::PostSem).stubs();
+    MOCKER_CPP(&AicpuEventManager::LoopProcess).stubs().will(returnValue(0));
+    MOCKER(halEschedWaitEvent).stubs().will(returnValue(DRV_ERROR_SCHED_PROCESS_EXIT));
+    StopAICPUDatadump(0, 0);
+    InitAICPUDatadump(0, 0);
+    int32_t ret = StopAICPUDatadump(0, 0);
+    unsetenv("AICPU_APP_LOG_SWITCH");
+    EXPECT_EQ(ret, 0);
+}
+
 TEST_F(AiCPUThreadDatadumpUt, InitAICPUDatadumpUtSuccess)
 {
     const uint32_t taskId = 3333;

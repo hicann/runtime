@@ -101,7 +101,7 @@ int32_t AIKernelsLibFWK::CallKernelApi(const aicpu::KernelType kernelType, const
 
 aeStatus_t AIKernelsLibFWK::BatchLoadKernelSo(const aicpu::KernelType kernelType, std::vector<std::string>& soVec)
 {
-    AE_INFO_LOG(AE_MODULE_ID, "Begin to batch load kernel so, kerelType:[%d].", kernelType);
+    AE_INFO_LOG(AE_MODULE_ID, "Begin to batch load kernel so, kernelType:[%d].", kernelType);
     if (soVec.empty()) {
         return AE_STATUS_SUCCESS;
     }

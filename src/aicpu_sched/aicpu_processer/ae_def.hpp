@@ -129,7 +129,7 @@ inline long GetTid()
 
 #else
 #define AE_ERR_LOG(id, fmt, args...) printf("[ERROR] [%s:%d][AICPU_PROCESSER] " fmt "\n", __FILE__, __LINE__, ##args)
-#define AE_WARN_LOG(id, fmt, args...) printf("[ERROR] [%s:%d][AICPU_PROCESSER] " fmt "\n", __FILE__, __LINE__, ##args)
+#define AE_WARN_LOG(id, fmt, args...) printf("[WARN] [%s:%d][AICPU_PROCESSER] " fmt "\n", __FILE__, __LINE__, ##args)
 #define AE_INFO_LOG(id, fmt, args...) printf("[INFO] [%s:%d][AICPU_PROCESSER] " fmt "\n", __FILE__, __LINE__, ##args)
 #define AE_DEBUG_LOG(id, fmt, args...) printf("[DEBUG] [%s:%d][AICPU_PROCESSER] " fmt "\n", __FILE__, __LINE__, ##args)
 #define AE_MEMORY_LOG(id, fmt, args...) printf("[INFO] [%s:%d][AICPU_PROCESSER] " fmt "\n", __FILE__, __LINE__, ##args)

@@ -177,7 +177,7 @@ void RouterServer::HandleBqsMsg(event_info& info)
     // aicpu message is not allowed in thread mode.
     if (isAicpuEvent_ && (deployMode_ == QueueSchedulerRunMode::MULTI_THREAD)) {
         BQS_LOG_ERROR(
-            "[RouterServer]Thread mode[%u] does not sopport event[%u] from aicpu.", static_cast<int32_t>(deployMode_),
+            "[RouterServer]Thread mode[%u] does not support event[%u] from aicpu.", static_cast<int32_t>(deployMode_),
             subEventId_);
         return;
     }
@@ -487,7 +487,7 @@ BqsStatus RouterServer::ProcessBindInit(const event_info& info)
     }
     // bind initial already done
     if ((pipelineQueueId_ < MAX_QUEUE_ID_NUM) && (srcPid_ != -1)) {
-        BQS_LOG_RUN_INFO("Pipeline queue already existed[%d], return pipelienQueueid", pipelineQueueId_.load());
+        BQS_LOG_RUN_INFO("Pipeline queue already existed[%d], return pipelineQueueId", pipelineQueueId_.load());
         return BQS_STATUS_OK;
     }
     const QsBindInit* const bindInitMsg = reinterpret_cast<const QsBindInit*>(info.priv.msg);
@@ -806,7 +806,7 @@ BqsStatus RouterServer::ParseRelationInfo(Mbuf** mbufPtr)
     }
     // aicpuRspHead_ is valid only in aicpu event senario, will be 0 in acl event senario
     subEventId_ = qsRouterHeadPtr_->subEventId;
-    BQS_LOG_INFO("[RouterServer]Parse head[%lu] subEvnetId[%u] from mbuff success.", aicpuRspHead_, subEventId_);
+    BQS_LOG_INFO("[RouterServer]Parse head[%lu] subEventId[%u] from mbuff success.", aicpuRspHead_, subEventId_);
 
     // query message need to get query info
     if ((subEventId_ == static_cast<uint32_t>(AICPU_QUERY_QUEUE)) ||
@@ -814,7 +814,7 @@ BqsStatus RouterServer::ParseRelationInfo(Mbuf** mbufPtr)
         if ((((qsRouterHeadPtr_->routeNum * sizeof(QueueRoute)) + sizeof(QsRouteHead)) + sizeof(QueueRouteQuery)) !=
             qsRouterHeadPtr_->length) {
             BQS_LOG_ERROR(
-                "[RouterServer]RouteNum[%d] is inconsistence with dataLen[%d] in subEventId[%u]",
+                "[RouterServer]RouteNum[%d] is inconsistent with dataLen[%d] in subEventId[%u]",
                 qsRouterHeadPtr_->routeNum, qsRouterHeadPtr_->length, subEventId_);
             return BQS_STATUS_PARAM_INVALID;
         }
@@ -826,7 +826,7 @@ BqsStatus RouterServer::ParseRelationInfo(Mbuf** mbufPtr)
     } else {
         if (((qsRouterHeadPtr_->routeNum * sizeof(QueueRoute)) + sizeof(QsRouteHead)) != qsRouterHeadPtr_->length) {
             BQS_LOG_ERROR(
-                "[RouterServer]RouteNum[%d] is inconsistence with dataLen[%d] in subEventId[%u]",
+                "[RouterServer]RouteNum[%d] is inconsistent with dataLen[%d] in subEventId[%u]",
                 qsRouterHeadPtr_->routeNum, qsRouterHeadPtr_->length, subEventId_);
             return BQS_STATUS_PARAM_INVALID;
         }
@@ -924,7 +924,7 @@ void RouterServer::SearchRelation(
 void RouterServer::GetBindRspBySingle(const EntityInfo& entityInfo, const uint32_t& queryType)
 {
     BQS_LOG_INFO(
-        "[RouterServer]RouterServer serialize get bind rsponse by entityId[%u], entityType[%d], Type[%d].",
+        "[RouterServer]RouterServer serialize get bind response by entityId[%u], entityType[%d], Type[%d].",
         entityInfo.GetId(), static_cast<int32_t>(entityInfo.GetType()), queryType);
     auto& relationInstance = BindRelation::GetInstance();
     queueRouteQueryList_.clear();
@@ -986,7 +986,7 @@ void RouterServer::TransRouteWithEntityInfo(
 void RouterServer::GetBindRspByDouble(const EntityInfo& src, const EntityInfo& dst, const uint32_t& queryType)
 {
     BQS_LOG_INFO(
-        "[RouterServer]RouterServer serialize get bind rsponse by srcId[%u], srcType[%d], dstId[%u], "
+        "[RouterServer]RouterServer serialize get bind response by srcId[%u], srcType[%d], dstId[%u], "
         "dstType[%d], Type[%u]",
         src.GetId(), static_cast<int32_t>(src.GetType()), dst.GetId(), static_cast<int32_t>(dst.GetType()), queryType);
     queueRouteQueryList_.clear();
@@ -1022,7 +1022,7 @@ void RouterServer::GetBindRspByDouble(const EntityInfo& src, const EntityInfo& d
 
 void RouterServer::GetAllAbnormalBind()
 {
-    BQS_LOG_INFO("[RouterServer]RouterServer serialize get all abnormal bind rsponse");
+    BQS_LOG_INFO("[RouterServer]RouterServer serialize get all abnormal bind response");
     queueRouteQueryList_.clear();
     auto& relationInstance = BindRelation::GetInstance();
     auto& abnormalSrcToDstRelation = relationInstance.GetAbnormalSrcToDstRelation();

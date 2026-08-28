@@ -312,7 +312,7 @@ void PackageCheckCodeService::HandleNormalPackageCheckCodeRsp(const HDCMessage& 
     }
     ctx_.deviceIdle = msg.device_idle();
     if (!ctx_.deviceIdle) {
-        TSD_RUN_WARN("device has process is running, skip load driver extend package");
+        TSD_RUN_WARN("a process is running on device, skip loading driver extend package");
     }
     ctx_.pkgRspCode = ((msg.tsd_rsp_code() == 0U) ? ResponseCode::SUCCESS : ResponseCode::FAIL);
     ctx_.loadPackageErrorMsg = msg.error_info().error_log();

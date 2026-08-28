@@ -233,6 +233,26 @@ TEST_F(DumpDataInfoKernelTest, SingleOpOrUnknownShapeOpDumpTest_DoDump_failed)
     EXPECT_EQ(kernel_.Compute(kernelInfo), AICPU_SCHEDULE_ERROR_DUMP_FAILED);
 }
 
+TEST_F(DumpDataInfoKernelTest, SingleOpOrUnknownShapeOpDumpTest_InvalidParamLength_ReturnsError)
+{
+    aicpu::HwtsTsKernel kernelInfo = {};
+    kernelInfo.kernelType = aicpu::KERNEL_TYPE_AICPU;
+    kernelInfo.kernelBase.cceKernel.kernelSo = 0;
+    const char* kernelName = "DumpDataInfo";
+    kernelInfo.kernelBase.cceKernel.kernelName = uint64_t(kernelName);
+    const uint32_t singleOpDumpParamNum = 2;
+    const uint32_t paramLen = sizeof(aicpu::AicpuParamHead) + singleOpDumpParamNum * sizeof(uint64_t);
+    std::unique_ptr<char[]> buff(new (std::nothrow) char[paramLen]);
+    if (buff == nullptr) {
+        return;
+    }
+    aicpu::AicpuParamHead* paramHead = (aicpu::AicpuParamHead*)(buff.get());
+    paramHead->length = 0;
+    paramHead->ioAddrNum = 2;
+    kernelInfo.kernelBase.cceKernel.paramBase = uint64_t(buff.get());
+    EXPECT_EQ(kernel_.Compute(kernelInfo), AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID);
+}
+
 TEST_F(DumpDataInfoKernelTest, SingleOpOrUnknownShapeOpDumpTest_DoDumpST_failed)
 {
     const int32_t dataType = 7; // int32

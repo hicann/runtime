@@ -73,6 +73,8 @@ using namespace AicpuSchedule;
 using namespace aicpu;
 
 namespace {
+int pthread_create_fail(pthread_t*, const pthread_attr_t*, void* (*)(void*), void*) { return 1; }
+
 using AicpuScheduleUtStub::DlopenMsqOperatorStub;
 using AicpuScheduleUtStub::DlsymMsqOperatorStub;
 
@@ -5422,6 +5424,19 @@ TEST_F(AICPUScheduleTEST, Ut_InitDumpProcess_test1)
     EXPECT_EQ(ret, AICPU_SCHEDULE_OK);
 }
 
+TEST_F(AICPUScheduleTEST, Ut_InitCustDumpProcess_CreateThreadFail)
+{
+    AicpuSdCustDumpProcess::GetInstance().initFlag_ = false;
+    MOCKER(sem_init).stubs().will(returnValue(0));
+    MOCKER(sem_post).stubs().will(returnValue(0));
+    MOCKER(sem_wait).stubs().will(returnValue(0));
+    MOCKER(sem_destroy).stubs().will(returnValue(0));
+    MOCKER(pthread_create).stubs().will(invoke(pthread_create_fail));
+    auto ret = AicpuSdCustDumpProcess::GetInstance().InitCustDumpProcess(2, 0);
+    EXPECT_EQ(ret, AICPU_SCHEDULE_ERROR_INIT_FAILED);
+    GlobalMockObject::verify();
+}
+
 TEST_F(AICPUScheduleTEST, AicpuUtil_NumElementsFail0)
 {
     const int64_t dimSize = 2;
@@ -5688,6 +5703,15 @@ TEST_F(AICPUScheduleTEST, CreateMc2MantenanceThread_Start_thread_multiple_times_
         AicpuSchedule::AicpuMc2MaintenanceThread::GetInstance(0).processThread_.join();
     }
     EXPECT_EQ(ret, AICPU_SCHEDULE_OK);
+}
+
+TEST_F(AICPUScheduleTEST, CreateMc2MantenanceThread_CreateThreadFail_Ut)
+{
+    AicpuSchedule::AicpuMc2MaintenanceThread::GetInstance(0).initFlag_ = false;
+    MOCKER(pthread_create).stubs().will(invoke(pthread_create_fail));
+    auto ret = AicpuSchedule::AicpuMc2MaintenanceThread::GetInstance(0).CreateMc2MantenanceThread();
+    EXPECT_EQ(ret, AICPU_SCHEDULE_ERROR_INIT_FAILED);
+    GlobalMockObject::verify();
 }
 
 TEST_F(AICPUScheduleTEST, CreateMc2MantenanceThread_destructor_Ut)

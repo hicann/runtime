@@ -71,7 +71,8 @@ void AicpuSdModelStatistic::StatNNModelExecTime(const uint32_t modelId)
         return;
     }
     aicpusd_info(
-        "enter curMax:%llu, curMin:%llu", modelStatArray_[modelId].maxExecTime, modelStatArray_[modelId].minExecTime);
+        "enter curMax(us):%llu, curMin(us):%llu", modelStatArray_[modelId].maxExecTime,
+        modelStatArray_[modelId].minExecTime);
     if (!modelStatArray_[modelId].useFlag) {
         aicpusd_info("only stat static model, dynamic model no need stat");
         return;
@@ -86,7 +87,7 @@ void AicpuSdModelStatistic::StatNNModelExecTime(const uint32_t modelId)
         modelStatArray_[modelId].maxExecTime, modelStatArray_[modelId].subMaxExecTime, curExecTime);
     AicpuUtil::UpdateMinData(modelStatArray_[modelId].minExecTime, curExecTime);
     aicpusd_info(
-        "after update curMax:%llu, curMin:%llu, curStat:%llu", modelStatArray_[modelId].maxExecTime,
+        "after update curMax(us):%llu, curMin(us):%llu, curStat(us):%llu", modelStatArray_[modelId].maxExecTime,
         modelStatArray_[modelId].minExecTime, curExecTime);
 }
 

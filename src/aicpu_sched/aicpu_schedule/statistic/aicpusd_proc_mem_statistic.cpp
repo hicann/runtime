@@ -77,7 +77,7 @@ bool AicpuSdProcMemStatistic::GetSvmInfoFromFile(uint64_t& svmValue)
         sscanf_s(summaryStr.c_str(), "peak_page_cnt=%llu; peak_hpage_cnt=%llu", &peakPgCnt, &peakHPgCnt);
     if (ret < SVM_VALUE_CNT) {
         aicpusd_warn(
-            "read summaryStr:%s failed, ret:%d, peakHPgCnt:%llu, peakHPgCnt:%llu", summaryStr.c_str(), ret, peakPgCnt,
+            "read summaryStr:%s failed, ret:%d, peakPgCnt:%llu, peakHPgCnt:%llu", summaryStr.c_str(), ret, peakPgCnt,
             peakHPgCnt);
         return false;
     }
@@ -259,13 +259,13 @@ void AicpuSdProcMemStatistic::PrintOutProcMemInfo(const uint32_t hostPid)
         }
         aicpusd_info("svmAvg:%llu B, svmtotal:%llu B, svmcnt:%llu", svmAvg, svmMem_.memTotal, svmMem_.statCnt);
         aicpusd_run_info(
-            "proc_metrics:pid=%u, rssavg=%lu B, rsshwm=%llu B, xsmemavg=%llu B, xsmemhwm=%lu B, "
-            "svmmemavg=%llu B, svmmemhwm=%lu B",
+            "proc_metrics:pid=%u, rssavg=%lu KB, rsshwm=%llu KB, xsmemavg=%llu KB, xsmemhwm=%lu KB, "
+            "svmmemavg=%llu KB, svmmemhwm=%lu KB",
             hostPid, rssavg * BYTE_TO_KBYTE, rssMem_.memHwm * BYTE_TO_KBYTE, xsmAvg, xsMem_.memHwm, svmAvg,
             svmMem_.memHwm);
     } else {
         aicpusd_run_info(
-            "proc_metrics:pid=%u, rssavg=%lu B, rsshwm=%llu B, xsmemavg=%llu B, xsmemhwm=%lu B", hostPid,
+            "proc_metrics:pid=%u, rssavg=%lu KB, rsshwm=%llu KB, xsmemavg=%llu KB, xsmemhwm=%lu KB", hostPid,
             rssavg * BYTE_TO_KBYTE, rssMem_.memHwm * BYTE_TO_KBYTE, xsmAvg, xsMem_.memHwm);
     }
 }

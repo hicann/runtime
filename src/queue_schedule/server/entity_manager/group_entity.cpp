@@ -176,14 +176,14 @@ bool GroupEntity::CheckTimeout(const uint64_t waitTransId) const
     (void)waitTransId;
     if (groupInfo_.timeout <= 0L) {
         DGW_LOG_INFO(
-            "[FSM] no need check timeout, timeoutInterval:%ld, waitTransId:%lu.", groupInfo_.timeout, waitTransId);
+            "[FSM] no need check timeout, timeoutInterval:%ld ms, waitTransId:%lu.", groupInfo_.timeout, waitTransId);
         return false;
     }
     const uint64_t currTimestamp = bqs::GetNowTime();
     if ((currTimestamp - groupInfo_.lastTimestamp) > static_cast<uint64_t>(groupInfo_.timeout)) {
         DGW_LOG_INFO(
-            "[FSM] timeout, currTimestamp:%lu, lasttimestamp:%lu, timeoutInterval:%ld, waitTransId:%lu.", currTimestamp,
-            groupInfo_.lastTimestamp, groupInfo_.timeout, waitTransId);
+            "[FSM] timeout, currTimestamp:%lu us, lasttimestamp:%lu us, timeoutInterval:%ld ms, waitTransId:%lu.",
+            currTimestamp, groupInfo_.lastTimestamp, groupInfo_.timeout, waitTransId);
         return true;
     }
     return false;

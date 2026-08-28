@@ -608,5 +608,12 @@ TEST_F(SoManagerUTest, AddSoInWhiteList)
     auto ret = AIKernelsLibManger::AddSoInWhiteList(soName);
     EXPECT_EQ(ret, AE_STATUS_SUCCESS);
 }
+
+TEST_F(SoManagerUTest, MultiSoManager_CreateSingleSoMgr_InvalidSoName_ReturnsBadParam)
+{
+    SingleSoManager* sinsoMgr = nullptr;
+    aeStatus_t ret = soMngr_.CreateSingleSoMgr(aicpu::KERNEL_TYPE_AICPU, "lib test.so", sinsoMgr);
+    EXPECT_EQ(AE_STATUS_BAD_PARAM, ret);
+}
 } // namespace ut
 } // namespace aicpu

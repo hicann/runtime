@@ -117,7 +117,7 @@ uint32_t QueueScheduleInterface::GetAicpuPhysIndex(uint32_t deviceId, const uint
     }
 
     if (aicpuLogIndex >= aiCpuIds_.size()) {
-        BQS_LOG_INFO("Get aicpu index not success");
+        BQS_LOG_WARN("Get aicpu index not success");
         return 0U;
     }
 
@@ -166,7 +166,7 @@ int32_t QueueScheduleInterface::CheckBindHostPid(const uint32_t selfHostPid) con
                 hostpid, selfHostPid, cpType);
         }
         if (ret == DRV_ERROR_NO_PROCESS) {
-            BQS_LOG_INFO("call drvQueryProcessHostPid trg again");
+            BQS_LOG_INFO("call drvQueryProcessHostPid try again");
             (void)usleep(QUERY_BIND_HOST_PID_INTERVBALE);
             continue;
         }

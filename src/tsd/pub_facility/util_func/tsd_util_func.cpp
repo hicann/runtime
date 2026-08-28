@@ -183,7 +183,7 @@ bool CheckRealPath(const std::string& inputPath)
         return false;
     }
     if (inputPath.length() >= static_cast<size_t>(PATH_MAX)) {
-        TSD_RUN_INFO("Input path must less than [%d]", PATH_MAX);
+        TSD_RUN_INFO("Input path length must be less than [%d]", PATH_MAX);
         return false;
     }
     std::unique_ptr<char_t[]> path(new (std::nothrow) char_t[PATH_MAX]);

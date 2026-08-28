@@ -164,7 +164,7 @@ int32_t AicpuCustSoManager::CheckAndDeleteSoFile(const LoadOpFromBufArgs* const 
     const std::string realSoName(
         static_cast<const char_t*>(ValueToPtr(args->kernelSoName)), static_cast<size_t>(soNameLen));
     if (realSoName.find_first_not_of(CP_PATTERN_FOR_SO_NAME) != std::string::npos) {
-        aicpusd_err("Cust so name %s is not invalid. Please check!", realSoName.c_str());
+        aicpusd_err("Cust so name %s is invalid. Please check!", realSoName.c_str());
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
 
@@ -212,7 +212,7 @@ int32_t AicpuCustSoManager::CreateSoFile(const FileInfo& fileInfo)
     // check so name
     const std::string kernelSo(fileInfo.name);
     if (kernelSo.find_first_not_of(CP_PATTERN_FOR_SO_NAME) != std::string::npos) {
-        aicpusd_err("Cust so name %s is not invalid. Please check!", kernelSo.c_str());
+        aicpusd_err("Cust so name %s is invalid. Please check!", kernelSo.c_str());
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
 
@@ -439,7 +439,7 @@ std::string AicpuCustSoManager::GetPathForCustAicpuSoftLink() const
 int32_t AicpuCustSoManager::CheckSoFullPathValid(const std::string& soFullPath) const
 {
     if (soFullPath.length() >= static_cast<size_t>(PATH_MAX)) {
-        aicpusd_err("soFullPath file length[%zu] must less than PATH_MAX[%u]", soFullPath.length(), PATH_MAX);
+        aicpusd_err("soFullPath file length[%zu] must be less than PATH_MAX[%u]", soFullPath.length(), PATH_MAX);
         return AICPU_SCHEDULE_ERROR_INNER_ERROR;
     }
 
@@ -682,7 +682,7 @@ int32_t HashCalculator::GenerateFileHashInfo(const std::string& filePath, FileHa
     const ScopeGuard fileGuard([&file]() { (void)file.close(); });
     std::streamsize size = file.tellg();
     if (static_cast<uint64_t>(size) > MAX_FILE_SIZE) {
-        aicpusd_err("The file size is large than max file size(200MB), size=%luBytes", static_cast<uint64_t>(size));
+        aicpusd_err("The file size is larger than max file size(200MB), size=%luBytes", static_cast<uint64_t>(size));
         return AICPU_SCHEDULE_ERROR_INNER_ERROR;
     }
 

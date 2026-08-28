@@ -101,7 +101,7 @@ bool ArgsParser::ParseDeviceId(const std::string& para)
     }
 
     if ((val < 0) || (val >= QS_FW_CHIP_NUM_MAX)) {
-        BQS_LOG_ERROR("DeviceId param[%s] invalided, value is not in [%d, %d)", para.c_str(), 0, QS_FW_CHIP_NUM_MAX);
+        BQS_LOG_ERROR("DeviceId param[%s] invalid, value is not in [%d, %d)", para.c_str(), 0, QS_FW_CHIP_NUM_MAX);
         return false;
     }
 
@@ -119,7 +119,7 @@ bool ArgsParser::ParseDeviceId(const std::string& para, int32_t& deviceId) const
     }
 
     if ((val < 0) || (val >= QS_FW_CHIP_NUM_MAX)) {
-        BQS_LOG_WARN("DeviceId param[%s] invalided, value is not in [%d, %d)", para.c_str(), 0, QS_FW_CHIP_NUM_MAX);
+        BQS_LOG_WARN("DeviceId param[%s] invalid, value is not in [%d, %d)", para.c_str(), 0, QS_FW_CHIP_NUM_MAX);
         return false;
     }
 
@@ -136,7 +136,7 @@ bool ArgsParser::ParseHostPid(const std::string& para)
     }
 
     if (val <= 0) {
-        BQS_LOG_ERROR("Pid param[%s] value invalided", para.c_str());
+        BQS_LOG_ERROR("Pid param[%s] value invalid", para.c_str());
         return false;
     }
 
@@ -161,7 +161,7 @@ bool ArgsParser::ParseVfId(const std::string& para)
     }
 
     if ((val < 0) || (val > VF_ID_MAX)) {
-        BQS_LOG_ERROR("VfId param[%s] invalided, value is not in [%u, %u]", para.c_str(), 0, VF_ID_MAX);
+        BQS_LOG_ERROR("VfId param[%s] invalid, value is not in [%u, %u]", para.c_str(), 0, VF_ID_MAX);
         return false;
     }
 
@@ -256,7 +256,7 @@ bool ArgsParser::ParseDeployMode(const std::string& para)
     if ((val < static_cast<int32_t>(bqs::QueueSchedulerRunMode::SINGLE_PROCESS)) ||
         (val > static_cast<int32_t>(bqs::QueueSchedulerRunMode::MULTI_THREAD))) {
         BQS_LOG_ERROR(
-            "deploy mode param[%s] invalided, value is not in [%u, %u]", para.c_str(),
+            "deploy mode param[%s] invalid, value is not in [%u, %u]", para.c_str(),
             static_cast<uint32_t>(QueueSchedulerRunMode::SINGLE_PROCESS),
             static_cast<uint32_t>(QueueSchedulerRunMode::MULTI_THREAD));
         return false;
@@ -277,7 +277,7 @@ bool ArgsParser::ParseReschedInterval(const std::string& para)
 
     if ((val < RESCHED_INTERVAL_CLOSE) || (val > RESCHED_INTERVAL_MAX)) {
         BQS_LOG_WARN(
-            "resched interval param[%s] invalided, value is not in [%d, %d], using default value[%d] ms", para.c_str(),
+            "resched interval param[%s] invalid, value is not in [%d, %d], using default value[%d] ms", para.c_str(),
             RESCHED_INTERVAL_CLOSE, RESCHED_INTERVAL_MAX, reschedInterval_);
         return true;
     }
@@ -344,13 +344,13 @@ bool ArgsParser::ParseAbnormalInterval(const std::string& para)
 {
     int32_t val = 0;
     if (!TransStrToInt(para, val)) {
-        BQS_LOG_INFO("Parse abnormal interval not success, using default value %d", abnormalInterval_);
+        BQS_LOG_INFO("Parse abnormal interval not success, using default value %d ms", abnormalInterval_);
         return true;
     }
 
     if ((val <= ABNORMAL_INTERVAL_MIN) || (val > ABNORMAL_INTERVAL_MAX)) {
         BQS_LOG_WARN(
-            "abnormal interval param[%s] invalided, value is not in [%d, %d], using default value[%d]", para.c_str(),
+            "abnormal interval param[%s] invalid, value is not in [%d, %d], using default value[%d]", para.c_str(),
             ABNORMAL_INTERVAL_MIN, ABNORMAL_INTERVAL_MAX, abnormalInterval_);
         return true;
     }

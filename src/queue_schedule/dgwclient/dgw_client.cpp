@@ -1151,7 +1151,7 @@ int32_t DgwClient::CalcConfigInfoLen(
 
             const uint32_t endpointNum = cfgInfo.cfg.groupCfg.endpointNum;
             if ((endpointNum == 0U) || (endpointNum > MAX_ENDPOINTS_NUM_IN_SINGLE_GROUP)) {
-                BQS_LOG_ERROR("route num[%u] is invalid.", endpointNum);
+                BQS_LOG_ERROR("endpoint num[%u] is invalid.", endpointNum);
                 return static_cast<int32_t>(BQS_STATUS_PARAM_INVALID);
             }
             const size_t endpointsLen = endpointNum * sizeof(Endpoint);

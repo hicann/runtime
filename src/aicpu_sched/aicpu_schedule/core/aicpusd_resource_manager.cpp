@@ -562,6 +562,6 @@ void RwLock::UnLock()
         --readCount_;
         return;
     }
-    aicpusd_warn("Three's no lock");
+    aicpusd_warn("There's no lock");
 }
 } // namespace AicpuSchedule

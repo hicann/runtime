@@ -79,7 +79,7 @@ BqsStatus BindRelation::CheckEntityExistInGroup(
             const auto& element = (*(*iter));
             if (dst == element) {
                 BQS_LOG_ERROR(
-                    "dst entity[%s] has exist in src group entity[%s].", dst.ToString().c_str(),
+                    "dst entity[%s] already exists in src group entity[%s].", dst.ToString().c_str(),
                     src.ToString().c_str());
                 return BQS_STATUS_PARAM_INVALID;
             }
@@ -100,7 +100,7 @@ BqsStatus BindRelation::CheckEntityExistInGroup(
         if (srcEntityPtr != nullptr) {
             const int32_t groupId = srcEntityPtr->GetHostGroupId();
             if (groupId != dgw::INVALID_GROUP_ID) {
-                BQS_LOG_ERROR("Entity[%s] has exist in group[%d].", src.ToString().c_str(), groupId);
+                BQS_LOG_ERROR("Entity[%s] already exists in group[%d].", src.ToString().c_str(), groupId);
                 return BQS_STATUS_PARAM_INVALID;
             }
             BQS_LOG_INFO("Entity[%s] has been created.", src.ToString().c_str());
@@ -113,7 +113,7 @@ BqsStatus BindRelation::CheckEntityExistInGroup(
             const auto& element = (*(*iter));
             if (src == element) {
                 BQS_LOG_ERROR(
-                    "src entity[%s] has exist in dst group entity[%s].", src.ToString().c_str(),
+                    "src entity[%s] already exists in dst group entity[%s].", src.ToString().c_str(),
                     dst.ToString().c_str());
                 return BQS_STATUS_PARAM_INVALID;
             }
@@ -134,7 +134,7 @@ BqsStatus BindRelation::CheckEntityExistInGroup(
         if (dstEntityPtr != nullptr) {
             const int32_t groupId = dstEntityPtr->GetHostGroupId();
             if (groupId != dgw::INVALID_GROUP_ID) {
-                BQS_LOG_ERROR("Entity[%s] has exist in group[%d].", dst.ToString().c_str(), groupId);
+                BQS_LOG_ERROR("Entity[%s] already exists in group[%d].", dst.ToString().c_str(), groupId);
                 return BQS_STATUS_PARAM_INVALID;
             }
             BQS_LOG_INFO("Entity[%s] has been created.", dst.ToString().c_str());
@@ -227,7 +227,7 @@ BqsStatus BindRelation::AddSrcToDst(EntityInfo& srcEntity, EntityInfo& dstEntity
     if ((SetEntityPtr(srcEntity, dgw::EntityDirection::DIRECTION_SEND, index) != BQS_STATUS_OK) ||
         (SetEntityPtr(dstEntity, dgw::EntityDirection::DIRECTION_RECV, index) != BQS_STATUS_OK)) {
         BQS_LOG_ERROR(
-            "Bind relation add [%s->%s] failed becuause of missing entity.", srcEntity.ToString().c_str(),
+            "Bind relation add [%s->%s] failed because of missing entity.", srcEntity.ToString().c_str(),
             dstEntity.ToString().c_str());
         return BQS_STATUS_INNER_ERROR;
     }
@@ -258,7 +258,7 @@ BqsStatus BindRelation::AddDstToSrc(EntityInfo& srcEntity, EntityInfo& dstEntity
     if ((SetEntityPtr(srcEntity, dgw::EntityDirection::DIRECTION_SEND, index) != BQS_STATUS_OK) ||
         (SetEntityPtr(dstEntity, dgw::EntityDirection::DIRECTION_RECV, index) != BQS_STATUS_OK)) {
         BQS_LOG_ERROR(
-            "Bind relation add [%s->%s] failed becuause of missing entity.", srcEntity.ToString().c_str(),
+            "Bind relation add [%s->%s] failed because of missing entity.", srcEntity.ToString().c_str(),
             dstEntity.ToString().c_str());
         return BQS_STATUS_INNER_ERROR;
     }
@@ -269,8 +269,8 @@ BqsStatus BindRelation::AddDstToSrc(EntityInfo& srcEntity, EntityInfo& dstEntity
         ret = SubscribeEvent(dstEntity, EventType::F2NF, index);
         if (ret != BQS_STATUS_OK) {
             BQS_LOG_ERROR(
-                "Bind relation add [%s->%s] failed, as subscribe f2nf failed, ret=%d.", srcEntity.ToString().c_str(),
-                dstEntity.ToString().c_str(), static_cast<int32_t>(ret));
+                "Bind relation add [%s->%s] failed, as subscribe full-to-notfull event failed, ret=%d.",
+                srcEntity.ToString().c_str(), dstEntity.ToString().c_str(), static_cast<int32_t>(ret));
         } else {
             (void)dstToSrcRelation.emplace(std::make_pair(dstEntity, EntityInfoSet{srcEntity}));
         }
@@ -354,8 +354,8 @@ BqsStatus BindRelation::Bind(EntityInfo& srcEntity, EntityInfo& dstEntity, const
         (void)DeleteEntity(srcEntity, true, index);
         (void)DeleteEntity(dstEntity, false, index);
         BQS_LOG_ERROR(
-            "Bind relation add [%s->%s] failed, as subscribe f2nf failed, ret=%d.", srcEntity.ToString().c_str(),
-            dstEntity.ToString().c_str(), static_cast<int32_t>(ret));
+            "Bind relation add [%s->%s] failed, as subscribe full-to-notfull event failed, ret=%d.",
+            srcEntity.ToString().c_str(), dstEntity.ToString().c_str(), static_cast<int32_t>(ret));
         return ret;
     }
 

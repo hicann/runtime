@@ -87,7 +87,7 @@ int32_t AicpuMc2MaintenanceThread::CreateMc2MantenanceThread()
         }
         processThread_ = std::thread(&AicpuMc2MaintenanceThread::StartProcessEvent, this);
     } catch (std::exception& e) {
-        aicpusd_err("create thread file:%s", e.what());
+        aicpusd_err("create thread failed:%s", e.what());
         return AICPU_SCHEDULE_ERROR_INIT_FAILED;
     }
     return AICPU_SCHEDULE_OK;
@@ -253,11 +253,11 @@ int32_t AicpuMc2MaintenanceThread::RegisterStopProcessEventFunc(AicpuMC2Maintena
 } // namespace AicpuSchedule
 int32_t CreateMc2MantenanceThread(const struct TsdSubEventInfo* const msg)
 {
-    AICPUSD_CHECK((msg != nullptr), AicpuSchedule::AICPU_SCHEDULE_ERROR_INNER_ERROR, "msg is nulll");
+    AICPUSD_CHECK((msg != nullptr), AicpuSchedule::AICPU_SCHEDULE_ERROR_INNER_ERROR, "msg is null");
     const struct AicpuSchedule::CreateCtrlThreadArgs* createCtrlThreadArgsPtr =
         PtrToPtr<const char_t, const struct AicpuSchedule::CreateCtrlThreadArgs>(msg->priMsg);
     AICPUSD_CHECK(
-        (createCtrlThreadArgsPtr != nullptr), AicpuSchedule::AICPU_SCHEDULE_ERROR_INNER_ERROR, "args ptr is nulll");
+        (createCtrlThreadArgsPtr != nullptr), AicpuSchedule::AICPU_SCHEDULE_ERROR_INNER_ERROR, "args ptr is null");
     uint32_t type = createCtrlThreadArgsPtr->type;
     aicpusd_info("aicpu create ctrl thread type[%u]", type);
     int32_t ret = AicpuSchedule::AicpuMc2MaintenanceThread::GetInstance(type).CreateMc2MantenanceThread();

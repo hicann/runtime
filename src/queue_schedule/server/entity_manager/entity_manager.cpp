@@ -136,7 +136,7 @@ FsmStatus EntityManager::CreateGroup(const uint32_t groupId, std::vector<EntityP
     const auto iter = groupEntityMap_.find(groupId);
     // when group src bind to multi dst
     if (iter != groupEntityMap_.end()) {
-        DGW_LOG_WARN("groupId[%u] has exist.", groupId);
+        DGW_LOG_WARN("groupId[%u] already exists.", groupId);
         return FsmStatus::FSM_SUCCESS;
     }
     (void)groupEntityMap_.insert(std::make_pair(groupId, entities));
@@ -448,7 +448,7 @@ FsmStatus EntityManager::SupplyEvent(const uint32_t eventId, const uint32_t devi
     const auto ret = halEschedSubmitEvent(submitDeviceId, &sched);
     if (ret != DRV_ERROR_NONE) {
         DGW_LOG_ERROR(
-            "Call halEschedSumbmitEvent failed, event:[%u], deviceId[%u], groupId[%u], ret:[%d].", eventId,
+            "Call halEschedSubmitEvent failed, event:[%u], deviceId[%u], groupId[%u], ret:[%d].", eventId,
             submitDeviceId, submitGroupId, static_cast<int32_t>(ret));
         return FsmStatus::FSM_FAILED;
     }
