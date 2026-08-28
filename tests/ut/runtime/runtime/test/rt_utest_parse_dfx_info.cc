@@ -106,6 +106,37 @@ void ConstructSimtBlock(uint8_t* buf, size_t blockSize, uint64_t readIdx, uint64
     BlockWriteInfo* writeInfo = RtPtrToPtr<BlockWriteInfo*>(buf + blockSize - sizeof(BlockWriteInfo));
     writeInfo->writeIdx = writeIdx;
 }
+
+uint64_t ConstructAicpuBlock(
+    uint8_t* buf, size_t blockSize, uint64_t readIdx, uint32_t tlvCount, uint32_t infoLen, uint64_t packIdx)
+{
+    BlockInfo* blockInfo = RtPtrToPtr<BlockInfo*>(buf);
+    blockInfo->length = static_cast<uint32_t>(blockSize);
+    blockInfo->coreId = 0U;
+    blockInfo->blockNum = 1U;
+    blockInfo->remainLen =
+        static_cast<uint32_t>(blockSize - sizeof(BlockInfo) - sizeof(BlockReadInfo) - sizeof(BlockWriteInfo));
+    blockInfo->magic = 0xAE86U;
+    blockInfo->flag = RT_KERNEL_DFX_INFO_CORE_TYPE_AICPU;
+    uint8_t* dataArea = buf + sizeof(BlockInfo) + sizeof(BlockReadInfo);
+    blockInfo->dumpAddr = RtPtrToValue(dataArea);
+
+    BlockReadInfo* readInfo = RtPtrToPtr<BlockReadInfo*>(buf + sizeof(BlockInfo));
+    readInfo->readIdx = readIdx;
+
+    const uint64_t tlvLen = sizeof(DumpInfoHead) + infoLen;
+    for (uint32_t i = 0U; i < tlvCount; ++i) {
+        DumpInfoHead* dumpHead = RtPtrToPtr<DumpInfoHead*>(dataArea + tlvLen * i);
+        dumpHead->type = DumpType::DUMP_AICPU;
+        dumpHead->infoLen = infoLen;
+        (void)memset_s(dumpHead->infoMsg, infoLen, 0xAB, infoLen);
+    }
+
+    BlockWriteInfo* writeInfo = RtPtrToPtr<BlockWriteInfo*>(buf + blockSize - sizeof(BlockWriteInfo));
+    writeInfo->writeIdx = readIdx + tlvLen * tlvCount;
+    writeInfo->packIdx = packIdx;
+    return tlvLen;
+}
 } // namespace
 
 class ParsePrintfV2Test : public testing::Test {
@@ -608,4 +639,174 @@ TEST_F(ParseSimtPrintfV2Test, WhenWraparoundPartialConsume_ExpectTwoSegmentClear
     BlockReadInfo* readInfo = RtPtrToPtr<BlockReadInfo*>(hostData.data() + sizeof(BlockInfo));
     EXPECT_EQ(readInfo->readIdx, testReadIdx + testConsumedLen);
     EXPECT_GT(readIdxMod + testConsumedLen, blockInfo->remainLen);
+}
+
+class ParseAicpuPrintfV2Test : public testing::Test {
+protected:
+    virtual void SetUp() { cmodelDrvMemcpy_flag = 1; }
+
+    virtual void TearDown()
+    {
+        cmodelDrvMemcpy_flag = 0;
+        (void)ParseKernelDfxInfo::Instance()->SetCallback(nullptr);
+        ResetCapture(0U);
+        ut::ForceResetPrimaryDeviceIfActive();
+    }
+};
+
+TEST_F(ParseAicpuPrintfV2Test, WhenWriteIdxAdvancedBeforePackIdx_ExpectCallbackCalled)
+{
+    ASSERT_EQ(rtSetDevice(0), RT_ERROR_NONE);
+    Runtime* rtInstance = (Runtime*)Runtime::Instance();
+    RawDevice* dev = (RawDevice*)rtInstance->GetDevice(0U, 0U);
+    ASSERT_NE(dev, nullptr);
+
+    const size_t blockSize = 1024U;
+    std::vector<uint8_t> hostData(blockSize, 0);
+    const uint64_t tlvCnt = dev->GetAicpuPrintTlvCnt();
+    (void)ConstructAicpuBlock(hostData.data(), blockSize, 0U, 1U, 16U, tlvCnt);
+    (void)ParseKernelDfxInfo::Instance()->SetCallback(TestParseDfxInfoCallback);
+    ResetCapture(0U);
+
+    EXPECT_EQ(ParseAicpuPrintfV2(hostData.data(), blockSize, dev->driver_, 0U), RT_ERROR_NONE);
+    EXPECT_TRUE(g_capture.called);
+    BlockReadInfo* readInfo = RtPtrToPtr<BlockReadInfo*>(hostData.data() + sizeof(BlockInfo));
+    EXPECT_EQ(readInfo->readIdx, 0U);
+    EXPECT_EQ(dev->GetAicpuPrintTlvCnt(), tlvCnt);
+}
+
+TEST_F(ParseAicpuPrintfV2Test, WhenCallbackConsumesData_ExpectReadIdxAdvanced)
+{
+    ASSERT_EQ(rtSetDevice(0), RT_ERROR_NONE);
+    Runtime* rtInstance = (Runtime*)Runtime::Instance();
+    RawDevice* dev = (RawDevice*)rtInstance->GetDevice(0U, 0U);
+    ASSERT_NE(dev, nullptr);
+
+    const size_t blockSize = 1024U;
+    std::vector<uint8_t> hostData(blockSize, 0);
+    const uint64_t tlvCnt = dev->GetAicpuPrintTlvCnt();
+    const uint64_t tlvLen = ConstructAicpuBlock(hostData.data(), blockSize, 0U, 1U, 16U, tlvCnt);
+    (void)ParseKernelDfxInfo::Instance()->SetCallback(TestParseDfxInfoCallback);
+    ResetCapture(tlvLen);
+
+    EXPECT_EQ(ParseAicpuPrintfV2(hostData.data(), blockSize, dev->driver_, 42U), RT_ERROR_NONE);
+    EXPECT_TRUE(g_capture.called);
+    EXPECT_EQ(g_capture.readIdx, 0U);
+    EXPECT_EQ(g_capture.writeIdx, tlvLen);
+    EXPECT_EQ(g_capture.datalen, static_cast<uint64_t>(blockSize));
+    EXPECT_EQ(g_capture.coreType, RT_KERNEL_DFX_INFO_CORE_TYPE_AICPU);
+    EXPECT_EQ(g_capture.coreId, 0U);
+    EXPECT_EQ(g_capture.deviceId, 42U);
+    BlockReadInfo* readInfo = RtPtrToPtr<BlockReadInfo*>(hostData.data() + sizeof(BlockInfo));
+    EXPECT_EQ(readInfo->readIdx, tlvLen);
+    EXPECT_EQ(dev->GetAicpuPrintTlvCnt(), tlvCnt);
+}
+
+TEST_F(ParseAicpuPrintfV2Test, WhenMultipleTlvs_ExpectRawWriteIdxDelivered)
+{
+    ASSERT_EQ(rtSetDevice(0), RT_ERROR_NONE);
+    Runtime* rtInstance = (Runtime*)Runtime::Instance();
+    RawDevice* dev = (RawDevice*)rtInstance->GetDevice(0U, 0U);
+    ASSERT_NE(dev, nullptr);
+
+    const size_t blockSize = 1024U;
+    std::vector<uint8_t> hostData(blockSize, 0);
+    const uint64_t tlvCnt = dev->GetAicpuPrintTlvCnt();
+    const uint64_t tlvLen = ConstructAicpuBlock(hostData.data(), blockSize, 0U, 2U, 16U, tlvCnt + 1U);
+    (void)ParseKernelDfxInfo::Instance()->SetCallback(TestParseDfxInfoCallback);
+    ResetCapture(tlvLen);
+
+    EXPECT_EQ(ParseAicpuPrintfV2(hostData.data(), blockSize, dev->driver_, 0U), RT_ERROR_NONE);
+    EXPECT_TRUE(g_capture.called);
+    EXPECT_EQ(g_capture.writeIdx, tlvLen * 2U);
+    BlockReadInfo* readInfo = RtPtrToPtr<BlockReadInfo*>(hostData.data() + sizeof(BlockInfo));
+    EXPECT_EQ(readInfo->readIdx, tlvLen);
+    EXPECT_EQ(dev->GetAicpuPrintTlvCnt(), tlvCnt);
+}
+
+TEST_F(ParseAicpuPrintfV2Test, WhenConsumedLenNotTlvAligned_ExpectByteAdvance)
+{
+    ASSERT_EQ(rtSetDevice(0), RT_ERROR_NONE);
+    Runtime* rtInstance = (Runtime*)Runtime::Instance();
+    RawDevice* dev = (RawDevice*)rtInstance->GetDevice(0U, 0U);
+    ASSERT_NE(dev, nullptr);
+
+    const size_t blockSize = 1024U;
+    std::vector<uint8_t> hostData(blockSize, 0);
+    const uint64_t tlvCnt = dev->GetAicpuPrintTlvCnt();
+    (void)ConstructAicpuBlock(hostData.data(), blockSize, 0U, 1U, 16U, tlvCnt);
+    (void)ParseKernelDfxInfo::Instance()->SetCallback(TestParseDfxInfoCallback);
+    ResetCapture(1U);
+
+    EXPECT_EQ(ParseAicpuPrintfV2(hostData.data(), blockSize, dev->driver_, 0U), RT_ERROR_NONE);
+    EXPECT_TRUE(g_capture.called);
+    BlockReadInfo* readInfo = RtPtrToPtr<BlockReadInfo*>(hostData.data() + sizeof(BlockInfo));
+    EXPECT_EQ(readInfo->readIdx, 1U);
+    EXPECT_EQ(dev->GetAicpuPrintTlvCnt(), tlvCnt);
+}
+
+TEST_F(ParseAicpuPrintfV2Test, WhenConsumedLenZero_ExpectDataRetained)
+{
+    ASSERT_EQ(rtSetDevice(0), RT_ERROR_NONE);
+    Runtime* rtInstance = (Runtime*)Runtime::Instance();
+    RawDevice* dev = (RawDevice*)rtInstance->GetDevice(0U, 0U);
+    ASSERT_NE(dev, nullptr);
+
+    const size_t blockSize = 1024U;
+    std::vector<uint8_t> hostData(blockSize, 0);
+    const uint64_t tlvCnt = dev->GetAicpuPrintTlvCnt();
+    (void)ConstructAicpuBlock(hostData.data(), blockSize, 0U, 1U, 16U, tlvCnt + 1U);
+    (void)ParseKernelDfxInfo::Instance()->SetCallback(TestParseDfxInfoCallback);
+    ResetCapture(0U);
+
+    EXPECT_EQ(ParseAicpuPrintfV2(hostData.data(), blockSize, dev->driver_, 0U), RT_ERROR_NONE);
+    EXPECT_TRUE(g_capture.called);
+    BlockReadInfo* readInfo = RtPtrToPtr<BlockReadInfo*>(hostData.data() + sizeof(BlockInfo));
+    EXPECT_EQ(readInfo->readIdx, 0U);
+    EXPECT_EQ(dev->GetAicpuPrintTlvCnt(), tlvCnt);
+}
+
+TEST_F(ParseAicpuPrintfV2Test, WhenConsumedLenExceedsAvailableData_ExpectClamped)
+{
+    ASSERT_EQ(rtSetDevice(0), RT_ERROR_NONE);
+    Runtime* rtInstance = (Runtime*)Runtime::Instance();
+    RawDevice* dev = (RawDevice*)rtInstance->GetDevice(0U, 0U);
+    ASSERT_NE(dev, nullptr);
+
+    const size_t blockSize = 1024U;
+    std::vector<uint8_t> hostData(blockSize, 0);
+    const uint64_t tlvCnt = dev->GetAicpuPrintTlvCnt();
+    const uint64_t tlvLen = ConstructAicpuBlock(hostData.data(), blockSize, 0U, 1U, 16U, tlvCnt);
+    (void)ParseKernelDfxInfo::Instance()->SetCallback(TestParseDfxInfoCallback);
+    ResetCapture(blockSize);
+
+    EXPECT_EQ(ParseAicpuPrintfV2(hostData.data(), blockSize, dev->driver_, 0U), RT_ERROR_NONE);
+    BlockReadInfo* readInfo = RtPtrToPtr<BlockReadInfo*>(hostData.data() + sizeof(BlockInfo));
+    EXPECT_EQ(readInfo->readIdx, tlvLen);
+    EXPECT_EQ(dev->GetAicpuPrintTlvCnt(), tlvCnt);
+}
+
+TEST_F(ParseAicpuPrintfV2Test, WhenNoCallback_ExpectReadIdxAdvance)
+{
+    ASSERT_EQ(rtSetDevice(0), RT_ERROR_NONE);
+    Runtime* rtInstance = (Runtime*)Runtime::Instance();
+    RawDevice* dev = (RawDevice*)rtInstance->GetDevice(0U, 0U);
+    ASSERT_NE(dev, nullptr);
+
+    const size_t blockSize = 1024U;
+    std::vector<uint8_t> hostData(blockSize, 0);
+    const uint64_t tlvCnt = dev->GetAicpuPrintTlvCnt();
+    const uint64_t tlvLen = ConstructAicpuBlock(hostData.data(), blockSize, 0U, 1U, 16U, tlvCnt);
+    (void)ParseKernelDfxInfo::Instance()->SetCallback(nullptr);
+
+    EXPECT_EQ(ParseAicpuPrintfV2(hostData.data(), blockSize, dev->driver_, 0U), RT_ERROR_NONE);
+    EXPECT_FALSE(g_capture.called);
+    BlockReadInfo* readInfo = RtPtrToPtr<BlockReadInfo*>(hostData.data() + sizeof(BlockInfo));
+    EXPECT_EQ(readInfo->readIdx, tlvLen);
+    EXPECT_EQ(dev->GetAicpuPrintTlvCnt(), tlvCnt);
+}
+
+TEST_F(ParseAicpuPrintfV2Test, WhenDrvNull_ExpectDrvNull)
+{
+    EXPECT_EQ(ParseAicpuPrintfV2(nullptr, 0U, nullptr, 0U), RT_ERROR_DRV_NULL);
 }

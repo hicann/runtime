@@ -65,6 +65,7 @@ constexpr uint32_t GE_DT_FLOAT8_E8M0 = 37U;
 
 bool IsDumpSimdBlockInfo[CORE_NUMBER_MAX]{false};
 bool IsDumpSimtBlockInfo = false;
+bool IsDumpAicpuBlockInfo = false;
 
 template <typename T>
 std::string ToHex(T num)
@@ -245,6 +246,20 @@ std::string ParseFormat(const char* format)
     return temp;
 }
 
+void PrintStringToLog(const std::string& printInfo, const bool isAssert)
+{
+    const size_t infoLen = printInfo.size();
+    for (size_t curIdx = 0; curIdx < infoLen; curIdx += MAX_LOG_LENGTH) {
+        const size_t curLen = (curIdx + MAX_LOG_LENGTH) > infoLen ? (infoLen - curIdx) : MAX_LOG_LENGTH;
+        (void)printf("%s", printInfo.substr(curIdx, curLen).c_str());
+        if (isAssert) {
+            RT_LOG(RT_LOG_ERROR, "%s", printInfo.substr(curIdx, curLen).c_str());
+        } else {
+            RT_LOG(RT_LOG_INFO, "PrintInfo: %s", printInfo.substr(curIdx, curLen).c_str());
+        }
+    }
+}
+
 void ParsePrintToLog(
     const char* format, const uint8_t* paramBegin, const uint32_t paramNum, const bool isAssert, uint32_t flag)
 {
@@ -286,22 +301,13 @@ void ParsePrintToLog(
         format += tempFormat.size();
     }
 
-    const size_t infoLen = printInfo.size();
-    for (size_t curIdx = 0; curIdx < infoLen; curIdx += MAX_LOG_LENGTH) {
-        const size_t curLen = (curIdx + MAX_LOG_LENGTH) > infoLen ? (infoLen - curIdx) : MAX_LOG_LENGTH;
-        (void)printf("%s", printInfo.substr(curIdx, curLen).c_str());
-        if (isAssert) {
-            RT_LOG(RT_LOG_ERROR, "%s", printInfo.substr(curIdx, curLen).c_str());
-        } else {
-            RT_LOG(RT_LOG_INFO, "PrintInfo: %s", printInfo.substr(curIdx, curLen).c_str());
-        }
-    }
+    PrintStringToLog(printInfo, isAssert);
 }
 
 void PrintDumpBase(const DumpInfoHead* dumpHead, uint32_t flag)
 {
     const uint32_t resvOffset = (flag == PRINT_SIMT) ? RESV_LEN_SIMT : RESV_LEN;
-    RT_LOG(RT_LOG_DEBUG, "Get dump print dataLen[%u bytes].", dumpHead->infoLen);
+    RT_LOG(RT_LOG_DEBUG, "Get dump print dataLen[%u bytes], flag[%u].", dumpHead->infoLen, flag);
     // 预留8字节, strOffset占位8字节
     COND_RETURN_VOID(
         dumpHead->infoLen < (PRINT_ARG_LEN + resvOffset), "dumpHead infoLen(%u) is too small", dumpHead->infoLen);
@@ -321,6 +327,28 @@ void PrintDumpBase(const DumpInfoHead* dumpHead, uint32_t flag)
 void PrintDump(const DumpInfoHead* dumpHead) { PrintDumpBase(dumpHead, PRINT_SIMD); }
 
 void PrintSimtDump(const DumpInfoHead* dumpHead) { PrintDumpBase(dumpHead, PRINT_SIMT); }
+
+void PrintAicpuDump(const DumpInfoHead* dumpHead)
+{
+    constexpr uint64_t minInfoLen = static_cast<uint64_t>(RESV_LEN) + PRINT_ARG_LEN + 1U;
+    RT_LOG(RT_LOG_DEBUG, "Get aicpu dump print dataLen[%u bytes].", dumpHead->infoLen);
+    COND_RETURN_VOID(
+        static_cast<uint64_t>(dumpHead->infoLen) < minInfoLen, "Aicpu dumpHead infoLen(%u) is too small",
+        dumpHead->infoLen);
+
+    const uint64_t strOffset = *(RtPtrToPtr<const uint64_t*>(dumpHead->infoMsg + RESV_LEN));
+    COND_RETURN_VOID(
+        strOffset != PRINT_ARG_LEN, "Aicpu dumpHead strOffset(%llu) is invalid",
+        static_cast<unsigned long long>(strOffset));
+
+    const uint64_t stringOffset = static_cast<uint64_t>(RESV_LEN) + strOffset;
+    const size_t maxStrLen = static_cast<size_t>(static_cast<uint64_t>(dumpHead->infoLen) - stringOffset);
+    const char* str = RtPtrToPtr<const char*>(dumpHead->infoMsg + stringOffset);
+    const size_t strLen = strnlen(str, maxStrLen);
+    COND_RETURN_VOID(strLen == maxStrLen, "Aicpu print string is not terminated within infoLen(%u)", dumpHead->infoLen);
+
+    PrintStringToLog(std::string(str, strLen), false);
+}
 
 void PrintDumpTimestamp(
     const DumpInfoHead* dumpHead, const uint32_t blockId, std::vector<MsprofAicTimeStampInfo>& timeStampInfo)
@@ -819,6 +847,7 @@ static rtKernelDfxInfoType GetrtKernelDfxInfoType(const DumpType type)
     switch (type) {
         case DumpType::DUMP_SCALAR:
         case DumpType::DUMP_SIMT_PRINTF:
+        case DumpType::DUMP_AICPU:
             return RT_KERNEL_DFX_INFO_PRINTF;
         case DumpType::DUMP_ASSERT:
         case DumpType::DUMP_SIMT_ASSERT:
@@ -846,6 +875,13 @@ static void DumpBlockInfo(
             (void)kernelDfxInfoInstance->ExecuteKernelDfxInfoFunc(type, coreType, coreId, blockAddr, sizeof(BlockInfo));
         }
     };
+    if (coreType == RT_KERNEL_DFX_INFO_CORE_TYPE_AICPU) {
+        if (!IsDumpAicpuBlockInfo) {
+            dumpInfo();
+            IsDumpAicpuBlockInfo = true;
+        }
+        return;
+    }
     if (!IsDumpSimdBlockInfo[coreId] && coreType != RT_KERNEL_DFX_INFO_CORE_TYPE_SIMT) {
         dumpInfo();
         IsDumpSimdBlockInfo[coreId] = true;
@@ -931,6 +967,69 @@ rtError_t GetReadLenAndAddr(
     return RT_ERROR_NONE;
 }
 
+uint64_t CollectCommittedAicpuDumpInfo(
+    const uint8_t* dumpReadStartAddr, const uint64_t totalReadBufLen, const uint64_t packIdx, const uint64_t tlvCnt,
+    std::vector<const DumpInfoHead*>& dumpInfoHeads)
+{
+    dumpInfoHeads.clear();
+    uint64_t processedLen = 0U;
+    while (processedLen < totalReadBufLen) {
+        const uint64_t currentTlvCnt = tlvCnt + static_cast<uint64_t>(dumpInfoHeads.size());
+        if (currentTlvCnt >= packIdx) {
+            RT_LOG(
+                RT_LOG_DEBUG, "aicpu collect dump info break, packIdx=%" PRIu64 ", tlvCnt=%" PRIu64, packIdx,
+                currentTlvCnt);
+            break;
+        }
+        const uint64_t remainingLen = totalReadBufLen - processedLen;
+        if (remainingLen < sizeof(DumpInfoHead)) {
+            RT_LOG(
+                RT_LOG_WARNING, "aicpu dump info header is truncated, remainingLen=%" PRIu64 ", headerLen=%zu.",
+                remainingLen, sizeof(DumpInfoHead));
+            break;
+        }
+        const DumpInfoHead* const dumpHead = RtPtrToPtr<const DumpInfoHead*>(dumpReadStartAddr + processedLen);
+        if (dumpHead->type != DumpType::DUMP_AICPU) {
+            RT_LOG(
+                RT_LOG_DEBUG, "aicpu collect dump info break, packIdx=%" PRIu64 ", tlvCnt=%" PRIu64 ", type=%u",
+                packIdx, currentTlvCnt, static_cast<uint32_t>(dumpHead->type));
+            break;
+        }
+        if (static_cast<uint64_t>(dumpHead->infoLen) > remainingLen - sizeof(DumpInfoHead)) {
+            RT_LOG(
+                RT_LOG_WARNING, "aicpu dump info payload is truncated, infoLen=%u, remainingLen=%" PRIu64 ".",
+                dumpHead->infoLen, remainingLen - sizeof(DumpInfoHead));
+            break;
+        }
+        processedLen += sizeof(DumpInfoHead) + static_cast<uint64_t>(dumpHead->infoLen);
+        dumpInfoHeads.emplace_back(dumpHead);
+    }
+    return processedLen;
+}
+
+rtError_t ClearDumpData(
+    Driver* curDrv, const uint64_t dumpAddr, const uint64_t remainLen, const uint64_t readIdx, const uint64_t clearLen)
+{
+    COND_RETURN_AND_MSG_INNER(
+        (remainLen == 0U), RT_ERROR_INVALID_VALUE, "remainLen is 0, invalid block configuration.");
+    if (clearLen == 0U) {
+        return RT_ERROR_NONE;
+    }
+    const uint64_t readIdxMod = readIdx % remainLen;
+    const void* const clearBufAddr = RtValueToPtr<const void*>(dumpAddr + readIdxMod);
+    if (readIdxMod + clearLen > remainLen) {
+        const uint64_t firstClearLen = remainLen - readIdxMod;
+        rtError_t ret = curDrv->MemSetSync(clearBufAddr, firstClearLen, 0U, firstClearLen);
+        COND_RETURN_WARN((ret != RT_ERROR_NONE), ret, "MemSetSync proc step1 failed, ret=%u", ret);
+        ret = curDrv->MemSetSync(RtValueToPtr<void*>(dumpAddr), clearLen - firstClearLen, 0U, clearLen - firstClearLen);
+        COND_RETURN_WARN((ret != RT_ERROR_NONE), ret, "MemSetSync proc step2 failed, ret=%u", ret);
+    } else {
+        const rtError_t ret = curDrv->MemSetSync(clearBufAddr, clearLen, 0U, clearLen);
+        COND_RETURN_WARN((ret != RT_ERROR_NONE), ret, "MemSetSync proc failed, ret=%u", ret);
+    }
+    return RT_ERROR_NONE;
+}
+
 void PrintDumpInfo(
     const DumpInfoHead* dumpHead, const uint32_t blockId, const uint32_t coreType, std::vector<size_t>& shapeInfo,
     std::vector<MsprofAicTimeStampInfo>& timeStampInfo)
@@ -970,6 +1069,18 @@ void PrintSimtDumpInfo(const DumpInfoHead* dumpHead)
             break;
         default:
             RT_LOG(RT_LOG_WARNING, "Invalid dump type %u.", static_cast<uint32_t>(dumpHead->type));
+            break;
+    }
+}
+
+void PrintAicpuDumpInfo(const DumpInfoHead* dumpHead)
+{
+    switch (dumpHead->type) {
+        case DumpType::DUMP_AICPU:
+            PrintAicpuDump(dumpHead);
+            break;
+        default:
+            RT_LOG(RT_LOG_WARNING, "Invalid aicpu dump type %u.", static_cast<uint32_t>(dumpHead->type));
             break;
     }
 }
@@ -1459,6 +1570,180 @@ rtError_t ParseSimtPrintfV2(void* addr, const size_t blockSize, Driver* curDrv, 
     ret = curDrv->MemCopySync(
         deviceAddr, sizeof(BlockReadInfo), readInfo, sizeof(BlockReadInfo), RT_MEMCPY_HOST_TO_DEVICE, false);
     COND_RETURN_ERROR((ret != RT_ERROR_NONE), ret, "MemCopySync h2d failed, ret=%u, deviceId=%u", ret, userDeviceId);
+
+    return RT_ERROR_NONE;
+}
+
+rtError_t InitAicpuPrintf(void* addr, const size_t blockSize, Driver* curDrv)
+{
+    const uint64_t totalLen = blockSize;
+    std::vector<uint8_t> hostData(totalLen, 0);
+
+    uint8_t* const blockAddr = hostData.data();
+    BlockInfo* const blockInfo = RtPtrToPtr<BlockInfo*>(blockAddr);
+    blockInfo->length = static_cast<uint32_t>(blockSize);
+    blockInfo->coreId = 0U;
+    blockInfo->blockNum = 1U;
+    blockInfo->remainLen =
+        static_cast<uint32_t>(blockSize - sizeof(BlockInfo) - sizeof(BlockReadInfo) - sizeof(BlockWriteInfo));
+    blockInfo->magic = MAGIC_NUM;
+    blockInfo->flag = static_cast<uint16_t>(RT_KERNEL_DFX_INFO_CORE_TYPE_AICPU);
+    blockInfo->dumpAddr = RtPtrToValue(addr) + sizeof(BlockInfo) + sizeof(BlockReadInfo);
+
+    BlockReadInfo* const readInfo = RtPtrToPtr<BlockReadInfo*>(blockAddr + sizeof(BlockInfo));
+    readInfo->dumpType = DumpType::DUMP_BUFO;
+    readInfo->length = static_cast<uint32_t>(sizeof(uint64_t) + sizeof(uint64_t));
+    readInfo->readIdx = 0U;
+
+    BlockWriteInfo* const writeInfo = RtPtrToPtr<BlockWriteInfo*>(blockAddr + blockSize - sizeof(BlockWriteInfo));
+    writeInfo->dumpType = DumpType::DUMP_BUFI;
+    writeInfo->length = sizeof(uint64_t) + sizeof(uint64_t);
+    writeInfo->writeIdx = readInfo->readIdx;
+
+    NULL_PTR_RETURN(curDrv, RT_ERROR_DRV_NULL);
+    const rtError_t ret =
+        curDrv->MemCopySync(addr, totalLen, hostData.data(), totalLen, RT_MEMCPY_HOST_TO_DEVICE, false);
+    COND_RETURN_WARN((ret != RT_ERROR_NONE), ret, "MemCopySync h2d failed, ret=%u", ret);
+    return RT_ERROR_NONE;
+}
+
+rtError_t ParseAicpuPrintf(void* addr, const size_t blockSize, Driver* curDrv, const Device* const dev)
+{
+    NULL_PTR_RETURN(curDrv, RT_ERROR_DRV_NULL);
+    std::vector<uint8_t> hostData(blockSize, 0);
+    rtError_t ret = curDrv->MemCopySync(hostData.data(), blockSize, addr, blockSize, RT_MEMCPY_DEVICE_TO_HOST, false);
+    COND_RETURN_WARN((ret != RT_ERROR_NONE), ret, "MemCopySync d2h failed, ret=%u", ret);
+
+    uint8_t* const blockAddr = hostData.data();
+    BlockReadInfo* const readInfo = RtPtrToPtr<BlockReadInfo*>(blockAddr + sizeof(BlockInfo));
+    const BlockWriteInfo* const writeInfo =
+        RtPtrToPtr<const BlockWriteInfo*>(blockAddr + blockSize - sizeof(BlockWriteInfo));
+    COND_RETURN_AND_MSG_INNER(
+        (readInfo->readIdx > writeInfo->writeIdx), RT_ERROR_INVALID_VALUE,
+        "The value of readIdx %" PRIu64 " must be less than or equal to that of writeIdx %" PRIu64 ".",
+        readInfo->readIdx, writeInfo->writeIdx);
+    if (readInfo->readIdx == writeInfo->writeIdx) {
+        RT_LOG(RT_LOG_DEBUG, "Aicpu block info writeIdx %" PRIu64 " has no info updates.", writeInfo->writeIdx);
+        return RT_ERROR_NONE;
+    }
+
+    uint64_t totalReadBufLen = 0U;
+    const uint8_t* dumpReadStartAddr;
+    std::vector<uint8_t> dumpInfoVec;
+    ret = GetReadLenAndAddr(blockAddr, blockSize, totalReadBufLen, dumpReadStartAddr, dumpInfoVec);
+    COND_RETURN_WARN((ret != RT_ERROR_NONE), ret, "Get read buffer len and addr failed, ret=%u", ret);
+
+    std::vector<const DumpInfoHead*> dumpInfoHeads;
+    const uint64_t packIdx = writeInfo->packIdx;
+    const uint64_t tlvCnt = dev->GetAicpuPrintTlvCnt();
+    const uint64_t processedLen =
+        CollectCommittedAicpuDumpInfo(dumpReadStartAddr, totalReadBufLen, packIdx, tlvCnt, dumpInfoHeads);
+    dev->AddAicpuPrintTlvCnt(static_cast<uint64_t>(dumpInfoHeads.size()));
+    const BlockInfo* const blockInfo = RtPtrToPtr<const BlockInfo*>(blockAddr);
+    if (processedLen == 0U) {
+        if (writeInfo->writeIdx - readInfo->readIdx > blockInfo->remainLen) {
+            RT_LOG(
+                RT_LOG_WARNING,
+                "Aicpu printf buffer overflow, readIdx=%" PRIu64 ", writeIdx=%" PRIu64
+                ", remainLen=%u. Reset readIdx to writeIdx to skip overwritten data.",
+                readInfo->readIdx, writeInfo->writeIdx, blockInfo->remainLen);
+            readInfo->readIdx = writeInfo->writeIdx;
+            void* const deviceReadAddr = RtValueToPtr<void*>(RtPtrToValue(addr) + sizeof(BlockInfo));
+            (void)curDrv->MemCopySync(
+                deviceReadAddr, sizeof(BlockReadInfo), readInfo, sizeof(BlockReadInfo), RT_MEMCPY_HOST_TO_DEVICE,
+                false);
+        }
+        return RT_ERROR_NONE;
+    }
+    ret = ClearDumpData(curDrv, blockInfo->dumpAddr, blockInfo->remainLen, readInfo->readIdx, processedLen);
+    if (ret != RT_ERROR_NONE) {
+        return ret;
+    }
+
+    if (writeInfo->writeIdx - readInfo->readIdx > blockInfo->remainLen) {
+        readInfo->readIdx = writeInfo->writeIdx;
+    } else {
+        readInfo->readIdx = readInfo->readIdx + processedLen;
+    }
+    void* const deviceAddr = RtValueToPtr<void*>(RtPtrToValue(addr) + sizeof(BlockInfo));
+    ret = curDrv->MemCopySync(
+        deviceAddr, sizeof(BlockReadInfo), readInfo, sizeof(BlockReadInfo), RT_MEMCPY_HOST_TO_DEVICE, false);
+    COND_RETURN_WARN((ret != RT_ERROR_NONE), ret, "MemCopySync h2d failed, ret=%u", ret);
+
+    for (const DumpInfoHead* const dumpHead : dumpInfoHeads) {
+        PrintAicpuDumpInfo(dumpHead);
+    }
+    ret =
+        ExecuteKernelDfxInfoFunc(blockAddr, dumpReadStartAddr, totalReadBufLen, RT_KERNEL_DFX_INFO_CORE_TYPE_AICPU, 0);
+    COND_RETURN_WARN((ret != RT_ERROR_NONE), ret, "Execute kernel dfx info func failed, ret=%u", ret);
+
+    return RT_ERROR_NONE;
+}
+
+rtError_t ParseAicpuPrintfV2(void* addr, const size_t blockSize, Driver* curDrv, uint32_t userDeviceId)
+{
+    NULL_PTR_RETURN(curDrv, RT_ERROR_DRV_NULL);
+    std::vector<uint8_t> hostData(blockSize, 0);
+    rtError_t ret = curDrv->MemCopySync(hostData.data(), blockSize, addr, blockSize, RT_MEMCPY_DEVICE_TO_HOST, false);
+    COND_RETURN_WARN((ret != RT_ERROR_NONE), ret, "MemCopySync d2h failed, ret=%u, deviceId=%u", ret, userDeviceId);
+
+    uint8_t* const blockAddr = hostData.data();
+    const BlockInfo* const blockInfo = RtPtrToPtr<const BlockInfo*>(blockAddr);
+    BlockReadInfo* const readInfo = RtPtrToPtr<BlockReadInfo*>(blockAddr + sizeof(BlockInfo));
+    const BlockWriteInfo* const writeInfo =
+        RtPtrToPtr<const BlockWriteInfo*>(blockAddr + blockSize - sizeof(BlockWriteInfo));
+    COND_RETURN_AND_MSG_INNER(
+        (readInfo->readIdx > writeInfo->writeIdx), RT_ERROR_INVALID_VALUE,
+        "The value of readIdx %" PRIu64 " must be less than or equal to that of writeIdx %" PRIu64 ".",
+        readInfo->readIdx, writeInfo->writeIdx);
+    COND_RETURN_AND_MSG_INNER(
+        (blockInfo->remainLen == 0U), RT_ERROR_INVALID_VALUE, "remainLen is 0, invalid block configuration.");
+    if (readInfo->readIdx == writeInfo->writeIdx) {
+        RT_LOG(
+            RT_LOG_DEBUG, "Aicpu block info writeIdx %" PRIu64 " has no info updates, deviceId=%u.",
+            writeInfo->writeIdx, userDeviceId);
+        return RT_ERROR_NONE;
+    }
+
+    const uint64_t readIdx = readInfo->readIdx;
+    const rtParseDfxInfoFunc cb = ParseKernelDfxInfo::Instance()->GetCallback();
+    if (cb != nullptr) {
+        uint64_t consumedLen = 0U;
+        rtDfxParseParam param = {blockAddr,           static_cast<uint64_t>(blockSize),   readIdx,
+                                 writeInfo->writeIdx, RT_KERNEL_DFX_INFO_CORE_TYPE_AICPU, 0U,
+                                 userDeviceId};
+        cb(&param, &consumedLen);
+        COND_RETURN_DEBUG(
+            (consumedLen == 0U), RT_ERROR_NONE,
+            "consumedLen=0, readIdx=%" PRIu64 ", writeIdx=%" PRIu64 ", data retained for next round, deviceId=%u",
+            readIdx, writeInfo->writeIdx, userDeviceId);
+
+        const uint64_t pendingLen = writeInfo->writeIdx - readIdx;
+        const uint64_t availableData = pendingLen > blockInfo->remainLen ? blockInfo->remainLen : pendingLen;
+        if (consumedLen > availableData) {
+            RT_LOG(
+                RT_LOG_WARNING, "consumedLen=%" PRIu64 " exceeds availableData=%" PRIu64 ", fallback to availableData.",
+                consumedLen, availableData);
+            consumedLen = availableData;
+        }
+
+        ret = ClearDumpData(curDrv, blockInfo->dumpAddr, blockInfo->remainLen, readIdx, consumedLen);
+        if (ret != RT_ERROR_NONE) {
+            return ret;
+        }
+        readInfo->readIdx = readIdx + consumedLen;
+    } else {
+        RT_LOG(
+            RT_LOG_WARNING,
+            "no callback registered, readIdx=%" PRIu64 ", writeIdx=%" PRIu64 ", coreType=%u, coreId=%u, deviceId=%u",
+            readIdx, writeInfo->writeIdx, RT_KERNEL_DFX_INFO_CORE_TYPE_AICPU, 0U, userDeviceId);
+        readInfo->readIdx = writeInfo->writeIdx;
+    }
+
+    void* const deviceAddr = RtValueToPtr<void*>(RtPtrToValue(addr) + sizeof(BlockInfo));
+    ret = curDrv->MemCopySync(
+        deviceAddr, sizeof(BlockReadInfo), readInfo, sizeof(BlockReadInfo), RT_MEMCPY_HOST_TO_DEVICE, false);
+    COND_RETURN_WARN((ret != RT_ERROR_NONE), ret, "MemCopySync h2d failed, ret=%u, deviceId=%u", ret, userDeviceId);
 
     return RT_ERROR_NONE;
 }

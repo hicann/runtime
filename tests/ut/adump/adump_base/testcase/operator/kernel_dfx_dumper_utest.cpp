@@ -25,9 +25,10 @@
 using namespace Adx;
 INT32 mmSleep_stub(UINT32 millseconds);
 
-class KernelDfxDumperUtest: public testing::Test {
+class KernelDfxDumperUtest : public testing::Test {
 protected:
-    virtual void SetUp() {
+    virtual void SetUp()
+    {
         MOCKER(mmSleep).stubs().will(invoke(mmSleep_stub));
         KernelDfxDumper::Instance().UnInit();
     }
@@ -60,7 +61,9 @@ TEST_F(KernelDfxDumperUtest, Test_DfxDumper_EnableWithEnv)
     (void)setenv("ASCEND_WORK_PATH", "./Test_DfxDumper_EnableWithEnv/NoPermission/ascendWorkPath", 1);
     // root用户执行用例有权限；但virtiofs等特殊挂载下root也可能无法绕过chmod 400，动态探测
     bool bRet = (system("mkdir ./Test_DfxDumper_EnableWithEnv/NoPermission/_probe_ 2>/dev/null") == 0);
-    if (bRet) { (void)system("rm -rf ./Test_DfxDumper_EnableWithEnv/NoPermission/_probe_"); }
+    if (bRet) {
+        (void)system("rm -rf ./Test_DfxDumper_EnableWithEnv/NoPermission/_probe_");
+    }
     KernelDfxDumper::Instance().EnableDfxDumper();
     EXPECT_EQ(KernelDfxDumper::Instance().IsEnabled(), bRet);
 
@@ -157,7 +160,6 @@ TEST_F(KernelDfxDumperUtest, Test_DfxDumper_Fork_EnableWithEnv)
     (void)system("rm -rf ./Test_DfxDumper_Fork_EnableWithEnv");
 }
 
-
 TEST_F(KernelDfxDumperUtest, Test_DfxDumper_Fork_EnableWithConfig)
 {
     (void)system("rm -rf ./Test_DfxDumper_Fork_EnableWithConfig");
@@ -244,13 +246,13 @@ TEST_F(KernelDfxDumperUtest, Test_DfxDumper_DumpDfxCallback_Failed)
         rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_INVALID, 0, 0, buffer, length);
     EXPECT_EQ(ret, ADUMP_FAILED);
     ret = KernelDfxDumper::Instance().DumpKernelDfxInfo(
-        rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_DEFAULT, 3, 0, buffer, length);
+        rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_DEFAULT, 4, 0, buffer, length);
     EXPECT_EQ(ret, ADUMP_FAILED);
     ret = KernelDfxDumper::Instance().DumpKernelDfxInfo(
         rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_DEFAULT, 0, 0, nullptr, length);
     EXPECT_EQ(ret, ADUMP_FAILED);
-    ret = KernelDfxDumper::Instance().DumpKernelDfxInfo(
-        rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_DEFAULT, 0, 0, buffer, 0);
+    ret =
+        KernelDfxDumper::Instance().DumpKernelDfxInfo(rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_DEFAULT, 0, 0, buffer, 0);
     EXPECT_EQ(ret, ADUMP_FAILED);
 
     // 无法加入落盘任务
@@ -275,7 +277,7 @@ TEST_F(KernelDfxDumperUtest, Test_DfxDumper_DumpDfxCallback_Failed)
 }
 
 int32_t g_mmGetDiskFreeSpaceStubCount = 0;
-INT32 mmGetDiskFreeSpaceStub(const char* path, mmDiskSize *diskSize)
+INT32 mmGetDiskFreeSpaceStub(const char* path, mmDiskSize* diskSize)
 {
     if (g_mmGetDiskFreeSpaceStubCount == 0) {
         diskSize->availSize = 10;
@@ -370,4 +372,34 @@ TEST_F(KernelDfxDumperUtest, Test_DfxDumper_DumpDfxCallback_RecordDisk_Success)
 
     EXPECT_EQ(filePath.Exist(), true);
     (void)system("rm -rf ./Test_DfxDumper_DumpDfxCallback_RecordDisk_Success");
+}
+
+TEST_F(KernelDfxDumperUtest, Test_DfxDumper_DumpAicpuDfxCallback_RecordDisk_Success)
+{
+    (void)system("rm -rf ./Test_DfxDumper_DumpAicpuDfxCallback_RecordDisk_Success");
+    (void)system("mkdir ./Test_DfxDumper_DumpAicpuDfxCallback_RecordDisk_Success");
+
+    DumpDfxConfig dumpDfxConfig;
+    dumpDfxConfig.dfxTypes.push_back("all");
+    dumpDfxConfig.dumpPath = "./Test_DfxDumper_DumpAicpuDfxCallback_RecordDisk_Success/ascendDumpPath";
+    int32_t ret = KernelDfxDumper::Instance().EnableDfxDumper(dumpDfxConfig);
+    EXPECT_EQ(ret, ADUMP_SUCCESS);
+
+    g_mmGetDiskFreeSpaceStubCount = 1;
+    MOCKER(mmGetDiskFreeSpace).stubs().will(invoke(mmGetDiskFreeSpaceStub));
+
+    const uint8_t buffer[] = "printf|assert";
+    size_t length = sizeof(buffer);
+    Path filePath = Path(KernelDfxDumper::Instance().dumpPath_).Concat("asc_kernel_data_aicpu_0.bin");
+    ret = KernelDfxDumper::Instance().DumpKernelDfxInfo(
+        rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_DEFAULT, 3, 0, buffer, length);
+    EXPECT_EQ(ret, ADUMP_SUCCESS);
+
+    KernelDfxDumper::Instance().UnInitTask();
+    while (KernelDfxDumper::Instance().taskRunning_) {
+        usleep(100000U);
+    }
+
+    EXPECT_EQ(filePath.Exist(), true);
+    (void)system("rm -rf ./Test_DfxDumper_DumpAicpuDfxCallback_RecordDisk_Success");
 }

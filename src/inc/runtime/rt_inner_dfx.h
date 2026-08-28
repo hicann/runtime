@@ -47,7 +47,7 @@ RTS_API rtError_t rtSetKernelDfxInfoCallback(rtKernelDfxInfoType type, rtKernelD
  * @param datalen   Total block length in bytes (blockSize)
  * @param readIdx   Ring buffer read position
  * @param writeIdx  Ring buffer write position
- * @param coreType  Core type: 0=AIC, 1=AIV, 2=SIMT
+ * @param coreType  Core type: 0=AIC, 1=AIV, 2=SIMT, 3=AICPU
  * @param coreId    Core ID
  * @param deviceId  User device ID (converted from driver device ID via GetUserDevIdByDeviceId)
  */
@@ -67,7 +67,7 @@ typedef struct rtDfxParseParam {
  * @param [out] consumedLen Bytes consumed by callback.
  *             SIMD: consumedLen is treated as a flag (0=not processed, non-zero=processed).
  *                   readIdx is advanced to writeIdx regardless of the actual value.
- *             SIMT: consumedLen is the actual number of bytes consumed.
+ *             SIMT/AICPU: consumedLen is the actual number of bytes consumed.
  *                   readIdx is advanced by consumedLen (clamped to availableData).
  *             Set to 0 if no data consumed (data retained for next round).
  * @note This callback is invoked synchronously in the PRINTF thread.

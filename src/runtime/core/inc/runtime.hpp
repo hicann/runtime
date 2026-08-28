@@ -624,6 +624,10 @@ public:
 
     uint32_t GetSimtPrintFifoSize() const { return simtPrintLen_; }
 
+    uint32_t GetAicpuPrintfMemSize() const { return aicpuPrintfMemSize_; }
+
+    void SetAicpuPrintfMemSize(uint32_t val) { aicpuPrintfMemSize_ = val; }
+
     void SetIsUserSetSocVersion(bool flag) { isUserSetSocVersion_ = flag; }
     rtError_t SubscribeCallback(const uint64_t threadId, Stream* stm, void* evtNotify);
     bool JudgeNeedSubscribe(const uint64_t threadId, Stream* stm, const uint32_t deviceId);
@@ -793,6 +797,7 @@ private:
     uint32_t deviceCustomerStackSize_{KERNEL_STACK_SIZE_32K}; // 全局共享，所有device生效，向上取整到16KB对齐
     uint32_t printblockLen_{SIMD_FIFO_PER_CORE_SIZE_32K}; // 全局共享
     uint32_t simtPrintLen_{SIMT_FIFO_SIZE_2M};            // 全局共享
+    uint32_t aicpuPrintfMemSize_{AICPU_FIFO_SIZE_1M};     // 全局共享
     ObjAllocator<RefObject<Program*>>* programAllocator_;
     Device* xpuDevice_{nullptr};
     Context* xpuCtxt_{nullptr};

@@ -72,5 +72,31 @@ rtError_t ParseKernelDfxInfo::SetCallback(rtParseDfxInfoFunc func)
 
 rtParseDfxInfoFunc ParseKernelDfxInfo::GetCallback() { return nullptr; }
 
+rtError_t InitAicpuPrintf(void* addr, const size_t blockSize, Driver* curDrv)
+{
+    UNUSED(addr);
+    UNUSED(blockSize);
+    UNUSED(curDrv);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t ParseAicpuPrintf(void* addr, const size_t blockSize, Driver* curDrv, const Device* const dev)
+{
+    UNUSED(addr);
+    UNUSED(blockSize);
+    UNUSED(curDrv);
+    UNUSED(dev);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t ParseAicpuPrintfV2(void* addr, const size_t blockSize, Driver* curDrv, uint32_t userDeviceId)
+{
+    UNUSED(addr);
+    UNUSED(blockSize);
+    UNUSED(curDrv);
+    UNUSED(userDeviceId);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
 } // namespace runtime
 } // namespace cce

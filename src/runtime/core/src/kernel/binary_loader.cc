@@ -357,6 +357,11 @@ PlainProgram* BinaryLoader::LoadCpuKernelFromData()
     }
 
     prog->RegCpuProgInfo(binaryBuffer_, binarySize_, soName_, cpuKernelMode_, isLoadFromFile_);
+
+    Context* const curCtx = Runtime::Instance()->CurrentContext();
+    if ((curCtx != nullptr) && (curCtx->Device_() != nullptr) && curCtx->Device_()->IsAicpuDfxSupport()) {
+        prog->SetHasPrintfTlv(ParseAicpuSoForPrintfTlv());
+    }
     return prog;
 }
 
@@ -466,6 +471,11 @@ PlainProgram* BinaryLoader::LoadCpuMode1Program()
     prog->RegCpuProgInfo(binaryBuffer_, binarySize_, soName_, cpuKernelMode_, isLoadFromFile_);
     prog->SetBinPath(binRealPath_);
 
+    Context* const curCtx = Runtime::Instance()->CurrentContext();
+    if ((curCtx != nullptr) && (curCtx->Device_() != nullptr) && curCtx->Device_()->IsAicpuDfxSupport()) {
+        prog->SetHasPrintfTlv(ParseAicpuSoForPrintfTlv());
+    }
+
     return prog;
 }
 
@@ -529,6 +539,16 @@ rtError_t BinaryLoader::Load(Program** prog)
     }
 
     return LoadNonCpu(prog);
+}
+
+bool BinaryLoader::ParseAicpuSoForPrintfTlv() const
+{
+    bool hasPrintf = false;
+    const rtError_t ret = CheckAicpuSoPrintfTlv(binaryBuffer_, binarySize_, hasPrintf);
+    if (ret != RT_ERROR_NONE) {
+        return false;
+    }
+    return hasPrintf;
 }
 } // namespace runtime
 } // namespace cce

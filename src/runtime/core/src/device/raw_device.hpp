@@ -484,6 +484,18 @@ public:
     rtError_t GetPrintSimdAddress(uint64_t* const addr) override;
     rtError_t GetPrintFifoAddrAndCreateThread(uint64_t* const addr, const uint32_t model) override;
 
+    rtError_t InitAicpuPrintInfo() override;
+    rtError_t ParseAicpuPrintInfo();
+    rtError_t CheckAicpuDfxSupport() override;
+    bool IsAicpuDfxSupport() const override { return aicpuDfxSupport_; }
+    void SetAicpuDfxSupport(bool flag) override { aicpuDfxSupport_ = flag; }
+    bool IsAicpuPrintfReady() const override { return aicpuDfxSent_.load() && (aicpuPrintfAddr_ != nullptr); }
+    void SetAicpuDfxSent(bool flag) override { aicpuDfxSent_.store(flag); }
+    std::mutex& GetAicpuDfxInitMutex() override { return aicpuDfxInitMutex_; }
+    uint32_t GetAicpuPrintfMemSize() const override { return aicpuPrintfMemSize_; }
+    uint64_t GetAicpuPrintTlvCnt() const override { return aicpuPrintTlvCnt_.Value(); }
+    void AddAicpuPrintTlvCnt(uint64_t val) const override { aicpuPrintTlvCnt_.Add(val); }
+
     rtError_t StoreEndGraphNotifyInfo(
         const uint32_t streamId, Model* captureModel, uint32_t endGraphNotifyPos) override;
     rtError_t DeleteEndGraphNotifyInfo(
@@ -544,6 +556,10 @@ public:
     rtError_t RestoreSqCqPool() override;
 
 private:
+    friend rtError_t InitAicpuPrintInfoImpl(RawDevice* device);
+    friend rtError_t ParseAicpuPrintInfoImpl(RawDevice* device);
+    friend rtError_t CheckAicpuDfxSupportImpl(RawDevice* device);
+
     bool JudgeIsEndGraphNotifyWaitExecuted(
         const Stream* const exeStream, Model* captureModel, std::list<uint32_t>& sqePosList) const;
     bool CheckTschCapability(const uint32_t tsFeature) const;
@@ -711,12 +727,18 @@ private:
     std::condition_variable printfCv_;
     void* printfAddr_ = nullptr;
     void* simtPrintfAddr_ = nullptr;
+    void* aicpuPrintfAddr_ = nullptr;
     uint32_t printblockLen_{SIMD_FIFO_PER_CORE_SIZE_32K}; // device 备份
     uint32_t simtPrintLen_{SIMT_FIFO_SIZE_2M};            // device 备份
+    uint32_t aicpuPrintfMemSize_{AICPU_FIFO_SIZE_1M};     // device 备份
     bool simdEnable_{false};
     bool simtEnable_{false};
+    bool aicpuDfxSupport_{false};
+    std::atomic<bool> aicpuDfxSent_{false};
+    std::mutex aicpuDfxInitMutex_;
     std::atomic<uint64_t> parseCounter_{0};
     mutable Atomic<uint64_t> simtPrintTlvCnt_{0U};
+    mutable Atomic<uint64_t> aicpuPrintTlvCnt_{0U};
     BufferAllocator* sqIdMemAddrPool_{nullptr};
     std::unique_ptr<CtrlSQ> ctrlSQ_;
     std::mutex programMtx_;

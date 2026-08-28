@@ -1495,6 +1495,12 @@ TEST_F(TinyStubTest, ParseSimtPrintfV2_ExpectFeatureNotSupport)
     EXPECT_EQ(error, RT_ERROR_FEATURE_NOT_SUPPORT);
 }
 
+TEST_F(TinyStubTest, ParseAicpuPrintfV2_ExpectFeatureNotSupport)
+{
+    rtError_t error = ParseAicpuPrintfV2(nullptr, 0U, nullptr, 0U);
+    EXPECT_EQ(error, RT_ERROR_FEATURE_NOT_SUPPORT);
+}
+
 TEST_F(TinyStubTest, rtRegisterParseDfxInfoFunc_ExpectFeatureNotSupport)
 {
     rtError_t error = rtRegisterParseDfxInfoFunc(nullptr);

@@ -228,6 +228,7 @@ set(runtimeut_src_kernel_list
     ${TOP_DIR}/src/runtime/core/src/kernel/kernel_utils.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/module.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/program.cc
+    ${TOP_DIR}/src/runtime/core/src/dfx/aicpu_dfx_tiny_stub.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/program_common.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/symbol_table.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/v100/kernel.cc

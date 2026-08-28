@@ -30,7 +30,8 @@ static const std::string KERNEL_DFX_TYPE_TENSOR = "tensor";
 static const std::string KERNEL_DFX_TYPE_ASSERT = "assert";
 static const std::string KERNEL_DFX_TYPE_TIMESTAMP = "timestamp";
 static const std::string KERNEL_DFX_TYPE_BLOCKINFO = "BlockInfo";
-static const std::map<uint32_t, std::string> DFX_CORE_TYPE_MAP = {{0U, "aic"}, {1U, "aiv"}, {2U, "simt"}};
+static const std::map<uint32_t, std::string> DFX_CORE_TYPE_MAP = {
+    {0U, "aic"}, {1U, "aiv"}, {2U, "simt"}, {3U, "aicpu"}};
 
 static const std::map<rtKernelDfxInfoType, std::string> DFX_TYPE_STR_MAP = {
     {rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_DEFAULT, KERNEL_DFX_TYPE_ALL},

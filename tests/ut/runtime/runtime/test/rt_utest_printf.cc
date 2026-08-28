@@ -8,6 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "driver/ascend_hal.h"
+#include <chrono>
+#include <future>
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
 #include "securec.h"
@@ -19,10 +21,19 @@
 #include "runtime.hpp"
 #include "thread_local_container.hpp"
 #include "raw_device.hpp"
+#include "aicpu_c.hpp"
+#include "stream.hpp"
+#include "engine.hpp"
+#include "program.hpp"
+#include "binary_loader.hpp"
+#include "context.hpp"
 #include "prof_ctrl_callback_manager.hpp"
 #include "common/rt_utest_context_reset_helper.hpp"
 #undef private
 #undef protected
+#include "stream_factory.hpp"
+#include "kernel_dfx_info.hpp"
+#include "parse_kernel_dfx_info.hpp"
 
 using namespace testing;
 using namespace cce::runtime;
@@ -31,6 +42,12 @@ namespace {
 const uint32_t PARAM_VALUE_LEN = 8;
 const uint32_t SIMD_PRINT_RSV_LEN = 8;
 const uint32_t SIMT_PRINT_RSV_LEN = 40;
+
+void EmptyParseDfxInfoCallback(const rtDfxParseParam* param, uint64_t* consumedLen)
+{
+    UNUSED(param);
+    *consumedLen = 0U;
+}
 } // namespace
 
 class PrintfTest : public testing::Test {
@@ -188,6 +205,924 @@ TEST_F(PrintfTest, TestInitSimtPrintf)
     EXPECT_EQ(error, RT_ERROR_NONE);
     cmodelDrvMemcpy_flag = 0;
     ut::ForceResetPrimaryDeviceIfActive();
+}
+
+// ===== AICPU printf UT =====
+
+TEST_F(PrintfTest, TestInitAicpuPrintf_LayoutAndNullDriver)
+{
+    const size_t blockSize = 1024 * 1024;
+    std::vector<uint8_t> deviceMemory(blockSize, 0);
+
+    rtError_t error = InitAicpuPrintf(deviceMemory.data(), blockSize, nullptr);
+    EXPECT_EQ(error, RT_ERROR_DRV_NULL);
+
+    rtError_t rtError = rtSetDevice(0);
+    EXPECT_EQ(rtError, RT_ERROR_NONE);
+    Runtime* rtInstance = (Runtime*)Runtime::Instance();
+    RawDevice* dev = (RawDevice*)rtInstance->GetDevice(0U, 0U);
+    ASSERT_NE(dev, nullptr);
+
+    cmodelDrvMemcpy_flag = 1;
+    error = InitAicpuPrintf(deviceMemory.data(), blockSize, dev->driver_);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    BlockInfo* blockInfo = RtPtrToPtr<BlockInfo*>(deviceMemory.data());
+    EXPECT_EQ(blockInfo->length, static_cast<uint32_t>(blockSize));
+    EXPECT_EQ(blockInfo->coreId, 0U);
+    EXPECT_EQ(blockInfo->blockNum, 1U);
+    EXPECT_EQ(blockInfo->magic, 0xAE86U);
+    EXPECT_EQ(blockInfo->flag, static_cast<uint16_t>(RT_KERNEL_DFX_INFO_CORE_TYPE_AICPU));
+
+    BlockReadInfo* readInfo = RtPtrToPtr<BlockReadInfo*>(deviceMemory.data() + sizeof(BlockInfo));
+    EXPECT_EQ(readInfo->dumpType, DumpType::DUMP_BUFO);
+    EXPECT_EQ(readInfo->readIdx, 0U);
+
+    BlockWriteInfo* writeInfo = RtPtrToPtr<BlockWriteInfo*>(deviceMemory.data() + blockSize - sizeof(BlockWriteInfo));
+    EXPECT_EQ(writeInfo->dumpType, DumpType::DUMP_BUFI);
+    EXPECT_EQ(writeInfo->writeIdx, 0U);
+    EXPECT_EQ(writeInfo->packIdx, 0U);
+
+    cmodelDrvMemcpy_flag = 0;
+    rtDeviceReset(0);
+}
+
+TEST_F(PrintfTest, TestInitAicpuPrintInfo_FirstAllocAndSkip)
+{
+    rtError_t rtError = rtSetDevice(0);
+    EXPECT_EQ(rtError, RT_ERROR_NONE);
+    Runtime* rtInstance = (Runtime*)Runtime::Instance();
+    RawDevice* dev = (RawDevice*)rtInstance->GetDevice(0U, 0U);
+    ASSERT_NE(dev, nullptr);
+
+    cmodelDrvMemcpy_flag = 1;
+    dev->aicpuPrintfAddr_ = nullptr;
+    MOCKER_CPP(&Engine::CreatePrintfThread).stubs().will(returnValue(RT_ERROR_NONE));
+
+    uint64_t addr = 0;
+    rtError = dev->GetPrintFifoAddrAndCreateThread(&addr, PRINT_AICPU);
+    EXPECT_EQ(rtError, RT_ERROR_NONE);
+    EXPECT_NE(dev->aicpuPrintfAddr_, nullptr);
+
+    void* firstAddr = dev->aicpuPrintfAddr_;
+    GlobalMockObject::verify();
+    MOCKER_CPP_VIRTUAL(dev, &RawDevice::InitAicpuPrintInfo).expects(never());
+    rtError = dev->GetPrintFifoAddrAndCreateThread(&addr, PRINT_AICPU);
+    EXPECT_EQ(rtError, RT_ERROR_NONE);
+    EXPECT_EQ(dev->aicpuPrintfAddr_, firstAddr);
+
+    GlobalMockObject::verify();
+    cmodelDrvMemcpy_flag = 0;
+    rtDeviceReset(0);
+}
+
+TEST_F(PrintfTest, TestParseAicpuPrintInfo_NotInited)
+{
+    rtError_t rtError = rtSetDevice(0);
+    EXPECT_EQ(rtError, RT_ERROR_NONE);
+    Runtime* rtInstance = (Runtime*)Runtime::Instance();
+    RawDevice* dev = (RawDevice*)rtInstance->GetDevice(0U, 0U);
+    ASSERT_NE(dev, nullptr);
+
+    dev->aicpuDfxSent_ = false;
+    dev->aicpuPrintfAddr_ = nullptr;
+
+    cmodelDrvMemcpy_flag = 1;
+    MOCKER(ParseAicpuPrintf).expects(never());
+    rtError = dev->ParseAicpuPrintInfo();
+    EXPECT_EQ(rtError, RT_ERROR_NONE);
+    GlobalMockObject::verify();
+    cmodelDrvMemcpy_flag = 0;
+
+    rtDeviceReset(0);
+}
+
+TEST_F(PrintfTest, TestParseAicpuPrintInfo_V1Fallback)
+{
+    ASSERT_EQ(rtSetDevice(0), RT_ERROR_NONE);
+    Runtime* rtInstance = (Runtime*)Runtime::Instance();
+    RawDevice* dev = (RawDevice*)rtInstance->GetDevice(0U, 0U);
+    ASSERT_NE(dev, nullptr);
+
+    dev->aicpuDfxSent_ = true;
+    dev->aicpuPrintfAddr_ = RtValueToPtr<void*>(0x1000U);
+    dev->aicpuPrintfMemSize_ = 1024U;
+    (void)ParseKernelDfxInfo::Instance()->SetCallback(nullptr);
+    MOCKER(ParseAicpuPrintf).expects(once()).will(returnValue(RT_ERROR_NONE));
+    MOCKER(ParseAicpuPrintfV2).expects(never());
+
+    EXPECT_EQ(dev->ParseAicpuPrintInfo(), RT_ERROR_NONE);
+
+    dev->aicpuPrintfAddr_ = nullptr;
+    dev->aicpuPrintfMemSize_ = 0U;
+    dev->aicpuDfxSent_ = false;
+    GlobalMockObject::verify();
+    rtDeviceReset(0);
+}
+
+TEST_F(PrintfTest, TestParseAicpuPrintInfo_V2Dispatch)
+{
+    ASSERT_EQ(rtSetDevice(0), RT_ERROR_NONE);
+    Runtime* rtInstance = (Runtime*)Runtime::Instance();
+    RawDevice* dev = (RawDevice*)rtInstance->GetDevice(0U, 0U);
+    ASSERT_NE(dev, nullptr);
+
+    dev->aicpuDfxSent_ = true;
+    dev->aicpuPrintfAddr_ = RtValueToPtr<void*>(0x1000U);
+    dev->aicpuPrintfMemSize_ = 1024U;
+    (void)ParseKernelDfxInfo::Instance()->SetCallback(EmptyParseDfxInfoCallback);
+    MOCKER(ParseAicpuPrintf).expects(never());
+    MOCKER(ParseAicpuPrintfV2).expects(once()).will(returnValue(RT_ERROR_NONE));
+
+    EXPECT_EQ(dev->ParseAicpuPrintInfo(), RT_ERROR_NONE);
+
+    (void)ParseKernelDfxInfo::Instance()->SetCallback(nullptr);
+    dev->aicpuPrintfAddr_ = nullptr;
+    dev->aicpuPrintfMemSize_ = 0U;
+    dev->aicpuDfxSent_ = false;
+    GlobalMockObject::verify();
+    rtDeviceReset(0);
+}
+
+TEST_F(PrintfTest, TestParseAicpuPrintf_NoDataAndWithData)
+{
+    rtError_t rtError = rtSetDevice(0);
+    EXPECT_EQ(rtError, RT_ERROR_NONE);
+    Runtime* rtInstance = (Runtime*)Runtime::Instance();
+    RawDevice* dev = (RawDevice*)rtInstance->GetDevice(0U, 0U);
+    ASSERT_NE(dev, nullptr);
+
+    const size_t blockSize = 1024 * 1024;
+    std::vector<uint8_t> deviceMemory(blockSize, 0);
+    cmodelDrvMemcpy_flag = 1;
+    rtError = InitAicpuPrintf(deviceMemory.data(), blockSize, dev->driver_);
+    EXPECT_EQ(rtError, RT_ERROR_NONE);
+
+    dev->aicpuDfxSent_ = true;
+    dev->aicpuPrintTlvCnt_.Set(0U);
+
+    MOCKER_CPP(&KernelDfxInfo::ExecuteKernelDfxInfoFunc).expects(never());
+    rtError = ParseAicpuPrintf(deviceMemory.data(), blockSize, dev->driver_, dev);
+    EXPECT_EQ(rtError, RT_ERROR_NONE);
+    GlobalMockObject::verify();
+
+    uint8_t* blockAddr = deviceMemory.data();
+    BlockInfo* blockInfo = RtPtrToPtr<BlockInfo*>(blockAddr);
+    uint8_t* dumpStartAddr = blockAddr + sizeof(BlockInfo) + sizeof(BlockReadInfo);
+
+    DumpInfoHead aicpuHead = {};
+    aicpuHead.type = DumpType::DUMP_AICPU;
+    aicpuHead.infoLen = 17U;
+    (void)memcpy_s(dumpStartAddr, sizeof(DumpInfoHead), &aicpuHead, sizeof(DumpInfoHead));
+    constexpr uint64_t strOffset = 8U;
+    (void)memcpy_s(
+        dumpStartAddr + sizeof(DumpInfoHead) + SIMD_PRINT_RSV_LEN, sizeof(strOffset), &strOffset, sizeof(strOffset));
+
+    DumpInfoHead tensorHead = {};
+    tensorHead.type = DumpType::DUMP_TENSOR;
+    tensorHead.infoLen = 8U;
+    uint8_t* secondTlvAddr = dumpStartAddr + sizeof(DumpInfoHead) + aicpuHead.infoLen;
+    (void)memcpy_s(secondTlvAddr, sizeof(DumpInfoHead), &tensorHead, sizeof(DumpInfoHead));
+
+    BlockWriteInfo* writeInfo = RtPtrToPtr<BlockWriteInfo*>(blockAddr + blockSize - sizeof(BlockWriteInfo));
+    writeInfo->writeIdx = sizeof(DumpInfoHead) + aicpuHead.infoLen;
+    writeInfo->packIdx = 1U;
+
+    MOCKER_CPP(&KernelDfxInfo::ExecuteKernelDfxInfoFunc).expects(exactly(1)).will(returnValue(RT_ERROR_NONE));
+    rtError = ParseAicpuPrintf(deviceMemory.data(), blockSize, dev->driver_, dev);
+    EXPECT_EQ(rtError, RT_ERROR_NONE);
+    GlobalMockObject::verify();
+
+    dev->aicpuDfxSent_ = false;
+    dev->aicpuPrintTlvCnt_.Set(0U);
+    cmodelDrvMemcpy_flag = 0;
+    rtDeviceReset(0);
+}
+
+TEST_F(PrintfTest, TestParseAicpuPrintf_FormattedStringWithPercent)
+{
+    rtError_t rtError = rtSetDevice(0);
+    EXPECT_EQ(rtError, RT_ERROR_NONE);
+    Runtime* rtInstance = (Runtime*)Runtime::Instance();
+    RawDevice* dev = (RawDevice*)rtInstance->GetDevice(0U, 0U);
+    ASSERT_NE(dev, nullptr);
+
+    const size_t blockSize = 1024 * 1024;
+    std::vector<uint8_t> deviceMemory(blockSize, 0);
+    cmodelDrvMemcpy_flag = 1;
+    rtError = InitAicpuPrintf(deviceMemory.data(), blockSize, dev->driver_);
+    EXPECT_EQ(rtError, RT_ERROR_NONE);
+
+    uint8_t* blockAddr = deviceMemory.data();
+    uint8_t* dumpStartAddr = blockAddr + sizeof(BlockInfo) + sizeof(BlockReadInfo);
+    DumpInfoHead* dumpHead = RtPtrToPtr<DumpInfoHead*>(dumpStartAddr);
+    dumpHead->type = DumpType::DUMP_AICPU;
+
+    constexpr uint64_t strOffset = 8U;
+    constexpr size_t stringOffset = SIMD_PRINT_RSV_LEN + strOffset;
+    const char* printInfo = "progress: 50% complete, text value=%d";
+    (void)memcpy_s(dumpHead->infoMsg + SIMD_PRINT_RSV_LEN, sizeof(strOffset), &strOffset, sizeof(strOffset));
+    (void)memcpy_s(dumpHead->infoMsg + stringOffset, strlen(printInfo) + 1U, printInfo, strlen(printInfo) + 1U);
+    dumpHead->infoLen = static_cast<uint32_t>(stringOffset + strlen(printInfo) + 1U);
+
+    BlockWriteInfo* writeInfo = RtPtrToPtr<BlockWriteInfo*>(blockAddr + blockSize - sizeof(BlockWriteInfo));
+    writeInfo->writeIdx = sizeof(DumpInfoHead) + dumpHead->infoLen;
+    writeInfo->packIdx = 1U;
+    dev->aicpuDfxSent_ = true;
+    dev->aicpuPrintTlvCnt_.Set(0U);
+
+    testing::internal::CaptureStdout();
+    rtError = ParseAicpuPrintf(deviceMemory.data(), blockSize, dev->driver_, dev);
+    const std::string output = testing::internal::GetCapturedStdout();
+    EXPECT_EQ(rtError, RT_ERROR_NONE);
+    EXPECT_NE(output.find(printInfo), std::string::npos);
+
+    dev->aicpuDfxSent_ = false;
+    dev->aicpuPrintTlvCnt_.Set(0U);
+    cmodelDrvMemcpy_flag = 0;
+    rtDeviceReset(0);
+}
+
+TEST_F(PrintfTest, TestParseAicpuPrintf_PackIdxHalfTlv)
+{
+    rtError_t rtError = rtSetDevice(0);
+    EXPECT_EQ(rtError, RT_ERROR_NONE);
+    Runtime* rtInstance = (Runtime*)Runtime::Instance();
+    RawDevice* dev = (RawDevice*)rtInstance->GetDevice(0U, 0U);
+    ASSERT_NE(dev, nullptr);
+
+    const size_t blockSize = 1024 * 1024;
+    std::vector<uint8_t> deviceMemory(blockSize, 0);
+    cmodelDrvMemcpy_flag = 1;
+    rtError = InitAicpuPrintf(deviceMemory.data(), blockSize, dev->driver_);
+    EXPECT_EQ(rtError, RT_ERROR_NONE);
+
+    uint8_t* blockAddr = deviceMemory.data();
+    BlockInfo* blockInfo = RtPtrToPtr<BlockInfo*>(blockAddr);
+    uint8_t* dumpStartAddr = blockAddr + sizeof(BlockInfo) + sizeof(BlockReadInfo);
+
+    DumpInfoHead dumpHead = {};
+    dumpHead.type = DumpType::DUMP_AICPU;
+    dumpHead.infoLen = 16U;
+    (void)memcpy_s(dumpStartAddr, sizeof(DumpInfoHead), &dumpHead, sizeof(DumpInfoHead));
+
+    BlockWriteInfo* writeInfo = RtPtrToPtr<BlockWriteInfo*>(blockAddr + blockSize - sizeof(BlockWriteInfo));
+    writeInfo->writeIdx = sizeof(DumpInfoHead) + dumpHead.infoLen;
+    writeInfo->packIdx = 0U;
+
+    dev->aicpuDfxSent_ = true;
+    dev->aicpuPrintTlvCnt_.Set(0U);
+
+    MOCKER_CPP(&KernelDfxInfo::ExecuteKernelDfxInfoFunc).expects(never());
+    rtError = ParseAicpuPrintf(deviceMemory.data(), blockSize, dev->driver_, dev);
+    EXPECT_EQ(rtError, RT_ERROR_NONE);
+    GlobalMockObject::verify();
+
+    BlockReadInfo* readInfo = RtPtrToPtr<BlockReadInfo*>(blockAddr + sizeof(BlockInfo));
+    EXPECT_EQ(readInfo->readIdx, 0U);
+
+    dev->aicpuDfxSent_ = false;
+    dev->aicpuPrintTlvCnt_.Set(0U);
+    cmodelDrvMemcpy_flag = 0;
+    rtDeviceReset(0);
+}
+
+TEST_F(PrintfTest, TestParseAicpuPrintf_TruncatedDumpInfo)
+{
+    rtError_t rtError = rtSetDevice(0);
+    EXPECT_EQ(rtError, RT_ERROR_NONE);
+    Runtime* rtInstance = (Runtime*)Runtime::Instance();
+    RawDevice* dev = (RawDevice*)rtInstance->GetDevice(0U, 0U);
+    ASSERT_NE(dev, nullptr);
+
+    const size_t blockSize = 1024 * 1024;
+    std::vector<uint8_t> deviceMemory(blockSize, 0);
+    cmodelDrvMemcpy_flag = 1;
+    rtError = InitAicpuPrintf(deviceMemory.data(), blockSize, dev->driver_);
+    EXPECT_EQ(rtError, RT_ERROR_NONE);
+
+    uint8_t* blockAddr = deviceMemory.data();
+    uint8_t* dumpStartAddr = blockAddr + sizeof(BlockInfo) + sizeof(BlockReadInfo);
+    BlockReadInfo* readInfo = RtPtrToPtr<BlockReadInfo*>(blockAddr + sizeof(BlockInfo));
+    BlockWriteInfo* writeInfo = RtPtrToPtr<BlockWriteInfo*>(blockAddr + blockSize - sizeof(BlockWriteInfo));
+    writeInfo->packIdx = 1U;
+    dev->aicpuDfxSent_ = true;
+    dev->aicpuPrintTlvCnt_.Set(0U);
+
+    DumpInfoHead dumpHead = {};
+    dumpHead.type = DumpType::DUMP_AICPU;
+    dumpHead.infoLen = 16U;
+    (void)memcpy_s(dumpStartAddr, sizeof(DumpInfoHead), &dumpHead, sizeof(DumpInfoHead));
+
+    MOCKER_CPP(&KernelDfxInfo::ExecuteKernelDfxInfoFunc).expects(never());
+    writeInfo->writeIdx = sizeof(DumpInfoHead) - 1U;
+    rtError = ParseAicpuPrintf(deviceMemory.data(), blockSize, dev->driver_, dev);
+    EXPECT_EQ(rtError, RT_ERROR_NONE);
+    EXPECT_EQ(readInfo->readIdx, 0U);
+    EXPECT_EQ(dev->GetAicpuPrintTlvCnt(), 0U);
+
+    writeInfo->writeIdx = sizeof(DumpInfoHead) + dumpHead.infoLen - 1U;
+    rtError = ParseAicpuPrintf(deviceMemory.data(), blockSize, dev->driver_, dev);
+    EXPECT_EQ(rtError, RT_ERROR_NONE);
+    EXPECT_EQ(readInfo->readIdx, 0U);
+    EXPECT_EQ(dev->GetAicpuPrintTlvCnt(), 0U);
+    GlobalMockObject::verify();
+
+    dev->aicpuDfxSent_ = false;
+    dev->aicpuPrintTlvCnt_.Set(0U);
+    cmodelDrvMemcpy_flag = 0;
+    rtDeviceReset(0);
+}
+
+TEST_F(PrintfTest, TestParseAicpuPrintf_NonAicpuTypeSkip)
+{
+    rtError_t rtError = rtSetDevice(0);
+    EXPECT_EQ(rtError, RT_ERROR_NONE);
+    Runtime* rtInstance = (Runtime*)Runtime::Instance();
+    RawDevice* dev = (RawDevice*)rtInstance->GetDevice(0U, 0U);
+    ASSERT_NE(dev, nullptr);
+
+    const size_t blockSize = 1024 * 1024;
+    std::vector<uint8_t> deviceMemory(blockSize, 0);
+    cmodelDrvMemcpy_flag = 1;
+    rtError = InitAicpuPrintf(deviceMemory.data(), blockSize, dev->driver_);
+    EXPECT_EQ(rtError, RT_ERROR_NONE);
+
+    uint8_t* blockAddr = deviceMemory.data();
+    uint8_t* dumpStartAddr = blockAddr + sizeof(BlockInfo) + sizeof(BlockReadInfo);
+
+    DumpInfoHead dumpHead = {};
+    dumpHead.type = DumpType::DUMP_TENSOR;
+    dumpHead.infoLen = 16U;
+    (void)memcpy_s(dumpStartAddr, sizeof(DumpInfoHead), &dumpHead, sizeof(DumpInfoHead));
+
+    BlockWriteInfo* writeInfo = RtPtrToPtr<BlockWriteInfo*>(blockAddr + blockSize - sizeof(BlockWriteInfo));
+    writeInfo->writeIdx = sizeof(DumpInfoHead) + dumpHead.infoLen;
+    writeInfo->packIdx = 1U;
+
+    dev->aicpuDfxSent_ = true;
+    dev->aicpuPrintTlvCnt_.Set(0U);
+
+    MOCKER_CPP(&KernelDfxInfo::ExecuteKernelDfxInfoFunc).expects(never());
+    rtError = ParseAicpuPrintf(deviceMemory.data(), blockSize, dev->driver_, dev);
+    EXPECT_EQ(rtError, RT_ERROR_NONE);
+    GlobalMockObject::verify();
+
+    BlockReadInfo* readInfo = RtPtrToPtr<BlockReadInfo*>(blockAddr + sizeof(BlockInfo));
+    EXPECT_EQ(readInfo->readIdx, 0U);
+
+    dev->aicpuDfxSent_ = false;
+    dev->aicpuPrintTlvCnt_.Set(0U);
+    cmodelDrvMemcpy_flag = 0;
+    rtDeviceReset(0);
+}
+
+TEST_F(PrintfTest, TestParseAicpuPrintf_Wraparound)
+{
+    rtError_t rtError = rtSetDevice(0);
+    EXPECT_EQ(rtError, RT_ERROR_NONE);
+    Runtime* rtInstance = (Runtime*)Runtime::Instance();
+    RawDevice* dev = (RawDevice*)rtInstance->GetDevice(0U, 0U);
+    ASSERT_NE(dev, nullptr);
+
+    const size_t blockSize = 1024 * 1024;
+    std::vector<uint8_t> deviceMemory(blockSize, 0);
+    cmodelDrvMemcpy_flag = 1;
+    rtError = InitAicpuPrintf(deviceMemory.data(), blockSize, dev->driver_);
+    EXPECT_EQ(rtError, RT_ERROR_NONE);
+
+    uint8_t* blockAddr = deviceMemory.data();
+    BlockInfo* blockInfo = RtPtrToPtr<BlockInfo*>(blockAddr);
+    uint8_t* dumpStartAddr = blockAddr + sizeof(BlockInfo) + sizeof(BlockReadInfo);
+
+    constexpr uint64_t strOffset = 8U;
+    const uint64_t tlvLen = sizeof(DumpInfoHead) + SIMD_PRINT_RSV_LEN + sizeof(strOffset) + 1U;
+    const uint64_t nearEnd = blockInfo->remainLen - 8U;
+
+    DumpInfoHead dumpHead = {};
+    dumpHead.type = DumpType::DUMP_AICPU;
+    dumpHead.infoLen = SIMD_PRINT_RSV_LEN + sizeof(strOffset) + 1U;
+    (void)memcpy_s(dumpStartAddr + nearEnd, sizeof(DumpInfoHead), &dumpHead, sizeof(DumpInfoHead));
+    (void)memcpy_s(dumpStartAddr + SIMD_PRINT_RSV_LEN, sizeof(strOffset), &strOffset, sizeof(strOffset));
+
+    BlockReadInfo* readInfo = RtPtrToPtr<BlockReadInfo*>(blockAddr + sizeof(BlockInfo));
+    readInfo->readIdx = nearEnd;
+
+    BlockWriteInfo* writeInfo = RtPtrToPtr<BlockWriteInfo*>(blockAddr + blockSize - sizeof(BlockWriteInfo));
+    writeInfo->writeIdx = nearEnd + tlvLen;
+    writeInfo->packIdx = 1U;
+
+    dev->aicpuDfxSent_ = true;
+    dev->aicpuPrintTlvCnt_.Set(0U);
+
+    MOCKER_CPP(&KernelDfxInfo::ExecuteKernelDfxInfoFunc).expects(exactly(1)).will(returnValue(RT_ERROR_NONE));
+    rtError = ParseAicpuPrintf(deviceMemory.data(), blockSize, dev->driver_, dev);
+    EXPECT_EQ(rtError, RT_ERROR_NONE);
+    EXPECT_EQ(readInfo->readIdx, writeInfo->writeIdx);
+    GlobalMockObject::verify();
+
+    dev->aicpuDfxSent_ = false;
+    dev->aicpuPrintTlvCnt_.Set(0U);
+    cmodelDrvMemcpy_flag = 0;
+    rtDeviceReset(0);
+}
+
+TEST_F(PrintfTest, TestParseAicpuPrintf_DataOverflow)
+{
+    rtError_t rtError = rtSetDevice(0);
+    EXPECT_EQ(rtError, RT_ERROR_NONE);
+    Runtime* rtInstance = (Runtime*)Runtime::Instance();
+    RawDevice* dev = (RawDevice*)rtInstance->GetDevice(0U, 0U);
+    ASSERT_NE(dev, nullptr);
+
+    const size_t blockSize = 1024 * 1024;
+    std::vector<uint8_t> deviceMemory(blockSize, 0);
+    cmodelDrvMemcpy_flag = 1;
+    rtError = InitAicpuPrintf(deviceMemory.data(), blockSize, dev->driver_);
+    EXPECT_EQ(rtError, RT_ERROR_NONE);
+
+    uint8_t* blockAddr = deviceMemory.data();
+    BlockInfo* blockInfo = RtPtrToPtr<BlockInfo*>(blockAddr);
+    uint8_t* dumpStartAddr = blockAddr + sizeof(BlockInfo) + sizeof(BlockReadInfo);
+
+    DumpInfoHead dumpHead = {};
+    dumpHead.type = DumpType::DUMP_AICPU;
+    constexpr uint64_t strOffset = 8U;
+    dumpHead.infoLen = SIMD_PRINT_RSV_LEN + sizeof(strOffset) + 1U;
+    const uint64_t dumpInfoLen = sizeof(DumpInfoHead) + dumpHead.infoLen;
+    for (uint64_t off = 0U; off < 100U * dumpInfoLen; off += dumpInfoLen) {
+        (void)memcpy_s(dumpStartAddr + off, sizeof(DumpInfoHead), &dumpHead, sizeof(DumpInfoHead));
+        (void)memcpy_s(
+            dumpStartAddr + off + sizeof(DumpInfoHead) + SIMD_PRINT_RSV_LEN, sizeof(strOffset), &strOffset,
+            sizeof(strOffset));
+    }
+
+    BlockReadInfo* readInfo = RtPtrToPtr<BlockReadInfo*>(blockAddr + sizeof(BlockInfo));
+    readInfo->readIdx = 0U;
+
+    BlockWriteInfo* writeInfo = RtPtrToPtr<BlockWriteInfo*>(blockAddr + blockSize - sizeof(BlockWriteInfo));
+    writeInfo->writeIdx = blockInfo->remainLen + 100U;
+    writeInfo->packIdx = 100U;
+
+    dev->aicpuDfxSent_ = true;
+    dev->aicpuPrintTlvCnt_.Set(0U);
+
+    MOCKER_CPP(&KernelDfxInfo::ExecuteKernelDfxInfoFunc).stubs().will(returnValue(RT_ERROR_NONE));
+    rtError = ParseAicpuPrintf(deviceMemory.data(), blockSize, dev->driver_, dev);
+    EXPECT_EQ(rtError, RT_ERROR_NONE);
+    EXPECT_EQ(readInfo->readIdx, writeInfo->writeIdx);
+    EXPECT_EQ(dev->GetAicpuPrintTlvCnt(), writeInfo->packIdx);
+    GlobalMockObject::verify();
+
+    readInfo->readIdx = 50U;
+    writeInfo->writeIdx = blockInfo->remainLen + 200U;
+    writeInfo->packIdx = 200U;
+    dev->aicpuPrintTlvCnt_.Set(200U);
+
+    DumpInfoHead invalidHead = {};
+    invalidHead.type = DumpType::DUMP_TENSOR;
+    invalidHead.infoLen = 8U;
+    (void)memset_s(dumpStartAddr, blockInfo->remainLen, 0, blockInfo->remainLen);
+    (void)memcpy_s(dumpStartAddr + 50U, sizeof(DumpInfoHead), &invalidHead, sizeof(DumpInfoHead));
+
+    rtError = ParseAicpuPrintf(deviceMemory.data(), blockSize, dev->driver_, dev);
+    EXPECT_EQ(rtError, RT_ERROR_NONE);
+    EXPECT_EQ(readInfo->readIdx, writeInfo->writeIdx);
+
+    dev->aicpuDfxSent_ = false;
+    dev->aicpuPrintTlvCnt_.Set(0U);
+    cmodelDrvMemcpy_flag = 0;
+    rtDeviceReset(0);
+}
+
+TEST_F(PrintfTest, TestReleaseAicpuPrintfMem)
+{
+    rtError_t rtError = rtSetDevice(0);
+    EXPECT_EQ(rtError, RT_ERROR_NONE);
+    Runtime* rtInstance = (Runtime*)Runtime::Instance();
+    RawDevice* dev = (RawDevice*)rtInstance->GetDevice(0U, 0U);
+    ASSERT_NE(dev, nullptr);
+
+    cmodelDrvMemcpy_flag = 1;
+    uint64_t addr = 0;
+    rtError = dev->GetPrintFifoAddrAndCreateThread(&addr, PRINT_AICPU);
+    EXPECT_EQ(rtError, RT_ERROR_NONE);
+    EXPECT_NE(dev->aicpuPrintfAddr_, nullptr);
+    dev->aicpuPrintTlvCnt_.Set(10U);
+    cmodelDrvMemcpy_flag = 0;
+
+    rtDeviceReset(0);
+
+    rtError = rtSetDevice(0);
+    EXPECT_EQ(rtError, RT_ERROR_NONE);
+    dev = (RawDevice*)((Runtime*)Runtime::Instance())->GetDevice(0U, 0U);
+    ASSERT_NE(dev, nullptr);
+    EXPECT_EQ(dev->aicpuPrintfAddr_, nullptr);
+    EXPECT_EQ(dev->aicpuPrintTlvCnt_.Value(), 0U);
+    rtDeviceReset(0);
+}
+
+// ===== Phase 1: CheckAicpuDfxSupport mock UT =====
+
+TEST_F(PrintfTest, TestCheckAicpuDfxSupport_FlowAndFail)
+{
+    rtError_t rtError = rtSetDevice(0);
+    EXPECT_EQ(rtError, RT_ERROR_NONE);
+    Runtime* rtInstance = (Runtime*)Runtime::Instance();
+    RawDevice* dev = (RawDevice*)rtInstance->GetDevice(0U, 0U);
+    ASSERT_NE(dev, nullptr);
+    dev->aicpuDfxSupport_ = false;
+
+    cmodelDrvMemcpy_flag = 1;
+    MOCKER(StreamLaunchCpuKernel).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(dev->primaryStream_, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
+    rtError = dev->CheckAicpuDfxSupport();
+    EXPECT_EQ(rtError, RT_ERROR_NONE);
+    EXPECT_EQ(dev->aicpuDfxSupport_, false);
+    GlobalMockObject::verify();
+
+    MOCKER(StreamLaunchCpuKernel).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    rtError = dev->CheckAicpuDfxSupport();
+    EXPECT_NE(rtError, RT_ERROR_NONE);
+    EXPECT_EQ(dev->aicpuDfxSupport_, false);
+    GlobalMockObject::verify();
+
+    MOCKER(StreamLaunchCpuKernel).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(dev->primaryStream_, &Stream::Synchronize)
+        .stubs()
+        .will(returnValue(RT_ERROR_STREAM_SYNC_TIMEOUT));
+    rtError = dev->CheckAicpuDfxSupport();
+    EXPECT_NE(rtError, RT_ERROR_NONE);
+    EXPECT_EQ(dev->aicpuDfxSupport_, false);
+    GlobalMockObject::verify();
+
+    cmodelDrvMemcpy_flag = 0;
+    rtDeviceReset(0);
+}
+
+TEST_F(PrintfTest, TestCheckAicpuDfxSupport_DfxSupported)
+{
+    rtError_t rtError = rtSetDevice(0);
+    EXPECT_EQ(rtError, RT_ERROR_NONE);
+    Runtime* rtInstance = (Runtime*)Runtime::Instance();
+    RawDevice* dev = (RawDevice*)rtInstance->GetDevice(0U, 0U);
+    ASSERT_NE(dev, nullptr);
+    dev->aicpuDfxSupport_ = false;
+
+    cmodelDrvMemcpy_flag = 1;
+    int32_t checkResult = 0;
+    void* checkResultPtr = &checkResult;
+    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::DevMemAlloc)
+        .stubs()
+        .with(
+            outBoundP(&checkResultPtr, sizeof(checkResultPtr)), mockcpp::any(), mockcpp::any(), mockcpp::any(),
+            mockcpp::any())
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::DevMemFree).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(StreamLaunchCpuKernel).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(dev->primaryStream_, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::MemCopySync)
+        .stubs()
+        .with(
+            outBoundP(checkResultPtr, sizeof(checkResult)), mockcpp::any(), mockcpp::any(), mockcpp::any(),
+            eq(RT_MEMCPY_DEVICE_TO_HOST), mockcpp::any())
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::MemCopySync).stubs().will(returnValue(RT_ERROR_NONE));
+    rtError = dev->CheckAicpuDfxSupport();
+    EXPECT_EQ(rtError, RT_ERROR_NONE);
+    EXPECT_EQ(dev->aicpuDfxSupport_, true);
+    GlobalMockObject::verify();
+
+    cmodelDrvMemcpy_flag = 0;
+    rtDeviceReset(0);
+}
+
+TEST_F(PrintfTest, TestCheckAicpuDfxSupport_MemCopyFail)
+{
+    rtError_t rtError = rtSetDevice(0);
+    EXPECT_EQ(rtError, RT_ERROR_NONE);
+    Runtime* rtInstance = (Runtime*)Runtime::Instance();
+    RawDevice* dev = (RawDevice*)rtInstance->GetDevice(0U, 0U);
+    ASSERT_NE(dev, nullptr);
+    dev->aicpuDfxSupport_ = false;
+
+    cmodelDrvMemcpy_flag = 0;
+    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::DevMemAlloc).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::MemCopySync).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::DevMemFree).stubs().will(returnValue(RT_ERROR_NONE));
+
+    rtError = dev->CheckAicpuDfxSupport();
+    EXPECT_NE(rtError, RT_ERROR_NONE);
+    EXPECT_EQ(dev->aicpuDfxSupport_, false);
+    GlobalMockObject::verify();
+
+    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::DevMemAlloc).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::MemCopySync)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE))
+        .then(returnValue(RT_ERROR_NONE))
+        .then(returnValue(RT_ERROR_INVALID_VALUE));
+    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::DevMemFree).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(StreamLaunchCpuKernel).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(dev->primaryStream_, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
+
+    rtError = dev->CheckAicpuDfxSupport();
+    EXPECT_NE(rtError, RT_ERROR_NONE);
+    EXPECT_EQ(dev->aicpuDfxSupport_, false);
+    GlobalMockObject::verify();
+
+    cmodelDrvMemcpy_flag = 1;
+    rtDeviceReset(0);
+}
+
+// ===== Phase 3: InitAicpuPrintInfo mock UT =====
+
+TEST_F(PrintfTest, TestInitAicpuPrintInfo_FailAndRetry)
+{
+    rtError_t rtError = rtSetDevice(0);
+    EXPECT_EQ(rtError, RT_ERROR_NONE);
+    Runtime* rtInstance = (Runtime*)Runtime::Instance();
+    RawDevice* dev = (RawDevice*)rtInstance->GetDevice(0U, 0U);
+    ASSERT_NE(dev, nullptr);
+
+    dev->aicpuPrintfAddr_ = nullptr;
+    uint64_t addr = 0;
+
+    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::DevMemAlloc).stubs().will(returnValue(RT_ERROR_DRV_ERR));
+    rtError = dev->GetPrintFifoAddrAndCreateThread(&addr, PRINT_AICPU);
+    EXPECT_NE(rtError, RT_ERROR_NONE);
+    EXPECT_EQ(dev->aicpuPrintfAddr_, nullptr);
+    GlobalMockObject::verify();
+
+    cmodelDrvMemcpy_flag = 1;
+    MOCKER_CPP(&Engine::CreatePrintfThread).stubs().will(returnValue(RT_ERROR_ENGINE_THREAD));
+    rtError = dev->GetPrintFifoAddrAndCreateThread(&addr, PRINT_AICPU);
+    EXPECT_NE(rtError, RT_ERROR_NONE);
+    EXPECT_NE(dev->aicpuPrintfAddr_, nullptr);
+    GlobalMockObject::verify();
+
+    MOCKER_CPP(&Engine::CreatePrintfThread).stubs().will(returnValue(RT_ERROR_NONE));
+    rtError = dev->GetPrintFifoAddrAndCreateThread(&addr, PRINT_AICPU);
+    EXPECT_EQ(rtError, RT_ERROR_NONE);
+    EXPECT_NE(dev->aicpuPrintfAddr_, nullptr);
+    EXPECT_EQ(addr, RtPtrToValue(dev->aicpuPrintfAddr_));
+    GlobalMockObject::verify();
+
+    cmodelDrvMemcpy_flag = 0;
+    rtDeviceReset(0);
+}
+
+// ===== Phase 3: ProcAicpuPrintfDfx indirect coverage via ProcCpuKernelH2DMem =====
+
+static void SetupProcCpuKernelH2DMemCommonMocks(RawDevice* dev)
+{
+    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::DevMemAlloc).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(&Runtime::StartAicpuSd).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(LaunchAicpuKernelForCpuSo).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(&StreamFactory::CreateStream).stubs().will(returnValue(dev->primaryStream_));
+    MOCKER_CPP_VIRTUAL(dev->primaryStream_, &Stream::Setup).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(dev->primaryStream_, &Stream::TearDown).stubs().will(returnValue(RT_ERROR_NONE));
+    cmodelDrvMemcpy_flag = 1;
+}
+
+static void SetupProcCpuKernelH2DMemMocks(RawDevice* dev)
+{
+    SetupProcCpuKernelH2DMemCommonMocks(dev);
+    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::MemCopySync).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::DevMemFree).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(dev->primaryStream_, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
+}
+
+static PlainProgram* CreateAicpuPrintfProgram(RawDevice* dev)
+{
+    uint8_t data[] = {0x01, 0x02, 0x03, 0x04};
+    BinaryLoader loader(data, sizeof(data), nullptr);
+    PlainProgram* prog = loader.LoadCpuKernelFromData();
+    if (prog != nullptr) {
+        prog->SetHasPrintfTlv(true);
+        prog->SetKernelRegType(RT_KERNEL_REG_TYPE_CPU);
+        prog->cpuRegMode_ = 2;
+    }
+    dev->aicpuDfxSupport_ = true;
+    dev->aicpuDfxSent_ = false;
+    dev->aicpuPrintfAddr_ = nullptr;
+    return prog;
+}
+
+static std::atomic<bool> g_aicpuPrintfThreadCreateCalled{false};
+
+static rtError_t CreateAicpuPrintfThreadStub()
+{
+    g_aicpuPrintfThreadCreateCalled.store(true);
+    return RT_ERROR_NONE;
+}
+
+TEST_F(PrintfTest, TestProcAicpuPrintfDfx_SuccessAndSkip)
+{
+    rtError_t rtError = rtSetDevice(0);
+    EXPECT_EQ(rtError, RT_ERROR_NONE);
+    RawDevice* dev = (RawDevice*)((Runtime*)Runtime::Instance())->GetDevice(0U, 0U);
+    ASSERT_NE(dev, nullptr);
+
+    PlainProgram* prog = CreateAicpuPrintfProgram(dev);
+    ASSERT_NE(prog, nullptr);
+
+    constexpr size_t printfMemSize = 1024U * 1024U;
+    static std::vector<uint8_t> printfMem(printfMemSize, 0);
+    dev->aicpuPrintfAddr_ = printfMem.data();
+    dev->aicpuPrintfMemSize_ = static_cast<uint32_t>(printfMemSize);
+
+    SetupProcCpuKernelH2DMemMocks(dev);
+    MOCKER_CPP(&Engine::CreatePrintfThread).expects(exactly(1)).will(returnValue(RT_ERROR_NONE));
+
+    rtError = prog->ProcCpuKernelH2DMem(true, dev);
+    EXPECT_EQ(rtError, RT_ERROR_NONE);
+    EXPECT_EQ(dev->aicpuDfxSent_, true);
+
+    rtError = prog->ProcCpuKernelH2DMem(true, dev);
+    EXPECT_EQ(rtError, RT_ERROR_NONE);
+    EXPECT_EQ(dev->aicpuDfxSent_, true);
+
+    GlobalMockObject::verify();
+    cmodelDrvMemcpy_flag = 0;
+    dev->aicpuDfxSent_ = false;
+    dev->aicpuPrintfAddr_ = nullptr;
+    delete prog;
+    rtDeviceReset(0);
+}
+
+TEST_F(PrintfTest, TestProcAicpuPrintfDfx_DeviceLockPreventsDuplicateSend)
+{
+    rtError_t rtError = rtSetDevice(0);
+    EXPECT_EQ(rtError, RT_ERROR_NONE);
+    RawDevice* dev = (RawDevice*)((Runtime*)Runtime::Instance())->GetDevice(0U, 0U);
+    ASSERT_NE(dev, nullptr);
+
+    PlainProgram* prog = CreateAicpuPrintfProgram(dev);
+    ASSERT_NE(prog, nullptr);
+
+    constexpr size_t printfMemSize = 1024U * 1024U;
+    static std::vector<uint8_t> printfMem(printfMemSize, 0);
+    dev->aicpuPrintfAddr_ = printfMem.data();
+    dev->aicpuPrintfMemSize_ = static_cast<uint32_t>(printfMemSize);
+
+    SetupProcCpuKernelH2DMemMocks(dev);
+    g_aicpuPrintfThreadCreateCalled.store(false);
+    MOCKER_CPP(&Engine::CreatePrintfThread).stubs().will(invoke(CreateAicpuPrintfThreadStub));
+    MOCKER(StreamLaunchCpuKernel).expects(never());
+
+    std::unique_lock<std::mutex> lock(dev->aicpuDfxInitMutex_);
+    auto result = std::async(std::launch::async, [prog, dev]() { return prog->ProcCpuKernelH2DMem(true, dev); });
+    while (!g_aicpuPrintfThreadCreateCalled.load()) {
+        std::this_thread::yield();
+    }
+    EXPECT_EQ(result.wait_for(std::chrono::milliseconds(10)), std::future_status::timeout);
+
+    dev->aicpuDfxSent_.store(true);
+    lock.unlock();
+    EXPECT_EQ(result.get(), RT_ERROR_NONE);
+
+    GlobalMockObject::verify();
+    cmodelDrvMemcpy_flag = 0;
+    dev->aicpuDfxSent_.store(false);
+    dev->aicpuPrintfAddr_ = nullptr;
+    delete prog;
+    rtDeviceReset(0);
+}
+
+TEST_F(PrintfTest, TestProcAicpuPrintfDfx_FailPaths)
+{
+    rtError_t rtError = rtSetDevice(0);
+    EXPECT_EQ(rtError, RT_ERROR_NONE);
+    RawDevice* dev = (RawDevice*)((Runtime*)Runtime::Instance())->GetDevice(0U, 0U);
+    ASSERT_NE(dev, nullptr);
+
+    PlainProgram* prog = CreateAicpuPrintfProgram(dev);
+    ASSERT_NE(prog, nullptr);
+
+    SetupProcCpuKernelH2DMemMocks(dev);
+    MOCKER_CPP(&Engine::CreatePrintfThread).stubs().will(returnValue(RT_ERROR_ENGINE_THREAD));
+    rtError = prog->ProcCpuKernelH2DMem(true, dev);
+    EXPECT_EQ(rtError, RT_ERROR_NONE);
+    EXPECT_EQ(dev->aicpuDfxSent_, false);
+
+    GlobalMockObject::verify();
+    cmodelDrvMemcpy_flag = 0;
+    dev->aicpuDfxSent_ = false;
+    delete prog;
+    rtDeviceReset(0);
+}
+
+TEST_F(PrintfTest, TestProcAicpuPrintfDfx_LaunchCpuKernelFail)
+{
+    rtError_t rtError = rtSetDevice(0);
+    EXPECT_EQ(rtError, RT_ERROR_NONE);
+    RawDevice* dev = (RawDevice*)((Runtime*)Runtime::Instance())->GetDevice(0U, 0U);
+    ASSERT_NE(dev, nullptr);
+
+    PlainProgram* prog = CreateAicpuPrintfProgram(dev);
+    ASSERT_NE(prog, nullptr);
+
+    SetupProcCpuKernelH2DMemMocks(dev);
+    MOCKER_CPP(&Engine::CreatePrintfThread).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(StreamLaunchCpuKernel).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    rtError = prog->ProcCpuKernelH2DMem(true, dev);
+    EXPECT_EQ(rtError, RT_ERROR_NONE);
+    EXPECT_EQ(dev->aicpuDfxSent_, false);
+
+    GlobalMockObject::verify();
+    cmodelDrvMemcpy_flag = 0;
+    dev->aicpuDfxSent_ = false;
+    delete prog;
+    rtDeviceReset(0);
+}
+
+TEST_F(PrintfTest, TestProcAicpuPrintfDfx_StreamSyncTimeout)
+{
+    rtError_t rtError = rtSetDevice(0);
+    EXPECT_EQ(rtError, RT_ERROR_NONE);
+    RawDevice* dev = (RawDevice*)((Runtime*)Runtime::Instance())->GetDevice(0U, 0U);
+    ASSERT_NE(dev, nullptr);
+
+    PlainProgram* prog = CreateAicpuPrintfProgram(dev);
+    ASSERT_NE(prog, nullptr);
+
+    SetupProcCpuKernelH2DMemCommonMocks(dev);
+    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::MemCopySync).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(dev->primaryStream_, &Stream::Synchronize)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE))
+        .then(returnValue(RT_ERROR_STREAM_SYNC_TIMEOUT));
+    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::DevMemFree).expects(exactly(5)).will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(&Engine::CreatePrintfThread).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(StreamLaunchCpuKernel).stubs().will(returnValue(RT_ERROR_NONE));
+    rtError = prog->ProcCpuKernelH2DMem(true, dev);
+    EXPECT_EQ(rtError, RT_ERROR_NONE);
+    EXPECT_EQ(dev->aicpuDfxSent_, false);
+
+    GlobalMockObject::verify();
+    cmodelDrvMemcpy_flag = 0;
+    dev->aicpuDfxSent_ = false;
+    delete prog;
+    rtDeviceReset(0);
+}
+
+TEST_F(PrintfTest, TestProcAicpuPrintfDfx_MemCopyFail)
+{
+    rtError_t rtError = rtSetDevice(0);
+    EXPECT_EQ(rtError, RT_ERROR_NONE);
+    RawDevice* dev = (RawDevice*)((Runtime*)Runtime::Instance())->GetDevice(0U, 0U);
+    ASSERT_NE(dev, nullptr);
+
+    PlainProgram* prog = CreateAicpuPrintfProgram(dev);
+    ASSERT_NE(prog, nullptr);
+
+    SetupProcCpuKernelH2DMemCommonMocks(dev);
+    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::MemCopySync)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE))
+        .then(returnValue(RT_ERROR_NONE))
+        .then(returnValue(RT_ERROR_NONE))
+        .then(returnValue(RT_ERROR_NONE))
+        .then(returnValue(RT_ERROR_NONE))
+        .then(returnValue(RT_ERROR_INVALID_VALUE));
+    MOCKER_CPP_VIRTUAL(dev->primaryStream_, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::DevMemFree).expects(exactly(5)).will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(&Engine::CreatePrintfThread).stubs().will(returnValue(RT_ERROR_NONE));
+    rtError = prog->ProcCpuKernelH2DMem(true, dev);
+    EXPECT_EQ(rtError, RT_ERROR_NONE);
+    EXPECT_EQ(dev->aicpuDfxSent_, false);
+
+    GlobalMockObject::verify();
+    cmodelDrvMemcpy_flag = 0;
+    dev->aicpuDfxSent_ = false;
+    delete prog;
+    rtDeviceReset(0);
+}
+
+TEST_F(PrintfTest, TestParsePrintInfo_AicpuErrorNotAbort)
+{
+    rtError_t rtError = rtSetDevice(0);
+    EXPECT_EQ(rtError, RT_ERROR_NONE);
+    RawDevice* dev = (RawDevice*)((Runtime*)Runtime::Instance())->GetDevice(0U, 0U);
+    ASSERT_NE(dev, nullptr);
+
+    dev->aicpuDfxSent_ = true;
+    dev->aicpuPrintfAddr_ = reinterpret_cast<void*>(0x1000);
+    uint64_t counterBefore = dev->parseCounter_.load();
+
+    cmodelDrvMemcpy_flag = 0;
+    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::MemCopySync).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+
+    rtError = dev->ParsePrintInfo();
+    EXPECT_EQ(rtError, RT_ERROR_NONE);
+    EXPECT_EQ(dev->parseCounter_.load(), counterBefore + 1U);
+
+    GlobalMockObject::verify();
+    dev->aicpuDfxSent_ = false;
+    dev->aicpuPrintfAddr_ = nullptr;
+    cmodelDrvMemcpy_flag = 1;
+    rtDeviceReset(0);
 }
 
 void FillNoParamDumpInfo(DumpInfoHead* noParamDumpInfo, DumpType type, const uint32_t rsvLen)

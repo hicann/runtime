@@ -425,6 +425,8 @@ public:
     virtual DeviceFaultType GetDeviceFaultType() const = 0;
     virtual void AddSimtPrintTlvCnt(uint64_t val) const = 0;
     virtual uint64_t GetSimtPrintTlvCnt() const = 0;
+    virtual void AddAicpuPrintTlvCnt(uint64_t val) const = 0;
+    virtual uint64_t GetAicpuPrintTlvCnt() const = 0;
     virtual bool GetPrintSimtEnable() const = 0;
     virtual uint32_t GetSimtPrintLen() const = 0;
     virtual void* GetSimtPrintfAddr() const = 0;
@@ -443,6 +445,14 @@ public:
     virtual void WakeUpPrintf() = 0;
     virtual rtError_t GetPrintSimdAddress(uint64_t* const addr) = 0;
     virtual rtError_t GetPrintFifoAddrAndCreateThread(uint64_t* const addr, const uint32_t model) = 0;
+    virtual rtError_t InitAicpuPrintInfo() = 0;
+    virtual rtError_t CheckAicpuDfxSupport() = 0;
+    virtual bool IsAicpuDfxSupport() const = 0;
+    virtual void SetAicpuDfxSupport(bool flag) = 0;
+    virtual bool IsAicpuPrintfReady() const = 0;
+    virtual void SetAicpuDfxSent(bool flag) = 0;
+    virtual std::mutex& GetAicpuDfxInitMutex() = 0;
+    virtual uint32_t GetAicpuPrintfMemSize() const = 0;
     virtual rtError_t StoreEndGraphNotifyInfo(
         const uint32_t streamId, Model* captureModel, uint32_t endGraphNotifyPos) = 0;
     virtual rtError_t DeleteEndGraphNotifyInfo(

@@ -11,8 +11,11 @@
 #include <thread>
 #include "securec.h"
 #include "context.hpp"
+#include "aicpu_c.hpp"
 #include "runtime.hpp"
 #include "elf.hpp"
+#include "printf.hpp"
+#include "aicpu_dfx.hpp"
 #include "error_message_manage.hpp"
 #include "utils.h"
 #include <vector>
@@ -1315,6 +1318,14 @@ rtError_t Program::ProcCpuKernelH2DMem(bool isLoadCpuSo, Device* const device)
 
     ret = stm->Synchronize(false, -1); // -1代表永不超时
     ERROR_RETURN(ret, "stream sync failed! error=%#x", ret);
+
+    if (isLoadCpuSo && HasPrintfTlv() && device->IsAicpuDfxSupport() && !device->IsAicpuPrintfReady()) {
+        RT_LOG(RT_LOG_DEBUG, "start to init aicpu printMem and send dfx task");
+        ret = SetupAicpuPrintfDfx(device, devId);
+        if (ret != RT_ERROR_NONE) {
+            RT_LOG(RT_LOG_WARNING, "ProcAicpuPrintfDfx failed, retCode=%#x, aicpu printf will be disabled.", ret);
+        }
+    }
     return RT_ERROR_NONE;
 }
 

@@ -9,6 +9,7 @@
  */
 #include "gtest/gtest.h"
 #include "api_impl.hpp"
+#include "aicpu_dfx.hpp"
 
 using namespace cce::runtime;
 
@@ -25,3 +26,5 @@ TEST(Arch5162ApiTest, KernelArgsApiImplStub_NotSupport)
     EXPECT_EQ(apiImpl.KernelArgsGetPlaceHolderBuffer(nullptr, nullptr, 0U, nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
     EXPECT_EQ(apiImpl.KernelArgsAppend(nullptr, nullptr, 0U, nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
 }
+
+TEST(Arch5162ApiTest, AicpuFifoPrintfDfxDisabled) { EXPECT_EQ(SetupAicpuPrintfDfx(nullptr, 0U), RT_ERROR_NONE); }

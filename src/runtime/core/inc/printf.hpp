@@ -46,6 +46,7 @@ enum class DumpType : uint32_t {
     DUMP_BUFI,
     DUMP_BUFO,
     DUMP_SKIP,
+    DUMP_AICPU,
     DUMP_SIMT_ASSERT = 0xF0E00F0EU,
     DUMP_SIMT_PRINTF = 0xF0F00F0FU,
     DUMP_WAIT = 0xF0A55A0FU
@@ -106,6 +107,39 @@ struct DumpShapeInfo {
 constexpr uint32_t RT_KERNEL_DFX_INFO_CORE_TYPE_AIC = 0U;
 constexpr uint32_t RT_KERNEL_DFX_INFO_CORE_TYPE_AIV = 1U;
 constexpr uint32_t RT_KERNEL_DFX_INFO_CORE_TYPE_SIMT = 2U;
+constexpr uint32_t RT_KERNEL_DFX_INFO_CORE_TYPE_AICPU = 3U;
+
+enum class AicpuDfxAttrId : uint32_t {
+    MEM_INFO = 1U,
+};
+
+#pragma pack(push, 1)
+struct AicpuPrintfMemInfo {
+    uint64_t printfMemAddr = 0U;
+    uint32_t printfMemSize = 0U;
+    uint32_t resv0 = 0U;
+};
+
+union AicpuDfxAttrValue {
+    uint8_t resv[64U] = {0U};
+    AicpuPrintfMemInfo printfMemInfo;
+};
+
+struct AicpuDfxAttrInfo {
+    uint32_t attrId = 0U;
+    AicpuDfxAttrValue value;
+};
+
+struct AicpuDfxInfo {
+    uint64_t attrs = 0U;    // AicpuDfxAttrInfo在device侧的内存地址
+    uint64_t numAttrs = 0U; // AicpuDfxAttrInfo的数量
+};
+
+struct AicpuSetDfxArgs {
+    uint8_t cpType = 0U;  // aicpu的类型，0：aicpusd, 1: custom_aicpusd
+    uint64_t dfxPtr = 0U; // AicpuDfxInfo在device侧的地址
+};
+#pragma pack(pop)
 
 rtError_t InitPrintf(void* addr, const size_t blockSize, const Device* const dev);
 rtError_t InitSimtPrintf(void* addr, const size_t blockSize, Driver* curDrv);
@@ -113,6 +147,9 @@ rtError_t ParsePrintf(void* addr, const size_t blockSize, Driver* curDrv);
 rtError_t ParseSimtPrintf(void* addr, const size_t blockSize, Driver* curDrv, const Device* const dev);
 rtError_t ParsePrintfV2(void* addr, const size_t blockSize, Driver* curDrv, uint32_t userDeviceId);
 rtError_t ParseSimtPrintfV2(void* addr, const size_t blockSize, Driver* curDrv, uint32_t userDeviceId);
+rtError_t InitAicpuPrintf(void* addr, const size_t blockSize, Driver* curDrv);
+rtError_t ParseAicpuPrintf(void* addr, const size_t blockSize, Driver* curDrv, const Device* const dev);
+rtError_t ParseAicpuPrintfV2(void* addr, const size_t blockSize, Driver* curDrv, uint32_t userDeviceId);
 } // namespace runtime
 } // namespace cce
 

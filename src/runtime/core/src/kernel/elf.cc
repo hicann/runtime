@@ -1856,5 +1856,77 @@ rtError_t GetFunctionMetaInfoSize(
     *size = static_cast<size_t>(metaInfo[0].second);
     return RT_ERROR_NONE;
 }
+
+rtError_t CheckAicpuSoPrintfTlv(const void* data, uint64_t size, bool& hasPrintf)
+{
+    RT_LOG(RT_LOG_DEBUG, "Start to check aicpu so print tlv.");
+    hasPrintf = false;
+    if ((data == nullptr) || (size == 0U)) {
+        return RT_ERROR_INVALID_VALUE;
+    }
+
+    rtElfData elfData;
+    elfData.obj_ptr = const_cast<char_t*>(static_cast<const char_t*>(data));
+    elfData.obj_ptr_origin = elfData.obj_ptr;
+    elfData.section_headers = nullptr;
+    elfData.obj_size = size;
+
+    if (GetFileHeader(&elfData) == ELF_FAIL) {
+        RT_LOG(RT_LOG_WARNING, "CheckAicpuSoPrintfTlv: GetFileHeader failed.");
+        return RT_ERROR_INVALID_VALUE;
+    }
+
+    if (Get64bitSectionHeaders(&elfData) == ELF_FAIL) {
+        DELETE_A(elfData.section_headers);
+        RT_LOG(RT_LOG_WARNING, "CheckAicpuSoPrintfTlv: Get64bitSectionHeaders failed.");
+        return RT_ERROR_INVALID_VALUE;
+    }
+
+    std::unique_ptr<char_t[]> strTbl;
+    uint64_t strTblSize = 0U;
+    if (GetStringTable(&elfData, strTbl, &strTblSize) == ELF_FAIL) {
+        DELETE_A(elfData.section_headers);
+        RT_LOG(RT_LOG_WARNING, "CheckAicpuSoPrintfTlv: GetStringTable failed.");
+        return RT_ERROR_INVALID_VALUE;
+    }
+    const char_t* const stringTbl = (strTbl != nullptr) ? strTbl.get() : nullptr;
+
+    constexpr uint16_t PRINTF_TLV_TYPE = 4U; // RT_FUNCTION_TYPE_DFX_TYPE
+    constexpr uint32_t PRINTF_TLV_VALUE = 6U;
+    for (uint32_t i = 0U; i < elfData.elf_header.e_shnum; i++) {
+        const Elf_Internal_Shdr* const section = &elfData.section_headers[i];
+        if (stringTbl == nullptr) {
+            break;
+        }
+        if (section->sh_name >= strTblSize) {
+            RT_LOG(
+                RT_LOG_WARNING, "CheckAicpuSoPrintfTlv: section name offset %u exceeds string table size %" PRIu64 ".",
+                section->sh_name, strTblSize);
+            continue;
+        }
+        const std::string secName(stringTbl + section->sh_name);
+        if (secName != ELF_SECTION_ASCEND_META) {
+            continue;
+        }
+
+        const auto result = GetMetaInfo(&elfData, section, PRINTF_TLV_TYPE);
+        for (const auto& item : result) {
+            if (item.second == sizeof(uint32_t)) {
+                uint32_t value = 0U;
+                if (memcpy_s(&value, sizeof(uint32_t), item.first, sizeof(uint32_t)) == EOK) {
+                    if (value == PRINTF_TLV_VALUE) {
+                        hasPrintf = true;
+                        RT_LOG(RT_LOG_INFO, "AICPU SO has printf TLV.");
+                        break;
+                    }
+                }
+            }
+        }
+        break;
+    }
+
+    DELETE_A(elfData.section_headers);
+    return RT_ERROR_NONE;
+}
 } // namespace runtime
 } // namespace cce

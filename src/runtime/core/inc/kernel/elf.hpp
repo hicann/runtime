@@ -53,6 +53,7 @@ constexpr uint32_t KERNEL_CUSTOM_STACK_SIZE_MAX_DAVID = 131072U;    // 128KB
 
 constexpr uint32_t PRINT_SIMD = 0U;
 constexpr uint32_t PRINT_SIMT = 2U;
+constexpr uint32_t PRINT_AICPU = 3U;
 
 #define MAX_BUF_NUM 2048
 #define DEFAULT_TASK_RATION 2U
@@ -72,6 +73,7 @@ constexpr uint32_t PRINT_SIMT = 2U;
 
 #define SIMD_FIFO_PER_CORE_SIZE_32K 32768U
 #define SIMT_FIFO_SIZE_2M (2U * 1024U * 1024U)
+#define AICPU_FIFO_SIZE_1M (1U * 1024U * 1024U)
 #define SIMD_MIN_FIFO_PRINTF_SIZE 1024U
 #define SIMT_MIN_FIFO_PRINTF_SIZE (1024U * 1024U)
 #define MAX_FIFO_PRINTF_SIZE (64U * 1024U * 1024U) // simd与 simt print fifo 最大值
@@ -431,6 +433,7 @@ rtError_t GetFunctionMetaInfo(
     const uint32_t length);
 rtError_t GetFunctionMetaInfoSize(
     const rtElfData* const elfData, const std::string& kernelName, const uint16_t type, size_t* size);
+rtError_t CheckAicpuSoPrintfTlv(const void* data, uint64_t size, bool& hasPrintf);
 } // namespace runtime
 } // namespace cce
 

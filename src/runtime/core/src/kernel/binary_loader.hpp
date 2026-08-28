@@ -40,6 +40,7 @@ private:
     PlainProgram* ParseJsonAndRegisterCpuKernel();
     rtError_t SetCpuBinInfo(const rtLoadBinaryOptionValue_t& option);
     std::string GenerateSoNameFromData();
+    bool ParseAicpuSoForPrintfTlv() const;
 
     std::string binPath_;
     std::string binRealPath_;

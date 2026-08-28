@@ -243,6 +243,7 @@ set(runtime_src_kernel_list
     ${RUNTIME_CORE_DIR}/src/kernel/kernel_utils.cc
     ${RUNTIME_CORE_DIR}/src/kernel/module.cc
     ${RUNTIME_CORE_DIR}/src/kernel/program.cc
+    ${RUNTIME_CORE_DIR}/src/dfx/aicpu_dfx_tiny_stub.cc
     ${RUNTIME_CORE_DIR}/src/kernel/program_common.cc
     ${RUNTIME_CORE_DIR}/src/kernel/symbol_table.cc
     ${RUNTIME_CORE_DIR}/src/kernel/v100/kernel.cc

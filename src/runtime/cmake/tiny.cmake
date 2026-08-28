@@ -262,6 +262,7 @@ set(libruntime_common_src_files
     ${RUNTIME_CORE_DIR}/src/kernel/kernel.cc
     ${RUNTIME_CORE_DIR}/src/kernel/module.cc
     ${RUNTIME_CORE_DIR}/src/kernel/program.cc
+    ${RUNTIME_CORE_DIR}/src/dfx/aicpu_dfx_tiny_stub.cc
     ${RUNTIME_CORE_DIR}/src/kernel/program_common.cc
     ${RUNTIME_CORE_DIR}/src/kernel/kernel_utils.cc
     ${RUNTIME_CORE_DIR}/src/kernel/v100/program_plat.cc
@@ -376,6 +377,7 @@ set(libruntime_v100_src_files
     ${RUNTIME_API_DIR}/impl/api_impl_creator.cc
     ${RUNTIME_API_DIR}/impl/api_impl_mbuf.cc
     ${RUNTIME_CORE_DIR}/src/dfx/kernel_dfx_info.cc
+    ${RUNTIME_CORE_DIR}/src/dfx/aicpu_dfx_tiny_stub.cc
     ${RUNTIME_CORE_DIR}/src/uvm/uvm_callback.cc
 
     # for V100

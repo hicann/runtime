@@ -9,11 +9,16 @@
  */
 #include "driver/ascend_hal.h"
 #include "runtime/rt.h"
-// #define private public
+#include <sstream>
+#define private public
+#define protected public
 #include "runtime.hpp"
 #include "program.hpp"
 #include "kernel.hpp"
+#include "binary_loader.hpp"
+#include "raw_device.hpp"
 #undef private
+#undef protected
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -1277,4 +1282,273 @@ TEST_F(ELFTest, GetBinaryMetaInfo_Error)
     size_t dataSize = 0;
     rtError_t ret = GetBinaryMetaInfo(&elfData, 99, 1, &data, &dataSize);
     EXPECT_NE(ret, RT_ERROR_NONE);
+}
+
+// ===== AICPU SO printf TLV detection UT =====
+// Constructs a minimal 64-bit ELF with a .ascend.meta section containing specified TLVs.
+// Layout: | Elf64_Ehdr | shstrtab | .ascend.meta data | Elf64_Shdr[2] |
+//          section[0] = .ascend.meta, section[1] = .shstrtab
+
+struct MiniElf {
+    std::vector<uint8_t> buf;
+};
+
+static MiniElf BuildElfWithMetaSection(const std::vector<std::pair<uint16_t, std::vector<uint8_t>>>& tlvs)
+{
+    MiniElf elf;
+    constexpr uint16_t ELF_MAGIC0 = 0x464C457FU; // \x7fELF
+    constexpr uint8_t ELFCLASS64 = 2U;
+    constexpr uint8_t ELFDATA2LSB = 1U;
+    constexpr uint16_t SHT_PROGBITS = 1U;
+    constexpr uint16_t SHT_STRTAB = 3U;
+
+    const std::string metaName = ".ascend.meta";
+    const std::string strtabName = ".shstrtab";
+    std::string shstrtab;
+    shstrtab += '\0';
+    const uint32_t metaNameIdx = static_cast<uint32_t>(shstrtab.size());
+    shstrtab += metaName + '\0';
+    const uint32_t strtabNameIdx = static_cast<uint32_t>(shstrtab.size());
+    shstrtab += strtabName + '\0';
+
+    std::vector<uint8_t> metaData;
+    for (const auto& tlv : tlvs) {
+        ElfTlvHead head;
+        head.type = tlv.first;
+        head.length = static_cast<uint16_t>(tlv.second.size());
+        metaData.insert(
+            metaData.end(), reinterpret_cast<uint8_t*>(&head), reinterpret_cast<uint8_t*>(&head) + sizeof(ElfTlvHead));
+        metaData.insert(metaData.end(), tlv.second.begin(), tlv.second.end());
+    }
+
+    const uint64_t ehdrSize = sizeof(Elf64_External_Ehdr);
+    const uint64_t shstrtabOff = ehdrSize;
+    const uint64_t metaOff = shstrtabOff + shstrtab.size();
+    const uint64_t shdrOff = metaOff + metaData.size();
+    const uint16_t shentsize = static_cast<uint16_t>(sizeof(Elf64_External_Shdr));
+    const uint16_t shnum = 2U;
+    const uint16_t shstrndx = 1U;
+
+    elf.buf.resize(shdrOff + shnum * sizeof(Elf64_External_Shdr), 0);
+
+    auto put16 = [&elf](uint64_t off, uint16_t val) {
+        for (int i = 0; i < 2; ++i) {
+            elf.buf[off + i] = static_cast<uint8_t>((val >> (i * 8)) & 0xFF);
+        }
+    };
+    auto put32 = [&elf](uint64_t off, uint32_t val) {
+        for (int i = 0; i < 4; ++i) {
+            elf.buf[off + i] = static_cast<uint8_t>((val >> (i * 8)) & 0xFF);
+        }
+    };
+    auto put64 = [&elf](uint64_t off, uint64_t val) {
+        for (int i = 0; i < 8; ++i) {
+            elf.buf[off + i] = static_cast<uint8_t>((val >> (i * 8)) & 0xFF);
+        }
+    };
+
+    // e_ident
+    elf.buf[0] = 0x7FU;
+    elf.buf[1] = 'E';
+    elf.buf[2] = 'L';
+    elf.buf[3] = 'F';
+    elf.buf[4] = ELFCLASS64;
+    elf.buf[5] = ELFDATA2LSB;
+    elf.buf[6] = 1U;
+    // e_type, e_machine, e_version
+    put16(16, 2U);
+    put16(18, 0xB7U);
+    put32(20, 1U);
+    // e_entry, e_phoff
+    put64(24, 0UL);
+    put64(32, 0UL);
+    // e_shoff
+    put64(40, shdrOff);
+    // e_flags, e_ehsize, e_phentsize, e_phnum
+    put32(48, 0U);
+    put16(52, static_cast<uint16_t>(ehdrSize));
+    put16(54, 0U);
+    put16(56, 0U);
+    // e_shentsize, e_shnum, e_shstrndx
+    put16(58, shentsize);
+    put16(60, shnum);
+    put16(62, shstrndx);
+
+    // shstrtab data
+    std::copy(shstrtab.begin(), shstrtab.end(), elf.buf.begin() + shstrtabOff);
+    // .ascend.meta data
+    std::copy(metaData.begin(), metaData.end(), elf.buf.begin() + metaOff);
+
+    // section header[0]: .ascend.meta
+    uint64_t shdr0 = shdrOff;
+    put32(shdr0 + 0, metaNameIdx);
+    put32(shdr0 + 4, SHT_PROGBITS);
+    put64(shdr0 + 8, 0UL);
+    put64(shdr0 + 16, 0UL);
+    put64(shdr0 + 24, metaOff);
+    put64(shdr0 + 32, static_cast<uint64_t>(metaData.size()));
+    put32(shdr0 + 40, 0U);
+    put32(shdr0 + 44, 0U);
+    put64(shdr0 + 48, 1UL);
+    put64(shdr0 + 56, 0UL);
+
+    // section header[1]: .shstrtab
+    uint64_t shdr1 = shdrOff + sizeof(Elf64_External_Shdr);
+    put32(shdr1 + 0, strtabNameIdx);
+    put32(shdr1 + 4, SHT_STRTAB);
+    put64(shdr1 + 8, 0UL);
+    put64(shdr1 + 16, 0UL);
+    put64(shdr1 + 24, shstrtabOff);
+    put64(shdr1 + 32, static_cast<uint64_t>(shstrtab.size()));
+    put32(shdr1 + 40, 0U);
+    put32(shdr1 + 44, 0U);
+    put64(shdr1 + 48, 1UL);
+    put64(shdr1 + 56, 0UL);
+
+    return elf;
+}
+
+TEST_F(ELFTest, CheckAicpuSoPrintfTlv_InvalidInput)
+{
+    bool hasPrintf = true;
+    rtError_t ret = CheckAicpuSoPrintfTlv(nullptr, 0, hasPrintf);
+    EXPECT_NE(ret, RT_ERROR_NONE);
+    EXPECT_EQ(hasPrintf, false);
+
+    uint8_t nonElf[] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07};
+    hasPrintf = true;
+    ret = CheckAicpuSoPrintfTlv(nonElf, sizeof(nonElf), hasPrintf);
+    EXPECT_NE(ret, RT_ERROR_NONE);
+    EXPECT_EQ(hasPrintf, false);
+
+    auto invalidSectionElf = BuildElfWithMetaSection({});
+    hasPrintf = true;
+    ret = CheckAicpuSoPrintfTlv(invalidSectionElf.buf.data(), sizeof(Elf64_External_Ehdr), hasPrintf);
+    EXPECT_NE(ret, RT_ERROR_NONE);
+    EXPECT_EQ(hasPrintf, false);
+}
+
+TEST_F(ELFTest, CheckAicpuSoPrintfTlv_NoMetaSection)
+{
+    bool hasPrintf = true;
+    rtError_t ret = CheckAicpuSoPrintfTlv(elf_o, elf_o_len, hasPrintf);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_EQ(hasPrintf, false);
+}
+
+TEST_F(ELFTest, CheckAicpuSoPrintfTlv_InvalidSectionNameOffset)
+{
+    auto elf = BuildElfWithMetaSection({});
+    const size_t sectionHeaderOffset = elf.buf.size() - 2U * sizeof(Elf64_External_Shdr);
+    std::fill_n(elf.buf.begin() + sectionHeaderOffset, sizeof(uint32_t), 0xFFU);
+
+    bool hasPrintf = true;
+    const rtError_t ret = CheckAicpuSoPrintfTlv(elf.buf.data(), elf.buf.size(), hasPrintf);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_EQ(hasPrintf, false);
+}
+
+TEST_F(ELFTest, CheckAicpuSoPrintfTlv_WithAndWithoutPrintfTlv)
+{
+    constexpr uint16_t PRINTF_TLV_TYPE = 4U;
+    constexpr uint32_t PRINTF_TLV_VALUE = 6U;
+    uint32_t goodVal = PRINTF_TLV_VALUE;
+    uint32_t badVal = 5U;
+    std::vector<uint8_t> goodValBytes(
+        reinterpret_cast<uint8_t*>(&goodVal), reinterpret_cast<uint8_t*>(&goodVal) + sizeof(uint32_t));
+    std::vector<uint8_t> badValBytes(
+        reinterpret_cast<uint8_t*>(&badVal), reinterpret_cast<uint8_t*>(&badVal) + sizeof(uint32_t));
+
+    auto elf1 = BuildElfWithMetaSection({{PRINTF_TLV_TYPE, goodValBytes}});
+    bool hasPrintf = false;
+    rtError_t ret = CheckAicpuSoPrintfTlv(elf1.buf.data(), elf1.buf.size(), hasPrintf);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_EQ(hasPrintf, true);
+
+    auto elf2 = BuildElfWithMetaSection({{1U, badValBytes}, {PRINTF_TLV_TYPE, goodValBytes}, {5U, badValBytes}});
+    hasPrintf = false;
+    ret = CheckAicpuSoPrintfTlv(elf2.buf.data(), elf2.buf.size(), hasPrintf);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_EQ(hasPrintf, true);
+
+    auto elf3 = BuildElfWithMetaSection({{PRINTF_TLV_TYPE, badValBytes}});
+    hasPrintf = true;
+    ret = CheckAicpuSoPrintfTlv(elf3.buf.data(), elf3.buf.size(), hasPrintf);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_EQ(hasPrintf, false);
+
+    auto elf4 = BuildElfWithMetaSection({{3U, goodValBytes}});
+    hasPrintf = true;
+    ret = CheckAicpuSoPrintfTlv(elf4.buf.data(), elf4.buf.size(), hasPrintf);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_EQ(hasPrintf, false);
+
+    auto elf5 = BuildElfWithMetaSection({{1U, badValBytes}});
+    hasPrintf = true;
+    ret = CheckAicpuSoPrintfTlv(elf5.buf.data(), elf5.buf.size(), hasPrintf);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_EQ(hasPrintf, false);
+}
+
+// ===== ParseAicpuSoForPrintfTlv via LoadCpuKernelFromData UT =====
+
+TEST_F(ELFTest, ParseAicpuSoForPrintfTlv_DfxNotSupported)
+{
+    rtError_t rtError = rtSetDevice(0);
+    EXPECT_EQ(rtError, RT_ERROR_NONE);
+    Runtime* rtInstance = (Runtime*)Runtime::Instance();
+    RawDevice* dev = (RawDevice*)rtInstance->GetDevice(0U, 0U);
+    ASSERT_NE(dev, nullptr);
+    dev->aicpuDfxSupport_ = false;
+
+    constexpr uint16_t PRINTF_TLV_TYPE = 4U;
+    uint32_t val = 6U;
+    std::vector<uint8_t> valBytes(
+        reinterpret_cast<uint8_t*>(&val), reinterpret_cast<uint8_t*>(&val) + sizeof(uint32_t));
+    auto elf = BuildElfWithMetaSection({{PRINTF_TLV_TYPE, valBytes}});
+
+    MOCKER_CPP(&BinaryLoader::ParseAicpuSoForPrintfTlv).expects(never());
+    BinaryLoader loader(elf.buf.data(), elf.buf.size(), nullptr);
+    PlainProgram* prog = loader.LoadCpuKernelFromData();
+    ASSERT_NE(prog, nullptr);
+    EXPECT_EQ(prog->HasPrintfTlv(), false);
+    GlobalMockObject::verify();
+    delete prog;
+
+    rtDeviceReset(0);
+}
+
+TEST_F(ELFTest, ParseAicpuSoForPrintfTlv_DfxSupported)
+{
+    rtError_t rtError = rtSetDevice(0);
+    EXPECT_EQ(rtError, RT_ERROR_NONE);
+    Runtime* rtInstance = (Runtime*)Runtime::Instance();
+    RawDevice* dev = (RawDevice*)rtInstance->GetDevice(0U, 0U);
+    ASSERT_NE(dev, nullptr);
+    dev->aicpuDfxSupport_ = true;
+
+    constexpr uint16_t PRINTF_TLV_TYPE = 4U;
+    uint32_t goodVal = 6U;
+    uint32_t badVal = 5U;
+    std::vector<uint8_t> goodValBytes(
+        reinterpret_cast<uint8_t*>(&goodVal), reinterpret_cast<uint8_t*>(&goodVal) + sizeof(uint32_t));
+    std::vector<uint8_t> badValBytes(
+        reinterpret_cast<uint8_t*>(&badVal), reinterpret_cast<uint8_t*>(&badVal) + sizeof(uint32_t));
+
+    auto elfWithPrintf = BuildElfWithMetaSection({{1U, badValBytes}, {PRINTF_TLV_TYPE, goodValBytes}});
+    BinaryLoader loader1(elfWithPrintf.buf.data(), elfWithPrintf.buf.size(), nullptr);
+    PlainProgram* prog1 = loader1.LoadCpuKernelFromData();
+    ASSERT_NE(prog1, nullptr);
+    EXPECT_EQ(prog1->HasPrintfTlv(), true);
+    delete prog1;
+
+    auto elfWithoutPrintf = BuildElfWithMetaSection({{1U, badValBytes}});
+    BinaryLoader loader2(elfWithoutPrintf.buf.data(), elfWithoutPrintf.buf.size(), nullptr);
+    PlainProgram* prog2 = loader2.LoadCpuKernelFromData();
+    ASSERT_NE(prog2, nullptr);
+    EXPECT_EQ(prog2->HasPrintfTlv(), false);
+    delete prog2;
+
+    dev->aicpuDfxSupport_ = false;
+    rtDeviceReset(0);
 }

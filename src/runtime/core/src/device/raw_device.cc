@@ -10,6 +10,7 @@
 #include "raw_device.hpp"
 
 #include <chrono>
+#include "aicpu_dfx.hpp"
 #include "device.hpp"
 #include "device_snapshot.hpp"
 #include "uma_arg_loader.hpp"
@@ -170,6 +171,11 @@ void RawDevice::ReleaseDriverResourcesOnDestroy() noexcept
             (void)driver_->DevMemFree(simtPrintfAddr_, deviceId_);
             simtPrintfAddr_ = nullptr;
             simtPrintTlvCnt_.Set(0U);
+        }
+        if (aicpuPrintfAddr_ != nullptr) {
+            (void)driver_->DevMemFree(aicpuPrintfAddr_, deviceId_);
+            aicpuPrintfAddr_ = nullptr;
+            aicpuPrintTlvCnt_.Set(0U);
         }
         (void)driver_->DeviceClose(deviceId_, tsId_);
         driver_ = nullptr;
@@ -2357,6 +2363,7 @@ rtError_t RawDevice::ParsePrintInfo()
     (void)printfCv_.wait_for(l, std::chrono::milliseconds(200));
     (void)ParseSimdPrintInfo();
     (void)ParseSimtPrintInfo();
+    (void)ParseAicpuPrintInfo();
     ++parseCounter_;
     return RT_ERROR_NONE;
 }
@@ -2425,6 +2432,16 @@ rtError_t RawDevice::GetPrintFifoAddrAndCreateThread(uint64_t* const addr, const
         }
         simtEnable_ = true;
         *addr = RtPtrToPtr<uint64_t>(simtPrintfAddr_);
+    } else if (model == PRINT_AICPU) {
+        if (aicpuPrintfAddr_ == nullptr) {
+            ret = InitAicpuPrintInfo();
+            COND_RETURN_WARN(
+                (ret != RT_ERROR_NONE), ret, "InitAicpuPrintInfo failed, device_id=%u, ret=%u.", deviceId_, ret);
+        }
+        ret = engine_->CreatePrintfThread();
+        COND_RETURN_WARN(
+            (ret != RT_ERROR_NONE), ret, "CreatePrintfThread failed, device_id=%u, ret=%u.", deviceId_, ret);
+        *addr = RtPtrToPtr<uint64_t>(aicpuPrintfAddr_);
     } else {
         ret = RT_ERROR_INVALID_VALUE;
         RT_LOG(RT_LOG_ERROR, "Invalid parallelism model, model=%u, device_id=%u, ret=%u.", model, deviceId_, ret);
@@ -2745,6 +2762,12 @@ int64_t RawDevice::GetDeviceCurrentTime() const
     }
     return currTime;
 }
+
+rtError_t RawDevice::InitAicpuPrintInfo() { return InitAicpuPrintInfoImpl(this); }
+
+rtError_t RawDevice::ParseAicpuPrintInfo() { return ParseAicpuPrintInfoImpl(this); }
+
+rtError_t RawDevice::CheckAicpuDfxSupport() { return CheckAicpuDfxSupportImpl(this); }
 
 } // namespace runtime
 } // namespace cce

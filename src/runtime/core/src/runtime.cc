@@ -144,6 +144,18 @@ rtError_t InitializePrimaryContext(PrimaryContextInitInfo& initInfo)
         static_cast<uint32_t>(err));
 #endif
 
+#ifndef CFG_DEV_PLATFORM_PC
+    if (!initInfo.dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_AICPUSD_LATER_PROCEDURE)) {
+        err = initInfo.dev->CheckAicpuDfxSupport();
+        if (err != RT_ERROR_NONE) {
+            RT_LOG(
+                RT_LOG_WARNING, "CheckAicpuDfxSupport failed, devId=%u, retCode=%#x, aicpu printf will be disabled.",
+                initInfo.dev->Id_(), static_cast<uint32_t>(err));
+            initInfo.dev->SetAicpuDfxSupport(false);
+        }
+    }
+#endif
+
     err = initInfo.dev->UpdateTimeoutConfig();
     ERROR_RETURN_MSG_INNER(
         err, "Primary context update timeout config failed, devId=%u, retCode=%#x.", initInfo.dev->Id_(),

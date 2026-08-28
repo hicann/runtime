@@ -333,6 +333,7 @@ set(runtimeut_910b_src_list
     ${TOP_DIR}/src/runtime/core/src/dfx/fp16_t.cpp
     ${TOP_DIR}/src/runtime/core/src/dfx/hifloat.cpp
     ${TOP_DIR}/src/runtime/core/src/dfx/printf.cc
+    ${TOP_DIR}/src/runtime/core/src/dfx/aicpu_dfx.cc
     ${TOP_DIR}/src/runtime/core/src/dfx/kernel_dfx_info.cc
     ${TOP_DIR}/src/runtime/core/src/dfx/parse_kernel_dfx_info.cc
     ${TOP_DIR}/src/runtime/core/src/dfx/fast_recover.cc

@@ -157,6 +157,10 @@ public:
 
     void SetKernelRegType(const KernelRegisterType type) { kernelRegType_ = type; }
 
+    bool HasPrintfTlv() const { return hasPrintfTlv_; }
+
+    void SetHasPrintfTlv(bool flag) { hasPrintfTlv_ = flag; }
+
     std::map<Module**, Context*>& GetCtxMap() { return mapUsedCtx_; }
 
     const std::map<std::string, void*>& GetSoNameDevAddrMap(const uint32_t deviceId) const
@@ -288,6 +292,7 @@ private:
         const std::string& literalName, void** devAddrHandle, const Device* const dev) const;
     void SaveBinaryData(const void* data, uint64_t length, const bool isLoadFromFile);
     rtError_t FreeCpuSoH2dMem(Device* const device, std::vector<void*>& allocatedMem) const;
+    bool hasPrintfTlv_ = false;
 };
 
 class PlainProgram : public Program {
