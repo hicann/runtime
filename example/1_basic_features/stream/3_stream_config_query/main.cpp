@@ -11,8 +11,6 @@
 #include <cstdint>
 #include <cstdio>
 
-#include <dlfcn.h>
-
 #include "acl/acl.h"
 #include "utils.h"
 
@@ -30,50 +28,6 @@ int CheckAcl(aclError ret, const char* expr)
     }
     return 0;
 }
-
-using CreateStreamConfigHandleFunc = aclrtStreamConfigHandle* (*)();
-using DestroyStreamConfigHandleFunc = aclError (*)(aclrtStreamConfigHandle*);
-using SetStreamConfigOptFunc = aclError (*)(aclrtStreamConfigHandle*, aclrtStreamConfigAttr, const void*, size_t);
-using CreateStreamV2Func = aclError (*)(aclrtStream*, const aclrtStreamConfigHandle*);
-
-struct StreamConfigApi {
-    CreateStreamConfigHandleFunc createConfigHandle;
-    DestroyStreamConfigHandleFunc destroyConfigHandle;
-    SetStreamConfigOptFunc setConfigOpt;
-    CreateStreamV2Func createStreamV2;
-};
-
-class StreamConfigHandleGuard {
-public:
-    StreamConfigHandleGuard(const StreamConfigApi& api, aclrtStreamConfigHandle* handle) : api_(api), handle_(handle) {}
-
-    ~StreamConfigHandleGuard()
-    {
-        if (handle_ != nullptr) {
-            CHECK_ERROR_WITHOUT_RETURN(api_.destroyConfigHandle(handle_));
-        }
-    }
-
-    StreamConfigHandleGuard(const StreamConfigHandleGuard&) = delete;
-    StreamConfigHandleGuard& operator=(const StreamConfigHandleGuard&) = delete;
-
-    aclError Destroy()
-    {
-        if (handle_ == nullptr) {
-            return ACL_SUCCESS;
-        }
-
-        aclError ret = api_.destroyConfigHandle(handle_);
-        if (ret == ACL_SUCCESS) {
-            handle_ = nullptr;
-        }
-        return ret;
-    }
-
-private:
-    const StreamConfigApi& api_;
-    aclrtStreamConfigHandle* handle_;
-};
 
 class StreamGuard {
 public:
@@ -106,43 +60,6 @@ private:
     aclrtStream stream_;
 };
 
-template <typename Func>
-bool LoadSymbol(void* handle, const char* name, Func* func)
-{
-    *func = reinterpret_cast<Func>(dlsym(handle, name));
-    if (*func == nullptr) {
-        WARN_LOG("Symbol %s is not exported by the current Runtime library.", name);
-        return false;
-    }
-    return true;
-}
-
-bool LoadStreamConfigApi(StreamConfigApi* api)
-{
-    bool ok = true;
-    ok = LoadSymbol(RTLD_DEFAULT, "aclrtCreateStreamConfigHandle", &api->createConfigHandle) && ok;
-    ok = LoadSymbol(RTLD_DEFAULT, "aclrtDestroyStreamConfigHandle", &api->destroyConfigHandle) && ok;
-    ok = LoadSymbol(RTLD_DEFAULT, "aclrtSetStreamConfigOpt", &api->setConfigOpt) && ok;
-    ok = LoadSymbol(RTLD_DEFAULT, "aclrtCreateStreamV2", &api->createStreamV2) && ok;
-    return ok;
-}
-
-int SetStreamConfigOptions(const StreamConfigApi& api, aclrtStreamConfigHandle* configHandle)
-{
-    if (CheckAcl(
-            api.setConfigOpt(configHandle, ACL_RT_STREAM_FLAG, &kStreamFlags, sizeof(kStreamFlags)),
-            "aclrtSetStreamConfigOpt(ACL_RT_STREAM_FLAG)") != 0) {
-        return -1;
-    }
-    if (CheckAcl(
-            api.setConfigOpt(configHandle, ACL_RT_STREAM_PRIORITY, &kStreamPriority, sizeof(kStreamPriority)),
-            "aclrtSetStreamConfigOpt(ACL_RT_STREAM_PRIORITY)") != 0) {
-        return -1;
-    }
-    INFO_LOG("Set stream config flags=%u priority=%u", kStreamFlags, kStreamPriority);
-    return 0;
-}
-
 int QueryStreamInfo(aclrtStream stream)
 {
     int32_t streamId = -1;
@@ -162,36 +79,25 @@ int QueryStreamInfo(aclrtStream stream)
         return -1;
     }
     INFO_LOG("Stream priority: %u", priority);
+
+    if ((flags != kStreamFlags) || (priority != kStreamPriority)) {
+        ERROR_LOG(
+            "Unexpected stream attributes: flags=%u, priority=%u; expected flags=%u, priority=%u", flags, priority,
+            kStreamFlags, kStreamPriority);
+        return -1;
+    }
     return 0;
 }
 
 int RunStreamConfigQuerySample()
 {
-    StreamConfigApi api = {};
-    if (!LoadStreamConfigApi(&api)) {
-        INFO_LOG("[SKIP] Stream config query sample skipped because the current Runtime library does not export all "
-                 "stream config APIs.");
-        return 0;
-    }
-
-    aclrtStreamConfigHandle* configHandle = api.createConfigHandle();
-    if (configHandle == nullptr) {
-        INFO_LOG("[SKIP] Stream config query sample skipped because aclrtCreateStreamConfigHandle returned nullptr.");
-        return 0;
-    }
-    StreamConfigHandleGuard configHandleGuard(api, configHandle);
-    INFO_LOG("Create stream config handle successfully");
-
-    if (SetStreamConfigOptions(api, configHandle) != 0) {
-        return -1;
-    }
-
     aclrtStream stream = nullptr;
-    if (CheckAcl(api.createStreamV2(&stream, configHandle), "aclrtCreateStreamV2") != 0) {
+    if (CheckAcl(aclrtCreateStreamWithConfig(&stream, kStreamPriority, kStreamFlags), "aclrtCreateStreamWithConfig") !=
+        0) {
         return -1;
     }
     StreamGuard streamGuard(stream);
-    INFO_LOG("Create stream with config successfully");
+    INFO_LOG("Create stream with priority=%u flags=%u successfully", kStreamPriority, kStreamFlags);
 
     if (QueryStreamInfo(stream) != 0) {
         return -1;
@@ -201,9 +107,6 @@ int RunStreamConfigQuerySample()
         return -1;
     }
     if (CheckAcl(streamGuard.Destroy(), "aclrtDestroyStream") != 0) {
-        return -1;
-    }
-    if (CheckAcl(configHandleGuard.Destroy(), "aclrtDestroyStreamConfigHandle") != 0) {
         return -1;
     }
     INFO_LOG("[SUCCESS] Stream config query sample completed successfully");

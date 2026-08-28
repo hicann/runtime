@@ -41,8 +41,6 @@ fi
 
 if grep -q "\\[SUCCESS\\] Stream config query sample completed successfully" "${file_path}"; then
     echo "[SUCCESS] Stream config query sample executed successfully."
-elif grep -q "\\[SKIP\\] Stream config query sample skipped" "${file_path}"; then
-    echo "[SUCCESS] Stream config query sample skipped because the current environment does not support stream config."
 else
     echo "[FAILURE] Stream config query sample did not print the expected success marker."
     exit 1

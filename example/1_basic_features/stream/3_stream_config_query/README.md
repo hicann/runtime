@@ -2,7 +2,7 @@
 
 ## 描述
 
-本样例演示如何使用 Stream 配置对象创建 Stream，并查询创建后的 Stream ID、Flag 和 Priority。样例在单 Device 上运行，用于展示配置化 Stream 创建和属性查询的基础流程。
+本样例演示如何使用指定的 Priority 和 Flag 创建 Stream，并查询创建后的 Stream ID、Flag 和 Priority。样例在单 Device 上运行，用于展示配置化 Stream 创建和属性查询的基础流程。
 
 ## 产品支持情况
 
@@ -45,10 +45,7 @@ bash run.sh
     - 调用 `aclrtResetDeviceForce` 接口复位当前 Device。
     - 调用 `aclFinalize` 接口完成 ACL 去初始化。
 - Stream 配置与创建
-    - 调用 `aclrtCreateStreamConfigHandle` 接口创建 Stream 配置对象。
-    - 调用 `aclrtSetStreamConfigOpt` 接口设置 Stream 配置属性。
-    - 调用 `aclrtCreateStreamV2` 接口根据配置对象创建 Stream。
-    - 调用 `aclrtDestroyStreamConfigHandle` 接口销毁 Stream 配置对象。
+    - 调用 `aclrtCreateStreamWithConfig` 接口，使用指定的 Priority 和 Flag 创建 Stream。
 - Stream 查询与同步
     - 调用 `aclrtStreamGetId` 接口查询 Stream ID。
     - 调用 `aclrtStreamGetFlags` 接口查询 Stream Flag。
@@ -59,20 +56,10 @@ bash run.sh
 ## 示例输出
 
 ```text
-[INFO]  Create stream config handle successfully
-[INFO]  Set stream config flags=0 priority=0
-[INFO]  Create stream with config successfully
+[INFO]  Create stream with priority=0 flags=0 successfully
 [INFO]  Stream id: 1
 [INFO]  Stream flags: 0
 [INFO]  Stream priority: 0
 [INFO]  [SUCCESS] Stream config query sample completed successfully
 [SUCCESS] Stream config query sample executed successfully.
-```
-
-如果当前 Runtime 库未导出完整的 Stream Config API，样例会打印跳过信息并正常退出：
-
-```text
-[WARN]  Symbol aclrtCreateStreamConfigHandle is not exported by the current Runtime library.
-[INFO]  [SKIP] Stream config query sample skipped because the current Runtime library does not export all stream config APIs.
-[SUCCESS] Stream config query sample skipped because the current environment does not support stream config.
 ```

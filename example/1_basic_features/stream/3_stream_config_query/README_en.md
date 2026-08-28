@@ -2,7 +2,7 @@
 
 ## Description
 
-This sample demonstrates how to create a Stream with a Stream configuration handle and query the Stream ID, flags, and priority after creation. The sample runs on a single Device and shows the basic flow of configured Stream creation and attribute query.
+This sample demonstrates how to create a Stream with a specified priority and flags and query the Stream ID, flags, and priority after creation. The sample runs on a single Device and shows the basic flow of configured Stream creation and attribute query.
 
 ## Product Support
 
@@ -45,10 +45,7 @@ The key functionality points and their key interfaces involved in this sample ar
     - Call `aclrtResetDeviceForce` to reset the current Device.
     - Call `aclFinalize` for ACL finalization.
 - Stream Configuration and Creation
-    - Call `aclrtCreateStreamConfigHandle` to create a Stream configuration handle.
-    - Call `aclrtSetStreamConfigOpt` to set Stream configuration attributes.
-    - Call `aclrtCreateStreamV2` to create a Stream from the configuration handle.
-    - Call `aclrtDestroyStreamConfigHandle` to destroy the Stream configuration handle.
+    - Call `aclrtCreateStreamWithConfig` to create a Stream with the specified priority and flags.
 - Stream Query and Synchronization
     - Call `aclrtStreamGetId` to query the Stream ID.
     - Call `aclrtStreamGetFlags` to query the Stream flags.
@@ -59,20 +56,10 @@ The key functionality points and their key interfaces involved in this sample ar
 ## Sample Output
 
 ```text
-[INFO]  Create stream config handle successfully
-[INFO]  Set stream config flags=0 priority=0
-[INFO]  Create stream with config successfully
+[INFO]  Create stream with priority=0 flags=0 successfully
 [INFO]  Stream id: 1
 [INFO]  Stream flags: 0
 [INFO]  Stream priority: 0
 [INFO]  [SUCCESS] Stream config query sample completed successfully
 [SUCCESS] Stream config query sample executed successfully.
-```
-
-If the current Runtime library does not export all Stream Config APIs, the sample prints a skip message and exits normally:
-
-```text
-[WARN]  Symbol aclrtCreateStreamConfigHandle is not exported by the current Runtime library.
-[INFO]  [SKIP] Stream config query sample skipped because the current Runtime library does not export all stream config APIs.
-[SUCCESS] Stream config query sample skipped because the current environment does not support stream config.
 ```
