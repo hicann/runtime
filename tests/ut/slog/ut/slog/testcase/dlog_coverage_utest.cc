@@ -20,6 +20,8 @@
 #include <signal.h>
 #include <errno.h>
 
+#include "log_time.h"
+
 extern "C" {
 #include "dlog_attr.h"
 #include "dlog_core.h"
@@ -85,6 +87,12 @@ int32_t CallWrite(LogMsgArg* arg, const char* fmt, ...)
 static void SigPipeTestHandler(int32_t signo) { (void)signo; }
 
 static int32_t ToolWriteStub(int32_t fd, const void* buf, uint32_t len) { return (int32_t)write(fd, buf, (size_t)len); }
+
+LogStatus MonotonicTimeFailStub(struct timespec* currentTimeval)
+{
+    (void)currentTimeval;
+    return LOG_FAILURE;
+}
 
 /* ---- write/flush/fork/atfork callbacks used by dlog_core tests ---- */
 extern "C" int32_t CovWriteOkCb(const char* content, uint32_t len, int32_t type)
@@ -561,6 +569,8 @@ TEST_F(DlogCoreUtest, WriteToStdoutMask)
 
 TEST_F(DlogCoreUtest, WriteFailureTriggersLogCtrlThenRecovers)
 {
+    (void)dlog_setlevel(SLOG, DLOG_DEBUG, 1);
+
     /* force writes to fail with EAGAIN on the socket path */
     SetToolWriteFail(1);
     SetToolErrno(EAGAIN);
@@ -599,6 +609,24 @@ TEST_F(DlogCoreUtest, WriteFailureTriggersLogCtrlThenRecovers)
     EXPECT_EQ(LOG_SUCCESS, CallWrite(&arg6, "raise again %d", 14));
     SetToolWriteFail(0);
     SetToolErrno(0);
+}
+
+TEST_F(DlogCoreUtest, WriteFailureWithTimeFailureDoesNotLockLogControl)
+{
+    (void)dlog_setlevel(SLOG, DLOG_DEBUG, 1);
+
+    SetToolWriteFail(1);
+    SetToolErrno(EAGAIN);
+    LogMsgArg errorArg = MakeMsgArg(SLOG, DEBUG_LOG_MASK, DLOG_ERROR);
+    EXPECT_EQ(LOG_SUCCESS, CallWrite(&errorArg, "failing write before time failure %d", 15));
+
+    MOCKER(LogGetMonotonicTime).stubs().will(invoke(MonotonicTimeFailStub));
+    EXPECT_EQ(TRUE, DlogCheckLogLevel(DLOG_WARN));
+
+    SetToolWriteFail(0);
+    SetToolErrno(0);
+    LogMsgArg warnArg = MakeMsgArg(SLOG, DEBUG_LOG_MASK, DLOG_WARN);
+    EXPECT_EQ(LOG_SUCCESS, CallWrite(&warnArg, "warn should not be locked %d", 16));
 }
 
 TEST_F(DlogCoreUtest, RegisterCallbacksAndPlogPath)

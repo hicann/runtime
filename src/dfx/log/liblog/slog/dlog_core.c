@@ -9,6 +9,9 @@
  */
 
 #include "dlog_core.h"
+
+#include <stdatomic.h>
+
 #include "securec.h"
 #include "log_platform.h"
 #include "log_common.h"
@@ -80,67 +83,118 @@ STATIC void DlogAtForkChild(void)
     SlogUnlock();
 }
 
-static bool g_logCtrlSwitch = false;
+static atomic_bool g_logCtrlSwitch = false;
 static int32_t g_writePrintNum = 0;
-static struct timespec g_lastTv = {0, 0};
-static int g_logCtrlLevel = DLOG_GLOABLE_DEFAULT_LEVEL;
-static unsigned int g_levelCount[LOG_MAX_LEVEL] = {0, 0, 0, 0}; // debug, info, warn, error
+static atomic_int_fast64_t g_lastLogCtrlMs = 0;
+static atomic_int g_logCtrlLevel = DLOG_GLOABLE_DEFAULT_LEVEL;
+static atomic_uint g_levelCount[LOG_MAX_LEVEL] = {0, 0, 0, 0}; // debug, info, warn, error
+
+STATIC bool DlogGetMonotonicMs(int64_t* currentMs)
+{
+    ONE_ACT_NO_LOG(currentMs == NULL, return false);
+
+    struct timespec currentTv = {0, 0};
+    LogStatus result = LogGetMonotonicTime(&currentTv);
+    if (result != LOG_SUCCESS) {
+        return false;
+    }
+
+    *currentMs = (int64_t)currentTv.tv_sec * S_TO_MS + (int64_t)(currentTv.tv_nsec / NS_TO_MS);
+    return true;
+}
+
+STATIC int64_t DlogAtomicTimeDiff(int64_t lastMs)
+{
+    ONE_ACT_NO_LOG(lastMs <= 0, return LOG_CTRL_TOTAL_INTERVAL + 1);
+
+    int64_t currentMs = 0;
+    ONE_ACT_NO_LOG(!DlogGetMonotonicMs(&currentMs), return LOG_CTRL_TOTAL_INTERVAL + 1);
+    return (currentMs > lastMs) ? (currentMs - lastMs) : 0;
+}
+
+STATIC unsigned int LogCtrlGetLevelCount(int32_t level)
+{
+    ONE_ACT_NO_LOG((level < DLOG_DEBUG) || (level >= LOG_MAX_LEVEL), return 0);
+    return atomic_load_explicit(&g_levelCount[level], memory_order_relaxed);
+}
+
+STATIC void LogCtrlIncLevelCount(int32_t level)
+{
+    ONE_ACT_NO_LOG((level < DLOG_DEBUG) || (level >= LOG_MAX_LEVEL), return);
+    (void)atomic_fetch_add_explicit(&g_levelCount[level], 1U, memory_order_relaxed);
+}
 
 STATIC void LogCtrlDecLogic(void)
 {
-    int64_t timeValue = DlogTimeDiff(&g_lastTv);
+    int64_t lastMs = atomic_load_explicit(&g_lastLogCtrlMs, memory_order_relaxed);
+    int64_t timeValue = DlogAtomicTimeDiff(lastMs);
     if (timeValue >= LOG_WARN_INTERVAL) {
         if (timeValue < LOG_INFO_INTERVAL) {
-            if (g_logCtrlLevel != DLOG_WARN) {
-                g_logCtrlLevel = DLOG_WARN;
+            if (atomic_load_explicit(&g_logCtrlLevel, memory_order_relaxed) != DLOG_WARN) {
+                atomic_store_explicit(&g_logCtrlLevel, DLOG_WARN, memory_order_relaxed);
                 SELF_LOG_WARN(
                     "log control down to level=WARNING, pid=%d, pid_name=%s, log loss condition: "
                     "error_num=%u, warn_num=%u, info_num=%u, debug_num=%u.",
-                    DlogGetCurrPid(), DlogGetPidName(), g_levelCount[DLOG_ERROR], g_levelCount[DLOG_WARN],
-                    g_levelCount[DLOG_INFO], g_levelCount[DLOG_DEBUG]);
+                    DlogGetCurrPid(), DlogGetPidName(), LogCtrlGetLevelCount(DLOG_ERROR),
+                    LogCtrlGetLevelCount(DLOG_WARN), LogCtrlGetLevelCount(DLOG_INFO), LogCtrlGetLevelCount(DLOG_DEBUG));
             }
         } else if (timeValue < LOG_CTRL_TOTAL_INTERVAL) {
-            if (g_logCtrlLevel != DLOG_INFO) {
-                g_logCtrlLevel = DLOG_INFO;
+            if (atomic_load_explicit(&g_logCtrlLevel, memory_order_relaxed) != DLOG_INFO) {
+                atomic_store_explicit(&g_logCtrlLevel, DLOG_INFO, memory_order_relaxed);
                 SELF_LOG_WARN(
                     "log control down to level=INFO, pid=%d, pid_name=%s, log loss condition: "
                     "error_num=%u, warn_num=%u, info_num=%u, debug_num=%u.",
-                    DlogGetCurrPid(), DlogGetPidName(), g_levelCount[DLOG_ERROR], g_levelCount[DLOG_WARN],
-                    g_levelCount[DLOG_INFO], g_levelCount[DLOG_DEBUG]);
+                    DlogGetCurrPid(), DlogGetPidName(), LogCtrlGetLevelCount(DLOG_ERROR),
+                    LogCtrlGetLevelCount(DLOG_WARN), LogCtrlGetLevelCount(DLOG_INFO), LogCtrlGetLevelCount(DLOG_DEBUG));
             }
         } else {
-            g_logCtrlSwitch = false;
-            g_logCtrlLevel = GetGlobalLogTypeLevelVar(DLOG_GLOBAL_TYPE_MASK);
-            g_lastTv.tv_sec = 0;
-            g_lastTv.tv_nsec = 0;
+            atomic_store_explicit(&g_logCtrlSwitch, false, memory_order_release);
+            atomic_store_explicit(
+                &g_logCtrlLevel, GetGlobalLogTypeLevelVar(DLOG_GLOBAL_TYPE_MASK), memory_order_relaxed);
+            atomic_store_explicit(&g_lastLogCtrlMs, 0, memory_order_relaxed);
             SELF_LOG_WARN(
                 "clear log control switch, pid=%d, pid_name=%s, log loss condition: "
                 "error_num=%u, warn_num=%u, info_num=%u, debug_num=%u.",
-                DlogGetCurrPid(), DlogGetPidName(), g_levelCount[DLOG_ERROR], g_levelCount[DLOG_WARN],
-                g_levelCount[DLOG_INFO], g_levelCount[DLOG_DEBUG]);
+                DlogGetCurrPid(), DlogGetPidName(), LogCtrlGetLevelCount(DLOG_ERROR), LogCtrlGetLevelCount(DLOG_WARN),
+                LogCtrlGetLevelCount(DLOG_INFO), LogCtrlGetLevelCount(DLOG_DEBUG));
         }
     }
 }
 
 STATIC void LogCtrlIncLogic(void)
 {
-    if (g_logCtrlSwitch == false) {
-        g_logCtrlSwitch = true;
-        g_logCtrlLevel = DLOG_ERROR;
+    int64_t currentMs = 0;
+    ONE_ACT_NO_LOG(!DlogGetMonotonicMs(&currentMs), return);
+
+    /*
+     * Level-control state transitions are reached from the socket write path
+     * under SlogLock(); DlogCheckLogLevel() is the lock-free reader. Publish
+     * switch after level/time so readers never observe a new switch with stale
+     * control data.
+     */
+    if (!atomic_load_explicit(&g_logCtrlSwitch, memory_order_relaxed)) {
+        atomic_store_explicit(&g_logCtrlLevel, DLOG_ERROR, memory_order_relaxed);
+        atomic_store_explicit(&g_lastLogCtrlMs, currentMs, memory_order_relaxed);
+        atomic_store_explicit(&g_logCtrlSwitch, true, memory_order_release);
         SELF_LOG_WARN(
             "set log control switch to level=ERROR, pid=%d, pid_name=%s, log loss condition: "
             "error_num=%u, warn_num=%u, info_num=%u, debug_num=%u.",
-            DlogGetCurrPid(), DlogGetPidName(), g_levelCount[DLOG_ERROR], g_levelCount[DLOG_WARN],
-            g_levelCount[DLOG_INFO], g_levelCount[DLOG_DEBUG]);
-    } else if (g_logCtrlLevel < DLOG_ERROR) {
-        g_logCtrlLevel++;
-        SELF_LOG_WARN(
-            "log control up to level=%s, pid=%d, pid_name=%s, log loss condition: "
-            "error_num=%u, warn_num=%u, info_num=%u, debug_num=%u.",
-            DlogGetBasicLevelNameById(g_logCtrlLevel), DlogGetCurrPid(), DlogGetPidName(), g_levelCount[DLOG_ERROR],
-            g_levelCount[DLOG_WARN], g_levelCount[DLOG_INFO], g_levelCount[DLOG_DEBUG]);
+            DlogGetCurrPid(), DlogGetPidName(), LogCtrlGetLevelCount(DLOG_ERROR), LogCtrlGetLevelCount(DLOG_WARN),
+            LogCtrlGetLevelCount(DLOG_INFO), LogCtrlGetLevelCount(DLOG_DEBUG));
+    } else {
+        int32_t ctrlLevel = atomic_load_explicit(&g_logCtrlLevel, memory_order_relaxed);
+        if (ctrlLevel < DLOG_ERROR) {
+            int32_t newLevel = ctrlLevel + 1;
+            atomic_store_explicit(&g_logCtrlLevel, newLevel, memory_order_relaxed);
+            SELF_LOG_WARN(
+                "log control up to level=%s, pid=%d, pid_name=%s, log loss condition: "
+                "error_num=%u, warn_num=%u, info_num=%u, debug_num=%u.",
+                DlogGetBasicLevelNameById(newLevel), DlogGetCurrPid(), DlogGetPidName(),
+                LogCtrlGetLevelCount(DLOG_ERROR), LogCtrlGetLevelCount(DLOG_WARN), LogCtrlGetLevelCount(DLOG_INFO),
+                LogCtrlGetLevelCount(DLOG_DEBUG));
+        }
     }
-    (void)LogGetMonotonicTime(&g_lastTv);
+    atomic_store_explicit(&g_lastLogCtrlMs, currentMs, memory_order_relaxed);
 }
 
 STATIC int32_t SafeWrites(int32_t fd, const void* buf, uint32_t count, uint32_t moduleId, int32_t level)
@@ -163,16 +217,17 @@ STATIC int32_t SafeWrites(int32_t fd, const void* buf, uint32_t count, uint32_t 
         }
     } while ((n < 0) && (retryTimes != WRITE_MAX_RETRY_TIMES));
 
-    if ((n > 0) && g_logCtrlSwitch) {
+    if ((n > 0) && atomic_load_explicit(&g_logCtrlSwitch, memory_order_acquire)) {
         LogCtrlDecLogic();
     } else if (n < 0) {
-        g_levelCount[level]++;
+        LogCtrlIncLevelCount(level);
         SELF_LOG_ERROR_N(
             &g_writePrintNum, WRITE_E_PRINT_NUM,
             "write failed, print every %d times, result=%d, strerr=%s, pid=%d, pid_name=%s, "
             "module=%u, log loss condition: error_num=%u, warn_num=%u, info_num=%u, debug_num=%u.",
-            WRITE_E_PRINT_NUM, n, strerror(err), DlogGetCurrPid(), DlogGetPidName(), moduleId, g_levelCount[DLOG_ERROR],
-            g_levelCount[DLOG_WARN], g_levelCount[DLOG_INFO], g_levelCount[DLOG_DEBUG]);
+            WRITE_E_PRINT_NUM, n, strerror(err), DlogGetCurrPid(), DlogGetPidName(), moduleId,
+            LogCtrlGetLevelCount(DLOG_ERROR), LogCtrlGetLevelCount(DLOG_WARN), LogCtrlGetLevelCount(DLOG_INFO),
+            LogCtrlGetLevelCount(DLOG_DEBUG));
     }
     return n;
 }
@@ -306,8 +361,12 @@ int32_t DlogCheckLogLevel(int32_t logLevel)
 {
     // check module loglevel and log control, check time diff to make switch back to false
     if (logLevel < LOG_MAX_LEVEL) {
-        if (g_logCtrlSwitch && (DlogTimeDiff(&g_lastTv) <= LOG_CTRL_TOTAL_INTERVAL)) {
-            TWO_ACT_NO_LOG(logLevel < g_logCtrlLevel, g_levelCount[logLevel]++, return FALSE);
+        if (atomic_load_explicit(&g_logCtrlSwitch, memory_order_acquire)) {
+            int64_t lastMs = atomic_load_explicit(&g_lastLogCtrlMs, memory_order_relaxed);
+            if (DlogAtomicTimeDiff(lastMs) <= LOG_CTRL_TOTAL_INTERVAL) {
+                int32_t ctrlLevel = atomic_load_explicit(&g_logCtrlLevel, memory_order_relaxed);
+                TWO_ACT_NO_LOG(logLevel < ctrlLevel, LogCtrlIncLevelCount(logLevel), return FALSE);
+            }
         }
         return TRUE;
     }
@@ -392,6 +451,7 @@ RESTORE_SIGPIPE:
  */
 int32_t DlogWriteInner(LogMsgArg* msgArg, const char* fmt, va_list v)
 {
+    // Fast path: skip formatting and the socket/file-handle lock when the log is filtered.
     ONE_ACT_NO_LOG(CheckLogLevelAfterInited(msgArg) == false, return LOG_FAILURE);
 
     // construct log content
