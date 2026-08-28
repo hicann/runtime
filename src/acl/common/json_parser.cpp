@@ -12,7 +12,6 @@
 
 #include <fstream>
 #include <sstream>
-#include <regex>
 #include <sys/stat.h>
 #include "mmpa/mmpa_api.h"
 
@@ -20,6 +19,32 @@ namespace {
 const std::string ACL_JSON_DEFAULT_DEVICE = "defaultDevice";
 const std::string ACL_JSON_DEFAULT_DEVICE_ID = "default_device";
 constexpr int32_t DECIMAL = 10;
+
+bool IsDecimalDigits(const std::string& value, const size_t start)
+{
+    for (size_t i = start; i < value.size(); ++i) {
+        if ((value[i] < '0') || (value[i] > '9')) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool IsZeroOrPositiveIntegerNoLeadingZero(const std::string& value)
+{
+    if (value.empty()) {
+        return false;
+    }
+    if (value == "0") {
+        return true;
+    }
+    return ((value[0] >= '1') && (value[0] <= '9') && IsDecimalDigits(value, 1U));
+}
+
+bool IsPositiveIntegerNoLeadingZero(const std::string& value)
+{
+    return (!value.empty() && (value[0] >= '1') && (value[0] <= '9') && IsDecimalDigits(value, 1U));
+}
 
 void CountDepth(const char_t ch, size_t& objDepth, size_t& maxObjDepth, size_t& arrayDepth, size_t& maxArrayDepth)
 {
@@ -327,8 +352,7 @@ aclError JsonParser::GetDefaultDeviceIdFromFile(const char_t* const fileName, in
         return ACL_ERROR_INTERNAL_ERROR;
     }
 
-    std::regex reg("0|[1-9]\\d*");
-    if (!std::regex_match(defaultDeviceIdStr, reg)) {
+    if (!IsZeroOrPositiveIntegerNoLeadingZero(defaultDeviceIdStr)) {
         acl::AclErrorLogManager::ReportInputError(
             acl::INVALID_PARAM_REASON_MSG, std::vector<const char*>({"func", "value", "param", "reason"}),
             std::vector<const char*>(
@@ -366,8 +390,7 @@ aclError JsonParser::GetEventModeFromFile(const char_t* const fileName, uint8_t&
     eventModeStr = JsonParser::GetCfgStrByKey(jsAclGraphConfig, ACL_EVENT_MODE_CONFIG_NAME);
 
     // 校验 event_mode 是否为合法整数，只允许 0 或 1
-    std::regex reg("0|1");
-    if (!std::regex_match(eventModeStr, reg)) {
+    if ((eventModeStr != "0") && (eventModeStr != "1")) {
         ACL_LOG_ERROR("event_mode value [%s] in json is not a valid integer.", eventModeStr.c_str());
         acl::AclErrorLogManager::ReportInputError(
             acl::INVALID_PARAM_REASON_MSG, std::vector<const char*>({"func", "value", "param", "reason"}),
@@ -446,8 +469,7 @@ aclError JsonParser::GetPrintFifoSizeByType(
         return ACL_SUCCESS;
     }
 
-    std::regex reg("[1-9]\\d*");
-    if (!std::regex_match(fifoSizeStr, reg)) {
+    if (!IsPositiveIntegerNoLeadingZero(fifoSizeStr)) {
         acl::AclErrorLogManager::ReportInputError(
             acl::INVALID_PARAM_REASON_MSG, std::vector<const char*>({"func", "value", "param", "reason"}),
             std::vector<const char*>(

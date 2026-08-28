@@ -8,18 +8,23 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include <map>
+#include <string>
 #include "api_impl.hpp"
 #include "runtime_handle_guard.h"
 #include "maintenance_task.h"
+#include "memory_task.h"
 #include "base.hpp"
 #include "stream.hpp"
 #include "stream_sqcq_manage.hpp"
 #include "event.hpp"
+#include "event_task.h"
 #include "program.hpp"
 #include "notify.hpp"
 #include "device.hpp"
 #include "task.hpp"
+#include "task_enum_desc.hpp"
 #include "host_task.hpp"
+#include "kernel_utils.hpp"
 #include "osal.hpp"
 #include "profiler.hpp"
 #include "npu_driver.hpp"
@@ -1403,6 +1408,143 @@ rtError_t ApiImpl::HostGetDevicePointerAddrRange(rtAddrRange* addrRange, uint32_
         error = NpuDriver::HostGetDevicePointerAddrRange(deviceId, addrRange, count);
     }
     return error;
+}
+
+rtError_t ApiImpl::TaskGetParams(rtTask_t task, rtTaskParams* const params)
+{
+    const TaskInfo* const taskInfo = RtPtrToPtr<const TaskInfo*>(task);
+    const Stream* stm = taskInfo->stream;
+    NULL_PTR_RETURN(stm, RT_ERROR_STREAM_NULL);
+    Model* const mdl = stm->Model_();
+    if ((mdl != nullptr) && (mdl->GetModelType() == RT_MODEL_CAPTURE_MODEL)) {
+        CaptureModel* captureModel = dynamic_cast<CaptureModel*>(mdl);
+        COND_RETURN_WARN(
+            ((captureModel != nullptr) && captureModel->IsSubCaptureModel()), RT_ERROR_FEATURE_NOT_SUPPORT,
+            "task belongs to sub ACL Graph, does not support getting task parameters");
+    }
+    rtError_t error = CheckCaptureModelSupportSoftwareSq(stm->Device_());
+    COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error);
+
+    if (taskInfo->taskOwner == static_cast<uint8_t>(TaskOwner::RT_TASK_INNER)) {
+        RT_LOG_OUTER_MSG_IMPL(
+            ErrorCode::EE1017, "Obtaining task parameter information", "task->type",
+            "The current task type RT_TASK_DEFAULT does not support obtaining of parameters."
+            " Only task types other than RT_TASK_DEFAULT supports obtaining of parameters");
+        RT_LOG(
+            RT_LOG_ERROR, "streamId=%d, taskId=%u, alloc taskType=%d, taskName=%s, taskOwner=%d.",
+            taskInfo->stream->Id_(), taskInfo->id, taskInfo->type, taskInfo->typeName,
+            static_cast<int32_t>(taskInfo->taskOwner));
+        return RT_ERROR_INVALID_VALUE;
+    }
+
+    COND_RETURN_WARN(
+        IsTaskBelongToSubCaptureMdl(taskInfo), RT_ERROR_FEATURE_NOT_SUPPORT,
+        "task belongs to sub ACL Graph, does not support querying task type");
+
+    (void)memset_s(params, sizeof(rtTaskParams), 0, sizeof(rtTaskParams));
+    error = ConvertTaskType(taskInfo, &params->type);
+    ERROR_RETURN(error, "get task type failed, retCode=%d.", error);
+    switch (taskInfo->type) {
+        case TS_TASK_TYPE_KERNEL_AICORE:
+        case TS_TASK_TYPE_KERNEL_AIVEC:
+            error = GetKernelTaskParams(taskInfo, params);
+            break;
+        case TS_TASK_TYPE_EVENT_RECORD:
+            error = GetEventRecordTaskParams(taskInfo, params);
+            break;
+        case TS_TASK_TYPE_STREAM_WAIT_EVENT:
+            error = GetEventWaitTaskParams(taskInfo, params);
+            break;
+        case TS_TASK_TYPE_EVENT_RESET:
+            error = GetEventResetTaskParams(taskInfo, params);
+            break;
+        case TS_TASK_TYPE_DAVID_EVENT_RECORD:
+            error = GetEventRecordTaskParamsStarsV2(taskInfo, params);
+            break;
+        case TS_TASK_TYPE_DAVID_EVENT_WAIT:
+            error = GetEventWaitTaskParamsStarsV2(taskInfo, params);
+            break;
+        case TS_TASK_TYPE_DAVID_EVENT_RESET:
+            error = GetEventResetTaskParamsStarsV2(taskInfo, params);
+            break;
+        case TS_TASK_TYPE_CAPTURE_RECORD:
+        case TS_TASK_TYPE_CAPTURE_RECORD_EXTERNAL:
+            error = GetCaptureRecordTaskParams(taskInfo, params);
+            break;
+        case TS_TASK_TYPE_CAPTURE_WAIT:
+        case TS_TASK_TYPE_CAPTURE_WAIT_EXTERNAL:
+            error = GetCaptureWaitTaskParams(taskInfo, params);
+            break;
+        case TS_TASK_TYPE_MEM_WRITE_VALUE: {
+            const std::string eventResetName = "EVENT_RESET";
+            if (eventResetName == taskInfo->typeName) {
+                error = GetCaptureResetTaskParams(taskInfo, params);
+            } else {
+                error = GetWriteValueTaskParams(taskInfo, params);
+            }
+            break;
+        }
+        case TS_TASK_TYPE_MEM_WAIT_VALUE:
+            error = GetWaitValueTaskParams(taskInfo, params);
+            break;
+        default:
+            RT_LOG_OUTER_MSG_IMPL(
+                ErrorCode::EE1017, "Obtaining task parameter information", "task->type",
+                "The current task type RT_TASK_DEFAULT does not support obtaining of parameters."
+                " Only task types other than RT_TASK_DEFAULT supports obtaining of parameters");
+            RT_LOG(
+                RT_LOG_ERROR,
+                "now this task doesn't support get params, stream_id=%d, task_id=%hu, typeName=%s, task type=%d",
+                stm->Id_(), taskInfo->id, taskInfo->typeName, taskInfo->type);
+            error = RT_ERROR_INVALID_VALUE;
+            break;
+    }
+    return error;
+}
+
+rtError_t ApiImpl::TaskSetParams(rtTask_t task, rtTaskParams* const params)
+{
+    TaskInfo* const taskInfo = static_cast<TaskInfo*>(task);
+    rtError_t error = CheckCaptureModelForUpdate(taskInfo->stream);
+    COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error);
+
+    CaptureModel* captureModel = dynamic_cast<CaptureModel*>(taskInfo->stream->Model_());
+    NULL_PTR_RETURN(captureModel, RT_ERROR_MODEL_NULL);
+
+    captureModel->SetCaptureModelStatus(RtCaptureModelStatus::UPDATING);
+
+    switch (params->type) {
+        case RT_TASK_KERNEL:
+            error = UpdateKernelParams(taskInfo, params);
+            break;
+        case RT_TASK_EVENT_RECORD:
+        case RT_TASK_EVENT_WAIT:
+        case RT_TASK_EVENT_RESET:
+            RT_LOG_OUTER_MSG_WITH_FUNC_DESC(
+                ErrorCode::EE1003, "Setting task parameters", TaskTypeToString(params->type), "params->type",
+                "TASK_KERNEL(1) or TASK_VALUE_WRITE(5) or TASK_VALUE_WAIT(6)");
+            error = RT_ERROR_INVALID_VALUE;
+            break;
+        case RT_TASK_VALUE_WRITE:
+            error = UpdateWriteValueTaskParams(taskInfo, params);
+            break;
+        case RT_TASK_VALUE_WAIT:
+            error = UpdateWaitValueTaskParams(taskInfo, params);
+            break;
+        default:
+            RT_LOG_OUTER_MSG_WITH_FUNC_DESC(
+                ErrorCode::EE1003, "Setting task parameters", TaskTypeToString(params->type), "params->type",
+                "TASK_KERNEL(1) or TASK_VALUE_WRITE(5) or TASK_VALUE_WAIT(6)");
+            error = RT_ERROR_INVALID_VALUE;
+            break;
+    }
+    ERROR_PROC_RETURN_MSG_INNER(error, captureModel->SetCaptureModelStatus(RtCaptureModelStatus::FAULT);
+                                , "task set params failed");
+    taskInfo->updateFlag = static_cast<uint8_t>(TaskUpdateFlag::RT_TASK_UPDATE);
+    RT_LOG(
+        RT_LOG_INFO, "stream_id=%d, task_id=%hu, typeName=%s, task type=%d, target type=%s", taskInfo->stream->Id_(),
+        taskInfo->id, taskInfo->typeName, taskInfo->type, TaskTypeToString(params->type).c_str());
+    return RT_ERROR_NONE;
 }
 
 } // namespace runtime

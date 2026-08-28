@@ -789,5 +789,20 @@ rtError_t ApiImpl::HostGetDevicePointerAddrRange(rtAddrRange* addrRange, uint32_
     UNUSED(count);
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
+
+rtError_t ApiImpl::TaskGetParams(rtTask_t task, rtTaskParams* const params)
+{
+    UNUSED(task);
+    UNUSED(params);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t ApiImpl::TaskSetParams(rtTask_t task, rtTaskParams* const params)
+{
+    UNUSED(task);
+    UNUSED(params);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
 } // namespace runtime
 } // namespace cce
