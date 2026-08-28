@@ -10,6 +10,7 @@
 #include "api_impl.hpp"
 #include "api_impl_event.hpp"
 #include "api_impl_soma.hpp"
+#include "notify.hpp"
 
 namespace cce {
 namespace runtime {
@@ -66,6 +67,66 @@ rtError_t ApiImpl::GetCntNotifyAddress(
     UNUSED(inCntNotify);
     UNUSED(cntNotifyAddress);
     UNUSED(regType);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t ApiImpl::GetNotifyAddress(Notify* const notify, uint64_t* const notifyAddress)
+{
+    UNUSED(notify);
+    UNUSED(notifyAddress);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t ApiImpl::NotifyReset(Notify* const inNotify)
+{
+    UNUSED(inNotify);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t ApiImpl::IpcSetNotifyName(Notify* const inNotify, char_t* const name, const uint32_t len, const uint64_t flag)
+{
+    UNUSED(inNotify);
+    UNUSED(name);
+    UNUSED(len);
+    UNUSED(flag);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t ApiImpl::IpcOpenNotify(Notify** const retNotify, const char_t* const name, uint32_t flag)
+{
+    UNUSED(retNotify);
+    UNUSED(name);
+    UNUSED(flag);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t ApiImpl::SetIpcNotifyPid(const char_t* const name, int32_t pid[], const int32_t num)
+{
+    UNUSED(name);
+    UNUSED(pid);
+    UNUSED(num);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t ApiImpl::ShrIdSetPodPid(const char* name, uint32_t sdid, int32_t pid)
+{
+    UNUSED(name);
+    UNUSED(sdid);
+    UNUSED(pid);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t ApiImpl::NotifyGetAddrOffset(Notify* const inNotify, uint64_t* const devAddrOffset)
+{
+    UNUSED(inNotify);
+    UNUSED(devAddrOffset);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t ApiImpl::GetNotifyPhyInfo(Notify* const inNotify, rtNotifyPhyInfo* notifyInfo)
+{
+    UNUSED(inNotify);
+    UNUSED(notifyInfo);
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 

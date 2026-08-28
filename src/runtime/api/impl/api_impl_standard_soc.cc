@@ -379,6 +379,151 @@ rtError_t ApiImpl::EventWorkModeGet(uint8_t* mode)
     return RT_ERROR_NONE;
 }
 
+rtError_t ApiImpl::GetNotifyAddress(Notify* const notify, uint64_t* const notifyAddress)
+{
+    uint64_t addr;
+    Context* const curCtx = CurrentContext();
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+
+    Stream* const curStm = curCtx->DefaultStream_();
+    NULL_STREAM_PTR_RETURN_MSG(curStm);
+    const rtError_t error = curCtx->GetNotifyAddress(notify, addr, curStm);
+    if (error != RT_ERROR_NONE) {
+        RT_LOG(RT_LOG_ERROR, "GetNotifyAddress failed, retCode=%#x", error);
+        return error;
+    }
+    RT_LOG(RT_LOG_INFO, "GetNotifyAddress ok, addr=%#" PRIx64, addr);
+    *notifyAddress = addr;
+    return RT_ERROR_NONE;
+}
+
+rtError_t ApiImpl::SetIpcNotifyPid(const char_t* const name, int32_t pid[], const int32_t num)
+{
+    RT_LOG(RT_LOG_DEBUG, "Set ipc notify pid. name=%s.", name);
+    Context* const curCtx = CurrentContext();
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+
+    if (!curCtx->Device_()->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_IPC_MEMORY)) {
+        RT_LOG_OUTER_MSG_WITH_FUNC_DESC(
+            ErrorCode::EE1005, "setting the trustlist of processes that can share a Notify object");
+        return RT_ERROR_FEATURE_NOT_SUPPORT;
+    }
+
+    return curCtx->Device_()->Driver_()->SetIpcNotifyPid(name, pid, num);
+}
+
+rtError_t ApiImpl::NotifyReset(Notify* const inNotify)
+{
+    RT_LOG(RT_LOG_INFO, "notify reset.");
+    Context* const curCtx = CurrentContext();
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+    Stream* curStm = curCtx->DefaultStream_();
+    NULL_STREAM_PTR_RETURN_MSG(curStm);
+
+    COND_RETURN_ERROR(
+        curStm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT,
+        "Notify reset failed, stream is not in current ctx, stream_id=%d.", curStm->Id_());
+
+    Device* const dev = curCtx->Device_();
+    if (!dev->IsStarsPlatform()) {
+        RT_LOG(RT_LOG_ERROR, "feature support only in stars platform");
+        RT_LOG_OUTER_MSG_WITH_FUNC_DESC(ErrorCode::EE1005, "notify resetting");
+        return RT_ERROR_FEATURE_NOT_SUPPORT;
+    }
+
+    if (!dev->CheckFeatureSupport(TS_FEATURE_MC2_ENHANCE)) {
+        RT_LOG(RT_LOG_ERROR, "This feature is not supported because the tsch version is too low.");
+        RT_LOG_OUTER_MSG_WITH_FUNC_DESC(ErrorCode::EE1015, "notify resetting", "");
+        return RT_ERROR_FEATURE_NOT_SUPPORT;
+    }
+
+    const uint32_t notifyId = inNotify->GetNotifyId();
+    const rtError_t error = inNotify->Reset(curStm);
+    ERROR_RETURN_MSG_INNER(
+        error, "Notify reset failed, notifyId=%u, retCode=%#x", notifyId, static_cast<uint32_t>(error));
+
+    return RT_ERROR_NONE;
+}
+
+rtError_t ApiImpl::GetNotifyPhyInfo(Notify* const inNotify, rtNotifyPhyInfo* notifyInfo)
+{
+    RT_LOG(RT_LOG_INFO, "get phy info.");
+    if (inNotify == nullptr) {
+        RT_LOG(RT_LOG_INFO, "inNotify is nullptr.");
+        RT_LOG(RT_LOG_ERROR, "Get pyh info failed.");
+        return RT_ERROR_NOTIFY_NULL;
+    }
+    notifyInfo->phyId = inNotify->GetPhyDevId();
+    notifyInfo->tsId = inNotify->GetTsId();
+    notifyInfo->shrId = inNotify->GetNotifyId();
+    notifyInfo->idType = SHR_ID_NOTIFY_TYPE;
+    notifyInfo->flag = (inNotify->IsPod() ? TSDRV_FLAG_SHR_ID_SHADOW : 0U);
+    RT_LOG(RT_LOG_INFO, "notify_id=%u, phyId=%u flag=0x%x.", notifyInfo->shrId, notifyInfo->phyId, notifyInfo->flag);
+    return RT_ERROR_NONE;
+}
+
+rtError_t ApiImpl::IpcSetNotifyName(Notify* const inNotify, char_t* const name, const uint32_t len, const uint64_t flag)
+{
+    RT_LOG(RT_LOG_INFO, "IpcSetNotifyName, name=%s, len=%u, flag=%#" PRIx64 ".", name, len, flag);
+    const uint32_t notify_id = inNotify->GetNotifyId();
+    rtError_t error = inNotify->CreateIpcNotify(name, len);
+    ERROR_RETURN_MSG_INNER(
+        error, "CreateIpcNotify failed, notify_id=%u, name=%s, len=%u retCode=%#x", notify_id, name, len,
+        static_cast<uint32_t>(error));
+
+    if ((flag & RT_NOTIFY_EXPORT_FLAG_DISABLE_PID_VALIDATION) != 0UL) {
+        error = NpuDriver::SetIpcNotifyDisablePidVerify(name);
+        COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
+    }
+    return RT_ERROR_NONE;
+}
+
+rtError_t ApiImpl::IpcOpenNotify(Notify** const retNotify, const char_t* const name, uint32_t flag)
+{
+    RT_LOG(RT_LOG_INFO, "open ipc notify. name=%s, flag=%#x.", name, flag);
+    Context* const curCtx = CurrentContext();
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+    Device* const dev = curCtx->Device_();
+    COND_RETURN_ERROR(dev == nullptr, RT_ERROR_INVALID_VALUE, "device is NULL.");
+
+    if ((flag & RT_NOTIFY_FLAG_DOWNLOAD_TO_DEV) != 0) {
+        const bool isMc2SupportHccl = CheckSupportMC2Feature(dev);
+        if (!isMc2SupportHccl) {
+            RT_LOG(
+                RT_LOG_WARNING, "Current ts version[%u] does not support opening IPC coprocessor notifies.",
+                dev->GetTschVersion());
+            return RT_ERROR_FEATURE_NOT_SUPPORT;
+        }
+    }
+
+    *retNotify = new (std::nothrow) Notify(dev->Id_(), dev->DevGetTsId());
+    COND_RETURN_AND_MSG_OUTER((*retNotify == nullptr), RT_ERROR_NOTIFY_NEW, ErrorCode::EE1013, sizeof(Notify), "new");
+
+    const rtError_t error = (*retNotify)->OpenIpcNotify(name, flag);
+    ERROR_PROC_RETURN_MSG_INNER(error, DELETE_O(*retNotify);
+                                , "Ipc open notify failed, retCode=%#x", static_cast<uint32_t>(error));
+    return error;
+}
+
+rtError_t ApiImpl::NotifyGetAddrOffset(Notify* const inNotify, uint64_t* const devAddrOffset)
+{
+    Context* const curCtx = CurrentContext();
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+
+    const uint32_t notify_id = inNotify->GetNotifyId();
+    const rtError_t error = inNotify->GetAddrOffset(devAddrOffset);
+    ERROR_RETURN_MSG_INNER(
+        error, "Notify get addr offset failed, notify_id=%u, retCode=%#x", notify_id, static_cast<uint32_t>(error));
+
+    return RT_ERROR_NONE;
+}
+
+rtError_t ApiImpl::ShrIdSetPodPid(const char* name, uint32_t sdid, int32_t pid)
+{
+    RT_LOG(RT_LOG_INFO, "Start to ShrIdSetPodPid name=%s, sdid=%d, pid=%d", name, sdid, pid);
+    return NpuDriver::ShrIdSetPodPid(name, sdid, pid);
+}
+
 rtError_t ApiImpl::MemsetD32(void* const dst, const uint64_t destMax, const uint32_t value, const uint64_t count)
 {
     RT_LOG(RT_LOG_DEBUG, "MemsetD32 sync, count=%zu, value=0x%x", count, value);

@@ -350,6 +350,7 @@ add_executable(runtime_utest_arch5162
     ../../rt_utest_mbuf_stub.cc
     rt_utest_api_arch5162.cc
     rt_utest_device_arch5162.cc
+    rt_utest_notify_arch5162.cc
 )
 add_dependencies(runtime_utest_arch5162 runtime_api_stub_generator_ut)
 

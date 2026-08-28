@@ -331,6 +331,18 @@ TEST_F(TinyStubTest, api_impl_stub)
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
     ret = impl.GetCntNotifyId(nullptr, nullptr);
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
+    ret = impl.GetNotifyPhyInfo(nullptr, nullptr);
+    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
+    ret = impl.NotifyGetAddrOffset(nullptr, nullptr);
+    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
+    ret = impl.GetNotifyAddress(nullptr, nullptr);
+    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
+    ret = impl.NotifyReset(nullptr);
+    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
+    ret = impl.IpcSetNotifyName(nullptr, nullptr, 0, 0);
+    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
+    ret = impl.IpcOpenNotify(nullptr, nullptr, 0);
+    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
     ret = impl.WriteValue(nullptr, nullptr);
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
     ret = impl.CCULaunch(nullptr, nullptr);
