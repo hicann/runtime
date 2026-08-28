@@ -76,7 +76,6 @@ set(adumpBaseSrcList
     ${SRC_CODE_ROOT_PATH}/adump/impl/dump_config_converter.cpp
     ${SRC_CODE_ROOT_PATH}/adump/operator/operator_dumper.cpp
     ${SRC_CODE_ROOT_PATH}/adump/operator/kernel_dfx_dumper.cpp
-    ${SRC_CODE_ROOT_PATH}/adump/operator/dfx_info_parser.cpp
     ${SRC_CODE_ROOT_PATH}/adump/operator/operator_preliminary/operator_preliminary.cpp
     ${SRC_CODE_ROOT_PATH}/adump/operator/operator_preliminary/operator_preliminary_platform.cpp
     ${SRC_CODE_ROOT_PATH}/adump/exception/dump_file.cpp
@@ -129,7 +128,6 @@ set(adumpBaseUtestSrcList
     ${ADUMP_BASE_UT_ROOT_PATH}/testcase/operator/operator_preliminary_platform_utest.cpp
     ${ADUMP_BASE_UT_ROOT_PATH}/testcase/operator/operator_dumper_utest.cpp
     ${ADUMP_BASE_UT_ROOT_PATH}/testcase/operator/kernel_dfx_dumper_utest.cpp
-    ${ADUMP_BASE_UT_ROOT_PATH}/testcase/operator/dfx_info_parser_utest.cpp
     ${ADUMP_BASE_UT_ROOT_PATH}/testcase/exception/dump_args_utest.cpp
     ${ADUMP_BASE_UT_ROOT_PATH}/testcase/exception/dump_args_callback_utest.cpp
     ${ADUMP_BASE_UT_ROOT_PATH}/testcase/exception/dump_ELF_utest.cpp

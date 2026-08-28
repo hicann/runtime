@@ -17,7 +17,6 @@
 #define private public
 
 #include "kernel_dfx_dumper.h"
-#include "dfx_info_parser.h"
 #include "rt_inner_dfx.h"
 #include "lib_path.h"
 #include "file_utils.h"
@@ -44,18 +43,6 @@ INT32 mmSleep_stub(UINT32 millseconds)
 {
     usleep(millseconds * 1000);
     return 0;
-}
-
-TEST_F(KernelDfxDumperUtest, Test_DfxDumper_UnInitUnregistersDfxParser)
-{
-    EXPECT_EQ(DfxInfoParser::Instance().Init(), ADUMP_SUCCESS);
-    EXPECT_EQ(DfxInfoParser::Instance().registered_, true);
-    EXPECT_EQ(DfxInfoParser::Instance().profRegistered_, true);
-
-    KernelDfxDumper::Instance().UnInit();
-
-    EXPECT_EQ(DfxInfoParser::Instance().registered_, false);
-    EXPECT_EQ(DfxInfoParser::Instance().profRegistered_, false);
 }
 
 TEST_F(KernelDfxDumperUtest, Test_DfxDumper_EnableWithEnv)
@@ -148,21 +135,6 @@ TEST_F(KernelDfxDumperUtest, Test_DfxDumper_EnableWithConfig)
     EXPECT_EQ(ret, ADUMP_SUCCESS);
 
     (void)system("rm -rf ./Test_DfxDumper_EnableWithConfig");
-}
-
-TEST_F(KernelDfxDumperUtest, Test_DfxDumper_EnableFailsWhenParserRegistrationFails)
-{
-    DfxInfoParser::Instance().UnInit();
-    MOCKER(rtRegisterParseDfxInfoFunc).stubs().will(returnValue(static_cast<rtError_t>(1)));
-    DumpDfxConfig dumpDfxConfig;
-    dumpDfxConfig.dfxTypes.push_back("all");
-    dumpDfxConfig.dumpPath = "./Test_DfxDumper_EnableFailsWhenParserRegistrationFails";
-
-    const int32_t ret = KernelDfxDumper::Instance().EnableDfxDumper(dumpDfxConfig);
-
-    EXPECT_EQ(ret, ADUMP_FAILED);
-    EXPECT_EQ(DfxInfoParser::Instance().registered_, false);
-    EXPECT_EQ(KernelDfxDumper::Instance().IsEnabled(), false);
 }
 
 TEST_F(KernelDfxDumperUtest, Test_DfxDumper_Fork_EnableWithEnv)
@@ -266,6 +238,7 @@ TEST_F(KernelDfxDumperUtest, Test_DfxDumper_DumpDfxCallback_Failed)
     EXPECT_EQ(ret, ADUMP_SUCCESS);
 
     // 未注册的类型
+    DumpKernelDfxInfoCallback(rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_PRINTF, 0, 0, nullptr, 0);
     const uint8_t buffer[] = "printf|assert";
     size_t length = sizeof(buffer);
     // 无效输入数据
@@ -388,7 +361,7 @@ TEST_F(KernelDfxDumperUtest, Test_DfxDumper_DumpDfxCallback_RecordDisk_Success)
     // case1：落盘成功
     Path filePath = Path(KernelDfxDumper::Instance().dumpPath_).Concat("asc_kernel_data_aic_0.bin");
     ret = KernelDfxDumper::Instance().DumpKernelDfxInfo(
-        rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_BLOCK_INFO, 0, 0, buffer, length);
+        rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_DEFAULT, 0, 0, buffer, length);
     EXPECT_EQ(ret, ADUMP_SUCCESS);
 
     // 等待落盘任务处理完成(UnInit会清空队列)
