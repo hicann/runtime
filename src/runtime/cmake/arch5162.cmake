@@ -104,6 +104,7 @@ set(libruntime_api_impl_src_files
     ${RUNTIME_API_DIR}/impl/api_impl_kernel_args_stub.cc
     ${RUNTIME_API_DIR}/impl/api_impl_creator.cc
     ${RUNTIME_API_DIR}/impl/api_impl_mbuf_stub.cc
+    ${RUNTIME_API_DIR}/impl/api_impl_esched.cc
     ${RUNTIME_API_DIR}/impl/api_impl_event_common.cc
     ${RUNTIME_API_DIR}/impl/api_impl_stub.cc
     ${RUNTIME_API_DIR}/impl/api_impl_arch5162.cc
@@ -450,6 +451,7 @@ macro(add_runtime_library target_name)
         ${RUNTIME_DIR}/src/runtime/driver/npu_driver.cc
         ${RUNTIME_DIR}/src/runtime/driver/npu_driver_mem.cc
         ${RUNTIME_DIR}/src/runtime/driver/npu_driver_queue.cc
+        ${RUNTIME_DIR}/src/runtime/driver/npu_driver_esched.cc
         ${RUNTIME_DIR}/src/runtime/driver/npu_driver_res.cc
         ${RUNTIME_DIR}/src/runtime/driver/npu_driver_tiny.cpp
         ${RUNTIME_DIR}/src/runtime/driver/npu_driver_dcache_lock_common.cpp

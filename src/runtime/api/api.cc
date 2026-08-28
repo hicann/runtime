@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "api.hpp"
+#include "api_esched.hpp"
 #include "api_event.hpp"
 #include "api_mbuf.hpp"
 #include "api_soma.hpp"
@@ -54,6 +55,16 @@ ApiEvent* ApiEvent::Instance()
         return nullptr;
     }
     return rtInstance->ApiEvent_();
+}
+
+ApiEsched* ApiEsched::Instance()
+{
+    const Runtime* const rtInstance = Runtime::Instance();
+    if (unlikely(rtInstance == nullptr)) {
+        RT_LOG(RT_LOG_ERROR, "Runtime::Instance == nullptr");
+        return nullptr;
+    }
+    return rtInstance->ApiEsched_();
 }
 
 } // namespace runtime

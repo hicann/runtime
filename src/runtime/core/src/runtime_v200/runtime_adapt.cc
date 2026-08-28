@@ -79,11 +79,13 @@ Runtime::~Runtime()
     apiMbuf_ = nullptr;
     apiSoma_ = nullptr;
     apiEvent_ = nullptr;
+    apiEsched_ = nullptr;
 
     DELETE_O(apiImpl_);
     DestroyImplMbuf(apiImplMbuf_);
     DELETE_O(apiImplSoma_);
     DELETE_O(apiImplEvent_);
+    DestroyImplEsched(apiImplEsched_);
     DELETE_O(apiError_);
     DELETE_O(logger_);
     DELETE_O(profiler_);

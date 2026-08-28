@@ -405,6 +405,7 @@ set(libruntime_cmodel_src_files
     ${RUNTIME_API_DIR}/impl/api_impl_mbuf.cc
     ${RUNTIME_API_DIR}/impl/api_impl_event.cc
     ${RUNTIME_API_DIR}/impl/api_impl_event_common.cc
+    ${RUNTIME_API_DIR}/impl/api_impl_esched.cc
     ${RUNTIME_CORE_DIR}/src/uvm/uvm_callback.cc
 
     # for V100
@@ -536,6 +537,7 @@ set(libruntime_cmodel_v200_src_files
     ${RUNTIME_API_DIR}/impl/api_impl_mbuf.cc
     ${RUNTIME_API_DIR}/impl/api_impl_event.cc
     ${RUNTIME_API_DIR}/impl/api_impl_event_common.cc
+    ${RUNTIME_API_DIR}/impl/api_impl_esched.cc
     ${RUNTIME_API_DIR}/impl/api_impl_david.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/v200/api_impl_david_capture_event.cc
     ${RUNTIME_CORE_DIR}/src/uvm/uvm_callback.cc
@@ -779,6 +781,7 @@ add_library(runtime_model OBJECT EXCLUDE_FROM_ALL
     ${RUNTIME_DIR}/src/runtime/driver/npu_driver.cc
     ${RUNTIME_DIR}/src/runtime/driver/npu_driver_mem.cc
     ${RUNTIME_DIR}/src/runtime/driver/npu_driver_queue.cc
+    ${RUNTIME_DIR}/src/runtime/driver/npu_driver_esched.cc
     ${RUNTIME_DIR}/src/runtime/driver/npu_driver_mbuf.cc
     ${RUNTIME_DIR}/src/runtime/driver/npu_driver_res.cc
     ${RUNTIME_DIR}/src/runtime/driver/npu_driver_tiny.cpp
@@ -844,6 +847,7 @@ add_library(runtime_model_v200 OBJECT EXCLUDE_FROM_ALL
     ${RUNTIME_DIR}/src/runtime/driver/npu_driver.cc
     ${RUNTIME_DIR}/src/runtime/driver/npu_driver_mem.cc
     ${RUNTIME_DIR}/src/runtime/driver/npu_driver_queue.cc
+    ${RUNTIME_DIR}/src/runtime/driver/npu_driver_esched.cc
     ${RUNTIME_DIR}/src/runtime/driver/npu_driver_mbuf.cc
     ${RUNTIME_DIR}/src/runtime/driver/npu_driver_res.cc
     ${RUNTIME_DIR}/src/runtime/driver/npu_driver_tiny.cpp

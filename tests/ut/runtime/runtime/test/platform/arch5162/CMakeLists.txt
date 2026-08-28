@@ -105,6 +105,7 @@ set(runtimeut_src_api_impl_list
     ${TOP_DIR}/src/runtime/api/impl/api_impl_creator.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_event_common.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_mbuf_stub.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_esched.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_stub.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_arch5162.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_memory_stub.cc
@@ -340,6 +341,7 @@ add_executable(runtime_utest_arch5162
     ${TOP_DIR}/src/runtime/driver/npu_driver.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_mem.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_queue.cc
+    ${TOP_DIR}/src/runtime/driver/npu_driver_esched.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_res.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_dcache_lock_opb.cpp
     ${TOP_DIR}/src/runtime/driver/v100/npu_driver.cc

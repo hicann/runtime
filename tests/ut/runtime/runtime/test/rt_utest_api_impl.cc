@@ -49,6 +49,7 @@
 #include "rt_utest_config_define.hpp"
 #include "api_impl_david.hpp"
 #include "api_impl_event.hpp"
+#include "api_impl_esched.hpp"
 #include "thread_local_container.hpp"
 #include "maintenance_task.h"
 #include "stream_c.hpp"
@@ -57,6 +58,7 @@
 #include "rts_snapshot.h"
 #include "ipc_event.hpp"
 #include "errcode_manage.hpp"
+#include "heterogenous.h"
 #include "common/rt_utest_context_reset_helper.hpp"
 using namespace testing;
 using namespace cce::runtime;
@@ -195,6 +197,100 @@ public:
     void* submittedData = nullptr;
     rtError_t submitRet = RT_ERROR_NONE;
 };
+
+class DefaultDeviceIdGuard {
+public:
+    DefaultDeviceIdGuard()
+        : rt_(static_cast<Runtime*>(Runtime::Instance())),
+          defaultDeviceId_(rt_->defaultDeviceId_),
+          hasSetDefaultDevId_(rt_->hasSetDefaultDevId_)
+    {}
+
+    ~DefaultDeviceIdGuard()
+    {
+        rt_->defaultDeviceId_ = defaultDeviceId_;
+        rt_->hasSetDefaultDevId_ = hasSetDefaultDevId_;
+    }
+
+private:
+    Runtime* const rt_;
+    const uint32_t defaultDeviceId_;
+    const bool hasSetDefaultDevId_;
+};
+
+drvError_t HostCpuDeviceResult(unsigned int devId)
+{
+    return (devId == static_cast<unsigned int>(DEFAULT_HOSTCPU_LOGIC_DEVICE_ID)) ? DRV_ERROR_NONE :
+                                                                                   DRV_ERROR_INVALID_VALUE;
+}
+
+drvError_t HalEschedSubmitEventSyncHostCpuStub(
+    unsigned int devId, struct event_summary* event, int timeout, struct event_reply* ack)
+{
+    UNUSED(event);
+    UNUSED(timeout);
+    if (ack != nullptr) {
+        ack->reply_len = 1U;
+    }
+    return HostCpuDeviceResult(devId);
+}
+
+drvError_t HalEschedAttachDeviceHostCpuStub(unsigned int devId) { return HostCpuDeviceResult(devId); }
+
+drvError_t HalEschedDettachDeviceHostCpuStub(unsigned int devId) { return HostCpuDeviceResult(devId); }
+
+drvError_t HalEschedWaitEventHostCpuStub(
+    unsigned int devId, unsigned int grpId, unsigned int threadId, int timeout, struct event_info* event)
+{
+    UNUSED(grpId);
+    UNUSED(threadId);
+    UNUSED(timeout);
+    if (event != nullptr) {
+        event->comm.event_id = EVENT_RANDOM_KERNEL;
+    }
+    return HostCpuDeviceResult(devId);
+}
+
+drvError_t HalEschedCreateGrpHostCpuStub(unsigned int devId, unsigned int grpId, GROUP_TYPE type)
+{
+    UNUSED(grpId);
+    UNUSED(type);
+    return HostCpuDeviceResult(devId);
+}
+
+drvError_t HalEschedSubmitEventHostCpuStub(unsigned int devId, struct event_summary* event)
+{
+    UNUSED(event);
+    return HostCpuDeviceResult(devId);
+}
+
+drvError_t HalEschedSubscribeEventHostCpuStub(
+    unsigned int devId, unsigned int grpId, unsigned int threadId, unsigned long long eventBitmap)
+{
+    UNUSED(grpId);
+    UNUSED(threadId);
+    UNUSED(eventBitmap);
+    return HostCpuDeviceResult(devId);
+}
+
+drvError_t HalEschedAckEventHostCpuStub(
+    unsigned int devId, EVENT_ID eventId, unsigned int subeventId, char* msg, unsigned int msgLen)
+{
+    UNUSED(eventId);
+    UNUSED(subeventId);
+    UNUSED(msg);
+    UNUSED(msgLen);
+    return HostCpuDeviceResult(devId);
+}
+
+drvError_t HalEschedQueryInfoHostCpuStub(
+    unsigned int devId, ESCHED_QUERY_TYPE type, struct esched_input_info* inPut, struct esched_output_info* outPut)
+{
+    UNUSED(type);
+    UNUSED(inPut);
+    UNUSED(outPut);
+    return HostCpuDeviceResult(devId);
+}
 } // namespace
 
 TEST_F(ApiImplTest, RegisterHostCpuFunc)
@@ -206,6 +302,113 @@ TEST_F(ApiImplTest, RegisterHostCpuFunc)
     EXPECT_EQ(GlobalContainer::RegisterHostCpuFunc(funcAddr), RT_ERROR_NONE);
     EXPECT_EQ(GlobalContainer::RegisterHostCpuFunc(funcAddr), RT_ERROR_NONE);
     EXPECT_TRUE(GlobalContainer::IsHostCpuFunc(funcAddr));
+}
+
+TEST_F(ApiImplTest, ApiImplEschedInvalidParam)
+{
+    ApiImplEsched apiImpl;
+    rtEschedEventSummary_t evt = {};
+    rtEschedEventReply_t ack = {};
+    rtEschedInputInfo input = {};
+    rtEschedOutputInfo output = {};
+
+    EXPECT_EQ(apiImpl.EschedSubmitEventSync(DEFAULT_HOSTCPU_USER_DEVICE_ID, nullptr, &ack), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(apiImpl.EschedSubmitEventSync(DEFAULT_HOSTCPU_USER_DEVICE_ID, &evt, nullptr), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(apiImpl.EschedSubmitEventSync(DEFAULT_HOSTCPU_USER_DEVICE_ID, &evt, &ack), RT_ERROR_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(apiImpl.EschedWaitEvent(DEFAULT_HOSTCPU_USER_DEVICE_ID, 0U, 0U, 0, nullptr), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(
+        apiImpl.EschedCreateGrp(DEFAULT_HOSTCPU_USER_DEVICE_ID, 0U, static_cast<rtGroupType_t>(0)),
+        RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(apiImpl.EschedSubmitEvent(DEFAULT_HOSTCPU_USER_DEVICE_ID, nullptr), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(
+        apiImpl.EschedAckEvent(DEFAULT_HOSTCPU_USER_DEVICE_ID, RT_EVENT_TEST, 0U, nullptr, 0U), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(
+        apiImpl.EschedQueryInfo(
+            static_cast<uint32_t>(DEFAULT_HOSTCPU_USER_DEVICE_ID), RT_QUERY_TYPE_LOCAL_GRP_ID, nullptr, &output),
+        RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(
+        apiImpl.EschedQueryInfo(
+            static_cast<uint32_t>(DEFAULT_HOSTCPU_USER_DEVICE_ID), RT_QUERY_TYPE_LOCAL_GRP_ID, &input, nullptr),
+        RT_ERROR_INVALID_VALUE);
+}
+
+TEST_F(ApiImplTest, ApiImplEschedHostCpuDeviceForwarding)
+{
+    DefaultDeviceIdGuard guard;
+    Runtime::Instance()->SetDefaultDeviceId(DEFAULT_DEVICE_ID);
+    ApiImplEsched apiImpl;
+    rtEschedEventSummary_t evt = {};
+    rtEschedEventReply_t ack = {};
+    rtEschedInputInfo input = {};
+    rtEschedOutputInfo output = {};
+    char msg[] = "ok";
+
+    MOCKER(halEschedSubmitEventSync).stubs().will(invoke(HalEschedSubmitEventSyncHostCpuStub));
+    evt.eventId = RT_MQ_SCHED_EVENT_QS_MSG;
+    EXPECT_EQ(apiImpl.EschedSubmitEventSync(DEFAULT_HOSTCPU_USER_DEVICE_ID, &evt, &ack), RT_ERROR_NONE);
+    EXPECT_EQ(ack.replyLen, 1U);
+
+    evt.eventId = RT_MQ_SCHED_EVENT_DRV_CUSTOM_MSG;
+    EXPECT_EQ(apiImpl.EschedSubmitEventSync(DEFAULT_HOSTCPU_USER_DEVICE_ID, &evt, &ack), RT_ERROR_NONE);
+
+    MOCKER(halEschedAttachDevice).stubs().will(invoke(HalEschedAttachDeviceHostCpuStub));
+    EXPECT_EQ(apiImpl.EschedAttachDevice(static_cast<uint32_t>(DEFAULT_HOSTCPU_USER_DEVICE_ID)), RT_ERROR_NONE);
+
+    MOCKER(halEschedDettachDevice).stubs().will(invoke(HalEschedDettachDeviceHostCpuStub));
+    EXPECT_EQ(apiImpl.EschedDettachDevice(static_cast<uint32_t>(DEFAULT_HOSTCPU_USER_DEVICE_ID)), RT_ERROR_NONE);
+
+    MOCKER(halEschedWaitEvent).stubs().will(invoke(HalEschedWaitEventHostCpuStub));
+    EXPECT_EQ(apiImpl.EschedWaitEvent(DEFAULT_HOSTCPU_USER_DEVICE_ID, 0U, 0U, 0, &evt), RT_ERROR_NONE);
+    EXPECT_EQ(evt.eventId, EVENT_RANDOM_KERNEL);
+
+    MOCKER(halEschedCreateGrp).stubs().will(invoke(HalEschedCreateGrpHostCpuStub));
+    EXPECT_EQ(
+        apiImpl.EschedCreateGrp(DEFAULT_HOSTCPU_USER_DEVICE_ID, 0U, RT_GRP_TYPE_BIND_DP_CPU_EXCLUSIVE), RT_ERROR_NONE);
+
+    MOCKER(halEschedSubmitEvent).stubs().will(invoke(HalEschedSubmitEventHostCpuStub));
+    EXPECT_EQ(apiImpl.EschedSubmitEvent(DEFAULT_HOSTCPU_USER_DEVICE_ID, &evt), RT_ERROR_NONE);
+
+    MOCKER(halEschedSubscribeEvent).stubs().will(invoke(HalEschedSubscribeEventHostCpuStub));
+    EXPECT_EQ(apiImpl.EschedSubscribeEvent(DEFAULT_HOSTCPU_USER_DEVICE_ID, 0U, 0U, 0U), RT_ERROR_NONE);
+
+    MOCKER(halEschedAckEvent).stubs().will(invoke(HalEschedAckEventHostCpuStub));
+    EXPECT_EQ(
+        apiImpl.EschedAckEvent(DEFAULT_HOSTCPU_USER_DEVICE_ID, RT_EVENT_TEST, 0U, msg, sizeof(msg)), RT_ERROR_NONE);
+
+    MOCKER(halEschedQueryInfo).stubs().will(invoke(HalEschedQueryInfoHostCpuStub));
+    EXPECT_EQ(
+        apiImpl.EschedQueryInfo(
+            static_cast<uint32_t>(DEFAULT_HOSTCPU_USER_DEVICE_ID), RT_QUERY_TYPE_LOCAL_GRP_ID, &input, &output),
+        RT_ERROR_NONE);
+}
+
+TEST_F(ApiImplTest, ApiImplEschedDeviceIdConvertFailed)
+{
+    ApiImplEsched apiImpl;
+    Runtime* const rtInstance = static_cast<Runtime*>(Runtime::Instance());
+    rtEschedEventSummary_t evt = {};
+    rtEschedEventReply_t ack = {};
+
+    evt.eventId = RT_MQ_SCHED_EVENT_QS_MSG;
+    MOCKER_CPP_VIRTUAL(rtInstance, &Runtime::ChgUserDevIdToDeviceId).stubs().will(returnValue(RT_ERROR_DEVICE_ID));
+
+    EXPECT_EQ(apiImpl.EschedSubmitEventSync(1, &evt, &ack), RT_ERROR_DEVICE_ID);
+    EXPECT_EQ(apiImpl.EschedAttachDevice(1U), RT_ERROR_DEVICE_ID);
+}
+
+TEST_F(ApiImplTest, ApiImplEschedDefaultDeviceContextNull)
+{
+    DefaultDeviceIdGuard guard;
+    Runtime::Instance()->SetDefaultDeviceId(0);
+    ApiImplEsched apiImpl;
+
+    MOCKER_CPP((static_cast<Context* (Runtime::*)(const bool, int32_t) const>(&Runtime::CurrentContext)))
+        .expects(once())
+        .with(eq(true), eq(DEFAULT_HOSTCPU_LOGIC_DEVICE_ID))
+        .will(returnValue(static_cast<Context*>(nullptr)));
+    MOCKER(&RtIsHeterogenous).expects(once()).will(returnValue(false));
+
+    EXPECT_EQ(apiImpl.EschedAttachDevice(static_cast<uint32_t>(DEFAULT_HOSTCPU_USER_DEVICE_ID)), RT_ERROR_CONTEXT_NULL);
 }
 
 TEST_F(ApiImplTest, LaunchHostFuncV2RegistersBeforeVirtualSubmit)

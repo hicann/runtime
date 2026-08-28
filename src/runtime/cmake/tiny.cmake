@@ -225,6 +225,7 @@ set(libruntime_common_src_files
     ${RUNTIME_API_DIR}/impl/api_impl_kernel_args.cc
     ${RUNTIME_API_DIR}/impl/api_impl_memory.cc
     ${RUNTIME_API_DIR}/impl/api_impl_mbuf.cc
+    ${RUNTIME_API_DIR}/impl/api_impl_esched.cc
     ${RUNTIME_CORE_DIR}/src/launch/cond_stars.cc
     ${RUNTIME_CORE_DIR}/src/launch/label_common.cc
     ${RUNTIME_CORE_DIR}/src/launch/label_stars.cc
@@ -376,6 +377,7 @@ set(libruntime_v100_src_files
     ${RUNTIME_API_DIR}/impl/api_error.cc
     ${RUNTIME_API_DIR}/impl/api_impl_creator.cc
     ${RUNTIME_API_DIR}/impl/api_impl_mbuf.cc
+    ${RUNTIME_API_DIR}/impl/api_impl_esched.cc
     ${RUNTIME_CORE_DIR}/src/dfx/kernel_dfx_info.cc
     ${RUNTIME_CORE_DIR}/src/dfx/aicpu_dfx_tiny_stub.cc
     ${RUNTIME_CORE_DIR}/src/uvm/uvm_callback.cc
@@ -775,6 +777,7 @@ macro(add_runtime_v100_library target_name)
         ${RUNTIME_DIR}/src/runtime/driver/npu_driver.cc
         ${RUNTIME_DIR}/src/runtime/driver/npu_driver_mem.cc
         ${RUNTIME_DIR}/src/runtime/driver/npu_driver_queue.cc
+        ${RUNTIME_DIR}/src/runtime/driver/npu_driver_esched.cc
         ${RUNTIME_DIR}/src/runtime/driver/npu_driver_mbuf.cc
         ${RUNTIME_DIR}/src/runtime/driver/npu_driver_res.cc
         ${RUNTIME_DIR}/src/runtime/driver/npu_driver_tiny.cpp
@@ -878,6 +881,7 @@ else()
         ${RUNTIME_DIR}/src/runtime/driver/npu_driver.cc
         ${RUNTIME_DIR}/src/runtime/driver/npu_driver_mem.cc
         ${RUNTIME_DIR}/src/runtime/driver/npu_driver_queue.cc
+        ${RUNTIME_DIR}/src/runtime/driver/npu_driver_esched.cc
         ${RUNTIME_DIR}/src/runtime/driver/npu_driver_mbuf.cc
         ${RUNTIME_DIR}/src/runtime/driver/npu_driver_res.cc
         ${RUNTIME_DIR}/src/runtime/driver/npu_driver_tiny.cpp

@@ -16,6 +16,7 @@ namespace cce {
 namespace runtime {
 class ApiMbuf;
 class ApiEvent;
+class ApiEsched;
 
 Api* CreateImplAndGet();
 bool IsImplMbufSupported();
@@ -23,6 +24,9 @@ ApiMbuf* CreateImplMbufAndGet();
 void DestroyImplMbuf(ApiMbuf*& apiImplMbuf);
 ApiSoma* CreateImplSomaAndGet();
 ApiEvent* CreateImplEventAndGet();
+bool IsImplEschedSupported();
+ApiEsched* CreateImplEschedAndGet();
+void DestroyImplEsched(ApiEsched*& apiImplEsched);
 } // namespace runtime
 } // namespace cce
 

@@ -576,6 +576,7 @@ set(runtimeut_src_list
     ${TOP_DIR}/src/runtime/api/impl/api_impl_soma.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_event.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_event_common.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_esched.cc
     ${TOP_DIR}/src/runtime/feature/xpu/api_error_xpu.cc
     ${TOP_DIR}/src/runtime/api/impl/api_error.cc
     ${TOP_DIR}/src/runtime/api/impl/api_error_standard_soc.cc
@@ -712,6 +713,7 @@ set(runtimeut_david_src_list
     ${TOP_DIR}/src/runtime/api/impl/api_impl_mbuf.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_event.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_event_common.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_esched.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_david.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/v200/api_impl_david_capture_event.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_creator.cc
@@ -820,6 +822,7 @@ set(runtimeut_david_src_list
      ${TOP_DIR}/src/runtime/driver/npu_driver_res.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_mem.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_queue.cc
+    ${TOP_DIR}/src/runtime/driver/npu_driver_esched.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_mbuf.cc
     ${TOP_DIR}/src/runtime/core/src/runtime_v200/runtime_adapt.cc
     ${TOP_DIR}/src/runtime/feature/xpu/program_plat.cc
@@ -929,6 +932,7 @@ add_executable(runtime_utest
     ${TOP_DIR}/src/runtime/driver/npu_driver.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_mem.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_queue.cc
+    ${TOP_DIR}/src/runtime/driver/npu_driver_esched.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_mbuf.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_res.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_dcache_lock_opb.cpp
@@ -1006,6 +1010,7 @@ add_executable(runtime_utest_camodel
     ${TOP_DIR}/src/runtime/driver/npu_driver.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_mem.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_queue.cc
+    ${TOP_DIR}/src/runtime/driver/npu_driver_esched.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_mbuf.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_res.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_dcache_lock_opb.cpp
@@ -1039,6 +1044,7 @@ add_executable(runtime_camodel_utest_v200
     ${TOP_DIR}/src/runtime/driver/npu_driver.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_mem.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_queue.cc
+    ${TOP_DIR}/src/runtime/driver/npu_driver_esched.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_mbuf.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_res.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_dcache_lock_opb.cpp
@@ -1071,6 +1077,7 @@ add_executable(runtime_utest_model
     ${TOP_DIR}/src/runtime/driver/npu_driver.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_mem.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_queue.cc
+    ${TOP_DIR}/src/runtime/driver/npu_driver_esched.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_mbuf.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_res.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_dcache_lock_opb.cpp
@@ -1105,6 +1112,7 @@ add_executable(runtime_utest_engine
     ${TOP_DIR}/src/runtime/driver/npu_driver.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_mem.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_queue.cc
+    ${TOP_DIR}/src/runtime/driver/npu_driver_esched.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_mbuf.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_res.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_dcache_lock_opb.cpp
@@ -1168,6 +1176,7 @@ add_executable(runtime_utest_api
     ${TOP_DIR}/src/runtime/driver/npu_driver.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_mem.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_queue.cc
+    ${TOP_DIR}/src/runtime/driver/npu_driver_esched.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_mbuf.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_res.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_dcache_lock_opb.cpp
@@ -1218,6 +1227,7 @@ add_executable(runtime_utest_api_ext_others
     ${TOP_DIR}/src/runtime/driver/npu_driver.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_mem.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_queue.cc
+    ${TOP_DIR}/src/runtime/driver/npu_driver_esched.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_mbuf.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_res.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_dcache_lock_opb.cpp
@@ -1256,6 +1266,7 @@ add_executable(runtime_utest_task_normal
     ${TOP_DIR}/src/runtime/driver/npu_driver.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_mem.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_queue.cc
+    ${TOP_DIR}/src/runtime/driver/npu_driver_esched.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_mbuf.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_res.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_dcache_lock_opb.cpp
@@ -1288,6 +1299,7 @@ add_executable(runtime_utest_dfx
     ${TOP_DIR}/src/runtime/driver/npu_driver.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_mem.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_queue.cc
+    ${TOP_DIR}/src/runtime/driver/npu_driver_esched.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_mbuf.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_res.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_dcache_lock_opb.cpp
@@ -1331,6 +1343,7 @@ set(runtimeut_src_tiny_list_all
     ${TOP_DIR}/src/runtime/driver/npu_driver.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_mem.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_queue.cc
+    ${TOP_DIR}/src/runtime/driver/npu_driver_esched.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_mbuf.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_res.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_dcache_lock_opb.cpp
@@ -1616,6 +1629,7 @@ set(runtimeut_v201_src_list
     ${TOP_DIR}/src/runtime/api/impl/api_impl_mbuf.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_event.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_event_common.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_esched.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_david.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/v200/api_impl_david_capture_event.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_creator.cc
@@ -1739,6 +1753,7 @@ add_executable(runtime_utest_task_v201
     ${TOP_DIR}/src/runtime/driver/npu_driver.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_mem.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_queue.cc
+    ${TOP_DIR}/src/runtime/driver/npu_driver_esched.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_mbuf.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_res.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_standard_soc.cc
@@ -1832,6 +1847,7 @@ add_executable(runtime_utest_api_normal
     ${TOP_DIR}/src/runtime/driver/npu_driver.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_mem.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_queue.cc
+    ${TOP_DIR}/src/runtime/driver/npu_driver_esched.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_mbuf.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_res.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_dcache_lock_opb.cpp
@@ -1893,6 +1909,7 @@ add_executable(runtime_utest_api_others
     ${TOP_DIR}/src/runtime/driver/npu_driver.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_mem.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_queue.cc
+    ${TOP_DIR}/src/runtime/driver/npu_driver_esched.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_mbuf.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_res.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_dcache_lock_opb.cpp

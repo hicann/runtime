@@ -15,6 +15,7 @@
 #include "runtime.hpp"
 #include "runtime_keeper.h"
 #include "npu_driver.hpp"
+#include "api_esched.hpp"
 #include "api_event.hpp"
 #include "api_impl.hpp"
 #include "api_impl_creator.hpp"
@@ -152,11 +153,26 @@ TEST_F(RuntimeTest, ApiEventInstanceInitialized)
     EXPECT_EQ(ApiEvent::Instance(), runtime->ApiEvent_());
 }
 
+TEST_F(RuntimeTest, ApiEschedInstanceInitialized)
+{
+    const Runtime* const runtime = Runtime::Instance();
+    ASSERT_NE(runtime, nullptr);
+    ASSERT_NE(runtime->ApiEsched_(), nullptr);
+    EXPECT_EQ(ApiEsched::Instance(), runtime->ApiEsched_());
+}
+
 TEST_F(RuntimeTest, CreateImplMbufAndGetFailed)
 {
     MOCKER(static_cast<NothrowNewFunc>(&operator new)).expects(once()).will(invoke(NothrowNewFailStub));
 
     EXPECT_EQ(CreateImplMbufAndGet(), nullptr);
+}
+
+TEST_F(RuntimeTest, CreateImplEschedAndGetFailed)
+{
+    MOCKER(static_cast<NothrowNewFunc>(&operator new)).expects(once()).will(invoke(NothrowNewFailStub));
+
+    EXPECT_EQ(CreateImplEschedAndGet(), nullptr);
 }
 
 TEST_F(RuntimeTest, DestroyImplMbufSuccess)
@@ -167,6 +183,16 @@ TEST_F(RuntimeTest, DestroyImplMbufSuccess)
     DestroyImplMbuf(apiImplMbuf);
 
     EXPECT_EQ(apiImplMbuf, nullptr);
+}
+
+TEST_F(RuntimeTest, DestroyImplEschedSuccess)
+{
+    ApiEsched* apiImplEsched = CreateImplEschedAndGet();
+    ASSERT_NE(apiImplEsched, nullptr);
+
+    DestroyImplEsched(apiImplEsched);
+
+    EXPECT_EQ(apiImplEsched, nullptr);
 }
 
 TEST_F(RuntimeTest, InitApiImpliesCreateMbufFailed)

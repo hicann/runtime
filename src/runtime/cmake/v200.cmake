@@ -272,6 +272,7 @@ set(libruntime_v200_v201_common_src_files
     ${RUNTIME_API_DIR}/impl/api_impl_mbuf.cc
     ${RUNTIME_API_DIR}/impl/api_impl_event.cc
     ${RUNTIME_API_DIR}/impl/api_impl_event_common.cc
+    ${RUNTIME_API_DIR}/impl/api_impl_esched.cc
     ${RUNTIME_CORE_DIR}/src/uvm/uvm_callback.cc
     ${RUNTIME_CORE_DIR}/src/context/context.cc
     ${RUNTIME_CORE_DIR}/src/device/device.cc
@@ -580,6 +581,7 @@ macro(add_runtime_v200_library target_name)
             ${RUNTIME_DIR}/src/runtime/driver/npu_driver.cc
             ${RUNTIME_DIR}/src/runtime/driver/npu_driver_mem.cc
             ${RUNTIME_DIR}/src/runtime/driver/npu_driver_queue.cc
+            ${RUNTIME_DIR}/src/runtime/driver/npu_driver_esched.cc
             ${RUNTIME_DIR}/src/runtime/driver/npu_driver_mbuf.cc
             ${RUNTIME_DIR}/src/runtime/driver/npu_driver_res.cc
             ${RUNTIME_DIR}/src/runtime/driver/npu_driver_tiny.cpp
@@ -690,6 +692,7 @@ macro(add_runtime_v201_library target_name)
             ${RUNTIME_DIR}/src/runtime/driver/npu_driver.cc
             ${RUNTIME_DIR}/src/runtime/driver/npu_driver_mem.cc
             ${RUNTIME_DIR}/src/runtime/driver/npu_driver_queue.cc
+            ${RUNTIME_DIR}/src/runtime/driver/npu_driver_esched.cc
             ${RUNTIME_DIR}/src/runtime/driver/npu_driver_mbuf.cc
             ${RUNTIME_DIR}/src/runtime/driver/npu_driver_res.cc
             ${RUNTIME_DIR}/src/runtime/driver/npu_driver_tiny.cpp

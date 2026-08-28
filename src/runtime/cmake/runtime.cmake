@@ -303,6 +303,7 @@ set(libruntime_v100_src_files
     ${RUNTIME_API_DIR}/impl/api_impl_mbuf.cc
     ${RUNTIME_API_DIR}/impl/api_impl_event.cc
     ${RUNTIME_API_DIR}/impl/api_impl_event_common.cc
+    ${RUNTIME_API_DIR}/impl/api_impl_esched.cc
     ${RUNTIME_API_DIR}/impl/api_error.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/api_error_aclgraph.cc
     ${RUNTIME_CORE_DIR}/src/uvm/uvm_callback.cc
@@ -715,6 +716,7 @@ macro(add_runtime_v100_library target_name)
         ${RUNTIME_DIR}/src/runtime/driver/npu_driver.cc
         ${RUNTIME_DIR}/src/runtime/driver/npu_driver_mem.cc
         ${RUNTIME_DIR}/src/runtime/driver/npu_driver_queue.cc
+        ${RUNTIME_DIR}/src/runtime/driver/npu_driver_esched.cc
         ${RUNTIME_DIR}/src/runtime/driver/npu_driver_mbuf.cc
         ${RUNTIME_DIR}/src/runtime/driver/npu_driver_res.cc
         ${RUNTIME_DIR}/src/runtime/driver/npu_driver_tiny.cpp

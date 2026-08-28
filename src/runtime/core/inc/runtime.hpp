@@ -134,6 +134,7 @@ static inline bool IsAbortError(rtError_t error)
 }
 
 class Api;
+class ApiEsched;
 class Context;
 class Device;
 class Kernel;
@@ -202,6 +203,8 @@ public:
     ApiSoma* ApiSoma_() const override { return apiSoma_; }
 
     ApiEvent* ApiEvent_() const override { return apiEvent_; }
+
+    ApiEsched* ApiEsched_() const override { return apiEsched_; }
 
     Api* ApiImpl_() const override { return apiImpl_; }
 
@@ -787,10 +790,12 @@ private:
     Api* api_;
     ApiMbuf* apiMbuf_;
     ApiSoma* apiSoma_;
+    ApiEsched* apiEsched_;
 
     Api* apiImpl_;
     ApiMbuf* apiImplMbuf_;
     ApiSoma* apiImplSoma_;
+    ApiEsched* apiImplEsched_;
 
     RefObject<Context*> priCtxs_[RT_MAX_DEV_NUM][RT_MAX_TS_NUM];
     RefObject<Device*> devices_[RT_MAX_DEV_NUM + 1][RT_MAX_TS_NUM]; // Last one is stub device
