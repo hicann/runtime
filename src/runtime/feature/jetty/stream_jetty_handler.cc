@@ -88,7 +88,7 @@ rtError_t StreamJettyHandler::GetOrCreateStreamJettyContext(
     jettyCtx = stream->Device_()->GetJettyManager()->GetOrCreateStreamJettyContext(stream, jettyType);
     if (jettyCtx == nullptr) {
         RT_LOG(RT_LOG_ERROR, "GetOrCreateStreamJettyContext failed, stream_id=%d.", stream->Id_());
-        return RT_ERROR_MEMORY_ALLOCATION;
+        return RT_ERROR_JETTY_POOL_NO_RESOURCES;
     }
 
     return RT_ERROR_NONE;
@@ -479,7 +479,7 @@ rtError_t StreamJettyHandler::RecycleJetty(Stream* stream, JettyType type, uint3
     return RT_ERROR_NONE;
 }
 
-rtError_t StreamJettyHandler::ReleaseJetty(Stream* stream, JettyType type, bool deleteContext)
+rtError_t StreamJettyHandler::ReleaseJetty(Stream* const stream, JettyType type, bool deleteContext)
 {
     NULL_PTR_RETURN(stream, RT_ERROR_INVALID_VALUE);
     NULL_PTR_RETURN(stream->Device_(), RT_ERROR_INVALID_VALUE);
@@ -513,7 +513,7 @@ rtError_t StreamJettyHandler::ReleaseJetty(Stream* stream, JettyType type, bool 
     return error;
 }
 
-rtError_t StreamJettyHandler::RefreshModelJettyInfoList(Model* mdl)
+rtError_t StreamJettyHandler::RefreshModelJettyInfoList(Model* const mdl)
 {
     NULL_PTR_RETURN(mdl, RT_ERROR_INVALID_VALUE);
     NULL_PTR_RETURN(mdl->Context_(), RT_ERROR_INVALID_VALUE);
@@ -536,7 +536,7 @@ rtError_t StreamJettyHandler::RefreshModelJettyInfoList(Model* mdl)
             }
 
             JettyInfo jettyInfo = {};
-            rtError_t ret = jettyMgr->GetJettyInfoForStream(streamId, type, jettyInfo);
+            const rtError_t ret = jettyMgr->GetJettyInfoForStream(streamId, type, jettyInfo);
             COND_RETURN_ERROR(
                 (ret != RT_ERROR_NONE), ret, "GetJettyInfoForStream failed, stream_id=%d, type=%d, retCode=%#x.",
                 streamId, static_cast<int32_t>(type), ret);

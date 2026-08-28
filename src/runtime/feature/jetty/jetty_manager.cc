@@ -120,7 +120,7 @@ rtError_t JettyManager::UnbindJettyForStream(int32_t streamId, JettyType type)
     return RT_ERROR_NONE;
 }
 
-rtError_t JettyManager::FreeJettyByHandle(uint64_t handle, JettyAllocMode allocMode, JettyType type)
+rtError_t JettyManager::FreeJettyByHandle(uint64_t handle, JettyAllocMode allocMode, JettyType type) const
 {
     std::lock_guard<std::recursive_mutex> lock(managerLock_);
     if (handle == 0ULL) {

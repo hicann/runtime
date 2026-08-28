@@ -220,7 +220,7 @@ rtError_t DeviceSqCqPool::AllocSqCqForAutoSplit(rtDeviceSqCqInfo_t* const sqCqIn
     RT_LOG(RT_LOG_DEBUG, "deviceId=%u, tsId=%u", device_->Id_(), device_->DevGetTsId());
     COND_RETURN_INFO(
         (sqCqInfo == nullptr), RT_ERROR_INVALID_VALUE, "sqCqInfo is nullptr, deviceId=%u.", device_->Id_());
-    uint32_t drvFlag = static_cast<uint32_t>(TSDRV_FLAG_NO_SQ_MEM);
+    const uint32_t drvFlag = static_cast<uint32_t>(TSDRV_FLAG_NO_SQ_MEM);
     rtError_t error = AllocSqCqFromDrv(sqCqInfo, drvFlag, PRE_ALLOC_SQ_CQ_RETRY_MAX_COUNT);
     COND_RETURN_INFO((error != RT_ERROR_NONE), error, "alloc sq cq, retCode=%#x.", static_cast<uint32_t>(error));
     error = AllocSqRegVirtualAddr(sqCqInfo->sqId, sqCqInfo->sqRegVirtualAddr);

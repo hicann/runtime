@@ -298,16 +298,16 @@ static rtError_t FlushJettyForModel(Model* const mdl)
             rtError_t error = StreamJettyHandler::FillNopWqeOnCaptureEnd(stm, type);
             COND_RETURN_ERROR(
                 error != RT_ERROR_NONE, error, "FillNopWqeOnCaptureEnd failed, stream_id=%d, type=%d, retCode=%#x.",
-                stm->Id_(), static_cast<int>(type), error);
+                stm->Id_(), static_cast<int32_t>(type), error);
 
             error = StreamJettyHandler::BindJetty(stm, type, nullptr);
             COND_RETURN_ERROR(
                 error != RT_ERROR_NONE, error, "BindJetty failed, stream_id=%d, type=%d, retCode=%#x.", stm->Id_(),
-                static_cast<int>(type), error);
+                static_cast<int32_t>(type), error);
         }
     }
 
-    rtError_t error = StreamJettyHandler::RefreshModelJettyInfoList(mdl);
+    const rtError_t error = StreamJettyHandler::RefreshModelJettyInfoList(mdl);
     COND_RETURN_ERROR(
         error != RT_ERROR_NONE, error, "RefreshModelJettyInfoList failed, model_id=%u, retCode=%#x.", mdl->Id_(),
         error);
@@ -322,7 +322,7 @@ rtError_t ModelSubmitExecuteTask(Model* const mdl, Notify* const notify, Stream*
 {
     if (mdl->GetNeedRebindJetty()) {
         RT_LOG(RT_LOG_INFO, "Jetty rebind needed for model after execution failure, model_id=%u.", mdl->Id_());
-        rtError_t rebindError = FlushJettyForModel(mdl);
+        const rtError_t rebindError = FlushJettyForModel(mdl);
         COND_RETURN_ERROR_MSG_INNER(
             rebindError != RT_ERROR_NONE, rebindError,
             "FlushJettyForModel failed during rebind, model_id=%u, retCode=%#x.", mdl->Id_(),

@@ -38,7 +38,8 @@ rtError_t JettyPool::CreateJetty(JettyType type, uint32_t depth, JettyInfo& jett
         return RT_ERROR_INVALID_VALUE;
     }
 
-    uint32_t dir = (type == JettyType::JETTY_TYPE_H2D) ? TRS_ASYNC_JETTY_HOST_DEVICE : TRS_ASYNC_JETTY_DEVICE_TO_DEVICE;
+    const uint32_t dir =
+        (type == JettyType::JETTY_TYPE_H2D) ? TRS_ASYNC_JETTY_HOST_DEVICE : TRS_ASYNC_JETTY_DEVICE_TO_DEVICE;
     uint64_t handle = 0ULL;
 
     rtError_t error = driver->AsyncDmaJettyCreate(deviceId_, 1U, depth, dir, &handle);

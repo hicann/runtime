@@ -241,7 +241,7 @@ static rtError_t ConvertUBDmaBatchForModel(TaskInfo* const taskInfo, AsyncDmaBat
     MemcpyAsyncTaskInfo* memcpyAsyncTaskInfo = &(taskInfo->u.memcpyAsyncTaskInfo);
 
     rtError_t error = RT_ERROR_NONE;
-    JettyType jettyType = StreamJettyHandler::GetJettyTypeFromTask(taskInfo);
+    const JettyType jettyType = StreamJettyHandler::GetJettyTypeFromTask(taskInfo);
     AsyncWqeInputPara input = {};
     AsyncWqeOutputPara output = {};
     input.wqeType = static_cast<uint32_t>(DRV_ASYNC_DMA_TYPE_BATCH);
@@ -795,7 +795,7 @@ static rtError_t HandleUbModeDmaResult(TaskInfo* const taskInfo, const AsyncDmaW
     return RT_ERROR_NONE;
 }
 
-static rtError_t ConvertUBDmaForModel(TaskInfo* const taskInfo, TaskInfo* const updateTask, bool isSqeUpdate)
+static rtError_t ConvertUBDmaForModel(TaskInfo* const taskInfo, const TaskInfo* const updateTask, bool isSqeUpdate)
 {
     Stream* const stream = taskInfo->stream;
     const uint32_t devId = stream->Device_()->Id_();

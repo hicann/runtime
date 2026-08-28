@@ -62,7 +62,7 @@ static rtError_t ConvertUBDma2DForModel(
             error);
         return error;
     }
-    uint64_t size = (output.fixedCnt == 1U) ? width * height : output.fixedSize;
+    const uint64_t size = (output.fixedCnt == 1U) ? width * height : output.fixedSize;
     memcpyAsyncTaskInfo->ubDma.fixedSize = size;
     memcpyAsyncTaskInfo->size = size;
     return RT_ERROR_NONE;

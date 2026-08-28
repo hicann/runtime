@@ -63,13 +63,13 @@ rtError_t StreamJettyHandler::RecycleJetty(Stream* stream, JettyType type, uint3
     return RT_ERROR_NONE;
 }
 
-rtError_t StreamJettyHandler::RefreshModelJettyInfoList(Model* mdl)
+rtError_t StreamJettyHandler::RefreshModelJettyInfoList(Model* const mdl)
 {
     UNUSED(mdl);
     return RT_ERROR_NONE;
 }
 
-rtError_t StreamJettyHandler::ReleaseJetty(Stream* stream, JettyType type, bool deleteContext)
+rtError_t StreamJettyHandler::ReleaseJetty(Stream* const stream, JettyType type, bool deleteContext)
 {
     UNUSED(stream);
     UNUSED(type);
