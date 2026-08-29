@@ -197,7 +197,7 @@ int32_t AicpuCustSoManager::CheckAndDeleteCustSoDir()
         const std::lock_guard<std::mutex> soFileLock(soFileMutex_);
         if (CheckDirEmpty(dirName)) {
             if (remove(dirName.c_str()) != 0) {
-                aicpusd_run_info("Delete dir:%s failed, error is %s.", dirName.c_str(), strerror(errno));
+                aicpusd_run_info("Unable to remove directory:%s, reason:%s.", dirName.c_str(), strerror(errno));
             } else {
                 aicpusd_info("Delete dir:%s success.", dirName.c_str());
             }
@@ -453,7 +453,7 @@ int32_t AicpuCustSoManager::CheckSoFullPathValid(const std::string& soFullPath) 
 
     std::unique_ptr<char_t[]> path(new (std::nothrow) char_t[PATH_MAX]);
     if (path == nullptr) {
-        aicpusd_run_info("Alloc memory for path failed.");
+        aicpusd_run_info("Unable to allocate memory for path normalization.");
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
 
@@ -507,7 +507,7 @@ bool AicpuCustSoManager::CheckDirEmpty(const std::string& dirName) const
     // open dir
     DIR* const dirHandle = opendir(dirName.c_str());
     if (dirHandle == nullptr) {
-        aicpusd_err("Open dir:%s failed, error:%s.", dirName.c_str(), strerror(errno));
+        aicpusd_run_warn("Unable to open directory:%s, reason:%s.", dirName.c_str(), strerror(errno));
         return false;
     }
     // search dir

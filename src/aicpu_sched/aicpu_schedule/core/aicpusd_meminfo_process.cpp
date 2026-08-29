@@ -471,7 +471,7 @@ StatusCode AicpuMemInfoProcess::LoadMemCfgFromFile(const std::string& filePath, 
             return AICPU_SCHEDULE_ERROR_READ_JSON_FAILED;
         }
         if (!ParseOneEntry(content, pos, entryEnd, output.cfg[entryCount])) {
-            aicpusd_run_info("Failed to parse entry for key [%s] in [%s].", key.c_str(), filePath.c_str());
+            aicpusd_run_info("Cannot parse entry for key [%s] in [%s].", key.c_str(), filePath.c_str());
             return AICPU_SCHEDULE_ERROR_READ_JSON_FAILED;
         }
         ++entryCount;
@@ -507,7 +507,7 @@ StatusCode AicpuMemInfoProcess::CheckPathValid(const std::string& cfgFullPath)
 
     std::unique_ptr<char_t[]> path(new (std::nothrow) char_t[PATH_MAX]);
     if (path == nullptr) {
-        aicpusd_run_info("Alloc memory for path failed.");
+        aicpusd_run_info("Unable to allocate memory for path normalization.");
         return AICPU_SCHEDULE_ERROR_GET_PATH_FAILED;
     }
 

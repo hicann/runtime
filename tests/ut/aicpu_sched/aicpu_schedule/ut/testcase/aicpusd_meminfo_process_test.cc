@@ -15,6 +15,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <fstream>
+#include <new>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -29,6 +30,9 @@ using namespace aicpu;
 
 namespace {
 const char_t* const TEST_JSON_PATH = "./aicpusd_meminfo_process_ut.json";
+using NothrowNewArrayFunc = void* (*)(size_t, const std::nothrow_t&);
+
+void* NothrowNewArrayFailStub(size_t, const std::nothrow_t&) { return nullptr; }
 
 std::string BuildEntry(const uint32_t cfgId)
 {
@@ -286,6 +290,13 @@ TEST_F(AicpuMemInfoProcessTEST, CheckPathValidRejectsLongPath)
     const std::string cfgFullPath(PATH_MAX, 'a');
 
     EXPECT_EQ(AicpuMemInfoProcess::CheckPathValid(cfgFullPath), AICPU_SCHEDULE_ERROR_GET_PATH_FAILED);
+}
+
+TEST_F(AicpuMemInfoProcessTEST, CheckPathValidReturnsErrorWhenAllocationFails)
+{
+    MOCKER(static_cast<NothrowNewArrayFunc>(&operator new[])).expects(once()).will(invoke(NothrowNewArrayFailStub));
+
+    EXPECT_EQ(AicpuMemInfoProcess::CheckPathValid("/abc/"), AICPU_SCHEDULE_ERROR_GET_PATH_FAILED);
 }
 
 TEST_F(AicpuMemInfoProcessTEST, CheckPathValidReturnsErrorWhenRealpathFails)

@@ -10,6 +10,7 @@
 
 #include <dirent.h>
 #include <fstream>
+#include <new>
 #include <securec.h>
 #include <stdlib.h>
 #include <sys/file.h>
@@ -34,6 +35,10 @@ char* RealpathSuccessStub(const char*, char* resolvedPath)
     resolvedPath[1] = '\0';
     return resolvedPath;
 }
+
+using NothrowNewArrayFunc = void* (*)(size_t, const std::nothrow_t&);
+
+void* NothrowNewArrayFailStub(size_t, const std::nothrow_t&) { return nullptr; }
 
 std::string MakeTempDir()
 {
@@ -90,6 +95,15 @@ TEST_F(AicpuCustSoManagerTEST, CheckSoFullPathValid_Failed1)
     char* a = nullptr;
     MOCKER(memset_s).stubs().will(returnValue(-1));
     auto ret = AicpuCustSoManager::GetInstance().CheckSoFullPathValid(soFullPath);
+    EXPECT_EQ(ret, AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID);
+}
+
+TEST_F(AicpuCustSoManagerTEST, CheckSoFullPathValidReturnsErrorWhenAllocationFails)
+{
+    MOCKER(static_cast<NothrowNewArrayFunc>(&operator new[])).expects(once()).will(invoke(NothrowNewArrayFailStub));
+
+    const auto ret = AicpuCustSoManager::GetInstance().CheckSoFullPathValid("/abc/");
+
     EXPECT_EQ(ret, AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID);
 }
 
