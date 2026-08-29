@@ -1235,7 +1235,7 @@ rtError_t NpuDriver::DevMemAllocOffline(
         if (ret != RT_ERROR_NONE) {
             RT_LOG(
                 RT_LOG_ERROR,
-                "this feature does not support on current version, "
+                "this feature is not supported on current version, "
                 "size=%lu, type=%u, memory policy=%u, deviceId=%u, moduleId=%u.",
                 size, type, memPolicy, deviceId, moduleId);
             return ret;

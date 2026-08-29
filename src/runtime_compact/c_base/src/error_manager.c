@@ -364,7 +364,7 @@ static size_t GetFirstCode(size_t errorItemNum)
 static int32_t ComputeAllocate(ErrorItem* firstItem)
 {
     g_errorThread->errorMsgLen +=
-        (ERRCODE_LENGTH + sizeof(": Inner Error!\r\n") + strlen(firstItem->errorMessage) + NEWLINE_LEN +
+        (ERRCODE_LENGTH + sizeof(": Internal Error!\r\n") + strlen(firstItem->errorMessage) + NEWLINE_LEN +
          sizeof("        TraceBack (most recent call last): \r\n"));
 
     if (!IsInnerErrorCode(firstItem->errorId)) {
@@ -386,7 +386,7 @@ static int32_t FormatTraceBefore(ErrorItem* firstItem)
     int32_t nFirstSolution = 0;
     if (IsInnerErrorCode(firstItem->errorId)) {
         n = sprintf_s(
-            g_errorThread->errorMsg, g_errorThread->errorMsgLen, "%s: Inner Error!\r\n%s\r\n", firstItem->errorId,
+            g_errorThread->errorMsg, g_errorThread->errorMsgLen, "%s: Internal Error!\r\n%s\r\n", firstItem->errorId,
             firstItem->errorMessage);
         if (n < 0) {
             return -1;

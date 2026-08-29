@@ -1688,7 +1688,7 @@ bool CaptureModel::CheckSubModelsIsEndCapture()
     for (CaptureModel* subModel : allSubModels) {
         if (subModel->GetCaptureModelStatus() != RtCaptureModelStatus::READY) {
             RT_LOG(
-                RT_LOG_ERROR, "sub ACL Graph is not end capture, root model_id=%u, sub model_id=%u.", Id_(),
+                RT_LOG_ERROR, "sub ACL Graph has not ended capture, root model_id=%u, sub model_id=%u.", Id_(),
                 subModel->Id_());
             return false;
         }

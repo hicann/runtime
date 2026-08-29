@@ -1144,7 +1144,7 @@ __attribute__((visibility("default"))) uint32_t PlatformInfoManager::GetPlatform
 {
     std::lock_guard<std::mutex> lock_guard(pc_lock_);
     if (opti_compilation_info_.soc_version.empty()) {
-        PF_LOGW("Can not found platform_info.");
+        PF_LOGW("Cannot find platform_info.");
         return PLATFORM_FAILED;
     }
     auto iter = platform_info_map_.find(opti_compilation_info_.soc_version);

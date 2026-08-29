@@ -397,11 +397,15 @@ TEST_F(CloudV2DcacheDeviceTest, RegisterDcacheLockOp_01)
 {
     RawDevice* dev = new RawDevice(1);
     Runtime* rtInstance = (Runtime*)Runtime::Instance();
+    rtInstance->dcacheLockMixOpData_.clear();
+    Program* dcacheLockOpProgram = nullptr;
+    auto ret = dev->RegisterDcacheLockOp(dcacheLockOpProgram);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
     std::vector<char> dcacheLockMixOpData{'a'};
     rtInstance->dcacheLockMixOpData_ = dcacheLockMixOpData;
     MOCKER_CPP(&Runtime::ProgramRegister).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
-    Program* dcacheLockOpProgram = nullptr;
-    auto ret = dev->RegisterDcacheLockOp(dcacheLockOpProgram);
+    ret = dev->RegisterDcacheLockOp(dcacheLockOpProgram);
     EXPECT_EQ(ret, RT_ERROR_INVALID_VALUE);
     rtInstance->dcacheLockMixOpData_.clear();
     delete dev;

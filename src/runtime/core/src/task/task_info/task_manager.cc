@@ -502,7 +502,8 @@ void GetBinAndKernelNameExceptionArgs(const Kernel* const kernel, rtExceptionArg
     const std::string& progkernelNames = programPtr->GetKernelNamesBuffer();
     const size_t progkernelNamesSize = progkernelNames.size();
     if (nameOffset >= progkernelNamesSize) {
-        RT_LOG(RT_LOG_WARNING, "nameOffset >= progkernelNamesSize");
+        RT_LOG(
+            RT_LOG_WARNING, "nameOffset=%u exceeds or equals progkernelNamesSize=%zu", nameOffset, progkernelNamesSize);
         return;
     }
 

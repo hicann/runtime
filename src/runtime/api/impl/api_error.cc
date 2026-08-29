@@ -1785,7 +1785,7 @@ rtError_t ApiErrorDecorator::DevMallocCached(
     const uint16_t moduleIdCov = (moduleId > DEFAULT_MODULEID) ? static_cast<uint16_t>(APP) : moduleId;
     const rtError_t error = impl_->DevMallocCached(devPtr, size, type, moduleIdCov);
     ERROR_RETURN(error, "Device malloc cached failed, size=%" PRIu64 "(bytes), type=%u.", size, type);
-    RT_LOG(RT_LOG_INFO, "dev cached memory alloc success, size=%" PRIu64 ", type=%u.", size, type);
+    RT_LOG(RT_LOG_INFO, "dev cached memory alloc success, size=%" PRIu64 " bytes, type=%u.", size, type);
     return error;
 }
 
@@ -1836,7 +1836,7 @@ rtError_t ApiErrorDecorator::HostMalloc(void** const hostPtr, const uint64_t siz
     const rtError_t error = impl_->HostMalloc(hostPtr, size, moduleIdCov);
     ERROR_RETURN(error, "Host memory malloc failed, size=%" PRIu64 "(bytes), moduleId=%hu.", size, moduleId);
     RT_LOG(
-        RT_LOG_INFO, "Host memory malloc succeed, size=%" PRIu64 ", moduleId=%hu, host addr=%#" PRIx64 ".", size,
+        RT_LOG_INFO, "Host memory malloc succeed, size=%" PRIu64 " bytes, moduleId=%hu, host addr=%#" PRIx64 ".", size,
         moduleId, RtPtrToValue(*hostPtr));
     return error;
 }
@@ -2029,7 +2029,7 @@ rtError_t ApiErrorDecorator::FlushCache(const uint64_t base, const size_t len)
 rtError_t ApiErrorDecorator::InvalidCache(const uint64_t base, const size_t len)
 {
     const rtError_t error = impl_->InvalidCache(base, len);
-    ERROR_RETURN(error, "Invalid cache failed, base=%" PRIu64 "(bytes), len=%zu(bytes).", base, len);
+    ERROR_RETURN(error, "Invalidate cache failed, base=%" PRIu64 "(bytes), len=%zu(bytes).", base, len);
     return error;
 }
 
@@ -3053,7 +3053,7 @@ rtError_t ApiErrorDecorator::MemGetInfo(size_t* const freeSize, size_t* const to
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(totalSize, RT_ERROR_INVALID_VALUE, "Obtaining memory information");
 
     const rtError_t error = impl_->MemGetInfo(freeSize, totalSize);
-    ERROR_RETURN(error, "Get memory info failed, free=%zu, total=%zu.", *freeSize, *totalSize);
+    ERROR_RETURN(error, "Get memory info failed, free=%zu bytes, total=%zu bytes.", *freeSize, *totalSize);
     return error;
 }
 
@@ -3095,7 +3095,7 @@ rtError_t ApiErrorDecorator::MemGetInfoEx(
         "[" + std::to_string(RT_MEMORYINFO_DDR) + ", " + std::to_string(RT_MEMORYINFO_P2P_HUGE1G) + "]");
     const rtError_t error = impl_->MemGetInfoEx(memInfoType, freeSize, totalSize);
     ERROR_RETURN(
-        error, "Get Memory extend info failed, memInfoType=%s, free=%zu, total=%zu.",
+        error, "Get Memory extend info failed, memInfoType=%s, free=%zu bytes, total=%zu bytes.",
         MemInfoTypeToString(memInfoType).c_str(), *freeSize, *totalSize);
     return error;
 }
@@ -3567,7 +3567,7 @@ rtError_t ApiErrorDecorator::ProfilerStart(
 rtError_t ApiErrorDecorator::ProfilerStop(
     const uint64_t profConfig, const int32_t numsDev, uint32_t* const deviceList, const uint64_t profSwitchHi)
 {
-    ZERO_RETURN_AND_MSG_OUTER_WITH_FUNC_DESC(profConfig, "Stoping a profile data collection task");
+    ZERO_RETURN_AND_MSG_OUTER_WITH_FUNC_DESC(profConfig, "Stopping a profile data collection task");
     COND_RETURN_AND_MSG_OUTER(
         (numsDev != -1) && (numsDev != 0) && (deviceList == nullptr), RT_ERROR_INVALID_VALUE, ErrorCode::EE1017,
         "Stopping profiling analysis", "profiler config",
@@ -4308,7 +4308,7 @@ rtError_t ApiErrorDecorator::ResourceClean(int32_t devId, rtIdType_t type)
         realDeviceId, "[0, " + std::to_string(deviceCnt) + ")");
 
     error = impl_->ResourceClean(realDeviceId, type);
-    ERROR_RETURN(error, "resource clean.");
+    ERROR_RETURN(error, "Resource cleanup failed.");
     return error;
 }
 

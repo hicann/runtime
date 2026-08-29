@@ -118,7 +118,7 @@ PrimaryContextInitInfo PreparePrimaryContext(
             initInfo.err = RT_ERROR_CONTEXT_NEW;
             return initInfo;
         }
-        RT_LOG(RT_LOG_INFO, "new Context ok, Runtime_alloc_size %zu", sizeof(Context));
+        RT_LOG(RT_LOG_INFO, "new Context ok, Runtime_alloc_size %zu bytes", sizeof(Context));
     }
     return initInfo;
 }
@@ -1090,7 +1090,7 @@ rtError_t Runtime::InitApiImplies()
         RT_LOG(RT_LOG_ERROR, "create ApiImpl failed.");
         return RT_ERROR_API_NEW;
     }
-    RT_LOG(RT_LOG_INFO, "ApiImpl:Runtime_alloc_size %zu", sizeof(ApiImpl));
+    RT_LOG(RT_LOG_INFO, "ApiImpl:Runtime_alloc_size %zu bytes", sizeof(ApiImpl));
 
     if (IsImplMbufSupported()) {
         apiImplMbuf_ = CreateImplMbufAndGet();
@@ -1105,7 +1105,7 @@ rtError_t Runtime::InitApiImplies()
         RT_LOG(RT_LOG_ERROR, "create ApiImplSoma failed.");
         return RT_ERROR_API_NEW;
     }
-    RT_LOG(RT_LOG_INFO, "ApiImplSoma:Runtime_alloc_size %zu", sizeof(ApiImplSoma));
+    RT_LOG(RT_LOG_INFO, "ApiImplSoma:Runtime_alloc_size %zu bytes", sizeof(ApiImplSoma));
 
     apiImplEvent_ = CreateImplEventAndGet();
     if (apiImplEvent_ == nullptr) {
@@ -1113,7 +1113,7 @@ rtError_t Runtime::InitApiImplies()
         RT_LOG(RT_LOG_ERROR, "create ApiImplEvent failed.");
         return RT_ERROR_API_NEW;
     }
-    RT_LOG(RT_LOG_INFO, "ApiImplEvent:Runtime_alloc_size %zu", sizeof(ApiImplEvent));
+    RT_LOG(RT_LOG_INFO, "ApiImplEvent:Runtime_alloc_size %zu bytes", sizeof(ApiImplEvent));
 
     if (IsImplEschedSupported()) {
         apiImplEsched_ = CreateImplEschedAndGet();
@@ -1131,7 +1131,7 @@ rtError_t Runtime::InitLogger()
         RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1013, sizeof(Logger), "new");
         return RT_ERROR_MEMORY_ALLOCATION;
     }
-    RT_LOG(RT_LOG_INFO, "Logger:Runtime_alloc_size %zu", sizeof(Logger));
+    RT_LOG(RT_LOG_INFO, "Logger:Runtime_alloc_size %zu bytes", sizeof(Logger));
     return RT_ERROR_NONE;
 }
 
@@ -1142,7 +1142,7 @@ rtError_t Runtime::InitApiProfiler(Api* const apiObj)
         RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1013, sizeof(Profiler), "new");
         return RT_ERROR_PROF_NEW;
     }
-    RT_LOG(RT_LOG_INFO, "RProfiler:Runtime_alloc_size %zu", sizeof(Profiler));
+    RT_LOG(RT_LOG_INFO, "RProfiler:Runtime_alloc_size %zu bytes", sizeof(Profiler));
 
     const rtError_t error = profiler_->Init();
     if (error != RT_ERROR_NONE) {
@@ -1159,7 +1159,7 @@ rtError_t Runtime::InitApiErrorDecorator(Api* const apiObj)
         RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1013, sizeof(ApiErrorDecorator), "new");
         return RT_ERROR_API_NEW;
     }
-    RT_LOG(RT_LOG_INFO, "ApiErrorDecorator:Runtime_alloc_size %zu.", sizeof(ApiErrorDecorator));
+    RT_LOG(RT_LOG_INFO, "ApiErrorDecorator:Runtime_alloc_size %zu bytes.", sizeof(ApiErrorDecorator));
     return RT_ERROR_NONE;
 }
 
@@ -1170,7 +1170,7 @@ rtError_t Runtime::InitThreadGuard()
         RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1013, sizeof(ThreadGuard), "new");
         return RT_ERROR_MEMORY_ALLOCATION;
     }
-    RT_LOG(RT_LOG_INFO, "Runtime init:new ThreadGuard ok, Runtime_alloc_size %zu.", sizeof(ThreadGuard));
+    RT_LOG(RT_LOG_INFO, "Runtime init:new ThreadGuard ok, Runtime_alloc_size %zu bytes.", sizeof(ThreadGuard));
     return RT_ERROR_NONE;
 }
 
@@ -1181,7 +1181,7 @@ rtError_t Runtime::InitStreamObserver()
         RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1013, sizeof(EngineStreamObserver), "new");
         return RT_ERROR_ENGINE_NEW;
     }
-    RT_LOG(RT_LOG_INFO, "EngineStreamObserver:Runtime_alloc_size %zu.", sizeof(EngineStreamObserver));
+    RT_LOG(RT_LOG_INFO, "EngineStreamObserver:Runtime_alloc_size %zu bytes.", sizeof(EngineStreamObserver));
     return RT_ERROR_NONE;
 }
 
@@ -1193,7 +1193,7 @@ rtError_t Runtime::InitAicpuStreamIdBitmap()
         return RT_ERROR_MEMORY_ALLOCATION;
     }
 
-    RT_LOG(RT_LOG_INFO, "Bitmap(%u):Runtime_alloc_size %zu.", RT_MAX_AICPU_STREAM_COUNT, sizeof(Bitmap));
+    RT_LOG(RT_LOG_INFO, "Bitmap(%u):Runtime_alloc_size %zu bytes.", RT_MAX_AICPU_STREAM_COUNT, sizeof(Bitmap));
     return RT_ERROR_NONE;
 }
 
@@ -1218,7 +1218,7 @@ rtError_t Runtime::InitCbSubscribe()
         RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1013, sizeof(CbSubscribe), "new");
         return RT_ERROR_SUBSCRIBE_NEW;
     }
-    RT_LOG(RT_LOG_INFO, "Runtime init:new CbSubscribe ok, Runtime_alloc_size %zu.", sizeof(CbSubscribe));
+    RT_LOG(RT_LOG_INFO, "Runtime init:new CbSubscribe ok, Runtime_alloc_size %zu bytes.", sizeof(CbSubscribe));
     return RT_ERROR_NONE;
 }
 
@@ -1291,7 +1291,7 @@ rtError_t Runtime::InitLabelAllocator()
         RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1013, sizeof(LabelAllocator), "new");
         return RT_ERROR_LABEL_ALLOCATOR;
     }
-    RT_LOG(RT_LOG_INFO, "Runtime init:new LabelAllocator ok, Runtime_alloc_size %zu.", sizeof(LabelAllocator));
+    RT_LOG(RT_LOG_INFO, "Runtime init:new LabelAllocator ok, Runtime_alloc_size %zu bytes.", sizeof(LabelAllocator));
     return RT_ERROR_NONE;
 }
 
@@ -5130,7 +5130,7 @@ rtError_t Runtime::BinaryGetFunctionByName(
     NULL_PTR_RETURN_MSG(dev, RT_ERROR_DEVICE_NULL);
     if (!IS_SUPPORT_CHIP_FEATURE(dev->GetChipType(), RtOptionalFeatureType::RT_FEATURE_XPU)) {
         ret = progTmp->CopySoAndNameToCurrentDevice();
-        ERROR_RETURN(ret, "copy program to, failed retCode=%#x.", ret);
+        ERROR_RETURN(ret, "Copy program to device failed, retCode=%#x.", ret);
     }
 
     Kernel* kernel = const_cast<Kernel*>(progTmp->GetKernelByName(kernelName));
@@ -5140,7 +5140,7 @@ rtError_t Runtime::BinaryGetFunctionByName(
     *funcHandle = kernel;
     if (IS_SUPPORT_CHIP_FEATURE(dev->GetChipType(), RtOptionalFeatureType::RT_FEATURE_XPU)) {
         ret = progTmp->XpuSetKernelLiteralNameDevAddr(kernel, devId);
-        ERROR_RETURN(ret, "Set xpu kernel litera name dev addr failed, retCode=%#x.", ret);
+        ERROR_RETURN(ret, "Set xpu kernel literal name dev addr failed, retCode=%#x.", ret);
     }
     return RT_ERROR_NONE;
 }
@@ -5451,7 +5451,7 @@ Context* Runtime::CurrentContext(const bool isNeedSetDevice, int32_t deviceId) c
 
     // 异构场景不支持隐式setdevice
     if (RtIsHeterogenous()) {
-        RT_LOG(RT_LOG_DEBUG, "current ctx is nullptr, Heterogenous does not support set device.");
+        RT_LOG(RT_LOG_DEBUG, "current ctx is nullptr, Heterogeneous does not support set device.");
         return nullptr;
     }
 

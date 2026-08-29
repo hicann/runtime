@@ -134,7 +134,7 @@ def generate_stub_file(input_header):
     返  回 值 : 解析后的参数值
     """
     content = generate_function(input_header)
-    print("content has been generate")
+    print("content has been generated")
     return content
 
 def generate_function(header_files):
@@ -150,7 +150,7 @@ def generate_function(header_files):
         include_str = '#include "{}"\n'.format(os.path.basename(header_file))
 
         content.append(include_str)
-        print("include concent build success")
+        print("include content build success")
         content.append('\n')
         # generate implement
         if not header_file.endswith('.h'):
@@ -169,7 +169,7 @@ def generate_function(header_files):
                 content.append(func)
                 content.append("\n")
 
-    print("implement concent build success")
+    print("implement content build success")
     return content
 
 def main(input_header, output_cfile):
@@ -180,7 +180,7 @@ def main(input_header, output_cfile):
     """
     content = generate_stub_file(input_header)
     if content:
-        print("stub content have been generated")
+        print("stub content has been generated")
         if not output_cfile:
             output_cfile = os.path.basename(input_header).replace(".h", ".c")
         with open(output_cfile, mode='w') as output_cnt:

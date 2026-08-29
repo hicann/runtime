@@ -169,7 +169,7 @@ void PrintErrorInfoForModelMaintainceTask(TaskInfo* const taskInfo, const uint32
     const uint32_t taskId = taskInfo->id;
     const int32_t streamId = stream->Id_();
     RT_LOG(
-        RT_LOG_ERROR, "model maintaince execute failed device_id=%u, stream_id=%d, task_id=%u, flip_num=%hu.", devId,
+        RT_LOG_ERROR, "model maintenance execute failed device_id=%u, stream_id=%d, task_id=%u, flip_num=%hu.", devId,
         streamId, taskId, taskInfo->flipNum);
     const uint32_t modelId = (modelMaintainceTaskInfo->model != nullptr) ? modelMaintainceTaskInfo->model->Id_() :
                                                                            static_cast<uint32_t>(UINT16_MAX);
@@ -186,7 +186,8 @@ void DoCompleteSuccessForModelMaintainceTask(TaskInfo* const taskInfo, const uin
 
     if (unlikely(errorCode != static_cast<uint32_t>(RT_ERROR_NONE))) {
         RT_LOG(
-            RT_LOG_ERROR, "Model maintaince process error, retCode=%#x, [%s].", errorCode, GetTsErrCodeDesc(errorCode));
+            RT_LOG_ERROR, "Model maintenance process error, retCode=%#x, [%s].", errorCode,
+            GetTsErrCodeDesc(errorCode));
         stream->SetErrCode(errorCode);
         PrintErrorInfoForModelMaintainceTask(taskInfo, devId);
         TaskFailCallBack(

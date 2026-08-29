@@ -80,7 +80,7 @@ static void ConstructDavidSqeForModelMaintainceTask(
             phSqe->u.modelMaintainceInfo.streamExecTimesAddr = modelMaintainceTaskInfo->execTimesSvmOffset;
             PrintDavidSqe(davidSqe, "ModelBindTask");
             RT_LOG(
-                RT_LOG_INFO, "model maintaince type=%d, device_id=%u, bind stream_id=%hu to modelId=%hu, task_id=%hu",
+                RT_LOG_INFO, "model maintenance type=%d, device_id=%u, bind stream_id=%hu to modelId=%hu, task_id=%hu",
                 type, taskInfo->stream->Device_()->Id_(), phSqe->u.modelMaintainceInfo.streamId,
                 phSqe->u.modelMaintainceInfo.modelId, taskInfo->id);
             break;
@@ -89,7 +89,7 @@ static void ConstructDavidSqeForModelMaintainceTask(
             PrintDavidSqe(davidSqe, "ModelUnbindTask");
             RT_LOG(
                 RT_LOG_INFO,
-                "model maintaince type=%d, device_id=%u, unbind stream_id=%hu from modelId=%hu,"
+                "model maintenance type=%d, device_id=%u, unbind stream_id=%hu from modelId=%hu,"
                 "task_id=%hu",
                 type, taskInfo->stream->Device_()->Id_(), phSqe->u.modelMaintainceInfo.streamId,
                 phSqe->u.modelMaintainceInfo.modelId, taskInfo->id);
@@ -107,7 +107,7 @@ static void ConstructDavidSqeForModelMaintainceTask(
             PrintDavidSqe(davidSqe, "ModelPreProcTask");
             RT_LOG(
                 RT_LOG_INFO,
-                "model maintaince type=%d, device_id=%u, pre proc stream_id=%hu of modelId=%hu,"
+                "model maintenance type=%d, device_id=%u, pre proc stream_id=%hu of modelId=%hu,"
                 "endgraphNotifyId=%hu, taskId=%hu, executorFlag=%u.",
                 type, taskInfo->stream->Device_()->Id_(), phSqe->u.modelMaintainceInfo.streamId,
                 phSqe->u.modelMaintainceInfo.modelId, phSqe->u.modelMaintainceInfo.endgraphNotifyId, taskInfo->id,
@@ -117,7 +117,7 @@ static void ConstructDavidSqeForModelMaintainceTask(
             PrintDavidSqe(davidSqe, "ModelLoadCompleteTask");
             RT_LOG(
                 RT_LOG_INFO,
-                "model maintaince type=%d, device_id=%u, load complete stream_id=%hu of modelId=%hu,"
+                "model maintenance type=%d, device_id=%u, load complete stream_id=%hu of modelId=%hu,"
                 "task_id=%hu",
                 type, taskInfo->stream->Device_()->Id_(), phSqe->u.modelMaintainceInfo.streamId,
                 phSqe->u.modelMaintainceInfo.modelId, taskInfo->id);
@@ -126,14 +126,14 @@ static void ConstructDavidSqeForModelMaintainceTask(
             phSqe->header.preP = 1U;
             PrintDavidSqe(davidSqe, "ModelAbortTask");
             RT_LOG(
-                RT_LOG_INFO, "model maintaince type=%d, device_id=%u, abort stream_id=%hu of modelId=%hu, task_id=%hu",
+                RT_LOG_INFO, "model maintenance type=%d, device_id=%u, abort stream_id=%hu of modelId=%hu, task_id=%hu",
                 type, taskInfo->stream->Device_()->Id_(), phSqe->u.modelMaintainceInfo.streamId,
                 phSqe->u.modelMaintainceInfo.modelId, taskInfo->id);
             break;
         default:
             PrintDavidSqe(davidSqe, "ModelMaintainceTask");
             RT_LOG(
-                RT_LOG_INFO, "model maintaince type=%d, device_id=%u, stream_id=%hu, modelId=%hu, task_id=%hu", type,
+                RT_LOG_INFO, "model maintenance type=%d, device_id=%u, stream_id=%hu, modelId=%hu, task_id=%hu", type,
                 taskInfo->stream->Device_()->Id_(), phSqe->u.modelMaintainceInfo.streamId,
                 phSqe->u.modelMaintainceInfo.modelId, taskInfo->id);
             break;

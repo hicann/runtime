@@ -239,6 +239,10 @@ TEST_F(ApiParmaSqeTest, TaskPrefetchSqeBuild)
     void* bufInfo = malloc(bufferLen);
     memset_s(bufInfo, bufferLen, 0, bufferLen);
     taskInput.compilerInfo.u.nanoHostFuncTask.u.paramBufDesc.bufInfo = bufInfo;
+    taskInput.compilerInfo.u.nanoHostFuncTask.u.paramBufDesc.bufSize = bufferLen + 1U;
+    error = rtTaskBuild(&taskInput, &taskLen);
+    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+
     taskInput.compilerInfo.u.nanoHostFuncTask.u.paramBufDesc.bufSize = bufferLen;
     error = rtTaskBuild(&taskInput, &taskLen);
     EXPECT_EQ(error, RT_ERROR_NONE);

@@ -97,7 +97,7 @@ rtError_t ConstructHostFuncParamSqe(const rtTaskInput_t* const taskInput, uint32
     const rtParamBufDesc_t& paramBufDesc = taskInput->compilerInfo.u.nanoHostFuncTask.u.paramBufDesc;
 
     if (bufferLen < paramBufDesc.bufSize) {
-        RT_LOG(RT_LOG_ERROR, "paramBufSize [%u] greater bufferLen [%u].", paramBufDesc.bufSize, bufferLen);
+        RT_LOG(RT_LOG_ERROR, "paramBufSize [%u] is greater than bufferLen [%u].", paramBufDesc.bufSize, bufferLen);
         return RT_ERROR_INVALID_VALUE;
     }
 

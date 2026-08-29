@@ -1681,7 +1681,7 @@ rtError_t ElfProgram::GetKernelTypeAndMixType(
     kernelAttrType = static_cast<rtKernelAttrType>(RT_KERNEL_ATTR_TYPE_INVALID);
     mixType = static_cast<uint8_t>(NO_MIX);
     rtError_t error = GetKernelTypeAndMixTypeByMetaInfo(elfkernelInfo, kernelAttrType, mixType);
-    ERROR_RETURN(error, "Ger kernel type and mix type failed, retCode=%#x.", static_cast<uint32_t>(error));
+    ERROR_RETURN(error, "Get kernel type and mix type failed, retCode=%#x.", static_cast<uint32_t>(error));
 
     COND_RETURN_INFO(
         (kernelAttrType != static_cast<rtKernelAttrType>(RT_KERNEL_ATTR_TYPE_INVALID)), RT_ERROR_NONE,

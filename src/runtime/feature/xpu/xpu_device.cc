@@ -110,8 +110,8 @@ rtError_t XpuDevice::ParseXpuConfigInfo()
     COND_RETURN_ERROR(ret != RT_ERROR_NONE, ret, "Failed to parse xpu config info, file name=%s", fileName.c_str());
     RT_LOG(
         RT_LOG_INFO,
-        "xpu config info: ver=%f, max_stream_num=%u, max_stream_depth=%u, timeout_monitor_granularity=%u, "
-        "default_task_exec_timeout=%u",
+        "xpu config info: ver=%f, max_stream_num=%u, max_stream_depth=%u, timeout_monitor_granularity=%u ms, "
+        "default_task_exec_timeout=%u ms.",
         configInfo_.version, configInfo_.maxStreamNum, configInfo_.maxStreamDepth,
         configInfo_.timeoutMonitorGranularity, configInfo_.defaultTaskExeTimeout);
     return RT_ERROR_NONE;
@@ -201,7 +201,7 @@ rtError_t XpuDevice::InitXpuDriver()
 void XpuDevice::FreeStreamIdBitmap(const int32_t id)
 {
     if (id == -1) {
-        RT_LOG(RT_LOG_DEBUG, "Stream id is not allocted, no need to free.");
+        RT_LOG(RT_LOG_DEBUG, "Stream id is not allocated, no need to free.");
         return;
     }
 

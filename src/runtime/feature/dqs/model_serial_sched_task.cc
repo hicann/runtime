@@ -229,7 +229,7 @@ void StarsSetResultForModelSerialSchedTask(TaskInfo* taskInfo, const rtCqReport_
         errorStr = it->second;
     }
     RT_LOG(
-        RT_LOG_ERROR, "Model serial sched task happen error, aicpuErrorCode=%#x, errorStr=%s.", aicpuErrorCode,
+        RT_LOG_ERROR, "Model serial sched task error occurred, aicpuErrorCode=%#x, errorStr=%s.", aicpuErrorCode,
         errorStr.c_str());
     taskInfo->errorCode = TS_ERROR_TASK_EXCEPTION;
 }

@@ -263,7 +263,7 @@ static void SetStarsResultByErrorType(TaskInfo* taskInfo, const rtCqReport_t& lo
 void StarsV2SetStarsResultForDavinciTask(TaskInfo* taskInfo, const rtCqReport_t& logicCq)
 {
     if (taskInfo->type == TS_TASK_TYPE_KERNEL_AICPU) {
-        RT_LOG(RT_LOG_DEBUG, "AI CPU Kernel task happen error, retCode=%#x.", logicCq.errorCode);
+        RT_LOG(RT_LOG_DEBUG, "An error occurred in the AI CPU kernel task, retCode=%#x.", logicCq.errorCode);
         const uint32_t aicpuErrorCode = logicCq.errorCode >> RT_AICPU_ERROR_CODE_BIT_MOVE;
         if (aicpuErrorCode == AICPU_HCCL_OP_UB_DDRC_FAILED || aicpuErrorCode == AICPU_HCCL_OP_UB_POISON_FAILED ||
             aicpuErrorCode == AICPU_HCCL_OP_UB_LINK_FAILED) {

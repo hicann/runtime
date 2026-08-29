@@ -62,7 +62,7 @@ rtError_t GetDrvSentinelMode(void)
     // 1：to lowpower  3: lowpower
     const bool mode = ((sentinelMode == 1) || (sentinelMode == 3) || (dieNum == 0)) ? true : false;
     Runtime::Instance()->SetSentinelMode(mode);
-    RT_LOG(RT_LOG_INFO, "Get sentinel mode info success.sentinelMode=%u,dieNum=%lld", sentinelMode, dieNum);
+    RT_LOG(RT_LOG_INFO, "Get sentinel mode info success, sentinelMode=%u, dieNum=%lld", sentinelMode, dieNum);
     return RT_ERROR_NONE;
 }
 

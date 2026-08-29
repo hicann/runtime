@@ -68,7 +68,7 @@ rtError_t GetNpuArchByName(const char_t* const socName, int32_t* hardwareNpuArch
         *hardwareNpuArch = std::stoi(result);
     } catch (...) {
         *hardwareNpuArch = MAX_INT32_NUM;
-        RT_LOG(RT_LOG_ERROR, "NpuArch [%s] is inValid.", result.c_str());
+        RT_LOG(RT_LOG_ERROR, "NpuArch [%s] is invalid.", result.c_str());
         return RT_ERROR_INVALID_VALUE;
     }
     return RT_ERROR_NONE;

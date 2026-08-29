@@ -749,7 +749,7 @@ void PrintAicAivErrorInfoForFftsPlusTask(TaskInfo* taskInfo, const rtFftsPlusTas
 
     std::string kernelName;
     for (uint32_t i = 0U; i < mapAddr.size(); i++) {
-        RT_LOG(RT_LOG_DEBUG, "contextype=%u, map[%u]=%#" PRIx64 ".", contextInfo.contextType, i, mapAddr[i]);
+        RT_LOG(RT_LOG_DEBUG, "contextType=%u, map[%u]=%#" PRIx64 ".", contextInfo.contextType, i, mapAddr[i]);
         if (mapAddr[i] == info.pcStart) {
             kernelName = taskInfo->stream->Device_()->LookupKernelNameByAddr(mapAddr[i]);
             break;

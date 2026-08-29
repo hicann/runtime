@@ -1031,7 +1031,7 @@ aclError aclrtMemcpy2dImpl(
     ACL_REQUIRES_RTS_OK(rtMemcpy2d(dst, dpitch, src, spitch, width, height, rtKind));
 
     ACL_LOG_DEBUG(
-        "Successfuly execute aclrtMemcpy2d, dpitch = %zu, spitch = %zu, width = %zu, height = %zu, "
+        "Successfully execute aclrtMemcpy2d, dpitch = %zu, spitch = %zu, width = %zu, height = %zu, "
         "kind = %s",
         dpitch, spitch, width, height, acl::GetMemcpyKindDesc(kind));
     return ACL_SUCCESS;
@@ -1057,7 +1057,7 @@ aclError aclrtMemcpy2dAsyncImpl(
         rtMemcpy2dAsync(dst, dpitch, src, spitch, width, height, rtKindVal, stream), rtMemcpy2dAsync);
 
     ACL_LOG_DEBUG(
-        "Successfuly execute aclrtMemcpy2dAsync, dpitch = %zu, spitch = %zu, width = %zu, height = %zu, "
+        "Successfully execute aclrtMemcpy2dAsync, dpitch = %zu, spitch = %zu, width = %zu, height = %zu, "
         "kind = %s",
         dpitch, spitch, width, height, acl::GetMemcpyKindDesc(kind));
     return ACL_SUCCESS;
@@ -1448,7 +1448,7 @@ aclError aclrtMemcpyAsyncWithOffsetImpl(
     ACL_PROFILING_REG(acl::AclProfType::AclrtMemcpyAsyncWithOffset);
     ACL_LOG_INFO("start to execute aclrtMemcpyAsyncWithOffset");
     if (count == 0UL) {
-        ACL_LOG_INFO("zero-size memcpy, no memory copy async with offsetwill be performed");
+        ACL_LOG_INFO("zero-size memcpy, no memory copy async with offset will be performed");
         return ACL_SUCCESS;
     }
 

@@ -402,7 +402,7 @@ static void ConstructPlaceHolderSqe(TaskInfo* const taskInfo, rtStarsSqe_t* cons
     sqe->u.memcpyAsyncWithoutSdmaInfo.pid = static_cast<uint32_t>(drvDeviceGetBareTgid());
     PrintSqe(command, "MemCopyAsyncByPlaceHolder");
     RT_LOG(
-        RT_LOG_INFO, "ConstructSqe, size_=%" PRIu64 ", pid=%u.", memcpyAsyncTaskInfo->size,
+        RT_LOG_INFO, "ConstructSqe, size_=%" PRIu64 " bytes, pid=%u.", memcpyAsyncTaskInfo->size,
         sqe->u.memcpyAsyncWithoutSdmaInfo.pid);
 }
 

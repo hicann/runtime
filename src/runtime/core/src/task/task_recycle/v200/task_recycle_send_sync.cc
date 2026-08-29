@@ -51,7 +51,7 @@ static void ReportTimeoutProc(
         timeoutCnt = 0;
         const mmTimespec curTimeSpec = mmGetTickCount();
         RT_LOG(
-            RT_LOG_EVENT, "report timeout! streamId=%u, pos=%u, curSec=%llu.", stm->Id_(), taskResPos,
+            RT_LOG_EVENT, "report timeout! streamId=%u, pos=%u, curMs=%llu.", stm->Id_(), taskResPos,
             ((static_cast<uint64_t>(curTimeSpec.tv_sec) * RT_MS_PER_S) +
              (static_cast<uint64_t>(curTimeSpec.tv_nsec) / RT_MS_TO_NS)));
         if (Runtime::Instance()->excptCallBack_ != nullptr) {

@@ -86,7 +86,7 @@ rtError_t Profiler::Init()
     COND_RETURN_AND_MSG_OUTER(
         apiProfileDecorator_ == nullptr, RT_ERROR_PROF_NEW, ErrorCode::EE1013,
         std::to_string(sizeof(ApiProfileDecorator)).c_str(), "new");
-    RT_LOG(RT_LOG_DEBUG, "new ApiProfileDecorator ok, size=%zu", sizeof(ApiProfileDecorator));
+    RT_LOG(RT_LOG_DEBUG, "new ApiProfileDecorator ok, size=%zu bytes", sizeof(ApiProfileDecorator));
 
     if (&InitApiProfileLogDecorator != nullptr) {
         InitApiProfileLogDecorator(api_, this, &apiProfileLogDecorator_);
@@ -97,7 +97,7 @@ rtError_t Profiler::Init()
             std::to_string(logDecoratorSize).c_str(), "new");
         RT_LOG(RT_LOG_DEBUG, "new ApiProfileLogDecorator ok, size=%zu", logDecoratorSize);
 
-        RT_LOG(RT_LOG_INFO, "Init ok, Runtime_alloc_size %zu", sizeof(ApiProfileDecorator) + logDecoratorSize);
+        RT_LOG(RT_LOG_INFO, "Init ok, Runtime_alloc_size %zu bytes", sizeof(ApiProfileDecorator) + logDecoratorSize);
     } else {
         RT_LOG(RT_LOG_INFO, "ApiProfileLogDecorator not provided on this platform, skipped");
         apiProfileLogDecorator_ = nullptr;

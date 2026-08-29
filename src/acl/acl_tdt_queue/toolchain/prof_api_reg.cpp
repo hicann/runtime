@@ -44,7 +44,7 @@ static aclError RegisterProfType()
         const uint32_t typeId = static_cast<uint32_t>(iter.first);
         const auto ret = MsprofRegTypeInfo(MSPROF_REPORT_ACL_LEVEL, typeId, iter.second.c_str());
         if (ret != MSPROF_ERROR_NONE) {
-            ACL_LOG_CALL_ERROR("Registered api type [%s(%u)] failed = %d", iter.second.c_str(), typeId, ret);
+            ACL_LOG_CALL_ERROR("Register api type [%s(%u)] failed = %d", iter.second.c_str(), typeId, ret);
             return ACL_ERROR_PROFILING_FAILURE;
         }
     }

@@ -595,7 +595,7 @@ rtError_t DavidStream::TearDown(const bool terminal, bool flag)
     while ((!((dynamic_cast<TaskResManageDavid*>(taskResMang_))->IsEmpty())) &&
            (device_->GetDevRunningState() == static_cast<uint32_t>(DEV_RUNNING_NORMAL))) {
         if (abortStatus_ == RT_ERROR_DEVICE_TASK_ABORT) {
-            RT_LOG(RT_LOG_WARNING, "stream is abort, stream_id=%d, pendingNum=%d.", stmId, pendingNum_.Value());
+            RT_LOG(RT_LOG_WARNING, "stream is aborted, stream_id=%d, pendingNum=%d.", stmId, pendingNum_.Value());
             break;
         }
         StreamSyncLock();
@@ -709,7 +709,7 @@ rtError_t DavidStream::SetupByFlagAndCheck(void)
         ERROR_RETURN(
             error, "Failed to get sq reg virtual addr, deviceId=%u, sqId=%u, retCode=%#x.", device_->Id_(), sqId_,
             static_cast<uint32_t>(error));
-        RT_LOG(RT_LOG_INFO, "Success to get sq=%u sq reg virtual addr length=%u.", sqId_, addrLen);
+        RT_LOG(RT_LOG_INFO, "Successfully got sq=%u sq reg virtual addr length=%u.", sqId_, addrLen);
         error = SetSqRegVirtualAddrToDevice(sqRegVirtualAddr_);
         ERROR_RETURN_MSG_INNER(
             error, "Failed to set sq virtual addr to device, sqId=%u, retCode=%#x.", sqId_,

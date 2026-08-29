@@ -278,7 +278,7 @@ aclError aclrtSetStreamOverflowSwitchImpl(aclrtStream stream, uint32_t flag)
     ACL_LOG_INFO("start to execute aclrtSetStreamOverflowSwitch, flag is %u.", flag);
     ACL_CHECK_INVALID_VALUE_WITH_EXPECT((flag == 0U) || (flag == 1U), flag, "0 or 1");
     ACL_REQUIRES_RTS_OK(rtSetStreamOverflowSwitch(static_cast<rtStream_t>(stream), flag));
-    ACL_LOG_INFO("successfully execute rtSetStreamOverflowSwitch, flag is %u.", flag);
+    ACL_LOG_INFO("successfully execute aclrtSetStreamOverflowSwitch, flag is %u.", flag);
     return ACL_SUCCESS;
 }
 

@@ -422,8 +422,8 @@ rtError_t SegmentManager::TrimTo(const uint64_t minBytesToKeep)
     std::lock_guard<std::mutex> lock(mutex_);
     RT_LOG(RT_LOG_DEBUG, "Trim reserved size from %lu to %lu.", reserveSize_, minBytesToKeep);
     COND_RETURN_ERROR(
-        minBytesToKeep > size_, RT_ERROR_POOL_OP_INVALID,
-        "Trim size should smaller than mempool total size, total size=%lu, trim to size=%lu.", size_, minBytesToKeep);
+        minBytesToKeep > size_, RT_ERROR_POOL_OP_INVALID, "trimSize=%lu bytes exceeds poolSize=%lu bytes.",
+        minBytesToKeep, size_);
     COND_RETURN_DEBUG(
         minBytesToKeep >= reserveSize_, RT_ERROR_NONE, "No need to trim, reserved size=%lu, trim to size=%lu.",
         reserveSize_, minBytesToKeep);
@@ -496,8 +496,7 @@ rtError_t SegmentManager::SetAttribute(rtMemPoolAttr attr, const void* value)
             reset = *static_cast<const uint64_t*>(value);
             COND_RETURN_ERROR(
                 reset > size_, RT_ERROR_POOL_PROP_INVALID,
-                "Value is out of range, reset value=%#" PRIx64 ", should less than maxsize=%#" PRIx64 ".", reset,
-                size_);
+                "releaseThreshold=%#" PRIx64 " bytes exceeds poolSize=%#" PRIx64 " bytes.", reset, size_);
             state_.waterMark = reset;
             RT_LOG(
                 RT_LOG_DEBUG, "Set attribute releaseThreshold, value=%#" PRIx64 ".",

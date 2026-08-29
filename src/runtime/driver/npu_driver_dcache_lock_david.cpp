@@ -65,7 +65,7 @@ rtError_t AllocAddrForDcache(const uint32_t deviceId, void*& dcacheAddr, const u
     drvError_t drvRet = halMemCreate(&handle, readSize, &prop, 0U);
     if (drvRet != DRV_ERROR_NONE || handle == nullptr) {
         RT_LOG(
-            RT_LOG_WARNING, "drv api] halMemCreate failed, drvRet=%u, size=%lld, readSize=%lld.", drvRet, size,
+            RT_LOG_WARNING, "[drv api] halMemCreate failed, drvRet=%u, size=%lld, readSize=%lld.", drvRet, size,
             readSize);
         return RT_ERROR_DCACHE_MEM_ALLOC_FAIL;
     }

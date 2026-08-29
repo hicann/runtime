@@ -767,7 +767,7 @@ rtError_t Stream::Setup()
             static_cast<int32_t>(device_->Id_()), device_->DevGetTsId(), sqId_, &sqRegVirtualAddr_, &addrLen);
         ERROR_RETURN_MSG_INNER(
             error, "Failed to get sq reg virtual addr, deviceId=%u, sqId=%u.", device_->Id_(), sqId_);
-        RT_LOG(RT_LOG_INFO, "Success to get sq=%u sq reg virtual addr length=%u.", sqId_, addrLen);
+        RT_LOG(RT_LOG_INFO, "Successfully got sq=%u sq reg virtual addr length=%u.", sqId_, addrLen);
         if (device_->GetSocVersion() == "Ascend031") {
             sqRegVirtualAddr_ = RT_STARS_BASE_ADDR_78000000 + RT_SIMPLE_SQ0_STARS_P0_SQ_CFG4_0_REG +
                                 sqId_ * RT_SIMPLE_SQ_OFFSET_1000 - STARS_SIMPLE_SQ_HEAD_OFFSET;
@@ -1433,7 +1433,7 @@ rtError_t Stream::TearDown(const bool terminal, bool flag)
     rtError_t errorReason;
 
     if (fusioning_) {
-        RT_LOG(RT_LOG_WARNING, "fusion is not match, stream_id=%d", stmId);
+        RT_LOG(RT_LOG_WARNING, "fusion does not match, stream_id=%d", stmId);
     }
     const bool starsFlag = dev->IsStarsPlatform();
     if (Runtime::IsProcessExiting(rt)) {
@@ -2115,7 +2115,7 @@ rtError_t Stream::Synchronize(const bool isNeedWaitSyncCq, int32_t timeout)
 #endif
     TryToFreeEventIdAndDestroyEvent(&event, event->EventId_(), true);
     if (fftsMemAllocCnt != fftsMemFreeCnt) {
-        RT_LOG(RT_LOG_ERROR, "fftsMemAllocCnt=%u, fftsMemAllocCnt=%u.", fftsMemAllocCnt, fftsMemFreeCnt);
+        RT_LOG(RT_LOG_ERROR, "fftsMemAllocCnt=%u, fftsMemFreeCnt=%u.", fftsMemAllocCnt, fftsMemFreeCnt);
     }
     error = GetError();
 
@@ -4685,7 +4685,7 @@ rtError_t Stream::ModelTaskUpdate(
         para);
     COND_PROC(
         (error == RT_ERROR_DRV_IOCTRL),
-        RT_LOG(RT_LOG_ERROR, "MemTranslate offset may used out, Please reduce IFA update task num."));
+        RT_LOG(RT_LOG_ERROR, "MemTranslate offset may be used up, please reduce IFA update task num."));
 
     ERROR_GOTO(error, ERROR_TASK, "Failed to init model update task.error=%d.", error);
 

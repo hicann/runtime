@@ -404,7 +404,9 @@ static void ReportNotifyErrorForNotifyWaitTask(TaskInfo* taskInfo, const uint32_
         MapNotifyErrorCodeForFastRecovery(taskInfo, devId);
     }
     const uint32_t errorCode = taskInfo->errorCode;
-    RT_LOG(RT_LOG_ERROR, "Kernel task happen error, retCode=%#x, [%s].", errorCode, GetTsErrCodeDesc(errorCode));
+    RT_LOG(
+        RT_LOG_ERROR, "Kernel task execution error occurred, retCode=%#x, [%s].", errorCode,
+        GetTsErrCodeDesc(errorCode));
     stream->SetErrCode(errorCode);
     PrintErrorInfoForNotifyWaitTask(taskInfo, devId);
     TaskFailCallBack(

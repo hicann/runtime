@@ -79,7 +79,7 @@ rtError_t StreamLaunchKernelPrepare(
     NULL_PTR_RETURN_MSG(prog, RT_ERROR_PROGRAM_NULL);
     COND_RETURN_ERROR_MSG_INNER(
         (progHandle != nullptr) && (prog != RtPtrToPtr<Program*, void*>(progHandle)), RT_ERROR_PROGRAM_BASE,
-        "Kernel prog is not belong to the launch prog.");
+        "Kernel prog does not belong to the launch prog.");
 
     kernelAttrType = registeredKernel->GetKernelAttrType();
     COND_RETURN_ERROR_MSG_INNER(

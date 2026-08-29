@@ -29,6 +29,7 @@
 #include "scheduler.hpp"
 #include "hwts.hpp"
 #include "stream.hpp"
+#include "stream_sqcq_manage.hpp"
 #include "npu_driver.hpp"
 #include "context.hpp"
 #include "device/device_error_proc.hpp"
@@ -129,6 +130,9 @@ TEST_F(DirectHwtsEngineTest, TaskReclaimEx_handleShmTask)
     RawDevice* device = new RawDevice(0);
     DirectHwtsEngine engine(device);
     uint32_t taskId = 0U;
+    device->streamSqCqManage_ = new StreamSqCqManage(device);
+    EXPECT_EQ(engine.TaskReclaimAllForNoRes(false, taskId), RT_ERROR_NONE);
+
     rtShmQuery_t shareMemInfo;
     shareMemInfo.valid = SQ_SHARE_MEMORY_VALID;
     shareMemInfo.taskId = 1U;

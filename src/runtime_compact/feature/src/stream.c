@@ -79,7 +79,7 @@ Stream* CreateStream(Context* curCtx, rtStreamConfigHandle* handle, rtError_t* e
     *error = SetupStream(stm);
     if (*error != ACL_RT_SUCCESS) {
         FreeStream(stm);
-        RT_LOG_ERROR("stream setup fail., ret=%#x.", *error);
+        RT_LOG_ERROR("stream setup failed, ret=%#x.", *error);
         return NULL;
     }
 

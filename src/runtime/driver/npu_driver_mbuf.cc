@@ -81,7 +81,7 @@ rtError_t NpuDriver::MbufAllocEx(
         }
     } else if (flag == DVPP_MEM) {
         COND_RETURN_WARN(
-            &halMbufAllocEx == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT, "[drv api] halMbufAlloc does not exist.");
+            &halMbufAllocEx == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT, "[drv api] halMbufAllocEx does not exist.");
         constexpr uint32_t align = 128U; // dvpp default 128-bit alignment
         const drvError_t drvRet = static_cast<drvError_t>(halMbufAllocEx(
             size, align, static_cast<unsigned long>(BUFF_SP_DVPP | BUFF_SP_HUGEPAGE_PRIOR), grpId,

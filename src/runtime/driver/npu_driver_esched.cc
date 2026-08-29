@@ -223,7 +223,7 @@ rtError_t NpuDriver::EschedAckEvent(
 {
     RT_LOG(
         RT_LOG_INFO,
-        "Esched subscribe event, drv devId=%d, grpevent_idId=%u, "
+        "Esched ack event, drv devId=%d, event_id=%u, "
         "subevent_id=%u, len=%u.",
         devId, static_cast<uint32_t>(evtId), subeventId, len);
 

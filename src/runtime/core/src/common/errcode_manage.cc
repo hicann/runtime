@@ -647,7 +647,7 @@ std::string ErrorcodeManage::GetErrorDesc(const RtInnerErrcodeType errcode)
         if (errcode >= RT_ERRORCODE_BASE) {
             ss << "ErrCode=";
             ss << ACL_ERROR_RT_INTERNAL_ERROR;
-            ss << ", desc=[runtime internel error]";
+            ss << ", desc=[runtime internal error]";
             ss << ", InnerCode=0x";
             ss << std::hex << errcode;
             return ss.str();
@@ -674,7 +674,7 @@ std::string ErrorcodeManage::GetErrorReason(const RtInnerErrcodeType errcode)
     const auto it = rtErrMap_.find(errcode);
     if (it == rtErrMap_.end()) {
         if (errcode >= RT_ERRORCODE_BASE) {
-            ss << "[runtime internel error]";
+            ss << "[runtime internal error]";
             return ss.str();
         } else {
             ss << "[callback error]";

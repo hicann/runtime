@@ -184,7 +184,7 @@ rtError_t Module::Load(Program* const prog)
         ERROR_GOTO(
             error, FAIL_FREE,
             "Memcpy failed, size=%u(bytes),"
-            "type=%s, retCode=%#x",
+            " type=%s, retCode=%#x",
             size, MemcpyKindToStr(RT_MEMCPY_HOST_TO_DEVICE), static_cast<uint32_t>(error));
     }
     RT_LOG(RT_LOG_DEBUG, "Load on device addr=%p, size=%u(bytes), program id=%u.", baseAddrAlign_, size, prog->Id_());

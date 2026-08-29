@@ -331,13 +331,12 @@ static rtError_t InterChipDqsTaskInit(Stream* const stream)
 
         result = LaunchDqsInterChipTaskByType(stream, groupIdx, DqsInterChipTaskType::DQS_INTER_CHIP_TASK_POSTPROC);
         ERROR_RETURN(
-            result, "Init post-proc task task failed for groupIdx=%u, ret=%#x", groupIdx,
-            static_cast<uint32_t>(result));
+            result, "Init post-proc task failed for groupIdx=%u, ret=%#x", groupIdx, static_cast<uint32_t>(result));
     }
 
     // add nop task
     result = LaunchDqsInterChipTaskByType(stream, 0U, DqsInterChipTaskType::DQS_INTER_CHIP_TASK_NOP);
-    ERROR_RETURN(result, "Init nop task task failed, ret=%#x", static_cast<uint32_t>(result));
+    ERROR_RETURN(result, "Init nop task failed, ret=%#x", static_cast<uint32_t>(result));
 
     RT_LOG(RT_LOG_INFO, "Init inter-chip dqs tasks successfully for streamId: %d, grpCnt=%u", stream->Id_(), grpCnt);
     return RT_ERROR_NONE;

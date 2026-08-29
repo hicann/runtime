@@ -130,7 +130,7 @@ static void ConstructPlaceHolderSqe(TaskInfo* const taskInfo, rtStarsSqe_t* cons
     }
     PrintSqe(command, "MemCopyAsyncByPlaceHolder");
     RT_LOG(
-        RT_LOG_INFO, "ConstructSqe, size_=%" PRIu64 ", pid=%u.", memcpyAsyncTaskInfo->size,
+        RT_LOG_INFO, "ConstructSqe, size_=%" PRIu64 " bytes, pid=%u.", memcpyAsyncTaskInfo->size,
         sqe->u.memcpy_async_without_sdma_info.pid);
 }
 
@@ -193,7 +193,8 @@ void ConstructPcieDmaSqe(TaskInfo* const taskInfo, rtStarsSqe_t* const command)
         // 1980C reserved for debug
         PrintSqe(command, "pcieDmaTask");
         RT_LOG(
-            RT_LOG_INFO, "stream_id=%d, task_id=%hu, copyType=%u, src=%#" PRIx64 ", dst=%#" PRIx64 ", len=%#" PRIx64,
+            RT_LOG_INFO,
+            "stream_id=%d, task_id=%hu, copyType=%u, src=%#" PRIx64 ", dst=%#" PRIx64 ", len=%#" PRIx64 " bytes",
             stream->Id_(), taskInfo->id, memcpyAsyncTaskInfo->copyType, sqe->src, sqe->dst, sqe->length);
         return;
     }
@@ -211,7 +212,7 @@ void ConstructPcieDmaSqe(TaskInfo* const taskInfo, rtStarsSqe_t* const command)
         RT_LOG(
             RT_LOG_INFO,
             "stream_id=%d, type=%u, task_id=%hu, sqId=%u, pos=%u, "
-            "copyType=%u, src=%#" PRIx64 ", dst=%#" PRIx64 ", len=%#" PRIx64,
+            "copyType=%u, src=%#" PRIx64 ", dst=%#" PRIx64 ", len=%#" PRIx64 " bytes",
             stream->Id_(), sqe->header.type, taskInfo->id, memcpyAsyncTaskInfo->sqId, memcpyAsyncTaskInfo->taskPos,
             memcpyAsyncTaskInfo->copyType, sqe->src, sqe->dst, sqe->length);
         return;
@@ -315,7 +316,7 @@ static void ConstructMemcpySqe(TaskInfo* const taskInfo, rtStarsSqe_t* const com
     }
     RT_LOG(
         RT_LOG_INFO,
-        "ConstructSqe size=%llu, qos=%u, partid=%u, copyType=%u, kernelCredit=%u, dstSubStreamId=%u, "
+        "ConstructSqe size=%llu bytes, qos=%u, partid=%u, copyType=%u, kernelCredit=%u, dstSubStreamId=%u, "
         "copyKind=%u, Opcode=0x%x, taskType=%d.",
         memcpyAsyncTaskInfo->size, sqe->qos, sqe->partid, copyType, sqe->kernelCredit,
         static_cast<uint32_t>(sqe->dstSubStreamId), static_cast<uint32_t>(copyKind), static_cast<uint32_t>(sqe->opcode),
@@ -785,7 +786,7 @@ void ConstructSqeForUpdateAddressTask(TaskInfo* const taskInfo, rtStarsSqe_t* co
     sqe->u.updateAddrInfo.dev_addr = updateAddrTask->devAddr;
     sqe->u.updateAddrInfo.len = updateAddrTask->len;
     PrintSqe(command, "UpdateAddressByPlaceHolder");
-    RT_LOG(RT_LOG_INFO, "ConstructSqe, len=%" PRIu64 ", stream_id=%d.", updateAddrTask->len, stream->Id_());
+    RT_LOG(RT_LOG_INFO, "ConstructSqe, len=%" PRIu64 " bytes, stream_id=%d.", updateAddrTask->len, stream->Id_());
 }
 #endif
 

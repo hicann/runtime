@@ -133,7 +133,10 @@ TEST_F(CloudV2ApiImplSpecTest, get_notify_phy_info)
     EXPECT_EQ(error, RT_ERROR_NONE);
     EXPECT_TRUE(notify != nullptr);
 
-    rtNotifyPhyInfo notifyInfo;
+    rtNotifyPhyInfo notifyInfo = {};
+    error = apiImpl.GetNotifyPhyInfo(nullptr, &notifyInfo);
+    EXPECT_EQ(error, RT_ERROR_NOTIFY_NULL);
+
     error = apiImpl.GetNotifyPhyInfo(notify, &notifyInfo);
     EXPECT_EQ(error, RT_ERROR_NONE);
     phyDevid = notifyInfo.phyId;

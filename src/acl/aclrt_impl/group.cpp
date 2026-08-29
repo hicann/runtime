@@ -150,7 +150,7 @@ aclError aclrtGetGroupInfoDetailImpl(
     if ((groupIndex < 0) || (static_cast<uint32_t>(groupIndex) >= count)) {
         ACL_LOG_ERROR("the index value of group is invalid, groupIndex = %d, not in range [0, %u)", groupIndex, count);
         const std::string groupIndexVal = std::to_string(groupIndex);
-        std::string expect = "[0, " + std::to_string(count) + "]";
+        std::string expect = "[0, " + std::to_string(count) + ")";
         std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__);
         acl::AclErrorLogManager::ReportInputError(
             acl::INVALID_VALUE_MSG, std::vector<const char*>({"func", "value", "param", "expect"}),

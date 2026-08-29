@@ -57,18 +57,18 @@ rtError_t SetMixDescBufOffset(
     rtError_t error = RT_ERROR_NONE;
     // only mix need translate descAlignBuf
     if (destTask->type == TS_TASK_TYPE_FFTS_PLUS) {
-        RT_LOG(RT_LOG_INFO, "ffts plus senario, desStreamId=%u, destaskId=%u", desStreamId, destaskId);
+        RT_LOG(RT_LOG_INFO, "ffts plus scenario, desStreamId=%u, destaskId=%u", desStreamId, destaskId);
         error = taskInfo->stream->Device_()->Driver_()->MemAddressTranslate(
             static_cast<int32_t>(dev->Id_()), RtPtrToValue(destTask->u.fftsPlusTask.descAlignBuf), descBufOffset);
     } else if (
         (destTask->type == TS_TASK_TYPE_KERNEL_AICORE) && (destTask->u.aicTaskInfo.kernel != nullptr) &&
         (destTask->u.aicTaskInfo.kernel->GetMixType() != NO_MIX)) {
-        RT_LOG(RT_LOG_INFO, "aicore mix senario, desStreamId=%u, destaskId=%u", desStreamId, destaskId);
+        RT_LOG(RT_LOG_INFO, "aicore mix scenario, desStreamId=%u, destaskId=%u", desStreamId, destaskId);
         error = taskInfo->stream->Device_()->Driver_()->MemAddressTranslate(
             static_cast<int32_t>(dev->Id_()), RtPtrToValue(destTask->u.aicTaskInfo.descAlignBuf), descBufOffset);
     } else {
         RT_LOG(
-            RT_LOG_INFO, "no mix senario. taskType=%u, desStreamId=%u, destaskId=%u", destTask->type, desStreamId,
+            RT_LOG_INFO, "no mix scenario. taskType=%u, desStreamId=%u, destaskId=%u", destTask->type, desStreamId,
             destaskId);
     }
 

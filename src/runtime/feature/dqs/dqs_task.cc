@@ -467,7 +467,9 @@ static rtError_t InitFuncCallParaForDqsZeroCopyTask(
                 break;
             }
         }
-        COND_RETURN_ERROR((queueIndex >= ctrlSpacePtr->input_queue_num), RT_ERROR_INVALID_VALUE, "Invalid queueId!");
+        COND_RETURN_ERROR(
+            (queueIndex >= ctrlSpacePtr->input_queue_num), RT_ERROR_INVALID_VALUE, "Invalid input queueId=%u.",
+            queueId);
     } else if (copyType == RT_DQS_ZERO_COPY_OUTPUT) {
         for (; queueIndex < ctrlSpacePtr->output_queue_num; queueIndex++) {
             if (queueId == ctrlSpacePtr->output_queue_ids[queueIndex]) {
@@ -477,7 +479,9 @@ static rtError_t InitFuncCallParaForDqsZeroCopyTask(
                 break;
             }
         }
-        COND_RETURN_ERROR((queueIndex >= ctrlSpacePtr->output_queue_num), RT_ERROR_INVALID_VALUE, "Invalid queueId!");
+        COND_RETURN_ERROR(
+            (queueIndex >= ctrlSpacePtr->output_queue_num), RT_ERROR_INVALID_VALUE, "Invalid output queueId=%u.",
+            queueId);
     } else {
         RT_LOG(RT_LOG_ERROR, "Invalid DqsZeroCopy type, copyType=UNKNOWN(%u)", static_cast<uint32_t>(copyType));
         return RT_ERROR_INVALID_VALUE;

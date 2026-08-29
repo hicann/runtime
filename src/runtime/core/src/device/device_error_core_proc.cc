@@ -1312,7 +1312,7 @@ rtError_t DeviceErrorProc::ProcessStarsCoreTimeoutDfxInfo(
     RT_LOG(
         RT_LOG_ERROR,
         "The error from device(chipId:%u, dieId:%u), serial number is %" PRIu64 ", "
-        "aicore task timeout dfx, falut_stream_id=%u, falut_task_id=%u, falut_slot_id=%u, timeout and own_bitmap=0",
+        "aicore task timeout dfx, fault_stream_id=%u, fault_task_id=%u, fault_slot_id=%u, timeout and own_bitmap=0",
         common.chipId, common.dieId, errorNumber, common.streamId, common.taskId, common.exceptionSlotId);
     TaskInfo* errTaskPtr = dev->GetTaskFactory()->GetTask(static_cast<int32_t>(common.streamId), common.taskId);
     if (errTaskPtr != nullptr) {
@@ -1391,7 +1391,7 @@ void DeviceErrorProc::ProcessStarsTimeoutDfxSlotInfo(
     RT_LOG(
         RT_LOG_ERROR,
         "aicore task timeout dfx, show slot info, slot_id=%u, device_id=%u, stream_id=%u, task_id=%u, "
-        "sche_mode=%u, blockd_dim=%u, aic_own_bitmap=%#" PRIx64 ", aiv_own_bitmap0=%#" PRIx64
+        "sche_mode=%u, block_dim=%u, aic_own_bitmap=%#" PRIx64 ", aiv_own_bitmap0=%#" PRIx64
         " aiv_own_bitmap1=%#" PRIx64 ", "
         "kernel_name=%s, kernel_info_ext=%s, pc_start=%#" PRIx64 ".",
         slotInfo.slotId, dev->Id_(), streamId, taskId, aicTaskInfo->schemMode, aicTaskInfo->comm.dim,

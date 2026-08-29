@@ -216,7 +216,7 @@ int32_t Get64bitSectionHeaders(rtElfData* const elfData)
             ErrorCode::EE1014, "The value " + std::to_string(size) + " of e_shentsize or the value " +
                                    std::to_string(num) +
                                    " of e_shnum in the operator binary ELF file header is incorrect. The expected "
-                                   "value complies the following rule: "
+                                   "value complies with the following rule: "
                                    "both e_shentsize and e_shnum are not 0, and the product of the values of e_shnum "
                                    "and e_shentsize cannot be greater than the maximum value of uint64_t");
         return ELF_FAIL;

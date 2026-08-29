@@ -223,7 +223,7 @@ rtError_t ApiImplSoma::SomaAicpuLaunchValidation(
         blockDim, argsInfo->argsSize, argsInfo->hostInputInfoNum, flags);
     ERROR_RETURN_MSG_INNER(
         Runtime::Instance()->StartAicpuSd(Runtime::Instance()->CurrentContext()->Device_()),
-        "CPU kernel launch ex with args failed, check and start tsd open AICPU sd error.");
+        "Failed to start the AI CPU service.");
     return RT_ERROR_NONE;
 }
 

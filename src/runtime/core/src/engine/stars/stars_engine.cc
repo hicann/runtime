@@ -1709,7 +1709,8 @@ void StarsEngine::StarsReportLogicCq(const rtCqReport_t& report, rtDvppGrpCallba
     uint32_t realDeviceId = 0U;
     const rtError_t error = Runtime::Instance()->GetUserDevIdByDeviceId(dev->Id_(), &realDeviceId);
     COND_RETURN_VOID(
-        (error != RT_ERROR_NONE), "Convert drvDeviceId:%u is err:%#x", dev->Id_(), static_cast<uint32_t>(error));
+        (error != RT_ERROR_NONE), "Failed to convert drvDeviceId:%u, retCode:%#x", dev->Id_(),
+        static_cast<uint32_t>(error));
     rtDvppGrpRptInfo_t dvppReport = {};
     dvppReport.deviceId = realDeviceId;
     dvppReport.streamId = report.streamId;
@@ -1734,7 +1735,8 @@ void StarsEngine::StarsReportLogicCq(
     uint32_t realDeviceId = 0U;
     const rtError_t error = Runtime::Instance()->GetUserDevIdByDeviceId(dev->Id_(), &realDeviceId);
     COND_RETURN_VOID(
-        (error != RT_ERROR_NONE), "Convert drvDeviceId:%u is err:%#x", dev->Id_(), static_cast<uint32_t>(error));
+        (error != RT_ERROR_NONE), "Failed to convert drvDeviceId:%u, retCode:%#x", dev->Id_(),
+        static_cast<uint32_t>(error));
     rtDvppGrpRptInfo_t dvppReport = {};
     dvppReport.deviceId = realDeviceId;
     dvppReport.streamId = report.streamId;

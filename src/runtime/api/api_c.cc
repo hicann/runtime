@@ -1515,7 +1515,7 @@ rtError_t rtSetDeviceIdByGeModelIdx(uint32_t geModelIdx, uint32_t deviceId)
     RT_LOG(RT_LOG_DEBUG, "geModelIdx:%u, deviceId:%u.", geModelIdx, deviceId);
     if (RtIsHeterogenous()) {
         RT_LOG(
-            RT_LOG_INFO, "Heterogenous does not support set device id by model id, geModelIdx:%u, deviceId:%u.",
+            RT_LOG_INFO, "Heterogeneous does not support set device id by model id, geModelIdx:%u, deviceId:%u.",
             geModelIdx, deviceId);
         return RT_ERROR_NONE;
     }

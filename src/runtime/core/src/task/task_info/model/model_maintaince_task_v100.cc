@@ -46,14 +46,14 @@ static void ConstructSqeForModelMaintainceTask(TaskInfo* const taskInfo, rtStars
             sqe->u.model_maintaince_info.streamExecTimesAddr = modelMaintainceTaskInfo->execTimesSvmOffset;
             PrintSqe(command, "ModelBindTask");
             RT_LOG(
-                RT_LOG_INFO, "model maintaince type=%u, bind stream_id=%hu to model_id=%hu", type,
+                RT_LOG_INFO, "model maintenance type=%u, bind stream_id=%hu to model_id=%hu", type,
                 sqe->u.model_maintaince_info.stream_id, sqe->u.model_maintaince_info.model_id);
             break;
         case MMT_STREAM_DEL:
             sqe->pre_p = RT_STARS_SQE_INT_DIR_TO_TSCPU;
             PrintSqe(command, "ModelUnbindTask");
             RT_LOG(
-                RT_LOG_INFO, "model maintaince type=%u, unbind stream_id=%hu from model_id=%hu", type,
+                RT_LOG_INFO, "model maintenance type=%u, unbind stream_id=%hu from model_id=%hu", type,
                 sqe->u.model_maintaince_info.stream_id, sqe->u.model_maintaince_info.model_id);
             break;
         case MMT_MODEL_PRE_PROC:
@@ -69,7 +69,7 @@ static void ConstructSqeForModelMaintainceTask(TaskInfo* const taskInfo, rtStars
             PrintSqe(command, "ModelPreProcTask");
             RT_LOG(
                 RT_LOG_INFO,
-                "model maintaince type=%u, pre proc stream_id=%hu of model_id=%hu, endgraph_notify_id"
+                "model maintenance type=%u, pre proc stream_id=%hu of model_id=%hu, endgraph_notify_id"
                 "=%hu",
                 type, sqe->u.model_maintaince_info.stream_id, sqe->u.model_maintaince_info.model_id,
                 sqe->u.model_maintaince_info.endgraph_notify_id);
@@ -77,20 +77,20 @@ static void ConstructSqeForModelMaintainceTask(TaskInfo* const taskInfo, rtStars
         case MMT_MODEL_LOAD_COMPLETE:
             PrintSqe(command, "ModelLoadCompleteTask");
             RT_LOG(
-                RT_LOG_INFO, "model maintaince type=%u, load complete stream_id=%hu of model_id=%hu", type,
+                RT_LOG_INFO, "model maintenance type=%u, load complete stream_id=%hu of model_id=%hu", type,
                 sqe->u.model_maintaince_info.stream_id, sqe->u.model_maintaince_info.model_id);
             break;
         case MMT_MODEL_ABORT:
             sqe->pre_p = RT_STARS_SQE_INT_DIR_TO_TSCPU;
             PrintSqe(command, "ModelAbortTask");
             RT_LOG(
-                RT_LOG_INFO, "model maintaince type=%u, abort stream_id=%hu of model_id=%hu", type,
+                RT_LOG_INFO, "model maintenance type=%u, abort stream_id=%hu of model_id=%hu", type,
                 sqe->u.model_maintaince_info.stream_id, sqe->u.model_maintaince_info.model_id);
             break;
         default:
             PrintSqe(command, "ModelMaintainceTask");
             RT_LOG(
-                RT_LOG_INFO, "model maintaince type=%u, stream_id=%hu, model_id=%hu", type,
+                RT_LOG_INFO, "model maintenance type=%u, stream_id=%hu, model_id=%hu", type,
                 sqe->u.model_maintaince_info.stream_id, sqe->u.model_maintaince_info.model_id);
             break;
     }

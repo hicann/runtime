@@ -145,7 +145,7 @@ static rtError_t PollingSqDisable(const rtCqReport_t* logicCq, Stream* const fai
             if (spendTime > getSqTimeout) {
                 failStm->SetStreamStatus(StreamStatus::ABNORMAL);
                 RT_LOG(
-                    RT_LOG_ERROR, "sq disable timeout, stream_id=%d, sync reamintime=%d.", failStm->Id_(),
+                    RT_LOG_ERROR, "sq disable timeout, stream_id=%d, sync remainTime=%d.", failStm->Id_(),
                     failStm->GetSyncRemainTime());
                 return RT_ERROR_REPORT_TIMEOUT;
             }
@@ -288,7 +288,7 @@ void ProcCqReportException(
     const uint16_t pos = logicCq.sqHead;
     const uint8_t errType = logicCq.errorType;
     const uint32_t errBit = (errType == 0U) ? UINT32_BIT_NUM : static_cast<uint32_t>(CTZ(errType));
-    std::string errMsg = errBit < DavidCqeErrorDesc_.size() ? DavidCqeErrorDesc_[errBit] : "unknow";
+    std::string errMsg = errBit < DavidCqeErrorDesc_.size() ? DavidCqeErrorDesc_[errBit] : "unknown";
     if (ProcReportIsException(logicCq)) {
         const uint32_t swStatus = logicCq.errorCode;
         PrintTaskErrorMsg(streamId, pos, logicCq, reportTask, errMsg);

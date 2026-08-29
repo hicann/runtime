@@ -245,7 +245,7 @@ rtError_t BinaryLoader::ParseKernelJsonFile(ElfProgram* const prog) const
     std::string jsonFileRealPath;
     rtError_t error = GetJsonObj(binRealPath_, jsonFileRealPath, kernelJsonObj);
     if (error != RT_ERROR_NONE) {
-        RT_LOG(RT_LOG_WARNING, "kernel json is not exists. bin=[%s]", binRealPath_.c_str());
+        RT_LOG(RT_LOG_WARNING, "kernel json does not exist. bin=[%s]", binRealPath_.c_str());
         return RT_ERROR_NONE;
     }
 

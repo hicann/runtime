@@ -377,7 +377,7 @@ void PrintErrorInfoForStreamSwitchTask(TaskInfo* taskInfo, const uint32_t devId)
             dfx, sizeof(dfx), streamSwitchTask->dfxPtr, sizeof(dfx), RT_MEMCPY_DEVICE_TO_HOST);
         RT_LOG(
             RT_LOG_ERROR,
-            "stream_id=%u,task_id=%u,true_sq_iq=%u,active_sq_id=%" PRIu64 ",fsm_state=%" PRIu64 ",enable=%" PRIu64
+            "stream_id=%u,task_id=%u,true_sq_id=%u,active_sq_id=%" PRIu64 ",fsm_state=%" PRIu64 ",enable=%" PRIu64
             ",head=%" PRIu64 ",tail=%" PRIu64,
             streamId, taskId, streamSwitchTask->trueStream->GetSqId(), dfx[0U] & 0xFFFU, dfx[0U] >> 32U, dfx[1U],
             dfx[2U] >> 48U, dfx[3U] >> 48U);

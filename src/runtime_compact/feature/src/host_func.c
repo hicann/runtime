@@ -26,7 +26,7 @@ rtError_t rtSubscribeHostFunc(uint64_t threadId, rtStream_t stream)
 rtError_t rtProcessHostFunc(int32_t timeout)
 {
     if ((timeout < -1) || (timeout == 0)) {
-        RT_LOG_ERROR("Invalid timeout, [%d]", timeout);
+        RT_LOG_ERROR("Invalid timeout=%d. Expected value: -1 or [1, INT32_MAX].", timeout);
         return ACL_ERROR_RT_PARAM_INVALID;
     }
     uint64_t subscribeUUID = GetCurSubscribeId();

@@ -38,7 +38,7 @@ rtError_t OnlineProf::OnlineProfMalloc(Stream* const stm)
     ERROR_RETURN(
         ret,
         "Failed to allocate online profiling device memory, "
-        "size=%" PRIu64 ", type=%d, deviceId=%d, retCode=%#x.",
+        "size=%" PRIu64 " bytes, type=%d, deviceId=%d, retCode=%#x.",
         memSize, RT_MEMORY_DEFAULT, dev->Id_(), static_cast<uint32_t>(ret));
 
     if (!dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_PROFILING_ONLINE_DEVICE_MEM_CLEAR)) {
@@ -51,7 +51,7 @@ rtError_t OnlineProf::OnlineProfMalloc(Stream* const stm)
 
         ret = deviceDrv->DevMemFlushCache(RtPtrToValue(deviceMem), static_cast<size_t>(memSize));
         ERROR_GOTO_MSG_INNER(
-            ret, ERROR_FREE, "Failed to flush online profiling memory cache, size=%zu, retCode=%#x.",
+            ret, ERROR_FREE, "Failed to flush online profiling memory cache, size=%zu bytes, retCode=%#x.",
             static_cast<size_t>(memSize), static_cast<uint32_t>(ret));
     }
 
@@ -59,7 +59,7 @@ rtError_t OnlineProf::OnlineProfMalloc(Stream* const stm)
     ERROR_GOTO(
         ret, ERROR_FREE,
         "Failed to allocate online profiling host runtime memory, "
-        "size=%u, retCode=%#x.",
+        "size=%u bytes, retCode=%#x.",
         ONLINEPROF_MEM_SIZE, static_cast<uint32_t>(ret));
 
     memRet = memset_s(hostRtMem, ONLINEPROF_MEM_SIZE, 0, ONLINEPROF_MEM_SIZE);
@@ -73,7 +73,7 @@ rtError_t OnlineProf::OnlineProfMalloc(Stream* const stm)
     ERROR_GOTO(
         ret, ERROR_FREE,
         "Failed to allocate online profiling host task scheduler memory, "
-        "size=%u, retCode=%#x.",
+        "size=%u bytes, retCode=%#x.",
         ONLINEPROF_MEM_SIZE, static_cast<uint32_t>(ret));
 
     memRet = memset_s(hostTsMem, ONLINEPROF_MEM_SIZE, 0, ONLINEPROF_MEM_SIZE);
@@ -182,7 +182,7 @@ rtError_t OnlineProf::GetOnlineProfilingData(
         hostTsMem, ONLINEPROF_MEM_SIZE, deviceMem, ONLINEPROF_MEM_SIZE, RT_MEMCPY_DEVICE_TO_HOST);
     ERROR_RETURN_MSG_INNER(
         error,
-        "Copy memory from ts to runtime failed, size=%u, kind=%s, "
+        "Copy memory from ts to runtime failed, size=%u bytes, kind=%s, "
         "retCode=%#x.",
         ONLINEPROF_MEM_SIZE, MemcpyKindToStr(RT_MEMCPY_DEVICE_TO_HOST), static_cast<uint32_t>(error));
 

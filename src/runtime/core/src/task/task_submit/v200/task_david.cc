@@ -474,7 +474,7 @@ rtError_t ProcAicpuTask(TaskInfo* submitTask)
         (void)submitTask->stream->Model_()->SaveAicpuStreamTask(submitTask->stream, &command);
     }
     RT_LOG(
-        RT_LOG_DEBUG, "aicpu stream,no need sent to ts,stream_id=%d,task_type=%d (%s).", submitTask->stream->Id_(),
+        RT_LOG_DEBUG, "aicpu stream, no need to send to ts,stream_id=%d,task_type=%d (%s).", submitTask->stream->Id_(),
         static_cast<int32_t>(submitTask->type), GetTaskDescByType(submitTask->type));
     TaskUnInitProc(submitTask);
     return RT_ERROR_NONE;

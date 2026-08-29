@@ -150,7 +150,7 @@ inline void ConstructCommonAicAivSqeWord(
 
     if ((IsAicAivBiuPerfStreamSupported(stm)) && (Runtime::Instance()->GetBiuperfProfFlag())) {
         if (sqe->header.postP == RT_STARS_SQE_INT_DIR_TO_TSCPU) {
-            RT_LOG(RT_LOG_WARNING, "post-p has already be set, service scenarios conflict.");
+            RT_LOG(RT_LOG_WARNING, "post-p has already been set, service scenarios conflict.");
         } else {
             sqe->header.postP = RT_STARS_SQE_INT_DIR_TO_TSCPU;
             sqe->featureFlag = static_cast<uint8_t>(sqe->featureFlag | SQE_BIZ_FLAG_BIUPERF);

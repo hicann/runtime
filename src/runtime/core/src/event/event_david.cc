@@ -89,7 +89,7 @@ bool DavidEvent::DavidUpdateWaitMapAndDestroyEvent(TaskInfo* taskInfo)
 rtError_t DavidEvent::GenEventId()
 {
     if (IsEventWithoutWaitTask()) { // stream mark or timeline.
-        RT_LOG(RT_LOG_INFO, "Stars not need to alloc id in this flag=%u", eventFlag_);
+        RT_LOG(RT_LOG_INFO, "Stars does not need to allocate an id with flag=%u", eventFlag_);
         return RT_ERROR_NONE;
     }
 
@@ -119,7 +119,7 @@ rtError_t DavidEvent::AllocEventIdResource(Stream* const stm, int32_t& eventId)
 {
     rtError_t error = RT_ERROR_NONE;
     if (IsEventWithoutWaitTask()) { // stream mark or timeline
-        RT_LOG(RT_LOG_INFO, "Stars not need to alloc id in this flag=%u", eventFlag_);
+        RT_LOG(RT_LOG_INFO, "Stars does not need to allocate an id with flag=%u", eventFlag_);
         return error;
     }
 
@@ -294,7 +294,7 @@ rtError_t DavidEvent::Synchronize(int32_t timeout)
 {
     if (!HasRecord()) {
         const int32_t deviceId = (device_ == nullptr) ? -1 : static_cast<int32_t>(device_->Id_());
-        RT_LOG(RT_LOG_INFO, "No record to be synchronize, return suc. device_id=%d, event_id=%d", deviceId, eventId_);
+        RT_LOG(RT_LOG_INFO, "No record to synchronize, return success. device_id=%d, event_id=%d", deviceId, eventId_);
         return RT_ERROR_NONE;
     }
 
@@ -427,7 +427,7 @@ bool DavidEvent::IsEventInModel()
 rtError_t DavidEvent::ReAllocId()
 {
     if (IsEventWithoutWaitTask() || isNewMode_ || eventFlag_ == RT_EVENT_DEFAULT || eventFlag_ == RT_EVENT_IPC) {
-        RT_LOG(RT_LOG_INFO, "Event_id not need to realloc in this flag=%u", eventFlag_);
+        RT_LOG(RT_LOG_INFO, "Event_id does not need to be reallocated with flag=%u", eventFlag_);
         return RT_ERROR_NONE;
     }
 

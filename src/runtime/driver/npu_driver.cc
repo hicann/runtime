@@ -600,7 +600,7 @@ rtError_t NpuDriver::GetPhyDevIdByIpcMemName(const char* name, uint32_t* const p
         return RT_GET_DRV_ERRCODE(drvRet);
     }
     *phyDevId = info.phyDevid;
-    RT_LOG(RT_LOG_DEBUG, "name=%s, pysical deviceId=%u.", name, *phyDevId);
+    RT_LOG(RT_LOG_DEBUG, "name=%s, physical deviceId=%u.", name, *phyDevId);
     return RT_ERROR_NONE;
 }
 

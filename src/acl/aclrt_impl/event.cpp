@@ -329,7 +329,7 @@ aclError aclrtMemUceRepairImpl(int32_t deviceId, aclrtMemUceInfo* memUceInfoArra
     for (size_t i = 0; i < arraySize; ++i) {
         if (memcmp(memUceInfoArray[i].reserved, reservedZeroValue, UCE_INFO_RESERVED_SIZE)) {
             ACL_LOG_ERROR("Failed to execute aclrtMemUceRepair with mismatched version, "
-                          "pls set valid value only for ptr and len.");
+                          "please set valid values only for ptr and len.");
             const char_t* argList[] = {"func", "param", "reason"};
             std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__);
             const char_t* argVal[] = {
@@ -444,7 +444,7 @@ aclError aclrtRepairErrorImpl(int32_t deviceId, const aclrtErrorInfo* errorInfo)
 aclError aclrtStreamWaitEventWithTimeoutImpl(aclrtStream stream, aclrtEvent event, int32_t timeout)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtStreamWaitEventWithTimeout);
-    ACL_LOG_INFO("start to execute aclrtStreamWaitEventWithTimeout, timeout is %d", timeout);
+    ACL_LOG_INFO("start to execute aclrtStreamWaitEventWithTimeout, timeout is %d ms", timeout);
     ACL_CHECK_INVALID_VALUE_WITH_EXPECT_RET(timeout >= 0, timeout, "[0, INT_MAX]", ACL_ERROR_RT_PARAM_INVALID);
 
     ACL_REQUIRES_RTS_OK(rtsEventWait(static_cast<rtStream_t>(stream), static_cast<rtEvent_t>(event), timeout));

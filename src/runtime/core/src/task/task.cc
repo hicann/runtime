@@ -159,7 +159,7 @@ int32_t TaskFactory::TryAgainAlloc(Stream* const streamPtr, rtError_t& errCode)
         std::unique_lock<std::mutex> allocRetryLock(allocRetryMutex_);
         (void)allocRetry_.wait_for(allocRetryLock, std::chrono::milliseconds(10)); // retry every 10ms
         if (exitFlag_.load()) {
-            RT_LOG(RT_LOG_INFO, "It need to exit.");
+            RT_LOG(RT_LOG_INFO, "It needs to exit.");
             break;
         }
     } while (countNum < maxCount);

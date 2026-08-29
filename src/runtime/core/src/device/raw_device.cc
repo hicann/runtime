@@ -470,7 +470,7 @@ rtError_t RawDevice::RegisterDcacheLockOp(Program*& dcacheLockOpProgram)
     const std::vector<char>& dcacheLockMixOpData = rtInstance->GetDcacheLockMixOpData();
     if (dcacheLockMixOpData.size() == 0) {
         // 对于在device侧发生SetDevice的逻辑时候，device侧并没有算子.o文件
-        RT_LOG(RT_LOG_WARNING, "dcacheLockMixOpData size is 0, so not enable dcache");
+        RT_LOG(RT_LOG_WARNING, "dcacheLockMixOpData size is 0, so dcache is not enabled");
         return RT_ERROR_NONE;
     }
 
@@ -1356,7 +1356,7 @@ rtError_t RawDevice::Stop()
     if (rt->IsStreamSyncEsched()) {
         const rtError_t ret = NpuDriver::EschedDettachDevice(deviceId_);
         if (ret != RT_ERROR_NONE) {
-            RT_LOG(RT_LOG_DEBUG, "The return of esched dettach device is %d.", ret);
+            RT_LOG(RT_LOG_DEBUG, "The return of esched detach device is %d.", ret);
         }
     }
     UnregisterAllProgram();
@@ -1675,7 +1675,7 @@ rtError_t RawDevice::AicpuModelExecute(const uint32_t modelId) { return aicpuSdA
 rtError_t RawDevice::AicpuModelAbort(const uint32_t modelId)
 {
     (void)modelId;
-    RT_LOG(RT_LOG_ERROR, "AicpuModelAbort is not implement.");
+    RT_LOG(RT_LOG_ERROR, "AicpuModelAbort is not implemented.");
     return RT_ERROR_NONE;
 }
 
@@ -1850,7 +1850,7 @@ void RawDevice::FreeHcclIndex(uint16_t stmid)
             return;
         }
     }
-    RT_LOG(RT_LOG_ERROR, "Free stream_id=%hu not find in array size=%u.", stmid, hcclStreamSize_);
+    RT_LOG(RT_LOG_ERROR, "Free stream_id=%hu is not found in array, size=%u.", stmid, hcclStreamSize_);
     return;
 }
 
@@ -2047,7 +2047,8 @@ void RawDevice::SetTschVersion(const uint32_t tschVersion)
 #else
     if (tschVersion_ < static_cast<uint32_t>(TS_VERSION_EXPAND_STREAM_TASK)) {
         RT_LOG(
-            RT_LOG_ERROR, "current tsch version [%u] is old version, not match current runtime version.", tschVersion_);
+            RT_LOG_ERROR, "current tsch version [%u] is an old version and does not match the current runtime version.",
+            tschVersion_);
     }
 #endif
 }
@@ -2406,7 +2407,7 @@ void RawDevice::WaitForParsePrintf()
         (void)mmSleep(1U);
     }
     curParseCounter = parseCounter_;
-    RT_LOG(RT_LOG_DEBUG, "Wait for the last print thread, suss, print count=%llu!", curParseCounter);
+    RT_LOG(RT_LOG_DEBUG, "Wait for the last print thread, success, print count=%llu!", curParseCounter);
 }
 
 rtError_t RawDevice::GetPrintSimdAddress(uint64_t* const addr)
@@ -2435,7 +2436,7 @@ rtError_t RawDevice::GetPrintFifoAddrAndCreateThread(uint64_t* const addr, const
         // 内部会判空保证不重复创建线程
         ret = engine_->CreatePrintfThread();
         COND_RETURN_ERROR(
-            (ret != RT_ERROR_NONE), ret, "CreatePrintfThread failed, device_id=%y, ret=%u.", deviceId_, ret);
+            (ret != RT_ERROR_NONE), ret, "CreatePrintfThread failed, device_id=%u, ret=%u.", deviceId_, ret);
         simdEnable_ = true;
         *addr = RtPtrToPtr<uint64_t>(printfAddr_);
     } else if (model == PRINT_SIMT) {

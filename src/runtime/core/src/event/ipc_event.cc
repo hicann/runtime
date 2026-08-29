@@ -153,7 +153,7 @@ rtError_t IpcEvent::Setup()
 {
     COND_RETURN_WARN(
         (!(NpuDriver::CheckIsSupportFeature(context_->Device_()->Id_(), FEATURE_SVM_VMM_NORMAL_GRANULARITY))),
-        RT_ERROR_FEATURE_NOT_SUPPORT, "Not support Ipc event in current drv version");
+        RT_ERROR_FEATURE_NOT_SUPPORT, "IPC event is not supported in the current driver version");
     // 1.get granularity
     RT_LOG(RT_LOG_INFO, "start ipc event setup.");
     size_t granularity = 0;
@@ -197,8 +197,7 @@ rtError_t IpcEvent::IpcGetEventHandle(rtIpcEventHandle_t* handle)
 {
     COND_RETURN_WARN(
         (!(NpuDriver::CheckIsSupportFeature(context_->Device_()->Id_(), FEATURE_SVM_VMM_NORMAL_GRANULARITY))),
-        RT_ERROR_FEATURE_NOT_SUPPORT, "Not support Ipc event in current drv version, version",
-        FEATURE_SVM_VMM_NORMAL_GRANULARITY);
+        RT_ERROR_FEATURE_NOT_SUPPORT, "IPC event is not supported by the current driver.");
     (void)memcpy_s(static_cast<void*>(handle), sizeof(uint64_t), &ipcHandle_, sizeof(uint64_t));
     return RT_ERROR_NONE;
 }
@@ -296,8 +295,7 @@ rtError_t IpcEvent::IpcOpenEventHandle(rtIpcEventHandle_t* ipcEventHandle)
 {
     COND_RETURN_WARN(
         (!(NpuDriver::CheckIsSupportFeature(context_->Device_()->Id_(), FEATURE_SVM_VMM_NORMAL_GRANULARITY))),
-        RT_ERROR_FEATURE_NOT_SUPPORT, "Not support Ipc event in current drv version, version",
-        FEATURE_SVM_VMM_NORMAL_GRANULARITY);
+        RT_ERROR_FEATURE_NOT_SUPPORT, "IPC event is not supported by the current driver.");
     RT_LOG(RT_LOG_INFO, "IpcOpenEventHandle start");
     NULL_PTR_RETURN(ipcEventHandle, RT_ERROR_INVALID_VALUE);
     rtError_t error = RT_ERROR_NONE;

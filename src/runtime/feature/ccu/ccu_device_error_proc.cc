@@ -85,8 +85,8 @@ static void HandleFusionKernelCcuException(
     fusionDetail->u.aicoreCcuInfo.ccuDetailMsg.ccuMissionNum = taskInfo->u.fusionKernelTask.ccuSqeNum;
     if (taskInfo->u.fusionKernelTask.ccuArgSize == RT_CCU_SQE32B_ARGS_SIZE) {
         COND_RETURN_VOID(
-            info->u.ccuErrorInfo.comm.coreNum > FUSION_SUB_TASK_MAX_CCU_NUM,
-            "32B ccu sub task num is invalid, coreNum=%hu.", info->u.ccuErrorInfo.comm.coreNum);
+            info->u.ccuErrorInfo.comm.coreNum > FUSION_SUB_TASK_MAX_CCU_NUM, "coreNum=%hu exceeds maximum=%u.",
+            info->u.ccuErrorInfo.comm.coreNum, static_cast<uint32_t>(FUSION_SUB_TASK_MAX_CCU_NUM));
         const RtDavidStarsCcuSqe32B* ccuSqe = RtPtrToPtr<const RtDavidStarsCcuSqe32B*, const rtDavidSqe_t*>(sqe);
         for (uint8_t idx = 0U; idx < taskInfo->u.fusionKernelTask.ccuSqeNum; idx++) {
             fusionDetail->u.aicoreCcuInfo.ccuDetailMsg.missionInfo[idx].dieId = ccuSqe[idx].resv.ccuResvDesc1.dieId;
@@ -105,7 +105,7 @@ static void HandleFusionKernelCcuException(
         }
     } else {
         COND_RETURN_VOID(
-            info->u.ccuErrorInfo.comm.coreNum > 2U, "128B ccu sub task num is invalid, coreNum=%hu.",
+            info->u.ccuErrorInfo.comm.coreNum > 2U, "coreNum=%hu exceeds maximum=2.",
             info->u.ccuErrorInfo.comm.coreNum);
         const RtDavidStarsCcuSqe* ccuSqe = RtPtrToPtr<const RtDavidStarsCcuSqe*, const rtDavidSqe_t*>(sqe);
         uint8_t idx = 0U;
@@ -207,7 +207,7 @@ static void ParseAndGetCcuExceptionInfo(
     rtDavidSqe_t* sqe = const_cast<rtDavidSqe_t*>(info->u.ccuErrorInfo.davidSqe);
     if (taskInfo->type == TS_TASK_TYPE_CCU_LAUNCH) {
         COND_RETURN_VOID(
-            info->u.ccuErrorInfo.comm.coreNum > 1U, "ccu sub task num is invalid, coreNum=%hu.",
+            info->u.ccuErrorInfo.comm.coreNum > 1U, "coreNum=%hu exceeds maximum=1.",
             info->u.ccuErrorInfo.comm.coreNum);
         expandInfo->u.ccuInfo.ccuMissionNum = 1U;
         RtDavidStarsCcuSqe* ccuSqe = RtPtrToPtr<RtDavidStarsCcuSqe*, rtDavidSqe_t*>(sqe);

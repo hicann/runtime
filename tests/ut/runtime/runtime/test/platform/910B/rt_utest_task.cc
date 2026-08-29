@@ -213,6 +213,11 @@ TEST_F(CloudV2TaskTest, stars_timeout_sqe)
 
     rtStarsSqe_t sqe1, sqe2;
     InitByStream(&task, stream_);
+    TimeoutSetTaskInitV1(&task);
+    TimeoutSetTaskUpdate(&task, static_cast<rtTaskTimeoutType_t>(2), 10);
+    EXPECT_FALSE(task.u.timeoutSetTask.opWaitTimeoutEn);
+    EXPECT_FALSE(task.u.timeoutSetTask.opExecuteTimeoutEn);
+
     TimeoutSetTaskInit(&task, RT_TIMEOUT_TYPE_OP_EXECUTE, 10);
     task.u.aicTaskInfo.kernel = kernel;
     ToConstructSqe(&task, &sqe1);

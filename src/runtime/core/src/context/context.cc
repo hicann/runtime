@@ -1529,16 +1529,20 @@ rtError_t Context::LaunchSqeUpdateTask(
     rtError_t error = MemcpyAsyncD2HTaskInit(rtMemcpyAsyncTask, src, cpySize, sqId, pos);
     if (error != RT_ERROR_NONE) {
         RT_LOG(
-            RT_LOG_ERROR, "device_id=%u, exe_stream_id=%d, dsa_sq_id=%u, dsa_pos=%u, cpySize=%#" PRIx64, device_->Id_(),
-            stm->Id_(), sqId, pos);
+            RT_LOG_ERROR,
+            "MemcpyAsyncD2HTaskInit failed, device_id=%u, exe_stream_id=%d, dsa_sq_id=%u, dsa_pos=%u, "
+            "cpySize=%#" PRIx64 " bytes, retCode=%#x.",
+            device_->Id_(), stm->Id_(), sqId, pos, cpySize, static_cast<uint32_t>(error));
         goto ERROR_RECYCLE;
     }
 
     error = device_->SubmitTask(rtMemcpyAsyncTask);
     if (error != RT_ERROR_NONE) {
         RT_LOG(
-            RT_LOG_ERROR, "device_id=%u, exe_stream_id=%d, dsa_sq_id=%u, dsa_pos=%u, cpySize=%#" PRIx64, device_->Id_(),
-            stm->Id_(), sqId, pos);
+            RT_LOG_ERROR,
+            "Submit memcpy async D2H task failed, device_id=%u, exe_stream_id=%d, dsa_sq_id=%u, dsa_pos=%u, "
+            "cpySize=%#" PRIx64 " bytes, retCode=%#x.",
+            device_->Id_(), stm->Id_(), sqId, pos, cpySize, static_cast<uint32_t>(error));
         goto ERROR_RECYCLE;
     }
 
@@ -1957,7 +1961,8 @@ void Context::SubModelDestroy(Model* subMdl)
 
 rtError_t Context::ModelDestroy(Model* mdl)
 {
-    COND_RETURN_EVENT(!ModelIsExistInContext(mdl), RT_ERROR_NONE, "model model_id=%u is not exist in ctx.", mdl->Id_());
+    COND_RETURN_EVENT(
+        !ModelIsExistInContext(mdl), RT_ERROR_NONE, "model model_id=%u does not exist in ctx.", mdl->Id_());
 
     if (mdl->GetModelType() == RT_MODEL_CAPTURE_MODEL) {
         CaptureModel* captureModel = dynamic_cast<CaptureModel*>(mdl);
@@ -3048,7 +3053,7 @@ rtError_t Context::DebugGetStalledCore(rtDbgCoreInfo_t* const coreInfo)
 {
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
         coreInfo, RT_ERROR_INVALID_VALUE, "Obtaining the physical ID of the stalled AI Core in the current process");
-    COND_RETURN_ERROR((!device_->IsCoredumpEnable()), RT_ERROR_INVALID_VALUE, "Coredump mode is disable!");
+    COND_RETURN_ERROR((!device_->IsCoredumpEnable()), RT_ERROR_INVALID_VALUE, "Coredump mode is disabled!");
     RT_LOG(RT_LOG_INFO, "Start to get core info.");
     RtDebugSendInfo sendInfo = {};
     sendInfo.reqId = GET_STALLED_AICINFO_BY_PID;
@@ -3070,7 +3075,7 @@ rtError_t Context::DebugGetStalledCore(rtDbgCoreInfo_t* const coreInfo)
 
 rtError_t Context::DebugReadAICore(rtDebugMemoryParam_t* const param)
 {
-    COND_RETURN_ERROR((!device_->IsCoredumpEnable()), RT_ERROR_INVALID_VALUE, "Coredump mode is disable!");
+    COND_RETURN_ERROR((!device_->IsCoredumpEnable()), RT_ERROR_INVALID_VALUE, "Coredump mode is disabled!");
     auto ret = CheckMemoryParam(param);
     ERROR_RETURN(ret, "CheckMemoryParam fail.");
     RT_LOG(

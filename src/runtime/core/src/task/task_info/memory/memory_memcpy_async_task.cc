@@ -173,7 +173,7 @@ rtError_t AllocCpyTmpMemForDavid(
             driver->HostMemAlloc(&memcpyAsyncTaskInfo->srcPtr, (addrSize + asyncMemorySize), stream->Device_()->Id_());
         COND_RETURN_ERROR(
             (memcpyAsyncTaskInfo->srcPtr == nullptr), RT_ERROR_MEMORY_ALLOCATION,
-            "HostMemAlloc src address failed, malloc size is %" PRIu64, addrSize + asyncMemorySize);
+            "HostMemAlloc src address failed, malloc size is %" PRIu64 " bytes", addrSize + asyncMemorySize);
         ERROR_RETURN(error, "HostMemAlloc host memory for args failed, retCode=%#x", static_cast<uint32_t>(error));
         const uintptr_t offset =
             RtPtrToValue(memcpyAsyncTaskInfo->srcPtr) + static_cast<uint64_t>(asyncMemoryAlignSize) -
@@ -195,7 +195,7 @@ rtError_t AllocCpyTmpMemForDavid(
             driver->HostMemAlloc(&memcpyAsyncTaskInfo->desPtr, (addrSize + asyncMemorySize), stream->Device_()->Id_());
         COND_RETURN_ERROR(
             (memcpyAsyncTaskInfo->desPtr == nullptr), RT_ERROR_MEMORY_ALLOCATION,
-            "HostMemAlloc dest address failed, malloc size is %" PRIu64, (addrSize + asyncMemorySize));
+            "HostMemAlloc dest address failed, malloc size is %" PRIu64 " bytes", (addrSize + asyncMemorySize));
         ERROR_RETURN(error, "HostMemAlloc host memory for args failed, retCode=%#x", static_cast<uint32_t>(error));
         const uintptr_t offset =
             RtPtrToValue(memcpyAsyncTaskInfo->desPtr) + static_cast<uint64_t>(asyncMemoryAlignSize) -
@@ -461,7 +461,7 @@ rtError_t MemcpyAsyncTaskInitV1(TaskInfo* const taskInfo, void* memcpyAddrInfo, 
     // use copyKind_ = RT_MEMCPY_RESERVED to distinguish from the ptr_mode=0 mode
     memcpyAsyncTaskInfo->copyType = RT_MEMCPY_ADDR_D2D_SDMA;
     memcpyAsyncTaskInfo->copyKind = RT_MEMCPY_RESERVED;
-    RT_LOG(RT_LOG_DEBUG, "MemcpyAsyncPtr Task Init, devId=%d, cpySize=%" PRIu64, devId, cpySize);
+    RT_LOG(RT_LOG_DEBUG, "MemcpyAsyncPtr Task Init, devId=%d, cpySize=%" PRIu64 " bytes", devId, cpySize);
     return RT_ERROR_NONE;
 }
 
@@ -581,7 +581,7 @@ rtError_t MemcpyAsyncTaskInitV3(
         memcpyAsyncTaskInfo->dstOffset = addrCfg->dstOffset;
         memcpyAsyncTaskInfo->srcOffset = addrCfg->srcOffset;
         RT_LOG(
-            RT_LOG_INFO, "cpySize=%llu, srcOffset=%llu, dstOffset=%llu.", memcpyAsyncTaskInfo->size,
+            RT_LOG_INFO, "cpySize=%llu bytes, srcOffset=%llu bytes, dstOffset=%llu bytes.", memcpyAsyncTaskInfo->size,
             memcpyAsyncTaskInfo->srcOffset, memcpyAsyncTaskInfo->dstOffset);
     }
 
@@ -783,10 +783,10 @@ static void PrintUbdmaErrorInfo(const MemcpyAsyncTaskInfo* const memcpyAsyncTask
         RT_LOG(
             RT_LOG_ERROR,
             "ub async copy error, die_id=%u, functionId=%u, jettyId=%u,"
-            " wqeLen=%d, is_sqe_update=%d, pi=%u, fixedSize(fixedCnt)=%llu.",
+            " wqeLen=%d, is_sqe_update=%d, pi=%u, fixedSize=%" PRIu64 " bytes, fixedCnt=%" PRIu64 ".",
             memcpyAsyncTaskInfo->ubDma.dieId, memcpyAsyncTaskInfo->ubDma.functionId, memcpyAsyncTaskInfo->ubDma.jettyId,
             memcpyAsyncTaskInfo->ubDma.wqeLen, memcpyAsyncTaskInfo->isSqeUpdateH2D, memcpyAsyncTaskInfo->ubDma.pi,
-            memcpyAsyncTaskInfo->ubDma.fixedSize);
+            memcpyAsyncTaskInfo->ubDma.fixedSize, memcpyAsyncTaskInfo->ubDma.fixedCnt);
     }
 }
 

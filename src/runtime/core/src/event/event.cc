@@ -625,7 +625,7 @@ bool Event::WaitSendCheck(const Stream* const stm, int32_t& eventId)
         if (latestRecord_.state == RECORDED) {
             RT_LOG(
                 RT_LOG_INFO,
-                "record has been execute, wait return suc, device_id=%u, event_id=%d, stream_id=%d,"
+                "record has been executed, wait returned success, device_id=%u, event_id=%d, stream_id=%d,"
                 " task_id=%hu",
                 device_->Id_(), eventId_, stm->Id_(), latestRecord_.taskId);
             return false;

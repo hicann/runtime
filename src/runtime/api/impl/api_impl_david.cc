@@ -1663,8 +1663,7 @@ rtError_t ApiImplDavid::ModelEndGraph(Model* const mdl, Stream* const stm, const
 
     if ((flags & RT_KERNEL_DUMPFLAG) != 0U) {
         ERROR_RETURN_MSG_INNER(
-            Runtime::Instance()->StartAicpuSd(curCtx->Device_()),
-            "Model end graph with kernel dump flag failed, check and start tsd open aicpu sd error.");
+            Runtime::Instance()->StartAicpuSd(curCtx->Device_()), "Failed to start the AI CPU service.");
     }
     return MdlAddEndGraph(mdl, stm, flags);
 }

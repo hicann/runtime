@@ -506,7 +506,7 @@ void* H2DCopyMgr::MallocUbBuffer(const size_t size, void* const para)
             RT_LOG_ERROR, "get tseg info failed, retCode=%#x, size=%llu(bytes), device_id=%u.", ret, size, dev->Id_());
         return nullptr;
     }
-    RT_LOG(RT_LOG_INFO, "Ub buffer alloc success, Runtime_alloc_size %u", size);
+    RT_LOG(RT_LOG_INFO, "Ub buffer alloc success, Runtime_alloc_size %u bytes", size);
 #ifdef __RT_ENABLE_ASAN__
     dev->Driver_()->MemSetSync(hostAddr, size, 0U, size);
 #endif

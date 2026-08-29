@@ -200,7 +200,7 @@ aclError aclrtCntNotifyResetImpl(aclrtCntNotify cntNotify, aclrtStream stream)
 aclError aclrtCntNotifyGetIdImpl(aclrtCntNotify cntNotify, uint32_t* notifyId)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtCntNotifyGetId);
-    ACL_LOG_INFO("start to execute aclrCntNotifyGetId");
+    ACL_LOG_INFO("start to execute aclrtCntNotifyGetId");
 
     ACL_REQUIRES_RTS_OK(rtsCntNotifyGetId(cntNotify, notifyId));
 

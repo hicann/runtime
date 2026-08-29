@@ -92,7 +92,7 @@ void ToCommandBodyForStreamSwitchNTask(TaskInfo* taskInfo, rtCommand_t* const co
     RT_LOG(
         RT_LOG_DEBUG,
         "StreamSwitchNTask::ToCommandBody:pptr=%#" PRIx64 ",size=%u,p_value_ptr=%#" PRIx64
-        "p_true_stream_id_ptr=%#" PRIx64 ",element_size=%u,data_type=%u,stream_id=%u.",
+        ",p_true_stream_id_ptr=%#" PRIx64 ",element_size=%u,data_type=%u,stream_id=%u.",
         pptr, ptrSize, physicValuePtr, pTrueStreamIdPtr, elemSize, tensorDataType, static_cast<uint32_t>(streamId));
 }
 

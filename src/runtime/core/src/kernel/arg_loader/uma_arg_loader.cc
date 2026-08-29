@@ -120,7 +120,7 @@ rtError_t UmaArgLoader::Init()
         kernelInfoAllocator_ == nullptr, RT_ERROR_MEMORY_ALLOCATION, ErrorCode::EE1013, sizeof(BufferAllocator), "new");
     RT_LOG(RT_LOG_INFO, "new BufferAllocator kernelInfoAllocator_ ok, Runtime_alloc_size %zu", sizeof(BufferAllocator));
 
-    RT_LOG(RT_LOG_INFO, "ALLOC PCIE is support[%d]", static_cast<int32_t>(isPcieBarSupport));
+    RT_LOG(RT_LOG_INFO, "ALLOC PCIE support status=%d", static_cast<int32_t>(isPcieBarSupport));
     if ((drv_->GetRunMode() == static_cast<uint32_t>(RT_RUN_MODE_ONLINE)) && isPcieBarSupport) {
         argPcieBarAllocator_ = new (std::nothrow) H2DCopyMgr(
             device_, PCIE_BAR_COPY_SIZE, 1024U, device_->GetDevProperties().maxSupportTaskNum, BufferAllocator::LINEAR,

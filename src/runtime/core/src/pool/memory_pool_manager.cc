@@ -78,7 +78,8 @@ void* MemoryPoolManager::Allocate(const size_t size, const bool readOnly)
             void* block = pool->Allocate(size);
             if (block != nullptr) {
                 RT_LOG(
-                    RT_LOG_DEBUG, "drv devId=%u, alloc size=%u, pool=%#" PRIx64 ", addr=%#" PRIx64 ", readOnly=%d.",
+                    RT_LOG_DEBUG,
+                    "drv devId=%u, alloc size=%u bytes, pool=%#" PRIx64 ", addr=%#" PRIx64 ", readOnly=%d.",
                     device_->Id_(), size, pool, pool->GetAddr(), readOnly);
                 return block;
             }
@@ -101,7 +102,7 @@ void MemoryPoolManager::Release(void* ptr, size_t size)
     for (auto pool : pools_) {
         if (pool->Contains(ptr)) {
             pool->Release(ptr, size);
-            RT_LOG(RT_LOG_DEBUG, "release device memory, ptr=%#" PRIx64 ", size=%u.", ptr, size);
+            RT_LOG(RT_LOG_DEBUG, "release device memory, ptr=%#" PRIx64 ", size=%u bytes.", ptr, size);
             CheckAndReleasePools();
             TIMESTAMP_END(MemoryPoolManagerRelease);
             return;
@@ -116,7 +117,7 @@ bool MemoryPoolManager::TryRelease(void* ptr, size_t size)
     for (auto pool : pools_) {
         if (pool->Contains(ptr)) {
             pool->Release(ptr, size);
-            RT_LOG(RT_LOG_DEBUG, "TryRelease device memory, ptr=%#" PRIx64 ", size=%u.", ptr, size);
+            RT_LOG(RT_LOG_DEBUG, "TryRelease device memory, ptr=%#" PRIx64 ", size=%u bytes.", ptr, size);
             CheckAndReleasePools();
             return true;
         }

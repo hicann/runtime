@@ -111,7 +111,7 @@ aclError UpdatePlatformInfoWithDevice(int32_t deviceId)
     }
     (void)g_platformInfoInitSet.emplace(deviceId);
     ACL_LOG_INFO(
-        "Successfully to UpdatePlatformInfoWithDevice, deviceId = %d, aicCnt = %u, vecCoreCnt = %ld, "
+        "Successfully updated platform info with device, deviceId = %d, aicCnt = %u, vecCoreCnt = %ld, "
         "cubeCoreCnt = %ld",
         deviceId, aicCnt, vecCoreCnt, cubeCoreCnt);
 #endif

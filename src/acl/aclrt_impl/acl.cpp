@@ -152,12 +152,12 @@ aclError SetStackSizeByType(const char_t* const configPath, rtLimitType_t limitT
     const rtError_t rtErr = rtDeviceSetLimit(0, limitType, static_cast<uint32_t>(stackSize));
     if (rtErr != RT_ERROR_NONE) {
         if (rtErr == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
-            ACL_LOG_WARN("set limit (%s %zu) not supported on this platform, skip.", typeName.c_str(), stackSize);
+            ACL_LOG_WARN("set limit (%s %zu bytes) not supported on this platform, skip.", typeName.c_str(), stackSize);
             return ACL_SUCCESS;
         }
         return ACL_GET_ERRCODE_RTS(rtErr);
     }
-    ACL_LOG_INFO("get %s stack size %zu success\n", typeName.c_str(), stackSize);
+    ACL_LOG_INFO("get %s stack size %zu bytes success\n", typeName.c_str(), stackSize);
     return ACL_SUCCESS;
 }
 aclError SetAllStackSizes(const char_t* const configPath)
@@ -197,12 +197,12 @@ aclError SetPrintFifoSizeByType(const char_t* const configPath, rtLimitType_t li
     const rtError_t rtErr = rtDeviceSetLimit(0, limitType, static_cast<uint32_t>(fifoSize));
     if (rtErr != RT_ERROR_NONE) {
         if (rtErr == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
-            ACL_LOG_WARN("set limit (%s %zu) not supported on this platform, skip.", typeName.c_str(), fifoSize);
+            ACL_LOG_WARN("set limit (%s %zu bytes) not supported on this platform, skip.", typeName.c_str(), fifoSize);
             return ACL_SUCCESS;
         }
         return ACL_GET_ERRCODE_RTS(rtErr);
     }
-    ACL_LOG_INFO("set %s fifo size %zu success", typeName.c_str(), fifoSize);
+    ACL_LOG_INFO("set %s fifo size %zu bytes success", typeName.c_str(), fifoSize);
     return ACL_SUCCESS;
 }
 
@@ -1037,7 +1037,7 @@ aclError aclsysGetVersionStrImpl(char* pkgName, char* versionStr)
             std::vector<const char*>(
                 {funcName.c_str(), "strcpy_s", strcpyRetVal.c_str(), strerror(strcpyRet), extendInfo.c_str()}));
         ACL_LOG_ERROR(
-            "Copy string failed. Dest buffer size is [%zu], source len is [%zu].",
+            "Copy string failed. Dest buffer size is [%zu bytes], source len is [%zu bytes].",
             static_cast<size_t>(ACL_PKG_VERSION_MAX_SIZE), verInfo.length());
         return ACL_ERROR_INTERNAL_ERROR;
     }

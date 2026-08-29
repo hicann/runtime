@@ -491,7 +491,7 @@ rtError_t DeviceErrorProc::ProcessSdmaErrorInfo(
     const DeviceErrorInfo* const info, const uint64_t errorNumber, const Device* const dev)
 {
     UNUSED(dev);
-    std::string str = "the channel exist the following problems:";
+    std::string str = "the channel has the following problems:";
     if ((info->u.sdmaErrorInfo.channelStatus & static_cast<uint64_t>(SDMA_ERROR_TIMEOUT)) ==
         static_cast<uint64_t>(SDMA_ERROR_TIMEOUT)) {
         str += "time out";
@@ -857,7 +857,7 @@ rtError_t DeviceErrorProc::ProcessReportRingBuffer(
             RtPtrToPtr<void*, uint8_t*>(RtPtrToPtr<uint8_t*, void*>(deviceRingBufferAddr_) + elementOffset);
         rtError_t error =
             devDrv->MemCopySync(elementHostAddr.get(), copySize, copyBase, copySize, RT_MEMCPY_DEVICE_TO_HOST, false);
-        ERROR_RETURN(error, "failed to Memcpy from, copy size=%" PRIu64 "(bytes), ret=%#x.", copySize, error);
+        ERROR_RETURN(error, "failed to Memcpy from device, copy size=%" PRIu64 "(bytes), ret=%#x.", copySize, error);
 
         stm = nullptr;
         info = RtPtrToPtr<RingBufferElementInfo*, char_t*>(elementHostAddr.get());

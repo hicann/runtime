@@ -1917,7 +1917,7 @@ rtError_t rtLaunchSIMTKernelWithHostArgs(
     const Runtime* const rtInstance = Runtime::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
     if (IS_SUPPORT_CHIP_FEATURE(rtInstance->GetChipType(), RtOptionalFeatureType::RT_FEATURE_XPU)) {
-        RT_LOG(RT_LOG_WARNING, "XPU not support rtLaunchSIMTKernelWithHostArgs");
+        RT_LOG(RT_LOG_WARNING, "XPU does not support rtLaunchSIMTKernelWithHostArgs");
         return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
     }
 
@@ -2065,7 +2065,7 @@ rtError_t rtLaunchSIMTKernelWithArgsArray(
     const Runtime* const rtInstance = Runtime::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
     if (IS_SUPPORT_CHIP_FEATURE(rtInstance->GetChipType(), RtOptionalFeatureType::RT_FEATURE_XPU)) {
-        RT_LOG(RT_LOG_WARNING, "XPU not support rtLaunchSIMTKernelWithArgsArray");
+        RT_LOG(RT_LOG_WARNING, "XPU does not support rtLaunchSIMTKernelWithArgsArray");
         return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
     }
 

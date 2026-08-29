@@ -537,7 +537,7 @@ rtError_t DirectHwtsEngine::TaskReclaim(const uint32_t streamId, const bool limi
     std::vector<uint32_t> allStreams;
     device_->GetStreamSqCqManage()->GetAllStreamId(allStreams);
     COND_PROC(allStreams.size() == 0, stmEmptyFlag_ = true);
-    RT_LOG(RT_LOG_INFO, "Stream id not provide, travel all streams, num=%zu.", allStreams.size());
+    RT_LOG(RT_LOG_INFO, "Stream id is not provided, traverse all streams, num=%zu.", allStreams.size());
     for (const uint32_t streamLoop : allStreams) {
         const rtError_t error = QueryShmInfo(streamLoop, limited, taskId);
         COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error);
@@ -552,7 +552,7 @@ rtError_t DirectHwtsEngine::TaskReclaimAllForNoRes(const bool limited, uint32_t&
     std::vector<uint32_t> allStreams;
     device_->GetStreamSqCqManage()->GetAllStreamId(allStreams);
     COND_PROC(allStreams.size() == 0, stmEmptyFlag_ = true);
-    RT_LOG(RT_LOG_INFO, "Stream id not provide, travel all streams, num=%zu.", allStreams.size());
+    RT_LOG(RT_LOG_INFO, "Stream id is not provided, traverse all streams, num=%zu.", allStreams.size());
     for (const uint32_t streamLoop : allStreams) {
         std::shared_ptr<Stream> stm = nullptr;
         error = device_->GetStreamSqCqManage()->GetStreamSharedPtrById(static_cast<uint32_t>(streamLoop), stm);

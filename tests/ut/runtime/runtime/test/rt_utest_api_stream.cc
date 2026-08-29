@@ -88,6 +88,16 @@ TEST_F(ApiStreamTest, rtGetAvailStreamNum)
 
     Runtime* rtInstance = (Runtime*)Runtime::Instance();
     rtChipType_t type = rtInstance->chipType_;
+    rtInstance->SetChipType(CHIP_MINI);
+    GlobalContainer::SetRtChipType(CHIP_MINI);
+    error = rtGetAvailStreamNum(RT_NORMAL_STREAM, &avaliStrCount);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+    uint32_t avaliEventCount;
+    error = rtGetAvailEventNum(&avaliEventCount);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+    rtInstance->SetChipType(type);
+    GlobalContainer::SetRtChipType(type);
+
     GlobalContainer::SetRtChipType(CHIP_CLOUD);
     error = rtGetAvailStreamNum(RT_NORMAL_STREAM, &avaliStrCount);
     EXPECT_EQ(error, ACL_RT_SUCCESS);

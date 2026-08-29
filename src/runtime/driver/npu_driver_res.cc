@@ -257,7 +257,7 @@ rtError_t NpuDriver::SetDeviceInfoByBuff(
 
     COND_RETURN_WARN(
         &halSetDeviceInfoByBuff == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT,
-        "[drv api] halGetDeviceInfoByBuff does not exist");
+        "[drv api] halSetDeviceInfoByBuff does not exist");
     drvRet = halSetDeviceInfoByBuff(deviceId, moduleType, infoType, buf, size);
     COND_RETURN_WARN(
         drvRet == DRV_ERROR_NOT_SUPPORT, RT_ERROR_FEATURE_NOT_SUPPORT,
@@ -1694,7 +1694,7 @@ rtError_t NpuDriver::NormalSqCqAllocate(
         ((sysMode_ == RUN_MACHINE_VIRTUAL && addrMode_ != 0) ? CQ_DEPTH_FOR_FLAT_ADDR_VIRTURE_MACH :
                                                                normalSqCqAllocInputInfo.cqeDepth);
     RT_LOG(
-        RT_LOG_INFO, "Set cq dep to %u, sysMode=%d addrMode=%d", normalSqCqAllocInputInfo.cqeDepth, sysMode_,
+        RT_LOG_INFO, "Set cq depth to %u, sysMode=%d addrMode=%d", normalSqCqAllocInputInfo.cqeDepth, sysMode_,
         addrMode_);
 
     // streamid send to ts, it will be need when resource recycle

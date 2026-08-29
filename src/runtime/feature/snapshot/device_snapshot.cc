@@ -136,7 +136,7 @@ rtError_t DeviceSnapshot::OpMemoryBackup(void)
         offset += size;
         COND_RETURN_ERROR(
             (offset > opTotalHostMemSize), RT_ERROR_INVALID_VALUE,
-            "offset is less than or equal to host memory size, offset=%lu, host memory size=%lu, devId=%d", offset,
+            "offset is greater than host memory size, offset=%lu, host memory size=%lu, devId=%d", offset,
             opTotalHostMemSize, device_->Id_());
     }
     COND_RETURN_ERROR(
@@ -175,7 +175,7 @@ rtError_t DeviceSnapshot::OpMemoryRestore(void)
         offset += size;
         COND_RETURN_ERROR(
             (offset > opTotalHostMemSize), RT_ERROR_INVALID_VALUE,
-            "offset is less than or equal to host memory size, offset=%lu, host memory size=%lu, devId=%d", offset,
+            "offset is greater than host memory size, offset=%lu, host memory size=%lu, devId=%d", offset,
             opTotalHostMemSize, device_->Id_());
     }
     COND_RETURN_ERROR(

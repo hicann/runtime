@@ -261,7 +261,7 @@ rtError_t ApiImpl::CheckCurCtxValid(const int32_t devId)
         Context* const curCtx = CurrentContext(true, devId);
         // 异构场景不校验context
         if (RtIsHeterogenous()) {
-            RT_LOG(RT_LOG_DEBUG, "Heterogenous do not check ctx.");
+            RT_LOG(RT_LOG_DEBUG, "Heterogeneous mode does not check ctx.");
             return RT_ERROR_NONE;
         }
         CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
@@ -1842,7 +1842,9 @@ rtError_t ApiImpl::GetAvailStreamNum(const uint32_t streamType, uint32_t* const 
     if (IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_DEVICE_GET_RESOURCE_NUM_DYNAMIC)) {
         return NpuDriver::GetAvailStreamNum(deviceId, tsId, streamCount);
     }
-    RT_LOG(RT_LOG_INFO, "get avail stream num is gen");
+    RT_LOG(
+        RT_LOG_INFO, "Dynamic query of available streams is not supported; use configured stream count=%u.",
+        *streamCount);
     return RT_ERROR_NONE;
 }
 
@@ -1873,7 +1875,8 @@ rtError_t ApiImpl::GetAvailEventNum(uint32_t* const eventCount)
             driver, RT_ERROR_INVALID_VALUE, "Querying the number of available events on the current device");
         return driver->GetAvailEventNum(deviceId, tsId, eventCount);
     }
-    RT_LOG(RT_LOG_INFO, "get avail event num is gen");
+    RT_LOG(
+        RT_LOG_INFO, "Dynamic query of available events is not supported; use configured event count=%u.", *eventCount);
     return RT_ERROR_NONE;
 }
 
@@ -3681,8 +3684,7 @@ rtError_t ApiImpl::ModelEndGraph(Model* const mdl, Stream* const stm, const uint
 
     if ((flags & RT_KERNEL_DUMPFLAG) != 0U) {
         ERROR_RETURN_MSG_INNER(
-            Runtime::Instance()->StartAicpuSd(curCtx->Device_()),
-            "Model end graph with kernel dump flag failed, check and start tsd open aicpu sd error.");
+            Runtime::Instance()->StartAicpuSd(curCtx->Device_()), "Failed to start the AI CPU service.");
     }
     return curCtx->ModelAddEndGraph(mdl, stm, flags);
 }
@@ -3697,9 +3699,7 @@ rtError_t ApiImpl::ModelExecutorSet(Model* const mdl, const uint8_t flags)
         mdl, curCtx, RT_ERROR_MODEL_CONTEXT, "Setting the executor type of a model");
     Runtime* const rtInstance = Runtime::Instance();
     COND_RETURN_ERROR(rtInstance == nullptr, RT_ERROR_INSTANCE_NULL, "Runtime instance is null.");
-    ERROR_RETURN_MSG_INNER(
-        rtInstance->StartAicpuSd(curCtx->Device_()),
-        "Model executor set failed, check and start tsd open aicpu sd error.");
+    ERROR_RETURN_MSG_INNER(rtInstance->StartAicpuSd(curCtx->Device_()), "Failed to start the AI CPU service.");
     return curCtx->ModelExecutorSet(mdl, flags);
 }
 
@@ -3755,9 +3755,7 @@ rtError_t ApiImpl::ModelBindQueue(Model* const mdl, const uint32_t queueId, cons
 
     Runtime* const rtInstance = Runtime::Instance();
     COND_RETURN_ERROR(rtInstance == nullptr, RT_ERROR_INSTANCE_NULL, "Runtime instance is null.");
-    ERROR_RETURN_MSG_INNER(
-        rtInstance->StartAicpuSd(curCtx->Device_()),
-        "Model bind queue failed, check and start tsd open aicpu sd error.");
+    ERROR_RETURN_MSG_INNER(rtInstance->StartAicpuSd(curCtx->Device_()), "Failed to start the AI CPU service.");
 
     return curCtx->ModelBindQueue(mdl, queueId, flag);
 }
@@ -4339,7 +4337,8 @@ rtError_t ApiImpl::CallbackLaunchWithEvent(
             return ret;
         }
         RT_LOG(
-            RT_LOG_INFO, "Launched stream_id=%d, subscribeFlag=%d, original stream_id=%d, subscribeFlag=%d",
+            RT_LOG_INFO,
+            "Launched stream_id=%d, launchSubscribeFlag=%d, original stream_id=%d, originalSubscribeFlag=%d",
             launchStm->Id_(), static_cast<int32_t>(launchStm->GetSubscribeFlag()), stm->Id_(),
             static_cast<int32_t>(stm->GetSubscribeFlag()));
     } else {
@@ -4407,7 +4406,8 @@ rtError_t ApiImpl::CallbackLaunchWithoutEvent(
             return ret;
         }
         RT_LOG(
-            RT_LOG_INFO, "Launched stream_id=%d, subscribeFlag=%d, original stream_id=%d, subscribeFlag=%d",
+            RT_LOG_INFO,
+            "Launched stream_id=%d, launchSubscribeFlag=%d, original stream_id=%d, originalSubscribeFlag=%d",
             launchStm->Id_(), static_cast<int32_t>(launchStm->GetSubscribeFlag()), stm->Id_(),
             static_cast<int32_t>(stm->GetSubscribeFlag()));
     }
@@ -5634,7 +5634,7 @@ static rtError_t QueryQueueInfo(
     QueueInfo memQueInfo = {};
     const uint32_t qid = *qidPtr;
     const rtError_t ret = NpuDriver::MemQueueQueryInfoV2(devId, qid, &memQueInfo);
-    ERROR_RETURN(ret, "query queque info failed. ret=%#x", static_cast<uint32_t>(ret));
+    ERROR_RETURN(ret, "query queue info failed. ret=%#x", static_cast<uint32_t>(ret));
 
     *outLen = static_cast<uint32_t>(sizeof(uint32_t));
     uint32_t* entityType = RtPtrToPtr<uint32_t*>(outBuff);
@@ -6860,7 +6860,7 @@ rtError_t ApiImpl::SetStreamCacheOpInfoSwitch(const Stream* const stm, uint32_t 
     if (stm->IsCapturing() && stm->GetCaptureStream() != nullptr && stm->GetCaptureStream()->IsOrigCaptureStream()) {
         CaptureModel* mdl = dynamic_cast<CaptureModel*>(stm->GetCaptureStream()->Model_());
         RT_LOG(
-            RT_LOG_INFO, "set cache op info switch status, model_id = %u, steam_id=%u, status=%u.", mdl->Id_(),
+            RT_LOG_INFO, "set cache op info switch status, model_id = %u, stream_id=%u, status=%u.", mdl->Id_(),
             stm->Id_(), cacheOpInfoSwitch);
         mdl->SetModelCacheOpInfoSwitch(cacheOpInfoSwitch);
     }

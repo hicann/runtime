@@ -199,7 +199,7 @@ rtError_t ApiErrorDecorator::ModelCondHandleCreate(
         "Conditional handle creation", flag, "[0, " + std::to_string(RT_COND_HANDLE_ASSIGN_DEFAULT) + "]");
     COND_RETURN_AND_MSG_OUTER(
         mdl->GetModelType() != RT_MODEL_CAPTURE_MODEL, RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1006,
-        "Conditional handle creation", "The modelRI create condition handle", "The modelRI is not a ACL Graph");
+        "Conditional handle creation", "The modelRI create condition handle", "The modelRI is not an ACL Graph");
 
     return impl_->ModelCondHandleCreate(mdl, defaultValue, flag, handle);
 }

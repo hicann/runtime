@@ -146,7 +146,7 @@ uint8_t ReduceOpcodeHigh(TaskInfo* const taskInfo)
                 opcode = static_cast<uint8_t>(RT_STARS_MEMCPY_ASYNC_DATA_TYPE_BFP16);
             } else {
                 RT_LOG(
-                    RT_LOG_WARNING, "DataType=%u is out of range or is not supported.",
+                    RT_LOG_WARNING, "DataType=%u is not supported on the current device.",
                     static_cast<uint32_t>(memcpyAsyncTaskInfo->copyDataType));
                 opcode = static_cast<uint8_t>(RT_STARS_MEMCPY_ASYNC_OP_RESERVED);
             }
@@ -161,8 +161,7 @@ uint8_t ReduceOpcodeHigh(TaskInfo* const taskInfo)
             // if not support, it will return RT_ERROR_FEATURE_NOT_SUPPORT at context.cc's reduce ability check.
             // Only for code style, 0x80 is reserved value of STRAS opcode.
             RT_LOG(
-                RT_LOG_WARNING, "DataType=%u is out of range or is not supported.",
-                static_cast<uint32_t>(memcpyAsyncTaskInfo->copyDataType));
+                RT_LOG_WARNING, "Unsupported DataType=%u.", static_cast<uint32_t>(memcpyAsyncTaskInfo->copyDataType));
             opcode = static_cast<uint8_t>(RT_STARS_MEMCPY_ASYNC_OP_RESERVED);
             break;
         }
@@ -192,7 +191,7 @@ uint8_t ReduceOpcodeLow(TaskInfo* const taskInfo)
             break;
         }
         default: {
-            RT_LOG(RT_LOG_WARNING, "Type out of range: copyKind=%u", memcpyAsyncTaskInfo->copyKind);
+            RT_LOG(RT_LOG_WARNING, "Invalid copyKind=%u. Expected range: [10, 13].", memcpyAsyncTaskInfo->copyKind);
             opcode = static_cast<uint8_t>(RT_STARS_MEMCPY_ASYNC_OP_RESERVED);
             break;
         }
@@ -359,7 +358,7 @@ static rtError_t AllocFuncCallMemForMemWaitTask(TaskInfo* taskInfo)
     if ((taskInfo->type == TS_TASK_TYPE_CAPTURE_WAIT) || (taskInfo->type == TS_TASK_TYPE_CAPTURE_WAIT_EXTERNAL)) {
         if (taskInfo->stream->Model_() == nullptr || allocSize > MEM_WAIT_SPLIT_SIZE) {
             RT_LOG(
-                RT_LOG_ERROR, "Model is null or capture wait alloc size=%llu max than %u.", allocSize,
+                RT_LOG_ERROR, "Model is null or capture wait alloc size=%llu exceeds the limit %u.", allocSize,
                 MEM_WAIT_SPLIT_SIZE);
             return RT_ERROR_MODEL_NULL;
         }

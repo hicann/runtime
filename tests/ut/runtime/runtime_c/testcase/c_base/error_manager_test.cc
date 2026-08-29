@@ -95,6 +95,10 @@ TEST_F(UtestErrManagerTest, GetErrorMessage)
                  "        Argument ll must not be NULL.\r\n");
     char* errmsg3 = GetErrorMessage();
     ASSERT_STREQ(errmsg3, NULL);
+
+    ReportInterErrMessage("E19999", "This is an internal error!");
+    char* errmsg4 = GetErrorMessage();
+    ASSERT_STREQ(errmsg4, "E19999: Internal Error!\r\nThis is an internal error!\r\n");
 }
 
 void* ThreadFunction(void* arg)

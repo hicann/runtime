@@ -295,7 +295,8 @@ void FillFftsMixSqeForDavinciTask(
         if (programPtr != nullptr) {
             stackSize = programPtr->GetStackSize();
             RT_LOG(
-                RT_LOG_INFO, "kernelNames_=%s, stackSize=%lu.", programPtr->GetKernelNamesBuffer().c_str(), stackSize);
+                RT_LOG_INFO, "kernelNames_=%s, stackSize=%lu bytes.", programPtr->GetKernelNamesBuffer().c_str(),
+                stackSize);
         }
     }
 
@@ -365,7 +366,7 @@ void FillFftsMixSqeForDavinciTask(
 
     if ((!stm->GetBindFlag()) && (Runtime::Instance()->GetBiuperfProfFlag())) {
         if (sqeHeader->postP == RT_STARS_SQE_INT_DIR_TO_TSCPU) {
-            RT_LOG(RT_LOG_WARNING, "post-p has already be set, service scenarios conflict.");
+            RT_LOG(RT_LOG_WARNING, "post-p has already been set, service scenarios conflict.");
         } else {
             sqeHeader->preP = RT_STARS_SQE_INT_DIR_TO_TSCPU;
             sqeHeader->postP = RT_STARS_SQE_INT_DIR_TO_TSCPU;
@@ -862,7 +863,7 @@ void ConstructAICoreSqeForDavinciTask(TaskInfo* const taskInfo, rtStarsSqe_t* co
 
     if ((!stm->GetBindFlag()) && (Runtime::Instance()->GetBiuperfProfFlag())) {
         if (sqe->header.post_p == RT_STARS_SQE_INT_DIR_TO_TSCPU) {
-            RT_LOG(RT_LOG_WARNING, "post-p has already be set, service scenarios conflict.");
+            RT_LOG(RT_LOG_WARNING, "post-p has already been set, service scenarios conflict.");
         } else {
             sqe->header.pre_p = RT_STARS_SQE_INT_DIR_TO_TSCPU;
             sqe->header.post_p = RT_STARS_SQE_INT_DIR_TO_TSCPU;

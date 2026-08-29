@@ -30,7 +30,7 @@ aclError QueueProcessorCcpu::acltdtCreateQueue(const acltdtQueueAttr* const attr
         isQueueIint = true;
     }
     ACL_REQUIRES_OK(acltdtCreateQueueWithAttr(deviceId, attr, qid));
-    ACL_LOG_INFO("Successfully to execute create queue, qid is %u", *qid);
+    ACL_LOG_INFO("Successfully executed create queue, qid is %u", *qid);
     return ACL_SUCCESS;
 }
 
@@ -76,7 +76,7 @@ aclError QueueProcessorCcpu::acltdtDestroyQueue(const uint32_t qid) { return acl
 aclError QueueProcessorCcpu::acltdtBindQueueRoutes(acltdtQueueRouteList* const qRouteList)
 {
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(qRouteList);
-    ACL_LOG_INFO("Start to acltdtBindQueueRoutes, queue route is %zu", qRouteList->routeList.size());
+    ACL_LOG_INFO("Start to execute acltdtBindQueueRoutes, queue route is %zu", qRouteList->routeList.size());
     // qs is thread mode, so no need to grant queue to qs
     constexpr int32_t deviceId = 0;
     ACL_REQUIRES_OK(InitQueueSchedule(deviceId));
@@ -98,14 +98,14 @@ aclError QueueProcessorCcpu::acltdtBindQueueRoutes(acltdtQueueRouteList* const q
         isQsInit_ = true;
     }
     ACL_REQUIRES_OK(SendBindUnbindMsgOnDevice(qRouteList, true, eventSum, ack));
-    ACL_LOG_INFO("Successfully to execute acltdtBindQueueRoutes, queue route is %zu", qRouteList->routeList.size());
+    ACL_LOG_INFO("Successfully executed acltdtBindQueueRoutes, queue route is %zu", qRouteList->routeList.size());
     return ACL_SUCCESS;
 }
 
 aclError QueueProcessorCcpu::acltdtUnbindQueueRoutes(acltdtQueueRouteList* const qRouteList)
 {
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(qRouteList);
-    ACL_LOG_INFO("Start to acltdtUnBindQueueRoutes, queue route is %zu", qRouteList->routeList.size());
+    ACL_LOG_INFO("Start to execute acltdtUnBindQueueRoutes, queue route is %zu", qRouteList->routeList.size());
     // get dst id
     const int32_t dstPid = mmGetPid();
     rtEschedEventSummary_t eventSum = {0, 0U, 0, 0U, 0U, nullptr, 0U, 0};
@@ -119,7 +119,7 @@ aclError QueueProcessorCcpu::acltdtUnbindQueueRoutes(acltdtQueueRouteList* const
     ack.bufLen = sizeof(qsRsp);
     const std::lock_guard<std::recursive_mutex> lk(muForQueueCtrl_);
     ACL_REQUIRES_OK(SendBindUnbindMsgOnDevice(qRouteList, false, eventSum, ack));
-    ACL_LOG_INFO("Successfully to execute acltdtUnBindQueueRoutes, queue route is %zu", qRouteList->routeList.size());
+    ACL_LOG_INFO("Successfully executed acltdtUnBindQueueRoutes, queue route is %zu", qRouteList->routeList.size());
     return ACL_SUCCESS;
 }
 
@@ -128,7 +128,7 @@ aclError QueueProcessorCcpu::acltdtQueryQueueRoutes(
 {
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(queryInfo);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(qRouteList);
-    ACL_LOG_INFO("Start to acltdtQueryQueueRoutes");
+    ACL_LOG_INFO("Start to execute acltdtQueryQueueRoutes");
     constexpr int32_t deviceId = 0;
     // get dst id
     const int32_t dstPid = mmGetPid();

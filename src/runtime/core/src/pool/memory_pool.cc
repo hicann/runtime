@@ -68,7 +68,7 @@ void MemoryPool::Release(void* address, size_t size)
     if (usedSize_ >= size) {
         usedSize_ -= size;
     } else {
-        RT_LOG(RT_LOG_EVENT, "release memory size[%lu] beyond the used memory size[%lu]!", size, usedSize_);
+        RT_LOG(RT_LOG_EVENT, "release memory size[%lu bytes] beyond the used memory size[%lu bytes]!", size, usedSize_);
         usedSize_ = 0;
     }
 }

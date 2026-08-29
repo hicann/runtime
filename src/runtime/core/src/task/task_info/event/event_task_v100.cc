@@ -179,7 +179,7 @@ static void ConstructSqeForEventWaitTask(TaskInfo* const taskInfo, rtStarsSqe_t*
     evSqe->header.type = RT_STARS_SQE_TYPE_EVENT_WAIT;
     evSqe->header.ie = RT_STARS_SQE_INT_DIR_NO;
     evSqe->header.pre_p = RT_STARS_SQE_INT_DIR_NO;
-    RT_LOG(RT_LOG_INFO, "timeout_=%u.", eventWaitTaskInfo->timeout);
+    RT_LOG(RT_LOG_INFO, "timeout=%ums.", eventWaitTaskInfo->timeout);
     evSqe->header.post_p = RT_STARS_SQE_INT_DIR_NO;
     evSqe->header.wr_cqe = stream->GetStarsWrCqeFlag();
     evSqe->kernelCredit = RT_STARS_NEVER_TIMEOUT_KERNEL_CREDIT;
@@ -203,7 +203,7 @@ static void ConstructSqeForEventWaitTask(TaskInfo* const taskInfo, rtStarsSqe_t*
     param.u.eventWaitParams = {eventWaitTaskInfo->eventId, false, eventLowEightAddr};
     AtraceSubmitLog(TYPE_EVENT_WAIT, param);
     RT_LOG(
-        RT_LOG_INFO, "event_wait: device_id=%u, stream_id=%d, task_id=%hu, event_id=%d, sq_id=%u, timeout=%us.",
+        RT_LOG_INFO, "event_wait: device_id=%u, stream_id=%d, task_id=%hu, event_id=%d, sq_id=%u, timeout=%ums.",
         stream->Device_()->Id_(), stream->Id_(), taskInfo->id, eventWaitTaskInfo->eventId, stream->GetSqId(),
         eventWaitTaskInfo->timeout);
 }

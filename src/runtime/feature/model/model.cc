@@ -2162,7 +2162,7 @@ rtError_t Model::CmoIdAlloc(const uint32_t logicId, uint16_t& cmoId)
     } else {
         cmoId = it->second;
     }
-    RT_LOG(RT_LOG_INFO, "alloc com id success, logicId=%u, cmoId=%hu.", logicId, cmoId);
+    RT_LOG(RT_LOG_INFO, "alloc cmo id success, logicId=%u, cmoId=%hu.", logicId, cmoId);
     return RT_ERROR_NONE;
 }
 

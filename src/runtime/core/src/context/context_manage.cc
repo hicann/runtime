@@ -218,7 +218,7 @@ bool ContextManage::IsSupportDeviceAbort(const int32_t devId)
     for (Context* const ctx : g_ctxMan.GetSetObj()) {
         COND_PROC(!IsContextOnDevice(ctx, devId), continue);
         if (!ctx->Device_()->CheckFeatureSupport(TS_FEATURE_TASK_ABORT)) {
-            RT_LOG(RT_LOG_WARNING, "feature not support because tsch version too low");
+            RT_LOG(RT_LOG_WARNING, "feature is not supported because tsch version is too low");
             return false;
         }
     }

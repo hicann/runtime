@@ -121,12 +121,12 @@ aclError QueueProcessor::acltdtDestroyQueueOndevice(const uint32_t qid, const bo
         ACL_REQUIRES_OK(GetQueueRouteNum(&queryInfo, deviceId, eventSum, ack, routeNum));
     }
     if (routeNum > 0U) {
-        ACL_LOG_ERROR("qid [%u] can not be destroyed, it need to be unbinded first.", qid);
+        ACL_LOG_ERROR("qid [%u] cannot be destroyed, it needs to be unbound first.", qid);
         return ACL_ERROR_FAILURE;
     }
     ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtMemQueueDestroy(deviceId, qid), rtMemQueueDestroy);
     DeleteMutexForData(qid);
-    ACL_LOG_INFO("successfully to execute destroy queue %u", qid);
+    ACL_LOG_INFO("Destroy queue %u succeeded.", qid);
     return ACL_SUCCESS;
 }
 
@@ -196,8 +196,8 @@ static aclError AllocMBufOnDevice(void** const devPtr, void** const mBuf, const 
 aclError QueueProcessor::SendConnectQsMsg(
     const int32_t deviceId, rtEschedEventSummary_t& eventSum, rtEschedEventReply_t& ack)
 {
-    // send contact msg
-    ACL_LOG_INFO("start to send contact msg");
+    // send connect msg
+    ACL_LOG_INFO("Start to send connect msg.");
     bqs::QsBindInit qsInitMsg = {0U, 0, 0U, MBUF_ENHANCED_ACL, {0}};
     qsInitMsg.pid = mmGetPid();
     qsInitMsg.grpId = 0U;
@@ -217,7 +217,7 @@ aclError QueueProcessor::SendConnectQsMsg(
     if (rsp->majorVersion >= MBUF_ENHANCED_QS) {
         isMbufEnhanced_ = true;
     }
-    ACL_LOG_INFO("successfully execute to SendConnectQsMsg");
+    ACL_LOG_INFO("Execute SendConnectQsMsg successfully.");
     return ACL_SUCCESS;
 }
 
@@ -320,7 +320,7 @@ aclError QueueProcessor::GetQueueRouteNum(
         return ACL_ERROR_FAILURE;
     }
     routeNum = rsp->retValue;
-    ACL_LOG_INFO("successfully to get queue route num %zu.", routeNum);
+    ACL_LOG_INFO("Got queue route num %zu successfully.", routeNum);
     return ACL_SUCCESS;
 }
 
@@ -398,7 +398,7 @@ aclError QueueProcessor::QueryQueueRoutesOnDevice(
     (void)rtMbufFree(mBuf);
     devPtr = nullptr;
     mBuf = nullptr;
-    ACL_LOG_INFO("Successfully to execute acltdtQueryQueueRoutes, queue route is %zu", qRouteList->routeList.size());
+    ACL_LOG_INFO("Successfully executed acltdtQueryQueueRoutes, queue route is %zu", qRouteList->routeList.size());
     return ACL_SUCCESS;
 }
 
@@ -666,7 +666,7 @@ aclError QueueProcessor::acltdtDequeueData(
     }
 
     ACL_LOG_INFO(
-        "success to execute acltdtDequeueData, device is %d, qid is %u, retDataSize is %zu", deviceId, qid,
+        "success to execute acltdtDequeueData, device is %d, qid is %u, retDataSize is %zu bytes", deviceId, qid,
         *retDataSize);
     return ACL_SUCCESS;
 }

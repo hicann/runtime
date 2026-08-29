@@ -314,7 +314,7 @@ void ConstrucModelExeCheckSqFsm(rtStarsModelExeFuncCallPara_t& funcCallPara, RtS
     const rtChipType_t chipType = Runtime::Instance()->GetChipType();
     DevProperties prop;
     const rtError_t error = GET_DEV_PROPERTIES(chipType, prop);
-    RT_LOG(RT_LOG_DEBUG, "go to offset1:%" PRIu64 "GetDevProperties, ret = %u", offset1, error);
+    RT_LOG(RT_LOG_DEBUG, "go to offset1:%" PRIu64 ", GetDevProperties, ret = %u", offset1, error);
     const uint32_t shamt = prop.rtsqShamt;
 
     // r1 is sqid

@@ -49,7 +49,11 @@ void TimeoutSetTaskUpdate(TaskInfo* taskInfo, const rtTaskTimeoutType_t type, co
             timeoutSetTask->opExecuteTimeout = timeout;
             break;
         default:
-            RT_LOG(RT_LOG_ERROR, "Invalid task timeout type=UNKNOWN(%d)", static_cast<int32_t>(type));
+            RT_LOG(
+                RT_LOG_ERROR,
+                "Invalid task timeout type=UNKNOWN(%d). Expected values: RT_TIMEOUT_TYPE_OP_WAIT(0) or "
+                "RT_TIMEOUT_TYPE_OP_EXECUTE(1).",
+                static_cast<int32_t>(type));
             break;
     }
     RT_LOG(

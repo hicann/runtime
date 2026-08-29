@@ -173,7 +173,7 @@ rtError_t GetCaptureStream(Context* const ctx, Stream* const stm, const Event* c
         stm->Id_(), evt->EventId_(), captureEvt->EventId_());
 
     RT_LOG(
-        RT_LOG_INFO, "Capture event_id=%d, stream_id=[%d->%d] bounded to model_id=%u.", captureEvt->EventId_(),
+        RT_LOG_INFO, "Capture event_id=%d, stream_id=[%d->%d] bound to model_id=%u.", captureEvt->EventId_(),
         stm->Id_(), curStm->Id_(), captureMdl->Id_());
     *captureStm = curStm;
     return RT_ERROR_NONE;
@@ -199,11 +199,11 @@ static rtError_t CheckCaptureModelSupportValueWaitTask(const bool isRecord)
         if (isRecord) {
             RT_LOG(
                 RT_LOG_WARNING,
-                "Current chip does not support value write task which required by external event record.");
+                "Current chip does not support value write task which is required by external event record.");
         } else {
             RT_LOG(
                 RT_LOG_WARNING,
-                "Current chip does not support value wait task, which required by external event wait.");
+                "Current chip does not support value wait task, which is required by external event wait.");
         }
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }

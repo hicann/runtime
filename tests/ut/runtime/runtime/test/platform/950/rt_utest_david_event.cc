@@ -189,6 +189,9 @@ TEST_F(EventTestDavid, TestAllocEventIdResource)
 
     int32_t eventId = 0;
     evt->eventFlag_ = RT_EVENT_TIME_LINE;
+    error = evt->GenEventId();
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
     error = evt->AllocEventIdResource(stm, eventId);
     EXPECT_EQ(error, RT_ERROR_NONE);
 

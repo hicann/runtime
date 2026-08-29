@@ -46,7 +46,7 @@ void ToCommandBodyForFusionDumpAddrSetTask(TaskInfo* taskInfo, rtCommand_t* cons
         static_cast<int32_t>(taskInfo->stream->Device_()->Id_()), addr, &(fusionDumpAddrSet->combAddr));
     COND_RETURN_VOID(error != RT_ERROR_NONE, "translate failed, retCode=%#x, address=%#" PRIx64 ".", error, addr);
     RT_LOG(
-        RT_LOG_INFO, "vir_addr=%#" PRIx64 ", comb_addr=%#" PRIx64 ", dumpSize=%u, modelID=%u.", addr,
+        RT_LOG_INFO, "vir_addr=%#" PRIx64 ", comb_addr=%#" PRIx64 ", dumpSize=%u bytes, modelID=%u.", addr,
         fusionDumpAddrSet->combAddr, fusionDumpAddrSet->dumpSize, fusionDumpAddrSet->modelId);
 
     command->u.fusionDumpAddrSetTask.dumpAddrPtr = fusionDumpAddrSet->combAddr;

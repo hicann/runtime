@@ -145,7 +145,7 @@ rtError_t DeviceSqCqPool::BatchAllocSqCq(const uint32_t allcocNum, const int32_t
     COND_RETURN_INFO(
         (deviceSqCqFreeList_.size() + deviceSqCqOccupyList_.size() + allcocNum) > RT_DEVICE_SQCQ_RES_MAX_NUM,
         RT_ERROR_DEVICE_SQCQ_POOL_RESOURCE_FULL,
-        "The number of sq cq resouces has reached the maximum free_size=%u, occupy_size=%u, need allcocNum=%u.",
+        "The number of sq cq resources has reached the maximum free_size=%u, occupy_size=%u, need allocNum=%u.",
         deviceSqCqFreeList_.size(), deviceSqCqOccupyList_.size(), allcocNum);
 
     rtDeviceSqCqInfo_t sqCqInfo = {};
@@ -184,7 +184,7 @@ void DeviceSqCqPool::PreAllocSqCq(void)
 
 rtError_t DeviceSqCqPool::AllocSqCq(const uint32_t allcocNum, rtDeviceSqCqInfo_t* const sqCqList)
 {
-    RT_LOG(RT_LOG_DEBUG, "deviceId=%u, tsId=%u, allcocNum=%u", device_->Id_(), device_->DevGetTsId(), allcocNum);
+    RT_LOG(RT_LOG_DEBUG, "deviceId=%u, tsId=%u, allocNum=%u", device_->Id_(), device_->DevGetTsId(), allcocNum);
     if ((allcocNum == 0U) || (sqCqList == nullptr)) {
         return RT_ERROR_INVALID_VALUE;
     }

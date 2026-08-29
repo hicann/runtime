@@ -560,7 +560,7 @@ rtError_t ApiImpl::GetNotifyPhyInfo(Notify* const inNotify, rtNotifyPhyInfo* not
     RT_LOG(RT_LOG_INFO, "get phy info.");
     if (inNotify == nullptr) {
         RT_LOG(RT_LOG_INFO, "inNotify is nullptr.");
-        RT_LOG(RT_LOG_ERROR, "Get pyh info failed.");
+        RT_LOG(RT_LOG_ERROR, "Get phy info failed.");
         return RT_ERROR_NOTIFY_NULL;
     }
     notifyInfo->phyId = inNotify->GetPhyDevId();
