@@ -11,7 +11,7 @@ concurrency:
 on:
   pull_request_comment:
     types: [created]
-    branches: [ '*' ]
+    branches: [ '**' ]
     comments: [ '^(?:\/)?compile*' ]
   pr_comment:
     types: [ created ]
@@ -38,7 +38,7 @@ stages:
             identifier: revise_image
             uses: cann/.gitcode/actions/revise-img@master
             with:
-              repo_name: 'runtime'
+              repo_name: ${{ env.repo_name }}
               target_branch: ${{ env.TARGET_BRANCH }}
               repo_url: ${{ vars.CI_PATH }}
           -
@@ -323,7 +323,6 @@ stages:
             uses: checkout
             with:
               ref: ${{ atomgit.event.pull_request.merge_commit_sha }}
-              token: ${{secrets.GIT_TOKEN}}
           -
             name: download
             uses: obs-download
@@ -346,7 +345,6 @@ stages:
               source_branch: ${{ env.SOURCE_BRANCH }}
               target_branch: ${{ env.TARGET_BRANCH }}
               obs_path: ${{ env.obs_path }}
-              git_token: ${{secrets.GIT_TOKEN}}
           -
             name: upload
             uses: obs-upload
@@ -371,7 +369,6 @@ stages:
             uses: checkout
             with:
               ref: ${{ atomgit.event.pull_request.merge_commit_sha }}
-              token: ${{secrets.GIT_TOKEN}}
           -
             name: download
             uses: obs-download
@@ -394,7 +391,6 @@ stages:
               source_branch: ${{ env.SOURCE_BRANCH }}
               target_branch: ${{ env.TARGET_BRANCH }}
               obs_path: ${{ env.obs_path }}
-              git_token: ${{secrets.GIT_TOKEN}}
           -
             name: upload
             uses: obs-upload
@@ -424,7 +420,6 @@ stages:
             identifier: process_checkout
             uses: checkout
             with:
-              token: ${{secrets.GIT_TOKEN}}
               ref: ${{ atomgit.event.pull_request.merge_commit_sha }}
           -
             name: download
@@ -460,7 +455,7 @@ stages:
               bucket: "ascend-ci"
               access-key: ${{ secrets.AK }}
               secret-key: ${{ secrets.SK }}
-              artifact-path: "${{ steps.process_checkout.outputs.path }}/slog.tar.gz"
+              artifact-path: "${{ steps.process_checkout.outputs.path }}/slog*.tar.gz"
               object-prefix: ${obs_smoke_path}/plog/
 
         if: env.TARGET_BRANCH == 'master'
