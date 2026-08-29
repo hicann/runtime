@@ -19,7 +19,7 @@ set -e
 append_env() {
     local name="$1"
     local value="$2"
-    local env_value="$(eval echo "\${${name}}")"
+    local env_value="$(eval echo "\${${name}:-}")"
 
     if [ "$env_value" = "" ]; then
         read -r $name <<EOF
@@ -36,7 +36,7 @@ EOF
 prepend_env() {
     local name="$1"
     local value="$2"
-    local env_value="$(eval echo "\${${name}}")"
+    local env_value="$(eval echo "\${${name}:-}")"
 
     if [ "$env_value" = "" ]; then
         read -r $name <<EOF
@@ -53,7 +53,7 @@ EOF
 remove_env() {
     local name="$1"
     local regex="$2"
-    local env_value="$(eval echo "\${${name}}")"
+    local env_value="$(eval echo "\${${name}:-}")"
 
     read -r $name <<EOF
 $(echo "${env_value}" | tr ':' '\n' | grep -v -E "${regex}" | tr '\n' ':' | sed 's/:$//')
