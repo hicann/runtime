@@ -22,13 +22,10 @@ ErrorManagerContext GetErrMgrContext()
     return errorContext;
 }
 
-void SetErrMgrContext(ErrorManagerContext errorContext)
-{
-    (void)(errorContext);
-}
+void SetErrMgrContext(ErrorManagerContext errorContext) { (void)(errorContext); }
 
-int32_t ReportInnerErrMsg(const char *fileName, const char *func, uint32_t line, const char *errorCode,
-                          const char *format, ...)
+int32_t ReportInnerErrMsg(
+    const char* fileName, const char* func, uint32_t line, const char* errorCode, const char* format, ...)
 {
     (void)fileName;
     (void)func;
@@ -38,8 +35,8 @@ int32_t ReportInnerErrMsg(const char *fileName, const char *func, uint32_t line,
     return 0;
 }
 
-int32_t ReportPredefinedErrMsg(const char *errorCode, const std::vector<const char *> &key,
-                               const std::vector<const char *> &value)
+int32_t ReportPredefinedErrMsg(
+    const char* errorCode, const std::vector<const char*>& key, const std::vector<const char*>& value)
 {
     (void)errorCode;
     (void)key;
@@ -47,23 +44,23 @@ int32_t ReportPredefinedErrMsg(const char *errorCode, const std::vector<const ch
     return 0;
 }
 
-int32_t ReportPredefinedErrMsg(const char *errorCode)
+int32_t ReportPredefinedErrMsg(const char* errorCode)
 {
     (void)errorCode;
     return 0;
 }
 
-int32_t ReportUserDefinedErrMsg(const char *errorCode, const char *format, ...)
+int32_t ReportUserDefinedErrMsg(const char* errorCode, const char* format, ...)
 {
     (void)errorCode;
     (void)format;
     return 0;
 }
 
-int32_t RegisterFormatErrorMessage(const char *errorMsg, size_t errorMsgLen)
+int32_t RegisterFormatErrorMessage(const char* errorMsg, size_t errorMsgLen)
 {
     (void)errorMsg;
     (void)errorMsgLen;
     return 0;
 }
-}  // namespace error_message
+} // namespace error_message

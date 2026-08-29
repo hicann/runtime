@@ -40,9 +40,8 @@ TEST_F(IDE_DAEMON_MSG_UTEST, IdeGetMsgLen)
 
     IDE_FREE_MSG_AND_SET_NULL(msg);
 
-    msg = IdeCeateStatusMsg(IDE_DAEMON_WRITE_ERROR, IdeGetStatusError(IDE_DAEMON_NO_SPACE_ERROR), strlen(IdeGetStatusError(IDE_DAEMON_NO_SPACE_ERROR)));
-    len = IDE_MSG_STATUS_LEN();
-    EXPECT_EQ(len, IdeGetMsgLen(msg));
+    msg = IdeCeateStatusMsg(IDE_DAEMON_WRITE_ERROR, IdeGetStatusError(IDE_DAEMON_NO_SPACE_ERROR),
+strlen(IdeGetStatusError(IDE_DAEMON_NO_SPACE_ERROR))); len = IDE_MSG_STATUS_LEN(); EXPECT_EQ(len, IdeGetMsgLen(msg));
 
     IDE_FREE_MSG_AND_SET_NULL(msg);
 

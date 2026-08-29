@@ -18,15 +18,13 @@
 #include "server_register.h"
 
 using namespace Adx;
-class ADX_SERVER_REGISTER_TEST: public testing::Test {
+class ADX_SERVER_REGISTER_TEST : public testing::Test {
 protected:
     virtual void SetUp() {}
-    virtual void TearDown() {
-        GlobalMockObject::verify();
-    }
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
-int32_t CreateDetachTaskWithDefaultAttrStub(mmThread &tid, mmUserBlock_t &funcBlock)
+int32_t CreateDetachTaskWithDefaultAttrStub(mmThread& tid, mmUserBlock_t& funcBlock)
 {
     funcBlock.procFunc(funcBlock.pulArg);
     return 0;
@@ -34,33 +32,25 @@ int32_t CreateDetachTaskWithDefaultAttrStub(mmThread &tid, mmUserBlock_t &funcBl
 
 TEST_F(ADX_SERVER_REGISTER_TEST, RegisterComponent)
 {
-    MOCKER_CPP(&AdxServerManager::ComponentAdd)
-        .stubs()
-    .will(returnValue(true))
-    .then(returnValue(false));
+    MOCKER_CPP(&AdxServerManager::ComponentAdd).stubs().will(returnValue(true)).then(returnValue(false));
     ServerRegister serviceManager;
-    std::unique_ptr<AdxComponent> cpn(new(std::nothrow)AdxDumpReceive);
+    std::unique_ptr<AdxComponent> cpn(new (std::nothrow) AdxDumpReceive);
     EXPECT_EQ(IDE_DAEMON_OK, serviceManager.RegisterComponent(HDC_SERVICE_TYPE_DUMP, cpn));
     EXPECT_EQ(IDE_DAEMON_ERROR, serviceManager.RegisterComponent(HDC_SERVICE_TYPE_DUMP, cpn));
 }
 
 TEST_F(ADX_SERVER_REGISTER_TEST, ComponentServerStartup)
 {
-    MOCKER_CPP(&ServerRegister::ServerManagerInit)
-    .stubs()
-    .will(returnValue(true))
-    .then(returnValue(false));
+    MOCKER_CPP(&ServerRegister::ServerManagerInit).stubs().will(returnValue(true)).then(returnValue(false));
     ServerRegister serviceManager;
-    ServerInitInfo info = { (int32_t)HDC_SERVICE_TYPE_DUMP, 0, -1 };
+    ServerInitInfo info = {(int32_t)HDC_SERVICE_TYPE_DUMP, 0, -1};
     EXPECT_EQ(IDE_DAEMON_OK, serviceManager.ComponentServerStartup(info));
     EXPECT_EQ(IDE_DAEMON_ERROR, serviceManager.ComponentServerStartup(info));
 }
 
 TEST_F(ADX_SERVER_REGISTER_TEST, ComponentServerCleanup)
 {
-    MOCKER_CPP(&AdxServerManager::Exit)
-    .stubs()
-    .will(returnValue(IDE_DAEMON_OK));
+    MOCKER_CPP(&AdxServerManager::Exit).stubs().will(returnValue(IDE_DAEMON_OK));
     ServerRegister serviceManager;
     EXPECT_EQ(IDE_DAEMON_OK, serviceManager.ComponentServerCleanup(HDC_SERVICE_TYPE_DUMP));
 }
@@ -73,7 +63,7 @@ TEST_F(ADX_SERVER_REGISTER_TEST, AdxRegisterComponentFunc)
         .then(returnValue(IDE_DAEMON_ERROR));
 
     drvHdcServiceType serverType = HDC_SERVICE_TYPE_DUMP;
-    std::unique_ptr<AdxComponent> cpn(new(std::nothrow)AdxDumpReceive);
+    std::unique_ptr<AdxComponent> cpn(new (std::nothrow) AdxDumpReceive);
     EXPECT_EQ(IDE_DAEMON_OK, AdxRegisterComponentFunc(serverType, cpn));
     EXPECT_EQ(IDE_DAEMON_ERROR, AdxRegisterComponentFunc(serverType, cpn));
 }
@@ -82,11 +72,8 @@ TEST_F(ADX_SERVER_REGISTER_TEST, AdxComponentServerStartup)
 {
     int mode = 0;
     int devId = -1;
-    ServerInitInfo info = { (int32_t)HDC_SERVICE_TYPE_DUMP, mode, devId };
-    MOCKER_CPP(&Thread::CreateDetachTaskWithDefaultAttr)
-        .stubs()
-        .will(returnValue(EN_OK))
-        .then(returnValue(EN_ERROR));
+    ServerInitInfo info = {(int32_t)HDC_SERVICE_TYPE_DUMP, mode, devId};
+    MOCKER_CPP(&Thread::CreateDetachTaskWithDefaultAttr).stubs().will(returnValue(EN_OK)).then(returnValue(EN_ERROR));
 
     EXPECT_EQ(IDE_DAEMON_OK, AdxComponentServerStartup(info));
     EXPECT_EQ(IDE_DAEMON_ERROR, AdxComponentServerStartup(info));
@@ -96,10 +83,8 @@ TEST_F(ADX_SERVER_REGISTER_TEST, AdxServerProcess)
 {
     int mode = 0;
     int devId = -1;
-    ServerInitInfo info = { (int32_t)HDC_SERVICE_TYPE_DUMP, mode, devId };
-    MOCKER_CPP(&Thread::CreateDetachTaskWithDefaultAttr)
-        .stubs()
-        .will(invoke(CreateDetachTaskWithDefaultAttrStub));
+    ServerInitInfo info = {(int32_t)HDC_SERVICE_TYPE_DUMP, mode, devId};
+    MOCKER_CPP(&Thread::CreateDetachTaskWithDefaultAttr).stubs().will(invoke(CreateDetachTaskWithDefaultAttrStub));
 
     EXPECT_EQ(IDE_DAEMON_OK, AdxComponentServerStartup(info));
 }
@@ -118,23 +103,16 @@ TEST_F(ADX_SERVER_REGISTER_TEST, AdxComponentServerCleanup)
 TEST_F(ADX_SERVER_REGISTER_TEST, ServerManagerInit)
 {
     ServerRegister serviceManager;
-    ServerInitInfo info = { (int32_t)HDC_SERVICE_TYPE_DUMP, 0, -1 };
-    std::unique_ptr<AdxComponent> cpn(new(std::nothrow)AdxDumpReceive);
+    ServerInitInfo info = {(int32_t)HDC_SERVICE_TYPE_DUMP, 0, -1};
+    std::unique_ptr<AdxComponent> cpn(new (std::nothrow) AdxDumpReceive);
     EXPECT_EQ(false, serviceManager.ServerManagerInit(info));
     serviceManager.RegisterComponent(HDC_SERVICE_TYPE_DUMP, cpn);
 
-    MOCKER_CPP(&AdxServerManager::RegisterEpoll)
-        .stubs()
-        .will(returnValue(false))
-        .then(returnValue(true));
+    MOCKER_CPP(&AdxServerManager::RegisterEpoll).stubs().will(returnValue(false)).then(returnValue(true));
 
-    MOCKER_CPP(&AdxServerManager::RegisterCommOpt)
-        .stubs()
-        .will(returnValue(true));
+    MOCKER_CPP(&AdxServerManager::RegisterCommOpt).stubs().will(returnValue(true));
 
-    MOCKER_CPP(&AdxServerManager::ComponentInit)
-        .stubs()
-        .will(returnValue(true));
+    MOCKER_CPP(&AdxServerManager::ComponentInit).stubs().will(returnValue(true));
 
     EXPECT_EQ(false, serviceManager.ServerManagerInit(info));
     EXPECT_EQ(true, serviceManager.ServerManagerInit(info));

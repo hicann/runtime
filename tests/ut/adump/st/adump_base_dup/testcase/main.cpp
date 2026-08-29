@@ -12,17 +12,10 @@
 
 using namespace testing;
 
-class AdumpBaseDupEnvironment : public testing::Environment
-{
+class AdumpBaseDupEnvironment : public testing::Environment {
 public:
-    virtual void SetUp()
-    {
-        std::cout << "Adump base dup environment setup" << std::endl;
-    }
-    virtual void TearDown()
-    {
-        std::cout << "Adump base dup environment teardown" << std::endl;
-    }
+    virtual void SetUp() { std::cout << "Adump base dup environment setup" << std::endl; }
+    virtual void TearDown() { std::cout << "Adump base dup environment teardown" << std::endl; }
 };
 
 int main(int argc, char* argv[])

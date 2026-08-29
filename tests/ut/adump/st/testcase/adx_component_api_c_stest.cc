@@ -17,12 +17,10 @@
 #include "common_utils.h"
 #include "adx_component_api_c.h"
 using namespace Adx;
-class ADX_SERVER_MANGER_STEST: public testing::Test {
+class ADX_SERVER_MANGER_STEST : public testing::Test {
 protected:
     virtual void SetUp() {}
-    virtual void TearDown() {
-        GlobalMockObject::verify();
-    }
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 TEST_F(ADX_SERVER_MANGER_STEST, ServerMangerFunc)
@@ -34,18 +32,14 @@ TEST_F(ADX_SERVER_MANGER_STEST, ServerMangerFunc)
     AdxComponentUnInit uninit = nullptr;
     EXPECT_EQ(IDE_DAEMON_OK, AdxRegisterService(serviceType, componentType, init, process, uninit));
 
-    ServerInitInfo *info = (ServerInitInfo *)malloc(sizeof(ServerInitInfo));
+    ServerInitInfo* info = (ServerInitInfo*)malloc(sizeof(ServerInitInfo));
     info->serverType = (int32_t)HDC_SERVICE_TYPE_LOG;
     info->mode = 0;
     info->deviceId = -1;
 
-    MOCKER(IdeXmalloc)
-    .stubs()
-    .will(returnValue((void*)info));
+    MOCKER(IdeXmalloc).stubs().will(returnValue((void*)info));
 
-    MOCKER(memcpy_s)
-    .stubs()
-    .will(returnValue(EOK));
+    MOCKER(memcpy_s).stubs().will(returnValue(EOK));
 
     EXPECT_EQ(IDE_DAEMON_OK, AdxServiceStartup(*info));
 

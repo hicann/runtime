@@ -23,15 +23,16 @@ extern "C" {
 #endif
 
 extern INT32 mmMutexDestroy(mmMutex_t* mutex);
-extern INT32 mmSemWait_stub(mmSem_t *sem);
-extern INT32 mmCreateTaskWithDetach_stub(mmThread *pstThreadHandle, mmUserBlock_t *pstFuncBlock);
-extern INT32 mmCreateTask_stub(mmThread *pstThreadHandle, mmUserBlock_t *pstFuncBlock);
-extern INT32 mmCreateTask_stub1( mmThread *pstThreadHandle, mmUserBlock_t *pstFuncBlock);
-extern INT32 mmCreateTaskWithThreadAttr_stub(mmThread *threadHandle, const mmUserBlock_t *funcBlock, const mmThreadAttr *threadAttr);
-extern INT32 mmSetThreadName(mmThread *pstThreadHandle, const CHAR* name);
-extern CHAR *mmGetErrorFormatMessage(mmErrorMsg errnum, CHAR *buf, mmSize size);
+extern INT32 mmSemWait_stub(mmSem_t* sem);
+extern INT32 mmCreateTaskWithDetach_stub(mmThread* pstThreadHandle, mmUserBlock_t* pstFuncBlock);
+extern INT32 mmCreateTask_stub(mmThread* pstThreadHandle, mmUserBlock_t* pstFuncBlock);
+extern INT32 mmCreateTask_stub1(mmThread* pstThreadHandle, mmUserBlock_t* pstFuncBlock);
+extern INT32 mmCreateTaskWithThreadAttr_stub(
+    mmThread* threadHandle, const mmUserBlock_t* funcBlock, const mmThreadAttr* threadAttr);
+extern INT32 mmSetThreadName(mmThread* pstThreadHandle, const CHAR* name);
+extern CHAR* mmGetErrorFormatMessage(mmErrorMsg errnum, CHAR* buf, mmSize size);
 #ifdef __cplusplus
 }
 #endif
 
-#endif//__IDE_MMPA_STUB_H
+#endif //__IDE_MMPA_STUB_H

@@ -25,25 +25,27 @@ public:
 
     bool Load(const std::string& path);
     bool CheckElfHeader();
-    bool CheckDevTbl(DevInfo &devInfo);
-    bool CheckGlobalMem(const std::vector<std::string>& globalMem, const std::vector<GlobalMemInfo> &globalMemInfo);
-    bool CheckGlobalMem(std::string &globalAuxInfo, uint32_t globalAuxInfoindex,
-        const std::vector<std::string>& globalMem, const std::vector<GlobalMemInfo> &globalMemInfo);
-    bool CheckLocalMem(uint16_t coreId, const std::vector<std::string> &localMemList, const std::vector<LocalMemInfo>& localMemInfo);
-    bool CheckLocalMem(uint16_t coreId, std::string &localAuxInfo, uint32_t localAuxInfoIndex,
-        const std::vector<std::string> &localMemList, const std::vector<LocalMemInfo>& localMemInfoList);
-    template<typename T>
+    bool CheckDevTbl(DevInfo& devInfo);
+    bool CheckGlobalMem(const std::vector<std::string>& globalMem, const std::vector<GlobalMemInfo>& globalMemInfo);
+    bool CheckGlobalMem(
+        std::string& globalAuxInfo, uint32_t globalAuxInfoindex, const std::vector<std::string>& globalMem,
+        const std::vector<GlobalMemInfo>& globalMemInfo);
+    bool CheckLocalMem(
+        uint16_t coreId, const std::vector<std::string>& localMemList, const std::vector<LocalMemInfo>& localMemInfo);
+    bool CheckLocalMem(
+        uint16_t coreId, std::string& localAuxInfo, uint32_t localAuxInfoIndex,
+        const std::vector<std::string>& localMemList, const std::vector<LocalMemInfo>& localMemInfoList);
+    template <typename T>
     bool CheckRegisters(uint16_t coreId, uint8_t validFlag);
-    template<typename T>
-    bool CheckRegisters(std::string &regData, uint32_t size, uint8_t validFlag);
+    template <typename T>
+    bool CheckRegisters(std::string& regData, uint32_t size, uint8_t validFlag);
 
 private:
     std::ifstream fileStream_;
     Elf64_Ehdr header_;
     std::vector<Elf64_Shdr> sections_;
     std::string shstrtab_;
-
 };
 
-}
+} // namespace Adx
 #endif // TOOLS_DUMP_CORE_CHECKER_H

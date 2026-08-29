@@ -17,10 +17,7 @@ using namespace Adx;
 
 class DumpPrintfPlatformUtest : public testing::Test {
 protected:
-    void SetUp() override
-    {
-        ResetAllPlatformManagers();
-    }
+    void SetUp() override { ResetAllPlatformManagers(); }
     void TearDown() override
     {
         ResetAllPlatformManagers();

@@ -16,7 +16,7 @@
 #include "utils.h"
 
 namespace Adx {
-std::string ReadFileToString(const std::string &filePath)
+std::string ReadFileToString(const std::string& filePath)
 {
     std::error_code ec;
     auto fileSize = std::filesystem::file_size(filePath, ec);
@@ -41,8 +41,7 @@ std::string ReadFileToString(const std::string &filePath)
     content.reserve(fileSize);
 
     // 更高效的读取方式
-    content.assign(std::istreambuf_iterator<char>(file),
-                   std::istreambuf_iterator<char>());
+    content.assign(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
     return content;
 }
 } // namespace Adx

@@ -19,10 +19,7 @@ using namespace Adx;
 class TinyThreadWithoutAttrStest : public testing::Test {
 protected:
     virtual void SetUp() {}
-    virtual void TearDown()
-    {
-        GlobalMockObject::verify();
-    }
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 TEST_F(TinyThreadWithoutAttrStest, Test_CreateTask)

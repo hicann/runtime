@@ -19,10 +19,7 @@ using namespace Adx;
 class ADX_SOCK_EPOLL_STEST : public testing::Test {
 protected:
     virtual void SetUp() {}
-    virtual void TearDown()
-    {
-        GlobalMockObject::verify();
-    }
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 TEST_F(ADX_SOCK_EPOLL_STEST, EpollCreate)

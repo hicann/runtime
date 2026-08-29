@@ -22,12 +22,10 @@
 #include "memory_utils.h"
 
 using namespace Adx;
-class ADX_COMMOPT_MANAGER_UTEST: public testing::Test {
+class ADX_COMMOPT_MANAGER_UTEST : public testing::Test {
 protected:
     virtual void SetUp() {}
-    virtual void TearDown() {
-        GlobalMockObject::verify();
-    }
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 TEST_F(ADX_COMMOPT_MANAGER_UTEST, CommOptsRegister)
@@ -236,12 +234,12 @@ TEST_F(ADX_COMMOPT_MANAGER_UTEST, Close)
     EXPECT_EQ(ret, IDE_DAEMON_OK);
 }
 
-static hdcError_t DrvHdcAllocMsgStub(HDC_SESSION session, struct drvHdcMsg **ppMsg, signed int count)
+static hdcError_t DrvHdcAllocMsgStub(HDC_SESSION session, struct drvHdcMsg** ppMsg, signed int count)
 {
-    char *tmp = "tmp_value.";
+    char* tmp = "tmp_value.";
     uint32_t len = strlen(tmp);
     struct IdeHdcPacket* packet = NULL;
-    packet = (struct IdeHdcPacket *)malloc(len + sizeof(struct IdeHdcPacket));
+    packet = (struct IdeHdcPacket*)malloc(len + sizeof(struct IdeHdcPacket));
     packet->type = IdeDaemonPackageType::IDE_DAEMON_LITTLE_PACKAGE;
     packet->len = len;
     packet->isLast = IdeLastPacket::IDE_LAST_PACK;
@@ -251,7 +249,7 @@ static hdcError_t DrvHdcAllocMsgStub(HDC_SESSION session, struct drvHdcMsg **ppM
     return DRV_ERROR_NONE;
 }
 
-static drvError_t DrvHdcFreeMsgStub(struct drvHdcMsg *msg)
+static drvError_t DrvHdcFreeMsgStub(struct drvHdcMsg* msg)
 {
     IdeXfree(msg);
     return DRV_ERROR_NONE;
@@ -291,7 +289,7 @@ TEST_F(ADX_COMMOPT_MANAGER_UTEST, Write)
 
 TEST_F(ADX_COMMOPT_MANAGER_UTEST, Read)
 {
-    void *buffer = nullptr;
+    void* buffer = nullptr;
     int32_t length = 0;
     CommHandle handle = ADX_COMMOPT_INVALID_HANDLE(OptType::COMM_HDC);
     int32_t ret = AdxCommOptManager::Instance().Read(handle, &buffer, length, 0);
@@ -350,29 +348,22 @@ TEST_F(ADX_COMMOPT_MANAGER_UTEST, SockOpenServer)
 
     info["0"] = "2";
     info["ServiceType"] = "0";
-    MOCKER(close).stubs()
-        .will(invoke(close_stub));
-    MOCKER(strcpy_s).stubs()
-            .will(returnValue(-1))
-            .then(returnValue(EOK));
+    MOCKER(close).stubs().will(invoke(close_stub));
+    MOCKER(strcpy_s).stubs().will(returnValue(-1)).then(returnValue(EOK));
     handle = AdxCommOptManager::Instance().OpenServer(OptType::COMM_LOCAL, info);
     EXPECT_EQ(handle.type, OptType::COMM_LOCAL);
     EXPECT_EQ(handle.session, -1);
 
-    MOCKER(mmBind).stubs()
-            .will(returnValue(-1))
-            .then(returnValue(EOK));
+    MOCKER(mmBind).stubs().will(returnValue(-1)).then(returnValue(EOK));
     handle = AdxCommOptManager::Instance().OpenServer(OptType::COMM_LOCAL, info);
     EXPECT_EQ(handle.type, OptType::COMM_LOCAL);
     EXPECT_EQ(handle.session, -1);
 
-    MOCKER(mmListen).stubs()
-            .will(returnValue(-1));
+    MOCKER(mmListen).stubs().will(returnValue(-1));
     handle = AdxCommOptManager::Instance().OpenServer(OptType::COMM_LOCAL, info);
     EXPECT_EQ(handle.type, OptType::COMM_LOCAL);
     EXPECT_EQ(handle.session, -1);
 }
-
 
 TEST_F(ADX_COMMOPT_MANAGER_UTEST, SockCloseServer)
 {
@@ -433,9 +424,7 @@ TEST_F(ADX_COMMOPT_MANAGER_UTEST, SockAccept)
     CommHandle session = AdxCommOptManager::Instance().Accept(handle);
     EXPECT_EQ(session.session, ADX_OPT_INVALID_HANDLE);
     handle.session = 123456789;
-    MOCKER(mmAccept).stubs()
-        .will(returnValue(-1))
-        .then(returnValue(1));
+    MOCKER(mmAccept).stubs().will(returnValue(-1)).then(returnValue(1));
     session = AdxCommOptManager::Instance().Accept(handle);
     EXPECT_EQ(session.session, ADX_OPT_INVALID_HANDLE);
     session = AdxCommOptManager::Instance().Accept(handle);
@@ -456,8 +445,7 @@ TEST_F(ADX_COMMOPT_MANAGER_UTEST, SockConnect)
     session = AdxCommOptManager::Instance().Connect(handle, info);
     EXPECT_EQ(session.session, ADX_OPT_INVALID_HANDLE);
 
-    MOCKER(accept).stubs()
-            .will(returnValue(1));
+    MOCKER(accept).stubs().will(returnValue(1));
 
     handle.session = 123456789;
     info["0"] = "0";
@@ -468,17 +456,13 @@ TEST_F(ADX_COMMOPT_MANAGER_UTEST, SockConnect)
 
     info["Pid"] = "123";
     session = AdxCommOptManager::Instance().Connect(handle, info);
-    EXPECT_EQ(session.session,123456789);
+    EXPECT_EQ(session.session, 123456789);
 
-    MOCKER(strcpy_s).stubs()
-            .will(returnValue(-1))
-            .then(returnValue(EOK));
+    MOCKER(strcpy_s).stubs().will(returnValue(-1)).then(returnValue(EOK));
     session = AdxCommOptManager::Instance().Connect(handle, info);
     EXPECT_EQ(session.session, ADX_OPT_INVALID_HANDLE);
 
-    MOCKER(mmConnect).stubs()
-            .will(returnValue(-1))
-            .then(returnValue(EOK));
+    MOCKER(mmConnect).stubs().will(returnValue(-1)).then(returnValue(EOK));
     session = AdxCommOptManager::Instance().Connect(handle, info);
     EXPECT_EQ(session.session, ADX_OPT_INVALID_HANDLE);
 
@@ -521,8 +505,7 @@ TEST_F(ADX_COMMOPT_MANAGER_UTEST, SockWrite)
     int32_t invalidLength = 0;
     ret = AdxCommOptManager::Instance().Write(handle, buffer, invalidLength, 0);
     EXPECT_EQ(ret, -1);
-    MOCKER(accept).stubs()
-                .will(returnValue(1));
+    MOCKER(accept).stubs().will(returnValue(1));
 
     handle.session = 123456789;
     ret = AdxCommOptManager::Instance().Write(handle, buffer, length, COMM_OPT_NOBLOCK);
@@ -530,8 +513,7 @@ TEST_F(ADX_COMMOPT_MANAGER_UTEST, SockWrite)
     ret = AdxCommOptManager::Instance().Write(handle, buffer, length, COMM_OPT_BLOCK);
     EXPECT_EQ(ret, 0);
 
-    MOCKER(mmSocketSend).stubs()
-        .will(returnValue(-1));
+    MOCKER(mmSocketSend).stubs().will(returnValue(-1));
     ret = AdxCommOptManager::Instance().Write(handle, buffer, length, COMM_OPT_NOBLOCK);
     EXPECT_EQ(ret, -1);
 
@@ -546,7 +528,7 @@ TEST_F(ADX_COMMOPT_MANAGER_UTEST, SockWrite)
 
 TEST_F(ADX_COMMOPT_MANAGER_UTEST, SockRead)
 {
-    void *buffer[100] = {0};
+    void* buffer[100] = {0};
     int32_t length = 100;
     CommHandle handle = ADX_COMMOPT_INVALID_HANDLE(OptType::COMM_LOCAL);
 
@@ -568,7 +550,7 @@ TEST_F(ADX_COMMOPT_MANAGER_UTEST, SockRead)
     ret = AdxCommOptManager::Instance().Read(handle, buffer, length, COMM_OPT_BLOCK);
     EXPECT_EQ(ret, -1);
 
-// not find type
+    // not find type
     handle.type = OptType::NR_COMM;
     ret = AdxCommOptManager::Instance().Read(handle, buffer, length, COMM_OPT_NOBLOCK);
     EXPECT_EQ(ret, -1);

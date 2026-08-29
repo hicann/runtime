@@ -20,14 +20,10 @@ constexpr mmMode_t READ_WRITE_MODE = M_IRUSR | M_IWUSR;
 constexpr mmMode_t READ_ONLY_MODE = M_IRUSR;
 constexpr mmMode_t WRITE_ONLY_MODE = M_IWUSR;
 
-
-class CommonFileUtest: public testing::Test {
+class CommonFileUtest : public testing::Test {
 protected:
     virtual void SetUp() {}
-    virtual void TearDown()
-    {
-        GlobalMockObject::verify();
-    }
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 TEST_F(CommonFileUtest, Test_Open_File)
@@ -182,7 +178,6 @@ TEST_F(CommonFileUtest, Test_Copy_With_Exception)
     ws.Chmod(srcFileName, "444");
     ws.Chmod(dstFileName, "444");
     EXPECT_EQ(File::Copy(srcPath, dstPath), ret);
-
 
     ws.Chmod(srcFileName, "644");
     ws.Chmod(dstFileName, "644");

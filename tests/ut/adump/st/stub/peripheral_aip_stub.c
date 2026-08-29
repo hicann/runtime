@@ -16,12 +16,6 @@ uint32_t QueryCameraIds(int* cameraIds, uint32_t* count)
     return 1;
 }
 
-int IsChipAlive(char* chipName)
-{
-    return 1;
-}
+int IsChipAlive(char* chipName) { return 1; }
 
-int MediaLibInit()
-{
-    return 1;
-}
+int MediaLibInit() { return 1; }

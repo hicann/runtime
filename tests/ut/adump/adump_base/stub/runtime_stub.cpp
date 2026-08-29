@@ -226,10 +226,7 @@ rtError_t rtCtxDestroy(rtContext_t context)
     return (rtError_t)-1;
 }
 
-rtError_t rtSetTaskFailCallback(rtTaskFailCallback callback)
-{
-    return RT_ERROR_NONE;
-}
+rtError_t rtSetTaskFailCallback(rtTaskFailCallback callback) { return RT_ERROR_NONE; }
 
 rtError_t rtStreamSynchronizeWithTimeout(rtStream_t stm, int32_t timeout)
 {
@@ -391,10 +388,7 @@ rtError_t rtGetDeviceIDs(uint32_t* devices, uint32_t len)
     return RT_ERROR_NONE;
 }
 
-rtError_t rtGetDeviceStatus(const int32_t devId, rtDevStatus_t* const status)
-{
-    return RT_ERROR_NONE;
-}
+rtError_t rtGetDeviceStatus(const int32_t devId, rtDevStatus_t* const status) { return RT_ERROR_NONE; }
 
 rtError_t rtGetDeviceInfo(uint32_t deviceId, int32_t moduleType, int32_t infoType, int64_t* val)
 {
@@ -418,7 +412,7 @@ rtError_t rtDebugSetDumpMode(const uint64_t mode)
 
 rtError_t rtDebugGetStalledCore(rtDbgCoreInfo_t* const coreInfo)
 {
-    coreInfo->aicBitmap0 = 2; // 1
+    coreInfo->aicBitmap0 = 2;  // 1
     coreInfo->aicBitmap1 = 8;
     coreInfo->aivBitmap0 = 4;  // 25+2
     coreInfo->aivBitmap1 = 12; // 25+64+2 25+64+3
@@ -555,10 +549,7 @@ rtError_t rtGetOpExecuteTimeoutV2(uint32_t* const timeout)
     return RT_ERROR_NONE;
 }
 
-rtError_t rtSetKernelDfxInfoCallback(rtKernelDfxInfoType type, rtKernelDfxInfoProFunc func)
-{
-    return RT_ERROR_NONE;
-}
+rtError_t rtSetKernelDfxInfoCallback(rtKernelDfxInfoType type, rtKernelDfxInfoProFunc func) { return RT_ERROR_NONE; }
 // Stream capture info
 rtError_t rtStreamGetCaptureInfo(rtStream_t stream, rtStreamCaptureStatus* const status, rtModel_t* captureMdl)
 {
@@ -736,12 +727,12 @@ rtError_t rtEventDestroy(rtEvent_t evt)
     return RT_ERROR_NONE;
 }
 
-rtError_t rtSnapShotCallbackRegister(rtSnapShotStage stage, rtSnapShotCallBack callback, void *args)
+rtError_t rtSnapShotCallbackRegister(rtSnapShotStage stage, rtSnapShotCallBack callback, void* args)
 {
     return RT_ERROR_NONE;
 }
 
-rtError_t rtBinaryGetFunctionByName(rtBinHandle binHandle, const char *kernelName, rtFuncHandle *funcHandle)
+rtError_t rtBinaryGetFunctionByName(rtBinHandle binHandle, const char* kernelName, rtFuncHandle* funcHandle)
 {
     (void)binHandle;
     (void)kernelName;
@@ -752,7 +743,7 @@ rtError_t rtBinaryGetFunctionByName(rtBinHandle binHandle, const char *kernelNam
     return RT_ERROR_NONE;
 }
 
-rtError_t rtsBinaryGetDevAddress(const rtBinHandle binHandle, void **bin, uint32_t *binSize)
+rtError_t rtsBinaryGetDevAddress(const rtBinHandle binHandle, void** bin, uint32_t* binSize)
 {
     (void)binHandle;
     if (bin == nullptr || binSize == nullptr) {
@@ -763,7 +754,7 @@ rtError_t rtsBinaryGetDevAddress(const rtBinHandle binHandle, void **bin, uint32
     return RT_ERROR_NONE;
 }
 
-rtError_t rtGetFuncHandleFromExceptionInfo(const rtExceptionInfo_t *info, rtFuncHandle *func)
+rtError_t rtGetFuncHandleFromExceptionInfo(const rtExceptionInfo_t* info, rtFuncHandle* func)
 {
     (void)info;
     if (func == nullptr) {
@@ -773,7 +764,7 @@ rtError_t rtGetFuncHandleFromExceptionInfo(const rtExceptionInfo_t *info, rtFunc
     return RT_ERROR_NONE;
 }
 
-rtError_t rtsFuncGetName(const rtFuncHandle funcHandle, const uint32_t maxLen, char *const name)
+rtError_t rtsFuncGetName(const rtFuncHandle funcHandle, const uint32_t maxLen, char* const name)
 {
     (void)funcHandle;
     if (name == nullptr || maxLen == 0) {
@@ -783,7 +774,7 @@ rtError_t rtsFuncGetName(const rtFuncHandle funcHandle, const uint32_t maxLen, c
     return RT_ERROR_NONE;
 }
 
-rtError_t rtsFuncGetAddr(const rtFuncHandle funcHandle, void **aicAddr, void **aivAddr)
+rtError_t rtsFuncGetAddr(const rtFuncHandle funcHandle, void** aicAddr, void** aivAddr)
 {
     (void)funcHandle;
     if (aicAddr != nullptr) {
@@ -795,7 +786,7 @@ rtError_t rtsFuncGetAddr(const rtFuncHandle funcHandle, void **aicAddr, void **a
     return RT_ERROR_NONE;
 }
 
-rtError_t rtFunctionGetMetaInfoSize(rtFuncHandle funcHandle, rtFunctionMetaType type, size_t *size)
+rtError_t rtFunctionGetMetaInfoSize(rtFuncHandle funcHandle, rtFunctionMetaType type, size_t* size)
 {
     (void)funcHandle;
     (void)type;
@@ -806,7 +797,8 @@ rtError_t rtFunctionGetMetaInfoSize(rtFuncHandle funcHandle, rtFunctionMetaType 
     return RT_ERROR_NONE;
 }
 
-rtError_t rtFunctionGetMetaInfo(const rtFuncHandle funcHandle, const rtFunctionMetaType type, void *data, const uint32_t length)
+rtError_t rtFunctionGetMetaInfo(
+    const rtFuncHandle funcHandle, const rtFunctionMetaType type, void* data, const uint32_t length)
 {
     (void)funcHandle;
     (void)type;

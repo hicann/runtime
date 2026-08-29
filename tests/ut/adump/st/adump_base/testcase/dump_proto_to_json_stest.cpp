@@ -13,12 +13,10 @@
 #include "dump_proto_to_json.h"
 #include "proto/adump/dump_data.pb.h"
 
-class DUMP_PROTO_TO_JSON_STEST: public testing::Test {
+class DUMP_PROTO_TO_JSON_STEST : public testing::Test {
 protected:
     virtual void SetUp() {}
-    virtual void TearDown() {
-        GlobalMockObject::verify();
-    }
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 TEST_F(DUMP_PROTO_TO_JSON_STEST, ParseDumpProtoToJson)
@@ -32,8 +30,8 @@ TEST_F(DUMP_PROTO_TO_JSON_STEST, ParseDumpProtoToJson)
     uint64_t protoSize = dumpData.ByteSizeLong();
     size_t dataLength = protoSize + sizeof(uint64_t);
     std::string data(dataLength, 0);
-    char *ptr = data.data();
-    uint64_t *sizePtr = (uint64_t *)ptr;
+    char* ptr = data.data();
+    uint64_t* sizePtr = (uint64_t*)ptr;
     *sizePtr = protoSize;
     memcpy_s(ptr + sizeof(uint64_t), protoSize, protoHeader.data(), protoSize);
 
@@ -51,8 +49,8 @@ TEST_F(DUMP_PROTO_TO_JSON_STEST, ParseDumpProtoToJson_error)
     uint64_t protoSize = dumpData.ByteSizeLong();
     size_t dataLength = protoSize + sizeof(uint64_t);
     std::string data(dataLength, 0);
-    char *ptr = data.data();
-    uint64_t *sizePtr = (uint64_t *)ptr;
+    char* ptr = data.data();
+    uint64_t* sizePtr = (uint64_t*)ptr;
     *sizePtr = protoSize;
     memcpy_s(ptr + sizeof(uint64_t), protoSize, protoHeader.data(), protoSize);
 

@@ -58,7 +58,7 @@ TEST_F(TinyDumpManagerStest, Test_UnSetDumpConfig)
     int32_t ret = DumpManager::Instance().SetDumpConfig(JSON_BASE "datadump/dump_data_stats.json");
     EXPECT_EQ(ret, ADUMP_SUCCESS);
     MOCKER_CPP(&Adx::DumpManager::IsEnableDump).stubs().will(returnValue(true));
-    MOCKER_CPP(&Adx::DumpManager::SetDumpConfig, int(Adx::DumpManager::*)(DumpType, const DumpConfig &))
+    MOCKER_CPP(&Adx::DumpManager::SetDumpConfig, int(Adx::DumpManager::*)(DumpType, const DumpConfig&))
         .stubs()
         .will(returnValue(ADUMP_FAILED))
         .then(returnValue(ADUMP_SUCCESS));

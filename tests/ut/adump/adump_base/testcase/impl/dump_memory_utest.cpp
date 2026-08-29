@@ -14,13 +14,10 @@
 
 using namespace Adx;
 
-class DumpMemoryUtest: public testing::Test {
+class DumpMemoryUtest : public testing::Test {
 protected:
     virtual void SetUp() {}
-    virtual void TearDown()
-    {
-        GlobalMockObject::verify();
-    }
+    virtual void TearDown() { GlobalMockObject::verify(); }
 
 private:
 };
@@ -30,13 +27,13 @@ TEST_F(DumpMemoryUtest, Test_CopyDeviceToHost)
     char stubData[] = {'a', 'b', 'c', 'd', 'e', 'f', 'g', '\0'};
 
     // success
-    void *hostMem = DumpMemory::CopyDeviceToHost(stubData, sizeof(stubData));
+    void* hostMem = DumpMemory::CopyDeviceToHost(stubData, sizeof(stubData));
     EXPECT_TRUE(hostMem != nullptr);
-    EXPECT_EQ(std::string(reinterpret_cast<char *>(hostMem)), std::string(stubData));
+    EXPECT_EQ(std::string(reinterpret_cast<char*>(hostMem)), std::string(stubData));
     DumpMemory::FreeHost(hostMem);
 
     // input nullptr or 0
-    void *hostMemNull = DumpMemory::CopyDeviceToHost(nullptr, 0);
+    void* hostMemNull = DumpMemory::CopyDeviceToHost(nullptr, 0);
     EXPECT_TRUE(hostMemNull == nullptr);
 
     // rtMallocHost failed.
@@ -56,14 +53,13 @@ TEST_F(DumpMemoryUtest, Test_CopyHostToDevice)
     char stubData[] = {'a', 'b', 'c', 'd', 'e', 'f', 'g', '\0'};
 
     // success
-    void *devMem = DumpMemory::CopyHostToDevice(stubData, sizeof(stubData));
+    void* devMem = DumpMemory::CopyHostToDevice(stubData, sizeof(stubData));
     EXPECT_TRUE(devMem != nullptr);
-    EXPECT_EQ(std::string(reinterpret_cast<char *>(devMem)), std::string(stubData));
+    EXPECT_EQ(std::string(reinterpret_cast<char*>(devMem)), std::string(stubData));
     DumpMemory::FreeDevice(devMem);
 
-
     // input nullptr or 0
-    void *devMemNull = DumpMemory::CopyHostToDevice(nullptr, 0);
+    void* devMemNull = DumpMemory::CopyHostToDevice(nullptr, 0);
     EXPECT_TRUE(devMemNull == nullptr);
 
     // rtMalloc failed.
@@ -94,7 +90,7 @@ TEST_F(DumpMemoryUtest, Test_CopyHostToDevice_MemcpyFail_ReleaseWithRtFree)
     MOCKER(rtFree).expects(once()).will(returnValue(RT_ERROR_NONE));
     MOCKER(rtFreeHost).expects(never());
 
-    void *devMemNull = DumpMemory::CopyHostToDevice(stubData, sizeof(stubData));
+    void* devMemNull = DumpMemory::CopyHostToDevice(stubData, sizeof(stubData));
     EXPECT_TRUE(devMemNull == nullptr);
     // TearDown() 中的 GlobalMockObject::verify() 校验上述 expects 是否满足
 }
@@ -102,11 +98,11 @@ TEST_F(DumpMemoryUtest, Test_CopyHostToDevice_MemcpyFail_ReleaseWithRtFree)
 TEST_F(DumpMemoryUtest, Test_HostMemoryGuardMacro)
 {
     char stubData[] = {'a', 'b', 'c', 'd', 'e', 'f', 'g', '\0'};
-    void *hostMem = nullptr;
+    void* hostMem = nullptr;
     {
         hostMem = DumpMemory::CopyDeviceToHost(stubData, sizeof(stubData));
         EXPECT_TRUE(hostMem != nullptr);
-        EXPECT_EQ(std::string(reinterpret_cast<char *>(hostMem)), std::string(stubData));
+        EXPECT_EQ(std::string(reinterpret_cast<char*>(hostMem)), std::string(stubData));
         HOST_RT_MEMORY_GUARD(hostMem);
     }
     EXPECT_TRUE(hostMem == nullptr);
@@ -115,11 +111,11 @@ TEST_F(DumpMemoryUtest, Test_HostMemoryGuardMacro)
 TEST_F(DumpMemoryUtest, Test_DeviceMemoryGuardMacro)
 {
     char stubData[] = {'a', 'b', 'c', 'd', 'e', 'f', 'g', '\0'};
-    void *devMem = nullptr;
+    void* devMem = nullptr;
     {
         devMem = DumpMemory::CopyHostToDevice(stubData, sizeof(stubData));
         EXPECT_TRUE(devMem != nullptr);
-        EXPECT_EQ(std::string(reinterpret_cast<char *>(devMem)), std::string(stubData));
+        EXPECT_EQ(std::string(reinterpret_cast<char*>(devMem)), std::string(stubData));
         DEVICE_RT_MEMORY_GUARD(devMem);
     }
     EXPECT_TRUE(devMem == nullptr);

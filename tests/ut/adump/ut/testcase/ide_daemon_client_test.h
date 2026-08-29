@@ -10,28 +10,29 @@
 #ifndef __IDE_CMD_TEST_H
 #define __IDE_CMD_TEST_H
 
-int IdeGetFilePath(IdeString filename, std::string &whiteFileName);
+int IdeGetFilePath(IdeString filename, std::string& whiteFileName);
 void IdeCmdUsage(const std::string msg);
-void ProcessRes(const char *str, int req_type);
-int IdeCmdCommonProcess(sock_handle_t handle, uint32_t dev_id, const char *command, enum cmd_class cmd_req);
-int IdeCmdDetectProcess(sock_handle_t handle, uint32_t dev_id, const char *command);
-int IdeCmdTimeProcess(const cmd_info_t &cmd_info);
-int IdeCmdLogProcess(struct IdeSockHandle handle, uint32_t devId, const char *command);
-int IdeHostCmdCommandProcess(sock_handle_t handle, uint32_t dev_id, const char *command);
-int IdeCmdApiProcess(sock_handle_t handle, uint32_t dev_id, const char *command);
-int IdeCreateSendFilePath(const std::string &rc_file_path, const std::string &des_file_path, std::string &p_value_buf);
-int IdeCmdFileProcess(sock_handle_t handle, uint32_t dev_id, const char *src_file_path, IdeString des_file_path, enum cmd_class cmd_req);
+void ProcessRes(const char* str, int req_type);
+int IdeCmdCommonProcess(sock_handle_t handle, uint32_t dev_id, const char* command, enum cmd_class cmd_req);
+int IdeCmdDetectProcess(sock_handle_t handle, uint32_t dev_id, const char* command);
+int IdeCmdTimeProcess(const cmd_info_t& cmd_info);
+int IdeCmdLogProcess(struct IdeSockHandle handle, uint32_t devId, const char* command);
+int IdeHostCmdCommandProcess(sock_handle_t handle, uint32_t dev_id, const char* command);
+int IdeCmdApiProcess(sock_handle_t handle, uint32_t dev_id, const char* command);
+int IdeCreateSendFilePath(const std::string& rc_file_path, const std::string& des_file_path, std::string& p_value_buf);
+int IdeCmdFileProcess(
+    sock_handle_t handle, uint32_t dev_id, const char* src_file_path, IdeString des_file_path, enum cmd_class cmd_req);
 int IdeCmdSendFileProcess(sock_handle_t handle, uint32_t dev_id, IdeString src_file_path, IdeString des_file_path);
 int IdeCmdSyncProcess(sock_handle_t handle, uint32_t dev_id, IdeString src_file_path, IdeString des_file_path);
-int IdeCmdGetType(int argc, IdeString argv[], cmd_info_t &cmd_info);
+int IdeCmdGetType(int argc, IdeString argv[], cmd_info_t& cmd_info);
 int IdeCmdGetFileProcess(sock_handle_t handle, uint32_t dev_id, IdeString local_path, IdeString host_path);
 int IdeCmdGetdFileProcess(sock_handle_t handle, uint32_t dev_id, IdeString local_path, IdeString host_path);
-int IdeCmdCheckValid(const cmd_info_t &cmd_info);
-int RemoteHandle(const cmd_info_t &cmd_info);
+int IdeCmdCheckValid(const cmd_info_t& cmd_info);
+int RemoteHandle(const cmd_info_t& cmd_info);
 int IdeCmdTestMain(int argc, IdeStringBuffer argv[]);
 int ExtractExitCode(const IdeString str);
-int IdeCmdGetFileCommonProcess(enum cmd_class type, struct IdeSockHandle handle,
-    uint32_t devId, const std::string localPath, const std::string sourcePath);
+int IdeCmdGetFileCommonProcess(
+    enum cmd_class type, struct IdeSockHandle handle, uint32_t devId, const std::string localPath,
+    const std::string sourcePath);
 
-
-#endif  //__IDE_CMD_TEST_H
+#endif //__IDE_CMD_TEST_H

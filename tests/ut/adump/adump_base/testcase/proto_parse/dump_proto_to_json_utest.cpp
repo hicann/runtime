@@ -13,12 +13,10 @@
 #include "dump_proto_to_json.h"
 #include "proto/adump/dump_data.pb.h"
 
-class DUMP_PROTO_TO_JSON_UTEST: public testing::Test {
+class DUMP_PROTO_TO_JSON_UTEST : public testing::Test {
 protected:
     virtual void SetUp() {}
-    virtual void TearDown() {
-        GlobalMockObject::verify();
-    }
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 TEST_F(DUMP_PROTO_TO_JSON_UTEST, ParseDumpProtoToJson)
@@ -32,8 +30,8 @@ TEST_F(DUMP_PROTO_TO_JSON_UTEST, ParseDumpProtoToJson)
     uint64_t protoSize = dumpData.ByteSizeLong();
     size_t dataLength = protoSize + sizeof(uint64_t);
     std::string data(dataLength, 0);
-    char *ptr = data.data();
-    uint64_t *sizePtr = (uint64_t *)ptr;
+    char* ptr = data.data();
+    uint64_t* sizePtr = (uint64_t*)ptr;
     *sizePtr = protoSize;
     memcpy_s(ptr + sizeof(uint64_t), protoSize, protoHeader.data(), protoSize);
 
@@ -51,8 +49,8 @@ TEST_F(DUMP_PROTO_TO_JSON_UTEST, ParseDumpProtoToJson_error)
     uint64_t protoSize = dumpData.ByteSizeLong();
     size_t dataLength = protoSize + sizeof(uint64_t);
     std::string data(dataLength, 0);
-    char *ptr = data.data();
-    uint64_t *sizePtr = (uint64_t *)ptr;
+    char* ptr = data.data();
+    uint64_t* sizePtr = (uint64_t*)ptr;
     *sizePtr = protoSize;
     memcpy_s(ptr + sizeof(uint64_t), protoSize, protoHeader.data(), protoSize);
 
@@ -60,9 +58,9 @@ TEST_F(DUMP_PROTO_TO_JSON_UTEST, ParseDumpProtoToJson_error)
     EXPECT_EQ(-1, ParseDumpProtoToJson(data.data(), 0, "/tmp/adump_proto_utest.json"));
     EXPECT_EQ(-1, ParseDumpProtoToJson(data.data(), dataLength - 1, "/tmp/adump_proto_utest.json"));
     EXPECT_EQ(-1, ParseDumpProtoToJson(data.data(), dataLength, "/tmp/test/adump_proto_utest.json"));
-    char *testStr = "/tmp/test";
+    char* testStr = "/tmp/test";
     size_t strLen = strlen(testStr) + 1;
-    char *strPtr = (char *)malloc(strLen);
+    char* strPtr = (char*)malloc(strLen);
     strcpy_s(strPtr, strLen, testStr);
     MOCKER(realpath).stubs().will(returnValue(strPtr));
     EXPECT_EQ(-1, ParseDumpProtoToJson(data.data(), dataLength, "/tmp/test/adump_proto_utest.json"));

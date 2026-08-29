@@ -31,14 +31,11 @@ using namespace Adx;
 class TinyExceptionCallBackStest : public testing::Test {
 protected:
     virtual void SetUp() {}
-    virtual void TearDown()
-    {
-        GlobalMockObject::verify();
-    }
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 /* == dlopen test == */
-static int32_t HeadProcessTest(uint32_t devId, const void *addr, uint64_t headerSize, uint64_t &newHeaderSize)
+static int32_t HeadProcessTest(uint32_t devId, const void* addr, uint64_t headerSize, uint64_t& newHeaderSize)
 {
     (void)devId;
     (void)addr;
@@ -46,7 +43,7 @@ static int32_t HeadProcessTest(uint32_t devId, const void *addr, uint64_t header
     return 0;
 }
 
-static int32_t TensorProcessTest(uint32_t devId, const void *addr, uint64_t size, int32_t fd)
+static int32_t TensorProcessTest(uint32_t devId, const void* addr, uint64_t size, int32_t fd)
 {
     (void)devId;
     (void)addr;

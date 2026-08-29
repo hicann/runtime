@@ -19,20 +19,12 @@
 
 using namespace Adx;
 
-class ADX_DUMP_SERVER_STUB_UTEST: public testing::Test {
+class ADX_DUMP_SERVER_STUB_UTEST : public testing::Test {
 protected:
     virtual void SetUp() {}
-    virtual void TearDown() {
-        GlobalMockObject::verify();
-    }
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
-TEST_F(ADX_DUMP_SERVER_STUB_UTEST, AdxDataDumpServerInit)
-{
-    EXPECT_EQ(0, AdxDataDumpServerInit());
-}
+TEST_F(ADX_DUMP_SERVER_STUB_UTEST, AdxDataDumpServerInit) { EXPECT_EQ(0, AdxDataDumpServerInit()); }
 
-TEST_F(ADX_DUMP_SERVER_STUB_UTEST, AdxDataDumpServerUnInit)
-{
-    EXPECT_EQ(0, AdxDataDumpServerUnInit());
-}
+TEST_F(ADX_DUMP_SERVER_STUB_UTEST, AdxDataDumpServerUnInit) { EXPECT_EQ(0, AdxDataDumpServerUnInit()); }

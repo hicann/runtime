@@ -9,20 +9,17 @@
  */
 #include "mmpa_api.h"
 
-int mmWaitPid(mmProcess pid, int *status, int options)
-{
-    return EN_OK;
-}
-int mmCreateProcess(const char* fileName, const mmArgvEnv *env, const char* stdoutRedirectFile, mmProcess *id)
+int mmWaitPid(mmProcess pid, int* status, int options) { return EN_OK; }
+int mmCreateProcess(const char* fileName, const mmArgvEnv* env, const char* stdoutRedirectFile, mmProcess* id)
 {
     return EN_OK;
 }
 
-INT32 mmGetEnv(const CHAR *name, CHAR *value, UINT32 len)
+INT32 mmGetEnv(const CHAR* name, CHAR* value, UINT32 len)
 {
     INT32 result;
     UINT32 envLen = 0;
-    CHAR *envPtr = NULL;
+    CHAR* envPtr = NULL;
     if (name == NULL || value == NULL || len == 0) {
         return EN_INVALID_PARAM;
     }
@@ -32,14 +29,14 @@ INT32 mmGetEnv(const CHAR *name, CHAR *value, UINT32 len)
     }
 
     UINT32 lenOfRet = (UINT32)strlen(envPtr);
-    if( lenOfRet < (MMPA_MEM_MAX_LEN - 1)) {
+    if (lenOfRet < (MMPA_MEM_MAX_LEN - 1)) {
         envLen = lenOfRet + 1;
     }
 
     if (envLen != 0 && len < envLen) {
         return EN_INVALID_PARAM;
     } else {
-        result = memcpy_s(value, len, envPtr, envLen); //lint !e613
+        result = memcpy_s(value, len, envPtr, envLen); // lint !e613
         if (result != EN_OK) {
             return EN_ERROR;
         }
@@ -47,12 +44,12 @@ INT32 mmGetEnv(const CHAR *name, CHAR *value, UINT32 len)
     return EN_OK;
 }
 
-INT32 mmGetTimeOfDay(mmTimeval *timeVal, mmTimezone *timeZone)
+INT32 mmGetTimeOfDay(mmTimeval* timeVal, mmTimezone* timeZone)
 {
     if (timeVal == NULL) {
         return EN_INVALID_PARAM;
     }
-    INT32 ret = gettimeofday((struct timeval *)timeVal, (struct timezone *)timeZone);
+    INT32 ret = gettimeofday((struct timeval*)timeVal, (struct timezone*)timeZone);
     if (ret != EN_OK) {
         ret = EN_ERROR;
     }

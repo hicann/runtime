@@ -19,8 +19,8 @@
 #include "ide_daemon_stub.h"
 using std::string;
 
-extern int PemPasswdCb(char *buf, int size, int rwflag, void *userdata);
-extern string GetCfgResolvedPath(const string &path);
+extern int PemPasswdCb(char* buf, int size, int rwflag, void* userdata);
+extern string GetCfgResolvedPath(const string& path);
 extern int SslVerifySelectTimeout(SslPt ssl, int sock, int stat, int timeout);
 using namespace IdeDaemon::Common::Utils;
 using namespace IdeDaemon::Common::Config;
@@ -28,20 +28,17 @@ using namespace IdeDaemon::Common::Config;
 class IDE_DAEMON_SSL_UTEST : public testing::Test {
 protected:
     virtual void SetUp() {}
-    virtual void TearDown()
-    {
-        GlobalMockObject::verify();
-    }
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 TEST_F(IDE_DAEMON_SSL_UTEST, SslInit)
 {
     sock_type_t type1 = TLS_CLIENT;
     sock_type_t type2 = TLS_SERVER;
-    ssl_ctx_t *g_ssl_ctx = (ssl_ctx_t *)0x123456;
-    ssl_ctx_t *null_ssl_ctx = NULL;
-    ssl_method_t *valid_method = (ssl_method_t *)0x123455;
-    ssl_method_t *invalid_method = NULL;
+    ssl_ctx_t* g_ssl_ctx = (ssl_ctx_t*)0x123456;
+    ssl_ctx_t* null_ssl_ctx = NULL;
+    ssl_method_t* valid_method = (ssl_method_t*)0x123455;
+    ssl_method_t* invalid_method = NULL;
 
     MOCKER(SslCtxNew).stubs().will(returnValue(null_ssl_ctx)).then(returnValue(g_ssl_ctx));
 
@@ -55,19 +52,19 @@ TEST_F(IDE_DAEMON_SSL_UTEST, SslInit)
 
     MOCKER(SslCreateMethod).stubs().will(returnValue(invalid_method)).then(returnValue(valid_method));
 
-    //SslCreateMethod == NULLn
+    // SslCreateMethod == NULLn
     EXPECT_EQ(SSL_ERROR, SslInit(type1));
 
-    //ssl_ctx == NULL
+    // ssl_ctx == NULL
     EXPECT_EQ(SSL_ERROR, SslInit(type1));
 
-    //type == TLS_CLIENT && ret == SSL_ERROR
+    // type == TLS_CLIENT && ret == SSL_ERROR
     EXPECT_EQ(SSL_ERROR, SslInit(type1));
 
-    //type == TLS_SERVER && ret == SSL_ERROR
+    // type == TLS_SERVER && ret == SSL_ERROR
     EXPECT_EQ(SSL_ERROR, SslInit(type2));
 
-    //SslInit ok
+    // SslInit ok
     EXPECT_EQ(SSL_OK, SslInit(type2));
     EXPECT_EQ(SSL_OK, SslInit(type1));
     EXPECT_TRUE(IsSslClientInited());
@@ -75,17 +72,17 @@ TEST_F(IDE_DAEMON_SSL_UTEST, SslInit)
 extern int KmcGetPassword(IdeStringBuffer pwd, int pwd_len);
 TEST_F(IDE_DAEMON_SSL_UTEST, SslLoadVerifyInfo)
 {
-    ssl_ctx_t *invalid_ctx = NULL;
-    ssl_ctx_t *valid_ctx = (ssl_ctx_t *)0x123456;
+    ssl_ctx_t* invalid_ctx = NULL;
+    ssl_ctx_t* valid_ctx = (ssl_ctx_t*)0x123456;
 
-    const char *invalid_ca_file = NULL;
-    const char *valid_ca_file = "1";
+    const char* invalid_ca_file = NULL;
+    const char* valid_ca_file = "1";
 
-    const char *invalid_cert_file = NULL;
-    const char *valid_cert_file = "2";
+    const char* invalid_cert_file = NULL;
+    const char* valid_cert_file = "2";
 
-    const char *invalid_key_file = NULL;
-    const char *valid_key_file = "3";
+    const char* invalid_key_file = NULL;
+    const char* valid_key_file = "3";
 
     MOCKER(SSL_CTX_load_verify_locations).stubs().will(returnValue(-1)).then(returnValue(1));
 
@@ -137,17 +134,17 @@ TEST_F(IDE_DAEMON_SSL_UTEST, SslCreateMethod)
     sock_type_t type1 = TLS_CLIENT;
     sock_type_t type2 = TLS_SERVER;
 
-    ssl_method_t *invalid_type = NULL;
+    ssl_method_t* invalid_type = NULL;
     EXPECT_EQ(invalid_type, SslCreateMethod(type1));
     EXPECT_EQ(invalid_type, SslCreateMethod(type2));
 }
 
 TEST_F(IDE_DAEMON_SSL_UTEST, SslCtxNew)
 {
-    ssl_method_t *valid_method = (ssl_method_t *)0x123456;
-    ssl_method_t *invalid_method = NULL;
+    ssl_method_t* valid_method = (ssl_method_t*)0x123456;
+    ssl_method_t* invalid_method = NULL;
 
-    ssl_ctx_t *invalid_ctx = NULL;
+    ssl_ctx_t* invalid_ctx = NULL;
 
     // method ==NULL
     EXPECT_EQ(invalid_ctx, SslCtxNew(invalid_method));
@@ -158,10 +155,10 @@ TEST_F(IDE_DAEMON_SSL_UTEST, SslCtxNew)
 
 TEST_F(IDE_DAEMON_SSL_UTEST, SslNew)
 {
-    ssl_ctx_t *valid_ctx = (ssl_ctx_t *)0x123456;
-    ssl_ctx_t *invalid_ctx = NULL;
+    ssl_ctx_t* valid_ctx = (ssl_ctx_t*)0x123456;
+    ssl_ctx_t* invalid_ctx = NULL;
 
-    ssl_t *invalid_ssl = NULL;
+    ssl_t* invalid_ssl = NULL;
     // ctx ==NULL
     EXPECT_EQ(invalid_ssl, SslNew(invalid_ctx));
 
@@ -171,8 +168,8 @@ TEST_F(IDE_DAEMON_SSL_UTEST, SslNew)
 
 TEST_F(IDE_DAEMON_SSL_UTEST, SslSetSock)
 {
-    ssl_t *valid_ssl = (ssl_t *)0x123456;
-    ssl_t *invalid_ssl = NULL;
+    ssl_t* valid_ssl = (ssl_t*)0x123456;
+    ssl_t* invalid_ssl = NULL;
 
     ssl_handle_t invalid_sock = -1;
     ssl_handle_t valid_sock = 1;
@@ -190,8 +187,8 @@ TEST_F(IDE_DAEMON_SSL_UTEST, SslSetSock)
 
 TEST_F(IDE_DAEMON_SSL_UTEST, SslAccept)
 {
-    ssl_t *valid_ssl = (ssl_t *)0x123456;
-    ssl_t *invalid_ssl = NULL;
+    ssl_t* valid_ssl = (ssl_t*)0x123456;
+    ssl_t* invalid_ssl = NULL;
 
     MOCKER(SSL_set_cipher_list).stubs().will(returnValue(0)).then(returnValue(1));
 
@@ -208,8 +205,8 @@ TEST_F(IDE_DAEMON_SSL_UTEST, SslAcceptVerify)
     ssl_handle_t invalid_sock = -1;
     ssl_handle_t valid_sock = 1;
 
-    ssl_t *valid_ssl = (ssl_t *)0x123456;
-    ssl_t *invalid_ssl = NULL;
+    ssl_t* valid_ssl = (ssl_t*)0x123456;
+    ssl_t* invalid_ssl = NULL;
 
     MOCKER(SslNew).stubs().will(returnValue(invalid_ssl)).then(returnValue(valid_ssl));
 
@@ -257,8 +254,8 @@ TEST_F(IDE_DAEMON_SSL_UTEST, SslAcceptVerify)
 
 TEST_F(IDE_DAEMON_SSL_UTEST, SslConnect)
 {
-    ssl_t *ssl = (ssl_t *)0x123456;
-    ssl_t *invalid_ssl = NULL;
+    ssl_t* ssl = (ssl_t*)0x123456;
+    ssl_t* invalid_ssl = NULL;
 
     MOCKER(SSL_connect).stubs().will(returnValue(-1)).then(returnValue(0));
     MOCKER(SSL_set_cipher_list).stubs().will(returnValue(0)).then(returnValue(1));
@@ -278,8 +275,8 @@ TEST_F(IDE_DAEMON_SSL_UTEST, SslConnectVerify)
     ssl_handle_t invalid_sock = -1;
     ssl_handle_t valid_sock = 1;
 
-    ssl_t *valid_ssl = (ssl_t *)0x123456;
-    ssl_t *invalid_ssl = NULL;
+    ssl_t* valid_ssl = (ssl_t*)0x123456;
+    ssl_t* invalid_ssl = NULL;
 
     MOCKER(SslNew).stubs().will(returnValue(invalid_ssl)).then(returnValue(valid_ssl));
 
@@ -306,11 +303,11 @@ TEST_F(IDE_DAEMON_SSL_UTEST, SslConnectVerify)
 
 TEST_F(IDE_DAEMON_SSL_UTEST, SslRecv)
 {
-    ssl_t *valid_ssl = (ssl_t *)0x123456;
-    ssl_t *invalid_ssl = NULL;
+    ssl_t* valid_ssl = (ssl_t*)0x123456;
+    ssl_t* invalid_ssl = NULL;
 
-    void *invalid_buf = NULL;
-    void *valid_buf = (ssl_ctx_t *)0x123456;
+    void* invalid_buf = NULL;
+    void* valid_buf = (ssl_ctx_t*)0x123456;
 
     int invalid_num = -1;
     int valid_num = 1;
@@ -326,11 +323,11 @@ TEST_F(IDE_DAEMON_SSL_UTEST, SslRecv)
 
 TEST_F(IDE_DAEMON_SSL_UTEST, SslSend)
 {
-    ssl_t *valid_ssl = (ssl_t *)0x123456;
-    ssl_t *invalid_ssl = NULL;
+    ssl_t* valid_ssl = (ssl_t*)0x123456;
+    ssl_t* invalid_ssl = NULL;
 
-    void *invalid_buf = NULL;
-    void *valid_buf = (ssl_ctx_t *)0x123456;
+    void* invalid_buf = NULL;
+    void* valid_buf = (ssl_ctx_t*)0x123456;
 
     int invalid_num = -1;
     int valid_num = 1;
@@ -364,11 +361,11 @@ TEST_F(IDE_DAEMON_SSL_UTEST, PemPasswdCb)
 
     MOCKER(strcpy_s).stubs().will(returnValue(-1)).then(returnValue(EOK));
 
-    EXPECT_EQ(-1, PemPasswdCb(buf, size, rwflag, (void *)userdata));
+    EXPECT_EQ(-1, PemPasswdCb(buf, size, rwflag, (void*)userdata));
     GlobalMockObject::verify();
 
     char userdata2[PASSWORD_MAX_LNE] = "test123";
-    EXPECT_EQ(strlen("test123"), PemPasswdCb(buf, size, rwflag, (void *)userdata2));
+    EXPECT_EQ(strlen("test123"), PemPasswdCb(buf, size, rwflag, (void*)userdata2));
 }
 
 TEST_F(IDE_DAEMON_SSL_UTEST, KmcGetPassword)
@@ -395,8 +392,8 @@ TEST_F(IDE_DAEMON_SSL_UTEST, SslDecodeBase64Test)
 TEST_F(IDE_DAEMON_SSL_UTEST, SslDecodeBase64_error)
 {
     unsigned char pwd[20] = {0};
-    MOCKER(BIO_new).stubs().will(returnValue((BIO *)NULL)).then(returnValue((BIO *)1234));
-    MOCKER(BIO_new_mem_buf).stubs().will(returnValue((BIO *)NULL));
+    MOCKER(BIO_new).stubs().will(returnValue((BIO*)NULL)).then(returnValue((BIO*)1234));
+    MOCKER(BIO_new_mem_buf).stubs().will(returnValue((BIO*)NULL));
     EXPECT_EQ(SSL_ERROR, SslDecodeBase64(NULL, 0, pwd, 9));
     EXPECT_EQ(SSL_ERROR, SslDecodeBase64("123456", 6, pwd, 11));
 }
@@ -415,29 +412,29 @@ TEST_F(IDE_DAEMON_SSL_UTEST, GetCfgResolvedPath)
     EXPECT_EQ(result, GetCfgResolvedPath(test));
 }
 
-extern SslCtxT *g_sslServerCtx;
+extern SslCtxT* g_sslServerCtx;
 TEST_F(IDE_DAEMON_SSL_UTEST, CheckServerVerifyInfoValidity)
 {
     g_sslServerCtx = nullptr;
-    MOCKER(SSL_CTX_get0_certificate).stubs().will(returnValue((X509 *)nullptr)).then(returnValue((X509 *)0x123456));
+    MOCKER(SSL_CTX_get0_certificate).stubs().will(returnValue((X509*)nullptr)).then(returnValue((X509*)0x123456));
     MOCKER(ASN1_TIME_cmp_time_t).stubs().will(returnValue(1)).then(returnValue(0));
 
     EXPECT_EQ(SSL_ERROR, CheckServerVerifyInfoValidity());
-    g_sslServerCtx = (SslCtxT *)0x123456;
+    g_sslServerCtx = (SslCtxT*)0x123456;
     EXPECT_EQ(SSL_ERROR, CheckServerVerifyInfoValidity());
     EXPECT_EQ(SSL_ERROR, CheckServerVerifyInfoValidity());
     EXPECT_EQ(SSL_OK, CheckServerVerifyInfoValidity());
     g_sslServerCtx = nullptr;
 }
 
-extern SslCtxT *g_sslClientCtx;
+extern SslCtxT* g_sslClientCtx;
 TEST_F(IDE_DAEMON_SSL_UTEST, CheckClientVerifyInfoValidity)
 {
     g_sslClientCtx = nullptr;
-    MOCKER(SSL_CTX_get0_certificate).stubs().will(returnValue((X509 *)nullptr)).then(returnValue((X509 *)0x123456));
+    MOCKER(SSL_CTX_get0_certificate).stubs().will(returnValue((X509*)nullptr)).then(returnValue((X509*)0x123456));
     MOCKER(ASN1_TIME_cmp_time_t).stubs().will(returnValue(1)).then(returnValue(0));
     EXPECT_EQ(SSL_ERROR, CheckClientVerifyInfoValidity());
-    g_sslClientCtx = (SslCtxT *)0x123456;
+    g_sslClientCtx = (SslCtxT*)0x123456;
     EXPECT_EQ(SSL_ERROR, CheckClientVerifyInfoValidity());
     EXPECT_EQ(SSL_ERROR, CheckClientVerifyInfoValidity());
     EXPECT_EQ(SSL_OK, CheckClientVerifyInfoValidity());

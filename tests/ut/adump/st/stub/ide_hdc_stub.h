@@ -10,8 +10,8 @@
 #ifndef __IDE_HDC_STUB_H
 #define __IDE_HDC_STUB_H
 
-hdcError_t drvHdcSessionAccept_stub(HDC_SERVER server, HDC_SESSION *session);
-hdcError_t drvHdcServerCreate_stub(int devid, int serviceType, HDC_SERVER *server);
-hdcError_t drvHdcSessionAccept_failed(HDC_SERVER server, HDC_SESSION *session);
+hdcError_t drvHdcSessionAccept_stub(HDC_SERVER server, HDC_SESSION* session);
+hdcError_t drvHdcServerCreate_stub(int devid, int serviceType, HDC_SERVER* server);
+hdcError_t drvHdcSessionAccept_failed(HDC_SERVER server, HDC_SESSION* session);
 
 #endif

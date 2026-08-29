@@ -264,17 +264,17 @@ TEST_F(DupDumpCoreUtest, Test_DumpV4DebugRegisterTableNumZero)
 TEST_F(DupDumpCoreUtest, Test_ConvertCoreIdAllBranches)
 {
     DumpCore core("", 10);
-    
+
     uint32_t v2type = static_cast<uint32_t>(PlatformType::CHIP_CLOUD_V2);
     MOCKER_CPP(&Adx::AdumpDsmi::DrvGetPlatformType).stubs().with(outBound(v2type)).will(returnValue(true));
     EXPECT_EQ(core.ConvertCoreId(CORE_TYPE_AIC, 0), 0);
     EXPECT_EQ(core.ConvertCoreId(1, 0), static_cast<uint16_t>(CORE_SIZE_AIC));
-    
+
     uint32_t v4type = static_cast<uint32_t>(PlatformType::CHIP_CLOUD_V4);
     MOCKER_CPP(&Adx::AdumpDsmi::DrvGetPlatformType).stubs().with(outBound(v4type)).will(returnValue(true));
     EXPECT_EQ(core.ConvertCoreId(CORE_TYPE_AIC, 5), 5);
     EXPECT_EQ(core.ConvertCoreId(1, 5), static_cast<uint16_t>(CORE_SIZE_AIC_DAVID + 5));
-    
+
     uint32_t unknownType = 255;
     MOCKER_CPP(&Adx::AdumpDsmi::DrvGetPlatformType).stubs().with(outBound(unknownType)).will(returnValue(true));
     EXPECT_EQ(core.ConvertCoreId(0, 10), 10);
@@ -288,7 +288,7 @@ TEST_F(DupDumpCoreUtest, Test_DumpRegisterV2AllCoreTypes)
     MOCKER_CPP(&Adx::AdumpDsmi::DrvGetPlatformType).stubs().with(outBound(v2type)).will(returnValue(true));
     RegisterManager registerManager = RegisterManager();
     registerManager.CreateRegister();
-    
+
     for (uint8_t coreType = 0; coreType <= 1; coreType++) {
         for (uint16_t coreId = 0; coreId < 10; coreId++) {
             core.DumpRegister(coreType, coreId);
@@ -303,7 +303,7 @@ TEST_F(DupDumpCoreUtest, Test_DumpRegisterV4AllCoreTypes)
     MOCKER_CPP(&Adx::AdumpDsmi::DrvGetPlatformType).stubs().with(outBound(v4type)).will(returnValue(true));
     RegisterManager registerManager = RegisterManager();
     registerManager.CreateRegister();
-    
+
     for (uint8_t coreType = 0; coreType <= 1; coreType++) {
         for (uint16_t coreId = 0; coreId < 10; coreId++) {
             core.DumpRegister(coreType, coreId);
@@ -314,13 +314,13 @@ TEST_F(DupDumpCoreUtest, Test_DumpRegisterV4AllCoreTypes)
 TEST_F(DupDumpCoreUtest, Test_ConvertCoreIdBoundaryValues)
 {
     DumpCore core("", 10);
-    
+
     uint32_t v2type = static_cast<uint32_t>(PlatformType::CHIP_CLOUD_V2);
     MOCKER_CPP(&Adx::AdumpDsmi::DrvGetPlatformType).stubs().with(outBound(v2type)).will(returnValue(true));
     EXPECT_EQ(core.ConvertCoreId(CORE_TYPE_AIC, 0), 0);
     EXPECT_EQ(core.ConvertCoreId(CORE_TYPE_AIC, UINT16_MAX), UINT16_MAX);
     EXPECT_EQ(core.ConvertCoreId(CORE_TYPE_AIV, 0), static_cast<uint16_t>(CORE_SIZE_AIC));
-    
+
     uint32_t v4type = static_cast<uint32_t>(PlatformType::CHIP_CLOUD_V4);
     MOCKER_CPP(&Adx::AdumpDsmi::DrvGetPlatformType).stubs().with(outBound(v4type)).will(returnValue(true));
     EXPECT_EQ(core.ConvertCoreId(CORE_TYPE_AIC, 0), 0);
@@ -335,7 +335,7 @@ TEST_F(DupDumpCoreUtest, Test_DumpRegisterWithDifferentCoreIds)
     MOCKER_CPP(&Adx::AdumpDsmi::DrvGetPlatformType).stubs().with(outBound(v2type)).will(returnValue(true));
     RegisterManager registerManager = RegisterManager();
     registerManager.CreateRegister();
-    
+
     std::vector<uint16_t> coreIds = {0, 1, 5, 10, 25, 50, 100, 200};
     for (uint16_t coreId : coreIds) {
         core.DumpRegister(CORE_TYPE_AIC, coreId);
@@ -350,7 +350,7 @@ TEST_F(DupDumpCoreUtest, Test_DumpRegisterMultipleTimes)
     MOCKER_CPP(&Adx::AdumpDsmi::DrvGetPlatformType).stubs().with(outBound(v4type)).will(returnValue(true));
     RegisterManager registerManager = RegisterManager();
     registerManager.CreateRegister();
-    
+
     for (int i = 0; i < 5; i++) {
         core.DumpRegister(0, 0);
     }
@@ -383,19 +383,16 @@ TEST_F(DupDumpCoreUtest, Test_DumpRegisterMdcLite)
 TEST_F(DupDumpCoreUtest, Test_ConvertCoreIdAllPlatformTypes)
 {
     DumpCore core("", 10);
-    
-    std::vector<PlatformType> supportedTypes = {
-        PlatformType::CHIP_CLOUD_V2,
-        PlatformType::CHIP_CLOUD_V4
-    };
-    
+
+    std::vector<PlatformType> supportedTypes = {PlatformType::CHIP_CLOUD_V2, PlatformType::CHIP_CLOUD_V4};
+
     for (PlatformType type : supportedTypes) {
         uint32_t platformType = static_cast<uint32_t>(type);
         MOCKER_CPP(&Adx::AdumpDsmi::DrvGetPlatformType).stubs().with(outBound(platformType)).will(returnValue(true));
-        
+
         uint16_t result = core.ConvertCoreId(CORE_TYPE_AIC, 5);
         EXPECT_EQ(result, 5);
-        
+
         uint16_t resultAiv = core.ConvertCoreId(CORE_TYPE_AIV, 5);
         if (type == PlatformType::CHIP_CLOUD_V2) {
             EXPECT_EQ(resultAiv, static_cast<uint16_t>(CORE_SIZE_AIC + 5));
@@ -412,7 +409,7 @@ TEST_F(DupDumpCoreUtest, Test_DumpRegisterV2WithRegisterTypes)
     MOCKER_CPP(&Adx::AdumpDsmi::DrvGetPlatformType).stubs().with(outBound(v2type)).will(returnValue(true));
     RegisterManager registerManager = RegisterManager();
     registerManager.CreateRegister();
-    
+
     auto reg = registerManager.GetRegister();
     if (reg != nullptr) {
         auto types = reg->GetRegisterTypes(CORE_TYPE_AIC);
@@ -429,7 +426,7 @@ TEST_F(DupDumpCoreUtest, Test_DumpRegisterV4WithRegisterTypes)
     MOCKER_CPP(&Adx::AdumpDsmi::DrvGetPlatformType).stubs().with(outBound(v4type)).will(returnValue(true));
     RegisterManager registerManager = RegisterManager();
     registerManager.CreateRegister();
-    
+
     auto reg = registerManager.GetRegister();
     if (reg != nullptr) {
         auto types = reg->GetRegisterTypes(CORE_TYPE_AIC);
@@ -438,7 +435,6 @@ TEST_F(DupDumpCoreUtest, Test_DumpRegisterV4WithRegisterTypes)
         }
     }
 }
-
 
 // TEST_F(DUMP_CORE_UTEST, TEST_CORE_DUMP_DAVID)
 // {
@@ -554,7 +550,8 @@ TEST_F(DupDumpCoreUtest, Test_DumpRegisterV4WithRegisterTypes)
 //     std::vector<uint8_t> normalPointerDfxInfo;
 //     L2PointerTensor normalPointerTensor;
 //     normalPointerTensor.argsType = static_cast<uint16_t>(DfxTensorType::INPUT_TENSOR) |
-//                                    (static_cast<uint16_t>(DfxPointerType::LEVEL_2_POINTER) << POINTER_TYPE_SHIFT_BITS);
+//                                    (static_cast<uint16_t>(DfxPointerType::LEVEL_2_POINTER) <<
+//                                    POINTER_TYPE_SHIFT_BITS);
 //     normalPointerTensor.size = NON_TENSOR_SIZE;
 //     normalPointerTensor.dataTypeSize = 4;
 //     generateDfxInfo(normalPointerDfxInfo, normalPointerTensor);

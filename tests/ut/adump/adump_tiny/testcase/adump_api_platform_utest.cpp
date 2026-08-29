@@ -21,19 +21,13 @@ namespace {
 // 文件作用域静态函数作为回调，静态存储期，避免局部 lambda 的生命周期歧义。
 // 注意：AdumpRegisterCallback 无对应反注册接口，回调会残留在 DumpManager 单例中，
 // 使用静态函数可保证即使后续被触发指针依然有效。
-int32_t DumpCallbackStub(uint64_t, const char *, int32_t)
-{
-    return 0;
-}
-}
+int32_t DumpCallbackStub(uint64_t, const char*, int32_t) { return 0; }
+} // namespace
 
 class TinyAdumpApiPlatformUtest : public testing::Test {
 protected:
     virtual void SetUp() {}
-    virtual void TearDown()
-    {
-        GlobalMockObject::verify();
-    }
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 TEST_F(TinyAdumpApiPlatformUtest, Test_AdumpGetSizeInfoAddr_OverMax)
@@ -45,10 +39,10 @@ TEST_F(TinyAdumpApiPlatformUtest, Test_AdumpGetSizeInfoAddr_OverMax)
 TEST_F(TinyAdumpApiPlatformUtest, Test_AdumpGetSizeInfoAddr_Valid)
 {
     uint32_t atomicIndex = 0;
-    void *addr = AdumpGetSizeInfoAddr(1, atomicIndex);
+    void* addr = AdumpGetSizeInfoAddr(1, atomicIndex);
     EXPECT_NE(addr, nullptr);
 
-    void *addr2 = AdumpGetSizeInfoAddr(MAX_TENSOR_NUM, atomicIndex);
+    void* addr2 = AdumpGetSizeInfoAddr(MAX_TENSOR_NUM, atomicIndex);
     EXPECT_NE(addr2, nullptr);
 }
 
@@ -62,10 +56,7 @@ TEST_F(TinyAdumpApiPlatformUtest, Test_AdumpRegisterCallback_Success)
     EXPECT_EQ(AdumpRegisterCallback(1, DumpCallbackStub, DumpCallbackStub), ADUMP_SUCCESS);
 }
 
-TEST_F(TinyAdumpApiPlatformUtest, Test_acldumpGetPath)
-{
-    EXPECT_EQ(acldumpGetPath(DATA_DUMP), nullptr);
-}
+TEST_F(TinyAdumpApiPlatformUtest, Test_acldumpGetPath) { EXPECT_EQ(acldumpGetPath(DATA_DUMP), nullptr); }
 
 TEST_F(TinyAdumpApiPlatformUtest, Test_acldumpSaveExceptionInfo_NotSupport)
 {

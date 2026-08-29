@@ -27,7 +27,8 @@ using namespace Adx;
 class DUMP_CORE_UTEST : public testing::Test {
 protected:
     virtual void SetUp() { ResetAllPlatformManagers(); }
-    virtual void TearDown() {
+    virtual void TearDown()
+    {
         ResetAllPlatformManagers();
         DumpManager::Instance().Reset();
         FreeExceptionRegInfo();
@@ -63,7 +64,7 @@ struct WithoutSizeTensor {
     uint64_t argsType;
 };
 
-static void generateDfxByBigEndian(std::vector<uint8_t> &vec, size_t typeSize, uint64_t value)
+static void generateDfxByBigEndian(std::vector<uint8_t>& vec, size_t typeSize, uint64_t value)
 {
     for (size_t i = 0; i < typeSize; ++i) {
         uint8_t tmpValue = static_cast<uint8_t>(((value) >> ((typeSize - i - 1) * 8)) & 0xFF);
@@ -71,7 +72,7 @@ static void generateDfxByBigEndian(std::vector<uint8_t> &vec, size_t typeSize, u
     }
 }
 
-static void generateDfxByLittleEndian(std::vector<uint8_t> &vec, size_t typeSize, uint64_t value)
+static void generateDfxByLittleEndian(std::vector<uint8_t>& vec, size_t typeSize, uint64_t value)
 {
     for (size_t i = 0; i < typeSize; ++i) {
         uint8_t tmpValue = static_cast<uint8_t>(((value) >> (i * 8)) & 0xFF);
@@ -80,10 +81,10 @@ static void generateDfxByLittleEndian(std::vector<uint8_t> &vec, size_t typeSize
 }
 
 template <typename T>
-void generateDfxInfo(std::vector<uint8_t> &dfxInfo, T &tensor, uint16_t argsInfoType = TYPE_L0_EXCEPTION_DFX_ARGS_INFO)
+void generateDfxInfo(std::vector<uint8_t>& dfxInfo, T& tensor, uint16_t argsInfoType = TYPE_L0_EXCEPTION_DFX_ARGS_INFO)
 {
     std::vector<uint8_t> tensorDfxInfo;
-    auto *p = reinterpret_cast<uint64_t *>(&tensor);
+    auto* p = reinterpret_cast<uint64_t*>(&tensor);
     for (size_t i = 0; i < sizeof(tensor) / sizeof(uint64_t); ++i) {
         generateDfxByBigEndian(tensorDfxInfo, sizeof(uint64_t), *(p + i));
     }
@@ -94,7 +95,7 @@ void generateDfxInfo(std::vector<uint8_t> &dfxInfo, T &tensor, uint16_t argsInfo
 }
 
 template <typename T>
-std::vector<uint8_t> GetTensorData(T &tensor)
+std::vector<uint8_t> GetTensorData(T& tensor)
 {
     std::vector<uint8_t> tensorData;
     tensorData.resize(sizeof(tensor));
@@ -112,7 +113,7 @@ void EnableCoreDump(uint32_t chipType)
     EXPECT_EQ(AdumpSetDumpConfig(DumpType::AIC_ERR_DETAIL_DUMP, dumpConf), ADUMP_SUCCESS);
 }
 
-void InitCoreDumpExceptionArgs(rtExceptionInfo &exceptionInfo)
+void InitCoreDumpExceptionArgs(rtExceptionInfo& exceptionInfo)
 {
     char fftsAddr[] = "ffts addr";
     int32_t tensor[] = {1, 2, 3, 4, 5, 6};
@@ -136,15 +137,15 @@ void InitCoreDumpExceptionArgs(rtExceptionInfo &exceptionInfo)
     args[7] = reinterpret_cast<uint64_t>(&workspace);
     args[8] = reinterpret_cast<uint64_t>(&normalPtr1);
     args[9] = reinterpret_cast<uint64_t>(&normalPtr2);
-    args[10] = sizeof(uint64_t) * 9;                    // offset of shapePtr(args[19])
-    args[11] = 2 | (1ULL << TENSOR_COUNT_SHIFT_BITS);   // shapePtr2t3 dim(2) and count(1)
-    args[12] = 2;                                       // shapePtr2t3 shape[0]
-    args[13] = 3;                                       // shapePtr2t3 shape[1]
-    args[14] = 2 | (1ULL << TENSOR_COUNT_SHIFT_BITS);   // shapePtrPlaceHold dim(2) and count(1)
-    args[15] = 3;                                       // shapePtrPlaceHold shape[0]
-    args[16] = 1;                                       // shapePtrPlaceHold shape[1]
-    args[17] = 1 | (1ULL << TENSOR_COUNT_SHIFT_BITS);   // shapePtrScalar dim(1) and count(1)
-    args[18] = 1;                                       // shapePtrScalar shape[0]
+    args[10] = sizeof(uint64_t) * 9;                  // offset of shapePtr(args[19])
+    args[11] = 2 | (1ULL << TENSOR_COUNT_SHIFT_BITS); // shapePtr2t3 dim(2) and count(1)
+    args[12] = 2;                                     // shapePtr2t3 shape[0]
+    args[13] = 3;                                     // shapePtr2t3 shape[1]
+    args[14] = 2 | (1ULL << TENSOR_COUNT_SHIFT_BITS); // shapePtrPlaceHold dim(2) and count(1)
+    args[15] = 3;                                     // shapePtrPlaceHold shape[0]
+    args[16] = 1;                                     // shapePtrPlaceHold shape[1]
+    args[17] = 1 | (1ULL << TENSOR_COUNT_SHIFT_BITS); // shapePtrScalar dim(1) and count(1)
+    args[18] = 1;                                     // shapePtrScalar shape[0]
     args[19] = reinterpret_cast<uint64_t>(&shapePtr2t3);
     args[20] = reinterpret_cast<uint64_t>(&shapePtrPlaceHold);
     args[21] = reinterpret_cast<uint64_t>(&shapePtrScalar);
@@ -152,7 +153,7 @@ void InitCoreDumpExceptionArgs(rtExceptionInfo &exceptionInfo)
     exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs.argsize = sizeof(args);
 }
 
-void InitCoreDumpExceptionDfxFftsAddrTensor(std::vector<uint8_t> &dfxInfoValue)
+void InitCoreDumpExceptionDfxFftsAddrTensor(std::vector<uint8_t>& dfxInfoValue)
 {
     // ffts addr
     std::vector<uint8_t> fftsAddrDfxInfo;
@@ -163,7 +164,7 @@ void InitCoreDumpExceptionDfxFftsAddrTensor(std::vector<uint8_t> &dfxInfoValue)
     dfxInfoValue.insert(dfxInfoValue.end(), fftsAddrDfxInfo.begin(), fftsAddrDfxInfo.end());
 }
 
-void InitCoreDumpExceptionDfxGeneralTensor(std::vector<uint8_t> &dfxInfoValue)
+void InitCoreDumpExceptionDfxGeneralTensor(std::vector<uint8_t>& dfxInfoValue)
 {
     // general tensor
     int32_t tensor[] = {1, 2, 3, 4, 5, 6};
@@ -178,7 +179,7 @@ void InitCoreDumpExceptionDfxGeneralTensor(std::vector<uint8_t> &dfxInfoValue)
     dfxInfoValue.insert(dfxInfoValue.end(), tensorDfxInfo.begin(), tensorDfxInfo.end());
 }
 
-void InitCoreDumpExceptionDfxInputTensor(std::vector<uint8_t> &dfxInfoValue)
+void InitCoreDumpExceptionDfxInputTensor(std::vector<uint8_t>& dfxInfoValue)
 {
     // input0
     float input0[] = {1, 2, 3, 4, 5, 6};
@@ -193,7 +194,7 @@ void InitCoreDumpExceptionDfxInputTensor(std::vector<uint8_t> &dfxInfoValue)
     dfxInfoValue.insert(dfxInfoValue.end(), inputDfxInfo.begin(), inputDfxInfo.end());
 }
 
-void InitCoreDumpExceptionDfxOutputTensor(std::vector<uint8_t> &dfxInfoValue)
+void InitCoreDumpExceptionDfxOutputTensor(std::vector<uint8_t>& dfxInfoValue)
 {
     // output0
     float output0[] = {2, 4, 6, 8, 10, 12};
@@ -208,7 +209,7 @@ void InitCoreDumpExceptionDfxOutputTensor(std::vector<uint8_t> &dfxInfoValue)
     dfxInfoValue.insert(dfxInfoValue.end(), outputDfxInfo.begin(), outputDfxInfo.end());
 }
 
-void InitCoreDumpExceptionDfxPlaceholdTensor(std::vector<uint8_t> &dfxInfoValue)
+void InitCoreDumpExceptionDfxPlaceholdTensor(std::vector<uint8_t>& dfxInfoValue)
 {
     // placehold
     std::vector<uint8_t> placeholdDfxInfo;
@@ -222,7 +223,7 @@ void InitCoreDumpExceptionDfxPlaceholdTensor(std::vector<uint8_t> &dfxInfoValue)
     dfxInfoValue.insert(dfxInfoValue.end(), placeholdDfxInfo.begin(), placeholdDfxInfo.end());
 }
 
-void InitCoreDumpExceptionDfxNormalTensor(std::vector<uint8_t> &dfxInfoValue)
+void InitCoreDumpExceptionDfxNormalTensor(std::vector<uint8_t>& dfxInfoValue)
 {
     // normal pointer
     std::vector<uint8_t> normalPointerDfxInfo;
@@ -235,7 +236,7 @@ void InitCoreDumpExceptionDfxNormalTensor(std::vector<uint8_t> &dfxInfoValue)
     dfxInfoValue.insert(dfxInfoValue.end(), normalPointerDfxInfo.begin(), normalPointerDfxInfo.end());
 }
 
-void InitCoreDumpExceptionDfxShapePointerTensor(std::vector<uint8_t> &dfxInfoValue)
+void InitCoreDumpExceptionDfxShapePointerTensor(std::vector<uint8_t>& dfxInfoValue)
 {
     // shape pointer
     std::vector<uint8_t> shapePointerDfxInfo;
@@ -249,7 +250,7 @@ void InitCoreDumpExceptionDfxShapePointerTensor(std::vector<uint8_t> &dfxInfoVal
     dfxInfoValue.insert(dfxInfoValue.end(), shapePointerDfxInfo.begin(), shapePointerDfxInfo.end());
 }
 
-void InitCoreDumpExceptionDfxWorkspaceTensor(std::vector<uint8_t> &dfxInfoValue)
+void InitCoreDumpExceptionDfxWorkspaceTensor(std::vector<uint8_t>& dfxInfoValue)
 {
     // workspace
     int32_t workspace[] = {100, 100, 100};
@@ -290,7 +291,7 @@ void CoreDumpBaseProcess(uint32_t chipType)
     generateDfxByLittleEndian(dfxInfo, sizeof(uint16_t), TYPE_L0_EXCEPTION_DFX);
     generateDfxByLittleEndian(dfxInfo, sizeof(uint16_t), dfxInfoLength);
     dfxInfo.insert(dfxInfo.end(), dfxInfoValue.begin(), dfxInfoValue.end());
-    uint8_t *ptr = dfxInfo.data();
+    uint8_t* ptr = dfxInfo.data();
     exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.dfxAddr = ptr;
     exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.dfxSize = dfxInfo.size();
     exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.elfDataFlag = 1;
@@ -377,26 +378,27 @@ TEST_F(DUMP_CORE_UTEST, TEST_CORE_DUMP_OLD)
     exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs.argsize = sizeof(args);
 
     uint32_t atomicIndex;
-    uint64_t sizeInfo[] = {atomicIndex,
-                           0x000000010000000D,
-                           sizeof(input0),
-                           0,
-                           static_cast<uint64_t>(static_cast<int64_t>(-2)),
-                           sizeof(oldNormalPtr),
-                           sizeof(oldNormalPtr),
-                           0x0100000000000002,
-                           sizeof(normalPtr1),
-                           sizeof(normalPtr2),
-                           0x0200000000000002,
-                           sizeof(shapePtr1),
-                           sizeof(shapePtr2),
-                           sizeof(workspace),
-                           0x0300000000000000 + sizeof(tilingData)};
+    uint64_t sizeInfo[] = {
+        atomicIndex,
+        0x000000010000000D,
+        sizeof(input0),
+        0,
+        static_cast<uint64_t>(static_cast<int64_t>(-2)),
+        sizeof(oldNormalPtr),
+        sizeof(oldNormalPtr),
+        0x0100000000000002,
+        sizeof(normalPtr1),
+        sizeof(normalPtr2),
+        0x0200000000000002,
+        sizeof(shapePtr1),
+        sizeof(shapePtr2),
+        sizeof(workspace),
+        0x0300000000000000 + sizeof(tilingData)};
     uint32_t space = sizeof(sizeInfo) / sizeof(sizeInfo[0]);
-    auto sizeInfoAddr = static_cast<uint64_t *>(AdumpGetSizeInfoAddr(space, atomicIndex));
+    auto sizeInfoAddr = static_cast<uint64_t*>(AdumpGetSizeInfoAddr(space, atomicIndex));
     auto sizeInfos = sizeInfoAddr;
     sizeInfo[0] = atomicIndex;
-    for (const auto &size : sizeInfo) {
+    for (const auto& size : sizeInfo) {
         *sizeInfos = size;
         sizeInfos++;
     }
@@ -446,15 +448,15 @@ TEST_F(DUMP_CORE_UTEST, TEST_CORE_DUMP_RUNTIME_FUNC_FAILED)
     args[7] = reinterpret_cast<uint64_t>(&workspace);
     args[8] = reinterpret_cast<uint64_t>(&normalPtr1);
     args[9] = reinterpret_cast<uint64_t>(&normalPtr2);
-    args[10] = sizeof(uint64_t) * 9;                    // offset of shapePtr(args[19])
-    args[11] = 2 | (1ULL << TENSOR_COUNT_SHIFT_BITS);   // shapePtr2t3 dim(2) and count(1)
-    args[12] = 2;                                       // shapePtr2t3 shape[0]
-    args[13] = 3;                                       // shapePtr2t3 shape[1]
-    args[14] = 2 | (1ULL << TENSOR_COUNT_SHIFT_BITS);   // shapePtrPlaceHold dim(2) and count(1)
-    args[15] = 3;                                       // shapePtrPlaceHold shape[0]
-    args[16] = 1;                                       // shapePtrPlaceHold shape[1]
-    args[17] = 1 | (1ULL << TENSOR_COUNT_SHIFT_BITS);   // shapePtrScalar dim(1) and count(1)
-    args[18] = 1;                                       // shapePtrScalar shape[0]
+    args[10] = sizeof(uint64_t) * 9;                  // offset of shapePtr(args[19])
+    args[11] = 2 | (1ULL << TENSOR_COUNT_SHIFT_BITS); // shapePtr2t3 dim(2) and count(1)
+    args[12] = 2;                                     // shapePtr2t3 shape[0]
+    args[13] = 3;                                     // shapePtr2t3 shape[1]
+    args[14] = 2 | (1ULL << TENSOR_COUNT_SHIFT_BITS); // shapePtrPlaceHold dim(2) and count(1)
+    args[15] = 3;                                     // shapePtrPlaceHold shape[0]
+    args[16] = 1;                                     // shapePtrPlaceHold shape[1]
+    args[17] = 1 | (1ULL << TENSOR_COUNT_SHIFT_BITS); // shapePtrScalar dim(1) and count(1)
+    args[18] = 1;                                     // shapePtrScalar shape[0]
     args[19] = reinterpret_cast<uint64_t>(&shapePtr2t3);
     args[20] = reinterpret_cast<uint64_t>(&shapePtrPlaceHold);
     args[21] = reinterpret_cast<uint64_t>(&shapePtrScalar);
@@ -550,7 +552,7 @@ TEST_F(DUMP_CORE_UTEST, TEST_CORE_DUMP_RUNTIME_FUNC_FAILED)
     generateDfxByLittleEndian(dfxInfo, sizeof(uint16_t), TYPE_L0_EXCEPTION_DFX);
     generateDfxByLittleEndian(dfxInfo, sizeof(uint16_t), dfxInfoLength);
     dfxInfo.insert(dfxInfo.end(), dfxInfoValue.begin(), dfxInfoValue.end());
-    uint8_t *ptr = dfxInfo.data();
+    uint8_t* ptr = dfxInfo.data();
     exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.dfxAddr = ptr;
     exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.dfxSize = dfxInfo.size();
     exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.elfDataFlag = 1;

@@ -20,10 +20,7 @@ using namespace Adx;
 class DupOperatorPreliminaryUtest : public testing::Test {
 protected:
     virtual void SetUp() {}
-    virtual void TearDown()
-    {
-        GlobalMockObject::verify();
-    }
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 TEST_F(DupOperatorPreliminaryUtest, Test_OperatorInit)

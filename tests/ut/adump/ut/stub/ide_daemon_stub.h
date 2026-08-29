@@ -42,17 +42,17 @@ extern int bbox_destroy_mock(void);
 extern int log_destroy_mock(void);
 extern int profile_destroy_mock(void);
 
-extern int debug_dev_process_stub(HDC_SESSION session, const struct tlv_req *req);
-extern int debug_host_process_stub(void *sock_desc, HDC_CLIENT client, const struct tlv_req *req);
-extern int ide_host_sock_cmd_process_stub(void *sock_desc, HDC_CLIENT client, const struct tlv_req *req);
+extern int debug_dev_process_stub(HDC_SESSION session, const struct tlv_req* req);
+extern int debug_host_process_stub(void* sock_desc, HDC_CLIENT client, const struct tlv_req* req);
+extern int ide_host_sock_cmd_process_stub(void* sock_desc, HDC_CLIENT client, const struct tlv_req* req);
 extern void _exit_stub(int exit_code);
-extern int getifaddrs_stub(struct ifaddrs **ifap);
-extern int freeifaddrs_stub(struct ifaddrs *ifa);
-extern int getnameinfo_stub(const struct sockaddr *addr, socklen_t addrlen,
-                            char *host, socklen_t hostlen,
-                            char *serv, socklen_t servlen, int flags);
-extern int gettimeofday_stub(struct  timeval*tv,struct  timezone *tz );
-extern ssize_t recvmsg_stub(int sockfd, struct msghdr *msg, int flags);
+extern int getifaddrs_stub(struct ifaddrs** ifap);
+extern int freeifaddrs_stub(struct ifaddrs* ifa);
+extern int getnameinfo_stub(
+    const struct sockaddr* addr, socklen_t addrlen, char* host, socklen_t hostlen, char* serv, socklen_t servlen,
+    int flags);
+extern int gettimeofday_stub(struct timeval* tv, struct timezone* tz);
+extern ssize_t recvmsg_stub(int sockfd, struct msghdr* msg, int flags);
 extern int close_stub(int fd);
 extern int free_stub(int fd);
 #ifdef __cplusplus

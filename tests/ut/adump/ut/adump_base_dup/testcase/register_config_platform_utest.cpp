@@ -21,10 +21,7 @@ using namespace Adx;
 class DupRegisterManagerUtest : public testing::Test {
 protected:
     virtual void SetUp() {}
-    virtual void TearDown()
-    {
-        GlobalMockObject::verify();
-    }
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 TEST_F(DupRegisterManagerUtest, Test_CreateRegisterFail)

@@ -15,9 +15,9 @@
 #include <functional>
 #include <iostream>
 
-INT32 mmGetCwd(CHAR *buffer, INT32 maxLen)
+INT32 mmGetCwd(CHAR* buffer, INT32 maxLen)
 {
-    CHAR *ptr = getcwd(buffer, (UINT32)maxLen);
+    CHAR* ptr = getcwd(buffer, (UINT32)maxLen);
     if (ptr != NULL) {
         return EN_OK;
     } else {
@@ -35,12 +35,12 @@ INT32 mmGetTid(void)
     return ret;
 }
 
-INT32 mmGetTimeOfDay(mmTimeval *timeVal, mmTimezone *timeZone)
+INT32 mmGetTimeOfDay(mmTimeval* timeVal, mmTimezone* timeZone)
 {
-    return gettimeofday((struct timeval *)timeVal, (struct timezone *)timeZone);
+    return gettimeofday((struct timeval*)timeVal, (struct timezone*)timeZone);
 }
 
-INT32 mmAccess2(const CHAR *pathName, INT32 mode)
+INT32 mmAccess2(const CHAR* pathName, INT32 mode)
 {
     if (pathName == NULL) {
         return EN_INVALID_PARAM;
@@ -53,13 +53,13 @@ INT32 mmAccess2(const CHAR *pathName, INT32 mode)
     return EN_OK;
 }
 
-INT32 mmIsDir(const CHAR *fileName)
+INT32 mmIsDir(const CHAR* fileName)
 {
     if (fileName == NULL) {
         return EN_INVALID_PARAM;
     }
     struct stat fileStat;
-    (VOID)memset_s(&fileStat, sizeof(fileStat), 0, sizeof(fileStat)); /* unsafe_function_ignore: memset */
+    (VOID) memset_s(&fileStat, sizeof(fileStat), 0, sizeof(fileStat)); /* unsafe_function_ignore: memset */
     INT32 ret = lstat(fileName, &fileStat);
     if (ret < MMPA_ZERO) {
         return EN_ERROR;
@@ -71,20 +71,20 @@ INT32 mmIsDir(const CHAR *fileName)
     return EN_OK;
 }
 
-INT32 mmRealPath(const CHAR *path, CHAR *realPath, INT32 realPathLen)
+INT32 mmRealPath(const CHAR* path, CHAR* realPath, INT32 realPathLen)
 {
     if ((path == nullptr) || (realPath == nullptr)) {
         return EN_INVALID_PARAM;
     }
 
-    CHAR *ret = realpath(path, realPath);
+    CHAR* ret = realpath(path, realPath);
     if (ret == nullptr) {
         return EN_ERROR;
     }
     return EN_OK;
 }
 
-INT32 mmMkdir(const CHAR *pathName, mmMode_t mode)
+INT32 mmMkdir(const CHAR* pathName, mmMode_t mode)
 {
     mode_t oldMask;
     oldMask = umask(0);
@@ -93,7 +93,7 @@ INT32 mmMkdir(const CHAR *pathName, mmMode_t mode)
     return ret;
 }
 
-INT32 mmOpen2(const char *pathName, INT32 flags, MODE mode)
+INT32 mmOpen2(const char* pathName, INT32 flags, MODE mode)
 {
     int ret;
     mode_t old_mask;
@@ -103,29 +103,20 @@ INT32 mmOpen2(const char *pathName, INT32 flags, MODE mode)
     return ret;
 }
 
-INT32 mmClose(INT32 fd)
-{
-    return close(fd);
-}
+INT32 mmClose(INT32 fd) { return close(fd); }
 
-mmSsize_t mmWrite(INT32 fd, VOID* mmBuf, UINT32 mmCount)
-{
-    return write(fd, mmBuf, mmCount);
-}
+mmSsize_t mmWrite(INT32 fd, VOID* mmBuf, UINT32 mmCount) { return write(fd, mmBuf, mmCount); }
 
-mmSsize_t mmRead(INT32 fd, VOID* mmBuf, UINT32 mmCount)
-{
-    return read(fd, mmBuf, mmCount);
-}
+mmSsize_t mmRead(INT32 fd, VOID* mmBuf, UINT32 mmCount) { return read(fd, mmBuf, mmCount); }
 
-INT32 mmGetEnv(const CHAR *name, CHAR *value, UINT32 len)
+INT32 mmGetEnv(const CHAR* name, CHAR* value, UINT32 len)
 {
     INT32 ret;
     UINT32 envLen = 0;
     if ((name == NULL) || (value == NULL) || (len == MMPA_ZERO)) {
         return EN_INVALID_PARAM;
     }
-    CHAR *envPtr = getenv(name);
+    CHAR* envPtr = getenv(name);
     if (envPtr == NULL) {
         return EN_ERROR;
     }
@@ -138,7 +129,7 @@ INT32 mmGetEnv(const CHAR *name, CHAR *value, UINT32 len)
     if (envLen != MMPA_ZERO && len < envLen) {
         return EN_INVALID_PARAM;
     } else {
-        ret = memcpy_s(value, len, envPtr, envLen); //lint !e613
+        ret = memcpy_s(value, len, envPtr, envLen); // lint !e613
         if (ret != EN_OK) {
             return EN_ERROR;
         }
@@ -152,10 +143,7 @@ INT32 mmGetErrorCode()
     return ret;
 }
 
-INT32 mmGetPid()
-{
-    return 12345;
-}
+INT32 mmGetPid() { return 12345; }
 
 mmTimespec mmGetTickCount()
 {
@@ -167,46 +155,32 @@ mmTimespec mmGetTickCount()
     return rts;
 }
 
-INT32 mmChmod(const CHAR *filename, INT32 mode)
-{
-    return 0;
-}
+INT32 mmChmod(const CHAR* filename, INT32 mode) { return 0; }
 
-INT32 mmDladdr(void *addr, mmDlInfo *info)
+INT32 mmDladdr(void* addr, mmDlInfo* info)
 {
     info->dli_fname = "/tmp/dl_addr_stub";
     return 0;
 }
 
-CHAR *mmGetErrorFormatMessage(mmErrorMsg errnum, CHAR *buf, mmSize size) {
-    return "unknow error!";
-}
+CHAR* mmGetErrorFormatMessage(mmErrorMsg errnum, CHAR* buf, mmSize size) { return "unknow error!"; }
 
-LONG mmLseek(INT32 fd, INT64 offset, INT32 seekFlag)
-{
-    return 0;
-}
+LONG mmLseek(INT32 fd, INT64 offset, INT32 seekFlag) { return 0; }
 
-INT32 mmAccess(const CHAR *pathName)
-{
-    return EN_OK;
-}
+INT32 mmAccess(const CHAR* pathName) { return EN_OK; }
 
-INT32 mmGetDiskFreeSpace(const char* path, mmDiskSize *diskSize)
+INT32 mmGetDiskFreeSpace(const char* path, mmDiskSize* diskSize)
 {
     diskSize->availSize = 10;
     diskSize->freeSize = 10;
     return EN_OK;
 }
 
-INT32 mmSleep(UINT32 millseconds)
-{
-    return 0;
-}
+INT32 mmSleep(UINT32 millseconds) { return 0; }
 
 typedef struct {
     mmEnvId id;
-    const CHAR *name;
+    const CHAR* name;
 } mmEnvInfo;
 
 static mmEnvInfo s_envList[] = {
@@ -238,10 +212,10 @@ static mmEnvInfo s_envList[] = {
     {MM_ENV_LD_LIBRARY_PATH, "LD_LIBRARY_PATH"},
 };
 
-static mmEnvInfo *GetEnvInfoById(mmEnvId id)
+static mmEnvInfo* GetEnvInfoById(mmEnvId id)
 {
     ULONG i = 0;
-    for (i = 0; i < sizeof(s_envList)/sizeof(s_envList[0]); ++i) {
+    for (i = 0; i < sizeof(s_envList) / sizeof(s_envList[0]); ++i) {
         if (s_envList[i].id == id) {
             return &s_envList[i];
         }
@@ -249,25 +223,25 @@ static mmEnvInfo *GetEnvInfoById(mmEnvId id)
     return nullptr;
 }
 
-CHAR *mmSysGetEnv(mmEnvId id)
+CHAR* mmSysGetEnv(mmEnvId id)
 {
-    mmEnvInfo *envInfo = GetEnvInfoById(id);
+    mmEnvInfo* envInfo = GetEnvInfoById(id);
     if (envInfo != nullptr) {
         return getenv(envInfo->name);
     }
     return nullptr;
 }
 
-INT32 mmSysSetEnv(mmEnvId id, const CHAR *value, INT32 overwrite)
+INT32 mmSysSetEnv(mmEnvId id, const CHAR* value, INT32 overwrite)
 {
-    mmEnvInfo *envInfo = GetEnvInfoById(id);
+    mmEnvInfo* envInfo = GetEnvInfoById(id);
     if (envInfo == nullptr) {
         return EN_INVALID_PARAM;
     }
     return setenv(envInfo->name, value, overwrite);
 }
 
-INT32 mmStatGet(const CHAR *path, mmStat_t *buffer)
+INT32 mmStatGet(const CHAR* path, mmStat_t* buffer)
 {
     if ((path == NULL) || (buffer == NULL)) {
         return EN_INVALID_PARAM;
@@ -280,53 +254,26 @@ INT32 mmStatGet(const CHAR *path, mmStat_t *buffer)
     return EN_OK;
 }
 
-INT32 mmJoinTask( mmThread *pstThreadHandle)
-{
-    return 0;
-}
+INT32 mmJoinTask(mmThread* pstThreadHandle) { return 0; }
 
-INT32 mmSetCurrentThreadName(const CHAR* name)
-{
-    return EN_OK;
-}
+INT32 mmSetCurrentThreadName(const CHAR* name) { return EN_OK; }
 
-INT32 mmCreateTaskWithThreadAttr(mmThread *threadHandle, const mmUserBlock_t *funcBlock, const mmThreadAttr *threadAttr)
+INT32 mmCreateTaskWithThreadAttr(mmThread* threadHandle, const mmUserBlock_t* funcBlock, const mmThreadAttr* threadAttr)
 {
     funcBlock->procFunc(funcBlock->pulArg);
     return 0;
 }
 
-mmSockHandle mmSocket(INT32 sockFamily, INT32 type, INT32 protocol)
-{
-    return 1;
-}
+mmSockHandle mmSocket(INT32 sockFamily, INT32 type, INT32 protocol) { return 1; }
 
-INT32 mmBind(mmSockHandle sockfd, mmSockAddr* addr, mmSocklen_t addrlen)
-{
-    return 0;
-}
+INT32 mmBind(mmSockHandle sockfd, mmSockAddr* addr, mmSocklen_t addrlen) { return 0; }
 
-INT32 mmListen(mmSockHandle sockfd, INT32 backlog)
-{
-    return 0;
-}
+INT32 mmListen(mmSockHandle sockfd, INT32 backlog) { return 0; }
 
-mmSockHandle mmAccept (mmSockHandle sockfd, mmSockAddr* addr, mmSocklen_t* addrlen)
-{
-    return 1;
-}
+mmSockHandle mmAccept(mmSockHandle sockfd, mmSockAddr* addr, mmSocklen_t* addrlen) { return 1; }
 
-INT32 mmConnect(mmSockHandle sockfd, mmSockAddr* addr, mmSocklen_t addrlen)
-{
-    return 0;
-}
+INT32 mmConnect(mmSockHandle sockfd, mmSockAddr* addr, mmSocklen_t addrlen) { return 0; }
 
-mmSsize_t mmSocketSend(mmSockHandle sockfd, VOID* pstSendBuf, INT32 sendLen, INT32 sendFlag)
-{
-    return 0;
-}
+mmSsize_t mmSocketSend(mmSockHandle sockfd, VOID* pstSendBuf, INT32 sendLen, INT32 sendFlag) { return 0; }
 
-mmSsize_t mmSocketRecv(mmSockHandle sockfd, VOID* pstRecvBuf, INT32 recvLen, INT32 recvFlag)
-{
-    return 1;
-}
+mmSsize_t mmSocketRecv(mmSockHandle sockfd, VOID* pstRecvBuf, INT32 recvLen, INT32 recvFlag) { return 1; }

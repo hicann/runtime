@@ -16,15 +16,12 @@ using namespace Adx;
 class CommonSysUtilsUtest : public testing::Test {
 protected:
     virtual void SetUp() {}
-    virtual void TearDown()
-    {
-        GlobalMockObject::verify();
-    }
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 TEST_F(CommonSysUtilsUtest, Test_GetCurrentTimeWithMillisecond)
 {
-    struct tm *time = nullptr;
+    struct tm* time = nullptr;
     MOCKER(localtime_r).stubs().will(returnValue(time));
     std::string timestamp = SysUtils::GetCurrentTimeWithMillisecond();
     EXPECT_EQ(DEFAULT_MILLISECOND_TIME, timestamp);

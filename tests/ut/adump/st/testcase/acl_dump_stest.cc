@@ -16,17 +16,15 @@
 #include "adx_dump_record.h"
 #include "adx_dump_process.h"
 #include "mmpa_api.h"
-class ACL_DUMP_STEST: public testing::Test {
+class ACL_DUMP_STEST : public testing::Test {
 protected:
     virtual void SetUp() {}
-    virtual void TearDown() {
-        GlobalMockObject::verify();
-    }
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
-int32_t messageCallbackStub1(const acldumpChunk * data, int32_t len)
+int32_t messageCallbackStub1(const acldumpChunk* data, int32_t len)
 {
-    if((sizeof(acldumpChunk) + data->bufLen) == len) {
+    if ((sizeof(acldumpChunk) + data->bufLen) == len) {
         printf("messageCallbackStub1 ok!\n");
         return 0;
     } else {
@@ -34,9 +32,9 @@ int32_t messageCallbackStub1(const acldumpChunk * data, int32_t len)
     }
 }
 
-int32_t messageCallbackStub2(const acldumpChunk * data, int32_t len)
+int32_t messageCallbackStub2(const acldumpChunk* data, int32_t len)
 {
-    if((sizeof(acldumpChunk) + data->bufLen) == len) {
+    if ((sizeof(acldumpChunk) + data->bufLen) == len) {
         printf("messageCallbackStub2 ok!\n");
         return 0;
     } else {

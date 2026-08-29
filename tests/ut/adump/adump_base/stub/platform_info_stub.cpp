@@ -10,37 +10,32 @@
 #include "platform/platform_info.h"
 
 namespace fe {
-PlatformInfoManager::PlatformInfoManager() : init_flag_(false), runtime_init_flag_(false), opti_compilation_info_()
-{}
+PlatformInfoManager::PlatformInfoManager() : init_flag_(false), runtime_init_flag_(false), opti_compilation_info_() {}
 
-PlatformInfoManager::~PlatformInfoManager()
-{}
+PlatformInfoManager::~PlatformInfoManager() {}
 
-PlatformInfoManager &PlatformInfoManager::Instance()
+PlatformInfoManager& PlatformInfoManager::Instance()
 {
     static PlatformInfoManager platform_info;
     return platform_info;
 }
 
-PlatformInfoManager &PlatformInfoManager::GeInstance()
+PlatformInfoManager& PlatformInfoManager::GeInstance()
 {
     static PlatformInfoManager ge_platform_info;
     return ge_platform_info;
 }
 
-uint32_t PlatformInfoManager::GetPlatformInfoWithOutSocVersion(PlatformInfo &platform_info,
-    OptionalInfo &opti_compilation_info)
+uint32_t PlatformInfoManager::GetPlatformInfoWithOutSocVersion(
+    PlatformInfo& platform_info, OptionalInfo& opti_compilation_info)
 {
     return 0;
 }
 
-uint32_t fe::PlatformInfoManager::InitializePlatformInfo()
-{
-    return 0;
-}
+uint32_t fe::PlatformInfoManager::InitializePlatformInfo() { return 0; }
 
-uint32_t PlatformInfoManager::GetPlatformInfo(const string SoCVersion, PlatformInfo &platform_info,
-    OptionalInfo &opti_compilation_info)
+uint32_t PlatformInfoManager::GetPlatformInfo(
+    const string SoCVersion, PlatformInfo& platform_info, OptionalInfo& opti_compilation_info)
 {
     (void)SoCVersion;
     (void)opti_compilation_info;
@@ -54,4 +49,4 @@ uint32_t PlatformInfoManager::GetPlatformInfo(const string SoCVersion, PlatformI
     platform_info.ai_core_spec.ub_size = 500;
     return 0;
 }
-}  // namespace fe
+} // namespace fe

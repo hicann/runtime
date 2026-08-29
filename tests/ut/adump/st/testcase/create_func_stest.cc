@@ -16,12 +16,10 @@
 #include "commopts/hdc_comm_opt.h"
 #include "create_func.h"
 using namespace Adx;
-class CREATE_FUNC_STEST: public testing::Test {
+class CREATE_FUNC_STEST : public testing::Test {
 protected:
     virtual void SetUp() {}
-    virtual void TearDown() {
-        GlobalMockObject::verify();
-    }
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 TEST_F(CREATE_FUNC_STEST, CreateAdxEpoll)
 {

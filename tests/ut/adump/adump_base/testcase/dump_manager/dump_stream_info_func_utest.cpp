@@ -21,10 +21,7 @@
 
 using namespace Adx;
 
-static void WaitInterval_stub(uint32_t intervalSec)
-{
-    (void)intervalSec;
-}
+static void WaitInterval_stub(uint32_t intervalSec) { (void)intervalSec; }
 
 static DumpTensor BuildFuncTestTensor(void* addr, size_t size, int32_t dataType = 0, int32_t format = 0)
 {
@@ -40,10 +37,9 @@ static DumpTensor BuildFuncTestTensor(void* addr, size_t size, int32_t dataType 
     return DumpTensor(info);
 }
 
-static DumpStreamInfo BuildFuncTestStreamInfo(const std::string& key = "stream_key",
-                                              const std::string& opName = "TestOp",
-                                              const std::string& opType = "TestOpType",
-                                              const std::string& dumpPath = "/tmp/dump_test")
+static DumpStreamInfo BuildFuncTestStreamInfo(
+    const std::string& key = "stream_key", const std::string& opName = "TestOp",
+    const std::string& opType = "TestOpType", const std::string& dumpPath = "/tmp/dump_test")
 {
     DumpStreamInfo info = {};
     info.stm = reinterpret_cast<rtStream_t>(0x1);
@@ -127,7 +123,7 @@ TEST_F(DumpStreamQueueUtest, Test_CopyTensorDataWithFlush_FullBuffer_FlushSucces
 {
     MOCKER(&AdxDumpRecord::RecordDumpDataToQueue).stubs().will(returnValue(true));
     std::vector<char> buf(DUMP_SLICE_SIZE);
-    size_t offset = DUMP_SLICE_SIZE;  // buffer completely full
+    size_t offset = DUMP_SLICE_SIZE; // buffer completely full
     std::string fileName = "/tmp/dump/0/TestFullBufFlush";
     ChunkContext ctx{buf, offset, fileName};
 
@@ -422,10 +418,7 @@ TEST_F(DumpStreamInfoFuncUtest, Test_CopyTensorsWithChunking_NullAddrFail)
 // ============================================================================
 // DumpTensorToQueue
 // ============================================================================
-TEST_F(DumpStreamInfoFuncUtest, Test_DumpTensorToQueue_NullPtr)
-{
-    DumpTensorToQueue(nullptr);
-}
+TEST_F(DumpStreamInfoFuncUtest, Test_DumpTensorToQueue_NullPtr) { DumpTensorToQueue(nullptr); }
 
 TEST_F(DumpStreamInfoFuncUtest, Test_DumpTensorToQueue_NoTensors)
 {
@@ -522,10 +515,7 @@ TEST_F(DumpStreamInfoFuncUtest, Test_DumpStreamCreate_FirstEventFail)
 
 TEST_F(DumpStreamInfoFuncUtest, Test_DumpStreamCreate_SecondEventFail)
 {
-    MOCKER(rtEventCreateExWithFlag)
-        .stubs()
-        .will(returnValue(RT_ERROR_NONE))
-        .then(returnValue(-1));
+    MOCKER(rtEventCreateExWithFlag).stubs().will(returnValue(RT_ERROR_NONE)).then(returnValue(-1));
     DumpStreamInfo* ptr = nullptr;
     EXPECT_NE(DumpStreamCreate(&ptr), ADUMP_SUCCESS);
     EXPECT_EQ(ptr, nullptr);
@@ -550,10 +540,7 @@ TEST_F(DumpStreamInfoFuncUtest, Test_DumpStreamCreate_GetStreamIdFail)
 // ============================================================================
 // DumpDataRecordInCaptureStream
 // ============================================================================
-TEST_F(DumpStreamInfoFuncUtest, Test_DumpDataRecordInCaptureStream_NullArgs)
-{
-    DumpDataRecordInCaptureStream(nullptr);
-}
+TEST_F(DumpStreamInfoFuncUtest, Test_DumpDataRecordInCaptureStream_NullArgs) { DumpDataRecordInCaptureStream(nullptr); }
 
 TEST_F(DumpStreamInfoFuncUtest, Test_DumpDataRecordInCaptureStream_ValidArgs)
 {

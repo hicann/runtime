@@ -25,15 +25,12 @@ rtExceptionInfo MakeException(rtExceptionExpandType_t type, uint32_t retcode = 0
     exception.expandInfo.type = type;
     return exception;
 }
-}  // namespace
+} // namespace
 
 class ExceptionInfoCommonUtest : public testing::Test {
 protected:
     void SetUp() override {}
-    void TearDown() override
-    {
-        GlobalMockObject::verify();
-    }
+    void TearDown() override { GlobalMockObject::verify(); }
 };
 
 TEST_F(ExceptionInfoCommonUtest, IsSupportDefaultExceptionDump_TypeMatrix)
@@ -52,8 +49,9 @@ TEST_F(ExceptionInfoCommonUtest, GetExceptionTaskTypeName_Aicpu)
     EXPECT_EQ(ExceptionInfoCommon::GetExceptionTaskTypeName(MakeException(RT_EXCEPTION_AICPU)), "aicpu");
     EXPECT_EQ(ExceptionInfoCommon::GetExceptionTaskTypeName(MakeException(RT_EXCEPTION_AICORE)), "aicore");
     EXPECT_EQ(ExceptionInfoCommon::GetExceptionTaskTypeName(MakeException(RT_EXCEPTION_FUSION)), "fusion");
-    EXPECT_EQ(ExceptionInfoCommon::GetExceptionTaskTypeName(
-        MakeException(static_cast<rtExceptionExpandType_t>(9999))), "unknown");
+    EXPECT_EQ(
+        ExceptionInfoCommon::GetExceptionTaskTypeName(MakeException(static_cast<rtExceptionExpandType_t>(9999))),
+        "unknown");
 }
 
 TEST_F(ExceptionInfoCommonUtest, GetExceptionKernelName_AicpuValid)
@@ -75,7 +73,7 @@ TEST_F(ExceptionInfoCommonUtest, GetExceptionKernelName_AicoreValid)
 {
     rtExceptionInfo exception = MakeException(RT_EXCEPTION_AICORE);
     const char kernelName[] = "aicore_kernel";
-    rtExceptionKernelInfo_t &kernelInfo = exception.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo;
+    rtExceptionKernelInfo_t& kernelInfo = exception.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo;
     kernelInfo.kernelName = kernelName;
     kernelInfo.kernelNameSize = static_cast<uint32_t>(std::strlen(kernelName));
     EXPECT_EQ(ExceptionInfoCommon::GetExceptionKernelName(exception), "aicore_kernel");
@@ -85,7 +83,7 @@ TEST_F(ExceptionInfoCommonUtest, GetExceptionKernelName_AicoreStripsMixSuffix)
 {
     rtExceptionInfo exception = MakeException(RT_EXCEPTION_AICORE);
     const char kernelName[] = "aicore_kernel_mix_aic";
-    rtExceptionKernelInfo_t &kernelInfo = exception.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo;
+    rtExceptionKernelInfo_t& kernelInfo = exception.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo;
     kernelInfo.kernelName = kernelName;
     kernelInfo.kernelNameSize = static_cast<uint32_t>(std::strlen(kernelName));
     EXPECT_EQ(ExceptionInfoCommon::GetExceptionKernelName(exception), "aicore_kernel");
@@ -94,7 +92,7 @@ TEST_F(ExceptionInfoCommonUtest, GetExceptionKernelName_AicoreStripsMixSuffix)
 TEST_F(ExceptionInfoCommonUtest, GetExceptionKernelName_AicoreNullReturnsEmpty)
 {
     rtExceptionInfo exception = MakeException(RT_EXCEPTION_AICORE);
-    rtExceptionKernelInfo_t &kernelInfo = exception.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo;
+    rtExceptionKernelInfo_t& kernelInfo = exception.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo;
     kernelInfo.kernelName = nullptr;
     kernelInfo.kernelNameSize = 0U;
     EXPECT_EQ(ExceptionInfoCommon::GetExceptionKernelName(exception), "");

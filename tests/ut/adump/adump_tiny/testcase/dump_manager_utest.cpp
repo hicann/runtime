@@ -20,10 +20,7 @@ using namespace Adx;
 class TinyDumpManagerUtest : public testing::Test {
 protected:
     virtual void SetUp() {}
-    virtual void TearDown()
-    {
-        GlobalMockObject::verify();
-    }
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 TEST_F(TinyDumpManagerUtest, Test_SetDumpConfig_WithMemory)
@@ -37,10 +34,10 @@ TEST_F(TinyDumpManagerUtest, Test_SetDumpConfig_WithMemory_NullParams)
 {
     int32_t ret = DumpManager::Instance().SetDumpConfig(nullptr, 0, "/tmp");
     EXPECT_EQ(ret, ADUMP_FAILED);
-    
+
     ret = DumpManager::Instance().SetDumpConfig("data", 0, nullptr);
     EXPECT_EQ(ret, ADUMP_FAILED);
-    
+
     ret = DumpManager::Instance().SetDumpConfig(nullptr, 10, nullptr);
     EXPECT_EQ(ret, ADUMP_FAILED);
 }
@@ -51,10 +48,7 @@ TEST_F(TinyDumpManagerUtest, Test_UnSetDumpConfig)
     EXPECT_EQ(ret, ADUMP_SUCCESS);
 }
 
-TEST_F(TinyDumpManagerUtest, Test_KFCResourceInit)
-{
-    DumpManager::Instance().KFCResourceInit();
-}
+TEST_F(TinyDumpManagerUtest, Test_KFCResourceInit) { DumpManager::Instance().KFCResourceInit(); }
 
 TEST_F(TinyDumpManagerUtest, Test_IsEnableDump)
 {
@@ -103,15 +97,12 @@ TEST_F(TinyDumpManagerUtest, Test_UnregisterExceptionDumpCallback_Success)
     auto callback = [](void*, ExceptionDumpInfo*, uint32_t, uint32_t*, ExceptionDumpMode*) -> uint32_t { return 0; };
     int32_t ret = DumpManager::Instance().RegisterExceptionDumpCallback(callback);
     EXPECT_EQ(ret, ADUMP_SUCCESS);
-    
+
     ret = DumpManager::Instance().UnregisterExceptionDumpCallback(callback);
     EXPECT_EQ(ret, ADUMP_SUCCESS);
 }
 
-TEST_F(TinyDumpManagerUtest, Test_GetDumpSetting)
-{
-    DumpManager::Instance().GetDumpSetting();
-}
+TEST_F(TinyDumpManagerUtest, Test_GetDumpSetting) { DumpManager::Instance().GetDumpSetting(); }
 
 TEST_F(TinyDumpManagerUtest, Test_AdumpGetDumpSwitch)
 {

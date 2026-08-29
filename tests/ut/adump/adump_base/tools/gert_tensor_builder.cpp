@@ -14,18 +14,18 @@ namespace gert {
 namespace {
 
 struct StubHostTensorHead {
-  size_t count;
-  static void *Create(size_t size)
-  {
-        auto head = static_cast<StubHostTensorHead *>(malloc(sizeof(StubHostTensorHead) + size));
+    size_t count;
+    static void* Create(size_t size)
+    {
+        auto head = static_cast<StubHostTensorHead*>(malloc(sizeof(StubHostTensorHead) + size));
         head->count = 1;
         return head + 1;
-  }
+    }
 };
 
-ge::graphStatus StubHostTensorManager(TensorAddress addr, TensorOperateType operateType, void **out)
+ge::graphStatus StubHostTensorManager(TensorAddress addr, TensorOperateType operateType, void** out)
 {
-    auto head = static_cast<StubHostTensorHead *>(addr) - 1;
+    auto head = static_cast<StubHostTensorHead*>(addr) - 1;
     switch (operateType) {
         case kGetTensorAddress:
             *out = addr;
@@ -43,48 +43,46 @@ ge::graphStatus StubHostTensorManager(TensorAddress addr, TensorOperateType oper
     }
     return ge::GRAPH_SUCCESS;
 }
-} // namespapce
+} // namespace
 
-TensorBuilder &TensorBuilder::Shape(std::initializer_list<int64_t> shape)
+TensorBuilder& TensorBuilder::Shape(std::initializer_list<int64_t> shape)
 {
     return OriginShape(shape).StorageShape(shape);
 }
 
-TensorBuilder &TensorBuilder::OriginShape(std::initializer_list<int64_t> shape)
+TensorBuilder& TensorBuilder::OriginShape(std::initializer_list<int64_t> shape)
 {
     tensor_.MutableOriginShape() = shape;
     return *this;
 }
 
-TensorBuilder &TensorBuilder::StorageShape(std::initializer_list<int64_t> shape)
+TensorBuilder& TensorBuilder::StorageShape(std::initializer_list<int64_t> shape)
 {
     tensor_.MutableStorageShape() = shape;
     return *this;
 }
 
-TensorBuilder &TensorBuilder::Format(ge::Format format)
-{
-    return OriginFormat(format).StorageFormat(format);
-}
+TensorBuilder& TensorBuilder::Format(ge::Format format) { return OriginFormat(format).StorageFormat(format); }
 
-TensorBuilder &TensorBuilder::OriginFormat(ge::Format format)
+TensorBuilder& TensorBuilder::OriginFormat(ge::Format format)
 {
     tensor_.MutableFormat().SetOriginFormat(format);
     return *this;
 }
 
-TensorBuilder &TensorBuilder::StorageFormat(ge::Format format)
+TensorBuilder& TensorBuilder::StorageFormat(ge::Format format)
 {
     tensor_.MutableFormat().SetStorageFormat(format);
     return *this;
 }
 
-TensorBuilder &TensorBuilder::DataType(ge::DataType dt) {
+TensorBuilder& TensorBuilder::DataType(ge::DataType dt)
+{
     tensor_.SetDataType(dt);
     return *this;
 }
 
-TensorBuilder &TensorBuilder::Placement(TensorPlacement placement)
+TensorBuilder& TensorBuilder::Placement(TensorPlacement placement)
 {
     tensor_.SetPlacement(placement);
     return *this;
@@ -95,7 +93,8 @@ TensorHolder TensorBuilder::Build() const
     TensorHolder th;
     if (tensor_.GetPlacement() == kFollowing) {
         size_t totalSize;
-        th.SetFollowingTensor(Tensor::CreateFollowing(tensor_.GetStorageShape().GetShapeSize(), tensor_.GetDataType(), totalSize));
+        th.SetFollowingTensor(
+            Tensor::CreateFollowing(tensor_.GetStorageShape().GetShapeSize(), tensor_.GetDataType(), totalSize));
     } else {
         th.SetTensor(std::unique_ptr<Tensor>(new Tensor));
         auto tensorSize = ge::GetSizeInBytes(tensor_.GetStorageShape().GetShapeSize(), tensor_.GetDataType());

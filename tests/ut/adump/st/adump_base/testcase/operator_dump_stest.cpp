@@ -25,13 +25,10 @@
 
 using namespace Adx;
 
-class OperatorDumpStest: public testing::Test {
+class OperatorDumpStest : public testing::Test {
 protected:
     virtual void SetUp() {}
-    virtual void TearDown()
-    {
-        GlobalMockObject::verify();
-    }
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 TEST_F(OperatorDumpStest, Test_EnableOperatorDump)
@@ -120,8 +117,10 @@ TEST_F(OperatorDumpStest, Test_DumpTensor)
     dumpConf.dumpSwitch = (OPERATOR_OP_DUMP | OPERATOR_KERNEL_DUMP);
     EXPECT_EQ(AdumpSetDumpConfig(DumpType::OPERATOR, dumpConf), ADUMP_SUCCESS);
 
-    auto inputTensor = gert::TensorBuilder().Placement(gert::kOnDeviceHbm).DataType(ge::DT_INT32).Shape({4, 16}).Build();
-    auto outputTensor = gert::TensorBuilder().Placement(gert::kOnDeviceHbm).DataType(ge::DT_INT32).Shape({4, 16}).Build();
+    auto inputTensor =
+        gert::TensorBuilder().Placement(gert::kOnDeviceHbm).DataType(ge::DT_INT32).Shape({4, 16}).Build();
+    auto outputTensor =
+        gert::TensorBuilder().Placement(gert::kOnDeviceHbm).DataType(ge::DT_INT32).Shape({4, 16}).Build();
 
     TensorInfo inputTensorInfo = BuildTensorInfo(inputTensor.GetTensor(), TensorType::INPUT);
     TensorInfo outputTensorInfo = BuildTensorInfo(outputTensor.GetTensor(), TensorType::OUTPUT);
@@ -129,7 +128,6 @@ TEST_F(OperatorDumpStest, Test_DumpTensor)
     aclrtStream stream = (aclrtStream)0x1234;
     EXPECT_EQ(AdumpDumpTensor("Conv2D", "op_name", tensorInfos, stream), ADUMP_SUCCESS);
 }
-
 
 TEST_F(OperatorDumpStest, Test_DumpTensor_Multi_DataType)
 {
@@ -140,18 +138,14 @@ TEST_F(OperatorDumpStest, Test_DumpTensor_Multi_DataType)
     dumpConf.dumpSwitch = (OPERATOR_OP_DUMP | OPERATOR_KERNEL_DUMP);
     EXPECT_EQ(AdumpSetDumpConfig(DumpType::OPERATOR, dumpConf), ADUMP_SUCCESS);
 
-    std::vector<ge::DataType> dataTypes = {
-        ge::DT_COMPLEX32, ge::DT_HIFLOAT8, ge::DT_FLOAT8_E5M2, ge::DT_FLOAT8_E4M3FN, ge::DT_FLOAT8_E8M0,
-        ge::DT_FLOAT6_E3M2, ge::DT_FLOAT6_E2M3, ge::DT_FLOAT4_E2M1, ge::DT_FLOAT4_E1M2};
+    std::vector<ge::DataType> dataTypes = {ge::DT_COMPLEX32,     ge::DT_HIFLOAT8,    ge::DT_FLOAT8_E5M2,
+                                           ge::DT_FLOAT8_E4M3FN, ge::DT_FLOAT8_E8M0, ge::DT_FLOAT6_E3M2,
+                                           ge::DT_FLOAT6_E2M3,   ge::DT_FLOAT4_E2M1, ge::DT_FLOAT4_E1M2};
     std::vector<TensorInfo> tensorInfos;
     std::vector<std::shared_ptr<gert::TensorHolder>> holders;
-    for (int i=0; i < dataTypes.size(); i++) {
+    for (int i = 0; i < dataTypes.size(); i++) {
         std::shared_ptr<gert::TensorHolder> holder = std::make_shared<gert::TensorHolder>(
-            gert::TensorBuilder()
-            .Placement(gert::kOnDeviceHbm)
-            .DataType(dataTypes[i])
-            .Shape({4, 16})
-            .Build());
+            gert::TensorBuilder().Placement(gert::kOnDeviceHbm).DataType(dataTypes[i]).Shape({4, 16}).Build());
         holders.push_back(holder);
         TensorInfo inputTensorInfo = BuildTensorInfo(holder->GetTensor(), TensorType::INPUT);
         tensorInfos.emplace_back(inputTensorInfo);
@@ -159,7 +153,6 @@ TEST_F(OperatorDumpStest, Test_DumpTensor_Multi_DataType)
     aclrtStream stream = (aclrtStream)0x1234;
     EXPECT_EQ(AdumpDumpTensor("Conv2D", "op_name", tensorInfos, stream), ADUMP_SUCCESS);
 }
-
 
 TEST_F(OperatorDumpStest, Test_DumpTensor_Stats)
 {
@@ -177,8 +170,10 @@ TEST_F(OperatorDumpStest, Test_DumpTensor_Stats)
     dumpConf.dumpStatsItem.push_back("Positive Inf");
     EXPECT_EQ(AdumpSetDumpConfig(DumpType::OPERATOR, dumpConf), ADUMP_SUCCESS);
 
-    auto inputTensor = gert::TensorBuilder().Placement(gert::kOnDeviceHbm).DataType(ge::DT_INT32).Shape({4, 16}).Build();
-    auto outputTensor = gert::TensorBuilder().Placement(gert::kOnDeviceHbm).DataType(ge::DT_INT32).Shape({4, 16}).Build();
+    auto inputTensor =
+        gert::TensorBuilder().Placement(gert::kOnDeviceHbm).DataType(ge::DT_INT32).Shape({4, 16}).Build();
+    auto outputTensor =
+        gert::TensorBuilder().Placement(gert::kOnDeviceHbm).DataType(ge::DT_INT32).Shape({4, 16}).Build();
 
     TensorInfo inputTensorInfo = BuildTensorInfo(inputTensor.GetTensor(), TensorType::INPUT);
     TensorInfo outputTensorInfo = BuildTensorInfo(outputTensor.GetTensor(), TensorType::OUTPUT);
@@ -263,7 +258,8 @@ TEST_F(OperatorDumpStest, Test_DumpTensor_rtMemcpy_fail)
 
     auto th = gert::TensorBuilder().Placement(gert::kOnDeviceHbm).DataType(ge::DT_INT32).Build();
 
-    TensorInfo outputTensorInfo = BuildTensorInfo(th.GetTensor(), TensorType::OUTPUT);;
+    TensorInfo outputTensorInfo = BuildTensorInfo(th.GetTensor(), TensorType::OUTPUT);
+    ;
     std::vector<TensorInfo> tensorInfos = {outputTensorInfo};
     aclrtStream stream = (aclrtStream)0x1234;
     EXPECT_EQ(AdumpDumpTensor("Conv2D", "op_name", tensorInfos, stream), ADUMP_FAILED);
@@ -282,12 +278,12 @@ TEST_F(OperatorDumpStest, Test_DumpTensor_rtGetDevice_fail)
 
     auto th = gert::TensorBuilder().Placement(gert::kOnDeviceHbm).DataType(ge::DT_INT32).Build();
 
-    TensorInfo outputTensorInfo = BuildTensorInfo(th.GetTensor(), TensorType::OUTPUT);;
+    TensorInfo outputTensorInfo = BuildTensorInfo(th.GetTensor(), TensorType::OUTPUT);
+    ;
     std::vector<TensorInfo> tensorInfos = {outputTensorInfo};
     aclrtStream stream = (aclrtStream)0x1234;
     EXPECT_EQ(AdumpDumpTensor("Conv2D", "op_name", tensorInfos, stream), ADUMP_FAILED);
 }
-
 
 TEST_F(OperatorDumpStest, Test_DumpTensor_rtGetTaskIdAndStreamID_fail)
 {
@@ -302,7 +298,8 @@ TEST_F(OperatorDumpStest, Test_DumpTensor_rtGetTaskIdAndStreamID_fail)
 
     auto th = gert::TensorBuilder().Placement(gert::kOnDeviceHbm).DataType(ge::DT_INT32).Build();
 
-    TensorInfo outputTensorInfo = BuildTensorInfo(th.GetTensor(), TensorType::OUTPUT);;
+    TensorInfo outputTensorInfo = BuildTensorInfo(th.GetTensor(), TensorType::OUTPUT);
+    ;
     std::vector<TensorInfo> tensorInfos = {outputTensorInfo};
     aclrtStream stream = (aclrtStream)0x1234;
     EXPECT_EQ(ADUMP_FAILED, AdumpDumpTensor("Conv2D", "op_name", tensorInfos, stream));
@@ -332,8 +329,9 @@ TEST_F(OperatorDumpStest, Test_DumpTensor_rtCpuKernelLaunch_fail)
     EXPECT_EQ(AdumpDumpTensor("Conv2D", "op_name", tensorInfos, stream), ADUMP_FAILED);
 }
 
-template<int64_t V>
-rtError_t rtGetDeviceInfoStub(uint32_t devId, int32_t moduleType, int32_t infoType, int64_t *value) {
+template <int64_t V>
+rtError_t rtGetDeviceInfoStub(uint32_t devId, int32_t moduleType, int32_t infoType, int64_t* value)
+{
     static int32_t g_halSuccessCnt = 0;
     (void)devId;
     (void)moduleType;
@@ -350,7 +348,7 @@ rtError_t rtGetDeviceInfoStub(uint32_t devId, int32_t moduleType, int32_t infoTy
 }
 
 int32_t g_versionStubCount = -1;
-drvError_t halGetAPIVersionStub(int32_t *halAPIVersion)
+drvError_t halGetAPIVersionStub(int32_t* halAPIVersion)
 {
     *halAPIVersion = 467734;
     g_versionStubCount++;
@@ -370,9 +368,7 @@ TEST_F(OperatorDumpStest, Test_AdumpSetDumpConfig_Milan)
     dumpConf.dumpMode = "output";
     DumpManager::Instance().Reset();
 
-    MOCKER(rtGetDeviceInfo)
-        .stubs()
-        .will(invoke(rtGetDeviceInfoStub<(uint64_t)(5 << 8)>));
+    MOCKER(rtGetDeviceInfo).stubs().will(invoke(rtGetDeviceInfoStub<(uint64_t)(5 << 8)>));
     EXPECT_EQ(AdumpSetDumpConfig(DumpType::OPERATOR, dumpConf), ADUMP_FAILED);
 
     // unsupported
@@ -417,9 +413,7 @@ TEST_F(OperatorDumpStest, Test_AdumpSetDumpConfig_KfcNotExisted)
     dumpConf.dumpData = "stats";
     dumpConf.dumpMode = "output";
     DumpManager::Instance().Reset();
-    MOCKER(rtGetDeviceInfo)
-        .stubs()
-        .will(invoke(rtGetDeviceInfoStub<(uint64_t)(15 << 8)>));
+    MOCKER(rtGetDeviceInfo).stubs().will(invoke(rtGetDeviceInfoStub<(uint64_t)(15 << 8)>));
 
     EXPECT_EQ(AdumpSetDumpConfig(DumpType::OPERATOR, dumpConf), ADUMP_FAILED);
     EXPECT_EQ(AdumpSetDumpConfig(DumpType::OPERATOR, dumpConf), ADUMP_SUCCESS);

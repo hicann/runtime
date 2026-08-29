@@ -20,62 +20,39 @@
 using namespace IdeDaemon::Common::Config;
 
 extern int g_netlink_notify_flag;
-class IDE_DAEMON_NETLINK_UTEST: public testing::Test {
+class IDE_DAEMON_NETLINK_UTEST : public testing::Test {
 protected:
-	virtual void SetUp() {
-        g_netlink_notify_flag = 0;
-	}
-	virtual void TearDown() {
-        GlobalMockObject::verify();
-	}
-
+    virtual void SetUp() { g_netlink_notify_flag = 0; }
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 TEST_F(IDE_DAEMON_NETLINK_UTEST, IdeNotifyNetlinkStatus_IdeXmalloc_failed)
 {
-    MOCKER(IdeXmalloc)
-        .stubs()
-        .will(returnValue((void *)NULL));
+    MOCKER(IdeXmalloc).stubs().will(returnValue((void*)NULL));
 
     EXPECT_EQ(IDE_DAEMON_ERROR, IdeNotifyNetlinkStatus(1));
 }
 
 TEST_F(IDE_DAEMON_NETLINK_UTEST, IdeNetlinkInit)
 {
-    MOCKER(mmSocket)
-        .stubs()
-        .will(returnValue(-1))
-        .then(returnValue(0));
+    MOCKER(mmSocket).stubs().will(returnValue(-1)).then(returnValue(0));
 
-    MOCKER(mmBind)
-        .stubs()
-        .will(returnValue(-1))
-        .then(returnValue(0));
+    MOCKER(mmBind).stubs().will(returnValue(-1)).then(returnValue(0));
 
-    MOCKER(IdeInsertSock)
-        .stubs()
-        .will(returnValue(false))
-        .then(returnValue(true));
+    MOCKER(IdeInsertSock).stubs().will(returnValue(false)).then(returnValue(true));
 
     EXPECT_EQ(IDE_DAEMON_ERROR, IdeNetlinkInit());
     EXPECT_EQ(IDE_DAEMON_ERROR, IdeNetlinkInit());
     EXPECT_EQ(IDE_DAEMON_ERROR, IdeNetlinkInit());
     EXPECT_EQ(IDE_DAEMON_OK, IdeNetlinkInit());
-
 }
 
 TEST_F(IDE_DAEMON_NETLINK_UTEST, IdeNotifyNetlinkStatus)
 {
-    MOCKER(recvmsg)
-        .stubs()
-        .will(invoke(recvmsg_stub));
+    MOCKER(recvmsg).stubs().will(invoke(recvmsg_stub));
 
-    MOCKER(IdeCreateSock)
-        .stubs()
-        .will(returnValue(1));
-    MOCKER(IdeInsertSock)
-        .stubs()
-        .will(returnValue(false));
+    MOCKER(IdeCreateSock).stubs().will(returnValue(1));
+    MOCKER(IdeInsertSock).stubs().will(returnValue(false));
 
     g_netlink_notify_flag = 0;
     EXPECT_EQ(IDE_DAEMON_OK, IdeNotifyNetlinkStatus(1));
@@ -101,4 +78,3 @@ TEST_F(IDE_DAEMON_NETLINK_UTEST, IdeDelSock)
     EXPECT_EQ(true, IdeInsertSock("eth0", "192.168.1.111", 1));
     IdeDelSock("eth0", "192.168.1.111");
 }
-

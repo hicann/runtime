@@ -15,13 +15,10 @@
 
 using namespace Adx;
 
-class DumpTensorUtest: public testing::Test {
+class DumpTensorUtest : public testing::Test {
 protected:
     virtual void SetUp() {}
-    virtual void TearDown()
-    {
-        GlobalMockObject::verify();
-    }
+    virtual void TearDown() { GlobalMockObject::verify(); }
 
 private:
 };

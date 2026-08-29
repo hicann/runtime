@@ -38,11 +38,10 @@ using namespace Adx;
 // 测试用例
 class KernelInfoCollectorUTest : public ::testing::Test {
 protected:
-    void SetUp() override {
-        Adx::ResetAllPlatformManagers();
-    }
+    void SetUp() override { Adx::ResetAllPlatformManagers(); }
 
-    void TearDown() override {
+    void TearDown() override
+    {
         Adx::ResetAllPlatformManagers();
         FreeExceptionRegInfo();
     }
@@ -53,9 +52,10 @@ protected:
         std::string strtab;
     };
 
-    ElfData CreateElfData(const std::vector<std::pair<std::string, uint8_t>>& symbols) {
+    ElfData CreateElfData(const std::vector<std::pair<std::string, uint8_t>>& symbols)
+    {
         ElfData data;
-        data.strtab = "\0";  // ELF字符串表以空字符开始
+        data.strtab = "\0"; // ELF字符串表以空字符开始
         size_t strIndex = 1;
 
         for (const auto& sym : symbols) {
@@ -69,7 +69,7 @@ protected:
             Elf64_Sym elfSym = {};
             elfSym.st_name = strIndex;
             elfSym.st_info = info;
-            elfSym.st_value = strIndex * 0x1000;  // 偏移地址
+            elfSym.st_value = strIndex * 0x1000; // 偏移地址
             elfSym.st_size = 0x100;
             elfSym.st_shndx = 1;
 
@@ -86,7 +86,8 @@ protected:
         std::vector<Elf64_Shdr> sections;
         std::string sectionNames;
 
-        MockELF() {
+        MockELF()
+        {
             // 初始化ELF头部
             memset(&ehdr, 0, sizeof(ehdr));
             ehdr.e_ident[EI_MAG0] = ELFMAG0;
@@ -103,7 +104,6 @@ protected:
             ehdr.e_shoff = sizeof(Elf64_Ehdr);
         }
     };
-
 };
 
 // 用例1: 非SuperKernel (functionCount <= globalCount)
@@ -111,22 +111,19 @@ TEST_F(KernelInfoCollectorUTest, NonSuperKernel)
 {
     // 创建1个函数符号(STT_FUNC)和2个全局符号(确保functionCount <= globalCount)
     auto elfData = CreateElfData({
-        {"func1", ELF64_ST_INFO(STB_GLOBAL, STT_FUNC)},     // 全局函数
+        {"func1", ELF64_ST_INFO(STB_GLOBAL, STT_FUNC)},        // 全局函数
         {"global_var", ELF64_ST_INFO(STB_GLOBAL, STT_OBJECT)}, // 全局对象
-        {"weak_func", ELF64_ST_INFO(STB_WEAK, STT_FUNC)}    // 弱函数
+        {"weak_func", ELF64_ST_INFO(STB_WEAK, STT_FUNC)}       // 弱函数
     });
 
     KernelSymbols kernelSymbols;
     KernelInfoCollector::ParseSuperKernelSymbols(
-        elfData.symtab.data(),
-        elfData.symtab.size() * sizeof(Elf64_Sym),
-        elfData.strtab.c_str(),
-        kernelSymbols);
+        elfData.symtab.data(), elfData.symtab.size() * sizeof(Elf64_Sym), elfData.strtab.c_str(), kernelSymbols);
 
     // 验证结果
     EXPECT_FALSE(kernelSymbols.existAicBase);
     EXPECT_FALSE(kernelSymbols.existAivBase);
-    EXPECT_EQ(kernelSymbols.symbols.size(), 2);  // 2个函数符号
+    EXPECT_EQ(kernelSymbols.symbols.size(), 2); // 2个函数符号
 }
 
 // 用例2: SuperKernel但无_entry符号
@@ -137,44 +134,37 @@ TEST_F(KernelInfoCollectorUTest, SuperKernelWithoutEntry)
         {"func1", ELF64_ST_INFO(STB_GLOBAL, STT_FUNC)},
         {"func2", ELF64_ST_INFO(STB_LOCAL, STT_FUNC)},
         {"func3", ELF64_ST_INFO(STB_WEAK, STT_FUNC)},
-        {"non_func", ELF64_ST_INFO(STB_LOCAL, STT_OBJECT)}  // 非函数
+        {"non_func", ELF64_ST_INFO(STB_LOCAL, STT_OBJECT)} // 非函数
     });
 
     KernelSymbols kernelSymbols;
     KernelInfoCollector::ParseSuperKernelSymbols(
-        elfData.symtab.data(),
-        elfData.symtab.size() * sizeof(Elf64_Sym),
-        elfData.strtab.c_str(),
-        kernelSymbols);
+        elfData.symtab.data(), elfData.symtab.size() * sizeof(Elf64_Sym), elfData.strtab.c_str(), kernelSymbols);
 
     // 验证结果
     EXPECT_FALSE(kernelSymbols.existAicBase);
     EXPECT_FALSE(kernelSymbols.existAivBase);
-    EXPECT_EQ(kernelSymbols.symbols.size(), 3);  // 3个函数符号
+    EXPECT_EQ(kernelSymbols.symbols.size(), 3); // 3个函数符号
 }
 
 // 用例3: SuperKernel含_mix_aic_entry符号
 TEST_F(KernelInfoCollectorUTest, SuperKernelWithAicEntry)
 {
     // 创建3个函数符号和1个全局符号
-    auto elfData = CreateElfData({
-        {"kernel_mix_aic", ELF64_ST_INFO(STB_GLOBAL, STT_FUNC)},
-        {"func2", ELF64_ST_INFO(STB_LOCAL, STT_FUNC)},
-        {"func3", ELF64_ST_INFO(STB_WEAK, STT_FUNC)},
-        {"non_func", ELF64_ST_INFO(STB_LOCAL, STT_OBJECT)}
-    });
+    auto elfData = CreateElfData(
+        {{"kernel_mix_aic", ELF64_ST_INFO(STB_GLOBAL, STT_FUNC)},
+         {"func2", ELF64_ST_INFO(STB_LOCAL, STT_FUNC)},
+         {"func3", ELF64_ST_INFO(STB_WEAK, STT_FUNC)},
+         {"non_func", ELF64_ST_INFO(STB_LOCAL, STT_OBJECT)}});
 
     KernelSymbols kernelSymbols;
     KernelInfoCollector::ParseSuperKernelSymbols(
-        elfData.symtab.data(),
-        elfData.symtab.size() * sizeof(Elf64_Sym),
-        elfData.strtab.c_str(),
-        kernelSymbols);
+        elfData.symtab.data(), elfData.symtab.size() * sizeof(Elf64_Sym), elfData.strtab.c_str(), kernelSymbols);
 
     // 验证结果
     EXPECT_TRUE(kernelSymbols.existAicBase);
     EXPECT_FALSE(kernelSymbols.existAivBase);
-    EXPECT_EQ(kernelSymbols.aicBase, 0x1000);  // 第一个符号的地址
+    EXPECT_EQ(kernelSymbols.aicBase, 0x1000); // 第一个符号的地址
     EXPECT_EQ(kernelSymbols.symbols.size(), 3);
 }
 
@@ -182,19 +172,15 @@ TEST_F(KernelInfoCollectorUTest, SuperKernelWithAicEntry)
 TEST_F(KernelInfoCollectorUTest, SuperKernelWithAivEntry)
 {
     // 创建3个函数符号和1个全局符号
-    auto elfData = CreateElfData({
-        {"kernel_mix_aiv", ELF64_ST_INFO(STB_GLOBAL, STT_FUNC)},
-        {"func2", ELF64_ST_INFO(STB_LOCAL, STT_FUNC)},
-        {"func3", ELF64_ST_INFO(STB_WEAK, STT_FUNC)},
-        {"non_func", ELF64_ST_INFO(STB_LOCAL, STT_OBJECT)}
-    });
+    auto elfData = CreateElfData(
+        {{"kernel_mix_aiv", ELF64_ST_INFO(STB_GLOBAL, STT_FUNC)},
+         {"func2", ELF64_ST_INFO(STB_LOCAL, STT_FUNC)},
+         {"func3", ELF64_ST_INFO(STB_WEAK, STT_FUNC)},
+         {"non_func", ELF64_ST_INFO(STB_LOCAL, STT_OBJECT)}});
 
     KernelSymbols kernelSymbols;
     KernelInfoCollector::ParseSuperKernelSymbols(
-        elfData.symtab.data(),
-        elfData.symtab.size() * sizeof(Elf64_Sym),
-        elfData.strtab.c_str(),
-        kernelSymbols);
+        elfData.symtab.data(), elfData.symtab.size() * sizeof(Elf64_Sym), elfData.strtab.c_str(), kernelSymbols);
 
     // 验证结果
     EXPECT_FALSE(kernelSymbols.existAicBase);
@@ -207,11 +193,7 @@ TEST_F(KernelInfoCollectorUTest, SuperKernelWithAivEntry)
 TEST_F(KernelInfoCollectorUTest, EmptySymtab)
 {
     KernelSymbols kernelSymbols;
-    KernelInfoCollector::ParseSuperKernelSymbols(
-        nullptr,
-        0,
-        nullptr,
-        kernelSymbols);
+    KernelInfoCollector::ParseSuperKernelSymbols(nullptr, 0, nullptr, kernelSymbols);
 
     // 验证结果
     EXPECT_FALSE(kernelSymbols.existAicBase);
@@ -320,7 +302,7 @@ TEST_F(KernelInfoCollectorUTest, NormalParseSymtabAndStrtab)
     symtabSection.sh_name = mockELF.sectionNames.size();
     mockELF.sectionNames += ".symtab";
     mockELF.sectionNames += '\0';
-    symtabSection.sh_offset = 0x1000; // 模拟符号表偏移
+    symtabSection.sh_offset = 0x1000;              // 模拟符号表偏移
     symtabSection.sh_size = sizeof(Elf64_Sym) * 2; // 2个符号
     mockELF.sections.push_back(symtabSection);
 
@@ -339,15 +321,16 @@ TEST_F(KernelInfoCollectorUTest, NormalParseSymtabAndStrtab)
     mockELF.ehdr.e_shstrndx = 0; // 字符串表节索引
 
     // 构建完整的ELF数据
-    size_t totalSize = sizeof(Elf64_Ehdr) + sizeof(Elf64_Shdr) * mockELF.sections.size() +
-        mockELF.sectionNames.size() + 0x3000;
+    size_t totalSize =
+        sizeof(Elf64_Ehdr) + sizeof(Elf64_Shdr) * mockELF.sections.size() + mockELF.sectionNames.size() + 0x3000;
     mockELF.data.resize(totalSize, 0);
 
     // 复制ELF头部
     memcpy(mockELF.data.data(), &mockELF.ehdr, sizeof(Elf64_Ehdr));
 
     // 复制节区段头表
-    memcpy(mockELF.data.data() + sizeof(Elf64_Ehdr), mockELF.sections.data(),
+    memcpy(
+        mockELF.data.data() + sizeof(Elf64_Ehdr), mockELF.sections.data(),
         sizeof(Elf64_Shdr) * mockELF.sections.size());
 
     // 调用函数（验证不崩溃且正确调用ParseSuperKernelSymbols）
@@ -380,13 +363,14 @@ TEST_F(KernelInfoCollectorUTest, MissingSymtabSection)
     mockELF.ehdr.e_shstrndx = 0;
 
     // 构建ELF数据
-    size_t totalSize = sizeof(Elf64_Ehdr) + sizeof(Elf64_Shdr) * mockELF.sections.size() +
-        mockELF.sectionNames.size() + 0x2000;
+    size_t totalSize =
+        sizeof(Elf64_Ehdr) + sizeof(Elf64_Shdr) * mockELF.sections.size() + mockELF.sectionNames.size() + 0x2000;
     mockELF.data.resize(totalSize, 0);
 
     // 复制数据
     memcpy(mockELF.data.data(), &mockELF.ehdr, sizeof(Elf64_Ehdr));
-    memcpy(mockELF.data.data() + sizeof(Elf64_Ehdr), mockELF.sections.data(),
+    memcpy(
+        mockELF.data.data() + sizeof(Elf64_Ehdr), mockELF.sections.data(),
         sizeof(Elf64_Shdr) * mockELF.sections.size());
 
     // 调用函数（验证输出错误日志并返回）

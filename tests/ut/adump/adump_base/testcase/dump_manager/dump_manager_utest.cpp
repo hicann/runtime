@@ -30,10 +30,7 @@ static uint32_t GetOpExecuteTimeOut()
     return timeout;
 }
 
-static void WaitInterval_stub(uint32_t intervalSec)
-{
-    (void)intervalSec;
-}
+static void WaitInterval_stub(uint32_t intervalSec) { (void)intervalSec; }
 
 #define JSON_BASE ADUMP_BASE_DIR "stub/data/json/"
 class DumpManagerUtest : public testing::Test {

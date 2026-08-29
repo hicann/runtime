@@ -23,58 +23,56 @@
 
 using namespace Adx;
 
-class ADX_DUMP_PRINTF_STEST: public testing::Test {
+class ADX_DUMP_PRINTF_STEST : public testing::Test {
 protected:
     virtual void SetUp() {}
-    virtual void TearDown() {
-        GlobalMockObject::verify();
-    }
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
-template<typename T>
-unsigned char*DumpInfoAppendByte(unsigned char*buf, T src)
+template <typename T>
+unsigned char* DumpInfoAppendByte(unsigned char* buf, T src)
 {
     T* dst = (T*)buf;
     *dst = src;
     return buf + sizeof(T);
 }
 
-template<typename T>
-unsigned char*DumpInfoAppend1Byte(unsigned char*buf, T src)
+template <typename T>
+unsigned char* DumpInfoAppend1Byte(unsigned char* buf, T src)
 {
     T* dst = (T*)buf;
     *dst = src;
     return buf + 1;
 }
 
-template<typename T>
-unsigned char*DumpInfoAppend4Byte(unsigned char*buf, T src)
+template <typename T>
+unsigned char* DumpInfoAppend4Byte(unsigned char* buf, T src)
 {
     T* dst = (T*)buf;
     *dst = src;
     return buf + 4;
 }
 
-template<typename T>
-unsigned char*DumpInfoAppend8Byte(unsigned char*buf, T src)
+template <typename T>
+unsigned char* DumpInfoAppend8Byte(unsigned char* buf, T src)
 {
     T* dst = (T*)buf;
     *dst = src;
     return buf + 8;
 }
 
-template<typename T>
-unsigned char*DumpInfoAppendArray(unsigned char*buf, T src[], const size_t len)
+template <typename T>
+unsigned char* DumpInfoAppendArray(unsigned char* buf, T src[], const size_t len)
 {
     T* dst = (T*)buf;
-    for (size_t i = 0U; i < len;++i) {
+    for (size_t i = 0U; i < len; ++i) {
         dst[i] = src[i];
     }
     return buf + sizeof(T) * len;
 }
 
-template<typename T>
-static unsigned char*AddTensorInfo(unsigned char*data, uint32_t dataType, T num[], const size_t len)
+template <typename T>
+static unsigned char* AddTensorInfo(unsigned char* data, uint32_t dataType, T num[], const size_t len)
 {
     AdxDumpInfoHead tensorHead{};
     tensorHead.type = 2U;
@@ -91,7 +89,7 @@ static unsigned char*AddTensorInfo(unsigned char*data, uint32_t dataType, T num[
     return data;
 }
 
-static unsigned char*AddShapeInfo(unsigned char*data, uint32_t num[], const size_t len)
+static unsigned char* AddShapeInfo(unsigned char* data, uint32_t num[], const size_t len)
 {
     AdxDumpInfoHead shapeHead{};
     shapeHead.type = 3U;
@@ -107,11 +105,9 @@ static unsigned char*AddShapeInfo(unsigned char*data, uint32_t num[], const size
     return data;
 }
 
-void AddBlockInfo1(unsigned char *data)
+void AddBlockInfo1(unsigned char* data)
 {
-    size_t dataLen = sizeof(AdxBlockInfo) +
-                     sizeof(AdxDumpMeta) +
-                     sizeof(AdxDumpShapeMessageHead) +
+    size_t dataLen = sizeof(AdxBlockInfo) + sizeof(AdxDumpMeta) + sizeof(AdxDumpShapeMessageHead) +
                      sizeof(AdxDumpInfoHead) * 18 +
                      sizeof(AdxDumpMessageHead) * 17; // an ampty info no AdxDumpMessageHead
     uint8_t num1[40];
@@ -120,7 +116,7 @@ void AddBlockInfo1(unsigned char *data)
     }
     uint32_t shape[] = {4, 2, 5};
 
-    int8_t num2[] = {-3, -2, -1 , 0, 1, 2, 3, 4};
+    int8_t num2[] = {-3, -2, -1, 0, 1, 2, 3, 4};
     uint16_t num3[] = {0, 1, 2, 3};
     int16_t num4[] = {-2, -1, 2}; // 非8字节对齐场景
     uint32_t num5[] = {0, 1};
@@ -183,20 +179,20 @@ void AddBlockInfo1(unsigned char *data)
     data = AddTensorInfo(data, 37, num13, 8);
     data = AddTensorInfo(data, 12, boolNums, 8);
     data = AddTensorInfo(data, 11, num11, 1); // no support dtype
-    AdxDumpInfoHead tensorHead{}; // invalid info
+    AdxDumpInfoHead tensorHead{};             // invalid info
     data = DumpInfoAppendByte(data, tensorHead);
 }
 
-static inline unsigned char*DumpInfoAppendString(unsigned char*buf, std::string &str)
+static inline unsigned char* DumpInfoAppendString(unsigned char* buf, std::string& str)
 {
-    for (size_t i = 0U; i < str.size();++i) {
+    for (size_t i = 0U; i < str.size(); ++i) {
         buf[i] = (unsigned char)str[i];
     }
     buf[str.size()] = '\0';
     return buf + str.size() + 1;
 }
 
-static unsigned char*AddPrintInfo(unsigned char*data, std::string &str, std::string &printStr, size_t strLen)
+static unsigned char* AddPrintInfo(unsigned char* data, std::string& str, std::string& printStr, size_t strLen)
 {
     AdxDumpInfoHead dumpHead{};
     dumpHead.type = 1U;
@@ -220,7 +216,7 @@ static unsigned char*AddPrintInfo(unsigned char*data, std::string &str, std::str
     return data;
 }
 
-void AddBlockInfo2(unsigned char*data)
+void AddBlockInfo2(unsigned char* data)
 {
     std::string str =
         "int_i %i, int_d %d, float_f %f, float_F %F, uint_u %u, addr_p %p, int_x %x, int_X %X, char_s %s\n";
@@ -229,9 +225,7 @@ void AddBlockInfo2(unsigned char*data)
     size_t strLen = str.size() + 1 + printStr.size() + 1 + 8 * 10;
     strLen = (strLen / 8 + 1) * 8;
 
-    size_t dataLen = sizeof(AdxBlockInfo) +
-                     sizeof(AdxDumpMeta) +
-                     sizeof(AdxDumpInfoHead);
+    size_t dataLen = sizeof(AdxBlockInfo) + sizeof(AdxDumpMeta) + sizeof(AdxDumpInfoHead);
     dataLen += strLen;
 
     AdxBlockInfo blockInfo{};
@@ -252,7 +246,7 @@ void AddBlockInfo2(unsigned char*data)
     data = AddPrintInfo(data, str, printStr, strLen);
 }
 
-void AddInvalidRemainLenBlockInfo(unsigned char*data)
+void AddInvalidRemainLenBlockInfo(unsigned char* data)
 {
     AdxBlockInfo blockInfo{};
     blockInfo.len = 1024U;
@@ -264,7 +258,7 @@ void AddInvalidRemainLenBlockInfo(unsigned char*data)
     data = DumpInfoAppendByte(data, blockInfo);
 }
 
-void AddInvalidInfoLenBlockInfo(unsigned char*data)
+void AddInvalidInfoLenBlockInfo(unsigned char* data)
 {
     AdxBlockInfo blockInfo{};
     blockInfo.len = 1024U;
@@ -281,11 +275,10 @@ void AddInvalidInfoLenBlockInfo(unsigned char*data)
     data = DumpInfoAppendByte(data, dumpHead);
 }
 
-void SetSizeInfoForFftsPlus(rtArgsSizeInfo *sizeInfo, size_t worksapceSize, bool isDynamic,
-                 bool isAssert)
+void SetSizeInfoForFftsPlus(rtArgsSizeInfo* sizeInfo, size_t worksapceSize, bool isDynamic, bool isAssert)
 {
     // sizeinfo: atomicIndex | totalNum | contextId | argsize | sizeNum |
-    uint64_t *sizeInfoAddr = reinterpret_cast<uint64_t *>(sizeInfo->infoAddr);
+    uint64_t* sizeInfoAddr = reinterpret_cast<uint64_t*>(sizeInfo->infoAddr);
     uint32_t atomicIndex = 0U;
     *sizeInfoAddr = static_cast<uint64_t>(atomicIndex);
     sizeInfoAddr++;
@@ -331,11 +324,9 @@ void SetSizeInfoForFftsPlus(rtArgsSizeInfo *sizeInfo, size_t worksapceSize, bool
     }
 }
 
-void AddBlockInfo3(unsigned char *data)
+void AddBlockInfo3(unsigned char* data)
 {
-    size_t dataLen = sizeof(AdxBlockInfo) +
-                     sizeof(AdxDumpMeta) +
-                     sizeof(AdxDumpShapeMessageHead) * 5 +
+    size_t dataLen = sizeof(AdxBlockInfo) + sizeof(AdxDumpMeta) + sizeof(AdxDumpShapeMessageHead) * 5 +
                      sizeof(AdxDumpInfoHead) * 9 +
                      sizeof(AdxDumpMessageHead) * 5; // an ampty info no AdxDumpMessageHead
     uint8_t num1[40];
@@ -370,25 +361,25 @@ void AddBlockInfo3(unsigned char *data)
     // 添加shape信息
     uint32_t shape1[] = {3, 2, 4};
     data = AddShapeInfo(data, shape1, 3);
-    data = AddTensorInfo(data, 4, num1, 40);  // 数据超过shape
+    data = AddTensorInfo(data, 4, num1, 40); // 数据超过shape
     uint32_t shape2[] = {5, 8};
     data = AddShapeInfo(data, shape2, 2);
-    data = AddTensorInfo(data, 4, num1, 16);  // 数据不足
+    data = AddTensorInfo(data, 4, num1, 16); // 数据不足
     uint32_t shape3[] = {2, 7};
     data = AddShapeInfo(data, shape3, 2);
-    data = AddTensorInfo(data, 4, num1, 8);  // 数据不足
+    data = AddTensorInfo(data, 4, num1, 8);       // 数据不足
     data = AddShapeInfo(data, shape1, 3);
-    data = AddTensorInfo(data, 12, boolNums, 16);  // 数据不足
+    data = AddTensorInfo(data, 12, boolNums, 16); // 数据不足
     data = AddShapeInfo(data, shape3, 1);
-    data = AddTensorInfo(data, 11, num2, 1);  // 不支持的数据类型
+    data = AddTensorInfo(data, 11, num2, 1);      // 不支持的数据类型
 }
 
 TEST_F(ADX_DUMP_PRINTF_STEST, AdxDumpPrintf_WITHOUT_ZERO_BLOCK)
 {
     int* addr = new int[1024 * 75];
-    void *workSpaceAddr = (void *)addr;
+    void* workSpaceAddr = (void*)addr;
     memset(workSpaceAddr, 0, 1024 * 75);
-    AdxBlockInfo *dataAddr = (AdxBlockInfo *)((uint8_t *)workSpaceAddr + 1024);
+    AdxBlockInfo* dataAddr = (AdxBlockInfo*)((uint8_t*)workSpaceAddr + 1024);
     dataAddr->len = 1024;
     dataAddr->core = 1;
     dataAddr->blockNum = 8;
@@ -397,7 +388,7 @@ TEST_F(ADX_DUMP_PRINTF_STEST, AdxDumpPrintf_WITHOUT_ZERO_BLOCK)
     dataAddr->rsv = 0;
     size_t debugBufSize = 1024 * 75;
     aclrtStream stream;
-    const char *opType = "test";
+    const char* opType = "test";
     AdumpPrintWorkSpace(workSpaceAddr, debugBufSize, stream, opType, true);
     EXPECT_NE(workSpaceAddr, nullptr);
     AdumpPrintWorkSpace(workSpaceAddr, debugBufSize, stream, opType, false);
@@ -408,14 +399,14 @@ TEST_F(ADX_DUMP_PRINTF_STEST, AdxDumpPrintf_WITHOUT_ZERO_BLOCK)
 TEST_F(ADX_DUMP_PRINTF_STEST, AdxDumpPrintf_WITH_ILLEGAL_BLOCKLEN)
 {
     int* addr = new int[1024 * 75];
-    void *workSpaceAddr = (void *)addr;
+    void* workSpaceAddr = (void*)addr;
     memset(workSpaceAddr, 0, 1024 * 75);
-    AdxBlockInfo *dataAddr = (AdxBlockInfo *)((uint8_t *)workSpaceAddr + 1024);
+    AdxBlockInfo* dataAddr = (AdxBlockInfo*)((uint8_t*)workSpaceAddr + 1024);
     dataAddr->len = 1000;
     dataAddr->magic = 0x5AA5BCCDU;
     size_t debugBufSize = 1024 * 75;
     aclrtStream stream;
-    const char *opType = "test";
+    const char* opType = "test";
     AdxPrintWorkSpace(workSpaceAddr, debugBufSize, stream, opType, true);
     EXPECT_NE(workSpaceAddr, nullptr);
     delete[] addr;
@@ -424,11 +415,11 @@ TEST_F(ADX_DUMP_PRINTF_STEST, AdxDumpPrintf_WITH_ILLEGAL_BLOCKLEN)
 TEST_F(ADX_DUMP_PRINTF_STEST, AdxDumpPrintf_Normal_BlockInfo)
 {
     int* addr = new int[1024 * 75];
-    void *workSpaceAddr = (void *)addr;
+    void* workSpaceAddr = (void*)addr;
     AddBlockInfo1((unsigned char*)addr);
     size_t debugBufSize = 1024 * 75;
     aclrtStream stream;
-    const char *opType = "test";
+    const char* opType = "test";
     AdxPrintWorkSpace(workSpaceAddr, debugBufSize, stream, opType, true);
     EXPECT_NE(workSpaceAddr, nullptr);
 
@@ -438,12 +429,12 @@ TEST_F(ADX_DUMP_PRINTF_STEST, AdxDumpPrintf_Normal_BlockInfo)
 TEST_F(ADX_DUMP_PRINTF_STEST, AdxDumpPrintf_Abnormal_BlockInfo)
 {
     int* addr = new int[1024 * 75];
-    void *workSpaceAddr = (void *)addr;
+    void* workSpaceAddr = (void*)addr;
     AddBlockInfo2((unsigned char*)addr);
     size_t debugBufSize = 1024 * 75;
     aclrtStream stream;
-    const char *opType = "test";
-    AdxPrintWorkSpace((void *)addr, debugBufSize, stream, opType, true);
+    const char* opType = "test";
+    AdxPrintWorkSpace((void*)addr, debugBufSize, stream, opType, true);
     EXPECT_NE(workSpaceAddr, nullptr);
     delete[] addr;
 }
@@ -451,12 +442,12 @@ TEST_F(ADX_DUMP_PRINTF_STEST, AdxDumpPrintf_Abnormal_BlockInfo)
 TEST_F(ADX_DUMP_PRINTF_STEST, AdxDumpPrintf_InvalidRemainLen)
 {
     int* addr = new int[1024 * 75];
-    void *workSpaceAddr = (void *)addr;
+    void* workSpaceAddr = (void*)addr;
     AddInvalidRemainLenBlockInfo((unsigned char*)addr);
     size_t debugBufSize = 1024 * 75;
     aclrtStream stream;
-    const char *opType = "test";
-    AdxPrintWorkSpace((void *)addr, debugBufSize, stream, opType, true);
+    const char* opType = "test";
+    AdxPrintWorkSpace((void*)addr, debugBufSize, stream, opType, true);
     EXPECT_NE(workSpaceAddr, nullptr);
     delete[] addr;
 }
@@ -464,12 +455,12 @@ TEST_F(ADX_DUMP_PRINTF_STEST, AdxDumpPrintf_InvalidRemainLen)
 TEST_F(ADX_DUMP_PRINTF_STEST, AdxDumpPrintf_InvalidInfoLen)
 {
     int* addr = new int[1024 * 75];
-    void *workSpaceAddr = (void *)addr;
+    void* workSpaceAddr = (void*)addr;
     AddInvalidInfoLenBlockInfo((unsigned char*)addr);
     size_t debugBufSize = 1024 * 75;
     aclrtStream stream;
-    const char *opType = "test";
-    AdxPrintWorkSpace((void *)addr, debugBufSize, stream, opType, true);
+    const char* opType = "test";
+    AdxPrintWorkSpace((void*)addr, debugBufSize, stream, opType, true);
     EXPECT_NE(workSpaceAddr, nullptr);
     delete[] addr;
 }
@@ -477,12 +468,12 @@ TEST_F(ADX_DUMP_PRINTF_STEST, AdxDumpPrintf_InvalidInfoLen)
 TEST_F(ADX_DUMP_PRINTF_STEST, AdxDumpPrintf_error)
 {
     int* addr = new int[1024 * 75];
-    void *workSpaceAddr = (void *)addr;
+    void* workSpaceAddr = (void*)addr;
     AddInvalidInfoLenBlockInfo((unsigned char*)addr);
     size_t debugBufSize = 1024 * 75;
     aclrtStream stream = (rtStream_t)0x5F;
-    const char *opType = "test";
-    AdxPrintWorkSpace((void *)addr, debugBufSize, stream, opType, true);
+    const char* opType = "test";
+    AdxPrintWorkSpace((void*)addr, debugBufSize, stream, opType, true);
     EXPECT_NE(workSpaceAddr, nullptr);
     delete[] addr;
 }
@@ -490,13 +481,13 @@ TEST_F(ADX_DUMP_PRINTF_STEST, AdxDumpPrintf_error)
 TEST_F(ADX_DUMP_PRINTF_STEST, AdxDumpPrintf_rtMemcpy_error)
 {
     int* addr = new int[1024 * 75];
-    void *workSpaceAddr = (void *)addr;
+    void* workSpaceAddr = (void*)addr;
     AddInvalidInfoLenBlockInfo((unsigned char*)addr);
     size_t debugBufSize = 1024 * 75;
     aclrtStream stream = (rtStream_t)0x5F;
-    const char *opType = "test";
+    const char* opType = "test";
     MOCKER(rtMemcpy).stubs().will(returnValue(1));
-    AdxPrintWorkSpace((void *)addr, debugBufSize, stream, opType, true);
+    AdxPrintWorkSpace((void*)addr, debugBufSize, stream, opType, true);
     EXPECT_NE(workSpaceAddr, nullptr);
     delete[] addr;
 }
@@ -504,11 +495,11 @@ TEST_F(ADX_DUMP_PRINTF_STEST, AdxDumpPrintf_rtMemcpy_error)
 TEST_F(ADX_DUMP_PRINTF_STEST, AdxDumpPrintf_AbNormal_Data_BlockInfo)
 {
     int* addr = new int[1024 * 75];
-    void *workSpaceAddr = (void *)addr;
+    void* workSpaceAddr = (void*)addr;
     AddBlockInfo3((unsigned char*)addr);
     size_t debugBufSize = 1024 * 75;
     aclrtStream stream;
-    const char *opType = "test";
+    const char* opType = "test";
     AdxPrintWorkSpace(workSpaceAddr, debugBufSize, stream, opType, true);
     EXPECT_NE(workSpaceAddr, nullptr);
     delete[] addr;
@@ -591,27 +582,23 @@ TEST_F(ADX_DUMP_PRINTF_STEST, FLOAT8_E8M0_AdxDumptensor)
     EXPECT_EQ(std::abs(fp82.GetValue() - val) < std::numeric_limits<float>::epsilon(), true);
 }
 
-
-class ADX_DUMP_ASSERT_STEST: public testing::Test {
+class ADX_DUMP_ASSERT_STEST : public testing::Test {
 protected:
     virtual void SetUp() {}
-    virtual void TearDown() {
-        GlobalMockObject::verify();
-    }
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
-template<typename T>
-void *AppendByte(void*buf, T src)
+template <typename T>
+void* AppendByte(void* buf, T src)
 {
     T* dst = (T*)buf;
     *dst = src;
     return buf + sizeof(T);
 }
 
-void SetSizeInfo(rtArgsSizeInfo *sizeInfo, bool hasCtrlAddr, size_t worksapceSize, bool isDynamic,
-                 bool isAssert)
+void SetSizeInfo(rtArgsSizeInfo* sizeInfo, bool hasCtrlAddr, size_t worksapceSize, bool isDynamic, bool isAssert)
 {
-    uint64_t *sizeInfoAddr = reinterpret_cast<uint64_t *>(sizeInfo->infoAddr);
+    uint64_t* sizeInfoAddr = reinterpret_cast<uint64_t*>(sizeInfo->infoAddr);
     uint32_t atomicIndex = 0U;
     *sizeInfoAddr = static_cast<uint64_t>(atomicIndex);
     sizeInfoAddr++;
@@ -653,15 +640,15 @@ TEST_F(ADX_DUMP_ASSERT_STEST, AdxDumpAssert_Assert)
 {
     rtExceptionInfo_t exceptionInfo;
     exceptionInfo.expandInfo.type = RT_EXCEPTION_AICORE;
-    rtExceptionArgsInfo_t *argsInfo = &exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs;
+    rtExceptionArgsInfo_t* argsInfo = &exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs;
     char* argsAddr = new char[1024];
-    argsInfo->argAddr = (void *)argsAddr;
+    argsInfo->argAddr = (void*)argsAddr;
     argsInfo->argsize = 1024;
     // SetArgsInfo
     uint64_t input0 = 1;
     uint64_t input1 = 2;
     uint64_t input2 = 3;
-    void *argAddr = argsInfo->argAddr;
+    void* argAddr = argsInfo->argAddr;
     argAddr = AppendByte<uint64_t>(argAddr, input0);
     argAddr = AppendByte<uint64_t>(argAddr, input1);
     argAddr = AppendByte<uint64_t>(argAddr, input2);
@@ -672,11 +659,11 @@ TEST_F(ADX_DUMP_ASSERT_STEST, AdxDumpAssert_Assert)
 
     char* workspace = new char[1024 * 75];
     AddBlockInfo1((unsigned char*)(workspace));
-    argAddr = AppendByte<void *>(argAddr, workspace);
+    argAddr = AppendByte<void*>(argAddr, workspace);
 
     rtArgsSizeInfo* sizeInfo = &argsInfo->sizeInfo;
     char* infoAddr = new char[1024];
-    sizeInfo->infoAddr = (void *)infoAddr;
+    sizeInfo->infoAddr = (void*)infoAddr;
     SetSizeInfo(sizeInfo, false, 1024 * 75, true, true);
     MOCKER(rtMemcpy).stubs().will(returnValue(1)).then(returnValue(0));
     rtSetOpExecuteTimeOutWithMs(100000);
@@ -698,15 +685,15 @@ TEST_F(ADX_DUMP_ASSERT_STEST, AdxDumpAssert_WithFfts)
 {
     rtExceptionInfo_t exceptionInfo;
     exceptionInfo.expandInfo.type = RT_EXCEPTION_AICORE;
-    rtExceptionArgsInfo_t *argsInfo = &exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs;
+    rtExceptionArgsInfo_t* argsInfo = &exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs;
     char* argsAddr = new char[1024];
-    argsInfo->argAddr = (void *)argsAddr;
+    argsInfo->argAddr = (void*)argsAddr;
     argsInfo->argsize = 1024;
     // SetArgsInfo
     uint64_t input0 = 1;
     uint64_t input1 = 2;
     uint64_t input2 = 3;
-    void *argAddr = argsInfo->argAddr;
+    void* argAddr = argsInfo->argAddr;
 
     // ffts地址
     uint64_t fftsAddr = 0;
@@ -718,11 +705,11 @@ TEST_F(ADX_DUMP_ASSERT_STEST, AdxDumpAssert_WithFfts)
 
     char* workspace = new char[1024 * 75];
     AddBlockInfo1((unsigned char*)(workspace));
-    argAddr = AppendByte<void *>(argAddr, workspace);
+    argAddr = AppendByte<void*>(argAddr, workspace);
 
     rtArgsSizeInfo* sizeInfo = &argsInfo->sizeInfo;
     char* infoAddr = new char[1024];
-    sizeInfo->infoAddr = (void *)infoAddr;
+    sizeInfo->infoAddr = (void*)infoAddr;
     SetSizeInfo(sizeInfo, true, 1024 * 75, false, true);
     EXPECT_NE(sizeInfo->infoAddr, nullptr);
     rtSetOpExecuteTimeOutWithMs(100000);
@@ -740,15 +727,15 @@ TEST_F(ADX_DUMP_ASSERT_STEST, AdxDumpAssert_MixFftsPlus)
     exceptionInfo.expandInfo.type = RT_EXCEPTION_FFTS_PLUS;
     exceptionInfo.expandInfo.u.fftsPlusInfo.contextId = 0;
 
-    rtExceptionArgsInfo_t *argsInfo = &exceptionInfo.expandInfo.u.fftsPlusInfo.exceptionArgs;
+    rtExceptionArgsInfo_t* argsInfo = &exceptionInfo.expandInfo.u.fftsPlusInfo.exceptionArgs;
     char* argsAddr = new char[1024];
-    argsInfo->argAddr = (void *)argsAddr;
+    argsInfo->argAddr = (void*)argsAddr;
     argsInfo->argsize = 1024;
     // SetArgsInfo
     uint64_t input0 = 1;
     uint64_t input1 = 2;
     uint64_t input2 = 3;
-    void *argAddr = argsInfo->argAddr;
+    void* argAddr = argsInfo->argAddr;
 
     // args: fftsAddr input0 input1 input2 worksapceaddr -> offset=4->workspaceaddr
     // ffts地址
@@ -761,11 +748,11 @@ TEST_F(ADX_DUMP_ASSERT_STEST, AdxDumpAssert_MixFftsPlus)
 
     char* workspace = new char[1024 * 75];
     AddBlockInfo1((unsigned char*)(workspace));
-    argAddr = AppendByte<void *>(argAddr, workspace);
+    argAddr = AppendByte<void*>(argAddr, workspace);
 
     rtArgsSizeInfo* sizeInfo = &argsInfo->sizeInfo;
     char* infoAddr = new char[1024];
-    sizeInfo->infoAddr = (void *)infoAddr;
+    sizeInfo->infoAddr = (void*)infoAddr;
     SetSizeInfoForFftsPlus(sizeInfo, 1024 * 75, true, true);
     EXPECT_NE(sizeInfo->infoAddr, nullptr);
     rtSetOpExecuteTimeOutWithMs(100000);
@@ -802,13 +789,10 @@ TEST_F(ADX_DUMP_ASSERT_STEST, AdxDumpAssert_QuickRecover)
     EXPECT_EQ(exceptionInfo.expandInfo.u.fftsPlusInfo.contextId, 0);
 }
 
-
-class ADX_DUMP_FP16_STEST: public testing::Test {
+class ADX_DUMP_FP16_STEST : public testing::Test {
 protected:
     virtual void SetUp() {}
-    virtual void TearDown() {
-        GlobalMockObject::verify();
-    }
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 TEST_F(ADX_DUMP_FP16_STEST, FP16_AdxDumptensor)
@@ -886,9 +870,9 @@ TEST_F(ADX_DUMP_FP16_STEST, AdxDumpFP16_Large)
     EXPECT_EQ(num10[0].toFloat(), 65504.0);
 }
 
-static unsigned char*AddTimeStampInfo(unsigned char*data)
+static unsigned char* AddTimeStampInfo(unsigned char* data)
 {
-    void *ptr = (void *)(data);
+    void* ptr = (void*)(data);
     size_t dataLen = sizeof(AdxBlockInfo) + sizeof(AdxDumpMeta) + sizeof(AdxDumpInfoHead) + 24U;
     AdxBlockInfo blockInfo{};
     blockInfo.len = 1024U;
@@ -919,24 +903,22 @@ static unsigned char*AddTimeStampInfo(unsigned char*data)
     return data;
 }
 
-class ADX_DUMP_TIMESTAMP_STEST: public testing::Test {
+class ADX_DUMP_TIMESTAMP_STEST : public testing::Test {
 protected:
     virtual void SetUp() {}
-    virtual void TearDown() {
-        GlobalMockObject::verify();
-    }
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 TEST_F(ADX_DUMP_TIMESTAMP_STEST, AdxDumpTimestamp)
 {
     int* addr = new int[1024 * 75];
-    void *workSpaceAddr = (void *)addr;
+    void* workSpaceAddr = (void*)addr;
     EXPECT_NE(workSpaceAddr, nullptr);
     memset(workSpaceAddr, 0, 1024 * 75);
     AddTimeStampInfo((unsigned char*)addr);
     size_t debugBufSize = 1024 * 75;
     aclrtStream stream;
-    const char *opType = "test";
+    const char* opType = "test";
     AdumpPrintConfig config = {false};
     AdumpPrintSetConfig(config);
     std::vector<MsprofAicTimeStampInfo> timeStampInfo;
@@ -949,12 +931,10 @@ TEST_F(ADX_DUMP_TIMESTAMP_STEST, AdxDumpTimestamp)
     delete[] addr;
 }
 
-class FILE_STEST: public testing::Test {
+class FILE_STEST : public testing::Test {
 protected:
     virtual void SetUp() {}
-    virtual void TearDown() {
-        GlobalMockObject::verify();
-    }
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 TEST_F(FILE_STEST, Test_Close_File)
@@ -996,22 +976,19 @@ TEST_F(FILE_STEST, Test_Write_Read_Failed)
     EXPECT_EQ(rwFile.Close(), ADUMP_SUCCESS);
 }
 
-class ADX_SIMT_PRINTF_STEST: public testing::Test {
+class ADX_SIMT_PRINTF_STEST : public testing::Test {
 protected:
-    virtual void SetUp() {
-        setenv("ADX_LLT_SOC_VERSION", "Ascend950PR_9599", 1);
-    }
-    virtual void TearDown() {
+    virtual void SetUp() { setenv("ADX_LLT_SOC_VERSION", "Ascend950PR_9599", 1); }
+    virtual void TearDown()
+    {
         setenv("ADX_LLT_SOC_VERSION", "", 1);
         GlobalMockObject::verify();
     }
 };
 
-void AddSimtBlockInfo(uint8_t *data)
+void AddSimtBlockInfo(uint8_t* data)
 {
-    size_t dataLen = sizeof(AdxBlockInfo) +
-                     sizeof(AdxSimtDumpMeta) +
-                     sizeof(AdxDumpInfoHead);
+    size_t dataLen = sizeof(AdxBlockInfo) + sizeof(AdxSimtDumpMeta) + sizeof(AdxDumpInfoHead);
     AdxBlockInfo blockInfo{};
     blockInfo.len = 2048U;
     blockInfo.core = 0U;
@@ -1037,7 +1014,7 @@ void AddSimtBlockInfo(uint8_t *data)
 TEST_F(ADX_SIMT_PRINTF_STEST, AdxSimtPrintf)
 {
     uint8_t* addr = new uint8_t[1024 * 1024 * 108 + 2048 * 2048 * 72];
-    void *workSpaceAddr = (void *)addr;
+    void* workSpaceAddr = (void*)addr;
     EXPECT_NE(workSpaceAddr, nullptr);
 
     // add first simd blockInfo
@@ -1060,7 +1037,7 @@ TEST_F(ADX_SIMT_PRINTF_STEST, AdxSimtPrintf)
     blockInfo2.len = 2048U;
     blockInfo2.magic = 0x5aa5bccdU;
     blockInfo2.remainLen = 2048U - 56U;
-    unsigned char *data = DumpInfoAppendByte((unsigned char*)addr + 1024 * 1024 * 108 + 2048 * 2, blockInfo2);
+    unsigned char* data = DumpInfoAppendByte((unsigned char*)addr + 1024 * 1024 * 108 + 2048 * 2, blockInfo2);
     AdxSimtDumpMeta dumpMeta{};
     data = DumpInfoAppendByte(data, dumpMeta);
     AdxDumpInfoHead dumpHead{};
@@ -1077,7 +1054,7 @@ TEST_F(ADX_SIMT_PRINTF_STEST, AdxSimtPrintf)
 
     size_t debugBufSize = 1024 * 1024 * 108 + 2048 * 2048 * 72;
     aclrtStream stream;
-    const char *opType = "test";
+    const char* opType = "test";
     AdumpPrintConfig config = {false};
     AdumpPrintSetConfig(config);
     AdxPrintWorkSpace(workSpaceAddr, debugBufSize, stream, opType, true);

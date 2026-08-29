@@ -15,10 +15,7 @@
 
 using namespace Adx;
 
-static void WaitInterval_stub(uint32_t intervalSec)
-{
-    (void)intervalSec;
-}
+static void WaitInterval_stub(uint32_t intervalSec) { (void)intervalSec; }
 
 class DumpResourceSafeMapUtest : public testing::Test {
 protected:
@@ -36,10 +33,7 @@ protected:
 
 class DumpResourceSafeMapWaitIntervalUtest : public testing::Test {
 protected:
-    virtual void SetUp()
-    {
-        DumpResourceSafeMap::Instance().clear();
-    }
+    virtual void SetUp() { DumpResourceSafeMap::Instance().clear(); }
     virtual void TearDown()
     {
         DumpResourceSafeMap::Instance().clear();
@@ -52,7 +46,7 @@ TEST_F(DumpResourceSafeMapWaitIntervalUtest, Test_WaitInterval_ActualSleep)
     auto start = std::chrono::steady_clock::now();
     DumpResourceSafeMap::WaitInterval(1);
     auto end = std::chrono::steady_clock::now();
-    
+
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
     EXPECT_GE(duration, 900);
 }
@@ -78,10 +72,7 @@ TEST_F(DumpResourceSafeMapUtest, Test_DumpStreamCreate_Fail_NullPtr)
     EXPECT_NE(ret, ADUMP_SUCCESS);
 }
 
-TEST_F(DumpResourceSafeMapUtest, Test_DumpStreamFree_NullPtr)
-{
-    DumpStreamFree(nullptr);
-}
+TEST_F(DumpResourceSafeMapUtest, Test_DumpStreamFree_NullPtr) { DumpStreamFree(nullptr); }
 
 TEST_F(DumpResourceSafeMapUtest, Test_DumpStreamFree_Normal)
 {

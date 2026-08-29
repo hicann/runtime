@@ -24,19 +24,17 @@
 
 using namespace Adx;
 
-class ADX_HDC_INTERFACE_UTEST: public testing::Test {
+class ADX_HDC_INTERFACE_UTEST : public testing::Test {
 protected:
     virtual void SetUp() {}
-    virtual void TearDown() {
-        GlobalMockObject::verify();
-    }
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 TEST_F(ADX_HDC_INTERFACE_UTEST, AdxSendMsgAndGetResultByType)
 {
-    const char *value = "a.txt;b.txt;123";
-    struct tlv_req *req = NULL;
-    req = (struct tlv_req *)IdeXmalloc(sizeof(struct tlv_req) + strlen(value) + 10);
+    const char* value = "a.txt;b.txt;123";
+    struct tlv_req* req = NULL;
+    req = (struct tlv_req*)IdeXmalloc(sizeof(struct tlv_req) + strlen(value) + 10);
     strcpy(req->value, value);
     req->len = strlen(value);
     req->type = IDE_SEND_FILE_REQ;
@@ -44,21 +42,13 @@ TEST_F(ADX_HDC_INTERFACE_UTEST, AdxSendMsgAndGetResultByType)
     uint32_t len = sizeof(result);
 
     HDC_CLIENT client = (HDC_CLIENT)0x12345678;
-    MOCKER(Adx::HdcClientCreate)
-        .stubs()
-        .will(returnValue((HDC_CLIENT)nullptr))
-        .then(returnValue(client));
+    MOCKER(Adx::HdcClientCreate).stubs().will(returnValue((HDC_CLIENT) nullptr)).then(returnValue(client));
     EXPECT_EQ(IDE_DAEMON_ERROR, AdxSendMsgAndGetResultByType((enum drvHdcServiceType)0, nullptr, result, len));
 
-    MOCKER(Adx::HdcSessionConnect)
-        .stubs()
-        .will(returnValue(IDE_DAEMON_ERROR))
-        .then(returnValue(IDE_DAEMON_OK));
+    MOCKER(Adx::HdcSessionConnect).stubs().will(returnValue(IDE_DAEMON_ERROR)).then(returnValue(IDE_DAEMON_OK));
     EXPECT_EQ(IDE_DAEMON_ERROR, AdxSendMsgAndGetResultByType((enum drvHdcServiceType)0, req, result, len));
 
-    MOCKER(Adx::AdxMsgProto::SendMsgData)
-        .stubs()
-        .will(returnValue(IDE_DAEMON_ERROR));
+    MOCKER(Adx::AdxMsgProto::SendMsgData).stubs().will(returnValue(IDE_DAEMON_ERROR));
     EXPECT_EQ(IDE_DAEMON_ERROR, AdxSendMsgAndGetResultByType((enum drvHdcServiceType)0, req, result, len));
 
     IDE_XFREE_AND_SET_NULL(req);
@@ -66,29 +56,21 @@ TEST_F(ADX_HDC_INTERFACE_UTEST, AdxSendMsgAndGetResultByType)
 
 TEST_F(ADX_HDC_INTERFACE_UTEST, AdxSendMsgAndNoResultByType)
 {
-    const char *value = "a.txt;b.txt;123";
-    struct tlv_req *req = NULL;
-    req = (struct tlv_req *)IdeXmalloc(sizeof(struct tlv_req) + strlen(value) + 10);
+    const char* value = "a.txt;b.txt;123";
+    struct tlv_req* req = NULL;
+    req = (struct tlv_req*)IdeXmalloc(sizeof(struct tlv_req) + strlen(value) + 10);
     strcpy(req->value, value);
     req->len = strlen(value);
     req->type = IDE_SEND_FILE_REQ;
 
     HDC_CLIENT client = (HDC_CLIENT)0x12345678;
-    MOCKER(Adx::HdcClientCreate)
-        .stubs()
-        .will(returnValue((HDC_CLIENT)nullptr))
-        .then(returnValue(client));
+    MOCKER(Adx::HdcClientCreate).stubs().will(returnValue((HDC_CLIENT) nullptr)).then(returnValue(client));
     EXPECT_EQ(IDE_DAEMON_ERROR, AdxSendMsgAndNoResultByType((enum drvHdcServiceType)0, nullptr));
 
-    MOCKER(Adx::HdcSessionConnect)
-        .stubs()
-        .will(returnValue(IDE_DAEMON_ERROR))
-        .then(returnValue(IDE_DAEMON_OK));
+    MOCKER(Adx::HdcSessionConnect).stubs().will(returnValue(IDE_DAEMON_ERROR)).then(returnValue(IDE_DAEMON_OK));
     EXPECT_EQ(IDE_DAEMON_ERROR, AdxSendMsgAndNoResultByType((enum drvHdcServiceType)0, req));
 
-    MOCKER(Adx::AdxMsgProto::SendMsgData)
-        .stubs()
-        .will(returnValue(IDE_DAEMON_ERROR));
+    MOCKER(Adx::AdxMsgProto::SendMsgData).stubs().will(returnValue(IDE_DAEMON_ERROR));
     EXPECT_EQ(IDE_DAEMON_ERROR, AdxSendMsgAndNoResultByType((enum drvHdcServiceType)0, req));
 
     IDE_XFREE_AND_SET_NULL(req);
@@ -96,30 +78,28 @@ TEST_F(ADX_HDC_INTERFACE_UTEST, AdxSendMsgAndNoResultByType)
 
 TEST_F(ADX_HDC_INTERFACE_UTEST, ReadSettingResultNotEnd)
 {
-    const char *value = "a.txt;b.txt;123";
-    struct tlv_req *req = NULL;
-    req = (struct tlv_req *)IdeXmalloc(sizeof(struct tlv_req) + strlen(value) + 10);
+    const char* value = "a.txt;b.txt;123";
+    struct tlv_req* req = NULL;
+    req = (struct tlv_req*)IdeXmalloc(sizeof(struct tlv_req) + strlen(value) + 10);
     strcpy(req->value, value);
     req->len = strlen(value);
     req->type = IDE_SEND_FILE_REQ;
-    char *result = "_result_";
+    char* result = "_result_";
     uint32_t len = sizeof(result);
 
     HDC_CLIENT client = (HDC_CLIENT)0x12345678;
     HDC_SESSION session = (HDC_SESSION)0x12345678;
     MOCKER(Adx::HdcClientCreate).stubs().will(returnValue(client));
-    MOCKER(Adx::HdcSessionConnect).stubs().with(any(), any(), any(), outBoundP(&session)).will(returnValue(IDE_DAEMON_OK));
+    MOCKER(Adx::HdcSessionConnect)
+        .stubs()
+        .with(any(), any(), any(), outBoundP(&session))
+        .will(returnValue(IDE_DAEMON_OK));
     MOCKER(Adx::HdcWrite).stubs().will(returnValue(IDE_DAEMON_OK));
 
     std::string str = "_message_";
-    MOCKER(Adx::AdxMsgProto::GetStringMsgData)
-        .stubs()
-        .with(any(), outBound(str))
-        .will(returnValue(IDE_DAEMON_OK));
+    MOCKER(Adx::AdxMsgProto::GetStringMsgData).stubs().with(any(), outBound(str)).will(returnValue(IDE_DAEMON_OK));
 
-    MOCKER(memcpy_s)
-        .stubs()
-        .will(returnValue(IDE_DAEMON_ERROR));
+    MOCKER(memcpy_s).stubs().will(returnValue(IDE_DAEMON_ERROR));
     EXPECT_NE(IDE_DAEMON_OK, AdxSendMsgAndGetResultByType((enum drvHdcServiceType)0, req, result, len));
 
     IDE_XFREE_AND_SET_NULL(req);
@@ -127,30 +107,28 @@ TEST_F(ADX_HDC_INTERFACE_UTEST, ReadSettingResultNotEnd)
 
 TEST_F(ADX_HDC_INTERFACE_UTEST, ReadSettingResultEnd)
 {
-    const char *value = "a.txt;b.txt;123";
-    struct tlv_req *req = NULL;
-    req = (struct tlv_req *)IdeXmalloc(sizeof(struct tlv_req) + strlen(value) + 10);
+    const char* value = "a.txt;b.txt;123";
+    struct tlv_req* req = NULL;
+    req = (struct tlv_req*)IdeXmalloc(sizeof(struct tlv_req) + strlen(value) + 10);
     strcpy(req->value, value);
     req->len = strlen(value);
     req->type = IDE_SEND_FILE_REQ;
-    char *result = "_result_";
+    char* result = "_result_";
     uint32_t len = sizeof(result);
 
     HDC_CLIENT client = (HDC_CLIENT)0x12345678;
     HDC_SESSION session = (HDC_SESSION)0x12345678;
     MOCKER(Adx::HdcClientCreate).stubs().will(returnValue(client));
-    MOCKER(Adx::HdcSessionConnect).stubs().with(any(), any(), any(), outBoundP(&session)).will(returnValue(IDE_DAEMON_OK));
+    MOCKER(Adx::HdcSessionConnect)
+        .stubs()
+        .with(any(), any(), any(), outBoundP(&session))
+        .will(returnValue(IDE_DAEMON_OK));
     MOCKER(Adx::HdcWrite).stubs().will(returnValue(IDE_DAEMON_OK));
 
     std::string str = "###[HDC_MSG]hdc_end_msg_used_by_framework###";
-    MOCKER(Adx::AdxMsgProto::GetStringMsgData)
-        .stubs()
-        .with(any(), outBound(str))
-        .will(returnValue(IDE_DAEMON_OK));
+    MOCKER(Adx::AdxMsgProto::GetStringMsgData).stubs().with(any(), outBound(str)).will(returnValue(IDE_DAEMON_OK));
 
-    MOCKER(strncpy_s)
-        .stubs()
-        .will(returnValue(IDE_DAEMON_OK));
+    MOCKER(strncpy_s).stubs().will(returnValue(IDE_DAEMON_OK));
     EXPECT_EQ(IDE_DAEMON_OK, AdxSendMsgAndGetResultByType((enum drvHdcServiceType)0, req, result, len));
 
     IDE_XFREE_AND_SET_NULL(req);
@@ -160,7 +138,7 @@ TEST_F(ADX_HDC_INTERFACE_UTEST, AdxSendMsgByHandle)
 {
     HDC_SESSION session = (HDC_SESSION)0x12345678;
     CommHandle handle{COMM_HDC, (OptHandle)session};
-    const char *value = "receive_success";
+    const char* value = "receive_success";
     uint32_t len = sizeof(value);
     MOCKER(Adx::AdxMsgProto::SendMsgData)
         .stubs()
@@ -174,19 +152,13 @@ TEST_F(ADX_HDC_INTERFACE_UTEST, AdxSendFileByHandle)
 {
     HDC_SESSION session = (HDC_SESSION)0x12345678;
     CommHandle handle{COMM_HDC, (OptHandle)session};
-    char *src = "/home/src";
-    char *des = "/home/des";
+    char* src = "/home/src";
+    char* des = "/home/des";
 
-    MOCKER(Adx::FileUtils::IsFileExist)
-        .stubs()
-        .will(returnValue(false))
-        .then(returnValue(true));
+    MOCKER(Adx::FileUtils::IsFileExist).stubs().will(returnValue(false)).then(returnValue(true));
     EXPECT_EQ(IDE_DAEMON_ERROR, AdxSendFileByHandle(&handle, IDE_EXEC_COMMAND_REQ, src, des, SEND_FILE_TYPE_REAL_FILE));
 
-    MOCKER(mmOpen2)
-        .stubs()
-        .will(returnValue(-1))
-        .then(returnValue(1));
+    MOCKER(mmOpen2).stubs().will(returnValue(-1)).then(returnValue(1));
     EXPECT_EQ(IDE_DAEMON_ERROR, AdxSendFileByHandle(&handle, IDE_EXEC_COMMAND_REQ, src, des, SEND_FILE_TYPE_REAL_FILE));
 
     MOCKER(Adx::AdxMsgProto::SendMsgData)
@@ -206,9 +178,9 @@ TEST_F(ADX_HDC_INTERFACE_UTEST, AdxSendFileByHandle)
 static int HdcReadDumpDataApiEndStub(HDC_SESSION session, IdeRecvBuffT recvBuf, IdeI32Pt recvLen)
 {
     static int loop = 0;
-    char *send = HDC_END_MSG;
+    char* send = HDC_END_MSG;
     uint32_t len = strlen(send);
-    MsgProto *msg = (MsgProto *)IdeXmalloc(sizeof(MsgProto) + len);
+    MsgProto* msg = (MsgProto*)IdeXmalloc(sizeof(MsgProto) + len);
 
     msg->reqType = IDE_INVALID_REQ;
     msg->devId = 0;
@@ -217,13 +189,13 @@ static int HdcReadDumpDataApiEndStub(HDC_SESSION session, IdeRecvBuffT recvBuf, 
     msg->totalLen = len;
 
     (void)memcpy_s(msg->data, len, send, len);
-    std::cout<<"HdcReadDumpDataApiEndStub : "<<*recvLen <<std::endl;
-    *recvBuf = (void *)msg;
+    std::cout << "HdcReadDumpDataApiEndStub : " << *recvLen << std::endl;
+    *recvBuf = (void*)msg;
     *recvLen = msg->totalLen + sizeof(MsgProto);
     return IDE_DAEMON_OK;
 }
 
-static errno_t StrncpyStub(char *strDest, size_t destMax, const char *strSrc, size_t count)
+static errno_t StrncpyStub(char* strDest, size_t destMax, const char* strSrc, size_t count)
 {
     (void)strcpy(strDest, strSrc);
     return 0;
@@ -232,20 +204,20 @@ static errno_t StrncpyStub(char *strDest, size_t destMax, const char *strSrc, si
 static int HdcReadDumpDataApiStub(HDC_SESSION session, IdeRecvBuffT recvBuf, IdeI32Pt recvLen)
 {
     static int loop = 1;
-    char *send = "hdc_message";
+    char* send = "hdc_message";
     if (loop % 5 == 0) {
         send = HDC_END_MSG;
     }
     uint32_t len = strlen(send);
-    MsgProto *msg = (MsgProto *)IdeXmalloc(sizeof(MsgProto) + len);
+    MsgProto* msg = (MsgProto*)IdeXmalloc(sizeof(MsgProto) + len);
     msg->reqType = IDE_INVALID_REQ;
     msg->devId = 0;
     msg->sliceLen = len;
     msg->totalLen = len;
     (void)memcpy_s(msg->data, len, send, len);
-    *recvBuf = (void *)msg;
+    *recvBuf = (void*)msg;
     *recvLen = msg->totalLen + sizeof(MsgProto);
-    std::cout<<"HdcReadDumpDataApiStub : "<<send <<std::endl;
+    std::cout << "HdcReadDumpDataApiStub : " << send << std::endl;
     loop++;
     return IDE_DAEMON_OK;
 }
@@ -258,17 +230,14 @@ TEST_F(ADX_HDC_INTERFACE_UTEST, AdxCreateCommHandle)
     char send[100] = "hdc_message";
     unsigned int len = 100;
     char recv[100] = {"0"};
-    char *get = (char *)IdeXmalloc(len);
+    char* get = (char*)IdeXmalloc(len);
     int val = -1;
     EXPECT_EQ(-1, AdxGetAttrByCommHandle(handle, 0, &val));
     EXPECT_EQ(-1, AdxSendMsg(handle, send, 100));
 
-    MOCKER(HdcReadNb).stubs()
-        .will(invoke(HdcReadDumpDataApiStub));
+    MOCKER(HdcReadNb).stubs().will(invoke(HdcReadDumpDataApiStub));
 
-    MOCKER(memcpy_s)
-        .stubs()
-        .will(invoke(StrncpyStub));
+    MOCKER(memcpy_s).stubs().will(invoke(StrncpyStub));
 
     EXPECT_EQ(-1, AdxRecvMsg((AdxCommHandle)handle, &get, &len, -1));
     IdeXfree(get);
@@ -277,12 +246,12 @@ TEST_F(ADX_HDC_INTERFACE_UTEST, AdxCreateCommHandle)
     handle = nullptr;
 }
 
-hdcError_t DrvHdcAllocMsgStub(HDC_SESSION session, struct drvHdcMsg **ppMsg, signed int count)
+hdcError_t DrvHdcAllocMsgStub(HDC_SESSION session, struct drvHdcMsg** ppMsg, signed int count)
 {
-    char *tmp = "tmp_value.";
+    char* tmp = "tmp_value.";
     uint32_t len = strlen(tmp);
     struct IdeHdcPacket* packet = NULL;
-    packet = (struct IdeHdcPacket *)IdeXmalloc(len + sizeof(struct IdeHdcPacket));
+    packet = (struct IdeHdcPacket*)IdeXmalloc(len + sizeof(struct IdeHdcPacket));
     packet->type = IdeDaemonPackageType::IDE_DAEMON_LITTLE_PACKAGE;
     packet->len = len;
     packet->isLast = IdeLastPacket::IDE_LAST_PACK;
@@ -292,7 +261,7 @@ hdcError_t DrvHdcAllocMsgStub(HDC_SESSION session, struct drvHdcMsg **ppMsg, sig
     return DRV_ERROR_NONE;
 }
 
-drvError_t DrvHdcFreeMsgStub(struct drvHdcMsg *msg)
+drvError_t DrvHdcFreeMsgStub(struct drvHdcMsg* msg)
 {
     IdeXfree(msg);
     return DRV_ERROR_NONE;
@@ -308,13 +277,12 @@ TEST_F(ADX_HDC_INTERFACE_UTEST, AdxCreateRecvLenFail)
     char send[100] = "hdc_message";
     unsigned int len = 1;
     char recv[100] = {"0"};
-    char *get = (char *)IdeXmalloc(len);
+    char* get = (char*)IdeXmalloc(len);
     int val = -1;
     EXPECT_EQ(0, AdxGetAttrByCommHandle(handle, 0, &val));
     EXPECT_EQ(0, AdxSendMsg(handle, send, 100));
 
-    MOCKER(HdcReadNb).stubs()
-        .will(invoke(HdcReadDumpDataApiStub));
+    MOCKER(HdcReadNb).stubs().will(invoke(HdcReadDumpDataApiStub));
 
     EXPECT_EQ(-1, AdxRecvMsg((AdxCommHandle)handle, &get, &len, -1));
     IdeXfree(get);
@@ -326,15 +294,15 @@ TEST_F(ADX_HDC_INTERFACE_UTEST, AdxCreateRecvLenFail)
 static int HdcReadDumpDataLessStub(HDC_SESSION session, IdeRecvBuffT recvBuf, IdeI32Pt recvLen)
 {
     static int loop = 1;
-    char *send = "hdc_message";
+    char* send = "hdc_message";
     if (loop % 5 == 0) {
         send = HDC_END_MSG;
     }
     uint32_t len = strlen(send);
-    void *msg = (void *)IdeXmalloc(sizeof(MsgProto) - 10);
+    void* msg = (void*)IdeXmalloc(sizeof(MsgProto) - 10);
     *recvBuf = msg;
     *recvLen = sizeof(MsgProto) - 10;
-    std::cout<<"HdcReadDumpDataLessStub : "<<send <<std::endl;
+    std::cout << "HdcReadDumpDataLessStub : " << send << std::endl;
     loop++;
     return IDE_DAEMON_OK;
 }
@@ -349,13 +317,12 @@ TEST_F(ADX_HDC_INTERFACE_UTEST, AdxCreateReadLessFail)
     char send[100] = "hdc_message";
     unsigned int len = 100;
     char recv[100] = {"0"};
-    char *get = (char *)IdeXmalloc(len);
+    char* get = (char*)IdeXmalloc(len);
     int val = -1;
     EXPECT_EQ(0, AdxGetAttrByCommHandle(handle, 0, &val));
     EXPECT_EQ(0, AdxSendMsg(handle, send, 100));
 
-    MOCKER(HdcReadNb).stubs()
-        .will(invoke(HdcReadDumpDataLessStub));
+    MOCKER(HdcReadNb).stubs().will(invoke(HdcReadDumpDataLessStub));
 
     EXPECT_EQ(5, AdxRecvMsg((AdxCommHandle)handle, &get, &len, -1));
     IdeXfree(get);
@@ -367,10 +334,7 @@ TEST_F(ADX_HDC_INTERFACE_UTEST, AdxCreateReadLessFail)
 TEST_F(ADX_HDC_INTERFACE_UTEST, AdxCreateCommHandleGetCapacityFailed)
 {
     struct drvHdcCapacity capacity = {HDC_CHAN_TYPE_MAX, 0};
-    MOCKER(drvHdcGetCapacity)
-        .stubs()
-        .with(outBound(&capacity))
-        .will(returnValue(0));
+    MOCKER(drvHdcGetCapacity).stubs().with(outBound(&capacity)).will(returnValue(0));
 
     AdxCommConHandle handle = AdxCreateCommHandle((enum drvHdcServiceType)3, 7, COMPONENT_GETD_FILE);
     EXPECT_EQ(-1, AdxIsCommHandleValid(handle));
@@ -378,9 +342,7 @@ TEST_F(ADX_HDC_INTERFACE_UTEST, AdxCreateCommHandleGetCapacityFailed)
 
 TEST_F(ADX_HDC_INTERFACE_UTEST, AdxCreateCommHandleSessionConnectFailed)
 {
-    MOCKER(drvHdcSessionConnect)
-        .stubs()
-        .will(returnValue(2));
+    MOCKER(drvHdcSessionConnect).stubs().will(returnValue(2));
 
     AdxCommConHandle handle = AdxCreateCommHandle((enum drvHdcServiceType)3, 7, COMPONENT_GETD_FILE);
     EXPECT_EQ(-1, AdxIsCommHandleValid(handle));
@@ -388,9 +350,7 @@ TEST_F(ADX_HDC_INTERFACE_UTEST, AdxCreateCommHandleSessionConnectFailed)
 
 TEST_F(ADX_HDC_INTERFACE_UTEST, AdxCreateCommHandleClientCreateFailed)
 {
-    MOCKER(drvHdcClientCreate)
-        .stubs()
-        .will(returnValue(2));
+    MOCKER(drvHdcClientCreate).stubs().will(returnValue(2));
 
     AdxCommConHandle handle = AdxCreateCommHandle((enum drvHdcServiceType)3, 7, COMPONENT_GETD_FILE);
     EXPECT_EQ(-1, AdxIsCommHandleValid(handle));
@@ -398,9 +358,7 @@ TEST_F(ADX_HDC_INTERFACE_UTEST, AdxCreateCommHandleClientCreateFailed)
 
 TEST_F(ADX_HDC_INTERFACE_UTEST, AdxCreateCommHandleSendMsgFailed)
 {
-    MOCKER(halHdcSend)
-        .stubs()
-        .will(returnValue(2));
+    MOCKER(halHdcSend).stubs().will(returnValue(2));
 
     AdxCommConHandle handle = AdxCreateCommHandle((enum drvHdcServiceType)3, 7, COMPONENT_GETD_FILE);
     EXPECT_EQ(-1, AdxIsCommHandleValid(handle));
@@ -408,11 +366,9 @@ TEST_F(ADX_HDC_INTERFACE_UTEST, AdxCreateCommHandleSendMsgFailed)
 
 TEST_F(ADX_HDC_INTERFACE_UTEST, AdcoreInterfaceInvalidInput)
 {
-    MOCKER(drvHdcAllocMsg).stubs()
-        .will(invoke(DrvHdcAllocMsgStub));
+    MOCKER(drvHdcAllocMsg).stubs().will(invoke(DrvHdcAllocMsgStub));
 
-    MOCKER(drvHdcFreeMsg).stubs()
-        .will(invoke(DrvHdcFreeMsgStub));
+    MOCKER(drvHdcFreeMsg).stubs().will(invoke(DrvHdcFreeMsgStub));
 
     AdxCommConHandle handle = AdxCreateCommHandle((enum drvHdcServiceType)3, 7, COMPONENT_GETD_FILE);
     EXPECT_EQ(-1, AdxIsCommHandleValid(nullptr));
@@ -426,25 +382,25 @@ TEST_F(ADX_HDC_INTERFACE_UTEST, AdcoreInterfaceInvalidInput)
     handle = nullptr;
 }
 
-hdcError_t DrvHdcGetMsgBufferStub(struct drvHdcMsg *msg, int index, char **pBuf, int *pLen)
+hdcError_t DrvHdcGetMsgBufferStub(struct drvHdcMsg* msg, int index, char** pBuf, int* pLen)
 {
     static int loop = 1;
-    struct IdeHdcPacket* packet= (struct IdeHdcPacket*)msg;
+    struct IdeHdcPacket* packet = (struct IdeHdcPacket*)msg;
     if (loop % 3 == 0) {
         packet->isLast = IdeLastPacket::IDE_LAST_PACK;
     } else {
         packet->isLast = IdeLastPacket::IDE_NOT_LAST_PACK;
     }
-    *pBuf = (char *)packet;
+    *pBuf = (char*)packet;
     *pLen = packet->len + sizeof(IdeHdcPacket);
     loop++;
     return DRV_ERROR_NONE;
 }
 
-hdcError_t DrvHdcGetMsgBufferFullStub(struct drvHdcMsg *msg, int index, char **pBuf, int *pLen)
+hdcError_t DrvHdcGetMsgBufferFullStub(struct drvHdcMsg* msg, int index, char** pBuf, int* pLen)
 {
     static int loop = 1;
-    struct IdeHdcPacket* packet= (struct IdeHdcPacket*)msg;
+    struct IdeHdcPacket* packet = (struct IdeHdcPacket*)msg;
     if (loop % 3 == 0) {
         packet->isLast = IdeLastPacket::IDE_LAST_PACK;
         packet->len = UINT32_MAX;
@@ -453,44 +409,42 @@ hdcError_t DrvHdcGetMsgBufferFullStub(struct drvHdcMsg *msg, int index, char **p
         packet->isLast = IdeLastPacket::IDE_NOT_LAST_PACK;
         *pLen = packet->len + sizeof(IdeHdcPacket);
     }
-    *pBuf = (char *)packet;
+    *pBuf = (char*)packet;
     loop++;
     return DRV_ERROR_NONE;
 }
 
-hdcError_t DrvHdcRecvStub(HDC_SESSION session, struct drvHdcMsg *msg, int bufLen,
-        unsigned long long flag, int *recvBufCount, unsigned int timeout)
+hdcError_t DrvHdcRecvStub(
+    HDC_SESSION session, struct drvHdcMsg* msg, int bufLen, unsigned long long flag, int* recvBufCount,
+    unsigned int timeout)
 {
-   *recvBufCount = 1;
-   return DRV_ERROR_NONE;
+    *recvBufCount = 1;
+    return DRV_ERROR_NONE;
 }
 
-hdcError_t DrvHdcRecvFullStub(HDC_SESSION session, struct drvHdcMsg *msg, int bufLen,
-        unsigned long long flag, int *recvBufCount, unsigned int timeout)
+hdcError_t DrvHdcRecvFullStub(
+    HDC_SESSION session, struct drvHdcMsg* msg, int bufLen, unsigned long long flag, int* recvBufCount,
+    unsigned int timeout)
 {
-   *recvBufCount = 3;
-   return DRV_ERROR_NONE;
+    *recvBufCount = 3;
+    return DRV_ERROR_NONE;
 }
 
 TEST_F(ADX_HDC_INTERFACE_UTEST, HdcReadTimeout)
 {
     OptHandle session = (OptHandle)0x123456;
-    char *result;
+    char* result;
 
-    MOCKER(drvHdcAllocMsg).stubs()
-        .will(invoke(DrvHdcAllocMsgStub));
+    MOCKER(drvHdcAllocMsg).stubs().will(invoke(DrvHdcAllocMsgStub));
 
-    MOCKER(halHdcRecv).stubs()
-        .will(invoke(DrvHdcRecvStub));
+    MOCKER(halHdcRecv).stubs().will(invoke(DrvHdcRecvStub));
 
-    MOCKER(drvHdcGetMsgBuffer).stubs()
-        .will(invoke(DrvHdcGetMsgBufferStub));
+    MOCKER(drvHdcGetMsgBuffer).stubs().will(invoke(DrvHdcGetMsgBufferStub));
 
-    MOCKER(drvHdcFreeMsg).stubs()
-        .will(invoke(DrvHdcFreeMsgStub));
+    MOCKER(drvHdcFreeMsg).stubs().will(invoke(DrvHdcFreeMsgStub));
 
     uint32_t length = 1024;
-    char *data = (char *)IdeXmalloc(length);
+    char* data = (char*)IdeXmalloc(length);
     CommHandle handle = {OptType::COMM_HDC, (OptHandle)0x11223344, COMPONENT_TRACE, 36, nullptr};
     EXPECT_EQ(1, AdxRecvMsg(&handle, &data, &length, 25));
 
@@ -501,22 +455,18 @@ TEST_F(ADX_HDC_INTERFACE_UTEST, HdcReadTimeout)
 TEST_F(ADX_HDC_INTERFACE_UTEST, HdcReadPackageLenFailed)
 {
     OptHandle session = (OptHandle)0x123456;
-    char *result;
+    char* result;
 
-    MOCKER(drvHdcAllocMsg).stubs()
-        .will(invoke(DrvHdcAllocMsgStub));
+    MOCKER(drvHdcAllocMsg).stubs().will(invoke(DrvHdcAllocMsgStub));
 
-    MOCKER(halHdcRecv).stubs()
-        .will(invoke(DrvHdcRecvFullStub));
+    MOCKER(halHdcRecv).stubs().will(invoke(DrvHdcRecvFullStub));
 
-    MOCKER(drvHdcGetMsgBuffer).stubs()
-        .will(invoke(DrvHdcGetMsgBufferFullStub));
+    MOCKER(drvHdcGetMsgBuffer).stubs().will(invoke(DrvHdcGetMsgBufferFullStub));
 
-    MOCKER(drvHdcFreeMsg).stubs()
-        .will(invoke(DrvHdcFreeMsgStub));
+    MOCKER(drvHdcFreeMsg).stubs().will(invoke(DrvHdcFreeMsgStub));
 
     uint32_t length = 1024;
-    char *data = (char *)IdeXmalloc(length);
+    char* data = (char*)IdeXmalloc(length);
     CommHandle handle = {OptType::COMM_HDC, (OptHandle)0x11223344, COMPONENT_TRACE, 36, nullptr};
     EXPECT_EQ(IDE_DAEMON_CHANNEL_ERROR, AdxRecvMsg(&handle, &data, &length, 25));
 
@@ -527,19 +477,16 @@ TEST_F(ADX_HDC_INTERFACE_UTEST, HdcReadPackageLenFailed)
 TEST_F(ADX_HDC_INTERFACE_UTEST, HdcReadNoDeviceFailed)
 {
     OptHandle session = (OptHandle)0x123456;
-    char *result;
+    char* result;
 
-    MOCKER(drvHdcAllocMsg).stubs()
-        .will(invoke(DrvHdcAllocMsgStub));
+    MOCKER(drvHdcAllocMsg).stubs().will(invoke(DrvHdcAllocMsgStub));
 
-    MOCKER(halHdcRecv).stubs()
-        .will(returnValue(DRV_ERROR_NO_DEVICE));
+    MOCKER(halHdcRecv).stubs().will(returnValue(DRV_ERROR_NO_DEVICE));
 
-    MOCKER(drvHdcFreeMsg).stubs()
-        .will(invoke(DrvHdcFreeMsgStub));
+    MOCKER(drvHdcFreeMsg).stubs().will(invoke(DrvHdcFreeMsgStub));
 
     uint32_t length = 1024;
-    char *data = (char *)IdeXmalloc(length);
+    char* data = (char*)IdeXmalloc(length);
     CommHandle handle = {OptType::COMM_HDC, (OptHandle)0x11223344, COMPONENT_TRACE, 36, nullptr};
     EXPECT_EQ(IDE_DAEMON_CHANNEL_ERROR, AdxRecvMsg(&handle, &data, &length, 25));
 
@@ -550,25 +497,20 @@ TEST_F(ADX_HDC_INTERFACE_UTEST, HdcReadNoDeviceFailed)
 TEST_F(ADX_HDC_INTERFACE_UTEST, HdcReuseMsgFailed)
 {
     OptHandle session = (OptHandle)0x123456;
-    char *result;
+    char* result;
 
-    MOCKER(drvHdcAllocMsg).stubs()
-        .will(invoke(DrvHdcAllocMsgStub));
+    MOCKER(drvHdcAllocMsg).stubs().will(invoke(DrvHdcAllocMsgStub));
 
-    MOCKER(halHdcRecv).stubs()
-        .will(invoke(DrvHdcRecvStub));
+    MOCKER(halHdcRecv).stubs().will(invoke(DrvHdcRecvStub));
 
-    MOCKER(drvHdcGetMsgBuffer).stubs()
-        .will(invoke(DrvHdcGetMsgBufferStub));
+    MOCKER(drvHdcGetMsgBuffer).stubs().will(invoke(DrvHdcGetMsgBufferStub));
 
-    MOCKER(drvHdcFreeMsg).stubs()
-        .will(invoke(DrvHdcFreeMsgStub));
+    MOCKER(drvHdcFreeMsg).stubs().will(invoke(DrvHdcFreeMsgStub));
 
-    MOCKER(drvHdcReuseMsg).stubs()
-        .will(returnValue(DRV_ERROR_SOCKET_CLOSE));
+    MOCKER(drvHdcReuseMsg).stubs().will(returnValue(DRV_ERROR_SOCKET_CLOSE));
 
     uint32_t length = 1024;
-    char *data = (char *)IdeXmalloc(length);
+    char* data = (char*)IdeXmalloc(length);
     CommHandle handle = {OptType::COMM_HDC, (OptHandle)0x11223344, COMPONENT_TRACE, 36, nullptr};
     EXPECT_EQ(IDE_DAEMON_CHANNEL_ERROR, AdxRecvMsg(&handle, &data, &length, 25));
 
@@ -579,22 +521,18 @@ TEST_F(ADX_HDC_INTERFACE_UTEST, HdcReuseMsgFailed)
 TEST_F(ADX_HDC_INTERFACE_UTEST, HdcReadTimeoutFailed)
 {
     OptHandle session = (OptHandle)0x123456;
-    char *result;
+    char* result;
 
-    MOCKER(drvHdcAllocMsg).stubs()
-        .will(invoke(DrvHdcAllocMsgStub));
+    MOCKER(drvHdcAllocMsg).stubs().will(invoke(DrvHdcAllocMsgStub));
 
-    MOCKER(halHdcRecv).stubs()
-        .will(returnValue(DRV_ERROR_WAIT_TIMEOUT));
+    MOCKER(halHdcRecv).stubs().will(returnValue(DRV_ERROR_WAIT_TIMEOUT));
 
-    MOCKER(drvHdcGetMsgBuffer).stubs()
-        .will(invoke(DrvHdcGetMsgBufferStub));
+    MOCKER(drvHdcGetMsgBuffer).stubs().will(invoke(DrvHdcGetMsgBufferStub));
 
-    MOCKER(drvHdcFreeMsg).stubs()
-        .will(invoke(DrvHdcFreeMsgStub));
+    MOCKER(drvHdcFreeMsg).stubs().will(invoke(DrvHdcFreeMsgStub));
 
     uint32_t length = 1024;
-    char *data = (char *)IdeXmalloc(length);
+    char* data = (char*)IdeXmalloc(length);
     CommHandle handle = {OptType::COMM_HDC, (OptHandle)0x11223344, COMPONENT_TRACE, 36, nullptr};
     EXPECT_EQ(IDE_DAEMON_HDC_TIMEOUT, AdxRecvMsg(&handle, &data, &length, 25));
 

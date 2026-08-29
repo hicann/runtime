@@ -10,9 +10,8 @@
 #ifndef __IDE_CMD_STEST_H
 #define __IDE_CMD_STEST_H
 
-
 #include "hdc_api.h"
 #include "hdc_log.h"
 #include "ide_daemon_sock.h"
 
-#endif  //__IDE_CMD_STEST_H
+#endif //__IDE_CMD_STEST_H

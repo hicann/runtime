@@ -30,12 +30,9 @@ protected:
     }
 
     // Build a basic OperatorInfoV2 with no tensors/deviceInfos
-    static OperatorInfoV2 MakeBasicOpInfo(const std::string &opType = "TestType",
-                                          const std::string &opName = "TestOp",
-                                          uint32_t taskId = 1U,
-                                          uint32_t streamId = 2U,
-                                          uint32_t deviceId = 0U,
-                                          uint32_t contextId = 42U)
+    static OperatorInfoV2 MakeBasicOpInfo(
+        const std::string& opType = "TestType", const std::string& opName = "TestOp", uint32_t taskId = 1U,
+        uint32_t streamId = 2U, uint32_t deviceId = 0U, uint32_t contextId = 42U)
     {
         OperatorInfoV2 info;
         info.opType = opType;
@@ -176,7 +173,7 @@ TEST_F(DumpOperatorExtraUtest, Init_WithTensor_NullAddr_Skipped)
     TensorInfoV2 tensor;
     tensor.type = TensorType::INPUT;
     tensor.tensorSize = 128U;
-    tensor.tensorAddr = nullptr;  // null addr -> should be skipped
+    tensor.tensorAddr = nullptr; // null addr -> should be skipped
     tensor.placement = static_cast<int32_t>(TensorPlacement::kOnDeviceHbm);
     tensor.argsOffSet = 0U;
     info.tensorInfos.push_back(tensor);
@@ -191,7 +188,7 @@ TEST_F(DumpOperatorExtraUtest, Init_WithTensor_ZeroSize_Skipped)
     static int64_t fakeMem[1] = {0};
     TensorInfoV2 tensor;
     tensor.type = TensorType::INPUT;
-    tensor.tensorSize = 0U;  // zero size -> should be skipped
+    tensor.tensorSize = 0U; // zero size -> should be skipped
     tensor.tensorAddr = fakeMem;
     tensor.placement = static_cast<int32_t>(TensorPlacement::kOnDeviceHbm);
     tensor.argsOffSet = 0U;
@@ -208,7 +205,7 @@ TEST_F(DumpOperatorExtraUtest, Init_WithTensor_NonHbmPlacement_Skipped)
     tensor.type = TensorType::INPUT;
     tensor.tensorSize = 128U;
     tensor.tensorAddr = fakeMem;
-    tensor.placement = static_cast<int32_t>(TensorPlacement::kOnHost);  // not HBM
+    tensor.placement = static_cast<int32_t>(TensorPlacement::kOnHost); // not HBM
     tensor.argsOffSet = 0U;
     info.tensorInfos.push_back(tensor);
     DumpOperator op(info);
@@ -223,7 +220,7 @@ TEST_F(DumpOperatorExtraUtest, Init_DeviceInfo_NullAddr_EarlyReturn)
     OperatorInfoV2 info = MakeBasicOpInfo();
     DeviceInfo devInfo;
     devInfo.name = DEVICE_INFO_NAME_ARGS;
-    devInfo.addr = nullptr;  // null addr -> early return in InitDeviceArgs
+    devInfo.addr = nullptr; // null addr -> early return in InitDeviceArgs
     devInfo.length = 64U;
     info.deviceInfos.push_back(devInfo);
     // Should not crash
@@ -470,7 +467,7 @@ TEST_F(DumpOperatorExtraUtest, RefreshAddrs_WithTensors_HostMem)
     DumpOperator op(info);
 
     // Use actual host args data (argsOffSet 0 and 1 map to positions in args array)
-    static void *hostArgs[2] = {(void*)0x1111, (void*)0x2222};
+    static void* hostArgs[2] = {(void*)0x1111, (void*)0x2222};
     rtExceptionArgsInfo argsInfo = {};
     argsInfo.argAddr = hostArgs;
     argsInfo.argsize = sizeof(hostArgs);
@@ -501,7 +498,7 @@ TEST_F(DumpOperatorExtraUtest, RefreshAddrs_ArgsOffsetExceedsMaxArgNum)
 
     DumpOperator op(info);
 
-    static void *args[1] = {(void*)0x1234};
+    static void* args[1] = {(void*)0x1234};
     rtExceptionArgsInfo argsInfo = {};
     argsInfo.argAddr = args;
     argsInfo.argsize = sizeof(args); // only 1 ptr = 8 bytes
@@ -517,7 +514,7 @@ TEST_F(DumpOperatorExtraUtest, RefreshAddrs_ArgsOffsetExceedsMaxArgNum)
 TEST_F(DumpOperatorExtraUtest, InitDeviceArgs_IsHostArgs_True_WithValidAddr)
 {
     OperatorInfoV2 info = MakeBasicOpInfo();
-    static void *fakeArgsMem[3] = {(void*)0x1, (void*)0x2, (void*)0x3};
+    static void* fakeArgsMem[3] = {(void*)0x1, (void*)0x2, (void*)0x3};
     DeviceInfo devInfo;
     devInfo.name = DEVICE_INFO_NAME_ARGS;
     devInfo.addr = fakeArgsMem;
@@ -540,8 +537,9 @@ TEST_F(DumpOperatorExtraUtest, LogExceptionInfo_PrintLog_ViaNonNullArgs)
     OperatorInfoV2 info = MakeBasicOpInfo();
     // Add isHostArgs_=true AND a DeviceInfo with DEVICE_INFO_NAME_ARGS
     // so hostArgs_ gets populated
-    static void *fakeArgs[25] = {}; // 25 ptrs to cover the i<count loop (printNumEachTime=20)
-    for (int i=0; i<25; ++i) fakeArgs[i] = (void*)(uintptr_t)(i+1);
+    static void* fakeArgs[25] = {}; // 25 ptrs to cover the i<count loop (printNumEachTime=20)
+    for (int i = 0; i < 25; ++i)
+        fakeArgs[i] = (void*)(uintptr_t)(i + 1);
     DeviceInfo devInfo;
     devInfo.name = DEVICE_INFO_NAME_ARGS;
     devInfo.addr = fakeArgs;
@@ -567,7 +565,7 @@ TEST_F(DumpOperatorExtraUtest, LogExceptionArgs_WithNonNullArgAddr)
     OperatorInfoV2 info = MakeBasicOpInfo();
     DumpOperator op(info);
 
-    static void *fakeArgData[4] = {(void*)0x11, (void*)0x22, (void*)0x33, (void*)0x44};
+    static void* fakeArgData[4] = {(void*)0x11, (void*)0x22, (void*)0x33, (void*)0x44};
     rtExceptionArgsInfo argsInfo = {};
     argsInfo.argAddr = fakeArgData; // non-null → DumpMemory::CopyDeviceToHost call
     argsInfo.argsize = sizeof(fakeArgData);
@@ -611,7 +609,7 @@ TEST_F(DumpOperatorExtraUtest, CopyOpKernelFile_NoDevFunc)
 TEST_F(DumpOperatorExtraUtest, RefreshAddrs_WithOutputTensors)
 {
     OperatorInfoV2 info = MakeBasicOpInfo();
-    static int64_t fakeData[8] = {1,2,3,4,5,6,7,8};
+    static int64_t fakeData[8] = {1, 2, 3, 4, 5, 6, 7, 8};
     // Add output tensor with argsOffset=0
     TensorInfoV2 outputTensor = {};
     outputTensor.addrType = AddressType::TRADITIONAL;
@@ -628,7 +626,7 @@ TEST_F(DumpOperatorExtraUtest, RefreshAddrs_WithOutputTensors)
     DumpOperator op(info);
 
     // argsInfo with host memory and argsize sufficient for offset 0
-    static void *hostArgPtrs[4] = {(void*)0x100, (void*)0x200, (void*)0x300, (void*)0x400};
+    static void* hostArgPtrs[4] = {(void*)0x100, (void*)0x200, (void*)0x300, (void*)0x400};
     rtExceptionArgsInfo argsInfo = {};
     argsInfo.argAddr = hostArgPtrs;
     argsInfo.argsize = sizeof(hostArgPtrs);

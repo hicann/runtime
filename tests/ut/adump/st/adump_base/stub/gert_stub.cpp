@@ -19,36 +19,31 @@
 
 namespace gert {
 
-size_t RuntimeAttrs::GetAttrNum() const
-{
-    return 0;
-}
+size_t RuntimeAttrs::GetAttrNum() const { return 0; }
 
-const void *RuntimeAttrs::GetPointerByIndex(size_t index) const
-{
-    return nullptr;
-}
+const void* RuntimeAttrs::GetPointerByIndex(size_t index) const { return nullptr; }
 
-const OpImplKernelRegistry::OpImplFunctionsV2 *OpImplRegistry::GetOpImpl(const ge::char_t *op_type) const
+const OpImplKernelRegistry::OpImplFunctionsV2* OpImplRegistry::GetOpImpl(const ge::char_t* op_type) const
 {
     static OpImplKernelRegistry::OpImplFunctionsV2 func;
     return &func;
 }
 
-const OpImplKernelRegistry::PrivateAttrList &OpImplRegistry::GetPrivateAttrs(const ge::char_t *op_type) const
+const OpImplKernelRegistry::PrivateAttrList& OpImplRegistry::GetPrivateAttrs(const ge::char_t* op_type) const
 {
     static OpImplKernelRegistry::PrivateAttrList list;
     return list;
 }
 
-OpImplRegistry &OpImplRegistry::GetInstance() {
+OpImplRegistry& OpImplRegistry::GetInstance()
+{
     static OpImplRegistry instance;
     return instance;
 }
 
 OpImplSpaceRegistryV2::OpImplSpaceRegistryV2() {}
 
-const OpImplKernelRegistry::OpImplFunctionsV2 *OpImplSpaceRegistryV2::GetOpImpl(const char_t *op_type) const
+const OpImplKernelRegistry::OpImplFunctionsV2* OpImplSpaceRegistryV2::GetOpImpl(const char_t* op_type) const
 {
     static OpImplKernelRegistry::OpImplFunctionsV2 func;
     return &func;
@@ -63,9 +58,10 @@ const std::shared_ptr<OpImplSpaceRegistryV2> DefaultOpImplSpaceRegistryV2::GetSp
     return space_registry;
 }
 
-DefaultOpImplSpaceRegistryV2 &DefaultOpImplSpaceRegistryV2::GetInstance() {
+DefaultOpImplSpaceRegistryV2& DefaultOpImplSpaceRegistryV2::GetInstance()
+{
     static DefaultOpImplSpaceRegistryV2 instance;
     return instance;
 }
 
-} // namespace ge
+} // namespace gert

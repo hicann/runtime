@@ -33,18 +33,15 @@ using namespace Adx;
 
 class RuntimeExceptionCallback {
 public:
-    static RuntimeExceptionCallback &Instance()
+    static RuntimeExceptionCallback& Instance()
     {
         static RuntimeExceptionCallback inst;
         return inst;
     }
 
-    rtTaskFailCallback &MutableCallback()
-    {
-        return callback_;
-    }
+    rtTaskFailCallback& MutableCallback() { return callback_; }
 
-    void Invoke(rtExceptionInfo *const exception)
+    void Invoke(rtExceptionInfo* const exception)
     {
         if (callback_) {
             callback_(exception);
@@ -55,7 +52,7 @@ private:
     rtTaskFailCallback callback_;
 };
 
-static rtError_t rtRegTaskFailCallbackByModuleStub(const char_t *moduleName, rtTaskFailCallback callback)
+static rtError_t rtRegTaskFailCallbackByModuleStub(const char_t* moduleName, rtTaskFailCallback callback)
 {
     RuntimeExceptionCallback::Instance().MutableCallback() = callback;
     return RT_ERROR_NONE;
@@ -63,10 +60,7 @@ static rtError_t rtRegTaskFailCallbackByModuleStub(const char_t *moduleName, rtT
 
 class DumpArgsStest : public testing::Test {
 protected:
-    virtual void SetUp()
-    {
-        SubRuntimeRegExceptionCallback();
-    }
+    virtual void SetUp() { SubRuntimeRegExceptionCallback(); }
 
     virtual void TearDown()
     {
@@ -85,7 +79,7 @@ protected:
         RuntimeExceptionCallback::Instance().MutableCallback() = nullptr;
     }
 
-    void InvokeException(rtExceptionInfo &exceptionInfo)
+    void InvokeException(rtExceptionInfo& exceptionInfo)
     {
         RuntimeExceptionCallback::Instance().Invoke(&exceptionInfo);
     }
@@ -98,7 +92,7 @@ TEST_F(DumpArgsStest, Test_EnableArgsDump)
     DumpConfig dumpConf;
     dumpConf.dumpPath = ws.Root();
     dumpConf.dumpStatus = "on";
-    dumpConf.dumpSwitch = 1U << 2;  // exception dump with shape
+    dumpConf.dumpSwitch = 1U << 2; // exception dump with shape
     EXPECT_EQ(AdumpSetDumpConfig(DumpType::ARGS_EXCEPTION, dumpConf), ADUMP_SUCCESS);
 
     rtExceptionInfo exceptionInfo = {0};
@@ -134,26 +128,27 @@ TEST_F(DumpArgsStest, Test_EnableArgsDump)
     exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs.argAddr = args;
 
     uint32_t atomicIndex;
-    uint64_t sizeInfo[] = {atomicIndex,
-                           0x000000010000000D,
-                           sizeof(input0),
-                           0,
-                           -2,
-                           sizeof(oldNormalPtr),
-                           sizeof(oldNormalPtr),
-                           0x0100000000000002,
-                           sizeof(normalPtr1),
-                           sizeof(normalPtr2),
-                           0x0200000000000002,
-                           sizeof(shapePtr1),
-                           sizeof(shapePtr2),
-                           sizeof(workspace),
-                           0x0300000000000000 + sizeof(tilingData)};
+    uint64_t sizeInfo[] = {
+        atomicIndex,
+        0x000000010000000D,
+        sizeof(input0),
+        0,
+        -2,
+        sizeof(oldNormalPtr),
+        sizeof(oldNormalPtr),
+        0x0100000000000002,
+        sizeof(normalPtr1),
+        sizeof(normalPtr2),
+        0x0200000000000002,
+        sizeof(shapePtr1),
+        sizeof(shapePtr2),
+        sizeof(workspace),
+        0x0300000000000000 + sizeof(tilingData)};
     uint32_t space = sizeof(sizeInfo) / sizeof(sizeInfo[0]);
-    auto sizeInfoAddr = static_cast<uint64_t *>(AdumpGetSizeInfoAddr(space, atomicIndex));
+    auto sizeInfoAddr = static_cast<uint64_t*>(AdumpGetSizeInfoAddr(space, atomicIndex));
     auto sizeInfos = sizeInfoAddr;
     sizeInfo[0] = atomicIndex;
-    for (const auto &size : sizeInfo) {
+    for (const auto& size : sizeInfo) {
         *sizeInfos = size;
         sizeInfos++;
     }
@@ -185,7 +180,7 @@ TEST_F(DumpArgsStest, Test_EnableArgsDump)
     exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.kernelName = kernelName.data();
     exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.kernelNameSize = kernelName.size();
     InvokeException(exceptionInfo);
-    sleep(2);  // wait async thread done;
+    sleep(2); // wait async thread done;
     // check host kernel file dump success
     Path hostKernelPath(ws.Root());
     std::string mixSuffix = "_mix_aic";
@@ -240,7 +235,7 @@ TEST_F(DumpArgsStest, Test_EnableArgsDump_OPP_Path)
     DumpConfig dumpConf;
     dumpConf.dumpPath = ws.Root();
     dumpConf.dumpStatus = "on";
-    dumpConf.dumpSwitch = 1U << 2;  // exception dump with shape
+    dumpConf.dumpSwitch = 1U << 2; // exception dump with shape
     EXPECT_EQ(AdumpSetDumpConfig(DumpType::ARGS_EXCEPTION, dumpConf), ADUMP_SUCCESS);
 
     rtExceptionInfo exceptionInfo = {0};
@@ -276,26 +271,27 @@ TEST_F(DumpArgsStest, Test_EnableArgsDump_OPP_Path)
     exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs.argAddr = args;
 
     uint32_t atomicIndex;
-    uint64_t sizeInfo[] = {atomicIndex,
-                           0x000000010000000D,
-                           sizeof(input0),
-                           0,
-                           -2,
-                           sizeof(oldNormalPtr),
-                           sizeof(oldNormalPtr),
-                           0x0100000000000002,
-                           sizeof(normalPtr1),
-                           sizeof(normalPtr2),
-                           0x0200000000000002,
-                           sizeof(shapePtr1),
-                           sizeof(shapePtr2),
-                           sizeof(workspace),
-                           0x0300000000000000 + sizeof(tilingData)};
+    uint64_t sizeInfo[] = {
+        atomicIndex,
+        0x000000010000000D,
+        sizeof(input0),
+        0,
+        -2,
+        sizeof(oldNormalPtr),
+        sizeof(oldNormalPtr),
+        0x0100000000000002,
+        sizeof(normalPtr1),
+        sizeof(normalPtr2),
+        0x0200000000000002,
+        sizeof(shapePtr1),
+        sizeof(shapePtr2),
+        sizeof(workspace),
+        0x0300000000000000 + sizeof(tilingData)};
     uint32_t space = sizeof(sizeInfo) / sizeof(sizeInfo[0]);
-    auto sizeInfoAddr = static_cast<uint64_t *>(AdumpGetSizeInfoAddr(space, atomicIndex));
+    auto sizeInfoAddr = static_cast<uint64_t*>(AdumpGetSizeInfoAddr(space, atomicIndex));
     auto sizeInfos = sizeInfoAddr;
     sizeInfo[0] = atomicIndex;
-    for (const auto &size : sizeInfo) {
+    for (const auto& size : sizeInfo) {
         *sizeInfos = size;
         sizeInfos++;
     }
@@ -327,7 +323,7 @@ TEST_F(DumpArgsStest, Test_EnableArgsDump_OPP_Path)
     exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.kernelName = kernelName.data();
     exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.kernelNameSize = kernelName.size();
     InvokeException(exceptionInfo);
-    sleep(2);  // wait async thread done;
+    sleep(2); // wait async thread done;
     // check host kernel file dump success
     Path hostKernelPath(ws.Root());
     std::string mixSuffix = "_mix_aic";
@@ -416,33 +412,34 @@ TEST_F(DumpArgsStest, Test_EnableFftsArgsDump)
     exceptionInfo.expandInfo.u.fftsPlusInfo.exceptionArgs.argAddr = args;
 
     uint32_t atomicIndex;
-    uint64_t sizeInfo[] = {atomicIndex,
-                           20,
-                           1,  // context 1
-                           0,  // argSize
-                           0x0000000100000001,
-                           1,
-                           2,  // context 2
-                           sizeof(args),
-                           0x000000010000000D,
-                           sizeof(input0),
-                           0,
-                           -2,
-                           sizeof(oldNormalPtr),
-                           sizeof(oldNormalPtr),
-                           0x0100000000000002,
-                           sizeof(normalPtr1),
-                           sizeof(normalPtr2),
-                           0x0200000000000002,
-                           sizeof(shapePtr1),
-                           sizeof(shapePtr2),
-                           sizeof(workspace),
-                           0x0300000000000000 + sizeof(tilingData)};
+    uint64_t sizeInfo[] = {
+        atomicIndex,
+        20,
+        1, // context 1
+        0, // argSize
+        0x0000000100000001,
+        1,
+        2, // context 2
+        sizeof(args),
+        0x000000010000000D,
+        sizeof(input0),
+        0,
+        -2,
+        sizeof(oldNormalPtr),
+        sizeof(oldNormalPtr),
+        0x0100000000000002,
+        sizeof(normalPtr1),
+        sizeof(normalPtr2),
+        0x0200000000000002,
+        sizeof(shapePtr1),
+        sizeof(shapePtr2),
+        sizeof(workspace),
+        0x0300000000000000 + sizeof(tilingData)};
     uint32_t space = sizeof(sizeInfo) / sizeof(sizeInfo[0]);
-    auto sizeInfoAddr = static_cast<uint64_t *>(AdumpGetSizeInfoAddr(space, atomicIndex));
+    auto sizeInfoAddr = static_cast<uint64_t*>(AdumpGetSizeInfoAddr(space, atomicIndex));
     auto sizeInfos = sizeInfoAddr;
     sizeInfo[0] = atomicIndex;
-    for (const auto &size : sizeInfo) {
+    for (const auto& size : sizeInfo) {
         *sizeInfos = size;
         sizeInfos++;
     }
@@ -453,7 +450,7 @@ TEST_F(DumpArgsStest, Test_EnableFftsArgsDump)
     EXPECT_EQ(ADUMP_SUCCESS, DumpManager::Instance().DumpExceptionInfo(exceptionInfo));
 }
 
-void generateDfxByBigEndian(std::vector<uint8_t> &vec, size_t typeSize, uint64_t value)
+void generateDfxByBigEndian(std::vector<uint8_t>& vec, size_t typeSize, uint64_t value)
 {
     for (size_t i = 0; i < typeSize; ++i) {
         uint8_t tmpValue = static_cast<uint8_t>(((value) >> ((typeSize - i - 1) * 8)) & 0xFF);
@@ -461,7 +458,7 @@ void generateDfxByBigEndian(std::vector<uint8_t> &vec, size_t typeSize, uint64_t
     }
 }
 
-void generateDfxByLittleEndian(std::vector<uint8_t> &vec, size_t typeSize, uint64_t value)
+void generateDfxByLittleEndian(std::vector<uint8_t>& vec, size_t typeSize, uint64_t value)
 {
     for (size_t i = 0; i < typeSize; ++i) {
         uint8_t tmpValue = static_cast<uint8_t>(((value) >> (i * 8)) & 0xFF);
@@ -498,10 +495,10 @@ struct WithoutSizeTensor {
 };
 
 template <typename T>
-void generateDfxInfo(std::vector<uint8_t> &dfxInfo, T &tensor, uint16_t argsInfoType = TYPE_L0_EXCEPTION_DFX_ARGS_INFO)
+void generateDfxInfo(std::vector<uint8_t>& dfxInfo, T& tensor, uint16_t argsInfoType = TYPE_L0_EXCEPTION_DFX_ARGS_INFO)
 {
     std::vector<uint8_t> tensorDfxInfo;
-    auto *p = reinterpret_cast<uint64_t *>(&tensor);
+    auto* p = reinterpret_cast<uint64_t*>(&tensor);
     for (size_t i = 0; i < sizeof(tensor) / sizeof(uint64_t); ++i) {
         generateDfxByBigEndian(tensorDfxInfo, sizeof(uint64_t), *(p + i));
     }
@@ -512,7 +509,7 @@ void generateDfxInfo(std::vector<uint8_t> &dfxInfo, T &tensor, uint16_t argsInfo
 }
 
 template <typename T>
-std::vector<uint8_t> GetTensorData(T &tensor)
+std::vector<uint8_t> GetTensorData(T& tensor)
 {
     std::vector<uint8_t> tensorData;
     tensorData.resize(sizeof(tensor));
@@ -662,7 +659,7 @@ TEST_F(DumpArgsStest, Test_Dump_Args_With_Dfx_Static)
     generateDfxByLittleEndian(dfxInfo, sizeof(uint16_t), TYPE_L0_EXCEPTION_DFX);
     generateDfxByLittleEndian(dfxInfo, sizeof(uint16_t), dfxInfoLength);
     dfxInfo.insert(dfxInfo.end(), dfxInfoValue.begin(), dfxInfoValue.end());
-    uint8_t *ptr = dfxInfo.data();
+    uint8_t* ptr = dfxInfo.data();
     exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.dfxAddr = ptr;
     exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.dfxSize = dfxInfo.size();
     exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.elfDataFlag = 1;
@@ -679,8 +676,8 @@ TEST_F(DumpArgsStest, Test_Dump_Args_With_Dfx_Static)
 
     InvokeException(exceptionInfo);
 
-    std::string expectDumpFilePath = ExpectedArgsDumpFilePath(ws.Root(), exceptionInfo.deviceid, exceptionInfo.streamid,
-                                                              exceptionInfo.taskid, stubNowTime);
+    std::string expectDumpFilePath = ExpectedArgsDumpFilePath(
+        ws.Root(), exceptionInfo.deviceid, exceptionInfo.streamid, exceptionInfo.taskid, stubNowTime);
     DumpFileChecker checker;
     EXPECT_EQ(checker.Load(expectDumpFilePath), true);
     EXPECT_EQ(checker.CheckInputTensorNum(3), true);
@@ -865,7 +862,7 @@ TEST_F(DumpArgsStest, Test_Dump_Args_With_Dfx_Static_Quick_Recover)
     generateDfxByLittleEndian(dfxInfo, sizeof(uint16_t), TYPE_L0_EXCEPTION_DFX);
     generateDfxByLittleEndian(dfxInfo, sizeof(uint16_t), dfxInfoLength);
     dfxInfo.insert(dfxInfo.end(), dfxInfoValue.begin(), dfxInfoValue.end());
-    uint8_t *ptr = dfxInfo.data();
+    uint8_t* ptr = dfxInfo.data();
     exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.dfxAddr = ptr;
     exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.dfxSize = dfxInfo.size();
     exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.elfDataFlag = 1;
@@ -882,8 +879,8 @@ TEST_F(DumpArgsStest, Test_Dump_Args_With_Dfx_Static_Quick_Recover)
 
     InvokeException(exceptionInfo);
 
-    std::string expectDumpFilePath = ExpectedArgsDumpFilePath(ws.Root(), exceptionInfo.deviceid, exceptionInfo.streamid,
-                                                              exceptionInfo.taskid, stubNowTime);
+    std::string expectDumpFilePath = ExpectedArgsDumpFilePath(
+        ws.Root(), exceptionInfo.deviceid, exceptionInfo.streamid, exceptionInfo.taskid, stubNowTime);
     DumpFileChecker checker;
     EXPECT_EQ(checker.Load(expectDumpFilePath), false);
 
@@ -935,12 +932,12 @@ TEST_F(DumpArgsStest, Test_Dump_Args_With_Dfx_Dynamic)
     uint64_t output0Shape1 = 3;
 
     uint64_t atomicIndex = 0;
-    uint64_t *shapeAddr = static_cast<uint64_t *>(AdumpGetDFXInfoAddrForDynamic(15, atomicIndex));
+    uint64_t* shapeAddr = static_cast<uint64_t*>(AdumpGetDFXInfoAddrForDynamic(15, atomicIndex));
     shapeAddr[0] = tensorSize;
     shapeAddr[1] = input0Size;
     shapeAddr[2] = output0Size;
     shapeAddr[3] = placeholdSize;
-    shapeAddr[4] = sizeof(uint64_t) * 11;  // shape ptr dynamic inputs size
+    shapeAddr[4] = sizeof(uint64_t) * 11; // shape ptr dynamic inputs size
     shapeAddr[5] = workspaceSize;
     shapeAddr[6] = tensorDim;
     shapeAddr[7] = tensorShape0;
@@ -965,7 +962,7 @@ TEST_F(DumpArgsStest, Test_Dump_Args_With_Dfx_Dynamic)
     args[11] = reinterpret_cast<uint64_t>(&normalPtr1);
     args[12] = reinterpret_cast<uint64_t>(&normalPtr2);
     args[5] = reinterpret_cast<uint64_t>(&args[11]);
-    args[13] = sizeof(uint64_t) * 10;  // offset
+    args[13] = sizeof(uint64_t) * 10; // offset
     args[6] = reinterpret_cast<uint64_t>(&args[13]);
     args[14] = 2 | (2ULL << TENSOR_COUNT_SHIFT_BITS);
     args[15] = 2;
@@ -974,8 +971,8 @@ TEST_F(DumpArgsStest, Test_Dump_Args_With_Dfx_Dynamic)
     args[18] = 1024;
     args[19] = 0;
     args[20] = 0 | (1ULL << TENSOR_COUNT_SHIFT_BITS);
-    args[21] = 0;  // empty shape info
-    args[22] = 0;  // empty shape info
+    args[21] = 0; // empty shape info
+    args[22] = 0; // empty shape info
     args[23] = reinterpret_cast<uint64_t>(&shapePtr2t3);
     args[24] = reinterpret_cast<uint64_t>(&shapePtr2t3);
     args[25] = reinterpret_cast<uint64_t>(&shapePtrPlaceHold);
@@ -1073,7 +1070,7 @@ TEST_F(DumpArgsStest, Test_Dump_Args_With_Dfx_Dynamic)
     generateDfxByLittleEndian(dfxInfo, sizeof(uint16_t), TYPE_L0_EXCEPTION_DFX);
     generateDfxByLittleEndian(dfxInfo, sizeof(uint16_t), dfxInfoLength);
     dfxInfo.insert(dfxInfo.end(), dfxInfoValue.begin(), dfxInfoValue.end());
-    uint8_t *ptr = dfxInfo.data();
+    uint8_t* ptr = dfxInfo.data();
     exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.dfxAddr = ptr;
     exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.dfxSize = dfxInfo.size();
     exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.elfDataFlag = 1;
@@ -1084,8 +1081,8 @@ TEST_F(DumpArgsStest, Test_Dump_Args_With_Dfx_Dynamic)
     int32_t ret = DumpManager::Instance().DumpExceptionInfo(exceptionInfo);
     EXPECT_EQ(ret, ADUMP_SUCCESS);
 
-    std::string expectDumpFilePath = ExpectedArgsDumpFilePath(ws.Root(), exceptionInfo.deviceid, exceptionInfo.streamid,
-                                                              exceptionInfo.taskid, stubNowTime);
+    std::string expectDumpFilePath = ExpectedArgsDumpFilePath(
+        ws.Root(), exceptionInfo.deviceid, exceptionInfo.streamid, exceptionInfo.taskid, stubNowTime);
     DumpFileChecker checker;
     EXPECT_EQ(checker.Load(expectDumpFilePath), true);
     EXPECT_EQ(checker.CheckInputTensorNum(4), true);
@@ -1136,7 +1133,7 @@ TEST_F(DumpArgsStest, Test_Dump_Args_With_Dfx_Dynamic)
 }
 
 /* == dlopen test == */
-static int32_t HeadProcessTest(uint32_t devId, const void *addr, uint64_t headerSize, uint64_t &newHeaderSize)
+static int32_t HeadProcessTest(uint32_t devId, const void* addr, uint64_t headerSize, uint64_t& newHeaderSize)
 {
     (void)devId;
     (void)addr;
@@ -1144,7 +1141,7 @@ static int32_t HeadProcessTest(uint32_t devId, const void *addr, uint64_t header
     return 0;
 }
 
-static int32_t TensorProcessTest(uint32_t devId, const void *addr, uint64_t size, int32_t fd)
+static int32_t TensorProcessTest(uint32_t devId, const void* addr, uint64_t size, int32_t fd)
 {
     (void)devId;
     (void)addr;
@@ -1160,21 +1157,18 @@ int32_t AdumpPluginInitStub()
     return 0;
 }
 
-void *mmDlsym(void *handle, const char* funcName)
+void* mmDlsym(void* handle, const char* funcName)
 {
     if (strcmp(funcName, "AdumpPluginInit") == 0) {
-        return (void *)&AdumpPluginInitStub;
+        return (void*)&AdumpPluginInitStub;
     }
     return nullptr;
 }
 
-char *mmDlerror(void)
-{
-    return "None";
-}
+char* mmDlerror(void) { return "None"; }
 
 int32_t g_handle;
-void * mmDlopen(const char *filename, int mode)
+void* mmDlopen(const char* filename, int mode)
 {
     (void)mode;
     if (strcmp(filename + strlen(filename) - strlen("plugin.so"), "plugin.so") == 0) {
@@ -1184,7 +1178,7 @@ void * mmDlopen(const char *filename, int mode)
 }
 /* == dlopen test == */
 
-static uint8_t workSpaceData[128] = {1,2,3,4,5};
+static uint8_t workSpaceData[128] = {1, 2, 3, 4, 5};
 static HcclCombinOpParam g_combinOpParam;
 
 TEST_F(DumpArgsStest, Test_Dump_Args_With_Dfx_Tik_Dynamic)
@@ -1231,7 +1225,7 @@ TEST_F(DumpArgsStest, Test_Dump_Args_With_Dfx_Tik_Dynamic)
     uint64_t output0Shape1 = 3;
 
     uint64_t atomicIndex = 0;
-    uint64_t *shapeAddr = static_cast<uint64_t *>(AdumpGetDFXInfoAddrForDynamic(13, atomicIndex));
+    uint64_t* shapeAddr = static_cast<uint64_t*>(AdumpGetDFXInfoAddrForDynamic(13, atomicIndex));
     shapeAddr[0] = tensorSize;
     shapeAddr[1] = input0Size;
     shapeAddr[2] = output0Size;
@@ -1320,7 +1314,7 @@ TEST_F(DumpArgsStest, Test_Dump_Args_With_Dfx_Tik_Dynamic)
     generateDfxByLittleEndian(dfxInfo, sizeof(uint16_t), TYPE_L0_EXCEPTION_DFX);
     generateDfxByLittleEndian(dfxInfo, sizeof(uint16_t), dfxInfoLength);
     dfxInfo.insert(dfxInfo.end(), dfxInfoValue.begin(), dfxInfoValue.end());
-    uint8_t *ptr = dfxInfo.data();
+    uint8_t* ptr = dfxInfo.data();
     exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.dfxAddr = ptr;
     exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.dfxSize = dfxInfo.size();
     exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.elfDataFlag = 1;
@@ -1331,8 +1325,8 @@ TEST_F(DumpArgsStest, Test_Dump_Args_With_Dfx_Tik_Dynamic)
     int32_t ret = DumpManager::Instance().DumpExceptionInfo(exceptionInfo);
     EXPECT_EQ(ret, ADUMP_SUCCESS);
 
-    std::string expectDumpFilePath = ExpectedArgsDumpFilePath(ws.Root(), exceptionInfo.deviceid, exceptionInfo.streamid,
-                                                              exceptionInfo.taskid, stubNowTime);
+    std::string expectDumpFilePath = ExpectedArgsDumpFilePath(
+        ws.Root(), exceptionInfo.deviceid, exceptionInfo.streamid, exceptionInfo.taskid, stubNowTime);
     DumpFileChecker checker;
     EXPECT_EQ(checker.Load(expectDumpFilePath), true);
     EXPECT_EQ(checker.CheckInputTensorNum(3), true);
@@ -1364,8 +1358,9 @@ TEST_F(DumpArgsStest, Test_Dump_Args_With_Dfx_Tik_Dynamic)
 
     uint64_t headerSize = 0;
     uint64_t newHeaderSize = 0;
-    EXPECT_EQ(0, DumpTensorPlugin::Instance().NotifyHeadCallback(DfxTensorType::MC2_CTX, 0, nullptr, headerSize,
-        newHeaderSize));
+    EXPECT_EQ(
+        0,
+        DumpTensorPlugin::Instance().NotifyHeadCallback(DfxTensorType::MC2_CTX, 0, nullptr, headerSize, newHeaderSize));
     EXPECT_EQ(1, newHeaderSize);
     EXPECT_EQ(0, DumpTensorPlugin::Instance().NotifyTensorCallback(DfxTensorType::MC2_CTX, 0, nullptr, 0, 0));
 }
@@ -1407,12 +1402,12 @@ TEST_F(DumpArgsStest, Test_Dump_Args_With_Dfx_Failed)
 
     uint64_t atomicIndex = 0;
     // get addr failed
-    void *addr = AdumpGetDFXInfoAddrForDynamic(DFX_MAX_TENSOR_NUM + 1, atomicIndex);
+    void* addr = AdumpGetDFXInfoAddrForDynamic(DFX_MAX_TENSOR_NUM + 1, atomicIndex);
     EXPECT_EQ(addr, nullptr);
     addr = AdumpGetDFXInfoAddrForStatic(DFX_MAX_TENSOR_NUM + 1, atomicIndex);
     EXPECT_EQ(addr, nullptr);
 
-    uint64_t *shapeAddr = static_cast<uint64_t *>(AdumpGetDFXInfoAddrForDynamic(13, atomicIndex));
+    uint64_t* shapeAddr = static_cast<uint64_t*>(AdumpGetDFXInfoAddrForDynamic(13, atomicIndex));
     shapeAddr[0] = tensorSize;
     shapeAddr[1] = input0Size;
     shapeAddr[2] = output0Size;
@@ -1487,7 +1482,7 @@ TEST_F(DumpArgsStest, Test_Dump_Args_With_Dfx_Failed)
     generateDfxByLittleEndian(dfxInfo, sizeof(uint16_t), TYPE_L0_EXCEPTION_DFX);
     generateDfxByLittleEndian(dfxInfo, sizeof(uint16_t), dfxInfoLength);
     dfxInfo.insert(dfxInfo.end(), dfxInfoValue.begin(), dfxInfoValue.end());
-    uint8_t *ptr = dfxInfo.data();
+    uint8_t* ptr = dfxInfo.data();
     exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.dfxAddr = ptr;
     exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.dfxSize = dfxInfo.size();
     exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.elfDataFlag = 1;
@@ -1532,7 +1527,7 @@ TEST_F(DumpArgsStest, Test_Dump_Args_With_Dfx_Failed)
     EXPECT_EQ(ret, ADUMP_FAILED);
 
     // chunk addr null
-    uint64_t *dynamicChunkBak = g_dynamicChunk;
+    uint64_t* dynamicChunkBak = g_dynamicChunk;
     g_dynamicChunk = nullptr;
     ret = DumpManager::Instance().DumpExceptionInfo(exceptionInfo);
     EXPECT_EQ(ret, ADUMP_FAILED);
@@ -1605,7 +1600,7 @@ TEST_F(DumpArgsStest, Test_DumpArgsJsonList)
     EXPECT_EQ(ret, ADUMP_SUCCESS);
 }
 
-rtError_t rtGetBinBufferStub(const rtBinHandle binHandle, const rtBinBufferType_t type, void **bin, uint32_t *binSize)
+rtError_t rtGetBinBufferStub(const rtBinHandle binHandle, const rtBinBufferType_t type, void** bin, uint32_t* binSize)
 {
     return -1;
 }
@@ -1706,7 +1701,7 @@ TEST_F(DumpArgsStest, Test_DumpArgsJsonNotObject)
     EXPECT_EQ(ret, ADUMP_SUCCESS);
 }
 
-INT32 mmRealPathStub(const CHAR *path, CHAR *realPath, INT32 realPathLen)
+INT32 mmRealPathStub(const CHAR* path, CHAR* realPath, INT32 realPathLen)
 {
     if (std::string(path) == std::string("AddCustom_8ee04b5d550e4239498c29151be6bb52_mix_aic.json")) {
         std::string cmd = "rm -fr " + std::string(path);
@@ -1740,7 +1735,7 @@ TEST_F(DumpArgsStest, Test_DumpArgsFileOpenFailed)
     EXPECT_EQ(ret, ADUMP_SUCCESS);
 }
 
-static rtError_t rtGetSocVersionStub(char *version, const uint32_t maxLen)
+static rtError_t rtGetSocVersionStub(char* version, const uint32_t maxLen)
 {
     strcpy_s(version, maxLen, "Ascend910_9381");
     return RT_ERROR_NONE;
@@ -1785,7 +1780,7 @@ TEST_F(DumpArgsStest, Test_Dump_Args_For_MC2_CTX_910C)
     uint64_t output0Shape1 = 3;
 
     uint64_t atomicIndex = 0;
-    uint64_t *shapeAddr = static_cast<uint64_t *>(AdumpGetDFXInfoAddrForDynamic(14, atomicIndex));
+    uint64_t* shapeAddr = static_cast<uint64_t*>(AdumpGetDFXInfoAddrForDynamic(14, atomicIndex));
     shapeAddr[0] = mc2CtxSize;
     shapeAddr[1] = tensorDim;
     shapeAddr[2] = tensorShape0;
@@ -1841,7 +1836,7 @@ TEST_F(DumpArgsStest, Test_Dump_Args_For_MC2_CTX_910C)
     generateDfxByLittleEndian(dfxInfo, sizeof(uint16_t), TYPE_L0_EXCEPTION_DFX);
     generateDfxByLittleEndian(dfxInfo, sizeof(uint16_t), dfxInfoLength);
     dfxInfo.insert(dfxInfo.end(), dfxInfoValue.begin(), dfxInfoValue.end());
-    uint8_t *ptr = dfxInfo.data();
+    uint8_t* ptr = dfxInfo.data();
     exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.dfxAddr = ptr;
     exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.dfxSize = dfxInfo.size();
     exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.elfDataFlag = 1;
@@ -1852,17 +1847,21 @@ TEST_F(DumpArgsStest, Test_Dump_Args_For_MC2_CTX_910C)
     int32_t ret = DumpManager::Instance().DumpExceptionInfo(exceptionInfo);
     EXPECT_EQ(ret, ADUMP_SUCCESS);
 
-    std::string expectDumpFilePath = ExpectedArgsDumpFilePath(ws.Root(), exceptionInfo.deviceid, exceptionInfo.streamid,
-                                                              exceptionInfo.taskid, stubNowTime);
+    std::string expectDumpFilePath = ExpectedArgsDumpFilePath(
+        ws.Root(), exceptionInfo.deviceid, exceptionInfo.streamid, exceptionInfo.taskid, stubNowTime);
     DumpFileChecker checker;
     EXPECT_EQ(checker.Load(expectDumpFilePath), true);
     EXPECT_EQ(checker.CheckWorkspaceNum(1), true);
 
     // mc2_ctx
-    std::vector<uint8_t> mc2Data(0, sizeof(HcclOpResParam) + 128 + 128);    // 128: workSpace size, 128: windows exp size
-    mc2Data.insert(mc2Data.end(), reinterpret_cast<uint8_t*>(&g_opResParam), reinterpret_cast<uint8_t*>(&g_opResParam) + sizeof(HcclOpResParam));
-    mc2Data.insert(mc2Data.end(), reinterpret_cast<uint8_t*>(&workSpaceData), reinterpret_cast<uint8_t*>(&workSpaceData) + 128);
-    mc2Data.insert(mc2Data.end(), reinterpret_cast<uint8_t*>(&workSpaceData), reinterpret_cast<uint8_t*>(&workSpaceData) + 128);
+    std::vector<uint8_t> mc2Data(0, sizeof(HcclOpResParam) + 128 + 128); // 128: workSpace size, 128: windows exp size
+    mc2Data.insert(
+        mc2Data.end(), reinterpret_cast<uint8_t*>(&g_opResParam),
+        reinterpret_cast<uint8_t*>(&g_opResParam) + sizeof(HcclOpResParam));
+    mc2Data.insert(
+        mc2Data.end(), reinterpret_cast<uint8_t*>(&workSpaceData), reinterpret_cast<uint8_t*>(&workSpaceData) + 128);
+    mc2Data.insert(
+        mc2Data.end(), reinterpret_cast<uint8_t*>(&workSpaceData), reinterpret_cast<uint8_t*>(&workSpaceData) + 128);
 
     EXPECT_EQ(checker.CheckWorkspaceSize(0, sizeof(g_opResParam) + 128 + 128), true);
     EXPECT_EQ(checker.CheckWorkspaceData(0, mc2Data), true);
@@ -1877,7 +1876,7 @@ static IbVerbsData g_ibVerbsData;
 
 TEST_F(DumpArgsStest, Test_Dump_Args_For_MC2_CTX_910B)
 {
-    g_combinOpParam.mc2WorkSpace =  {(uint64_t)&workSpaceData, 128};
+    g_combinOpParam.mc2WorkSpace = {(uint64_t)&workSpaceData, 128};
     g_combinOpParam.rankId = 0;
     g_combinOpParam.winSize = 128;
     g_combinOpParam.windowsIn[g_combinOpParam.rankId] = (uint64_t)&workSpaceData;
@@ -1917,7 +1916,7 @@ TEST_F(DumpArgsStest, Test_Dump_Args_For_MC2_CTX_910B)
     uint64_t output0Shape1 = 3;
 
     uint64_t atomicIndex = 0;
-    uint64_t *shapeAddr = static_cast<uint64_t *>(AdumpGetDFXInfoAddrForDynamic(14, atomicIndex));
+    uint64_t* shapeAddr = static_cast<uint64_t*>(AdumpGetDFXInfoAddrForDynamic(14, atomicIndex));
     shapeAddr[0] = mc2CtxSize;
     shapeAddr[1] = tensorDim;
     shapeAddr[2] = tensorShape0;
@@ -1973,7 +1972,7 @@ TEST_F(DumpArgsStest, Test_Dump_Args_For_MC2_CTX_910B)
     generateDfxByLittleEndian(dfxInfo, sizeof(uint16_t), TYPE_L0_EXCEPTION_DFX);
     generateDfxByLittleEndian(dfxInfo, sizeof(uint16_t), dfxInfoLength);
     dfxInfo.insert(dfxInfo.end(), dfxInfoValue.begin(), dfxInfoValue.end());
-    uint8_t *ptr = dfxInfo.data();
+    uint8_t* ptr = dfxInfo.data();
     exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.dfxAddr = ptr;
     exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.dfxSize = dfxInfo.size();
     exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.elfDataFlag = 1;
@@ -1984,23 +1983,38 @@ TEST_F(DumpArgsStest, Test_Dump_Args_For_MC2_CTX_910B)
     int32_t ret = DumpManager::Instance().DumpExceptionInfo(exceptionInfo);
     EXPECT_EQ(ret, ADUMP_SUCCESS);
 
-    std::string expectDumpFilePath = ExpectedArgsDumpFilePath(ws.Root(), exceptionInfo.deviceid, exceptionInfo.streamid,
-                                                              exceptionInfo.taskid, stubNowTime);
+    std::string expectDumpFilePath = ExpectedArgsDumpFilePath(
+        ws.Root(), exceptionInfo.deviceid, exceptionInfo.streamid, exceptionInfo.taskid, stubNowTime);
     DumpFileChecker checker;
     EXPECT_EQ(checker.Load(expectDumpFilePath), true);
     EXPECT_EQ(checker.CheckWorkspaceNum(1), true);
 
     // mc2_ctx
-    // workspace + windowsIn + windowsOut + ibverbsData struct + ibverbsData data localInput + ibverbsData data localOutput
+    // workspace + windowsIn + windowsOut + ibverbsData struct + ibverbsData data localInput + ibverbsData data
+    // localOutput
     size_t totalSize = sizeof(HcclCombinOpParam) + 128 + 128 + 128 + sizeof(g_ibVerbsData) + 128 + 128;
     std::vector<uint8_t> mc2Data(0, totalSize);
-    mc2Data.insert(mc2Data.end(), reinterpret_cast<uint8_t*>(&g_combinOpParam), reinterpret_cast<uint8_t*>(&g_combinOpParam) + sizeof(HcclCombinOpParam));
-    mc2Data.insert(mc2Data.end(), reinterpret_cast<uint8_t*>(&workSpaceData), reinterpret_cast<uint8_t*>(&workSpaceData) + 128);    // workspace
-    mc2Data.insert(mc2Data.end(), reinterpret_cast<uint8_t*>(&workSpaceData), reinterpret_cast<uint8_t*>(&workSpaceData) + 128);    // windowsIn
-    mc2Data.insert(mc2Data.end(), reinterpret_cast<uint8_t*>(&workSpaceData), reinterpret_cast<uint8_t*>(&workSpaceData) + 128);    // windowsOut
-    mc2Data.insert(mc2Data.end(), reinterpret_cast<uint8_t*>(&g_ibVerbsData), reinterpret_cast<uint8_t*>(&g_ibVerbsData) + sizeof(g_ibVerbsData));    // ibverbsData struct
-    mc2Data.insert(mc2Data.end(), reinterpret_cast<uint8_t*>(&workSpaceData), reinterpret_cast<uint8_t*>(&workSpaceData) + 128);    // ibverbsData data localInput
-    mc2Data.insert(mc2Data.end(), reinterpret_cast<uint8_t*>(&workSpaceData), reinterpret_cast<uint8_t*>(&workSpaceData) + 128);    // ibverbsData data localOutput
+    mc2Data.insert(
+        mc2Data.end(), reinterpret_cast<uint8_t*>(&g_combinOpParam),
+        reinterpret_cast<uint8_t*>(&g_combinOpParam) + sizeof(HcclCombinOpParam));
+    mc2Data.insert(
+        mc2Data.end(), reinterpret_cast<uint8_t*>(&workSpaceData),
+        reinterpret_cast<uint8_t*>(&workSpaceData) + 128); // workspace
+    mc2Data.insert(
+        mc2Data.end(), reinterpret_cast<uint8_t*>(&workSpaceData),
+        reinterpret_cast<uint8_t*>(&workSpaceData) + 128); // windowsIn
+    mc2Data.insert(
+        mc2Data.end(), reinterpret_cast<uint8_t*>(&workSpaceData),
+        reinterpret_cast<uint8_t*>(&workSpaceData) + 128); // windowsOut
+    mc2Data.insert(
+        mc2Data.end(), reinterpret_cast<uint8_t*>(&g_ibVerbsData),
+        reinterpret_cast<uint8_t*>(&g_ibVerbsData) + sizeof(g_ibVerbsData)); // ibverbsData struct
+    mc2Data.insert(
+        mc2Data.end(), reinterpret_cast<uint8_t*>(&workSpaceData),
+        reinterpret_cast<uint8_t*>(&workSpaceData) + 128); // ibverbsData data localInput
+    mc2Data.insert(
+        mc2Data.end(), reinterpret_cast<uint8_t*>(&workSpaceData),
+        reinterpret_cast<uint8_t*>(&workSpaceData) + 128); // ibverbsData data localOutput
 
     EXPECT_EQ(checker.CheckWorkspaceSize(0, totalSize), true);
     EXPECT_EQ(checker.CheckWorkspaceData(0, mc2Data), true);
@@ -2045,7 +2059,7 @@ TEST_F(DumpArgsStest, Test_DumpArgsMultiThread)
     ret = args.DumpArgsExceptionInfo(deviceId, dumpPath);
     ret = args.DumpArgsExceptionInfo(deviceId, dumpPath);
     EXPECT_EQ(ret, ADUMP_SUCCESS);
-    //multi thread collect different kernel files.
+    // multi thread collect different kernel files.
     DumpArgs args2;
     args2.LoadArgsExceptionInfo(exceptionInfo);
     ret = args2.DumpArgsExceptionInfo(deviceId, dumpPath);
@@ -2077,7 +2091,7 @@ TEST_F(DumpArgsStest, Test_Dump_Args_For_L2_Shape)
     exceptionInfo.deviceid = 1;
     exceptionInfo.expandInfo.type = RT_EXCEPTION_FUSION;
     int32_t shapePtr2t3[] = {2, 2, 2, 3, 3, 3};
-    int32_t shapePtr2t2Float4[] = {0x12345678, 0x43218765};   // shape: 4*4, 16bit
+    int32_t shapePtr2t2Float4[] = {0x12345678, 0x43218765}; // shape: 4*4, 16bit
     int32_t shapePtrPlaceHold[] = {0, 0, 0};
     int32_t shapePtrScalar[] = {123456};
     uint64_t args[19] = {};
@@ -2115,7 +2129,7 @@ TEST_F(DumpArgsStest, Test_Dump_Args_For_L2_Shape)
         static_cast<uint16_t>(DfxTensorType::OUTPUT_TENSOR) |
         (static_cast<uint16_t>(DfxPointerType::LEVEL_2_POINTER_WITH_SHAPE) << POINTER_TYPE_SHIFT_BITS);
     shapePointerTensor.size = NON_TENSOR_SIZE;
-    shapePointerTensor.dataTypeSize = 4;   // unit: bit
+    shapePointerTensor.dataTypeSize = 4; // unit: bit
     generateDfxInfo(shapePointerDfxInfo, shapePointerTensor);
     dfxInfoValue.insert(dfxInfoValue.end(), shapePointerDfxInfo.begin(), shapePointerDfxInfo.end());
 
@@ -2126,7 +2140,7 @@ TEST_F(DumpArgsStest, Test_Dump_Args_For_L2_Shape)
         static_cast<uint16_t>(DfxTensorType::OUTPUT_TENSOR) |
         (static_cast<uint16_t>(DfxPointerType::LEVEL_2_POINTER_WITH_SHAPE) << POINTER_TYPE_SHIFT_BITS);
     shapePointerTensor2.size = NON_TENSOR_SIZE;
-    shapePointerTensor2.dataTypeSize = 4 * 8; //unit: bit
+    shapePointerTensor2.dataTypeSize = 4 * 8; // unit: bit
     generateDfxInfo(shapePointerDfxInfo2, shapePointerTensor2);
     dfxInfoValue.insert(dfxInfoValue.end(), shapePointerDfxInfo2.begin(), shapePointerDfxInfo2.end());
 
@@ -2145,7 +2159,7 @@ TEST_F(DumpArgsStest, Test_Dump_Args_For_L2_Shape)
     dfxInfo.insert(dfxInfo.end(), kernelTypeDfxInfo.begin(), kernelTypeDfxInfo.end());
     dfxInfo.insert(dfxInfo.end(), exceptionDfxInfo.begin(), exceptionDfxInfo.end());
 
-    uint8_t *ptr = dfxInfo.data();
+    uint8_t* ptr = dfxInfo.data();
     exceptionInfo.expandInfo.u.fusionInfo.u.aicoreCcuInfo.exceptionArgs.exceptionKernelInfo.dfxAddr = ptr;
     exceptionInfo.expandInfo.u.fusionInfo.u.aicoreCcuInfo.exceptionArgs.exceptionKernelInfo.dfxSize = dfxInfo.size();
     exceptionInfo.expandInfo.u.fusionInfo.u.aicoreCcuInfo.exceptionArgs.exceptionKernelInfo.elfDataFlag = 1;
@@ -2154,8 +2168,8 @@ TEST_F(DumpArgsStest, Test_Dump_Args_For_L2_Shape)
     MOCKER_CPP(&SysUtils::GetCurrentTimeWithMillisecond).stubs().will(returnValue(stubNowTime));
     InvokeException(exceptionInfo);
 
-    std::string expectDumpFilePath = ExpectedArgsDumpFilePath(ws.Root(), exceptionInfo.deviceid, exceptionInfo.streamid,
-                                                              exceptionInfo.taskid, stubNowTime);
+    std::string expectDumpFilePath = ExpectedArgsDumpFilePath(
+        ws.Root(), exceptionInfo.deviceid, exceptionInfo.streamid, exceptionInfo.taskid, stubNowTime);
     DumpFileChecker checker;
     EXPECT_TRUE(checker.Load(expectDumpFilePath));
     EXPECT_TRUE(checker.CheckOutputTensorNum(4));

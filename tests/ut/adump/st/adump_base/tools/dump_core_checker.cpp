@@ -36,7 +36,7 @@ bool DumpCoreChecker::Load(const std::string& path)
         std::cout << "Read section header table failed." << std::endl;
         return false;
     }
-    const Elf64_Shdr *secHeaderPtr = reinterpret_cast<const Elf64_Shdr*>(secHeaderTable.data());
+    const Elf64_Shdr* secHeaderPtr = reinterpret_cast<const Elf64_Shdr*>(secHeaderTable.data());
     for (uint32_t i = 0; i < header_.e_shnum; ++i) {
         sections_.emplace_back(secHeaderPtr[i]);
     }
@@ -54,12 +54,9 @@ bool DumpCoreChecker::Load(const std::string& path)
     return true;
 }
 
-bool DumpCoreChecker::CheckElfHeader()
-{
-    return true;
-}
+bool DumpCoreChecker::CheckElfHeader() { return true; }
 
-bool DumpCoreChecker::CheckDevTbl(DevInfo &devInfo)
+bool DumpCoreChecker::CheckDevTbl(DevInfo& devInfo)
 {
     bool isFind = false;
     for (const auto& section : sections_) {
@@ -90,7 +87,8 @@ bool DumpCoreChecker::CheckDevTbl(DevInfo &devInfo)
     return isFind;
 }
 
-bool DumpCoreChecker::CheckGlobalMem(const std::vector<std::string>& globalMem, const std::vector<GlobalMemInfo> &globalMemInfo)
+bool DumpCoreChecker::CheckGlobalMem(
+    const std::vector<std::string>& globalMem, const std::vector<GlobalMemInfo>& globalMemInfo)
 {
     std::string globalAuxInfo;
     uint32_t globalAuxInfoindex = 0;
@@ -130,50 +128,43 @@ bool DumpCoreChecker::CheckGlobalMem(const std::vector<std::string>& globalMem, 
     return CheckGlobalMem(globalAuxInfo, globalAuxInfoindex, globalMem, globalMemInfo);
 }
 
-bool DumpCoreChecker::CheckGlobalMem(std::string &globalAuxInfo, uint32_t globalAuxInfoindex,
-    const std::vector<std::string>& globalMem, const std::vector<GlobalMemInfo> &globalMemInfo)
+bool DumpCoreChecker::CheckGlobalMem(
+    std::string& globalAuxInfo, uint32_t globalAuxInfoindex, const std::vector<std::string>& globalMem,
+    const std::vector<GlobalMemInfo>& globalMemInfo)
 {
-    const GlobalMemInfo *globalMemInfoPtr = reinterpret_cast<const GlobalMemInfo*>(globalAuxInfo.data());
+    const GlobalMemInfo* globalMemInfoPtr = reinterpret_cast<const GlobalMemInfo*>(globalAuxInfo.data());
     std::string sectionData;
     for (uint32_t i = 0; i < globalMem.size(); ++i) {
         // check GlobalMemInfo
         if (globalMemInfoPtr[i].devAddr != globalMemInfo[i].devAddr ||
-            globalMemInfoPtr[i].size != globalMemInfo[i].size ||
-            globalMemInfoPtr[i].type != globalMemInfo[i].type ||
+            globalMemInfoPtr[i].size != globalMemInfo[i].size || globalMemInfoPtr[i].type != globalMemInfo[i].type ||
             globalMemInfoPtr[i].extraInfo.shape.dim != globalMemInfo[i].extraInfo.shape.dim) {
             std::cout << "check global mem size failed." << std::endl;
-            std::cout << "expect devAddr: " << std::hex << globalMemInfo[i].devAddr <<
-                         ", size: " << std::dec << globalMemInfo[i].size <<
-                         ", type: " << (uint32_t)globalMemInfo[i].type <<
-                         ", shape dim: " << globalMemInfo[i].extraInfo.shape.dim << std::endl;
-            std::cout << "but got devAddr: " << std::hex << globalMemInfoPtr[i].devAddr <<
-                         ", size: " << std::dec << globalMemInfoPtr[i].size <<
-                         ", type: " << (uint32_t)globalMemInfoPtr[i].type <<
-                         ", shape dim: " << globalMemInfoPtr[i].extraInfo.shape.dim << std::endl;
+            std::cout << "expect devAddr: " << std::hex << globalMemInfo[i].devAddr << ", size: " << std::dec
+                      << globalMemInfo[i].size << ", type: " << (uint32_t)globalMemInfo[i].type
+                      << ", shape dim: " << globalMemInfo[i].extraInfo.shape.dim << std::endl;
+            std::cout << "but got devAddr: " << std::hex << globalMemInfoPtr[i].devAddr << ", size: " << std::dec
+                      << globalMemInfoPtr[i].size << ", type: " << (uint32_t)globalMemInfoPtr[i].type
+                      << ", shape dim: " << globalMemInfoPtr[i].extraInfo.shape.dim << std::endl;
             return false;
         }
 
         // check section header
-        auto &section = sections_[globalMemInfoPtr[i].sectionIndex];
+        auto& section = sections_[globalMemInfoPtr[i].sectionIndex];
         if (ASCEND_SHNAME_GLOBAL.compare(shstrtab_.data() + section.sh_name) != 0 ||
-            section.sh_type != ASCEND_SHTYPE_GLOBAL ||
-            section.sh_size != globalMemInfoPtr[i].size ||
-            section.sh_addr != globalMemInfoPtr[i].devAddr ||
-            section.sh_link != globalAuxInfoindex ||
+            section.sh_type != ASCEND_SHTYPE_GLOBAL || section.sh_size != globalMemInfoPtr[i].size ||
+            section.sh_addr != globalMemInfoPtr[i].devAddr || section.sh_link != globalAuxInfoindex ||
             section.sh_info != i) {
-            std::cout << "expect section header sh_name: " << ASCEND_SHNAME_GLOBAL <<
-                        ", sh_type: " << ASCEND_SHTYPE_GLOBAL <<
-                        ", sh_flags: " << 0 <<
-                        ", sh_addr: " << globalMemInfoPtr[i].devAddr <<
-                        ", sh_size: " << globalMemInfoPtr[i].size <<
-                        ", sh_link: " << globalAuxInfoindex <<
-                        ", sh_info: " << i <<
-                        ", sh_entsize: " << 0 << std::endl;
-            std::cout << "but get section header sh_name: " << shstrtab_.data() + section.sh_name <<
-                        ", sh_type: " << section.sh_type << ", sh_flags: " << section.sh_flags <<
-                        ", sh_addr: " << section.sh_addr << ", sh_size: " << section.sh_size <<
-                        ", sh_link: " << section.sh_link << ", sh_info: " << section.sh_info <<
-                        ", sh_entsize: " << section.sh_entsize << std::endl;
+            std::cout << "expect section header sh_name: " << ASCEND_SHNAME_GLOBAL
+                      << ", sh_type: " << ASCEND_SHTYPE_GLOBAL << ", sh_flags: " << 0
+                      << ", sh_addr: " << globalMemInfoPtr[i].devAddr << ", sh_size: " << globalMemInfoPtr[i].size
+                      << ", sh_link: " << globalAuxInfoindex << ", sh_info: " << i << ", sh_entsize: " << 0
+                      << std::endl;
+            std::cout << "but get section header sh_name: " << shstrtab_.data() + section.sh_name
+                      << ", sh_type: " << section.sh_type << ", sh_flags: " << section.sh_flags
+                      << ", sh_addr: " << section.sh_addr << ", sh_size: " << section.sh_size
+                      << ", sh_link: " << section.sh_link << ", sh_info: " << section.sh_info
+                      << ", sh_entsize: " << section.sh_entsize << std::endl;
             return false;
         }
 
@@ -195,15 +186,18 @@ bool DumpCoreChecker::CheckGlobalMem(std::string &globalAuxInfo, uint32_t global
     return true;
 }
 
-bool DumpCoreChecker::CheckLocalMem(uint16_t coreId, const std::vector<std::string> &localMemList, const std::vector<LocalMemInfo>& localMemInfoList)
+bool DumpCoreChecker::CheckLocalMem(
+    uint16_t coreId, const std::vector<std::string>& localMemList, const std::vector<LocalMemInfo>& localMemInfoList)
 {
     std::string localAuxInfo;
     uint32_t localAuxInfoIndex = 0;
     bool result = false;
-    uint32_t sectionNum = coreId < CORE_SIZE_AIC ? 7 : 4;       // aic(l0A l0B l0C L1 icache dcache2) aiv(UB icache dcache2)
+    uint32_t sectionNum = coreId < CORE_SIZE_AIC ? 7 : 4; // aic(l0A l0B l0C L1 icache dcache2) aiv(UB icache dcache2)
     for (const auto& section : sections_) {
         if (section.sh_type == ASCEND_SHTYPE_AUXINFO_LOCAL) {
-            if (ASCEND_SHNAME_AUXINFO_LOCAL.compare(0, ASCEND_SHNAME_AUXINFO_LOCAL.size(), shstrtab_.data() + section.sh_name, ASCEND_SHNAME_AUXINFO_LOCAL.size()) != 0) {
+            if (ASCEND_SHNAME_AUXINFO_LOCAL.compare(
+                    0, ASCEND_SHNAME_AUXINFO_LOCAL.size(), shstrtab_.data() + section.sh_name,
+                    ASCEND_SHNAME_AUXINFO_LOCAL.size()) != 0) {
                 std::cout << "check local auxinfo section name failed." << std::endl;
                 return false;
             }
@@ -247,37 +241,34 @@ bool DumpCoreChecker::CheckLocalMem(uint16_t coreId, const std::vector<std::stri
     return CheckLocalMem(coreId, localAuxInfo, localAuxInfoIndex, localMemList, localMemInfoList);
 }
 
-bool DumpCoreChecker::CheckLocalMem(uint16_t coreId, std::string &localAuxInfo, uint32_t localAuxInfoIndex,
-    const std::vector<std::string> &localMemList, const std::vector<LocalMemInfo>& localMemInfoList)
+bool DumpCoreChecker::CheckLocalMem(
+    uint16_t coreId, std::string& localAuxInfo, uint32_t localAuxInfoIndex,
+    const std::vector<std::string>& localMemList, const std::vector<LocalMemInfo>& localMemInfoList)
 {
-    const LocalMemInfo *localMemInfoPtr = reinterpret_cast<const LocalMemInfo*>(localAuxInfo.data());
+    const LocalMemInfo* localMemInfoPtr = reinterpret_cast<const LocalMemInfo*>(localAuxInfo.data());
     std::string sectionName = ASCEND_SHNAME_LOCAL + "." + std::to_string(coreId);
     for (uint32_t i = 0; i < localMemInfoList.size(); ++i) {
         if (localMemInfoPtr[i].size != localMemInfoList[i].size ||
             localMemInfoPtr[i].type != localMemInfoList[i].type) {
             std::cout << "check local mem size failed." << std::endl;
-            std::cout << "expect size: " << std::dec << localMemInfoList[i].size <<
-                         ", type: " << localMemInfoList[i].type << std::endl;
-            std::cout << "but got size: " << std::dec << localMemInfoPtr[i].size <<
-                         ", type: " << localMemInfoPtr[i].type << std::endl;
+            std::cout << "expect size: " << std::dec << localMemInfoList[i].size
+                      << ", type: " << localMemInfoList[i].type << std::endl;
+            std::cout << "but got size: " << std::dec << localMemInfoPtr[i].size
+                      << ", type: " << localMemInfoPtr[i].type << std::endl;
             return false;
         }
 
-        auto &section = sections_[localMemInfoPtr[i].sectionIndex];
-        if (sectionName.compare(shstrtab_.data() + section.sh_name) != 0 ||
-            section.sh_type != ASCEND_SHTYPE_LOCAL ||
-            section.sh_addr != 0 ||
-            section.sh_size != localMemInfoPtr[i].size ||
-            section.sh_link != localAuxInfoIndex ||
-            section.sh_info != i) {
-            std::cout << "expect section header sh_name: " << sectionName <<
-                         ", sh_type: " << ASCEND_SHTYPE_LOCAL << ", sh_addr: " << 0 <<
-                         ", sh_size: " << localMemInfoPtr[i].size << ", sh_link: " << localAuxInfoIndex <<
-                         ", sh_info: " << i << ", sh_entsize: " << 0 << std::endl;
-            std::cout << "but get section header sh_name: " << shstrtab_.data() + section.sh_name <<
-                         ", sh_type: " << section.sh_type << ", sh_addr: " << section.sh_addr <<
-                         ", sh_size: " << section.sh_size << ", sh_link: " << section.sh_link <<
-                         ", sh_info: " << section.sh_info << ", sh_entsize: " << section.sh_entsize << std::endl;
+        auto& section = sections_[localMemInfoPtr[i].sectionIndex];
+        if (sectionName.compare(shstrtab_.data() + section.sh_name) != 0 || section.sh_type != ASCEND_SHTYPE_LOCAL ||
+            section.sh_addr != 0 || section.sh_size != localMemInfoPtr[i].size ||
+            section.sh_link != localAuxInfoIndex || section.sh_info != i) {
+            std::cout << "expect section header sh_name: " << sectionName << ", sh_type: " << ASCEND_SHTYPE_LOCAL
+                      << ", sh_addr: " << 0 << ", sh_size: " << localMemInfoPtr[i].size
+                      << ", sh_link: " << localAuxInfoIndex << ", sh_info: " << i << ", sh_entsize: " << 0 << std::endl;
+            std::cout << "but get section header sh_name: " << shstrtab_.data() + section.sh_name
+                      << ", sh_type: " << section.sh_type << ", sh_addr: " << section.sh_addr
+                      << ", sh_size: " << section.sh_size << ", sh_link: " << section.sh_link
+                      << ", sh_info: " << section.sh_info << ", sh_entsize: " << section.sh_entsize << std::endl;
             return false;
         }
 
@@ -298,13 +289,14 @@ bool DumpCoreChecker::CheckLocalMem(uint16_t coreId, std::string &localAuxInfo, 
     return true;
 }
 
-template<typename T>
+template <typename T>
 bool DumpCoreChecker::CheckRegisters(uint16_t coreId, uint8_t validFlag)
 {
     bool result = false;
     for (const auto& section : sections_) {
         if (section.sh_type == ASCEND_SHTYPE_REGS) {
-            if (ASCEND_SHNAME_REGS.compare(0, ASCEND_SHNAME_REGS.size(), shstrtab_.data() + section.sh_name, ASCEND_SHNAME_REGS.size()) != 0) {
+            if (ASCEND_SHNAME_REGS.compare(
+                    0, ASCEND_SHNAME_REGS.size(), shstrtab_.data() + section.sh_name, ASCEND_SHNAME_REGS.size()) != 0) {
                 std::cout << "check regs section name failed." << std::endl;
                 return false;
             }
@@ -339,17 +331,18 @@ bool DumpCoreChecker::CheckRegisters(uint16_t coreId, uint8_t validFlag)
     return result;
 }
 
-template<typename T>
-bool DumpCoreChecker::CheckRegisters(std::string &regData, uint32_t size, uint8_t validFlag)
+template <typename T>
+bool DumpCoreChecker::CheckRegisters(std::string& regData, uint32_t size, uint8_t validFlag)
 {
-    const T *regInfoPtr = reinterpret_cast<const T*>(regData.data());
+    const T* regInfoPtr = reinterpret_cast<const T*>(regData.data());
     uint32_t regNum = size / sizeof(T);
     for (uint32_t i = 0; i < regNum; ++i) {
         if (validFlag == REG_DATA_INVALID) {
             if (regInfoPtr[i].validFlag == REG_DATA_INVALID) {
                 continue;
             } else {
-                std::cout << "check regs invalid flag failed, index: " << i << ", addr: " << regInfoPtr[i].addr << std::endl;
+                std::cout << "check regs invalid flag failed, index: " << i << ", addr: " << regInfoPtr[i].addr
+                          << std::endl;
                 return false;
             }
         }
@@ -368,4 +361,4 @@ template bool DumpCoreChecker::CheckRegisters<RegInfo>(std::string&, uint32_t, u
 template bool DumpCoreChecker::CheckRegisters<RegInfoWide>(std::string&, uint32_t, uint8_t);
 template bool DumpCoreChecker::CheckRegisters<RegInfo>(uint16_t, uint8_t);
 template bool DumpCoreChecker::CheckRegisters<RegInfoWide>(uint16_t, uint8_t);
-}
+} // namespace Adx

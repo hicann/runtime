@@ -19,13 +19,10 @@
 class ADX_DUMP_CALLBACK_UTEST : public testing::Test {
 protected:
     virtual void SetUp() {}
-    virtual void TearDown()
-    {
-        GlobalMockObject::verify();
-    }
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
-int messageCallbackStub1(const struct Adx::DumpChunk *data, int len)
+int messageCallbackStub1(const struct Adx::DumpChunk* data, int len)
 {
     if ((sizeof(Adx::DumpChunk) + data->bufLen) == len) {
         printf("messageCallbackStub1 ok\n");
@@ -35,7 +32,7 @@ int messageCallbackStub1(const struct Adx::DumpChunk *data, int len)
     }
 }
 
-int messageCallbackStub2(const struct Adx::DumpChunk *data, int len)
+int messageCallbackStub2(const struct Adx::DumpChunk* data, int len)
 {
     if ((sizeof(Adx::DumpChunk) + data->bufLen) == len) {
         printf("messageCallbackStub2 ok\n");

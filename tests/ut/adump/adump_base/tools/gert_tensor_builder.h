@@ -18,24 +18,21 @@ namespace gert {
 
 struct TensorHolder {
 public:
-    void SetTensor(std::unique_ptr<Tensor> &&tensor)
-    {
-        tensor_ = std::move(tensor);
-    }
+    void SetTensor(std::unique_ptr<Tensor>&& tensor) { tensor_ = std::move(tensor); }
 
-    void SetFollowingTensor(std::unique_ptr<uint8_t[]> &&followingTensor)
+    void SetFollowingTensor(std::unique_ptr<uint8_t[]>&& followingTensor)
     {
         followingTensor_ = std::move(followingTensor);
     }
 
-    Tensor *GetTensor()
+    Tensor* GetTensor()
     {
         if (tensor_ != nullptr) {
             return tensor_.get();
         }
 
         if (followingTensor_ != nullptr) {
-            return reinterpret_cast<Tensor *>(followingTensor_.get());
+            return reinterpret_cast<Tensor*>(followingTensor_.get());
         }
         return nullptr;
     }
@@ -58,30 +55,32 @@ private:
 
 class TensorBuilder {
 public:
-    TensorBuilder &Shape(std::initializer_list<int64_t> shape);
-    TensorBuilder &OriginShape(std::initializer_list<int64_t> shape);
-    TensorBuilder &StorageShape(std::initializer_list<int64_t> shape);
+    TensorBuilder& Shape(std::initializer_list<int64_t> shape);
+    TensorBuilder& OriginShape(std::initializer_list<int64_t> shape);
+    TensorBuilder& StorageShape(std::initializer_list<int64_t> shape);
 
-    TensorBuilder &Format(ge::Format format);
-    TensorBuilder &OriginFormat(ge::Format format);
-    TensorBuilder &StorageFormat(ge::Format format);
-    TensorBuilder &DataType(ge::DataType dt);
-    TensorBuilder &Placement(TensorPlacement placement);
+    TensorBuilder& Format(ge::Format format);
+    TensorBuilder& OriginFormat(ge::Format format);
+    TensorBuilder& StorageFormat(ge::Format format);
+    TensorBuilder& DataType(ge::DataType dt);
+    TensorBuilder& Placement(TensorPlacement placement);
     TensorHolder Build() const;
 
     template <typename T>
-    TensorBuilder &Value(const std::vector<T> &value) {
+    TensorBuilder& Value(const std::vector<T>& value)
+    {
         tensorValue_.resize(sizeof(T) * value.size());
         memcpy(tensorValue_.data(), value.data(), tensorValue_.size());
         return *this;
     }
+
 private:
     Tensor tensor_{
-        {{}, {}},                            // shape
-        {ge::FORMAT_ND, ge::FORMAT_ND, {}},  // format
-        kOnHost,                             // placement
-        ge::DT_FLOAT,                        // data type
-        nullptr                              // address
+        {{}, {}},                           // shape
+        {ge::FORMAT_ND, ge::FORMAT_ND, {}}, // format
+        kOnHost,                            // placement
+        ge::DT_FLOAT,                       // data type
+        nullptr                             // address
     };
 
     std::vector<uint8_t> tensorValue_;

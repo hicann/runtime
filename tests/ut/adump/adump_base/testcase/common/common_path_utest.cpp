@@ -16,13 +16,10 @@
 
 using namespace Adx;
 
-class CommonPathUtest: public testing::Test {
+class CommonPathUtest : public testing::Test {
 protected:
     virtual void SetUp() {}
-    virtual void TearDown()
-    {
-        GlobalMockObject::verify();
-    }
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 TEST_F(CommonPathUtest, Test_Path_Construct)
@@ -65,7 +62,8 @@ TEST_F(CommonPathUtest, Test_Path_Concat)
 {
     std::string pathWithEndline = "/path/with/endline/";
     EXPECT_EQ(Path(pathWithEndline).Concat("sub_path").GetString(), std::string("/path/with/endline/sub_path"));
-    EXPECT_EQ(Path(pathWithEndline).Concat("file_name.txt").GetString(), std::string("/path/with/endline/file_name.txt"));
+    EXPECT_EQ(
+        Path(pathWithEndline).Concat("file_name.txt").GetString(), std::string("/path/with/endline/file_name.txt"));
     EXPECT_EQ(Path(pathWithEndline).Concat(" //// ").GetString(), std::string("/path/with/endline/"));
 }
 

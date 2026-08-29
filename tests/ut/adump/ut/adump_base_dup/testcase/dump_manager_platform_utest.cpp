@@ -67,9 +67,9 @@ TEST_F(DupDumpManagerUtest, Test_CheckCoredumpSupportedPlatformBothV2V4)
     uint32_t v2type = static_cast<uint32_t>(PlatformType::CHIP_CLOUD_V2);
     MOCKER_CPP(&Adx::AdumpDsmi::DrvGetPlatformType).stubs().with(outBound(v2type)).will(returnValue(true));
     EXPECT_EQ(DumpManager::Instance().CheckCoredumpSupportedPlatform(), true);
-    
+
     DumpManager::Instance().Reset();
-    
+
     uint32_t v4type = static_cast<uint32_t>(PlatformType::CHIP_CLOUD_V4);
     MOCKER_CPP(&Adx::AdumpDsmi::DrvGetPlatformType).stubs().with(outBound(v4type)).will(returnValue(true));
     EXPECT_EQ(DumpManager::Instance().CheckCoredumpSupportedPlatform(), true);
@@ -94,27 +94,27 @@ TEST_F(DupDumpManagerUtest, Test_CheckCoredumpSupportedPlatformAllTypes)
     uint32_t v2type = static_cast<uint32_t>(PlatformType::CHIP_CLOUD_V2);
     MOCKER_CPP(&Adx::AdumpDsmi::DrvGetPlatformType).stubs().with(outBound(v2type)).will(returnValue(true));
     EXPECT_EQ(DumpManager::Instance().CheckCoredumpSupportedPlatform(), true);
-    
+
     DumpManager::Instance().Reset();
-    
+
     uint32_t v4type = static_cast<uint32_t>(PlatformType::CHIP_CLOUD_V4);
     MOCKER_CPP(&Adx::AdumpDsmi::DrvGetPlatformType).stubs().with(outBound(v4type)).will(returnValue(true));
     EXPECT_EQ(DumpManager::Instance().CheckCoredumpSupportedPlatform(), true);
-    
+
     DumpManager::Instance().Reset();
-    
+
     uint32_t dcType = static_cast<uint32_t>(PlatformType::CHIP_DC_TYPE);
     MOCKER_CPP(&Adx::AdumpDsmi::DrvGetPlatformType).stubs().with(outBound(dcType)).will(returnValue(true));
     EXPECT_EQ(DumpManager::Instance().CheckCoredumpSupportedPlatform(), false);
-    
+
     DumpManager::Instance().Reset();
-    
+
     uint32_t miniType = static_cast<uint32_t>(PlatformType::CHIP_MINI_V3_TYPE);
     MOCKER_CPP(&Adx::AdumpDsmi::DrvGetPlatformType).stubs().with(outBound(miniType)).will(returnValue(true));
     EXPECT_EQ(DumpManager::Instance().CheckCoredumpSupportedPlatform(), false);
-    
+
     DumpManager::Instance().Reset();
-    
+
     uint32_t unknownType = 255;
     MOCKER_CPP(&Adx::AdumpDsmi::DrvGetPlatformType).stubs().with(outBound(unknownType)).will(returnValue(true));
     EXPECT_EQ(DumpManager::Instance().CheckCoredumpSupportedPlatform(), false);
@@ -132,9 +132,9 @@ TEST_F(DupDumpManagerUtest, Test_ResetAfterCheck)
     uint32_t v2type = static_cast<uint32_t>(PlatformType::CHIP_CLOUD_V2);
     MOCKER_CPP(&Adx::AdumpDsmi::DrvGetPlatformType).stubs().with(outBound(v2type)).will(returnValue(true));
     EXPECT_EQ(DumpManager::Instance().CheckCoredumpSupportedPlatform(), true);
-    
+
     DumpManager::Instance().Reset();
-    
+
     uint32_t dcType = static_cast<uint32_t>(PlatformType::CHIP_DC_TYPE);
     MOCKER_CPP(&Adx::AdumpDsmi::DrvGetPlatformType).stubs().with(outBound(dcType)).will(returnValue(true));
     EXPECT_EQ(DumpManager::Instance().CheckCoredumpSupportedPlatform(), false);

@@ -21,29 +21,23 @@
 
 using namespace Adx;
 
-class ADX_DUMP_SERVER_STEST: public testing::Test {
+class ADX_DUMP_SERVER_STEST : public testing::Test {
 protected:
     virtual void SetUp() {}
-    virtual void TearDown() {
-        GlobalMockObject::verify();
-    }
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 // normal scene
 TEST_F(ADX_DUMP_SERVER_STEST, AdxDataDumpServerInit_And_Uninit)
 {
-    MOCKER(rtGetRunMode)
-        .stubs()
-        .will(invoke(rtGetRunModeHost));
+    MOCKER(rtGetRunMode).stubs().will(invoke(rtGetRunModeHost));
     EXPECT_EQ(IDE_DAEMON_OK, AdxDataDumpServerInit());
     EXPECT_EQ(IDE_DAEMON_OK, AdxDataDumpServerUnInit());
 }
 
 TEST_F(ADX_DUMP_SERVER_STEST, AdxDataDumpServerReInit_And_ReUninit)
 {
-    MOCKER(rtGetRunMode)
-        .stubs()
-        .will(returnValue(1));
+    MOCKER(rtGetRunMode).stubs().will(returnValue(1));
     EXPECT_EQ(IDE_DAEMON_OK, AdxDataDumpServerInit());
     EXPECT_EQ(IDE_DAEMON_OK, AdxDataDumpServerUnInit());
     EXPECT_EQ(IDE_DAEMON_OK, AdxDataDumpServerInit());
@@ -52,40 +46,32 @@ TEST_F(ADX_DUMP_SERVER_STEST, AdxDataDumpServerReInit_And_ReUninit)
 
 TEST_F(ADX_DUMP_SERVER_STEST, AdxDataDumpServerInit_AdxDumpRecord_InitFailed)
 {
-    MOCKER(rtGetRunMode)
-        .stubs()
-        .will(invoke(rtGetRunModeHost));
-    MOCKER_CPP(&Adx::AdxDumpRecord::Init)
-        .stubs()
-        .will(returnValue(-1));
+    MOCKER(rtGetRunMode).stubs().will(invoke(rtGetRunModeHost));
+    MOCKER_CPP(&Adx::AdxDumpRecord::Init).stubs().will(returnValue(-1));
     EXPECT_EQ(IDE_DAEMON_ERROR, AdxDataDumpServerInit());
 }
 
 TEST_F(ADX_DUMP_SERVER_STEST, AdxDataDumpServerInit_GetMode_Helper)
 {
     rtRunMode info = RT_RUN_MODE_RESERVED;
-    MOCKER(rtGetRunMode)
-        .stubs()
-        .will(returnValue((rtError_t)1));
+    MOCKER(rtGetRunMode).stubs().will(returnValue((rtError_t)1));
     EXPECT_EQ(IDE_DAEMON_OK, AdxDataDumpServerInit());
     EXPECT_EQ(IDE_DAEMON_OK, AdxDataDumpServerUnInit());
 }
 
 TEST_F(ADX_DUMP_SERVER_STEST, AdxDataDumpServerUnInit)
 {
-    MOCKER(rtGetRunMode)
-        .stubs()
-        .will(invoke(rtGetRunModeHost));
+    MOCKER(rtGetRunMode).stubs().will(invoke(rtGetRunModeHost));
     EXPECT_EQ(IDE_DAEMON_OK, AdxDataDumpServerUnInit());
 
-    while(Adx::AdxDumpRecord::Instance().GetDumpInitNum() > 0) {
+    while (Adx::AdxDumpRecord::Instance().GetDumpInitNum() > 0) {
         Adx::AdxDumpRecord::Instance().UpdateDumpInitNum(false);
     }
 
     MOCKER_CPP(&Adx::AdxServerManager::Exit)
-    .stubs()
-    .will(returnValue(IDE_DAEMON_ERROR))
-    .then(returnValue(IDE_DAEMON_OK));
+        .stubs()
+        .will(returnValue(IDE_DAEMON_ERROR))
+        .then(returnValue(IDE_DAEMON_OK));
 
     EXPECT_EQ(IDE_DAEMON_ERROR, AdxDataDumpServerUnInit());
     EXPECT_EQ(IDE_DAEMON_OK, AdxDataDumpServerUnInit());
@@ -94,13 +80,8 @@ TEST_F(ADX_DUMP_SERVER_STEST, AdxDataDumpServerUnInit)
 // helper scene
 TEST_F(ADX_DUMP_SERVER_STEST, HelperAdxDataDumpServerInit)
 {
-    MOCKER(rtGetRunMode)
-        .stubs()
-        .will(invoke(rtGetRunModeHost))
-        .then(invoke(rtGetRunModeDevice));
-    MOCKER_CPP(&Adx::AdxDumpRecord::Init)
-        .stubs()
-        .will(returnValue(-1));
+    MOCKER(rtGetRunMode).stubs().will(invoke(rtGetRunModeHost)).then(invoke(rtGetRunModeDevice));
+    MOCKER_CPP(&Adx::AdxDumpRecord::Init).stubs().will(returnValue(-1));
     EXPECT_EQ(IDE_DAEMON_ERROR, AdxDataDumpServerInit());
     std::string hostPID = "456";
     int ret = setenv(IdeDaemon::Common::Config::HELPER_HOSTPID.c_str(), hostPID.c_str(), 0);
@@ -110,12 +91,8 @@ TEST_F(ADX_DUMP_SERVER_STEST, HelperAdxDataDumpServerInit)
 
 TEST_F(ADX_DUMP_SERVER_STEST, HelperAdxDataDumpServerUnInit)
 {
-    MOCKER(rtGetRunMode)
-        .stubs()
-        .will(invoke(rtGetRunModeDevice));
-    MOCKER_CPP(&Adx::AdxServerManager::Exit)
-        .stubs()
-        .will(returnValue(IDE_DAEMON_ERROR));
+    MOCKER(rtGetRunMode).stubs().will(invoke(rtGetRunModeDevice));
+    MOCKER_CPP(&Adx::AdxServerManager::Exit).stubs().will(returnValue(IDE_DAEMON_ERROR));
     std::string hostPID = "456";
     int ret = setenv(IdeDaemon::Common::Config::HELPER_HOSTPID.c_str(), hostPID.c_str(), 0);
     EXPECT_EQ(IDE_DAEMON_OK, AdxDataDumpServerUnInit());

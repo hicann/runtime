@@ -16,21 +16,19 @@ int g_sprintf_s_flag = 0;
 extern "C" {
 #endif
 
-int memset_s(void *dest, int dest_max, int c, int count)
+int memset_s(void* dest, int dest_max, int c, int count)
 {
     memset(dest, 0, count);
     return 0;
 }
 
-
-int memcpy_s(void *dest, int dest_max, const void *src, int count)
+int memcpy_s(void* dest, int dest_max, const void* src, int count)
 {
     memcpy(dest, src, count);
     return 0;
 }
 
-
-int sprintf_s(char* strDest, int destMax,const char* format, const char* src)
+int sprintf_s(char* strDest, int destMax, const char* format, const char* src)
 {
     int ret = 0;
 
@@ -45,27 +43,23 @@ int sprintf_s(char* strDest, int destMax,const char* format, const char* src)
     }
 }
 
-int strcpy_s(char* strDest,int dest_max,const char* strSrc)
+int strcpy_s(char* strDest, int dest_max, const char* strSrc)
 {
-    strcpy(strDest,strSrc);
+    strcpy(strDest, strSrc);
     return 0;
 }
 int strcat_s(char* dest, int dest_max, const char* src)
 {
-    strcat(dest,src);
+    strcat(dest, src);
     return 0;
-
 }
 int strtok_s(char* strToken, const char* strDelimit, char** context)
 {
-    strtok(strToken,strDelimit);
+    strtok(strToken, strDelimit);
     return 0;
 }
 
-int vsnprintf_s(char *strDest, size_t destMax, size_t count, const char *format, va_list argList)
-{
-    return 0;
-}
+int vsnprintf_s(char* strDest, size_t destMax, size_t count, const char* format, va_list argList) { return 0; }
 
 #ifdef __cplusplus
 }

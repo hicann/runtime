@@ -22,12 +22,10 @@ using namespace Adx;
 namespace {
 void MockPlatformInfoSuccess()
 {
-    MOCKER_CPP(&fe::PlatformInfoManager::InitializePlatformInfo)
-        .stubs().will(returnValue(0U));
-    MOCKER_CPP(&fe::PlatformInfoManager::GetPlatformInfo)
-        .stubs().will(returnValue(0U));
+    MOCKER_CPP(&fe::PlatformInfoManager::InitializePlatformInfo).stubs().will(returnValue(0U));
+    MOCKER_CPP(&fe::PlatformInfoManager::GetPlatformInfo).stubs().will(returnValue(0U));
 }
-}
+} // namespace
 
 class DupAdumpPlatformApiUtest : public testing::Test {
 protected:
@@ -85,8 +83,7 @@ TEST_F(DupAdumpPlatformApiUtest, Test_GetUBSizeAndCoreNumDCSuccess)
 
 TEST_F(DupAdumpPlatformApiUtest, Test_GetUBSizeAndCoreNumInitFail)
 {
-    MOCKER_CPP(&fe::PlatformInfoManager::InitializePlatformInfo)
-        .stubs().will(returnValue(1U));
+    MOCKER_CPP(&fe::PlatformInfoManager::InitializePlatformInfo).stubs().will(returnValue(1U));
 
     const std::string socVersion("Ascend950");
     PlatformData platformData;
@@ -98,8 +95,7 @@ TEST_F(DupAdumpPlatformApiUtest, Test_GetAicoreSizeInfoFail)
     const std::string socVersion("test");
     BufferSize bufferSize{};
 
-    MOCKER_CPP(&fe::PlatformInfoManager::InitializePlatformInfo)
-        .stubs().will(returnValue(1U));
+    MOCKER_CPP(&fe::PlatformInfoManager::InitializePlatformInfo).stubs().will(returnValue(1U));
 
     EXPECT_EQ(AdumpPlatformApi::GetAicoreSizeInfo(socVersion, bufferSize), false);
 }
@@ -109,10 +105,8 @@ TEST_F(DupAdumpPlatformApiUtest, Test_GetAicoreSizeInfoGetPlatformInfoFail)
     const std::string socVersion("test");
     BufferSize bufferSize{};
 
-    MOCKER_CPP(&fe::PlatformInfoManager::InitializePlatformInfo)
-        .stubs().will(returnValue(0U));
-    MOCKER_CPP(&fe::PlatformInfoManager::GetPlatformInfo)
-        .stubs().will(returnValue(1U));
+    MOCKER_CPP(&fe::PlatformInfoManager::InitializePlatformInfo).stubs().will(returnValue(0U));
+    MOCKER_CPP(&fe::PlatformInfoManager::GetPlatformInfo).stubs().will(returnValue(1U));
 
     EXPECT_EQ(AdumpPlatformApi::GetAicoreSizeInfo(socVersion, bufferSize), false);
 }

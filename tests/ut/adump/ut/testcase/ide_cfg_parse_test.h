@@ -10,4 +10,4 @@
 #ifndef __IDE_CFG_PARSE_TEST_H
 #define __IDE_CFG_PARSE_TEST_H
 
-#endif  //__IDE_COMMON_UTIL_TEST_H
+#endif //__IDE_COMMON_UTIL_TEST_H

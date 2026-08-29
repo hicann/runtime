@@ -18,15 +18,13 @@
 #include "server_register.h"
 
 using namespace Adx;
-class ADX_SERVER_REGISTER_STEST: public testing::Test {
+class ADX_SERVER_REGISTER_STEST : public testing::Test {
 protected:
     virtual void SetUp() {}
-    virtual void TearDown() {
-        GlobalMockObject::verify();
-    }
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
-int32_t CreateDetachTaskWithDefaultAttrStub(mmThread &tid, mmUserBlock_t &funcBlock)
+int32_t CreateDetachTaskWithDefaultAttrStub(mmThread& tid, mmUserBlock_t& funcBlock)
 {
     funcBlock.procFunc(funcBlock.pulArg);
     return 0;
@@ -37,10 +35,10 @@ TEST_F(ADX_SERVER_REGISTER_STEST, ServerRegisterTest)
     drvHdcServiceType serverType = HDC_SERVICE_TYPE_DUMP;
     int mode = 0;
     int devId = -1;
-    std::unique_ptr<AdxComponent> cpn(new(std::nothrow)AdxDumpReceive);
+    std::unique_ptr<AdxComponent> cpn(new (std::nothrow) AdxDumpReceive);
     EXPECT_EQ(IDE_DAEMON_OK, AdxRegisterComponentFunc(serverType, cpn));
 
-    ServerInitInfo info = { (int32_t)serverType, mode, devId };
+    ServerInitInfo info = {(int32_t)serverType, mode, devId};
     EXPECT_EQ(IDE_DAEMON_OK, AdxComponentServerStartup(info));
 
     EXPECT_EQ(IDE_DAEMON_OK, AdxComponentServerCleanup(serverType));
@@ -50,10 +48,8 @@ TEST_F(ADX_SERVER_REGISTER_STEST, AdxServerProcess)
 {
     int mode = 0;
     int devId = -1;
-    ServerInitInfo info = { (int32_t)HDC_SERVICE_TYPE_DUMP, mode, devId };
-    MOCKER_CPP(&Thread::CreateDetachTaskWithDefaultAttr)
-        .stubs()
-        .will(invoke(CreateDetachTaskWithDefaultAttrStub));
+    ServerInitInfo info = {(int32_t)HDC_SERVICE_TYPE_DUMP, mode, devId};
+    MOCKER_CPP(&Thread::CreateDetachTaskWithDefaultAttr).stubs().will(invoke(CreateDetachTaskWithDefaultAttrStub));
 
     EXPECT_EQ(IDE_DAEMON_OK, AdxComponentServerStartup(info));
 }

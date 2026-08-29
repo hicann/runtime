@@ -13,7 +13,7 @@
 #include "ascend_hal.h"
 #include "runtime/dev.h"
 
-rtError_t rtGetRunModeHost(rtRunMode *info);
-rtError_t rtGetRunModeDevice(rtRunMode *info);
+rtError_t rtGetRunModeHost(rtRunMode* info);
+rtError_t rtGetRunModeDevice(rtRunMode* info);
 
 #endif

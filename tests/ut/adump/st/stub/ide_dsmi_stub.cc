@@ -11,23 +11,25 @@
 
 static const uint32_t LOCAL_DEV_NUM = 8;
 
-rtError_t rtGetRunModeHost(rtRunMode *info) {
-	*info = (rtRunMode)1;
+rtError_t rtGetRunModeHost(rtRunMode* info)
+{
+    *info = (rtRunMode)1;
     return RT_ERROR_NONE;
 }
 
-rtError_t rtGetRunModeDevice(rtRunMode *info) {
-	*info = (rtRunMode)0;
+rtError_t rtGetRunModeDevice(rtRunMode* info)
+{
+    *info = (rtRunMode)0;
     return RT_ERROR_NONE;
 }
 
-rtError_t rtGetDeviceCount(int32_t *cnt)
+rtError_t rtGetDeviceCount(int32_t* cnt)
 {
     *cnt = LOCAL_DEV_NUM;
     return RT_ERROR_NONE;
 }
 
-rtError_t rtGetDeviceIDs(uint32_t *devices, uint32_t len)
+rtError_t rtGetDeviceIDs(uint32_t* devices, uint32_t len)
 {
     for (size_t i = 0; i < len; ++i) {
         devices[i] = i;
@@ -36,18 +38,15 @@ rtError_t rtGetDeviceIDs(uint32_t *devices, uint32_t len)
     return RT_ERROR_NONE;
 }
 
-rtError_t rtGetDeviceStatus(const int32_t devId, rtDevStatus_t * const status)
+rtError_t rtGetDeviceStatus(const int32_t devId, rtDevStatus_t* const status) { return RT_ERROR_NONE; }
+
+rtError_t rtGetDeviceInfo(uint32_t deviceId, int32_t moduleType, int32_t infoType, int64_t* val)
 {
     return RT_ERROR_NONE;
 }
 
-rtError_t rtGetDeviceInfo(uint32_t deviceId, int32_t moduleType, int32_t infoType, int64_t *val)
+rtError_t rtGetRunMode(rtRunMode* runMode)
 {
-    return RT_ERROR_NONE;
-}
-
-rtError_t rtGetRunMode(rtRunMode *runMode)
-{
-	*runMode = RT_RUN_MODE_OFFLINE;
+    *runMode = RT_RUN_MODE_OFFLINE;
     return RT_ERROR_NONE;
 }

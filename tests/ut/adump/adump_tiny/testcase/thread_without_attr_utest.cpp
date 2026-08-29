@@ -20,11 +20,8 @@ using namespace Adx;
 // mmpa 桩全局标志 g_mmCreateTaskWitchDeatchFlag 由 mmpa_stub.h 声明：
 // 置 2 使 mmCreateTaskWithDetach 返回 -1
 namespace {
-void *ThreadEntry(void *arg)
-{
-    return arg;
-}
-}
+void* ThreadEntry(void* arg) { return arg; }
+} // namespace
 
 class TinyThreadWithoutAttrUtest : public testing::Test {
 protected:

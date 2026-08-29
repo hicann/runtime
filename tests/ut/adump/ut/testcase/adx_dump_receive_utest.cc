@@ -30,15 +30,15 @@
 
 using namespace Adx;
 
-class ADX_DUMP_RECEIVE_TEST: public testing::Test {
+class ADX_DUMP_RECEIVE_TEST : public testing::Test {
 protected:
     virtual void SetUp() {}
-    virtual void TearDown() {
-        GlobalMockObject::verify();
-    }
+    virtual void TearDown() { GlobalMockObject::verify(); }
 
-    static SharedPtr<MsgProto> CreateMsgProto(MsgType msgType, MsgStatus status, uint32_t reqType = 1, uint32_t devId = 0) {
-        MsgProto *proto = (MsgProto *)IdeXmalloc(sizeof(MsgProto));
+    static SharedPtr<MsgProto> CreateMsgProto(
+        MsgType msgType, MsgStatus status, uint32_t reqType = 1, uint32_t devId = 0)
+    {
+        MsgProto* proto = (MsgProto*)IdeXmalloc(sizeof(MsgProto));
         (void)memset_s(proto, sizeof(MsgProto), 0, sizeof(MsgProto));
         proto->msgType = msgType;
         proto->status = status;
@@ -47,7 +47,8 @@ protected:
         return SharedPtr<MsgProto>(proto, IdeXfree);
     }
 
-    static CommHandle CreateHdcHandle() {
+    static CommHandle CreateHdcHandle()
+    {
         CommHandle handle;
         handle.type = OptType::COMM_HDC;
         return handle;
@@ -68,7 +69,7 @@ TEST_F(ADX_DUMP_RECEIVE_TEST, UnInit)
 
 static int HdcReadCtrlDataInStub(HDC_SESSION session, IdeRecvBuffT recvBuf, IdeI32Pt recvLen)
 {
-    MsgProto *msg = (MsgProto *)IdeXmalloc(sizeof(MsgProto));
+    MsgProto* msg = (MsgProto*)IdeXmalloc(sizeof(MsgProto));
     (void)memset_s(msg, sizeof(MsgProto), 0, sizeof(MsgProto));
     msg->msgType = MsgType::MSG_CTRL;
     msg->status = MsgStatus::MSG_STATUS_DATA_IN;
@@ -79,7 +80,7 @@ static int HdcReadCtrlDataInStub(HDC_SESSION session, IdeRecvBuffT recvBuf, IdeI
 
 static int HdcReadCtrlEndStub(HDC_SESSION session, IdeRecvBuffT recvBuf, IdeI32Pt recvLen)
 {
-    MsgProto *msg = (MsgProto *)IdeXmalloc(sizeof(MsgProto));
+    MsgProto* msg = (MsgProto*)IdeXmalloc(sizeof(MsgProto));
     (void)memset_s(msg, sizeof(MsgProto), 0, sizeof(MsgProto));
     msg->msgType = MsgType::MSG_CTRL;
     msg->status = MsgStatus::MSG_STATUS_DATA_END;
@@ -137,10 +138,7 @@ TEST_F(ADX_DUMP_RECEIVE_TEST, Process_HandshakeSuccessAndReceive)
     EXPECT_EQ(IDE_DAEMON_OK, adxDumpReceive.UnInit());
 }
 
-static int HdcReadErrorStub(HDC_SESSION session, IdeRecvBuffT recvBuf, IdeI32Pt recvLen)
-{
-    return IDE_DAEMON_ERROR;
-}
+static int HdcReadErrorStub(HDC_SESSION session, IdeRecvBuffT recvBuf, IdeI32Pt recvLen) { return IDE_DAEMON_ERROR; }
 
 TEST_F(ADX_DUMP_RECEIVE_TEST, Receive_ReadError)
 {
@@ -177,7 +175,7 @@ TEST_F(ADX_DUMP_RECEIVE_TEST, Receive_MsgNull)
 
 static int HdcReadLenTooSmallStub(HDC_SESSION session, IdeRecvBuffT recvBuf, IdeI32Pt recvLen)
 {
-    MsgProto *msg = (MsgProto *)IdeXmalloc(sizeof(MsgProto));
+    MsgProto* msg = (MsgProto*)IdeXmalloc(sizeof(MsgProto));
     (void)memset_s(msg, sizeof(MsgProto), 0, sizeof(MsgProto));
     *recvBuf = msg;
     *recvLen = sizeof(MsgProto) - 1;
@@ -203,11 +201,11 @@ static int HdcReadSliceLenMismatchStub(HDC_SESSION session, IdeRecvBuffT recvBuf
     uint32_t chunkHeaderLen = sizeof(DumpChunk);
     uint32_t dataLen = 100;
     uint32_t totalSize = protoHeaderLen + chunkHeaderLen + dataLen;
-    MsgProto *msg = (MsgProto *)IdeXmalloc(totalSize);
+    MsgProto* msg = (MsgProto*)IdeXmalloc(totalSize);
     (void)memset_s(msg, totalSize, 0, totalSize);
     msg->msgType = MsgType::MSG_DATA;
     msg->sliceLen = dataLen + 10;
-    DumpChunk *chunk = reinterpret_cast<DumpChunk*>(msg->data);
+    DumpChunk* chunk = reinterpret_cast<DumpChunk*>(msg->data);
     chunk->bufLen = dataLen;
     *recvBuf = msg;
     *recvLen = totalSize;
@@ -232,7 +230,7 @@ static int HdcReadDataLenTooSmallStub(HDC_SESSION session, IdeRecvBuffT recvBuf,
     uint32_t protoHeaderLen = sizeof(MsgProto);
     uint32_t chunkHeaderLen = sizeof(DumpChunk);
     uint32_t totalSize = protoHeaderLen + chunkHeaderLen - 1;
-    MsgProto *msg = (MsgProto *)IdeXmalloc(protoHeaderLen + chunkHeaderLen);
+    MsgProto* msg = (MsgProto*)IdeXmalloc(protoHeaderLen + chunkHeaderLen);
     (void)memset_s(msg, protoHeaderLen + chunkHeaderLen, 0, protoHeaderLen + chunkHeaderLen);
     msg->msgType = MsgType::MSG_DATA;
     msg->sliceLen = chunkHeaderLen - 1;
@@ -260,11 +258,11 @@ static int HdcReadBufLenExceedsStub(HDC_SESSION session, IdeRecvBuffT recvBuf, I
     uint32_t chunkHeaderLen = sizeof(DumpChunk);
     uint32_t dataLen = 50;
     uint32_t totalSize = protoHeaderLen + chunkHeaderLen + dataLen;
-    MsgProto *msg = (MsgProto *)IdeXmalloc(totalSize);
+    MsgProto* msg = (MsgProto*)IdeXmalloc(totalSize);
     (void)memset_s(msg, totalSize, 0, totalSize);
     msg->msgType = MsgType::MSG_DATA;
     msg->sliceLen = chunkHeaderLen + dataLen;
-    DumpChunk *chunk = reinterpret_cast<DumpChunk*>(msg->data);
+    DumpChunk* chunk = reinterpret_cast<DumpChunk*>(msg->data);
     chunk->bufLen = dataLen + 100;
     *recvBuf = msg;
     *recvLen = totalSize;
@@ -290,11 +288,11 @@ static int HdcReadValidDataStub(HDC_SESSION session, IdeRecvBuffT recvBuf, IdeI3
     uint32_t chunkHeaderLen = sizeof(DumpChunk);
     uint32_t dataLen = 100;
     uint32_t totalSize = protoHeaderLen + chunkHeaderLen + dataLen;
-    MsgProto *msg = (MsgProto *)IdeXmalloc(totalSize);
+    MsgProto* msg = (MsgProto*)IdeXmalloc(totalSize);
     (void)memset_s(msg, totalSize, 0, totalSize);
     msg->msgType = MsgType::MSG_DATA;
     msg->sliceLen = chunkHeaderLen + dataLen;
-    DumpChunk *chunk = reinterpret_cast<DumpChunk*>(msg->data);
+    DumpChunk* chunk = reinterpret_cast<DumpChunk*>(msg->data);
     chunk->bufLen = dataLen;
     chunk->isLastChunk = 1;
     chunk->offset = 0;

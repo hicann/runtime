@@ -19,10 +19,9 @@ constexpr uint32_t MAX_PATH_LENGTH = 512;
 std::mutex CaseWorkspace::mtx_;
 uint64_t CaseWorkspace::uniqueId_ = 0;
 
-CaseWorkspace::CaseWorkspace(const std::string &caseName, bool autoClean)
-    : caseName_(caseName), autoClean_(autoClean)
+CaseWorkspace::CaseWorkspace(const std::string& caseName, bool autoClean) : caseName_(caseName), autoClean_(autoClean)
 {
-    (void) Init();
+    (void)Init();
 }
 
 CaseWorkspace::~CaseWorkspace()
@@ -46,12 +45,9 @@ void CaseWorkspace::Clean() const
     return;
 }
 
-std::string CaseWorkspace::Root() const
-{
-    return rootPath_;
-}
+std::string CaseWorkspace::Root() const { return rootPath_; }
 
-std::string CaseWorkspace::Touch(const std::string &file) const
+std::string CaseWorkspace::Touch(const std::string& file) const
 {
     std::string absFilePath = rootPath_ + "/" + file;
     Print("Touch %s", absFilePath.c_str());
@@ -60,7 +56,7 @@ std::string CaseWorkspace::Touch(const std::string &file) const
     return absFilePath;
 }
 
-std::string CaseWorkspace::Mkdir(const std::string &dir) const
+std::string CaseWorkspace::Mkdir(const std::string& dir) const
 {
     std::string absDirPath = rootPath_ + "/" + dir;
     Print("Mkdir %s", absDirPath.c_str());
@@ -69,7 +65,7 @@ std::string CaseWorkspace::Mkdir(const std::string &dir) const
     return absDirPath;
 }
 
-void CaseWorkspace::Print(const char *fmt, ...) const
+void CaseWorkspace::Print(const char* fmt, ...) const
 {
     if (fmt == nullptr) {
         printf("[CaseWorkspace][%s] null\n", caseName_.c_str());
@@ -89,7 +85,7 @@ void CaseWorkspace::Print(const char *fmt, ...) const
     fflush(stdout);
 }
 
-void CaseWorkspace::Echo(const std::string &context, const std::string &file, bool endline, bool append) const
+void CaseWorkspace::Echo(const std::string& context, const std::string& file, bool endline, bool append) const
 {
     std::string newline = endline ? "" : "-n";
     std::string redirect = append ? ">>" : ">";
@@ -99,7 +95,7 @@ void CaseWorkspace::Echo(const std::string &context, const std::string &file, bo
     system(cmd.c_str());
 }
 
-void CaseWorkspace::Chmod(const std::string &path, const std::string &mode) const
+void CaseWorkspace::Chmod(const std::string& path, const std::string& mode) const
 {
     std::string absPath = rootPath_ + "/" + path;
     Print("Chmod path %s, mode: %s", absPath.c_str(), mode.c_str());
@@ -110,7 +106,7 @@ void CaseWorkspace::Chmod(const std::string &path, const std::string &mode) cons
 std::string CaseWorkspace::InitRootPath()
 {
     char cwd[MAX_PATH_LENGTH] = {0};
-    char *ptr = getcwd(cwd, MAX_PATH_LENGTH);
+    char* ptr = getcwd(cwd, MAX_PATH_LENGTH);
     if (ptr == nullptr) {
         Print("Get current case cwd failed.");
         return "";

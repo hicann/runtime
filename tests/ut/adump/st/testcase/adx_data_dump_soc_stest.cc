@@ -20,11 +20,8 @@
 using namespace Adx;
 class ADX_DATA_DUMP_SOC_STEST : public testing::Test {
 protected:
-    virtual void SetUp() {
-    }
-    virtual void TearDown() {
-        GlobalMockObject::verify();
-    }
+    virtual void SetUp() {}
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 static mmSsize_t SockRecvDumpDataApiStub(mmSockHandle sockfd, VOID* pstRecvBuf, INT32 recvLen, INT32 recvFlag)
@@ -35,13 +32,13 @@ static mmSsize_t SockRecvDumpDataApiStub(mmSockHandle sockfd, VOID* pstRecvBuf, 
     msg->msgType = MsgType::MSG_DATA;
     msg->sliceLen = 0;
     msg->totalLen = 0;
-    std::cout << "SockRecvDumpDataStub" << recvLen <<std::endl;
+    std::cout << "SockRecvDumpDataStub" << recvLen << std::endl;
     return recvLen;
 }
 
 static mmSsize_t SockSendDumpDataApiStub(mmSockHandle sockfd, VOID* pstSendBuf, INT32 sendLen, INT32 sendFlag)
 {
-    std::cout << "SockSendDumpDataStub" << sendLen <<std::endl;
+    std::cout << "SockSendDumpDataStub" << sendLen << std::endl;
     return sendLen;
 }
 

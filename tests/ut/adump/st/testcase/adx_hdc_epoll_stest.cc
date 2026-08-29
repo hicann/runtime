@@ -15,14 +15,10 @@
 #include "epoll/adx_hdc_epoll.h"
 #include "ide_daemon_stub.h"
 using namespace Adx;
-class ADX_HDC_EPOLL_STEST: public testing::Test {
+class ADX_HDC_EPOLL_STEST : public testing::Test {
 protected:
-    virtual void SetUp() {
-        
-    }
-    virtual void TearDown() {
-        GlobalMockObject::verify();
-    }
+    virtual void SetUp() {}
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 TEST_F(ADX_HDC_EPOLL_STEST, EpollCreate)
@@ -32,10 +28,8 @@ TEST_F(ADX_HDC_EPOLL_STEST, EpollCreate)
 
     const int invalidSize = -1;
     const int validSize = 1;
-    MOCKER(drvHdcEpollCreate).stubs()
-        .will(returnValue(-1));
-    MOCKER(free).stubs()
-        .will(invoke(free_stub));
+    MOCKER(drvHdcEpollCreate).stubs().will(returnValue(-1));
+    MOCKER(free).stubs().will(invoke(free_stub));
 
     int ret = epoll->EpollCreate(invalidSize);
     EXPECT_EQ(IDE_DAEMON_ERROR, ret);
@@ -43,7 +37,6 @@ TEST_F(ADX_HDC_EPOLL_STEST, EpollCreate)
 
 TEST_F(ADX_HDC_EPOLL_STEST, EpollCtl)
 {
-
     std::shared_ptr<Adx::AdxEpoll> epoll = nullptr;
     epoll = std::make_shared<Adx::AdxHdcEpoll>();
 
@@ -55,8 +48,7 @@ TEST_F(ADX_HDC_EPOLL_STEST, EpollCtl)
     EXPECT_EQ(-1, epoll->EpollCtl(handle, event, HDC_EPOLL_CTL_ADD));
 
     handle = 1;
-    MOCKER(drvHdcEpollCtl).stubs()
-        .will(returnValue(-1));
+    MOCKER(drvHdcEpollCtl).stubs().will(returnValue(-1));
 
     EXPECT_EQ(-1, epoll->EpollCtl(handle, event, HDC_EPOLL_CTL_ADD));
 }
@@ -73,8 +65,7 @@ TEST_F(ADX_HDC_EPOLL_STEST, EpollWait)
     int32_t timeout = 0;
     EXPECT_EQ(-1, epoll->EpollWait(event, size, timeout));
 
-    MOCKER(drvHdcEpollWait).stubs()
-        .will(returnValue(-1));
+    MOCKER(drvHdcEpollWait).stubs().will(returnValue(-1));
 
     EXPECT_EQ(-1, epoll->EpollWait(event, size, timeout));
 }
@@ -93,5 +84,4 @@ TEST_F(ADX_HDC_EPOLL_STEST, EpollGetSize)
     epoll = std::make_shared<Adx::AdxHdcEpoll>();
 
     EXPECT_EQ(128, epoll->EpollGetSize());
-
 }

@@ -22,51 +22,44 @@
 using namespace Adx;
 class ADX_DATA_DUMP_UTEST : public testing::Test {
 protected:
-    virtual void SetUp() {
-    }
-    virtual void TearDown() {
-        GlobalMockObject::verify();
-    }
+    virtual void SetUp() {}
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 static int HdcReadDumpDataApiStub(HDC_SESSION session, IdeRecvBuffT recvBuf, IdeI32Pt recvLen)
 {
     static int loop = 0;
-    MsgProto *msg = (MsgProto *)malloc(sizeof(MsgProto));
+    MsgProto* msg = (MsgProto*)malloc(sizeof(MsgProto));
     (void)AdxMsgProto::CreateCtrlMsg(*msg, MsgStatus::MSG_STATUS_NONE_ERROR);
     msg->reqType = IDE_DUMP_REQ;
     msg->devId = 0;
 
-    std::cout<<"HdcReadDumpDataApiStub : "<<*recvLen <<std::endl;
-    *recvBuf = (void *)msg;
+    std::cout << "HdcReadDumpDataApiStub : " << *recvLen << std::endl;
+    *recvBuf = (void*)msg;
     *recvLen = sizeof(MsgProto);
     return IDE_DAEMON_OK;
 }
 
 TEST_F(ADX_DATA_DUMP_UTEST, IdeDumpHdcApiSuccessRemote)
 {
-    MOCKER(HdcRead).stubs()
-        .will(invoke(HdcReadDumpDataApiStub));
+    MOCKER(HdcRead).stubs().will(invoke(HdcReadDumpDataApiStub));
 
-    MOCKER(HdcReadNb).stubs()
-        .will(invoke(HdcReadDumpDataApiStub));
+    MOCKER(HdcReadNb).stubs().will(invoke(HdcReadDumpDataApiStub));
 
-    MOCKER(HdcWrite).stubs()
-        .will(returnValue(IDE_DAEMON_OK));
+    MOCKER(HdcWrite).stubs().will(returnValue(IDE_DAEMON_OK));
 
-    MOCKER(HdcWriteNb).stubs()
-        .will(returnValue(IDE_DAEMON_OK));
+    MOCKER(HdcWriteNb).stubs().will(returnValue(IDE_DAEMON_OK));
 
-    const char *info = "127.0.0.1:22118;0;1000";
+    const char* info = "127.0.0.1:22118;0;1000";
     IDE_SESSION session = IdeDumpStart(info);
     EXPECT_EQ(true, session != nullptr);
     IdeDumpChunk dumpChunk;
     dumpChunk.fileName = "127.0.0.1:adx_data_dump_server_manager";
     dumpChunk.bufLen = strlen("127.0.0.1:adx_data_dump_server_manager");
-    dumpChunk.dataBuf = (unsigned char *)"127.0.0.1:adx_data_dump_server_manager";
-    dumpChunk.flag = IDE_DUMP_NONE_FLAG;        // flag
-    dumpChunk.isLastChunk = 1;                  // last chunk
-    dumpChunk.offset = -1;                      // write append
+    dumpChunk.dataBuf = (unsigned char*)"127.0.0.1:adx_data_dump_server_manager";
+    dumpChunk.flag = IDE_DUMP_NONE_FLAG; // flag
+    dumpChunk.isLastChunk = 1;           // last chunk
+    dumpChunk.offset = -1;               // write append
     EXPECT_EQ(IDE_DAEMON_NONE_ERROR, IdeDumpData(session, &dumpChunk));
     EXPECT_EQ(IDE_DAEMON_NONE_ERROR, IdeDumpEnd(session));
 }

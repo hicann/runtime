@@ -17,20 +17,15 @@
 #include "common_utils.h"
 #include "adx_component_api_c.h"
 using namespace Adx;
-class ADX_SERVER_MANGER_TEST: public testing::Test {
+class ADX_SERVER_MANGER_TEST : public testing::Test {
 protected:
     virtual void SetUp() {}
-    virtual void TearDown() {
-        GlobalMockObject::verify();
-    }
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 TEST_F(ADX_SERVER_MANGER_TEST, AdxRegisterService)
 {
-    MOCKER(AdxRegisterComponentFunc)
-        .stubs()
-        .will(returnValue(IDE_DAEMON_OK))
-        .then(returnValue(IDE_DAEMON_ERROR));
+    MOCKER(AdxRegisterComponentFunc).stubs().will(returnValue(IDE_DAEMON_OK)).then(returnValue(IDE_DAEMON_ERROR));
     drvHdcServiceType serviceType;
     ComponentType componentType;
     AdxComponentInit init;
@@ -59,17 +54,13 @@ TEST_F(ADX_SERVER_MANGER_TEST, AdxUnRegisterService)
 
 TEST_F(ADX_SERVER_MANGER_TEST, AdxServiceStartupSucc)
 {
-    ServerInitInfo *info = (ServerInitInfo *)malloc(sizeof(ServerInitInfo));
+    ServerInitInfo* info = (ServerInitInfo*)malloc(sizeof(ServerInitInfo));
     info->serverType = HDC_SERVICE_TYPE_LOG;
     info->mode = 0;
     info->deviceId = -1;
-    MOCKER(IdeXmalloc)
-    .stubs()
-    .will(returnValue((void*)info));
+    MOCKER(IdeXmalloc).stubs().will(returnValue((void*)info));
 
-    MOCKER(memcpy_s)
-    .stubs()
-    .will(returnValue(EOK));
+    MOCKER(memcpy_s).stubs().will(returnValue(EOK));
 
     EXPECT_EQ(IDE_DAEMON_OK, AdxServiceStartup(*info));
     IDE_XFREE_AND_SET_NULL(info);
@@ -77,10 +68,7 @@ TEST_F(ADX_SERVER_MANGER_TEST, AdxServiceStartupSucc)
 
 TEST_F(ADX_SERVER_MANGER_TEST, AdxServiceCleanup)
 {
-    MOCKER(AdxComponentServerCleanup)
-    .stubs()
-    .will(returnValue(IDE_DAEMON_OK))
-    .then(returnValue(IDE_DAEMON_ERROR));
+    MOCKER(AdxComponentServerCleanup).stubs().will(returnValue(IDE_DAEMON_OK)).then(returnValue(IDE_DAEMON_ERROR));
     drvHdcServiceType serviceType;
     EXPECT_EQ(IDE_DAEMON_OK, AdxServiceCleanup(serviceType));
     EXPECT_EQ(IDE_DAEMON_ERROR, AdxServiceCleanup(serviceType));

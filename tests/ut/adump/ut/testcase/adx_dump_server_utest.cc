@@ -23,12 +23,13 @@
 
 using namespace Adx;
 
-class ADX_DATADUMP_SERVER_UTEST: public testing::Test {
+class ADX_DATADUMP_SERVER_UTEST : public testing::Test {
 protected:
     virtual void SetUp() {}
-    virtual void TearDown() {
+    virtual void TearDown()
+    {
         GlobalMockObject::verify();
-        while(Adx::AdxDumpRecord::Instance().GetDumpInitNum() > 0) {
+        while (Adx::AdxDumpRecord::Instance().GetDumpInitNum() > 0) {
             Adx::AdxDumpRecord::Instance().UpdateDumpInitNum(false);
         }
     }
@@ -96,9 +97,7 @@ TEST_F(ADX_DATADUMP_SERVER_UTEST, AdxDataDumpServerInit_CreateRecordProcess_Fail
 TEST_F(ADX_DATADUMP_SERVER_UTEST, AdxDataDumpServerInit_CreateServerProcess_Failed)
 {
     MOCKER(rtGetRunMode).stubs().will(returnValue(1));
-    MOCKER_CPP(&Thread::CreateDetachTaskWithDefaultAttr)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER_CPP(&Thread::CreateDetachTaskWithDefaultAttr).stubs().will(returnValue(EN_ERROR));
     EXPECT_EQ(IDE_DAEMON_ERROR, AdxDataDumpServerInit());
     EXPECT_EQ(Adx::AdxDumpRecord::Instance().GetDumpInitNum(), 0);
     EXPECT_EQ(IDE_DAEMON_OK, AdxDataDumpServerUnInit());
@@ -110,10 +109,7 @@ TEST_F(ADX_DATADUMP_SERVER_UTEST, AdxDataDumpServerUnInit_RecordUninit_Failed)
     MOCKER(rtGetRunMode).stubs().will(returnValue(1));
     AdxDataDumpServerInit();
     EXPECT_EQ(Adx::AdxDumpRecord::Instance().GetDumpInitNum(), 1);
-    MOCKER_CPP(&Adx::AdxDumpRecord::UnInit)
-        .stubs()
-        .will(returnValue(-1))
-        .then(returnValue(IDE_DAEMON_OK));
+    MOCKER_CPP(&Adx::AdxDumpRecord::UnInit).stubs().will(returnValue(-1)).then(returnValue(IDE_DAEMON_OK));
     EXPECT_EQ(IDE_DAEMON_ERROR, AdxDataDumpServerUnInit());
     EXPECT_EQ(Adx::AdxDumpRecord::Instance().GetDumpInitNum(), 1);
     EXPECT_EQ(IDE_DAEMON_OK, AdxDataDumpServerUnInit());
@@ -155,10 +151,7 @@ TEST_F(ADX_DATADUMP_SERVER_UTEST, Helper_AdxDataDumpServerReInit_And_ReUninit)
 
 TEST_F(ADX_DATADUMP_SERVER_UTEST, Helper_AdxDataDumpServerInit_Failed)
 {
-    MOCKER_CPP(&Adx::AdxDumpRecord::Init)
-        .stubs()
-        .will(returnValue(-1))
-        .then(returnValue(IDE_DAEMON_OK));
+    MOCKER_CPP(&Adx::AdxDumpRecord::Init).stubs().will(returnValue(-1)).then(returnValue(IDE_DAEMON_OK));
 
     std::string hostPID = "456";
     (void)setenv(IdeDaemon::Common::Config::HELPER_HOSTPID.c_str(), hostPID.c_str(), 0);
@@ -175,10 +168,7 @@ TEST_F(ADX_DATADUMP_SERVER_UTEST, Helper_AdxDataDumpServerInit_Failed)
 
 TEST_F(ADX_DATADUMP_SERVER_UTEST, Helper_AdxDataDumpServerUnInit_Failed)
 {
-    MOCKER_CPP(&Adx::AdxDumpRecord::UnInit)
-        .stubs()
-        .will(returnValue(-1))
-        .then(returnValue(IDE_DAEMON_OK));
+    MOCKER_CPP(&Adx::AdxDumpRecord::UnInit).stubs().will(returnValue(-1)).then(returnValue(IDE_DAEMON_OK));
 
     std::string hostPID = "456";
     (void)setenv(IdeDaemon::Common::Config::HELPER_HOSTPID.c_str(), hostPID.c_str(), 0);
@@ -193,10 +183,7 @@ TEST_F(ADX_DATADUMP_SERVER_UTEST, Helper_AdxDataDumpServerUnInit_Failed)
 
 TEST_F(ADX_DATADUMP_SERVER_UTEST, Helper_AdxDataDumpServerInit_WithoutServer)
 {
-    MOCKER_CPP(&Thread::CreateDetachTaskWithDefaultAttr)
-        .stubs()
-        .will(returnValue(EN_OK))
-        .then(returnValue(EN_ERROR));
+    MOCKER_CPP(&Thread::CreateDetachTaskWithDefaultAttr).stubs().will(returnValue(EN_OK)).then(returnValue(EN_ERROR));
     std::string hostPID = "456";
     (void)setenv(IdeDaemon::Common::Config::HELPER_HOSTPID.c_str(), hostPID.c_str(), 0);
     EXPECT_EQ(IDE_DAEMON_OK, AdxDataDumpServerInit());
@@ -218,9 +205,7 @@ TEST_F(ADX_DATADUMP_SERVER_UTEST, Helper_AdxDataDumpServerUnInit_WithoutServer)
 TEST_F(ADX_DATADUMP_SERVER_UTEST, TimeProcess_FaultDevice)
 {
     SharedPtr<AdxDevice> device = std::make_shared<AdxHdcDevice>();
-    MOCKER_CPP(&Adx::AdxCommOptManager::GetDevice)
-    .stubs()
-    .will(returnValue(device));
+    MOCKER_CPP(&Adx::AdxCommOptManager::GetDevice).stubs().will(returnValue(device));
     AdxServerManager manager;
     manager.TimerProcess();
     EXPECT_EQ(1, manager.faultyDevices_.size());
@@ -233,12 +218,8 @@ TEST_F(ADX_DATADUMP_SERVER_UTEST, TimeProcess_FaultDevice)
 TEST_F(ADX_DATADUMP_SERVER_UTEST, TimeProcess_FaultToNormalDevice)
 {
     SharedPtr<AdxDevice> device = std::make_shared<AdxHdcDevice>();
-    MOCKER_CPP(&Adx::AdxCommOptManager::GetDevice)
-    .stubs()
-    .will(returnValue(device));
-    MOCKER_CPP(&Adx::AdxServerManager::ServerInit)
-    .stubs()
-    .will(returnValue(false)).then(returnValue(true));
+    MOCKER_CPP(&Adx::AdxCommOptManager::GetDevice).stubs().will(returnValue(device));
+    MOCKER_CPP(&Adx::AdxServerManager::ServerInit).stubs().will(returnValue(false)).then(returnValue(true));
     AdxServerManager manager;
     manager.TimerProcess();
     EXPECT_EQ(1, manager.faultyDevices_.size());

@@ -18,59 +18,55 @@
 
 using namespace Adx;
 
-class OperatorDumperUtest: public testing::Test {
+class OperatorDumperUtest : public testing::Test {
 protected:
     virtual void SetUp() {}
-    virtual void TearDown()
-    {
-        GlobalMockObject::verify();
-    }
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 class OperatorDumperBuilder {
 public:
     OperatorDumperBuilder() = default;
-    OperatorDumperBuilder &OpType(const std::string &opType)
+    OperatorDumperBuilder& OpType(const std::string& opType)
     {
         opType_ = opType;
         return *this;
     }
 
-    OperatorDumperBuilder &OpName(const std::string &opName)
+    OperatorDumperBuilder& OpName(const std::string& opName)
     {
         opName_ = opName;
         return *this;
     }
 
-    OperatorDumperBuilder &DumpPath(const std::string &dumpPath)
+    OperatorDumperBuilder& DumpPath(const std::string& dumpPath)
     {
         dumpPath_ = dumpPath;
         return *this;
     }
 
-    OperatorDumperBuilder &DumpMode(const std::string &dumpMode)
+    OperatorDumperBuilder& DumpMode(const std::string& dumpMode)
     {
         dumpMode_ = dumpMode;
         return *this;
     }
 
-    OperatorDumperBuilder &DumpData(const std::string &dumpData)
+    OperatorDumperBuilder& DumpData(const std::string& dumpData)
     {
         dumpData_ = dumpData;
         return *this;
     }
 
-    OperatorDumperBuilder &SetDumpType(const DumpType &dumpType)
+    OperatorDumperBuilder& SetDumpType(const DumpType& dumpType)
     {
         dumpType_ = dumpType;
         return *this;
     }
 
-
-    OperatorDumperBuilder &AddInputTensor(AddressType addrType = AddressType::TRADITIONAL)
+    OperatorDumperBuilder& AddInputTensor(AddressType addrType = AddressType::TRADITIONAL)
     {
         TensorInfo tensor = {};
-        tensor.tensorAddr = (int64_t *)0x1234;
+        tensor.tensorAddr = (int64_t*)0x1234;
         tensor.tensorSize = 1;
         tensor.type = TensorType::INPUT;
         tensor.placement = TensorPlacement::kOnDeviceHbm;
@@ -83,10 +79,10 @@ public:
         return *this;
     }
 
-    OperatorDumperBuilder &AddOutputTensor(AddressType addrType = AddressType::TRADITIONAL)
+    OperatorDumperBuilder& AddOutputTensor(AddressType addrType = AddressType::TRADITIONAL)
     {
         TensorInfo tensor = {};
-        tensor.tensorAddr = (int64_t *)0x1234;
+        tensor.tensorAddr = (int64_t*)0x1234;
         tensor.tensorSize = 2;
         tensor.type = TensorType::OUTPUT;
         tensor.placement = TensorPlacement::kOnDeviceHbm;
@@ -99,7 +95,7 @@ public:
         return *this;
     }
 
-    OperatorDumperBuilder &Stream(rtStream_t stream)
+    OperatorDumperBuilder& Stream(rtStream_t stream)
     {
         stream_ = stream;
         return *this;
@@ -123,20 +119,20 @@ public:
         dumpConf.dumpMode = dumpMode_;
         dumpConf.dumpData = dumpData_;
         DumpSetting setting;
-        (void) setting.Init(dumpType_, dumpConf);
+        (void)setting.Init(dumpType_, dumpConf);
         return setting;
     }
 
 private:
-    std::string opType_ {"TestOpType"};
-    std::string opName_ {"TestOpName"};
-    std::string dumpPath_ {"/path/to/dump/"};
-    std::string dumpMode_ {"all"};
-    std::string dumpData_ {"tensor"};
+    std::string opType_{"TestOpType"};
+    std::string opName_{"TestOpName"};
+    std::string dumpPath_{"/path/to/dump/"};
+    std::string dumpMode_{"all"};
+    std::string dumpData_{"tensor"};
     DumpType dumpType_ = DumpType::OPERATOR;
     std::vector<DumpTensor> inputDumpTensors_;
     std::vector<DumpTensor> outputDumpTensors_;
-    rtStream_t stream_ {nullptr};
+    rtStream_t stream_{nullptr};
 };
 
 TEST_F(OperatorDumperUtest, Test_DumpTensor_Tensor_Success)
@@ -204,15 +200,15 @@ TEST_F(OperatorDumperUtest, Test_DumpTensorWithCfg_StaticGraph_Tensor_Success)
 {
     DumpCfg dumpCfg;
     std::vector<DumpAttr> attrs;
-    std::string modelName {"modelName"};
-    std::string dumpStep {"0|1|3"};
-    attrs.push_back({DUMP_ATTR_MODEL_NAME, {.modelName = const_cast<char *>(modelName.c_str())}});
+    std::string modelName{"modelName"};
+    std::string dumpStep{"0|1|3"};
+    attrs.push_back({DUMP_ATTR_MODEL_NAME, {.modelName = const_cast<char*>(modelName.c_str())}});
     attrs.push_back({DUMP_ATTR_MODEL_NAMESIZE, {.modelNameSize = modelName.size()}});
     attrs.push_back({DUMP_ATTR_MODEL_ID, {.modelId = 10U}});
     attrs.push_back({DUMP_ATTR_STEP_ID_ADDR, {.stepIdAddr = 0x1234}});
     attrs.push_back({DUMP_ATTR_ITER_PER_LOOP_ADDR, {.iterPerLoopAddr = 0x1234}});
     attrs.push_back({DUMP_ATTR_LOOP_COND_ADDR, {.loopCondAddr = 0x1234}});
-    attrs.push_back({DUMP_ATTR_DUMP_STEP, {.dumpStep = const_cast<char *>(dumpStep.c_str())}});
+    attrs.push_back({DUMP_ATTR_DUMP_STEP, {.dumpStep = const_cast<char*>(dumpStep.c_str())}});
     attrs.push_back({DUMP_ATTR_DUMP_STEPSIZE, {.dumpStepSize = dumpStep.size()}});
     attrs.push_back({DUMP_ATTR_STREAM_MODEL, {.streamModel = 0U}});
     dumpCfg.attrs = attrs.data();
@@ -251,8 +247,8 @@ TEST_F(OperatorDumperUtest, Test_DumpTensorWithCfg_StaticGraph_OverFlow_Success)
     std::vector<DumpAttr> attrs;
     dumpCfg.attrs = attrs.data();
     dumpCfg.numAttrs = attrs.size();
-    OperatorDumper opDumper = OperatorDumperBuilder().SetDumpType(
-        DumpType::OP_OVERFLOW).AddOutputTensor(AddressType::RAW).Build();
+    OperatorDumper opDumper =
+        OperatorDumperBuilder().SetDumpType(DumpType::OP_OVERFLOW).AddOutputTensor(AddressType::RAW).Build();
     EXPECT_EQ(opDumper.LaunchWithCfg(dumpCfg), ADUMP_SUCCESS);
     opDumper.FreeDevMemCache();
 }

@@ -14,14 +14,10 @@
 #include "mockcpp/mockcpp.hpp"
 #include "dump_printf_platform.h"
 
-
 class DupDumpPrintfPlatformUtest : public testing::Test {
 protected:
     virtual void SetUp() {}
-    virtual void TearDown()
-    {
-        GlobalMockObject::verify();
-    }
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 TEST_F(DupDumpPrintfPlatformUtest, Test_DumpPrintfPlatform)
@@ -48,7 +44,7 @@ TEST_F(DupDumpPrintfPlatformUtest, Test_AdxGetBlockNumMultipleCalls)
 
 TEST_F(DupDumpPrintfPlatformUtest, Test_AdxEnableSimtDumpWithDifferentSizes)
 {
-    std::vector<size_t> sizes = {0, 1024, 1024*1024, 1024*1024*10, 1024*1024*100, 1024*1024*200};
+    std::vector<size_t> sizes = {0, 1024, 1024 * 1024, 1024 * 1024 * 10, 1024 * 1024 * 100, 1024 * 1024 * 200};
     for (size_t size : sizes) {
         EXPECT_EQ(AdxEnableSimtDump(size), false);
     }
@@ -65,14 +61,14 @@ TEST_F(DupDumpPrintfPlatformUtest, Test_AllFunctionsConsistency)
 {
     uint32_t offset1 = AdxGetCoreTypeIDOffset();
     uint32_t block1 = AdxGetBlockNum();
-    bool simt1 = AdxEnableSimtDump(1024*1024);
+    bool simt1 = AdxEnableSimtDump(1024 * 1024);
     uint32_t timeout1 = GetStreamSynchronizeTimeout();
-    
+
     uint32_t offset2 = AdxGetCoreTypeIDOffset();
     uint32_t block2 = AdxGetBlockNum();
-    bool simt2 = AdxEnableSimtDump(1024*1024);
+    bool simt2 = AdxEnableSimtDump(1024 * 1024);
     uint32_t timeout2 = GetStreamSynchronizeTimeout();
-    
+
     EXPECT_EQ(offset1, offset2);
     EXPECT_EQ(block1, block2);
     EXPECT_EQ(simt1, simt2);
@@ -111,9 +107,9 @@ TEST_F(DupDumpPrintfPlatformUtest, Test_FunctionsIndependentCalls)
     EXPECT_EQ(AdxGetBlockNum(), 75U);
     EXPECT_EQ(AdxEnableSimtDump(1024), false);
     EXPECT_EQ(GetStreamSynchronizeTimeout(), 60000U);
-    
+
     EXPECT_EQ(AdxGetBlockNum(), 75U);
     EXPECT_EQ(AdxGetCoreTypeIDOffset(), 50U);
     EXPECT_EQ(GetStreamSynchronizeTimeout(), 60000U);
-    EXPECT_EQ(AdxEnableSimtDump(1024*1024), false);
+    EXPECT_EQ(AdxEnableSimtDump(1024 * 1024), false);
 }

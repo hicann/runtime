@@ -17,18 +17,18 @@ namespace Tools {
 
 class CaseWorkspace {
 public:
-    explicit CaseWorkspace(const std::string &caseName, bool autoClean = true);
+    explicit CaseWorkspace(const std::string& caseName, bool autoClean = true);
     ~CaseWorkspace();
-    CaseWorkspace(const CaseWorkspace &) = delete;
-    CaseWorkspace &operator=(const CaseWorkspace &) = delete;
+    CaseWorkspace(const CaseWorkspace&) = delete;
+    CaseWorkspace& operator=(const CaseWorkspace&) = delete;
     std::string Init();
     void Clean() const;
     std::string Root() const;
-    void Print(const char *fmt, ...) const;
-    void Echo(const std::string &context, const std::string &file, bool endline = false, bool append = true) const;
-    std::string Touch(const std::string &file) const;
-    std::string Mkdir(const std::string &dir) const;
-    void Chmod(const std::string &path, const std::string &mode) const;
+    void Print(const char* fmt, ...) const;
+    void Echo(const std::string& context, const std::string& file, bool endline = false, bool append = true) const;
+    std::string Touch(const std::string& file) const;
+    std::string Mkdir(const std::string& dir) const;
+    void Chmod(const std::string& path, const std::string& mode) const;
 
 private:
     std::string InitRootPath();

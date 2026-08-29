@@ -20,10 +20,7 @@ using namespace Adx;
 class TinyOperatorPreliminaryStest : public testing::Test {
 protected:
     virtual void SetUp() {}
-    virtual void TearDown()
-    {
-        GlobalMockObject::verify();
-    }
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 TEST_F(TinyOperatorPreliminaryStest, Test_OperatorInit)

@@ -31,55 +31,37 @@ int64_t GetSizeInBytes(int64_t count, ge::DataType dataType)
     }
 }
 
-std::string TypeUtils::FormatToSerialString(const ge::Format format)
-{
-    return "ND";
-}
+std::string TypeUtils::FormatToSerialString(const ge::Format format) { return "ND"; }
 
-std::string TypeUtils::DataTypeToSerialString(const ge::DataType dataType)
-{
-    return "DT_UNDEFINED";
-}
+std::string TypeUtils::DataTypeToSerialString(const ge::DataType dataType) { return "DT_UNDEFINED"; }
 
-const char_t *GetDataTypeStr(DataType dt)
-{
-    return "float";
-}
+const char_t* GetDataTypeStr(DataType dt) { return "float"; }
 
-Format GetFormatFromName(const char_t *format)
-{
-    return FORMAT_ND;
-}
+Format GetFormatFromName(const char_t* format) { return FORMAT_ND; }
 
-const char_t *GetFormatName(Format format)
-{
-    return "ND";
-}
+const char_t* GetFormatName(Format format) { return "ND"; }
 
 OpDesc::OpDesc() {}
 
 OpDesc::~OpDesc() {}
 
-ProtoAttrMap &OpDesc::MutableAttrMap()
+ProtoAttrMap& OpDesc::MutableAttrMap()
 {
     static ProtoAttrMap mp;
     return mp;
 }
 
-ConstProtoAttrMap &OpDesc::GetAttrMap() const
+ConstProtoAttrMap& OpDesc::GetAttrMap() const
 {
     static ConstProtoAttrMap mp;
     return mp;
 }
 
-Operator OperatorFactory::CreateOperator(char const* a, char const* b)
-{
-    return Operator();
-}
+Operator OperatorFactory::CreateOperator(char const* a, char const* b) { return Operator(); }
 
 void Operator::BreakConnect() const {}
 
-graphStatus Operator::GetAllIrAttrNamesAndTypes(std::map<AscendString, AscendString> &attr_name_types) const
+graphStatus Operator::GetAllIrAttrNamesAndTypes(std::map<AscendString, AscendString>& attr_name_types) const
 {
     return 0;
 }
@@ -90,145 +72,149 @@ OpDescPtr OpDescUtils::GetOpDescFromOperator(const Operator& oprt)
     return ptr;
 }
 
-const std::vector<std::pair<std::string, IrInputType>> &OpDesc::GetIrInputs() const
+const std::vector<std::pair<std::string, IrInputType>>& OpDesc::GetIrInputs() const
 {
     static std::vector<std::pair<std::string, IrInputType>> mp;
     return mp;
 }
 
-size_t OpDesc::GetAllInputsSize() const
-{
-    return 0;
-}
+size_t OpDesc::GetAllInputsSize() const { return 0; }
 
-const std::vector<std::pair<std::string, IrOutputType>> &OpDesc::GetIrOutputs() const
+const std::vector<std::pair<std::string, IrOutputType>>& OpDesc::GetIrOutputs() const
 {
     static std::vector<std::pair<std::string, IrOutputType>> mp;
     return mp;
 }
 
-size_t OpDesc::GetOutputsSize() const
-{
-    return 0;
-}
+size_t OpDesc::GetOutputsSize() const { return 0; }
 
-const std::vector<std::string> &OpDesc::GetIrAttrNames() const
+const std::vector<std::string>& OpDesc::GetIrAttrNames() const
 {
     static std::vector<std::string> vec;
     return vec;
 }
 
-const char_t *AscendString::GetString() const
+const char_t* AscendString::GetString() const
 {
-  if (name_ == nullptr) {
-    const static char *empty_value = "";
-    return empty_value;
-  }
-  return (*name_).c_str();
+    if (name_ == nullptr) {
+        const static char* empty_value = "";
+        return empty_value;
+    }
+    return (*name_).c_str();
 }
 
-AscendString::AscendString(const char_t *const name) {
-  if (name != nullptr) {
-    name_ = MakeShared<std::string>(name);
-  }
-}
-
-AscendString::AscendString(const char_t *const name, size_t length) {
-  if (name != nullptr) {
-    name_ = MakeShared<std::string>(name, length);
-  }
-}
-
-bool AscendString::operator<(const AscendString &d) const
+AscendString::AscendString(const char_t* const name)
 {
-  if ((name_ == nullptr) && (d.name_ == nullptr)) {
-    return false;
-  } else if (name_ == nullptr) {
-    return true;
-  } else if (d.name_ == nullptr) {
-    return false;
-  } else {
-    return (*name_) < (*(d.name_));
-  }
-}
-size_t AscendString::GetLength() const {
-  if (name_ == nullptr) {
-    return 0UL;
-  }
-
-  return (*name_).length();
+    if (name != nullptr) {
+        name_ = MakeShared<std::string>(name);
+    }
 }
 
-size_t AscendString::Find(const AscendString &ascend_string) const {
-  if ((name_ == nullptr) || (ascend_string.name_ == nullptr)) {
-    return std::string::npos;
-  }
-  return name_->find(*(ascend_string.name_));
+AscendString::AscendString(const char_t* const name, size_t length)
+{
+    if (name != nullptr) {
+        name_ = MakeShared<std::string>(name, length);
+    }
 }
 
-size_t AscendString::Hash() const {
-  if (name_ == nullptr) {
-    const static size_t kEmptyStringHash = std::hash<std::string>()("");
-    return kEmptyStringHash;
-  }
+bool AscendString::operator<(const AscendString& d) const
+{
+    if ((name_ == nullptr) && (d.name_ == nullptr)) {
+        return false;
+    } else if (name_ == nullptr) {
+        return true;
+    } else if (d.name_ == nullptr) {
+        return false;
+    } else {
+        return (*name_) < (*(d.name_));
+    }
+}
+size_t AscendString::GetLength() const
+{
+    if (name_ == nullptr) {
+        return 0UL;
+    }
 
-  return std::hash<std::string>()(*name_);
+    return (*name_).length();
 }
 
-bool AscendString::operator>(const AscendString &d) const {
-  if ((name_ == nullptr) && (d.name_ == nullptr)) {
-    return false;
-  } else if (name_ == nullptr) {
-    return false;
-  } else if (d.name_ == nullptr) {
-    return true;
-  } else {
-    return (*name_) > (*(d.name_));
-  }
+size_t AscendString::Find(const AscendString& ascend_string) const
+{
+    if ((name_ == nullptr) || (ascend_string.name_ == nullptr)) {
+        return std::string::npos;
+    }
+    return name_->find(*(ascend_string.name_));
 }
 
-bool AscendString::operator<=(const AscendString &d) const {
-  if (name_ == nullptr) {
-    return true;
-  } else if (d.name_ == nullptr) {
-    return false;
-  } else {
-    return (*name_) <= (*(d.name_));
-  }
+size_t AscendString::Hash() const
+{
+    if (name_ == nullptr) {
+        const static size_t kEmptyStringHash = std::hash<std::string>()("");
+        return kEmptyStringHash;
+    }
+
+    return std::hash<std::string>()(*name_);
 }
 
-bool AscendString::operator>=(const AscendString &d) const {
-  if (d.name_ == nullptr) {
-    return true;
-  } else if (name_ == nullptr) {
-    return false;
-  } else {
-    return (*name_) >= (*(d.name_));
-  }
+bool AscendString::operator>(const AscendString& d) const
+{
+    if ((name_ == nullptr) && (d.name_ == nullptr)) {
+        return false;
+    } else if (name_ == nullptr) {
+        return false;
+    } else if (d.name_ == nullptr) {
+        return true;
+    } else {
+        return (*name_) > (*(d.name_));
+    }
 }
 
-bool AscendString::operator==(const AscendString &d) const {
-  if ((name_ == nullptr) && (d.name_ == nullptr)) {
-    return true;
-  } else if (name_ == nullptr) {
-    return false;
-  } else if (d.name_ == nullptr) {
-    return false;
-  } else {
-    return (*name_) == (*(d.name_));
-  }
+bool AscendString::operator<=(const AscendString& d) const
+{
+    if (name_ == nullptr) {
+        return true;
+    } else if (d.name_ == nullptr) {
+        return false;
+    } else {
+        return (*name_) <= (*(d.name_));
+    }
 }
 
-bool AscendString::operator!=(const AscendString &d) const {
-  if ((name_ == nullptr) && (d.name_ == nullptr)) {
-    return false;
-  } else if (name_ == nullptr) {
-    return true;
-  } else if (d.name_ == nullptr) {
-    return true;
-  } else {
-    return (*name_) != (*(d.name_));
-  }
+bool AscendString::operator>=(const AscendString& d) const
+{
+    if (d.name_ == nullptr) {
+        return true;
+    } else if (name_ == nullptr) {
+        return false;
+    } else {
+        return (*name_) >= (*(d.name_));
+    }
+}
+
+bool AscendString::operator==(const AscendString& d) const
+{
+    if ((name_ == nullptr) && (d.name_ == nullptr)) {
+        return true;
+    } else if (name_ == nullptr) {
+        return false;
+    } else if (d.name_ == nullptr) {
+        return false;
+    } else {
+        return (*name_) == (*(d.name_));
+    }
+}
+
+bool AscendString::operator!=(const AscendString& d) const
+{
+    if ((name_ == nullptr) && (d.name_ == nullptr)) {
+        return false;
+    } else if (name_ == nullptr) {
+        return true;
+    } else if (d.name_ == nullptr) {
+        return true;
+    } else {
+        return (*name_) != (*(d.name_));
+    }
 }
 
 const std::map<std::string, AnyValue::ValueType> kAttrStrTypesMap = {
@@ -256,13 +242,13 @@ const std::map<std::string, AnyValue::ValueType> kAttrStrTypesMap = {
     {"VT_LIST_DATA_TYPE", AnyValue::VT_LIST_DATA_TYPE},
 };
 
-AnyValue::ValueType AttrUtils::SerialStringToValueType(const std::string &value_type_string)
+AnyValue::ValueType AttrUtils::SerialStringToValueType(const std::string& value_type_string)
 {
-  const auto it = kAttrStrTypesMap.find(value_type_string);
-  if (it != kAttrStrTypesMap.end()) {
-    return it->second;
-  } else {
-    return AnyValue::VT_NONE;
-  }
+    const auto it = kAttrStrTypesMap.find(value_type_string);
+    if (it != kAttrStrTypesMap.end()) {
+        return it->second;
+    } else {
+        return AnyValue::VT_NONE;
+    }
 }
 } // namespace ge

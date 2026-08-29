@@ -22,10 +22,7 @@ using namespace Adx;
 class DupDumpCoreStest : public testing::Test {
 protected:
     virtual void SetUp() {}
-    virtual void TearDown()
-    {
-        GlobalMockObject::verify();
-    }
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 TEST_F(DupDumpCoreStest, Test_DumpRegisterNotSupport)

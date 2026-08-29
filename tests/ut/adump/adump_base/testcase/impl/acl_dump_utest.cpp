@@ -19,9 +19,9 @@
 #include "error_manager_stub.h"
 #include "adx_datadump_callback.h"
 
-int32_t messageCallbackStub(const struct acldumpChunk * data, int32_t len)
+int32_t messageCallbackStub(const struct acldumpChunk* data, int32_t len)
 {
-    if((sizeof(acldumpChunk) + data->bufLen) == len) {
+    if ((sizeof(acldumpChunk) + data->bufLen) == len) {
         printf("messageCallbackStub ok\n");
         return 0;
     } else {
@@ -29,12 +29,11 @@ int32_t messageCallbackStub(const struct acldumpChunk * data, int32_t len)
     }
 }
 
-class ACL_DUMP_UTEST: public testing::Test {
+class ACL_DUMP_UTEST : public testing::Test {
 protected:
-    virtual void SetUp() {
-        ClearLastReportedErrorCode();
-    }
-    virtual void TearDown() {
+    virtual void SetUp() { ClearLastReportedErrorCode(); }
+    virtual void TearDown()
+    {
         GlobalMockObject::verify();
         ClearLastReportedErrorCode();
     }
@@ -63,17 +62,17 @@ TEST_F(ACL_DUMP_UTEST, TestAcldumpRegCallbackInvalidFlag)
     aclError ret1 = acldumpRegCallback(messageCallbackStub, 1);
     EXPECT_EQ(ret1, ACL_ERROR_FAILURE);
     EXPECT_EQ(GetLastReportedErrorCode(), "EP0006");
-    
+
     ClearLastReportedErrorCode();
     aclError ret2 = acldumpRegCallback(messageCallbackStub, -1);
     EXPECT_EQ(ret2, ACL_ERROR_FAILURE);
     EXPECT_EQ(GetLastReportedErrorCode(), "EP0006");
-    
+
     ClearLastReportedErrorCode();
     aclError ret3 = acldumpRegCallback(nullptr, 1);
     EXPECT_EQ(ret3, ACL_ERROR_FAILURE);
     EXPECT_EQ(GetLastReportedErrorCode(), "EP0007");
-    
+
     acldumpUnregCallback();
 }
 

@@ -26,10 +26,7 @@ static std::vector<std::string> logRecord;
 class DumpFileUtest : public testing::Test {
 protected:
     virtual void SetUp() {}
-    virtual void TearDown()
-    {
-        GlobalMockObject::verify();
-    }
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 TEST_F(DumpFileUtest, Test_DumpData)
@@ -110,7 +107,7 @@ TEST_F(DumpFileUtest, Test_SetOpAttr)
     tensorV2.type = TensorType::INPUT;
     tensorV2.dataType = static_cast<int32_t>(GeDataType::DT_INT64);
     tensorV2.argsOffSet = 0;
-    tensorV2.format = 2;  // ND
+    tensorV2.format = 2; // ND
     tensorV2.shape = {1};
     tensorV2.originShape = {1};
     tensorV2.tensorAddr = &hostData;
@@ -122,7 +119,7 @@ TEST_F(DumpFileUtest, Test_SetOpAttr)
 
     // 屏蔽真实 device 内存拷贝，直接写 host 数据
     // 堆分配：CopyDeviceToHost 返回值由 HOST_RT_MEMORY_GUARD 释放，FreeHost 打桩防止 double-free
-    void *fakeHostData = malloc(sizeof(hostData));
+    void* fakeHostData = malloc(sizeof(hostData));
     ASSERT_NE(fakeHostData, nullptr);
     MOCKER(rtMemGetInfoByType).stubs().will(returnValue((rtError_t)RT_ERROR_NONE));
     MOCKER(&DumpMemory::CopyDeviceToHost).stubs().will(returnValue(fakeHostData));
@@ -442,14 +439,11 @@ TEST_F(DumpFileUtest, Test_SetOpAttr)
 class DumpFileExtraUtest : public testing::Test {
 protected:
     void SetUp() override {}
-    void TearDown() override
-    {
-        GlobalMockObject::verify();
-    }
+    void TearDown() override { GlobalMockObject::verify(); }
 
     static TensorInfoV2 MakeValidTensorInfo(TensorType type, uint32_t argsOffset = 0U)
     {
-        static int64_t fakeData[16] = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16};
+        static int64_t fakeData[16] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
         TensorInfoV2 t = {};
         t.addrType = AddressType::TRADITIONAL;
         t.type = type;
@@ -514,7 +508,7 @@ TEST_F(DumpFileExtraUtest, SetWorkspaces_NonNullAddr)
 
     static int32_t wsData[4] = {10, 20, 30, 40};
     std::vector<DumpWorkspace> workspaces;
-    workspaces.emplace_back(static_cast<void *>(wsData), sizeof(wsData), 0U);
+    workspaces.emplace_back(static_cast<void*>(wsData), sizeof(wsData), 0U);
 
     dumpFile.SetWorkspaces(workspaces); // covers non-null workspace path
     EXPECT_TRUE(true);
@@ -545,7 +539,7 @@ TEST_F(DumpFileExtraUtest, Dump_WithNonNullTensors_ValidPath)
     // Set workspace with non-null address
     static int32_t wsData[4] = {1, 2, 3, 4};
     std::vector<DumpWorkspace> workspaces;
-    workspaces.emplace_back(static_cast<void *>(wsData), sizeof(wsData), 0U);
+    workspaces.emplace_back(static_cast<void*>(wsData), sizeof(wsData), 0U);
     dumpFile.SetWorkspaces(workspaces);
 
     // Execute dump - covers lines 222-334 (Dump + WriteInputTensors + WriteOutputTensors + WriteWorkspace)
@@ -563,7 +557,7 @@ TEST_F(DumpFileExtraUtest, SetWorkspaces_ZeroSize_SkipsWrite)
 
     static int32_t wsData[4] = {1, 2, 3, 4};
     std::vector<DumpWorkspace> workspaces;
-    workspaces.emplace_back(static_cast<void *>(wsData), 0U, 0U); // size=0 → skip
+    workspaces.emplace_back(static_cast<void*>(wsData), 0U, 0U); // size=0 → skip
 
     dumpFile.SetWorkspaces(workspaces);
 
@@ -592,7 +586,7 @@ TEST_F(DumpFileExtraUtest, SetTensorBuffer_OutputTensor)
 {
     DumpFile dumpFile(0, "/tmp/adump_extra_tensor_buf_output.bin");
 
-    static int32_t bufData[16] = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16};
+    static int32_t bufData[16] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
     TensorBuffer tb(static_cast<const void*>(bufData), 0U, DfxTensorType::OUTPUT_TENSOR, DfxPointerType(0));
     tb.size = 16U;
     tb.dataTypeSize = sizeof(int32_t);
@@ -611,7 +605,7 @@ TEST_F(DumpFileExtraUtest, SetTensorBuffer_TilingData)
 {
     DumpFile dumpFile(0, "/tmp/adump_extra_tensor_buf_tiling.bin");
 
-    static int32_t bufData[8] = {10,20,30,40,50,60,70,80};
+    static int32_t bufData[8] = {10, 20, 30, 40, 50, 60, 70, 80};
     TensorBuffer tb(static_cast<const void*>(bufData), 1U, DfxTensorType::TILING_DATA, DfxPointerType(0));
     tb.size = 8U;
     tb.dataTypeSize = sizeof(int32_t);

@@ -36,12 +36,10 @@ static IdeDumpChunk BuildDefaultDumpChunk()
     return dumpChunk;
 }
 
-class ADX_DUMP_SOC_HELPER_TEST: public testing::Test {
+class ADX_DUMP_SOC_HELPER_TEST : public testing::Test {
 protected:
     virtual void SetUp() {}
-    virtual void TearDown() {
-        GlobalMockObject::verify();
-    }
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 TEST_F(ADX_DUMP_SOC_HELPER_TEST, ParseConnectInfo)
@@ -59,17 +57,14 @@ TEST_F(ADX_DUMP_SOC_HELPER_TEST, ParseConnectInfo)
     const std::string privInfo3 = "127.0.0.1:22118;0;abc";
     ret = Adx::AdxDumpSocHelper::Instance().ParseConnectInfo(privInfo3);
     EXPECT_EQ(IDE_DAEMON_INVALID_PARAM_ERROR, ret);
-    
 }
 
 TEST_F(ADX_DUMP_SOC_HELPER_TEST, IdeDumpStart)
 {
     const char* privInfo = "127.0.0.1:22118;0;123";
-    MOCKER(mmGetPid).stubs()
-        .will(returnValue(123));
+    MOCKER(mmGetPid).stubs().will(returnValue(123));
     const char* appBin = "/home/app";
-    MOCKER(readlink).stubs()
-        .will(returnValue(0));
+    MOCKER(readlink).stubs().will(returnValue(0));
     IDE_SESSION session = IdeDumpStart(privInfo);
     EXPECT_EQ(session, (IDE_SESSION)0xFFFF0000);
 }
@@ -137,12 +132,8 @@ TEST_F(ADX_DUMP_SOC_HELPER_TEST, IdeDumpData_BufLenOverflow)
 TEST_F(ADX_DUMP_SOC_HELPER_TEST, IdeDumpData_MallocFailed)
 {
     IdeDumpChunk dumpChunk = BuildDefaultDumpChunk();
-    MOCKER(Adx::IdeXmalloc).stubs().will(returnValue((IdeMemHandle)nullptr));
+    MOCKER(Adx::IdeXmalloc).stubs().will(returnValue((IdeMemHandle) nullptr));
     EXPECT_EQ(IDE_DAEMON_MALLOC_ERROR, IdeDumpData(TEST_SESSION, &dumpChunk));
 }
 
-TEST_F(ADX_DUMP_SOC_HELPER_TEST, IdeDumpEnd)
-{
-    EXPECT_EQ(0, IdeDumpEnd(TEST_SESSION));
-}
-
+TEST_F(ADX_DUMP_SOC_HELPER_TEST, IdeDumpEnd) { EXPECT_EQ(0, IdeDumpEnd(TEST_SESSION)); }

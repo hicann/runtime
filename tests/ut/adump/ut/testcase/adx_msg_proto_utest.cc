@@ -19,34 +19,21 @@
 #include "adx_comm_opt_manager.h"
 
 using namespace Adx;
-class ADX_MSG_PROTO_UTEST: public testing::Test {
+class ADX_MSG_PROTO_UTEST : public testing::Test {
 protected:
-    virtual void SetUp() {
-
-    }
-    virtual void TearDown() {
-        GlobalMockObject::verify();
-    }
+    virtual void SetUp() {}
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 TEST_F(ADX_MSG_PROTO_UTEST, SendEventFile)
 {
     CommHandle handle = ADX_COMMOPT_INVALID_HANDLE(OptType::COMM_LOCAL);
 
-    MOCKER(mmLseek)
-    .stubs()
-    .will(returnValue((long)1000));
+    MOCKER(mmLseek).stubs().will(returnValue((long)1000));
 
-    MOCKER(mmRead)
-    .stubs()
-    .will(returnValue((long)-1))
-    .then(returnValue((long)-1))
-    .then(returnValue((long)1000));
+    MOCKER(mmRead).stubs().will(returnValue((long)-1)).then(returnValue((long)-1)).then(returnValue((long)1000));
 
-    MOCKER(mmGetErrorCode)
-    .stubs()
-    .will(returnValue(EIO))
-    .then(returnValue(0));
+    MOCKER(mmGetErrorCode).stubs().will(returnValue(EIO)).then(returnValue(0));
 
     EXPECT_EQ(IDE_DAEMON_CHANNEL_ERROR, AdxMsgProto::SendEventFile(handle, IDE_FILE_GETD_REQ, 0, 1));
     EXPECT_EQ(IDE_DAEMON_UNKNOW_ERROR, AdxMsgProto::SendEventFile(handle, IDE_FILE_GETD_REQ, 0, 1));
@@ -57,13 +44,9 @@ TEST_F(ADX_MSG_PROTO_UTEST, SendFile)
 {
     CommHandle handle = ADX_COMMOPT_INVALID_HANDLE(OptType::COMM_LOCAL);
 
-    MOCKER(mmLseek)
-    .stubs()
-    .will(returnValue((long)1000));
+    MOCKER(mmLseek).stubs().will(returnValue((long)1000));
 
-    MOCKER(mmRead)
-    .stubs()
-    .will(returnValue((long)1000));
+    MOCKER(mmRead).stubs().will(returnValue((long)1000));
 
     EXPECT_EQ(IDE_DAEMON_CHANNEL_ERROR, AdxMsgProto::SendFile(handle, IDE_FILE_GETD_REQ, 0, 1));
 }

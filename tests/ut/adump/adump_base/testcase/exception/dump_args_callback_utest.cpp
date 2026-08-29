@@ -27,14 +27,14 @@
 using namespace Adx;
 
 namespace {
-void AppendBigEndian16(std::vector<uint8_t> &data, uint16_t value)
+void AppendBigEndian16(std::vector<uint8_t>& data, uint16_t value)
 {
     constexpr uint32_t byteBits = 8U;
     data.push_back(static_cast<uint8_t>(value >> byteBits));
     data.push_back(static_cast<uint8_t>(value));
 }
 
-void AppendBigEndian64(std::vector<uint8_t> &data, uint64_t value)
+void AppendBigEndian64(std::vector<uint8_t>& data, uint64_t value)
 {
     constexpr uint32_t byteBits = 8U;
     for (int32_t i = 7; i >= 0; --i) {
@@ -46,7 +46,7 @@ std::vector<uint8_t> BuildTilingDfxInfo(uint64_t tilingDataSize)
 {
     std::vector<uint8_t> dfxInfo;
     const uint64_t tilingType = static_cast<uint16_t>(DfxTensorType::TILING_DATA) |
-        (static_cast<uint64_t>(DfxPointerType::LEVEL_1_POINTER) << POINTER_TYPE_SHIFT_BITS);
+                                (static_cast<uint64_t>(DfxPointerType::LEVEL_1_POINTER) << POINTER_TYPE_SHIFT_BITS);
 
     AppendBigEndian16(dfxInfo, TYPE_L0_EXCEPTION_DFX_ARGS_INFO);
     AppendBigEndian16(dfxInfo, 2U);
@@ -55,7 +55,7 @@ std::vector<uint8_t> BuildTilingDfxInfo(uint64_t tilingDataSize)
     return dfxInfo;
 }
 
-rtError_t RtBinaryGetFunctionByNameFailed(rtBinHandle binHandle, const char *kernelName, rtFuncHandle *funcHandle)
+rtError_t RtBinaryGetFunctionByNameFailed(rtBinHandle binHandle, const char* kernelName, rtFuncHandle* funcHandle)
 {
     (void)binHandle;
     (void)kernelName;
@@ -63,7 +63,7 @@ rtError_t RtBinaryGetFunctionByNameFailed(rtBinHandle binHandle, const char *ker
     return static_cast<rtError_t>(-1);
 }
 
-rtError_t RtFunctionGetDfxMetaInfoSizeFailed(rtFuncHandle funcHandle, rtFunctionMetaType type, size_t *size)
+rtError_t RtFunctionGetDfxMetaInfoSizeFailed(rtFuncHandle funcHandle, rtFunctionMetaType type, size_t* size)
 {
     (void)funcHandle;
     (void)type;
@@ -73,7 +73,7 @@ rtError_t RtFunctionGetDfxMetaInfoSizeFailed(rtFuncHandle funcHandle, rtFunction
     return static_cast<rtError_t>(-1);
 }
 
-rtError_t RtFunctionGetDfxMetaInfoSizeTooLarge(rtFuncHandle funcHandle, rtFunctionMetaType type, size_t *size)
+rtError_t RtFunctionGetDfxMetaInfoSizeTooLarge(rtFuncHandle funcHandle, rtFunctionMetaType type, size_t* size)
 {
     (void)funcHandle;
     (void)type;
@@ -83,8 +83,8 @@ rtError_t RtFunctionGetDfxMetaInfoSizeTooLarge(rtFuncHandle funcHandle, rtFuncti
     return RT_ERROR_NONE;
 }
 
-rtError_t RtFunctionGetDfxMetaInfoFailed(const rtFuncHandle funcHandle, const rtFunctionMetaType type,
-    void *data, const uint32_t length)
+rtError_t RtFunctionGetDfxMetaInfoFailed(
+    const rtFuncHandle funcHandle, const rtFunctionMetaType type, void* data, const uint32_t length)
 {
     (void)funcHandle;
     (void)type;
@@ -93,7 +93,7 @@ rtError_t RtFunctionGetDfxMetaInfoFailed(const rtFuncHandle funcHandle, const rt
     return static_cast<rtError_t>(-1);
 }
 
-rtError_t RtFunctionGetIsTikMetaInfoSizeFailed(rtFuncHandle funcHandle, rtFunctionMetaType type, size_t *size)
+rtError_t RtFunctionGetIsTikMetaInfoSizeFailed(rtFuncHandle funcHandle, rtFunctionMetaType type, size_t* size)
 {
     (void)funcHandle;
     if (size == nullptr) {
@@ -107,8 +107,8 @@ rtError_t RtFunctionGetIsTikMetaInfoSizeFailed(rtFuncHandle funcHandle, rtFuncti
     return RT_ERROR_NONE;
 }
 
-rtError_t RtFunctionGetIsTikMetaInfoFailed(const rtFuncHandle funcHandle, const rtFunctionMetaType type,
-    void *data, const uint32_t length)
+rtError_t RtFunctionGetIsTikMetaInfoFailed(
+    const rtFuncHandle funcHandle, const rtFunctionMetaType type, void* data, const uint32_t length)
 {
     (void)funcHandle;
     if (data == nullptr) {
@@ -120,44 +120,51 @@ rtError_t RtFunctionGetIsTikMetaInfoFailed(const rtFuncHandle funcHandle, const 
     }
     return static_cast<rtError_t>(-1);
 }
-}
+} // namespace
 
 class DumpArgsCallbackUtest : public testing::Test {
 protected:
     void SetUp() {}
-    void TearDown() {
+    void TearDown()
+    {
         DumpManager::Instance().Reset();
         GlobalMockObject::verify();
     }
-    
-    void InitExceptionInfo(rtExceptionInfo &exception) {
+
+    void InitExceptionInfo(rtExceptionInfo& exception)
+    {
         exception.deviceid = 1;
         exception.streamid = 1;
         exception.taskid = 1;
     }
-    
-    void InitTensorInfo(TensorInfo &tensor, TensorType type, void *addr, size_t size) {
+
+    void InitTensorInfo(TensorInfo& tensor, TensorType type, void* addr, size_t size)
+    {
         tensor = {};
         tensor.type = type;
         tensor.tensorAddr = reinterpret_cast<int64_t*>(addr);
         tensor.tensorSize = size;
     }
-    
-    void SetKernelName(ExceptionDumpInfo &info, const std::string &name) {
+
+    void SetKernelName(ExceptionDumpInfo& info, const std::string& name)
+    {
         SafeStrCopy(info.kernelName, name.c_str(), MAX_KERNELNAME_LEN);
     }
-    
-    void SetDisplayName(ExceptionDumpInfo &info, const std::string &name) {
+
+    void SetDisplayName(ExceptionDumpInfo& info, const std::string& name)
+    {
         SafeStrCopy(info.kernelDisplayName, name.c_str(), MAX_KERNELNAME_LEN);
     }
 
-    void InitKernelBinInfo(ExceptionDumpInfo &info) {
+    void InitKernelBinInfo(ExceptionDumpInfo& info)
+    {
         info = {0};
         info.bin = (rtBinHandle)0x5f;
         SetKernelName(info, "test_kernel");
     }
 
-    void InitDfxArgsDumpInfo(ExceptionDumpInfo &info, uint64_t *args, size_t argSize) {
+    void InitDfxArgsDumpInfo(ExceptionDumpInfo& info, uint64_t* args, size_t argSize)
+    {
         InitKernelBinInfo(info);
         info.argAddr = args;
         info.argSize = argSize;
@@ -172,7 +179,7 @@ TEST_F(DumpArgsCallbackUtest, Test_DumpDfxArgs_InvalidArgs)
 
     ExceptionDumpInfo info = {0};
     SetKernelName(info, "test_kernel");
-    
+
     DumpArgsCallback callback(exception, info, ws.Root());
     EXPECT_EQ(callback.DumpDfxArgs(), ADUMP_SUCCESS);
 }
@@ -190,7 +197,7 @@ TEST_F(DumpArgsCallbackUtest, Test_DumpDfxArgs_WithStub)
     info.argSize = sizeof(args);
     info.bin = (rtBinHandle)0x5f;
     SetKernelName(info, "test_kernel");
-    
+
     DumpArgsCallback callback(exception, info, ws.Root());
     EXPECT_EQ(callback.DumpDfxArgs(), ADUMP_FAILED);
 }
@@ -201,7 +208,7 @@ TEST_F(DumpArgsCallbackUtest, Test_InitTensorModeInfo_TilingShapeMagicInvalid)
     uint64_t args[] = {reinterpret_cast<uint64_t>(tilingData.data())};
     std::vector<uint8_t> dfxInfo = BuildTilingDfxInfo(tilingData.size());
     uint64_t dynamicChunk = 0U;
-    uint64_t *dynamicChunkBak = g_dynamicChunk;
+    uint64_t* dynamicChunkBak = g_dynamicChunk;
     g_dynamicChunk = &dynamicChunk;
 
     DfxArgsParser parser;
@@ -232,7 +239,7 @@ TEST_F(DumpArgsCallbackUtest, Test_DumpExtraTensors_ExceedMax)
     ExceptionDumpInfo info = {0};
     info.extraTensorNum = EXCEPTION_DUMP_MAX_TENSOR_NUM + 1;
     SetKernelName(info, "test_kernel");
-    
+
     DumpArgsCallback callback(exception, info, ws.Root());
     EXPECT_EQ(callback.DumpExtraTensors(), ADUMP_FAILED);
 }
@@ -242,13 +249,13 @@ TEST_F(DumpArgsCallbackUtest, Test_DumpExtraTensors_TensorTypes)
     Tools::CaseWorkspace ws("Test_DumpExtraTensors_TensorTypes");
     rtExceptionInfo exception = {0};
     InitExceptionInfo(exception);
-    
+
     char data[] = "test";
     TensorInfo tensors[3];
     InitTensorInfo(tensors[0], TensorType::INPUT, data, sizeof(data));
     InitTensorInfo(tensors[1], TensorType::OUTPUT, data, sizeof(data));
     InitTensorInfo(tensors[2], TensorType::WORKSPACE, data, sizeof(data));
-    
+
     ExceptionDumpInfo info = {0};
     info.extraTensorNum = 3;
     info.extraTensor[0] = tensors[0];
@@ -259,7 +266,7 @@ TEST_F(DumpArgsCallbackUtest, Test_DumpExtraTensors_TensorTypes)
     MOCKER(&DumpFile::SetInputTensors).stubs();
     MOCKER(&DumpFile::SetOutputTensors).stubs();
     MOCKER(&DumpFile::SetWorkspaces).stubs();
-    
+
     DumpArgsCallback callback(exception, info, ws.Root());
     EXPECT_EQ(callback.DumpExtraTensors(), ADUMP_SUCCESS);
 }
@@ -274,7 +281,7 @@ TEST_F(DumpArgsCallbackUtest, Test_Dump_Basic)
 
     MOCKER(&DumpFile::Dump).stubs().will(returnValue(ADUMP_SUCCESS));
     MOCKER(mmChmod).stubs().will(returnValue(0));
-    
+
     DumpArgsCallback callback(exception, info, ws.Root());
     EXPECT_EQ(callback.Dump(), ADUMP_SUCCESS);
 }
@@ -288,7 +295,7 @@ TEST_F(DumpArgsCallbackUtest, Test_Dump_Failed)
     SetKernelName(info, "test_kernel");
 
     MOCKER(&DumpFile::Dump).stubs().will(returnValue(ADUMP_FAILED));
-    
+
     DumpArgsCallback callback(exception, info, ws.Root());
     EXPECT_EQ(callback.Dump(), ADUMP_FAILED);
 }
@@ -529,15 +536,15 @@ TEST_F(DumpArgsCallbackUtest, Test_DumpExtraTensors_SkipNull)
     Tools::CaseWorkspace ws("Test_DumpExtraTensors_SkipNull");
     rtExceptionInfo exception = {0};
     InitExceptionInfo(exception);
-    
+
     char data[] = "valid";
     TensorInfo validTensor = {};
     validTensor.type = TensorType::INPUT;
     validTensor.tensorAddr = reinterpret_cast<int64_t*>(data);
     validTensor.tensorSize = sizeof(data);
-    
+
     TensorInfo nullTensor = {};
-    
+
     ExceptionDumpInfo info = {0};
     info.extraTensorNum = 2;
     info.extraTensor[0] = nullTensor;
@@ -545,7 +552,7 @@ TEST_F(DumpArgsCallbackUtest, Test_DumpExtraTensors_SkipNull)
     SetKernelName(info, "test_kernel");
 
     MOCKER(&DumpFile::SetInputTensors).stubs();
-    
+
     DumpArgsCallback callback(exception, info, ws.Root());
     EXPECT_EQ(callback.DumpExtraTensors(), ADUMP_SUCCESS);
 }
@@ -555,12 +562,12 @@ TEST_F(DumpArgsCallbackUtest, Test_FullWorkflow)
     Tools::CaseWorkspace ws("Test_FullWorkflow");
     rtExceptionInfo exception = {0};
     InitExceptionInfo(exception);
-    
+
     ExceptionDumpInfo info = {0};
     info.coreId = 0;
     info.coreType = RT_CORE_TYPE_AIC;
     SetKernelName(info, "test_kernel");
-    
+
     char tensorData[] = "tensor";
     TensorInfo inputTensor = {};
     inputTensor.type = TensorType::INPUT;
@@ -572,7 +579,7 @@ TEST_F(DumpArgsCallbackUtest, Test_FullWorkflow)
     MOCKER(&DumpFile::Dump).stubs().will(returnValue(ADUMP_SUCCESS));
     MOCKER(&DumpFile::SetInputTensors).stubs();
     MOCKER(mmChmod).stubs().will(returnValue(0));
-    
+
     DumpArgsCallback callback(exception, info, ws.Root());
     EXPECT_EQ(callback.DumpExtraTensors(), ADUMP_SUCCESS);
     EXPECT_EQ(callback.DumpKernelBin(), ADUMP_SUCCESS);

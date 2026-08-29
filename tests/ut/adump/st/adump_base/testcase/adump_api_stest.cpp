@@ -27,7 +27,7 @@
 using namespace Adx;
 
 #define JSON_BASE ADUMP_BASE_DIR "ut/adump_base/stub/data/json/"
-class AdumpApiStest: public testing::Test {
+class AdumpApiStest : public testing::Test {
 protected:
     virtual void SetUp() {}
     virtual void TearDown()
@@ -90,23 +90,17 @@ TEST_F(AdumpApiStest, TestAdumpSetDumpCommon)
     ret = AdumpSetDump(JSON_BASE "common/watcher_output.json");
     EXPECT_EQ(ret, ADUMP_SUCCESS);
 
-    MOCKER(&mmRealPath)
-        .stubs()
-        .will(returnValue(-1));
+    MOCKER(&mmRealPath).stubs().will(returnValue(-1));
     ret = AdumpSetDump(JSON_BASE "datadump/dump_data_tensor.json");
     EXPECT_EQ(ret, ADUMP_FAILED);
 
     GlobalMockObject::reset();
-    MOCKER(&mmAccess2)
-        .stubs()
-        .will(returnValue(-1));
+    MOCKER(&mmAccess2).stubs().will(returnValue(-1));
     ret = AdumpSetDump(JSON_BASE "datadump/dump_data_tensor.json");
     EXPECT_EQ(ret, ADUMP_FAILED);
 
     GlobalMockObject::reset();
-    MOCKER(&mmStatGet)
-        .stubs()
-        .will(returnValue(-1));
+    MOCKER(&mmStatGet).stubs().will(returnValue(-1));
     ret = AdumpSetDump(JSON_BASE "datadump/dump_data_tensor.json");
     EXPECT_EQ(ret, ADUMP_FAILED);
 
@@ -114,32 +108,24 @@ TEST_F(AdumpApiStest, TestAdumpSetDumpCommon)
     char trustedPath[MMPA_MAX_PATH] = {};
     mmStat_t pathStat = {};
     pathStat.st_mode = 0000000;
-    MOCKER(&mmStatGet)
-        .stubs()
-        .with(any(), outBoundP(&pathStat, sizeof(mmStat_t)))
-        .will(returnValue(0));
+    MOCKER(&mmStatGet).stubs().with(any(), outBoundP(&pathStat, sizeof(mmStat_t))).will(returnValue(0));
     ret = AdumpSetDump(JSON_BASE "datadump/dump_data_tensor.json");
     EXPECT_EQ(ret, ADUMP_FAILED);
 
     GlobalMockObject::reset();
     pathStat.st_mode = 0100000;
     pathStat.st_size = 10 * 1024 * 1024 + 1;
-    MOCKER(&mmStatGet)
-        .stubs()
-        .with(any(), outBoundP(&pathStat, sizeof(mmStat_t)))
-        .will(returnValue(0));
+    MOCKER(&mmStatGet).stubs().with(any(), outBoundP(&pathStat, sizeof(mmStat_t))).will(returnValue(0));
     ret = AdumpSetDump(JSON_BASE "datadump/dump_data_tensor.json");
     EXPECT_EQ(ret, ADUMP_FAILED);
 
     GlobalMockObject::reset();
-    MOCKER(&std::basic_ifstream<char>::is_open, bool (std::basic_ifstream<char>::*)())
-        .stubs()
-        .will(returnValue(false));
+    MOCKER(&std::basic_ifstream<char>::is_open, bool(std::basic_ifstream<char>::*)()).stubs().will(returnValue(false));
     ret = AdumpSetDump(JSON_BASE "datadump/dump_data_tensor.json");
     EXPECT_EQ(ret, ADUMP_FAILED);
 
     GlobalMockObject::reset();
-    MOCKER(&std::basic_ifstream<char>::is_open, bool (std::basic_ifstream<char>::*)())
+    MOCKER(&std::basic_ifstream<char>::is_open, bool(std::basic_ifstream<char>::*)())
         .stubs()
         .will(returnValue(true))
         .then(returnValue(false));
@@ -147,7 +133,7 @@ TEST_F(AdumpApiStest, TestAdumpSetDumpCommon)
     EXPECT_EQ(ret, ADUMP_FAILED);
 
     GlobalMockObject::reset();
-    MOCKER(&std::basic_ifstream<char>::is_open, bool (std::basic_ifstream<char>::*)())
+    MOCKER(&std::basic_ifstream<char>::is_open, bool(std::basic_ifstream<char>::*)())
         .stubs()
         .will(returnValue(true))
         .then(returnValue(true))
@@ -249,7 +235,8 @@ TEST_F(AdumpApiStest, TestAdumpSetDumpDataDump)
     EXPECT_EQ(ret, ADUMP_FAILED);
 }
 
-TEST_F(AdumpApiStest, TestAdumpUnSetDump) {
+TEST_F(AdumpApiStest, TestAdumpUnSetDump)
+{
     int32_t ret = AdumpSetDump(JSON_BASE "datadump/dump_data_stats.json");
     EXPECT_EQ(ret, ADUMP_SUCCESS);
 
@@ -286,7 +273,7 @@ TEST_F(AdumpApiStest, Test_AdumpGetDumpSwitch)
     EXPECT_EQ(AdumpGetDumpSwitch(DumpType::OPERATOR), 0U);
 }
 
-static int32_t AdumpCallbackTest(uint64_t dumpSwitch, char *dumpConfig, int32_t size)
+static int32_t AdumpCallbackTest(uint64_t dumpSwitch, char* dumpConfig, int32_t size)
 {
     if ((dumpSwitch & OP_INFO_RECORD) == 0) {
         std::string testData("test op info record");

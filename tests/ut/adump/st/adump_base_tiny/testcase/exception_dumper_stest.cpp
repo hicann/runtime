@@ -77,8 +77,9 @@ TEST_F(TinyExceptionDumperStest, Test_ExceptionDump_DumpData)
                               .TensorInfo(input.GetTensor(), TensorType::INPUT, AddressType::TRADITIONAL, 0)
                               .TensorInfo(output.GetTensor(), TensorType::OUTPUT, AddressType::TRADITIONAL, 1)
                               .TensorInfo(workspace.GetTensor(), TensorType::WORKSPACE)
-                              .AdditionInfo(DUMP_ADDITIONAL_IMPLY_TYPE,
-                                            std::to_string(static_cast<int32_t>(domi::ImplyType::TVM)))  // must be tvm
+                              .AdditionInfo(
+                                  DUMP_ADDITIONAL_IMPLY_TYPE,
+                                  std::to_string(static_cast<int32_t>(domi::ImplyType::TVM))) // must be tvm
                               .AdditionInfo(DUMP_ADDITIONAL_TILING_DATA, "")
                               .AdditionInfo(DUMP_ADDITIONAL_IS_HOST_ARGS, "false")
                               .DeviceInfo(DEVICE_INFO_NAME_ARGS, args.data(), args.size() * sizeof(uintptr_t))
@@ -182,8 +183,9 @@ TEST_F(TinyExceptionDumperStest, Test_ExceptionDump_DumpData_LongName)
                               .TensorInfo(input.GetTensor(), TensorType::INPUT, AddressType::TRADITIONAL, 0)
                               .TensorInfo(output.GetTensor(), TensorType::OUTPUT, AddressType::TRADITIONAL, 1)
                               .TensorInfo(workspace.GetTensor(), TensorType::WORKSPACE)
-                              .AdditionInfo(DUMP_ADDITIONAL_IMPLY_TYPE,
-                                            std::to_string(static_cast<int32_t>(domi::ImplyType::TVM)))  // must be tvm
+                              .AdditionInfo(
+                                  DUMP_ADDITIONAL_IMPLY_TYPE,
+                                  std::to_string(static_cast<int32_t>(domi::ImplyType::TVM))) // must be tvm
                               .AdditionInfo(DUMP_ADDITIONAL_TILING_DATA, "")
                               .AdditionInfo(DUMP_ADDITIONAL_IS_HOST_ARGS, "true")
                               .DeviceInfo(DEVICE_INFO_NAME_ARGS, args.data(), args.size() * sizeof(uintptr_t))
@@ -260,8 +262,9 @@ TEST_F(TinyExceptionDumperStest, Test_ExceptionDump_DumpData_Exception)
                               .TensorInfo(input.GetTensor(), TensorType::INPUT)
                               .TensorInfo(output.GetTensor(), TensorType::OUTPUT)
                               .TensorInfo(workspace.GetTensor(), TensorType::WORKSPACE)
-                              .AdditionInfo(DUMP_ADDITIONAL_IMPLY_TYPE,
-                                            std::to_string(static_cast<int32_t>(domi::ImplyType::TVM)))  // must be tvm
+                              .AdditionInfo(
+                                  DUMP_ADDITIONAL_IMPLY_TYPE,
+                                  std::to_string(static_cast<int32_t>(domi::ImplyType::TVM))) // must be tvm
                               .AdditionInfo(DUMP_ADDITIONAL_TILING_DATA, "")
                               .Build();
     DumpConfig dumpConf;
@@ -335,8 +338,9 @@ TEST_F(TinyExceptionDumperStest, Test_ExceptionDump_DumpData_RealPath)
                               .TensorInfo(input.GetTensor(), TensorType::INPUT)
                               .TensorInfo(output.GetTensor(), TensorType::OUTPUT)
                               .TensorInfo(workspace.GetTensor(), TensorType::WORKSPACE)
-                              .AdditionInfo(DUMP_ADDITIONAL_IMPLY_TYPE,
-                                            std::to_string(static_cast<int32_t>(domi::ImplyType::TVM)))  // must be tvm
+                              .AdditionInfo(
+                                  DUMP_ADDITIONAL_IMPLY_TYPE,
+                                  std::to_string(static_cast<int32_t>(domi::ImplyType::TVM))) // must be tvm
                               .AdditionInfo(DUMP_ADDITIONAL_TILING_DATA, "")
                               .Build();
 
@@ -410,8 +414,9 @@ TEST_F(TinyExceptionDumperStest, Test_ExceptionDump_DumpData_AddMapping_Failed)
                               .TensorInfo(input.GetTensor(), TensorType::INPUT)
                               .TensorInfo(output.GetTensor(), TensorType::OUTPUT)
                               .TensorInfo(workspace.GetTensor(), TensorType::WORKSPACE)
-                              .AdditionInfo(DUMP_ADDITIONAL_IMPLY_TYPE,
-                                            std::to_string(static_cast<int32_t>(domi::ImplyType::TVM)))  // must be tvm
+                              .AdditionInfo(
+                                  DUMP_ADDITIONAL_IMPLY_TYPE,
+                                  std::to_string(static_cast<int32_t>(domi::ImplyType::TVM))) // must be tvm
                               .AdditionInfo(DUMP_ADDITIONAL_TILING_DATA, "")
                               .Build();
 
@@ -485,8 +490,9 @@ TEST_F(TinyExceptionDumperStest, Test_ExceptionDump_DumpData_Write_Mapping_Faile
                               .TensorInfo(input.GetTensor(), TensorType::INPUT)
                               .TensorInfo(output.GetTensor(), TensorType::OUTPUT)
                               .TensorInfo(workspace.GetTensor(), TensorType::WORKSPACE)
-                              .AdditionInfo(DUMP_ADDITIONAL_IMPLY_TYPE,
-                                            std::to_string(static_cast<int32_t>(domi::ImplyType::TVM)))  // must be tvm
+                              .AdditionInfo(
+                                  DUMP_ADDITIONAL_IMPLY_TYPE,
+                                  std::to_string(static_cast<int32_t>(domi::ImplyType::TVM))) // must be tvm
                               .AdditionInfo(DUMP_ADDITIONAL_TILING_DATA, "")
                               .Build();
 
@@ -535,8 +541,9 @@ TEST_F(TinyExceptionDumperStest, Test_DumpException)
                               .Task(1, 2, 3)
                               .TensorInfo(input.GetTensor(), TensorType::INPUT)
                               .TensorInfo(output.GetTensor(), TensorType::OUTPUT)
-                              .AdditionInfo(DUMP_ADDITIONAL_IMPLY_TYPE,
-                                            std::to_string(static_cast<int32_t>(domi::ImplyType::TVM)))  // must be tvm
+                              .AdditionInfo(
+                                  DUMP_ADDITIONAL_IMPLY_TYPE,
+                                  std::to_string(static_cast<int32_t>(domi::ImplyType::TVM))) // must be tvm
                               .AdditionInfo(DUMP_ADDITIONAL_TILING_DATA, "")
                               .Build();
 
@@ -562,7 +569,8 @@ TEST_F(TinyExceptionDumperStest, Test_DumpException)
     EXPECT_EQ(ret, ADUMP_SUCCESS);
 
     rtExceptionInfo notExistException = BuildRtException(1, 20, 3);
-    notExistException.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.bin = static_cast<rtBinHandle>(hostKernel);
+    notExistException.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.bin =
+        static_cast<rtBinHandle>(hostKernel);
     notExistException.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.binSize = sizeof(hostKernel);
     notExistException.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.kernelName = kernelName.data();
     notExistException.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.kernelNameSize = kernelName.size();
@@ -580,8 +588,9 @@ TEST_F(TinyExceptionDumperStest, Test_DumpException_ResidentOp)
                               .Task(1, 2, 3)
                               .TensorInfo(input.GetTensor(), TensorType::INPUT)
                               .TensorInfo(output.GetTensor(), TensorType::OUTPUT)
-                              .AdditionInfo(DUMP_ADDITIONAL_IMPLY_TYPE,
-                                            std::to_string(static_cast<int32_t>(domi::ImplyType::TVM)))  // must be tvm
+                              .AdditionInfo(
+                                  DUMP_ADDITIONAL_IMPLY_TYPE,
+                                  std::to_string(static_cast<int32_t>(domi::ImplyType::TVM))) // must be tvm
                               .AdditionInfo(DUMP_ADDITIONAL_TILING_DATA, "")
                               .Build();
 
@@ -626,8 +635,9 @@ TEST_F(TinyExceptionDumperStest, Test_DumpException_FFTS_PLUS)
                               .Task(1, 2, 3, 4)
                               .TensorInfo(input.GetTensor(), TensorType::INPUT)
                               .TensorInfo(output.GetTensor(), TensorType::OUTPUT)
-                              .AdditionInfo(DUMP_ADDITIONAL_IMPLY_TYPE,
-                                            std::to_string(static_cast<int32_t>(domi::ImplyType::TVM)))  // must be tvm
+                              .AdditionInfo(
+                                  DUMP_ADDITIONAL_IMPLY_TYPE,
+                                  std::to_string(static_cast<int32_t>(domi::ImplyType::TVM))) // must be tvm
                               .AdditionInfo(DUMP_ADDITIONAL_TILING_DATA, "")
                               .Build();
     ;
@@ -685,7 +695,7 @@ TEST_F(TinyExceptionDumperStest, Test_DumpException_ResidentOp_Coredump)
 {
     Tools::CaseWorkspace ws("Test_DumpException_ResidentOp");
 
-    uint32_t type = 5;  // CHIP_CLOUD_V2
+    uint32_t type = 5; // CHIP_CLOUD_V2
     MOCKER_CPP(&Adx::AdumpDsmi::DrvGetPlatformType).stubs().with(outBound(type)).will(returnValue(true));
 
     auto input = gert::TensorBuilder().Placement(gert::kOnDeviceHbm).DataType(ge::DT_INT32).Shape({4, 2}).Build();
@@ -695,8 +705,9 @@ TEST_F(TinyExceptionDumperStest, Test_DumpException_ResidentOp_Coredump)
                               .Task(1, 2, 3)
                               .TensorInfo(input.GetTensor(), TensorType::INPUT)
                               .TensorInfo(output.GetTensor(), TensorType::OUTPUT)
-                              .AdditionInfo(DUMP_ADDITIONAL_IMPLY_TYPE,
-                                            std::to_string(static_cast<int32_t>(domi::ImplyType::TVM)))  // must be tvm
+                              .AdditionInfo(
+                                  DUMP_ADDITIONAL_IMPLY_TYPE,
+                                  std::to_string(static_cast<int32_t>(domi::ImplyType::TVM))) // must be tvm
                               .AdditionInfo(DUMP_ADDITIONAL_TILING_DATA, "")
                               .Build();
 
@@ -804,7 +815,6 @@ TEST_F(TinyExceptionDumperStest, Test_DumpException_DumpException_NotSupport)
     EXPECT_EQ(dumper.DumpException(exception), Adx::ADUMP_FAILED);
     DumpManager::Instance().Reset();
 }
-
 
 TEST_F(TinyExceptionDumperStest, Test_DumpException_ExceptionModeDowngrade)
 {

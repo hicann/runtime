@@ -15,31 +15,27 @@
 #include <map>
 
 const std::map<int, std::string> LOG_LEVEL_INFO = {
-    {DLOG_DEBUG, "DEBUG"},
-    {DLOG_INFO,  "INFO"},
-    {DLOG_WARN,  "WARING"},
-    {DLOG_ERROR, "ERROR"},
-    {DLOG_EVENT, "EVENT"},
+    {DLOG_DEBUG, "DEBUG"}, {DLOG_INFO, "INFO"}, {DLOG_WARN, "WARING"}, {DLOG_ERROR, "ERROR"}, {DLOG_EVENT, "EVENT"},
 };
 
 static int g_logLevelStub = DLOG_INFO;
 
 extern "C" int dlog_setlevel(int moduleId, int level, int enableEvent)
 {
-    (void) moduleId;
-    (void) enableEvent;
+    (void)moduleId;
+    (void)enableEvent;
     g_logLevelStub = level;
     return 0;
 }
 
-extern "C" int CheckLogLevel(int moduleId, int logLevel)
-{
-    return logLevel >= g_logLevelStub;
-}
+extern "C" int CheckLogLevel(int moduleId, int logLevel) { return logLevel >= g_logLevelStub; }
 
-#define CHECK_LOG_FMT(format)   if (format == nullptr) { return; }
+#define CHECK_LOG_FMT(format) \
+    if (format == nullptr) {  \
+        return;               \
+    }
 
-std::string FormatWithEndline(const char *fmt)
+std::string FormatWithEndline(const char* fmt)
 {
     std::string format(fmt);
     if (!format.empty() && format.back() != '\n') {
@@ -48,7 +44,7 @@ std::string FormatWithEndline(const char *fmt)
     return format;
 }
 
-extern "C" void DlogDebugInner(int moduleId, const char *fmt, ...)
+extern "C" void DlogDebugInner(int moduleId, const char* fmt, ...)
 {
     CHECK_LOG_FMT(fmt);
     printf("[DEBUG] ");
@@ -61,7 +57,7 @@ extern "C" void DlogDebugInner(int moduleId, const char *fmt, ...)
     fflush(stdout);
 }
 
-extern "C" void DlogInfoInner(int moduleId, const char *fmt, ...)
+extern "C" void DlogInfoInner(int moduleId, const char* fmt, ...)
 {
     CHECK_LOG_FMT(fmt);
     printf("[INFO] ");
@@ -74,7 +70,7 @@ extern "C" void DlogInfoInner(int moduleId, const char *fmt, ...)
     fflush(stdout);
 }
 
-extern "C" void DlogWarnInner(int moduleId, const char *fmt, ...)
+extern "C" void DlogWarnInner(int moduleId, const char* fmt, ...)
 {
     CHECK_LOG_FMT(fmt);
     printf("[WARN] ");
@@ -87,7 +83,7 @@ extern "C" void DlogWarnInner(int moduleId, const char *fmt, ...)
     fflush(stdout);
 }
 
-extern "C" void DlogErrorInner(int moduleId, const char *fmt, ...)
+extern "C" void DlogErrorInner(int moduleId, const char* fmt, ...)
 {
     CHECK_LOG_FMT(fmt);
     printf("[ERROR] ");
@@ -100,7 +96,7 @@ extern "C" void DlogErrorInner(int moduleId, const char *fmt, ...)
     fflush(stdout);
 }
 
-extern "C" void DlogEventInner(int moduleId, const char *fmt, ...)
+extern "C" void DlogEventInner(int moduleId, const char* fmt, ...)
 {
     CHECK_LOG_FMT(fmt);
     printf("[EVENT] ");
@@ -113,7 +109,7 @@ extern "C" void DlogEventInner(int moduleId, const char *fmt, ...)
     fflush(stdout);
 }
 
-void DlogRecord(int moduleId, int level, const char *fmt, ...)
+void DlogRecord(int moduleId, int level, const char* fmt, ...)
 {
     if (level < g_logLevelStub) {
         return;
@@ -121,8 +117,7 @@ void DlogRecord(int moduleId, int level, const char *fmt, ...)
     CHECK_LOG_FMT(fmt);
     auto iter = LOG_LEVEL_INFO.find(level);
     std::string levelStr;
-    if (iter != LOG_LEVEL_INFO.end())
-    {
+    if (iter != LOG_LEVEL_INFO.end()) {
         levelStr = iter->second;
     }
     printf("[%s] ", levelStr.c_str());
@@ -135,6 +130,4 @@ void DlogRecord(int moduleId, int level, const char *fmt, ...)
     fflush(stdout);
 }
 
-extern "C" void DlogFlush(void)
-{
-}
+extern "C" void DlogFlush(void) {}

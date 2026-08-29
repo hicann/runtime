@@ -27,18 +27,15 @@ using namespace Adx;
 
 class RuntimeExceptionCallback {
 public:
-    static RuntimeExceptionCallback &Instance()
+    static RuntimeExceptionCallback& Instance()
     {
         static RuntimeExceptionCallback inst;
         return inst;
     }
 
-    rtTaskFailCallback &MutableCallback()
-    {
-        return callback_;
-    }
+    rtTaskFailCallback& MutableCallback() { return callback_; }
 
-    void Invoke(rtExceptionInfo *const exception)
+    void Invoke(rtExceptionInfo* const exception)
     {
         if (callback_) {
             callback_(exception);
@@ -49,7 +46,7 @@ private:
     rtTaskFailCallback callback_;
 };
 
-static rtError_t rtRegTaskFailCallbackByModuleStub(const char_t *moduleName, rtTaskFailCallback callback)
+static rtError_t rtRegTaskFailCallbackByModuleStub(const char_t* moduleName, rtTaskFailCallback callback)
 {
     RuntimeExceptionCallback::Instance().MutableCallback() = callback;
     return RT_ERROR_NONE;
@@ -57,10 +54,7 @@ static rtError_t rtRegTaskFailCallbackByModuleStub(const char_t *moduleName, rtT
 
 class ExceptionDumpStest : public testing::Test {
 protected:
-    virtual void SetUp()
-    {
-        SubRuntimeRegExceptionCallback();
-    }
+    virtual void SetUp() { SubRuntimeRegExceptionCallback(); }
 
     virtual void TearDown()
     {
@@ -79,19 +73,21 @@ protected:
         RuntimeExceptionCallback::Instance().MutableCallback() = nullptr;
     }
 
-    void InvokeException(uint32_t deviceId, uint32_t taskId, uint32_t streamId, uint32_t retCode = 0,
-                         uint32_t contextId = UINT32_MAX)
+    void InvokeException(
+        uint32_t deviceId, uint32_t taskId, uint32_t streamId, uint32_t retCode = 0, uint32_t contextId = UINT32_MAX)
     {
         rtExceptionInfo exception = BuildRtException(deviceId, taskId, streamId, retCode, contextId);
         char hostKernel[] = "host kernel bin file stub";
         std::string kernelName = "AddCustom_6ee04b5d550e4239498c29151be6bb50_mix_aic";
         if (contextId == UINT32_MAX) {
-            exception.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.bin = static_cast<rtBinHandle>(hostKernel);
+            exception.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.bin =
+                static_cast<rtBinHandle>(hostKernel);
             exception.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.binSize = sizeof(hostKernel);
             exception.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.kernelName = kernelName.data();
             exception.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.kernelNameSize = kernelName.size();
         } else {
-            exception.expandInfo.u.fftsPlusInfo.exceptionArgs.exceptionKernelInfo.bin = static_cast<rtBinHandle>(hostKernel);
+            exception.expandInfo.u.fftsPlusInfo.exceptionArgs.exceptionKernelInfo.bin =
+                static_cast<rtBinHandle>(hostKernel);
             exception.expandInfo.u.fftsPlusInfo.exceptionArgs.exceptionKernelInfo.binSize = sizeof(hostKernel);
             exception.expandInfo.u.fftsPlusInfo.exceptionArgs.exceptionKernelInfo.kernelName = kernelName.data();
             exception.expandInfo.u.fftsPlusInfo.exceptionArgs.exceptionKernelInfo.kernelNameSize = kernelName.size();
@@ -109,7 +105,7 @@ TEST_F(ExceptionDumpStest, Test_ExceptionDump_Close)
     dumpConf.dumpStatus = "off";
     EXPECT_EQ(ADUMP_SUCCESS, dumper.ExceptionDumperInit(DumpType::EXCEPTION, dumpConf));
     rtExceptionInfo exception;
-    EXPECT_EQ(ADUMP_FAILED, dumper.DumpException(exception));   // not enable dump
+    EXPECT_EQ(ADUMP_FAILED, dumper.DumpException(exception)); // not enable dump
 }
 
 TEST_F(ExceptionDumpStest, Test_EnableExceptionDump_ByEnv)
@@ -173,8 +169,9 @@ TEST_F(ExceptionDumpStest, Test_ExceptionDump_DumpData)
                               .TensorInfo(input.GetTensor(), TensorType::INPUT, AddressType::TRADITIONAL, 0)
                               .TensorInfo(output.GetTensor(), TensorType::OUTPUT, AddressType::TRADITIONAL, 1)
                               .TensorInfo(workspace.GetTensor(), TensorType::WORKSPACE)
-                              .AdditionInfo(DUMP_ADDITIONAL_IMPLY_TYPE,
-                                            std::to_string(static_cast<int32_t>(domi::ImplyType::TVM)))  // must be tvm
+                              .AdditionInfo(
+                                  DUMP_ADDITIONAL_IMPLY_TYPE,
+                                  std::to_string(static_cast<int32_t>(domi::ImplyType::TVM))) // must be tvm
                               .AdditionInfo(DUMP_ADDITIONAL_TILING_DATA, "")
                               .AdditionInfo(DUMP_ADDITIONAL_IS_HOST_ARGS, "false")
                               .DeviceInfo(DEVICE_INFO_NAME_ARGS, args.data(), args.size() * sizeof(uintptr_t))
@@ -260,8 +257,9 @@ TEST_F(ExceptionDumpStest, Test_ExceptionDump_DumpData_LongName)
                               .TensorInfo(input.GetTensor(), TensorType::INPUT)
                               .TensorInfo(output.GetTensor(), TensorType::OUTPUT)
                               .TensorInfo(workspace.GetTensor(), TensorType::WORKSPACE)
-                              .AdditionInfo(DUMP_ADDITIONAL_IMPLY_TYPE,
-                                            std::to_string(static_cast<int32_t>(domi::ImplyType::TVM)))  // must be tvm
+                              .AdditionInfo(
+                                  DUMP_ADDITIONAL_IMPLY_TYPE,
+                                  std::to_string(static_cast<int32_t>(domi::ImplyType::TVM))) // must be tvm
                               .AdditionInfo(DUMP_ADDITIONAL_TILING_DATA, "")
                               .AdditionInfo(DUMP_ADDITIONAL_IS_HOST_ARGS, "false")
                               .DeviceInfo(DEVICE_INFO_NAME_ARGS, args.data(), args.size() * sizeof(uintptr_t))
@@ -336,8 +334,9 @@ TEST_F(ExceptionDumpStest, Test_ExceptionDump_DumpData_Exception)
                               .TensorInfo(input.GetTensor(), TensorType::INPUT)
                               .TensorInfo(output.GetTensor(), TensorType::OUTPUT)
                               .TensorInfo(workspace.GetTensor(), TensorType::WORKSPACE)
-                              .AdditionInfo(DUMP_ADDITIONAL_IMPLY_TYPE,
-                                            std::to_string(static_cast<int32_t>(domi::ImplyType::TVM)))  // must be tvm
+                              .AdditionInfo(
+                                  DUMP_ADDITIONAL_IMPLY_TYPE,
+                                  std::to_string(static_cast<int32_t>(domi::ImplyType::TVM))) // must be tvm
                               .AdditionInfo(DUMP_ADDITIONAL_TILING_DATA, "")
                               .Build();
 
@@ -412,8 +411,9 @@ TEST_F(ExceptionDumpStest, Test_ExceptionDump_DumpData_RealPath)
                               .TensorInfo(input.GetTensor(), TensorType::INPUT)
                               .TensorInfo(output.GetTensor(), TensorType::OUTPUT)
                               .TensorInfo(workspace.GetTensor(), TensorType::WORKSPACE)
-                              .AdditionInfo(DUMP_ADDITIONAL_IMPLY_TYPE,
-                                            std::to_string(static_cast<int32_t>(domi::ImplyType::TVM)))  // must be tvm
+                              .AdditionInfo(
+                                  DUMP_ADDITIONAL_IMPLY_TYPE,
+                                  std::to_string(static_cast<int32_t>(domi::ImplyType::TVM))) // must be tvm
                               .AdditionInfo(DUMP_ADDITIONAL_TILING_DATA, "")
                               .Build();
 
@@ -663,7 +663,7 @@ TEST_F(ExceptionDumpStest, Test_ExceptionDump_DumpData_With_ErrorAddress)
     MOCKER(rtMallocHost).stubs().will(returnValue(1));
     InvokeException(1, 2, 3);
 
-    void *nullHostMem = nullptr;
+    void* nullHostMem = nullptr;
     MOCKER(&DumpMemory::CopyDeviceToHost).stubs().will(returnValue(nullHostMem));
     MOCKER(memset_s).stubs().will(returnValue(1));
     InvokeException(1, 2, 3);
@@ -763,8 +763,9 @@ TEST_F(ExceptionDumpStest, Test_ExceptionDump_With_DeviceArgs)
             .Task(deviceId, taskId, streamId)
             .TensorInfo(input.GetTensor(), TensorType::INPUT, AddressType::TRADITIONAL, 3)
             .TensorInfo(output.GetTensor(), TensorType::OUTPUT, AddressType::TRADITIONAL, 3)
-            .AdditionInfo(DUMP_ADDITIONAL_IMPLY_TYPE,
-                          std::to_string(static_cast<int32_t>(domi::ImplyType::TVM)))  // must be tvm
+            .AdditionInfo(
+                DUMP_ADDITIONAL_IMPLY_TYPE,
+                std::to_string(static_cast<int32_t>(domi::ImplyType::TVM))) // must be tvm
             .AdditionInfo(DUMP_ADDITIONAL_TILING_DATA, "")
             .AdditionInfo(DUMP_ADDITIONAL_BLOCK_DIM, "32")
             .AdditionInfo(DUMP_ADDITIONAL_WORKSPACE_BYTES, "[]")
@@ -813,7 +814,7 @@ TEST_F(ExceptionDumpStest, Test_ExceptionDump_CopyOpKernal)
 
     OperatorInfo opInfo = OperatorInfoBuilder("CONV2D", "TestName")
                               .Task(1, 2, 3)
-                              .AdditionInfo(DUMP_ADDITIONAL_DEV_FUNC, devFunc)  // set dev func
+                              .AdditionInfo(DUMP_ADDITIONAL_DEV_FUNC, devFunc) // set dev func
                               .AdditionInfo(DUMP_ADDITIONAL_OP_FILE_PATH, KernalMetaPath)
                               .Build();
 
@@ -855,7 +856,7 @@ TEST_F(ExceptionDumpStest, Test_ExceptionDump_CopyOpKernal_WithError)
     std::string devFunc = kernalName + "__dev_suffix";
     OperatorInfo opInfo = OperatorInfoBuilder("CONV2D", "TestName")
                               .Task(1, 2, 3)
-                              .AdditionInfo(DUMP_ADDITIONAL_DEV_FUNC, devFunc)  // set dev func
+                              .AdditionInfo(DUMP_ADDITIONAL_DEV_FUNC, devFunc) // set dev func
                               .AdditionInfo(DUMP_ADDITIONAL_OP_FILE_PATH, KernalMetaPath)
                               .Build();
 
@@ -864,7 +865,7 @@ TEST_F(ExceptionDumpStest, Test_ExceptionDump_CopyOpKernal_WithError)
     std::string inValidDevFunc = kernalName + "invalid__dev_suffix";
     OperatorInfo inValidOpInfo = OperatorInfoBuilder("CONV2D", "TestName")
                                      .Task(2, 3, 4)
-                                     .AdditionInfo(DUMP_ADDITIONAL_DEV_FUNC, inValidDevFunc)  // set invalid dev func
+                                     .AdditionInfo(DUMP_ADDITIONAL_DEV_FUNC, inValidDevFunc) // set invalid dev func
                                      .AdditionInfo(DUMP_ADDITIONAL_OP_FILE_PATH, KernalMetaPath)
                                      .Build();
 
@@ -874,7 +875,7 @@ TEST_F(ExceptionDumpStest, Test_ExceptionDump_CopyOpKernal_WithError)
 
     // test invalid dev func path
     InvokeException(2, 3, 4);
-    EXPECT_EQ(IsFileExist(expectKernalFile), false);  // kernal file is not exist cause src file is invalid
+    EXPECT_EQ(IsFileExist(expectKernalFile), false); // kernal file is not exist cause src file is invalid
 
     // test valid op exception
     rtExceptionInfo exception = BuildRtException(1, 2, 3);

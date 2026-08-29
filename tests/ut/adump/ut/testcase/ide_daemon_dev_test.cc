@@ -15,23 +15,17 @@
 #include "hdc_api.h"
 #include "ide_daemon_stub.h"
 
-extern"C"{
-extern void IdeDeviceStateNotifierRegister(int (*ide_dev_state_notifier)(devdrv_state_info_t *stateIfo));
+extern "C" {
+extern void IdeDeviceStateNotifierRegister(int (*ide_dev_state_notifier)(devdrv_state_info_t* stateIfo));
 }
 
-class IDE_DAEMON_DEV_UTEST: public testing::Test {
+class IDE_DAEMON_DEV_UTEST : public testing::Test {
 protected:
-	virtual void SetUp() {
-	
-	}
-	virtual void TearDown() {
-        GlobalMockObject::verify();
-	}
+    virtual void SetUp() {}
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
-int ide_dev_state_notifier(devdrv_state_info_t *state_info){
-    return 0;
-}
+int ide_dev_state_notifier(devdrv_state_info_t* state_info) { return 0; }
 
 TEST_F(IDE_DAEMON_DEV_UTEST, IdeDeviceStateNotifierRegister)
 {
@@ -42,4 +36,3 @@ TEST_F(IDE_DAEMON_DEV_UTEST, IdeDeviceStateNotifierRegister)
     EXPECT_EQ(1, g_ideInfo.devStateNotify.flag[0]);
     EXPECT_FALSE(IdeDevStateNotifyIsAllFlagSet());
 }
-

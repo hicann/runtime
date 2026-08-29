@@ -19,37 +19,20 @@ using std::string;
 using namespace IdeDaemon::Common::Utils;
 using namespace IdeDaemon::Common::Config;
 
-class ADX_LOCAL_SOCKET_UTEST: public testing::Test {
+class ADX_LOCAL_SOCKET_UTEST : public testing::Test {
 protected:
-    virtual void SetUp() {
-    }
-    virtual void TearDown() {
-        GlobalMockObject::verify();
-    }
+    virtual void SetUp() {}
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 TEST_F(ADX_LOCAL_SOCKET_UTEST, AdxLocalClientInit)
 {
     int fd = 0;
-    MOCKER(socket)
-        .stubs()
-        .will(returnValue(-1))
-        .then(returnValue(12345));
-    MOCKER(strcpy_s)
-        .stubs()
-        .will(returnValue(-1))
-        .then(returnValue(0));
-    MOCKER(connect)
-        .stubs()
-        .will(returnValue(-1))
-        .then(returnValue(0));
-    MOCKER(IdeXmalloc)
-        .stubs()
-        .will(returnValue((void *)nullptr))
-        .then(returnValue((void *)&fd));
-    MOCKER(close)
-        .stubs()
-        .will(returnValue(0));
+    MOCKER(socket).stubs().will(returnValue(-1)).then(returnValue(12345));
+    MOCKER(strcpy_s).stubs().will(returnValue(-1)).then(returnValue(0));
+    MOCKER(connect).stubs().will(returnValue(-1)).then(returnValue(0));
+    MOCKER(IdeXmalloc).stubs().will(returnValue((void*)nullptr)).then(returnValue((void*)&fd));
+    MOCKER(close).stubs().will(returnValue(0));
 
     // socket failed
     EXPECT_TRUE(AdxLocalClientInit() == nullptr);
@@ -61,7 +44,7 @@ TEST_F(ADX_LOCAL_SOCKET_UTEST, AdxLocalClientInit)
     EXPECT_TRUE(AdxLocalClientInit() == nullptr);
     // success
     EXPECT_EQ(AdxLocalClientInit(), &fd);
-    std::cout<<"AdxLocalClientInit fd = "<<fd<<std::endl;
+    std::cout << "AdxLocalClientInit fd = " << fd << std::endl;
     EXPECT_EQ(12345, fd);
 }
 
@@ -70,9 +53,7 @@ TEST_F(ADX_LOCAL_SOCKET_UTEST, AdxLocalReadData)
     int recvLen = 1;
     IdeSession session = (IdeSession)&recvLen;
     IdeRecvBuffT readBuf = (IdeRecvBuffT)0x12345;
-    MOCKER(Getpkt)
-        .stubs()
-        .will(returnValue(-1));
+    MOCKER(Getpkt).stubs().will(returnValue(-1));
 
     // parameter failed
     EXPECT_TRUE(AdxLocalReadData(nullptr, readBuf, &recvLen) == IDE_DAEMON_ERROR);
@@ -89,9 +70,7 @@ TEST_F(ADX_LOCAL_SOCKET_UTEST, AdxLocalWriteData)
     int recvLen = 1;
     IdeSession session = (IdeSession)&recvLen;
     IdeSendBuffT readBuf = (IdeSendBuffT)0x12345;
-    MOCKER(Putpkt)
-        .stubs()
-        .will(returnValue(-1));
+    MOCKER(Putpkt).stubs().will(returnValue(-1));
 
     // parameter failed
     EXPECT_TRUE(AdxLocalWriteData(nullptr, readBuf, recvLen) == IDE_DAEMON_ERROR);
@@ -106,12 +85,10 @@ TEST_F(ADX_LOCAL_SOCKET_UTEST, AdxLocalWriteData)
 TEST_F(ADX_LOCAL_SOCKET_UTEST, AdxLocalClientDestroy)
 {
     int fd = 1;
-    IdeSession session = (IdeSession)&fd;;
-    MOCKER(close)
-        .stubs()
-        .will(returnValue(0));
-    MOCKER(IdeXfree)
-        .stubs();
+    IdeSession session = (IdeSession)&fd;
+    ;
+    MOCKER(close).stubs().will(returnValue(0));
+    MOCKER(IdeXfree).stubs();
 
     // parameter failed
     AdxLocalClientDestroy(nullptr);
@@ -120,25 +97,11 @@ TEST_F(ADX_LOCAL_SOCKET_UTEST, AdxLocalClientDestroy)
 
 TEST_F(ADX_LOCAL_SOCKET_UTEST, AdxLocalServerInit)
 {
-    MOCKER(socket)
-        .stubs()
-        .will(returnValue(-1))
-        .then(returnValue(12345));
-    MOCKER(strcpy_s)
-        .stubs()
-        .will(returnValue(-1))
-        .then(returnValue(0));
-    MOCKER(bind)
-        .stubs()
-        .will(returnValue(-1))
-        .then(returnValue(0));
-    MOCKER(listen)
-        .stubs()
-        .will(returnValue(-1))
-        .then(returnValue(0));
-    MOCKER(close)
-        .stubs()
-        .will(returnValue(0));
+    MOCKER(socket).stubs().will(returnValue(-1)).then(returnValue(12345));
+    MOCKER(strcpy_s).stubs().will(returnValue(-1)).then(returnValue(0));
+    MOCKER(bind).stubs().will(returnValue(-1)).then(returnValue(0));
+    MOCKER(listen).stubs().will(returnValue(-1)).then(returnValue(0));
+    MOCKER(close).stubs().will(returnValue(0));
 
     // socket failed
     EXPECT_TRUE(AdxLocalServerInit() == -1);
@@ -155,10 +118,7 @@ TEST_F(ADX_LOCAL_SOCKET_UTEST, AdxLocalServerInit)
 TEST_F(ADX_LOCAL_SOCKET_UTEST, AdxLocalServerAccept)
 {
     mmSockAddr clientAddr;
-    MOCKER(accept)
-        .stubs()
-        .will(returnValue(-1))
-        .then(returnValue(12345));
+    MOCKER(accept).stubs().will(returnValue(-1)).then(returnValue(12345));
 
     // parameter failed
     EXPECT_TRUE(AdxLocalServerAccept(-1, clientAddr) == -1);
@@ -167,4 +127,3 @@ TEST_F(ADX_LOCAL_SOCKET_UTEST, AdxLocalServerAccept)
     // accept success
     EXPECT_EQ(AdxLocalServerAccept(1, clientAddr), 12345);
 }
-

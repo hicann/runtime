@@ -81,7 +81,6 @@ void StubOperatorInitDependencies()
     MOCKER(rtAicpuKernelLaunchExWithArgs).stubs().will(invoke(RtAicpuKernelLaunchCaptureStub));
 }
 } // namespace
-
 class OperatorPreliminaryUtest : public testing::Test {
 protected:
     virtual void SetUp() { ResetAllPlatformManagers(); }

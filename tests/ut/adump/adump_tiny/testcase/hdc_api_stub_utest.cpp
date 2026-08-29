@@ -21,10 +21,7 @@ using namespace IdeDaemon::Common::Config;
 class TinyHdcApiStubUtest : public testing::Test {
 protected:
     virtual void SetUp() {}
-    virtual void TearDown()
-    {
-        GlobalMockObject::verify();
-    }
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 TEST_F(TinyHdcApiStubUtest, Test_ClientApis)
@@ -56,7 +53,7 @@ TEST_F(TinyHdcApiStubUtest, Test_StorePackage)
 TEST_F(TinyHdcApiStubUtest, Test_ReadApis)
 {
     HDC_SESSION session = nullptr;
-    void *recvBuf = nullptr;
+    void* recvBuf = nullptr;
     int32_t recvLen = 0;
     EXPECT_EQ(HdcRead(session, &recvBuf, &recvLen), IDE_DAEMON_ERROR);
     EXPECT_EQ(HdcReadNb(session, &recvBuf, &recvLen), IDE_DAEMON_ERROR);

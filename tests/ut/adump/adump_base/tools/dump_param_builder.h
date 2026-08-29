@@ -14,8 +14,9 @@
 
 namespace Adx {
 
-inline TensorInfo BuildTensorInfo(gert::Tensor *tensor, TensorType tensorType,
-                                  AddressType addrType = AddressType::TRADITIONAL, uint32_t argsOffSet = 0)
+inline TensorInfo BuildTensorInfo(
+    gert::Tensor* tensor, TensorType tensorType, AddressType addrType = AddressType::TRADITIONAL,
+    uint32_t argsOffSet = 0)
 {
     TensorInfo ti;
     ti.tensor = tensor;
@@ -25,7 +26,7 @@ inline TensorInfo BuildTensorInfo(gert::Tensor *tensor, TensorType tensorType,
     return ti;
 }
 
-inline DeviceInfo BuildDeviceInfo(const std::string &name, void *addr, uint64_t length)
+inline DeviceInfo BuildDeviceInfo(const std::string& name, void* addr, uint64_t length)
 {
     DeviceInfo di;
     di.name = name;
@@ -34,8 +35,9 @@ inline DeviceInfo BuildDeviceInfo(const std::string &name, void *addr, uint64_t 
     return di;
 }
 
-inline rtExceptionInfo BuildRtException(uint32_t deviceId, uint32_t taskId, uint32_t streamId, uint32_t retCode = 0,
-                                        uint32_t contextId = UINT32_MAX, uint32_t threadId = UINT32_MAX)
+inline rtExceptionInfo BuildRtException(
+    uint32_t deviceId, uint32_t taskId, uint32_t streamId, uint32_t retCode = 0, uint32_t contextId = UINT32_MAX,
+    uint32_t threadId = UINT32_MAX)
 {
     rtExceptionInfo exception;
     exception.deviceid = deviceId;
@@ -54,14 +56,14 @@ inline rtExceptionInfo BuildRtException(uint32_t deviceId, uint32_t taskId, uint
 
 class OperatorInfoBuilder {
 public:
-    OperatorInfoBuilder(const std::string &opType, const std::string &opName, bool aging = true)
+    OperatorInfoBuilder(const std::string& opType, const std::string& opName, bool aging = true)
     {
         info_.opType = opType;
         info_.opName = opName;
         info_.agingFlag = aging;
     }
 
-    OperatorInfoBuilder &Task(uint32_t deviceId, uint32_t taskId, uint32_t streamId, uint32_t contextId = UINT32_MAX)
+    OperatorInfoBuilder& Task(uint32_t deviceId, uint32_t taskId, uint32_t streamId, uint32_t contextId = UINT32_MAX)
     {
         info_.deviceId = deviceId;
         info_.taskId = taskId;
@@ -70,22 +72,22 @@ public:
         return *this;
     }
 
-    OperatorInfoBuilder &TensorInfo(gert::Tensor *tensor, TensorType type,
-                                    AddressType addrType = AddressType::TRADITIONAL, uint32_t argsOffSet = 0)
+    OperatorInfoBuilder& TensorInfo(
+        gert::Tensor* tensor, TensorType type, AddressType addrType = AddressType::TRADITIONAL, uint32_t argsOffSet = 0)
     {
         info_.tensorInfos.emplace_back(BuildTensorInfo(tensor, type, addrType, argsOffSet));
         return *this;
     }
 
-    OperatorInfoBuilder &AdditionInfo(const std::string &key, const std::string &value)
+    OperatorInfoBuilder& AdditionInfo(const std::string& key, const std::string& value)
     {
         info_.additionalInfo[key] = value;
         return *this;
     }
 
-    OperatorInfoBuilder &DeviceInfo(const std::string &name, void *addr, uint64_t length)
+    OperatorInfoBuilder& DeviceInfo(const std::string& name, void* addr, uint64_t length)
     {
-        for (auto &devInfo : info_.deviceInfos) {
+        for (auto& devInfo : info_.deviceInfos) {
             if (devInfo.name == name) {
                 devInfo.addr = addr;
                 devInfo.length = length;
@@ -96,14 +98,11 @@ public:
         return *this;
     }
 
-    OperatorInfo Build()
-    {
-        return info_;
-    }
+    OperatorInfo Build() { return info_; }
 
 private:
     OperatorInfo info_;
 };
 
-}  // namespace Adx
-#endif  // TOOLS_DUMP_PARAMS_BUILDER_H
+} // namespace Adx
+#endif // TOOLS_DUMP_PARAMS_BUILDER_H

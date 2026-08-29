@@ -30,18 +30,14 @@ protected:
 };
 
 // Helper: build a JSON config string with dump object
-static std::string MakeDumpJson(const std::string& body)
-{
-    return std::string("{\"dump\": {") + body + "}}";
-}
+static std::string MakeDumpJson(const std::string& body) { return std::string("{\"dump\": {") + body + "}}"; }
 
 // ============================================================================
 // CheckDumpStep
 // ============================================================================
 TEST_F(DumpConfigConverterExtraUtest, TestDumpStep_SingleStep)
 {
-    std::string cfg = MakeDumpJson(
-        "\"dump_path\": \"./\", \"dump_op_switch\": \"on\", \"dump_step\": \"3\"");
+    std::string cfg = MakeDumpJson("\"dump_path\": \"./\", \"dump_op_switch\": \"on\", \"dump_step\": \"3\"");
     DumpConfig dumpConfig;
     DumpDfxConfig dfxConfig;
     DumpType dumpType;
@@ -53,8 +49,7 @@ TEST_F(DumpConfigConverterExtraUtest, TestDumpStep_SingleStep)
 
 TEST_F(DumpConfigConverterExtraUtest, TestDumpStep_RangeStep)
 {
-    std::string cfg = MakeDumpJson(
-        "\"dump_path\": \"./\", \"dump_op_switch\": \"on\", \"dump_step\": \"1|3-5|10\"");
+    std::string cfg = MakeDumpJson("\"dump_path\": \"./\", \"dump_op_switch\": \"on\", \"dump_step\": \"1|3-5|10\"");
     DumpConfig dumpConfig;
     DumpDfxConfig dfxConfig;
     DumpType dumpType;
@@ -66,8 +61,7 @@ TEST_F(DumpConfigConverterExtraUtest, TestDumpStep_RangeStep)
 
 TEST_F(DumpConfigConverterExtraUtest, TestDumpStep_InvalidNonDigit)
 {
-    std::string cfg = MakeDumpJson(
-        "\"dump_path\": \"./\", \"dump_op_switch\": \"on\", \"dump_step\": \"abc\"");
+    std::string cfg = MakeDumpJson("\"dump_path\": \"./\", \"dump_op_switch\": \"on\", \"dump_step\": \"abc\"");
     DumpConfig dumpConfig;
     DumpDfxConfig dfxConfig;
     DumpType dumpType;
@@ -78,8 +72,7 @@ TEST_F(DumpConfigConverterExtraUtest, TestDumpStep_InvalidNonDigit)
 
 TEST_F(DumpConfigConverterExtraUtest, TestDumpStep_RangeReversed)
 {
-    std::string cfg = MakeDumpJson(
-        "\"dump_path\": \"./\", \"dump_op_switch\": \"on\", \"dump_step\": \"5-3\"");
+    std::string cfg = MakeDumpJson("\"dump_path\": \"./\", \"dump_op_switch\": \"on\", \"dump_step\": \"5-3\"");
     DumpConfig dumpConfig;
     DumpDfxConfig dfxConfig;
     DumpType dumpType;
@@ -91,8 +84,7 @@ TEST_F(DumpConfigConverterExtraUtest, TestDumpStep_RangeReversed)
 TEST_F(DumpConfigConverterExtraUtest, TestDumpStep_TooManySegments)
 {
     // 3-segment step like "1-2-3" should fail
-    std::string cfg = MakeDumpJson(
-        "\"dump_path\": \"./\", \"dump_op_switch\": \"on\", \"dump_step\": \"1-2-3\"");
+    std::string cfg = MakeDumpJson("\"dump_path\": \"./\", \"dump_op_switch\": \"on\", \"dump_step\": \"1-2-3\"");
     DumpConfig dumpConfig;
     DumpDfxConfig dfxConfig;
     DumpType dumpType;
@@ -106,9 +98,9 @@ TEST_F(DumpConfigConverterExtraUtest, TestDumpStep_TooManySegments)
 // ============================================================================
 TEST_F(DumpConfigConverterExtraUtest, TestDumpList_OptypeBlacklist_NonOpLevel_Fails)
 {
-    std::string cfg = MakeDumpJson(
-        "\"dump_path\": \"./\", \"dump_op_switch\": \"on\", \"dump_level\": \"all\","
-        "\"dump_list\": [{\"model_name\": \"mymodel\", \"optype_blacklist\": [{\"name\": \"Conv2D\", \"pos\": [\"input\"]}]}]");
+    std::string cfg = MakeDumpJson("\"dump_path\": \"./\", \"dump_op_switch\": \"on\", \"dump_level\": \"all\","
+                                   "\"dump_list\": [{\"model_name\": \"mymodel\", \"optype_blacklist\": [{\"name\": "
+                                   "\"Conv2D\", \"pos\": [\"input\"]}]}]");
     DumpConfig dumpConfig;
     DumpDfxConfig dfxConfig;
     DumpType dumpType;
@@ -136,9 +128,9 @@ TEST_F(DumpConfigConverterExtraUtest, TestDumpList_OpnameBlacklist_OpLevel)
 // ============================================================================
 TEST_F(DumpConfigConverterExtraUtest, TestDumpList_OpnameRange_OpLevel)
 {
-    std::string cfg = MakeDumpJson(
-        "\"dump_path\": \"./\", \"dump_op_switch\": \"on\", \"dump_level\": \"op\","
-        "\"dump_list\": [{\"model_name\": \"mymodel\", \"opname_range\": [{\"begin\": \"op_start\", \"end\": \"op_end\"}]}]");
+    std::string cfg = MakeDumpJson("\"dump_path\": \"./\", \"dump_op_switch\": \"on\", \"dump_level\": \"op\","
+                                   "\"dump_list\": [{\"model_name\": \"mymodel\", \"opname_range\": [{\"begin\": "
+                                   "\"op_start\", \"end\": \"op_end\"}]}]");
     DumpConfig dumpConfig;
     DumpDfxConfig dfxConfig;
     DumpType dumpType;
@@ -150,9 +142,9 @@ TEST_F(DumpConfigConverterExtraUtest, TestDumpList_OpnameRange_OpLevel)
 
 TEST_F(DumpConfigConverterExtraUtest, TestDumpList_OpnameRange_NonOpLevel_Fails)
 {
-    std::string cfg = MakeDumpJson(
-        "\"dump_path\": \"./\", \"dump_op_switch\": \"on\", \"dump_level\": \"all\","
-        "\"dump_list\": [{\"model_name\": \"mymodel\", \"opname_range\": [{\"begin\": \"op_start\", \"end\": \"op_end\"}]}]");
+    std::string cfg = MakeDumpJson("\"dump_path\": \"./\", \"dump_op_switch\": \"on\", \"dump_level\": \"all\","
+                                   "\"dump_list\": [{\"model_name\": \"mymodel\", \"opname_range\": [{\"begin\": "
+                                   "\"op_start\", \"end\": \"op_end\"}]}]");
     DumpConfig dumpConfig;
     DumpDfxConfig dfxConfig;
     DumpType dumpType;
@@ -163,9 +155,9 @@ TEST_F(DumpConfigConverterExtraUtest, TestDumpList_OpnameRange_NonOpLevel_Fails)
 
 TEST_F(DumpConfigConverterExtraUtest, TestDumpList_OpnameRange_EmptyModelName_Fails)
 {
-    std::string cfg = MakeDumpJson(
-        "\"dump_path\": \"./\", \"dump_op_switch\": \"on\", \"dump_level\": \"op\","
-        "\"dump_list\": [{\"opname_range\": [{\"begin\": \"op_start\", \"end\": \"op_end\"}]}]");
+    std::string cfg =
+        MakeDumpJson("\"dump_path\": \"./\", \"dump_op_switch\": \"on\", \"dump_level\": \"op\","
+                     "\"dump_list\": [{\"opname_range\": [{\"begin\": \"op_start\", \"end\": \"op_end\"}]}]");
     DumpConfig dumpConfig;
     DumpDfxConfig dfxConfig;
     DumpType dumpType;
@@ -192,9 +184,8 @@ TEST_F(DumpConfigConverterExtraUtest, TestDumpList_OpnameRange_EmptyBegin_Fails)
 // ============================================================================
 TEST_F(DumpConfigConverterExtraUtest, TestDumpList_SwitchOff_WithModelName)
 {
-    std::string cfg = MakeDumpJson(
-        "\"dump_path\": \"./\", \"dump_op_switch\": \"off\","
-        "\"dump_list\": [{\"model_name\": \"mymodel\"}]");
+    std::string cfg = MakeDumpJson("\"dump_path\": \"./\", \"dump_op_switch\": \"off\","
+                                   "\"dump_list\": [{\"model_name\": \"mymodel\"}]");
     DumpConfig dumpConfig;
     DumpDfxConfig dfxConfig;
     DumpType dumpType;
@@ -206,9 +197,8 @@ TEST_F(DumpConfigConverterExtraUtest, TestDumpList_SwitchOff_WithModelName)
 
 TEST_F(DumpConfigConverterExtraUtest, TestDumpList_SwitchOff_WithLayer)
 {
-    std::string cfg = MakeDumpJson(
-        "\"dump_path\": \"./\", \"dump_op_switch\": \"off\","
-        "\"dump_list\": [{\"model_name\": \"mymodel\", \"layer\": [\"A\", \"B\"]}]");
+    std::string cfg = MakeDumpJson("\"dump_path\": \"./\", \"dump_op_switch\": \"off\","
+                                   "\"dump_list\": [{\"model_name\": \"mymodel\", \"layer\": [\"A\", \"B\"]}]");
     DumpConfig dumpConfig;
     DumpDfxConfig dfxConfig;
     DumpType dumpType;
@@ -223,8 +213,8 @@ TEST_F(DumpConfigConverterExtraUtest, TestDumpList_SwitchOff_WithLayer)
 // ============================================================================
 TEST_F(DumpConfigConverterExtraUtest, TestDumpStats_Valid)
 {
-    std::string cfg = MakeDumpJson(
-        "\"dump_path\": \"./\", \"dump_op_switch\": \"on\", \"dump_data\": \"stats\", \"dump_stats\": [\"Max\", \"Min\"]");
+    std::string cfg = MakeDumpJson("\"dump_path\": \"./\", \"dump_op_switch\": \"on\", \"dump_data\": \"stats\", "
+                                   "\"dump_stats\": [\"Max\", \"Min\"]");
     DumpConfig dumpConfig;
     DumpDfxConfig dfxConfig;
     DumpType dumpType;
@@ -236,8 +226,8 @@ TEST_F(DumpConfigConverterExtraUtest, TestDumpStats_Valid)
 
 TEST_F(DumpConfigConverterExtraUtest, TestDumpStats_EmptyList_Fails)
 {
-    std::string cfg = MakeDumpJson(
-        "\"dump_path\": \"./\", \"dump_op_switch\": \"on\", \"dump_data\": \"stats\", \"dump_stats\": []");
+    std::string cfg =
+        MakeDumpJson("\"dump_path\": \"./\", \"dump_op_switch\": \"on\", \"dump_data\": \"stats\", \"dump_stats\": []");
     DumpConfig dumpConfig;
     DumpDfxConfig dfxConfig;
     DumpType dumpType;
@@ -248,8 +238,7 @@ TEST_F(DumpConfigConverterExtraUtest, TestDumpStats_EmptyList_Fails)
 
 TEST_F(DumpConfigConverterExtraUtest, TestDumpStats_WithoutDumpData_Fails)
 {
-    std::string cfg = MakeDumpJson(
-        "\"dump_path\": \"./\", \"dump_op_switch\": \"on\", \"dump_stats\": [\"Max\"]");
+    std::string cfg = MakeDumpJson("\"dump_path\": \"./\", \"dump_op_switch\": \"on\", \"dump_stats\": [\"Max\"]");
     DumpConfig dumpConfig;
     DumpDfxConfig dfxConfig;
     DumpType dumpType;
@@ -263,9 +252,8 @@ TEST_F(DumpConfigConverterExtraUtest, TestDumpStats_WithoutDumpData_Fails)
 // ============================================================================
 TEST_F(DumpConfigConverterExtraUtest, TestWatcherNodes_NonWatcherScene_Fails)
 {
-    std::string cfg = MakeDumpJson(
-        "\"dump_path\": \"./\", \"dump_op_switch\": \"on\","
-        "\"dump_list\": [{\"model_name\": \"mymodel\", \"watcher_nodes\": [\"node1\"]}]");
+    std::string cfg = MakeDumpJson("\"dump_path\": \"./\", \"dump_op_switch\": \"on\","
+                                   "\"dump_list\": [{\"model_name\": \"mymodel\", \"watcher_nodes\": [\"node1\"]}]");
     DumpConfig dumpConfig;
     DumpDfxConfig dfxConfig;
     DumpType dumpType;
@@ -488,19 +476,19 @@ TEST_F(DumpManagerExtraUtest, Test_SetDumpConfig_NullData)
 
 TEST_F(DumpManagerExtraUtest, Test_SetDumpConfig_ZeroSize)
 {
-    const char *cfg = "{\"dump\":{\"dump_path\":\"./\"}}";
+    const char* cfg = "{\"dump\":{\"dump_path\":\"./\"}}";
     EXPECT_EQ(DumpManager::Instance().SetDumpConfig(cfg, 0U, "/tmp"), ADUMP_FAILED);
 }
 
 TEST_F(DumpManagerExtraUtest, Test_SetDumpConfig_NullPath)
 {
-    const char *cfg = "{\"dump\":{\"dump_path\":\"./\"}}";
+    const char* cfg = "{\"dump\":{\"dump_path\":\"./\"}}";
     EXPECT_EQ(DumpManager::Instance().SetDumpConfig(cfg, strlen(cfg), nullptr), ADUMP_FAILED);
 }
 
 TEST_F(DumpManagerExtraUtest, Test_SetDumpConfig_InvalidJson)
 {
-    const char *cfg = "abc";
+    const char* cfg = "abc";
     EXPECT_EQ(DumpManager::Instance().SetDumpConfig(cfg, strlen(cfg), "/tmp"), ADUMP_INPUT_FAILED);
 }
 
@@ -547,8 +535,8 @@ TEST_F(DumpManagerExtraUtest, Test_IsEnableDump_UnknownType)
 // dump_kernel_data valid  (line 79 from_json)
 TEST_F(DumpConfigConverterExtraUtest, TestDumpKernelData_Valid)
 {
-    std::string cfg = MakeDumpJson(
-        "\"dump_path\": \"./\", \"dump_op_switch\": \"on\", \"dump_kernel_data\": \"printf\"");
+    std::string cfg =
+        MakeDumpJson("\"dump_path\": \"./\", \"dump_op_switch\": \"on\", \"dump_kernel_data\": \"printf\"");
     DumpType dumpType;
     DumpConfig dumpConfig;
     DumpDfxConfig dumpDfxConfig;
@@ -561,8 +549,8 @@ TEST_F(DumpConfigConverterExtraUtest, TestDumpKernelData_Valid)
 // dump_kernel_data invalid → CheckDumpKernelData → returns false (lines 284-291)
 TEST_F(DumpConfigConverterExtraUtest, TestDumpKernelData_Invalid)
 {
-    std::string cfg = MakeDumpJson(
-        "\"dump_path\": \"./\", \"dump_op_switch\": \"on\", \"dump_kernel_data\": \"invalid_type\"");
+    std::string cfg =
+        MakeDumpJson("\"dump_path\": \"./\", \"dump_op_switch\": \"on\", \"dump_kernel_data\": \"invalid_type\"");
     DumpType dumpType;
     DumpConfig dumpConfig;
     DumpDfxConfig dumpDfxConfig;
@@ -575,8 +563,8 @@ TEST_F(DumpConfigConverterExtraUtest, TestDumpKernelData_Invalid)
 // dump_level invalid value (line 197-200)
 TEST_F(DumpConfigConverterExtraUtest, TestDumpLevel_InvalidValue)
 {
-    std::string cfg = MakeDumpJson(
-        "\"dump_path\": \"./\", \"dump_op_switch\": \"on\", \"dump_level\": \"invalid_level\"");
+    std::string cfg =
+        MakeDumpJson("\"dump_path\": \"./\", \"dump_op_switch\": \"on\", \"dump_level\": \"invalid_level\"");
     DumpType dumpType;
     DumpConfig dumpConfig;
     DumpDfxConfig dumpDfxConfig;
@@ -592,7 +580,8 @@ TEST_F(DumpConfigConverterExtraUtest, TestDumpStep_TooManySteps)
     // Build 101 step entries like "0|1|2|...|100"
     std::string steps;
     for (int i = 0; i < 101; ++i) {
-        if (i > 0) steps += "|";
+        if (i > 0)
+            steps += "|";
         steps += std::to_string(i);
     }
     std::string cfg = MakeDumpJson(
@@ -609,8 +598,7 @@ TEST_F(DumpConfigConverterExtraUtest, TestDumpStep_TooManySteps)
 // dump_op_switch with invalid value (lines 436-439)
 TEST_F(DumpConfigConverterExtraUtest, TestDumpOpSwitch_Invalid)
 {
-    std::string cfg = MakeDumpJson(
-        "\"dump_path\": \"./\", \"dump_op_switch\": \"maybe\"");
+    std::string cfg = MakeDumpJson("\"dump_path\": \"./\", \"dump_op_switch\": \"maybe\"");
     DumpType dumpType;
     DumpConfig dumpConfig;
     DumpDfxConfig dumpDfxConfig;
@@ -624,9 +612,8 @@ TEST_F(DumpConfigConverterExtraUtest, TestDumpOpSwitch_Invalid)
 TEST_F(DumpConfigConverterExtraUtest, TestDumpListSwitchOff_InvalidEntry)
 {
     // When op_switch=off and dump_list has valid model_name entry → should fail
-    std::string cfg = MakeDumpJson(
-        "\"dump_path\": \"./\", \"dump_op_switch\": \"off\", "
-        "\"dump_list\": [{\"model_name\": \"test_model\"}]");
+    std::string cfg = MakeDumpJson("\"dump_path\": \"./\", \"dump_op_switch\": \"off\", "
+                                   "\"dump_list\": [{\"model_name\": \"test_model\"}]");
     DumpType dumpType;
     DumpConfig dumpConfig;
     DumpDfxConfig dumpDfxConfig;
@@ -643,8 +630,7 @@ TEST_F(DumpConfigConverterExtraUtest, TestGetEnvVariable_EmptyEnv)
     // Called indirectly through EnableExceptionDumpWithEnv
     // We trigger it by calling Convert without any relevant env vars set
     // Just ensure no crash
-    std::string cfg = MakeDumpJson(
-        "\"dump_path\": \"./\", \"dump_scene\": \"aic_err_norm\"");
+    std::string cfg = MakeDumpJson("\"dump_path\": \"./\", \"dump_scene\": \"aic_err_norm\"");
     DumpType dumpType;
     DumpConfig dumpConfig;
     DumpDfxConfig dumpDfxConfig;
@@ -669,8 +655,7 @@ TEST_F(DumpConfigConverterExtraUtest, TestDumpTypeToStr_AllTypes)
 TEST_F(DumpConfigConverterExtraUtest, TestDumpPath_InvalidIP_Gt255)
 {
     // IP path with value > 255
-    std::string cfg = MakeDumpJson(
-        "\"dump_path\": \"256.0.0.1:/data/dump\"");
+    std::string cfg = MakeDumpJson("\"dump_path\": \"256.0.0.1:/data/dump\"");
     DumpType dumpType;
     DumpConfig dumpConfig;
     DumpDfxConfig dumpDfxConfig;
@@ -683,8 +668,7 @@ TEST_F(DumpConfigConverterExtraUtest, TestDumpPath_InvalidIP_Gt255)
 // dump_step with inverted range (first > second) → lines 382-386
 TEST_F(DumpConfigConverterExtraUtest, TestDumpStep_InvertedRange)
 {
-    std::string cfg = MakeDumpJson(
-        "\"dump_path\": \"./\", \"dump_op_switch\": \"on\", \"dump_step\": \"10-5\"");
+    std::string cfg = MakeDumpJson("\"dump_path\": \"./\", \"dump_op_switch\": \"on\", \"dump_step\": \"10-5\"");
     DumpType dumpType;
     DumpConfig dumpConfig;
     DumpDfxConfig dumpDfxConfig;
@@ -697,8 +681,7 @@ TEST_F(DumpConfigConverterExtraUtest, TestDumpStep_InvertedRange)
 // dump_step with non-digit step → lines 373-378
 TEST_F(DumpConfigConverterExtraUtest, TestDumpStep_NonDigit)
 {
-    std::string cfg = MakeDumpJson(
-        "\"dump_path\": \"./\", \"dump_op_switch\": \"on\", \"dump_step\": \"abc\"");
+    std::string cfg = MakeDumpJson("\"dump_path\": \"./\", \"dump_op_switch\": \"on\", \"dump_step\": \"abc\"");
     DumpType dumpType;
     DumpConfig dumpConfig;
     DumpDfxConfig dumpDfxConfig;
@@ -711,8 +694,7 @@ TEST_F(DumpConfigConverterExtraUtest, TestDumpStep_NonDigit)
 // dump_step with too many range parts (steps.size() > 2) → lines 363-367
 TEST_F(DumpConfigConverterExtraUtest, TestDumpStep_TooManyRangeParts)
 {
-    std::string cfg = MakeDumpJson(
-        "\"dump_path\": \"./\", \"dump_op_switch\": \"on\", \"dump_step\": \"1-2-3\"");
+    std::string cfg = MakeDumpJson("\"dump_path\": \"./\", \"dump_op_switch\": \"on\", \"dump_step\": \"1-2-3\"");
     DumpType dumpType;
     DumpConfig dumpConfig;
     DumpDfxConfig dumpDfxConfig;
@@ -725,9 +707,9 @@ TEST_F(DumpConfigConverterExtraUtest, TestDumpStep_TooManyRangeParts)
 // CheckOpBlacklistWithDumpLevel – blacklist configured with non-op dump_level (lines 505-506)
 TEST_F(DumpConfigConverterExtraUtest, TestBlacklistWithNonOpLevel)
 {
-    std::string cfg = MakeDumpJson(
-        "\"dump_path\": \"./\", \"dump_op_switch\": \"on\", \"dump_level\": \"kernel\", "
-        "\"dump_list\": [{\"model_name\": \"model1\", \"optype_blacklist\": [{\"name\": \"Conv2D\"}]}]");
+    std::string cfg =
+        MakeDumpJson("\"dump_path\": \"./\", \"dump_op_switch\": \"on\", \"dump_level\": \"kernel\", "
+                     "\"dump_list\": [{\"model_name\": \"model1\", \"optype_blacklist\": [{\"name\": \"Conv2D\"}]}]");
     DumpType dumpType;
     DumpConfig dumpConfig;
     DumpDfxConfig dumpDfxConfig;
@@ -740,9 +722,8 @@ TEST_F(DumpConfigConverterExtraUtest, TestBlacklistWithNonOpLevel)
 // CheckWatcherScene: watcher scene but empty watcher_nodes (lines 476-480)
 TEST_F(DumpConfigConverterExtraUtest, TestWatcherScene_EmptyWatcherNodes)
 {
-    std::string cfg = MakeDumpJson(
-        "\"dump_mode\": \"output\", \"dump_scene\": \"watcher\", "
-        "\"dump_list\": [{\"watcher_nodes\": []}]");
+    std::string cfg = MakeDumpJson("\"dump_mode\": \"output\", \"dump_scene\": \"watcher\", "
+                                   "\"dump_list\": [{\"watcher_nodes\": []}]");
     DumpType dumpType;
     DumpConfig dumpConfig;
     DumpDfxConfig dumpDfxConfig;
@@ -757,9 +738,8 @@ TEST_F(DumpConfigConverterExtraUtest, TestWatcherScene_EmptyWatcherNodes)
 // CheckWatcherScene: non-watcher scene but watcher_nodes set (lines 483-486)
 TEST_F(DumpConfigConverterExtraUtest, TestNonWatcherScene_WithWatcherNodes)
 {
-    std::string cfg = MakeDumpJson(
-        "\"dump_path\": \"./\", \"dump_op_switch\": \"on\", "
-        "\"dump_list\": [{\"model_name\": \"model1\", \"watcher_nodes\": [\"node1\"]}]");
+    std::string cfg = MakeDumpJson("\"dump_path\": \"./\", \"dump_op_switch\": \"on\", "
+                                   "\"dump_list\": [{\"model_name\": \"model1\", \"watcher_nodes\": [\"node1\"]}]");
     DumpType dumpType;
     DumpConfig dumpConfig;
     DumpDfxConfig dumpDfxConfig;
@@ -785,8 +765,8 @@ TEST_F(DumpManagerExtraUtest, Test_AdumpSetDumpConfig_NullArgs)
 
 TEST_F(DumpManagerExtraUtest, Test_AdumpSetDumpConfig_InvalidJson)
 {
-    const char *badJson = "not_json";
-    const char *path = "./";
+    const char* badJson = "not_json";
+    const char* path = "./";
     DumpConfigInfo configInfo = {};
     configInfo.dumpConfigPath = path;
     configInfo.dumpConfigData = badJson;
@@ -822,7 +802,7 @@ TEST_F(DumpManagerExtraUtest, Test_SaveFile_WithNonEmptyPath)
     // First set opInfoRecordPath_ via StartDumpArgs
     (void)DumpManager::Instance().StartDumpArgs("/tmp/adump_savefile_test");
 
-    const char *data = "test_data_content";
+    const char* data = "test_data_content";
     size_t dataLen = strlen(data);
     // Call SaveFile - covers lines 741-773
     int32_t ret = DumpManager::Instance().SaveFile(data, dataLen, "test.json", SaveType::OVERWRITE);
@@ -839,7 +819,7 @@ TEST_F(DumpManagerExtraUtest, Test_CallbackEnvExceptionDumpEvent_NoEnv)
     // isEnvExceptionDump_=false by default → just returns ADUMP_SUCCESS
     auto cb = [](uint64_t, const char*, int32_t) -> int32_t { return 0; };
     int32_t ret = DumpManager::Instance().CallbackEnvExceptionDumpEvent(
-        static_cast<int32_t(*)(uint64_t, const char*, int32_t)>(cb));
+        static_cast<int32_t (*)(uint64_t, const char*, int32_t)>(cb));
     EXPECT_EQ(ret, ADUMP_SUCCESS);
 }
 
@@ -849,8 +829,7 @@ TEST_F(DumpManagerExtraUtest, Test_CallbackEnvExceptionDumpEvent_NoEnv)
 TEST_F(DumpConfigConverterExtraUtest, Test_IsValueValid_EmptyValue)
 {
     // "dump_mode" is in dumpValidOptions but value is "" → IsValueValid → lines 627-631
-    std::string cfg = MakeDumpJson(
-        "\"dump_path\": \"./\", \"dump_op_switch\": \"on\", \"dump_mode\": \"\"");
+    std::string cfg = MakeDumpJson("\"dump_path\": \"./\", \"dump_op_switch\": \"on\", \"dump_mode\": \"\"");
     DumpType dumpType;
     DumpConfig dumpConfig;
     DumpDfxConfig dumpDfxConfig;
@@ -866,8 +845,7 @@ TEST_F(DumpConfigConverterExtraUtest, Test_IsValueValid_EmptyValue)
 TEST_F(DumpConfigConverterExtraUtest, Test_CheckIpAddress_NonNumericOctet)
 {
     // dump_path = "255.abc.0.1:/tmp" → stoi("abc") throws → catch at 690-692
-    std::string cfg = MakeDumpJson(
-        "\"dump_path\": \"255.abc.0.1:/tmp\", \"dump_op_switch\": \"on\"");
+    std::string cfg = MakeDumpJson("\"dump_path\": \"255.abc.0.1:/tmp\", \"dump_op_switch\": \"on\"");
     DumpType dumpType;
     DumpConfig dumpConfig;
     DumpDfxConfig dumpDfxConfig;
@@ -889,8 +867,7 @@ TEST_F(DumpConfigConverterExtraUtest, Test_CheckDumpStep_PipeSeparator_EmptyPart
     // dump_step = "|" → Split("|", '|', matchVecs) → matchVecs = ["", "", ""]
     // For each empty element: Split("", '-', steps) → lines 563-565
     // Then IsDigit("") → lines 583-584 → returns false → CheckDumpStep returns false
-    std::string cfg = MakeDumpJson(
-        "\"dump_path\": \"./\", \"dump_op_switch\": \"on\", \"dump_step\": \"|\"");
+    std::string cfg = MakeDumpJson("\"dump_path\": \"./\", \"dump_op_switch\": \"on\", \"dump_step\": \"|\"");
     DumpType dumpType;
     DumpConfig dumpConfig;
     DumpDfxConfig dumpDfxConfig;

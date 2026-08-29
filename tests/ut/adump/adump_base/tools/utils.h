@@ -13,6 +13,6 @@
 #include <string>
 
 namespace Adx {
-std::string ReadFileToString(const std::string &filePath);
+std::string ReadFileToString(const std::string& filePath);
 }
 #endif

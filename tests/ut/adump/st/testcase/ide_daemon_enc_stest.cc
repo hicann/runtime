@@ -41,7 +41,6 @@
 #include "ide_task_register.h"
 #include <vector>
 
-
 using namespace IdeDaemon::Common::Config;
 
 extern int g_ide_cmd_write_time;
@@ -54,26 +53,27 @@ extern int g_mmCreateTaskWitchDeatchFlag;
 extern int g_ide_daemon_send_file_req;
 extern int g_netlink_notify_flag;
 extern enum cmd_class g_ide_daemon_host_req_type;
-extern"C"{
-extern int HdcDaemonServerRegister(uint32_t num, const std::vector<uint32_t> &dev);
-extern void *IdeDaemonHdcCreateServerEvent(void *args);
-extern int IdeSigError(int signo,const struct sigaction* act,struct sigaction* oact);
-extern void IdeDeviceStateNotifierRegister(int (*ide_dev_state_notifier)(devdrv_state_info_t *stateInfo));
+extern "C" {
+extern int HdcDaemonServerRegister(uint32_t num, const std::vector<uint32_t>& dev);
+extern void* IdeDaemonHdcCreateServerEvent(void* args);
+extern int IdeSigError(int signo, const struct sigaction* act, struct sigaction* oact);
+extern void IdeDeviceStateNotifierRegister(int (*ide_dev_state_notifier)(devdrv_state_info_t* stateInfo));
 }
-extern int SingleProcessStart(std::string &lock);
+extern int SingleProcessStart(std::string& lock);
 
-extern std::string GetCfgResolvedPath(const std::string &path);
-extern void *Fopen(const char *filePathName, const KmcFileOpenMode mode);
-extern int Fwrite(const void *buffer, size_t count, const void *stream);
-extern int Fclose(void *stream);
-void *sec_file = NULL;
-void *sto_file = NULL;
+extern std::string GetCfgResolvedPath(const std::string& path);
+extern void* Fopen(const char* filePathName, const KmcFileOpenMode mode);
+extern int Fwrite(const void* buffer, size_t count, const void* stream);
+extern int Fclose(void* stream);
+void* sec_file = NULL;
+void* sto_file = NULL;
 std::string sec_file_s;
 std::string sto_file_s;
 
-class IDE_DAEMON_DAEMON_ENC_STEST: public testing::Test {
+class IDE_DAEMON_DAEMON_ENC_STEST : public testing::Test {
 protected:
-	virtual void SetUp() {
+    virtual void SetUp()
+    {
         g_ide_cmd_write_time = 0;
         g_ide_cmd_read_time = 0;
         g_ide_recv_time = 0;
@@ -82,65 +82,41 @@ protected:
         g_mmCreateTaskWitchDeatchFlag = 1;
         g_ide_daemon_send_file_req = 0;
         g_netlink_notify_flag = 0;
-	}
-	virtual void TearDown() {
-        GlobalMockObject::verify();
-	}
+    }
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 static const int ret_size = sizeof(struct IdePack);
 
 static void mocker_common()
 {
-	MOCKER(IdeFork)
-		.stubs()
-		.will(returnValue(IDE_DAEMON_OK));
+    MOCKER(IdeFork).stubs().will(returnValue(IDE_DAEMON_OK));
 
-	MOCKER(setsid)
-		.stubs()
-		.will(returnValue(IDE_DAEMON_OK));
+    MOCKER(setsid).stubs().will(returnValue(IDE_DAEMON_OK));
 
-	MOCKER(setsockopt)
-        .stubs()
-        .will(returnValue(0));
+    MOCKER(setsockopt).stubs().will(returnValue(0));
 
-    MOCKER(getifaddrs)
-        .stubs()
-        .will(invoke(getifaddrs_stub));
+    MOCKER(getifaddrs).stubs().will(invoke(getifaddrs_stub));
 
-    MOCKER(freeifaddrs)
-        .stubs()
-        .will(invoke(freeifaddrs_stub));
+    MOCKER(freeifaddrs).stubs().will(invoke(freeifaddrs_stub));
 
-    MOCKER(getnameinfo)
-        .stubs()
-        .will(invoke(getnameinfo_stub));
+    MOCKER(getnameinfo).stubs().will(invoke(getnameinfo_stub));
 
-    MOCKER(mmSemWait)
-        .stubs()
-        .will(invoke(mmSemWait_stub));
+    MOCKER(mmSemWait).stubs().will(invoke(mmSemWait_stub));
 
-    MOCKER(SingleProcessStart)
-        .stubs()
-        .will(returnValue(0));
+    MOCKER(SingleProcessStart).stubs().will(returnValue(0));
 
     g_ide_create_task_time = 1;
 }
 
-static void mocker_select()
-{
-    MOCKER(select)
-        .stubs()
-        .will(returnValue(1))
-        .then(returnValue(-1));
-}
+static void mocker_select() { MOCKER(select).stubs().will(returnValue(1)).then(returnValue(-1)); }
 
-WsecErr WsecRegFuncEx_stub(const WsecCallbacks *allCallbacks)
+WsecErr WsecRegFuncEx_stub(const WsecCallbacks* allCallbacks)
 {
-    void *filename = NULL;
+    void* filename = NULL;
     char buff[10] = {'a'};
     int endOfFile;
-    unsigned char *pEnt;
+    unsigned char* pEnt;
     time_t curTime;
     struct tm curTm;
 
@@ -173,23 +149,20 @@ WsecErr WsecRegFuncEx_stub(const WsecCallbacks *allCallbacks)
     allCallbacks->timeCallbacks.gmTimeSafe(&curTime, &curTm);
 
     return WSEC_SUCCESS;
-
 }
 
-extern int TestDecWithKMC(unsigned char *cpr, unsigned int cprlen, unsigned char *pln, unsigned int *plnlen);
+extern int TestDecWithKMC(unsigned char* cpr, unsigned int cprlen, unsigned char* pln, unsigned int* plnlen);
 TEST_F(IDE_DAEMON_DAEMON_ENC_STEST, IdeDaemonTestMain_cmd)
 {
     int argc = 2;
-    char *argv[2];
-    argv[0] = (char *)"ide_host_main";
-    argv[1] = (char *)"9090";
+    char* argv[2];
+    argv[0] = (char*)"ide_host_main";
+    argv[1] = (char*)"9090";
 
     g_ide_daemon_host_req_type = IDE_EXEC_COMMAND_REQ;
     mocker_common();
     mocker_select();
-    MOCKER(HdcCreateHdcServerProc)
-        .stubs()
-        .will(returnValue((void *) NULL));
+    MOCKER(HdcCreateHdcServerProc).stubs().will(returnValue((void*)NULL));
     sec_file_s = GetCfgResolvedPath(IDE_DAEMON_SEC);
     sto_file_s = GetCfgResolvedPath(IDE_DAEMON_STO);
     sec_file = Fopen("/tmp/test", KMC_FILE_READWRITE_BINARY);
@@ -201,13 +174,9 @@ TEST_F(IDE_DAEMON_DAEMON_ENC_STEST, IdeDaemonTestMain_cmd)
     cmd = "echo test >> " + sto_file_s;
     system(cmd.c_str());
 
-    MOCKER(WsecRegFuncEx)
-        .stubs()
-        .will(invoke(WsecRegFuncEx_stub));
+    MOCKER(WsecRegFuncEx).stubs().will(invoke(WsecRegFuncEx_stub));
 
-    MOCKER(mmSleep)
-        .stubs()
-        .will(invoke(mmSleep_stub));
+    MOCKER(mmSleep).stubs().will(invoke(mmSleep_stub));
 
-    EXPECT_EQ(0, IdeDaemonTestMain(argc, argv)); //ide_host_command_process
+    EXPECT_EQ(0, IdeDaemonTestMain(argc, argv)); // ide_host_command_process
 }

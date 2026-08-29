@@ -14,14 +14,10 @@
 #include "mockcpp/mockcpp.hpp"
 #include "dump_printf_platform.h"
 
-
 class DupDumpPrintfPlatformStest : public testing::Test {
 protected:
     virtual void SetUp() {}
-    virtual void TearDown()
-    {
-        GlobalMockObject::verify();
-    }
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 TEST_F(DupDumpPrintfPlatformStest, Test_DumpPrintfPlatform)

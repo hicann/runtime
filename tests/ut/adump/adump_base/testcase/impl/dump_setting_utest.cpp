@@ -14,13 +14,10 @@
 
 using namespace Adx;
 
-class DumpSettingUtest: public testing::Test {
+class DumpSettingUtest : public testing::Test {
 protected:
     virtual void SetUp() {}
-    virtual void TearDown()
-    {
-        GlobalMockObject::verify();
-    }
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 TEST_F(DumpSettingUtest, Test_InitDumpConfig)

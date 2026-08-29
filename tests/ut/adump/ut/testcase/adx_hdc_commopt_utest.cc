@@ -17,12 +17,10 @@
 #include "hdc_api.h"
 #include "mmpa_api.h"
 using namespace Adx;
-class ADX_HDC_COMMOPT_UTEST: public testing::Test {
+class ADX_HDC_COMMOPT_UTEST : public testing::Test {
 protected:
     virtual void SetUp() {}
-    virtual void TearDown() {
-        GlobalMockObject::verify();
-    }
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 /*
 TEST_F(ADX_HDC_COMMOPT_UTEST, CommOptName)

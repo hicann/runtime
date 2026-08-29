@@ -10,7 +10,6 @@
 #ifndef __IDE_DAEMON_SSL_TEST_H
 #define __IDE_DAEMON_SSL_TEST_H
 
-
 #include "ide_daemon_ssl.h"
 
-#endif  //__IDE_DAEMON_SSL_TEST_H
+#endif //__IDE_DAEMON_SSL_TEST_H

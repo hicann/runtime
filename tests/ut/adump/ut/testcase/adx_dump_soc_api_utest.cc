@@ -14,20 +14,16 @@
 #include "adx_dump_record.h"
 #include "adx_dump_soc_helper.h"
 
-class ADX_DUMP_SOC_HELPER_TEST: public testing::Test {
+class ADX_DUMP_SOC_HELPER_TEST : public testing::Test {
 protected:
     virtual void SetUp() {}
-    virtual void TearDown() {
-        GlobalMockObject::verify();
-    }
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 TEST_F(ADX_DUMP_SOC_HELPER_TEST, IdeDumpStart)
 {
     const char* privInfo = "127.0.0.1:22118;0;123";
-    MOCKER_CPP(&Adx::AdxDumpRecord::Init)
-        .stubs()
-        .will(returnValue(-1));
+    MOCKER_CPP(&Adx::AdxDumpRecord::Init).stubs().will(returnValue(-1));
     IDE_SESSION session = IdeDumpStart(privInfo);
     EXPECT_EQ(0, session);
 
@@ -35,9 +31,7 @@ TEST_F(ADX_DUMP_SOC_HELPER_TEST, IdeDumpStart)
     session = IdeDumpStart(privInfo);
     EXPECT_EQ(session, nullptr);
 
-    MOCKER_CPP(&Adx::AdxDumpSocHelper::Init)
-        .stubs()
-        .will(returnValue(true));
+    MOCKER_CPP(&Adx::AdxDumpSocHelper::Init).stubs().will(returnValue(true));
     privInfo = "127.0.0.1:22118;123";
     session = IdeDumpStart(privInfo);
     EXPECT_EQ(session, nullptr);
@@ -53,10 +47,9 @@ TEST_F(ADX_DUMP_SOC_HELPER_TEST, IdeDumpData)
     dumpChunk.bufLen = 1;
     dumpChunk.isLastChunk = 0;
     dumpChunk.offset = 0;
-    dumpChunk.flag = IDE_DUMP_NONE_FLAG ;
+    dumpChunk.flag = IDE_DUMP_NONE_FLAG;
     const IdeDumpChunk constDumpChunk = dumpChunk;
     EXPECT_EQ(IDE_DAEMON_INVALID_PARAM_ERROR, IdeDumpData(nullptr, nullptr));
     EXPECT_EQ(IDE_DAEMON_INVALID_PARAM_ERROR, IdeDumpData(session, nullptr));
     EXPECT_EQ(IDE_DAEMON_NONE_ERROR, IdeDumpEnd(session));
 }
-

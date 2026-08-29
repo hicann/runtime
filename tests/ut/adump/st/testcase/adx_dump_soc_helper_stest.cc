@@ -15,12 +15,10 @@
 #include "adx_dump_soc_helper.h"
 #include "mmpa_api.h"
 #include "adx_datadump_server_soc.h"
-class ADX_DUMP_SOC_HELPER_STEST: public testing::Test {
+class ADX_DUMP_SOC_HELPER_STEST : public testing::Test {
 protected:
     virtual void SetUp() {}
-    virtual void TearDown() {
-        GlobalMockObject::verify();
-    }
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 TEST_F(ADX_DUMP_SOC_HELPER_STEST, ParseConnectInfo)
@@ -38,17 +36,14 @@ TEST_F(ADX_DUMP_SOC_HELPER_STEST, ParseConnectInfo)
     const std::string privInfo3 = "127.0.0.1:22118;0;abc";
     ret = Adx::AdxDumpSocHelper::Instance().ParseConnectInfo(privInfo3);
     EXPECT_EQ(IDE_DAEMON_INVALID_PARAM_ERROR, ret);
-
 }
 
 TEST_F(ADX_DUMP_SOC_HELPER_STEST, IdeDumpStart)
 {
     const char* privInfo = "127.0.0.1:22118;0;123";
-    MOCKER(mmGetPid).stubs()
-        .will(returnValue(123));
+    MOCKER(mmGetPid).stubs().will(returnValue(123));
     const char* appBin = "/home/app";
-    MOCKER(readlink).stubs()
-        .will(returnValue(0));
+    MOCKER(readlink).stubs().will(returnValue(0));
     IDE_SESSION session = IdeDumpStart(privInfo);
     EXPECT_EQ(session, (IDE_SESSION)0xFFFF0000);
 }
@@ -63,7 +58,7 @@ TEST_F(ADX_DUMP_SOC_HELPER_STEST, IdeDumpData)
     dumpChunk.bufLen = 1;
     dumpChunk.isLastChunk = 0;
     dumpChunk.offset = 0;
-    dumpChunk.flag = IDE_DUMP_NONE_FLAG ;
+    dumpChunk.flag = IDE_DUMP_NONE_FLAG;
     const IdeDumpChunk constDumpChunk = dumpChunk;
     EXPECT_EQ(IDE_DAEMON_INVALID_PARAM_ERROR, IdeDumpData(nullptr, nullptr));
     EXPECT_EQ(IDE_DAEMON_INVALID_PARAM_ERROR, IdeDumpData(session, nullptr));
@@ -76,4 +71,3 @@ TEST_F(ADX_DUMP_SOC_HELPER_STEST, IdeDumpEnd)
     IDE_SESSION session = (IDE_SESSION)0xFFFF0000;
     EXPECT_EQ(0, IdeDumpEnd(session));
 }
-

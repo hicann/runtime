@@ -20,13 +20,10 @@
 
 using namespace Adx;
 
-class OperatorOverflowStest: public testing::Test {
+class OperatorOverflowStest : public testing::Test {
 protected:
     virtual void SetUp() {}
-    virtual void TearDown()
-    {
-        GlobalMockObject::verify();
-    }
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 TEST_F(OperatorOverflowStest, Test_EnableOperatorOverflow)
@@ -87,8 +84,10 @@ TEST_F(OperatorOverflowStest, Test_DumpTensor)
     dumpConf.dumpSwitch = (OPERATOR_OP_DUMP | OPERATOR_KERNEL_DUMP);
     EXPECT_EQ(AdumpSetDumpConfig(DumpType::OP_OVERFLOW, dumpConf), ADUMP_SUCCESS);
 
-    auto inputTensor = gert::TensorBuilder().Placement(gert::kOnDeviceHbm).DataType(ge::DT_INT32).Shape({4, 16}).Build();
-    auto outputTensor = gert::TensorBuilder().Placement(gert::kOnDeviceHbm).DataType(ge::DT_INT32).Shape({4, 16}).Build();
+    auto inputTensor =
+        gert::TensorBuilder().Placement(gert::kOnDeviceHbm).DataType(ge::DT_INT32).Shape({4, 16}).Build();
+    auto outputTensor =
+        gert::TensorBuilder().Placement(gert::kOnDeviceHbm).DataType(ge::DT_INT32).Shape({4, 16}).Build();
 
     TensorInfo inputTensorInfo = BuildTensorInfo(inputTensor.GetTensor(), TensorType::INPUT);
     TensorInfo outputTensorInfo = BuildTensorInfo(outputTensor.GetTensor(), TensorType::OUTPUT);
@@ -96,7 +95,6 @@ TEST_F(OperatorOverflowStest, Test_DumpTensor)
     aclrtStream stream = (aclrtStream)0x1234;
     EXPECT_EQ(AdumpDumpTensor("Conv2D", "op_name", tensorInfos, stream), ADUMP_SUCCESS);
 }
-
 
 TEST_F(OperatorOverflowStest, Test_DumpTensor_NotOnDevice)
 {
@@ -173,7 +171,8 @@ TEST_F(OperatorOverflowStest, Test_DumpTensor_rtMemcpy_fail)
 
     auto th = gert::TensorBuilder().Placement(gert::kOnDeviceHbm).DataType(ge::DT_INT32).Build();
 
-    TensorInfo outputTensorInfo = BuildTensorInfo(th.GetTensor(), TensorType::OUTPUT);;
+    TensorInfo outputTensorInfo = BuildTensorInfo(th.GetTensor(), TensorType::OUTPUT);
+    ;
     std::vector<TensorInfo> tensorInfos = {outputTensorInfo};
     aclrtStream stream = (aclrtStream)0x1234;
     EXPECT_EQ(AdumpDumpTensor("Conv2D", "op_name", tensorInfos, stream), ADUMP_FAILED);
@@ -192,12 +191,12 @@ TEST_F(OperatorOverflowStest, Test_DumpTensor_rtGetDevice_fail)
 
     auto th = gert::TensorBuilder().Placement(gert::kOnDeviceHbm).DataType(ge::DT_INT32).Build();
 
-    TensorInfo outputTensorInfo = BuildTensorInfo(th.GetTensor(), TensorType::OUTPUT);;
+    TensorInfo outputTensorInfo = BuildTensorInfo(th.GetTensor(), TensorType::OUTPUT);
+    ;
     std::vector<TensorInfo> tensorInfos = {outputTensorInfo};
     aclrtStream stream = (aclrtStream)0x1234;
     EXPECT_EQ(AdumpDumpTensor("Conv2D", "op_name", tensorInfos, stream), ADUMP_FAILED);
 }
-
 
 TEST_F(OperatorOverflowStest, Test_DumpTensor_rtGetTaskIdAndStreamID_fail)
 {
@@ -212,7 +211,8 @@ TEST_F(OperatorOverflowStest, Test_DumpTensor_rtGetTaskIdAndStreamID_fail)
 
     auto th = gert::TensorBuilder().Placement(gert::kOnDeviceHbm).DataType(ge::DT_INT32).Build();
 
-    TensorInfo outputTensorInfo = BuildTensorInfo(th.GetTensor(), TensorType::OUTPUT);;
+    TensorInfo outputTensorInfo = BuildTensorInfo(th.GetTensor(), TensorType::OUTPUT);
+    ;
     std::vector<TensorInfo> tensorInfos = {outputTensorInfo};
     aclrtStream stream = (aclrtStream)0x1234;
     EXPECT_EQ(ADUMP_FAILED, AdumpDumpTensor("Conv2D", "op_name", tensorInfos, stream));
@@ -240,4 +240,3 @@ TEST_F(OperatorOverflowStest, Test_DumpTensor_rtCpuKernelLaunch_fail)
     aclrtStream stream = (aclrtStream)0x1234;
     EXPECT_EQ(AdumpDumpTensor("Conv2D", "op_name", tensorInfos, stream), ADUMP_FAILED);
 }
-

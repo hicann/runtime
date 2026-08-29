@@ -26,7 +26,7 @@ protected:
 TEST_F(Fp16UTest, CopyAssign_SameObject)
 {
     fp16_t a(1.0f);
-    fp16_t &ref = (a = a); // self-assign
+    fp16_t& ref = (a = a); // self-assign
     EXPECT_EQ(&ref, &a);
 }
 
@@ -373,7 +373,7 @@ TEST_F(Fp16UTest, AssignDouble_NormalNegative)
 TEST_F(Fp16UTest, AssignDouble_ExactlyMinDenormal)
 {
     fp16_t f;
-    f = 3.0e-8;  // eD == 0x3E6 and mD > 0 -> mRet=1
+    f = 3.0e-8; // eD == 0x3E6 and mD > 0 -> mRet=1
     EXPECT_GE(f.val & 0x7FFFu, 0u);
 }
 

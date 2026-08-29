@@ -15,30 +15,26 @@
 
 using namespace Adx;
 
-class GetIrDataTypeUtest: public testing::Test {
+class GetIrDataTypeUtest : public testing::Test {
 protected:
     virtual void SetUp() {}
-    virtual void TearDown()
-    {
-        GlobalMockObject::verify();
-    }
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 TEST_F(GetIrDataTypeUtest, Test_GetIrDataType)
 {
     const std::map<GeDataType, ProtoDataType> dtMapping = {
-        { GeDataType::DT_COMPLEX32, ProtoDataType::DT_COMPLEX32 },
-        { GeDataType::DT_HIFLOAT8, ProtoDataType::DT_HIFLOAT8 },
-        { GeDataType::DT_FLOAT8_E5M2, ProtoDataType::DT_FLOAT8_E5M2 },
-        { GeDataType::DT_FLOAT8_E4M3FN, ProtoDataType::DT_FLOAT8_E4M3FN },
-        { GeDataType::DT_FLOAT8_E8M0, ProtoDataType::DT_FLOAT8_E8M0 },
-        { GeDataType::DT_FLOAT6_E3M2, ProtoDataType::DT_FLOAT6_E3M2 },
-        { GeDataType::DT_FLOAT6_E2M3, ProtoDataType::DT_FLOAT6_E2M3 },
-        { GeDataType::DT_FLOAT4_E2M1, ProtoDataType::DT_FLOAT4_E2M1 },
-        { GeDataType::DT_FLOAT4_E1M2, ProtoDataType::DT_FLOAT4_E1M2 }
-    };
-    for (const auto& pair: dtMapping) {
-        EXPECT_EQ(DumpDataType::GetIrDataType(pair.first),  static_cast<int32_t>(pair.second));
+        {GeDataType::DT_COMPLEX32, ProtoDataType::DT_COMPLEX32},
+        {GeDataType::DT_HIFLOAT8, ProtoDataType::DT_HIFLOAT8},
+        {GeDataType::DT_FLOAT8_E5M2, ProtoDataType::DT_FLOAT8_E5M2},
+        {GeDataType::DT_FLOAT8_E4M3FN, ProtoDataType::DT_FLOAT8_E4M3FN},
+        {GeDataType::DT_FLOAT8_E8M0, ProtoDataType::DT_FLOAT8_E8M0},
+        {GeDataType::DT_FLOAT6_E3M2, ProtoDataType::DT_FLOAT6_E3M2},
+        {GeDataType::DT_FLOAT6_E2M3, ProtoDataType::DT_FLOAT6_E2M3},
+        {GeDataType::DT_FLOAT4_E2M1, ProtoDataType::DT_FLOAT4_E2M1},
+        {GeDataType::DT_FLOAT4_E1M2, ProtoDataType::DT_FLOAT4_E1M2}};
+    for (const auto& pair : dtMapping) {
+        EXPECT_EQ(DumpDataType::GetIrDataType(pair.first), static_cast<int32_t>(pair.second));
     }
 }
 
@@ -52,10 +48,8 @@ TEST_F(GetIrDataTypeUtest, Test_GetIrDataType_Unknown)
 TEST_F(GetIrDataTypeUtest, Test_GetIrDataType_Common)
 {
     // Common types that are in the map
-    EXPECT_NE(DumpDataType::GetIrDataType(GeDataType::DT_FLOAT),
-              static_cast<int32_t>(ProtoDataType::DT_UNDEFINED));
-    EXPECT_NE(DumpDataType::GetIrDataType(GeDataType::DT_INT32),
-              static_cast<int32_t>(ProtoDataType::DT_UNDEFINED));
+    EXPECT_NE(DumpDataType::GetIrDataType(GeDataType::DT_FLOAT), static_cast<int32_t>(ProtoDataType::DT_UNDEFINED));
+    EXPECT_NE(DumpDataType::GetIrDataType(GeDataType::DT_INT32), static_cast<int32_t>(ProtoDataType::DT_UNDEFINED));
 }
 
 TEST_F(GetIrDataTypeUtest, Test_FormatToSerialString_Known)
@@ -63,7 +57,7 @@ TEST_F(GetIrDataTypeUtest, Test_FormatToSerialString_Known)
     // FORMAT_ND = 2, FORMAT_NCHW = 0 (common formats that should be in the map)
     // Just call with any format value; a known one returns a non-"RESERVED" string
     std::string s = DumpDataType::FormatToSerialString(0); // FORMAT_NCHW
-    EXPECT_NE(s, ""); // should have some result
+    EXPECT_NE(s, "");                                      // should have some result
 }
 
 TEST_F(GetIrDataTypeUtest, Test_FormatToSerialString_Unknown)

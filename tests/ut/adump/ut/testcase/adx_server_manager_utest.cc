@@ -24,12 +24,10 @@
 
 using namespace Adx;
 
-class ADX_SERVER_MANAGER_UTEST: public testing::Test {
+class ADX_SERVER_MANAGER_UTEST : public testing::Test {
 protected:
     virtual void SetUp() {}
-    virtual void TearDown() {
-        GlobalMockObject::verify();
-    }
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 TEST_F(ADX_SERVER_MANAGER_UTEST, RegisterEpoll)
@@ -94,8 +92,7 @@ TEST_F(ADX_SERVER_MANAGER_UTEST, ServerInitEpollAddFailed)
     info["1"] = "1";
     info["DeviceId"] = "0";
     info["ServiceType"] = "0";
-    MOCKER(drvHdcEpollCtl).stubs()
-        .will(returnValue(DRV_ERROR_DEVICE_NOT_READY));
+    MOCKER(drvHdcEpollCtl).stubs().will(returnValue(DRV_ERROR_DEVICE_NOT_READY));
     ret = server.ServerInit(info);
     EXPECT_EQ(false, ret);
 }
@@ -141,14 +138,9 @@ TEST_F(ADX_SERVER_MANAGER_UTEST, AdxServerManagerExit)
     ret = server.ServerInit(info);
     EXPECT_EQ(true, ret);
 
-    MOCKER_CPP(&Adx::AdxServerManager::ServerInit)
-    .stubs()
-    .will(returnValue(false))
-    .then(returnValue(true));
+    MOCKER_CPP(&Adx::AdxServerManager::ServerInit).stubs().will(returnValue(false)).then(returnValue(true));
 
-    MOCKER(drvHdcEpollClose).stubs()
-    .will(returnValue(DRV_ERROR_DEVICE_NOT_READY))
-    .then(returnValue(DRV_ERROR_NONE));
+    MOCKER(drvHdcEpollClose).stubs().will(returnValue(DRV_ERROR_DEVICE_NOT_READY)).then(returnValue(DRV_ERROR_NONE));
 }
 
 TEST_F(ADX_SERVER_MANAGER_UTEST, CommOptServerUnInit)
@@ -163,7 +155,7 @@ TEST_F(ADX_SERVER_MANAGER_UTEST, CommOptServerUnInit)
     epoll = std::unique_ptr<Adx::AdxHdcEpoll>(new Adx::AdxHdcEpoll());
     EXPECT_EQ(true, server.RegisterEpoll(epoll));
     std::unique_ptr<Adx::AdxCommOpt> opt = nullptr;
-    EXPECT_EQ(false, server.RegisterCommOpt(opt, std::to_string(3)));  // 3 -> hdc service type
+    EXPECT_EQ(false, server.RegisterCommOpt(opt, std::to_string(3))); // 3 -> hdc service type
     opt = std::unique_ptr<Adx::HdcCommOpt>(new Adx::HdcCommOpt());
     EXPECT_EQ(true, server.RegisterCommOpt(opt, std::to_string(3)));
     info["0"] = "0";
@@ -175,7 +167,7 @@ TEST_F(ADX_SERVER_MANAGER_UTEST, CommOptServerUnInit)
 }
 
 TEST_F(ADX_SERVER_MANAGER_UTEST, ServerUnInitCloseServerFail)
-{   
+{
     Adx::AdxServerManager server;
     std::map<std::string, std::string> info;
     OptHandle epHandle = (OptHandle)1;
@@ -190,16 +182,14 @@ TEST_F(ADX_SERVER_MANAGER_UTEST, ServerUnInitCloseServerFail)
     info["DeviceId"] = "0";
     info["ServiceType"] = "0";
     EXPECT_EQ(true, server.ServerInit(info));
-    MOCKER(drvHdcEpollCtl).stubs()
-        .will(returnValue(DRV_ERROR_DEVICE_NOT_READY))
-        .then(returnValue(DRV_ERROR_NONE));
+    MOCKER(drvHdcEpollCtl).stubs().will(returnValue(DRV_ERROR_DEVICE_NOT_READY)).then(returnValue(DRV_ERROR_NONE));
     bool ret = server.ServerUnInit(epHandle);
     EXPECT_EQ(false, ret);
-    MOCKER(drvHdcServerDestroy).stubs()
-        .will(repeat(DRV_ERROR_CLIENT_BUSY, 30))  // 30 -> max retry times
+    MOCKER(drvHdcServerDestroy)
+        .stubs()
+        .will(repeat(DRV_ERROR_CLIENT_BUSY, 30)) // 30 -> max retry times
         .then(returnValue(DRV_ERROR_NONE));
-    MOCKER(mmSleep).stubs()
-        .will(returnValue(EN_OK));
+    MOCKER(mmSleep).stubs().will(returnValue(EN_OK));
     ret = server.ServerUnInit(epHandle);
     EXPECT_EQ(false, ret);
 }
@@ -220,8 +210,7 @@ TEST_F(ADX_SERVER_MANAGER_UTEST, ExitKeepServerOnUnInitFail)
     EXPECT_EQ(1U, server.servers_.size());
 
     // let EpollDel fail so ServerUnInit returns false during Exit
-    MOCKER(drvHdcEpollCtl).stubs()
-        .will(returnValue(DRV_ERROR_DEVICE_NOT_READY));
+    MOCKER(drvHdcEpollCtl).stubs().will(returnValue(DRV_ERROR_DEVICE_NOT_READY));
     EXPECT_EQ(IDE_DAEMON_ERROR, server.Exit());
     // the entry survives instead of being dropped, so its handle is not leaked
     EXPECT_EQ(1U, server.servers_.size());
@@ -245,9 +234,7 @@ TEST_F(ADX_SERVER_MANAGER_UTEST, ExitRetryClosesRetainedServer)
     EXPECT_EQ(true, server.ServerInit(info));
 
     // EpollDel fails the first time, succeeds the second
-    MOCKER(drvHdcEpollCtl).stubs()
-        .will(returnValue(DRV_ERROR_DEVICE_NOT_READY))
-        .then(returnValue(DRV_ERROR_NONE));
+    MOCKER(drvHdcEpollCtl).stubs().will(returnValue(DRV_ERROR_DEVICE_NOT_READY)).then(returnValue(DRV_ERROR_NONE));
     EXPECT_EQ(IDE_DAEMON_ERROR, server.Exit());
     EXPECT_EQ(1U, server.servers_.size());
 
@@ -276,7 +263,8 @@ TEST_F(ADX_SERVER_MANAGER_UTEST, ExitEraseServerOnUnInitOk)
 }
 
 TEST_F(ADX_SERVER_MANAGER_UTEST, ServerUnInitEpollDeleteFail)
-{    Adx::AdxServerManager server;
+{
+    Adx::AdxServerManager server;
     std::map<std::string, std::string> info;
     OptHandle epHandle = (OptHandle)1; // valid
     std::unique_ptr<Adx::AdxEpoll> epoll = nullptr;
@@ -293,53 +281,51 @@ TEST_F(ADX_SERVER_MANAGER_UTEST, ServerUnInitEpollDeleteFail)
     info["ServiceType"] = "0";
     ret = server.ServerInit(info);
     EXPECT_EQ(true, ret);
-    MOCKER(drvHdcEpollCtl).stubs()
-        .will(returnValue(DRV_ERROR_DEVICE_NOT_READY))
-        .then(returnValue(DRV_ERROR_NONE));
+    MOCKER(drvHdcEpollCtl).stubs().will(returnValue(DRV_ERROR_DEVICE_NOT_READY)).then(returnValue(DRV_ERROR_NONE));
     ret = server.ServerUnInit(epHandle);
     EXPECT_EQ(false, ret);
     ret = server.ServerUnInit(epHandle);
     EXPECT_EQ(true, ret);
 }
 
-drvError_t drvHdcEpollWaitStub(HDC_EPOLL epoll, struct drvHdcEvent * events, int maxevents, int timeout, int * eventnum)
+drvError_t drvHdcEpollWaitStub(HDC_EPOLL epoll, struct drvHdcEvent* events, int maxevents, int timeout, int* eventnum)
 {
     events->data = 0x12345678;
     events->events = HDC_EPOLL_SESSION_CLOSE | HDC_EPOLL_CONN_IN | HDC_EPOLL_DATA_IN;
     *eventnum = 3;
-    std::cout<<"drvHdcEpollWaitStub Enable"<<std::endl;
+    std::cout << "drvHdcEpollWaitStub Enable" << std::endl;
     return DRV_ERROR_NONE;
 }
 
 int HdcReadStub(HDC_SESSION session, IdeRecvBuffT recvBuf, IdeI32Pt recvLen)
 {
-    const char *srcFile = "adx_server_manager";
-    MsgProto *msg = AdxMsgProto::CreateMsgPacket(IDE_FILE_GETD_REQ, 0, srcFile, strlen(srcFile) + 1);
+    const char* srcFile = "adx_server_manager";
+    MsgProto* msg = AdxMsgProto::CreateMsgPacket(IDE_FILE_GETD_REQ, 0, srcFile, strlen(srcFile) + 1);
     *recvLen = sizeof(MsgProto) + strlen(srcFile) + 1;
     msg->totalLen = strlen(srcFile) + 1;
-    std::cout<<"HdcReadStub"<<*recvLen <<std::endl;
+    std::cout << "HdcReadStub" << *recvLen << std::endl;
     *recvBuf = msg;
     return IDE_DAEMON_OK;
 }
 
 int HdcReadLenFailStub(HDC_SESSION session, IdeRecvBuffT recvBuf, IdeI32Pt recvLen)
 {
-    const char *srcFile = "adx_server_manager";
-    MsgProto *msg = AdxMsgProto::CreateMsgPacket(IDE_FILE_GETD_REQ, 0, srcFile, strlen(srcFile) + 1);
+    const char* srcFile = "adx_server_manager";
+    MsgProto* msg = AdxMsgProto::CreateMsgPacket(IDE_FILE_GETD_REQ, 0, srcFile, strlen(srcFile) + 1);
     *recvLen = sizeof(MsgProto) + strlen(srcFile) + 10;
     msg->totalLen = strlen(srcFile) + 1;
-    std::cout<<"HdcReadLenFailStub"<<*recvLen <<std::endl;
+    std::cout << "HdcReadLenFailStub" << *recvLen << std::endl;
     *recvBuf = msg;
     return IDE_DAEMON_OK;
 }
 
 int HdcReadFailStub(HDC_SESSION session, IdeRecvBuffT recvBuf, IdeI32Pt recvLen)
 {
-    const char *srcFile = "adx_server_manager";
-    MsgProto *msg = AdxMsgProto::CreateMsgPacket(IDE_FILE_GETD_REQ, 0, srcFile, strlen(srcFile) + 1);
+    const char* srcFile = "adx_server_manager";
+    MsgProto* msg = AdxMsgProto::CreateMsgPacket(IDE_FILE_GETD_REQ, 0, srcFile, strlen(srcFile) + 1);
     *recvLen = sizeof(MsgProto) + strlen(srcFile) + 10;
     msg->totalLen = strlen(srcFile) + 1;
-    std::cout<<"HdcReadLenFailStub"<<*recvLen <<std::endl;
+    std::cout << "HdcReadLenFailStub" << *recvLen << std::endl;
     *recvBuf = msg;
     free(msg);
     msg = nullptr;
@@ -388,24 +374,16 @@ TEST_F(ADX_SERVER_MANAGER_UTEST, AdxServerManagerFileDumpRun)
 
     ret = server.ComponentInit();
     EXPECT_EQ(true, ret);
-    MOCKER(drvHdcEpollWait).stubs()
-        .will(invoke(drvHdcEpollWaitStub));
-    MOCKER(HdcReadNb).stubs()
-            .will(invoke(HdcReadStub));
+    MOCKER(drvHdcEpollWait).stubs().will(invoke(drvHdcEpollWaitStub));
+    MOCKER(HdcReadNb).stubs().will(invoke(HdcReadStub));
 
-    MOCKER(HdcRead).stubs()
-            .will(invoke(HdcReadStub));
+    MOCKER(HdcRead).stubs().will(invoke(HdcReadStub));
     struct drvHdcCapacity capacity;
     capacity.maxSegment = 32 * 1024;
 
-    MOCKER(drvHdcGetCapacity)
-        .stubs()
-        .with(outBoundP(&capacity, sizeof(capacity)))
-        .will(returnValue(DRV_ERROR_NONE));
+    MOCKER(drvHdcGetCapacity).stubs().with(outBoundP(&capacity, sizeof(capacity))).will(returnValue(DRV_ERROR_NONE));
 
-    MOCKER_CPP(&Adx::Runnable::IsQuit).stubs()
-        .will(returnValue(false))
-        .then(returnValue(true));
+    MOCKER_CPP(&Adx::Runnable::IsQuit).stubs().will(returnValue(false)).then(returnValue(true));
 
     g_ide_create_task_time = 1;
     g_mmCreateTaskWitchDeatchFlag = 1;
@@ -428,7 +406,8 @@ public:
     int32_t Init() override { return IDE_DAEMON_OK; };
     virtual const std::string GetInfo() { return "TransferFile"; }
     ComponentType GetType() override { return ComponentType::COMPONENT_GETD_FILE; };
-    int32_t Process(const CommHandle &handle, const SharedPtr<MsgProto> &req) override {
+    int32_t Process(const CommHandle& handle, const SharedPtr<MsgProto>& req) override
+    {
         g_AdxFileDumpProcessStubFlag = 1;
         return IDE_DAEMON_OK;
     };
@@ -442,7 +421,8 @@ public:
     int32_t Init() override { return IDE_DAEMON_OK; };
     virtual const std::string GetInfo() { return "LogBackhaul"; }
     ComponentType GetType() override { return ComponentType::COMPONENT_LOG_BACKHAUL; };
-    int32_t Process(const CommHandle &handle, const SharedPtr<MsgProto> &req) override {
+    int32_t Process(const CommHandle& handle, const SharedPtr<MsgProto>& req) override
+    {
         g_AdxFileDumpProcessStubFlag = 1;
         return IDE_DAEMON_OK;
     };
@@ -471,25 +451,20 @@ TEST_F(ADX_SERVER_MANAGER_UTEST, AdxServerManagerProcess)
     server.SetDeviceId(-1);
 
     // register file dump
-    std::cout<<"Add Transfer File Component"<<std::endl;
+    std::cout << "Add Transfer File Component" << std::endl;
     std::unique_ptr<AdxComponent> cpn = std::unique_ptr<AdxFileDumpStub>(new AdxFileDumpStub());
     ret = server.ComponentAdd(cpn);
     EXPECT_EQ(true, ret);
     ret = server.ComponentInit();
     EXPECT_EQ(true, ret);
-    MOCKER(drvHdcEpollWait).stubs()
-        .will(invoke(drvHdcEpollWaitStub));
-    MOCKER(HdcReadNb).stubs()
-            .will(invoke(HdcReadStub));
+    MOCKER(drvHdcEpollWait).stubs().will(invoke(drvHdcEpollWaitStub));
+    MOCKER(HdcReadNb).stubs().will(invoke(HdcReadStub));
 
-    MOCKER(HdcRead).stubs()
-            .will(invoke(HdcReadStub));
-    MOCKER_CPP(&Adx::Runnable::IsQuit).stubs()
-        .will(returnValue(false))
-        .then(returnValue(true));
+    MOCKER(HdcRead).stubs().will(invoke(HdcReadStub));
+    MOCKER_CPP(&Adx::Runnable::IsQuit).stubs().will(returnValue(false)).then(returnValue(true));
 
     g_ide_create_task_time = 1;
-    g_mmCreateTaskWitchDeatchFlag = 1;// mmCreateTaskWithDetach
+    g_mmCreateTaskWitchDeatchFlag = 1; // mmCreateTaskWithDetach
     g_AdxFileDumpProcessStubFlag = 0;
     server.Start();
     g_ide_create_task_time = 0;
@@ -519,25 +494,20 @@ TEST_F(ADX_SERVER_MANAGER_UTEST, AdxServerManagerReadFail)
     server.SetDeviceId(-1);
 
     // register file dump
-    std::cout<<"Add Transfer File Component"<<std::endl;
+    std::cout << "Add Transfer File Component" << std::endl;
     std::unique_ptr<AdxComponent> cpn = std::unique_ptr<AdxLogBackhaulStub>(new AdxLogBackhaulStub());
     ret = server.ComponentAdd(cpn);
     EXPECT_EQ(true, ret);
     ret = server.ComponentInit();
     EXPECT_EQ(true, ret);
-    MOCKER(drvHdcEpollWait).stubs()
-        .will(invoke(drvHdcEpollWaitStub));
-    MOCKER(HdcReadNb).stubs()
-            .will(invoke(HdcReadFailStub));
+    MOCKER(drvHdcEpollWait).stubs().will(invoke(drvHdcEpollWaitStub));
+    MOCKER(HdcReadNb).stubs().will(invoke(HdcReadFailStub));
 
-    MOCKER(HdcRead).stubs()
-            .will(invoke(HdcReadFailStub));
-    MOCKER_CPP(&Adx::Runnable::IsQuit).stubs()
-        .will(returnValue(false))
-        .then(returnValue(true));
+    MOCKER(HdcRead).stubs().will(invoke(HdcReadFailStub));
+    MOCKER_CPP(&Adx::Runnable::IsQuit).stubs().will(returnValue(false)).then(returnValue(true));
 
     g_ide_create_task_time = 1;
-    g_mmCreateTaskWitchDeatchFlag = 1;// mmCreateTaskWithDetach
+    g_mmCreateTaskWitchDeatchFlag = 1; // mmCreateTaskWithDetach
     g_AdxFileDumpProcessStubFlag = 0;
     server.Start();
     g_ide_create_task_time = 0;
@@ -567,25 +537,20 @@ TEST_F(ADX_SERVER_MANAGER_UTEST, AdxServerManagerReadLengthFail)
     server.SetDeviceId(-1);
 
     // register file dump
-    std::cout<<"Add Transfer File Component"<<std::endl;
+    std::cout << "Add Transfer File Component" << std::endl;
     std::unique_ptr<AdxComponent> cpn = std::unique_ptr<AdxLogBackhaulStub>(new AdxLogBackhaulStub());
     ret = server.ComponentAdd(cpn);
     EXPECT_EQ(true, ret);
     ret = server.ComponentInit();
     EXPECT_EQ(true, ret);
-    MOCKER(drvHdcEpollWait).stubs()
-        .will(invoke(drvHdcEpollWaitStub));
-    MOCKER(HdcReadNb).stubs()
-            .will(invoke(HdcReadLenFailStub));
+    MOCKER(drvHdcEpollWait).stubs().will(invoke(drvHdcEpollWaitStub));
+    MOCKER(HdcReadNb).stubs().will(invoke(HdcReadLenFailStub));
 
-    MOCKER(HdcRead).stubs()
-            .will(invoke(HdcReadLenFailStub));
-    MOCKER_CPP(&Adx::Runnable::IsQuit).stubs()
-        .will(returnValue(false))
-        .then(returnValue(true));
+    MOCKER(HdcRead).stubs().will(invoke(HdcReadLenFailStub));
+    MOCKER_CPP(&Adx::Runnable::IsQuit).stubs().will(returnValue(false)).then(returnValue(true));
 
     g_ide_create_task_time = 1;
-    g_mmCreateTaskWitchDeatchFlag = 1;// mmCreateTaskWithDetach
+    g_mmCreateTaskWitchDeatchFlag = 1; // mmCreateTaskWithDetach
     g_AdxFileDumpProcessStubFlag = 0;
     server.Start();
     g_ide_create_task_time = 0;
@@ -615,28 +580,22 @@ TEST_F(ADX_SERVER_MANAGER_UTEST, AdxServerManagerProcessFail)
     server.SetDeviceId(-1);
 
     // register file dump
-    std::cout<<"Add Transfer File Component"<<std::endl;
+    std::cout << "Add Transfer File Component" << std::endl;
     std::unique_ptr<AdxComponent> cpn = std::unique_ptr<AdxFileDumpStub>(new AdxFileDumpStub());
     ret = server.ComponentAdd(cpn);
     EXPECT_EQ(true, ret);
     ret = server.ComponentInit();
     EXPECT_EQ(true, ret);
-    MOCKER(drvHdcEpollWait).stubs()
-        .will(invoke(drvHdcEpollWaitStub));
-    MOCKER(HdcReadNb).stubs()
-            .will(invoke(HdcReadStub));
+    MOCKER(drvHdcEpollWait).stubs().will(invoke(drvHdcEpollWaitStub));
+    MOCKER(HdcReadNb).stubs().will(invoke(HdcReadStub));
 
-    MOCKER(HdcRead).stubs()
-            .will(invoke(HdcReadStub));
-    MOCKER_CPP(&Adx::Runnable::IsQuit).stubs()
-        .will(returnValue(false))
-        .then(returnValue(true));
+    MOCKER(HdcRead).stubs().will(invoke(HdcReadStub));
+    MOCKER_CPP(&Adx::Runnable::IsQuit).stubs().will(returnValue(false)).then(returnValue(true));
 
-    MOCKER(IdeGetDevIdBySession).stubs()
-        .will(returnValue(IDE_DAEMON_ERROR));
+    MOCKER(IdeGetDevIdBySession).stubs().will(returnValue(IDE_DAEMON_ERROR));
 
     g_ide_create_task_time = 1;
-    g_mmCreateTaskWitchDeatchFlag = 1;// mmCreateTaskWithDetach
+    g_mmCreateTaskWitchDeatchFlag = 1; // mmCreateTaskWithDetach
     g_AdxFileDumpProcessStubFlag = 0;
     server.Start();
     g_ide_create_task_time = 0;
@@ -666,27 +625,21 @@ TEST_F(ADX_SERVER_MANAGER_UTEST, AdxServerManagerLinkOverloadFail)
     server.SetDeviceId(-1);
 
     // register file dump
-    std::cout<<"Add Transfer File Component"<<std::endl;
+    std::cout << "Add Transfer File Component" << std::endl;
     std::unique_ptr<AdxComponent> cpn = std::unique_ptr<AdxFileDumpStub>(new AdxFileDumpStub());
     ret = server.ComponentAdd(cpn);
     EXPECT_EQ(true, ret);
     ret = server.ComponentInit();
     EXPECT_EQ(true, ret);
-    MOCKER(drvHdcEpollWait).stubs()
-        .will(invoke(drvHdcEpollWaitStub));
-    MOCKER(HdcReadNb).stubs()
-            .will(invoke(HdcReadStub));
+    MOCKER(drvHdcEpollWait).stubs().will(invoke(drvHdcEpollWaitStub));
+    MOCKER(HdcReadNb).stubs().will(invoke(HdcReadStub));
 
-    MOCKER(HdcRead).stubs()
-            .will(invoke(HdcReadStub));
-    MOCKER_CPP(&Adx::Runnable::IsQuit).stubs()
-        .will(returnValue(false))
-        .then(returnValue(true));
-    MOCKER_CPP(&Adx::AdxServerManager::IsLinkOverload).stubs()
-        .will(returnValue(true));
+    MOCKER(HdcRead).stubs().will(invoke(HdcReadStub));
+    MOCKER_CPP(&Adx::Runnable::IsQuit).stubs().will(returnValue(false)).then(returnValue(true));
+    MOCKER_CPP(&Adx::AdxServerManager::IsLinkOverload).stubs().will(returnValue(true));
 
     g_ide_create_task_time = 1;
-    g_mmCreateTaskWitchDeatchFlag = 1;// mmCreateTaskWithDetach
+    g_mmCreateTaskWitchDeatchFlag = 1; // mmCreateTaskWithDetach
     g_AdxFileDumpProcessStubFlag = 0;
     server.Start();
     g_ide_create_task_time = 0;
@@ -716,29 +669,23 @@ TEST_F(ADX_SERVER_MANAGER_UTEST, AdxServerManagerCreateDetachTaskFail)
     server.SetDeviceId(-1);
 
     // register file dump
-    std::cout<<"Add Transfer File Component"<<std::endl;
+    std::cout << "Add Transfer File Component" << std::endl;
     std::unique_ptr<AdxComponent> cpn = std::unique_ptr<AdxFileDumpStub>(new AdxFileDumpStub());
     ret = server.ComponentAdd(cpn);
     EXPECT_EQ(true, ret);
     ret = server.ComponentInit();
     EXPECT_EQ(true, ret);
-    MOCKER(drvHdcEpollWait).stubs()
-        .will(invoke(drvHdcEpollWaitStub));
+    MOCKER(drvHdcEpollWait).stubs().will(invoke(drvHdcEpollWaitStub));
 
-    MOCKER_CPP(&Adx::Thread::CreateDetachTask).stubs()
-        .will(returnValue(-1));
+    MOCKER_CPP(&Adx::Thread::CreateDetachTask).stubs().will(returnValue(-1));
 
-    MOCKER(HdcReadNb).stubs()
-            .will(invoke(HdcReadStub));
+    MOCKER(HdcReadNb).stubs().will(invoke(HdcReadStub));
 
-    MOCKER(HdcRead).stubs()
-            .will(invoke(HdcReadStub));
-    MOCKER_CPP(&Adx::Runnable::IsQuit).stubs()
-        .will(returnValue(false))
-        .then(returnValue(true));
+    MOCKER(HdcRead).stubs().will(invoke(HdcReadStub));
+    MOCKER_CPP(&Adx::Runnable::IsQuit).stubs().will(returnValue(false)).then(returnValue(true));
 
     g_ide_create_task_time = 1;
-    g_mmCreateTaskWitchDeatchFlag = 1;// mmCreateTaskWithDetach
+    g_mmCreateTaskWitchDeatchFlag = 1; // mmCreateTaskWithDetach
     g_AdxFileDumpProcessStubFlag = 0;
     server.Start();
     g_ide_create_task_time = 0;
@@ -768,27 +715,21 @@ TEST_F(ADX_SERVER_MANAGER_UTEST, AdxServerManagerQueuePopFail)
     server.SetDeviceId(-1);
 
     // register file dump
-    std::cout<<"Add Transfer File Component"<<std::endl;
+    std::cout << "Add Transfer File Component" << std::endl;
     std::unique_ptr<AdxComponent> cpn = std::unique_ptr<AdxFileDumpStub>(new AdxFileDumpStub());
     ret = server.ComponentAdd(cpn);
     EXPECT_EQ(true, ret);
     ret = server.ComponentInit();
     EXPECT_EQ(true, ret);
-    MOCKER(drvHdcEpollWait).stubs()
-        .will(invoke(drvHdcEpollWaitStub));
-    MOCKER(HdcReadNb).stubs()
-            .will(invoke(HdcReadStub));
+    MOCKER(drvHdcEpollWait).stubs().will(invoke(drvHdcEpollWaitStub));
+    MOCKER(HdcReadNb).stubs().will(invoke(HdcReadStub));
 
-    MOCKER(HdcRead).stubs()
-            .will(invoke(HdcReadStub));
-    MOCKER_CPP(&Adx::Runnable::IsQuit).stubs()
-        .will(returnValue(false))
-        .then(returnValue(true));
-    MOCKER_CPP(&Adx::AdxServerManager::IsLinkOverload).stubs()
-        .will(returnValue(true));
+    MOCKER(HdcRead).stubs().will(invoke(HdcReadStub));
+    MOCKER_CPP(&Adx::Runnable::IsQuit).stubs().will(returnValue(false)).then(returnValue(true));
+    MOCKER_CPP(&Adx::AdxServerManager::IsLinkOverload).stubs().will(returnValue(true));
 
     g_ide_create_task_time = 1;
-    g_mmCreateTaskWitchDeatchFlag = 1;// mmCreateTaskWithDetach
+    g_mmCreateTaskWitchDeatchFlag = 1; // mmCreateTaskWithDetach
     g_AdxFileDumpProcessStubFlag = 0;
     server.Start();
     g_ide_create_task_time = 0;
@@ -819,25 +760,20 @@ TEST_F(ADX_SERVER_MANAGER_UTEST, AdxServerManagerLinkNumFailed)
     server.SetDeviceId(-1);
 
     // register file dump
-    std::cout<<"Add FileDump Component"<<std::endl;
+    std::cout << "Add FileDump Component" << std::endl;
     std::unique_ptr<AdxComponent> file = std::unique_ptr<AdxFileDumpStub>(new AdxFileDumpStub());
     ret = server.ComponentAdd(file);
     EXPECT_EQ(true, ret);
     ret = server.ComponentInit();
     EXPECT_EQ(true, ret);
-    MOCKER(drvHdcEpollWait).stubs()
-        .will(invoke(drvHdcEpollWaitStub));
-    MOCKER(HdcReadNb).stubs()
-            .will(invoke(HdcReadStub));
+    MOCKER(drvHdcEpollWait).stubs().will(invoke(drvHdcEpollWaitStub));
+    MOCKER(HdcReadNb).stubs().will(invoke(HdcReadStub));
 
-    MOCKER(HdcRead).stubs()
-            .will(invoke(HdcReadStub));
-    MOCKER_CPP(&Adx::Runnable::IsQuit).stubs()
-        .will(returnValue(false))
-        .then(returnValue(true));
+    MOCKER(HdcRead).stubs().will(invoke(HdcReadStub));
+    MOCKER_CPP(&Adx::Runnable::IsQuit).stubs().will(returnValue(false)).then(returnValue(true));
 
     g_ide_create_task_time = 1;
-    g_mmCreateTaskWitchDeatchFlag = 1;// mmCreateTaskWithDetach
+    g_mmCreateTaskWitchDeatchFlag = 1; // mmCreateTaskWithDetach
     g_AdxFileDumpProcessStubFlag = 0;
     server.Start();
     g_ide_create_task_time = 0;

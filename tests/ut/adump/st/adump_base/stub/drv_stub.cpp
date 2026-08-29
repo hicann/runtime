@@ -14,25 +14,25 @@
 #include <map>
 #include <vector>
 
-drvError_t halGetVdevNum(uint32_t *num_dev)
+drvError_t halGetVdevNum(uint32_t* num_dev)
 {
     (void)num_dev;
     return DRV_ERROR_NONE;
 }
-drvError_t halGetVdevIDs(uint32_t *devices, uint32_t len)
+drvError_t halGetVdevIDs(uint32_t* devices, uint32_t len)
 {
     (void)devices;
     (void)len;
     return DRV_ERROR_NONE;
 }
-drvError_t halGetChipInfo(uint32_t devId, halChipInfo *chipInfo)
+drvError_t halGetChipInfo(uint32_t devId, halChipInfo* chipInfo)
 {
     (void)devId;
     (void)chipInfo;
     return DRV_ERROR_NONE;
 }
 
-drvError_t halGetAPIVersion(int32_t *halAPIVersion)
+drvError_t halGetAPIVersion(int32_t* halAPIVersion)
 {
     *halAPIVersion = 467735;
     return DRV_ERROR_NONE;

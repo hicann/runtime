@@ -14,7 +14,7 @@
 
 namespace Adx {
 
-bool DumpFileChecker::Load(const std::string &filePath)
+bool DumpFileChecker::Load(const std::string& filePath)
 {
     std::ifstream ifs(filePath, std::ios::binary);
     if (!ifs.is_open()) {
@@ -22,7 +22,7 @@ bool DumpFileChecker::Load(const std::string &filePath)
     }
 
     uint64_t protoHeaderSize = 0;
-    if (!ifs.read(reinterpret_cast<char *>(&protoHeaderSize), sizeof(uint64_t))) {
+    if (!ifs.read(reinterpret_cast<char*>(&protoHeaderSize), sizeof(uint64_t))) {
         std::cout << "Read proto header size failed" << std::endl;
         return false;
     }
@@ -43,10 +43,10 @@ bool DumpFileChecker::Load(const std::string &filePath)
     std::cout << "Read workspace size: " << header_.space_size() << std::endl;
 
     for (int i = 0; i < header_.input_size(); i++) {
-        const toolkit::dump::OpInput &input = header_.input(i);
+        const toolkit::dump::OpInput& input = header_.input(i);
         uint64_t inputSize = input.size();
         std::vector<uint8_t> buff(inputSize);
-        if (!ifs.read(reinterpret_cast<char *>(buff.data()), inputSize)) {
+        if (!ifs.read(reinterpret_cast<char*>(buff.data()), inputSize)) {
             std::cout << "read input " << i << " tensor failed" << std::endl;
             return false;
         }
@@ -54,10 +54,10 @@ bool DumpFileChecker::Load(const std::string &filePath)
     }
 
     for (int i = 0; i < header_.output_size(); i++) {
-        const toolkit::dump::OpOutput &output = header_.output(i);
+        const toolkit::dump::OpOutput& output = header_.output(i);
         uint64_t outputSize = output.size();
         std::vector<uint8_t> buff(outputSize);
-        if (!ifs.read(reinterpret_cast<char *>(buff.data()), outputSize)) {
+        if (!ifs.read(reinterpret_cast<char*>(buff.data()), outputSize)) {
             std::cout << "read output " << i << " tensor failed" << std::endl;
             return false;
         }
@@ -65,10 +65,10 @@ bool DumpFileChecker::Load(const std::string &filePath)
     }
 
     for (int i = 0; i < header_.space_size(); i++) {
-        const toolkit::dump::Workspace &workspace = header_.space(i);
+        const toolkit::dump::Workspace& workspace = header_.space(i);
         uint64_t workspaceSize = workspace.size();
         std::vector<uint8_t> buff(workspaceSize);
-        if (!ifs.read(reinterpret_cast<char *>(buff.data()), workspaceSize)) {
+        if (!ifs.read(reinterpret_cast<char*>(buff.data()), workspaceSize)) {
             std::cout << "read workspace " << i << " failed" << std::endl;
             return false;
         }
@@ -77,10 +77,7 @@ bool DumpFileChecker::Load(const std::string &filePath)
     return true;
 }
 
-bool DumpFileChecker::CheckHead(const std::string &opName) const
-{
-    return header_.op_name() == opName;
-}
+bool DumpFileChecker::CheckHead(const std::string& opName) const { return header_.op_name() == opName; }
 
 bool DumpFileChecker::CheckInputTensorNum(int32_t num) const
 {
@@ -94,10 +91,7 @@ bool DumpFileChecker::CheckOutputTensorNum(int32_t num) const
     return header_.output_size() == num;
 }
 
-bool DumpFileChecker::CheckWorkspaceNum(int32_t num) const
-{
-    return header_.space_size() == num;
-}
+bool DumpFileChecker::CheckWorkspaceNum(int32_t num) const { return header_.space_size() == num; }
 
 bool DumpFileChecker::CheckInputTensorSize(size_t index, uint64_t size) const
 {
@@ -107,7 +101,7 @@ bool DumpFileChecker::CheckInputTensorSize(size_t index, uint64_t size) const
     return header_.input(index).size() == size;
 }
 
-bool DumpFileChecker::CheckInputTensorData(size_t index, const std::vector<uint8_t> &data) const
+bool DumpFileChecker::CheckInputTensorData(size_t index, const std::vector<uint8_t>& data) const
 {
     if (index >= header_.input_size() || index >= inputs_.size()) {
         return false;
@@ -115,7 +109,7 @@ bool DumpFileChecker::CheckInputTensorData(size_t index, const std::vector<uint8
     return inputs_[index] == data;
 }
 
-bool DumpFileChecker::CheckInputTensorShape(size_t index, const std::vector<int64_t> &shape) const
+bool DumpFileChecker::CheckInputTensorShape(size_t index, const std::vector<int64_t>& shape) const
 {
     if (index >= header_.input_size()) {
         return false;
@@ -159,7 +153,7 @@ bool DumpFileChecker::CheckOutputTensorSize(size_t index, uint64_t size) const
     return header_.output(index).size() == size;
 }
 
-bool DumpFileChecker::CheckOutputTensorData(size_t index, const std::vector<uint8_t> &data) const
+bool DumpFileChecker::CheckOutputTensorData(size_t index, const std::vector<uint8_t>& data) const
 {
     if (index >= header_.output_size() || index >= outputs_.size()) {
         return false;
@@ -167,7 +161,7 @@ bool DumpFileChecker::CheckOutputTensorData(size_t index, const std::vector<uint
     return outputs_[index] == data;
 }
 
-bool DumpFileChecker::CheckOutputTensorShape(size_t index, const std::vector<int64_t> &shape) const
+bool DumpFileChecker::CheckOutputTensorShape(size_t index, const std::vector<int64_t>& shape) const
 {
     if (index >= header_.output_size()) {
         return false;
@@ -201,7 +195,7 @@ bool DumpFileChecker::CheckOutputTensorFormat(size_t index, toolkit::dump::Outpu
     return header_.output(index).format() == format;
 }
 
-bool DumpFileChecker::CheckWorkspaceData(size_t index, const std::vector<uint8_t> &data) const
+bool DumpFileChecker::CheckWorkspaceData(size_t index, const std::vector<uint8_t>& data) const
 {
     if (index >= header_.space_size() || index >= workspaces_.size()) {
         return false;
@@ -217,8 +211,9 @@ bool DumpFileChecker::CheckWorkspaceSize(size_t index, uint64_t size) const
     return header_.space(index).size() == size;
 }
 
-std::string ExpectedDumpFilePath(const std::string &envDumpPath, uint32_t deviceId, const std::string &opType,
-                                 const std::string &opName, uint32_t taskId, const std::string &timestamp)
+std::string ExpectedDumpFilePath(
+    const std::string& envDumpPath, uint32_t deviceId, const std::string& opType, const std::string& opName,
+    uint32_t taskId, const std::string& timestamp)
 {
     std::string expectDumpFile = opType + "." + opName + "." + std::to_string(taskId) + "." + timestamp;
     std::string expectDumpDir = envDumpPath + "/extra-info/data-dump/" + std::to_string(deviceId);
@@ -226,8 +221,8 @@ std::string ExpectedDumpFilePath(const std::string &envDumpPath, uint32_t device
     return expectDumpFilePath;
 }
 
-std::string ExpectedArgsDumpFilePath(const std::string &envDumpPath, uint32_t deviceId, uint32_t streamId,
-                                     uint32_t taskId, const std::string &timestamp)
+std::string ExpectedArgsDumpFilePath(
+    const std::string& envDumpPath, uint32_t deviceId, uint32_t streamId, uint32_t taskId, const std::string& timestamp)
 {
     std::string opType = "exception_info";
     std::string expectDumpFile =
@@ -237,8 +232,5 @@ std::string ExpectedArgsDumpFilePath(const std::string &envDumpPath, uint32_t de
     return expectDumpFilePath;
 }
 
-bool IsFileExist(const std::string &filePath)
-{
-    return access(filePath.c_str(), F_OK) == 0;
-}
-}  // namespace Adx
+bool IsFileExist(const std::string& filePath) { return access(filePath.c_str(), F_OK) == 0; }
+} // namespace Adx

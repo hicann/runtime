@@ -23,15 +23,12 @@ using namespace Adx;
 class TinyDumpPrintfStest : public testing::Test {
 protected:
     virtual void SetUp() {}
-    virtual void TearDown()
-    {
-        GlobalMockObject::verify();
-    }
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 TEST_F(TinyDumpPrintfStest, Test_DumpPrintfForTiny)
 {
-    void *workSpaceAddr = nullptr;
+    void* workSpaceAddr = nullptr;
     size_t dumpWorkSpaceSize = 0;
     AdxPrintWorkSpace(nullptr, 0, nullptr, "test", false);
     std::vector<MsprofAicTimeStampInfo> timeStampInfo;

@@ -25,17 +25,15 @@
 #include "common_utils.h"
 
 using namespace Adx;
-class ADX_DUMP_RECORD_TEST: public testing::Test {
+class ADX_DUMP_RECORD_TEST : public testing::Test {
 protected:
     virtual void SetUp() {}
-    virtual void TearDown() {
-        GlobalMockObject::verify();
-    }
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
-int messageCallback(const Adx::DumpChunk * data, int len)
+int messageCallback(const Adx::DumpChunk* data, int len)
 {
-    if((sizeof(struct Adx::DumpChunk) + data->bufLen) == len) {
+    if ((sizeof(struct Adx::DumpChunk) + data->bufLen) == len) {
         printf("record to mindspore success\n");
         return 0;
     } else {
@@ -45,21 +43,16 @@ int messageCallback(const Adx::DumpChunk * data, int len)
 
 TEST_F(ADX_DUMP_RECORD_TEST, Init)
 {
-    MOCKER(mmGetCwd)
-        .stubs()
-        .will(returnValue(-1));
+    MOCKER(mmGetCwd).stubs().will(returnValue(-1));
     int ret = Adx::AdxDumpRecord::Instance().Init("");
     EXPECT_EQ(IDE_DAEMON_ERROR, ret);
 
     MOCKER(Adx::FileUtils::IsFileExist).stubs().will(returnValue(true));
-    MOCKER(readlink).stubs()
-        .will(returnValue(0))
-        .then(returnValue(-1));
+    MOCKER(readlink).stubs().will(returnValue(0)).then(returnValue(-1));
     ret = Adx::AdxDumpRecord::Instance().Init("1");
     EXPECT_EQ(IDE_DAEMON_OK, ret);
 
-    MOCKER(readlink).stubs()
-        .will(returnValue(-1));
+    MOCKER(readlink).stubs().will(returnValue(-1));
     ret = Adx::AdxDumpRecord::Instance().Init("1");
     EXPECT_EQ(IDE_DAEMON_ERROR, ret);
 }
@@ -67,10 +60,10 @@ TEST_F(ADX_DUMP_RECORD_TEST, Init)
 TEST_F(ADX_DUMP_RECORD_TEST, InitPermissionDenied)
 {
     std::string testPid = "../tmp/adumpllt/12345";
-    const char mkCmd[] = { "mkdir -p /tmp/adumpllt/12345/" };
-    const char thCmd[] = { "touch /tmp/adumpllt/12345/exe" };
-    const char chCmd[] = { "chmod 220 /tmp/adumpllt/12345/exe" };
-    const char rmCmd[] = { "rm -rf /tmp/adumpllt/12345/" };
+    const char mkCmd[] = {"mkdir -p /tmp/adumpllt/12345/"};
+    const char thCmd[] = {"touch /tmp/adumpllt/12345/exe"};
+    const char chCmd[] = {"chmod 220 /tmp/adumpllt/12345/exe"};
+    const char rmCmd[] = {"rm -rf /tmp/adumpllt/12345/"};
     system(mkCmd);
     system(thCmd);
     system(chCmd);
@@ -93,9 +86,9 @@ TEST_F(ADX_DUMP_RECORD_TEST, StartRecordAndUnInit)
     // starting again while running is a no-op success
     EXPECT_EQ(IDE_DAEMON_OK, Adx::AdxDumpRecord::Instance().StartRecord());
 
-    const char *srcFile = "adx_data_dump_server_manager";
+    const char* srcFile = "adx_data_dump_server_manager";
     uint32_t dataLen = strlen(srcFile) + 1 + sizeof(Adx::DumpChunk);
-    MsgProto *msg = Adx::AdxMsgProto::CreateMsgPacket(IDE_DUMP_REQ, 0, nullptr, dataLen);
+    MsgProto* msg = Adx::AdxMsgProto::CreateMsgPacket(IDE_DUMP_REQ, 0, nullptr, dataLen);
     Adx::SharedPtr<MsgProto> msgPtr(msg, IdeXfree);
     Adx::HostDumpDataInfo info = {msgPtr, dataLen};
     EXPECT_EQ(true, Adx::AdxDumpRecord::Instance().RecordDumpDataToQueue(info));
@@ -118,9 +111,9 @@ TEST_F(ADX_DUMP_RECORD_TEST, QueueNullSafeAfterRelease)
     EXPECT_EQ(true, Adx::AdxDumpRecord::Instance().DumpDataQueueIsEmpty());
 
     // enqueue on a null queue must fail gracefully instead of crashing
-    const char *srcFile = "adx_data_dump_server_manager";
+    const char* srcFile = "adx_data_dump_server_manager";
     uint32_t dataLen = strlen(srcFile) + 1 + sizeof(Adx::DumpChunk);
-    MsgProto *msg = Adx::AdxMsgProto::CreateMsgPacket(IDE_DUMP_REQ, 0, nullptr, dataLen);
+    MsgProto* msg = Adx::AdxMsgProto::CreateMsgPacket(IDE_DUMP_REQ, 0, nullptr, dataLen);
     Adx::SharedPtr<MsgProto> msgPtr(msg, IdeXfree);
     Adx::HostDumpDataInfo info = {msgPtr, dataLen};
     EXPECT_EQ(false, Adx::AdxDumpRecord::Instance().RecordDumpDataToQueue(info));
@@ -176,8 +169,7 @@ TEST_F(ADX_DUMP_RECORD_TEST, ForkChildRebuildDump)
         int32_t initRet = Adx::AdxDumpRecord::Instance().Init("");
         int32_t startRet = Adx::AdxDumpRecord::Instance().StartRecord();
         int32_t uninitRet = Adx::AdxDumpRecord::Instance().UnInit();
-        _exit((initRet == IDE_DAEMON_OK && startRet == IDE_DAEMON_OK &&
-               uninitRet == IDE_DAEMON_OK) ? 0 : 1);
+        _exit((initRet == IDE_DAEMON_OK && startRet == IDE_DAEMON_OK && uninitRet == IDE_DAEMON_OK) ? 0 : 1);
     } else if (pid > 0) {
         int status = 0;
         waitpid(pid, &status, 0);
@@ -200,11 +192,11 @@ TEST_F(ADX_DUMP_RECORD_TEST, UpdateDumpInitNum)
 
 TEST_F(ADX_DUMP_RECORD_TEST, RecordDumpDataToDisk)
 {
-    const char *srcFile = "adx_data_dump_server_manager";
+    const char* srcFile = "adx_data_dump_server_manager";
     uint32_t dataLen = strlen(srcFile) + 1 + sizeof(Adx::DumpChunk);
-    MsgProto *msg = Adx::AdxMsgProto::CreateMsgPacket(IDE_DUMP_REQ, 0, nullptr, dataLen);
+    MsgProto* msg = Adx::AdxMsgProto::CreateMsgPacket(IDE_DUMP_REQ, 0, nullptr, dataLen);
     std::unique_ptr<MsgProto, decltype(&IdeXfree)> sendDataMsgPtr(msg, IdeXfree);
-    Adx::DumpChunk* data = (Adx::DumpChunk *)msg->data;
+    Adx::DumpChunk* data = (Adx::DumpChunk*)msg->data;
     data->bufLen = strlen(srcFile) + 1;
     data->flag = 0;
     data->isLastChunk = 1;
@@ -216,26 +208,17 @@ TEST_F(ADX_DUMP_RECORD_TEST, RecordDumpDataToDisk)
 
     const Adx::DumpChunk dumpChunk = *data;
 
-    MOCKER(Adx::FileUtils::IsFileExist)
-    .stubs()
-    .will(returnValue(false))
-    .then(returnValue(true));
+    MOCKER(Adx::FileUtils::IsFileExist).stubs().will(returnValue(false)).then(returnValue(true));
     MOCKER(Adx::FileUtils::CreateDir)
-    .stubs()
-    .will(returnValue(IDE_DAEMON_INVALID_PATH_ERROR))
-    .then(returnValue(IDE_DAEMON_NONE_ERROR));
-    MOCKER(Adx::FileUtils::IsDiskFull)
-    .stubs()
-    .will(returnValue(true))
-    .then(returnValue(false));
-    MOCKER(Adx::FileUtils::FileNameIsReal)
-    .stubs()
-    .will(returnValue(IDE_DAEMON_ERROR))
-    .then(returnValue(IDE_DAEMON_OK));
+        .stubs()
+        .will(returnValue(IDE_DAEMON_INVALID_PATH_ERROR))
+        .then(returnValue(IDE_DAEMON_NONE_ERROR));
+    MOCKER(Adx::FileUtils::IsDiskFull).stubs().will(returnValue(true)).then(returnValue(false));
+    MOCKER(Adx::FileUtils::FileNameIsReal).stubs().will(returnValue(IDE_DAEMON_ERROR)).then(returnValue(IDE_DAEMON_OK));
     MOCKER(Adx::FileUtils::WriteFile)
-    .stubs()
-    .will(returnValue(IDE_DAEMON_WRITE_ERROR))
-    .then(returnValue(IDE_DAEMON_NONE_ERROR));
+        .stubs()
+        .will(returnValue(IDE_DAEMON_WRITE_ERROR))
+        .then(returnValue(IDE_DAEMON_NONE_ERROR));
     bool ret = Adx::AdxDumpRecord::Instance().RecordDumpDataToDisk(dumpChunk);
     EXPECT_EQ(false, ret);
     ret = Adx::AdxDumpRecord::Instance().RecordDumpDataToDisk(dumpChunk);
@@ -252,13 +235,13 @@ TEST_F(ADX_DUMP_RECORD_TEST, RecordDumpDataToDisk)
 
 TEST_F(ADX_DUMP_RECORD_TEST, RecordDumpDataToQueue)
 {
-    const char *srcFile = "adx_data_dump_server_manager";
+    const char* srcFile = "adx_data_dump_server_manager";
     uint32_t dataLen = strlen(srcFile) + 1 + sizeof(Adx::DumpChunk);
-    MsgProto *msg = Adx::AdxMsgProto::CreateMsgPacket(IDE_DUMP_REQ, 0, nullptr, dataLen);
+    MsgProto* msg = Adx::AdxMsgProto::CreateMsgPacket(IDE_DUMP_REQ, 0, nullptr, dataLen);
     Adx::SharedPtr<MsgProto> msgPtr(msg, IdeXfree);
     Adx::HostDumpDataInfo info = {msgPtr, dataLen};
-    Adx::AdxDumpRecord::Instance().Init("");            // 复位队列 quit_，使 Push 可入队
-    Adx::AdxDumpRecord::Instance().dumpRecordFlag_ = false;  // 让 RecordDumpInfo 排空后即退出，避免同步调用阻塞
+    Adx::AdxDumpRecord::Instance().Init("");                // 复位队列 quit_，使 Push 可入队
+    Adx::AdxDumpRecord::Instance().dumpRecordFlag_ = false; // 让 RecordDumpInfo 排空后即退出，避免同步调用阻塞
     bool ret = Adx::AdxDumpRecord::Instance().RecordDumpDataToQueue(info);
     EXPECT_EQ(true, ret);
     Adx::AdxDumpRecord::Instance().RecordDumpInfo();
@@ -266,44 +249,42 @@ TEST_F(ADX_DUMP_RECORD_TEST, RecordDumpDataToQueue)
 
 TEST_F(ADX_DUMP_RECORD_TEST, RecordDumpDataToFullQueue)
 {
-    const char *srcFile = "adx_data_dump_server_manager";
+    const char* srcFile = "adx_data_dump_server_manager";
     uint32_t dataLen = strlen(srcFile) + 1 + sizeof(Adx::DumpChunk);
-    MsgProto *msg = Adx::AdxMsgProto::CreateMsgPacket(IDE_DUMP_REQ, 0, nullptr, dataLen);
+    MsgProto* msg = Adx::AdxMsgProto::CreateMsgPacket(IDE_DUMP_REQ, 0, nullptr, dataLen);
     Adx::SharedPtr<MsgProto> msgPtr(msg, IdeXfree);
     Adx::HostDumpDataInfo info = {msgPtr, dataLen};
-    MOCKER_CPP(&Adx::BoundQueueMemory<HostDumpDataInfo>::IsFull)
-    .stubs()
-    .will(returnValue(true));
+    MOCKER_CPP(&Adx::BoundQueueMemory<HostDumpDataInfo>::IsFull).stubs().will(returnValue(true));
     bool ret = Adx::AdxDumpRecord::Instance().RecordDumpDataToQueue(info);
     EXPECT_EQ(false, ret);
     Adx::AdxDumpRecord::Instance().RecordDumpInfo();
 }
 
-static int SysinfoAmpleMem(struct sysinfo *info)
+static int SysinfoAmpleMem(struct sysinfo* info)
 {
-    info->totalram = 4ULL * 1024 * 1024 * 1024;  // 4 GB total
-    info->freeram  = 2ULL * 1024 * 1024 * 1024;  // 2 GB free (50% > 15% threshold)
+    info->totalram = 4ULL * 1024 * 1024 * 1024; // 4 GB total
+    info->freeram = 2ULL * 1024 * 1024 * 1024;  // 2 GB free (50% > 15% threshold)
     return 0;
 }
 
-static int SysinfoLowMem(struct sysinfo *info)
+static int SysinfoLowMem(struct sysinfo* info)
 {
-    info->totalram = 4ULL * 1024 * 1024 * 1024;  // 4 GB total
-    info->freeram  = 0;                           // 0 free (< 15% threshold)
+    info->totalram = 4ULL * 1024 * 1024 * 1024; // 4 GB total
+    info->freeram = 0;                          // 0 free (< 15% threshold)
     return 0;
 }
 
-static int SysinfoError(struct sysinfo *info)
+static int SysinfoError(struct sysinfo* info)
 {
     (void)info;
-    return -1;  // sysinfo failure → fallback to queue-size check
+    return -1; // sysinfo failure → fallback to queue-size check
 }
 
 TEST_F(ADX_DUMP_RECORD_TEST, RecordDumpDataToFullQueueLimit)
 {
-    const char *srcFile = "adx_data_dump_server_manager";
+    const char* srcFile = "adx_data_dump_server_manager";
     uint32_t dataLen = strlen(srcFile) + 1 + sizeof(Adx::DumpChunk);
-    MsgProto *msg = Adx::AdxMsgProto::CreateMsgPacket(IDE_DUMP_REQ, 0, nullptr, dataLen);
+    MsgProto* msg = Adx::AdxMsgProto::CreateMsgPacket(IDE_DUMP_REQ, 0, nullptr, dataLen);
     Adx::SharedPtr<MsgProto> msgPtr(msg, IdeXfree);
     Adx::HostDumpDataInfo info = {msgPtr, dataLen};
 
@@ -335,9 +316,9 @@ TEST_F(ADX_DUMP_RECORD_TEST, RecordDumpDataToFullQueueLimit)
 
 TEST_F(ADX_DUMP_RECORD_TEST, PushAfterQuitRejected)
 {
-    const char *srcFile = "adx_data_dump_server_manager";
+    const char* srcFile = "adx_data_dump_server_manager";
     uint32_t dataLen = strlen(srcFile) + 1 + sizeof(Adx::DumpChunk);
-    MsgProto *msg = Adx::AdxMsgProto::CreateMsgPacket(IDE_DUMP_REQ, 0, nullptr, dataLen);
+    MsgProto* msg = Adx::AdxMsgProto::CreateMsgPacket(IDE_DUMP_REQ, 0, nullptr, dataLen);
     Adx::SharedPtr<MsgProto> msgPtr(msg, IdeXfree);
     Adx::HostDumpDataInfo info = {msgPtr, dataLen};
 
@@ -355,21 +336,21 @@ TEST_F(ADX_DUMP_RECORD_TEST, PushAfterQuitRejected)
 
     // Init 复位：清空上一轮残留数据 + 恢复入队能力
     mem.Init();
-    EXPECT_EQ(0u, mem.Size());          // 残留数据被清空
+    EXPECT_EQ(0u, mem.Size()); // 残留数据被清空
     EXPECT_EQ(true, mem.Push(info));
     EXPECT_EQ(1u, mem.Size());
 }
 
 TEST_F(ADX_DUMP_RECORD_TEST, RecordDumpInfoToMindspore)
 {
-    const char *srcFile = "adx_data_dump_server_manager";
+    const char* srcFile = "adx_data_dump_server_manager";
     uint32_t dataLen = strlen(srcFile) + 1 + sizeof(Adx::DumpChunk);
     Adx::AdxDumpProcess::Instance().MessageCallbackRegister(messageCallback);
-    MsgProto *msg = Adx::AdxMsgProto::CreateMsgPacket(IDE_DUMP_REQ, 0, nullptr, dataLen);
+    MsgProto* msg = Adx::AdxMsgProto::CreateMsgPacket(IDE_DUMP_REQ, 0, nullptr, dataLen);
     Adx::SharedPtr<MsgProto> msgPtr(msg, IdeXfree);
     Adx::HostDumpDataInfo info = {msgPtr, dataLen};
-    Adx::AdxDumpRecord::Instance().Init("");            // 复位队列 quit_，使 Push 可入队
-    Adx::AdxDumpRecord::Instance().dumpRecordFlag_ = false;  // 让 RecordDumpInfo 排空后即退出，避免同步调用阻塞
+    Adx::AdxDumpRecord::Instance().Init("");                // 复位队列 quit_，使 Push 可入队
+    Adx::AdxDumpRecord::Instance().dumpRecordFlag_ = false; // 让 RecordDumpInfo 排空后即退出，避免同步调用阻塞
     bool ret = Adx::AdxDumpRecord::Instance().RecordDumpDataToQueue(info);
     EXPECT_EQ(true, ret);
     Adx::AdxDumpRecord::Instance().RecordDumpInfo();
@@ -377,17 +358,18 @@ TEST_F(ADX_DUMP_RECORD_TEST, RecordDumpInfoToMindspore)
 
 TEST_F(ADX_DUMP_RECORD_TEST, RecordOptimizedMode)
 {
-    const char *srcFile = "adx_data_dump_server_manager.bin";
+    const char* srcFile = "adx_data_dump_server_manager.bin";
     uint32_t dataLen = strlen(srcFile) + 1 + sizeof(Adx::DumpChunk);
     Adx::AdxDumpProcess::Instance().MessageCallbackRegister(messageCallback);
-    MsgProto *msg = Adx::AdxMsgProto::CreateMsgPacket(IDE_DUMP_REQ, 0, nullptr, dataLen);
+    MsgProto* msg = Adx::AdxMsgProto::CreateMsgPacket(IDE_DUMP_REQ, 0, nullptr, dataLen);
     Adx::SharedPtr<MsgProto> msgPtr(msg, IdeXfree);
     Adx::HostDumpDataInfo info = {msgPtr, dataLen};
-    Adx::AdxDumpRecord::Instance().Init("");            // 复位队列 quit_，使 Push 可入队
-    Adx::AdxDumpRecord::Instance().dumpRecordFlag_ = false;  // 让 RecordDumpInfo 排空后即退出，避免同步调用阻塞
+    Adx::AdxDumpRecord::Instance().Init("");                // 复位队列 quit_，使 Push 可入队
+    Adx::AdxDumpRecord::Instance().dumpRecordFlag_ = false; // 让 RecordDumpInfo 排空后即退出，避免同步调用阻塞
     bool ret = Adx::AdxDumpRecord::Instance().RecordDumpDataToQueue(info);
     EXPECT_EQ(true, ret);
-    uint64_t statsItem = DUMP_STATS_MAX | DUMP_STATS_MIN | DUMP_STATS_AVG | DUMP_STATS_NAN | DUMP_STATS_NEG_INF | DUMP_STATS_POS_INF;
+    uint64_t statsItem =
+        DUMP_STATS_MAX | DUMP_STATS_MIN | DUMP_STATS_AVG | DUMP_STATS_NAN | DUMP_STATS_NEG_INF | DUMP_STATS_POS_INF;
     AdxDumpRecord::Instance().SetOptimizationMode(statsItem);
     MOCKER_CPP(&Adx::AdxDumpRecord::StatsDataParsing).stubs().will(returnValue(true));
     MOCKER_CPP(&Adx::AdxDumpRecord::FileNameCheck).stubs().will(returnValue(true));
@@ -397,8 +379,8 @@ TEST_F(ADX_DUMP_RECORD_TEST, RecordOptimizedMode)
 
 TEST_F(ADX_DUMP_RECORD_TEST, StatsDataParsing)
 {
-    const char *wrongName = "aclnnBatchMatMul_0_L2.aclnnBatchMatMul.65535.65535.1725960383079645.csv";
-    const char *srcFile = "aclnnBatchMatMul_0_L2.aclnnBatchMatMul.65535.65535.1725960383079645.bin";
+    const char* wrongName = "aclnnBatchMatMul_0_L2.aclnnBatchMatMul.65535.65535.1725960383079645.csv";
+    const char* srcFile = "aclnnBatchMatMul_0_L2.aclnnBatchMatMul.65535.65535.1725960383079645.bin";
     Adx::DumpChunk dumpChunk;
     dumpChunk.bufLen = sizeof(OpStatsResult);
     dumpChunk.flag = 0;
@@ -406,41 +388,22 @@ TEST_F(ADX_DUMP_RECORD_TEST, StatsDataParsing)
     dumpChunk.offset = -1;
     strcpy(dumpChunk.fileName, wrongName);
 
-    MOCKER(memcpy_s)
-        .stubs()
-        .will(returnValue(EOK));
-    MOCKER(Adx::FileUtils::IsFileExist)
-        .stubs()
-        .will(returnValue(false)).then(returnValue(true));
+    MOCKER(memcpy_s).stubs().will(returnValue(EOK));
+    MOCKER(Adx::FileUtils::IsFileExist).stubs().will(returnValue(false)).then(returnValue(true));
     MOCKER(Adx::FileUtils::CreateDir)
         .stubs()
         .will(returnValue(IDE_DAEMON_INVALID_PATH_ERROR))
         .then(returnValue(IDE_DAEMON_NONE_ERROR));
-    MOCKER(Adx::FileUtils::IsDiskFull)
-        .stubs().will(returnValue(true))
-        .then(returnValue(false));
-    MOCKER(Adx::FileUtils::FileNameIsReal)
-        .stubs()
-        .will(returnValue(IDE_DAEMON_ERROR))
-        .then(returnValue(IDE_DAEMON_OK));
+    MOCKER(Adx::FileUtils::IsDiskFull).stubs().will(returnValue(true)).then(returnValue(false));
+    MOCKER(Adx::FileUtils::FileNameIsReal).stubs().will(returnValue(IDE_DAEMON_ERROR)).then(returnValue(IDE_DAEMON_OK));
     MOCKER(Adx::FileUtils::WriteFile)
         .stubs()
         .will(returnValue(IDE_DAEMON_WRITE_ERROR))
         .then(returnValue(IDE_DAEMON_NONE_ERROR));
-    MOCKER_CPP(&Adx::AdxDumpRecord::JudgeRemoteFalg)
-        .stubs()
-        .will(returnValue(true))
-        .then(returnValue(false));
-    MOCKER_CPP(&Adx::AdxDumpRecord::GenerateFileData)
-        .stubs()
-        .will(returnValue(true));
-    MOCKER_CPP(&Adx::AdxDumpRecord::DumpDataToCallback)
-        .stubs()
-        .will(returnValue(true));
-    MOCKER_CPP(&Adx::AdxDumpProcess::IsRegistered)
-        .stubs()
-        .will(returnValue(true))
-        .then(returnValue(false));
+    MOCKER_CPP(&Adx::AdxDumpRecord::JudgeRemoteFalg).stubs().will(returnValue(true)).then(returnValue(false));
+    MOCKER_CPP(&Adx::AdxDumpRecord::GenerateFileData).stubs().will(returnValue(true));
+    MOCKER_CPP(&Adx::AdxDumpRecord::DumpDataToCallback).stubs().will(returnValue(true));
+    MOCKER_CPP(&Adx::AdxDumpProcess::IsRegistered).stubs().will(returnValue(true)).then(returnValue(false));
 
     // file name is not right
     bool ret = Adx::AdxDumpRecord::Instance().StatsDataParsing(dumpChunk);
@@ -460,7 +423,8 @@ TEST_F(ADX_DUMP_RECORD_TEST, StatsDataParsing)
     ret = Adx::AdxDumpRecord::Instance().StatsDataParsing(dumpChunk);
     EXPECT_EQ(false, ret);
 
-    uint64_t statsItem = DUMP_STATS_MAX | DUMP_STATS_MIN | DUMP_STATS_AVG | DUMP_STATS_NAN | DUMP_STATS_NEG_INF | DUMP_STATS_POS_INF;
+    uint64_t statsItem =
+        DUMP_STATS_MAX | DUMP_STATS_MIN | DUMP_STATS_AVG | DUMP_STATS_NAN | DUMP_STATS_NEG_INF | DUMP_STATS_POS_INF;
     AdxDumpRecord::Instance().SetOptimizationMode(statsItem);
     // WriteFile failed
     ret = Adx::AdxDumpRecord::Instance().StatsDataParsing(dumpChunk);
@@ -480,7 +444,8 @@ TEST_F(ADX_DUMP_RECORD_TEST, DumpDataToCallback)
 TEST_F(ADX_DUMP_RECORD_TEST, GenerateFileData)
 {
     const std::string srcFile = "aclnnBatchMatMul_0_L2.aclnnBatchMatMul.65535.65535.1725960383079645.csv";
-    uint64_t statsItem = DUMP_STATS_MAX | DUMP_STATS_MIN | DUMP_STATS_AVG | DUMP_STATS_NAN | DUMP_STATS_NEG_INF | DUMP_STATS_POS_INF;
+    uint64_t statsItem =
+        DUMP_STATS_MAX | DUMP_STATS_MIN | DUMP_STATS_AVG | DUMP_STATS_NAN | DUMP_STATS_NEG_INF | DUMP_STATS_POS_INF;
     std::shared_ptr<OpStatsResult> opRes = std::make_shared<OpStatsResult>();
     opRes->tensorNum = 1;
     opRes->stat[0].size = 268435456;
@@ -511,35 +476,48 @@ TEST_F(ADX_DUMP_RECORD_TEST, GenerateFileData)
     EXPECT_EQ("Input,0,268435456,DT_INT64,ND,100x20x40,100,200,10.1,80000,400,500,600\n", strStream.str());
 
     // parse success with full title
-    MOCKER_CPP(&Adx::AdxDumpRecord::CheckFileNameExist)
-        .stubs()
-        .will(returnValue(false));
+    MOCKER_CPP(&Adx::AdxDumpRecord::CheckFileNameExist).stubs().will(returnValue(false));
     strStream.str("");
     Adx::AdxDumpRecord::Instance().GenerateFileData(strStream, srcFile, opRes);
 
-    EXPECT_EQ("Input/Output,Index,Data Size,Data Type,Format,Shape,Max Value,Min Value,Avg Value,Count,Nan Count,Negative Inf Count,Positive Inf Count\n"
-        "Input,0,268435456,DT_INT64,ND,100x20x40,100,200,10.1,80000,400,500,600\n", strStream.str());
+    EXPECT_EQ(
+        "Input/Output,Index,Data Size,Data Type,Format,Shape,Max Value,Min Value,Avg Value,Count,Nan Count,Negative "
+        "Inf Count,Positive Inf Count\n"
+        "Input,0,268435456,DT_INT64,ND,100x20x40,100,200,10.1,80000,400,500,600\n",
+        strStream.str());
 
     strStream.str("");
     opRes->stat[0].dType = toolkit::dump::DT_BF16;
     Adx::AdxDumpRecord::Instance().GenerateFileData(strStream, srcFile, opRes);
-    EXPECT_EQ("Input/Output,Index,Data Size,Data Type,Format,Shape,Max Value,Min Value,Avg Value,Count,Nan Count,Negative Inf Count,Positive Inf Count\n"
-        "Input,0,268435456,DT_BF16,ND,100x20x40,1.4013e-43,2.8026e-43,10.1,80000,400,500,600\n", strStream.str());
+    EXPECT_EQ(
+        "Input/Output,Index,Data Size,Data Type,Format,Shape,Max Value,Min Value,Avg Value,Count,Nan Count,Negative "
+        "Inf Count,Positive Inf Count\n"
+        "Input,0,268435456,DT_BF16,ND,100x20x40,1.4013e-43,2.8026e-43,10.1,80000,400,500,600\n",
+        strStream.str());
     strStream.str("");
     opRes->stat[0].dType = toolkit::dump::DT_HIFLOAT8;
     Adx::AdxDumpRecord::Instance().GenerateFileData(strStream, srcFile, opRes);
-    EXPECT_EQ("Input/Output,Index,Data Size,Data Type,Format,Shape,Max Value,Min Value,Avg Value,Count,Nan Count,Negative Inf Count,Positive Inf Count\n"
-        "Input,0,268435456,DT_HIFLOAT8,ND,100x20x40,1.4013e-43,2.8026e-43,10.1,80000,400,500,600\n", strStream.str());
+    EXPECT_EQ(
+        "Input/Output,Index,Data Size,Data Type,Format,Shape,Max Value,Min Value,Avg Value,Count,Nan Count,Negative "
+        "Inf Count,Positive Inf Count\n"
+        "Input,0,268435456,DT_HIFLOAT8,ND,100x20x40,1.4013e-43,2.8026e-43,10.1,80000,400,500,600\n",
+        strStream.str());
     strStream.str("");
     opRes->stat[0].dType = toolkit::dump::DT_FLOAT8_E5M2;
     Adx::AdxDumpRecord::Instance().GenerateFileData(strStream, srcFile, opRes);
-    EXPECT_EQ("Input/Output,Index,Data Size,Data Type,Format,Shape,Max Value,Min Value,Avg Value,Count,Nan Count,Negative Inf Count,Positive Inf Count\n"
-        "Input,0,268435456,DT_FLOAT8_E5M2,ND,100x20x40,1.4013e-43,2.8026e-43,10.1,80000,400,500,600\n", strStream.str());
+    EXPECT_EQ(
+        "Input/Output,Index,Data Size,Data Type,Format,Shape,Max Value,Min Value,Avg Value,Count,Nan Count,Negative "
+        "Inf Count,Positive Inf Count\n"
+        "Input,0,268435456,DT_FLOAT8_E5M2,ND,100x20x40,1.4013e-43,2.8026e-43,10.1,80000,400,500,600\n",
+        strStream.str());
     strStream.str("");
     opRes->stat[0].dType = toolkit::dump::DT_FLOAT8_E4M3FN;
     Adx::AdxDumpRecord::Instance().GenerateFileData(strStream, srcFile, opRes);
-    EXPECT_EQ("Input/Output,Index,Data Size,Data Type,Format,Shape,Max Value,Min Value,Avg Value,Count,Nan Count,Negative Inf Count,Positive Inf Count\n"
-        "Input,0,268435456,DT_FLOAT8_E4M3FN,ND,100x20x40,1.4013e-43,2.8026e-43,10.1,80000,400,500,600\n", strStream.str());
+    EXPECT_EQ(
+        "Input/Output,Index,Data Size,Data Type,Format,Shape,Max Value,Min Value,Avg Value,Count,Nan Count,Negative "
+        "Inf Count,Positive Inf Count\n"
+        "Input,0,268435456,DT_FLOAT8_E4M3FN,ND,100x20x40,1.4013e-43,2.8026e-43,10.1,80000,400,500,600\n",
+        strStream.str());
 
     // format not supported, dType is float
     DataTypeUnion dtUnion2;
@@ -551,8 +529,11 @@ TEST_F(ADX_DUMP_RECORD_TEST, GenerateFileData)
     opRes->stat[0].format = toolkit::dump::FORMAT_MAX;
     strStream.str("");
     Adx::AdxDumpRecord::Instance().GenerateFileData(strStream, srcFile, opRes);
-    EXPECT_EQ("Input/Output,Index,Data Size,Data Type,Format,Shape,Max Value,Min Value,Avg Value,Count,Nan Count,Negative Inf Count,Positive Inf Count\n"
-        "Input,0,268435456,DT_FLOAT,UNKNOW,100x20x40,12.34,56.7897,10.1,80000,400,500,600\n", strStream.str());
+    EXPECT_EQ(
+        "Input/Output,Index,Data Size,Data Type,Format,Shape,Max Value,Min Value,Avg Value,Count,Nan Count,Negative "
+        "Inf Count,Positive Inf Count\n"
+        "Input,0,268435456,DT_FLOAT,UNKNOW,100x20x40,12.34,56.7897,10.1,80000,400,500,600\n",
+        strStream.str());
 
     // format not supported, dType is float
     dtUnion.intValue[0] = 1234;
@@ -563,15 +544,21 @@ TEST_F(ADX_DUMP_RECORD_TEST, GenerateFileData)
     opRes->stat[0].format = toolkit::dump::FORMAT_ALL;
     strStream.str("");
     Adx::AdxDumpRecord::Instance().GenerateFileData(strStream, srcFile, opRes);
-    EXPECT_EQ("Input/Output,Index,Data Size,Data Type,Format,Shape,Max Value,Min Value,Avg Value,Count,Nan Count,Negative Inf Count,Positive Inf Count\n"
-        "Input,0,268435456,DT_INT32,ALL,100x20x40,1234,5678,10.1,80000,400,500,600\n", strStream.str());
+    EXPECT_EQ(
+        "Input/Output,Index,Data Size,Data Type,Format,Shape,Max Value,Min Value,Avg Value,Count,Nan Count,Negative "
+        "Inf Count,Positive Inf Count\n"
+        "Input,0,268435456,DT_INT32,ALL,100x20x40,1234,5678,10.1,80000,400,500,600\n",
+        strStream.str());
 
     // data is useless
     opRes->stat[0].result = 1;
     strStream.str("");
     Adx::AdxDumpRecord::Instance().GenerateFileData(strStream, srcFile, opRes);
-    EXPECT_EQ("Input/Output,Index,Data Size,Data Type,Format,Shape,Max Value,Min Value,Avg Value,Count,Nan Count,Negative Inf Count,Positive Inf Count\n"
-        "Input,0,268435456,DT_INT32,ALL,100x20x40,NA,NA,NA,80000,NA,NA,NA\n", strStream.str());
+    EXPECT_EQ(
+        "Input/Output,Index,Data Size,Data Type,Format,Shape,Max Value,Min Value,Avg Value,Count,Nan Count,Negative "
+        "Inf Count,Positive Inf Count\n"
+        "Input,0,268435456,DT_INT32,ALL,100x20x40,NA,NA,NA,80000,NA,NA,NA\n",
+        strStream.str());
 
     opRes->statItem = DUMP_STATS_MAX | DUMP_STATS_MIN | DUMP_STATS_L2NORM;
     dtUnion.floatValue = 90.30045678;
@@ -579,8 +566,10 @@ TEST_F(ADX_DUMP_RECORD_TEST, GenerateFileData)
     opRes->stat[0].result = 0;
     strStream.str("");
     Adx::AdxDumpRecord::Instance().GenerateFileData(strStream, srcFile, opRes);
-    EXPECT_EQ("Input/Output,Index,Data Size,Data Type,Format,Shape,Count,Max Value,Min Value,l2norm\n"
-        "Input,0,268435456,DT_INT32,ALL,100x20x40,1234,5678,90.3005\n", strStream.str());
+    EXPECT_EQ(
+        "Input/Output,Index,Data Size,Data Type,Format,Shape,Count,Max Value,Min Value,l2norm\n"
+        "Input,0,268435456,DT_INT32,ALL,100x20x40,1234,5678,90.3005\n",
+        strStream.str());
 }
 
 TEST_F(ADX_DUMP_RECORD_TEST, CheckFileNameCycle)
@@ -609,7 +598,7 @@ TEST_F(ADX_DUMP_RECORD_TEST, GetStatsString)
 
 TEST_F(ADX_DUMP_RECORD_TEST, FileNameCheck)
 {
-    const char *srcFile = "aclnnBatchMatMul_0_L2.aclnnBatchMatMul.65535.65535.1725960383079645.bin";
+    const char* srcFile = "aclnnBatchMatMul_0_L2.aclnnBatchMatMul.65535.65535.1725960383079645.bin";
     Adx::DumpChunk dumpChunk;
     dumpChunk.bufLen = sizeof(OpStatsResult);
     dumpChunk.flag = 0;

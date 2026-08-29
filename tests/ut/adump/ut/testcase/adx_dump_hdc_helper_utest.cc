@@ -17,12 +17,10 @@
 #include "adx_comm_opt.h"
 #include "ascend_hal.h"
 
-class ADX_DUMP_HDC_HELPER_TEST: public testing::Test {
+class ADX_DUMP_HDC_HELPER_TEST : public testing::Test {
 protected:
     virtual void SetUp() {}
-    virtual void TearDown() {
-        GlobalMockObject::verify();
-    }
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 TEST_F(ADX_DUMP_HDC_HELPER_TEST, ParseConnectInfo)
@@ -74,7 +72,7 @@ TEST_F(ADX_DUMP_HDC_HELPER_TEST, IdeDumpData_WriteError)
     dumpChunk.bufLen = 1;
     dumpChunk.isLastChunk = 0;
     dumpChunk.offset = 0;
-    dumpChunk.flag = IDE_DUMP_NONE_FLAG ;
+    dumpChunk.flag = IDE_DUMP_NONE_FLAG;
     const IdeDumpChunk constDumpChunk = dumpChunk;
     EXPECT_EQ(IDE_DAEMON_INVALID_PARAM_ERROR, IdeDumpData(nullptr, nullptr));
     EXPECT_EQ(IDE_DAEMON_INVALID_PARAM_ERROR, IdeDumpData(session, nullptr));
@@ -93,7 +91,7 @@ TEST_F(ADX_DUMP_HDC_HELPER_TEST, IdeDumpData_SessionError)
     dumpChunk.bufLen = 1;
     dumpChunk.isLastChunk = 0;
     dumpChunk.offset = 0;
-    dumpChunk.flag = IDE_DUMP_NONE_FLAG ;
+    dumpChunk.flag = IDE_DUMP_NONE_FLAG;
     const IdeDumpChunk constDumpChunk = dumpChunk;
     EXPECT_EQ(IDE_DAEMON_INVALID_PARAM_ERROR, IdeDumpData(nullptr, nullptr));
     EXPECT_EQ(IDE_DAEMON_INVALID_PARAM_ERROR, IdeDumpData(session, nullptr));

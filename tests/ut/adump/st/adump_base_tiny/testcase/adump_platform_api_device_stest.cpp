@@ -20,16 +20,13 @@ using namespace Adx;
 class DupAdumpPlatformApiStest : public testing::Test {
 protected:
     virtual void SetUp() {}
-    virtual void TearDown()
-    {
-        GlobalMockObject::verify();
-    }
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 TEST_F(DupAdumpPlatformApiStest, Test_TensorPluginRegister)
 {
     PlatformData data{0, 0, 0};
-    BufferSize buffer {0, 0, 0, 0, 0};
+    BufferSize buffer{0, 0, 0, 0, 0};
     EXPECT_EQ(AdumpPlatformApi::GetUBSizeAndCoreNum("", PlatformType::CHIP_MDC_TYPE, data), true);
     EXPECT_EQ(AdumpPlatformApi::GetAicoreSizeInfo("", buffer), true);
 }

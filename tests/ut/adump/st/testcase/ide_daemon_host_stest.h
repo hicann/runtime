@@ -15,11 +15,10 @@
 #include "ide_daemon_sock.h"
 #include "ide_handle.h"
 
-int IdeDaemonTestMain(int argc, char *argv[]);
-extern int IdeTransferFile(struct IdeData &pdata, struct IdeSockHandle handle, int fd, uint32_t perSendSize);
-extern int IdeSendFrontData(struct IdeData &pdata, int handler,
-    struct IdeSockHandle handle, uint32_t perSendSize, long int& len);
-extern int IdeSendLastData(struct IdeData &pdata, int handler,
-    struct IdeSockHandle handle, uint32_t perSendSize, uint32_t remain);
-#endif  //__IDE_DAEMON_HOST_STEST_H
-
+int IdeDaemonTestMain(int argc, char* argv[]);
+extern int IdeTransferFile(struct IdeData& pdata, struct IdeSockHandle handle, int fd, uint32_t perSendSize);
+extern int IdeSendFrontData(
+    struct IdeData& pdata, int handler, struct IdeSockHandle handle, uint32_t perSendSize, long int& len);
+extern int IdeSendLastData(
+    struct IdeData& pdata, int handler, struct IdeSockHandle handle, uint32_t perSendSize, uint32_t remain);
+#endif //__IDE_DAEMON_HOST_STEST_H

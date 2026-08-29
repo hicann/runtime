@@ -19,26 +19,14 @@ using namespace Adx;
 class ADX_COMM_COMPONENT_STEST : public testing::Test {
 protected:
     virtual void SetUp() {}
-    virtual void TearDown()
-    {
-        GlobalMockObject::verify();
-    }
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
-int32_t InitStub()
-{
-    return IDE_DAEMON_OK;
-}
+int32_t InitStub() { return IDE_DAEMON_OK; }
 
-int32_t ProcessStub(const CommHandle *, const void *, uint32_t len)
-{
-    return IDE_DAEMON_OK;
-}
+int32_t ProcessStub(const CommHandle*, const void*, uint32_t len) { return IDE_DAEMON_OK; }
 
-int32_t UninitStub()
-{
-    return IDE_DAEMON_ERROR;
-}
+int32_t UninitStub() { return IDE_DAEMON_ERROR; }
 
 TEST_F(ADX_COMM_COMPONENT_STEST, CommonCptFunc)
 {
