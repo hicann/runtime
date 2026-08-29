@@ -5307,7 +5307,10 @@ rtError_t Runtime::GetKernelBin(const char_t* const binFileName, char_t** const 
     }
 
     RT_LOG(RT_LOG_INFO, "kernel bin full path:%s", binRealPath.c_str());
-    return GetKernelBinByFileName(binRealPath.c_str(), buffer, RtPtrToPtr<uint64_t*>(length));
+    uint64_t binaryLength = 0U;
+    const rtError_t getBinRet = GetKernelBinByFileName(binRealPath.c_str(), buffer, &binaryLength);
+    *length = static_cast<uint32_t>(binaryLength);
+    return getBinRet;
 }
 
 rtError_t Runtime::GetBinBuffer(
