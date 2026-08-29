@@ -283,7 +283,7 @@ set(runtimeut_src_list
     ${TOP_DIR}/src/runtime/core/src/launch/memory_stars.cc
     ${TOP_DIR}/src/runtime/core/src/launch/xpu_aicpu_c_stub.cc
     ${TOP_DIR}/src/runtime/core/src/memory/mem_type.cc
-    ${TOP_DIR}/src/runtime/core/src/notify/notify.cc
+    ${TOP_DIR}/src/runtime/core/src/notify/notify_basic.cc
     ${TOP_DIR}/src/runtime/core/src/plugin_manage/runtime_keeper.cc
     ${TOP_DIR}/src/runtime/core/src/plugin_manage/v100/plugin_old_arch.cc
     ${TOP_DIR}/src/runtime/core/src/runtime.cc

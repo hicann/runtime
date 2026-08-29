@@ -160,6 +160,14 @@ rtError_t Context::SetNotifyForExeModel(CaptureModel* const captureMdl)
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
+rtError_t Context::GetNotifyAddress(Notify* const notify, uint64_t& addr, Stream* const stm)
+{
+    UNUSED(notify);
+    UNUSED(addr);
+    UNUSED(stm);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
 rtError_t Context::StreamGetCaptureInfo(
     const Stream* const stm, rtStreamCaptureStatus* const status, Model** const captureMdl) const
 {
