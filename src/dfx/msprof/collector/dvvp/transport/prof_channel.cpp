@@ -97,7 +97,7 @@ int32_t ChannelReader::Uinit()
     MSPROF_EVENT(
         "device id %d, channel: %d, total_size_channel: %lld bytes, warmup_size: %lld bytes, "
         "file:%s, job_id:%s, channelReadCnt:%lld, readExecCnt: %u, dispatchInCnt: %u, "
-        "dispatchOutCnt: %u, uploadDataMaxDuration: %llu.",
+        "dispatchOutCnt: %u, uploadDataMaxDuration: %llu ns.",
         deviceId_, static_cast<int32_t>(channelId_), totalSize_, warmupSize_, relativeFileName_.c_str(),
         jobCtx_->job_id.c_str(), drvChannelReadCont_, readExecCnt_, totalSchedulingInCnt_, totalSchedulingOutCnt_,
         uploadDataMaxDuration_);

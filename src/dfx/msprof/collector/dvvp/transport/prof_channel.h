@@ -99,7 +99,7 @@ private:
     uint32_t readExecCnt_;
     std::mutex flushMutex_;
     std::condition_variable flushFlag_;
-    uint64_t uploadDataMaxDuration_;
+    uint64_t uploadDataMaxDuration_; // ns
     SHARED_PTR_ALIA<ChannelBuffer> readerBuffer_;
 };
 
