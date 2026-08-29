@@ -16,7 +16,7 @@
 #include "ide_platform_stub.h"
 #include "ide_daemon_hdc.h"
 #include "ide_common_util.h"
-#include "adx_dsmi.h"
+#include "prof_adx_dsmi.h"
 extern int g_mmSemwait_time;
 extern int g_sprintf_s_flag;
 extern int g_sprintf_s_flag2;

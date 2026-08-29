@@ -31,7 +31,7 @@
 #include "program.hpp"
 #include "api_impl.hpp"
 #include "logger.hpp"
-#include "toolchain/prof_api.h"
+#include "profiling/prof_api.h"
 #include "thread_local_container.hpp"
 #include "inner_thread_local.hpp"
 #include "profiling_agent.hpp"

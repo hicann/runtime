@@ -10,7 +10,7 @@
 
 #ifndef DOMAIN_COLLECT_REPORT_REPORT_MANAGER_H
 #define DOMAIN_COLLECT_REPORT_REPORT_MANAGER_H
-#include "toolchain/prof_api.h"
+#include "profiling/prof_api.h"
 #include "osal/osal.h"
 // ACL、ACLNN、ASCENDC、GE、TFA、HCCL、AICPU、RUNTIME、PROFTX
 #ifdef __cplusplus

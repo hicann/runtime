@@ -16,7 +16,7 @@
 #include <mutex>
 #include "message/prof_params.h"
 #include "errno/error_code.h"
-#include "msprof_manager.h"
+#include "msprofbin_manager.h"
 #include "input_parser.h"
 #include "env_manager.h"
 #include "platform/platform.h"

@@ -14,7 +14,7 @@
 #include "mockcpp/mockcpp.hpp"
 #include "mmpa_api.h"
 #include "data_manager.h"
-#include "toolchain/prof_api.h"
+#include "profiling/prof_api.h"
 #include "errno/error_code.h"
 #include "task/task_slot.h"
 #include "osal/osal.h"

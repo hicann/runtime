@@ -95,7 +95,7 @@ set(src_file
     ${MSPROF_SOURCE_DIR}/dvvp/analyze/src/stats_analyzer.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/analyze/src/op_desc_parser.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/msprofbin/src/msprof_bin.cpp
-    ${MSPROF_SOURCE_DIR}/dvvp/msprofbin/src/msprof_manager.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/msprofbin/src/msprofbin_manager.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/msprofbin/src/msprof_params_adapter.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/msprofbin/src/input_parser.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/msprofbin/src/input_parser_host_sys.cpp

@@ -47,7 +47,7 @@
 #include "hwts.hpp"
 #include "profiler.hpp"
 #include "profiler_struct.hpp"
-#include "toolchain/prof_api.h"
+#include "profiling/prof_api.h"
 #include "task_submit.hpp"
 #include "../../task_test_helper.h"
 #include "thread_local_container.hpp"

@@ -24,7 +24,7 @@
 #include "profiler.hpp"
 #include "profiler_struct.hpp"
 #include "thread_local_container.hpp"
-#include "toolchain/prof_api.h"
+#include "profiling/prof_api.h"
 #include "rt_unwrap.h"
 #undef protected
 #undef private

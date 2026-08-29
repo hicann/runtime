@@ -11,7 +11,7 @@
 #include "gtest/gtest.h"
 #include <iostream>
 #include "errno/error_code.h"
-#include "msprof_manager.h"
+#include "msprofbin_manager.h"
 #include "message/codec.h"
 #include "config/config.h"
 #include "config_manager.h"
@@ -193,7 +193,7 @@ drvError_t g_error = (drvError_t)0;
 extern "C" drvError_t halGetDeviceInfoByBuff(
     uint32_t devId, int32_t moduleType, int32_t infoType, void* value, int32_t* len)
 {
-    if (moduleType = MODULE_TYPE_QOS) {
+    if (moduleType == MODULE_TYPE_QOS) {
         QosProfileInfo* info = (QosProfileInfo*)value;
         if (info->mode == 0) {
             info->streamNum = 10;

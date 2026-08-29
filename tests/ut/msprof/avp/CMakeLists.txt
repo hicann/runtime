@@ -30,7 +30,7 @@ set(src_file
     ${MSPROF_SOURCE_DIR}/avp/domain/collect/report/hash_dic.c
     ${MSPROF_SOURCE_DIR}/avp/domain/collect/report/start_time.c
     ${MSPROF_SOURCE_DIR}/avp/domain/collect/task/task_pool.c
-    ${MSPROF_SOURCE_DIR}/avp/domain/collect/task/task_manager.c
+    ${MSPROF_SOURCE_DIR}/avp/domain/collect/task/prof_avp_task_manager.c
     ${MSPROF_SOURCE_DIR}/avp/domain/collect/task/task_slot.c
     ${MSPROF_SOURCE_DIR}/avp/service/api/prof_api.c
     ${MSPROF_SOURCE_DIR}/avp/service/impl/service_impl.c

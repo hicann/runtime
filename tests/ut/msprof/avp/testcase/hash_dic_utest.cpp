@@ -14,7 +14,7 @@
 #include "mockcpp/mockcpp.hpp"
 #include "osal/osal.h"
 #include "osal/osal_mem.h"
-#include "toolchain/prof_api.h"
+#include "profiling/prof_api.h"
 #include "errno/error_code.h"
 #include "report/hash_dic.h"
 #include "logger/logger.h"

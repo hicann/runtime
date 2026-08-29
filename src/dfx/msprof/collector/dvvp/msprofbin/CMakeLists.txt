@@ -69,7 +69,7 @@ set(hdcCpp
 set(msprofbinCpp
     ./src/msprof_bin.cpp
     ./src/msopprof_manager.cpp
-    ./src/msprof_manager.cpp
+    ./src/msprofbin_manager.cpp
     ./src/msprof_task.cpp
     ./src/msprof_params_adapter.cpp
     ./src/input_parser.cpp

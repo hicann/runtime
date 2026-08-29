@@ -16,7 +16,7 @@
 #include "collection_entry.h"
 #include "prof_device_core.h"
 #include "transport/hdc/hdc_transport.h"
-#include "task_manager.h"
+#include "prof_task_manager.h"
 #include "adx_prof_api.h"
 
 using namespace analysis::dvvp::common::error;

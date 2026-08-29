@@ -10,7 +10,7 @@
 #ifndef __CCE_RUNTIME_PROFILER_STRUCT_HPP__
 #define __CCE_RUNTIME_PROFILER_STRUCT_HPP__
 #include "base.hpp"
-#include "toolchain/prof_api.h"
+#include "profiling/prof_api.h"
 
 #define M_PROF_DIRSTR_LEN (128)
 #define M_PROF_FMTSTR_LEN (64)

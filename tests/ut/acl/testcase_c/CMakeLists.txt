@@ -52,8 +52,8 @@ target_include_directories(ascendcl_c_utest PRIVATE
     ${BASE_DIR}/include/external
     ${BASE_DIR}/include/external/acl # error_codes
     ${BASE_DIR}/pkg_inc/base # slog.h
-    ${BASE_DIR}/pkg_inc # toolchain/prof_api.h
-    ${BASE_DIR}/pkg_inc/profiling # toolchain/prof_api.h
+    ${BASE_DIR}/pkg_inc # profiling/prof_api.h
+    ${BASE_DIR}/pkg_inc/profiling # profiling/prof_api.h
     ${BASE_DIR}/src/acl/aclrt_c
     ${BASE_DIR}/src/acl/aclrt_c/common
     ${BASE_DIR}/pkg_inc/runtime # runtime/mem.h，runtime/base.h

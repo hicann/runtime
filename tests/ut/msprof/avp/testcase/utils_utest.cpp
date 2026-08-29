@@ -16,7 +16,7 @@
 #include "osal/osal.h"
 #include "osal/osal_mem.h"
 #include "data_manager.h"
-#include "toolchain/prof_api.h"
+#include "profiling/prof_api.h"
 #include "errno/error_code.h"
 #include "osal/osal.h"
 #include "platform_feature.h"

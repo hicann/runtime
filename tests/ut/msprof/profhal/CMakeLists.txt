@@ -155,7 +155,7 @@ list(APPEND src_file
     ${MSPROF_SOURCE_DIR}/dvvp/transport/hdc/device_transport.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/transport/hdc/data_handle.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/msprofbin/src/running_mode.cpp
-    ${MSPROF_SOURCE_DIR}/dvvp/msprofbin/src/msprof_manager.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/msprofbin/src/msprofbin_manager.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/msprofbin/src/input_parser.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/msprofbin/src/input_parser_host_sys.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/msprofbin/src/msprof_params_adapter.cpp

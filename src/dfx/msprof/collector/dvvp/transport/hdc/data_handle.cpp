@@ -17,7 +17,7 @@
 #include "config/config.h"
 #include "platform/platform.h"
 #include "task_relationship_mgr.h"
-#include "msprof_manager.h"
+#include "msprofbin_manager.h"
 
 namespace Analysis {
 namespace Dvvp {

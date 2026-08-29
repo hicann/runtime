@@ -10,7 +10,7 @@
 
 #ifndef SERVICE_IMPL_SERVICE_REPORT_H
 #define SERVICE_IMPL_SERVICE_REPORT_H
-#include "toolchain/prof_api.h"
+#include "profiling/prof_api.h"
 
 int32_t ServiceReportInitialize(uint32_t index, uint32_t length);
 int32_t ServiceReportApiPush(uint8_t aging, const struct MsprofApi* data);

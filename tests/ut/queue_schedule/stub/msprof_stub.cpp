@@ -11,7 +11,7 @@
 
 #include <atomic>
 #include "common/bqs_log.h"
-#include "toolchain/prof_api.h"
+#include "profiling/prof_api.h"
 
 namespace qstest {
 ProfCommandHandle g_profCallback = nullptr;

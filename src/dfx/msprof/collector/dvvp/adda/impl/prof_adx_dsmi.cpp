@@ -7,7 +7,7 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
-#include "adx_dsmi.h"
+#include "prof_adx_dsmi.h"
 #include <algorithm>
 #include "ascend_hal.h"
 #include "adx_log.h"

@@ -14,7 +14,7 @@
 #include "errno/error_code.h"
 #include "msprof_dlog.h"
 #include "param_validation.h"
-#include "task_manager.h"
+#include "prof_task_manager.h"
 #include "utils/utils.h"
 #include "adx_prof_api.h"
 

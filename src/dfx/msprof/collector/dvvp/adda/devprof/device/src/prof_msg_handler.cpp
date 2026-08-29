@@ -14,7 +14,7 @@
 #include "msprof_dlog.h"
 #include "param_validation.h"
 #include "prof_job_handler.h"
-#include "task_manager.h"
+#include "prof_task_manager.h"
 #include "uploader_mgr.h"
 #include "utils/utils.h"
 

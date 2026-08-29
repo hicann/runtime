@@ -13,7 +13,7 @@
 #include <fstream>
 #include "errno/error_code.h"
 #include "running_mode.h"
-#include "msprof_manager.h"
+#include "msprofbin_manager.h"
 #include "config_manager.h"
 #include "platform/platform.h"
 

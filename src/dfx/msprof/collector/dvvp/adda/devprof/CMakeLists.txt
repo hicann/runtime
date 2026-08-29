@@ -47,7 +47,7 @@ set(devProfCppList
     ./device/src/prof_device_core.cpp
     ./device/src/prof_job_handler.cpp
     ./device/src/prof_msg_handler.cpp
-    ./device/src/task_manager.cpp
+    ./device/src/prof_task_manager.cpp
     ../../driver/channel/ai_drv_prof_api.cpp
     ../../driver/devmgmt/ai_drv_dev_api.cpp
     ../../driver/devmgmt/msprof_drv_api.cpp
@@ -96,6 +96,7 @@ set(devprofHeader
     ${RUNTIME_DIR}/src/dfx/msprof/inc/toolchain
     ${RUNTIME_DIR}/src/inc/
     ${RUNTIME_DIR}/include/dfx
+    ${RUNTIME_DIR}/pkg_inc/profiling
     ${RUNTIME_DIR}/pkg_inc/driver
     ${RUNTIME_DIR}/abl/ascend_hal/user_space/inc
     ./device/include

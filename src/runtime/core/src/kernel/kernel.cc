@@ -14,7 +14,7 @@
 #include "runtime.hpp"
 #include "program.hpp"
 #include "context.hpp"
-#include "toolchain/prof_api.h"
+#include "profiling/prof_api.h"
 #include "enum_desc.hpp"
 
 namespace cce {

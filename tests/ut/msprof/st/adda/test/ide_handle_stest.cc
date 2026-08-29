@@ -20,7 +20,7 @@
 #include "ide_platform_stub.h"
 #include "ide_daemon_hdc.h"
 #include "ide_common_util.h"
-#include "adx_dsmi.h"
+#include "prof_adx_dsmi.h"
 #include "ide_daemon_stub.h"
 #include <map>
 

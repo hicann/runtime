@@ -12,7 +12,7 @@ set(INSTALL_LIBRARY_DIR lib)
 
 ############### adda ###################
 set(addaCppList
-    ${BASE_DIR}/adx_dsmi.cpp
+    ${BASE_DIR}/prof_adx_dsmi.cpp
     ${BASE_DIR}/ide_daemon.cpp
     ${BASE_DIR}/ide_daemon_hdc.cpp
     ${BASE_DIR}/ide_daemon_monitor.cpp

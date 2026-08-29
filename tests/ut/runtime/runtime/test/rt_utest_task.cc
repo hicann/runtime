@@ -60,7 +60,7 @@
 #include "hwts.hpp"
 #include "profiler.hpp"
 #include "profiler_struct.hpp"
-#include "toolchain/prof_api.h"
+#include "profiling/prof_api.h"
 #include "task_submit.hpp"
 #include "thread_local_container.hpp"
 #include "device/device_error_proc.hpp"

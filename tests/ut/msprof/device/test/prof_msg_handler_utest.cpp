@@ -16,7 +16,7 @@
 #include "utils/utils.h"
 #include "errno/error_code.h"
 #include "prof_msg_handler.h"
-#include "task_manager.h"
+#include "prof_task_manager.h"
 #include "transport/hdc/hdc_transport.h"
 #include "transport/transport.h"
 

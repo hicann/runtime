@@ -11,7 +11,7 @@
 #ifndef DOMAIN_COLLECT_REPORT_BUFFER_MANAGER_H
 #define DOMAIN_COLLECT_REPORT_BUFFER_MANAGER_H
 
-#include "toolchain/prof_api.h"
+#include "profiling/prof_api.h"
 #include "transport/transport.h"
 #include "osal/osal_thread.h"
 

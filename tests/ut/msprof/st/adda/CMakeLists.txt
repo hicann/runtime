@@ -9,7 +9,7 @@
 # -----------------------------------------------------------------------------------------------------------
 
 set(profilerSrcFiles
-    ${MSPROF_SOURCE_DIR}/dvvp/adda/impl/adx_dsmi.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/adda/impl/prof_adx_dsmi.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/adda/impl/ide_common_util.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/adda/impl/ide_daemon_hdc.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/adda/impl/ide_daemon.cpp

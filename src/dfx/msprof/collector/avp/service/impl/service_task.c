@@ -10,7 +10,7 @@
 
 #include "service_task.h"
 #include "errno/error_code.h"
-#include "task/task_manager.h"
+#include "task/prof_avp_task_manager.h"
 #include "task/task_pool.h"
 #include "report/report_manager.h"
 #include "platform/platform.h"

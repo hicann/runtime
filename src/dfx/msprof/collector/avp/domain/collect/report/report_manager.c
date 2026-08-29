@@ -14,7 +14,7 @@
 #include "logger/logger.h"
 #include "utils/utils.h"
 #include "thread/thread_pool.h"
-#include "toolchain/prof_api.h"
+#include "profiling/prof_api.h"
 #include "osal/osal_mem.h"
 #include "osal/osal_thread.h"
 #include "transport/uploader.h"

@@ -16,7 +16,7 @@
 #include "json/json_generator.h"
 #include "logger/logger.h"
 #include "toolchain/prof_data_config.h"
-#include "toolchain/prof_api.h"
+#include "profiling/prof_api.h"
 #include "platform/platform.h"
 #include "osal/osal_mem.h"
 

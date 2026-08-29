@@ -180,7 +180,7 @@ set(PROFIMPL_SRC_FILE
     ${MSPROF_SOURCE_DIR}/dvvp/transport/hash_data.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/transport/hdc/device_transport.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/transport/hdc/data_handle.cpp
-    ${MSPROF_SOURCE_DIR}/dvvp/msprofbin/src/msprof_manager.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/msprofbin/src/msprofbin_manager.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/msprofbin/src/msprof_task.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/msprofbin/src/running_mode.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/msprofbin/src/input_parser.cpp

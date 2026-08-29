@@ -11,7 +11,7 @@
 #ifndef QUEUE_SCHEDULE_MSPROF_API_ADAPTER_H
 #define QUEUE_SCHEDULE_MSPROF_API_ADAPTER_H
 
-#include "toolchain/prof_api.h"
+#include "profiling/prof_api.h"
 #include "common/bqs_so_manager.h"
 
 namespace bqs {

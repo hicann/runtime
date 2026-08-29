@@ -19,7 +19,7 @@
 #include "errno/error_code.h"
 #include "transport/transport.h"
 #include "transport/uploader.h"
-#include "task/task_manager.h"
+#include "task/prof_avp_task_manager.h"
 #include "job/job_manager.h"
 
 class TaskManagerUtest : public testing::Test {

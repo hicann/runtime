@@ -12,5 +12,5 @@
 
 #include "hdc_api.h"
 #include "hdc_log.h"
-#include "adx_dsmi.h"
+#include "prof_adx_dsmi.h"
 #endif //__HDC_API_TEST_H

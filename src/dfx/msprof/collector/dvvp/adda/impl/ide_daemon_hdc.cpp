@@ -14,7 +14,7 @@
 #include "thread.h"
 #include "securec.h"
 #include "ascend_hal.h"
-#include "adx_dsmi.h"
+#include "prof_adx_dsmi.h"
 #include "adx_log.h"
 #include "adx_config.h"
 #include "msprof_dlog.h"

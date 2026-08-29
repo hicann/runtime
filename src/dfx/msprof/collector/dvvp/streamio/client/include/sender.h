@@ -15,7 +15,7 @@
 #include <chrono>
 #include <mutex>
 #include <google/protobuf/message.h>
-#include "file.h"
+#include "prof_file.h"
 #include "osal.h"
 #include "queue/bound_queue.h"
 #include "singleton/singleton.h"

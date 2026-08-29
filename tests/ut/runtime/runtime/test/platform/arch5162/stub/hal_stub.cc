@@ -19,7 +19,7 @@
 #include "runtime.hpp"
 #include "gtest/gtest.h"
 #include "cmodel_driver.h"
-#include "toolchain/prof_api.h"
+#include "profiling/prof_api.h"
 #include "task.hpp"
 #include "rt_utest_encap.h"
 #include "rt_utest_stub.h"

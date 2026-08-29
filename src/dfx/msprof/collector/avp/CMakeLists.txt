@@ -60,7 +60,7 @@ set(domainSrc
     domain/collect/report/hash_dic.c
     domain/collect/report/report_buffer_mgr.c
     domain/collect/report/start_time.c
-    domain/collect/task/task_manager.c
+    domain/collect/task/prof_avp_task_manager.c
     domain/collect/task/task_slot.c
     domain/collect/task/task_pool.c
     domain/collect/channel/channel_manager.c

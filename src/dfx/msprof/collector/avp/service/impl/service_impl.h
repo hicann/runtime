@@ -10,7 +10,7 @@
 
 #ifndef SERVICE_IMPL_SERVICE_IMPL_H
 #define SERVICE_IMPL_SERVICE_IMPL_H
-#include "toolchain/prof_api.h"
+#include "profiling/prof_api.h"
 #include "osal/osal.h"
 int32_t ServiceImplInitialize(void);
 int32_t ServiceImplSetConfig(uint32_t dataType, OsalVoidPtr data, uint32_t dataLength);
