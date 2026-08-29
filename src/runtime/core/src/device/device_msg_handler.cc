@@ -197,7 +197,7 @@ std::string DeviceStreamSnapshotHandler::GetActiveStreamSnapshot(
 {
     std::ostringstream outStream;
     uint32_t realDeviceId = dev_->Id_();
-    (void)Runtime::Instance()->GetUserDevIdByDeviceId(dev_->Id_(), &realDeviceId);
+    (void)Runtime::Instance()->GetUserDevIdByDeviceId(dev_->Id_(), &realDeviceId, false, true);
     outStream << "Device[" << realDeviceId << "] total running stream num=" << cnt << std::endl;
     for (uint32_t i = 0U; i < cnt; ++i) {
         auto& streamSnapshot = streamSnapshots[i];
