@@ -189,6 +189,7 @@ struct ProfileParams : public BaseInfo {
     // app cpu/memory/network usage on host
     bool hostProfiling;
     std::string host_cpu_profiling;
+    std::string host_cpu_freq_profiling;
     std::string host_mem_profiling;
     std::string hostAllPidCpuProfiling;
     std::string hostAllPidMemProfiling;
@@ -292,6 +293,7 @@ struct ProfileParams : public BaseInfo {
           pureCpu("off"),
           hostProfiling(false),
           host_cpu_profiling("off"),
+          host_cpu_freq_profiling("off"),
           host_mem_profiling("off"),
           hostAllPidCpuProfiling("off"),
           hostAllPidMemProfiling("off"),
@@ -360,11 +362,11 @@ struct ProfileParams : public BaseInfo {
 
     bool IsHostProfiling() const
     {
-        if (host_cpu_profiling.compare("on") == 0 || host_mem_profiling.compare("on") == 0 ||
-            hostAllPidCpuProfiling.compare("on") == 0 || hostAllPidMemProfiling.compare("on") == 0 ||
-            host_network_profiling.compare("on") == 0 || host_disk_profiling.compare("on") == 0 ||
-            host_osrt_profiling.compare("on") == 0 || host_numa_profiling.compare("on") == 0 ||
-            msproftx.compare("on") == 0) {
+        if (host_cpu_profiling.compare("on") == 0 || host_cpu_freq_profiling.compare("on") == 0 ||
+            host_mem_profiling.compare("on") == 0 || hostAllPidCpuProfiling.compare("on") == 0 ||
+            hostAllPidMemProfiling.compare("on") == 0 || host_network_profiling.compare("on") == 0 ||
+            host_disk_profiling.compare("on") == 0 || host_osrt_profiling.compare("on") == 0 ||
+            host_numa_profiling.compare("on") == 0 || msproftx.compare("on") == 0) {
             return true;
         }
         return false;
@@ -606,6 +608,7 @@ private:
         // host system
         SET_VALUE(object, hostProfiling);
         SET_VALUE(object, host_cpu_profiling);
+        SET_VALUE(object, host_cpu_freq_profiling);
         SET_VALUE(object, host_mem_profiling);
         SET_VALUE(object, host_network_profiling);
         SET_VALUE(object, pureCpu);
@@ -676,6 +679,7 @@ private:
         // host system
         FROM_BOOL_VALUE(object, hostProfiling);
         FROM_STRING_VALUE(object, host_cpu_profiling);
+        FROM_STRING_VALUE(object, host_cpu_freq_profiling);
         FROM_STRING_VALUE(object, pureCpu);
     }
 

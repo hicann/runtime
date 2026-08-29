@@ -188,6 +188,56 @@ int32_t ProfHostMemJob::Uninit()
     return PROFILING_SUCCESS;
 }
 
+ProfHostCpuFreqJob::ProfHostCpuFreqJob() : ProfHostDataBase() {}
+
+ProfHostCpuFreqJob::~ProfHostCpuFreqJob() {}
+
+int32_t ProfHostCpuFreqJob::Init(const SHARED_PTR_ALIA<CollectionJobCfg> cfg)
+{
+    CHECK_JOB_CONTEXT_PARAM_RET(cfg, return PROFILING_FAILED);
+    const int32_t ret = ProfHostDataBase::Init(cfg);
+    if (ret != PROFILING_SUCCESS) {
+        return ret;
+    }
+
+    if (collectionJobCfg_->comParams->params->host_cpu_freq_profiling.compare(MSVP_PROF_ON) != 0) {
+        MSPROF_LOGI("Host cpu frequency profiling not enabled");
+        return PROFILING_FAILED;
+    }
+    MSPROF_LOGI("HostCpuFreqJob Init succ, sampleIntervalNs_:%llu", sampleIntervalNs_);
+    return PROFILING_SUCCESS;
+}
+
+int32_t ProfHostCpuFreqJob::Process()
+{
+    CHECK_JOB_COMMON_PARAM_RET(collectionJobCfg_, return PROFILING_FAILED);
+    MSPROF_LOGI("HostCpuFreqJob Process start");
+
+    SHARED_PTR_ALIA<ProcHostCpuFreqHandler> freqHandler;
+    SHARED_PTR_ALIA<TimerAttr> attr = nullptr;
+    MSVP_MAKE_SHARED4(
+        attr, TimerAttr, PROF_HOST_CPU_FREQ, 0, PROC_HOST_PROC_DATA_BUF_SIZE, sampleIntervalNs_,
+        return PROFILING_FAILED);
+    attr->retFileName = PROF_HOST_CPU_FREQ_FILE;
+    MSVP_MAKE_SHARED4(
+        freqHandler, ProcHostCpuFreqHandler, attr, collectionJobCfg_->comParams->params,
+        collectionJobCfg_->comParams->jobCtx, upLoader_, return PROFILING_FAILED);
+    if (freqHandler->Init() != PROFILING_SUCCESS) {
+        MSPROF_LOGE("HostCpuFreqHandler Init Failed");
+        return PROFILING_FAILED;
+    }
+
+    StartHostProfTimer(PROF_HOST_CPU_FREQ, freqHandler);
+    return PROFILING_SUCCESS;
+}
+
+int32_t ProfHostCpuFreqJob::Uninit()
+{
+    StopHostProfTimer(PROF_HOST_CPU_FREQ);
+    (void)ProfHostDataBase::Uninit();
+    return PROFILING_SUCCESS;
+}
+
 ProfHostAllPidJob::ProfHostAllPidJob() : ProfHostDataBase() {}
 
 ProfHostAllPidJob::~ProfHostAllPidJob() {}

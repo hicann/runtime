@@ -450,6 +450,7 @@ void ProfParamsAdapter::SetHostSysParam(
     for (auto sysSwitch : hostSysArray) {
         if (sysSwitch == HOST_SYS_CPU) {
             params->host_cpu_profiling = "on";
+            params->host_cpu_freq_profiling = "on";
         } else if (sysSwitch == HOST_SYS_MEM) {
             params->host_mem_profiling = "on";
         } else if (sysSwitch == HOST_SYS_NETWORK) {

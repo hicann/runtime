@@ -137,6 +137,7 @@ constexpr int32_t PERIPHERAL_INTERVAL_MS_MAX = 1000;
 const char* const PROF_SYS_CPU_USAGE_FILE = "SystemCpuUsage.data";
 const char* const PROF_SYS_MEM_FILE = "Memory.data";
 const char* const PROF_HOST_PROC_CPU_USAGE_FILE = "host_cpu.data";
+const char* const PROF_HOST_CPU_FREQ_FILE = "host_cpu_freq.data";
 const char* const PROF_HOST_PROC_MEM_USAGE_FILE = "host_mem.data";
 const char* const PROF_HOST_SYS_NETWORK_USAGE_FILE = "host_network.data";
 const char* const PROF_NETDEV_STATS_FILE = "netdev_stats.data";

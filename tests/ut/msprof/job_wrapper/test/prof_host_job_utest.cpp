@@ -110,6 +110,51 @@ TEST_F(JOB_WRAPPER_PROF_HOST_CPU_JOB_TEST, Uninit)
     EXPECT_EQ(PROFILING_SUCCESS, profHostCpuJob->Uninit());
 }
 
+TEST_F(JOB_WRAPPER_PROF_HOST_CPU_JOB_TEST, CpuFreqInitProcessAndUninit)
+{
+    GlobalMockObject::verify();
+    MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::RunSocSide)
+        .stubs()
+        .will(returnValue(true))
+        .then(returnValue(false))
+        .then(returnValue(false))
+        .then(returnValue(false));
+
+    auto profHostCpuFreqJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfHostCpuFreqJob>();
+    EXPECT_EQ(PROFILING_FAILED, profHostCpuFreqJob->Init(nullptr));
+    EXPECT_EQ(PROFILING_NOTSUPPORT, profHostCpuFreqJob->Init(collectionJobCfg_));
+
+    collectionJobCfg_->comParams->params->hostProfiling = true;
+    EXPECT_EQ(PROFILING_NOTSUPPORT, profHostCpuFreqJob->Init(collectionJobCfg_));
+
+    auto uploader = std::make_shared<analysis::dvvp::transport::Uploader>(nullptr);
+    MOCKER_CPP(&analysis::dvvp::transport::UploaderMgr::GetUploader).stubs().with(any(), outBound(uploader));
+    analysis::dvvp::transport::UploaderMgr::instance()->AddUploader("0", uploader);
+    collectionJobCfg_->comParams->params->job_id = "0";
+    collectionJobCfg_->comParams->params->host_cpu_freq_profiling = "off";
+    EXPECT_EQ(PROFILING_FAILED, profHostCpuFreqJob->Init(collectionJobCfg_));
+    collectionJobCfg_->comParams->params->host_cpu_freq_profiling = "on";
+    EXPECT_EQ(PROFILING_SUCCESS, profHostCpuFreqJob->Init(collectionJobCfg_));
+
+    unsigned int localBufSize = 10;
+    unsigned int localSampleIntervalMs = 20;
+    std::string localRetFileName = "retFileName";
+    std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams());
+    std::shared_ptr<analysis::dvvp::message::JobContext> jobCtx(new analysis::dvvp::message::JobContext());
+    std::shared_ptr<TimerAttr> attr(new TimerAttr{PROF_HOST_CPU_FREQ, 0, localBufSize, localSampleIntervalMs});
+    attr->retFileName = localRetFileName;
+    Analysis::Dvvp::JobWrapper::ProcHostCpuFreqHandler hostCpuFreqHandler(attr, params, jobCtx, uploader);
+
+    MOCKER_CPP_VIRTUAL(
+        (Analysis::Dvvp::JobWrapper::ProcTimerHandler*)&hostCpuFreqHandler,
+        &Analysis::Dvvp::JobWrapper::ProcHostCpuFreqHandler::Init)
+        .stubs()
+        .will(returnValue(PROFILING_FAILED))
+        .then(returnValue(PROFILING_SUCCESS));
+    EXPECT_EQ(PROFILING_FAILED, profHostCpuFreqJob->Process());
+    EXPECT_EQ(PROFILING_SUCCESS, profHostCpuFreqJob->Process());
+    EXPECT_EQ(PROFILING_SUCCESS, profHostCpuFreqJob->Uninit());
+}
 class JOB_WRAPPER_PROF_HOST_MEM_JOB_TEST : public testing::Test {
 protected:
     virtual void SetUp()

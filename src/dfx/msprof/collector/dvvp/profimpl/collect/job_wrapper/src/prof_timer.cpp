@@ -323,6 +323,83 @@ ProcHostCpuHandler::ProcHostCpuHandler(
 
 ProcHostCpuHandler::~ProcHostCpuHandler() {}
 
+ProcHostCpuFreqHandler::ProcHostCpuFreqHandler(
+    SHARED_PTR_ALIA<TimerAttr> attr, SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> param,
+    SHARED_PTR_ALIA<analysis::dvvp::message::JobContext> jobCtx,
+    SHARED_PTR_ALIA<analysis::dvvp::transport::Uploader> upLoader)
+    : ProcTimerHandler(attr, param, jobCtx, upLoader)
+{
+    taskSrc_ = std::string(PROC_FILE) + MSVP_SLASH + std::to_string(param->host_sys_pid) + MSVP_SLASH + PROC_TASK;
+}
+
+ProcHostCpuFreqHandler::~ProcHostCpuFreqHandler() {}
+
+bool ProcHostCpuFreqHandler::GetThreadCpu(const std::string& statFile, int32_t& cpuId) const
+{
+    if (!CheckFileSize(statFile)) {
+        return false;
+    }
+    std::ifstream fin(statFile, std::ifstream::in);
+    if (!fin.is_open()) {
+        return false;
+    }
+
+    std::string line;
+    if (!std::getline(fin, line)) {
+        return false;
+    }
+    const size_t commandEnd = line.rfind(')');
+    if (commandEnd == std::string::npos) {
+        return false;
+    }
+
+    std::istringstream stream(line.substr(commandEnd + 1));
+    std::string field;
+    for (uint32_t index = 0; index <= 36; ++index) {
+        if (!(stream >> field)) {
+            return false;
+        }
+    }
+    if (!Utils::StrToInt32(cpuId, field)) {
+        return false;
+    }
+    return cpuId >= 0;
+}
+
+void ProcHostCpuFreqHandler::ParseProcFile(std::ifstream& ifs, std::string& data)
+{
+    UNUSED(ifs);
+    std::vector<std::string> tidDirs;
+    Utils::GetChildDirs(taskSrc_, false, tidDirs, 0);
+    if (tidDirs.empty()) {
+        return;
+    }
+
+    std::set<int32_t> cpuIds;
+    for (const auto& tidDir : tidDirs) {
+        int32_t cpuId = -1;
+        if (GetThreadCpu(tidDir + MSVP_SLASH + PROC_TID_STAT, cpuId)) {
+            cpuIds.insert(cpuId);
+        }
+    }
+
+    for (const int32_t cpuId : cpuIds) {
+        const std::string freqFile =
+            "/sys/devices/system/cpu/cpu" + std::to_string(cpuId) + "/cpufreq/scaling_cur_freq";
+        if (!CheckFileSize(freqFile)) {
+            continue;
+        }
+        std::ifstream fin(freqFile, std::ifstream::in);
+        std::string frequency;
+        if (fin.is_open() && std::getline(fin, frequency)) {
+            data += std::to_string(cpuId) + " " + frequency + "\n";
+        }
+    }
+    if (!data.empty()) {
+        data = "time " + std::to_string(Utils::GetClockMonotonicRaw()) + "\n" + data;
+    }
+}
+
 void ProcHostCpuHandler::ParseProcFile(std::ifstream& ifs /* = ios::in */, std::string& data)
 {
     UNUSED(ifs);

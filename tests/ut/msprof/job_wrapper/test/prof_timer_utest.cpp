@@ -377,6 +377,107 @@ TEST_F(PROF_HOST_CPU_HANDLER_TEST, ParseProcTidStat)
     EXPECT_EQ(data, "PROF_HOST_CPU_HANDLER_TEST.ParseSysTime");
     analysis::dvvp::common::utils::Utils::RemoveDir("/tmp/PROF_HOST_CPU_HANDLER_TEST/");
 }
+
+///////////////////////////////////////////////////////////////////////////////////
+class PROF_HOST_CPU_FREQ_HANDLER_TEST : public testing::Test {
+protected:
+    virtual void SetUp()
+    {
+        param = std::make_shared<analysis::dvvp::message::ProfileParams>();
+        jobCtx = std::make_shared<analysis::dvvp::message::JobContext>();
+
+        auto transport = std::shared_ptr<analysis::dvvp::transport::HDCTransport>(
+            new analysis::dvvp::transport::HDCTransport(session));
+        upLoader = std::make_shared<analysis::dvvp::transport::Uploader>(transport);
+    }
+
+    virtual void TearDown() {}
+
+    void WriteContent(const std::string& filePath, const std::string& content)
+    {
+        std::ofstream ofs(filePath, std::ofstream::out | std::ofstream::trunc);
+        ofs << content;
+        ofs.close();
+    }
+
+public:
+    unsigned int devId = 0;
+    unsigned int bufSize = 10;
+    unsigned int sampleIntervalMs = 20;
+    std::string retFileName = "retFileName";
+    std::shared_ptr<analysis::dvvp::message::ProfileParams> param;
+    std::shared_ptr<analysis::dvvp::message::JobContext> jobCtx;
+
+    HDC_SESSION session = (HDC_SESSION)0x12345678;
+    std::shared_ptr<analysis::dvvp::transport::Uploader> upLoader;
+};
+
+TEST_F(PROF_HOST_CPU_FREQ_HANDLER_TEST, GetThreadCpu)
+{
+    GlobalMockObject::verify();
+
+    std::shared_ptr<TimerAttr> attr(new TimerAttr{PROF_HOST_CPU_FREQ, devId, bufSize, sampleIntervalMs});
+    attr->retFileName = retFileName;
+    ProcHostCpuFreqHandler hostCpuFreqHandler(attr, param, jobCtx, upLoader);
+
+    const std::string baseDir = "/tmp/PROF_HOST_CPU_FREQ_HANDLER_TEST/GetThreadCpu";
+    analysis::dvvp::common::utils::Utils::CreateDir(baseDir);
+    const std::string statFile = baseDir + "/stat";
+    WriteContent(
+        statFile, "1 (systemd) S 0 1 1 0 -1 4194560 3640341 68119163464 176 354013289 7223 19124 258872940 "
+                  "403205756 20 0 1 0 7 172728320 2824 18446744073709551615 187650231959552 187650233428308 "
+                  "281474659414352 0 0 0 671173123 4096 1260 1 0 0 17 124 0 0 0 0 0 187650233497392 "
+                  "187650233816632 187651016065024 281474659417889 281474659417900 281474659417900 "
+                  "281474659418093 0\n");
+
+    int32_t cpuId = -1;
+    EXPECT_TRUE(hostCpuFreqHandler.GetThreadCpu(statFile, cpuId));
+    EXPECT_EQ(cpuId, 124);
+
+    WriteContent(statFile, "1 (systemd) S 0 1 1\n");
+    EXPECT_FALSE(hostCpuFreqHandler.GetThreadCpu(statFile, cpuId));
+    analysis::dvvp::common::utils::Utils::RemoveDir("/tmp/PROF_HOST_CPU_FREQ_HANDLER_TEST/");
+}
+
+TEST_F(PROF_HOST_CPU_FREQ_HANDLER_TEST, ParseProcFile)
+{
+    GlobalMockObject::verify();
+
+    std::shared_ptr<TimerAttr> attr(new TimerAttr{PROF_HOST_CPU_FREQ, devId, bufSize, sampleIntervalMs});
+    attr->retFileName = retFileName;
+    ProcHostCpuFreqHandler hostCpuFreqHandler(attr, param, jobCtx, upLoader);
+
+    const std::string baseDir = "/tmp/PROF_HOST_CPU_FREQ_HANDLER_TEST/ParseProcFile";
+    const std::string tidDir0 = baseDir + "/100";
+    const std::string tidDir1 = baseDir + "/101";
+    analysis::dvvp::common::utils::Utils::CreateDir(tidDir0);
+    analysis::dvvp::common::utils::Utils::CreateDir(tidDir1);
+    WriteContent(
+        tidDir0 + "/stat", "1 (worker0) S 0 1 1 0 -1 4194560 3640341 68119163464 176 354013289 7223 19124 258872940 "
+                           "403205756 20 0 1 0 7 172728320 2824 18446744073709551615 187650231959552 187650233428308 "
+                           "281474659414352 0 0 0 671173123 4096 1260 1 0 0 17 99999 0 0 0 0 0 187650233497392 "
+                           "187650233816632 187651016065024 281474659417889 281474659417900 281474659417900 "
+                           "281474659418093 0\n");
+    WriteContent(
+        tidDir1 + "/stat", "1 (worker1) S 0 1 1 0 -1 4194560 3640341 68119163464 176 354013289 7223 19124 258872940 "
+                           "403205756 20 0 1 0 7 172728320 2824 18446744073709551615 187650231959552 187650233428308 "
+                           "281474659414352 0 0 0 671173123 4096 1260 1 0 0 17 99999 0 0 0 0 0 187650233497392 "
+                           "187650233816632 187651016065024 281474659417889 281474659417900 281474659417900 "
+                           "281474659418093 0\n");
+
+    hostCpuFreqHandler.taskSrc_ = baseDir;
+    std::ifstream ifs;
+    std::string data;
+    hostCpuFreqHandler.ParseProcFile(ifs, data);
+    EXPECT_TRUE(data.empty());
+
+    WriteContent(tidDir1 + "/stat", "1 (worker1) S 0 1 1\n");
+    data.clear();
+    hostCpuFreqHandler.ParseProcFile(ifs, data);
+    EXPECT_TRUE(data.empty());
+
+    analysis::dvvp::common::utils::Utils::RemoveDir("/tmp/PROF_HOST_CPU_FREQ_HANDLER_TEST/");
+}
 ///////////////////////////////////////////////////////////////////////////////////
 class PROF_HOST_MEM_HANDLER_TEST : public testing::Test {
 protected:

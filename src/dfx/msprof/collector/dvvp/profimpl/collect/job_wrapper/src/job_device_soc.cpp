@@ -552,6 +552,8 @@ int32_t JobDeviceSoc::CreateSysCollectionJobArray()
     MSVP_MAKE_SHARED0(
         collectionJobV_[HOST_DISKIO_COLLECTION_JOB].collectionJob, ProfHostDiskJob, return PROFILING_FAILED);
     MSVP_MAKE_SHARED0(collectionJobV_[HOST_CPU_COLLECTION_JOB].collectionJob, ProfHostCpuJob, return PROFILING_FAILED);
+    MSVP_MAKE_SHARED0(
+        collectionJobV_[HOST_CPU_FREQ_COLLECTION_JOB].collectionJob, ProfHostCpuFreqJob, return PROFILING_FAILED);
     MSVP_MAKE_SHARED0(collectionJobV_[HOST_MEM_COLLECTION_JOB].collectionJob, ProfHostMemJob, return PROFILING_FAILED);
     MSVP_MAKE_SHARED0(
         collectionJobV_[HOST_NETWORK_COLLECTION_JOB].collectionJob, ProfHostNetworkJob, return PROFILING_FAILED);
