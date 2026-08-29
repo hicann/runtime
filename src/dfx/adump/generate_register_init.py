@@ -123,10 +123,10 @@ def _read_reginfo_file(input_file):
         with open(input_file, 'r') as f:
             return f.readlines()
     except FileNotFoundError:
-        log_msg(f"Error: File not found: {input_file}")
+        logging.error(f"Error: File not found: {input_file}")
         return None
     except Exception as e:
-        log_msg(f"Error opening file {input_file}: {e}")
+        logging.error(f"Error opening file {input_file}: {e}")
         return None
 
 
@@ -163,15 +163,20 @@ def _process_debug_address_pair(lines, i, parts, context):
     
     try:
         low_value = int(parts[4], 16)
+    except ValueError as e:
+        logging.error(f"Error parsing low debug address at line {i + 1}: {e}")
+        return None
+
+    try:
         high_value = int(next_parts[4], 16)
     except ValueError as e:
-        log_msg(f"Error parsing hex values at line {i}: {e}")
+        logging.error(f"Error parsing high debug address at line {i + 2}: {e}")
         return None
     
     debug_addr = (high_value << 32) | low_value
     
     if debug_addr in context.seen_debug_addresses:
-        log_msg(f"Warning: Duplicate debug address 0x{debug_addr:x} skipped (line {i+1})")
+        logging.warning(f"Warning: Duplicate debug address 0x{debug_addr:x} skipped (line {i+1})")
         context.duplicate['debug'].append({'address': debug_addr, 'line': i + 1})
         return None
     
@@ -192,11 +197,12 @@ def _process_normal_register(reg_name, reg_addr, bit_width, context, line_num):
     try:
         normal_addr = int(reg_addr, 16)
     except ValueError as e:
-        log_msg(f"Error parsing register address at line {line_num}: {e}")
+        logging.error(f"Error parsing register address at line {line_num + 1}: {e}")
         return False
     
     if normal_addr in context.seen_normal_addresses:
-        log_msg(f"Warning: Duplicated normal address 0x{normal_addr:x} ({reg_name}) skipped (line {line_num+1})")
+        logging.warning(
+            f"Warning: Duplicated normal address 0x{normal_addr:x} ({reg_name}) skipped (line {line_num+1})")
         context.duplicate['normal'].append({'address': normal_addr, 'name': reg_name, 'line': line_num + 1})
         return False
     
@@ -354,7 +360,7 @@ def main():
             all_normal_registers.append(normal_registers)
             all_debug_registers.append(debug_registers)
         except Exception as e:
-            log_msg(f"Error processing {input_file}: {e}")
+            logging.error(f"Error processing {input_file}: {e}")
     
     generate_cpp_output(all_normal_registers, all_debug_registers, output_file)
 
