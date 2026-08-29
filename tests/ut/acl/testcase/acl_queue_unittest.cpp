@@ -66,6 +66,24 @@ TEST_F(UTEST_QUEUE, MsprofRegisterCallbackTest)
     EXPECT_EQ(ret, ACL_SUCCESS);
 }
 
+TEST_F(UTEST_QUEUE, MsprofRegisterCallbackFailureLog)
+{
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), MsprofRegTypeInfo(_, _, _)).WillOnce(Return(1));
+    rtProfCommandHandle_t command = {};
+    command.profSwitch = 1;
+    command.devNums = 1;
+    command.devIdList[0] = 0;
+    command.type = 1; // START_PROFILING
+    EXPECT_EQ(
+        AclTdtQueueProfCtrlHandle(RT_PROF_CTRL_SWITCH, static_cast<void*>(&command), sizeof(rtProfCommandHandle_t)),
+        ACL_SUCCESS);
+
+    command.type = 2; // STOP_PROFILING
+    EXPECT_EQ(
+        AclTdtQueueProfCtrlHandle(RT_PROF_CTRL_SWITCH, static_cast<void*>(&command), sizeof(rtProfCommandHandle_t)),
+        ACL_SUCCESS);
+}
+
 TEST_F(UTEST_QUEUE, acltdtCreateQueueAttr_acltdtDestroyQueueAttr)
 {
     acltdtQueueAttr* attr = acltdtCreateQueueAttr();

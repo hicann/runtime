@@ -756,7 +756,7 @@ void PoolRegistry::EventStateCallbackWrapper(Stream* stream, Event* event, Event
     } else if (period == EventStatePeriod::EVENT_STATE_PERIOD_WAIT) {
         PoolRegistry::Instance().UpdateSeqMap(stream->Id_(), event->EventId_());
     } else {
-        RT_LOG(RT_LOG_ERROR, "EventStatePeriod period err, period=%u.", period);
+        RT_LOG(RT_LOG_ERROR, "EventStatePeriod period err, period=UNKNOWN(%u).", static_cast<uint32_t>(period));
     }
 }
 

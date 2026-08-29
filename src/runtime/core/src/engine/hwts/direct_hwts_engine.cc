@@ -793,9 +793,9 @@ rtError_t DirectHwtsEngine::SubmitSend(TaskInfo* const workTask, uint32_t* const
         TaskFinished(stm->Device_()->Id_(), workTask);
         RT_LOG(
             RT_LOG_ERROR,
-            "Failed to send task, stream_id=%d, task_id=%hu, task_type=%u, "
+            "Failed to send task, stream_id=%d, task_id=%hu, task_type=%s(%u), "
             "retCode=%#x.",
-            stm->Id_(), workTask->id, workTask->type, error);
+            stm->Id_(), workTask->id, GetTaskDescByType(workTask->type), workTask->type, error);
         return error;
     };
 

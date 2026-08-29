@@ -12,6 +12,7 @@
 #include "runtime.hpp"
 #include "context.hpp"
 #include "maintenance_task.h"
+#include "device_enum_desc.hpp"
 
 namespace cce {
 namespace runtime {
@@ -81,8 +82,8 @@ rtError_t GetDevMsgTaskInit(
             static_cast<int32_t>(taskInfo->stream->Device_()->Id_()), RtPtrToValue<void*>(getDevMsgTask->devMem),
             &(getDevMsgTask->offset));
         COND_RETURN_ERROR(
-            (error != RT_ERROR_NONE), error, "MemAddressTranslate address error=%#x, msg type=%d, msgBuffer length=%u.",
-            error, messageType, getDevMsgTask->msgBufferLen);
+            (error != RT_ERROR_NONE), error, "MemAddressTranslate address error=%#x, msg type=%s, msgBuffer length=%u.",
+            error, GetDevMsgTypeToString(messageType).c_str(), getDevMsgTask->msgBufferLen);
     }
 
     RT_LOG(

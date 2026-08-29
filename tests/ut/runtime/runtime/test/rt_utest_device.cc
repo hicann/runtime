@@ -16,6 +16,7 @@
 #include "runtime.hpp"
 #include "engine.hpp"
 #include "raw_device.hpp"
+#include "ctrl_sq.hpp"
 #include "module.hpp"
 #include "event.hpp"
 #include "task_info.hpp"
@@ -33,6 +34,7 @@
 #include "thread_local_container.hpp"
 #include "runtime_exit_test_helper.h"
 #include "device_snapshot.hpp"
+#include "runtime_dump_task.h"
 #undef private
 #undef protected
 #include "rdma_task.h"
@@ -1615,6 +1617,37 @@ TEST_F(DeviceTest, CtrlStreamFailSetupTest)
     device->CtrlStreamSetup();
     EXPECT_EQ(device->ctrlStream_, nullptr);
     DELETE_O(device);
+}
+
+TEST_F(DeviceTest, CtrlMsgTypeErrorLogs)
+{
+    RawDevice device(0);
+    device.chipType_ = CHIP_CLOUD;
+    TaskFactory taskFactory(&device);
+    device.taskFactory_ = &taskFactory;
+    Stream stream(&device, 0);
+    CtrlSQ ctrlSq(&device);
+    ctrlSq.stream_ = &stream;
+    ctrlSq.RegCtrlMsgInitFunc();
+
+    TaskInfo taskInfo = {};
+    taskInfo.stream = &stream;
+    MOCKER_CPP(&Stream::AllocTask).stubs().will(returnValue(&taskInfo));
+    MOCKER_CPP(&TaskFactory::Recycle).stubs().will(returnValue(0));
+    MOCKER(DebugRegisterTaskInit).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    MOCKER_CPP_VIRTUAL(&device, &RawDevice::SubmitTask).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    MOCKER_CPP_VIRTUAL(&device, &RawDevice::GetDevRunningState)
+        .stubs()
+        .will(returnValue(static_cast<uint32_t>(DEV_RUNNING_NORMAL)));
+
+    RtCtrlMsgParam param = {};
+    param.taskType = TS_TASK_TYPE_COMMON_CMD;
+    const uint32_t maxType = static_cast<uint32_t>(RtCtrlMsgType::RT_CTRL_MSG_MAX);
+    for (uint32_t type = 0U; type <= maxType + 1U; ++type) {
+        EXPECT_EQ(ctrlSq.CreateCtrlMsg(static_cast<RtCtrlMsgType>(type), param), RT_ERROR_INVALID_VALUE);
+    }
+    ctrlSq.stream_ = nullptr;
+    device.taskFactory_ = nullptr;
 }
 
 TEST_F(DeviceTest, STARS_CORE_FFTSPLUS_0)

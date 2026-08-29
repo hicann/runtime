@@ -142,20 +142,25 @@ TEST_F(CloudV2NpuDriverTest, MemcpyAsyncCallback)
 TEST_F(CloudV2NpuDriverTest, PrefetchCallbackWrapper)
 {
     UvmCallback::PrefetchCallbackWrapper(nullptr);
-    struct drv_uvm_location drvLoc1 = {DRV_UVM_LOCATION_TYPE_INVALID, 0};
-    PrefetchParams* param1 = new PrefetchParams;
-    param1->ptr = 0;
-    param1->size = 0;
-    param1->location = drvLoc1;
-    param1->flags = 0;
-    UvmCallback::PrefetchCallbackWrapper(static_cast<void*>(param1));
-    struct drv_uvm_location drvLoc2 = {DRV_UVM_LOCATION_TYPE_DEVICE, 0};
-    PrefetchParams* param2 = new PrefetchParams;
-    param2->ptr = 0;
-    param2->size = 0;
-    param2->location = drvLoc1;
-    param2->flags = 0;
-    UvmCallback::PrefetchCallbackWrapper(static_cast<void*>(param2));
+    PrefetchParams* nullPtrParam = new PrefetchParams;
+    nullPtrParam->ptr = 0;
+    UvmCallback::PrefetchCallbackWrapper(static_cast<void*>(nullPtrParam));
+
+    MOCKER(halMemManagedPrefetch).stubs().will(returnValue(DRV_ERROR_INVALID_VALUE));
+    const drv_uvm_location_type locationTypes[] = {
+        DRV_UVM_LOCATION_TYPE_INVALID,
+        DRV_UVM_LOCATION_TYPE_DEVICE,
+        DRV_UVM_LOCATION_TYPE_HOST,
+        DRV_UVM_LOCATION_TYPE_HOST_NUMA,
+    };
+    for (const auto type : locationTypes) {
+        PrefetchParams* param = new PrefetchParams;
+        param->ptr = 1U;
+        param->size = 1U;
+        param->location = {type, 0};
+        param->flags = 0U;
+        UvmCallback::PrefetchCallbackWrapper(static_cast<void*>(param));
+    }
     UvmCallback::PrefetchBatchCallbackWrapper(nullptr);
 }
 

@@ -9,6 +9,8 @@
  */
 
 #include "enum_desc.hpp"
+#include "capture_model_enum_desc.hpp"
+#include "device_enum_desc.hpp"
 #include "mem_type.hpp"
 #include "task_enum_desc.hpp"
 #include "securec.h"
@@ -17,6 +19,36 @@
 
 namespace cce {
 namespace runtime {
+
+std::string GetDevMsgTypeToString(const rtGetDevMsgType_t type)
+{
+    switch (type) {
+        case RT_GET_DEV_ERROR_MSG:
+            return "GET_DEV_ERROR_MSG(0)";
+        case RT_GET_DEV_RUNNING_STREAM_SNAPSHOT_MSG:
+            return "GET_DEV_RUNNING_STREAM_SNAPSHOT_MSG(1)";
+        case RT_GET_DEV_PID_SNAPSHOT_MSG:
+            return "GET_DEV_PID_SNAPSHOT_MSG(2)";
+        case RT_GET_DEV_MSG_RESERVE:
+            return "GET_DEV_MSG_RESERVE(3)";
+        default:
+            return RtFmtMsg("UNKNOWN(%d)", static_cast<int32_t>(type));
+    }
+}
+
+std::string ModelTypeToString(const ModelType type)
+{
+    switch (type) {
+        case RT_MODEL_NORMAL:
+            return "MODEL_NORMAL(0)";
+        case RT_MODEL_CAPTURE_MODEL:
+            return "MODEL_CAPTURE_MODEL(1)";
+        case RT_MODEL_MAX:
+            return "MODEL_MAX(2)";
+        default:
+            return RtFmtMsg("UNKNOWN(%d)", static_cast<int32_t>(type));
+    }
+}
 
 std::string DataTypeToString(const rtDataType_t type)
 {

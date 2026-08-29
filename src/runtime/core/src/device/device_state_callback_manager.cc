@@ -111,7 +111,7 @@ void DeviceStateCallbackManager::Notify(
             void* args = info.second.args;
             callback(userDeviceId, deviceState, args);
         } else {
-            RT_LOG(RT_LOG_ERROR, "notify device state type:%u is invalid.", type);
+            RT_LOG(RT_LOG_ERROR, "notify device state type=UNKNOWN(%u) is invalid.", static_cast<uint32_t>(type));
             return;
         }
         RT_LOG(RT_LOG_DEBUG, "notify [%s] device state end.", info.first.c_str());

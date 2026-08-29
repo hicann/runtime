@@ -31,7 +31,7 @@ rtError_t EventStateCallbackManager::RegEventStateCallback(
     }
 
     if (cbType != EventStateCallbackType::RT_EVENT_STATE_CALLBACK) {
-        RT_LOG(RT_LOG_ERROR, "Register event state cbType:%u is invalid.", cbType);
+        RT_LOG(RT_LOG_ERROR, "Register event state cbType=UNKNOWN(%u) is invalid.", static_cast<uint32_t>(cbType));
         return RT_ERROR_INVALID_VALUE;
     }
     callbackMap_[regName].callback = RtPtrToPtr<rtEventStateCallback>(callback);
@@ -60,7 +60,7 @@ void EventStateCallbackManager::Notify(Stream* stream, Event* event, EventStateP
             callback(stream, event, period, args);
         } else {
             // If cbType is invalid, stop notifying remaining callbacks immediately.
-            RT_LOG(RT_LOG_ERROR, "Notify event state Type:%u is invalid.", cbType);
+            RT_LOG(RT_LOG_ERROR, "Notify event state type=UNKNOWN(%u) is invalid.", static_cast<uint32_t>(cbType));
             return;
         }
         RT_LOG(RT_LOG_DEBUG, "Notify [%s] event state end.", info.first.c_str());

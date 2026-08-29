@@ -11,6 +11,7 @@
 #include "driver/ascend_hal.h"
 #include "driver/ascend_inpackage_hal.h"
 #include "runtime.hpp"
+#include "driver_enum_desc.hpp"
 
 #ifdef CFG_DEV_PLATFORM_PC
 #include "cmodel_driver.h"
@@ -1649,9 +1650,9 @@ rtError_t NpuDriver::MemHandleSetAttribute(rtDrvMemHandle handle, HandleAttrType
     } else if (drvRet != DRV_ERROR_NONE) {
         DRV_ERROR_PROCESS(
             drvRet,
-            "Call driver api halMemHandleSetAttribute failed, drvRetCode=%d, type=%d, memMapRoute=%u, "
+            "Call driver api halMemHandleSetAttribute failed, drvRetCode=%d, type=%s(%d), memMapRoute=%u, "
             "handleAttr.mem_map_route=%u.",
-            static_cast<int32_t>(drvRet), type, attr.memMapRoute, handleAttr.mem_map_route);
+            static_cast<int32_t>(drvRet), HandleAttrTypeName(type), type, attr.memMapRoute, handleAttr.mem_map_route);
     } else { // clean code
     }
     return RT_GET_DRV_ERRCODE(drvRet);
@@ -1666,8 +1667,8 @@ rtError_t NpuDriver::MemHandleGetAttribute(rtDrvMemHandle handle, HandleAttrType
         halMemHandleGetAttribute(RtPtrToPtr<drv_mem_handle_t*>(handle), type, RtPtrToPtr<HandleAttr*>(attr));
     if (drvRet != DRV_ERROR_NONE) {
         DRV_ERROR_PROCESS(
-            drvRet, "Call driver api halMemHandleGetAttribute failed, drvRetCode=%d, type=%d.",
-            static_cast<int32_t>(drvRet), type);
+            drvRet, "Call driver api halMemHandleGetAttribute failed, drvRetCode=%d, type=%s(%d).",
+            static_cast<int32_t>(drvRet), HandleAttrTypeName(type), type);
     }
     return RT_GET_DRV_ERRCODE(drvRet);
 }

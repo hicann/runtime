@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "context.hpp"
+#include "driver_enum_desc.hpp"
 #include "davinci_kernel_task.h"
 #include "maintenance_task.h"
 #include "model_graph_task.h"
@@ -134,14 +135,14 @@ rtError_t CheckMemoryParam(const rtDebugMemoryParam_t* const param)
         COND_RETURN_ERROR(
             (!isValid), RT_ERROR_INVALID_VALUE,
             "The read memory boundary exceeds the hardware memory boundary of the specified memory type,"
-            " debugMemType=%d, srcAddr=0x%llx, memLen=%llu.",
-            param->debugMemType, param->srcAddr, param->memLen);
+            " debugMemType=%s(%d), srcAddr=0x%llx, memLen=%llu.",
+            DebugMemoryTypeName(param->debugMemType), param->debugMemType, param->srcAddr, param->memLen);
     }
     if (param->debugMemType == RT_MEM_TYPE_REGISTER) {
         COND_RETURN_ERROR(
             (param->elementSize == 0U), RT_ERROR_INVALID_VALUE,
-            "CheckMemoryParam failed, elementSize cannot be 0, debugMemType=%d, srcAddr=0x%llx, memLen=%llu.",
-            param->debugMemType, param->srcAddr, param->memLen);
+            "CheckMemoryParam failed, elementSize cannot be 0, debugMemType=%s(%d), srcAddr=0x%llx, memLen=%llu.",
+            DebugMemoryTypeName(param->debugMemType), param->debugMemType, param->srcAddr, param->memLen);
         COND_RETURN_ERROR(
             (param->memLen % param->elementSize != 0), RT_ERROR_INVALID_VALUE,
             "The read memory length %llu is not aligned with the register bit width %u.", param->memLen,
@@ -3119,10 +3120,11 @@ rtError_t Context::DebugReadAICore(rtDebugMemoryParam_t* const param)
         ret = SendAndRecvDebugTask(&sendInfo, &reportInfo);
         COND_RETURN_ERROR(
             ((ret != RT_ERROR_NONE) || (reportInfo.returnVal != 0U)), RT_ERROR_INVALID_VALUE,
-            "DebugReadAICore failed, retCode=%#x, reportVal=%u, coreType=%u, coreId=%u, debugMemType=%u, "
+            "DebugReadAICore failed, retCode=%#x, reportVal=%u, coreType=%u, coreId=%u, debugMemType=%s(%u), "
             "elementSize=%u, memLen=%llu, srcAddr=0x%llx, dstAddr=0x%llx.",
-            ret, reportInfo.returnVal, param->coreType, param->coreId, param->debugMemType, memoryParam->elementSize,
-            memoryParam->memLen, memoryParam->srcAddr, memoryParam->dstAddr);
+            ret, reportInfo.returnVal, param->coreType, param->coreId, DebugMemoryTypeName(param->debugMemType),
+            static_cast<uint32_t>(param->debugMemType), memoryParam->elementSize, memoryParam->memLen,
+            memoryParam->srcAddr, memoryParam->dstAddr);
 
         ret = devDrv->MemCopySync(
             ValueToPtr(param->dstAddr + offset), memoryParam->memLen, devMem, memoryParam->memLen,

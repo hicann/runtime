@@ -312,6 +312,26 @@ TEST_F(UTEST_tensor_data_transfer, TestTensorDatasetSerializes02)
     EXPECT_EQ(acltdtDestroyDataItem(item), ACL_SUCCESS);
 }
 
+TEST_F(UTEST_tensor_data_transfer, TensorDatasetConversionRejectsInvalidTypes)
+{
+    acltdtDataset* dataset = acltdtCreateDataset();
+    ASSERT_NE(dataset, nullptr);
+    acltdtDataItem invalidItem;
+    invalidItem.tdtType = ACL_TENSOR_DATA_UNDEFINED;
+    dataset->blobs.push_back(&invalidItem);
+
+    std::vector<tdt::DataItem> items;
+    EXPECT_EQ(TensorDatasetSerializes(dataset, items), ACL_ERROR_INVALID_PARAM);
+    std::vector<aclTdtDataItemInfo> itemsV2;
+    EXPECT_EQ(TensorDatasetSerializesV2(dataset, itemsV2), ACL_ERROR_INVALID_PARAM);
+
+    dataset->blobs.clear();
+    tdt::DataItem invalidTdtItem = {tdt::TDT_DATATYPE_MAX, "hidden", "3", "int64", 8, nullptr};
+    items.push_back(invalidTdtItem);
+    EXPECT_EQ(TensorDatasetDeserializes(items, dataset), ACL_ERROR_UNSUPPORTED_DATA_TYPE);
+    EXPECT_EQ(acltdtDestroyDataset(dataset), ACL_SUCCESS);
+}
+
 TEST_F(UTEST_tensor_data_transfer, TestGetTdtDataTypeByAclDataType)
 {
     tdt::TdtDataType tdtDataType1 = tdt::TDT_TFRECORD;

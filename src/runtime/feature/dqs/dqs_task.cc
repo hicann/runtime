@@ -479,7 +479,7 @@ static rtError_t InitFuncCallParaForDqsZeroCopyTask(
         }
         COND_RETURN_ERROR((queueIndex >= ctrlSpacePtr->output_queue_num), RT_ERROR_INVALID_VALUE, "Invalid queueId!");
     } else {
-        RT_LOG(RT_LOG_ERROR, "Invalid DqsZeroCopy type, copyType=%u", static_cast<uint32_t>(copyType));
+        RT_LOG(RT_LOG_ERROR, "Invalid DqsZeroCopy type, copyType=UNKNOWN(%u)", static_cast<uint32_t>(copyType));
         return RT_ERROR_INVALID_VALUE;
     }
 
@@ -745,7 +745,9 @@ static rtError_t PrepareSqeInfoForDqsInterChipMemcpyTask(
     } else if (type == DqsInterChipTaskType::DQS_INTER_CHIP_TASK_MEMCPY_MBUF_DATA) {
         fieldOffset = offsetof(stars_dqs_inter_chip_space_t, mbuf_data_memcpy_sqe);
     } else {
-        RT_LOG(RT_LOG_ERROR, "Invalid type, streamId=%d, type=%d.", stm->Id_(), static_cast<int32_t>(type));
+        RT_LOG(
+            RT_LOG_ERROR, "Invaild type, streamId=%d, type=%s(%d).", stm->Id_(), DqsInterChipTaskTypeName(type),
+            static_cast<int32_t>(type));
         return RT_ERROR_INVALID_VALUE;
     }
 
@@ -1102,13 +1104,13 @@ rtError_t DqsInterChipMemcpyTaskInit(TaskInfo* taskInfo, const uint32_t groupIdx
     ERROR_RETURN_MSG_INNER(
         error,
         "Failed to prepare the SQE information for the DQS inter-chip memory copy task, "
-        "groupIdx=%u, type=%u, retCode=%#x.",
-        groupIdx, static_cast<uint32_t>(type), static_cast<uint32_t>(error));
+        "groupIdx=%u, type=%s(%u), retCode=%#x.",
+        groupIdx, DqsInterChipTaskTypeName(type), static_cast<uint32_t>(type), static_cast<uint32_t>(error));
 
     error = MemcpyAsyncTaskInitV1(taskInfo, memcpyAddrInfo, 0ULL);
     ERROR_RETURN_MSG_INNER(
-        error, "Failed to initialize DQS inter-chip memory copy task, groupIdx=%u, type=%u, retCode=%#x.", groupIdx,
-        static_cast<uint32_t>(type), static_cast<uint32_t>(error));
+        error, "Failed to initialize DQS inter-chip memory copy task, groupIdx=%u, type=%s(%u), retCode=%#x.", groupIdx,
+        DqsInterChipTaskTypeName(type), static_cast<uint32_t>(type), static_cast<uint32_t>(error));
 
     return RT_ERROR_NONE;
 }

@@ -42,7 +42,7 @@ rtError_t StreamStateCallbackManager::RegStreamStateCallback(
         callbackMap_[regName].callbackV2 = RtPtrToPtr<rtsStreamStateCallback>(callback);
         callbackMap_[regName].args = args;
     } else {
-        RT_LOG(RT_LOG_ERROR, "register stream state type:%u is invalid.", type);
+        RT_LOG(RT_LOG_ERROR, "register stream state type=UNKNOWN(%u) is invalid.", static_cast<uint32_t>(type));
         return RT_ERROR_INVALID_VALUE;
     }
 
@@ -86,7 +86,7 @@ void StreamStateCallbackManager::Notify(Stream* const stm, const bool isCreate)
                 callback(stream, RT_STREAM_STATE_DESTROY_PRE, args);
             }
         } else {
-            RT_LOG(RT_LOG_ERROR, "notify stream state type:%u is invalid.", type);
+            RT_LOG(RT_LOG_ERROR, "notify stream state type=UNKNOWN(%u) is invalid.", static_cast<uint32_t>(type));
             return;
         }
         RT_LOG(RT_LOG_DEBUG, "notify [%s] stream state end.", info.first.c_str());

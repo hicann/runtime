@@ -20,6 +20,8 @@
 namespace cce {
 namespace runtime {
 
+std::string ModelTypeToString(ModelType type);
+
 static inline std::string CaptureModelStatusToString(const RtCaptureModelStatus status)
 {
     std::string desc;

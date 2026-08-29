@@ -36,6 +36,28 @@
 
 namespace cce {
 namespace runtime {
+namespace {
+const char_t* DriverStatusName(const drvStatus_t status)
+{
+    switch (status) {
+        case DRV_STATUS_INITING:
+            return "DRV_STATUS_INITING";
+        case DRV_STATUS_WORK:
+            return "DRV_STATUS_WORK";
+        case DRV_STATUS_EXCEPTION:
+            return "DRV_STATUS_EXCEPTION";
+        case DRV_STATUS_SLEEP:
+            return "DRV_STATUS_SLEEP";
+        case DRV_STATUS_COMMUNICATION_LOST:
+            return "DRV_STATUS_COMMUNICATION_LOST";
+        case DRV_STATUS_RESERVED:
+            return "DRV_STATUS_RESERVED";
+        default:
+            return "UNKNOWN";
+    }
+}
+} // namespace
+
 EngineObserver::~EngineObserver() {}
 
 void EngineObserver::TaskSubmited(Device* const dev, TaskInfo* const tsk)
@@ -645,8 +667,8 @@ rtError_t Engine::ProcessTaskWait(TaskInfo* const task) const
     error = WaitExecFinish(task);
     if (error != RT_ERROR_NONE) {
         RT_LOG(
-            RT_LOG_ERROR, "WaitExecFinish Failed. task_id=%hu, taskType = %u, error = %#x, [%s].", task->id,
-            static_cast<int32_t>(task->type), error, GetTsErrDescByRtErr(error));
+            RT_LOG_ERROR, "WaitExecFinish Failed. task_id=%hu, taskType=%s(%u), error=%#x, [%s].", task->id,
+            GetTaskDescByType(task->type), static_cast<uint32_t>(task->type), error, GetTsErrDescByRtErr(error));
         TIMESTAMP_END(Engine_ProcessTaskWait);
         return error;
     }
@@ -725,7 +747,11 @@ rtError_t Engine::ReportHeartBreakProcV2(void)
     }
     ret = devDrv->GetDeviceStatus(GetDevice()->Id_(), &status);
     if ((ret == RT_ERROR_NONE) && ((status == DRV_STATUS_EXCEPTION) || (status == DRV_STATUS_COMMUNICATION_LOST))) {
-        RT_DEVICE_RUNNING_DOWN_LOG(status);
+        if (runningState_ != DEV_RUNNING_DOWN) {
+            RT_LOG(
+                RT_LOG_ERROR, "Device %d, status %s(%u), DEV_RUNNING_DOWN.", device_->Id_(), DriverStatusName(status),
+                static_cast<uint32_t>(status));
+        }
         GetDevice()->SetDevStatus(RT_ERROR_LOST_HEARTBEAT);
         Runtime::Instance()->SetWatchDogDevStatus(device_, RT_DEVICE_STATUS_ABNORMAL);
         SetDevRunningState(DEV_RUNNING_DOWN, true);
@@ -1065,8 +1091,9 @@ rtError_t Engine::SendCommand(
     error = WaitExecFinish(workTask);
     if (error != RT_ERROR_NONE) {
         RT_LOG(
-            RT_LOG_ERROR, "Failed to wait for execution finish, taskType=%u, retCode=%#x, [%s].",
-            static_cast<int32_t>(workTask->type), error, GetTsErrDescByRtErr(error));
+            RT_LOG_ERROR, "Failed to wait for execution finish, taskType=%s(%u), retCode=%#x, [%s].",
+            GetTaskDescByType(workTask->type), static_cast<uint32_t>(workTask->type), error,
+            GetTsErrDescByRtErr(error));
         return error;
     }
     TIMESTAMP_BEGIN(CommandSend);

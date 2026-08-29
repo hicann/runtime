@@ -31,6 +31,22 @@
 
 namespace cce {
 namespace runtime {
+namespace {
+const char_t* EventStateName(const rtEventState_t state)
+{
+    switch (state) {
+        case INIT:
+            return "INIT";
+        case RECORDING:
+            return "RECORDING";
+        case RECORDED:
+            return "RECORDED";
+        default:
+            return "UNKNOWN";
+    }
+}
+} // namespace
+
 Event::Event()
     : NoCopy(),
       device_(nullptr),
@@ -180,8 +196,8 @@ rtError_t Event::TrySwitchToSoftwareMode()
     const std::lock_guard<std::mutex> recordLock(recordStateMutex_);
     if (HasRecord() || (latestRecord_.state != INIT)) {
         RT_LOG(
-            RT_LOG_ERROR, "Event mode cannot switch after record, event_id=%d, record_state=%u.", eventId_,
-            latestRecord_.state);
+            RT_LOG_ERROR, "Event mode cannot switch after record, event_id=%d, record_state=%s(%u).", eventId_,
+            EventStateName(latestRecord_.state), static_cast<uint32_t>(latestRecord_.state));
         return RT_ERROR_INVALID_VALUE;
     }
     SoftwareModeEnable();

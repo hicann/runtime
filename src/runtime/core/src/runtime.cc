@@ -9,6 +9,7 @@
  */
 
 #include "runtime.hpp"
+#include "device_enum_desc.hpp"
 #include <fstream>
 #include <algorithm>
 #include <dlfcn.h>
@@ -682,8 +683,9 @@ rtError_t Runtime::GetAicoreNumByLevel(const rtChipType_t chipTypeValue, int64_t
 
         if (drvRet != DRV_ERROR_NONE) {
             DRV_ERROR_PROCESS(
-                drvRet, "Call halGetDeviceInfo failed: drvRetCode=%u, module type=%d, info type=%d.",
-                static_cast<uint32_t>(drvRet), MODULE_TYPE_AICORE, INFO_TYPE_CORE_NUM_LEVEL);
+                drvRet, "Call halGetDeviceInfo failed: drvRetCode=%u, module type=%s, info type=%s.",
+                static_cast<uint32_t>(drvRet), ModuleTypeToString(MODULE_TYPE_AICORE).c_str(),
+                InfoTypeToString(INFO_TYPE_CORE_NUM_LEVEL).c_str());
             return RT_GET_DRV_ERRCODE(drvRet);
         }
         RT_LOG(RT_LOG_INFO, "Get aicore num level=%" PRId64 ", chipTypeValue:%d", aicoreNumLevel, chipType_);
@@ -693,8 +695,8 @@ rtError_t Runtime::GetAicoreNumByLevel(const rtChipType_t chipTypeValue, int64_t
             aicoreNum = RT_AICORE_NUM_30;
         } else {
             RT_LOG_INNER_MSG(
-                RT_LOG_ERROR, "AI Core number level not supported, aicoreNumLevel=%" PRId64 ", chipType=%d.",
-                aicoreNumLevel, chipType_);
+                RT_LOG_ERROR, "AI Core number level not supported, aicoreNumLevel=%" PRId64 ", chipType=%s.",
+                aicoreNumLevel, ChipTypeToString(chipType_).c_str());
             return RT_ERROR_DRV_ERR;
         }
     }
@@ -767,16 +769,18 @@ void Runtime::InitSocTypeFromBS9SX1AXVersion()
     drvRet = halGetDeviceInfo(RT_DEV_ZERO, MODULE_TYPE_AICORE, INFO_TYPE_CORE_NUM, &aicNum);
     if (drvRet != DRV_ERROR_NONE) {
         DRV_ERROR_PROCESS(
-            drvRet, "Call halGetDeviceInfo failed: drvRetCode=%u, module type=%d, info type=%d.",
-            static_cast<uint32_t>(drvRet), MODULE_TYPE_AICORE, INFO_TYPE_CORE_NUM);
+            drvRet, "Call halGetDeviceInfo failed: drvRetCode=%u, module type=%s, info type=%s.",
+            static_cast<uint32_t>(drvRet), ModuleTypeToString(MODULE_TYPE_AICORE).c_str(),
+            InfoTypeToString(INFO_TYPE_CORE_NUM).c_str());
         return;
     }
 
     drvRet = halGetDeviceInfo(RT_DEV_ZERO, MODULE_TYPE_VECTOR_CORE, INFO_TYPE_CORE_NUM, &aivNum);
     if (drvRet != DRV_ERROR_NONE) {
         DRV_ERROR_PROCESS(
-            drvRet, "Call halGetDeviceInfo failed: drvRetCode=%u, module type=%d, info type=%d.",
-            static_cast<uint32_t>(drvRet), MODULE_TYPE_VECTOR_CORE, INFO_TYPE_CORE_NUM);
+            drvRet, "Call halGetDeviceInfo failed: drvRetCode=%u, module type=%s, info type=%s.",
+            static_cast<uint32_t>(drvRet), ModuleTypeToString(MODULE_TYPE_VECTOR_CORE).c_str(),
+            InfoTypeToString(INFO_TYPE_CORE_NUM).c_str());
         return;
     }
 
@@ -841,8 +845,9 @@ void Runtime::InitSocTypeFromCloudVersion(const int64_t aicoreNumLevel)
     drvError_t drvRet = halGetDeviceInfo(workingDev_, MODULE_TYPE_AICORE, INFO_TYPE_FREQUE_LEVEL, &aicoreFreqLevel);
     if (drvRet != DRV_ERROR_NONE) {
         DRV_ERROR_PROCESS(
-            drvRet, "Call halGetDeviceInfo failed: drvRetCode=%u, module type=%d, info type=%d.",
-            static_cast<uint32_t>(drvRet), MODULE_TYPE_AICORE, INFO_TYPE_FREQUE_LEVEL);
+            drvRet, "Call halGetDeviceInfo failed: drvRetCode=%u, module type=%s, info type=%s.",
+            static_cast<uint32_t>(drvRet), ModuleTypeToString(MODULE_TYPE_AICORE).c_str(),
+            InfoTypeToString(INFO_TYPE_FREQUE_LEVEL).c_str());
         return;
     }
     SocTypeInit(aicoreNumLevel, aicoreFreqLevel);
@@ -964,8 +969,9 @@ rtError_t Runtime::InitSocVersionByHardwareVersion(const uint32_t deviceId, cons
     drvRet = halGetDeviceInfo(workingDev_, MODULE_TYPE_AICORE, INFO_TYPE_CORE_NUM, &vmAicoreNum);
     if (drvRet != DRV_ERROR_NONE) {
         DRV_ERROR_PROCESS(
-            drvRet, "[drv api] halGetDeviceInfo failed: drvRetCode=%u, module type=%d, info type=%d.",
-            static_cast<uint32_t>(drvRet), MODULE_TYPE_AICORE, INFO_TYPE_CORE_NUM);
+            drvRet, "[drv api] halGetDeviceInfo failed: drvRetCode=%u, module type=%s, info type=%s.",
+            static_cast<uint32_t>(drvRet), ModuleTypeToString(MODULE_TYPE_AICORE).c_str(),
+            InfoTypeToString(INFO_TYPE_CORE_NUM).c_str());
         return RT_GET_DRV_ERRCODE(drvRet);
     }
 
@@ -1034,8 +1040,9 @@ rtError_t Runtime::InitSocVersion()
     drvRet = halGetDeviceInfo(workingDev_, MODULE_TYPE_SYSTEM, INFO_TYPE_CORE_NUM, &tsNumber);
     if (drvRet != DRV_ERROR_NONE) {
         DRV_ERROR_PROCESS(
-            drvRet, "Call halGetDeviceInfo failed: drvRetCode=%u, module type=%d, info type=%d.",
-            static_cast<uint32_t>(drvRet), MODULE_TYPE_SYSTEM, INFO_TYPE_CORE_NUM);
+            drvRet, "Call halGetDeviceInfo failed: drvRetCode=%u, module type=%s, info type=%s.",
+            static_cast<uint32_t>(drvRet), ModuleTypeToString(MODULE_TYPE_SYSTEM).c_str(),
+            InfoTypeToString(INFO_TYPE_CORE_NUM).c_str());
         return RT_GET_DRV_ERRCODE(drvRet);
     }
 
@@ -1067,7 +1074,8 @@ rtError_t Runtime::InitChipTypeAndSocVersion()
     ERROR_RETURN_MSG_INNER(ret, "Get all dev properties failed, retCode=%#x.", static_cast<uint32_t>(ret));
     ret = GET_DEV_PROPERTIES(chipType_, curChipProperties_);
     ERROR_RETURN_MSG_INNER(
-        ret, "Get dev properties failed, chipType=%d, retCode=%#x.", chipType_, static_cast<uint32_t>(ret));
+        ret, "Get dev properties failed, chipType=%s, retCode=%#x.", ChipTypeToString(chipType_).c_str(),
+        static_cast<uint32_t>(ret));
     RT_LOG(
         RT_LOG_INFO, "Runtime init: device type=%d, soc version=%s, have device=%d", chipType_, socVersion_.c_str(),
         isHaveDevice_);
@@ -1346,8 +1354,8 @@ bool Runtime::CheckHaveDevice()
     if (drvRet != DRV_ERROR_NONE) {
         if (drvRet != DRV_ERROR_NOT_SUPPORT) {
             DRV_ERROR_PROCESS(
-                drvRet, "Call halGetDeviceInfo failed: drvRet=%d, module type=%d, info type=%d.", drvRet,
-                MODULE_TYPE_SYSTEM, INFO_TYPE_VERSION);
+                drvRet, "Call halGetDeviceInfo failed: drvRet=%d, module type=%s, info type=%s.", drvRet,
+                ModuleTypeToString(MODULE_TYPE_SYSTEM).c_str(), InfoTypeToString(INFO_TYPE_VERSION).c_str());
         } else {
             RT_LOG(
                 RT_LOG_WARNING,
@@ -1456,8 +1464,8 @@ rtError_t Runtime::GetDcacheLockMixOpPath(std::string& dcacheLockMixOpPath) cons
     DevProperties prop;
     rtError_t ret = GET_DEV_PROPERTIES(chipType_, prop);
     COND_RETURN_ERROR_MSG_INNER(
-        ret != RT_ERROR_NONE, ret, "Get dev properties failed, chipType=%d, retCode=%#x.", chipType_,
-        static_cast<uint32_t>(ret));
+        ret != RT_ERROR_NONE, ret, "Get dev properties failed, chipType=%s, retCode=%#x.",
+        ChipTypeToString(chipType_).c_str(), static_cast<uint32_t>(ret));
     if (prop.dcacheLockMixType == DcacheLockMixType::DCACHE_LOCK_MIX_TYPE_FROM_910_B_93) {
         GetCloudV2DcacheLockMixPath(dcacheLockMixOpPath);
     } else if (prop.dcacheLockMixType == DcacheLockMixType::DCACHE_LOCK_MIX_TYPE_FROM_STARS_V2) {
@@ -4339,7 +4347,7 @@ rtError_t Runtime::SetTaskAbortCallBack(const char_t* regName, void* callback, v
         taskAbortCallbackMap_[regName].callbackV2 = RtPtrToPtr<rtsDeviceTaskAbortCallback>(callback);
         taskAbortCallbackMap_[regName].args = args;
     } else {
-        RT_LOG_INNER_MSG(RT_LOG_ERROR, "Task abort callback type %u is invalid.", static_cast<uint32_t>(type));
+        RT_LOG_INNER_MSG(RT_LOG_ERROR, "Task abort callback type UNKNOWN(%u) is invalid.", static_cast<uint32_t>(type));
         return RT_ERROR_INVALID_VALUE;
     }
 
@@ -4391,7 +4399,8 @@ rtError_t Runtime::TaskAbortCallBack(int32_t devId, rtTaskAbortStage_t stage, ui
             error = callback(userDeviceId, newStage, timeout, args);
             ERROR_RETURN_MSG_INNER(error, "regName:%s retCode=%#x.", info.first.c_str(), error);
         } else {
-            RT_LOG_INNER_MSG(RT_LOG_ERROR, "Notify task abort type %u is invalid.", static_cast<uint32_t>(type));
+            RT_LOG_INNER_MSG(
+                RT_LOG_ERROR, "Notify task abort type UNKNOWN(%u) is invalid.", static_cast<uint32_t>(type));
             return error;
         }
         RT_LOG(RT_LOG_DEBUG, "notify [%s] task abort end.", info.first.c_str());
@@ -5471,8 +5480,9 @@ rtError_t Runtime::InitAiCpuCnt()
     const drvError_t drvRet = halGetDeviceInfo(workingDev_, MODULE_TYPE_AICPU, INFO_TYPE_CORE_NUM, &aicpuNum);
     if (drvRet != DRV_ERROR_NONE) {
         DRV_ERROR_PROCESS(
-            drvRet, "[drv api] halGetDeviceInfo failed, drvRetCode=%u, module type=%d, info type=%d.",
-            static_cast<uint32_t>(drvRet), MODULE_TYPE_AICPU, INFO_TYPE_CORE_NUM);
+            drvRet, "[drv api] halGetDeviceInfo failed, drvRetCode=%u, module type=%s, info type=%s.",
+            static_cast<uint32_t>(drvRet), ModuleTypeToString(MODULE_TYPE_AICPU).c_str(),
+            InfoTypeToString(INFO_TYPE_CORE_NUM).c_str());
         return RT_GET_DRV_ERRCODE(drvRet);
     }
     aicpuCnt_ = aicpuNum;

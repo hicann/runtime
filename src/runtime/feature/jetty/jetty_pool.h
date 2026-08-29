@@ -31,6 +31,22 @@ enum class JettyType : uint8_t {
     JETTY_TYPE_MAX
 };
 
+static inline const char* JettyTypeName(const JettyType type)
+{
+    switch (type) {
+        case JettyType::JETTY_TYPE_H2D:
+            return "JETTY_TYPE_H2D";
+        case JettyType::JETTY_TYPE_D2D_IN_BOARD:
+            return "JETTY_TYPE_D2D_IN_BOARD";
+        case JettyType::JETTY_TYPE_D2D_CROSS_BOARD:
+            return "JETTY_TYPE_D2D_CROSS_BOARD";
+        case JettyType::JETTY_TYPE_MAX:
+            return "JETTY_TYPE_MAX";
+        default:
+            return "UNKNOWN";
+    }
+}
+
 enum class JettyState : uint8_t { FREE = 0, BOUND };
 
 enum class JettyAllocMode : uint8_t { POOLED = 0, DIRECT };

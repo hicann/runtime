@@ -44,7 +44,8 @@ Driver* DriverFactory::GetDriverIfCreated(const driverType_t type) const
     const int32_t typeValue = static_cast<int32_t>(type);
     if ((typeValue < 0) || (typeValue >= static_cast<int32_t>(MAX_DRIVER_NUM))) {
         RT_LOG(
-            RT_LOG_ERROR, "driver type is invalid, type=%d, max=%d.", typeValue, static_cast<int32_t>(MAX_DRIVER_NUM));
+            RT_LOG_ERROR, "driver type is invalid, type=UNKNOWN(%d), max=%d.", typeValue,
+            static_cast<int32_t>(MAX_DRIVER_NUM));
         return nullptr;
     }
     return drivers_[type].load();

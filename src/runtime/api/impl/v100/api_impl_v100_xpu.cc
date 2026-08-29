@@ -92,7 +92,7 @@ rtError_t ApiImpl::GetXpuDevCount(const rtXpuDevType devType, uint32_t* devCount
             break;
         default:
             RT_LOG(
-                RT_LOG_ERROR, "devType=%d is invalid, retCode=%#x", devType,
+                RT_LOG_ERROR, "devType=UNKNOWN(%d) is invalid, retCode=%#x", devType,
                 static_cast<uint32_t>(RT_ERROR_INVALID_VALUE));
             error = RT_ERROR_INVALID_VALUE;
             break;

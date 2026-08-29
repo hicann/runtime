@@ -48,8 +48,8 @@ rtError_t JettyPool::CreateJetty(JettyType type, uint32_t depth, JettyInfo& jett
 
     rtError_t error = driver->AsyncDmaJettyCreate(deviceId_, 1U, depth, dir, &handle);
     COND_RETURN_ERROR(
-        error != RT_ERROR_NONE, error, "Create jetty failed, device_id=%u, type=%d, depth=%u, retCode=%#x.", deviceId_,
-        static_cast<int32_t>(type), depth, error);
+        error != RT_ERROR_NONE, error, "Create jetty failed, device_id=%u, type=%s(%d), depth=%u, retCode=%#x.",
+        deviceId_, JettyTypeName(type), static_cast<int32_t>(type), depth, error);
 
     uint32_t dieId = 0U;
     uint32_t functionId = 0U;
@@ -134,8 +134,8 @@ rtError_t JettyPool::FreeJetty(uint64_t handle, JettyAllocMode mode, JettyType t
             const rtError_t ret = driver->AsyncDmaJettyDestroy(deviceId_, it->handle);
             if (ret != RT_ERROR_NONE) {
                 RT_LOG(
-                    RT_LOG_ERROR, "Destroy jetty failed, device_id=%u, handle=%llu, jetty_id=%u, retCode=%#x.",
-                    deviceId_, handle, it->jettyId, ret);
+                    RT_LOG_ERROR, "Destroy jetty failed, device_id=%u, type=%s(%d), jetty_id=%u, retCode=%#x.",
+                    deviceId_, JettyTypeName(type), static_cast<int32_t>(type), it->jettyId, ret);
                 return ret;
             }
             RT_LOG(

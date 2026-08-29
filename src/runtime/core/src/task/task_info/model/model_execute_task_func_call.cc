@@ -26,6 +26,7 @@
 #include "capture_model_utils.hpp"
 #include "capture_model.hpp"
 #include "cond_op_manager.hpp"
+#include "enum_desc.hpp"
 
 namespace cce {
 namespace runtime {
@@ -326,8 +327,8 @@ static rtError_t FuncCallSvmMemCopy(const Device* const dev, const Model* const 
     COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
     error = drv->MemCopySync(dst, size, model->GetFuncCallHostMem(), size, kind);
     COND_RETURN_ERROR(
-        (error != RT_ERROR_NONE), error, "Memcpy failed, size=%" PRIu64 "(bytes), type=%d, retCode=%#x, device_id=%u.",
-        size, kind, static_cast<uint32_t>(error), devId);
+        (error != RT_ERROR_NONE), error, "Memcpy failed, size=%" PRIu64 "(bytes), type=%s, retCode=%#x, device_id=%u.",
+        size, MemcpyKindToStr(kind), static_cast<uint32_t>(error), devId);
     error = BinaryMemAdvise(adviseAddr, adviseSize, RT_ADVISE_ACCESS_READONLY, dev, needAdvise);
     COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
     return RT_ERROR_NONE;

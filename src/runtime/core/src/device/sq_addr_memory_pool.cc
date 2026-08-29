@@ -66,9 +66,9 @@ uint32_t SqAddrMemoryOrder::GetMemOrderTypeByMemSize(const uint32_t memSize) con
 
     if (memOrderType >= SQ_ADDR_MEM_ORDER_TYPE_MAX) {
         RT_LOG_INNER_MSG(
-            RT_LOG_ERROR,
-            "GetMemOrderTypeByMemSize failed because value %u for memOrderType is invalid. Expected value: [%u, %u).",
-            memOrderType, SQ_ADDR_MEM_ORDER_TYPE_32K, SQ_ADDR_MEM_ORDER_TYPE_MAX);
+            RT_LOG_ERROR, "GetMemOrderTypeByMemSize failed because memOrderType=UNKNOWN(%u). Expected value: [%u, %u).",
+            static_cast<uint32_t>(memOrderType), static_cast<uint32_t>(SQ_ADDR_MEM_ORDER_TYPE_32K),
+            static_cast<uint32_t>(SQ_ADDR_MEM_ORDER_TYPE_MAX));
     }
 
     return static_cast<uint32_t>(memOrderType);

@@ -8,6 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "api_error.hpp"
+#include "device_enum_desc.hpp"
+#include "capture_model_enum_desc.hpp"
 #include "enum_desc.hpp"
 #include "osal.hpp"
 #include "program.hpp"
@@ -444,7 +446,7 @@ rtError_t ApiErrorDecorator::CheckArgsWithType(const Kernel* kernel, const RtArg
             break;
         }
         default:
-            RT_LOG(RT_LOG_ERROR, "check args failed. type=%u", static_cast<uint32_t>(argsWithType->type));
+            RT_LOG(RT_LOG_ERROR, "check args failed. type=UNKNOWN(%u)", static_cast<uint32_t>(argsWithType->type));
             error = RT_ERROR_INVALID_VALUE;
             break;
     }
@@ -5068,7 +5070,7 @@ rtError_t ApiErrorDecorator::GetDevMsg(const rtGetDevMsgType_t getMsgType, const
 {
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(callback, RT_ERROR_INVALID_VALUE, "Obtaining device-related messages");
     const rtError_t error = impl_->GetDevMsg(getMsgType, callback);
-    ERROR_RETURN(error, "GetDeviceMsg failed, getMsgType=%d.", static_cast<int32_t>(getMsgType));
+    ERROR_RETURN(error, "GetDeviceMsg failed, getMsgType=%s.", GetDevMsgTypeToString(getMsgType).c_str());
     return error;
 }
 
@@ -5815,7 +5817,8 @@ rtError_t ApiErrorDecorator::CmoAddrTaskLaunch(
     DevProperties devProperty{};
     rtError_t error = GET_DEV_PROPERTIES(chipType, devProperty);
     COND_RETURN_ERROR_MSG_INNER(
-        error != RT_ERROR_NONE, RT_ERROR_DRV_INVALID_DEVICE, "Failed to get dev properties, chipType = %u", chipType);
+        error != RT_ERROR_NONE, RT_ERROR_DRV_INVALID_DEVICE, "Failed to get dev properties, chipType=%s",
+        ChipTypeToString(chipType).c_str());
     const uint64_t sizeMax = (devProperty.cmoAddrInfoType == CmoAddrInfoType::CMO_ADDR_INFO_TYPE_DAVID) ?
                                  sizeof(rtDavidCmoAddrInfo) :
                                  sizeof(rtCmoAddrInfo);
@@ -7618,8 +7621,8 @@ rtError_t ApiErrorDecorator::ModelGetStreams(const Model* const mdl, Stream** st
         const CaptureModel* captureModel = dynamic_cast<const CaptureModel*>(mdl);
         if (captureModel == nullptr) {
             RT_LOG(
-                RT_LOG_ERROR, "dynamic_cast to CaptureModel failed, model_type=%d, model_id=%u.", mdl->GetModelType(),
-                mdl->Id_());
+                RT_LOG_ERROR, "dynamic_cast to CaptureModel failed, model_type=%s, model_id=%u.",
+                ModelTypeToString(mdl->GetModelType()).c_str(), mdl->Id_());
             return RT_ERROR_MODEL_NULL;
         }
         COND_RETURN_WARN(

@@ -19,6 +19,7 @@
 #include "model.hpp"
 #include "notify.hpp"
 #include "model_c.hpp"
+#include "task_info.hpp"
 
 namespace cce {
 namespace runtime {
@@ -129,8 +130,8 @@ rtError_t LaunchModelSerialSchedTaskByType(Stream* const stm, const tsTaskType_t
 {
     const auto iter = MODEL_SERIAL_SCHED_TASK_INIT_FUNC_MAP.find(type);
     COND_RETURN_ERROR_MSG_INNER(
-        iter == MODEL_SERIAL_SCHED_TASK_INIT_FUNC_MAP.end(), RT_ERROR_INVALID_VALUE, "type[%d] is invalid",
-        static_cast<int32_t>(type));
+        iter == MODEL_SERIAL_SCHED_TASK_INIT_FUNC_MAP.end(), RT_ERROR_INVALID_VALUE, "type=%s(%d) is invalid",
+        GetTaskDescByType(type), static_cast<int32_t>(type));
 
     const ModelSerialSchedTaskInitInfo* taskInitInfo = &(iter->second);
     const int32_t streamId = stm->Id_();

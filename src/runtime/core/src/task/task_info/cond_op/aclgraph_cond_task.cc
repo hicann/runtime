@@ -223,8 +223,8 @@ rtError_t CaptureConditionTaskInit(TaskInfo* taskInfo, CondHandle* condHandle)
 
     condTaskInfo->funCallMemSize = GetFuncCallMemSizeForCaptureCondTask(condHandle->GetCondType());
     COND_RETURN_ERROR(
-        condTaskInfo->funCallMemSize == 0U, RT_ERROR_INVALID_VALUE, "Invalid cond type, cond type=%d",
-        condHandle->GetCondType());
+        condTaskInfo->funCallMemSize == 0U, RT_ERROR_INVALID_VALUE, "Invalid cond type, cond type=%s",
+        CondTaskTypeToString(condHandle->GetCondType()).c_str());
 
     Notify* notify = condHandle->GetSubModelNotify();
     COND_RETURN_ERROR((notify == nullptr), RT_ERROR_NOTIFY_NULL, "Sub model end graph notify is null.");
@@ -539,14 +539,15 @@ rtError_t ReConstructCaptureConditionTaskFc(TaskInfo* taskInfo, CondHandle* cond
     ret = ConstructCaptureCondTaskPara(taskInfo, condHandle, para);
     COND_RETURN_ERROR(
         ret != RT_ERROR_NONE, ret,
-        "construct cond task para failed, device_id=%u, stream_id=%d, task_id=%u, condtype=%d, retCode=%#x.",
-        dev->Id_(), stream->Id_(), taskInfo->id, condTaskInfo->condHandle->GetCondType(), ret);
+        "construct cond task para failed, device_id=%u, stream_id=%d, task_id=%u, condtype=%s, retCode=%#x.",
+        dev->Id_(), stream->Id_(), taskInfo->id, CondTaskTypeToString(condTaskInfo->condHandle->GetCondType()).c_str(),
+        ret);
 
     ret = ConstructCaptureCondTaskFc(condTaskInfo, para);
     COND_RETURN_ERROR(
         ret != RT_ERROR_NONE, ret,
-        "construct cond task fc failed, device_id=%u, stream_id=%d, task_id=%u, condtype=%d, retCode=%#x.", dev->Id_(),
-        stream->Id_(), taskInfo->id, condTaskInfo->condHandle->GetCondType(), ret);
+        "construct cond task fc failed, device_id=%u, stream_id=%d, task_id=%u, condtype=%s, retCode=%#x.", dev->Id_(),
+        stream->Id_(), taskInfo->id, CondTaskTypeToString(condTaskInfo->condHandle->GetCondType()).c_str(), ret);
 
     ret = drv->MemCopySync(
         condTaskInfo->funcCallSvmMem, condTaskInfo->funCallMemSize, condTaskInfo->funcCallHostMem,

@@ -37,6 +37,7 @@
 #include "capture_model.hpp"
 #include "model_c.hpp"
 #include "aicpu_timeout_manager.h"
+#include "task_info.hpp"
 
 namespace {
 constexpr uint16_t TASK_RECLAIM_MAX_NUM = 64U;       // Max reclaim num per query.
@@ -1355,8 +1356,8 @@ rtError_t StarsEngine::SubmitSend(TaskInfo* const workTask, uint32_t* const flip
     rtError_t error = SendTask(workTask, taskId, flipTaskId);
     if (error != RT_ERROR_NONE) {
         RT_LOG(
-            RT_LOG_ERROR, "Failed to send task, streamId=%d, taskId=%hu, taskType=%u, retCode=%#x.", stm->Id_(),
-            workTask->id, workTask->type, error);
+            RT_LOG_ERROR, "Failed to send task, streamId=%d, taskId=%hu, taskType=%s(%u), retCode=%#x.", stm->Id_(),
+            workTask->id, GetTaskDescByType(workTask->type), workTask->type, error);
         if (!(bindFlag && (error == RT_ERROR_STREAM_FULL))) {
             TaskFinished(device->Id_(), workTask);
         }
@@ -1433,8 +1434,9 @@ rtError_t StarsEngine::StarsResumeRtsq(
             (Runtime::Instance()->IsSupportOpTimeoutMs() && (failStm->GetFailureMode() == ABORT_ON_FAILURE)),
             RT_ERROR_NONE,
             "Failed to resume RTSQ. Reason: stop scheduling in abort failure mode, stream_id=%hu, sq_id=%hu, "
-            "sq_head=%hu, task_id=%hu, taskType=%hu.",
-            logicCq.streamId, logicCq.sqId, logicCq.sqHead, logicCq.taskId, taskType);
+            "sq_head=%hu, task_id=%hu, taskType=%s(%hu).",
+            logicCq.streamId, logicCq.sqId, logicCq.sqHead, logicCq.taskId,
+            GetTaskDescByType(static_cast<uint8_t>(taskType)), taskType);
         if ((cnt++ % pollingCycleCnt) == 0U) {
             queryCnt++;
             error = devDrv->GetSqEnable(devId, tsId, static_cast<uint32_t>(logicCq.sqId), enable);
@@ -1494,8 +1496,9 @@ rtError_t StarsEngine::StarsResumeRtsq(
         RT_LOG(
             RT_LOG_ERROR,
             "stop scheduling due to SQ is destroyed : stream_id=%hu, sq_id=%hu, logicCq sq_head=%hu"
-            ", task_id=%hu, taskType=%hu, sq_head=%hu, sq_tail=%hu.",
-            logicCq.streamId, logicCq.sqId, logicCq.sqHead, logicCq.taskId, taskType, sqHead, sqTail);
+            ", task_id=%hu, taskType=%s(%hu), sq_head=%hu, sq_tail=%hu.",
+            logicCq.streamId, logicCq.sqId, logicCq.sqHead, logicCq.taskId,
+            GetTaskDescByType(static_cast<uint8_t>(taskType)), taskType, sqHead, sqTail);
         return RT_ERROR_NONE;
     }
 
@@ -1508,8 +1511,9 @@ rtError_t StarsEngine::StarsResumeRtsq(
         RT_LOG(
             RT_LOG_ERROR,
             "Failed to resume RTSQ. Reason: stop scheduling in abort failure mode, stream_id=%hu, sq_id=%hu, "
-            "sq_head=%hu, task_id=%hu, taskType=%hu.",
-            logicCq.streamId, logicCq.sqId, logicCq.sqHead, logicCq.taskId, taskType);
+            "sq_head=%hu, task_id=%hu, taskType=%s(%hu).",
+            logicCq.streamId, logicCq.sqId, logicCq.sqHead, logicCq.taskId,
+            GetTaskDescByType(static_cast<uint8_t>(taskType)), taskType);
         return RT_ERROR_NONE;
     }
 

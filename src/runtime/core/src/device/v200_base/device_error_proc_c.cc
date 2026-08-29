@@ -317,7 +317,7 @@ static const DavidErrorBitMask* g_davidErrorBitMaskByChip[CHIP_END] = {};
 void RegDavidErrorBitMask(rtChipType_t chipType, const DavidErrorBitMask* mask)
 {
     if (chipType < CHIP_BEGIN || chipType >= CHIP_END) {
-        RT_LOG(RT_LOG_ERROR, "Invalid chipType = %d, valid range: [%d, %d).", chipType, CHIP_BEGIN, CHIP_END);
+        RT_LOG(RT_LOG_ERROR, "Invalid chipType=UNKNOWN(%d), valid range: [%d, %d).", chipType, CHIP_BEGIN, CHIP_END);
         return;
     }
     g_davidErrorBitMaskByChip[chipType] = mask;
@@ -326,7 +326,7 @@ void RegDavidErrorBitMask(rtChipType_t chipType, const DavidErrorBitMask* mask)
 const DavidErrorBitMask* GetDavidErrorBitMask(rtChipType_t chipType)
 {
     if (chipType < CHIP_BEGIN || chipType >= CHIP_END) {
-        RT_LOG(RT_LOG_ERROR, "Invalid chipType = %d, valid range: [%d, %d).", chipType, CHIP_BEGIN, CHIP_END);
+        RT_LOG(RT_LOG_ERROR, "Invalid chipType=UNKNOWN(%d), valid range: [%d, %d).", chipType, CHIP_BEGIN, CHIP_END);
         return nullptr;
     }
     return g_davidErrorBitMaskByChip[chipType];

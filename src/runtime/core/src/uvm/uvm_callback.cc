@@ -18,6 +18,24 @@
 namespace cce {
 namespace runtime {
 
+namespace {
+const char_t* UvmLocationTypeName(const drv_uvm_location_type type)
+{
+    switch (type) {
+        case DRV_UVM_LOCATION_TYPE_INVALID:
+            return "DRV_UVM_LOCATION_TYPE_INVALID";
+        case DRV_UVM_LOCATION_TYPE_DEVICE:
+            return "DRV_UVM_LOCATION_TYPE_DEVICE";
+        case DRV_UVM_LOCATION_TYPE_HOST:
+            return "DRV_UVM_LOCATION_TYPE_HOST";
+        case DRV_UVM_LOCATION_TYPE_HOST_NUMA:
+            return "DRV_UVM_LOCATION_TYPE_HOST_NUMA";
+        default:
+            return "UNKNOWN";
+    }
+}
+} // namespace
+
 void UvmCallback::MemsetAsyncCallback(void* fnData)
 {
     NULL_PTR_RETURN_DIRECTLY(fnData);
@@ -169,10 +187,10 @@ void UvmCallback::PrefetchCallbackWrapper(void* userData)
     if (drvRet != RT_ERROR_NONE) {
         DRV_ERROR_PROCESS(
             drvRet,
-            "[drv api] halMemManagedPrefetch failed: size=%zu, loc_type=%u, loc_id=%d, flags=%u, "
+            "[drv api] halMemManagedPrefetch failed: size=%zu, loc_type=%s(%u), loc_id=%d, flags=%u, "
             "drvRetCode=%d!",
-            params->size, static_cast<uint32_t>(params->location.type), params->location.id, params->flags,
-            static_cast<int32_t>(drvRet));
+            params->size, UvmLocationTypeName(params->location.type), static_cast<uint32_t>(params->location.type),
+            params->location.id, params->flags, static_cast<int32_t>(drvRet));
     }
     DELETE_O(params);
     return;

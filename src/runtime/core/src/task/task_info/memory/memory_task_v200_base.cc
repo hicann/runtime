@@ -262,8 +262,8 @@ static rtError_t ConvertUBDmaBatchForModel(TaskInfo* const taskInfo, AsyncDmaBat
     error = StreamJettyHandler::HandleUbDmaTask(taskInfo, jettyType, &input, &output);
     if (error != RT_ERROR_NONE) {
         RT_LOG(
-            RT_LOG_ERROR, "HandleUbDmaTask failed, device_id=%u, stream_id=%d, jetty_type=%u, retCode=%#x.", devId,
-            stream->Id_(), jettyType, error);
+            RT_LOG_ERROR, "HandleUbDmaTask failed, device_id=%u, stream_id=%d, jetty_type=%s(%u), retCode=%#x.", devId,
+            stream->Id_(), JettyTypeName(jettyType), static_cast<uint32_t>(jettyType), error);
         return error;
     }
     memcpyAsyncTaskInfo->ubDma.fixedSize = output.fixedSize;

@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "runtime_keeper.h"
+#include "device_enum_desc.hpp"
 #include "runtime.hpp"
 #include "errcode_manage.hpp"
 #include "error_message_manage.hpp"
@@ -80,8 +81,10 @@ rtError_t GetDeviceType(int64_t* hwVersion)
     if (drvRet != DRV_ERROR_NONE) {
         if (drvRet != DRV_ERROR_NOT_SUPPORT) {
             DRV_ERROR_PROCESS(
-                drvRet, "Call halGetDeviceInfo failed: drvRet=%d, module type=%d, info type=%d.", drvRet,
-                MODULE_TYPE_SYSTEM, INFO_TYPE_VERSION);
+                drvRet,
+                "Call halGetDeviceInfo failed: drvRet=%d, module type=MODULE_TYPE_SYSTEM(%d), "
+                "info type=INFO_TYPE_VERSION(%d).",
+                drvRet, MODULE_TYPE_SYSTEM, INFO_TYPE_VERSION);
         } else {
             RT_LOG(
                 RT_LOG_WARNING,
@@ -180,7 +183,7 @@ static const std::string GetLibRuntimeSoName()
     std::string soName;
     const rtError_t ret = GET_PLATFORM_LIB_INFO(chipType, soName);
     if ((ret != RT_ERROR_NONE) || (soName.empty())) {
-        RT_LOG(RT_LOG_ERROR, "Find chipType %d fail", static_cast<int32_t>(chipType));
+        RT_LOG(RT_LOG_ERROR, "Find chipType %s(%d) fail", ChipTypeToName(chipType), static_cast<int32_t>(chipType));
         return LIBRUNTIME_SO_NAME;
     }
     return soName;

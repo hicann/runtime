@@ -9,6 +9,7 @@
  */
 
 #include "thread_local_container.hpp"
+#include "device_enum_desc.hpp"
 #include "inner_thread_local.hpp"
 #include "runtime_task_manager.h"
 #include "stream_sqcq_manage.hpp"
@@ -39,7 +40,8 @@ rtError_t InitFuncCallParaForStreamActiveTask(
     DevProperties props;
     rtError_t error = GET_DEV_PROPERTIES(chipType, props);
     COND_RETURN_ERROR_MSG_INNER(
-        error != RT_ERROR_NONE, RT_ERROR_INVALID_VALUE, "GetDevProperties failed, chip type=%d.", chipType);
+        error != RT_ERROR_NONE, RT_ERROR_INVALID_VALUE, "GetDevProperties failed, chip type=%s.",
+        ChipTypeToString(chipType).c_str());
     if (props.isSupportInitFuncCallPara) {
         fcPara.rtSqFsmStateAddr = props.rtsqVirtualAddr.rtSqFsmStateAddr;
         fcPara.rtSqEnableAddr = props.rtsqVirtualAddr.rtSqEnableAddr + sqVirtualAddr;

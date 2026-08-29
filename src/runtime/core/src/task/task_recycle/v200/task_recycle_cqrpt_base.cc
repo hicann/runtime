@@ -209,8 +209,9 @@ rtError_t StarsResumeRtsq(const rtCqReport_t* logicCq, const TaskInfo* const tas
         RT_LOG(
             RT_LOG_ERROR,
             "stop scheduling in abort failure mode: stream_id=%d, sq_id=%hu, sq_head=%hu"
-            ", task_id=%hu, taskType=%hu.",
-            failStm->Id_(), logicCq->sqId, logicCq->sqHead, logicCq->sqHead, taskInfo->type);
+            ", task_id=%hu, taskType=%s(%hu).",
+            failStm->Id_(), logicCq->sqId, logicCq->sqHead, logicCq->sqHead, GetTaskDescByType(taskInfo->type),
+            taskInfo->type);
         return RT_ERROR_NONE;
     }
 

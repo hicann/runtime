@@ -34,6 +34,24 @@ enum class DqsInterChipTaskType : int32_t {
     DQS_INTER_CHIP_TASK_NOP
 };
 
+static inline const char* DqsInterChipTaskTypeName(const DqsInterChipTaskType type)
+{
+    switch (type) {
+        case DqsInterChipTaskType::DQS_INTER_CHIP_TASK_PREPROC:
+            return "DQS_INTER_CHIP_TASK_PREPROC";
+        case DqsInterChipTaskType::DQS_INTER_CHIP_TASK_MEMCPY_MBUF_HEAD:
+            return "DQS_INTER_CHIP_TASK_MEMCPY_MBUF_HEAD";
+        case DqsInterChipTaskType::DQS_INTER_CHIP_TASK_MEMCPY_MBUF_DATA:
+            return "DQS_INTER_CHIP_TASK_MEMCPY_MBUF_DATA";
+        case DqsInterChipTaskType::DQS_INTER_CHIP_TASK_POSTPROC:
+            return "DQS_INTER_CHIP_TASK_POSTPROC";
+        case DqsInterChipTaskType::DQS_INTER_CHIP_TASK_NOP:
+            return "DQS_INTER_CHIP_TASK_NOP";
+        default:
+            return "UNKNOWN";
+    }
+}
+
 } // namespace runtime
 } // namespace cce
 

@@ -474,14 +474,14 @@ rtError_t StreamJettyHandler::RecycleJetty(Stream* stream, JettyType type, uint3
     }
     rtError_t error = ResetJettyCi(jettyMgr, stream, type, jettyCtx);
     COND_RETURN_ERROR(
-        (error != RT_ERROR_NONE), error, "ResetJettyCi failed, stream_id=%d, type=%d, retCode=%#x.", streamId,
-        static_cast<int32_t>(type), error);
+        (error != RT_ERROR_NONE), error, "ResetJettyCi failed, stream_id=%d, type=%s(%d), retCode=%#x.", streamId,
+        JettyTypeName(type), static_cast<int32_t>(type), error);
 
     if (jettyCtx->allocMode == JettyAllocMode::POOLED) {
         error = jettyMgr->UnbindJettyForStream(streamId, type);
         COND_RETURN_ERROR(
-            error != RT_ERROR_NONE, error, "UnbindJettyForStream failed, stream_id=%d, type=%d, retCode=%#x.", streamId,
-            static_cast<int32_t>(type), error);
+            error != RT_ERROR_NONE, error, "UnbindJettyForStream failed, stream_id=%d, type=%s(%d), retCode=%#x.",
+            streamId, JettyTypeName(type), static_cast<int32_t>(type), error);
         count++;
     }
     return RT_ERROR_NONE;

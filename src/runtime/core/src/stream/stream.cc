@@ -10,6 +10,7 @@
 #include <cinttypes>
 #include <iomanip>
 #include "stream.hpp"
+#include "device_enum_desc.hpp"
 #include "model_update_task.h"
 #include "runtime_handle_guard.h"
 #include "arg_loader.hpp"
@@ -1991,8 +1992,8 @@ rtError_t Stream::SynchronizeExecutedTask(const uint32_t taskId, const mmTimespe
         COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "Context is abort, status=%#x.", static_cast<uint32_t>(error));
         COND_RETURN_ERROR_MSG_INNER(
             (GetStreamStatus() != StreamStatus::NORMAL), RT_ERROR_STREAM_SYNC,
-            "The stream status is %u (NORMAL=0, ABNORMAL=1), device_id=%u, stream_id=%d.",
-            static_cast<uint32_t>(GetStreamStatus()), device_->Id_(), Id_());
+            "The stream status is ABNORMAL(%u), device_id=%u, stream_id=%d.", static_cast<uint32_t>(GetStreamStatus()),
+            device_->Id_(), Id_());
         const uint16_t exeEndTaskId = GetExecuteEndTaskId();
         if (((exeEndTaskId != MAX_UINT16_NUM) && IsTaskExcuted(exeEndTaskId, taskId)) || (sqHead == posTail)) {
             return RT_ERROR_NONE;
@@ -3019,8 +3020,9 @@ rtError_t Stream::WaitForTask(const uint32_t taskId, const bool isNeedWaitSyncCq
                 COND_RETURN_ERROR_MSG_INNER(
                     (count >= static_cast<uint64_t>(timeout)), RT_ERROR_STREAM_SYNC_TIMEOUT,
                     "Stream synchronize timeout, device_id=%u, stream_id=%d, time=%" PRIu64 "ms, timeout=%dms, "
-                    "tryCount=%u, RunningState=%u.",
-                    deviceId, streamId_, count, timeout, tryCount, device_->GetDevRunningState());
+                    "tryCount=%u, RunningState=%s.",
+                    deviceId, streamId_, count, timeout, tryCount,
+                    DevRunningStateToString(device_->GetDevRunningState()).c_str());
             }
             (void)sched_yield();
         }
@@ -3151,8 +3153,8 @@ rtError_t Stream::ExecPendingList(uint32_t hostTaskType)
         if (retCode != RT_ERROR_NONE) {
             errorCode = retCode;
             RT_LOG(
-                RT_LOG_ERROR, "ExecPendingList result failed, hostTaskType = %d, retCode = %#x.", hostTaskType,
-                errorCode);
+                RT_LOG_ERROR, "ExecPendingList result failed, hostTaskType=HOST_TASK_TYPE_MEMCPY(%u), retCode=%#x.",
+                hostTaskType, errorCode);
         }
         DELETE_O(*iter);
     }
@@ -3656,8 +3658,8 @@ rtError_t Stream::UpdateAllPersistentTask()
                 break;
             default:
                 RT_LOG(
-                    RT_LOG_ERROR, "Invalid updateFlag: updateFlag=%d, stream_id=%d, task_id=%hu", workTask->updateFlag,
-                    streamId_, workTask->id);
+                    RT_LOG_ERROR, "Invalid updateFlag: updateFlag=UNKNOWN(%u), stream_id=%d, task_id=%hu",
+                    static_cast<uint32_t>(workTask->updateFlag), streamId_, workTask->id);
                 error = RT_ERROR_INVALID_VALUE;
                 break;
         }

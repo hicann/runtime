@@ -64,8 +64,8 @@ rtError_t CaptureModel::RefreshJettyInfoList()
             JettyInfo jettyInfo = {};
             const rtError_t ret = jettyMgr->GetJettyInfoForStream(streamId, type, jettyInfo);
             COND_RETURN_ERROR(
-                (ret != RT_ERROR_NONE), ret, "GetJettyInfoForStream failed, stream_id=%d, type=%d, retCode=%#x.",
-                streamId, static_cast<int32_t>(type), ret);
+                (ret != RT_ERROR_NONE), ret, "GetJettyInfoForStream failed, stream_id=%d, type=%s(%d), retCode=%#x.",
+                streamId, JettyTypeName(type), static_cast<int32_t>(type), ret);
 
             UbAsyncJettyInfo info = {};
             info.dieId = static_cast<uint16_t>(std::min(jettyInfo.dieId, static_cast<uint32_t>(UINT16_MAX)));

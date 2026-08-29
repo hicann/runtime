@@ -5938,3 +5938,18 @@ TEST_F(ContextTest, StreamEndTaskUpdate_AllTasksUpdated_ReturnsSuccess)
     ASSERT_EQ(stm->UpdateTaskGroupStatus(StreamTaskGroupStatus::NONE), RT_ERROR_NONE);
     EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
 }
+
+TEST_F(ContextTest, StreamBeginTaskUpdateReportsStatusOnUpdateFailure)
+{
+    rtStream_t stream = nullptr;
+    ASSERT_EQ(rtStreamCreate(&stream, 0), RT_ERROR_NONE);
+    Stream* const stm = rt_ut::UnwrapOrNull<Stream>(stream);
+    ASSERT_NE(stm, nullptr);
+
+    TaskGroup taskGroup;
+    MOCKER_CPP(&Stream::UpdateTaskGroupStatus).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    EXPECT_EQ(stm->Context_()->StreamBeginTaskUpdate(stm, &taskGroup), RT_ERROR_INVALID_VALUE);
+
+    GlobalMockObject::verify();
+    EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
+}

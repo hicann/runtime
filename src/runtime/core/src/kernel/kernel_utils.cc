@@ -222,7 +222,9 @@ rtError_t UpdateKernelParams(TaskInfo* const taskInfo, rtTaskParams* const param
             "The input task must be a compute task on the Cube Core or Vector Core. Before calling "
             "aclmdlRITaskSetParams, "
             "use aclmdlRITaskGetType to obtain the task type and check whether the task type is correct");
-        RT_LOG(RT_LOG_ERROR, "Invalid taskInfo type(%d), expect 0(AI core) or 66(AI vector)", taskInfo->type);
+        RT_LOG(
+            RT_LOG_ERROR, "Invalid taskInfo type=%s(%d), expect 0(AI core) or 66(AI vector)",
+            GetTaskDescByType(taskInfo->type), taskInfo->type);
         return RT_ERROR_INVALID_VALUE;
     }
     COND_RETURN_AND_MSG_OUTER(
@@ -314,7 +316,9 @@ rtError_t GetKernelAttribute(
             "The input task must be a compute task on the Cube Core or Vector Core. Before calling "
             "aclmdlRIKernelTaskGetAttribute, "
             "use aclmdlRITaskGetType to obtain the task type and check whether the task type is correct");
-        RT_LOG(RT_LOG_ERROR, "Invalid taskInfo type(%d), expect 0(AI core) or 66(AI vector)", taskInfo->type);
+        RT_LOG(
+            RT_LOG_ERROR, "Invalid taskInfo type=%s(%d), expect 0(AI core) or 66(AI vector)",
+            GetTaskDescByType(taskInfo->type), taskInfo->type);
         return RT_ERROR_INVALID_VALUE;
     }
 

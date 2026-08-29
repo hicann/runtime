@@ -25,7 +25,7 @@
 namespace {
 constexpr int32_t DEVICE_UTILIZATION_NOT_SUPPORT = -1;
 
-int32_t GetAllUtilizations(const int32_t deviceId, const rtTypeUtil_t utilType)
+int32_t GetAllUtilizations(const int32_t deviceId, const rtTypeUtil_t utilType, const char* const utilTypeName)
 {
     uint8_t utilRate = 0U;
     const rtError_t rtErr = rtGetAllUtilizations(deviceId, utilType, &utilRate);
@@ -37,8 +37,8 @@ int32_t GetAllUtilizations(const int32_t deviceId, const rtTypeUtil_t utilType)
     }
     if (rtErr != RT_ERROR_NONE) {
         ACL_LOG_CALL_ERROR(
-            "rtGetAllUtilizations failed, utilType = %d, runtime result = %d.", static_cast<int32_t>(utilType),
-            static_cast<int32_t>(rtErr));
+            "rtGetAllUtilizations failed, utilType=%s(%d), runtime result=%d.", utilTypeName,
+            static_cast<int32_t>(utilType), static_cast<int32_t>(rtErr));
         return DEVICE_UTILIZATION_NOT_SUPPORT;
     }
     ACL_LOG_INFO(
@@ -209,9 +209,9 @@ aclError aclrtGetDeviceUtilizationRateImpl(int32_t deviceId, aclrtUtilizationInf
     ACL_CHECK_INVALID_PARAM_NO_VALUE(
         utilizationExtend == nullptr, "utilizationInfo->utilizationExtend",
         "utilizationExtend is a reserved parameter and must be nullptr");
-    utilizationInfo->cubeUtilization = GetAllUtilizations(deviceId, RT_UTIL_TYPE_AICORE);
-    utilizationInfo->vectorUtilization = GetAllUtilizations(deviceId, RT_UTIL_TYPE_AIVECTOR);
-    utilizationInfo->aicpuUtilization = GetAllUtilizations(deviceId, RT_UTIL_TYPE_AICPU);
+    utilizationInfo->cubeUtilization = GetAllUtilizations(deviceId, RT_UTIL_TYPE_AICORE, "UTIL_TYPE_AICORE");
+    utilizationInfo->vectorUtilization = GetAllUtilizations(deviceId, RT_UTIL_TYPE_AIVECTOR, "UTIL_TYPE_AIVECTOR");
+    utilizationInfo->aicpuUtilization = GetAllUtilizations(deviceId, RT_UTIL_TYPE_AICPU, "UTIL_TYPE_AICPU");
     // Currently, memory is not supported
     utilizationInfo->memoryUtilization = DEVICE_UTILIZATION_NOT_SUPPORT;
     ACL_LOG_INFO("successfully execute aclrtGetDeviceUtilizationRate, device is %d.", deviceId);

@@ -16,9 +16,57 @@
 #include "runtime_task_manager.h"
 #include "task_info.hpp"
 #include "model_maintaince_task.h"
+#include "capture_model_enum_desc.hpp"
+#include "securec.h"
 
 namespace cce {
 namespace runtime {
+
+namespace {
+const char_t* ModelMaintainceTypeToString(const MmtType type)
+{
+    switch (type) {
+        case MMT_STREAM_ADD:
+            return "MMT_STREAM_ADD(0)";
+        case MMT_STREAM_DEL:
+            return "MMT_STREAM_DEL(1)";
+        case MMT_MODEL_LOAD_COMPLETE:
+            return "MMT_MODEL_LOAD_COMPLETE(2)";
+        case MMT_MODEL_DESTROY:
+            return "MMT_MODEL_DESTROY(3)";
+        case MMT_MODEL_PRE_PROC:
+            return "MMT_MODEL_PRE_PROC(4)";
+        case MMT_STREAM_LOAD_COMPLETE:
+            return "MMT_STREAM_LOAD_COMPLETE(5)";
+        case MMT_MODEL_ABORT:
+            return "MMT_MODEL_ABORT(6)";
+        case MMT_RESERVED:
+            return "MMT_RESERVED(7)";
+        default:
+            break;
+    }
+    static thread_local char_t enumBuf[32];
+    (void)snprintf_s(enumBuf, sizeof(enumBuf), sizeof(enumBuf) - 1U, "UNKNOWN(%d)", static_cast<int32_t>(type));
+    enumBuf[sizeof(enumBuf) - 1U] = '\0';
+    return enumBuf;
+}
+
+const char_t* ModelStreamTypeToString(const uint32_t type)
+{
+    switch (type) {
+        case static_cast<uint32_t>(RT_MODEL_HEAD_STREAM):
+            return "MODEL_HEAD_STREAM(0)";
+        case static_cast<uint32_t>(RT_MODEL_WAIT_ACTIVE_STREAM):
+            return "MODEL_WAIT_ACTIVE_STREAM(1)";
+        default:
+            break;
+    }
+    static thread_local char_t enumBuf[32];
+    (void)snprintf_s(enumBuf, sizeof(enumBuf), sizeof(enumBuf) - 1U, "UNKNOWN(%u)", type);
+    enumBuf[sizeof(enumBuf) - 1U] = '\0';
+    return enumBuf;
+}
+} // namespace
 
 #if F_DESC("ModelMaintainceTask")
 uint16_t GetRootExeStreamId(const Model* const mdl)
@@ -30,8 +78,8 @@ uint16_t GetRootExeStreamId(const Model* const mdl)
     auto* captureModel = dynamic_cast<const CaptureModel*>(mdl);
     if (captureModel == nullptr) {
         RT_LOG(
-            RT_LOG_ERROR, "dynamic_cast to CaptureModel failed, model_type=%d, model_id=%u.", mdl->GetModelType(),
-            mdl->Id_());
+            RT_LOG_ERROR, "dynamic_cast to CaptureModel failed, model_type=%s, model_id=%u.",
+            ModelTypeToString(mdl->GetModelType()).c_str(), mdl->Id_());
         return UINT16_MAX;
     }
 
@@ -126,8 +174,9 @@ void PrintErrorInfoForModelMaintainceTask(TaskInfo* const taskInfo, const uint32
     const uint32_t modelId = (modelMaintainceTaskInfo->model != nullptr) ? modelMaintainceTaskInfo->model->Id_() :
                                                                            static_cast<uint32_t>(UINT16_MAX);
     RT_LOG(
-        RT_LOG_ERROR, "model_id=%u, operation_type=%u, stream_type=%d, op_stream_id=%u.", modelId,
-        modelMaintainceTaskInfo->type, modelMaintainceTaskInfo->streamType, modelMaintainceTaskInfo->opStream->Id_());
+        RT_LOG_ERROR, "model_id=%u, operation_type=%s, stream_type=%s, op_stream_id=%u.", modelId,
+        ModelMaintainceTypeToString(modelMaintainceTaskInfo->type),
+        ModelStreamTypeToString(modelMaintainceTaskInfo->streamType), modelMaintainceTaskInfo->opStream->Id_());
 }
 
 void DoCompleteSuccessForModelMaintainceTask(TaskInfo* const taskInfo, const uint32_t devId)

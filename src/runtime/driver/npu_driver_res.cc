@@ -1874,8 +1874,8 @@ rtError_t NpuDriver::LogicCqFree(const uint32_t devId, const uint32_t tsId, cons
     const drvError_t drvRet = halSqCqFree(devId, &freeInput);
     if (drvRet != DRV_ERROR_NONE) {
         DRV_ERROR_PROCESS(
-            drvRet, "[drv api] halSqCqFree failed:device_id=%u,tsId=%u,type=%u,cqId=%u,drvRetCode=%d.", devId,
-            freeInput.tsId, static_cast<uint32_t>(freeInput.type), freeInput.cqId, static_cast<int32_t>(drvRet));
+            drvRet, "[drv api] halSqCqFree failed:device_id=%u,tsId=%u,type=DRV_LOGIC_TYPE(%u),cqId=%u,drvRetCode=%d.",
+            devId, freeInput.tsId, static_cast<uint32_t>(freeInput.type), freeInput.cqId, static_cast<int32_t>(drvRet));
         return RT_ERROR_DRV_ERR;
     }
 
@@ -2271,7 +2271,7 @@ rtError_t NpuDriver::LogicCqReportV2(
             RT_LOG(
                 RT_LOG_ERROR,
                 "[drv api] halCqReportIrqWait failed, device_id=%u, ts_id=%u"
-                ", type=%u, logicCq=%u, drvRetCode=%d",
+                ", type=DRV_LOGIC_TYPE(%u), logicCq=%u, drvRetCode=%d",
                 waitInfo.devId, waitInfo.tsId, static_cast<uint32_t>(irqWaitInputInfo.type), waitInfo.cqId,
                 static_cast<int32_t>(drvReportWaitRet));
         } else {
@@ -2331,7 +2331,8 @@ rtError_t NpuDriver::LogicCqReportV2(
     if ((drvReportGetRet != DRV_ERROR_NONE) && (drvReportGetRet != DRV_ERROR_SOCKET_CLOSE)) {
         DRV_ERROR_PROCESS(
             drvReportGetRet,
-            "Call driver api halCqReportRecv failed, drvRetCode=%d, drvDevId=%u, tsId=%u, type=%u, cqId=%u.",
+            "Call driver api halCqReportRecv failed, drvRetCode=%d, drvDevId=%u, tsId=%u, "
+            "type=DRV_LOGIC_TYPE(%u), cqId=%u.",
             static_cast<int32_t>(drvReportGetRet), waitInfo.devId, repRecvInfo.tsId,
             static_cast<uint32_t>(repRecvInfo.type), repRecvInfo.cqId);
         return RT_GET_DRV_ERRCODE(drvReportGetRet);
@@ -2391,7 +2392,8 @@ rtError_t NpuDriver::LogicCqReport(const LogicCqWaitInfo& waitInfo, rtLogicRepor
     if (drvReportGetRet != DRV_ERROR_NONE) {
         DRV_ERROR_PROCESS(
             drvReportGetRet,
-            "Call driver api halCqReportGet failed, drvRetCode=%d, drvDevId=%u, tsId=%u, type=%u, cqId=%u.",
+            "Call driver api halCqReportGet failed, drvRetCode=%d, drvDevId=%u, tsId=%u, "
+            "type=DRV_LOGIC_TYPE(%u), cqId=%u.",
             static_cast<int32_t>(drvReportGetRet), waitInfo.devId, repGetInputInfo.tsId,
             static_cast<uint32_t>(repGetInputInfo.type), repGetInputInfo.cqId);
         return RT_GET_DRV_ERRCODE(drvReportGetRet);

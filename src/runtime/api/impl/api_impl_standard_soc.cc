@@ -10,6 +10,7 @@
 #include <map>
 #include <string>
 #include "api_impl.hpp"
+#include "device_enum_desc.hpp"
 #include "runtime_handle_guard.h"
 #include "maintenance_task.h"
 #include "memory_task.h"
@@ -418,8 +419,8 @@ rtError_t ApiImpl::GetDeviceNpuArch(uint32_t deviceId, int64_t* val) const
     DevProperties props;
     const rtError_t ret = GET_DEV_PROPERTIES(rt->GetChipType(), props);
     COND_RETURN_ERROR_MSG_INNER(
-        ret != RT_ERROR_NONE, RT_ERROR_INVALID_VALUE, "Get NPU arch failed, chipType=%d.",
-        static_cast<int32_t>(rt->GetChipType()));
+        ret != RT_ERROR_NONE, RT_ERROR_INVALID_VALUE, "Get NPU arch failed, chipType=%s.",
+        ChipTypeToString(rt->GetChipType()).c_str());
     COND_RETURN_ERROR_MSG_INNER(
         props.npuArch <= 0, RT_ERROR_INVALID_VALUE, "Get NPU arch failed, NPU arch is not initialized.");
     *val = props.npuArch;
@@ -703,7 +704,7 @@ rtError_t ApiImpl::SetGroup(const int32_t groupId)
 {
     const rtChipType_t chipType = Runtime::Instance()->GetChipType();
     if (!IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_DEVICE_GROUP)) {
-        RT_LOG(RT_LOG_ERROR, "Device groups are not supported on chipType=%d", chipType);
+        RT_LOG(RT_LOG_ERROR, "Device groups are not supported on chipType=%s", ChipTypeToString(chipType).c_str());
         RT_LOG_OUTER_MSG_WITH_FUNC_DESC(ErrorCode::EE1005, "specifying the group used for the current operation");
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
@@ -717,7 +718,7 @@ rtError_t ApiImpl::GetGroupCount(uint32_t* const cnt)
 {
     const rtChipType_t chipType = Runtime::Instance()->GetChipType();
     if (!IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_DEVICE_GROUP)) {
-        RT_LOG(RT_LOG_ERROR, "Device groups are not supported on chipType=%d", chipType);
+        RT_LOG(RT_LOG_ERROR, "Device groups are not supported on chipType=%s", ChipTypeToString(chipType).c_str());
         RT_LOG_OUTER_MSG_WITH_FUNC_DESC(ErrorCode::EE1005, "obtaining the number of available computing power groups");
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
@@ -731,7 +732,7 @@ rtError_t ApiImpl::GetGroupInfo(const int32_t groupId, rtGroupInfo_t* const grou
 {
     const rtChipType_t chipType = Runtime::Instance()->GetChipType();
     if (!IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_DEVICE_GROUP)) {
-        RT_LOG(RT_LOG_ERROR, "Device groups are not supported on chipType=%d", chipType);
+        RT_LOG(RT_LOG_ERROR, "Device groups are not supported on chipType=%s", ChipTypeToString(chipType).c_str());
         RT_LOG_OUTER_MSG_WITH_FUNC_DESC(
             ErrorCode::EE1005, "querying the computing power information of a specified group");
         return RT_ERROR_FEATURE_NOT_SUPPORT;
@@ -865,7 +866,8 @@ rtError_t ApiImpl::GetDevMsg(const rtGetDevMsgType_t getMsgType, rtGetMsgCallbac
     const auto chipType = Runtime::Instance()->GetChipType();
     COND_RETURN_ERROR_MSG_INNER(
         !IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_DFX_TS_GET_DEVICE_MSG),
-        RT_ERROR_FEATURE_NOT_SUPPORT, "chipType=%d does not support get device msg feature.", chipType);
+        RT_ERROR_FEATURE_NOT_SUPPORT, "chipType=%s does not support get device msg feature.",
+        ChipTypeToString(chipType).c_str());
     rtRunMode runMode = RT_RUN_MODE_OFFLINE;
     (void)GetRunMode(&runMode);
     if (runMode == RT_RUN_MODE_OFFLINE) {
@@ -882,7 +884,7 @@ rtError_t ApiImpl::GetDevMsg(const rtGetDevMsgType_t getMsgType, rtGetMsgCallbac
     } else {
         // The value range of this parameter in this function is [0 - 2). Parameter 2 is used in the snapshot process.
         RT_LOG_CALL_MSG(
-            ERR_MODULE_GE, "Unsupported get msg type=%d, range is [%d, %d)", getMsgType, RT_GET_DEV_ERROR_MSG,
+            ERR_MODULE_GE, "Unsupported get msg type=UNKNOWN(%d), range is [%d, %d)", getMsgType, RT_GET_DEV_ERROR_MSG,
             RT_GET_DEV_PID_SNAPSHOT_MSG);
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }

@@ -640,7 +640,7 @@ static void UpdateQosCfgInFftsCtx(rtFftsPlusMixAicAivCtx_t* fftsCtx, const TaskI
         }
     } else {
         RT_LOG(
-            RT_LOG_ERROR, "masterType (%u) is invalid, the QoS will not be updated.",
+            RT_LOG_ERROR, "masterType=UNKNOWN(%u) is invalid, the QoS will not be updated.",
             static_cast<uint32_t>(masterType));
     }
     return;
@@ -807,7 +807,7 @@ static void UpdateQosCfgInAicoreSqe(RtFftsPlusKernelSqe* sqe, const TaskInfo* co
         }
     } else {
         RT_LOG(
-            RT_LOG_ERROR, "masterType (%u) is invalid, the QoS will not be updated.",
+            RT_LOG_ERROR, "masterType=UNKNOWN(%u) is invalid, the QoS will not be updated.",
             static_cast<uint32_t>(masterType));
     }
     return;

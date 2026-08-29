@@ -255,8 +255,9 @@ set(libruntime_v200_src_files_exclude_for_tiny
 
 # v201 v200 common files, so please check carefully
 set(libruntime_v200_v201_common_src_files
-    ${RUNTIME_CORE_ENUM_DESC_SRC_FILES}
-    ${RUNTIME_OPTIONAL_ENUM_DESC_SRC_FILES}
+    ${RUNTIME_CORE_DIR}/src/common/enum_desc.cc
+    ${RUNTIME_CORE_DIR}/src/common/api_enum_desc.cc
+    ${RUNTIME_CORE_DIR}/src/common/optional_enum_desc.cc
     ${RUNTIME_CORE_DIR}/src/common/inner_thread_local.cpp
     ${RUNTIME_API_DIR}/impl/api_decorator.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/api_decorator_aclgraph.cc

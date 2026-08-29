@@ -128,6 +128,13 @@ TEST_F(EventTest910B, SwitchToSoftwareModeFailsAfterRecord)
     recorded.SetRecord(true);
     EXPECT_NE(recorded.TrySwitchToSoftwareMode(), RT_ERROR_NONE);
     EXPECT_TRUE(recorded.IsHardwareMode());
+
+    const rtEventState_t invalidStates[] = {RECORDING, RECORDED, static_cast<rtEventState_t>(RECORDED + 1)};
+    for (const auto state : invalidStates) {
+        Event eventWithInvalidState(device_, RT_EVENT_DEFAULT, nullptr);
+        eventWithInvalidState.latestRecord_.state = state;
+        EXPECT_EQ(eventWithInvalidState.TrySwitchToSoftwareMode(), RT_ERROR_INVALID_VALUE);
+    }
 }
 
 TEST(EventNotifyWaitTaskTest, NotifyWaitTaskUnInitClearsExternalWaitRetainedOwner)

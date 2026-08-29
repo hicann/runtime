@@ -277,8 +277,8 @@ aclError TensorDatasetSerializes(const acltdtDataset* dataset, std::vector<tdt::
         if (ret != ACL_SUCCESS) {
             ACL_LOG_INNER_ERROR(
                 "[Check][Dataset]TensorDatasetSerializes failed, "
-                "invalid tdt type %d",
-                dataset->blobs[i]->tdtType);
+                "invalid tdt type %s",
+                acl::GetTensorTypeDesc(dataset->blobs[i]->tdtType));
             itemVec.clear();
             return ret;
         }
@@ -303,8 +303,8 @@ aclError TensorDatasetSerializesV2(const acltdtDataset* dataset, std::vector<acl
         if (ret != ACL_SUCCESS) {
             ACL_LOG_INNER_ERROR(
                 "[Check][Dataset]TensorDatasetSerializes failed, "
-                "invalid tdt type %d",
-                dataset->blobs[i]->tdtType);
+                "invalid tdt type %s",
+                acl::GetTensorTypeDesc(dataset->blobs[i]->tdtType));
             return ret;
         }
 
@@ -340,7 +340,8 @@ aclError TensorDatasetDeserializes(const std::vector<tdt::DataItem>& itemVec, ac
         ret = GetAclTypeByTdtDataType(itemVec[i].dataType_, aclType);
         if (ret != ACL_SUCCESS) {
             ACL_LOG_INNER_ERROR(
-                "[Check][Dataset]TensorDatasetDeserializes failed, invalid data type %d", itemVec[i].dataType_);
+                "[Check][Dataset]TensorDatasetDeserializes failed, invalid data type %s",
+                acl::GetTdtDataTypeDesc(itemVec[i].dataType_));
             break;
         }
 

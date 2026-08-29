@@ -14,6 +14,24 @@
 
 namespace cce {
 namespace runtime {
+namespace {
+const char_t* QueueEntityTypeName(const QUEUE_ENTITY_TYPE type)
+{
+    switch (type) {
+        case SOFT_ENTITY_TYPE:
+            return "SOFT_ENTITY_TYPE";
+        case QMNGR_ENTITY_TYPE:
+            return "QMNGR_ENTITY_TYPE";
+        case GQM_ENTITY_TYPE:
+            return "GQM_ENTITY_TYPE";
+        case QUEUE_ENTITY_TYPE_MAX:
+            return "QUEUE_ENTITY_TYPE_MAX";
+        default:
+            return "UNKNOWN";
+    }
+}
+} // namespace
+
 StreamWithDqs::~StreamWithDqs()
 {
     DestroyDqsCtrlSpace();
@@ -240,8 +258,8 @@ rtError_t StreamWithDqs::SetCtrlSpaceInputQueInfo(const rtDqsSchedCfg_t* const d
         ERROR_RETURN(ret, "get dqs que info failed, ret=%#x.", static_cast<uint32_t>(ret));
         COND_RETURN_ERROR_MSG_INNER(
             queInfo.queType != GQM_ENTITY_TYPE, RT_ERROR_INVALID_VALUE,
-            "queInfo.queType %u is not equal to %u(GQM_ENTITY_TYPE), qid=%u.", static_cast<uint32_t>(queInfo.queType),
-            GQM_ENTITY_TYPE, qid);
+            "queInfo.queType %s(%u) is not equal to GQM_ENTITY_TYPE(%u), qid=%u.", QueueEntityTypeName(queInfo.queType),
+            static_cast<uint32_t>(queInfo.queType), static_cast<uint32_t>(GQM_ENTITY_TYPE), qid);
         dqsCtrlSpace_->input_queue_gqm_base_addrs[i] = queInfo.dequeOpAddr;
         RT_LOG(RT_LOG_INFO, "input queue id=%hu, gqm base=%#llx", qid, dqsCtrlSpace_->input_queue_gqm_base_addrs[i]);
     }
@@ -344,8 +362,9 @@ rtError_t StreamWithDqs::SetCtrlSpaceOutputQueInfo(const rtDqsSchedCfg_t* const 
         ERROR_RETURN(ret, "get dqs que info failed, ret=%#x.", static_cast<uint32_t>(ret));
         COND_RETURN_ERROR(
             queInfo.queType != QMNGR_ENTITY_TYPE, RT_ERROR_INVALID_VALUE,
-            "queInfo.queType %u is not equal to %u(QMNGR_ENTITY_TYPE), qid=%u.", static_cast<uint32_t>(queInfo.queType),
-            QMNGR_ENTITY_TYPE, qid);
+            "queInfo.queType %s(%u) is not equal to QMNGR_ENTITY_TYPE(%u), qid=%u.",
+            QueueEntityTypeName(queInfo.queType), static_cast<uint32_t>(queInfo.queType),
+            static_cast<uint32_t>(QMNGR_ENTITY_TYPE), qid);
         dqsCtrlSpace_->output_qmngr_enqueue_addrs[i] = queInfo.enqueOpAddr;
         dqsCtrlSpace_->output_qmngr_ow_addrs[i] = queInfo.prodqOwAddr;
 

@@ -145,7 +145,7 @@ rtError_t CountNotify::GetCntNotifyAddress(uint64_t& addr, rtNotifyType_t regTyp
             devResType = RT_RES_TYPE_STARS_CNT_NOTIFY_BIT_CLR;
             break;
         default:
-            RT_LOG(RT_LOG_ERROR, "invalid notify type, type=%u", regType);
+            RT_LOG(RT_LOG_ERROR, "invalid notify type, type=UNKNOWN(%u)", static_cast<uint32_t>(regType));
             return RT_ERROR_INVALID_VALUE;
     }
     rtDevResInfo resInfo = {tsId_, RT_PROCESS_CP1, devResType, notifyid_, 0U};

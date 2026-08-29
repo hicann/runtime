@@ -2960,6 +2960,23 @@ TEST_F(UTEST_ACL_Runtime, aclrtGetDeviceUtilizationRate)
     EXPECT_EQ(ret, ACL_SUCCESS);
 }
 
+TEST_F(UTEST_ACL_Runtime, aclrtGetDeviceUtilizationRateErrorLogs)
+{
+    const int32_t devId = 1;
+    aclrtUtilizationInfo utilInfo = {};
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtGetAllUtilizations(devId, RT_UTIL_TYPE_AICORE, _))
+        .WillOnce(Return(ACL_ERROR_INVALID_PARAM));
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtGetAllUtilizations(devId, RT_UTIL_TYPE_AIVECTOR, _))
+        .WillOnce(Return(ACL_ERROR_INVALID_PARAM));
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtGetAllUtilizations(devId, RT_UTIL_TYPE_AICPU, _))
+        .WillOnce(Return(ACL_ERROR_INVALID_PARAM));
+
+    EXPECT_EQ(aclrtGetDeviceUtilizationRate(devId, &utilInfo), ACL_SUCCESS);
+    EXPECT_EQ(utilInfo.cubeUtilization, -1);
+    EXPECT_EQ(utilInfo.vectorUtilization, -1);
+    EXPECT_EQ(utilInfo.aicpuUtilization, -1);
+}
+
 TEST_F(UTEST_ACL_Runtime, virtual_memory_address_reserve_release)
 {
     void* virPtr = nullptr;

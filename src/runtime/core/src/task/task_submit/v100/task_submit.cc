@@ -351,8 +351,8 @@ rtError_t SubmitTaskDc(TaskInfo* submitTask, Stream* stm, uint32_t* const flipTa
     COND_RETURN_ERROR(
         error != RT_ERROR_NONE, error,
         "AllocTaskAndSendDc fail, streamId=%d, taskId=%hu,"
-        "taskType=%u, retCode=%#x",
-        stm->Id_(), submitTask->id, submitTask->type, error);
+        "taskType=%s(%u), retCode=%#x",
+        stm->Id_(), submitTask->id, GetTaskDescByType(submitTask->type), submitTask->type, error);
     taskId = submitTask->id;
     Engine* engine = ((RawDevice*)(stm->Device_()))->Engine_();
     if (!stm->IsCtrlStream()) {

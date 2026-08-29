@@ -9,6 +9,7 @@
  */
 
 #include "stream.hpp"
+#include "device_enum_desc.hpp"
 #include "runtime.hpp"
 #include "context.hpp"
 #include "stars_cond_isa_helper.hpp"
@@ -39,7 +40,8 @@ rtError_t InitFuncCallParaForStreamSwitchTaskV1(
     // 此处应该使用device中的函数，但由于UT中动态切换芯片类型，为保证UT通过使用宏
     auto error = GET_DEV_PROPERTIES(chipType, props);
     COND_RETURN_ERROR_MSG_INNER(
-        error != RT_ERROR_NONE, RT_ERROR_INVALID_VALUE, "GetDevProperties failed, chip type=%d.", chipType);
+        error != RT_ERROR_NONE, RT_ERROR_INVALID_VALUE, "GetDevProperties failed, chip type=%s.",
+        ChipTypeToString(chipType).c_str());
 
     if (props.isSupportInitFuncCallPara) {
         fcPara.rtSqFsmStateAddr = props.rtsqVirtualAddr.rtSqFsmStateAddr;
@@ -99,7 +101,8 @@ rtError_t InitFuncCallParaForStreamSwitchTaskV2(
     // 此处应该使用device中的函数，但由于UT中动态切换芯片类型，为保证UT通过使用宏
     const auto error = GET_DEV_PROPERTIES(chipType, props);
     COND_RETURN_ERROR_MSG_INNER(
-        error != RT_ERROR_NONE, RT_ERROR_INVALID_VALUE, "GetDevProperties failed, chip type=%d.", chipType);
+        error != RT_ERROR_NONE, RT_ERROR_INVALID_VALUE, "GetDevProperties failed, chip type=%s.",
+        ChipTypeToString(chipType).c_str());
 
     if (props.isSupportInitFuncCallPara) {
         fcPara.rtSqFsmStateAddr = props.rtsqVirtualAddr.rtSqFsmStateAddr;

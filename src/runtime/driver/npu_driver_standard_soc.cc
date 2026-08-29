@@ -18,6 +18,7 @@
 #include "errcode_manage.hpp"
 #include "error_message_manage.hpp"
 #include "npu_driver_record.hpp"
+#include "device_enum_desc.hpp"
 namespace cce {
 namespace runtime {
 rtError_t NpuDriver::CreateAsyncDmaWqe(
@@ -372,10 +373,10 @@ rtError_t NpuDriver::GetDevResAddress(
     if (drvRet != DRV_ERROR_NONE) {
         DRV_ERROR_PROCESS(
             drvRet,
-            "Call driver api halResAddrMap failed, drvRetCode=%d, drvDevId=%u, processType=%d, resType=%d, resId=%u, "
+            "Call driver api halResAddrMap failed, drvRetCode=%d, drvDevId=%u, processType=%s, resType=%s, resId=%u, "
             "udieId=%u, flag=%#x.",
-            static_cast<int32_t>(drvRet), deviceId, static_cast<int32_t>(resInfo->procType),
-            static_cast<int32_t>(resInfo->resType), resInfo->resId, resInfo->dieId, resInfo->flag);
+            static_cast<int32_t>(drvRet), deviceId, DevResProcTypeToString(resInfo->procType).c_str(),
+            DevResTypeToString(resInfo->resType).c_str(), resInfo->resId, resInfo->dieId, resInfo->flag);
         return RT_GET_DRV_ERRCODE(drvRet);
     }
     return RT_ERROR_NONE;
@@ -400,10 +401,10 @@ rtError_t NpuDriver::ReleaseDevResAddress(const uint32_t deviceId, const rtDevRe
     if (drvRet != DRV_ERROR_NONE) {
         DRV_ERROR_PROCESS(
             drvRet,
-            "Call driver api halResAddrUnmap failed, drvRetCode=%d, drvDevId=%u, processType=%d, resType=%d, resId=%u, "
+            "Call driver api halResAddrUnmap failed, drvRetCode=%d, drvDevId=%u, processType=%s, resType=%s, resId=%u, "
             "udieId=%u, flag=%#x.",
-            static_cast<int32_t>(drvRet), deviceId, static_cast<int32_t>(resInfo->procType),
-            static_cast<int32_t>(resInfo->resType), resInfo->resId, resInfo->dieId, resInfo->flag);
+            static_cast<int32_t>(drvRet), deviceId, DevResProcTypeToString(resInfo->procType).c_str(),
+            DevResTypeToString(resInfo->resType).c_str(), resInfo->resId, resInfo->dieId, resInfo->flag);
         return RT_GET_DRV_ERRCODE(drvRet);
     }
     return RT_ERROR_NONE;
@@ -829,7 +830,9 @@ rtError_t NpuDriver::AsyncDmaWqeConvert(const uint32_t devId, AsyncWqeInputPara*
             halIn.nop.nopCnt = inParam->nop.nopCnt;
             break;
         default:
-            RT_LOG(RT_LOG_ERROR, "Unsupported wqeType=%d, devId=%u.", static_cast<int32_t>(inParam->wqeType), devId);
+            RT_LOG(
+                RT_LOG_ERROR, "Unsupported wqeType=UNKNOWN(%d), devId=%u.", static_cast<int32_t>(inParam->wqeType),
+                devId);
             return RT_ERROR_INVALID_VALUE;
     }
 

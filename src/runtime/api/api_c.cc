@@ -9,6 +9,7 @@
  */
 
 #include "api_c.h"
+#include "device_enum_desc.hpp"
 #include "api.hpp"
 #include "api_event.hpp"
 #include "api_handle_guard.h"
@@ -3145,7 +3146,8 @@ RTS_API rtError_t rtSetDeviceSatMode(rtFloatOverflowMode_t floatOverflowMode)
     DevProperties prop;
     const rtError_t error = GET_DEV_PROPERTIES(rtInstance->GetChipType(), prop);
     COND_RETURN_EXT_ERRCODE_AND_MSG_INNER(
-        error != RT_ERROR_NONE, error, "GetDevProperties failed, chipType=%u.", rtInstance->GetChipType());
+        error != RT_ERROR_NONE, error, "GetDevProperties failed, chipType=%s(%d).",
+        ChipTypeToName(rtInstance->GetChipType()), static_cast<int32_t>(rtInstance->GetChipType()));
 
     if ((floatOverflowMode >= RT_OVERFLOW_MODE_SATURATION) && (floatOverflowMode < RT_OVERFLOW_MODE_UNDEF)) {
         const uint32_t mode = 1U << floatOverflowMode;
@@ -3605,7 +3607,9 @@ RTS_API rtError_t rtEschedQueryInfo(
             rtInstance->GetChipType(), RtOptionalFeatureType::RT_FEATURE_DRIVER_ESCHED_QUERY_INFO)) {
         ret = apiInstance->EschedQueryInfo(devId, type, inPut, outPut);
     } else {
-        RT_LOG(RT_LOG_ERROR, "Chip type(%d) does not support.", static_cast<int32_t>(rtInstance->GetChipType()));
+        RT_LOG(
+            RT_LOG_ERROR, "Chip type %s(%d) does not support.", ChipTypeToName(rtInstance->GetChipType()),
+            static_cast<int32_t>(rtInstance->GetChipType()));
         return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_FEATURE_NOT_SUPPORT);
     }
 
@@ -3843,7 +3847,8 @@ rtError_t rtNeedDevVA2PA(bool* need)
     DevProperties devProperty{};
     const rtError_t error = GET_DEV_PROPERTIES(chipType, devProperty);
     COND_RETURN_EXT_ERRCODE_AND_MSG_INNER(
-        error != RT_ERROR_NONE, RT_ERROR_DRV_INVALID_DEVICE, "GetDevProperties failed, chipType=%u.", chipType);
+        error != RT_ERROR_NONE, RT_ERROR_DRV_INVALID_DEVICE, "GetDevProperties failed, chipType=%s(%d).",
+        ChipTypeToName(chipType), static_cast<int32_t>(chipType));
     if (devProperty.isSupportDevVA2PA) {
         *need = true;
     }
@@ -3860,9 +3865,12 @@ rtError_t rtDevVA2PA(uint64_t devAddr, uint64_t len, rtStream_t stm, bool isAsyn
     DevProperties devProperty{};
     rtError_t error = GET_DEV_PROPERTIES(chipType, devProperty);
     COND_RETURN_EXT_ERRCODE_AND_MSG_INNER(
-        error != RT_ERROR_NONE, RT_ERROR_DRV_INVALID_DEVICE, "GetDevProperties failed, chipType=%u.", chipType);
+        error != RT_ERROR_NONE, RT_ERROR_DRV_INVALID_DEVICE, "GetDevProperties failed, chipType=%s(%d).",
+        ChipTypeToName(chipType), static_cast<int32_t>(chipType));
     if (!(devProperty.isSupportDevVA2PA)) {
-        RT_LOG(RT_LOG_ERROR, "Chip type(%d) does not support.", static_cast<int32_t>(rtInstance->GetChipType()));
+        RT_LOG(
+            RT_LOG_ERROR, "Chip type %s(%d) does not support.", ChipTypeToName(chipType),
+            static_cast<int32_t>(chipType));
         return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_FEATURE_NOT_SUPPORT);
     }
 

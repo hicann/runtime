@@ -22,6 +22,7 @@
 #include "aclgraph_cond_task.h"
 #include "notify.hpp"
 #include "capture_model.hpp"
+#include "cond_enum_desc.hpp"
 
 namespace cce {
 namespace runtime {
@@ -227,9 +228,10 @@ rtError_t SubmitCaptureConditionTask(CondHandle* condHandle, Stream* const stm)
     error = CaptureConditionTaskInit(condTask, condHandle);
     ERROR_RETURN(
         error,
-        "Capture condition task init failed, model_id=%u, stream_id=%d, task_id=%u, condtype=%d, condsize=%u, "
+        "Capture condition task init failed, model_id=%u, stream_id=%d, task_id=%u, condtype=%s, condsize=%u, "
         "retCode=%#x.",
-        stm->Model_()->Id_(), streamId, pos, condHandle->GetCondType(), condHandle->GetCondSize(), error);
+        stm->Model_()->Id_(), streamId, pos, CondTaskTypeToString(condHandle->GetCondType()).c_str(),
+        condHandle->GetCondSize(), error);
 
     error = DavidSendTask(condTask, dstStm);
     ERROR_RETURN_MSG_INNER(
@@ -275,9 +277,11 @@ rtError_t StreamAddCondTask(CondHandle* condHandle, rtCondTaskParams params, Str
     error = SubmitCaptureConditionTask(condHandle, stm);
     ERROR_RETURN(
         error,
-        "Failed to submit capture condition task, model_id=%u, stream_id=%d, condition type=%d, condition size=%u, "
+        "Failed to submit capture condition task, model_id=%u, stream_id=%d, condition type=%s, "
+        "condition size=%u, "
         "retCode=%#x.",
-        stm->Model_()->Id_(), stm->Id_(), params.type, params.size, static_cast<uint32_t>(error));
+        stm->Model_()->Id_(), stm->Id_(), CondTaskTypeToString(params.type).c_str(), params.size,
+        static_cast<uint32_t>(error));
 
     subModelErrRecycle.ReleaseGuard();
     return RT_ERROR_NONE;

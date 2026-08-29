@@ -9,6 +9,7 @@
  */
 
 #include "task_execute_time.h"
+#include "device_enum_desc.hpp"
 #include "stars_base.hpp"
 #include "stars.hpp"
 #include "runtime.hpp"
@@ -29,8 +30,8 @@ uint16_t TransKernelCreditCreditByChip(const uint16_t kernelCredit)
         DevProperties devProperty{};
         rtError_t error = GET_DEV_PROPERTIES(chipType, devProperty);
         COND_RETURN_ERROR_MSG_INNER(
-            error != RT_ERROR_NONE, kernelCredit, "Failed to get dev properties, chipType = %d error = %d", chipType,
-            error);
+            error != RT_ERROR_NONE, kernelCredit, "Failed to get dev properties, chipType=%s, error=%d",
+            ChipTypeToString(chipType).c_str(), error);
 
         creditStartValue = devProperty.creditStartValue;
         isGet = true;

@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "raw_device.hpp"
+#include "device_enum_desc.hpp"
 
 #include <chrono>
 #include "aicpu_dfx.hpp"
@@ -580,13 +581,13 @@ rtError_t RawDevice::Init()
 
     error = GET_CHIP_FEATURE_SET(chipType, featureSet_);
     ERROR_RETURN_MSG_INNER(
-        error, "Failed to get feature, chipType=%d, device_id=%u, retCode=%#x.", chipType, deviceId_,
-        static_cast<uint32_t>(error));
+        error, "Failed to get feature, chipType=%s, device_id=%u, retCode=%#x.", ChipTypeToString(chipType).c_str(),
+        deviceId_, static_cast<uint32_t>(error));
 
     error = GET_DEV_PROPERTIES(chipType, properties_);
     ERROR_RETURN_MSG_INNER(
-        error, "GetDevProperties failed, chipType=%d, device_id=%u, retCode=%#x.", chipType, deviceId_,
-        static_cast<uint32_t>(error));
+        error, "GetDevProperties failed, chipType=%s, device_id=%u, retCode=%#x.", ChipTypeToString(chipType).c_str(),
+        deviceId_, static_cast<uint32_t>(error));
 
     if (IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_OVERFLOW_MODE)) {
         SetSatMode(RT_OVERFLOW_MODE_INFNAN);
@@ -616,8 +617,8 @@ rtError_t RawDevice::Init()
         error = driver_->GetDevInfo(deviceId_, MODULE_TYPE_AICORE, INFO_TYPE_DIE_NUM, &dieNum);
         if (error != RT_ERROR_NONE) {
             RT_LOG(
-                RT_LOG_ERROR, "Get Ddie_die_num failed!, device_id=%u, module type=%d, info type=%d.", deviceId_,
-                MODULE_TYPE_AICORE, INFO_TYPE_DIE_NUM);
+                RT_LOG_ERROR, "Get Ddie_die_num failed!, device_id=%u, module type=%s, info type=%s.", deviceId_,
+                ModuleTypeToString(MODULE_TYPE_AICORE).c_str(), InfoTypeToString(INFO_TYPE_DIE_NUM).c_str());
         }
         davidDieNum_ = static_cast<uint8_t>(dieNum);
         RT_LOG(RT_LOG_INFO, "Ddie_die_num=%hhu", davidDieNum_);

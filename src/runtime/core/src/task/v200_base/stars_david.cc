@@ -40,11 +40,11 @@ constexpr uint8_t TASK_NUM_FOR_HEAD_UPDATE = 64U;
 void RegDavidSqeFunc(rtChipType_t chipType, tsTaskType_t taskType, PfnTaskToDavidSqe func)
 {
     if (taskType >= TS_TASK_TYPE_RESERVED) {
-        RT_LOG(RT_LOG_ERROR, "task type is invalid: %d", taskType);
+        RT_LOG(RT_LOG_ERROR, "task type is invalid: UNKNOWN(%d)", taskType);
         return;
     }
     if (chipType < CHIP_BEGIN || chipType >= CHIP_END) {
-        RT_LOG(RT_LOG_ERROR, "Invalid chipType = %d, valid range: [%d, %d).", chipType, CHIP_BEGIN, CHIP_END);
+        RT_LOG(RT_LOG_ERROR, "Invalid chipType=UNKNOWN(%d), valid range: [%d, %d).", chipType, CHIP_BEGIN, CHIP_END);
         return;
     }
     g_toDavidSqeFunc[chipType][taskType] = func;

@@ -11,6 +11,7 @@
 #include <new>
 #include <string>
 #include "device_enum_desc.hpp"
+#include "driver_enum_desc.hpp"
 #include "enum_desc.hpp"
 #include "cond_c.hpp"
 #include "internal_error_define.hpp"
@@ -1832,8 +1833,8 @@ rtError_t ApiImpl::GetAvailStreamNum(const uint32_t streamType, uint32_t* const 
     if (streamType == RT_HUGE_STREAM) {
         COND_RETURN_ERROR_MSG_INNER(
             props.maxAllocHugeStreamNum == 0U, RT_ERROR_FEATURE_NOT_SUPPORT,
-            "Get max stream and task failed, unsupported huge stream mode in chipType=%d, streamType=%u", chipType,
-            streamType);
+            "Get max stream and task failed, unsupported huge stream mode in chipType=%s, streamType=%u",
+            ChipTypeToString(chipType).c_str(), streamType);
         *streamCount = props.maxAllocHugeStreamNum;
         return RT_ERROR_NONE;
     }
@@ -4927,8 +4928,8 @@ rtError_t ApiImpl::GetFftsWorkMode(int32_t* const val)
             RT_DEV_ZERO, static_cast<int32_t>(MODULE_TYPE_TSCPU), static_cast<int32_t>(INFO_TYPE_FFTS_TYPE), &fftsMode);
         COND_RETURN_ERROR_MSG_CALL(
             ERR_MODULE_DRV, ret != RT_ERROR_NONE, ret,
-            "Call GetDeviceInfo failed: retCode=%d, module type=%d, info type=%d.", ret, MODULE_TYPE_TSCPU,
-            INFO_TYPE_FFTS_TYPE);
+            "Call GetDeviceInfo failed: retCode=%d, module type=%s, info type=%s.", ret,
+            ModuleTypeToString(MODULE_TYPE_TSCPU).c_str(), InfoTypeToString(INFO_TYPE_FFTS_TYPE).c_str());
         // drv query register info, 0 is ffts mode, 1 is ffts+, default is ffts+
         if (fftsMode == 0) {
             *val = static_cast<int32_t>(RT_MODE_FFTS);

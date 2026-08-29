@@ -45,7 +45,7 @@ void TaskFailCallBackManager::Notify(rtExceptionInfo_t* const exceptionInfo)
             void* args = info.second.args;
             callback(exceptionInfo, args);
         } else {
-            RT_LOG(RT_LOG_ERROR, "notify task fail type:%u is invalid.", type);
+            RT_LOG(RT_LOG_ERROR, "notify task fail type=UNKNOWN(%u) is invalid.", static_cast<uint32_t>(type));
             return;
         }
         RT_LOG(RT_LOG_INFO, "notify [%s] task end.", info.first.c_str());
@@ -77,7 +77,7 @@ rtError_t TaskFailCallBackManager::RegTaskFailCallback(
         callbackMap_[regName].callbackV2 = RtPtrToPtr<rtsTaskFailCallback>(callback);
         callbackMap_[regName].args = args;
     } else {
-        RT_LOG(RT_LOG_ERROR, "Register task fail callback type:%u is invalid.", type);
+        RT_LOG(RT_LOG_ERROR, "Register task fail callback type=UNKNOWN(%u) is invalid.", static_cast<uint32_t>(type));
         return RT_ERROR_INVALID_VALUE;
     }
 

@@ -570,8 +570,8 @@ rtError_t UmaArgLoader::GetKernelInfoDevAddr(const char_t* const name, const Ker
         }
         default: {
             RT_LOG(
-                RT_LOG_ERROR, "Invalid kernel info type=%d, valid type is [%d, %d).", static_cast<int32_t>(type),
-                static_cast<int32_t>(SO_NAME), static_cast<int32_t>(MAX_NAME));
+                RT_LOG_ERROR, "Invalid kernel info type=UNKNOWN(%d), valid type is [%d, %d).",
+                static_cast<int32_t>(type), static_cast<int32_t>(SO_NAME), static_cast<int32_t>(MAX_NAME));
             error = RT_ERROR_KERNEL_TYPE;
             break;
         }
@@ -607,7 +607,7 @@ void UmaArgLoader::GetKernelInfoFromAddr(std::string& name, const KernelInfoType
         }
         default: {
             RT_LOG(
-                RT_LOG_ERROR, "Invalid kernel info type, current type = %d, valid type is %d or %d.",
+                RT_LOG_ERROR, "Invalid kernel info type, current type=UNKNOWN(%d), valid type is %d or %d.",
                 static_cast<int32_t>(type), static_cast<int32_t>(SO_NAME), static_cast<int32_t>(KERNEL_NAME));
             break;
         }

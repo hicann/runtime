@@ -36,6 +36,22 @@ namespace cce {
 namespace runtime {
 namespace {
 constexpr size_t NOTIFY_INDEX = 2U;
+
+const char* StreamTaskGroupStatusName(const StreamTaskGroupStatus status)
+{
+    switch (status) {
+        case StreamTaskGroupStatus::NONE:
+            return "NONE";
+        case StreamTaskGroupStatus::SAMPLE:
+            return "SAMPLE";
+        case StreamTaskGroupStatus::UPDATE:
+            return "UPDATE";
+        case StreamTaskGroupStatus::BUTT:
+            return "BUTT";
+        default:
+            return "UNKNOWN";
+    }
+}
 } // namespace
 
 rtError_t Context::UpdateEndGraphTask(Stream* const origCaptureStream, Stream* const exeStream, Notify* ntf) const
@@ -47,8 +63,8 @@ rtError_t Context::UpdateEndGraphTask(Stream* const origCaptureStream, Stream* c
 
     COND_RETURN_ERROR(
         rtNotifyRecord->type != TS_TASK_TYPE_NOTIFY_RECORD, RT_ERROR_STREAM_INVALID,
-        "EndGraph stream_id=%d, task_id=%u, task type=%u", rtNotifyRecord->stream->Id_(), rtNotifyRecord->id,
-        rtNotifyRecord->type);
+        "EndGraph stream_id=%d, task_id=%u, task type=%s(%u)", rtNotifyRecord->stream->Id_(), rtNotifyRecord->id,
+        GetTaskDescByType(rtNotifyRecord->type), rtNotifyRecord->type);
     rtNotifyRecord->u.notifyrecordTask.notifyId = ntf->GetNotifyId();
     uint8_t sqeMem[RT_STARS_SQE_LEN] = {0};
     ConstructStarsSqeForNotifyRecordTask(rtNotifyRecord, sqeMem);
@@ -885,8 +901,8 @@ rtError_t Context::StreamBeginTaskUpdate(Stream* const stm, TaskGroup* handle) c
 
     const rtError_t ret = stm->UpdateTaskGroupStatus(StreamTaskGroupStatus::UPDATE);
     ERROR_RETURN(
-        ret, "update stream task group status failed, ret:%#x, status:%d.", static_cast<uint32_t>(ret),
-        stm->GetTaskGroupStatus());
+        ret, "update stream task group status failed, ret:%#x, status:%s(%u).", static_cast<uint32_t>(ret),
+        StreamTaskGroupStatusName(stm->GetTaskGroupStatus()), static_cast<uint32_t>(stm->GetTaskGroupStatus()));
 
     stm->SetUpdateTaskGroup(handle);
     RT_LOG(RT_LOG_INFO, "Success to begin update tasks, stream_id=%d.", stm->Id_());
@@ -975,9 +991,10 @@ rtError_t Context::SubmitCaptureConditionTask(CondHandle* condHandle, Stream* co
     error = cce::runtime::CaptureConditionTaskInit(tsk, condHandle);
     ERROR_RETURN(
         error,
-        "Capture condition task init failed, model_id=%u, stream_id=%d, task_id=%u, condtype=%d, condsize=%u, "
+        "Capture condition task init failed, model_id=%u, stream_id=%d, task_id=%u, condtype=%s, condsize=%u, "
         "retCode=%#x.",
-        stm->Model_()->Id_(), stm->Id_(), tsk->id, condHandle->GetCondType(), condHandle->GetCondSize(), error);
+        stm->Model_()->Id_(), stm->Id_(), tsk->id, CondTaskTypeToString(condHandle->GetCondType()).c_str(),
+        condHandle->GetCondSize(), error);
     error = dev->SubmitTask(tsk);
     ERROR_RETURN_MSG_INNER(
         error, "Failed to submit capture model condition task, retCode=%#x.", static_cast<uint32_t>(error));

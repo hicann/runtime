@@ -21,6 +21,25 @@
 namespace cce {
 namespace runtime {
 
+static inline std::string DevRunningStateToString(const uint32_t state)
+{
+    switch (state) {
+        case static_cast<uint32_t>(DEV_RUNNING_NORMAL):
+            return "DEV_RUNNING_NORMAL(0)";
+        case static_cast<uint32_t>(DEV_RUNNING_DOWN):
+            return "DEV_RUNNING_DOWN(1)";
+        default:
+            return RtFmtMsg("UNKNOWN(%u)", state);
+    }
+}
+
+const char_t* ChipTypeToName(rtChipType_t type);
+
+static inline std::string ChipTypeToString(const rtChipType_t type)
+{
+    return RtFmtMsg("%s(%d)", ChipTypeToName(type), static_cast<int32_t>(type));
+}
+
 static inline std::string DevResTypeToString(const rtDevResType_t type)
 {
     std::string desc;
@@ -85,6 +104,8 @@ static inline std::string DevResProcTypeToString(const rtDevResProcType_t type)
     return desc;
 }
 
+std::string GetDevMsgTypeToString(rtGetDevMsgType_t type);
+
 static inline std::string UbDevQueryCmdToString(const rtUbDevQueryCmd cmd)
 {
     std::string desc;
@@ -129,6 +150,15 @@ static inline std::string InfoTypeToString(const uint32_t infoType)
             break;
         case static_cast<uint32_t>(INFO_TYPE_CORE_NUM_LEVEL):
             desc = "CORE_NUM_LEVEL(15)";
+            break;
+        case static_cast<uint32_t>(INFO_TYPE_FREQUE_LEVEL):
+            desc = "FREQUE_LEVEL(16)";
+            break;
+        case static_cast<uint32_t>(INFO_TYPE_FFTS_TYPE):
+            desc = "FFTS_TYPE(17)";
+            break;
+        case static_cast<uint32_t>(INFO_TYPE_DIE_NUM):
+            desc = "DIE_NUM(41)";
             break;
         default:
             desc = RtFmtMsg("UNKNOWN(%u)", static_cast<uint64_t>(infoType));

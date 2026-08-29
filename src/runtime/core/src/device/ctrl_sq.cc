@@ -19,6 +19,48 @@
 
 namespace cce {
 namespace runtime {
+namespace {
+const char* CtrlMsgTypeName(const RtCtrlMsgType type)
+{
+    switch (type) {
+        case RtCtrlMsgType::RT_CTRL_MSG_STREAM_CLEAR:
+            return "CTRL_MSG_STREAM_CLEAR";
+        case RtCtrlMsgType::RT_CTRL_MSG_STREAM_RECYCLE:
+            return "CTRL_MSG_STREAM_RECYCLE";
+        case RtCtrlMsgType::RT_CTRL_MSG_NOTIFY_RESET:
+            return "CTRL_MSG_NOTIFY_RESET";
+        case RtCtrlMsgType::RT_CTRL_MSG_MODEL_BIND_STREAM:
+            return "CTRL_MSG_MODEL_BIND_STREAM";
+        case RtCtrlMsgType::RT_CTRL_MSG_MODEL_UNBIND_STREAM:
+            return "CTRL_MSG_MODEL_UNBIND_STREAM";
+        case RtCtrlMsgType::RT_CTRL_MSG_MODEL_LOAD_COMPLETE:
+            return "CTRL_MSG_MODEL_LOAD_COMPLETE";
+        case RtCtrlMsgType::RT_CTRL_MSG_MODEL_ABORT:
+            return "CTRL_MSG_MODEL_ABORT";
+        case RtCtrlMsgType::RT_CTRL_MSG_DATADUMP_INFOLOAD:
+            return "CTRL_MSG_DATADUMP_INFOLOAD";
+        case RtCtrlMsgType::RT_CTRL_MSG_AICPU_INFOLOAD:
+            return "CTRL_MSG_AICPU_INFOLOAD";
+        case RtCtrlMsgType::RT_CTRL_MSG_DEBUG_REGISTER:
+            return "CTRL_MSG_DEBUG_REGISTER";
+        case RtCtrlMsgType::RT_CTRL_MSG_DEBUG_UNREGISTER:
+            return "CTRL_MSG_DEBUG_UNREGISTER";
+        case RtCtrlMsgType::RT_CTRL_MSG_SET_OVERFLOW_SWITCH:
+            return "CTRL_MSG_SET_OVERFLOW_SWITCH";
+        case RtCtrlMsgType::RT_CTRL_MSG_AICPU_MODEL_DESTROY:
+            return "CTRL_MSG_AICPU_MODEL_DESTROY";
+        case RtCtrlMsgType::RT_CTRL_MSG_SET_STREAM_TAG:
+            return "CTRL_MSG_SET_STREAM_TAG";
+        case RtCtrlMsgType::RT_CTRL_MSG_NOTIFY_RESET_V200:
+            return "CTRL_MSG_NOTIFY_RESET_V200";
+        case RtCtrlMsgType::RT_CTRL_MSG_MAX:
+            return "CTRL_MSG_MAX";
+        default:
+            return "UNKNOWN";
+    }
+}
+} // namespace
+
 using PfnCtrlMsgInit = rtError_t (*)(TaskInfo* taskInfo, const RtCtrlMsgParam& param);
 static PfnCtrlMsgInit ctrlMsgHandlerArr[static_cast<uint32_t>(RtCtrlMsgType::RT_CTRL_MSG_MAX)] = {};
 CtrlSQ::CtrlSQ(Device* const dev) : NoCopy(), device_(dev) {}
@@ -45,7 +87,7 @@ rtError_t CtrlSQ::CreateCtrlMsg(RtCtrlMsgType msgType, const RtCtrlMsgParam& par
     // 根据type找到对应的setupFunc
     const uint32_t idx = static_cast<uint32_t>(msgType);
     if (idx >= static_cast<uint32_t>(RtCtrlMsgType::RT_CTRL_MSG_MAX) || ctrlMsgHandlerArr[idx] == nullptr) {
-        RT_LOG(RT_LOG_ERROR, "Ctrl msg handler not found, msgType=%u.", idx);
+        RT_LOG(RT_LOG_ERROR, "Ctrl msg handler not found, msgType=%s(%u).", CtrlMsgTypeName(msgType), idx);
         return RT_ERROR_INVALID_VALUE;
     }
     if (device_->IsDavidPlatform()) {
@@ -60,12 +102,14 @@ rtError_t CtrlSQ::CreateCtrlMsg(RtCtrlMsgType msgType, const RtCtrlMsgParam& par
     error = ctrlMsgHandlerArr[idx](taskInfo, param);
     COND_PROC_RETURN_ERROR(
         error != RT_ERROR_NONE, error, (void)device_->GetTaskFactory()->Recycle(taskInfo),
-        "Failed to set up ctrl msg, msg_type=%u, error=%#x.", idx, static_cast<uint32_t>(error));
+        "Failed to set up ctrl msg, msg_type=%s(%u), error=%#x.", CtrlMsgTypeName(msgType), idx,
+        static_cast<uint32_t>(error));
 
     error = device_->SubmitTask(taskInfo, msgId, param.sendParam.timeout);
     COND_PROC_RETURN_ERROR(
         error != RT_ERROR_NONE, error, (void)device_->GetTaskFactory()->Recycle(taskInfo),
-        "Failed to submit task, msg_type=%u, error=%#x.", idx, static_cast<uint32_t>(error));
+        "Failed to submit task, msg_type=%s(%u), error=%#x.", CtrlMsgTypeName(msgType), idx,
+        static_cast<uint32_t>(error));
 
     RT_LOG(RT_LOG_INFO, "Ctrl msg send success, msgType=%u.", idx);
     return error;
@@ -90,13 +134,13 @@ rtError_t CtrlSQ::CreateDavidCtrlMsg(RtCtrlMsgType msgType, const RtCtrlMsgParam
     // 根据type找到对应的setupFunc
     error = ctrlMsgHandlerArr[idx](taskInfo, param);
     COND_PROC_RETURN_ERROR(error != RT_ERROR_NONE, error, TaskUnInitProc(taskInfo); TaskRollBack(stream_, pos);
-                           stream_->StreamUnLock();
-                           , "Failed to set up ctrl msg, msg_type=%u, error=%#x.", idx, static_cast<uint32_t>(error));
+                           stream_->StreamUnLock();, "Failed to set up ctrl msg, msg_type=%s(%u), error=%#x.",
+                                                   CtrlMsgTypeName(msgType), idx, static_cast<uint32_t>(error));
 
     error = DavidSendTask(taskInfo, stream_);
     COND_PROC_RETURN_ERROR(error != RT_ERROR_NONE, error, TaskUnInitProc(taskInfo); TaskRollBack(stream_, pos);
-                           stream_->StreamUnLock();
-                           , "Failed to submit task, msg_type=%u, error=%#x.", idx, static_cast<uint32_t>(error));
+                           stream_->StreamUnLock();, "Failed to submit task, msg_type=%s(%u), error=%#x.",
+                                                   CtrlMsgTypeName(msgType), idx, static_cast<uint32_t>(error));
     stream_->StreamUnLock();
     if (msgId != nullptr && taskInfo != nullptr) {
         *msgId = taskInfo->taskSn;

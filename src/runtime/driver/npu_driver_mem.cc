@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "npu_driver.hpp"
+#include "device_enum_desc.hpp"
 #include "driver/ascend_hal.h"
 #include "driver/ascend_inpackage_hal.h"
 #include "runtime.hpp"
@@ -2452,7 +2453,7 @@ rtError_t NpuDriver::CheckIfSupport1GHugePage()
     const auto curChipType = Runtime::Instance()->GetChipType();
     // Static function does not have featureSet
     if (!IS_SUPPORT_CHIP_FEATURE(curChipType, RtOptionalFeatureType::RT_FEATURE_MEM_1G_HUGE_PAGE)) {
-        RT_LOG(RT_LOG_ERROR, "chip type does not support, chip type=%d.", curChipType);
+        RT_LOG(RT_LOG_ERROR, "chip type does not support, chip type=%s.", ChipTypeToString(curChipType).c_str());
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
 

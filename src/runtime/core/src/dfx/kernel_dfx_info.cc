@@ -9,6 +9,7 @@
  */
 
 #include "kernel_dfx_info.hpp"
+#include "driver_enum_desc.hpp"
 
 namespace cce {
 namespace runtime {
@@ -16,7 +17,9 @@ rtError_t KernelDfxInfo::SetKernelDfxInfoCallback(rtKernelDfxInfoType type, rtKe
 {
     const std::unique_lock<std::mutex> regMapLock(kernelDfxInfoCallbackMutex_);
     if (kernelDfxInfoCallbackMap_.find(type) != kernelDfxInfoCallbackMap_.end()) {
-        RT_LOG(RT_LOG_ERROR, "Failed to register dump call function, duplicate callback registration, type=%d", type);
+        RT_LOG(
+            RT_LOG_ERROR, "Failed to register dump call function, duplicate callback registration, type=%s(%d)",
+            KernelDfxInfoTypeName(type), type);
         return RT_ERROR_INVALID_VALUE;
     }
     kernelDfxInfoCallbackMap_[type] = func;

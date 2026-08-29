@@ -715,7 +715,8 @@ static rtError_t CheckUpdatingTaskParams(TaskInfo* const taskInfo, rtTaskParams*
     ERROR_RETURN(error, "get task type failed, retCode=%#x.", error);
     // RT_TASK_DEFAULT表示外部不识别的类型，报错并打印RTS内部具体的Task类型
     COND_RETURN_ERROR(
-        taskType == RT_TASK_DEFAULT, RT_ERROR_INVALID_VALUE, "current taskType(%d) is invalid", taskInfo->type);
+        taskType == RT_TASK_DEFAULT, RT_ERROR_INVALID_VALUE, "current taskType=%s(%d) is invalid",
+        GetTaskDescByType(taskInfo->type), taskInfo->type);
 
     COND_RETURN_ERROR(params->taskGrp != nullptr, RT_ERROR_INVALID_VALUE, "taskGrp must be nullptr");
     COND_RETURN_ERROR(params->opInfoPtr != nullptr, RT_ERROR_INVALID_VALUE, "opInfoPtr must be nullptr");

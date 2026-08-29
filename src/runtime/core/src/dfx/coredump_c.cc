@@ -9,6 +9,7 @@
  */
 
 #include "coredump_c.hpp"
+#include "driver_enum_desc.hpp"
 #include "error_message_manage.hpp"
 #include "thread_local_container.hpp"
 #include "inner_thread_local.hpp"
@@ -40,14 +41,14 @@ static rtError_t CheckMemoryParam(const rtDebugMemoryParam_t* const param)
         COND_RETURN_ERROR(
             (!isValid), RT_ERROR_INVALID_VALUE,
             "The read memory boundary exceeds the hardware memory boundary of the specified memory type,"
-            " debugMemType=%d, srcAddr=0x%llx, memLen=%llu.",
-            param->debugMemType, param->srcAddr, param->memLen);
+            " debugMemType=%s(%d), srcAddr=0x%llx, memLen=%llu.",
+            DebugMemoryTypeName(param->debugMemType), param->debugMemType, param->srcAddr, param->memLen);
     }
     if (param->debugMemType == RT_MEM_TYPE_REGISTER) {
         COND_RETURN_ERROR(
             (param->elementSize == 0U), RT_ERROR_INVALID_VALUE,
-            "CheckMemoryParam failed, elementSize cannot be 0, debugMemType=%d, srcAddr=0x%llx, memLen=%llu.",
-            param->debugMemType, param->srcAddr, param->memLen);
+            "CheckMemoryParam failed, elementSize cannot be 0, debugMemType=%s(%d), srcAddr=0x%llx, memLen=%llu.",
+            DebugMemoryTypeName(param->debugMemType), param->debugMemType, param->srcAddr, param->memLen);
         COND_RETURN_ERROR(
             (param->memLen % param->elementSize != 0U), RT_ERROR_INVALID_VALUE,
             "The read memory length %llu is not aligned with the register bit width %u.", param->memLen,
@@ -56,8 +57,8 @@ static rtError_t CheckMemoryParam(const rtDebugMemoryParam_t* const param)
     if (param->debugMemType == RT_MEM_TYPE_REGISTER_DIRECT) {
         COND_RETURN_ERROR(
             (param->memLen == 0U), RT_ERROR_INVALID_VALUE,
-            "CheckMemoryParam failed, memLen cannot be 0, debugMemType=%d, memLen=%llu.", param->debugMemType,
-            param->memLen);
+            "CheckMemoryParam failed, memLen cannot be 0, debugMemType=%s(%d), memLen=%llu.",
+            DebugMemoryTypeName(param->debugMemType), param->debugMemType, param->memLen);
     }
     return RT_ERROR_NONE;
 }
@@ -150,10 +151,11 @@ static rtError_t ConstructReadAICoreSendInfo(
         ret = ctx->SendAndRecvDebugTask(&sendInfo, &reportInfo);
         COND_RETURN_ERROR(
             ((ret != RT_ERROR_NONE) || (reportInfo.returnVal != 0U)), RT_ERROR_INVALID_VALUE,
-            "DebugReadAICore failed, retCode=%#x, reportVal=%u, coreType=%u, coreId=%u, debugMemType=%u, "
+            "DebugReadAICore failed, retCode=%#x, reportVal=%u, coreType=%u, coreId=%u, debugMemType=%s(%u), "
             "elementSize=%u, memLen=%llu, srcAddr=0x%llx, dstAddr=0x%llx.",
-            ret, reportInfo.returnVal, param->coreType, param->coreId, param->debugMemType, memoryParam->elementSize,
-            memoryParam->memLen, memoryParam->srcAddr, memoryParam->dstAddr);
+            ret, reportInfo.returnVal, param->coreType, param->coreId, DebugMemoryTypeName(param->debugMemType),
+            static_cast<uint32_t>(param->debugMemType), memoryParam->elementSize, memoryParam->memLen,
+            memoryParam->srcAddr, memoryParam->dstAddr);
         ret = devDrv->MemCopySync(
             ValueToPtr(param->dstAddr + offset), memoryParam->memLen, devMem, memoryParam->memLen,
             RT_MEMCPY_DEVICE_TO_HOST);

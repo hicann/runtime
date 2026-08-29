@@ -64,7 +64,8 @@ static std::map<DqsInterChipTaskType, DqsInterChipTaskInitInfo> DQS_INTER_CHIP_T
 static inline rtError_t GetDqsTaskInitInfo(const rtDqsTaskType type, DqsTaskInitInfo** taskInitInfo)
 {
     const auto iter = DQS_TASK_INIT_FUNC.find(type);
-    COND_RETURN_ERROR_MSG_INNER(iter == DQS_TASK_INIT_FUNC.end(), RT_ERROR_INVALID_VALUE, "type[%d] is invalid", type);
+    COND_RETURN_ERROR_MSG_INNER(
+        iter == DQS_TASK_INIT_FUNC.end(), RT_ERROR_INVALID_VALUE, "type=UNKNOWN(%d) is invalid", type);
 
     *taskInitInfo = &(iter->second);
 
@@ -76,7 +77,7 @@ static inline rtError_t GetDqsInterChipTaskInitInfo(
 {
     const auto iter = DQS_INTER_CHIP_TASK_INIT_FUNC.find(type);
     COND_RETURN_ERROR_MSG_INNER(
-        iter == DQS_INTER_CHIP_TASK_INIT_FUNC.end(), RT_ERROR_INVALID_VALUE, "type[%d] is invalid",
+        iter == DQS_INTER_CHIP_TASK_INIT_FUNC.end(), RT_ERROR_INVALID_VALUE, "type=UNKNOWN(%d) is invalid",
         static_cast<int32_t>(type));
 
     *taskInitInfo = &(iter->second);
@@ -544,7 +545,7 @@ rtError_t DqsLaunchTask(Stream* const stm, const rtDqsTaskCfg_t* const taskCfg)
 
     COND_RETURN_ERROR(
         (dqsLaunchTaskFuncIter == DQS_LAUNCH_TASK_FUNC_MAP.end()), RT_ERROR_INVALID_VALUE,
-        "Unsupported dqs task type: %u", static_cast<uint32_t>(taskCfg->type));
+        "Unsupported dqs task type: UNKNOWN(%u)", static_cast<uint32_t>(taskCfg->type));
 
     return dqsLaunchTaskFuncIter->second(stm, taskCfg);
 }

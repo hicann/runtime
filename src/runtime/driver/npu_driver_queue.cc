@@ -13,6 +13,7 @@
 #include "errcode_manage.hpp"
 #include "error_message_manage.hpp"
 #include "rt_log.h"
+#include "driver_enum_desc.hpp"
 
 namespace {
 constexpr int32_t MEMQ_EVENT_CROSS_DEV_VERSION = 0x72316; // MAJOR:0x07, MINOR:0x23, PATCH:0x16
@@ -90,8 +91,8 @@ rtError_t NpuDriver::BuffGetInfo(
     const drvError_t drvRet = static_cast<drvError_t>(halBuffGetInfo(drvType, drvInBuff, inLen, outBuff, outLen));
     if (drvRet != DRV_ERROR_NONE) {
         DRV_ERROR_PROCESS(
-            drvRet, "Call driver api halBuffGetInfo failed, drvRetCode=%d, type=%d.", static_cast<int32_t>(drvRet),
-            static_cast<int32_t>(drvType));
+            drvRet, "Call driver api halBuffGetInfo failed, drvRetCode=%d, type=%s(%d).", static_cast<int32_t>(drvRet),
+            BuffGetCmdTypeName(drvType), static_cast<int32_t>(drvType));
         return RT_GET_DRV_ERRCODE(drvRet);
     }
 
@@ -612,8 +613,8 @@ rtError_t NpuDriver::MemQueueSet(
     const drvError_t drvRet = halQueueSet(static_cast<uint32_t>(devId), type, &para);
     if (drvRet != DRV_ERROR_NONE) {
         DRV_ERROR_PROCESS(
-            drvRet, "Call driver api halQueueSet failed, drvRetCode=%d, drvDevId=%d, type=%d.",
-            static_cast<int32_t>(drvRet), devId, static_cast<int32_t>(cmd));
+            drvRet, "Call driver api halQueueSet failed, drvRetCode=%d, drvDevId=%d, type=%s(%d).",
+            static_cast<int32_t>(drvRet), devId, MemQueueSetCmdTypeName(cmd), static_cast<int32_t>(cmd));
         return RT_GET_DRV_ERRCODE(drvRet);
     }
     return RT_ERROR_NONE;

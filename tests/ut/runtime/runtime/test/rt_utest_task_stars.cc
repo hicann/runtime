@@ -542,6 +542,21 @@ TEST_F(StarsTaskTest, ModelMaintaince)
     EXPECT_EQ(stream->GetBindFlag(), false);
     EXPECT_EQ(sqe.phSqe.pre_p, 1U);
 
+    const MmtType maintainceTypes[] = {
+        MMT_STREAM_ADD,    MMT_STREAM_DEL,     MMT_MODEL_LOAD_COMPLETE,
+        MMT_MODEL_DESTROY, MMT_MODEL_PRE_PROC, MMT_STREAM_LOAD_COMPLETE,
+        MMT_MODEL_ABORT,   MMT_RESERVED,       static_cast<MmtType>(MMT_RESERVED + 1),
+    };
+    for (const auto type : maintainceTypes) {
+        maintainceTask.u.modelMaintainceTaskInfo.type = type;
+        PrintErrorInfoForModelMaintainceTask(&maintainceTask, 0U);
+    }
+    maintainceTask.u.modelMaintainceTaskInfo.streamType = RT_MODEL_WAIT_ACTIVE_STREAM;
+    PrintErrorInfoForModelMaintainceTask(&maintainceTask, 0U);
+    maintainceTask.u.modelMaintainceTaskInfo.streamType =
+        static_cast<rtModelStreamType_t>(RT_MODEL_WAIT_ACTIVE_STREAM + 1);
+    PrintErrorInfoForModelMaintainceTask(&maintainceTask, 0U);
+
     ret = rtStreamDestroy(streamHandle);
     EXPECT_EQ(ret, RT_ERROR_NONE);
     ret = rtModelDestroy(modelHandle);

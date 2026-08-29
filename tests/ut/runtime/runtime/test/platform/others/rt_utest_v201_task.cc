@@ -78,6 +78,7 @@ using namespace testing;
 using namespace cce::runtime;
 extern int64_t g_device_driver_version_stub;
 static rtChipType_t g_chipType;
+static QUEUE_ENTITY_TYPE g_queueEntityType;
 
 static drvError_t halResAddrMapStub(
     unsigned int devId, struct res_addr_info* resInfo, unsigned long* va, unsigned int* len)
@@ -151,6 +152,12 @@ rtError_t StubGetDqsQueInfo(NpuDriver* drv, const uint32_t devId, const uint32_t
         queInfo->queType = GQM_ENTITY_TYPE;
     }
 
+    return RT_ERROR_NONE;
+}
+
+rtError_t StubGetDqsQueInfoByType(NpuDriver* drv, const uint32_t devId, const uint32_t qid, DqsQueueInfo* queInfo)
+{
+    queInfo->queType = g_queueEntityType;
     return RT_ERROR_NONE;
 }
 
@@ -731,6 +738,41 @@ TEST_F(TaskTestV201, Test_DqsTask_03)
     cfg.type = RT_DQS_TASK_SCHED_CONFIG;
     rtError_t error = DqsLaunchTask(stm, &cfg);
     EXPECT_EQ(error, RT_ERROR_NONE);
+
+    delete stm;
+}
+
+TEST_F(TaskTestV201, DqsQueueEntityTypeErrorLogs)
+{
+    Stream* stm = CreateStreamAndGet(device_, 0, RT_STREAM_DQS_CTRL, nullptr);
+    ASSERT_NE(stm, nullptr);
+    StreamWithDqs* streamWithDqs = static_cast<StreamWithDqs*>(stm);
+
+    stars_dqs_ctrl_space_t ctrlSpace = {};
+    streamWithDqs->SetDqsCtrlSpace(&ctrlSpace);
+    rtDqsSchedCfg_t schedCfg = {};
+    schedCfg.inputQueueNum = 1U;
+    schedCfg.inputQueueIds[0] = 1U;
+    MOCKER_CPP_VIRTUAL((NpuDriver*)(device_->Driver_()), &NpuDriver::GetDqsQueInfo)
+        .stubs()
+        .will(invoke(StubGetDqsQueInfoByType));
+
+    const QUEUE_ENTITY_TYPE invalidInputTypes[] = {
+        SOFT_ENTITY_TYPE,
+        QMNGR_ENTITY_TYPE,
+        QUEUE_ENTITY_TYPE_MAX,
+        static_cast<QUEUE_ENTITY_TYPE>(QUEUE_ENTITY_TYPE_MAX + 1),
+    };
+    for (const auto type : invalidInputTypes) {
+        g_queueEntityType = type;
+        EXPECT_EQ(streamWithDqs->SetCtrlSpaceInputQueInfo(&schedCfg), RT_ERROR_INVALID_VALUE);
+    }
+
+    schedCfg.type = 1U;
+    schedCfg.outputQueueNum = 1U;
+    schedCfg.outputQueueIds[0] = 1U;
+    g_queueEntityType = GQM_ENTITY_TYPE;
+    EXPECT_EQ(streamWithDqs->SetCtrlSpaceOutputQueInfo(&schedCfg), RT_ERROR_INVALID_VALUE);
 
     delete stm;
 }

@@ -16,6 +16,7 @@
 #include "api_handle_guard.h"
 #include "capture_model_utils.hpp"
 #include "aclgraph_cond_task.h"
+#include "cond_enum_desc.hpp"
 
 #define RT_DRV_FAULT_CNT 25U
 #define NULL_STREAM_PTR_RETURN_MSG(STREAM) NULL_PTR_RETURN_MSG((STREAM), RT_ERROR_STREAM_NULL)
@@ -267,8 +268,8 @@ rtError_t ApiImpl::StreamAddCondTaskParasCheck(rtCondTaskParams params, Stream* 
 
     error = CheckCondTaskParamsSize(params);
     ERROR_RETURN_MSG_INNER(
-        error, "Failed to check condition task params, condition type=%u, condition size=%u, retCode=%#x.", params.type,
-        params.size, static_cast<uint32_t>(error));
+        error, "Failed to check condition task params, condition type=%s, condition size=%u, retCode=%#x.",
+        CondTaskTypeToString(params.type).c_str(), params.size, static_cast<uint32_t>(error));
     COND_RETURN_AND_MSG_OUTER(
         !realHandle->GetSubCaptureModels().empty(), RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, "rtStreamAddCondTask",
         "params.handle", "The condHandle has already been used by rtStreamAddCondTask");
@@ -290,8 +291,8 @@ rtError_t ApiImpl::StreamAddCondTask(rtCondTaskParams params, Stream* const stm,
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     error = curCtx->CreateSubCaptureModels(realHandle, params, stm);
     ERROR_RETURN_MSG_INNER(
-        error, "Create sub capture model failed, condition type=%u, condition size=%u, retCode=%#x.", params.type,
-        params.size, static_cast<uint32_t>(error));
+        error, "Create sub capture model failed, condition type=%s, condition size=%u, retCode=%#x.",
+        CondTaskTypeToString(params.type).c_str(), params.size, static_cast<uint32_t>(error));
 
     return curCtx->StreamAddCondTask(realHandle, params, stm, flags);
 }

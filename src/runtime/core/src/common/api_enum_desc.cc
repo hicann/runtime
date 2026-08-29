@@ -9,10 +9,81 @@
  */
 
 #include "enum_desc.hpp"
+#include "device_enum_desc.hpp"
 #include "securec.h"
 
 namespace cce {
 namespace runtime {
+
+const char_t* ChipTypeToName(const rtChipType_t type)
+{
+    if (type >= CHIP_EXT_BEGIN) {
+        switch (type) {
+            case CHIP_X90:
+                return "CHIP_X90";
+            case CHIP_9030:
+                return "CHIP_9030";
+            case CHIP_DEV_0000:
+                return "CHIP_DEV_0000";
+            case CHIP_DEV_0001:
+                return "CHIP_DEV_0001";
+            case CHIP_DEV_0002:
+                return "CHIP_DEV_0002";
+            case CHIP_DEV_0003:
+                return "CHIP_DEV_0003";
+            default:
+                return "UNKNOWN";
+        }
+    }
+    switch (type) {
+        case CHIP_MINI:
+            return "CHIP_MINI";
+        case CHIP_CLOUD:
+            return "CHIP_CLOUD";
+        case CHIP_ADC:
+            return "CHIP_ADC";
+        case CHIP_LHISI:
+            return "CHIP_LHISI";
+        case CHIP_DC:
+            return "CHIP_DC";
+        case CHIP_910_B_93:
+            return "CHIP_910_B_93";
+        case CHIP_NO_DEVICE:
+            return "CHIP_NO_DEVICE";
+        case CHIP_MINI_V3:
+            return "CHIP_MINI_V3";
+        case CHIP_ASCEND_031:
+            return "CHIP_ASCEND_031";
+        case CHIP_NANO:
+            return "CHIP_NANO";
+        case CHIP_RESERVED:
+            return "CHIP_RESERVED";
+        case CHIP_AS31XM1:
+            return "CHIP_AS31XM1";
+        case CHIP_610LITE:
+            return "CHIP_610LITE";
+        case CHIP_CLOUD_V3:
+            return "CHIP_CLOUD_V3";
+        case CHIP_BS9SX1A:
+            return "CHIP_BS9SX1A";
+        case CHIP_DAVID:
+            return "CHIP_DAVID";
+        case CHIP_CLOUD_V5:
+            return "CHIP_CLOUD_V5";
+        case CHIP_MC62CM12A:
+            return "CHIP_MC62CM12A";
+        case CHIP_MC32DM11A:
+            return "CHIP_MC32DM11A";
+        case CHIP_ASCEND_350:
+            return "CHIP_ASCEND_350";
+        case CHIP_XPU:
+            return "CHIP_XPU";
+        case CHIP_5162A:
+            return "CHIP_5162A";
+        default:
+            return "UNKNOWN";
+    }
+}
 
 const char_t* MemcpyKindToStr(const rtMemcpyKind_t kind)
 {
