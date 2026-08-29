@@ -35,20 +35,8 @@ namespace runtime {
 uint32_t CalcLogicSqRemainNum(const LogicSq* const logicSq, const uint32_t curHwPos)
 {
     const uint32_t depth = logicSq->GetLogicSqDepth();
-    if (curHwPos == 0U) {
-        // 第一次进来，返回最大深度，因为stream的最后可能是multi task + stream active task
-        // 一次性把当前流里面的task拷贝全
-        return depth;
-    }
-
-    // 超过预留的最大深度，要级联
-    const uint32_t reserve = logicSq->GetReserveSqeNum(); // 包含32个预留 + expandStreamRsvTaskNum
-    if ((curHwPos + reserve) >= depth) {
-        return 0U;
-    }
-
-    // 这个分支是给下个版本的条件任务合并需求预留的
-    return depth - reserve - curHwPos;
+    // 当前要求 CaptureStream 与 LogicSq 一一对应，当前 LogicSq 已有 SQE 时不再承载后续 stream。
+    return (curHwPos == 0U) ? depth : 0U;
 }
 
 /**
