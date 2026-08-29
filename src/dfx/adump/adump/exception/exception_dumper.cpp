@@ -133,7 +133,7 @@ int32_t ExceptionDumper::ExceptionDumperInit(DumpType dumpType, const DumpConfig
         IDE_CTRL_VALUE_FAILED(InitArgsExceptionMemory(), return ADUMP_FAILED, "Init args exception memory failed.");
         if (status && !argsExceptionStatus_) {
             IDE_CTRL_VALUE_WARN(
-                LoadTensorPluginLib() == ADUMP_SUCCESS, return ADUMP_FAILED, "Load tersor custom plugin failed.");
+                LoadTensorPluginLib() == ADUMP_SUCCESS, return ADUMP_FAILED, "Load tensor custom plugin failed.");
         }
         argsExceptionStatus_ = status;
     } else {
@@ -248,7 +248,7 @@ std::string ExceptionDumper::CreateDumpPath(Path& dumpPath) const
 {
     IDE_CTRL_VALUE_FAILED(dumpPath.CreateDirectory(true), return "", "Create path[%s] failed", dumpPath.GetCString());
     IDE_CTRL_VALUE_FAILED(
-        dumpPath.RealPath(), return "", "Get RealPath of [%s] failed, strerr=%s", dumpPath.GetCString(),
+        dumpPath.RealPath(), return "", "Get RealPath of [%s] failed, strerror=%s", dumpPath.GetCString(),
         strerror(errno));
     return dumpPath.GetString();
 }

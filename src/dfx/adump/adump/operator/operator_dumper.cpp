@@ -142,7 +142,7 @@ int32_t OperatorDumper::Launch()
 
     IDE_CTRL_VALUE_FAILED(FillOpMappingInfo() == ADUMP_SUCCESS, return ADUMP_FAILED, "Fill op mapping info failed!");
 
-    IDE_CTRL_VALUE_FAILED(LaunchDumpKernel() == ADUMP_SUCCESS, return ADUMP_FAILED, "Launch dump kernal failed!");
+    IDE_CTRL_VALUE_FAILED(LaunchDumpKernel() == ADUMP_SUCCESS, return ADUMP_FAILED, "Launch dump kernel failed!");
     return ADUMP_SUCCESS;
 }
 
@@ -162,7 +162,7 @@ int32_t OperatorDumper::LaunchWithCfg(const DumpCfg& dumpCfg)
     FillOpMappingInfoWithCfg(dumpCfg, synchronize);
 
     IDE_CTRL_VALUE_FAILED(
-        LaunchDumpKernel(synchronize) == ADUMP_SUCCESS, return ADUMP_FAILED, "Launch dump kernal with cfg failed!");
+        LaunchDumpKernel(synchronize) == ADUMP_SUCCESS, return ADUMP_FAILED, "Launch dump kernel with cfg failed!");
     return ADUMP_SUCCESS;
 }
 

@@ -72,7 +72,7 @@ int32_t DumpTensorPlugin::InitPluginLib()
         IDE_LOGD("The file of the target plugin.so is %s.", realFile.c_str());
 
         // Load target plugin so by dlopen
-        IDE_LOGD("Load plugin librairy from %s.", realFile.c_str());
+        IDE_LOGD("Load plugin library from %s.", realFile.c_str());
         void* handle = dlopen(realFile.c_str(), RTLD_NOW | RTLD_GLOBAL | RTLD_NODELETE);
         IDE_CTRL_VALUE_WARN_NODO(
             handle != nullptr, continue, "Cannot open library %s, error: %s.", realFile.c_str(), dlerror());

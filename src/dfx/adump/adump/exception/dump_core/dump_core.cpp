@@ -251,7 +251,7 @@ void DumpCore::SaveCoreFile(const rtExceptionInfo& exception)
     dumpFileName = dumpFileName.length() > 255U ? dumpFileName.substr(dumpFileName.length() - 255U) : dumpFileName;
     Path dumpFilePath(path_);
     IDE_CTRL_VALUE_FAILED(
-        dumpFilePath.RealPath(), return, "Get path %s real path failed, strerr=%s.", dumpFilePath.GetCString(),
+        dumpFilePath.RealPath(), return, "Get path %s real path failed, strerror=%s.", dumpFilePath.GetCString(),
         strerror(errno));
     std::string dir = dumpFilePath.GetString();
     dumpFilePath.Concat(dumpFileName);
@@ -544,7 +544,7 @@ void DumpCore::DumpHostFile(const std::string& filePath, uint32_t sectionType, c
 {
     char canonicalPath[PATH_MAX] = {0};
     IDE_CTRL_VALUE_FAILED(
-        realpath(filePath.c_str(), canonicalPath) != nullptr, return, "Get file path %s realpath failed, strerr=%s",
+        realpath(filePath.c_str(), canonicalPath) != nullptr, return, "Get file path %s realpath failed, strerror=%s",
         filePath.c_str(), strerror(errno));
     std::ifstream file(canonicalPath);
     IDE_CTRL_VALUE_FAILED(file.is_open(), return, "Open file failed, path: %s", canonicalPath);

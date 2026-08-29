@@ -295,7 +295,7 @@ int32_t DumpManager::SetDumpConfig(DumpType dumpType, const DumpConfig& dumpConf
 
     ret = OperatorDumper(dumpSetting_).UpdateDevMemCache();
     IDE_CTRL_VALUE_FAILED(
-        ret == ADUMP_SUCCESS, return ADUMP_FAILED, "Update device memery cache for data dump failed! dumpType=%s[%d]",
+        ret == ADUMP_SUCCESS, return ADUMP_FAILED, "Update device memory cache for data dump failed! dumpType=%s[%d]",
         DumpConfigConverter::DumpTypeToStr(dumpType).c_str(), dumpType);
 
     IDE_RUN_LOGI(

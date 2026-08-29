@@ -93,7 +93,7 @@ SectionPtr DumpELF::CreateSection(Elf64_Word type)
         sections_.back()->SetIndex(static_cast<uint32_t>(sections_.size() - 1));
         return sections_.back();
     } catch (std::exception& ex) {
-        IDE_LOGE("Section make shared failed, strerr=%s", ex.what());
+        IDE_LOGE("Section make shared failed, error=%s", ex.what());
         return nullptr;
     }
 }
@@ -142,11 +142,11 @@ void DumpELF::Save(const std::string& filename)
         mmAccess2(filename.c_str(), F_OK) != EN_OK, return, "file %s already exist", filename.c_str());
 
     int32_t fd = mmOpen2(filename.c_str(), M_RDWR | M_CREAT, M_IRUSR | M_IWUSR);
-    IDE_CTRL_VALUE_FAILED(fd >= 0, return, "open file %s failed, strerr=%s", filename.c_str(), strerror(errno));
+    IDE_CTRL_VALUE_FAILED(fd >= 0, return, "open file %s failed, strerror=%s", filename.c_str(), strerror(errno));
     close(fd);
 
     std::ofstream ofs(filename, std::ios::binary);
-    IDE_CTRL_VALUE_FAILED(ofs.is_open(), return, "open file %s failed, strerr=%s", filename.c_str(), strerror(errno));
+    IDE_CTRL_VALUE_FAILED(ofs.is_open(), return, "open file %s failed, strerror=%s", filename.c_str(), strerror(errno));
 
     SetSectionHeaderStringTable();
 
@@ -168,7 +168,7 @@ void DumpELF::Save(const std::string& filename)
     IDE_LOGE("Save dump file %s", filename.c_str());
 
     int32_t err = mmChmod(filename.c_str(), M_IRUSR); // 落盘文件置为最小权限:用户只读, 400
-    IDE_CTRL_VALUE_WARN(err == 0, return, "mmChmod %s failed, strerr=%s", filename.c_str(), strerror(errno));
+    IDE_CTRL_VALUE_WARN(err == 0, return, "mmChmod %s failed, strerror=%s", filename.c_str(), strerror(errno));
 }
 
 void DumpELF::SetSectionHeaderStringTable()

@@ -616,7 +616,7 @@ static void AdxPrint(
                 // if条件进来，ADX_PRINT_FORMAT_CALLS中存在tempFormat，size必不为0
                 format += tempFormat.size() - 1;
             } else {
-                IDE_LOGW("Dump print fomat %s is illegal.", tempFormat.c_str());
+                IDE_LOGW("Dump print format %s is illegal.", tempFormat.c_str());
                 (void)printf("%%");
                 (void)printf("%s", tempFormat.c_str());
                 printInfo += "%" + tempFormat;

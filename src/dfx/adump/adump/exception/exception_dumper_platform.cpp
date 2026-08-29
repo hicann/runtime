@@ -90,7 +90,7 @@ int32_t ExceptionDumper::DumpDetailException(const rtExceptionInfo& exception, c
         Exit();
     } else {
         IDE_CTRL_VALUE_WARN(
-            LoadTensorPluginLib() == ADUMP_SUCCESS, return ADUMP_FAILED, "Load tersor custom plugin failed.");
+            LoadTensorPluginLib() == ADUMP_SUCCESS, return ADUMP_FAILED, "Load tensor custom plugin failed.");
         // detail exception dump downgrade to L0 exception dump
         return DumpArgsException(exception, dumpPath);
     }

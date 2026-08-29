@@ -95,10 +95,10 @@ IdeErrorT AdxDumpHdcHelper::HandShake(const std::string& info, IDE_SESSION& sess
     IDE_CTRL_VALUE_FAILED(
         handle.session != ADX_OPT_INVALID_HANDLE, return IDE_DAEMON_INVALID_PARAM_ERROR, "dump data connect failed");
     err = AdxMsgProto::SendResponse(handle, IDE_DUMP_REQ, devId, MsgStatus::MSG_STATUS_HAND_SHAKE);
-    IDE_CTRL_VALUE_FAILED(err == IDE_DAEMON_NONE_ERROR, return err, "dump data hand shake failed");
+    IDE_CTRL_VALUE_FAILED(err == IDE_DAEMON_NONE_ERROR, return err, "dump data handshake failed");
 
     err = AdxMsgProto::RecvResponse(handle);
-    IDE_CTRL_VALUE_FAILED(err == IDE_DAEMON_NONE_ERROR, return err, "dump date shake response failed");
+    IDE_CTRL_VALUE_FAILED(err == IDE_DAEMON_NONE_ERROR, return err, "dump data handshake response failed");
 
     session = reinterpret_cast<HDC_SESSION>(handle.session);
     IDE_LOGD("handshake success");
@@ -122,7 +122,7 @@ IdeErrorT AdxDumpHdcHelper::DataProcess(const IDE_SESSION& session, const IdeDum
         "fileName is too long, not longer than %d length", IDE_MAX_FILE_PATH);
     int32_t err = strcpy_s(data->fileName, MAX_FILE_PATH_LENGTH, dumpChunk.fileName);
     IDE_CTRL_VALUE_FAILED(
-        err == EOK, return IDE_DAEMON_INVALID_PATH_ERROR, "copy file name failed, err=%d, strerr=%s", err,
+        err == EOK, return IDE_DAEMON_INVALID_PATH_ERROR, "copy file name failed, err=%d, strerror=%s", err,
         strerror(errno));
     data->bufLen = dumpChunk.bufLen;
     data->flag = dumpChunk.flag;
