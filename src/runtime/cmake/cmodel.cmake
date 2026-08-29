@@ -201,6 +201,7 @@ set(libruntime_cmodel_api_src_files_cmodel
     ${RUNTIME_DIR}/src/runtime/api/api_c_model.cc
     ${RUNTIME_DIR}/src/runtime/api/api_c_event.cc
     ${RUNTIME_DIR}/src/runtime/api/api_c_mbuf.cc
+    ${RUNTIME_DIR}/src/runtime/api/api_c_esched.cc
     ${RUNTIME_DIR}/src/runtime/api/inner.cc
     ${RUNTIME_DIR}/src/runtime/api/api_handle_guard.cc
     ${RUNTIME_DIR}/src/runtime/api/api_global_err.cc

@@ -177,6 +177,7 @@ set(runtimeut_src_api_list
     ${TOP_DIR}/src/runtime/api/api_c_model.cc
     ${TOP_DIR}/src/runtime/api/api_c_event.cc
     ${TOP_DIR}/src/runtime/api/api_c_mbuf.cc
+    ${TOP_DIR}/src/runtime/api/api_c_esched.cc
     ${TOP_DIR}/src/runtime/api/inner.cc
     ${TOP_DIR}/src/runtime/api/api_handle_guard.cc
     ${TOP_DIR}/src/runtime/api/api_global_err.cc
@@ -1201,6 +1202,7 @@ add_executable(runtime_utest_api
     test/rt_utest_api_context.cc
     test/rt_utest_api_device.cc
     test/rt_utest_api_event_route.cc
+    test/rt_utest_api_esched_route.cc
     test/rt_utest_api_kernel.cc
     test/rt_utest_api_impl.cc
     test/rt_api_test.cc

@@ -2889,95 +2889,12 @@ rtError_t rtBufEventTrigger(const char_t* const name)
 }
 
 VISIBILITY_DEFAULT
-rtError_t rtEschedSubmitEventSync(int32_t devId, rtEschedEventSummary_t* evt, rtEschedEventReply_t* ack)
-{
-    Api* const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->EschedSubmitEventSync(devId, evt, ack);
-    COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT); // special state
-    ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
 rtError_t rtQueryDevPid(rtBindHostpidInfo_t* info, int32_t* devPid)
 {
     Api* const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     const rtError_t error = apiInstance->QueryDevPid(info, devPid);
     return GetRtExtErrCodeAndSetGlobalErr(error);
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtEschedAttachDevice(int32_t devId)
-{
-    Api* const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->EschedAttachDevice(devId);
-    ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtEschedDettachDevice(int32_t devId)
-{
-    Api* const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->EschedDettachDevice(devId);
-    ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtEschedWaitEvent(
-    int32_t devId, uint32_t grpId, uint32_t threadId, int32_t timeout, rtEschedEventSummary_t* evt)
-{
-    Api* const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->EschedWaitEvent(devId, grpId, threadId, timeout, evt);
-    COND_RETURN_WITH_NOLOG(error == RT_ERROR_REPORT_TIMEOUT, ACL_ERROR_RT_REPORT_TIMEOUT);
-    ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtEschedCreateGrp(int32_t devId, uint32_t grpId, rtGroupType_t type)
-{
-    Api* const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->EschedCreateGrp(devId, grpId, type);
-    ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtEschedSubmitEvent(int32_t devId, rtEschedEventSummary_t* evt)
-{
-    Api* const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->EschedSubmitEvent(devId, evt);
-    ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtEschedSubscribeEvent(int32_t devId, uint32_t grpId, uint32_t threadId, uint64_t eventBitmap)
-{
-    Api* const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->EschedSubscribeEvent(devId, grpId, threadId, eventBitmap);
-    ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtEschedAckEvent(int32_t devId, rtEventIdType_t evtId, uint32_t subEvtId, char_t* msg, uint32_t len)
-{
-    Api* const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->EschedAckEvent(devId, evtId, subEvtId, msg, len);
-    ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    return ACL_RT_SUCCESS;
 }
 
 VISIBILITY_DEFAULT
@@ -3590,30 +3507,6 @@ RTS_API rtError_t rtGetAllUtilizations(const int32_t devId, const rtTypeUtil_t k
     const rtError_t error = apiInstance->GetAllUtilizations(devId, kind, util);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
-RTS_API rtError_t rtEschedQueryInfo(
-    const uint32_t devId, const rtEschedQueryType type, rtEschedInputInfo* inPut, rtEschedOutputInfo* outPut)
-{
-    rtError_t ret;
-    const Runtime* const rtInstance = Runtime::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
-    Api* const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-
-    if (IS_SUPPORT_CHIP_FEATURE(
-            rtInstance->GetChipType(), RtOptionalFeatureType::RT_FEATURE_DRIVER_ESCHED_QUERY_INFO)) {
-        ret = apiInstance->EschedQueryInfo(devId, type, inPut, outPut);
-    } else {
-        RT_LOG(
-            RT_LOG_ERROR, "Chip type %s(%d) does not support.", ChipTypeToName(rtInstance->GetChipType()),
-            static_cast<int32_t>(rtInstance->GetChipType()));
-        return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_FEATURE_NOT_SUPPORT);
-    }
-
-    ERROR_RETURN_WITH_EXT_ERRCODE(ret);
     return ACL_RT_SUCCESS;
 }
 

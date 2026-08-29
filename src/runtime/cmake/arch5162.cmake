@@ -28,6 +28,7 @@ set(RUNTIME_API_WEAK_REAL_SRC_FILES
     # definitions from the legacy api_c_stub/api_c_mbuf_stub files. Do not add
     # another source unless its APIs have corresponding generated stubs.
     ${RUNTIME_API_DIR}/api_c_dqs.cc          # 1 stub
+    ${RUNTIME_API_DIR}/api_c_esched.cc       # 9 stubs
     ${RUNTIME_API_DIR}/api_c_mbuf.cc         # 17 stubs
     ${RUNTIME_API_DIR}/api_c_snapshot.cc     # 7 stubs
     ${RUNTIME_API_DIR}/api_c_soma.cc         # 7 stubs
