@@ -11,7 +11,7 @@
 /*!
  * \file adump_pub.h
  * \brief 算子dump接口头文件
-*/
+ */
 
 /* * @defgroup dump dump接口 */
 #ifndef ADUMP_PUB_H
@@ -34,9 +34,9 @@ constexpr int32_t ADUMP_INPUT_FAILED = -2;
 constexpr uint32_t ADUMP_ARGS_EXCEPTION_HEAD = 2;
 
 // AdumpGetDFXInfoAddr chunk size parameter
-extern uint64_t *g_dynamicChunk;
-extern uint64_t *g_staticChunk;
-constexpr uint32_t DYNAMIC_RING_CHUNK_SIZE = 393216;  // 393216 * 8 = 3M
+extern uint64_t* g_dynamicChunk;
+extern uint64_t* g_staticChunk;
+constexpr uint32_t DYNAMIC_RING_CHUNK_SIZE = 393216; // 393216 * 8 = 3M
 constexpr uint32_t STATIC_RING_CHUNK_SIZE = 131072;  // 131072 * 8 = 1M
 constexpr uint32_t DFX_MAX_TENSOR_NUM = 4000;
 constexpr uint16_t RESERVE_SPACE = 2;
@@ -82,13 +82,13 @@ ADX_API uint64_t AdumpGetDumpSwitch(const DumpType dumpType);
  * @see        无
  * @since
  */
-ADX_API int32_t AdumpSetDump(const char *dumpConfigData, size_t dumpConfigSize);
+ADX_API int32_t AdumpSetDump(const char* dumpConfigData, size_t dumpConfigSize);
 
 typedef struct DumpConfigInfo {
-    const char *dumpConfigPath; // 配置文件路径
-    const char *dumpConfigData; // 配置文件数据内容
+    const char* dumpConfigPath; // 配置文件路径
+    const char* dumpConfigData; // 配置文件数据内容
     size_t dumpConfigSize;      // 配置文件数据内容的大小
-}DumpConfigInfo;
+} DumpConfigInfo;
 
 /**
  * @ingroup dump
@@ -116,50 +116,42 @@ ADX_API int32_t AdumpSetDumpConfig(const DumpConfigInfo configInfo);
  */
 ADX_API int32_t AdumpUnSetDump();
 
-enum class TensorType : int32_t {
-    INPUT,
-    OUTPUT,
-    WORKSPACE
-};
+enum class TensorType : int32_t { INPUT, OUTPUT, WORKSPACE };
 
-enum class AddressType : int32_t {
-    TRADITIONAL,
-    NOTILING,
-    RAW
-};
+enum class AddressType : int32_t { TRADITIONAL, NOTILING, RAW };
 
 enum TensorPlacement : int32_t {
-    kOnDeviceHbm,  ///< Tensor位于Device上的HBM内存
-    kOnHost,       ///< Tensor位于Host
-    kFollowing,    ///< Tensor位于Host，且数据紧跟在结构体后面
-    kOnDeviceP2p,  ///< Tensor位于Device上的P2p内存
+    kOnDeviceHbm, ///< Tensor位于Device上的HBM内存
+    kOnHost,      ///< Tensor位于Host
+    kFollowing,   ///< Tensor位于Host，且数据紧跟在结构体后面
+    kOnDeviceP2p, ///< Tensor位于Device上的P2p内存
     kTensorPlacementEnd
 };
 
 struct TensorInfo {
-    TensorType type;       // tensor类型
-    size_t tensorSize;     // tensor内存大小
+    TensorType type;   // tensor类型
+    size_t tensorSize; // tensor内存大小
     int32_t format;
     int32_t dataType;
-    int64_t *tensorAddr;   // tensor数据地址
-    AddressType addrType;  // 地址的类型
+    int64_t* tensorAddr;              // tensor数据地址
+    AddressType addrType;             // 地址的类型
     int32_t placement;
-    uint32_t argsOffSet;   // tensor数据地址在args里的偏移
-    std::vector<int64_t> shape;  //shape
-    std::vector<int64_t> originShape; //originShape
+    uint32_t argsOffSet;              // tensor数据地址在args里的偏移
+    std::vector<int64_t> shape;       // shape
+    std::vector<int64_t> originShape; // originShape
 };
 
 struct TensorInfoV2 {
-    TensorType type;       // tensor类型
-    size_t tensorSize;     // tensor内存大小
+    TensorType type;   // tensor类型
+    size_t tensorSize; // tensor内存大小
     int32_t format;
     int32_t dataType;
-    int64_t *tensorAddr;   // tensor数据地址
-    AddressType addrType;  // 地址的类型
+    int64_t* tensorAddr;              // tensor数据地址
+    AddressType addrType;             // 地址的类型
     int32_t placement;
-    uint32_t argsOffSet;   // tensor数据地址在args里的偏移
-    std::vector<int64_t> shape;  //shape
-    std::vector<int64_t> originShape; //originShape
+    uint32_t argsOffSet;              // tensor数据地址在args里的偏移
+    std::vector<int64_t> shape;       // shape
+    std::vector<int64_t> originShape; // originShape
 };
 
 /**
@@ -176,8 +168,8 @@ struct TensorInfoV2 {
  * @see        无
  * @since
  */
-ADX_API int32_t AdumpDumpTensor(const std::string &opType, const std::string &opName,
-    const std::vector<TensorInfo> &tensors, aclrtStream stream);
+ADX_API int32_t AdumpDumpTensor(
+    const std::string& opType, const std::string& opName, const std::vector<TensorInfo>& tensors, aclrtStream stream);
 
 /**
  * @ingroup dump
@@ -193,8 +185,8 @@ ADX_API int32_t AdumpDumpTensor(const std::string &opType, const std::string &op
  * @see        无
  * @since
  */
-ADX_API int32_t AdumpDumpTensorV2(const std::string &opType, const std::string &opName,
-    const std::vector<TensorInfoV2> &tensors, aclrtStream stream);
+ADX_API int32_t AdumpDumpTensorV2(
+    const std::string& opType, const std::string& opName, const std::vector<TensorInfoV2>& tensors, aclrtStream stream);
 
 typedef enum {
     DUMP_ATTR_MODEL_NAME = 1,
@@ -245,9 +237,9 @@ typedef struct {
  * @see        无
  * @since
  */
-__attribute__((weak)) ADX_API int32_t AdumpDumpTensorWithCfg(const std::string &opType,
-    const std::string &opName, const std::vector<TensorInfo> &tensors, aclrtStream stream,
-    const DumpCfg &dumpCfg);
+__attribute__((weak)) ADX_API int32_t AdumpDumpTensorWithCfg(
+    const std::string& opType, const std::string& opName, const std::vector<TensorInfo>& tensors, aclrtStream stream,
+    const DumpCfg& dumpCfg);
 
 constexpr char DUMP_ADDITIONAL_BLOCK_DIM[] = "block_dim";
 constexpr char DUMP_ADDITIONAL_TILING_KEY[] = "tiling_key";
@@ -268,16 +260,16 @@ constexpr char DEVICE_INFO_NAME_ARGS[] = "args before execute";
 
 struct DeviceInfo {
     std::string name;
-    void *addr;
+    void* addr;
     uint64_t length;
 };
 
 struct OperatorInfo {
-    bool agingFlag{ true };
-    uint32_t taskId{ 0U };
-    uint32_t streamId{ 0U };
-    uint32_t deviceId{ 0U };
-    uint32_t contextId{ UINT32_MAX };
+    bool agingFlag{true};
+    uint32_t taskId{0U};
+    uint32_t streamId{0U};
+    uint32_t deviceId{0U};
+    uint32_t contextId{UINT32_MAX};
     std::string opType;
     std::string opName;
     std::vector<TensorInfo> tensorInfos;
@@ -286,11 +278,11 @@ struct OperatorInfo {
 };
 
 struct OperatorInfoV2 {
-    bool agingFlag{ true };
-    uint32_t taskId{ 0U };
-    uint32_t streamId{ 0U };
-    uint32_t deviceId{ 0U };
-    uint32_t contextId{ UINT32_MAX };
+    bool agingFlag{true};
+    uint32_t taskId{0U};
+    uint32_t streamId{0U};
+    uint32_t deviceId{0U};
+    uint32_t contextId{UINT32_MAX};
     std::string opType;
     std::string opName;
     std::vector<TensorInfoV2> tensorInfos;
@@ -309,7 +301,7 @@ struct OperatorInfoV2 {
  * @see 无
  * @since
  */
-extern "C" ADX_API int32_t AdumpAddExceptionOperatorInfo(const OperatorInfo &opInfo);
+extern "C" ADX_API int32_t AdumpAddExceptionOperatorInfo(const OperatorInfo& opInfo);
 
 /**
  * @ingroup dump
@@ -322,7 +314,7 @@ extern "C" ADX_API int32_t AdumpAddExceptionOperatorInfo(const OperatorInfo &opI
  * @see 无
  * @since
  */
-extern "C" ADX_API int32_t AdumpAddExceptionOperatorInfoV2(const OperatorInfoV2 &opInfo);
+extern "C" ADX_API int32_t AdumpAddExceptionOperatorInfoV2(const OperatorInfoV2& opInfo);
 
 /**
  * @ingroup dump
@@ -350,7 +342,7 @@ extern "C" ADX_API int32_t AdumpDelExceptionOperatorInfo(uint32_t deviceId, uint
  * @see         无
  * @since
  */
-extern "C" ADX_API void *AdumpGetDFXInfoAddrForDynamic(uint32_t space, uint64_t &atomicIndex);
+extern "C" ADX_API void* AdumpGetDFXInfoAddrForDynamic(uint32_t space, uint64_t& atomicIndex);
 
 /**
  * @ingroup dump
@@ -364,9 +356,9 @@ extern "C" ADX_API void *AdumpGetDFXInfoAddrForDynamic(uint32_t space, uint64_t 
  * @see         无
  * @since
  */
-extern "C" ADX_API void *AdumpGetDFXInfoAddrForStatic(uint32_t space, uint64_t &atomicIndex);
+extern "C" ADX_API void* AdumpGetDFXInfoAddrForStatic(uint32_t space, uint64_t& atomicIndex);
 
-using AdumpCallback = int32_t (*)(uint64_t dumpSwitch, const char *dumpConfig, int32_t size);
+using AdumpCallback = int32_t (*)(uint64_t dumpSwitch, const char* dumpConfig, int32_t size);
 
 /**
  * @ingroup dump
@@ -382,40 +374,32 @@ using AdumpCallback = int32_t (*)(uint64_t dumpSwitch, const char *dumpConfig, i
  */
 ADX_API int32_t AdumpRegisterCallback(uint32_t moduleId, AdumpCallback enableFunc, AdumpCallback disableFunc);
 
-enum class SaveType : int32_t {
-    APPEND,
-    OVERWRITE
-};
+enum class SaveType : int32_t { APPEND, OVERWRITE };
 
-ADX_API int32_t AdumpSaveToFile(const char *data, size_t dataLen, const char *filename, SaveType type);
+ADX_API int32_t AdumpSaveToFile(const char* data, size_t dataLen, const char* filename, SaveType type);
 
 constexpr uint32_t MAX_KERNELNAME_LEN = 1024U;
 constexpr uint32_t EXCEPTION_DUMP_MAX_TENSOR_NUM = 128U;
 
-enum class ExceptionDumpMode : uint32_t {
-    DUMP_MODE_NONE = 0,
-    DUMP_MODE_OVERWRITE = 1,
-    DUMP_MODE_ADDITIONAL = 2
-};
+enum class ExceptionDumpMode : uint32_t { DUMP_MODE_NONE = 0, DUMP_MODE_OVERWRITE = 1, DUMP_MODE_ADDITIONAL = 2 };
 
 // 调用方保证 kernelName/kernelDisplayName 以 \0 结尾，最大长度含终止符 MAX_KERNELNAME_LEN 字节。
 struct ExceptionDumpInfo {
     uint32_t coreId;
-    uint32_t coreType;     // rtCoreType_t
+    uint32_t coreType; // rtCoreType_t
     uint32_t argSize;
-    void *argAddr;
-    void *bin;             // rtBinHandle
+    void* argAddr;
+    void* bin; // rtBinHandle
     char kernelName[MAX_KERNELNAME_LEN];
     char kernelDisplayName[MAX_KERNELNAME_LEN];
     uint32_t extraTensorNum;
     TensorInfo extraTensor[EXCEPTION_DUMP_MAX_TENSOR_NUM];
 };
 
-using ExceptionDumpCallback = uint32_t (*)(void *exceptionInfo,  // rtExceptionInfo_t*
-    ExceptionDumpInfo *exceptionDumpInfo,
-    uint32_t exceptionDumpSize,
-    uint32_t *exceptionDumpRealSize,
-    ExceptionDumpMode *mode);
+using ExceptionDumpCallback = uint32_t (*)(
+    void* exceptionInfo, // rtExceptionInfo_t*
+    ExceptionDumpInfo* exceptionDumpInfo, uint32_t exceptionDumpSize, uint32_t* exceptionDumpRealSize,
+    ExceptionDumpMode* mode);
 
 __attribute__((weak)) ADX_API int32_t AdumpRegExceptionDumpCallback(ExceptionDumpCallback callback);
 

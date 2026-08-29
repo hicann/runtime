@@ -20,7 +20,7 @@ namespace Adx {
  *      IDE_DAEMON_OK:    datadump server init success
  *      IDE_DAEMON_ERROR: datadump server init failed
  */
-int32_t AdxSocDataDumpInit(const std::string &hostPid);
+int32_t AdxSocDataDumpInit(const std::string& hostPid);
 
 /**
  * @brief uninitialize server for soc datadump function.
@@ -29,5 +29,5 @@ int32_t AdxSocDataDumpInit(const std::string &hostPid);
  *      IDE_DAEMON_ERROR: datadump server uninit failed
  */
 int32_t AdxSocDataDumpUnInit();
-}
+} // namespace Adx
 #endif

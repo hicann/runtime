@@ -34,7 +34,7 @@ struct DumpConfig {
     std::string dumpMode;   // input/output/workspace
     std::string dumpStatus; // on/off
     std::string dumpData;   // tensor/stats
-    uint64_t dumpSwitch{ OPERATOR_OP_DUMP | OPERATOR_KERNEL_DUMP };
+    uint64_t dumpSwitch{OPERATOR_OP_DUMP | OPERATOR_KERNEL_DUMP};
     std::vector<std::string> dumpStatsItem;
 };
 
@@ -63,7 +63,7 @@ ADX_API bool AdumpIsDumpEnable(DumpType dumpType);
  * @see 无
  * @since
  */
-ADX_API bool AdumpIsDumpEnable(DumpType dumpType, uint64_t &dumpSwitch);
+ADX_API bool AdumpIsDumpEnable(DumpType dumpType, uint64_t& dumpSwitch);
 
 /**
  * @ingroup dump
@@ -77,7 +77,7 @@ ADX_API bool AdumpIsDumpEnable(DumpType dumpType, uint64_t &dumpSwitch);
  * @see 无
  * @since
  */
-ADX_API int32_t AdumpSetDumpConfig(DumpType dumpType, const DumpConfig &dumpConfig);
+ADX_API int32_t AdumpSetDumpConfig(DumpType dumpType, const DumpConfig& dumpConfig);
 
 /**
  * @ingroup dump
@@ -91,20 +91,21 @@ ADX_API int32_t AdumpSetDumpConfig(DumpType dumpType, const DumpConfig &dumpConf
  * @see 无
  * @since
  */
-extern "C" ADX_API void *AdumpGetSizeInfoAddr(uint32_t space, uint32_t &atomicIndex);
+extern "C" ADX_API void* AdumpGetSizeInfoAddr(uint32_t space, uint32_t& atomicIndex);
 
-ADX_API void AdumpPrintWorkSpace(const void *workSpaceAddr, const size_t dumpWorkSpaceSize,
-                                 aclrtStream stream, const char *opType);
+ADX_API void AdumpPrintWorkSpace(
+    const void* workSpaceAddr, const size_t dumpWorkSpaceSize, aclrtStream stream, const char* opType);
 
-ADX_API void AdumpPrintWorkSpace(const void *workSpaceAddr, const size_t dumpWorkSpaceSize,
-                                 aclrtStream stream, const char *opType, bool enableSync);
+ADX_API void AdumpPrintWorkSpace(
+    const void* workSpaceAddr, const size_t dumpWorkSpaceSize, aclrtStream stream, const char* opType, bool enableSync);
 
-ADX_API void AdumpPrintAndGetTimeStampInfo(const void *workSpaceAddr, const size_t dumpWorkSpaceSize,
-    aclrtStream stream, const char *opType, std::vector<MsprofAicTimeStampInfo> &timeStampInfo);
+ADX_API void AdumpPrintAndGetTimeStampInfo(
+    const void* workSpaceAddr, const size_t dumpWorkSpaceSize, aclrtStream stream, const char* opType,
+    std::vector<MsprofAicTimeStampInfo>& timeStampInfo);
 
-struct AdumpPrintConfig{
-   bool printEnable;
+struct AdumpPrintConfig {
+    bool printEnable;
 };
-ADX_API void AdumpPrintSetConfig(const AdumpPrintConfig &config);
+ADX_API void AdumpPrintSetConfig(const AdumpPrintConfig& config);
 } // namespace Adx
 #endif

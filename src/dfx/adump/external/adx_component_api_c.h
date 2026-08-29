@@ -15,8 +15,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-ADX_API int32_t AdxRegisterService(int32_t serverType, ComponentType componentType, AdxComponentInit init,
-    AdxComponentProcess process, AdxComponentUnInit uninit);
+ADX_API int32_t AdxRegisterService(
+    int32_t serverType, ComponentType componentType, AdxComponentInit init, AdxComponentProcess process,
+    AdxComponentUnInit uninit);
 ADX_API int32_t AdxUnRegisterService(int32_t serverType, ComponentType componentType);
 ADX_API int32_t AdxServiceStartup(ServerInitInfo info);
 ADX_API int32_t AdxServiceCleanup(int32_t serverType);

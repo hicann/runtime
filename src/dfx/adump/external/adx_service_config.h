@@ -14,45 +14,40 @@
 extern "C" {
 #endif
 typedef enum {
-    COMPONENT_GETD_FILE    = 6,   // get file from device
-    COMPONENT_LOG_BACKHAUL = 7,   // log backhaul from device
-    COMPONENT_LOG_LEVEL    = 8,   // operate device log level
-    COMPONENT_DUMP         = 10,  // process data dump
-    COMPONENT_TRACE        = 11,  // trace
-    COMPONENT_MSNPUREPORT  = 12,  // msnpureport
-    COMPONENT_HBM_DETECT   = 13,  // hbm detect
-    COMPONENT_SYS_GET      = 14,  // get system log
-    COMPONENT_SYS_REPORT   = 15,  // report system log
-    COMPONENT_FILE_REPORT  = 16,  // file report
-    COMPONENT_CPU_DETECT   = 17,  // cpu detect
-    COMPONENT_DETECT_LIB_LOAD = 18,  // lib load
+    COMPONENT_GETD_FILE = 6,        // get file from device
+    COMPONENT_LOG_BACKHAUL = 7,     // log backhaul from device
+    COMPONENT_LOG_LEVEL = 8,        // operate device log level
+    COMPONENT_DUMP = 10,            // process data dump
+    COMPONENT_TRACE = 11,           // trace
+    COMPONENT_MSNPUREPORT = 12,     // msnpureport
+    COMPONENT_HBM_DETECT = 13,      // hbm detect
+    COMPONENT_SYS_GET = 14,         // get system log
+    COMPONENT_SYS_REPORT = 15,      // report system log
+    COMPONENT_FILE_REPORT = 16,     // file report
+    COMPONENT_CPU_DETECT = 17,      // cpu detect
+    COMPONENT_DETECT_LIB_LOAD = 18, // lib load
     NR_COMPONENTS,
 } ComponentType;
 
 typedef uintptr_t OptHandle;
 
-typedef enum {
-    COMM_HDC,
-    COMM_SSL,
-    COMM_LOCAL,
-    NR_COMM
-} OptType;
+typedef enum { COMM_HDC, COMM_SSL, COMM_LOCAL, NR_COMM } OptType;
 
 typedef struct {
     OptType type;
     OptHandle session;
     ComponentType comp;
     int32_t timeout; // 0 : wait_always; > 0 wait_timeout; < 0 wait_default
-    void *client;
+    void* client;
 } CommHandle;
 
-typedef CommHandle*        AdxCommHandle;
-typedef const CommHandle*  AdxCommConHandle;
+typedef CommHandle* AdxCommHandle;
+typedef const CommHandle* AdxCommConHandle;
 
 typedef struct {
     int32_t serverType;
-    int32_t mode;      // 0 default, 1 virtual
-    int32_t deviceId;  // set -1 is all
+    int32_t mode;     // 0 default, 1 virtual
+    int32_t deviceId; // set -1 is all
 } ServerInitInfo;
 
 typedef int32_t (*AdxComponentInit)(void);

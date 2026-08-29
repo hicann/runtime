@@ -15,50 +15,55 @@
 extern "C" {
 #endif
 
-typedef void*                IdeSession;
-typedef void*                IdeThreadArg;
-typedef void*                IdeMemHandle;
-typedef void*                IdeKmcHandle;
-typedef void*                IdeKmcLock;
-typedef void**               IdeKmcLockAddr;
-typedef void*                IdeBuffT;
-typedef void**               IdeRecvBuffT;
-typedef const void*          IdeKmcConHandle;
-typedef const void*          IdeSendBuffT;
-typedef char*                IdeStringBuffer;
-typedef const char*          IdeString;
-typedef char**               IdeStrBufAddrT;
-typedef unsigned char*       IdeU8Pt;
-typedef int*                 IdeI32Pt;
-typedef unsigned int*        IdeU32Pt;
+typedef void* IdeSession;
+typedef void* IdeThreadArg;
+typedef void* IdeMemHandle;
+typedef void* IdeKmcHandle;
+typedef void* IdeKmcLock;
+typedef void** IdeKmcLockAddr;
+typedef void* IdeBuffT;
+typedef void** IdeRecvBuffT;
+typedef const void* IdeKmcConHandle;
+typedef const void* IdeSendBuffT;
+typedef char* IdeStringBuffer;
+typedef const char* IdeString;
+typedef char** IdeStrBufAddrT;
+typedef unsigned char* IdeU8Pt;
+typedef int* IdeI32Pt;
+typedef unsigned int* IdeU32Pt;
 typedef const unsigned char* IdeConU8Pt;
-typedef const int*           IdeConI32Pt;
-typedef const unsigned int*  IdeConU32Pt;
-typedef int*                 IdePidPtr;
-typedef char*                AdxStringBuffer;
-typedef const char*          AdxString;
+typedef const int* IdeConI32Pt;
+typedef const unsigned int* IdeConU32Pt;
+typedef int* IdePidPtr;
+typedef char* AdxStringBuffer;
+typedef const char* AdxString;
 
-#define IDE_DAEMON_ERROR            (-1)
-#define IDE_DAEMON_OK               (0)
-#define IDE_DAEMON_SOCK_CLOSE       (1)
-#define IDE_DAEMON_RECV_NODATA      (2)
-#define IDE_DAEMON_DONE             (3)
-#define MAX_SESSION_NUM             (96)
-#define TCP_MAX_LISTEN_NUM          (100)
-#define PACK_SIZE                   (102400)
-#define SOCK_OK                     (0)
-#define SOCK_ERROR                  (-1)
-#define ADX_COMPUTE_POWER_GROUP     (26)
-#define DEVICE_NUM_MAX              (1124)
-#define IDE_MAX_FILE_PATH           (4096)
+#define IDE_DAEMON_ERROR (-1)
+#define IDE_DAEMON_OK (0)
+#define IDE_DAEMON_SOCK_CLOSE (1)
+#define IDE_DAEMON_RECV_NODATA (2)
+#define IDE_DAEMON_DONE (3)
+#define MAX_SESSION_NUM (96)
+#define TCP_MAX_LISTEN_NUM (100)
+#define PACK_SIZE (102400)
+#define SOCK_OK (0)
+#define SOCK_ERROR (-1)
+#define ADX_COMPUTE_POWER_GROUP (26)
+#define DEVICE_NUM_MAX (1124)
+#define IDE_MAX_FILE_PATH (4096)
 
-#define HDC_END_MSG                      ("###[HDC_MSG]hdc_end_msg_used_by_framework###")
-#define ADX_SAFE_MALLOC(size)            ((size) > 0 ? calloc(1, size) : nullptr)
-#define ADX_SAFE_CALLOC(n, size)         (((n) > 0 && (size) > 0) ? calloc(n, size) : nullptr)
-#define ADX_SAFE_FREE(p)                 do { if ((p) != nullptr) { free(p); (p) = nullptr; } } while (0)
+#define HDC_END_MSG ("###[HDC_MSG]hdc_end_msg_used_by_framework###")
+#define ADX_SAFE_MALLOC(size) ((size) > 0 ? calloc(1, size) : nullptr)
+#define ADX_SAFE_CALLOC(n, size) (((n) > 0 && (size) > 0) ? calloc(n, size) : nullptr)
+#define ADX_SAFE_FREE(p)      \
+    do {                      \
+        if ((p) != nullptr) { \
+            free(p);          \
+            (p) = nullptr;    \
+        }                     \
+    } while (0)
 #ifdef __cplusplus
 }
 #endif
 
 #endif
-

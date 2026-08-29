@@ -16,54 +16,59 @@
 #include "dlog_pub.h"
 namespace Adx {
 const int32_t ADX_MODULE_NAME = IDEDD;
-const int32_t MAX_ERRSTR_LEN  = 128;
-#if defined (IDE_DAEMON_DEVICE) || defined (ADX_LIB) || defined (ADX_LIB_HOST)
+const int32_t MAX_ERRSTR_LEN = 128;
+#if defined(IDE_DAEMON_DEVICE) || defined(ADX_LIB) || defined(ADX_LIB_HOST)
 
-#define IDE_LOGD(format, ...) do {                                                              \
-    dlog_debug(Adx::ADX_MODULE_NAME, "[tid:%d] " format "\n", mmGetTid(), ##__VA_ARGS__);       \
-} while (0)
-#define IDE_LOGI(format, ...) do {                                                              \
-    dlog_info(Adx::ADX_MODULE_NAME, "[tid:%d] " format "\n", mmGetTid(), ##__VA_ARGS__);        \
-} while (0)
+#define IDE_LOGD(format, ...)                                                                 \
+    do {                                                                                      \
+        dlog_debug(Adx::ADX_MODULE_NAME, "[tid:%d] " format "\n", mmGetTid(), ##__VA_ARGS__); \
+    } while (0)
+#define IDE_LOGI(format, ...)                                                                \
+    do {                                                                                     \
+        dlog_info(Adx::ADX_MODULE_NAME, "[tid:%d] " format "\n", mmGetTid(), ##__VA_ARGS__); \
+    } while (0)
 
-#define IDE_LOGW(format, ...) do {                                                              \
-    dlog_warn(Adx::ADX_MODULE_NAME, "[tid:%d] " format "\n", mmGetTid(), ##__VA_ARGS__);        \
-} while (0)
+#define IDE_LOGW(format, ...)                                                                \
+    do {                                                                                     \
+        dlog_warn(Adx::ADX_MODULE_NAME, "[tid:%d] " format "\n", mmGetTid(), ##__VA_ARGS__); \
+    } while (0)
 
-#define IDE_LOGE(format, ...) do {                                                              \
-    dlog_error(Adx::ADX_MODULE_NAME, "[tid:%d] " format "\n", mmGetTid(), ##__VA_ARGS__);       \
-} while (0)
+#define IDE_LOGE(format, ...)                                                                 \
+    do {                                                                                      \
+        dlog_error(Adx::ADX_MODULE_NAME, "[tid:%d] " format "\n", mmGetTid(), ##__VA_ARGS__); \
+    } while (0)
 
-inline void AdxLogFlush()
-{
-    DlogFlush();
-}
-#define IDE_RUN_LOGI(format, ...) do {                                                                        \
-    dlog_info(Adx::ADX_MODULE_NAME | RUN_LOG_MASK, "[tid:%d] " format "\n", mmGetTid(), ##__VA_ARGS__);       \
-} while (0)
+inline void AdxLogFlush() { DlogFlush(); }
+#define IDE_RUN_LOGI(format, ...)                                                                           \
+    do {                                                                                                    \
+        dlog_info(Adx::ADX_MODULE_NAME | RUN_LOG_MASK, "[tid:%d] " format "\n", mmGetTid(), ##__VA_ARGS__); \
+    } while (0)
 #else
-#define IDE_LOGD(format, ...) do {             \
-} while (0)
+#define IDE_LOGD(format, ...) \
+    do {                      \
+    } while (0)
 
-#define IDE_LOGI(format, ...) do {                                                                                  \
-    syslog(LOG_INFO, "[tid:%ld] %s:%d: " format "\n", syscall(SYS_gettid), __FILE__, __LINE__, ##__VA_ARGS__);   \
-} while (0)
+#define IDE_LOGI(format, ...)                                                                                      \
+    do {                                                                                                           \
+        syslog(LOG_INFO, "[tid:%ld] %s:%d: " format "\n", syscall(SYS_gettid), __FILE__, __LINE__, ##__VA_ARGS__); \
+    } while (0)
 
-#define IDE_LOGW(format, ...) do {                                                                                  \
-    syslog(LOG_WARNING, "[tid:%ld] %s:%d: " format "\n", syscall(SYS_gettid), __FILE__, __LINE__, ##__VA_ARGS__);   \
-} while (0)
+#define IDE_LOGW(format, ...)                                                                                         \
+    do {                                                                                                              \
+        syslog(LOG_WARNING, "[tid:%ld] %s:%d: " format "\n", syscall(SYS_gettid), __FILE__, __LINE__, ##__VA_ARGS__); \
+    } while (0)
 
-#define IDE_LOGE(format, ...) do {                                                                              \
-    syslog(LOG_ERR, "[tid:%ld] %s:%d: " format "\n", syscall(SYS_gettid), __FILE__, __LINE__, ##__VA_ARGS__);   \
-} while (0)
+#define IDE_LOGE(format, ...)                                                                                     \
+    do {                                                                                                          \
+        syslog(LOG_ERR, "[tid:%ld] %s:%d: " format "\n", syscall(SYS_gettid), __FILE__, __LINE__, ##__VA_ARGS__); \
+    } while (0)
 
-#define IDE_RUN_LOGI(format, ...) do {         \
-} while (0)
+#define IDE_RUN_LOGI(format, ...) \
+    do {                          \
+    } while (0)
 
-inline void AdxLogFlush()
-{
-}
+inline void AdxLogFlush() {}
 
 #endif
-}
+} // namespace Adx
 #endif // IDE_HDC_LOG_H

@@ -27,7 +27,8 @@ extern "C" {
  */
 ADX_API int32_t AdxGetDeviceFileTimeout(uint16_t devId, IdeString desPath, IdeString logType, uint32_t timeout);
 ADX_API int32_t AdxGetDeviceFile(uint16_t devId, IdeString desPath, IdeString logType);
-ADX_API int32_t AdxGetSpecifiedFile(uint16_t devId, IdeString desPath, IdeString logType, int32_t hdcType, int32_t compType);
+ADX_API int32_t
+AdxGetSpecifiedFile(uint16_t devId, IdeString desPath, IdeString logType, int32_t hdcType, int32_t compType);
 #ifdef __cplusplus
 }
 #endif
