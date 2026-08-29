@@ -24,7 +24,10 @@
 #undef private
 #include "runtime/rt.h"
 #include "event_task.h"
+#include "memcpy_c.hpp"
+#include "memory_c.hpp"
 #include "memory_task.h"
+#include "memset_common.h"
 #include "model_execute_task.h"
 #include "task_info_v100.h"
 #include "task_info.hpp"
@@ -35,7 +38,6 @@
 #include "task_execute_time.h"
 #include "device_error_proc.hpp"
 #include "cond_op_label_task.h"
-#include "model.hpp"
 #include "cond_op_stream_task.h"
 #include "stream_task.h"
 #include "task_res.hpp"
@@ -51,8 +53,19 @@ using namespace cce::runtime;
 namespace {
 constexpr uint32_t DUMP_ARGS_SIZE = 256U;
 constexpr uint64_t DUMP_ARGS_BASE = 0x1000ULL;
+constexpr uint32_t MEMCPY_MODULE_ID = 7U;
 uint8_t g_dumpArgsBuf[DUMP_ARGS_SIZE] = {};
 bool g_memCopySyncFail = false;
+
+class MemcpyModuleNpuDriver final : public NpuDriver {
+public:
+    rtError_t GetAddrModuleId(void* memcpyAddr, uint32_t* moduleId) const override
+    {
+        (void)memcpyAddr;
+        *moduleId = MEMCPY_MODULE_ID;
+        return RT_ERROR_NONE;
+    }
+};
 
 rtError_t DumpAicpuArgsMemCopyStub(
     Driver* drv, void* dst, uint64_t destMax, const void* src, uint64_t size, rtMemcpyKind_t kind)
@@ -130,7 +143,10 @@ TEST_F(Arch5162TaskTest, StubTask)
     ret = UpdateD2HTaskInit(nullptr, nullptr, 0, 0, 0, 0);
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
 
-    ret = MemWriteValueTaskInit(nullptr, nullptr, 0);
+    ret = MemcpyAsyncD2HTaskInit(nullptr, nullptr, 0, 0, 0);
+    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
+
+    ret = MemWriteValueTaskInit(nullptr, nullptr, 0U);
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
 
     MemWaitTaskUnInit(nullptr);
@@ -172,6 +188,92 @@ TEST_F(Arch5162TaskTest, StubTask)
 
     ret = UpdateAddressTaskInit(nullptr, 0, 0);
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
+}
+
+TEST_F(Arch5162TaskTest, MemoryLaunchStub)
+{
+    uint64_t realSize = 0U;
+    EXPECT_EQ(
+        MemcopyAsync(nullptr, 0U, nullptr, 0U, RT_MEMCPY_DEVICE_TO_DEVICE, nullptr, &realSize), RT_ERROR_STREAM_NULL);
+    EXPECT_EQ(DevMemSetAsyncByMemset(nullptr, nullptr, 0U, 0U, 0U), RT_ERROR_FEATURE_NOT_SUPPORT);
+}
+
+TEST_F(Arch5162TaskTest, MemcopyAsyncSuccess)
+{
+    RawDevice* device = new RawDevice(0);
+    Stream* stream = new Stream(device, 0);
+    ASSERT_NE(stream, nullptr);
+    uint32_t src = 1U;
+    uint32_t dst = 0U;
+    uint64_t realSize = 0U;
+    TaskInfo task = {};
+    task.stream = stream;
+    task.u.memcpyAsyncTaskInfo.size = sizeof(src);
+    task.u.memcpyAsyncTaskInfo.guardMemVec = new std::vector<std::shared_ptr<void>>();
+    std::shared_ptr<void> guardMem = std::make_shared<uint32_t>(src);
+    MOCKER_CPP(&Stream::AllocTask).stubs().will(returnValue(&task));
+    MOCKER(MemcpyAsyncTaskInitV3).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(device, &RawDevice::SubmitTask).stubs().will(returnValue(RT_ERROR_NONE));
+
+    const rtError_t error =
+        MemcopyAsync(&dst, sizeof(dst), &src, sizeof(src), RT_MEMCPY_DEVICE_TO_DEVICE, stream, &realSize, guardMem);
+
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(realSize, sizeof(src));
+    EXPECT_EQ(task.u.memcpyAsyncTaskInfo.guardMemVec->size(), 1U);
+    EXPECT_EQ(task.u.memcpyAsyncTaskInfo.guardMemVec->front(), guardMem);
+    delete task.u.memcpyAsyncTaskInfo.guardMemVec;
+    delete stream;
+    delete device;
+}
+
+TEST_F(Arch5162TaskTest, MemcopyAsyncRecycleOnInitFailure)
+{
+    RawDevice* device = new RawDevice(0);
+    Stream* stream = new Stream(device, 0);
+    ASSERT_NE(stream, nullptr);
+    TaskFactory taskFactory(device);
+    device->taskFactory_ = &taskFactory;
+    uint64_t realSize = 0U;
+    TaskInfo task = {};
+    task.stream = stream;
+    MOCKER_CPP(&Stream::AllocTask).stubs().will(returnValue(&task));
+    MOCKER(MemcpyAsyncTaskInitV3).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    MOCKER_CPP(&TaskFactory::Recycle).stubs().will(returnValue(RT_ERROR_NONE));
+
+    const rtError_t error =
+        MemcopyAsync(nullptr, 0U, nullptr, 0U, RT_MEMCPY_DEVICE_TO_DEVICE, stream, &realSize, std::shared_ptr<void>());
+
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+    device->taskFactory_ = nullptr;
+    delete stream;
+    delete device;
+}
+
+TEST_F(Arch5162TaskTest, MemcopyAsyncRecycleOnSubmitFailure)
+{
+    RawDevice* device = new RawDevice(0);
+    Stream* stream = new Stream(device, 0);
+    ASSERT_NE(stream, nullptr);
+    TaskFactory taskFactory(device);
+    device->taskFactory_ = &taskFactory;
+    uint64_t realSize = 0U;
+    TaskInfo task = {};
+    task.stream = stream;
+    task.u.memcpyAsyncTaskInfo.size = sizeof(uint32_t);
+    MOCKER_CPP(&Stream::AllocTask).stubs().will(returnValue(&task));
+    MOCKER(MemcpyAsyncTaskInitV3).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(device, &RawDevice::SubmitTask).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    MOCKER_CPP(&TaskFactory::Recycle).stubs().will(returnValue(RT_ERROR_NONE));
+
+    const rtError_t error =
+        MemcopyAsync(nullptr, 0U, nullptr, 0U, RT_MEMCPY_DEVICE_TO_DEVICE, stream, &realSize, std::shared_ptr<void>());
+
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(realSize, sizeof(uint32_t));
+    device->taskFactory_ = nullptr;
+    delete stream;
+    delete device;
 }
 
 TEST_F(Arch5162TaskTest, ConstructAICoreSqeForDavinciTask)
@@ -379,7 +481,6 @@ TEST_F(Arch5162TaskTest, ConstructSqeForMemcpyAsyncTask)
 TEST_F(Arch5162TaskTest, MemcpyAsyncTaskUnInitAndDoComplete)
 {
     MOCKER(TaskFailCallBack).stubs();
-    MOCKER(RecycleTaskResourceForMemcpyAsyncTask).stubs();
     MOCKER(PrintErrorInfoForMemcpyAsyncTask).stubs();
     RawDevice* device = new RawDevice(0);
     Stream* stream = new Stream(device, 0);
@@ -388,16 +489,113 @@ TEST_F(Arch5162TaskTest, MemcpyAsyncTaskUnInitAndDoComplete)
     task.stream = stream;
     task.type = TS_TASK_TYPE_MEMCPY;
     task.u.memcpyAsyncTaskInfo.src = nullptr;
-    task.u.memcpyAsyncTaskInfo.releaseArgHandle = nullptr;
     task.u.memcpyAsyncTaskInfo.guardMemVec = nullptr;
-    task.u.memcpyAsyncTaskInfo.srcPtr = nullptr;
-    task.u.memcpyAsyncTaskInfo.desPtr = nullptr;
     PfnTaskUnInit taskUnInitFunc = g_taskFuncArrays[CHIP_5162A].taskUnInitFunc[task.type];
     taskUnInitFunc(&task);
 
     task.errorCode = TS_ERROR_TASK_TIMEOUT;
     PfnDoCompleteSucc doCompleteSuccFunc = g_taskFuncArrays[CHIP_5162A].doCompleteSuccFunc[task.type];
     doCompleteSuccFunc(&task, 0);
+    delete stream;
+    delete device;
+}
+
+TEST_F(Arch5162TaskTest, MemcpyAsyncTaskInitV3D2D)
+{
+    RawDevice* device = new RawDevice(0);
+    Stream* stream = new Stream(device, 0);
+    ASSERT_NE(stream, nullptr);
+    uint32_t src = 1U;
+    uint32_t dst = 0U;
+    TaskInfo task = {};
+    task.stream = stream;
+    rtTaskCfgInfo_t cfgInfo = {};
+    cfgInfo.qos = 2U;
+    cfgInfo.partId = 3U;
+    cfgInfo.d2dCrossFlag = true;
+    rtD2DAddrCfgInfo_t addrCfg = {};
+    addrCfg.srcOffset = 4U;
+    addrCfg.dstOffset = 8U;
+    MOCKER(SetTaskTag).stubs();
+
+    const rtError_t error =
+        MemcpyAsyncTaskInitV3(&task, RT_MEMCPY_DEVICE_TO_DEVICE, &src, &dst, sizeof(src), &cfgInfo, &addrCfg);
+
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(task.type, TS_TASK_TYPE_MEMCPY);
+    EXPECT_EQ(task.u.memcpyAsyncTaskInfo.copyKind, RT_MEMCPY_DEVICE_TO_DEVICE);
+    EXPECT_EQ(task.u.memcpyAsyncTaskInfo.copyType, RT_MEMCPY_DIR_D2D_SDMA);
+    EXPECT_EQ(task.u.memcpyAsyncTaskInfo.src, &src);
+    EXPECT_EQ(task.u.memcpyAsyncTaskInfo.destPtr, &dst);
+    EXPECT_EQ(task.u.memcpyAsyncTaskInfo.size, sizeof(src));
+    EXPECT_EQ(task.u.memcpyAsyncTaskInfo.qos, cfgInfo.qos);
+    EXPECT_EQ(task.u.memcpyAsyncTaskInfo.partId, cfgInfo.partId);
+    EXPECT_TRUE(task.u.memcpyAsyncTaskInfo.isD2dCross);
+    EXPECT_TRUE(task.u.memcpyAsyncTaskInfo.d2dOffsetFlag);
+    EXPECT_EQ(task.u.memcpyAsyncTaskInfo.srcOffset, addrCfg.srcOffset);
+    EXPECT_EQ(task.u.memcpyAsyncTaskInfo.dstOffset, addrCfg.dstOffset);
+    EXPECT_TRUE(task.u.memcpyAsyncTaskInfo.dmaKernelConvertFlag);
+    PfnTaskUnInit taskUnInitFunc = g_taskFuncArrays[CHIP_5162A].taskUnInitFunc[task.type];
+    ASSERT_NE(taskUnInitFunc, nullptr);
+    taskUnInitFunc(&task);
+    delete stream;
+    delete device;
+}
+
+TEST_F(Arch5162TaskTest, SetStarsResultForMemcpyAsyncTask)
+{
+    TaskInfo task = {};
+    rtCqReport_t logicCq = {};
+    logicCq.errorType = CQE_ERROR_MAP_TIMEOUT;
+    SetStarsResultForMemcpyAsyncTask(&task, logicCq);
+    EXPECT_EQ(task.errorCode, TS_ERROR_SDMA_TIMEOUT);
+
+    task.errorCode = RT_ERROR_NONE;
+    logicCq.errorType = 1U;
+    logicCq.errorCode = TS_ERROR_SDMA_OVERFLOW;
+    SetStarsResultForMemcpyAsyncTask(&task, logicCq);
+    EXPECT_EQ(task.errorCode, TS_ERROR_SDMA_OVERFLOW);
+
+    task.errorCode = RT_ERROR_NONE;
+    logicCq.errorCode = TS_ERROR_SDMA_LINK_ERROR;
+    SetStarsResultForMemcpyAsyncTask(&task, logicCq);
+    EXPECT_EQ(task.errorCode, TS_ERROR_SDMA_ERROR);
+}
+
+TEST_F(Arch5162TaskTest, PrintMemcpyErrorInfo)
+{
+    uint32_t moduleId = SVM_INVALID_MODULE_ID;
+    EXPECT_FALSE(GetModuleIdByMemcpyAddr(nullptr, nullptr, &moduleId));
+
+    MemcpyModuleNpuDriver driver;
+    RawDevice* device = new RawDevice(0);
+    device->driver_ = &driver;
+    Stream* stream = new Stream(device, 0);
+    ASSERT_NE(stream, nullptr);
+    uint32_t src = 1U;
+    uint32_t dst = 0U;
+
+    EXPECT_TRUE(GetModuleIdByMemcpyAddr(&driver, &src, &moduleId));
+    EXPECT_EQ(moduleId, MEMCPY_MODULE_ID);
+    char_t errMsg[MSG_LENGTH] = {};
+    int32_t countNum = 0;
+    PrintModuleIdProc(&driver, errMsg, &src, &dst, countNum);
+    EXPECT_NE(std::string(errMsg).find("src_module_id=7"), std::string::npos);
+    EXPECT_NE(std::string(errMsg).find("dst_module_id=7"), std::string::npos);
+
+    TaskInfo task = {};
+    task.stream = stream;
+    task.id = 1U;
+    task.u.memcpyAsyncTaskInfo.src = &src;
+    task.u.memcpyAsyncTaskInfo.destPtr = &dst;
+    task.u.memcpyAsyncTaskInfo.size = sizeof(src);
+    task.u.memcpyAsyncTaskInfo.copyType = RT_MEMCPY_DIR_D2D_SDMA;
+    PrintErrorInfoForMemcpyAsyncTask(&task, 0U);
+    ASSERT_FALSE(stream->errorMsg_.empty());
+    EXPECT_EQ(stream->errorMsg_.back().first, ERR_MODULE_RTS);
+    EXPECT_NE(stream->errorMsg_.back().second.find("MEMCPY_DIR_D2D_SDMA"), std::string::npos);
+
+    device->driver_ = nullptr;
     delete stream;
     delete device;
 }

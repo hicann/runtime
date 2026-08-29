@@ -65,7 +65,6 @@ set(libruntime_v100_task_src_files
     ${RUNTIME_CORE_DIR}/src/task/task_info/maintenance/float_status_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/maintenance/maintenance_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/maintenance/maintenance_task_arch5162.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/memory/memory_memcpy_async_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/memory/memory_task_arch5162.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_execute_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_graph_task.cc
@@ -286,9 +285,8 @@ set(libruntime_src_files
     ${RUNTIME_CORE_DIR}/src/launch/label.cc
     ${RUNTIME_CORE_DIR}/src/launch/label_common.cc
     ${RUNTIME_CORE_DIR}/src/launch/label_stars.cc
-    ${RUNTIME_CORE_DIR}/src/launch/memcpy_stars.cc
+    ${RUNTIME_CORE_DIR}/src/launch/memory_arch5162.cc
     ${RUNTIME_CORE_DIR}/src/launch/memory_common.cc
-    ${RUNTIME_CORE_DIR}/src/launch/memory_stars.cc
     ${RUNTIME_CORE_DIR}/src/launch/xpu_aicpu_c_stub.cc
     ${RUNTIME_CORE_DIR}/src/memory/mem_type.cc
     ${RUNTIME_CORE_DIR}/src/notify/notify_basic.cc

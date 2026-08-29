@@ -36,7 +36,6 @@ set(runtimeut_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/task_info/event/event_task_arch5162.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/maintenance/float_status_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/maintenance/maintenance_task.cc
-    ${TOP_DIR}/src/runtime/core/src/task/task_info/memory/memory_memcpy_async_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/maintenance/maintenance_task_arch5162.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/memory/memory_task_arch5162.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_execute_task.cc
@@ -277,9 +276,8 @@ set(runtimeut_src_list
     ${TOP_DIR}/src/runtime/core/src/launch/label.cc
     ${TOP_DIR}/src/runtime/core/src/launch/label_common.cc
     ${TOP_DIR}/src/runtime/core/src/launch/label_stars.cc
-    ${TOP_DIR}/src/runtime/core/src/launch/memcpy_stars.cc
+    ${TOP_DIR}/src/runtime/core/src/launch/memory_arch5162.cc
     ${TOP_DIR}/src/runtime/core/src/launch/memory_common.cc
-    ${TOP_DIR}/src/runtime/core/src/launch/memory_stars.cc
     ${TOP_DIR}/src/runtime/core/src/launch/xpu_aicpu_c_stub.cc
     ${TOP_DIR}/src/runtime/core/src/memory/mem_type.cc
     ${TOP_DIR}/src/runtime/core/src/notify/notify_basic.cc
