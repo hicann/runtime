@@ -59,7 +59,8 @@ public:
           maxCount_(maxCount),
           clearFlag_(clearFlag),
           pool_(nullptr),
-          mtx_(nullptr)
+          mtx_(nullptr),
+          activeCount_(nullptr)
     {}
 
     ~ObjAllocator() override
@@ -80,6 +81,10 @@ public:
         if (mtx_ != nullptr) {
             delete[] mtx_;
             mtx_ = nullptr;
+        }
+        if (activeCount_ != nullptr) {
+            delete[] activeCount_;
+            activeCount_ = nullptr;
         }
     }
 
@@ -122,8 +127,22 @@ public:
             pool_ = nullptr;
             return RT_ERROR_MEMORY_ALLOCATION;
         }
-
         RT_LOG(RT_LOG_INFO, "ObjAllocator alloc success, Runtime_alloc_size %zu(bytes)", poolNum * sizeof(std::mutex));
+
+        activeCount_ = new (std::nothrow) std::atomic<uint32_t>[poolNum]();
+        if (activeCount_ == nullptr) {
+            RT_LOG(RT_LOG_ERROR, "new activeCount_ failed, poolNum=%u.", poolNum);
+            ObjFree(pool_[0]);
+            pool_[0] = nullptr;
+            free((void*)pool_);
+            pool_ = nullptr;
+            delete[] mtx_;
+            mtx_ = nullptr;
+            return RT_ERROR_MEMORY_ALLOCATION;
+        }
+        RT_LOG(
+            RT_LOG_INFO, "ObjAllocator alloc success, Runtime_alloc_size %zu(bytes)",
+            poolNum * sizeof(std::atomic<uint32_t>));
         return RT_ERROR_NONE;
     }
 
@@ -174,12 +193,42 @@ public:
     {
         ObjFree(pool_[idx]);
         pool_[idx] = nullptr;
+        if (activeCount_ != nullptr) {
+            activeCount_[idx].store(0U, std::memory_order_relaxed);
+        }
         return;
     }
 
     std::mutex* GetObjAllocatorMutex() const { return mtx_; }
 
     T** GetObjAllocatorPool() const { return pool_; }
+
+    // 递增对应 pool 的活跃计数器
+    uint32_t IncActiveCount(uint32_t poolIdx)
+    {
+        if (activeCount_ != nullptr) {
+            return activeCount_[poolIdx].fetch_add(1U, std::memory_order_acq_rel);
+        }
+        return MAX_UINT32_NUM;
+    }
+
+    // 递减对应 pool 的活跃计数器
+    uint32_t DecActiveCount(uint32_t poolIdx)
+    {
+        if (activeCount_ != nullptr) {
+            return activeCount_[poolIdx].fetch_sub(1U, std::memory_order_release);
+        }
+        return MAX_UINT32_NUM;
+    }
+
+    // 检查 pool 是否可回收（无活跃对象）
+    bool IsPoolEmpty(uint32_t poolIdx) const
+    {
+        if (activeCount_ == nullptr) {
+            return false;
+        }
+        return activeCount_[poolIdx].load(std::memory_order_acquire) == 0U;
+    }
 
 private:
     void GetOrAllocItemById(uint32_t id, uint32_t& poolIdx, uint32_t& subId) const
@@ -226,6 +275,7 @@ private:
     const bool clearFlag_;
     T** pool_;
     std::mutex* mtx_;
+    std::atomic<uint32_t>* activeCount_;
 };
 } // namespace runtime
 } // namespace cce

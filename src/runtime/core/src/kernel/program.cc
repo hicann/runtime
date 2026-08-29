@@ -128,7 +128,9 @@ void Program::ResetProgramAllocatorOnDestroy() const
         return;
     }
 
-    RefObject<Program*>* const programItem = Runtime::Instance()->GetProgramAllocator()->GetDataToItem(progId_);
+    ObjAllocator<RefObject<Program*>>* programAllocator = Runtime::Instance()->GetProgramAllocator();
+    COND_PROC((programAllocator == nullptr), return);
+    RefObject<Program*>* const programItem = programAllocator->GetDataToItem(progId_);
     if (programItem == nullptr) {
         return;
     }
@@ -148,6 +150,32 @@ void Program::ResetProgramAllocatorOnDestroy() const
     }
     programInst = nullptr;
     programItem->ResetVal();
+
+    const uint32_t poolIdx = progId_ / DEFAULT_PROGRAM_NUMBER;
+    const uint32_t count = programAllocator->DecActiveCount(poolIdx);
+    RT_LOG(RT_LOG_INFO, "progId=%u, poolIdx=%u, activeCount=%d", progId_, poolIdx, count);
+    COND_PROC((programAllocator->IsPoolEmpty(poolIdx) == false), return);
+
+    RefObject<Program*>** pool = programAllocator->GetObjAllocatorPool();
+    COND_PROC((pool == nullptr), return);
+
+    std::mutex* progMtx = programAllocator->GetObjAllocatorMutex();
+    COND_PROC((progMtx == nullptr), return);
+
+    std::lock_guard<std::mutex> poolLock(progMtx[poolIdx]);
+    RefObject<Program*>* poolSlot = pool[poolIdx];
+    COND_PROC((poolSlot == nullptr), return);
+
+    bool needRecyleFlag = true;
+    for (uint32_t headIdx = 0U, tailIdx = DEFAULT_PROGRAM_NUMBER - 1U; headIdx <= tailIdx; headIdx++, tailIdx--) {
+        if ((poolSlot[headIdx].GetRef() != 0U) || (poolSlot[tailIdx].GetRef() != 0U)) {
+            needRecyleFlag = false;
+            break;
+        }
+    }
+    if (needRecyleFlag) {
+        programAllocator->RecyclePool(poolIdx);
+    }
 }
 
 void Program::CloseBinaryHandleOnDestroy()

@@ -1740,10 +1740,12 @@ rtError_t Runtime::AddProgramToPool(Program* const prog)
         const uint32_t id = i % maxProgramNum_;
         RefObject<Program*>* const programItem = programAllocator_->GetDataToItem(id);
         if ((programItem != nullptr) && (programItem->TryIncAndSet(prog))) {
+            const uint32_t poolIdx = id / DEFAULT_PROGRAM_NUMBER;
+            const uint32_t count = programAllocator_->IncActiveCount(poolIdx);
             prog->SetId(id);
             latestPoolIdx_ = i / DEFAULT_PROGRAM_NUMBER;
             programsTryIdx = ((id + 1U) >= maxProgramNum_) ? 0U : (id + 1U);
-            RT_LOG(RT_LOG_INFO, "progId=%u", id);
+            RT_LOG(RT_LOG_INFO, "progId=%u, poolIdx=%u, activeCount=%u", id, poolIdx, count);
             return RT_ERROR_NONE;
         }
     }
