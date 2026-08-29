@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "gtest/gtest.h"
+#include "runtime/rt.h"
 #include "api_impl.hpp"
 #include "aicpu_dfx.hpp"
 
@@ -28,3 +29,13 @@ TEST(Arch5162ApiTest, KernelArgsApiImplStub_NotSupport)
 }
 
 TEST(Arch5162ApiTest, AicpuFifoPrintfDfxDisabled) { EXPECT_EQ(SetupAicpuPrintfDfx(nullptr, 0U), RT_ERROR_NONE); }
+
+TEST(Arch5162ApiTest, GetDeviceReturnsFixedDeviceId)
+{
+    int32_t deviceId = -1;
+
+    EXPECT_EQ(rtGetDevice(&deviceId), RT_ERROR_NONE);
+    EXPECT_EQ(deviceId, 0);
+}
+
+TEST(Arch5162ApiTest, GetDeviceRejectsNullOutput) { EXPECT_EQ(rtGetDevice(nullptr), ACL_ERROR_RT_PARAM_INVALID); }

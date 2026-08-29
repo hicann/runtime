@@ -25,6 +25,7 @@ def find_generator_path():
 
 
 GENERATOR_PATH = find_generator_path()
+REPO_ROOT = GENERATOR_PATH.parents[3]
 SPEC = importlib.util.spec_from_file_location("generate_runtime_api_stubs", GENERATOR_PATH)
 GENERATOR = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(GENERATOR)
@@ -35,6 +36,7 @@ RUNTIME_API_CATALOG_VERSION(1)
 RUNTIME_API(module_a, rtError_t, rtUnsupported, (int32_t value), (value), FEATURE_NOT_SUPPORT, EXPORT)
 RUNTIME_API(module_a, rtError_t, rtNoop, (void), (), SUCCESS_NOOP, EXPORT)
 RUNTIME_API(module_b, void, rtVoidNoop, (void* value), (value), VOID_NOOP, HIDDEN)
+RUNTIME_API(module_b, uint32_t, rtMemoryReserved, (void), (), MEMORY_RESERVED, EXPORT)
 """
 
 
@@ -90,7 +92,23 @@ RUNTIME_API_STUB(rtNoop)
         hidden_stub = GENERATOR.render_stub(catalog["rtVoidNoop"])
         self.assertIn("void rtVoidNoop(void* value)", hidden_stub)
         self.assertNotIn("VISIBILITY_DEFAULT", hidden_stub)
+        reserved_stub = GENERATOR.render_stub(catalog["rtMemoryReserved"])
+        self.assertIn("return RT_MEMORY_RESERVED;", reserved_stub)
         self.assertNotIn("RUNTIME_API_WEAK", source)
+
+        test_source = GENERATOR.render_test_source(
+            "test", [catalog["rtUnsupported"], catalog["rtNoop"]]
+        )
+        self.assertIn(
+            "EXPECT_EQ(InvokeWithDefaultArguments(&rtUnsupported), "
+            "ACL_ERROR_RT_FEATURE_NOT_SUPPORT);",
+            test_source,
+        )
+        self.assertIn(
+            "EXPECT_EQ(InvokeWithDefaultArguments(&rtNoop), ACL_RT_SUCCESS);",
+            test_source,
+        )
+        self.assertEqual(test_source.count("TEST(Arch5162RuntimeApiStubTest,"), 2)
 
         report_path = self.root / "provider.csv"
         GENERATOR.write_report(report_path, "test", catalog, names)
@@ -101,7 +119,134 @@ RUNTIME_API_STUB(rtNoop)
         )
         self.assertEqual(
             {row["api"]: row["provider"] for row in rows},
-            {"rtNoop": "strong_stub", "rtUnsupported": "strong_stub", "rtVoidNoop": "weak_real"},
+            {
+                "rtMemoryReserved": "weak_real",
+                "rtNoop": "strong_stub",
+                "rtUnsupported": "strong_stub",
+                "rtVoidNoop": "weak_real",
+            },
+        )
+
+    def test_arch5162_product_matches_confirmed_api_support(self):
+        catalog_path = REPO_ROOT / "src/runtime/api/runtime_api_stub_catalog.def"
+        product_path = REPO_ROOT / "src/runtime/cmake/arch5162_unsupported_runtime_api.def"
+        catalog_version, catalog = GENERATOR.parse_catalog(catalog_path)
+        product_version, names = GENERATOR.parse_product_def(product_path)
+
+        self.assertEqual(catalog_version, product_version)
+        self.assertFalse(set(names) - set(catalog))
+        self.assertEqual(names, sorted(names))
+        self.assertEqual(len(catalog), 783)
+        self.assertEqual(len(names), 654)
+        self.assertEqual(len(set(catalog) - set(names)), 129)
+        self.assertEqual(
+            sum(catalog[name].policy == "FEATURE_NOT_SUPPORT" for name in names),
+            650,
+        )
+        self.assertEqual(
+            sum(catalog[name].policy == "SUCCESS_NOOP" for name in names), 3
+        )
+        self.assertEqual(
+            sum(catalog[name].policy == "VOID_NOOP" for name in names), 1
+        )
+        generated_tests = GENERATOR.render_test_source(
+            "arch5162", [catalog[name] for name in names]
+        )
+        self.assertEqual(
+            generated_tests.count("TEST(Arch5162RuntimeApiStubTest,"), len(names)
+        )
+        for api in (
+            "rtCtxGetCurrentDefaultStream",
+            "rtDatadumpInfoLoadWithFlag",
+            "rtDeviceGetStreamPriorityRange",
+            "rtEventRecord",
+            "rtGetAvailEventNum",
+            "rtGetDeviceInfo",
+            "rtGetEventID",
+            "rtGetNotifyID",
+            "rtGetOpExecuteTimeoutV2",
+            "rtGetOpTimeOutInterval",
+            "rtGetSocVersion",
+            "rtGetSocSpec",
+            "rtGetStreamId",
+            "rtGetTsMemType",
+            "rtLabelDestroy",
+            "rtLabelSet",
+            "rtLabelSwitchByIndex",
+            "rtMalloc",
+            "rtMemcpy",
+            "rtMemcpyAsync",
+            "rtModelCreate",
+            "rtModelLoadComplete",
+            "rtModelUnbindStream",
+            "rtNotifyDestroy",
+            "rtNotifyRecord",
+            "rtNotifyWait",
+            "rtNotifyWaitWithTimeOut",
+            "rtNpuClearFloatDebugStatus",
+            "rtNpuGetFloatDebugStatus",
+            "rtSetDevice",
+            "rtSetModelName",
+            "rtStarsTaskLaunch",
+            "rtStarsTaskLaunchWithFlag",
+            "rtStreamActive",
+            "rtStreamSwitchEx",
+            "rtStreamWaitEventWithTimeout",
+            "rtsFree",
+            "rtsPointerGetAttributes",
+        ):
+            self.assertIn(api, catalog)
+            self.assertNotIn(api, names)
+        for api in (
+            "rtBinaryLoadWithoutTilingKey",
+            "rtDeviceGetHostAtomicCapabilities",
+            "rtDeviceGetLimit",
+            "rtDeviceGetP2PAtomicCapabilities",
+            "rtEventRecordWithFlag",
+            "rtGetDevMsg",
+            "rtMemGetAddressRange",
+            "rtMemMapSelectedLink",
+            "rtModelGetId",
+            "rtRegTaskFailCallbackByModule",
+            "rtStreamWaitEventWithFlag",
+            "rtsMalloc",
+            "rtsLaunchUpdateTask",
+            "rtsModelAbort",
+        ):
+            self.assertIn(api, names)
+        self.assertNotIn("rtDeinit", names)
+        self.assertNotIn("rtGetDevice", names)
+        self.assertEqual(catalog["rtDeinit"].policy, "VOID_NOOP")
+
+    def test_arch5162_acl_tests_reference_product_stubs(self):
+        product_path = REPO_ROOT / "src/runtime/cmake/arch5162_unsupported_runtime_api.def"
+        _, runtime_stub_names = GENERATOR.parse_product_def(product_path)
+        runtime_stub_set = set(runtime_stub_names)
+
+        acl_def_path = (
+            REPO_ROOT
+            / "tests/ut/runtime/runtime/test/platform/arch5162/arch5162_unsupported_acl_api.def"
+        )
+        content = GENERATOR.strip_comments(acl_def_path.read_text(encoding="utf-8"))
+        macros = (
+            "ARCH5162_UNSUPPORTED_ACL_API",
+            "ARCH5162_UNSUPPORTED_ACL_API_WITH_ARGS",
+            "ARCH5162_UNSUPPORTED_ACL_API_WITH_EXPECTED",
+            "ARCH5162_UNSUPPORTED_ACL_API_WITH_ARGS_AND_EXPECTED",
+            "ARCH5162_UNSUPPORTED_ACL_POINTER_API_WITH_ARGS",
+        )
+        mappings = []
+        for macro in macros:
+            for invocation in GENERATOR.extract_invocations(content, macro):
+                fields = GENERATOR.split_top_level(invocation)
+                mappings.append((fields[0], fields[1]))
+
+        acl_names = [acl_name for acl_name, _ in mappings]
+        self.assertEqual(len(acl_names), 265)
+        self.assertFalse(any(name.startswith("acltdt") for name in acl_names))
+        self.assertEqual(len(acl_names), len(set(acl_names)))
+        self.assertFalse(
+            {runtime_name for _, runtime_name in mappings} - runtime_stub_set
         )
 
     def test_rejects_duplicate_product_api(self):

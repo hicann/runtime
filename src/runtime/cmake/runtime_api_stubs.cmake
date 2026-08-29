@@ -48,9 +48,16 @@ function(generate_runtime_api_stubs product product_def output_var)
     set(output_dir ${CMAKE_CURRENT_BINARY_DIR}/generated/runtime_api_stubs/${product})
     set(output_source ${output_dir}/api_c_generated_stub.cc)
     set(output_report ${output_dir}/api_provider_report.csv)
+    set(generated_outputs ${output_source})
+    set(generator_test_args)
+    if(ARGC GREATER 3)
+        set(output_test_source ${output_dir}/api_c_generated_stub_test.cc)
+        list(APPEND generated_outputs ${output_test_source})
+        list(APPEND generator_test_args --test-output ${output_test_source})
+    endif()
 
     add_custom_command(
-        OUTPUT ${output_source}
+        OUTPUT ${generated_outputs}
         BYPRODUCTS ${output_report}
         COMMAND ${CMAKE_COMMAND} -E make_directory ${output_dir}
         COMMAND python3 ${RUNTIME_API_STUB_GENERATOR}
@@ -59,20 +66,24 @@ function(generate_runtime_api_stubs product product_def output_var)
             --product ${product}
             --output ${output_source}
             --report ${output_report}
-        COMMAND ${CMAKE_COMMAND} -E touch ${output_source}
+            ${generator_test_args}
+        COMMAND ${CMAKE_COMMAND} -E touch ${generated_outputs}
         DEPENDS
             ${RUNTIME_API_STUB_GENERATOR}
             ${RUNTIME_API_STUB_CATALOG}
             ${product_def}
         VERBATIM
     )
-    set_source_files_properties(${output_source} PROPERTIES GENERATED TRUE)
+    set_source_files_properties(${generated_outputs} PROPERTIES GENERATED TRUE)
     if(NOT "${TARGET_SYSTEM_NAME}" STREQUAL "Windows")
         set_property(SOURCE ${output_source} APPEND PROPERTY
             COMPILE_OPTIONS -ffunction-sections -fdata-sections
         )
     endif()
     set(${output_var} ${output_source} PARENT_SCOPE)
+    if(ARGC GREATER 3)
+        set(${ARGV3} ${output_test_source} PARENT_SCOPE)
+    endif()
 endfunction()
 
 function(enable_runtime_api_weak_override target_name)

@@ -24,6 +24,14 @@ using namespace cce::runtime;
 extern "C" {
 #endif // __cplusplus
 VISIBILITY_DEFAULT
+rtError_t rtGetDevice(int32_t* devId)
+{
+    PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(devId, RT_ERROR_INVALID_VALUE);
+    *devId = 0;
+    return ACL_RT_SUCCESS;
+}
+
+VISIBILITY_DEFAULT
 rtError_t rtMallocCached(void** devPtr, uint64_t size, rtMemType_t type, const uint16_t moduleId)
 {
     GLOBAL_STATE_WAIT_IF_LOCKED();

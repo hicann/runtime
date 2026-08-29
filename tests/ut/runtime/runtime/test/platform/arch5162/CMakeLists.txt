@@ -15,6 +15,7 @@ generate_runtime_api_stubs(
     arch5162
     ${TOP_DIR}/src/runtime/cmake/arch5162_unsupported_runtime_api.def
     RUNTIME_UT_ARCH5162_GENERATED_API_STUB_SOURCE
+    RUNTIME_UT_ARCH5162_GENERATED_API_STUB_TEST_SOURCE
 )
 
 set(runtimeut_src_task_list
@@ -77,8 +78,7 @@ set(libruntime_src_files_include_for_arch5162
     ${TOP_DIR}/src/runtime/core/src/profiler/api_profile_decorator_tiny_stub.cc
 )
 
-set(runtimeut_src_api_list
-    ${TOP_DIR}/src/runtime/api/api.cc
+set(RUNTIME_UT_ARCH5162_API_WEAK_REAL_SRC_FILES
     ${TOP_DIR}/src/runtime/api/api_c.cc
     ${TOP_DIR}/src/runtime/api/api_c_context.cc
     ${TOP_DIR}/src/runtime/api/api_c_device.cc
@@ -88,6 +88,12 @@ set(runtimeut_src_api_list
     ${TOP_DIR}/src/runtime/api/api_c_model.cc
     ${TOP_DIR}/src/runtime/api/api_c_soc.cc
     ${TOP_DIR}/src/runtime/api/api_c_stream.cc
+)
+configure_runtime_api_weak_real_sources(arch5162 ${RUNTIME_UT_ARCH5162_API_WEAK_REAL_SRC_FILES})
+
+set(runtimeut_src_api_list
+    ${TOP_DIR}/src/runtime/api/api.cc
+    ${RUNTIME_UT_ARCH5162_API_WEAK_REAL_SRC_FILES}
     ${RUNTIME_UT_ARCH5162_GENERATED_API_STUB_SOURCE}
     ${TOP_DIR}/src/runtime/api/api_c_arch5162.cc
     ${TOP_DIR}/src/runtime/api/api_global_err.cc
@@ -301,6 +307,7 @@ set(runtimeut_src_list
 
 ###################################################################################################
 add_library(runtimeut_src_static_lib_5162a STATIC ${runtimeut_src_list})
+set_property(TARGET runtimeut_src_static_lib_5162a PROPERTY RUNTIME_API_WEAK_PROVIDER TRUE)
 
 target_link_libraries(runtimeut_src_static_lib_5162a PRIVATE $<BUILD_INTERFACE:runtime_utest_intf_pub_arch5162>)
 
@@ -320,6 +327,10 @@ target_compile_definitions(runtimeut_src_static_lib_5162a PUBLIC
 )
 
 target_link_libraries(runtimeut_src_static_lib_5162a PRIVATE $<BUILD_INTERFACE:runtime_utest_intf_pub_arch5162>)
+
+target_include_directories(ut_ascendcl_src PRIVATE
+    ${TOP_DIR}/src/inc/tdt
+)
 ###################################################################################################
 set(stub_src_list
     ${TOP_DIR}/tests/ut/runtime/runtime/stub/atrace_stub.cc
@@ -347,6 +358,8 @@ add_executable(runtime_utest_arch5162
     rt_utest_task_arch5162.cc
     rt_utest_task_execute_time_arch5162.cc
     rt_utest_mem_arch5162.cc
+    rt_utest_api_stub_arch5162.cc
+    ${RUNTIME_UT_ARCH5162_GENERATED_API_STUB_TEST_SOURCE}
     ../../rt_utest_mbuf_stub.cc
     rt_utest_api_arch5162.cc
     rt_utest_arg_loader_nocopy.cc
@@ -360,15 +373,32 @@ target_compile_definitions(runtime_utest_arch5162 PUBLIC
     TEMP_PERFORMANCE_NOT_OUTPUT
 )
 
+target_include_directories(runtime_utest_arch5162 PRIVATE
+    ${TOP_DIR}/include/external
+    ${TOP_DIR}/src/acl
+)
+
 target_link_libraries(runtime_utest_arch5162 PRIVATE
     $<BUILD_INTERFACE:runtime_utest_intf_pub_arch5162>
     -Wl,--whole-archive
      runtimeut_src_static_lib_5162a
      runtime_ut_stub_static_lib_5162a
     -Wl,--no-whole-archive
+    ut_ascendcl_src
+    json
+    ge_stub
+    slog_stub
+    c_sec
+    mmpa_stub
+    tdt_stub
+    toolchain_stub
+    profiling_stub
+    runtime_stub
+    -lrt
+    -ldl
+    -lpthread
+    -lgcov
 )
-###################################################################################################
-
 
 ##################################################################################################
 add_library(runtime_utest_intf_pub_arch5162 INTERFACE)
