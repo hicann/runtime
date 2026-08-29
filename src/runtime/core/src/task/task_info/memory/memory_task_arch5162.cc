@@ -27,6 +27,16 @@ void PrintAsyncPtrProc(Driver* const driver, char_t* const errStr, void* memcpyA
     UNUSED(countNum);
 }
 
+rtError_t GetD2dCrossType(
+    Driver* const driver, const void* const srcAddr, const void* const desAddr, bool* isD2dCross8P)
+{
+    UNUSED(driver);
+    UNUSED(srcAddr);
+    UNUSED(desAddr);
+    UNUSED(isD2dCross8P);
+    return RT_ERROR_NONE;
+}
+
 rtError_t MixKernelUpdatePrepare(TaskInfo* const updateTask, void** const hostAddr, const uint64_t allocSize)
 {
     UNUSED(updateTask);

@@ -49,15 +49,17 @@ JettyType StreamJettyHandler::GetJettyTypeFromTask(const TaskInfo* task)
         return JettyType::JETTY_TYPE_MAX;
     }
 
-    return ConvertCopyTypeToJettyType(task->u.memcpyAsyncTaskInfo.copyType);
+    return ConvertCopyTypeToJettyType(task->u.memcpyAsyncTaskInfo.copyType, task->u.memcpyAsyncTaskInfo.isD2dCross8P);
 }
 
-JettyType StreamJettyHandler::ConvertCopyTypeToJettyType(uint32_t copyType)
+JettyType StreamJettyHandler::ConvertCopyTypeToJettyType(const uint32_t copyType, const bool isD2dCross8P)
 {
     if (copyType == RT_MEMCPY_DIR_H2D || copyType == RT_MEMCPY_DIR_D2H) {
         return JettyType::JETTY_TYPE_H2D;
+    } else if (copyType == RT_MEMCPY_DIR_D2D_UB && !isD2dCross8P) {
+        return JettyType::JETTY_TYPE_D2D_IN_BOARD;
     }
-    return JettyType::JETTY_TYPE_D2D;
+    return JettyType::JETTY_TYPE_D2D_CROSS_BOARD;
 }
 
 rtError_t StreamJettyHandler::GetDriverAndDeviceId(const Stream* stream, Driver*& driver, uint32_t& deviceId)
@@ -527,15 +529,15 @@ rtError_t StreamJettyHandler::RefreshModelJettyInfoList(Model* const mdl)
     JettyManager* jettyMgr = mdl->Context_()->Device_()->GetJettyManager();
     NULL_PTR_RETURN(jettyMgr, RT_ERROR_INVALID_VALUE);
 
-    mdl->ClearH2dJettyInfoList();
-    mdl->ClearD2dJettyInfoList();
+    mdl->ClearJettyInfoList();
 
     for (Stream* stm : mdl->StreamList_()) {
         if (stm == nullptr) {
             continue;
         }
         const int32_t streamId = stm->Id_();
-        for (const JettyType type : {JettyType::JETTY_TYPE_H2D, JettyType::JETTY_TYPE_D2D}) {
+        for (const JettyType type :
+             {JettyType::JETTY_TYPE_H2D, JettyType::JETTY_TYPE_D2D_IN_BOARD, JettyType::JETTY_TYPE_D2D_CROSS_BOARD}) {
             StreamJettyContext* jettyCtx = jettyMgr->GetStreamJettyContext(streamId, type);
             if (jettyCtx == nullptr || jettyCtx->jettyHandle == 0ULL || jettyCtx->filledWqeCount == 0U) {
                 continue;
@@ -558,11 +560,7 @@ rtError_t StreamJettyHandler::RefreshModelJettyInfoList(Model* const mdl)
             info.piValue = static_cast<uint16_t>(std::min(piVal, static_cast<uint32_t>(UINT16_MAX)));
             info.sqId = stm->GetSqId();
 
-            if (type == JettyType::JETTY_TYPE_H2D) {
-                mdl->SetH2dJettyInfo(info);
-            } else {
-                mdl->SetD2dJettyInfo(info);
-            }
+            mdl->SetJettyInfo(info);
             RT_LOG(
                 RT_LOG_DEBUG,
                 "Refresh jetty info, stream_id=%d, type=%d, jetty_id=%u, die_id=%u, func_id=%u, pi_value=%u.", streamId,

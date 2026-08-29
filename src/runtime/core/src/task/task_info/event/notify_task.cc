@@ -425,10 +425,10 @@ static void ReleaseJettyForNormalModelOnError(Model* model, uint32_t errorCode)
             continue;
         }
         (void)StreamJettyHandler::ReleaseJetty(stm, JettyType::JETTY_TYPE_H2D, false);
-        (void)StreamJettyHandler::ReleaseJetty(stm, JettyType::JETTY_TYPE_D2D, false);
+        (void)StreamJettyHandler::ReleaseJetty(stm, JettyType::JETTY_TYPE_D2D_IN_BOARD, false);
+        (void)StreamJettyHandler::ReleaseJetty(stm, JettyType::JETTY_TYPE_D2D_CROSS_BOARD, false);
     }
-    model->ClearH2dJettyInfoList();
-    model->ClearD2dJettyInfoList();
+    model->ClearJettyInfoList();
     model->SetNeedUpdateUBPi(false);
     model->SetNeedRebindJetty(true);
     RT_LOG(

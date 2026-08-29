@@ -234,38 +234,25 @@ static rtError_t AsyncJettyToHead(const Model* const mdl, Stream* const stm)
     if (!mdl->GetNeedUpdateUBPi()) {
         return RT_ERROR_NONE;
     }
-    if ((mdl->GetH2dJettyInfo().empty()) && (mdl->GetD2dJettyInfo().empty())) {
+    if (mdl->GetJettyInfo().empty()) {
         return RT_ERROR_NONE;
     }
 
-    RT_LOG(
-        RT_LOG_INFO, "ub model includes async copy task, h2d_list_size=%d, d2d_list_size=%d.",
-        mdl->GetH2dJettyInfo().size(), mdl->GetD2dJettyInfo().size());
+    RT_LOG(RT_LOG_INFO, "ub model includes async copy task, list_size=%d.", mdl->GetJettyInfo().size());
 
     rtError_t error = RT_ERROR_NONE;
     rtUbDbInfo_t dbInfo;
     dbInfo.wrCqe = 0U;
     dbInfo.dbNum = UB_DOORBELL_NUM_MIN;
 
-    for (auto& info : mdl->GetH2dJettyInfo()) {
+    for (auto& info : mdl->GetJettyInfo()) {
         dbInfo.info[0].dieId = info.dieId;
         dbInfo.info[0].jettyId = info.jettyId;
         dbInfo.info[0].functionId = info.functionId;
         dbInfo.info[0].piValue = info.piValue;
         error = StreamUbDbSend(&dbInfo, stm, static_cast<uint16_t>(UbDmaSqeSource::RT_UBDMA_SOURCE_MODEL_EXE));
         COND_RETURN_ERROR(
-            (error != RT_ERROR_NONE), error, "send h2d ub doorbell failed, stream_id=%d, model_sq_id=%u, error=%d.",
-            stm->Id_(), info.sqId, error);
-    }
-
-    for (auto& info : mdl->GetD2dJettyInfo()) {
-        dbInfo.info[0].dieId = info.dieId;
-        dbInfo.info[0].jettyId = info.jettyId;
-        dbInfo.info[0].functionId = info.functionId;
-        dbInfo.info[0].piValue = info.piValue;
-        error = StreamUbDbSend(&dbInfo, stm, static_cast<uint16_t>(UbDmaSqeSource::RT_UBDMA_SOURCE_MODEL_EXE));
-        COND_RETURN_ERROR(
-            (error != RT_ERROR_NONE), error, "send d2d ub doorbell failed, stream_id=%d, model_sq_id=%u, error=%d.",
+            (error != RT_ERROR_NONE), error, "send ub doorbell failed, stream_id=%d, model_sq_id=%u, error=%d.",
             stm->Id_(), info.sqId, error);
     }
 
@@ -290,7 +277,8 @@ static rtError_t FlushJettyForModel(Model* const mdl)
         if (stm == nullptr) {
             continue;
         }
-        for (const JettyType type : {JettyType::JETTY_TYPE_H2D, JettyType::JETTY_TYPE_D2D}) {
+        for (const JettyType type :
+             {JettyType::JETTY_TYPE_H2D, JettyType::JETTY_TYPE_D2D_IN_BOARD, JettyType::JETTY_TYPE_D2D_CROSS_BOARD}) {
             StreamJettyContext* ctx = jettyMgr->GetStreamJettyContext(stm->Id_(), type);
             if (ctx == nullptr || ctx->filledWqeCount == 0U) {
                 continue;

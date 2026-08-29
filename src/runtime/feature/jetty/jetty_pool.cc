@@ -19,12 +19,15 @@ namespace runtime {
 JettyPool::JettyPool(uint32_t deviceId) : deviceId_(deviceId)
 {
     h2dJettyPool_.reserve(JETTY_POOL_H2D_MAX_SIZE);
-    d2dJettyPool_.reserve(JETTY_POOL_D2D_MAX_SIZE);
+    d2dInBoardJettyPool_.reserve(JETTY_POOL_D2D_MAX_SIZE);
+    d2dCrossBoardJettyPool_.reserve(JETTY_POOL_D2D_MAX_SIZE);
     // tsdrv约束, 必须device申请过jetty,才能create wqe
     JettyInfo h2dJetty;
     (void)CreateJetty(JettyType::JETTY_TYPE_H2D, JETTY_DEPTH_STANDARD, h2dJetty);
-    JettyInfo d2dJetty;
-    (void)CreateJetty(JettyType::JETTY_TYPE_D2D, JETTY_DEPTH_STANDARD, d2dJetty);
+    JettyInfo d2dInBoardJetty;
+    (void)CreateJetty(JettyType::JETTY_TYPE_D2D_IN_BOARD, JETTY_DEPTH_STANDARD, d2dInBoardJetty);
+    JettyInfo d2dCrossBoardJetty;
+    (void)CreateJetty(JettyType::JETTY_TYPE_D2D_CROSS_BOARD, JETTY_DEPTH_STANDARD, d2dCrossBoardJetty);
 
     RT_LOG(RT_LOG_INFO, "Jetty pool created, device_id=%u.", deviceId_);
 }
@@ -38,8 +41,9 @@ rtError_t JettyPool::CreateJetty(JettyType type, uint32_t depth, JettyInfo& jett
         return RT_ERROR_INVALID_VALUE;
     }
 
-    const uint32_t dir =
-        (type == JettyType::JETTY_TYPE_H2D) ? TRS_ASYNC_JETTY_HOST_DEVICE : TRS_ASYNC_JETTY_DEVICE_TO_DEVICE;
+    const uint32_t dir = (type == JettyType::JETTY_TYPE_H2D)          ? TRS_ASYNC_JETTY_HOST_DEVICE :
+                         (type == JettyType::JETTY_TYPE_D2D_IN_BOARD) ? TRS_ASYNC_JETTY_DEVICE_TO_DEVICE :
+                                                                        TRS_ASYNC_JETTY_D2D_CROSS_BOARD;
     uint64_t handle = 0ULL;
 
     rtError_t error = driver->AsyncDmaJettyCreate(deviceId_, 1U, depth, dir, &handle);
@@ -74,14 +78,34 @@ rtError_t JettyPool::CreateJetty(JettyType type, uint32_t depth, JettyInfo& jett
 rtError_t JettyPool::PreAllocJetty(JettyType type)
 {
     std::lock_guard<std::mutex> lock(poolLock_);
-    std::vector<JettyInfo>& pool = (type == JettyType::JETTY_TYPE_H2D) ? h2dJettyPool_ : d2dJettyPool_;
-    const uint32_t maxSize = (type == JettyType::JETTY_TYPE_H2D) ? JETTY_POOL_H2D_MAX_SIZE : JETTY_POOL_D2D_MAX_SIZE;
-    if (pool.size() < maxSize) {
+    std::vector<JettyInfo>* poolPtr = nullptr;
+    uint32_t maxSize = 0, poolSize = 0;
+    switch (type) {
+        case JettyType::JETTY_TYPE_H2D:
+            poolPtr = &h2dJettyPool_;
+            maxSize = JETTY_POOL_H2D_MAX_SIZE;
+            poolSize = h2dJettyPool_.size();
+            break;
+        case JettyType::JETTY_TYPE_D2D_IN_BOARD:
+            poolPtr = &d2dInBoardJettyPool_;
+            maxSize = JETTY_POOL_D2D_MAX_SIZE;
+            poolSize = d2dInBoardJettyPool_.size() + d2dCrossBoardJettyPool_.size();
+            break;
+        case JettyType::JETTY_TYPE_D2D_CROSS_BOARD:
+            poolPtr = &d2dCrossBoardJettyPool_;
+            maxSize = JETTY_POOL_D2D_MAX_SIZE;
+            poolSize = d2dInBoardJettyPool_.size() + d2dCrossBoardJettyPool_.size();
+            break;
+        default:
+            RT_LOG(RT_LOG_ERROR, "Invalid jetty type=%d.", static_cast<int32_t>(type));
+            return RT_ERROR_INVALID_VALUE;
+    }
+    if (poolSize < maxSize) {
         JettyInfo newJetty;
         const rtError_t error = CreateJetty(type, JETTY_DEPTH_STANDARD, newJetty);
         COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
         newJetty.state = JettyState::FREE;
-        pool.push_back(newJetty);
+        poolPtr->push_back(newJetty);
         RT_LOG(
             RT_LOG_INFO, "Create jetty (FREE), device_id=%u, type=%d, jetty_id=%u.", deviceId_,
             static_cast<int32_t>(type), newJetty.jettyId);
@@ -101,9 +125,10 @@ rtError_t JettyPool::FreeJetty(uint64_t handle, JettyAllocMode mode, JettyType t
         return RT_ERROR_INVALID_VALUE;
     }
 
-    std::vector<JettyInfo>& pool = (mode == JettyAllocMode::DIRECT)    ? directJettyList_ :
-                                   (type == JettyType::JETTY_TYPE_H2D) ? h2dJettyPool_ :
-                                                                         d2dJettyPool_;
+    std::vector<JettyInfo>& pool = (mode == JettyAllocMode::DIRECT)             ? directJettyList_ :
+                                   (type == JettyType::JETTY_TYPE_H2D)          ? h2dJettyPool_ :
+                                   (type == JettyType::JETTY_TYPE_D2D_IN_BOARD) ? d2dInBoardJettyPool_ :
+                                                                                  d2dCrossBoardJettyPool_;
     for (auto it = pool.begin(); it != pool.end(); ++it) {
         if (it->handle == handle) {
             const rtError_t ret = driver->AsyncDmaJettyDestroy(deviceId_, it->handle);
@@ -207,14 +232,17 @@ void JettyPool::Clear()
     // jetty handle destroy by tsdrv
     std::lock_guard<std::mutex> lock(poolLock_);
     h2dJettyPool_.clear();
-    d2dJettyPool_.clear();
+    d2dInBoardJettyPool_.clear();
+    d2dCrossBoardJettyPool_.clear();
     directJettyList_.clear();
     RT_LOG(RT_LOG_INFO, "Jetty pool cleared, device_id=%u.", deviceId_);
 }
 
 bool JettyPool::FindJettyByState(JettyType type, JettyState state, JettyInfo*& jettyInfo)
 {
-    std::vector<JettyInfo>& pool = (type == JettyType::JETTY_TYPE_H2D) ? h2dJettyPool_ : d2dJettyPool_;
+    std::vector<JettyInfo>& pool = (type == JettyType::JETTY_TYPE_H2D)          ? h2dJettyPool_ :
+                                   (type == JettyType::JETTY_TYPE_D2D_IN_BOARD) ? d2dInBoardJettyPool_ :
+                                                                                  d2dCrossBoardJettyPool_;
     for (auto& jetty : pool) {
         if (jetty.state == state) {
             jettyInfo = &jetty;
@@ -232,7 +260,13 @@ bool JettyPool::FindJettyByHandle(uint64_t handle, JettyInfo*& jettyInfo)
             return true;
         }
     }
-    for (auto& jetty : d2dJettyPool_) {
+    for (auto& jetty : d2dInBoardJettyPool_) {
+        if (jetty.handle == handle) {
+            jettyInfo = &jetty;
+            return true;
+        }
+    }
+    for (auto& jetty : d2dCrossBoardJettyPool_) {
         if (jetty.handle == handle) {
             jettyInfo = &jetty;
             return true;

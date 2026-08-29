@@ -24,7 +24,12 @@ constexpr uint32_t JETTY_POOL_H2D_MAX_SIZE = 1024U;
 constexpr uint32_t JETTY_POOL_D2D_MAX_SIZE = 1024U;
 constexpr uint32_t JETTY_DEPTH_STANDARD = 2048U;
 
-enum class JettyType : uint8_t { JETTY_TYPE_H2D = 0, JETTY_TYPE_D2D = 1, JETTY_TYPE_MAX };
+enum class JettyType : uint8_t {
+    JETTY_TYPE_H2D = 0,
+    JETTY_TYPE_D2D_IN_BOARD = 1,
+    JETTY_TYPE_D2D_CROSS_BOARD = 2,
+    JETTY_TYPE_MAX
+};
 
 enum class JettyState : uint8_t { FREE = 0, BOUND };
 
@@ -122,7 +127,8 @@ private:
 
     uint32_t deviceId_{0U};
     std::vector<JettyInfo> h2dJettyPool_;
-    std::vector<JettyInfo> d2dJettyPool_;
+    std::vector<JettyInfo> d2dInBoardJettyPool_;
+    std::vector<JettyInfo> d2dCrossBoardJettyPool_;
     std::vector<JettyInfo> directJettyList_;
     std::mutex poolLock_;
 };

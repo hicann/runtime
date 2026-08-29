@@ -290,17 +290,11 @@ public:
         devAddrList_.clear();
     }
 
-    void SetH2dJettyInfo(const UbAsyncJettyInfo& info) { h2dJettyInfoList_.push_back(info); }
+    void SetJettyInfo(const UbAsyncJettyInfo& info) { jettyInfoList_.push_back(info); }
 
-    std::vector<UbAsyncJettyInfo> GetH2dJettyInfo() const { return h2dJettyInfoList_; }
+    std::vector<UbAsyncJettyInfo> GetJettyInfo() const { return jettyInfoList_; }
 
-    void SetD2dJettyInfo(const UbAsyncJettyInfo& info) { d2dJettyInfoList_.push_back(info); }
-
-    std::vector<UbAsyncJettyInfo> GetD2dJettyInfo() const { return d2dJettyInfoList_; }
-
-    void ClearH2dJettyInfoList() { h2dJettyInfoList_.clear(); }
-
-    void ClearD2dJettyInfoList() { d2dJettyInfoList_.clear(); }
+    void ClearJettyInfoList() { jettyInfoList_.clear(); }
 
     bool GetNeedRebindJetty() const { return needRebindJetty_.load(); }
 
@@ -406,8 +400,7 @@ private:
     void* currentAddr_ = nullptr;
     uint8_t allocTimes_ = 0;
     std::vector<void*> devAddrList_;
-    std::vector<UbAsyncJettyInfo> h2dJettyInfoList_;
-    std::vector<UbAsyncJettyInfo> d2dJettyInfoList_;
+    std::vector<UbAsyncJettyInfo> jettyInfoList_;
     std::atomic<bool> needRebindJetty_;
     mutable std::mutex extendInfosMutex_;
     std::map<int32_t, std::map<uint32_t, std::string>> extendInfos_;

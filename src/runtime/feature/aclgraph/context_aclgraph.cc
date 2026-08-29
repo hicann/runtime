@@ -643,7 +643,12 @@ rtError_t Context::StreamEndCapture(Stream* const stm, Model** const captureMdl)
                     error != RT_ERROR_NONE, error, ClearCaptureModel(this, stm, captureModel),
                     "Failed to fill nop wqe, retCode=%#x.", static_cast<uint32_t>(error));
 
-                error = StreamJettyHandler::FillNopWqeOnCaptureEnd(innerStm, JettyType::JETTY_TYPE_D2D);
+                error = StreamJettyHandler::FillNopWqeOnCaptureEnd(innerStm, JettyType::JETTY_TYPE_D2D_IN_BOARD);
+                COND_PROC_RETURN_ERROR(
+                    error != RT_ERROR_NONE, error, ClearCaptureModel(this, stm, captureModel),
+                    "Failed to fill nop wqe, retCode=%#x.", static_cast<uint32_t>(error));
+
+                error = StreamJettyHandler::FillNopWqeOnCaptureEnd(innerStm, JettyType::JETTY_TYPE_D2D_CROSS_BOARD);
                 COND_PROC_RETURN_ERROR(
                     error != RT_ERROR_NONE, error, ClearCaptureModel(this, stm, captureModel),
                     "Failed to fill nop wqe, retCode=%#x.", static_cast<uint32_t>(error));

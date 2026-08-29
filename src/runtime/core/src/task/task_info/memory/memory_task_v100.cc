@@ -45,6 +45,16 @@ rtError_t ConvertAsyncDma(TaskInfo* const taskInfo)
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
+rtError_t GetD2dCrossType(
+    Driver* const driver, const void* const srcAddr, const void* const desAddr, bool* isD2dCross8P)
+{
+    UNUSED(driver);
+    UNUSED(srcAddr);
+    UNUSED(desAddr);
+    UNUSED(isD2dCross8P);
+    return RT_ERROR_NONE;
+}
+
 #ifdef __RT_CFG_HOST_CHIP_HI3559A__
 static void ReleaseCpyTmpMem(TaskInfo* const taskInfo)
 {

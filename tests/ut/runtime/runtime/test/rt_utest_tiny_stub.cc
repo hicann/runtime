@@ -1415,7 +1415,8 @@ TEST_F(TinyStubTest, jetty_stub)
     EXPECT_EQ(StreamJettyHandler::HandleUbDmaTask(nullptr, JettyType::JETTY_TYPE_H2D, nullptr, nullptr), RT_ERROR_NONE);
     EXPECT_EQ(StreamJettyHandler::RefreshModelJettyInfoList(nullptr), RT_ERROR_NONE);
     EXPECT_EQ(StreamJettyHandler::ReleaseJetty(nullptr, JettyType::JETTY_TYPE_H2D), RT_ERROR_NONE);
-    EXPECT_EQ(StreamJettyHandler::ReleaseJetty(nullptr, JettyType::JETTY_TYPE_D2D, false), RT_ERROR_NONE);
+    EXPECT_EQ(StreamJettyHandler::ReleaseJetty(nullptr, JettyType::JETTY_TYPE_D2D_IN_BOARD, false), RT_ERROR_NONE);
+    EXPECT_EQ(StreamJettyHandler::ReleaseJetty(nullptr, JettyType::JETTY_TYPE_D2D_CROSS_BOARD, false), RT_ERROR_NONE);
 }
 
 TEST_F(TinyStubTest, task_david_stub)

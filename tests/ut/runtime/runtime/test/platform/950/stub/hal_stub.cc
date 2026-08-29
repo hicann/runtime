@@ -1447,15 +1447,20 @@ drvError_t halAsyncDmaJettyCreate(
     uint32_t devId, struct halAsyncDmaJettyCreateIn* in, struct halAsyncDmaJettyCreateOut* out)
 {
     static halAsyncJettyHandle h2dHandle = {};
-    static halAsyncJettyHandle d2dHandle = {};
+    static halAsyncJettyHandle d2dInBoardHandle = {};
+    static halAsyncJettyHandle d2dCrossBoardHandle = {};
     // 区分 handle 内容以便后续区分 H2D/D2D
     h2dHandle.handle[0] = 1;
-    d2dHandle.handle[0] = 2;
+    d2dInBoardHandle.handle[0] = 2;
+    d2dCrossBoardHandle.handle[0] = 3;
     if (in->dir == TRS_ASYNC_JETTY_HOST_DEVICE) {
         out->jettyHandle = &h2dHandle;
     }
     if (in->dir == TRS_ASYNC_JETTY_DEVICE_TO_DEVICE) {
-        out->jettyHandle = &d2dHandle;
+        out->jettyHandle = &d2dInBoardHandle;
+    }
+    if (in->dir == TRS_ASYNC_JETTY_D2D_CROSS_BOARD) {
+        out->jettyHandle = &d2dCrossBoardHandle;
     }
     return DRV_ERROR_NONE;
 }

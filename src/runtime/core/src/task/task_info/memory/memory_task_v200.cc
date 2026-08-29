@@ -205,6 +205,42 @@ void ConstructDavidSqeForMemcpyAsyncTask(TaskInfo* const taskInfo, void* const s
         taskInfo->stream->Device_()->Id_(), static_cast<int32_t>(stream->Id_()), static_cast<uint32_t>(taskInfo->id),
         memcpyAsyncTaskInfo->copyType);
 }
+
+rtError_t GetD2dCrossType(
+    Driver* const driver, const void* const srcAddr, const void* const desAddr, bool* isD2dCross8P)
+{
+    int64_t locationType = 0;
+    rtPtrAttributes_t srcAttributes = {}, dstAttributes = {};
+    *isD2dCross8P = false;
+
+    rtError_t error = driver->PtrGetAttributes(srcAddr, &srcAttributes);
+    COND_RETURN_ERROR(
+        (error != RT_ERROR_NONE), error, "Failed to get src memory attribute, retCode=%#x.",
+        static_cast<uint32_t>(error));
+
+    error = driver->PtrGetAttributes(desAddr, &dstAttributes);
+    COND_RETURN_ERROR(
+        (error != RT_ERROR_NONE), error, "Failed to get dst memory attribute, retCode=%#x.",
+        static_cast<uint32_t>(error));
+
+    const uint32_t srcDevId = srcAttributes.location.id;
+    const uint32_t dstDevId = dstAttributes.location.id;
+
+    error = driver->GetPairDevicesInfo(srcDevId, dstDevId, DEVS_INFO_TYPE_BOARD_LOCATION, &locationType, false);
+    COND_RETURN_ERROR(
+        (error != RT_ERROR_NONE), error,
+        "Failed to get device board location type, src device_id=%u, dst device_id=%u, retCode=%#x.", srcDevId,
+        dstDevId, static_cast<uint32_t>(error));
+    if (locationType == LOCATION_CROSS_BOARD) {
+        *isD2dCross8P = true;
+    }
+
+    RT_LOG(
+        RT_LOG_DEBUG,
+        "Success to get device board location type: src device_id=%u, dst device_id=%u, cross board flag=%d.", srcDevId,
+        dstDevId, *isD2dCross8P);
+    return RT_ERROR_NONE;
+}
 #endif
 
 static bool MemoryTaskRegister()

@@ -60,7 +60,7 @@ private:
 
     static rtError_t GetDriverAndDeviceId(const Stream* stream, Driver*& driver, uint32_t& deviceId);
 
-    static JettyType ConvertCopyTypeToJettyType(uint32_t copyType);
+    static JettyType ConvertCopyTypeToJettyType(const uint32_t copyType, const bool isD2dCross8P);
 };
 
 } // namespace runtime

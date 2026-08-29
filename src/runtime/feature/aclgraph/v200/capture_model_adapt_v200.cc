@@ -52,11 +52,11 @@ rtError_t CaptureModel::RefreshJettyInfoList()
 {
     JettyManager* jettyMgr = Context_()->Device_()->GetJettyManager();
     NULL_PTR_RETURN(jettyMgr, RT_ERROR_INVALID_VALUE);
-    ClearH2dJettyInfoList();
-    ClearD2dJettyInfoList();
+    ClearJettyInfoList();
     for (Stream* stm : StreamList_()) {
         const int32_t streamId = stm->Id_();
-        for (const JettyType type : {JettyType::JETTY_TYPE_H2D, JettyType::JETTY_TYPE_D2D}) {
+        for (const JettyType type :
+             {JettyType::JETTY_TYPE_H2D, JettyType::JETTY_TYPE_D2D_IN_BOARD, JettyType::JETTY_TYPE_D2D_CROSS_BOARD}) {
             StreamJettyContext* jettyCtx = jettyMgr->GetStreamJettyContext(streamId, type);
             if (jettyCtx == nullptr || jettyCtx->jettyHandle == 0U || jettyCtx->filledWqeCount == 0U) {
                 continue;
@@ -77,11 +77,7 @@ rtError_t CaptureModel::RefreshJettyInfoList()
             }
             info.piValue = static_cast<uint16_t>(piVal);
             info.sqId = stm->GetSqId();
-            if (type == JettyType::JETTY_TYPE_H2D) {
-                SetH2dJettyInfo(info);
-            } else {
-                SetD2dJettyInfo(info);
-            }
+            SetJettyInfo(info);
         }
     }
     return RT_ERROR_NONE;
@@ -102,9 +98,14 @@ rtError_t CaptureModel::BindJettyForUbdma()
         rtError_t error = StreamJettyHandler::BindJetty(stm, JettyType::JETTY_TYPE_H2D, this);
         COND_RETURN_ERROR(
             error != RT_ERROR_NONE, error, "BindJetty H2D failed, stream_id=%d, retCode=%#x.", stm->Id_(), error);
-        error = StreamJettyHandler::BindJetty(stm, JettyType::JETTY_TYPE_D2D, this);
+        error = StreamJettyHandler::BindJetty(stm, JettyType::JETTY_TYPE_D2D_IN_BOARD, this);
         COND_RETURN_ERROR(
-            error != RT_ERROR_NONE, error, "BindJetty D2D failed, stream_id=%d, retCode=%#x.", stm->Id_(), error);
+            error != RT_ERROR_NONE, error, "BindJetty D2D in board failed, stream_id=%d, retCode=%#x.", stm->Id_(),
+            error);
+        error = StreamJettyHandler::BindJetty(stm, JettyType::JETTY_TYPE_D2D_CROSS_BOARD, this);
+        COND_RETURN_ERROR(
+            error != RT_ERROR_NONE, error, "BindJetty D2D cross board failed, stream_id=%d, retCode=%#x.", stm->Id_(),
+            error);
     }
 
     // jetty 可能因回收而更换，清空旧 info 列表,重新添加
@@ -115,26 +116,33 @@ rtError_t CaptureModel::BindJettyForUbdma()
     return RT_ERROR_NONE;
 }
 
-rtError_t CaptureModel::RecycleAllJetty(uint32_t& h2dCount, uint32_t& d2dCount)
+rtError_t CaptureModel::RecycleAllJetty(uint32_t& h2dCount, uint32_t& d2dInBoardCount, uint32_t& d2dCrossBoardCount)
 {
     const std::unique_lock<std::mutex> lk(jettyMutex_);
     h2dCount = 0U;
-    d2dCount = 0U;
+    d2dInBoardCount = 0U;
+    d2dCrossBoardCount = 0U;
     for (Stream* stm : StreamList_()) {
         const int32_t streamId = stm->Id_();
         rtError_t error = StreamJettyHandler::RecycleJetty(stm, JettyType::JETTY_TYPE_H2D, h2dCount);
         COND_RETURN_ERROR(
             error != RT_ERROR_NONE, error, "RecycleJetty H2D failed, stream_id=%d, retCode=%#x.", streamId, error);
-        error = StreamJettyHandler::RecycleJetty(stm, JettyType::JETTY_TYPE_D2D, d2dCount);
+        error = StreamJettyHandler::RecycleJetty(stm, JettyType::JETTY_TYPE_D2D_IN_BOARD, d2dInBoardCount);
         COND_RETURN_ERROR(
-            error != RT_ERROR_NONE, error, "RecycleJetty D2D failed, stream_id=%d, retCode=%#x.", streamId, error);
+            error != RT_ERROR_NONE, error, "RecycleJetty D2D in board failed, stream_id=%d, retCode=%#x.", streamId,
+            error);
+        error = StreamJettyHandler::RecycleJetty(stm, JettyType::JETTY_TYPE_D2D_CROSS_BOARD, d2dCrossBoardCount);
+        COND_RETURN_ERROR(
+            error != RT_ERROR_NONE, error, "RecycleJetty D2D cross board failed, stream_id=%d, retCode=%#x.", streamId,
+            error);
     }
     SetNeedUpdateUBPi(false);
-    ClearH2dJettyInfoList();
-    ClearD2dJettyInfoList();
+    ClearJettyInfoList();
     SetJettyBindFlag(false);
     RT_LOG(
-        RT_LOG_DEBUG, "RecycleAllJetty completed, model_id=%u, h2d_count=%u, d2d_count=%u.", Id_(), h2dCount, d2dCount);
+        RT_LOG_DEBUG,
+        "RecycleAllJetty completed, model_id=%u, h2d_count=%u, d2d_in_board_count=%u, d2d_cross_board_count=%u.", Id_(),
+        h2dCount, d2dInBoardCount, d2dCrossBoardCount);
     return RT_ERROR_NONE;
 }
 
@@ -151,9 +159,14 @@ rtError_t CaptureModel::ReleaseAllJetty()
             RT_LOG(RT_LOG_ERROR, "ReleaseJetty H2D failed, stream_id=%d, retCode=%#x.", streamId, ret);
             finalError = ret;
         }
-        ret = StreamJettyHandler::ReleaseJetty(stm, JettyType::JETTY_TYPE_D2D);
+        ret = StreamJettyHandler::ReleaseJetty(stm, JettyType::JETTY_TYPE_D2D_IN_BOARD);
         if (ret != RT_ERROR_NONE) {
-            RT_LOG(RT_LOG_ERROR, "ReleaseJetty D2D failed, stream_id=%d, retCode=%#x.", streamId, ret);
+            RT_LOG(RT_LOG_ERROR, "ReleaseJetty D2D in board failed, stream_id=%d, retCode=%#x.", streamId, ret);
+            finalError = ret;
+        }
+        ret = StreamJettyHandler::ReleaseJetty(stm, JettyType::JETTY_TYPE_D2D_CROSS_BOARD);
+        if (ret != RT_ERROR_NONE) {
+            RT_LOG(RT_LOG_ERROR, "ReleaseJetty D2D cross board failed, stream_id=%d, retCode=%#x.", streamId, ret);
             finalError = ret;
         }
     }

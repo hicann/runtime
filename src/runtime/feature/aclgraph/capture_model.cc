@@ -1536,8 +1536,7 @@ void* CaptureModel::GetShapeInfo(const int32_t streamId, const uint32_t taskId, 
 void CaptureModel::RestoreJettyForSnapshot()
 {
     COND_PROC((!IsSoftwareSqEnable()) || (!Runtime::Instance()->GetConnectUbFlag()), return);
-    ClearH2dJettyInfoList();
-    ClearD2dJettyInfoList();
+    ClearJettyInfoList();
     SetNeedUpdateUBPi(false);
     SetJettyBindFlag(false);
 }

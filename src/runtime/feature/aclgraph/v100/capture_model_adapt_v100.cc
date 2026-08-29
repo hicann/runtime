@@ -88,10 +88,11 @@ rtError_t FillExternalRecordRefreshEntry(void* const entry, uint64_t eventAddr)
 
 rtError_t CaptureModel::BindJettyForUbdma() { return RT_ERROR_NONE; }
 
-rtError_t CaptureModel::RecycleAllJetty(uint32_t& h2dCount, uint32_t& d2dCount)
+rtError_t CaptureModel::RecycleAllJetty(uint32_t& h2dCount, uint32_t& d2dInBoardCount, uint32_t& d2dCrossBoardCount)
 {
     h2dCount = 0;
-    d2dCount = 0;
+    d2dInBoardCount = 0;
+    d2dCrossBoardCount = 0;
     return RT_ERROR_NONE;
 }
 

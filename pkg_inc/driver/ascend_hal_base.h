@@ -449,6 +449,8 @@ typedef enum {
 
 typedef enum {
     DEVS_INFO_TYPE_TOPOLOGY = 0,
+    DEVS_INFO_TYPE_BOARD_LOCATION = 1,
+    DEVS_INFO_TYPE_MAX,
 } PAIR_DEVS_INFO_TYPE;
 
 #define TOPOLOGY_HCCS 0
@@ -459,6 +461,9 @@ typedef enum {
 #define TOPOLOGY_SIO 5
 #define TOPOLOGY_HCCS_SW 6
 #define TOPOLOGY_UB 7
+
+#define LOCATION_IN_BOARD 0
+#define LOCATION_CROSS_BOARD 1
 
 typedef enum {
     ADDR_MODE_INDEPENDENT = 0,

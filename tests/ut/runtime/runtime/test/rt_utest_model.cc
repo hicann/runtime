@@ -729,8 +729,7 @@ TEST_F(ModelTest, ModelFinalizeHostStateOnExitClearsOnlyHostReferences)
     model.dmaAddrRecord_.push_back({});
     model.argActiveStreamRecord_.push_back(nullptr);
     model.mapAicpuTask_[3U] = {};
-    model.h2dJettyInfoList_.push_back({});
-    model.d2dJettyInfoList_.push_back({});
+    model.jettyInfoList_.push_back({});
 
     model.FinalizeHostStateOnExit();
 
@@ -744,8 +743,7 @@ TEST_F(ModelTest, ModelFinalizeHostStateOnExitClearsOnlyHostReferences)
     EXPECT_TRUE(model.dmaAddrRecord_.empty());
     EXPECT_TRUE(model.argActiveStreamRecord_.empty());
     EXPECT_TRUE(model.mapAicpuTask_.empty());
-    EXPECT_TRUE(model.h2dJettyInfoList_.empty());
-    EXPECT_TRUE(model.d2dJettyInfoList_.empty());
+    EXPECT_TRUE(model.jettyInfoList_.empty());
     EXPECT_EQ(model.aicpuModelInfo_, nullptr);
     EXPECT_EQ(model.streamInfoPtr_, nullptr);
     EXPECT_EQ(model.aicpuTaskInfoPtr_, nullptr);

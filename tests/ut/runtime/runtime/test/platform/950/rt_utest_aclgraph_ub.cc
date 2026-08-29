@@ -339,10 +339,12 @@ TEST_F(JettyPoolTest, Clear)
     JettyInfo info;
     rtError_t error1 = jettyPool_->PreAllocJetty(JettyType::JETTY_TYPE_H2D);
     EXPECT_EQ(error1, RT_ERROR_NONE);
-    rtError_t error2 = jettyPool_->PreAllocJetty(JettyType::JETTY_TYPE_D2D);
+    rtError_t error2 = jettyPool_->PreAllocJetty(JettyType::JETTY_TYPE_D2D_IN_BOARD);
     EXPECT_EQ(error2, RT_ERROR_NONE);
-    rtError_t error3 = jettyPool_->AllocDirectJetty(JettyType::JETTY_TYPE_H2D, 4096, info);
+    rtError_t error3 = jettyPool_->PreAllocJetty(JettyType::JETTY_TYPE_D2D_CROSS_BOARD);
     EXPECT_EQ(error3, RT_ERROR_NONE);
+    rtError_t error4 = jettyPool_->AllocDirectJetty(JettyType::JETTY_TYPE_H2D, 4096, info);
+    EXPECT_EQ(error4, RT_ERROR_NONE);
 
     jettyPool_->Clear();
 
@@ -453,15 +455,20 @@ TEST_F(StreamJettyHandlerTest, IsUbDmaTaskType_WithoutUbFlag)
 TEST_F(StreamJettyHandlerTest, ConvertCopyTypeToJettyType_H2DAndD2H)
 {
     Runtime::Instance()->SetConnectUbFlag(true);
-    EXPECT_EQ(StreamJettyHandler::ConvertCopyTypeToJettyType(RT_MEMCPY_DIR_H2D), JettyType::JETTY_TYPE_H2D);
-    EXPECT_EQ(StreamJettyHandler::ConvertCopyTypeToJettyType(RT_MEMCPY_DIR_D2H), JettyType::JETTY_TYPE_H2D);
+    EXPECT_EQ(StreamJettyHandler::ConvertCopyTypeToJettyType(RT_MEMCPY_DIR_H2D, false), JettyType::JETTY_TYPE_H2D);
+    EXPECT_EQ(StreamJettyHandler::ConvertCopyTypeToJettyType(RT_MEMCPY_DIR_D2H, false), JettyType::JETTY_TYPE_H2D);
     Runtime::Instance()->SetConnectUbFlag(false);
 }
 
 TEST_F(StreamJettyHandlerTest, ConvertCopyTypeToJettyType_D2D)
 {
     Runtime::Instance()->SetConnectUbFlag(true);
-    EXPECT_EQ(StreamJettyHandler::ConvertCopyTypeToJettyType(RT_MEMCPY_DIR_D2D_UB), JettyType::JETTY_TYPE_D2D);
+    EXPECT_EQ(
+        StreamJettyHandler::ConvertCopyTypeToJettyType(RT_MEMCPY_DIR_D2D_UB, false),
+        JettyType::JETTY_TYPE_D2D_IN_BOARD);
+    EXPECT_EQ(
+        StreamJettyHandler::ConvertCopyTypeToJettyType(RT_MEMCPY_DIR_D2D_UB, true),
+        JettyType::JETTY_TYPE_D2D_CROSS_BOARD);
     Runtime::Instance()->SetConnectUbFlag(false);
 }
 
@@ -647,7 +654,9 @@ TEST_F(StreamJettyHandlerIntegrationTest, UpdateUbdmaSqeWithJettyInfo_EmptyPosit
 
 TEST_F(StreamJettyHandlerIntegrationTest, FillNopWqeOnCaptureEnd_NoContext)
 {
-    rtError_t error = StreamJettyHandler::FillNopWqeOnCaptureEnd(stream_, JettyType::JETTY_TYPE_D2D);
+    rtError_t error = StreamJettyHandler::FillNopWqeOnCaptureEnd(stream_, JettyType::JETTY_TYPE_D2D_IN_BOARD);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = StreamJettyHandler::FillNopWqeOnCaptureEnd(stream_, JettyType::JETTY_TYPE_D2D_CROSS_BOARD);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
@@ -682,17 +691,31 @@ TEST_F(StreamJettyHandlerIntegrationTest, JettyManager_BindJettyForStream)
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
-TEST_F(StreamJettyHandlerIntegrationTest, JettyManager_BindJettyForStream_AlreadyBound)
+TEST_F(StreamJettyHandlerIntegrationTest, JettyManager_BindJettyForStream_AlreadyBound_IN_BOARD)
 {
     JettyManager* mgr = stream_->Device_()->GetJettyManager();
     ASSERT_NE(mgr, nullptr);
-    StreamJettyContext* ctx = mgr->GetOrCreateStreamJettyContext(stream_, JettyType::JETTY_TYPE_D2D);
+    StreamJettyContext* ctx = mgr->GetOrCreateStreamJettyContext(stream_, JettyType::JETTY_TYPE_D2D_IN_BOARD);
     ASSERT_NE(ctx, nullptr);
     int32_t streamId = static_cast<int32_t>(stream_->Id_());
-    rtError_t error = mgr->BindJettyForStream(streamId, nullptr, JettyType::JETTY_TYPE_D2D);
+    rtError_t error = mgr->BindJettyForStream(streamId, nullptr, JettyType::JETTY_TYPE_D2D_IN_BOARD);
     EXPECT_EQ(error, RT_ERROR_NONE);
     ctx->jettyHandle = 1U;
-    error = mgr->BindJettyForStream(streamId, nullptr, JettyType::JETTY_TYPE_D2D);
+    error = mgr->BindJettyForStream(streamId, nullptr, JettyType::JETTY_TYPE_D2D_IN_BOARD);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(StreamJettyHandlerIntegrationTest, JettyManager_BindJettyForStream_AlreadyBound_CROSS_BOARD)
+{
+    JettyManager* mgr = stream_->Device_()->GetJettyManager();
+    ASSERT_NE(mgr, nullptr);
+    StreamJettyContext* ctx = mgr->GetOrCreateStreamJettyContext(stream_, JettyType::JETTY_TYPE_D2D_CROSS_BOARD);
+    ASSERT_NE(ctx, nullptr);
+    int32_t streamId = static_cast<int32_t>(stream_->Id_());
+    rtError_t error = mgr->BindJettyForStream(streamId, nullptr, JettyType::JETTY_TYPE_D2D_CROSS_BOARD);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    ctx->jettyHandle = 1U;
+    error = mgr->BindJettyForStream(streamId, nullptr, JettyType::JETTY_TYPE_D2D_CROSS_BOARD);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
@@ -728,18 +751,28 @@ TEST_F(StreamJettyHandlerIntegrationTest, JettyManager_ResetJettyForSnapshotRest
     ASSERT_NE(ctx->jettyHandle, 0U);
 
     Stream* stream2 = new Stream(stream_->Device_(), 1);
-    StreamJettyContext* ctx2 = mgr->GetOrCreateStreamJettyContext(stream2, JettyType::JETTY_TYPE_D2D);
+    StreamJettyContext* ctx2 = mgr->GetOrCreateStreamJettyContext(stream2, JettyType::JETTY_TYPE_D2D_IN_BOARD);
     ASSERT_NE(ctx2, nullptr);
     ctx2->capacity = 2048;
     ctx2->filledWqeCount = 10;
-    rtError_t bindError2 = mgr->BindJettyForStream(stream2->Id_(), nullptr, JettyType::JETTY_TYPE_D2D);
+    rtError_t bindError2 = mgr->BindJettyForStream(stream2->Id_(), nullptr, JettyType::JETTY_TYPE_D2D_IN_BOARD);
     ASSERT_EQ(bindError2, RT_ERROR_NONE);
     ASSERT_NE(ctx2->jettyHandle, 0U);
+
+    Stream* stream3 = new Stream(stream_->Device_(), 1);
+    StreamJettyContext* ctx3 = mgr->GetOrCreateStreamJettyContext(stream3, JettyType::JETTY_TYPE_D2D_CROSS_BOARD);
+    ASSERT_NE(ctx3, nullptr);
+    ctx3->capacity = 2048;
+    ctx3->filledWqeCount = 10;
+    rtError_t bindError3 = mgr->BindJettyForStream(stream3->Id_(), nullptr, JettyType::JETTY_TYPE_D2D_CROSS_BOARD);
+    ASSERT_EQ(bindError3, RT_ERROR_NONE);
+    ASSERT_NE(ctx3->jettyHandle, 0U);
 
     rtError_t resetError = mgr->ResetJettyForSnapshotRestore();
     EXPECT_EQ(resetError, RT_ERROR_NONE);
     EXPECT_EQ(ctx->jettyHandle, 0U);
     EXPECT_EQ(ctx2->jettyHandle, 0U);
+    EXPECT_EQ(ctx3->jettyHandle, 0U);
     EXPECT_EQ(ctx->capacity, 2048U);
     EXPECT_EQ(ctx->filledWqeCount, 100U);
     EXPECT_EQ(ctx->taskWqeCounts.size(), 1U);
@@ -748,6 +781,7 @@ TEST_F(StreamJettyHandlerIntegrationTest, JettyManager_ResetJettyForSnapshotRest
     JettyInfo jettyInfo;
     EXPECT_EQ(mgr->GetJettyInfoForStream(streamId, JettyType::JETTY_TYPE_H2D, jettyInfo), RT_ERROR_INVALID_VALUE);
     delete stream2;
+    delete stream3;
 }
 
 class JettyManagerTest : public testing::Test {
@@ -873,10 +907,22 @@ TEST_F(CaptureModelJettyTest, BindJettyForUbdma_LargeJetty_Success)
 TEST_F(CaptureModelJettyTest, BindJettyForUbdma_AlreadyBound)
 {
     captureModel_->ModelPushFrontStream(stream_);
-    SetupJettyContext(stream_, JettyType::JETTY_TYPE_D2D, 100, false);
+    SetupJettyContext(stream_, JettyType::JETTY_TYPE_D2D_IN_BOARD, 100, false);
     JettyManager* mgr = device_->GetJettyManager();
     int32_t streamId = static_cast<int32_t>(stream_->Id_());
-    rtError_t bindError = mgr->BindJettyForStream(streamId, nullptr, JettyType::JETTY_TYPE_D2D);
+    rtError_t bindError = mgr->BindJettyForStream(streamId, nullptr, JettyType::JETTY_TYPE_D2D_IN_BOARD);
+    ASSERT_EQ(bindError, RT_ERROR_NONE);
+    rtError_t error = captureModel_->BindJettyForUbdma();
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(CaptureModelJettyTest, BindCrossBoardJettyForUbdma_AlreadyBound)
+{
+    captureModel_->ModelPushFrontStream(stream_);
+    SetupJettyContext(stream_, JettyType::JETTY_TYPE_D2D_CROSS_BOARD, 100, false);
+    JettyManager* mgr = device_->GetJettyManager();
+    int32_t streamId = static_cast<int32_t>(stream_->Id_());
+    rtError_t bindError = mgr->BindJettyForStream(streamId, nullptr, JettyType::JETTY_TYPE_D2D_CROSS_BOARD);
     ASSERT_EQ(bindError, RT_ERROR_NONE);
     rtError_t error = captureModel_->BindJettyForUbdma();
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -906,7 +952,8 @@ TEST_F(CaptureModelJettyTest, BindJettyForUbdma_BothTypes_Success)
 {
     captureModel_->ModelPushFrontStream(stream_);
     SetupJettyContext(stream_, JettyType::JETTY_TYPE_H2D, 100, false);
-    SetupJettyContext(stream_, JettyType::JETTY_TYPE_D2D, 50, false);
+    SetupJettyContext(stream_, JettyType::JETTY_TYPE_D2D_IN_BOARD, 50, false);
+    SetupJettyContext(stream_, JettyType::JETTY_TYPE_D2D_CROSS_BOARD, 50, false);
     rtError_t error = captureModel_->BindJettyForUbdma();
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
@@ -925,7 +972,8 @@ TEST_F(CaptureModelJettyTest, BindJettyForUbdma_MultipleStreams)
     captureModel_->ModelPushFrontStream(stream_);
     captureModel_->ModelPushFrontStream(stream2);
     SetupJettyContext(stream_, JettyType::JETTY_TYPE_H2D, 100, false);
-    SetupJettyContext(stream2, JettyType::JETTY_TYPE_D2D, 200, false);
+    SetupJettyContext(stream2, JettyType::JETTY_TYPE_D2D_IN_BOARD, 200, false);
+    SetupJettyContext(stream2, JettyType::JETTY_TYPE_D2D_CROSS_BOARD, 200, false);
     rtError_t error = captureModel_->BindJettyForUbdma();
     EXPECT_EQ(error, RT_ERROR_NONE);
     captureModel_->ModelRemoveStream(stream2);
@@ -935,22 +983,26 @@ TEST_F(CaptureModelJettyTest, BindJettyForUbdma_MultipleStreams)
 TEST_F(CaptureModelJettyTest, RecycleAllJetty_NoStreams)
 {
     uint32_t h2dCount = 0;
-    uint32_t d2dCount = 0;
-    rtError_t error = captureModel_->RecycleAllJetty(h2dCount, d2dCount);
+    uint32_t d2dCountInBoard = 0;
+    uint32_t d2dCountCrossBoard = 0;
+    rtError_t error = captureModel_->RecycleAllJetty(h2dCount, d2dCountInBoard, d2dCountCrossBoard);
     EXPECT_EQ(error, RT_ERROR_NONE);
     EXPECT_EQ(h2dCount, 0U);
-    EXPECT_EQ(d2dCount, 0U);
+    EXPECT_EQ(d2dCountInBoard, 0U);
+    EXPECT_EQ(d2dCountCrossBoard, 0U);
 }
 
 TEST_F(CaptureModelJettyTest, RecycleAllJetty_StreamWithoutContext)
 {
     captureModel_->ModelPushFrontStream(stream_);
     uint32_t h2dCount = 0;
-    uint32_t d2dCount = 0;
-    rtError_t error = captureModel_->RecycleAllJetty(h2dCount, d2dCount);
+    uint32_t d2dCountInBoard = 0;
+    uint32_t d2dCountCrossBoard = 0;
+    rtError_t error = captureModel_->RecycleAllJetty(h2dCount, d2dCountInBoard, d2dCountCrossBoard);
     EXPECT_EQ(error, RT_ERROR_NONE);
     EXPECT_EQ(h2dCount, 0U);
-    EXPECT_EQ(d2dCount, 0U);
+    EXPECT_EQ(d2dCountInBoard, 0U);
+    EXPECT_EQ(d2dCountCrossBoard, 0U);
 }
 
 TEST_F(CaptureModelJettyTest, RecycleAllJetty_H2DStandard_Success)
@@ -963,28 +1015,52 @@ TEST_F(CaptureModelJettyTest, RecycleAllJetty_H2DStandard_Success)
     ASSERT_EQ(bindError, RT_ERROR_NONE);
     MOCKER(StreamUbDbSend).stubs().will(returnValue(RT_ERROR_NONE));
     uint32_t h2dCount = 0;
-    uint32_t d2dCount = 0;
-    rtError_t error = captureModel_->RecycleAllJetty(h2dCount, d2dCount);
+    uint32_t d2dCountInBoard = 0;
+    uint32_t d2dCountCrossBoard = 0;
+    rtError_t error = captureModel_->RecycleAllJetty(h2dCount, d2dCountInBoard, d2dCountCrossBoard);
     EXPECT_EQ(error, RT_ERROR_NONE);
     EXPECT_EQ(h2dCount, 1U);
-    EXPECT_EQ(d2dCount, 0U);
+    EXPECT_EQ(d2dCountInBoard, 0U);
+    EXPECT_EQ(d2dCountCrossBoard, 0U);
 }
 
-TEST_F(CaptureModelJettyTest, RecycleAllJetty_LargeJetty_Success)
+TEST_F(CaptureModelJettyTest, RecycleAllJetty_LargeJetty_Success_In_Board)
 {
     captureModel_->ModelPushFrontStream(stream_);
-    SetupJettyContext(stream_, JettyType::JETTY_TYPE_D2D, 3000, true);
+    SetupJettyContext(stream_, JettyType::JETTY_TYPE_D2D_IN_BOARD, 3000, true);
     JettyManager* mgr = device_->GetJettyManager();
     int32_t streamId = static_cast<int32_t>(stream_->Id_());
-    rtError_t bindError = mgr->BindJettyForStream(streamId, nullptr, JettyType::JETTY_TYPE_D2D);
+    rtError_t bindError = mgr->BindJettyForStream(streamId, nullptr, JettyType::JETTY_TYPE_D2D_IN_BOARD);
     ASSERT_EQ(bindError, RT_ERROR_NONE);
     MOCKER(StreamUbDbSend).stubs().will(returnValue(RT_ERROR_NONE));
     uint32_t h2dCount = 0;
-    uint32_t d2dCount = 0;
-    rtError_t error = captureModel_->RecycleAllJetty(h2dCount, d2dCount);
+    uint32_t d2dCountInBoard = 0;
+    uint32_t d2dCountCrossBoard = 0;
+    rtError_t error = captureModel_->RecycleAllJetty(h2dCount, d2dCountInBoard, d2dCountCrossBoard);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    EXPECT_EQ(d2dCount, 0U);
-    error = StreamJettyHandler::ReleaseJetty(stream_, JettyType::JETTY_TYPE_D2D);
+    EXPECT_EQ(d2dCountInBoard, 0U);
+    EXPECT_EQ(d2dCountCrossBoard, 0U);
+    error = StreamJettyHandler::ReleaseJetty(stream_, JettyType::JETTY_TYPE_D2D_IN_BOARD);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(CaptureModelJettyTest, RecycleAllJetty_LargeJetty_Success_Cross_Board)
+{
+    captureModel_->ModelPushFrontStream(stream_);
+    SetupJettyContext(stream_, JettyType::JETTY_TYPE_D2D_CROSS_BOARD, 3000, true);
+    JettyManager* mgr = device_->GetJettyManager();
+    int32_t streamId = static_cast<int32_t>(stream_->Id_());
+    rtError_t bindError = mgr->BindJettyForStream(streamId, nullptr, JettyType::JETTY_TYPE_D2D_CROSS_BOARD);
+    ASSERT_EQ(bindError, RT_ERROR_NONE);
+    MOCKER(StreamUbDbSend).stubs().will(returnValue(RT_ERROR_NONE));
+    uint32_t h2dCount = 0;
+    uint32_t d2dCountInBoard = 0;
+    uint32_t d2dCountCrossBoard = 0;
+    rtError_t error = captureModel_->RecycleAllJetty(h2dCount, d2dCountInBoard, d2dCountCrossBoard);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(d2dCountInBoard, 0U);
+    EXPECT_EQ(d2dCountCrossBoard, 0U);
+    error = StreamJettyHandler::ReleaseJetty(stream_, JettyType::JETTY_TYPE_D2D_CROSS_BOARD);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
@@ -992,20 +1068,25 @@ TEST_F(CaptureModelJettyTest, RecycleAllJetty_BothTypes_Success)
 {
     captureModel_->ModelPushFrontStream(stream_);
     SetupJettyContext(stream_, JettyType::JETTY_TYPE_H2D, 100, false);
-    SetupJettyContext(stream_, JettyType::JETTY_TYPE_D2D, 50, false);
+    SetupJettyContext(stream_, JettyType::JETTY_TYPE_D2D_IN_BOARD, 50, false);
+    SetupJettyContext(stream_, JettyType::JETTY_TYPE_D2D_CROSS_BOARD, 50, false);
     JettyManager* mgr = device_->GetJettyManager();
     int32_t streamId = static_cast<int32_t>(stream_->Id_());
     rtError_t bindH2d = mgr->BindJettyForStream(streamId, nullptr, JettyType::JETTY_TYPE_H2D);
-    rtError_t bindD2d = mgr->BindJettyForStream(streamId, nullptr, JettyType::JETTY_TYPE_D2D);
+    rtError_t bindD2dInBoard = mgr->BindJettyForStream(streamId, nullptr, JettyType::JETTY_TYPE_D2D_IN_BOARD);
+    rtError_t bindD2dCrossBoard = mgr->BindJettyForStream(streamId, nullptr, JettyType::JETTY_TYPE_D2D_CROSS_BOARD);
     ASSERT_EQ(bindH2d, RT_ERROR_NONE);
-    ASSERT_EQ(bindD2d, RT_ERROR_NONE);
+    ASSERT_EQ(bindD2dInBoard, RT_ERROR_NONE);
+    ASSERT_EQ(bindD2dCrossBoard, RT_ERROR_NONE);
     MOCKER(StreamUbDbSend).stubs().will(returnValue(RT_ERROR_NONE));
     uint32_t h2dCount = 0;
-    uint32_t d2dCount = 0;
-    rtError_t error = captureModel_->RecycleAllJetty(h2dCount, d2dCount);
+    uint32_t d2dCountInBoard = 0;
+    uint32_t d2dCountCrossBoard = 0;
+    rtError_t error = captureModel_->RecycleAllJetty(h2dCount, d2dCountInBoard, d2dCountCrossBoard);
     EXPECT_EQ(error, RT_ERROR_NONE);
     EXPECT_EQ(h2dCount, 1U);
-    EXPECT_EQ(d2dCount, 1U);
+    EXPECT_EQ(d2dCountInBoard, 1U);
+    EXPECT_EQ(d2dCountCrossBoard, 1U);
 }
 
 TEST_F(CaptureModelJettyTest, RecycleAllJetty_AlreadyRecycled)
@@ -1018,12 +1099,14 @@ TEST_F(CaptureModelJettyTest, RecycleAllJetty_AlreadyRecycled)
     ASSERT_EQ(bindError, RT_ERROR_NONE);
     MOCKER(StreamUbDbSend).stubs().will(returnValue(RT_ERROR_NONE));
     uint32_t h2dCount1 = 0;
-    uint32_t d2dCount1 = 0;
-    rtError_t error1 = captureModel_->RecycleAllJetty(h2dCount1, d2dCount1);
+    uint32_t d2dCountInBoard1 = 0;
+    uint32_t d2dCountCrossBoard1 = 0;
+    rtError_t error1 = captureModel_->RecycleAllJetty(h2dCount1, d2dCountInBoard1, d2dCountCrossBoard1);
     ASSERT_EQ(error1, RT_ERROR_NONE);
     uint32_t h2dCount2 = 0;
-    uint32_t d2dCount2 = 0;
-    rtError_t error2 = captureModel_->RecycleAllJetty(h2dCount2, d2dCount2);
+    uint32_t d2dCountInBoard2 = 0;
+    uint32_t d2dCountCrossBoard2 = 0;
+    rtError_t error2 = captureModel_->RecycleAllJetty(h2dCount2, d2dCountInBoard2, d2dCountCrossBoard2);
     EXPECT_EQ(error2, RT_ERROR_NONE);
     EXPECT_EQ(h2dCount2, 0U);
 }
@@ -1040,12 +1123,19 @@ TEST_F(CaptureModelJettyTest, ReleaseJetty_Success)
     rtError_t error = StreamJettyHandler::ReleaseJetty(stream_, JettyType::JETTY_TYPE_H2D);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    SetupJettyContext(stream_, JettyType::JETTY_TYPE_D2D, 3000, true);
-    rtError_t bindError2 = mgr->BindJettyForStream(streamId, nullptr, JettyType::JETTY_TYPE_D2D);
+    SetupJettyContext(stream_, JettyType::JETTY_TYPE_D2D_IN_BOARD, 3000, true);
+    rtError_t bindError2 = mgr->BindJettyForStream(streamId, nullptr, JettyType::JETTY_TYPE_D2D_IN_BOARD);
     ASSERT_EQ(bindError2, RT_ERROR_NONE);
 
-    rtError_t error2 = StreamJettyHandler::ReleaseJetty(stream_, JettyType::JETTY_TYPE_D2D);
+    rtError_t error2 = StreamJettyHandler::ReleaseJetty(stream_, JettyType::JETTY_TYPE_D2D_IN_BOARD);
     EXPECT_EQ(error2, RT_ERROR_NONE);
+
+    SetupJettyContext(stream_, JettyType::JETTY_TYPE_D2D_CROSS_BOARD, 3000, true);
+    rtError_t bindError3 = mgr->BindJettyForStream(streamId, nullptr, JettyType::JETTY_TYPE_D2D_CROSS_BOARD);
+    ASSERT_EQ(bindError3, RT_ERROR_NONE);
+
+    rtError_t error3 = StreamJettyHandler::ReleaseJetty(stream_, JettyType::JETTY_TYPE_D2D_CROSS_BOARD);
+    EXPECT_EQ(error3, RT_ERROR_NONE);
 }
 
 TEST_F(CaptureModelJettyTest, TryRecycleCaptureModelJettyResource_Success)
@@ -1523,17 +1613,36 @@ TEST_F(JettyPoolTest, FindJettyByState_BoundState)
 }
 
 // Cover FindJettyByHandle in D2D pool
-TEST_F(JettyPoolTest, FindJettyByHandle_D2DPool)
+TEST_F(JettyPoolTest, FindJettyByHandle_D2DPool_In_Board)
 {
     GlobalMockObject::reset();
     Driver* driver = ((Runtime*)Runtime::Instance())->driverFactory_.GetDriver(NPU_DRIVER);
     SetupJettyDriverMocks(driver);
 
-    rtError_t error = jettyPool_->PreAllocJetty(JettyType::JETTY_TYPE_D2D);
+    rtError_t error = jettyPool_->PreAllocJetty(JettyType::JETTY_TYPE_D2D_IN_BOARD);
     ASSERT_EQ(error, RT_ERROR_NONE);
 
     JettyInfo* freeInfo = nullptr;
-    ASSERT_TRUE(jettyPool_->FindJettyByState(JettyType::JETTY_TYPE_D2D, JettyState::FREE, freeInfo));
+    ASSERT_TRUE(jettyPool_->FindJettyByState(JettyType::JETTY_TYPE_D2D_IN_BOARD, JettyState::FREE, freeInfo));
+    ASSERT_NE(freeInfo, nullptr);
+
+    JettyInfo* foundInfo = nullptr;
+    bool found = jettyPool_->FindJettyByHandle(freeInfo->handle, foundInfo);
+    EXPECT_TRUE(found);
+    EXPECT_NE(foundInfo, nullptr);
+}
+
+TEST_F(JettyPoolTest, FindJettyByHandle_D2DPool_Cross_Board)
+{
+    GlobalMockObject::reset();
+    Driver* driver = ((Runtime*)Runtime::Instance())->driverFactory_.GetDriver(NPU_DRIVER);
+    SetupJettyDriverMocks(driver);
+
+    rtError_t error = jettyPool_->PreAllocJetty(JettyType::JETTY_TYPE_D2D_CROSS_BOARD);
+    ASSERT_EQ(error, RT_ERROR_NONE);
+
+    JettyInfo* freeInfo = nullptr;
+    ASSERT_TRUE(jettyPool_->FindJettyByState(JettyType::JETTY_TYPE_D2D_CROSS_BOARD, JettyState::FREE, freeInfo));
     ASSERT_NE(freeInfo, nullptr);
 
     JettyInfo* foundInfo = nullptr;
@@ -1568,7 +1677,8 @@ TEST_F(JettyPoolTest, Clear_AllPools)
 
     // Add jets to all pools
     ASSERT_EQ(jettyPool_->PreAllocJetty(JettyType::JETTY_TYPE_H2D), RT_ERROR_NONE);
-    ASSERT_EQ(jettyPool_->PreAllocJetty(JettyType::JETTY_TYPE_D2D), RT_ERROR_NONE);
+    ASSERT_EQ(jettyPool_->PreAllocJetty(JettyType::JETTY_TYPE_D2D_IN_BOARD), RT_ERROR_NONE);
+    ASSERT_EQ(jettyPool_->PreAllocJetty(JettyType::JETTY_TYPE_D2D_CROSS_BOARD), RT_ERROR_NONE);
     JettyInfo largeInfo;
     ASSERT_EQ(jettyPool_->AllocDirectJetty(JettyType::JETTY_TYPE_H2D, 4096, largeInfo), RT_ERROR_NONE);
 
@@ -1766,7 +1876,9 @@ TEST_F(NpuDriverJettyTest, HandleUbDmaTask_InvalidCopyType)
 TEST_F(NpuDriverJettyTest, FillNopWqeOnCaptureEnd_D2D_Success)
 {
     Runtime::Instance()->SetConnectUbFlag(true);
-    rtError_t error = StreamJettyHandler::FillNopWqeOnCaptureEnd(nullptr, JettyType::JETTY_TYPE_D2D);
+    rtError_t error = StreamJettyHandler::FillNopWqeOnCaptureEnd(nullptr, JettyType::JETTY_TYPE_D2D_IN_BOARD);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+    error = StreamJettyHandler::FillNopWqeOnCaptureEnd(nullptr, JettyType::JETTY_TYPE_D2D_CROSS_BOARD);
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
     Runtime::Instance()->SetConnectUbFlag(false);
 }
@@ -2621,21 +2733,24 @@ TEST_F(CaptureModelJettyTest, RefreshModelJettyInfoList_Success)
 {
     captureModel_->ModelPushFrontStream(stream_);
     SetupJettyContext(stream_, JettyType::JETTY_TYPE_H2D, 100, false);
-    SetupJettyContext(stream_, JettyType::JETTY_TYPE_D2D, 200, false);
+    SetupJettyContext(stream_, JettyType::JETTY_TYPE_D2D_IN_BOARD, 200, false);
+    SetupJettyContext(stream_, JettyType::JETTY_TYPE_D2D_CROSS_BOARD, 200, false);
 
     JettyManager* mgr = device_->GetJettyManager();
     int32_t streamId = static_cast<int32_t>(stream_->Id_());
     ASSERT_EQ(mgr->BindJettyForStream(streamId, nullptr, JettyType::JETTY_TYPE_H2D), RT_ERROR_NONE);
-    ASSERT_EQ(mgr->BindJettyForStream(streamId, nullptr, JettyType::JETTY_TYPE_D2D), RT_ERROR_NONE);
+    ASSERT_EQ(mgr->BindJettyForStream(streamId, nullptr, JettyType::JETTY_TYPE_D2D_IN_BOARD), RT_ERROR_NONE);
+    ASSERT_EQ(mgr->BindJettyForStream(streamId, nullptr, JettyType::JETTY_TYPE_D2D_CROSS_BOARD), RT_ERROR_NONE);
 
     StreamJettyContext* h2dCtx = mgr->GetStreamJettyContext(streamId, JettyType::JETTY_TYPE_H2D);
-    StreamJettyContext* d2dCtx = mgr->GetStreamJettyContext(streamId, JettyType::JETTY_TYPE_D2D);
+    StreamJettyContext* d2dInBoardCtx = mgr->GetStreamJettyContext(streamId, JettyType::JETTY_TYPE_D2D_IN_BOARD);
+    StreamJettyContext* d2dCrossBoardCtx = mgr->GetStreamJettyContext(streamId, JettyType::JETTY_TYPE_D2D_CROSS_BOARD);
     ASSERT_NE(h2dCtx, nullptr);
-    ASSERT_NE(d2dCtx, nullptr);
+    ASSERT_NE(d2dInBoardCtx, nullptr);
+    ASSERT_NE(d2dCrossBoardCtx, nullptr);
     rtError_t error = StreamJettyHandler::RefreshModelJettyInfoList(captureModel_);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    EXPECT_FALSE(captureModel_->GetH2dJettyInfo().empty());
-    EXPECT_FALSE(captureModel_->GetD2dJettyInfo().empty());
+    EXPECT_FALSE(captureModel_->GetJettyInfo().empty());
 }
 
 TEST_F(StreamJettyHandlerIntegrationTest, BindJetty_FailureRollback)
@@ -2762,9 +2877,8 @@ TEST_F(NormalModelJettyTest, RefreshModelJettyInfoList_NormalModel)
 
     rtError_t error = StreamJettyHandler::RefreshModelJettyInfoList(mdl_);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    EXPECT_FALSE(mdl_->GetH2dJettyInfo().empty());
-    EXPECT_EQ(mdl_->GetD2dJettyInfo().size(), 0U);
-    EXPECT_EQ(mdl_->GetH2dJettyInfo()[0].sqId, stream_->GetSqId());
+    EXPECT_FALSE(mdl_->GetJettyInfo().empty());
+    EXPECT_EQ(mdl_->GetJettyInfo()[0].sqId, stream_->GetSqId());
 }
 
 TEST_F(NormalModelJettyTest, NeedRebindJetty_StateVerification)
@@ -2817,8 +2931,7 @@ TEST_F(NormalModelJettyTest, NotifyWaitTask_HwFailureSoftRelease)
     EXPECT_EQ(ctx->jettyHandle, 0U);
     EXPECT_NE(mgr->GetStreamJettyContext(streamId, JettyType::JETTY_TYPE_H2D), nullptr);
     EXPECT_FALSE(ctx->wqeBuffers.empty());
-    EXPECT_TRUE(mdl_->GetH2dJettyInfo().empty());
-    EXPECT_TRUE(mdl_->GetD2dJettyInfo().empty());
+    EXPECT_TRUE(mdl_->GetJettyInfo().empty());
     EXPECT_FALSE(mdl_->GetNeedUpdateUBPi());
 
     delete notify;
@@ -2870,4 +2983,337 @@ TEST_F(NpuDriverJettyTest, AsyncDmaWqeProc_NonPersistentStream_Cleanup)
     ((Runtime*)Runtime::Instance())->SetConnectUbFlag(true);
     StarsV2MemcpyAsyncTaskUnInit(&taskInfo);
     ((Runtime*)Runtime::Instance())->SetConnectUbFlag(false);
+}
+
+// ========== Coverage for commit f643ba9: JETTY_TYPE_D2D split ==========
+
+extern int32_t drv_trans_type;
+
+static drvError_t StubPairDevInfo_CrossBoard(uint32_t d1, uint32_t d2, int32_t t, int64_t* v)
+{
+    if (v != nullptr) {
+        *v = 1;
+    }
+    return DRV_ERROR_NONE;
+}
+
+static drvError_t StubPairDevInfo_Fail(uint32_t d1, uint32_t d2, int32_t t, int64_t* v)
+{
+    return DRV_ERROR_INVALID_VALUE;
+}
+
+// Cover PreAllocJetty invalid type returns RT_ERROR_INVALID_VALUE
+TEST_F(JettyPoolTest, PreAllocJetty_InvalidType)
+{
+    GlobalMockObject::reset();
+    Driver* driver = ((Runtime*)Runtime::Instance())->driverFactory_.GetDriver(NPU_DRIVER);
+    SetupJettyDriverMocks(driver);
+
+    rtError_t error = jettyPool_->PreAllocJetty(JettyType::JETTY_TYPE_MAX);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+}
+
+// Cover PreAllocJetty shared D2D quota: when in-board + cross-board combined
+// reaches JETTY_POOL_D2D_MAX_SIZE, both types stop allocating
+TEST_F(JettyPoolTest, PreAllocJetty_D2DSharedQuota_Exhausted)
+{
+    GlobalMockObject::reset();
+    Driver* driver = ((Runtime*)Runtime::Instance())->driverFactory_.GetDriver(NPU_DRIVER);
+    SetupJettyDriverMocks(driver);
+
+    // Constructor already creates 1 D2D_IN_BOARD + 1 D2D_CROSS_BOARD
+    // Fill remaining quota by alternating between in-board and cross-board
+    // Total D2D quota is JETTY_POOL_D2D_MAX_SIZE (1024), shared between both types
+    for (uint32_t i = 2; i < JETTY_POOL_D2D_MAX_SIZE; i += 2) {
+        ASSERT_EQ(jettyPool_->PreAllocJetty(JettyType::JETTY_TYPE_D2D_IN_BOARD), RT_ERROR_NONE);
+        ASSERT_EQ(jettyPool_->PreAllocJetty(JettyType::JETTY_TYPE_D2D_CROSS_BOARD), RT_ERROR_NONE);
+    }
+
+    // Pool should now be exhausted (combined size == JETTY_POOL_D2D_MAX_SIZE)
+    // Both types should return RT_ERROR_NONE (no error, just no-op)
+    rtError_t errInBoard = jettyPool_->PreAllocJetty(JettyType::JETTY_TYPE_D2D_IN_BOARD);
+    EXPECT_EQ(errInBoard, RT_ERROR_NONE);
+
+    rtError_t errCrossBoard = jettyPool_->PreAllocJetty(JettyType::JETTY_TYPE_D2D_CROSS_BOARD);
+    EXPECT_EQ(errCrossBoard, RT_ERROR_NONE);
+}
+
+// Cover PreAllocJetty D2D quota: fill entirely with in-board, cross-board should also be blocked
+TEST_F(JettyPoolTest, PreAllocJetty_D2DSharedQuota_InBoardFillsAll)
+{
+    GlobalMockObject::reset();
+    Driver* driver = ((Runtime*)Runtime::Instance())->driverFactory_.GetDriver(NPU_DRIVER);
+    SetupJettyDriverMocks(driver);
+
+    // Constructor already created 1 D2D_IN_BOARD + 1 D2D_CROSS_BOARD (combined = 2)
+    // Fill remaining with in-board only
+    for (uint32_t i = 2; i < JETTY_POOL_D2D_MAX_SIZE; ++i) {
+        ASSERT_EQ(jettyPool_->PreAllocJetty(JettyType::JETTY_TYPE_D2D_IN_BOARD), RT_ERROR_NONE);
+    }
+
+    // Now combined D2D pool size == JETTY_POOL_D2D_MAX_SIZE
+    // Cross-board should also be blocked (returns RT_ERROR_NONE, no new jetty created)
+    rtError_t error = jettyPool_->PreAllocJetty(JettyType::JETTY_TYPE_D2D_CROSS_BOARD);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+// Cover ConvertCopyTypeToJettyType fallthrough for non-UB D2D types
+TEST_F(StreamJettyHandlerTest, ConvertCopyTypeToJettyType_NonUBFallback)
+{
+    Runtime::Instance()->SetConnectUbFlag(true);
+    // Non-UB D2D types (SDMA, PCIe, HCCs) should fall through to CROSS_BOARD
+    EXPECT_EQ(
+        StreamJettyHandler::ConvertCopyTypeToJettyType(RT_MEMCPY_DIR_D2D_SDMA, false),
+        JettyType::JETTY_TYPE_D2D_CROSS_BOARD);
+    EXPECT_EQ(
+        StreamJettyHandler::ConvertCopyTypeToJettyType(RT_MEMCPY_DIR_D2D_PCIe, false),
+        JettyType::JETTY_TYPE_D2D_CROSS_BOARD);
+    EXPECT_EQ(
+        StreamJettyHandler::ConvertCopyTypeToJettyType(RT_MEMCPY_DIR_D2D_HCCs, false),
+        JettyType::JETTY_TYPE_D2D_CROSS_BOARD);
+    // isD2dCross should not matter for non-UB types (always CROSS_BOARD)
+    EXPECT_EQ(
+        StreamJettyHandler::ConvertCopyTypeToJettyType(RT_MEMCPY_DIR_D2D_SDMA, true),
+        JettyType::JETTY_TYPE_D2D_CROSS_BOARD);
+    Runtime::Instance()->SetConnectUbFlag(false);
+}
+
+// Cover ConvertD2DCpyType with UB channel type (in-board path)
+TEST_F(StreamJettyHandlerIntegrationTest, ConvertD2DCpyType_UB_InBoard)
+{
+    drv_trans_type = RT_MEMCPY_CHANNEL_TYPE_UB;
+
+    uint32_t cpyType = 0;
+    bool isD2dCross = true;
+    MOCKER(NpuDriver::CheckIsSupportFeature).stubs().will(returnValue(true));
+    rtError_t error = ConvertD2DCpyType(
+        stream_, cpyType, reinterpret_cast<const void*>(0x1000), reinterpret_cast<void*>(0x2000), &isD2dCross);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(cpyType, RT_MEMCPY_DIR_D2D_UB);
+    EXPECT_FALSE(isD2dCross);
+    drv_trans_type = 0;
+}
+
+// Cover ConvertD2DCpyType with UB channel type (cross-board path)
+TEST_F(StreamJettyHandlerIntegrationTest, ConvertD2DCpyType_UB_CrossBoard)
+{
+    drv_trans_type = RT_MEMCPY_CHANNEL_TYPE_UB;
+    MOCKER(halGetPairDevicesInfo).stubs().will(invoke(StubPairDevInfo_CrossBoard));
+
+    uint32_t cpyType = 0;
+    bool isD2dCross = false;
+    MOCKER(NpuDriver::CheckIsSupportFeature).stubs().will(returnValue(true));
+    rtError_t error = ConvertD2DCpyType(
+        stream_, cpyType, reinterpret_cast<const void*>(0x1000), reinterpret_cast<void*>(0x2000), &isD2dCross);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(cpyType, RT_MEMCPY_DIR_D2D_UB);
+    EXPECT_TRUE(isD2dCross);
+    drv_trans_type = 0;
+}
+
+// Cover ConvertD2DCpyType with UB channel type and isD2dCross == nullptr
+TEST_F(StreamJettyHandlerIntegrationTest, ConvertD2DCpyType_UB_NullIsD2dCross)
+{
+    drv_trans_type = RT_MEMCPY_CHANNEL_TYPE_UB;
+
+    uint32_t cpyType = 0;
+    MOCKER(NpuDriver::CheckIsSupportFeature).stubs().will(returnValue(true));
+    rtError_t error = ConvertD2DCpyType(
+        stream_, cpyType, reinterpret_cast<const void*>(0x1000), reinterpret_cast<void*>(0x2000), nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(cpyType, RT_MEMCPY_DIR_D2D_UB);
+    drv_trans_type = 0;
+}
+
+// Cover ConvertD2DCpyType with PCIe channel type
+TEST_F(StreamJettyHandlerIntegrationTest, ConvertD2DCpyType_PCIe)
+{
+    drv_trans_type = RT_MEMCPY_CHANNEL_TYPE_PCIe;
+
+    uint32_t cpyType = 0;
+    MOCKER(NpuDriver::CheckIsSupportFeature).stubs().will(returnValue(true));
+    rtError_t error = ConvertD2DCpyType(
+        stream_, cpyType, reinterpret_cast<const void*>(0x1000), reinterpret_cast<void*>(0x2000), nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(cpyType, RT_MEMCPY_DIR_D2D_PCIe);
+    drv_trans_type = 0;
+}
+
+// Cover ConvertD2DCpyType with HCCs channel type
+TEST_F(StreamJettyHandlerIntegrationTest, ConvertD2DCpyType_HCCs)
+{
+    drv_trans_type = RT_MEMCPY_CHANNEL_TYPE_HCCs;
+
+    uint32_t cpyType = 0;
+    MOCKER(NpuDriver::CheckIsSupportFeature).stubs().will(returnValue(true));
+    rtError_t error = ConvertD2DCpyType(
+        stream_, cpyType, reinterpret_cast<const void*>(0x1000), reinterpret_cast<void*>(0x2000), nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(cpyType, RT_MEMCPY_DIR_D2D_HCCs);
+    drv_trans_type = 0;
+}
+
+// Cover ConvertD2DCpyType with default channel type (SDMA)
+TEST_F(StreamJettyHandlerIntegrationTest, ConvertD2DCpyType_DefaultSDMA)
+{
+    drv_trans_type = 99;
+
+    uint32_t cpyType = 0;
+    MOCKER(NpuDriver::CheckIsSupportFeature).stubs().will(returnValue(true));
+    rtError_t error = ConvertD2DCpyType(
+        stream_, cpyType, reinterpret_cast<const void*>(0x1000), reinterpret_cast<void*>(0x2000), nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(cpyType, RT_MEMCPY_DIR_D2D_SDMA);
+    drv_trans_type = 0;
+}
+
+// Cover ConvertD2DCpyType GetTransWayByAddr failure
+TEST_F(StreamJettyHandlerIntegrationTest, ConvertD2DCpyType_GetTransWayFail)
+{
+    Driver* drv = stream_->Device_()->Driver_();
+    MOCKER_CPP_VIRTUAL(drv, &Driver::GetTransWayByAddr).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+
+    uint32_t cpyType = 0;
+    MOCKER(NpuDriver::CheckIsSupportFeature).stubs().will(returnValue(true));
+    rtError_t error = ConvertD2DCpyType(
+        stream_, cpyType, reinterpret_cast<const void*>(0x1000), reinterpret_cast<void*>(0x2000), nullptr);
+    EXPECT_NE(error, RT_ERROR_NONE);
+}
+
+// Cover ConvertD2DCpyType UB channel with PtrGetAttributes failure
+TEST_F(StreamJettyHandlerIntegrationTest, ConvertD2DCpyType_UB_PtrGetAttrFail)
+{
+    drv_trans_type = RT_MEMCPY_CHANNEL_TYPE_UB;
+    Driver* drv = stream_->Device_()->Driver_();
+    MOCKER_CPP_VIRTUAL(drv, &Driver::PtrGetAttributes).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+
+    uint32_t cpyType = 0;
+    bool isD2dCross = false;
+    MOCKER(NpuDriver::CheckIsSupportFeature).stubs().will(returnValue(true));
+    rtError_t error = ConvertD2DCpyType(
+        stream_, cpyType, reinterpret_cast<const void*>(0x1000), reinterpret_cast<void*>(0x2000), &isD2dCross);
+    EXPECT_NE(error, RT_ERROR_NONE);
+    drv_trans_type = 0;
+}
+
+// ========== Coverage for commit 1f10998: GetD2dCrossType platform isolation ==========
+
+// Cover GetD2dCrossType in-board path (locationType stays 0 = LOCATION_IN_BOARD)
+TEST_F(StreamJettyHandlerIntegrationTest, GetD2dCrossType_InBoard)
+{
+    Driver* drv = stream_->Device_()->Driver_();
+    MOCKER_CPP_VIRTUAL(drv, &Driver::PtrGetAttributes).stubs().will(returnValue(RT_ERROR_NONE));
+
+    bool isD2dCross = true;
+    rtError_t error =
+        GetD2dCrossType(drv, reinterpret_cast<const void*>(0x1000), reinterpret_cast<const void*>(0x2000), &isD2dCross);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_FALSE(isD2dCross);
+}
+
+// Cover GetD2dCrossType cross-board path (locationType = LOCATION_CROSS_BOARD)
+TEST_F(StreamJettyHandlerIntegrationTest, GetD2dCrossType_CrossBoard)
+{
+    Driver* drv = stream_->Device_()->Driver_();
+    MOCKER_CPP_VIRTUAL(drv, &Driver::PtrGetAttributes).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(halGetPairDevicesInfo).stubs().will(invoke(StubPairDevInfo_CrossBoard));
+
+    bool isD2dCross = false;
+    rtError_t error =
+        GetD2dCrossType(drv, reinterpret_cast<const void*>(0x1000), reinterpret_cast<const void*>(0x2000), &isD2dCross);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_TRUE(isD2dCross);
+}
+
+// Cover GetD2dCrossType src PtrGetAttributes failure
+TEST_F(StreamJettyHandlerIntegrationTest, GetD2dCrossType_SrcPtrGetAttrFail)
+{
+    Driver* drv = stream_->Device_()->Driver_();
+    MOCKER_CPP_VIRTUAL(drv, &Driver::PtrGetAttributes).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+
+    bool isD2dCross = false;
+    rtError_t error =
+        GetD2dCrossType(drv, reinterpret_cast<const void*>(0x1000), reinterpret_cast<const void*>(0x2000), &isD2dCross);
+    EXPECT_NE(error, RT_ERROR_NONE);
+    EXPECT_FALSE(isD2dCross);
+}
+
+// Cover GetD2dCrossType GetPairDevicesInfo failure
+TEST_F(StreamJettyHandlerIntegrationTest, GetD2dCrossType_GetPairDevInfoFail)
+{
+    Driver* drv = stream_->Device_()->Driver_();
+    MOCKER_CPP_VIRTUAL(drv, &Driver::PtrGetAttributes).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(halGetPairDevicesInfo).stubs().will(invoke(StubPairDevInfo_Fail));
+
+    bool isD2dCross = false;
+    rtError_t error =
+        GetD2dCrossType(drv, reinterpret_cast<const void*>(0x1000), reinterpret_cast<const void*>(0x2000), &isD2dCross);
+    EXPECT_NE(error, RT_ERROR_NONE);
+}
+
+// ========== Coverage for isD2dCross8P field ==========
+
+// Cover GetJettyTypeFromTask uses isD2dCross8P for D2D_UB type (in-board)
+TEST_F(StreamJettyHandlerTest, GetJettyTypeFromTask_D2DUB_InBoard)
+{
+    TaskInfo taskInfo = {};
+    taskInfo.u.memcpyAsyncTaskInfo.copyType = RT_MEMCPY_DIR_D2D_UB;
+    taskInfo.u.memcpyAsyncTaskInfo.isD2dCross8P = false;
+    JettyType result = StreamJettyHandler::GetJettyTypeFromTask(&taskInfo);
+    EXPECT_EQ(result, JettyType::JETTY_TYPE_D2D_IN_BOARD);
+}
+
+// Cover GetJettyTypeFromTask uses isD2dCross8P for D2D_UB type (cross-board)
+TEST_F(StreamJettyHandlerTest, GetJettyTypeFromTask_D2DUB_CrossBoard)
+{
+    TaskInfo taskInfo = {};
+    taskInfo.u.memcpyAsyncTaskInfo.copyType = RT_MEMCPY_DIR_D2D_UB;
+    taskInfo.u.memcpyAsyncTaskInfo.isD2dCross8P = true;
+    JettyType result = StreamJettyHandler::GetJettyTypeFromTask(&taskInfo);
+    EXPECT_EQ(result, JettyType::JETTY_TYPE_D2D_CROSS_BOARD);
+}
+
+// Cover GetJettyTypeFromTask with non-UB D2D type (should be CROSS_BOARD regardless of isD2dCross8P)
+TEST_F(StreamJettyHandlerTest, GetJettyTypeFromTask_D2DSdma_CrossBoard)
+{
+    TaskInfo taskInfo = {};
+    taskInfo.u.memcpyAsyncTaskInfo.copyType = RT_MEMCPY_DIR_D2D_SDMA;
+    taskInfo.u.memcpyAsyncTaskInfo.isD2dCross8P = false;
+    JettyType result = StreamJettyHandler::GetJettyTypeFromTask(&taskInfo);
+    EXPECT_EQ(result, JettyType::JETTY_TYPE_D2D_CROSS_BOARD);
+}
+
+// ========== Coverage for unified jettyInfoList_ ==========
+
+// Cover Model SetJettyInfo / GetJettyInfo / ClearJettyInfoList unified list
+TEST_F(NormalModelJettyTest, JettyInfoList_UnifiedOperations)
+{
+    UbAsyncJettyInfo info1 = {};
+    info1.jettyId = 100;
+    info1.sqId = 1;
+    UbAsyncJettyInfo info2 = {};
+    info2.jettyId = 200;
+    info2.sqId = 2;
+
+    mdl_->SetJettyInfo(info1);
+    mdl_->SetJettyInfo(info2);
+
+    EXPECT_EQ(mdl_->GetJettyInfo().size(), 2U);
+    EXPECT_EQ(mdl_->GetJettyInfo()[0].jettyId, 100U);
+    EXPECT_EQ(mdl_->GetJettyInfo()[1].jettyId, 200U);
+
+    mdl_->ClearJettyInfoList();
+    EXPECT_TRUE(mdl_->GetJettyInfo().empty());
+}
+
+// Cover Model jettyInfoList_ cleared on FinalizeHostStateOnExit
+TEST_F(NormalModelJettyTest, JettyInfoList_ClearedOnFinalize)
+{
+    UbAsyncJettyInfo info = {};
+    info.jettyId = 300;
+    mdl_->SetJettyInfo(info);
+    ASSERT_FALSE(mdl_->GetJettyInfo().empty());
+
+    mdl_->FinalizeHostStateOnExit();
+    EXPECT_TRUE(mdl_->GetJettyInfo().empty());
 }

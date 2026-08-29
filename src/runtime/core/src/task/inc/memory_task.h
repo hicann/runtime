@@ -89,7 +89,11 @@ rtError_t UpdateAddressTaskInit(TaskInfo* taskInfo, uint64_t devAddr, uint64_t l
 uint32_t GetSqeNumForMemcopyAsync(
     const rtMemcpyKind_t kind, bool isModelByUb = false, uint32_t cpyType = UINT32_MAX,
     uint32_t cpyMethod = UINT32_MAX);
-rtError_t ConvertD2DCpyType(const Stream* const stm, uint32_t& cpyType, const void* const srcAddr, void* const desAddr);
+rtError_t ConvertD2DCpyType(
+    const Stream* const stm, uint32_t& cpyType, const void* const srcAddr, void* const desAddr,
+    bool* isD2dCross8P = nullptr);
+rtError_t GetD2dCrossType(
+    Driver* const driver, const void* const srcAddr, const void* const desAddr, bool* isD2dCross8P);
 void RecycleTaskResourceForMemcpyAsyncTask(TaskInfo* const taskInfo);
 
 bool IsPcieDma(const uint32_t copyTypeFlag);

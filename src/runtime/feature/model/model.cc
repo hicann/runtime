@@ -125,8 +125,7 @@ Model::~Model() noexcept
         (void)deviceDrv->ModelIdFree(id_, dev->Id_(), dev->DevGetTsId());
         id_ = MODEL_ID_INVALID;
     }
-    h2dJettyInfoList_.clear();
-    d2dJettyInfoList_.clear();
+    jettyInfoList_.clear();
 }
 
 rtError_t Model::Setup(Context* const contextIn)
@@ -287,8 +286,7 @@ void Model::FinalizeHostStateOnExit() noexcept
     dmaAddrRecord_.clear();
     argActiveStreamRecord_.clear();
     mapAicpuTask_.clear();
-    h2dJettyInfoList_.clear();
-    d2dJettyInfoList_.clear();
+    jettyInfoList_.clear();
     context_ = nullptr;
     aicpuModelInfo_ = nullptr;
     streamInfoPtr_ = nullptr;
@@ -624,7 +622,8 @@ rtError_t Model::UnbindStream(Stream* const streamIn, const bool force)
         error, "Failed to unbind the stream from the model, stream_id=%d, retCode=%#x.", streamId,
         static_cast<uint32_t>(error));
     if (Runtime::Instance()->GetConnectUbFlag()) {
-        for (const JettyType type : {JettyType::JETTY_TYPE_H2D, JettyType::JETTY_TYPE_D2D}) {
+        for (const JettyType type :
+             {JettyType::JETTY_TYPE_H2D, JettyType::JETTY_TYPE_D2D_IN_BOARD, JettyType::JETTY_TYPE_D2D_CROSS_BOARD}) {
             (void)StreamJettyHandler::ReleaseJetty(streamIn, type, true);
         }
     }

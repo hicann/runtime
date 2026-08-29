@@ -4969,6 +4969,7 @@ TEST_F(ApiDavidTest, test_memcpy_kinds_ub_model_task_on_david)
     EXPECT_EQ(error, RT_ERROR_NONE);
     drv_trans_type = RT_MEMCPY_CHANNEL_TYPE_UB;
     MOCKER(AllocTaskInfoForCapture).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    MOCKER(NpuDriver::CheckIsSupportFeature).stubs().will(returnValue(true));
     error = apiImpl.MemcpyAsync(devPtr, 64, srcPtr, 64, RT_MEMCPY_DEVICE_TO_DEVICE, stream_);
     EXPECT_NE(error, RT_ERROR_NONE);
 

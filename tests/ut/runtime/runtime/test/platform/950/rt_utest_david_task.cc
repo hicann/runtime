@@ -664,8 +664,7 @@ TEST_F(TaskTestDavid, TestModelUbSubmitExecuteTask)
     info.functionId = 1;
     info.piValue = 1;
     info.sqId = 1;
-    mdl->SetH2dJettyInfo(info);
-    mdl->SetD2dJettyInfo(info);
+    mdl->SetJettyInfo(info);
     MOCKER(StreamUbDbSend).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER(ModelToAicpuTaskInit).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
     ret = ModelSubmitExecuteTask(mdl, nullptr, stm);

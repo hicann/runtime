@@ -259,6 +259,7 @@ struct MemcpyAsyncTaskInfo {
     uint8_t partId;
     uint8_t sqeOffset;
     bool isD2dCross;
+    bool isD2dCross8P;
     uint32_t sqId;
     uint32_t taskPos;
     bool dmaKernelConvertFlag;

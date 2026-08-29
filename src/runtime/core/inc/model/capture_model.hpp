@@ -308,7 +308,7 @@ public:
     rtError_t RestoreForSoftwareSqForOneModels(Device* const dev);
 
     rtError_t BindJettyForUbdma();
-    rtError_t RecycleAllJetty(uint32_t& h2dCount, uint32_t& d2dCount);
+    rtError_t RecycleAllJetty(uint32_t& h2dCount, uint32_t& d2dInBoardCount, uint32_t& d2dCrossBoardCount);
     rtError_t ReleaseAllJetty();
 
     bool GetJettyBindFlag() const { return jettyBindFlag_; }

@@ -64,6 +64,16 @@ void ConstructDavidSqeForMemcpyAsyncTask(TaskInfo* const taskInfo, void* const s
         taskInfo->stream->Device_()->Id_(), static_cast<int32_t>(stream->Id_()), static_cast<uint32_t>(taskInfo->id),
         memcpyAsyncTaskInfo->copyType);
 }
+
+rtError_t GetD2dCrossType(
+    Driver* const driver, const void* const srcAddr, const void* const desAddr, bool* isD2dCross8P)
+{
+    UNUSED(driver);
+    UNUSED(srcAddr);
+    UNUSED(desAddr);
+    UNUSED(isD2dCross8P);
+    return RT_ERROR_NONE;
+}
 #endif
 
 static bool MemoryTaskRegister()

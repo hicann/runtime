@@ -60,7 +60,8 @@ rtError_t Context::TryRecycleCaptureModelJettyResource(const CaptureModel* const
     }
     uint32_t totalRelease = 0U;
     uint32_t h2dCount = 0U;
-    uint32_t d2dCount = 0U;
+    uint32_t d2dInBoardCount = 0U;
+    uint32_t d2dCrossBoardCount = 0U;
     rtError_t error = RT_ERROR_NONE;
     modelLock_.Lock();
     for (Model* model : models_) {
@@ -75,17 +76,20 @@ rtError_t Context::TryRecycleCaptureModelJettyResource(const CaptureModel* const
             }
 
             h2dCount = 0U;
-            d2dCount = 0U;
+            d2dInBoardCount = 0U;
+            d2dCrossBoardCount = 0U;
             if (captureMdl->ModelSqOperTryLock()) {
-                error = captureMdl->RecycleAllJetty(h2dCount, d2dCount);
+                error = captureMdl->RecycleAllJetty(h2dCount, d2dInBoardCount, d2dCrossBoardCount);
                 captureMdl->ModelSqOperUnLock();
                 COND_PROC(error != RT_ERROR_NONE, break);
             }
 
             if (type == JettyType::JETTY_TYPE_H2D) {
                 totalRelease += h2dCount;
+            } else if (type == JettyType::JETTY_TYPE_D2D_IN_BOARD) {
+                totalRelease += d2dInBoardCount;
             } else {
-                totalRelease += d2dCount;
+                totalRelease += d2dCrossBoardCount;
             }
         }
     }

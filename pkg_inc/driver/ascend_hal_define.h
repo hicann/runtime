@@ -1353,7 +1353,8 @@ typedef enum tagDrvAsyncDmaJettyPiMode {
 typedef enum tagDrvAsyncJettyDmaDir {
     TRS_ASYNC_JETTY_HOST_DEVICE = 0,
     TRS_ASYNC_JETTY_DEVICE_TO_DEVICE = 1,
-    TRS_ASYNC_JETTY_MAX_DIR = 2
+    TRS_ASYNC_JETTY_D2D_CROSS_BOARD = 2,
+    TRS_ASYNC_JETTY_MAX_DIR = 3
 } drvAsyncDmaJettyDir_t;
 
 #define TRS_ASYNC_DMA_JETTY_HANDLE_RSV_LEN 8
@@ -1524,6 +1525,7 @@ typedef enum tagDrvFeature {
     FEATURE_SVM_MEM_REGISTER_QUERY_AND_GET_ATTR = 11,
     FEATURE_APM_RES_MAP_REMOTE = 12,
     FEATURE_SVM_MEM_REGISTER_HOST_PINNED = 13,
+    FEATURE_DMS_GET_BOARD_LOCATION = 14,
     FEATURE_MAX
 } drvFeature_t;
 /*=============================== query feature END ===============================*/
