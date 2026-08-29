@@ -24,7 +24,9 @@ ADUMP_PLATFORM_REGISTER(ExceptionDumpInterface, PlatformType::CHIP_CLOUD_V4, Clo
 ADUMP_PLATFORM_REGISTER(DataDumpInterface, PlatformType::CHIP_CLOUD_V4, CloudV4DataDump);
 
 namespace {
-constexpr size_t ADX_MAX_AICORE_ON_ASCEND950 = 36U;
+constexpr uint32_t MAX_AIC_CORE_COUNT = 36U;
+constexpr uint32_t MAX_AIV_CORE_COUNT = 72U;
+constexpr uint32_t MAX_ALL_CORE_COUNT = MAX_AIC_CORE_COUNT + MAX_AIV_CORE_COUNT;
 constexpr size_t ADX_MAX_STR_LEN = 1024U * 1024U;
 } // namespace
 
@@ -54,24 +56,27 @@ void CloudV4Coredump::DumpRegister(DumpCore& core, uint8_t coreType, uint16_t co
 
 uint16_t CloudV4Coredump::ConvertCoreId(uint8_t coreType, uint16_t coreId) const
 {
-    return (coreType == CORE_TYPE_AIC) ? coreId : static_cast<uint16_t>(CORE_SIZE_AIC_DAVID + coreId);
+    return (coreType == CORE_TYPE_AIC) ? coreId : static_cast<uint16_t>(MAX_AIC_CORE_COUNT + coreId);
 }
 
 bool CloudV4Exception::IsArgsDataTypeSizeByByte() const { return false; }
 
 uint64_t CloudV4DataDump::GetKfcStackSize() const
 {
-    constexpr uint32_t OP_STACK_950 = 108;
-    return CalcKfcStackSize(OP_STACK_950);
+    constexpr uint32_t op_stack_count = MAX_ALL_CORE_COUNT;
+    return CalcKfcStackSize(op_stack_count);
 }
 
-std::string CloudV4DataDump::GetKfcBinName() const { return "kfc_dump_stat_ascend950.o"; }
+std::vector<std::string> CloudV4DataDump::GetKfcBinNames() const
+{
+    return {"dump_stat_op_ascend950.o", "kfc_dump_stat_ascend950.o"};
+}
 
 bool CloudV4DataDump::IsUbFromAiCore() const { return true; }
 
-size_t CloudV4DataDump::GetCoreTypeIDOffset() const { return ADX_MAX_AICORE_ON_ASCEND950 * 2; }
+size_t CloudV4DataDump::GetCoreTypeIDOffset() const { return MAX_AIV_CORE_COUNT; }
 
-size_t CloudV4DataDump::GetBlockNum() const { return ADX_MAX_AICORE_ON_ASCEND950 * 3; }
+size_t CloudV4DataDump::GetBlockNum() const { return MAX_ALL_CORE_COUNT; }
 
 int32_t CloudV4DataDump::GetStreamSyncTimeout() const
 {

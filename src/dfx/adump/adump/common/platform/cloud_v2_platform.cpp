@@ -89,7 +89,10 @@ uint64_t CloudV2DataDump::GetKfcStackSize() const
     return CalcKfcStackSize(OP_STACK_910B);
 }
 
-std::string CloudV2DataDump::GetKfcBinName() const { return "kfc_dump_stat_ascend910B.o"; }
+std::vector<std::string> CloudV2DataDump::GetKfcBinNames() const
+{
+    return {"dump_stat_op_ascend910B.o", "kfc_dump_stat_ascend910B.o"};
+}
 
 bool CloudV2DataDump::IsUbFromAiCore() const { return true; }
 

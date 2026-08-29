@@ -30,7 +30,7 @@ public:
 class DcDataDump : public DataDumpInterface {
 public:
     uint64_t GetKfcStackSize() const override;
-    std::string GetKfcBinName() const override;
+    std::vector<std::string> GetKfcBinNames() const override;
 };
 
 } // namespace Adx

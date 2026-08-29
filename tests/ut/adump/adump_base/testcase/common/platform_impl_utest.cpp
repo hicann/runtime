@@ -11,6 +11,7 @@
 #include "mockcpp/mockcpp.hpp"
 #include "platform/cloud_v2_platform.h"
 #include "platform/cloud_v4_platform.h"
+#include "platform/cloud_v5_platform.h"
 #include "platform/dc_platform.h"
 #include "kernel_pc_fixer.h"
 #include "register_config.h"
@@ -24,18 +25,18 @@ namespace {
 constexpr uint32_t BLOCK_MIN_SIZE = 32U;
 constexpr uint32_t INTEGER_KILOBYTE = 1024U;
 
-rtError_t rtGetSocVersion910_93Stub(char *version, const uint32_t maxLen)
+rtError_t rtGetSocVersion910_93Stub(char* version, const uint32_t maxLen)
 {
     strcpy_s(version, maxLen, "Ascend910_9381");
     return RT_ERROR_NONE;
 }
 
-rtError_t rtGetSocVersion910BStub(char *version, const uint32_t maxLen)
+rtError_t rtGetSocVersion910BStub(char* version, const uint32_t maxLen)
 {
     strcpy_s(version, maxLen, "Ascend910B4");
     return RT_ERROR_NONE;
 }
-}
+} // namespace
 
 class PlatformImplUtest : public testing::Test {
 protected:
@@ -68,8 +69,8 @@ TEST_F(PlatformImplUtest, DcException_Behaviour)
 TEST_F(PlatformImplUtest, DcDataDump_Behaviour)
 {
     DcDataDump dataDump;
-    EXPECT_EQ(dataDump.GetKfcStackSize(), static_cast<uint64_t>(2) * BLOCK_MIN_SIZE * INTEGER_KILOBYTE);
-    EXPECT_EQ(dataDump.GetKfcBinName(), "kfc_dump_stat_ascend310p3.o");
+    EXPECT_EQ(dataDump.GetKfcStackSize(), 0U);
+    EXPECT_EQ(dataDump.GetKfcBinNames(), std::vector<std::string>{});
     // 走基类默认值（printf 参数、UbFromAiCore）
     EXPECT_FALSE(dataDump.IsUbFromAiCore());
     EXPECT_EQ(dataDump.GetCoreTypeIDOffset(), 50U);
@@ -115,7 +116,8 @@ TEST_F(PlatformImplUtest, CloudV4DataDump_Behaviour)
 {
     CloudV4DataDump dataDump;
     EXPECT_EQ(dataDump.GetKfcStackSize(), static_cast<uint64_t>(108) * BLOCK_MIN_SIZE * INTEGER_KILOBYTE);
-    EXPECT_EQ(dataDump.GetKfcBinName(), "kfc_dump_stat_ascend950.o");
+    EXPECT_EQ(
+        dataDump.GetKfcBinNames(), (std::vector<std::string>{"dump_stat_op_ascend950.o", "kfc_dump_stat_ascend950.o"}));
     EXPECT_TRUE(dataDump.IsUbFromAiCore());
     EXPECT_EQ(dataDump.GetCoreTypeIDOffset(), 36U * 2U);
     EXPECT_EQ(dataDump.GetBlockNum(), 36U * 3U);
@@ -124,6 +126,71 @@ TEST_F(PlatformImplUtest, CloudV4DataDump_Behaviour)
     constexpr size_t maxStrLen = 1024U * 1024U;
     EXPECT_FALSE(dataDump.IsSimtDumpEnabled(dataDump.GetBlockNum() * maxStrLen));
     EXPECT_TRUE(dataDump.IsSimtDumpEnabled(dataDump.GetBlockNum() * maxStrLen + 1U));
+}
+
+// ---------------- CloudV5Platform (CHIP_CLOUD_V5 / Ascend960) ----------------
+TEST_F(PlatformImplUtest, CloudV5Features_SupportMatrix)
+{
+    CloudV5Features features;
+    EXPECT_TRUE(features.FeatureIsSupport(AdumpPlatformFeature::FEATURE_DATA_DUMP));
+    EXPECT_TRUE(features.FeatureIsSupport(AdumpPlatformFeature::FEATURE_OVERFLOW_DUMP));
+    EXPECT_TRUE(features.FeatureIsSupport(AdumpPlatformFeature::FEATURE_EXCEPTION_DUMP_L0));
+    EXPECT_TRUE(features.FeatureIsSupport(AdumpPlatformFeature::FEATURE_EXCEPTION_DUMP_L1));
+    EXPECT_TRUE(features.FeatureIsSupport(AdumpPlatformFeature::FEATURE_CORE_DUMP));
+}
+
+TEST_F(PlatformImplUtest, CloudV5Coredump_Behaviour)
+{
+    CloudV5Coredump coredump;
+    EXPECT_NE(coredump.CreatePcFixer(), nullptr);
+    DumpCore core("/tmp/dump_core_v5", 0);
+    MOCKER_CPP(&DumpCore::DumpV4Register).stubs();
+    coredump.DumpRegister(core, CORE_TYPE_AIC, 0);
+}
+
+TEST_F(PlatformImplUtest, CloudV5Coredump_ConvertCoreId_UsesV5AicCount)
+{
+    CloudV5Coredump coredump;
+    EXPECT_EQ(coredump.ConvertCoreId(CORE_TYPE_AIC, 0), 0U);
+    EXPECT_EQ(coredump.ConvertCoreId(CORE_TYPE_AIC, 69), 69U);
+    EXPECT_EQ(coredump.ConvertCoreId(CORE_TYPE_AIV, 0), 70U);
+    EXPECT_EQ(coredump.ConvertCoreId(CORE_TYPE_AIV, 3), 73U);
+    EXPECT_EQ(coredump.ConvertCoreId(CORE_TYPE_AIV, 69U), 139U);
+}
+
+TEST_F(PlatformImplUtest, CloudV5Exception_Behaviour)
+{
+    CloudV5Exception exception;
+    EXPECT_FALSE(exception.IsArgsDataTypeSizeByByte());
+    EXPECT_FALSE(exception.SupportMc2SpacesDump());
+    EXPECT_EQ(exception.GetMc2StructSize(), 0U);
+}
+
+TEST_F(PlatformImplUtest, CloudV5DataDump_OverriddenBehaviour)
+{
+    CloudV5DataDump dataDump;
+    EXPECT_EQ(dataDump.GetKfcStackSize(), static_cast<uint64_t>(140) * BLOCK_MIN_SIZE * INTEGER_KILOBYTE);
+    EXPECT_EQ(
+        dataDump.GetKfcBinNames(), (std::vector<std::string>{"dump_stat_op_ascend960.o", "kfc_dump_stat_ascend960.o"}));
+    EXPECT_EQ(dataDump.GetCoreTypeIDOffset(), static_cast<size_t>(70));
+    EXPECT_EQ(dataDump.GetBlockNum(), static_cast<size_t>(140));
+}
+
+TEST_F(PlatformImplUtest, CloudV5DataDump_InheritedBehaviour)
+{
+    CloudV5DataDump dataDump;
+    EXPECT_TRUE(dataDump.IsUbFromAiCore());
+    EXPECT_EQ(dataDump.GetStreamSyncTimeout(), 60000 * 30);
+}
+
+TEST_F(PlatformImplUtest, CloudV5DataDump_SimtDumpThresholdFollowsBlockNum)
+{
+    CloudV5DataDump dataDump;
+    constexpr size_t maxStrLen = 1024U * 1024U;
+    const size_t threshold = dataDump.GetBlockNum() * maxStrLen;
+    EXPECT_EQ(threshold, static_cast<size_t>(140) * maxStrLen);
+    EXPECT_FALSE(dataDump.IsSimtDumpEnabled(threshold));
+    EXPECT_TRUE(dataDump.IsSimtDumpEnabled(threshold + 1U));
 }
 
 // ---------------- CloudV2Platform (CHIP_CLOUD_V2 / Ascend910B) ----------------
@@ -184,7 +251,9 @@ TEST_F(PlatformImplUtest, CloudV2DataDump_Behaviour)
 {
     CloudV2DataDump dataDump;
     EXPECT_EQ(dataDump.GetKfcStackSize(), static_cast<uint64_t>(75) * BLOCK_MIN_SIZE * INTEGER_KILOBYTE);
-    EXPECT_EQ(dataDump.GetKfcBinName(), "kfc_dump_stat_ascend910B.o");
+    EXPECT_EQ(
+        dataDump.GetKfcBinNames(),
+        (std::vector<std::string>{"dump_stat_op_ascend910B.o", "kfc_dump_stat_ascend910B.o"}));
     EXPECT_TRUE(dataDump.IsUbFromAiCore());
     // printf 参数走基类默认值
     EXPECT_EQ(dataDump.GetCoreTypeIDOffset(), 50U);

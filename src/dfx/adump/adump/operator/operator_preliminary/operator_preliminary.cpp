@@ -12,6 +12,7 @@
 #include <cinttypes>
 #include <fstream>
 #include <algorithm>
+#include "securec.h"
 #include "lib_path.h"
 #include "file_utils.h"
 #include "log/adx_log.h"
@@ -50,14 +51,13 @@ uint64_t OperatorPreliminary::CalcWorkspaceSize(uint64_t statsCnt)
     return BLOCK_MIN_SIZE * (coreSize + 1) * statsCnt; // + 1 用于当做同步空间
 }
 
-std::string OperatorPreliminary::GetBinName() const
+std::vector<std::string> OperatorPreliminary::GetBinNames() const
 {
     auto plat = PlatformReflection<DataDumpInterface>::CreatePlatform(setting_.GetPlatformType());
     if (plat == nullptr) {
-        return "UNKNOW_FILENAME";
+        return {};
     }
-    std::string name = plat->GetKfcBinName();
-    return name.empty() ? "UNKNOW_FILENAME" : name;
+    return plat->GetKfcBinNames();
 }
 
 int32_t OperatorPreliminary::GetStreamInfo()
@@ -105,7 +105,7 @@ int32_t OperatorPreliminary::GetUBSizeAndCoreNum()
     PlatformData platformData;
     IDE_CTRL_VALUE_FAILED(
         AdumpPlatformApi::GetUBSizeAndCoreNum(socVersion, setting_.GetPlatformType(), platformData),
-        return ADUMP_FAILED, "Failed to read platform info from fe api.");
+        return ADUMP_FAILED, "Failed to read platform information from fe api.");
 
     opData_.ubSize = platformData.ubSize;
     opData_.aiCoreCnt = platformData.aiCoreCnt;
@@ -151,18 +151,27 @@ int32_t OperatorPreliminary::GetOperatorPCAddr()
     rtError_t ret = RT_ERROR_NONE;
 
     if (binData == nullptr) {
-        std::string opName = GetBinName();
-        IDE_CTRL_VALUE_FAILED(!opName.empty(), return ADUMP_FAILED, "Failed to find kfc operator file.");
-
-        const std::string opPath = LibPath::Instance().GetTargetPath(opName);
+        const std::vector<std::string> opNames = GetBinNames();
+        std::string hitPath;
+        for (const auto& opName : opNames) {
+            const std::string opPath = LibPath::Instance().GetTargetPath(opName);
+            IDE_CTRL_VALUE_FAILED(
+                !opPath.empty(), continue, "Failed to get the path of the kfc operator. opName=%s", opName.c_str());
+            if (FileUtils::IsFileExist(opPath)) {
+                hitPath = opPath;
+                break;
+            }
+        }
         IDE_CTRL_VALUE_FAILED(
-            !opPath.empty(), return ADUMP_FAILED, "Received an empty path for file %s.", opName.c_str());
-        IDE_CTRL_VALUE_FAILED(
-            FileUtils::IsFileExist(opPath), return ADUMP_FAILED, "Failed to binary file from %s.", opPath.c_str());
+            !hitPath.empty(), return ADUMP_FAILED, "Failed to find an existing kfc operator file. candidates=%zu",
+            opNames.size());
 
         size_t fileSize = 0;
-        binData = LoadBinFile(opPath, fileSize);
-        IDE_CTRL_VALUE_FAILED(binData != nullptr, return ADUMP_FAILED, "Get binary handle failed");
+        binData = LoadBinFile(hitPath, fileSize);
+        IDE_CTRL_VALUE_FAILED(
+            binData != nullptr, return ADUMP_FAILED, "Failed to load the kfc operator data. opPath=%s",
+            hitPath.c_str());
+        IDE_LOGI("Success to load the kfc operator data. opPath=%s, fileSize=%zu", hitPath.c_str(), fileSize);
 
         rtDevBinary_t bin{
             .magic = RT_DEV_BINARY_MAGIC_ELF_AIVEC,
@@ -172,20 +181,21 @@ int32_t OperatorPreliminary::GetOperatorPCAddr()
 
         ret = rtDevBinaryRegister(&bin, &opData_.binHandle);
         IDE_CTRL_VALUE_FAILED(
-            ret == RT_ERROR_NONE, return ADUMP_FAILED, "Failed to parse bin data into handle, ret is %d", ret);
+            ret == RT_ERROR_NONE, return ADUMP_FAILED, "Failed to register the kfc operator binary. ret=%d", ret);
 
         ret = rtFunctionRegister(opData_.binHandle, KFC_OPERATOR_STUB_NAME, KFC_OPERATOR_NAME, KFC_OPERATOR_NAME, 0U);
         IDE_CTRL_VALUE_FAILED(
-            ret == RT_ERROR_NONE, return ADUMP_FAILED, "Failed to register handle into stub kernel name %s, ret is %d",
-            KFC_OPERATOR_STUB_NAME, ret);
+            ret == RT_ERROR_NONE, return ADUMP_FAILED,
+            "Failed to register the kfc operator function. stubFunc=%s, stubName=%s, ret=%d", KFC_OPERATOR_STUB_NAME,
+            KFC_OPERATOR_NAME, ret);
     }
 
     ret = rtGetAddrByFun(KFC_OPERATOR_STUB_NAME, &opData_.pcAddr);
     IDE_CTRL_VALUE_FAILED(
-        ret == RT_ERROR_NONE, return ADUMP_FAILED, "Failed to get pc addr from stub kernel name %s, ret is %d",
-        KFC_OPERATOR_STUB_NAME, ret);
+        ret == RT_ERROR_NONE, return ADUMP_FAILED,
+        "Failed to get the kfc pc address with stubFunc. stubFunc=%s, ret=%d", KFC_OPERATOR_STUB_NAME, ret);
 
-    IDE_LOGI("Success to get pc address %p on device %u.", opData_.pcAddr, deviceId_);
+    IDE_LOGI("Success to get the kfc pc address on device %u. pcAddr=%p", deviceId_, opData_.pcAddr);
     return ADUMP_SUCCESS;
 }
 
@@ -204,23 +214,22 @@ int32_t OperatorPreliminary::CreateMemory()
 
     IDE_CTRL_VALUE_FAILED(
         opData_.workspaceSize != 0 && opData_.stackBaseSize != 0, return ADUMP_FAILED,
-        "The size of the workspaceSize is 0");
+        "The workspaceSize is 0 or the stackBaseSize is 0");
     IDE_LOGI(
         "Calculate MsgQ Size:%" PRIu64 "Byte, output size:%" PRIu64 "Byte, workspace size:%" PRIu64 "Byte,"
         "stack base size:%" PRIu64 "Byte on device %u.",
         opData_.msgQSize, opData_.outputSize, opData_.workspaceSize, opData_.stackBaseSize, deviceId_);
 
-    rtError_t ret = rtMalloc(
-        &opData_.memoryAddr, opData_.msgQSize + opData_.outputSize + opData_.workspaceSize + opData_.stackBaseSize,
-        RT_MEMORY_DEFAULT, AICPU);
-    IDE_CTRL_VALUE_FAILED(ret == RT_ERROR_NONE, return ADUMP_FAILED, "Execute rtMalloc failed with result %d", ret);
-    IDE_LOGI("Rt malloc success on device %u.", deviceId_);
+    uint64_t memSize = opData_.msgQSize + opData_.outputSize + opData_.workspaceSize + opData_.stackBaseSize;
+    rtError_t ret = rtMalloc(&opData_.memoryAddr, memSize, RT_MEMORY_DEFAULT, AICPU);
+    IDE_CTRL_VALUE_FAILED(ret == RT_ERROR_NONE, return ADUMP_FAILED, "rtMalloc failed. ret=%d", ret);
+    IDE_LOGI("rtMalloc success for the kfc operator. memAddr=%p, memSize=%llu", opData_.memoryAddr, memSize);
     return ADUMP_SUCCESS;
 }
 
 int32_t OperatorPreliminary::KFCKernelLaunch()
 {
-    IDE_LOGD("Start to init kfc kernel information for device %u.", deviceId_);
+    IDE_LOGD("Start to initialize the kfc kernel information on device %u.", deviceId_);
     KfcDumpOpInitParam kfcParam;
     kfcParam.kfcWorkSpace.msgQ = reinterpret_cast<uint64_t>(opData_.memoryAddr);
     kfcParam.kfcWorkSpace.msgQSize = opData_.msgQSize;
@@ -244,6 +253,10 @@ int32_t OperatorPreliminary::KFCKernelLaunch()
     kfcParam.streamInfo.logicCqIds = opData_.logicCqIds;
     kfcParam.streamInfo.deviceId = deviceId_;
 
+    if (UpdateKFCLaunchInfo(kfcParam) != ADUMP_SUCCESS) {
+        return ADUMP_FAILED;
+    }
+
     rtAicpuArgsEx_t argsInfo;
     argsInfo.args = static_cast<void*>(&kfcParam);
     argsInfo.argsSize = sizeof(kfcParam);
@@ -257,44 +270,88 @@ int32_t OperatorPreliminary::KFCKernelLaunch()
 
     rtError_t ret =
         rtAicpuKernelLaunchExWithArgs(KERNEL_TYPE_AICPU_KFC, "VectorStats", 1, &argsInfo, nullptr, nullptr, 0);
-    IDE_CTRL_VALUE_FAILED(ret == RT_ERROR_NONE, return ADUMP_FAILED, "Failed to launch kernel for KFC, ret is %d", ret);
+    IDE_CTRL_VALUE_FAILED(ret == RT_ERROR_NONE, return ADUMP_FAILED, "Failed to launch kfc kernel, ret=%d", ret);
 
     ret = rtStreamSynchronize(nullptr); // Use the default flow to ensure successful execution.
     IDE_CTRL_VALUE_FAILED(
-        ret == RT_ERROR_NONE, return ADUMP_FAILED,
-        "Execute rtStreamSynchronize for kernel launch failed with result %d", ret);
+        ret == RT_ERROR_NONE, return ADUMP_FAILED, "Execute rtStreamSynchronize failed for kfc kernel. ret=%d", ret);
 
-    IDE_LOGI("Success to init kfc kernel information on device %u.", deviceId_);
+    IDE_LOGI("Success to initialize the kfc kernel information on device %u.", deviceId_);
+    return ADUMP_SUCCESS;
+}
+
+KfcLaunchMode OperatorPreliminary::DecideKFCLaunchMode(int32_t driverApiVersion)
+{
+    // 低于LAUNCH_MODE_AICPU，驱动版本过低(含：0(无驱动接口符号)和-1(获取驱动失败)))，统一不支持KFC算子。
+    if (driverApiVersion < KFC_AICPU_DRV_VERSION) {
+        return KfcLaunchMode::UNSUPPORTED;
+    }
+    if (driverApiVersion < KFC_ADUMP_DRV_VERSION) {
+        return KfcLaunchMode::LAUNCH_MODE_AICPU;
+    }
+    return KfcLaunchMode::LAUNCH_MODE_ADUMP;
+}
+
+int32_t OperatorPreliminary::UpdateKFCLaunchInfo(KfcDumpOpInitParam& kfcParam) const
+{
+    KfcLaunchInfo launchInfo = {};
+    switch (kfcLaunchMode_) {
+        case KfcLaunchMode::LAUNCH_MODE_AICPU:
+            launchInfo = AICPU_LAUNCH_INFO;
+            break;
+        case KfcLaunchMode::LAUNCH_MODE_ADUMP:
+            launchInfo = ADUMP_LAUNCH_INFO;
+            break;
+        default:
+            IDE_LOGE("Kfc launch mode is unsupported");
+            return ADUMP_FAILED;
+    }
+
+    errno_t ret = strcpy_s(kfcParam.soName, FILE_NAME_MAX, launchInfo.soName);
+    if (ret != EOK) {
+        IDE_LOGE("Failed to set kfc soName, ret=%d", ret);
+        return ADUMP_FAILED;
+    }
+    ret = strcpy_s(kfcParam.kernelName, FILE_NAME_MAX, launchInfo.kernelName);
+    if (ret != EOK) {
+        IDE_LOGE("Failed to set kfc kernelName, ret=%d", ret);
+        return ADUMP_FAILED;
+    }
+
+    IDE_LOGI("Kfc operator uses soName[%s], kernelName[%s]", launchInfo.soName, launchInfo.kernelName);
     return ADUMP_SUCCESS;
 }
 
 int32_t OperatorPreliminary::OperatorInit()
 {
     int32_t version = AdumpDsmi::DrvGetAPIVersion();
-    if (version != 0 && version < SUPPORTED_DRV_VERSION) {
-        IDE_LOGW("Current driver version %d does not support this feature.", version);
+    kfcLaunchMode_ = DecideKFCLaunchMode(version);
+    if (kfcLaunchMode_ == KfcLaunchMode::UNSUPPORTED) {
+        IDE_LOGW("Current driver version %d does not support kfc feature for dump statistics.", version);
         return ADUMP_SUCCESS;
     }
-    // If version is 0, it indicates that the interface is obsolete and the current operator continues to execute.
 
-    IDE_LOGI("Prepare to initialize the resources of kfc kernel on device %u.", deviceId_);
+    IDE_LOGI("Prepare to initialize the resources of kfc operator on device %u.", deviceId_);
     do {
         int32_t ret = GetStreamInfo();
-        IDE_CTRL_VALUE_FAILED_NODO(ret == ADUMP_SUCCESS, break, "OperatorInit fails at GetStreamInfo when executed.");
+        IDE_CTRL_VALUE_FAILED_NODO(
+            ret == ADUMP_SUCCESS, break, "OperatorInit is failed at GetStreamInfo when executed.");
 
         ret = GetUBSizeAndCoreNum();
         IDE_CTRL_VALUE_FAILED_NODO(
-            ret == ADUMP_SUCCESS, break, "OperatorInit fails at GetUBSizeAndCoreNum when executed.");
+            ret == ADUMP_SUCCESS, break, "OperatorInit is failed at GetUBSizeAndCoreNum when executed.");
 
         ret = GetOperatorPCAddr();
         IDE_CTRL_VALUE_FAILED_NODO(
-            ret == ADUMP_SUCCESS, break, "OperatorInit fails at GetOperatorPCAddr when executed.");
+            ret == ADUMP_SUCCESS, break, "OperatorInit is failed at GetOperatorPCAddr when executed.");
 
         ret = CreateMemory();
-        IDE_CTRL_VALUE_FAILED_NODO(ret == ADUMP_SUCCESS, break, "OperatorInit fails at CreateMemory when executed.");
+        IDE_CTRL_VALUE_FAILED_NODO(
+            ret == ADUMP_SUCCESS, break, "OperatorInit is failed at CreateMemory when executed.");
 
         ret = KFCKernelLaunch();
-        IDE_CTRL_VALUE_FAILED_NODO(ret == ADUMP_SUCCESS, break, "OperatorInit fails at kernel launch when executed.");
+        IDE_CTRL_VALUE_FAILED_NODO(
+            ret == ADUMP_SUCCESS, break, "OperatorInit is failed at kernel launch when executed.");
         return ADUMP_SUCCESS;
     } while (0);
     IDE_LOGW("Start to destroy rt api resources on device %u.", deviceId_);

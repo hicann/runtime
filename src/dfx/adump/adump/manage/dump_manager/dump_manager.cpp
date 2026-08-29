@@ -391,26 +391,32 @@ int32_t DumpManager::UnSetDumpConfig()
     return ADUMP_SUCCESS;
 }
 
-std::string DumpManager::GetBinName() const
+std::vector<std::string> DumpManager::GetBinNames() const
 {
     auto plat = PlatformReflection<DataDumpInterface>::CreatePlatform(dumpSetting_.GetPlatformType());
     if (plat == nullptr) {
-        return "";
+        return {};
     }
-    return plat->GetKfcBinName();
+    return plat->GetKfcBinNames();
 }
 
 bool DumpManager::CheckBinValidation()
 {
-    const std::string opName = GetBinName();
-    if ((dumpSetting_.GetDumpData().compare(DUMP_STATS_DATA) != 0) || opName.empty()) {
+    const std::vector<std::string> opNames = GetBinNames();
+    if ((dumpSetting_.GetDumpData().compare(DUMP_STATS_DATA) != 0) || opNames.empty()) {
+        IDE_LOGI("CheckBinValidation result is false");
         return false;
     }
-    const std::string opPath = LibPath::Instance().GetTargetPath(opName);
-    IDE_CTRL_VALUE_FAILED(!opPath.empty(), return false, "Received an empty path for file %s.", opName.c_str());
-    bool isExist = FileUtils::IsFileExist(opPath);
-    IDE_LOGI("CheckBinValidation result is %s", isExist ? "true" : "false");
-    return isExist;
+    for (const auto& opName : opNames) {
+        const std::string opPath = LibPath::Instance().GetTargetPath(opName);
+        IDE_CTRL_VALUE_FAILED(!opPath.empty(), continue, "Received an empty path for file %s.", opName.c_str());
+        if (FileUtils::IsFileExist(opPath)) {
+            IDE_LOGI("CheckBinValidation result is true with file %s", opName.c_str());
+            return true;
+        }
+    }
+    IDE_LOGI("CheckBinValidation result is false");
+    return false;
 }
 
 bool DumpManager::IsEnableDump(DumpType dumpType)

@@ -46,7 +46,7 @@ TEST_F(OperatorPreliminaryPlatformUtest, Test_CalcStackSizeDCType)
     dumpConfig.dumpMode = "all";
     dumpSetting.Init(DumpType::OPERATOR, dumpConfig);
     OperatorPreliminary opIniter = OperatorPreliminary(dumpSetting, 0);
-    EXPECT_EQ(opIniter.CalcStackSize(), 2 * 32 * 1024);
+    EXPECT_EQ(opIniter.CalcStackSize(), 0U);
 }
 
 TEST_F(OperatorPreliminaryPlatformUtest, Test_CalcStackSizeCloudV2)

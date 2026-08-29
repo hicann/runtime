@@ -13,6 +13,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <string>
+#include <vector>
 
 namespace Adx {
 
@@ -24,7 +25,7 @@ public:
 
     // KFC stats
     virtual uint64_t GetKfcStackSize() const { return 0; }
-    virtual std::string GetKfcBinName() const { return ""; }
+    virtual std::vector<std::string> GetKfcBinNames() const { return {}; }
     virtual bool IsUbFromAiCore() const { return false; } // 原 CHIP_CORE_MAP
 
     // dump_printf 参数（原 Ascend950 专属逻辑，芯片身份消失）

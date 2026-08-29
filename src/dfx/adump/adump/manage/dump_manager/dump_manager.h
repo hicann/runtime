@@ -89,7 +89,7 @@ private:
     DumpManager(const DumpManager&) = delete;
     DumpManager& operator=(const DumpManager&) = delete;
     int32_t ExceptionConfig(DumpType dumpType, const DumpConfig& dumpConfig);
-    std::string GetBinName() const;
+    std::vector<std::string> GetBinNames() const;
     bool CheckBinValidation();
     bool RegsiterExceptionCallback();
     bool CheckCoredumpSupportedPlatform() const;

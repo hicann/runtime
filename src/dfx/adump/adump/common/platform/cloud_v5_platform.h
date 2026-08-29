@@ -25,13 +25,18 @@ class CloudV5Coredump : public CloudV4Coredump {
 public:
     std::unique_ptr<PcFixerInterface> CreatePcFixer() const override;
     std::shared_ptr<RegisterInterface> CreateRegister() const override;
+    uint16_t ConvertCoreId(uint8_t coreType, uint16_t coreId) const override;
 };
 
 // 异常/数据 dump 行为与 V4 一致，直接复用 V4 实现。
-class CloudV5Exception : public CloudV4Exception {
-};
+class CloudV5Exception : public CloudV4Exception {};
 
 class CloudV5DataDump : public CloudV4DataDump {
+public:
+    uint64_t GetKfcStackSize() const override;
+    std::vector<std::string> GetKfcBinNames() const override;
+    size_t GetCoreTypeIDOffset() const override;
+    size_t GetBlockNum() const override;
 };
 
 } // namespace Adx

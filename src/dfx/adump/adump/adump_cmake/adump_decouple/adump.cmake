@@ -15,6 +15,10 @@ set(adumpHeaderList
     ${ADUMP_ADUMP_DIR}/common
     ${ADUMP_DIR}/adcore/device
     ${ADUMP_DIR}/adcore/common
+    ${ADUMP_DIR}/adcore/log
+    ${ADUMP_ADUMP_DIR}/device/dump_statistics
+    ${PROJECT_TOP_DIR}/pkg_inc/driver
+    ${PROJECT_TOP_DIR}/src/inc/aicpu_sched/
 )
 
 set(adumpSrcList
@@ -48,6 +52,12 @@ set(adumpSrcList
     ${ADUMP_ADUMP_DIR}/device/adx_dump_hdc_helper.cpp
     ${ADUMP_ADUMP_DIR}/device/adx_dump_hdc_api.cpp
     ${ADUMP_ADUMP_DIR}/common/sys_utils.cpp
+    # kfc dump server
+    ${ADUMP_ADUMP_DIR}/dump_statistics/dump_stat_fw/dump_stats_interface.cpp
+    ${ADUMP_ADUMP_DIR}/dump_statistics/dump_stat_fw/dump_stats_printf.cpp
+    ${ADUMP_ADUMP_DIR}/dump_statistics/dump_stat_fw/dump_stats_process.cpp
+    ${ADUMP_ADUMP_DIR}/dump_statistics/dump_stat_fw/dump_stats_server.cpp
+    ${ADUMP_ADUMP_DIR}/dump_statistics/dump_stat_fw/dump_stats_task.cpp
 )
 
 # MODULE_EXT 由 build.sh --module_extension=<VALUE> 传入，非空时标识需隐藏的类产品。

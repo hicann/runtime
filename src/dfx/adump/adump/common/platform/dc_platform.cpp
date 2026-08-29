@@ -31,10 +31,14 @@ bool DcException::IsArgsDataTypeSizeByByte() const { return true; }
 
 uint64_t DcDataDump::GetKfcStackSize() const
 {
-    constexpr uint32_t OP_STACK_310P = 2;
-    return CalcKfcStackSize(OP_STACK_310P);
+    // DC(310p) not support kfc again
+    return 0;
 }
 
-std::string DcDataDump::GetKfcBinName() const { return "kfc_dump_stat_ascend310p3.o"; }
+std::vector<std::string> DcDataDump::GetKfcBinNames() const
+{
+    // DC(310p) not support kfc again
+    return {};
+}
 
 } // namespace Adx

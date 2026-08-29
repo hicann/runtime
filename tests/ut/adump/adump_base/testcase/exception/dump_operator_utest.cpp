@@ -29,10 +29,7 @@ using namespace Adx;
 class DumpOperatorUtest : public testing::Test {
 protected:
     virtual void SetUp() {}
-    virtual void TearDown()
-    {
-        GlobalMockObject::verify();
-    }
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 TEST_F(DumpOperatorUtest, Test_OpIdentify)
@@ -163,8 +160,8 @@ TEST_F(DumpOperatorUtest, Test_Log_ExceptionArgs)
     DumpManager::Instance().ConvertOperatorInfo(builder.Build(), opInfoV2);
     EXPECT_EQ(DumpOperator(opInfoV2).LogExceptionInfo(exceptionArgs), ADUMP_SUCCESS);
 
-    //copy device memory to host failed
-    void *hostMem = nullptr;
+    // copy device memory to host failed
+    void* hostMem = nullptr;
     MOCKER_CPP(&DumpMemory::CopyDeviceToHost).stubs().will(returnValue(hostMem));
     DumpManager::Instance().ConvertOperatorInfo(builder.Build(), opInfoV2);
     EXPECT_EQ(DumpOperator(opInfoV2).LogExceptionInfo(exceptionArgs), ADUMP_FAILED);
@@ -229,7 +226,7 @@ TEST_F(DumpOperatorUtest, Test_CopyOpKernelFile)
 
     OperatorInfo opInfo = OperatorInfoBuilder("CONV2D", "TestName")
                               .Task(1, 2, 3, 4)
-                              .AdditionInfo(DUMP_ADDITIONAL_DEV_FUNC, devFunc)  // set dev func
+                              .AdditionInfo(DUMP_ADDITIONAL_DEV_FUNC, devFunc) // set dev func
                               .AdditionInfo(DUMP_ADDITIONAL_OP_FILE_PATH, KernalMetaPath)
                               .Build();
 
@@ -254,7 +251,7 @@ TEST_F(DumpOperatorUtest, Test_CopyOpKernelFile_With_Error)
     // Copy op kernal file with out set additional dev func
     OperatorInfoV2 opInfoV2 = {};
     DumpManager::Instance().ConvertOperatorInfo(builder.Build(), opInfoV2);
-    EXPECT_EQ(DumpOperator(opInfoV2).CopyOpKernelFile(), ADUMP_FAILED);  // no dev func.
+    EXPECT_EQ(DumpOperator(opInfoV2).CopyOpKernelFile(), ADUMP_FAILED); // no dev func.
 
     // set dev func
     std::string devFunc = kernalName + "__dev_suffix";
@@ -262,7 +259,7 @@ TEST_F(DumpOperatorUtest, Test_CopyOpKernelFile_With_Error)
 
     // no src kernal file
     DumpManager::Instance().ConvertOperatorInfo(builder.Build(), opInfoV2);
-    EXPECT_EQ(DumpOperator(opInfoV2).CopyOpKernelFile(), ADUMP_FAILED);  // src file path realpath failed.
+    EXPECT_EQ(DumpOperator(opInfoV2).CopyOpKernelFile(), ADUMP_FAILED); // src file path realpath failed.
 
     // create kernal dir and file
     std::string KernalMetaPath = ws.Mkdir(kernalMeta);
@@ -277,13 +274,13 @@ TEST_F(DumpOperatorUtest, Test_CopyOpKernelFile_With_Error)
         .will(returnValue(emptyDstFileDir))
         .then(returnValue(existDstFileDir));
     DumpManager::Instance().ConvertOperatorInfo(builder.Build(), opInfoV2);
-    EXPECT_EQ(DumpOperator(opInfoV2).CopyOpKernelFile(), ADUMP_FAILED);  // GetCurrentWorkDir failed
+    EXPECT_EQ(DumpOperator(opInfoV2).CopyOpKernelFile(), ADUMP_FAILED); // GetCurrentWorkDir failed
 
     // stub copy file fail
     MOCKER_CPP(&File::Copy).stubs().will(returnValue(ADUMP_FAILED)).then(returnValue(ADUMP_SUCCESS));
     DumpManager::Instance().ConvertOperatorInfo(builder.Build(), opInfoV2);
-    EXPECT_EQ(DumpOperator(opInfoV2).CopyOpKernelFile(), ADUMP_FAILED);   // copy file fail
-    EXPECT_EQ(DumpOperator(opInfoV2).CopyOpKernelFile(), ADUMP_SUCCESS);  // success
+    EXPECT_EQ(DumpOperator(opInfoV2).CopyOpKernelFile(), ADUMP_FAILED);  // copy file fail
+    EXPECT_EQ(DumpOperator(opInfoV2).CopyOpKernelFile(), ADUMP_SUCCESS); // success
 }
 
 TEST_F(DumpOperatorUtest, Test_DumpException)
@@ -324,7 +321,7 @@ TEST_F(DumpOperatorUtest, Test_DumpOpreaterStatsConfig)
 }
 
 int32_t g_halSuccessCnt = 0;
-rtError_t rtGetDeviceInfoStub(uint32_t devId, int32_t moduleType, int32_t infoType, int64_t *value)
+rtError_t rtGetDeviceInfoStub(uint32_t devId, int32_t moduleType, int32_t infoType, int64_t* value)
 {
     (void)devId;
     (void)moduleType;
@@ -332,17 +329,17 @@ rtError_t rtGetDeviceInfoStub(uint32_t devId, int32_t moduleType, int32_t infoTy
     *value = 1280;
 
     if (g_halSuccessCnt > 8) {
-        return RT_ERROR_NONE;  // 9+
+        return RT_ERROR_NONE; // 9+
     } else if (g_halSuccessCnt > 7) {
         g_halSuccessCnt++;
-        return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;  // 8
+        return ACL_ERROR_RT_FEATURE_NOT_SUPPORT; // 8
     }
     g_halSuccessCnt++;
-    return ACL_ERROR_RT_NO_DEVICE;  // 0
+    return ACL_ERROR_RT_NO_DEVICE; // 0
 }
 
 int32_t g_versionStubCount = -1;
-drvError_t halGetAPIVersionStub(int32_t *halAPIVersion)
+drvError_t halGetAPIVersionStub(int32_t* halAPIVersion)
 {
     *halAPIVersion = 467734;
     g_versionStubCount++;
@@ -396,7 +393,6 @@ TEST_F(DumpOperatorUtest, Test_DumpOpreaterStatsConfigInMilan)
     EXPECT_EQ(DumpManager::operatorMap_.size(), 8);
 }
 
-
 TEST_F(DumpOperatorUtest, Test_DumpOpreaterStatsConfigKfcNotExisted)
 {
     DumpConfig dumpConf;
@@ -408,6 +404,6 @@ TEST_F(DumpOperatorUtest, Test_DumpOpreaterStatsConfigKfcNotExisted)
     MOCKER(rtGetDeviceInfo).stubs().will(invoke(rtGetDeviceInfoStub));
     MOCKER(&FileUtils::IsFileExist).stubs().will(returnValue(false));
     EXPECT_EQ(DumpManager::Instance().SetDumpConfig(DumpType::OPERATOR, dumpConf), ADUMP_SUCCESS);
-    EXPECT_EQ(DumpManager::Instance().GetBinName(), "kfc_dump_stat_ascend910B.o");
+    EXPECT_EQ(DumpManager::Instance().GetBinNames(), std::vector<std::string>{"kfc_dump_stat_ascend910B.o"});
     EXPECT_FALSE(DumpManager::Instance().CheckBinValidation());
 }

@@ -18,6 +18,10 @@
 namespace Adx {
 constexpr uint32_t FILE_NAME_MAX = 32;
 constexpr uint32_t SOC_VERSION_LEN = 50U;
+// 2024.5.16: 支持kfc算子(libaicpu_extend_kernels.so)
+constexpr int32_t KFC_AICPU_DRV_VERSION = 467735;
+// 2026.8.15: 迁移kfc算子(libaicpu_extend_kernels.so -> libadump.so)
+constexpr int32_t KFC_ADUMP_DRV_VERSION = 467994;
 
 struct OperatorData {
     aclrtStream deviceStm = nullptr;
@@ -67,6 +71,20 @@ struct KfcDumpStreamInfo {
     uint32_t res;
 };
 
+enum class KfcLaunchMode {
+    UNSUPPORTED,
+    LAUNCH_MODE_AICPU,
+    LAUNCH_MODE_ADUMP,
+};
+
+struct KfcLaunchInfo {
+    const char* soName;
+    const char* kernelName;
+};
+
+constexpr KfcLaunchInfo AICPU_LAUNCH_INFO = {"libaicpu_extend_kernels.so", "AicpuKfcDumpSrvInit"};
+constexpr KfcLaunchInfo ADUMP_LAUNCH_INFO = {"libadump.so", "AdumpStatsOpSrvInit"};
+
 struct KfcDumpOpInitParam {
     KfcDumpWorkSpace kfcWorkSpace;
     KfcDumpOpConfig config; // 配置参数
@@ -84,16 +102,19 @@ public:
 private:
     uint64_t CalcWorkspaceSize(uint64_t statsCnt);
     uint64_t CalcStackSize() const;
-    std::string GetBinName() const;
+    std::vector<std::string> GetBinNames() const;
     int32_t GetStreamInfo();
     int32_t GetUBSizeAndCoreNum();
     std::unique_ptr<char[]> LoadBinFile(const std::string& filename, size_t& fileSize) const;
     int32_t GetOperatorPCAddr();
     int32_t CreateMemory();
     int32_t KFCKernelLaunch();
+    static KfcLaunchMode DecideKFCLaunchMode(int32_t driverApiVersion);
+    int32_t UpdateKFCLaunchInfo(KfcDumpOpInitParam& kfcParam) const;
     uint32_t deviceId_;
     DumpSetting setting_;
     OperatorData opData_;
+    KfcLaunchMode kfcLaunchMode_ = KfcLaunchMode::UNSUPPORTED;
 };
 } // namespace Adx
 #endif // OPERATOR_PRELIMINARY_H

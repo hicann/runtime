@@ -17,7 +17,6 @@
 
 namespace Adx {
 constexpr uint32_t DEFAULT_CHIP_TYPE = 2;
-constexpr int32_t SUPPORTED_DRV_VERSION = 467735; // 2024.5.16
 enum class SysPlatformType { DEVICE = 0, HOST = 1, INVALID = 2 };
 
 enum class PlatformType : uint32_t {

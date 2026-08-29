@@ -10,6 +10,7 @@
 #include "cloud_v5_platform.h"
 
 #include "adump_platform_registry.h"
+#include "dump_common.h"
 #include "kernel_pc_fixer.h"
 #include "register_config.h"
 
@@ -20,13 +21,17 @@ ADUMP_PLATFORM_REGISTER(CoredumpInterface, PlatformType::CHIP_CLOUD_V5, CloudV5C
 ADUMP_PLATFORM_REGISTER(ExceptionDumpInterface, PlatformType::CHIP_CLOUD_V5, CloudV5Exception);
 ADUMP_PLATFORM_REGISTER(DataDumpInterface, PlatformType::CHIP_CLOUD_V5, CloudV5DataDump);
 
+namespace {
+constexpr uint32_t MAX_AIC_CORE_COUNT = 70U;
+constexpr uint32_t MAX_AIV_CORE_COUNT = 70U;
+constexpr uint32_t MAX_ALL_CORE_COUNT = MAX_AIC_CORE_COUNT + MAX_AIV_CORE_COUNT;
+} // namespace
+
 CloudV5Features::CloudV5Features()
 {
     supported_ = {
-        AdumpPlatformFeature::FEATURE_DATA_DUMP,
-        AdumpPlatformFeature::FEATURE_OVERFLOW_DUMP,
-        AdumpPlatformFeature::FEATURE_EXCEPTION_DUMP_L0,
-        AdumpPlatformFeature::FEATURE_EXCEPTION_DUMP_L1,
+        AdumpPlatformFeature::FEATURE_DATA_DUMP,         AdumpPlatformFeature::FEATURE_OVERFLOW_DUMP,
+        AdumpPlatformFeature::FEATURE_EXCEPTION_DUMP_L0, AdumpPlatformFeature::FEATURE_EXCEPTION_DUMP_L1,
         AdumpPlatformFeature::FEATURE_CORE_DUMP,
     };
 }
@@ -40,5 +45,25 @@ std::shared_ptr<RegisterInterface> CloudV5Coredump::CreateRegister() const
 {
     return std::make_shared<CloudV5Register>();
 }
+
+uint16_t CloudV5Coredump::ConvertCoreId(uint8_t coreType, uint16_t coreId) const
+{
+    return (coreType == CORE_TYPE_AIC) ? coreId : static_cast<uint16_t>(MAX_AIC_CORE_COUNT + coreId);
+}
+
+uint64_t CloudV5DataDump::GetKfcStackSize() const
+{
+    constexpr uint32_t op_stack_count = MAX_ALL_CORE_COUNT;
+    return CalcKfcStackSize(op_stack_count);
+}
+
+std::vector<std::string> CloudV5DataDump::GetKfcBinNames() const
+{
+    return {"dump_stat_op_ascend960.o", "kfc_dump_stat_ascend960.o"};
+}
+
+size_t CloudV5DataDump::GetCoreTypeIDOffset() const { return MAX_AIV_CORE_COUNT; }
+
+size_t CloudV5DataDump::GetBlockNum() const { return MAX_ALL_CORE_COUNT; }
 
 } // namespace Adx

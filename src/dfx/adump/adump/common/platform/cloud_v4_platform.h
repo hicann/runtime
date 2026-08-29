@@ -39,7 +39,7 @@ public:
 class CloudV4DataDump : public DataDumpInterface {
 public:
     uint64_t GetKfcStackSize() const override;
-    std::string GetKfcBinName() const override;
+    std::vector<std::string> GetKfcBinNames() const override;
     bool IsUbFromAiCore() const override;
     size_t GetCoreTypeIDOffset() const override;
     size_t GetBlockNum() const override;

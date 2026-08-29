@@ -70,12 +70,15 @@ add_subdirectory(adx_hdc_dump)
 add_subdirectory(adx_soc_dump)
 add_subdirectory(adump_base)
 add_subdirectory(adump_tiny)
+add_subdirectory(dump_statistics)
 
 set(ADUMP_UT_SUB_TARGETS
     adx_hdc_dump_utest
     adx_soc_dump_utest
     adump_base_utest
     adump_tiny_utest
+    adump_dump_stat_fw_utest
+    adump_dump_stat_op_utest
 )
 
 add_custom_target(adump_ut DEPENDS ${ADUMP_UT_SUB_TARGETS})
