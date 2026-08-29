@@ -92,7 +92,12 @@ TIMESTAMP_EXTERN(rtMemcpyAsyncWithCfg);
 } // namespace cce
 
 namespace {
-std::array<std::atomic<int64_t>, SYS_OPT_RESERVED> sysParamOpt_ = {};
+std::array<std::atomic<int64_t>, SYS_OPT_RESERVED> sysParamOpt_ = {
+    SYS_OPT_DISABLE, // SYS_OPT_DETERMINISTIC
+    SYS_OPT_DISABLE, // SYS_OPT_ENABLE_DEBUG_KERNEL
+    SYS_OPT_DISABLE, // SYS_OPT_STRONG_CONSISTENCY
+    SYS_OPT_ENABLE   // SYS_OPT_ENABLE_KERNEL_EARLY_START
+};
 
 bool IsZeroSizeMemcpy2d(const uint64_t width, const uint64_t height) { return (width == 0U) || (height == 0U); }
 } // namespace

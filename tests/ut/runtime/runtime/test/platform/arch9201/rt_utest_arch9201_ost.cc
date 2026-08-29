@@ -36,16 +36,30 @@ protected:
     {
         MOCKER(GetChipTypeFromPlatform).stubs().will(invoke(StubGetChipTypeFromPlatform));
         (void)rtSetDevice(0);
-        Runtime::Instance()->SetEnableOstFlag(false);
     }
 
     virtual void TearDown()
     {
-        Runtime::Instance()->SetEnableOstFlag(false);
+        (void)rtSetSysParamOpt(SYS_OPT_ENABLE_KERNEL_EARLY_START, SYS_OPT_ENABLE);
         (void)rtDeviceReset(0);
         GlobalMockObject::verify();
     }
 };
+
+TEST_F(Ost960Test, GetOstReturnsEffectiveRuntimeFlag)
+{
+    int64_t configVal = -1;
+    EXPECT_EQ(rtGetSysParamOpt(SYS_OPT_ENABLE_KERNEL_EARLY_START, &configVal), RT_ERROR_NONE);
+    EXPECT_EQ(configVal, static_cast<int64_t>(SYS_OPT_ENABLE));
+
+    EXPECT_EQ(rtSetSysParamOpt(SYS_OPT_ENABLE_KERNEL_EARLY_START, SYS_OPT_DISABLE), RT_ERROR_NONE);
+    EXPECT_EQ(rtGetSysParamOpt(SYS_OPT_ENABLE_KERNEL_EARLY_START, &configVal), RT_ERROR_NONE);
+    EXPECT_EQ(configVal, static_cast<int64_t>(SYS_OPT_DISABLE));
+
+    EXPECT_EQ(rtSetSysParamOpt(SYS_OPT_ENABLE_KERNEL_EARLY_START, SYS_OPT_ENABLE), RT_ERROR_NONE);
+    EXPECT_EQ(rtGetSysParamOpt(SYS_OPT_ENABLE_KERNEL_EARLY_START, &configVal), RT_ERROR_NONE);
+    EXPECT_EQ(configVal, static_cast<int64_t>(SYS_OPT_ENABLE));
+}
 
 TEST_F(Ost960Test, EnableOst)
 {
