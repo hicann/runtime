@@ -167,10 +167,9 @@ set(runtimeut_src_profile_list
 )
 
 set(runtime_src_arg_loader_list
-    ${TOP_DIR}/src/runtime/core/src/kernel/arg_loader/arg_manage_pcie.cc
+    ${TOP_DIR}/src/runtime/core/src/kernel/arg_loader/arg_manage_nocopy.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/arg_loader/load_policy.cc
-    ${TOP_DIR}/src/runtime/core/src/kernel/arg_loader/stars_arg_manager.cc
-    ${TOP_DIR}/src/runtime/core/src/kernel/arg_loader/uma_arg_loader.cc
+    ${TOP_DIR}/src/runtime/core/src/kernel/arg_loader/uma_arg_loader_nocopy.cc
 )
 
 set(runtimeut_src_pool_list
@@ -352,6 +351,7 @@ add_executable(runtime_utest_arch5162
     rt_utest_mem_arch5162.cc
     ../../rt_utest_mbuf_stub.cc
     rt_utest_api_arch5162.cc
+    rt_utest_arg_loader_nocopy.cc
     rt_utest_device_arch5162.cc
     rt_utest_notify_arch5162.cc
 )

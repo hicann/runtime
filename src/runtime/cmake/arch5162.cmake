@@ -165,10 +165,9 @@ set(libruntime_profile_src_files
 )
 
 set(libruntime_arg_loader_files
-    ${RUNTIME_CORE_DIR}/src/kernel/arg_loader/arg_manage_pcie.cc
-    ${RUNTIME_CORE_DIR}/src/kernel/arg_loader/uma_arg_loader.cc
+    ${RUNTIME_CORE_DIR}/src/kernel/arg_loader/arg_manage_nocopy.cc
+    ${RUNTIME_CORE_DIR}/src/kernel/arg_loader/uma_arg_loader_nocopy.cc
     ${RUNTIME_CORE_DIR}/src/kernel/arg_loader/load_policy.cc
-    ${RUNTIME_CORE_DIR}/src/kernel/arg_loader/stars_arg_manager.cc
 )
 
 set(runtime_src_pool_list
@@ -234,7 +233,6 @@ set(runtime_src_device_list
 )
 
 set(runtime_src_kernel_list
-    ${RUNTIME_CORE_DIR}/src/kernel/args/args_handle_allocator.cc
     ${RUNTIME_CORE_DIR}/src/kernel/args/para_convertor.cc
     ${RUNTIME_CORE_DIR}/src/kernel/binary_loader.cc
     ${RUNTIME_CORE_DIR}/src/kernel/elf.cc
