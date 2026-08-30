@@ -246,7 +246,7 @@ int32_t CollectionEntry::FinishCollection(uint32_t devIdFlush, const std::string
         std::string encoded = analysis::dvvp::message::EncodeMessage(message);
         int32_t ret = uploader->UploadData(encoded.c_str(), encoded.size());
         if (ret != PROFILING_SUCCESS) {
-            MSPROF_LOGI("Upload data failed when collection finished");
+            MSPROF_LOGI("Data upload was not completed when finishing collection.");
             return ret;
         }
         uploader->Flush();

@@ -29,6 +29,7 @@
 #include "uploader_mgr.h"
 #include "prof_stamp_pool.h"
 #include "prof_tx_plugin.h"
+#include "msproftx_adaptor.h"
 #define private public
 #define protected public
 #include "msprof_tx_manager.h"
@@ -51,6 +52,12 @@ protected:
     virtual void SetUp() {}
     virtual void TearDown() {}
 };
+
+TEST_F(MSPROF_TEST, MsprofTxLiteAdaptorStub)
+{
+    MsprofTxInit();
+    MsprofTxUnInit();
+}
 
 void func_counter(Reporter* reporter)
 {

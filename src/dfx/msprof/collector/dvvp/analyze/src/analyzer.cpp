@@ -263,7 +263,7 @@ uint64_t Analyzer::GetOpIndexId(uint64_t opTimeStamp)
         }
     }
 
-    MSPROF_LOGI("Unable to get OpIndexID. opNum %d, opTimeStamp %" PRIu64 ".", opNum, opTimeStamp);
+    MSPROF_LOGI("OpIndexID is unavailable, op_num=%d, op_timestamp=%" PRIu64 ".", opNum, opTimeStamp);
     return 0;
 }
 

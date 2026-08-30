@@ -233,6 +233,26 @@ TEST_F(DEVICE_COLLECTION_ENTRY_TEST, FinishCollection)
     EXPECT_EQ(PROFILING_SUCCESS, entry->FinishCollection(0, job_ctx.ToString()));
 }
 
+TEST_F(DEVICE_COLLECTION_ENTRY_TEST, FinishCollectionUploadDataFailed)
+{
+    GlobalMockObject::verify();
+    using UploaderUploadDataFunc = int32_t (analysis::dvvp::transport::Uploader::*)(CONST_VOID_PTR, int32_t);
+    MOCKER_CPP(&analysis::dvvp::transport::Uploader::UploadData, UploaderUploadDataFunc)
+        .stubs()
+        .will(returnValue(PROFILING_FAILED));
+
+    HDC_SESSION session = (HDC_SESSION)0x12345678;
+    auto transport =
+        std::shared_ptr<analysis::dvvp::transport::HDCTransport>(new analysis::dvvp::transport::HDCTransport(session));
+    auto uploader =
+        std::shared_ptr<analysis::dvvp::transport::Uploader>(new analysis::dvvp::transport::Uploader(transport));
+    analysis::dvvp::transport::UploaderMgr::instance()->AddUploader("finish_failed", uploader);
+
+    auto entry = analysis::dvvp::device::CollectionEntry::instance();
+    EXPECT_EQ(PROFILING_FAILED, entry->FinishCollection(0, "finish_failed"));
+    analysis::dvvp::transport::UploaderMgr::instance()->DelUploader("finish_failed");
+}
+
 TEST_F(DEVICE_COLLECTION_ENTRY_TEST, destrcutor)
 {
     GlobalMockObject::verify();

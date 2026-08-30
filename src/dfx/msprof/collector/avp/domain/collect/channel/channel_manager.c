@@ -283,7 +283,7 @@ int32_t ChannelMgrCreateReader(uint32_t deviceId, uint32_t channelId)
     (void)OsalMutexLock(&g_chanMgrAttr.pollMtx);
     int32_t ret = AddChannelReader(deviceId, channelId);
     if (ret != PROFILING_SUCCESS) {
-        MSPROF_LOGI("Failed to create channel reader, deviceId: %d, channelId: %d", deviceId, channelId);
+        MSPROF_LOGI("Channel reader was not created, deviceId=%d, channel_id=%d", deviceId, channelId);
         (void)OsalMutexUnlock(&g_chanMgrAttr.pollMtx);
         return PROFILING_FAILED;
     }

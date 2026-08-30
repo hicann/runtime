@@ -49,7 +49,6 @@ STATIC int32_t SingleProcessStart(std::string& lockInfo)
     int32_t ret = IdeLockFcntl(fd, F_SETLK, lock);
     if (ret < 0) {
         MSPROF_LOGE("ada already exists, don't start again");
-        printf("ada already exists, don't start again\n");
         IDE_MMCLOSE_AND_SET_INVALID(fd);
         // other process has locked the file, must not remove the file
         return IDE_DAEMON_ERROR;

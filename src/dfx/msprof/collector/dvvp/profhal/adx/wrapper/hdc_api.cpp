@@ -537,7 +537,7 @@ int32_t HdcWriteNb(HDC_SESSION session, IdeSendBuffT buf, int32_t len)
 static int32_t FinalizeHdcSessionConnect(hdcError_t error, HDC_SESSION_PTR session)
 {
     if (error != DRV_ERROR_NONE || *session == nullptr) {
-        MSPROF_LOGI("Hdc Session Connect, ret: %d", error);
+        MSPROF_LOGI("HDC session connection was not established, return_code=%d.", error);
         return IDE_DAEMON_ERROR;
     }
 

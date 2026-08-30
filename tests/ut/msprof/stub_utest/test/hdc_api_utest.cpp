@@ -433,6 +433,15 @@ TEST_F(HDC_API_UTEST, HdcSessionConnect)
     EXPECT_EQ(DRV_ERROR_NONE, HdcSessionConnect(peer_node, peer_devid, client, &session));
 }
 
+TEST_F(HDC_API_UTEST, HdcSessionConnect_NullSessionAfterDriverSuccess)
+{
+    HDC_CLIENT client = (HDC_CLIENT)(0x87654321);
+    HDC_SESSION session = nullptr;
+
+    MOCKER(drvHdcSessionConnect).stubs().will(returnValue(DRV_ERROR_NONE));
+    EXPECT_EQ(IDE_DAEMON_ERROR, HdcSessionConnect(0, 0, client, &session));
+}
+
 TEST_F(HDC_API_UTEST, HalHdcSessionConnect)
 {
     int peer_node = 0;
