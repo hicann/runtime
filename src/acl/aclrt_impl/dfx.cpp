@@ -32,16 +32,6 @@ aclError aclrtProfTraceImpl(void* userdata, int32_t length, aclrtStream stream)
 }
 
 #ifdef ACL_RT_API_HOOK_ENABLE
-#if __GNUC__ >= 8
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wcast-function-type"
-#endif // __GNUC__ >= 8
-ACL_RT_FUNC_MAP(ACL_HOOK_DEF)
-ACL_RT_ALLOCATOR_FUNC_MAP(ACL_HOOK_DEF)
-ACL_MDLRI_FUNC_MAP(ACL_HOOK_DEF)
-#if __GNUC__ >= 8
-#pragma GCC diagnostic pop
-#endif // __GNUC__ >= 8
 
 namespace {
 // Cold-path lookup table for SetFunc/GetFunc (string name -> entry pointer).
@@ -64,10 +54,15 @@ aclrtApiEntry* FindHookEntryByName(const char* name)
         return nullptr;
     }
     for (size_t i = 0; i < ACLRT_API_LOOKUP_COUNT; ++i) {
+        if (g_aclrtApiLookup[i].entry == nullptr) {
+            continue;
+        }
         if (strcmp(name, g_aclrtApiLookup[i].name) == 0) {
+            ACL_LOG_DEBUG("Find api, name is [%s].", name);
             return g_aclrtApiLookup[i].entry;
         }
     }
+    ACL_LOG_DEBUG("Cannot find api, name is [%s].", name);
     return nullptr;
 }
 } // namespace
@@ -90,6 +85,7 @@ __attribute__((constructor)) void RegisterApiHookToProf()
     if (ret != 0) {
         ACL_LOG_WARN("MsprofInjectionInitialize failed, prof result = %d", ret);
     }
+    ACL_LOG_DEBUG("Hook init finished.");
 }
 #endif // ACL_RT_API_HOOK_ENABLE
 
