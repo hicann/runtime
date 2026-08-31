@@ -204,6 +204,12 @@ TEST_F(UTEST_ACL_compatibility_enum_check, aclDataType)
 
     dataType = (aclDataType)41;
     EXPECT_EQ(dataType, ACL_FLOAT4_E1M2);
+
+    dataType = (aclDataType)42;
+    EXPECT_EQ(dataType, ACL_HIFLOAT4);
+
+    dataType = (aclDataType)43;
+    EXPECT_EQ(dataType, ACL_HIFLOAT4_SCALE);
 }
 
 TEST_F(UTEST_ACL_compatibility_enum_check, aclFormat)

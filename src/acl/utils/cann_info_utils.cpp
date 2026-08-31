@@ -331,6 +331,10 @@ const char* GetDataTypeDesc(aclDataType type)
             return "FLOAT4_E2M1(40)";
         case ACL_FLOAT4_E1M2:
             return "FLOAT4_E1M2(41)";
+        case ACL_HIFLOAT4:
+            return "HIFLOAT4(42)";
+        case ACL_HIFLOAT4_SCALE:
+            return "HIFLOAT4_SCALE(43)";
         default:
             break;
     }

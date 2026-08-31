@@ -2910,6 +2910,8 @@ TEST_F(UTEST_ACL_Common, GetFuncNameWithoutImplSuffix_multiple_calls)
     EXPECT_EQ("noChange", acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix("noChange"));
 }
 
+TEST_F(UTEST_ACL_Common, AclDataTypeSizeSupportsHiFloat4) { EXPECT_EQ(aclDataTypeSize(ACL_HIFLOAT4), 1U); }
+
 TEST_F(UTEST_ACL_Common, EnumDescUsesNameWithoutAclPrefixAndNumericValue)
 {
     EXPECT_STREQ(GetCaptureModeDesc(ACL_MODEL_RI_CAPTURE_MODE_GLOBAL), "MODEL_RI_CAPTURE_MODE_GLOBAL(0)");
@@ -2945,6 +2947,8 @@ TEST_F(UTEST_ACL_Common, EnumDescUsesNameWithoutAclPrefixAndNumericValue)
     EXPECT_STREQ(GetDataTypeDesc(ACL_FLOAT6_E2M3), "FLOAT6_E2M3(39)");
     EXPECT_STREQ(GetDataTypeDesc(ACL_FLOAT4_E2M1), "FLOAT4_E2M1(40)");
     EXPECT_STREQ(GetDataTypeDesc(ACL_FLOAT4_E1M2), "FLOAT4_E1M2(41)");
+    EXPECT_STREQ(GetDataTypeDesc(ACL_HIFLOAT4), "HIFLOAT4(42)");
+    EXPECT_STREQ(GetDataTypeDesc(ACL_HIFLOAT4_SCALE), "HIFLOAT4_SCALE(43)");
 
     EXPECT_STREQ(GetMemcpyKindDesc(ACL_MEMCPY_HOST_TO_HOST), "MEMCPY_HOST_TO_HOST(0)");
     EXPECT_STREQ(GetMemcpyKindDesc(ACL_MEMCPY_HOST_TO_DEVICE), "MEMCPY_HOST_TO_DEVICE(1)");
