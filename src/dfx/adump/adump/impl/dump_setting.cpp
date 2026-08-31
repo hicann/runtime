@@ -44,7 +44,7 @@ int32_t DumpSetting::DumpOperatorInit(const DumpConfig& dumpConfig)
 {
     bool dumpStatus = dumpStatus_;
     if (!InitDumpStatus(dumpConfig.dumpStatus, dumpStatus)) {
-        IDE_LOGE("Dump status(%s) is not valid.", dumpConfig.dumpStatus.c_str());
+        IDE_LOGE("Dump status(%s) is not valid, valid values are on/off/ON/OFF.", dumpConfig.dumpStatus.c_str());
         return ADUMP_FAILED;
     }
 
@@ -55,7 +55,7 @@ int32_t DumpSetting::DumpOperatorInit(const DumpConfig& dumpConfig)
     }
 
     if (!InitDumpMode(dumpConfig.dumpMode)) {
-        IDE_LOGE("Dump mode(%s) is not valid.", dumpConfig.dumpMode.c_str());
+        IDE_LOGE("Dump mode(%s) is not valid, valid values are input/output/all.", dumpConfig.dumpMode.c_str());
         return ADUMP_FAILED;
     }
 
@@ -85,7 +85,7 @@ int32_t DumpSetting::DumpOverflowInit(const DumpConfig& dumpConfig)
 {
     bool dumpDebugStatus = dumpDebugStatus_;
     if (!InitDumpStatus(dumpConfig.dumpStatus, dumpDebugStatus)) {
-        IDE_LOGE("Dump status(%s) is not valid.", dumpConfig.dumpStatus.c_str());
+        IDE_LOGE("Dump status(%s) is not valid, valid values are on/off/ON/OFF.", dumpConfig.dumpStatus.c_str());
         return ADUMP_FAILED;
     }
 
@@ -97,7 +97,7 @@ int32_t DumpSetting::DumpOverflowInit(const DumpConfig& dumpConfig)
 
     // default all
     if (!InitDumpMode(CONF_DUMP_MODE_ALL)) {
-        IDE_LOGE("Dump mode(%s) is not valid.", dumpConfig.dumpMode.c_str());
+        IDE_LOGE("Dump mode(%s) is not valid, valid values are input/output/all.", CONF_DUMP_MODE_ALL);
         return ADUMP_FAILED;
     }
 

@@ -120,7 +120,8 @@ int32_t ExceptionDumper::ExceptionDumperInit(DumpType dumpType, const DumpConfig
 {
     bool status = false;
     if (!setting_.InitDumpStatus(dumpConfig.dumpStatus, status)) {
-        IDE_LOGE("The value of dumpStatus: %s is invalid.", dumpConfig.dumpStatus.c_str());
+        IDE_LOGE(
+            "The value of dumpStatus: %s is invalid, valid values are on/off/ON/OFF.", dumpConfig.dumpStatus.c_str());
         return ADUMP_FAILED;
     }
 

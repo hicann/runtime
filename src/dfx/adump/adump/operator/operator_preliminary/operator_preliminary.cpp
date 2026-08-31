@@ -214,7 +214,8 @@ int32_t OperatorPreliminary::CreateMemory()
 
     IDE_CTRL_VALUE_FAILED(
         opData_.workspaceSize != 0 && opData_.stackBaseSize != 0, return ADUMP_FAILED,
-        "The workspaceSize is 0 or the stackBaseSize is 0");
+        "workspaceSize=%" PRIu64 " bytes, stackBaseSize=%" PRIu64 " bytes, both must be non-zero",
+        opData_.workspaceSize, opData_.stackBaseSize);
     IDE_LOGI(
         "Calculate MsgQ Size:%" PRIu64 "Byte, output size:%" PRIu64 "Byte, workspace size:%" PRIu64 "Byte,"
         "stack base size:%" PRIu64 "Byte on device %u.",

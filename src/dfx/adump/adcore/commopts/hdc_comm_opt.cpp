@@ -91,7 +91,9 @@ OptHandle HdcCommOpt::OpenClient(const std::map<std::string, std::string>& info)
     }
 
     if (type >= HDC_SERVICE_TYPE_MAX) {
-        IDE_LOGE("open client input type out of range");
+        IDE_LOGE(
+            "open client input type reaches or exceeds the upper bound, type=%d, upper bound=%d (exclusive)",
+            static_cast<int32_t>(type), static_cast<int32_t>(HDC_SERVICE_TYPE_MAX));
         return ADX_OPT_INVALID_HANDLE;
     }
 

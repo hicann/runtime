@@ -135,6 +135,7 @@ set(adumpBaseUtestSrcList
     ${ADUMP_BASE_UT_ROOT_PATH}/testcase/exception/dump_ELF_utest.cpp
     ${ADUMP_BASE_UT_ROOT_PATH}/testcase/exception/dump_core_utest.cpp
     ${ADUMP_BASE_UT_ROOT_PATH}/testcase/exception/dump_file_utest.cpp
+    ${ADUMP_BASE_UT_ROOT_PATH}/testcase/exception/dump_file_mc2_utest.cpp
     ${ADUMP_BASE_UT_ROOT_PATH}/testcase/exception/kernel_symbol_locator_utest.cpp
     ${ADUMP_BASE_UT_ROOT_PATH}/testcase/exception/kernel_source_symbolizer_utest.cpp
     ${ADUMP_BASE_UT_ROOT_PATH}/testcase/exception/kernel_pc_fixer_utest.cpp

@@ -461,7 +461,6 @@ void DumpFile::HandleMc2CtxV1(const void* hostData, uint64_t& totalSize, std::ve
     const HcclCombinOpParam* param = static_cast<const HcclCombinOpParam*>(hostData);
     dataList.emplace_back(
         reinterpret_cast<const void*>(param->mc2WorkSpace.workSpace), param->mc2WorkSpace.workSpaceSize);
-    totalSize += param->mc2WorkSpace.workSpaceSize;
     IDE_LOGI(
         "[Dump][Exception] MC2 workspace addr 0x%llx and size %llu bytes, rankId %u", param->mc2WorkSpace.workSpace,
         param->mc2WorkSpace.workSpaceSize, param->rankId);
@@ -475,21 +474,23 @@ void DumpFile::HandleMc2CtxV1(const void* hostData, uint64_t& totalSize, std::ve
     } else {
         dataList.emplace_back(nullptr, param->winSize); // windowsIn 占位
         dataList.emplace_back(nullptr, param->winSize); // windowsOut 占位
-        IDE_LOGW("[Dump][Exception] MC2 winSize %llu bytes, rankId is invalid, max rankId %u", RANK_NUM);
+        IDE_LOGW(
+            "[Dump][Exception] MC2 winSize %llu bytes, rankId %u is invalid, valid range [0, %u)", param->winSize,
+            param->rankId, RANK_NUM);
     }
-    totalSize += param->winSize + param->winSize;
-
     const void* deviceDataPtr = reinterpret_cast<const void*>(param->ibverbsData);
     dataList.emplace_back(deviceDataPtr, param->ibverbsDataSize);
-    totalSize += param->ibverbsDataSize;
+    totalSize += param->mc2WorkSpace.workSpaceSize + param->winSize + param->winSize + param->ibverbsDataSize;
 
     if (param->rankId >= param->ibverbsDataSize / sizeof(IbVerbsData)) {
-        IDE_LOGW("[Dump][Exception] MC2 ibverbsData size %llu bytes, rankId out of range", param->ibverbsDataSize);
+        IDE_LOGW(
+            "[Dump][Exception] MC2 ibverbsData size %llu bytes, rankId %u is out of range, valid range [0, %llu)",
+            param->ibverbsDataSize, param->rankId,
+            static_cast<unsigned long long>(param->ibverbsDataSize / sizeof(IbVerbsData)));
         return;
     }
 
-    int32_t ret = DumpMemory::CheckDeviceMemory(deviceId_, deviceDataPtr);
-    if (ret == ADUMP_SUCCESS) {
+    if (DumpMemory::CheckDeviceMemory(deviceId_, deviceDataPtr) == ADUMP_SUCCESS) {
         void* hostDataPtr = DumpMemory::CopyDeviceToHost(deviceDataPtr, param->ibverbsDataSize);
         if (hostDataPtr != nullptr) {
             IbVerbsData* ibverbsData = static_cast<IbVerbsData*>(hostDataPtr);
