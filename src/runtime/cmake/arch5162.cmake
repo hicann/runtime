@@ -104,7 +104,7 @@ set(libruntime_api_impl_src_files
     ${RUNTIME_API_DIR}/impl/api_impl_kernel_args_stub.cc
     ${RUNTIME_API_DIR}/impl/api_impl_creator.cc
     ${RUNTIME_API_DIR}/impl/api_impl_mbuf_stub.cc
-    ${RUNTIME_API_DIR}/impl/api_impl_esched.cc
+    ${RUNTIME_API_DIR}/impl/api_impl_esched_stub.cc
     ${RUNTIME_API_DIR}/impl/api_impl_event_common.cc
     ${RUNTIME_API_DIR}/impl/api_impl_stub.cc
     ${RUNTIME_API_DIR}/impl/api_impl_arch5162.cc
@@ -210,6 +210,7 @@ set(libruntime_src_files_include_for_arch5162
     ${RUNTIME_CORE_DIR}/src/pool/event_pool_tiny_stub.cc
     ${RUNTIME_CORE_DIR}/src/pool/event_expanding_tiny_stub.cc
     ${RUNTIME_DIR}/src/runtime/driver/npu_driver_tiny_stub.cc
+    ${RUNTIME_DIR}/src/runtime/driver/npu_driver_esched_stub.cc
     ${RUNTIME_CORE_DIR}/src/engine/engine_factory_tiny_stub.cc
     ${RUNTIME_CORE_DIR}/src/task/tiny/rdma_task_tiny_stub.cc
     ${RUNTIME_FEATURE_DIR}/ffts/ffts_task_tiny_stub.cc
@@ -449,7 +450,6 @@ macro(add_runtime_library target_name)
         ${RUNTIME_DIR}/src/runtime/driver/npu_driver.cc
         ${RUNTIME_DIR}/src/runtime/driver/npu_driver_mem.cc
         ${RUNTIME_DIR}/src/runtime/driver/npu_driver_queue.cc
-        ${RUNTIME_DIR}/src/runtime/driver/npu_driver_esched.cc
         ${RUNTIME_DIR}/src/runtime/driver/npu_driver_res.cc
         ${RUNTIME_DIR}/src/runtime/driver/npu_driver_tiny.cpp
         ${RUNTIME_DIR}/src/runtime/driver/npu_driver_dcache_lock_common.cpp

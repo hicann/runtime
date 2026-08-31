@@ -25,7 +25,7 @@ rtError_t rtEschedSubmitEventSync(int32_t devId, rtEschedEventSummary_t* evt, rt
     ApiEsched* const apiEschedInstance = ApiEsched::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiEschedInstance);
     const rtError_t error = apiEschedInstance->EschedSubmitEventSync(devId, evt, ack);
-    COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT); // special state
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }

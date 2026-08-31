@@ -12480,16 +12480,6 @@ TEST_F(ApiDavidTest, api_decorator_debug_esched_forwarding)
     error = api.DebugUnRegisterForStream(nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::EschedSubmitEventSync).stubs().will(returnValue(RT_ERROR_NONE));
-    rtEschedEventSummary_t evtSum = {};
-    rtEschedEventReply_t evtReply = {};
-    error = api.EschedSubmitEventSync(0, &evtSum, &evtReply);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::EschedWaitEvent).stubs().will(returnValue(RT_ERROR_NONE));
-    error = api.EschedWaitEvent(0, 0U, 0U, 0, &evtSum);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
     MOCKER_CPP_VIRTUAL(impl, &ApiImpl::NpuGetFloatStatus).stubs().will(returnValue(RT_ERROR_NONE));
     error = api.NpuGetFloatStatus(nullptr, 0U, 0U, nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -12619,14 +12609,6 @@ TEST_F(ApiDavidTest, api_error_decorator_forwarding_part2)
     rtMemQueueShareAttr_t attr = {};
     error = api.MemQueueGrant(0, 0U, 0, nullptr);
     EXPECT_NE(error, RT_ERROR_NONE);
-
-    rtEschedEventSummary_t evtSum = {};
-    error = api.EschedWaitEvent(0, 0U, 0U, 0, nullptr);
-    EXPECT_NE(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::EschedSubscribeEvent).stubs().will(returnValue(RT_ERROR_NONE));
-    error = api.EschedSubscribeEvent(0, 0U, 0U, 0U);
-    EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = api.MemcpyHostTask(nullptr, 0U, nullptr, 0U, RT_MEMCPY_DEVICE_TO_DEVICE, nullptr);
     EXPECT_NE(error, RT_ERROR_NONE);

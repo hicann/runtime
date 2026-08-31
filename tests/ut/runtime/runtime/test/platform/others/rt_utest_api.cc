@@ -342,10 +342,6 @@ TEST_F(ApiTest, testGetTaskBufferLenTest)
     error = apiDec.FreeKernelBin(NULL);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::EschedQueryInfo).stubs().will(returnValue(RT_ERROR_NONE));
-    error = apiDec.EschedQueryInfo(1, RT_QUERY_TYPE_LOCAL_GRP_ID, NULL, NULL);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
     MOCKER_CPP_VIRTUAL(impl, &ApiImpl::ModelCheckArchVersion).stubs().will(returnValue(RT_ERROR_NONE));
     error = apiDec.ModelCheckArchVersion(NULL);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -469,10 +465,6 @@ TEST_F(ApiTest, testBuffAllocTest)
 
     MOCKER_CPP_VIRTUAL(impl, &ApiImpl::BuffFree).stubs().will(returnValue(RT_ERROR_NONE));
     error = apiDec.BuffFree(NULL);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::EschedSubscribeEvent).stubs().will(returnValue(RT_ERROR_NONE));
-    error = apiDec.EschedSubscribeEvent(1, 1, 1, 1);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 

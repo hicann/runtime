@@ -699,8 +699,6 @@ public:
     rtError_t MemQueueGrant(
         const int32_t devId, const uint32_t qid, const int32_t pid, rtMemQueueShareAttr_t* const attr) override;
     rtError_t MemQueueAttach(const int32_t devId, const uint32_t qid, const int32_t timeOut) override;
-    rtError_t EschedSubmitEventSync(
-        const int32_t devId, rtEschedEventSummary_t* const evt, rtEschedEventReply_t* const ack) override;
     rtError_t QueryDevPid(rtBindHostpidInfo_t* const info, int32_t* const devPid) override;
     rtError_t BuffAlloc(const uint64_t size, void** buff) override;
     rtError_t BuffConfirm(void* const buff, const uint64_t size) override;
@@ -720,18 +718,6 @@ public:
     rtError_t QueueSubscribe(
         const int32_t devId, const uint32_t qId, const uint32_t groupId, const int32_t type) override;
     rtError_t BufEventTrigger(const char_t* const name) override;
-    rtError_t EschedAttachDevice(const uint32_t devId) override;
-    rtError_t EschedDettachDevice(const uint32_t devId) override;
-    rtError_t EschedWaitEvent(
-        const int32_t devId, const uint32_t grpId, const uint32_t threadId, const int32_t timeout,
-        rtEschedEventSummary_t* const evt) override;
-    rtError_t EschedCreateGrp(const int32_t devId, const uint32_t grpId, const rtGroupType_t type) override;
-    rtError_t EschedSubmitEvent(const int32_t devId, rtEschedEventSummary_t* const evt) override;
-    rtError_t EschedSubscribeEvent(
-        const int32_t devId, const uint32_t grpId, const uint32_t threadId, const uint64_t eventBitmap) override;
-    rtError_t EschedAckEvent(
-        const int32_t devId, const rtEventIdType_t evtId, const uint32_t subeventId, char_t* const msg,
-        const uint32_t len) override;
     rtError_t CmoTaskLaunch(const rtCmoTaskInfo_t* const taskInfo, Stream* const stm, const uint32_t flag) override;
     rtError_t CmoAddrTaskLaunch(
         void* cmoAddrInfo, const uint64_t destMax, const rtCmoOpCode_t cmoOpCode, Stream* const stm,
@@ -754,9 +740,6 @@ public:
     rtError_t GetDeviceSatStatus(void* const outputAddrPtr, const uint64_t outputSize, Stream* const stm) override;
     rtError_t CleanDeviceSatStatus(Stream* const stm) override;
     rtError_t GetAllUtilizations(const int32_t devId, const rtTypeUtil_t kind, uint8_t* const util) override;
-    rtError_t EschedQueryInfo(
-        const uint32_t devId, const rtEschedQueryType type, rtEschedInputInfo* inPut,
-        rtEschedOutputInfo* outPut) override;
     rtError_t BindHostPid(rtBindHostpidInfo info) override;
     rtError_t UnbindHostPid(rtBindHostpidInfo info) override;
     rtError_t QueryProcessHostPid(

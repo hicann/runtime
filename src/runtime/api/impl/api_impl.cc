@@ -5704,80 +5704,10 @@ rtError_t ApiImpl::QueueSubscribe(const int32_t devId, const uint32_t qId, const
 
 rtError_t ApiImpl::BufEventTrigger(const char_t* const name) { return NpuDriver::BufEventTrigger(name); }
 
-rtError_t ApiImpl::EschedSubmitEventSync(
-    const int32_t devId, rtEschedEventSummary_t* const evt, rtEschedEventReply_t* const ack)
-{
-    RT_LOG(RT_LOG_INFO, "Start to submit event on drv devId %d.", devId);
-    COND_RETURN_ERROR(
-        CheckCurCtxValid(devId) != RT_ERROR_NONE, RT_ERROR_CONTEXT_NULL, "Current Context is null, drv devId[%d].",
-        devId);
-    return NpuDriver::EschedSubmitEventSync(devId, evt, ack);
-}
-
 rtError_t ApiImpl::QueryDevPid(rtBindHostpidInfo_t* const info, int32_t* const devPid)
 {
     RT_LOG(RT_LOG_INFO, "Start to query device pid.");
     return NpuDriver::QueryDevPid(info, devPid);
-}
-
-rtError_t ApiImpl::EschedAttachDevice(const uint32_t devId)
-{
-    COND_RETURN_ERROR(
-        CheckCurCtxValid(static_cast<int32_t>(devId)) != RT_ERROR_NONE, RT_ERROR_CONTEXT_NULL,
-        "Current Context is null, drv devId[%lu].", devId);
-    return NpuDriver::EschedAttachDevice(devId);
-}
-
-rtError_t ApiImpl::EschedDettachDevice(const uint32_t devId)
-{
-    COND_RETURN_ERROR(
-        CheckCurCtxValid(static_cast<int32_t>(devId)) != RT_ERROR_NONE, RT_ERROR_CONTEXT_NULL,
-        "Current Context is null, drv devId[%lu].", devId);
-    return NpuDriver::EschedDettachDevice(devId);
-}
-
-rtError_t ApiImpl::EschedWaitEvent(
-    const int32_t devId, const uint32_t grpId, const uint32_t threadId, const int32_t timeout,
-    rtEschedEventSummary_t* const evt)
-{
-    COND_RETURN_ERROR(
-        CheckCurCtxValid(devId) != RT_ERROR_NONE, RT_ERROR_CONTEXT_NULL, "Current Context is null, drv devId[%d].",
-        devId);
-    return NpuDriver::EschedWaitEvent(devId, grpId, threadId, timeout, evt);
-}
-
-rtError_t ApiImpl::EschedCreateGrp(const int32_t devId, const uint32_t grpId, const rtGroupType_t type)
-{
-    COND_RETURN_ERROR(
-        CheckCurCtxValid(devId) != RT_ERROR_NONE, RT_ERROR_CONTEXT_NULL, "Current Context is null, drv devId[%d].",
-        devId);
-    return NpuDriver::EschedCreateGrp(devId, grpId, type);
-}
-
-rtError_t ApiImpl::EschedSubmitEvent(const int32_t devId, rtEschedEventSummary_t* const evt)
-{
-    COND_RETURN_ERROR(
-        CheckCurCtxValid(devId) != RT_ERROR_NONE, RT_ERROR_CONTEXT_NULL, "Current Context is null, drv devId[%d].",
-        devId);
-    return NpuDriver::EschedSubmitEvent(devId, evt);
-}
-
-rtError_t ApiImpl::EschedSubscribeEvent(
-    const int32_t devId, const uint32_t grpId, const uint32_t threadId, const uint64_t eventBitmap)
-{
-    COND_RETURN_ERROR(
-        CheckCurCtxValid(devId) != RT_ERROR_NONE, RT_ERROR_CONTEXT_NULL, "Current Context is null, drv devId[%d].",
-        devId);
-    return NpuDriver::EschedSubscribeEvent(devId, grpId, threadId, eventBitmap);
-}
-
-rtError_t ApiImpl::EschedAckEvent(
-    const int32_t devId, const rtEventIdType_t evtId, const uint32_t subeventId, char_t* const msg, const uint32_t len)
-{
-    COND_RETURN_ERROR(
-        CheckCurCtxValid(devId) != RT_ERROR_NONE, RT_ERROR_CONTEXT_NULL, "Current Context is null, drv devId[%d].",
-        devId);
-    return NpuDriver::EschedAckEvent(devId, evtId, subeventId, msg, len);
 }
 
 rtError_t ApiImpl::BuffAlloc(const uint64_t size, void** buff)
@@ -6213,16 +6143,6 @@ rtError_t ApiImpl::FreeKernelBin(char_t* const buffer)
     RT_LOG(RT_LOG_INFO, "FreeKernelBin");
     const rtError_t error = Runtime::Instance()->FreeKernelBin(buffer);
     return error;
-}
-
-rtError_t ApiImpl::EschedQueryInfo(
-    const uint32_t devId, const rtEschedQueryType type, rtEschedInputInfo* inPut, rtEschedOutputInfo* outPut)
-{
-    RT_LOG(RT_LOG_INFO, "Start to Query Esched Info");
-    COND_RETURN_ERROR(
-        CheckCurCtxValid(static_cast<int32_t>(devId)) != RT_ERROR_NONE, RT_ERROR_CONTEXT_NULL,
-        "Current Context is null, drv devId[%lu].", devId);
-    return NpuDriver::EschedQueryInfo(devId, type, inPut, outPut);
 }
 
 rtError_t ApiImpl::GetDevArgsAddr(Stream* const stm, rtArgsEx_t* const argsInfo, void** devArgsAddr, void** argsHandle)

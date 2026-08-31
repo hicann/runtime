@@ -1389,12 +1389,6 @@ rtError_t ApiDecorator::MemQueueAttach(const int32_t devId, const uint32_t qid, 
     return impl_->MemQueueAttach(devId, qid, timeOut);
 }
 
-rtError_t ApiDecorator::EschedSubmitEventSync(
-    const int32_t devId, rtEschedEventSummary_t* const evt, rtEschedEventReply_t* const ack)
-{
-    return impl_->EschedSubmitEventSync(devId, evt, ack);
-}
-
 rtError_t ApiDecorator::QueryDevPid(rtBindHostpidInfo_t* const info, int32_t* const devPid)
 {
     return impl_->QueryDevPid(info, devPid);
@@ -1470,39 +1464,6 @@ rtError_t ApiDecorator::MemCopy2DAsync(
     const uint64_t height, Stream* const stm, const rtMemcpyKind_t kind, const rtMemcpyKind newKind)
 {
     return impl_->MemCopy2DAsync(dst, dstPitch, src, srcPitch, width, height, stm, kind, newKind);
-}
-
-rtError_t ApiDecorator::EschedAttachDevice(const uint32_t devId) { return impl_->EschedAttachDevice(devId); }
-
-rtError_t ApiDecorator::EschedDettachDevice(const uint32_t devId) { return impl_->EschedDettachDevice(devId); }
-
-rtError_t ApiDecorator::EschedWaitEvent(
-    const int32_t devId, const uint32_t grpId, const uint32_t threadId, const int32_t timeout,
-    rtEschedEventSummary_t* const evt)
-{
-    return impl_->EschedWaitEvent(devId, grpId, threadId, timeout, evt);
-}
-
-rtError_t ApiDecorator::EschedCreateGrp(const int32_t devId, const uint32_t grpId, const rtGroupType_t type)
-{
-    return impl_->EschedCreateGrp(devId, grpId, type);
-}
-
-rtError_t ApiDecorator::EschedSubmitEvent(const int32_t devId, rtEschedEventSummary_t* const evt)
-{
-    return impl_->EschedSubmitEvent(devId, evt);
-}
-
-rtError_t ApiDecorator::EschedSubscribeEvent(
-    const int32_t devId, const uint32_t grpId, const uint32_t threadId, const uint64_t eventBitmap)
-{
-    return impl_->EschedSubscribeEvent(devId, grpId, threadId, eventBitmap);
-}
-
-rtError_t ApiDecorator::EschedAckEvent(
-    const int32_t devId, const rtEventIdType_t evtId, const uint32_t subeventId, char_t* const msg, const uint32_t len)
-{
-    return impl_->EschedAckEvent(devId, evtId, subeventId, msg, len);
 }
 
 rtError_t ApiDecorator::CmoTaskLaunch(const rtCmoTaskInfo_t* const taskInfo, Stream* const stm, const uint32_t flag)
@@ -1666,12 +1627,6 @@ rtError_t ApiDecorator::BinaryGetGlobal(const Program* const binHandle, const ch
 }
 
 rtError_t ApiDecorator::FreeKernelBin(char_t* const buffer) { return impl_->FreeKernelBin(buffer); }
-
-rtError_t ApiDecorator::EschedQueryInfo(
-    const uint32_t devId, const rtEschedQueryType type, rtEschedInputInfo* inPut, rtEschedOutputInfo* outPut)
-{
-    return impl_->EschedQueryInfo(devId, type, inPut, outPut);
-}
 
 rtError_t ApiDecorator::ModelCheckArchVersion(const char_t* omsocVersion)
 {

@@ -719,6 +719,42 @@ RUNTIME_API(mbuf, rtError_t, rtMbufChainGetMbuf,
     (rtMbufPtr_t memBufChainHead, uint32_t index, rtMbufPtr_t* memBuf),
     (memBufChainHead, index, memBuf), FEATURE_NOT_SUPPORT, EXPORT)
 
+RUNTIME_API(esched, rtError_t, rtEschedSubmitEventSync,
+    (int32_t devId, rtEschedEventSummary_t* evt, rtEschedEventReply_t* ack),
+    (devId, evt, ack), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(esched, rtError_t, rtEschedAttachDevice,
+    (int32_t devId),
+    (devId), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(esched, rtError_t, rtEschedDettachDevice,
+    (int32_t devId),
+    (devId), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(esched, rtError_t, rtEschedWaitEvent,
+    (int32_t devId, uint32_t grpId, uint32_t threadId, int32_t timeout, rtEschedEventSummary_t* evt),
+    (devId, grpId, threadId, timeout, evt), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(esched, rtError_t, rtEschedCreateGrp,
+    (int32_t devId, uint32_t grpId, rtGroupType_t type),
+    (devId, grpId, type), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(esched, rtError_t, rtEschedSubmitEvent,
+    (int32_t devId, rtEschedEventSummary_t* evt),
+    (devId, evt), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(esched, rtError_t, rtEschedSubscribeEvent,
+    (int32_t devId, uint32_t grpId, uint32_t threadId, uint64_t eventBitmap),
+    (devId, grpId, threadId, eventBitmap), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(esched, rtError_t, rtEschedAckEvent,
+    (int32_t devId, rtEventIdType_t evtId, uint32_t subEvtId, char_t* msg, uint32_t len),
+    (devId, evtId, subEvtId, msg, len), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(esched, rtError_t, rtEschedQueryInfo,
+    (const uint32_t devId, const rtEschedQueryType type, rtEschedInputInfo* inPut, rtEschedOutputInfo* outPut),
+    (devId, type, inPut, outPut), FEATURE_NOT_SUPPORT, EXPORT)
+
 // These providers were previously omitted with their complete source files.
 // Keep them hidden while providing a deterministic unsupported implementation.
 RUNTIME_API(standard_soc, rtError_t, rtSetKernelDfxInfoCallback,
@@ -924,45 +960,6 @@ RUNTIME_API(stars, rtError_t, rtDvppWaitGroupReport,
 RUNTIME_API(device, rtError_t, rtEnableP2P,
     (uint32_t devIdDes, uint32_t phyIdSrc, uint32_t flag),
     (devIdDes, phyIdSrc, flag), FEATURE_NOT_SUPPORT, EXPORT)
-
-RUNTIME_API(memory, rtError_t, rtEschedAckEvent,
-    (int32_t devId, rtEventIdType_t evtId, uint32_t subEvtId, char_t* msg, uint32_t len),
-    (devId, evtId, subEvtId, msg, len), FEATURE_NOT_SUPPORT, EXPORT)
-
-RUNTIME_API(memory, rtError_t, rtEschedAttachDevice,
-    (int32_t devId),
-    (devId), FEATURE_NOT_SUPPORT, EXPORT)
-
-RUNTIME_API(memory, rtError_t, rtEschedCreateGrp,
-    (int32_t devId, uint32_t grpId, rtGroupType_t type),
-    (devId, grpId, type), FEATURE_NOT_SUPPORT, EXPORT)
-
-RUNTIME_API(memory, rtError_t, rtEschedDettachDevice,
-    (int32_t devId),
-    (devId), FEATURE_NOT_SUPPORT, EXPORT)
-
-RUNTIME_API(memory, rtError_t, rtEschedQueryInfo,
-    (const uint32_t devId,
-     const rtEschedQueryType type,
-     rtEschedInputInfo* inPut,
-     rtEschedOutputInfo* outPut),
-    (devId, type, inPut, outPut), FEATURE_NOT_SUPPORT, EXPORT)
-
-RUNTIME_API(memory, rtError_t, rtEschedSubmitEvent,
-    (int32_t devId, rtEschedEventSummary_t* evt),
-    (devId, evt), FEATURE_NOT_SUPPORT, EXPORT)
-
-RUNTIME_API(memory, rtError_t, rtEschedSubmitEventSync,
-    (int32_t devId, rtEschedEventSummary_t* evt, rtEschedEventReply_t* ack),
-    (devId, evt, ack), FEATURE_NOT_SUPPORT, EXPORT)
-
-RUNTIME_API(memory, rtError_t, rtEschedSubscribeEvent,
-    (int32_t devId, uint32_t grpId, uint32_t threadId, uint64_t eventBitmap),
-    (devId, grpId, threadId, eventBitmap), FEATURE_NOT_SUPPORT, EXPORT)
-
-RUNTIME_API(memory, rtError_t, rtEschedWaitEvent,
-    (int32_t devId, uint32_t grpId, uint32_t threadId, int32_t timeout, rtEschedEventSummary_t* evt),
-    (devId, grpId, threadId, timeout, evt), FEATURE_NOT_SUPPORT, EXPORT)
 
 RUNTIME_API(event, rtError_t, rtEventQuery,
     (rtEvent_t evt),

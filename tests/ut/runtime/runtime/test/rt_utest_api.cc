@@ -6048,10 +6048,6 @@ TEST_F(ApiTest, api_event_test)
     error = api.EventSynchronize(&event);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::EschedSubmitEventSync).stubs().will(returnValue(RT_ERROR_NONE));
-    error = api.EschedSubmitEventSync(0, NULL, NULL);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
     MOCKER_CPP_VIRTUAL(impl, &ApiImpl::QueueSubF2NFEvent).stubs().will(returnValue(RT_ERROR_NONE));
     error = api.QueueSubF2NFEvent(0, 0, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -9026,16 +9022,6 @@ TEST_F(ApiTest, api_decorator_debug_esched_forwarding)
 
     MOCKER_CPP_VIRTUAL(impl, &ApiImpl::DebugUnRegisterForStream).stubs().will(returnValue(RT_ERROR_NONE));
     error = api.DebugUnRegisterForStream(nullptr);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::EschedSubmitEventSync).stubs().will(returnValue(RT_ERROR_NONE));
-    rtEschedEventSummary_t evtSum = {};
-    rtEschedEventReply_t evtReply = {};
-    error = api.EschedSubmitEventSync(0, &evtSum, &evtReply);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::EschedWaitEvent).stubs().will(returnValue(RT_ERROR_NONE));
-    error = api.EschedWaitEvent(0, 0U, 0U, 0, &evtSum);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     MOCKER_CPP_VIRTUAL(impl, &ApiImpl::NpuGetFloatStatus).stubs().will(returnValue(RT_ERROR_NONE));

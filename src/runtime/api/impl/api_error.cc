@@ -5419,27 +5419,6 @@ rtError_t ApiErrorDecorator::MemQueueAttach(const int32_t devId, const uint32_t 
     return impl_->MemQueueAttach(realDeviceId, qid, timeOut);
 }
 
-rtError_t ApiErrorDecorator::EschedSubmitEventSync(
-    const int32_t devId, rtEschedEventSummary_t* const evt, rtEschedEventReply_t* const ack)
-{
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(evt, RT_ERROR_INVALID_VALUE, "Synchronous event submission");
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(ack, RT_ERROR_INVALID_VALUE, "Synchronous event submission");
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
-        ((evt->eventId != RT_MQ_SCHED_EVENT_QS_MSG) && (evt->eventId != RT_MQ_SCHED_EVENT_DRV_CUSTOM_MSG)),
-        RT_ERROR_FEATURE_NOT_SUPPORT, "Synchronous event submission", evt->eventId,
-        std::to_string(RT_MQ_SCHED_EVENT_QS_MSG) + " or " + std::to_string(RT_MQ_SCHED_EVENT_DRV_CUSTOM_MSG));
-    int32_t realDeviceId = 0;
-    if (IsHostCpuDevId(devId)) {
-        realDeviceId = DEFAULT_HOSTCPU_LOGIC_DEVICE_ID;
-    } else {
-        const rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(
-            static_cast<uint32_t>(devId), RtPtrToPtr<uint32_t*>(&realDeviceId));
-        COND_RETURN_ERROR(
-            error != RT_ERROR_NONE, error, "Failed to convert the user device ID %d to driver device ID.", devId);
-    }
-    return impl_->EschedSubmitEventSync(realDeviceId, evt, ack);
-}
-
 rtError_t ApiErrorDecorator::MemQueueEnQueueBuff(
     const int32_t devId, const uint32_t qid, rtMemQueueBuff_t* const inBuf, const int32_t timeout)
 {
@@ -5657,115 +5636,6 @@ rtError_t ApiErrorDecorator::MemQueueGetQidByName(const int32_t devId, const cha
             error != RT_ERROR_NONE, error, "Failed to convert the user device ID %d to driver device ID.", devId);
     }
     return impl_->MemQueueGetQidByName(realDeviceId, name, qId);
-}
-
-rtError_t ApiErrorDecorator::EschedAttachDevice(const uint32_t devId)
-{
-    uint32_t realDeviceId = 0U;
-    /* HostCPU场景下, 底软三件套(Mbuff/队列调度/事件调度)接口无需对DeviceID做转换 */
-    if (IsHostCpuDevId(static_cast<int32_t>(devId))) {
-        realDeviceId = static_cast<uint32_t>(DEFAULT_HOSTCPU_LOGIC_DEVICE_ID);
-    } else {
-        const rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(devId, &realDeviceId);
-        COND_RETURN_ERROR(
-            error != RT_ERROR_NONE, error, "Failed to convert the user device ID %u to driver device ID.", devId);
-    }
-    return impl_->EschedAttachDevice(realDeviceId);
-}
-
-rtError_t ApiErrorDecorator::EschedDettachDevice(const uint32_t devId)
-{
-    uint32_t realDeviceId = 0U;
-    if (IsHostCpuDevId(static_cast<int32_t>(devId))) {
-        realDeviceId = static_cast<uint32_t>(DEFAULT_HOSTCPU_LOGIC_DEVICE_ID);
-    } else {
-        const rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(devId, &realDeviceId);
-        COND_RETURN_ERROR(
-            error != RT_ERROR_NONE, error, "Failed to convert the user device ID %u to driver device ID.", devId);
-    }
-    return impl_->EschedDettachDevice(realDeviceId);
-}
-
-rtError_t ApiErrorDecorator::EschedWaitEvent(
-    const int32_t devId, const uint32_t grpId, const uint32_t threadId, const int32_t timeout,
-    rtEschedEventSummary_t* const evt)
-{
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(evt, RT_ERROR_INVALID_VALUE, "Waiting for an event");
-    int32_t realDeviceId = 0;
-    if (IsHostCpuDevId(devId)) {
-        realDeviceId = DEFAULT_HOSTCPU_LOGIC_DEVICE_ID;
-    } else {
-        const rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(
-            static_cast<uint32_t>(devId), RtPtrToPtr<uint32_t*>(&realDeviceId));
-        COND_RETURN_ERROR(
-            error != RT_ERROR_NONE, error, "Failed to convert the user device ID %d to driver device ID.", devId);
-    }
-    return impl_->EschedWaitEvent(realDeviceId, grpId, threadId, timeout, evt);
-}
-
-rtError_t ApiErrorDecorator::EschedCreateGrp(const int32_t devId, const uint32_t grpId, const rtGroupType_t type)
-{
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
-        (type < RT_GRP_TYPE_BIND_DP_CPU) || (type > RT_GRP_TYPE_BIND_DP_CPU_EXCLUSIVE), RT_ERROR_INVALID_VALUE,
-        "Creating an event scheduling group", type,
-        "[" + std::to_string(RT_GRP_TYPE_BIND_DP_CPU) + ", " + std::to_string(RT_GRP_TYPE_BIND_DP_CPU_EXCLUSIVE) + "]");
-
-    int32_t realDeviceId = 0;
-    if (IsHostCpuDevId(devId)) {
-        realDeviceId = DEFAULT_HOSTCPU_LOGIC_DEVICE_ID;
-    } else {
-        const rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(
-            static_cast<uint32_t>(devId), RtPtrToPtr<uint32_t*>(&realDeviceId));
-        COND_RETURN_ERROR(
-            error != RT_ERROR_NONE, error, "Failed to convert the user device ID %d to driver device ID.", devId);
-    }
-    return impl_->EschedCreateGrp(realDeviceId, grpId, type);
-}
-
-rtError_t ApiErrorDecorator::EschedSubmitEvent(const int32_t devId, rtEschedEventSummary_t* const evt)
-{
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(evt, RT_ERROR_INVALID_VALUE, "Event submission");
-    int32_t realDeviceId = 0;
-    if (IsHostCpuDevId(devId)) {
-        realDeviceId = DEFAULT_HOSTCPU_LOGIC_DEVICE_ID;
-    } else {
-        const rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(
-            static_cast<uint32_t>(devId), RtPtrToPtr<uint32_t*>(&realDeviceId));
-        COND_RETURN_ERROR(
-            error != RT_ERROR_NONE, error, "Failed to convert the user device ID %d to driver device ID.", devId);
-    }
-    return impl_->EschedSubmitEvent(realDeviceId, evt);
-}
-
-rtError_t ApiErrorDecorator::EschedSubscribeEvent(
-    const int32_t devId, const uint32_t grpId, const uint32_t threadId, const uint64_t eventBitmap)
-{
-    int32_t realDeviceId = 0;
-    if (IsHostCpuDevId(devId)) {
-        realDeviceId = DEFAULT_HOSTCPU_LOGIC_DEVICE_ID;
-    } else {
-        const rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(
-            static_cast<uint32_t>(devId), RtPtrToPtr<uint32_t*>(&realDeviceId));
-        COND_RETURN_ERROR(
-            error != RT_ERROR_NONE, error, "Failed to convert the user device ID %d to driver device ID.", devId);
-    }
-    return impl_->EschedSubscribeEvent(realDeviceId, grpId, threadId, eventBitmap);
-}
-
-rtError_t ApiErrorDecorator::EschedAckEvent(
-    const int32_t devId, const rtEventIdType_t evtId, const uint32_t subeventId, char_t* const msg, const uint32_t len)
-{
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(msg, RT_ERROR_INVALID_VALUE, "Event confirmation");
-    int32_t realDeviceId = 0;
-    if (IsHostCpuDevId(devId)) {
-        realDeviceId = DEFAULT_HOSTCPU_LOGIC_DEVICE_ID;
-    } else {
-        const rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(
-            static_cast<uint32_t>(devId), RtPtrToPtr<uint32_t*>(&realDeviceId));
-        COND_RETURN_ERROR(
-            error != RT_ERROR_NONE, error, "Failed to convert the user device ID %d to driver device ID.", devId);
-    }
-    return impl_->EschedAckEvent(realDeviceId, evtId, subeventId, msg, len);
 }
 
 rtError_t ApiErrorDecorator::CheckDeviceIdIsValid(const int32_t devId) const
@@ -6173,22 +6043,6 @@ rtError_t ApiErrorDecorator::FreeKernelBin(char_t* const buffer)
         buffer, RT_ERROR_INVALID_VALUE, "Releasing memory allocated to the kernel binary file");
 
     return impl_->FreeKernelBin(buffer);
-}
-
-rtError_t ApiErrorDecorator::EschedQueryInfo(
-    const uint32_t devId, const rtEschedQueryType type, rtEschedInputInfo* inPut, rtEschedOutputInfo* outPut)
-{
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(inPut, RT_ERROR_INVALID_VALUE, "Information query");
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(outPut, RT_ERROR_INVALID_VALUE, "Information query");
-    uint32_t realDeviceId = 0U;
-    if (IsHostCpuDevId(static_cast<int32_t>(devId))) {
-        realDeviceId = static_cast<uint32_t>(DEFAULT_HOSTCPU_LOGIC_DEVICE_ID);
-    } else {
-        const rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(devId, &realDeviceId);
-        COND_RETURN_ERROR(
-            error != RT_ERROR_NONE, error, "Failed to convert the user device ID %u to driver device ID.", devId);
-    }
-    return impl_->EschedQueryInfo(realDeviceId, type, inPut, outPut);
 }
 
 rtError_t ApiErrorDecorator::ModelCheckArchVersion(const char_t* omsocVersion)

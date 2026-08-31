@@ -1315,32 +1315,9 @@ TEST_F(CloudV2ApiImplTest, LabelCreateEx_01)
     delete apiDecorator_;
 }
 
-TEST_F(CloudV2ApiImplTest, AllNotCoverPart1_01)
-{
-    rtError_t error;
-    rtGroupType_t grpType = RT_GRP_TYPE_BIND_CP_CPU;
-    rtEschedEventSummary_t evtSummary;
-    Api* oldApi_ = const_cast<Api*>(Runtime::runtime_->api_);
-    ApiDecorator* apiDecorator_ = new ApiDecorator(oldApi_);
-    error = apiDecorator_->EschedAttachDevice(0);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    error = apiDecorator_->EschedDettachDevice(0);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    error = apiDecorator_->EschedCreateGrp(0, 0, grpType);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    error = apiDecorator_->EschedSubmitEvent(0, &evtSummary);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    rtEventIdType_t evtType = RT_EVENT_TEST;
-    error = apiDecorator_->EschedAckEvent(0, evtType, 0, "hello", 128);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    delete apiDecorator_;
-}
-
 TEST_F(CloudV2ApiImplTest, AllNotCoverPart1_02)
 {
     rtError_t error;
-    rtGroupType_t grpType = RT_GRP_TYPE_BIND_CP_CPU;
-    rtEschedEventSummary_t evtSummary;
     Api* oldApi_ = const_cast<Api*>(Runtime::runtime_->api_);
     ApiDecorator* apiDecorator_ = new ApiDecorator(oldApi_);
     uint32_t srvId = 0;

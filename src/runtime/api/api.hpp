@@ -783,8 +783,6 @@ public:
     virtual rtError_t MemQueueGrant(
         const int32_t devId, const uint32_t qid, const int32_t pid, rtMemQueueShareAttr_t* const attr) = 0;
     virtual rtError_t MemQueueAttach(const int32_t devId, const uint32_t qid, const int32_t timeOut) = 0;
-    virtual rtError_t EschedSubmitEventSync(
-        const int32_t devId, rtEschedEventSummary_t* const evt, rtEschedEventReply_t* const ack) = 0;
     virtual rtError_t QueryDevPid(rtBindHostpidInfo_t* const info, int32_t* const devPid) = 0;
     virtual rtError_t BuffAlloc(const uint64_t size, void** buff) = 0;
     virtual rtError_t BuffConfirm(void* const buff, const uint64_t size) = 0;
@@ -804,18 +802,6 @@ public:
     virtual rtError_t QueueSubscribe(
         const int32_t devId, const uint32_t qId, const uint32_t groupId, const int32_t type) = 0;
     virtual rtError_t BufEventTrigger(const char* const name) = 0;
-    virtual rtError_t EschedAttachDevice(const uint32_t devId) = 0;
-    virtual rtError_t EschedDettachDevice(const uint32_t devId) = 0;
-    virtual rtError_t EschedWaitEvent(
-        const int32_t devId, const uint32_t grpId, const uint32_t threadId, const int32_t timeout,
-        rtEschedEventSummary_t* const evt) = 0;
-    virtual rtError_t EschedCreateGrp(const int32_t devId, const uint32_t grpId, const rtGroupType_t type) = 0;
-    virtual rtError_t EschedSubmitEvent(const int32_t devId, rtEschedEventSummary_t* const evt) = 0;
-    virtual rtError_t EschedSubscribeEvent(
-        const int32_t devId, const uint32_t grpId, const uint32_t threadId, const uint64_t eventBitmap) = 0;
-    virtual rtError_t EschedAckEvent(
-        const int32_t devId, const rtEventIdType_t evtId, const uint32_t subeventId, char_t* const msg,
-        const uint32_t len) = 0;
     virtual rtError_t CmoTaskLaunch(const rtCmoTaskInfo_t* const taskInfo, Stream* const stm, const uint32_t flag) = 0;
     virtual rtError_t CmoAddrTaskLaunch(
         void* cmoAddrInfo, const uint64_t destMax, const rtCmoOpCode_t cmoOpCode, Stream* const stm,
@@ -840,8 +826,6 @@ public:
     virtual rtError_t GetDeviceSatStatus(void* const outputAddrPtr, const uint64_t outputSize, Stream* const stm) = 0;
     virtual rtError_t CleanDeviceSatStatus(Stream* const stm) = 0;
     virtual rtError_t GetAllUtilizations(const int32_t devId, const rtTypeUtil_t kind, uint8_t* const util) = 0;
-    virtual rtError_t EschedQueryInfo(
-        const uint32_t devId, const rtEschedQueryType type, rtEschedInputInfo* inPut, rtEschedOutputInfo* outPut) = 0;
     virtual rtError_t BindHostPid(rtBindHostpidInfo info) = 0;
     virtual rtError_t UnbindHostPid(rtBindHostpidInfo info) = 0;
     virtual rtError_t QueryProcessHostPid(

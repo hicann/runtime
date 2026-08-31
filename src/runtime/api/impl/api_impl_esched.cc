@@ -59,6 +59,7 @@ rtError_t CheckCurCtxValid(const int32_t devId)
     return RT_ERROR_NONE;
 }
 
+/* HostCPU场景下, 底软三件套(Mbuff/队列调度/事件调度)接口无需对DeviceID做转换 */
 rtError_t ConvertUserDevIdToRealDevId(const int32_t devId, int32_t& realDeviceId)
 {
     if (IsHostCpuDevId(devId)) {

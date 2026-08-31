@@ -67,6 +67,7 @@ set(libruntime_src_files_include_for_arch5162
     ${TOP_DIR}/src/runtime/core/src/pool/event_pool_tiny_stub.cc
     ${TOP_DIR}/src/runtime/core/src/pool/event_expanding_tiny_stub.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_tiny_stub.cc
+    ${TOP_DIR}/src/runtime/driver/npu_driver_esched_stub.cc
     ${TOP_DIR}/src/runtime/core/src/engine/engine_factory_tiny_stub.cc
     ${TOP_DIR}/src/runtime/core/src/task/tiny/rdma_task_tiny_stub.cc
     ${TOP_DIR}/src/runtime/feature/ffts/ffts_task_tiny_stub.cc
@@ -111,7 +112,7 @@ set(runtimeut_src_api_impl_list
     ${TOP_DIR}/src/runtime/api/impl/api_impl_creator.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_event_common.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_mbuf_stub.cc
-    ${TOP_DIR}/src/runtime/api/impl/api_impl_esched.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_esched_stub.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_stub.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_arch5162.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_memory_stub.cc
@@ -350,7 +351,6 @@ add_executable(runtime_utest_arch5162
     ${TOP_DIR}/src/runtime/driver/npu_driver.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_mem.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_queue.cc
-    ${TOP_DIR}/src/runtime/driver/npu_driver_esched.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_res.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_dcache_lock_opb.cpp
     ${TOP_DIR}/src/runtime/driver/v100/npu_driver.cc
@@ -364,6 +364,7 @@ add_executable(runtime_utest_arch5162
     ../../rt_utest_mbuf_stub.cc
     rt_utest_api_arch5162.cc
     rt_utest_arg_loader_nocopy.cc
+    ../../rt_utest_esched_stub.cc
     rt_utest_device_arch5162.cc
     rt_utest_notify_arch5162.cc
 )

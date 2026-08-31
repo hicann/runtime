@@ -471,6 +471,7 @@ set(runtimeut_src_tiny_include_list
     ${TOP_DIR}/src/runtime/api/impl/api_impl_stub.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_tiny.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_event_tiny_stub.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_esched.cc
     ${TOP_DIR}/src/runtime/api/impl/api_decorator_tiny_stub.cc
     ${TOP_DIR}/src/runtime/core/src/dfx/fast_recover.cc
     ${TOP_DIR}/src/runtime/api/impl/v100/api_impl_v100.cc
