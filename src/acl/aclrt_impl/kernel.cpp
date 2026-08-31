@@ -195,7 +195,7 @@ aclError aclrtBinaryGetFunctionByEntryImpl(aclrtBinHandle binHandle, uint64_t fu
     return ACL_SUCCESS;
 }
 
-aclError aclrtBinaryGetFunctionCountImpl(aclrtBinHandle binHandle, uint32_t* count)
+aclError aclrtBinaryGetFunctionCountImpl(const aclrtBinHandle binHandle, uint32_t* count)
 {
     ACL_LOG_INFO("start to execute aclrtBinaryGetFunctionCount");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(binHandle);

@@ -3526,7 +3526,7 @@ ACL_FUNC_VISIBILITY aclError aclrtBinaryGetFunctionByEntry(
  * @retval OtherValues Failure
  */
 ACL_FUNC_VISIBILITY aclError aclrtBinaryGetFunctionCount(
-    aclrtBinHandle binHandle, uint32_t *count);
+    const aclrtBinHandle binHandle, uint32_t *count);
 
 /**
  * @ingroup AscendCL

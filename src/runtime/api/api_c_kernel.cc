@@ -444,7 +444,7 @@ rtError_t rtsFuncGetByEntry(const rtBinHandle binHandle, const uint64_t funcEntr
 }
 
 VISIBILITY_DEFAULT
-rtError_t rtBinaryGetFunctionCount(const rtBinHandle binHandle, uint32_t* count)
+rtError_t rtBinaryGetFunctionCount(rtBinHandle const binHandle, uint32_t* count)
 {
     Api* const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);

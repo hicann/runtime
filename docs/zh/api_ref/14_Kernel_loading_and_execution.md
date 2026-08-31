@@ -9,7 +9,7 @@
 - [`aclError aclrtBinaryLoadFromData(const void *data, size_t length, const aclrtBinaryLoadOptions *options, aclrtBinHandle *binHandle)`](#aclrtBinaryLoadFromData)：从内存加载并解析算子二进制数据，输出指向算子二进制的binHandle。
 - [`aclError aclrtBinaryGetFunction(const aclrtBinHandle binHandle, const char *kernelName, aclrtFuncHandle *funcHandle)`](#aclrtBinaryGetFunction)：根据核函数名称，查找到对应的核函数，并使用funcHandle表达。
 - [`aclError aclrtBinaryGetFunctionByEntry(aclrtBinHandle binHandle, uint64_t funcEntry, aclrtFuncHandle *funcHandle)`](#aclrtBinaryGetFunctionByEntry)：根据Function Entry获取核函数句柄。
-- [`aclError aclrtBinaryGetFunctionCount(aclrtBinHandle binHandle, uint32_t *count)`](#aclrtBinaryGetFunctionCount)：获取算子二进制中核函数的总数。
+- [`aclError aclrtBinaryGetFunctionCount(const aclrtBinHandle binHandle, uint32_t *count)`](#aclrtBinaryGetFunctionCount)：获取算子二进制中核函数的总数。
 - [`aclError aclrtBinaryGetDevAddress(const aclrtBinHandle binHandle, void **binAddr, size_t *binSize)`](#aclrtBinaryGetDevAddress)：获取算子二进制数据在Device上的内存地址及内存大小。
 - [`aclError aclrtBinaryGetGlobal(aclrtBinHandle binHandle, const char *name, void **dptr, size_t *size)`](#aclrtBinaryGetGlobal)：根据全局变量名称获取Device侧全局变量的地址和大小。
 - [`aclError aclrtBinarySetExceptionCallback(aclrtBinHandle binHandle, aclrtOpExceptionCallback callback, void *userData)`](#aclrtBinarySetExceptionCallback)：调用本接口注册回调函数。若多次设置回调函数，以最后一次设置为准。
@@ -2353,7 +2353,7 @@ aclError aclrtLaunchSIMTKernelWithHostArgs(void *func, dim3 gridDim, dim3 blockD
 ## aclrtBinaryGetFunctionCount
 
 ```c
-aclError aclrtBinaryGetFunctionCount(aclrtBinHandle binHandle, uint32_t *count)
+aclError aclrtBinaryGetFunctionCount(const aclrtBinHandle binHandle, uint32_t *count)
 ```
 
 ### 产品支持情况

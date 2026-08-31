@@ -142,7 +142,7 @@ rtBinaryEnumerateFunctions(const rtBinHandle binHandle, rtFuncHandle* funcHandle
  * @param [out] count output param: total number of kernel functions.
  * @return RT_ERROR_NONE for ok
  */
-RTS_API rtError_t rtBinaryGetFunctionCount(const rtBinHandle binHandle, uint32_t* count);
+RTS_API rtError_t rtBinaryGetFunctionCount(rtBinHandle const binHandle, uint32_t* count);
 
 #if defined(__cplusplus)
 }
