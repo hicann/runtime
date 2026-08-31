@@ -27,7 +27,7 @@ static void ConstructSqeForMaintenanceTask(TaskInfo* const taskInfo, rtStarsSqe_
     sqe->header.type = RT_STARS_SQE_TYPE_PLACE_HOLDER;
     sqe->header.wrCqe = 1U; // need write cqe
     sqe->header.preP = RT_STARS_SQE_INT_DIR_TO_TSCPU;
-    sqe->header.u.sqeSubType = RT_SQE_SUBTYPE_RESERVED;
+    sqe->header.u.sqeSubType = RT_SQE_SUBTYPE_MAINTENANCE;
     sqe->header.rtStreamId = static_cast<uint16_t>(stm->Id_());
     sqe->header.taskId = taskInfo->id;
 

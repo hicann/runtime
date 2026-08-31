@@ -947,7 +947,7 @@ TEST_F(Arch5162TaskTest, ConstructSqeForMaintenanceTask)
     EXPECT_EQ(sqe.phSqe.header.wrCqe, 1U);
     EXPECT_EQ(sqe.phSqe.header.preP, RT_STARS_SQE_INT_DIR_TO_TSCPU);
     EXPECT_EQ(sqe.phSqe.header.postP, RT_STARS_SQE_INT_DIR_NO);
-    EXPECT_EQ(sqe.phSqe.header.u.sqeSubType, RT_SQE_SUBTYPE_RESERVED);
+    EXPECT_EQ(sqe.phSqe.header.u.sqeSubType, RT_SQE_SUBTYPE_MAINTENANCE);
     EXPECT_EQ(sqe.phSqe.header.rtStreamId, static_cast<uint16_t>(stream->Id_()));
     EXPECT_EQ(sqe.phSqe.header.taskId, taskInfo.id);
     delete stream;
@@ -971,6 +971,7 @@ TEST_F(Arch5162TaskTest, ConstructSqeForMaintenanceTask_RecycleTask)
     toSqeFunc(&taskInfo, &sqe);
     EXPECT_EQ(sqe.phSqe.header.type, RT_STARS_SQE_TYPE_PLACE_HOLDER);
     EXPECT_EQ(sqe.phSqe.header.wrCqe, 1U);
+    EXPECT_EQ(sqe.phSqe.header.u.sqeSubType, RT_SQE_SUBTYPE_MAINTENANCE);
     EXPECT_EQ(sqe.phSqe.header.rtStreamId, static_cast<uint16_t>(stream->Id_()));
     EXPECT_EQ(sqe.phSqe.header.taskId, taskInfo.id);
     delete stream;
@@ -1300,7 +1301,7 @@ TEST_F(Arch5162TaskTest, ConstructSqeForModelMaintainceTask_Bind)
     PfnTaskToSqe toSqeFunc = g_taskFuncArrays[CHIP_5162A].toSqeFunc[TS_TASK_TYPE_MODEL_MAINTAINCE];
     toSqeFunc(&taskInfo, &sqe);
     EXPECT_EQ(sqe.phSqe.header.type, RT_STARS_SQE_TYPE_PLACE_HOLDER);
-    EXPECT_EQ(sqe.phSqe.header.u.sqeSubType, RT_SQE_SUBTYPE_MODEL_MAINTAINCE);
+    EXPECT_EQ(sqe.phSqe.header.u.sqeSubType, RT_SQE_SUBTYPE_MODEL_MAINTENANCE);
     EXPECT_EQ(sqe.phSqe.u.modelMaintainceInfo.operation, MMT_STREAM_ADD);
     delete opStream;
     delete stream;
@@ -1387,7 +1388,7 @@ TEST_F(Arch5162TaskTest, ConstructSqeForModelMaintainceTask_Unbind)
     PfnTaskToSqe toSqeFunc = g_taskFuncArrays[CHIP_5162A].toSqeFunc[TS_TASK_TYPE_MODEL_MAINTAINCE];
     toSqeFunc(&taskInfo, &sqe);
     EXPECT_EQ(sqe.phSqe.header.type, RT_STARS_SQE_TYPE_PLACE_HOLDER);
-    EXPECT_EQ(sqe.phSqe.header.u.sqeSubType, RT_SQE_SUBTYPE_MODEL_MAINTAINCE);
+    EXPECT_EQ(sqe.phSqe.header.u.sqeSubType, RT_SQE_SUBTYPE_MODEL_MAINTENANCE);
     EXPECT_EQ(sqe.phSqe.header.preP, RT_STARS_SQE_INT_DIR_TO_TSCPU);
     EXPECT_EQ(sqe.phSqe.u.modelMaintainceInfo.operation, MMT_STREAM_DEL);
     delete opStream;
@@ -1415,7 +1416,7 @@ TEST_F(Arch5162TaskTest, ConstructSqeForModelMaintainceTask_LoadComplete)
     PfnTaskToSqe toSqeFunc = g_taskFuncArrays[CHIP_5162A].toSqeFunc[TS_TASK_TYPE_MODEL_MAINTAINCE];
     toSqeFunc(&taskInfo, &sqe);
     EXPECT_EQ(sqe.phSqe.header.type, RT_STARS_SQE_TYPE_PLACE_HOLDER);
-    EXPECT_EQ(sqe.phSqe.header.u.sqeSubType, RT_SQE_SUBTYPE_MODEL_MAINTAINCE);
+    EXPECT_EQ(sqe.phSqe.header.u.sqeSubType, RT_SQE_SUBTYPE_MODEL_MAINTENANCE);
     EXPECT_EQ(sqe.phSqe.u.modelMaintainceInfo.operation, MMT_MODEL_LOAD_COMPLETE);
     EXPECT_EQ(sqe.phSqe.header.preP, RT_STARS_SQE_INT_DIR_NO);
     delete opStream;
@@ -1444,7 +1445,7 @@ TEST_F(Arch5162TaskTest, ConstructSqeForModelMaintainceTask_PreProc_Aicpu)
     PfnTaskToSqe toSqeFunc = g_taskFuncArrays[CHIP_5162A].toSqeFunc[TS_TASK_TYPE_MODEL_MAINTAINCE];
     toSqeFunc(&taskInfo, &sqe);
     EXPECT_EQ(sqe.phSqe.header.type, RT_STARS_SQE_TYPE_PLACE_HOLDER);
-    EXPECT_EQ(sqe.phSqe.header.u.sqeSubType, RT_SQE_SUBTYPE_MODEL_MAINTAINCE);
+    EXPECT_EQ(sqe.phSqe.header.u.sqeSubType, RT_SQE_SUBTYPE_MODEL_MAINTENANCE);
     EXPECT_EQ(sqe.phSqe.u.modelMaintainceInfo.operation, MMT_MODEL_PRE_PROC);
     EXPECT_EQ(sqe.phSqe.header.preP, RT_STARS_SQE_INT_DIR_TO_TSCPU);
     EXPECT_EQ(sqe.phSqe.u.modelMaintainceInfo.executorFlag, MODEL_EXECUTOR_AICPU);
@@ -1477,7 +1478,7 @@ TEST_F(Arch5162TaskTest, ConstructSqeForModelMaintainceTask_PreProc_NonAicpu)
     PfnTaskToSqe toSqeFunc = g_taskFuncArrays[CHIP_5162A].toSqeFunc[TS_TASK_TYPE_MODEL_MAINTAINCE];
     toSqeFunc(&taskInfo, &sqe);
     EXPECT_EQ(sqe.phSqe.header.type, RT_STARS_SQE_TYPE_PLACE_HOLDER);
-    EXPECT_EQ(sqe.phSqe.header.u.sqeSubType, RT_SQE_SUBTYPE_MODEL_MAINTAINCE);
+    EXPECT_EQ(sqe.phSqe.header.u.sqeSubType, RT_SQE_SUBTYPE_MODEL_MAINTENANCE);
     EXPECT_EQ(sqe.phSqe.u.modelMaintainceInfo.operation, MMT_MODEL_PRE_PROC);
     EXPECT_EQ(sqe.phSqe.header.preP, RT_STARS_SQE_INT_DIR_TO_TSCPU);
     EXPECT_EQ(sqe.phSqe.u.modelMaintainceInfo.executorFlag, MODEL_EXECUTOR_RESERVED);
@@ -1507,7 +1508,7 @@ TEST_F(Arch5162TaskTest, ConstructSqeForModelMaintainceTask_Abort)
     PfnTaskToSqe toSqeFunc = g_taskFuncArrays[CHIP_5162A].toSqeFunc[TS_TASK_TYPE_MODEL_MAINTAINCE];
     toSqeFunc(&taskInfo, &sqe);
     EXPECT_EQ(sqe.phSqe.header.type, RT_STARS_SQE_TYPE_PLACE_HOLDER);
-    EXPECT_EQ(sqe.phSqe.header.u.sqeSubType, RT_SQE_SUBTYPE_MODEL_MAINTAINCE);
+    EXPECT_EQ(sqe.phSqe.header.u.sqeSubType, RT_SQE_SUBTYPE_MODEL_MAINTENANCE);
     EXPECT_EQ(sqe.phSqe.u.modelMaintainceInfo.operation, MMT_MODEL_ABORT);
     EXPECT_EQ(sqe.phSqe.header.preP, RT_STARS_SQE_INT_DIR_TO_TSCPU);
     delete opStream;
@@ -1535,7 +1536,7 @@ TEST_F(Arch5162TaskTest, ConstructSqeForModelMaintainceTask_DefaultCase)
     PfnTaskToSqe toSqeFunc = g_taskFuncArrays[CHIP_5162A].toSqeFunc[TS_TASK_TYPE_MODEL_MAINTAINCE];
     toSqeFunc(&taskInfo, &sqe);
     EXPECT_EQ(sqe.phSqe.header.type, RT_STARS_SQE_TYPE_PLACE_HOLDER);
-    EXPECT_EQ(sqe.phSqe.header.u.sqeSubType, RT_SQE_SUBTYPE_MODEL_MAINTAINCE);
+    EXPECT_EQ(sqe.phSqe.header.u.sqeSubType, RT_SQE_SUBTYPE_MODEL_MAINTENANCE);
     EXPECT_EQ(sqe.phSqe.u.modelMaintainceInfo.operation, MMT_MODEL_DESTROY);
     EXPECT_EQ(sqe.phSqe.header.preP, RT_STARS_SQE_INT_DIR_NO);
     delete opStream;
@@ -1565,7 +1566,7 @@ TEST_F(Arch5162TaskTest, ConstructSqeForModelMaintainceTask_Bind_AllFields)
     toSqeFunc(&taskInfo, &sqe);
     EXPECT_EQ(sqe.phSqe.header.type, RT_STARS_SQE_TYPE_PLACE_HOLDER);
     EXPECT_EQ(sqe.phSqe.header.wrCqe, stream->GetStarsWrCqeFlag());
-    EXPECT_EQ(sqe.phSqe.header.u.sqeSubType, RT_SQE_SUBTYPE_MODEL_MAINTAINCE);
+    EXPECT_EQ(sqe.phSqe.header.u.sqeSubType, RT_SQE_SUBTYPE_MODEL_MAINTENANCE);
     EXPECT_EQ(sqe.phSqe.header.rtStreamId, static_cast<uint16_t>(stream->Id_()));
     EXPECT_EQ(sqe.phSqe.header.taskId, 8U);
     EXPECT_EQ(sqe.phSqe.header.preP, RT_STARS_SQE_INT_DIR_TO_TSCPU);

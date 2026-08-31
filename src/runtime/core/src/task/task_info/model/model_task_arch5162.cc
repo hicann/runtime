@@ -120,7 +120,7 @@ static void ConstructSqeForModelMaintainceTask(TaskInfo* const taskInfo, rtStars
     sqe->header.wrCqe = stream->GetStarsWrCqeFlag();
     sqe->header.rtStreamId = static_cast<uint16_t>(stream->Id_());
     sqe->header.taskId = taskInfo->id;
-    sqe->header.u.sqeSubType = RT_SQE_SUBTYPE_MODEL_MAINTAINCE;
+    sqe->header.u.sqeSubType = RT_SQE_SUBTYPE_MODEL_MAINTENANCE;
 
     sqe->u.modelMaintainceInfo.modelId = static_cast<uint16_t>(modelMaintainceTaskInfo->model->Id_());
     sqe->u.modelMaintainceInfo.streamId = static_cast<uint16_t>(modelMaintainceTaskInfo->opStream->Id_());
