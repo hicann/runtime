@@ -19,7 +19,7 @@ set(proto_src_files
     ${CMAKE_CURRENT_SOURCE_DIR}/proto/dynamic_sched.proto
 )
 
-protobuf_generate(aicpu PROTO_SRCS PROTO_HDRS ${proto_src_files})
+generate_cann_protobuf(aicpu PROTO_SRCS PROTO_HDRS ${proto_src_files})
 
 set(statistic_src_file
     ${CMAKE_CURRENT_SOURCE_DIR}/statistic/aicpusd_period_statistic.cpp

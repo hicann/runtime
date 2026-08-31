@@ -88,7 +88,7 @@ set(adumpBaseTinyProtoList
     "${TOP_DIR}/metadef/proto/dump_task.proto"
     "${SRC_CODE_ROOT_PATH}/inc/adump/dump_data.proto"
 )
-protobuf_generate(adump_base_tiny_proto adumpBaseTinyProtoSrc adumBaseTinyProtoHeaders ${adumpBaseTinyProtoList} TARGET)
+generate_cann_protobuf(adump_base_tiny_proto adumpBaseTinyProtoSrc adumBaseTinyProtoHeaders ${adumpBaseTinyProtoList} TARGET)
 
 add_executable(adump_base_tiny_stest
     ${adumpBaseTinyUtestSrc}

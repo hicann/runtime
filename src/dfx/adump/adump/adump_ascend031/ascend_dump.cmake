@@ -12,7 +12,7 @@ set(adump_host_proto_files
     "${ADUMP_DIR}/proto/op_mapping.proto"
     "${ADUMP_DIR}/proto/dump_task.proto"
 )
-protobuf_generate(adump_host_proto adump_host_proto_srcs adump_host_proto_headers ${adump_host_proto_files} TARGET)
+generate_cann_protobuf(adump_host_proto adump_host_proto_srcs adump_host_proto_headers ${adump_host_proto_files} TARGET)
 
 ####################### libascend_dump.so begin ###########################
 

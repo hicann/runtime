@@ -64,7 +64,7 @@ target_link_libraries(msprof_utestonetrack_pub INTERFACE
     -lpthread
 )
 
-protobuf_generate(profiler
+generate_cann_protobuf(profiler
     CppPath
     HeaderPath
     ${MSPROF_SOURCE_DIR}/dvvp/proto/profiler.proto

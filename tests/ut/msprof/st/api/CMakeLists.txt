@@ -231,7 +231,7 @@ set(SRC_FILE
     ${DEVPROF_SRC_FILE}
 )
 
-protobuf_generate(profiler
+generate_cann_protobuf(profiler
     CppPath
     HeaderPath
     ${MSPROF_SOURCE_DIR}/dvvp/proto/profiler.proto
@@ -932,8 +932,6 @@ add_library(profapi_share_st SHARED
     stub/aoe_stub.cpp
     ../../stub/error_manager_stub2.cpp
 )
-
-add_dependencies(profapi_share_st csec_src)
 
 target_compile_definitions(profapi_share_st PRIVATE
     $<$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>:WIN32>

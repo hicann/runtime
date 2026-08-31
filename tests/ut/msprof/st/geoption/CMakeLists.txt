@@ -240,7 +240,7 @@ if(NOT BUILD_PROFILING_OPEN_PROJECT)
     )
 endif()
 
-protobuf_generate(profiler
+generate_cann_protobuf(profiler
     CppPath
     HeaderPath
     ${MSPROF_SOURCE_DIR}/dvvp/proto/profiler.proto

@@ -121,7 +121,7 @@ set(TSD_PROTO_SRC_FILE
 file(GLOB_RECURSE RTOTO_LIST RELATIVE ${CMAKE_CURRENT_LIST_DIR}
     ${TSD_PROTO_SRC_FILE}
 )
-protobuf_generate(tsd_client_proto PROTO_SRCS PROTO_HDRS ${RTOTO_LIST})
+generate_cann_protobuf(tsd_client_proto PROTO_SRCS PROTO_HDRS ${RTOTO_LIST})
 
 add_executable(tsd_client_utest
     ${TSD_CLIENT_SRC_FILE}

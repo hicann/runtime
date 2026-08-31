@@ -21,7 +21,7 @@ endif()
 set(PRODUCT_TYPE "DEFAULT")
 set(lhisi_product false)
 
-protobuf_generate(aicpu PROTO_SRCS PROTO_HDRS ${proto_src_files})
+generate_cann_protobuf(aicpu PROTO_SRCS PROTO_HDRS ${proto_src_files})
 ###for queue_schedule so
 set (queue_schedule_server_files
     common/bqs_so_manager.cpp

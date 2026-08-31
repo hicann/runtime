@@ -9,7 +9,7 @@ file(GLOB_RECURSE PROTO_LIST RELATIVE ${CMAKE_CURRENT_LIST_DIR}
 
 set_legacy_protobuf()
 
-protobuf_generate(platform_infos_proto PROTO_SRCS PROTO_HDRS ${PROTO_LIST} TARGET)
+generate_cann_protobuf(platform_infos_proto PROTO_SRCS PROTO_HDRS ${PROTO_LIST} TARGET)
 
 set (PLATFORM_SRC_FILES
         ${TOP_DIR}/ace/npuruntime/runtime/platform/platform_info.cpp

@@ -7,7 +7,7 @@
 # INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
-protobuf_generate(profiler_proto
+generate_cann_protobuf(profiler_proto
     CppPath
     HeaderPath
     ${CMAKE_CURRENT_SOURCE_DIR}/../proto/profiler.proto

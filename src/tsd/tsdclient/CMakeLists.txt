@@ -28,7 +28,7 @@ if(CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64")
     )
 endif()
 
-protobuf_generate(tsd_host_proto PROTO_SRCS PROTO_HDRS ${PROTO_LIST} TARGET)
+generate_cann_protobuf(tsd_host_proto PROTO_SRCS PROTO_HDRS ${PROTO_LIST} TARGET)
     
 add_library(tsdclient SHARED
     ${tsdclient_all_sources}

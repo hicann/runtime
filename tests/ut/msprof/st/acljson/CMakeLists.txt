@@ -309,7 +309,7 @@ set(INCLUDE_DIR
     ${CMAKE_BINARY_DIR}/proto/profiler
 )
 
-protobuf_generate(profiler
+generate_cann_protobuf(profiler
     CppPath
     HeaderPath
     ${MSPROF_SOURCE_DIR}/dvvp/proto/profiler.proto

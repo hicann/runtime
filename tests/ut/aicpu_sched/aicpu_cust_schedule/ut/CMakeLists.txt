@@ -17,7 +17,7 @@ set(proto_src_files
     ${SRC_PATH}/proto/op_mapping_info.proto
 )
 
-protobuf_generate(aicpu_custom_proto PROTO_SRCS PROTO_HDRS ${proto_src_files} TARGET)
+generate_cann_protobuf(aicpu_custom_proto PROTO_SRCS PROTO_HDRS ${proto_src_files} TARGET)
 
 set(LOCAL_SRC_FILES
     ${SRC_PATH}/execute/main.cpp

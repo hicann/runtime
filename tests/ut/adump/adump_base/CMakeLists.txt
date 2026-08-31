@@ -18,7 +18,7 @@ set(adumpBaseProtoList
     "${TOP_DIR}/src/dfx/adump/proto/dump_task.proto"
 )
 
-protobuf_generate(adump_base_proto adumpBaseProtoSrc adumBaseProtoHeaders ${adumpBaseProtoList} TARGET)
+generate_cann_protobuf(adump_base_proto adumpBaseProtoSrc adumBaseProtoHeaders ${adumpBaseProtoList} TARGET)
 add_dependencies(adump_base_proto ascend_protobuf_static)
 ########################################################################
 

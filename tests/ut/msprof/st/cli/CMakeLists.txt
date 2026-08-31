@@ -243,7 +243,7 @@ set(adprof_src
     ${MSPROF_SOURCE_DIR}/dvvp/streamio/client/src/sender.cpp
 )
 
-protobuf_generate(profiler
+generate_cann_protobuf(profiler
     CppPath
     HeaderPath
     ${MSPROF_SOURCE_DIR}/dvvp/proto/profiler.proto

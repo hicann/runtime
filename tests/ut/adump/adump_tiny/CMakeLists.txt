@@ -19,7 +19,7 @@ set(adumpTinyProtoList
     "${TOP_DIR}/src/dfx/adump/proto/dump_task.proto"
 )
 
-protobuf_generate(adump_tiny_proto adumpTinyProtoSrc adumpTinyProtoHeaders ${adumpTinyProtoList} TARGET)
+generate_cann_protobuf(adump_tiny_proto adumpTinyProtoSrc adumpTinyProtoHeaders ${adumpTinyProtoList} TARGET)
 add_dependencies(adump_tiny_proto ascend_protobuf_static)
 ########################################################################
 

@@ -18,7 +18,7 @@ set(SRC_PATH
     ${TOP_DIR}/src/queue_schedule
 )
 # set_legacy_protobuf()
-protobuf_generate(aicpu PROTO_SRCS PROTO_HDRS ${proto_src_files})
+generate_cann_protobuf(aicpu PROTO_SRCS PROTO_HDRS ${proto_src_files})
 
 set(common_compile_options
     -rdynamic

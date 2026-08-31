@@ -19,7 +19,7 @@ install(FILES
 ####################### prof_collect end ###########################
 
 ####################### libdevprof begin ###########################
-protobuf_generate(devprof_proto
+generate_cann_protobuf(devprof_proto
     CppPath
     HeaderPath
     ${CMAKE_CURRENT_SOURCE_DIR}/../../proto/profiler.proto

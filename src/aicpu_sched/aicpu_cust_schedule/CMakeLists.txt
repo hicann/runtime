@@ -20,7 +20,7 @@ set(proto_src_files
     ${CMAKE_CURRENT_SOURCE_DIR}/proto/op_mapping_info.proto
 )
 
-protobuf_generate(aicpu_cust PROTO_SRCS PROTO_HDRS ${proto_src_files})
+generate_cann_protobuf(aicpu_cust PROTO_SRCS PROTO_HDRS ${proto_src_files})
 
 set(AICPU_TS_SRC_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/core/aicpusd_interface_process.cpp

@@ -18,7 +18,7 @@ set(proto_src_files
     ${SRC_PATH}/proto/dynamic_sched.proto
 )
 
-protobuf_generate(aicpu_proto PROTO_SRCS PROTO_HDRS ${proto_src_files} TARGET)
+generate_cann_protobuf(aicpu_proto PROTO_SRCS PROTO_HDRS ${proto_src_files} TARGET)
 
 set(COMMON_C_INCLUDES
     ${SRC_PATH}/core/operator_kernel/communication

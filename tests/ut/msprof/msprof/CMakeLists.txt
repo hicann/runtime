@@ -7,7 +7,7 @@
 # INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
-protobuf_generate(msprofiler_utest_proto
+generate_cann_protobuf(msprofiler_utest_proto
     CppPath
     HeaderPath
     ${MSPROF_SOURCE_DIR}/dvvp/proto/profiler.proto
@@ -328,7 +328,7 @@ set_target_properties(msprofiler_utest
 )
 
 # msprof utest
-protobuf_generate(msprof_utest_proto
+generate_cann_protobuf(msprof_utest_proto
     CppPath
     HeaderPath
     ${MSPROF_SOURCE_DIR}/dvvp/proto/profiler.proto

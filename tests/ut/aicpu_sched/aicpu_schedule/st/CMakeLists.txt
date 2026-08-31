@@ -18,7 +18,7 @@ set(proto_src_files
     ${SRC_PATH}/proto/dynamic_sched.proto
 )
 
-protobuf_generate(aicpu_st_proto PROTO_SRCS PROTO_HDRS ${proto_src_files} TARGET)
+generate_cann_protobuf(aicpu_st_proto PROTO_SRCS PROTO_HDRS ${proto_src_files} TARGET)
 
 set(statistic_src_file
     ${SRC_PATH}/statistic/aicpusd_period_statistic.cpp

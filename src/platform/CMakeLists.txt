@@ -16,7 +16,7 @@ set(RUNTIME_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../..)
 file(GLOB_RECURSE PROTO_LIST RELATIVE ${CMAKE_CURRENT_LIST_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/proto/platform_infos.proto)
 
-protobuf_generate(platform_infos_proto PROTO_SRCS PROTO_HDRS ${PROTO_LIST} TARGET)
+generate_cann_protobuf(platform_infos_proto PROTO_SRCS PROTO_HDRS ${PROTO_LIST} TARGET)
 
 if((DEFINED PRODUCT) AND (PRODUCT STREQUAL "ascend031"))
         set(PLATFORMFILE

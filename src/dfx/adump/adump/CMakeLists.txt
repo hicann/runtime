@@ -18,7 +18,7 @@ set(adumpHostProto
     "${ADUMP_DIR}/proto/dump_task.proto"
 )
 
-protobuf_generate(adumpHostProto adumpHostProtoSrcs adumpHostProtoHeaders ${adumpHostProto} TARGET)
+generate_cann_protobuf(adumpHostProto adumpHostProtoSrcs adumpHostProtoHeaders ${adumpHostProto} TARGET)
 
 # op_mapping_v2.proto: 兼容性设计，不能直接在op_mapping.proto新增字段，影响其他组件运行
 set(adumpBaseProtoList
@@ -26,7 +26,7 @@ set(adumpBaseProtoList
     "${ADUMP_DIR}/proto/op_mapping_v2.proto"
 )
 
-protobuf_generate(ascend_dump_protos adumpBaseProtoSrcs adumpBaseProtoHeaders ${adumpBaseProtoList} TARGET)
+generate_cann_protobuf(ascend_dump_protos adumpBaseProtoSrcs adumpBaseProtoHeaders ${adumpBaseProtoList} TARGET)
 
 ############################ adump_headers ############################
 add_library(adump_headers INTERFACE)

@@ -96,7 +96,7 @@ set(adumpBaseDupProtoList
     "${TOP_DIR}/metadef/proto/dump_task.proto"
     "${SRC_CODE_ROOT_PATH}/inc/adump/dump_data.proto"
 )
-protobuf_generate(adump_base_dup_proto adumpBaseDupProtoSrc adumBaseDupProtoHeaders ${adumpBaseDupProtoList} TARGET)
+generate_cann_protobuf(adump_base_dup_proto adumpBaseDupProtoSrc adumBaseDupProtoHeaders ${adumpBaseDupProtoList} TARGET)
 
 add_executable(adump_base_dup_stest
     ${adumpBaseDupUtestSrc}
