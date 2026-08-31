@@ -129,6 +129,8 @@ TEST_F(TinyStubTest, api_c_stub)
     EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ret = rtGetBinaryDeviceBaseAddr(nullptr, nullptr);
     EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    ret = rtBinaryEnumerateFunctions(nullptr, nullptr, 0U);
+    EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ret = rtFftsPlusTaskLaunch(0, nullptr);
     EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ret = rtFftsPlusTaskLaunchWithFlag(0, nullptr, 0);

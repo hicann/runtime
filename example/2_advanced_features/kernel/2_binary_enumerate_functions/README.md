@@ -9,6 +9,16 @@
 Context 对应的 Device。样例输入为 `x=1.0`、`y=2.0`，三个 Kernel 的结果分别为
 `3.0`、`-1.0` 和 `2.0`。
 
+## 产品支持情况
+
+本样例支持以下产品：
+
+| 产品 | 是否支持 |
+| --- | --- |
+| Ascend 950PR/Ascend 950DT | √ |
+| Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
+| Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
+
 ## 目录
 
 ```text
@@ -46,7 +56,7 @@ export SOC_VERSION=Ascend910B1
 ## 编译运行
 
 ```bash
-cd /mnt/workspace/runtime/example/2_advanced_features/kernel/2_binary_enumerate_functions
+cd ${git_clone_path}/example/2_advanced_features/kernel/2_binary_enumerate_functions
 bash run.sh
 ```
 

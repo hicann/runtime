@@ -105,7 +105,7 @@ aclError aclrtBinaryGetFunctionImpl(const aclrtBinHandle binHandle, const char* 
 }
 
 aclError aclrtBinaryEnumerateFunctionsImpl(
-    const aclrtBinHandle binHandle, aclrtFuncHandle* const funcHandles, const uint32_t numFunctions)
+    aclrtBinHandle const binHandle, aclrtFuncHandle* funcHandles, uint32_t numFunctions)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtBinaryEnumerateFunctions);
     ACL_LOG_INFO("start to execute aclrtBinaryEnumerateFunctions");

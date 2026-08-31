@@ -209,7 +209,7 @@
       (const aclrtBinHandle binHandle, const char* kernelName, aclrtFuncHandle* funcHandle),                           \
       (binHandle, kernelName, funcHandle))                                                                             \
     _(aclError, aclrtBinaryEnumerateFunctions,                                                                         \
-      (const aclrtBinHandle binHandle, aclrtFuncHandle* funcHandles, uint32_t numFunctions),                           \
+      (aclrtBinHandle const binHandle, aclrtFuncHandle* funcHandles, uint32_t numFunctions),                           \
       (binHandle, funcHandles, numFunctions))                                                                          \
     _(aclError, aclrtLaunchKernel,                                                                                     \
       (aclrtFuncHandle funcHandle, uint32_t numBlocks, const void* argsData, size_t argsSize, aclrtStream stream),     \

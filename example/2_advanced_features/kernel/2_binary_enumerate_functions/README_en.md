@@ -10,6 +10,16 @@ and prints the first output element from each Kernel.
 of the current Context. With `x=1.0` and `y=2.0`, the three Kernels produce `3.0`,
 `-1.0`, and `2.0`, respectively.
 
+## Product Support
+
+This sample supports the following products:
+
+| Product | Supported |
+| --- | --- |
+| Ascend 950PR/Ascend 950DT | Yes |
+| Atlas A3 training series products/Atlas A3 inference series products | Yes |
+| Atlas A2 training series products/Atlas A2 inference series products | Yes |
+
 The Device Kernels are defined in `kernel/custom.cpp`.
 
 ## Environment
@@ -36,7 +46,7 @@ export SOC_VERSION=Ascend910B1
 ## Build and Run
 
 ```bash
-cd /mnt/workspace/runtime/example/2_advanced_features/kernel/2_binary_enumerate_functions
+cd ${git_clone_path}/example/2_advanced_features/kernel/2_binary_enumerate_functions
 bash run.sh
 ```
 

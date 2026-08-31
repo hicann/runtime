@@ -133,7 +133,7 @@ RTS_API rtError_t rtGetFuncBySymbol(const void* symbol, rtFuncHandle* funcHandle
  * @return RT_ERROR_INVALID_VALUE for error input
  */
 RTS_API rtError_t
-rtBinaryEnumerateFunctions(const rtBinHandle binHandle, rtFuncHandle* funcHandles, uint32_t numFunctions);
+rtBinaryEnumerateFunctions(rtBinHandle const binHandle, rtFuncHandle* funcHandles, uint32_t numFunctions);
 
 /**
  * @ingroup rts_kernel

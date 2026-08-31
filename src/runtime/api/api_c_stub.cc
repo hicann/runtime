@@ -1374,8 +1374,7 @@ rtError_t rtBinaryLoadWithoutTilingKey(const void* data, const uint64_t length, 
 }
 
 VISIBILITY_DEFAULT
-rtError_t rtBinaryEnumerateFunctions(
-    const rtBinHandle binHandle, rtFuncHandle* const funcHandles, const uint32_t numFunctions)
+rtError_t rtBinaryEnumerateFunctions(rtBinHandle const binHandle, rtFuncHandle* funcHandles, uint32_t numFunctions)
 {
     UNUSED(binHandle);
     UNUSED(funcHandles);

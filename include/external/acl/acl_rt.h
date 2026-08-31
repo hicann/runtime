@@ -3554,7 +3554,7 @@ ACL_FUNC_VISIBILITY aclError aclrtBinaryGetGlobal(
  * @retval OtherValues Failure
  */
 ACL_FUNC_VISIBILITY aclError aclrtBinaryEnumerateFunctions(
-    const aclrtBinHandle binHandle, aclrtFuncHandle* funcHandles, uint32_t numFunctions);
+    aclrtBinHandle const binHandle, aclrtFuncHandle* funcHandles, uint32_t numFunctions);
 
 /**
  * @ingroup AscendCL
