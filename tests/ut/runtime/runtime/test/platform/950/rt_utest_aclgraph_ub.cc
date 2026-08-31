@@ -3205,8 +3205,8 @@ TEST_F(StreamJettyHandlerIntegrationTest, GetD2dCrossType_InBoard)
     MOCKER_CPP_VIRTUAL(drv, &Driver::PtrGetAttributes).stubs().will(returnValue(RT_ERROR_NONE));
 
     bool isD2dCross = true;
-    rtError_t error =
-        GetD2dCrossType(drv, reinterpret_cast<const void*>(0x1000), reinterpret_cast<const void*>(0x2000), &isD2dCross);
+    rtError_t error = GetD2dCrossType(
+        stream_, reinterpret_cast<const void*>(0x1000), reinterpret_cast<const void*>(0x2000), &isD2dCross);
     EXPECT_EQ(error, RT_ERROR_NONE);
     EXPECT_FALSE(isD2dCross);
 }
@@ -3219,8 +3219,8 @@ TEST_F(StreamJettyHandlerIntegrationTest, GetD2dCrossType_CrossBoard)
     MOCKER(halGetPairDevicesInfo).stubs().will(invoke(StubPairDevInfo_CrossBoard));
 
     bool isD2dCross = false;
-    rtError_t error =
-        GetD2dCrossType(drv, reinterpret_cast<const void*>(0x1000), reinterpret_cast<const void*>(0x2000), &isD2dCross);
+    rtError_t error = GetD2dCrossType(
+        stream_, reinterpret_cast<const void*>(0x1000), reinterpret_cast<const void*>(0x2000), &isD2dCross);
     EXPECT_EQ(error, RT_ERROR_NONE);
     EXPECT_TRUE(isD2dCross);
 }
@@ -3232,8 +3232,8 @@ TEST_F(StreamJettyHandlerIntegrationTest, GetD2dCrossType_SrcPtrGetAttrFail)
     MOCKER_CPP_VIRTUAL(drv, &Driver::PtrGetAttributes).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
 
     bool isD2dCross = false;
-    rtError_t error =
-        GetD2dCrossType(drv, reinterpret_cast<const void*>(0x1000), reinterpret_cast<const void*>(0x2000), &isD2dCross);
+    rtError_t error = GetD2dCrossType(
+        stream_, reinterpret_cast<const void*>(0x1000), reinterpret_cast<const void*>(0x2000), &isD2dCross);
     EXPECT_NE(error, RT_ERROR_NONE);
     EXPECT_FALSE(isD2dCross);
 }
@@ -3246,8 +3246,8 @@ TEST_F(StreamJettyHandlerIntegrationTest, GetD2dCrossType_GetPairDevInfoFail)
     MOCKER(halGetPairDevicesInfo).stubs().will(invoke(StubPairDevInfo_Fail));
 
     bool isD2dCross = false;
-    rtError_t error =
-        GetD2dCrossType(drv, reinterpret_cast<const void*>(0x1000), reinterpret_cast<const void*>(0x2000), &isD2dCross);
+    rtError_t error = GetD2dCrossType(
+        stream_, reinterpret_cast<const void*>(0x1000), reinterpret_cast<const void*>(0x2000), &isD2dCross);
     EXPECT_NE(error, RT_ERROR_NONE);
 }
 

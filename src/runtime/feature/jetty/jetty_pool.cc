@@ -26,8 +26,6 @@ JettyPool::JettyPool(uint32_t deviceId) : deviceId_(deviceId)
     (void)CreateJetty(JettyType::JETTY_TYPE_H2D, JETTY_DEPTH_STANDARD, h2dJetty);
     JettyInfo d2dInBoardJetty;
     (void)CreateJetty(JettyType::JETTY_TYPE_D2D_IN_BOARD, JETTY_DEPTH_STANDARD, d2dInBoardJetty);
-    JettyInfo d2dCrossBoardJetty;
-    (void)CreateJetty(JettyType::JETTY_TYPE_D2D_CROSS_BOARD, JETTY_DEPTH_STANDARD, d2dCrossBoardJetty);
 
     RT_LOG(RT_LOG_INFO, "Jetty pool created, device_id=%u.", deviceId_);
 }
@@ -225,6 +223,17 @@ rtError_t JettyPool::GetJettyInfo(uint64_t handle, uint32_t& dieId, uint32_t& fu
     }
 
     return driver->AsyncDmaJettyQuery(deviceId_, handle, dieId, functionId, jettyId);
+}
+
+void JettyPool::CreateCrossBoardJetty()
+{
+    std::lock_guard<std::mutex> lock(poolLock_);
+    if (!ifHasCrossBoardJetty_) {
+        JettyInfo d2dCrossBoardJetty;
+        (void)CreateJetty(JettyType::JETTY_TYPE_D2D_CROSS_BOARD, JETTY_DEPTH_STANDARD, d2dCrossBoardJetty);
+        ifHasCrossBoardJetty_ = true;
+        RT_LOG(RT_LOG_INFO, "D2d Cross Board jetty created, device_id=%u.", deviceId_);
+    }
 }
 
 void JettyPool::Clear()

@@ -30,9 +30,9 @@ void PrintAsyncPtrProc(Driver* const driver, char_t* const errStr, void* memcpyA
 }
 
 rtError_t GetD2dCrossType(
-    Driver* const driver, const void* const srcAddr, const void* const desAddr, bool* isD2dCross8P)
+    const Stream* const stm, const void* const srcAddr, const void* const desAddr, bool* isD2dCross8P)
 {
-    UNUSED(driver);
+    UNUSED(stm);
     UNUSED(srcAddr);
     UNUSED(desAddr);
     UNUSED(isD2dCross8P);

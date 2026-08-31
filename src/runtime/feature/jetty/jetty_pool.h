@@ -133,6 +133,11 @@ public:
     rtError_t GetJettyInfoByHandle(uint64_t handle, JettyInfo& jettyInfo);
 
     /**
+     * @brief 创建wqe之前需要先创建jetty
+     */
+    void CreateCrossBoardJetty();
+
+    /**
      * @brief 清空 JettyPool
      */
     void Clear();
@@ -147,6 +152,7 @@ private:
     std::vector<JettyInfo> d2dCrossBoardJettyPool_;
     std::vector<JettyInfo> directJettyList_;
     std::mutex poolLock_;
+    bool ifHasCrossBoardJetty_{false};
 };
 } // namespace runtime
 } // namespace cce

@@ -388,7 +388,7 @@ rtError_t ConvertD2DCpyType(
             cpyType = RT_MEMCPY_DIR_D2D_UB;
             if ((isD2dCross8P != nullptr) &&
                 NpuDriver::CheckIsSupportFeature(stm->Device_()->Id_(), FEATURE_DMS_GET_BOARD_LOCATION)) {
-                error = GetD2dCrossType(driver, srcAddr, desAddr, isD2dCross8P);
+                error = GetD2dCrossType(stm, srcAddr, desAddr, isD2dCross8P);
                 ERROR_RETURN_MSG_INNER(
                     error, "Get device board location type failed, retCode=%#x.", static_cast<uint32_t>(error));
             }

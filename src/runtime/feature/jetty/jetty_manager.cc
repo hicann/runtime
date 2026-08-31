@@ -231,6 +231,8 @@ void JettyManager::DeleteStreamJettyContext(int32_t streamId, JettyType type)
     }
 }
 
+void JettyManager::CreateCrossBoardJetty() { jettyPool_->CreateCrossBoardJetty(); }
+
 void JettyManager::Clear()
 {
     std::lock_guard<std::recursive_mutex> lock(managerLock_);

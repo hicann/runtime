@@ -97,6 +97,11 @@ public:
     void DeleteStreamJettyContext(int32_t streamId, JettyType type);
 
     /**
+     * @brief 创建wqe之前需要先创建jetty
+     */
+    void CreateCrossBoardJetty();
+
+    /**
      * @brief 清空所有 Jetty
      */
     void Clear();

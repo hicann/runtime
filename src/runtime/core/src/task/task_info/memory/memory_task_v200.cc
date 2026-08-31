@@ -17,6 +17,7 @@
 #include "stars.hpp"
 #include "device.hpp"
 #include "error_code.h"
+#include "jetty_manager.h"
 
 namespace cce {
 namespace runtime {
@@ -207,8 +208,9 @@ void ConstructDavidSqeForMemcpyAsyncTask(TaskInfo* const taskInfo, void* const s
 }
 
 rtError_t GetD2dCrossType(
-    Driver* const driver, const void* const srcAddr, const void* const desAddr, bool* isD2dCross8P)
+    const Stream* const stm, const void* const srcAddr, const void* const desAddr, bool* isD2dCross8P)
 {
+    Driver* const driver = stm->Device_()->Driver_();
     int64_t locationType = 0;
     rtPtrAttributes_t srcAttributes = {}, dstAttributes = {};
     *isD2dCross8P = false;
@@ -233,6 +235,8 @@ rtError_t GetD2dCrossType(
         dstDevId, static_cast<uint32_t>(error));
     if (locationType == LOCATION_CROSS_BOARD) {
         *isD2dCross8P = true;
+        JettyManager* jettyMgr = stm->Device_()->GetJettyManager();
+        jettyMgr->CreateCrossBoardJetty();
     }
 
     RT_LOG(
