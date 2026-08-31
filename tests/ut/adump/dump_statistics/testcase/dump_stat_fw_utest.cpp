@@ -72,13 +72,52 @@ void KFCSeverProcess(
     *ready = true;
     // 循环结构与真实 AIV 对齐(canndev kfc_dump_stat.cpp:215-258)：退出判据放在 while
     // 条件处而非循环体开头，否则绕回时会把同一槽位的残留 REQUEST 当成新请求。
+    // 上一条请求所在的槽位，用于延后清理被测泄漏在该槽位上的 valid 标志，见下方说明。
+    KfcDumpStatsMsg* prevRcvMsg = nullptr;
     do {
-        if (rcvMsg->msgType == KFC_DUMP_MSG_REQUEST && rcvMsg->valid == DUMP_MSG_VALID_MASK) {
+        // valid 是消息就绪的唯一判据，必须先读 valid，再读 msgType。
+        // 真实 AIV 的 GetRcvMsg 对整条消息(64B 单 cache line)做 DCCI，msgType 与 valid
+        // 同时刷新；本仿真线程按普通内存逐字段读，没有这种行级原子性。若沿用
+        // "先判 msgType 再判 valid"，当被测把 FINISHED 写进一个残留 msgType=REQUEST 的
+        // 复用槽位时(tensor 数 20 > DUMP_MSG_CNT 16 必然绕回)，本线程可能读到
+        // 旧 msgType=REQUEST 搭配新 valid=MASK，把 FINISHED 误当请求消费掉。
+        if (rcvMsg->valid == DUMP_MSG_VALID_MASK) {
             // acquire：确保后续对消息体的读取不会被重排到 valid 检查之前
             std::atomic_thread_fence(std::memory_order_acquire);
+            // msgType 只读一次，避免同一轮里前后两次读到不同值
+            const DumpStatMsgType msgType = rcvMsg->msgType;
+            if (msgType == KFC_DUMP_MSG_FINISHED) {
+                // 真实 AIV 的唯一退出条件。与被 running 强行收回区分开，
+                // 供用例断言"被测确实发了 FINISHED"，否则该断言恒真形同虚设。
+                // 最后一条请求槽位上泄漏的 valid 由循环外的统一收尾清理，见函数末尾。
+                *sawFinished = true;
+                break;
+            }
+            if (msgType != KFC_DUMP_MSG_REQUEST) {
+                // valid 已置但 msgType 尚不可动作：被测 PostMsg 是"整struct memcpy 后再
+                // 显式置 valid"，而入参 gMsg 被复用收发、其 valid 仍带着上一条应答的 MASK，
+                // 故 memcpy 本身就会中途把槽位置为有效，此刻 msgType 可能还是零值。
+                // 原地重读即可 —— memcpy 落全后 msgType 自然变为 REQUEST/FINISHED，
+                // 不会永久停在此处。注意绝不能在消费时清 msgType 来"帮忙"：那会与
+                // PostMsg 竞争出 msgType=DEFAULT + valid=MASK 的持久状态，两侧判据都不
+                // 成立而永久互等(见本文件顶部关于 UpdateMsg 的说明)。
+                continue;
+            }
+            // 清理上一条请求槽位上被泄漏的 valid：
+            // 被测 PostMsg 在 memcpy 之后还会显式置一次 valid。若本线程在这两步之间就
+            // 消费并清零了该槽位，那次显式置位会把"已消费"的槽位重新标记为有效，而被测
+            // 的发送游标已经前移，再也不会来清理它。绕回一圈后本线程会把它当成新请求
+            // 重复消费一次，游标就此比被测多走一格；此后被测投递的 FINISHED 落在本线程
+            // 已越过的槽位上，永远等不到 —— 即 SawFinished() 偶发失败的直接原因。
+            // 放在"收到下一条请求之后"清理，是为了拿到确定的先后关系：被测对上一槽位的
+            // 显式置位发生在其 PostMsg 返回之前，而 PostMsg 返回又发生在它投递本条请求
+            // 之前，故此刻那次泄漏的置位必已完成，清理不会被它反超。
+            if (prevRcvMsg != nullptr) {
+                prevRcvMsg->valid = ~DUMP_MSG_VALID_MASK;
+            }
+            prevRcvMsg = rcvMsg;
             // 只清 valid，不动 msgType —— 与真实 AIV 的 UpdateMsg 一致
-            // (canndev kfc_dump_base.h:261)。若额外清 msgType，会与被测 PostMsg 竞争出
-            // msgType=DEFAULT + valid=MASK 的状态，两侧判据都不成立而永久互等。
+            // (canndev kfc_dump_base.h:261)。
             rcvMsg->valid = ~DUMP_MSG_VALID_MASK;
             sndMsg->msgType = responseMsgType;
             sndMsg->result = result;
@@ -94,14 +133,24 @@ void KFCSeverProcess(
                 workspace + DUMP_MSG_CNT * sizeof(KfcDumpStatsMsg) + recCount * sizeof(KfcDumpStatsMsg));
             sndMsg = reinterpret_cast<KfcDumpStatsMsg*>(workspace + sndCount * sizeof(KfcDumpStatsMsg));
         }
-        if (rcvMsg->msgType == KFC_DUMP_MSG_FINISHED) {
-            // 真实 AIV 的唯一退出条件。与被 running 强行收回区分开，
-            // 供用例断言"被测确实发了 FINISHED"，否则该断言恒真形同虚设。
-            *sawFinished = true;
-            break;
-        }
         // running 为 false 时退出，供用例在异常路径(被测未发 FINISHED)下回收本线程
     } while (*running);
+    // 退出前补一次排空检查：Stop() 置 running=false 与被测投递 FINISHED 是两个独立事件。
+    // 被测的顺序是 "PostMsg(FINISHED) -> WaitTaskFinish -> Launch 返回 -> 用例调 Stop()"，
+    // 故 running 转 false 时 FINISHED 必已落在消息区；但本线程可能恰在读到它之前就走到
+    // while 判据而退出，于是 sawFinished 漏置、用例误报"被测没发 FINISHED"。
+    if (!*sawFinished && rcvMsg->valid == DUMP_MSG_VALID_MASK) {
+        std::atomic_thread_fence(std::memory_order_acquire);
+        if (rcvMsg->msgType == KFC_DUMP_MSG_FINISHED) {
+            *sawFinished = true;
+        }
+    }
+    // 无论从哪条路径退出，都补清上一条请求槽位上被泄漏的 valid，使"退出后接收区
+    // 不残留 valid 的 REQUEST"成为本线程的无条件出口约定，供用例断言。
+    // running 转 false 这条路径上被测已不再投递，此刻清理同样无并发写者。
+    if (prevRcvMsg != nullptr) {
+        prevRcvMsg->valid = ~DUMP_MSG_VALID_MASK;
+    }
     *exited = true;
 }
 
@@ -112,7 +161,8 @@ void KFCSeverProcess(
 class KfcServerHandle {
 public:
     KfcServerHandle(uint64_t workspace, DumpStatMsgType responseMsgType, uint32_t result)
-        : running_(std::make_shared<std::atomic<bool>>(true)),
+        : workspace_(workspace),
+          running_(std::make_shared<std::atomic<bool>>(true)),
           ready_(std::make_shared<std::atomic<bool>>(false)),
           consumed_(std::make_shared<std::atomic<uint32_t>>(0U)),
           exited_(std::make_shared<std::atomic<bool>>(false)),
@@ -132,8 +182,15 @@ public:
         }
     }
 
-    // 析构只回收线程，不做断言(gtest 断言不应在析构函数中执行)
-    ~KfcServerHandle() { Join(); }
+    // 析构只回收线程与清场，不做断言(gtest 断言不应在析构函数中执行)。
+    // 清场在此兜底：用例即使漏调 Stop()，也不会把残留槽位泄漏给后续用例。
+    // Join() 内的 std::thread::join() 无超时语义，返回即桩线程已结束，
+    // 故此处清场不存在与桩线程并发读写消息区的可能。
+    ~KfcServerHandle()
+    {
+        Join();
+        ClearMsgArea();
+    }
 
     KfcServerHandle(const KfcServerHandle&) = delete;
     KfcServerHandle& operator=(const KfcServerHandle&) = delete;
@@ -143,9 +200,30 @@ public:
     uint32_t Stop()
     {
         Join();
+        // std::thread::join() 不带超时，返回即桩线程已结束；exited_ 仅自检其跑完了收尾段。
         EXPECT_TRUE(*exited_) << "kfc server thread did not exit normally";
-        return *consumed_;
+        const uint32_t consumed = *consumed_;
+        // 清场会把整个 msgBody 置零，之后再查"有无残留请求槽位"只能查到自己刚写的零、
+        // 恒为真，故必须在清场之前取快照，用例再据此断言协议收尾状态。
+        noStaleRequestAtStop_ = NoStaleRequestInRcvArea();
+        // 线程已结束，此刻确定无并发写者，可安全清场。必须在此清而非留到下一轮开头：
+        // 同一用例内多轮 Launch 复用同一块 msgQ，任何残留的 valid=MASK 槽位都会被下一轮
+        // 新起的桩线程误判为新请求，使其游标比被测多走一格。
+        ClearMsgArea();
+        return consumed;
     }
+
+    // 清空收发消息区(msgBody)。只清 MSG_BODY_SIZE：其后是 syncSpace 与尾部的
+    // KfcDumpContext(算子入参)，由被测在每次 Launch 内自行准备，不属于消息协议状态。
+    void ClearMsgArea() const { (void)memset_s(reinterpret_cast<void*>(workspace_), MSG_BODY_SIZE, 0, MSG_BODY_SIZE); }
+
+    // 协议收尾契约：Stop() 清场之前，接收区不得残留 valid 的 REQUEST 槽位。
+    // 残留的 REQUEST 正是本文件所治问题的根因 —— 它会被下一轮新起的桩线程误判为新请求，
+    // 使桩游标比被测多走一格，此后被测投递的 FINISHED 落在桩已越过的槽位上永远等不到。
+    // 注意不能要求"接收区全无 valid 槽位"：被测发出的 FINISHED 由桩读到即 break，
+    // 该槽位的 valid 按协议不由任何一方清理(真实 AIV 同样如此，见 kfc_dump_stat.cpp
+    // 的 KFC_DUMP_MSG_FINISHED 分支)，故 FINISHED 槽位保持 valid 是预期状态。
+    bool NoStaleRequestAtStop() const { return noStaleRequestAtStop_; }
 
     uint32_t Consumed() const { return *consumed_; }
 
@@ -162,6 +240,21 @@ private:
         }
     }
 
+    // 扫描桩的接收区(即被测的 msgSndArea，偏移 DUMP_MSG_CNT 起，被测在此投递
+    // REQUEST/FINISHED)：任一 valid 槽位若仍带 REQUEST，即为无人清理的残留请求。
+    bool NoStaleRequestInRcvArea() const
+    {
+        const KfcDumpStatsMsg* rcvArea = reinterpret_cast<const KfcDumpStatsMsg*>(workspace_) + DUMP_MSG_CNT;
+        for (uint32_t i = 0; i < DUMP_MSG_CNT; i++) {
+            if (rcvArea[i].valid == DUMP_MSG_VALID_MASK && rcvArea[i].msgType == KFC_DUMP_MSG_REQUEST) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    uint64_t workspace_;
+    bool noStaleRequestAtStop_ = false;
     std::shared_ptr<std::atomic<bool>> running_;
     std::shared_ptr<std::atomic<bool>> ready_;
     std::shared_ptr<std::atomic<uint32_t>> consumed_;
@@ -196,7 +289,15 @@ protected:
         KfcDumpProcess::ResetForTest();
         std::cout << "KfcDumpServer_UT Test SetUp" << std::endl;
     }
-    virtual void TearDown() { std::cout << "KfcDumpServer_UT Test TearDown" << std::endl; }
+    virtual void TearDown()
+    {
+        // 各用例的 StubKFCDumpParam 是栈对象、地址会被后续用例复用，而被测的 g_dumpParam
+        // 仍持有已失效的 msgQ 地址。此处复位被测状态，使下个用例必须重新 Init 才能 Launch，
+        // 不会踩到上个用例已析构的栈缓冲区。
+        KfcDumpProcess::ResetForTest();
+        g_kfcDumpInfo = nullptr;
+        std::cout << "KfcDumpServer_UT Test TearDown" << std::endl;
+    }
 };
 
 // ---------------------------------------------------------------------------
@@ -617,7 +718,7 @@ TEST_F(KfcDumpServer_UT, InitKfcDumpInfo_SqQueryFail)
         StubKFCDumpParam kfcDumpParam;
         SetStubSqQueryFailProp(prop);
         EXPECT_EQ(KFC_DUMP_E_DRIVE, AdumpStatsOpSrvInit(&kfcDumpParam.initParam)) << "failed prop: " << prop;
-        EXPECT_FALSE(AdumpStatsOpInitStatus());
+        EXPECT_FALSE(AdumpStatsOpInitStatus()) << "failed prop: " << prop;
     }
 }
 
@@ -655,7 +756,8 @@ TEST_F(KfcDumpServer_UT, AdumpStatsOpSrvLaunch_PostDumpResultsFail)
     SetStubDumpOpTaskDataFail(true);
     EXPECT_EQ(KFC_DUMP_E_INTERNAL, AdumpStatsOpSrvLaunch(reinterpret_cast<void*>(&kfcDumpTask)));
     (void)kfcServer.Stop();
-    EXPECT_TRUE(kfcServer.SawFinished()) << "上报失败后未发 FINISHED，AIV 实例将永久占核";
+    EXPECT_TRUE(kfcServer.SawFinished())
+        << "FINISHED not posted after report failure, AIV instance would occupy the core forever";
 }
 
 // Launch 阶段：SQ 下发时 halSqCqConfig 失败
@@ -765,9 +867,9 @@ TEST_F(KfcDumpServer_UT, AdumpStatsOpSrvLaunch_RepeatedCallsAllSucceed)
         KfcServerHandle kfcServer(kfcDumpParam.initParam.kfcWorkSpace.msgQ, KFC_DUMP_MSG_RESPONSE, 0);
         EXPECT_EQ(KFC_DUMP_SUCCESS, AdumpStatsOpSrvLaunch(reinterpret_cast<void*>(&kfcDumpTask)))
             << "failed at launch round " << i;
-        // 每轮应答条数不应少于该轮 tensor 数(逐 tensor 一问一答)。
-        // 用 GE 的原因同 RepeatedCallsWithDifferentTasks 中的说明：绕回时桩可能多计 1 条。
-        EXPECT_GE(kfcServer.Stop(), perRound) << "reply count too low at round " << i;
+        // 每轮应答条数应恰好等于该轮 tensor 数(逐 tensor 一问一答)。
+        // 桩延后清理上一请求槽位后，绕回已不会重复消费残留 REQUEST，故用 EQ 锁定。
+        EXPECT_EQ(kfcServer.Stop(), perRound) << "reply count mismatch at round " << i;
     }
 }
 
@@ -783,10 +885,11 @@ TEST_F(KfcDumpServer_UT, AdumpStatsOpSrvLaunch_RepeatedCallsReuseSameMsgQ)
 
     for (uint32_t i = 0; i < 3U; i++) {
         KfcServerHandle kfcServer(msgAddr, KFC_DUMP_MSG_RESPONSE, 0);
-        EXPECT_EQ(KFC_DUMP_SUCCESS, AdumpStatsOpSrvLaunch(reinterpret_cast<void*>(&kfcDumpTask)));
+        EXPECT_EQ(KFC_DUMP_SUCCESS, AdumpStatsOpSrvLaunch(reinterpret_cast<void*>(&kfcDumpTask)))
+            << "failed at launch round " << i;
         (void)kfcServer.Stop();
         // 全过程复用同一块 msgQ
-        EXPECT_EQ(msgAddr, kfcDumpParam.initParam.kfcWorkSpace.msgQ);
+        EXPECT_EQ(msgAddr, kfcDumpParam.initParam.kfcWorkSpace.msgQ) << "failed at launch round " << i;
     }
 }
 
@@ -806,9 +909,9 @@ TEST_F(KfcDumpServer_UT, AdumpStatsOpSrvLaunch_RepeatedCallsWithDifferentTasks)
         EXPECT_EQ(KFC_DUMP_SUCCESS, AdumpStatsOpSrvLaunch(reinterpret_cast<void*>(&task)))
             << "failed at taskId " << taskId;
         const uint32_t expect = static_cast<uint32_t>(info.inputDumpInfo.size() + info.outputDumpInfo.size());
-        // 用 GE 而非 EQ：tensor 数超过 DUMP_MSG_CNT 发生绕回时，桩可能把槽位残留的
-        // REQUEST 多消费一次。被测已收齐全部应答并成功返回，属桩的固有局限。
-        EXPECT_GE(kfcServer.Stop(), expect) << "reply count too low at taskId " << taskId;
+        // 用 EQ：桩把"清理上一请求槽位"延后到收到下一条请求之后，tensor 数超过
+        // DUMP_MSG_CNT 绕回时也不会把残留 REQUEST 重复消费，应答条数与 tensor 数严格一致。
+        EXPECT_EQ(kfcServer.Stop(), expect) << "reply count mismatch at taskId " << taskId;
     }
 }
 
@@ -856,7 +959,8 @@ TEST_F(KfcDumpServer_UT, AdumpStatsOpSrvLaunch_PostsFinishedEvenWhenFailed)
     // 失败仍保留首个错误码(E_PARA)，而非被 FINISHED 的收尾结果掩盖
     EXPECT_EQ(KFC_DUMP_E_PARA, AdumpStatsOpSrvLaunch(reinterpret_cast<void*>(&kfcDumpTask)));
     (void)kfcServer.Stop();
-    EXPECT_TRUE(kfcServer.SawFinished()) << "统计阶段失败后未发 FINISHED，AIV 实例将永久占核";
+    EXPECT_TRUE(kfcServer.SawFinished())
+        << "FINISHED not posted after statistics failure, AIV instance would occupy the core forever";
 }
 
 // 上一次 Launch 失败后，下一次 Launch 仍能正常完成 —— 验证失败不残留 AIV 实例
@@ -874,11 +978,15 @@ TEST_F(KfcDumpServer_UT, AdumpStatsOpSrvLaunch_NextLaunchOkAfterFailure)
         (void)kfcServer.Stop();
         // 失败路径也必须已通知 AIV 退出，否则下一轮 Launch 会与残留实例争抢消息队列
         EXPECT_TRUE(kfcServer.SawFinished());
+        // 收尾时不得残留 valid 的 REQUEST 槽位，下一轮才能从干净状态开始。
+        // 该判据取自 Stop() 清场之前的快照，故不会被清场本身"洗成"恒真。
+        EXPECT_TRUE(kfcServer.NoStaleRequestAtStop());
     }
     {
         KfcServerHandle kfcServer(kfcDumpParam.initParam.kfcWorkSpace.msgQ, KFC_DUMP_MSG_RESPONSE, 0);
         EXPECT_EQ(KFC_DUMP_SUCCESS, AdumpStatsOpSrvLaunch(reinterpret_cast<void*>(&kfcDumpTask)));
         (void)kfcServer.Stop();
         EXPECT_TRUE(kfcServer.SawFinished());
+        EXPECT_TRUE(kfcServer.NoStaleRequestAtStop());
     }
 }
