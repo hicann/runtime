@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "coprocessor_stream.hpp"
+#include "context.hpp"
 #include "stream_sqcq_manage.hpp"
 #include "runtime.hpp"
 #include "error_message_manage.hpp"
@@ -39,6 +40,22 @@ rtError_t CoprocessorStream::Setup()
 
     constexpr uint32_t drvFlag = static_cast<uint32_t>(TSDRV_FLAG_REMOTE_ID);
     error = stmSqCqManage->AllocStreamSqCq(this, priority_, drvFlag, tmpSqId, tmpCqId);
+    if (error == RT_ERROR_DRV_NO_RESOURCES) {
+        DeviceSqCqPool* sqcqPool = device_->GetDeviceSqCqManage();
+        if (sqcqPool != nullptr) {
+            if ((sqcqPool->GetSqCqPoolFreeResNum() == 0U) && (Context_() != nullptr)) {
+                (void)Context_()->TryRecycleCaptureModelResource(1U, 0U, nullptr);
+            }
+
+            if ((sqcqPool->GetSqCqPoolFreeResNum() != 0U) && (sqcqPool->TryFreeSqCqToDrv() == RT_ERROR_NONE)) {
+                RT_LOG(
+                    RT_LOG_DEBUG, "Realloc sq cq, stream_id=%d, free_res_num=%u.", streamId_,
+                    sqcqPool->GetSqCqPoolFreeResNum());
+                error = stmSqCqManage->AllocStreamSqCq(this, priority_, drvFlag, tmpSqId, tmpCqId);
+            }
+        }
+    }
+
     if (error != RT_ERROR_NONE) {
         RT_LOG(
             RT_LOG_ERROR, "Alloc coprocessor sq cq failed, stream_id=%d, retCode=%#x.", streamId_,

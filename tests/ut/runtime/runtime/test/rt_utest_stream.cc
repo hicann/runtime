@@ -3000,6 +3000,36 @@ TEST_F(StreamTest, CoprocessorStreamSetupAllocSqCqNoResource)
     delete device;
 }
 
+TEST_F(StreamTest, CoprocessorStreamSetupRetryAllocSqCqSuccess)
+{
+    RawDevice* device = new RawDevice(0);
+    ASSERT_EQ(device->Init(), RT_ERROR_NONE);
+    Driver* driver = device->Driver_();
+    int32_t streamId = 1;
+    MOCKER_CPP_VIRTUAL(driver, &Driver::StreamIdAlloc)
+        .stubs()
+        .with(outBoundP(&streamId, sizeof(streamId)), mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any())
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::StreamIdFree).stubs().will(returnValue(RT_ERROR_NONE));
+
+    DeviceSqCqPool* sqCqPool = device->GetDeviceSqCqManage();
+    sqCqPool->PreAllocSqCq();
+    ASSERT_EQ(sqCqPool->GetSqCqPoolFreeResNum(), 1U);
+    MOCKER_CPP(&StreamSqCqManage::AllocStreamSqCq)
+        .expects(exactly(2))
+        .will(returnValue(RT_ERROR_DRV_NO_RESOURCES))
+        .then(returnValue(RT_ERROR_NONE));
+
+    {
+        CoprocessorStream stream(device, 0U, 0U);
+        EXPECT_EQ(stream.Setup(), RT_ERROR_NONE);
+        EXPECT_EQ(sqCqPool->GetSqCqPoolFreeResNum(), 0U);
+    }
+
+    GlobalMockObject::verify();
+    delete device;
+}
+
 TEST_F(StreamTest, AllocStreamIdForAutoSplitNoResource)
 {
     RawDevice* device = new RawDevice(0);
