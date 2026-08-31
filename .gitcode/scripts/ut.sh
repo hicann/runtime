@@ -90,7 +90,7 @@ if [ "${TARGET_BRANCH}" = "master" ];then
             ret=$?
             ;;
         aicpusd)
-            LOG_DO bash tests/build_ut.sh --ut=aicpusd --target=aicpu_sched_ut -c -f "pr_filelist.txt" --cann_3rd_lib_path="/home/jenkins/opensource" -j12
+            LOG_DO bash tests/build_ut.sh --ut=aicpusd --target=aicpu_sched_ut -c -f "pr_filelist.txt" --cann_3rd_lib_path="/home/jenkins/opensource"
             ret=$?
             ;;
         tsd)

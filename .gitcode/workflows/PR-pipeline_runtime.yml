@@ -207,7 +207,7 @@ stages:
           task_name: 'UT_Test_aicpusd'
           ut_package: 'ut_cov_*.tar.gz'
           ge_st_rt2: 'aicpusd'
-          spec: 'xlarge'
+          spec: '2xlarge'
           image_version: ${{ jobs.JOB_image.outputs.UT_Test_aicpusd }}
       JOB_UT_Test_tsd:
         name: UT_Test_tsd
