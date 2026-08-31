@@ -125,6 +125,7 @@ extern int64_t g_device_driver_version_stub;
 extern int64_t g_deviceCurrentTimeStub;
 extern int32_t faultEventFlag;
 extern std::string g_lastDlogRecordLine;
+extern std::string g_allDlogRecordLines;
 void ClearLastDlogRecordLine();
 bool DlogRecordContains(const std::string& keyword);
 #define PLATFORMCONFIG_NO_DEVICE                                                     \
@@ -132,12 +133,117 @@ bool DlogRecordContains(const std::string& keyword);
         (static_cast<uint32_t>(ARCH_C220)), (static_cast<uint32_t>(CHIP_NO_DEVICE)), \
         (static_cast<uint32_t>(RT_VER_NA)))
 
-rtCqReport_t g_cqReport1;
+static uint32_t g_queryPageFaultInfoCount = 0U;
+static rtError_t g_queryPageFaultInfoRet = RT_ERROR_NONE;
+static uint32_t g_validRangeSide = static_cast<uint32_t>(MEM_DEV_SIDE);
+static uint32_t g_validRangeDeviceId = 7U;
+static int32_t g_validRangeIsShared = 1;
+static rtError_t StubQueryPageFaultInfo(const uint32_t deviceId, struct svmPagefaultInfo& info)
+{
+    EXPECT_EQ(deviceId, 0U);
+    ++g_queryPageFaultInfoCount;
+    if (g_queryPageFaultInfoRet != RT_ERROR_NONE) {
+        return g_queryPageFaultInfoRet;
+    }
+    info.fault_va = 0x12345000ULL;
+    info.valid_range_start = 0x12340000ULL;
+    info.valid_range_size = 0x2000ULL;
+    info.valid_range_side = g_validRangeSide;
+    info.valid_range_devid = g_validRangeDeviceId;
+    info.valid_range_is_shared = g_validRangeIsShared;
+    return RT_ERROR_NONE;
+}
+
+static uint32_t g_clearPageFaultInfoCount = 0U;
+static bool g_checkPageFaultLogAbsentWhenClear = false;
+static rtError_t StubClearPageFaultInfo(const uint32_t deviceId)
+{
+    EXPECT_EQ(deviceId, 0U);
+    if (g_checkPageFaultLogAbsentWhenClear) {
+        EXPECT_FALSE(DlogRecordContains("Page fault info"));
+    }
+    ++g_clearPageFaultInfoCount;
+    return RT_ERROR_DRV_ERR;
+}
+
+static uint32_t g_pageFaultMemCtlCount = 0U;
+static uint32_t g_pageFaultMemCtlQueryCount = 0U;
+static uint32_t g_pageFaultMemCtlClearCount = 0U;
+static uint32_t g_pageFaultMemCtlExpectedDeviceId = 3U;
+static bool g_checkPageFaultLogAbsentWhenMemCtlClear = false;
+static drvError_t g_pageFaultMemCtlRet = DRV_ERROR_NONE;
+static drvError_t StubPageFaultMemCtl(
+    int type, void* paramValue, size_t paramValueSize, void* outValue, size_t* outSizeRet)
+{
+    EXPECT_NE(paramValue, nullptr);
+    EXPECT_EQ(paramValueSize, sizeof(uint32_t));
+    EXPECT_EQ(*static_cast<uint32_t*>(paramValue), g_pageFaultMemCtlExpectedDeviceId);
+    ++g_pageFaultMemCtlCount;
+    if (type == CTRL_TYPE_PAGEFAULT_INFO_QUERY) {
+        ++g_pageFaultMemCtlQueryCount;
+        EXPECT_NE(outValue, nullptr);
+        EXPECT_NE(outSizeRet, nullptr);
+        EXPECT_EQ(*outSizeRet, sizeof(struct svmPagefaultInfo));
+        struct svmPagefaultInfo* const info = static_cast<struct svmPagefaultInfo*>(outValue);
+        info->fault_va = 0x12345000ULL;
+        info->valid_range_start = 0x12340000ULL;
+        info->valid_range_size = 0x2000ULL;
+        info->valid_range_side = g_validRangeSide;
+        info->valid_range_devid = g_validRangeDeviceId;
+        info->valid_range_is_shared = g_validRangeIsShared;
+        *outSizeRet = sizeof(struct svmPagefaultInfo);
+    } else {
+        EXPECT_EQ(type, CTRL_TYPE_PAGEFAULT_INFO_CLEAR);
+        EXPECT_EQ(outValue, nullptr);
+        EXPECT_EQ(outSizeRet, nullptr);
+        if (g_checkPageFaultLogAbsentWhenMemCtlClear) {
+            EXPECT_FALSE(DlogRecordContains("Page fault info"));
+        }
+        ++g_pageFaultMemCtlClearCount;
+    }
+    return g_pageFaultMemCtlRet;
+}
+
+static size_t CountDlogOccurrences(const std::string& keyword)
+{
+    size_t count = 0U;
+    size_t pos = 0U;
+    while ((pos = g_allDlogRecordLines.find(keyword, pos)) != std::string::npos) {
+        ++count;
+        pos += keyword.size();
+    }
+    return count;
+}
+
+static rtError_t ProcessStarv2TaskErrorBatch(
+    Device* const device, const uint32_t errorType, const StarsDeviceErrorInfoRingBuffer& errorInfo)
+{
+    constexpr size_t uint64Size = sizeof(uint64_t);
+    const size_t ringBufferSize = sizeof(DevRingBufferCtlInfo) + RINGBUFFER_EXT_ONE_ELEMENT_LENGTH_ON_DAVID;
+    std::vector<uint64_t> ringBuffer((ringBufferSize + uint64Size - 1U) / uint64Size, 0U);
+    DevRingBufferCtlInfo* const ctlInfo = reinterpret_cast<DevRingBufferCtlInfo*>(ringBuffer.data());
+    ctlInfo->tail = 1U;
+    ctlInfo->magic = RINGBUFFER_MAGIC;
+    ctlInfo->ringBufferLen = RINGBUFFER_LEN;
+    ctlInfo->elementSize = RINGBUFFER_EXT_ONE_ELEMENT_LENGTH_ON_DAVID;
+
+    RingBufferElementInfo* const elementInfo = reinterpret_cast<RingBufferElementInfo*>(
+        reinterpret_cast<uint8_t*>(ringBuffer.data()) + sizeof(DevRingBufferCtlInfo));
+    elementInfo->errorType = errorType;
+    StarsDeviceErrorInfoRingBuffer* const ringBufferErrorInfo =
+        reinterpret_cast<StarsDeviceErrorInfoRingBuffer*>(elementInfo + 1);
+    *ringBufferErrorInfo = errorInfo;
+
+    DeviceErrorProc errorProc(device);
+    return errorProc.ProcessStarv2OneElementInRingBuffer(ctlInfo, 0U, 1U);
+}
+
+rtLogicCqReport_t g_cqReport1;
 static rtError_t Sub_LogicCqReportV2(
     NpuDriver* drv, const LogicCqWaitInfo& waitInfo, uint8_t* report, uint32_t reportCnt, uint32_t& realCnt)
 {
     realCnt = 1;
-    rtCqReport_t* reportPtr = reinterpret_cast<rtCqReport_t*>(report);
+    rtLogicCqReport_t* reportPtr = reinterpret_cast<rtLogicCqReport_t*>(report);
     g_cqReport1.taskId = 1U;
     *reportPtr = g_cqReport1;
 
@@ -1594,6 +1700,202 @@ static void SetDeviceTimeMock(Device* dev, int64_t currentTimeMs, int64_t baseTi
     g_deviceCurrentTimeStub = currentTimeMs;
     MOCKER_CPP_VIRTUAL(dev, &Device::GetDeviceCurrentTime).stubs().will(returnValue(currentTimeMs));
     MOCKER_CPP_VIRTUAL(dev, &Device::GetBaseTime).stubs().will(returnValue(baseTimeMs));
+}
+
+TEST_F(DavidTaskTest, page_fault_mem_ctrl_passes_device_id)
+{
+    MOCKER(halMemCtl).stubs().will(invoke(StubPageFaultMemCtl));
+    struct svmPagefaultInfo info = {};
+    g_pageFaultMemCtlCount = 0U;
+    g_pageFaultMemCtlQueryCount = 0U;
+    g_pageFaultMemCtlClearCount = 0U;
+    g_pageFaultMemCtlExpectedDeviceId = 3U;
+    g_pageFaultMemCtlRet = DRV_ERROR_NONE;
+
+    EXPECT_EQ(NpuDriver::QueryPageFaultInfo(3U, info), RT_ERROR_NONE);
+    EXPECT_EQ(info.fault_va, 0x12345000ULL);
+    EXPECT_EQ(NpuDriver::ClearPageFaultInfo(3U), RT_ERROR_NONE);
+    EXPECT_EQ(g_pageFaultMemCtlCount, 2U);
+    EXPECT_EQ(g_pageFaultMemCtlQueryCount, 1U);
+    EXPECT_EQ(g_pageFaultMemCtlClearCount, 1U);
+    GlobalMockObject::verify();
+}
+
+TEST_F(DavidTaskTest, page_fault_mem_ctrl_query_failure_degrades)
+{
+    MOCKER(halMemCtl).stubs().will(invoke(StubPageFaultMemCtl));
+    struct svmPagefaultInfo info = {};
+    g_pageFaultMemCtlCount = 0U;
+    g_pageFaultMemCtlQueryCount = 0U;
+    g_pageFaultMemCtlClearCount = 0U;
+    g_pageFaultMemCtlExpectedDeviceId = 3U;
+
+    g_pageFaultMemCtlRet = DRV_ERROR_NOT_SUPPORT;
+    ClearLastDlogRecordLine();
+    EXPECT_EQ(NpuDriver::QueryPageFaultInfo(3U, info), RT_GET_DRV_ERRCODE(DRV_ERROR_NOT_SUPPORT));
+    EXPECT_EQ(g_pageFaultMemCtlCount, 1U);
+    EXPECT_EQ(g_pageFaultMemCtlQueryCount, 1U);
+    EXPECT_EQ(g_pageFaultMemCtlClearCount, 0U);
+    EXPECT_FALSE(DlogRecordContains("halMemCtl"));
+    GlobalMockObject::verify();
+}
+
+TEST_F(DavidTaskTest, page_fault_mem_ctrl_clear_propagates_failure)
+{
+    MOCKER(halMemCtl).stubs().will(invoke(StubPageFaultMemCtl));
+    g_pageFaultMemCtlCount = 0U;
+    g_pageFaultMemCtlQueryCount = 0U;
+    g_pageFaultMemCtlClearCount = 0U;
+    g_pageFaultMemCtlExpectedDeviceId = 3U;
+
+    g_pageFaultMemCtlRet = DRV_ERROR_NOT_SUPPORT;
+    ClearLastDlogRecordLine();
+    EXPECT_EQ(NpuDriver::ClearPageFaultInfo(3U), RT_GET_DRV_ERRCODE(DRV_ERROR_NOT_SUPPORT));
+    EXPECT_EQ(g_pageFaultMemCtlCount, 1U);
+    EXPECT_EQ(g_pageFaultMemCtlQueryCount, 0U);
+    EXPECT_EQ(g_pageFaultMemCtlClearCount, 1U);
+    EXPECT_FALSE(DlogRecordContains("halMemCtl"));
+    GlobalMockObject::verify();
+}
+
+TEST_F(DavidTaskTest, task_error_page_fault_info_query_once)
+{
+    StarsDeviceErrorInfoRingBuffer errorInfo = {};
+    errorInfo.u.davidCoreErrorInfo.comm.type = AICORE_ERROR;
+    errorInfo.u.davidCoreErrorInfo.comm.coreNum = 2U;
+    MOCKER(GetTaskInfo).stubs().will(returnValue(static_cast<TaskInfo*>(nullptr)));
+    MOCKER(halMemCtl).stubs().will(invoke(StubPageFaultMemCtl));
+
+    g_pageFaultMemCtlCount = 0U;
+    g_pageFaultMemCtlQueryCount = 0U;
+    g_pageFaultMemCtlClearCount = 0U;
+    g_pageFaultMemCtlExpectedDeviceId = 0U;
+    g_checkPageFaultLogAbsentWhenMemCtlClear = true;
+    g_pageFaultMemCtlRet = DRV_ERROR_NONE;
+    g_validRangeSide = static_cast<uint32_t>(MEM_DEV_SIDE);
+    g_validRangeDeviceId = 7U;
+    g_validRangeIsShared = 1;
+    ClearLastDlogRecordLine();
+    const rtError_t ret = ProcessStarv2TaskErrorBatch(dev_, AICORE_ERROR, errorInfo);
+    g_checkPageFaultLogAbsentWhenMemCtlClear = false;
+
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_EQ(g_pageFaultMemCtlCount, 2U);
+    EXPECT_EQ(g_pageFaultMemCtlQueryCount, 1U);
+    EXPECT_EQ(g_pageFaultMemCtlClearCount, 1U);
+    EXPECT_EQ(CountDlogOccurrences("An error occurs on the device"), 2U);
+    EXPECT_EQ(CountDlogOccurrences("Page fault info"), 1U);
+    const size_t errorPos = g_allDlogRecordLines.find("An error occurs on the device");
+    const size_t pageFaultPos = g_allDlogRecordLines.find("Page fault info", errorPos);
+    ASSERT_NE(errorPos, std::string::npos);
+    ASSERT_NE(pageFaultPos, std::string::npos);
+    EXPECT_LT(errorPos, pageFaultPos);
+    EXPECT_NE(g_allDlogRecordLines.find("fault_va=0x12345000", pageFaultPos), std::string::npos);
+    EXPECT_NE(g_allDlogRecordLines.find("valid_range_size=8192(bytes)", pageFaultPos), std::string::npos);
+    EXPECT_NE(g_allDlogRecordLines.find("valid_range_side=device", pageFaultPos), std::string::npos);
+    EXPECT_NE(g_allDlogRecordLines.find("valid_range_devid=7", pageFaultPos), std::string::npos);
+    EXPECT_NE(g_allDlogRecordLines.find("valid_range_is_shared=1", pageFaultPos), std::string::npos);
+    GlobalMockObject::verify();
+}
+
+TEST_F(DavidTaskTest, task_error_page_fault_not_found_does_not_report_or_clear)
+{
+    StarsDeviceErrorInfoRingBuffer errorInfo = {};
+    errorInfo.u.davidCoreErrorInfo.comm.type = AICORE_ERROR;
+    errorInfo.u.davidCoreErrorInfo.comm.coreNum = 1U;
+    MOCKER(GetTaskInfo).stubs().will(returnValue(static_cast<TaskInfo*>(nullptr)));
+    MOCKER(halMemCtl).stubs().will(invoke(StubPageFaultMemCtl));
+
+    g_pageFaultMemCtlCount = 0U;
+    g_pageFaultMemCtlQueryCount = 0U;
+    g_pageFaultMemCtlClearCount = 0U;
+    g_pageFaultMemCtlExpectedDeviceId = 0U;
+    g_pageFaultMemCtlRet = DRV_ERROR_NOT_EXIST;
+    ClearLastDlogRecordLine();
+    const rtError_t ret = ProcessStarv2TaskErrorBatch(dev_, AICORE_ERROR, errorInfo);
+
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_EQ(g_pageFaultMemCtlCount, 1U);
+    EXPECT_EQ(g_pageFaultMemCtlQueryCount, 1U);
+    EXPECT_EQ(g_pageFaultMemCtlClearCount, 0U);
+    EXPECT_TRUE(DlogRecordContains("An error occurs on the device"));
+    EXPECT_FALSE(DlogRecordContains("Page fault info:"));
+    g_pageFaultMemCtlRet = DRV_ERROR_NONE;
+    GlobalMockObject::verify();
+}
+
+TEST_F(DavidTaskTest, non_aicore_task_error_reports_page_fault_info)
+{
+    StarsDeviceErrorInfoRingBuffer errorInfo = {};
+    errorInfo.u.aicpuErrorInfo.comm.type = AICPU_ERROR;
+    errorInfo.u.aicpuErrorInfo.comm.coreNum = 1U;
+    MOCKER(GetTaskInfo).stubs().will(returnValue(static_cast<TaskInfo*>(nullptr)));
+    MOCKER(NpuDriver::QueryPageFaultInfo).stubs().will(invoke(StubQueryPageFaultInfo));
+    MOCKER(NpuDriver::ClearPageFaultInfo).stubs().will(invoke(StubClearPageFaultInfo));
+
+    g_queryPageFaultInfoCount = 0U;
+    g_clearPageFaultInfoCount = 0U;
+    g_queryPageFaultInfoRet = RT_ERROR_NONE;
+    ClearLastDlogRecordLine();
+    const rtError_t ret = ProcessStarv2TaskErrorBatch(dev_, AICPU_ERROR, errorInfo);
+
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_EQ(g_queryPageFaultInfoCount, 1U);
+    EXPECT_EQ(g_clearPageFaultInfoCount, 1U);
+    const size_t taskErrorPos = g_allDlogRecordLines.find("AICPU execution");
+    const size_t pageFaultPos = g_allDlogRecordLines.find("Page fault info", taskErrorPos);
+    ASSERT_NE(taskErrorPos, std::string::npos);
+    ASSERT_NE(pageFaultPos, std::string::npos);
+    EXPECT_LT(taskErrorPos, pageFaultPos);
+    GlobalMockObject::verify();
+}
+
+TEST_F(DavidTaskTest, non_processable_error_does_not_query_page_fault_info)
+{
+    StarsDeviceErrorInfoRingBuffer errorInfo = {};
+    MOCKER(NpuDriver::QueryPageFaultInfo).stubs().will(invoke(StubQueryPageFaultInfo));
+    MOCKER(NpuDriver::ClearPageFaultInfo).stubs().will(invoke(StubClearPageFaultInfo));
+
+    g_queryPageFaultInfoCount = 0U;
+    g_clearPageFaultInfoCount = 0U;
+    g_queryPageFaultInfoRet = RT_ERROR_NONE;
+    EXPECT_EQ(ProcessStarv2TaskErrorBatch(dev_, AICORE_EXT_ERROR, errorInfo), RT_ERROR_NONE);
+    EXPECT_EQ(ProcessStarv2TaskErrorBatch(dev_, ERROR_TYPE_BUTT, errorInfo), RT_ERROR_NONE);
+    EXPECT_EQ(g_queryPageFaultInfoCount, 0U);
+    EXPECT_EQ(g_clearPageFaultInfoCount, 0U);
+    GlobalMockObject::verify();
+}
+
+TEST_F(DavidTaskTest, task_error_page_fault_info_formats_non_device_side)
+{
+    StarsDeviceErrorInfoRingBuffer errorInfo = {};
+    errorInfo.u.davidCoreErrorInfo.comm.type = AIVECTOR_ERROR;
+    errorInfo.u.davidCoreErrorInfo.comm.coreNum = 1U;
+    MOCKER(GetTaskInfo).stubs().will(returnValue(static_cast<TaskInfo*>(nullptr)));
+    MOCKER(NpuDriver::QueryPageFaultInfo).stubs().will(invoke(StubQueryPageFaultInfo));
+    MOCKER(NpuDriver::ClearPageFaultInfo).stubs().will(invoke(StubClearPageFaultInfo));
+
+    g_queryPageFaultInfoCount = 0U;
+    g_clearPageFaultInfoCount = 0U;
+    g_queryPageFaultInfoRet = RT_ERROR_NONE;
+    g_validRangeSide = static_cast<uint32_t>(MEM_HOST_SIDE);
+    g_validRangeIsShared = 0;
+    ClearLastDlogRecordLine();
+    EXPECT_EQ(ProcessStarv2TaskErrorBatch(dev_, AIVECTOR_ERROR, errorInfo), RT_ERROR_NONE);
+    EXPECT_TRUE(DlogRecordContains("valid_range_side=host"));
+    EXPECT_FALSE(DlogRecordContains("valid_range_devid="));
+    EXPECT_TRUE(DlogRecordContains("valid_range_is_shared=0"));
+
+    g_validRangeSide = static_cast<uint32_t>(MEM_MAX_SIDE);
+    ClearLastDlogRecordLine();
+    EXPECT_EQ(ProcessStarv2TaskErrorBatch(dev_, AIVECTOR_ERROR, errorInfo), RT_ERROR_NONE);
+    EXPECT_TRUE(DlogRecordContains("valid_range_side=invalid"));
+    EXPECT_FALSE(DlogRecordContains("valid_range_devid="));
+    EXPECT_EQ(g_queryPageFaultInfoCount, 2U);
+    EXPECT_EQ(g_clearPageFaultInfoCount, 2U);
+    g_validRangeSide = static_cast<uint32_t>(MEM_DEV_SIDE);
+    g_validRangeIsShared = 1;
+    GlobalMockObject::verify();
 }
 
 TEST_F(DavidTaskTest, aicore_ras_mte_poison_with_device_time)

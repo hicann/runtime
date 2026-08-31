@@ -2017,6 +2017,19 @@ void NpuDriver::SetAllocNumaTsSupported() { return; }
 
 rtError_t NpuDriver::Support1GHugePageCtrl() { return RT_ERROR_NONE; }
 
+rtError_t NpuDriver::QueryPageFaultInfo(const uint32_t deviceId, struct svmPagefaultInfo& info)
+{
+    UNUSED(deviceId);
+    UNUSED(info);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t NpuDriver::ClearPageFaultInfo(const uint32_t deviceId)
+{
+    UNUSED(deviceId);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
 rtError_t NpuDriver::SupportNumaTsMemCtrl(int64_t& val)
 {
     UNUSED(val);

@@ -267,6 +267,63 @@ static void DeleteFakeStream(Stream* const stream)
     delete stream;
 }
 
+static uint32_t g_starsPageFaultQueryCount = 0U;
+static uint32_t g_starsPageFaultClearCount = 0U;
+
+static rtError_t StubStarsQueryPageFaultInfo(const uint32_t deviceId, struct svmPagefaultInfo& info)
+{
+    EXPECT_EQ(deviceId, 0U);
+    ++g_starsPageFaultQueryCount;
+    info.fault_va = 0x12345000ULL;
+    info.valid_range_start = 0x12340000ULL;
+    info.valid_range_size = 0x2000ULL;
+    info.valid_range_side = static_cast<uint32_t>(MEM_DEV_SIDE);
+    info.valid_range_devid = 0U;
+    info.valid_range_is_shared = 0;
+    return RT_ERROR_NONE;
+}
+
+static rtError_t StubStarsClearPageFaultInfo(const uint32_t deviceId)
+{
+    EXPECT_EQ(deviceId, 0U);
+    ++g_starsPageFaultClearCount;
+    return RT_ERROR_NONE;
+}
+
+TEST_F(CloudV2DeviceTest, STARS_TASK_ERROR_PAGE_FAULT_INFO_QUERY_ONCE)
+{
+    Device* const device = Runtime::Instance()->DeviceRetain(0U, 0U);
+    ASSERT_NE(device, nullptr);
+    {
+        DeviceErrorProc errorProc(device);
+        constexpr size_t uint64Size = sizeof(uint64_t);
+        std::vector<uint64_t> ringBuffer((DEVICE_ERROR_EXT_RINGBUFFER_SIZE + uint64Size - 1U) / uint64Size, 0U);
+        DevRingBufferCtlInfo* const ctlInfo = reinterpret_cast<DevRingBufferCtlInfo*>(ringBuffer.data());
+        ctlInfo->head = 0U;
+        ctlInfo->tail = 1U;
+        ctlInfo->ringBufferLen = RINGBUFFER_LEN;
+        ctlInfo->elementSize = RINGBUFFER_EXT_ONE_ELEMENT_LENGTH;
+
+        uint8_t* const elementAddr = reinterpret_cast<uint8_t*>(ctlInfo) + sizeof(DevRingBufferCtlInfo);
+        RingBufferElementInfo* const elementInfo = reinterpret_cast<RingBufferElementInfo*>(elementAddr);
+        elementInfo->errorType = AICORE_ERROR;
+        StarsDeviceErrorInfoRingBuffer* const errorInfo =
+            reinterpret_cast<StarsDeviceErrorInfoRingBuffer*>(elementInfo + 1);
+        errorInfo->u.coreErrorInfo.comm.type = AICORE_ERROR;
+        errorInfo->u.coreErrorInfo.comm.coreNum = 0U;
+
+        MOCKER(NpuDriver::QueryPageFaultInfo).stubs().will(invoke(StubStarsQueryPageFaultInfo));
+        MOCKER(NpuDriver::ClearPageFaultInfo).stubs().will(invoke(StubStarsClearPageFaultInfo));
+        g_starsPageFaultQueryCount = 0U;
+        g_starsPageFaultClearCount = 0U;
+
+        EXPECT_EQ(errorProc.ProcessStarsOneElementInRingBuffer(ctlInfo, 0U, 1U), RT_ERROR_NONE);
+        EXPECT_EQ(g_starsPageFaultQueryCount, 1U);
+        EXPECT_EQ(g_starsPageFaultClearCount, 1U);
+    }
+    Runtime::Instance()->DeviceRelease(device);
+}
+
 TEST_F(CloudV2DeviceTest, STARS_FFTSPLUS_ERROR_PROC)
 {
     Device* device = ((Runtime*)Runtime::Instance())->DeviceRetain(0, 0);

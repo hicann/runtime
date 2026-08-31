@@ -1695,6 +1695,40 @@ static uint32_t CollectStarsExtInfos(
     return CollectCoreExtInfos(ctlInfo, elementSize, head, tail, baseType, 1U, aicExt, aivExt);
 }
 
+static void QueryAndReportPageFaultInfo(const Device* const device)
+{
+    if (device == nullptr) {
+        RT_LOG(RT_LOG_ERROR, "Device is null.");
+        return;
+    }
+    struct svmPagefaultInfo pageFaultInfo = {};
+    const rtError_t queryRet = NpuDriver::QueryPageFaultInfo(device->Id_(), pageFaultInfo);
+    if (queryRet != RT_ERROR_NONE) {
+        return;
+    }
+    (void)NpuDriver::ClearPageFaultInfo(device->Id_());
+
+    const char* validRangeSide = "invalid";
+    if (pageFaultInfo.valid_range_side == static_cast<uint32_t>(MEM_DEV_SIDE)) {
+        validRangeSide = "device";
+    } else if (pageFaultInfo.valid_range_side == static_cast<uint32_t>(MEM_HOST_SIDE)) {
+        validRangeSide = "host";
+    } else {
+        // No action is required for unexpected values.
+    }
+    const std::string validRangeDeviceInfo =
+        (pageFaultInfo.valid_range_side == static_cast<uint32_t>(MEM_DEV_SIDE)) ?
+            ", valid_range_devid=" + std::to_string(pageFaultInfo.valid_range_devid) :
+            "";
+    RT_LOG_CALL_MSG(
+        ERR_MODULE_RTS,
+        "Page fault info: device_id=%u, fault_va=%#" PRIx64 ", valid_range_start=%#" PRIx64
+        ", valid_range_size=%" PRIu64 "(bytes), valid_range_side=%s%s, valid_range_is_shared=%d.",
+        device->Id_(), static_cast<uint64_t>(pageFaultInfo.fault_va),
+        static_cast<uint64_t>(pageFaultInfo.valid_range_start), static_cast<uint64_t>(pageFaultInfo.valid_range_size),
+        validRangeSide, validRangeDeviceInfo.c_str(), pageFaultInfo.valid_range_is_shared);
+}
+
 void DeviceErrorProc::ProcessStarsRingBufferErrorInfo(
     const RingBufferElementInfo* const info, const bool isPrintTaskInfo,
     const StarsDeviceErrorInfo* const errorInfo) const
@@ -1740,6 +1774,7 @@ rtError_t DeviceErrorProc::ProcessOneElementInRingBufferImpl(
         RT_LOG_INFO, "it need to process %u errMessages, headSize=%zu, elementSize=%zu.",
         (tail + ctlInfo->ringBufferLen - head) % ctlInfo->ringBufferLen, headSize, elementSize);
 
+    bool needQueryPageFaultInfo = false;
     while (head != tail) {
         // 先按当前 head 获取元素，再推进 head；Ext 合并逻辑可继续消费后续紧邻的 Ext 元素。
         const RingBufferElementInfo* const elementInfo = GetRingBufferElement(ctlInfo, elementSize, head);
@@ -1749,7 +1784,7 @@ rtError_t DeviceErrorProc::ProcessOneElementInRingBufferImpl(
 
         head = (head + 1U) % (ctlInfo->ringBufferLen);
 
-        if (elementInfo->errorType > static_cast<uint32_t>(ERROR_TYPE_BUTT)) {
+        if (elementInfo->errorType >= static_cast<uint32_t>(ERROR_TYPE_BUTT)) {
             RT_LOG(
                 RT_LOG_WARNING, "Failed to get error information from device, error type=%u.", elementInfo->errorType);
             continue;
@@ -1763,6 +1798,7 @@ rtError_t DeviceErrorProc::ProcessOneElementInRingBufferImpl(
             StarsDeviceErrorInfo mergedErrorInfo = {};
             extMergeProcessor(ctlInfo, elementSize, head, tail, elementInfo->errorType, rbErrorInfo, mergedErrorInfo);
             ProcessStarsRingBufferErrorInfo(elementInfo, isPrintTaskInfo, &mergedErrorInfo);
+            needQueryPageFaultInfo = true;
             continue;
         }
 
@@ -1777,6 +1813,10 @@ rtError_t DeviceErrorProc::ProcessOneElementInRingBufferImpl(
         CopyRingBufferPayload(procErrorInfo, rbErrorInfo, elementSize);
 
         ProcessStarsRingBufferErrorInfo(elementInfo, isPrintTaskInfo, &procErrorInfo);
+        needQueryPageFaultInfo = true;
+    }
+    if (needQueryPageFaultInfo) {
+        QueryAndReportPageFaultInfo(device_);
     }
     return RT_ERROR_NONE;
 }

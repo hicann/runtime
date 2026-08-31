@@ -749,17 +749,16 @@ rtError_t ApiImplDavid::SetMemcpyDesc(
 }
 
 static rtError_t GetUbMemcpyFlag(
-    void* const dst, const void* const src, const rtMemcpyKind_t kind, Stream* const stm, bool& isUbMemcpy)
+    const void* const dst, const void* const src, const rtMemcpyKind_t kind, Stream* const stm, bool& isUbMemcpy)
 {
     if (kind != RT_MEMCPY_DEVICE_TO_DEVICE) {
         isUbMemcpy = Runtime::Instance()->GetConnectUbFlag();
         return RT_ERROR_NONE;
     }
 
-    // D2D用地址的attr判断互联类型
     uint8_t transType = 0U;
-    const rtError_t error =
-        stm->Device_()->Driver_()->GetTransWayByAddr(RtPtrToUnConstPtr<void*>(src), dst, &transType);
+    const rtError_t error = stm->Device_()->Driver_()->GetTransWayByAddr(
+        RtPtrToUnConstPtr<void*>(src), RtPtrToUnConstPtr<void*>(dst), &transType);
     COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
     isUbMemcpy = (transType == RT_MEMCPY_CHANNEL_TYPE_UB);
     return RT_ERROR_NONE;

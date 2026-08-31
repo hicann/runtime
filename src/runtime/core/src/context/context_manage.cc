@@ -12,6 +12,7 @@
 #include "context.hpp"
 #include "inner_thread_local.hpp"
 #include "context_data_manage.h"
+#include "npu_driver.hpp"
 
 namespace cce {
 namespace runtime {
@@ -399,6 +400,8 @@ rtError_t ContextManage::DeviceTaskAbort(const int32_t devId, const uint32_t tim
     ERROR_GOTO_MSG_INNER(
         error, TIMEINFO, "Failed to query device terminate status, retCode=%#x.", static_cast<uint32_t>(error));
     mmGetTimeOfDay(&tv[++index], nullptr);
+
+    (void)NpuDriver::ClearPageFaultInfo(static_cast<uint32_t>(devId));
 
     error = DeviceClean(devId);
     mmGetTimeOfDay(&tv[++index], nullptr);

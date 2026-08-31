@@ -910,7 +910,18 @@ enum ctrlType {
     CTRL_TYPE_PROCESS_CP_MMAP = 6,
     CTRL_TYPE_PROCESS_CP_MUNMAP = 7,
     CTRL_TYPE_GET_DCACHE_ADDR = 8,
+    CTRL_TYPE_PAGEFAULT_INFO_QUERY = 9,  /* Inpara is devid, Outpara is svmPagefaultInfo */
+    CTRL_TYPE_PAGEFAULT_INFO_CLEAR = 10, /* Inpara is devid */
     CTRL_TYPE_MAX
+};
+
+struct svmPagefaultInfo {
+    unsigned long long fault_va;          /* Fault VA that triggered page fault failure. */
+    unsigned long long valid_range_start; /* Start of the nearest valid address range before fault VA. */
+    unsigned long long valid_range_size;  /* Size of the nearest valid address range. */
+    unsigned int valid_range_side;        /* enum drv_mem_side: MEM_HOST_SIDE or MEM_DEV_SIDE. */
+    unsigned int valid_range_devid;       /* Valid only when valid_range_side is MEM_DEV_SIDE. */
+    int valid_range_is_shared;            /* 1: shared (IPC/VMM import); 0: self-allocated. */
 };
 
 #define CTRL_SUPPORT_NUMA_TS_BIT 0

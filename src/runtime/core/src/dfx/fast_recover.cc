@@ -16,6 +16,7 @@
 #include "context_data_manage.h"
 #include "context_manage.hpp"
 #include "device/device_error_info.hpp"
+#include "npu_driver.hpp"
 
 namespace cce {
 namespace runtime {
@@ -274,6 +275,8 @@ rtError_t DavidDeviceTaskAbort(const int32_t devId, const uint32_t time)
     COND_RETURN_ERROR(
         ((timeout != 0U) && (timeCost[index] >= timeout)), RT_ERROR_WAIT_TIMEOUT, "Query abort timeout, device_id=%d.",
         devId);
+
+    (void)NpuDriver::ClearPageFaultInfo(static_cast<uint32_t>(devId));
 
     /* 5. Callback HCCL to clean all communication domain */
     error = rtInstance->TaskAbortCallBack(

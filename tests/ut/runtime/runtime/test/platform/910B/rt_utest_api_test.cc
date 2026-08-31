@@ -10,6 +10,7 @@
 #include "../../rt_utest_api.hpp"
 #include "platform_manager_v2.h"
 #include "../../data/elf.h"
+#include "npu_driver.hpp"
 
 class NewCloudV2ApiTest : public testing::Test {
 public:
@@ -2370,10 +2371,31 @@ TEST_F(NewCloudV2ApiTest, rtDeviceStatusQuery_02)
 }
 
 bool g_taskAbortCallBack = false;
+static bool g_abortTerminateConfirmed = false;
+static uint32_t g_abortPageFaultClearCount = 0U;
+
 static int32_t StubTaskAbortCallBack(uint32_t devId, rtTaskAbortStage_t stage, uint32_t timeout, void* args)
 {
     g_taskAbortCallBack = true;
     return 0;
+}
+
+static rtError_t StubDeviceQueryForPageFaultClear(const int32_t devId, const uint32_t step, const uint32_t timeout)
+{
+    (void)devId;
+    (void)timeout;
+    if (step == APP_ABORT_TERMINATE_FINISH) {
+        g_abortTerminateConfirmed = true;
+    }
+    return RT_ERROR_NONE;
+}
+
+static rtError_t StubAbortClearPageFaultInfo(const uint32_t deviceId)
+{
+    EXPECT_EQ(deviceId, 0U);
+    EXPECT_TRUE(g_abortTerminateConfirmed);
+    ++g_abortPageFaultClearCount;
+    return RT_GET_DRV_ERRCODE(DRV_ERROR_NOT_SUPPORT);
 }
 
 TEST_F(NewCloudV2ApiTest, rtDeviceTaskAbort_04)
@@ -2392,13 +2414,18 @@ TEST_F(NewCloudV2ApiTest, rtDeviceTaskAbort_04)
 
     MOCKER(halSqCqAllocate).stubs().will(returnValue(DRV_ERROR_NONE));
 
-    MOCKER(ContextManage::DeviceQuery).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(ContextManage::DeviceQuery).stubs().will(invoke(StubDeviceQueryForPageFaultClear));
+    MOCKER(NpuDriver::ClearPageFaultInfo).stubs().will(invoke(StubAbortClearPageFaultInfo));
 
     MOCKER_CPP(&StreamSqCqManage::UpdateStreamSqCq).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER(ContextManage::IsSupportDeviceAbort).stubs().will(returnValue(true));
+    g_taskAbortCallBack = false;
+    g_abortTerminateConfirmed = false;
+    g_abortPageFaultClearCount = 0U;
     error = rtDeviceTaskAbort(devId, 1000);
     EXPECT_EQ(error, DRV_ERROR_NONE);
     EXPECT_EQ(g_taskAbortCallBack, true);
+    EXPECT_EQ(g_abortPageFaultClearCount, 1U);
 }
 
 TEST_F(NewCloudV2ApiTest, rtDeviceTaskAbort_05)

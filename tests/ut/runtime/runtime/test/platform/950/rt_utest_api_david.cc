@@ -6833,8 +6833,21 @@ TEST_F(ApiDavidTest, rtStreamTaskClean_03)
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
+static uint32_t g_clearPageFaultInfoCount = 0U;
+static bool g_checkClearBeforeAbortPost = false;
+
+static rtError_t StubClearPageFaultInfo(const uint32_t deviceId)
+{
+    EXPECT_EQ(deviceId, 0U);
+    ++g_clearPageFaultInfoCount;
+    return RT_ERROR_DRV_ERR;
+}
+
 int32_t testrtSetTaskAbortCallBack(uint32_t devId, rtTaskAbortStage_t stage, uint32_t timeout, void* args)
 {
+    if (g_checkClearBeforeAbortPost && (stage == RT_DEVICE_ABORT_POST)) {
+        EXPECT_EQ(g_clearPageFaultInfoCount, 1U);
+    }
     printf("callback func for abort");
     return 0;
 }
@@ -6855,11 +6868,16 @@ TEST_F(ApiDavidTest, DavidrtDeviceTaskAbort_01)
     error = rtCtxCreate(&ctx, 0, 0);
     MOCKER(halTsdrvCtl).stubs().will(returnValue(DRV_ERROR_NONE));
     MOCKER(DavidDeviceQuery).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(NpuDriver::ClearPageFaultInfo).stubs().will(invoke(StubClearPageFaultInfo));
 
+    g_clearPageFaultInfoCount = 0U;
+    g_checkClearBeforeAbortPost = true;
     error = rtSetTaskAbortCallBack("test", testrtSetTaskAbortCallBack, NULL);
     error = rtDeviceTaskAbort(0, 0);
+    g_checkClearBeforeAbortPost = false;
 
     EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(g_clearPageFaultInfoCount, 1U);
     rtCtxDestroy(ctx);
 }
 
@@ -8971,6 +8989,8 @@ TEST_F(ApiDavidTest, StreamLaunchKernel_aclgraph_update)
     error = rtDevBinaryUnRegister(binHandle_);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
+    stream->streamId_ = -1;
+    capStream->streamId_ = -1;
     delete stream;
     delete capStream;
     delete mdl;
@@ -9115,6 +9135,8 @@ TEST_F(ApiDavidTest, StreamLaunchKernelWithHandle_aclgraph_update)
 
     TaskUnInitProc(&memcpyTask);
 
+    stream->streamId_ = -1;
+    capStream->streamId_ = -1;
     delete stream;
     delete capStream;
     delete mdl;
@@ -9478,6 +9500,8 @@ TEST_F(ApiDavidTest, StreamLaunchKernelWithHandle_aclgraph_update_allocTaskFail)
 
     TaskUnInitProc(&memcpyTask);
 
+    stream->streamId_ = -1;
+    capStream->streamId_ = -1;
     delete stream;
     delete capStream;
     delete mdl;
@@ -9616,6 +9640,8 @@ TEST_F(ApiDavidTest, StreamLaunchKernelWithHandle_aclgraph_update_CaptureStreamE
     EXPECT_EQ(error, RT_ERROR_MODEL_NULL);
     TaskUnInitProc(&memcpyTask);
 
+    stream->streamId_ = -1;
+    capStream->streamId_ = -1;
     delete stream;
     delete capStream;
     delete mdl;
