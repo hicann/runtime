@@ -317,11 +317,13 @@ TSD_StatusT SubProcessController::CloseSubProcList(const ProcStatusParam* closeL
         TSD_RUN_INFO("ExecuteClosePidList success cnt:%u", cnt);
     }
 
-    if (ExecuteClosePidList(closeList, loopCnt * CLOSE_PID_PER_LOOP, reserveCnt) != TSD_OK) {
-        TSD_ERROR("ExecuteClosePidList failed reserveCnt:%u", reserveCnt);
-        return TSD_INTERNAL_ERROR;
+    if (reserveCnt > 0U) {
+        if (ExecuteClosePidList(closeList, loopCnt * CLOSE_PID_PER_LOOP, reserveCnt) != TSD_OK) {
+            TSD_ERROR("ExecuteClosePidList failed reserveCnt:%u", reserveCnt);
+            return TSD_INTERNAL_ERROR;
+        }
+        TSD_RUN_INFO("ExecuteClosePidList success reserveCnt:%u", reserveCnt);
     }
-    TSD_RUN_INFO("ExecuteClosePidList success reserveCnt:%u", reserveCnt);
     return TSD_OK;
 }
 

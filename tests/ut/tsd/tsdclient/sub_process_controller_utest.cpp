@@ -242,6 +242,27 @@ TEST_F(SubProcessControllerTest, CloseSubProcList_FiftyOneEntries_Sends50Plus1Ba
     EXPECT_EQ(comm->sentMessages_[1].sub_proc_type_list(0), TSD_SUB_PROC_HCCP);
 }
 
+TEST_F(SubProcessControllerTest, CloseSubProcList_FiftyEntries_SendsSingleBatch)
+{
+    MOCKER_CPP(&TsdProcessController::WaitRsp).stubs().will(returnValue(tsd::TSD_OK));
+    ProcessModeManager processModeManager(deviceId, 0);
+    auto comm = InjectStubComm(processModeManager, deviceId);
+    processModeManager.capabilityMgr_.tsdSupportLevel_ = 4U;
+    std::array<ProcStatusParam, 50U> closeList{};
+    for (size_t i = 0; i < closeList.size(); ++i) {
+        closeList[i].pid = static_cast<pid_t>(3000U + i);
+        closeList[i].procType = TSD_SUB_PROC_HCCP;
+    }
+
+    EXPECT_EQ(
+        processModeManager.GetSubProcessController().CloseSubProcList(closeList.data(), closeList.size()), TSD_OK);
+    ASSERT_EQ(comm->sentMessages_.size(), 1U);
+    EXPECT_EQ(comm->sentMessages_[0].type(), HDCMessage::TSD_CLOSE_SUB_PROC_LIST);
+    EXPECT_EQ(comm->sentMessages_[0].close_sub_list_size(), 50);
+    EXPECT_EQ(comm->sentMessages_[0].close_sub_list(0).sub_proc_pid(), 3000U);
+    EXPECT_EQ(comm->sentMessages_[0].close_sub_list(49).sub_proc_pid(), 3049U);
+}
+
 TEST_F(SubProcessControllerTest, CloseSubProcList_FiftyOneEntries_Second50Plus1BatchFails)
 {
     MOCKER_CPP(&TsdProcessController::WaitRsp).stubs().will(returnValue(tsd::TSD_OK));
