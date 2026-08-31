@@ -22,6 +22,7 @@
 #include "rts/rts_kernel.h"
 #include "rts/rts_snapshot.h"
 #include "rt_inner_dfx.h"
+#include "aprof_pub.h"
 #include "inner_kernel.h"
 #include "rt_inner_model.h"
 #include "rt_inner_stream.h"
@@ -550,6 +551,15 @@ rtError_t rtGetOpExecuteTimeoutV2(uint32_t* const timeout)
 }
 
 rtError_t rtSetKernelDfxInfoCallback(rtKernelDfxInfoType type, rtKernelDfxInfoProFunc func) { return RT_ERROR_NONE; }
+
+rtError_t rtRegisterParseDfxInfoFunc(rtParseDfxInfoFunc func) { return RT_ERROR_NONE; }
+
+rtError_t rtProfRegisterCtrlCallback(uint32_t moduleId, rtProfCtrlHandle callback) { return RT_ERROR_NONE; }
+
+uint64_t MsprofSysCycleTime(void) { return 1000U; }
+
+int32_t MsprofReportAdditionalInfo(uint32_t nonPersistantFlag, const VOID_PTR data, uint32_t length) { return 0; }
+
 // Stream capture info
 rtError_t rtStreamGetCaptureInfo(rtStream_t stream, rtStreamCaptureStatus* const status, rtModel_t* captureMdl)
 {
