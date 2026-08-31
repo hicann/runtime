@@ -238,7 +238,7 @@ int32_t DumpManager::ExceptionConfig(DumpType dumpType, const DumpConfig& dumpCo
     }
 
     if (dumpType == DumpType::AIC_ERR_DETAIL_DUMP && !CheckCoredumpSupportedPlatform()) {
-        IDE_LOGE("Current platform is not support coredump mode.");
+        IDE_LOGE("Current platform does not support coredump mode.");
         return ADUMP_FAILED;
     }
 
@@ -485,7 +485,7 @@ int32_t DumpManager::DumpOperatorWithCfg(
 {
     std::lock_guard<std::mutex> lk(resourceMtx_);
     if (!dumpSetting_.GetDumpStatusEx() && !dumpSetting_.GetDumpDebugStatus()) {
-        IDE_LOGW("Operator or overflow dump is not enable, can't dump data.");
+        IDE_LOGW("Both operator and overflow dump are disabled; data cannot be dumped.");
         return ADUMP_SUCCESS;
     }
 
@@ -507,7 +507,7 @@ int32_t DumpManager::DumpOperatorWithCfg(
 
     if (IsEnableDumpOperatorWithCapture(opType, opName, stream)) {
         if (dumpSetting_.GetDumpDebugStatus() || dumpSetting_.IsDumpDataStats()) {
-            IDE_LOGI("overflow or stats is not allow in capture stream");
+            IDE_LOGI("Overflow dump and statistics collection are not allowed in a captured stream.");
             return ADUMP_SUCCESS;
         }
         return DumpOperatorWithCapture(opType, opName, inputTensors, outputTensors, stream);
@@ -536,7 +536,7 @@ int32_t DumpManager::DumpOperatorV2(
 {
     std::lock_guard<std::mutex> lk(resourceMtx_);
     if (!dumpSetting_.GetDumpStatus() && !dumpSetting_.GetDumpDebugStatus()) {
-        IDE_LOGW("Operator or overflow dump is not enable, can't dump.");
+        IDE_LOGW("Both operator and overflow dump are disabled; dumping is skipped.");
         return ADUMP_SUCCESS;
     }
 
@@ -549,7 +549,7 @@ int32_t DumpManager::DumpOperatorV2(
 
     if (IsEnableDumpOperatorWithCapture(opType, opName, stream)) {
         if (dumpSetting_.GetDumpDebugStatus() || dumpSetting_.IsDumpDataStats()) {
-            IDE_LOGI("overflow or stats is not allow in capture stream");
+            IDE_LOGI("Overflow dump and statistics collection are not allowed in a captured stream.");
             return ADUMP_SUCCESS;
         }
         return DumpOperatorWithCapture(opType, opName, inputTensors, outputTensors, stream);

@@ -27,7 +27,7 @@ static const std::string MAPPING_FILE_NAME = "mapping.csv";
  */
 IdeErrorT FileUtils::WriteFile(const std::string& fileName, IdeSendBuffT data, uint32_t len, int64_t offset)
 {
-    IDE_CTRL_VALUE_FAILED(!fileName.empty(), return IDE_DAEMON_INVALID_PARAM_ERROR, "fileName is nullptr");
+    IDE_CTRL_VALUE_FAILED(!fileName.empty(), return IDE_DAEMON_INVALID_PARAM_ERROR, "fileName is empty");
     IDE_CTRL_VALUE_FAILED(data != nullptr, return IDE_DAEMON_INVALID_PARAM_ERROR, "data is nullptr");
     std::string wrFile = fileName;
     int32_t fd = mmOpen2(wrFile.c_str(), O_APPEND | M_RDWR | M_CREAT, M_IREAD | M_IWRITE);

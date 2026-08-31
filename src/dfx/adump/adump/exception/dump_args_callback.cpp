@@ -182,7 +182,7 @@ int32_t DumpArgsCallback::DumpDfxArgs()
     logRecord_ = parser.GetLogRecords();
 
     IDE_LOGI(
-        "Dfx args tensors are parsed finished. tensor size=%zu, workspace size=%zu.", tensorBuffer_.size(),
+        "Dfx args tensors have been parsed. tensor count=%zu, workspace count=%zu.", tensorBuffer_.size(),
         workspaces_.size());
 
     dumpFile_.SetTensorBuffer(tensorBuffer_);

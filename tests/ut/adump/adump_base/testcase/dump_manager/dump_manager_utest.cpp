@@ -391,6 +391,23 @@ TEST_F(DumpManagerUtest, Test_DumpOperatorV2_CaptureWithStatusMode_SkipDump)
     EXPECT_EQ(dumpInfo, nullptr);
 }
 
+TEST_F(DumpManagerUtest, Test_DumpOperatorWithCfg_CaptureWithStatsMode_SkipDump)
+{
+    std::string validConfigData = ReadFileToString(JSON_BASE "datadump/dump_data_stats.json");
+    ASSERT_EQ(DumpManager::Instance().SetDumpConfig(validConfigData.c_str(), validConfigData.size()), ADUMP_SUCCESS);
+
+    int64_t data[1024] = {};
+    TensorInfo tensor = {};
+    tensor.tensorAddr = data;
+    tensor.tensorSize = sizeof(data);
+    tensor.placement = TensorPlacement::kOnDeviceHbm;
+    tensor.type = TensorType::INPUT;
+
+    DumpCfg dumpCfg = {};
+    rtStream_t stream = reinterpret_cast<rtStream_t>(0x1);
+    EXPECT_EQ(DumpManager::Instance().DumpOperatorWithCfg("Add", "add_op", {tensor}, stream, dumpCfg), ADUMP_SUCCESS);
+}
+
 TEST_F(DumpManagerUtest, Test_RegisterSnapShotCallback_OK)
 {
     DumpManager::Instance().snapCbkRegistered_ = false;

@@ -627,7 +627,7 @@ int32_t DumpFile::WriteDeviceDataToFile(const DeviceData& devData) const
     rtError_t err = rtMemGetInfoByType(deviceId_, RT_MEM_INFO_TYPE_ADDR_CHECK, &memInfo);
     if ((err != RT_ERROR_NONE) || (memInfo.addrInfo.flag == false)) {
         IDE_LOGE(
-            "[Dump][Exception] the address maybe invalid, check addr info failed, error code: %d, check flag: %u, "
+            "[Dump][Exception] the address may be invalid, check addr info failed, error code: %d, check flag: %u, "
             "addr info: %p;%llu.",
             static_cast<int32_t>(err), memInfo.addrInfo.flag, devData.addr, devData.bytes);
         LogIsOtherDeviceAddress(devData, memInfo);
@@ -638,7 +638,7 @@ int32_t DumpFile::WriteDeviceDataToFile(const DeviceData& devData) const
         hostData = DumpMemory::CopyDeviceToHost(devData.addr, devData.bytes);
         if (hostData == nullptr) {
             IDE_LOGE(
-                "[Dump][Exception] the address maybe invalid, D2H failed, addr info: %p;%llu.", devData.addr,
+                "[Dump][Exception] the address may be invalid, D2H failed, addr info: %p;%llu.", devData.addr,
                 devData.bytes);
             if (AllocDefaultMemory(&hostData, devData.bytes) != ADUMP_SUCCESS) {
                 return ADUMP_FAILED;

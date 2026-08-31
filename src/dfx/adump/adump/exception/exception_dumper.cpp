@@ -173,7 +173,8 @@ int32_t ExceptionDumper::DumpException(const rtExceptionInfo& exception)
 {
     IDE_CTRL_VALUE_WARN(!destructionFlag_, return ADUMP_FAILED, "ExceptionDumper has been destructed.");
     IDE_CTRL_VALUE_WARN(
-        ExceptionInfoCommon::IsSupportExceptionDump(exception), return ADUMP_FAILED, "Exception is not need to dump.");
+        ExceptionInfoCommon::IsSupportExceptionDump(exception), return ADUMP_FAILED,
+        "Exception dump is not supported for this exception.");
     IDE_CTRL_VALUE_WARN(IsEnabledExceptionDump(), return ADUMP_FAILED, "Not enable exception dump.");
     std::string dumpPath = CreateDeviceDumpPath(exception.deviceid);
     if (dumpPath.empty()) {
@@ -400,7 +401,7 @@ int32_t ExceptionDumper::DumpNormalExceptionDefault(const rtExceptionInfo& excep
 {
     IDE_CTRL_VALUE_WARN(
         ExceptionInfoCommon::IsSupportDefaultExceptionDump(exception), return ADUMP_FAILED,
-        "Exception is not support default dump.");
+        "Exception does not support default dump.");
     // 先无条件提前落 _host.o，再符号化（symbolize 复用已落盘文件，不重复落盘）。
     DumpHostKernelBinBeforeSymbolize(exception, dumpPath);
     KernelSymbolLocator::DumpErrorSymbols(exception, dumpPath);
@@ -430,7 +431,7 @@ int32_t ExceptionDumper::DumpArgsExceptionDefault(const rtExceptionInfo& excepti
 {
     IDE_CTRL_VALUE_WARN(
         ExceptionInfoCommon::IsSupportDefaultExceptionDump(exception), return ADUMP_FAILED,
-        "Exception is not support default dump.");
+        "Exception does not support default dump.");
     // 先无条件提前落 _host.o，再符号化（symbolize 复用已落盘文件，不重复落盘）。
     DumpHostKernelBinBeforeSymbolize(exception, dumpPath);
     KernelSymbolLocator::DumpErrorSymbols(exception, dumpPath);

@@ -51,7 +51,7 @@ int32_t ExceptionDumper::DumpArgsExceptionFastRecovery(const rtExceptionInfo& ex
 {
     IDE_CTRL_VALUE_WARN(
         ExceptionInfoCommon::IsSupportDefaultExceptionDump(exception), return ADUMP_FAILED,
-        "Exception is not support default dump.");
+        "Exception does not support default dump.");
     // copy exception and other data for thread because of RTS free item after exception callback
     void* exceptionCopy = DumpMemory::CopyHostToHost(&exception, sizeof(rtExceptionInfo));
     if (exceptionCopy == nullptr) {
@@ -79,7 +79,7 @@ int32_t ExceptionDumper::DumpDetailException(const rtExceptionInfo& exception, c
 {
     IDE_CTRL_VALUE_WARN(
         ExceptionInfoCommon::IsSupportDefaultExceptionDump(exception), return ADUMP_FAILED,
-        "Exception is not support default dump.");
+        "Exception does not support default dump.");
     if (coredumpEnableComplete_) {
         std::lock_guard<std::mutex> lock(mutex_);
         DumpCore core(dumpPath, exception.deviceid);

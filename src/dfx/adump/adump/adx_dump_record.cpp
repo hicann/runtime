@@ -592,7 +592,7 @@ bool AdxDumpRecord::DumpDataToCallback(
 
     int32_t ret = messageCallback(dumpChunk.get(), dumpChunkLen);
     IDE_CTRL_VALUE_FAILED(
-        ret == IDE_DAEMON_NONE_ERROR, return false, "Failed to transmission dump data to mindspore. err = %d", ret);
+        ret == IDE_DAEMON_NONE_ERROR, return false, "Failed to transmit dump data to mindspore. err = %d", ret);
     IDE_LOGI("Send dump data to mindspore success: %s", filename.c_str());
     AppendFileName(filename);
     return true;
@@ -736,7 +736,7 @@ void AdxDumpRecord::RecordDumpInfo()
             int32_t dumpChunkLen = sizeof(struct DumpChunk) + dumpChunk->bufLen;
             int32_t ret = messageCallback(dumpChunk, dumpChunkLen);
             if (ret != IDE_DAEMON_NONE_ERROR) {
-                IDE_LOGE("failed to transmission dump data to mindspore. err = %d", ret);
+                IDE_LOGE("failed to transmit dump data to mindspore. err = %d", ret);
             }
         } else if (!RecordDumpDataToDisk(*dumpChunk)) {
             IDE_LOGE("failed to record dump data to disk.");

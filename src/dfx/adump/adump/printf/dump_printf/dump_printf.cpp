@@ -768,7 +768,8 @@ static void AdxPrintBlockInfo(
     const size_t maxDataLen = blockDataLen - sizeof(AdxBlockInfo) - sizeof(AdxDumpMeta);
     if (static_cast<size_t>(blockInfo->remainLen) > maxDataLen) {
         IDE_LOGW(
-            "Block info remain length %u bytes illegal, must small than %zu bytes.", blockInfo->remainLen, maxDataLen);
+            "Block info remaining length %u bytes is invalid; it must not exceed %zu bytes.", blockInfo->remainLen,
+            maxDataLen);
         return;
     }
 
@@ -809,7 +810,9 @@ static void AdxPrintSimtBlockInfo(const uint8_t* blockData, size_t blockDataLen,
     const AdxBlockInfo* blockInfo = Adx::SysUtils::ReinterpretCast<const AdxBlockInfo, const uint8_t>(blockData);
     const size_t maxDataLen = blockDataLen - sizeof(AdxBlockInfo) - sizeof(AdxSimtDumpMeta);
     if (static_cast<size_t>(blockInfo->remainLen) > maxDataLen) {
-        IDE_LOGW("Block info remainLen(%u) is illegal, must be small than %zu.", blockInfo->remainLen, maxDataLen);
+        IDE_LOGW(
+            "Block info remaining length %u bytes is invalid; it must not exceed %zu bytes.", blockInfo->remainLen,
+            maxDataLen);
         return;
     }
 

@@ -56,7 +56,7 @@ int32_t DumpTensorPlugin::InitPluginLib()
 
     // Get plugin.so path
     const std::string pluginPath = LibPath::Instance().GetTargetPath("/plugin/adump");
-    IDE_CTRL_VALUE_FAILED(!pluginPath.empty(), return ADUMP_FAILED, "Received an empty path for file %s.");
+    IDE_CTRL_VALUE_FAILED(!pluginPath.empty(), return ADUMP_FAILED, "Received an empty path.");
     IDE_LOGD("The path of the target plugin.so is %s.", pluginPath.c_str());
 
     // Obtaining the absolute path of all plugin.so files

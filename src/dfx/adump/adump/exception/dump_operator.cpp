@@ -34,7 +34,7 @@ bool OpIdentity::operator==(const OpIdentity& rhs) const
 std::string OpIdentity::GetString() const
 {
     std::stringstream ss;
-    ss << "stream_id:" << streamId << ", task_id:" << taskId << ", context_id:" << contextId << ", thread_id:";
+    ss << "stream_id:" << streamId << ", task_id:" << taskId << ", context_id:" << contextId;
     return ss.str();
 }
 

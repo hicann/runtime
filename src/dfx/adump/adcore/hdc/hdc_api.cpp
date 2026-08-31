@@ -303,7 +303,8 @@ static int32_t HdcReadIovecToMem(
     struct IoVec ioBase = {nullptr, 0};
     IDE_CTRL_VALUE_FAILED(recvBuf != nullptr, return IDE_DAEMON_ERROR, "recvBuf is nullptr");
     IDE_CTRL_VALUE_FAILED(recvLen != nullptr, return IDE_DAEMON_ERROR, "recvLen is nullptr");
-    IDE_CTRL_VALUE_FAILED(bufLen > 0, return IDE_DAEMON_ERROR, "bufLen is nullptr");
+    IDE_CTRL_VALUE_FAILED(
+        bufLen > 0, return IDE_DAEMON_ERROR, "bufLen must be greater than 0, bufLen=%u bytes", bufLen);
     IdeStringBuffer buf = static_cast<IdeStringBuffer>(IdeXmalloc(bufLen));
     if (buf == nullptr) {
         IoVecListFree(hdcIoList);

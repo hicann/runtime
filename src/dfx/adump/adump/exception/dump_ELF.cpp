@@ -139,7 +139,7 @@ SectionPtr DumpELF::GetSectionByIndex(uint32_t index) const
 void DumpELF::Save(const std::string& filename)
 {
     IDE_CTRL_VALUE_FAILED(
-        mmAccess2(filename.c_str(), F_OK) != EN_OK, return, "file %s already exist", filename.c_str());
+        mmAccess2(filename.c_str(), F_OK) != EN_OK, return, "file %s already exists", filename.c_str());
 
     int32_t fd = mmOpen2(filename.c_str(), M_RDWR | M_CREAT, M_IRUSR | M_IWUSR);
     IDE_CTRL_VALUE_FAILED(fd >= 0, return, "open file %s failed, strerror=%s", filename.c_str(), strerror(errno));
