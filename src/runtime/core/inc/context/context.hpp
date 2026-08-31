@@ -470,6 +470,7 @@ public:
 
     rtError_t UpdateEndGraphTask(Stream* const origCaptureStream, Stream* const exeStream, Notify* ntf) const;
     rtError_t UpdateSuModelExeStreamNotifyWaitSqe(TaskInfo* taskInfo, Stream* const exeStream) const;
+    rtError_t GetCaptureModelEndGraphNotify(Model* const mdl, Stream* const stm, Notify*& ntf) const;
     rtError_t SendAndRecvDebugTask(RtDebugSendInfo* const sendInfo, rtDebugReportInfo_t* const reportInfo) const;
     uint64_t GetCallBackThreadId() const { return callBackThreadId_; }
     rtError_t CreateContextCallBackThread();

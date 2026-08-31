@@ -1056,7 +1056,8 @@ TEST_F(TinyStubTest, logic_sq_stub)
     uint32_t activeStreamSqId = 0U;
     EXPECT_EQ(GetActiveStreamSqId(nullptr, activeStreamSqId), RT_ERROR_FEATURE_NOT_SUPPORT);
     Notify* notify = nullptr;
-    EXPECT_EQ(GetCaptureModelEndGraphNotify(nullptr, nullptr, notify), RT_ERROR_FEATURE_NOT_SUPPORT);
+    Context ctx(nullptr, false);
+    EXPECT_EQ(ctx.GetCaptureModelEndGraphNotify(nullptr, nullptr, notify), RT_ERROR_MODEL_NULL);
 }
 
 TEST_F(TinyStubTest, stream_capture_stub)

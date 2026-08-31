@@ -363,7 +363,7 @@ ERROR_RECYCLE:
 rtError_t InternalUpdateNormalKernelTaskForSoftwareSq(
     const Context* const ctx, TaskInfo* const updateTask, Stream* const stm, void* const updateArgHandle)
 {
-    if (updateTask->stream->GetDeviceSqeAddrByPos(updateTask->pos) == 0U) {
+    if (updateTask->stream->GetDeviceSqeAddrByPos(updateTask->pos) == nullptr) {
         /*
          * normal capture
          * mode场景：deviceSqeAddr_在CaptureModel::AllocLogicSqDeviceSqe()函数中申请，即在CaptureModel执行前申请SqMem

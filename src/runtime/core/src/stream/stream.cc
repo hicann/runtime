@@ -3889,7 +3889,7 @@ rtError_t Stream::ModelWaitForTask(const uint32_t taskId, const bool isNeedWaitS
 
         // eg: prePos is loadCompleteTask's position of occupy, sqTail is the position of rtsq's tail
         NULL_PTR_RETURN_MSG(preTask, RT_ERROR_TASK_NULL);
-        uint32_t prePos = preTask->pos;
+        const uint32_t prePos = preTask->pos;
         if (TASK_ID_GEQ(sqTail, prePos)) {
             RT_LOG(
                 RT_LOG_DEBUG, "Model wait finish, device_id=%u, ts_id=%u, stream_id=%d, prePos=%u, sqTail=%u", devId,

@@ -16,26 +16,30 @@
 #include "rt_log.h"
 namespace cce {
 namespace runtime {
-LogicSq::~LogicSq()
+LogicSq::~LogicSq() noexcept
 {
-    DELETE_A(hostSqeAddr_);
+    try {
+        DELETE_A(hostSqeAddr_);
 
-    if ((deviceSqeAddr_ != nullptr) && (device_ != nullptr) && (sqMemOrderType_ != UINT32_MAX)) {
-        SqAddrMemoryOrder* sqAddrMemoryManage = device_->GetSqAddrMemoryManage();
-        if (sqAddrMemoryManage != nullptr) {
-            const rtError_t error =
-                sqAddrMemoryManage->FreeSqAddr(RtPtrToPtr<uint64_t*>(deviceSqeAddr_), sqMemOrderType_);
-            COND_LOG(
-                error != RT_ERROR_NONE, "Free logic sq device sqe addr failed, device_id=%u, retCode=%#x.",
-                device_->Id_(), static_cast<uint32_t>(error));
+        if ((deviceSqeAddr_ != nullptr) && (device_ != nullptr) && (sqMemOrderType_ != UINT32_MAX)) {
+            SqAddrMemoryOrder* sqAddrMemoryManage = device_->GetSqAddrMemoryManage();
+            if (sqAddrMemoryManage != nullptr) {
+                const rtError_t error =
+                    sqAddrMemoryManage->FreeSqAddr(RtPtrToPtr<uint64_t*>(deviceSqeAddr_), sqMemOrderType_);
+                COND_LOG(
+                    error != RT_ERROR_NONE, "Free logic sq device sqe addr failed, device_id=%u, retCode=%#x.",
+                    device_->Id_(), static_cast<uint32_t>(error));
+            }
+            deviceSqeAddr_ = nullptr;
+            sqMemOrderType_ = UINT32_MAX;
         }
-        deviceSqeAddr_ = nullptr;
-        sqMemOrderType_ = UINT32_MAX;
-    }
 
-    if (sqIdMemAddr_ != 0UL) {
-        device_->FreeSqIdMemAddr(sqIdMemAddr_);
-        sqIdMemAddr_ = 0UL;
+        if ((sqIdMemAddr_ != 0UL) && (device_ != nullptr)) {
+            device_->FreeSqIdMemAddr(sqIdMemAddr_);
+            sqIdMemAddr_ = 0UL;
+        }
+    } catch (...) {
+        RT_LOG(RT_LOG_EVENT, "Unexpected exception in logic sq destructor.");
     }
 }
 

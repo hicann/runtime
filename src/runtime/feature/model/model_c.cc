@@ -632,7 +632,7 @@ rtError_t MdlAddEndGraph(Model* const mdl, Stream* const stm, const uint32_t fla
         }
 
         Notify* notify = nullptr;
-        error = GetCaptureModelEndGraphNotify(mdl, stm, notify);
+        error = mdl->Context_()->GetCaptureModelEndGraphNotify(mdl, stm, notify);
         COND_RETURN_ERROR(
             error != RT_ERROR_NONE, error, "Failed to get capture model endgraph notify, model_id=%u, stream_id=%d",
             mdl->Id_(), stm->Id_());

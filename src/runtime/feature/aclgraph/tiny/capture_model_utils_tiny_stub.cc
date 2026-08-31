@@ -110,6 +110,11 @@ rtError_t ReleaseNotify(Model* const mdl, Notify* notify)
     UNUSED(notify);
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
+rtError_t SetupEndGraphNotifyWithoutAllocNtyId(Notify* const notify)
+{
+    UNUSED(notify);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
 uint32_t FindStreamIdInSubModels(CaptureModel* const parentModel, const uint16_t sqId)
 {
     UNUSED(parentModel);

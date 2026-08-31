@@ -1242,7 +1242,7 @@ rtError_t CaptureModel::ConfigLogicSqTail(void) const
     Device* const dev = Context_()->Device_();
     for (LogicSq* logicSq : logicSqs_) {
         COND_RETURN_ERROR(
-            logicSq->GetRtsqId() == UINT16_MAX, RT_ERROR_INVALID_VALUE,
+            logicSq->GetRtsqId() == MAX_UINT16_NUM, RT_ERROR_INVALID_VALUE,
             "Invalid logic sq rtsq id, device_id=%u, model_id=%u, logic_sq_id=%u.", dev->Id_(), Id_(), logicSq->Id_());
         error = dev->Driver_()->SetSqTail(dev->Id_(), dev->DevGetTsId(), logicSq->GetRtsqId(), logicSq->GetSqeNum());
         COND_RETURN_ERROR(

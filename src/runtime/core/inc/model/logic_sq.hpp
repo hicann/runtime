@@ -23,7 +23,7 @@ class SqAddrMemoryOrder;
 class LogicSq {
 public:
     explicit LogicSq(Device* const device) : device_(device) {}
-    ~LogicSq();
+    ~LogicSq() noexcept;
     Device* Device_() const { return device_; }
     rtError_t SetUp(const uint32_t logicSqId, const uint32_t reserveSqeNum);
     rtError_t AllocDeviceSqeAddr(const uint32_t additionalSqeNum);

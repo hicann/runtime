@@ -285,7 +285,7 @@ void CaptureModel::CollectSourceStreams(std::vector<std::vector<StreamRange>>& s
     sourceGroups.clear();
 }
 
-LogicSq::~LogicSq() {}
+LogicSq::~LogicSq() noexcept {}
 
 bool LogicSq::GetStreamIdAndPosByHwPos(const uint32_t hwPos, uint32_t& streamId, uint32_t& pos) const
 {
@@ -317,9 +317,9 @@ rtError_t LogicSq::AllocDeviceSqeAddr(const uint32_t additionalSqeNum)
 
 LogicSqManage::~LogicSqManage() {}
 
-rtError_t LogicSqManage::CreateLogicSq(LogicSq*& sq)
+rtError_t LogicSqManage::CreateLogicSq(LogicSq*& logicSq)
 {
-    UNUSED(sq);
+    UNUSED(logicSq);
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
@@ -341,10 +341,10 @@ rtError_t LogicSqManage::GetLogicSqIdByRtsqId(const uint32_t rtsqId, uint32_t& l
     return RT_ERROR_STREAM_INVALID;
 }
 
-rtError_t LogicSqManage::GetLogicSqById(const uint32_t logicSqId, LogicSq*& sq) const
+rtError_t LogicSqManage::GetLogicSqById(const uint32_t logicSqId, LogicSq*& logicSq) const
 {
     UNUSED(logicSqId);
-    UNUSED(sq);
+    UNUSED(logicSq);
     return RT_ERROR_STREAM_INVALID;
 }
 
@@ -352,14 +352,6 @@ rtError_t GetActiveStreamSqId(TaskInfo* const task, uint32_t& activeStreamSqId)
 {
     UNUSED(task);
     UNUSED(activeStreamSqId);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
-rtError_t GetCaptureModelEndGraphNotify(Model* const mdl, Stream* const stm, Notify*& ntf)
-{
-    UNUSED(mdl);
-    UNUSED(stm);
-    UNUSED(ntf);
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 

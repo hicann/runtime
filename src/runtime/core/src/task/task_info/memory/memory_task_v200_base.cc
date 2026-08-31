@@ -926,7 +926,7 @@ rtError_t ConvertAsyncDmaForTaskUpdate(TaskInfo* const taskInfo, TaskInfo* const
     // task update目标流为扩流的流
     if (updateTaskInfo->stream->IsSoftwareSqEnable()) {
         Stream* updateStm = updateTaskInfo->stream;
-        if (updateStm->GetDeviceSqeAddrByPos(updateTaskInfo->pos) == 0U) {
+        if (updateStm->GetDeviceSqeAddrByPos(updateTaskInfo->pos) == nullptr) {
             LogicSq* const logicSq = updateStm->GetLogicSqByPos(updateTaskInfo->pos);
             COND_RETURN_ERROR(
                 logicSq == nullptr, RT_ERROR_INVALID_VALUE, "Get logic sq failed, device_id=%u, stream_id=%d, pos=%u.",

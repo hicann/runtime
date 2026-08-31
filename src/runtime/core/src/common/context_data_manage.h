@@ -68,8 +68,8 @@ public:
     bool ExistsSetValueWithoutLock(Context* key) { return !(set_.find(key) == set_.end()); };
 
 private:
-    mmRWLock_t setLock_;
-    std::unordered_set<Context*> set_;
+    mmRWLock_t setLock_{};
+    std::unordered_set<Context*> set_{};
 };
 
 } // namespace runtime

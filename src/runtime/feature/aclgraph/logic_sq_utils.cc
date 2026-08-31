@@ -7,6 +7,7 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include "logic_sq_utils.hpp"
 #include "logic_sq.hpp"
 #include "capture_model.hpp"
 #include "context.hpp"
