@@ -458,9 +458,6 @@ void ConstructDqsEnqueueFc(RtStarsDqsEnqueueFc& fc, const RtStarsDqsFcPara& func
     ConstructSetJumpPcFc(r7, offset, fc.jumpPc3);
     ConstructBranch(r0, r6, RT_STARS_COND_ISA_BRANCH_FUNC3_BNE, static_cast<uint8_t>(offset), fc.bne);
 
-    // 根据 mbufFreeAddr 的地址 r9 读 mbuf pool 到 r7 寄存器中
-    ConstructLoad(r9, 0U, r7, RT_STARS_COND_ISA_LOAD_FUNC3_LDR, fc.ldr3);
-
     // r8 = ow mbufHandle
     ConstructLLWI(r8, dqsPoolIdBlkIdMask, fc.llwi8);
     ConstructLHWI(r8, dqsPoolIdBlkIdMask, fc.lhwi8);
@@ -478,6 +475,8 @@ void ConstructDqsEnqueueFc(RtStarsDqsEnqueueFc& fc, const RtStarsDqsFcPara& func
         static_cast<uint32_t>((RtPtrToValue(&(fc.owFreeMbufTracefc.nop)) - RtPtrToValue(&fc)) / sizeof(uint32_t));
     ConstructMbufTrace(fc.owFreeMbufTracefc, funcCallPara.owFreeMbufTracePara, owFreeRegInfo, mbufTraceNop);
 
+    // 根据 mbufFreeAddr 的地址 r9 读 mbuf pool 到 r7 寄存器中
+    ConstructLoad(r9, 0U, r7, RT_STARS_COND_ISA_LOAD_FUNC3_LDR, fc.ldr3);
     // read immd reg va cfg mask
     ConstructLLWI(r5, AXI_USER_VA_CFG_MASK, fc.llwi);
     ConstructLHWI(r5, AXI_USER_VA_CFG_MASK, fc.lhwi);

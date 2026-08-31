@@ -60,11 +60,11 @@ struct RtStarsDqsEnqueueFc {
     RtStarsCondOpBranch beq2;
     RtStarsSetCsrJumpPc jumpPc3;
     RtStarsCondOpBranch bne; // if ow, must mbufFree firstly.
-    RtStarsCondOpLoad ldr3;
     RtStarsCondOpLLWI llwi8;
     RtStarsCondOpLHWI lhwi8;
     RtStarsCondOpOp and1;
     CondMbufTraceFc owFreeMbufTracefc;
+    RtStarsCondOpLoad ldr3;
     RtStarsCondOpLLWI llwi;
     RtStarsCondOpLHWI lhwi;
     RtStarsCondOpSystemCsr csrrc;
