@@ -917,6 +917,76 @@ static rtError_t CreateAicpuPrintfThreadStub()
     return RT_ERROR_NONE;
 }
 
+TEST_F(PrintfTest, InitPrintInfoDevMemAllocUsesRuntimeModuleId)
+{
+    EXPECT_EQ(rtSetDevice(0), RT_ERROR_NONE);
+    RawDevice* dev = (RawDevice*)((Runtime*)Runtime::Instance())->GetDevice(0U, 0U);
+    ASSERT_NE(dev, nullptr);
+
+    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::DevMemAlloc)
+        .expects(once())
+        .with(
+            mockcpp::any(), mockcpp::any(), eq(RT_MEMORY_HBM), eq(dev->deviceId_),
+            eq(static_cast<uint16_t>(MODULEID_RUNTIME)))
+        .will(returnValue(RT_ERROR_DRV_ERR));
+
+    EXPECT_EQ(dev->InitPrintInfo(), RT_ERROR_DRV_ERR);
+    GlobalMockObject::verify();
+    rtDeviceReset(0);
+}
+
+TEST_F(PrintfTest, InitSimtPrintInfoDevMemAllocUsesRuntimeModuleId)
+{
+    EXPECT_EQ(rtSetDevice(0), RT_ERROR_NONE);
+    RawDevice* dev = (RawDevice*)((Runtime*)Runtime::Instance())->GetDevice(0U, 0U);
+    ASSERT_NE(dev, nullptr);
+
+    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::DevMemAlloc)
+        .expects(once())
+        .with(
+            mockcpp::any(), mockcpp::any(), eq(RT_MEMORY_HBM), eq(dev->deviceId_),
+            eq(static_cast<uint16_t>(MODULEID_RUNTIME)))
+        .will(returnValue(RT_ERROR_DRV_ERR));
+
+    EXPECT_EQ(dev->InitSimtPrintInfo(), RT_ERROR_DRV_ERR);
+    GlobalMockObject::verify();
+    rtDeviceReset(0);
+}
+
+TEST_F(PrintfTest, ProcCpuKernelH2DMemDevMemAllocUsesRuntimeModuleId)
+{
+    EXPECT_EQ(rtSetDevice(0), RT_ERROR_NONE);
+    RawDevice* dev = (RawDevice*)((Runtime*)Runtime::Instance())->GetDevice(0U, 0U);
+    ASSERT_NE(dev, nullptr);
+
+    PlainProgram* prog = CreateAicpuPrintfProgram(dev);
+    ASSERT_NE(prog, nullptr);
+    prog->SetHasPrintfTlv(false);
+    dev->aicpuDfxSupport_ = false;
+
+    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::DevMemAlloc)
+        .expects(exactly(3))
+        .with(
+            mockcpp::any(), mockcpp::any(), eq(RT_MEMORY_HBM), eq(static_cast<uint32_t>(dev->Id_())),
+            eq(static_cast<uint16_t>(MODULEID_RUNTIME)))
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::MemCopySync).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::DevMemFree).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(&Runtime::StartAicpuSd).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(LaunchAicpuKernelForCpuSo).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(&StreamFactory::CreateStream).stubs().will(returnValue(dev->primaryStream_));
+    MOCKER_CPP_VIRTUAL(dev->primaryStream_, &Stream::Setup).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(dev->primaryStream_, &Stream::TearDown).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(dev->primaryStream_, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
+
+    const rtError_t rtError = prog->ProcCpuKernelH2DMem(true, dev);
+    EXPECT_EQ(rtError, RT_ERROR_NONE);
+
+    GlobalMockObject::verify();
+    delete prog;
+    rtDeviceReset(0);
+}
+
 TEST_F(PrintfTest, TestProcAicpuPrintfDfx_SuccessAndSkip)
 {
     rtError_t rtError = rtSetDevice(0);

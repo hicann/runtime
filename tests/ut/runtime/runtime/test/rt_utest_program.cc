@@ -35,6 +35,65 @@ protected:
     }
 };
 
+TEST_F(ProgramTest, ModuleLoadDevMemAllocUsesRuntimeModuleId)
+{
+    Context* ctx = Runtime::Instance()->CurrentContext();
+    ASSERT_NE(ctx, nullptr);
+    Device* device = ctx->Device_();
+    ASSERT_NE(device, nullptr);
+    Runtime* rtInstance = const_cast<Runtime*>(Runtime::Instance());
+    const rtChipType_t originRtChipType = rtInstance->GetChipType();
+    const rtChipType_t originDevChipType = device->GetChipType();
+    rtInstance->SetChipType(CHIP_MINI);
+    device->SetChipType(CHIP_MINI);
+
+    uint8_t binary[] = {0x01, 0x02, 0x03, 0x04};
+    PlainProgram prog(RT_KERNEL_ATTR_TYPE_AICORE);
+    prog.binary_ = binary;
+    prog.binarySize_ = sizeof(binary);
+    Module module(device);
+
+    MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::DevMemAlloc)
+        .expects(once())
+        .with(
+            mockcpp::any(), mockcpp::any(), eq(RT_MEMORY_HBM), eq(static_cast<uint32_t>(device->Id_())),
+            eq(static_cast<uint16_t>(MODULEID_RUNTIME)), eq(true), eq(false))
+        .will(returnValue(RT_ERROR_DRV_ERR));
+
+    EXPECT_EQ(module.Load(&prog), RT_ERROR_DRV_ERR);
+    rtInstance->SetChipType(originRtChipType);
+    device->SetChipType(originDevChipType);
+}
+
+TEST_F(ProgramTest, RuntimeBinaryLoadDevMemAllocUsesRuntimeModuleId)
+{
+    Context* ctx = Runtime::Instance()->CurrentContext();
+    ASSERT_NE(ctx, nullptr);
+    Device* device = ctx->Device_();
+    ASSERT_NE(device, nullptr);
+    Runtime* rtInstance = const_cast<Runtime*>(Runtime::Instance());
+    const rtChipType_t originRtChipType = rtInstance->GetChipType();
+    const rtChipType_t originDevChipType = device->GetChipType();
+    rtInstance->SetChipType(CHIP_MINI);
+    device->SetChipType(CHIP_MINI);
+
+    uint8_t binary[] = {0x01, 0x02, 0x03, 0x04};
+    PlainProgram prog(RT_KERNEL_ATTR_TYPE_AICORE);
+    prog.binary_ = binary;
+    prog.binarySize_ = sizeof(binary);
+
+    MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::DevMemAlloc)
+        .expects(once())
+        .with(
+            mockcpp::any(), mockcpp::any(), eq(RT_MEMORY_HBM), eq(static_cast<uint32_t>(device->Id_())),
+            eq(static_cast<uint16_t>(MODULEID_RUNTIME)), eq(true), eq(false))
+        .will(returnValue(RT_ERROR_DRV_ERR));
+
+    EXPECT_EQ(Runtime::Instance()->BinaryLoad(device, &prog), RT_ERROR_DRV_ERR);
+    rtInstance->SetChipType(originRtChipType);
+    device->SetChipType(originDevChipType);
+}
+
 TEST_F(ProgramTest, Program_Process_ELF)
 {
     rtError_t error;

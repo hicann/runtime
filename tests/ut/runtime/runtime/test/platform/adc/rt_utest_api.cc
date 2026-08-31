@@ -93,6 +93,22 @@ TEST_F(ApiTest, ADCProfiler_malloc_failed)
     EXPECT_EQ(error, ACL_ERROR_RT_MEMORY_ALLOCATION);
 }
 
+TEST_F(ApiTest, ADCProfilerMallocUsesRuntimeModuleId)
+{
+    void* addr = nullptr;
+    constexpr uint32_t length = 256 * 1024;
+
+    MOCKER(rtMalloc)
+        .expects(once())
+        .with(
+            mockcpp::any(), eq(static_cast<uint64_t>(length)), mockcpp::any(),
+            eq(static_cast<uint16_t>(MODULEID_RUNTIME)))
+        .will(returnValue(RT_ERROR_INVALID_VALUE));
+
+    const rtError_t error = rtStartADCProfiler(&addr, length);
+    EXPECT_EQ(error, ACL_ERROR_RT_MEMORY_ALLOCATION);
+}
+
 TEST_F(ApiTest, StopADCProfiler_test_failed)
 {
     rtError_t error = rtStopADCProfiler(nullptr);
