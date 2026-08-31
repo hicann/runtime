@@ -644,10 +644,11 @@ void GetDumpShape(const DumpInfoHead* dumpHead, std::vector<size_t>& shape)
     const DumpShapeInfo* const shapeHead = RtPtrToPtr<const DumpShapeInfo*>(dumpHead->infoMsg);
     if (shapeHead->dim > RT_DUMP_SHAPE_MAX_SIZE) {
         RT_LOG(
-            RT_LOG_WARNING, "DumpShape's shape dim %u exceeds the maximum limit of %u.", shapeHead->dim,
+            RT_LOG_WARNING, "The dim of DumpShape is %u, which exceeds the maximum limit of %u.", shapeHead->dim,
             RT_DUMP_SHAPE_MAX_SIZE);
         (void)printf(
-            "DumpShape's shape dim %u exceeds the maximum limit of %u.\n", shapeHead->dim, RT_DUMP_SHAPE_MAX_SIZE);
+            "The dim of DumpShape is %u, which exceeds the maximum limit of %u.\n", shapeHead->dim,
+            RT_DUMP_SHAPE_MAX_SIZE);
         return;
     }
 
@@ -661,17 +662,18 @@ void GetDumpTensorShape(const DumpTensorInfo* tensorHead, std::vector<size_t>& s
     // if DumpTensor's shape dim exceeds the maximum limit of shape, discard shape info.
     if (tensorHead->dim > RT_DUMP_SHAPE_MAX_SIZE) {
         RT_LOG(
-            RT_LOG_WARNING, "DumpTensor's shape dim %u exceeds the maximum limit of %u.", tensorHead->dim,
+            RT_LOG_WARNING, "The dim of DumpTensor is %u, which exceeds the maximum limit of %u.", tensorHead->dim,
             RT_DUMP_SHAPE_MAX_SIZE);
         (void)printf(
-            "DumpTensor's shape dim %u exceeds the maximum limit of %u.\n", tensorHead->dim, RT_DUMP_SHAPE_MAX_SIZE);
+            "The dim of DumpTensor is %u, which exceeds the maximum limit of %u.\n", tensorHead->dim,
+            RT_DUMP_SHAPE_MAX_SIZE);
         shape = {};
         return;
     }
 
     // if DumpTensor's shape dim is zero, use DumpShape to print.
     if (tensorHead->dim == 0U) {
-        RT_LOG(RT_LOG_DEBUG, "DumpTensor's shape dim %u.", tensorHead->dim);
+        RT_LOG(RT_LOG_DEBUG, "The dim of DumpTensor is %u.", tensorHead->dim);
         return;
     }
     shape = {};
