@@ -156,22 +156,25 @@ int32_t OperatorPreliminary::GetOperatorPCAddr()
         for (const auto& opName : opNames) {
             const std::string opPath = LibPath::Instance().GetTargetPath(opName);
             IDE_CTRL_VALUE_FAILED(
-                !opPath.empty(), continue, "Failed to get the path of the kfc operator. opName=%s", opName.c_str());
+                !opPath.empty(), continue,
+                "Failed to get the path of the KFC (Kernel Fusion Custom) operator. opName=%s", opName.c_str());
             if (FileUtils::IsFileExist(opPath)) {
                 hitPath = opPath;
                 break;
             }
         }
         IDE_CTRL_VALUE_FAILED(
-            !hitPath.empty(), return ADUMP_FAILED, "Failed to find an existing kfc operator file. candidates=%zu",
-            opNames.size());
+            !hitPath.empty(), return ADUMP_FAILED,
+            "Failed to find an existing KFC (Kernel Fusion Custom) operator file. candidates=%zu", opNames.size());
 
         size_t fileSize = 0;
         binData = LoadBinFile(hitPath, fileSize);
         IDE_CTRL_VALUE_FAILED(
-            binData != nullptr, return ADUMP_FAILED, "Failed to load the kfc operator data. opPath=%s",
-            hitPath.c_str());
-        IDE_LOGI("Success to load the kfc operator data. opPath=%s, fileSize=%zu", hitPath.c_str(), fileSize);
+            binData != nullptr, return ADUMP_FAILED,
+            "Failed to load the KFC (Kernel Fusion Custom) operator data. opPath=%s", hitPath.c_str());
+        IDE_LOGI(
+            "Success to load the KFC (Kernel Fusion Custom) operator data. opPath=%s, fileSize=%zu", hitPath.c_str(),
+            fileSize);
 
         rtDevBinary_t bin{
             .magic = RT_DEV_BINARY_MAGIC_ELF_AIVEC,
@@ -181,21 +184,24 @@ int32_t OperatorPreliminary::GetOperatorPCAddr()
 
         ret = rtDevBinaryRegister(&bin, &opData_.binHandle);
         IDE_CTRL_VALUE_FAILED(
-            ret == RT_ERROR_NONE, return ADUMP_FAILED, "Failed to register the kfc operator binary. ret=%d", ret);
+            ret == RT_ERROR_NONE, return ADUMP_FAILED,
+            "Failed to register the KFC (Kernel Fusion Custom) operator binary. ret=%d", ret);
 
         ret = rtFunctionRegister(opData_.binHandle, KFC_OPERATOR_STUB_NAME, KFC_OPERATOR_NAME, KFC_OPERATOR_NAME, 0U);
         IDE_CTRL_VALUE_FAILED(
             ret == RT_ERROR_NONE, return ADUMP_FAILED,
-            "Failed to register the kfc operator function. stubFunc=%s, stubName=%s, ret=%d", KFC_OPERATOR_STUB_NAME,
-            KFC_OPERATOR_NAME, ret);
+            "Failed to register the KFC (Kernel Fusion Custom) operator function. stubFunc=%s, stubName=%s, ret=%d",
+            KFC_OPERATOR_STUB_NAME, KFC_OPERATOR_NAME, ret);
     }
 
     ret = rtGetAddrByFun(KFC_OPERATOR_STUB_NAME, &opData_.pcAddr);
     IDE_CTRL_VALUE_FAILED(
         ret == RT_ERROR_NONE, return ADUMP_FAILED,
-        "Failed to get the kfc pc address with stubFunc. stubFunc=%s, ret=%d", KFC_OPERATOR_STUB_NAME, ret);
+        "Failed to get the KFC (Kernel Fusion Custom) PC address with stubFunc. stubFunc=%s, ret=%d",
+        KFC_OPERATOR_STUB_NAME, ret);
 
-    IDE_LOGI("Success to get the kfc pc address on device %u. pcAddr=%p", deviceId_, opData_.pcAddr);
+    IDE_LOGI(
+        "Success to get the KFC (Kernel Fusion Custom) PC address on device %u. pcAddr=%p", deviceId_, opData_.pcAddr);
     return ADUMP_SUCCESS;
 }
 
@@ -224,13 +230,15 @@ int32_t OperatorPreliminary::CreateMemory()
     uint64_t memSize = opData_.msgQSize + opData_.outputSize + opData_.workspaceSize + opData_.stackBaseSize;
     rtError_t ret = rtMalloc(&opData_.memoryAddr, memSize, RT_MEMORY_DEFAULT, AICPU);
     IDE_CTRL_VALUE_FAILED(ret == RT_ERROR_NONE, return ADUMP_FAILED, "rtMalloc failed. ret=%d", ret);
-    IDE_LOGI("rtMalloc success for the kfc operator. memAddr=%p, memSize=%llu", opData_.memoryAddr, memSize);
+    IDE_LOGI(
+        "rtMalloc success for the KFC (Kernel Fusion Custom) operator. memAddr=%p, memSize=%llu", opData_.memoryAddr,
+        memSize);
     return ADUMP_SUCCESS;
 }
 
 int32_t OperatorPreliminary::KFCKernelLaunch()
 {
-    IDE_LOGD("Start to initialize the kfc kernel information on device %u.", deviceId_);
+    IDE_LOGD("Start to init KFC (Kernel Fusion Custom) kernel information for device %u.", deviceId_);
     KfcDumpOpInitParam kfcParam;
     kfcParam.kfcWorkSpace.msgQ = reinterpret_cast<uint64_t>(opData_.memoryAddr);
     kfcParam.kfcWorkSpace.msgQSize = opData_.msgQSize;
@@ -271,13 +279,16 @@ int32_t OperatorPreliminary::KFCKernelLaunch()
 
     rtError_t ret =
         rtAicpuKernelLaunchExWithArgs(KERNEL_TYPE_AICPU_KFC, "VectorStats", 1, &argsInfo, nullptr, nullptr, 0);
-    IDE_CTRL_VALUE_FAILED(ret == RT_ERROR_NONE, return ADUMP_FAILED, "Failed to launch kfc kernel, ret=%d", ret);
+    IDE_CTRL_VALUE_FAILED(
+        ret == RT_ERROR_NONE, return ADUMP_FAILED, "Failed to launch kernel for KFC (Kernel Fusion Custom), ret is %d",
+        ret);
 
     ret = rtStreamSynchronize(nullptr); // Use the default flow to ensure successful execution.
     IDE_CTRL_VALUE_FAILED(
-        ret == RT_ERROR_NONE, return ADUMP_FAILED, "Execute rtStreamSynchronize failed for kfc kernel. ret=%d", ret);
+        ret == RT_ERROR_NONE, return ADUMP_FAILED,
+        "Execute rtStreamSynchronize failed for KFC (Kernel Fusion Custom) kernel. ret=%d", ret);
 
-    IDE_LOGI("Success to initialize the kfc kernel information on device %u.", deviceId_);
+    IDE_LOGI("Success to initialize the KFC (Kernel Fusion Custom) kernel information on device %u.", deviceId_);
     return ADUMP_SUCCESS;
 }
 
@@ -304,22 +315,24 @@ int32_t OperatorPreliminary::UpdateKFCLaunchInfo(KfcDumpOpInitParam& kfcParam) c
             launchInfo = ADUMP_LAUNCH_INFO;
             break;
         default:
-            IDE_LOGE("Kfc launch mode is unsupported");
+            IDE_LOGE("KFC (Kernel Fusion Custom) launch mode is unsupported");
             return ADUMP_FAILED;
     }
 
     errno_t ret = strcpy_s(kfcParam.soName, FILE_NAME_MAX, launchInfo.soName);
     if (ret != EOK) {
-        IDE_LOGE("Failed to set kfc soName, ret=%d", ret);
+        IDE_LOGE("Failed to set KFC (Kernel Fusion Custom) soName, ret=%d", ret);
         return ADUMP_FAILED;
     }
     ret = strcpy_s(kfcParam.kernelName, FILE_NAME_MAX, launchInfo.kernelName);
     if (ret != EOK) {
-        IDE_LOGE("Failed to set kfc kernelName, ret=%d", ret);
+        IDE_LOGE("Failed to set KFC (Kernel Fusion Custom) kernelName, ret=%d", ret);
         return ADUMP_FAILED;
     }
 
-    IDE_LOGI("Kfc operator uses soName[%s], kernelName[%s]", launchInfo.soName, launchInfo.kernelName);
+    IDE_LOGI(
+        "KFC (Kernel Fusion Custom) operator uses soName[%s], kernelName[%s]", launchInfo.soName,
+        launchInfo.kernelName);
     return ADUMP_SUCCESS;
 }
 
@@ -328,11 +341,13 @@ int32_t OperatorPreliminary::OperatorInit()
     int32_t version = AdumpDsmi::DrvGetAPIVersion();
     kfcLaunchMode_ = DecideKFCLaunchMode(version);
     if (kfcLaunchMode_ == KfcLaunchMode::UNSUPPORTED) {
-        IDE_LOGW("Current driver version %d does not support kfc feature for dump statistics.", version);
+        IDE_LOGW(
+            "Current driver version %d does not support the KFC (Kernel Fusion Custom) feature for dump statistics.",
+            version);
         return ADUMP_SUCCESS;
     }
 
-    IDE_LOGI("Prepare to initialize the resources of kfc operator on device %u.", deviceId_);
+    IDE_LOGI("Prepare to initialize the resources of KFC (Kernel Fusion Custom) kernel on device %u.", deviceId_);
     do {
         int32_t ret = GetStreamInfo();
         IDE_CTRL_VALUE_FAILED_NODO(

@@ -210,19 +210,19 @@ void DumpManager::KFCResourceInit()
 {
 #if !defined(ADUMP_SOC_HOST) || ADUMP_SOC_HOST == 1
     if (isKFCInit_) {
-        IDE_LOGD("KFC resources have been initialized on all devices.");
+        IDE_LOGD("KFC (Kernel Fusion Custom) resources have been initialized on all devices.");
         return;
     }
     std::vector<uint32_t> devList = AdumpDsmi::DrvGetDeviceList();
 
     for (uint32_t& deviceId : devList) {
-        IDE_LOGI("Start to initialize KFC resources on device %u.", deviceId);
+        IDE_LOGI("Start to initialize KFC (Kernel Fusion Custom) resources on device %u.", deviceId);
         SharedPtr<OperatorPreliminary> opIniter = MakeSharedInstance<OperatorPreliminary>(GetDumpSetting(), deviceId);
         IDE_CTRL_VALUE_FAILED_NODO(
             opIniter != nullptr && opIniter->OperatorInit() == ADUMP_SUCCESS, return,
             "Failed to execute the resource initialization task on device %u.", deviceId);
         DumpManager::operatorMap_.emplace_back(std::move(opIniter));
-        IDE_LOGI("KFC executed on the device %u successfully.", deviceId);
+        IDE_LOGI("KFC (Kernel Fusion Custom) executed on the device %u successfully.", deviceId);
     }
 #endif
     isKFCInit_ = true;
@@ -287,7 +287,7 @@ int32_t DumpManager::SetDumpConfig(DumpType dumpType, const DumpConfig& dumpConf
         std::thread kfcThread(kfcBind);
         kfcThread.join();
         if (!isKFCInit_) {
-            IDE_LOGE("SetDumpConfig failed due to kfc resource initialization error.");
+            IDE_LOGE("SetDumpConfig failed due to KFC (Kernel Fusion Custom) resource initialization error.");
             DumpManager::operatorMap_.clear();
             return ADUMP_FAILED;
         }

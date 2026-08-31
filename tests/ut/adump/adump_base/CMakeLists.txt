@@ -114,6 +114,7 @@ set(adumpBaseUtestSrcList
     ${ADUMP_BASE_UT_ROOT_PATH}/testcase/common/common_sys_utils_utest.cpp
     ${ADUMP_BASE_UT_ROOT_PATH}/testcase/common/platform_impl_utest.cpp
     ${ADUMP_BASE_UT_ROOT_PATH}/testcase/dump_manager/dump_manager_utest.cpp
+    ${ADUMP_BASE_UT_ROOT_PATH}/testcase/dump_manager/kfc_resource_init_utest.cpp
     ${ADUMP_BASE_UT_ROOT_PATH}/testcase/dump_manager/dump_stream_info_utest.cpp
     ${ADUMP_BASE_UT_ROOT_PATH}/testcase/dump_manager/dump_stream_info_func_utest.cpp
     ${ADUMP_BASE_UT_ROOT_PATH}/testcase/impl/adump_api_utest.cpp
