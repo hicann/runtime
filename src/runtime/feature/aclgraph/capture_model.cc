@@ -989,9 +989,18 @@ rtError_t CaptureModel::UpdateNotifyId(Stream* const exeStream)
 
     rtError_t error = RT_ERROR_NONE;
     rtError_t errorTmp = RT_ERROR_NONE;
+    const mmTimespec beginTime = mmGetTickCount();
+    const int32_t REPORT_TIME_UINT = 180 * 1000; // report timeout every 3 min.
+    int32_t reportTime = REPORT_TIME_UINT;
     do {
-        COND_PROC(ntf->GetNotifyId() != MAX_UINT32_NUM,
-                  break;); // 所有子模型共用一个notify，其中一个申请，其他的就不用再申请了
+        COND_PROC(IsProcessTimeout(beginTime, reportTime), reportTime += REPORT_TIME_UINT; RT_LOG(
+                      RT_LOG_EVENT, "Alloc notify id three minutes! device_id=%u, model_id=%u, exec stream_id=%d.",
+                      exeStream->Device_()->Id_(), Id_(), exeStream->Id_()));
+
+        // 所有子模型共用一个notify，其中一个申请，其他的就不用再申请了
+        COND_PROC(ntf->GetNotifyId() != MAX_UINT32_NUM, break;);
+        error = Context_()->CheckStatus();
+        ERROR_RETURN(error, "context is abort, status=%#x.", static_cast<uint32_t>(error));
         error = ntf->AllocId();
         COND_PROC(error != RT_ERROR_NONE, errorTmp = Context_()->TryRecycleCaptureModelResource(0U, 1U, this));
         COND_PROC(errorTmp != RT_ERROR_NONE, mmSleep(1U));
