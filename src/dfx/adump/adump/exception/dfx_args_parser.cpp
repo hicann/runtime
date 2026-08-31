@@ -260,7 +260,8 @@ int32_t DfxArgsParser::InitTensorModeInfoInner(uint32_t currArgsIndex, const uin
     IDE_CHECK_RET(ret, return ADUMP_FAILED);
 
     if (tilingDataSize < ATOMIC_INDEX_SIZE) {
-        IDE_LOGE("The tiling data size[%llu] is less than the min size[%u].", tilingDataSize, ATOMIC_INDEX_SIZE);
+        IDE_LOGE(
+            "The tiling data size[%llu] bytes is less than the min size[%u] bytes.", tilingDataSize, ATOMIC_INDEX_SIZE);
         return ADUMP_FAILED;
     }
 
@@ -341,11 +342,11 @@ int32_t DfxArgsParser::InitTensorModeInfo()
             currDfxSize += sizeof(uint64_t) * argsInfoNum;
             dfxAddr += sizeof(uint64_t) * argsInfoNum;
         }
-        IDE_LOGI("Current dfx total size is %llu", currDfxSize);
+        IDE_LOGI("Current dfx total size is %llu bytes", currDfxSize);
     }
 
     if (currDfxSize > dfxSize_) {
-        IDE_LOGE("The dfx info size[%llu] is over the max size[%u].", currDfxSize, dfxSize_);
+        IDE_LOGE("The dfx info size[%llu] bytes is over the max size[%u] bytes.", currDfxSize, dfxSize_);
         return ADUMP_FAILED;
     }
 
@@ -373,7 +374,7 @@ int32_t DfxArgsParser::LoadDfxL1PtrTensor(TensorBuffer& tensor)
         uint64_t size = 0;
         ret = GetPointerValueByBigEndian(&dfxAddr_, size, currDfxSize_, dfxSize_);
         IDE_CHECK_RET(ret, return ADUMP_FAILED);
-        IDE_LOGI("Tensor size[%llu].", size);
+        IDE_LOGI("Tensor size[%llu] bytes.", size);
         tensor.size = size;
 
         uint64_t dimension = 0;
@@ -488,9 +489,9 @@ int32_t DfxArgsParser::LoadDfxTensor(TensorBuffer& tensor, uint16_t argsInfoNum)
         uint64_t dataTypeSize = 0;
         ret = GetPointerValueByBigEndian(&dfxAddr_, dataTypeSize, currDfxSize_, dfxSize_);
         IDE_CHECK_RET(ret, return ADUMP_FAILED);
-        IDE_LOGI("The tensor datatype size[%llu].", dataTypeSize);
         IDE_CTRL_VALUE_FAILED(
             GetIsDataTypeSizeByte(tensor.isDataTypeSizeByte), return ADUMP_FAILED, "Load data type size unit failed.");
+        IDE_LOGI("The tensor datatype size[%llu] %s.", dataTypeSize, tensor.isDataTypeSizeByte ? "bytes" : "bits");
         tensor.dataTypeSize = dataTypeSize;
         ret = LoadDfxL2ShapePtrTensor(tensor);
         IDE_CHECK_RET(ret, return ADUMP_FAILED);
@@ -525,7 +526,7 @@ int32_t DfxArgsParser::LoadDfxWorkspace(TensorBuffer& tensor)
         uint64_t size = 0;
         int32_t ret = GetPointerValueByBigEndian(&dfxAddr_, size, currDfxSize_, dfxSize_);
         IDE_CHECK_RET(ret, return ADUMP_FAILED);
-        IDE_LOGI("Workspace size[%llu].", size);
+        IDE_LOGI("Workspace size[%llu] bytes.", size);
         workspace.bytes = size;
     }
 
@@ -544,7 +545,7 @@ int32_t DfxArgsParser::LoadDfxTilingData(TensorBuffer& tensor)
     uint64_t tilingDataSize = 0;
     int32_t ret = GetPointerValueByBigEndian(&dfxAddr_, tilingDataSize, currDfxSize_, dfxSize_);
     IDE_CHECK_RET(ret, return ADUMP_FAILED);
-    IDE_LOGI("The tiling data size=%llu.", tilingDataSize);
+    IDE_LOGI("The tiling data size=%llu bytes.", tilingDataSize);
     tensor.size = tilingDataSize;
 
     // TBE算子无法区分tensor和workspace，当前GE框架无法识别TBE算子，
@@ -561,7 +562,7 @@ int32_t DfxArgsParser::LoadDfxShapeData()
 {
     int32_t ret = ADUMP_SUCCESS;
     size_t tensorBufferSize = tensors_.size();
-    IDE_LOGI("The tensor buffer size=%llu.", tensorBufferSize);
+    IDE_LOGI("The tensor buffer count=%zu items.", tensorBufferSize);
     for (size_t i = 0; i < tensorBufferSize; ++i) {
         DfxPointerType localPointerType = tensors_[i].pointerType;
         if ((localPointerType == DfxPointerType::LEVEL_1_POINTER) && tensors_[i].size != 0 &&

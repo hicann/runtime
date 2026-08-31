@@ -106,7 +106,8 @@ int32_t DfxArgsParser::GetPointerValueByBigEndian(const uint8_t** ptr, T& value,
 
     for (size_t i = 0; i < sizeof(T); ++i) {
         if (currSize >= totalSize) {
-            IDE_LOGE("The dfx data size[%llu] is larger than the total dfx size[%u].", currSize, totalSize);
+            IDE_LOGE(
+                "The dfx data size[%llu] bytes reaches or exceeds the total dfx size[%u] bytes.", currSize, totalSize);
             return ADUMP_FAILED;
         }
         value = value | (static_cast<uint64_t>(**ptr) << ((sizeof(T) - i - 1) * bitOfByte));

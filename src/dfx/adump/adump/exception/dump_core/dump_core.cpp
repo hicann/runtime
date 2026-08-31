@@ -309,7 +309,9 @@ int32_t DumpCore::D2HMemcpyWithCheck(const GlobalMemInfo& memInfo, std::string& 
 
 int32_t DumpCore::ProcessGlobalMemory(GlobalMemInfo& memInfo, std::vector<GlobalMemInfo>& memInfoList, bool checkAddr)
 {
-    IDE_LOGI("Dump device data. data type: %hu, addr: 0x%llx, size: %llu", memInfo.type, memInfo.devAddr, memInfo.size);
+    IDE_LOGI(
+        "Dump device data. data type: %hu, addr: 0x%llx, size: %llu bytes", memInfo.type, memInfo.devAddr,
+        memInfo.size);
     std::string curData(memInfo.size, 0);
     if (memInfo.size != 0) {
         if (checkAddr) {
