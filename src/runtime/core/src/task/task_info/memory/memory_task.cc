@@ -625,6 +625,9 @@ void IpcEventDestroy(IpcEvent** eventPtr, int32_t freeId, bool isNeedDestroy)
     bool canEventbeDelete = (*eventPtr)->TryFreeEventIdAndCheckCanBeDelete(freeId, isNeedDestroy);
     if (canEventbeDelete) {
         (void)(*eventPtr)->ReleaseDrvResource();
+        if ((*eventPtr)->Device_() != nullptr) {
+            (*eventPtr)->Device_()->RemoveEvent(*eventPtr);
+        }
         delete *eventPtr;
         (*eventPtr) = nullptr;
     }
