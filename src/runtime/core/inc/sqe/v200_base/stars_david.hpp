@@ -493,7 +493,7 @@ void RefreshDavidSqeRunningFunc(rtChipType_t chipType);
 
 inline void PostProcessDavidSqeHeader(rtDavidStarsSqeHeader_t* header)
 {
-    const PfnDavidSqeHeaderPostProc postProcFunc = g_davidSqeHeaderPostProcRunningFunc;
+    PfnDavidSqeHeaderPostProc const postProcFunc = g_davidSqeHeaderPostProcRunningFunc;
     if (postProcFunc != nullptr) {
         postProcFunc(header);
     }

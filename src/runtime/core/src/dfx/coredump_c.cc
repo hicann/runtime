@@ -97,8 +97,8 @@ static rtError_t CheckCoreParam(
 
 static uint32_t GetDieOffset(const Device* device, const uint32_t coreType, const uint32_t coreId)
 {
-    uint32_t aicNumPerDie = device->GetDevProperties().aicNumPerDie;
-    uint32_t aivNumPerDie = device->GetDevProperties().aivNumPerDie;
+    const uint32_t aicNumPerDie = device->GetDevProperties().aicNumPerDie;
+    const uint32_t aivNumPerDie = device->GetDevProperties().aivNumPerDie;
     const uint32_t dieId = (coreType == 0U) ? (coreId / aicNumPerDie) : (coreId / aivNumPerDie);
     const uint32_t coreIdOnDie = (coreType == 0U) ? (coreId % aicNumPerDie) : (coreId % aivNumPerDie);
     const uint32_t offsetBase = coreIdOnDie + (aicNumPerDie + aivNumPerDie) * dieId;

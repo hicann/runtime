@@ -3426,7 +3426,7 @@ RTS_API rtError_t rtSetSysParamOpt(const rtSysParamOpt configOpt, const int64_t 
     if (unlikely(configOpt == SYS_OPT_ENABLE_KERNEL_EARLY_START)) {
         Runtime* const rtInstance = Runtime::Instance();
         NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
-        bool flag = (configVal == SYS_OPT_ENABLE);
+        const bool flag = (configVal == SYS_OPT_ENABLE);
         rtInstance->SetEnableOstFlag(flag);
     }
     return ACL_RT_SUCCESS;

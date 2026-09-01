@@ -20,7 +20,7 @@ namespace runtime {
 
 inline const std::array<rtChipType_t, 2U>& GetArch920xChips()
 {
-    static const std::array<rtChipType_t, 2U> chips = {CHIP_CLOUD_V5, CHIP_CLOUD_V6};
+    static constexpr std::array<rtChipType_t, 2U> chips = {CHIP_CLOUD_V5, CHIP_CLOUD_V6};
     return chips;
 }
 
