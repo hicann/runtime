@@ -14,6 +14,7 @@
 #include "stream_factory.hpp"
 #include "error_message_manage.hpp"
 #include "enum_desc.hpp"
+#include "cond_enum_desc.hpp"
 #include "thread_local_container.hpp"
 #include "inner_thread_local.hpp"
 #include "context_data_manage.h"
@@ -889,9 +890,9 @@ rtError_t StreamWriteValuePtr(
 {
     if ((static_cast<uint32_t>(writeValueInfo->size) >= WRITE_VALUE_SIZE_TYPE_BUFF) ||
         (writeValueInfo->size == WRITE_VALUE_SIZE_TYPE_INVALID)) {
-        RT_LOG_OUTER_MSG_INVALID_PARAM_WITH_DESC(
-            "Writing data to the specified memory", writeValueInfo->size,
-            "[1, " + std::to_string(WRITE_VALUE_SIZE_TYPE_BUFF) + ")");
+        RT_LOG_OUTER_MSG_WITH_FUNC_DESC(
+            ErrorCode::EE1003, "Writing data to the specified memory", WriteValueSizeTypeToString(writeValueInfo->size),
+            "writeValueInfo->size", "[1, " + std::to_string(WRITE_VALUE_SIZE_TYPE_BUFF) + ")");
         return RT_ERROR_INVALID_VALUE;
     }
     constexpr uint64_t temp = 0ULL;

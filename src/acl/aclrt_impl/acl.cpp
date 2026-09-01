@@ -849,7 +849,7 @@ aclError aclsysGetCANNVersionImpl(aclCANNPackageName name, aclCANNPackageVersion
             ret = GetCANNVersionInternal(name, *version, driverPath);
             break;
         default:
-            ACL_LOG_ERROR("[Check]package name enum id [%d] is invalid.", (int32_t)name);
+            ACL_LOG_ERROR("[Check]package name enum id [UNKNOWN(%d)] is invalid.", (int32_t)name);
             ret = ACL_ERROR_INVALID_PARAM;
             break;
     }

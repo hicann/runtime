@@ -285,13 +285,13 @@ static rtError_t FlushJettyForModel(Model* const mdl)
             }
             rtError_t error = StreamJettyHandler::FillNopWqeOnCaptureEnd(stm, type);
             COND_RETURN_ERROR(
-                error != RT_ERROR_NONE, error, "FillNopWqeOnCaptureEnd failed, stream_id=%d, type=%d, retCode=%#x.",
-                stm->Id_(), static_cast<int32_t>(type), error);
+                error != RT_ERROR_NONE, error, "FillNopWqeOnCaptureEnd failed, stream_id=%d, type=%s(%d), retCode=%#x.",
+                stm->Id_(), JettyTypeName(type), static_cast<int32_t>(type), error);
 
             error = StreamJettyHandler::BindJetty(stm, type, nullptr);
             COND_RETURN_ERROR(
-                error != RT_ERROR_NONE, error, "BindJetty failed, stream_id=%d, type=%d, retCode=%#x.", stm->Id_(),
-                static_cast<int32_t>(type), error);
+                error != RT_ERROR_NONE, error, "BindJetty failed, stream_id=%d, type=%s(%d), retCode=%#x.", stm->Id_(),
+                JettyTypeName(type), static_cast<int32_t>(type), error);
         }
     }
 

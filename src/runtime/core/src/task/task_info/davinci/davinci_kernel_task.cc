@@ -38,6 +38,30 @@ namespace cce {
 namespace runtime {
 #if F_DESC("DavinciKernelTask")
 
+static const char* AicpuKernelTypeName(const tsAicpuKernelType type)
+{
+    switch (type) {
+        case TS_AICPU_KERNEL_CCE:
+            return "TS_AICPU_KERNEL_CCE";
+        case TS_AICPU_KERNEL_FMK:
+            return "TS_AICPU_KERNEL_FMK";
+        case TS_AICPU_KERNEL_AICPU:
+            return "TS_AICPU_KERNEL_AICPU";
+        case TS_AICPU_KERNEL_DATADUMP:
+            return "TS_AICPU_KERNEL_DATADUMP";
+        case TS_AICPU_KERNEL_CUSTOM_AICPU:
+            return "TS_AICPU_KERNEL_CUSTOM_AICPU";
+        case TS_AICPU_KERNEL_AICPU_KFC:
+            return "TS_AICPU_KERNEL_AICPU_KFC";
+        case TS_AICPU_KERNEL_NON:
+            return "TS_AICPU_KERNEL_NON";
+        case TS_AICPU_KERNEL_RESERVED:
+            return "TS_AICPU_KERNEL_RESERVED";
+        default:
+            return "UNKNOWN";
+    }
+}
+
 static void DavinciTaskInitCommon(
     DavinciTaskInfoCommon* comm, const uint16_t dimNum, const uint32_t flag, uint8_t isUpdateSinkSqe)
 {
@@ -704,10 +728,10 @@ static void PrintAicpuErrorInfo(TaskInfo* taskInfo, const uint32_t devId)
             "AI CPU kernel execution failed, device_id=%u, stream_id=%d, "
             "%s=%u, soName=%s, funcName=%s, kernelName=%s, errorCode=%#x, "
             "paramAddr=%#" PRIx64 ", argsSize=%u, soNameDevAddr=%#" PRIx64 ", funcNameDevAddr=%#" PRIx64 ", "
-            "headParamOffset=%u, aicpuKernelType=%u.",
+            "headParamOffset=%u, aicpuKernelType=%s(%u).",
             devId, streamId, TaskIdDesc(), taskId, soName.c_str(), funcName.c_str(), kernelName.c_str(),
             taskInfo->errorCode, paramAddr, argsSize, soNameDevAddr, funcNameDevAddr, headParamOffset,
-            static_cast<uint32_t>(aicpuKernelType));
+            AicpuKernelTypeName(aicpuKernelType), static_cast<uint32_t>(aicpuKernelType));
     }
 
     Stream* const reportStream = GetReportStream(taskInfo->stream);
@@ -720,10 +744,10 @@ static void PrintAicpuErrorInfo(TaskInfo* taskInfo, const uint32_t devId)
             reportStream, ERR_MODULE_AICPU,
             "AI CPU kernel execution failed, device_id=%u, stream_id=%d, %s=%u, fault op_name=%s, soName=%s, "
             "funcName=%s, kernelName=%s, paramAddr=%#" PRIx64 ", argsSize=%u, soNameDevAddr=%#" PRIx64 ", "
-            "funcNameDevAddr=%#" PRIx64 ", headParamOffset=%u, aicpuKernelType=%u.",
+            "funcNameDevAddr=%#" PRIx64 ", headParamOffset=%u, aicpuKernelType=%s(%u).",
             devId, streamId, TaskIdDesc(), taskId, taskInfo->stream->GetTaskTag(taskInfo->id).c_str(), soName.c_str(),
             funcName.c_str(), kernelName.c_str(), paramAddr, argsSize, soNameDevAddr, funcNameDevAddr, headParamOffset,
-            static_cast<uint32_t>(aicpuKernelType));
+            AicpuKernelTypeName(aicpuKernelType), static_cast<uint32_t>(aicpuKernelType));
         return;
     }
 
@@ -743,12 +767,12 @@ static void PrintAicpuErrorInfo(TaskInfo* taskInfo, const uint32_t devId)
         devId, streamId, TaskIdDesc(), taskId, soName.c_str(), funcName.c_str(), kernelName.c_str());
     STREAM_REPORT_ERR_MSG(
         reportStream, ERR_MODULE_AICPU,
-        "AI CPU kernel execution failed, device_id=%u, stream_id=%d, %s=%u, flip_num=%hu, kernel_type=%u, "
+        "AI CPU kernel execution failed, device_id=%u, stream_id=%d, %s=%u, flip_num=%hu, kernel_type=%s(%u), "
         "fault op_name=%s, extend_info=%s, paramAddr=%#" PRIx64 ", argsSize=%u, soNameDevAddr=%#" PRIx64 ", "
         "funcNameDevAddr=%#" PRIx64 ", headParamOffset=%u.",
-        devId, streamId, TaskIdDesc(), taskId, taskInfo->flipNum, aicpuKernelType,
-        taskInfo->stream->GetTaskTag(taskInfo->id).c_str(), extendInfo.c_str(), paramAddr, argsSize, soNameDevAddr,
-        funcNameDevAddr, headParamOffset);
+        devId, streamId, TaskIdDesc(), taskId, taskInfo->flipNum, AicpuKernelTypeName(aicpuKernelType),
+        static_cast<uint32_t>(aicpuKernelType), taskInfo->stream->GetTaskTag(taskInfo->id).c_str(), extendInfo.c_str(),
+        paramAddr, argsSize, soNameDevAddr, funcNameDevAddr, headParamOffset);
 }
 
 rtError_t GetMixCtxInfo(TaskInfo* taskInfo)

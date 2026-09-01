@@ -923,11 +923,17 @@ rtError_t NpuDriver::ManagedMemAllocInner(
     if (drvRet != DRV_ERROR_NONE) {
         const rtError_t rtErrorCode = RT_GET_DRV_ERRCODE(drvRet);
         const std::string errorStr = RT_GET_ERRDESC(rtErrorCode);
+        const char_t* const flagName =
+            (flag == MANAGED_MEM_RW) ?
+                "MANAGED_MEM_RW" :
+                ((flag == MANAGED_MEM_EX) ? "MANAGED_MEM_EX" :
+                                            ((flag == MANAGED_MEM_UVM) ? "MANAGED_MEM_UVM" : "UNKNOWN"));
         DRV_MALLOC_ERROR_PROCESS(
             drvRet, moduleId,
             "Call driver api halMemAlloc failed, drvRetCode=%d, drvDevId=%u, "
-            "size=%" PRIu64 "(bytes), flag=%d, drvFlag=%#" PRIx64 ", %s.",
-            static_cast<int32_t>(drvRet), deviceId, size, static_cast<int32_t>(flag), drvFlag, errorStr.c_str());
+            "size=%" PRIu64 "(bytes), flag=%s(%d), drvFlag=%#" PRIx64 ", %s.",
+            static_cast<int32_t>(drvRet), deviceId, size, flagName, static_cast<int32_t>(flag), drvFlag,
+            errorStr.c_str());
         return rtErrorCode;
     }
 
@@ -2172,8 +2178,8 @@ rtError_t NpuDriver::MemCopySync(
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(src, RT_ERROR_INVALID_VALUE, "Synchronous memory copy");
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(dst, RT_ERROR_INVALID_VALUE, "Synchronous memory copy");
     if (kind >= RT_MEMCPY_RESERVED) {
-        RT_LOG_OUTER_MSG_INVALID_PARAM_WITH_DESC(
-            "Synchronous memory copy", kind,
+        RT_LOG_OUTER_MSG_WITH_FUNC_DESC(
+            ErrorCode::EE1003, "Synchronous memory copy", MemcpyKindToStr(kind), "kind",
             "[" + std::to_string(RT_MEMCPY_HOST_TO_HOST) + ", " + std::to_string(RT_MEMCPY_RESERVED) + ")");
         return RT_ERROR_DRV_INPUT;
     }
@@ -2223,8 +2229,8 @@ rtError_t NpuDriver::MemCopyAsync(
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(src, RT_ERROR_INVALID_VALUE, "Asynchronous memory copy");
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(dst, RT_ERROR_INVALID_VALUE, "Asynchronous memory copy");
     if (kind >= RT_MEMCPY_RESERVED) {
-        RT_LOG_OUTER_MSG_INVALID_PARAM_WITH_DESC(
-            "Asynchronous memory copy", kind,
+        RT_LOG_OUTER_MSG_WITH_FUNC_DESC(
+            ErrorCode::EE1003, "Asynchronous memory copy", MemcpyKindToStr(kind), "kind",
             "[" + std::to_string(RT_MEMCPY_HOST_TO_HOST) + ", " + std::to_string(RT_MEMCPY_RESERVED) + ")");
         return RT_ERROR_DRV_INPUT;
     }

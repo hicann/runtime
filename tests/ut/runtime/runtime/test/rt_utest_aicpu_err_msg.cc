@@ -422,7 +422,7 @@ TEST_F(AicpuErrMsgTest, PrintAicpuErrorInfo_SQEFieldsInErrorMsg)
         if (msg.find("headParamOffset=64") != std::string::npos) {
             foundHeadParamOffset = true;
         }
-        if (msg.find("aicpuKernelType=2") != std::string::npos) {
+        if (msg.find("aicpuKernelType=TS_AICPU_KERNEL_AICPU(2)") != std::string::npos) {
             foundAicpuKernelType = true;
         }
     }
@@ -432,6 +432,28 @@ TEST_F(AicpuErrMsgTest, PrintAicpuErrorInfo_SQEFieldsInErrorMsg)
     EXPECT_EQ(foundFuncNameDevAddr, true);
     EXPECT_EQ(foundHeadParamOffset, true);
     EXPECT_EQ(foundAicpuKernelType, true);
+
+    task->u.aicpuTaskInfo.comm.args = nullptr;
+    task->u.aicpuTaskInfo.comm.argsSize = 0U;
+    const auto verifyKernelType = [stm, task](const tsAicpuKernelType type, const char* const name) {
+        stm->errorMsg_.clear();
+        task->u.aicpuTaskInfo.aicpuKernelType = static_cast<uint8_t>(type);
+        PrintErrorInfo(task, 0U);
+
+        const std::string expected = std::string(name) + "(" + std::to_string(static_cast<uint32_t>(type)) + ")";
+        const auto iter = std::find_if(stm->errorMsg_.cbegin(), stm->errorMsg_.cend(), [&expected](const auto& msg) {
+            return msg.second.find(expected) != std::string::npos;
+        });
+        EXPECT_NE(iter, stm->errorMsg_.cend());
+    };
+    verifyKernelType(TS_AICPU_KERNEL_CCE, "TS_AICPU_KERNEL_CCE");
+    verifyKernelType(TS_AICPU_KERNEL_FMK, "TS_AICPU_KERNEL_FMK");
+    verifyKernelType(TS_AICPU_KERNEL_DATADUMP, "TS_AICPU_KERNEL_DATADUMP");
+    verifyKernelType(TS_AICPU_KERNEL_CUSTOM_AICPU, "TS_AICPU_KERNEL_CUSTOM_AICPU");
+    verifyKernelType(TS_AICPU_KERNEL_AICPU_KFC, "TS_AICPU_KERNEL_AICPU_KFC");
+    verifyKernelType(TS_AICPU_KERNEL_NON, "TS_AICPU_KERNEL_NON");
+    verifyKernelType(TS_AICPU_KERNEL_RESERVED, "TS_AICPU_KERNEL_RESERVED");
+    verifyKernelType(static_cast<tsAicpuKernelType>(0xFFU), "UNKNOWN");
 
     device->GetTaskFactory()->Recycle(task);
     DELETE_O(stm);

@@ -25,6 +25,7 @@
 #include "runtime.hpp"
 #include "error_message_manage.hpp"
 #include "enum_desc.hpp"
+#include "capture_model_enum_desc.hpp"
 #include "npu_driver.hpp"
 #include "task_info.hpp"
 #include "task_submit.hpp"
@@ -773,8 +774,8 @@ rtError_t Model::SendSqe(void)
     auto* capMdl = dynamic_cast<CaptureModel*>(this);
     COND_RETURN_ERROR(
         (capMdl == nullptr) || (!capMdl->IsSoftwareSqEnable()), RT_ERROR_INVALID_VALUE,
-        "Invalid capture model, device_id=%u, model_id=%u, model_type=%u, isCaptureModel=%u", deviceId, Id_(),
-        GetModelType(), (capMdl != nullptr));
+        "Invalid capture model, device_id=%u, model_id=%u, model_type=%s, isCaptureModel=%u", deviceId, Id_(),
+        ModelTypeToString(GetModelType()).c_str(), (capMdl != nullptr));
 
     for (LogicSq* logicSq : capMdl->GetLogicSqs()) {
         if (logicSq->GetSqeNum() == 0U) {

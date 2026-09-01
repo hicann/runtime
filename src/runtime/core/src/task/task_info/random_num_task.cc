@@ -349,9 +349,10 @@ static rtError_t SetRandomSqeDiffInfo(
             break;
         default:
             error = RT_ERROR_INVALID_VALUE;
-            RT_LOG_OUTER_MSG_INVALID_PARAM_WITH_DESC(
-                "Setting task parameters based on the random number distribution type",
-                taskInfo->randomNumFuncParaInfo.funcType,
+            RT_LOG_OUTER_MSG_WITH_FUNC_DESC(
+                ErrorCode::EE1003, "Setting task parameters based on the random number distribution type",
+                RandomNumFuncTypeToString(taskInfo->randomNumFuncParaInfo.funcType),
+                "taskInfo->randomNumFuncParaInfo.funcType",
                 "[" + std::to_string(RT_RANDOM_NUM_FUNC_TYPE_DROPOUT_BITMASK) + ", " +
                     std::to_string(RT_RANDOM_NUM_FUNC_TYPE_MAX) + ")");
             break;
@@ -462,9 +463,10 @@ rtError_t CheckRandomNumTaskInfo(const rtRandomNumTaskInfo_t* taskInfo)
             error = CheckNorDisTaskInfo(taskInfo, dataSize);
             break;
         default:
-            RT_LOG_OUTER_MSG_INVALID_PARAM_WITH_DESC(
-                "Checking the validity of random number generation task parameters",
-                taskInfo->randomNumFuncParaInfo.funcType,
+            RT_LOG_OUTER_MSG_WITH_FUNC_DESC(
+                ErrorCode::EE1003, "Checking the validity of random number generation task parameters",
+                RandomNumFuncTypeToString(taskInfo->randomNumFuncParaInfo.funcType),
+                "taskInfo->randomNumFuncParaInfo.funcType",
                 "[" + std::to_string(RT_RANDOM_NUM_FUNC_TYPE_DROPOUT_BITMASK) + ", " +
                     std::to_string(RT_RANDOM_NUM_FUNC_TYPE_MAX) + ")");
             error = RT_ERROR_INVALID_VALUE;

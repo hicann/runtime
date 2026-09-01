@@ -55,7 +55,7 @@ void RegDavidSqeFunc(rtChipType_t chipType, tsTaskType_t taskType, PfnTaskToDavi
 void RegDavidSqeHeaderPostProcFunc(rtChipType_t chipType, PfnDavidSqeHeaderPostProc func)
 {
     if (chipType < CHIP_BEGIN || chipType >= CHIP_END) {
-        RT_LOG(RT_LOG_ERROR, "Invalid chipType = %d, valid range: [%d, %d).", chipType, CHIP_BEGIN, CHIP_END);
+        RT_LOG(RT_LOG_ERROR, "Invalid chipType=UNKNOWN(%d), valid range: [%d, %d).", chipType, CHIP_BEGIN, CHIP_END);
         return;
     }
     g_davidSqeHeaderPostProcFunc[chipType] = func;

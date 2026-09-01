@@ -9,6 +9,7 @@
  */
 #include "api_error.hpp"
 #include "device_enum_desc.hpp"
+#include "driver_enum_desc.hpp"
 #include "capture_model_enum_desc.hpp"
 #include "enum_desc.hpp"
 #include "osal.hpp"
@@ -495,7 +496,13 @@ rtError_t ApiErrorDecorator::GetMemcpyConfigAttr(rtMemcpyAttribute_t* attr, RtMe
             configInfo->checkBitmap = attr->value.checkBitmap;
             break;
         default:
-            RT_LOG_OUTER_MSG_INVALID_PARAM_WITH_DESC("Obtaining configuration attributes of memory copy", attr->id, 1);
+            const char_t* const attrName =
+                (attr->id == RT_MEMCPY_ATTRIBUTE_RSV) ?
+                    "MEMCPY_ATTRIBUTE_RSV" :
+                    ((attr->id == RT_MEMCPY_ATTRIBUTE_MAX) ? "MEMCPY_ATTRIBUTE_MAX" : "UNKNOWN");
+            RT_LOG_OUTER_MSG_WITH_FUNC_DESC(
+                ErrorCode::EE1003, "Obtaining configuration attributes of memory copy",
+                RtFmtMsg("%s(%d)", attrName, static_cast<int32_t>(attr->id)), "attr->id", 1);
             error = RT_ERROR_INVALID_VALUE;
             break;
     }
@@ -1978,9 +1985,9 @@ rtError_t ApiErrorDecorator::HostMemMapCapabilities(
         error != RT_ERROR_NONE, error, "Device ID is invalid, drv devId=%u, retCode=%#x", realDeviceId,
         static_cast<uint32_t>(error));
 
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
         hacType >= RT_HAC_TYPE_MAX, RT_ERROR_INVALID_VALUE,
-        "Querying the host memory mapping capability on a specified device", hacType,
+        "Querying the host memory mapping capability on a specified device", HacTypeToString(hacType), "hacType",
         "[0, " + std::to_string(RT_HAC_TYPE_MAX) + ")");
     error = impl_->HostMemMapCapabilities(realDeviceId, hacType, capabilities);
     if (error == RT_ERROR_FEATURE_NOT_SUPPORT) {
@@ -4228,7 +4235,9 @@ rtError_t ApiErrorDecorator::ModelBindQueue(Model* const mdl, const uint32_t que
         "Binding a queue to a model", flag,
         std::to_string(RT_MODEL_INPUT_QUEUE) + " or " + std::to_string(RT_MODEL_OUTPUT_QUEUE));
     const rtError_t error = impl_->ModelBindQueue(mdl, queueId, flag);
-    ERROR_RETURN(error, "Model bind queue failed, queueId=%u, flag=%d.", queueId, static_cast<int32_t>(flag));
+    ERROR_RETURN(
+        error, "Model bind queue failed, queueId=%u, flag=%s(%d).", queueId,
+        (flag == RT_MODEL_INPUT_QUEUE) ? "MODEL_INPUT_QUEUE" : "MODEL_OUTPUT_QUEUE", static_cast<int32_t>(flag));
     return error;
 }
 
@@ -7269,10 +7278,13 @@ rtError_t ApiErrorDecorator::FunctionGetAttribute(rtFuncHandle funcHandle, rtFun
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
         funcHandle, RT_ERROR_INVALID_VALUE, "Obtaining kernel function attributes");
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(attrValue, RT_ERROR_INVALID_VALUE, "Obtaining kernel function attributes");
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
         ((static_cast<uint32_t>(attrType) < RT_FUNCTION_ATTR_KERNEL_TYPE) ||
          (static_cast<uint32_t>(attrType) >= RT_FUNCTION_ATTR_MAX)),
-        RT_ERROR_INVALID_VALUE, "Obtaining kernel function attributes", attrType,
+        RT_ERROR_INVALID_VALUE, "Obtaining kernel function attributes",
+        (attrType == RT_FUNCTION_ATTR_MAX) ? "FUNCTION_ATTR_MAX(4)" :
+                                             RtFmtMsg("UNKNOWN(%d)", static_cast<int32_t>(attrType)),
+        "attrType",
         "[" + std::to_string(RT_FUNCTION_ATTR_KERNEL_TYPE) + ", " + std::to_string(RT_FUNCTION_ATTR_MAX) + ")");
 
     if (attrType == RT_FUNCTION_ATTR_KERNEL_RATIO) {
@@ -7401,9 +7413,11 @@ rtError_t ApiErrorDecorator::MemMapSelectedLink(void* virPtrDst, size_t size, vo
 rtError_t ApiErrorDecorator::MemMapSetLink(rtDrvMemHandle handle, rtMemLinkType adviceLink)
 {
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(handle, RT_ERROR_INVALID_VALUE, "Setting the link ID for memory mapping");
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
         adviceLink > RT_MEM_ACCESS_UB_MULTI_PORT_PATH, RT_ERROR_INVALID_VALUE, "Setting the link ID for memory mapping",
-        adviceLink,
+        (adviceLink == RT_MEM_ACCESS_LINK_MAX) ? "MEM_ACCESS_LINK_MAX(4)" :
+                                                 RtFmtMsg("UNKNOWN(%d)", static_cast<int32_t>(adviceLink)),
+        "adviceLink",
         "[" + std::to_string(RT_MEM_ACCESS_LINK_SIO) + ", " + std::to_string(RT_MEM_ACCESS_UB_MULTI_PORT_PATH) + "]");
     return impl_->MemMapSetLink(handle, adviceLink);
 }
@@ -7451,9 +7465,10 @@ rtError_t ApiErrorDecorator::KernelTaskGetAttribute(
 
 rtError_t ApiErrorDecorator::SetKernelDfxInfoCallback(rtKernelDfxInfoType type, rtKernelDfxInfoProFunc func)
 {
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
         (type < RT_KERNEL_DFX_INFO_DEFAULT || type > RT_KERNEL_DFX_INFO_BLOCK_INFO), RT_ERROR_INVALID_VALUE,
-        "Registering the dump callback function", type,
+        "Registering the dump callback function",
+        RtFmtMsg("%s(%d)", KernelDfxInfoTypeName(type), static_cast<int32_t>(type)), "type",
         "[" + std::to_string(RT_KERNEL_DFX_INFO_DEFAULT) + ", " + std::to_string(RT_KERNEL_DFX_INFO_BLOCK_INFO) + "]");
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(func, RT_ERROR_INVALID_VALUE, "Registering the dump callback function");
     return impl_->SetKernelDfxInfoCallback(type, func);

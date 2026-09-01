@@ -1064,9 +1064,12 @@ rtError_t ApiImpl::RegisterCpuFunc(
     *funcHandle = nullptr;
     Program* const prog = RtPtrToPtr<Program*>(binHandle);
     const KernelRegisterType kernelRegType = prog->GetKernelRegType();
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
         kernelRegType != RT_KERNEL_REG_TYPE_CPU, RT_ERROR_INVALID_VALUE, "Registering AI CPU operator information",
-        kernelRegType, std::to_string(RT_KERNEL_REG_TYPE_CPU));
+        RtFmtMsg(
+            "%s(%d)", (kernelRegType == RT_KERNEL_REG_TYPE_NON_CPU) ? "KERNEL_REG_TYPE_NON_CPU" : "UNKNOWN",
+            static_cast<int32_t>(kernelRegType)),
+        "kernelRegType", std::to_string(RT_KERNEL_REG_TYPE_CPU));
     Kernel* kernel = nullptr;
     // 注册cpu kernel
     rtError_t error = prog->RegisterSingleCpuKernel(funcName, kernelName, &kernel);
@@ -1337,8 +1340,12 @@ rtError_t ApiImpl::LaunchKernelV2(
         }
         default:
             error = RT_ERROR_INVALID_VALUE;
-            RT_LOG_OUTER_MSG_INVALID_PARAM_WITH_DESC(
-                "Starting the compute task of the corresponding operator", argsWithType->type,
+            RT_LOG_OUTER_MSG_WITH_FUNC_DESC(
+                ErrorCode::EE1003, "Starting the compute task of the corresponding operator",
+                RtFmtMsg(
+                    "%s(%d)", (argsWithType->type == RT_ARGS_MAX) ? "ARGS_MAX" : "UNKNOWN",
+                    static_cast<int32_t>(argsWithType->type)),
+                "argsWithType->type",
                 "[" + std::to_string(RT_ARGS_NON_CPU_EX) + ", " + std::to_string(RT_ARGS_MAX) + ")");
             break;
     }
@@ -4704,7 +4711,7 @@ rtError_t ApiImpl::GetAicpuDeploy(rtAicpuDeployType_t* const deployType)
     const uint32_t type = dev->Driver_()->GetAicpuDeploy();
     COND_RETURN_ERROR_MSG_INNER(
         type > AICPU_DEPLOY_RESERVED, RT_ERROR_DEVICE_DEPLOY,
-        "Get aicpu deploy failed, invalid deployType, current deployType=%u,"
+        "Get aicpu deploy failed, invalid deployType, current deployType=UNKNOWN(%u),"
         " valid deployType range is [0, %d]",
         type, AICPU_DEPLOY_RESERVED);
     *deployType = static_cast<rtAicpuDeployType_t>(type);
@@ -6076,8 +6083,10 @@ rtError_t ApiImpl::GetTaskBufferLen(const rtTaskBuffType_t type, uint32_t* const
             *bufferLen = PRELOAD_PARAM_BUFFER_MAX_N * 20U;
             break;
         default:
-            RT_LOG_OUTER_MSG_INVALID_PARAM_WITH_DESC(
-                "Obtaining the task buffer length", type, "[0, " + std::to_string(MAX_TASK) + ")");
+            RT_LOG_OUTER_MSG_WITH_FUNC_DESC(
+                ErrorCode::EE1003, "Obtaining the task buffer length",
+                RtFmtMsg("%s(%d)", (type == MAX_TASK) ? "MAX_TASK" : "UNKNOWN", static_cast<int32_t>(type)), "type",
+                "[0, " + std::to_string(MAX_TASK) + ")");
             return RT_ERROR_INVALID_VALUE;
     }
     RT_LOG(RT_LOG_INFO, "Get Task Buffer Len success. bufferLen=%zu, task type=%d.", *bufferLen, type);

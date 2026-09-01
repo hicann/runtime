@@ -149,9 +149,9 @@ rtError_t ApiImplEsched::EschedWaitEvent(
 
 rtError_t ApiImplEsched::EschedCreateGrp(const int32_t devId, const uint32_t grpId, const rtGroupType_t type)
 {
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
         (type < RT_GRP_TYPE_BIND_DP_CPU) || (type > RT_GRP_TYPE_BIND_DP_CPU_EXCLUSIVE), RT_ERROR_INVALID_VALUE,
-        "Creating an event scheduling group", type,
+        "Creating an event scheduling group", RtFmtMsg("UNKNOWN(%d)", static_cast<int32_t>(type)), "type",
         "[" + std::to_string(RT_GRP_TYPE_BIND_DP_CPU) + ", " + std::to_string(RT_GRP_TYPE_BIND_DP_CPU_EXCLUSIVE) + "]");
 
     int32_t realDeviceId = 0;

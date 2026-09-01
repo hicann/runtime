@@ -12,6 +12,7 @@
 #include "driver/ascend_inpackage_hal.h"
 #include "errcode_manage.hpp"
 #include "error_message_manage.hpp"
+#include "driver_enum_desc.hpp"
 #include "rt_log.h"
 
 namespace {
@@ -129,8 +130,8 @@ rtError_t NpuDriver::EschedCreateGrp(const int32_t devId, const uint32_t grpId, 
     const drvError_t drvRet = halEschedCreateGrp(static_cast<uint32_t>(devId), grpId, static_cast<GROUP_TYPE>(type));
     if (drvRet != DRV_ERROR_NONE) {
         DRV_ERROR_PROCESS(
-            drvRet, "Call driver api halEschedCreateGrp failed, drvRetCode=%d, drvDevId=%d, grpId=%u, type=%u.",
-            static_cast<int32_t>(drvRet), devId, grpId, static_cast<uint32_t>(type));
+            drvRet, "Call driver api halEschedCreateGrp failed, drvRetCode=%d, drvDevId=%d, grpId=%u, type=%s(%u).",
+            static_cast<int32_t>(drvRet), devId, grpId, GroupTypeName(type), static_cast<uint32_t>(type));
         return RT_GET_DRV_ERRCODE(drvRet);
     }
     return RT_ERROR_NONE;
@@ -235,9 +236,9 @@ rtError_t NpuDriver::EschedAckEvent(
     if (drvRet != DRV_ERROR_NONE) {
         DRV_ERROR_PROCESS(
             drvRet,
-            "Call driver api halEschedAckEvent failed, drvRetCode=%d, drvDevId=%d, eventId=%u, subeventId=%u, "
+            "Call driver api halEschedAckEvent failed, drvRetCode=%d, drvDevId=%d, eventId=%s(%u), subeventId=%u, "
             "len=%u(bytes).",
-            static_cast<int32_t>(drvRet), devId, static_cast<uint32_t>(evtId), subeventId, len);
+            static_cast<int32_t>(drvRet), devId, EventIdTypeName(evtId), static_cast<uint32_t>(evtId), subeventId, len);
         return RT_GET_DRV_ERRCODE(drvRet);
     }
     return RT_ERROR_NONE;
@@ -255,8 +256,8 @@ rtError_t NpuDriver::EschedQueryInfo(
         RtPtrToPtr<esched_output_info*>(outPut));
     if (drvRet != DRV_ERROR_NONE) {
         DRV_ERROR_PROCESS(
-            drvRet, "Call driver api halEschedQueryInfo failed, drvRetCode=%d, drvDevId=%u, type=%d.",
-            static_cast<int32_t>(drvRet), devId, type);
+            drvRet, "Call driver api halEschedQueryInfo failed, drvRetCode=%d, drvDevId=%u, type=%s(%d).",
+            static_cast<int32_t>(drvRet), devId, EschedQueryTypeName(type), static_cast<int32_t>(type));
         return RT_GET_DRV_ERRCODE(drvRet);
     }
     return RT_ERROR_NONE;

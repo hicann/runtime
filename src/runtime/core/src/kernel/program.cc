@@ -1481,8 +1481,10 @@ rtError_t BinaryMemAdvise(
     // for compatibility between new and old packages, do not handle RT_ERROR_DRV_NOT_SUPPORT and RT_ERROR_DRV_INPUT.
     if ((error != RT_ERROR_NONE) && (error != RT_ERROR_DRV_NOT_SUPPORT) && (error != RT_ERROR_DRV_INPUT)) {
         RT_LOG(
-            RT_LOG_ERROR, "advise memory, retCode=%#x, dev_mem=%p, dev_size=%" PRIu64 ", advise_type=%d, device_id=%u.",
-            static_cast<uint32_t>(error), devMem, devSize, adviseType, devId);
+            RT_LOG_ERROR,
+            "advise memory, retCode=%#x, dev_mem=%p, dev_size=%" PRIu64 ", advise_type=%d(%s), device_id=%u.",
+            static_cast<uint32_t>(error), devMem, devSize, adviseType,
+            (adviseType == RT_ADVISE_ACCESS_READONLY) ? "ADVISE_ACCESS_READONLY" : "ADVISE_ACCESS_READWRITE", devId);
         return error;
     }
 
@@ -1794,10 +1796,11 @@ rtError_t ElfProgram::MergeKernel(const RtKernel* const elfkernelInfo, Kernel* o
         RT_LOG(
             RT_LOG_ERROR,
             "found the previous mix kernel but conflict. "
-            "found kernel name=[%s], kernelAttrType=%s, mixType=%hu, offset2=%u, "
-            "current kernel name=[%s], kernelAttrType=%s, mixType=%hu",
-            oldKernel->Name_().c_str(), KernelAttrTypeToString(oldKernelAttrType).c_str(), oldMixType,
-            oldKernel->Offset2_(), elfkernelInfo->name, KernelAttrTypeToString(kernelAttrType).c_str(), mixType);
+            "found kernel name=[%s], kernelAttrType=%s, mixType=%s, offset2=%u, "
+            "current kernel name=[%s], kernelAttrType=%s, mixType=%s",
+            oldKernel->Name_().c_str(), KernelAttrTypeToString(oldKernelAttrType).c_str(),
+            KernelMixTypeToString(oldMixType).c_str(), oldKernel->Offset2_(), elfkernelInfo->name,
+            KernelAttrTypeToString(kernelAttrType).c_str(), KernelMixTypeToString(mixType).c_str());
         RT_LOG_OUTER_MSG_IMPL(
             ErrorCode::EE1014,
             RtFmtMsg("The mix kernel %s conflicts with another kernel of the same name", elfkernelInfo->name));

@@ -156,8 +156,8 @@ rtError_t DevMemSetAsyncByMemcpy(
         ERROR_RETURN_MSG_INNER(
             error,
             "Memcpy async step1 failed, retCode=%#x,"
-            " max size=%" PRIu64 "(bytes), src size=%" PRIu64 "(bytes), type=%d.",
-            error, destMax - doneSize, remainSize, RT_MEMCPY_HOST_TO_DEVICE);
+            " max size=%" PRIu64 "(bytes), src size=%" PRIu64 "(bytes), type=%s.",
+            error, destMax - doneSize, remainSize, MemcpyKindToStr(RT_MEMCPY_HOST_TO_DEVICE));
         doneSize += realSize;
         remainSize -= realSize;
     }
@@ -171,8 +171,8 @@ rtError_t DevMemSetAsyncByMemcpy(
             ERROR_RETURN_MSG_INNER(
                 error,
                 "Memcpy async step2 failed,"
-                " max size=%" PRIu64 "(bytes), src size=%" PRIu64 "(bytes), type=%d.",
-                destMax - (idx * MEM_BLOCK_SIZE), MEM_BLOCK_SIZE, RT_MEMCPY_DEVICE_TO_DEVICE);
+                " max size=%" PRIu64 "(bytes), src size=%" PRIu64 "(bytes), type=%s.",
+                destMax - (idx * MEM_BLOCK_SIZE), MEM_BLOCK_SIZE, MemcpyKindToStr(RT_MEMCPY_DEVICE_TO_DEVICE));
         }
 
         const uint64_t memRemain = fillCount % MEM_BLOCK_SIZE;
@@ -184,8 +184,8 @@ rtError_t DevMemSetAsyncByMemcpy(
             ERROR_RETURN_MSG_INNER(
                 error,
                 "Memcpy async step3 failed,"
-                " max size=%" PRIu64 "(bytes), src size=%" PRIu64 "(bytes), type=%d.",
-                destMax - (memBlockNum * MEM_BLOCK_SIZE), memRemain, RT_MEMCPY_DEVICE_TO_DEVICE);
+                " max size=%" PRIu64 "(bytes), src size=%" PRIu64 "(bytes), type=%s.",
+                destMax - (memBlockNum * MEM_BLOCK_SIZE), memRemain, MemcpyKindToStr(RT_MEMCPY_DEVICE_TO_DEVICE));
         }
     }
 

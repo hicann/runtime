@@ -898,8 +898,8 @@ acltdtDataItem* acltdtCreateDataItem(
         if (dims != nullptr) {
             ACL_LOG_ERROR(
                 "[Check][Dims]acltdtCreateDataItem failed, "
-                "dims must be nullptr. tdtType is %d",
-                tdtType);
+                "dims must be nullptr. tdtType is %s",
+                acl::GetTensorTypeDesc(tdtType));
             const std::string dimsVal = std::to_string(reinterpret_cast<uintptr_t>(dims));
             acl::AclErrorLogManager::ReportInputError(
                 acl::INVALID_VALUE_MSG, std::vector<const char*>({"func", "value", "param", "expect"}),

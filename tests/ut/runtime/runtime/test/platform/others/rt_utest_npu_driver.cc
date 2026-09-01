@@ -371,6 +371,41 @@ TEST_F(NpuDriverTest, event_id_alloc)
     delete rawDrv;
 }
 
+TEST_F(NpuDriverTest, ReAllocResourceIdTypeName)
+{
+    MOCKER(halResourceIdAlloc).stubs().will(returnValue(DRV_ERROR_INVALID_VALUE));
+    NpuDriver driver;
+
+    for (const drvIdType_t type :
+         {DRV_STREAM_ID, DRV_EVENT_ID, DRV_MODEL_ID, DRV_NOTIFY_ID, DRV_CMO_ID, DRV_CNT_NOTIFY_ID, DRV_SQ_ID, DRV_CQ_ID,
+          DRV_INVALID_ID, static_cast<drvIdType_t>(MAX_INT32_NUM)}) {
+        EXPECT_EQ(driver.ReAllocResourceId(0U, 0U, 0U, 0U, type), RT_ERROR_DRV_INPUT);
+    }
+}
+
+TEST_F(NpuDriverTest, GetDeviceInfoByBuffTypeName)
+{
+    MOCKER(halGetDeviceInfoByBuff).stubs().will(returnValue(DRV_ERROR_INVALID_VALUE));
+    NpuDriver driver;
+    uint32_t value = 0U;
+    int32_t size = sizeof(value);
+    const auto verifyType = [&driver, &value, &size](const int32_t moduleType, const int32_t infoType) {
+        EXPECT_EQ(driver.GetDeviceInfoByBuff(0U, moduleType, infoType, &value, &size), RT_ERROR_DRV_INPUT);
+    };
+
+    verifyType(MODULE_TYPE_SYSTEM, INFO_TYPE_UUID);
+    verifyType(MODULE_TYPE_PCIE, INFO_TYPE_UUID);
+    verifyType(MODULE_TYPE_QOS, INFO_TYPE_UUID);
+    verifyType(MODULE_TYPE_L2BUFF, INFO_TYPE_UUID);
+    verifyType(MAX_INT32_NUM, INFO_TYPE_UUID);
+    verifyType(MODULE_TYPE_SYSTEM, INFO_TYPE_PCIE_ID_INFO);
+    verifyType(MODULE_TYPE_SYSTEM, INFO_TYPE_QOS_MASTER_CONFIG);
+    verifyType(MODULE_TYPE_SYSTEM, INFO_TYPE_L2BUFF_RESUME);
+    verifyType(MODULE_TYPE_SYSTEM, INFO_TYPE_L2BUFF_RESUME_CNT);
+    verifyType(MODULE_TYPE_SYSTEM, INFO_TYPE_L2BUFF_INVALID_CACHE);
+    verifyType(MODULE_TYPE_SYSTEM, MAX_INT32_NUM);
+}
+
 TEST_F(NpuDriverTest, dev_memory_failed)
 {
     void* mem;

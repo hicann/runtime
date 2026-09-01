@@ -286,8 +286,9 @@ void PrintErrorInfoCommon(TaskInfo* taskInfo, const uint32_t devId)
     STREAM_REPORT_ERR_MSG(
         reportStream, ERR_MODULE_RTS,
         "Task execution failed, device_id=%u,"
-        " stream_id=%d, %s=%hu, flip_num=%hu, task_type=%d.",
-        devId, streamId, TaskIdDesc(), taskInfo->id, taskInfo->flipNum, static_cast<int32_t>(taskInfo->type));
+        " stream_id=%d, %s=%hu, flip_num=%hu, task_type=%d(%s).",
+        devId, streamId, TaskIdDesc(), taskInfo->id, taskInfo->flipNum, static_cast<int32_t>(taskInfo->type),
+        taskInfo->typeName);
 }
 
 // If the task does not have the corresponding docomplete function, use this function.

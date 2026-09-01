@@ -103,6 +103,64 @@ static inline const char* EschedQueryTypeName(const rtEschedQueryType type)
     }
 }
 
+static inline const char* EventIdTypeName(const rtEventIdType_t type)
+{
+    switch (type) {
+        case RT_EVENT_RANDOM_KERNEL:
+            return "EVENT_RANDOM_KERNEL";
+        case RT_EVENT_DVPP_MSG:
+            return "EVENT_DVPP_MSG";
+        case RT_EVENT_FR_MSG:
+            return "EVENT_FR_MSG";
+        case RT_EVENT_TS_HWTS_KERNEL:
+            return "EVENT_TS_HWTS_KERNEL";
+        case RT_EVENT_AICPU_MSG:
+            return "EVENT_AICPU_MSG";
+        case RT_EVENT_TS_CTRL_MSG:
+            return "EVENT_TS_CTRL_MSG";
+        case RT_EVENT_QUEUE_ENQUEUE:
+            return "EVENT_QUEUE_ENQUEUE";
+        case RT_EVENT_QUEUE_FULL_TO_NOT_FULL:
+            return "EVENT_QUEUE_FULL_TO_NOT_FULL";
+        case RT_EVENT_QUEUE_EMPTY_TO_NOT_EMPTY:
+            return "EVENT_QUEUE_EMPTY_TO_NOT_EMPTY";
+        case RT_EVENT_TDT_ENQUEUE:
+            return "EVENT_TDT_ENQUEUE";
+        case RT_EVENT_TIMER:
+            return "EVENT_TIMER";
+        case RT_EVENT_HCFI_SCHED_MSG:
+            return "EVENT_HCFI_SCHED_MSG";
+        case RT_EVENT_HCFI_EXEC_MSG:
+            return "EVENT_HCFI_EXEC_MSG";
+        case RT_EVENT_ROS_MSG_LEVEL0:
+            return "EVENT_ROS_MSG_LEVEL0";
+        case RT_EVENT_ROS_MSG_LEVEL1:
+            return "EVENT_ROS_MSG_LEVEL1";
+        case RT_EVENT_ROS_MSG_LEVEL2:
+            return "EVENT_ROS_MSG_LEVEL2";
+        case RT_EVENT_ACPU_MSG_TYPE0:
+            return "EVENT_ACPU_MSG_TYPE0";
+        case RT_EVENT_ACPU_MSG_TYPE1:
+            return "EVENT_ACPU_MSG_TYPE1";
+        case RT_EVENT_ACPU_MSG_TYPE2:
+            return "EVENT_ACPU_MSG_TYPE2";
+        case RT_EVENT_CCPU_CTRL_MSG:
+            return "EVENT_CCPU_CTRL_MSG";
+        case RT_EVENT_SPLIT_KERNEL:
+            return "EVENT_SPLIT_KERNEL";
+        case RT_EVENT_DVPP_MPI_MSG:
+            return "EVENT_DVPP_MPI_MSG";
+        case RT_EVENT_CDQ_MSG:
+            return "EVENT_CDQ_MSG";
+        case RT_EVENT_TEST:
+            return "EVENT_TEST";
+        case RT_EVENT_MAX_NUM:
+            return "EVENT_MAX_NUM";
+        default:
+            return "UNKNOWN";
+    }
+}
+
 static inline const char* DebugMemoryTypeName(const rtDebugMemoryType_t type)
 {
     switch (type) {

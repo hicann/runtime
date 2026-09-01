@@ -22,7 +22,9 @@ rtError_t GetConnectUbFlagFromDrv(const uint32_t deviceId, bool& connectUbFlag)
     drvRet = halGetDeviceInfo(deviceId, MODULE_TYPE_SYSTEM, INFO_TYPE_HD_CONNECT_TYPE, &hdConnectType);
     if (drvRet != DRV_ERROR_NONE) {
         DRV_ERROR_PROCESS(
-            drvRet, "Call driver api halGetDeviceInfo failed, drvRetCode=%d, moduleType=%d, infoType=%d.",
+            drvRet,
+            "Call driver api halGetDeviceInfo failed, drvRetCode=%d, moduleType=SYSTEM(%d), "
+            "infoType=HD_CONNECT_TYPE(%d).",
             static_cast<int32_t>(drvRet), static_cast<int32_t>(MODULE_TYPE_SYSTEM),
             static_cast<int32_t>(INFO_TYPE_HD_CONNECT_TYPE));
         return RT_GET_DRV_ERRCODE(drvRet);

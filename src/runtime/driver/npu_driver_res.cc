@@ -20,6 +20,68 @@ namespace runtime {
 constexpr uint32_t GET_SQ_HEAD_MAX_RETRY_TIMES = 100U;
 constexpr uint32_t GET_SQ_HEAD_QUERY_FAIL_STAT_TIMES = 1000U;
 
+static const char* DrvIdTypeName(const drvIdType_t type)
+{
+    switch (type) {
+        case DRV_STREAM_ID:
+            return "DRV_STREAM_ID";
+        case DRV_EVENT_ID:
+            return "DRV_EVENT_ID";
+        case DRV_MODEL_ID:
+            return "DRV_MODEL_ID";
+        case DRV_NOTIFY_ID:
+            return "DRV_NOTIFY_ID";
+        case DRV_CMO_ID:
+            return "DRV_CMO_ID";
+        case DRV_CNT_NOTIFY_ID:
+            return "DRV_CNT_NOTIFY_ID";
+        case DRV_SQ_ID:
+            return "DRV_SQ_ID";
+        case DRV_CQ_ID:
+            return "DRV_CQ_ID";
+        case DRV_INVALID_ID:
+            return "DRV_INVALID_ID";
+        default:
+            return "UNKNOWN";
+    }
+}
+
+static const char* DevModuleTypeName(const int32_t type)
+{
+    switch (type) {
+        case MODULE_TYPE_SYSTEM:
+            return "MODULE_TYPE_SYSTEM";
+        case MODULE_TYPE_PCIE:
+            return "MODULE_TYPE_PCIE";
+        case MODULE_TYPE_QOS:
+            return "MODULE_TYPE_QOS";
+        case MODULE_TYPE_L2BUFF:
+            return "MODULE_TYPE_L2BUFF";
+        default:
+            return "UNKNOWN";
+    }
+}
+
+static const char* DevInfoTypeName(const int32_t type)
+{
+    switch (type) {
+        case INFO_TYPE_UUID:
+            return "INFO_TYPE_UUID";
+        case INFO_TYPE_PCIE_ID_INFO:
+            return "INFO_TYPE_PCIE_ID_INFO";
+        case INFO_TYPE_QOS_MASTER_CONFIG:
+            return "INFO_TYPE_QOS_MASTER_CONFIG";
+        case INFO_TYPE_L2BUFF_RESUME:
+            return "INFO_TYPE_L2BUFF_RESUME";
+        case INFO_TYPE_L2BUFF_RESUME_CNT:
+            return "INFO_TYPE_L2BUFF_RESUME_CNT";
+        case INFO_TYPE_L2BUFF_INVALID_CACHE:
+            return "INFO_TYPE_L2BUFF_INVALID_CACHE";
+        default:
+            return "UNKNOWN";
+    }
+}
+
 static rtError_t GetFaultEvents(
     const uint32_t deviceId, const rtDmsEventFilter* const filter, rtDmsFaultEvent* dmsEvent, uint32_t len,
     uint32_t* eventCount)
@@ -173,7 +235,7 @@ rtError_t NpuDriver::GetRasSyscnt(const uint32_t deviceId, RtHbmRasInfo* hbmRasI
     DRV_PROCESS_ERROR_RETURN(
         drvRet,
         "Call driver api halGetDeviceInfoByBuff failed, drvRetCode=%d, drvDevId=%u,"
-        "moduleType=%d, infoType=%d.",
+        "moduleType=MEMORY(%d), infoType=%d.",
         static_cast<int32_t>(drvRet), deviceId, moduleType, infoType);
 
     return RT_ERROR_NONE;
@@ -200,7 +262,7 @@ rtError_t NpuDriver::GetMemUceInfo(const uint32_t deviceId, rtMemUceInfo* memUce
         DRV_ERROR_PROCESS(
             drvRet,
             "Call driver api halGetDeviceInfoByBuff failed, drvRetCode=%d, drvDevId=%u,"
-            "moduleType=%d, infoType=%d.",
+            "moduleType=MEMORY(%d), infoType=%d.",
             static_cast<int32_t>(drvRet), deviceId, moduleType, infoType);
     }
 
@@ -243,8 +305,9 @@ rtError_t NpuDriver::GetDeviceInfoByBuff(
         DRV_ERROR_PROCESS(
             drvRet,
             "Call driver api halGetDeviceInfoByBuff failed, drvRetCode=%d, drvDevId=%u,"
-            "moduleType=%d, infoType=%d.",
-            static_cast<int32_t>(drvRet), deviceId, moduleType, infoType);
+            "moduleType=%s(%d), infoType=%s(%d).",
+            static_cast<int32_t>(drvRet), deviceId, DevModuleTypeName(moduleType), moduleType,
+            DevInfoTypeName(infoType), infoType);
     }
 
     return RT_GET_DRV_ERRCODE(drvRet);
@@ -266,8 +329,9 @@ rtError_t NpuDriver::SetDeviceInfoByBuff(
         DRV_ERROR_PROCESS(
             drvRet,
             "Call driver api halSetDeviceInfoByBuff failed, drvRetCode=%d, drvDevId=%u,"
-            "moduleType=%d, infoType=%d.",
-            static_cast<int32_t>(drvRet), deviceId, moduleType, infoType);
+            "moduleType=%s(%d), infoType=%s(%d).",
+            static_cast<int32_t>(drvRet), deviceId, DevModuleTypeName(moduleType), moduleType,
+            DevInfoTypeName(infoType), infoType);
     }
 
     return RT_GET_DRV_ERRCODE(drvRet);
@@ -1234,8 +1298,9 @@ rtError_t NpuDriver::ReAllocResourceId(
         DRV_ERROR_PROCESS(
             drvRet,
             "Call driver api halResourceIdAlloc failed, drvRetCode=%d, drvDevId=%u, priority=%u, "
-            "tsId=%u, resourceId=%u, resAllocOutput.resourceId=%u, idType=%d.",
-            static_cast<int32_t>(drvRet), deviceId, priority, tsId, resourceId, resAllocOutput.resourceId, idType);
+            "tsId=%u, resourceId=%u, resAllocOutput.resourceId=%u, idType=%s(%d).",
+            static_cast<int32_t>(drvRet), deviceId, priority, tsId, resourceId, resAllocOutput.resourceId,
+            DrvIdTypeName(idType), static_cast<int32_t>(idType));
         return RT_GET_DRV_ERRCODE(drvRet);
     }
 

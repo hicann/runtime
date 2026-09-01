@@ -161,7 +161,7 @@ rtError_t ApiImplDavid::CpuKernelLaunchExAll(
     const uint32_t kernelType = kernel->GetAicpuKernelType_();
     if ((kernelType != KERNEL_TYPE_FWK) && (kernelType != KERNEL_TYPE_AICPU) &&
         (kernelType != KERNEL_TYPE_AICPU_CUSTOM) && (kernelType != KERNEL_TYPE_AICPU_KFC)) {
-        RT_LOG(RT_LOG_ERROR, "kernel type mismatch kernelType=%u.", kernelType);
+        RT_LOG(RT_LOG_ERROR, "kernel type mismatch kernelType=UNKNOWN(%u).", kernelType);
         return RT_ERROR_KERNEL_TYPE;
     }
 
@@ -618,8 +618,12 @@ rtError_t ApiImplDavid::LaunchKernelByArgsWithType(
         }
         default:
             error = RT_ERROR_INVALID_VALUE;
-            RT_LOG_OUTER_MSG_INVALID_PARAM_WITH_DESC(
-                "Operator task delivery", argsWithType->type,
+            RT_LOG_OUTER_MSG_WITH_FUNC_DESC(
+                ErrorCode::EE1003, "Operator task delivery",
+                RtFmtMsg(
+                    "%s(%d)", (argsWithType->type == RT_ARGS_MAX) ? "ARGS_MAX" : "UNKNOWN",
+                    static_cast<int32_t>(argsWithType->type)),
+                "argsWithType->type",
                 "[" + std::to_string(RT_ARGS_NON_CPU_EX) + ", " + std::to_string(RT_ARGS_MAX) + ")");
             break;
     }
@@ -1169,9 +1173,10 @@ rtError_t ApiImplDavid::GetCntNotifyAddress(
     COND_RETURN_ERROR(dev == nullptr, RT_ERROR_INVALID_VALUE, "device is NULL.");
     if (!dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_AICPUSD_LATER_PROCEDURE)) {
         // Driver now only support NOTIFY_CNT_ST_SLICE for count notify
-        COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+        COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
             (regType != NOTIFY_CNT_ST_SLICE), RT_ERROR_INVALID_VALUE,
-            "Obtaining the on-device address of a CntNotify object", regType, std::to_string(NOTIFY_CNT_ST_SLICE));
+            "Obtaining the on-device address of a CntNotify object",
+            RtFmtMsg("UNKNOWN(%d)", static_cast<int32_t>(regType)), "regType", std::to_string(NOTIFY_CNT_ST_SLICE));
     } else {
         COND_RETURN_ERROR(
             regType == NOTIFY_TABLE_SLICE, RT_ERROR_INVALID_VALUE,

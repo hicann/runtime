@@ -57,6 +57,32 @@ protected:
     }
 };
 
+TEST_F(ModelTest, PrintErrorInfoForModelToAicpuTaskCmdTypeName)
+{
+    Stream stream(static_cast<Device*>(nullptr), 1);
+    TaskInfo task = {};
+    task.stream = &stream;
+    task.id = 2U;
+    task.u.modelToAicpuTask.modelId = 3U;
+
+    const auto verifyCmdType = [&stream, &task](const uint32_t type, const char* const name) {
+        stream.errorMsg_.clear();
+        task.u.modelToAicpuTask.cmdType = type;
+        PrintErrorInfoForModelToAicpuTask(&task, 0U);
+
+        ASSERT_FALSE(stream.errorMsg_.empty());
+        const std::string expected = std::string("cmd_type=") + name + "(" + std::to_string(type) + ")";
+        EXPECT_NE(stream.errorMsg_.back().second.find(expected), std::string::npos);
+    };
+
+    verifyCmdType(TS_AICPU_MODEL_LOAD, "TS_AICPU_MODEL_LOAD");
+    verifyCmdType(TS_AICPU_MODEL_EXECUTE, "TS_AICPU_MODEL_EXECUTE");
+    verifyCmdType(TS_AICPU_MODEL_DESTROY, "TS_AICPU_MODEL_DESTROY");
+    verifyCmdType(TS_AICPU_MODEL_ABORT, "TS_AICPU_MODEL_ABORT");
+    verifyCmdType(TS_AICPU_MODEL_RESERVED, "TS_AICPU_MODEL_RESERVED");
+    verifyCmdType(MAX_UINT32_NUM, "UNKNOWN");
+}
+
 TEST_F(ModelTest, TestModelSetupWithDevMemAllocFailed)
 {
     rtError_t error;

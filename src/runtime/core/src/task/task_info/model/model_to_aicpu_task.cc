@@ -24,6 +24,24 @@ namespace runtime {
 
 #if F_DESC("ModelToAicpuTask")
 
+static const char* AicpuModelCmdName(const uint32_t type)
+{
+    switch (type) {
+        case TS_AICPU_MODEL_LOAD:
+            return "TS_AICPU_MODEL_LOAD";
+        case TS_AICPU_MODEL_EXECUTE:
+            return "TS_AICPU_MODEL_EXECUTE";
+        case TS_AICPU_MODEL_DESTROY:
+            return "TS_AICPU_MODEL_DESTROY";
+        case TS_AICPU_MODEL_ABORT:
+            return "TS_AICPU_MODEL_ABORT";
+        case TS_AICPU_MODEL_RESERVED:
+            return "TS_AICPU_MODEL_RESERVED";
+        default:
+            return "UNKNOWN";
+    }
+}
+
 rtError_t ModelToAicpuTaskInit(
     TaskInfo* taskInfo, const uint32_t modelIndex, const uint32_t controlType, const uint32_t exeFlag,
     const uint64_t modelPtr)
@@ -61,9 +79,10 @@ void PrintErrorInfoForModelToAicpuTask(TaskInfo* taskInfo, const uint32_t devId)
     STREAM_REPORT_ERR_MSG(
         reportStream, ERR_MODULE_AICPU,
         "ModelToAicpu task execution failed, device_id=%u, stream_id=%d, %s=%u, flip_num=%hu, "
-        "model_id=%u, cmd_type=%u, executor_flag=%u.",
+        "model_id=%u, cmd_type=%s(%u), executor_flag=%u.",
         devId, streamId, TaskIdDesc(), taskId, taskInfo->flipNum, taskInfo->u.modelToAicpuTask.modelId,
-        taskInfo->u.modelToAicpuTask.cmdType, taskInfo->u.modelToAicpuTask.executorFlag);
+        AicpuModelCmdName(taskInfo->u.modelToAicpuTask.cmdType), taskInfo->u.modelToAicpuTask.cmdType,
+        taskInfo->u.modelToAicpuTask.executorFlag);
 }
 
 void DoCompleteSuccForModelToAicpuTask(TaskInfo* taskInfo, const uint32_t devId)
@@ -94,9 +113,9 @@ void SetStarsResultForModelToAicpuTask(TaskInfo* taskInfo, const rtCqReport_t& l
             taskInfo->errorCode = aicpuErrMap[errorIndex];
             RT_LOG(
                 RT_LOG_ERROR,
-                "aicpu model cmdType=%u,errorCode=%u,logicCq:err=%u,errCode=%u,model_id=%u,"
+                "aicpu model cmdType=%s(%u),errorCode=%u,logicCq:err=%u,errCode=%u,model_id=%u,"
                 " stream_id=%hu,task_id=%hu",
-                cmdType, taskInfo->errorCode, logicCq.errorType, logicCq.errorCode,
+                AicpuModelCmdName(cmdType), cmdType, taskInfo->errorCode, logicCq.errorType, logicCq.errorCode,
                 taskInfo->u.modelToAicpuTask.modelId, taskInfo->stream->Id_(), taskInfo->id);
         }
     }

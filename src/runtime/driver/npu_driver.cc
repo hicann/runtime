@@ -554,8 +554,12 @@ rtError_t NpuDriver::SetIpcMemAttr(const char* name, uint32_t type, uint64_t att
     const drvError_t drvRet = halShmemSetAttribute(name, type, attr);
     if (drvRet != DRV_ERROR_NONE) {
         DRV_ERROR_PROCESS(
-            drvRet, "Call driver api halShmemSetAttribute failed, drvRetCode=%d, type=%u, attr=%" PRIu64 ".",
-            static_cast<int32_t>(drvRet), type, attr);
+            drvRet, "Call driver api halShmemSetAttribute failed, drvRetCode=%d, type=%u(%s), attr=%" PRIu64 ".",
+            static_cast<int32_t>(drvRet), type,
+            (type == RT_ATTR_TYPE_MEM_MAP)               ? "ATTR_TYPE_MEM_MAP" :
+            (type == SHMEM_ATTR_TYPE_NO_WLIST_IN_SERVER) ? "SHMEM_ATTR_TYPE_NO_WLIST_IN_SERVER" :
+                                                           "UNKNOWN",
+            attr);
         return RT_GET_DRV_ERRCODE(drvRet);
     }
     RT_LOG(RT_LOG_DEBUG, "set ipc mem attr success, name=%s, type=%u, attr=%" PRIx64 ".", name, type, attr);
@@ -1124,7 +1128,9 @@ bool NpuDriver::CheckIsSupportFeature(uint32_t devId, int32_t featureType)
     }
 
     if (featureType < 0 || static_cast<drvFeature_t>(featureType) >= FEATURE_MAX) {
-        RT_LOG(RT_LOG_ERROR, "featureType %d is invalid.", featureType);
+        RT_LOG(
+            RT_LOG_ERROR, "featureType=%s(%d) is invalid.",
+            (featureType == static_cast<int32_t>(FEATURE_MAX)) ? "FEATURE_MAX" : "UNKNOWN", featureType);
         return false;
     }
 
@@ -1315,8 +1321,10 @@ rtError_t NpuDriver::GetPairDevicesInfo(
     if (drvRet != DRV_ERROR_NONE) {
         std::string name = deviceFlag ? "halGetPairPhyDevicesInfo" : "halGetPairDevicesInfo";
         DRV_ERROR_PROCESS(
-            drvRet, "[drv api] %s failed: drv devId=%u, drv otherDevId=%u, infoType=%d, drvRetCode=%d!", name.c_str(),
-            devId, otherDevId, infoType, static_cast<int32_t>(drvRet));
+            drvRet, "[drv api] %s failed: drv devId=%u, drv otherDevId=%u, infoType=%d(%s), drvRetCode=%d!",
+            name.c_str(), devId, otherDevId, infoType,
+            (infoType == DEVS_INFO_TYPE_TOPOLOGY) ? "DEVS_INFO_TYPE_TOPOLOGY" : "UNKNOWN",
+            static_cast<int32_t>(drvRet));
         return RT_GET_DRV_ERRCODE(drvRet);
     }
     return RT_ERROR_NONE;
@@ -1386,9 +1394,11 @@ rtError_t NpuDriver::GetAllUtilizations(const int32_t devId, const rtTypeUtil_t 
             infoType = MODULE_TYPE_AICPU;
             break;
         default:
-            RT_LOG_OUTER_MSG_INVALID_PARAM_WITH_DESC(
-                "Querying the usage of Cube, Vector, and AI CPU on the device", kind,
-                "(0, " + std::to_string(RT_UTIL_TYPE_MAX) + ")");
+            RT_LOG_OUTER_MSG_WITH_FUNC_DESC(
+                ErrorCode::EE1003, "Querying the usage of Cube, Vector, and AI CPU on the device",
+                RtFmtMsg(
+                    "%s(%d)", (kind == RT_UTIL_TYPE_MAX) ? "UTIL_TYPE_MAX" : "UNKNOWN", static_cast<int32_t>(kind)),
+                "kind", "(0, " + std::to_string(RT_UTIL_TYPE_MAX) + ")");
             return RT_ERROR_INVALID_VALUE;
     }
     int64_t value = 0;

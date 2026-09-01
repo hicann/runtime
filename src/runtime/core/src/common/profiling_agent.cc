@@ -22,18 +22,22 @@ constexpr size_t PROF_API_STACK_RESERVE_SIZE = 8U;
 thread_local std::vector<ProfApiContext> g_apiProfStack{};
 thread_local ProfApiContext g_fallbackProfApiContext{};
 
-static uint32_t GetProfExtInfoDataLen(const uint32_t extInfoType)
+static uint32_t GetProfExtInfoDataLen(const uint32_t extInfoType, const char*& typeName)
 {
     uint32_t dataLen = 0U;
+    typeName = "UNKNOWN";
     switch (extInfoType) {
         case RT_PROFILE_TYPE_MEMCPY_EXT_INFO:
             dataLen = static_cast<uint32_t>(sizeof(MsprofMemcpyInfo));
+            typeName = "PROFILE_TYPE_MEMCPY_EXT_INFO";
             break;
         case RT_PROFILE_TYPE_MEMSET_INFO:
             dataLen = static_cast<uint32_t>(sizeof(MsprofMemsetInfo));
+            typeName = "PROFILE_TYPE_MEMSET_INFO";
             break;
         case RT_PROFILE_TYPE_MEMMNG_INFO:
             dataLen = static_cast<uint32_t>(sizeof(MsprofMemMngInfo));
+            typeName = "PROFILE_TYPE_MEMMNG_INFO";
             break;
         default:
             break;
@@ -65,9 +69,10 @@ static rtError_t SetProfExtCompactData(
 static rtError_t ReportProfExtCompactInfo(
     const uint32_t extInfoType, const RuntimeProfExtInfo& extInfo, const uint32_t threadId, const uint64_t timeStamp)
 {
-    const uint32_t dataLen = GetProfExtInfoDataLen(extInfoType);
+    const char* typeName = nullptr;
+    const uint32_t dataLen = GetProfExtInfoDataLen(extInfoType, typeName);
     if (dataLen == 0U) {
-        RT_LOG(RT_LOG_ERROR, "Invalid runtime profiling ext info type, type=%u.", extInfoType);
+        RT_LOG(RT_LOG_ERROR, "Invalid runtime profiling ext info type, type=UNKNOWN(%u).", extInfoType);
         return RT_ERROR_INVALID_VALUE;
     }
 
@@ -84,7 +89,9 @@ static rtError_t ReportProfExtCompactInfo(
 
     const int32_t res = MsprofReportCompactInfo(true, &compactInfo, static_cast<uint32_t>(sizeof(MsprofCompactInfo)));
     if (res != MSPROF_ERROR_NONE) {
-        RT_LOG_CALL_MSG(ERR_MODULE_PROFILE, "Failed to report profiling ext info, type=%u, ret=%d.", extInfoType, res);
+        RT_LOG_CALL_MSG(
+            ERR_MODULE_PROFILE, "Failed to report profiling ext info, type=%s(%u), ret=%d.", typeName, extInfoType,
+            res);
         return RT_ERROR_PROF_OPER;
     }
     return RT_ERROR_NONE;

@@ -9,6 +9,7 @@
  */
 
 #include "cond_op_manager.hpp"
+#include "device_enum_desc.hpp"
 #include "inner_thread_local.hpp"
 #include "stars_cond_isa_helper.hpp"
 
@@ -21,13 +22,15 @@ static void InvokeCondIsaConstruct(Func CondIsaConstructFuncs::*const funcMember
 {
     const rtChipType_t chipType = InnerThreadLocalContainer::GetCurrentChipType();
     if (unlikely((chipType < CHIP_BEGIN) || (chipType >= CHIP_END))) {
-        RT_LOG(RT_LOG_ERROR, "Invalid chipType = %d, valid range: [%d, %d).", chipType, CHIP_BEGIN, CHIP_END);
+        RT_LOG(RT_LOG_ERROR, "Invalid chipType=UNKNOWN(%d), valid range: [%d, %d).", chipType, CHIP_BEGIN, CHIP_END);
         return;
     }
 
     Func const func = g_condIsaConstructFunc[chipType].*funcMember;
     if (unlikely(func == nullptr)) {
-        RT_LOG(RT_LOG_ERROR, "Cond ISA construct function is not registered, chipType = %d.", chipType);
+        RT_LOG(
+            RT_LOG_ERROR, "Cond ISA construct function is not registered, chipType=%s.",
+            ChipTypeToString(chipType).c_str());
         return;
     }
     func(args...);

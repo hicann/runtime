@@ -1194,13 +1194,15 @@ rtError_t ApiImpl::MemMapSelectedLink(void* virPtrDst, size_t size, void* virPtr
         error = NpuDriver::MemHandleGetAttribute(handle, HANDLE_ATTR_MEM_MAP_ROUTE, &attrOrg);
         COND_PROC_RETURN_ERROR(
             error != RT_ERROR_NONE, error, (void)FreePhysical(handle),
-            "Call MemHandleGetAttribute failed, handle=%p, type=%d.", handle, HANDLE_ATTR_MEM_MAP_ROUTE);
+            "Call MemHandleGetAttribute failed, handle=%p, type=HANDLE_ATTR_MEM_MAP_ROUTE(%d).", handle,
+            HANDLE_ATTR_MEM_MAP_ROUTE);
         attrNew.memMapRoute = linkIdx;
         error = NpuDriver::MemHandleSetAttribute(handle, HANDLE_ATTR_MEM_MAP_ROUTE, attrNew);
         COND_PROC_RETURN_ERROR(
             error != RT_ERROR_NONE, error, (void)FreePhysical(handle),
-            "Call MemHandleSetAttribute failed, handle=%p, type=%d, linkIdx=%u, attrNew.memMapRoute=%u.", handle,
-            HANDLE_ATTR_MEM_MAP_ROUTE, linkIdx, attrNew.memMapRoute);
+            "Call MemHandleSetAttribute failed, handle=%p, type=HANDLE_ATTR_MEM_MAP_ROUTE(%d), linkIdx=%u, "
+            "attrNew.memMapRoute=%u.",
+            handle, HANDLE_ATTR_MEM_MAP_ROUTE, linkIdx, attrNew.memMapRoute);
         error = MapMem(virPtrNew, baseSize, 0, handle, 0);
         COND_PROC_RETURN_ERROR(
             error != RT_ERROR_NONE, error, (void)FreePhysical(handle),
@@ -1208,7 +1210,8 @@ rtError_t ApiImpl::MemMapSelectedLink(void* virPtrDst, size_t size, void* virPtr
         error = NpuDriver::MemHandleSetAttribute(handle, HANDLE_ATTR_MEM_MAP_ROUTE, attrOrg);
         COND_PROC_RETURN_ERROR(
             error != RT_ERROR_NONE, error, (void)FreePhysical(handle),
-            "Call MemHandleGetAttribute failed, handle=%p, type=%d.", handle, HANDLE_ATTR_MEM_MAP_ROUTE);
+            "Call MemHandleGetAttribute failed, handle=%p, type=HANDLE_ATTR_MEM_MAP_ROUTE(%d).", handle,
+            HANDLE_ATTR_MEM_MAP_ROUTE);
 
         error = FreePhysical(handle);
         ERROR_RETURN(error, "Call FreePhysical failed, handle=%p.", handle);

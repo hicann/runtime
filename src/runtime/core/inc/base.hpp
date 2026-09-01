@@ -233,13 +233,18 @@ inline std::string MakeStr(std::string&& s) { return std::move(s); }
 template <typename T, std::enable_if_t<std::is_arithmetic_v<T> || std::is_enum_v<T>, int> = 0>
 inline std::string MakeStr(T v)
 {
-    std::ostringstream oss;
-    if constexpr (std::is_same_v<std::decay_t<T>, int8_t> || std::is_same_v<std::decay_t<T>, uint8_t>) {
-        oss << static_cast<int>(v);
-    } else {
+    using ValueType = std::decay_t<T>;
+    if constexpr (std::is_floating_point_v<ValueType> || std::is_enum_v<ValueType>) {
+        std::ostringstream oss;
         oss << v;
+        return oss.str();
+    } else if constexpr (std::is_same_v<ValueType, char>) {
+        return std::string(1U, v);
+    } else if constexpr (std::is_same_v<ValueType, int8_t> || std::is_same_v<ValueType, uint8_t>) {
+        return std::to_string(static_cast<int>(v));
+    } else {
+        return std::to_string(v);
     }
-    return oss.str();
 }
 inline std::string MakeStr(const void* p)
 {

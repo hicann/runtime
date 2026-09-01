@@ -52,8 +52,12 @@ rtError_t GetLaunchConfigAttr(rtLaunchAttribute_t* attr, LaunchTaskCfgInfo_t* la
             launchTaskCfg->dumpflag = attr->value.dumpflag;
             break;
         default:
-            RT_LOG_OUTER_MSG_INVALID_PARAM_WITH_DESC(
-                "Obtaining the configuration attributes of kernel launch", attr->id,
+            RT_LOG_OUTER_MSG_WITH_FUNC_DESC(
+                ErrorCode::EE1003, "Obtaining the configuration attributes of kernel launch",
+                RtFmtMsg(
+                    "%s(%d)", (attr->id == RT_LAUNCH_ATTRIBUTE_MAX) ? "LAUNCH_ATTRIBUTE_MAX" : "UNKNOWN",
+                    static_cast<int32_t>(attr->id)),
+                "attr->id",
                 "[" + std::to_string(RT_LAUNCH_ATTRIBUTE_BLOCKDIM) + ", " + std::to_string(RT_LAUNCH_ATTRIBUTE_MAX) +
                     ")");
             error = RT_ERROR_INVALID_VALUE;

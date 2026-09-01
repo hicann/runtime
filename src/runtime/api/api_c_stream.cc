@@ -487,8 +487,12 @@ rtError_t rtsStreamSetAttribute(rtStream_t stm, rtStreamAttr stmAttrId, rtStream
             break;
         }
         default:
-            RT_LOG_OUTER_MSG_INVALID_PARAM(
-                stmAttrId,
+            RT_LOG_OUTER_MSG_WITH_FUNC(
+                ErrorCode::EE1003,
+                RtFmtMsg(
+                    "%s(%d)", (stmAttrId == RT_STREAM_ATTR_MAX) ? "STREAM_ATTR_MAX" : "UNKNOWN",
+                    static_cast<int32_t>(stmAttrId)),
+                "stmAttrId",
                 "[" + std::to_string(RT_STREAM_ATTR_FAILURE_MODE) + ", " + std::to_string(RT_STREAM_ATTR_MAX) + ")");
             error = RT_ERROR_INVALID_VALUE;
             break;
@@ -537,8 +541,12 @@ rtError_t rtsStreamGetAttribute(rtStream_t stm, rtStreamAttr stmAttrId, rtStream
             break;
         }
         default:
-            RT_LOG_OUTER_MSG_INVALID_PARAM(
-                stmAttrId,
+            RT_LOG_OUTER_MSG_WITH_FUNC(
+                ErrorCode::EE1003,
+                RtFmtMsg(
+                    "%s(%d)", (stmAttrId == RT_STREAM_ATTR_MAX) ? "STREAM_ATTR_MAX" : "UNKNOWN",
+                    static_cast<int32_t>(stmAttrId)),
+                "stmAttrId",
                 "[" + std::to_string(RT_STREAM_ATTR_FAILURE_MODE) + ", " + std::to_string(RT_STREAM_ATTR_MAX) + ")");
             error = RT_ERROR_INVALID_VALUE;
             break;

@@ -375,8 +375,8 @@ static void RollbackJetty(JettyManager* jettyMgr, int32_t streamId, JettyType ty
     const rtError_t rollbackError = jettyMgr->UnbindJettyForStream(streamId, type);
     if (rollbackError != RT_ERROR_NONE) {
         RT_LOG(
-            RT_LOG_ERROR, "Rollback jetty failed, stream_id=%d, type=%d, retCode=%#x.", streamId,
-            static_cast<int32_t>(type), rollbackError);
+            RT_LOG_ERROR, "Rollback jetty failed, stream_id=%d, type=%s(%d), retCode=%#x.", streamId,
+            JettyTypeName(type), static_cast<int32_t>(type), rollbackError);
     }
 }
 
@@ -407,19 +407,20 @@ rtError_t StreamJettyHandler::BindJetty(Stream* stream, JettyType type, const Ca
     error = jettyMgr->GetJettyInfoForStream(streamId, type, jettyInfo);
     ERROR_PROC_RETURN_MSG_INNER(
         error, RollbackJetty(jettyMgr, streamId, type),
-        "GetJettyInfoForStream failed, stream_id=%d, type=%d, retCode=%#x.", streamId, static_cast<int32_t>(type),
-        error);
+        "GetJettyInfoForStream failed, stream_id=%d, type=%s(%d), retCode=%#x.", streamId, JettyTypeName(type),
+        static_cast<int32_t>(type), error);
 
     error = FillWqeToDevice(stream, jettyCtx, jettyInfo);
     ERROR_PROC_RETURN_MSG_INNER(
-        error, RollbackJetty(jettyMgr, streamId, type), "FillWqeToDevice failed, stream_id=%d, type=%d, retCode=%#x.",
-        streamId, static_cast<int32_t>(type), error);
+        error, RollbackJetty(jettyMgr, streamId, type),
+        "FillWqeToDevice failed, stream_id=%d, type=%s(%d), retCode=%#x.", streamId, JettyTypeName(type),
+        static_cast<int32_t>(type), error);
 
     error = UpdateUbdmaSqeWithJettyInfo(stream, jettyCtx, jettyInfo);
     ERROR_PROC_RETURN_MSG_INNER(
         error, RollbackJetty(jettyMgr, streamId, type),
-        "UpdateUbdmaSqeWithJettyInfo failed, stream_id=%d, type=%d, retCode=%#x.", streamId, static_cast<int32_t>(type),
-        error);
+        "UpdateUbdmaSqeWithJettyInfo failed, stream_id=%d, type=%s(%d), retCode=%#x.", streamId, JettyTypeName(type),
+        static_cast<int32_t>(type), error);
     return RT_ERROR_NONE;
 }
 
@@ -546,8 +547,8 @@ rtError_t StreamJettyHandler::RefreshModelJettyInfoList(Model* const mdl)
             JettyInfo jettyInfo = {};
             const rtError_t ret = jettyMgr->GetJettyInfoForStream(streamId, type, jettyInfo);
             COND_RETURN_ERROR(
-                (ret != RT_ERROR_NONE), ret, "GetJettyInfoForStream failed, stream_id=%d, type=%d, retCode=%#x.",
-                streamId, static_cast<int32_t>(type), ret);
+                (ret != RT_ERROR_NONE), ret, "GetJettyInfoForStream failed, stream_id=%d, type=%s(%d), retCode=%#x.",
+                streamId, JettyTypeName(type), static_cast<int32_t>(type), ret);
 
             UbAsyncJettyInfo info = {};
             info.dieId = static_cast<uint16_t>(std::min(jettyInfo.dieId, static_cast<uint32_t>(UINT16_MAX)));

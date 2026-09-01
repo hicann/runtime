@@ -194,9 +194,10 @@ rtError_t ApiErrorDecorator::ModelCondHandleCreate(
 {
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(mdl, RT_ERROR_INVALID_VALUE, "Conditional handle creation");
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(handle, RT_ERROR_INVALID_VALUE, "Conditional handle creation");
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
         static_cast<uint32_t>(flag) > RT_COND_HANDLE_ASSIGN_DEFAULT, RT_ERROR_INVALID_VALUE,
-        "Conditional handle creation", flag, "[0, " + std::to_string(RT_COND_HANDLE_ASSIGN_DEFAULT) + "]");
+        "Conditional handle creation", CondHandleFlagToString(flag), "flag",
+        "[0, " + std::to_string(RT_COND_HANDLE_ASSIGN_DEFAULT) + "]");
     COND_RETURN_AND_MSG_OUTER(
         mdl->GetModelType() != RT_MODEL_CAPTURE_MODEL, RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1006,
         "Conditional handle creation", "The modelRI create condition handle", "The modelRI is not an ACL Graph");
@@ -216,9 +217,10 @@ rtError_t ApiErrorDecorator::ModelCondHandleGetCondPtr(CondHandle* const handle,
 rtError_t ApiErrorDecorator::StreamAddCondTask(rtCondTaskParams params, Stream* const stm, uint32_t flags)
 {
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(stm, RT_ERROR_INVALID_VALUE, "Adding a conditional task to a stream");
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
         (static_cast<uint32_t>(params.type) > RT_COND_TASK_TYPE_SWITCH), RT_ERROR_INVALID_VALUE,
-        "Adding a conditional task to a stream", params.type, "[0, " + std::to_string(RT_COND_TASK_TYPE_SWITCH) + "]");
+        "Adding a conditional task to a stream", CondTaskTypeToString(params.type), "params.type",
+        "[0, " + std::to_string(RT_COND_TASK_TYPE_SWITCH) + "]");
     COND_RETURN_AND_MSG_OUTER(
         (flags != 0), RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, "Adding a conditional task to a stream", "flags",
         "flags is reserved parameter and must be 0");

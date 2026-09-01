@@ -95,7 +95,7 @@ rtError_t JettyPool::PreAllocJetty(JettyType type)
             poolSize = d2dInBoardJettyPool_.size() + d2dCrossBoardJettyPool_.size();
             break;
         default:
-            RT_LOG(RT_LOG_ERROR, "Invalid jetty type=%d.", static_cast<int32_t>(type));
+            RT_LOG(RT_LOG_ERROR, "Invalid jetty type=%s(%d).", JettyTypeName(type), static_cast<int32_t>(type));
             return RT_ERROR_INVALID_VALUE;
     }
     if (poolSize < maxSize) {

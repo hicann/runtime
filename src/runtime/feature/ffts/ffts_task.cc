@@ -899,7 +899,7 @@ static void TaskFailCallBackForFftsPlusTask(
     }
     RT_LOG(
         RT_LOG_ERROR,
-        "fftsplus streamId=%d, taskId=%u, context_id=%u, expandType=%u, rtCode=%#x,[%s], "
+        "fftsplus streamId=%d, taskId=%u, context_id=%u, expandType=EXCEPTION_FFTS_PLUS(%u), rtCode=%#x,[%s], "
         "psStart=0x%llx, kernel_name=%s, binHandle=%p, binSize=%u.",
         streamId, exceptionInfo.taskid, exceptionInfo.expandInfo.u.fftsPlusInfo.contextId,
         exceptionInfo.expandInfo.type, rtErrCode, retDes, info.pcStart, kernelName.c_str(), kernelInfo.bin,
@@ -935,12 +935,13 @@ static void DumpContext(TaskInfo* taskInfo)
     for (uint32_t ctxId = 0U; ctxId < printNum; ctxId++) {
         const uint32_t* buf = RtPtrToPtr<const uint32_t*>(ctxBuf.data() + ctxId * CONTEXT_LEN);
         const auto* comCtx = RtPtrToPtr<const rtFftsPlusComCtx_t*>(buf);
+        const std::string contextTypeName = GetFftsPlusContextTypeName(comCtx->contextType);
         RT_LOG(
             RT_LOG_ERROR,
             "context[%u] stream_id=%d task_id=%u "
-            "context_id=%u contextType=%u successorNum=%u predCntInit=%u.",
-            ctxId, taskInfo->stream->Id_(), taskInfo->id, ctxId, comCtx->contextType, comCtx->successorNum,
-            comCtx->predCntInit);
+            "context_id=%u contextType=%u(%s) successorNum=%u predCntInit=%u.",
+            ctxId, taskInfo->stream->Id_(), taskInfo->id, ctxId, comCtx->contextType, contextTypeName.c_str(),
+            comCtx->successorNum, comCtx->predCntInit);
         for (uint32_t row = 0U; row < 4U; row++) {
             const uint32_t start = row * 8U;
             RT_LOG(

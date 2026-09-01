@@ -359,7 +359,10 @@ static rtError_t FusionKernelTaskPreProc(
                     "CCU-only fusion task requires double die with 128B argSize");
                 break;
             default:
-                RT_LOG_OUTER_MSG_INVALID_PARAM_WITH_DESC("Fusion kernel task preprocessing", subKernelType, "[0, 3]");
+                RT_LOG_OUTER_MSG_WITH_FUNC_DESC(
+                    ErrorCode::EE1003, "Fusion kernel task preprocessing",
+                    RtFmtMsg("%s(%u)", (subKernelType == RT_FUSION_END) ? "FUSION_END" : "UNKNOWN", subKernelType),
+                    "subKernelType", "[0, 3]");
                 return RT_ERROR_INVALID_VALUE;
         }
     }

@@ -381,16 +381,17 @@ static rtError_t DqsSchedConfigCheck(const rtDqsSchedCfg_t* const cfg)
 static rtError_t DqsZeroCopyTaskCfgCheck(const rtDqsZeroCopyCfg_t* const cfg)
 {
     const rtDqsZeroCopyType copyType = cfg->copyType;
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
         (copyType != RT_DQS_ZERO_COPY_INPUT) && (copyType != RT_DQS_ZERO_COPY_OUTPUT), RT_ERROR_INVALID_VALUE,
-        "Checking the configuration validity of the DQS zero-copy task", copyType, "[0, 1]");
+        "Checking the configuration validity of the DQS zero-copy task",
+        RtFmtMsg("UNKNOWN(%d)", static_cast<int32_t>(copyType)), "copyType", "[0, 1]");
 
     const rtDqsZeroCopyAddrOrderType copyOrderType = cfg->cpyAddrOrder;
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
         (copyOrderType != RT_DQS_ZERO_COPY_ADDR_ORDER_LOW32_FIRST) &&
             (copyOrderType != RT_DQS_ZERO_COPY_ADDR_ORDER_HIGH32_FIRST),
-        RT_ERROR_INVALID_VALUE, "Checking the configuration validity of the DQS zero-copy task", copyOrderType,
-        "[0, 1]");
+        RT_ERROR_INVALID_VALUE, "Checking the configuration validity of the DQS zero-copy task",
+        RtFmtMsg("UNKNOWN(%d)", static_cast<int32_t>(copyOrderType)), "copyOrderType", "[0, 1]");
 
     ZERO_RETURN_AND_MSG_OUTER_WITH_FUNC_DESC(
         cfg->count, "Checking the configuration validity of the DQS zero-copy task")

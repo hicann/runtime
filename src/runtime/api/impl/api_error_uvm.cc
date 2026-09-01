@@ -21,9 +21,10 @@ rtError_t ApiErrorDecorator::MemManagedAdvise(
         ptr, RT_ERROR_INVALID_VALUE, "Managing the policy attributes of the unified virtual memory (UVM)");
     ZERO_RETURN_AND_MSG_OUTER_WITH_FUNC_DESC(
         size, "Managing the policy attributes of the unified virtual memory (UVM)");
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
         advise > rtMemAdviseUnSetAccessedBy, RT_ERROR_INVALID_VALUE,
-        "Managing the policy attributes of the unified virtual memory (UVM)", advise,
+        "Managing the policy attributes of the unified virtual memory (UVM)",
+        RtFmtMsg("UNKNOWN(%u)", static_cast<uint32_t>(advise)), "advise",
         "[0, " + std::to_string(rtMemAdviseUnSetAccessedBy) + "]");
     if (location.type == rtMemLocationTypeDevice) {
         int32_t numDev = 0;
@@ -49,9 +50,10 @@ rtError_t ApiErrorDecorator::MemManagedGetAttr(
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
         ptr, RT_ERROR_INVALID_VALUE, "Querying a policy attribute value of the UVM of a specified size");
     ZERO_RETURN_AND_MSG_OUTER_WITH_FUNC_DESC(size, "Querying a policy attribute value of the UVM of a specified size");
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
         (attribute < rtMemRangeAttributeReadMostly) || (attribute > rtMemRangeAttributeLastPrefetchLocationId),
-        RT_ERROR_INVALID_VALUE, "Querying a policy attribute value of the UVM of a specified size", attribute,
+        RT_ERROR_INVALID_VALUE, "Querying a policy attribute value of the UVM of a specified size",
+        RtFmtMsg("UNKNOWN(%d)", static_cast<int32_t>(attribute)), "attribute",
         "[" + std::to_string(rtMemRangeAttributeReadMostly) + ", " +
             std::to_string(rtMemRangeAttributeLastPrefetchLocationId) + "]");
 
@@ -77,11 +79,11 @@ rtError_t ApiErrorDecorator::MemManagedGetAttrs(
         size, "Querying multiple policy attribute values of the UVM of a specified size");
 
     for (size_t i = 0U; i < numAttributes; i++) {
-        COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+        COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
             (attributes[i] < rtMemRangeAttributeReadMostly) ||
                 (attributes[i] > rtMemRangeAttributeLastPrefetchLocationId),
             RT_ERROR_INVALID_VALUE, "Querying multiple policy attribute values of the UVM of a specified size",
-            attributes[i],
+            RtFmtMsg("UNKNOWN(%d)", static_cast<int32_t>(attributes[i])), "attributes[i]",
             "[" + std::to_string(rtMemRangeAttributeReadMostly) + ", " +
                 std::to_string(rtMemRangeAttributeLastPrefetchLocationId) + "]");
     }
