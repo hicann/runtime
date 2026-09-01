@@ -11,8 +11,6 @@
 #ifndef CALL_BACK_SAMPLE_H_
 #define CALL_BACK_SAMPLE_H_
 
-#include <thread>
-#include <string>
 #include "utils.h"
 #include "acl/acl.h"
 
@@ -24,11 +22,8 @@ public:
     int Init();
     int Callback();
     int Destroy();
-    static void ThreadFunc(void* arg);
-    static void HostFuncThreadFunc(void* arg);
-    static void CallBackFunc(void* arg);
     static void CallBackBeforeLaunchFunc(void* arg);
-    static void HostFunc(void* arg);
+    static void CallBackFunc(void* arg);
 
 public:
     static int32_t deviceId_;

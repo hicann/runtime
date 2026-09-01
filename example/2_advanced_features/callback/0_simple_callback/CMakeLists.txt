@@ -37,7 +37,6 @@ link_directories(${ASCEND_CANN_PACKAGE_PATH}/lib64)
 
 add_executable(main 
 callback_sample.cpp
-../callback_utils.cpp 
 main.cpp)
 
 target_link_libraries(main PRIVATE 

@@ -1,7 +1,7 @@
 # 0_simple_callback
 
 ## 描述
-本样例展示了如何为同一个 Stream 同时注册 Report 回调线程和 HostFunc 处理线程，并通过 `aclrtLaunchCallback` 与 `aclrtLaunchHostFunc` 观察两类回调在用户指定线程上的执行行为。
+本样例展示了如何通过 `aclrtLaunchHostFunc` 在 Stream 上下发 Host 回调任务，在 NPU 任务执行前后插入 CPU 回调函数。该接口内部自动创建并管理回调线程，无需用户自行创建线程和注册。
 
 ## 产品支持情况
 
@@ -9,13 +9,6 @@
 
 | 接口 | Ascend 950PR/Ascend 950DT | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 |
 | --- | --- | --- | --- |
-| aclrtSubscribeReport | √ | √ | √ |
-| aclrtProcessReport | √ | √ | √ |
-| aclrtUnSubscribeReport | √ | √ | √ |
-| aclrtLaunchCallback | √ | √ | √ |
-| aclrtSubscribeHostFunc | × | × | × |
-| aclrtProcessHostFunc | × | × | × |
-| aclrtUnSubscribeHostFunc | × | × | × |
 | aclrtLaunchHostFunc | √ | √ | √ |
 
 ## 编译运行
@@ -42,10 +35,7 @@ bash run.sh
   - `aclrtCreateContext` / `aclrtDestroyContext`
   - `aclrtCreateStream` / `aclrtDestroyStreamForce`
   - `aclrtSetStreamFailureMode`
-- 控制回调
-  - `aclrtSubscribeReport` / `aclrtProcessReport` / `aclrtUnSubscribeReport`
-  - `aclrtLaunchCallback`
-  - `aclrtSubscribeHostFunc` / `aclrtProcessHostFunc` / `aclrtUnSubscribeHostFunc`
+- Host 回调
   - `aclrtLaunchHostFunc`
 - 内存与数据传输
   - `aclrtMalloc` / `aclrtFree`
@@ -55,16 +45,10 @@ bash run.sh
 ## 示例输出
 
 ```text
-[INFO]  The main thread id is ...
-[INFO]  The created report thread id is ...
-[INFO]  The created hostfunc thread id is ...
-[INFO]  After begin a task, launch one hostfunc and five callbacks.
 [INFO]  This callback before task, result: user data is: 520.
-[INFO]  Hostfunc executed in subscribed thread, user data is: 520.
-[INFO]  This callback after task and loop five times, result: user data is: 520.
+[INFO]  After begin a task, launch one hostfunc.
+[INFO]  This callback after task, result: user data is: 520.
 [INFO]  After assigning the task, the current int is: ...
-[INFO]  Report callback thread exit
-[INFO]  Hostfunc processing thread exit
 ```
 
 ## 已知 issue

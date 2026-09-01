@@ -1,7 +1,7 @@
 # 0_simple_callback
 
 ## Description
-This sample demonstrates how to register Report callback thread and HostFunc processing thread for the same Stream, and observe execution behavior of both callback types on user-specified threads using `aclrtLaunchCallback` and `aclrtLaunchHostFunc`.
+This sample demonstrates how to launch Host callback tasks on a Stream using `aclrtLaunchHostFunc`, inserting CPU callback functions before and after NPU tasks. This interface internally creates and manages the callback thread, without requiring users to create threads or register manually.
 
 ## Product Support
 
@@ -9,13 +9,6 @@ Key interfaces in this sample have the following support status on different pro
 
 | Interface | Ascend 950PR/Ascend 950DT | Atlas A3 training series products/Atlas A3 inference series products | Atlas A2 training series products/Atlas A2 inference series products |
 | --- | --- | --- | --- |
-| aclrtSubscribeReport | Yes | Yes | Yes |
-| aclrtProcessReport | Yes | Yes | Yes |
-| aclrtUnSubscribeReport | Yes | Yes | Yes |
-| aclrtLaunchCallback | Yes | Yes | Yes |
-| aclrtSubscribeHostFunc | No | No | No |
-| aclrtProcessHostFunc | No | No | No |
-| aclrtUnSubscribeHostFunc | No | No | No |
 | aclrtLaunchHostFunc | Yes | Yes | Yes |
 
 ## Build and Run
@@ -42,10 +35,7 @@ Key features and interfaces in this sample:
   - `aclrtCreateContext` / `aclrtDestroyContext`
   - `aclrtCreateStream` / `aclrtDestroyStreamForce`
   - `aclrtSetStreamFailureMode`
-- Control Callback
-  - `aclrtSubscribeReport` / `aclrtProcessReport` / `aclrtUnSubscribeReport`
-  - `aclrtLaunchCallback`
-  - `aclrtSubscribeHostFunc` / `aclrtProcessHostFunc` / `aclrtUnSubscribeHostFunc`
+- Host Callback
   - `aclrtLaunchHostFunc`
 - Memory and Data Transfer
   - `aclrtMalloc` / `aclrtFree`
@@ -55,16 +45,10 @@ Key features and interfaces in this sample:
 ## Sample Output
 
 ```text
-[INFO]  The main thread id is ...
-[INFO]  The created report thread id is ...
-[INFO]  The created hostfunc thread id is ...
-[INFO]  After begin a task, launch one hostfunc and five callbacks.
 [INFO]  This callback before task, result: user data is: 520.
-[INFO]  Hostfunc executed in subscribed thread, user data is: 520.
-[INFO]  This callback after task and loop five times, result: user data is: 520.
+[INFO]  After begin a task, launch one hostfunc.
+[INFO]  This callback after task, result: user data is: 520.
 [INFO]  After assigning the task, the current int is: ...
-[INFO]  Report callback thread exit
-[INFO]  Hostfunc processing thread exit
 ```
 
 ## Known Issues
