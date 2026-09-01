@@ -241,7 +241,6 @@ create_stub_softlink() {
         for lib in $(get_stub_libs_from_filelist); do
             [ -f "$lib" ] && ln -sf "$lib" "$(basename $lib)"
         done
-        chmod u-w .
     })
 }
 
@@ -253,7 +252,6 @@ remove_stub_softlink() {
     local arch_name="$pkg_arch_name"
     ([ -d "$install_path/${arch_name}-linux/devlib" ] && cd "$install_path/${arch_name}-linux/devlib" && {
         chmod u+w . && basename --multiple $(get_stub_libs_from_filelist) | xargs --no-run-if-empty rm -rf
-        chmod u-w .
     })
 }
 
@@ -288,7 +286,6 @@ create_acl_empty_headers() {
     for header in acl_base_mdl.h acl_mdl.h acl_op.h; do
         gen_acl_header "$acl_headers_dir/$header" "$mod"
     done
-    chmod u-w "$acl_headers_dir" > /dev/null 2>&1
 }
 
 remove_acl_empty_headers() {
@@ -299,7 +296,6 @@ remove_acl_empty_headers() {
     for header in acl_base_mdl.h acl_mdl.h acl_op.h; do
         rm -rf "$acl_headers_dir/$header" > /dev/null 2>&1
     done
-    chmod u-w "$acl_headers_dir" > /dev/null 2>&1
 }
 
 process_acl_empty_headers() {

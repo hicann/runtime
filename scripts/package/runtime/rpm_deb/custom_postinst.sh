@@ -14,6 +14,7 @@ set -e
 sourcedir="${INSTALL_PATH}"
 pkg_arch_name="${PKG_ARCH_NAME}"
 
+sed -i "s#version_dirpath=.\+#version_dirpath=\"${sourcedir}\"#" "${sourcedir}/set_env.sh"
 stub_libs="
  	 libacl_rt.so
  	 libacl_tdt_channel.so
@@ -44,7 +45,7 @@ add_prereq_script_file() {
         done
     fi
 }
- 	 
+
 create_stub_softlink() {
     local install_path="${sourcedir}"
     if [ ! -d "$install_path" ]; then
@@ -129,3 +130,4 @@ process_acl_empty_headers() {
 add_prereq_script_file
 create_stub_softlink
 process_acl_empty_headers
+

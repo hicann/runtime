@@ -9,7 +9,7 @@
 # -----------------------------------------------------------------------------------------------------------
 
 if(NOT PROJECT_SOURCE_DIR)
-    set(CANN_CMAKE_TAG "master-053")
+    set(CANN_CMAKE_TAG "master-054")
     if(CANN_3RD_LIB_PATH AND IS_DIRECTORY "${CANN_3RD_LIB_PATH}/cann-cmake")
         include("${CANN_3RD_LIB_PATH}/cann-cmake/function/prepare.cmake")
     else()
@@ -18,7 +18,7 @@ if(NOT PROJECT_SOURCE_DIR)
             FetchContent_Declare(
                 cann-cmake
                 URL "${CANN_3RD_LIB_PATH}/cmake-${CANN_CMAKE_TAG}.tar.gz"
-                URL_HASH SHA256=5ca4948c257f2ba8530d6f506e1fed3bb8d24a3ab347fb226599d37e51edc429
+                URL_HASH SHA256=43fb1a2cb376192bb307bd4003c0c4bd82ab66a7eb62d3ddfa9f70f988b7ff18
             )
         else()
             FetchContent_Declare(
