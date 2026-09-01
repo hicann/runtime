@@ -15,7 +15,9 @@ extern "C" {
 #endif
 
 uint32_t GetErrLogNum(void);
+uint32_t GetWarnLogNum(void);
 void ResetErrLog(void);
+void ResetWarnLog(void);
 int32_t CheckErrLog(char* msg);
 
 #ifdef __cplusplus

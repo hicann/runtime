@@ -27,6 +27,7 @@ protected:
     {
         system("echo [DBG][TEST][`date +%Y-%m-%d-%H-%M-%S`] Start test case");
         ResetErrLog();
+        ResetWarnLog();
     }
 
     virtual void TearDown()
@@ -177,6 +178,16 @@ TEST_F(EP_SLOGD_SESSION_MGR_FUNC_UTEST, InvalidData)
     item.type = SESSION_SINGLE_EXPORT;
     EXPECT_EQ(SessionMgrSendMsg(&item, nullptr, sizeof(SESSION_MESSAGE)), -1);
     EXPECT_EQ(SessionMgrSendMsg(&item, SESSION_MESSAGE, 0), -1);
+}
+
+TEST_F(EP_SLOGD_SESSION_MGR_FUNC_UTEST, EmptySessionListShouldNotWarn)
+{
+    EXPECT_EQ(SUCCESS, InitSessionList());
+    EXPECT_EQ(nullptr, GetSessionNode(100, 0));
+    EXPECT_EQ(nullptr, GetDeletedSessionNode(100, 0));
+    EXPECT_EQ(nullptr, GetSessionNode(100, 0));
+    EXPECT_EQ(0U, GetWarnLogNum());
+    FreeSessionList();
 }
 
 int32_t AdxGetAttrByCommHandleStub(const CommHandle* handle, int32_t attr, int32_t* value)

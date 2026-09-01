@@ -11,6 +11,7 @@
 #include "log_print.h"
 
 static uint32_t g_errLogNum = 0;
+static uint32_t g_warnLogNum = 0;
 void LogPrintSys(int priority, const char* format, ...)
 {
     va_list args;
@@ -29,6 +30,9 @@ void LogPrintSys(int priority, const char* format, ...)
         printf("[ERROR] ");
         printf(msg);
         return;
+    }
+    if (priority == LOG_WARNING) {
+        g_warnLogNum++;
     }
 #ifdef LLT_DEBUG
     char logFile[200] = {0};
@@ -78,6 +82,8 @@ void LogPrintSelf(const char* format, ...)
 
 uint32_t GetErrLogNum(void) { return g_errLogNum; }
 
+uint32_t GetWarnLogNum(void) { return g_warnLogNum; }
+
 void ResetErrLog(void)
 {
     g_errLogNum = 0;
@@ -88,6 +94,8 @@ void ResetErrLog(void)
         system("rm " PATH_ROOT "/errLogFile_cmd_result.txt");
     }
 }
+
+void ResetWarnLog(void) { g_warnLogNum = 0; }
 
 int32_t CheckErrLog(char* msg)
 {

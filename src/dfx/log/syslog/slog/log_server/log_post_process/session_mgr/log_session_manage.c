@@ -304,7 +304,7 @@ LogRt InsertSessionNode(uintptr_t session, int32_t pid, int32_t devId)
 
 static SessionNode* GetSessionNodeByList(uint32_t pid, uint32_t devId, SessionNode* list)
 {
-    ONE_ACT_WARN_LOG(list == NULL, return NULL, "session node list is null.");
+    ONE_ACT_NO_LOG(list == NULL, return NULL);
 
     SessionNode* tmp = list;
     while (tmp != NULL) {
