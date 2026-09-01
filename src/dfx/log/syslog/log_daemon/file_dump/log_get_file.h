@@ -36,6 +36,7 @@ private:
     std::string GetScriptDumpDevicePath(const std::string& logType) const;
     bool IsValidTmpFilePath(const std::string& tmpFilePath, std::string& matchStr, int32_t pid) const;
     int32_t GetMappingPid(int32_t pid) const;
+    int32_t SendEndMsg(const CommHandle& handle) const;
     void ClearTmpDir(std::string& logType, int32_t pid) const;
 
 private:

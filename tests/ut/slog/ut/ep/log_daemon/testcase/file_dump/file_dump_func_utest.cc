@@ -78,10 +78,19 @@ int32_t CreateProcess(const char* fileName, const mmArgvEnv* env, mmProcess* id,
 namespace {
 int32_t g_logCmdResponseMode = 0;
 std::string g_capturedCmd;
+std::string g_capturedEndMsg;
 
 int32_t AdxCreateProcessCaptureStub(IdeString command)
 {
     g_capturedCmd = command;
+    return SYS_OK;
+}
+
+int32_t AdxSendEndMsgCaptureStub(const CommHandle* handle, CmdClassT type, IdeString data, uint32_t len)
+{
+    (void)handle;
+    (void)type;
+    g_capturedEndMsg.assign(data, len == 0U ? 0U : len - 1U);
     return SYS_OK;
 }
 
@@ -371,6 +380,149 @@ TEST_F(EP_FILE_DUMP_FUNC_UTEST, LogGetFileProcessRejectsNonDataAndUnknownType)
     auto unknown = MakeFileRequest(MsgType::MSG_DATA, "unknown");
     ASSERT_NE(nullptr, unknown);
     EXPECT_EQ(SYS_ERROR, getFile.Process(handle, unknown));
+    ResetErrLog();
+}
+
+TEST_F(EP_FILE_DUMP_FUNC_UTEST, LogGetFileProcessEndsWhenModuleScriptIsMissing)
+{
+    LogGetFile getFile;
+    ASSERT_EQ(SYS_OK, getFile.Init());
+    CommHandle handle = {};
+    handle.type = COMM_HDC;
+    handle.session = 1U;
+
+    g_capturedEndMsg.clear();
+    MOCKER_CPP(&LogFileUtils::IsFileExist).stubs().will(returnValue(false));
+    MOCKER_CPP(&LogGetFile::ClearTmpDir).expects(never());
+    MOCKER(AdxSendMsgByHandle).stubs().will(invoke(AdxSendEndMsgCaptureStub));
+    auto request = MakeFileRequest(MsgType::MSG_DATA, "dvpp");
+    ASSERT_NE(nullptr, request);
+
+    EXPECT_EQ(SYS_OK, getFile.Process(handle, request));
+    EXPECT_EQ("game_over", g_capturedEndMsg);
+    ResetErrLog();
+}
+
+TEST_F(EP_FILE_DUMP_FUNC_UTEST, LogGetFileProcessEndsWhenRunEnvQueryFails)
+{
+    LogGetFile getFile;
+    ASSERT_EQ(SYS_OK, getFile.Init());
+    CommHandle handle = {};
+    handle.type = COMM_HDC;
+    handle.session = 1U;
+
+    g_capturedEndMsg.clear();
+    MOCKER(LogIdeGetRunEnvBySession).stubs().will(returnValue(SYS_ERROR));
+    MOCKER(AdxSendMsgByHandle).stubs().will(invoke(AdxSendEndMsgCaptureStub));
+    auto request = MakeFileRequest(MsgType::MSG_DATA, "dvpp");
+    ASSERT_NE(nullptr, request);
+
+    EXPECT_EQ(SYS_ERROR, getFile.Process(handle, request));
+    EXPECT_EQ("game_over", g_capturedEndMsg);
+    ResetErrLog();
+}
+
+TEST_F(EP_FILE_DUMP_FUNC_UTEST, LogGetFileProcessEndsWhenPidQueryFails)
+{
+    LogGetFile getFile;
+    ASSERT_EQ(SYS_OK, getFile.Init());
+    CommHandle handle = {};
+    handle.type = COMM_HDC;
+    handle.session = 1U;
+
+    g_capturedEndMsg.clear();
+    MOCKER(LogIdeGetPidBySession).stubs().will(returnValue(SYS_ERROR));
+    MOCKER(AdxSendMsgByHandle).stubs().will(invoke(AdxSendEndMsgCaptureStub));
+    auto request = MakeFileRequest(MsgType::MSG_DATA, "dvpp");
+    ASSERT_NE(nullptr, request);
+
+    EXPECT_EQ(SYS_ERROR, getFile.Process(handle, request));
+    EXPECT_EQ("game_over", g_capturedEndMsg);
+    ResetErrLog();
+}
+
+TEST_F(EP_FILE_DUMP_FUNC_UTEST, LogGetFileProcessEndsWhenScriptExecutionFails)
+{
+    LogGetFile getFile;
+    ASSERT_EQ(SYS_OK, getFile.Init());
+    CommHandle handle = {};
+    handle.type = COMM_HDC;
+    handle.session = 1U;
+
+    g_capturedEndMsg.clear();
+    MOCKER_CPP(&LogFileUtils::IsFileExist).stubs().will(returnValue(true));
+    MOCKER(AdxCreateProcess).stubs().will(returnValue(SYS_ERROR));
+    MOCKER(AdxSendMsgByHandle).stubs().will(invoke(AdxSendEndMsgCaptureStub));
+    auto request = MakeFileRequest(MsgType::MSG_DATA, "dvpp");
+    ASSERT_NE(nullptr, request);
+
+    EXPECT_EQ(SYS_ERROR, getFile.Process(handle, request));
+    EXPECT_EQ("game_over", g_capturedEndMsg);
+    ResetErrLog();
+}
+
+TEST_F(EP_FILE_DUMP_FUNC_UTEST, LogGetFileProcessEndsWhenFileListFails)
+{
+    LogGetFile getFile;
+    ASSERT_EQ(SYS_OK, getFile.Init());
+    CommHandle handle = {};
+    handle.type = COMM_HDC;
+    handle.session = 1U;
+
+    g_capturedEndMsg.clear();
+    MOCKER_CPP(&LogFileUtils::IsFileExist).stubs().will(returnValue(true));
+    MOCKER_CPP(&LogFileUtils::IsDirExist).stubs().will(returnValue(true));
+    MOCKER_CPP(&LogFileUtils::RemoveDir).stubs().will(returnValue(SYS_OK));
+    MOCKER(AdxCreateProcess).stubs().will(returnValue(SYS_OK));
+    MOCKER_CPP(&LogFileUtils::GetDirFileList).stubs().will(returnValue(false));
+    MOCKER(AdxSendMsgByHandle).stubs().will(invoke(AdxSendEndMsgCaptureStub));
+    auto request = MakeFileRequest(MsgType::MSG_DATA, "dvpp");
+    ASSERT_NE(nullptr, request);
+
+    EXPECT_EQ(SYS_ERROR, getFile.Process(handle, request));
+    EXPECT_EQ("game_over", g_capturedEndMsg);
+    ResetErrLog();
+}
+
+TEST_F(EP_FILE_DUMP_FUNC_UTEST, LogGetFileProcessEndsAfterEmptyFileList)
+{
+    LogGetFile getFile;
+    ASSERT_EQ(SYS_OK, getFile.Init());
+    CommHandle handle = {};
+    handle.type = COMM_HDC;
+    handle.session = 1U;
+
+    g_capturedEndMsg.clear();
+    MOCKER_CPP(&LogFileUtils::GetDirFileList).stubs().will(returnValue(true));
+    MOCKER(AdxSendMsgByHandle).stubs().will(invoke(AdxSendEndMsgCaptureStub));
+    auto request = MakeFileRequest(MsgType::MSG_DATA, "event_sched");
+    ASSERT_NE(nullptr, request);
+
+    EXPECT_EQ(SYS_OK, getFile.Process(handle, request));
+    EXPECT_EQ("game_over", g_capturedEndMsg);
+    ResetErrLog();
+}
+
+TEST_F(EP_FILE_DUMP_FUNC_UTEST, LogGetFileSkipsCleanupWhenModuleDirectoryIsMissing)
+{
+    LogGetFile getFile;
+    ASSERT_EQ(SYS_OK, getFile.Init());
+    CommHandle handle = {};
+    handle.type = COMM_HDC;
+    handle.session = 1U;
+
+    g_capturedEndMsg.clear();
+    MOCKER_CPP(&LogFileUtils::IsFileExist).stubs().will(returnValue(true));
+    MOCKER_CPP(&LogFileUtils::IsDirExist).stubs().will(returnValue(false));
+    MOCKER_CPP(&LogFileUtils::RemoveDir).expects(never());
+    MOCKER(AdxCreateProcess).stubs().will(returnValue(SYS_OK));
+    MOCKER(AdxSendMsgByHandle).stubs().will(invoke(AdxSendEndMsgCaptureStub));
+    auto request = MakeFileRequest(MsgType::MSG_DATA, "dvpp");
+    ASSERT_NE(nullptr, request);
+
+    EXPECT_EQ(SYS_OK, getFile.Process(handle, request));
+    EXPECT_EQ("game_over", g_capturedEndMsg);
+    EXPECT_EQ(0, GetErrLogNum());
     ResetErrLog();
 }
 

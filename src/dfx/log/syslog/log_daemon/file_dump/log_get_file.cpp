@@ -159,6 +159,7 @@ int32_t LogGetFile::Process(const CommHandle& handle, const std::shared_ptr<MsgP
     int32_t err = LogIdeGetRunEnvBySession(reinterpret_cast<HDC_SESSION>(handle.session), &runEnv);
     if (err != SYS_OK) {
         SELF_LOG_ERROR("Get run env failed, %d.", err);
+        (void)SendEndMsg(handle);
         return SYS_ERROR;
     }
     if (runEnv != NON_DOCKER && runEnv != VM_NON_DOCKER) {
@@ -174,6 +175,7 @@ int32_t LogGetFile::Process(const CommHandle& handle, const std::shared_ptr<MsgP
     err = LogIdeGetPidBySession(reinterpret_cast<HDC_SESSION>(handle.session), &pid);
     if (err != SYS_OK) {
         SELF_LOG_ERROR("get pid failed, %d", err);
+        (void)SendEndMsg(handle);
         return SYS_ERROR;
     }
 
@@ -184,10 +186,9 @@ int32_t LogGetFile::Process(const CommHandle& handle, const std::shared_ptr<MsgP
     }
 
     err = GetFileList(logType, list, pid);
-    if (err != SYS_OK) {
-        if (err == SYS_INVALID_PARAM) {
-            return SYS_OK;
-        }
+    const bool moduleUnsupported = (err == SYS_INVALID_PARAM);
+    if (err != SYS_OK && !moduleUnsupported) {
+        (void)SendEndMsg(handle);
         return SYS_ERROR;
     }
 
@@ -211,13 +212,20 @@ int32_t LogGetFile::Process(const CommHandle& handle, const std::shared_ptr<MsgP
         }
         (void)ToolSleep(TEN_MILLISECOND);
     }
-    ClearTmpDir(logType, pid);
+    if (!moduleUnsupported) {
+        ClearTmpDir(logType, pid);
+    }
 
-    err = AdxSendMsgByHandle(&handle, IDE_FILE_GETD_REQ, SEND_END_MSG.c_str(), SEND_END_MSG.length() + 1);
+    err = SendEndMsg(handle);
     ONE_ACT_ERR_LOG(err != SYS_OK, return SYS_ERROR, "send end msg failed");
 
     SELF_LOG_INFO("transfer %s file finished", logType.c_str());
     return SYS_OK;
+}
+
+int32_t LogGetFile::SendEndMsg(const CommHandle& handle) const
+{
+    return AdxSendMsgByHandle(&handle, IDE_FILE_GETD_REQ, SEND_END_MSG.c_str(), SEND_END_MSG.length() + 1);
 }
 
 void LogGetFile::ClearTmpDir(std::string& logType, int32_t pid) const
@@ -233,6 +241,9 @@ void LogGetFile::ClearTmpDir(std::string& logType, int32_t pid) const
     std::string tmpDirName = GetScriptDumpDevicePath(logType);
     if (tmpDirName.empty() == false) {
         path = MODULE_INFO_USER_PATH + tmpDirName + "/" + std::to_string(pid);
+        if (!LogFileUtils::IsDirExist(path)) {
+            return;
+        }
         ret = LogFileUtils::RemoveDir(path, 0);
         NO_ACT_ERR_LOG(ret != 0, "remove dir %s failed", path.c_str());
     }
