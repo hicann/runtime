@@ -13,6 +13,21 @@ project(toolchain_liblog)
 
 get_filename_component(TOOLAHCIN_LOG_DIR "${CMAKE_CURRENT_SOURCE_DIR}/.." ABSOLUTE)
 
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+set(LOG_COMMON_COMPILE_OPTIONS
+    -Werror
+    -Wall
+    -Wextra
+    -Wundef
+    -Wunused
+    -Wfloat-equal
+    -Wshadow
+)
+
 add_subdirectory(slog)
 
 ### INTERNAL START ###

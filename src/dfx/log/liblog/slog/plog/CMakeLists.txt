@@ -62,11 +62,7 @@ target_link_options(static_plog_cpp PRIVATE
 )
 
 target_compile_options(static_plog_cpp PRIVATE
-    $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>>:-Werror>
-    $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>>:-Wfloat-equal -Wextra>
-    $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>>:-Wunused>
-    $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>>:-Wshadow>
-    $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>>:-Wundef>
+    ${LOG_COMMON_COMPILE_OPTIONS}
     $<$<CONFIG:Debug>:-g -O0>
     $<$<CONFIG:Release>:-Os>
     -fvisibility=hidden
@@ -123,11 +119,7 @@ target_link_options(static_plog PRIVATE
 )
 
 target_compile_options(static_plog PRIVATE
-    $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>>:-Werror>
-    $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>>:-Wfloat-equal -Wextra>
-    $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>>:-Wunused>
-    $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>>:-Wshadow>
-    $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>>:-Wundef>
+    ${LOG_COMMON_COMPILE_OPTIONS}
     $<$<CONFIG:Debug>:-g -O0>
     $<$<CONFIG:Release>:-Os>
     -fvisibility=hidden

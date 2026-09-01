@@ -33,11 +33,7 @@ target_compile_definitions(ascendlogcollector PRIVATE
 )
 
 target_compile_options(ascendlogcollector PRIVATE
-    -Werror
-    -Wfloat-equal -Wextra
-    -Wunused
-    -Wshadow
-    -Wundef
+    ${LOG_COMMON_COMPILE_OPTIONS}
     -fvisibility=hidden
     $<$<CONFIG:Debug>:-g -O0>
     $<$<CONFIG:Release>:-Os -D_FORTIFY_SOURCE=2>

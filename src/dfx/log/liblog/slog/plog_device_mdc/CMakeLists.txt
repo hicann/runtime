@@ -69,11 +69,7 @@ target_compile_definitions(slog PRIVATE
 
 target_compile_options(slog
     PRIVATE
-        -Werror
-        -Wfloat-equal -Wextra
-        -Wunused
-        -Wshadow
-        -Wundef
+        ${LOG_COMMON_COMPILE_OPTIONS}
         -fvisibility=hidden
         $<$<CONFIG:Debug>:-g -O0>
         $<$<CONFIG:Release>:-Os -D_FORTIFY_SOURCE=2>
@@ -156,11 +152,7 @@ target_compile_definitions(alog PRIVATE
 
 target_compile_options(alog
     PRIVATE
-        -Werror
-        -Wfloat-equal -Wextra
-        -Wunused
-        -Wshadow
-        -Wundef
+        ${LOG_COMMON_COMPILE_OPTIONS}
         -fvisibility=hidden
         $<$<CONFIG:Debug>:-g -O0>
         $<$<CONFIG:Release>:-Os -D_FORTIFY_SOURCE=2>
@@ -237,11 +229,7 @@ target_compile_definitions(unified_slog PRIVATE
 
 target_compile_options(unified_slog
     PRIVATE
-        -Werror
-        -Wfloat-equal -Wextra
-        -Wunused
-        -Wshadow
-        -Wundef
+        ${LOG_COMMON_COMPILE_OPTIONS}
         -fvisibility=hidden
         $<$<CONFIG:Debug>:-g -O0>
         $<$<CONFIG:Release>:-Os -D_FORTIFY_SOURCE=2>
@@ -319,11 +307,7 @@ target_compile_definitions(unified_dlog PRIVATE
 
 target_compile_options(unified_dlog
     PRIVATE
-        -Werror
-        -Wfloat-equal -Wextra
-        -Wunused
-        -Wshadow
-        -Wundef
+        ${LOG_COMMON_COMPILE_OPTIONS}
         -fvisibility=hidden
         $<$<CONFIG:Debug>:-g -O0>
         $<$<CONFIG:Release>:-Os -D_FORTIFY_SOURCE=2>
