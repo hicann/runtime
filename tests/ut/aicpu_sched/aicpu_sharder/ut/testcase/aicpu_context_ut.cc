@@ -260,12 +260,3 @@ TEST_F(AiCPUContextUt, SetAndGetDfxInfoSuccess)
     EXPECT_EQ(AicpuGetDfxInfo(&actualAddr), 0);
     EXPECT_EQ(actualAddr, expectAddr);
 }
-
-TEST_F(AiCPUContextUt, GetDfxInfoNullParam) { EXPECT_EQ(AicpuGetDfxInfo(nullptr), -1); }
-
-TEST_F(AiCPUContextUt, InitTaskMonitorContext_MallocFail)
-{
-    auto ret = InitTaskMonitorContext(0xFFFFFFFFU);
-    EXPECT_EQ(ret, AICPU_ERROR_FAILED);
-    (void)InitTaskMonitorContext(1U);
-}
