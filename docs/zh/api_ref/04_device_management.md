@@ -41,6 +41,7 @@
 - [`aclError aclrtDeviceGetP2PAtomicCapabilities(uint32_t* capabilities, const aclrtAtomicOperation* operations, const uint32_t count, int32_t srcDeviceId, int32_t dstDeviceId)`](#aclrtDeviceGetP2PAtomicCapabilities)：查询一个AI Server内两个Device之间支持的原子操作详情。AI Server通常是多个Device组成的服务器形态的统称。
 - [`aclError aclrtDeviceSetLimit(aclrtDeviceLimit limit, size_t value)`](#aclrtDeviceSetLimit)：设置当前进程的Device资源限制，例如SIMT算子栈空间大小、SIMT Printf维测空间大小等。
 - [`aclError aclrtDeviceGetLimit(aclrtDeviceLimit limit, size_t *value)`](#aclrtDeviceGetLimit)：获取当前进程的Device资源限制。
+- [`aclError aclrtDeviceL2CacheFlush(void* rsv)`](#aclrtDeviceL2CacheFlush)：清空当前Device的L2 Cache。
 
 <a id="aclrtSetDevice"></a>
 
@@ -2319,3 +2320,62 @@ aclError aclrtDeviceGetLimit(aclrtDeviceLimit limit, size_t *value)
 <!-- npu="950" id3277 -->
 - 对于Ascend 950PR/Ascend 950DT，查询`ACL_RT_DEV_LIMIT_SIMT_STACK_SIZE`返回对齐后×32的值（每warp线程数），如设置256则查询返回8192；查询`ACL_RT_DEV_LIMIT_SIMT_DVG_WARP_STACK_SIZE`返回对齐后的值（不乘线程数），如设置512则查询返回512。
 <!-- end id3277 -->
+
+<br>
+<br>
+<br>
+
+<a id="aclrtDeviceL2CacheFlush"></a>
+
+## aclrtDeviceL2CacheFlush
+
+```c
+aclError aclrtDeviceL2CacheFlush(void* rsv)
+```
+
+### 产品支持情况
+
+<!-- npu="950" id3300 -->
+- Ascend 950PR/Ascend 950DT：支持
+<!-- end id3300 -->
+<!-- npu="A3" id3301 -->
+- Atlas A3 训练系列产品/Atlas A3 推理系列产品：不支持
+<!-- end id3301 -->
+<!-- npu="910b" id3302 -->
+- Atlas A2 训练系列产品/Atlas A2 推理系列产品：不支持
+<!-- end id3302 -->
+<!-- npu="310b" id3303 -->
+- Atlas 200I/500 A2 推理产品：不支持
+<!-- end id3303 -->
+<!-- npu="310p" id3304 -->
+- Atlas 推理系列产品：不支持
+<!-- end id3304 -->
+<!-- npu="910" id3305 -->
+- Atlas 训练系列产品：不支持
+<!-- end id3305 -->
+<!-- npu="IPV350" id3306 -->
+- IPV350：不支持
+<!-- end id3306 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/04_device_management_res.md#id40 -->
+
+### 功能说明
+
+清空当前Device的L2 Cache，接口返回即表示 L2 cache 清空完成。
+
+当前Device通过[aclrtSetDevice](#aclrtSetDevice)接口指定。
+
+### 参数说明
+
+| 参数名 | 输入/输出 | 说明 |
+| --- | :---: | --- |
+| rsv | 输入 | 预留参数，当前必须传入nullptr。 |
+
+### 返回值说明
+
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
+
+### 约束说明
+
+- 昇腾虚拟化实例场景下不支持调用本接口。
+- 不建议高频调用本接口，频繁调用会对业务性能产生影响。
+- 若清空期间该Device上存在并发业务在执行，L2 Cache可能会被再次占用，导致本次清空操作无效。
