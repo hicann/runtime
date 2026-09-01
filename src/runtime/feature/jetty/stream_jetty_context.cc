@@ -62,10 +62,10 @@ rtError_t StreamJettyContext::ExpandCapacity(Driver* driver)
     if (capacity + WQE_BUFFER_DEPTH > JETTY_DEPTH_MAX) {
         RT_LOG_OUTER_MSG_IMPL(
             ErrorCode::EE1023, "Expanding the capacity",
-            "There are too many asynchronous copy tasks in the ACL Graph. "
-            "1. If the value of numBatches for aclrtMemcpyBatchAsync in the ACL Graph is too large, reduce the value "
+            "There are too many asynchronous copy tasks. "
+            "1. If the value of numBatches for aclrtMemcpyBatchAsync is too large, reduce the value "
             "of numBatches. "
-            "2. If the value of height for aclrtMemcpy2dAsync in the ACL Graph is too large, reduce the value of "
+            "2. If the value of height for aclrtMemcpy2dAsync is too large, reduce the value of "
             "height");
         return RT_ERROR_JETTY_LIMIT;
     }
@@ -88,10 +88,10 @@ rtError_t StreamJettyContext::RoundUpCapacity(Driver* driver, uint32_t deviceId)
         if (validDepth > JETTY_DEPTH_MAX) {
             RT_LOG_OUTER_MSG_IMPL(
                 ErrorCode::EE1023, "Rounding up the capacity",
-                "There are too many asynchronous copy tasks in the ACL Graph. "
-                "1. If the value of numBatches for aclrtMemcpyBatchAsync in the ACL Graph is too large, reduce the "
+                "There are too many asynchronous copy tasks. "
+                "1. If the value of numBatches for aclrtMemcpyBatchAsync is too large, reduce the "
                 "value of numBatches. "
-                "2. If the value of height for aclrtMemcpy2dAsync in the ACL Graph is too large, reduce the value of "
+                "2. If the value of height for aclrtMemcpy2dAsync is too large, reduce the value of "
                 "height");
             return RT_ERROR_JETTY_LIMIT;
         }

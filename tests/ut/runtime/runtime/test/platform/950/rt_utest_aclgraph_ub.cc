@@ -1275,6 +1275,20 @@ protected:
     Stream* stream_ = nullptr;
 };
 
+TEST_F(NpuDriverJettyTest, GetOrCreateStreamJettyContext_ReserveFail_ReturnsDrvNoResources)
+{
+    FullResetAndSetupMocks(stream_->Device_()->Driver_());
+    // Mock AsyncDmaJettyCreate to fail, causing PreAllocJetty to fail
+    MOCKER_CPP_VIRTUAL(stream_->Device_()->Driver_(), &Driver::AsyncDmaJettyCreate)
+        .stubs()
+        .will(returnValue(RT_ERROR_INVALID_VALUE));
+
+    StreamJettyContext* context = nullptr;
+    rtError_t error = StreamJettyHandler::GetOrCreateStreamJettyContext(stream_, JettyType::JETTY_TYPE_H2D, context);
+    EXPECT_EQ(error, RT_ERROR_DRV_NO_RESOURCES);
+    EXPECT_EQ(context, nullptr);
+}
+
 TEST_F(NpuDriverJettyTest, ExternalRefreshUsesHostToDeviceExForUbDma)
 {
     constexpr uint64_t refreshSize = 16U;

@@ -89,8 +89,9 @@ rtError_t StreamJettyHandler::GetOrCreateStreamJettyContext(
 
     jettyCtx = stream->Device_()->GetJettyManager()->GetOrCreateStreamJettyContext(stream, jettyType);
     if (jettyCtx == nullptr) {
-        RT_LOG(RT_LOG_ERROR, "GetOrCreateStreamJettyContext failed, stream_id=%d.", stream->Id_());
-        return RT_ERROR_JETTY_POOL_NO_RESOURCES;
+        RT_LOG_OUTER_MSG_IMPL(
+            ErrorCode::EE1023, "Alloc copy resource", "Too many streams with asynchronous copy tasks");
+        return RT_ERROR_DRV_NO_RESOURCES;
     }
 
     return RT_ERROR_NONE;
