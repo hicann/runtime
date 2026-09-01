@@ -3331,3 +3331,12 @@ TEST_F(NormalModelJettyTest, JettyInfoList_ClearedOnFinalize)
     mdl_->FinalizeHostStateOnExit();
     EXPECT_TRUE(mdl_->GetJettyInfo().empty());
 }
+
+// ========== Coverage for commit 731f1fab: FEATURE_DMS_GET_BOARD_LOCATION in featureNameMap ==========
+
+// Cover CheckIsSupportFeature recognizes FEATURE_DMS_GET_BOARD_LOCATION (no mock, real impl)
+TEST_F(StreamJettyHandlerIntegrationTest, CheckIsSupportFeature_BoardLocation_Supported)
+{
+    bool ret = NpuDriver::CheckIsSupportFeature(stream_->Device_()->Id_(), FEATURE_DMS_GET_BOARD_LOCATION);
+    EXPECT_TRUE(ret);
+}

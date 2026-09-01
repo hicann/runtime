@@ -362,46 +362,6 @@ uint32_t GetSqeNumForMemcopyAsync(const rtMemcpyKind_t kind, bool isModelByUb, u
     return 1U;
 }
 
-rtError_t ConvertD2DCpyType(
-    const Stream* const stm, uint32_t& cpyType, const void* const srcAddr, void* const desAddr, bool* isD2dCross8P)
-{
-    Driver* const driver = stm->Device_()->Driver_();
-    uint8_t transType = 0U;
-    TIMESTAMP_BEGIN(rtMemcpyAsync_drvDeviceGetTransWay);
-    rtError_t error = driver->GetTransWayByAddr(RtPtrToUnConstPtr<void*>(srcAddr), desAddr, &transType);
-    TIMESTAMP_END(rtMemcpyAsync_drvDeviceGetTransWay);
-
-    COND_RETURN_ERROR(
-        (error != RT_ERROR_NONE), error, "D2D memcpy async, get channel type failed, retCode=%#x.",
-        static_cast<uint32_t>(error));
-
-    switch (transType) {
-        case RT_MEMCPY_CHANNEL_TYPE_PCIe:
-            cpyType = RT_MEMCPY_DIR_D2D_PCIe;
-            RT_LOG(RT_LOG_INFO, "MemcpyAsyncTask::ConvertCpyType MEMCPY_DIR_D2D_PCIe, direct= %u", cpyType);
-            break;
-        case RT_MEMCPY_CHANNEL_TYPE_HCCs:
-            cpyType = RT_MEMCPY_DIR_D2D_HCCs;
-            RT_LOG(RT_LOG_INFO, "MemcpyAsyncTask::ConvertCpyType MEMCPY_DIR_D2D_HCCs, direct= %u", cpyType);
-            break;
-        case RT_MEMCPY_CHANNEL_TYPE_UB:
-            cpyType = RT_MEMCPY_DIR_D2D_UB;
-            if ((isD2dCross8P != nullptr) &&
-                NpuDriver::CheckIsSupportFeature(stm->Device_()->Id_(), FEATURE_DMS_GET_BOARD_LOCATION)) {
-                error = GetD2dCrossType(stm, srcAddr, desAddr, isD2dCross8P);
-                ERROR_RETURN_MSG_INNER(
-                    error, "Get device board location type failed, retCode=%#x.", static_cast<uint32_t>(error));
-            }
-            RT_LOG(RT_LOG_INFO, "MemcpyAsyncTask::ConvertCpyType RT_MEMCPY_DIR_D2D_UB, direct= %u", cpyType);
-            break;
-        default:
-            cpyType = RT_MEMCPY_DIR_D2D_SDMA;
-            RT_LOG(RT_LOG_INFO, "MemcpyAsyncTask::ConvertCpyType MEMCPY_DIR_D2D_SDMA, direct= %u", cpyType);
-            break;
-    }
-    return RT_ERROR_NONE;
-}
-
 rtError_t ConvertCpyType(
     TaskInfo* const taskInfo, const uint32_t cpyType, const void* const srcAddr, void* const desAddr)
 {
@@ -442,6 +402,46 @@ rtError_t ConvertCpyType(
 
     memcpyAsyncTaskInfo->copyType = copyTypeTmp;
 
+    return RT_ERROR_NONE;
+}
+
+rtError_t ConvertD2DCpyType(
+    const Stream* const stm, uint32_t& cpyType, const void* const srcAddr, void* const desAddr, bool* isD2dCross8P)
+{
+    Driver* const driver = stm->Device_()->Driver_();
+    uint8_t transType = 0U;
+    TIMESTAMP_BEGIN(rtMemcpyAsync_drvDeviceGetTransWay);
+    rtError_t error = driver->GetTransWayByAddr(RtPtrToUnConstPtr<void*>(srcAddr), desAddr, &transType);
+    TIMESTAMP_END(rtMemcpyAsync_drvDeviceGetTransWay);
+
+    COND_RETURN_ERROR(
+        (error != RT_ERROR_NONE), error, "D2D memcpy async, get channel type failed, retCode=%#x.",
+        static_cast<uint32_t>(error));
+
+    switch (transType) {
+        case RT_MEMCPY_CHANNEL_TYPE_PCIe:
+            cpyType = RT_MEMCPY_DIR_D2D_PCIe;
+            RT_LOG(RT_LOG_INFO, "MemcpyAsyncTask::ConvertCpyType MEMCPY_DIR_D2D_PCIe, direct= %u", cpyType);
+            break;
+        case RT_MEMCPY_CHANNEL_TYPE_HCCs:
+            cpyType = RT_MEMCPY_DIR_D2D_HCCs;
+            RT_LOG(RT_LOG_INFO, "MemcpyAsyncTask::ConvertCpyType MEMCPY_DIR_D2D_HCCs, direct= %u", cpyType);
+            break;
+        case RT_MEMCPY_CHANNEL_TYPE_UB:
+            cpyType = RT_MEMCPY_DIR_D2D_UB;
+            if ((isD2dCross8P != nullptr) &&
+                NpuDriver::CheckIsSupportFeature(stm->Device_()->Id_(), FEATURE_DMS_GET_BOARD_LOCATION)) {
+                error = GetD2dCrossType(stm, srcAddr, desAddr, isD2dCross8P);
+                ERROR_RETURN_MSG_INNER(
+                    error, "Get device board location type failed, retCode=%#x.", static_cast<uint32_t>(error));
+            }
+            RT_LOG(RT_LOG_INFO, "MemcpyAsyncTask::ConvertCpyType RT_MEMCPY_DIR_D2D_UB, direct= %u", cpyType);
+            break;
+        default:
+            cpyType = RT_MEMCPY_DIR_D2D_SDMA;
+            RT_LOG(RT_LOG_INFO, "MemcpyAsyncTask::ConvertCpyType MEMCPY_DIR_D2D_SDMA, direct= %u", cpyType);
+            break;
+    }
     return RT_ERROR_NONE;
 }
 

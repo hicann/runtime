@@ -1148,6 +1148,7 @@ bool NpuDriver::CheckIsSupportFeature(uint32_t devId, int32_t featureType)
         {FEATURE_SVM_MEM_REGISTER_QUERY_AND_GET_ATTR, "FEATURE_SVM_MEM_REGISTER_QUERY_AND_GET_ATTR"},
         {FEATURE_APM_RES_MAP_REMOTE, "FEATURE_APM_RES_MAP_REMOTE"},
         {FEATURE_SVM_MEM_REGISTER_HOST_PINNED, "FEATURE_SVM_MEM_REGISTER_HOST_PINNED"},
+        {FEATURE_DMS_GET_BOARD_LOCATION, "FEATURE_DMS_GET_BOARD_LOCATION"},
     };
 
     auto iter = featureNameMap.find(static_cast<drvFeature_t>(featureType));
