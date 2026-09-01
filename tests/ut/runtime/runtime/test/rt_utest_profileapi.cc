@@ -29,6 +29,7 @@
 #include "api.hpp"
 #include "raw_device.hpp"
 #include "task_info.hpp"
+#include "rt_unwrap.h"
 #include <fstream>
 #include "prof_ctrl_callback_manager.hpp"
 #include "api_error.hpp"
@@ -119,6 +120,117 @@ rtEvent_t ProfileApiTest::event_ = NULL;
 void* ProfileApiTest::binHandle_ = NULL;
 char ProfileApiTest::function_ = 'a';
 uint32_t ProfileApiTest::binary_[32] = {};
+
+class ProfileApiCloudSyncTest : public ProfileApiTest {
+protected:
+    static void SetUpTestCase()
+    {
+        Runtime* const runtime = Runtime::Instance();
+        oldChipType_ = runtime->GetChipType();
+        oldGlobalChipType_ = GlobalContainer::GetRtChipType();
+        runtime->SetChipType(CHIP_CLOUD);
+        GlobalContainer::SetRtChipType(CHIP_CLOUD);
+        ProfileApiTest::SetUpTestCase();
+    }
+
+    static void TearDownTestCase()
+    {
+        ProfileApiTest::TearDownTestCase();
+        Runtime* const runtime = Runtime::Instance();
+        runtime->SetChipType(oldChipType_);
+        GlobalContainer::SetRtChipType(oldGlobalChipType_);
+    }
+
+private:
+    static rtChipType_t oldChipType_;
+    static rtChipType_t oldGlobalChipType_;
+};
+
+rtChipType_t ProfileApiCloudSyncTest::oldChipType_ = CHIP_END;
+rtChipType_t ProfileApiCloudSyncTest::oldGlobalChipType_ = CHIP_END;
+
+TEST_F(ProfileApiCloudSyncTest, model_api_cacheTrack)
+{
+    rtError_t error;
+    rtStream_t stream;
+    rtStream_t execStream;
+    rtModel_t model;
+    uint32_t taskid = 0;
+    uint32_t streamId = 0;
+
+    error = rtStreamCreate(&stream, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtStreamCreate(&execStream, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    Stream* const execStreamPtr = rt_ut::UnwrapOrNull<Stream>(execStream);
+    ASSERT_NE(execStreamPtr, nullptr);
+    // 910A stream synchronization does not create the temporary Event used by the threaded path.
+    MOCKER_CPP_VIRTUAL(execStreamPtr, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
+
+    error = rtModelCreate(&model, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtModelGetTaskId(model, &taskid, &streamId);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtModelBindStream(model, stream, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtModelExecute(model, execStream, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtModelUnbindStream(model, stream);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    Context* const context = Runtime::Instance()->CurrentContext();
+    ASSERT_NE(context, nullptr);
+    Device* const device = context->Device_();
+    ASSERT_NE(device, nullptr);
+    Stream* const profileStream = device->GetCtrlSQStream(device->PrimaryStream_());
+    ASSERT_NE(profileStream, nullptr);
+    MOCKER_CPP_VIRTUAL(profileStream, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
+
+    rtProfCommandHandle_t profilerConfig = {0};
+    profilerConfig.devNums = 1;
+    profilerConfig.type = PROF_COMMANDHANDLE_TYPE_START;
+    profilerConfig.profSwitch = 0xc000000084000000ULL;
+    error = rtProfSetProSwitch(&profilerConfig, sizeof(profilerConfig));
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    profilerConfig.type = PROF_COMMANDHANDLE_TYPE_STOP;
+    profilerConfig.profSwitch |= 0xc000000084000000ULL;
+    error = rtProfSetProSwitch(&profilerConfig, sizeof(profilerConfig));
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    profilerConfig.type = PROF_COMMANDHANDLE_TYPE_START;
+    profilerConfig.profSwitch = 0xc000000084000000ULL;
+    error = rtProfSetProSwitch(&profilerConfig, sizeof(profilerConfig));
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    profilerConfig.type = PROF_COMMANDHANDLE_TYPE_STOP;
+    profilerConfig.profSwitch |= 0xc000000084000000ULL;
+    error = rtProfSetProSwitch(&profilerConfig, sizeof(profilerConfig));
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    profilerConfig.type = PROF_COMMANDHANDLE_TYPE_START;
+    profilerConfig.profSwitch = PROF_TASK_TIME_MASK;
+    error = rtProfSetProSwitch(&profilerConfig, sizeof(profilerConfig));
+
+    profilerConfig.type = PROF_COMMANDHANDLE_TYPE_STOP;
+    error = rtProfSetProSwitch(&profilerConfig, sizeof(profilerConfig));
+
+    error = rtModelDestroy(model);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtStreamDestroy(stream);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtStreamDestroy(execStream);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    ProfCtrlCallbackManager::Instance().DelAllData();
+}
 
 TEST_F(ProfileApiTest, stream_create_and_destroy)
 {
@@ -1006,75 +1118,6 @@ TEST_F(ProfileApiTest, GetL2CacheOffset_fail)
     rtError_t error = apiErrDecorator_->GetL2CacheOffset(0, &offset);
     EXPECT_EQ(error, RT_ERROR_DRV_INPUT);
     delete apiErrDecorator_;
-}
-
-TEST_F(ProfileApiTest, model_api_cacheTrack)
-{
-    rtError_t error;
-    rtStream_t stream;
-    rtStream_t execStream;
-    rtModel_t model;
-    uint32_t taskid = 0;
-    uint32_t streamId = 0;
-
-    error = rtStreamCreate(&stream, 0);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = rtStreamCreate(&execStream, 0);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = rtModelCreate(&model, 0);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = rtModelGetTaskId(model, &taskid, &streamId);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = rtModelBindStream(model, stream, 0);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = rtModelExecute(model, execStream, 0);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = rtModelUnbindStream(model, stream);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    rtProfCommandHandle_t profilerConfig = {0};
-    profilerConfig.devNums = 1;
-    profilerConfig.type = PROF_COMMANDHANDLE_TYPE_START;
-    profilerConfig.profSwitch = 0xc000000084000000ULL;
-    error = rtProfSetProSwitch(&profilerConfig, sizeof(profilerConfig));
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    profilerConfig.type = PROF_COMMANDHANDLE_TYPE_STOP;
-    profilerConfig.profSwitch |= 0xc000000084000000ULL;
-    error = rtProfSetProSwitch(&profilerConfig, sizeof(profilerConfig));
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    profilerConfig.type = PROF_COMMANDHANDLE_TYPE_START;
-    profilerConfig.profSwitch = 0xc000000084000000ULL;
-    error = rtProfSetProSwitch(&profilerConfig, sizeof(profilerConfig));
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    profilerConfig.type = PROF_COMMANDHANDLE_TYPE_STOP;
-    profilerConfig.profSwitch |= 0xc000000084000000ULL;
-    error = rtProfSetProSwitch(&profilerConfig, sizeof(profilerConfig));
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    profilerConfig.type = PROF_COMMANDHANDLE_TYPE_START;
-    profilerConfig.profSwitch = PROF_TASK_TIME_MASK;
-    error = rtProfSetProSwitch(&profilerConfig, sizeof(profilerConfig));
-
-    error = rtModelDestroy(model);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = rtStreamDestroy(stream);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = rtStreamDestroy(execStream);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    ProfCtrlCallbackManager::Instance().DelAllData();
-    StubProfilingDelAll();
 }
 
 TEST_F(ProfileApiTest, rtProfSetProSwitch)

@@ -71,7 +71,7 @@ public:
     void ReportTrackData(const Stream* const s, const uint16_t taskId) const;
     void ReportTrackDataV2(
         const Stream* const stm, const TaskInfo* const task, const uint32_t devId,
-        const RuntimeProfTrackData& v1TrackData) const;
+        const RuntimeProfTrackData& v1TrackData, const bool hasRecordWaitExtInfo) const;
     void SetTrackProfEnable(bool trackProfEnable, uint32_t cacheFlag = 0)
     {
         if (trackProfEnable) {

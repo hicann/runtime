@@ -825,7 +825,7 @@ TEST_F(ModelTest, CacheTaskTrackReport)
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     RawDevice* device = (RawDevice*)((Context*)ctx)->Device_();
-    device->chipType_ = CHIP_CLOUD;
+    device->chipType_ = CHIP_CLOUD; // 1980
 
     Profiler* profilerPtr = Runtime::Instance()->Profiler_();
     profilerPtr->SetTrackProfEnable(false);
@@ -835,6 +835,9 @@ TEST_F(ModelTest, CacheTaskTrackReport)
 
     error = rtStreamCreateWithFlags(&syncStream, 0, RT_STREAM_FORBIDDEN_DEFAULT);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    Stream* const syncStreamPtr = rt_ut::UnwrapOrNull<Stream>(syncStream);
+    ASSERT_NE(syncStreamPtr, nullptr);
+    MOCKER_CPP_VIRTUAL(syncStreamPtr, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
 
     error = rtModelCreate(&model, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);

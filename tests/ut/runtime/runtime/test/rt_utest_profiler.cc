@@ -47,10 +47,12 @@ namespace cce {
 namespace runtime {
 extern void FillKernelLaunchExtInfo(struct MsprofRuntimeTrack& runtimeTrack, const TaskInfo* const taskInfo);
 extern void ChangeTrackDataTaskType(struct MsprofRuntimeTrack& runtimeTrack, const TaskInfo* const taskInfo);
+extern bool FillRecordWaitTrackInfo(const TaskInfo& taskInfo, struct MsprofRuntimeTrack& runtimeTrack);
 } // namespace runtime
 } // namespace cce
 
 Api* g_apiPtrOld = NULL;
+MsprofCompactInfo g_lastRuntimeTrackV2 = {};
 
 #define ENV_VAR_NAME "CCE_PROF_SWITCH"
 #define PROF_SWITCH_ON "on"
@@ -59,6 +61,14 @@ Api* g_apiPtrOld = NULL;
 int32_t MsprofReporterCallbackStub(uint32_t moduleId, uint32_t type, void* data, uint32_t len)
 {
     std::cout << "MsprofCtrlCallbackStub moduleId=" << moduleId << ", type=" << type << ", len=" << len << std::endl;
+    return MSPROF_ERROR_NONE;
+}
+
+int32_t MsprofReportRuntimeTrackV2CaptureStub(uint32_t agingFlag, const VOID_PTR data, uint32_t length)
+{
+    if ((data != nullptr) && (length == sizeof(MsprofCompactInfo))) {
+        g_lastRuntimeTrackV2 = *static_cast<const MsprofCompactInfo*>(data);
+    }
     return MSPROF_ERROR_NONE;
 }
 
@@ -4369,4 +4379,328 @@ TEST_F(ProfilerTest, RuntimeProfilerStop_UnInitFailed)
     MOCKER_CPP(&ProfilingAgent::UnInit).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
     profiler->RuntimeProfilerStop();
     GlobalMockObject::verify();
+}
+
+TEST_F(ProfilerTest, RuntimeTrackRecordWaitStructSize)
+{
+    EXPECT_EQ(sizeof(MSprofEventInfo), 16U);
+    EXPECT_EQ(sizeof(MSprofNotifyInfo), 16U);
+    EXPECT_EQ(sizeof(MsprofRuntimeTrack), 40U);
+    EXPECT_EQ(sizeof(MsprofRuntimeTrackV2), 40U);
+}
+
+TEST_F(ProfilerTest, ReportTrackDataV2_DoesNotCopyRecordWaitExtInfo)
+{
+    Stream stream(static_cast<Device*>(nullptr), 0U);
+    Model captureModel(RT_MODEL_CAPTURE_MODEL);
+    stream.SetModel(&captureModel);
+
+    TaskInfo taskInfo = {};
+    RuntimeProfTrackData v1TrackData = {};
+    v1TrackData.compactInfo.data.runtimeTrack.taskId = 7U;
+    v1TrackData.compactInfo.data.runtimeTrack.taskType = TS_TASK_TYPE_EVENT_RECORD;
+    v1TrackData.compactInfo.data.runtimeTrack.kernelName = 11U;
+    (void)memset_s(
+        &v1TrackData.compactInfo.data.runtimeTrack.extInfo, sizeof(v1TrackData.compactInfo.data.runtimeTrack.extInfo),
+        0xFF, sizeof(v1TrackData.compactInfo.data.runtimeTrack.extInfo));
+
+    g_lastRuntimeTrackV2 = {};
+    MOCKER(MsprofReportCompactInfo).expects(once()).will(invoke(MsprofReportRuntimeTrackV2CaptureStub));
+    Profiler profiler(nullptr);
+    profiler.ReportTrackDataV2(&stream, &taskInfo, 3U, v1TrackData, true);
+
+    EXPECT_EQ(g_lastRuntimeTrackV2.type, RT_PROFILE_TYPE_TASK_TRACK_V2);
+    EXPECT_EQ(g_lastRuntimeTrackV2.data.runtimeTrackV2.taskId, 7U);
+    EXPECT_EQ(g_lastRuntimeTrackV2.data.runtimeTrackV2.taskType, TS_TASK_TYPE_EVENT_RECORD);
+    const uint8_t* const extInfo = reinterpret_cast<const uint8_t*>(&g_lastRuntimeTrackV2.data.runtimeTrackV2.extInfo);
+    for (size_t i = 0U; i < sizeof(g_lastRuntimeTrackV2.data.runtimeTrackV2.extInfo); ++i) {
+        EXPECT_EQ(extInfo[i], 0U);
+    }
+}
+
+TEST_F(ProfilerTest, FillRecordWaitTrackInfo_EventRecordAndWait)
+{
+    constexpr uint64_t eventFlag = 0x35U;
+    constexpr uint32_t recordFlag = 3U;
+    constexpr uint32_t waitFlag = 5U;
+    constexpr int32_t eventId = 17;
+    Event event(nullptr, eventFlag, nullptr);
+    event.SetRecordFlag(recordFlag);
+    event.SetWaitFlag(waitFlag);
+
+    TaskInfo recordTask = {};
+    recordTask.type = TS_TASK_TYPE_EVENT_RECORD;
+    recordTask.u.eventRecordTaskInfo.event = &event;
+    recordTask.u.eventRecordTaskInfo.eventid = eventId;
+    MsprofRuntimeTrack recordTrack = {};
+    recordTrack.taskType = recordTask.type;
+    EXPECT_TRUE(FillRecordWaitTrackInfo(recordTask, recordTrack));
+    EXPECT_EQ(recordTrack.taskType, static_cast<uint64_t>(TS_TASK_TYPE_EVENT_RECORD));
+    EXPECT_EQ(recordTrack.extInfo.eventInfo.key, static_cast<uint64_t>(eventId));
+    EXPECT_EQ(recordTrack.extInfo.eventInfo.eventFlag, static_cast<uint32_t>(eventFlag));
+    EXPECT_EQ(recordTrack.extInfo.eventInfo.flag, recordFlag);
+
+    TaskInfo waitTask = {};
+    waitTask.type = TS_TASK_TYPE_STREAM_WAIT_EVENT;
+    waitTask.u.eventWaitTaskInfo.event = &event;
+    waitTask.u.eventWaitTaskInfo.eventId = eventId;
+    MsprofRuntimeTrack waitTrack = {};
+    waitTrack.taskType = waitTask.type;
+    EXPECT_TRUE(FillRecordWaitTrackInfo(waitTask, waitTrack));
+    EXPECT_EQ(waitTrack.taskType, static_cast<uint64_t>(TS_TASK_TYPE_STREAM_WAIT_EVENT));
+    EXPECT_EQ(waitTrack.extInfo.eventInfo.key, static_cast<uint64_t>(eventId));
+    EXPECT_EQ(waitTrack.extInfo.eventInfo.eventFlag, static_cast<uint32_t>(eventFlag));
+    EXPECT_EQ(waitTrack.extInfo.eventInfo.flag, waitFlag);
+}
+
+TEST_F(ProfilerTest, FillRecordWaitTrackInfo_DavidCountEvent)
+{
+    constexpr int32_t eventId = 0x1234;
+    constexpr uint32_t countValue = 0x56789ABCU;
+    const uint64_t expectedKey =
+        (static_cast<uint64_t>(static_cast<uint32_t>(eventId)) << 32U) | static_cast<uint64_t>(countValue);
+    Event event(nullptr, RT_EVENT_DEFAULT, nullptr);
+
+    TaskInfo recordTask = {};
+    recordTask.type = TS_TASK_TYPE_DAVID_EVENT_RECORD;
+    recordTask.u.davidEventRecordTaskInfo.event = &event;
+    recordTask.u.davidEventRecordTaskInfo.eventId = eventId;
+    recordTask.u.davidEventRecordTaskInfo.isCountNotify = 1U;
+    recordTask.u.davidEventRecordTaskInfo.countValue = countValue;
+    MsprofRuntimeTrack recordTrack = {};
+    recordTrack.taskType = recordTask.type;
+    EXPECT_TRUE(FillRecordWaitTrackInfo(recordTask, recordTrack));
+    EXPECT_EQ(recordTrack.extInfo.eventInfo.key, expectedKey);
+
+    TaskInfo waitTask = {};
+    waitTask.type = TS_TASK_TYPE_DAVID_EVENT_WAIT;
+    waitTask.u.davidEventWaitTaskInfo.event = &event;
+    waitTask.u.davidEventWaitTaskInfo.eventId = eventId;
+    waitTask.u.davidEventWaitTaskInfo.isCountNotify = 1U;
+    waitTask.u.davidEventWaitTaskInfo.countValue = countValue;
+    MsprofRuntimeTrack waitTrack = {};
+    waitTrack.taskType = waitTask.type;
+    EXPECT_TRUE(FillRecordWaitTrackInfo(waitTask, waitTrack));
+    EXPECT_EQ(waitTrack.extInfo.eventInfo.key, expectedKey);
+}
+
+TEST_F(ProfilerTest, FillRecordWaitTrackInfo_MemoryEventMapping)
+{
+    constexpr uint64_t eventAddr = 0x12345678ULL;
+    Event event(nullptr, RT_EVENT_DEFAULT, nullptr);
+
+    TaskInfo recordTask = {};
+    recordTask.type = TS_TASK_TYPE_MEM_WRITE_VALUE;
+    recordTask.u.memWriteValueTask.event = &event;
+    recordTask.u.memWriteValueTask.devAddr = eventAddr;
+    recordTask.u.memWriteValueTask.value = 1U;
+    MsprofRuntimeTrack recordTrack = {};
+    recordTrack.taskType = recordTask.type;
+    EXPECT_TRUE(FillRecordWaitTrackInfo(recordTask, recordTrack));
+    EXPECT_EQ(recordTrack.taskType, static_cast<uint64_t>(TS_TASK_TYPE_EVENT_RECORD));
+    EXPECT_EQ(recordTrack.extInfo.eventInfo.key, eventAddr);
+
+    TaskInfo resetTask = {};
+    resetTask.type = TS_TASK_TYPE_MEM_WRITE_VALUE;
+    resetTask.u.memWriteValueTask.event = &event;
+    resetTask.u.memWriteValueTask.devAddr = eventAddr;
+    resetTask.u.memWriteValueTask.value = 0U;
+    MsprofRuntimeTrack resetTrack = {};
+    (void)memset_s(&resetTrack.extInfo, sizeof(resetTrack.extInfo), 0xFF, sizeof(resetTrack.extInfo));
+    resetTrack.taskType = resetTask.type;
+    EXPECT_FALSE(FillRecordWaitTrackInfo(resetTask, resetTrack));
+    EXPECT_EQ(resetTrack.taskType, static_cast<uint64_t>(TS_TASK_TYPE_EVENT_RESET));
+    for (const uint8_t value : resetTrack.extInfo.rsv) {
+        EXPECT_EQ(value, 0U);
+    }
+
+    TaskInfo waitTask = {};
+    waitTask.type = TS_TASK_TYPE_MEM_WAIT_VALUE;
+    waitTask.u.memWaitValueTask.event = &event;
+    waitTask.u.memWaitValueTask.devAddr = eventAddr;
+    MsprofRuntimeTrack waitTrack = {};
+    waitTrack.taskType = waitTask.type;
+    EXPECT_TRUE(FillRecordWaitTrackInfo(waitTask, waitTrack));
+    EXPECT_EQ(waitTrack.taskType, static_cast<uint64_t>(TS_TASK_TYPE_STREAM_WAIT_EVENT));
+    EXPECT_EQ(waitTrack.extInfo.eventInfo.key, eventAddr);
+
+    TaskInfo memoryTask = {};
+    memoryTask.type = TS_TASK_TYPE_MEM_WRITE_VALUE;
+    memoryTask.u.memWriteValueTask.event = nullptr;
+    MsprofRuntimeTrack memoryTrack = {};
+    memoryTrack.taskType = memoryTask.type;
+    EXPECT_FALSE(FillRecordWaitTrackInfo(memoryTask, memoryTrack));
+    EXPECT_EQ(memoryTrack.taskType, static_cast<uint64_t>(TS_TASK_TYPE_MEM_WRITE_VALUE));
+
+    TaskInfo memoryWaitTask = {};
+    memoryWaitTask.type = TS_TASK_TYPE_MEM_WAIT_VALUE;
+    memoryWaitTask.u.memWaitValueTask.event = nullptr;
+    MsprofRuntimeTrack memoryWaitTrack = {};
+    memoryWaitTrack.taskType = memoryWaitTask.type;
+    EXPECT_FALSE(FillRecordWaitTrackInfo(memoryWaitTask, memoryWaitTrack));
+    EXPECT_EQ(memoryWaitTrack.taskType, static_cast<uint64_t>(TS_TASK_TYPE_MEM_WAIT_VALUE));
+}
+
+TEST_F(ProfilerTest, FillRecordWaitTrackInfo_RevisedNotifyWait)
+{
+    constexpr int32_t eventId = 0x2AB;
+    TaskInfo taskInfo = {};
+    taskInfo.type = TS_TASK_TYPE_STREAM_WAIT_EVENT;
+    taskInfo.u.eventWaitTaskInfo.event = nullptr;
+    taskInfo.u.eventWaitTaskInfo.eventId = eventId;
+    taskInfo.u.eventWaitTaskInfo.eventWaitFlag = 1U;
+
+    MsprofRuntimeTrack runtimeTrack = {};
+    runtimeTrack.taskType = taskInfo.type;
+    EXPECT_TRUE(FillRecordWaitTrackInfo(taskInfo, runtimeTrack));
+    EXPECT_EQ(runtimeTrack.taskType, static_cast<uint64_t>(TS_TASK_TYPE_NOTIFY_WAIT));
+    EXPECT_EQ(runtimeTrack.extInfo.notifyInfo.key, static_cast<uint64_t>(eventId));
+    for (const uint8_t value : runtimeTrack.extInfo.notifyInfo.rsv) {
+        EXPECT_EQ(value, 0U);
+    }
+}
+
+TEST_F(ProfilerTest, FillRecordWaitTrackInfo_NotifyRecordKinds)
+{
+    constexpr uint32_t notifyId = 39U;
+
+    TaskInfo notifyTask = {};
+    notifyTask.type = TS_TASK_TYPE_NOTIFY_RECORD;
+    notifyTask.u.notifyrecordTask.notifyId = notifyId;
+    notifyTask.u.notifyrecordTask.isCountNotify = false;
+    notifyTask.u.notifyrecordTask.uInfo.singleBitNtfyInfo.isNotifyReset = false;
+    MsprofRuntimeTrack notifyTrack = {};
+    notifyTrack.taskType = notifyTask.type;
+    EXPECT_TRUE(FillRecordWaitTrackInfo(notifyTask, notifyTrack));
+    EXPECT_EQ(notifyTrack.taskType, static_cast<uint64_t>(TS_TASK_TYPE_NOTIFY_RECORD));
+    EXPECT_EQ(notifyTrack.extInfo.notifyInfo.key, static_cast<uint64_t>(notifyId));
+
+    notifyTask.u.notifyrecordTask.uInfo.singleBitNtfyInfo.isNotifyReset = true;
+    MsprofRuntimeTrack resetTrack = {};
+    (void)memset_s(&resetTrack.extInfo, sizeof(resetTrack.extInfo), 0xFF, sizeof(resetTrack.extInfo));
+    resetTrack.taskType = notifyTask.type;
+    EXPECT_FALSE(FillRecordWaitTrackInfo(notifyTask, resetTrack));
+    EXPECT_EQ(resetTrack.taskType, static_cast<uint64_t>(ProfTaskType::PROF_TASK_TYPE_NOTIFY_RESET));
+    for (const uint8_t value : resetTrack.extInfo.rsv) {
+        EXPECT_EQ(value, 0U);
+    }
+
+    TaskInfo countTask = {};
+    countTask.type = TS_TASK_TYPE_NOTIFY_RECORD;
+    countTask.u.notifyrecordTask.notifyId = notifyId;
+    countTask.u.notifyrecordTask.isCountNotify = true;
+    MsprofRuntimeTrack countTrack = {};
+    countTrack.taskType = countTask.type;
+    EXPECT_TRUE(FillRecordWaitTrackInfo(countTask, countTrack));
+    EXPECT_EQ(countTrack.taskType, static_cast<uint64_t>(ProfTaskType::PROF_TASK_TYPE_COUNT_NOTIFY_RECORD));
+    EXPECT_EQ(countTrack.extInfo.notifyInfo.key, static_cast<uint64_t>(notifyId));
+}
+
+TEST_F(ProfilerTest, FillRecordWaitTrackInfo_NotifyWaitKinds)
+{
+    constexpr uint32_t notifyId = 41U;
+
+    TaskInfo notifyTask = {};
+    notifyTask.type = TS_TASK_TYPE_NOTIFY_WAIT;
+    notifyTask.u.notifywaitTask.notifyId = notifyId;
+    MsprofRuntimeTrack notifyTrack = {};
+    notifyTrack.taskType = notifyTask.type;
+    EXPECT_TRUE(FillRecordWaitTrackInfo(notifyTask, notifyTrack));
+    EXPECT_EQ(notifyTrack.taskType, static_cast<uint64_t>(TS_TASK_TYPE_NOTIFY_WAIT));
+    EXPECT_EQ(notifyTrack.extInfo.notifyInfo.key, static_cast<uint64_t>(notifyId));
+
+    notifyTask.u.notifywaitTask.isCountNotify = true;
+    MsprofRuntimeTrack countTrack = {};
+    countTrack.taskType = notifyTask.type;
+    EXPECT_TRUE(FillRecordWaitTrackInfo(notifyTask, countTrack));
+    EXPECT_EQ(countTrack.taskType, static_cast<uint64_t>(ProfTaskType::PROF_TASK_TYPE_COUNT_NOTIFY_WAIT));
+    EXPECT_EQ(countTrack.extInfo.notifyInfo.key, static_cast<uint64_t>(notifyId));
+
+    notifyTask.u.notifywaitTask.isCountNotify = false;
+    notifyTask.u.notifywaitTask.isEndGraphNotify = true;
+    notifyTask.u.notifywaitTask.captureModel = reinterpret_cast<Model*>(static_cast<uintptr_t>(1U));
+    MsprofRuntimeTrack endGraphTrack = {};
+    endGraphTrack.taskType = static_cast<uint64_t>(ProfTaskType::PROF_TASK_TYPE_MODEL_WAIT_COMPLETE);
+    endGraphTrack.extInfo.modelInfo.modelId = 7U;
+    EXPECT_FALSE(FillRecordWaitTrackInfo(notifyTask, endGraphTrack));
+    EXPECT_EQ(endGraphTrack.taskType, static_cast<uint64_t>(ProfTaskType::PROF_TASK_TYPE_MODEL_WAIT_COMPLETE));
+    EXPECT_EQ(endGraphTrack.extInfo.modelInfo.modelId, 7U);
+}
+
+TEST_F(ProfilerTest, FillRecordWaitTrackInfo_CaptureExternalAndIpc)
+{
+    constexpr uint64_t captureAddr = 0x12345678ULL;
+    constexpr uint64_t ipcRecordAddr = 0x98765432ULL;
+    constexpr uint64_t ipcWaitAddr = 0x87654321ULL;
+    Event event(nullptr, RT_EVENT_DEFAULT, nullptr);
+
+    TaskInfo externalRecordTask = {};
+    externalRecordTask.type = TS_TASK_TYPE_CAPTURE_RECORD_EXTERNAL;
+    externalRecordTask.u.memWriteValueTask.event = &event;
+    MsprofRuntimeTrack externalRecordTrack = {};
+    externalRecordTrack.taskType = externalRecordTask.type;
+    EXPECT_TRUE(FillRecordWaitTrackInfo(externalRecordTask, externalRecordTrack));
+    EXPECT_EQ(externalRecordTrack.extInfo.eventInfo.key, RtPtrToValue(&event));
+
+    TaskInfo externalWaitTask = {};
+    externalWaitTask.type = TS_TASK_TYPE_CAPTURE_WAIT_EXTERNAL;
+    externalWaitTask.u.memWaitValueTask.event = &event;
+    MsprofRuntimeTrack externalWaitTrack = {};
+    externalWaitTrack.taskType = externalWaitTask.type;
+    EXPECT_TRUE(FillRecordWaitTrackInfo(externalWaitTask, externalWaitTrack));
+    EXPECT_EQ(externalWaitTrack.extInfo.eventInfo.key, RtPtrToValue(&event));
+
+    TaskInfo captureRecordTask = {};
+    captureRecordTask.type = TS_TASK_TYPE_CAPTURE_RECORD;
+    captureRecordTask.u.memWriteValueTask.event = &event;
+    captureRecordTask.u.memWriteValueTask.devAddr = captureAddr;
+    MsprofRuntimeTrack captureRecordTrack = {};
+    captureRecordTrack.taskType = captureRecordTask.type;
+    EXPECT_TRUE(FillRecordWaitTrackInfo(captureRecordTask, captureRecordTrack));
+    EXPECT_EQ(captureRecordTrack.extInfo.eventInfo.key, captureAddr);
+
+    TaskInfo captureWaitTask = {};
+    captureWaitTask.type = TS_TASK_TYPE_CAPTURE_WAIT;
+    captureWaitTask.u.memWaitValueTask.event = &event;
+    captureWaitTask.u.memWaitValueTask.devAddr = captureAddr;
+    MsprofRuntimeTrack captureWaitTrack = {};
+    captureWaitTrack.taskType = captureWaitTask.type;
+    EXPECT_TRUE(FillRecordWaitTrackInfo(captureWaitTask, captureWaitTrack));
+    EXPECT_EQ(captureWaitTrack.extInfo.eventInfo.key, captureAddr);
+
+    TaskInfo ipcRecordTask = {};
+    ipcRecordTask.type = TS_TASK_TYPE_IPC_RECORD;
+    ipcRecordTask.u.memWriteValueTask.event = &event;
+    ipcRecordTask.u.memWriteValueTask.devAddr = ipcRecordAddr;
+    MsprofRuntimeTrack ipcRecordTrack = {};
+    ipcRecordTrack.taskType = ipcRecordTask.type;
+    EXPECT_TRUE(FillRecordWaitTrackInfo(ipcRecordTask, ipcRecordTrack));
+    EXPECT_EQ(ipcRecordTrack.extInfo.eventInfo.key, ipcRecordAddr);
+
+    TaskInfo ipcWaitTask = {};
+    ipcWaitTask.type = TS_TASK_TYPE_IPC_WAIT;
+    ipcWaitTask.u.memWaitValueTask.event = &event;
+    ipcWaitTask.u.memWaitValueTask.devAddr = ipcWaitAddr;
+    MsprofRuntimeTrack ipcWaitTrack = {};
+    ipcWaitTrack.taskType = ipcWaitTask.type;
+    EXPECT_TRUE(FillRecordWaitTrackInfo(ipcWaitTask, ipcWaitTrack));
+    EXPECT_EQ(ipcWaitTrack.taskType, static_cast<uint64_t>(TS_TASK_TYPE_IPC_WAIT));
+    EXPECT_EQ(ipcWaitTrack.extInfo.eventInfo.key, ipcWaitAddr);
+}
+
+TEST_F(ProfilerTest, FillRecordWaitTrackInfo_UnhandledTypes)
+{
+    TaskInfo remoteTask = {};
+    remoteTask.type = TS_TASK_TYPE_REMOTE_EVENT_WAIT;
+    MsprofRuntimeTrack remoteTrack = {};
+    remoteTrack.taskType = remoteTask.type;
+    EXPECT_FALSE(FillRecordWaitTrackInfo(remoteTask, remoteTrack));
+    EXPECT_EQ(remoteTrack.taskType, static_cast<uint64_t>(TS_TASK_TYPE_REMOTE_EVENT_WAIT));
+
+    TaskInfo serialTask = {};
+    serialTask.type = TS_TASK_TYPE_MODEL_SERIAL_SCHED_NOTIFY_WAIT;
+    MsprofRuntimeTrack serialTrack = {};
+    serialTrack.taskType = serialTask.type;
+    EXPECT_FALSE(FillRecordWaitTrackInfo(serialTask, serialTrack));
+    EXPECT_EQ(serialTrack.taskType, static_cast<uint64_t>(TS_TASK_TYPE_MODEL_SERIAL_SCHED_NOTIFY_WAIT));
 }

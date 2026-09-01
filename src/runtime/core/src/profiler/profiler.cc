@@ -24,6 +24,7 @@
 #include "stub_task.hpp"
 #include "context.hpp"
 #include "context_manage.hpp"
+#include "event.hpp"
 
 namespace cce {
 namespace runtime {
@@ -227,6 +228,167 @@ void FillKernelLaunchExtInfo(struct MsprofRuntimeTrack& runtimeTrack, const Task
     }
 }
 
+static void ClearRecordWaitExtInfo(struct MsprofRuntimeTrack& runtimeTrack)
+{
+    (void)memset_s(&runtimeTrack.extInfo, sizeof(runtimeTrack.extInfo), 0, sizeof(runtimeTrack.extInfo));
+}
+
+static uint64_t GetEventIdKey(const int32_t eventId) { return static_cast<uint64_t>(static_cast<uint32_t>(eventId)); }
+
+static uint64_t GetDavidCountEventKey(const int32_t eventId, const uint32_t countValue)
+{
+    return (GetEventIdKey(eventId) << 32U) | static_cast<uint64_t>(countValue);
+}
+
+static bool FillEventTrackInfo(const TaskInfo& taskInfo, struct MsprofRuntimeTrack& runtimeTrack)
+{
+    Event* event = nullptr;
+    uint64_t key = 0U;
+    bool isRecord = false;
+    switch (taskInfo.type) {
+        case TS_TASK_TYPE_EVENT_RECORD:
+            event = taskInfo.u.eventRecordTaskInfo.event;
+            key = GetEventIdKey(taskInfo.u.eventRecordTaskInfo.eventid);
+            isRecord = true;
+            break;
+        case TS_TASK_TYPE_STREAM_WAIT_EVENT:
+            if (taskInfo.u.eventWaitTaskInfo.eventWaitFlag == 1U) {
+                return false;
+            }
+            event = taskInfo.u.eventWaitTaskInfo.event;
+            key = GetEventIdKey(taskInfo.u.eventWaitTaskInfo.eventId);
+            break;
+        case TS_TASK_TYPE_DAVID_EVENT_RECORD:
+            event = taskInfo.u.davidEventRecordTaskInfo.event;
+            key = (taskInfo.u.davidEventRecordTaskInfo.isCountNotify != 0U) ?
+                      GetDavidCountEventKey(
+                          taskInfo.u.davidEventRecordTaskInfo.eventId, taskInfo.u.davidEventRecordTaskInfo.countValue) :
+                      GetEventIdKey(taskInfo.u.davidEventRecordTaskInfo.eventId);
+            isRecord = true;
+            break;
+        case TS_TASK_TYPE_DAVID_EVENT_WAIT:
+            event = taskInfo.u.davidEventWaitTaskInfo.event;
+            key = (taskInfo.u.davidEventWaitTaskInfo.isCountNotify != 0U) ?
+                      GetDavidCountEventKey(
+                          taskInfo.u.davidEventWaitTaskInfo.eventId, taskInfo.u.davidEventWaitTaskInfo.countValue) :
+                      GetEventIdKey(taskInfo.u.davidEventWaitTaskInfo.eventId);
+            break;
+        case TS_TASK_TYPE_DAVID_EVENT_RESET:
+            ClearRecordWaitExtInfo(runtimeTrack);
+            return false;
+        case TS_TASK_TYPE_MEM_WRITE_VALUE:
+            event = taskInfo.u.memWriteValueTask.event;
+            if (event == nullptr) {
+                return false;
+            }
+            if (taskInfo.u.memWriteValueTask.value == 0U) {
+                ClearRecordWaitExtInfo(runtimeTrack);
+                runtimeTrack.taskType = TS_TASK_TYPE_EVENT_RESET;
+                return false;
+            }
+            if (taskInfo.u.memWriteValueTask.value != 1U) {
+                return false;
+            }
+            runtimeTrack.taskType = TS_TASK_TYPE_EVENT_RECORD;
+            key = taskInfo.u.memWriteValueTask.devAddr;
+            isRecord = true;
+            break;
+        case TS_TASK_TYPE_MEM_WAIT_VALUE:
+            event = taskInfo.u.memWaitValueTask.event;
+            if (event == nullptr) {
+                return false;
+            }
+            runtimeTrack.taskType = TS_TASK_TYPE_STREAM_WAIT_EVENT;
+            key = taskInfo.u.memWaitValueTask.devAddr;
+            break;
+        case TS_TASK_TYPE_CAPTURE_RECORD:
+        case TS_TASK_TYPE_IPC_RECORD:
+            event = taskInfo.u.memWriteValueTask.event;
+            key = taskInfo.u.memWriteValueTask.devAddr;
+            isRecord = true;
+            break;
+        case TS_TASK_TYPE_CAPTURE_WAIT:
+        case TS_TASK_TYPE_IPC_WAIT:
+            event = taskInfo.u.memWaitValueTask.event;
+            key = taskInfo.u.memWaitValueTask.devAddr;
+            break;
+        case TS_TASK_TYPE_CAPTURE_RECORD_EXTERNAL:
+            event = taskInfo.u.memWriteValueTask.event;
+            key = RtPtrToValue(event);
+            isRecord = true;
+            break;
+        case TS_TASK_TYPE_CAPTURE_WAIT_EXTERNAL:
+            event = taskInfo.u.memWaitValueTask.event;
+            key = RtPtrToValue(event);
+            break;
+        default:
+            return false;
+    }
+
+    ClearRecordWaitExtInfo(runtimeTrack);
+    if (event == nullptr) {
+        RT_LOG(
+            RT_LOG_WARNING, "Event is null when filling runtime track, task_type=%u, task_id=%u.",
+            static_cast<uint32_t>(taskInfo.type), taskInfo.id);
+        return false;
+    }
+    runtimeTrack.extInfo.eventInfo.key = key;
+    runtimeTrack.extInfo.eventInfo.eventFlag = static_cast<uint32_t>(event->GetEventFlag());
+    runtimeTrack.extInfo.eventInfo.flag = isRecord ? event->GetRecordFlag() : event->GetWaitFlag();
+    return true;
+}
+
+static bool FillNotifyTrackInfo(const TaskInfo& taskInfo, struct MsprofRuntimeTrack& runtimeTrack)
+{
+    uint64_t notifyKey = 0U;
+    switch (taskInfo.type) {
+        case TS_TASK_TYPE_STREAM_WAIT_EVENT:
+            if (taskInfo.u.eventWaitTaskInfo.eventWaitFlag != 1U) {
+                return false;
+            }
+            runtimeTrack.taskType = TS_TASK_TYPE_NOTIFY_WAIT;
+            notifyKey = GetEventIdKey(taskInfo.u.eventWaitTaskInfo.eventId);
+            break;
+        case TS_TASK_TYPE_NOTIFY_RECORD: {
+            const NotifyRecordTaskInfo& recordInfo = taskInfo.u.notifyrecordTask;
+            if (recordInfo.isCountNotify) {
+                runtimeTrack.taskType = static_cast<uint64_t>(ProfTaskType::PROF_TASK_TYPE_COUNT_NOTIFY_RECORD);
+            } else if (recordInfo.uInfo.singleBitNtfyInfo.isNotifyReset) {
+                ClearRecordWaitExtInfo(runtimeTrack);
+                runtimeTrack.taskType = static_cast<uint64_t>(ProfTaskType::PROF_TASK_TYPE_NOTIFY_RESET);
+                return false;
+            }
+            notifyKey = static_cast<uint64_t>(recordInfo.notifyId);
+            break;
+        }
+        case TS_TASK_TYPE_NOTIFY_WAIT: {
+            const NotifyWaitTaskInfo& waitInfo = taskInfo.u.notifywaitTask;
+            if (waitInfo.isEndGraphNotify && (waitInfo.captureModel != nullptr)) {
+                return false;
+            }
+            if (waitInfo.isCountNotify) {
+                runtimeTrack.taskType = static_cast<uint64_t>(ProfTaskType::PROF_TASK_TYPE_COUNT_NOTIFY_WAIT);
+            }
+            notifyKey = static_cast<uint64_t>(waitInfo.notifyId);
+            break;
+        }
+        default:
+            return false;
+    }
+
+    ClearRecordWaitExtInfo(runtimeTrack);
+    runtimeTrack.extInfo.notifyInfo.key = notifyKey;
+    return true;
+}
+
+bool FillRecordWaitTrackInfo(const TaskInfo& taskInfo, struct MsprofRuntimeTrack& runtimeTrack)
+{
+    if (FillEventTrackInfo(taskInfo, runtimeTrack)) {
+        return true;
+    }
+    return FillNotifyTrackInfo(taskInfo, runtimeTrack);
+}
+
 void Profiler::ModifyTrackData(TaskInfo* const taskInfo, const uint32_t devId, RuntimeProfTrackData* trackData) const
 {
     const Stream* const stm = taskInfo->stream;
@@ -267,6 +429,7 @@ void Profiler::ModifyTrackData(TaskInfo* const taskInfo, const uint32_t devId, R
     }
 
     trackData->compactInfo.data.runtimeTrack.taskType = taskType;
+    (void)FillRecordWaitTrackInfo(*taskInfo, trackData->compactInfo.data.runtimeTrack);
     FillKernelLaunchExtInfo(trackData->compactInfo.data.runtimeTrack, taskInfo);
     trackData->compactInfo.data.runtimeTrack.kernelName = GetKernelNameId(*taskInfo);
 
@@ -504,16 +667,17 @@ void Profiler::ReportTrackData(const Stream* const s, const uint16_t taskId) con
     trackData.compactInfo.data.runtimeTrack.streamId = static_cast<uint32_t>(s->GetExposedStreamId());
     trackData.compactInfo.data.runtimeTrack.taskId = GetProfTaskId(task);
     trackData.compactInfo.data.runtimeTrack.taskType = task->type;
+    const bool hasRecordWaitExtInfo = FillRecordWaitTrackInfo(*task, trackData.compactInfo.data.runtimeTrack);
     FillKernelLaunchExtInfo(trackData.compactInfo.data.runtimeTrack, task);
     trackData.compactInfo.data.runtimeTrack.kernelName = GetKernelNameId(*task);
     (void)ReportCompactInfo(&trackData);
-    ReportTrackDataV2(s, task, devId, trackData);
+    ReportTrackDataV2(s, task, devId, trackData, hasRecordWaitExtInfo);
     return;
 }
 
 void Profiler::ReportTrackDataV2(
-    const Stream* const stm, const TaskInfo* const task, const uint32_t devId,
-    const RuntimeProfTrackData& v1TrackData) const
+    const Stream* const stm, const TaskInfo* const task, const uint32_t devId, const RuntimeProfTrackData& v1TrackData,
+    const bool hasRecordWaitExtInfo) const
 {
     const Model* model = stm->Model_();
     if ((model == nullptr) || (model->GetModelType() != RT_MODEL_CAPTURE_MODEL)) {
@@ -534,12 +698,14 @@ void Profiler::ReportTrackDataV2(
     track.taskId = v1TrackData.compactInfo.data.runtimeTrack.taskId;
     track.taskType = static_cast<uint32_t>(v1TrackData.compactInfo.data.runtimeTrack.taskType);
     track.kernelName = v1TrackData.compactInfo.data.runtimeTrack.kernelName;
-    const errno_t rc = memcpy_s(
-        &track.extInfo, sizeof(track.extInfo), &v1TrackData.compactInfo.data.runtimeTrack.extInfo,
-        sizeof(v1TrackData.compactInfo.data.runtimeTrack.extInfo));
-    if (rc != EOK) {
-        RT_LOG(RT_LOG_ERROR, "memcpy_s failed for extInfo copy, rc=%d.", static_cast<int32_t>(rc));
-        return;
+    if (!hasRecordWaitExtInfo) {
+        const errno_t rc = memcpy_s(
+            &track.extInfo, sizeof(track.extInfo), &v1TrackData.compactInfo.data.runtimeTrack.extInfo,
+            sizeof(v1TrackData.compactInfo.data.runtimeTrack.extInfo));
+        if (rc != EOK) {
+            RT_LOG(RT_LOG_ERROR, "memcpy_s failed for extInfo copy, rc=%d.", static_cast<int32_t>(rc));
+            return;
+        }
     }
 
     (void)ReportCompactInfo(&trackData);

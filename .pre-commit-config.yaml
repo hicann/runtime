@@ -7,7 +7,8 @@ repos:
         files: \.(c|h|cpp|hpp|cc|hh|cxx|hxx)$
         exclude: |
           (?x)^(
-            include/external/acl/(?:
+            pkg_inc/profiling/aprof_pub\.h$
+            |include/external/acl/(?:
               acl_prof
               | acl_rt
               | acl_rt_allocator

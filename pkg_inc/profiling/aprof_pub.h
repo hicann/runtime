@@ -371,6 +371,17 @@ struct MsprofModelInfo {
     uint8_t rsv[12];
 };
 
+struct MSprofEventInfo {
+    uint64_t key;
+    uint32_t eventFlag;
+    uint32_t flag;
+};
+
+struct MSprofNotifyInfo {
+    uint64_t key;
+    uint8_t rsv[8];
+};
+
 struct MsprofRuntimeTrack { // for MsprofReportCompactInfo buffer data
     uint16_t deviceId;
     uint16_t streamId;
@@ -378,9 +389,12 @@ struct MsprofRuntimeTrack { // for MsprofReportCompactInfo buffer data
     uint64_t taskType;   // task message hash id
     uint64_t kernelName; // kernelname hash id
     union {
+        uint8_t rsv[16];
         struct MsprofKernelInfo kernelInfo;
         struct MsprofSimtKernelInfo simtKernelInfo;
         struct MsprofModelInfo modelInfo;
+        struct MSprofEventInfo eventInfo;
+        struct MSprofNotifyInfo notifyInfo;
     } extInfo;
 };
 

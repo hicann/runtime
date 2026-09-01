@@ -552,11 +552,10 @@ rtError_t DavidSendTask(TaskInfo* taskInfo, Stream* const stm)
         }
     }
 
+    ToConstructDavidSqe(taskInfo, sqeAddr, sqeInfo);
     if ((profilerPtr != nullptr) && (!dev->IsDeviceRelease()) && (!stm->IsCtrlSQStream())) {
         profilerPtr->ReportTaskTrack(taskInfo, devId);
     }
-
-    ToConstructDavidSqe(taskInfo, sqeAddr, sqeInfo);
     // update the host-side head and tail
     rtError_t error = AddTaskToPublicQueue(taskInfo, taskInfo->sqeNum);
     if (error != RT_ERROR_NONE) {

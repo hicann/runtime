@@ -11,6 +11,10 @@
 #include "mockcpp/mockcpp.hpp"
 #include "profiling_agent.hpp"
 #include "osal.hpp"
+#include "task_base.hpp"
+
+#include <string>
+#include <unordered_map>
 
 using namespace testing;
 using namespace cce::runtime;
@@ -25,6 +29,7 @@ __THREAD_LOCAL__ bool g_lastSuccess = false;
 constexpr uint32_t COMPACT_INFO_CAPTURE_NUM = 4U;
 __THREAD_LOCAL__ uint32_t g_compactCount = 0U;
 __THREAD_LOCAL__ MsprofCompactInfo g_compactInfos[COMPACT_INFO_CAPTURE_NUM] = {};
+std::unordered_map<uint32_t, std::string> g_registeredTypeNames;
 
 class ProfilingAgentTest : public testing::Test {
 protected:
@@ -48,6 +53,7 @@ protected:
         g_lastDataPtr = nullptr;
         g_lastSuccess = false;
         g_compactCount = 0U;
+        g_registeredTypeNames.clear();
         for (uint32_t i = 0U; i < COMPACT_INFO_CAPTURE_NUM; ++i) {
             g_compactInfos[i] = {};
         }
@@ -95,6 +101,51 @@ int32_t MsprofReportCompactInfoCaptureStub(uint32_t agingFlag, const VOID_PTR da
     }
     ++g_compactCount;
     return MSPROF_ERROR_NONE;
+}
+
+int32_t MsprofRegTypeInfoCaptureStub(uint16_t level, uint32_t typeId, const char* typeName)
+{
+    if ((level == MSPROF_REPORT_RUNTIME_LEVEL) && (typeName != nullptr)) {
+        g_registeredTypeNames[typeId] = typeName;
+    }
+    return MSPROF_ERROR_NONE;
+}
+
+TEST_F(ProfilingAgentTest, PROF_REGISTER_RECORD_WAIT_TYPE_NAMES)
+{
+    MOCKER(MsprofRegTypeInfo).stubs().will(invoke(MsprofRegTypeInfoCaptureStub));
+    ASSERT_EQ(ProfilingAgent::Instance().Init(), RT_ERROR_NONE);
+
+    const std::unordered_map<uint32_t, std::string> expectedNames = {
+        {TS_TASK_TYPE_EVENT_RECORD, "EVENT RECORD"},
+        {TS_TASK_TYPE_STREAM_WAIT_EVENT, "EVENT WAIT"},
+        {TS_TASK_TYPE_NOTIFY_WAIT, "NOTIFY WAIT"},
+        {TS_TASK_TYPE_NOTIFY_RECORD, "NOTIFY RECORD"},
+        {TS_TASK_TYPE_DAVID_EVENT_RECORD, "EVENT RECORD"},
+        {TS_TASK_TYPE_DAVID_EVENT_WAIT, "EVENT WAIT"},
+        {TS_TASK_TYPE_DAVID_EVENT_RESET, "EVENT_RESET"},
+        {TS_TASK_TYPE_CAPTURE_RECORD, "EVENT RECORD"},
+        {TS_TASK_TYPE_CAPTURE_WAIT, "EVENT WAIT"},
+        {TS_TASK_TYPE_IPC_RECORD, "IPC EVENT RECORD"},
+        {TS_TASK_TYPE_IPC_WAIT, "IPC EVENT WAIT"},
+        {TS_TASK_TYPE_CAPTURE_RECORD_EXTERNAL, "EVENT RECORD"},
+        {TS_TASK_TYPE_CAPTURE_WAIT_EXTERNAL, "EVENT WAIT"},
+        {static_cast<uint32_t>(ProfTaskType::PROF_TASK_TYPE_NOTIFY_RESET), "NOTIFY_RESET"},
+        {static_cast<uint32_t>(ProfTaskType::PROF_TASK_TYPE_COUNT_NOTIFY_RECORD), "COUNT_NOTIFY_RECORD"},
+        {static_cast<uint32_t>(ProfTaskType::PROF_TASK_TYPE_COUNT_NOTIFY_WAIT), "COUNT_NOTIFY_WAIT"},
+        {TS_TASK_TYPE_REMOTE_EVENT_WAIT, "REMOTE_EVENT_WAIT"},
+        {TS_TASK_TYPE_MEM_WRITE_VALUE, "MEM_WRITE_VALUE"},
+        {TS_TASK_TYPE_MEM_WAIT_VALUE, "MEM_WAIT_VALUE"},
+        {TS_TASK_TYPE_MODEL_SERIAL_SCHED_NOTIFY_WAIT, "MODEL_SERIAL_SCHED_NOTIFY_WAIT"},
+        {static_cast<uint32_t>(ProfTaskType::PROF_TASK_TYPE_MODEL_WAIT_COMPLETE), "MODEL_WAIT_COMPLETE"},
+    };
+    for (const auto& expected : expectedNames) {
+        const auto actual = g_registeredTypeNames.find(expected.first);
+        ASSERT_NE(actual, g_registeredTypeNames.end()) << "taskType=" << expected.first;
+        EXPECT_EQ(actual->second, expected.second) << "taskType=" << expected.first;
+    }
+
+    EXPECT_EQ(ProfilingAgent::Instance().UnInit(), RT_ERROR_NONE);
 }
 
 TEST_F(ProfilingAgentTest, PROF_NULL)
