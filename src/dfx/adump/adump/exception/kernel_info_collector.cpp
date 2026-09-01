@@ -282,8 +282,8 @@ int32_t KernelInfoCollector::DumpHostKernelBin(const std::string& dumpPath, std:
             hostKernelBinPath.c_str());
         return ADUMP_FAILED;
     }
-    // File::Write 内部循环处理短写、返回的是最后一次 mmWrite 的长度而非累计值，不能用它判完整性；
-    // 改为写后 stat 校验最终文件大小,截断/短写(如磁盘满)时文件大小不足即判失败,避免残留截断文件被幂等误判为完整。
+    // File::Write 已返回累计写入长度(短写/截断时返回负错误码)，这里再做一次写后 stat 校验作为兜底：
+    // 覆盖本进程之外的干扰(如并发截断),截断时文件大小不足即判失败,避免残留截断文件被幂等误判为完整。
     if (stat(hostKernelBinPath.c_str(), &hostBinStat) != 0 ||
         static_cast<uint64_t>(hostBinStat.st_size) != static_cast<uint64_t>(kernelBinSize_)) {
         // 同上:残留的截断文件不主动删除,靠下次大小校验重写;此处打印告警提醒盘上存在不完整的 _host.o。

@@ -19,6 +19,8 @@ namespace {
 constexpr int32_t INVALID_FILE_FD = -1;
 constexpr mmMode_t READ_WRITE_MODE = M_IRUSR | M_IWUSR;
 constexpr int64_t MAX_BUFFER_LENGTH = 512;
+// 单次处理1GB
+constexpr int64_t MAX_IO_CHUNK_SIZE = 1LL << 30;
 static const std::string MAPPING_FILE_NAME = "mapping.csv";
 } // namespace
 
@@ -111,37 +113,60 @@ int32_t File::Close()
 
 int64_t File::Write(const char* const buffer, int64_t length) const
 {
-    mmSsize_t ret = 0;
-    UINT32 reserve = static_cast<UINT32>(length);
-    do {
-        ret = mmWrite(fd_, const_cast<char*>(buffer) + (static_cast<UINT32>(length) - reserve), reserve);
+    if (length < 0) {
+        IDE_LOGE("Write data failed, invalid length: %ld", length);
+        return static_cast<int64_t>(EN_INVALID_PARAM);
+    }
+    int64_t written = 0;
+    while (written < length) {
+        const int64_t remain = length - written;
+        const UINT32 chunk = static_cast<UINT32>((remain > MAX_IO_CHUNK_SIZE) ? MAX_IO_CHUNK_SIZE : remain);
+        const mmSsize_t ret = mmWrite(fd_, const_cast<char*>(buffer) + written, chunk);
         if ((ret == EN_ERROR) && (mmGetErrorCode() == EINTR)) {
             continue;
         }
-        if (ret < 0 || static_cast<UINT32>(ret) > reserve) {
-            IDE_LOGE("Write data failed, buff: %p, length: %ld, ret: %zd", buffer, length, ret);
-            break;
+        // ret == 0 表示无法继续推进(继续循环会死循环)，ret > chunk 表示底层返回值异常，均按失败处理；
+        // 统一返回负错误码，避免调用方的 `ret >= 0` 判断把未写完当成成功。
+        // 打印 errno 便于区分磁盘满等根因(mmWrite 返回 0 时不带错误码)。
+        if ((ret == 0) || (static_cast<int64_t>(ret) > static_cast<int64_t>(chunk))) {
+            IDE_LOGE(
+                "Write data failed, buff: %p, length: %ld, written: %ld, ret: %zd, errno: %d", buffer, length, written,
+                ret, mmGetErrorCode());
+            return static_cast<int64_t>(EN_ERROR);
         }
-        reserve -= ret;
-        if (reserve == 0) {
-            break;
+        if (ret < 0) {
+            IDE_LOGE("Write data failed, buff: %p, length: %ld, written: %ld, ret: %zd", buffer, length, written, ret);
+            return static_cast<int64_t>(ret);
         }
-    } while (true);
-
-    return static_cast<int64_t>(ret);
+        written += static_cast<int64_t>(ret);
+    }
+    return written;
 }
 
 int64_t File::Read(char* buffer, int64_t length) const
 {
-    mmSsize_t ret;
-    do {
-        ret = mmRead(fd_, buffer, static_cast<UINT32>(length));
-    } while (ret == EN_ERROR && mmGetErrorCode() == EINTR);
-
-    if (ret == EN_ERROR) {
-        IDE_LOGE("Read data failed, buff: %p, length: %ld bytes, ret: %zd", buffer, length, ret);
+    if (length < 0) {
+        IDE_LOGE("Read data failed, invalid length: %ld", length);
+        return static_cast<int64_t>(EN_INVALID_PARAM);
     }
-    return static_cast<int64_t>(ret);
+    int64_t read = 0;
+    while (read < length) {
+        const int64_t remain = length - read;
+        const UINT32 chunk = static_cast<UINT32>((remain > MAX_IO_CHUNK_SIZE) ? MAX_IO_CHUNK_SIZE : remain);
+        const mmSsize_t ret = mmRead(fd_, buffer + read, chunk);
+        if ((ret == EN_ERROR) && (mmGetErrorCode() == EINTR)) {
+            continue;
+        }
+        if (ret < 0) {
+            IDE_LOGE("Read data failed, buff: %p, length: %ld bytes, read: %ld, ret: %zd", buffer, length, read, ret);
+            return static_cast<int64_t>(ret);
+        }
+        if (ret == 0) {
+            break;
+        }
+        read += static_cast<int64_t>(ret);
+    }
+    return read;
 }
 
 int32_t File::Copy(const std::string& srcPath, const std::string& dstPath)
@@ -204,8 +229,11 @@ int32_t File::AddMapping(const std::string& filePath, const std::string& fileNam
     do {
         mmSsize_t writeLen =
             mmWrite(fd_, const_cast<AdxStringBuffer>(mapping.c_str()) + (mappingLen - residLen), residLen);
-        if (writeLen < 0) {
-            IDE_LOGE("Write failed, info: %s, write length: %ld bytes", strerror(errno), writeLen);
+        // writeLen 为 0 时 residLen -= 0 恒不变，循环无法推进会死循环，故并入失败分支
+        if (writeLen <= 0) {
+            IDE_LOGE(
+                "Write failed, info: %s, write length: %zd bytes, errno: %d", strerror(errno), writeLen,
+                mmGetErrorCode());
             (void)Close();
             return ADUMP_FAILED;
         }
