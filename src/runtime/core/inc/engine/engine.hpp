@@ -254,7 +254,7 @@ protected:
         Stream* const stm, const uint16_t lastRecycleTaskId, const uint16_t endTaskId, bool isTaskDelayRecycle);
     void ReportSocketCloseProc();
     void ReportSocketCloseProcV2();
-    void ReportOomQueryProc() const;
+    void ReportOomQueryProc();
 
     rtError_t SendFlipTask(uint16_t preTaskId, Stream* stm);
 
@@ -301,6 +301,7 @@ protected:
     std::unique_ptr<Thread> printfThread_;
     std::atomic<bool> printThreadRunFlag_{false};
     std::mutex printMtx_;
+    bool latestOomFlag_ = false;
 #ifndef CFG_DEV_PLATFORM_PC
     error_message::Context errorContext_ = {0UL, "", "", ""};
 #endif

@@ -770,6 +770,44 @@ TEST_F(EngineTest, ReportOomQueryProc)
     EXPECT_EQ(engine->GetDevRunningState(), DEV_RUNNING_NORMAL);
 }
 
+TEST_F(EngineTest, AicpuOomRecentState)
+{
+    for (uint32_t i = 0U; i < AICPU_OOM_RECENT_DEPTH; ++i) {
+        device_->UpdateRecentOom(false);
+    }
+    EXPECT_FALSE(device_->HasRecentOom());
+
+    device_->UpdateRecentOom(true);
+    EXPECT_TRUE(device_->HasRecentOom());
+
+    for (uint32_t i = 0U; i < AICPU_OOM_RECENT_DEPTH; ++i) {
+        device_->UpdateRecentOom(false);
+    }
+    EXPECT_FALSE(device_->HasRecentOom());
+}
+
+TEST_F(EngineTest, ReportOomQueryProc_UpdateRecentState)
+{
+    for (uint32_t i = 0U; i < AICPU_OOM_RECENT_DEPTH; ++i) {
+        device_->UpdateRecentOom(false);
+    }
+    MOCKER_CPP(&NpuDriver::GetDeviceAicpuStat)
+        .stubs()
+        .will(returnValue(RT_ERROR_DEVICE_OOM))
+        .then(returnValue(RT_ERROR_NONE))
+        .then(returnValue(RT_ERROR_DRV_NOT_SUPPORT));
+    MOCKER_CPP(&TaskFailCallBackManager::Notify).stubs();
+    std::unique_ptr<StarsEngine> engine = std::make_unique<StarsEngine>(device_);
+    engine->ReportOomQueryProc();
+    EXPECT_TRUE(device_->HasRecentOom());
+
+    engine->ReportOomQueryProc();
+    EXPECT_TRUE(device_->HasRecentOom());
+
+    engine->ReportOomQueryProc();
+    EXPECT_TRUE(device_->HasRecentOom());
+}
+
 TEST_F(EngineTest, DvppWaitGroup)
 {
     DvppGrp* grp = new DvppGrp(device_, 0);

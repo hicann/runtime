@@ -64,6 +64,9 @@ void ErrorMessageUtils::FuncErrorReason(const RtInnerErrcodeType rtErrCode, cons
         case RT_ERROR_STREAM_SYNC_TIMEOUT:
             RT_LOG_OUTER_MSG(RT_STREAM_SYNC_TIMEOUT_INNER_ERROR, "%s execution failed.", funcName);
             break;
+        case RT_ERROR_TSFW_AICPU_TIMEOUT:
+            // The synchronization implementation has already reported E30008 or EE1024.
+            break;
         default:
             RT_LOG_CALL_MSG(
                 ERR_MODULE_GE, "%s execution failed, reason=%s", funcName, RT_GET_ERRREASON(rtErrCode).c_str());

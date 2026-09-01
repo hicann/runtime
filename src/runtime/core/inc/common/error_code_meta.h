@@ -109,6 +109,11 @@
       DLOG_ERROR)                                                                                                  \
     /* EE1023 - Resource_Error */                                                                                  \
     X(EE1023, "EE1023", ("func", "reason"), "%s failed. Reason: %s. ErrorCode=EE1023.\n", DLOG_ERROR)              \
+    /* EE1024 - Execution_Error_Stream_Synchronize_Timeout */                                                      \
+    X(EE1024, "EE1024", ("func_name", "devId", "oom_window"),                                                      \
+      "%s failed. Reason: AI CPU operator execution timed out on device %s. "                                      \
+      "In addition, an OOM event occurred on the device within %s seconds.\n",                                     \
+      DLOG_ERROR)                                                                                                  \
     /* EE2002 - Config_Error_Invalid_Environment_Variable */                                                       \
     X(EE2002, "EE2002", ("value", "env", "expect"),                                                                \
       "Value %s for environment variable %s is invalid. "                                                          \

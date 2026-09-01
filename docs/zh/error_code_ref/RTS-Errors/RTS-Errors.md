@@ -44,6 +44,8 @@
 
 - [EE1023 Resource\_Error](EE1023-Resource_Error.md) 
 
+- [EE1024 Execution\_Error\_Stream\_Synchronize\_Timeout](EE1024-Execution_Error_Stream_Synchronize_Timeout.md)
+
 - [EE2002 Config\_Error\_Invalid\_Environment\_Variable](EE2002-Config_Error_Invalid_Environment_Variable.md)  
 
 - [EE4001 Model\_Binding\_Errors](EE4001-Model_Binding_Errors.md)  

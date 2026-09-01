@@ -119,6 +119,17 @@ public:
 
     rtError_t GetDeviceStatus() const override { return deviceStatus_.Value(); }
 
+    void UpdateRecentOom(const bool isOom) override
+    {
+        oomRecent_[oomRecentIndex_] = isOom;
+        oomRecentIndex_ = (oomRecentIndex_ + 1U) % AICPU_OOM_RECENT_DEPTH;
+    }
+
+    bool HasRecentOom() const override
+    {
+        return std::find(oomRecent_.begin(), oomRecent_.end(), true) != oomRecent_.end();
+    }
+
     void SetDeviceFaultType(const DeviceFaultType type) override { deviceFaultType_.Set(type); }
 
     bool SetDeviceFaultTypeIfNoError(const DeviceFaultType type) override
@@ -602,6 +613,8 @@ private:
     Driver* driver_;
     Engine* engine_;
     Atomic<rtError_t> deviceStatus_;
+    std::array<bool, AICPU_OOM_RECENT_DEPTH> oomRecent_ = {};
+    uint32_t oomRecentIndex_ = 0U;
     SpmPool* spmPool_;
     EventPool* eventPool_; // stubdevice ?
     CtrlResEntry* ctrlRes_{nullptr};

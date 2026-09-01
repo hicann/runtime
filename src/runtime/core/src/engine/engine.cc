@@ -832,20 +832,19 @@ void Engine::ReportSocketCloseProc()
     }
 }
 
-void Engine::ReportOomQueryProc() const
+void Engine::ReportOomQueryProc()
 {
-    static bool currOomFlag = false;
-    static bool latestOomFlag = false;
     const uint32_t devId = device_->Id_();
     const rtError_t error = NpuDriver::GetDeviceAicpuStat(devId);
-    currOomFlag = (error == RT_ERROR_DEVICE_OOM) ? true : false;
-    if (currOomFlag != latestOomFlag) {
+    const bool currOomFlag = (error == RT_ERROR_DEVICE_OOM);
+    device_->UpdateRecentOom(currOomFlag);
+    if (currOomFlag != latestOomFlag_) {
         if (currOomFlag) {
             ReportStatusOomProc(error, devId);
         } else {
             RT_LOG(RT_LOG_INFO, "Device oom recovery, device_id=%u.", devId);
         }
-        latestOomFlag = currOomFlag;
+        latestOomFlag_ = currOomFlag;
     }
 }
 

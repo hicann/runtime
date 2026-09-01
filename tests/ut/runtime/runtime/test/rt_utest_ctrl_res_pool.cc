@@ -96,6 +96,7 @@ TEST_F(CtrlTaskPoolEntryTest, ErrorMessageUtilsTest)
     EXPECT_NE(&errMsgValue, nullptr);
     ErrorMessageUtils::RuntimeErrorMessage(0, errMsgKey, errMsgValue);
     ErrorMessageUtils::FuncErrorReason(rtErrCode, funcName);
+    ErrorMessageUtils::FuncErrorReason(RT_ERROR_TSFW_AICPU_TIMEOUT, funcName);
 }
 
 TEST_F(CtrlTaskPoolEntryTest, AllocTaskIdSuccess)

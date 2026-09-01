@@ -1654,6 +1654,17 @@ static rtError_t CheckStreamSynchronizeParam(Stream*& curStm, Context* const cur
     return RT_ERROR_NONE;
 }
 
+static void ReportAicpuTimeoutError(
+    Device* const device, const char_t* const funcName, const RtInnerErrcodeType errorCode)
+{
+    if (device->HasRecentOom()) {
+        RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1024, funcName, device->Id_(), AICPU_OOM_RECENT_DEPTH);
+    } else {
+        RT_LOG_OUTER_MSG(
+            RT_AICPU_TIMEOUT_ERROR, "%s execution failed, reason=%s", funcName, RT_GET_ERRREASON(errorCode).c_str());
+    }
+}
+
 rtError_t ApiImpl::StreamSynchronize(Stream* const stm, const int32_t timeout)
 {
     Context* const curCtx = CurrentContext();
@@ -1696,6 +1707,9 @@ rtError_t ApiImpl::StreamSynchronize(Stream* const stm, const int32_t timeout)
         if ((curStm->Device_()->GetIsRingbufferGetErr()) && (curCtx->GetFailureError() == RT_ERROR_NONE) &&
             (curCtx->GetCtxMode() != CONTINUE_ON_FAILURE)) {
             errCode = curCtx->SyncAllStreamToGetError();
+        }
+        if (errCode == RT_ERROR_TSFW_AICPU_TIMEOUT) {
+            ReportAicpuTimeoutError(curStm->Device_(), "Stream synchronize", errCode);
         }
     }
 
@@ -3245,6 +3259,9 @@ rtError_t ApiImpl::DeviceSynchronize(const int32_t timeout)
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     rtError_t error = curCtx->Synchronize(timeout);
+    if (error == RT_ERROR_TSFW_AICPU_TIMEOUT) {
+        ReportAicpuTimeoutError(curCtx->Device_(), "Device synchronize", error);
+    }
 
     RT_LOG(RT_LOG_INFO, "Trigger implicit mempool trim (exclude graph pool).");
     rtError_t trimRet = Runtime::Instance()->ApiSoma_()->MemPoolTrimImplicit(false);

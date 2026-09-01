@@ -88,6 +88,9 @@ TEST_F(RtErrorCodeTest, PrintErrMsgToLog)
         "set the saturation mode", "only the Inf/NaN mode can be set and the saturation mode"};
     PrintErrMsgToLog(ErrorCode::WE0001, "file", 1000, "func", values101);
 
+    std::vector<std::string> values1024 = {"Stream synchronize", "0", "10"};
+    PrintErrMsgToLog(ErrorCode::EE1024, "file", 1000, "func", values1024);
+
     std::vector<std::string> values4 = {"rtMemCpy", "d2d", "The current device does not support d2d memory copy"};
     PrintErrMsgToLog(ErrorCode::EE1006, "file", 1000, "func", values4);
 
@@ -191,6 +194,7 @@ TEST_F(RtErrorCodeTest, RePortErrCode)
     RT_LOG_OUTER_MSG_IMPL(
         ErrorCode::EE1022, "rtUbDbSend", "nullptr and nullptr", "pbase and psize",
         "Parameters pbase and psize cannot both be nullptr");
+    RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1024, "Stream synchronize", 0, 10);
     RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE2002, "1, 2, 2", "SetVisible", "not repeat");
     RT_LOG_OUTER_MSG_IMPL(
         ErrorCode::WE0001, "set the saturation mode", "only the Inf/NaN mode can be set and the saturation mode");
@@ -244,6 +248,8 @@ TEST_F(RtErrorCodeTest, CheckErrCodeParams2)
     EXPECT_EQ(names, (std::vector<std::string>{"resource_type", "api"}));
     names = GetParamNames(ErrorCode::EE1022);
     EXPECT_EQ(names, (std::vector<std::string>{"func", "values", "params", "reason"}));
+    names = GetParamNames(ErrorCode::EE1024);
+    EXPECT_EQ(names, (std::vector<std::string>{"func_name", "devId", "oom_window"}));
     names = GetParamNames(ErrorCode::EE2002);
     EXPECT_EQ(names, (std::vector<std::string>{"value", "env", "expect"}));
     names = GetParamNames(ErrorCode::EE_NO_ERROR);
@@ -266,8 +272,8 @@ TEST_F(RtErrorCodeTest, ErrorCodeTableParamCountMatchesMessageFormat)
         {ErrorCode::EE1010, 3}, {ErrorCode::EE1011, 4}, {ErrorCode::EE1012, 4}, {ErrorCode::EE1013, 2},
         {ErrorCode::EE1014, 1}, {ErrorCode::EE1015, 2}, {ErrorCode::EE1016, 2}, {ErrorCode::EE1017, 3},
         {ErrorCode::EE1018, 2}, {ErrorCode::EE1019, 2}, {ErrorCode::EE1020, 5}, {ErrorCode::EE1021, 2},
-        {ErrorCode::EE1022, 4}, {ErrorCode::EE1023, 2}, {ErrorCode::EE2002, 3}, {ErrorCode::EE4002, 1},
-        {ErrorCode::EZ2001, 3}, {ErrorCode::WE0001, 2},
+        {ErrorCode::EE1022, 4}, {ErrorCode::EE1023, 2}, {ErrorCode::EE1024, 3}, {ErrorCode::EE2002, 3},
+        {ErrorCode::EE4002, 1}, {ErrorCode::EZ2001, 3}, {ErrorCode::WE0001, 2},
     };
     for (const auto& info : allCodes) {
         auto names = GetParamNames(info.code);

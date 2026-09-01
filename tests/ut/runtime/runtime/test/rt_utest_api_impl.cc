@@ -60,6 +60,10 @@
 #include "errcode_manage.hpp"
 #include "heterogenous.h"
 #include "common/rt_utest_context_reset_helper.hpp"
+
+void ClearLastDlogRecordLine();
+bool DlogRecordContains(const std::string& keyword);
+
 using namespace testing;
 using namespace cce::runtime;
 
@@ -435,6 +439,60 @@ TEST_F(ApiImplTest, LaunchHostFuncV2DecoratorForwarding)
     EXPECT_EQ(apiErrorDecorator.LaunchHostFuncV2(nullptr, HostCpuFuncForTest, &data), RT_ERROR_NONE);
     EXPECT_EQ(apiImpl.submittedData, &data);
     EXPECT_EQ(RtPtrToValue(apiImpl.submittedCallback), RtPtrToValue(HostCpuFuncForTest));
+}
+
+TEST_F(ApiImplTest, StreamSynchronizeAicpuTimeoutWithoutRecentOom)
+{
+    ApiImpl apiImpl;
+    Context* const context = Runtime::Instance()->CurrentContext();
+    ASSERT_NE(context, nullptr);
+    Stream stream(context->Device_(), 0);
+
+    MOCKER_CPP_VIRTUAL(&stream, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_TSFW_AICPU_TIMEOUT));
+    MOCKER_CPP_VIRTUAL(context->Device_(), &Device::HasRecentOom).stubs().will(returnValue(false));
+    ClearLastDlogRecordLine();
+
+    EXPECT_EQ(apiImpl.StreamSynchronize(&stream, -1), RT_ERROR_TSFW_AICPU_TIMEOUT);
+    EXPECT_TRUE(DlogRecordContains("Stream synchronize execution failed"));
+}
+
+TEST_F(ApiImplTest, StreamSynchronizeAicpuTimeoutWithRecentOom)
+{
+    ApiImpl apiImpl;
+    Context* const context = Runtime::Instance()->CurrentContext();
+    ASSERT_NE(context, nullptr);
+    Stream stream(context->Device_(), 0);
+
+    MOCKER_CPP_VIRTUAL(&stream, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_TSFW_AICPU_TIMEOUT));
+    MOCKER_CPP_VIRTUAL(context->Device_(), &Device::HasRecentOom).stubs().will(returnValue(true));
+
+    EXPECT_EQ(apiImpl.StreamSynchronize(&stream, -1), RT_ERROR_TSFW_AICPU_TIMEOUT);
+}
+
+TEST_F(ApiImplTest, DeviceSynchronizeAicpuTimeoutWithRecentOom)
+{
+    ApiImpl apiImpl;
+    Context* const context = Runtime::Instance()->CurrentContext();
+    ASSERT_NE(context, nullptr);
+
+    MOCKER_CPP(&Context::Synchronize).stubs().will(returnValue(RT_ERROR_TSFW_AICPU_TIMEOUT));
+    MOCKER_CPP_VIRTUAL(context->Device_(), &Device::HasRecentOom).stubs().will(returnValue(true));
+
+    EXPECT_EQ(apiImpl.DeviceSynchronize(100), RT_ERROR_TSFW_AICPU_TIMEOUT);
+}
+
+TEST_F(ApiImplTest, DeviceSynchronizeAicpuTimeoutWithoutRecentOom)
+{
+    ApiImpl apiImpl;
+    Context* const context = Runtime::Instance()->CurrentContext();
+    ASSERT_NE(context, nullptr);
+
+    MOCKER_CPP(&Context::Synchronize).stubs().will(returnValue(RT_ERROR_TSFW_AICPU_TIMEOUT));
+    MOCKER_CPP_VIRTUAL(context->Device_(), &Device::HasRecentOom).stubs().will(returnValue(false));
+    ClearLastDlogRecordLine();
+
+    EXPECT_EQ(apiImpl.DeviceSynchronize(100), RT_ERROR_TSFW_AICPU_TIMEOUT);
+    EXPECT_TRUE(DlogRecordContains("Device synchronize execution failed"));
 }
 
 TEST_F(ApiImplTest, LaunchHostFuncV2SubmitFailureKeepsRegistration)

@@ -42,6 +42,7 @@ class LogicSqManage;
 constexpr uint32_t DMA_CPY_NUM_DEVICE_MAX = 5 * 1024U;
 constexpr uint32_t RT_DEFAULT_STACK_SIZE_32K = 32U * 1024U;
 constexpr uint32_t RT_DEFAULT_STACK_SIZE_16K = 16U * 1024U;
+constexpr uint32_t AICPU_OOM_RECENT_DEPTH = 10U;
 
 extern bool g_isAddrFlatDevice;
 
@@ -211,6 +212,8 @@ public:
     virtual uint16_t GetTsdQos() const = 0;
     virtual void SetDeviceStatus(rtError_t status) = 0;
     virtual rtError_t GetDeviceStatus() const = 0;
+    virtual void UpdateRecentOom(bool isOom) = 0;
+    virtual bool HasRecentOom() const = 0;
     virtual uint64_t GetTTBR_() const = 0;
     virtual uint32_t GetSSID_() const = 0;
     virtual uint64_t GetTCR_() const = 0;
