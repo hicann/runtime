@@ -200,10 +200,6 @@ rtError_t StarsResumeRtsq(const rtCqReport_t* logicCq, const TaskInfo* const tas
     COND_RETURN_ERROR(
         (failStm->GetAbortStatus() == RT_ERROR_STREAM_ABORT), RT_ERROR_STREAM_ABORT,
         "stream is in stream abort status, device_id=%u, stream_id=%d", devId, failStm->Id_());
-    error = devDrv->SetSqHead(devId, tsId, static_cast<uint32_t>(logicCq->sqId), head);
-    COND_RETURN_ERROR(
-        (error != RT_ERROR_NONE), error, "Failed to set sq head, stream_id=%d, sq_id=%hu, device_id=%u, retCode=%#x.",
-        failStm->Id_(), logicCq->sqId, devId, static_cast<uint32_t>(error));
 
     if (failStm->GetFailureMode() == ABORT_ON_FAILURE) {
         RT_LOG(
@@ -214,6 +210,11 @@ rtError_t StarsResumeRtsq(const rtCqReport_t* logicCq, const TaskInfo* const tas
             taskInfo->type);
         return RT_ERROR_NONE;
     }
+
+    error = devDrv->SetSqHead(devId, tsId, static_cast<uint32_t>(logicCq->sqId), head);
+    COND_RETURN_ERROR(
+        (error != RT_ERROR_NONE), error, "Failed to set sq head, stream_id=%d, sq_id=%hu, device_id=%u, retCode=%#x.",
+        failStm->Id_(), logicCq->sqId, devId, static_cast<uint32_t>(error));
 
     error = devDrv->EnableSq(devId, tsId, static_cast<uint32_t>(logicCq->sqId));
     COND_PROC_RETURN_ERROR(
