@@ -16,18 +16,36 @@
 
 ## 编译运行
 
-1.下载样例代码至安装CANN软件的环境，切换到样例目录。
+环境安装详情以及运行详情请见 example 目录下的 [README](../../../README.md)。
+
+1. 下载样例代码至安装CANN软件的环境，切换到样例目录。
 ```bash
 cd ${git_clone_path}/example/5_performance/profiling/3_mstx_with_domain
 ```
 
-2.设置环境变量。
+2. 设置环境变量。
 ```bash
 # ${install_root} 替换为 CANN 安装根目录，默认安装在`/usr/local/Ascend`目录
 source ${install_root}/cann/set_env.sh
 ```
 
-3.执行以下命令运行样例。
+3. 检查 msTX 依赖。
+
+本样例依赖 CANN Toolkit 中的 MindStudio Tools Extension Library（msTX）组件。执行以下命令检查当前环境是否存在样例所需的 msTX 头文件：
+
+```bash
+ls -l "${ASCEND_HOME_PATH}/include/mstx/ms_tools_ext.h"
+```
+
+若命令正常显示该文件信息，表示当前环境已包含样例所需的 msTX 头文件；若命令提示文件不存在，请按以下方式处理：
+
+- 确认 `ASCEND_HOME_PATH` 指向 CANN Toolkit 的实际安装目录。
+- 若当前环境未安装 msTX，请选择与当前 CANN 软件版本配套的 msTX 版本，并参见《msTX 安装指南》中的[在线安装](https://gitcode.com/Ascend/mstx/blob/master/docs/zh/install_guide/mstx_install_guide.md#21-在线安装)或[离线安装](https://gitcode.com/Ascend/mstx/blob/master/docs/zh/install_guide/mstx_install_guide.md#22-离线安装)。
+- 若需要升级 msTX，请参见《msTX 安装指南》中的[升级说明](https://gitcode.com/Ascend/mstx/blob/master/docs/zh/install_guide/mstx_install_guide.md#5-升级)。
+
+安装或升级完成后，请重新执行 `source ${install_root}/cann/set_env.sh` 加载 CANN 环境变量，并再次执行上述检查，确认头文件可通过 `${ASCEND_HOME_PATH}/include/mstx/ms_tools_ext.h` 访问。
+
+4. 执行以下命令运行样例。
 ```bash
 bash run.sh
 ```

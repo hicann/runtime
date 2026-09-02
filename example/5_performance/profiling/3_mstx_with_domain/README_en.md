@@ -16,6 +16,8 @@ This sample supports the following products:
 
 ## Compile and Run
 
+For environment setup and general instructions for running samples, see the [README](../../../README_en.md) in the example directory.
+
 1. Download the sample code to the environment where CANN software is installed. Switch to the sample directory.
 ```bash
 cd ${git_clone_path}/example/5_performance/profiling/3_mstx_with_domain
@@ -27,7 +29,23 @@ cd ${git_clone_path}/example/5_performance/profiling/3_mstx_with_domain
 source ${install_root}/cann/set_env.sh
 ```
 
-3. Run the following command to execute the sample.
+3. Verify the msTX dependency.
+
+This sample depends on the MindStudio Tools Extension Library (msTX) component provided with CANN Toolkit. Run the following command to check whether the msTX header required by this sample is available:
+
+```bash
+ls -l "${ASCEND_HOME_PATH}/include/mstx/ms_tools_ext.h"
+```
+
+If the command displays the file information, the required msTX header is available. If the file does not exist:
+
+- Make sure that `ASCEND_HOME_PATH` points to the actual CANN Toolkit installation directory.
+- If msTX is not installed, install a version compatible with the installed CANN version. For download and installation options, see the [MindStudio download page](https://www.hiascend.com/en/developer/software/mindstudio/download).
+- To upgrade msTX, see [Upgrade](https://gitcode.com/Ascend/mstx/blob/master/docs/en/install_guide/mstx_install_guide.md#4-upgrade).
+
+After installing or upgrading msTX, run `source ${install_root}/cann/set_env.sh` again to reload the CANN environment variables. Then repeat the check and confirm that `${ASCEND_HOME_PATH}/include/mstx/ms_tools_ext.h` is accessible.
+
+4. Run the following command to execute the sample.
 ```bash
 bash run.sh
 ```
