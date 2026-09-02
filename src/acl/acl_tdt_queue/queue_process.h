@@ -146,7 +146,6 @@ protected:
     uint32_t qsContactId_ = 0U;
     int32_t qsGroupId_ = 0;
     static bool isInitQs_;
-    static bool isMbufInit_;
     // new mbuf version is enhanced, mbuf can not be operated after enqueue
     bool isMbufEnhanced_ = false;
 };

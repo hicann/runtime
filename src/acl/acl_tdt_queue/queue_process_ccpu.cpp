@@ -20,14 +20,16 @@ aclError QueueProcessorCcpu::acltdtCreateQueue(const acltdtQueueAttr* const attr
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(qid);
     ACL_REQUIRES_OK(acltdtCreateGroup());
     constexpr int32_t deviceId = 0;
-    static bool isQueueIint = false;
-    if (!isQueueIint) {
+    static const aclError queueInitRet = []() -> aclError {
         ACL_LOG_INFO("need to init queue once");
         const rtError_t ret = rtMemQueueInit(deviceId);
         if ((ret != ACL_RT_SUCCESS) && (ret != ACL_ERROR_RT_REPEATED_INIT)) {
             return ret;
         }
-        isQueueIint = true;
+        return ACL_RT_SUCCESS;
+    }();
+    if (queueInitRet != ACL_SUCCESS) {
+        return queueInitRet;
     }
     ACL_REQUIRES_OK(acltdtCreateQueueWithAttr(deviceId, attr, qid));
     ACL_LOG_INFO("Successfully executed create queue, qid is %u", *qid);
@@ -170,14 +172,16 @@ aclError QueueProcessorCcpu::QueryGroup(const int32_t pid, size_t& grpNum, std::
 
 aclError QueueProcessorCcpu::MbufInit() const
 {
-    static bool isMbufInit = false;
-    if (!isMbufInit) {
+    static const aclError mbufInitRet = []() -> aclError {
         rtMemBuffCfg_t cfg = {{}};
         const rtError_t ret = rtMbufInit(&cfg);
         if ((ret != ACL_RT_SUCCESS) && (ret != ACL_ERROR_RT_REPEATED_INIT)) {
             return ret;
         }
-        isMbufInit = true;
+        return ACL_RT_SUCCESS;
+    }();
+    if (mbufInitRet != ACL_SUCCESS) {
+        return mbufInitRet;
     }
     return ACL_SUCCESS;
 }

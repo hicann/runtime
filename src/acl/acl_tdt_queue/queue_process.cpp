@@ -18,7 +18,6 @@ constexpr uint32_t RT_MQ_DEPTH_DEFAULT = 8U;
 constexpr uint16_t MBUF_ENHANCED_QS = 2U;
 constexpr uint16_t MBUF_ENHANCED_ACL = 1U;
 bool QueueProcessor::isInitQs_ = false;
-bool QueueProcessor::isMbufInit_ = false;
 
 aclError QueueProcessor::acltdtEnqueue(const uint32_t qid, const acltdtBuf buf, const int32_t timeout)
 {
@@ -468,14 +467,16 @@ aclError QueueProcessor::QueryGroupId(const std::string& grpName)
 
 aclError QueueProcessor::acltdtAllocBufData(const size_t size, const uint32_t type, acltdtBuf* const buf)
 {
-    rtError_t ret;
-    if (!isMbufInit_) {
+    static const aclError mbufInitRet = []() -> aclError {
         rtMemBuffCfg_t cfg = {{}};
-        ret = rtMbufInit(&cfg);
+        const rtError_t ret = rtMbufInit(&cfg);
         if ((ret != ACL_RT_SUCCESS) && (ret != ACL_ERROR_RT_REPEATED_INIT)) {
             return ret;
         }
-        isMbufInit_ = true;
+        return ACL_RT_SUCCESS;
+    }();
+    if (mbufInitRet != ACL_SUCCESS) {
+        return mbufInitRet;
     }
     ACL_REQUIRES_RTS_OK(rtMbufAllocEx(buf, size, type, qsGroupId_));
     return ACL_SUCCESS;
