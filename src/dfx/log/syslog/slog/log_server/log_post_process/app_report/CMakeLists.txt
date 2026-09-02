@@ -50,8 +50,8 @@ target_compile_definitions(log_server PRIVATE
     $<$<STREQUAL:${PRODUCT},ascend950>:HDC_PROFILING_SUPPORT>
     $<$<STREQUAL:${PRODUCT},ascend950esl>:HDC_PROFILING_SUPPORT>
     $<$<STREQUAL:${PRODUCT},ascend350>:HDC_PROFILING_SUPPORT>
-    $<$<STREQUAL:${PRODUCT},ascend960>:HDC_PROFILING_SUPPORT>
-    $<$<STREQUAL:${PRODUCT},ascend960esl>:HDC_PROFILING_SUPPORT>
+    $<$<STREQUAL:${PRODUCT},ascend910_96>:HDC_PROFILING_SUPPORT>
+    $<$<STREQUAL:${PRODUCT},ascend910_96esl>:HDC_PROFILING_SUPPORT>
 )
 
 target_link_libraries(log_server PRIVATE

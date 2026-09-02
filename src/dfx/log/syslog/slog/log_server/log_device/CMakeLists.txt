@@ -145,8 +145,8 @@ if (PRODUCT)
 if ((${PRODUCT} STREQUAL "ascend950") OR 
         (${PRODUCT} STREQUAL "ascend950esl") OR 
         (${PRODUCT} STREQUAL "ascend350") OR 
-        (${PRODUCT} STREQUAL "ascend960") OR 
-        (${PRODUCT} STREQUAL "ascend960esl"))
+        (${PRODUCT} STREQUAL "ascend910_96") OR 
+        (${PRODUCT} STREQUAL "ascend910_96esl"))
     list(APPEND slogdSrcFiles 
         ${CMAKE_CURRENT_SOURCE_DIR}/../../../common/driver/log_drv.c
         ${CMAKE_CURRENT_SOURCE_DIR}/../../../common/driver/driver_api.c
@@ -206,9 +206,9 @@ target_compile_definitions(slogd PRIVATE
     $<$<STREQUAL:${PRODUCT},ascend950esl>:APP_LOG_REPORT EP_MODE IAM_MONITOR APP_LOG_PID_RECORD KERNEL_LOG DRV_EVENT_LOG OS_SLOG STATIC_BUFFER DRIVER_STATIC_BUFFER>
     # ascend950rc: Similar to 95 but without static buffer
     $<$<AND:$<STREQUAL:${PRODUCT},ascend950>,$<STREQUAL:${ENABLE_RC},true>>:APP_LOG_REPORT RC_MODE IAM_MONITOR APP_LOG_PID_RECORD KERNEL_LOG DRV_EVENT_LOG OS_SLOG>
-    # ascend960/96esl: Similar to 95 but without static buffer for 96esl
-    $<$<STREQUAL:${PRODUCT},ascend960>:APP_LOG_REPORT EP_MODE IAM_MONITOR APP_LOG_PID_RECORD KERNEL_LOG DRV_EVENT_LOG OS_SLOG STATIC_BUFFER DRIVER_STATIC_BUFFER>
-    $<$<STREQUAL:${PRODUCT},ascend960esl>:APP_LOG_REPORT EP_MODE IAM_MONITOR APP_LOG_PID_RECORD KERNEL_LOG DRV_EVENT_LOG OS_SLOG>
+    # ascend910_96/96esl: Similar to 95 but without static buffer for 96esl
+    $<$<STREQUAL:${PRODUCT},ascend910_96>:APP_LOG_REPORT EP_MODE IAM_MONITOR APP_LOG_PID_RECORD KERNEL_LOG DRV_EVENT_LOG OS_SLOG STATIC_BUFFER DRIVER_STATIC_BUFFER>
+    $<$<STREQUAL:${PRODUCT},ascend910_96esl>:APP_LOG_REPORT EP_MODE IAM_MONITOR APP_LOG_PID_RECORD KERNEL_LOG DRV_EVENT_LOG OS_SLOG>
     # ascend350: With kernel log and OS slog support
     $<$<AND:$<STREQUAL:${PRODUCT},ascend350>,$<NOT:$<BOOL:${ENABLE_RC}>>>:APP_LOG_REPORT EP_MODE IAM_MONITOR APP_LOG_PID_RECORD KERNEL_LOG DRV_EVENT_LOG OS_SLOG STATIC_BUFFER DRIVER_STATIC_BUFFER>
 )
@@ -269,8 +269,8 @@ target_link_options(slogd PRIVATE
     $<$<STREQUAL:${PRODUCT},ascend950>:-Wl,-rpath-link,${CMAKE_BINARY_DIR}/extend_rootfs/lib64>
     $<$<STREQUAL:${PRODUCT},ascend950esl>:-Wl,-rpath-link,${CMAKE_BINARY_DIR}/extend_rootfs/lib64>
     $<$<STREQUAL:${PRODUCT},ascend350>:-Wl,-rpath-link,${CMAKE_BINARY_DIR}/extend_rootfs/lib64>
-    $<$<STREQUAL:${PRODUCT},ascend960>:-Wl,-rpath-link,${CMAKE_BINARY_DIR}/extend_rootfs/lib64>
-    $<$<STREQUAL:${PRODUCT},ascend960esl>:-Wl,-rpath-link,${CMAKE_BINARY_DIR}/extend_rootfs/lib64>
+    $<$<STREQUAL:${PRODUCT},ascend910_96>:-Wl,-rpath-link,${CMAKE_BINARY_DIR}/extend_rootfs/lib64>
+    $<$<STREQUAL:${PRODUCT},ascend910_96esl>:-Wl,-rpath-link,${CMAKE_BINARY_DIR}/extend_rootfs/lib64>
     # Security hardening linker flags
     -Wl,-z,relro,-z,now,-z,noexecstack              # RELRO, immediate binding, no exec stack
     -Wl,--gc-sections                                # Remove unused sections
@@ -285,8 +285,8 @@ target_link_directories(slogd PRIVATE
     $<$<STREQUAL:${PRODUCT},ascend950>:${CMAKE_INSTALL_PREFIX}/lib>
     $<$<STREQUAL:${PRODUCT},ascend950esl>:${CMAKE_INSTALL_PREFIX}/lib>
     $<$<STREQUAL:${PRODUCT},ascend350>:${CMAKE_INSTALL_PREFIX}/lib>
-    $<$<STREQUAL:${PRODUCT},ascend960>:${CMAKE_INSTALL_PREFIX}/lib>
-    $<$<STREQUAL:${PRODUCT},ascend960esl>:${CMAKE_INSTALL_PREFIX}/lib>
+    $<$<STREQUAL:${PRODUCT},ascend910_96>:${CMAKE_INSTALL_PREFIX}/lib>
+    $<$<STREQUAL:${PRODUCT},ascend910_96esl>:${CMAKE_INSTALL_PREFIX}/lib>
 )
 ### INTERNAL END ###
 
@@ -409,23 +409,23 @@ target_link_libraries(slogd PRIVATE
     $<$<STREQUAL:${PRODUCT},ascend350>:urma_common>
     $<$<STREQUAL:${PRODUCT},ascend350>:utrace_server_share>
     
-    # ascend960 libraries (includes URMA)
-    $<$<STREQUAL:${PRODUCT},ascend960>:ascend_hal>
-    $<$<STREQUAL:${PRODUCT},ascend960>:iam>
-    $<$<STREQUAL:${PRODUCT},ascend960>:stackcore>
-    $<$<STREQUAL:${PRODUCT},ascend960>:log_server>
-    $<$<STREQUAL:${PRODUCT},ascend960>:urma>
-    $<$<STREQUAL:${PRODUCT},ascend960>:urma_common>
-    $<$<STREQUAL:${PRODUCT},ascend960>:utrace_server_share>
+    # ascend910_96 libraries (includes URMA)
+    $<$<STREQUAL:${PRODUCT},ascend910_96>:ascend_hal>
+    $<$<STREQUAL:${PRODUCT},ascend910_96>:iam>
+    $<$<STREQUAL:${PRODUCT},ascend910_96>:stackcore>
+    $<$<STREQUAL:${PRODUCT},ascend910_96>:log_server>
+    $<$<STREQUAL:${PRODUCT},ascend910_96>:urma>
+    $<$<STREQUAL:${PRODUCT},ascend910_96>:urma_common>
+    $<$<STREQUAL:${PRODUCT},ascend910_96>:utrace_server_share>
     
-    # ascend960esl libraries (includes URMA)
-    $<$<STREQUAL:${PRODUCT},ascend960esl>:ascend_hal>
-    $<$<STREQUAL:${PRODUCT},ascend960esl>:iam>
-    $<$<STREQUAL:${PRODUCT},ascend960esl>:stackcore>
-    $<$<STREQUAL:${PRODUCT},ascend960esl>:log_server>
-    $<$<STREQUAL:${PRODUCT},ascend960esl>:urma>
-    $<$<STREQUAL:${PRODUCT},ascend960esl>:urma_common>
-    $<$<STREQUAL:${PRODUCT},ascend960esl>:utrace_server_share>
+    # ascend910_96esl libraries (includes URMA)
+    $<$<STREQUAL:${PRODUCT},ascend910_96esl>:ascend_hal>
+    $<$<STREQUAL:${PRODUCT},ascend910_96esl>:iam>
+    $<$<STREQUAL:${PRODUCT},ascend910_96esl>:stackcore>
+    $<$<STREQUAL:${PRODUCT},ascend910_96esl>:log_server>
+    $<$<STREQUAL:${PRODUCT},ascend910_96esl>:urma>
+    $<$<STREQUAL:${PRODUCT},ascend910_96esl>:urma_common>
+    $<$<STREQUAL:${PRODUCT},ascend910_96esl>:utrace_server_share>
     
     bbox_proc
     # Common security library (required for all products)
@@ -514,8 +514,8 @@ if (PRODUCT)
 if ((${PRODUCT} STREQUAL "ascend950") OR 
         (${PRODUCT} STREQUAL "ascend950esl") OR 
         (${PRODUCT} STREQUAL "ascend350") OR 
-        (${PRODUCT} STREQUAL "ascend960") OR 
-        (${PRODUCT} STREQUAL "ascend960esl"))
+        (${PRODUCT} STREQUAL "ascend910_96") OR 
+        (${PRODUCT} STREQUAL "ascend910_96esl"))
     add_custom_target(slogDeviceFiles
         COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/../../etc/david_910_95/slog.conf ${CMAKE_CURRENT_BINARY_DIR}/slog.conf
         COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/../../etc/david_910_95/log.yaml ${CMAKE_CURRENT_BINARY_DIR}
@@ -587,8 +587,8 @@ if (PRODUCT)
 if ((${PRODUCT} STREQUAL "ascend950") OR 
         (${PRODUCT} STREQUAL "ascend950esl") OR 
         (${PRODUCT} STREQUAL "ascend350") OR 
-        (${PRODUCT} STREQUAL "ascend960") OR 
-        (${PRODUCT} STREQUAL "ascend960esl"))
+        (${PRODUCT} STREQUAL "ascend910_96") OR 
+        (${PRODUCT} STREQUAL "ascend910_96esl"))
     install(FILES
         ${CMAKE_CURRENT_BINARY_DIR}/log.yaml
         ${CMAKE_CURRENT_BINARY_DIR}/slogd.yaml
