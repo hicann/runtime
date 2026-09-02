@@ -79,7 +79,7 @@ int main()
     CHECK_ERROR(aclrtMalloc(&counterAddr, kCounterSize, ACL_MEM_MALLOC_HUGE_FIRST));
     CHECK_ERROR(aclrtMemset(counterAddr, kCounterSize, 0, kCounterSize));
 
-    printf("Gen normal distribution random num, data type: float \n");
+    INFO_LOG("Generate normal distribution random numbers, data type: float");
     float mean = 3.0;
     float stddev = 2.0;
     CHECK_ERROR(NormalFloatAsync(mean, stddev, false, seed, num, counterAddr, devOutput, stream));
@@ -93,7 +93,7 @@ int main()
         printf("Random result[%d] = %f\n", i, floatData[i]);
     }
 
-    printf("\nGen truncated normal distribution random num, data type: BF16 \n");
+    INFO_LOG("Generate truncated normal distribution random numbers, data type: BF16");
     BF16 meanBF16 = 0x3F80;   // bf16(1.0)
     BF16 stddevBF16 = 0x4000; // bf16(2.0)
     CHECK_ERROR(NormalBF16Async(meanBF16, stddevBF16, true, seed, num, counterAddr, devOutput, stream));
@@ -107,7 +107,7 @@ int main()
         printf("Random result[%d] = %#x\n", i, bf16Data[i]);
     }
 
-    printf("\nGen uniform distribution random num, data type: FP16 \n");
+    INFO_LOG("Generate uniform distribution random numbers, data type: FP16");
     Float16 minFP16 = 0x3C00; // fp16(1.0)
     Float16 maxFP16 = 0x4000; // fp16(2.0)
     CHECK_ERROR(UniformFloat16Async(minFP16, maxFP16, seed, num, counterAddr, devOutput, stream));
@@ -121,7 +121,7 @@ int main()
         printf("Random result[%d] = %#x\n", i, fp16Data[i]);
     }
 
-    printf("\nGen uniform distribution random num, data type: INT32 \n");
+    INFO_LOG("Generate uniform distribution random numbers, data type: INT32");
     int32_t min = 1;
     int32_t max = 100;
     CHECK_ERROR(UniformInt32Async(min, max, seed, num, counterAddr, devOutput, stream));
@@ -135,7 +135,7 @@ int main()
         printf("Random result[%d] = %d\n", i, int32Data[i]);
     }
 
-    printf("\nGen dropout bitmask, output data type: UINT8 \n");
+    INFO_LOG("Generate dropout bitmask, output data type: UINT8");
     float ration = 0.4;
     CHECK_ERROR(DropoutBitmask(ration, seed, num, counterAddr, devOutput, stream));
     // 同步 stream
@@ -154,7 +154,7 @@ int main()
     aclrtDestroyStream(stream);
     aclrtResetDeviceForce(0);
     aclFinalize();
-    printf("Sample Run Successfully.\n");
+    INFO_LOG("Sample run successfully.");
     return 0;
 }
 

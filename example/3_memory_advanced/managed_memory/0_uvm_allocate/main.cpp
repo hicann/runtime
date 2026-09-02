@@ -70,7 +70,7 @@ int32_t AllocateKernelBuffers(size_t inputByteSize, size_t outputByteSize, Kerne
         aclrtMemAllocManaged(reinterpret_cast<void**>(&buffers->xPtr), inputByteSize, ACL_RT_MEM_ATTACH_GLOBAL);
     if (allocRet == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
         const char* socName = aclrtGetSocName();
-        INFO_LOG(
+        WARN_LOG(
             "[SKIP] uvm_allocate sample skipped: the current SOC (%s) does not support UVM, "
             "aclrtMemAllocManaged returned error code %d.",
             (socName != nullptr) ? socName : "unknown", static_cast<int32_t>(allocRet));
@@ -91,15 +91,21 @@ int32_t PrepareInputData(size_t inputByteSize, const KernelBuffers& buffers)
 {
     // Load generated input files.
     size_t xFileSize = inputByteSize;
-    if (!kernel::ReadFile("./input/input_x.bin", xFileSize, buffers.xPtr, inputByteSize) ||
-        xFileSize != inputByteSize) {
-        ERROR_LOG("Read input_x.bin failed or file size is invalid.");
+    if (!kernel::ReadFile("./input/input_x.bin", xFileSize, buffers.xPtr, inputByteSize)) {
+        ERROR_LOG("Failed to read input_x.bin.");
+        return -1;
+    }
+    if (xFileSize != inputByteSize) {
+        ERROR_LOG("Invalid input_x.bin size: actual=%zu bytes, expected=%zu bytes", xFileSize, inputByteSize);
         return -1;
     }
     size_t yFileSize = inputByteSize;
-    if (!kernel::ReadFile("./input/input_y.bin", yFileSize, buffers.yPtr, inputByteSize) ||
-        yFileSize != inputByteSize) {
-        ERROR_LOG("Read input_y.bin failed or file size is invalid.");
+    if (!kernel::ReadFile("./input/input_y.bin", yFileSize, buffers.yPtr, inputByteSize)) {
+        ERROR_LOG("Failed to read input_y.bin.");
+        return -1;
+    }
+    if (yFileSize != inputByteSize) {
+        ERROR_LOG("Invalid input_y.bin size: actual=%zu bytes, expected=%zu bytes", yFileSize, inputByteSize);
         return -1;
     }
 

@@ -61,7 +61,7 @@ int main()
     CHECK_ERROR(aclrtEventGetTimestamp(endEvent, &time));
     INFO_LOG("End event timestamp: %ld.", time);
     CHECK_ERROR(aclrtEventElapsedTime(&useTime, startEvent, endEvent));
-    INFO_LOG("The short task consume time %f ms.", useTime);
+    INFO_LOG("The short task consumes %f ms.", useTime);
     CHECK_ERROR(aclrtFree(numDevice)); // 释放短任务分配的内存
 
     // 再做一个长耗时任务查看耗时
@@ -82,7 +82,7 @@ int main()
     CHECK_ERROR(aclrtEventGetTimestamp(endEvent, &time));
     INFO_LOG("End event timestamp: %ld.", time);
     CHECK_ERROR(aclrtEventElapsedTime(&useTime, startEvent, endEvent));
-    INFO_LOG("The short task consume time %f ms.", useTime);
+    INFO_LOG("The long task consumes %f ms.", useTime);
 
     // 释放资源
     CHECK_ERROR(aclrtFree(numDevice));

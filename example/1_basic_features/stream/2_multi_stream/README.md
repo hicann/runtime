@@ -78,7 +78,7 @@ bash run.sh
 [INFO]  Stream synchronize.
 [INFO]  Begin a short task, num *= 2.
 [INFO]  The answer is 2.
-[INFO]  Simulate timeout, wait 1000ms, the task will fail.
+[INFO]  Simulate a 1000 ms stream timeout.
 [ERROR]  Operation failed: aclrtSynchronizeStreamWithTimeout(stream1, kWaitTimeMs) returned error code 507046
 [INFO]  Resource cleanup completed.
 [INFO]  Use event synchronize.

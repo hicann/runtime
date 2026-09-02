@@ -33,7 +33,7 @@ int32_t main(int argc, char* argv[])
     if (argc > 2) {
         port = atoi(argv[2]);
         if (port <= 0 || port > 65535) {
-            ERROR_LOG("Client: invalid port number, using default port 8888");
+            ERROR_LOG("Client: invalid port=%d, expected range=[1, 65535]; using default 8888", port);
             port = 8888;
         }
     }

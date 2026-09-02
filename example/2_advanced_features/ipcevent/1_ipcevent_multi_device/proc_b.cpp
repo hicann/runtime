@@ -83,7 +83,9 @@ int main(int argc, char* argv[])
     CHECK_ERROR(aclrtQueryEventStatus(ipcEvent, &status));
     INFO_LOG("Consumer %d: event status = %d (1=completed)", consumerId, status);
     if (status != ACL_EVENT_RECORDED_STATUS_COMPLETE) {
-        ERROR_LOG("Consumer %d: event status error", consumerId);
+        ERROR_LOG(
+            "Consumer %d: event status error: expected %d, got %d", consumerId, ACL_EVENT_RECORDED_STATUS_COMPLETE,
+            status);
         return -1;
     }
 

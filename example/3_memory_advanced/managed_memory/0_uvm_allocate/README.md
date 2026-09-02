@@ -85,6 +85,6 @@ error ratio: 0.0000, tolerance: 0.0010
 在不支持 UVM 的产品上运行时，输出示例：
 
 ```text
-[INFO]  [SKIP] uvm_allocate sample skipped: the current SOC (Ascend910A) does not support UVM, aclrtMemAllocManaged returned error code 207000.
+[WARN]  [SKIP] uvm_allocate sample skipped: the current SOC (Ascend910A) does not support UVM, aclrtMemAllocManaged returned error code 207000.
 [SUCCESS] uvm_allocate sample skipped because the current SOC does not support UVM.
 ```

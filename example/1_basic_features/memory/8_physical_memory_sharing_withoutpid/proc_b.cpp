@@ -45,9 +45,7 @@ int32_t main()
 
     size_t granularity = 0UL;
     CHECK_ERROR(aclrtMemGetAllocationGranularity(&prop, ACL_RT_MEM_ALLOC_GRANULARITY_MINIMUM, &granularity));
-    INFO_LOG(
-        "Process B: get memory allocation granularity successfully, granularity = %d",
-        static_cast<int32_t>(granularity));
+    INFO_LOG("Process B: get memory allocation granularity successfully, granularity = %zu bytes", granularity);
 
     // Reserve virtual memory
     void* virPtr = nullptr;

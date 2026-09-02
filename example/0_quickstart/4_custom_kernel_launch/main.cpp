@@ -14,13 +14,8 @@
 #include <vector>
 
 #include "acl/acl.h"
+#include "utils.h"
 #include "vector_add_kernel.h"
-
-#define CHECK_ERROR(ret)                                                             \
-    if ((ret) != ACL_SUCCESS) {                                                      \
-        printf("Error at line %d, ret = %d\n", __LINE__, static_cast<int32_t>(ret)); \
-        return -1;                                                                   \
-    }
 
 namespace {
 constexpr uint32_t kElementCount = 8;
@@ -45,23 +40,23 @@ int main()
 
     // Initialize runtime resources.
     CHECK_ERROR(aclInit(nullptr));
-    printf("ACL init successfully\n");
+    INFO_LOG("ACL init successfully");
 
     CHECK_ERROR(aclrtSetDevice(deviceId));
-    printf("Set device %d successfully\n", deviceId);
+    INFO_LOG("Set device %d successfully", deviceId);
 
     CHECK_ERROR(aclrtCreateStream(&stream));
-    printf("Create stream successfully\n");
+    INFO_LOG("Create stream successfully");
 
     // Allocate and populate device buffers.
     CHECK_ERROR(aclrtMalloc(reinterpret_cast<void**>(&srcADevice), bufferSize, ACL_MEM_MALLOC_HUGE_FIRST));
     CHECK_ERROR(aclrtMalloc(reinterpret_cast<void**>(&srcBDevice), bufferSize, ACL_MEM_MALLOC_HUGE_FIRST));
     CHECK_ERROR(aclrtMalloc(reinterpret_cast<void**>(&dstDevice), bufferSize, ACL_MEM_MALLOC_HUGE_FIRST));
-    printf("Allocate device buffers successfully\n");
+    INFO_LOG("Allocate device buffers successfully");
 
     CHECK_ERROR(aclrtMemcpy(srcADevice, bufferSize, srcAHost.data(), bufferSize, ACL_MEMCPY_HOST_TO_DEVICE));
     CHECK_ERROR(aclrtMemcpy(srcBDevice, bufferSize, srcBHost.data(), bufferSize, ACL_MEMCPY_HOST_TO_DEVICE));
-    printf("Copy input vectors to device successfully\n");
+    INFO_LOG("Copy input vectors to device successfully");
 
     printf("Input vectors:\n");
     printf(
@@ -74,10 +69,10 @@ int main()
 
     // Launch the custom AscendC kernel through the <<<>>> call path.
     CHECK_ERROR(VectorAddDo(blockDim, stream, srcADevice, srcBDevice, dstDevice, alpha, kElementCount));
-    printf("Custom AscendC kernel <<<>>> call successfully\n");
+    INFO_LOG("Custom AscendC kernel <<<>>> call successfully");
 
     CHECK_ERROR(aclrtSynchronizeStream(stream));
-    printf("Synchronize stream successfully\n");
+    INFO_LOG("Synchronize stream successfully");
 
     // Copy the result back for verification.
     CHECK_ERROR(aclrtMemcpy(dstHost.data(), bufferSize, dstDevice, bufferSize, ACL_MEMCPY_DEVICE_TO_HOST));
@@ -95,23 +90,23 @@ int main()
     CHECK_ERROR(aclrtFree(srcADevice));
     CHECK_ERROR(aclrtFree(srcBDevice));
     CHECK_ERROR(aclrtFree(dstDevice));
-    printf("Free device memory successfully\n");
+    INFO_LOG("Free device memory successfully");
 
     // Release runtime resources in reverse order.
     CHECK_ERROR(aclrtDestroyStream(stream));
-    printf("Destroy stream successfully\n");
+    INFO_LOG("Destroy stream successfully");
 
     CHECK_ERROR(aclrtResetDeviceForce(deviceId));
-    printf("Reset device successfully\n");
+    INFO_LOG("Reset device successfully");
 
     CHECK_ERROR(aclFinalize());
-    printf("ACL finalize successfully\n");
+    INFO_LOG("ACL finalize successfully");
 
     if (!resultMatched) {
-        printf("\nSample run failed: vector addition result mismatched!\n");
+        ERROR_LOG("Sample run failed: vector addition result mismatched!");
         return -1;
     }
 
-    printf("\nSample run successfully with <<<>>> kernel call!\n");
+    INFO_LOG("Sample run successfully with <<<>>> kernel call!");
     return 0;
 }

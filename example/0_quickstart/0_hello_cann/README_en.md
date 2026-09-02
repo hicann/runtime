@@ -79,17 +79,17 @@ out = self + alpha * other
 ## Sample Output
 
 ```text
-ACL init successfully
-Set device 0 successfully
-Create stream successfully
+[INFO]  ACL init successfully
+[INFO]  Set device 0 successfully
+[INFO]  Create stream successfully
 Input vectors:
   self:   [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]
   other:  [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0]
   alpha:  1.0
-Create output aclDataBuffer successfully, buffer addr = 0x...
-Get workspace size successfully, workspace size = ...
-Launch aclnnAdd successfully
-Synchronize stream successfully
+[INFO]  Create output aclDataBuffer successfully, buffer addr = 0x...
+[INFO]  Get workspace size successfully, workspace size = ...
+[INFO]  Launch aclnnAdd successfully
+[INFO]  Synchronize stream successfully
 
 Vector addition result:
   result[0] = 1.5 (expected: 1.5)
@@ -101,7 +101,7 @@ Vector addition result:
   result[6] = 10.5 (expected: 10.5)
   result[7] = 12.0 (expected: 12.0)
 
-Sample run successfully!
+[INFO]  Sample run successfully!
 ```
 
 ## Related Samples

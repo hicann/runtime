@@ -65,7 +65,7 @@ int EventSynchronization()
     INFO_LOG("The answer is %d.", num);
 
     // event超时等待
-    INFO_LOG("Simulate timeout, wait 1000ms, the task will fail.");
+    INFO_LOG("Simulate a 1000 ms event timeout.");
     LongOP(kBlockDim, stream1, numDevice);
     CHECK_ERROR(aclrtRecordEvent(event, stream1));
     // 流的超时等待，如果超时直接报函数错误，将时间变长则不会报错。
@@ -121,7 +121,7 @@ int StreamSynchronization()
     INFO_LOG("The answer is %d.", num);
 
     // event超时等待
-    INFO_LOG("Simulate timeout, wait 1000ms, the task will fail.");
+    INFO_LOG("Simulate a 1000 ms stream timeout.");
     LongOP(kBlockDim, stream1, numDevice);
     // 流的超时等待，如果超时直接报函数错误，将时间变长则不会报错。
     CHECK_ERROR_WITHOUT_RETURN(aclrtSynchronizeStreamWithTimeout(stream1, kWaitTimeMs));

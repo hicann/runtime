@@ -13,12 +13,16 @@
 #include <vector>
 #include "acl/acl.h"
 #include "aclnnop/aclnn_add.h"
+#include "utils.h"
 
-#define CHECK_ERROR(ret)                                       \
-    if ((ret) != ACL_SUCCESS) {                                \
-        printf("Error at line %d, ret = %d\n", __LINE__, ret); \
-        return -1;                                             \
-    }
+#define CHECK_RESULT(result)                                                                                      \
+    do {                                                                                                          \
+        const auto resultValue = (result);                                                                        \
+        if (resultValue != ACL_SUCCESS) {                                                                         \
+            ERROR_LOG("Operation failed: %s returned error code %d", #result, static_cast<int32_t>(resultValue)); \
+            return -1;                                                                                            \
+        }                                                                                                         \
+    } while (0)
 
 // 计算张量的元素总数
 int64_t GetShapeSize(const std::vector<int64_t>& shape)
@@ -39,10 +43,10 @@ int CreateAclTensor(
     auto size = GetShapeSize(shape) * sizeof(T);
 
     // 在设备上分配内存
-    CHECK_ERROR(aclrtMalloc(deviceAddr, size, ACL_MEM_MALLOC_HUGE_FIRST));
+    CHECK_RESULT(aclrtMalloc(deviceAddr, size, ACL_MEM_MALLOC_HUGE_FIRST));
 
     // 将数据从主机同步复制到设备
-    CHECK_ERROR(aclrtMemcpy(*deviceAddr, size, hostData.data(), size, ACL_MEMCPY_HOST_TO_DEVICE));
+    CHECK_RESULT(aclrtMemcpy(*deviceAddr, size, hostData.data(), size, ACL_MEMCPY_HOST_TO_DEVICE));
 
     // 计算 strides
     std::vector<int64_t> strides(shape.size(), 1);
@@ -55,7 +59,7 @@ int CreateAclTensor(
         shape.data(), shape.size(), dataType, strides.data(), 0, aclFormat::ACL_FORMAT_ND, shape.data(), shape.size(),
         *deviceAddr);
     if (*tensor == nullptr) {
-        printf("Create tensor failed\n");
+        ERROR_LOG("Create tensor failed");
         return -1;
     }
 
@@ -84,18 +88,18 @@ int main()
     aclError ret;
 
     // 初始化 ACL
-    CHECK_ERROR(aclInit(NULL));
-    printf("ACL init successfully\n");
+    CHECK_RESULT(aclInit(NULL));
+    INFO_LOG("ACL init successfully");
 
     // 设置设备
     int32_t deviceId = 0;
-    CHECK_ERROR(aclrtSetDevice(deviceId));
-    printf("Set device %d successfully\n", deviceId);
+    CHECK_RESULT(aclrtSetDevice(deviceId));
+    INFO_LOG("Set device %d successfully", deviceId);
 
     // 创建 Stream
     aclrtStream stream = nullptr;
-    CHECK_ERROR(aclrtCreateStream(&stream));
-    printf("Create stream successfully\n");
+    CHECK_RESULT(aclrtCreateStream(&stream));
+    INFO_LOG("Create stream successfully");
 
     // 准备输入数据 - 两个向量
     // self = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]
@@ -127,59 +131,59 @@ int main()
     printf("  alpha:  %.1f\n", alphaValue);
 
     // 创建输入 Tensor
-    CHECK_ERROR(CreateAclTensor(selfHostData, shape, &selfDeviceAddr, aclDataType::ACL_FLOAT, &self));
-    CHECK_ERROR(CreateAclTensor(otherHostData, shape, &otherDeviceAddr, aclDataType::ACL_FLOAT, &other));
+    CHECK_RESULT(CreateAclTensor(selfHostData, shape, &selfDeviceAddr, aclDataType::ACL_FLOAT, &self));
+    CHECK_RESULT(CreateAclTensor(otherHostData, shape, &otherDeviceAddr, aclDataType::ACL_FLOAT, &other));
 
     // 创建 alpha Scalar
     alpha = aclCreateScalar(&alphaValue, aclDataType::ACL_FLOAT);
     if (alpha == nullptr) {
-        printf("Create alpha Scalar failed\n");
+        ERROR_LOG("Create alpha Scalar failed");
         return -1;
     }
 
     // 创建输出 Tensor
-    CHECK_ERROR(CreateAclTensor(outHostData, shape, &outDeviceAddr, aclDataType::ACL_FLOAT, &out));
+    CHECK_RESULT(CreateAclTensor(outHostData, shape, &outDeviceAddr, aclDataType::ACL_FLOAT, &out));
 
     // 使用 aclDataBuffer 包装输出 Device 内存，便于后续在更复杂场景中传递 Buffer 描述信息
     outDataBuffer = aclCreateDataBuffer(outDeviceAddr, outHostData.size() * sizeof(float));
     if (outDataBuffer == nullptr) {
-        printf("Create output aclDataBuffer failed\n");
+        ERROR_LOG("Create output aclDataBuffer failed");
         return -1;
     }
     void* outBufferAddr = aclGetDataBufferAddr(outDataBuffer);
     if (outBufferAddr == nullptr) {
-        printf("Get output aclDataBuffer address failed\n");
+        ERROR_LOG("Get output aclDataBuffer address failed");
         return -1;
     }
-    printf("Create output aclDataBuffer successfully, buffer addr = %p\n", outBufferAddr);
+    INFO_LOG("Create output aclDataBuffer successfully, buffer addr = %p", outBufferAddr);
 
     // 调用 aclnnAdd GetWorkspaceSize 接口
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor = nullptr;
     ret = aclnnAddGetWorkspaceSize(self, other, alpha, out, &workspaceSize, &executor);
-    CHECK_ERROR(ret);
-    printf("Get workspace size successfully, workspace size = %lu\n", workspaceSize);
+    CHECK_RESULT(ret);
+    INFO_LOG("Get workspace size successfully, workspace size = %lu", workspaceSize);
 
     // 根据 workspaceSize 分配设备内存
     void* workspaceAddr = nullptr;
     if (workspaceSize > 0) {
-        CHECK_ERROR(aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST));
-        printf("Allocate workspace successfully\n");
+        CHECK_RESULT(aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST));
+        INFO_LOG("Allocate workspace successfully");
     }
 
     // 调用 aclnnAdd 接口执行向量加法
     ret = aclnnAdd(workspaceAddr, workspaceSize, executor, stream);
-    CHECK_ERROR(ret);
-    printf("Launch aclnnAdd successfully\n");
+    CHECK_RESULT(ret);
+    INFO_LOG("Launch aclnnAdd successfully");
 
     // 同步等待任务完成
-    CHECK_ERROR(aclrtSynchronizeStream(stream));
-    printf("Synchronize stream successfully\n");
+    CHECK_RESULT(aclrtSynchronizeStream(stream));
+    INFO_LOG("Synchronize stream successfully");
 
     // 将结果从设备复制到主机
     auto size = GetShapeSize(shape);
     std::vector<float> resultData(size, 0.0f);
-    CHECK_ERROR(aclrtMemcpy(
+    CHECK_RESULT(aclrtMemcpy(
         resultData.data(), resultData.size() * sizeof(float), outBufferAddr, size * sizeof(float),
         ACL_MEMCPY_DEVICE_TO_HOST));
 
@@ -210,20 +214,20 @@ int main()
     if (workspaceAddr != nullptr) {
         aclrtFree(workspaceAddr);
     }
-    printf("Free device memory successfully\n");
+    INFO_LOG("Free device memory successfully");
 
     // 销毁 Stream
     aclrtDestroyStream(stream);
-    printf("Destroy stream successfully\n");
+    INFO_LOG("Destroy stream successfully");
 
     // 复位设备
     aclrtResetDeviceForce(deviceId);
-    printf("Reset device successfully\n");
+    INFO_LOG("Reset device successfully");
 
     // 去初始化 ACL
     aclFinalize();
-    printf("ACL finalize successfully\n");
+    INFO_LOG("ACL finalize successfully");
 
-    printf("\nSample run successfully!\n");
+    INFO_LOG("Sample run successfully!");
     return 0;
 }

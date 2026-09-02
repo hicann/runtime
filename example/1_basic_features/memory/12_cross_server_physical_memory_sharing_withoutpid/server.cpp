@@ -30,7 +30,7 @@ int32_t main(int argc, char* argv[])
     if (argc > 1) {
         port = atoi(argv[1]);
         if (port <= 0 || port > 65535) {
-            ERROR_LOG("Server: invalid port number, using default port 8888");
+            ERROR_LOG("Server: invalid port=%d, expected range=[1, 65535]; using default 8888", port);
             port = 8888;
         }
     }
@@ -52,8 +52,7 @@ int32_t main(int argc, char* argv[])
 
     size_t granularity = 0UL;
     CHECK_ERROR(aclrtMemGetAllocationGranularity(&prop, ACL_RT_MEM_ALLOC_GRANULARITY_MINIMUM, &granularity));
-    INFO_LOG(
-        "Server: get memory allocation granularity successfully, granularity = %d", static_cast<int32_t>(granularity));
+    INFO_LOG("Server: get memory allocation granularity successfully, granularity = %zu bytes", granularity);
 
     // Start allocating physical memory based on memory allocation granularity
     size_t alignedSize = ((dataSize + granularity - 1U) / granularity) * granularity;

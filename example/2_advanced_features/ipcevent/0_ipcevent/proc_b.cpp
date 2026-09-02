@@ -79,7 +79,7 @@ int32_t main()
     CHECK_ERROR(aclrtQueryEventStatus(ipcEvent, &status));
     INFO_LOG("Process B: event status = %d (1=completed)", status);
     if (status != ACL_EVENT_RECORDED_STATUS_COMPLETE) {
-        ERROR_LOG("Event status error");
+        ERROR_LOG("Event status error: expected %d, got %d", ACL_EVENT_RECORDED_STATUS_COMPLETE, status);
         return -1;
     }
 

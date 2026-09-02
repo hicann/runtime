@@ -72,12 +72,12 @@ The key functionality points and their key interfaces involved in this sample ar
 [INFO]  After synchronize, check the time.
 [INFO]  Start event timestamp: ...
 [INFO]  End event timestamp: ...
-[INFO]  The short task consume time ... ms.
-[INFO]  Begin a short task.
+[INFO]  The short task consumes ... ms.
+[INFO]  Begin a long task.
 [INFO]  After completing the long task, the answer is 1.
 [INFO]  After synchronize, check the time.
 [INFO]  Start event timestamp: ...
 [INFO]  End event timestamp: ...
-[INFO]  The short task consume time ... ms.
+[INFO]  The long task consumes ... ms.
 [INFO]  Resource cleanup completed.
 ```

@@ -59,17 +59,17 @@ bash run.sh
 样例会打印输入向量、`<<<>>>` 调用成功信息以及最终结果。典型输出如下：
 
 ```text
-ACL init successfully
-Set device 0 successfully
-Create stream successfully
-Allocate device buffers successfully
-Copy input vectors to device successfully
+[INFO]  ACL init successfully
+[INFO]  Set device 0 successfully
+[INFO]  Create stream successfully
+[INFO]  Allocate device buffers successfully
+[INFO]  Copy input vectors to device successfully
 Input vectors:
   self:   [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]
   other:  [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0]
   alpha:  1.0
-Custom AscendC kernel <<<>>> call successfully
-Synchronize stream successfully
+[INFO]  Custom AscendC kernel <<<>>> call successfully
+[INFO]  Synchronize stream successfully
 
 Vector addition result:
   result[0] = 1.5 (expected: 1.5)
@@ -81,7 +81,7 @@ Vector addition result:
   result[6] = 10.5 (expected: 10.5)
   result[7] = 12.0 (expected: 12.0)
 
-Sample run successfully with <<<>>> kernel call!
+[INFO]  Sample run successfully with <<<>>> kernel call!
 ```
 
 如果输出结果与预期一致，说明 CANN 自定义 Kernel 的 `<<<>>>` 调用路径工作正常。

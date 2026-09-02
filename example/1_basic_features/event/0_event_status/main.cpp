@@ -40,7 +40,7 @@ int main()
 
     // 查询创建后的event状态
     CHECK_ERROR(aclrtQueryEventStatus(event, &eventStatus));
-    INFO_LOG("After create event, current event status is %d.", eventStatus);
+    INFO_LOG("After creating the event, current event status is %d.", eventStatus);
 
     // 开始做长任务
     CHECK_ERROR(aclrtMalloc((void**)&numDevice, size, ACL_MEM_MALLOC_HUGE_FIRST));
@@ -52,7 +52,7 @@ int main()
 
     // 查询同步前的event状态
     CHECK_ERROR(aclrtQueryEventStatus(event, &eventStatus));
-    INFO_LOG("0 is incompleted, 1 is completed.");
+    INFO_LOG("0 is incomplete, 1 is completed.");
     INFO_LOG("After record but before synchronize, current event status is %d.", eventStatus);
 
     // 查询同步后的event状态
