@@ -26,7 +26,6 @@
 #include "stub_task.hpp"
 #include "capture_model_utils.hpp"
 #include "capture_model.hpp"
-#include "stream_jetty_handler.h"
 
 namespace cce {
 namespace runtime {
@@ -414,38 +413,13 @@ static void ReportNotifyErrorForNotifyWaitTask(TaskInfo* taskInfo, const uint32_
         stream->Device_());
 }
 
-static void ReleaseJettyForNormalModelOnError(Model* model, uint32_t errorCode)
-{
-    if (!Runtime::Instance()->GetConnectUbFlag()) {
-        return;
-    }
-    if (model == nullptr || model->GetModelType() != ModelType::RT_MODEL_NORMAL) {
-        return;
-    }
-    for (Stream* stm : model->StreamList_()) {
-        if (stm == nullptr) {
-            continue;
-        }
-        (void)StreamJettyHandler::ReleaseJetty(stm, JettyType::JETTY_TYPE_H2D, false);
-        (void)StreamJettyHandler::ReleaseJetty(stm, JettyType::JETTY_TYPE_D2D_IN_BOARD, false);
-        (void)StreamJettyHandler::ReleaseJetty(stm, JettyType::JETTY_TYPE_D2D_CROSS_BOARD, false);
-    }
-    model->ClearJettyInfoList();
-    model->SetNeedUpdateUBPi(false);
-    model->SetNeedRebindJetty(true);
-    RT_LOG(
-        RT_LOG_ERROR, "Release jetty for normal model after execution failure, model_id=%u, error_code=%u.",
-        model->Id_(), errorCode);
-}
-
 void DoCompleteSuccessForNotifyWaitTask(TaskInfo* taskInfo, const uint32_t devId)
 {
     if (unlikely(taskInfo->errorCode != static_cast<uint32_t>(RT_ERROR_NONE))) {
         if ((!taskInfo->u.notifywaitTask.isCountNotify) && (taskInfo->u.notifywaitTask.u.notify != nullptr) &&
             (taskInfo->u.notifywaitTask.u.notify->GetEndGraphModel() != nullptr)) {
             ReportModelEndGraphErrorForNotifyWaitTask(taskInfo, devId);
-            ReleaseJettyForNormalModelOnError(
-                taskInfo->u.notifywaitTask.u.notify->GetEndGraphModel(), taskInfo->errorCode);
+            ReleaseResourceForNotifyWaitTaskOnlModel(taskInfo);
         } else {
             ReportNotifyErrorForNotifyWaitTask(taskInfo, devId);
         }

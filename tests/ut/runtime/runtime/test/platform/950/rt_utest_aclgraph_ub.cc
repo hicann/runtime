@@ -2951,6 +2951,68 @@ TEST_F(NormalModelJettyTest, NotifyWaitTask_HwFailureSoftRelease)
     delete notify;
 }
 
+TEST_F(NormalModelJettyTest, NotifyWaitTask_OnlModelRelease_NullEndGraphModel)
+{
+    Notify* notify = new Notify(0, 0);
+
+    TaskInfo taskInfo = {};
+    taskInfo.errorCode = TS_ERROR_TASK_TIMEOUT;
+    taskInfo.stream = stream_;
+    taskInfo.u.notifywaitTask.u.notify = notify;
+    taskInfo.u.notifywaitTask.isCountNotify = false;
+    taskInfo.type = TS_TASK_TYPE_MODEL_EXECUTE;
+
+    ReleaseResourceForNotifyWaitTaskOnlModel(&taskInfo);
+
+    EXPECT_FALSE(mdl_->GetNeedRebindJetty());
+
+    delete notify;
+}
+
+TEST_F(NormalModelJettyTest, NotifyWaitTask_OnlModelRelease_NotNormalModel)
+{
+    CaptureModel* captureModel = new CaptureModel(RT_MODEL_CAPTURE_MODEL);
+    captureModel->context_ = context_;
+    Notify* notify = new Notify(0, 0);
+    notify->SetEndGraphModel(captureModel);
+
+    TaskInfo taskInfo = {};
+    taskInfo.errorCode = TS_ERROR_TASK_TIMEOUT;
+    taskInfo.stream = stream_;
+    taskInfo.u.notifywaitTask.u.notify = notify;
+    taskInfo.u.notifywaitTask.isCountNotify = false;
+    taskInfo.type = TS_TASK_TYPE_MODEL_EXECUTE;
+
+    ReleaseResourceForNotifyWaitTaskOnlModel(&taskInfo);
+
+    EXPECT_FALSE(captureModel->GetNeedRebindJetty());
+
+    delete notify;
+    delete captureModel;
+}
+
+TEST_F(NormalModelJettyTest, NotifyWaitTask_OnlModelRelease_NullStreamInList)
+{
+    Notify* notify = new Notify(0, 0);
+    notify->SetEndGraphModel(mdl_);
+
+    TaskInfo taskInfo = {};
+    taskInfo.errorCode = TS_ERROR_TASK_TIMEOUT;
+    taskInfo.stream = stream_;
+    taskInfo.u.notifywaitTask.u.notify = notify;
+    taskInfo.u.notifywaitTask.isCountNotify = false;
+    taskInfo.type = TS_TASK_TYPE_MODEL_EXECUTE;
+
+    mdl_->streams_.push_back(nullptr);
+    ReleaseResourceForNotifyWaitTaskOnlModel(&taskInfo);
+    mdl_->streams_.remove(nullptr);
+
+    EXPECT_TRUE(mdl_->GetNeedRebindJetty());
+    EXPECT_FALSE(mdl_->GetNeedUpdateUBPi());
+
+    delete notify;
+}
+
 TEST_F(NpuDriverJettyTest, AsyncDmaWqeProc_PersistentStream_Skip)
 {
     Driver* drv = stream_->Device_()->Driver_();

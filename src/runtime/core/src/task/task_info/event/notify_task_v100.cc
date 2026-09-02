@@ -176,6 +176,9 @@ static void ConstructSqeForNotifyWaitTask(TaskInfo* taskInfo, rtStarsSqe_t* cons
         notifyWaitTask->notifyId, stream->Id_(), taskInfo->id, stream->GetSqId(), stream->Device_()->Id_(),
         notifyWaitTask->timeout);
 }
+
+void ReleaseResourceForNotifyWaitTaskOnlModel(TaskInfo* taskInfo) { UNUSED(taskInfo); }
+
 #endif
 
 static bool NotifyTaskRegister()

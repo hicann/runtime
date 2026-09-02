@@ -14,6 +14,9 @@
 #include "notify_task.h"
 #include "runtime_task_manager.h"
 #include "error_code.h"
+#include "jetty_pool.h"
+#include "stream_jetty_handler.h"
+#include "notify.hpp"
 namespace cce {
 namespace runtime {
 
@@ -43,6 +46,32 @@ void ConstructSqeForIpcNotifyRecordTask(TaskInfo* taskInfo, rtDavidSqe_t* const 
         "writeAddrLow=0x%x, writeAddrHigh=0x%x, subType=%u.",
         devId, stream->Id_(), taskInfo->id, taskInfo->taskSn, stream->GetSqId(), sqe->writeAddrLow, sqe->writeAddrHigh,
         sqe->subType);
+}
+
+void ReleaseResourceForNotifyWaitTaskOnlModel(TaskInfo* taskInfo)
+{
+    if (!Runtime::Instance()->GetConnectUbFlag()) {
+        return;
+    }
+
+    Model* model = taskInfo->u.notifywaitTask.u.notify->GetEndGraphModel();
+    if (model == nullptr || model->GetModelType() != ModelType::RT_MODEL_NORMAL) {
+        return;
+    }
+    for (Stream* stm : model->StreamList_()) {
+        if (stm == nullptr) {
+            continue;
+        }
+        (void)StreamJettyHandler::ReleaseJetty(stm, JettyType::JETTY_TYPE_H2D, false);
+        (void)StreamJettyHandler::ReleaseJetty(stm, JettyType::JETTY_TYPE_D2D_IN_BOARD, false);
+        (void)StreamJettyHandler::ReleaseJetty(stm, JettyType::JETTY_TYPE_D2D_CROSS_BOARD, false);
+    }
+    model->ClearJettyInfoList();
+    model->SetNeedUpdateUBPi(false);
+    model->SetNeedRebindJetty(true);
+    RT_LOG(
+        RT_LOG_ERROR, "Release jetty for normal model after execution failure, model_id=%u, error_code=%u.",
+        model->Id_(), taskInfo->errorCode);
 }
 
 static bool NotifyTaskRegister()

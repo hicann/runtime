@@ -2231,3 +2231,8 @@ TEST_F(TaskTestV201, GetStreamTaskInfo_NullStream)
     TaskInfo* result = GetStreamTaskInfo(device_, 999, 0);
     EXPECT_EQ(result, nullptr);
 }
+
+TEST_F(TaskTestV201, ReleaseResourceForNotifyWaitTaskOnlModel_Noop)
+{
+    EXPECT_NO_THROW(ReleaseResourceForNotifyWaitTaskOnlModel(nullptr));
+}

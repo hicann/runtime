@@ -35,6 +35,7 @@ void ToCommandBodyForNotifyWaitTask(TaskInfo* taskInfo, rtCommand_t* const comma
 void DoCompleteSuccessForNotifyWaitTask(TaskInfo* taskInfo, const uint32_t devId);
 void PrintErrorInfoForNotifyWaitTask(TaskInfo* const taskInfo, const uint32_t devId);
 TaskInfo* GetRealReportFaultTaskForNotifyWaitTask(TaskInfo* taskInfo, const void* info);
+void ReleaseResourceForNotifyWaitTaskOnlModel(TaskInfo* taskInfo);
 } // namespace runtime
 } // namespace cce
 #endif // RUNTIME_NOTIFY_TASK_H

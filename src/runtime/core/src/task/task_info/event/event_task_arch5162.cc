@@ -64,6 +64,8 @@ static void ConstructSqeForNotifyWaitTask(TaskInfo* taskInfo, rtStarsSqe_t* cons
     PrintSqe(command, "Notify Wait Task");
     RT_LOG(RT_LOG_INFO, "NotifyWaitTask stream_id=%d task_id=%hu.", taskInfo->stream->Id_(), taskInfo->id);
 }
+
+void ReleaseResourceForNotifyWaitTaskOnlModel(TaskInfo* taskInfo) { UNUSED(taskInfo); }
 #endif
 
 #if F_DESC("EventRecordTask")
