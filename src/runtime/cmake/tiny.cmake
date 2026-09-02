@@ -27,7 +27,7 @@ set(libruntime_v100_task_src_files
     ${RUNTIME_CORE_DIR}/src/task/task_info/memory/memory_memcpy_async_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/memory/memory_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/memory/memory_task_v100.cc
-    ${RUNTIME_CORE_DIR}/src/task/tiny/memory_task_v100_external_event_tiny_stub.cc
+    ${RUNTIME_CORE_DIR}/src/task/tiny/memory_task_v100_external_event_stub.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/reduce/reduce_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/reduce/reduce_task_v100.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/cond_op/cond_op_stream_task.cc
@@ -107,7 +107,7 @@ set(common_src_files
     ${RUNTIME_CORE_DIR}/src/common/errcode_manage.cc
     ${RUNTIME_CORE_DIR}/src/common/error_message_manage.cc
     ${RUNTIME_CORE_DIR}/src/common/task_fail_callback_data_manager.cc
-    ${RUNTIME_FEATURE_DIR}/xpu/xpu_task_fail_callback_data_manager_tiny_stub.cc
+    ${RUNTIME_FEATURE_DIR}/xpu/xpu_task_fail_callback_data_manager_stub.cc
     ${RUNTIME_CORE_DIR}/src/common/performance_record.cc
     ${RUNTIME_CORE_DIR}/src/common/prof_ctrl_callback_manager.cc
     ${RUNTIME_CORE_DIR}/src/common/rt_log.cc
@@ -161,44 +161,44 @@ set(libruntime_callback_files
 )
 
 set(libruntime_src_files_include_for_tiny
-    ${RUNTIME_API_DIR}/impl/api_error_tiny_stub.cc
+    ${RUNTIME_API_DIR}/impl/api_error_stub.cc
     ${RUNTIME_API_DIR}/impl/api_impl_stub.cc
     ${RUNTIME_API_DIR}/impl/api_impl_tiny.cc
     ${RUNTIME_API_DIR}/impl/v100/api_impl_v100.cc
-    ${RUNTIME_CORE_DIR}/src/context/context_tiny_stub.cc
-    ${RUNTIME_FEATURE_DIR}/ffts/context_ffts_tiny_stub.cc
-    ${RUNTIME_CORE_DIR}/src/dfx/printf_tiny_stub.cc
-    ${RUNTIME_CORE_DIR}/src/event/ipc_event_tiny_stub.cc
-    ${RUNTIME_CORE_DIR}/src/pool/event_pool_tiny_stub.cc
-    ${RUNTIME_CORE_DIR}/src/pool/event_expanding_tiny_stub.cc
-    ${RUNTIME_DIR}/src/runtime/driver/npu_driver_tiny_stub.cc
-    ${RUNTIME_CORE_DIR}/src/engine/engine_factory_tiny_stub.cc
+    ${RUNTIME_CORE_DIR}/src/context/context_stub.cc
+    ${RUNTIME_FEATURE_DIR}/ffts/context_ffts_stub.cc
+    ${RUNTIME_CORE_DIR}/src/dfx/printf_stub.cc
+    ${RUNTIME_CORE_DIR}/src/event/ipc_event_stub.cc
+    ${RUNTIME_CORE_DIR}/src/pool/event_pool_stub.cc
+    ${RUNTIME_CORE_DIR}/src/pool/event_expanding_stub.cc
+    ${RUNTIME_DIR}/src/runtime/driver/npu_driver_stub.cc
+    ${RUNTIME_CORE_DIR}/src/engine/engine_factory_stub.cc
     ${RUNTIME_CORE_DIR}/src/kernel/binary_loader.cc
     ${RUNTIME_CORE_DIR}/src/kernel/json_parse.cc
-    ${RUNTIME_CORE_DIR}/src/kernel/symbol_table_tiny_stub.cc
-    ${RUNTIME_CORE_DIR}/src/task/tiny/rdma_task_tiny_stub.cc
-    ${RUNTIME_CORE_DIR}/src/kernel/funcsymbol_table_tiny_stub.cc
-    ${RUNTIME_FEATURE_DIR}/ffts/ffts_task_tiny_stub.cc
-    ${RUNTIME_CORE_DIR}/src/task/tiny/task_tiny_stub.cc
-    ${RUNTIME_CORE_DIR}/src/profiler/api_profile_decorator_tiny_stub.cc
-    ${RUNTIME_CORE_DIR}/src/profiler/api_profile_log_decorator_tiny_stub.cc
+    ${RUNTIME_CORE_DIR}/src/kernel/symbol_table_stub.cc
+    ${RUNTIME_CORE_DIR}/src/task/tiny/rdma_task_stub.cc
+    ${RUNTIME_CORE_DIR}/src/kernel/funcsymbol_table_stub.cc
+    ${RUNTIME_FEATURE_DIR}/ffts/ffts_task_stub.cc
+    ${RUNTIME_CORE_DIR}/src/task/tiny/task_stub.cc
+    ${RUNTIME_CORE_DIR}/src/profiler/api_profile_decorator_stub.cc
+    ${RUNTIME_CORE_DIR}/src/profiler/api_profile_log_decorator_stub.cc
     ${RUNTIME_CORE_DIR}/src/launch/xpu_aicpu_c_stub.cc
-    ${RUNTIME_FEATURE_DIR}/snapshot/tiny/device_snapshot_tiny_stub.cc
-    ${RUNTIME_FEATURE_DIR}/snapshot/tiny/snapshot_process_helper_tiny_stub.cc
-    ${RUNTIME_FEATURE_DIR}/snapshot/tiny/snapshot_callback_manager_tiny_stub.cc
-    ${RUNTIME_FEATURE_DIR}/aclgraph/tiny/capture_model_utils_tiny_stub.cc
-    ${RUNTIME_FEATURE_DIR}/aclgraph/tiny/capture_model_tiny_stub.cc
-    ${RUNTIME_FEATURE_DIR}/aclgraph/tiny/context_tiny_stub_aclgraph.cc
-    ${RUNTIME_FEATURE_DIR}/aclgraph/tiny/event_capture_tiny_stub.cc
-    ${RUNTIME_FEATURE_DIR}/aclgraph/tiny/capture_adapt_tiny_stub.cc
-    ${RUNTIME_API_DIR}/impl/api_decorator_tiny_stub.cc
-    ${RUNTIME_FEATURE_DIR}/model/tiny/model_aclgraph_tiny_stub.cc
-    ${RUNTIME_FEATURE_DIR}/aclgraph/tiny/stream_capture_tiny_stub.cc
+    ${RUNTIME_FEATURE_DIR}/snapshot/tiny/device_snapshot_stub.cc
+    ${RUNTIME_FEATURE_DIR}/snapshot/tiny/snapshot_process_helper_stub.cc
+    ${RUNTIME_FEATURE_DIR}/snapshot/tiny/snapshot_callback_manager_stub.cc
+    ${RUNTIME_FEATURE_DIR}/aclgraph/tiny/capture_model_utils_stub.cc
+    ${RUNTIME_FEATURE_DIR}/aclgraph/tiny/capture_model_stub.cc
+    ${RUNTIME_FEATURE_DIR}/aclgraph/tiny/context_aclgraph_stub.cc
+    ${RUNTIME_FEATURE_DIR}/aclgraph/tiny/event_capture_stub.cc
+    ${RUNTIME_FEATURE_DIR}/aclgraph/tiny/capture_adapt_stub.cc
+    ${RUNTIME_API_DIR}/impl/api_decorator_stub.cc
+    ${RUNTIME_FEATURE_DIR}/model/tiny/model_aclgraph_stub.cc
+    ${RUNTIME_FEATURE_DIR}/aclgraph/tiny/stream_capture_stub.cc
     ${RUNTIME_FEATURE_DIR}/jetty/jetty_stub.cc
 )
 
 set(libruntime_event_src_files_include_for_tiny
-    ${RUNTIME_API_DIR}/impl/api_impl_event_tiny_stub.cc
+    ${RUNTIME_API_DIR}/impl/api_impl_event_stub.cc
 )
 
 set(libruntime_api_src_files_exclude_for_tiny
@@ -265,7 +265,7 @@ set(libruntime_common_src_files
     ${RUNTIME_CORE_DIR}/src/kernel/kernel.cc
     ${RUNTIME_CORE_DIR}/src/kernel/module.cc
     ${RUNTIME_CORE_DIR}/src/kernel/program.cc
-    ${RUNTIME_CORE_DIR}/src/dfx/aicpu_dfx_tiny_stub.cc
+    ${RUNTIME_CORE_DIR}/src/dfx/aicpu_dfx_stub.cc
     ${RUNTIME_CORE_DIR}/src/kernel/program_common.cc
     ${RUNTIME_CORE_DIR}/src/kernel/kernel_utils.cc
     ${RUNTIME_CORE_DIR}/src/kernel/v100/program_plat.cc
@@ -382,7 +382,7 @@ set(libruntime_v100_src_files
     ${RUNTIME_API_DIR}/impl/api_impl_mbuf.cc
     ${RUNTIME_API_DIR}/impl/api_impl_esched.cc
     ${RUNTIME_CORE_DIR}/src/dfx/kernel_dfx_info.cc
-    ${RUNTIME_CORE_DIR}/src/dfx/aicpu_dfx_tiny_stub.cc
+    ${RUNTIME_CORE_DIR}/src/dfx/aicpu_dfx_stub.cc
     ${RUNTIME_CORE_DIR}/src/uvm/uvm_callback.cc
 
     # for V100

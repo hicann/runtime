@@ -979,7 +979,7 @@ classDiagram
 | Runtime | `src/runtime/core/inc/runtime.hpp`、`src/runtime/core/src/runtime.cc` | 默认Context retain/release、当前Context解析、内部访问上下文 |
 | Context头文件 | `src/runtime/core/inc/context/context.hpp` | Context类、状态机、访问模式、校验宏、核心方法声明 |
 | Context实现 | `src/runtime/core/src/context/context.cc` | Context生命周期、资源管理、状态迁移、线程绑定引用、同步和错误状态 |
-| Context平台实现 | `src/runtime/core/src/context/context_standard_soc.cc`、`src/runtime/core/src/context/context_tiny_stub.cc` | 标准平台和tiny stub的Context差异实现 |
+| Context平台实现 | `src/runtime/core/src/context/context_standard_soc.cc`、`src/runtime/core/src/context/context_stub.cc` | 标准平台和stub的Context差异实现 |
 | ContextManage | `src/runtime/core/inc/context/context_manage.hpp`、`src/runtime/core/src/context/context_manage.cc` | 全局Context集合、USER/INTERNAL有效性校验、inactive销毁收尾、设备异常传播 |
 | ContextDataManage | `src/runtime/core/src/common/context_data_manage.h`、`src/runtime/core/src/common/context_data_manage.cc` | Context集合的增删、查询和遍历；同时供有效性校验、快速恢复及Snapshot使用 |
 | InnerThreadLocalContainer | `src/runtime/core/inc/common/inner_thread_local.hpp`、`src/runtime/core/src/common/inner_thread_local.cpp` | 线程局部存储中的当前Context、内部访问标记、线程关联引用加减 |

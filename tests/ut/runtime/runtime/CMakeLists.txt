@@ -467,47 +467,47 @@ set(runtimeut_src_tiny_exclude_list
 set(runtimeut_src_tiny_include_list
     ${TOP_DIR}/src/runtime/api/api_c_stub.cc
     ${TOP_DIR}/src/runtime/api/api_c_tiny.cc
-    ${TOP_DIR}/src/runtime/api/impl/api_error_tiny_stub.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_error_stub.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_stub.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_tiny.cc
-    ${TOP_DIR}/src/runtime/api/impl/api_impl_event_tiny_stub.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_event_stub.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_esched.cc
-    ${TOP_DIR}/src/runtime/api/impl/api_decorator_tiny_stub.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_decorator_stub.cc
     ${TOP_DIR}/src/runtime/core/src/dfx/fast_recover.cc
     ${TOP_DIR}/src/runtime/api/impl/v100/api_impl_v100.cc
-    ${TOP_DIR}/src/runtime/core/src/context/context_tiny_stub.cc
-    ${TOP_DIR}/src/runtime/feature/aclgraph/tiny/context_tiny_stub_aclgraph.cc
-    ${TOP_DIR}/src/runtime/feature/aclgraph/tiny/capture_adapt_tiny_stub.cc
-    ${TOP_DIR}/src/runtime/feature/aclgraph/tiny/capture_model_tiny_stub.cc
-    ${TOP_DIR}/src/runtime/feature/aclgraph/tiny/capture_model_utils_tiny_stub.cc
-    ${TOP_DIR}/src/runtime/feature/aclgraph/tiny/event_capture_tiny_stub.cc
-    ${TOP_DIR}/src/runtime/feature/aclgraph/tiny/stream_capture_tiny_stub.cc
-    ${TOP_DIR}/src/runtime/feature/model/tiny/model_aclgraph_tiny_stub.cc
-    ${TOP_DIR}/src/runtime/feature/snapshot/tiny/device_snapshot_tiny_stub.cc
-    ${TOP_DIR}/src/runtime/feature/snapshot/tiny/snapshot_process_helper_tiny_stub.cc
-    ${TOP_DIR}/src/runtime/feature/snapshot/tiny/snapshot_callback_manager_tiny_stub.cc
-    ${TOP_DIR}/src/runtime/feature/ffts/context_ffts_tiny_stub.cc
-    ${TOP_DIR}/src/runtime/core/src/dfx/printf_tiny_stub.cc
-    ${TOP_DIR}/src/runtime/core/src/dfx/aicpu_dfx_tiny_stub.cc
+    ${TOP_DIR}/src/runtime/core/src/context/context_stub.cc
+    ${TOP_DIR}/src/runtime/feature/aclgraph/tiny/context_aclgraph_stub.cc
+    ${TOP_DIR}/src/runtime/feature/aclgraph/tiny/capture_adapt_stub.cc
+    ${TOP_DIR}/src/runtime/feature/aclgraph/tiny/capture_model_stub.cc
+    ${TOP_DIR}/src/runtime/feature/aclgraph/tiny/capture_model_utils_stub.cc
+    ${TOP_DIR}/src/runtime/feature/aclgraph/tiny/event_capture_stub.cc
+    ${TOP_DIR}/src/runtime/feature/aclgraph/tiny/stream_capture_stub.cc
+    ${TOP_DIR}/src/runtime/feature/model/tiny/model_aclgraph_stub.cc
+    ${TOP_DIR}/src/runtime/feature/snapshot/tiny/device_snapshot_stub.cc
+    ${TOP_DIR}/src/runtime/feature/snapshot/tiny/snapshot_process_helper_stub.cc
+    ${TOP_DIR}/src/runtime/feature/snapshot/tiny/snapshot_callback_manager_stub.cc
+    ${TOP_DIR}/src/runtime/feature/ffts/context_ffts_stub.cc
+    ${TOP_DIR}/src/runtime/core/src/dfx/printf_stub.cc
+    ${TOP_DIR}/src/runtime/core/src/dfx/aicpu_dfx_stub.cc
     ${TOP_DIR}/src/runtime/core/src/dfx/kernel_dfx_info.cc
-    ${TOP_DIR}/src/runtime/driver/npu_driver_tiny_stub.cc
-    ${TOP_DIR}/src/runtime/core/src/engine/engine_factory_tiny_stub.cc
-    ${TOP_DIR}/src/runtime/core/src/kernel/binary_loader_tiny_stub.cc
+    ${TOP_DIR}/src/runtime/driver/npu_driver_stub.cc
+    ${TOP_DIR}/src/runtime/core/src/engine/engine_factory_stub.cc
+    ${TOP_DIR}/src/runtime/core/src/kernel/binary_loader_stub.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/program_common.cc
-    ${TOP_DIR}/src/runtime/core/src/kernel/symbol_table_tiny_stub.cc
+    ${TOP_DIR}/src/runtime/core/src/kernel/symbol_table_stub.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/kernel_utils.cc
-    ${TOP_DIR}/src/runtime/core/src/kernel/funcsymbol_table_tiny_stub.cc
-    ${TOP_DIR}/src/runtime/core/src/profiler/api_profile_log_decorator_tiny_stub.cc
-    ${TOP_DIR}/src/runtime/core/src/profiler/api_profile_decorator_tiny_stub.cc
-    ${TOP_DIR}/src/runtime/core/src/task/tiny/rdma_task_tiny_stub.cc
-    ${TOP_DIR}/src/runtime/feature/ffts/ffts_task_tiny_stub.cc
-    ${TOP_DIR}/src/runtime/core/src/task/tiny/task_tiny_stub.cc
-    ${TOP_DIR}/src/runtime/core/src/task/tiny/memory_task_v100_external_event_tiny_stub.cc
-    ${TOP_DIR}/src/runtime/core/src/pool/event_pool_tiny_stub.cc
-    ${TOP_DIR}/src/runtime/core/src/event/ipc_event_tiny_stub.cc
-    ${TOP_DIR}/src/runtime/core/src/pool/event_expanding_tiny_stub.cc
+    ${TOP_DIR}/src/runtime/core/src/kernel/funcsymbol_table_stub.cc
+    ${TOP_DIR}/src/runtime/core/src/profiler/api_profile_log_decorator_stub.cc
+    ${TOP_DIR}/src/runtime/core/src/profiler/api_profile_decorator_stub.cc
+    ${TOP_DIR}/src/runtime/core/src/task/tiny/rdma_task_stub.cc
+    ${TOP_DIR}/src/runtime/feature/ffts/ffts_task_stub.cc
+    ${TOP_DIR}/src/runtime/core/src/task/tiny/task_stub.cc
+    ${TOP_DIR}/src/runtime/core/src/task/tiny/memory_task_v100_external_event_stub.cc
+    ${TOP_DIR}/src/runtime/core/src/pool/event_pool_stub.cc
+    ${TOP_DIR}/src/runtime/core/src/event/ipc_event_stub.cc
+    ${TOP_DIR}/src/runtime/core/src/pool/event_expanding_stub.cc
     ${TOP_DIR}/src/runtime/feature/jetty/jetty_stub.cc
-    ${TOP_DIR}/src/runtime/feature/xpu/xpu_task_fail_callback_data_manager_tiny_stub.cc
+    ${TOP_DIR}/src/runtime/feature/xpu/xpu_task_fail_callback_data_manager_stub.cc
 )
 
 set(runtime_raw_device_adpt_common_list
@@ -1377,7 +1377,7 @@ add_executable(runtime_utest_tiny_stub
     ${runtimeut_src_tiny_include_list}
     stub/hal_stub.cc
     test/main.cc
-    test/rt_utest_tiny_stub.cc
+    test/rt_utest_stub.cc
 )
 
 target_compile_definitions(runtime_utest_tiny_stub PUBLIC

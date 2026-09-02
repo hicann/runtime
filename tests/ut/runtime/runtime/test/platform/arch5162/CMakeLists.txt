@@ -58,25 +58,25 @@ set(runtimeut_src_task_list
 )
 
 set(libruntime_src_files_include_for_arch5162
-    ${TOP_DIR}/src/runtime/api/impl/api_error_tiny_stub.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_error_stub.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_stub.cc
     ${TOP_DIR}/src/runtime/api/impl/v100/api_impl_v100.cc
-    ${TOP_DIR}/src/runtime/core/src/context/context_tiny_stub.cc
-    ${TOP_DIR}/src/runtime/core/src/dfx/printf_tiny_stub.cc
-    ${TOP_DIR}/src/runtime/core/src/event/ipc_event_tiny_stub.cc
-    ${TOP_DIR}/src/runtime/core/src/pool/event_pool_tiny_stub.cc
-    ${TOP_DIR}/src/runtime/core/src/pool/event_expanding_tiny_stub.cc
-    ${TOP_DIR}/src/runtime/driver/npu_driver_tiny_stub.cc
+    ${TOP_DIR}/src/runtime/core/src/context/context_stub.cc
+    ${TOP_DIR}/src/runtime/core/src/dfx/printf_stub.cc
+    ${TOP_DIR}/src/runtime/core/src/event/ipc_event_stub.cc
+    ${TOP_DIR}/src/runtime/core/src/pool/event_pool_stub.cc
+    ${TOP_DIR}/src/runtime/core/src/pool/event_expanding_stub.cc
+    ${TOP_DIR}/src/runtime/driver/npu_driver_stub.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_esched_stub.cc
-    ${TOP_DIR}/src/runtime/core/src/engine/engine_factory_tiny_stub.cc
-    ${TOP_DIR}/src/runtime/core/src/task/tiny/rdma_task_tiny_stub.cc
-    ${TOP_DIR}/src/runtime/feature/ffts/ffts_task_tiny_stub.cc
+    ${TOP_DIR}/src/runtime/core/src/engine/engine_factory_stub.cc
+    ${TOP_DIR}/src/runtime/core/src/task/tiny/rdma_task_stub.cc
+    ${TOP_DIR}/src/runtime/feature/ffts/ffts_task_stub.cc
 
-    ${TOP_DIR}/src/runtime/feature/snapshot/tiny/snapshot_callback_manager_tiny_stub.cc
-    ${TOP_DIR}/src/runtime/feature/snapshot/tiny/snapshot_process_helper_tiny_stub.cc
+    ${TOP_DIR}/src/runtime/feature/snapshot/tiny/snapshot_callback_manager_stub.cc
+    ${TOP_DIR}/src/runtime/feature/snapshot/tiny/snapshot_process_helper_stub.cc
 
-    ${TOP_DIR}/src/runtime/core/src/task/tiny/task_tiny_stub.cc
-    ${TOP_DIR}/src/runtime/core/src/profiler/api_profile_decorator_tiny_stub.cc
+    ${TOP_DIR}/src/runtime/core/src/task/tiny/task_stub.cc
+    ${TOP_DIR}/src/runtime/core/src/profiler/api_profile_decorator_stub.cc
 )
 
 set(RUNTIME_UT_ARCH5162_API_WEAK_REAL_SRC_FILES
@@ -105,7 +105,7 @@ set(runtimeut_src_api_list
 
 set(runtimeut_src_api_impl_list
     ${TOP_DIR}/src/runtime/api/impl/api_decorator.cc
-    ${TOP_DIR}/src/runtime/api/impl/api_decorator_tiny_stub.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_decorator_stub.cc
     ${TOP_DIR}/src/runtime/api/impl/api_error.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_kernel_args_stub.cc
@@ -202,12 +202,12 @@ set(runtimeut_src_aclgraph_list
     ${TOP_DIR}/src/runtime/core/src/task/task_info/cond_op/cond_op_task_arch5162.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/cond_handle.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/event_capture_arch5162.cc
-    ${TOP_DIR}/src/runtime/feature/aclgraph/tiny/capture_adapt_tiny_stub.cc
-    ${TOP_DIR}/src/runtime/feature/aclgraph/tiny/capture_model_tiny_stub.cc
-    ${TOP_DIR}/src/runtime/feature/aclgraph/tiny/context_tiny_stub_aclgraph.cc
-    ${TOP_DIR}/src/runtime/feature/aclgraph/tiny/capture_model_utils_tiny_stub.cc
-    ${TOP_DIR}/src/runtime/feature/aclgraph/tiny/stream_capture_tiny_stub.cc
-    ${TOP_DIR}/src/runtime/feature/model/tiny/model_aclgraph_tiny_stub.cc
+    ${TOP_DIR}/src/runtime/feature/aclgraph/tiny/capture_adapt_stub.cc
+    ${TOP_DIR}/src/runtime/feature/aclgraph/tiny/capture_model_stub.cc
+    ${TOP_DIR}/src/runtime/feature/aclgraph/tiny/context_aclgraph_stub.cc
+    ${TOP_DIR}/src/runtime/feature/aclgraph/tiny/capture_model_utils_stub.cc
+    ${TOP_DIR}/src/runtime/feature/aclgraph/tiny/stream_capture_stub.cc
+    ${TOP_DIR}/src/runtime/feature/model/tiny/model_aclgraph_stub.cc
     ${TOP_DIR}/src/runtime/feature/jetty/jetty_stub.cc
 )
 
@@ -235,7 +235,7 @@ set(runtimeut_src_kernel_list
     ${TOP_DIR}/src/runtime/core/src/kernel/kernel_utils.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/module.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/program.cc
-    ${TOP_DIR}/src/runtime/core/src/dfx/aicpu_dfx_tiny_stub.cc
+    ${TOP_DIR}/src/runtime/core/src/dfx/aicpu_dfx_stub.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/program_common.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/symbol_table.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/v100/kernel.cc

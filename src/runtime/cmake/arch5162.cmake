@@ -98,7 +98,7 @@ set(libruntime_api_src_files
 
 set(libruntime_api_impl_src_files
     ${RUNTIME_API_DIR}/impl/api_decorator.cc
-    ${RUNTIME_API_DIR}/impl/api_decorator_tiny_stub.cc
+    ${RUNTIME_API_DIR}/impl/api_decorator_stub.cc
     ${RUNTIME_API_DIR}/impl/api_error.cc
     ${RUNTIME_API_DIR}/impl/api_impl.cc
     ${RUNTIME_API_DIR}/impl/api_impl_kernel_args_stub.cc
@@ -192,32 +192,32 @@ set(runtime_src_aclgraph_list
     ${RUNTIME_CORE_DIR}/src/task/task_info/cond_op/cond_op_task_arch5162.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/cond_handle.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/event_capture_arch5162.cc
-    ${RUNTIME_FEATURE_DIR}/aclgraph/tiny/capture_adapt_tiny_stub.cc
-    ${RUNTIME_FEATURE_DIR}/aclgraph/tiny/capture_model_tiny_stub.cc
-    ${RUNTIME_FEATURE_DIR}/aclgraph/tiny/context_tiny_stub_aclgraph.cc
-    ${RUNTIME_FEATURE_DIR}/aclgraph/tiny/capture_model_utils_tiny_stub.cc
-    ${RUNTIME_FEATURE_DIR}/aclgraph/tiny/stream_capture_tiny_stub.cc
-    ${RUNTIME_FEATURE_DIR}/model/tiny/model_aclgraph_tiny_stub.cc
+    ${RUNTIME_FEATURE_DIR}/aclgraph/tiny/capture_adapt_stub.cc
+    ${RUNTIME_FEATURE_DIR}/aclgraph/tiny/capture_model_stub.cc
+    ${RUNTIME_FEATURE_DIR}/aclgraph/tiny/context_aclgraph_stub.cc
+    ${RUNTIME_FEATURE_DIR}/aclgraph/tiny/capture_model_utils_stub.cc
+    ${RUNTIME_FEATURE_DIR}/aclgraph/tiny/stream_capture_stub.cc
+    ${RUNTIME_FEATURE_DIR}/model/tiny/model_aclgraph_stub.cc
     ${RUNTIME_FEATURE_DIR}/jetty/jetty_stub.cc
 )
 
 set(libruntime_src_files_include_for_arch5162
-    ${RUNTIME_API_DIR}/impl/api_error_tiny_stub.cc
+    ${RUNTIME_API_DIR}/impl/api_error_stub.cc
     ${RUNTIME_API_DIR}/impl/v100/api_impl_v100.cc
-    ${RUNTIME_CORE_DIR}/src/context/context_tiny_stub.cc
-    ${RUNTIME_CORE_DIR}/src/dfx/printf_tiny_stub.cc
-    ${RUNTIME_CORE_DIR}/src/event/ipc_event_tiny_stub.cc
-    ${RUNTIME_CORE_DIR}/src/pool/event_pool_tiny_stub.cc
-    ${RUNTIME_CORE_DIR}/src/pool/event_expanding_tiny_stub.cc
-    ${RUNTIME_DIR}/src/runtime/driver/npu_driver_tiny_stub.cc
+    ${RUNTIME_CORE_DIR}/src/context/context_stub.cc
+    ${RUNTIME_CORE_DIR}/src/dfx/printf_stub.cc
+    ${RUNTIME_CORE_DIR}/src/event/ipc_event_stub.cc
+    ${RUNTIME_CORE_DIR}/src/pool/event_pool_stub.cc
+    ${RUNTIME_CORE_DIR}/src/pool/event_expanding_stub.cc
+    ${RUNTIME_DIR}/src/runtime/driver/npu_driver_stub.cc
     ${RUNTIME_DIR}/src/runtime/driver/npu_driver_esched_stub.cc
-    ${RUNTIME_CORE_DIR}/src/engine/engine_factory_tiny_stub.cc
-    ${RUNTIME_CORE_DIR}/src/task/tiny/rdma_task_tiny_stub.cc
-    ${RUNTIME_FEATURE_DIR}/ffts/ffts_task_tiny_stub.cc
-    ${RUNTIME_FEATURE_DIR}/snapshot/tiny/snapshot_callback_manager_tiny_stub.cc
-    ${RUNTIME_FEATURE_DIR}/snapshot/tiny/snapshot_process_helper_tiny_stub.cc
-    ${RUNTIME_CORE_DIR}/src/task/tiny/task_tiny_stub.cc
-    ${RUNTIME_CORE_DIR}/src/profiler/api_profile_decorator_tiny_stub.cc
+    ${RUNTIME_CORE_DIR}/src/engine/engine_factory_stub.cc
+    ${RUNTIME_CORE_DIR}/src/task/tiny/rdma_task_stub.cc
+    ${RUNTIME_FEATURE_DIR}/ffts/ffts_task_stub.cc
+    ${RUNTIME_FEATURE_DIR}/snapshot/tiny/snapshot_callback_manager_stub.cc
+    ${RUNTIME_FEATURE_DIR}/snapshot/tiny/snapshot_process_helper_stub.cc
+    ${RUNTIME_CORE_DIR}/src/task/tiny/task_stub.cc
+    ${RUNTIME_CORE_DIR}/src/profiler/api_profile_decorator_stub.cc
 )
 
 set(runtime_src_device_list
@@ -243,7 +243,7 @@ set(runtime_src_kernel_list
     ${RUNTIME_CORE_DIR}/src/kernel/kernel_utils.cc
     ${RUNTIME_CORE_DIR}/src/kernel/module.cc
     ${RUNTIME_CORE_DIR}/src/kernel/program.cc
-    ${RUNTIME_CORE_DIR}/src/dfx/aicpu_dfx_tiny_stub.cc
+    ${RUNTIME_CORE_DIR}/src/dfx/aicpu_dfx_stub.cc
     ${RUNTIME_CORE_DIR}/src/kernel/program_common.cc
     ${RUNTIME_CORE_DIR}/src/kernel/symbol_table.cc
     ${RUNTIME_CORE_DIR}/src/kernel/v100/kernel.cc
