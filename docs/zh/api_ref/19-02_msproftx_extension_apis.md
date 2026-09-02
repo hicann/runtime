@@ -235,6 +235,9 @@ aclprofMarkEx打点接口。
 
 返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
+### 约束说明
+
+无
 <br>
 <br>
 <br>

@@ -1,4 +1,4 @@
-﻿# 19-01 Profiling数据采集接口
+# 19-01 Profiling数据采集接口
 
 本章节描述Profiling数据采集的核心接口，用于性能采集的初始化、配置、启停控制。Profiling产物路径、解析命令和字段含义请参见[Profiling产物解读](../profiling_ref/profiling_artifact_analysis.md)。
 
@@ -142,7 +142,7 @@ aclprofCreateConfig接口的扩展接口，用于设置性能数据采集参数�
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| configType | 输入 | 作为configType参数值。每个枚举表示不同采集配置，若要使用该接口下不同的选项采集多种性能数据，则需要多次调用该接口，详细请参见[aclprofConfigType](25-02_Enumerations.md#aclprofConfigType)。 |
+| configType | 输入 | 性能数据采集参数类型。每个枚举表示不同采集配置，若要使用该接口下不同的选项采集多种性能数据，则需要多次调用该接口，详细请参见[aclprofConfigType](25-02_Enumerations.md#aclprofConfigType)。 |
 | config | 输入 | 指定配置项参数值。 |
 | configLength | 输入 | config的长度，单位为Byte，最大长度不超过256字节。 |
 
@@ -195,7 +195,7 @@ aclError aclprofStart(const aclprofConfig *profilerConfig)
 
 下发Profiling请求，使能对应数据的采集。
 
-用户可根据需要，在模型执行过程中按需调用aclprofStart接口，Profiling采集到的数据为调用该接口之后的数据。
+用户可根据需要，在模型执行时按需调用aclprofStart接口，Profiling采集到的数据为调用该接口之后的数据。
 
 ### 参数说明
 

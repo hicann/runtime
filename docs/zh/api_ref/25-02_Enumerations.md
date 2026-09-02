@@ -635,6 +635,7 @@ typedef enum {
     ACL_PROF_SYS_MEM_SERVICEFLOW        = 12,
     ACL_PROF_SYS_CPU_FREQ               = 13,
     ACL_PROF_OPTYPE                     = 14,
+    ACL_PROF_NTS_METRICS                = 15,
     ACL_PROF_PATH                       = 16,
     ACL_PROF_ARGS_MAX                   = 17
 } aclprofConfigType;
@@ -748,7 +749,7 @@ typedef enum{
 typedef enum{
     ACL_STEP_START = 0, // step  start
     ACL_STEP_END = 1    // step  end
-} aclprofStepTag
+} aclprofStepTag;
 ```
 
 > **说明：**

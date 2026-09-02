@@ -1,4 +1,4 @@
-﻿# 19-03 订阅算子信息
+# 19-03 订阅算子信息
 
 本章节描述算子信息订阅接口，用于订阅模型中算子的执行信息（类型、名称、耗时等）。
 
@@ -86,7 +86,7 @@ aclError aclprofModelSubscribe(uint32_t modelId, const aclprofSubscribeConfig *p
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| modelId | 输入 | 待订阅的网络模型的ID。<br>调用aclmdlLoadFromFile接口/aclmdlLoadFromMem接口/aclmdlLoadFromFileWithMem接口/aclmdlLoadFromMemWithMem接口加载模型成功后，会返回模型ID。<br>类型定义请参见[aclprofSubscribeConfig](25-03_Operation_APIs.md#aclprofSubscribeConfig)。 |
+| modelId | 输入 | 待订阅的网络模型的ID。<br>调用aclmdlLoadFromFile接口/aclmdlLoadFromMem接口/aclmdlLoadFromFileWithMem接口/aclmdlLoadFromMemWithMem接口加载模型成功后，会返回模型ID。|
 | profSubscribeConfig | 输入 | 待订阅的配置信息。<br>需提前调用[aclprofCreateSubscribeConfig](25-03_Operation_APIs.md#aclprofCreateSubscribeConfig)接口创建aclprofSubscribeConfig类型的数据。 |
 
 ### 返回值说明
