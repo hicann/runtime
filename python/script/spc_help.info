@@ -1,0 +1,5 @@
+  --full                            Install run mode
+  --install-path=<path>             Install to specific path
+  --uninstall                       Uninstall 
+  --rollback                        Rolling back to the previous version
+  --version                         Show version

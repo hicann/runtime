@@ -1,0 +1,2 @@
+set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE hitestwrapper)
+set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK hitestwrapper)

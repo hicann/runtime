@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright (c) 2026 Huawei Technologies Co., Ltd.
+     This program is free software, you can redistribute it and/or modify it under the terms and conditions of
+     CANN Open Software License Agreement Version 2.0 (the "License").
+     Please refer to the License for details. You may not use this file except in compliance with the License.
+     THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+     INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+     See LICENSE in the root of the software repository for the full text of the License.
+-->
+<project>
+    <artifact>
+        <versionType>Component</versionType>
+        <repoType>Generic</repoType>
+        <id>
+            <offering>CANN</offering>
+            <componentName>ACL</componentName>
+            <componentVersion>20.10.0.B010</componentVersion>
+        </id>
+        <isClear>N</isClear>
+        <copies>
+            <copy>
+                <source>output/</source>
+                <dest />
+            </copy>
+        </copies>
+    </artifact>
+    <dependencies>
+        <!-- Platform -->
+        <dependency>
+            <versionType>Component</versionType>
+            <repoType>Generic</repoType>
+            <id>
+                <offering>CANN</offering>
+                <componentName>Tuscany-ASL</componentName>
+                <componentVersion>1.75.B020</componentVersion>
+            </id>
+            <according>Y</according>
+            <copies>
+                <copy>
+                    <source>x86_64-centos7.6/cann-npu-runtime_*_linux-x86_64.run</source>
+                    <source>x86_64-centos7.6/cann-acl-extend_*_linux-x86_64.run</source>
+                    <source>x86_64-centos7.6/cann-dvpp_*_linux-x86_64.run</source>
+                    <source>x86_64-centos7.6/cann-ge-executor_*_linux-x86_64.run</source>
+                    <dest>platform/Tuscany</dest>
+                </copy>
+            </copies>
+        </dependency>
+        <!-- 3rd-party -->
+        <!--<dependency>
+            <versionType>3rd-party</versionType>
+            <repoType>Generic</repoType>
+            <id>
+                <artifactName>Python-3.7.5.tgz</artifactName>
+                <pdmCode>05833PUQ</pdmCode>
+            </id>
+            <copies>
+                <copy>
+                    <source>/*</source>
+                    <dest>opensource/python</dest>
+                </copy>
+            </copies>
+        </dependency>
+        <dependency>
+            <versionType>3rd-party</versionType>
+            <repoType>Generic</repoType>
+            <id>
+                <artifactName>numpy-1.18.2.zip</artifactName>
+                <pdmCode>05834AJL</pdmCode>
+            </id>
+            <copies>
+                <copy>
+                    <source>/*</source>
+                    <dest>opensource/numpy</dest>
+                </copy>
+            </copies>
+        </dependency>-->
+    </dependencies>
+</project>
