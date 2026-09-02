@@ -406,7 +406,8 @@ rtError_t ConvertCpyType(
 }
 
 rtError_t ConvertD2DCpyType(
-    const Stream* const stm, uint32_t& cpyType, const void* const srcAddr, void* const desAddr, bool* isD2dCross8P)
+    const Stream* const stm, uint32_t& cpyType, const void* const srcAddr, void* const desAddr,
+    bool* const isD2dCross8P)
 {
     Driver* const driver = stm->Device_()->Driver_();
     uint8_t transType = 0U;

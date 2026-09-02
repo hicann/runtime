@@ -208,7 +208,7 @@ void ConstructDavidSqeForMemcpyAsyncTask(TaskInfo* const taskInfo, void* const s
 }
 
 rtError_t GetD2dCrossType(
-    const Stream* const stm, const void* const srcAddr, const void* const desAddr, bool* isD2dCross8P)
+    const Stream* const stm, const void* const srcAddr, const void* const desAddr, bool* const isD2dCross8P)
 {
     Driver* const driver = stm->Device_()->Driver_();
     int64_t locationType = 0;

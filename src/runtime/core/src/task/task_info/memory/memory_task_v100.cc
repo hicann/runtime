@@ -46,7 +46,7 @@ rtError_t ConvertAsyncDma(TaskInfo* const taskInfo)
 }
 
 rtError_t GetD2dCrossType(
-    const Stream* const stm, const void* const srcAddr, const void* const desAddr, bool* isD2dCross8P)
+    const Stream* const stm, const void* const srcAddr, const void* const desAddr, bool* const isD2dCross8P)
 {
     UNUSED(stm);
     UNUSED(srcAddr);

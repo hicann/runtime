@@ -91,9 +91,9 @@ uint32_t GetSqeNumForMemcopyAsync(
     uint32_t cpyMethod = UINT32_MAX);
 rtError_t ConvertD2DCpyType(
     const Stream* const stm, uint32_t& cpyType, const void* const srcAddr, void* const desAddr,
-    bool* isD2dCross8P = nullptr);
+    bool* const isD2dCross8P = nullptr);
 rtError_t GetD2dCrossType(
-    const Stream* const stm, const void* const srcAddr, const void* const desAddr, bool* isD2dCross8P);
+    const Stream* const stm, const void* const srcAddr, const void* const desAddr, bool* const isD2dCross8P);
 void RecycleTaskResourceForMemcpyAsyncTask(TaskInfo* const taskInfo);
 
 bool IsPcieDma(const uint32_t copyTypeFlag);
