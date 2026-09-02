@@ -27,10 +27,12 @@ int g_atlsReportRegType = 0;
 int g_atlsHashIdCalled = 0;
 int g_atlsHostFreqCalled = 0;
 int g_atlsSetDeviceCalled = 0;
+uint32_t g_reportedApiType = 0;
 
-int32_t StubAtlsReportApi(uint32_t, const MsprofApi*)
+int32_t StubAtlsReportApi(uint32_t, const MsprofApi* api)
 {
     ++g_atlsReportApi;
+    g_reportedApiType = api->type;
     return 0;
 }
 int32_t StubAtlsReportEvent(uint32_t, const MsprofEvent*)
@@ -91,6 +93,7 @@ void ResetAtlsCounters()
     g_atlsHashIdCalled = 0;
     g_atlsHostFreqCalled = 0;
     g_atlsSetDeviceCalled = 0;
+    g_reportedApiType = 0;
 }
 
 void ClearAtlsHooks()
@@ -340,9 +343,11 @@ TEST_F(PROF_CANN_PLUGIN_UTEST, ProfSetStepInfo_MarkExFail)
 TEST_F(PROF_CANN_PLUGIN_UTEST, ProfSetStepInfo_Success)
 {
     auto plugin = ProfCannPlugin::instance();
+    plugin->atlsReportApi_ = StubAtlsReportApi;
     MOCKER_CPP(&ProfRuntimePlugin::RuntimeApiInit).stubs().will(returnValue((int32_t)PROFILING_SUCCESS));
     MOCKER_CPP(&ProfRuntimePlugin::ProfMarkEx).stubs().will(returnValue((int32_t)RT_ERROR_NONE));
     EXPECT_EQ(PROFILING_SUCCESS, plugin->ProfSetStepInfo(1, 2, nullptr));
+    EXPECT_EQ(65542U, g_reportedApiType);
 }
 
 TEST_F(PROF_CANN_PLUGIN_UTEST, BuildApiInfo_FillsFields)

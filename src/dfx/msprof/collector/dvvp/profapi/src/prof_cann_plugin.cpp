@@ -793,14 +793,15 @@ int32_t ProfCannPlugin::ProfSetStepInfo(const uint64_t indexId, const uint16_t t
         return PROFILING_FAILED;
     }
     const uint64_t modelId = 0xFFFFFFFFU;
-    const uint32_t apiType = 11;
+    // GeProfInfoType::kStepInfo
+    const uint32_t geStepInfoApiType = 65542U;
     const auto beginTime = MsprofSysCycleTime();
     rtError_t ret = ProfAPI::ProfRuntimePlugin::instance()->ProfMarkEx(indexId, modelId, tagId, stream);
     if (ret != RT_ERROR_NONE) {
         return ret;
     }
     const auto endTime = MsprofSysCycleTime();
-    return ReportApiInfo(beginTime, endTime, static_cast<uint64_t>(tagId), apiType);
+    return ReportApiInfo(beginTime, endTime, static_cast<uint64_t>(tagId), geStepInfoApiType);
 }
 
 int32_t ProfCannPlugin::ReportApiInfo(
