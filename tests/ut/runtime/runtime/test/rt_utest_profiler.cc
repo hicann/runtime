@@ -4389,6 +4389,31 @@ TEST_F(ProfilerTest, RuntimeTrackRecordWaitStructSize)
     EXPECT_EQ(sizeof(MsprofRuntimeTrackV2), 40U);
 }
 
+TEST_F(ProfilerTest, ModifyTrackData_ClearsReusedEventExtInfoForAicpu)
+{
+    Event event(nullptr, RT_EVENT_TIME_LINE, nullptr);
+    TaskInfo eventTask = {};
+    eventTask.type = TS_TASK_TYPE_EVENT_RECORD;
+    eventTask.u.eventRecordTaskInfo.event = &event;
+    eventTask.u.eventRecordTaskInfo.eventid = TIMELINE_EVENT_ID;
+
+    RuntimeProfTrackData trackData = {};
+    MsprofRuntimeTrack& runtimeTrack = trackData.compactInfo.data.runtimeTrack;
+    runtimeTrack.taskType = eventTask.type;
+    ASSERT_TRUE(FillRecordWaitTrackInfo(eventTask, runtimeTrack));
+    ASSERT_EQ(runtimeTrack.extInfo.kernelInfo.numBlocks, static_cast<uint16_t>(TIMELINE_EVENT_ID));
+
+    TaskInfo aicpuTask = {};
+    aicpuTask.type = TS_TASK_TYPE_KERNEL_AICPU;
+    Profiler profiler(nullptr);
+    profiler.ModifyTrackData(&aicpuTask, 0U, &trackData);
+
+    EXPECT_EQ(runtimeTrack.taskType, static_cast<uint64_t>(TS_TASK_TYPE_KERNEL_AICPU));
+    for (const uint8_t value : runtimeTrack.extInfo.rsv) {
+        EXPECT_EQ(value, 0U);
+    }
+}
+
 TEST_F(ProfilerTest, ReportTrackDataV2_DoesNotCopyRecordWaitExtInfo)
 {
     Stream stream(static_cast<Device*>(nullptr), 0U);

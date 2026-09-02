@@ -392,6 +392,7 @@ bool FillRecordWaitTrackInfo(const TaskInfo& taskInfo, struct MsprofRuntimeTrack
 void Profiler::ModifyTrackData(TaskInfo* const taskInfo, const uint32_t devId, RuntimeProfTrackData* trackData) const
 {
     const Stream* const stm = taskInfo->stream;
+    ClearRecordWaitExtInfo(trackData->compactInfo.data.runtimeTrack);
     trackData->isModel = (stm == nullptr) ? false : stm->GetBindFlag(); // is it a model task
     trackData->compactInfo.level = MSPROF_REPORT_RUNTIME_LEVEL;
     trackData->compactInfo.type = RT_PROFILE_TYPE_TASK_TRACK;           // RT_PROFILE_TYPE_TASK_TRACK regitered in init
