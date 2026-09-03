@@ -78,6 +78,7 @@ constexpr uint64_t L1_SIZE = 1048576;
 constexpr uint64_t STREAM_ABORT_TIMEOUT = (60UL * RT_MS_PER_S); // 60s
 constexpr uint64_t REDUCE_ALIGN_SIZE = 0x4ULL;
 constexpr uint64_t REDUCE16_ALIGN_SIZE = 0x2ULL;
+constexpr uint64_t AICPU_CPU_SO_KERNEL_TIMEOUT_US = 1091ULL * 1000ULL * 1000ULL;
 
 bool ShouldRestoreStreamAfterTearDownFailure(
     const Stream* const stm, const bool willDeleteOnTearDown, const bool destroyTaskRecycledStream,
@@ -233,7 +234,7 @@ rtError_t LaunchAicpuKernelForCpuSo(
     const rtKernelLaunchNames_t* const launchNames, const rtArgsEx_t* const argsInfo, Stream* const stm)
 {
     rtError_t error = RT_ERROR_NONE;
-    uint64_t timeout = 0UL;
+    uint64_t timeout = AICPU_CPU_SO_KERNEL_TIMEOUT_US;
     // for batchLoadsoFrombuf and deleteCustOp set never timeout
     if (Runtime::Instance()->IsSupportOpTimeoutMs()) {
         timeout = MAX_UINT64_NUM;
