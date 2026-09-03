@@ -21,6 +21,7 @@ set(src_file
     ${MSPROF_SOURCE_DIR}/dvvp/profapi/src/prof_acl_inner_api.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profapi/src/prof_impl_inner_api.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profapi/src/prof_cann_plugin.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/profapi/src/prof_compute_injection.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profapi/src/prof_runtime_plugin.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profapi/src/prof_plugin.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profapi/src/prof_tx_plugin.cpp
@@ -36,6 +37,10 @@ if(NOT BUILD_PROFILING_OPEN_PROJECT)
     list(APPEND src_file
         ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/nano_platform.cpp
     )
+endif()
+
+if(DEFINED PRODUCT AND PRODUCT STREQUAL "ascend031")
+    add_compile_definitions(ascend031)
 endif()
 
 add_executable(prof_api_utest

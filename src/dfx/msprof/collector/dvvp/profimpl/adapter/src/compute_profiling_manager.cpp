@@ -9,8 +9,6 @@
  */
 
 #include "compute_profiling_manager.h"
-#include <cstdlib>
-#include <dlfcn.h>
 #include <sstream>
 #include "aprof_pub.h"
 #include "command_handle.h"
@@ -42,12 +40,8 @@ constexpr uint32_t CALLBACK_WAIT_TIMEOUT_SEC = 60;
 constexpr uint32_t COMPUTE_UPLOADER_QUEUE_SIZE = 4096U * 4U;
 const char CUSTOM_METRIC_PREFIX[] = "Custom:";
 const char METRIC_DELIMITER[] = ",";
-constexpr char ACL_API_INJECTION_ENV[] = "ACL_API_INJECTION";
-constexpr char ACL_TOOL_INITIALIZE_FUNC[] = "acltoolInitialize";
 
 bool IsEnabled(uint64_t profSwitch, uint64_t mask) { return (profSwitch & mask) != 0; }
-
-bool HasAclToolInjectionPath(const char* injectionPath) { return injectionPath != nullptr && injectionPath[0] != '\0'; }
 } // namespace
 
 ComputeProfilingManager::ComputeProfilingManager()
@@ -57,12 +51,7 @@ ComputeProfilingManager::ComputeProfilingManager()
       runningProfSwitch_(0),
       runningParams_(nullptr),
       jobAdapter_(nullptr),
-      injectionTransport_(nullptr),
-      aclToolHandle_(nullptr),
-      setInjectionFunc_(nullptr),
-      getInjectionFunc_(nullptr),
-      hookInitFunc_(nullptr),
-      injectionEnabled_(false)
+      injectionTransport_(nullptr)
 {}
 
 ComputeProfilingManager::~ComputeProfilingManager()
@@ -73,7 +62,6 @@ ComputeProfilingManager::~ComputeProfilingManager()
         std::lock_guard<std::mutex> lock(mutex_);
         ClearContext();
     }
-    ClearInjectionContext();
 }
 
 int32_t ComputeProfilingManager::RegisterDataCallback(uint32_t type, void* callback)
@@ -95,138 +83,6 @@ MsprofRawDataCallback ComputeProfilingManager::GetComputeRawDataCallback()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     return computeCallback_;
-}
-
-int32_t ComputeProfilingManager::RegisterInjectionFunc(uint32_t type, void* func)
-{
-    if (func == nullptr) {
-        MSPROF_LOGE("Invalid injection func, type:%u.", type);
-        return PROFILING_FAILED;
-    }
-    std::lock_guard<std::mutex> lock(injectionMutex_);
-    if (type == PROF_HOOK_SET) {
-        setInjectionFunc_ = func;
-    } else if (type == PROF_HOOK_GET) {
-        getInjectionFunc_ = func;
-    } else if (type == PROF_HOOK_INIT) {
-        hookInitFunc_ = reinterpret_cast<AclToolInitializeFunc>(func);
-    } else {
-        MSPROF_LOGE("Invalid injection func type:%u.", type);
-        return PROFILING_FAILED;
-    }
-    return PROFILING_SUCCESS;
-}
-
-int32_t ComputeProfilingManager::CheckInjectionFuncRegistered() const
-{
-    if (setInjectionFunc_ != nullptr && getInjectionFunc_ != nullptr) {
-        return PROFILING_SUCCESS;
-    }
-    MSPROF_LOGE("Runtime injection funcs are not registered.");
-    return PROFILING_FAILED;
-}
-
-int32_t ComputeProfilingManager::LoadAclToolLibrary(const char* injectionPath, void*& aclToolHandle) const
-{
-    aclToolHandle = dlopen(injectionPath, RTLD_LAZY | RTLD_LOCAL);
-    if (aclToolHandle == nullptr) {
-        MSPROF_LOGE("Failed to dlopen acl tool injection:%s.", dlerror());
-        return PROFILING_FAILED;
-    }
-    return PROFILING_SUCCESS;
-}
-
-int32_t ComputeProfilingManager::GetAclToolInitialize(void* aclToolHandle, AclToolInitializeFunc& initializeFunc) const
-{
-    initializeFunc = reinterpret_cast<AclToolInitializeFunc>(dlsym(aclToolHandle, ACL_TOOL_INITIALIZE_FUNC));
-    if (initializeFunc == nullptr) {
-        MSPROF_LOGE("Failed to find acltoolInitialize:%s.", dlerror());
-        return PROFILING_FAILED;
-    }
-    return PROFILING_SUCCESS;
-}
-
-int32_t ComputeProfilingManager::CallAclToolInitialize(AclToolInitializeFunc initializeFunc)
-{
-    if (initializeFunc() != PROFILING_SUCCESS) {
-        MSPROF_LOGE("acltoolInitialize failed.");
-        return PROFILING_FAILED;
-    }
-    return PROFILING_SUCCESS;
-}
-
-void ComputeProfilingManager::CloseAclToolLibrary(void* aclToolHandle) const
-{
-    if (aclToolHandle != nullptr) {
-        dlclose(aclToolHandle);
-    }
-}
-
-int32_t ComputeProfilingManager::InitializeInjection()
-{
-    const char* injectionPath = std::getenv(ACL_API_INJECTION_ENV);
-    AclToolInitializeFunc initializeFunc = nullptr;
-    void* newAclToolHandle = nullptr;
-    if (HasAclToolInjectionPath(injectionPath) &&
-        (LoadAclToolLibrary(injectionPath, newAclToolHandle) != PROFILING_SUCCESS ||
-         GetAclToolInitialize(newAclToolHandle, initializeFunc) != PROFILING_SUCCESS)) {
-        CloseAclToolLibrary(newAclToolHandle);
-        ClearInjectionContext();
-        return PROFILING_FAILED;
-    }
-
-    void* oldAclToolHandle = nullptr;
-    bool injectionFuncMissed = false;
-    {
-        std::lock_guard<std::mutex> lock(injectionMutex_);
-        if (!HasAclToolInjectionPath(injectionPath)) {
-            initializeFunc = hookInitFunc_;
-        }
-        if (initializeFunc == nullptr) {
-            ClearInjectionState(oldAclToolHandle);
-            MSPROF_LOGI("ACL_API_INJECTION and PROF_HOOK_INIT are not configured.");
-        } else if (CheckInjectionFuncRegistered() != PROFILING_SUCCESS) {
-            ClearInjectionState(oldAclToolHandle);
-            injectionFuncMissed = true;
-        } else {
-            oldAclToolHandle = aclToolHandle_;
-            aclToolHandle_ = newAclToolHandle;
-            newAclToolHandle = nullptr;
-            injectionEnabled_ = true;
-        }
-    }
-    if (injectionFuncMissed) {
-        CloseAclToolLibrary(newAclToolHandle);
-        CloseAclToolLibrary(oldAclToolHandle);
-        return PROFILING_FAILED;
-    }
-    CloseAclToolLibrary(oldAclToolHandle);
-    if (initializeFunc == nullptr) {
-        return PROFILING_SUCCESS;
-    }
-    if (CallAclToolInitialize(initializeFunc) != PROFILING_SUCCESS) {
-        ClearInjectionContext();
-        return PROFILING_FAILED;
-    }
-    MSPROF_LOGI("Initialize acl tool injection success.");
-    return PROFILING_SUCCESS;
-}
-
-void* ComputeProfilingManager::GetInjectionFunc(uint32_t type)
-{
-    std::lock_guard<std::mutex> lock(injectionMutex_);
-    if (!injectionEnabled_) {
-        MSPROF_LOGW("Acl tool injection is not enabled.");
-        return nullptr;
-    }
-    if (type == PROF_HOOK_SET) {
-        return setInjectionFunc_;
-    }
-    if (type == PROF_HOOK_GET) {
-        return getInjectionFunc_;
-    }
-    MSPROF_LOGE("Invalid injection func type:%u.", type);
-    return nullptr;
 }
 
 int32_t ComputeProfilingManager::ParseInstrMode(uint32_t instrMode, ComputeProfileConfig& outConfig) const
@@ -592,26 +448,6 @@ void ComputeProfilingManager::ClearContext()
     runningParams_.reset();
     jobAdapter_.reset();
     injectionTransport_.reset();
-}
-
-void ComputeProfilingManager::ClearInjectionState(void*& aclToolHandle)
-{
-    aclToolHandle = aclToolHandle_;
-    aclToolHandle_ = nullptr;
-    setInjectionFunc_ = nullptr;
-    getInjectionFunc_ = nullptr;
-    hookInitFunc_ = nullptr;
-    injectionEnabled_ = false;
-}
-
-void ComputeProfilingManager::ClearInjectionContext()
-{
-    void* aclToolHandle = nullptr;
-    {
-        std::lock_guard<std::mutex> lock(injectionMutex_);
-        ClearInjectionState(aclToolHandle);
-    }
-    CloseAclToolLibrary(aclToolHandle);
 }
 
 } // namespace ProfilerCommon

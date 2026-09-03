@@ -21,12 +21,15 @@
 #include "device_simulator_manager.h"
 #include "acl_api_stub.h"
 #include "devprof_drv_aicpu.h"
+#include "prof_cann_plugin.h"
+#include "prof_inner_api.h"
 #include "prof_common.h"
 #include "securec.h"
 
 using namespace analysis::dvvp::common::error;
 using namespace Cann::Dvvp::Test;
 
+#ifndef ascend031
 extern "C" int32_t acltoolInitialize();
 
 namespace {
@@ -77,6 +80,7 @@ int32_t ComputeControlCallback(uint32_t type, void* data, uint32_t len)
 
 void ResetComputeInjectionStState()
 {
+    ProfAPI::ProfCannPlugin::instance()->ProfResetInjectionState();
     computeInitCount.store(0);
     computeRawDataCount.store(0);
     computeInitSawSetHook.store(false);
@@ -151,6 +155,49 @@ void RegisterComputeSetGetHooks()
     EXPECT_EQ(PROFILING_SUCCESS, MsprofSetInjectionFunc(PROF_HOOK_GET, reinterpret_cast<void*>(RuntimeGetHookStub)));
 }
 
+void ExpectComputeInjectionInitialized()
+{
+    EXPECT_EQ(1U, computeInitCount.load());
+    EXPECT_TRUE(computeInitSawSetHook.load());
+    EXPECT_TRUE(computeInitSawGetHook.load());
+}
+
+void RunComputeProfilingStartStop(const std::string& aclProfPath, uint32_t blockMode = 0)
+{
+    MsprofConfigAttr attrs[2] = {};
+    MsprofConfig config = {};
+    if (blockMode == 0) {
+        FillComputeConfig("", attrs[0], config);
+    } else {
+        FillComputeBlockConfig(blockMode, attrs, config);
+    }
+    EXPECT_EQ('\0', config.dumpPath[0]);
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofRegisterCallback(COMPUTE_CALLBACK_MODULE_ID, ComputeControlCallback));
+    ResetComputeControlCallbackState();
+    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    computeControlCaptureEnabled.store(true);
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofStart(MSPROF_CTRL_INIT_COMPUTE, &config, sizeof(config)));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofStop(MSPROF_CTRL_INIT_COMPUTE, &config, sizeof(config)));
+    computeControlCaptureEnabled.store(false);
+    EXPECT_EQ(1U, computeStartCallbackCount.load());
+    EXPECT_EQ(1U, computeStopCallbackCount.load());
+    EXPECT_FALSE(HasComputeResultDir(aclProfPath));
+}
+
+void RunComputeProfilingWithInitHook(const std::string& aclProfPath, uint32_t blockMode = 0)
+{
+    ResetComputeInjectionStState();
+    RegisterComputeSetGetHooks();
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofSetInjectionFunc(PROF_HOOK_INIT, reinterpret_cast<void*>(acltoolInitialize)));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofInjectionInitialize());
+    ExpectComputeInjectionInitialized();
+    RunComputeProfilingStartStop(aclProfPath, blockMode);
+}
+} // namespace
+
+extern "C" int32_t acltoolInitialize() { return RegisterCallbackFromAcltoolInitialize(); }
+#endif
+
 void ExpectSetConfigSuccess(aclprofConfigType configType, const std::string& setConfig)
 {
     auto ret = aclprofSetConfig(configType, setConfig.c_str(), setConfig.size());
@@ -193,48 +240,6 @@ std::vector<std::string> GetAclApiSetConfigHostDataList()
         /*, "host_disk.data", "host_pthreadcall.data", "host_syscall.data"*/};
 }
 
-void ExpectComputeInjectionInitialized()
-{
-    EXPECT_EQ(1U, computeInitCount.load());
-    EXPECT_TRUE(computeInitSawSetHook.load());
-    EXPECT_TRUE(computeInitSawGetHook.load());
-}
-
-void RunComputeProfilingStartStop(const std::string& aclProfPath, uint32_t blockMode = 0)
-{
-    MsprofConfigAttr attrs[2] = {};
-    MsprofConfig config = {};
-    if (blockMode == 0) {
-        FillComputeConfig("", attrs[0], config);
-    } else {
-        FillComputeBlockConfig(blockMode, attrs, config);
-    }
-    EXPECT_EQ('\0', config.dumpPath[0]);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofRegisterCallback(COMPUTE_CALLBACK_MODULE_ID, ComputeControlCallback));
-    ResetComputeControlCallbackState();
-    std::this_thread::sleep_for(std::chrono::milliseconds(20));
-    computeControlCaptureEnabled.store(true);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofStart(MSPROF_CTRL_INIT_COMPUTE, &config, sizeof(config)));
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofStop(MSPROF_CTRL_INIT_COMPUTE, &config, sizeof(config)));
-    computeControlCaptureEnabled.store(false);
-    EXPECT_EQ(1U, computeStartCallbackCount.load());
-    EXPECT_EQ(1U, computeStopCallbackCount.load());
-    EXPECT_FALSE(HasComputeResultDir(aclProfPath));
-}
-
-void RunComputeProfilingWithInitHook(const std::string& aclProfPath, uint32_t blockMode = 0)
-{
-    ResetComputeInjectionStState();
-    RegisterComputeSetGetHooks();
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofSetInjectionFunc(PROF_HOOK_INIT, reinterpret_cast<void*>(acltoolInitialize)));
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofInjectionInitialize());
-    ExpectComputeInjectionInitialized();
-    RunComputeProfilingStartStop(aclProfPath, blockMode);
-}
-} // namespace
-
-extern "C" int32_t acltoolInitialize() { return RegisterCallbackFromAcltoolInitialize(); }
-
 class AclApiDavidStest : public testing::Test {
 protected:
     std::string aclProfPath;
@@ -252,6 +257,7 @@ protected:
         EXPECT_EQ(2, SimulatorMgr().CreateDeviceSimulator(2, StPlatformType::CHIP_CLOUD_V3));
         SimulatorMgr().SetSocSide(SocType::HOST);
         ClearApiSingleton();
+        ProfAPI::ProfCannPlugin::instance()->ProfResetInjectionState();
         aclInit(nullptr);
         aclrtSetDevice(0);
         EXPECT_EQ(ACL_ERROR_NONE, aclprofInit(aclProfPath.c_str(), aclProfPath.size()));
@@ -260,6 +266,7 @@ protected:
     virtual void TearDown()
     {
         unsetenv("ACL_API_INJECTION");
+        ProfAPI::ProfCannPlugin::instance()->ProfResetInjectionState();
         aclprofFinalize();
         aclFinalize();
         DevprofDrvAicpu::instance()->isRegister_ = false; // 重置aicpu注册状态，使单进程内能多次注册
@@ -278,6 +285,7 @@ protected:
     }
 };
 
+#ifndef ascend031
 TEST_F(AclApiDavidStest, ComputeProfilingApiInitHookEndToEnd) { RunComputeProfilingWithInitHook(aclProfPath); }
 
 TEST_F(AclApiDavidStest, ComputeProfilingAclApiInjectionEndToEnd)
@@ -299,6 +307,7 @@ TEST_F(AclApiDavidStest, ComputeProfilingBlockShinkEndToEnd)
 {
     RunComputeProfilingWithInitHook(aclProfPath, PROF_COMPUTE_BLOCK_SHRINK);
 }
+#endif
 
 TEST_F(AclApiDavidStest, AclApiDefault)
 {

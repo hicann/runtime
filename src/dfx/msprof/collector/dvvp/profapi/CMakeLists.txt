@@ -37,6 +37,7 @@ set(profApiCpp
     src/prof_impl_inner_api.cpp
     src/prof_plugin_manager.cpp
     src/prof_cann_plugin.cpp
+    src/prof_compute_injection.cpp
     src/prof_plugin.cpp
     src/prof_tx_plugin.cpp
     src/prof_acl_plugin.cpp
@@ -46,6 +47,10 @@ set(profApiCpp
     ../common/utils/utils.cpp
     ${PROF_BASIC_DIR}/osal/osal.c
 )
+
+if(DEFINED PRODUCT AND PRODUCT STREQUAL "ascend031")
+    list(REMOVE_ITEM profApiCpp src/prof_compute_injection.cpp)
+endif()
 
 ####################### libprofapi static lib for windows  begin ###########################
 if(${TARGET_SYSTEM_NAME} STREQUAL "Windows")
@@ -112,6 +117,7 @@ add_library(profapi_share SHARED
 )
 
 target_compile_definitions(profapi_share PRIVATE
+    $<$<STREQUAL:${PRODUCT},ascend031>:ascend031>
     $<$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>:WIN32>
 )
 

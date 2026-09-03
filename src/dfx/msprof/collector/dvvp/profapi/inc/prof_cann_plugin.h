@@ -13,6 +13,7 @@
 #include <vector>
 #include <map>
 #include <functional>
+#include <memory>
 #include "singleton/singleton.h"
 #include "prof_plugin.h"
 #include "prof_utils.h"
@@ -52,9 +53,6 @@ using ProfGetFeatureIsOnFunc = int32_t (*)(uint64_t feature);
 using ProfImplInitMstxInjectionFunc = void (*)(const ProfRegisterMstxFuncCallback func);
 using ProfSubscribeRawDataFunc = int32_t (*)(MsprofRawDataCallback callback);
 using ProfUnSubscribeRawDataFunc = int32_t (*)();
-using ProfSetInjectionFuncFunc = int32_t (*)(uint32_t type, void* func);
-using ProfInjectionInitializeFunc = int32_t (*)();
-using ProfGetInjectionFuncFunc = void* (*)(uint32_t type);
 using ProfRegisterDataCallbackFunc = int32_t (*)(uint32_t type, void* callback);
 
 using ProfVarAddBlockBufPopFunc = void* (*)(const ProfVarAddBlockBufPopCallback func);
@@ -63,8 +61,11 @@ using ProfVarAddBufIndexShiftFunc = void* (*)(const ProfVarAddBufIndexShiftCallB
 using ProfSetCommandFunc = int32_t (*)(VOID_PTR command, uint32_t len);
 using ProfCheckOpSwitchFunc = bool (*)(uint32_t type, const char* op, size_t len);
 
+struct InjectionState;
+
 class ProfCannPlugin : public ProfPlugin, public analysis::dvvp::common::singleton::Singleton<ProfCannPlugin> {
 public:
+    ProfCannPlugin();
     void ProfApiInit();
 
     int32_t ProfInit(uint32_t type, void* data, uint32_t dataLen) override;
@@ -118,6 +119,7 @@ public:
     int32_t ProfSetInjectionFunc(uint32_t type, void* func);
     int32_t ProfInjectionInitialize();
     void* ProfGetInjectionFunc(uint32_t type);
+    void ProfResetInjectionState();
     int32_t ProfRegisterDataCallback(uint32_t type, void* callback);
 
     int32_t ProfSetProfCommand(VOID_PTR command, uint32_t len);
@@ -126,8 +128,10 @@ public:
     ~ProfCannPlugin() override;
 
 private:
+    InjectionState& GetInjectionState();
     void ProfRegisterFunc(uint32_t type, void* func);
     void LoadProfInfo();
+    int32_t SyncComputeDataCallback();
     std::atomic<void*> msProfLibHandle_{nullptr};
     std::map<uint32_t, uint32_t> deviceIdMaps_;   // (moduleId, deviceId)
     std::mutex deviceMapsMutex_;
@@ -146,7 +150,6 @@ private:
 
     int32_t RegisterProfileCallbackForAtls(int32_t callbackType, VOID_PTR callback);
     void ProfNotifyCachedDevice();
-
     PTHREAD_ONCE_T profApiLoadFlag_;
     ProfInitFunc profInit_{nullptr};
     ProfStartFunc profStart_{nullptr};
@@ -182,9 +185,6 @@ private:
     ProfImplInitMstxInjectionFunc profImplInitMstxInjection_{nullptr};
     ProfSubscribeRawDataFunc profSubscribeRawData_{nullptr};
     ProfUnSubscribeRawDataFunc profUnSubscribeRawData_{nullptr};
-    ProfSetInjectionFuncFunc profSetInjectionFunc_{nullptr};
-    ProfInjectionInitializeFunc profInjectionInitialize_{nullptr};
-    ProfGetInjectionFuncFunc profGetInjectionFunc_{nullptr};
     ProfRegisterDataCallbackFunc profRegisterDataCallback_{nullptr};
 
     VariableBlockBuffer variableAdditionalBuffer_{};
@@ -193,6 +193,7 @@ private:
 
     ProfSetCommandFunc profSetProfCommand_{nullptr};
     ProfCheckOpSwitchFunc profCheckOpSwitch_{nullptr};
+    std::unique_ptr<InjectionState> injectionState_;
 
     // for atls tools callback
     MsprofSetDeviceHandle atlsSetDevice_{nullptr};

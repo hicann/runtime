@@ -8,8 +8,11 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "prof_cann_plugin.h"
+#include <cstdlib>
 #include <dlfcn.h>
+#include <mutex>
 #include "prof_acl_plugin.h"
+#include "prof_compute_injection_impl.h"
 #include "prof_tx_plugin.h"
 #include "prof_mstx_plugin.h"
 #include "msprof_dlog.h"
@@ -20,6 +23,7 @@
 
 using namespace analysis::dvvp::common::error;
 using namespace analysis::dvvp::common::utils;
+
 namespace ProfAPI {
 #if (defined(_WIN32) || defined(_WIN64) || defined(_MSC_VER))
 const std::string MSPROFILER_LIB_PATH = "libmsprofiler.dll";
@@ -39,8 +43,13 @@ struct ProfSetDevPara {
         api = reinterpret_cast<func>(dlsym(hanle, name)); \
     } while (0)
 
+ProfCannPlugin::ProfCannPlugin() : injectionState_(std::make_unique<InjectionState>()) {}
+
+InjectionState& ProfCannPlugin::GetInjectionState() { return *injectionState_; }
+
 ProfCannPlugin::~ProfCannPlugin()
 {
+    ProfResetInjectionState();
     void* handle = msProfLibHandle_.load(std::memory_order_acquire);
     if (handle != nullptr) {
         dlclose(handle);
@@ -139,10 +148,6 @@ void ProfCannPlugin::LoadProfRawDataApi()
     LOAD_MSPROF_API(profSubscribeRawData_, msProfLibHandle_, ProfSubscribeRawDataFunc, "ProfImplSubscribeRawData");
     LOAD_MSPROF_API(
         profUnSubscribeRawData_, msProfLibHandle_, ProfUnSubscribeRawDataFunc, "ProfImplUnSubscribeRawData");
-    LOAD_MSPROF_API(profSetInjectionFunc_, msProfLibHandle_, ProfSetInjectionFuncFunc, "MsprofSetInjectionFunc");
-    LOAD_MSPROF_API(
-        profInjectionInitialize_, msProfLibHandle_, ProfInjectionInitializeFunc, "MsprofInjectionInitialize");
-    LOAD_MSPROF_API(profGetInjectionFunc_, msProfLibHandle_, ProfGetInjectionFuncFunc, "MsprofGetInjectionFunc");
     LOAD_MSPROF_API(
         profRegisterDataCallback_, msProfLibHandle_, ProfRegisterDataCallbackFunc, "MsprofRegisterDataCallback");
 }
@@ -392,6 +397,11 @@ int32_t ProfCannPlugin::ProfStart(uint32_t dataType, const void* data, uint32_t 
 {
     std::unique_lock<std::mutex> envLock(envMutex_);
     ProfApiInit();
+#ifndef ascend031
+    if (dataType == MSPROF_CTRL_INIT_COMPUTE && SyncComputeDataCallback() != PROFILING_SUCCESS) {
+        return PROFILING_FAILED;
+    }
+#endif
     ProfInitReportBuf(dataType);
     ProfTxInit();
     if (profStart_ != nullptr) {
@@ -977,44 +987,23 @@ int32_t ProfCannPlugin::ProfUnSubscribeRawData() const
     return 0;
 }
 
-int32_t ProfCannPlugin::ProfSetInjectionFunc(uint32_t type, void* func)
+void ProfCannPlugin::ProfResetInjectionState()
 {
-    ProfApiInit();
-    if (profSetInjectionFunc_ != nullptr) {
-        return profSetInjectionFunc_(type, func);
+    auto& state = GetInjectionState();
+    void* aclToolHandle = state.aclToolHandle.exchange(nullptr, std::memory_order_acq_rel);
+    state.setInjectionFunc.store(nullptr, std::memory_order_release);
+    state.getInjectionFunc.store(nullptr, std::memory_order_release);
+    state.hookInitFunc.store(nullptr, std::memory_order_release);
+    state.injectionEnabled.store(false, std::memory_order_release);
+    {
+        std::lock_guard<std::mutex> lock(state.dataCallbackMutex);
+        state.pendingDataCallbackType = 0;
+        state.pendingDataCallback = nullptr;
+        state.pendingDataCallbackReady = false;
     }
-    MSPROF_LOGW("profSetInjectionFunc_ is null");
-    return PROFILING_FAILED;
-}
-
-int32_t ProfCannPlugin::ProfInjectionInitialize()
-{
-    ProfApiInit();
-    if (profInjectionInitialize_ != nullptr) {
-        return profInjectionInitialize_();
+    if (aclToolHandle != nullptr) {
+        dlclose(aclToolHandle);
     }
-    MSPROF_LOGW("profInjectionInitialize_ is null");
-    return PROFILING_FAILED;
-}
-
-void* ProfCannPlugin::ProfGetInjectionFunc(uint32_t type)
-{
-    ProfApiInit();
-    if (profGetInjectionFunc_ != nullptr) {
-        return profGetInjectionFunc_(type);
-    }
-    MSPROF_LOGW("profGetInjectionFunc_ is null");
-    return nullptr;
-}
-
-int32_t ProfCannPlugin::ProfRegisterDataCallback(uint32_t type, void* callback)
-{
-    ProfApiInit();
-    if (profRegisterDataCallback_ != nullptr) {
-        return profRegisterDataCallback_(type, callback);
-    }
-    MSPROF_LOGW("profRegisterDataCallback_ is null");
-    return PROFILING_FAILED;
 }
 
 bool ProfCannPlugin::ProfCheckOpSwitch(uint32_t type, const char* op, size_t len)

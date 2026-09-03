@@ -32,6 +32,12 @@ MSVP_PROF_API int32_t MsprofRegisterProfileCallback(int32_t callbackType, VOID_P
     return ProfAPI::ProfCannPlugin::instance()->RegisterProfileCallback(callbackType, callback, len);
 }
 
+#ifndef ascend031
+MSVP_PROF_API int32_t MsprofRegisterDataCallback(uint32_t type, void* callback)
+{
+    return ProfAPI::ProfCannPlugin::instance()->ProfRegisterDataCallback(type, callback);
+}
+
 MSVP_PROF_API int32_t MsprofSetInjectionFunc(uint32_t type, void* func)
 {
     return ProfAPI::ProfCannPlugin::instance()->ProfSetInjectionFunc(type, func);
@@ -46,11 +52,7 @@ MSVP_PROF_API void* MsprofGetInjectionFunc(uint32_t type)
 {
     return ProfAPI::ProfCannPlugin::instance()->ProfGetInjectionFunc(type);
 }
-
-MSVP_PROF_API int32_t MsprofRegisterDataCallback(uint32_t type, void* callback)
-{
-    return ProfAPI::ProfCannPlugin::instance()->ProfRegisterDataCallback(type, callback);
-}
+#endif
 
 // API for cann using
 MSVP_PROF_API int32_t profSetStepInfo(const uint64_t indexId, const uint16_t tagId, void* const stream)

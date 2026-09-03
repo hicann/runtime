@@ -62,9 +62,6 @@ extern "C" MSVP_PROF_API void ProfImplSetBatchAddBufIndexShift(const ProfBatchAd
 extern "C" MSVP_PROF_API int32_t ProfImplGetFeatureIsOn(uint64_t feature);
 extern "C" MSVP_PROF_API int32_t ProfImplSubscribeRawData(MsprofRawDataCallback callback);
 extern "C" MSVP_PROF_API int32_t ProfImplUnSubscribeRawData();
-extern "C" MSVP_PROF_API int32_t MsprofSetInjectionFunc(uint32_t type, void* func);
-extern "C" MSVP_PROF_API int32_t MsprofInjectionInitialize(void);
-extern "C" MSVP_PROF_API void* MsprofGetInjectionFunc(uint32_t type);
 extern "C" MSVP_PROF_API int32_t MsprofRegisterDataCallback(uint32_t type, void* callback);
 
 extern "C" MSVP_PROF_API void ProfImplSetVarAddBlockBufBatchPop(const ProfVarAddBlockBufPopCallback func);

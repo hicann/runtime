@@ -15,6 +15,10 @@ set(LLT_DATA_DIR
     ${TOP_DIR}/tests/ut/msprof/st/data
 )
 
+if(DEFINED PRODUCT AND PRODUCT STREQUAL "ascend031")
+    add_compile_definitions(ascend031)
+endif()
+
 set(testStubSrc
     ${ACLJSON_STUB_DIR}/hdc-api-stub.cpp
     ${ACLJSON_STUB_DIR}/hdc-log-stub.cpp
@@ -172,6 +176,7 @@ set(src_file
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/adapter/src/msprofiler_acl_api.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/adapter/src/command_handle.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profapi/src/prof_cann_plugin.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/profapi/src/prof_compute_injection.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profapi/src/prof_plugin.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profapi/src/prof_plugin_manager.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profapi/src/prof_tx_plugin.cpp

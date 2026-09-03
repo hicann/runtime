@@ -189,15 +189,6 @@ int32_t MsptiUnSubscribeRawData()
     return ret;
 }
 
-int32_t ProfSetInjectionFunc(uint32_t type, void* func)
-{
-    return ComputeProfilingManager::instance()->RegisterInjectionFunc(type, func);
-}
-
-int32_t ProfInjectionInitialize() { return ComputeProfilingManager::instance()->InitializeInjection(); }
-
-void* ProfGetInjectionFunc(uint32_t type) { return ComputeProfilingManager::instance()->GetInjectionFunc(type); }
-
 int32_t ProfRegisterDataCallback(uint32_t type, void* callback)
 {
     return ComputeProfilingManager::instance()->RegisterDataCallback(type, callback);

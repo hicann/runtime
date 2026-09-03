@@ -56,6 +56,7 @@ set(MSPROFAPI_SRC_FILE
     ${MSPROF_SOURCE_DIR}/dvvp/profapi/src/prof_plugin_manager.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profapi/src/prof_plugin.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profapi/src/prof_cann_plugin.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/profapi/src/prof_compute_injection.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profapi/src/prof_tx_plugin.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profapi/src/prof_acl_plugin.cpp
 )
@@ -344,6 +345,10 @@ set(TEST_SRC
     # testcase/common/api_stest.cpp
     # testcase/common/api_inner_stest.cpp
 )
+
+if(DEFINED PRODUCT AND PRODUCT STREQUAL "ascend031")
+    add_compile_definitions(ascend031)
+endif()
 
 ####################### api_dc_stest ###########################
 
@@ -913,6 +918,7 @@ set(prof_api_src_file
     ${MSPROF_SOURCE_DIR}/dvvp/profapi/src/prof_plugin_manager.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profapi/src/prof_plugin.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profapi/src/prof_cann_plugin.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/profapi/src/prof_compute_injection.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profapi/src/prof_tx_plugin.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profapi/src/prof_acl_plugin.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profapi/src/prof_runtime_plugin.cpp

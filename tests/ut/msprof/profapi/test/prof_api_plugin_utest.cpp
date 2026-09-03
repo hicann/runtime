@@ -9,9 +9,11 @@
  */
 #include "mockcpp/mockcpp.hpp"
 #include "gtest/gtest.h"
+#include <atomic>
 #include <map>
 #include <string>
 #include "msprof_dlog.h"
+#include "prof_inner_api.h"
 #include "prof_acl_plugin.h"
 #include "prof_cann_plugin.h"
 #include "prof_plugin_manager.h"
@@ -24,37 +26,16 @@
 #include "prof_report_api.h"
 #include "prof_plugin.h"
 
+using namespace analysis::dvvp::common::error;
+
 #ifdef PROF_API_STUB
 extern void profOstreamStub(void);
 #endif
 
 namespace {
-uint32_t setInjectionFuncCallCount = 0;
-uint32_t injectionInitializeCallCount = 0;
-uint32_t getInjectionFuncCallCount = 0;
+#ifndef ascend031
 uint32_t registerDataCallbackCallCount = 0;
-void* injectionFuncStub = reinterpret_cast<void*>(&getInjectionFuncCallCount);
-
-int32_t ProfSetInjectionFuncStub(uint32_t type, void* func)
-{
-    (void)type;
-    (void)func;
-    setInjectionFuncCallCount++;
-    return 0;
-}
-
-int32_t ProfInjectionInitializeStub()
-{
-    injectionInitializeCallCount++;
-    return 0;
-}
-
-void* ProfGetInjectionFuncStub(uint32_t type)
-{
-    (void)type;
-    getInjectionFuncCallCount++;
-    return injectionFuncStub;
-}
+std::atomic<uint32_t> profStartCallCount{0};
 
 int32_t ProfRegisterDataCallbackStub(uint32_t type, void* callback)
 {
@@ -64,33 +45,79 @@ int32_t ProfRegisterDataCallbackStub(uint32_t type, void* callback)
     return 0;
 }
 
-void RegisterInjectionApiStubs()
+int32_t ProfRegisterDataCallbackFailStub(uint32_t type, void* callback)
 {
-    RegisterMmDlsymStub("MsprofSetInjectionFunc", reinterpret_cast<void*>(ProfSetInjectionFuncStub));
-    RegisterMmDlsymStub("MsprofInjectionInitialize", reinterpret_cast<void*>(ProfInjectionInitializeStub));
-    RegisterMmDlsymStub("MsprofGetInjectionFunc", reinterpret_cast<void*>(ProfGetInjectionFuncStub));
-    RegisterMmDlsymStub("MsprofRegisterDataCallback", reinterpret_cast<void*>(ProfRegisterDataCallbackStub));
+    (void)type;
+    (void)callback;
+    registerDataCallbackCallCount++;
+    return PROFILING_FAILED;
 }
 
-void ResetInjectionApiStubCount()
+int32_t ProfSetHookStub() { return 0; }
+
+int32_t ProfGetHookStub() { return 0; }
+
+int32_t ProfStartTrackingStub(uint32_t, const void*, uint32_t)
 {
-    setInjectionFuncCallCount = 0;
-    injectionInitializeCallCount = 0;
-    getInjectionFuncCallCount = 0;
-    registerDataCallbackCallCount = 0;
+    profStartCallCount.fetch_add(1);
+    return PROFILING_SUCCESS;
 }
 
-void ResetProfApiLoadState()
+std::atomic<bool> initSawSetHook{false};
+std::atomic<bool> initSawGetHook{false};
+std::atomic<bool> oldHandleClosedObserved{false};
+std::atomic<bool> initSawOldHandleClosed{false};
+std::atomic<uint32_t> initCallCount{0};
+
+int32_t ProfAclToolInitializeStub()
 {
+    initCallCount.fetch_add(1);
+    initSawSetHook.store(MsprofGetInjectionFunc(PROF_HOOK_SET) != nullptr);
+    initSawGetHook.store(MsprofGetInjectionFunc(PROF_HOOK_GET) != nullptr);
+    return (initSawSetHook.load() && initSawGetHook.load()) ? PROFILING_SUCCESS : PROFILING_FAILED;
+}
+
+int32_t ProfAclToolInitializeOldHandleStub()
+{
+    initCallCount.fetch_add(1);
+    initSawOldHandleClosed.store(oldHandleClosedObserved.load());
+    return PROFILING_SUCCESS;
+}
+
+int32_t ProfAclToolInitializeFailedStub()
+{
+    initCallCount.fetch_add(1);
+    return PROFILING_FAILED;
+}
+
+int32_t ProfInjectionDlcloseStub(void* handle)
+{
+    if (handle != nullptr) {
+        oldHandleClosedObserved.store(true);
+    }
+    return mmDlclose(handle);
+}
+#endif
+
+void ResetInjectionStateForTest()
+{
+    unsetenv("ACL_API_INJECTION");
     auto plugin = ProfAPI::ProfCannPlugin::instance();
-    plugin->msProfLibHandle_ = nullptr;
-    plugin->profApiLoadFlag_ = PTHREAD_ONCE_INIT;
-    plugin->profSetInjectionFunc_ = nullptr;
-    plugin->profInjectionInitialize_ = nullptr;
-    plugin->profGetInjectionFunc_ = nullptr;
+    plugin->ProfResetInjectionState();
     plugin->profRegisterDataCallback_ = nullptr;
+#ifndef ascend031
+    initSawSetHook.store(false);
+    initSawGetHook.store(false);
+    oldHandleClosedObserved.store(false);
+    initSawOldHandleClosed.store(false);
+    initCallCount.store(0);
+    registerDataCallbackCallCount = 0;
+    profStartCallCount.store(0);
+#endif
 }
 } // namespace
+
+static int32_t ProfStartFuncStub(uint32_t dataType, const void* data, uint32_t length);
 
 class PROF_API_PLUGIN_UTTEST : public testing::Test {
 protected:
@@ -100,8 +127,9 @@ protected:
         MOCKER(dlsym).stubs().will(invoke(mmDlsym));
         MOCKER(dlclose).stubs().will(invoke(mmDlclose));
         MOCKER(dlerror).stubs().will(invoke(mmDlerror));
+        ResetInjectionStateForTest();
     }
-    virtual void TearDown() {}
+    virtual void TearDown() { ResetInjectionStateForTest(); }
 };
 
 int ProfApiInitStub(void)
@@ -110,38 +138,123 @@ int ProfApiInitStub(void)
     return 0;
 }
 
+#ifndef ascend031
 TEST_F(PROF_API_PLUGIN_UTTEST, PROF_INJECTION_API_COLD_START)
 {
-    RegisterInjectionApiStubs();
-    ResetInjectionApiStubCount();
-    ResetProfApiLoadState();
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofSetInjectionFunc(PROF_HOOK_SET, reinterpret_cast<void*>(ProfSetHookStub)));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofSetInjectionFunc(PROF_HOOK_GET, reinterpret_cast<void*>(ProfGetHookStub)));
     EXPECT_EQ(
-        0, ProfAPI::ProfCannPlugin::instance()->ProfSetInjectionFunc(
-               PROF_HOOK_SET, reinterpret_cast<void*>(ProfSetInjectionFuncStub)));
-    EXPECT_EQ(1U, setInjectionFuncCallCount);
-    EXPECT_EQ(0, ProfAPI::ProfCannPlugin::instance()->ProfInjectionInitialize());
-    EXPECT_EQ(1U, injectionInitializeCallCount);
-    EXPECT_EQ(injectionFuncStub, ProfAPI::ProfCannPlugin::instance()->ProfGetInjectionFunc(PROF_HOOK_GET));
-    EXPECT_EQ(1U, getInjectionFuncCallCount);
-    EXPECT_EQ(
-        0, ProfAPI::ProfCannPlugin::instance()->ProfRegisterDataCallback(
-               PROF_DATA_CALLBACK_COMPUTE, reinterpret_cast<void*>(ProfRegisterDataCallbackStub)));
-    EXPECT_EQ(1U, registerDataCallbackCallCount);
+        PROFILING_SUCCESS, MsprofSetInjectionFunc(PROF_HOOK_INIT, reinterpret_cast<void*>(ProfAclToolInitializeStub)));
+    EXPECT_EQ(nullptr, MsprofGetInjectionFunc(PROF_HOOK_SET));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofInjectionInitialize());
+    EXPECT_EQ(1U, initCallCount.load());
+    EXPECT_TRUE(initSawSetHook.load());
+    EXPECT_TRUE(initSawGetHook.load());
+    EXPECT_NE(nullptr, MsprofGetInjectionFunc(PROF_HOOK_SET));
+    EXPECT_NE(nullptr, MsprofGetInjectionFunc(PROF_HOOK_GET));
+    EXPECT_EQ(nullptr, MsprofGetInjectionFunc(PROF_HOOK_INIT));
 }
 
 TEST_F(PROF_API_PLUGIN_UTTEST, PROF_INJECTION_API_SYMBOL_NULL)
 {
-    ProfAPI::ProfCannPlugin::instance()->profSetInjectionFunc_ = nullptr;
-    ProfAPI::ProfCannPlugin::instance()->profInjectionInitialize_ = nullptr;
-    ProfAPI::ProfCannPlugin::instance()->profGetInjectionFunc_ = nullptr;
-    ProfAPI::ProfCannPlugin::instance()->profRegisterDataCallback_ = nullptr;
-    EXPECT_EQ(-1, ProfAPI::ProfCannPlugin::instance()->ProfSetInjectionFunc(PROF_HOOK_SET, nullptr));
-    EXPECT_EQ(-1, ProfAPI::ProfCannPlugin::instance()->ProfInjectionInitialize());
-    EXPECT_EQ(nullptr, ProfAPI::ProfCannPlugin::instance()->ProfGetInjectionFunc(PROF_HOOK_GET));
-    EXPECT_EQ(-1, ProfAPI::ProfCannPlugin::instance()->ProfRegisterDataCallback(PROF_DATA_CALLBACK_COMPUTE, nullptr));
-    RegisterInjectionApiStubs();
-    ProfAPI::ProfCannPlugin::instance()->LoadProfRawDataApi();
+    EXPECT_EQ(PROFILING_FAILED, MsprofSetInjectionFunc(PROF_HOOK_SET, nullptr));
+    EXPECT_EQ(PROFILING_FAILED, MsprofSetInjectionFunc(3, reinterpret_cast<void*>(ProfAclToolInitializeStub)));
+    EXPECT_EQ(nullptr, MsprofGetInjectionFunc(PROF_HOOK_SET));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofInjectionInitialize());
+    EXPECT_EQ(nullptr, MsprofGetInjectionFunc(PROF_HOOK_GET));
+    EXPECT_EQ(
+        PROFILING_FAILED,
+        ProfAPI::ProfCannPlugin::instance()->ProfRegisterDataCallback(PROF_DATA_CALLBACK_COMPUTE, nullptr));
 }
+
+TEST_F(PROF_API_PLUGIN_UTTEST, PROF_INJECTION_API_INIT_HOOK_REQUIRES_SET_GET_HOOKS)
+{
+    EXPECT_EQ(
+        PROFILING_SUCCESS, MsprofSetInjectionFunc(PROF_HOOK_INIT, reinterpret_cast<void*>(ProfAclToolInitializeStub)));
+    EXPECT_EQ(PROFILING_FAILED, MsprofInjectionInitialize());
+    EXPECT_EQ(0U, initCallCount.load());
+}
+
+TEST_F(PROF_API_PLUGIN_UTTEST, PROF_INJECTION_API_INIT_HOOK_FAILED)
+{
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofSetInjectionFunc(PROF_HOOK_SET, reinterpret_cast<void*>(ProfSetHookStub)));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofSetInjectionFunc(PROF_HOOK_GET, reinterpret_cast<void*>(ProfGetHookStub)));
+    EXPECT_EQ(
+        PROFILING_SUCCESS,
+        MsprofSetInjectionFunc(PROF_HOOK_INIT, reinterpret_cast<void*>(ProfAclToolInitializeFailedStub)));
+    EXPECT_EQ(PROFILING_FAILED, MsprofInjectionInitialize());
+    EXPECT_EQ(nullptr, MsprofGetInjectionFunc(PROF_HOOK_SET));
+}
+
+TEST_F(PROF_API_PLUGIN_UTTEST, PROF_INJECTION_API_ENV_OFF_CLEARS_OLD_STATE)
+{
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofSetInjectionFunc(PROF_HOOK_SET, reinterpret_cast<void*>(ProfSetHookStub)));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofSetInjectionFunc(PROF_HOOK_GET, reinterpret_cast<void*>(ProfGetHookStub)));
+    RegisterMmDlsymStub("acltoolInitialize", reinterpret_cast<void*>(ProfAclToolInitializeStub));
+    EXPECT_EQ(0, setenv("ACL_API_INJECTION", "libprofimpl.so", 1));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofInjectionInitialize());
+    EXPECT_NE(nullptr, MsprofGetInjectionFunc(PROF_HOOK_SET));
+
+    unsetenv("ACL_API_INJECTION");
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofInjectionInitialize());
+    EXPECT_EQ(nullptr, MsprofGetInjectionFunc(PROF_HOOK_SET));
+}
+
+TEST_F(PROF_API_PLUGIN_UTTEST, PROF_INJECTION_API_ENV_OFF_KEEPS_OLD_HANDLE_LIVE_DURING_INIT)
+{
+    MOCKER(dlclose).stubs().will(invoke(ProfInjectionDlcloseStub));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofSetInjectionFunc(PROF_HOOK_SET, reinterpret_cast<void*>(ProfSetHookStub)));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofSetInjectionFunc(PROF_HOOK_GET, reinterpret_cast<void*>(ProfGetHookStub)));
+    EXPECT_EQ(
+        PROFILING_SUCCESS,
+        MsprofSetInjectionFunc(PROF_HOOK_INIT, reinterpret_cast<void*>(ProfAclToolInitializeOldHandleStub)));
+    RegisterMmDlsymStub("acltoolInitialize", reinterpret_cast<void*>(ProfAclToolInitializeOldHandleStub));
+    EXPECT_EQ(0, setenv("ACL_API_INJECTION", "libprofimpl.so", 1));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofInjectionInitialize());
+    EXPECT_EQ(1U, initCallCount.load());
+
+    oldHandleClosedObserved.store(false);
+    initSawOldHandleClosed.store(false);
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofInjectionInitialize());
+    EXPECT_EQ(2U, initCallCount.load());
+    EXPECT_FALSE(initSawOldHandleClosed.load());
+}
+
+TEST_F(PROF_API_PLUGIN_UTTEST, PROF_REGISTER_DATA_CALLBACK_CACHE_AND_SYNC)
+{
+    auto plugin = ProfAPI::ProfCannPlugin::instance();
+    EXPECT_EQ(PROFILING_FAILED, plugin->ProfRegisterDataCallback(PROF_DATA_CALLBACK_COMPUTE, nullptr));
+    EXPECT_EQ(
+        PROFILING_SUCCESS,
+        MsprofRegisterDataCallback(PROF_DATA_CALLBACK_COMPUTE, reinterpret_cast<void*>(ProfSetHookStub)));
+    EXPECT_EQ(0U, registerDataCallbackCallCount);
+
+    RegisterMmDlsymStub("MsprofRegisterDataCallback", reinterpret_cast<void*>(ProfRegisterDataCallbackStub));
+    plugin->profRegisterDataCallback_ = ProfRegisterDataCallbackStub;
+    plugin->profStart_ = ProfStartFuncStub;
+    EXPECT_EQ(PROFILING_SUCCESS, plugin->ProfStart(MSPROF_CTRL_INIT_COMPUTE, nullptr, 0));
+    EXPECT_EQ(1U, registerDataCallbackCallCount);
+    EXPECT_EQ(PROFILING_SUCCESS, plugin->ProfStart(MSPROF_CTRL_INIT_COMPUTE, nullptr, 0));
+    EXPECT_EQ(1U, registerDataCallbackCallCount);
+}
+
+TEST_F(PROF_API_PLUGIN_UTTEST, PROF_REGISTER_DATA_CALLBACK_SYNC_FAIL_BEFORE_RESOURCE_INIT)
+{
+    auto plugin = ProfAPI::ProfCannPlugin::instance();
+    EXPECT_EQ(
+        PROFILING_SUCCESS,
+        MsprofRegisterDataCallback(PROF_DATA_CALLBACK_COMPUTE, reinterpret_cast<void*>(ProfSetHookStub)));
+    plugin->profRegisterDataCallback_ = ProfRegisterDataCallbackFailStub;
+    plugin->profStart_ = ProfStartTrackingStub;
+
+    MOCKER_CPP(&ProfAPI::ProfCannPlugin::ProfInitReportBuf).expects(never());
+    MOCKER_CPP(&ProfAPI::ProfCannPlugin::ProfTxInit).expects(never());
+
+    EXPECT_EQ(PROFILING_FAILED, plugin->ProfStart(MSPROF_CTRL_INIT_COMPUTE, nullptr, 0));
+    EXPECT_EQ(1U, registerDataCallbackCallCount);
+    EXPECT_EQ(0U, profStartCallCount.load());
+}
+#endif
 
 TEST_F(PROF_API_PLUGIN_UTTEST, PROF_API_INIT)
 {

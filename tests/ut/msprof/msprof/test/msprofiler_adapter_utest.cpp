@@ -19,7 +19,6 @@
 #include "prof_api.h"
 #include "prof_inner_api.h"
 #include "prof_tx_plugin.h"
-#include "prof_cann_plugin.h"
 #include "errno/error_code.h"
 #include "prof_plugin_manager.h"
 #include "platform/platform.h"
@@ -66,13 +65,6 @@ int32_t ComputeRawDataCallback(MsprofRawData* rawData)
     return PROFILING_SUCCESS;
 }
 
-int32_t HookInitSuccess() { return PROFILING_SUCCESS; }
-
-int32_t HookInitFailed() { return PROFILING_FAILED; }
-
-bool initHookCalled = false;
-bool initHookSawSetHook = false;
-bool initHookSawGetHook = false;
 int32_t g_computeTestStartRet = PROFILING_SUCCESS;
 int32_t g_computeTestStopRet = PROFILING_SUCCESS;
 uint32_t g_computeTestStartCount = 0;
@@ -97,36 +89,6 @@ public:
         return g_computeTestStopRet;
     }
 };
-
-void ResetInjectionContext()
-{
-    initHookCalled = false;
-    initHookSawSetHook = false;
-    initHookSawGetHook = false;
-    auto manager = Analysis::Dvvp::ProfilerCommon::ComputeProfilingManager::instance();
-    manager->ClearInjectionContext();
-}
-
-void ExpectRegisterInjectionFunc(uint32_t type, void* func)
-{
-    EXPECT_EQ(PROFILING_SUCCESS, Analysis::Dvvp::ProfilerCommon::ProfSetInjectionFunc(type, func));
-}
-
-void PrepareInjectionContextWithSetGetHooks()
-{
-    ResetInjectionContext();
-    unsetenv("ACL_API_INJECTION");
-    ExpectRegisterInjectionFunc(PROF_HOOK_SET, reinterpret_cast<void*>(ComputeRawDataCallback));
-    ExpectRegisterInjectionFunc(PROF_HOOK_GET, reinterpret_cast<void*>(ComputeRawDataCallback));
-}
-
-int32_t HookInitGetRegisteredHooks()
-{
-    initHookCalled = true;
-    initHookSawSetHook = Analysis::Dvvp::ProfilerCommon::ProfGetInjectionFunc(PROF_HOOK_SET) != nullptr;
-    initHookSawGetHook = Analysis::Dvvp::ProfilerCommon::ProfGetInjectionFunc(PROF_HOOK_GET) != nullptr;
-    return (initHookSawSetHook && initHookSawGetHook) ? PROFILING_SUCCESS : PROFILING_FAILED;
-}
 
 void ResetComputeTestJob(int32_t startRet, int32_t stopRet)
 {
@@ -614,66 +576,4 @@ TEST_F(MSPROFILER_ADAPTER_UTEST, COMPUTE_CREATE_UPLOADER_ROLLBACK_WHEN_CREATE_UP
     manager->ClearContext();
     EXPECT_EQ(PROFILING_FAILED, manager->CreateComputeUploader("0"));
     EXPECT_EQ(nullptr, manager->injectionTransport_);
-}
-
-TEST_F(MSPROFILER_ADAPTER_UTEST, INJECTION_FUNC_CHECK_PARAM_AND_ENV_OFF)
-{
-    unsetenv("ACL_API_INJECTION");
-    EXPECT_EQ(PROFILING_FAILED, Analysis::Dvvp::ProfilerCommon::ProfSetInjectionFunc(PROF_HOOK_SET, nullptr));
-    EXPECT_EQ(
-        PROFILING_FAILED,
-        Analysis::Dvvp::ProfilerCommon::ProfSetInjectionFunc(3, reinterpret_cast<void*>(ComputeRawDataCallback)));
-    EXPECT_EQ(
-        PROFILING_SUCCESS, Analysis::Dvvp::ProfilerCommon::ProfSetInjectionFunc(
-                               PROF_HOOK_SET, reinterpret_cast<void*>(ComputeRawDataCallback)));
-    EXPECT_EQ(
-        PROFILING_SUCCESS, Analysis::Dvvp::ProfilerCommon::ProfSetInjectionFunc(
-                               PROF_HOOK_GET, reinterpret_cast<void*>(ComputeRawDataCallback)));
-    EXPECT_EQ(PROFILING_SUCCESS, Analysis::Dvvp::ProfilerCommon::ProfInjectionInitialize());
-    EXPECT_EQ(nullptr, Analysis::Dvvp::ProfilerCommon::ProfGetInjectionFunc(PROF_HOOK_SET));
-}
-
-TEST_F(MSPROFILER_ADAPTER_UTEST, INJECTION_FUNC_INIT_HOOK_SUCCESS)
-{
-    PrepareInjectionContextWithSetGetHooks();
-    EXPECT_EQ(
-        PROFILING_SUCCESS,
-        Analysis::Dvvp::ProfilerCommon::ProfSetInjectionFunc(PROF_HOOK_INIT, reinterpret_cast<void*>(HookInitSuccess)));
-    EXPECT_EQ(PROFILING_SUCCESS, Analysis::Dvvp::ProfilerCommon::ProfInjectionInitialize());
-    EXPECT_NE(nullptr, Analysis::Dvvp::ProfilerCommon::ProfGetInjectionFunc(PROF_HOOK_SET));
-    EXPECT_NE(nullptr, Analysis::Dvvp::ProfilerCommon::ProfGetInjectionFunc(PROF_HOOK_GET));
-    EXPECT_EQ(nullptr, Analysis::Dvvp::ProfilerCommon::ProfGetInjectionFunc(PROF_HOOK_INIT));
-}
-
-TEST_F(MSPROFILER_ADAPTER_UTEST, INJECTION_FUNC_INIT_HOOK_GETS_REGISTERED_HOOKS)
-{
-    PrepareInjectionContextWithSetGetHooks();
-    EXPECT_EQ(
-        PROFILING_SUCCESS, Analysis::Dvvp::ProfilerCommon::ProfSetInjectionFunc(
-                               PROF_HOOK_INIT, reinterpret_cast<void*>(HookInitGetRegisteredHooks)));
-    EXPECT_EQ(PROFILING_SUCCESS, Analysis::Dvvp::ProfilerCommon::ProfInjectionInitialize());
-    EXPECT_TRUE(initHookCalled);
-    EXPECT_TRUE(initHookSawSetHook);
-    EXPECT_TRUE(initHookSawGetHook);
-}
-
-TEST_F(MSPROFILER_ADAPTER_UTEST, INJECTION_FUNC_INIT_HOOK_REQUIRES_SET_GET_HOOKS)
-{
-    ResetInjectionContext();
-    unsetenv("ACL_API_INJECTION");
-    EXPECT_EQ(
-        PROFILING_SUCCESS, Analysis::Dvvp::ProfilerCommon::ProfSetInjectionFunc(
-                               PROF_HOOK_INIT, reinterpret_cast<void*>(HookInitGetRegisteredHooks)));
-    EXPECT_EQ(PROFILING_FAILED, Analysis::Dvvp::ProfilerCommon::ProfInjectionInitialize());
-    EXPECT_FALSE(initHookCalled);
-}
-
-TEST_F(MSPROFILER_ADAPTER_UTEST, INJECTION_FUNC_INIT_HOOK_FAILED)
-{
-    PrepareInjectionContextWithSetGetHooks();
-    EXPECT_EQ(
-        PROFILING_SUCCESS,
-        Analysis::Dvvp::ProfilerCommon::ProfSetInjectionFunc(PROF_HOOK_INIT, reinterpret_cast<void*>(HookInitFailed)));
-    EXPECT_EQ(PROFILING_FAILED, Analysis::Dvvp::ProfilerCommon::ProfInjectionInitialize());
-    EXPECT_EQ(nullptr, Analysis::Dvvp::ProfilerCommon::ProfGetInjectionFunc(PROF_HOOK_SET));
 }

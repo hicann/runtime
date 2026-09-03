@@ -465,6 +465,7 @@ add_executable(msprof_utest
     ${MSPROF_SOURCE_DIR}/dvvp/profapi/src/prof_plugin.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profapi/stub/prof_tx_plugin_stub.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profapi/src/prof_cann_plugin.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/profapi/src/prof_compute_injection.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profapi/src/prof_runtime_plugin.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profapi/src/prof_acl_plugin.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profapi/src/prof_mstx_plugin.cpp
@@ -474,6 +475,10 @@ add_executable(msprof_utest
 
 if(NOT BUILD_PROFILING_OPEN_PROJECT)
     target_sources(msprof_utest PRIVATE ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/nano_platform.cpp)
+endif()
+
+if(DEFINED PRODUCT AND PRODUCT STREQUAL "ascend031")
+    add_compile_definitions(ascend031)
 endif()
 
 target_include_directories(msprof_utest PRIVATE
