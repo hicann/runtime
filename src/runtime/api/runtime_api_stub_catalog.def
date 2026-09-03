@@ -3378,7 +3378,7 @@ RUNTIME_API(standard_soc, rtError_t, rtsUnSubscribeReport,
     (threadId, stm), FEATURE_NOT_SUPPORT, EXPORT)
 
 RUNTIME_API(kernel, rtError_t, rtBinaryGetFunctionCount,
-    (const rtBinHandle binHandle, uint32_t* count),
+    (rtBinHandle const binHandle, uint32_t* const count),
     (binHandle, count), FEATURE_NOT_SUPPORT, EXPORT)
 
 RUNTIME_API(standard_soc, rtError_t, rtHostGetDevicePointerAddrRange,

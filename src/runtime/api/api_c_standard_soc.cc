@@ -2050,9 +2050,9 @@ rtError_t rtBinaryEnumerateFunctions(rtBinHandle const binHandle, rtFuncHandle* 
         realProgram, RtPtrToPtr<Kernel**>(funcHandles), numFunctions, &actualCount);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
     for (uint32_t i = 0U; i < actualCount; i++) {
-        Kernel* const realKernel = RtPtrToPtr<Kernel*>(*(funcHandles + i));
+        Kernel* const realKernel = RtPtrToPtr<Kernel*>(funcHandles[i]);
         InitEmbeddedInnerHandle<Kernel>(realKernel);
-        *(funcHandles + i) = ExportEmbeddedHandle<rtFuncHandle>(realKernel);
+        funcHandles[i] = ExportEmbeddedHandle<rtFuncHandle>(realKernel);
     }
     return ACL_RT_SUCCESS;
 }
