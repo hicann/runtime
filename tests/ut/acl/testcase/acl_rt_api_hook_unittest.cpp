@@ -9,6 +9,7 @@
  */
 
 #include "acl/acl_rt.h"
+#include "acl/acl_rt_allocator.h"
 
 #if __GNUC__ >= 8
 #pragma GCC diagnostic push
@@ -217,6 +218,74 @@ TEST_F(UTEST_AclRtApiHook, GetFuncNullOutputsSucceeds)
 {
     aclError ret = aclrtApiInjectionGetFunc("aclrtGetDevice", nullptr, nullptr);
     EXPECT_EQ(ret, ACL_SUCCESS);
+}
+
+// Multi-API hook: verify that hooking different APIs from different func maps works independently.
+TEST_F(UTEST_AclRtApiHook, MultiApiHookFromDifferentFuncMaps)
+{
+    // aclrtGetSocName is in ACL_RT_FUNC_MAP, returns const char*.
+    aclrtApiFunc socOrigin = nullptr;
+    aclrtApiFunc socCurrent = nullptr;
+    ASSERT_EQ(aclrtApiInjectionGetFunc("aclrtGetSocName", &socOrigin, &socCurrent), ACL_SUCCESS);
+    EXPECT_NE(socOrigin, nullptr);
+    EXPECT_EQ(socOrigin, socCurrent);
+
+    // aclrtAllocatorCreateDesc is in ACL_RT_ALLOCATOR_FUNC_MAP, returns aclrtAllocatorDesc (void*).
+    aclrtApiFunc allocOrigin = nullptr;
+    aclrtApiFunc allocCurrent = nullptr;
+    ASSERT_EQ(aclrtApiInjectionGetFunc("aclrtAllocatorCreateDesc", &allocOrigin, &allocCurrent), ACL_SUCCESS);
+    EXPECT_NE(allocOrigin, nullptr);
+    EXPECT_EQ(allocOrigin, allocCurrent);
+
+    // aclmdlRIDestroy is in ACL_MDLRI_FUNC_MAP, returns aclError.
+    aclrtApiFunc mdlOrigin = nullptr;
+    aclrtApiFunc mdlCurrent = nullptr;
+    ASSERT_EQ(aclrtApiInjectionGetFunc("aclmdlRIDestroy", &mdlOrigin, &mdlCurrent), ACL_SUCCESS);
+    EXPECT_NE(mdlOrigin, nullptr);
+    EXPECT_EQ(mdlOrigin, mdlCurrent);
+
+    // Verify the three APIs have distinct entries.
+    EXPECT_NE(socOrigin, allocOrigin);
+    EXPECT_NE(socOrigin, mdlOrigin);
+    EXPECT_NE(allocOrigin, mdlOrigin);
+}
+
+// Hook an allocator API and verify it redirects.
+TEST_F(UTEST_AclRtApiHook, AllocatorApiHookRedirects)
+{
+    aclrtApiFunc origin = nullptr;
+    ASSERT_EQ(aclrtApiInjectionGetFunc("aclrtAllocatorDestroyDesc", &origin, nullptr), ACL_SUCCESS);
+    EXPECT_NE(origin, nullptr);
+
+    ASSERT_EQ(aclrtApiInjectionSetFunc("aclrtAllocatorDestroyDesc", (aclrtApiFunc)DummyGetDeviceHook), ACL_SUCCESS);
+
+    aclrtApiFunc current = nullptr;
+    ASSERT_EQ(aclrtApiInjectionGetFunc("aclrtAllocatorDestroyDesc", nullptr, &current), ACL_SUCCESS);
+    EXPECT_EQ(current, (aclrtApiFunc)DummyGetDeviceHook);
+
+    aclError callRet = aclrtAllocatorDestroyDesc(nullptr);
+    EXPECT_EQ(callRet, HOOK_RET_VALUE);
+
+    ASSERT_EQ(aclrtApiInjectionSetFunc("aclrtAllocatorDestroyDesc", origin), ACL_SUCCESS);
+}
+
+// Hook an mdlRI API and verify it redirects.
+TEST_F(UTEST_AclRtApiHook, MdlRiApiHookRedirects)
+{
+    aclrtApiFunc origin = nullptr;
+    ASSERT_EQ(aclrtApiInjectionGetFunc("aclmdlRIDestroy", &origin, nullptr), ACL_SUCCESS);
+    EXPECT_NE(origin, nullptr);
+
+    ASSERT_EQ(aclrtApiInjectionSetFunc("aclmdlRIDestroy", (aclrtApiFunc)DummyGetDeviceHook), ACL_SUCCESS);
+
+    aclrtApiFunc current = nullptr;
+    ASSERT_EQ(aclrtApiInjectionGetFunc("aclmdlRIDestroy", nullptr, &current), ACL_SUCCESS);
+    EXPECT_EQ(current, (aclrtApiFunc)DummyGetDeviceHook);
+
+    aclError callRet = aclmdlRIDestroy(nullptr);
+    EXPECT_EQ(callRet, HOOK_RET_VALUE);
+
+    ASSERT_EQ(aclrtApiInjectionSetFunc("aclmdlRIDestroy", origin), ACL_SUCCESS);
 }
 
 #if __GNUC__ >= 8

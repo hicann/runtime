@@ -56,6 +56,19 @@ ACL_MDLRI_FUNC_MAP(ACL_RT_CPP_HOOKABLE)
 #pragma GCC diagnostic pop
 #endif // __GNUC__ >= 8
 
+namespace {
+#define ACL_HOOK_LOOKUP(ret, name, sig, args) {#name, &g_hook_##name},
+const AclrtApiLookupEntry g_aclrtApiLookup[] = {ACL_RT_FUNC_MAP(ACL_HOOK_LOOKUP) ACL_MDLRI_FUNC_MAP(ACL_HOOK_LOOKUP)
+                                                    ACL_RT_ALLOCATOR_FUNC_MAP(ACL_HOOK_LOOKUP)};
+#undef ACL_HOOK_LOOKUP
+
+constexpr size_t ACLRT_API_LOOKUP_COUNT = sizeof(g_aclrtApiLookup) / sizeof(g_aclrtApiLookup[0]);
+
+__attribute__((constructor)) void RegisterHookLookupTableInit()
+{
+    RegisterHookLookupTable(g_aclrtApiLookup, ACLRT_API_LOOKUP_COUNT);
+}
+} // namespace
 #else  // ACL_RT_API_HOOK_ENABLE
 
 ACL_RT_FUNC_MAP(ACL_RT_CPP)

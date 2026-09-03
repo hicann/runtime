@@ -34,41 +34,36 @@ aclError aclrtProfTraceImpl(void* userdata, int32_t length, aclrtStream stream)
 #ifdef ACL_RT_API_HOOK_ENABLE
 
 namespace {
-// Cold-path lookup table for SetFunc/GetFunc (string name -> entry pointer).
-// Linear scan is sufficient: ~250 entries, only invoked by tools at init time.
-struct AclrtApiLookupEntry {
-    const char* name;
-    aclrtApiEntry* entry;
-};
-
-#define ACL_HOOK_LOOKUP(ret, name, sig, args) {#name, &g_hook_##name},
-const AclrtApiLookupEntry g_aclrtApiLookup[] = {ACL_RT_FUNC_MAP(ACL_HOOK_LOOKUP) ACL_MDLRI_FUNC_MAP(ACL_HOOK_LOOKUP)
-                                                    ACL_RT_ALLOCATOR_FUNC_MAP(ACL_HOOK_LOOKUP)};
-#undef ACL_HOOK_LOOKUP
-
-constexpr size_t ACLRT_API_LOOKUP_COUNT = sizeof(g_aclrtApiLookup) / sizeof(g_aclrtApiLookup[0]);
+const AclrtApiLookupEntry* g_hookLookupTable = nullptr;
+size_t g_hookLookupCount = 0;
 
 aclrtApiEntry* FindHookEntryByName(const char* name)
 {
     if (name == nullptr) {
         return nullptr;
     }
-    for (size_t i = 0; i < ACLRT_API_LOOKUP_COUNT; ++i) {
-        if (g_aclrtApiLookup[i].entry == nullptr) {
-            continue;
-        }
-        if (strcmp(name, g_aclrtApiLookup[i].name) == 0) {
+    if ((g_hookLookupTable == nullptr) || (g_hookLookupCount == 0)) {
+        ACL_LOG_WARN("Hook lookup table not registered yet.");
+        return nullptr;
+    }
+    for (size_t i = 0; i < g_hookLookupCount; ++i) {
+        if (strcmp(name, g_hookLookupTable[i].name) == 0) {
             ACL_LOG_DEBUG("Find api, name is [%s].", name);
-            return g_aclrtApiLookup[i].entry;
+            return g_hookLookupTable[i].entry;
         }
     }
     ACL_LOG_DEBUG("Cannot find api, name is [%s].", name);
     return nullptr;
 }
 } // namespace
-#endif // ACL_RT_API_HOOK_ENABLE
 
-#ifdef ACL_RT_API_HOOK_ENABLE
+ACL_FUNC_VISIBILITY void RegisterHookLookupTable(const AclrtApiLookupEntry* table, size_t count)
+{
+    g_hookLookupTable = table;
+    g_hookLookupCount = count;
+    ACL_LOG_DEBUG("Hook lookup table registered, count=%zu.", count);
+}
+
 __attribute__((constructor)) void RegisterApiHookToProf()
 {
     auto ret = MsprofSetInjectionFunc(
