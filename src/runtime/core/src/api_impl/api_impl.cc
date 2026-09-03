@@ -3242,7 +3242,6 @@ rtError_t ApiImpl::SetDevice(const int32_t devId)
 
     RT_LOG(RT_LOG_INFO, "SetCurRef = %p,drv devId=%u", context->GetVal(), devId);
     InnerThreadLocalContainer::SetCurRef(context);
-    DeviceStateCallbackManager::Instance().Notify(static_cast<uint32_t>(devId), true, DEV_CB_POS_BACK, RT_DEVICE_STATE_SET_POST);
     RT_LOG(RT_LOG_INFO, "New device success, deviceId=%d.", devId);
 
     Context * const curCtx = context->GetVal();
@@ -3251,6 +3250,7 @@ rtError_t ApiImpl::SetDevice(const int32_t devId)
     curCtx->Device_()->SetSatMode(Runtime::Instance()->GetSatMode());
 
     InnerThreadLocalContainer::SetCurCtx(nullptr);
+    DeviceStateCallbackManager::Instance().Notify(static_cast<uint32_t>(devId), true, DEV_CB_POS_BACK, RT_DEVICE_STATE_SET_POST);
 
     RT_LOG(RT_LOG_INFO, "SetDevice success, curCtx=%p, drv devId=%u.", curCtx, devId);
     return RT_ERROR_NONE;
