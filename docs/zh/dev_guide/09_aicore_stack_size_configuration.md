@@ -6,7 +6,7 @@
 
 json文件的配置示例如下，在aicore\_stack\_size参数处设置栈空间大小，单位为字节，详细使用说明请参见aclInit接口。
 
-```
+```json
 {
     "StackSize":{
         "aicore_stack_size":32768

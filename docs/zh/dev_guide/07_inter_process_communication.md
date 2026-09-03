@@ -1,10 +1,10 @@
-﻿# 进程间通信
+# 进程间通信
 
 由某个主机线程创建的任意设备内存、Event资源或Notify资源，都可以在同一进程内被该进程中的其他线程直接引用。但这些指针或句柄在进程之外是无效的，因此不能被其他进程的线程直接使用。
 
 若要在不同进程之间共享设备内存、Event资源或Notify资源，需要应用程序使用Runtime提供的进程间通信相关API以实现如下典型场景：**由一个主进程生成一批输入数据，并将这些数据提供给多个从属进程使用，而无需在每个进程中重新生成或复制数据**。不同资源涉及的IPC（Inter-Process Communication）接口不同，可查看下文中的调用示例。
 
-需要注意的是，通过aclrtMalloc接口分配设备内存时，出于性能考虑，可能会从更大的底层内存块中切分出来。在这种情况下，IPC接口会检查共享内存是否页表对齐，若未对齐，API将拦截并报错，以防止跨进程多映射内存导致的信息泄露风险。因此，建议使用aclrtMalloc接口根据内存分配规则申请内存。申请不同类型的内存时，其页表大小会有所不同：普通页内存的页表大小为4K，大页内存的页表大小支持2M或1G。
+需要注意的是，通过aclrtMalloc接口分配设备内存时，出于性能考虑，可能会从更大的底层内存块中切分出来。在这种情况下，IPC接口会检查共享内存是否页表对齐，若未对齐，API将拦截并报错，以防止跨进程多映射内存导致的信息泄露风险。因此，建议使用aclrtMalloc接口根据内存分配规则申请内存。申请不同类型的内存时，其页表大小会有所不同：普通页内存的页表大小为4KB，大页内存的页表大小支持2MB或1GB。
 
 ## 进程间共享内存
 
@@ -18,7 +18,7 @@
 
     **注意**：A进程要等待B进程导入后，再关闭IPC共享。若A进程提前关闭共享，B进程会导入失败
 
-    ```
+    ```c
     uint keyLen = 65;
     char key[keyLen]; 
     void *ptrA = nullptr;
@@ -42,7 +42,7 @@
 
 2.  在B进程中，通过共享key导入共享内存：
 
-    ```
+    ```c
     uint keyLen = 65;
     char key[keyLen];
     void *ptrB;
@@ -71,7 +71,7 @@
     
     **注意**：A进程要等待B进程导入后，再销毁共享Event。若A进程提前销毁，B进程会导入失败
 
-    ```
+    ```c
     aclrtEvent event;
     aclrtStream stream;
     aclrtIpcEventHandle handle;
@@ -96,7 +96,7 @@
 
 2.  在B进程中，通过共享handle导入共享Event：
 
-    ```
+    ```c
     aclrtStream stream;
     aclrtEvent event;
     aclrtIpcEventHandle handle;
@@ -132,7 +132,7 @@
 
     **注意**：A进程要等待B进程导入后，再销毁共享Notify。若A进程提前销毁，B进程会导入失败
 
-    ```
+    ```c
     uint keyLen = 65;
     char key[keyLen]; 
     aclrtNotify notify;
@@ -158,7 +158,7 @@
 
 2.  在B进程中，通过共享key导入共享Notify：
 
-    ```
+    ```c
     uint keyLen = 65;
     char key[keyLen];
     aclrtNotify notify;
@@ -195,7 +195,7 @@
 
     **注意**：A进程要等待B进程导入后，再销毁物理内存Handle。若A进程提前销毁，B进程会导入失败
 
-    ```
+    ```c
     // 查询内存申请粒度
     const size_t dataSize = 1024 * sizeof(float);
     aclrtPhysicalMemProp prop = {};
@@ -243,7 +243,7 @@
 
 2.  在B进程中：
 
-    ```
+    ```c
     uint64_t shareableHandle = 0ULL;
     // 从文件中获取共享handle
     readFile("file/vmm_mem", &shareableHandle, sizeof(shareableHandle));

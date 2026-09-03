@@ -20,7 +20,7 @@
 
 以下为获取Device信息的代码示例，不可以直接拷贝编译运行，仅供参考：
 
-```
+```c
 // 获取Device数量及其对应的属性信息
 uint32_t deviceCount;
 aclrtGetDeviceCount(&deviceCount);
@@ -41,7 +41,7 @@ for (deviceId = 0; deviceId < deviceCount; ++deviceId) {
 
 以下是多Device选择的代码示例，不可以直接拷贝编译运行，仅供参考：
 
-```
+```c
 // 指定Device 0作为计算设备，并将Device 0的默认Context作为当前线程的默认Context
 aclrtSetDevice(0);
 aclrtStream s0;                    
@@ -71,7 +71,7 @@ aclrtResetDeviceForce(0);
 
 在与当前Device无所属关系的Stream上下发算子将会失败，示例代码如下：
 
-```
+```c
 aclrtSetDevice(0);                 // 指定Device 0作为计算设备
 aclrtStream s0;                    
 aclrtCreateStream(&s0);            // 在Device 0上创建Stream s0
@@ -101,7 +101,7 @@ myKernel<<<8, nullptr, s0>>>();    // 在Device 1上通过Stream s0下发算子
 
 以下是跨Device内存复制的代码示例，不可以直接拷贝编译运行，仅供参考。完整样例代码请参见[Link](https://gitcode.com/cann/runtime/tree/master/example/1_basic_features/device/2_device_P2P)。
 
-```
+```c
 aclInit(NULL); // 初始化
 int32_t canAccessPeer = 0;
 aclrtDeviceCanAccessPeer(&canAccessPeer, 0, 1);      // 查询Device 0和Device 1之间是否支持数据交互
@@ -122,7 +122,7 @@ if (canAccessPeer == 1) {
         aclrtSetDevice(0);                           // 切换到Device 0上进行操作
         aclrtDeviceDisablePeerAccess(1);             // 关闭当前Device（Device 0）到指定Device（Device 1）的数据交互
 	aclrtFree(dev0Mem);
-	aclrtResetDeviceForce(0);                    // Device 0下的操作，调用aclrtResetDeviceForce接口释放Device 0的资源
+	aclrtResetDeviceForce(0);                    // Device 0下的操作,调用aclrtResetDeviceForce接口释放Device 0的资源
 	printf("P2P copy success\n");
 } else {
 	printf("current device doesn't support p2p feature\n");

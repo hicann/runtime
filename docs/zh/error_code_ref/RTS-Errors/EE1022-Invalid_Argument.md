@@ -4,13 +4,13 @@
 
 报错格式如下，占位符%s的含义依次为接口功能、参数值、参数名、报错原因：
 
-```
+```text
 %s failed. Values %s for parameters %s are invalid. Reason: %s.
 ```
 
 报错示例如下：
 
-```
+```text
 MemGetAddressRange failed. Values nullptr and nullptr for parameters pbase and psize are invalid. Reason: Parameters pbase and psize cannot both be nullptr.
 ```
 

@@ -4,14 +4,14 @@
 
 报错格式如下，占位符%s表示报错原因：
 
-```
+```text
 The argument is invalid. Reason: %s
 ```
 
 报错示例如下：
 
-```
-The argument is invalid.Reason: Invalid device ID 8. Set drv devId to 8. The valid device range is [0, 7).
+```text
+The argument is invalid. Reason: Invalid device ID 8. Set drv devId to 8. The valid device range is [0, 7).
 ```
 
 ## 解决方法

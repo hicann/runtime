@@ -9,7 +9,7 @@
 
 以下是初始化及指定计算设备的代码示例，不可以直接拷贝编译运行，仅供参考。完整样例代码请参见[Link](https://gitcode.com/cann/runtime/tree/master/example/1_basic_features/device/0_device_normal)。
 
-```
+```c
 // 初始化
 int32_t deviceId = 0;
 aclInit(nullptr); // json配置路径为nullptr, 默认初始化
@@ -25,7 +25,7 @@ aclFinalize();
 
 若不显式调用aclrtSetDevice接口，可在aclInit接口的json文件中指定默认Device，例如：
 
-```
+```c
 {
     "defaultDevice":{
         "default_device":"0"
@@ -35,14 +35,14 @@ aclFinalize();
 
 在aclInit接口中启用默认Device功能后，初始化的示例代码如下，不可以直接拷贝编译运行，仅供参考。默认Device配置说明请参见[aclInit接口](../api_ref/02_initialization_and_deinitialization.md#默认device配置示例)。
 
-```
+```c
 // 初始化
 int32_t deviceId = 0;
 aclInit(nullptr);
 
 // 启用DefaultDevice后，可以不显式调用aclrtSetDevice直接调用运行时接口
 // 接口中会按json配置文件指定的device，进行隐式aclrtSetDevice
-aclrtMalloc(&devPtr, size, 0); 
+aclrtMalloc(&devPtr, size, 0);
 
 ......
 

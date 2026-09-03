@@ -4,13 +4,13 @@
 
 报错格式如下，占位符%s的含义依次为参数值、参数名、报错原因：
 
-```
+```text
 Value %s for %s is invalid. Reason: %s.
 ```
 
 报错示例如下：
 
-```
+```text
 Value 0 for size is invalid. Reason: size must be greater than zero.
 ```
 

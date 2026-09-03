@@ -414,7 +414,7 @@ aclError aclrtSetOpExecuteTimeOut(uint32_t timeout)
 
 - 由于不同产品型号的架构差异，AI Core算子、AI CPU算子的最大超时时间有所不同：
     <!-- npu="950,A3,910b" id18 -->
-    - 对于Ascend 950PR/Ascend 950DT、Atlas A3 训练系列产品/Atlas A3 推理系列产品、Atlas A2 训练系列产品/Atlas A2 推理系列产品，AI Core算子、AI CPU算子最大超时时间为interval \* 254，单位是微秒，interval可通过aclrtGetOpTimeoutInterval接口获取。
+    - 对于Ascend 950PR/Ascend 950DT、Atlas A3 训练系列产品/Atlas A3 推理系列产品、Atlas A2 训练系列产品/Atlas A2 推理系列产品，AI Core算子、AI CPU算子最大超时时间为interval \* 254，单位是微秒，interval可通过aclrtGetOpTimeOutInterval接口获取。
     <!-- end id18 -->   
     <!-- npu="310b" id19 -->
     - 对于Atlas 200I/500 A2 推理产品，AI Core算子、AI CPU算子最大超时时间为1091秒。
@@ -709,7 +709,7 @@ aclError aclrtReduceAsync(void *dst, const void *src, uint64_t count, aclrtReduc
 
 ### 约束说明
 
-dts、src必须跟stream所在的Device是同一个设备。
+dst、src必须跟stream所在的Device是同一个设备。
 
 <!-- npu="950" id25 -->
 Ascend 950PR/Ascend 950DT支持如下数据类型：int8、int16、int32、uint32、fp16、fp32、bf16。

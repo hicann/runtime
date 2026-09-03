@@ -4,13 +4,13 @@
 
 报错格式如下，占位符%s表示参数名：
 
-```
+```text
 Argument %s must not be null.
 ```
 
 报错示例如下：
 
-```
+```text
 Argument dataset must not be null.
 ```
 

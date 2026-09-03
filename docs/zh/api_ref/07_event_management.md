@@ -1294,7 +1294,6 @@ aclError aclrtIpcGetEventHandle(aclrtEvent event, aclrtIpcEventHandle *handle)
 **本接口需与以下其它关键接口配合使用**，此处以A进程、B进程为例：
 
 <a id="li288673614297"></a>
-<a id="li288673614297"></a>
 
 1. A进程中：
     1. 调用[aclrtCreateEventExWithFlag](#aclrtCreateEventExWithFlag)接口创建flag为ACL\_EVENT\_IPC的Event。

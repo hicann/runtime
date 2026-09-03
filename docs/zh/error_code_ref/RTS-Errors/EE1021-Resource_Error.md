@@ -4,13 +4,13 @@
 
 报错格式如下，占位符%s的含义依次为资源类型、接口名：
 
-```
+```text
 The runtime module failed to create host %s through API %s.
 ```
 
 报错示例如下：
 
-```
+```text
 The runtime module failed to create host semaphore through API sem_init.
 ```
 

@@ -2509,7 +2509,7 @@ aclError acltdtAddQueueRoute(acltdtQueueRouteList *routeList, const acltdtQueueR
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
 | routeList | 输入&输出 | 队列路由配置数组。<br>需提前调用[acltdtCreateQueueRouteList](#acltdtCreateQueueRouteList)接口创建acltdtQueueRouteList类型的数据。 |
-| route | 输入 | 需添加的队列路由配置信息的指针。<br>需提前调用[acltdtCreateQueueRoute](#acltdtCreateQueueRoute)接口创建acltdtQueueRoute类型的数据。 |
+| route | 输入 | 队列路由配置信息的指针。<br>需提前调用[acltdtCreateQueueRoute](#acltdtCreateQueueRoute)接口创建acltdtQueueRoute类型的数据。 |
 
 ### 返回值说明
 

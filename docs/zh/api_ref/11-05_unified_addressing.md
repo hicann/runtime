@@ -2,7 +2,7 @@
 
 本章节描述统一/托管内存（Unified/Managed Memory）接口，用于自动迁移的内存分配、预取及属性查询。
 
-- [`aclError aclrtMemAllocManaged(void **ptr, uint64_t size, uint32_t flag)`](#aclrtMemAllocManaged)：申请统一虚拟内存（Unified Virtual Memory, UVM），通过\*ptr返回已申请内存的指针，且申请的内存大小会根据用户指定的size向上按2M对齐。
+- [`aclError aclrtMemAllocManaged(void **ptr, uint64_t size, uint32_t flag)`](#aclrtMemAllocManaged)：申请统一虚拟内存（Unified Virtual Memory, UVM），通过\*ptr返回已申请内存的指针，且申请的内存大小会根据用户指定的size向上按2MB对齐。
 - [`aclError aclrtMemManagedAdvise(const void *const ptr, uint64_t size, aclrtMemManagedAdviseType advise, aclrtMemManagedLocation location)`](#aclrtMemManagedAdvise)：管理统一虚拟内存（Unified Virtual Memory, UVM）的策略属性，既支持设置策略属性，也支持取消设置。
 - [`aclError aclrtMemManagedGetAttr(aclrtMemManagedRangeAttribute attribute, const void *ptr, size_t size, void *data, size_t dataSize)`](#aclrtMemManagedGetAttr)：查询指定大小的UVM内存的策略属性值。
 - [`aclError aclrtMemManagedGetAttrs(aclrtMemManagedRangeAttribute *attributes, size_t numAttributes, const void *ptr, size_t size, void **data, size_t *dataSizes)`](#aclrtMemManagedGetAttrs)：查询指定大小的UVM内存的策略属性值。
@@ -46,7 +46,7 @@ aclError aclrtMemAllocManaged(void **ptr, uint64_t size, uint32_t flag)
 
 ### 功能说明
 
-申请统一虚拟内存（Unified Virtual Memory, UVM），通过\*ptr返回已申请内存的指针，且申请的内存大小会根据用户指定的size向上按2M对齐。使用本接口申请的内存，若需释放内存，需调用[aclrtFree](11-01_device_memory_malloc_and_free.md#aclrtFree)接口。
+申请统一虚拟内存（Unified Virtual Memory, UVM），通过\*ptr返回已申请内存的指针，且申请的内存大小会根据用户指定的size向上按2MB对齐。使用本接口申请的内存，若需释放内存，需调用[aclrtFree](11-01_device_memory_malloc_and_free.md#aclrtFree)接口。
 
 通过本接口申请的内存仅在实际访问时才会建立虚拟内存到物理内存的页表映射关系。如果内存访问发生在Host上，则映射Host的物理内存；如果内存访问发生在Device上，则映射Device的物理内存。后续使用该内存时，每当访问内存的对象发生变更，例如，从Host变更为Device，从一个Device变更为另一个Device等，在新的访问对象上会触发缺页中断，需要将内存数据迁移到新的访问对象上，并重新建立虚拟内存到物理内存的页表映射关系，此时前一个访问对象上的页表映射关系将失效、物理内存也会释放。若频繁的更换访问对象，则会频繁触发缺页中断、频繁迁移内存数据和重新建立页表映射关系，影响性能。为了减少这种情况带来的性能开销，Runtime还提供了[aclrtMemManagedAdvise](#aclrtMemManagedAdvise)接口来设置内存管理策略。
 
@@ -288,7 +288,7 @@ aclError aclrtMemManagedPrefetchAsync(const void* ptr, size_t size, aclrtMemMana
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| ptr      |   输入    | 待预取的内存地址，地址范围必须在UVM内存范围内存，即[0x90000000000ULL, 0x90000000000ULL+3TB)。 |
+| ptr      |   输入    | 待预取的内存地址，地址范围必须在UVM内存范围内，即[0x90000000000ULL, 0x90000000000ULL+3TB)。 |
 | size     |   输入    | 待预取的内存长度，单位Byte，要求2MB对齐。取值范围为(0, 3TB]。 |
 | location |   输入    | 物理内存的位置信息，location参数包含id和type两个成员。类型定义请参见[aclrtMemManagedLocation](25-04_Structs.md#aclrtMemManagedLocation)。 |
 | flags    |   输入    | 预留参数。当前固定配置为0。                                  |
@@ -361,7 +361,7 @@ aclError aclrtMemManagedPrefetchBatchAsync(const void** ptrs, size_t* sizes, siz
 ### 约束说明
 
 - 将ptrs中指定的数据预取到prefetchLocs中指定的物理内存区域，每个预取操作的大小由sizes指定，ptrs、sizes这两个数组必须具有count指定的相同长度。
-- 在预取批处理操作中，prefetchLocs数组中的每个条目可应用与多个预取操作，具体通过prefetchLocIdxs数组指定对应物理地址区域需要预取的起始UVM地址索引。prefetchLocs和prefetchLocIdxs这两个数组必须具有numPrefetchLocs指定的相同长度。例如：若批处理包含ptrs/sizes列出的10个预取操作，其中前6个需要被预取到同一块物理内存区域，后4个需要被预取到另一块物理内存区域，则numPrefetchLocs为2，prefetchLocIdxs为\{0,6\}，prefetchLocs包含两组物理内存的位置信息。注意，prefetchLocIdxs的首个条目必须为0，且每个条目必须大于前一个条目，最后一个条目应小于count。此外numPrefetchLocs必须小于等于count。
+- 在预取批处理操作中，prefetchLocs数组中的每个条目可应用于多个预取操作，具体通过prefetchLocIdxs数组指定对应物理地址区域需要预取的起始UVM地址索引。prefetchLocs和prefetchLocIdxs这两个数组必须具有numPrefetchLocs指定的相同长度。例如：若批处理包含ptrs/sizes列出的10个预取操作，其中前6个需要被预取到同一块物理内存区域，后4个需要被预取到另一块物理内存区域，则numPrefetchLocs为2，prefetchLocIdxs为\{0,6\}，prefetchLocs包含两组物理内存的位置信息。注意，prefetchLocIdxs的首个条目必须为0，且每个条目必须大于前一个条目，最后一个条目应小于count。此外numPrefetchLocs必须小于等于count。
 
 <br>
 <br>

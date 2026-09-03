@@ -260,7 +260,7 @@ aclFloat16 aclFloatToFloat16(float value)
 aclError aclrtGetVersion(int32_t *majorVersion, int32_t *minorVersion, int32_t *patchVersion)
 ```
 
-**须知：此接口后续版本会废弃，请使用aclsysGetVersionum接口或者aclsysGetVersionStr接口。**
+**须知：此接口后续版本会废弃，请使用aclsysGetVersioNum接口或者aclsysGetVersionStr接口。**
 
 ### 产品支持情况
 

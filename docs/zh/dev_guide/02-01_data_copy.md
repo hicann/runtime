@@ -20,7 +20,7 @@ Host和Device拥有独立内存空间。Host侧准备的数据需要复制到Dev
 
 Host与Device之间的数据复制是最常见的输入、输出搬运方式。典型流程为：申请Host内存和Device内存，将输入从Host复制到Device，在Stream上下发算子，最后将输出从Device复制回Host。
 
-```
+```c
 aclrtStream stream = nullptr;
 aclrtCreateStream(&stream);
 
@@ -69,7 +69,7 @@ ACL_MEMCPY_INNER_DEVICE_TO_DEVICE只表示同Device内复制，需要在描述�
 
 跨Device复制用于同一进程内不同Device之间的数据搬运。调用复制接口前，应先确认两个Device之间是否支持数据交互，并按访问方向开启Peer Access：
 
-```
+```c
 int32_t canAccess = 0;
 aclrtDeviceCanAccessPeer(&canAccess, srcDeviceId, dstDeviceId);
 if (canAccess != 0) {

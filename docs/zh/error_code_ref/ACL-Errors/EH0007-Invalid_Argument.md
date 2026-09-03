@@ -4,13 +4,13 @@
 
 报错格式如下，占位符%s的含义依次为报错阶段、参数值、参数名、期望值：
 
-```
+```text
 %s failed because value %s for parameter %s is invalid. Expected value: %s.
 ```
 
 报错示例如下：
 
-```
+```text
 aclrtMemcpyKindTranslate failed because value ACL_MEMCPY_INNER_DEVICE_TO_DEVICE for parameter kind is invalid. Expected value: ACL_MEMCPY_HOST_TO_DEVICE
 ```
 

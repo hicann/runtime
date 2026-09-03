@@ -833,7 +833,7 @@ aclError aclrtMemAllocManaged(T **devPtr, size_t size, uint32_t flags = ACL_RT_M
 
 ### 功能说明
 
-申请统一虚拟内存（Unified Virtual Memory, UVM），通过\*ptr返回已申请内存的指针，且申请的内存大小会根据用户指定的size向上按2M对齐。使用本接口申请的内存，若需释放内存，需调用[aclrtFree](11-01_device_memory_malloc_and_free.md#aclrtFree)接口。
+申请统一虚拟内存（Unified Virtual Memory, UVM），通过\*ptr返回已申请内存的指针，且申请的内存大小会根据用户指定的size向上按2MB对齐。使用本接口申请的内存，若需释放内存，需调用[aclrtFree](11-01_device_memory_malloc_and_free.md#aclrtFree)接口。
 
 本接口为封装接口，仅适用于C++程序，接口内部调用C接口[aclrtMemAllocManaged](11-05_unified_addressing.md#aclrtMemAllocManaged)。
 
@@ -1039,7 +1039,7 @@ aclError aclrtMalloc(T **devPtr, size_t size, aclrtMemMallocPolicy policy, aclrt
 | --- | --- | --- |
 | devPtr | 输出 | “Device上已分配内存的指针”的指针。 |
 | size | 输入 | 申请内存的大小，单位Byte。<br>size不能为0。 |
-| policy | 输入 | 内存分配规则。类型定义请参见[aclrtMemMallocPolicy](25-02_Enumerations.md#aclrtMemMallocPolicy)。<br>若配置的内存分配规则超出[aclrtMemMallocPolicy](25-02_Enumerations.md#aclrtMemMallocPolicy)取值范围，size≥2M时，按大页申请内存，否则按普通页申请内存。 |
+| policy | 输入 | 内存分配规则。类型定义请参见[aclrtMemMallocPolicy](25-02_Enumerations.md#aclrtMemMallocPolicy)。<br>若配置的内存分配规则超出[aclrtMemMallocPolicy](25-02_Enumerations.md#aclrtMemMallocPolicy)取值范围，size≥2MB时，按大页申请内存，否则按普通页申请内存。 |
 | cfg | 输入 | 内存配置信息。类型定义请参见[aclrtMallocConfig](25-04_Structs.md#aclrtMallocConfig)。 |
 
 ### 返回值说明

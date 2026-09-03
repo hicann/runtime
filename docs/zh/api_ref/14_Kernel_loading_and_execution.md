@@ -144,7 +144,7 @@ aclError aclrtBinaryLoadFromFile(const char* binPath, aclrtBinaryLoadOptions *op
 
 从文件加载并解析算子二进制文件，输出指向算子二进制的binHandle。
 
-对于AI Core算子，若使用本接口加载并解析算子二进制文件，需配套使用[aclrtLaunchKernelWithConfig](#aclrtBinaryLoadFromFile)、[aclrtLaunchKernelV2](#aclrtLaunchKernelV2)或[aclrtLaunchKernelWithHostArgs](#aclrtLaunchKernelWithHostArgs)接口下发计算任务。
+对于AI Core算子，若使用本接口加载并解析算子二进制文件，需配套使用[aclrtLaunchKernelWithConfig](#aclrtLaunchKernelWithConfig)、[aclrtLaunchKernelV2](#aclrtLaunchKernelV2)或[aclrtLaunchKernelWithHostArgs](#aclrtLaunchKernelWithHostArgs)接口下发计算任务。
 
 ### 参数说明
 

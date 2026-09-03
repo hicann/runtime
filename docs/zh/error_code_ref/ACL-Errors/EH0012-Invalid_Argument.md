@@ -4,13 +4,13 @@
 
 报错格式如下，占位符%s的含义依次为报错阶段、参数名、报错原因：
 
-```
+```text
 %s failed. Parameter %s is invalid. Reason: %s.
 ```
 
 报错示例如下：
 
-```
+```text
 aclrtAllocatorGetByStream failed. Parameter stream is invalid. Reason: The stream is not registered with any allocator.
 ```
 

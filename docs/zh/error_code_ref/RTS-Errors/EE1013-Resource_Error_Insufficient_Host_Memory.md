@@ -4,13 +4,13 @@
 
 报错格式如下，占位符%s分别表示内存大小、内存申请接口：
 
-```
+```text
 Failed to allocate %s bytes of host memory via %s to Runtime.
 ```
 
 报错示例如下：
 
-```
+```text
 Failed to allocate 160 bytes of host memory via new to Runtime.
 ```
 

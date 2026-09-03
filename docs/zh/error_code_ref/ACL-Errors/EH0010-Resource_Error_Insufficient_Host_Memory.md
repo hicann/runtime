@@ -4,14 +4,14 @@
 
 报错格式如下，占位符%s分别表示内存大小、内存申请接口：
 
-```
+```text
 Failed to allocate %s bytes of host memory via %s to ACL.
 ```
 
 报错示例如下：
 
-```
-Failed to allocate 1024 bytes host memory for ACL.
+```text
+Failed to allocate 1024 bytes host memory via new to ACL.
 ```
 
 ## 可能原因

@@ -9,7 +9,7 @@
 | 型号 | 注意事项 |
 | --- | --- |
 | 各型号都涉及 | - 若涉及媒体数据处理功能，由于媒体数据处理功能对存放输入、输出数据的内存有更高的要求，因此需调用专用的内存申请接口，例如hi_mpi_dvpp_malloc。<br>  - 调用专用的内存申请接口申请出来的内存可以满足媒体数据处理的要求，也可以在其它任务中使用，例如，从性能角度，为了减少拷贝，媒体数据处理的输出作为模型推理的输入，实现内存复用。<br>  - 但由于媒体数据处理访问的地址空间有限，为确保媒体数据处理时内存足够，除媒体数据处理功能外的其它功能（例如，模型加载），建议调用[内存管理](11_memory_management.md)下的接口申请内存，例如[aclrtMalloc](11-01_device_memory_malloc_and_free.md#aclrtMalloc)接口、[aclrtMallocHost](11-02_host_memory_management.md#aclrtMallocHost)接口等。 |
-| Ascend 950PR/Ascend 950DT<br>Atlas A3 训练系列产品/Atlas A3 推理系列产品<br>Atlas A2 训练系列产品/Atlas A2 推理系列产品 | - 若涉及申请Device上的大页内存，需注意，当前版本为防止大页内存不够用，系统内部已提前预留大页内存，用户在使用大页内存前，可调用[aclrtGetMemInfo](11-01_device_memory_malloc_and_free.md#aclrtGetMemInfo)接口，查询空闲的大页内存。<br>  - Ascend EP形态下，Device启动后首次执行推理或训练任务时，会将系统包加载到Device上，因此会占用部分Device内存（300M左右，不同AI处理器有所不同）。若Device重启，这部分内存才会释放。 |
+| Ascend 950PR/Ascend 950DT<br>Atlas A3 训练系列产品/Atlas A3 推理系列产品<br>Atlas A2 训练系列产品/Atlas A2 推理系列产品 | - 若涉及申请Device上的大页内存，需注意，当前版本为防止大页内存不够用，系统内部已提前预留大页内存，用户在使用大页内存前，可调用[aclrtGetMemInfo](11-01_device_memory_malloc_and_free.md#aclrtGetMemInfo)接口，查询空闲的大页内存。<br>  - Ascend EP形态下，Device启动后首次执行推理或训练任务时，会将系统包加载到Device上，因此会占用部分Device内存（300MB左右，不同AI处理器有所不同）。若Device重启，这部分内存才会释放。 |
 
 ---
 

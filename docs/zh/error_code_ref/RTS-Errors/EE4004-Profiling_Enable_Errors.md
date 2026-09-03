@@ -4,13 +4,13 @@
 
 报错格式如下，占位符%s表示报错原因：
 
-```
+```text
 Failed to enable profiling.  %s
 ```
 
 报错示例如下：
 
-```
+```text
 Failed to enable profiling. Reason: sample based profiling is ongoing.
 ```
 

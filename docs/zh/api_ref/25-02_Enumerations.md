@@ -1164,9 +1164,9 @@ typedef enum {
     - 2：A+X Server形态，昇腾（Ascend）+非鲲鹏架构（如X86架构）。
     - 3：PCIe标卡形态。
 
-    <!-- npu="950" id87 -->
+    <!-- npu="950" id61 -->
     仅Ascend 950PR/Ascend 950DT支持该选项。
-    <!-- end id87 -->
+    <!-- end id61 -->
 
     对于不支持该选项的产品型号，返回报错。
 
@@ -1492,7 +1492,7 @@ typedef enum {
     ACL_RT_HAC_TYPE_AIC,          // AI Core或Cube Core
     ACL_RT_HAC_TYPE_AIV,          // Vector Core
     ACL_RT_HAC_TYPE_PCIEDMA,      // PCIe Direct Memory Access
-    ACL_RT_HAC_TYPE_RDMA,         // Remote Direct Memory Asscess
+    ACL_RT_HAC_TYPE_RDMA,         // Remote Direct Memory Access
     ACL_RT_HAC_TYPE_SDMA,         // System Direct Memory Access
     ACL_RT_HAC_TYPE_DVPP,         // Digital Vision Pre-Processing
     ACL_RT_HAC_TYPE_UDMA,         // Unified Buffer Direct Memory Asscess
@@ -1652,28 +1652,28 @@ typedef enum aclrtMemAttr {
     ACL_HBM_MEM,             // 大页内存+普通内存
     ACL_DDR_MEM_HUGE,        // 大页内存
     ACL_DDR_MEM_NORMAL,      // 普通内存
-    ACL_HBM_MEM_HUGE,        // 大页内存，内存申请粒度为2M，不足2M的倍数，向上2M对齐
+    ACL_HBM_MEM_HUGE,        // 大页内存，内存申请粒度为2MB，不足2MB的倍数，向上2MB对齐
     ACL_HBM_MEM_NORMAL,      // 普通内存
     ACL_DDR_MEM_P2P_HUGE,    // 用于Device间数据复制的大页内存
     ACL_DDR_MEM_P2P_NORMAL,  // 用于Device间数据复制的普通内存
-    ACL_HBM_MEM_P2P_HUGE,    // 用于Device间数据复制的大页内存，内存申请粒度为2M，不足2M的倍数，向上2M对齐
+    ACL_HBM_MEM_P2P_HUGE,    // 用于Device间数据复制的大页内存，内存申请粒度为2MB，不足2MB的倍数，向上2MB对齐
     ACL_HBM_MEM_P2P_NORMAL,  // 用于Device间数据复制的普通内存
-    ACL_HBM_MEM_HUGE1G,      // 大页内存，内存申请粒度为1G，不足1G的倍数，向上1G对齐
-    ACL_HBM_MEM_P2P_HUGE1G,  // 用于Device间数据复制的大页内存，内存申请粒度为1G，不足1G的倍数，向上1G对齐
+    ACL_HBM_MEM_HUGE1G,      // 大页内存，内存申请粒度为1GB，不足1GB的倍数，向上1GB对齐
+    ACL_HBM_MEM_P2P_HUGE1G,  // 用于Device间数据复制的大页内存，内存申请粒度为1GB，不足1GB的倍数，向上1GB对齐
 
     /* 以上选项兼容旧版本，需由用户根据硬件内存（DDR、HBM）选择相应的内存属性选项 */
     /* 以下选项由接口内部根据底层硬件内存自动选择DDR或HBM，用户无需关注硬件细节，建议使用以下选项 */
 
     ACL_MEM_NORMAL,          // 普通内存
-    ACL_MEM_HUGE,            // 大页内存，内存申请粒度为2M，不足2M的倍数，向上2M对齐
-    ACL_MEM_HUGE1G,          // 大页内存，内存申请粒度为1G，不足1G的倍数，向上1G对齐
+    ACL_MEM_HUGE,            // 大页内存，内存申请粒度为2MB，不足2MB的倍数，向上2MB对齐
+    ACL_MEM_HUGE1G,          // 大页内存，内存申请粒度为1GB，不足1GB的倍数，向上1GB对齐
     ACL_MEM_P2P_NORMAL,      // 用于Device间数据复制的普通内存
-    ACL_MEM_P2P_HUGE,        // 用于Device间数据复制的大页内存，内存申请粒度为2M，不足2M的倍数，向上2M对齐
-    ACL_MEM_P2P_HUGE1G,      // 用于Device间数据复制的大页内存，内存申请粒度为1G，不足1G的倍数，向上1G对齐
+    ACL_MEM_P2P_HUGE,        // 用于Device间数据复制的大页内存，内存申请粒度为2MB，不足2MB的倍数，向上2MB对齐
+    ACL_MEM_P2P_HUGE1G,      // 用于Device间数据复制的大页内存，内存申请粒度为1GB，不足1GB的倍数，向上1GB对齐
 } aclrtMemAttr;
 ```
 
-对于申请大页内存的场景，当内存申请粒度为2M时，如果要申请1G大小的大页内存，会占用1024/2=512个页表，当内存申请粒度为1G时，1G大页内存只占用1个页表，能有效降低页表数量，有效扩大TLB（Translation Lookaside Buffer）缓存的地址范围，从而提升离散访问的性能。TLB是AI处理器中用于高速缓存的硬件模块，用于存储最近使用的虚拟地址到物理地址的映射。
+对于申请大页内存的场景，当内存申请粒度为2MB时，如果要申请1GB大小的大页内存，会占用1024/2=512个页表，当内存申请粒度为1GB时，1GB大页内存只占用1个页表，能有效降低页表数量，有效扩大TLB（Translation Lookaside Buffer）缓存的地址范围，从而提升离散访问的性能。TLB是AI处理器中用于高速缓存的硬件模块，用于存储最近使用的虚拟地址到物理地址的映射。
 
 <!-- npu="A3,910b" id59 -->
 仅Atlas A3 训练系列产品/Atlas A3 推理系列产品、Atlas A2 训练系列产品/Atlas A2 推理系列产品支持HUGE1G相关选项。
@@ -1777,13 +1777,13 @@ typedef enum aclrtMemMallocPolicy {
 
 - ACL\_MEM\_MALLOC\_HUGE\_FIRST
 
-    申请大页内存，内存申请粒度为2M，不足2M的倍数，向上2M对齐。另外，系统内部会根据硬件支持情况选择从高带宽或低带宽物理内存申请内存。
+    申请大页内存，内存申请粒度为2MB，不足2MB的倍数，向上2MB对齐。另外，系统内部会根据硬件支持情况选择从高带宽或低带宽物理内存申请内存。
 
     当申请的内存小于等于1M时，即使使用该内存分配规则，也是申请普通页的内存。当申请的内存大于1M时，优先申请大页内存，如果大页内存不够，则使用普通页的内存。
 
 - ACL\_MEM\_MALLOC\_HUGE\_ONLY
 
-    申请大页内存，内存申请粒度为2M，不足2M的倍数，向上2M对齐。另外，系统内部会根据硬件支持情况选择从高带宽或低带宽物理内存申请内存。
+    申请大页内存，内存申请粒度为2MB，不足2MB的倍数，向上2MB对齐。另外，系统内部会根据硬件支持情况选择从高带宽或低带宽物理内存申请内存。
 
     配置该选项时，表示仅申请大页，如果大页内存不够，则返回错误。
 
@@ -1793,7 +1793,7 @@ typedef enum aclrtMemMallocPolicy {
 
 - ACL\_MEM\_MALLOC\_HUGE\_FIRST\_P2P
 
-    两个Device之间内存复制场景下使用该选项申请大页内存，内存申请粒度为2M，不足2M的倍数，向上2M对齐。另外，系统内部会根据硬件支持情况选择从高带宽或低带宽物理内存申请内存。
+    两个Device之间内存复制场景下使用该选项申请大页内存，内存申请粒度为2MB，不足2MB的倍数，向上2MB对齐。另外，系统内部会根据硬件支持情况选择从高带宽或低带宽物理内存申请内存。
 
     配置该选项时，表示优先申请大页内存，如果大页内存不够，则使用普通页的内存。
 
@@ -1812,7 +1812,7 @@ typedef enum aclrtMemMallocPolicy {
 
 - ACL\_MEM\_MALLOC\_HUGE\_ONLY\_P2P
 
-    两个Device之间内存复制场景下使用该选项申请大页内存，内存申请粒度为2M，不足2M的倍数，向上2M对齐。另外，系统内部会根据硬件支持情况选择从高带宽或低带宽物理内存申请内存。
+    两个Device之间内存复制场景下使用该选项申请大页内存，内存申请粒度为2MB，不足2MB的倍数，向上2MB对齐。另外，系统内部会根据硬件支持情况选择从高带宽或低带宽物理内存申请内存。
 
     配置该选项时，表示仅申请大页内存，如果大页内存不够，则返回错误。
 
@@ -1849,11 +1849,11 @@ typedef enum aclrtMemMallocPolicy {
 
 - ACL\_MEM\_MALLOC\_HUGE1G\_ONLY
 
-    申请大页内存，内存申请粒度为1G，不足1G的倍数，向上1G对齐。例如申请1.9G时，按向上对齐的原则，实际会申请2G。另外，系统内部会根据硬件支持情况选择从高带宽或低带宽物理内存申请内存。
+    申请大页内存，内存申请粒度为1GB，不足1GB的倍数，向上1GB对齐。例如申请1.9GB时，按向上对齐的原则，实际会申请2GB。另外，系统内部会根据硬件支持情况选择从高带宽或低带宽物理内存申请内存。
 
-    配置为该选项时，表示仅申请1G大页，如果1G大页内存不够，则返回错误。由于1G大页资源有限，可尝试使用ACL\_MEM\_MALLOC\_HUGE\_FIRST选项申请大页内存。
+    配置为该选项时，表示仅申请1GB大页，如果1GB大页内存不够，则返回错误。由于1GB大页资源有限，可尝试使用ACL\_MEM\_MALLOC\_HUGE\_FIRST选项申请大页内存。
 
-    该选项与ACL\_MEM\_MALLOC\_HUGE\_ONLY选项相比，ACL\_MEM\_MALLOC\_HUGE\_ONLY的内存申请粒度为2M，如果要申请1G大小的大页内存，会占用1024/2=512个页表，但ACL\_MEM\_MALLOC\_HUGE1G\_ONLY的内存申请粒度为1G，1G大页内存只占用1个页表，能有效降低页表数量，有效扩大TLB（Translation Lookaside Buffer）缓存的地址范围，从而提升离散访问的性能。TLB是AI处理器中用于高速缓存的硬件模块，用于存储最近使用的虚拟地址到物理地址的映射。
+    该选项与ACL\_MEM\_MALLOC\_HUGE\_ONLY选项相比，ACL\_MEM\_MALLOC\_HUGE\_ONLY的内存申请粒度为2MB，如果要申请1GB大小的大页内存，会占用1024/2=512个页表，但ACL\_MEM\_MALLOC\_HUGE1G\_ONLY的内存申请粒度为1GB，1GB大页内存只占用1个页表，能有效降低页表数量，有效扩大TLB（Translation Lookaside Buffer）缓存的地址范围，从而提升离散访问的性能。TLB是AI处理器中用于高速缓存的硬件模块，用于存储最近使用的虚拟地址到物理地址的映射。
 
     <!-- npu="910,310p,310b" id71 -->
     Atlas 200I/500 A2 推理产品、Atlas 推理系列产品、Atlas 训练系列产品，不支持该选项。
@@ -1866,11 +1866,11 @@ typedef enum aclrtMemMallocPolicy {
 
 - ACL\_MEM\_MALLOC\_HUGE1G\_ONLY\_P2P：
 
-    两个Device之间内存复制场景下使用该选项申请大页内存，内存申请粒度为1G，不足1G的倍数，向上1G对齐。例如申请1.9G时，按向上对齐的原则，实际会申请2G。另外，系统内部会根据硬件支持情况选择从高带宽或低带宽物理内存申请内存。
+    两个Device之间内存复制场景下使用该选项申请大页内存，内存申请粒度为1GB，不足1GB的倍数，向上1GB对齐。例如申请1.9GB时，按向上对齐的原则，实际会申请2GB。另外，系统内部会根据硬件支持情况选择从高带宽或低带宽物理内存申请内存。
 
-    配置为该选项时，表示仅申请1G大页，如果1G大页内存不够，则返回错误。由于1G大页资源有限，可尝试使用ACL\_MEM\_MALLOC\_HUGE\_FIRST\_P2P选项申请大页内存。
+    配置为该选项时，表示仅申请1GB大页，如果1GB大页内存不够，则返回错误。由于1GB大页资源有限，可尝试使用ACL\_MEM\_MALLOC\_HUGE\_FIRST\_P2P选项申请大页内存。
 
-    该选项与ACL\_MEM\_MALLOC\_HUGE\_ONLY\_P2P选项相比，ACL\_MEM\_MALLOC\_HUGE\_ONLY\_P2P的内存申请粒度为2M，如果要申请1G大小的大页内存，会占用1024/2=512个页表，但ACL\_MEM\_MALLOC\_HUGE1G\_ONLY\_P2P的内存申请粒度为1G，1G大页内存只占用1个页表，能有效降低页表数量，有效扩大TLB（Translation Lookaside Buffer）缓存的地址范围，从而提升离散访问的性能。TLB是AI处理器中用于高速缓存的硬件模块，用于存储最近使用的虚拟地址到物理地址的映射。
+    该选项与ACL\_MEM\_MALLOC\_HUGE\_ONLY\_P2P选项相比，ACL\_MEM\_MALLOC\_HUGE\_ONLY\_P2P的内存申请粒度为2MB，如果要申请1GB大小的大页内存，会占用1024/2=512个页表，但ACL\_MEM\_MALLOC\_HUGE1G\_ONLY\_P2P的内存申请粒度为1GB，1GB大页内存只占用1个页表，能有效降低页表数量，有效扩大TLB（Translation Lookaside Buffer）缓存的地址范围，从而提升离散访问的性能。TLB是AI处理器中用于高速缓存的硬件模块，用于存储最近使用的虚拟地址到物理地址的映射。
 
     <!-- npu="910,310p,310b" id73 -->
     Atlas 200I/500 A2 推理产品、Atlas 推理系列产品、Atlas 训练系列产品，不支持该选项。
@@ -2457,7 +2457,7 @@ typedef enum aclrtDeviceLimit {
 
 - `ACL_RT_DEV_LIMIT_SIMT_DVG_WARP_STACK_SIZE`：用于设置SIMT算子的分支（Divergence）栈空间大小，单位Byte。默认值为1024Byte。设置为`ACL_RT_DEV_LIMIT_SIMT_DVG_WARP_STACK_SIZE`类型时，value取值必须是128Byte的整数倍，如果传入的不是128Byte的整数倍，则接口内部会自动向上取整，确保其为128Byte的整数倍。
 
-- `ACL_RT_DEV_LIMIT_SIMD_STACK_SIZE`：用于控制进程中SIMD（Single Instruction Multiple Data）算子执行时为每个AI Core分配的栈空间大小，单位Byte。默认值为32768Byte（即32K）。
+- `ACL_RT_DEV_LIMIT_SIMD_STACK_SIZE`：用于控制进程中SIMD（Single Instruction Multiple Data）算子执行时为每个AI Core分配的栈空间大小，单位Byte。默认值为32768Byte（即32KB）。
 
     <!-- npu="A3,910b" id104 -->
     对于Atlas A3 训练系列产品/Atlas A3 推理系列产品、Atlas A2 训练系列产品/Atlas A2 推理系列产品，设置为`ACL_RT_DEV_LIMIT_SIMD_STACK_SIZE`类型时，value的取值范围为(32768, 196608]Byte，即(32, 192]KB。
@@ -2467,9 +2467,9 @@ typedef enum aclrtDeviceLimit {
     对于Ascend 950PR/Ascend 950DT，设置为`ACL_RT_DEV_LIMIT_SIMD_STACK_SIZE`类型时，value的取值范围为(32768, 131072]Byte，即(32, 128]KB。
     <!-- end id105 -->
 
-    当value的取值大于32K时，接口内部会向上取整，确保其为16K的整数倍；当value的取值小于或等于32K时，默认按32K处理。
+    当value的取值大于32KB时，接口内部会向上取整，确保其为16KB的整数倍；当value的取值小于或等于32KB时，默认按32KB处理。
 
-- `ACL_RT_DEV_LIMIT_SIMD_PRINTF_FIFO_SIZE_PER_CORE`：用于控制每个Core上SIMD算子可以Printf打印的空间大小，单位Byte。默认值为32768Byte（即32K）。设置为`ACL_RT_DEV_LIMIT_SIMD_PRINTF_FIFO_SIZE_PER_CORE`类型时，value取值必须是8Byte的整数倍，如果传入的不是8Byte的整数倍，则接口内部会自动向上取整，确保其为8Byte的整数倍。value的取值范围为[1024, 67108864]Byte，即[1KB, 64MB]。
+- `ACL_RT_DEV_LIMIT_SIMD_PRINTF_FIFO_SIZE_PER_CORE`：用于控制每个Core上SIMD算子可以Printf打印的空间大小，单位Byte。默认值为32768Byte（即32KB）。设置为`ACL_RT_DEV_LIMIT_SIMD_PRINTF_FIFO_SIZE_PER_CORE`类型时，value取值必须是8Byte的整数倍，如果传入的不是8Byte的整数倍，则接口内部会自动向上取整，确保其为8Byte的整数倍。value的取值范围为[1024, 67108864]Byte，即[1KB, 64MB]。
 
-- `ACL_RT_DEV_LIMIT_SIMT_PRINTF_FIFO_SIZE`：用于控制SIMT算子可以Printf打印的空间大小，单位Byte。默认值为2097152Byte（即2M）。设置为`ACL_RT_DEV_LIMIT_SIMT_PRINTF_FIFO_SIZE`类型时，value取值必须是8Byte的整数倍，如果传入的不是8Byte的整数倍，则接口内部会自动向上取整，确保其为8Byte的整数倍。value的取值范围为[1048576, 67108864]Byte，即[1, 64]MB。
+- `ACL_RT_DEV_LIMIT_SIMT_PRINTF_FIFO_SIZE`：用于控制SIMT算子可以Printf打印的空间大小，单位Byte。默认值为2097152Byte（即2MB）。设置为`ACL_RT_DEV_LIMIT_SIMT_PRINTF_FIFO_SIZE`类型时，value取值必须是8Byte的整数倍，如果传入的不是8Byte的整数倍，则接口内部会自动向上取整，确保其为8Byte的整数倍。value的取值范围为[1048576, 67108864]Byte，即[1, 64]MB。
 

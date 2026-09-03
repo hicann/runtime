@@ -212,7 +212,7 @@ aclError aclrtCntNotifyReset(aclrtCntNotify cntNotify, aclrtStream stream)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| cntNotify | 输入 | CntNotify的指针。类型定义请参见[aclrtCntNotify](25-05_Typedefs.md#aclrtCntNotify)。 |
+| cntNotify | 输入 | 待复位的CntNotify。类型定义请参见[aclrtCntNotify](25-05_Typedefs.md#aclrtCntNotify)。 |
 | stream | 输入 | 指定Stream。类型定义请参见[aclrtStream](25-05_Typedefs.md#aclrtStream)。<br>如果使用默认Stream，此处设置为NULL。<br>多Stream同步等待场景下，例如，Stream2等Stream1的场景，此处配置为Stream2。 |
 
 ### 返回值说明
@@ -264,8 +264,8 @@ aclError aclrtCntNotifyGetId(aclrtCntNotify cntNotify, uint32_t *notifyId)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| cntNotify | 输入 | cntNotify的指针。类型定义请参见[aclrtCntNotify](25-05_Typedefs.md#aclrtCntNotify)。 |
-| notifyId | 输出 | cntNotify ID。 |
+| cntNotify | 输入 | 待获取的CntNotify。类型定义请参见[aclrtCntNotify](25-05_Typedefs.md#aclrtCntNotify)。 |
+| notifyId | 输出 | CntNotify ID。 |
 
 ### 返回值说明
 
@@ -316,7 +316,7 @@ aclError aclrtCntNotifyDestroy(aclrtCntNotify cntNotify)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| cntNotify | 输入 | CntNotify的指针。类型定义请参见[aclrtCntNotify](25-05_Typedefs.md#aclrtCntNotify)。 |
+| cntNotify | 输入 | 待销毁的CntNotify。类型定义请参见[aclrtCntNotify](25-05_Typedefs.md#aclrtCntNotify)。 |
 
 ### 返回值说明
 

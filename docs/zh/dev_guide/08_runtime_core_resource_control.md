@@ -1,4 +1,4 @@
-﻿# 运行时核资源控制
+# 运行时核资源控制
 
 为了提高Device核资源的使用率以及隔离性，Runtime支持控制Device的核资源。当前支持配置Device粒度、Stream粒度的核资源限制，核资源包括AI Core或Cube Core数量、Vector Core数量。
 
@@ -14,7 +14,7 @@
 
 以下是关键步骤的代码示例，不可以直接拷贝编译运行，仅供参考。完整样例代码，请参见[Link](https://gitcode.com/cann/runtime/tree/master/example/2_advanced_features/kernel/1_launch_kernel_with_reslimit)。
 
-```
+```c
 ......
 int32_t deviceId = 0;
 uint32_t numBlocks = 8;
@@ -40,7 +40,7 @@ aclrtGetDeviceResLimit(deviceId, ACL_RT_DEV_RES_CUBE_CORE, &coreDim);
 
 以下是关键步骤的代码示例，不可以直接拷贝编译运行，仅供参考。
 
-```
+```c
 #include "acl/acl.h"
 ......
 int32_t deviceId = 0;

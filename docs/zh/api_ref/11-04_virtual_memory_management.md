@@ -88,8 +88,8 @@ aclError aclrtMallocPhysical(aclrtDrvMemHandle *handle, size_t size, const aclrt
 <!-- end id2 -->
 - 内存属性类型aclrtPhysicalMemProp.aclrtMemAttr当前仅支持如下选项：
     - ACL\_MEM\_NORMAL：普通内存。
-    - ACL\_MEM\_HUGE：2M粒度对齐的大页内存。
-    - ACL\_MEM\_HUGE1G：1G粒度对齐的大页内存，仅支持Device。
+    - ACL\_MEM\_HUGE：2MB粒度对齐的大页内存。
+    - ACL\_MEM\_HUGE1G：1GB粒度对齐的大页内存，仅支持Device。
 
         <!-- npu="A3,910b" id3 -->
         仅Atlas A3 训练系列产品/Atlas A3 推理系列产品、Atlas A2 训练系列产品/Atlas A2 推理系列产品支持该类型。
@@ -104,8 +104,8 @@ aclError aclrtMallocPhysical(aclrtDrvMemHandle *handle, size_t size, const aclrt
         <!-- end id5 -->
 
     - ACL\_MEM\_P2P\_NORMAL：用于Device间数据复制的普通内存。
-    - ACL\_MEM\_P2P\_HUGE：用于Device间数据复制的大页内存，内存申请粒度为2M。
-    - ACL\_MEM\_P2P\_HUGE1G：用于Device间数据复制的大页内存，内存申请粒度为1G，仅支持Device。
+    - ACL\_MEM\_P2P\_HUGE：用于Device间数据复制的大页内存，内存申请粒度为2MB。
+    - ACL\_MEM\_P2P\_HUGE1G：用于Device间数据复制的大页内存，内存申请粒度为1GB，仅支持Device。
 
         <!-- npu="A3" id6 -->
         仅Atlas A3 训练系列产品/Atlas A3 推理系列产品中的部分互联形态支持该类型，以接口实际返回情况为准。
@@ -119,8 +119,8 @@ aclError aclrtMallocPhysical(aclrtDrvMemHandle *handle, size_t size, const aclrt
         Atlas 200I/500 A2 推理产品、Atlas 推理系列产品、Atlas 训练系列产品不支持该类型。
         <!-- end id8 -->
 
-    - ACL\_HBM\_MEM\_HUGE：2M粒度对齐的大页内存。
-    - ACL\_HBM\_MEM\_HUGE1G：1G粒度对齐的大页内存，仅支持Device。
+    - ACL\_HBM\_MEM\_HUGE：2MB粒度对齐的大页内存。
+    - ACL\_HBM\_MEM\_HUGE1G：1GB粒度对齐的大页内存，仅支持Device。
 
         <!-- npu="950,A3,910b" id9 -->
         Ascend 950PR/Ascend 950DT、Atlas A3 训练系列产品/Atlas A3 推理系列产品、Atlas A2 训练系列产品/Atlas A2 推理系列产品支持该类型。
@@ -253,7 +253,7 @@ aclError aclrtReserveMemAddress(void **virPtr, size_t size, size_t alignment, vo
 | virPtr | 输出 | “已分配的虚拟内存地址的指针”的指针。 |
 | size | 输入 | 虚拟内存大小，单位Byte。<br>size不能为0。 |
 | alignment | 输入 | 虚拟地址对齐值，预留，当前只能设置为0。 |
-| expectPtr | 输入 | 指定期望返回的虚拟内存起始地址。<br>取值说明如下：<br>  - nullptr：系统自动分配符合对齐规则的虚拟地址。<br>  - 非nullptr：由用户指定起始地址，地址必须在8T范围内（16T-24T）。用户需确保指定的地址未被占用，且符合对齐规则，否则预留虚拟内存失败，接口返回错误。对齐规则为：若size小于1G，expectPtr需按2的n次方对齐；如果size大于1G，expectPtr需按1G对齐。须知：由用户指定起始地址是试验特性，后续版本可能存在变更，不支持应用于生产环境中。 |
+| expectPtr | 输入 | 指定期望返回的虚拟内存起始地址。<br>取值说明如下：<br>  - nullptr：系统自动分配符合对齐规则的虚拟地址。<br>  - 非nullptr：由用户指定起始地址，地址必须在8T范围内（16T-24T）。用户需确保指定的地址未被占用，且符合对齐规则，否则预留虚拟内存失败，接口返回错误。对齐规则为：若size小于1GB，expectPtr需按2的n次方对齐；如果size大于1GB，expectPtr需按1GB对齐。须知：由用户指定起始地址是试验特性，后续版本可能存在变更，不支持应用于生产环境中。 |
 | flags | 输入 | 预留参数，建议固定配置为0。 |
 
 ### 返回值说明
@@ -324,7 +324,7 @@ aclError aclrtReserveMemAddressNoUCMemory(void **virPtr, size_t size, size_t ali
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
 | virPtr | 输出 | “已分配的虚拟内存地址的指针”的指针。 |
-| size | 输入 | 虚拟内存大小，单位Byte。<br>size不能为0，只能为1G的整数倍，最小为1G。 |
+| size | 输入 | 虚拟内存大小，单位Byte。<br>size不能为0，只能为1GB的整数倍，最小为1GB。 |
 | alignment | 输入 | 虚拟地址对齐值，预留，当前只能设置为0。 |
 | expectPtr | 输入 | 指定期望返回的虚拟内存起始地址。<br>由用户指定起始地址，地址建议在40T-224T范围内。用户需确保指定的地址未被占用，否则预留虚拟内存失败，接口返回错误。 |
 | flags | 输入 | 预留参数，建议固定配置为0。 |
@@ -513,7 +513,7 @@ aclError aclrtMemMapNoAccess(void *virPtr, size_t size, size_t offset, aclrtDrvM
 ### 功能说明
 
 将虚拟内存映射到物理内存。
-本接口与aclrtMemMap接口的区别在于：调用本接口成功后，目标Device上尚未建立可访问页表，虚拟地址区间不可访问。因此，需先调用[aclrtMemSetAccess](#aclrtMemSetAccess)接口设置内存访问权限，以触发在Device上建立可访问页表，方可访问该虚拟地址区间。
+本接口与aclrtMapMem接口的区别在于：调用本接口成功后，目标Device上尚未建立可访问页表，虚拟地址区间不可访问。因此，需先调用[aclrtMemSetAccess](#aclrtMemSetAccess)接口设置内存访问权限，以触发在Device上建立可访问页表，方可访问该虚拟地址区间。
 
 **本接口需与以下其它接口配合使用**，以便申请地址连续的虚拟内存、最大化利用物理内存：
 
@@ -966,7 +966,7 @@ aclError aclrtMemSetPidToShareableHandleV2(void *shareableHandle, aclrtMemShared
 ## aclrtMemImportFromShareableHandleV2
 
 ```c
-aclError aclrtMemImportFromShareableHandleV2(void *shareableHandle, aclrtMemSharedHandleType shareType, uint64_t flags, aclrtDrvMemHandle *handle);
+aclError aclrtMemImportFromShareableHandleV2(void *shareableHandle, aclrtMemSharedHandleType shareType, uint64_t flags, aclrtDrvMemHandle *handle)
 ```
 
 ### 产品支持情况
@@ -1416,7 +1416,7 @@ aclError aclrtMemMapSelectedLink(void *virPtrDst, size_t size, void *virPtrSrc, 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
 | virPtrDst | 输入 | 待映射的虚拟内存地址。<br> 需要通过aclrtReserveMemAddress接口提前预留虚拟地址内存，然后将虚拟内存的首地址作为入参传入本接口。不支持将虚拟内存首地址进行偏移后再传入本接口。|
-| size | 输入 | 虚拟内存大小，单位Byte。<br> virPtrDst与virPtsSrc处的虚拟内存大小需保持一致，且与size相等。 |
+| size | 输入 | 虚拟内存大小，单位Byte。<br> virPtrDst与virPtrSrc处的虚拟内存大小需保持一致，且与size相等。 |
 | virPtrSrc | 输入 | 已与物理内存建立映射关系的虚拟内存地址。<br> 需提前通过aclrtMapMem接口完成虚拟内存与物理内存的映射，然后将虚拟内存的首地址作为入参传入本接口。不支持对虚拟内存首地址进行偏移后再传入本接口。|
 | linkIdx | 输入 | 链路标识。<br> -  ACL_RT_MEM_LINK_IDX_0：SIO（Small Input Output），表示片内连接方式，两个DIE之间通过该方式连接。<br> -  ACL_RT_MEM_LINK_IDX_1：HCCS（Huawei Cache Coherence System），HCCS是华为缓存一致性系统，用于CPU/NPU之间的高速互联。 <br> <br> 宏定义如下：<br> ``` #define ACL_RT_MEM_LINK_IDX_0 0U    // SIO ``` <br> ```#define ACL_RT_MEM_LINK_IDX_1 1U    // HCCS``` | 
 

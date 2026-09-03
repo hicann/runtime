@@ -4,13 +4,13 @@
 
 报错格式如下，占位符%s的含义依次为特性或接口、报错原因：
 
-```
+```text
 %s is not supported. Reason: %s.
 ```
 
 报错示例如下：
 
-```
+```text
 acltdtAddDataItem is not supported. Reason: item cannot be added because internal item already exists.
 ```
 

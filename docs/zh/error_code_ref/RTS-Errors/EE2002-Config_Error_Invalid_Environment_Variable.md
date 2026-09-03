@@ -4,13 +4,13 @@
 
 报错格式如下，占位符%s的含义依次为环境变量值、环境变量名、期望值：
 
-```
+```text
 Value %s for environment variable %s is invalid. Expected value: %s.
 ```
 
 报错示例如下：
 
-```
+```text
 Value 1,2,2 for environment variable ASCEND_RT_VISIBLE_DEVICES is invalid. Expected value: cannot be duplicated.
 ```
 

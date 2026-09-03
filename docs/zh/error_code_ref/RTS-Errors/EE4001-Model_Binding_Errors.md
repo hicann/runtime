@@ -4,13 +4,13 @@
 
 报错格式如下，占位符%s表示报错原因：
 
-```
+```text
 Failed to bind the stream to the model. %s
 ```
 
 报错示例如下：
 
-```
+```text
 Failed to bind the stream to the model. Stream [1] has been bound to model [2] and failed to be bound to model [3].
 ```
 

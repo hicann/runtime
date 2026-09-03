@@ -4,13 +4,13 @@
 
 报错格式如下，占位符%s表示报错原因：
 
-```
+```text
 Stream synchronize timeout. %s
 ```
 
 报错示例如下：
 
-```
+```text
 Stream synchronize timeout. rtModelExecute execution failed.
 ```
 

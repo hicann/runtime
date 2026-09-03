@@ -59,7 +59,7 @@ aclError acltdtAllocBuf(size_t size, uint32_t type, acltdtBuf *buf)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| size | 输入 | 用于指定数据区的内存大小，单位Byte，不能超过4G。 |
+| size | 输入 | 用于指定数据区的内存大小，单位Byte，不能超过4GB。 |
 | type | 输入 | 共享Buffer内存类型，支持设置如下枚举值。<br>typedef enum {<br>   ACL_TDT_NORMAL_MEM = 0,<br>   ACL_TDT_DVPP_MEM<br>} acltdtAllocBufType;<br>当前仅支持设置ACL_TDT_NORMAL_MEM。 |
 | buf | 输出 | 申请成功，输出共享Buffer。类型定义请参见[acltdtBuf](25-05_Typedefs.md#acltdtBuf)。 |
 
@@ -165,7 +165,7 @@ aclError acltdtGetBufData(const acltdtBuf buf, void **dataPtr, size_t *size)
 
 获取共享Buffer的数据区指针和数据区长度，用户可以使用此指针填入数据。
 
-接口调用顺序：调用[acltdtAllocBuf](#acltdtAllocBuf)或[acltdtCopyBufRef](#acltdtCopyBufRef)接口申请到共享Buffer后，因此需由用户调用[acltdtGetBufData](#acltdtGetBufData)接口获取共享Buffer的内存指针及长度后，再自行向内存中填充有效数据，然后再调用[acltdtSetBufDataLen](#acltdtSetBufDataLen)接口设置共享Buffer中有效数据的长度，且长度必须小于[acltdtGetBufData](#acltdtGetBufData)获取到的size大小。
+接口调用顺序：调用[acltdtAllocBuf](#acltdtAllocBuf)或[acltdtCopyBufRef](#acltdtCopyBufRef)接口申请到共享Buffer后，由用户调用[acltdtGetBufData](#acltdtGetBufData)接口获取共享Buffer的内存指针及长度后，再自行向内存中填充有效数据，然后再调用[acltdtSetBufDataLen](#acltdtSetBufDataLen)接口设置共享Buffer中有效数据的长度，且长度必须小于[acltdtGetBufData](#acltdtGetBufData)获取到的size大小。
 
 ### 参数说明
 
@@ -279,7 +279,7 @@ aclError acltdtGetBufUserData(const acltdtBuf buf, void *dataPtr, size_t size, s
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
 | buf | 输入 | 共享Buffer指针。类型定义请参见[acltdtBuf](25-05_Typedefs.md#acltdtBuf)。<br>须通过[acltdtAllocBuf](#acltdtAllocBuf)或[acltdtCopyBufRef](#acltdtCopyBufRef)接口申请获得。 |
-| dataPtr | 输入 | 存放用户数据的内存地址指针。 |
+| dataPtr | 输入&输出 | 存放用户数据的内存地址指针。 |
 | size | 输入 | 用户数据的长度，单位为Byte。<br>数据长度小于或等于96Byte。 |
 | offset | 输入 | 地址偏移，单位为Byte。<br>偏移量小于或等于96Byte。 |
 
@@ -328,7 +328,7 @@ aclError acltdtSetBufDataLen(acltdtBuf buf, size_t len)
 
 设置共享Buffer中有效数据的长度。
 
-接口调用顺序：调用[acltdtAllocBuf](#acltdtAllocBuf)或[acltdtCopyBufRef](#acltdtCopyBufRef)接口申请到共享Buffer后，因此需由用户调用[acltdtGetBufData](#acltdtGetBufData)接口获取共享Buffer的内存指针及长度后，再自行向内存中填充有效数据，然后再调用acltdtSetBufDataLen接口设置共享Buffer中有效数据的长度，且长度必须小于[acltdtGetBufData](#acltdtGetBufData)获取到的size大小。
+接口调用顺序：调用[acltdtAllocBuf](#acltdtAllocBuf)或[acltdtCopyBufRef](#acltdtCopyBufRef)接口申请到共享Buffer后，由用户调用[acltdtGetBufData](#acltdtGetBufData)接口获取共享Buffer的内存指针及长度后，再自行向内存中填充有效数据，然后再调用acltdtSetBufDataLen接口设置共享Buffer中有效数据的长度，且长度必须小于[acltdtGetBufData](#acltdtGetBufData)获取到的size大小。
 
 ### 参数说明
 

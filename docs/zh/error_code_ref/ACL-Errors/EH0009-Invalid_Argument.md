@@ -4,13 +4,13 @@
 
 报错格式如下，占位符%s的含义依次为报错阶段、参数值、参数名、报错原因：
 
-```
+```text
 %s failed. Value %s for parameter %s is invalid. Reason: %s.
 ```
 
 报错示例如下：
 
-```
+```text
 acltdtGetDataItem failed. Value 5 for parameter index is invalid. Reason: index 5 is greater than or equal to dataset size 10.
 ```
 

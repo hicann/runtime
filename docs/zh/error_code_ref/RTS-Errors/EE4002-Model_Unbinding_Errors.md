@@ -4,13 +4,13 @@
 
 报错格式如下，占位符%s表示报错原因：
 
-```
+```text
 Failed to unbind the stream from the model. %s
 ```
 
 报错示例如下：
 
-```
+```text
 Failed to unbind the stream from the model. The specified stream (stream_id=61) is not bound to the current model (model_id=63).
 ```
 

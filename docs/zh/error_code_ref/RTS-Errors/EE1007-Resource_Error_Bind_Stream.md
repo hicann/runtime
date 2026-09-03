@@ -4,13 +4,13 @@
 
 报错格式如下，占位符%s的含义依次为Stream ID、报错原因：
 
-```
+```text
 Failed to bind stream (stream_id=%s). Reason: %s.
 ```
 
 报错示例如下：
 
-```
+```text
 Failed to bind stream (stream_id=1). Reason: The stream is already bound.
 ```
 

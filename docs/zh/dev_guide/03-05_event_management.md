@@ -21,7 +21,7 @@ Event也支持**多个任务等待同一个事件（多等一）**，例如strea
 
 以下是创建两个Event并销毁的代码示例，该示例仅用于说明Event使用方法，不可以直接拷贝编译运行。完整样例代码请参见[Link](https://gitcode.com/cann/runtime/blob/master/example/1_basic_features/event/1_event_timestamp)。
 
-```
+```c
 aclrtEvent startEvent;
 aclrtEvent endEvent;
 // 创建Event，接口传入ACL_EVENT_SYNC参数，表示创建的Event用于同步
@@ -44,7 +44,7 @@ aclrtDestroyEvent(endEvent);
 
 以下为调用aclrtStreamWaitEvent接口的示例代码，不可以直接拷贝编译运行，仅供参考：
 
-```
+```c
 // 创建一个Event
 aclrtEvent event;
 aclrtCreateEventExWithFlag(&event, ACL_EVENT_SYNC);
@@ -90,7 +90,7 @@ aclrtDestroyEvent(event);
 
 在[Event的创建与销毁](#event的创建与销毁)章节中创建的Event可用于统计Stream上计算任务的耗时，代码示例如下。该示例仅用于说明Event使用方法，不可以直接拷贝编译运行。完整样例代码请参见[Link](https://gitcode.com/cann/runtime/blob/master/example/1_basic_features/event/1_event_timestamp)。
 
-```
+```c
 uint64_t time = 0;
 float useTime = 0;
 
@@ -127,7 +127,7 @@ aclrtEventElapsedTime(&useTime, startEvent, endEvent);
 
 1.  在A线程中创建内存池，算子所用的内存来源于内存池，在算子后面插入Event Record任务。
 
-    ```
+    ```c
     // 申请内存池
     ......
     // 创建Stream
@@ -146,7 +146,7 @@ aclrtEventElapsedTime(&useTime, startEvent, endEvent);
 
 2.  在B线程中调用查询接口，如果查询的Event已经完成，则代表Event Record前面的算子内存都可以被安全的复用。
 
-    ```
+    ```c
     aclrtEventRecordedStatus status;
     // 查询线程A的event是否完成
     aclrtQueryEventStatus(event, &status);
@@ -165,7 +165,7 @@ aclrtEventElapsedTime(&useTime, startEvent, endEvent);
 
 调用aclrtSynchronizeEvent接口阻塞当前主机线程直到指定的Event事件完成。以下为示例代码，不可以直接拷贝编译运行，仅供参考：
 
-```
+```c
 // 创建Event
 aclrtEvent event;
 aclrtCreateEventExWithFlag(&event, ACL_EVENT_CAPTURE_STREAM_PROGRESS);

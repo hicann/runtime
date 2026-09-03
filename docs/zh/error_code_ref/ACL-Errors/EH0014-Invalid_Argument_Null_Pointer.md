@@ -4,13 +4,13 @@
 
 报错格式如下，占位符%s的含义依次为接口功能、参数名：
 
-```
+```text
 %s failed because %s cannot be NULL pointers at the same time.
 ```
 
 报错示例如下：
 
-```
+```text
 aclrtFunctionGetParamInfo failed because paramOffset and paramSize cannot be NULL pointers at the same time.
 ```
 
