@@ -1,6 +1,6 @@
 # UT代码规范
 
-本文档定义 Runtime 仓 UT 代码的硬性规范，用于补充 `UT用例开发指导.md` 中偏方法论和设计层面的内容。
+本文档定义 Runtime 仓 UT 代码的硬性规范，用于补充 `dt_guide/ut_case_development_guide.md` 中偏方法论和设计层面的内容。
 
 ## 一、断言规范
 
