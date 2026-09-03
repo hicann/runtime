@@ -638,6 +638,10 @@ RUNTIME_API(standard_soc, rtError_t, rtBinaryLoadWithoutTilingKey,
     (const void* data, const uint64_t length, rtBinHandle* binHandle),
     (data, length, binHandle), FEATURE_NOT_SUPPORT, EXPORT)
 
+RUNTIME_API(standard_soc, rtError_t, rtBinaryEnumerateFunctions,
+    (const rtBinHandle binHandle, rtFuncHandle* const funcHandles, const uint32_t numFunctions),
+    (binHandle, funcHandles, numFunctions), FEATURE_NOT_SUPPORT, EXPORT)
+
 RUNTIME_API(standard_soc, rtError_t, rtLaunchSIMTKernelWithHostArgs,
     ( void* func, rtDim3 gridDim, rtDim3 blockDim, size_t dynUbufSize, rtStream_t stm, rtKernelLaunchCfg_t* cfg,
     void* hostArgs, uint32_t argsSize, rtPlaceHolderInfo_t* placeHolderArray, uint32_t placeHolderNum),

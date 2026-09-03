@@ -7,6 +7,14 @@
 # INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
+set(RUNTIME_API_DIR ${TOP_DIR}/src/runtime/api)
+include(${TOP_DIR}/src/runtime/cmake/runtime_api_stubs.cmake)
+generate_runtime_api_stubs_at_configure(
+    tiny
+    ${TOP_DIR}/src/runtime/cmake/tiny_unsupported_runtime_api.def
+    RUNTIME_UT_TINY_GENERATED_API_STUB_SOURCE
+)
+
 add_subdirectory(test)
 set(BASE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${CANN_3RD_LIB_PATH}/boost-1.87.0)
@@ -465,7 +473,7 @@ set(runtimeut_src_tiny_exclude_list
 )
 
 set(runtimeut_src_tiny_include_list
-    ${TOP_DIR}/src/runtime/api/api_c_stub.cc
+    ${RUNTIME_UT_TINY_GENERATED_API_STUB_SOURCE}
     ${TOP_DIR}/src/runtime/api/api_c_tiny.cc
     ${TOP_DIR}/src/runtime/api/impl/api_error_stub.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_stub.cc

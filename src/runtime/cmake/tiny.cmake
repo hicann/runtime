@@ -9,6 +9,13 @@
 # -----------------------------------------------------------------------------------------------------------
 include_guard(GLOBAL)
 include(${RUNTIME_DIR}/pkg_inc/runtime/runtime/runtime_headers.cmake)
+include(${RUNTIME_CMAKE_DIR}/runtime_api_stubs.cmake)
+
+generate_runtime_api_stubs(
+    tiny
+    ${RUNTIME_CMAKE_DIR}/tiny_unsupported_runtime_api.def
+    RUNTIME_TINY_GENERATED_API_STUB_SOURCE
+)
 
 set(libruntime_v100_task_src_files
     ${RUNTIME_CORE_DIR}/src/task/task.cc
@@ -77,7 +84,7 @@ set(libruntime_v100_task_src_files
     ${RUNTIME_CORE_DIR}/src/task/v100/memory_corruption_checker.cc
 )
 
-set(libruntime_api_src_files
+set(libruntime_api_legacy_src_files
     ${RUNTIME_CORE_DIR}/src/common/api_enum_desc.cc
     ${RUNTIME_DIR}/src/runtime/api/api_c.cc
     ${RUNTIME_DIR}/src/runtime/api/api_c_context.cc
@@ -93,6 +100,40 @@ set(libruntime_api_src_files
     ${RUNTIME_DIR}/src/runtime/api/api_handle_guard.cc
     ${RUNTIME_DIR}/src/runtime/api/api_global_err.cc
     ${RUNTIME_DIR}/src/runtime/api/api_c_soc.cc
+)
+
+set(libruntime_api_weak_real_src_files
+    ${RUNTIME_API_DIR}/api_c.cc
+    ${RUNTIME_API_DIR}/api_c_context.cc
+    ${RUNTIME_API_DIR}/api_c_device.cc
+    ${RUNTIME_API_DIR}/api_c_esched.cc
+    ${RUNTIME_API_DIR}/api_c_dqs.cc
+    ${RUNTIME_API_DIR}/api_c_event.cc
+    ${RUNTIME_API_DIR}/api_c_kernel.cc
+    ${RUNTIME_API_DIR}/api_c_mbuf.cc
+    ${RUNTIME_API_DIR}/api_c_memory.cc
+    ${RUNTIME_API_DIR}/api_c_model.cc
+    ${RUNTIME_API_DIR}/api_c_snapshot.cc
+    ${RUNTIME_API_DIR}/api_c_soc.cc
+    ${RUNTIME_API_DIR}/api_c_soma.cc
+    ${RUNTIME_API_DIR}/api_c_standard_soc.cc
+    ${RUNTIME_API_DIR}/api_c_stream.cc
+    ${RUNTIME_API_DIR}/api_c_task.cc
+    ${RUNTIME_API_DIR}/api_c_uvm.cc
+    ${RUNTIME_API_DIR}/api_c_xpu.cc
+    ${RUNTIME_API_DIR}/api_david.cc
+    ${RUNTIME_API_DIR}/api_preload_task.cc
+)
+configure_runtime_api_weak_real_sources(tiny ${libruntime_api_weak_real_src_files})
+
+set(libruntime_api_src_files
+    ${RUNTIME_CORE_DIR}/src/common/api_enum_desc.cc
+    ${libruntime_api_weak_real_src_files}
+    ${RUNTIME_TINY_GENERATED_API_STUB_SOURCE}
+    ${RUNTIME_API_DIR}/api_c_tiny.cc
+    ${RUNTIME_API_DIR}/inner.cc
+    ${RUNTIME_API_DIR}/api_handle_guard.cc
+    ${RUNTIME_API_DIR}/api_global_err.cc
 )
 
 set(common_src_files
@@ -201,19 +242,9 @@ set(libruntime_event_src_files_include_for_tiny
     ${RUNTIME_API_DIR}/impl/api_impl_event_stub.cc
 )
 
-set(libruntime_api_src_files_exclude_for_tiny
-    ${RUNTIME_DIR}/src/runtime/api/api_c_snapshot.cc
-    ${RUNTIME_DIR}/src/runtime/api/api_c_standard_soc.cc
-    ${RUNTIME_DIR}/src/runtime/api/api_c_soma.cc
-    ${RUNTIME_DIR}/src/runtime/api/api_preload_task.cc
-    ${RUNTIME_DIR}/src/runtime/api/api_c_dqs.cc
-    ${RUNTIME_DIR}/src/runtime/api/api_david.cc
-    ${RUNTIME_DIR}/src/runtime/api/api_c_uvm.cc
-)
-
 set(libruntime_api_src_files_include_for_tiny
     ${RUNTIME_DIR}/src/runtime/api/api_c_tiny.cc
-    ${RUNTIME_DIR}/src/runtime/api/api_c_stub.cc
+    ${RUNTIME_TINY_GENERATED_API_STUB_SOURCE}
 )
 
 set(libruntime_common_src_files
@@ -310,16 +341,16 @@ set(libruntime_common_src_files
     ${RUNTIME_CORE_DIR}/src/task/v100/stub_task.cc
     ${RUNTIME_CORE_DIR}/src/memory/mem_type.cc
     ${libruntime_v100_task_src_files}
-    ${libruntime_api_src_files}
+    ${libruntime_api_legacy_src_files}
     ${libruntime_context_src_files}
     ${libruntime_stream_src_files}
     ${libruntime_profile_src_files}
     ${libruntime_arg_loader_files}
     ${libruntime_callback_files}
     ${common_src_files}
-    $<$<STREQUAL:${PRODUCT},ascend031>:${libruntime_api_src_files_include_for_tiny}>
-    $<$<STREQUAL:${PRODUCT},ascend031>:${libruntime_src_files_include_for_tiny}>
-    $<$<STREQUAL:${PRODUCT},ascend031>:${libruntime_event_src_files_include_for_tiny}>
+    ${libruntime_api_src_files_include_for_tiny}
+    ${libruntime_src_files_include_for_tiny}
+    ${libruntime_event_src_files_include_for_tiny}
 )
 
 set(libruntime_dev_info_src_files
@@ -624,7 +655,6 @@ macro(add_runtime_common_library target_name)
             $<$<AND:$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>>,$<NOT:$<STREQUAL:${ENABLE_TSD},true>>>:ascend_hal_stub>
             awatchdog_share
             unified_dlog
-            $<$<AND:$<NOT:$<STREQUAL:${PRODUCT},ascend031>>,$<NOT:$<STREQUAL:${PRODUCT},ascend610>>,$<NOT:$<STREQUAL:${PRODUCT},ascend610Lite>>>:atrace_share>
             json
             platform
             -Wl,--as-needed
@@ -654,26 +684,23 @@ endmacro()
 macro(add_runtime_api_library target_name)
     if(${TARGET_SYSTEM_NAME} STREQUAL "Windows")
         add_library(${target_name} SHARED
-            ${libruntime_api_src_files}
-            $<$<NOT:$<STREQUAL:${PRODUCT},ascend031>>:${libruntime_api_src_files_exclude_for_tiny}>
-            $<$<STREQUAL:${PRODUCT},ascend031>:${libruntime_api_src_files_include_for_tiny}>
+            ${libruntime_api_legacy_src_files}
+            ${libruntime_api_src_files_include_for_tiny}
             ${RUNTIME_DIR}/src/runtime/api/api.cc
             ${RUNTIME_CORE_DIR}/src/profiler/prof_map_ge_model_device.cc
             ${RUNTIME_CORE_DIR}/src/plugin_manage/runtime_keeper.cc
             ${libruntime_aclrt_impl_src_files}
             $<TARGET_OBJECTS:profapi_stub>
-            $<$<STREQUAL:${PRODUCT},ascend031>:$<TARGET_OBJECTS:runtime_platform_tiny>>
+            $<TARGET_OBJECTS:runtime_platform_tiny>
         )
     else()
         add_library(${target_name} SHARED
             ${libruntime_api_src_files}
-            $<$<NOT:$<STREQUAL:${PRODUCT},ascend031>>:${libruntime_api_src_files_exclude_for_tiny}>
-            $<$<STREQUAL:${PRODUCT},ascend031>:${libruntime_api_src_files_include_for_tiny}>
             ${RUNTIME_DIR}/src/runtime/api/api.cc
             ${RUNTIME_CORE_DIR}/src/profiler/prof_map_ge_model_device.cc
             ${RUNTIME_CORE_DIR}/src/plugin_manage/runtime_keeper.cc
             ${libruntime_aclrt_impl_src_files}
-            $<$<STREQUAL:${PRODUCT},ascend031>:$<TARGET_OBJECTS:runtime_platform_tiny>>
+            $<TARGET_OBJECTS:runtime_platform_tiny>
         )
     endif()
 
@@ -698,6 +725,7 @@ macro(add_runtime_api_library target_name)
         -Wextra
         $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>>:-Wfloat-equal>
     )
+    enable_runtime_api_weak_override(${target_name})
 
     target_include_directories(${target_name} PRIVATE
         ${RUNTIME_INC_DIR_TINY}
@@ -741,7 +769,6 @@ macro(add_runtime_api_library target_name)
             $<$<AND:$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>>,$<NOT:$<STREQUAL:${ENABLE_TSD},true>>>:ascend_hal_stub>
             awatchdog_share
             unified_dlog
-            $<$<AND:$<NOT:$<STREQUAL:${PRODUCT},ascend031>>,$<NOT:$<STREQUAL:${PRODUCT},ascend610>>,$<NOT:$<STREQUAL:${PRODUCT},ascend610Lite>>>:atrace_share>
             json
             platform
             runtime_common
@@ -834,7 +861,6 @@ macro(add_runtime_v100_library target_name)
             $<$<AND:$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>>,$<NOT:$<STREQUAL:${ENABLE_TSD},true>>>:ascend_hal_stub>
             awatchdog_share
             unified_dlog
-            $<$<AND:$<NOT:$<STREQUAL:${PRODUCT},ascend031>>,$<NOT:$<STREQUAL:${PRODUCT},ascend610>>,$<NOT:$<STREQUAL:${PRODUCT},ascend610Lite>>>:atrace_share>
             json
             platform
             runtime_common
@@ -876,7 +902,7 @@ if(${TARGET_SYSTEM_NAME} STREQUAL "Windows")
         ${RUNTIME_DIR}/src/runtime/driver/npu_driver_dcache_lock_common.cpp
         ${RUNTIME_DIR}/src/runtime/driver/npu_driver_dcache_lock_opb.cpp
         $<TARGET_OBJECTS:profapi_stub>
-        $<$<STREQUAL:${PRODUCT},ascend031>:$<TARGET_OBJECTS:runtime_platform_tiny>>
+        $<TARGET_OBJECTS:runtime_platform_tiny>
     )
 else()
     add_library(static_runtime STATIC
@@ -890,7 +916,7 @@ else()
         ${RUNTIME_DIR}/src/runtime/driver/npu_driver_tiny.cpp
         ${RUNTIME_DIR}/src/runtime/driver/npu_driver_dcache_lock_common.cpp
         ${RUNTIME_DIR}/src/runtime/driver/npu_driver_dcache_lock_opb.cpp
-        $<$<STREQUAL:${PRODUCT},ascend031>:$<TARGET_OBJECTS:runtime_platform_tiny>>
+        $<TARGET_OBJECTS:runtime_platform_tiny>
     )
 endif()
 

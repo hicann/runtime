@@ -86,6 +86,38 @@ function(generate_runtime_api_stubs product product_def output_var)
     endif()
 endfunction()
 
+# UT source lists are consumed from child directories, so generate their stub
+# source while configuring the parent directory.
+function(generate_runtime_api_stubs_at_configure product product_def output_var)
+    check_runtime_api_stub_product(${product})
+    set(output_dir ${CMAKE_CURRENT_BINARY_DIR}/generated/runtime_api_stubs/${product})
+    set(output_source ${output_dir}/api_c_generated_stub.cc)
+    set(output_report ${output_dir}/api_provider_report.csv)
+
+    file(MAKE_DIRECTORY ${output_dir})
+    execute_process(
+        COMMAND python3 ${RUNTIME_API_STUB_GENERATOR}
+            --catalog ${RUNTIME_API_STUB_CATALOG}
+            --product-def ${product_def}
+            --product ${product}
+            --output ${output_source}
+            --report ${output_report}
+        RESULT_VARIABLE generator_result
+        ERROR_VARIABLE generator_error
+    )
+    if(NOT generator_result EQUAL 0)
+        message(FATAL_ERROR "Failed to generate ${product} Runtime API stubs: ${generator_error}")
+    endif()
+
+    set_source_files_properties(${output_source} PROPERTIES GENERATED TRUE)
+    set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
+        ${RUNTIME_API_STUB_GENERATOR}
+        ${RUNTIME_API_STUB_CATALOG}
+        ${product_def}
+    )
+    set(${output_var} ${output_source} PARENT_SCOPE)
+endfunction()
+
 function(enable_runtime_api_weak_override target_name)
     get_target_property(runtime_api_target_type ${target_name} TYPE)
     if(NOT "${runtime_api_target_type}" STREQUAL "SHARED_LIBRARY")
