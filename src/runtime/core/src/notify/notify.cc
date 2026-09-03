@@ -169,6 +169,7 @@ rtError_t Notify::ReAllocId() const
     Context* const curCtx = Runtime::Instance()->CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     Device* const dev = curCtx->Device_();
+    COND_RETURN_INFO(notifyid_ == MAX_UINT32_NUM, RT_ERROR_NONE, "End graph notify no need realloc id.");
     const rtError_t ret = driver_->ReAllocResourceId(deviceId_, dev->DevGetTsId(), 0U, notifyid_, DRV_NOTIFY_ID);
     ERROR_RETURN(
         ret, "Failed to realloc notify id, notifyid=%u, device_id=%u, retCode=%#x.", notifyid_, deviceId_,

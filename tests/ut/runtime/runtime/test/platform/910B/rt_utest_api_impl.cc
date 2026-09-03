@@ -572,14 +572,17 @@ TEST_F(CloudV2ApiImplTest, SnapShotResourceRestore_ut)
     Context context(device, false);
     ctxMan.InsertSetValueWithoutLock(&context);
 
+    Notify* notify = new (std::nothrow) Notify(device->Id_(), device->DevGetTsId());
+    EXPECT_NE(notify, nullptr);
+    rtError_t error = notify->SetupWithoutAllocNtyId();
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
     MOCKER_CPP(&Context::StreamsTaskClean).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP(&Context::StreamsRestore).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(static_cast<RawDevice*>(device), &RawDevice::EventsReAllocId)
         .stubs()
         .will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP_VIRTUAL(static_cast<RawDevice*>(device), &RawDevice::NotifiesReAllocId)
-        .stubs()
-        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::ReAllocResourceId).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(static_cast<RawDevice*>(device), &RawDevice::ResourceRestore)
         .stubs()
         .will(returnValue(RT_ERROR_NONE));
@@ -587,7 +590,7 @@ TEST_F(CloudV2ApiImplTest, SnapShotResourceRestore_ut)
         .stubs()
         .will(returnValue(RT_ERROR_NONE));
 
-    rtError_t error = SnapShotResourceRestore(ctxMan);
+    error = SnapShotResourceRestore(ctxMan);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     GlobalMockObject::reset();
@@ -600,6 +603,8 @@ TEST_F(CloudV2ApiImplTest, SnapShotResourceRestore_ut)
 
     error = SnapShotResourceRestore(ctxMan);
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+
+    DELETE_O(notify);
 }
 
 TEST_F(CloudV2ApiImplTest, dev_binary_register_test)
