@@ -11,7 +11,7 @@
 #include "mockcpp/mockcpp.hpp"
 #include "self_log_stub.h"
 #include "log_daemon_stub.h"
-#include "cpu_detect.h"
+#include "cpu_detect_server.h"
 #include "log_drv.h"
 #include "adcore_api.h"
 #include "library_load.h"

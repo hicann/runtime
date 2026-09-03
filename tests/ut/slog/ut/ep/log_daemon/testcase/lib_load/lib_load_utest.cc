@@ -22,7 +22,7 @@ using namespace testing;
 
 int32_t g_libLoadHandle = 0;
 
-// 这些函数仅作为 dlsym 的返回目标，不能与 cpu_detect.c / hbm_detect.c
+// 这些函数仅作为 dlsym 的返回目标，不能与 cpu_detect_server.c / hbm_detect.c
 // 中的同名产品实现重名，否则与本 target 链接时会重复定义。
 static int32_t HbmDetectServerInitStub() { return 0; }
 

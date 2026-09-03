@@ -8,7 +8,7 @@
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
 set(libcpuDeviceSrcFiles
-    ${CMAKE_CURRENT_SOURCE_DIR}/cpu_detect.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/cpu_detect_server.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../common/log_path_mgr.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../common/log_print_selflog.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../common/config/log_config_list.c
@@ -31,7 +31,7 @@ set(libcpuDeviceDir
     ${TOOLAHCIN_LOG_DIR}/syslog/common
     ${TOOLAHCIN_LOG_DIR}/syslog/common/driver
     ${TOOLAHCIN_LOG_DIR}/syslog/common/config
-    ${TOOLAHCIN_LOG_DIR}/syslog/log_daemon/cpu_detect
+    ${TOOLAHCIN_LOG_DIR}/syslog/log_daemon/cpu_detect_server
     ${TOOLAHCIN_LOG_DIR}/syslog/log_daemon/server_mgr
     ${RUNTIME_DIR}/src/dfx/adump/external
 )

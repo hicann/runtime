@@ -12,7 +12,7 @@ add_subdirectory(hbm_detect)
 add_subdirectory(file_dump)
 add_subdirectory(sys_monitor)
 add_subdirectory(stackcore)
-add_subdirectory(cpu_detect)
+add_subdirectory(cpu_detect_server)
 add_subdirectory(lib_load)
 
 ###################################################################

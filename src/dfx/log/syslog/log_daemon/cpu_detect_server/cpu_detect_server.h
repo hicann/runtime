@@ -8,8 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#ifndef CPU_DETECT_H
-#define CPU_DETECT_H
+#ifndef CPU_DETECT_SERVER_H
+#define CPU_DETECT_SERVER_H
 
 #include "detect_errcode.h"
 #include "server_mgr.h"

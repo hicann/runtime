@@ -21,7 +21,7 @@
 #include "log_pm.h"
 #include "log_pm_sig.h"
 #include "log_config_api.h"
-#include "cpu_detect.h"
+#include "cpu_detect_server.h"
 #include "server_mgr.h"
 #include "sys_monitor_frame.h"
 #define RESULT_BUFFER_LEN 1024U

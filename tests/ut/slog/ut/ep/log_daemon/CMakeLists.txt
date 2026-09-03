@@ -76,9 +76,9 @@ set(logDaemonSrc
     ${LOG_SOURCE_PATH}/syslog/log_daemon/hbm_detect/hbm_detect.c
     #server-mgr
     ${LOG_SOURCE_PATH}/syslog/log_daemon/server_mgr/server_mgr.c
-    # cpu-detect
-    ${CMAKE_CURRENT_SOURCE_DIR}/testcase/cpu_detect/cpu_detect_utest.cc
-    ${LOG_SOURCE_PATH}/syslog/log_daemon/cpu_detect/cpu_detect.c
+    # cpu-detect-server
+    ${CMAKE_CURRENT_SOURCE_DIR}/testcase/cpu_detect_server/cpu_detect_server_utest.cc
+    ${LOG_SOURCE_PATH}/syslog/log_daemon/cpu_detect_server/cpu_detect_server.c
     # lib-load
     ${CMAKE_CURRENT_SOURCE_DIR}/testcase/lib_load/lib_load_utest.cc
     ${LOG_SOURCE_PATH}/syslog/log_daemon/lib_load/lib_load.c
@@ -118,7 +118,7 @@ set(logDaemonInc
     ${LOG_SOURCE_PATH}/syslog/log_daemon/file_monitor
     ${LOG_SOURCE_PATH}/syslog/log_daemon/server_mgr
     ${LOG_SOURCE_PATH}/syslog/log_daemon/include
-    ${LOG_SOURCE_PATH}/syslog/log_daemon/cpu_detect
+    ${LOG_SOURCE_PATH}/syslog/log_daemon/cpu_detect_server
     ${LOG_SOURCE_PATH}/syslog/log_daemon/lib_load
     ${UT_SOURCE_PATH}/stub
     ${UT_SOURCE_PATH}/ep/stub
