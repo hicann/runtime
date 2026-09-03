@@ -292,7 +292,7 @@ set(libruntime_src_files
     ${RUNTIME_CORE_DIR}/src/launch/memory_common.cc
     ${RUNTIME_CORE_DIR}/src/launch/xpu_aicpu_c_stub.cc
     ${RUNTIME_CORE_DIR}/src/memory/mem_type.cc
-    ${RUNTIME_CORE_DIR}/src/notify/notify_basic.cc
+    ${RUNTIME_CORE_DIR}/src/notify/notify.cc
     ${RUNTIME_CORE_DIR}/src/plugin_manage/runtime_keeper.cc
     ${RUNTIME_CORE_DIR}/src/plugin_manage/v100/plugin_old_arch.cc
     ${RUNTIME_CORE_DIR}/src/runtime.cc
