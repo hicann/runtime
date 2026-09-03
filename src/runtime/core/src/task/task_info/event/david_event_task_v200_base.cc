@@ -336,6 +336,9 @@ void DavidUpdateAndTryToDestroyEvent(TaskInfo *taskInfo, Event **eventPtr, David
             mdl->DeleteSingleOperEvent(*eventPtr);
             (*eventPtr)->SetCaptureEvent(nullptr);
         }
+        if ((*eventPtr)->Device_() != nullptr) {
+            (*eventPtr)->Device_()->RemoveEvent(*eventPtr);
+        }
         delete *eventPtr;
         (*eventPtr) = nullptr;
     }

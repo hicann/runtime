@@ -77,7 +77,6 @@ void ConstructDavidSqeForModelMaintainceTask(TaskInfo * const taskInfo, rtDavidS
         case MMT_STREAM_ADD:
             sqe->header.preP = 1U;
             sqe->u.modelMaintainceInfo.streamExecTimesAddr = modelMaintainceTaskInfo->execTimesSvmOffset;
-            modelMaintainceTaskInfo->opStream->SetBindFlag(true);
             PrintDavidSqe(davidSqe, "ModelBindTask");
             RT_LOG(RT_LOG_INFO, "model maintaince type=%d, device_id=%u, bind stream_id=%hu to modelId=%hu, task_id=%hu",
                 type, taskInfo->stream->Device_()->Id_(), sqe->u.modelMaintainceInfo.streamId,
@@ -85,7 +84,6 @@ void ConstructDavidSqeForModelMaintainceTask(TaskInfo * const taskInfo, rtDavidS
             break;
         case MMT_STREAM_DEL:
             sqe->header.preP = 1U;
-            modelMaintainceTaskInfo->opStream->SetBindFlag(false);
             PrintDavidSqe(davidSqe, "ModelUnbindTask");
             RT_LOG(RT_LOG_INFO, "model maintaince type=%d, device_id=%u, unbind stream_id=%hu from modelId=%hu,"
                 "task_id=%hu", type, taskInfo->stream->Device_()->Id_(), sqe->u.modelMaintainceInfo.streamId,

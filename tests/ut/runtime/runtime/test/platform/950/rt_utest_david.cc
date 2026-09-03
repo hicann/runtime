@@ -624,7 +624,6 @@ TEST_F(DavidTaskTest, construct_davidsqe_for_model_maintaince)
     (void)ModelMaintainceTaskInit(&maintainceTask, MMT_STREAM_ADD, model, stream, RT_MODEL_HEAD_STREAM, 0U);
     uint64_t sqBaseAddr = 0U;
     ToConstructDavidSqe(task, &sqe, sqBaseAddr);
-    EXPECT_EQ(stream->GetBindFlag(), true);
     EXPECT_EQ(sqe.phSqe.header.preP, 1U);
 
     model->SetModelExecutorType(EXECUTOR_AICPU);
@@ -643,7 +642,6 @@ TEST_F(DavidTaskTest, construct_davidsqe_for_model_maintaince)
     model->modelType_ = RT_MODEL_NORMAL;
     (void)ModelMaintainceTaskInit(&maintainceTask, MMT_STREAM_DEL, model, stream, RT_MODEL_HEAD_STREAM, 0U);
     ToConstructDavidSqe(task, &sqe, sqBaseAddr);
-    EXPECT_EQ(stream->GetBindFlag(), false);
     EXPECT_EQ(sqe.phSqe.header.preP, 1U);
     uint64_t addr;
     stream->SetModel(model);

@@ -1954,14 +1954,13 @@ rtError_t ApiImpl::EventCreate(Event ** const evt, const uint64_t flag)
     COND_RETURN_AND_MSG_OUTER((*evt == nullptr), RT_ERROR_EVENT_NEW, ErrorCode::EE1013,
         sizeof(Event), "new");
 
-    dev->PushEvent(*evt);
-
     if (flag != RT_EVENT_DEFAULT) {
         const rtError_t error = (*evt)->GenEventId();
         COND_PROC_RETURN_ERROR(error != RT_ERROR_NONE, error, DELETE_O(*evt);,
             "Gen event id failed, device_id=%u, tsId=%u, retCode=%#x", dev->Id_(), dev->DevGetTsId(), error);
     }
     InitEmbeddedInnerHandle<Event>(*evt);
+    dev->PushEvent(*evt);
     return RT_ERROR_NONE;
 }
 
