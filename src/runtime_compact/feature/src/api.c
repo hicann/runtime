@@ -16,6 +16,7 @@
 #include "securec.h"
 #include "ref_obj.h"
 #include "rt_ctrl_model.h"
+#include "rts_mem.h"
 
 #if defined(__cplusplus)
 extern "C" {
@@ -83,6 +84,14 @@ rtError_t rtFree(void* devPtr)
         REPORT_INNER_ERROR(RT_DRV_INNER_ERROR, "free memory failed, drvRet = %d.", error);
         return ErrorConvert(error);
     }
+    return ACL_RT_SUCCESS;
+}
+
+rtError_t rtsPointerGetAttributes(const void* ptr, rtPtrAttributes_t* attributes)
+{
+    (void)memset_s(attributes, sizeof(*attributes), 0, sizeof(*attributes));
+    const drvMemType_t type = halMemGetType(ptr);
+    attributes->location.type = (type == DRV_MEMTYPE_HOST) ? RT_MEMORY_LOC_HOST : RT_MEMORY_LOC_DEVICE;
     return ACL_RT_SUCCESS;
 }
 

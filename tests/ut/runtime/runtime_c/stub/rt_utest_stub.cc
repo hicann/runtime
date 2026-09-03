@@ -125,3 +125,11 @@ drvError_t halSqUnSubscribeTid(uint8_t devId, uint8_t sqId, uint8_t type) { retu
 drvError_t halSqResume(uint8_t devId, int32_t sqid) { return DRV_ERROR_NONE; }
 
 drvError_t halHostFuncWait(int32_t timeout, int64_t tid) { return DRV_ERROR_NONE; }
+
+drvMemType_t g_halMemTypeForTest = DRV_MEMTYPE_DEVICE;
+
+drvMemType_t halMemGetType(const void* p)
+{
+    (void)p;
+    return g_halMemTypeForTest;
+}

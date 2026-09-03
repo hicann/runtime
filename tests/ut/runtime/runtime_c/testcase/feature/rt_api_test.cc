@@ -14,6 +14,7 @@
 #include "mockcpp/mockcpp.hpp"
 #include "securec.h"
 #include "rt.h"
+#include "rts_mem.h"
 #include "hal_ts.h"
 #include "error_codes/rt_error_codes.h"
 #include "rt_ctrl_model.h"
@@ -24,6 +25,8 @@ using namespace testing;
 
 #define LINUX 0
 #define LITEOS 1
+
+extern drvMemType_t g_halMemTypeForTest;
 
 class ApiCTest : public testing::Test {
 protected:
@@ -1390,4 +1393,28 @@ TEST_F(ApiCTest, runtime_rtProcessHostFunc)
 
     error = rtProcessHostFunc(timeout);
     EXPECT_EQ(error, ACL_ERROR_RT_REPORT_TIMEOUT);
+}
+
+TEST_F(ApiCTest, runtime_rtsPointerGetAttributes)
+{
+    uint8_t address = 0U;
+    rtPtrAttributes_t attributes = {};
+
+    g_halMemTypeForTest = DRV_MEMTYPE_HOST;
+    EXPECT_EQ(rtsPointerGetAttributes(&address, &attributes), RT_ERROR_NONE);
+    EXPECT_EQ(attributes.location.type, RT_MEMORY_LOC_HOST);
+    EXPECT_EQ(attributes.location.id, 0U);
+    EXPECT_EQ(attributes.pageSize, 0U);
+
+    EXPECT_EQ(rtInit(), RT_ERROR_NONE);
+    rtContext_t context = nullptr;
+    EXPECT_EQ(rtCtxCreateEx(&context, 0U, 0), RT_ERROR_NONE);
+
+    g_halMemTypeForTest = DRV_MEMTYPE_DEVICE;
+    EXPECT_EQ(rtsPointerGetAttributes(&address, &attributes), RT_ERROR_NONE);
+    EXPECT_EQ(attributes.location.type, RT_MEMORY_LOC_DEVICE);
+    EXPECT_EQ(attributes.location.id, 0U);
+
+    EXPECT_EQ(rtCtxDestroyEx(context), RT_ERROR_NONE);
+    rtDeinit();
 }

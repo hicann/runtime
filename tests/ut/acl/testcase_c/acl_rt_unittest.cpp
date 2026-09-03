@@ -863,6 +863,37 @@ TEST_F(AclRtTest, aclrtMemcpy_normal_ToDevice)
     EXPECT_EQ(ret, ACL_SUCCESS);
 }
 
+TEST_F(AclRtTest, aclrtPointerGetAttributes_success)
+{
+    void* ptr = reinterpret_cast<void*>(0x01);
+    aclrtPtrAttributes attributes = {};
+    EXPECT_CALL(RuntimeStubMock::GetInstance(), rtsPointerGetAttributes(ptr, _)).WillOnce(Return(RT_ERROR_NONE));
+
+    const aclError ret = aclrtPointerGetAttributes(ptr, &attributes);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+}
+
+TEST_F(AclRtTest, aclrtPointerGetAttributes_nullptr)
+{
+    void* ptr = reinterpret_cast<void*>(0x01);
+    aclrtPtrAttributes attributes = {};
+
+    aclError ret = aclrtPointerGetAttributes(NULL, &attributes);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+    ret = aclrtPointerGetAttributes(ptr, NULL);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+}
+
+TEST_F(AclRtTest, aclrtPointerGetAttributes_rtsFailed)
+{
+    void* ptr = reinterpret_cast<void*>(0x01);
+    aclrtPtrAttributes attributes = {};
+    EXPECT_CALL(RuntimeStubMock::GetInstance(), rtsPointerGetAttributes(ptr, _)).WillOnce(Return(ACL_ERROR_RT_FAILURE));
+
+    const aclError ret = aclrtPointerGetAttributes(ptr, &attributes);
+    EXPECT_EQ(ret, ACL_ERROR_RT_FAILURE);
+}
+
 TEST_F(AclRtTest, aclrtGetMemInfo_ParamNULL)
 {
     size_t free;

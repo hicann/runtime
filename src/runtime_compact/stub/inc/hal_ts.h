@@ -891,6 +891,15 @@ extern drvError_t halHostMemAlloc(void** pp, unsigned long long size, unsigned l
  */
 extern drvError_t halHostMemFree(void* p);
 
+typedef enum tagDrvMemType { DRV_MEMTYPE_HOST, DRV_MEMTYPE_DEVICE } drvMemType_t;
+
+/**
+ * @brief Get the memory location type for an address.
+ * @param [in] p Memory address.
+ * @return Memory location type.
+ */
+extern drvMemType_t halMemGetType(const void* p);
+
 /* 功能说明: NPU驱动全局公共资源初始化，仅能调用一次包括:
  *          1) 规格类配置：如sq队列数、支持的模型执行描述符数目、模型描述符数目等
             2) 公共资源池初始化:ModelExecDesc、ModelDesc初始化

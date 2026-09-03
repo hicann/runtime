@@ -203,6 +203,11 @@ rtError_t rtStreamCreateWithConfig(rtStream_t* stream, rtStreamConfigHandle* han
     return RuntimeStubMock::GetInstance().rtStreamCreateWithConfig(stream, handle);
 }
 
+rtError_t rtsPointerGetAttributes(const void* ptr, rtPtrAttributes_t* attributes)
+{
+    return RuntimeStubMock::GetInstance().rtsPointerGetAttributes(ptr, attributes);
+}
+
 rtError_t rtGetRunMode_Device_Normal_Invoke(rtRunMode* mode)
 {
     *mode = RT_RUN_MODE_OFFLINE;

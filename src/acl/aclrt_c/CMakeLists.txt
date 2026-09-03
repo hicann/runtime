@@ -34,6 +34,7 @@ if (${TARGET_SYSTEM_NAME} STREQUAL "Linux")
         ${BASE_DIR}/include/external/acl
         ${BASE_DIR}/include
         ${BASE_DIR}/pkg_inc/base # dlog_pub.h
+        ${BASE_DIR}/pkg_inc/runtime/runtime/rts
     )
 
     target_compile_options(${ASCENDCL_C_COMPILE_TARGET} PRIVATE
@@ -86,6 +87,7 @@ elseif (${TARGET_SYSTEM_NAME} STREQUAL "LiteOS")
         ${BASE_DIR}/include/external/acl
         ${BASE_DIR}/include
         ${BASE_DIR}/pkg_inc/base # dlog_pub.h
+        ${BASE_DIR}/pkg_inc/runtime/runtime/rts
     )
 
     target_compile_options(${ASCENDCL_C_COMPILE_TARGET} PRIVATE

@@ -14,6 +14,7 @@
 #include "securec.h"
 #include "runtime/dev.h"
 #include "runtime/mem.h"
+#include "rts_mem.h"
 #include "model_config_rt.h"
 
 #define ACL_MEMCPY_KIND_DESC_LEN 48U
@@ -131,6 +132,15 @@ aclError aclrtMemset(void* devPtr, size_t maxCount, int32_t value, size_t count)
         return ACL_ERROR_INVALID_PARAM;
     }
     return rtMemset(devPtr, maxCount, (uint32_t)(value), count);
+}
+
+aclError aclrtPointerGetAttributes(const void* ptr, aclrtPtrAttributes* attributes)
+{
+    if (ptr == NULL || attributes == NULL) {
+        ACL_LOG_ERROR("%s", ptr == NULL ? "ptr is NULL." : "attributes is NULL.");
+        return ACL_ERROR_INVALID_PARAM;
+    }
+    return rtsPointerGetAttributes(ptr, (rtPtrAttributes_t*)attributes);
 }
 
 aclError aclrtGetMemInfo(aclrtMemAttr attr, size_t* free, size_t* total)

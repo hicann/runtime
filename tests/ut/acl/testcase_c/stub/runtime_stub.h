@@ -14,6 +14,7 @@
 #include "runtime/base.h"
 #include "runtime/mem.h"
 #include "runtime/rt.h"
+#include "rts_mem.h"
 #include "acl_base.h"
 #include "acl_rt.h"
 
@@ -36,6 +37,7 @@ public:
     MOCK_METHOD1(rtCtxGetCurrent, rtError_t(rtContext_t* ctx));
     MOCK_METHOD1(rtGetRunMode, rtError_t(rtRunMode* mode));
     MOCK_METHOD2(rtStreamCreateWithConfig, rtError_t(rtStream_t* stream, rtStreamConfigHandle* handle));
+    MOCK_METHOD2(rtsPointerGetAttributes, rtError_t(const void* ptr, rtPtrAttributes_t* attributes));
 };
 
 rtError_t rtGetRunMode_Device_Normal_Invoke(rtRunMode* mode);
