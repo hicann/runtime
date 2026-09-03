@@ -96,7 +96,7 @@ stages:
           spec: 'xlarge'
       JOB_codecheck_action:
         name: CodeCheck
-        uses: .gitcode/workflows/codecheck_action.yml
+        uses: cann/.gitcode/.gitcode/workflows/codecheck_action.yml@master
         with:
           precommit_image_version: ${{ jobs.JOB_image.outputs.precommit }}
           codecheck_image_version: ${{ jobs.JOB_image.outputs.codecheck }}
