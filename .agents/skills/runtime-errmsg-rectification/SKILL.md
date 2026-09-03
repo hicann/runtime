@@ -94,4 +94,5 @@ Step 1中涉及新增宏时，要同步更新[ErrMsg 上报宏使用规范](../.
 | 信息完整 | 对照[打印格式规范](../../../docs/zh/guidelines/error_message_guide/rectification-principles.md) |
 | 错误信息改动自检 | 对照[review-checklist](../../../docs/zh/guidelines/error_message_guide/review-checklist.md) |
 | 不改业务逻辑 | 检查返回值、条件判断未修改 |
-| 不重复上报 | 检查调用链无重复上报 |
+| 不重复上报 | 检查一次 ErrMsg 输出中无完全相同或实质相同消息，并尽量删除调用栈中的冗余中间层上报 |
+| 去重安全性 | 检查删除或迁移上报后无应报路径漏报，且返回码、清理顺序和其他业务逻辑不变 |

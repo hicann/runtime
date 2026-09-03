@@ -194,15 +194,15 @@
 4. 宏是否匹配错误码、控制流和参数传递风格，是否误用 `_INNER` / `_OUTER` 系列宏：按照[ErrMsg 上报宏使用规范](../../../docs/zh/guidelines/error_message_guide/macro-selection-guide.md)进行判断。
 5. 涉及新增宏时，要同步更新[ErrMsg 上报宏使用规范](../../../docs/zh/guidelines/error_message_guide/macro-selection-guide.md)
 6. 错误文案是否包含参数名、参数值、期望值或 Reason，是否可定位、可自闭环，是否句式完整，不存在语法错误。
-7. 是否存在同一错误路径重复结构化上报。
+7. 是否存在重复结构化上报：按照[重复结构化上报](../../../docs/zh/guidelines/error_message_guide/rectification-principles.md)检查同一次 ErrMsg 输出及其调用栈。
 8. Error Message 整改是否误改业务逻辑、返回值、条件判断或普通日志级别。
 9. 公开 API 参数错误是否漏报必要结构化错误。
 10. 是否满足Error Message整改边界：按照[整改边界](../../../docs/zh/guidelines/error_message_guide/rectification-principles.md)进行判断。
 
 严重程度定义：
 
-- **[必须修改]**：用户错误和内部错误分类明显错误；错误码明显选错；Arglist 数量或顺序与 `error_code.json` / `error_code_meta.h` 不匹配；同一错误路径重复结构化上报；Error Message 整改引入业务逻辑、返回值、条件判断或日志级别变化；公开 API 参数错误漏报必要结构化错误。
-- **[建议修改]**：宏可工作但不是推荐专用宏；文案不够自闭环；Reason、Expected、参数名或参数值表达不清；第一现场日志上下文不足。
+- **[必须修改]**：用户错误和内部错误分类明显错误；错误码明显选错；Arglist 数量或顺序与 `error_code.json` / `error_code_meta.h` 不匹配；一次 ErrMsg 输出中存在完全相同或实质相同的结构化消息；删除或迁移上报导致本应结构化上报的路径漏报；Error Message 整改引入业务逻辑、返回值、条件判断、清理顺序或日志级别变化；公开 API 参数错误漏报必要结构化错误。
+- **[建议修改]**：宏可工作但不是推荐专用宏；文案不够自闭环；Reason、Expected、参数名或参数值表达不清；第一现场日志上下文不足；调用栈中存在可由首错点和 acl/rt 接口层完整覆盖的冗余中间层上报。
 - **[仅供参考]**：非关键措辞优化，或不影响定位的问题说明。
 
 ## 输出格式
