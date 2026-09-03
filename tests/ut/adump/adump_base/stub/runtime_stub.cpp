@@ -556,6 +556,8 @@ rtError_t rtRegisterParseDfxInfoFunc(rtParseDfxInfoFunc func) { return RT_ERROR_
 
 rtError_t rtProfRegisterCtrlCallback(uint32_t moduleId, rtProfCtrlHandle callback) { return RT_ERROR_NONE; }
 
+int32_t MsprofRegisterCallback(uint32_t moduleId, ProfCommandHandle handle) { return 0; }
+
 uint64_t MsprofSysCycleTime(void) { return 1000U; }
 
 int32_t MsprofReportAdditionalInfo(uint32_t nonPersistantFlag, const VOID_PTR data, uint32_t length) { return 0; }

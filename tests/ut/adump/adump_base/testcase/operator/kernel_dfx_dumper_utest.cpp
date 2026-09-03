@@ -50,12 +50,10 @@ TEST_F(KernelDfxDumperUtest, Test_DfxDumper_UnInitUnregistersDfxParser)
 {
     EXPECT_EQ(DfxInfoParser::Instance().Init(), ADUMP_SUCCESS);
     EXPECT_EQ(DfxInfoParser::Instance().registered_, true);
-    EXPECT_EQ(DfxInfoParser::Instance().profRegistered_, true);
 
     KernelDfxDumper::Instance().UnInit();
 
     EXPECT_EQ(DfxInfoParser::Instance().registered_, false);
-    EXPECT_EQ(DfxInfoParser::Instance().profRegistered_, false);
 }
 
 TEST_F(KernelDfxDumperUtest, Test_DfxDumper_EnableWithEnv)

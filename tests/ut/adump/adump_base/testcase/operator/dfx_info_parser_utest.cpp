@@ -62,7 +62,11 @@ static DumpInfoHead* WriteTlv(uint8_t* buf, cce::runtime::DumpType type, uint32_
 
 class DfxInfoParserUtest : public testing::Test {
 protected:
-    virtual void SetUp() { KernelDfxDumper::Instance().UnInit(); }
+    virtual void SetUp()
+    {
+        KernelDfxDumper::Instance().UnInit();
+        DfxInfoParser::profCtrlRegistered_ = false; // 进程级注册标志按用例重置，保证断言确定性
+    }
     virtual void TearDown()
     {
         DfxInfoParser::Instance().UnInit();
@@ -1581,15 +1585,18 @@ TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_TensorFloat32WithShape)
     EXPECT_EQ(consumedLen, off);
 }
 
-static rtProfCtrlHandle g_capturedProfCallback = nullptr;
+static ProfCommandHandle g_capturedProfCallback = nullptr;
 static rtParseDfxInfoFunc g_capturedParseCallback = nullptr;
 static uint32_t g_profRegisterCalls = 0U;
 static uint32_t g_parseRegisterCalls = 0U;
-static rtError_t captureProfCallback(uint32_t moduleId, rtProfCtrlHandle callback)
+static uint32_t g_reportAdditionalInfoCalls = 0U;
+static uint32_t g_capturedProfModuleId = 0U;
+static int32_t captureMsprofCallback(uint32_t moduleId, ProfCommandHandle callback)
 {
     g_profRegisterCalls++;
+    g_capturedProfModuleId = moduleId;
     g_capturedProfCallback = callback;
-    return RT_ERROR_NONE;
+    return 0;
 }
 
 static rtError_t CaptureParseCallback(rtParseDfxInfoFunc callback)
@@ -1599,26 +1606,115 @@ static rtError_t CaptureParseCallback(rtParseDfxInfoFunc callback)
     return RT_ERROR_NONE;
 }
 
-static void SetProfSwitch(uint64_t profSwitch)
+static int32_t CountMsprofReportAdditionalInfo(uint32_t nonPersistantFlag, const VOID_PTR data, uint32_t length)
+{
+    g_reportAdditionalInfoCalls++;
+    return 0;
+}
+
+static void SetProfSwitch(uint64_t profSwitch, uint32_t cmdType = PROF_COMMANDHANDLE_TYPE_START)
 {
     if (g_capturedProfCallback != nullptr) {
-        rtProfCommandHandle_t cmd;
+        MsprofCommandHandle cmd;
+        (void)memset_s(&cmd, sizeof(cmd), 0, sizeof(cmd));
         cmd.profSwitch = profSwitch;
+        cmd.type = cmdType;
         g_capturedProfCallback(RT_PROF_CTRL_SWITCH, &cmd, sizeof(cmd));
     }
 }
 
 TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_ProfCtrlCallback)
 {
-    MOCKER(rtProfRegisterCtrlCallback).stubs().will(invoke(captureProfCallback));
+    g_capturedProfModuleId = 0U;
+    MOCKER(MsprofRegisterCallback).stubs().will(invoke(captureMsprofCallback));
     DfxInfoParser::Instance().Init();
+    // moduleId 须取 msprof g_moduleIdMap 已登记的 RUNTIME，未登记 ID（如 IDEDD）会被 json 门禁误挡
+    EXPECT_EQ(g_capturedProfModuleId, static_cast<uint32_t>(RUNTIME));
     SetProfSwitch(0x0000100000000ULL);
+    DfxInfoParser::Instance().UnInit();
+}
+
+TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_ProfSwitchClearedOnStop)
+{
+    g_reportAdditionalInfoCalls = 0U;
+    MOCKER(MsprofRegisterCallback).stubs().will(invoke(captureMsprofCallback));
+    MOCKER(MsprofReportAdditionalInfo).stubs().will(invoke(CountMsprofReportAdditionalInfo));
+    DfxInfoParser::Instance().Init();
+
+    BlockBuffer block(256);
+    const uint32_t tlvLen = BuildTimestampTlv(block.dumpStartAddr);
+    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, tlvLen);
+
+    // START 下发开关掩码后，时间戳走 MsprofReportAdditionalInfo 上报
+    SetProfSwitch(PROF_OP_TIMESTAMP_MASK, PROF_COMMANDHANDLE_TYPE_START);
+    uint64_t consumedLen = 0U;
+    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
+    EXPECT_EQ(consumedLen, tlvLen);
+    EXPECT_GT(g_reportAdditionalInfoCalls, 0U);
+
+    // STOP 命令载荷仍携带开关掩码，但 g_profSwitch 必须被清零，不再上报
+    const uint32_t callsAfterStart = g_reportAdditionalInfoCalls;
+    SetProfSwitch(PROF_OP_TIMESTAMP_MASK, PROF_COMMANDHANDLE_TYPE_STOP);
+    consumedLen = 0U;
+    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
+    EXPECT_EQ(consumedLen, tlvLen);
+    EXPECT_EQ(g_reportAdditionalInfoCalls, callsAfterStart);
+
+    DfxInfoParser::Instance().UnInit();
+}
+
+TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_ProfSwitchClearedOnFinalize)
+{
+    g_reportAdditionalInfoCalls = 0U;
+    MOCKER(MsprofRegisterCallback).stubs().will(invoke(captureMsprofCallback));
+    MOCKER(MsprofReportAdditionalInfo).stubs().will(invoke(CountMsprofReportAdditionalInfo));
+    DfxInfoParser::Instance().Init();
+
+    BlockBuffer block(256);
+    const uint32_t tlvLen = BuildTimestampTlv(block.dumpStartAddr);
+    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, tlvLen);
+
+    SetProfSwitch(PROF_OP_TIMESTAMP_MASK, PROF_COMMANDHANDLE_TYPE_START);
+    uint64_t consumedLen = 0U;
+    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
+    EXPECT_EQ(consumedLen, tlvLen);
+    EXPECT_GT(g_reportAdditionalInfoCalls, 0U);
+
+    // FINALIZE 与 STOP 同为终止命令，g_profSwitch 必须被清零
+    const uint32_t callsAfterStart = g_reportAdditionalInfoCalls;
+    SetProfSwitch(PROF_OP_TIMESTAMP_MASK, PROF_COMMANDHANDLE_TYPE_FINALIZE);
+    consumedLen = 0U;
+    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
+    EXPECT_EQ(consumedLen, tlvLen);
+    EXPECT_EQ(g_reportAdditionalInfoCalls, callsAfterStart);
+
+    DfxInfoParser::Instance().UnInit();
+}
+
+TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_ProfSwitchIgnoredOnInit)
+{
+    g_reportAdditionalInfoCalls = 0U;
+    MOCKER(MsprofRegisterCallback).stubs().will(invoke(captureMsprofCallback));
+    MOCKER(MsprofReportAdditionalInfo).stubs().will(invoke(CountMsprofReportAdditionalInfo));
+    DfxInfoParser::Instance().Init();
+
+    BlockBuffer block(256);
+    const uint32_t tlvLen = BuildTimestampTlv(block.dumpStartAddr);
+    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, tlvLen);
+
+    // INIT 载荷 profSwitch 恒为 0，且不属于携带有效开关的命令类型，不应开启上报
+    SetProfSwitch(PROF_OP_TIMESTAMP_MASK, PROF_COMMANDHANDLE_TYPE_INIT);
+    uint64_t consumedLen = 0U;
+    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
+    EXPECT_EQ(consumedLen, tlvLen);
+    EXPECT_EQ(g_reportAdditionalInfoCalls, 0U);
+
     DfxInfoParser::Instance().UnInit();
 }
 
 TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_ReportTimeStampWithProfSwitch)
 {
-    MOCKER(rtProfRegisterCtrlCallback).stubs().will(invoke(captureProfCallback));
+    MOCKER(MsprofRegisterCallback).stubs().will(invoke(captureMsprofCallback));
     DfxInfoParser::Instance().Init();
     SetProfSwitch(PROF_OP_TIMESTAMP_MASK);
 
@@ -1647,24 +1743,26 @@ TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_Init_RegistrationFailure)
 {
     g_capturedProfCallback = nullptr;
     g_profRegisterCalls = 0U;
-    MOCKER(rtProfRegisterCtrlCallback).stubs().will(invoke(captureProfCallback));
+    MOCKER(MsprofRegisterCallback).stubs().will(invoke(captureMsprofCallback));
     MOCKER(rtRegisterParseDfxInfoFunc).stubs().will(returnValue(static_cast<rtError_t>(1)));
     int32_t ret = DfxInfoParser::Instance().Init();
     EXPECT_EQ(ret, ADUMP_FAILED);
     EXPECT_EQ(DfxInfoParser::Instance().registered_, false);
-    EXPECT_EQ(DfxInfoParser::Instance().profRegistered_, false);
-    EXPECT_EQ(g_capturedProfCallback, nullptr);
-    EXPECT_EQ(g_profRegisterCalls, 2U);
+    EXPECT_NE(g_capturedProfCallback, nullptr);
+    EXPECT_EQ(g_profRegisterCalls, 1U);
+    // 解析回调注册持续失败时再次 Init：prof 回调为进程级一次性注册，不应重复注册
+    ret = DfxInfoParser::Instance().Init();
+    EXPECT_EQ(ret, ADUMP_FAILED);
+    EXPECT_EQ(g_profRegisterCalls, 1U);
     DfxInfoParser::Instance().UnInit();
 }
 
 TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_ProfRegistrationFailureDoesNotFailParser)
 {
-    MOCKER(rtProfRegisterCtrlCallback).stubs().will(returnValue(static_cast<rtError_t>(1)));
+    MOCKER(MsprofRegisterCallback).stubs().will(returnValue(static_cast<int32_t>(1)));
     const int32_t ret = DfxInfoParser::Instance().Init();
     EXPECT_EQ(ret, ADUMP_SUCCESS);
     EXPECT_EQ(DfxInfoParser::Instance().registered_, true);
-    EXPECT_EQ(DfxInfoParser::Instance().profRegistered_, false);
 }
 
 TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_UnInitUnregistersCallbacksOnce)
@@ -1673,7 +1771,7 @@ TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_UnInitUnregistersCallbacksOnce)
     g_capturedParseCallback = nullptr;
     g_profRegisterCalls = 0U;
     g_parseRegisterCalls = 0U;
-    MOCKER(rtProfRegisterCtrlCallback).stubs().will(invoke(captureProfCallback));
+    MOCKER(MsprofRegisterCallback).stubs().will(invoke(captureMsprofCallback));
     MOCKER(rtRegisterParseDfxInfoFunc).stubs().will(invoke(CaptureParseCallback));
 
     EXPECT_EQ(DfxInfoParser::Instance().Init(), ADUMP_SUCCESS);
@@ -1682,15 +1780,20 @@ TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_UnInitUnregistersCallbacksOnce)
 
     DfxInfoParser::Instance().UnInit();
     EXPECT_EQ(DfxInfoParser::Instance().registered_, false);
-    EXPECT_EQ(DfxInfoParser::Instance().profRegistered_, false);
-    EXPECT_EQ(g_capturedProfCallback, nullptr);
+    EXPECT_EQ(g_profRegisterCalls, 1U);
     EXPECT_EQ(g_capturedParseCallback, nullptr);
-    EXPECT_EQ(g_profRegisterCalls, 2U);
     EXPECT_EQ(g_parseRegisterCalls, 2U);
 
     DfxInfoParser::Instance().UnInit();
-    EXPECT_EQ(g_profRegisterCalls, 2U);
+    EXPECT_EQ(g_profRegisterCalls, 1U);
     EXPECT_EQ(g_parseRegisterCalls, 2U);
+
+    // profapi 无反注册能力，prof 回调为进程级一次性注册：UnInit 后再次 Init 不重复注册
+    EXPECT_EQ(DfxInfoParser::Instance().Init(), ADUMP_SUCCESS);
+    EXPECT_EQ(g_profRegisterCalls, 1U);
+    EXPECT_EQ(g_parseRegisterCalls, 3U);
+    DfxInfoParser::Instance().UnInit();
+    EXPECT_EQ(g_parseRegisterCalls, 4U);
 }
 
 TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_TensorBF16WithShape)
@@ -1786,7 +1889,7 @@ TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_MultipleTimestampsWithProfSwitch)
 {
     constexpr uint32_t timestampCount = 20U;
     constexpr uint32_t timestampTlvLen = static_cast<uint32_t>(sizeof(DumpInfoHead) + sizeof(DumpTimeStampInfoMsg));
-    MOCKER(rtProfRegisterCtrlCallback).stubs().will(invoke(captureProfCallback));
+    MOCKER(MsprofRegisterCallback).stubs().will(invoke(captureMsprofCallback));
     DfxInfoParser::Instance().Init();
     SetProfSwitch(PROF_OP_TIMESTAMP_MASK);
 

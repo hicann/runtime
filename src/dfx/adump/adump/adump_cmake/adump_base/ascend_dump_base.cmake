@@ -142,6 +142,12 @@ set(ascendDumpBaseLinkLibraries
     ascend_protobuf
     unified_dlog
     runtime
+    # MsprofRegisterCallback 符号来源：非 Windows 由 profapi_share 提供；
+    # Windows 上 profapi 只构建 profapi_stub（静态空实现，见 profapi/CMakeLists.txt），
+    # 链接 profapi_share 会因 target 不存在导致链接失败。
+    # profapi 库需位于 -Wl,--as-needed 之前，防止运行时调用的 Msprof* 符号被裁剪。
+    $<$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>:profapi_stub>
+    $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>>:profapi_share>
     -Wl,--as-needed
     -ldl
 )

@@ -32,18 +32,35 @@
 namespace Adx {
 namespace {
 
-constexpr uint32_t MODULE_ID_ADUMP = 200U;
-
 std::atomic<uint64_t> g_profSwitch{0U};
 
-rtError_t ProfCtrlCallback(uint32_t dataType, void* data, uint32_t dataLen)
+int32_t ProfCtrlCallback(uint32_t dataType, void* data, uint32_t dataLen)
 {
-    if ((dataType == RT_PROF_CTRL_SWITCH) && (data != nullptr) && (dataLen == sizeof(rtProfCommandHandle_t))) {
-        const auto* cmd = static_cast<const rtProfCommandHandle_t*>(data);
-        g_profSwitch.store(cmd->profSwitch, std::memory_order_relaxed);
-        IDE_LOGI("Prof switch updated, profSwitch=%#llx.", static_cast<unsigned long long>(cmd->profSwitch));
+    // dataType 由 profapi 侧下发，取值为 aprof_pub.h 的 ProfCtrlType（恒为 PROF_CTRL_SWITCH），
+    // 不可用 runtime 侧的 rtProfCtrlType_t 枚举判断，避免跨模块枚举混用导致条件失效且无日志可查
+    if ((dataType != static_cast<uint32_t>(PROF_CTRL_SWITCH)) || (data == nullptr) ||
+        (dataLen != sizeof(MsprofCommandHandle))) {
+        IDE_LOGW("Unexpected prof ctrl callback, dataType=%u, dataLen=%u.", dataType, dataLen);
+        return MSPROF_ERROR_NONE;
     }
-    return RT_ERROR_NONE;
+    const auto* cmd = static_cast<const MsprofCommandHandle*>(data);
+    switch (cmd->type) {
+        case PROF_COMMANDHANDLE_TYPE_START:
+        case PROF_COMMANDHANDLE_TYPE_MODEL_SUBSCRIBE:
+            g_profSwitch.store(cmd->profSwitch, std::memory_order_relaxed);
+            IDE_LOGI("Prof switch updated, profSwitch=%#llx.", static_cast<unsigned long long>(cmd->profSwitch));
+            break;
+        case PROF_COMMANDHANDLE_TYPE_STOP:
+        case PROF_COMMANDHANDLE_TYPE_FINALIZE:
+            g_profSwitch.store(0U, std::memory_order_relaxed);
+            IDE_LOGI("Prof switch cleared, cmdType=%u.", cmd->type);
+            break;
+        default:
+            // INIT 载荷的 profSwitch 恒为 0，未知类型的载荷语义未定义，均不更新开关
+            IDE_LOGI("Ignore prof command, cmdType=%u.", cmd->type);
+            break;
+    }
+    return MSPROF_ERROR_NONE;
 }
 
 uint64_t GetProfSwitchData() { return g_profSwitch.load(std::memory_order_relaxed); }
@@ -1101,7 +1118,31 @@ void ParseDfxInfoCallback(const rtDfxParseParam* param, uint64_t* consumedLen)
     DfxInfoParser::Instance().ParseDfxInfo(param, consumedLen);
 }
 
-DfxInfoParser::DfxInfoParser() : registered_(false), profRegistered_(false) {}
+std::atomic<bool> DfxInfoParser::profCtrlRegistered_{false};
+
+// profapi 不提供反注册能力：无 MsprofUnregisterCallback 接口，且 MsprofRegisterCallback 拒绝空回调，
+// 因此 ProfCtrlCallback 的注册生命周期为进程级：仅首次 Init 注册一次，UnInit 不反注册、
+// 重复 Init 不重复注册（profapi 侧按 module-callback 集合登记，同一回调指针重复注册无意义）。
+// 约束：本库不支持 dlclose 卸载后 profapi 继续下发命令的场景（回调指针会残留），
+// 与 acl 模块 AclProfCtrlHandle 的注册约束一致。
+void DfxInfoParser::RegisterProfCtrlCallbackOnce()
+{
+    if (profCtrlRegistered_.exchange(true)) {
+        return;
+    }
+    // moduleId 必须取 msprof g_moduleIdMap 已登记的值（ASCENDCL/GE/RUNTIME/HCCL/AICPU）：
+    // 未登记的 moduleId 会被 GetJsonModuleProfSwitch 的 g_moduleIdMap[] 默认插入为
+    // MSPROF_MODULE_DATA_PREPROCESS，data_preprocess 关闭时回调被门禁跳过，采集静默失效。
+    // adump 的 DfxInfo 开关属于 task/op 级采集，与 runtime 组件一致取 RUNTIME（先例：
+    // runtime_keeper.cc 的 MsprofRegisterCallback(RUNTIME, &rtProfilingCommandHandle)）。
+    const int32_t profRet = MsprofRegisterCallback(RUNTIME, ProfCtrlCallback);
+    if (profRet != MSPROF_ERROR_NONE) {
+        profCtrlRegistered_.store(false); // 注册失败允许下次 Init 重试
+        IDE_LOGW("Register prof ctrl callback failed, ret=%d.", profRet);
+    }
+}
+
+DfxInfoParser::DfxInfoParser() : registered_(false) {}
 
 DfxInfoParser::~DfxInfoParser() { UnInit(); }
 
@@ -1111,14 +1152,9 @@ int32_t DfxInfoParser::Init()
         IDE_LOGI("DfxInfoParser already registered.");
         return ADUMP_SUCCESS;
     }
-    if (!profRegistered_) {
-        const rtError_t profRet = rtProfRegisterCtrlCallback(MODULE_ID_ADUMP, ProfCtrlCallback);
-        if (profRet != RT_ERROR_NONE) {
-            IDE_LOGW("Register prof ctrl callback failed, ret=%u.", profRet);
-        } else {
-            profRegistered_ = true;
-        }
-    }
+
+    RegisterProfCtrlCallbackOnce();
+
     const rtError_t ret = rtRegisterParseDfxInfoFunc(ParseDfxInfoCallback);
     if (ret != RT_ERROR_NONE) {
         IDE_LOGE("Register parse dfx info callback failed, ret=%u.", ret);
@@ -1132,20 +1168,15 @@ int32_t DfxInfoParser::Init()
 
 void DfxInfoParser::UnInit()
 {
+    // profapi 不支持反注册，ProfCtrlCallback 为进程级注册（见 RegisterProfCtrlCallbackOnce），
+    // 此处仅注销 DfxInfo 解析回调；UnInit 后 ProfCtrlCallback 仍可能被 profapi 触发并更新 g_profSwitch，
+    // 该状态更新无副作用（不上报数据），符合设计预期。
     if (registered_) {
         const rtError_t ret = rtRegisterParseDfxInfoFunc(nullptr);
         if (ret != RT_ERROR_NONE) {
             IDE_LOGE("Unregister parse dfx info callback failed, ret=%u.", ret);
         } else {
             registered_ = false;
-        }
-    }
-    if (profRegistered_) {
-        const rtError_t ret = rtProfRegisterCtrlCallback(MODULE_ID_ADUMP, nullptr);
-        if (ret != RT_ERROR_NONE) {
-            IDE_LOGE("Unregister prof ctrl callback failed, ret=%u.", ret);
-        } else {
-            profRegistered_ = false;
         }
     }
 }

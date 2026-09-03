@@ -11,8 +11,11 @@
 #ifndef DFX_INFO_PARSER_H
 #define DFX_INFO_PARSER_H
 
+#include <atomic>
+
 #include "common/singleton.h"
 #include "rt_inner_dfx.h"
+#include "base/log_types.h"
 #include "profiling/prof_common.h"
 
 namespace Adx {
@@ -27,7 +30,8 @@ public:
 
 private:
     bool registered_;
-    bool profRegistered_;
+    static std::atomic<bool> profCtrlRegistered_;
+    static void RegisterProfCtrlCallbackOnce();
 };
 
 } // namespace Adx
