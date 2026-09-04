@@ -326,7 +326,7 @@ bool AdxDumpRecord::RecordDumpDataToDisk(const DumpChunk& dumpChunk) const
         }
     }
 
-    while (FileUtils::IsDiskFull(saveDirName, dumpChunk.bufLen)) {
+    if (FileUtils::IsDiskFull(saveDirName, dumpChunk.bufLen)) {
         IDE_LOGE("don't have enough free disk %u bytes", dumpChunk.bufLen);
         return false;
     }
@@ -656,7 +656,7 @@ bool AdxDumpRecord::StatsDataParsing(const DumpChunk& dumpChunk)
             FileUtils::CreateDir(dirName) == IDE_DAEMON_NONE_ERROR, return false, "Create dir failed path: %s",
             dirName.c_str());
     }
-    while (FileUtils::IsDiskFull(dirName, dumpChunk.bufLen)) {
+    if (FileUtils::IsDiskFull(dirName, dumpChunk.bufLen)) {
         IDE_LOGE("Don't have enough free disk %u bytes", dumpChunk.bufLen);
         return false;
     }

@@ -780,8 +780,7 @@ static void AdxPrintBlockInfo(
     std::vector<size_t> shape;
     while ((offset + sizeof(AdxDumpInfoHead)) <= dataLen) {
         auto dumpHead = (const AdxDumpInfoHead*)(beginAddr + offset);
-        if ((!flag) && ((dumpHead->type != AdxDumpType::DUMP_TIMESTAMP) ||
-                        ((dumpHead->type == AdxDumpType::DUMP_TIMESTAMP) && (!g_adxPrintConfigFlag)))) {
+        if ((!flag) && ((dumpHead->type != AdxDumpType::DUMP_TIMESTAMP) || (!g_adxPrintConfigFlag))) {
             AdxPrintHeadInfo(blockData, opType, isAssert);
             flag = true;
         }

@@ -32,8 +32,7 @@ constexpr uint32_t DUMP_SWITCH_DUMP_STATS = 0x2U;
 constexpr uint32_t DUMP_SWITCH_DUMP_OVERFLOW = 0x4U;
 } // namespace
 
-OperatorDumper::OperatorDumper(const std::string& opType, const std::string& opName)
-    : opType_(opType), opName_(opName), stream_(nullptr)
+OperatorDumper::OperatorDumper(const std::string& opType, const std::string& opName) : opType_(opType), opName_(opName)
 {}
 
 OperatorDumper::OperatorDumper(const DumpSetting& setting) : setting_(setting) {}

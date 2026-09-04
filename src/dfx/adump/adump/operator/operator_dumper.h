@@ -51,7 +51,7 @@ private:
     DumpSetting setting_;
     std::vector<DumpTensor> inputTensors_;
     std::vector<DumpTensor> outputTensors_;
-    aclrtStream stream_;
+    aclrtStream stream_{nullptr};
     toolkitV2::aicpu::dump::OpMappingInfo opMappingInfo_;
 };
 } // namespace Adx
