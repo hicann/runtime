@@ -17,6 +17,7 @@
 #include "cond_op_manager.hpp"
 #include "capture_model.hpp"
 #include "runtime_task_manager.h"
+#include "error_message_manage.hpp"
 
 namespace cce {
 namespace runtime {
@@ -48,6 +49,32 @@ rtError_t ReConstructStreamActiveTaskFc(TaskInfo* taskInfo)
     return ((funcs != nullptr) && (funcs->reconstructStreamActive != nullptr)) ?
                funcs->reconstructStreamActive(taskInfo) :
                ReConstructStreamActiveTaskFcDefault(taskInfo);
+}
+
+rtError_t UpdateStreamActiveTaskFuncCallForSnapshot(TaskInfo* taskInfo)
+{
+    Stream* const stream = taskInfo->stream;
+    StreamActiveTaskInfo* const streamActiveTask = &(taskInfo->u.streamactiveTask);
+    COND_RETURN_ERROR_MSG_INNER(
+        streamActiveTask->activeStream == nullptr, RT_ERROR_INVALID_VALUE,
+        "Active stream is nullptr, stream_id=%d, task_id=%u.", stream->Id_(), taskInfo->id);
+    COND_RETURN_ERROR_MSG_INNER(
+        streamActiveTask->funcCallSvmMem == nullptr, RT_ERROR_INVALID_VALUE,
+        "Stream active func call memory is nullptr, stream_id=%d, task_id=%u.", stream->Id_(), taskInfo->id);
+    const rtError_t error = ReConstructStreamActiveTaskFc(taskInfo);
+    ERROR_RETURN(
+        error,
+        "Failed to reconstruct stream active func call, stream_id=%d, task_id=%u, active_stream_id=%u, "
+        "active_sq_id=%u, retCode=%#x.",
+        stream->Id_(), taskInfo->id, streamActiveTask->activeStreamId, streamActiveTask->activeStreamSqId,
+        static_cast<uint32_t>(error));
+    RT_LOG(
+        RT_LOG_DEBUG,
+        "Reconstruct stream active func call success, stream_id=%d, task_id=%u, active_stream_id=%u, "
+        "active_sq_id=%u, retCode=%#x.",
+        stream->Id_(), taskInfo->id, streamActiveTask->activeStreamId, streamActiveTask->activeStreamSqId,
+        static_cast<uint32_t>(error));
+    return RT_ERROR_NONE;
 }
 
 rtError_t AllocFuncCallMemForStreamActiveTask(TaskInfo* taskInfo)

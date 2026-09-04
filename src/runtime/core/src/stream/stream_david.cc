@@ -31,6 +31,7 @@
 #include "stream_c.hpp"
 #include "stream_state_callback_manager.hpp"
 #include "fusion_task.h"
+#include "stream_task.h"
 #include <thread>
 #include "raw_device.hpp"
 #include "aix_c.hpp"
@@ -1619,24 +1620,25 @@ rtError_t DavidStream::Restore()
             static_cast<uint32_t>(error));
     }
 
-    const std::lock_guard<std::mutex> notifyLock(cntNotifyInfoLock_);
-    if (cntNotifyId_ != MAX_UINT32_NUM) {
-        const uint32_t deviceId = device_->Id_();
-        const uint32_t tsId = device_->DevGetTsId();
-        error = device_->Driver_()->ReAllocResourceId(deviceId, tsId, 0U, cntNotifyId_, DRV_CNT_NOTIFY_ID);
-        ERROR_RETURN(
-            error, "Realloc cnt_notify_id failed, cnt_notify_id=%u, device_id=%u, ret=%#x.", cntNotifyId_, deviceId,
-            static_cast<uint32_t>(error));
+    {
+        const std::lock_guard<std::mutex> notifyLock(cntNotifyInfoLock_);
+        if (cntNotifyId_ != MAX_UINT32_NUM) {
+            const uint32_t deviceId = device_->Id_();
+            const uint32_t tsId = device_->DevGetTsId();
+            error = device_->Driver_()->ReAllocResourceId(deviceId, tsId, 0U, cntNotifyId_, DRV_CNT_NOTIFY_ID);
+            ERROR_RETURN(
+                error, "Realloc cnt_notify_id failed, cnt_notify_id=%u, device_id=%u, ret=%#x.", cntNotifyId_, deviceId,
+                static_cast<uint32_t>(error));
+        }
+        recordVersion_.Set(0);
     }
 
-    recordVersion_.Set(0);
+    // 更新stream ub args pool
+    if ((argManage_ != nullptr) && GetIsHasArgPool()) {
+        error = argManage_->RestoreArgRes();
+        ERROR_RETURN(error, "Failed to restore stream arg pool, stream_id=%d, ret=%#x.", streamId_, error);
+    }
     return RT_ERROR_NONE;
-}
-
-bool DavidStream::IsNeedUpdateTask(const TaskInfo* const updateTask) const
-{
-    const std::vector<tagTsTaskType> updateTasks = {TS_TASK_TYPE_MEMCPY};
-    return std::find(updateTasks.begin(), updateTasks.end(), updateTask->type) != updateTasks.end();
 }
 
 rtError_t DavidStream::UpdateSnapShotSqe()
@@ -1669,9 +1671,9 @@ rtError_t DavidStream::UpdateSnapShotSqe()
                                                       (static_cast<uint32_t>(nextTask->id) + nextTask->sqeNum);
 
         RT_LOG(RT_LOG_DEBUG, "Stream_id=%d, pos=%u, type=%d.", Id_(), i, nextTask->type);
-        if (IsNeedUpdateTask(nextTask)) {
-            const rtError_t error = UpdateTaskAndSqe(nextTask, ctrlStream);
-            ERROR_RETURN(error, "Update task failed, stream_id=%d, pos=%u, ret=%d", Id_(), i, error);
+        if (nextTask->type == TS_TASK_TYPE_MEMCPY && NeedUpdateMemcpyTaskInfoForSnapshot(nextTask)) {
+            const rtError_t error = UpdateMemcpyTaskAndSqe(nextTask, ctrlStream);
+            ERROR_RETURN(error, "Failed to update task, stream_id=%d, pos=%u, retCode=%d.", Id_(), i, error);
         }
     }
 
@@ -1761,21 +1763,13 @@ rtError_t DavidStream::HandleTaskDefault(
     return RT_ERROR_NONE;
 }
 
-// 当前暂未支持图下沉备份和恢复, 代码预埋
-rtError_t DavidStream::UpdateTaskAndSqe(TaskInfo* task, Stream* stream)
+rtError_t DavidStream::UpdateMemcpyTaskAndSqe(TaskInfo* task, Stream* const stream)
 {
-    rtError_t error = RT_ERROR_NONE;
-    if (task->type == TS_TASK_TYPE_MEMCPY) {
-        // convert dma
-        if (IsPcieDma(task->u.memcpyAsyncTaskInfo.copyType) &&
-            (device_->Driver_()->GetRunMode() == RT_RUN_MODE_ONLINE)) {
-            error = device_->Driver_()->MemConvertAddr(
-                RtPtrToValue(task->u.memcpyAsyncTaskInfo.src), RtPtrToValue(task->u.memcpyAsyncTaskInfo.desPtr),
-                task->u.memcpyAsyncTaskInfo.size, &(task->u.memcpyAsyncTaskInfo.dmaAddr));
-            ERROR_RETURN_MSG_INNER(
-                error, "Convert memory address from virtual to dma physical failed, ret=%#x.", error);
-        }
-    }
+    rtError_t error = UpdateMemcpyTaskInfoForSnapshot(task);
+    ERROR_RETURN_MSG_INNER(error, "Failed to update memcpy dma for snapshot, ret=%#x.", error);
+
+    stream->StreamLock();
+    const ScopeGuard streamLockGuard([stream]() { stream->StreamUnLock(); });
 
     error = UpdateDavidKernelTaskSubmit(task, stream);
     ERROR_RETURN_MSG_INNER(error, "UpdateDavidKernelTaskSubmit failed, ret=%#x.", error);

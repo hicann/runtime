@@ -28,6 +28,7 @@
 #include "event_david.hpp"
 #include "h2d_copy_mgr.hpp"
 #include "stream_david.hpp"
+#include "stream_task.h"
 #include "npu_driver.hpp"
 #include "count_notify.hpp"
 #include "npu_driver_dcache_lock.hpp"
@@ -497,31 +498,30 @@ TEST_F(DavidSnapshotTest, DavidStreamRestore_Success)
     delete stream;
 }
 
-TEST_F(DavidSnapshotTest, DavidStreamIsNeedUpdateTask_MemcpyTask)
+TEST_F(DavidSnapshotTest, DavidStreamRestore_ArgPoolRestoreSuccess)
 {
     DavidStream* stream = new (std::nothrow) DavidStream(dev_, 0, 0, nullptr);
     ASSERT_NE(stream, nullptr);
 
-    TaskInfo taskInfo;
-    taskInfo.type = TS_TASK_TYPE_MEMCPY;
+    auto* argManage = new (std::nothrow) UbArgManage(stream);
+    ASSERT_NE(argManage, nullptr);
+    stream->argManage_ = argManage;
+    stream->isHasArgPool_ = true;
+    argManage->argPoolSize_ = 64U;
+    argManage->devArgResBaseAddr_ = reinterpret_cast<void*>(0x1234);
+    argManage->hostArgResBaseAddr_ = reinterpret_cast<void*>(0x5678);
 
-    bool result = stream->IsNeedUpdateTask(&taskInfo);
-    EXPECT_EQ(result, true);
+    MOCKER_CPP_VIRTUAL(dev_->Driver_(), &Driver::ReAllocResourceId).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(dev_->Driver_(), &Driver::NormalSqCqAllocate).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(dev_->Driver_(), &Driver::LogicCqAllocateV2).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(dev_->Driver_(), &Driver::StreamBindLogicCq).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(dev_->Driver_(), &Driver::GetTsegInfoByVa).stubs().will(returnValue(RT_ERROR_NONE));
 
-    delete stream;
-}
+    rtError_t error = stream->Restore();
+    EXPECT_EQ(error, RT_ERROR_NONE);
 
-TEST_F(DavidSnapshotTest, DavidStreamIsNeedUpdateTask_OtherTask)
-{
-    DavidStream* stream = new (std::nothrow) DavidStream(dev_, 0, 0, nullptr);
-    ASSERT_NE(stream, nullptr);
-
-    TaskInfo taskInfo;
-    taskInfo.type = TS_TASK_TYPE_KERNEL_AICPU;
-
-    bool result = stream->IsNeedUpdateTask(&taskInfo);
-    EXPECT_EQ(result, false);
-
+    argManage->devArgResBaseAddr_ = nullptr;
+    argManage->hostArgResBaseAddr_ = nullptr;
     delete stream;
 }
 
@@ -536,61 +536,73 @@ TEST_F(DavidSnapshotTest, DavidStreamUpdateSnapShotSqe_NullTaskResMang)
     delete stream;
 }
 
-TEST_F(DavidSnapshotTest, DavidStreamUpdateTaskAndSqe_MemcpyTaskSuccess)
+TEST_F(DavidSnapshotTest, DavidStreamUpdateMemcpyTaskAndSqe_MemcpyTaskSuccess)
 {
     DavidStream* stream = new (std::nothrow) DavidStream(dev_, 0, 0, nullptr);
     ASSERT_NE(stream, nullptr);
 
-    TaskInfo taskInfo;
-    taskInfo.type = TS_TASK_TYPE_KERNEL_AICORE;
+    TaskInfo taskInfo = {};
+    taskInfo.type = TS_TASK_TYPE_MEMCPY;
     taskInfo.stream = stream;
     taskInfo.u.memcpyAsyncTaskInfo.copyType = RT_MEMCPY_DIR_H2D;
     taskInfo.u.memcpyAsyncTaskInfo.src = reinterpret_cast<void*>(0x1000);
-    taskInfo.u.memcpyAsyncTaskInfo.desPtr = reinterpret_cast<void*>(0x2000);
-    taskInfo.u.memcpyAsyncTaskInfo.size = 1024;
+    taskInfo.u.memcpyAsyncTaskInfo.destPtr = reinterpret_cast<void*>(0x2000);
+    taskInfo.u.memcpyAsyncTaskInfo.copySize = 1024U;
+    taskInfo.u.memcpyAsyncTaskInfo.copyMethod = static_cast<uint8_t>(rtAsyncCpyMethod::RT_ASYNC_CPY);
 
+    MOCKER_CPP_VIRTUAL(dev_->Driver_(), &Driver::MemConvertAddr).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER(UpdateDavidKernelTaskSubmit).stubs().will(returnValue(RT_ERROR_NONE));
 
-    rtError_t error = stream->UpdateTaskAndSqe(&taskInfo, dev_->PrimaryStream_());
+    EXPECT_TRUE(NeedUpdateMemcpyTaskInfoForSnapshot(&taskInfo));
+    rtError_t error = stream->UpdateMemcpyTaskAndSqe(&taskInfo, dev_->PrimaryStream_());
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     delete stream;
 }
 
-TEST_F(DavidSnapshotTest, DavidStreamUpdateTaskAndSqe_MemcpyTaskConvertFailed)
+TEST_F(DavidSnapshotTest, DavidStreamUpdateMemcpyTaskAndSqe_MemcpyTaskConvertFailed)
 {
     DavidStream* stream = new (std::nothrow) DavidStream(dev_, 0, 0, nullptr);
     ASSERT_NE(stream, nullptr);
 
-    TaskInfo taskInfo;
+    TaskInfo taskInfo = {};
     taskInfo.type = TS_TASK_TYPE_MEMCPY;
     taskInfo.stream = stream;
     taskInfo.u.memcpyAsyncTaskInfo.copyType = RT_MEMCPY_DIR_H2D;
     taskInfo.u.memcpyAsyncTaskInfo.src = reinterpret_cast<void*>(0x1000);
-    taskInfo.u.memcpyAsyncTaskInfo.desPtr = reinterpret_cast<void*>(0x2000);
-    taskInfo.u.memcpyAsyncTaskInfo.size = 1024;
+    taskInfo.u.memcpyAsyncTaskInfo.destPtr = reinterpret_cast<void*>(0x2000);
+    taskInfo.u.memcpyAsyncTaskInfo.copySize = 1024U;
+    taskInfo.u.memcpyAsyncTaskInfo.copyMethod = static_cast<uint8_t>(rtAsyncCpyMethod::RT_ASYNC_CPY);
 
     MOCKER_CPP_VIRTUAL(dev_->Driver_(), &Driver::MemConvertAddr).stubs().will(returnValue(RT_ERROR_DRV_NOT_SUPPORT));
 
-    rtError_t error = stream->UpdateTaskAndSqe(&taskInfo, dev_->PrimaryStream_());
+    EXPECT_TRUE(NeedUpdateMemcpyTaskInfoForSnapshot(&taskInfo));
+    rtError_t error = stream->UpdateMemcpyTaskAndSqe(&taskInfo, dev_->PrimaryStream_());
     EXPECT_EQ(error, RT_ERROR_DRV_NOT_SUPPORT);
 
     delete stream;
 }
 
-TEST_F(DavidSnapshotTest, DavidStreamUpdateTaskAndSqe_UpdateKernelFailed)
+TEST_F(DavidSnapshotTest, DavidStreamUpdateMemcpyTaskAndSqe_UpdateKernelFailed)
 {
     DavidStream* stream = new (std::nothrow) DavidStream(dev_, 0, 0, nullptr);
     ASSERT_NE(stream, nullptr);
 
-    TaskInfo taskInfo;
-    taskInfo.type = TS_TASK_TYPE_KERNEL_AICORE;
+    TaskInfo taskInfo = {};
+    taskInfo.type = TS_TASK_TYPE_MEMCPY;
     taskInfo.stream = stream;
+    taskInfo.u.memcpyAsyncTaskInfo.copyType = RT_MEMCPY_DIR_H2D;
+    taskInfo.u.memcpyAsyncTaskInfo.src = reinterpret_cast<void*>(0x1000);
+    taskInfo.u.memcpyAsyncTaskInfo.destPtr = reinterpret_cast<void*>(0x2000);
+    taskInfo.u.memcpyAsyncTaskInfo.copySize = 1024U;
+    taskInfo.u.memcpyAsyncTaskInfo.copyMethod = static_cast<uint8_t>(rtAsyncCpyMethod::RT_ASYNC_CPY);
 
-    MOCKER(UpdateDavidKernelTaskSubmit).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(dev_->Driver_(), &Driver::MemConvertAddr).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(UpdateDavidKernelTaskSubmit).stubs().will(returnValue(RT_ERROR_DRV_NOT_SUPPORT));
 
-    rtError_t error = stream->UpdateTaskAndSqe(&taskInfo, dev_->PrimaryStream_());
-    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_TRUE(NeedUpdateMemcpyTaskInfoForSnapshot(&taskInfo));
+    rtError_t error = stream->UpdateMemcpyTaskAndSqe(&taskInfo, dev_->PrimaryStream_());
+    EXPECT_EQ(error, RT_ERROR_DRV_NOT_SUPPORT);
 
     delete stream;
 }
@@ -901,4 +913,252 @@ TEST_F(DavidSnapshotTest, HandleModelTaskUpdate)
     TaskHandlers::HandleModelTaskUpdate(&task, deviceSnapshot_);
     const auto& addrs = deviceSnapshot_->GetOpVirtualAddrs();
     EXPECT_GT(addrs.size(), 0U);
+}
+
+TEST_F(DavidSnapshotTest, UpdateMemcpyTaskInfoForSnapshot_1D_Success)
+{
+    DavidStream* stream = new (std::nothrow) DavidStream(dev_, 0, 0, nullptr);
+    ASSERT_NE(stream, nullptr);
+
+    TaskInfo taskInfo;
+    taskInfo.type = TS_TASK_TYPE_MEMCPY;
+    taskInfo.stream = stream;
+    taskInfo.u.memcpyAsyncTaskInfo.copyType = RT_MEMCPY_DIR_H2D;
+    taskInfo.u.memcpyAsyncTaskInfo.src = reinterpret_cast<void*>(0x1000);
+    taskInfo.u.memcpyAsyncTaskInfo.desPtr = reinterpret_cast<void*>(0x2000);
+    taskInfo.u.memcpyAsyncTaskInfo.size = 1024;
+    taskInfo.u.memcpyAsyncTaskInfo.copySize = 1024;
+    taskInfo.u.memcpyAsyncTaskInfo.copyMethod = static_cast<uint8_t>(rtAsyncCpyMethod::RT_ASYNC_CPY);
+
+    MOCKER_CPP_VIRTUAL(dev_->Driver_(), &Driver::MemConvertAddr).stubs().will(returnValue(RT_ERROR_NONE));
+
+    rtError_t error = UpdateMemcpyTaskInfoForSnapshot(&taskInfo);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    delete stream;
+}
+
+TEST_F(DavidSnapshotTest, NeedUpdateMemcpyTaskInfoForSnapshot_1D_NotPcieDma_Skip)
+{
+    DavidStream* stream = new (std::nothrow) DavidStream(dev_, 0, 0, nullptr);
+    ASSERT_NE(stream, nullptr);
+
+    TaskInfo taskInfo;
+    taskInfo.type = TS_TASK_TYPE_MEMCPY;
+    taskInfo.stream = stream;
+    taskInfo.u.memcpyAsyncTaskInfo.copyType = RT_MEMCPY_DIR_D2D_SDMA;
+    taskInfo.u.memcpyAsyncTaskInfo.copyMethod = static_cast<uint8_t>(rtAsyncCpyMethod::RT_ASYNC_CPY);
+
+    EXPECT_FALSE(NeedUpdateMemcpyTaskInfoForSnapshot(&taskInfo));
+
+    delete stream;
+}
+
+TEST_F(DavidSnapshotTest, UpdateMemcpyTaskInfoForSnapshot_2D_Success)
+{
+    Runtime::Instance()->SetConnectUbFlag(false);
+    DavidStream* stream = new (std::nothrow) DavidStream(dev_, 0, 0, nullptr);
+    ASSERT_NE(stream, nullptr);
+
+    TaskInfo taskInfo;
+    taskInfo.type = TS_TASK_TYPE_MEMCPY;
+    taskInfo.stream = stream;
+    taskInfo.u.memcpyAsyncTaskInfo.copyType = RT_MEMCPY_DIR_H2D;
+    taskInfo.u.memcpyAsyncTaskInfo.src = reinterpret_cast<void*>(0x1000);
+    taskInfo.u.memcpyAsyncTaskInfo.desPtr = reinterpret_cast<void*>(0x2000);
+    taskInfo.u.memcpyAsyncTaskInfo.copyMethod = static_cast<uint8_t>(rtAsyncCpyMethod::RT_ASYNC_CPY_2D);
+    taskInfo.u.memcpyAsyncTaskInfo.dstPitch = 256;
+    taskInfo.u.memcpyAsyncTaskInfo.srcPitch = 256;
+    taskInfo.u.memcpyAsyncTaskInfo.width = 128;
+    taskInfo.u.memcpyAsyncTaskInfo.height = 2;
+    taskInfo.u.memcpyAsyncTaskInfo.fixedSize = 256;
+    taskInfo.u.memcpyAsyncTaskInfo.copyKind = RT_MEMCPY_HOST_TO_DEVICE;
+
+    MOCKER_CPP_VIRTUAL(dev_->Driver_(), &Driver::MemCopy2D).stubs().will(returnValue(RT_ERROR_NONE));
+
+    rtError_t error = UpdateMemcpyTaskInfoForSnapshot(&taskInfo);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    delete stream;
+}
+
+TEST_F(DavidSnapshotTest, NeedUpdateMemcpyTaskInfoForSnapshot_2D_D2D_Skip)
+{
+    DavidStream* stream = new (std::nothrow) DavidStream(dev_, 0, 0, nullptr);
+    ASSERT_NE(stream, nullptr);
+
+    TaskInfo taskInfo;
+    taskInfo.type = TS_TASK_TYPE_MEMCPY;
+    taskInfo.stream = stream;
+    taskInfo.u.memcpyAsyncTaskInfo.copyType = RT_MEMCPY_DIR_D2D_SDMA;
+    taskInfo.u.memcpyAsyncTaskInfo.copyMethod = static_cast<uint8_t>(rtAsyncCpyMethod::RT_ASYNC_CPY_2D);
+
+    EXPECT_FALSE(NeedUpdateMemcpyTaskInfoForSnapshot(&taskInfo));
+
+    delete stream;
+}
+
+TEST_F(DavidSnapshotTest, UpdateStreamActiveTaskFuncCall_ActiveStreamNullForNonActiveType)
+{
+    DavidStream* stream = new (std::nothrow) DavidStream(dev_, 0, 0, nullptr);
+    ASSERT_NE(stream, nullptr);
+
+    TaskInfo taskInfo;
+    taskInfo.type = TS_TASK_TYPE_KERNEL_AICORE;
+    taskInfo.stream = stream;
+    taskInfo.u.streamactiveTask.activeStream = nullptr;
+    taskInfo.u.streamactiveTask.funcCallSvmMem = nullptr;
+
+    rtError_t error = UpdateStreamActiveTaskFuncCallForSnapshot(&taskInfo);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+
+    delete stream;
+}
+
+TEST_F(DavidSnapshotTest, UpdateStreamActiveTaskFuncCall_ActiveStreamNull)
+{
+    DavidStream* stream = new (std::nothrow) DavidStream(dev_, 0, 0, nullptr);
+    ASSERT_NE(stream, nullptr);
+
+    TaskInfo taskInfo;
+    taskInfo.type = TS_TASK_TYPE_STREAM_ACTIVE;
+    taskInfo.stream = stream;
+    taskInfo.u.streamactiveTask.activeStream = nullptr;
+    taskInfo.u.streamactiveTask.funcCallSvmMem = nullptr;
+
+    rtError_t error = UpdateStreamActiveTaskFuncCallForSnapshot(&taskInfo);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+
+    delete stream;
+}
+
+TEST_F(DavidSnapshotTest, DavidStreamUpdateMemcpyTaskAndSqe_Memcpy2D_Success)
+{
+    Runtime::Instance()->SetConnectUbFlag(false);
+    DavidStream* stream = new (std::nothrow) DavidStream(dev_, 0, 0, nullptr);
+    ASSERT_NE(stream, nullptr);
+
+    TaskInfo taskInfo = {};
+    taskInfo.type = TS_TASK_TYPE_MEMCPY;
+    taskInfo.stream = stream;
+    taskInfo.u.memcpyAsyncTaskInfo.copyType = RT_MEMCPY_DIR_H2D;
+    taskInfo.u.memcpyAsyncTaskInfo.src = reinterpret_cast<void*>(0x1000);
+    taskInfo.u.memcpyAsyncTaskInfo.destPtr = reinterpret_cast<void*>(0x2000);
+    taskInfo.u.memcpyAsyncTaskInfo.copyMethod = static_cast<uint8_t>(rtAsyncCpyMethod::RT_ASYNC_CPY_2D);
+    taskInfo.u.memcpyAsyncTaskInfo.dstPitch = 256;
+    taskInfo.u.memcpyAsyncTaskInfo.srcPitch = 256;
+    taskInfo.u.memcpyAsyncTaskInfo.width = 128;
+    taskInfo.u.memcpyAsyncTaskInfo.height = 2;
+    taskInfo.u.memcpyAsyncTaskInfo.fixedSize = 256;
+    taskInfo.u.memcpyAsyncTaskInfo.copyKind = RT_MEMCPY_HOST_TO_DEVICE;
+
+    MOCKER_CPP_VIRTUAL(dev_->Driver_(), &Driver::MemCopy2D).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(UpdateDavidKernelTaskSubmit).stubs().will(returnValue(RT_ERROR_NONE));
+
+    EXPECT_TRUE(NeedUpdateMemcpyTaskInfoForSnapshot(&taskInfo));
+    rtError_t error = stream->UpdateMemcpyTaskAndSqe(&taskInfo, dev_->PrimaryStream_());
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    delete stream;
+}
+
+TEST_F(DavidSnapshotTest, DavidStreamUpdateMemcpyTaskAndSqe_Memcpy2D_MemCopy2DFailed)
+{
+    Runtime::Instance()->SetConnectUbFlag(false);
+    DavidStream* stream = new (std::nothrow) DavidStream(dev_, 0, 0, nullptr);
+    ASSERT_NE(stream, nullptr);
+
+    TaskInfo taskInfo = {};
+    taskInfo.type = TS_TASK_TYPE_MEMCPY;
+    taskInfo.stream = stream;
+    taskInfo.u.memcpyAsyncTaskInfo.copyType = RT_MEMCPY_DIR_H2D;
+    taskInfo.u.memcpyAsyncTaskInfo.destPtr = reinterpret_cast<void*>(0x2000);
+    taskInfo.u.memcpyAsyncTaskInfo.copyMethod = static_cast<uint8_t>(rtAsyncCpyMethod::RT_ASYNC_CPY_2D);
+    taskInfo.u.memcpyAsyncTaskInfo.dstPitch = 256;
+    taskInfo.u.memcpyAsyncTaskInfo.srcPitch = 256;
+    taskInfo.u.memcpyAsyncTaskInfo.width = 128;
+    taskInfo.u.memcpyAsyncTaskInfo.height = 2;
+    taskInfo.u.memcpyAsyncTaskInfo.fixedSize = 256;
+    taskInfo.u.memcpyAsyncTaskInfo.copyKind = RT_MEMCPY_HOST_TO_DEVICE;
+
+    MOCKER_CPP_VIRTUAL(dev_->Driver_(), &Driver::MemCopy2D).stubs().will(returnValue(RT_ERROR_DRV_NOT_SUPPORT));
+
+    EXPECT_TRUE(NeedUpdateMemcpyTaskInfoForSnapshot(&taskInfo));
+    rtError_t error = stream->UpdateMemcpyTaskAndSqe(&taskInfo, dev_->PrimaryStream_());
+    EXPECT_EQ(error, RT_ERROR_DRV_NOT_SUPPORT);
+
+    delete stream;
+}
+
+TEST_F(DavidSnapshotTest, UpdateStreamActiveTaskFuncCallForSnapshot_Success)
+{
+    DavidStream* stream = new (std::nothrow) DavidStream(dev_, 0, 0, nullptr);
+    ASSERT_NE(stream, nullptr);
+
+    TaskInfo taskInfo;
+    taskInfo.type = TS_TASK_TYPE_STREAM_ACTIVE;
+    taskInfo.stream = stream;
+    taskInfo.u.streamactiveTask.activeStream = dev_->PrimaryStream_();
+    taskInfo.u.streamactiveTask.funcCallSvmMem = reinterpret_cast<void*>(0x5000);
+    taskInfo.u.streamactiveTask.activeStreamId = 1;
+    taskInfo.u.streamactiveTask.activeStreamSqId = 2;
+
+    MOCKER(ReConstructStreamActiveTaskFc).stubs().will(returnValue(RT_ERROR_NONE));
+
+    rtError_t error = UpdateStreamActiveTaskFuncCallForSnapshot(&taskInfo);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    delete stream;
+}
+
+TEST_F(DavidSnapshotTest, UpdateStreamActiveTaskFuncCallForSnapshot_ReconstructFailed)
+{
+    DavidStream* stream = new (std::nothrow) DavidStream(dev_, 0, 0, nullptr);
+    ASSERT_NE(stream, nullptr);
+
+    TaskInfo taskInfo;
+    taskInfo.type = TS_TASK_TYPE_STREAM_ACTIVE;
+    taskInfo.stream = stream;
+    taskInfo.u.streamactiveTask.activeStream = dev_->PrimaryStream_();
+    taskInfo.u.streamactiveTask.funcCallSvmMem = reinterpret_cast<void*>(0x5000);
+
+    MOCKER(ReConstructStreamActiveTaskFc).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+
+    rtError_t error = UpdateStreamActiveTaskFuncCallForSnapshot(&taskInfo);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+
+    delete stream;
+}
+
+TEST_F(DavidSnapshotTest, UpdateStreamActiveTaskFuncCallForSnapshot_FuncCallSvmMemNull)
+{
+    DavidStream* stream = new (std::nothrow) DavidStream(dev_, 0, 0, nullptr);
+    ASSERT_NE(stream, nullptr);
+
+    TaskInfo taskInfo;
+    taskInfo.type = TS_TASK_TYPE_STREAM_ACTIVE;
+    taskInfo.stream = stream;
+    taskInfo.u.streamactiveTask.activeStream = dev_->PrimaryStream_();
+    taskInfo.u.streamactiveTask.funcCallSvmMem = nullptr;
+
+    rtError_t error = UpdateStreamActiveTaskFuncCallForSnapshot(&taskInfo);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+
+    delete stream;
+}
+
+TEST_F(DavidSnapshotTest, NeedUpdateMemcpyTaskInfoForSnapshot_2D_NotH2DOrD2H_Skip)
+{
+    DavidStream* stream = new (std::nothrow) DavidStream(dev_, 0, 0, nullptr);
+    ASSERT_NE(stream, nullptr);
+
+    TaskInfo taskInfo;
+    taskInfo.type = TS_TASK_TYPE_MEMCPY;
+    taskInfo.stream = stream;
+    taskInfo.u.memcpyAsyncTaskInfo.copyType = RT_MEMCPY_DIR_D2D_UB;
+    taskInfo.u.memcpyAsyncTaskInfo.copyMethod = static_cast<uint8_t>(rtAsyncCpyMethod::RT_ASYNC_CPY_2D);
+
+    EXPECT_FALSE(NeedUpdateMemcpyTaskInfoForSnapshot(&taskInfo));
+
+    delete stream;
 }

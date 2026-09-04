@@ -963,6 +963,19 @@ rtError_t Model::SendAicpuModelLoadMsg(Stream* stream) const
     return error;
 }
 
+rtError_t Model::UpdateLabelCountPtr() const
+{
+    Device* const dev = context_->Device_();
+    if (dev->IsStarsPlatform()) {
+        const rtError_t error = dev->Driver_()->MemCopySync(
+            labelCountPtr_, sizeof(uint64_t), &labelCount_, sizeof(uint64_t), RT_MEMCPY_HOST_TO_DEVICE);
+        if (error != RT_ERROR_NONE) {
+            ERROR_RETURN_MSG_INNER(error, "Failed to copy label count, retCode=%#x.", static_cast<uint32_t>(error));
+        }
+    }
+    return RT_ERROR_NONE;
+}
+
 rtError_t Model::LoadCompleteByStreamPrep(Stream*& stream)
 {
     rtError_t error = PacketAicpuModelInfo();
@@ -999,12 +1012,9 @@ rtError_t Model::LoadCompleteByStreamPrep(Stream*& stream)
         RT_LOG(RT_LOG_DEBUG, "use default stream for model load");
     }
 
-    if (dev->IsStarsPlatform()) {
-        error = dev->Driver_()->MemCopySync(
-            labelCountPtr_, sizeof(uint64_t), &labelCount_, sizeof(uint64_t), RT_MEMCPY_HOST_TO_DEVICE);
-        if (error != RT_ERROR_NONE) {
-            ERROR_RETURN_MSG_INNER(error, "Failed to copy label count, retCode=%#x.", static_cast<uint32_t>(error));
-        }
+    error = UpdateLabelCountPtr();
+    if (error != RT_ERROR_NONE) {
+        ERROR_RETURN_MSG_INNER(error, "Failed to copy label count, retCode=%#x.", static_cast<uint32_t>(error));
     }
     COND_RETURN_AND_MSG_OUTER(
         (endGraphNotify_ == nullptr) && dev->IsStarsPlatform() && (GetModelExecutorType() != EXECUTOR_AICPU),
@@ -1014,7 +1024,7 @@ rtError_t Model::LoadCompleteByStreamPrep(Stream*& stream)
     return RT_ERROR_NONE;
 }
 
-static bool CheckSqQuery(const Stream* const stm)
+bool Model::CheckSqQuery(const Stream* const stm) const
 {
     if (stm->Device_()->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_MODEL_STREAM_LOAD_COMPLETE_TO_RTSQ)) {
         if ((stm->Flags() & RT_STREAM_AICPU) != 0) {

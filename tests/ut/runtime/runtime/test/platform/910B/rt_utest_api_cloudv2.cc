@@ -22,6 +22,7 @@
 #include "api.hpp"
 #include "capture_model_utils.hpp"
 #include "rt_unwrap.h"
+#include "rt_capture_model_mock_helper.hpp"
 #include "api_impl.hpp"
 #include "api_error.hpp"
 #include "program.hpp"
@@ -94,6 +95,7 @@ CaptureModel* GetCaptureModel(rtModel_t captureMdlHandle)
     EXPECT_NE(model, nullptr);
     return model;
 }
+
 } // namespace
 
 class RtApiTest : public testing::Test {
@@ -384,13 +386,12 @@ TEST_F(RtApiTest, capture_api_03)
     rtModel_t model;
     uint32_t num;
 
-    MOCKER_CPP(&Model::LoadCompleteByStreamPostp).stubs().will(returnValue(RT_ERROR_NONE));
-
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtStreamBeginCapture(stream, RT_STREAM_CAPTURE_MODE_GLOBAL);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    MOCK_CAPTURE_MODEL_LOAD_COMPLETE(stream);
 
     error = rtStreamEndCapture(stream, &model);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -415,13 +416,12 @@ TEST_F(RtApiTest, capture_api_06)
     rtModel_t model;
     rtModel_t newModel;
 
-    MOCKER_CPP(&Model::LoadCompleteByStreamPostp).stubs().will(returnValue(RT_ERROR_NONE));
-
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtStreamBeginCapture(stream, RT_STREAM_CAPTURE_MODE_GLOBAL);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    MOCK_CAPTURE_MODEL_LOAD_COMPLETE(stream);
 
     error = rtStreamBeginCapture(stream, RT_STREAM_CAPTURE_MODE_GLOBAL);
     EXPECT_NE(error, RT_ERROR_NONE);
@@ -449,13 +449,12 @@ TEST_F(RtApiTest, capture_api_08)
 
     MOCKER(memcpy_s).stubs().will(returnValue(NULL));
 
-    MOCKER_CPP(&Model::LoadCompleteByStreamPostp).stubs().will(returnValue(RT_ERROR_NONE));
-
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtStreamBeginCapture(stream, RT_STREAM_CAPTURE_MODE_GLOBAL);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    MOCK_CAPTURE_MODEL_LOAD_COMPLETE(stream);
 
     error = rtKernelLaunch(&function_, 1, (void*)args, sizeof(args), NULL, stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -481,13 +480,12 @@ TEST_F(RtApiTest, capture_api_09)
     MOCKER(memcpy_s).stubs().will(returnValue(NULL));
     MOCKER_CPP(&CondStreamActive).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
 
-    MOCKER_CPP(&Model::LoadCompleteByStreamPostp).stubs().will(returnValue(RT_ERROR_NONE));
-
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtStreamBeginCapture(stream, RT_STREAM_CAPTURE_MODE_GLOBAL);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    MOCK_CAPTURE_MODEL_LOAD_COMPLETE(stream);
 
     error = rtKernelLaunch(&function_, 1, (void*)args, sizeof(args), NULL, stream);
 
@@ -506,8 +504,6 @@ TEST_F(RtApiTest, capture_api_15)
     rtModel_t model;
     rtStream_t exeStream;
 
-    MOCKER_CPP(&Model::LoadCompleteByStreamPostp).stubs().will(returnValue(RT_ERROR_NONE));
-
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
@@ -516,6 +512,7 @@ TEST_F(RtApiTest, capture_api_15)
 
     error = rtStreamBeginCapture(stream, RT_STREAM_CAPTURE_MODE_GLOBAL);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    MOCK_CAPTURE_MODEL_LOAD_COMPLETE(stream);
 
     error = rtStreamEndCapture(stream, &model);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -738,13 +735,12 @@ TEST_F(RtApiTest, capture_api_28)
     rtStream_t stream;
     rtModel_t model;
 
-    MOCKER_CPP(&Model::LoadCompleteByStreamPostp).stubs().will(returnValue(RT_ERROR_NONE));
-
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtStreamBeginCapture(stream, RT_STREAM_CAPTURE_MODE_GLOBAL);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    MOCK_CAPTURE_MODEL_LOAD_COMPLETE(stream);
 
     error = rtStreamEndCapture(stream, &model);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -790,13 +786,12 @@ TEST_F(RtApiTest, capture_api_29)
     rtStream_t stream;
     rtModel_t model;
 
-    MOCKER_CPP(&Model::LoadCompleteByStreamPostp).stubs().will(returnValue(RT_ERROR_NONE));
-
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtStreamBeginCapture(stream, RT_STREAM_CAPTURE_MODE_GLOBAL);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    MOCK_CAPTURE_MODEL_LOAD_COMPLETE(stream);
 
     error = rtStreamGetCaptureInfo(stream, nullptr, nullptr);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
@@ -819,13 +814,12 @@ TEST_F(RtApiTest, capture_api_30)
     rtStreamCaptureStatus status;
     rtModel_t captureMdl;
 
-    MOCKER_CPP(&Model::LoadCompleteByStreamPostp).stubs().will(returnValue(RT_ERROR_NONE));
-
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtStreamBeginCapture(stream, RT_STREAM_CAPTURE_MODE_GLOBAL);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    MOCK_CAPTURE_MODEL_LOAD_COMPLETE(stream);
 
     error = rtStreamGetCaptureInfo(stream, &status, &captureMdl);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -850,8 +844,6 @@ TEST_F(RtApiTest, capture_api_31)
     rtStream_t stream;
     rtModel_t model;
     rtStreamCaptureStatus status;
-
-    MOCKER_CPP(&Model::LoadCompleteByStreamPostp).stubs().will(returnValue(RT_ERROR_NONE));
 
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -891,8 +883,6 @@ TEST_F(RtApiTest, capture_api_32)
     rtModel_t model;
     rtStreamCaptureStatus status;
 
-    MOCKER_CPP(&Model::LoadCompleteByStreamPostp).stubs().will(returnValue(RT_ERROR_NONE));
-
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
@@ -929,8 +919,6 @@ TEST_F(RtApiTest, capture_api_33)
     rtStream_t stream;
     rtModel_t model;
     rtStreamCaptureStatus status;
-
-    MOCKER_CPP(&Model::LoadCompleteByStreamPostp).stubs().will(returnValue(RT_ERROR_NONE));
 
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -969,8 +957,6 @@ TEST_F(RtApiTest, capture_api_34)
     rtStream_t stream;
     rtModel_t model;
     rtStreamCaptureStatus status;
-
-    MOCKER_CPP(&Model::LoadCompleteByStreamPostp).stubs().will(returnValue(RT_ERROR_NONE));
 
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -1011,13 +997,12 @@ TEST_F(RtApiTest, capture_api_37)
 
     Runtime* rtInstance = (Runtime*)Runtime::Instance();
 
-    MOCKER_CPP(&Model::LoadCompleteByStreamPostp).stubs().will(returnValue(RT_ERROR_NONE));
-
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtStreamBeginCapture(stream, RT_STREAM_CAPTURE_MODE_GLOBAL);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    MOCK_CAPTURE_MODEL_LOAD_COMPLETE(stream);
 
     error = rtSubscribeReport(1, stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -1048,13 +1033,12 @@ TEST_F(RtApiTest, capture_api_38)
     rtModel_t captureMdl;
     rtCallback_t stub_func = (rtCallback_t)0x12345;
 
-    MOCKER_CPP(&Model::LoadCompleteByStreamPostp).stubs().will(returnValue(RT_ERROR_NONE));
-
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtStreamBeginCapture(stream, RT_STREAM_CAPTURE_MODE_GLOBAL);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    MOCK_CAPTURE_MODEL_LOAD_COMPLETE(stream);
 
     error = rtSubscribeReport(1, stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -1086,13 +1070,12 @@ TEST_F(RtApiTest, capture_api_39)
     rtModel_t captureMdl;
     rtCallback_t stub_func = (rtCallback_t)0x12345;
 
-    MOCKER_CPP(&Model::LoadCompleteByStreamPostp).stubs().will(returnValue(RT_ERROR_NONE));
-
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtStreamBeginCapture(stream, RT_STREAM_CAPTURE_MODE_GLOBAL);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    MOCK_CAPTURE_MODEL_LOAD_COMPLETE(stream);
 
     error = rtSubscribeReport(1, stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -1124,13 +1107,12 @@ TEST_F(RtApiTest, capture_api_40)
     rtModel_t captureMdl;
     rtCallback_t stub_func = (rtCallback_t)0x12345;
 
-    MOCKER_CPP(&Model::LoadCompleteByStreamPostp).stubs().will(returnValue(RT_ERROR_NONE));
-
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtStreamBeginCapture(stream, RT_STREAM_CAPTURE_MODE_GLOBAL);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    MOCK_CAPTURE_MODEL_LOAD_COMPLETE(stream);
 
     error = rtsLaunchHostFunc(stream, stub_func, nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);

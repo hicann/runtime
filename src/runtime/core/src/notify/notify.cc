@@ -166,6 +166,9 @@ rtError_t Notify::SetupWithoutAllocNtyId()
 
 rtError_t Notify::ReAllocId() const
 {
+    if (notifyid_ == MAX_UINT32_NUM) {
+        return RT_ERROR_NONE;
+    }
     Context* const curCtx = Runtime::Instance()->CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     Device* const dev = curCtx->Device_();

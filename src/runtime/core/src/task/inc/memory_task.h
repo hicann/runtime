@@ -31,6 +31,8 @@ rtError_t MemcpyAsyncTaskInitV2(
 rtError_t MemcpyAsyncTaskInitV3(
     TaskInfo* const taskInfo, uint32_t cpyType, const void* srcAddr, void* desAddr, const uint64_t cpySize,
     const rtTaskCfgInfo_t* cfgInfo, const rtD2DAddrCfgInfo_t* const addrCfg);
+bool NeedUpdateMemcpyTaskInfoForSnapshot(const TaskInfo* const taskInfo);
+rtError_t UpdateMemcpyTaskInfoForSnapshot(TaskInfo* const taskInfo);
 
 rtError_t MemcpyAsyncBatchTaskInit(TaskInfo* const taskInfo, AsyncDmaBatchInfo& batchInfo);
 rtError_t MemcpyAsyncD2HTaskInit(

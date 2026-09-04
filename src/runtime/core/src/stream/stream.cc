@@ -5494,17 +5494,49 @@ rtError_t Stream::ReBuildStreamId()
 
 rtError_t Stream::UpdateSnapShotSqe()
 {
-    const size_t size = delayRecycleTaskid_.size();
-    for (size_t i = 0U; i < size; i++) {
-        const uint16_t taskId = delayRecycleTaskid_[i];
+    if (IsSoftwareSqEnable()) {
+        return UpdateHostSqeForSnapshot();
+    }
+    return UpdateDeviceSqeForSnapshot();
+}
+
+rtError_t Stream::UpdateDeviceSqeForSnapshot()
+{
+    for (const uint16_t taskId : delayRecycleTaskid_) {
         TaskInfo* task = device_->GetTaskFactory()->GetTask(Id_(), taskId);
         NULL_PTR_RETURN_MSG(task, RT_ERROR_INVALID_VALUE);
-        if (IsNeedUpdateTask(task)) {
-            const rtError_t error = SubmitMemCpyAsyncTask(task);
-            ERROR_RETURN(error, "update task failed, ret=%d", error);
+        // 非software sq场景，需要更新Stream active任务的funcCall memory
+        rtError_t error;
+        switch (task->type) {
+            case TS_TASK_TYPE_STREAM_ACTIVE: {
+                error = UpdateStreamActiveTaskFuncCallForSnapshot(task);
+                ERROR_RETURN(
+                    error,
+                    "Failed to update stream active task func call for snapshot, stream_id=%d, task_id=%u, ret=%#x.",
+                    Id_(), task->id, error);
+                break;
+            }
+            case TS_TASK_TYPE_MEMCPY: {
+                if (task->u.memcpyAsyncTaskInfo.copyMethod != static_cast<uint8_t>(rtAsyncCpyMethod::RT_ASYNC_CPY_2D) ||
+                    !NeedUpdateMemcpyTaskInfoForSnapshot(task)) {
+                    break;
+                }
+                error = UpdateMemcpyTaskInfoForSnapshot(task);
+                ERROR_RETURN(error, "Failed to update memcpy dma for snapshot, task_id=%u, ret=%#x.", task->id, error);
+                error = SubmitMemCpyAsyncTask(task);
+                ERROR_RETURN(error, "Failed to update memcpy sqe for snapshot, task_id=%u, ret=%#x.", task->id, error);
+                break;
+            }
+            case TS_TASK_TYPE_STREAM_SWITCH:
+            case TS_TASK_TYPE_MODEL_TASK_UPDATE: {
+                error = SubmitMemCpyAsyncTask(task);
+                ERROR_RETURN(error, "Failed to update task, ret=%#x", error);
+                break;
+            }
+            default:
+                break;
         }
     }
-
     Stream* const stm = context_->GetCtrlSQStream();
     constexpr uint32_t waitTimeout = 1000U * 60U * 10U; // 超时等待十分钟
     const rtError_t error = stm->Synchronize(false, waitTimeout);
@@ -5512,11 +5544,28 @@ rtError_t Stream::UpdateSnapShotSqe()
     return RT_ERROR_NONE;
 }
 
-bool Stream::IsNeedUpdateTask(const TaskInfo* const updateTask) const
+rtError_t Stream::UpdateHostSqeForSnapshot()
 {
-    const std::vector<tagTsTaskType> updateTasks = {TS_TASK_TYPE_STREAM_SWITCH, TS_TASK_TYPE_MODEL_TASK_UPDATE};
+    for (const uint16_t taskId : delayRecycleTaskid_) {
+        TaskInfo* task = device_->GetTaskFactory()->GetTask(Id_(), taskId);
+        NULL_PTR_RETURN_MSG(task, RT_ERROR_INVALID_VALUE);
+        if (task->type != TS_TASK_TYPE_MEMCPY) {
+            continue;
+        }
 
-    return std::find(updateTasks.begin(), updateTasks.end(), updateTask->type) != updateTasks.end();
+        if (task->u.memcpyAsyncTaskInfo.copyMethod != static_cast<uint8_t>(rtAsyncCpyMethod::RT_ASYNC_CPY_2D) ||
+            !NeedUpdateMemcpyTaskInfoForSnapshot(task)) {
+            continue;
+        }
+
+        rtError_t error = UpdateMemcpyTaskInfoForSnapshot(task);
+        ERROR_RETURN(
+            error, "Failed to update memcpy dma for software sq snapshot, task_id=%u, ret=%#x.", task->id, error);
+
+        error = UpdateHostSqeBufferByTask(task);
+        ERROR_RETURN(error, "Failed to rebuild memcpy host sqe for snapshot, task_id=%u, ret=%#x.", task->id, error);
+    }
+    return RT_ERROR_NONE;
 }
 
 rtError_t Stream::SubmitMemCpyAsyncTask(TaskInfo* const updateTask)

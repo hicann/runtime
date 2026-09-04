@@ -19,6 +19,7 @@
 #include "capture_model.hpp"
 #include "cond_handle/cond_handle.hpp"
 #include "rt_unwrap.h"
+#include "rt_capture_model_mock_helper.hpp"
 #include "raw_device.hpp"
 #include "module.hpp"
 #include "notify.hpp"
@@ -134,7 +135,6 @@ TEST_F(CloudV2CaptureModelTest, CheckCaptureModelForUpdateRefreshesSupportResult
 TEST_F(CloudV2CaptureModelTest, SUBMIT_RDMA_PI_VALUE_MODIFY_TASK)
 {
     Runtime* rtInstance = (Runtime*)Runtime::Instance();
-    MOCKER_CPP(&Model::LoadCompleteByStreamPostp).stubs().will(returnValue(RT_ERROR_NONE));
     std::string socVersion = GlobalContainer::GetSocVersion();
     GlobalContainer::SetSocVersion("Ascend910B2");
 
@@ -148,6 +148,7 @@ TEST_F(CloudV2CaptureModelTest, SUBMIT_RDMA_PI_VALUE_MODIFY_TASK)
 
     ret = rtStreamBeginCapture(stream, RT_STREAM_CAPTURE_MODE_GLOBAL);
     EXPECT_EQ(ret, RT_ERROR_NONE);
+    MOCK_CAPTURE_MODEL_LOAD_COMPLETE(stream);
 
     rtFftsPlusTaskInfo_t fftsPlusTaskInfo;
     rtFftsPlusSqe_t sqe;
@@ -711,8 +712,6 @@ TEST_F(CloudV2CaptureModelTest, capture_mode_api_03)
     error = rtMalloc(&devPtr, 60, RT_MEMORY_HBM, DEFAULT_MODULEID);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    MOCKER_CPP(&Model::LoadCompleteByStreamPostp).stubs().will(returnValue(RT_ERROR_NONE));
-
     error = rtMemset(devPtr, 60, 0, 60);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
@@ -721,6 +720,7 @@ TEST_F(CloudV2CaptureModelTest, capture_mode_api_03)
 
     error = rtStreamBeginCapture(stream, RT_STREAM_CAPTURE_MODE_GLOBAL);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    MOCK_CAPTURE_MODEL_LOAD_COMPLETE(stream);
 
     error = rtMemset(devPtr, 60, 0, 60);
     EXPECT_EQ(error, ACL_ERROR_RT_CAPTURE_MODE_NOT_SUPPORT);
@@ -733,6 +733,7 @@ TEST_F(CloudV2CaptureModelTest, capture_mode_api_03)
 
     error = rtStreamBeginCapture(stream, RT_STREAM_CAPTURE_MODE_THREAD_LOCAL);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    MOCK_CAPTURE_MODEL_LOAD_COMPLETE(stream);
 
     error = rtMemset(devPtr, 60, 0, 60);
     EXPECT_EQ(error, ACL_ERROR_RT_CAPTURE_MODE_NOT_SUPPORT);
@@ -745,6 +746,7 @@ TEST_F(CloudV2CaptureModelTest, capture_mode_api_03)
 
     error = rtStreamBeginCapture(stream, RT_STREAM_CAPTURE_MODE_RELAXED);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    MOCK_CAPTURE_MODEL_LOAD_COMPLETE(stream);
 
     error = rtMemset(devPtr, 60, 0, 60);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -942,13 +944,12 @@ TEST_F(CloudV2CaptureModelTest, capture_mode_api_06)
 
     Runtime* rtInstance = (Runtime*)Runtime::Instance();
 
-    MOCKER_CPP(&Model::LoadCompleteByStreamPostp).stubs().will(returnValue(RT_ERROR_NONE));
-
     error = rtStreamCreate(&stream1, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtStreamBeginCapture(stream1, RT_STREAM_CAPTURE_MODE_GLOBAL);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    MOCK_CAPTURE_MODEL_LOAD_COMPLETE(stream1);
 
     error = rtMemset(devPtr, 60, 0, 60);
     EXPECT_EQ(error, ACL_ERROR_RT_CAPTURE_MODE_NOT_SUPPORT);
@@ -996,13 +997,12 @@ TEST_F(CloudV2CaptureModelTest, capture_mode_api_07)
     error = rtMalloc(&devPtr, 60, RT_MEMORY_HBM, DEFAULT_MODULEID);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    MOCKER_CPP(&Model::LoadCompleteByStreamPostp).stubs().will(returnValue(RT_ERROR_NONE));
-
     error = rtStreamCreate(&stream1, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtStreamBeginCapture(stream1, RT_STREAM_CAPTURE_MODE_RELAXED);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    MOCK_CAPTURE_MODEL_LOAD_COMPLETE(stream1);
 
     error = rtMemset(devPtr, 60, 0, 60);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -1203,7 +1203,6 @@ protected:
             .with(eq(TS_FEATURE_ACLGRAPH_COND_OP))
             .will(returnValue(true));
         MOCKER(CheckCaptureModelSupportSoftwareSq).stubs().will(returnValue(RT_ERROR_NONE));
-        MOCKER_CPP(&Model::LoadCompleteByStreamPostp).stubs().will(returnValue(RT_ERROR_NONE));
     }
 
     virtual void TearDown()

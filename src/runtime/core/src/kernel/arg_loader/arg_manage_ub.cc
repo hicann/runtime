@@ -254,5 +254,29 @@ rtError_t UbArgManage::LoadSimtHostArgs(const bool useArgPool, SimtArgsHost* sim
     return ParseArgsCpyWqe(result, totalArgsSize);
 }
 
+rtError_t UbArgManage::RestoreArgRes()
+{
+    if ((devArgResBaseAddr_ == nullptr) || (hostArgResBaseAddr_ == nullptr) || (argPoolSize_ == 0U)) {
+        return RT_ERROR_NONE;
+    }
+
+    Device* const dev = stream_->Device_();
+    const uint32_t devId = dev->Id_();
+
+    rtError_t ret = dev->Driver_()->GetTsegInfoByVa(
+        devId, RtPtrToValue(hostArgResBaseAddr_), static_cast<uint64_t>(argPoolSize_), 1U,
+        &(memTsegInfo_.hostTsegInfo));
+    ERROR_RETURN(
+        ret, "Failed to refresh stream args host tseg, retCode=%#x, size=%u, device_id=%u.", ret, argPoolSize_, devId);
+
+    ret = dev->Driver_()->GetTsegInfoByVa(
+        devId, RtPtrToValue(devArgResBaseAddr_), static_cast<uint64_t>(argPoolSize_), 0U, &(memTsegInfo_.devTsegInfo));
+    ERROR_RETURN(
+        ret, "Failed to refresh stream args device tseg, retCode=%#x, size=%u, device_id=%u.", ret, argPoolSize_,
+        devId);
+
+    return RT_ERROR_NONE;
+}
+
 } // namespace runtime
 } // namespace cce

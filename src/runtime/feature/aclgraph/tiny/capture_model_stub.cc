@@ -19,6 +19,22 @@ CaptureModel::CaptureModel(ModelType type) : Model(type) {}
 
 CaptureModel::~CaptureModel() noexcept {}
 
+rtError_t CaptureModel::LoadComplete() { return RT_ERROR_FEATURE_NOT_SUPPORT; }
+
+rtError_t CaptureModel::LoadCompleteByStreamPrep(Stream*& stream)
+{
+    UNUSED(stream);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t CaptureModel::LoadCompleteByStreamPostp(Stream* const stream)
+{
+    UNUSED(stream);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t CaptureModel::LoadCompleteByStream() { return RT_ERROR_FEATURE_NOT_SUPPORT; }
+
 rtError_t CaptureModel::Execute(Stream* const stm, int32_t timeout)
 {
     UNUSED(stm);
@@ -172,11 +188,17 @@ rtError_t CaptureModel::RestoreForSoftwareSq(Device* const dev)
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
+rtError_t CaptureModel::RestoreForSoftwareSqForOneModels(Device* const dev)
+{
+    UNUSED(dev);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
 void CaptureModel::RestoreJettyForSnapshot() {}
 
 rtError_t CaptureModel::BindSqCqAndSendSqe(void) { return RT_ERROR_FEATURE_NOT_SUPPORT; }
 
-rtError_t RebuildExternalTaskSqe(TaskInfo* const task)
+rtError_t UpdateHostSqeBufferByTask(TaskInfo* const task)
 {
     UNUSED(task);
     return RT_ERROR_FEATURE_NOT_SUPPORT;

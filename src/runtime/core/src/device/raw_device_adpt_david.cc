@@ -108,6 +108,7 @@ rtError_t RawDevice::AllocStackPhyBaseDavid()
             RtPtrToValue(stackPhyBase32k_) :
             (((RtPtrToValue(stackPhyBase32k_) >> STACK_PHY_BASE_ALIGN_BIT) + 1U) << STACK_PHY_BASE_ALIGN_BIT);
     stackPhyBase32kAlign_ = RtValueToPtr<void*>(devAlignAddr);
+    stackAddrIsDcache_ = false;
     RT_LOG(
         RT_LOG_INFO,
         "device_id=%u, stackPhyBase32k_=0x%llx, stackPhyBase32kAlign_=0x%llx, "

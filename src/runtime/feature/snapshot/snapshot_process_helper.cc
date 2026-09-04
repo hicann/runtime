@@ -213,7 +213,8 @@ rtError_t ModelBackup(const int32_t devId)
                 mdlLock.Unlock();
                 COND_RETURN_WARN(
                     true, RT_ERROR_FEATURE_NOT_SUPPORT,
-                    "Snapshots cannot be created for models with the AICPU execution type.");
+                    "Snapshots cannot be created for models with the AICPU execution type, model_type=%u.",
+                    mdl->GetModelExecutorType());
             }
             if (IsSoftwareSqCaptureModel(mdl) || mdl->IsAutoSplitSq()) {
                 continue;

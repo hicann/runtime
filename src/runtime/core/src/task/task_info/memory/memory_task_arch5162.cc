@@ -143,6 +143,18 @@ rtError_t MemcpyAsyncD2HTaskInit(
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
+bool NeedUpdateMemcpyTaskInfoForSnapshot(const TaskInfo* const taskInfo)
+{
+    UNUSED(taskInfo);
+    return false;
+}
+
+rtError_t UpdateMemcpyTaskInfoForSnapshot(TaskInfo* const taskInfo)
+{
+    UNUSED(taskInfo);
+    return RT_ERROR_NONE;
+}
+
 void SetStarsResultForMemcpyAsyncTask(TaskInfo* const taskInfo, const rtCqReport_t& logicCq)
 {
     if ((logicCq.errorType & RT_STARS_EXIST_ERROR) != 0U) {

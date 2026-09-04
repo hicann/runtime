@@ -80,6 +80,16 @@ public:
     explicit RestoreFailedStream(Device* const dev) : Stream(dev, 0U) {}
     rtError_t Restore() override { return RT_ERROR_INVALID_VALUE; }
 };
+
+rtError_t SubmitTaskExpectMemcpy2DCopyMethod(RawDevice* dev, TaskInfo* task)
+{
+    UNUSED(dev);
+    EXPECT_NE(task, nullptr);
+    if (task != nullptr) {
+        EXPECT_EQ(task->u.memcpyAsyncTaskInfo.copyMethod, static_cast<uint8_t>(rtAsyncCpyMethod::RT_ASYNC_CPY_2D));
+    }
+    return RT_ERROR_NONE;
+}
 } // namespace
 
 class CloudV2ContextTest : public testing::Test {
@@ -3407,6 +3417,41 @@ TEST_F(CloudV2ContextTest, MemCopy2DAsync_test)
 
     error = Memcpy2DAsync(NULL, 100, NULL, 100, 100, 1, RT_MEMCPY_DEVICE_TO_HOST, &realSize, stream, 100);
     EXPECT_NE(error, RT_ERROR_NONE);
+
+    (void)((Runtime*)Runtime::Instance())->PrimaryContextRelease(devId);
+    stream->taskResMang_ = preVal;
+    delete stream;
+    delete device;
+    GlobalMockObject::verify();
+}
+
+TEST_F(CloudV2ContextTest, MemCopy2DAsyncSetsCopyMethodForSnapshot)
+{
+    GlobalMockObject::verify();
+    int32_t devId;
+    rtError_t error = rtGetDevice(&devId);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    RawDevice* device = new RawDevice(0);
+    EXPECT_NE(device, nullptr);
+    device->Init();
+
+    Stream* stream = new Stream(device, 0);
+    EXPECT_NE(stream, nullptr);
+    int tempMemory;
+    auto preVal = stream->taskResMang_;
+    stream->taskResMang_ = reinterpret_cast<TaskResManage*>(&tempMemory);
+    RefObject<Context*>* refObject = (RefObject<Context*>*)((Runtime*)Runtime::Instance())->PrimaryContextRetain(devId);
+    EXPECT_NE(refObject, nullptr);
+    Context* ctx = refObject->GetVal();
+    EXPECT_NE(ctx, nullptr);
+    stream->context_ = ctx;
+
+    uint64_t realSize = 8U;
+    MOCKER_CPP(&TaskFactory::Recycle).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(MemcpyAsyncTaskInitV2).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(device, &RawDevice::SubmitTask).stubs().will(invoke(SubmitTaskExpectMemcpy2DCopyMethod));
+    error = Memcpy2DAsync(nullptr, 100, nullptr, 100, 100, 1, RT_MEMCPY_DEVICE_TO_HOST, &realSize, stream, 100);
+    EXPECT_EQ(error, RT_ERROR_NONE);
 
     (void)((Runtime*)Runtime::Instance())->PrimaryContextRelease(devId);
     stream->taskResMang_ = preVal;

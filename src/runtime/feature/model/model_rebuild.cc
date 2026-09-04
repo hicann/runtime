@@ -37,6 +37,15 @@ void Model::ResetForRestore(void)
         (void)deviceDrv->DevMemFree(queueInfoPtr_, deviceId);
         queueInfoPtr_ = nullptr;
     }
+    ResetFuncCallMem(dev);
+    RT_LOG(RT_LOG_INFO, "Success to reInit, devId=%u, tsId=%u, modelId=%u.", deviceId, tsId, id_);
+}
+
+void Model::ResetFuncCallMem(Device* const dev)
+{
+    Driver* const deviceDrv = dev->Driver_();
+    const uint32_t deviceId = dev->Id_();
+
     if (funcCallHostMem_ != nullptr) {
         free(funcCallHostMem_);
         funcCallHostMem_ = nullptr;
@@ -54,7 +63,8 @@ void Model::ResetForRestore(void)
     }
     funCallMemSize_ = 0ULL;
     funcCallSvmMem_ = 0ULL;
-    RT_LOG(RT_LOG_INFO, "Success to reInit, devId=%u, tsId=%u, modelId=%u.", deviceId, tsId, id_);
+    funcCallInstrSize_ = 0U;
+    RT_LOG(RT_LOG_DEBUG, "Success to reset func call memory.");
 }
 
 rtError_t Model::ReAllocStreamId(void)

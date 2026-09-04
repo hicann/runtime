@@ -1277,13 +1277,13 @@ TEST_F(DavidStreamTest, ExternalTaskSqeBuildRejectsInvalidTaskAndSkipsNullSqeBuf
     uint32_t oldSqeBufferSize = 0U;
     ASSERT_NE(captureModel, nullptr);
 
-    EXPECT_EQ(RebuildExternalTaskSqe(nullptr), RT_ERROR_INVALID_VALUE);
-    EXPECT_EQ(RebuildExternalTaskSqe(&taskInfo), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(UpdateHostSqeBufferByTask(nullptr), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(UpdateHostSqeBufferByTask(&taskInfo), RT_ERROR_INVALID_VALUE);
     oldStream = taskInfo.stream;
     oldSqeBuffer = stream_->sqeBuffer_;
     taskInfo.stream = stream_;
     stream_->sqeBuffer_ = nullptr;
-    EXPECT_EQ(RebuildExternalTaskSqe(&taskInfo), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(UpdateHostSqeBufferByTask(&taskInfo), RT_ERROR_INVALID_VALUE);
     stream_->sqeBuffer_ = oldSqeBuffer;
     taskInfo.stream = oldStream;
 
@@ -1298,17 +1298,17 @@ TEST_F(DavidStreamTest, ExternalTaskSqeBuildRejectsInvalidTaskAndSkipsNullSqeBuf
     oldSqeBufferSize = stream_->sqeBufferSize_;
     stream_->SetSqeBuffer(sqeBuffer);
     stream_->SetSqeBufferSize(0U);
-    EXPECT_EQ(RebuildExternalTaskSqe(&taskInfo), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(UpdateHostSqeBufferByTask(&taskInfo), RT_ERROR_INVALID_VALUE);
     stream_->SetSqeBufferSize(sizeof(sqeBuffer));
     MOCKER_CPP_VIRTUAL(device_->Driver_(), &Driver::MemCopySync).stubs().will(invoke(MemCopySyncCopyStub));
-    EXPECT_EQ(RebuildExternalTaskSqe(&taskInfo), RT_ERROR_NONE);
+    EXPECT_EQ(UpdateHostSqeBufferByTask(&taskInfo), RT_ERROR_NONE);
     const auto* funcCall = reinterpret_cast<const RtStarsExternalWaitFuncCall*>(funcCallMem);
     EXPECT_EQ(funcCall->loadActual.func3, RT_STARS_COND_ISA_LOAD_FUNC3_LDR);
     EXPECT_EQ(funcCall->loadActual.rs1, RT_STARS_COND_ISA_REGISTER_R2);
     EXPECT_EQ(funcCall->loadActual.rd, RT_STARS_COND_ISA_REGISTER_R1);
     EXPECT_EQ(funcCall->waitSatisfied.func3, RT_STARS_COND_ISA_BRANCH_FUNC3_BGEU);
     MOCKER(memcpy_s).stubs().will(returnValue(EOK)).then(returnValue(EINVAL));
-    EXPECT_EQ(RebuildExternalTaskSqe(&taskInfo), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(UpdateHostSqeBufferByTask(&taskInfo), RT_ERROR_INVALID_VALUE);
     stream_->SetSqeBuffer(oldSqeBuffer);
     stream_->SetSqeBufferSize(oldSqeBufferSize);
 }

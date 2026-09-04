@@ -136,6 +136,7 @@ rtError_t Memcpy2DAsync(
         recycleTask();
         return error;
     }
+    taskAsync2d->u.memcpyAsyncTaskInfo.copyMethod = static_cast<uint8_t>(rtAsyncCpyMethod::RT_ASYNC_CPY_2D);
     *realSize = taskAsync2d->u.memcpyAsyncTaskInfo.size;
 
     error = stm->Device_()->SubmitTask(taskAsync2d);

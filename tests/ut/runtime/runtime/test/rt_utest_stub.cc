@@ -1003,7 +1003,13 @@ TEST_F(TinyStubTest, capture_model_sqcq_stub)
     captureModel.CaptureModelExecuteFinish(RT_ERROR_NONE);
     EXPECT_EQ(captureModel.MarkStreamActiveTask(nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
     EXPECT_EQ(captureModel.RestoreForSoftwareSq(nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(captureModel.RestoreForSoftwareSqForOneModels(nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
     captureModel.RestoreJettyForSnapshot();
+    Stream* stream = nullptr;
+    EXPECT_EQ(captureModel.LoadComplete(), RT_ERROR_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(captureModel.LoadCompleteByStreamPrep(stream), RT_ERROR_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(captureModel.LoadCompleteByStreamPostp(nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(captureModel.LoadCompleteByStream(), RT_ERROR_FEATURE_NOT_SUPPORT);
 }
 
 TEST_F(TinyStubTest, capture_model_sqcq_bind_stub)

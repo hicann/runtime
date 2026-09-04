@@ -85,6 +85,10 @@ public:
 
     ~CaptureModel() noexcept override;
 
+    rtError_t LoadComplete() override;
+    rtError_t LoadCompleteByStreamPrep(Stream*& stream) override;
+    rtError_t LoadCompleteByStreamPostp(Stream* const stream) override;
+    rtError_t LoadCompleteByStream() override;
     rtError_t Execute(Stream* const stm, int32_t timeout = -1) override;
     rtError_t ExecuteAsync(Stream* const stm) override;
     rtError_t TearDown() override;

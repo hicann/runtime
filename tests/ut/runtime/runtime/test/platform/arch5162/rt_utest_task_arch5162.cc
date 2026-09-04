@@ -478,6 +478,17 @@ TEST_F(Arch5162TaskTest, ConstructSqeForMemcpyAsyncTask)
     delete device;
 }
 
+TEST_F(Arch5162TaskTest, NeedUpdateMemcpyTaskInfoForSnapshot)
+{
+    TaskInfo task = {};
+    task.type = TS_TASK_TYPE_MEMCPY;
+    task.u.memcpyAsyncTaskInfo.copyType = RT_MEMCPY_DIR_H2D;
+    task.u.memcpyAsyncTaskInfo.copyMethod = static_cast<uint8_t>(rtAsyncCpyMethod::RT_ASYNC_CPY_2D);
+
+    EXPECT_FALSE(NeedUpdateMemcpyTaskInfoForSnapshot(&task));
+    EXPECT_FALSE(NeedUpdateMemcpyTaskInfoForSnapshot(nullptr));
+}
+
 TEST_F(Arch5162TaskTest, MemcpyAsyncTaskUnInitAndDoComplete)
 {
     MOCKER(TaskFailCallBack).stubs();

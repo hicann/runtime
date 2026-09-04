@@ -81,6 +81,8 @@ public:
     virtual rtError_t LoadSimtHostArgs(
         const bool useArgPool, SimtArgsHost* simtArgsHost, StarsArgLoaderResult* result) = 0;
 
+    virtual rtError_t RestoreArgRes() { return RT_ERROR_NONE; }
+
     uint32_t argPoolSize_{0U};
     void* devArgResBaseAddr_{nullptr};
     void* hostArgResBaseAddr_{nullptr};
@@ -179,6 +181,7 @@ public:
         StarsArgLoaderResult* result) override;
     rtError_t LoadSimtHostArgs(
         const bool useArgPool, SimtArgsHost* simtArgsHost, StarsArgLoaderResult* result) override;
+    rtError_t RestoreArgRes() override;
 
 private:
     struct memTsegInfo memTsegInfo_;

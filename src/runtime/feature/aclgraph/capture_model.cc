@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "capture_model.hpp"
+#include "model_c.hpp"
 #include "capture_model_enum_desc.hpp"
 #include "capture_model_utils.hpp"
 #include "cond_handle.hpp"
@@ -30,10 +31,12 @@
 #include "sq_addr_memory_pool.hpp"
 #include "inner_thread_local.hpp"
 #include "drv/driver.hpp"
+#include "ctrl_sq.hpp"
 #include "task_recycle.hpp"
 #include "aclgraph_cond_task.h"
 #include "common_task.h"
 #include "memory_task.h"
+#include "model_maintaince_task.h"
 #include "memcpy_c.hpp"
 #include "notify_c.hpp"
 #include <securec.h>
@@ -42,6 +45,10 @@
 
 namespace cce {
 namespace runtime {
+
+namespace {
+constexpr int32_t MAX_WAIT_TIME = 5000;
+} // namespace
 
 constexpr uint8_t RT_MODEL_CAPTURE_EXECUTE_DEFAULT = 0U; /* async and with timeout */
 constexpr uint8_t RT_MODEL_CAPTURE_EXECUTE_ASYNC = 1U;   /* async */
@@ -135,6 +142,102 @@ CaptureModel::~CaptureModel() noexcept
         mgr->FreeLogicSq(sq->Id_());
     }
     logicSqs_.clear();
+}
+
+rtError_t CaptureModel::LoadCompleteByStreamPrep(Stream*& stream)
+{
+    UNUSED(stream);
+
+    rtError_t error = UpdateLabelCountPtr();
+    if (error != RT_ERROR_NONE) {
+        ERROR_RETURN_MSG_INNER(error, "Failed to copy label count, retCode=%#x.", static_cast<uint32_t>(error));
+    }
+    return RT_ERROR_NONE;
+}
+
+rtError_t CaptureModel::LoadCompleteByStreamPostp(Stream* const stream)
+{
+    stream->isModelComplete = true;
+    rtError_t error = stream->Synchronize();
+    ERROR_RETURN_MSG_INNER(error, "Failed to synchronize default stream, retCode=%#x.", static_cast<uint32_t>(error));
+    SetModelLoadComplete(true);
+    SetFirstExecute(true);
+    for (Stream* const sinkStream : StreamList_()) {
+        if (!CheckSqQuery(sinkStream)) {
+            break;
+        }
+        const uint32_t sqId = sinkStream->GetSqId();
+        const uint32_t tsId = sinkStream->Device_()->DevGetTsId();
+        const uint32_t devId = sinkStream->Device_()->Id_();
+        const uint32_t flags = sinkStream->Flags();
+        Driver* driver = sinkStream->Device_()->Driver_();
+        uint16_t devTail = 0;
+        const uint32_t totalTask = sinkStream->GetCurSqPos();
+        if ((flags & RT_STREAM_AICPU) != 0U) {
+            continue;
+        }
+        mmTimespec timeBegin = mmGetTickCount();
+        uint64_t diff = 0ULL;
+        do {
+            COND_PROC(driver->GetSqTail(devId, tsId, sqId, devTail) != RT_ERROR_NONE, break);
+            diff = GetTimeInterval(timeBegin);
+        } while ((devTail < static_cast<uint16_t>(totalTask)) && (diff <= MAX_WAIT_TIME)); // Max wait time is 5000 ms
+        COND_PROC(
+            (diff > MAX_WAIT_TIME),
+            RT_LOG(
+                RT_LOG_EVENT,
+                "refresh SqTail time is more than 5s, model_id=%u, stream_id=%d, devTail=%hu, totalTask=%u", Id_(),
+                sinkStream->Id_(), devTail, totalTask));
+    }
+    return RT_ERROR_NONE;
+}
+
+rtError_t CaptureModel::LoadCompleteByStream(void)
+{
+    Stream* stream = nullptr;
+    rtError_t error = LoadCompleteByStreamPrep(stream);
+    ERROR_RETURN_MSG_INNER(error, "Preprocess of load completion failed, retCode=%#x.", static_cast<uint32_t>(error));
+
+    TaskInfo submitTaskInfo = {};
+    TaskInfo* maintainceTask = nullptr;
+    rtError_t errorReason;
+    Device* const dev = Context_()->Device_();
+
+    if (dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ)) {
+        stream = Context_()->GetCtrlSQStream();
+        error = dev->GetCtrlSQ().SendModelLoadCompleteMsg(this, GetFirstTaskId());
+        ERROR_RETURN_MSG_INNER(error, "SendModelLoadCompleteMsg failed, retCode=%#x.", static_cast<uint32_t>(error));
+    } else {
+        stream = Context_()->DefaultStream_();
+        maintainceTask = stream->AllocTask(&submitTaskInfo, TS_TASK_TYPE_MODEL_MAINTAINCE, errorReason);
+        NULL_PTR_RETURN_MSG(maintainceTask, errorReason);
+
+        (void)ModelMaintainceTaskInit(
+            maintainceTask, MMT_MODEL_PRE_PROC, this, stream, RT_MODEL_HEAD_STREAM, GetFirstTaskId());
+
+        error = dev->SubmitTask(maintainceTask);
+        ERROR_GOTO_MSG_INNER(
+            error, ERROR_TASK, "Failed to submit model pre proc task, retCode=%#x.", static_cast<uint32_t>(error));
+    }
+    SetNeedSubmitTask(true);
+
+    error = LoadCompleteByStreamPostp(stream);
+    ERROR_RETURN_MSG_INNER(error, "Postprocess of load completion failed, retCode=%#x.", static_cast<uint32_t>(error));
+
+    return error;
+ERROR_TASK:
+    (void)dev->GetTaskFactory()->Recycle(maintainceTask);
+    return error;
+}
+
+rtError_t CaptureModel::LoadComplete()
+{
+    Device* const dev = Context_()->Device_();
+    if (dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_TASK_ALLOC_FROM_STREAM_POOL)) {
+        return ModelLoadCompleteByStream(this);
+    }
+
+    return LoadCompleteByStream();
 }
 
 rtError_t CaptureModel::SetNotifyBeforeExecute(Stream* const exeStm, CaptureModel* const captureMdl)
@@ -603,7 +706,7 @@ rtError_t CaptureModel::RebuildAllExternalTaskSqes() const
             (taskInfo == nullptr) || (taskInfo->type != TS_TASK_TYPE_CAPTURE_RECORD_EXTERNAL), RT_ERROR_INVALID_VALUE,
             "External record task is invalid, model_id=%u, stream_id=%u, task_id=%u.", Id_(), taskRef.captureStreamId,
             taskRef.taskId);
-        const rtError_t error = RebuildExternalTaskSqe(taskInfo);
+        const rtError_t error = UpdateHostSqeBufferByTask(taskInfo);
         ERROR_RETURN(
             error, "Failed to rebuild external record SQE, model_id=%u, retCode=%#x.", Id_(),
             static_cast<uint32_t>(error));
@@ -614,7 +717,7 @@ rtError_t CaptureModel::RebuildAllExternalTaskSqes() const
             (taskInfo == nullptr) || (taskInfo->type != TS_TASK_TYPE_CAPTURE_WAIT_EXTERNAL), RT_ERROR_INVALID_VALUE,
             "External wait task is invalid, model_id=%u, stream_id=%u, task_id=%u.", Id_(), taskRef.captureStreamId,
             taskRef.taskId);
-        const rtError_t error = RebuildExternalTaskSqe(taskInfo);
+        const rtError_t error = UpdateHostSqeBufferByTask(taskInfo);
         ERROR_RETURN(
             error, "Failed to rebuild external wait SQE, model_id=%u, retCode=%#x.", Id_(),
             static_cast<uint32_t>(error));
@@ -1338,7 +1441,7 @@ rtError_t CaptureModel::UpdateStreamActiveTaskFuncCallMem(void)
         error = ReConstructStreamActiveTaskFc(task);
         if (error != RT_ERROR_NONE) {
             RT_LOG(
-                RT_LOG_ERROR, "reconstruct stream active task failed, device_id=%u, model_id=%u, retCode=%#x.",
+                RT_LOG_ERROR, "Failed to reconstruct stream active task, device_id=%u, model_id=%u, retCode=%#x.",
                 Context_()->Device_()->Id_(), Id_(), static_cast<uint32_t>(error));
             break;
         }
@@ -1630,10 +1733,16 @@ void CaptureModel::ReportShapeInfoForProfilingForAllModels()
 rtError_t CaptureModel::RestoreForSoftwareSqForOneModels(Device* const dev)
 {
     RT_LOG(RT_LOG_INFO, "Begin restore capture model, modelId=%u, deviceId=%u.", Id_(), dev->Id_());
+    ResetFuncCallMem(dev);
+    SetIsSendSqe(false);
     for (auto& stream : StreamList_()) {
-        const rtError_t error = stream->RestoreForSoftwareSq();
+        rtError_t error = stream->RestoreForSoftwareSq();
         COND_RETURN_ERROR(
             (error != RT_ERROR_NONE), error, "Restore capture stream failed, streamId=%d, deviceId=%u, retCode=%#x.",
+            stream->Id_(), dev->Id_(), error);
+        error = stream->UpdateSnapShotSqe();
+        COND_RETURN_ERROR(
+            (error != RT_ERROR_NONE), error, "Stream UpdateSnapShotSqe failed, streamId=%d, deviceId=%u, retCode=%#x.",
             stream->Id_(), dev->Id_(), error);
     }
 
@@ -1668,7 +1777,6 @@ rtError_t CaptureModel::RestoreForSoftwareSqForOneModels(Device* const dev)
     DELETE_A(sqCqArray_);
     sqCqNum_ = 0U;
     DELETE_A(switchInfo_);
-    SetIsSendSqe(false);
     refCount_ = 0;
     RestoreJettyForSnapshot();
     return RT_ERROR_NONE;
@@ -1687,6 +1795,9 @@ rtError_t CaptureModel::RestoreForSoftwareSq(Device* const dev)
             (error != RT_ERROR_NONE), error, "Restore capture stream failed, model_Id=%u, ret=%d.", curMdl->Id_(),
             error);
     }
+
+    uint32_t releaseNtyNum = 0;
+    (void)ReleaseNotifyId(releaseNtyNum);
 
     return RT_ERROR_NONE;
 }

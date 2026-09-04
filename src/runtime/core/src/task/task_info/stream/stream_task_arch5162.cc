@@ -64,6 +64,12 @@ rtError_t StreamActiveTaskInit(TaskInfo* taskInfo, const Stream* const stm)
     return RT_ERROR_NONE;
 }
 
+rtError_t UpdateStreamActiveTaskFuncCallForSnapshot(TaskInfo* taskInfo)
+{
+    UNUSED(taskInfo);
+    return RT_ERROR_NONE;
+}
+
 #endif
 
 #if F_DESC("CallbackLaunchTask")

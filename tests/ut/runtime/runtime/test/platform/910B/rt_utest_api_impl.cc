@@ -46,6 +46,7 @@
 #include "device_msg_handler.hpp"
 #include "ttlv.hpp"
 #include "model.hpp"
+#include "capture_model.hpp"
 #include "task_info.hpp"
 #include "platform/platform_info.h"
 #include "soc_info.h"
@@ -55,6 +56,7 @@
 #include "maintenance_task.h"
 #include "model/capture_model_utils.hpp"
 #include "inner_thread_local.hpp"
+#include "rt_capture_model_mock_helper.hpp"
 
 using namespace testing;
 using namespace cce::runtime;
@@ -98,7 +100,6 @@ TEST_F(CloudV2ApiImplTest, capture_api_01)
     Model* model;
     Api* oldApi_ = const_cast<Api*>(Runtime::runtime_->api_);
     ApiDecorator* apiDecorator_ = new ApiDecorator(oldApi_);
-    MOCKER_CPP(&Model::LoadCompleteByStreamPostp).stubs().will(returnValue(RT_ERROR_NONE));
 
     rtContext_t current = NULL;
     error = rtCtxGetCurrent(&current);
@@ -113,6 +114,7 @@ TEST_F(CloudV2ApiImplTest, capture_api_01)
 
     error = apiDecorator_->StreamBeginCapture(stream, RT_STREAM_CAPTURE_MODE_GLOBAL);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    MOCK_CAPTURE_MODEL_LOAD_COMPLETE(stream);
 
     error = apiDecorator_->StreamEndCapture(stream, &model);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -132,7 +134,6 @@ TEST_F(CloudV2ApiImplTest, capture_api_02)
 
     Api* oldApi_ = const_cast<Api*>(Runtime::runtime_->api_);
     ApiDecorator* apiDecorator_ = new ApiDecorator(oldApi_);
-    MOCKER_CPP(&Model::LoadCompleteByStreamPostp).stubs().will(returnValue(RT_ERROR_NONE));
 
     rtContext_t current = NULL;
     error = rtCtxGetCurrent(&current);
@@ -151,6 +152,7 @@ TEST_F(CloudV2ApiImplTest, capture_api_02)
     error = apiDecorator_->StreamGetCaptureInfo(stream, &status, &model);
     EXPECT_EQ(error, RT_ERROR_NONE);
     EXPECT_EQ(status, RT_STREAM_CAPTURE_STATUS_ACTIVE);
+    MOCK_CAPTURE_MODEL_LOAD_COMPLETE(stream);
 
     error = apiDecorator_->StreamEndCapture(stream, &model);
     EXPECT_EQ(error, RT_ERROR_NONE);

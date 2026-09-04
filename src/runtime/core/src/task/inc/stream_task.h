@@ -27,6 +27,7 @@ rtError_t PrepareSqeInfoForStreamActiveTask(TaskInfo* taskInfo);
 rtError_t StreamActiveTaskInit(TaskInfo* taskInfo, const Stream* const stm);
 rtError_t ReConstructStreamActiveTaskFcDefault(TaskInfo* taskInfo);
 rtError_t ReConstructStreamActiveTaskFc(TaskInfo* taskInfo);
+rtError_t UpdateStreamActiveTaskFuncCallForSnapshot(TaskInfo* taskInfo);
 void ToCommandBodyForStreamActiveTask(TaskInfo* taskInfo, rtCommand_t* const command);
 void StreamActiveTaskUnInit(TaskInfo* const taskInfo);
 void PrintErrorInfoForStreamActiveTask(TaskInfo* taskInfo, const uint32_t devId);

@@ -296,6 +296,12 @@ rtError_t MemcpyAsyncTaskCommonInit(TaskInfo* const taskInfo)
     memcpyAsyncTaskInfo->copyMethod = 0U;
     memcpyAsyncTaskInfo->copyKind = 0U;
     memcpyAsyncTaskInfo->size = 0U;
+    memcpyAsyncTaskInfo->copySize = 0U;
+    memcpyAsyncTaskInfo->dstPitch = 0U;
+    memcpyAsyncTaskInfo->srcPitch = 0U;
+    memcpyAsyncTaskInfo->width = 0U;
+    memcpyAsyncTaskInfo->height = 0U;
+    memcpyAsyncTaskInfo->fixedSize = 0U;
     memcpyAsyncTaskInfo->src = nullptr;
     memcpyAsyncTaskInfo->destPtr = nullptr;
     memcpyAsyncTaskInfo->srcPtr = nullptr;
@@ -476,6 +482,14 @@ rtError_t MemcpyAsyncTaskInitV2(
     MemcpyAsyncTaskInfo* memcpyAsyncTaskInfo = &(taskInfo->u.memcpyAsyncTaskInfo);
     Stream* const stream = taskInfo->stream;
     Driver* const driver = taskInfo->stream->Device_()->Driver_();
+    memcpyAsyncTaskInfo->src = const_cast<void*>(srcAddr);
+    memcpyAsyncTaskInfo->destPtr = dst;
+    memcpyAsyncTaskInfo->dstPitch = dstPitch;
+    memcpyAsyncTaskInfo->srcPitch = srcPitch;
+    memcpyAsyncTaskInfo->width = width;
+    memcpyAsyncTaskInfo->height = height;
+    memcpyAsyncTaskInfo->fixedSize = fixedSize;
+    memcpyAsyncTaskInfo->copyKind = kind;
 
     if (kind == RT_MEMCPY_HOST_TO_DEVICE) {
         memcpyAsyncTaskInfo->copyType = RT_MEMCPY_DIR_H2D;
@@ -495,8 +509,6 @@ rtError_t MemcpyAsyncTaskInitV2(
     // d2d copy data convert
     if ((copyType == RT_MEMCPY_DIR_D2D_SDMA) || (copyType == RT_MEMCPY_DIR_D2D_HCCs) ||
         (copyType == RT_MEMCPY_DIR_D2D_PCIe)) {
-        memcpyAsyncTaskInfo->src = const_cast<void*>(srcAddr);
-        memcpyAsyncTaskInfo->destPtr = dst;
         RT_LOG(
             RT_LOG_DEBUG,
             "MemcpyAsync2dTask Init, dstPitch=%" PRIu64 ", srcPitch=%" PRIu64 ", width=%" PRIu64 ", height=%" PRIu64
@@ -564,6 +576,7 @@ rtError_t MemcpyAsyncTaskInitV3(
         error != RT_ERROR_NONE, error, "Failed to convert copy type, retCode=%#x, size=%" PRIu64 "(bytes).", error,
         cpySize);
     memcpyAsyncTaskInfo->size = cpySize;
+    memcpyAsyncTaskInfo->copySize = cpySize;
     if (cfgInfo != nullptr) {
         memcpyAsyncTaskInfo->qos = cfgInfo->qos;
         memcpyAsyncTaskInfo->partId = cfgInfo->partId;
@@ -644,6 +657,70 @@ rtError_t MemcpyAsyncTaskInitV3(
         memcpyAsyncTaskInfo->size = memcpyAsyncTaskInfo->dmaAddr.fixed_size;
     }
 
+    return RT_ERROR_NONE;
+}
+
+static bool NeedUpdateMemcpy2DDmaForSnapshot(const uint32_t copyType)
+{
+    if ((copyType == RT_MEMCPY_DIR_D2D_SDMA) || (copyType == RT_MEMCPY_DIR_D2D_HCCs) ||
+        (copyType == RT_MEMCPY_DIR_D2D_PCIe)) {
+        return false;
+    }
+    if (IsDavidUbDma(copyType)) {
+        return false;
+    }
+    return (copyType == RT_MEMCPY_DIR_H2D) || (copyType == RT_MEMCPY_DIR_D2H);
+}
+
+static bool NeedUpdateMemcpy1DDmaForSnapshot(Driver* const driver, const uint32_t copyType)
+{
+    return (driver->GetRunMode() == RT_RUN_MODE_ONLINE) && IsPcieDma(copyType);
+}
+
+bool NeedUpdateMemcpyTaskInfoForSnapshot(const TaskInfo* const taskInfo)
+{
+    const MemcpyAsyncTaskInfo* const memcpyAsyncTaskInfo = &(taskInfo->u.memcpyAsyncTaskInfo);
+    const uint32_t copyType = memcpyAsyncTaskInfo->copyType;
+    if (memcpyAsyncTaskInfo->copyMethod == static_cast<uint8_t>(rtAsyncCpyMethod::RT_ASYNC_CPY_2D)) {
+        return NeedUpdateMemcpy2DDmaForSnapshot(copyType);
+    }
+    if (memcpyAsyncTaskInfo->copyMethod == static_cast<uint8_t>(rtAsyncCpyMethod::RT_ASYNC_CPY)) {
+        return NeedUpdateMemcpy1DDmaForSnapshot(taskInfo->stream->Device_()->Driver_(), copyType);
+    }
+
+    RT_LOG(
+        RT_LOG_DEBUG, "Skip snapshot dma update for memcpy task, stream_id=%d, task_id=%hu, copyMethod=%u.",
+        taskInfo->stream->Id_(), taskInfo->id, static_cast<uint32_t>(memcpyAsyncTaskInfo->copyMethod));
+    return false;
+}
+
+rtError_t UpdateMemcpyTaskInfoForSnapshot(TaskInfo* const taskInfo)
+{
+    MemcpyAsyncTaskInfo* const memcpyAsyncTaskInfo = &(taskInfo->u.memcpyAsyncTaskInfo);
+    Stream* const stream = taskInfo->stream;
+    Driver* const driver = stream->Device_()->Driver_();
+
+    if (memcpyAsyncTaskInfo->copyMethod == static_cast<uint8_t>(rtAsyncCpyMethod::RT_ASYNC_CPY_2D)) {
+        memcpyAsyncTaskInfo->dmaAddr.offsetAddr.devid = static_cast<uint32_t>(stream->Device_()->Id_());
+        const rtError_t error = driver->MemCopy2D(
+            memcpyAsyncTaskInfo->destPtr, memcpyAsyncTaskInfo->dstPitch, memcpyAsyncTaskInfo->src,
+            memcpyAsyncTaskInfo->srcPitch, memcpyAsyncTaskInfo->width, memcpyAsyncTaskInfo->height,
+            memcpyAsyncTaskInfo->copyKind, DEVMM_MEMCPY2D_ASYNC_CONVERT, memcpyAsyncTaskInfo->fixedSize,
+            &(memcpyAsyncTaskInfo->dmaAddr));
+        ERROR_RETURN_MSG_INNER(error, "MemCopy2D failed, retCode=%#x.", error);
+        memcpyAsyncTaskInfo->size = memcpyAsyncTaskInfo->dmaAddr.fixed_size;
+        return RT_ERROR_NONE;
+    }
+    if (memcpyAsyncTaskInfo->copyMethod == static_cast<uint8_t>(rtAsyncCpyMethod::RT_ASYNC_CPY)) {
+        memcpyAsyncTaskInfo->dmaAddr.offsetAddr.devid = static_cast<uint32_t>(stream->Device_()->Id_());
+        const rtError_t error = driver->MemConvertAddr(
+            RtPtrToValue(memcpyAsyncTaskInfo->src), RtPtrToValue(memcpyAsyncTaskInfo->destPtr),
+            memcpyAsyncTaskInfo->copySize, &(memcpyAsyncTaskInfo->dmaAddr));
+        ERROR_RETURN_MSG_INNER(
+            error, "Failed to convert memory address from virtual to dma physical, retCode=%#x.", error);
+        memcpyAsyncTaskInfo->size = memcpyAsyncTaskInfo->dmaAddr.fixed_size;
+        return RT_ERROR_NONE;
+    }
     return RT_ERROR_NONE;
 }
 

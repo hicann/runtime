@@ -58,6 +58,7 @@
 #include "runtime/rts/rts_stream.h"
 #include "api_c.h"
 #include "rt_unwrap.h"
+#include "rt_capture_model_mock_helper.hpp"
 #include "../../data/elf.h"
 #undef protected
 #undef private
@@ -171,7 +172,6 @@ TEST_F(ApiCloudV2DisableThreadTest, capture_event_external)
     MOCKER_CPP(&Stream::StarsWaitForTask).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP(&Stream::IsStreamFull).stubs().will(returnValue(false));
     MOCKER_CPP_VIRTUAL(stream, &Stream::AddTaskToList).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP(&Model::LoadCompleteByStreamPostp).stubs().will(returnValue(RT_ERROR_NONE));
 
     error = rtStreamCreate(&stream1, 0);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
@@ -184,6 +184,7 @@ TEST_F(ApiCloudV2DisableThreadTest, capture_event_external)
 
     error = rtStreamBeginCapture(stream1, RT_STREAM_CAPTURE_MODE_GLOBAL);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
+    MOCK_CAPTURE_MODEL_LOAD_COMPLETE(stream1);
 
     error = rtEventRecord(event, stream2);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
@@ -245,7 +246,6 @@ TEST_F(ApiCloudV2DisableThreadTest, capture_event_external2)
     MOCKER_CPP(&Stream::StarsWaitForTask).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP(&Stream::IsStreamFull).stubs().will(returnValue(false));
     MOCKER_CPP_VIRTUAL(stream, &Stream::AddTaskToList).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP(&Model::LoadCompleteByStreamPostp).stubs().will(returnValue(RT_ERROR_NONE));
 
     error = rtStreamCreate(&stream1, 0);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
@@ -258,6 +258,7 @@ TEST_F(ApiCloudV2DisableThreadTest, capture_event_external2)
 
     error = rtStreamBeginCapture(stream1, RT_STREAM_CAPTURE_MODE_GLOBAL);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
+    MOCK_CAPTURE_MODEL_LOAD_COMPLETE(stream1);
 
     error = rtEventRecord(event, stream1);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
@@ -356,13 +357,13 @@ TEST_F(ApiCloudV2DisableThreadTest, task_group_create)
     MOCKER_CPP(&Stream::StarsWaitForTask).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP(&Stream::IsStreamFull).stubs().will(returnValue(false));
     MOCKER_CPP_VIRTUAL(stream, &Stream::AddTaskToList).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP(&Model::LoadCompleteByStreamPostp).stubs().will(returnValue(RT_ERROR_NONE));
 
     error = rtStreamCreate(&stream1, 0);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
 
     error = rtStreamBeginCapture(stream1, RT_STREAM_CAPTURE_MODE_GLOBAL);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
+    MOCK_CAPTURE_MODEL_LOAD_COMPLETE(stream1);
 
     error = rtsStreamBeginTaskGrp(nullptr);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
@@ -419,7 +420,6 @@ TEST_F(ApiCloudV2DisableThreadTest, capture_event_not_support)
     MOCKER_CPP(&Stream::StarsWaitForTask).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP(&Stream::IsStreamFull).stubs().will(returnValue(false));
     MOCKER_CPP_VIRTUAL(stream, &Stream::AddTaskToList).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP(&Model::LoadCompleteByStreamPostp).stubs().will(returnValue(RT_ERROR_NONE));
 
     error = rtStreamCreate(&stream1, 0);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
@@ -435,6 +435,7 @@ TEST_F(ApiCloudV2DisableThreadTest, capture_event_not_support)
 
     error = rtStreamBeginCapture(stream1, RT_STREAM_CAPTURE_MODE_GLOBAL);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
+    MOCK_CAPTURE_MODEL_LOAD_COMPLETE(stream1);
 
     error = rtKernelLaunch(&function_, 1, (void*)args, sizeof(args), nullptr, stream1);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -477,7 +478,6 @@ TEST_F(ApiCloudV2DisableThreadTest, task_group_unclosed)
     rtTaskGrp_t taskGrpHandle = nullptr;
 
     MOCKER_CPP(&Stream::StarsWaitForTask).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP(&Model::LoadCompleteByStreamPostp).stubs().will(returnValue(RT_ERROR_NONE));
 
     error = rtStreamCreate(&stream1, 0);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
@@ -487,6 +487,7 @@ TEST_F(ApiCloudV2DisableThreadTest, task_group_unclosed)
 
     error = rtStreamBeginCapture(stream1, RT_STREAM_CAPTURE_MODE_GLOBAL);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
+    MOCK_CAPTURE_MODEL_LOAD_COMPLETE(stream1);
 
     error = rtsStreamEndTaskGrp(stream1, &taskGrpHandle);
     EXPECT_EQ(error, ACL_ERROR_STREAM_TASK_GROUP_STATUS);
@@ -553,13 +554,13 @@ TEST_F(ApiCloudV2DisableThreadTest, task_group_repeat)
     MOCKER_CPP(&Stream::StarsWaitForTask).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP(&Stream::IsStreamFull).stubs().will(returnValue(false));
     MOCKER_CPP_VIRTUAL(stream, &Stream::AddTaskToList).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP(&Model::LoadCompleteByStreamPostp).stubs().will(returnValue(RT_ERROR_NONE));
 
     error = rtStreamCreate(&stream1, 0);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
 
     error = rtStreamBeginCapture(stream1, RT_STREAM_CAPTURE_MODE_GLOBAL);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
+    MOCK_CAPTURE_MODEL_LOAD_COMPLETE(stream1);
 
     error = rtsStreamBeginTaskGrp(stream1);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
@@ -605,13 +606,13 @@ TEST_F(ApiCloudV2DisableThreadTest, task_group_update)
     MOCKER_CPP(&Stream::StarsWaitForTask).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP(&Stream::IsStreamFull).stubs().will(returnValue(false));
     MOCKER_CPP_VIRTUAL(stream, &Stream::AddTaskToList).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP(&Model::LoadCompleteByStreamPostp).stubs().will(returnValue(RT_ERROR_NONE));
 
     error = rtStreamCreate(&stream1, 0);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
 
     error = rtStreamBeginCapture(stream1, RT_STREAM_CAPTURE_MODE_GLOBAL);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
+    MOCK_CAPTURE_MODEL_LOAD_COMPLETE(stream1);
 
     error = rtsStreamBeginTaskGrp(stream1);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
@@ -659,7 +660,6 @@ TEST_F(ApiCloudV2DisableThreadTest, task_group_update_task)
     MOCKER_CPP(&Stream::IsStreamFull).stubs().will(returnValue(false));
     MOCKER_CPP_VIRTUAL(stream, &Stream::AddTaskToList).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(device, &Device::CheckFeatureSupport).stubs().will(returnValue(true));
-    MOCKER_CPP(&Model::LoadCompleteByStreamPostp).stubs().will(returnValue(RT_ERROR_NONE));
 
     error = rtStreamCreate(&stream1, 0);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
@@ -672,6 +672,7 @@ TEST_F(ApiCloudV2DisableThreadTest, task_group_update_task)
 
     error = rtStreamBeginCapture(stream1, RT_STREAM_CAPTURE_MODE_GLOBAL);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
+    MOCK_CAPTURE_MODEL_LOAD_COMPLETE(stream1);
 
     error = rtsStreamBeginTaskGrp(stream1);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
@@ -746,7 +747,6 @@ TEST_F(ApiCloudV2DisableThreadTest, task_group_cascade)
     MOCKER_CPP(&Stream::IsStreamFull).stubs().will(returnValue(false));
     MOCKER_CPP_VIRTUAL(stream, &Stream::AddTaskToList).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(device, &Device::CheckFeatureSupport).stubs().will(returnValue(true));
-    MOCKER_CPP(&Model::LoadCompleteByStreamPostp).stubs().will(returnValue(RT_ERROR_NONE));
 
     error = rtStreamCreate(&stream2, 0);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
@@ -755,6 +755,7 @@ TEST_F(ApiCloudV2DisableThreadTest, task_group_cascade)
     MOCKER_CPP_VIRTUAL(rawDrv, &NpuDriver::GetRunMode).stubs().will(returnValue(1));
     error = rtStreamBeginCapture(stream1, RT_STREAM_CAPTURE_MODE_GLOBAL);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
+    MOCK_CAPTURE_MODEL_LOAD_COMPLETE(stream1);
 
     error = rtsStreamBeginTaskGrp(stream1);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
@@ -839,7 +840,6 @@ TEST_F(ApiCloudV2DisableThreadTest, task_group_cascade2)
     MOCKER_CPP(&Stream::IsStreamFull).stubs().will(returnValue(false));
     MOCKER_CPP_VIRTUAL(stream, &Stream::AddTaskToList).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(device, &Device::CheckFeatureSupport).stubs().will(returnValue(true));
-    MOCKER_CPP(&Model::LoadCompleteByStreamPostp).stubs().will(returnValue(RT_ERROR_NONE));
 
     error = rtStreamCreate(&stream2, 0);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
@@ -848,6 +848,7 @@ TEST_F(ApiCloudV2DisableThreadTest, task_group_cascade2)
     MOCKER_CPP_VIRTUAL(rawDrv, &NpuDriver::GetRunMode).stubs().will(returnValue(1));
     error = rtStreamBeginCapture(stream1, RT_STREAM_CAPTURE_MODE_GLOBAL);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
+    MOCK_CAPTURE_MODEL_LOAD_COMPLETE(stream1);
 
     error = rtsStreamBeginTaskGrp(stream1);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
@@ -920,7 +921,6 @@ TEST_F(ApiCloudV2DisableThreadTest, task_group_capture_invalid)
     MOCKER_CPP(&Stream::IsStreamFull).stubs().will(returnValue(false));
     MOCKER_CPP_VIRTUAL(stream, &Stream::AddTaskToList).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP(&Context::AllocCascadeCaptureStream).stubs().will(returnValue(RT_ERROR_DRV_NO_RESOURCES));
-    MOCKER_CPP(&Model::LoadCompleteByStreamPostp).stubs().will(returnValue(RT_ERROR_NONE));
 
     error = rtStreamCreate(&stream1, 0);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
@@ -972,7 +972,6 @@ TEST_F(ApiCloudV2DisableThreadTest, ModelDebugJsonPrint_AicpuTask)
     MOCKER_CPP(&Stream::IsStreamFull).stubs().will(returnValue(false));
     MOCKER_CPP_VIRTUAL(stream, &Stream::AddTaskToList).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(device, &Device::CheckFeatureSupport).stubs().will(returnValue(true));
-    MOCKER_CPP(&Model::LoadCompleteByStreamPostp).stubs().will(returnValue(RT_ERROR_NONE));
 
     error = rtStreamCreate(&stream2, 0);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
@@ -981,6 +980,7 @@ TEST_F(ApiCloudV2DisableThreadTest, ModelDebugJsonPrint_AicpuTask)
 
     error = rtStreamBeginCapture(stream1, RT_STREAM_CAPTURE_MODE_GLOBAL);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
+    MOCK_CAPTURE_MODEL_LOAD_COMPLETE(stream1);
 
     error = rtsStreamBeginTaskGrp(stream1);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
@@ -1064,7 +1064,6 @@ TEST_F(ApiCloudV2DisableThreadTest, ModelDebugJsonPrint_Error_01)
     MOCKER_CPP(&Stream::IsStreamFull).stubs().will(returnValue(false));
     MOCKER_CPP_VIRTUAL(stream, &Stream::AddTaskToList).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(device, &Device::CheckFeatureSupport).stubs().will(returnValue(true));
-    MOCKER_CPP(&Model::LoadCompleteByStreamPostp).stubs().will(returnValue(RT_ERROR_NONE));
 
     error = rtStreamCreate(&stream2, 0);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
@@ -1073,6 +1072,7 @@ TEST_F(ApiCloudV2DisableThreadTest, ModelDebugJsonPrint_Error_01)
 
     error = rtStreamBeginCapture(stream1, RT_STREAM_CAPTURE_MODE_GLOBAL);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
+    MOCK_CAPTURE_MODEL_LOAD_COMPLETE(stream1);
 
     error = rtsStreamBeginTaskGrp(stream1);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
@@ -1148,7 +1148,6 @@ TEST_F(ApiCloudV2DisableThreadTest, task_group_update_1)
     MOCKER_CPP(&Stream::StarsWaitForTask).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP(&Stream::IsStreamFull).stubs().will(returnValue(false));
     MOCKER_CPP_VIRTUAL(stream, &Stream::AddTaskToList).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP(&Model::LoadCompleteByStreamPostp).stubs().will(returnValue(RT_ERROR_NONE));
 
     error = rtStreamCreate(&stream1, 0);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
@@ -1157,6 +1156,7 @@ TEST_F(ApiCloudV2DisableThreadTest, task_group_update_1)
 
     error = rtStreamBeginCapture(stream1, RT_STREAM_CAPTURE_MODE_GLOBAL);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
+    MOCK_CAPTURE_MODEL_LOAD_COMPLETE(stream1);
 
     error = rtsStreamBeginTaskGrp(stream1);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
@@ -1215,13 +1215,13 @@ TEST_F(ApiCloudV2DisableThreadTest, task_group_update_2)
     MOCKER_CPP(&Stream::StarsWaitForTask).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP(&Stream::IsStreamFull).stubs().will(returnValue(false));
     MOCKER_CPP_VIRTUAL(stream, &Stream::AddTaskToList).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP(&Model::LoadCompleteByStreamPostp).stubs().will(returnValue(RT_ERROR_NONE));
 
     error = rtStreamCreate(&stream1, 0);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
 
     error = rtStreamBeginCapture(stream1, RT_STREAM_CAPTURE_MODE_GLOBAL);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
+    MOCK_CAPTURE_MODEL_LOAD_COMPLETE(stream1);
 
     error = rtsStreamBeginTaskGrp(stream1);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
@@ -1308,7 +1308,6 @@ TEST_F(ApiCloudV2DisableThreadTest, task_group_update_4)
     MOCKER_CPP(&Stream::IsStreamFull).stubs().will(returnValue(false));
     MOCKER_CPP_VIRTUAL(stream, &Stream::AddTaskToList).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(device, &Device::CheckFeatureSupport).stubs().will(returnValue(true));
-    MOCKER_CPP(&Model::LoadCompleteByStreamPostp).stubs().will(returnValue(RT_ERROR_NONE));
 
     error = rtStreamCreate(&stream1, 0);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
@@ -1317,6 +1316,7 @@ TEST_F(ApiCloudV2DisableThreadTest, task_group_update_4)
 
     error = rtStreamBeginCapture(stream1, RT_STREAM_CAPTURE_MODE_GLOBAL);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
+    MOCK_CAPTURE_MODEL_LOAD_COMPLETE(stream1);
 
     error = rtsStreamBeginTaskGrp(stream1);
     EXPECT_EQ(error, ACL_RT_SUCCESS);

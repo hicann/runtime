@@ -43,7 +43,7 @@ rtError_t CaptureModel::BindSqCqAndSendSqe(void)
     return error;
 }
 
-rtError_t RebuildExternalTaskSqe(TaskInfo* const task)
+rtError_t UpdateHostSqeBufferByTask(TaskInfo* const task)
 {
     if ((task == nullptr) || (task->stream == nullptr)) {
         return RT_ERROR_INVALID_VALUE;

@@ -9,6 +9,7 @@
  */
 #include "../../rt_utest_api.hpp"
 #include "../../data/elf.h"
+#include "rt_capture_model_mock_helper.hpp"
 
 rtError_t CmoTaskInitStub(
     TaskInfo* taskInfo, const rtCmoTaskInfo_t* const cmoTaskInfo, const Stream* const stm, const uint32_t flag)
@@ -186,7 +187,6 @@ TEST_F(RtOthersApiTest, capture_api_37)
     rtModel_t captureMdl;
     rtCallback_t stub_func = (rtCallback_t)0x12345;
 
-    MOCKER_CPP(&Model::LoadCompleteByStreamPostp).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP(&Context::CreateContextCallBackThread).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP(&CbSubscribe::GetThreadIdByStreamId).stubs().will(invoke(GetThreadIdByStreamIdStub));
     MOCKER_CPP(&DevInfoManage::IsSupportChipFeature).stubs().will(returnValue(true));
@@ -196,6 +196,7 @@ TEST_F(RtOthersApiTest, capture_api_37)
 
     error = rtStreamBeginCapture(stream, RT_STREAM_CAPTURE_MODE_GLOBAL);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    MOCK_CAPTURE_MODEL_LOAD_COMPLETE(stream);
 
     error = rtsLaunchHostFunc(stream, stub_func, nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);

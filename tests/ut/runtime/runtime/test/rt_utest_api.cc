@@ -7210,7 +7210,6 @@ TEST_F(ApiTest, ModelDebugJsonPrint_Error_02)
 
     rtInstance->SetChipType(CHIP_DAVID);
     GlobalContainer::SetRtChipType(CHIP_DAVID);
-    MOCKER_CPP(&Model::LoadCompleteByStreamPostp).stubs().will(returnValue(RT_ERROR_NONE));
 
     error = rtModelDebugJsonPrint(nullptr, "graph_dump.json", 0);
     EXPECT_EQ(error, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);

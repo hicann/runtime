@@ -37,6 +37,7 @@
 #include "profiler.hpp"
 #include "api_profile_decorator.hpp"
 #include "api_profile_log_decorator.hpp"
+#include "api_handle_guard.h"
 #include "device_state_callback_manager.hpp"
 #include "task_fail_callback_manager.hpp"
 #include "model.hpp"
@@ -747,7 +748,7 @@ TEST_F(CloudV2ApiAbnormalTest, ModelDebugJsonPrint_Error)
 
     Runtime* rtInstance = (Runtime*)Runtime::Instance();
 
-    MOCKER_CPP(&Model::LoadCompleteByStreamPostp).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(&cce::runtime::ValidateModelHandleForApi).stubs().will(returnValue(ACL_ERROR_RT_PARAM_INVALID));
 
     error = rtModelDebugJsonPrint(nullptr, "graph_dump.json", 0);
     EXPECT_NE(error, RT_ERROR_NONE);

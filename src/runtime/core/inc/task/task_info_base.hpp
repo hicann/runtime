@@ -250,7 +250,13 @@ struct MemcpyAsyncTaskInfo {
     void* releaseArgHandle; // old argHandle will be release after update
     void* updateArgHandle;
     std::vector<std::shared_ptr<void>>* guardMemVec;
-    uint64_t size;
+    uint64_t size;     // SQE 实际搬运长度 / fixed_size
+    uint64_t copySize; // 原始传给 MemConvertAddr 的 len
+    uint64_t dstPitch;
+    uint64_t srcPitch;
+    uint64_t width;
+    uint64_t height;
+    uint64_t fixedSize;
     uint32_t copyType;
     uint32_t copyKind;
     uint8_t copyDataType;

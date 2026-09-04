@@ -437,8 +437,10 @@ rtError_t ModelLoadCompleteByStream(Model* const mdl)
 
     Device* const dev = mdl->Context_()->Device_();
     if (dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ)) {
+        stream = mdl->Context_()->GetCtrlSQStream();
         error = dev->GetCtrlSQ().SendModelLoadCompleteMsg(mdl, mdl->GetFirstTaskId());
     } else {
+        stream = mdl->Context_()->DefaultStream_();
         error = SubmitLoadCompleteDirectly(mdl, stream);
     }
     ERROR_RETURN_MSG_INNER(error, "Failed to submit load complete task, retCode=%#x.", static_cast<uint32_t>(error));

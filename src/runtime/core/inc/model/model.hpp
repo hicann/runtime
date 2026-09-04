@@ -146,10 +146,13 @@ public:
     rtError_t BindStream(Stream* const streamIn, const uint32_t flag);
     rtError_t ModelUnBindTaskSubmit(Stream* const streamIn, const bool force);
     rtError_t UnbindStream(Stream* const streamIn, const bool force = false);
-    rtError_t LoadComplete();
-    rtError_t LoadCompleteByStreamPrep(Stream*& stream);
-    rtError_t LoadCompleteByStreamPostp(Stream* const stream);
-    rtError_t LoadCompleteByStream();
+    rtError_t UpdateLabelCountPtr() const;
+    void SetModelLoadComplete(bool isModelComplete) { isModelComplete_ = isModelComplete; }
+    bool CheckSqQuery(const Stream* const stm) const;
+    virtual rtError_t LoadComplete();
+    virtual rtError_t LoadCompleteByStreamPrep(Stream*& stream);
+    virtual rtError_t LoadCompleteByStreamPostp(Stream* const stream);
+    virtual rtError_t LoadCompleteByStream();
     virtual rtError_t Execute(Stream* const stm, int32_t timeout = -1);
     virtual rtError_t ExecuteSync(int32_t timeout = -1);
     virtual rtError_t ExecuteAsync(Stream* const stm);
@@ -314,6 +317,8 @@ public:
     uint16_t GetFuncCallInstrSize() const { return funcCallInstrSize_; }
 
     void SetFuncCallInstrSize(uint16_t size) { funcCallInstrSize_ = size; }
+
+    void ResetFuncCallMem(Device* const dev);
 
 private:
     /*

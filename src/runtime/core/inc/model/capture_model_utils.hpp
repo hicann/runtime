@@ -50,7 +50,7 @@ bool IsUbDmaWithSubModel(
 rtError_t CalculateExternalEventRefreshLayout(size_t recordCount, size_t waitCount, ExternalEventRefreshLayout* layout);
 size_t GetExternalRecordRefreshEntrySize(void);
 rtError_t FillExternalRecordRefreshEntry(void* const entry, uint64_t eventAddr);
-rtError_t RebuildExternalTaskSqe(TaskInfo* const task);
+rtError_t UpdateHostSqeBufferByTask(TaskInfo* const task);
 void RollbackExternalEventRefreshInfo(ExternalEventRefreshInfo* refreshInfo);
 void ReleaseRetainedEventResources(std::vector<EventResource>* resources);
 rtError_t InitExternalEventHostRefresh(

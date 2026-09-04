@@ -68,6 +68,7 @@
 #include "stars_cond_isa_helper.hpp"
 #include "cond_op_manager.hpp"
 #include "rt_unwrap.h"
+#include "rt_capture_model_mock_helper.hpp"
 #include "davinci_kernel_task.h"
 #include "task_scheduler_error.h"
 #include "capture_adapt.hpp"
@@ -2534,8 +2535,6 @@ protected:
             .will(returnValue(true));
 
         MOCKER(CheckCaptureModelSupportSoftwareSq).stubs().will(returnValue(RT_ERROR_NONE));
-
-        MOCKER_CPP(&Model::LoadCompleteByStreamPostp).stubs().will(returnValue(RT_ERROR_NONE));
     }
 
     virtual void TearDown()
@@ -2570,6 +2569,7 @@ TEST_F(DavidCondHandleTest, CondHandleWhileE2E)
     rtModel_t parentModel;
     ret = rtStreamGetCaptureInfo(stream, &status, &parentModel);
     EXPECT_EQ(ret, RT_ERROR_NONE);
+    MOCK_CAPTURE_MODEL_LOAD_COMPLETE_BY_MODEL(parentModel);
 
     rtCondHandle_t condHandle = nullptr;
     ret = rtModelCondHandleCreate(parentModel, 0, static_cast<rtCondHandleFlag_t>(0), &condHandle);
@@ -2590,6 +2590,7 @@ TEST_F(DavidCondHandleTest, CondHandleWhileE2E)
 
     ret = rtStreamBeginCaptureToModel(subStream, subModels[0], RT_STREAM_CAPTURE_MODE_THREAD_LOCAL);
     EXPECT_EQ(ret, RT_ERROR_NONE);
+    MOCK_CAPTURE_MODEL_LOAD_COMPLETE_BY_MODEL(subModels[0]);
 
     rtModel_t subModelResult;
     ret = rtStreamEndCapture(subStream, &subModelResult);
@@ -2630,6 +2631,7 @@ TEST_F(DavidCondHandleTest, CondHandleWhileWithAssignDefault)
     rtModel_t parentModel;
     ret = rtStreamGetCaptureInfo(stream, &status, &parentModel);
     EXPECT_EQ(ret, RT_ERROR_NONE);
+    MOCK_CAPTURE_MODEL_LOAD_COMPLETE_BY_MODEL(parentModel);
 
     rtCondHandle_t condHandle = nullptr;
     ret = rtModelCondHandleCreate(parentModel, 1, RT_COND_HANDLE_ASSIGN_DEFAULT, &condHandle);
@@ -2650,6 +2652,7 @@ TEST_F(DavidCondHandleTest, CondHandleWhileWithAssignDefault)
 
     ret = rtStreamBeginCaptureToModel(subStream, subModels[0], RT_STREAM_CAPTURE_MODE_THREAD_LOCAL);
     EXPECT_EQ(ret, RT_ERROR_NONE);
+    MOCK_CAPTURE_MODEL_LOAD_COMPLETE_BY_MODEL(subModels[0]);
 
     rtModel_t subModelResult;
     ret = rtStreamEndCapture(subStream, &subModelResult);
@@ -2694,6 +2697,7 @@ TEST_F(DavidCondHandleTest, CondHandleIfE2E)
     rtModel_t parentModel;
     ret = rtStreamGetCaptureInfo(stream, &status, &parentModel);
     EXPECT_EQ(ret, RT_ERROR_NONE);
+    MOCK_CAPTURE_MODEL_LOAD_COMPLETE_BY_MODEL(parentModel);
 
     rtCondHandle_t condHandle = nullptr;
     ret = rtModelCondHandleCreate(parentModel, 0, static_cast<rtCondHandleFlag_t>(0), &condHandle);
@@ -2714,12 +2718,14 @@ TEST_F(DavidCondHandleTest, CondHandleIfE2E)
 
     ret = rtStreamBeginCaptureToModel(subStream1, subModels[0], RT_STREAM_CAPTURE_MODE_THREAD_LOCAL);
     EXPECT_EQ(ret, RT_ERROR_NONE);
+    MOCK_CAPTURE_MODEL_LOAD_COMPLETE_BY_MODEL(subModels[0]);
     rtModel_t subModelResult1;
     ret = rtStreamEndCapture(subStream1, &subModelResult1);
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
     ret = rtStreamBeginCaptureToModel(subStream2, subModels[1], RT_STREAM_CAPTURE_MODE_THREAD_LOCAL);
     EXPECT_EQ(ret, RT_ERROR_NONE);
+    MOCK_CAPTURE_MODEL_LOAD_COMPLETE_BY_MODEL(subModels[1]);
     rtModel_t subModelResult2;
     ret = rtStreamEndCapture(subStream2, &subModelResult2);
     EXPECT_EQ(ret, RT_ERROR_NONE);
@@ -2761,6 +2767,7 @@ TEST_F(DavidCondHandleTest, CondHandleIfSizeOneE2E)
     rtModel_t parentModel;
     ret = rtStreamGetCaptureInfo(stream, &status, &parentModel);
     EXPECT_EQ(ret, RT_ERROR_NONE);
+    MOCK_CAPTURE_MODEL_LOAD_COMPLETE_BY_MODEL(parentModel);
 
     rtCondHandle_t condHandle = nullptr;
     ret = rtModelCondHandleCreate(parentModel, 0, static_cast<rtCondHandleFlag_t>(0), &condHandle);
@@ -2781,6 +2788,7 @@ TEST_F(DavidCondHandleTest, CondHandleIfSizeOneE2E)
 
     ret = rtStreamBeginCaptureToModel(subStream1, subModels[0], RT_STREAM_CAPTURE_MODE_THREAD_LOCAL);
     EXPECT_EQ(ret, RT_ERROR_NONE);
+    MOCK_CAPTURE_MODEL_LOAD_COMPLETE_BY_MODEL(subModels[0]);
     rtModel_t subModelResult1;
     ret = rtStreamEndCapture(subStream1, &subModelResult1);
     EXPECT_EQ(ret, RT_ERROR_NONE);
@@ -2823,6 +2831,7 @@ TEST_F(DavidCondHandleTest, CondHandleSwitchE2E)
     rtModel_t parentModel;
     ret = rtStreamGetCaptureInfo(stream, &status, &parentModel);
     EXPECT_EQ(ret, RT_ERROR_NONE);
+    MOCK_CAPTURE_MODEL_LOAD_COMPLETE_BY_MODEL(parentModel);
 
     rtCondHandle_t condHandle = nullptr;
     ret = rtModelCondHandleCreate(parentModel, 0, static_cast<rtCondHandleFlag_t>(0), &condHandle);
@@ -2844,6 +2853,7 @@ TEST_F(DavidCondHandleTest, CondHandleSwitchE2E)
     for (uint32_t i = 0; i < switchSize; i++) {
         ret = rtStreamBeginCaptureToModel(subStreams[i], subModels[i], RT_STREAM_CAPTURE_MODE_THREAD_LOCAL);
         EXPECT_EQ(ret, RT_ERROR_NONE);
+        MOCK_CAPTURE_MODEL_LOAD_COMPLETE_BY_MODEL(subModels[i]);
         rtModel_t subModelResult;
         ret = rtStreamEndCapture(subStreams[i], &subModelResult);
         EXPECT_EQ(ret, RT_ERROR_NONE);
@@ -2894,6 +2904,7 @@ TEST_F(DavidCondHandleTest, CondHandleIfNestedIfE2E)
     rtModel_t parentModel;
     ret = rtStreamGetCaptureInfo(parentStream, &status, &parentModel);
     EXPECT_EQ(ret, RT_ERROR_NONE);
+    MOCK_CAPTURE_MODEL_LOAD_COMPLETE_BY_MODEL(parentModel);
 
     rtCondHandle_t outerCondHandle = nullptr;
     ret = rtModelCondHandleCreate(parentModel, 0, static_cast<rtCondHandleFlag_t>(0), &outerCondHandle);
@@ -2919,6 +2930,7 @@ TEST_F(DavidCondHandleTest, CondHandleIfNestedIfE2E)
     rtModel_t ifTrueModel;
     ret = rtStreamGetCaptureInfo(ifTrueSubStream, &innerStatus, &ifTrueModel);
     EXPECT_EQ(ret, RT_ERROR_NONE);
+    MOCK_CAPTURE_MODEL_LOAD_COMPLETE_BY_MODEL(ifTrueModel);
 
     rtCondHandle_t innerCondHandle = nullptr;
     ret = rtModelCondHandleCreate(ifTrueModel, 0, static_cast<rtCondHandleFlag_t>(0), &innerCondHandle);
@@ -2939,6 +2951,7 @@ TEST_F(DavidCondHandleTest, CondHandleIfNestedIfE2E)
 
     ret = rtStreamBeginCaptureToModel(innerIfSubStream, innerSubModels[0], RT_STREAM_CAPTURE_MODE_THREAD_LOCAL);
     EXPECT_EQ(ret, RT_ERROR_NONE);
+    MOCK_CAPTURE_MODEL_LOAD_COMPLETE_BY_MODEL(innerSubModels[0]);
     rtModel_t innerSubModelResult;
     ret = rtStreamEndCapture(innerIfSubStream, &innerSubModelResult);
     EXPECT_EQ(ret, RT_ERROR_NONE);
@@ -2949,6 +2962,7 @@ TEST_F(DavidCondHandleTest, CondHandleIfNestedIfE2E)
 
     ret = rtStreamBeginCaptureToModel(ifFalseSubStream, outerSubModels[1], RT_STREAM_CAPTURE_MODE_THREAD_LOCAL);
     EXPECT_EQ(ret, RT_ERROR_NONE);
+    MOCK_CAPTURE_MODEL_LOAD_COMPLETE_BY_MODEL(outerSubModels[1]);
     rtModel_t ifFalseModelResult;
     ret = rtStreamEndCapture(ifFalseSubStream, &ifFalseModelResult);
     EXPECT_EQ(ret, RT_ERROR_NONE);

@@ -176,7 +176,7 @@ rtError_t CaptureModel::ReleaseAllJetty()
     return finalError;
 }
 
-rtError_t RebuildExternalTaskSqe(TaskInfo* const task)
+rtError_t UpdateHostSqeBufferByTask(TaskInfo* const task)
 {
     if ((task == nullptr) || (task->stream == nullptr)) {
         return RT_ERROR_INVALID_VALUE;
