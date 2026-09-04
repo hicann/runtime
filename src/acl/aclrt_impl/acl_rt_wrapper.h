@@ -11,8 +11,7 @@
 #ifndef RUNTIME_ACL_RT_WRAPPER_H_
 #define RUNTIME_ACL_RT_WRAPPER_H_
 
-// Declare one named global entry per hookable api, e.g. g_hook_aclrtMemcpy.
-#define ACL_HOOK_DECL(ret, name, sig, args) extern ACL_FUNC_VISIBILITY aclrtApiEntry g_hook_##name;
+// Define one named global entry per hookable api, e.g. g_hook_aclrtMemcpy.
 #define ACL_HOOK_DEF(ret, name, sig, args)              \
     ACL_FUNC_VISIBILITY aclrtApiEntry g_hook_##name = { \
         reinterpret_cast<aclrtApiFunc>(&name##Impl), reinterpret_cast<aclrtApiFunc>(&name##Impl)};

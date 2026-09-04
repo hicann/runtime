@@ -45,10 +45,6 @@ typedef struct {
 } aclrtApiEntry;
 
 #ifdef ACL_RT_API_HOOK_ENABLE
-ACL_RT_FUNC_MAP(ACL_HOOK_DECL)
-ACL_RT_ALLOCATOR_FUNC_MAP(ACL_HOOK_DECL)
-ACL_MDLRI_FUNC_MAP(ACL_HOOK_DECL)
-
 // Cold-path lookup table for SetFunc/GetFunc (string name -> entry pointer).
 // Linear scan is sufficient: ~250 entries, only invoked by tools at init time.
 typedef struct {
