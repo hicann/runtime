@@ -31,6 +31,9 @@
 using namespace testing;
 using namespace cce::runtime;
 
+void ClearLastDlogRecordLine();
+bool DlogRecordContains(const std::string& keyword);
+
 namespace {
 const std::vector<uint64_t> ARCH9201_ERROR_TYPES = {
     AICORE_ERROR, AIVECTOR_ERROR, WAIT_TIMEOUT_ERROR,  SDMA_ERROR, AICPU_ERROR,
@@ -254,7 +257,13 @@ TEST_F(Arch9201ErrorProcTest, ProcessStarv2OneElement_AllPathsAndInvalidInput)
         errorInfo->u.davidCoreErrorInfo.info[0].coreId = 5;
         errorInfo->u.davidCoreErrorInfo.info[0].vecError =
             (1ULL << (VEC_ERR_BIU_RESP_ERR_T0 - RINGBUFFER_VEC_ERROR_OFFSET));
+        std::string expectedErrorString;
+        std::string expectedErrorCode;
+        ProcessDavidStarsCoreErrorMapInfo(
+            &(errorInfo->u.davidCoreErrorInfo.info[0]), expectedErrorString, expectedErrorCode, CHIP_CLOUD_V5);
+        ClearLastDlogRecordLine();
         EXPECT_EQ(errorProc->ProcessStarv2OneElementInRingBuffer(ctlInfo, 0, 1), RT_ERROR_NONE);
+        EXPECT_TRUE(DlogRecordContains("errorStr: " + expectedErrorString));
     }
 
     // --- FUSION_KERNEL_ERROR + Ext 合并：base + aicExt + aivExt 三段 element ---
