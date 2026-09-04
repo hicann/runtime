@@ -55,6 +55,7 @@ enum {
     DRV = 10,      /* Driver */
     NET = 11,      /* Network */
     HIXL = 12,     /* Hixl */
+    DQS = 13,      /* DQSFW */
     DEVMM = 22,    /* Dlog memory managent */
     KERNEL = 23,   /* Kernel */
     LIBMEDIA = 24, /* Libmedia */

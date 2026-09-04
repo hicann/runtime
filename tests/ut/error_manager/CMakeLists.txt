@@ -13,6 +13,7 @@ include_directories(${BASE_DIR}/src/dfx/error_manager)
 include_directories(${BASE_DIR}/include/dfx)
 include_directories(${BASE_DIR}/pkg_inc)
 include_directories(${BASE_DIR}/pkg_inc/base)
+include_directories(${BASE_DIR}/include/dfx/base)
 
 set(UT_FILES
     "testcase/error_manager_unittest.cc"

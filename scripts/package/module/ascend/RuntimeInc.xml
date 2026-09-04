@@ -204,12 +204,11 @@
         <file value="err_msg.h" install_mod="440" entity="true"/>
         <file value="acl_log.h" install_mod="440" entity="true"/>
         <file value="alog_pub.h" install_mod="440" entity="true"/>
-        <file value="log_types.h" install_mod="440" entity="true"/>
+        <file value="log_types.h" install_mod="440" entity="true" install_softlink="$(TARGET_ENV)/pkg_inc/base/log_types.h;$(TARGET_ENV)/include/toolchain/log_types.h"/>
     </file_info>
     <file_info copy_type="source" src_path="" dst_path="$(TARGET_ENV)/pkg_inc/base" install_path="$(TARGET_ENV)/pkg_inc/base" install_type="all">
         <file value="err_mgr.h" install_mod="440" entity="true"/>
         <file value="dlog_pub.h" install_mod="440" entity="true" install_softlink="$(TARGET_ENV)/include/toolchain/slog.h"/>
-        <file value="log_types.h" install_mod="440" entity="true" install_softlink="$(TARGET_ENV)/include/toolchain/log_types.h"/>
         <file value="plog.h" install_mod="440" entity="true"/>
     </file_info>
     <file_info copy_type="source" src_path="" dst_path="$(TARGET_ENV)/include/experiment/metadef/common/util/error_manager" install_path="$(TARGET_ENV)/include/experiment/metadef/common/util/error_manager" install_type="all">

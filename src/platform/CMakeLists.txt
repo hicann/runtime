@@ -1,3 +1,13 @@
+# -----------------------------------------------------------------------------------------------------------
+# Copyright (c) 2025 Huawei Technologies Co., Ltd.
+# This program is free software, you can redistribute it and/or modify it under the terms and conditions of
+# CANN Open Software License Agreement Version 2.0 (the "License").
+# Please refer to the License for details. You may not use this file except in compliance with the License.
+# THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+# INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+# See LICENSE in the root of the software repository for the full text of the License.
+# -----------------------------------------------------------------------------------------------------------
+
 project(platform)
 
 add_library(platform_headers INTERFACE)
@@ -39,6 +49,7 @@ target_include_directories(platform_headers INTERFACE
     $<BUILD_INTERFACE:${RUNTIME_DIR}/pkg_inc>
     $<BUILD_INTERFACE:${RUNTIME_DIR}/pkg_inc/platform>
     $<BUILD_INTERFACE:${RUNTIME_DIR}/include/dfx/base>
+    $<BUILD_INTERFACE:${RUNTIME_DIR}/pkg_inc/base>
     $<INSTALL_INTERFACE:include>
     $<INSTALL_INTERFACE:include/platform>
     $<INSTALL_INTERFACE:include/platform/platform>
@@ -63,8 +74,9 @@ target_include_directories(platform PRIVATE
         ${RUNTIME_DIR}/pkg_inc
         ${RUNTIME_DIR}/include/external
         ${RUNTIME_DIR}/src/dfx/error_manager
-        ${RUNTIME_DIR}/src/dfx/log/inc/toolchain
         ${RUNTIME_DIR}/include/dfx/base
+        ${RUNTIME_DIR}/pkg_inc/base
+        ${RUNTIME_DIR}/src/dfx/log/inc/toolchain
         $<INSTALL_INTERFACE:include>
         $<INSTALL_INTERFACE:include/platform>
         $<INSTALL_INTERFACE:include/platform/platform>
@@ -90,8 +102,9 @@ target_include_directories(platform_static PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
         ${CMAKE_CURRENT_LIST_DIR}/inc
         ${RUNTIME_DIR}/src/dfx/error_manager
-        ${RUNTIME_DIR}/src/dfx/log/inc/toolchain
         ${RUNTIME_DIR}/include/dfx/base
+        ${RUNTIME_DIR}/pkg_inc/base
+        ${RUNTIME_DIR}/src/dfx/log/inc/toolchain
         ${RUNTIME_DIR}/include/external
         $<INSTALL_INTERFACE:include>
         $<INSTALL_INTERFACE:include/platform>

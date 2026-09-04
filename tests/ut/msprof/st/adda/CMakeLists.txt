@@ -65,6 +65,8 @@ target_include_directories(adda_stest PRIVATE
     ${TOP_DIR}/pkg_inc/driver
     ${TOP_DIR}/src/dfx/adump/inc
     ${TOP_DIR}/src/dfx/adump/inc/adump
+    ${TOP_DIR}/include/dfx/base
+    ${TOP_DIR}/pkg_inc/base
     ${TOP_DIR}/src/dfx/log/inc/toolchain
     ${TOP_DIR}/src/dfx/error_manager
 )

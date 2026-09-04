@@ -59,6 +59,7 @@ set(AICPU_TS_C_INCLUDES
     ${RUNTIME_DIR}/pkg_inc/aicpu_sched/cpu_kernels
     ${RUNTIME_DIR}/pkg_inc/profiling
     ${RUNTIME_DIR}/pkg_inc/base
+    ${RUNTIME_DIR}/include/dfx/base
     ${RUNTIME_DIR}/pkg_inc/aicpu_sched/common
     ${RUNTIME_DIR}/pkg_inc/tsd
     ${RUNTIME_DIR}/pkg_inc/aicpu_sched

@@ -10,10 +10,12 @@
 
 add_library(slog_headers INTERFACE)
 target_include_directories(slog_headers INTERFACE
-    $<BUILD_INTERFACE:${TOOLAHCIN_LOG_DIR}/inc>
-    $<BUILD_INTERFACE:${TOOLAHCIN_LOG_DIR}/inc/toolchain>
-    $<BUILD_INTERFACE:${TOOLAHCIN_LOG_DIR}/../../../pkg_inc>
-    $<BUILD_INTERFACE:${TOOLAHCIN_LOG_DIR}/../../../pkg_inc/base>
+    $<BUILD_INTERFACE:${RUNTIME_DIR}/include/dfx>
+    $<BUILD_INTERFACE:${RUNTIME_DIR}/include/dfx/base>
+    $<BUILD_INTERFACE:${RUNTIME_DIR}/pkg_inc>
+    $<BUILD_INTERFACE:${RUNTIME_DIR}/pkg_inc/base>
+    $<BUILD_INTERFACE:${RUNTIME_DIR}/src/dfx/log/inc>
+    $<BUILD_INTERFACE:${RUNTIME_DIR}/src/dfx/log/inc/toolchain>
     $<INSTALL_INTERFACE:include>
     $<INSTALL_INTERFACE:include/slog>
     $<INSTALL_INTERFACE:include/slog/toolchain>

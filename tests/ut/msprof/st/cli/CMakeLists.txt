@@ -271,6 +271,7 @@ set(libmsprofHeaderDir
     ${TOP_DIR}/src/dfx/adump/inc/metadef
     ${TOP_DIR}/pkg_inc/aicpu_sched
     ${TOP_DIR}/pkg_inc/base
+    ${TOP_DIR}/include/dfx/base
     ${TOP_DIR}/src/dfx/adump/inc/metadef/external
     ${TOP_DIR}/tests/ut/msprof/st/stub
     ${MSPROF_SOURCE_DIR}/dvvp/msprof/msproftx/mstx/inc

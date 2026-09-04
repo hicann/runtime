@@ -348,6 +348,7 @@ set(libmsprofHeaderDir
     ${TOP_DIR}/src/dfx/adump/inc/metadef
     ${TOP_DIR}/pkg_inc/aicpu_sched
     ${TOP_DIR}/pkg_inc/base
+    ${TOP_DIR}/include/dfx/base
     ${TOP_DIR}/pkg_inc/runtime
     ${TOP_DIR}/pkg_inc/runtime/runtime
     ${TOP_DIR}/src/dfx/adump/inc/metadef/external

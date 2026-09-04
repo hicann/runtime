@@ -40,6 +40,7 @@ set(ACL_INC_EXTERNAL_DIR ${CMAKE_CURRENT_LIST_DIR}/../../../include/external)
 target_include_directories(acl_rt_impl PRIVATE
     ${ACL_INC_EXTERNAL_DIR}
     ${CMAKE_CURRENT_LIST_DIR}
+    ${RUNTIME_DIR}/pkg_inc/base
 )
 
 target_compile_options(acl_rt_impl PRIVATE

@@ -338,14 +338,6 @@ install(FILES
 )
 
 install(FILES
-    ${RUNTIME_DIR}/src/dfx/log/inc/toolchain/alog_pub.h
-    ${RUNTIME_DIR}/src/dfx/log/inc/toolchain/log_types.h
-    DESTINATION ${CMAKE_SYSTEM_PROCESSOR}-linux/include/base
-    ${INSTALL_OPTIONAL}
-    COMPONENT npu-runtime
-)
- 
-install(FILES
     ${RUNTIME_DIR}/src/dfx/error_manager/error_manager.h
     DESTINATION ${CMAKE_SYSTEM_PROCESSOR}-linux/include/experiment/metadef/common/util/error_manager
     ${INSTALL_OPTIONAL}

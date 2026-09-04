@@ -8,7 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "toolchain/slog.h"
-#include "toolchain/plog.h"
+#include "plog.h"
 #include "securec.h"
 #include "base.hpp"
 #include "runtime.hpp"

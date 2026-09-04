@@ -23,6 +23,7 @@ set(inc_path_
     ${RUNTIME_DIR}/pkg_inc/aicpu_sched/aicpu_schedule
     ${RUNTIME_DIR}/src/aicpu_sched
     ${RUNTIME_DIR}/pkg_inc/base
+    ${RUNTIME_DIR}/include/dfx/base
     ${RUNTIME_DIR}/src/dfx/msprof/inc/toolchain
     ${RUNTIME_DIR}/pkg_inc/profiling
 )

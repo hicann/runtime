@@ -11,7 +11,7 @@
 #include "devprof_drv_aicpu.h"
 #include <string>
 #include "error_code.h"
-#include "base/log_types.h"
+#include "log_types.h"
 #include "config/config.h"
 #include "ai_drv_prof_api.h"
 #include "devprof_common.h"

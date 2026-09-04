@@ -26,6 +26,7 @@ include_directories(${BASE_DIR}/tests/depends/)
 
 include_directories(${BASE_DIR}/pkg_inc)
 include_directories(${BASE_DIR}/pkg_inc/base)
+include_directories(${BASE_DIR}/include/dfx/base)
 include_directories(${BASE_DIR}/pkg_inc/profiling)
 include_directories(${BASE_DIR}/pkg_inc/dump)
 include_directories(${BASE_DIR}/pkg_inc/watchdog)

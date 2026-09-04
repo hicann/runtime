@@ -17,7 +17,7 @@
 #include <unordered_map>
 #include <functional>
 #include "toolchain/slog.h"
-#include "toolchain/plog.h"
+#include "base/plog.h"
 #include "tprt_log.hpp"
 #include "tprt_error_code.h"
 #include "mmpa/mmpa_api.h"

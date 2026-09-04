@@ -23,7 +23,7 @@
 #include "runtime/event.h"
 #include "base/err_mgr.h"
 #include "common/log_inner.h"
-#include "toolchain/plog.h"
+#include "plog.h"
 #include "toolchain/dump.h"
 #include "toolchain/dump_shim.h"
 #include "toolchain/profiling.h"

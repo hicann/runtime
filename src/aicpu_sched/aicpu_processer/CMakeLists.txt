@@ -30,6 +30,7 @@ set(inc_path
     ${RUNTIME_DIR}/pkg_inc/aicpu_sched
     ${RUNTIME_DIR}/pkg_inc/aicpu_sched/common
     ${RUNTIME_DIR}/pkg_inc/base
+    ${RUNTIME_DIR}/include/dfx/base
     ${RUNTIME_DIR}/pkg_inc/aicpu_sched/aicpu_schedule
     ${RUNTIME_DIR}/pkg_inc/driver
     ${RUNTIME_DIR}/src/dfx/msprof/inc/toolchain
