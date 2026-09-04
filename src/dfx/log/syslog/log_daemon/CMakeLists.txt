@@ -116,7 +116,7 @@ if ((${PRODUCT} STREQUAL "ascend610") OR (${PRODUCT} STREQUAL "ascend610Lite") O
     set(logDaemonSrcFiles ${logDaemonRcSrcFiles})
     set(logDaemonHeaderDir ${logDaemonRcHeaderDir})
 endif ()
-if ((${PRODUCT} STREQUAL "ascend610") OR (${PRODUCT} STREQUAL "ascend610Lite") OR (${PRODUCT} STREQUAL "ascend610Liteesl") OR (${PRODUCT} STREQUAL "as31xm1") OR (${PRODUCT} STREQUAL "mc32dm11a") OR (${PRODUCT} STREQUAL "mc32dm11aesl") OR (${PRODUCT} STREQUAL "ascend310p") OR (${PRODUCT} STREQUAL "ascend310B") OR (${PRODUCT} STREQUAL "ascend310Besl") OR (${PRODUCT} STREQUAL "ascend310Brc") OR (${PRODUCT} STREQUAL "ascend310Brcesl") OR ${PRODUCT} STREQUAL "ascend910" OR ${PRODUCT} STREQUAL "ascend910B" OR ${PRODUCT} STREQUAL "ascend950" OR ${PRODUCT} STREQUAL "ascend950esl" OR ${PRODUCT} STREQUAL "ascend350" OR (${PRODUCT} STREQUAL "ascend910_96") OR (${PRODUCT} STREQUAL "ascend910_96esl") OR (${PRODUCT} STREQUAL "helper310p") OR (${PRODUCT} STREQUAL "mc62cm12a") OR (${PRODUCT} STREQUAL "mc62cm12aesl"))
+if ((${PRODUCT} STREQUAL "ascend610") OR (${PRODUCT} STREQUAL "ascend610Lite") OR (${PRODUCT} STREQUAL "ascend610Liteesl") OR (${PRODUCT} STREQUAL "as31xm1") OR (${PRODUCT} STREQUAL "mc32dm11a") OR (${PRODUCT} STREQUAL "mc32dm11aesl") OR (${PRODUCT} STREQUAL "ascend310p") OR (${PRODUCT} STREQUAL "ascend310B") OR (${PRODUCT} STREQUAL "ascend310Besl") OR (${PRODUCT} STREQUAL "ascend310Brc") OR (${PRODUCT} STREQUAL "ascend310Brcesl") OR ${PRODUCT} STREQUAL "ascend910" OR ${PRODUCT} STREQUAL "ascend910B" OR ${PRODUCT} STREQUAL "ascend950" OR ${PRODUCT} STREQUAL "ascend950esl" OR ${PRODUCT} STREQUAL "ascend350" OR (${PRODUCT} STREQUAL "ascend960") OR (${PRODUCT} STREQUAL "ascend960esl") OR (${PRODUCT} STREQUAL "helper310p") OR (${PRODUCT} STREQUAL "mc62cm12a") OR (${PRODUCT} STREQUAL "mc62cm12aesl"))
     list(APPEND logDaemonHeaderDir
         ${IAM_HEADER_DIR}/include
         ${MDC_LINUX_SDK_DIR}/include)
@@ -153,8 +153,8 @@ target_compile_definitions(logDaemon PRIVATE
     $<$<STREQUAL:${PRODUCT},ascend950esl>:IAM_MONITOR EP_MODE LOG_COREDUMP LOG_CORETRACE>
     $<$<AND:$<STREQUAL:${PRODUCT},ascend350>,$<NOT:$<BOOL:${ENABLE_RC}>>>:IAM_MONITOR EP_MODE LOG_COREDUMP LOG_CORETRACE>
     $<$<AND:$<STREQUAL:${PRODUCT},ascend350>,$<BOOL:${ENABLE_RC}>>:IAM_MONITOR RC_MODE LOG_COREDUMP LOG_CORETRACE>
-    $<$<STREQUAL:${PRODUCT},ascend910_96>:IAM_MONITOR EP_MODE LOG_COREDUMP LOG_CORETRACE>
-    $<$<STREQUAL:${PRODUCT},ascend910_96esl>:IAM_MONITOR EP_MODE LOG_COREDUMP LOG_CORETRACE>
+    $<$<STREQUAL:${PRODUCT},ascend960>:IAM_MONITOR EP_MODE LOG_COREDUMP LOG_CORETRACE>
+    $<$<STREQUAL:${PRODUCT},ascend960esl>:IAM_MONITOR EP_MODE LOG_COREDUMP LOG_CORETRACE>
     OS_TYPE_DEF=0
     IDE_DAEMON_HOST
 )
@@ -190,8 +190,8 @@ target_link_options(logDaemon PRIVATE
     $<$<STREQUAL:${PRODUCT},ascend950>:-Wl,-rpath-link,${CMAKE_BINARY_DIR}/extend_rootfs/lib64>
     $<$<STREQUAL:${PRODUCT},ascend950esl>:-Wl,-rpath-link,${CMAKE_BINARY_DIR}/extend_rootfs/lib64>
     $<$<STREQUAL:${PRODUCT},ascend350>:-Wl,-rpath-link,${CMAKE_BINARY_DIR}/extend_rootfs/lib64>
-    $<$<STREQUAL:${PRODUCT},ascend910_96>:-Wl,-rpath-link,${CMAKE_BINARY_DIR}/extend_rootfs/lib64>
-    $<$<STREQUAL:${PRODUCT},ascend910_96esl>:-Wl,-rpath-link,${CMAKE_BINARY_DIR}/extend_rootfs/lib64>
+    $<$<STREQUAL:${PRODUCT},ascend960>:-Wl,-rpath-link,${CMAKE_BINARY_DIR}/extend_rootfs/lib64>
+    $<$<STREQUAL:${PRODUCT},ascend960esl>:-Wl,-rpath-link,${CMAKE_BINARY_DIR}/extend_rootfs/lib64>
     -Wl,-z,relro,-z,now,-z,noexecstack
     -Wl,--gc-sections
 )
@@ -222,8 +222,8 @@ target_link_directories(logDaemon PRIVATE
     $<$<STREQUAL:${PRODUCT},ascend950>:${CMAKE_INSTALL_PREFIX}/lib>
     $<$<STREQUAL:${PRODUCT},ascend950esl>:${CMAKE_INSTALL_PREFIX}/lib>
     $<$<STREQUAL:${PRODUCT},ascend350>:${CMAKE_INSTALL_PREFIX}/lib>
-    $<$<STREQUAL:${PRODUCT},ascend910_96>:${CMAKE_INSTALL_PREFIX}/lib>
-    $<$<STREQUAL:${PRODUCT},ascend910_96esl>:${CMAKE_INSTALL_PREFIX}/lib>
+    $<$<STREQUAL:${PRODUCT},ascend960>:${CMAKE_INSTALL_PREFIX}/lib>
+    $<$<STREQUAL:${PRODUCT},ascend960esl>:${CMAKE_INSTALL_PREFIX}/lib>
 )
 
 if (PRODUCT)
@@ -263,20 +263,20 @@ target_link_libraries(logDaemon PRIVATE
     $<$<STREQUAL:${PRODUCT},ascend350>:stackcore>
     $<$<STREQUAL:${PRODUCT},ascend350>:urma>
     $<$<STREQUAL:${PRODUCT},ascend350>:urma_common>
-    $<$<STREQUAL:${PRODUCT},ascend910_96>:iam>
-    $<$<STREQUAL:${PRODUCT},ascend910_96>:ascend_hal>
-    $<$<STREQUAL:${PRODUCT},ascend910_96>:file_dump>
-    $<$<STREQUAL:${PRODUCT},ascend910_96>:sys_monitor>
-    $<$<STREQUAL:${PRODUCT},ascend910_96>:stackcore>
-    $<$<STREQUAL:${PRODUCT},ascend910_96>:urma>
-    $<$<STREQUAL:${PRODUCT},ascend910_96>:urma_common>
-    $<$<STREQUAL:${PRODUCT},ascend910_96esl>:iam>
-    $<$<STREQUAL:${PRODUCT},ascend910_96esl>:ascend_hal>
-    $<$<STREQUAL:${PRODUCT},ascend910_96esl>:file_dump>
-    $<$<STREQUAL:${PRODUCT},ascend910_96esl>:sys_monitor>
-    $<$<STREQUAL:${PRODUCT},ascend910_96esl>:stackcore>
-    $<$<STREQUAL:${PRODUCT},ascend910_96esl>:urma>
-    $<$<STREQUAL:${PRODUCT},ascend910_96esl>:urma_common>
+    $<$<STREQUAL:${PRODUCT},ascend960>:iam>
+    $<$<STREQUAL:${PRODUCT},ascend960>:ascend_hal>
+    $<$<STREQUAL:${PRODUCT},ascend960>:file_dump>
+    $<$<STREQUAL:${PRODUCT},ascend960>:sys_monitor>
+    $<$<STREQUAL:${PRODUCT},ascend960>:stackcore>
+    $<$<STREQUAL:${PRODUCT},ascend960>:urma>
+    $<$<STREQUAL:${PRODUCT},ascend960>:urma_common>
+    $<$<STREQUAL:${PRODUCT},ascend960esl>:iam>
+    $<$<STREQUAL:${PRODUCT},ascend960esl>:ascend_hal>
+    $<$<STREQUAL:${PRODUCT},ascend960esl>:file_dump>
+    $<$<STREQUAL:${PRODUCT},ascend960esl>:sys_monitor>
+    $<$<STREQUAL:${PRODUCT},ascend960esl>:stackcore>
+    $<$<STREQUAL:${PRODUCT},ascend960esl>:urma>
+    $<$<STREQUAL:${PRODUCT},ascend960esl>:urma_common>
     $<$<STREQUAL:${PRODUCT},ascend310>:ascend_monitor>
     $<$<STREQUAL:${PRODUCT},ascend310>:ascend_hal>
     $<$<STREQUAL:${PRODUCT},ascend310>:file_dump>
@@ -375,7 +375,7 @@ elseif (${PRODUCT} STREQUAL "ascend910B")
 add_custom_target(logdaemonDeviceFiles
      COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/../slog/etc/milan_910/log-daemon.yaml ${CMAKE_CURRENT_BINARY_DIR}
 )
-elseif ((${PRODUCT} STREQUAL "ascend950") OR (${PRODUCT} STREQUAL "ascend950esl") OR (${PRODUCT} STREQUAL "ascend350") OR (${PRODUCT} STREQUAL "ascend910_96") OR (${PRODUCT} STREQUAL "ascend910_96esl"))
+elseif ((${PRODUCT} STREQUAL "ascend950") OR (${PRODUCT} STREQUAL "ascend950esl") OR (${PRODUCT} STREQUAL "ascend350") OR (${PRODUCT} STREQUAL "ascend960") OR (${PRODUCT} STREQUAL "ascend960esl"))
 add_custom_target(logdaemonDeviceFiles
      COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/../slog/etc/david_910_95/log-daemon.yaml ${CMAKE_CURRENT_BINARY_DIR}
 )
@@ -412,7 +412,7 @@ install(PROGRAMS
     ${CMAKE_CURRENT_BINARY_DIR}/log_daemon_monitor.sh
     DESTINATION ${INSTALL_LIBRARY_DIR} OPTIONAL
 )
-elseif ((${PRODUCT} STREQUAL "ascend310p") OR (${PRODUCT} STREQUAL "ascend310B") OR (${PRODUCT} STREQUAL "ascend310Besl") OR (${PRODUCT} STREQUAL "ascend310rc") OR (${PRODUCT} STREQUAL "ascend310Brc") OR (${PRODUCT} STREQUAL "ascend310Brcesl") OR (${PRODUCT} STREQUAL "ascend610") OR (${PRODUCT} STREQUAL "ascend610Lite") OR (${PRODUCT} STREQUAL "ascend610Liteesl") OR (${PRODUCT} STREQUAL "as31xm1") OR (${PRODUCT} STREQUAL "ascend910") OR (${PRODUCT} STREQUAL "ascend910B") OR (${PRODUCT} STREQUAL "ascend950") OR (${PRODUCT} STREQUAL "ascend950esl") OR (${PRODUCT} STREQUAL "ascend350") OR (${PRODUCT} STREQUAL "ascend910_96") OR (${PRODUCT} STREQUAL "ascend910_96esl") OR (${PRODUCT} STREQUAL "helper310p") OR (${PRODUCT} STREQUAL "mc62cm12a") OR (${PRODUCT} STREQUAL "mc62cm12aesl") OR (${PRODUCT} STREQUAL "mc32dm11a")  OR (${PRODUCT} STREQUAL "mc32dm11aesl"))
+elseif ((${PRODUCT} STREQUAL "ascend310p") OR (${PRODUCT} STREQUAL "ascend310B") OR (${PRODUCT} STREQUAL "ascend310Besl") OR (${PRODUCT} STREQUAL "ascend310rc") OR (${PRODUCT} STREQUAL "ascend310Brc") OR (${PRODUCT} STREQUAL "ascend310Brcesl") OR (${PRODUCT} STREQUAL "ascend610") OR (${PRODUCT} STREQUAL "ascend610Lite") OR (${PRODUCT} STREQUAL "ascend610Liteesl") OR (${PRODUCT} STREQUAL "as31xm1") OR (${PRODUCT} STREQUAL "ascend910") OR (${PRODUCT} STREQUAL "ascend910B") OR (${PRODUCT} STREQUAL "ascend950") OR (${PRODUCT} STREQUAL "ascend950esl") OR (${PRODUCT} STREQUAL "ascend350") OR (${PRODUCT} STREQUAL "ascend960") OR (${PRODUCT} STREQUAL "ascend960esl") OR (${PRODUCT} STREQUAL "helper310p") OR (${PRODUCT} STREQUAL "mc62cm12a") OR (${PRODUCT} STREQUAL "mc62cm12aesl") OR (${PRODUCT} STREQUAL "mc32dm11a")  OR (${PRODUCT} STREQUAL "mc32dm11aesl"))
 install(TARGETS logDaemon
     RUNTIME DESTINATION ${INSTALL_LIBRARY_DIR} OPTIONAL
 )
