@@ -110,7 +110,7 @@ checkopts() {
         shift 2
         ;;
       -v | --verbose)
-        VERBOSE="VERBOSE=1"
+        VERBOSE="on"
         shift
         ;;
       --cann_3rd_lib_path)
@@ -316,10 +316,16 @@ build_rts() {
     echo "execute command: cmake ${CMAKE_ARGS} .. failed."
     return 1
   fi
+
+  VERBOSE_FLAG=""
+  if [ "${VERBOSE}" = "on" ]; then
+    VERBOSE_FLAG="--verbose"
+  fi
+
   if [ ${#TARGETS[@]} -ne 0 ]; then
     for TARGET in "${TARGETS[@]}"; do
       echo "Building target: ${TARGET}"
-      cmake --build . --target "${TARGET}" -j${THREAD_NUM}
+      cmake --build . --target "${TARGET}" -j${THREAD_NUM} ${VERBOSE_FLAG}
       if [ $? -ne 0 ]; then
         echo "execute command: cmake --build build --target=${TARGET} -j${THREAD_NUM} failed."
         return 1
@@ -329,18 +335,22 @@ build_rts() {
     if [ -n "${ut_name_map["${UT_TARGET}"]}" ]; then
       DEFAULT_TARGET="${ut_name_map["${UT_TARGET}"]}"
       echo "Building default target for --ut=${UT_TARGET}: ${DEFAULT_TARGET}"
-      cmake --build . --target "${DEFAULT_TARGET}" -j${THREAD_NUM}
+      cmake --build . --target "${DEFAULT_TARGET}" -j${THREAD_NUM} ${VERBOSE_FLAG}
       if [ $? -ne 0 ]; then
         echo "execute command: cmake --build build --target=${DEFAULT_TARGET} -j${THREAD_NUM} failed."
         return 1
       fi
     else
-      cmake --build . -j${THREAD_NUM}
+      cmake --build . -j${THREAD_NUM} ${VERBOSE_FLAG}
     fi
   fi
 
   if [[ "X$MAKE_PKG" = "Xon" ]]; then
-    make package -j${THREAD_NUM}
+    if [ "${VERBOSE}" = "on" ]; then
+      make package -j${THREAD_NUM} VERBOSE=1
+    else
+      make package -j${THREAD_NUM}
+    fi
     if [ $? -ne 0 ]; then
       echo "execute command: make package failed."
       return 1
