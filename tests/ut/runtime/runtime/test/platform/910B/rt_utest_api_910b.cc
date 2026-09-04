@@ -956,6 +956,9 @@ TEST_F(CloudV2ApiTest910b, stream_switch_adc)
 
     error = rtsSwitchStream(NULL, RT_EQUAL, NULL, RT_SWITCH_INT32, NULL, NULL, NULL);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+
+    error = rtStreamDestroy(falseStream);
+    EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
 TEST_F(CloudV2ApiTest910b, stream_state_callback_reg)
@@ -1312,6 +1315,7 @@ TEST_F(CloudV2ApiTest910b, rtStreamAbort_02)
 
     error = rtStreamAbort(stream);
     EXPECT_EQ(error, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    GlobalMockObject::verify();
     error = rtStreamDestroy(stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
@@ -1343,6 +1347,7 @@ TEST_F(CloudV2ApiTest910b, rtStreamAbort_00)
 
     error = rtStreamAbort(stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    GlobalMockObject::verify();
     error = rtStreamDestroy(stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }

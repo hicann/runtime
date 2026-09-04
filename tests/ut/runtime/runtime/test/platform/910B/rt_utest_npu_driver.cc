@@ -137,6 +137,9 @@ TEST_F(CloudV2NpuDriverTest, MemcpyAsyncCallback)
     memcpyCallbackParam->kind = RT_MEMCPY_DEVICE_TO_DEVICE;
     memcpyCallbackParam->stm = stm;
     UvmCallback::MemcpyAsyncCallback(static_cast<void*>(memcpyCallbackParam));
+
+    ret = rtStreamDestroy(stream);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
 }
 
 TEST_F(CloudV2NpuDriverTest, PrefetchCallbackWrapper)

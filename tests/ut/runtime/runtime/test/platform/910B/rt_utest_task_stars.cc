@@ -943,6 +943,9 @@ TEST_F(StarsTaskTest, DeviceSatMode)
     EXPECT_EQ(ret, ACL_ERROR_RT_PARAM_INVALID);
     ret = rtSetDeviceSatMode(RT_OVERFLOW_MODE_SATURATION);
     EXPECT_EQ(ret, ACL_RT_SUCCESS);
+
+    ret = rtStreamDestroy(stream);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
 }
 
 TEST_F(StarsTaskTest, OverflowSwitch)
@@ -972,6 +975,9 @@ TEST_F(StarsTaskTest, OverflowSwitch)
     ret = rtGetStreamOverflowSwitch(stream, &flags);
     EXPECT_EQ(ret, ACL_RT_SUCCESS);
     EXPECT_EQ(flags, 1U);
+
+    ret = rtStreamDestroy(stream);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
 }
 
 TEST_F(StarsTaskTest, OverflowSwitchSetTask)
@@ -1015,6 +1021,9 @@ TEST_F(StarsTaskTest, DataDumpLoadInfoTask)
     rtCqReport_t cqe = {};
     cqe.errorType = 1U;
     SetStarsResult(&task, cqe);
+
+    ret = rtStreamDestroy(streamHandle);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
 }
 
 void DvppGrpCallbackFunc(rtDvppGrpRptInfo_t* report) { UNUSED(report); }
@@ -1202,6 +1211,9 @@ TEST_F(StarsTaskTest, EventResetTask_DoCompleteSuccess)
     rtCqReport_t cqe = {};
     cqe.errorType = 1U;
     SetStarsResult(&task, cqe);
+
+    ret = rtStreamDestroy(streamHandle);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
 }
 
 TEST_F(StarsTaskTest, MemcpyAsyncTask_sdma_posion_error)

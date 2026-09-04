@@ -2688,7 +2688,7 @@ TEST_F(CloudV2DeviceTest, AllocSqCqDrvFail)
     deviceSqCqPool->PreAllocSqCq();
 
     MOCKER_CPP_VIRTUAL((NpuDriver*)(device->Driver_()), &NpuDriver::NormalSqCqAllocate).stubs().will(returnValue(1));
-    rtError_t ret = deviceSqCqPool->AllocSqCqFromDrv(&sqCqList, TSDRV_FLAG_NO_SQ_MEM);
+    rtError_t ret = deviceSqCqPool->AllocSqCqFromDrv(&sqCqList, TSDRV_FLAG_NO_SQ_MEM, 0U);
     EXPECT_NE(ret, RT_ERROR_NONE);
 
     ret = deviceSqCqPool->AllocSqCq(0U, &sqCqList);

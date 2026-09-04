@@ -425,10 +425,16 @@ TEST_F(SnapshotTest, SnapShotProcessRestore3)
 
     RawDevice* device = dynamic_cast<RawDevice*>(device_);
     MOCKER_CPP_VIRTUAL(device, &RawDevice::RestoreSqCqPool).stubs().will(returnValue(RT_ERROR_NONE));
+    const uint32_t sqId = stm->GetSqId();
+    const uint32_t cqId = stm->GetCqId();
     error = SnapShotAclGraphRestore(device);
     EXPECT_EQ(error, RT_ERROR_NONE);
     curCtx->models_.clear();
     captureModel->ModelRemoveStream(stm);
+    error = rtStreamDestroy(stream);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = device_->Driver_()->NormalSqCqFree(device_->Id_(), device_->DevGetTsId(), 0U, sqId, cqId);
+    EXPECT_EQ(error, RT_ERROR_NONE);
     delete captureModel;
     delete captureModel1;
 }

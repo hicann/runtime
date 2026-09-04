@@ -820,11 +820,16 @@ void Stream::UpdateSqCq(const rtDeviceSqCqInfo_t* const sqCqInfo)
     cqId_ = sqCqInfo->cqId;
     sqRegVirtualAddr_ = sqCqInfo->sqRegVirtualAddr;
 
+    StreamSqCqManage* stmSqCqManage = device_->GetStreamSqCqManage();
+    stmSqCqManage->BindSqToStream(static_cast<uint32_t>(streamId_), sqCqInfo->sqId);
     return;
 }
 
 void Stream::ResetSqCq(void)
 {
+    StreamSqCqManage* stmSqCqManage = device_->GetStreamSqCqManage();
+    stmSqCqManage->UnBindSqToStream(static_cast<uint32_t>(streamId_), sqId_);
+
     sqId_ = UINT32_MAX;
     cqId_ = UINT32_MAX;
     sqRegVirtualAddr_ = 0ULL;

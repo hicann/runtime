@@ -123,6 +123,9 @@ public:
     rtError_t GetStreamSharedPtrById(const uint32_t streamId, std::shared_ptr<Stream>& sharedStm);
     Device* Device_() const { return device_; }
 
+    rtError_t BindSqToStream(const uint32_t streamId, const uint32_t sqId);
+    rtError_t UnBindSqToStream(const uint32_t streamId, const uint32_t sqId);
+
 protected:
     std::mutex streamMapLock_;
     std::map<uint32_t, uint32_t> streamIdToSqIdMap_;

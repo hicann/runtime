@@ -877,6 +877,9 @@ TEST_F(RtApiTest, capture_api_31)
     error = rtModelDestroy(model);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
+    error = rtStreamDestroy(addStream);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
     error = rtStreamDestroy(stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
@@ -912,6 +915,9 @@ TEST_F(RtApiTest, capture_api_32)
 
     error = rtModelDestroy(model);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+
+    error = rtStreamDestroy(addStream);
+    EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtStreamDestroy(stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -950,6 +956,9 @@ TEST_F(RtApiTest, capture_api_33)
     error = rtModelDestroy(model);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
+    error = rtStreamDestroy(addStream);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
     error = rtStreamDestroy(stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
@@ -984,6 +993,9 @@ TEST_F(RtApiTest, capture_api_34)
     error = rtStreamEndCapture(stream, &model);
 
     error = rtModelDestroy(model);
+
+    error = rtStreamDestroy(addStream);
+    EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtStreamDestroy(stream);
     EXPECT_EQ(error, RT_ERROR_NONE);

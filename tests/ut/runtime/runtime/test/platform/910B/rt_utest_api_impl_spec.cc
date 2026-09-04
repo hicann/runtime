@@ -560,6 +560,12 @@ TEST_F(CloudV2ApiImplSpecTest, MODEL_RESTORE)
     EXPECT_EQ(error, RT_ERROR_NONE);
     error = rtModelDestroy(model);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    error = rtStreamDestroy(desStm);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = rtStreamDestroy(sinkStm);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = rtStreamDestroy(aicpuStm);
+    EXPECT_EQ(error, RT_ERROR_NONE);
 
     Device* dev2 = curCtx->DefaultStream_()->Device_();
     MOCKER_CPP_VIRTUAL(dev2, &Device::GetDevRunningState)

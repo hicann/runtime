@@ -379,6 +379,9 @@ TEST_F(CloudV2ApiImplTest, ModelExecuteAsync_decorator_test)
     error = impl.ModelDestroy(model_);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
+    error = rtStreamDestroy(stream);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
     delete apiDecorator_;
 }
 

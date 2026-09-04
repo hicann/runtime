@@ -215,6 +215,7 @@ void DavidStream::FreeStreamIdAndSqCq()
             (void)device_->Driver_()->SqSwitchStreamBatch(device_->Id_(), streamSwitchInfo_, 1U);
         }
         (void)device_->GetDeviceSqCqManage()->FreeSqCqToDrv(sqId_, cqId_);
+        ResetSqCq();
     }
     DELETE_A(streamSwitchInfo_);
     FreeStreamId();

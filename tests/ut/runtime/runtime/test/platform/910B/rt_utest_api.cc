@@ -768,6 +768,9 @@ TEST_F(CloudV2ApiTest, GetDevArgsAddr)
     void *devArgsAddr = nullptr, *argsHandle = nullptr;
     error = rtGetDevArgsAddr(stm, &argsInfo, &devArgsAddr, &argsHandle);
     EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtStreamDestroy(stm);
+    EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
 TEST_F(CloudV2ApiTest, mem_wait_record_task_01)
@@ -1348,6 +1351,9 @@ TEST_F(CloudV2ApiTest3, TEST_Stars_Launch)
     commonSqe.sqeHeader.type = RT_STARS_SQE_TYPE_END;
     error = rtStarsTaskLaunch(&commonSqe, sizeof(cce::runtime::rtStarsCommonSqe_t), stream);
     EXPECT_NE(error, RT_ERROR_NONE);
+
+    error = rtStreamDestroy(stream);
+    EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
 TEST_F(CloudV2ApiTest3, test_get_fault_event)

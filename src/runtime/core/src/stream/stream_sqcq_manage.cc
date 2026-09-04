@@ -800,5 +800,43 @@ rtError_t StreamSqCqManage::GetStreamSharedPtrById(const uint32_t streamId, std:
     }
     return RT_ERROR_STREAM_NULL;
 }
+
+rtError_t StreamSqCqManage::BindSqToStream(const uint32_t streamId, const uint32_t sqId)
+{
+    const std::lock_guard<std::mutex> stmLock(streamMapLock_);
+    const auto iter1 = streamIdToSqIdMap_.find(streamId);
+    if (unlikely(iter1 != streamIdToSqIdMap_.end())) {
+        RT_LOG_INNER_MSG(
+            RT_LOG_ERROR,
+            "The SQ have been applied for the current stream and cannot be applied for again, "
+            "stream_id=%u, current sq_id=%u, applied sq_id=%u.",
+            streamId, iter1->second, sqId);
+        return RT_ERROR_STREAM_DUPLICATE;
+    }
+
+    const auto iter2 = sqIdToStreamIdMap_.find(sqId);
+    if (unlikely(iter2 != sqIdToStreamIdMap_.end())) {
+        RT_LOG_INNER_MSG(
+            RT_LOG_ERROR,
+            "The stream have been applied for the current SQ and cannot be applied for again, "
+            "sq_id=%u, current stream_id=%u, applied stream_id=%u.",
+            sqId, iter2->second, streamId);
+        return RT_ERROR_STREAM_DUPLICATE;
+    }
+
+    streamIdToSqIdMap_[streamId] = sqId;
+    sqIdToStreamIdMap_[sqId] = streamId;
+
+    return RT_ERROR_NONE;
+}
+
+rtError_t StreamSqCqManage::UnBindSqToStream(const uint32_t streamId, const uint32_t sqId)
+{
+    const std::lock_guard<std::mutex> stmLock(streamMapLock_);
+    (void)streamIdToSqIdMap_.erase(streamId);
+    (void)sqIdToStreamIdMap_.erase(sqId);
+
+    return RT_ERROR_NONE;
+}
 } // namespace runtime
 } // namespace cce

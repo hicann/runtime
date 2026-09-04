@@ -41,6 +41,7 @@ protected:
         std::cout << "======== SomaTest Start SetUpTestCase ========" << std::endl;
         MOCKER(rtDeviceReset).stubs().will(invoke(rtDeviceResetStub));
         MOCKER(rtSetDevice).stubs().will(returnValue(0));
+        PoolRegistry::Instance().Init();
     }
 
     static void TearDownTestCase() { std::cout << "======== SomaTest Start TearDownTestCase ========" << std::endl; }

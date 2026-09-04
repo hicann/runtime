@@ -1136,6 +1136,8 @@ TEST_F(CloudV2CaptureModelTest, capture_mode_api_normal)
 
     error = rtModelDestroy(model1);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    error = rtStreamDestroy(stream2);
+    EXPECT_EQ(error, RT_ERROR_NONE);
     error = rtStreamDestroy(stream1);
     EXPECT_EQ(error, RT_ERROR_NONE);
     error = rtStreamDestroy(streamExe);
@@ -2182,6 +2184,8 @@ rtStream_t* createModelAndGetStreams(rtModel_t* model, rtStream_t* stream)
     EXPECT_EQ(error, RT_ERROR_NONE);
     EXPECT_EQ(numStreams, 2);
 
+    error = rtStreamDestroy(addStream);
+    EXPECT_EQ(error, RT_ERROR_NONE);
     return inputStreams;
 }
 

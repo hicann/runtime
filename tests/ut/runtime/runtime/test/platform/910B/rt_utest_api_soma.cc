@@ -417,6 +417,8 @@ TEST_F(CloudV2ApiTestSOMA, MallocFromPoolAsyncSuccess)
 
     error = rtMemPoolDestroy(memPoolId);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    error = rtStreamDestroy(streamId);
+    EXPECT_EQ(error, RT_ERROR_NONE);
     delete device;
 }
 
@@ -470,6 +472,8 @@ TEST_F(CloudV2ApiTestSOMA, rt_free_from_mempool_normal)
     error = rtMemPoolDestroy(memPoolId);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
+    error = rtStreamDestroy(stream1);
+    EXPECT_EQ(error, RT_ERROR_NONE);
     delete device;
 }
 
@@ -509,6 +513,8 @@ TEST_F(CloudV2ApiTestSOMA, rt_free_from_mempool_invaild_ptr)
     error = rtMemPoolDestroy(memPoolId);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
+    error = rtStreamDestroy(stream1);
+    EXPECT_EQ(error, RT_ERROR_NONE);
     delete device;
 }
 
@@ -900,6 +906,8 @@ TEST_F(CloudV2ApiTestSOMA, rt_sync_alloc_and_async_free)
 
     rtStreamSynchronize(streamId);
 
+    ret = rtStreamDestroy(streamId);
+    ASSERT_EQ(ret, RT_ERROR_NONE);
     delete device;
 }
 
@@ -927,6 +935,8 @@ TEST_F(CloudV2ApiTestSOMA, rt_sync_alloc_and_async_free_failed)
     ret = rtFree(ptr);
     ASSERT_EQ(ret, RT_ERROR_NONE);
 
+    ret = rtStreamDestroy(streamId);
+    ASSERT_EQ(ret, RT_ERROR_NONE);
     delete device;
 }
 
@@ -979,6 +989,8 @@ TEST_F(CloudV2ApiTestSOMA, rt_async_alloc_and_sync_free)
     ret = rtMemPoolDestroy(memPoolId);
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
+    ret = rtStreamDestroy(streamId);
+    ASSERT_EQ(ret, RT_ERROR_NONE);
     delete device;
 }
 
