@@ -390,11 +390,19 @@ install(FILES
 )
 
 # TODO: ge so packed temporarily for debugging, this need be reverted after ge code has been moved to ge repository.
-install(TARGETS acl_rt acl_rt_impl acl_tdt_queue acl_tdt_channel runtime xpu_tprt runtime_common runtime_v100 runtime_v201
+install(TARGETS acl_rt acl_rt_impl acl_tdt_queue acl_tdt_channel runtime runtime_common runtime_v100 runtime_v201
         mmpa static_mmpa error_manager platform awatchdog_share runtime_v200
         LIBRARY DESTINATION ${INSTALL_DIR} ${INSTALL_OPTIONAL} COMPONENT npu-runtime
         ARCHIVE DESTINATION ${INSTALL_DIR} ${INSTALL_OPTIONAL} COMPONENT npu-runtime
 )
+
+if(NOT "${TARGET_SYSTEM_NAME}" STREQUAL "Windows")
+    install(TARGETS xpu_tprt_compat_stub
+        LIBRARY DESTINATION ${INSTALL_DIR}
+        ${INSTALL_OPTIONAL}
+        COMPONENT npu-runtime
+    )
+endif()
 
 install(FILES
     $<TARGET_FILE:c_sec> $<TARGET_FILE:c_sec_static>

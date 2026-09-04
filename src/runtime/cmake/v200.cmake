@@ -647,7 +647,9 @@ macro(add_runtime_v200_library target_name)
             $<$<AND:$<NOT:$<STREQUAL:${PRODUCT},ascend031>>,$<NOT:$<STREQUAL:${PRODUCT},ascend610>>,$<NOT:$<STREQUAL:${PRODUCT},ascend610Lite>>>:atrace_share>
             $<$<NOT:$<STREQUAL:${PRODUCT},ascend031>>:json>
             platform
+            $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>>:-Wl,--whole-archive>
             xpu_tprt
+            $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>>:-Wl,--no-whole-archive>
             runtime_common
             -Wl,--as-needed
         PUBLIC

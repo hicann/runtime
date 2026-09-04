@@ -27,10 +27,14 @@ set(tprt_include
     ${CMAKE_CURRENT_SOURCE_DIR}/feature/inc
 )
  
-#------------------------- xpu_tprt -------------------------
-add_library(xpu_tprt SHARED
+#------------------------- xpu_tprt internal -------------------------
+add_library(xpu_tprt STATIC
         ${tprt_source}
         )
+
+set_target_properties(xpu_tprt PROPERTIES
+    POSITION_INDEPENDENT_CODE ON
+)
  
 target_include_directories(xpu_tprt PRIVATE
         ${tprt_include}
@@ -42,6 +46,8 @@ target_compile_options(xpu_tprt PRIVATE
         -Werror
         $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>>:-Wextra>
         $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>>:-Wno-error=unused-parameter>
+        $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>>:-fvisibility=hidden>
+        $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>>:-fvisibility-inlines-hidden>
         )
  
 target_link_libraries(xpu_tprt PRIVATE
@@ -61,4 +67,20 @@ target_compile_definitions(xpu_tprt PRIVATE
     google=ascend_private
     )
 
-install(TARGETS xpu_tprt DESTINATION ${INSTALL_LIBRARY_DIR} OPTIONAL)
+if(NOT "${TARGET_SYSTEM_NAME}" STREQUAL "Windows")
+    add_library(xpu_tprt_compat_stub SHARED
+        stub/xpu_tprt_compat_stub.c
+    )
+
+    set_target_properties(xpu_tprt_compat_stub PROPERTIES
+        OUTPUT_NAME xpu_tprt
+        C_VISIBILITY_PRESET hidden
+    )
+
+    add_dependencies(xpu_tprt xpu_tprt_compat_stub)
+
+    install(TARGETS xpu_tprt_compat_stub
+        LIBRARY DESTINATION ${INSTALL_LIBRARY_DIR}
+        OPTIONAL
+    )
+endif()
