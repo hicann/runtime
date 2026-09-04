@@ -183,7 +183,7 @@ int32_t AIKernelsLibAiCpuKFC::CallKernelApi(const aicpu::KernelType kernelType, 
 uint32_t AIKernelsLibAiCpuKFC::RunAicpuFunc(const void* const kernelBase, AicpuKFCOpFuncPtr& opFuncPtr) const
 {
     const auto cceKernelBase = static_cast<const aicpu::HwtsCceKernel*>(kernelBase);
-    void* const param = ValueToPtr(static_cast<const uintptr_t>(cceKernelBase->paramBase));
+    void* const param = ValueToPtr(static_cast<uintptr_t>(cceKernelBase->paramBase));
     uint32_t result = 0U;
     if (&aicpu::SetBlockIdxAndBlockNum != nullptr) {
         (void)aicpu::SetBlockIdxAndBlockNum(cceKernelBase->blockId, cceKernelBase->blockNum);

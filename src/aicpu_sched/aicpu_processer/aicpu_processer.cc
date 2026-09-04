@@ -30,7 +30,7 @@ __attribute__((visibility("default"))) int32_t aeCallInterface(const void* const
     AE_INFO_LOG(AE_MODULE_ID, "Begin to CallKernelApi, kernelType=%u.", strKernel->kernelType);
     FUNC_PROFILE_START
     // step1. Get the Ai Kernel Lib
-    const aicpu::KernelType kernelType = static_cast<const aicpu::KernelType>(strKernel->kernelType);
+    const aicpu::KernelType kernelType = static_cast<aicpu::KernelType>(strKernel->kernelType);
     cce::AIKernelsLibBase* targetKernelLib = nullptr;
     int32_t ret = cce::AIKernelsLibManger::GetKernelLib(kernelType, targetKernelLib);
     if ((ret == AE_STATUS_SUCCESS) && (targetKernelLib != nullptr)) {
@@ -77,7 +77,7 @@ __attribute__((visibility("default"))) aeStatus_t aeCloseSo(const uint32_t kerne
 {
     cce::AIKernelsLibBase* targetKernelLib = nullptr;
     const aeStatus_t ret =
-        cce::AIKernelsLibManger::GetKernelLib(static_cast<const aicpu::KernelType>(kernelType), targetKernelLib);
+        cce::AIKernelsLibManger::GetKernelLib(static_cast<aicpu::KernelType>(kernelType), targetKernelLib);
     if ((ret != AE_STATUS_SUCCESS)) {
         AE_ERR_LOG(AE_MODULE_ID, "aeCloseSo get kernel lib failed, kernelType[%u], ret[%u].", kernelType, ret);
         return ret;

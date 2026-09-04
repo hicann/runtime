@@ -67,14 +67,14 @@ aeStatus_t AIKernelsLibFWK::CloseSo(const char_t* const soName)
 
 int32_t AIKernelsLibFWK::CallKernelApi(const aicpu::KernelType kernelType, const void* const kernelBase)
 {
-    const auto fwkKernel = reinterpret_cast<const aicpu::HwtsFwkKernel* const>(kernelBase);
+    const auto fwkKernel = reinterpret_cast<const aicpu::HwtsFwkKernel*>(kernelBase);
     if (static_cast<bool>(unlikely(fwkKernel == nullptr))) {
         AE_ERR_LOG(AE_MODULE_ID, "Input param fwkKernelBase is NULL.");
         return AE_STATUS_BAD_PARAM;
     }
 
-    const auto fwkOpKernelPtr = static_cast<const uintptr_t>(fwkKernel->kernel);
-    const auto fwkOpKernel = reinterpret_cast<const STR_FWK_OP_KERNEL* const>(fwkOpKernelPtr);
+    const auto fwkOpKernelPtr = static_cast<uintptr_t>(fwkKernel->kernel);
+    const auto fwkOpKernel = reinterpret_cast<const STR_FWK_OP_KERNEL*>(fwkOpKernelPtr);
     if (static_cast<bool>(unlikely(fwkOpKernel == nullptr))) {
         AE_ERR_LOG(AE_MODULE_ID, "Input param fwkOpKernel is NULL.");
         return AE_STATUS_BAD_PARAM;
