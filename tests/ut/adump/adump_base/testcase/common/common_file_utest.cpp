@@ -477,6 +477,75 @@ TEST_F(CommonFileUtest, Test_Copy_With_Exception)
     EXPECT_EQ(File::Copy(srcPath, dstPath), ADUMP_FAILED);
 }
 
+namespace {
+// 读取文件全部内容，用于断言源文件没有被 M_TRUNC 清零。
+std::string ReadWholeFile(const std::string& path)
+{
+    File file(path, M_RDONLY);
+    if (file.IsFileOpen() != ADUMP_SUCCESS) {
+        return "";
+    }
+    char buffer[512] = {0};
+    const int64_t size = file.Read(buffer, sizeof(buffer) - 1);
+    if (size <= 0) {
+        return "";
+    }
+    return std::string(buffer, static_cast<size_t>(size));
+}
+} // namespace
+
+// 源、目标指向同一个文件时，Copy 必须直接返回成功且不能清空文件内容。
+// 覆盖同一路径、相对路径与绝对路径、符号链接、硬链接四种指向同一 inode 的形态。
+TEST_F(CommonFileUtest, Test_Copy_Src_Same_As_Dst)
+{
+    Tools::CaseWorkspace ws("Test_Copy_Src_Same_As_Dst");
+
+    const std::string srcContext = "kernel meta should not be truncated";
+    const std::string srcFileName = "same.json";
+    const std::string srcPath = ws.Touch(srcFileName);
+    ws.Echo(srcContext, srcFileName);
+    ASSERT_EQ(ReadWholeFile(srcPath), srcContext);
+
+    // 完全相同的路径
+    EXPECT_EQ(File::Copy(srcPath, srcPath), ADUMP_SUCCESS);
+    EXPECT_EQ(ReadWholeFile(srcPath), srcContext);
+
+    // 相对路径与绝对路径混用，字符串不同但 inode 相同
+    const std::string dotPath = ws.Root() + "/./" + srcFileName;
+    EXPECT_EQ(File::Copy(srcPath, dotPath), ADUMP_SUCCESS);
+    EXPECT_EQ(ReadWholeFile(srcPath), srcContext);
+
+    // 符号链接指向源文件
+    const std::string symlinkPath = ws.Root() + "/same_symlink.json";
+    ASSERT_EQ(symlink(srcPath.c_str(), symlinkPath.c_str()), 0);
+    EXPECT_EQ(File::Copy(srcPath, symlinkPath), ADUMP_SUCCESS);
+    EXPECT_EQ(ReadWholeFile(srcPath), srcContext);
+
+    // 硬链接与源文件共享 inode
+    const std::string hardlinkPath = ws.Root() + "/same_hardlink.json";
+    ASSERT_EQ(link(srcPath.c_str(), hardlinkPath.c_str()), 0);
+    EXPECT_EQ(File::Copy(srcPath, hardlinkPath), ADUMP_SUCCESS);
+    EXPECT_EQ(ReadWholeFile(srcPath), srcContext);
+}
+
+// 不同文件之间的拷贝不受同文件保护影响：目标已存在且有内容时仍应被源内容覆盖。
+TEST_F(CommonFileUtest, Test_Copy_Different_File_Still_Overwrite)
+{
+    Tools::CaseWorkspace ws("Test_Copy_Different_File_Still_Overwrite");
+
+    const std::string srcContext = "new content";
+    const std::string srcFileName = "src.json";
+    const std::string srcPath = ws.Touch(srcFileName);
+    ws.Echo(srcContext, srcFileName);
+
+    const std::string dstFileName = "dst.json";
+    const std::string dstPath = ws.Touch(dstFileName);
+    ws.Echo("stale content that must be replaced", dstFileName);
+
+    EXPECT_EQ(File::Copy(srcPath, dstPath), ADUMP_SUCCESS);
+    EXPECT_EQ(ReadWholeFile(dstPath), srcContext);
+}
+
 // Test long filename path: triggers ENAMETOOLONG → AddMapping (lines 56-70, 179-211)
 TEST_F(CommonFileUtest, Test_Open_LongFilename_ENAMETOOLONG)
 {

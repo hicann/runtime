@@ -23,6 +23,38 @@ constexpr int64_t MAX_BUFFER_LENGTH = 512;
 // 单次处理1GB
 constexpr int64_t MAX_IO_CHUNK_SIZE = 1LL << 30;
 static const std::string MAPPING_FILE_NAME = "mapping.csv";
+
+/*
+ * @brief: 判断已打开的源文件与目标路径是否为同一个文件（同一 inode）。
+ *         目标不存在、无法 stat 时按"不同文件"处理，让后续正常拷贝流程走下去并报出真实错误。
+ * @param [in] srcFile 已成功打开的源文件
+ * @param [in] dstPath 目标文件路径
+ * @return true: 两者是同一个文件; false: 不是，或无法判定
+ */
+bool IsSameFile(const File& srcFile, const std::string& dstPath)
+{
+#if (defined(_WIN32) || defined(_WIN64) || defined(_MSC_VER))
+    // Windows 下 struct stat 的 st_ino 恒为 0，按 inode 比较会把任意两个文件误判成同一个，
+    // 反而会漏掉本该执行的拷贝。这里统一退化为"不是同一文件"，保持原有拷贝行为。
+    (void)srcFile;
+    (void)dstPath;
+    return false;
+#else
+    mmStat_t srcStat = {};
+    if (mmFStatGet(srcFile.GetFileDiscriptor(), &srcStat) != EN_OK) {
+        IDE_LOGW("Get src file stat failed, fall back to normal copy.");
+        return false;
+    }
+
+    mmStat_t dstStat = {};
+    // 目标一般还不存在，这是正常拷贝路径，不需要告警。
+    if (mmStatGet(dstPath.c_str(), &dstStat) != EN_OK) {
+        return false;
+    }
+
+    return (srcStat.st_dev == dstStat.st_dev) && (srcStat.st_ino == dstStat.st_ino);
+#endif
+}
 } // namespace
 
 File::File(const std::string& path, int32_t flag, mmMode_t mode, bool lazyOpen)
@@ -182,6 +214,14 @@ int32_t File::Copy(const std::string& srcPath, const std::string& dstPath)
     if (ret != ADUMP_SUCCESS) {
         IDE_LOGE("Open src file failed, file: %s", srcPath.c_str());
         return ret;
+    }
+
+    // 源、目标是同一个文件时必须提前返回：下面用 M_TRUNC 打开目标会把源文件截断成 0 字节，
+    // 随后 Read 立即返回 0，拷贝"成功"但内容已丢失。这里比较 st_dev/st_ino，
+    // 因为路径字符串不同（相对/绝对、符号链接、硬链接）仍可能指向同一 inode。
+    if (IsSameFile(srcFile, dstPath)) {
+        IDE_LOGW("Src and dst are the same file, skip copy to avoid truncating it, file: %s", srcPath.c_str());
+        return ADUMP_SUCCESS;
     }
 
     File dstFile(dstPath, M_CREAT | M_WRONLY | M_TRUNC, READ_WRITE_MODE);

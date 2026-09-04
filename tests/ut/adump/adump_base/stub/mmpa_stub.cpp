@@ -254,6 +254,19 @@ INT32 mmStatGet(const CHAR* path, mmStat_t* buffer)
     return EN_OK;
 }
 
+INT32 mmFStatGet(INT32 fd, mmStat_t* buffer)
+{
+    if (buffer == NULL) {
+        return EN_INVALID_PARAM;
+    }
+
+    INT32 ret = fstat(fd, buffer);
+    if (ret != EN_OK) {
+        return EN_ERROR;
+    }
+    return EN_OK;
+}
+
 INT32 mmJoinTask(mmThread* pstThreadHandle) { return 0; }
 
 INT32 mmSetCurrentThreadName(const CHAR* name) { return EN_OK; }
