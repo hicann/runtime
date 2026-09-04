@@ -631,9 +631,10 @@ TEST_F(ADX_API_UTEST, AdxRecvDevFileTimeout)
     const char* desPath = "/tmp/adcore_utest";
     char filename[1024] = {0};
     char* value = HDC_END_MSG;
+    uint32_t realLen = strlen(value);
     MOCKER(AdxRecvMsg)
         .stubs()
-        .with(any(), outBoundP(&value, sizeof(value)), any(), any())
+        .with(any(), outBoundP(&value, sizeof(value)), outBoundP(&realLen), any())
         .will(returnValue(1))
         .then(returnValue(IDE_DAEMON_OK));
 
@@ -643,9 +644,10 @@ TEST_F(ADX_API_UTEST, AdxRecvDevFileTimeout)
     GlobalMockObject::verify();
     MOCKER(mmOpen2).stubs().will(returnValue(-1));
     value = "test";
+    realLen = strlen(value);
     MOCKER(AdxRecvMsg)
         .stubs()
-        .with(any(), outBoundP(&value, sizeof(value)), any(), any())
+        .with(any(), outBoundP(&value, sizeof(value)), outBoundP(&realLen), any())
         .will(returnValue(IDE_DAEMON_OK));
     EXPECT_EQ(IDE_DAEMON_ERROR, AdxRecvDevFileTimeout(handle, desPath, 1000, filename, 1024));
     free(handle);
@@ -657,10 +659,11 @@ TEST_F(ADX_API_UTEST, AdxRecvDevFileTimeoutSucc)
     const char* desPath = "/tmp/adcore_utest";
     char filename[1024] = {0};
     char* value = "test";
+    uint32_t realLen = strlen(value);
     MOCKER(mmOpen2).stubs().will(returnValue(1));
     MOCKER(AdxRecvMsg)
         .stubs()
-        .with(any(), outBoundP(&value, sizeof(value)), any(), any())
+        .with(any(), outBoundP(&value, sizeof(value)), outBoundP(&realLen), any())
         .will(returnValue(IDE_DAEMON_OK));
     MOCKER(HdcReadTimeout).stubs().will(invoke(HdcReadTimeoutDataStub));
     EXPECT_EQ(IDE_DAEMON_OK, AdxRecvDevFileTimeout(handle, desPath, 1000, filename, 1024));
@@ -673,9 +676,10 @@ TEST_F(ADX_API_UTEST, AdxRecvDevFileTimeout_CheckCrossPathFailed)
     const char* desPath = "/tmp/adcore_utest";
     char filename[1024] = {0};
     char* value = "../test";
+    uint32_t realLen = strlen(value);
     MOCKER(AdxRecvMsg)
         .stubs()
-        .with(any(), outBoundP(&value, sizeof(value)), any(), any())
+        .with(any(), outBoundP(&value, sizeof(value)), outBoundP(&realLen), any())
         .will(returnValue(IDE_DAEMON_OK));
     MOCKER(HdcReadTimeout).stubs().will(invoke(HdcReadTimeoutDataStub));
     EXPECT_EQ(IDE_DAEMON_ERROR, AdxRecvDevFileTimeout(handle, desPath, 1000, filename, 1024));

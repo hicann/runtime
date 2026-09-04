@@ -9,6 +9,7 @@
  */
 
 #include "file.h"
+#include <cinttypes>
 #include "path.h"
 #include "adump_pub.h"
 #include "log/adx_log.h"
@@ -113,8 +114,8 @@ int32_t File::Close()
 
 int64_t File::Write(const char* const buffer, int64_t length) const
 {
-    if (length < 0) {
-        IDE_LOGE("Write data failed, invalid length: %ld", length);
+    if (length < 0 || (length > 0 && buffer == nullptr)) {
+        IDE_LOGE("Write data failed, invalid buffer or length: buffer=%p, length=%" PRId64, buffer, length);
         return static_cast<int64_t>(EN_INVALID_PARAM);
     }
     int64_t written = 0;
@@ -130,12 +131,14 @@ int64_t File::Write(const char* const buffer, int64_t length) const
         // 打印 errno 便于区分磁盘满等根因(mmWrite 返回 0 时不带错误码)。
         if ((ret == 0) || (static_cast<int64_t>(ret) > static_cast<int64_t>(chunk))) {
             IDE_LOGE(
-                "Write data failed, buff: %p, length: %ld, written: %ld, ret: %zd, errno: %d", buffer, length, written,
-                ret, mmGetErrorCode());
+                "Write data failed, buff: %p, length: %" PRId64 ", written: %" PRId64 ", ret: %zd, errno: %d", buffer,
+                length, written, ret, mmGetErrorCode());
             return static_cast<int64_t>(EN_ERROR);
         }
         if (ret < 0) {
-            IDE_LOGE("Write data failed, buff: %p, length: %ld, written: %ld, ret: %zd", buffer, length, written, ret);
+            IDE_LOGE(
+                "Write data failed, buff: %p, length: %" PRId64 ", written: %" PRId64 ", ret: %zd", buffer, length,
+                written, ret);
             return static_cast<int64_t>(ret);
         }
         written += static_cast<int64_t>(ret);
@@ -146,7 +149,7 @@ int64_t File::Write(const char* const buffer, int64_t length) const
 int64_t File::Read(char* buffer, int64_t length) const
 {
     if (length < 0) {
-        IDE_LOGE("Read data failed, invalid length: %ld", length);
+        IDE_LOGE("Read data failed, invalid length: %" PRId64, length);
         return static_cast<int64_t>(EN_INVALID_PARAM);
     }
     int64_t read = 0;
@@ -158,7 +161,9 @@ int64_t File::Read(char* buffer, int64_t length) const
             continue;
         }
         if (ret < 0) {
-            IDE_LOGE("Read data failed, buff: %p, length: %ld bytes, read: %ld, ret: %zd", buffer, length, read, ret);
+            IDE_LOGE(
+                "Read data failed, buff: %p, length: %" PRId64 " bytes, read: %" PRId64 ", ret: %zd", buffer, length,
+                read, ret);
             return static_cast<int64_t>(ret);
         }
         if (ret == 0) {
@@ -194,7 +199,7 @@ int32_t File::Copy(const std::string& srcPath, const std::string& dstPath)
             IDE_LOGE("Read file failed, file: %s", srcPath.c_str());
             return ADUMP_FAILED;
         }
-        IDE_LOGD("Read file size: %ld bytes", size);
+        IDE_LOGD("Read file size: %" PRId64 " bytes", size);
         if (size > 0) {
             const auto writeSize = dstFile.Write(buffer, size);
             if (writeSize < 0) {

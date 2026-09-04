@@ -226,6 +226,8 @@ int32_t HdcStorePackage(const IdeHdcPacket& packet, struct IoVec& ioVec)
         if (ret != EOK) {
             MSPROF_LOGE("memory copy failed, ret: %d", ret);
             IDE_XFREE_AND_SET_NULL(buf);
+            ioVec.base = nullptr;
+            ioVec.len = 0;
             return IDE_DAEMON_ERROR;
         }
         ioVec.base = buf;

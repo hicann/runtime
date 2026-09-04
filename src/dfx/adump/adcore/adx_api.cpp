@@ -336,7 +336,7 @@ int32_t AdxRecvDevFileTimeout(
     if (ret != IDE_DAEMON_OK) {
         return ret;
     }
-    std::string value(fileName);
+    std::string value(fileName, len);
     if (value.compare(HDC_END_MSG) == 0) {
         return IDE_DAEMON_ERROR;
     }
