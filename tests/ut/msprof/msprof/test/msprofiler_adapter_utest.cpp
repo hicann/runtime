@@ -392,6 +392,9 @@ TEST_F(MSPROFILER_ADAPTER_UTEST, COMPUTE_PARSE_TEN_AICORE_METRICS)
     EXPECT_EQ(analysis::dvvp::message::PROFILING_MODE_DEF, params->profiling_mode);
     EXPECT_EQ(0, params->ai_core_metrics.find("Custom:"));
     EXPECT_NE(std::string::npos, params->ai_core_metrics.find("0x509"));
+    EXPECT_EQ(std::string::npos, params->ai_core_profiling_events.find("Custom:"));
+    EXPECT_NE(std::string::npos, params->ai_core_profiling_events.find("0x509"));
+    EXPECT_EQ(params->ai_core_profiling_events, params->aiv_profiling_events);
 }
 
 TEST_F(MSPROFILER_ADAPTER_UTEST, COMPUTE_KEEP_ZERO_AICORE_METRIC)
@@ -411,7 +414,9 @@ TEST_F(MSPROFILER_ADAPTER_UTEST, COMPUTE_KEEP_ZERO_AICORE_METRIC)
     auto params = manager->BuildProfileParams(computeConfig, "0");
     ASSERT_NE(nullptr, params);
     EXPECT_EQ("Custom:0x0,0x501,0x301", params->ai_core_metrics);
+    EXPECT_EQ("0x0,0x501,0x301", params->ai_core_profiling_events);
     EXPECT_EQ(params->ai_core_metrics, params->aiv_metrics);
+    EXPECT_EQ(params->ai_core_profiling_events, params->aiv_profiling_events);
 }
 
 TEST_F(MSPROFILER_ADAPTER_UTEST, COMPUTE_PARSE_ALL_BLOCK_MODE)

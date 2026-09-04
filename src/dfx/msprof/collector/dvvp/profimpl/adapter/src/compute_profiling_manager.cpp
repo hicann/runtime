@@ -9,6 +9,7 @@
  */
 
 #include "compute_profiling_manager.h"
+#include <cstring>
 #include <sstream>
 #include "aprof_pub.h"
 #include "command_handle.h"
@@ -222,14 +223,15 @@ SHARED_PTR_ALIA<ProfileParams> ComputeProfilingManager::BuildProfileParams(
     }
     if (config.enablePmu) {
         const std::string metricEvents = BuildMetricEvents(config.aicoreMetrics);
+        const std::string rawEvents = metricEvents.substr(strlen(CUSTOM_METRIC_PREFIX));
         params->ai_core_profiling = MSVP_PROF_ON;
         params->ai_core_profiling_mode = PROFILING_MODE_TASK_BASED;
         params->ai_core_metrics = metricEvents;
-        params->ai_core_profiling_events = metricEvents;
+        params->ai_core_profiling_events = rawEvents;
         params->aiv_profiling = MSVP_PROF_ON;
         params->aiv_profiling_mode = PROFILING_MODE_TASK_BASED;
         params->aiv_metrics = metricEvents;
-        params->aiv_profiling_events = metricEvents;
+        params->aiv_profiling_events = rawEvents;
     }
     if (config.enableInstr) {
         params->instrProfiling = config.enableBiuPerf ? MSVP_PROF_ON : MSVP_PROF_OFF;
