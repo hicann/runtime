@@ -16,6 +16,7 @@
 #include "task_recycle.hpp"
 #include "task_fail_callback_manager.hpp"
 #include "arch920x.hpp"
+#include "stream_sqcq_manage.hpp"
 
 namespace cce {
 namespace runtime {
@@ -42,10 +43,12 @@ static bool RegisterArch920xErrorBitMask()
 static bool g_registerArch920xErrorBitMask = RegisterArch920xErrorBitMask();
 
 static void PrintArch920xCoreErrInfo(
-    const StarsDeviceErrorInfo* const info, const uint64_t errorNumber, const uint32_t coreIdx,
+    const StarsDeviceErrorInfo* const info, const uint64_t errorNumber, const uint32_t coreIdx, const Device* const dev,
     const std::string& errorCode)
 {
     const DavidOneCoreErrorInfo& coreErrInfo = info->u.davidCoreErrorInfo.info[coreIdx];
+    uint32_t firstStreamId = UINT32_MAX;
+    (void)dev->GetStreamSqCqManage()->GetStreamIdBySqId(coreErrInfo.ostTaskOneCore[0].rtsqId, firstStreamId);
     std::ostringstream oss;
     oss << std::showbase << std::dec << "The error from device(chipId:" << info->u.davidCoreErrorInfo.comm.chipId
         << ", dieId:" << info->u.davidCoreErrorInfo.comm.dieId << "), serial number is " << errorNumber
@@ -58,12 +61,12 @@ static void PrintArch920xCoreErrInfo(
         << ", cube error info: " << coreErrInfo.cubeErrInfo << ", l1 error info: " << coreErrInfo.l1ErrInfo
         << ", aic error mask: " << coreErrInfo.aicErrorMask << ", para base: " << coreErrInfo.paraBase
         << ", first pc start: " << coreErrInfo.ostTaskOneCore[0].pcStart << std::dec
-        << ", first taskid: " << coreErrInfo.ostTaskOneCore[0].taskId
-        << ", first streamid: " << coreErrInfo.ostTaskOneCore[0].streamId;
+        << ", first taskid: " << coreErrInfo.ostTaskOneCore[0].taskId << ", first streamid: " << firstStreamId;
     if (coreErrInfo.ostTaskOneCore[1].pcStart != 0) {
+        uint32_t secondStreamId = UINT32_MAX;
+        (void)dev->GetStreamSqCqManage()->GetStreamIdBySqId(coreErrInfo.ostTaskOneCore[1].rtsqId, secondStreamId);
         oss << std::showbase << std::hex << ", second pc start: " << coreErrInfo.ostTaskOneCore[1].pcStart << std::dec
-            << ", second taskid: " << coreErrInfo.ostTaskOneCore[1].taskId
-            << ", second streamid: " << coreErrInfo.ostTaskOneCore[1].streamId
+            << ", second taskid: " << coreErrInfo.ostTaskOneCore[1].taskId << ", second streamid: " << secondStreamId
             << ", isconcurrentexe: " << coreErrInfo.isConcurrentExe << ".";
     } else {
         oss << ".";
@@ -120,7 +123,13 @@ static void DavidOstTaskErrorProc(
         if (info->ostTaskOneCore[taskIdx].pcStart == 0ULL) {
             continue;
         }
-        const uint16_t streamId = info->ostTaskOneCore[taskIdx].streamId;
+        const uint16_t rtsqId = info->ostTaskOneCore[taskIdx].rtsqId;
+        uint32_t streamId = UINT32_MAX;
+        const rtError_t ret = dev->GetStreamSqCqManage()->GetStreamIdBySqId(rtsqId, streamId);
+        if ((ret != RT_ERROR_NONE) || (streamId >= UINT16_MAX)) {
+            RT_LOG(RT_LOG_WARNING, "GetStreamId error, device_id=%u, rtsq_id=%u.", dev->Id_(), rtsqId);
+            continue;
+        }
         const uint16_t taskId = info->ostTaskOneCore[taskIdx].taskId;
         const uint32_t formatSTaskId = ((streamId << 16) | taskId); // streamId和taskId组合成一个32位的值用于去重
         if (allSTaskId->find(formatSTaskId) != allSTaskId->end()) {
@@ -159,7 +168,7 @@ static rtError_t ProcessArch920xStarsCoreErrorInfo(
         ProcessDavidStarsCoreErrorMapInfo(
             &(info->u.davidCoreErrorInfo.info[coreIdx]), errorString, errorCode, dev->GetChipType());
         AddExceptionRegInfo(info, coreIdx, type, errTaskPtr);
-        PrintArch920xCoreErrInfo(info, errorNumber, coreIdx, errorCode);
+        PrintArch920xCoreErrInfo(info, errorNumber, coreIdx, dev, errorCode);
         DavidOstTaskErrorProc(dev, &(info->u.davidCoreErrorInfo.info[coreIdx]), &allSTaskId);
     }
     return RT_ERROR_NONE;

@@ -800,6 +800,5 @@ rtError_t StreamSqCqManage::GetStreamSharedPtrById(const uint32_t streamId, std:
     }
     return RT_ERROR_STREAM_NULL;
 }
-
 } // namespace runtime
 } // namespace cce

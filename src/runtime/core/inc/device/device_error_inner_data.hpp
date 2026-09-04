@@ -149,7 +149,7 @@ struct StarsDvppErrorInfo {
 };
 
 struct starsOstTaskOneCoreInfo {
-    uint16_t streamId;
+    uint16_t rtsqId;
     uint16_t taskId;
     uint64_t pcStart;
 };

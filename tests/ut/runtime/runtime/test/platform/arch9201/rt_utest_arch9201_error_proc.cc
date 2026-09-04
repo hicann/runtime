@@ -23,6 +23,7 @@
 #include "device_error_proc_c.hpp"
 #include "thread_local_container.hpp"
 #include "stars_david.hpp"
+#include "stream_sqcq_manage.hpp"
 #include "rt_unwrap.h"
 #undef private
 #undef protected
@@ -237,7 +238,7 @@ TEST_F(Arch9201ErrorProcTest, ProcessStarv2OneElement_AllPathsAndInvalidInput)
             errorInfo->u.davidCoreErrorInfo.info[i].suErrInfo[3] = 0x9ABC;
             errorInfo->u.davidCoreErrorInfo.info[i].ostTaskOneCore[0].pcStart = 0x1000;
             errorInfo->u.davidCoreErrorInfo.info[i].ostTaskOneCore[1].pcStart = 0x2000;
-            errorInfo->u.davidCoreErrorInfo.info[i].ostTaskOneCore[1].streamId = 1;
+            errorInfo->u.davidCoreErrorInfo.info[i].ostTaskOneCore[1].rtsqId = 1;
             errorInfo->u.davidCoreErrorInfo.info[i].ostTaskOneCore[1].taskId = 2;
         }
         EXPECT_EQ(errorProc->ProcessStarv2OneElementInRingBuffer(ctlInfo, 0, 1), RT_ERROR_NONE);
@@ -330,6 +331,22 @@ TEST_F(Arch9201ErrorProcTest, ProcessStarv2OneElement_AicoreAicpuFusionError)
     rtStream_t streamHandle = nullptr;
     rtStreamCreate(&streamHandle, 0);
     Stream* stream = rt_ut::UnwrapOrNull<Stream>(streamHandle);
+    ASSERT_NE(stream, nullptr);
+
+    constexpr uint16_t firstRtsqId = 100U;
+    constexpr uint16_t secondRtsqId = 101U;
+    constexpr uint32_t firstStreamId = UINT16_MAX - 2U;
+    constexpr uint32_t secondStreamId = UINT16_MAX - 1U;
+    StreamSqCqManage* const streamSqCqManage = device->GetStreamSqCqManage();
+    ASSERT_NE(streamSqCqManage, nullptr);
+    ASSERT_TRUE(streamSqCqManage->sqIdToStreamIdMap_.emplace(firstRtsqId, firstStreamId).second);
+    ASSERT_TRUE(streamSqCqManage->sqIdToStreamIdMap_.emplace(secondRtsqId, secondStreamId).second);
+
+    uint32_t mappedStreamId = UINT32_MAX;
+    EXPECT_EQ(streamSqCqManage->GetStreamIdBySqId(firstRtsqId, mappedStreamId), RT_ERROR_NONE);
+    EXPECT_EQ(mappedStreamId, firstStreamId);
+    EXPECT_EQ(streamSqCqManage->GetStreamIdBySqId(secondRtsqId, mappedStreamId), RT_ERROR_NONE);
+    EXPECT_EQ(mappedStreamId, secondStreamId);
 
     // --- AICORE 3 core：PrintErrorInfo(1) + RT_ERROR_NONE ---
     {
@@ -348,15 +365,15 @@ TEST_F(Arch9201ErrorProcTest, ProcessStarv2OneElement_AicoreAicpuFusionError)
         rbErr->u.davidCoreErrorInfo.comm.coreNum = 3;
         rbErr->u.davidCoreErrorInfo.info[0].coreId = 0;
         rbErr->u.davidCoreErrorInfo.info[0].isConcurrentExe = 0;
-        rbErr->u.davidCoreErrorInfo.info[0].ostTaskOneCore[0] = {0, 0, 0x100};
-        rbErr->u.davidCoreErrorInfo.info[0].ostTaskOneCore[1] = {1, 0, 0x200};
+        rbErr->u.davidCoreErrorInfo.info[0].ostTaskOneCore[0] = {firstRtsqId, 0, 0x100};
+        rbErr->u.davidCoreErrorInfo.info[0].ostTaskOneCore[1] = {secondRtsqId, 0, 0x200};
         rbErr->u.davidCoreErrorInfo.info[1].coreId = 1;
         rbErr->u.davidCoreErrorInfo.info[1].isConcurrentExe = 1;
-        rbErr->u.davidCoreErrorInfo.info[1].ostTaskOneCore[0] = {0, 0, 0x300};
-        rbErr->u.davidCoreErrorInfo.info[1].ostTaskOneCore[1] = {1, 1, 0x400};
+        rbErr->u.davidCoreErrorInfo.info[1].ostTaskOneCore[0] = {firstRtsqId, 0, 0x300};
+        rbErr->u.davidCoreErrorInfo.info[1].ostTaskOneCore[1] = {secondRtsqId, 1, 0x400};
         rbErr->u.davidCoreErrorInfo.info[2].coreId = 2;
         rbErr->u.davidCoreErrorInfo.info[2].isConcurrentExe = 0;
-        rbErr->u.davidCoreErrorInfo.info[2].ostTaskOneCore[0] = {0, 1, 0x500};
+        rbErr->u.davidCoreErrorInfo.info[2].ostTaskOneCore[0] = {firstRtsqId, 1, 0x500};
         rbErr->u.davidCoreErrorInfo.info[2].ostTaskOneCore[1] = {0, 0, 0};
 
         g_printErrCnt = 0;
@@ -431,12 +448,12 @@ TEST_F(Arch9201ErrorProcTest, ProcessStarv2OneElement_AicoreAicpuFusionError)
         rbErr->u.davidCoreErrorInfo.comm.coreNum = 2;
         rbErr->u.davidCoreErrorInfo.info[0].coreId = 0;
         rbErr->u.davidCoreErrorInfo.info[0].isConcurrentExe = 0;
-        rbErr->u.davidCoreErrorInfo.info[0].ostTaskOneCore[0] = {0, 0, 0x100};
-        rbErr->u.davidCoreErrorInfo.info[0].ostTaskOneCore[1] = {1, 0, 0x200};
+        rbErr->u.davidCoreErrorInfo.info[0].ostTaskOneCore[0] = {firstRtsqId, 0, 0x100};
+        rbErr->u.davidCoreErrorInfo.info[0].ostTaskOneCore[1] = {secondRtsqId, 0, 0x200};
         rbErr->u.davidCoreErrorInfo.info[1].coreId = 1;
         rbErr->u.davidCoreErrorInfo.info[1].isConcurrentExe = 1;
-        rbErr->u.davidCoreErrorInfo.info[1].ostTaskOneCore[0] = {0, 0, 0x300};
-        rbErr->u.davidCoreErrorInfo.info[1].ostTaskOneCore[1] = {1, 1, 0x400};
+        rbErr->u.davidCoreErrorInfo.info[1].ostTaskOneCore[0] = {firstRtsqId, 0, 0x300};
+        rbErr->u.davidCoreErrorInfo.info[1].ostTaskOneCore[1] = {secondRtsqId, 1, 0x400};
 
         g_printErrCnt = 0;
         g_callCnt = 0;
@@ -445,6 +462,65 @@ TEST_F(Arch9201ErrorProcTest, ProcessStarv2OneElement_AicoreAicpuFusionError)
         EXPECT_EQ(g_callCnt, 3U);
     }
 
+    EXPECT_EQ(streamSqCqManage->sqIdToStreamIdMap_.erase(firstRtsqId), 1U);
+    EXPECT_EQ(streamSqCqManage->sqIdToStreamIdMap_.erase(secondRtsqId), 1U);
+    rtStreamDestroy(streamHandle);
+    free(ctlInfo);
+    CleanupErrorProc(errorProc, device);
+    rtDeviceReset(1);
+}
+
+TEST_F(Arch9201ErrorProcTest, ProcessStarv2OneElement_OstTaskInvalidStreamMapping)
+{
+    rtSetDevice(1);
+    Device* device = ((Runtime*)Runtime::Instance())->DeviceRetain(1, 0);
+    DeviceErrorProc* errorProc = new DeviceErrorProc(device);
+    DevRingBufferCtlInfo* ctlInfo = (DevRingBufferCtlInfo*)malloc(DEVICE_ERROR_EXT_RINGBUFFER_SIZE);
+    ASSERT_NE(ctlInfo, nullptr);
+
+    MOCKER(StreamNopTask).stubs().will(returnValue(RT_ERROR_NONE));
+    rtStream_t streamHandle = nullptr;
+    rtStreamCreate(&streamHandle, 0);
+    Stream* stream = rt_ut::UnwrapOrNull<Stream>(streamHandle);
+    ASSERT_NE(stream, nullptr);
+
+    constexpr uint16_t invalidStreamRtsqId = 102U;
+    constexpr uint16_t unmappedRtsqId = 103U;
+    constexpr uint32_t invalidStreamId = UINT16_MAX;
+    StreamSqCqManage* const streamSqCqManage = device->GetStreamSqCqManage();
+    ASSERT_NE(streamSqCqManage, nullptr);
+    ASSERT_TRUE(streamSqCqManage->sqIdToStreamIdMap_.emplace(invalidStreamRtsqId, invalidStreamId).second);
+
+    uint32_t mappedStreamId = UINT32_MAX;
+    EXPECT_EQ(streamSqCqManage->GetStreamIdBySqId(invalidStreamRtsqId, mappedStreamId), RT_ERROR_NONE);
+    EXPECT_EQ(mappedStreamId, invalidStreamId);
+    EXPECT_EQ(streamSqCqManage->GetStreamIdBySqId(unmappedRtsqId, mappedStreamId), RT_ERROR_STREAM_NOT_EXIST);
+
+    TaskInfo taskInfo = {};
+    taskInfo.stream = stream;
+    taskInfo.type = TS_TASK_TYPE_FUSION_KERNEL;
+    MOCKER_CPP(&TaskFactory::GetTask).stubs().will(returnValue(&taskInfo));
+    MOCKER(GetTaskInfo)
+        .expects(exactly(2))
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::eq(true))
+        .will(returnValue(&taskInfo));
+    MOCKER(PrintErrorInfo).stubs().will(invoke(PrintErrorInfoStub));
+    MOCKER(TaskFailCallBackForFusionKernelTask).expects(never());
+
+    RingBufferElementInfo* info = InitRingBuffer(ctlInfo, 1);
+    StarsDeviceErrorInfoRingBuffer* rbErr = reinterpret_cast<StarsDeviceErrorInfoRingBuffer*>(info + 1);
+    info->errorType = AICORE_ERROR;
+    rbErr->u.davidCoreErrorInfo.comm.type = AICORE_ERROR;
+    rbErr->u.davidCoreErrorInfo.comm.coreNum = 1;
+    rbErr->u.davidCoreErrorInfo.info[0].coreId = 0;
+    rbErr->u.davidCoreErrorInfo.info[0].ostTaskOneCore[0] = {invalidStreamRtsqId, 0, 0x100};
+    rbErr->u.davidCoreErrorInfo.info[0].ostTaskOneCore[1] = {unmappedRtsqId, 1, 0x200};
+
+    g_printErrCnt = 0;
+    EXPECT_EQ(errorProc->ProcessStarv2OneElementInRingBuffer(ctlInfo, 0, 1, 1), RT_ERROR_NONE);
+    EXPECT_EQ(g_printErrCnt, 1U);
+
+    EXPECT_EQ(streamSqCqManage->sqIdToStreamIdMap_.erase(invalidStreamRtsqId), 1U);
     rtStreamDestroy(streamHandle);
     free(ctlInfo);
     CleanupErrorProc(errorProc, device);
