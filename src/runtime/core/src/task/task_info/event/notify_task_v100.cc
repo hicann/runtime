@@ -177,7 +177,7 @@ static void ConstructSqeForNotifyWaitTask(TaskInfo* taskInfo, rtStarsSqe_t* cons
         notifyWaitTask->timeout);
 }
 
-void ReleaseResourceForNotifyWaitTaskOnlModel(TaskInfo* taskInfo) { UNUSED(taskInfo); }
+void ReleaseResourceForNotifyWaitTaskOnlModel(TaskInfo* const taskInfo) { UNUSED(taskInfo); }
 
 #endif
 

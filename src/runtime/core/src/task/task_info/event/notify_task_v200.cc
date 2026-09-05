@@ -48,7 +48,7 @@ void ConstructSqeForIpcNotifyRecordTask(TaskInfo* taskInfo, rtDavidSqe_t* const 
         sqe->subType);
 }
 
-void ReleaseResourceForNotifyWaitTaskOnlModel(TaskInfo* taskInfo)
+void ReleaseResourceForNotifyWaitTaskOnlModel(TaskInfo* const taskInfo)
 {
     if (!Runtime::Instance()->GetConnectUbFlag()) {
         return;

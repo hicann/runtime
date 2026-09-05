@@ -61,7 +61,7 @@ void ConstructSqeForIpcNotifyRecordTask(TaskInfo* taskInfo, rtDavidSqe_t* const 
         sqe->subType);
 }
 
-void ReleaseResourceForNotifyWaitTaskOnlModel(TaskInfo* taskInfo) { UNUSED(taskInfo); }
+void ReleaseResourceForNotifyWaitTaskOnlModel(TaskInfo* const taskInfo) { UNUSED(taskInfo); }
 
 static bool NotifyTaskRegister()
 {
