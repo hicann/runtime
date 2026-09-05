@@ -27,6 +27,9 @@ struct DumpDfxInfo {
     uint32_t length;
 };
 
+void DumpKernelDfxInfoCallback(
+    rtKernelDfxInfoType dfxType, uint32_t coreType, uint32_t coreId, const uint8_t* buffer, size_t length);
+
 class KernelDfxDumper : public Adx::Common::Singleton::Singleton<KernelDfxDumper> {
 public:
     KernelDfxDumper();

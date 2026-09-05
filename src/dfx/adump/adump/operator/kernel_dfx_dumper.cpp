@@ -20,7 +20,6 @@
 #include "log/adx_log.h"
 #include "dump_config_converter.h"
 #include "kernel_dfx_dumper.h"
-#include "dfx_info_parser.h"
 
 namespace Adx {
 static const int32_t WAIT_TASK_INTERVAL_TIME = 500;
@@ -41,6 +40,12 @@ static const std::map<rtKernelDfxInfoType, std::string> DFX_TYPE_STR_MAP = {
     {rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_ASSERT, KERNEL_DFX_TYPE_ASSERT},
     {rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_TIME_STAMP, KERNEL_DFX_TYPE_TIMESTAMP},
     {rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_BLOCK_INFO, KERNEL_DFX_TYPE_BLOCKINFO}};
+
+void DumpKernelDfxInfoCallback(
+    rtKernelDfxInfoType dfxType, uint32_t coreType, uint32_t coreId, const uint8_t* buffer, size_t length)
+{
+    (void)KernelDfxDumper::Instance().DumpKernelDfxInfo(dfxType, coreType, coreId, buffer, length);
+}
 
 int32_t KernelDfxDumper::PushDfxInfoToQueue(DumpDfxInfo& dfxInfo)
 {
@@ -163,7 +168,6 @@ int32_t KernelDfxDumper::UnInitTask()
 
 void KernelDfxDumper::UnInit()
 {
-    DfxInfoParser::Instance().UnInit();
     std::lock_guard<std::mutex> lock(mutex_);
     destructed_ = true;
     UnInitTask();
@@ -203,10 +207,6 @@ KernelDfxDumper::KernelDfxDumper()
         pthread_atfork(KernelDfxDumper::PrepareFork, KernelDfxDumper::PostForkParent, KernelDfxDumper::PostForkChild);
     if (ret != 0) {
         IDE_LOGW("call pthread_atfork failed, ret: %d", ret);
-    }
-    ret = DfxInfoParser::Instance().Init();
-    if (ret != ADUMP_SUCCESS) {
-        IDE_LOGE("Initialize dfx info parser failed, ret=%d.", ret);
     }
     EnableDfxDumper();
 }
@@ -251,16 +251,20 @@ int32_t KernelDfxDumper::EnableDfxDumper(const DumpDfxConfig config)
     if (config.dfxTypes.empty() || config.dumpPath.empty()) {
         return ADUMP_SUCCESS;
     }
-    IDE_CTRL_VALUE_FAILED(
-        DfxInfoParser::Instance().Init() == ADUMP_SUCCESS, return ADUMP_FAILED, "Initialize dfx info parser failed.");
     std::lock_guard<std::mutex> lock(mutex_);
     destructed_ = false;
     std::set<rtKernelDfxInfoType> rtDfxTypes;
     GetRegisterDfxTypes(config.dfxTypes, rtDfxTypes);
     for (auto& rtDfxType : rtDfxTypes) {
         if (!IsEnabled(rtDfxType)) {
+            rtError_t ret = rtSetKernelDfxInfoCallback(rtDfxType, DumpKernelDfxInfoCallback);
+            IDE_CTRL_VALUE_FAILED(
+                ret == RT_ERROR_NONE, return ADUMP_FAILED,
+                "Register the dfx info dump callback to RTS failed! dfxType=%d, ret=%d", rtDfxType, ret);
             enabledDfxTypes_.insert(rtDfxType);
-            IDE_LOGI("Enable dfx info dump. dfxType=%d", rtDfxType);
+            IDE_LOGI("Register the dfx info dump callback to RTS success. dfxType=%d", rtDfxType);
+        } else {
+            IDE_LOGI("The dfx info dump callback has been registered to RTS. dfxType=%d", rtDfxType);
         }
     }
     IDE_CTRL_VALUE_FAILED(

@@ -17,7 +17,6 @@
 #define private public
 
 #include "kernel_dfx_dumper.h"
-#include "dfx_info_parser.h"
 #include "rt_inner_dfx.h"
 #include "lib_path.h"
 #include "file_utils.h"
@@ -44,16 +43,6 @@ INT32 mmSleep_stub(UINT32 millseconds)
 {
     usleep(millseconds * 1000);
     return 0;
-}
-
-TEST_F(KernelDfxDumperUtest, Test_DfxDumper_UnInitUnregistersDfxParser)
-{
-    EXPECT_EQ(DfxInfoParser::Instance().Init(), ADUMP_SUCCESS);
-    EXPECT_EQ(DfxInfoParser::Instance().registered_, true);
-
-    KernelDfxDumper::Instance().UnInit();
-
-    EXPECT_EQ(DfxInfoParser::Instance().registered_, false);
 }
 
 TEST_F(KernelDfxDumperUtest, Test_DfxDumper_EnableWithEnv)
@@ -148,19 +137,19 @@ TEST_F(KernelDfxDumperUtest, Test_DfxDumper_EnableWithConfig)
     (void)system("rm -rf ./Test_DfxDumper_EnableWithConfig");
 }
 
-TEST_F(KernelDfxDumperUtest, Test_DfxDumper_EnableFailsWhenParserRegistrationFails)
+TEST_F(KernelDfxDumperUtest, Test_DfxDumper_EnableFailsWhenKernelDfxCallbackRegistrationFails)
 {
-    DfxInfoParser::Instance().UnInit();
-    MOCKER(rtRegisterParseDfxInfoFunc).stubs().will(returnValue(static_cast<rtError_t>(1)));
     DumpDfxConfig dumpDfxConfig;
     dumpDfxConfig.dfxTypes.push_back("all");
-    dumpDfxConfig.dumpPath = "./Test_DfxDumper_EnableFailsWhenParserRegistrationFails";
+    dumpDfxConfig.dumpPath = "./Test_DfxDumper_EnableFailsWhenKernelDfxCallbackRegistrationFails";
+    MOCKER(rtSetKernelDfxInfoCallback).stubs().will(returnValue(static_cast<rtError_t>(1)));
 
     const int32_t ret = KernelDfxDumper::Instance().EnableDfxDumper(dumpDfxConfig);
 
     EXPECT_EQ(ret, ADUMP_FAILED);
-    EXPECT_EQ(DfxInfoParser::Instance().registered_, false);
     EXPECT_EQ(KernelDfxDumper::Instance().IsEnabled(), false);
+    EXPECT_TRUE(KernelDfxDumper::Instance().enabledDfxTypes_.empty());
+    EXPECT_EQ(KernelDfxDumper::Instance().taskInit_, false);
 }
 
 TEST_F(KernelDfxDumperUtest, Test_DfxDumper_Fork_EnableWithEnv)
