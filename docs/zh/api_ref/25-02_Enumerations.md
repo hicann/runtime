@@ -62,6 +62,7 @@ enum 类型数据。
 - [aclrtMemcpyKind](#aclrtMemcpyKind)
 - [aclrtMemGranularityOptions](#aclrtMemGranularityOptions)
 - [aclrtMemHandleType](#aclrtMemHandleType)
+- [aclrtMemLinkType](#aclrtMemLinkType)
 - [aclrtMemLocationType](#aclrtMemLocationType)
 - [aclrtMemMallocPolicy](#aclrtMemMallocPolicy)
 - [aclrtMemManagedAdviseType](#aclrtMemManagedAdviseType)
@@ -1730,6 +1731,35 @@ typedef enum aclrtMemHandleType {
     ACL_MEM_HANDLE_TYPE_POSIX = 2,  // POSIX类型的handle，表示内存可以通过POSIX文件描述符导出，建议仅在POSIX系统中配置该属性
 } aclrtMemHandleType;
 ```
+
+<br>
+
+<a id="aclrtMemLinkType"></a>
+
+## aclrtMemLinkType
+
+```c
+typedef enum {
+    ACL_RT_MEM_ACCESS_LINK_SIO = 0,
+    ACL_RT_MEM_ACCESS_LINK_HCCS = 1,
+    ACL_RT_MEM_ACCESS_UB_ONE_PORT_PATH = 2,
+    ACL_RT_MEM_ACCESS_UB_MULTI_PORT_PATH = 3,
+} aclrtMemLinkType;
+```
+
+各枚举项的说明如下：
+
+- `ACL_RT_MEM_ACCESS_LINK_SIO`：SIO通道，片内连接方式，两个DIE之间通过该方式连接。
+- `ACL_RT_MEM_ACCESS_LINK_HCCS`：HCCS通道，HCCS是Huawei Cache Coherence System（华为缓存一致性系统），用于CPU/NPU之间的高速互联。
+- `ACL_RT_MEM_ACCESS_UB_ONE_PORT_PATH`：UB（Unified Bus）单端口路径：FM（Full Mesh）连线方式，无层级、全点对点直连。
+- `ACL_RT_MEM_ACCESS_UB_MULTI_PORT_PATH`：UB（Unified Bus）多端口路径：CLOS连线方式，分层结构化互联。
+
+<!-- npu="A3" id109 -->
+对于Atlas A3 训练系列产品/Atlas A3 推理系列产品，仅支持`ACL_RT_MEM_ACCESS_LINK_SIO`、`ACL_RT_MEM_ACCESS_LINK_HCCS`。
+<!-- end id109 -->
+<!-- npu="950" id110 -->
+对于Ascend 950PR/Ascend 950DT，仅支持`ACL_RT_MEM_ACCESS_UB_ONE_PORT_PATH`、`ACL_RT_MEM_ACCESS_UB_MULTI_PORT_PATH`。
+<!-- end id110 -->
 
 <br>
 

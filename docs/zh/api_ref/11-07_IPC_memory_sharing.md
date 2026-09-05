@@ -71,6 +71,8 @@ aclError aclrtIpcMemGetExportKey(void *devPtr, size_t size, char *key, size_t le
 
     3. 调用[aclrtIpcMemClose](#aclrtIpcMemClose)接口关闭IPC共享内存。
 
+        每成功调用一次[aclrtIpcMemImportByKey](#aclrtIpcMemImportByKey)接口，均需调用一次[aclrtIpcMemClose](#aclrtIpcMemClose)接口，并确保两个接口传入的key相同，即两个接口需成对调用。
+
 ### 参数说明
 
 | 参数名 | 输入/输出 | 说明 |
@@ -281,7 +283,7 @@ aclError aclrtIpcMemSetAttr(const char *key, aclrtIpcMemAttrType type, uint64_t 
 ### 产品支持情况
 
 <!-- npu="950" id421 -->
-- Ascend 950PR/Ascend 950DT：不支持
+- Ascend 950PR/Ascend 950DT：支持
 <!-- end id421 -->
 <!-- npu="A3" id422 -->
 - Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
@@ -311,17 +313,42 @@ aclError aclrtIpcMemSetAttr(const char *key, aclrtIpcMemAttrType type, uint64_t 
 对于Atlas A3 训练系列产品/Atlas A3 推理系列产品，若需设置IPC共享内存的属性信息，在调用[aclrtIpcMemGetExportKey](#aclrtIpcMemGetExportKey)接口的进程中，需要先调用aclrtIpcMemSetAttr接口，再调用[aclrtIpcMemGetExportKey](#aclrtIpcMemGetExportKey)接口，且两个接口中的key必须保持一致。
 <!-- end id3 -->
 
+<!-- npu="950" id4 -->
+对于Ascend 950PR/Ascend 950DT，若需设置IPC共享内存的属性信息，在调用[aclrtIpcMemImportByKey](#aclrtIpcMemImportByKey)接口的进程中，需要先调用aclrtIpcMemSetAttr接口，再调用[aclrtIpcMemImportByKey](#aclrtIpcMemImportByKey)接口，且两个接口中的key必须保持一致。
+
+对同一个key多次调用aclrtIpcMemSetAttr接口设置attr时，以最后一次设置的attr值为准。
+<!-- end id4 -->
+
 ### 参数说明
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
 | key | 输入 | 共享内存key<br>必须先调用[aclrtIpcMemGetExportKey](#aclrtIpcMemGetExportKey)接口获取共享内存key，再作为入参传入。 |
-| type | 输入 | 内存映射类型。类型定义请参见[aclrtIpcMemAttrType](25-02_Enumerations.md#aclrtIpcMemAttrType)。<br>当前支持配置为ACL_RT_IPC_MEM_ATTR_ACCESS_LINK，用于在跨片访问时，指定双die之间是SIO（serial input/output）通道、还是HCCS（Huawei Cache Coherence System）通道。 |
-| attr | 输入 | 属性。<br>当前支持设置为如下宏：<br><br>  - ACL_RT_IPC_MEM_ATTR_ACCESS_LINK_SIO：SIO通道，默认该选项<br>  - ACL_RT_IPC_MEM_ATTR_ACCESS_LINK_HCCS：HCCS通道<br><br><br>宏的定义如下：<br>#define ACL_RT_IPC_MEM_ATTR_ACCESS_LINK_SIO 0<br>#define ACL_RT_IPC_MEM_ATTR_ACCESS_LINK_HCCS 1 |
+| type | 输入 | 内存映射类型。类型定义请参见[aclrtIpcMemAttrType](25-02_Enumerations.md#aclrtIpcMemAttrType)。<br>当前支持配置为ACL_RT_IPC_MEM_ATTR_ACCESS_LINK，用于在跨片访问时指定访问链路类型。 |
+| attr | 输入 | 属性。 |
 
 ### 返回值说明
 
 返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
+
+<!-- npu="950,A3" id7 -->
+### 约束说明
+
+<!-- npu="950" id5 -->
+- 对于Ascend 950PR/Ascend 950DT，attr支持以下取值：
+    - ACL_RT_IPC_MEM_ATTR_ACCESS_LINK_UB_ONE_PORT_PATH（值为2）：UB（Unified Bus）单端口路径：FM（Full Mesh）连线方式，无层级、全点对点直连。
+    - ACL_RT_IPC_MEM_ATTR_ACCESS_LINK_UB_MULTI_PORT_PATH（值为3）：UB（Unified Bus）多端口路径：CLOS连线方式，分层结构化互联。
+
+    若传入其他值，则返回[ACL_ERROR_RT_LINK_TYPE_NOT_SUPPORTED](25-01_aclError.md)错误码。
+<!-- end id5 -->
+<!-- npu="A3" id6 -->
+- 对于Atlas A3 训练系列产品/Atlas A3 推理系列产品，attr支持以下取值：
+    - ACL_RT_IPC_MEM_ATTR_ACCESS_LINK_SIO（值为0）：SIO通道，片内连接方式，两个DIE之间通过该方式连接。
+    - ACL_RT_IPC_MEM_ATTR_ACCESS_LINK_HCCS（值为1）：HCCS通道，HCCS是Huawei Cache Coherence System（华为缓存一致性系统），用于CPU/NPU之间的高速互联。
+
+    若传入其他值，则返回[ACL_ERROR_RT_FEATURE_NOT_SUPPORT](25-01_aclError.md)错误码。
+<!-- end id6 -->
+<!-- end id7 -->
 
 <br>
 <br>

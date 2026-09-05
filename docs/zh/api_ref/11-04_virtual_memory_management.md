@@ -23,6 +23,7 @@
 - [`aclError aclrtMemGetAllocationPropertiesFromHandle(aclrtDrvMemHandle handle, aclrtPhysicalMemProp* prop)`](#aclrtMemGetAllocationPropertiesFromHandle)：根据物理内存信息的handle查询其内存属性信息。
 - [`aclError aclrtMemGetAddressRange(void *ptr, void **pbase, size_t *psize)`](#aclrtMemGetAddressRange)：获取待查询地址所属内存块的起始地址以及内存块大小。
 - [`aclError aclrtMemMapSelectedLink(void *virPtrDst, size_t size, void *virPtrSrc, uint32_t linkIdx)`](#aclrtMemMapSelectedLink)：将虚拟地址 virPtrSrc 映射到虚拟地址 virPtrDst 对应的物理地址，可以通过 linkIdx 选择 HCCS 链路或者 SIO 链路。
+- [`aclError aclrtMemMapSetLink(aclrtDrvMemHandle handle, aclrtMemLinkType adviceLink)`](#aclrtMemMapSetLink)：设置物理内存handle在映射时使用的访问链路类型。
 
 <a id="aclrtMallocPhysical"></a>
 
@@ -1427,3 +1428,73 @@ aclError aclrtMemMapSelectedLink(void *virPtrDst, size_t size, void *virPtrSrc, 
 ### 约束说明
 
 若virPtrSrc虚拟内存的首地址在偏移后映射至多个不同的物理内存，则在调用aclrtMemMapSelectedLink接口将virPtrDst与virPtrSrc进行映射时，virPtrDst同样会映射至这些不同的物理内存，且virPtrDst与virPtrSrc的地址偏移量保持一致。在此场景下，需多次调用aclrtUnmapMem接口取消virPtrDst与多个物理地址之间的映射关系。
+
+<br>
+<br>
+<br>
+
+<a id="aclrtMemMapSetLink"></a>
+
+## aclrtMemMapSetLink
+
+```c
+aclError aclrtMemMapSetLink(aclrtDrvMemHandle handle, aclrtMemLinkType adviceLink)
+```
+
+### 产品支持情况
+
+<!-- npu="950" id3361 -->
+- Ascend 950PR/Ascend 950DT：支持
+<!-- end id3361 -->
+<!-- npu="A3" id3362 -->
+- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+<!-- end id3362 -->
+<!-- npu="910b" id3363 -->
+- Atlas A2 训练系列产品/Atlas A2 推理系列产品：不支持
+<!-- end id3363 -->
+<!-- npu="310b" id3364 -->
+- Atlas 200I/500 A2 推理产品：不支持
+<!-- end id3364 -->
+<!-- npu="310p" id3365 -->
+- Atlas 推理系列产品：不支持
+<!-- end id3365 -->
+<!-- npu="910" id3366 -->
+- Atlas 训练系列产品：不支持
+<!-- end id3366 -->
+<!-- npu="IPV350" id3367 -->
+- IPV350：不支持
+<!-- end id3367 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/11-04_virtual_memory_management_res.md#id22 -->
+
+### 功能说明
+
+设置物理内存映射时使用的访问链路类型。
+
+如需指定访问链路类型，需先调用[aclrtMemImportFromShareableHandle](#aclrtMemImportFromShareableHandle)接口获取物理内存handle，再调用本接口设置该handle的访问链路类型，最后调用[aclrtMapMem](#aclrtMapMem)接口建立虚拟内存与物理内存的映射关系。
+
+### 参数说明
+
+| 参数名 | 输入/输出 | 说明 |
+| --- | :---: | --- |
+| handle | 输入 | 物理内存信息handle。类型定义请参见[aclrtDrvMemHandle](25-05_Typedefs.md#aclrtDrvMemHandle)。<br>该handle需通过[aclrtMemImportFromShareableHandle](#aclrtMemImportFromShareableHandle)接口获取。 |
+| adviceLink | 输入 | 内存访问链路类型。类型定义请参见[aclrtMemLinkType](25-02_Enumerations.md#aclrtMemLinkType)。 |
+
+### 返回值说明
+
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
+
+<!-- npu="950,A3" id37 -->
+### 约束说明
+
+<!-- npu="950" id3368 -->
+- 对于Ascend 950PR/Ascend 950DT，adviceLink支持以下取值：
+    - ACL_RT_MEM_ACCESS_UB_ONE_PORT_PATH：UB（Unified Bus）单端口路径：FM（Full Mesh）连线方式，无层级、全点对点直连。
+    - ACL_RT_MEM_ACCESS_UB_MULTI_PORT_PATH：UB（Unified Bus）多端口路径：CLOS连线方式，分层结构化互联。
+<!-- end id3368 -->
+<!-- npu="A3" id3369 -->
+- 对于Atlas A3 训练系列产品/Atlas A3 推理系列产品，adviceLink支持以下取值：
+    - ACL_RT_MEM_ACCESS_LINK_SIO：SIO通道，片内连接方式，两个DIE之间通过该方式连接。
+    - ACL_RT_MEM_ACCESS_LINK_HCCS：HCCS通道，HCCS是Huawei Cache Coherence System（华为缓存一致性系统），用于CPU/NPU之间的高速互联。
+<!-- end id3369 -->
+若当前产品不支持adviceLink指定的访问链路类型，则返回[ACL_ERROR_RT_LINK_TYPE_NOT_SUPPORTED](25-01_aclError.md)错误码。
+<!-- end id37 -->
