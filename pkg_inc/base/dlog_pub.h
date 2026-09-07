@@ -20,6 +20,8 @@
 #include <stdarg.h>
 #include "log_types.h"
 
+#define DLOG_EVENT 0x10 // event log print level id
+
 #define DLOG_FILE_NAME __FILE__
 
 #define __FILENAME__ DLOG_FILE_NAME
