@@ -16,6 +16,7 @@
 #include <cstring>
 #include <memory>
 #include <set>
+#include <unistd.h>
 #include "osal.h"
 #include "config/config.h"
 #include "config_manager.h"
@@ -663,6 +664,7 @@ bool ProfAclMgr::IsAclApiStatsMode()
 static ProfAclMgr* profAclMgrObjPtr = NULL;
 static std::mutex g_sigHandlerMtx;
 static bool g_sigHandlerRegistered = false;
+static bool g_sigHandlerUnregistering = false;
 static volatile sig_atomic_t g_sigintReceived = 0; // 信号处理使用，符合 POSIX async-signal-safe
 static std::atomic<bool> g_sigWatcherQuit{false};  // 改为 atomic 以符合 C++ 内存模型
 static std::unique_ptr<std::thread> g_sigWatcherThread;
@@ -684,63 +686,63 @@ static void SigintWatcherThread()
         return;
     }
     int signum = static_cast<int>(g_sigintReceived);
-    MSPROF_LOGI("SigintWatcherThread: received signal %d, waiting for graceful shutdown", signum);
-    // Give the host application a window to react to the signal (e.g. CPython
-    // raising KeyboardInterrupt and unwinding) before we force-finalize.
-    // Stop polling early once the application's own teardown has driven the
-    // profiling state machine into MODE_OFF (g_sigWatcherQuit set by UnInit).
-    constexpr int kGraceLoops = 200; // 200 * 10ms = 2s ceiling
-    for (int i = 0; i < kGraceLoops && !g_sigWatcherQuit.load(); ++i) {
-        OsalSleep(10);
-    }
+    MSPROF_LOGI("SigintWatcherThread: received signal %d, finalizing profiling", signum);
     if (g_sigWatcherQuit.load()) {
-        MSPROF_LOGI("SigintWatcherThread: app finished teardown, no force finalize");
+        MSPROF_LOGI("SigintWatcherThread: profiling already finalized by application");
         return;
     }
     MSPROF_LOGI("SigintWatcherThread: calling MsprofFinalizeHandle as fallback");
     if (profAclMgrObjPtr != NULL) {
         (void)profAclMgrObjPtr->MsprofFinalizeHandle();
     }
-    if (oldSigAction.sa_handler == SIG_DFL) {
-        struct sigaction defaultAction;
-        (void)memset_s(&defaultAction, sizeof(defaultAction), 0, sizeof(defaultAction));
-        defaultAction.sa_handler = SIG_DFL;
-        sigemptyset(&defaultAction.sa_mask);
-        if (sigaction(signum, &defaultAction, nullptr) != 0) {
-            MSPROF_LOGE("Failed to restore SIG_DFL handler");
+    {
+        // Serialize the final quit check, handler restore, and redelivery with
+        // UnInit so teardown cannot race between the check and kill().
+        std::lock_guard<std::mutex> lk(g_sigHandlerMtx);
+        if (g_sigWatcherQuit.load()) {
+            MSPROF_LOGI("SigintWatcherThread: application finalized during fallback");
+            return;
         }
-        raise(signum);
-    } else if (oldSigAction.sa_handler != nullptr && oldSigAction.sa_handler != SIG_IGN) {
+        // Restore the application's handler only after all profiling data,
+        // including end_info, has been flushed. Deliver the signal to the
+        // process rather than invoking the handler on this worker thread
+        // (Python handlers must run on the interpreter's main thread).
         if (sigaction(signum, &oldSigAction, nullptr) != 0) {
-            MSPROF_LOGE("Failed to restore custom SIGINT handler");
+            MSPROF_LOGE("Failed to restore original signal handler");
+        } else if (oldSigAction.sa_handler != SIG_IGN && kill(getpid(), signum) != 0) {
+            MSPROF_LOGE("Failed to redeliver signal %d after profiling finalize", signum);
         }
-        raise(signum);
     }
     MSPROF_LOGI("SigintWatcherThread exited");
 }
 
 static void UnregisterSigalHandler()
 {
-    std::lock_guard<std::mutex> lk(g_sigHandlerMtx);
-    if (!g_sigHandlerRegistered) {
-        return;
-    }
-    // 使用 sigaction 恢复原始信号处理器
-    if (sigaction(SIGINT, &oldSigAction, nullptr) != 0) {
-        MSPROF_LOGE("Failed to restore SIGINT handler");
-    }
-
-    g_sigWatcherQuit.store(true);
-    if (g_sigWatcherThread != nullptr) {
-        if (g_sigWatcherThread->joinable()) {
-            g_sigWatcherThread->join();
+    std::unique_ptr<std::thread> watcherThread;
+    {
+        std::lock_guard<std::mutex> lk(g_sigHandlerMtx);
+        if (!g_sigHandlerRegistered || g_sigHandlerUnregistering) {
+            return;
         }
-        g_sigWatcherThread.reset();
+        // 使用 sigaction 恢复原始信号处理器
+        if (sigaction(SIGINT, &oldSigAction, nullptr) != 0) {
+            MSPROF_LOGE("Failed to restore SIGINT handler");
+        }
+        g_sigWatcherQuit.store(true);
+        watcherThread = std::move(g_sigWatcherThread);
+        g_sigHandlerUnregistering = true;
+    }
+    if (watcherThread != nullptr && watcherThread->joinable()) {
+        watcherThread->join();
     }
     profAclMgrObjPtr = NULL;
-    g_sigHandlerRegistered = false;
     g_sigintReceived = 0;
     g_sigWatcherQuit.store(false);
+    {
+        std::lock_guard<std::mutex> lk(g_sigHandlerMtx);
+        g_sigHandlerRegistered = false;
+        g_sigHandlerUnregistering = false;
+    }
     MSPROF_LOGI("UnregisterSigalHandler done");
 }
 
@@ -749,23 +751,12 @@ static void newSigHandler(int signum)
     // Only sig_atomic_t assignment: async-signal-safe per POSIX
     // Actual finalize is done by SigintWatcherThread in normal thread context
     g_sigintReceived = static_cast<sig_atomic_t>(signum);
-    // Forward the signal to the previously installed handler (e.g. CPython's
-    // default_int_handler) so the host application stops scheduling new ops.
-    // Without this, the profiled process keeps issuing tasks while the
-    // watcher thread is finalizing -- those new tasks are captured on the host
-    // side but their PMU association data is dropped because the device-side
-    // collection has already been stopped, producing
-    // "contextPmu has no matched log" in the analysis stage.
-    if (oldSigAction.sa_handler != nullptr && oldSigAction.sa_handler != SIG_IGN &&
-        oldSigAction.sa_handler != SIG_DFL && oldSigAction.sa_handler != newSigHandler) {
-        oldSigAction.sa_handler(signum);
-    }
 }
 
 static void RegisterSiganlHandler(ProfAclMgr* ptr)
 {
     std::lock_guard<std::mutex> lk(g_sigHandlerMtx);
-    if (g_sigHandlerRegistered) {
+    if (g_sigHandlerRegistered || g_sigHandlerUnregistering) {
         MSPROF_LOGI("SIGINT handler already registered, skip");
         return;
     }

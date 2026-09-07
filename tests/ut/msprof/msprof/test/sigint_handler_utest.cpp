@@ -11,6 +11,10 @@
 #include <gtest/gtest.h>
 #include <csignal>
 #include <atomic>
+#include <chrono>
+#include <condition_variable>
+#include <mutex>
+#include <thread>
 #include <unistd.h>
 #include <mockcpp/mockcpp.hpp>
 #include "prof_acl_mgr.h"
@@ -52,7 +56,35 @@ private:
 static void CustomerSigHandler(int signum) { (void)signum; }
 
 static std::atomic<bool> g_customSigHandlerCalled{false};
+static std::atomic<bool> g_finalizeCalled{false};
+static std::atomic<bool> g_handlerCalledBeforeFinalize{false};
+static std::atomic<bool> g_finalizeEntered{false};
+static std::atomic<bool> g_releaseFinalize{false};
+static std::mutex g_unInitMtx;
+static std::condition_variable g_unInitCv;
+static bool g_unInitStarted = false;
 static void CustomerSigHandlerWithFlag(int /*signum*/) { g_customSigHandlerCalled = true; }
+
+static void CustomerSigHandlerAfterFinalize(int /*signum*/)
+{
+    g_handlerCalledBeforeFinalize = !g_finalizeCalled.load();
+    g_customSigHandlerCalled = true;
+}
+
+static int32_t FinalizeAndSetFlag()
+{
+    g_finalizeCalled = true;
+    return 0;
+}
+
+static int32_t FinalizeWaitForUnInit()
+{
+    g_finalizeEntered = true;
+    while (!g_releaseFinalize.load()) {
+        usleep(1000);
+    }
+    return 0;
+}
 
 TEST_F(SigintHandlerUtest, RegisterSignalHandlerTwice)
 {
@@ -80,9 +112,13 @@ TEST_F(SigintHandlerUtest, RegisterSignalHandlerTwice)
 TEST_F(SigintHandlerUtest, SigintWatcherThreadCallsMsprofFinalize)
 {
     g_customSigHandlerCalled = false;
-    signal(SIGINT, CustomerSigHandlerWithFlag);
+    g_finalizeCalled = false;
+    g_handlerCalledBeforeFinalize = false;
+    signal(SIGINT, CustomerSigHandlerAfterFinalize);
 
-    MOCKER_CPP(&ProfAclMgr::MsprofFinalizeHandle).stubs().will(returnValue(0));
+    MOCKER(OsalSleep).stubs().will(invoke(OsalSleepNoopStub));
+
+    MOCKER_CPP(&ProfAclMgr::MsprofFinalizeHandle).stubs().will(invoke(FinalizeAndSetFlag));
 
     auto* mgr = ProfAclMgr::instance();
     mgr->isReady_ = true;
@@ -91,13 +127,54 @@ TEST_F(SigintHandlerUtest, SigintWatcherThreadCallsMsprofFinalize)
     raise(SIGINT);
 
     int waitMs = 0;
-    while (!g_customSigHandlerCalled && waitMs < 200) {
+    while (!g_customSigHandlerCalled && waitMs < 500) {
         usleep(1000);
         waitMs++;
     }
-    EXPECT_TRUE(g_customSigHandlerCalled) << "CustomerSigHandlerWithFlag was not called within 200ms";
+    EXPECT_TRUE(g_customSigHandlerCalled) << "CustomerSigHandlerAfterFinalize was not called after finalize";
+    EXPECT_TRUE(g_finalizeCalled.load());
+    EXPECT_FALSE(g_handlerCalledBeforeFinalize.load());
 
     mgr->UnInit();
+}
+
+TEST_F(SigintHandlerUtest, SigintWatcherSkipsRedeliveryWhenUnInitRunsDuringFinalize)
+{
+    g_customSigHandlerCalled = false;
+    g_finalizeEntered = false;
+    g_releaseFinalize = false;
+    {
+        std::lock_guard<std::mutex> lock(g_unInitMtx);
+        g_unInitStarted = false;
+    }
+    signal(SIGINT, CustomerSigHandlerWithFlag);
+
+    MOCKER_CPP(&ProfAclMgr::MsprofFinalizeHandle).stubs().will(invoke(FinalizeWaitForUnInit));
+
+    auto* mgr = ProfAclMgr::instance();
+    mgr->isReady_ = true;
+    mgr->Init();
+    raise(SIGINT);
+
+    while (!g_finalizeEntered.load()) {
+        usleep(1000);
+    }
+    std::thread uninitThread([mgr]() {
+        {
+            std::lock_guard<std::mutex> lock(g_unInitMtx);
+            g_unInitStarted = true;
+        }
+        g_unInitCv.notify_one();
+        mgr->UnInit();
+    });
+    {
+        std::unique_lock<std::mutex> lock(g_unInitMtx);
+        ASSERT_TRUE(g_unInitCv.wait_for(lock, std::chrono::seconds(1), [] { return g_unInitStarted; }));
+    }
+    g_releaseFinalize = true;
+    uninitThread.join();
+
+    EXPECT_FALSE(g_customSigHandlerCalled.load());
 }
 
 TEST_F(SigintHandlerUtest, UnregisterSigalHandlerRestoresOldHandler)
@@ -140,6 +217,24 @@ TEST_F(SigintHandlerUtest, ProfNotifySetDeviceSkipsCmdlineRestartWhenSigintShutt
     EXPECT_EQ(MSPROF_ERROR_NONE, Analysis::Dvvp::ProfilerCommon::ProfNotifySetDevice(0, 0, true));
 
     mgr->UnInit();
+}
+
+TEST_F(SigintHandlerUtest, ProfReportDataSkipsReportsDuringSigintShutdown)
+{
+    signal(SIGINT, SIG_IGN);
+    MOCKER(OsalSleep).stubs().will(invoke(OsalSleepNoopStub));
+    MOCKER_CPP(&ProfAclMgr::MsprofFinalizeHandle).stubs().will(returnValue(0));
+
+    auto* mgr = ProfAclMgr::instance();
+    mgr->isReady_ = true;
+    mgr->Init();
+    raise(SIGINT);
+
+    EXPECT_EQ(
+        analysis::dvvp::common::error::PROFILING_SUCCESS,
+        Analysis::Dvvp::ProfilerCommon::ProfReportData(MSPROF_MODULE_MSPROF, 0, nullptr, 0));
+    mgr->UnInit();
+    signal(SIGINT, SIG_DFL);
 }
 
 TEST_F(SigintHandlerUtest, UnregisterSignalHandlerRestoresSIGIGN)

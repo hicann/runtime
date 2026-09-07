@@ -391,6 +391,12 @@ inline int32_t InternalErrorCodeToExternal(int32_t internalErrorCode)
 
 int32_t ProfReportData(uint32_t moduleId, uint32_t type, VOID_PTR data, uint32_t len)
 {
+    // Once SIGINT shutdown starts, stop accepting newly reported records while
+    // the watcher drains and flushes the records already in flight. This keeps
+    // task and PMU streams aligned until end_info is written.
+    if (ProfAclMgr::instance()->IsSigintShutdownInProgress()) {
+        return PROFILING_SUCCESS;
+    }
     switch (moduleId) {
         case MSPROF_MODULE_FRAMEWORK:
         case MSPROF_MODULE_ACL:
