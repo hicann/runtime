@@ -198,7 +198,7 @@ TEST_F(LabelTest, label_task_submit)
     error = rtModelCreate(&model, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = rtStreamCreate(&stream, 0);
+    error = rtStreamCreateWithFlags(&stream, 0, RT_STREAM_PERSISTENT);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtModelBindStream(model, stream, 0);
@@ -277,7 +277,7 @@ TEST_F(LabelTest, label_gotoex_task_submit)
     error = rtModelCreate(&model, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = rtStreamCreate(&stream, 0);
+    error = rtStreamCreateWithFlags(&stream, 0, RT_STREAM_PERSISTENT);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtModelBindStream(model, stream, 0);
@@ -358,7 +358,7 @@ TEST_F(LabelTest, label_task_recycle)
     error = rtModelCreate(&model, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = rtStreamCreate(&stream, 0);
+    error = rtStreamCreateWithFlags(&stream, 0, RT_STREAM_PERSISTENT);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtModelBindStream(model, stream, 0);
@@ -411,7 +411,7 @@ TEST_F(LabelTest, model_load_complete_mini)
     error = rtModelCreate(&model, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = rtStreamCreate(&stream, 0);
+    error = rtStreamCreateWithFlags(&stream, 0, RT_STREAM_PERSISTENT);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtModelBindStream(model, stream, 0);

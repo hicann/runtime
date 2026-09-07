@@ -577,7 +577,7 @@ TEST_F(ApiTest, TEST_MODEL_LOAD_COMPLETE_MODEL_MORE_THEN_1)
     error = rtModelCreate(&model2, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = rtStreamCreate(&stream, 0);
+    error = rtStreamCreateWithFlags(&stream, 0, RT_STREAM_PERSISTENT);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtModelBindStream(model, stream, 0);
@@ -603,7 +603,7 @@ TEST_F(ApiTest, TEST_MODEL_LOAD_COMPLETE_FAIL)
     error = rtModelCreate(&model, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = rtStreamCreate(&stream, 0);
+    error = rtStreamCreateWithFlags(&stream, 0, RT_STREAM_PERSISTENT);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtModelBindStream(model, stream, 0);
@@ -636,7 +636,7 @@ TEST_F(ApiTest, TEST_MODEL_LOAD_COMPLETE)
     error = rtModelCreate(&model, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = rtStreamCreate(&stream, 0);
+    error = rtStreamCreateWithFlags(&stream, 0, RT_STREAM_PERSISTENT);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtModelBindStream(model, stream, 0);
@@ -3868,7 +3868,7 @@ TEST_F(ApiTest, memcpy_async_host_to_device_ex)
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     rtStream_t stream;
-    error = rtStreamCreate(&stream, 0);
+    error = rtStreamCreateWithFlags(&stream, 0, RT_STREAM_PERSISTENT);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     rtModel_t model;
@@ -4038,6 +4038,7 @@ TEST_F(ApiTest, ipc_set_notify_pid2)
 TEST_F(ApiTest, kernel_launch_set_kernel_task_id)
 {
     rtError_t error;
+    rtStream_t stream;
     rtL2Ctrl_t ctrl;
     void* args[] = {&error, NULL};
     char function;
@@ -4062,17 +4063,23 @@ TEST_F(ApiTest, kernel_launch_set_kernel_task_id)
     error = rtModelCreate(&model, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = rtModelBindStream(model, stream_, 0);
+    error = rtStreamCreateWithFlags(&stream, 0, RT_STREAM_PERSISTENT);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtModelBindStream(model, stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     ctrl.size = 128;
-    error = rtKernelLaunch(&function, 1, (void*)args, sizeof(args), &ctrl, stream_);
+    error = rtKernelLaunch(&function, 1, (void*)args, sizeof(args), &ctrl, stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = rtModelUnbindStream(model, stream_);
+    error = rtModelUnbindStream(model, stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtModelDestroy(model);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtStreamDestroy(stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
     rtDevBinaryUnRegister(binHdl);
 }

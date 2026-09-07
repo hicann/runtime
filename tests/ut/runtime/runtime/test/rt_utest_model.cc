@@ -830,7 +830,7 @@ TEST_F(ModelTest, CacheTaskTrackReport)
     Profiler* profilerPtr = Runtime::Instance()->Profiler_();
     profilerPtr->SetTrackProfEnable(false);
 
-    error = rtStreamCreate(&stream, 0);
+    error = rtStreamCreateWithFlags(&stream, 0, RT_STREAM_PERSISTENT);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtStreamCreateWithFlags(&syncStream, 0, RT_STREAM_FORBIDDEN_DEFAULT);
@@ -932,7 +932,7 @@ TEST_F(ModelTest, model_end_graph)
     rtModel_t model;
     std::string oldSocVersion = Runtime::Instance()->GetSocVersion();
     GlobalContainer::SetSocVersion("Ascend310P1");
-    rtError_t error = rtStreamCreateWithFlags(&stream, 1, RT_STREAM_DEFAULT);
+    rtError_t error = rtStreamCreateWithFlags(&stream, 1, RT_STREAM_PERSISTENT);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtStreamCreate(&exe_stream, 0);
@@ -1241,7 +1241,7 @@ TEST_F(ModelTest, model_stream_unbind_stream_fail_03)
     error = rtCtxCreate(&ctx, RT_CTX_NORMAL_MODE, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = rtStreamCreate(&stream, 0);
+    error = rtStreamCreateWithFlags(&stream, 0, RT_STREAM_PERSISTENT);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtModelCreate(&model, 0);
@@ -1389,7 +1389,7 @@ TEST_F(ModelTest, model_head_stream)
     error = rtModelCreate(&model, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = rtStreamCreate(&stream, 0);
+    error = rtStreamCreateWithFlags(&stream, 0, RT_STREAM_PERSISTENT);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtModelBindStream(model, stream, 0);
@@ -1422,7 +1422,7 @@ TEST_F(ModelTest, model_stream_not_dc_not_support_reuse)
         EXPECT_EQ(error, RT_ERROR_NONE);
     }
 
-    error = rtStreamCreate(&stream, 0);
+    error = rtStreamCreateWithFlags(&stream, 0, RT_STREAM_PERSISTENT);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     for (uint16_t i = 0; i < 2; i++) {
@@ -1454,7 +1454,7 @@ TEST_F(ModelTest, model_stream_get_head_stream)
     error = rtModelCreate(&model, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = rtStreamCreate(&stream, 0);
+    error = rtStreamCreateWithFlags(&stream, 0, RT_STREAM_PERSISTENT);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtModelBindStream(model, stream, 0);
@@ -1479,7 +1479,7 @@ TEST_F(ModelTest, model_stream_dup_bind)
     error = rtModelCreate(&model, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = rtStreamCreate(&stream, 0);
+    error = rtStreamCreateWithFlags(&stream, 0, RT_STREAM_PERSISTENT);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtModelBindStream(model, stream, 0);
@@ -1505,7 +1505,7 @@ TEST_F(ModelTest, model_maintain_init_fail)
     error = rtModelCreate(&model, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = rtStreamCreate(&stream, 0);
+    error = rtStreamCreateWithFlags(&stream, 0, RT_STREAM_PERSISTENT);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtModelBindStream(model, stream, 0);
@@ -1587,7 +1587,7 @@ TEST_F(ModelTest, load_comple_81)
     error = rtModelCreate(&model, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = rtStreamCreate(&stream, 0);
+    error = rtStreamCreateWithFlags(&stream, 0, RT_STREAM_PERSISTENT);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtModelBindStream(model, stream, 0);

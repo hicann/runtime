@@ -21,8 +21,8 @@ namespace runtime {
 
 bool StreamFlagIsSupportCapture(uint32_t flag)
 {
-    static constexpr uint32_t flags[]{
-        RT_STREAM_AICPU, RT_STREAM_FORBIDDEN_DEFAULT, RT_STREAM_CP_PROCESS_USE, RT_STREAM_VECTOR_CORE_USE};
+    static constexpr uint32_t flags[]{RT_STREAM_AICPU,           RT_STREAM_FORBIDDEN_DEFAULT, RT_STREAM_CP_PROCESS_USE,
+                                      RT_STREAM_VECTOR_CORE_USE, RT_STREAM_PERSISTENT,        RT_STREAM_ACSQ_LOCK};
 
     for (const uint32_t elem : flags) {
         if ((flag & elem) == elem) {

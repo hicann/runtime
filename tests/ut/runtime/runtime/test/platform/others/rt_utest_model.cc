@@ -204,7 +204,7 @@ TEST_F(ChipModelTest, model_stream_bind_max)
         EXPECT_EQ(error, RT_ERROR_NONE);
     }
 
-    error = rtStreamCreate(&stream, 0);
+    error = rtStreamCreateWithFlags(&stream, 0, RT_STREAM_PERSISTENT);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtModelBindStream(model[0], stream, 0);
@@ -330,7 +330,7 @@ TEST_F(ChipModelTest, l1fusiondumpaddrset)
     error = rtMalloc((void**)&dumpAddr, dumpSize, 0, DEFAULT_MODULEID);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = rtStreamCreate(&stream, 0);
+    error = rtStreamCreateWithFlags(&stream, 0, RT_STREAM_PERSISTENT);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtModelCreate(&model, 0);
@@ -411,7 +411,7 @@ TEST_F(ChipModelTest, model_stream_offline_ok)
     error = rtModelCreate(&model, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = rtStreamCreate(&stream, 0);
+    error = rtStreamCreateWithFlags(&stream, 0, RT_STREAM_PERSISTENT);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtModelBindStream(model, stream, 0);
@@ -458,7 +458,7 @@ TEST_F(ChipModelTest, model_stream_offline_fail)
     error = rtModelCreate(&model2, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = rtStreamCreate(&stream, 0);
+    error = rtStreamCreateWithFlags(&stream, 0, RT_STREAM_PERSISTENT);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtModelBindStream(model1, stream, 0);
@@ -505,7 +505,7 @@ TEST_F(ChipModelTest, LoadCompleteByStreamPrep_UseDefaultStream_310P)
     GlobalContainer::SetSocVersion("");
     error = rtModelCreate(&model, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    error = rtStreamCreate(&stream, 0);
+    error = rtStreamCreateWithFlags(&stream, 0, RT_STREAM_PERSISTENT);
     EXPECT_EQ(error, RT_ERROR_NONE);
     error = rtModelBindStream(model, stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);

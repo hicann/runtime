@@ -592,7 +592,7 @@ TEST_F(EventTest910B, TestEventSynchronizeWithEventInModel)
     error = rtModelCreate(&model, 0);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
 
-    error = rtStreamCreate(&stream, 0);
+    error = rtStreamCreateWithFlags(&stream, 0, RT_STREAM_PERSISTENT);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
 
     error = rtEventCreateExWithFlag(&event, RT_EVENT_WITH_FLAG);

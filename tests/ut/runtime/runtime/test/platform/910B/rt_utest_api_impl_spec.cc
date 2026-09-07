@@ -358,11 +358,11 @@ TEST_F(CloudV2ApiImplSpecTest, MODEL_TASK_UPDATE_TEST_1)
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     rtStream_t desStm;
-    error = rtStreamCreate(&desStm, 0);
+    error = rtStreamCreateWithFlags(&desStm, 0, RT_STREAM_PERSISTENT);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     rtStream_t sinkStm;
-    error = rtStreamCreate(&sinkStm, 0);
+    error = rtStreamCreateWithFlags(&sinkStm, 0, RT_STREAM_PERSISTENT);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     rtModel_t model;
@@ -432,7 +432,7 @@ TEST_F(CloudV2ApiImplSpecTest, MODEL_BACKUP)
     EXPECT_EQ(dev != nullptr, true);
 
     rtStream_t sinkStm;
-    error = rtStreamCreate(&sinkStm, 0);
+    error = rtStreamCreateWithFlags(&sinkStm, 0, RT_STREAM_PERSISTENT);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     rtModel_t model;
@@ -483,11 +483,11 @@ TEST_F(CloudV2ApiImplSpecTest, MODEL_RESTORE)
     EXPECT_EQ(dev != nullptr, true);
 
     rtStream_t desStm;
-    error = rtStreamCreate(&desStm, 0);
+    error = rtStreamCreateWithFlags(&desStm, 0, RT_STREAM_PERSISTENT);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     rtStream_t sinkStm;
-    error = rtStreamCreate(&sinkStm, 0);
+    error = rtStreamCreateWithFlags(&sinkStm, 0, RT_STREAM_PERSISTENT);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     rtStream_t aicpuStm;
@@ -587,7 +587,7 @@ TEST_F(CloudV2ApiImplSpecTest, MODEL_RESTORE2)
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     rtStream_t sinkStm;
-    error = rtStreamCreate(&sinkStm, 0);
+    error = rtStreamCreateWithFlags(&sinkStm, 0, RT_STREAM_PERSISTENT);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     rtModel_t model;
@@ -814,7 +814,7 @@ TEST_F(CloudV2ApiImplSpecTest, MODEL_SNAPSHOT_001)
     temp_model->UpdateSnapShotSqe();
     temp_model->ReBuild();
     rtStream_t sinkStm;
-    error = rtStreamCreate(&sinkStm, 0);
+    error = rtStreamCreateWithFlags(&sinkStm, 0, RT_STREAM_PERSISTENT);
     EXPECT_EQ(error, RT_ERROR_NONE);
     RawDevice* rawDevice = dynamic_cast<RawDevice*>(dev);
     MOCKER_CPP_VIRTUAL(rawDevice->Engine_(), &Engine::SyncTask).stubs().will(returnValue(RT_ERROR_NONE));

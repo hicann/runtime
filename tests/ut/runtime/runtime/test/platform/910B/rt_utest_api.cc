@@ -3274,10 +3274,10 @@ TEST_F(CloudV2ApiTest, model_switch_stream_ex)
     int64_t* devMem = &dev_val;
     int64_t* devMem_target = &dev_val_target;
 
-    error = rtStreamCreate(&streamA, 0);
+    error = rtStreamCreateWithFlags(&streamA, 0, RT_STREAM_PERSISTENT);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = rtStreamCreate(&streamB, 0);
+    error = rtStreamCreateWithFlags(&streamB, 0, RT_STREAM_PERSISTENT);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtStreamCreate(&exeStream, 0);

@@ -3827,10 +3827,9 @@ rtError_t ApiErrorDecorator::ModelBindStream(Model* const mdl, Stream* const stm
             "Stream (stream_id=%d) with the flag ACL_STREAM_FAST_LAUNCH cannot be bound to a model", curStm->Id_()));
 
     COND_RETURN_AND_MSG_OUTER(
-        (curStm->Device_()->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_MODEL_STREAM_DOT_SYNC)) &&
-            ((curStm->Flags() & (RT_STREAM_PERSISTENT | RT_STREAM_AICPU)) == 0),
-        RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, "Binding a model running instance to a stream", curStm->Flags(),
-        "stream flag", RtFmtMsg("Non-persistent stream (stream_id=%d) cannot be bound to a model", curStm->Id_()));
+        ((curStm->Flags() & (RT_STREAM_PERSISTENT | RT_STREAM_AICPU)) == 0), RT_ERROR_INVALID_VALUE, ErrorCode::EE1011,
+        "Binding a model running instance to a stream", curStm->Flags(), "stream flag",
+        RtFmtMsg("Non-persistent stream (stream_id=%d) cannot be bound to a model", curStm->Id_()));
 
     const uint32_t modelId = mdl->Id_();
     const int32_t streamId = curStm->Id_();
@@ -3894,8 +3893,7 @@ rtError_t ApiErrorDecorator::ModelExecute(Model* const mdl, Stream* const stm, c
         "Executing the model running instance",
         RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", stm->Id_()));
 
-    if ((stm != nullptr) &&
-        (stm->Device_()->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_MODEL_STREAM_DOT_SYNC))) {
+    if (stm != nullptr) {
         COND_RETURN_AND_MSG_OUTER(
             ((stm->Flags() & RT_STREAM_AICPU) != 0), RT_ERROR_INVALID_VALUE, ErrorCode::EE1006,
             "Executing the model running instance", "Stream flag value " + std::to_string(stm->Flags()),

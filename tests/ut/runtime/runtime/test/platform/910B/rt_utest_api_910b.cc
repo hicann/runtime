@@ -581,7 +581,7 @@ TEST_F(CloudV2ApiTest910b, TEST_MODEL_LOAD_COMPLETE_MODEL_MORE_THEN_1)
     error = rtModelCreate(&model2, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = rtStreamCreate(&stream, 0);
+    error = rtStreamCreateWithFlags(&stream, 0, RT_STREAM_PERSISTENT);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtModelBindStream(model, stream, 0);
@@ -613,7 +613,7 @@ TEST_F(CloudV2ApiTest910b, TEST_MODEL_LOAD_COMPLETE_FAIL)
     error = rtModelCreate(&model, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = rtStreamCreate(&stream, 0);
+    error = rtStreamCreateWithFlags(&stream, 0, RT_STREAM_PERSISTENT);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtModelBindStream(model, stream, 0);
@@ -646,7 +646,7 @@ TEST_F(CloudV2ApiTest910b, TEST_MODEL_LOAD_COMPLETE)
     error = rtModelCreate(&model, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = rtStreamCreate(&stream, 0);
+    error = rtStreamCreateWithFlags(&stream, 0, RT_STREAM_PERSISTENT);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtModelBindStream(model, stream, 0);

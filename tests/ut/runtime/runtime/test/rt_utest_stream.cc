@@ -2132,20 +2132,13 @@ TEST_F(StreamTest, GetTaskEventIdOrNotifyId)
 
 TEST_F(StreamTest, StreamFlagIsSupportCapture)
 {
-    bool flag = StreamFlagIsSupportCapture(8);
-    EXPECT_EQ(flag, false);
-
-    flag = StreamFlagIsSupportCapture(16);
-    EXPECT_EQ(flag, false);
-
-    flag = StreamFlagIsSupportCapture(2048);
-    EXPECT_EQ(flag, false);
-
-    flag = StreamFlagIsSupportCapture(4096);
-    EXPECT_EQ(flag, false);
-
-    flag = StreamFlagIsSupportCapture(0);
-    EXPECT_EQ(flag, true);
+    EXPECT_FALSE(StreamFlagIsSupportCapture(RT_STREAM_AICPU));
+    EXPECT_FALSE(StreamFlagIsSupportCapture(RT_STREAM_FORBIDDEN_DEFAULT));
+    EXPECT_FALSE(StreamFlagIsSupportCapture(RT_STREAM_CP_PROCESS_USE));
+    EXPECT_FALSE(StreamFlagIsSupportCapture(RT_STREAM_VECTOR_CORE_USE));
+    EXPECT_FALSE(StreamFlagIsSupportCapture(RT_STREAM_PERSISTENT));
+    EXPECT_FALSE(StreamFlagIsSupportCapture(RT_STREAM_ACSQ_LOCK));
+    EXPECT_TRUE(StreamFlagIsSupportCapture(RT_STREAM_DEFAULT));
 }
 
 TEST_F(StreamTest, stream_taskGrp_status)

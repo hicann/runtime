@@ -1483,7 +1483,7 @@ TEST_F(RtApiTest, model_json_print_record_wait)
     rtStream_t syncStream;
     rtEvent_t event;
 
-    error = rtStreamCreate(&stream, 0);
+    error = rtStreamCreateWithFlags(&stream, 0, RT_STREAM_PERSISTENT);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtStreamCreateWithFlags(&syncStream, 0, RT_STREAM_FORBIDDEN_DEFAULT);

@@ -278,7 +278,7 @@ TEST_F(StarsTaskTest, RdmaSink)
     rtStream_t streamHandle = nullptr;
     Stream* stream = nullptr;
 
-    ret = rtStreamCreate(&streamHandle, 0);
+    ret = rtStreamCreateWithFlags(&streamHandle, 0, RT_STREAM_PERSISTENT);
     EXPECT_EQ(ret, RT_ERROR_NONE);
     stream = rt_ut::UnwrapOrNull<Stream>(streamHandle);
     ASSERT_NE(stream, nullptr);
@@ -356,7 +356,7 @@ TEST_F(StarsTaskTest, ModelExecute)
 
     rtStream_t headSreamHandle = nullptr;
     Stream* headSream = nullptr;
-    ret = rtStreamCreate(&headSreamHandle, 0);
+    ret = rtStreamCreateWithFlags(&headSreamHandle, 0, RT_STREAM_PERSISTENT);
     EXPECT_EQ(ret, RT_ERROR_NONE);
     headSream = rt_ut::UnwrapOrNull<Stream>(headSreamHandle);
     ASSERT_NE(headSream, nullptr);
@@ -390,7 +390,7 @@ TEST_F(StarsTaskTest, ModelExecute_1)
     TaskInfo mdlExecTask = {};
     rtStream_t headSreamHandle = nullptr;
     Stream* headSream = nullptr;
-    ret = rtStreamCreate(&headSreamHandle, 0);
+    ret = rtStreamCreateWithFlags(&headSreamHandle, 0, RT_STREAM_PERSISTENT);
     EXPECT_EQ(ret, RT_ERROR_NONE);
     headSream = rt_ut::UnwrapOrNull<Stream>(headSreamHandle);
     ASSERT_NE(headSream, nullptr);
@@ -424,7 +424,7 @@ TEST_F(StarsTaskTest, ModelExecute_failed)
     TaskInfo mdlExecTask = {};
     rtStream_t headSreamHandle = nullptr;
     Stream* headSream = nullptr;
-    ret = rtStreamCreate(&headSreamHandle, 0);
+    ret = rtStreamCreateWithFlags(&headSreamHandle, 0, RT_STREAM_PERSISTENT);
     EXPECT_EQ(ret, RT_ERROR_NONE);
     headSream = rt_ut::UnwrapOrNull<Stream>(headSreamHandle);
     ASSERT_NE(headSream, nullptr);
@@ -450,7 +450,7 @@ TEST_F(StarsTaskTest, FuncCallAllocDevMem_devMem_failed)
     TaskInfo mdlExecTask = {};
     rtStream_t headSreamHandle = nullptr;
     Stream* headSream = nullptr;
-    ret = rtStreamCreate(&headSreamHandle, 0);
+    ret = rtStreamCreateWithFlags(&headSreamHandle, 0, RT_STREAM_PERSISTENT);
     EXPECT_EQ(ret, RT_ERROR_NONE);
     headSream = rt_ut::UnwrapOrNull<Stream>(headSreamHandle);
     ASSERT_NE(headSream, nullptr);
@@ -478,7 +478,7 @@ TEST_F(StarsTaskTest, FuncCallAllocDevMem_devDfxMem_failed)
     TaskInfo mdlExecTask = {};
     rtStream_t headSreamHandle = nullptr;
     Stream* headSream = nullptr;
-    ret = rtStreamCreate(&headSreamHandle, 0);
+    ret = rtStreamCreateWithFlags(&headSreamHandle, 0, RT_STREAM_PERSISTENT);
     EXPECT_EQ(ret, RT_ERROR_NONE);
     headSream = rt_ut::UnwrapOrNull<Stream>(headSreamHandle);
     ASSERT_NE(headSream, nullptr);
@@ -1210,7 +1210,7 @@ TEST_F(StarsTaskTest, MemcpyAsyncTask_ConstructPcieDmaSqe_3)
 TEST_F(StarsTaskTest, stars_label_switch_by_index)
 {
     rtStream_t stream = NULL;
-    rtError_t error = rtStreamCreate(&stream, 0);
+    rtError_t error = rtStreamCreateWithFlags(&stream, 0, RT_STREAM_PERSISTENT);
     EXPECT_EQ(error, RT_ERROR_NONE);
     rtLabel_t label;
     rtModel_t model;
