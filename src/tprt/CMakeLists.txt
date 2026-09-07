@@ -66,21 +66,3 @@ target_link_libraries(xpu_tprt PRIVATE
 target_compile_definitions(xpu_tprt PRIVATE
     google=ascend_private
     )
-
-if(NOT "${TARGET_SYSTEM_NAME}" STREQUAL "Windows")
-    add_library(xpu_tprt_compat_stub SHARED
-        stub/xpu_tprt_compat_stub.c
-    )
-
-    set_target_properties(xpu_tprt_compat_stub PROPERTIES
-        OUTPUT_NAME xpu_tprt
-        C_VISIBILITY_PRESET hidden
-    )
-
-    add_dependencies(xpu_tprt xpu_tprt_compat_stub)
-
-    install(TARGETS xpu_tprt_compat_stub
-        LIBRARY DESTINATION ${INSTALL_LIBRARY_DIR}
-        OPTIONAL
-    )
-endif()
