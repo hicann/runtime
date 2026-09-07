@@ -344,7 +344,7 @@ bool AicpuScheduleInterface::SendVfMsgToDrv(const uint32_t cmd, const uint32_t d
     if (FeatureCtrl::IsVfMode(deviceId, vfId)) {
         const int32_t fd = open("/dev/qos", O_RDWR);
         if (fd < 0) {
-            aicpusd_warn("no such file. error[%s],errorno[%d]", strerror(errno), errno);
+            aicpusd_warn("no such file. error[%s],errno[%d]", strerror(errno), errno);
             return false;
         }
         VfMsgInfo vfMsg;
@@ -352,7 +352,7 @@ bool AicpuScheduleInterface::SendVfMsgToDrv(const uint32_t cmd, const uint32_t d
         vfMsg.vfId = vfId;
         const auto ret = ioctl(fd, cmd, PtrToPtr<VfMsgInfo, void>(&vfMsg));
         if (ret != 0) {
-            aicpusd_warn("ioctl failed, error[%s],errorno[%d]", strerror(errno), errno);
+            aicpusd_warn("ioctl failed, error[%s],errno[%d]", strerror(errno), errno);
             (void)close(fd);
             return false;
         }

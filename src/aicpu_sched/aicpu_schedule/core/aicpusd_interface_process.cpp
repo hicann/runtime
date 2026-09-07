@@ -455,7 +455,7 @@ int32_t AicpuScheduleInterface::Stop(const uint32_t modelId) const
         retryCost += retryIntervalUs;
         stopRet = model->ModelStop();
     }
-    aicpusd_run_info("Stop model[%u], ret is %d, retryCost is %u.", modelId, stopRet, retryCost);
+    aicpusd_run_info("Stop model[%u], ret is %d, retryCost is %u us.", modelId, stopRet, retryCost);
     return stopRet;
 }
 
@@ -476,7 +476,7 @@ int32_t AicpuScheduleInterface::Restart(const uint32_t modelId) const
         retryCost += retryIntervalUs;
         restartRet = model->ModelRestart();
     }
-    aicpusd_run_info("Restart model[%u], ret is %d, retryCost is %u.", modelId, restartRet, retryCost);
+    aicpusd_run_info("Restart model[%u], ret is %d, retryCost is %u us.", modelId, restartRet, retryCost);
     return restartRet;
 }
 

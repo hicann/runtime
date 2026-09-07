@@ -87,7 +87,7 @@ int32_t AicpuCustDumpProcess::SetDataDumpThreadAffinity() const
 {
     std::vector<uint32_t> ccpuIds = AicpuDrvManager::GetInstance().GetCcpuList();
     if (ccpuIds.empty()) {
-        aicpusd_run_info("ccpu list is empty no need bind core");
+        aicpusd_run_info("ccpu list is empty, no need to bind core");
         return AICPU_SCHEDULE_OK;
     }
     if (AicpuUtil::IsEnvValEqual(ENV_NAME_PROCMGR_AICPU_CPUSET, "1")) {
@@ -214,7 +214,7 @@ int32_t AicpuCustDumpProcess::ProcessDumpMessage(const event_info& drvEventInfo)
             return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
         }
     } else {
-        aicpusd_err("invalid thread index:%u", threadIndex);
+        aicpusd_err("invalid thread index:%u, valid range [0, %zu)", threadIndex, waitCondVec_.size());
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
     return AICPU_SCHEDULE_ERROR_INNER_ERROR;

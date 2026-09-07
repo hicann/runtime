@@ -62,7 +62,7 @@ aeStatus_t AIKernelsLibAiCpuKFC::GetKernelName(char_t*& kernelName, const aicpu:
     }
     uint32_t len = strnlen(kernelName, AE_MAX_KERNEL_NAME + 1);
     if (static_cast<bool>(unlikely(len > AE_MAX_KERNEL_NAME))) {
-        AE_ERR_LOG(AE_MODULE_ID, "KernelName length is not supported, len=%d.", len);
+        AE_ERR_LOG(AE_MODULE_ID, "KernelName length is not supported, len=%d, max=%u.", len, AE_MAX_KERNEL_NAME);
         kernelName = nullptr;
         return AE_STATUS_INNER_ERROR;
     }
@@ -86,7 +86,8 @@ int32_t AIKernelsLibAiCpuKFC::GetApiWhenSonameNotEmpty(
     void*& funcAddr)
 {
     if (static_cast<bool>(unlikely(soNameLen > AE_MAX_SO_NAME))) {
-        AE_RUN_WARN_LOG(AE_MODULE_ID, "kernelSoName length is not supported, len=%d.", soNameLen);
+        AE_RUN_WARN_LOG(
+            AE_MODULE_ID, "kernelSoName length is not supported, len=%d, max=%u.", soNameLen, AE_MAX_SO_NAME);
         return static_cast<int32_t>(AE_STATUS_INNER_ERROR);
     }
 

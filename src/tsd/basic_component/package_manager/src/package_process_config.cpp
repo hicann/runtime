@@ -84,7 +84,7 @@ TSD_StatusT PackageProcessConfig::ParseConfigDataFromProtoBuf(const HDCMessage& 
     for (auto j = 0; j < hdcMsg.sink_pkg_con_list_size(); j++) {
         const SinkPackageConfig& hdcConfig = hdcMsg.sink_pkg_con_list(j);
         if (!SetConfigDataOnServer(hdcConfig)) {
-            TSD_RUN_WARN("invalid config data");
+            TSD_RUN_WARN("invalid config data, pkg config index:%d, name:%s", j, hdcConfig.package_name().c_str());
             return TSD_START_FAIL;
         }
     }

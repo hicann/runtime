@@ -166,7 +166,7 @@ void AicpuEventManager::LoopProcess(const uint32_t threadIndex)
     while (runningFlag_) {
         (void)DoOnce(threadIndex, deviceId);
     }
-    aicpusd_info("The loop of getting event is exit in thread[%u].", threadIndex);
+    aicpusd_info("The loop of getting event has exited in thread[%u].", threadIndex);
 }
 
 void AicpuEventManager::SetRunningFlag(const bool runningFlag) { runningFlag_ = runningFlag; }

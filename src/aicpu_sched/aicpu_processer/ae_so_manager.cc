@@ -104,7 +104,7 @@ aeStatus_t SingleSoManager::CheckSoFile(const std::string& guardDirName, const s
     }
 
     if (soFile.length() >= static_cast<std::string::size_type>(PATH_MAX)) {
-        AE_ERR_LOG(AE_MODULE_ID, "soFile file length[%zu] must less than PATH_MAX[%u]", soFile.length(), PATH_MAX);
+        AE_ERR_LOG(AE_MODULE_ID, "soFile file length[%zu] must be less than PATH_MAX[%u]", soFile.length(), PATH_MAX);
         return AE_STATUS_OPEN_SO_FAILED;
     }
 
@@ -317,7 +317,7 @@ aeStatus_t MultiSoManager::Init()
         const std::string str = innerDirName;
         const size_t len = str.length();
         if ((len == 0U) || (len >= static_cast<size_t>(PATH_MAX))) {
-            AE_ERR_LOG(AE_MODULE_ID, "Length of inner so dir %zu is invalid.", len);
+            AE_ERR_LOG(AE_MODULE_ID, "Length of inner so dir %zu is invalid, valid range is [1, %d).", len, PATH_MAX);
             return AE_STATUS_INNER_ERROR;
         }
         innerKernelPath_ = str;
@@ -331,7 +331,7 @@ aeStatus_t MultiSoManager::Init()
         const std::string str = custDirName;
         const size_t len = str.length();
         if ((len == 0U) || (len >= static_cast<size_t>(PATH_MAX))) {
-            AE_ERR_LOG(AE_MODULE_ID, "Length of cust so dir %zu is invalid.", len);
+            AE_ERR_LOG(AE_MODULE_ID, "Length of cust so dir %zu is invalid, valid range is [1, %d).", len, PATH_MAX);
             return AE_STATUS_INNER_ERROR;
         }
         custKernelPath_ = str;
@@ -371,7 +371,7 @@ aeStatus_t MultiSoManager::GetThreadModeSoPath(std::string& soPath) const
         const std::string str = innerDirName;
         const size_t len = str.length();
         if ((len == 0U) || (len >= static_cast<size_t>(PATH_MAX))) {
-            AE_ERR_LOG(AE_MODULE_ID, "Length[%zu] of inner so dir is invalid.", len);
+            AE_ERR_LOG(AE_MODULE_ID, "Length[%zu] of inner so dir is invalid, valid range is [1, %d).", len, PATH_MAX);
             return AE_STATUS_INNER_ERROR;
         }
         soPath = str;
@@ -467,7 +467,8 @@ aeStatus_t MultiSoManager::BuildCustSoPath(std::string& soPath, const uint32_t u
         const std::string dirName = curDirName;
         const size_t len = dirName.length();
         if ((len == 0LU) || (len >= static_cast<size_t>(PATH_MAX))) {
-            AE_ERR_LOG(AE_MODULE_ID, "Length of current dir name %zu is invalid.", len);
+            AE_ERR_LOG(
+                AE_MODULE_ID, "Length of current dir name %zu is invalid, valid range is [1, %d).", len, PATH_MAX);
             return AE_STATUS_INNER_ERROR;
         }
         soPath = dirName;

@@ -106,14 +106,14 @@ int32_t OperatorKernelModelReportStatus::EnqueueStatus(
     Mbuf* mbuf = nullptr;
     auto drvRet = halMbufAlloc(reqSize, &mbuf);
     if (drvRet != DRV_ERROR_NONE) {
-        aicpusd_err("halMbufAlloc failed, drvRet=%d, dataSize=%lu.", drvRet, reqSize);
+        aicpusd_err("halMbufAlloc failed, drvRet=%d, dataSize=%lu bytes.", drvRet, reqSize);
         return AICPU_SCHEDULE_ERROR_DRV_ERR;
     }
     auto mbufDeleter = [](Mbuf* buf) { (void)halMbufFree(buf); };
     std::unique_ptr<Mbuf, decltype(mbufDeleter)> mbufGuard(mbuf, mbufDeleter);
     drvRet = halMbufSetDataLen(mbuf, reqSize);
     if (drvRet != DRV_ERROR_NONE) {
-        aicpusd_err("halMbufSetDataLen failed, drvRet=%d, dataSize=%lu.", drvRet, reqSize);
+        aicpusd_err("halMbufSetDataLen failed, drvRet=%d, dataSize=%lu bytes.", drvRet, reqSize);
         return AICPU_SCHEDULE_ERROR_DRV_ERR;
     }
     // write mbuf data

@@ -23,7 +23,17 @@
 
 using namespace AicpuSchedule;
 
-namespace {} // namespace
+namespace {
+using NothrowArrayNewFunc = void* (*)(std::size_t, const std::nothrow_t&);
+
+// 模拟 nothrow new[] 分配失败，覆盖 QueueEnQueueBuff 中 buffIovec 分配失败分支
+void* NothrowArrayNewFail(std::size_t size, const std::nothrow_t& tag)
+{
+    (void)size;
+    (void)tag;
+    return nullptr;
+}
+} // namespace
 
 class OperatorKernelModelEnqueueBuffTest : public OperatorKernelTest {
 protected:
@@ -119,4 +129,23 @@ TEST_F(OperatorKernelModelEnqueueBuffTest, ModelEnqueueBuffTaskKernel_failed3)
     MOCKER_CPP(&AicpuModel::GetModelRetCode).stubs().will(returnValue(1));
     int ret = kernel_.ModelEnqueueBuff(bufInfoT, runContextT);
     EXPECT_EQ(ret, AICPU_SCHEDULE_OK);
+}
+
+TEST_F(OperatorKernelModelEnqueueBuffTest, ModelEnqueueBuff_AllocBuffIovecFail)
+{
+    BUILD_SUCC_PREPARE_INFO();
+    MOCKER(halMbufGetPrivInfo).stubs().will(invoke(halMbufGetPrivInfoFake));
+    MOCKER_CPP(&AicpuModelManager::GetModel).stubs().will(returnValue(aicpuModel));
+    MOCKER_CPP(&BufManager::UnGuardBuf).stubs().will(returnValue(0));
+    MOCKER(halQueueEnQueueBuff).stubs().will(returnValue(DRV_ERROR_NONE));
+    AicpuTaskInfo taskT;
+    taskT.taskID = 1;
+    char tmpBuf[128] = {0};
+    Mbuf* mbuf = (Mbuf*)tmpBuf;
+    BufEnQueueBuffInfo queue{0, 0, (uint64_t)&mbuf};
+    taskT.paraBase = (uint64_t)&queue;
+    MOCKER(static_cast<NothrowArrayNewFunc>(&operator new[])).expects(once()).will(invoke(NothrowArrayNewFail));
+    int ret = kernel_.Compute(taskT, runContextT);
+    EXPECT_EQ(ret, AICPU_SCHEDULE_ERROR_FROM_DRV);
+    GlobalMockObject::verify();
 }

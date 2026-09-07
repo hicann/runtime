@@ -53,14 +53,15 @@ int32_t RecordNotifyTsKernel::Compute(const aicpu::HwtsTsKernel& tsKernelInfo)
     // if has wait, set hasWait true and set waitStreamId, or else save notify come.
     EventWaitManager::NotifyWaitManager().Event(static_cast<size_t>(info->notify_id), hasWait, waitStreamId);
     if (!hasWait) {
-        aicpusd_info("End to process ts notify[%u] event, but no stream is waiting", info->notify_id);
+        aicpusd_info("Finished processing ts notify[%u] event, but no stream is waiting", info->notify_id);
         return AICPU_SCHEDULE_OK;
     }
 
     uint32_t modelId = 0U;
     auto ret = ModelStreamManager::GetInstance().GetStreamModelId(waitStreamId, modelId);
     if (ret != AICPU_SCHEDULE_OK) {
-        aicpusd_err("ModelRecord[%u] need active stream[%u] but find modelId failed.", info->notify_id, waitStreamId);
+        aicpusd_err(
+            "ModelRecord[%u] needs to activate stream[%u] but failed to find modelId.", info->notify_id, waitStreamId);
         return ret;
     }
 
@@ -92,7 +93,7 @@ int32_t ActiveEntryStreamTsKernel::Compute(const aicpu::HwtsTsKernel& tsKernelIn
     uint32_t modelId = 0U;
     auto ret = ModelStreamManager::GetInstance().GetStreamModelId(*streamIdPtr, modelId);
     if (ret != AICPU_SCHEDULE_OK) {
-        aicpusd_err("ActiveEntryStream need active stream[%u] but find modelId failed.", *streamIdPtr);
+        aicpusd_err("ActiveEntryStream needs to activate stream[%u] but failed to find modelId.", *streamIdPtr);
         return ret;
     }
 

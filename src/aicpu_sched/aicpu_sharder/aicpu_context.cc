@@ -114,11 +114,15 @@ void GetSqeId(const uint32_t num, uint32_t& start, uint32_t& end)
         end = g_sqeId;
         if (start >= end) {
             // Num reached  the maximum.
-            AICPUE_LOGW("The num[%u] exceeds the maximum number that can be applied for.", num);
+            AICPUE_LOGW(
+                "The num[%u] exceeds the maximum number[%u] that can be applied for.", num,
+                UINT32_MAX - INITIAL_SQE_IQ);
             g_sqeId = INITIAL_SQE_IQ;
             return;
         }
-        AICPUE_LOGW("The num[%u] exceeds the max, start will begin from initial value.", num);
+        AICPUE_LOGW(
+            "The num[%u] exceeds the max[%u], start will begin from initial value[%u].", num, UINT32_MAX,
+            INITIAL_SQE_IQ);
     }
     return;
 }
@@ -360,7 +364,8 @@ static std::map<uint32_t, AicpuStreamDvpp> g_streamAndChannelMap[AICPU_DVPP_CHL_
 void SetStreamDvppBuffBychlType(const AicpuDvppChlType chlType, const uint64_t buffLen, uint8_t* buff)
 {
     if (chlType >= AICPU_DVPP_CHL_BUTT) {
-        AICPUE_LOGE("chlType is invalid, chlType[%d].", static_cast<int32_t>(chlType));
+        AICPUE_LOGE(
+            "chlType is invalid, chlType[%d], valid range[0, %u).", static_cast<int32_t>(chlType), AICPU_DVPP_CHL_BUTT);
         return;
     }
 
@@ -386,7 +391,8 @@ void SetStreamDvppBuffByStreamId(
     const AicpuDvppChlType chlType, const uint32_t streamId, const uint64_t buffLen, uint8_t* buff)
 {
     if (chlType >= AICPU_DVPP_CHL_BUTT) {
-        AICPUE_LOGE("chlType is invalid, chlType[%d].", static_cast<int32_t>(chlType));
+        AICPUE_LOGE(
+            "chlType is invalid, chlType[%d], valid range[0, %u).", static_cast<int32_t>(chlType), AICPU_DVPP_CHL_BUTT);
         return;
     }
 
@@ -404,7 +410,8 @@ void SetStreamDvppBuffByStreamId(
 void GetDvppBufAndLenBychlType(const AicpuDvppChlType chlType, uint8_t** buff, uint64_t* buffLen)
 {
     if (chlType >= AICPU_DVPP_CHL_BUTT) {
-        AICPUE_LOGE("chlType is invalid, chlType[%d].", static_cast<int32_t>(chlType));
+        AICPUE_LOGE(
+            "chlType is invalid, chlType[%d], valid range[0, %u).", static_cast<int32_t>(chlType), AICPU_DVPP_CHL_BUTT);
         return;
     }
 
@@ -429,7 +436,8 @@ void GetDvppBufAndLenBychlType(const AicpuDvppChlType chlType, uint8_t** buff, u
 void GetDvppBufAndLenByStreamId(const uint32_t streamId, const AicpuDvppChlType chlType, uint8_t** buff)
 {
     if (chlType >= AICPU_DVPP_CHL_BUTT) {
-        AICPUE_LOGE("chlType is invalid, chlType[%d].", static_cast<int32_t>(chlType));
+        AICPUE_LOGE(
+            "chlType is invalid, chlType[%d], valid range[0, %u).", static_cast<int32_t>(chlType), AICPU_DVPP_CHL_BUTT);
         return;
     }
 

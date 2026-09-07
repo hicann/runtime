@@ -323,7 +323,7 @@ int32_t AicpuCustSoManager::CreateSoftLinkToSoFile(const std::string& softLinkPa
 {
     if (access(existedSoPath.c_str(), F_OK) != 0) {
         aicpusd_err(
-            "The target path is not existed in device, cannot create. linkPath=%s, targetPath=%s", softLinkPath.c_str(),
+            "The target path does not exist in device, cannot create. linkPath=%s, targetPath=%s", softLinkPath.c_str(),
             existedSoPath.c_str());
         return AICPU_SCHEDULE_ERROR_INNER_ERROR;
     }
@@ -337,7 +337,7 @@ int32_t AicpuCustSoManager::CreateSoftLinkToSoFile(const std::string& softLinkPa
 
     int32_t ret = CheckOrMakeDirectory(custSoDirName_);
     if (ret != AICPU_SCHEDULE_OK) {
-        aicpusd_err("The dir to create so soft link is not exist, dir=%s", custSoDirName_.c_str());
+        aicpusd_err("The dir to create so soft link does not exist, dir=%s", custSoDirName_.c_str());
         return ret;
     }
 
@@ -383,7 +383,7 @@ int32_t AicpuCustSoManager::GetDirForCustAicpuSo(std::string& dirName) const
         dirName = custDirName;
         const size_t len = dirName.size();
         if ((len == 0U) || (len >= static_cast<size_t>(PATH_MAX))) {
-            aicpusd_err("The length of custDirName is %zu which is invalid.", len);
+            aicpusd_err("The length of custDirName is %zu which is invalid, valid range is [1, %d).", len, PATH_MAX);
             return AICPU_SCHEDULE_ERROR_INNER_ERROR;
         }
         if (dirName[dirName.size() - 1U] != '/') {
@@ -614,7 +614,8 @@ bool HashCalculator::GetSameFileInfo(const FileInfo& fileInfo, FileHashInfo& exi
     const uint64_t hashValue = GetQuickHash(fileInfo.data, fileInfo.size);
     if (GetSameHashFileFromCache(hashValue, existedFileHashInfo)) {
         aicpusd_info(
-            "The file has same existed file after hash compare, so=%s, hash=%lu", fileInfo.name.c_str(), hashValue);
+            "The file is the same as an existing file after hash compare, so=%s, hash=%lu", fileInfo.name.c_str(),
+            hashValue);
         return true;
     }
 

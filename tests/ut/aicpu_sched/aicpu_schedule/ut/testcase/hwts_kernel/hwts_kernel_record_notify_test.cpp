@@ -68,3 +68,19 @@ TEST_F(RecordNotifyKernelTest, TsKernelRecordNotifyHasWait)
     int ret = kernel_.Compute(tsKernelInfo);
     EXPECT_EQ(ret, AICPU_SCHEDULE_OK);
 }
+
+TEST_F(RecordNotifyKernelTest, TsKernelRecordNotifyGetStreamModelIdFail)
+{
+    MOCKER_CPP(&ModelStreamManager::GetStreamModelId).stubs().will(returnValue(AICPU_SCHEDULE_ERROR_INNER_ERROR));
+    aicpu::HwtsTsKernel tsKernelInfo = {};
+    aicpu::HwtsCceKernel cceKernel = {};
+    TsAicpuNotify notifyInfo = {};
+    notifyInfo.notify_id = 161;
+    cceKernel.paramBase = (uint64_t)&notifyInfo;
+    tsKernelInfo.kernelBase.cceKernel = cceKernel;
+    const uint32_t waitStreamId = 162U;
+    bool needWait = true;
+    EventWaitManager::NotifyWaitManager().WaitEvent(notifyInfo.notify_id, waitStreamId, needWait);
+    int ret = kernel_.Compute(tsKernelInfo);
+    EXPECT_EQ(ret, AICPU_SCHEDULE_ERROR_INNER_ERROR);
+}

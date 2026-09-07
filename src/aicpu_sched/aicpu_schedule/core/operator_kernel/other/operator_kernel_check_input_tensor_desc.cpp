@@ -170,7 +170,7 @@ int32_t OperatorKernelCheckInputTensorDesc::CheckShapeInfo(
 
     if (modelTensorDesc.shape[0] > MAX_DIM_SIZE + 1) {
         aicpusd_err(
-            "Failed to check modelTensorDesc shape. shape size[%d] should less than %d", modelTensorDesc.shape[0],
+            "Failed to check modelTensorDesc shape. shape size[%d] should be less than %d", modelTensorDesc.shape[0],
             MAX_DIM_SIZE + 1);
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
@@ -191,7 +191,7 @@ void OperatorKernelCheckInputTensorDesc::PrintErrShapeInfo(
 {
     if ((modelTensorDesc.shape[0] > MAX_DIM_SIZE + 1) || (tensorDesc.shape[0] > MAX_DIM_SIZE + 1)) {
         aicpusd_err(
-            "Failed to check modelTensorDesc shape. shape size[%d] should less than %d", modelTensorDesc.shape[0],
+            "Failed to check modelTensorDesc shape. shape size[%d] should be less than %d", modelTensorDesc.shape[0],
             MAX_DIM_SIZE + 1);
         return;
     }

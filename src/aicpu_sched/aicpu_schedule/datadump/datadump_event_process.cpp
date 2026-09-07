@@ -65,7 +65,7 @@ int32_t AicpuEventProcess::ProcessDumpDataEvent(AicpuSqeAdapter& aicpuSqeAdapter
     AicpuSqeAdapter::AicpuDataDumpInfo info{};
     aicpuSqeAdapter.GetAicpuDataDumpInfo(info);
     aicpusd_info(
-        "Begin to dump data, stream id[%u], task id[%u], debug stream id[%u], debug task id[%u],"
+        "Begin to dump data, stream id[%u], task id[%u], debug stream id[%u], debug task id[%u], "
         "is model[%u]",
         info.dump_stream_id, info.dump_task_id, info.debug_dump_stream_id, info.debug_dump_task_id, info.is_model);
     // reserved 是否有用？？
@@ -75,7 +75,7 @@ int32_t AicpuEventProcess::ProcessDumpDataEvent(AicpuSqeAdapter& aicpuSqeAdapter
     if (info.is_debug && FeatureCtrl::IsNoNeedDumpOpDebugProduct()) {
         aicpusd_warn(
             "Op debug dump is not supported, stream id[%u],"
-            " task id[%u], stream id1[%u], task id1[%u], is model[%u],",
+            " task id[%u], stream id1[%u], task id1[%u], is model[%u]",
             info.dump_stream_id, info.dump_task_id, info.debug_dump_stream_id, info.debug_dump_task_id, info.is_model);
     } else {
         uint32_t fileNameTaskId = info.is_debug ? info.debug_dump_task_id : info.dump_task_id;
@@ -155,7 +155,7 @@ int32_t AicpuEventProcess::SendDumpResponceInfo(AicpuSqeAdapter& adapter, const 
     auto ret = adapter.AicpuDumpResponseToTs(dumpRet);
     aicpusd_info("Finished to send dump report information, ret[%d].", ret);
     if (ret != AICPU_SCHEDULE_OK) {
-        aicpusd_err("Failed to response info, ret[%d]", ret);
+        aicpusd_err("Failed to respond to info, ret[%d]", ret);
         return AICPU_SCHEDULE_ERROR_INNER_ERROR;
     }
     return AICPU_SCHEDULE_OK;
@@ -182,7 +182,7 @@ int32_t AicpuEventProcess::ProcessLoadOpMappingEvent(AicpuSqeAdapter& aicpuSqeAd
     aicpusd_info("Finished to send dump load info report info, ret[%d].", ret);
 
     if (ret != AICPU_SCHEDULE_OK) {
-        aicpusd_err("Failed to response info, ret[%d]", ret);
+        aicpusd_err("Failed to respond to info, ret[%d]", ret);
         return AICPU_SCHEDULE_ERROR_INNER_ERROR;
     }
     return AICPU_SCHEDULE_OK;

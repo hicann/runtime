@@ -343,7 +343,7 @@ int32_t AicpuEventManager::ProcessHWTSKernelEvent(const event_info& eventInfo, c
         PtrToPtr<hwts_response_t, char_t>(&hwtsResponse), static_cast<uint32_t>(sizeof(hwts_response_t)));
     if (drvRet != DRV_ERROR_NONE) {
         aicpusd_err(
-            "Failed to send ack to Ts,"
+            "Failed to send ack to Ts, "
             "subevent_id[%u], mailboxId[%u], serialNo[%lu], result[%d], originResult[%d], "
             "status[%d], error[%d].",
             subeventId, mailboxId, serialNo, hwtsResponse.result, ret, hwtsResponse.status, drvRet);

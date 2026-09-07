@@ -43,7 +43,7 @@ TSD_StatusT PackageWorkerUtils::MakeDirectory(const std::string& dirPath)
         ret = mmIsDir(dirPath.c_str());
         if (ret != EN_OK) {
             TSD_ERROR(
-                "File exist but not is a dir, ret=%d, path=%s, reason=%s", ret, dirPath.c_str(),
+                "File exists but is not a dir, ret=%d, path=%s, reason=%s", ret, dirPath.c_str(),
                 SafeStrerror().c_str());
             return TSD_INTERNAL_ERROR;
         }

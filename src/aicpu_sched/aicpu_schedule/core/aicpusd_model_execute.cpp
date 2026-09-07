@@ -363,7 +363,7 @@ StatusCode AicpuModelManager::GetModelConfigShape(
     const uint32_t modelId, std::vector<ModelConfigTensorDesc>& tensorDescArr)
 {
     if (tensorDescMap_.find(modelId) == tensorDescMap_.end()) {
-        aicpusd_warn("not find modelId[%u] aicpu model shape config", modelId);
+        aicpusd_warn("modelId[%u] aicpu model shape config not found", modelId);
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
     tensorDescArr = tensorDescMap_[modelId];
@@ -496,21 +496,21 @@ StatusCode AicpuModelManager::SetEventPriority(const AicpuPriInfo& cfg, const st
         auto ret = halEschedSetEventPriority(
             deviceVec[i], EVENT_QUEUE_EMPTY_TO_NOT_EMPTY, static_cast<SCHEDULE_PRIORITY>(cfg.eventPriority));
         if (ret != DRV_ERROR_NONE) {
-            aicpusd_err("[AicpuModelEschedPriority] failed set EVENT_QUEUE_EMPTY_TO_NOT_EMPTY ret[%d].", ret);
+            aicpusd_err("[AicpuModelEschedPriority] failed to set EVENT_QUEUE_EMPTY_TO_NOT_EMPTY ret[%d].", ret);
             return AICPU_SCHEDULE_ERROR_DRV_ERR;
         }
         aicpusd_info(
-            "[AicpuModelEschedPriority] set EVENT_QUEUE_EMPTY_TO_NOT_EMPTY priority success Index[%u],"
+            "[AicpuModelEschedPriority] set EVENT_QUEUE_EMPTY_TO_NOT_EMPTY priority success Index[%u], "
             "deviceid[%u]",
             i, deviceVec[i]);
         ret = halEschedSetEventPriority(
             deviceVec[i], EVENT_QUEUE_FULL_TO_NOT_FULL, static_cast<SCHEDULE_PRIORITY>(cfg.eventPriority));
         if (ret != DRV_ERROR_NONE) {
-            aicpusd_err("[AicpuModelEschedPriority] failed set EVENT_QUEUE_FULL_TO_NOT_FULL ret[%d].", ret);
+            aicpusd_err("[AicpuModelEschedPriority] failed to set EVENT_QUEUE_FULL_TO_NOT_FULL ret[%d].", ret);
             return AICPU_SCHEDULE_ERROR_DRV_ERR;
         }
         aicpusd_info(
-            "[AicpuModelEschedPriority] set EVENT_QUEUE_FULL_TO_NOT_FULL priority success Index[%u],"
+            "[AicpuModelEschedPriority] set EVENT_QUEUE_FULL_TO_NOT_FULL priority success Index[%u], "
             "deviceid[%u]",
             i, deviceVec[i]);
     }
@@ -525,7 +525,9 @@ StatusCode AicpuModelManager::ProcessModelPriorityMsg(const AicpuPriInfo& cfg, c
     if (cfg.checkHead != PRIORITY_MSG_CHECKCODE) {
         // checkcode error in process mode is msg error return fail
         if (isProcessMode) {
-            aicpusd_err("[AicpuModelEschedPriority] the msg checkcode is error [%x]", cfg.checkHead);
+            aicpusd_err(
+                "[AicpuModelEschedPriority] the msg checkcode is error, actual[%x], expected[%x]", cfg.checkHead,
+                PRIORITY_MSG_CHECKCODE);
             return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
         } else {
             return AICPU_SCHEDULE_OK;

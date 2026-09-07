@@ -49,7 +49,7 @@ TSD_StatusT AicpuThreadPackageWorker::LoadPackage(const std::string& packagePath
     }
 
     TSD_RUN_INFO(
-        "Start load package, originPkg=%s, decomPkg=%s, checkCode=%lu, pkgSize=%lu",
+        "Start load package, originPkg=%s, decomPkg=%s, checkCode=%lu, pkgSize=%lu bytes",
         originPackagePath_.realPath.c_str(), decomPackagePath_.realPath.c_str(), GetCheckCode(),
         GetOriginPackageSize());
 

@@ -239,7 +239,8 @@ Return Value  : NA
 void ReleaseProfiling()
 {
     int32_t ret = ProfilingAdp::GetInstance().UninitProcess();
-    AICPU_LOG_WHEN(ret != static_cast<int32_t>(ProfStatusCode::PROFILINE_SUCCESS), "Failed unit profiling(%d).", ret);
+    AICPU_LOG_WHEN(
+        ret != static_cast<int32_t>(ProfStatusCode::PROFILINE_SUCCESS), "Failed to uninit profiling(%d).", ret);
 }
 
 int32_t SetProfHandle(const std::shared_ptr<ProfMessage> profMsg)

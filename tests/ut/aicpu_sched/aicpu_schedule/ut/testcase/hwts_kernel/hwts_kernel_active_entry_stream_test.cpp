@@ -51,3 +51,17 @@ TEST_F(ActiveEntryStreamKernelTest, TsKernelActiveEntryStream_succ)
     int ret = kernel_.Compute(tsKernelInfo);
     EXPECT_EQ(ret, AICPU_SCHEDULE_OK);
 }
+
+TEST_F(ActiveEntryStreamKernelTest, TsKernelActiveEntryStream_GetStreamModelIdFail)
+{
+    aicpu::HwtsTsKernel tsKernelInfo = {};
+    aicpu::HwtsCceKernel cceKernel;
+    int streamId = 1;
+    cceKernel.paramBase = (uint64_t)&streamId;
+    tsKernelInfo.kernelBase.cceKernel = cceKernel;
+    MOCKER_CPP(&ModelStreamManager::GetInstance().GetStreamModelId)
+        .stubs()
+        .will(returnValue(AICPU_SCHEDULE_ERROR_INNER_ERROR));
+    int ret = kernel_.Compute(tsKernelInfo);
+    EXPECT_EQ(ret, AICPU_SCHEDULE_ERROR_INNER_ERROR);
+}

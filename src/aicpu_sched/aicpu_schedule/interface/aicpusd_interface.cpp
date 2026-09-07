@@ -409,7 +409,10 @@ int32_t CheckKernelSupported(const CheckKernelSupportedConfig* const cfgPtr)
     const uint32_t kernelNameLen = cfgPtr->kernelNameLen;
     uint32_t* resultAddr = PtrToPtr<void, uint32_t>(ValueToPtr(cfgPtr->checkResultAddr));
     if ((kernelName == nullptr) || (kernelNameLen == 0) || (resultAddr == nullptr)) {
-        aicpusd_err("CheckKernelSupportedConfig params error");
+        aicpusd_err(
+            "CheckKernelSupportedConfig params error, kernelName is %s, kernelNameLen[%u], resultAddr is %s",
+            (kernelName == nullptr) ? "null" : "not null", kernelNameLen,
+            (resultAddr == nullptr) ? "null" : "not null");
         return AICPU_SCHEDULE_FAIL;
     }
     std::string operatorKernelName(kernelName, kernelNameLen);

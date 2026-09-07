@@ -31,13 +31,13 @@ TSD_StatusT PackageVerify::VerifyPackage() const
 
     TSD_StatusT ret = IsPackageValid();
     if (ret != TSD_OK) {
-        TSD_ERROR("Verify package failed by path is invalid, ret=%u, path=%s", ret, pkgPath_.c_str());
+        TSD_ERROR("Verify package failed because path is invalid, ret=%u, path=%s", ret, pkgPath_.c_str());
         return TSD_VERIFY_OPP_FAIL;
     }
 
     ret = ChangePackageMode();
     if (ret != TSD_OK) {
-        TSD_ERROR("Verify package failed by change mode failed, ret=%u, path=%s", ret, pkgPath_.c_str());
+        TSD_ERROR("Verify package failed because changing package mode failed, ret=%u, path=%s", ret, pkgPath_.c_str());
         return TSD_VERIFY_OPP_FAIL;
     }
 
@@ -61,7 +61,7 @@ TSD_StatusT PackageVerify::IsPackageValid() const
 
     const int32_t ret = access(pkgPath_.c_str(), F_OK);
     if (ret != EOK) {
-        TSD_ERROR("File cannot access, ret=%d, path=%s, reason=%s", ret, pkgPath_.c_str(), SafeStrerror().c_str());
+        TSD_ERROR("Cannot access file, ret=%d, path=%s, reason=%s", ret, pkgPath_.c_str(), SafeStrerror().c_str());
         return TSD_INTERNAL_ERROR;
     }
 
@@ -190,7 +190,9 @@ TSD_StatusT PackageVerify::GetPkgCodeLen(const std::string& srcPath, uint32_t& m
     }
     const int64_t fileLen = ftell(fp);
     if (fileLen <= static_cast<int64_t>(CMS_IMG_DESC_LEN + CMS_HEAD_FIX_PACKET_LEN)) {
-        TSD_ERROR("[CMSCBB_VERIFY] file length invalid. path[%s], len[%lld]", srcPath.c_str(), fileLen);
+        TSD_ERROR(
+            "[CMSCBB_VERIFY] file length invalid. path[%s], len[%lld], expect > %lld", srcPath.c_str(), fileLen,
+            static_cast<int64_t>(CMS_IMG_DESC_LEN + CMS_HEAD_FIX_PACKET_LEN));
         return static_cast<uint32_t>(TSD_START_FAIL);
     }
     rewind(fp);
@@ -212,7 +214,7 @@ TSD_StatusT PackageVerify::GetPkgCodeLen(const std::string& srcPath, uint32_t& m
     }
     mixCodeLen = pktHeader->uwLCodeLen;
     if (mixCodeLen <= CMS_IMG_DESC_LEN) {
-        TSD_ERROR("[CMSCBB_VERIFY] invalid code length:%u", mixCodeLen);
+        TSD_ERROR("[CMSCBB_VERIFY] invalid code length:%u, expect > %u", mixCodeLen, CMS_IMG_DESC_LEN);
         return static_cast<uint32_t>(TSD_START_FAIL);
     }
     mixCodeLen = mixCodeLen - CMS_IMG_DESC_LEN;

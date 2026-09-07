@@ -44,6 +44,21 @@ char* GetHomeEnvForUser(const char* __name) { return const_cast<char*>(userPath.
 
 char* GetHomeEnvFail(const char* __name) { return nullptr; }
 
+namespace {
+const std::string tooLongSoPath(4097U, 'a');
+const std::string validSoPath = "/usr/lib64/";
+
+char* GetEnvTooLong(const char* __name) { return const_cast<char*>(tooLongSoPath.data()); }
+
+char* GetEnvInnerOkCustTooLong(const char* __name)
+{
+    if (std::string(__name) == "ASCEND_CUST_AICPU_KERNEL_CACHE_PATH") {
+        return const_cast<char*>(tooLongSoPath.data());
+    }
+    return const_cast<char*>(validSoPath.data());
+}
+} // namespace
+
 class SoManagerUTest : public testing::Test {
 protected:
     static void SetUpTestCase() { printf("SoManagerUTest SetUpTestCase\n"); }
@@ -599,6 +614,33 @@ TEST_F(SoManagerUTest, GetThreadModeSoPathFail01)
     std::string soPath = "";
     const auto ret = soMngr_.GetThreadModeSoPath(soPath);
     EXPECT_EQ(ret, AE_STATUS_INNER_ERROR);
+}
+
+TEST_F(SoManagerUTest, GetThreadModeSoPathFail02)
+{
+    // length of HOME is longer than PATH_MAX
+    MOCKER(getenv).stubs().will(invoke(GetEnvTooLong));
+    std::string soPath = "";
+    const auto ret = soMngr_.GetThreadModeSoPath(soPath);
+    EXPECT_EQ(ret, AE_STATUS_INNER_ERROR);
+}
+
+TEST_F(SoManagerUTest, MultiSoManager_Init_InnerDirTooLong)
+{
+    MOCKER(aicpu::GetAicpuRunMode).stubs().will(invoke(GetAicpuRunModeStub));
+    MOCKER(getenv).stubs().will(invoke(GetEnvTooLong));
+    cce::MultiSoManager soMngr;
+    aeStatus_t ret = soMngr.Init();
+    EXPECT_EQ(AE_STATUS_INNER_ERROR, ret);
+}
+
+TEST_F(SoManagerUTest, MultiSoManager_Init_CustDirTooLong)
+{
+    MOCKER(aicpu::GetAicpuRunMode).stubs().will(invoke(GetAicpuRunModeStub));
+    MOCKER(getenv).stubs().will(invoke(GetEnvInnerOkCustTooLong));
+    cce::MultiSoManager soMngr;
+    aeStatus_t ret = soMngr.Init();
+    EXPECT_EQ(AE_STATUS_INNER_ERROR, ret);
 }
 
 TEST_F(SoManagerUTest, AddSoInWhiteList)

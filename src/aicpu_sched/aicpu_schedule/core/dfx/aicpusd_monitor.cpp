@@ -358,9 +358,9 @@ void AicpuMonitor::Work(AicpuMonitor* const monitor)
                 subEventInfo.modelId = waitId;
                 const drvError_t ret = halEschedSubmitEvent(monitor->deviceId_, &eventInfoSummary);
                 if (ret != DRV_ERROR_NONE) {
-                    aicpusd_err("Failed to supply enque event for model[%u]. ret is %d.", waitId, ret);
+                    aicpusd_err("Failed to supply enqueue event for model[%u]. ret is %d.", waitId, ret);
                 }
-                aicpusd_info("supply enque event for model[%u].", waitId);
+                aicpusd_info("supply enqueue event for model[%u].", waitId);
             }
             eventWaitIds.clear();
         }

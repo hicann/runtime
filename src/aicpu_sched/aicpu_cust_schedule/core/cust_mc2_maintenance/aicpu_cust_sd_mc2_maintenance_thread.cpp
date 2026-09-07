@@ -75,7 +75,7 @@ void AicpuCustMc2MaintenanceThread::SendCustMc2CreateThreadMsgToMain() const
 int32_t AicpuCustMc2MaintenanceThread::CreateCustMc2MaintenanceThread()
 {
     if (initFlag_) {
-        aicpusd_info("the thread no need to multiple init, threadId[%llu]", threadId_);
+        aicpusd_info("the thread does not need to be initialized multiple times, threadId[%llu]", threadId_);
         return AICPU_SCHEDULE_OK;
     }
     try {
@@ -104,7 +104,7 @@ int32_t AicpuCustMc2MaintenanceThread::InitCustMc2MaintenanceProcess(
         return AICPU_SCHEDULE_ERROR_INNER_ERROR;
     }
     if (runMode != aicpu::AicpuRunMode::PROCESS_PCIE_MODE) {
-        aicpusd_info("not pcie mode no need this thread type[%u]", type_);
+        aicpusd_info("current mode is not pcie mode, this thread is not needed, type[%u]", type_);
         return AICPU_SCHEDULE_NOT_SUPPORT;
     }
     const std::lock_guard<std::mutex> lk(initMutex_);
@@ -143,7 +143,7 @@ int32_t AicpuCustMc2MaintenanceThread::SetCustMc2MaintenanceThreadAffinity()
 {
     std::vector<uint32_t> ccpuIds = AicpuDrvManager::GetInstance().GetCcpuList();
     if (ccpuIds.empty()) {
-        aicpusd_run_info("ccpu list is empty no need bind core");
+        aicpusd_run_info("ccpu list is empty, no need to bind core");
         return AICPU_SCHEDULE_OK;
     }
     if (AicpuUtil::IsEnvValEqual(ENV_NAME_PROCMGR_AICPU_CPUSET, "1")) {
@@ -184,7 +184,7 @@ void AicpuCustMc2MaintenanceThread::StartProcessEvent()
 void AicpuCustMc2MaintenanceThread::ProcessEventFunc() const
 {
     if (processEventFuncPtr_ == nullptr) {
-        aicpusd_err("the processEventFuncPtr not register. type[%u]", type_);
+        aicpusd_err("the processEventFuncPtr is not registered. type[%u]", type_);
         return;
     }
     processEventFuncPtr_(processEventFuncParam_);
@@ -205,7 +205,7 @@ void AicpuCustMc2MaintenanceThread::StopProcessEventFunc() const
 {
     // 调用结束回调
     if (stopProcessEventFuncPtr_ == nullptr) {
-        aicpusd_err("the stopProcessEventFuncPtr not register. type[%u]", type_);
+        aicpusd_err("the stopProcessEventFuncPtr is not registered. type[%u]", type_);
         return;
     }
     stopProcessEventFuncPtr_(stopProcessEventFuncParam_);
@@ -216,7 +216,7 @@ void AicpuCustMc2MaintenanceThread::UnitCustMc2MaintenanceProcess()
     aicpusd_info("UnitCustMc2MaintenanceProcess start. type[%u]", type_);
     const std::lock_guard<std::mutex> lk(initMutex_);
     if (!initFlag_) {
-        aicpusd_info("the thread is already stop");
+        aicpusd_info("the thread is already stopped");
         return;
     }
     StopProcessEventFunc();

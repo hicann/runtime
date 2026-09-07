@@ -93,7 +93,7 @@ int32_t OperatorKernelModelEnqueueBuff::QueueEnQueueBuff(
     constexpr size_t totalLen = sizeof(struct buff_iovec) + sizeof(struct iovec_info);
     std::unique_ptr<char_t[]> vecUniquePtr(new (std::nothrow) char_t[totalLen], std::default_delete<char_t[]>());
     if (vecUniquePtr == nullptr) {
-        aicpusd_err("failed to alloc memory for buffIovec, size[%zu].", totalLen);
+        aicpusd_err("failed to alloc memory for buffIovec, size[%zu bytes].", totalLen);
         return AICPU_SCHEDULE_ERROR_INNER_ERROR;
     }
 

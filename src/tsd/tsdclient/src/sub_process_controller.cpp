@@ -73,7 +73,7 @@ TSD_StatusT SubProcessController::ConstructCommonOpenMsg(HDCMessage& hdcMsg, con
 {
     MessageContext ctx = tsdCtrl_.BuildBaseMessageContext();
     if (!SetCommonOpenParamList(ctx, procArgs)) {
-        TSD_ERROR("input param is error, SetCommonOpenParamList failed");
+        TSD_ERROR("input param is invalid, SetCommonOpenParamList failed");
         return TSD_INTERNAL_ERROR;
     }
 
@@ -144,7 +144,7 @@ TSD_StatusT SubProcessController::OpenSubProc(ProcOpenArgs* openArgs)
 TSD_StatusT SubProcessController::CloseSubProc(const pid_t closePid)
 {
     if (closePid <= 0) {
-        TSD_ERROR("input param is error");
+        TSD_ERROR("input param is invalid");
         return TSD_INTERNAL_ERROR;
     }
     if (!capabilityMgr_.IsSupportCommonInterface(TSD_SUPPORT_HS_AISERVER_FEATURE_BIT)) {
@@ -171,7 +171,7 @@ TSD_StatusT SubProcessController::CloseSubProc(const pid_t closePid)
         return TSD_INTERNAL_ERROR;
     }
     ret = tsdCtrl_.WaitRsp(0U);
-    TSD_CHECK(ret == TSD_OK, ret, "Wait open response from device failed.");
+    TSD_CHECK(ret == TSD_OK, ret, "Wait close response from device failed.");
     TSD_RUN_INFO("leave ProcessCloseSubProc subpid:%u", closePid);
     return TSD_OK;
 }
@@ -179,13 +179,14 @@ TSD_StatusT SubProcessController::CloseSubProc(const pid_t closePid)
 TSD_StatusT SubProcessController::GetSubProcStatus(ProcStatusInfo* pidInfo, const uint32_t arrayLen)
 {
     if ((pidInfo == nullptr) || (arrayLen == 0U)) {
-        TSD_ERROR("input param is error");
+        TSD_ERROR("input param is invalid");
         return TSD_INTERNAL_ERROR;
     }
 
     TSD_DEBUG("enter into GetSubProcStatus");
     TSD_CHECK_NULLPTR(
-        commAgent_.GetDeviceComm(), TSD_INSTANCE_NOT_INITIALED, "[TsdClient] devCommClient_ is null in Close function");
+        commAgent_.GetDeviceComm(), TSD_INSTANCE_NOT_INITIALED,
+        "[TsdClient] devCommClient_ is null in GetSubProcStatus function");
     HDCMessage msg;
     MessageContext ctx = tsdCtrl_.BuildBaseMessageContext();
     ctx.subProcPidList.reserve(static_cast<size_t>(arrayLen));
@@ -211,7 +212,7 @@ TSD_StatusT SubProcessController::GetSubProcStatus(ProcStatusInfo* pidInfo, cons
 TSD_StatusT SubProcessController::GetSubProcListStatus(ProcStatusParam* pidInfo, const uint32_t arrayLen)
 {
     if ((pidInfo == nullptr) || (arrayLen == 0U) || (arrayLen > MAX_PROCESS_PID_CNT)) {
-        TSD_ERROR("input param is error");
+        TSD_ERROR("input param is invalid");
         return TSD_INTERNAL_ERROR;
     }
 
@@ -244,7 +245,7 @@ TSD_StatusT SubProcessController::GetSubProcListStatus(ProcStatusParam* pidInfo,
 TSD_StatusT SubProcessController::RemoveFileOnDevice(const char_t* const filePath, const uint64_t pathLen)
 {
     if ((filePath == nullptr) || (pathLen == 0UL) || (pathLen >= 4096UL)) {
-        TSD_ERROR("input param is error");
+        TSD_ERROR("input param is invalid");
         return TSD_INTERNAL_ERROR;
     }
     try {
@@ -289,7 +290,7 @@ TSD_StatusT SubProcessController::CloseSubProcList(const ProcStatusParam* closeL
     TSD_RUN_INFO(
         "enter ExecuteClosePidList cnt:%u, tsdSupportLevel_:%u", listSize, capabilityMgr_.GetTsdSupportLevel());
     if ((listSize > MAX_PROCESS_PID_CNT) || (listSize == 0U) || (closeList == nullptr)) {
-        TSD_ERROR("pid list size invalid:%u", listSize);
+        TSD_ERROR("pid list size invalid:%u, valid range is [1, %u]", listSize, MAX_PROCESS_PID_CNT);
         return TSD_INTERNAL_ERROR;
     }
     if (commAgent_.GetDeviceComm() == nullptr) {
@@ -331,7 +332,9 @@ TSD_StatusT SubProcessController::ExecuteClosePidList(
     const ProcStatusParam* closeList, const uint32_t startIndex, const uint32_t pidCnt)
 {
     if ((closeList == nullptr) || (pidCnt == 0U) || (pidCnt > MAX_PROCESS_PID_CNT)) {
-        TSD_ERROR("input param is error");
+        TSD_ERROR(
+            "input param is error, closeList:%s, pidCnt:%u, valid range is [1, %u]",
+            (closeList == nullptr) ? "null" : "not null", pidCnt, MAX_PROCESS_PID_CNT);
         return TSD_INTERNAL_ERROR;
     }
 

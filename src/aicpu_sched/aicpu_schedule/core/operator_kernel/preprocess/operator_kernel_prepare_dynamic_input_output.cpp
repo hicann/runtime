@@ -117,7 +117,7 @@ int32_t PrepareDynamicInputOutputBase::AllocateAndInitOutput(
         Mbuf* mbuf =
             BufManager::GetInstance().MallocAndGuardBufU64(static_cast<uint64_t>(allocSize), taskContext.modelId);
         if (mbuf == nullptr) {
-            aicpusd_err("model[%u] alloc mbuf fail, size: %zu.", taskContext.modelId, allocSize);
+            aicpusd_err("model[%u] alloc mbuf fail, size: %zu bytes.", taskContext.modelId, allocSize);
             return AICPU_SCHEDULE_ERROR_FROM_DRV;
         }
         mbufsToFree.emplace_back(mbuf);
@@ -152,7 +152,7 @@ int32_t PrepareDynamicInputOutputBase::PrepareReqMsg(
     Mbuf* reqMbuf =
         BufManager::GetInstance().MallocAndGuardBufU64(static_cast<uint64_t>(reqMsgSize), taskContext.modelId);
     if (reqMbuf == nullptr) {
-        aicpusd_err("model[%u] alloc mbuf fail, size: %zu.", taskContext.modelId, reqMsgSize);
+        aicpusd_err("model[%u] alloc mbuf fail, size: %zu bytes.", taskContext.modelId, reqMsgSize);
         return AICPU_SCHEDULE_ERROR_FROM_DRV;
     }
     mbufsToFree.emplace_back(reqMbuf);

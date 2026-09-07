@@ -37,7 +37,11 @@ aeStatus_t AIKernelsLibManger::GetKernelLib(const aicpu::KernelType kernelType, 
             kernelLib = AIKernelsLibAiCpuKFC::GetInstance();
             break;
         default:
-            AE_ERR_LOG(AE_MODULE_ID, "Input param kernelType is invalid :%d", kernelType);
+            AE_ERR_LOG(
+                AE_MODULE_ID,
+                "Input param kernelType is invalid :%d, supported types are KERNEL_TYPE_FWK[1], KERNEL_TYPE_AICPU[2], "
+                "KERNEL_TYPE_AICPU_CUSTOM[4], KERNEL_TYPE_AICPU_KFC[5], KERNEL_TYPE_AICPU_CUSTOM_KFC[6]",
+                kernelType);
             break;
     }
 

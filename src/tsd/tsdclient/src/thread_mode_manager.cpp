@@ -471,7 +471,7 @@ TSD_StatusT ThreadModeManager::RemoveFileOnDevice(const char_t* const filePath, 
 TSD_StatusT ThreadModeManager::ProcessCloseSubProcList(const ProcStatusParam* closeList, const uint32_t listSize)
 {
     if ((listSize == 0U) || (closeList == nullptr)) {
-        TSD_ERROR("[ThreadModeManager]closeList is nullptr or pid list size invalid:%u", listSize);
+        TSD_ERROR("[ThreadModeManager] closeList is nullptr or pid list size invalid:%u", listSize);
         return TSD_INTERNAL_ERROR;
     }
     TSD_RUN_INFO("[ThreadModeManager] enter ExecuteClosePidList cnt:%u, procType:%u", listSize, closeList[0].procType);
@@ -508,7 +508,7 @@ TSD_StatusT ThreadModeManager::ProcessCloseSubProcList(const ProcStatusParam* cl
 TSD_StatusT ThreadModeManager::GetSubProcListStatus(ProcStatusParam* pidInfo, const uint32_t arrayLen)
 {
     if ((pidInfo == nullptr) || (arrayLen == 0U) || (arrayLen > MAX_PROCESS_PID_CNT)) {
-        TSD_ERROR("input param is error");
+        TSD_ERROR("input param is invalid");
         return TSD_INTERNAL_ERROR;
     }
 

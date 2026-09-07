@@ -4878,6 +4878,32 @@ TEST_F(AICPUScheduleTEST, UtMainTestWithVf_openFail)
     EXPECT_EQ(ret, 0);
 }
 
+// cover SendVfMsgToDrv ioctl failed branch in execute/main.cpp
+TEST_F(AICPUScheduleTEST, UtMainTestWithVf_ioctlFail)
+{
+    char processName[] = "aicpu_scheduler";
+    char paramDeviceIdOk[] = "--deviceId=2";
+    char paramPidOk[] = "--pid=4";
+    char paramPidSignOk[] = "--pidSign=1234A";
+    char paramModeOk[] = "--profilingMode=1";
+    char paramLogLevelOk[] = "--logLevelInPid=0";
+    char paramVfId[] = "--vfId=2";
+    char paramGrpNameOk[] = "--groupNameList=Grp3";
+    char paramGrpNumOk[] = "--groupNameNum=1";
+    MOCKER(system).stubs().will(returnValue(0));
+
+    MOCKER(open, int(const char*, int)).stubs().will(returnValue(0));
+    MOCKER(ioctl, int(int, int, void*)).stubs().will(returnValue(-1));
+    MOCKER(close).stubs().will(returnValue(0));
+
+    char* argv[] = {processName,     paramDeviceIdOk, paramPidOk,     paramPidSignOk, paramModeOk,
+                    paramLogLevelOk, paramVfId,       paramGrpNameOk, paramGrpNumOk};
+    int32_t argc = 9;
+    MOCKER_CPP(&AicpuScheduleInterface::InitAICPUScheduler).stubs().will(returnValue(0));
+    int32_t ret = ComputeProcessMain(argc, argv);
+    EXPECT_EQ(ret, 0);
+}
+
 TEST_F(AICPUScheduleTEST, AddToCgroup_ERROR_001)
 {
     char processName[] = "aicpu_scheduler";
@@ -5383,6 +5409,16 @@ TEST_F(AICPUScheduleTEST, Ut_SetDataDumpThreadAffinity_test1)
     MOCKER(pthread_setaffinity_np).stubs().will(returnValue(2));
     ret = AicpuSdCustDumpProcess::GetInstance().SetDataDumpThreadAffinity();
     EXPECT_EQ(ret, AICPU_SCHEDULE_OK);
+}
+
+TEST_F(AICPUScheduleTEST, Ut_SetDataDumpThreadAffinity_emptyCcpuList)
+{
+    auto& ccpuIdVec = AicpuSchedule::AicpuDrvManager::GetInstance().ccpuIdVec_;
+    const std::vector<uint32_t> savedCcpuIds = ccpuIdVec;
+    ccpuIdVec.clear();
+    int32_t ret = AicpuSdCustDumpProcess::GetInstance().SetDataDumpThreadAffinity();
+    EXPECT_EQ(ret, AICPU_SCHEDULE_OK);
+    ccpuIdVec = savedCcpuIds;
 }
 
 TEST_F(AICPUScheduleTEST, Ut_LoopProcessEventTest4DRV_ERROR_SCHED_PROCESS_EXIT)

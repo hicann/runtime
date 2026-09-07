@@ -161,10 +161,10 @@ TSD_StatusT TsdProcessController::Close(uint32_t flag)
         ret = WaitRsp(0U, false, true);
         TSD_CHECK(ret == TSD_OK, ret, "Wait open response from device failed.");
         TSD_RUN_INFO(
-            "[TsdClient][logicDeviceId_=%u]has recv close hccp and computer process response",
+            "[TsdClient][logicDeviceId_=%u] has recv close hccp and computer process response",
             sharedCtx_.logicDeviceId);
     } else {
-        TSD_RUN_INFO("Enable quick tsd close, close will only in host.");
+        TSD_RUN_INFO("Enable quick tsd close, close will only be executed in host.");
     }
 
     commAgent_.ReleaseDeviceConnection();
@@ -447,7 +447,7 @@ bool TsdProcessController::CheckNeedToOpen(const uint32_t rankSize, TsdStartStat
         }
     } else {
         if ((tsdStartStatus_.startCp_) && (tsdStartStatus_.startHccp_)) {
-            TSD_INFO("[TsdClient] hccp and cp has already opened, no need open again");
+            TSD_INFO("[TsdClient] hccp and cp have already opened, no need open again");
             return false;
         }
         startInfo.startCp_ = true;

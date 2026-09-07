@@ -206,7 +206,7 @@ void AicpuMc2MaintenanceThread::StopProcessEventFunc() const
 {
     // 调用结束回调
     if (stopProcessEventFuncPtr_ == nullptr) {
-        aicpusd_err("the stopProcessEventFuncPtr not register. type[%u]", type_);
+        aicpusd_err("the stopProcessEventFuncPtr is not registered. type[%u]", type_);
         return;
     }
     stopProcessEventFuncPtr_(stopProcessEventFuncParam_);
@@ -217,7 +217,7 @@ void AicpuMc2MaintenanceThread::UnitMc2MantenanceProcess()
     aicpusd_info("UnitMc2MantenanceProcess start. type[%u]", type_);
     const std::lock_guard<std::mutex> lk(initMutex_);
     if (!initFlag_) {
-        aicpusd_info("the thread is already stop");
+        aicpusd_info("the thread is already stopped");
         return;
     }
     StopProcessEventFunc();

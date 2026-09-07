@@ -811,7 +811,7 @@ int32_t AicpuModel::CheckOperateAndUpdateStatus(const AicpuModelOperate operate)
     const int32_t operateIndex = static_cast<int32_t>(operate);
     if (!modelOperatePermission[static_cast<int32_t>(modelStatus_)][operateIndex]) {
         aicpusd_err(
-            "Model[%u] status[%s] is not allow operate[%s].", modelId_,
+            "Model[%u] status[%s] does not allow operate[%s].", modelId_,
             STATUS_VALUE[static_cast<int32_t>(modelStatus_)].c_str(), OPERATE_VALUE[operateIndex].c_str());
         return AICPU_SCHEDULE_ERROR_MODEL_STATUS_NOT_ALLOW_OPERATE;
     }
@@ -833,7 +833,7 @@ int32_t AicpuModel::CheckOperate(const AicpuSchedule::AicpuModelOperate operate)
         return AICPU_SCHEDULE_OK;
     }
     aicpusd_err(
-        "Model[%u] status[%s] is not allow operate[%s].", modelId_,
+        "Model[%u] status[%s] does not allow operate[%s].", modelId_,
         STATUS_VALUE[static_cast<size_t>(modelStatus_)].c_str(), OPERATE_VALUE[static_cast<size_t>(operate)].c_str());
     return AICPU_SCHEDULE_ERROR_MODEL_STATUS_NOT_ALLOW_OPERATE;
 }
@@ -1187,7 +1187,9 @@ GatherResult AicpuModel::GatherDequedMbuf(
     Mbuf*** const mbufPptr, std::pair<uint64_t, uint32_t>& mbufKey, const int32_t timeOutMs, const uint32_t cacheNum)
 {
     const uint32_t timeOutNs = static_cast<uint32_t>(timeOutMs * TIMES_MS_TO_NS);
-    AICPUSD_CHECK(timeOutNs < UINT_MAX, GatherResult::UN_SELECTED, "Invalid timeout value %ld ms.", timeOutMs);
+    AICPUSD_CHECK(
+        timeOutNs < UINT_MAX, GatherResult::UN_SELECTED, "Invalid timeout value %ld ms, valid range is [0, %u] ms.",
+        timeOutMs, static_cast<uint32_t>(UINT_MAX / TIMES_MS_TO_NS));
     const uint64_t minBirthDay = GetCurrentTime() - timeOutNs;
     uint64_t count = 0U;
     bool timeoutCandidate = false;
@@ -1412,7 +1414,7 @@ bool QueueMbufStore::Store(const size_t qIndex, Mbuf* const mbuf, std::map<size_
         return false;
     }
     if (qIndex >= queuesLists_.size()) {
-        aicpusd_err("qIndex [%zu] invalid", qIndex);
+        aicpusd_err("qIndex [%zu] invalid, valid range is [0, %zu).", qIndex, queuesLists_.size());
         return false;
     }
     queuesLists_[qIndex].push_back(mbuf);

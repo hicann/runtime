@@ -187,7 +187,8 @@ int32_t MBufferPool::Init(const uint32_t blockNum, const uint32_t blockSize, con
 
     if (!registerMem) {
         aicpusd_info(
-            "Create pool successfully without registering memory, blockSize: %u, blockNum: %u", blockSize, blockNum);
+            "Create pool successfully without registering memory, blockSize: %u bytes, blockNum: %u", blockSize,
+            blockNum);
         return RET_SUCCESS;
     }
 
@@ -203,12 +204,12 @@ int32_t MBufferPool::Init(const uint32_t blockNum, const uint32_t blockSize, con
             aicpusd_err("Fail to register memory, res is %d.", static_cast<int32_t>(res));
         } else {
             isRegister_ = true;
-            aicpusd_info("Successfully registered memory[%lu]", poolSize_);
+            aicpusd_info("Successfully registered memory[%lu] bytes", poolSize_);
         }
     } else {
         aicpusd_err("halBuffGetInfo fail, ret is %d", poolInfoRet);
     }
-    aicpusd_info("create pool success, blockSize: %u, blockNum: %u", blockSize, blockNum);
+    aicpusd_info("create pool success, blockSize: %u bytes, blockNum: %u", blockSize, blockNum);
     return RET_SUCCESS;
 }
 
@@ -245,7 +246,7 @@ int32_t MBufferPool::Allocate(Mbuf** mbufPtr)
     }
     const auto ret = halMbufAllocByPool(mp_, mbufPtr);
     if (ret != RET_SUCCESS) {
-        aicpusd_warn("unable allocate by pool, ret is %d", ret);
+        aicpusd_warn("unable to allocate by pool, ret is %d", ret);
     } else {
         std::lock_guard<std::mutex> lockForMbufSet(mutexForMbufSet_);
         mbufsAllocated_.emplace(*mbufPtr);

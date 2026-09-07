@@ -432,3 +432,41 @@ TEST_F(SubProcessControllerTest, SetCommonOpenParamList_HccpEnvironment_IgnoresE
     EXPECT_EQ(ctx.subProcEnvList.size(), 0UL);
     EXPECT_EQ(ret, true);
 }
+
+// MAX_PROCESS_PID_CNT 与源文件 sub_process_controller.cpp 中保持一致
+constexpr uint32_t UT_MAX_PROCESS_PID_CNT = 1024U;
+
+TEST_F(SubProcessControllerTest, GetSubProcListStatus_InvalidParams_ReturnsInternalError)
+{
+    ProcessModeManager processModeManager(deviceId, 0);
+    ProcStatusParam pidInfo = {};
+    EXPECT_EQ(processModeManager.GetSubProcessController().GetSubProcListStatus(nullptr, 1U), TSD_INTERNAL_ERROR);
+    EXPECT_EQ(processModeManager.GetSubProcessController().GetSubProcListStatus(&pidInfo, 0U), TSD_INTERNAL_ERROR);
+    EXPECT_EQ(
+        processModeManager.GetSubProcessController().GetSubProcListStatus(&pidInfo, UT_MAX_PROCESS_PID_CNT + 1U),
+        TSD_INTERNAL_ERROR);
+}
+
+TEST_F(SubProcessControllerTest, CloseSubProcList_InvalidParams_ReturnsInternalError)
+{
+    ProcessModeManager processModeManager(deviceId, 0);
+    ProcStatusParam closeList[1] = {};
+    EXPECT_EQ(processModeManager.GetSubProcessController().CloseSubProcList(&closeList[0], 0U), TSD_INTERNAL_ERROR);
+    EXPECT_EQ(processModeManager.GetSubProcessController().CloseSubProcList(nullptr, 1U), TSD_INTERNAL_ERROR);
+    EXPECT_EQ(
+        processModeManager.GetSubProcessController().CloseSubProcList(&closeList[0], UT_MAX_PROCESS_PID_CNT + 1U),
+        TSD_INTERNAL_ERROR);
+}
+
+TEST_F(SubProcessControllerTest, ExecuteClosePidList_InvalidParams_ReturnsInternalError)
+{
+    ProcessModeManager processModeManager(deviceId, 0);
+    ProcStatusParam closeList[1] = {};
+    EXPECT_EQ(processModeManager.GetSubProcessController().ExecuteClosePidList(nullptr, 0U, 1U), TSD_INTERNAL_ERROR);
+    EXPECT_EQ(
+        processModeManager.GetSubProcessController().ExecuteClosePidList(&closeList[0], 0U, 0U), TSD_INTERNAL_ERROR);
+    EXPECT_EQ(
+        processModeManager.GetSubProcessController().ExecuteClosePidList(
+            &closeList[0], 0U, UT_MAX_PROCESS_PID_CNT + 1U),
+        TSD_INTERNAL_ERROR);
+}

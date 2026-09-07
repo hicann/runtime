@@ -288,7 +288,7 @@ int32_t ThreadPool::WriteTidForAffinity(const size_t threadIndex)
     std::string command = "sudo /var/add_aicpu_tid_to_tasks.sh";
     std::string pathStr = "/var/add_aicpu_tid_to_tasks.sh";
     if (access(pathStr.c_str(), F_OK) != 0) {
-        aicpusd_info("Not find add_aicpu_tid_to_tasks.sh.");
+        aicpusd_info("Cannot find add_aicpu_tid_to_tasks.sh.");
         return AICPU_SCHEDULE_OK;
     }
     command = command + " " + std::to_string(GetTid());
@@ -474,7 +474,8 @@ void ThreadPool::SetThreadSchedModeByTsd()
 {
     const size_t relationSize = threadIdLists_.size();
     if (relationSize > MAX_THREAD_ID_CNT) {
-        aicpusd_err("current list is too long, size:%zu", relationSize);
+        aicpusd_err(
+            "current list is too long, size:%zu, max:%zu", relationSize, static_cast<size_t>(MAX_THREAD_ID_CNT));
         return;
     }
     SubProcScheduleModeInfo curInfo = {};

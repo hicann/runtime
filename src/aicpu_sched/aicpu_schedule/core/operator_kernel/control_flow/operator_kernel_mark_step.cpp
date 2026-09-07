@@ -40,7 +40,7 @@ int32_t OperatorKernelMarkStep::Compute(const AicpuTaskInfo& kernelTaskInfo, con
 
     uint64_t* const stepIdAddr = PtrToPtr<void, uint64_t>(ValueToPtr(static_cast<uintptr_t>(bufInfo->stepIdAddr)));
     if (static_cast<uint32_t>(bufInfo->headFlag) == 1U) {
-        aicpusd_debug("Not is head node, modelId=%u", taskContext.modelId);
+        aicpusd_debug("This is not the head node, modelId=%u", taskContext.modelId);
         model->SetHeadNodeFlag(false);
         model->SetStepIdInfo(std::move(StepIdInfo(stepIdAddr, 0U)));
         return AICPU_SCHEDULE_OK;
@@ -49,22 +49,28 @@ int32_t OperatorKernelMarkStep::Compute(const AicpuTaskInfo& kernelTaskInfo, con
     const uint64_t iteratorCount = model->GetIteratorId();
     if (AicpuUtil::IsUint64MulOverflow(iteratorCount, bufInfo->groupTotalCount)) {
         aicpusd_err(
-            "modelId[%u], iteratorCount:[%lu], groupIndex:%u, totalCnt:%u!", taskContext.modelId, iteratorCount,
-            bufInfo->groupIndex, bufInfo->groupTotalCount);
+            "modelId[%u], iteratorCount:[%lu], groupIndex:%u, totalCnt:%u, iteratorCount * totalCnt uint64 mul "
+            "overflow, max:[%lu]!",
+            taskContext.modelId, iteratorCount, bufInfo->groupIndex, bufInfo->groupTotalCount,
+            std::numeric_limits<uint64_t>::max());
         return AICPU_SCHEDULE_ERROR_OVERFLOW;
     }
     uint64_t tempCnt = iteratorCount * bufInfo->groupTotalCount;
     if ((std::numeric_limits<uint64_t>::max() - tempCnt) <= bufInfo->groupIndex) {
         aicpusd_err(
-            "modelId[%u], iteratorCount:[%lu], groupIndex:%u, totalCnt:%u!", taskContext.modelId, iteratorCount,
-            bufInfo->groupIndex, bufInfo->groupTotalCount);
+            "modelId[%u], iteratorCount:[%lu], groupIndex:%u, totalCnt:%u, tempCnt[%lu] + groupIndex uint64 add "
+            "overflow, max:[%lu]!",
+            taskContext.modelId, iteratorCount, bufInfo->groupIndex, bufInfo->groupTotalCount, tempCnt,
+            std::numeric_limits<uint64_t>::max());
         return AICPU_SCHEDULE_ERROR_OVERFLOW;
     }
     tempCnt += bufInfo->groupIndex;
     if ((std::numeric_limits<uint64_t>::max() - tempCnt) <= static_cast<uint64_t>(bufInfo->groupTotalCount - 1U)) {
         aicpusd_err(
-            "modelId[%u], iteratorCount:[%lu], groupIndex:%u, totalCnt:%u!", taskContext.modelId, iteratorCount,
-            bufInfo->groupIndex, bufInfo->groupTotalCount);
+            "modelId[%u], iteratorCount:[%lu], groupIndex:%u, totalCnt:%u, tempCnt[%lu] + (totalCnt-1) uint64 add "
+            "overflow, max:[%lu]!",
+            taskContext.modelId, iteratorCount, bufInfo->groupIndex, bufInfo->groupTotalCount, tempCnt,
+            std::numeric_limits<uint64_t>::max());
         return AICPU_SCHEDULE_ERROR_OVERFLOW;
     }
 

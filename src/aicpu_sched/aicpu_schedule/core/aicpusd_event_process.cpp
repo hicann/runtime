@@ -199,7 +199,7 @@ int32_t AicpuEventProcess::AICPUEventUpdateProfilingMode(const AICPUSubEventInfo
             deviceVec[0], static_cast<uint32_t>(TsdWaitType::TSD_COMPUTE),
             static_cast<uint32_t>(AicpuDrvManager::GetInstance().GetHostPid()),
             AicpuDrvManager::GetInstance().GetVfId()) != AICPU_SCHEDULE_OK) {
-        aicpusd_err("send profiline response to tsd failed");
+        aicpusd_err("send profiling response to tsd failed");
         return AICPU_SCHEDULE_ERROR_TASK_EXECUTE_FAILED;
     }
     return AICPU_SCHEDULE_OK;
@@ -442,8 +442,8 @@ int32_t AicpuEventProcess::ProcessMsgVersionEvent(AicpuSqeAdapter& aicpuSqeAdapt
     aicpusd_info("Begin to send response msg version.");
     int32_t rspRet = aicpuSqeAdapter.AicpuMsgVersionResponseToTs(ret);
     aicpusd_info("Finished to send response msg version information, ret[%d].", rspRet);
-    if (ret != AICPU_SCHEDULE_OK) {
-        aicpusd_err("Failed to response info, ret[%d]", ret);
+    if (rspRet != AICPU_SCHEDULE_OK) {
+        aicpusd_err("Failed to respond to info, rspRet[%d]", rspRet);
         return AICPU_SCHEDULE_ERROR_INNER_ERROR;
     }
     return AICPU_SCHEDULE_OK;
@@ -460,7 +460,7 @@ int32_t AicpuEventProcess::ProcessDumpDataEvent(AicpuSqeAdapter& aicpuSqeAdapter
     AicpuSqeAdapter::AicpuDataDumpInfo info{};
     aicpuSqeAdapter.GetAicpuDataDumpInfo(info);
     aicpusd_info(
-        "Begin to dump data, stream id[%u], task id[%u], debug stream id[%u], debug task id[%u],"
+        "Begin to dump data, stream id[%u], task id[%u], debug stream id[%u], debug task id[%u], "
         "is model[%u], file name stream id [%u], file name task id [%u]",
         info.dump_stream_id, info.dump_task_id, info.debug_dump_stream_id, info.debug_dump_task_id, info.is_model,
         info.file_name_stream_id, info.file_name_task_id);

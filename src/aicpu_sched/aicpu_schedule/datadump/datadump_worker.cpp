@@ -206,7 +206,7 @@ int32_t ThreadPool::WriteTidForAffinity(const size_t threadIndex)
     std::string command = "cd /var/ && sudo ./add_aicpu_tid_to_tasks.sh";
     std::string pathStr = "/var/add_aicpu_tid_to_tasks.sh";
     if (access(pathStr.c_str(), F_OK) != 0) {
-        aicpusd_info("Not find add_aicpu_tid_to_tasks.sh.");
+        aicpusd_info("Cannot find add_aicpu_tid_to_tasks.sh.");
         return AICPU_SCHEDULE_OK;
     }
     command = command + " " + std::to_string(GetTid());

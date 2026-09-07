@@ -168,7 +168,7 @@ void AicpuSdModelStatistic::MarNNModelStartTime(const uint32_t modelId)
     }
     modelStatArray_[modelId].modelStartTime = std::chrono::steady_clock::now();
     modelStatArray_[modelId].useFlag = true;
-    aicpusd_info("mark mode:%u started", modelId);
+    aicpusd_info("mark model:%u started", modelId);
 }
 
 void AicpuSdModelStatistic::StatNNModelOutput(

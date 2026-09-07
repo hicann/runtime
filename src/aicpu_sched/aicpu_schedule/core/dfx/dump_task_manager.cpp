@@ -415,7 +415,7 @@ static bool CheckAndGetDumpBitmap(MappingInfoOptionalParam& optionalParam, uint6
 int32_t OpDumpTaskManager::DumpOpInfoForUnknowShape(
     const uint64_t opMappingInfoAddr, const uint64_t opMappingInfoLen) const
 {
-    aicpusd_info("load op mapping info from dump task,value[%llu], size[%llu]", opMappingInfoAddr, opMappingInfoLen);
+    aicpusd_info("load op mapping info from dump task, value[%llu], size[%llu]", opMappingInfoAddr, opMappingInfoLen);
     if (opMappingInfoAddr == 0U) {
         aicpusd_err("op mapping info addr is null");
         return AICPU_SCHEDULE_ERROR_DUMP_FAILED;
@@ -906,8 +906,8 @@ int32_t OpDumpTaskManager::DumpOpTaskDataforKfc(const KfcDumpTask& taskKey, void
     const auto iter = kfcDumpTaskMap_.find(taskKey);
     if (iter == kfcDumpTaskMap_.end()) {
         aicpusd_err(
-            "Not get dump info for kfc. length [%u], streamId[%u], taskId[%u], index[%u].", length, taskKey.streamId_,
-            taskKey.taskId_, taskKey.index_);
+            "Failed to get dump info for kfc. length [%u], streamId[%u], taskId[%u], index[%u].", length,
+            taskKey.streamId_, taskKey.taskId_, taskKey.index_);
         return AICPU_SCHEDULE_ERROR_DUMP_FAILED;
     }
     if (iter->second == nullptr) {

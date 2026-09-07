@@ -426,14 +426,14 @@ public:
     static inline bool IsValidTimeoutVal(const uint32_t timeout)
     {
         if (timeout == 0U) {
-            aicpusd_err("Invalid timeout value send by ts which cannot be zero.");
+            aicpusd_err("Invalid timeout value sent by ts, which cannot be zero.");
             return false;
         }
 
         const uint64_t sysTickFreq = aicpu::GetSystemTickFreq();
         if (sysTickFreq > (UINT64_MAX / static_cast<uint64_t>(timeout))) {
             aicpusd_err(
-                "Invalid timeout[%u] value send by ts resulting in unsigned long reverse. freq[%lu]", timeout,
+                "Invalid timeout[%u] value sent by ts, which would cause unsigned long overflow. freq[%lu]", timeout,
                 sysTickFreq);
             return false;
         }

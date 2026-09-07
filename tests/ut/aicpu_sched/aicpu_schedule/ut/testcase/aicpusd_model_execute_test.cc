@@ -1167,6 +1167,41 @@ TEST_F(AICPUModelExecuteTEST, ProcessModelPriorityMsg_threadfaild)
     GlobalMockObject::verify();
 }
 
+TEST_F(AICPUModelExecuteTEST, SetEventPriority_fail_emptyToNotEmpty)
+{
+    AicpuPriInfo priInfo = {};
+    priInfo.checkHead = PRIORITY_MSG_CHECKCODE;
+    priInfo.eventPriority = 2;
+    auto& eventPri = AicpuModelManager::GetInstance().curEventPri_;
+    const int32_t savedEventPri = eventPri;
+    eventPri = 2;
+    MOCKER(halEschedSetEventPriority).stubs().will(returnValue(static_cast<drvError_t>(DRV_ERROR_INNER_ERR)));
+    const std::vector<uint32_t> deviceVec = {0U};
+    auto ret = AicpuModelManager::GetInstance().SetEventPriority(priInfo, deviceVec);
+    EXPECT_EQ(ret, AICPU_SCHEDULE_ERROR_DRV_ERR);
+    eventPri = savedEventPri;
+    GlobalMockObject::verify();
+}
+
+TEST_F(AICPUModelExecuteTEST, SetEventPriority_fail_fullToNotFull)
+{
+    AicpuPriInfo priInfo = {};
+    priInfo.checkHead = PRIORITY_MSG_CHECKCODE;
+    priInfo.eventPriority = 2;
+    auto& eventPri = AicpuModelManager::GetInstance().curEventPri_;
+    const int32_t savedEventPri = eventPri;
+    eventPri = 2;
+    MOCKER(halEschedSetEventPriority)
+        .stubs()
+        .will(returnValue(static_cast<drvError_t>(DRV_ERROR_NONE)))
+        .then(returnValue(static_cast<drvError_t>(DRV_ERROR_INNER_ERR)));
+    const std::vector<uint32_t> deviceVec = {0U};
+    auto ret = AicpuModelManager::GetInstance().SetEventPriority(priInfo, deviceVec);
+    EXPECT_EQ(ret, AICPU_SCHEDULE_ERROR_DRV_ERR);
+    eventPri = savedEventPri;
+    GlobalMockObject::verify();
+}
+
 TEST_F(AICPUModelExecuteTEST, ModelActiveOtherAicpuStreams)
 {
     AicpuModel aicpuModel;

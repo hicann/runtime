@@ -300,7 +300,7 @@ TSD_StatusT PackageLoader::LoadOmFileToDevice(
     const MessageContext& baseCtx)
 {
     if ((filePath == nullptr) || (pathLen == 0UL) || (pathLen >= HELPER_INPUT_MAX_FILE_PATH_LEN)) {
-        TSD_ERROR("input param is error");
+        TSD_ERROR("input param is invalid");
         return TSD_INTERNAL_ERROR;
     }
     try {
@@ -355,7 +355,7 @@ TSD_StatusT PackageLoader::LoadFileToDevice(
 bool PackageLoader::IsOkToLoadFileToDevice(const char_t* const fileName, const uint64_t fileNameLen) const
 {
     if ((fileName == nullptr) || (fileNameLen == 0UL) || (fileNameLen >= HELPER_INPUT_MAX_FILE_NAME_LEN)) {
-        TSD_ERROR("input param is error");
+        TSD_ERROR("input param is invalid");
         return false;
     }
     if (!capabilityMgr_.IsSupportCommonInterface(TSD_SUPPORT_HS_AISERVER_FEATURE_BIT)) {

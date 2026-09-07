@@ -82,6 +82,20 @@ TEST_F(CustOperationCommonTest, NowaitGrp)
     GlobalMockObject::verify();
 }
 
+TEST_F(CustOperationCommonTest, StartCustProcess_SendCtrlCpuMsgFail)
+{
+    const uint32_t loadLibNum = 1U;
+    const std::unique_ptr<const char_t*[]> soNames(new (std::nothrow) const char_t*[loadLibNum]);
+    MOCKER(&CreateOrFindCustPid).stubs().will(invoke(CreateOrFindCustPidFake));
+    MOCKER(&halGrpQuery).stubs().will(invoke(halGrpQueryFake));
+    MOCKER_CPP(&CustOperationCommon::AicpuNotifyLoadSoEventToCustCtrlCpu).stubs().will(returnValue(AICPU_SCHEDULE_OK));
+    MOCKER_CPP(&CustOperationCommon::NotifyCustCloseMonitor).stubs().will(returnValue(AICPU_SCHEDULE_OK));
+    MOCKER_CPP(&CustOperationCommon::SendCtrlCpuMsg).stubs().will(returnValue(AICPU_SCHEDULE_ERROR_DRV_ERR));
+    int32_t ret = commonKernel_.StartCustProcess(loadLibNum, soNames.get());
+    EXPECT_EQ(ret, AICPU_SCHEDULE_OK);
+    GlobalMockObject::verify();
+}
+
 TEST_F(CustOperationCommonTest, CloseMonitorNotifyFailureBlocksStart)
 {
     const uint32_t loadLibNum = 1U;

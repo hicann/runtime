@@ -139,7 +139,7 @@ int32_t CreateQueueTsKernel::CreateGrp() const
         BuffCfg buffCfg = {};
         drvRet = halBuffInit(&buffCfg);
         if (drvRet != DRV_ERROR_NONE) {
-            aicpusd_err("Buffer initial failed for master aicpusd[%d], ret[%d]", curPid, drvRet);
+            aicpusd_err("Buffer initialization failed for master aicpusd[%d], ret[%d]", curPid, drvRet);
             return AICPU_SCHEDULE_ERROR_DRV_ERR;
         }
         aicpusd_info("Create new group[%s] for master aicpusd[%d] success", groupName.c_str(), curPid);
@@ -214,7 +214,7 @@ int32_t DestroyQueueTsKernel::Compute(const aicpu::HwtsTsKernel& tsKernelInfo)
     const auto baseAddr = PtrToPtr<void, char_t>(ValueToPtr(kernel.paramBase));
     const aicpu::AicpuParamHead* const paramHead = PtrToPtr<char_t, aicpu::AicpuParamHead>(baseAddr);
     if (paramHead == nullptr) {
-        aicpusd_err("ParamHead for DumpDataKernel is nullptr");
+        aicpusd_err("ParamHead for DestroyQueueKernel is nullptr");
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
 

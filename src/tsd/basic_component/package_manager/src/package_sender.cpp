@@ -43,8 +43,8 @@ TSD_StatusT PackageSender::SendAICPUPackageSimple(
     const int32_t peerNode, const std::string& orgFile, const std::string& dstFile, bool useCannPath) const
 {
     TSD_RUN_INFO(
-        "[TsdClient][deviceId=%u] no equal to begin send file[%s] to [%s]", envInfo_.GetLogicDeviceId(),
-        orgFile.c_str(), dstFile.c_str());
+        "[TsdClient][deviceId=%u] checkcode is not equal to device, begin to send file[%s] to [%s]",
+        envInfo_.GetLogicDeviceId(), orgFile.c_str(), dstFile.c_str());
     if (useCannPath) {
         const auto ret = drvHdcSendFileV2(
             peerNode, static_cast<int32_t>(envInfo_.GetLogicDeviceId()), orgFile.c_str(), dstFile.c_str(), nullptr);
@@ -142,7 +142,7 @@ TSD_StatusT PackageSender::SendAICPUPackage(const int32_t peerNode, const std::s
     constexpr uint32_t packageType = static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_AICPU_KERNEL);
     if (envInfo_.GetPackageNameRef(packageType).empty()) {
         TSD_RUN_INFO(
-            "[TsdClient][deviceId_=%u] aicpu package is not existed, skip send package", envInfo_.GetLogicDeviceId());
+            "[TsdClient][deviceId_=%u] aicpu package does not exist, skip send package", envInfo_.GetLogicDeviceId());
         return TSD_OK;
     }
 
@@ -185,7 +185,7 @@ TSD_StatusT PackageSender::SendCommonPackage(
 {
     if (envInfo_.GetPackageNameRef(packageType).empty()) {
         TSD_RUN_INFO(
-            "[TsdClient][deviceId_=%u] package is not existed, skip send, packageType[%u]", envInfo_.GetLogicDeviceId(),
+            "[TsdClient][deviceId_=%u] package does not exist, skip send, packageType[%u]", envInfo_.GetLogicDeviceId(),
             packageType);
         return TSD_OK;
     }
@@ -219,7 +219,7 @@ TSD_StatusT PackageSender::SendCommonPackage(
     const std::string dstFile =
         path + "/" + std::to_string(commAgent_.GetProcSign().tgid) + "_" + envInfo_.GetPackageNameRef(packageType);
     TSD_INFO(
-        "[TsdClient][deviceId=%u] hostCheckCode[%u] no equal to deviceCheckCode[%u], begin send file[%s] to [%s], "
+        "[TsdClient][deviceId=%u] hostCheckCode[%u] is not equal to deviceCheckCode[%u], begin send file[%s] to [%s], "
         "packageType[%u]",
         envInfo_.GetLogicDeviceId(), ctx_.hostCheckCode[packageType], ctx_.peerCheckCode[packageType], orgFile.c_str(),
         dstFile.c_str(), packageType);

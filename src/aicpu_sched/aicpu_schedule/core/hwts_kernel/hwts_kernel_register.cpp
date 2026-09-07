@@ -71,7 +71,7 @@ void HwTsKernelRegister::Register(const std::string& kernelType, const HwTsKerne
     std::unique_lock<std::mutex> lock(hwtsKernelMapMutex_);
     std::map<std::string, std::shared_ptr<HwTsKernelHandler>>::iterator iter = tsKernelInstMap_.find(kernelType);
     if (iter != tsKernelInstMap_.end()) {
-        aicpusd_run_warn("Hwts Kernel[%s] creator already exist.", kernelType.c_str());
+        aicpusd_run_warn("Hwts Kernel[%s] creator already exists.", kernelType.c_str());
         return;
     }
 

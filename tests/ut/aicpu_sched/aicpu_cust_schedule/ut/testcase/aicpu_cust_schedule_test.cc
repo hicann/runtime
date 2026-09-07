@@ -1169,6 +1169,21 @@ TEST_F(AICPUCustScheduleTEST, ProcessDataDumpInfoLoad_succ)
     EXPECT_EQ(ret, AICPU_SCHEDULE_OK);
 }
 
+TEST_F(AICPUCustScheduleTEST, ProcessDataDumpInfoLoad_rspFail)
+{
+    event_info eventInfo;
+    eventInfo.comm.event_id = EVENT_TS_CTRL_MSG;
+    TsAicpuMsgInfo* msgInfoPtr = reinterpret_cast<TsAicpuMsgInfo*>(eventInfo.priv.msg);
+    msgInfoPtr->cmd_type = AICPU_DATADUMP_LOADINFO;
+    MOCKER_CPP(tsDevSendMsgAsync).stubs().will(returnValue(0));
+    uint16_t version = 1;
+    MOCKER_CPP(&FeatureCtrl::GetTsMsgVersion).stubs().will(returnValue(version));
+    MOCKER_CPP(&OpDumpTaskManager::LoadOpMappingInfo).stubs().will(returnValue(0));
+    MOCKER_CPP(&AicpuSqeAdapter::AicpuDataDumpLoadResponseToTs).stubs().will(returnValue(1));
+    int32_t ret = AicpuEventManager::GetInstance().ProcessEvent(eventInfo, 0);
+    EXPECT_EQ(ret, AICPU_SCHEDULE_ERROR_INNER_ERROR);
+}
+
 TEST_F(AICPUCustScheduleTEST, ProcessCmdType_fail)
 {
     event_info eventInfo;
@@ -2234,6 +2249,16 @@ TEST_F(AICPUCustScheduleTEST, SetDataDumpThreadAffinity_test1)
     MOCKER(pthread_setaffinity_np).stubs().will(returnValue(2));
     ret = AicpuCustDumpProcess::GetInstance().SetDataDumpThreadAffinity();
     EXPECT_EQ(ret, AICPU_SCHEDULE_OK);
+}
+
+TEST_F(AICPUCustScheduleTEST, SetDataDumpThreadAffinity_emptyCcpuList)
+{
+    auto& ccpuIdVec = AicpuSchedule::AicpuDrvManager::GetInstance().ccpuIdVec_;
+    const std::vector<uint32_t> savedCcpuIds = ccpuIdVec;
+    ccpuIdVec.clear();
+    int32_t ret = AicpuCustDumpProcess::GetInstance().SetDataDumpThreadAffinity();
+    EXPECT_EQ(ret, AICPU_SCHEDULE_OK);
+    ccpuIdVec = savedCcpuIds;
 }
 
 TEST_F(AICPUCustScheduleTEST, StartProcessEvent_test1)

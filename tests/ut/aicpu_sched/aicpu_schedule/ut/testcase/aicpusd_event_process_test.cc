@@ -11,7 +11,6 @@
 #include <dlfcn.h>
 #include <vector>
 #include "core/aicpusd_resource_manager.h"
-#include "core/aicpusd_drv_manager.h"
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
 #include "ascend_hal.h"
@@ -20,7 +19,10 @@
 #include "aicpusd_status.h"
 #include "aicpusd_util.h"
 #include "aicpu_sched/common/aicpu_task_struct.h"
+#include "aicpu_msg.h"
+#include "tsd.h"
 #define private public
+#include "core/aicpusd_drv_manager.h"
 #include "aicpusd_interface_process.h"
 #include "task_queue.h"
 #include "dump_task.h"
@@ -466,4 +468,39 @@ TEST_F(AicpuEventProcessTEST, AICPUEventSupplyEnqueNoModel)
     auto ret = AicpuEventProcess::GetInstance().AICPUEventSupplyEnque(subEventInfo);
     EXPECT_EQ(ret, AICPU_SCHEDULE_OK);
     EventWaitManager::AnyQueNotEmptyWaitManager().ClearBatch({0});
+}
+
+TEST_F(AicpuEventProcessTEST, AICPUEventUpdateProfilingMode_SendRspFail)
+{
+    auto& deviceVec = AicpuDrvManager::GetInstance().deviceVec_;
+    const std::vector<uint32_t> savedDeviceVec = deviceVec;
+    deviceVec.clear();
+    deviceVec.push_back(0U);
+    MOCKER(SendUpdateProfilingRspToTsd).stubs().will(returnValue(AICPU_SCHEDULE_ERROR_INNER_ERROR));
+
+    AICPUSubEventInfo subEventInfo = {};
+    subEventInfo.para.modeInfo.flag = 0U;
+    auto ret = AicpuEventProcess::GetInstance().AICPUEventUpdateProfilingMode(subEventInfo);
+    EXPECT_EQ(ret, AICPU_SCHEDULE_ERROR_TASK_EXECUTE_FAILED);
+
+    deviceVec = savedDeviceVec;
+    GlobalMockObject::verify();
+}
+
+// 覆盖 ProcessMsgVersionEvent 中响应发送失败分支：rspRet != AICPU_SCHEDULE_OK
+TEST_F(AicpuEventProcessTEST, ProcessMsgVersionEvent_ResponseFail_ReturnsInnerError)
+{
+    // VALID_MAGIC_NUM 与 aicpusd_event_process.cpp 中保持一致，version 取 allVersion 中的 VERSION_1
+    TsAicpuSqe ctrlMsg = {};
+    ctrlMsg.cmd_type = AICPU_MSG_VERSION;
+    ctrlMsg.u.aicpu_msg_version.magic_num = 0x5A5A;
+    ctrlMsg.u.aicpu_msg_version.version = 1U;
+    AicpuSqeAdapter aicpuSqeAdapter(ctrlMsg, 1);
+    MOCKER_CPP(&AicpuSqeAdapter::AicpuMsgVersionResponseToTs)
+        .stubs()
+        .will(returnValue(static_cast<int32_t>(AICPU_SCHEDULE_ERROR_INNER_ERROR)));
+
+    auto ret = AicpuEventProcess::GetInstance().ProcessMsgVersionEvent(aicpuSqeAdapter);
+    EXPECT_EQ(ret, AICPU_SCHEDULE_ERROR_INNER_ERROR);
+    GlobalMockObject::verify();
 }

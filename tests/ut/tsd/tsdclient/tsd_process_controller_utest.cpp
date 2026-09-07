@@ -93,7 +93,11 @@ public:
         s = sessStat_;
         return commGetConctStatusRet_;
     }
-    tsd::TSD_StatusT CommSendMsg(const uint32_t, const HDCMessage&) override { return commSendMsgRet_; }
+    tsd::TSD_StatusT CommSendMsg(const uint32_t, const HDCMessage&) override
+    {
+        ++sendMsgCount_;
+        return commSendMsgRet_;
+    }
     tsd::TSD_StatusT CommGetVersionVerify(const uint32_t, std::shared_ptr<tsd::VersionVerify>& v) override
     {
         v = inspector_;
@@ -109,6 +113,7 @@ public:
     uint32_t sessionIdStub_ = 1U;
     int32_t sessStat_ = 0;
     int destroyCount_ = 0;
+    int sendMsgCount_ = 0;
     std::shared_ptr<tsd::VersionVerify> inspector_;
 };
 
@@ -603,6 +608,22 @@ TEST_F(TsdProcessControllerTest, Close_CallsReleaseDeviceConnection)
     EXPECT_EQ(processModeManager.commAgent_.devCommClient_, nullptr);
     EXPECT_FALSE(processModeManager.commAgent_.IsInit());
     EXPECT_EQ(stub->destroyCount_, 1);
+    GlobalMockObject::verify();
+}
+
+// flag bit0 置位为 QUICK_CLOSE_MODE：不走设备侧收发，直接走快速关闭分支
+TEST_F(TsdProcessControllerTest, Close_QuickCloseMode_SkipsDeviceClose_ReturnsOk)
+{
+    ProcessModeManager processModeManager(deviceId, 0);
+    auto stub = InjectStubComm(processModeManager, deviceId);
+    const uint32_t quickCloseFlag = static_cast<uint32_t>(TsdProcessController::TsdCloseMode::QUICK_CLOSE_MODE);
+
+    auto ret = processModeManager.tsdCtrl_.Close(quickCloseFlag);
+    EXPECT_EQ(ret, TSD_OK);
+    EXPECT_EQ(processModeManager.commAgent_.devCommClient_, nullptr);
+    EXPECT_FALSE(processModeManager.commAgent_.IsInit());
+    EXPECT_EQ(stub->destroyCount_, 1);
+    EXPECT_EQ(stub->sendMsgCount_, 0);
     GlobalMockObject::verify();
 }
 

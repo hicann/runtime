@@ -58,7 +58,7 @@ int32_t OperatorKernelModelPrepare::Compute(const AicpuTaskInfo& kernelTaskInfo,
     }
     if (prepareInfo->inQueueNum > prepareInfo->inputAddrNum) {
         aicpusd_err(
-            "Failed check AicpuPrepareInfo, inQueueNum[%u] is bigger then inputAddrNum[%u].", prepareInfo->inQueueNum,
+            "Failed check AicpuPrepareInfo, inQueueNum[%u] is bigger than inputAddrNum[%u].", prepareInfo->inQueueNum,
             prepareInfo->inputAddrNum);
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
@@ -86,31 +86,31 @@ int32_t OperatorKernelModelPrepare::ChecPrepareNullptr(const AicpuPrepareInfo& p
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
     if (prepareInfo.inputAddrList == 0UL) {
-        aicpusd_err("inputAddrList pointers is nullptr!");
+        aicpusd_err("inputAddrList pointer is nullptr!");
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
     if (prepareInfo.inputIndexList == 0UL) {
-        aicpusd_err("inputIndexList pointers is nullptr!");
+        aicpusd_err("inputIndexList pointer is nullptr!");
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
     if (prepareInfo.outputAddrList == 0UL) {
-        aicpusd_err("outputAddrList pointers is nullptr!");
+        aicpusd_err("outputAddrList pointer is nullptr!");
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
     if (prepareInfo.outputIndexList == 0UL) {
-        aicpusd_err("outputIndexList pointers is nullptr!");
+        aicpusd_err("outputIndexList pointer is nullptr!");
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
     if (prepareInfo.outDataSizeList == 0UL) {
-        aicpusd_err("outDataSizeList pointers is nullptr!");
+        aicpusd_err("outDataSizeList pointer is nullptr!");
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
     if (prepareInfo.inQueueIdList == 0UL) {
-        aicpusd_err("inQueueIdList pointers is nullptr!");
+        aicpusd_err("inQueueIdList pointer is nullptr!");
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
     if (prepareInfo.mbufPtrlist == 0UL) {
-        aicpusd_err("mbufPtrlist pointers is nullptr!");
+        aicpusd_err("mbufPtrlist pointer is nullptr!");
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
     return AICPU_SCHEDULE_OK;

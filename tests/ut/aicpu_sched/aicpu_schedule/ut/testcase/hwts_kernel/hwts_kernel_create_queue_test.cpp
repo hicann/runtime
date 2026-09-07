@@ -26,10 +26,33 @@
 
 using namespace AicpuSchedule;
 
+namespace {
+int halGrpQueryEmptyFake(GroupQueryCmdType cmd, void* inBuff, unsigned int inLen, void* outBuff, unsigned int* outLen)
+{
+    (void)cmd;
+    (void)inBuff;
+    (void)inLen;
+    (void)outBuff;
+    *outLen = 0U;
+    return DRV_ERROR_NONE;
+}
+} // namespace
+
 class CreateQueueKernelTest : public EventProcessKernelTest {
 protected:
     CreateQueueTsKernel kernel_;
 };
+
+TEST_F(CreateQueueKernelTest, TsKernelCreateGrp_BuffInitFail)
+{
+    MOCKER(halGrpQuery).stubs().will(invoke(halGrpQueryEmptyFake));
+    MOCKER(halGrpCreate).stubs().will(returnValue(int32_t(DRV_ERROR_NONE)));
+    MOCKER(halGrpAddProc).stubs().will(returnValue(int32_t(DRV_ERROR_NONE)));
+    MOCKER(halGrpAttach).stubs().will(returnValue(int32_t(DRV_ERROR_NONE)));
+    MOCKER(halBuffInit).stubs().will(returnValue(int32_t(DRV_ERROR_INNER_ERR)));
+    int32_t ret = kernel_.CreateGrp();
+    EXPECT_EQ(ret, AICPU_SCHEDULE_ERROR_DRV_ERR);
+}
 
 TEST_F(CreateQueueKernelTest, TsKernelCreateQueue_success)
 {

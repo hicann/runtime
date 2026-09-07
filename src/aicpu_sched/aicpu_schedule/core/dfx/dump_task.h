@@ -28,18 +28,18 @@
 #include "datadump_kfc_interface.h"
 #include "aicpusd_sqe_adapter.h"
 
-#define DATADUMP_MAKE_SHARED(exec_expr0, exec_expr1)                                     \
-    try {                                                                                \
-        exec_expr0;                                                                      \
-    } catch (const std::bad_alloc& err) {                                                \
-        aicpusd_err("bad alloc for object, reason is [%s]", err.what());                 \
-        exec_expr1;                                                                      \
-    } catch (const std::exception& err) {                                                \
-        aicpusd_err("make shared failed for object failed, reason is [%s]", err.what()); \
-        exec_expr1;                                                                      \
-    } catch (...) {                                                                      \
-        aicpusd_err("make shared failed. reason is [%s]", strerror(errno));              \
-        exec_expr1;                                                                      \
+#define DATADUMP_MAKE_SHARED(exec_expr0, exec_expr1)                              \
+    try {                                                                         \
+        exec_expr0;                                                               \
+    } catch (const std::bad_alloc& err) {                                         \
+        aicpusd_err("bad alloc for object, reason is [%s]", err.what());          \
+        exec_expr1;                                                               \
+    } catch (const std::exception& err) {                                         \
+        aicpusd_err("make shared failed for object, reason is [%s]", err.what()); \
+        exec_expr1;                                                               \
+    } catch (...) {                                                               \
+        aicpusd_err("make shared failed. reason is [%s]", strerror(errno));       \
+        exec_expr1;                                                               \
     }
 
 #ifdef __cplusplus

@@ -111,7 +111,7 @@ bool GenTaskInfoFromCtx(AsyncTaskInfo& taskInfo)
     try {
         waitType = std::stoi(waitTypeValue);
     } catch (...) {
-        AICPUE_LOGE("Transfer string:%s to waitId failed", waitTypeValue.c_str());
+        AICPUE_LOGE("Transfer string:%s to waitType failed", waitTypeValue.c_str());
         return false;
     }
     taskInfo.waitType = static_cast<uint8_t>(waitType);

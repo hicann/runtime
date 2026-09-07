@@ -190,7 +190,7 @@ uint32_t TsdCapabilityGet(const uint32_t logicDeviceId, const int32_t type, cons
         return tsd::TSD_OK;
     }
     if (type >= TSD_CAPABILITY_BUT) {
-        TSD_ERROR("capability type is error");
+        TSD_ERROR("capability type is invalid, type[%d], valid range is [0, %d).", type, TSD_CAPABILITY_BUT);
         return tsd::TSD_CLT_OPEN_FAILED;
     }
 

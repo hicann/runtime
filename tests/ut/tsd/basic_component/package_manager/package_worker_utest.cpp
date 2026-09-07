@@ -68,6 +68,14 @@ TEST_F(PackageWorkerTest, DestroyPackageWorker_ExistingManager_RemovesManager)
     EXPECT_EQ(PackageWorker::workerManager_.size(), 0);
 }
 
+TEST_F(PackageWorkerTest, ClearWorkerManager_ManagerNotExists_OnlyLogsWarn)
+{
+    std::shared_ptr<PackageWorker> packageWorker = PackageWorker::GetInstance(0, 0);
+    PackageWorker::workerManager_.clear();
+    packageWorker->ClearWorkerManager();
+    EXPECT_EQ(PackageWorker::workerManager_.size(), 0);
+}
+
 TEST_F(PackageWorkerTest, LoadPackage_InvalidWorkerType_ReturnsNotFound)
 {
     std::shared_ptr<PackageWorker> packageWorker = PackageWorker::GetInstance(0, 0);

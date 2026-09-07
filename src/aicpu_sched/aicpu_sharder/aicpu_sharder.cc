@@ -113,8 +113,8 @@ void SharderNonBlock::ParallelFor(const int64_t total, const int64_t perUnitSize
     // There is no need to submit an event if shardNum is 1
     if (shardNum == 1) {
         AICPUE_LOGI(
-            "Executes on the current thread by shardNum is 1. parallelId=%u, total=%ld, perUnitSize=%ld", parallelId,
-            total, perUnitSize);
+            "Executes on the current thread because shardNum is 1. parallelId=%u, total=%ld, perUnitSize=%ld",
+            parallelId, total, perUnitSize);
         work(0, total);
         return;
     }

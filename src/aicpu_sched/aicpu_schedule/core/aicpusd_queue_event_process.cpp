@@ -580,13 +580,13 @@ int32_t AicpuQueueEventProcess::AddQueueAuthToQs(const bqs::QueueRoute* const qu
         if (iter == grantedSrcQueueSet_.end()) {
             (void)srcQueuesId.insert(queueRoute[i].srcId);
         } else {
-            aicpusd_info("aicpusd has already grant queueId[%u] read authority to qs", queueRoute[i].srcId);
+            aicpusd_info("aicpusd has already granted queueId[%u] read authority to qs", queueRoute[i].srcId);
         }
         iter = grantedDstQueueSet_.find(queueRoute[i].dstId);
         if (iter == grantedDstQueueSet_.end()) {
             (void)dstQueuesId.insert(queueRoute[i].dstId);
         } else {
-            aicpusd_info("aicpusd has already grant queueId[%u] write authority to qs", queueRoute[i].dstId);
+            aicpusd_info("aicpusd has already granted queueId[%u] write authority to qs", queueRoute[i].dstId);
         }
     }
 
@@ -708,7 +708,7 @@ int32_t AicpuQueueEventProcess::CreateGroupForMaster(
     BuffCfg buffConfig = {};
     drvRet = halBuffInit(&buffConfig);
     if (drvRet != DRV_ERROR_NONE) {
-        aicpusd_err("Buffer initial failed for master aicpusd[%d], ret[%d]", curPid_, drvRet);
+        aicpusd_err("Buffer initialization failed for master aicpusd[%d], ret[%d]", curPid_, drvRet);
         return drvRet;
     }
     aicpusd_info("Create new group[%s] for master aicpusd[%d] success", groupName.c_str(), curPid_);
@@ -738,7 +738,7 @@ int32_t AicpuQueueEventProcess::AttachGroupForSlave(
     BuffCfg buffConfig = {};
     drvRet = halBuffInit(&buffConfig);
     if (drvRet != DRV_ERROR_NONE) {
-        aicpusd_err("Buffer initial failed for slave aicpusd[%d] ret[%d]", curPid_, drvRet);
+        aicpusd_err("Buffer initialization failed for slave aicpusd[%d] ret[%d]", curPid_, drvRet);
         return drvRet;
     }
     aicpusd_info("Attach group[%s] for slave aicpusd[%d] success", outGroupName.c_str(), curPid_);
@@ -796,7 +796,7 @@ int32_t AicpuQueueEventProcess::ShareGroupWithProcess(const std::string& groupNa
                 aicpusd_warn("Aicpusd already add group[%s] to slave process[%d]", groupName.c_str(), pid);
                 return AICPU_SCHEDULE_OK;
             } else {
-                aicpusd_err("Slave aicpusd[%d] already in group[%s], but doesn't has admin.", pid, groupName.c_str());
+                aicpusd_err("Slave aicpusd[%d] already in group[%s], but doesn't have admin.", pid, groupName.c_str());
                 return AICPU_SCHEDULE_ERROR_SLAVE_GRP_INVALID;
             }
         }
@@ -934,7 +934,7 @@ int32_t AicpuQueueEventProcess::ProxyCreateGroup(const event_info& event)
     }
 
     aicpusd_info(
-        "Proxy create group [%s], size[%lu]KB, allocSize[%ld].", groupName, createGroupMsg->size,
+        "Proxy create group [%s], size[%lu]KB, allocSize[%ld]KB.", groupName, createGroupMsg->size,
         createGroupMsg->allocSize);
 
     std::string outGroupName;
@@ -1101,7 +1101,7 @@ int32_t AicpuQueueEventProcess::ProxyAllocCache(const event_info& event) const
     }
 
     if (grpName_.empty()) {
-        aicpusd_err("Cannot alloc cache for group has not been created!");
+        aicpusd_err("Cannot alloc cache because group has not been created!");
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
     const ProxyMsgAllocCache* const allocCacheMsg = PtrToPtr<const char_t, const ProxyMsgAllocCache>(msg);

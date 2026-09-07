@@ -79,7 +79,7 @@ int32_t AicpuSdCustDumpProcess::SetDataDumpThreadAffinity() const
 {
     std::vector<uint32_t> ccpuIds = AicpuDrvManager::GetInstance().GetCcpuList();
     if (ccpuIds.empty()) {
-        aicpusd_run_info("ccpu list is empty no need bind core");
+        aicpusd_run_info("ccpu list is empty, no need to bind core");
         return AICPU_SCHEDULE_OK;
     }
     if (AicpuUtil::IsEnvValEqual(ENV_NAME_PROCMGR_AICPU_CPUSET, "1")) {

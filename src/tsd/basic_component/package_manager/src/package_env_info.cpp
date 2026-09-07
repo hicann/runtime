@@ -68,7 +68,8 @@ void PackageEnvInfo::GetAscendLatestIntallPath(std::string& pkgBasePath) const
         if (pkgBasePath.empty()) {
             pkgBasePath = "/usr/local/Ascend/latest/";
             TSD_INFO(
-                "[TsdClient][logicDeviceId_=%u] ASCEND_LATEST_INSTALL_PATH is not set, use default value[%s]",
+                "[TsdClient][logicDeviceId_=%u] ASCEND_LATEST_INSTALL_PATH and ASCEND_HOME_PATH are not set, "
+                "use default value[%s]",
                 logicDeviceId_, pkgBasePath.c_str());
         }
     }

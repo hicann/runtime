@@ -33,7 +33,7 @@ int32_t OperatorKernelEndGraph::Compute(const AicpuTaskInfo& kernelTaskInfo, con
     const uint32_t modelId = *modelIdPtr;
     if (modelId != taskContext.modelId) {
         aicpusd_warn(
-            "ModelEndGraph kernelTaskInfo modelId[%u] is diff with context, "
+            "ModelEndGraph kernelTaskInfo modelId[%u] is different from context, "
             "modelId[%u], streamId[%u], taskId[%u]",
             modelId, taskContext.modelId, taskContext.streamId, kernelTaskInfo.taskID);
     }

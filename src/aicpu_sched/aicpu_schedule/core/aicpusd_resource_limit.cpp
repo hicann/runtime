@@ -33,7 +33,7 @@ bool AddToCgroup(const uint32_t deviceId, const uint32_t vfId)
     if (access(pathStr.c_str(), F_OK) != 0) {
         pathStr = "/usr/local/Ascend/driver/tools/add_aicpu_tid_to_tasks.sh";
         if (access(pathStr.c_str(), F_OK) != 0) {
-            aicpusd_info("Not find add_aicpu_tid_to_tasks.sh.");
+            aicpusd_info("Cannot find add_aicpu_tid_to_tasks.sh.");
             return true;
         }
         command = "cd /usr/local/Ascend/driver/tools/ && sudo ./tsdaemon_add_to_usermemory.sh";

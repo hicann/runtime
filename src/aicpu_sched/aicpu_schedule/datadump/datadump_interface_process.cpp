@@ -159,7 +159,7 @@ int32_t AicpuScheduleInterface::GetCurrentRunMode(const bool isOnline)
         aicpusd_run_info("Current aicpu mode is offline (call by api).");
         return AICPU_SCHEDULE_OK;
     }
-    aicpusd_err("Datadump only support thread mode.");
+    aicpusd_err("Datadump only supports thread mode.");
     return AICPU_SCHEDULE_ERROR_INIT_CP_FAILED;
 }
 

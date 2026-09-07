@@ -91,8 +91,10 @@ int32_t AIKernelsLibFWK::CallKernelApi(const aicpu::KernelType kernelType, const
             break;
         default:
             AE_ERR_LOG(
-                AE_MODULE_ID, "Input param fwkKernelType in STR_FWK_OP_KERNEL is invalid :%d",
-                fwkOpKernel->fwkKernelType);
+                AE_MODULE_ID,
+                "Input param fwkKernelType in STR_FWK_OP_KERNEL is invalid :%d, only FMK_KERNEL_TYPE_TF[%d] "
+                "is supported",
+                fwkOpKernel->fwkKernelType, FMK_KERNEL_TYPE_TF);
             ret = AE_STATUS_BAD_PARAM;
             break;
     }
@@ -192,7 +194,8 @@ aeStatus_t FWKKernelTfImpl::GetTfThreadModeSoPath(std::string& soPath)
         const std::string str = innerDirName;
         const size_t len = str.length();
         if ((len == 0U) || (len >= static_cast<size_t>(MAX_SO_PATH))) {
-            AE_ERR_LOG(AE_MODULE_ID, "Length[%zu] of inner so dir is invalid.", len);
+            AE_ERR_LOG(
+                AE_MODULE_ID, "Length[%zu] of inner so dir is invalid, valid range is [1, %u).", len, MAX_SO_PATH);
             return AE_STATUS_INNER_ERROR;
         }
         soPath = str;

@@ -105,6 +105,16 @@ TEST_F(CloseAicpuMonitorKernelTest, CheckKernelSupported)
     EXPECT_EQ(ret, AICPU_SCHEDULE_OK);
 }
 
+TEST_F(CloseAicpuMonitorKernelTest, RegisterDuplicateKernelType)
+{
+    const HwTsKernelCreatorFunc creator = []() { return std::make_shared<CloseAicpuMonitorTsKernel>(); };
+    HwTsKernelRegister::Instance().Register("CloseAicpuMonitor", creator);
+    // register the same kernel type twice, the second one should be ignored
+    HwTsKernelRegister::Instance().Register("CloseAicpuMonitor", creator);
+    int32_t ret = HwTsKernelRegister::Instance().CheckTsKernelSupported("CloseAicpuMonitor");
+    EXPECT_EQ(ret, AICPU_SCHEDULE_OK);
+}
+
 TEST_F(CloseAicpuMonitorKernelTest, CheckKernelSupportedNotFound)
 {
     int32_t ret = HwTsKernelRegister::Instance().CheckTsKernelSupported("CloseAicpuMonitorNotExist");

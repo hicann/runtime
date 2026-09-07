@@ -234,7 +234,7 @@ int32_t AicpuEventProcess::ProcessMsgVersionEvent(AicpuSqeAdapter& aicpuSqeAdapt
     int32_t rspRet = aicpuSqeAdapter.AicpuMsgVersionResponseToTs(ret);
     aicpusd_info("Finished to send response msg version information, ret[%d].", rspRet);
     if (rspRet != AICPU_SCHEDULE_OK) {
-        aicpusd_err("Failed to response info, ret[%d]", ret);
+        aicpusd_err("Failed to respond msg version info, rspRet[%d]", rspRet);
         return AICPU_SCHEDULE_ERROR_INNER_ERROR;
     }
     return AICPU_SCHEDULE_OK;
@@ -259,7 +259,7 @@ int32_t AicpuEventProcess::ProcessLoadOpMappingEvent(AicpuSqeAdapter& aicpuSqeAd
     aicpusd_info("Finished to send dump load info report info, ret=%d", ret);
 
     if (res != AICPU_SCHEDULE_OK) {
-        aicpusd_err("Failed to response info, ret[%d]", ret);
+        aicpusd_err("Failed to respond dump load info, res[%d]", res);
         return AICPU_SCHEDULE_ERROR_INNER_ERROR;
     }
 

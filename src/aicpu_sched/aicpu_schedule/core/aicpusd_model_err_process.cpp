@@ -44,7 +44,7 @@ void AicpuModelErrProc::ProcessLogBuffCfgMsg(const aicpu::AicpuConfigMsg& cfgInf
     aicpusd_info("Begin to ProcessLogBuffCfgMsg, tsId[%u], msgType[%u].", tsId, msgType);
 
     if (tsId >= ERRLOG_TS_MAXNUM) {
-        aicpusd_err("Invalid input tsId, tsId[%u].", tsId);
+        aicpusd_err("Invalid input tsId, tsId[%u], valid range is [0, %u).", tsId, ERRLOG_TS_MAXNUM);
         return;
     }
 
@@ -81,7 +81,9 @@ void AicpuModelErrProc::SetLogBuffInvalid(const uint32_t tsId)
 void AicpuModelErrProc::SetUnitLogEmpy(const uint32_t tsId, const uint32_t offset)
 {
     if ((offset >= ERRLOG_TOTAL_MAXLEN) || ((offset % ERRLOG_UNIT_MAXLEN) != 0U)) {
-        aicpusd_err("Invalid input offset, offset[%u].", offset);
+        aicpusd_err(
+            "Invalid input offset, offset[%u], must be < %u and aligned to %u.", offset, ERRLOG_TOTAL_MAXLEN,
+            ERRLOG_UNIT_MAXLEN);
         return;
     }
 
@@ -201,7 +203,7 @@ void AicpuModelErrProc::RecordAicoreOpErrLog(
 
     const uint32_t tsId = model->GetModelTsId();
     if (tsId >= ERRLOG_TS_MAXNUM) {
-        aicpusd_err("Invalid input tsId, tsId[%u].", tsId);
+        aicpusd_err("Invalid input tsId, tsId[%u], valid range is [0, %u).", tsId, ERRLOG_TS_MAXNUM);
         return;
     }
 
@@ -241,7 +243,7 @@ void AicpuModelErrProc::RecordAicpuOpErrLog(
 {
     const auto kernelName = PtrToPtr<const void, const char_t>(ValueToPtr(kernelTaskInfo.kernelName));
     aicpusd_err(
-        "Aicpu report aicpu error to ts. modelId=%u, streamId=%u, taskId=%u, kernelType=%u, ret=%u,"
+        "Aicpu report aicpu error to ts. modelId=%u, streamId=%u, taskId=%u, kernelType=%u, ret=%u, "
         "kernelName=%s",
         taskContext.modelId, taskContext.streamId, kernelTaskInfo.taskID, kernelTaskInfo.kernelType, resultCode,
         kernelName);
@@ -254,7 +256,7 @@ void AicpuModelErrProc::RecordAicpuOpErrLog(
 
     const uint32_t tsId = model->GetModelTsId();
     if (tsId >= ERRLOG_TS_MAXNUM) {
-        aicpusd_err("Invalid input tsId, tsId[%u].", tsId);
+        aicpusd_err("Invalid input tsId, tsId[%u], valid range is [0, %u).", tsId, ERRLOG_TS_MAXNUM);
         return;
     }
 

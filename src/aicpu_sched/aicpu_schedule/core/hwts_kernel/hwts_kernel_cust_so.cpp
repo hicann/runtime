@@ -121,7 +121,7 @@ int32_t CustOperationCommon::StartCustProcess(const uint32_t loadLibNum, const c
 
     AicpuScheduleInterface::GetInstance().SetAicpuCustSdProcId(custAicpuPid);
     if (!firstStart) {
-        aicpusd_run_info("Cust aicpu have already existed");
+        aicpusd_run_info("Cust aicpu already exists");
         return AICPU_SCHEDULE_OK;
     }
 
@@ -139,7 +139,7 @@ int32_t CustOperationCommon::StartCustProcess(const uint32_t loadLibNum, const c
         if (SendCtrlCpuMsg(
                 custAicpuPid, static_cast<uint32_t>(TsdSubEventType::TSD_EVENT_STOP_SUB_PROCESS_WAIT), nullptr, 0U) !=
             AICPU_SCHEDULE_OK) {
-            aicpusd_run_info("SendCtrlCpuMsg send to custaicpu no success");
+            aicpusd_run_info("SendCtrlCpuMsg send to custaicpu failed");
         }
         aicpusd_run_info("SendCtrlCpuMsg Send to custaicpu success");
         (void)StopWaitForCustAicpu();
@@ -352,7 +352,9 @@ int32_t BatchLoadSoFromBuffTsKernel::Compute(const aicpu::HwtsTsKernel& tsKernel
     const uint32_t soNum = static_cast<uint32_t>(batchLoadOpFromBufArgs->soNum);
     // check so num
     if ((soNum == 0U) || (soNum > MAX_CUSTOM_SO_NUM)) {
-        aicpusd_err("BatchLoadOpFromBuf kernel input param soNum is invalid. soNum value is %u.", soNum);
+        aicpusd_err(
+            "BatchLoadOpFromBuf kernel input param soNum is invalid. soNum value is %u, valid range is [1, %u].", soNum,
+            MAX_CUSTOM_SO_NUM);
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
 
@@ -403,7 +405,9 @@ int32_t DeleteCustOpTsKernel::Compute(const aicpu::HwtsTsKernel& tsKernelInfo)
     const uint32_t soNum = static_cast<uint32_t>(batchLoadOpFromBufArgs->soNum);
     // check so num
     if ((soNum == 0U) || (soNum > MAX_CUSTOM_SO_NUM)) {
-        aicpusd_err("DeleteCustOp kernel input param soNum is invalid. soNum value is %u.", soNum);
+        aicpusd_err(
+            "DeleteCustOp kernel input param soNum is invalid. soNum value is %u, valid range is [1, %u].", soNum,
+            MAX_CUSTOM_SO_NUM);
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
     for (uint32_t i = 0U; i < soNum; i++) {

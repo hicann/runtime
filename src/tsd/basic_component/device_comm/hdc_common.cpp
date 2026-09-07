@@ -59,7 +59,9 @@ TSD_StatusT HdcCommon::InitMsgSize()
     drvHdcCapacity drvHdcCapacityObj;
     const hdcError_t drvRet = drvHdcGetCapacity(&drvHdcCapacityObj);
     if ((drvRet != DRV_ERROR_NONE) || (drvHdcCapacityObj.maxSegment <= HDC_MSG_LONG_HEAD_SIZE)) {
-        TSD_ERROR("drvHdcCapacityObj.maxSegment = %u bytes", drvHdcCapacityObj.maxSegment);
+        TSD_ERROR(
+            "drvHdcCapacityObj.maxSegment = %u bytes, drvRet[%d], maxSegment must be greater than %u bytes",
+            drvHdcCapacityObj.maxSegment, drvRet, HDC_MSG_LONG_HEAD_SIZE);
         return TSD_INTERNAL_ERROR;
     }
 

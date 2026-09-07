@@ -81,7 +81,7 @@ void SetLogLevel(AicpuSchedule::ArgsParser& startParams)
 bool AttachHostGroup(const std::vector<std::string>& groupNameVec, const uint32_t grpNameNum)
 {
     if (grpNameNum == 0U) {
-        aicpusd_info("There is not group need to be attached");
+        aicpusd_info("No group needs to be attached");
         return true;
     }
     if (groupNameVec.empty()) {
@@ -273,7 +273,7 @@ bool SendVfMsgToDrv(const uint32_t cmd, const uint32_t deviceId, const uint32_t 
     if (FeatureCtrl::IsVfMode(deviceId, vfId)) {
         const int32_t fd = open("/dev/qos", O_RDWR);
         if (fd < 0) {
-            aicpusd_warn("no such file. error[%s],errorno[%d]", strerror(errno), errno);
+            aicpusd_warn("no such file. error[%s],errno[%d]", strerror(errno), errno);
             return false;
         }
         VfMsgInfo vfMsg;
@@ -281,7 +281,7 @@ bool SendVfMsgToDrv(const uint32_t cmd, const uint32_t deviceId, const uint32_t 
         vfMsg.vfId = vfId;
         const auto ret = ioctl(fd, cmd, PtrToPtr<VfMsgInfo, void>(&vfMsg));
         if (ret != 0) {
-            aicpusd_warn("ioctl failed, error[%s],errorno[%d]", strerror(errno), errno);
+            aicpusd_warn("ioctl failed, error[%s],errno[%d]", strerror(errno), errno);
             (void)close(fd);
             return false;
         }

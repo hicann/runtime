@@ -1221,7 +1221,7 @@ void AicpuEventManager::LoopProcess(const uint32_t threadIndex)
     while (runningFlag_) {
         (void)DoOnce(threadIndex, deviceId);
     }
-    aicpusd_info("The loop of getting event is exit in thread[%u].", threadIndex);
+    aicpusd_info("The loop of getting events has exited in thread[%u].", threadIndex);
 }
 
 bool AicpuEventManager::ModelLoopTimeOut(const int32_t retVal, uint32_t& waitCounter, const uint32_t maxCounter)
@@ -1250,7 +1250,7 @@ void AicpuEventManager::CallModeLoopProcess()
             break;
         }
     }
-    aicpusd_info("The loop of getting event is exit in call mode.");
+    aicpusd_info("The loop of getting events has exited in call mode.");
 }
 
 void AicpuEventManager::SetRunningFlag(const bool runningFlag) { runningFlag_ = runningFlag; }

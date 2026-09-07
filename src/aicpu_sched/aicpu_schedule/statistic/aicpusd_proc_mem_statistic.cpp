@@ -177,12 +177,12 @@ bool AicpuSdProcMemStatistic::GetOsMemInfoFromFile(uint64_t& rssValue, uint64_t&
     }
 
     if (!AicpuUtil::TransStrToull(vmRssStr.substr(strlen(VM_RSS_NAME)), rssValue)) {
-        aicpusd_warn("get vmRssError:%s failed", vmRssStr.c_str());
+        aicpusd_warn("failed to get vmRss, str:%s", vmRssStr.c_str());
         return false;
     }
 
     if (!AicpuUtil::TransStrToull(vmHwmStr.substr(strlen(VM_HWM_NAME)), hwmValue)) {
-        aicpusd_warn("get vmHwmError:%s failed", vmHwmStr.c_str());
+        aicpusd_warn("failed to get vmHwm, str:%s", vmHwmStr.c_str());
         return false;
     }
     aicpusd_info("vmRss:%llu KB, vmHwm:%llu KB.", rssValue, hwmValue);

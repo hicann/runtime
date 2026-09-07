@@ -168,3 +168,20 @@ TEST_F(AicpuSdProcMemStatisticTest, rssStatFailed1)
     auto ret = procMem.GetOsMemInfoFromFile(rssValue, hwmValue);
     EXPECT_EQ(ret, false);
 }
+
+TEST_F(AicpuSdProcMemStatisticTest, rssStatHwmInvalid)
+{
+    std::string rssFile = "/tmp/rsstat_hwm";
+    std::string fileInfo1 = "VmRSS:1234";
+    std::string fileInfo2 = "VmHWM:undefine";
+    if (WriteStatFileTwo(rssFile, fileInfo1, fileInfo2)) {
+        AicpuSdProcMemStatistic procMem;
+        procMem.rssMem_.statCnt = 0UL;
+        procMem.rssMemCfgFile_ = rssFile;
+        uint64_t rssValue = 0UL;
+        uint64_t hwmValue = 0UL;
+        auto ret = procMem.GetOsMemInfoFromFile(rssValue, hwmValue);
+        EXPECT_EQ(ret, false);
+        remove(rssFile.c_str());
+    }
+}

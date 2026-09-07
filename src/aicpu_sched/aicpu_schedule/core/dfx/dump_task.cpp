@@ -71,9 +71,6 @@ StatusCode OpDumpTask::GetDumpNumber(uint64_t& dumpNum)
             loopCond = *(optionalParam_.loopCondAddr);
             aicpusd_info("op name[%s], loop cond is[%llu]", opName_.c_str(), loopCond);
         }
-        aicpusd_info(
-            "op name[%s], step id[%llu], iterations per loop[%llu], loop cond[%llu]", opName_.c_str(), stepId,
-            iterationsPerLoop, loopCond);
         // overflow does not matter
         dumpNum = (stepId * (iterationsPerLoop + 1U)) + loopCond;
     } else {
@@ -580,12 +577,12 @@ StatusCode OpDumpTask::ProcessOpWorkspaceDump(
     for (int64_t i = 0; i < dumpData.space_size(); ++i) {
         auto& space = dumpData.space(i);
         if (space.size() == 0U) {
-            aicpusd_err("op name[%s], op space[%d] data size is zero", opName_.c_str(), i);
+            aicpusd_warn("op name[%s], op space[%d] data size is zero", opName_.c_str(), i);
             continue;
         }
         const size_t opWorkspaceAddrIndex = static_cast<size_t>(i);
         if (opWorkspaceAddr_[opWorkspaceAddrIndex] == 0U) {
-            aicpusd_err("op name[%s], op space[%d] workspace is null", opName_.c_str(), i);
+            aicpusd_warn("op name[%s], op space[%d] workspace is null", opName_.c_str(), i);
             continue;
         }
         uint64_t innerOffset = 0U;

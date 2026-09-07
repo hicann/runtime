@@ -21,6 +21,7 @@
 #include "aicpusd_profiler.h"
 #include "gtest/gtest.h"
 #include "hiperf_marker.h"
+#include "mockcpp/mockcpp.hpp"
 #include "profiling_adp.h"
 #include "stub/aicpusd_meminfo_process.h"
 #include "task_queue.h"
@@ -294,6 +295,30 @@ TEST(AicpusdStubCoverageTest, HcclFakeSoSuccessPathsAreCallable)
     EXPECT_EQ(pool.Init(1U, 64U, false), RET_SUCCESS);
     EXPECT_EQ(pool.Init(1U, 64U, true), RET_SUCCESS);
     HcclSoManager::GetInstance()->UnloadSo();
+}
+
+namespace {
+// stub 的 halBuffCreatePool 不回写 *mp，导致 mp_ 为空时 Allocate 无法走到分配分支，
+// 此处打桩回写非空句柄，使 Allocate 真正执行到 halMbufAllocByPool 路径
+int FakeCreatePoolOk(mp_attr* attr, mempool_t** mp)
+{
+    (void)attr;
+    *mp = reinterpret_cast<mempool_t*>(0x1);
+    return DRV_ERROR_NONE;
+}
+} // namespace
+
+TEST(AicpusdStubCoverageTest, MBufferPoolAllocateFail)
+{
+    MBufferPool pool;
+    MOCKER(halBuffCreatePool).stubs().will(invoke(FakeCreatePoolOk));
+    EXPECT_EQ(pool.Init(1U, 64U, false), RET_SUCCESS);
+    Mbuf* mbuf = nullptr;
+    MOCKER(halMbufAllocByPool).stubs().will(returnValue(static_cast<int32_t>(DRV_ERROR_INNER_ERR)));
+    EXPECT_NE(pool.Allocate(&mbuf), RET_SUCCESS);
+    GlobalMockObject::verify();
+    pool.FreeAll();
+    pool.UnInit();
 }
 
 TEST(AicpusdStubCoverageTest, CoreProfilerPathsAreCallable)

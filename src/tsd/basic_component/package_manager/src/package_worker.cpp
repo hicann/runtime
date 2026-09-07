@@ -140,7 +140,7 @@ void PackageWorker::ClearWorkerManager()
     const std::lock_guard<std::mutex> lk(PackageWorker::workerManagerMutex_);
     const auto iter = PackageWorker::workerManager_.find(std::make_pair(deviceId_, vfId_));
     if (iter == workerManager_.end()) {
-        TSD_WARN("Delete package worker manager but not exist, deviceId=%u, vfId=%u", deviceId_, vfId_);
+        TSD_WARN("Delete package worker manager but it does not exist, deviceId=%u, vfId=%u", deviceId_, vfId_);
         return;
     }
 

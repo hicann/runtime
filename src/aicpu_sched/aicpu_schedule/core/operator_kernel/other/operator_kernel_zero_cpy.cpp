@@ -213,7 +213,7 @@ int32_t OperatorKernelCpuZeroCpy::Compute(const AicpuTaskInfo& kernelTaskInfo, c
         const auto dstPtr = reinterpret_cast<void**>(ValueToPtr(dstAddrList[static_cast<size_t>(i)]));
         const auto srcPtr = reinterpret_cast<void**>(ValueToPtr(srcAddrList[static_cast<size_t>(i)]));
         *dstPtr = *srcPtr;
-        aicpusd_info("copy element %p, srcPptr %p, dstPptr %p", *dstPtr, srcPtr, dstPtr);
+        aicpusd_info("copy element %p, srcPtr %p, dstPtr %p", *dstPtr, srcPtr, dstPtr);
     }
     return AICPU_SCHEDULE_OK;
 }

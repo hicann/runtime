@@ -133,7 +133,7 @@ int32_t BufManager::MallocAndAppend(
     } else {
         ret = halMbufChainAppend(mbufListHead, mbuf);
         if (ret != DRV_ERROR_NONE) {
-            aicpusd_err("halMbufChainAppend mbuf error.ret:%d", ret);
+            aicpusd_err("halMbufChainAppend mbuf error, ret:%d.", ret);
             const int32_t drvRet = halMbufFree(mbuf);
             if (drvRet != DRV_ERROR_NONE) {
                 aicpusd_err("free by driver failed, ret[%d].", drvRet);
@@ -314,8 +314,8 @@ void EventWaitManager::Event(const size_t eventWaitId, bool& hasWait, uint32_t& 
     if (waitStream_[eventWaitId] == UINT32_MAX) {
         hasWait = false;
         aicpusd_info(
-            "[%s] eventWaitId[%zu] is come, but no stream is waiting. waitCount[%d]", eventType_.c_str(), eventWaitId,
-            waitCount_);
+            "[%s] eventWaitId[%zu] has arrived, but no stream is waiting. waitCount[%d]", eventType_.c_str(),
+            eventWaitId, waitCount_);
         return;
     }
     waitStreamId = waitStream_[eventWaitId];
@@ -323,8 +323,8 @@ void EventWaitManager::Event(const size_t eventWaitId, bool& hasWait, uint32_t& 
     waitStream_[eventWaitId] = UINT32_MAX;
     --waitCount_;
     aicpusd_info(
-        "[%s] waitId[%zu] is come, stream[%u] is waiting. waitCount[%d]", eventType_.c_str(), eventWaitId, waitStreamId,
-        waitCount_);
+        "[%s] waitId[%zu] has arrived, stream[%u] is waiting. waitCount[%d]", eventType_.c_str(), eventWaitId,
+        waitStreamId, waitCount_);
 }
 
 void EventWaitManager::WaitEvent(const size_t eventWaitId, const uint32_t waitStreamId, bool& needWait)
@@ -338,7 +338,7 @@ void EventWaitManager::WaitEvent(const size_t eventWaitId, const uint32_t waitSt
         needWait = true;
         ++waitCount_;
         aicpusd_info(
-            "[%s] waitId[%zu] does not come, stream[%u] need wait. waitCount[%d]", eventType_.c_str(), eventWaitId,
+            "[%s] waitId[%zu] does not come, stream[%u] needs to wait. waitCount[%d]", eventType_.c_str(), eventWaitId,
             waitStreamId, waitCount_);
         return;
     }
@@ -347,8 +347,8 @@ void EventWaitManager::WaitEvent(const size_t eventWaitId, const uint32_t waitSt
     eventState_[eventWaitId] = false;
     needWait = false;
     aicpusd_info(
-        "[%s] WaitId[%zu] is come, stream[%u] no need wait. waitCount[%d]", eventType_.c_str(), eventWaitId,
-        waitStreamId, waitCount_);
+        "[%s] WaitId[%zu] has arrived, stream[%u] does not need to wait. waitCount[%d]", eventType_.c_str(),
+        eventWaitId, waitStreamId, waitCount_);
 }
 
 void EventWaitManager::GetWaitingEvent(std::vector<size_t>& eventWaitIds)

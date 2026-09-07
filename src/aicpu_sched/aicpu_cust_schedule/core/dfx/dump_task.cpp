@@ -461,12 +461,12 @@ StatusCode OpDumpTask::ProcessOpWorkspaceDump(
     for (int64_t i = 0; i < dumpData.space_size(); ++i) {
         auto& space = dumpData.space(i);
         if (space.size() == 0U) {
-            aicpusd_err("op name[%s], op space[%d] data size is zero", opName_.c_str(), i);
+            aicpusd_info("op name[%s], op space[%d] data size is zero", opName_.c_str(), i);
             continue;
         }
         const size_t opWorkspaceAddrIndex = static_cast<size_t>(i);
         if (opWorkspaceAddr_[opWorkspaceAddrIndex] == 0U) {
-            aicpusd_err("op name[%s], op space[%d] workspace is null", opName_.c_str(), i);
+            aicpusd_info("op name[%s], op space[%d] workspace is null", opName_.c_str(), i);
             continue;
         }
         uint64_t innerOffset = 0U;

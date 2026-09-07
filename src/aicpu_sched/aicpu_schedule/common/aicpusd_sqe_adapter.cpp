@@ -694,7 +694,7 @@ void AicpuSqeAdapter::AicpuActiveStreamSetMsg(ActiveStreamInfo& info)
 {
     aicpusd_info("Aicpu active stream set msg.");
     if (activeStreamSetMsgFuncMap_.find(version_) == activeStreamSetMsgFuncMap_.end()) {
-        aicpusd_err("The version[%hu] does not have a corresponding get error msg response Function.", version_);
+        aicpusd_err("The version[%hu] does not have a corresponding active stream set msg function.", version_);
         return;
     }
     return (this->*activeStreamSetMsgFuncMap_[version_])(info);
