@@ -1027,6 +1027,9 @@ rtError_t Context::TearDownStreamAndFinalize(Stream* stm, bool flag, bool* destr
          ((rt != nullptr) && rt->GetDisableThread()))) {
         DeleteStream(stm);
     }
+    if (InnerThreadLocalContainer::GetCurrentResLimitStream() == stm) {
+        InnerThreadLocalContainer::SetCurrentResLimitStream(nullptr);
+    }
     return error;
 }
 

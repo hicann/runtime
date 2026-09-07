@@ -524,7 +524,7 @@ aclError aclrtLaunchKernelWithHostArgsImpl(
     ACL_PROFILING_REG(acl::AclProfType::AclrtLaunchKernelWithHostArgs);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(funcHandle);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(hostArgs);
-
+    ACL_LOG_INFO("start to execute aclrtLaunchKernelWithHostArgsImpl");
     rtKernelLaunchCfg_t* rt_cfg = nullptr;
     rtPlaceHolderInfo_t* rt_placeHolderArray = nullptr;
     if (cfg != nullptr) {

@@ -81,7 +81,10 @@ struct DavidStarsModelMaintaince {
     uint64_t streamExecTimesAddr;
     uint32_t opSqId;
     uint32_t sqId;
-    uint32_t reserved[4];
+    uint8_t notifyIdExpandFlag;
+    uint8_t rev[3];
+    uint32_t endgraphNotifyIdExpand; // endgraphNotifyId may exceed 64K on A5/A6.
+    uint32_t reserved[2];
 };
 
 struct DavidRingBufferControl {

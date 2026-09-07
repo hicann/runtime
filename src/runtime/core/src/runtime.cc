@@ -2866,6 +2866,7 @@ void Runtime::PrepareProcessExitNoThrow()
         }
     }
 
+    InnerThreadLocalContainer::SetCurrentResLimitStream(nullptr);
     InnerThreadLocalContainer::SetCurRef(nullptr);
     InnerThreadLocalContainer::SetCurCtx(nullptr);
 }

@@ -103,6 +103,9 @@ static void ConstructDavidSqeForModelMaintainceTask(
                 phSqe->u.modelMaintainceInfo.executorFlag = GetCaptureModelExecutorType(modelMaintainceTaskInfo);
                 phSqe->u.modelMaintainceInfo.endgraphNotifyId =
                     static_cast<uint16_t>(GetEndGraphNotifyId(modelMaintainceTaskInfo->model));
+                phSqe->u.modelMaintainceInfo.notifyIdExpandFlag = true;
+                phSqe->u.modelMaintainceInfo.endgraphNotifyIdExpand =
+                    GetEndGraphNotifyId(modelMaintainceTaskInfo->model);
             }
             PrintDavidSqe(davidSqe, "ModelPreProcTask");
             RT_LOG(
