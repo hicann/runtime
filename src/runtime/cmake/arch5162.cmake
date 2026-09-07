@@ -436,7 +436,7 @@ set(libruntime_aclrt_impl_src_files
 
 set_source_files_properties(${libruntime_aclrt_impl_src_files}
     PROPERTIES
-        COMPILE_OPTIONS "-O2;-ftrapv"
+        COMPILE_OPTIONS "-Os;-ftrapv"
         COMPILE_DEFINITIONS "OS_TYPE=0;FUNC_VISIBILITY"
 )
 
@@ -468,7 +468,7 @@ macro(add_runtime_library target_name)
     )
 
     target_compile_options(${target_name} PRIVATE
-        -O2
+        -Os
         -ffunction-sections
         -fvisibility=hidden
         -fno-common
