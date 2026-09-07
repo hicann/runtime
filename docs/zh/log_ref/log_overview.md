@@ -22,8 +22,8 @@
   <!-- npu="310p" id5 -->
   - Atlas 推理系列产品
   <!-- end id5 -->
-<!-- npu="310b" id7 -->
 <!-- end id9 -->
+<!-- npu="310b" id7 -->
 - [查看日志（Ascend RC）](./viewing_logs_rc.md)：当前仅涉及Atlas 200I/500 A2 推理产品。
 <!-- end id7 -->
 <!-- npu="310p" id8 -->
