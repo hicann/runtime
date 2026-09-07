@@ -22,6 +22,7 @@
 #define TYPE_7 (1U << 7U)
 #define TYPE_8 (1U << 8U)
 #define TYPE_9 (1U << 9U)
+#define TYPE_10 (1U << 10U)
 typedef struct {
     const char* label;            // component-specific label
     const char* hostFilePath;     // path of file storage at host
@@ -43,5 +44,6 @@ const MsnpureportFileDumpTable MSNPUREPORT_FILE_DUMP_INFO[] = {
     {"ao_self", "ao_info", "ao_info", "/var/ao_info_collect.sh", "7", 305000, (TYPE_7), true},
     {"ao_cnt", "ao_info", "ao_info", "/var/ao_info_collect.sh", "8", 605000, (TYPE_8), true},
     {"ao_uart", "ao_info", "ao_info", "/var/ao_info_collect.sh", "9", 305000, (TYPE_9), true},
+    {"ccu_info", "ccu_info", "ccu_info", "/var/ccu_info_collect.sh", NULL, 100000, (TYPE_10), true},
 };
 #endif

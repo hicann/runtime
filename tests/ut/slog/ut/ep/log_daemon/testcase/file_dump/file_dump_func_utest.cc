@@ -33,6 +33,7 @@ HdclogErr PreProcessBeforeParseCmd(HDC_SESSION session);
 #include "log_file_utils.h"
 #include "log_get_file.h"
 #include "log_process_util.h"
+#include "msnpureport_filedump.h"
 #undef private
 #undef protected
 using namespace std;
@@ -112,6 +113,20 @@ int32_t LogIdeContainerCoverageStub(HDC_SESSION session, int32_t* runEnv)
 {
     (void)session;
     *runEnv = 2;
+    return SYS_OK;
+}
+
+int32_t LogIdeNonContainerCoverageStub(HDC_SESSION session, int32_t* runEnv)
+{
+    (void)session;
+    *runEnv = 1;
+    return SYS_OK;
+}
+
+int32_t LogIdePidCoverageStub(HDC_SESSION session, int32_t* pid)
+{
+    (void)session;
+    *pid = 42;
     return SYS_OK;
 }
 
@@ -218,6 +233,25 @@ TEST_F(EP_FILE_DUMP_FUNC_UTEST, FileUtilitiesAndComponent)
     EXPECT_FALSE(getFile.IsIntDigital("12x"));
     EXPECT_TRUE(getFile.IsIntDigital("123"));
     EXPECT_EQ(SYS_OK, getFile.UnInit());
+}
+
+TEST_F(EP_FILE_DUMP_FUNC_UTEST, FileDumpTableIncludesCcuInfo)
+{
+    size_t foundCount = 0;
+    for (const auto& info : MSNPUREPORT_FILE_DUMP_INFO) {
+        if (std::string(info.label) != "ccu_info") {
+            continue;
+        }
+        ++foundCount;
+        EXPECT_STREQ("ccu_info", info.hostFilePath);
+        EXPECT_STREQ("ccu_info", info.deviceFilePath);
+        EXPECT_STREQ("/var/ccu_info_collect.sh", info.deviceScriptPath);
+        EXPECT_EQ(nullptr, info.scriptArgs);
+        EXPECT_EQ(100000U, info.timeout);
+        EXPECT_EQ(TYPE_10, info.type);
+        EXPECT_TRUE(info.isRoot);
+    }
+    EXPECT_EQ(1U, foundCount);
 }
 
 TEST_F(EP_FILE_DUMP_FUNC_UTEST, FileUtilitiesCoverRealDirectoryTree)
@@ -523,6 +557,31 @@ TEST_F(EP_FILE_DUMP_FUNC_UTEST, LogGetFileSkipsCleanupWhenModuleDirectoryIsMissi
     EXPECT_EQ(SYS_OK, getFile.Process(handle, request));
     EXPECT_EQ("game_over", g_capturedEndMsg);
     EXPECT_EQ(0, GetErrLogNum());
+    ResetErrLog();
+}
+
+TEST_F(EP_FILE_DUMP_FUNC_UTEST, LogGetFileProcessExportsCcuInfoScript)
+{
+    LogGetFile getFile;
+    ASSERT_EQ(SYS_OK, getFile.Init());
+    CommHandle handle = {};
+    handle.type = COMM_HDC;
+    handle.session = 1U;
+
+    g_capturedCmd.clear();
+    g_capturedEndMsg.clear();
+    MOCKER(LogIdeGetRunEnvBySession).stubs().will(invoke(LogIdeNonContainerCoverageStub));
+    MOCKER(LogIdeGetPidBySession).stubs().will(invoke(LogIdePidCoverageStub));
+    MOCKER_CPP(&LogFileUtils::IsFileExist).stubs().will(returnValue(true));
+    MOCKER_CPP(&LogFileUtils::IsDirExist).stubs().will(returnValue(false));
+    MOCKER(AdxCreateProcess).stubs().will(invoke(AdxCreateProcessCaptureStub));
+    MOCKER(AdxSendMsgByHandle).stubs().will(invoke(AdxSendEndMsgCaptureStub));
+    auto request = MakeFileRequest(MsgType::MSG_DATA, "ccu_info");
+    ASSERT_NE(nullptr, request);
+
+    EXPECT_EQ(SYS_OK, getFile.Process(handle, request));
+    EXPECT_EQ("sudo /var/ccu_info_collect.sh 42", g_capturedCmd);
+    EXPECT_EQ("game_over", g_capturedEndMsg);
     ResetErrLog();
 }
 
