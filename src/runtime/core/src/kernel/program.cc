@@ -30,19 +30,23 @@
 namespace cce {
 namespace runtime {
 
-#pragma pack(push, 1)
-struct CpuSoBuf {
-    uint64_t kernelSoBuf;
-    uint32_t kernelSoBufLen;
-    uint64_t kernelSoName;
-    uint32_t kernelSoNameLen;
-};
+rtError_t AllocAndCopyHbmBuf(
+    Device* const dev, const void* const hostBuf, const size_t bufSize, void** const devBuf,
+    std::vector<void*>& allocMem)
+{
+    const uint32_t devId = dev->Id_();
+    Driver* const drv = dev->Driver_();
+    rtError_t ret = drv->DevMemAlloc(devBuf, bufSize, RT_MEMORY_HBM, devId, MODULEID_RUNTIME);
+    ERROR_RETURN(
+        ret, "DevMemAlloc failed, deviceId=%u, size=%zu, ret=%#x.", devId, bufSize, static_cast<uint32_t>(ret));
+    allocMem.push_back(*devBuf);
 
-struct BatchProcCpuOpFromBufArgs {
-    uint32_t soNum;
-    uint64_t args;
-};
-#pragma pack(pop)
+    ret = drv->MemCopySync(*devBuf, bufSize, hostBuf, bufSize, RT_MEMCPY_HOST_TO_DEVICE);
+    COND_PROC_RETURN_ERROR(
+        ret != RT_ERROR_NONE, ret, (drv->DevMemFree(*devBuf, devId), *devBuf = nullptr, allocMem.pop_back()),
+        "MemCopySync H2D failed, deviceId=%u, size=%zu, ret=%#x.", devId, bufSize, static_cast<uint32_t>(ret));
+    return RT_ERROR_NONE;
+}
 
 Program::Program(const rtKernelAttrType kernelAttrType)
     : NoCopy(),
@@ -1296,39 +1300,24 @@ rtError_t Program::ProcCpuKernelH2DMem(bool isLoadCpuSo, Device* const device)
     const uint32_t devId = static_cast<uint32_t>(device->Id_());
     void* devSoBuff = nullptr;
     if (isLoadCpuSo) {
-        ret = device->Driver_()->DevMemAlloc(&devSoBuff, binarySize_, RT_MEMORY_HBM, devId, MODULEID_RUNTIME);
-        ERROR_RETURN(ret, "devSoBuff alloc failed! error=%#x", ret);
-        allocMem.push_back(devSoBuff);
-
-        ret = device->Driver_()->MemCopySync(devSoBuff, binarySize_, binary_, binarySize_, RT_MEMCPY_HOST_TO_DEVICE);
-        ERROR_RETURN(ret, "devSoBuff copy failed! error=%#x", ret);
+        ret = AllocAndCopyHbmBuf(device, binary_, binarySize_, &devSoBuff, allocMem);
+        ERROR_RETURN(ret, "devSoBuff alloc and copy failed! error=%#x", ret);
     }
 
     void* devSoName = nullptr;
-    ret = device->Driver_()->DevMemAlloc(&devSoName, soName_.size(), RT_MEMORY_HBM, devId, MODULEID_RUNTIME);
-    ERROR_RETURN(ret, "devSoName alloc failed! error=%#x", ret);
-    allocMem.push_back(devSoName);
-
-    ret = device->Driver_()->MemCopySync(
-        devSoName, soName_.size(), soName_.c_str(), soName_.size(), RT_MEMCPY_HOST_TO_DEVICE);
-    ERROR_RETURN(ret, "devSoName copy failed! error=%#x", ret);
+    ret = AllocAndCopyHbmBuf(device, soName_.c_str(), soName_.size(), &devSoName, allocMem);
+    ERROR_RETURN(ret, "devSoName alloc and copy failed! error=%#x", ret);
 
     CpuSoBuf cpuSoBuf = {
-        .kernelSoBuf = PtrToValue(devSoBuff),
+        .kernelSoBuf = RtPtrToValue(devSoBuff),
         .kernelSoBufLen = static_cast<uint32_t>(binarySize_),
-        .kernelSoName = PtrToValue(devSoName),
+        .kernelSoName = RtPtrToValue(devSoName),
         .kernelSoNameLen = static_cast<uint32_t>(soName_.size())};
 
-    // 1. alloc device memory for args
-    // 2. copy cpuSoBuf to device memory
     void* args = nullptr;
     constexpr size_t argsSize = sizeof(CpuSoBuf);
-    ret = device->Driver_()->DevMemAlloc(&args, argsSize, RT_MEMORY_HBM, devId, MODULEID_RUNTIME);
-    ERROR_RETURN(ret, "args alloc failed! error=%#x", ret);
-    allocMem.push_back(args);
-
-    ret = device->Driver_()->MemCopySync(args, argsSize, &cpuSoBuf, argsSize, RT_MEMCPY_HOST_TO_DEVICE);
-    ERROR_RETURN(ret, "args copy failed! error=%#x", ret);
+    ret = AllocAndCopyHbmBuf(device, &cpuSoBuf, argsSize, &args, allocMem);
+    ERROR_RETURN(ret, "args alloc and copy failed! error=%#x", ret);
 
     const std::string opName = isLoadCpuSo ? LOAD_CPU_SO : DELETE_CPU_SO;
     const rtKernelLaunchNames_t launchName = {nullptr, opName.c_str(), ""};
@@ -1337,7 +1326,7 @@ rtError_t Program::ProcCpuKernelH2DMem(bool isLoadCpuSo, Device* const device)
         "Cpu kernel launch failed, check and start tsd open aicpu sd error.");
 
     // only 1 so
-    BatchProcCpuOpFromBufArgs batchCpuSo = {.soNum = 1U, .args = PtrToValue(args)};
+    BatchProcCpuOpFromBufArgs batchCpuSo = {.soNum = 1U, .args = RtPtrToValue(args)};
     rtArgsEx_t argsInfo = {};
     argsInfo.args = &batchCpuSo;
     argsInfo.argsSize = static_cast<uint32_t>(sizeof(BatchProcCpuOpFromBufArgs));

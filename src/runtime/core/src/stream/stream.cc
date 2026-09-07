@@ -4711,19 +4711,19 @@ void Stream::FreeOnlineProf() const
     (void)Device_()->DevSetOnlineProfStart(false);
     if (onProfDeviceAddr_ != nullptr) {
         error = device_->Driver_()->DevMemFree(onProfDeviceAddr_, device_->Id_());
-        COND_LOG(
+        COND_LOG_WARN(
             error != RT_ERROR_NONE, "Free online profiling memory deviceMem failed, retCode=%#x",
             static_cast<uint32_t>(error));
     }
     if (onProfHostRtAddr_ != nullptr) {
         error = device_->Driver_()->HostMemFree(onProfHostRtAddr_);
-        COND_LOG(
+        COND_LOG_WARN(
             error != RT_ERROR_NONE, "Free online profiling memory hostRtMem failed, retCode=%#x",
             static_cast<uint32_t>(error));
     }
     if (onProfHostTsAddr_ != nullptr) {
         error = device_->Driver_()->HostMemFree(onProfHostTsAddr_);
-        COND_LOG(
+        COND_LOG_WARN(
             error != RT_ERROR_NONE, "Free online profiling memory hostTsMem failed, retCode=%#x",
             static_cast<uint32_t>(error));
     }

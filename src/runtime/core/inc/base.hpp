@@ -365,7 +365,7 @@ inline void ErrorCodeProcess(
 #define COND_GOTO_ERROR(COND, LABEL, ERROR, ERRCODE, format, ...) \
     COND_GOTO_WITH_ERRCODE_((COND), LABEL, ERROR, ERRCODE, RT_LOG_ERROR, format, ##__VA_ARGS__)
 
-#define COND_LOG(COND, format, ...)                    \
+#define COND_LOG_WARN(COND, format, ...)               \
     if (unlikely(COND)) {                              \
         RT_LOG(RT_LOG_WARNING, format, ##__VA_ARGS__); \
     }

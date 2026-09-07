@@ -112,7 +112,7 @@ void* SpmPool::DrvAllocSPM(const size_t size, void* const para)
     SpmPool* const spm = static_cast<SpmPool*>(para);
 
     error = spm->dev_->Driver_()->DevMemAlloc(&addr, static_cast<uint64_t>(size), RT_MEMORY_HBM, spm->dev_->Id_());
-    COND_LOG(
+    COND_LOG_WARN(
         error != RT_ERROR_NONE,
         "device mem alloc spm failed, "
         "size=%u(bytes), kind=%d, id=%d, retCode=%#x",
@@ -134,7 +134,7 @@ void SpmPool::DrvFreeSPM(void* const addr, void* const para)
     SpmPool* const spm = static_cast<SpmPool*>(para);
 
     error = spm->dev_->Driver_()->DevMemFree(addr, spm->dev_->Id_());
-    COND_LOG(error != RT_ERROR_NONE, "device mem free spm failed, retCode=%#x", error);
+    COND_LOG_WARN(error != RT_ERROR_NONE, "device mem free spm failed, retCode=%#x", error);
 
     for (i = 0U; i < spm->spmPageNum_; i++) {
         if (spm->spmBases_[i] == RtPtrToValue(addr)) {

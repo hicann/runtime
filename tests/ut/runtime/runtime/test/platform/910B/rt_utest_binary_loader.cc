@@ -200,6 +200,16 @@ TEST_F(BinaryLoaderTest, TestRtsBinaryLoadFromData_CpuKernel_Failed)
     EXPECT_EQ(ret, RT_ERROR_INVALID_VALUE);
 }
 
+TEST_F(BinaryLoaderTest, TestLoadCpuKernelFromData_AddProgramToPool_Failed)
+{
+    uint64_t data = 1024U;
+    BinaryLoader binaryLoader(static_cast<void*>(&data), sizeof(uint64_t), nullptr);
+    MOCKER_CPP(&Runtime::AddProgramToPool).stubs().will(returnValue(RT_ERROR_PROGRAM_USEOUT));
+    PlainProgram* prog = binaryLoader.LoadCpuKernelFromData();
+    EXPECT_EQ(prog, nullptr);
+    GlobalMockObject::verify();
+}
+
 TEST_F(BinaryLoaderTest, TestRtsBinaryLoadFromFile_CpuKernel_JsonAndSo)
 {
     char* path = "../tests/ut/runtime/runtime/test/data/libcust_aicpu_kernels.json";

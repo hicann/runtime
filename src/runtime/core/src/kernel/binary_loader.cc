@@ -362,6 +362,12 @@ PlainProgram* BinaryLoader::LoadCpuKernelFromData()
     if ((curCtx != nullptr) && (curCtx->Device_() != nullptr) && curCtx->Device_()->IsAicpuDfxSupport()) {
         prog->SetHasPrintfTlv(ParseAicpuSoForPrintfTlv());
     }
+    const rtError_t ret = Runtime::Instance()->AddProgramToPool(prog);
+    if (ret != RT_ERROR_NONE) {
+        RT_LOG(RT_LOG_ERROR, "add program to pool failed, ret=%#x", ret);
+        DELETE_O(prog);
+        return nullptr;
+    }
     return prog;
 }
 

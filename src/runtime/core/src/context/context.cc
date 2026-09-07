@@ -306,7 +306,7 @@ void Context::ReleaseOverflowAddrAfterTearDown()
 {
     if ((overflowAddr_ != nullptr) && (device_ != nullptr)) {
         const rtError_t error = device_->Driver_()->DevMemFree(overflowAddr_, device_->Id_());
-        COND_LOG(error != RT_ERROR_NONE, "overflowAddr DevMemFree failed, retCode=%#x.", error);
+        COND_LOG_WARN(error != RT_ERROR_NONE, "overflowAddr DevMemFree failed, retCode=%#x.", error);
     }
     overflowAddr_ = nullptr;
     overflowAddrOffset_ = INVALID_CONTEXT_OVERFLOW_OFFSET;

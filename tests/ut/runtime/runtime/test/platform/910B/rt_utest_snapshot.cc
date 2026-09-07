@@ -23,6 +23,13 @@
 #include "api_decorator.hpp"
 #include "snapshot_process_helper.hpp"
 #include "device_snapshot.hpp"
+#include "npu_driver.hpp"
+#include "program.hpp"
+#include "binary_loader.hpp"
+#include "aicpu_dfx.hpp"
+#include "stream.hpp"
+#include "arg_loader.hpp"
+#include "printf.hpp"
 #undef private
 #undef protected
 
@@ -590,4 +597,302 @@ TEST_F(SnapshotTest, ModelRestore_ReBuildFailed)
     curCtx->models_.remove(mdl);
     delete mdl;
     GlobalMockObject::verify();
+}
+
+// ==================== AICPU Snapshot Restore UT ====================
+
+static void SetupSnapShotRestoreUpstreamMocks(RawDevice* rawDevice, DeviceSnapshot* snap)
+{
+    MOCKER_CPP(&SnapShotDeviceRestore).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(&SnapShotResourceRestore).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(&Runtime::RestoreModule).stubs().will(returnValue(RT_ERROR_NONE));
+    IDeviceSnapshotOps* deviceSnapshotOps = static_cast<IDeviceSnapshotOps*>(snap);
+    MOCKER_CPP_VIRTUAL(rawDevice, &RawDevice::GetDeviceSnapShot).stubs().will(returnValue(deviceSnapshotOps));
+    MOCKER_CPP_VIRTUAL(snap, &DeviceSnapshot::OpMemoryRestore).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(snap, &DeviceSnapshot::ArgsPoolRestore).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(snap, &DeviceSnapshot::UbArgsPoolRestore).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(&ModelRestore).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(&SnapShotAclGraphRestore).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(rawDevice->ArgLoader_(), &ArgLoader::RestoreAiCpuKernelInfo).stubs();
+}
+
+static rtError_t DevMemAllocStub(
+    Driver* drv, void** dptr, uint64_t size, rtMemType_t type, uint32_t deviceId, uint16_t moduleId, bool isLogError,
+    bool readOnlyFlag, bool starsTillingFlag, bool isNewApi, bool cpOnlyFlag)
+{
+    UNUSED(drv);
+    UNUSED(size);
+    UNUSED(type);
+    UNUSED(deviceId);
+    UNUSED(moduleId);
+    UNUSED(isLogError);
+    UNUSED(readOnlyFlag);
+    UNUSED(starsTillingFlag);
+    UNUSED(isNewApi);
+    UNUSED(cpOnlyFlag);
+    *dptr = reinterpret_cast<void*>(0x1000);
+    return RT_ERROR_NONE;
+}
+
+static PlainProgram* CreateTestCpuProgram()
+{
+    uint8_t data[] = {0x01, 0x02, 0x03, 0x04};
+    BinaryLoader loader(data, sizeof(data), nullptr);
+    PlainProgram* prog = loader.LoadCpuKernelFromData();
+    if (prog != nullptr) {
+        prog->SetKernelRegType(RT_KERNEL_REG_TYPE_CPU);
+        prog->cpuRegMode_ = 2;
+        prog->SetSoName("test_cpu_kernel.so");
+    }
+    return prog;
+}
+
+TEST_F(SnapshotTest, SnapShotProcessRestore_NoCustomProcess_SkipBatchLoad)
+{
+    RawDevice* rawDevice = dynamic_cast<RawDevice*>(device_);
+    ASSERT_NE(rawDevice, nullptr);
+    rawDevice->hasCustomProcess_.Set(false);
+
+    SetupSnapShotRestoreUpstreamMocks(rawDevice, deviceSnapshot_);
+    MOCKER(LaunchAicpuKernelForCpuSo).expects(never());
+    MOCKER(SetupAicpuPrintfDfx).expects(never());
+
+    rtError_t error = SnapShotProcessRestore();
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(SnapshotTest, SnapShotProcessRestore_HasCustomProcessButNoPrograms)
+{
+    RawDevice* rawDevice = dynamic_cast<RawDevice*>(device_);
+    ASSERT_NE(rawDevice, nullptr);
+    rawDevice->hasCustomProcess_.Set(true);
+    rawDevice->programSet_.clear();
+
+    SetupSnapShotRestoreUpstreamMocks(rawDevice, deviceSnapshot_);
+    MOCKER(LaunchAicpuKernelForCpuSo).expects(never());
+
+    rtError_t error = SnapShotProcessRestore();
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(SnapshotTest, SnapShotProcessRestore_BatchLoadCustomAicpuSo_Success)
+{
+    RawDevice* rawDevice = dynamic_cast<RawDevice*>(device_);
+    ASSERT_NE(rawDevice, nullptr);
+    rawDevice->hasCustomProcess_.Set(true);
+
+    PlainProgram* prog = CreateTestCpuProgram();
+    ASSERT_NE(prog, nullptr);
+    rawDevice->programSet_.clear();
+    rawDevice->programSet_.insert(prog);
+
+    SetupSnapShotRestoreUpstreamMocks(rawDevice, deviceSnapshot_);
+    MOCKER_CPP_VIRTUAL(rawDevice->Driver_(), &Driver::DevMemAlloc).stubs().will(invoke(DevMemAllocStub));
+    MOCKER_CPP_VIRTUAL(rawDevice->Driver_(), &Driver::MemCopySync).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(rawDevice->Driver_(), &Driver::DevMemFree).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(LaunchAicpuKernelForCpuSo).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(rawDevice->primaryStream_, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
+    rawDevice->aicpuDfxSupport_ = false;
+
+    rtError_t error = SnapShotProcessRestore();
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    rawDevice->programSet_.clear();
+    DELETE_O(prog);
+}
+
+TEST_F(SnapshotTest, SnapShotProcessRestore_BatchLoad_DevMemAllocFailed)
+{
+    RawDevice* rawDevice = dynamic_cast<RawDevice*>(device_);
+    ASSERT_NE(rawDevice, nullptr);
+    rawDevice->hasCustomProcess_.Set(true);
+
+    PlainProgram* prog = CreateTestCpuProgram();
+    ASSERT_NE(prog, nullptr);
+    rawDevice->programSet_.clear();
+    rawDevice->programSet_.insert(prog);
+
+    SetupSnapShotRestoreUpstreamMocks(rawDevice, deviceSnapshot_);
+    MOCKER_CPP_VIRTUAL(rawDevice->Driver_(), &Driver::DevMemAlloc).stubs().will(returnValue(RT_ERROR_DRV_ERR));
+    MOCKER_CPP_VIRTUAL(rawDevice->Driver_(), &Driver::DevMemFree).stubs().will(returnValue(RT_ERROR_NONE));
+
+    rtError_t error = SnapShotProcessRestore();
+    EXPECT_NE(error, RT_ERROR_NONE);
+
+    rawDevice->programSet_.clear();
+    DELETE_O(prog);
+}
+
+TEST_F(SnapshotTest, SnapShotProcessRestore_BatchLoad_LaunchFailed)
+{
+    RawDevice* rawDevice = dynamic_cast<RawDevice*>(device_);
+    ASSERT_NE(rawDevice, nullptr);
+    rawDevice->hasCustomProcess_.Set(true);
+
+    PlainProgram* prog = CreateTestCpuProgram();
+    ASSERT_NE(prog, nullptr);
+    rawDevice->programSet_.clear();
+    rawDevice->programSet_.insert(prog);
+
+    SetupSnapShotRestoreUpstreamMocks(rawDevice, deviceSnapshot_);
+    MOCKER_CPP_VIRTUAL(rawDevice->Driver_(), &Driver::DevMemAlloc).stubs().will(invoke(DevMemAllocStub));
+    MOCKER_CPP_VIRTUAL(rawDevice->Driver_(), &Driver::MemCopySync).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(rawDevice->Driver_(), &Driver::DevMemFree).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(LaunchAicpuKernelForCpuSo).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+
+    rtError_t error = SnapShotProcessRestore();
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+
+    rawDevice->programSet_.clear();
+    DELETE_O(prog);
+}
+
+TEST_F(SnapshotTest, SnapShotProcessRestore_BatchLoad_StreamSyncFailed)
+{
+    RawDevice* rawDevice = dynamic_cast<RawDevice*>(device_);
+    ASSERT_NE(rawDevice, nullptr);
+    rawDevice->hasCustomProcess_.Set(true);
+
+    PlainProgram* prog = CreateTestCpuProgram();
+    ASSERT_NE(prog, nullptr);
+    rawDevice->programSet_.clear();
+    rawDevice->programSet_.insert(prog);
+
+    SetupSnapShotRestoreUpstreamMocks(rawDevice, deviceSnapshot_);
+    MOCKER_CPP_VIRTUAL(rawDevice->Driver_(), &Driver::DevMemAlloc).stubs().will(invoke(DevMemAllocStub));
+    MOCKER_CPP_VIRTUAL(rawDevice->Driver_(), &Driver::MemCopySync).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(rawDevice->Driver_(), &Driver::DevMemFree).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(LaunchAicpuKernelForCpuSo).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(rawDevice->primaryStream_, &Stream::Synchronize)
+        .stubs()
+        .will(returnValue(RT_ERROR_STREAM_SYNC_TIMEOUT));
+
+    rtError_t error = SnapShotProcessRestore();
+    EXPECT_EQ(error, RT_ERROR_STREAM_SYNC_TIMEOUT);
+
+    rawDevice->programSet_.clear();
+    DELETE_O(prog);
+}
+
+TEST_F(SnapshotTest, SnapShotProcessRestore_SkipNonCpuProgram)
+{
+    RawDevice* rawDevice = dynamic_cast<RawDevice*>(device_);
+    ASSERT_NE(rawDevice, nullptr);
+    rawDevice->hasCustomProcess_.Set(true);
+
+    PlainProgram* prog = CreateTestCpuProgram();
+    ASSERT_NE(prog, nullptr);
+    prog->SetKernelRegType(RT_KERNEL_REG_TYPE_NON_CPU);
+    rawDevice->programSet_.clear();
+    rawDevice->programSet_.insert(prog);
+
+    SetupSnapShotRestoreUpstreamMocks(rawDevice, deviceSnapshot_);
+    MOCKER(LaunchAicpuKernelForCpuSo).expects(never());
+
+    rtError_t error = SnapShotProcessRestore();
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    rawDevice->programSet_.clear();
+    DELETE_O(prog);
+}
+
+TEST_F(SnapshotTest, SnapShotProcessRestore_SetAicpuDfx_NotSupported)
+{
+    RawDevice* rawDevice = dynamic_cast<RawDevice*>(device_);
+    ASSERT_NE(rawDevice, nullptr);
+    rawDevice->hasCustomProcess_.Set(false);
+    rawDevice->aicpuDfxSupport_ = false;
+
+    SetupSnapShotRestoreUpstreamMocks(rawDevice, deviceSnapshot_);
+    MOCKER(SetupAicpuPrintfDfx).expects(never());
+
+    rtError_t error = SnapShotProcessRestore();
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(SnapshotTest, SnapShotProcessRestore_SetAicpuDfx_ReInitFailed)
+{
+    RawDevice* rawDevice = dynamic_cast<RawDevice*>(device_);
+    ASSERT_NE(rawDevice, nullptr);
+    rawDevice->hasCustomProcess_.Set(false);
+    rawDevice->aicpuDfxSupport_ = true;
+    rawDevice->aicpuDfxSent_ = true;
+    rawDevice->aicpuPrintfAddr_ = reinterpret_cast<void*>(0x1000);
+    rawDevice->aicpuPrintfMemSize_ = 1024;
+
+    SetupSnapShotRestoreUpstreamMocks(rawDevice, deviceSnapshot_);
+    MOCKER(InitAicpuPrintf).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+
+    rtError_t error = SnapShotProcessRestore();
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+
+    rawDevice->aicpuPrintfAddr_ = nullptr;
+}
+
+TEST_F(SnapshotTest, SnapShotProcessRestore_SetAicpuDfx_SetupFailed)
+{
+    RawDevice* rawDevice = dynamic_cast<RawDevice*>(device_);
+    ASSERT_NE(rawDevice, nullptr);
+    rawDevice->hasCustomProcess_.Set(false);
+    rawDevice->aicpuDfxSupport_ = true;
+    rawDevice->aicpuDfxSent_ = true;
+    rawDevice->aicpuPrintfAddr_ = reinterpret_cast<void*>(0x1000);
+    rawDevice->aicpuPrintfMemSize_ = 1024;
+
+    SetupSnapShotRestoreUpstreamMocks(rawDevice, deviceSnapshot_);
+    MOCKER(InitAicpuPrintf).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(SetupAicpuPrintfDfx).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+
+    rtError_t error = SnapShotProcessRestore();
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+
+    rawDevice->aicpuPrintfAddr_ = nullptr;
+}
+
+TEST_F(SnapshotTest, SnapShotProcessRestore_SetAicpuDfx_Success)
+{
+    RawDevice* rawDevice = dynamic_cast<RawDevice*>(device_);
+    ASSERT_NE(rawDevice, nullptr);
+    rawDevice->hasCustomProcess_.Set(false);
+    rawDevice->aicpuDfxSupport_ = true;
+    rawDevice->aicpuDfxSent_ = true;
+    rawDevice->aicpuPrintfAddr_ = reinterpret_cast<void*>(0x1000);
+    rawDevice->aicpuPrintfMemSize_ = 1024;
+
+    SetupSnapShotRestoreUpstreamMocks(rawDevice, deviceSnapshot_);
+    MOCKER(InitAicpuPrintf).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(SetupAicpuPrintfDfx).stubs().will(returnValue(RT_ERROR_NONE));
+
+    rtError_t error = SnapShotProcessRestore();
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    rawDevice->aicpuPrintfAddr_ = nullptr;
+}
+
+TEST_F(SnapshotTest, HasCustomProcess_DefaultAndSet)
+{
+    RawDevice* rawDevice = dynamic_cast<RawDevice*>(device_);
+    ASSERT_NE(rawDevice, nullptr);
+    EXPECT_EQ(rawDevice->GetHasCustomProcess(), false);
+    rawDevice->SetHasCustomProcess(true);
+    EXPECT_EQ(rawDevice->GetHasCustomProcess(), true);
+    rawDevice->SetHasCustomProcess(false);
+    EXPECT_EQ(rawDevice->GetHasCustomProcess(), false);
+}
+
+TEST_F(SnapshotTest, GetLoadedPrograms_EmptyAndNonEmpty)
+{
+    RawDevice* rawDevice = dynamic_cast<RawDevice*>(device_);
+    ASSERT_NE(rawDevice, nullptr);
+    rawDevice->programSet_.clear();
+    EXPECT_EQ(rawDevice->GetLoadedPrograms().size(), 0U);
+
+    PlainProgram* prog = CreateTestCpuProgram();
+    ASSERT_NE(prog, nullptr);
+    rawDevice->programSet_.insert(prog);
+    auto programs = rawDevice->GetLoadedPrograms();
+    EXPECT_EQ(programs.size(), 1U);
+
+    rawDevice->programSet_.clear();
+    DELETE_O(prog);
 }

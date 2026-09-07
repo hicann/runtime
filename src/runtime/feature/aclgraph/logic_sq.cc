@@ -26,7 +26,7 @@ LogicSq::~LogicSq() noexcept
             if (sqAddrMemoryManage != nullptr) {
                 const rtError_t error =
                     sqAddrMemoryManage->FreeSqAddr(RtPtrToPtr<uint64_t*>(deviceSqeAddr_), sqMemOrderType_);
-                COND_LOG(
+                COND_LOG_WARN(
                     error != RT_ERROR_NONE, "Free logic sq device sqe addr failed, device_id=%u, retCode=%#x.",
                     device_->Id_(), static_cast<uint32_t>(error));
             }

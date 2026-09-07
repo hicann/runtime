@@ -441,7 +441,7 @@ bool Engine::ProcessPublicTask(TaskInfo* workTask, const uint32_t deviceId, uint
                 "task_id=%u endTaskId=%hu",
                 streamId, recycleStm->isHasPcieBar_, static_cast<uint32_t>(delTaskId), endTaskId);
             error = DelPublicRecycleTask(workTask, recycleStm, bindFlag, endTaskId);
-            COND_LOG(
+            COND_LOG_WARN(
                 error != RT_ERROR_NONE,
                 "Delete task failed,stream_id=%d,tail_task_id=%hu,del_task_id=%hu,"
                 "retCode=%#x.",

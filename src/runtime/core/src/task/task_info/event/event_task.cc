@@ -344,9 +344,9 @@ void RemoteEventWaitTaskUnInit(TaskInfo* const taskInfo)
 void ToCommandBodyForRemoteEventWaitTask(TaskInfo* const taskInfo, rtCommand_t* const command)
 {
     RemoteEventWaitTaskInfo* remoteEventWaitTaskInfo = &(taskInfo->u.remoteEventWaitTaskInfo);
-    COND_LOG(remoteEventWaitTaskInfo->srcMailboxPa == 0U, "srcMailboxPa_ = 0");
-    COND_LOG(remoteEventWaitTaskInfo->srcDoorbellPa == 0U, "srcDoorbellPa_ = 0");
-    COND_LOG(remoteEventWaitTaskInfo->dstDoorbellPa == 0U, "dstDoorbellPa_ = 0");
+    COND_LOG_WARN(remoteEventWaitTaskInfo->srcMailboxPa == 0U, "srcMailboxPa_ = 0");
+    COND_LOG_WARN(remoteEventWaitTaskInfo->srcDoorbellPa == 0U, "srcDoorbellPa_ = 0");
+    COND_LOG_WARN(remoteEventWaitTaskInfo->dstDoorbellPa == 0U, "dstDoorbellPa_ = 0");
     command->u.remoteEventWaitTask.srcMailboxPa = remoteEventWaitTaskInfo->srcMailboxPa;
     command->u.remoteEventWaitTask.srcDoorbellPa = remoteEventWaitTaskInfo->srcDoorbellPa;
     command->u.remoteEventWaitTask.dstDoorbellPa = remoteEventWaitTaskInfo->dstDoorbellPa;

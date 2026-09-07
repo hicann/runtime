@@ -157,7 +157,7 @@ rtError_t StreamSqCqManage::AllocDavidStreamSqCq(
         streamId, drvFlag, sqId, cqId, info, sizeof(info), RtPtrToPtr<uint32_t*>(&infoEx), sizeof(rtStreamInfoExMsg_t));
     COND_RETURN_WARN((error != RT_ERROR_NONE), error, "NormalSqCqAllocate fail, retCode=%#x.", error);
     error = device_->Driver_()->GetSqAddrInfo(device_->Id_(), device_->DevGetTsId(), sqId, sqAddr);
-    COND_LOG(
+    COND_LOG_WARN(
         error != RT_ERROR_NONE, "hal may not support get sq addr info, device_id=%u, retCode=%#x.", device_->Id_(),
         error);
     RT_LOG(

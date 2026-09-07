@@ -56,7 +56,7 @@ void EventExpandingPool::FreeBufferForEvent(void* const addr, void* const para)
 {
     Device* const dev = static_cast<Device*>(para);
     rtError_t error = dev->Driver_()->DevMemFree(addr, dev->Id_());
-    COND_LOG(
+    COND_LOG_WARN(
         error != RT_ERROR_NONE, "device mem free failed, device_id=%u, retCode=%#x!", dev->Id_(),
         static_cast<uint32_t>(error));
 }

@@ -1578,6 +1578,7 @@ rtError_t ParseSimtPrintfV2(void* addr, const size_t blockSize, Driver* curDrv, 
 
 rtError_t InitAicpuPrintf(void* addr, const size_t blockSize, Driver* curDrv)
 {
+    IsDumpAicpuBlockInfo = false;
     const uint64_t totalLen = blockSize;
     std::vector<uint8_t> hostData(totalLen, 0);
 
@@ -1625,7 +1626,6 @@ rtError_t ParseAicpuPrintf(void* addr, const size_t blockSize, Driver* curDrv, c
         "The value of readIdx %" PRIu64 " must be less than or equal to that of writeIdx %" PRIu64 ".",
         readInfo->readIdx, writeInfo->writeIdx);
     if (readInfo->readIdx == writeInfo->writeIdx) {
-        RT_LOG(RT_LOG_DEBUG, "Aicpu block info writeIdx %" PRIu64 " has no info updates.", writeInfo->writeIdx);
         return RT_ERROR_NONE;
     }
 

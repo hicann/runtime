@@ -20,6 +20,11 @@
 #include "jetty_manager.h"
 #include "aicpu_timeout_manager.h"
 #include "logic_sq_manage.hpp"
+#include "program.hpp"
+#include "stream.hpp"
+#include "osal.hpp"
+#include "aicpu_dfx.hpp"
+#include "rt_external_mem.h"
 
 namespace cce {
 namespace runtime {
@@ -179,10 +184,208 @@ rtError_t SnapShotAclGraphRestore(Device* const dev)
         }
         modelLock.Unlock();
     }
+
     err = dev->RestoreSqCqPool();
     ERROR_RETURN(err, "Restore SqCqPool failed, deviceId=%u, retCode=%#x!", deviceId, static_cast<uint32_t>(err));
     return RT_ERROR_NONE;
 }
+
+namespace {
+constexpr uint32_t MAX_BATCH_SO_NUM = 1024U;
+
+void QueryCustomAicpuProcess(Device* const dev)
+{
+    dev->SetHasCustomProcess(false);
+    rtBindHostpidInfo_t info = {};
+    info.chipId = dev->Id_();
+    info.cpType = RT_DEV_PROCESS_CP2;
+    info.hostPid = mmGetPid();
+    int32_t devPid = 0;
+    rtError_t ret = NpuDriver::QueryDevPid(&info, &devPid);
+    if (ret == RT_ERROR_NONE) {
+        dev->SetHasCustomProcess(true);
+        RT_LOG(RT_LOG_INFO, "Custom AICPU process detected, deviceId=%u, devPid=%d.", dev->Id_(), devPid);
+    }
+}
+
+void FreeTempAicpuSoReloadMem(Driver* const drv, const uint32_t devId, std::vector<void*>& devMems)
+{
+    for (void* const devMem : devMems) {
+        if (devMem == nullptr) {
+            continue;
+        }
+        const rtError_t ret = drv->DevMemFree(devMem, devId);
+        COND_LOG_WARN(
+            ret != RT_ERROR_NONE, "Free temp AICPU so reload buffer failed, deviceId=%u, addr=%p, ret=%#x.", devId,
+            devMem, static_cast<uint32_t>(ret));
+    }
+    devMems.clear();
+}
+
+bool IsCustomAicpuProgram(Program* const prog)
+{
+    if (prog == nullptr) {
+        return false;
+    }
+    if (prog->GetKernelRegType() != RT_KERNEL_REG_TYPE_CPU) {
+        return false;
+    }
+
+    const void* const soData = prog->Data();
+    const uint32_t soSize = prog->LoadSize();
+    const std::string& soName = prog->GetSoName();
+    if ((soData == nullptr) || (soSize == 0U) || soName.empty()) {
+        RT_LOG(
+            RT_LOG_DEBUG,
+            "Skip invalid custom AICPU program for reload, progId=%u, soData=%p, soSize=%u, soNameLen=%zu.",
+            prog->Id_(), soData, soSize, soName.size());
+        return false;
+    }
+    return true;
+}
+
+rtError_t BuildAicpuReloadSoBufs(
+    Device* const dev, Program* const* progs, const uint32_t batchNum, std::vector<CpuSoBuf>& soBufs,
+    std::vector<void*>& allocMem)
+{
+    for (uint32_t i = 0U; i < batchNum; i++) {
+        Program* const prog = progs[i];
+        const void* const soData = prog->Data();
+        const uint32_t soSize = prog->LoadSize();
+        void* devSoBuf = nullptr;
+        rtError_t ret = AllocAndCopyHbmBuf(dev, soData, soSize, &devSoBuf, allocMem);
+        ERROR_RETURN(
+            ret, "Prepare custom AICPU so buffer failed, deviceId=%u, progId=%u, soSize=%u, ret=%#x.", dev->Id_(),
+            prog->Id_(), soSize, static_cast<uint32_t>(ret));
+
+        const std::string& soName = prog->GetSoName();
+        void* devSoName = nullptr;
+        ret = AllocAndCopyHbmBuf(dev, soName.c_str(), soName.size(), &devSoName, allocMem);
+        ERROR_RETURN(
+            ret, "Prepare custom AICPU so name failed, deviceId=%u, progId=%u, soName=%s, ret=%#x.", dev->Id_(),
+            prog->Id_(), soName.c_str(), static_cast<uint32_t>(ret));
+
+        soBufs[i].kernelSoBuf = RtPtrToValue(devSoBuf);
+        soBufs[i].kernelSoBufLen = soSize;
+        soBufs[i].kernelSoName = RtPtrToValue(devSoName);
+        soBufs[i].kernelSoNameLen = static_cast<uint32_t>(soName.size());
+    }
+    return RT_ERROR_NONE;
+}
+
+void DumpCustomAicpuReloadArgs(
+    const uint32_t devId, const std::vector<CpuSoBuf>& soBufs, const std::vector<Program*>& aicpuPrograms,
+    const uint32_t idx)
+{
+    for (uint32_t i = 0U; i < soBufs.size(); ++i) {
+        Program* const prog = aicpuPrograms[idx + i];
+        RT_LOG(
+            RT_LOG_DEBUG,
+            "AICPU reload arg, deviceId=%u, globalIdx=%u, batchIdx=%u, soName=%s, soNameLen=%u, "
+            "devSoBuf=%p, soSize=%u, devSoName=%p.",
+            devId, idx + i, i, prog->GetSoName().c_str(), soBufs[i].kernelSoNameLen,
+            RtValueToPtr<void*>(soBufs[i].kernelSoBuf), soBufs[i].kernelSoBufLen,
+            RtValueToPtr<void*>(soBufs[i].kernelSoName));
+    }
+}
+
+rtError_t BatchLoadCustomAicpuSo(Device* const dev)
+{
+    COND_RETURN_DEBUG(
+        !dev->GetHasCustomProcess(), RT_ERROR_NONE, "No custom AICPU process, skip batchLoadsoFrombuf, deviceId=%u.",
+        dev->Id_());
+
+    const uint32_t devId = dev->Id_();
+    std::vector<Program*> programs = dev->GetLoadedPrograms();
+    std::vector<Program*> aicpuPrograms;
+    for (Program* prog : programs) {
+        if (IsCustomAicpuProgram(prog)) {
+            aicpuPrograms.push_back(prog);
+        }
+    }
+
+    COND_RETURN_INFO(aicpuPrograms.empty(), RT_ERROR_NONE, "No custom AICPU program to reload, deviceId=%u.", devId);
+
+    RT_LOG(RT_LOG_INFO, "Custom AICPU programs need reload, deviceId=%u, programNum=%zu.", devId, aicpuPrograms.size());
+    Stream* const stm = dev->GetCtrlSQStream(dev->PrimaryStream_());
+    COND_RETURN_WARN(
+        stm == nullptr, RT_ERROR_STREAM_NULL, "GetCtrlSQStream failed for batchLoadsoFrombuf, deviceId=%u.", devId);
+    Driver* const drv = dev->Driver_();
+
+    uint32_t idx = 0U;
+    rtError_t ret = RT_ERROR_NONE;
+    while (idx < aicpuPrograms.size()) {
+        const uint32_t batchNum = std::min(static_cast<uint32_t>(aicpuPrograms.size() - idx), MAX_BATCH_SO_NUM);
+
+        std::vector<CpuSoBuf> soBufs(batchNum);
+        std::vector<void*> tempDevMems;
+        const std::function<void()> recycle = [&drv, &devId, &tempDevMems]() {
+            FreeTempAicpuSoReloadMem(drv, devId, tempDevMems);
+        };
+        ScopeGuard tempMemGuard(recycle);
+
+        ret = BuildAicpuReloadSoBufs(dev, aicpuPrograms.data() + idx, batchNum, soBufs, tempDevMems);
+        ERROR_RETURN(
+            ret, "Build AICPU reload so buffers failed, deviceId=%u, batchNum=%u, ret=%#x.", devId, batchNum,
+            static_cast<uint32_t>(ret));
+
+        void* devArgsBuf = nullptr;
+        const size_t argsBufSize = sizeof(CpuSoBuf) * batchNum;
+        ret = AllocAndCopyHbmBuf(dev, soBufs.data(), argsBufSize, &devArgsBuf, tempDevMems);
+        ERROR_RETURN(
+            ret, "Prepare CpuSoBuf array failed, deviceId=%u, batchNum=%u, ret=%#x.", devId, batchNum,
+            static_cast<uint32_t>(ret));
+
+        BatchProcCpuOpFromBufArgs batchArgs = {.soNum = batchNum, .args = RtPtrToValue(devArgsBuf)};
+        rtKernelLaunchNames_t launchName = {nullptr, LOAD_CPU_SO.c_str(), ""};
+        rtArgsEx_t argsInfo = {};
+        argsInfo.args = &batchArgs;
+        argsInfo.argsSize = static_cast<uint32_t>(sizeof(BatchProcCpuOpFromBufArgs));
+        argsInfo.isNoNeedH2DCopy = 0U; // 0 is need h2d copy
+
+        RT_LOG(
+            RT_LOG_INFO, "Launch batchLoadsoFrombuf, deviceId=%u, batchNum=%u, idx=%u, devArgsBuf=%p, argsBufSize=%zu.",
+            devId, batchNum, idx, devArgsBuf, argsBufSize);
+        ret = LaunchAicpuKernelForCpuSo(&launchName, &argsInfo, stm);
+        ERROR_RETURN(
+            ret, "Launch batchLoadsoFrombuf failed, deviceId=%u, batchNum=%u, ret=%#x.", devId, batchNum,
+            static_cast<uint32_t>(ret));
+
+        ret = stm->Synchronize(false, -1);
+        ERROR_RETURN(
+            ret, "Stream sync after batchLoadsoFrombuf failed, deviceId=%u, ret=%#x.", devId,
+            static_cast<uint32_t>(ret));
+        DumpCustomAicpuReloadArgs(devId, soBufs, aicpuPrograms, idx);
+        RT_LOG(RT_LOG_INFO, "batchLoadsoFrombuf success, deviceId=%u, batchNum=%u, idx=%u.", devId, batchNum, idx);
+        idx += batchNum;
+    }
+
+    return ret;
+}
+
+rtError_t SetAicpuDfxForRestore(Device* const dev)
+{
+    COND_RETURN_INFO(
+        !dev->IsAicpuDfxSupport(), RT_ERROR_NONE, "AICPU dfx not supported, skip restore, deviceId=%u.", dev->Id_());
+
+    rtError_t ret = RT_ERROR_NONE;
+    COND_RETURN_INFO(
+        !dev->IsAicpuPrintfReady(), ret, "AICPU printf not ready, skip dfx restore, deviceId=%u.", dev->Id_());
+
+    ret = dev->ReInitAicpuPrintfMem();
+    COND_RETURN_ERROR(
+        ret != RT_ERROR_NONE, ret, "ReInitAicpuPrintfMem failed, deviceId=%u, ret=%#x.", dev->Id_(),
+        static_cast<uint32_t>(ret));
+
+    // GetPrintFifoAddrAndCreateThread 内部判空，不会重复创建线程。
+    ret = SetupAicpuPrintfDfx(dev, dev->Id_());
+    COND_RETURN_ERROR(
+        ret != RT_ERROR_NONE, ret, "SetAicpuDfx for restore failed, deviceId=%u, ret=%#x.", dev->Id_(),
+        static_cast<uint32_t>(ret));
+    RT_LOG(RT_LOG_INFO, "SetAicpuDfx for restore success, deviceId=%u.", dev->Id_());
+    return ret;
+}
+} // namespace
 
 rtError_t SinkTaskMemoryBackup(const int32_t devId)
 {
@@ -283,6 +486,7 @@ rtError_t SnapShotProcessBackup()
         if (dev == nullptr) {
             continue;
         }
+        QueryCustomAicpuProcess(dev);
         ret = ModelBackup(static_cast<int32_t>(devId));
         COND_RETURN_WITH_NOLOG(ret != RT_ERROR_NONE, ret);
     }
@@ -303,6 +507,10 @@ rtError_t SnapShotProcessRestore()
 
     ret = SnapShotResourceRestore(ctxMan);
     ERROR_RETURN(ret, "Resource Restore failed, ret=%#x.", ret);
+
+    ret = Runtime::Instance()->RestoreModule();
+    ERROR_RETURN(ret, "Module Restore failed, ret=%#x.", static_cast<uint32_t>(ret));
+
     for (uint32_t devId = 0; devId < static_cast<uint32_t>(RT_MAX_DEV_NUM); devId++) {
         Device* dev = Runtime::Instance()->GetDevice(devId, 0U);
         if (dev == nullptr) {
@@ -333,10 +541,12 @@ rtError_t SnapShotProcessRestore()
         ret = AicpuTimeoutManager::TryCloseAicpuMonitor(dev);
         ERROR_RETURN(ret, "Close AI CPU monitor failed, ret=%#x, devId=%u.", ret, devId);
 #endif
-    }
+        ret = BatchLoadCustomAicpuSo(dev);
+        ERROR_RETURN(ret, "BatchLoadCustomAicpuSo failed, ret=%#x, devId=%u.", static_cast<uint32_t>(ret), devId);
 
-    ret = Runtime::Instance()->RestoreModule();
-    ERROR_RETURN(ret, "Module Restore failed, ret=%#x.", static_cast<uint32_t>(ret));
+        ret = SetAicpuDfxForRestore(dev);
+        ERROR_RETURN(ret, "SetAicpuDfxForRestore failed, ret=%#x, devId=%u.", static_cast<uint32_t>(ret), devId);
+    }
 
     RT_LOG(RT_LOG_INFO, "the resource is restored successfully");
     return RT_ERROR_NONE;

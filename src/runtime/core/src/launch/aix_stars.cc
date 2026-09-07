@@ -545,7 +545,7 @@ void InternalLaunchKernelRecycle(
 
     if (result.handle != nullptr) {
         error = ctx->Device_()->ArgLoader_()->Release(result.handle);
-        COND_LOG(error != RT_ERROR_NONE, "argloader release failed, retCode=%#x.", error);
+        COND_LOG_WARN(error != RT_ERROR_NONE, "argloader release failed, retCode=%#x.", error);
         result.handle = nullptr;
     }
 

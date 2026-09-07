@@ -131,7 +131,7 @@ rtError_t OnlineProf::OnlineProfFree(Stream* const stm)
     deviceMem = stm->GetOnProfDeviceAddr();
     if (deviceMem != nullptr) {
         error = deviceDrv->DevMemFree(deviceMem, dev->Id_());
-        COND_LOG(
+        COND_LOG_WARN(
             error != RT_ERROR_NONE,
             "Failed to free online profiling device memory, "
             "retCode=%#x.",
@@ -141,7 +141,7 @@ rtError_t OnlineProf::OnlineProfFree(Stream* const stm)
     hostRtMem = stm->GetOnProfHostRtAddr();
     if (hostRtMem != nullptr) {
         error = deviceDrv->HostMemFree(hostRtMem);
-        COND_LOG(
+        COND_LOG_WARN(
             error != RT_ERROR_NONE, "Failed to free online profiling host runtime memory, retCode=%#x.",
             static_cast<uint32_t>(error));
     }
@@ -149,7 +149,7 @@ rtError_t OnlineProf::OnlineProfFree(Stream* const stm)
     hostTsMem = stm->GetOnProfHostTsAddr();
     if (hostTsMem != nullptr) {
         error = deviceDrv->HostMemFree(hostTsMem);
-        COND_LOG(
+        COND_LOG_WARN(
             error != RT_ERROR_NONE, "Failed to free online profiling host task scheduler memory, retCode=%#x.",
             static_cast<uint32_t>(error));
     }

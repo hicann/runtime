@@ -270,6 +270,10 @@ public:
 
     void SetAicpuProcessStopPendingStatus(const bool pending) { isAicpuProcessStopPending_.Set(pending); }
 
+    bool GetHasCustomProcess() const { return hasCustomProcess_.Value(); }
+
+    void SetHasCustomProcess(const bool flag) { hasCustomProcess_.Set(flag); }
+
     virtual rtError_t DevSetLimit(const rtLimitType_t type, const uint32_t val) = 0;
     virtual rtError_t DevSetTsId(const uint32_t taskSchId) = 0;
     virtual uint32_t DevGetTsId() const = 0;
@@ -458,6 +462,7 @@ public:
     virtual void SetAicpuDfxSent(bool flag) = 0;
     virtual std::mutex& GetAicpuDfxInitMutex() = 0;
     virtual uint32_t GetAicpuPrintfMemSize() const = 0;
+    virtual rtError_t ReInitAicpuPrintfMem() = 0;
     virtual rtError_t StoreEndGraphNotifyInfo(
         const uint32_t streamId, Model* captureModel, uint32_t endGraphNotifyPos) = 0;
     virtual rtError_t DeleteEndGraphNotifyInfo(
@@ -475,6 +480,7 @@ public:
     virtual void UnRegisterProgram(Program* prog) = 0;
     virtual bool ProgramSetMutexTryLock() = 0;
     virtual void ProgramSetMutexUnLock() = 0;
+    virtual std::vector<Program*> GetLoadedPrograms() = 0;
     virtual void PushFftsPlusArgHandle(void* argHandle) = 0;
     virtual void FreeFftsPlusArgHandleCache() = 0;
     virtual rtError_t RestoreSqCqPool() = 0;
@@ -499,6 +505,7 @@ private:
     bool isDoingRecycling_{false};
     Atomic<bool> isAicpuProcessStopPending_{false};
     Atomic<bool> isAicpuMonitorClosed_{false};
+    Atomic<bool> hasCustomProcess_{false};
     uint8_t argStreamNum_{0};
     std::mutex devErrProLock_;
     std::mutex argStreamMutex_;

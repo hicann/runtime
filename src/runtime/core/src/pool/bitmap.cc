@@ -18,7 +18,7 @@ constexpr uint32_t minAvailableIdCountTh = 1024U;
 Bitmap::Bitmap(const uint32_t maxIdCnt)
     : NoCopy(), freeBitmap_(nullptr), maxIdCount_(maxIdCnt), allocedCnt_(0U), lastAllocIdx_(0U)
 {
-    COND_LOG((maxIdCnt == 0U), "Bitmap maxId Count should be larger than 0, current maxIdCount is 0");
+    COND_LOG_WARN((maxIdCnt == 0U), "Bitmap maxId Count should be larger than 0, current maxIdCount is 0");
 }
 
 rtError_t Bitmap::AllocBitmap()

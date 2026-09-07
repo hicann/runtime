@@ -143,7 +143,7 @@ rtError_t NpuDriver::EschedCreateGrpEx(const uint32_t devId, const uint32_t maxT
         &halEschedCreateGrpEx == nullptr, RT_ERROR_DRV_NOT_SUPPORT, "[drv api] halEschedCreateGrpEx does not exist");
     struct esched_grp_para grpPara = {};
     errno_t rc = memset_s(&grpPara, sizeof(esched_grp_para), 0, sizeof(esched_grp_para));
-    COND_LOG(rc != EOK, "memset_s failed, size=%zu(bytes), retCode=%d!", sizeof(esched_grp_para), rc);
+    COND_LOG_WARN(rc != EOK, "memset_s failed, size=%zu(bytes), retCode=%d!", sizeof(esched_grp_para), rc);
     grpPara.type = GRP_TYPE_BIND_DP_CPU;
     grpPara.threadNum = maxThreadNum;
     rc = strcpy_s(grpPara.grp_name, sizeof(grpPara.grp_name), "stmSyncEGrp");

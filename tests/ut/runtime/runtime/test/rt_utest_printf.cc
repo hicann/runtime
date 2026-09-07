@@ -247,6 +247,43 @@ TEST_F(PrintfTest, TestInitAicpuPrintf_LayoutAndNullDriver)
     rtDeviceReset(0);
 }
 
+TEST_F(PrintfTest, TestReInitAicpuPrintfMem_AddrNull)
+{
+    rtError_t rtError = rtSetDevice(0);
+    EXPECT_EQ(rtError, RT_ERROR_NONE);
+    RawDevice* dev = (RawDevice*)((Runtime*)Runtime::Instance())->GetDevice(0U, 0U);
+    ASSERT_NE(dev, nullptr);
+
+    dev->aicpuPrintfAddr_ = nullptr;
+    rtError = dev->ReInitAicpuPrintfMem();
+    EXPECT_EQ(rtError, RT_ERROR_INVALID_VALUE);
+
+    rtDeviceReset(0);
+}
+
+TEST_F(PrintfTest, TestReInitAicpuPrintfMem_Success)
+{
+    rtError_t rtError = rtSetDevice(0);
+    EXPECT_EQ(rtError, RT_ERROR_NONE);
+    RawDevice* dev = (RawDevice*)((Runtime*)Runtime::Instance())->GetDevice(0U, 0U);
+    ASSERT_NE(dev, nullptr);
+
+    const uint32_t printfMemSize = 1024U * 1024U;
+    static std::vector<uint8_t> printfMem(printfMemSize, 0);
+    dev->aicpuPrintfAddr_ = printfMem.data();
+    dev->aicpuPrintfMemSize_ = printfMemSize;
+    dev->aicpuPrintTlvCnt_.Set(100U);
+
+    cmodelDrvMemcpy_flag = 1;
+    rtError = dev->ReInitAicpuPrintfMem();
+    EXPECT_EQ(rtError, RT_ERROR_NONE);
+    EXPECT_EQ(dev->aicpuPrintTlvCnt_.Value(), 0U);
+
+    cmodelDrvMemcpy_flag = 0;
+    dev->aicpuPrintfAddr_ = nullptr;
+    rtDeviceReset(0);
+}
+
 TEST_F(PrintfTest, TestInitAicpuPrintInfo_FirstAllocAndSkip)
 {
     rtError_t rtError = rtSetDevice(0);

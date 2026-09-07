@@ -1242,7 +1242,7 @@ void RawDevice::FreeBufferForSqIdMem(void* const addr, void* const para)
 {
     Device* const dev = static_cast<Device*>(para);
     const rtError_t error = dev->Driver_()->DevMemFree(addr, dev->Id_());
-    COND_LOG(
+    COND_LOG_WARN(
         error != RT_ERROR_NONE, "mem free failed, device_id=%u, retCode=%#x!", dev->Id_(),
         static_cast<uint32_t>(error));
 }
@@ -2786,6 +2786,17 @@ rtError_t RawDevice::InitAicpuPrintInfo() { return InitAicpuPrintInfoImpl(this);
 rtError_t RawDevice::ParseAicpuPrintInfo() { return ParseAicpuPrintInfoImpl(this); }
 
 rtError_t RawDevice::CheckAicpuDfxSupport() { return CheckAicpuDfxSupportImpl(this); }
+
+rtError_t RawDevice::ReInitAicpuPrintfMem()
+{
+    if (aicpuPrintfAddr_ == nullptr) {
+        RT_LOG(RT_LOG_ERROR, "aicpuPrintfAddr_ is null, cannot reinit, deviceId=%u.", deviceId_);
+        return RT_ERROR_INVALID_VALUE;
+    }
+    SetAicpuDfxSent(false);
+    aicpuPrintTlvCnt_.Set(0U);
+    return InitAicpuPrintf(aicpuPrintfAddr_, static_cast<size_t>(aicpuPrintfMemSize_), driver_);
+}
 
 } // namespace runtime
 } // namespace cce

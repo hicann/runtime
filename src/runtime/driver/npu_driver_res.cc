@@ -593,7 +593,7 @@ rtError_t NpuDriver::ResourceReset(const uint32_t deviceId, const uint32_t tsId,
     COND_RETURN_WARN(
         &halResourceConfig == nullptr, RT_ERROR_DRV_NOT_SUPPORT, "[drv api] halResourceConfig does not exist");
     const errno_t rc = memset_s(&configInfo, sizeof(halResourceConfigInfo), 0, sizeof(halResourceConfigInfo));
-    COND_LOG(rc != EOK, "memset_s failed, size=%zu(bytes), retCode=%d!", sizeof(halResourceConfigInfo), rc);
+    COND_LOG_WARN(rc != EOK, "memset_s failed, size=%zu(bytes), retCode=%d!", sizeof(halResourceConfigInfo), rc);
     configInfo.prop = DRV_ID_RESET;
 
     const drvError_t ret = halResourceConfig(deviceId, &in, &configInfo);
@@ -1074,7 +1074,7 @@ rtError_t NpuDriver::StreamEnableStmSyncEsched(
     COND_RETURN_WARN(
         &halResourceConfig == nullptr, RT_ERROR_DRV_NOT_SUPPORT, "[drv api] halResourceConfig does not exist");
     const errno_t rc = memset_s(&configInfo, sizeof(halResourceConfigInfo), 0, sizeof(halResourceConfigInfo));
-    COND_LOG(rc != EOK, "memset_s failed, size=%zu(bytes), retCode=%d!", sizeof(halResourceConfigInfo), rc);
+    COND_LOG_WARN(rc != EOK, "memset_s failed, size=%zu(bytes), retCode=%d!", sizeof(halResourceConfigInfo), rc);
     configInfo.prop = DRV_STREAM_ENABLE_EVENT;
     configInfo.value[0U] = grpId;
     configInfo.value[1U] = eventId;

@@ -1308,7 +1308,8 @@ RtKernel* GetKernels(rtElfData* const elfData)
             }
             (void)memset_s(kernels[kernelNum].name, len + 1U, 0, len + 1U);
             const errno_t rc = strncpy_s(kernels[kernelNum].name, len + 1U, stringTab + psym->st_name, strTabSize);
-            COND_LOG(rc != EOK, "strncpy_s failed, size=%zu, strTabSize=%u, retCode=%d.", len + 1U, strTabSize, rc);
+            COND_LOG_WARN(
+                rc != EOK, "strncpy_s failed, size=%zu, strTabSize=%u, retCode=%d.", len + 1U, strTabSize, rc);
             kernels[kernelNum].offset = static_cast<int32_t>(psym->st_value);
             kernels[kernelNum].length = static_cast<int32_t>(psym->st_size);
 

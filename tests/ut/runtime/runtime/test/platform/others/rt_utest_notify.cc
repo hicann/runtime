@@ -474,3 +474,49 @@ TEST_F(NotifyTest, RevisedWait_EventPtrCanBeNull)
     (void)((Runtime*)Runtime::Instance())->PrimaryContextRelease(0);
     driver->chipType_ = CHIP_CLOUD;
 }
+
+TEST_F(NotifyTest, ReAllocId_IdNotAllocated_Skip)
+{
+    int32_t device_id = 0;
+    uint32_t tsId = 0;
+
+    RefObject<Context*>* refObject = (RefObject<Context*>*)((Runtime*)Runtime::Instance())->PrimaryContextRetain(0);
+    Context* ctx = refObject->GetVal();
+    EXPECT_NE(ctx, (Context*)NULL);
+
+    Notify* notify = new Notify(device_id, tsId);
+    notify->notifyid_ = MAX_UINT32_NUM;
+
+    MOCKER_CPP_VIRTUAL(ctx->Device_()->Driver_(), &Driver::ReAllocResourceId).expects(never());
+
+    rtError_t error = notify->ReAllocId();
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    delete notify;
+    (void)((Runtime*)Runtime::Instance())->PrimaryContextRelease(0);
+    GlobalMockObject::verify();
+}
+
+TEST_F(NotifyTest, ReAllocId_IdAllocated_Success)
+{
+    int32_t device_id = 0;
+    uint32_t tsId = 0;
+
+    MOCKER(halResourceIdAlloc).stubs().will(invoke(testResourceIdAlloc));
+    RefObject<Context*>* refObject = (RefObject<Context*>*)((Runtime*)Runtime::Instance())->PrimaryContextRetain(0);
+    Context* ctx = refObject->GetVal();
+    EXPECT_NE(ctx, (Context*)NULL);
+
+    Notify* notify = new Notify(device_id, tsId);
+    notify->Setup();
+    EXPECT_NE(notify->GetNotifyId(), MAX_UINT32_NUM);
+
+    MOCKER_CPP_VIRTUAL(ctx->Device_()->Driver_(), &Driver::ReAllocResourceId).stubs().will(returnValue(RT_ERROR_NONE));
+
+    rtError_t error = notify->ReAllocId();
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    delete notify;
+    (void)((Runtime*)Runtime::Instance())->PrimaryContextRelease(0);
+    GlobalMockObject::verify();
+}

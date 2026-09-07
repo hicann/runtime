@@ -112,7 +112,7 @@ rtError_t NpuDriver::MallocHostSharedMemory(
         RT_LOG(RT_LOG_DEBUG, "malloc host shared memory mmap success.");
 
         const int32_t ret = madvise(out->ptr, in->size, MADV_HUGEPAGE);
-        COND_LOG(ret != 0, "madvise failed, size=%" PRIu64 "(bytes), retCode=%d.", in->size, ret);
+        COND_LOG_WARN(ret != 0, "madvise failed, size=%" PRIu64 "(bytes), retCode=%d.", in->size, ret);
 
         if (retVal == -1) {
             const uint64_t loop = (in->size / PAGE_SIZE) + (((in->size % PAGE_SIZE) == 0U) ? 0U : 1U);

@@ -825,3 +825,85 @@ TEST_F(ProgramTest, CopySoAndNameToCurrentDevice_StoreKernelLiteralNameFailed)
 
     delete program;
 }
+
+static rtError_t DevMemAllocSuccessStub(
+    Driver* drv, void** dptr, uint64_t size, rtMemType_t type, uint32_t deviceId, uint16_t moduleId, bool isLogError,
+    bool readOnlyFlag, bool starsTillingFlag, bool isNewApi, bool cpOnlyFlag)
+{
+    UNUSED(drv);
+    UNUSED(size);
+    UNUSED(type);
+    UNUSED(deviceId);
+    UNUSED(moduleId);
+    UNUSED(isLogError);
+    UNUSED(readOnlyFlag);
+    UNUSED(starsTillingFlag);
+    UNUSED(isNewApi);
+    UNUSED(cpOnlyFlag);
+    *dptr = reinterpret_cast<void*>(0x1000);
+    return RT_ERROR_NONE;
+}
+
+TEST_F(ProgramTest, AllocAndCopyHbmBuf_Success)
+{
+    Context* ctx = Runtime::Instance()->CurrentContext();
+    ASSERT_NE(ctx, nullptr);
+    Device* device = ctx->Device_();
+    ASSERT_NE(device, nullptr);
+
+    uint8_t hostBuf[] = {0x01, 0x02, 0x03, 0x04};
+    void* devBuf = nullptr;
+    std::vector<void*> allocMem;
+
+    MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::DevMemAlloc).stubs().will(invoke(DevMemAllocSuccessStub));
+    MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::MemCopySync).stubs().will(returnValue(RT_ERROR_NONE));
+
+    rtError_t ret = AllocAndCopyHbmBuf(device, hostBuf, sizeof(hostBuf), &devBuf, allocMem);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_NE(devBuf, nullptr);
+    EXPECT_EQ(allocMem.size(), 1U);
+
+    MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::DevMemFree).stubs().will(returnValue(RT_ERROR_NONE));
+    for (void* mem : allocMem) {
+        device->Driver_()->DevMemFree(mem, device->Id_());
+    }
+}
+
+TEST_F(ProgramTest, AllocAndCopyHbmBuf_DevMemAllocFailed)
+{
+    Context* ctx = Runtime::Instance()->CurrentContext();
+    ASSERT_NE(ctx, nullptr);
+    Device* device = ctx->Device_();
+    ASSERT_NE(device, nullptr);
+
+    uint8_t hostBuf[] = {0x01};
+    void* devBuf = nullptr;
+    std::vector<void*> allocMem;
+
+    MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::DevMemAlloc).stubs().will(returnValue(RT_ERROR_DRV_ERR));
+
+    rtError_t ret = AllocAndCopyHbmBuf(device, hostBuf, sizeof(hostBuf), &devBuf, allocMem);
+    EXPECT_NE(ret, RT_ERROR_NONE);
+    EXPECT_EQ(allocMem.size(), 0U);
+}
+
+TEST_F(ProgramTest, AllocAndCopyHbmBuf_MemCopySyncFailed)
+{
+    Context* ctx = Runtime::Instance()->CurrentContext();
+    ASSERT_NE(ctx, nullptr);
+    Device* device = ctx->Device_();
+    ASSERT_NE(device, nullptr);
+
+    uint8_t hostBuf[] = {0x01, 0x02};
+    void* devBuf = nullptr;
+    std::vector<void*> allocMem;
+
+    MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::DevMemAlloc).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::MemCopySync).stubs().will(returnValue(RT_ERROR_DRV_ERR));
+    MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::DevMemFree).stubs().will(returnValue(RT_ERROR_NONE));
+
+    rtError_t ret = AllocAndCopyHbmBuf(device, hostBuf, sizeof(hostBuf), &devBuf, allocMem);
+    EXPECT_NE(ret, RT_ERROR_NONE);
+    EXPECT_EQ(devBuf, nullptr);
+    EXPECT_EQ(allocMem.size(), 0U);
+}

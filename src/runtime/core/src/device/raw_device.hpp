@@ -509,6 +509,7 @@ public:
     uint32_t GetAicpuPrintfMemSize() const override { return aicpuPrintfMemSize_; }
     uint64_t GetAicpuPrintTlvCnt() const override { return aicpuPrintTlvCnt_.Value(); }
     void AddAicpuPrintTlvCnt(uint64_t val) const override { aicpuPrintTlvCnt_.Add(val); }
+    rtError_t ReInitAicpuPrintfMem() override;
 
     rtError_t StoreEndGraphNotifyInfo(
         const uint32_t streamId, Model* captureModel, uint32_t endGraphNotifyPos) override;
@@ -560,6 +561,11 @@ public:
     void UnregisterAllProgram();
     bool ProgramSetMutexTryLock() override { return programMtx_.try_lock(); }
     void ProgramSetMutexUnLock() override { programMtx_.unlock(); }
+    std::vector<Program*> GetLoadedPrograms() override
+    {
+        const std::lock_guard<std::mutex> lk(programMtx_);
+        return {programSet_.begin(), programSet_.end()};
+    }
     void PushFftsPlusArgHandle(void* argHandle) override;
     void FreeFftsPlusArgHandleCache() override;
 

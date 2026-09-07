@@ -3202,13 +3202,13 @@ rtError_t Runtime::PrepareDeviceRetain(
     if (DlogReportStart != nullptr) {
         RT_LOG(RT_LOG_INFO, "[dlog api] DlogReportStart exist.");
         const rtError_t error = DlogReportStart(static_cast<int32_t>(devId), LOG_SAVE_MODE_DEF_RUN);
-        COND_LOG(error != RT_ERROR_NONE, "call DlogReportStart api failed, retCode=%#x devId=%u.", error, devId);
+        COND_LOG_WARN(error != RT_ERROR_NONE, "call DlogReportStart api failed, retCode=%#x devId=%u.", error, devId);
     }
     errorTrace = RT_ERROR_NONE;
     if (AtraceReportStart != nullptr) {
         RT_LOG(RT_LOG_INFO, "[dlog api] AtraceReportStart exist.");
         errorTrace = AtraceReportStart(static_cast<int32_t>(devId));
-        COND_LOG(
+        COND_LOG_WARN(
             errorTrace != RT_ERROR_NONE, "call AtraceReportStart api failed, retCode=%#x devId=%u.", errorTrace, devId);
     }
     DeviceStateCallbackManager::Instance().Notify(devId, false, DEV_CB_POS_FRONT, RT_DEVICE_STATE_SET_PRE);

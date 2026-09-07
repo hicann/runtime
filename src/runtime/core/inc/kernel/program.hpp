@@ -23,6 +23,27 @@ namespace cce {
 namespace runtime {
 const std::string LOAD_CPU_SO = "batchLoadsoFrombuf";
 const std::string DELETE_CPU_SO = "deleteCustOp";
+
+#pragma pack(push, 1)
+struct CpuSoBuf {
+    uint64_t kernelSoBuf;
+    uint32_t kernelSoBufLen;
+    uint64_t kernelSoName;
+    uint32_t kernelSoNameLen;
+};
+
+struct BatchProcCpuOpFromBufArgs {
+    uint32_t soNum;
+    uint64_t args;
+};
+#pragma pack(pop)
+
+class Device;
+
+rtError_t AllocAndCopyHbmBuf(
+    Device* const dev, const void* const hostBuf, const size_t bufSize, void** const devBuf,
+    std::vector<void*>& allocMem);
+
 class Context;
 class Module;
 // The kernels program to be execuced on device cores. A program contains one

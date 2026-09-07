@@ -152,7 +152,7 @@ void SqAddrMemoryOrder::DrvFreeSqAddr(void* const addr, void* const para)
     COND_RETURN_WARN(para == nullptr, , "para is null");
     Device* const device = RtPtrToPtr<Device*, void*>(para);
     const rtError_t error = device->Driver_()->DevMemFree(addr, device->Id_());
-    COND_LOG(error != RT_ERROR_NONE, "device mem free sqAddr failed, retCode=%#x", static_cast<uint32_t>(error));
+    COND_LOG_WARN(error != RT_ERROR_NONE, "device mem free sqAddr failed, retCode=%#x", static_cast<uint32_t>(error));
 }
 
 rtError_t SqAddrMemoryOrder::AllocSqAddr(const uint32_t memOrderType, uint64_t** sqAddr)
