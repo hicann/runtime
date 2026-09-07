@@ -1096,10 +1096,16 @@ TEST_F(EP_ALOG_HOST_FUNC_UTEST, AcllogCheckDebugLogLevelInterface)
 
     EXPECT_EQ(0, acllogCheckDebugLevel(0xff00, DLOG_DEBUG));
     EXPECT_EQ(1, acllogCheckDebugLevel(0xff00, DLOG_INFO));
+    EXPECT_EQ(1, acllogCheckDebugLevel(0xff00, DLOG_ERROR));
     EXPECT_EQ(1, acllogCheckDebugLevel(0xffff, DLOG_WARN));
     EXPECT_EQ(1, acllogCheckDebugLevel(0xffff, DLOG_ERROR));
+    EXPECT_EQ(1, acllogCheckDebugLevel(SLOG, DLOG_ERROR));
     EXPECT_EQ(0, acllogCheckDebugLevel(0xff00, DLOG_NULL + 1));
-    EXPECT_EQ(1, acllogCheckDebugLevel(0xff00 | RUN_LOG_MASK, DLOG_INFO));
+    EXPECT_EQ(0, acllogCheckDebugLevel(0xff00 | DEBUG_LOG_MASK, DLOG_INFO));
+    EXPECT_EQ(0, acllogCheckDebugLevel(0xff00 | DEBUG_LOG_MASK, DLOG_ERROR));
+    EXPECT_EQ(0, acllogCheckDebugLevel(SLOG | DEBUG_LOG_MASK, DLOG_ERROR));
+    EXPECT_EQ(0, acllogCheckDebugLevel(0xff00 | RUN_LOG_MASK, DLOG_INFO));
+    EXPECT_EQ(0, acllogCheckDebugLevel(0xff00 | RUN_LOG_MASK, DLOG_ERROR));
     EXPECT_EQ(0, acllogCheckDebugLevel(0x1 | RUN_LOG_MASK, DLOG_INFO));
 
     DlogDestructor();
@@ -1115,9 +1121,11 @@ TEST_F(EP_ALOG_HOST_FUNC_UTEST, AcllogPrintUserModuleId)
 
     acllogRecord(0xff00, DLOG_INFO, "user module log %d", 1);
     CallAcllogVaList(0xffff, DLOG_WARN, "user va log %d", 2);
+    acllogRecord(0xff00 | DEBUG_LOG_MASK, DLOG_INFO, "user module debug log %d", 3);
+    CallAcllogVaList(0xffff | DEBUG_LOG_MASK, DLOG_WARN, "user va debug log %d", 4);
 
     DlogDestructor();
-    EXPECT_EQ(2, DlogCheckHostPrintNum(PATH_ROOT, "debug"));
+    EXPECT_EQ(4, DlogCheckHostPrintNum(PATH_ROOT, "debug"));
     unsetenv("ASCEND_GLOBAL_LOG_LEVEL");
     unsetenv("ASCEND_PROCESS_LOG_PATH");
 }

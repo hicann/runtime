@@ -610,6 +610,8 @@ static bool IsAcllogLogTypeMask(uint32_t typeMask)
            (typeMask == SECURITY_LOG_MASK) || (typeMask == STDOUT_LOG_MASK);
 }
 
+static bool IsAcllogCheckLogTypeMask(uint32_t typeMask) { return typeMask == 0U; }
+
 static bool IsAcllogUserModuleId(uint32_t moduleId)
 {
     return (moduleId >= ACLLOG_USER_MODULE_ID_MIN) && (moduleId <= ACLLOG_USER_MODULE_ID_MAX);
@@ -630,7 +632,7 @@ static bool IsAcllogValidModuleId(int32_t moduleId)
 
 extern "C" LOG_FUNC_VISIBILITY __attribute((weak)) int32_t acllogCheckDebugLevel(int32_t moduleId, int32_t logLevel)
 {
-    if (!IsAcllogValidModuleId(moduleId)) {
+    if (!IsAcllogValidModuleId(moduleId) || !IsAcllogCheckLogTypeMask(GetAcllogLogTypeMask(moduleId))) {
         return FALSE;
     }
     const uint32_t typeMask = GetAcllogLogTypeMask(moduleId);

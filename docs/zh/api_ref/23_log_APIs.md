@@ -336,7 +336,7 @@ int32_t acllogCheckDebugLevel(int32_t moduleId, int32_t logLevel)
 
 | 参数 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| moduleId | 输入 | 用户模块ID，取值范围为`0xff00`~`0xffff`。如需校验运行日志级别，可传入`moduleId \| RUN_LOG_MASK`。 |
+| moduleId | 输入 | 用户模块ID，取值范围为`0xff00`~`0xffff`。 |
 | logLevel | 输入 | 日志级别，宏定义请参见[数据类型定义](#数据类型定义)。 |
 
 ### 返回值
