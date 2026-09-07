@@ -2756,6 +2756,15 @@ rtError_t ApiErrorDecorator::MemcpyAsyncCheckLocation(
     /* 2) check memory copy kind and real location */
     const uint32_t runMode = curCtx->Device_()->Driver_()->GetRunMode();
     if ((checkKind) && (runMode == RT_RUN_MODE_ONLINE)) {
+        COND_RETURN_AND_MSG_OUTER(
+            (copyKind == RT_MEMCPY_ADDR_DEVICE_TO_DEVICE) &&
+                ((srcLocationType != RT_MEMORY_LOC_DEVICE) || (dstLocationType != RT_MEMORY_LOC_DEVICE)),
+            RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, "Checking kind and location for asynchronous memory copy",
+            "src or dst",
+            RtFmtMsg(
+                "The parameter copyKind is RT_MEMCPY_ADDR_DEVICE_TO_DEVICE(5), but the src location %s"
+                " and dst location %s are not both RT_MEMORY_LOC_DEVICE(1)",
+                MemLocationTypeToString(srcLocationType).c_str(), MemLocationTypeToString(dstLocationType).c_str()));
         error = MemcpyKindAutoCorrect(srcLocationType, dstLocationType, &copyKind);
         COND_RETURN_ERROR_MSG_CALL(
             ERR_MODULE_GE, error != RT_ERROR_NONE, error,
