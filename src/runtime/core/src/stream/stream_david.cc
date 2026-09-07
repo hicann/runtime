@@ -1411,6 +1411,12 @@ void DavidStream::ArgReleaseSingleTask(TaskInfo* const taskInfo, bool freeStmPoo
             if (argManage_ != nullptr) {
                 argManage_->RecycleDevLoader(commDavinciInfo->argHandle);
             }
+            LaunchParam& launchParam = taskInfo->u.aicTaskInfo.launchParam;
+            if (launchParam.placeHoderPtr != nullptr) {
+                delete[] launchParam.placeHoderPtr;
+                launchParam.placeHoderPtr = nullptr;
+                launchParam.placeHoderNum = 0U;
+            }
         }
 
         commDavinciInfo->argHandle = nullptr;

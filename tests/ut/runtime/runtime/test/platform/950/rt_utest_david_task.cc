@@ -2377,6 +2377,7 @@ TEST_F(TaskTestDavid, memcpy_async_batch_ub_dma_test)
 
     // not ub: copyType=D2D_SDMA, not UB DMA type
     InitByStream(&task, stm);
+    task.type = TS_TASK_TYPE_MEMCPY;
     task.u.memcpyAsyncTaskInfo.copyType = RT_MEMCPY_DIR_D2D_SDMA;
     AsyncDmaBatchInfo batchInfo1 = {dsts, srcs, sizes, count, 0, 0};
     error = MemcpyAsyncBatchTaskInit(&task, batchInfo1);

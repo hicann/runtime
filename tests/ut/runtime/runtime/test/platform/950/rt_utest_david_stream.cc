@@ -1422,3 +1422,21 @@ TEST_F(DavidStreamTest, BackupTaskArgHandle_Normal)
 
     delete stream;
 }
+
+TEST_F(DavidStreamTest, ArgReleaseSingleTask_AicoreReleaseLaunchParam)
+{
+    DavidStream* stream = new DavidStream(device_, 0, 0, nullptr);
+    TaskInfo taskInfo = {0};
+    taskInfo.stream = stream;
+    taskInfo.type = TS_TASK_TYPE_KERNEL_AICORE;
+    taskInfo.u.aicTaskInfo.launchParam.placeHoderPtr = new (std::nothrow) rtHostInputInfo_t[2];
+    ASSERT_NE(taskInfo.u.aicTaskInfo.launchParam.placeHoderPtr, nullptr);
+    taskInfo.u.aicTaskInfo.launchParam.placeHoderNum = 2U;
+
+    stream->ArgReleaseSingleTask(&taskInfo, false);
+
+    EXPECT_EQ(taskInfo.u.aicTaskInfo.launchParam.placeHoderPtr, nullptr);
+    EXPECT_EQ(taskInfo.u.aicTaskInfo.launchParam.placeHoderNum, 0U);
+
+    delete stream;
+}
