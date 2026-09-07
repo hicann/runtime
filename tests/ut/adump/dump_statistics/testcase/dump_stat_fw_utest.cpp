@@ -411,6 +411,32 @@ TEST_F(KfcDumpServer_UT, InitKfcDumpInfo_MsgQSizeScalesWithCoreNum)
     EXPECT_FALSE(AdumpStatsOpInitStatus());
 }
 
+// ---------------------------------------------------------------------------
+// deviceId 透传语义（检视意见：透传行为需有测试保护）
+// host 侧 deviceId 来自 rtGetDeviceIDs（逻辑 Id），单机场景下转换必然失败，
+// devId 必须回退为原始逻辑 Id 下发；虚拟化/集群场景下转换成功，用转换结果。
+// ---------------------------------------------------------------------------
+// 单机场景（默认桩状态：转换失败）：Init 下发给 halSqCqQuery 的 devId 必须与
+// streamInfo.deviceId 完全一致 —— 即"转换失败回退原值"这一透传语义成立
+TEST_F(KfcDumpServer_UT, InitKfcDumpInfo_DevIdPassthroughWhenConvertFail)
+{
+    StubKFCDumpParam kfcDumpParam;
+    kfcDumpParam.initParam.streamInfo.deviceId = 3; // 非 0 值，避免与桩默认值碰撞
+    EXPECT_EQ(KFC_DUMP_SUCCESS, AdumpStatsOpSrvInit(&kfcDumpParam.initParam));
+    EXPECT_EQ(kfcDumpParam.initParam.streamInfo.deviceId, GetStubLastQueriedDevId());
+}
+
+// 转换成功场景：devId 必须使用转换结果（桩模拟本地编号为 hostId+1），
+// 防止"转换成功却仍透传原值"的回归
+TEST_F(KfcDumpServer_UT, InitKfcDumpInfo_DevIdUsesConvertedWhenConvertSucceed)
+{
+    StubKFCDumpParam kfcDumpParam;
+    kfcDumpParam.initParam.streamInfo.deviceId = 3;
+    SetStubDevIdConvertRet(DRV_ERROR_NONE);
+    EXPECT_EQ(KFC_DUMP_SUCCESS, AdumpStatsOpSrvInit(&kfcDumpParam.initParam));
+    EXPECT_EQ(kfcDumpParam.initParam.streamInfo.deviceId + 1U, GetStubLastQueriedDevId());
+}
+
 TEST_F(KfcDumpServer_UT, InitKfcDumpInfo_InitArgsIsNullptr)
 {
     EXPECT_EQ(KFC_DUMP_E_PARA, AdumpStatsOpSrvInit(nullptr));
@@ -696,15 +722,6 @@ TEST_F(KfcDumpServer_UT, AddOneStatDumpTask_V1AndV2)
     hwts_kernel_sqe_t sqeV2 = {};
     AddOneStatDumpTaskV2(reinterpret_cast<uint8_t*>(&sqeV2), &kfcDumpParam.initParam, &kfcDumpParam.dumpContext);
     KfcDumpPrintf::PrintSqeV2(reinterpret_cast<uint8_t*>(&sqeV2));
-}
-
-// Init 阶段：devId 转换失败
-TEST_F(KfcDumpServer_UT, InitKfcDumpInfo_DevIdConvertFail)
-{
-    StubKFCDumpParam kfcDumpParam;
-    SetStubDevIdConvertFail(true);
-    EXPECT_EQ(KFC_DUMP_E_DRIVE, AdumpStatsOpSrvInit(&kfcDumpParam.initParam));
-    EXPECT_FALSE(AdumpStatsOpInitStatus());
 }
 
 // Init 阶段：查询 SQ 基址 / 深度 / head / tail 分别失败

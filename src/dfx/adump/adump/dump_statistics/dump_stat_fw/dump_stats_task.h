@@ -17,7 +17,7 @@
 #include "ascend_hal_define.h"
 
 extern "C" {
-drvError_t __attribute__((weak)) drvGetLocalDevIDByHostDevID(uint32_t host_udevid, uint32_t* localDevid);
+drvError_t __attribute__((weak)) drvGetLocalDevIDByHostDevID(uint32_t hostDevId, uint32_t* localDevId);
 }
 namespace kfc_dump_stats {
 constexpr uint64_t LOW_ADDR_MASK = 0xFFFFFFFF;

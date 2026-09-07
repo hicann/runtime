@@ -57,16 +57,13 @@ KfcDumpResult InitSqCqFunction()
     return KFC_DUMP_SUCCESS;
 }
 
-KfcDumpResult KfcDumpProcess::InitKfcDumpInfo(KfcDumpOpInitParam* dumpParam)
+static KfcDumpResult CheckInitParam(const KfcDumpOpInitParam* dumpParam)
 {
-    KfcDumpPrintf::PrintKfcDumpInitParam(dumpParam);
-    g_isInitialized = false;
     IDE_CTRL_VALUE_FAILED(
         dumpParam->kfcWorkSpace.outputSize >= STAT_LEN, return KFC_DUMP_E_PARA,
         "Output buffer size[%lu] is less than the required statistics length[%zu]", dumpParam->kfcWorkSpace.outputSize,
         STAT_LEN);
-    // 不能用 constexpr：vectorCoreNum 是运行期入参。msgQ 布局为
-    // msgBody + syncSpace(每核 SYNC_SPACE_BYTES_PER_CORE) + 尾部 KfcDumpContext，故下限随核数变化。
+    // msgQ 布局为msgBody + syncSpace(每核 SYNC_SPACE_BYTES_PER_CORE) + 尾部 KfcDumpContext，故下限随核数变化。
     const uint64_t minMsgQSize =
         MSG_BODY_SIZE + dumpParam->config.vectorCoreNum * SYNC_SPACE_BYTES_PER_CORE + sizeof(KfcDumpContext);
     IDE_CTRL_VALUE_FAILED(
@@ -76,22 +73,33 @@ KfcDumpResult KfcDumpProcess::InitKfcDumpInfo(KfcDumpOpInitParam* dumpParam)
         dumpParam->config.vectorCoreNum != 0U && dumpParam->config.ubSize != 0U, return KFC_DUMP_E_PARA,
         "Invalid platform config, vectorCoreNum[%lu] and ubSize[%lu] must be positive", dumpParam->config.vectorCoreNum,
         dumpParam->config.ubSize);
+    return KFC_DUMP_SUCCESS;
+}
 
+static void FillStreamCtx(KfcDumpOpInitParam* dumpParam)
+{
     g_dumpParam = *dumpParam;
     g_kfcDumpStreamInfo.chipType = g_dumpParam.config.chipType;
     g_kfcDumpStreamInfo.streamId = g_dumpParam.streamInfo.streamIds;
     g_kfcDumpStreamInfo.sqId = g_dumpParam.streamInfo.sqIds;
     g_kfcDumpStreamInfo.cqId = g_dumpParam.streamInfo.cqIds;
     g_kfcDumpStreamInfo.logicCqId = g_dumpParam.streamInfo.logicCqIds;
-    IDE_CTRL_VALUE_FAILED(
-        drvGetLocalDevIDByHostDevID != nullptr, return KFC_DUMP_E_NOT_SUPPORT,
-        "drvGetLocalDevIDByHostDevID is unresolved, driver does not support device id conversion");
+    // host传入的deviceId是rtGetDeviceIDs返回的逻辑devId，halSqCqQuery/Config
+    // 接受的也是逻辑devid，默认可以直接透传；仅虚拟化/多卡集群下两侧逻辑编号不同时
+    // 才需经drvGetLocalDevIDByHostDevID转换，转换失败（单机无远端设备）回退原值。
+    g_kfcDumpStreamInfo.devId = g_dumpParam.streamInfo.deviceId;
+    if (drvGetLocalDevIDByHostDevID != nullptr) {
+        drvError_t drvRet = drvGetLocalDevIDByHostDevID(g_dumpParam.streamInfo.deviceId, &(g_kfcDumpStreamInfo.devId));
+        if (drvRet != DRV_ERROR_NONE) {
+            IDE_LOGW(
+                "Failed to convert host device id[%u] to local device id, ret[%d], fallback to raw device id",
+                g_dumpParam.streamInfo.deviceId, static_cast<int32_t>(drvRet));
+        }
+    }
+}
 
-    drvError_t drvRet = drvGetLocalDevIDByHostDevID(g_dumpParam.streamInfo.deviceId, &(g_kfcDumpStreamInfo.devId));
-    IDE_CTRL_VALUE_FAILED(
-        drvRet == DRV_ERROR_NONE, return KFC_DUMP_E_DRIVE,
-        "Failed to convert host device id[%u] to local device id, ret[%d]", g_dumpParam.streamInfo.deviceId,
-        static_cast<int32_t>(drvRet));
+static KfcDumpResult QueryStreamResource()
+{
     uint64_t sqAddr;
     DUMP_STATS_CHK_RET(
         KfcDumpTaskDispatcher::QuerySqBaseAddr(g_kfcDumpStreamInfo.devId, g_kfcDumpStreamInfo.sqId, sqAddr));
@@ -102,11 +110,20 @@ KfcDumpResult KfcDumpProcess::InitKfcDumpInfo(KfcDumpOpInitParam* dumpParam)
         g_kfcDumpStreamInfo.sqDepth != 0U, return KFC_DUMP_E_DRIVE,
         "Invalid sq depth[0] queried from driver, devId[%u] sqId[%u]", g_kfcDumpStreamInfo.devId,
         g_kfcDumpStreamInfo.sqId);
-
     DUMP_STATS_CHK_RET(KfcDumpTaskDispatcher::QuerySqStatusByType(
         g_kfcDumpStreamInfo.devId, g_kfcDumpStreamInfo.sqId, DRV_SQCQ_PROP_SQ_HEAD, g_kfcDumpStreamInfo.sqHead));
     DUMP_STATS_CHK_RET(KfcDumpTaskDispatcher::QuerySqStatusByType(
         g_kfcDumpStreamInfo.devId, g_kfcDumpStreamInfo.sqId, DRV_SQCQ_PROP_SQ_TAIL, g_kfcDumpStreamInfo.sqTail));
+    return KFC_DUMP_SUCCESS;
+}
+
+KfcDumpResult KfcDumpProcess::InitKfcDumpInfo(KfcDumpOpInitParam* dumpParam)
+{
+    KfcDumpPrintf::PrintKfcDumpInitParam(dumpParam);
+    g_isInitialized = false;
+    DUMP_STATS_CHK_RET(CheckInitParam(dumpParam));
+    FillStreamCtx(dumpParam);
+    DUMP_STATS_CHK_RET(QueryStreamResource());
     KfcDumpPrintf::PrintKfcDumpStreamCtx(&g_kfcDumpStreamInfo);
     DUMP_STATS_CHK_RET(InitSqCqFunction());
     g_isInitialized = true;

@@ -12,6 +12,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include "ascend_hal.h"
 
 // 驱动打桩返回的默认 sq 深度
 constexpr uint32_t STUB_DEFAULT_SQ_DEPTH = 2048U;
@@ -27,8 +28,6 @@ constexpr uint64_t STUB_TENSOR_COUNT_PER_TYPE = 10U;
 // 失败注入开关：被测代码的错误分支依赖外部接口返回失败, 无法靠正常输入触达,
 // 故由桩按开关返回错误码。每个用例用完须复位(ResetSqCqStub/ResetKfcCallbackStub)。
 // ---------------------------------------------------------------------------
-// drvGetLocalDevIDByHostDevID 返回失败
-void SetStubDevIdConvertFail(bool fail);
 // halSqCqQuery 对指定 prop 返回失败; prop 传 -1 表示不注入
 void SetStubSqQueryFailProp(int32_t prop);
 // halSqCqConfig 返回失败
@@ -36,6 +35,11 @@ void SetStubSqConfigFail(bool fail);
 // halSqCqQuery 查询 SQ_HEAD 时固定返回该值(不再自增), 用于构造 SQ 满与等待超时
 // head 传 -1 表示恢复默认的自增行为
 void SetStubFixedSqHead(int64_t head);
+// drvGetLocalDevIDByHostDevID 桩返回值: 传 DRV_ERROR_NONE 转换成功(本地编号模拟为
+// hostDevId+1), 传其他错误码模拟单机场景转换失败。默认 DRV_ERROR_INNER_ERR
+void SetStubDevIdConvertRet(drvError_t ret);
+// 桩最近一次 halSqCqQuery/halSqCqConfig 收到的 devId; 尚未调用过返回 0xFFFFFFFF
+uint32_t GetStubLastQueriedDevId();
 // AicpuGetOpTaskInfo 返回失败
 void SetStubGetOpTaskInfoFail(bool fail);
 // AicpuGetOpTaskInfo 成功但回填空指针

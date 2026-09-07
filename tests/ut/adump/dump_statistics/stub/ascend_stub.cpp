@@ -21,24 +21,28 @@ static uint32_t g_sqCqQueryCount = 0;
 // 模拟驱动返回的 sq 深度。默认 2048，用例可改写以构造非法深度等场景。
 static uint32_t g_stubSqDepth = STUB_DEFAULT_SQ_DEPTH;
 
-static bool g_devIdConvertFail = false;
 static int32_t g_sqQueryFailProp = -1;
 static bool g_sqConfigFail = false;
 static int64_t g_fixedSqHead = -1;
+
+// 记录桩最近一次收到的 devId，供用例断言被测下发的设备号与 streamInfo.deviceId 一致
+static uint32_t g_lastQueriedDevId = 0xFFFFFFFFU;
+// 转换桩的返回值：DRV_ERROR_NONE 表示转换成功（返回 hostDevId+1 模拟本地编号不同号），
+// 其他值表示转换失败；默认失败，模拟单机无 remote agent 设备的真实行为
+static drvError_t g_devIdConvertRet = DRV_ERROR_INNER_ERR;
 
 void ResetSqCqStub()
 {
     g_sqCqQueryCount = 0;
     g_stubSqDepth = STUB_DEFAULT_SQ_DEPTH;
-    g_devIdConvertFail = false;
     g_sqQueryFailProp = -1;
     g_sqConfigFail = false;
     g_fixedSqHead = -1;
+    g_lastQueriedDevId = 0xFFFFFFFFU;
+    g_devIdConvertRet = DRV_ERROR_INNER_ERR;
 }
 
 void SetStubSqDepth(uint32_t depth) { g_stubSqDepth = depth; }
-
-void SetStubDevIdConvertFail(bool fail) { g_devIdConvertFail = fail; }
 
 void SetStubSqQueryFailProp(int32_t prop) { g_sqQueryFailProp = prop; }
 
@@ -46,21 +50,28 @@ void SetStubSqConfigFail(bool fail) { g_sqConfigFail = fail; }
 
 void SetStubFixedSqHead(int64_t head) { g_fixedSqHead = head; }
 
+// 获取桩最近一次 halSqCqQuery/halSqCqConfig 收到的 devId；尚未调用过返回 0xFFFFFFFF
+uint32_t GetStubLastQueriedDevId() { return g_lastQueriedDevId; }
+
+// 设置 drvGetLocalDevIDByHostDevID 桩的返回值。传 DRV_ERROR_NONE 时转换成功，
+// 本地编号模拟为 hostDevId + 1（构造两侧不同号）；其他值按该错误码返回
+void SetStubDevIdConvertRet(drvError_t ret) { g_devIdConvertRet = ret; }
+
 drvError_t drvGetLocalDevIDByHostDevID(uint32_t hostDevId, uint32_t* localDevId)
 {
     if (localDevId == nullptr) {
         return DRV_ERROR_INVALID_VALUE;
     }
-    if (g_devIdConvertFail) {
-        return DRV_ERROR_INNER_ERR;
+    if (g_devIdConvertRet != DRV_ERROR_NONE) {
+        return g_devIdConvertRet;
     }
-    *localDevId = hostDevId;
+    *localDevId = hostDevId + 1U;
     return DRV_ERROR_NONE;
 }
 
 drvError_t halSqCqQuery(uint32_t devId, struct halSqCqQueryInfo* info)
 {
-    (void)devId;
+    g_lastQueriedDevId = devId;
     if (info == nullptr) {
         return DRV_ERROR_INNER_ERR;
     }
@@ -100,7 +111,7 @@ drvError_t halSqCqQuery(uint32_t devId, struct halSqCqQueryInfo* info)
 
 drvError_t halSqCqConfig(uint32_t devId, struct halSqCqConfigInfo* configInfo)
 {
-    (void)devId;
+    g_lastQueriedDevId = devId;
     (void)configInfo;
     if (g_sqConfigFail) {
         return DRV_ERROR_INNER_ERR;
