@@ -10,6 +10,7 @@
 
 #include "subscribe_manager.h"
 #include "common/bqs_log.h"
+#include "common/bqs_enum_name.h"
 #include "driver/ascend_hal.h"
 #include "statistic_manager.h"
 #include "bqs_util.h"
@@ -319,7 +320,7 @@ drvError_t SubscribeManager::DefalutSubscribe(const uint32_t queueId, const QUEU
         return halQueueSubF2NFEvent(deviceId_, queueId, enqueGroupId_);
     }
 
-    BQS_LOG_ERROR("Invalid event type %d", static_cast<int32_t>(eventType));
+    BQS_LOG_ERROR("Invalid event type[%s(%d)]", GetEnumName(eventType).c_str(), static_cast<int32_t>(eventType));
     return DRV_ERROR_INVALID_VALUE;
 }
 
@@ -355,7 +356,7 @@ drvError_t SubscribeManager::DefalutUnSubscribe(const uint32_t queueId, const QU
         return halQueueUnsubF2NFEvent(deviceId_, queueId);
     }
 
-    BQS_LOG_ERROR("Invalid event type %d", static_cast<int32_t>(eventType));
+    BQS_LOG_ERROR("Invalid event type[%s(%d)]", GetEnumName(eventType).c_str(), static_cast<int32_t>(eventType));
     return DRV_ERROR_INVALID_VALUE;
 }
 

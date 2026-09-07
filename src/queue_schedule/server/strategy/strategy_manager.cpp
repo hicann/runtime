@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "strategy_manager.h"
+#include "common/bqs_enum_name.h"
 #include "common/bqs_log.h"
 
 namespace dgw {
@@ -34,7 +35,7 @@ Strategy* StrategyManager::GetStrategy(const bqs::GroupPolicy policy) const
     if (iter != strategy_.end()) {
         return iter->second;
     }
-    DGW_LOG_ERROR("[FSM] Failed policy:%d.", static_cast<int32_t>(policy));
+    DGW_LOG_ERROR("[FSM] Failed policy:%s(%d).", bqs::GetEnumName(policy).c_str(), static_cast<int32_t>(policy));
     return nullptr;
 }
 
@@ -44,7 +45,7 @@ const std::string& StrategyManager::GetStrategyDesc(const bqs::GroupPolicy polic
     if (iter != strategyDesc_.end()) {
         return iter->second;
     }
-    DGW_LOG_ERROR("[FSM] Failed policy:%d.", static_cast<int32_t>(policy));
+    DGW_LOG_ERROR("[FSM] Failed policy:%s(%d).", bqs::GetEnumName(policy).c_str(), static_cast<int32_t>(policy));
     return UNKNOWN_POLICY;
 }
 } // namespace dgw

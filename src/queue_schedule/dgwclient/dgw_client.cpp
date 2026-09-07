@@ -19,6 +19,7 @@
 #include "driver/ascend_hal.h"
 #include "driver/ascend_hal_define.h"
 #include "common/bqs_status.h"
+#include "common/bqs_enum_name.h"
 #include "bqs_log.h"
 #include "bqs_util.h"
 #include "common/type_def.h"
@@ -1213,7 +1214,9 @@ int32_t DgwClient::CalcConfigInfoLen(
             break;
         }
         default: {
-            BQS_LOG_ERROR("calculate config info len failed, cmd[%d] is invalid.", static_cast<int32_t>(cfgInfo.cmd));
+            BQS_LOG_ERROR(
+                "calculate config info len failed, cmd[%s(%d)] is invalid.", GetEnumName(cfgInfo.cmd).c_str(),
+                static_cast<int32_t>(cfgInfo.cmd));
             return static_cast<int32_t>(BQS_STATUS_PARAM_INVALID);
         }
     }
@@ -1269,11 +1272,11 @@ int32_t DgwClient::CheckConfigNum(const ConfigQuery& query, ConfigInfo& cfgInfo)
             }
             break;
         }
-        default: {
+        default:
             ret = static_cast<int32_t>(BQS_STATUS_PARAM_INVALID);
-            BQS_LOG_ERROR("[DgwClient] query mode[%d] is invalid.", static_cast<int32_t>(query.mode));
-            break;
-        }
+            BQS_LOG_ERROR(
+                "[DgwClient] query mode[%s(%d)] is invalid.", GetEnumName(query.mode).c_str(),
+                static_cast<int32_t>(query.mode));
     }
     return ret;
 }

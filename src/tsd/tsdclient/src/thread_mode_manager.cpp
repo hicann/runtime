@@ -9,6 +9,7 @@
  */
 
 #include "inc/thread_mode_manager.h"
+#include "common/enum_name.h"
 #include "driver/ascend_hal.h"
 #include "tsd_log.h"
 #include "tsd_util_func.h"
@@ -392,8 +393,8 @@ TSD_StatusT ThreadModeManager::ProcessOpenSubProc(ProcOpenArgs* openArgs)
         "[ThreadModeManager] enter into ProcessOpenSubProc subtype:%u", static_cast<uint32_t>(openArgs->procType));
     if (openArgs->procType != TSD_SUB_PROC_ADPROF) {
         TSD_ERROR(
-            "[ThreadModeManager] open in thread mode is not supported, procType:%u",
-            static_cast<uint32_t>(openArgs->procType));
+            "[ThreadModeManager] open in thread mode is not supported, procType:%s(%u)",
+            GetEnumName(openArgs->procType).c_str(), static_cast<uint32_t>(openArgs->procType));
         return TSD_INTERNAL_ERROR;
     }
 
@@ -477,8 +478,8 @@ TSD_StatusT ThreadModeManager::ProcessCloseSubProcList(const ProcStatusParam* cl
     TSD_RUN_INFO("[ThreadModeManager] enter ExecuteClosePidList cnt:%u, procType:%u", listSize, closeList[0].procType);
     if (closeList[0].procType != TSD_SUB_PROC_ADPROF) {
         TSD_ERROR(
-            "[ThreadModeManager] close in thread mode is not supported, procType:%u",
-            static_cast<uint32_t>(closeList[0].procType));
+            "[ThreadModeManager] close in thread mode is not supported, procType:%s(%u)",
+            GetEnumName(closeList[0].procType).c_str(), static_cast<uint32_t>(closeList[0].procType));
         return TSD_INTERNAL_ERROR;
     }
 

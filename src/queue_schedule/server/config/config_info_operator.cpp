@@ -17,6 +17,7 @@
 #include "hccl/hccl_ex.h"
 #include "hccl/comm_channel_manager.h"
 #include "common/type_def.h"
+#include "common/bqs_enum_name.h"
 #include "queue_schedule/dgw_client.h"
 #include "common/bqs_log.h"
 #include "queue_manager.h"
@@ -712,7 +713,9 @@ BqsStatus ConfigInfoOperator::ConvertToEndpoint(const EntityInfo& entity, Endpoi
             break;
         }
         default: {
-            BQS_LOG_ERROR("Unsupport entity type[%d].", static_cast<int32_t>(entity.GetType()));
+            BQS_LOG_ERROR(
+                "Unsupport entity type[%s(%d)].", dgw::GetEnumName(entity.GetType()).c_str(),
+                static_cast<int32_t>(entity.GetType()));
             ret = BQS_STATUS_PARAM_INVALID;
             break;
         }
@@ -809,7 +812,9 @@ EntityInfoPtr ConfigInfoOperator::CreateEntityInfo(const Endpoint& endpoint, con
     try {
         entityPtr = std::make_shared<EntityInfo>(id, localDeviceId, &args);
     } catch (...) {
-        BQS_LOG_ERROR("Create entity info ptr failed, id[%u], type[%d].", id, static_cast<int32_t>(eType));
+        BQS_LOG_ERROR(
+            "Create entity info ptr failed, id[%u], type[%s(%d)].", id, dgw::GetEnumName(eType).c_str(),
+            static_cast<int32_t>(eType));
     }
 
     BQS_LOG_INFO("Create entity success: %s", entityPtr->ToString().c_str());

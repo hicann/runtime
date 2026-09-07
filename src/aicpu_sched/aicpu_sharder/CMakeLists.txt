@@ -40,12 +40,14 @@ target_compile_options(aicpu_sharder PRIVATE
 )
 
 target_include_directories(aicpu_sharder PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/../aicpu_schedule/common
     ${RUNTIME_DIR}/include
     ${RUNTIME_DIR}/pkg_inc
     ${RUNTIME_DIR}/pkg_inc/base
     ${RUNTIME_DIR}/include/dfx/base
     ${RUNTIME_DIR}/pkg_inc/aicpu_sched/aicpu_schedule
     ${RUNTIME_DIR}/pkg_inc/aicpu_sched
+    ${RUNTIME_DIR}/src/inc
 )
 
 install(TARGETS aicpu_sharder OPTIONAL

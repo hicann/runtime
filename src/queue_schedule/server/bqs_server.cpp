@@ -26,6 +26,12 @@ namespace {
 // prevents concurrent execution of multiple clients
 std::mutex g_bqsMutex;
 
+std::string GetMsgTypeName(const BQSMsg::MsgType type)
+{
+    const std::string name = BQSMsg::MsgType_Name(type);
+    return name.empty() ? "UNKNOWN" : name;
+}
+
 constexpr const char_t* BQS_SERVER_THREAD_NAME_PREFIX = "bqs_server";
 
 /**
@@ -107,8 +113,7 @@ void BqsServer::HandleBqsReqMsg(const uint32_t msgId, const char_t* const data, 
     const uint32_t parseLength = currMsgSize - BQS_MSG_HEAD_SIZE;
     if (bqsReqMsg_.ParseFromArray(data + BQS_MSG_HEAD_SIZE, static_cast<int32_t>(parseLength))) {
         BQS_LOG_INFO(
-            "BqsServer request msg type{%d:BIND, %d:UNBIND, %d:GET_BIND, %d:GET_ALL_BIND}:%d "
-            "begin to process",
+            "BqsServer request msg type{%d:BIND, %d:UNBIND, %d:GET_BIND, %d:GET_ALL_BIND}:%d begin to process",
             BQSMsg::BIND, BQSMsg::UNBIND, BQSMsg::GET_BIND, BQSMsg::GET_ALL_BIND, bqsReqMsg_.msg_type());
         switch (bqsReqMsg_.msg_type()) {
             case BQSMsg::GET_BIND:
@@ -128,7 +133,9 @@ void BqsServer::HandleBqsReqMsg(const uint32_t msgId, const char_t* const data, 
                 WaitBindMsgProc();
                 break;
             default:
-                BQS_LOG_ERROR("BqsServer receive unsupported msg type:%d", bqsReqMsg_.msg_type());
+                BQS_LOG_ERROR(
+                    "BqsServer receive unsupported msg type:%s(%d)", GetMsgTypeName(bqsReqMsg_.msg_type()).c_str(),
+                    static_cast<int32_t>(bqsReqMsg_.msg_type()));
                 break;
         }
     }
@@ -182,7 +189,9 @@ void BqsServer::BindMsgProc()
     } else if (bqsReqMsg_.msg_type() == BQSMsg::UNBIND) {
         ParseUnbindMsg(bqsReqMsg_, bqsRespMsg_);
     } else {
-        BQS_LOG_ERROR("Invalid request type[%d]", static_cast<int32_t>(bqsReqMsg_.msg_type()));
+        BQS_LOG_ERROR(
+            "Invalid request type[%s(%d)]", GetMsgTypeName(bqsReqMsg_.msg_type()).c_str(),
+            static_cast<int32_t>(bqsReqMsg_.msg_type()));
     }
     bqsReqMsg_.Clear();
 

@@ -26,6 +26,7 @@
 #include "dgw_client.h"
 #undef private
 #undef protected
+#include "common/bqs_enum_name.h"
 #include "queue_schedule_feature_ctrl.h"
 
 using namespace std;
@@ -1207,4 +1208,10 @@ TEST_F(DgwClientUtest, CalcConfigInfoLenIsSupportSetVisibleDevices02)
     std::unique_ptr<Route[]> myRoutes(new Route[endpointNum]);
     std::unique_ptr<Endpoint[]> existing_ptr(new Endpoint[endpointNum]);
     EXPECT_EQ(1, dgwClient->CalcConfigInfoLen(config, cfgLen, dataList, myRoutes, existing_ptr));
+}
+
+TEST(EnumNameRegistryUtest, QueryRegisteredAndUnknownConfigCmd)
+{
+    EXPECT_EQ(enum_name::GetEnumName(ConfigCmd::DGW_CFG_CMD_BIND_ROUTE), "DGW_CFG_CMD_BIND_ROUTE");
+    EXPECT_EQ(enum_name::GetEnumName(static_cast<ConfigCmd>(-1)), "UNKNOWN");
 }

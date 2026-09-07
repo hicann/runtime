@@ -15,9 +15,11 @@
 #include <memory>
 #include <mutex>
 #include <functional>
+#include <string>
 #include <unordered_map>
 
 #include "proto/tsd_message.pb.h"
+#include "enum_name_registry.h"
 #include "tsd/status.h"
 #include "tsd_version_verify.h"
 
@@ -157,5 +159,23 @@ protected:
     // 设备通信类型
     DeviceCommType commType_;
 };
+} // namespace tsd
+
+namespace enum_name {
+template <>
+struct EnumNameTable<tsd::DeviceCommType> {
+    static const EnumNameMap<tsd::DeviceCommType>& Get()
+    {
+        static const EnumNameMap<tsd::DeviceCommType> table = {
+            {tsd::DeviceCommType::HDC, "HDC"},
+            {tsd::DeviceCommType::DEVICE_COMM_TYPE_TOTAL_NUM, "DEVICE_COMM_TYPE_TOTAL_NUM"},
+        };
+        return table;
+    }
+};
+} // namespace enum_name
+
+namespace tsd {
+inline std::string GetEnumName(const DeviceCommType type) { return enum_name::GetEnumName(type); }
 } // namespace tsd
 #endif // TSD_BASIC_COMPONENT_DEVICE_COMM_DEVICE_COMM_H

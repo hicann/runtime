@@ -131,6 +131,7 @@ set(queue_schedule_exe_path
     ${RUNTIME_DIR}/include 
     ${RUNTIME_DIR}/pkg_inc/tsd/
     ${RUNTIME_DIR}/pkg_inc
+    ${RUNTIME_DIR}/src/inc
 )
 
 add_library(queue_schedule_so SHARED

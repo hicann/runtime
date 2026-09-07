@@ -9,6 +9,7 @@
  */
 
 #include "aicpusd_worker.h"
+#include "aicpu_enum_name.h"
 
 #include <csignal>
 #include <cstring>
@@ -229,7 +230,9 @@ void ThreadPool::Work(const size_t threadIndex, const uint32_t deviceId, const A
     const int32_t ret = (schedMode == SCHED_MODE_MSGQ) ? InitMessageQueueWorker(threadIndex) :
                                                          InitInterruptWorker(deviceId, threadIndex);
     if (ret != AICPU_SCHEDULE_OK) {
-        aicpusd_err("Init work for sched mode failed, mode=%u", schedMode);
+        aicpusd_err(
+            "Init work for sched mode failed, mode=%s(%u)", GetEnumName(schedMode).c_str(),
+            static_cast<uint32_t>(schedMode));
         AicpuSchedule::ThreadPool::Instance().PostSem(threadIndex);
         return;
     }

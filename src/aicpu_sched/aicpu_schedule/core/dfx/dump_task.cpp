@@ -827,15 +827,22 @@ StatusCode OpDumpTask::ProcessDumpOpInfo(const TaskInfoExt& dumpTaskInfo, const 
             dumpRet = ProcessDumpStatistic(dumpTaskInfo, dumpFilePath);
             break;
         default:
-            aicpusd_err("Fail to dump for dump mode is unknown, DumpMode=%d", static_cast<int32_t>(dumpMode_));
+            aicpusd_err("Fail to dump for unknown dump mode[%d].", static_cast<int32_t>(dumpMode_));
             dumpRet = AICPU_SCHEDULE_ERROR_DUMP_FAILED;
             break;
     }
 
     if (dumpRet != AICPU_SCHEDULE_OK) {
-        aicpusd_err(
-            "Dump failed. ret=%d, dumpMode=%d, threadId=%u, dumpFilePath=%s", static_cast<int32_t>(dumpRet),
-            static_cast<int32_t>(dumpMode_), dumpTaskInfo.threadId_, dumpFilePath.c_str());
+        const std::string& dumpModeName = ::aicpu::dump::DumpData_Name(dumpMode_);
+        if (dumpModeName.empty()) {
+            aicpusd_err(
+                "Dump failed. ret=%d, dumpMode=%d, threadId=%u, dumpFilePath=%s", static_cast<int32_t>(dumpRet),
+                static_cast<int32_t>(dumpMode_), dumpTaskInfo.threadId_, dumpFilePath.c_str());
+        } else {
+            aicpusd_err(
+                "Dump failed. ret=%d, dumpMode=%s(%d), threadId=%u, dumpFilePath=%s", static_cast<int32_t>(dumpRet),
+                dumpModeName.c_str(), static_cast<int32_t>(dumpMode_), dumpTaskInfo.threadId_, dumpFilePath.c_str());
+        }
     }
 
     return dumpRet;

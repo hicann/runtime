@@ -9,6 +9,7 @@
  */
 
 #include "package_worker.h"
+#include "common/enum_name.h"
 #include "tsd_path_mgr.h"
 
 namespace tsd {
@@ -49,16 +50,16 @@ TSD_StatusT PackageWorker::LoadPackage(
     const std::shared_ptr<BasePackageWorker> packageWorker = GetPackageWorker(type);
     if (packageWorker == nullptr) {
         TSD_ERROR(
-            "Get package worker inst failed by nullptr, type=%u, path=%s, fileName=%s", static_cast<uint32_t>(type),
-            path.c_str(), fileName.c_str());
+            "Get package worker inst failed by nullptr, type=%s(%u), path=%s, fileName=%s", GetEnumName(type).c_str(),
+            static_cast<uint32_t>(type), path.c_str(), fileName.c_str());
         return TSD_INSTANCE_NOT_FOUND;
     }
 
     const TSD_StatusT ret = packageWorker->LoadPackage(path, fileName);
     if (ret != TSD_OK) {
         TSD_ERROR(
-            "Load package failed, ret=%u, type=%u, path=%s, fileName=%s", ret, static_cast<uint32_t>(type),
-            path.c_str(), fileName.c_str());
+            "Load package failed, ret=%u, type=%s(%u), path=%s, fileName=%s", ret, GetEnumName(type).c_str(),
+            static_cast<uint32_t>(type), path.c_str(), fileName.c_str());
     }
 
     return ret;
@@ -68,13 +69,16 @@ TSD_StatusT PackageWorker::UnloadPackage(const PackageWorkerType type)
 {
     const std::shared_ptr<BasePackageWorker> packageWorker = GetPackageWorker(type);
     if (packageWorker == nullptr) {
-        TSD_ERROR("Get package worker inst failed by nullptr, type=%u", static_cast<uint32_t>(type));
+        TSD_ERROR(
+            "Get package worker inst failed by nullptr, type=%s(%u)", GetEnumName(type).c_str(),
+            static_cast<uint32_t>(type));
         return TSD_INSTANCE_NOT_FOUND;
     }
 
     const TSD_StatusT ret = packageWorker->UnloadPackage();
     if (ret != TSD_OK) {
-        TSD_ERROR("Unload package failed, ret=%u, type=%u", ret, static_cast<uint32_t>(type));
+        TSD_ERROR(
+            "Unload package failed, ret=%u, type=%s(%u)", ret, GetEnumName(type).c_str(), static_cast<uint32_t>(type));
     }
 
     return ret;
@@ -84,7 +88,9 @@ uint64_t PackageWorker::GetPackageCheckCode(const PackageWorkerType type)
 {
     const std::shared_ptr<BasePackageWorker> packageWorker = GetPackageWorker(type);
     if (packageWorker == nullptr) {
-        TSD_ERROR("Get package worker inst failed by nullptr, type=%u", static_cast<uint32_t>(type));
+        TSD_ERROR(
+            "Get package worker inst failed by nullptr, type=%s(%u)", GetEnumName(type).c_str(),
+            static_cast<uint32_t>(type));
         return 0UL;
     }
 
@@ -95,7 +101,9 @@ void PackageWorker::ClearPackageCheckCode(const PackageWorkerType type)
 {
     const std::shared_ptr<BasePackageWorker> packageWorker = GetPackageWorker(type);
     if (packageWorker == nullptr) {
-        TSD_ERROR("Get package worker inst failed by nullptr, type=%u", static_cast<uint32_t>(type));
+        TSD_ERROR(
+            "Get package worker inst failed by nullptr, type=%s(%u)", GetEnumName(type).c_str(),
+            static_cast<uint32_t>(type));
         return;
     }
 
@@ -117,7 +125,7 @@ std::shared_ptr<BasePackageWorker> PackageWorker::GetPackageWorker(const Package
     const PackageWorkerParas paras(deviceId_, vfId_);
     const auto newWorker = PackageWorkerFactory::GetInstance().CreatePackageWorker(type, paras);
     if (newWorker == nullptr) {
-        TSD_ERROR("Create worker failed, type=%u", static_cast<uint32_t>(type));
+        TSD_ERROR("Create worker failed, type=%s(%u)", GetEnumName(type).c_str(), static_cast<uint32_t>(type));
         return nullptr;
     }
 

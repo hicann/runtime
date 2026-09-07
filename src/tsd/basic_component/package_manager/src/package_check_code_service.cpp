@@ -239,7 +239,9 @@ TSD_StatusT PackageCheckCodeService::GetDeviceHsPkgCheckCode(
     }
     ret = commAgent_.SendMsg(msg);
     if (ret != TSD_OK) {
-        TSD_ERROR("Send runtime checkcode failed msgtype:%u.", static_cast<uint32_t>(msgType));
+        TSD_ERROR(
+            "Send runtime checkcode failed msgType:%s(%u).", HDCMessage::MsgType_Name(msgType).c_str(),
+            static_cast<uint32_t>(msgType));
         commAgent_.ReleaseDeviceConnection();
         return TSD_INTERNAL_ERROR;
     }
@@ -251,7 +253,9 @@ TSD_StatusT PackageCheckCodeService::GetDeviceHsPkgCheckCode(
         if (beforeSendFlag) {
             TSD_RUN_INFO("not receive TSD_CHECK_PACKAGE rsp msg, just send pkg to server");
         } else {
-            TSD_ERROR("not receive TSD_CHECK_PACKAGE failed Msgtype:%u", static_cast<uint32_t>(msgType));
+            TSD_ERROR(
+                "not receive TSD_CHECK_PACKAGE failed msgType:%s(%u)", HDCMessage::MsgType_Name(msgType).c_str(),
+                static_cast<uint32_t>(msgType));
             return TSD_INTERNAL_ERROR;
         }
     }

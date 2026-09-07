@@ -27,12 +27,14 @@ set(LOCAL_SRC_FILES
 )
 set(LOCAL_C_INCLUDES
     ${SRC_PATH}
+    ${AICPU_SCHED_PATH}/aicpu_schedule/common
     ${RUNTIME_DIR}/include
     ${RUNTIME_DIR}/pkg_inc
     ${RUNTIME_DIR}/pkg_inc/base
     ${RUNTIME_DIR}/include/dfx/base
     ${RUNTIME_DIR}/pkg_inc/aicpu_sched/aicpu_schedule
     ${RUNTIME_DIR}/pkg_inc/aicpu_sched
+    ${RUNTIME_DIR}/src/inc
 )
 
 add_executable(aicpu_sharder_st

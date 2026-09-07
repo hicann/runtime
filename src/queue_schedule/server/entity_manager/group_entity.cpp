@@ -11,6 +11,7 @@
 #include "group_entity.h"
 #include "bqs_util.h"
 #include "common/bqs_log.h"
+#include "common/bqs_enum_name.h"
 #include "entity_manager.h"
 #include "strategy/strategy_manager.h"
 
@@ -220,8 +221,8 @@ void GroupEntity::SelectDstEntities(
     Strategy* const strategy = StrategyManager::GetInstance().GetStrategy(groupInfo_.groupPolicy);
     if (strategy == nullptr) {
         DGW_LOG_ERROR(
-            "Strategy in group:%u with policy:%d is null. Please check!", id_,
-            static_cast<int32_t>(groupInfo_.groupPolicy));
+            "Strategy in group:%u with policy:%s(%d) is null. Please check!", id_,
+            bqs::GetEnumName(groupInfo_.groupPolicy).c_str(), static_cast<int32_t>(groupInfo_.groupPolicy));
         return;
     }
     DGW_LOG_INFO(

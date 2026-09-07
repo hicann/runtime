@@ -9,6 +9,7 @@
  */
 
 #include "package_worker_factory.h"
+#include "common/enum_name.h"
 #include "tsd_log.h"
 
 namespace tsd {
@@ -43,13 +44,17 @@ std::shared_ptr<BasePackageWorker> PackageWorkerFactory::CreatePackageWorker(
 {
     const auto iter = creatorMap_.find(type);
     if (iter == creatorMap_.end()) {
-        TSD_ERROR("Cannot find package worker create func, type=%u", static_cast<uint32_t>(type));
+        TSD_ERROR(
+            "Cannot find package worker create func, type=%s(%u)", GetEnumName(type).c_str(),
+            static_cast<uint32_t>(type));
         return nullptr;
     }
 
     const std::shared_ptr<BasePackageWorker> inst = iter->second(paras);
     if (inst == nullptr) {
-        TSD_ERROR("Create package worker failed by nullptr, type=%u", static_cast<uint32_t>(type));
+        TSD_ERROR(
+            "Create package worker failed by nullptr, type=%s(%u)", GetEnumName(type).c_str(),
+            static_cast<uint32_t>(type));
         return nullptr;
     }
 

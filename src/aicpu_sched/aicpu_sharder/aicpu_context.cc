@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "aicpu_context.h"
+#include "aicpu_enum_name.h"
 
 #include <map>
 #include <memory>
@@ -365,7 +366,8 @@ void SetStreamDvppBuffBychlType(const AicpuDvppChlType chlType, const uint64_t b
 {
     if (chlType >= AICPU_DVPP_CHL_BUTT) {
         AICPUE_LOGE(
-            "chlType is invalid, chlType[%d], valid range[0, %u).", static_cast<int32_t>(chlType), AICPU_DVPP_CHL_BUTT);
+            "chlType is invalid, chlType[%s(%d)], valid range[0, %u).", aicpu::GetEnumName(chlType).c_str(),
+            static_cast<int32_t>(chlType), AICPU_DVPP_CHL_BUTT);
         return;
     }
 
@@ -392,7 +394,8 @@ void SetStreamDvppBuffByStreamId(
 {
     if (chlType >= AICPU_DVPP_CHL_BUTT) {
         AICPUE_LOGE(
-            "chlType is invalid, chlType[%d], valid range[0, %u).", static_cast<int32_t>(chlType), AICPU_DVPP_CHL_BUTT);
+            "chlType is invalid, chlType[%s(%d)], valid range[0, %u).", aicpu::GetEnumName(chlType).c_str(),
+            static_cast<int32_t>(chlType), AICPU_DVPP_CHL_BUTT);
         return;
     }
 
@@ -411,7 +414,8 @@ void GetDvppBufAndLenBychlType(const AicpuDvppChlType chlType, uint8_t** buff, u
 {
     if (chlType >= AICPU_DVPP_CHL_BUTT) {
         AICPUE_LOGE(
-            "chlType is invalid, chlType[%d], valid range[0, %u).", static_cast<int32_t>(chlType), AICPU_DVPP_CHL_BUTT);
+            "chlType is invalid, chlType[%s(%d)], valid range[0, %u).", aicpu::GetEnumName(chlType).c_str(),
+            static_cast<int32_t>(chlType), AICPU_DVPP_CHL_BUTT);
         return;
     }
 
@@ -437,7 +441,8 @@ void GetDvppBufAndLenByStreamId(const uint32_t streamId, const AicpuDvppChlType 
 {
     if (chlType >= AICPU_DVPP_CHL_BUTT) {
         AICPUE_LOGE(
-            "chlType is invalid, chlType[%d], valid range[0, %u).", static_cast<int32_t>(chlType), AICPU_DVPP_CHL_BUTT);
+            "chlType is invalid, chlType[%s(%d)], valid range[0, %u).", aicpu::GetEnumName(chlType).c_str(),
+            static_cast<int32_t>(chlType), AICPU_DVPP_CHL_BUTT);
         return;
     }
 
@@ -539,7 +544,9 @@ void AicpuSetDfxInfo(const uint64_t dfxInfoAddr)
 aicpu::status_t SetThreadCtxInfo(aicpu::CtxType type, const std::string& key, const std::string& value)
 {
     if (key.empty()) {
-        AICPUE_LOGE("Set thread context failed, context type[%d], key is empty", static_cast<int32_t>(type));
+        AICPUE_LOGE(
+            "Set thread context failed, context type[%s(%d)], key is empty", aicpu::GetEnumName(type).c_str(),
+            static_cast<int32_t>(type));
         return aicpu::AICPU_ERROR_FAILED;
     }
 
@@ -547,7 +554,9 @@ aicpu::status_t SetThreadCtxInfo(aicpu::CtxType type, const std::string& key, co
     try {
         ctx[key] = value;
     } catch (std::exception& aicpuExp) {
-        AICPUE_LOGE("Set thread context failed, context type[%d], %s", static_cast<int32_t>(type), aicpuExp.what());
+        AICPUE_LOGE(
+            "Set thread context failed, context type[%s(%d)], %s", aicpu::GetEnumName(type).c_str(),
+            static_cast<int32_t>(type), aicpuExp.what());
         return aicpu::AICPU_ERROR_FAILED;
     }
     return aicpu::AICPU_ERROR_NONE;
@@ -556,7 +565,9 @@ aicpu::status_t SetThreadCtxInfo(aicpu::CtxType type, const std::string& key, co
 aicpu::status_t GetThreadCtxInfo(aicpu::CtxType type, const std::string& key, std::string& value)
 {
     if (key.empty()) {
-        AICPUE_LOGE("Get thread context failed, context type[%d], key is empty", static_cast<int32_t>(type));
+        AICPUE_LOGE(
+            "Get thread context failed, context type[%s(%d)], key is empty", aicpu::GetEnumName(type).c_str(),
+            static_cast<int32_t>(type));
         return aicpu::AICPU_ERROR_FAILED;
     }
 
@@ -567,7 +578,8 @@ aicpu::status_t GetThreadCtxInfo(aicpu::CtxType type, const std::string& key, st
         return aicpu::AICPU_ERROR_NONE;
     }
     AICPUE_LOGE(
-        "Get thread context failed, context type[%d], no such key[%s]", static_cast<int32_t>(type), key.c_str());
+        "Get thread context failed, context type[%s(%d)], no such key[%s]", aicpu::GetEnumName(type).c_str(),
+        static_cast<int32_t>(type), key.c_str());
     return aicpu::AICPU_ERROR_FAILED;
 }
 
@@ -580,7 +592,8 @@ aicpu::status_t RemoveThreadCtxInfo(aicpu::CtxType type, const std::string& key)
         return aicpu::AICPU_ERROR_NONE;
     }
     AICPUE_LOGE(
-        "Remove thread context failed, context type[%d], no such key[%s]", static_cast<int32_t>(type), key.c_str());
+        "Remove thread context failed, context type[%s(%d)], no such key[%s]", aicpu::GetEnumName(type).c_str(),
+        static_cast<int32_t>(type), key.c_str());
     return aicpu::AICPU_ERROR_FAILED;
 }
 

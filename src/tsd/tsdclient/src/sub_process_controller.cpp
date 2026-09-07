@@ -9,6 +9,7 @@
  */
 
 #include "inc/sub_process_controller.h"
+#include "common/enum_name.h"
 #include "tsd_log.h"
 #include "tsd_scope_guard.h"
 #include "tsd/status.h"
@@ -118,7 +119,9 @@ TSD_StatusT SubProcessController::OpenSubProc(ProcOpenArgs* openArgs)
 
     TSD_RUN_INFO("enter into ProcessOpenSubProc subtype:%u", static_cast<uint32_t>(openArgs->procType));
     if (!capabilityMgr_.CheckSubProcSupported(static_cast<SubProcType>(openArgs->procType))) {
-        TSD_ERROR("ProcessOpenSubProc versionCheck failed, subtype[%u]", static_cast<uint32_t>(openArgs->procType));
+        TSD_ERROR(
+            "ProcessOpenSubProc versionCheck failed, subtype[%s(%u)]", GetEnumName(openArgs->procType).c_str(),
+            static_cast<uint32_t>(openArgs->procType));
         return TSD_INTERNAL_ERROR;
     }
 

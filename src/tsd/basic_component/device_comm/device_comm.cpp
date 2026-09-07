@@ -53,7 +53,9 @@ std::shared_ptr<DeviceComm> DeviceComm::GetInstance(const uint32_t devId, const 
         const std::unordered_map<uint32_t, CreatorFunc>::iterator creatorIter =
             creatorMap->find(static_cast<uint32_t>(commType));
         if (creatorIter == creatorMap->end()) {
-            TSD_ERROR("DeviceCommType=%u is not supported", static_cast<uint32_t>(commType));
+            TSD_ERROR(
+                "DeviceCommType[%s(%u)] is not supported", GetEnumName(commType).c_str(),
+                static_cast<uint32_t>(commType));
             return nullptr;
         }
         deviceCommPtr = creatorIter->second(devId);

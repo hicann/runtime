@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "tsd/tsd_client.h"
+#include "common/enum_name.h"
 #include "tsd_log.h"
 #include "inc/client_manager.h"
 #include "tsd_msg_parse_reg.h"
@@ -198,7 +199,9 @@ uint32_t TsdCapabilityGet(const uint32_t logicDeviceId, const int32_t type, cons
     TSD_CHECK_NULLPTR(clientManager, tsd::TSD_CLT_OPEN_FAILED, "Get ClientManager failed for TsdCapabilityGet.");
     const tsd::TSD_StatusT ret = clientManager->CapabilityGet(type, ptr);
     if (ret != tsd::TSD_OK) {
-        TSD_ERROR("TsdCapabilityGet failed, type[%d].", type);
+        TSD_ERROR(
+            "TsdCapabilityGet failed, type[%s(%d)].", tsd::GetEnumName(static_cast<TsdCapabilityType>(type)).c_str(),
+            type);
         if (type != TSD_CAPABILITY_LEVEL) {
             clientManager->Destroy();
         }

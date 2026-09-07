@@ -30,14 +30,17 @@ int32_t SomaMemMngTsKernel::Compute(const aicpu::HwtsTsKernel& tsKernelInfo)
     auto op = static_cast<SomaOpType>(Mng->memAsyncOpType);
     soma_mem_pool_t pool = {.poolId = Mng->mempoolId, .devId = Mng->deviceId};
     drvError_t ret = DRV_ERROR_NONE;
+    std::string opName = std::to_string(static_cast<int32_t>(op));
     switch (op) {
         case SomaOpType::SOMA_OP_MALLOC:
+            opName = "SOMA_OP_MALLOC(" + opName + ")";
             aicpusd_info(
                 "SOMA: malloc deviceId=%u,mempoolId=%llx,va=%llx,size=%llu,memAsyncSubCMD=%u.", Mng->deviceId,
                 Mng->mempoolId, Mng->va, Mng->size, Mng->memAsyncSubCMD);
             ret = halMemPoolMalloc(pool, Mng->va, Mng->size, Mng->memAsyncSubCMD);
             break;
         case SomaOpType::SOMA_OP_FREE:
+            opName = "SOMA_OP_FREE(" + opName + ")";
             aicpusd_info(
                 "SOMA: free deviceId=%u,mempoolId=%llx,va=%llx,memAsyncSubCMD=%u.", Mng->deviceId, Mng->mempoolId,
                 Mng->va, Mng->memAsyncSubCMD);
@@ -50,9 +53,9 @@ int32_t SomaMemMngTsKernel::Compute(const aicpu::HwtsTsKernel& tsKernelInfo)
     }
     if (ret != DRV_ERROR_NONE) {
         aicpusd_err(
-            "Ts Kernel SomaMemMng Compute failed, OpType [%d] had been processed, malloc "
+            "Ts Kernel SomaMemMng Compute failed, OpType [%s] had been processed, malloc "
             "deviceId=%u,mempoolId=%llx,va=%llx,size=%llu,memAsyncSubCMD=%u, errcode=%d",
-            static_cast<int32_t>(op), Mng->deviceId, Mng->mempoolId, Mng->va, Mng->size, Mng->memAsyncSubCMD,
+            opName.c_str(), Mng->deviceId, Mng->mempoolId, Mng->va, Mng->size, Mng->memAsyncSubCMD,
             static_cast<int32_t>(ret));
         return AICPU_SCHEDULE_FAIL;
     }

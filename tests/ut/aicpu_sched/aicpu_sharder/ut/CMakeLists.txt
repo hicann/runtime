@@ -32,12 +32,14 @@ add_executable(aicpu_sharder_utest
 
 target_include_directories (aicpu_sharder_utest PRIVATE
     ${SRC_PATH}
+    ${AICPU_SCHED_PATH}/aicpu_schedule/common
     ${RUNTIME_DIR}/include
     ${RUNTIME_DIR}/pkg_inc
     ${RUNTIME_DIR}/pkg_inc/base
     ${RUNTIME_DIR}/include/dfx/base
     ${RUNTIME_DIR}/pkg_inc/aicpu_sched/aicpu_schedule
     ${RUNTIME_DIR}/pkg_inc/aicpu_sched
+    ${RUNTIME_DIR}/src/inc
 )
 
 target_link_libraries(aicpu_sharder_utest PRIVATE

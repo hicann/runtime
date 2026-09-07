@@ -12,7 +12,9 @@
 #define DGW_STATE_DEFINE_H
 
 #include <memory>
+#include <string>
 #include "common/bqs_log.h"
+#include "enum_name_registry.h"
 
 namespace dgw {
 class Entity;
@@ -96,5 +98,48 @@ enum class ChannelLinkStatus : int32_t {
     CONNECTED,
     ABNORMAL,
 };
+} // namespace dgw
+
+namespace enum_name {
+template <>
+struct EnumNameTable<dgw::EntityType> {
+    static const EnumNameMap<dgw::EntityType>& Get()
+    {
+        static const EnumNameMap<dgw::EntityType> table = {
+            {dgw::EntityType::ENTITY_QUEUE, "ENTITY_QUEUE"},
+            {dgw::EntityType::ENTITY_TAG, "ENTITY_TAG"},
+            {dgw::EntityType::ENTITY_GROUP, "ENTITY_GROUP"},
+            {dgw::EntityType::ENTITY_INVALID, "ENTITY_INVALID"},
+        };
+        return table;
+    }
+};
+
+template <>
+struct EnumNameTable<dgw::FsmState> {
+    static const EnumNameMap<dgw::FsmState>& Get()
+    {
+        static const EnumNameMap<dgw::FsmState> table = {
+            {dgw::FsmState::FSM_BASE_STATE, "FSM_BASE_STATE"},
+            {dgw::FsmState::FSM_IDLE_STATE, "FSM_IDLE_STATE"},
+            {dgw::FsmState::FSM_PEEK_STATE, "FSM_PEEK_STATE"},
+            {dgw::FsmState::FSM_TRY_PUSH_STATE, "FSM_TRY_PUSH_STATE"},
+            {dgw::FsmState::FSM_WAIT_PUSH_STATE, "FSM_WAIT_PUSH_STATE"},
+            {dgw::FsmState::FSM_PUSH_STATE, "FSM_PUSH_STATE"},
+            {dgw::FsmState::FSM_FULL_STATE, "FSM_FULL_STATE"},
+            {dgw::FsmState::FSM_ERROR_STATE, "FSM_ERROR_STATE"},
+            {dgw::FsmState::FSM_INVALID_STATE, "FSM_INVALID_STATE"},
+        };
+        return table;
+    }
+};
+} // namespace enum_name
+
+namespace dgw {
+template <typename Enum>
+inline std::string GetEnumName(const Enum value)
+{
+    return enum_name::GetEnumName(value);
+}
 } // namespace dgw
 #endif

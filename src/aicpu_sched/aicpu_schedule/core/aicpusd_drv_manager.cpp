@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "aicpusd_drv_manager.h"
+#include "aicpu_enum_name.h"
 #include <sys/time.h>
 #include <sstream>
 #include "driver/ascend_hal.h"
@@ -330,7 +331,9 @@ int32_t AicpuDrvManager::InitDrvMgr(
         ret = GetNormalAicpuDCpuInfo(deviceVec);
     }
     if (ret != AICPU_SCHEDULE_OK) {
-        aicpusd_err("get cpu info failed, ret[%d], vfId[%u], runMode[%u]", ret, vfId, runMode);
+        aicpusd_err(
+            "get cpu info failed, ret[%d], vfId[%u], runMode[%s(%u)]", ret, vfId, aicpu::GetEnumName(runMode).c_str(),
+            static_cast<uint32_t>(runMode));
         return AICPU_SCHEDULE_ERROR_INIT_FAILED;
     }
 
