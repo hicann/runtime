@@ -814,7 +814,7 @@ BqsStatus RouterServer::ParseRelationInfo(Mbuf** mbufPtr)
         if ((((qsRouterHeadPtr_->routeNum * sizeof(QueueRoute)) + sizeof(QsRouteHead)) + sizeof(QueueRouteQuery)) !=
             qsRouterHeadPtr_->length) {
             BQS_LOG_ERROR(
-                "[RouterServer]RouteNum[%d] is inconsistent with dataLen[%d] in subEventId[%u]",
+                "[RouterServer]RouteNum[%d] is inconsistent with dataLen[%d] in query msg, subEventId[%u]",
                 qsRouterHeadPtr_->routeNum, qsRouterHeadPtr_->length, subEventId_);
             return BQS_STATUS_PARAM_INVALID;
         }
@@ -826,7 +826,7 @@ BqsStatus RouterServer::ParseRelationInfo(Mbuf** mbufPtr)
     } else {
         if (((qsRouterHeadPtr_->routeNum * sizeof(QueueRoute)) + sizeof(QsRouteHead)) != qsRouterHeadPtr_->length) {
             BQS_LOG_ERROR(
-                "[RouterServer]RouteNum[%d] is inconsistent with dataLen[%d] in subEventId[%u]",
+                "[RouterServer]RouteNum[%d] is inconsistent with dataLen[%d] in non-query msg, subEventId[%u]",
                 qsRouterHeadPtr_->routeNum, qsRouterHeadPtr_->length, subEventId_);
             return BQS_STATUS_PARAM_INVALID;
         }
@@ -1199,14 +1199,14 @@ void RouterServer::ManageQsEvent()
             continue;
         } else if (schedRet == DRV_ERROR_PARA_ERROR) {
             BQS_LOG_ERROR(
-                "ManageQsEvent bind/unbind/query event failed, deviceId[%u] groupId[%u] error[%d].", deviceId_,
-                bindQueueGroupId_, static_cast<int32_t>(schedRet));
+                "ManageQsEvent bind/unbind/query event failed with para error, deviceId[%u] groupId[%u] error[%d].",
+                deviceId_, bindQueueGroupId_, static_cast<int32_t>(schedRet));
             break;
         } else {
             // LOG ERROR
             BQS_LOG_ERROR(
-                "ManageQsEvent bind/unbind/query event failed, deviceId[%u] groupId[%u] error[%d].", deviceId_,
-                bindQueueGroupId_, static_cast<int32_t>(schedRet));
+                "ManageQsEvent bind/unbind/query event failed with other error, deviceId[%u] groupId[%u] error[%d].",
+                deviceId_, bindQueueGroupId_, static_cast<int32_t>(schedRet));
         }
     }
     BQS_LOG_INFO("[RouterServer] ManageQsEvent of RouterServer thread exit.");

@@ -67,7 +67,9 @@ public:
     uint32_t GetAicpuPhysIndexInVfMode(const uint32_t aicpuLogIndex, const uint32_t deviceId) const
     {
         if (aicpuLogIndex >= aiCpuIds_.size()) {
-            BQS_LOG_ERROR("Get aicpu index error");
+            BQS_LOG_ERROR(
+                "Get aicpu index in vf mode error, aicpuLogIndex[%u] invalid, valid range is [0, %zu)", aicpuLogIndex,
+                aiCpuIds_.size());
             return 0U;
         }
         if (FeatureCtrl::IsVfModeDie1(deviceId)) {
@@ -79,7 +81,9 @@ public:
     uint32_t GetExtraAicpuPhysIndexInVfMode(const uint32_t aicpuLogIndex, const uint32_t deviceId) const
     {
         if (aicpuLogIndex >= aiCpuIdsExtra_.size()) {
-            BQS_LOG_ERROR("Get aicpu index error");
+            BQS_LOG_ERROR(
+                "Get extra aicpu index in vf mode error, aicpuLogIndex[%u] invalid, valid range is [0, %zu)",
+                aicpuLogIndex, aiCpuIdsExtra_.size());
             return 0U;
         }
         if (FeatureCtrl::IsVfModeDie1(deviceId)) {

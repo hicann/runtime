@@ -938,3 +938,12 @@ TEST_F(QsInterfaceUtest, GetAicpuPhysIndex_002)
     uint32_t ret = qsInterface.GetAicpuPhysIndex(0, 1);
     EXPECT_EQ(ret, 34);
 }
+
+TEST_F(QsInterfaceUtest, GetAicpuPhysIndexOutOfRange001)
+{
+    QueueScheduleInterface& qsInterface = QueueScheduleInterface::GetInstance();
+    qsInterface.aiCpuIds_ = {12, 34};
+    MOCKER_CPP(&FeatureCtrl::IsAosCore).stubs().will(returnValue(false));
+    uint32_t ret = qsInterface.GetAicpuPhysIndex(0, 5);
+    EXPECT_EQ(ret, 0);
+}

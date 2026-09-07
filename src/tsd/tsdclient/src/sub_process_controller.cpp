@@ -336,7 +336,7 @@ TSD_StatusT SubProcessController::ExecuteClosePidList(
 {
     if ((closeList == nullptr) || (pidCnt == 0U) || (pidCnt > MAX_PROCESS_PID_CNT)) {
         TSD_ERROR(
-            "input param is error, closeList:%s, pidCnt:%u, valid range is [1, %u]",
+            "input param is invalid, closeList:%s, pidCnt:%u, valid range is [1, %u]",
             (closeList == nullptr) ? "null" : "not null", pidCnt, MAX_PROCESS_PID_CNT);
         return TSD_INTERNAL_ERROR;
     }

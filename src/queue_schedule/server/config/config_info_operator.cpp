@@ -425,7 +425,7 @@ BqsStatus ConfigInfoOperator::QueryGroup(const uintptr_t mbufData, const uint64_
         onlyQryNum ? (sizeof(ConfigQuery) + sizeof(CfgRetInfo)) :
                      (sizeof(ConfigQuery) + sizeof(ConfigInfo) + (endpointNum * sizeof(Endpoint)) + sizeof(CfgRetInfo));
     if (dataLen != totalLen) {
-        BQS_LOG_ERROR("mbuf dataLen[%lu] is not equal with totalLen[%zu].", dataLen, totalLen);
+        BQS_LOG_ERROR("mbuf dataLen[%lu] is not equal to totalLen[%zu].", dataLen, totalLen);
         return BQS_STATUS_PARAM_INVALID;
     }
 
@@ -479,7 +479,7 @@ BqsStatus ConfigInfoOperator::QueryRoutes(const uintptr_t mbufData, const uint64
         onlyQryNum ? (sizeof(ConfigQuery) + sizeof(CfgRetInfo)) :
                      (sizeof(ConfigQuery) + sizeof(ConfigInfo) + (routeNum * sizeof(Route)) + sizeof(CfgRetInfo));
     if (dataLen != totalLen) {
-        BQS_LOG_ERROR("mbuf dataLen[%lu] is not equal with totalLen[%zu].", dataLen, totalLen);
+        BQS_LOG_ERROR("mbuf dataLen[%lu] is not equal to totalLen[%zu].", dataLen, totalLen);
         return BQS_STATUS_PARAM_INVALID;
     }
 
@@ -1152,7 +1152,7 @@ BqsStatus ConfigInfoOperator::CheckAndRecordAddGrpInfo() const
             return BQS_STATUS_PARAM_INVALID;
         }
         if (entity->GetType() == dgw::EntityType::ENTITY_GROUP) {
-            BQS_LOG_ERROR("Not allowed group[%s] exist in group.", entity->ToString().c_str());
+            BQS_LOG_ERROR("Not allowed group[%s] exists in group.", entity->ToString().c_str());
             return BQS_STATUS_PARAM_INVALID;
         }
         entityVec.emplace_back(entity);

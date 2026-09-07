@@ -154,3 +154,67 @@ TEST_F(QsLogUtest, CheckLogLevel003)
     bqs::HostQsLog::GetInstance().CheckLogLevel(0, 1);
     EXPECT_NE(&(bqs::HostQsLog::GetInstance()), nullptr);
 }
+
+TEST_F(QsLogUtest, BqsCheckAssign32UAddOverflow001)
+{
+    uint32_t result = 0U;
+    bool onceOverFlow = false;
+    bqs::BqsCheckAssign32UAdd(UINT32_MAX, 1U, result, onceOverFlow);
+    EXPECT_EQ(onceOverFlow, true);
+    EXPECT_EQ(result, 0U);
+}
+
+TEST_F(QsLogUtest, BqsCheckAssign32UAddOverflow002)
+{
+    uint32_t result = 0U;
+    bool onceOverFlow = true;
+    bqs::BqsCheckAssign32UAdd(UINT32_MAX, UINT32_MAX, result, onceOverFlow);
+    EXPECT_EQ(onceOverFlow, true);
+    EXPECT_EQ(result, 0U);
+}
+
+TEST_F(QsLogUtest, BqsCheckAssign32UAddNormal001)
+{
+    uint32_t result = 0U;
+    bool onceOverFlow = false;
+    bqs::BqsCheckAssign32UAdd(100U, 200U, result, onceOverFlow);
+    EXPECT_EQ(onceOverFlow, false);
+    EXPECT_EQ(result, 300U);
+}
+
+TEST_F(QsLogUtest, BqsCheckAssign32UMutiOverflow001)
+{
+    uint32_t result = 0U;
+    bool onceOverFlow = false;
+    bqs::BqsCheckAssign32UMuti(UINT32_MAX, 2U, result, onceOverFlow);
+    EXPECT_EQ(onceOverFlow, true);
+    EXPECT_EQ(result, 0U);
+}
+
+TEST_F(QsLogUtest, BqsCheckAssign32UMutiNormal001)
+{
+    uint32_t result = 0U;
+    bool onceOverFlow = false;
+    bqs::BqsCheckAssign32UMuti(100U, 0U, result, onceOverFlow);
+    EXPECT_EQ(onceOverFlow, false);
+    EXPECT_EQ(result, 0U);
+    bqs::BqsCheckAssign32UMuti(100U, 3U, result, onceOverFlow);
+    EXPECT_EQ(onceOverFlow, false);
+    EXPECT_EQ(result, 300U);
+}
+
+TEST_F(QsLogUtest, BqsCheckAssign64UAddOverflow001)
+{
+    bool onceOverFlow = false;
+    const uint64_t ret = bqs::BqsCheckAssign64UAdd(UINT64_MAX, 1UL, onceOverFlow);
+    EXPECT_EQ(onceOverFlow, true);
+    EXPECT_EQ(ret, 0UL);
+}
+
+TEST_F(QsLogUtest, BqsCheckAssign64UAddNormal001)
+{
+    bool onceOverFlow = false;
+    const uint64_t ret = bqs::BqsCheckAssign64UAdd(100UL, 200UL, onceOverFlow);
+    EXPECT_EQ(onceOverFlow, false);
+    EXPECT_EQ(ret, 300UL);
+}

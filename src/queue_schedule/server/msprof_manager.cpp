@@ -232,7 +232,7 @@ void BqsMsprofManager::ReportApiPerf(const ProfInfo& profData) const
         DGW_LOG_ERROR("[Prof]Report api failed, ret=%d, itemId=%lu", static_cast<int32_t>(ret), profData.itemId);
     }
 
-    DGW_LOG_INFO("[Prof]Send api perf success, itemId=%lu, beginTime=%lu.", reportData.itemId, reportData.beginTime);
+    DGW_LOG_INFO("[Prof]Send api perf success, itemId=%lu, beginTime=%luus.", reportData.itemId, reportData.beginTime);
 
     return;
 }
@@ -260,7 +260,7 @@ void BqsMsprofManager::ReportEventPerf(const ProfInfo& profData)
     }
 
     DGW_LOG_INFO(
-        "[Prof]Send event perf success, requestId=%u, itemId=%lu, timeStamp=%lu.", reportData.requestId,
+        "[Prof]Send event perf success, requestId=%u, itemId=%lu, timeStamp=%luus.", reportData.requestId,
         reportData.itemId, reportData.timeStamp);
 
     return;

@@ -109,7 +109,11 @@ int32_t CheckSupportedTsKernel::Compute(const aicpu::HwtsTsKernel& tsKernelInfo)
     const char* const kernelName = PtrToPtr<void, const char>(ValueToPtr(supportedCfg->kernelNameAddr));
     uint32_t* resultAddr = PtrToPtr<void, uint32_t>(ValueToPtr(supportedCfg->checkResultAddr));
     if ((kernelName == nullptr) || (kernelNameLen == 0) || (resultAddr == nullptr)) {
-        aicpusd_err("CheckKernelSupportedConfig params error");
+        aicpusd_err(
+            "CheckKernelSupportedConfig params error in ts kernel, kernelName is %s, kernelNameLen[%u], resultAddr is "
+            "%s",
+            (kernelName == nullptr) ? "null" : "not null", kernelNameLen,
+            (resultAddr == nullptr) ? "null" : "not null");
         return AICPU_SCHEDULE_FAIL;
     }
 

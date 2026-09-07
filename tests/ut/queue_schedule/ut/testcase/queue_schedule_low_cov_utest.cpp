@@ -22,6 +22,7 @@
 #include "hccl/hcom.h"
 #include "hccl/hccl_ex.h"
 #include "hccl/hccl_so_manager.h"
+#include "hccl/comm_channel_queue.h"
 #include "bqs_log.h"
 #include "qs_args_parser.h"
 #include "tsd.h"
@@ -192,6 +193,20 @@ TEST_F(QueueScheduleLowCovUtest, TsdClientStubFunctions)
     EXPECT_EQ(SendUpdateProfilingRspToTsd(0U, 1U, 2U, 3U), 0);
     EXPECT_EQ(CreateOrFindCustPid(0U, 1U, libNames, 2U, 3U, "group", 1U, &custPid, &firstStart), 0);
     EXPECT_EQ(SetSubProcScheduleMode(0U, 1U, 2U, 3U, &scheduleMode), 0);
+}
+
+TEST_F(QueueScheduleLowCovUtest, CommChannelQueueInitInvalidDepth)
+{
+    CommChannelQueue<uint32_t> queue;
+    EXPECT_EQ(queue.Init(0U), FsmStatus::FSM_FAILED);
+    EXPECT_EQ(queue.Init(MAX_QUEUE_DEPTH + 1U), FsmStatus::FSM_FAILED);
+}
+
+TEST_F(QueueScheduleLowCovUtest, CommChannelQueueInitAndUninit)
+{
+    CommChannelQueue<uint32_t> queue;
+    EXPECT_EQ(queue.Init(4U), FsmStatus::FSM_SUCCESS);
+    queue.Uninit();
 }
 
 } // namespace

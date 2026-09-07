@@ -117,7 +117,9 @@ uint32_t QueueScheduleInterface::GetAicpuPhysIndex(uint32_t deviceId, const uint
     }
 
     if (aicpuLogIndex >= aiCpuIds_.size()) {
-        BQS_LOG_WARN("Get aicpu index not success");
+        BQS_LOG_WARN(
+            "Get aicpu index not success, aicpuLogIndex[%u] invalid, valid range is [0, %zu)", aicpuLogIndex,
+            aiCpuIds_.size());
         return 0U;
     }
 
@@ -135,7 +137,9 @@ uint32_t QueueScheduleInterface::GetExtraAicpuPhysIndex(uint32_t deviceId, const
     return ((aicpuBaseIdExtra_ + aicpuNumExtra_) * deviceId) + aicpuBaseIdExtra_ + aicpuLogIndex;
 #else
     if (aicpuLogIndex >= aiCpuIdsExtra_.size()) {
-        BQS_LOG_ERROR("Get aicpu index error");
+        BQS_LOG_ERROR(
+            "Get extra aicpu index error, aicpuLogIndex[%u] invalid, valid range is [0, %zu)", aicpuLogIndex,
+            aiCpuIdsExtra_.size());
         return 0U;
     }
 #ifdef BIND_CPU_ONLY_ONE_DEVICE

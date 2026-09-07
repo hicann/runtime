@@ -186,7 +186,7 @@ inline void BqsCheckAssign32UAdd(const uint32_t para1, const uint32_t para2, uin
         return;
     }
     if ((UINT32_MAX - para1) < para2) {
-        BQS_LOG_ERROR("Integer reversed para1: %u + para2: %u", para1, para2);
+        BQS_LOG_ERROR("Integer overflow para1: %u + para2: %u", para1, para2);
         onceOverFlow = true;
         return;
     }
@@ -206,7 +206,7 @@ inline void BqsCheckAssign32UMuti(const uint32_t para1, const uint32_t para2, ui
         return;
     }
     if ((para1 != 0U) && (para2 != 0U) && ((UINT32_MAX / para1) < para2)) {
-        BQS_LOG_ERROR("Integer reversed para1: %u * para2: %u", para1, para2);
+        BQS_LOG_ERROR("Integer overflow para1: %u * para2: %u", para1, para2);
         onceOverFlow = true;
         return;
     }
@@ -220,7 +220,7 @@ inline uint64_t BqsCheckAssign64UAdd(const uint64_t para1, const uint64_t para2,
         return 0U;
     }
     if ((UINT64_MAX - para1) < para2) {
-        BQS_LOG_ERROR("Integer reversed para1: %lu + para2: %lu", para1, para2);
+        BQS_LOG_ERROR("Integer overflow para1: %lu + para2: %lu", para1, para2);
         onceOverFlow = true;
         return 0U;
     }

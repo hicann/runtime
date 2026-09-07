@@ -54,7 +54,7 @@ public:
     FsmStatus Init(const uint32_t depth)
     {
         if ((depth == 0U) || (depth > MAX_QUEUE_DEPTH)) {
-            BQS_LOG_ERROR("Invalid parameter, depth:[%u].", depth);
+            BQS_LOG_ERROR("Invalid parameter, depth:[%u], valid range is [1, %u].", depth, MAX_QUEUE_DEPTH);
             return FsmStatus::FSM_FAILED;
         }
         depth_ = depth;
@@ -64,11 +64,11 @@ public:
             BQS_LOG_ERROR("Failed to kzalloc memory for queue, depth=[%u].", depth_);
             return FsmStatus::FSM_FAILED;
         }
-        BQS_LOG_DEBUG("Success to alloc memory[%zu].", sizeof(T) * depth_);
+        BQS_LOG_DEBUG("Successfully alloced memory[%zu] bytes.", sizeof(T) * depth_);
 
         head_ = 0U;
         tail_ = 0U;
-        BQS_LOG_DEBUG("Success to init comm channel queue, depth:[%u].", depth_);
+        BQS_LOG_DEBUG("Successfully inited comm channel queue, depth:[%u].", depth_);
         return FsmStatus::FSM_SUCCESS;
     }
 
@@ -80,12 +80,12 @@ public:
         if (ring_ != nullptr) {
             delete[] ring_;
             ring_ = nullptr;
-            BQS_LOG_DEBUG("Success to free memory[%zu].", sizeof(T) * depth_);
+            BQS_LOG_DEBUG("Successfully freed memory[%zu] bytes.", sizeof(T) * depth_);
         }
         head_ = 0U;
         tail_ = 0U;
         depth_ = 1U;
-        BQS_LOG_DEBUG("Success to uninit comm channel queue.");
+        BQS_LOG_DEBUG("Successfully uninited comm channel queue.");
     }
 
     /**

@@ -58,7 +58,7 @@ int32_t DumpDataInfoTsKernel::Compute(const aicpu::HwtsTsKernel& tsKernelInfo)
     constexpr size_t len = sizeof(aicpu::AicpuParamHead) + (singleOpDumpParamNum * sizeof(uint64_t));
     const aicpu::AicpuParamHead* const paramHead = PtrToPtr<void, aicpu::AicpuParamHead>(ValueToPtr(kernel.paramBase));
     if (paramHead == nullptr) {
-        aicpusd_err("paramHead for DumpDataKernel is nullptr");
+        aicpusd_err("ParamHead for DumpDataKernel is nullptr");
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
 

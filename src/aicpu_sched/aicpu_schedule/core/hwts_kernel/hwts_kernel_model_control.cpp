@@ -126,10 +126,10 @@ int32_t ModelStopTsKernel::Compute(const aicpu::HwtsTsKernel& tsKernelInfo)
     for (uint32_t i = 0U; i < modelIdNum; ++i) {
         const int32_t ret = AicpuScheduleInterface::GetInstance().Stop(modelIds[i]);
         if (ret != AICPU_SCHEDULE_OK) {
-            aicpusd_err("Stop model[%u] failed, ret[%d].", modelIds[i], ret);
+            aicpusd_err("Stop model[%u] failed in ts kernel, ret[%d].", modelIds[i], ret);
             return AICPU_SCHEDULE_FAIL;
         }
-        aicpusd_info("Stop model[%u] success", modelIds[i]);
+        aicpusd_info("Stop model[%u] success in ts kernel", modelIds[i]);
     }
 
     aicpusd_run_info("Finish to process ts kernel ModelStop event, [%u] model had been processed.", modelIdNum);
@@ -158,10 +158,10 @@ int32_t ModelClearAndRestartTsKernel::Compute(const aicpu::HwtsTsKernel& tsKerne
 
         ret = AicpuScheduleInterface::GetInstance().Restart(modelIds[i]);
         if (ret != AICPU_SCHEDULE_OK) {
-            aicpusd_err("Restart model[%u] failed, ret[%d].", modelIds[i], ret);
+            aicpusd_err("Restart model[%u] failed in ts kernel, ret[%d].", modelIds[i], ret);
             return AICPU_SCHEDULE_FAIL;
         }
-        aicpusd_info("Restart model[%u] success", modelIds[i]);
+        aicpusd_info("Restart model[%u] success in ts kernel", modelIds[i]);
     }
 
     aicpusd_run_info(

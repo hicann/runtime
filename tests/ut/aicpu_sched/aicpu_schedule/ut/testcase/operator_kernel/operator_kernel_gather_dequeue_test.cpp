@@ -42,7 +42,7 @@ void ClearMbufHeads()
 
 drvError_t halQueueDeQueueHead(unsigned int devId, unsigned int qid, void** mbuf)
 {
-    std::cout << "try to dequed mbuf from queue: " << qid << std::endl;
+    std::cout << "try to dequeue mbuf from queue: " << qid << std::endl;
     if (qid >= 3U) {
         return DRV_ERROR_NO_DEVICE;
     }
@@ -53,7 +53,7 @@ drvError_t halQueueDeQueueHead(unsigned int devId, unsigned int qid, void** mbuf
 
     auto& head = g_mbufHeads[qid][g_dequeCursor[qid]];
     *mbuf = (Mbuf*)(&head);
-    std::cout << "dequed mbuf: " << *mbuf << " from queue: " << qid << std::endl;
+    std::cout << "dequeued mbuf: " << *mbuf << " from queue: " << qid << std::endl;
     g_dequeCursor[qid]++;
     if ((head.transId == 0U) && (head.routeLabel == 0U)) {
         return DRV_ERROR_QUEUE_EMPTY;

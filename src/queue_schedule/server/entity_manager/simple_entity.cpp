@@ -247,7 +247,7 @@ Mbuf* SimpleEntity::AllocateMbuf(const uint64_t desBufLen) const
     auto drvRet = halMbufAllocEx(desBufLen, MBUF_ALLOC_ALIGN, flag, memGroupId, &mbufPtr);
     if ((drvRet != static_cast<int32_t>(DRV_ERROR_NONE)) || mbufPtr == nullptr) {
         BQS_LOG_ERROR(
-            "halMbufAllocEx failed, drvRet=%d, dataSize=%lu, flag=%lu, groupId=%d.", drvRet, desBufLen, flag,
+            "halMbufAllocEx failed, drvRet=%d, dataSize=%lu bytes, flag=%lu, groupId=%d.", drvRet, desBufLen, flag,
             memGroupId);
         return nullptr;
     }

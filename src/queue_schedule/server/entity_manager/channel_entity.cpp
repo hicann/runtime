@@ -190,7 +190,7 @@ FsmStatus ChannelEntity::Probe(uint64_t& dataCount, HcclMessage& msg, uint64_t& 
         }
         if (cachedEnvelopeQueue_.IsFull()) {
             DGW_LOG_INFO(
-                "Cached req count of comm channel[%s] is up to [%u] and cachedEnvelopeQueue is up to [%u],"
+                "Cached req count of comm channel[%s] is up to [%u] and cachedEnvelopeQueue is up to [%u], "
                 "then skip probe.",
                 entityDesc_.c_str(), maxCachedReqCount_, cachedEnvelopeQueue_.Size());
             return FsmStatus::FSM_FAILED;

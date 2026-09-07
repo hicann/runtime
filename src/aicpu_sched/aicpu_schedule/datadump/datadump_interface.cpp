@@ -54,13 +54,13 @@ int32_t InitAICPUDatadump(const uint32_t deviceId, const pid_t hostPid)
     if (deployContext == AicpuSchedule::DeployContext::DEVICE) {
         const drvError_t ret = drvGetProcessSign(&pidSign);
         if (ret != DRV_ERROR_NONE) {
-            aicpusd_err("Get process sign failed, ret[%d].", ret);
+            aicpusd_err("Get process sign failed in datadump, ret[%d].", ret);
             return AICPU_SCHEDULE_FAIL;
         }
     } else {
         pidSign.sign[0U] = '\0';
     }
-    aicpusd_info("Get process sign success");
+    aicpusd_info("Get process sign success in datadump");
     return AicpuSchedule::AicpuScheduleInterface::GetInstance().InitAICPUScheduler(
         deviceVec, hostPid, pidSign.sign, PROFILING_CLOSE, 0U, false);
 }

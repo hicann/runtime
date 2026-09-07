@@ -51,7 +51,8 @@ void RpcHandler(const int32_t fd, EzcomRequest* const req)
     BqsServer::GetInstance().HandleBqsReqMsg(req->id, reinterpret_cast<const char_t*>(req->data), req->size);
     // send response
     BqsServer::GetInstance().SendRspMsg(fd, req->id);
-    BQS_LOG_INFO("BqsServer HandleBqsReqMsg a request success, id = %u, msg_size = %u", req->id, req->size);
+    BQS_LOG_INFO(
+        "BqsServer HandleBqsReqMsg handled a request successfully, id = %u, msg_size = %u", req->id, req->size);
     return;
 }
 
