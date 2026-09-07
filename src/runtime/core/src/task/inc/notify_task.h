@@ -34,8 +34,8 @@ void NotifyWaitTaskUnInit(TaskInfo* taskInfo);
 void ToCommandBodyForNotifyWaitTask(TaskInfo* taskInfo, rtCommand_t* const command);
 void DoCompleteSuccessForNotifyWaitTask(TaskInfo* taskInfo, const uint32_t devId);
 void PrintErrorInfoForNotifyWaitTask(TaskInfo* const taskInfo, const uint32_t devId);
-TaskInfo* GetRealReportFaultTaskForNotifyWaitTask(TaskInfo* const taskInfo, const void* info);
-void ReleaseResourceForNotifyWaitTaskOnlModel(TaskInfo* taskInfo);
+TaskInfo* GetRealReportFaultTaskForNotifyWaitTask(TaskInfo* taskInfo, const void* info);
+void ReleaseResourceForNotifyWaitTaskOnlModel(TaskInfo* const taskInfo);
 } // namespace runtime
 } // namespace cce
 #endif // RUNTIME_NOTIFY_TASK_H
