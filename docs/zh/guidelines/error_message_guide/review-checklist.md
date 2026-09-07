@@ -23,6 +23,8 @@
 （1）首字母未大写：第一个英文字母应大写（占位符除外）
 （2）末尾句号缺失：完整句子末尾应有句号；最后 `%s` 是独立 `extend_info` 且模板无句号时属于设计选择
 （3）`%s` 数量与 Arglist 不匹配：ErrMessage 中 `%s` 数量必须等于 Arglist 参数数量
+（4）`[%s]` 方括号格式：ErrMessage 中字符串变量禁止使用 `[%s]` 方括号格式，应直接使用 `%s` 或融入句式
+（5）对象 ID 缺失：ErrMessage 中涉及 stream/model/event/notify 对象时，必须打印其 ID 值
 
 ### 校验项 — suggestion 校验
 

@@ -258,9 +258,10 @@ COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER((priority != RT_STREAM_GREATEST_PRIORITY) 
     ". The actual chipType is " + std::to_string(chipType));
 ```
 
-### 参数名打印规范
+### 参数打印规范
 
-用户入参需打印参数名和参数值或地址，确保用户能准确定位问题参数。
+- 用户入参需打印参数名和参数值或地址，确保用户能准确定位问题参数。
+- 禁止使用 `[%s]` 方括号格式呈现，应直接使用 `%s` 或将变量融入句式；数值类变量（`%u`、`%d` 等）的方括号格式（如 `label [%u]`）不受此限制。
 
 ### 专有名词打印规范
 
@@ -277,6 +278,8 @@ COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER((priority != RT_STREAM_GREATEST_PRIORITY) 
 `stream id`、`model id` 等标识符打印格式：
 - `stream (stream_id=%d)`
 - `model (model_id=%d)`
+- `event (event_id=%d)`
+- `notify (notify_id=%u)`
 
 ### 内部函数名打印规范
 
