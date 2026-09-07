@@ -1769,7 +1769,7 @@ rtError_t DavidStream::HandleTaskDefault(
     return RT_ERROR_NONE;
 }
 
-rtError_t DavidStream::UpdateMemcpyTaskAndSqe(TaskInfo* task, Stream* const stream)
+rtError_t DavidStream::UpdateMemcpyTaskAndSqe(TaskInfo* task, Stream* const stream) const
 {
     rtError_t error = UpdateMemcpyTaskInfoForSnapshot(task);
     ERROR_RETURN_MSG_INNER(error, "Failed to update memcpy dma for snapshot, ret=%#x.", error);

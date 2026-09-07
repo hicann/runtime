@@ -114,7 +114,7 @@ public:
     rtError_t Restore() override;
     rtError_t ReAllocStreamId() override;
     rtError_t UpdateSnapShotSqe() override;
-    rtError_t UpdateMemcpyTaskAndSqe(TaskInfo* task, Stream* const stream);
+    rtError_t UpdateMemcpyTaskAndSqe(TaskInfo* task, Stream* const stream) const;
 
 private:
     void BuildTraceEventForTask(TaskInfo* const task, const uint32_t flags, TraceEvent& record) const;
