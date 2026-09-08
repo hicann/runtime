@@ -2223,7 +2223,7 @@ DLLEXPORT DV_ONLINE DVresult halMemcpyWait(struct DMA_ADDR* dma_addr);
  * 6. devPtr must be aligned by page size.
  * 7. Share mem addr not support prefetch, including ipc open and mem export, use may result in unexpected behavior.
  * 8. Not support vmm va, use may result in unexpected behavior.
- * 9. Prefetch addr not support sdma copy in ascend950, ascend910_96, which may lead to unpredictable behavior.
+ * 9. Prefetch addr not support sdma copy in ascend950, ascend960, which may lead to unpredictable behavior.
  * @param [in] dev_ptr: memory to prefetch
  * @param [in] len: prefetch size
  * @param [in] device: destination device for prefetching data
@@ -2240,7 +2240,7 @@ DLLEXPORT DV_ONLINE DVresult drvMemPrefetchToDevice(DVdeviceptr dev_ptr, size_t 
  * offset.
  * 2. The length of the name array and name_len must be greater than 64.
  * 3. Not support vmm va, use may result in unexpected behavior.
- * 4. For Ascend950, Ascend910_96, should config ubmem firstly.
+ * 4. For Ascend950, Ascend960, should config ubmem firstly.
  * @param [in] vptr: virtual memory to be shared
  * @param [in] byte_count: user-defined length to be shared
  * @param [in] name_len: the maximum length of the name array
@@ -2265,7 +2265,7 @@ DLLEXPORT DV_ONLINE DVresult halShmemDestroyHandle(const char* name);
  * @brief Configure the whitelist of nodes with ipc mem shared memory
  * @attention Available online, not offline. mutually exclusive with halShmemSetAttribute interface.
  * 1. The maximum number of PIDs that can be set for a shmem is:
- *     for Ascend950, Ascend910_55, Ascend910_96, is 65535;
+ *     for Ascend950, Ascend910_55, Ascend960, is 65535;
  *     for Ascend310B, Ascend910, Ascend310P, Ascend910B, Ascend910_93, is 32768.
  * @param [in] name: name used for sharing between processes
  * @param [in] pid: host pid whitelist array
@@ -2294,7 +2294,7 @@ DLLEXPORT DV_ONLINE DVresult halShmemSetPodPid(const char* name, uint32_t sdid, 
  * @attention
  * 1、Available online, not offline.
  * 2、Ipc not support access double pgtable offset addr.
- * 3、Ipc not support sdma copy in ascend950, ascend910_96, which may lead to unpredictable behavior.
+ * 3、Ipc not support sdma copy in ascend950, ascend960, which may lead to unpredictable behavior.
  * @param [in] name: name used for sharing between processes
  * @param [out] vptr: virtual address with access to shared memory
  * @return DRV_ERROR_NONE : success
@@ -2308,7 +2308,7 @@ DLLEXPORT DV_ONLINE DVresult halShmemOpenHandle(const char* name, DVdeviceptr* v
  * @attention
  * 1. Available online, not offline.
  * 2. Ipc not support access double pgtable offset addr.
- * 3. Ipc not support sdma copy in ascend950, ascend910_96, which may lead to unpredictable behavior.
+ * 3. Ipc not support sdma copy in ascend950, ascend960, which may lead to unpredictable behavior.
  * @param [in] name: name used for sharing between processes
  * @param [in] dev_id: logic devid
  * @param [out] vptr: virtual address with access to shared memory
@@ -2657,7 +2657,7 @@ DLLEXPORT drvError_t halMemRetainAllocationHandle(drv_mem_handle_t** handle, voi
  * @attention
  * 1. Only support ONLINE scene.
  * 2. If page type is MEM_GIANT_PAGE_TYPE, size and ptr must be aligned by 1G.
- * 3. Shared scene not support sdma copy in ascend950, ascend910_96, which may lead to unpredictable behavior.
+ * 3. Shared scene not support sdma copy in ascend950, ascend960, which may lead to unpredictable behavior.
  * @param [in] ptr: address where memory will be mapped, must be aligned by 2M.
  * @param [in] size: size of the memory mapping, must be aligned by 2M.
  * @param [in] offset: currently unused, must be zero.

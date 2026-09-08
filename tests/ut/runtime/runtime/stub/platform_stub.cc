@@ -140,7 +140,7 @@ const std::map<std::string, StubVersionInfo> kVersionInfoMap = {
     {"Ascend610Lite", {"12", "3101"}},    {"MC62CM12AA", {"17", "3511"}},    {"MC32DM11AA", {"18", "3512"}},
     {"Ascend950PR_9599", {"15", "3510"}}, {"Ascend5162A", {"21", "5162"}},   {"KirinX90", {"200", "3003"}},
     {"Kirin9030", {"201", "3113"}},       {"KirinDev0000", {"202", "5101"}}, {"KirinDev0001", {"203", "5161"}},
-    {"KirinDev0002", {"204", "5165"}},    {"KirinDev0003", {"205", "5163"}}, {"Ascend910_9699", {"16", "9201"}},
+    {"KirinDev0002", {"204", "5165"}},    {"KirinDev0003", {"205", "5163"}}, {"Ascend960DT_961BY", {"16", "9201"}},
 };
 
 const std::map<std::string, StubFieldMap> kSocInfoMap = {
@@ -213,7 +213,7 @@ const std::map<std::string, StubFieldMap> kSocInfoMap = {
       {"normal_stream_depth", "8192"},
       {"huge_stream_num", "16"},
       {"huge_stream_depth", "4096"}}},
-    {"Ascend910_9699",
+    {"Ascend960DT_961BY",
      {{"normal_stream_num", "65535"},
       {"normal_stream_depth", "2049"},
       {"huge_stream_num", "0"},

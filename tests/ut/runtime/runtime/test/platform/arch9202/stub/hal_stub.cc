@@ -131,7 +131,7 @@ drvError_t halGetDeviceInfo(uint32_t devId, int32_t moduleType, int32_t infoType
     if (value) {
         if (moduleType == MODULE_TYPE_SYSTEM && infoType == INFO_TYPE_VERSION) {
             *value =
-                PLATFORMCONFIG_ASCEND_910_9691; // 等到后续arch9202的ini文件上库之后，这个需要修改，暂时先在ut中打桩GetChipTypeFromPlatform函数
+                PLATFORMCONFIG_ASCEND_960DT_968B7; // 等到后续arch9202的ini文件上库之后，这个需要修改，暂时先在ut中打桩GetChipTypeFromPlatform函数
         } else if (moduleType == MODULE_TYPE_SYSTEM && infoType == INFO_TYPE_CORE_NUM) {
             *value = g_device_driver_version_stub;
         } else {
@@ -1091,7 +1091,7 @@ drvError_t halGetSocVersion(uint32_t devId, char* soc_version, uint32_t len)
 {
     error_t err = strcpy_s(
         soc_version, len,
-        "Ascend910_9699"); // 等到后续arch9202的ini文件上库之后，这个需要修改，暂时先在ut中打桩GetChipTypeFromPlatform函数
+        "Ascend960DT_961BY"); // 等到后续arch9202的ini文件上库之后，这个需要修改，暂时先在ut中打桩GetChipTypeFromPlatform函数
     if (err != EOK) {
         return DRV_ERROR_NOT_SUPPORT;
     }
@@ -1121,7 +1121,7 @@ drvError_t halGetChipInfo(unsigned int devId, halChipInfo* chipInfo)
 {
     (void)strcpy(
         reinterpret_cast<char*>(chipInfo->name),
-        "910_9691"); // 等到后续arch9202的ini文件上库之后，这个需要修改，暂时先在ut中打桩GetChipTypeFromPlatform函数
+        "960DT_968B7"); // 等到后续arch9202的ini文件上库之后，这个需要修改，暂时先在ut中打桩GetChipTypeFromPlatform函数
     return DRV_ERROR_NONE;
 }
 
