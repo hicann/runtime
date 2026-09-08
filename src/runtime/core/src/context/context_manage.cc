@@ -165,7 +165,7 @@ Device* ContextManage::GetActiveContextDevice(Context* const ctx)
 
 bool ContextManage::IsContextOnDevice(Context* const ctx, const int32_t devId)
 {
-    if (!HasAttachedDevice(ctx) || (devId < 0)) {
+    if (!HasAttachedDevice(ctx) || (devId < 0) || (ctx->Device_()->GetChipType() == CHIP_XPU)) {
         return false;
     }
     return ctx->Device_()->Id_() == static_cast<uint32_t>(devId);

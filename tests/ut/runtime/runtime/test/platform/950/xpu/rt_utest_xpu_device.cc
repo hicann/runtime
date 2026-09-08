@@ -212,6 +212,19 @@ TEST_F(XpuDeviceTest, SetXpuDevice_success)
     EXPECT_EQ(error, ACL_RT_SUCCESS);
 }
 
+TEST_F(XpuDeviceTest, IsContextOnDevice_ReturnsFalseForXpuContextBeforeRuntimeBinding)
+{
+    XpuDevice* const xpuDev = new XpuDevice(0);
+    XpuContext xpuCtx(xpuDev, true);
+    ContextManage::InsertContext(&xpuCtx);
+
+    EXPECT_FALSE(ContextManage::IsContextOnDevice(&xpuCtx, 0));
+
+    EXPECT_EQ(ContextManage::RemoveContextFromSet(&xpuCtx), RT_ERROR_NONE);
+    xpuCtx.AttachDevice(nullptr);
+    delete xpuDev;
+}
+
 TEST_F(XpuDeviceTest, SetXpuDevice_Offline)
 {
     MOCKER(drvGetPlatformInfo).stubs().will(invoke(drvGetPlatformInfo_offline));
