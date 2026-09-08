@@ -85,15 +85,21 @@ TSD_StatusT PackageEnvInfo::GetTrustedBasePathFromDevice(int32_t& peerNode, std:
 
 std::string PackageEnvInfo::GetCurHostMutexFile(bool useCannPath) const
 {
+    std::string mutexFile = QUEUE_SCHEDULE_SO;
+    const std::string queueSoPath = hostSoPath_ + mutexFile;
+    if (mmAccess(queueSoPath.c_str()) != EN_OK) {
+        TSD_INFO("Queue so path[%s] does not exist", queueSoPath.c_str());
+        mutexFile = MUTEX_FILE_PREFIX + "0" + ".cfg";
+    }
     if (!useCannPath) {
-        return QUEUE_SCHEDULE_SO;
+        return mutexFile;
     }
     int64_t masterId = 0;
     uint32_t phyId = 0U;
     auto drvRet = drvDeviceGetPhyIdByIndex(logicDeviceId_, &phyId);
     if (drvRet != DRV_ERROR_NONE) {
         TSD_RUN_WARN("Getting the physical ID was not successful, retCode[%d] deviceId[%u]", drvRet, logicDeviceId_);
-        return QUEUE_SCHEDULE_SO;
+        return mutexFile;
     }
     TSD_INFO("deviceId[%u] physical ID[%u]", logicDeviceId_, phyId);
     drvRet = halGetDeviceInfo(phyId, MODULE_TYPE_SYSTEM, INFO_TYPE_MASTERID, &masterId);
@@ -101,10 +107,10 @@ std::string PackageEnvInfo::GetCurHostMutexFile(bool useCannPath) const
         TSD_RUN_WARN(
             "Calling halGetDeviceInfo was not successful, retCode[%d] deviceId[%u] physical ID[%u]", drvRet,
             logicDeviceId_, phyId);
-        return QUEUE_SCHEDULE_SO;
+        return mutexFile;
     }
     const int64_t devOsId = masterId % SUPPORT_MAX_DEVICE_PER_HOST;
-    std::string mutexFile = MUTEX_FILE_PREFIX + std::to_string(devOsId) + ".cfg";
+    mutexFile = MUTEX_FILE_PREFIX + std::to_string(devOsId) + ".cfg";
     TSD_RUN_INFO(
         "get masterId:%lld, logicDeviceId:%u, physicalDeviceId[%u],devOsId:%lld, mutexFile:%s, maxcount:%lld", masterId,
         logicDeviceId_, phyId, devOsId, mutexFile.c_str(), SUPPORT_MAX_DEVICE_PER_HOST);

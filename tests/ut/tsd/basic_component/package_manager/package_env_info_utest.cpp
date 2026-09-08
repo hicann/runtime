@@ -72,6 +72,24 @@ void mmScandirFree2_invokeExtend(mmDirent2**, int32_t)
 
 class PackageEnvInfoComponentTest : public PackageManagerComponentTest {};
 
+TEST_F(PackageEnvInfoComponentTest, GetCurHostMutexFile_QueueSoExists_ReturnsQueueSoName)
+{
+    MOCKER(mmAccess).expects(once()).will(returnValue(EN_OK));
+    PackageEnvInfo envInfo(deviceId, static_cast<uint32_t>(ModeType::ONLINE), false, CHIP_MINI);
+    envInfo.SetHostSoPath("/test/");
+
+    EXPECT_EQ(envInfo.GetCurHostMutexFile(false), "libqueue_schedule.so");
+}
+
+TEST_F(PackageEnvInfoComponentTest, GetCurHostMutexFile_QueueSoMissing_ReturnsDefaultMutexName)
+{
+    MOCKER(mmAccess).expects(once()).will(returnValue(EN_ERROR));
+    PackageEnvInfo envInfo(deviceId, static_cast<uint32_t>(ModeType::ONLINE), false, CHIP_MINI);
+    envInfo.SetHostSoPath("/test/");
+
+    EXPECT_EQ(envInfo.GetCurHostMutexFile(false), "sink_file_mutex_0.cfg");
+}
+
 TEST_F(PackageEnvInfoComponentTest, GetAscendLatestIntallPath_LatestPathEnvSet_ReturnsEnvValue)
 {
     char env[] = "/usr/local/Asend/lastest";
@@ -84,6 +102,7 @@ TEST_F(PackageEnvInfoComponentTest, GetAscendLatestIntallPath_LatestPathEnvSet_R
 
 TEST_F(PackageEnvInfoComponentTest, GetCurHostMutexFile_LegacyAndV2DriverResults_ReturnExpectedNames)
 {
+    MOCKER(mmAccess).stubs().will(returnValue(EN_OK));
     PackageEnvInfo envInfo(deviceId, static_cast<uint32_t>(ModeType::ONLINE), false, CHIP_MINI);
 
     EXPECT_EQ(envInfo.GetCurHostMutexFile(false), "libqueue_schedule.so");
@@ -96,6 +115,7 @@ TEST_F(PackageEnvInfoComponentTest, GetCurHostMutexFile_LegacyAndV2DriverResults
 
 TEST_F(PackageEnvInfoComponentTest, GetCurHostMutexFile_PhysicalIdLookupFails_ReturnsLegacyMutexName)
 {
+    MOCKER(mmAccess).stubs().will(returnValue(EN_OK));
     PackageEnvInfo envInfo(deviceId, static_cast<uint32_t>(ModeType::ONLINE), false, CHIP_MINI);
     EXPECT_EQ(envInfo.GetCurHostMutexFile(false), "libqueue_schedule.so");
     MOCKER(halGetDeviceInfo).stubs().will(returnValue(DRV_ERROR_INVALID_VALUE));
@@ -105,6 +125,7 @@ TEST_F(PackageEnvInfoComponentTest, GetCurHostMutexFile_PhysicalIdLookupFails_Re
 
 TEST_F(PackageEnvInfoComponentTest, GetCurHostMutexFile_MasterIdAvailable_ReturnsDeviceMutexName)
 {
+    MOCKER(mmAccess).stubs().will(returnValue(EN_OK));
     PackageEnvInfo envInfo(deviceId, static_cast<uint32_t>(ModeType::ONLINE), false, CHIP_MINI);
     EXPECT_EQ(envInfo.GetCurHostMutexFile(false), "libqueue_schedule.so");
     EXPECT_EQ(envInfo.GetCurHostMutexFile(true), "sink_file_mutex_0.cfg");
