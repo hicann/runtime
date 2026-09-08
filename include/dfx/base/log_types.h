@@ -56,6 +56,7 @@ enum {
     NET = 11,      /* Network */
     HIXL = 12,     /* Hixl */
     DQS = 13,      /* DQSFW */
+    ASCTOOL = 14,  /* AscTool: npu-compute, npu-check, npu-sim */
     DEVMM = 22,    /* Dlog memory managent */
     KERNEL = 23,   /* Kernel */
     LIBMEDIA = 24, /* Libmedia */
