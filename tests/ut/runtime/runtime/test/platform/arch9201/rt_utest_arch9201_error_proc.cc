@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "driver/ascend_hal.h"
+#include "acc_error_info.h"
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
 #include "securec.h"
@@ -357,22 +358,30 @@ TEST_F(Arch9201ErrorProcTest, ProcessStarv2OneElement_AicoreAicpuFusionError)
     EXPECT_EQ(streamSqCqManage->GetStreamIdBySqId(secondRtsqId, mappedStreamId), RT_ERROR_NONE);
     EXPECT_EQ(mappedStreamId, secondStreamId);
 
-    // --- AICORE 3 core：PrintErrorInfo(1) + RT_ERROR_NONE ---
+    // --- AICORE 3 core：Ext寄存器合并 + PrintErrorInfo(1) + RT_ERROR_NONE ---
     {
+        constexpr uint16_t errorStreamId = 123U;
+        constexpr uint32_t taskSn = 456U;
+        constexpr uint64_t vecErrInfoT06 = 0x1122334400000000ULL;
         TaskInfo taskInfo = {};
         taskInfo.stream = stream;
         taskInfo.type = TS_TASK_TYPE_KERNEL_AIVEC;
+        taskInfo.taskSn = taskSn;
         MOCKER_CPP(&TaskFactory::GetTask).stubs().will(returnValue(&taskInfo));
         MOCKER(TaskFailCallBack).stubs().will(returnValue(&taskInfo));
         MOCKER(GetTaskInfo).stubs().will(returnValue(&taskInfo));
         MOCKER(PrintErrorInfo).stubs().will(invoke(PrintErrorInfoStub));
 
-        RingBufferElementInfo* info = InitRingBuffer(ctlInfo, 1);
+        RingBufferElementInfo* info = InitRingBuffer(ctlInfo, 2);
         StarsDeviceErrorInfoRingBuffer* rbErr = reinterpret_cast<StarsDeviceErrorInfoRingBuffer*>(info + 1);
         info->errorType = AICORE_ERROR;
         rbErr->u.davidCoreErrorInfo.comm.type = AICORE_ERROR;
         rbErr->u.davidCoreErrorInfo.comm.coreNum = 3;
+        rbErr->u.davidCoreErrorInfo.comm.streamId = errorStreamId;
         rbErr->u.davidCoreErrorInfo.info[0].coreId = 0;
+        rbErr->u.davidCoreErrorInfo.info[0].vecErrInfo[0] = 0x11U;
+        rbErr->u.davidCoreErrorInfo.info[0].vecErrInfo[1] = 0x22U;
+        rbErr->u.davidCoreErrorInfo.info[0].vecErrInfo[2] = 0x33U;
         rbErr->u.davidCoreErrorInfo.info[0].isConcurrentExe = 0;
         rbErr->u.davidCoreErrorInfo.info[0].ostTaskOneCore[0] = {firstRtsqId, 0, 0x100};
         rbErr->u.davidCoreErrorInfo.info[0].ostTaskOneCore[1] = {secondRtsqId, 0, 0x200};
@@ -385,11 +394,34 @@ TEST_F(Arch9201ErrorProcTest, ProcessStarv2OneElement_AicoreAicpuFusionError)
         rbErr->u.davidCoreErrorInfo.info[2].ostTaskOneCore[0] = {firstRtsqId, 1, 0x500};
         rbErr->u.davidCoreErrorInfo.info[2].ostTaskOneCore[1] = {0, 0, 0};
 
+        uintptr_t extAddr = reinterpret_cast<uintptr_t>(info) + RINGBUFFER_EXT_ONE_ELEMENT_LENGTH_ON_DAVID;
+        RingBufferElementInfo* extInfo = reinterpret_cast<RingBufferElementInfo*>(extAddr);
+        DavidCoreErrorInfoExt* extData = reinterpret_cast<DavidCoreErrorInfoExt*>(extInfo + 1);
+        extInfo->errorType = AICORE_EXT_ERROR;
+        extData->comm.coreNum = 3;
+        extData->info[0].coreId = 0;
+        extData->info[0].validSize = sizeof(extData->info[0].aicCond) + sizeof(extData->info[0].vecErrInfoT06);
+        extData->info[0].aicCond = 0x55667788U;
+        extData->info[0].vecErrInfoT06 = vecErrInfoT06;
+
+        const std::pair<uint32_t, uint32_t> exceptionRegKey = {errorStreamId, taskSn};
+        auto& exceptionRegMap = device->GetExceptionRegMap();
+        (void)exceptionRegMap.erase(exceptionRegKey);
         g_printErrCnt = 0;
         g_callCnt = 0;
-        EXPECT_EQ(errorProc->ProcessStarv2OneElementInRingBuffer(ctlInfo, 0, 1, 1), RT_ERROR_NONE);
+        ClearLastDlogRecordLine();
+        EXPECT_EQ(errorProc->ProcessStarv2OneElementInRingBuffer(ctlInfo, 0, 2, 1), RT_ERROR_NONE);
         EXPECT_EQ(g_printErrCnt, 1U);
         EXPECT_EQ(g_callCnt, 0U);
+        EXPECT_TRUE(DlogRecordContains("vec error info: 0x11,0x22,0x33,0x1122334400000000"));
+        EXPECT_TRUE(DlogRecordContains("aic cond: 0x55667788"));
+
+        const auto regIt = exceptionRegMap.find(exceptionRegKey);
+        EXPECT_NE(regIt, exceptionRegMap.end());
+        if ((regIt != exceptionRegMap.end()) && (!regIt->second.empty())) {
+            EXPECT_EQ(regIt->second[0].errReg[RT_V200_VEC_ERR_INFO_T0_6], 0x11223344U);
+        }
+        EXPECT_EQ(exceptionRegMap.erase(exceptionRegKey), 1U);
     }
 
     // --- AICPU：仅 PrintErrorInfo(1)，不触发回调 ---

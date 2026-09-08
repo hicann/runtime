@@ -53,9 +53,11 @@ rtError_t CheckFusionKernelErrorInfoStub(
 {
     EXPECT_EQ(info->u.fusionKernelErrorInfo.aicInfo.info[1].coreId, 25U);
     EXPECT_EQ(info->u.fusionKernelErrorInfo.aicInfo.info[1].aicCond, 0x1234U);
+    EXPECT_EQ(info->u.fusionKernelErrorInfo.aicInfo.info[1].vecErrInfoT06, 0x1234567800000000ULL);
     EXPECT_EQ(info->u.fusionKernelErrorInfo.aicInfo.info[1].rsvExt[0], 0x13579BDFU);
     EXPECT_EQ(info->u.fusionKernelErrorInfo.aivInfo.info[1].coreId, 27U);
     EXPECT_EQ(info->u.fusionKernelErrorInfo.aivInfo.info[1].aicCond, 0x9abcU);
+    EXPECT_EQ(info->u.fusionKernelErrorInfo.aivInfo.info[1].vecErrInfoT06, 0x9ABCDEF000000000ULL);
     EXPECT_EQ(info->u.fusionKernelErrorInfo.aivInfo.info[1].rsvExt[0], 0x13579BDFU);
     return RT_ERROR_NONE;
 }
@@ -111,15 +113,18 @@ static void FillFusionKernelBase(RingBufferElementInfo* info)
 }
 
 static void FillStarv2CoreExt(
-    RingBufferElementInfo* info, rtErrorType errorType, uint32_t coreIndex, uint32_t coreId, uint64_t aicCond)
+    RingBufferElementInfo* info, rtErrorType errorType, uint32_t coreIndex, uint32_t coreId, uint64_t aicCond,
+    uint64_t vecErrInfoT06)
 {
     DavidCoreErrorInfoExt* extData = reinterpret_cast<DavidCoreErrorInfoExt*>(info + 1);
     info->errorType = errorType;
     extData->comm.coreNum = coreIndex + 1U;
     extData->info[coreIndex].coreId = coreId;
-    extData->info[coreIndex].validSize =
-        sizeof(extData->info[coreIndex].aicCond) + sizeof(extData->info[coreIndex].rsv[0]);
+    extData->info[coreIndex].validSize = sizeof(extData->info[coreIndex].aicCond) +
+                                         sizeof(extData->info[coreIndex].vecErrInfoT06) +
+                                         sizeof(extData->info[coreIndex].rsv[0]);
     extData->info[coreIndex].aicCond = aicCond;
+    extData->info[coreIndex].vecErrInfoT06 = vecErrInfoT06;
     extData->info[coreIndex].rsv[0] = 0x13579BDFU;
 }
 
@@ -196,11 +201,11 @@ TEST_F(DeviceTestDavid, FUSION_KERNEL_Merge_Base_WithStarv2Ext)
 
     uintptr_t aicExtAddr = infoAddr + RINGBUFFER_EXT_ONE_ELEMENT_LENGTH_ON_DAVID;
     RingBufferElementInfo* aicExtInfo = (RingBufferElementInfo*)aicExtAddr;
-    FillStarv2CoreExt(aicExtInfo, AICORE_EXT_ERROR, 1U, 25, 0x1234U);
+    FillStarv2CoreExt(aicExtInfo, AICORE_EXT_ERROR, 1U, 25, 0x1234U, 0x1234567800000000ULL);
 
     uintptr_t aivExtAddr = aicExtAddr + RINGBUFFER_EXT_ONE_ELEMENT_LENGTH_ON_DAVID;
     RingBufferElementInfo* aivExtInfo = (RingBufferElementInfo*)aivExtAddr;
-    FillStarv2CoreExt(aivExtInfo, AIVECTOR_EXT_ERROR, 1U, 27, 0x9abcU);
+    FillStarv2CoreExt(aivExtInfo, AIVECTOR_EXT_ERROR, 1U, 27, 0x9abcU, 0x9ABCDEF000000000ULL);
 
     MOCKER(ProcessDavidStarsFusionKernelErrorInfo).stubs().will(invoke(CheckFusionKernelErrorInfoStub));
     rtError_t error = errorProc->ProcessStarv2OneElementInRingBuffer(ctlInfo, 0, 3);

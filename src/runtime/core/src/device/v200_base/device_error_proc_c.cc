@@ -598,6 +598,7 @@ static void GetRegInfoErrReg(const DavidOneCoreErrorInfo& info, rtExceptionErrRe
     regInfo.errReg[RT_V200_SU_ERR_INFO_T0_6] = static_cast<uint32_t>(info.suErrInfo[3]);
     regInfo.errReg[RT_V200_SU_ERR_INFO_T0_7] = static_cast<uint32_t>(info.suErrInfo[3] >> REG_OFFSET);
     regInfo.errReg[RT_V200_SU_ERROR_T0_1] = static_cast<uint32_t>(info.suError >> REG_OFFSET);
+    regInfo.errReg[RT_V200_VEC_ERR_INFO_T0_6] = static_cast<uint32_t>(info.vecErrInfoT06 >> REG_OFFSET);
 }
 
 void AddExceptionRegInfo(

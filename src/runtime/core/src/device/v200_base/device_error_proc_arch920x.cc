@@ -57,12 +57,13 @@ static void PrintArch920xCoreErrInfo(
         << ", dump info: pc start: " << std::hex << coreErrInfo.pcStart << ", current:" << coreErrInfo.currentPC
         << ", sc error info: " << coreErrInfo.scErrInfo << ", su error info: " << coreErrInfo.suErrInfo[0] << ","
         << coreErrInfo.suErrInfo[1] << "," << coreErrInfo.suErrInfo[2] << "," << coreErrInfo.suErrInfo[3]
-        << ", mte error info: " << coreErrInfo.mteErrInfo[0] << ", vec error info: " << coreErrInfo.vecErrInfo[0]
+        << ", mte error info: " << coreErrInfo.mteErrInfo[0] << ", vec error info: " << coreErrInfo.vecErrInfo[0] << ","
+        << coreErrInfo.vecErrInfo[1] << "," << coreErrInfo.vecErrInfo[2] << "," << coreErrInfo.vecErrInfoT06
         << ", cube error info: " << coreErrInfo.cubeErrInfo << ", l1 error info: " << coreErrInfo.l1ErrInfo
         << ", aic error mask: " << coreErrInfo.aicErrorMask << ", para base: " << coreErrInfo.paraBase
-        << ", first pc start: " << coreErrInfo.ostTaskOneCore[0].pcStart << std::dec
-        << ", first taskid: " << coreErrInfo.ostTaskOneCore[0].taskId << ", first streamid: " << firstStreamId
-        << ", errorStr: " << errorString.c_str();
+        << ", aic cond: " << coreErrInfo.aicCond << ", first pc start: " << coreErrInfo.ostTaskOneCore[0].pcStart
+        << std::dec << ", first taskid: " << coreErrInfo.ostTaskOneCore[0].taskId
+        << ", first streamid: " << firstStreamId << ", errorStr: " << errorString.c_str();
     if (coreErrInfo.ostTaskOneCore[1].pcStart != 0) {
         uint32_t secondStreamId = UINT32_MAX;
         (void)dev->GetStreamSqCqManage()->GetStreamIdBySqId(coreErrInfo.ostTaskOneCore[1].rtsqId, secondStreamId);
