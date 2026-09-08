@@ -20,7 +20,8 @@ extern "C" {
  * @brief       get device log
  * @param [in]  unsigned short devId : device id
  * @param [in]  desPath : store device log path of host
- * @param [in]  logType : device log type(slog, stackcore, bbox, message etc.)
+ * @param [in]  logType : device log type(slog, stackcore, bbox, message, dvpp, hal, hal_normal, tee, ub, ao_self,
+ *                        ao_cnt, ao_uart)
  * @param [in]  timeout : 0 wait_always, > 0 wait_timeout; unit: ms
  * @return
  *      0 : success; other : failed

@@ -349,6 +349,40 @@ TEST_F(EP_FILE_DUMP_FUNC_UTEST, LogGetFileValidatesPathsAndMessageNames)
     EXPECT_EQ(SYS_OK, getFile.UnInit());
 }
 
+TEST_F(EP_FILE_DUMP_FUNC_UTEST, HalNormalModuleLookupAndScriptTrigger)
+{
+    const MsnpureportFileDumpTable* hal = nullptr;
+    const MsnpureportFileDumpTable* halNormal = nullptr;
+    for (const auto& info : MSNPUREPORT_FILE_DUMP_INFO) {
+        if (std::string(info.label) == "hal") {
+            ASSERT_EQ(nullptr, hal);
+            hal = &info;
+        } else if (std::string(info.label) == "hal_normal") {
+            ASSERT_EQ(nullptr, halNormal);
+            halNormal = &info;
+        }
+    }
+    ASSERT_NE(nullptr, hal);
+    ASSERT_NE(nullptr, halNormal);
+    EXPECT_STREQ("/var/hal_proc_collect.sh", hal->deviceScriptPath);
+    EXPECT_STREQ("/var/hal_proc_collect_normal.sh", halNormal->deviceScriptPath);
+    EXPECT_TRUE(hal->isRoot);
+    EXPECT_FALSE(halNormal->isRoot);
+
+    LogGetFile getFile;
+    ASSERT_EQ(SYS_OK, getFile.Init());
+    MOCKER(LogFileUtils::IsFileExist).stubs().will(returnValue(true));
+    MOCKER(AdxCreateProcess).stubs().will(invoke(AdxCreateProcessCaptureStub));
+
+    EXPECT_EQ(SYS_OK, getFile.ExportModuleInfo("hal", 17));
+    EXPECT_EQ("sudo /var/hal_proc_collect.sh 17", g_capturedCmd);
+    EXPECT_EQ(SYS_OK, getFile.ExportModuleInfo("hal_normal", 17));
+    EXPECT_EQ("/var/hal_proc_collect_normal.sh 17", g_capturedCmd);
+    EXPECT_EQ(SYS_ERROR, getFile.ExportModuleInfo("hal_proc_collect_normal", 17));
+    ResetErrLog();
+    EXPECT_EQ(SYS_OK, getFile.UnInit());
+}
+
 TEST_F(EP_FILE_DUMP_FUNC_UTEST, LogGetFileTransfersKnownPathsAndRejectsInvalidPaths)
 {
     LogGetFile getFile;

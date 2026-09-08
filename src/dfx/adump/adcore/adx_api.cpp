@@ -103,7 +103,8 @@ static int32_t AdxCommonGetFile(const CommHandle& handle, const std::string& src
  * @brief  get device file
  * @param  [in]  devId      : physical device id
  * @param  [in]  desPath    : send file to destination path
- * @param  [in]  logType    : file type, stackcore, slog, bbox, message
+ * @param  [in]  logType    : file type, stackcore, slog, bbox, message, dvpp, hal, hal_normal, tee, ub, ao_self,
+ *                             ao_cnt, ao_uart
  * @param  [in]  timeout    : 0 wait_always, > 0 wait_timeout; unit: ms
  * @return IDE_DAEMON_OK(0) : get file success, IDE_DAEMON_ERROR(-1) : get file failed
  */
@@ -212,7 +213,8 @@ static int32_t AdxRecvFile(const CommHandle& handle, int32_t fd)
  * @brief  get device file
  * @param  [in]  devId      : physical device id
  * @param  [in]  desPath    : send file to destination path
- * @param  [in]  logType    : file type, stackcore, slog, bbox, message
+ * @param  [in]  logType    : file type, stackcore, slog, bbox, message, dvpp, hal, hal_normal, tee, ub, ao_self,
+ *                             ao_cnt, ao_uart
  * @return IDE_DAEMON_OK(0) : get file success, IDE_DAEMON_ERROR(-1) : get file failed
  */
 int32_t AdxGetDeviceFile(uint16_t devId, IdeString desPath, IdeString logType)
