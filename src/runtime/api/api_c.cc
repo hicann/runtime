@@ -3428,6 +3428,7 @@ RTS_API rtError_t rtSetSysParamOpt(const rtSysParamOpt configOpt, const int64_t 
         NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
         const bool flag = (configVal == SYS_OPT_ENABLE);
         rtInstance->SetEnableOstFlag(flag);
+        RT_LOG(RT_LOG_EVENT, "Kernel early start is %s.", flag ? "enabled" : "disabled");
     }
     return ACL_RT_SUCCESS;
 }
