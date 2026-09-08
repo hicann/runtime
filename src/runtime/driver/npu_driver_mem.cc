@@ -541,15 +541,19 @@ rtError_t NpuDriver::GetAllocationGranularity(
 
 static bool TransSharedHandleType(rtMemSharedHandleType handleType, drv_mem_handle_type& drvHandleType)
 {
-    static const std::map<rtMemSharedHandleType, drv_mem_handle_type> typeMap = {
-        {RT_MEM_SHARE_HANDLE_TYPE_DEFAULT, MEM_HANDLE_TYPE_NONE},
-        {RT_MEM_SHARE_HANDLE_TYPE_FABRIC, MEM_HANDLE_TYPE_FABRIC}};
-    auto it = typeMap.find(handleType);
-    if (it == typeMap.end()) {
-        return false;
+    bool isValid = true;
+    switch (handleType) {
+        case RT_MEM_SHARE_HANDLE_TYPE_DEFAULT:
+            drvHandleType = MEM_HANDLE_TYPE_NONE;
+            break;
+        case RT_MEM_SHARE_HANDLE_TYPE_FABRIC:
+            drvHandleType = MEM_HANDLE_TYPE_FABRIC;
+            break;
+        default:
+            isValid = false;
+            break;
     }
-    drvHandleType = it->second;
-    return true;
+    return isValid;
 }
 
 rtError_t NpuDriver::ExportToShareableHandle(
@@ -1627,18 +1631,36 @@ void NpuDriver::FreeFastRingBuffer(void* const ptr, const uint64_t size, const u
  * Subcategory: Get Memory Info
  * ======================================================== */
 
-std::map<rtMemInfoType_t, rtMemInfoType_t> g_memInfoTypeMap = {
-    {RT_MEMORYINFO_DDR, RT_MEMORYINFO_DDR},
-    {RT_MEMORYINFO_HBM, RT_MEMORYINFO_DDR},
-    {RT_MEMORYINFO_DDR_HUGE, RT_MEMORYINFO_DDR_HUGE},
-    {RT_MEMORYINFO_DDR_NORMAL, RT_MEMORYINFO_DDR_NORMAL},
-    {RT_MEMORYINFO_HBM_HUGE, RT_MEMORYINFO_DDR_HUGE},
-    {RT_MEMORYINFO_HBM_NORMAL, RT_MEMORYINFO_DDR_NORMAL},
-    {RT_MEMORYINFO_DDR_P2P_HUGE, RT_MEMORYINFO_DDR_P2P_HUGE},
-    {RT_MEMORYINFO_DDR_P2P_NORMAL, RT_MEMORYINFO_DDR_P2P_NORMAL},
-    {RT_MEMORYINFO_HBM_P2P_HUGE, RT_MEMORYINFO_DDR_P2P_HUGE},
-    {RT_MEMORYINFO_HBM_P2P_NORMAL, RT_MEMORYINFO_DDR_P2P_NORMAL},
-};
+static rtMemInfoType_t ConvertMemInfoType(const rtMemInfoType_t memInfoType)
+{
+    // Unmapped types use DDR on platforms that require memory information type conversion.
+    rtMemInfoType_t targetType = RT_MEMORYINFO_DDR;
+    switch (memInfoType) {
+        case RT_MEMORYINFO_DDR:
+        case RT_MEMORYINFO_HBM:
+            targetType = RT_MEMORYINFO_DDR;
+            break;
+        case RT_MEMORYINFO_DDR_HUGE:
+        case RT_MEMORYINFO_HBM_HUGE:
+            targetType = RT_MEMORYINFO_DDR_HUGE;
+            break;
+        case RT_MEMORYINFO_DDR_NORMAL:
+        case RT_MEMORYINFO_HBM_NORMAL:
+            targetType = RT_MEMORYINFO_DDR_NORMAL;
+            break;
+        case RT_MEMORYINFO_DDR_P2P_HUGE:
+        case RT_MEMORYINFO_HBM_P2P_HUGE:
+            targetType = RT_MEMORYINFO_DDR_P2P_HUGE;
+            break;
+        case RT_MEMORYINFO_DDR_P2P_NORMAL:
+        case RT_MEMORYINFO_HBM_P2P_NORMAL:
+            targetType = RT_MEMORYINFO_DDR_P2P_NORMAL;
+            break;
+        default:
+            break;
+    }
+    return targetType;
+}
 
 static rtError_t GetMemInfoType(const rtMemInfoType_t memInfoType, uint32_t* const type)
 {
@@ -1899,7 +1921,7 @@ rtError_t NpuDriver::MemGetInfoEx(
     uint32_t type = 0U;
     rtMemInfoType_t curMemInfoType = memInfoType;
     if ((GetDevProperties().memInfoMapType & MAP_WHEN_GET_INFO) != 0) {
-        curMemInfoType = g_memInfoTypeMap[memInfoType];
+        curMemInfoType = ConvertMemInfoType(memInfoType);
         RT_LOG(
             RT_LOG_INFO, "memInfoType convert %s to %s.", MemInfoTypeToString(memInfoType).c_str(),
             MemInfoTypeToString(curMemInfoType).c_str());

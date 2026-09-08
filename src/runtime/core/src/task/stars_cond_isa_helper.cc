@@ -11,21 +11,36 @@
 #include "stars_cond_isa_helper.hpp"
 #include "enum_desc.hpp"
 #include "runtime.hpp"
-#include <map>
 
 namespace cce {
 namespace runtime {
 
 rtCondition_t GetNotCondition(const rtCondition_t condition)
 {
-    static const std::map<rtCondition_t, rtCondition_t> notConditions = {
-        {RT_EQUAL, RT_NOT_EQUAL},       {RT_NOT_EQUAL, RT_EQUAL},       {RT_GREATER, RT_LESS_OR_EQUAL},
-        {RT_GREATER_OR_EQUAL, RT_LESS}, {RT_LESS, RT_GREATER_OR_EQUAL}, {RT_LESS_OR_EQUAL, RT_GREATER}};
-    const auto notCondition = notConditions.find(condition);
-    if (notCondition == notConditions.end()) {
-        return condition;
+    rtCondition_t notCondition = condition;
+    switch (condition) {
+        case RT_EQUAL:
+            notCondition = RT_NOT_EQUAL;
+            break;
+        case RT_NOT_EQUAL:
+            notCondition = RT_EQUAL;
+            break;
+        case RT_GREATER:
+            notCondition = RT_LESS_OR_EQUAL;
+            break;
+        case RT_GREATER_OR_EQUAL:
+            notCondition = RT_LESS;
+            break;
+        case RT_LESS:
+            notCondition = RT_GREATER_OR_EQUAL;
+            break;
+        case RT_LESS_OR_EQUAL:
+            notCondition = RT_GREATER;
+            break;
+        default:
+            break;
     }
-    return notCondition->second;
+    return notCondition;
 }
 
 void ConvertConditionToBranchFunc3(

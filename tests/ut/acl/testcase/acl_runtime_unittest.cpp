@@ -744,6 +744,45 @@ TEST_F(UTEST_ACL_Runtime, aclrtSynchronizeStreamWithTimeoutTest)
     EXPECT_EQ(ret, ACL_ERROR_RT_END_OF_SEQUENCE);
 }
 
+TEST_F(UTEST_ACL_Runtime, aclrtNonBlockingLaunchTest)
+{
+    aclrtStream stream = (aclrtStream)0x01;
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtNonBlockingLaunchBegin(nullptr, 0U))
+        .WillOnce(Return(RT_ERROR_NONE));
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtNonBlockingLaunchEnd(nullptr, 0U))
+        .WillOnce(Return(RT_ERROR_NONE));
+    aclError ret = aclrtNonBlockingLaunchBegin(nullptr, 0U);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+
+    ret = aclrtNonBlockingLaunchEnd(nullptr, 0U);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+
+    ret = aclrtNonBlockingLaunchBegin(stream, 1U);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+
+    ret = aclrtNonBlockingLaunchEnd(stream, 1U);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtNonBlockingLaunchBegin(_, _))
+        .WillOnce(Return(ACL_ERROR_RT_PARAM_INVALID))
+        .WillOnce(Return(RT_ERROR_NONE));
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtNonBlockingLaunchEnd(_, _))
+        .WillOnce(Return(ACL_ERROR_RT_PARAM_INVALID))
+        .WillOnce(Return(RT_ERROR_NONE));
+
+    ret = aclrtNonBlockingLaunchBegin(stream, 0U);
+    EXPECT_EQ(ret, ACL_ERROR_RT_PARAM_INVALID);
+
+    ret = aclrtNonBlockingLaunchEnd(stream, 0U);
+    EXPECT_EQ(ret, ACL_ERROR_RT_PARAM_INVALID);
+
+    ret = aclrtNonBlockingLaunchBegin(stream, 0U);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+
+    ret = aclrtNonBlockingLaunchEnd(stream, 0U);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+}
+
 TEST_F(UTEST_ACL_Runtime, aclrtStreamQueryTest)
 {
     // test aclrtStreamQuery
@@ -5762,6 +5801,23 @@ TEST_F(UTEST_ACL_Runtime, aclrtSetStreamAttribute_success)
     EXPECT_EQ(ret, ACL_SUCCESS);
 }
 
+TEST_F(UTEST_ACL_Runtime, aclrtSetStreamAttribute_launchBlocking_success)
+{
+    aclrtStream stream = (aclrtStream)0x01;
+    aclrtStreamAttrValue value = {};
+    value.launchBlockingMode = ACL_STREAM_LAUNCH_BLOCKING_MODE_NON_BLOCKING;
+
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtsStreamSetAttribute(stream, _, _))
+        .WillOnce(Return(RT_ERROR_NONE));
+    auto ret = aclrtSetStreamAttribute(stream, ACL_STREAM_LAUNCH_BLOCKING_MODE, &value);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtsStreamSetAttribute(nullptr, _, _))
+        .WillOnce(Return(RT_ERROR_NONE));
+    ret = aclrtSetStreamAttribute(nullptr, ACL_STREAM_LAUNCH_BLOCKING_MODE, &value);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+}
+
 TEST_F(UTEST_ACL_Runtime, aclrtGetStreamAttribute_failed_with_invalid_args)
 {
     aclrtStreamAttr stmAttrType = ACL_STREAM_ATTR_FAILURE_MODE;
@@ -5786,6 +5842,22 @@ TEST_F(UTEST_ACL_Runtime, aclrtGetStreamAttribute_success)
     aclrtStream stream = (aclrtStream)0x01;
     aclrtStreamAttrValue value;
     const auto ret = aclrtGetStreamAttribute(stream, stmAttrType, &value);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+}
+
+TEST_F(UTEST_ACL_Runtime, aclrtGetStreamAttribute_launchBlocking_success)
+{
+    aclrtStream stream = (aclrtStream)0x01;
+    aclrtStreamAttrValue value = {};
+
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtsStreamGetAttribute(stream, _, _))
+        .WillOnce(Return(RT_ERROR_NONE));
+    auto ret = aclrtGetStreamAttribute(stream, ACL_STREAM_LAUNCH_BLOCKING_MODE, &value);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtsStreamGetAttribute(nullptr, _, _))
+        .WillOnce(Return(RT_ERROR_NONE));
+    ret = aclrtGetStreamAttribute(nullptr, ACL_STREAM_LAUNCH_BLOCKING_MODE, &value);
     EXPECT_EQ(ret, ACL_SUCCESS);
 }
 

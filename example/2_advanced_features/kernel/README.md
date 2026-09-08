@@ -8,3 +8,4 @@
 - [1_launch_kernel_with_reslimit](./1_launch_kernel_with_reslimit/README.md)：演示在 Device 资源限制下的 Kernel 执行。
 - [2_binary_enumerate_functions](./2_binary_enumerate_functions/README.md)：演示枚举同一算子二进制中的多个核函数，并依次下发和校验计算结果。
 - [3_binary_get_function_count](./3_binary_get_function_count/README.md)：演示查询 Kernel 二进制中的核函数数量。
+- [4_launch_blocking](./4_launch_blocking/README.md)：演示 Kernel Launch Blocking 的环境变量控制、流级三态及嵌套非阻塞区间。

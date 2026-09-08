@@ -53,6 +53,7 @@
 #include "utils.h"
 #include "api_handle_guard.h"
 #include "error_message_manage.hpp"
+#include "stream_launch_blocking.hpp"
 #include "capability.hpp"
 #include "notify_enum_desc.hpp"
 #include "task.hpp"
@@ -143,7 +144,11 @@ rtError_t ApiImplDavid::LaunchKernel(
     rtStreamLaunchKernelV2ExtendArgs_t launchKernelExtendArgs = {};
     launchKernelExtendArgs.argsInfo = argsInfo;
     launchKernelExtendArgs.taskCfg = &taskCfg;
-    return StreamLaunchKernelV2(kernel, blockDim, curStm, &launchKernelExtendArgs);
+    const rtError_t error = StreamLaunchKernelV2(kernel, blockDim, curStm, &launchKernelExtendArgs);
+    if ((error == RT_ERROR_NONE) && StreamLaunchBlocking::ShouldLaunchBlock(curStm)) {
+        return curStm->Synchronize(false);
+    }
+    return error;
 }
 
 rtError_t ApiImplDavid::CpuKernelLaunchExAll(
@@ -1406,9 +1411,9 @@ rtError_t ApiImplDavid::GetDeviceSatStatus(void* const outputAddrPtr, const uint
     return error;
 }
 
-rtError_t ApiImplDavid::SetStreamOverflowSwitch(Stream* const stm, const uint32_t flags)
+static rtError_t SetStreamOverflowSwitchInternal(Stream* const stm, const uint32_t flags)
 {
-    Context* const curCtx = CurrentContext();
+    Context* const curCtx = Runtime::Instance()->CurrentContext(true, DEFAULT_DEVICE_ID);
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
 
     Stream* const targetStm = (stm == nullptr) ? curCtx->DefaultStream_() : stm;
@@ -1418,16 +1423,49 @@ rtError_t ApiImplDavid::SetStreamOverflowSwitch(Stream* const stm, const uint32_
     return SetOverflowSwitchOnStream(targetStm, flags);
 }
 
-rtError_t ApiImplDavid::SetStreamTag(Stream* const stm, const uint32_t geOpTag)
+static rtError_t SetStreamTagInternal(Stream* const stm, const uint32_t geOpTag)
 {
     RT_LOG(RT_LOG_DEBUG, "geOpTag=%#x.", geOpTag);
-    Context* const curCtx = CurrentContext();
+    Context* const curCtx = Runtime::Instance()->CurrentContext(true, DEFAULT_DEVICE_ID);
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     Stream* const targetStm = (stm == nullptr) ? curCtx->DefaultStream_() : stm;
     NULL_STREAM_PTR_RETURN_MSG(targetStm);
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
         targetStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Setting the stream tag");
     return SetTagOnStream(targetStm, geOpTag);
+}
+
+rtError_t ApiImplDavid::StreamSetAttribute(
+    Stream* const stm, const rtStreamAttr stmAttrId, const rtStreamAttrValue_t* const attrValue)
+{
+    NULL_PTR_RETURN_MSG(attrValue, RT_ERROR_INVALID_VALUE);
+    rtError_t error;
+    // Overflow and stream tag use the David-specific task delivery path.
+    switch (stmAttrId) {
+        case RT_STREAM_ATTR_FLOAT_OVERFLOW_CHECK: {
+            error = SetStreamOverflowSwitchInternal(stm, attrValue->overflowSwitch);
+            break;
+        }
+        case RT_STREAM_ATTR_USER_CUSTOM_TAG: {
+            error = SetStreamTagInternal(stm, attrValue->userCustomTag);
+            break;
+        }
+        default: {
+            error = ApiImpl::StreamSetAttribute(stm, stmAttrId, attrValue);
+            break;
+        }
+    }
+    return error;
+}
+
+rtError_t ApiImplDavid::SetStreamOverflowSwitch(Stream* const stm, const uint32_t flags)
+{
+    return SetStreamOverflowSwitchInternal(stm, flags);
+}
+
+rtError_t ApiImplDavid::SetStreamTag(Stream* const stm, const uint32_t geOpTag)
+{
+    return SetStreamTagInternal(stm, geOpTag);
 }
 
 rtError_t ApiImplDavid::UbDbSend(rtUbDbInfo_t* const dbInfo, Stream* const stm)

@@ -12,6 +12,8 @@
 - [`aclError aclrtStreamQuery(aclrtStream stream, aclrtStreamStatus *status)`](#aclrtStreamQuery)：查询指定Stream上的所有任务的执行状态。
 - [`aclError aclrtSynchronizeStream(aclrtStream stream)`](#aclrtSynchronizeStream)：阻塞Host侧当前线程直到指定Stream中的所有任务都完成。
 - [`aclError aclrtSynchronizeStreamWithTimeout(aclrtStream stream, int32_t timeout)`](#aclrtSynchronizeStreamWithTimeout)：阻塞Host侧当前线程直到指定Stream中的所有任务都完成，该接口是在[aclrtSynchronizeStream](#aclrtSynchronizeStream)接口基础上进行了增强，支持用户设置超时时间，当应用程序异常时可根据所设置的超时时间自行退出。
+- [`aclError aclrtNonBlockingLaunchBegin(aclrtStream stream, uint64_t flag)`](#aclrtNonBlockingLaunchBegin)：与[aclrtNonBlockingLaunchEnd](#aclrtNonBlockingLaunchEnd)接口配合使用，用于标记指定Stream上任务异步执行的起始点。
+- [`aclError aclrtNonBlockingLaunchEnd(aclrtStream stream, uint64_t flag)`](#aclrtNonBlockingLaunchEnd)：与[aclrtNonBlockingLaunchBegin](#aclrtNonBlockingLaunchBegin)接口配合使用，用于标记指定Stream上任务异步执行的结束点。
 - [`aclError aclrtStreamAbort(aclrtStream stream)`](#aclrtStreamAbort)：停止指定Stream上正在执行的任务、丢弃指定Stream上已下发但未执行的任务。本接口执行期间，指定Stream上新下发的任务不再生效。
 - [`aclError aclrtStreamGetId(aclrtStream stream, int32_t *streamId)`](#aclrtStreamGetId)：获取指定Stream的ID。
 - [`aclError aclrtGetStreamAvailableNum(uint32_t *streamCount)`](#aclrtGetStreamAvailableNum)：获取当前Device上剩余可用的Stream数量。
@@ -663,6 +665,156 @@ aclError aclrtSynchronizeStreamWithTimeout(aclrtStream stream, int32_t timeout)
 <br>
 <br>
 
+<a id="aclrtNonBlockingLaunchBegin"></a>
+
+## aclrtNonBlockingLaunchBegin
+
+```c
+aclError aclrtNonBlockingLaunchBegin(aclrtStream stream, uint64_t flag)
+```
+
+### 产品支持情况
+
+<!-- npu="950" id3600 -->
+- Ascend 950PR/Ascend 950DT：支持
+<!-- end id3600 -->
+<!-- npu="A3" id3601 -->
+- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+<!-- end id3601 -->
+<!-- npu="910b" id3602 -->
+- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+<!-- end id3602 -->
+<!-- npu="310b" id3603 -->
+- Atlas 200I/500 A2 推理产品：不支持
+<!-- end id3603 -->
+<!-- npu="310p" id3604 -->
+- Atlas 推理系列产品：不支持
+<!-- end id3604 -->
+<!-- npu="910" id3605 -->
+- Atlas 训练系列产品：不支持
+<!-- end id3605 -->
+<!-- npu="IPV350" id3606 -->
+- IPV350：不支持
+<!-- end id3606 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/06_stream_management_res.md#id29 -->
+
+### 功能说明
+
+本接口需与[aclrtNonBlockingLaunchEnd](#aclrtNonBlockingLaunchEnd)接口配合使用。当`ASCEND_RT_LAUNCH_BLOCKING`环境变量配置为1，或通过[aclrtSetStreamAttribute](#aclrtSetStreamAttribute)接口将指定Stream设置为同步模式时，调用本接口和[aclrtNonBlockingLaunchEnd](#aclrtNonBlockingLaunchEnd)接口分别标记指定Stream上任务异步执行的起始点和结束点。在[aclrtNonBlockingLaunchBegin](#aclrtNonBlockingLaunchBegin)接口和[aclrtNonBlockingLaunchEnd](#aclrtNonBlockingLaunchEnd)接口之间，以下接口下发的任务将保持异步模式：
+
+- aclrtLaunchKernel
+- aclrtLaunchKernelV2
+- aclrtLaunchKernelWithConfig
+- aclrtLaunchKernelWithHostArgs
+- aclrtLaunchKernelWithArgsArray
+- aclrtLaunchSIMTKernelWithArgsArray
+- aclrtLaunchSIMTKernelWithHostArgs
+- aclmdlRIExecuteAsync
+
+### 参数说明
+
+| 参数名 | 输入/输出 | 说明 |
+| --- | :---: | --- |
+| stream | 输入 | 指定Stream。传入NULL时，表示当前Context的默认Stream。类型定义请参见[aclrtStream](25-05_Typedefs.md#aclrtStream)。 |
+| flag | 输入 | 预留参数。当前固定配置为0。 |
+
+### 返回值说明
+
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
+
+### 约束说明
+
+- 不支持使用[aclmdlRIBindStream](15_model_running_instance_management.md#aclmdlRIBindStream)接口来绑定模型运行实例的Stream。
+- stream参数指定的Stream必须是不在捕获状态的Stream。
+- 不支持调用[aclrtCreateStreamWithConfig](#aclrtCreateStreamWithConfig)接口，将flag设置为ACL_STREAM_PERSISTENT、ACL_STREAM_CPU_SCHEDULE或ACL_STREAM_DEVICE_USE_ONLY创建的Stream。
+- 本接口仅对上述接口生效。
+- 本接口设置的异步模式优先级高于`ASCEND_RT_LAUNCH_BLOCKING`环境变量和通过[aclrtSetStreamAttribute](#aclrtSetStreamAttribute)接口设置的`ACL_STREAM_LAUNCH_BLOCKING_MODE`属性。
+- 本接口和[aclrtNonBlockingLaunchEnd](#aclrtNonBlockingLaunchEnd)接口要成对使用，且两个接口中的Stream应相同。
+- 支持嵌套调用。每调用一次本接口，需对应调用一次[aclrtNonBlockingLaunchEnd](#aclrtNonBlockingLaunchEnd)接口。两层嵌套调用示例如下：
+
+    ```c
+    aclrtNonBlockingLaunchBegin(stream, 0); // 外层开始
+    aclrtNonBlockingLaunchBegin(stream, 0); // 内层开始
+    aclrtNonBlockingLaunchEnd(stream, 0);   // 内层结束
+    aclrtNonBlockingLaunchEnd(stream, 0);   // 外层结束
+    ```
+
+<br>
+<br>
+<br>
+
+<a id="aclrtNonBlockingLaunchEnd"></a>
+
+## aclrtNonBlockingLaunchEnd
+
+```c
+aclError aclrtNonBlockingLaunchEnd(aclrtStream stream, uint64_t flag)
+```
+
+### 产品支持情况
+
+<!-- npu="950" id3607 -->
+- Ascend 950PR/Ascend 950DT：支持
+<!-- end id3607 -->
+<!-- npu="A3" id3608 -->
+- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+<!-- end id3608 -->
+<!-- npu="910b" id3609 -->
+- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+<!-- end id3609 -->
+<!-- npu="310b" id3610 -->
+- Atlas 200I/500 A2 推理产品：不支持
+<!-- end id3610 -->
+<!-- npu="310p" id3611 -->
+- Atlas 推理系列产品：不支持
+<!-- end id3611 -->
+<!-- npu="910" id3612 -->
+- Atlas 训练系列产品：不支持
+<!-- end id3612 -->
+<!-- npu="IPV350" id3613 -->
+- IPV350：不支持
+<!-- end id3613 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/06_stream_management_res.md#id30 -->
+
+### 功能说明
+
+本接口需与[aclrtNonBlockingLaunchBegin](#aclrtNonBlockingLaunchBegin)接口配合使用。当`ASCEND_RT_LAUNCH_BLOCKING`环境变量配置为1，或通过[aclrtSetStreamAttribute](#aclrtSetStreamAttribute)接口将指定Stream设置为同步模式时，调用[aclrtNonBlockingLaunchBegin](#aclrtNonBlockingLaunchBegin)接口和本接口分别标记指定Stream上任务异步执行的起始点和结束点。在[aclrtNonBlockingLaunchBegin](#aclrtNonBlockingLaunchBegin)接口和[aclrtNonBlockingLaunchEnd](#aclrtNonBlockingLaunchEnd)接口之间，以下接口下发的任务将保持异步模式：
+
+- aclrtLaunchKernel
+- aclrtLaunchKernelV2
+- aclrtLaunchKernelWithConfig
+- aclrtLaunchKernelWithHostArgs
+- aclrtLaunchKernelWithArgsArray
+- aclrtLaunchSIMTKernelWithArgsArray
+- aclrtLaunchSIMTKernelWithHostArgs
+- aclmdlRIExecuteAsync
+
+调用本接口后，若已不存在尚未结束的[aclrtNonBlockingLaunchBegin](#aclrtNonBlockingLaunchBegin)接口调用，且当前Stream需要同步，本接口会等待调用前指定Stream上已下发的任务执行完成后返回。若仍有尚未结束的[aclrtNonBlockingLaunchBegin](#aclrtNonBlockingLaunchBegin)接口调用，则指定Stream上的相关接口继续采用异步模式，不执行同步等待。
+
+### 参数说明
+
+| 参数名 | 输入/输出 | 说明 |
+| --- | :---: | --- |
+| stream | 输入 | 指定Stream。传入NULL时，表示当前Context的默认Stream。类型定义请参见[aclrtStream](25-05_Typedefs.md#aclrtStream)。 |
+| flag | 输入 | 预留参数。当前固定配置为0。 |
+
+### 返回值说明
+
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
+
+### 约束说明
+
+- 不支持使用[aclmdlRIBindStream](15_model_running_instance_management.md#aclmdlRIBindStream)接口来绑定模型运行实例的Stream。
+- stream参数指定的Stream必须是不在捕获状态的Stream。
+- 不支持调用[aclrtCreateStreamWithConfig](#aclrtCreateStreamWithConfig)接口，将flag设置为ACL_STREAM_PERSISTENT、ACL_STREAM_CPU_SCHEDULE或ACL_STREAM_DEVICE_USE_ONLY创建的Stream。
+- 本接口仅对上述接口生效。
+- [aclrtNonBlockingLaunchBegin](#aclrtNonBlockingLaunchBegin)接口和本接口要成对使用，且两个接口中的Stream应相同。若未先调用[aclrtNonBlockingLaunchBegin](#aclrtNonBlockingLaunchBegin)接口，本接口返回失败。
+- 支持嵌套调用，只有所有[aclrtNonBlockingLaunchBegin](#aclrtNonBlockingLaunchBegin)接口调用均已结束时才可能执行同步等待。
+
+<br>
+<br>
+<br>
+
 <a id="aclrtStreamAbort"></a>
 
 ## aclrtStreamAbort
@@ -879,6 +1031,9 @@ aclError aclrtSetStreamAttribute(aclrtStream stream, aclrtStreamAttr stmAttrType
 ### 约束说明
 
 - 溢出检测属性：调用该接口打开或关闭溢出检测开关后，仅对后续新下发的任务生效，已下发的任务仍维持原样。
+<!-- npu="950,A3,910b" id3618 -->
+- `ACL_STREAM_LAUNCH_BLOCKING_MODE`属性：仅Ascend 950PR/Ascend 950DT、Atlas A3 训练系列产品/Atlas A3 推理系列产品、Atlas A2 训练系列产品/Atlas A2 推理系列产品支持设置该属性。不支持对使用[aclmdlRIBindStream](15_model_running_instance_management.md#aclmdlRIBindStream)接口绑定模型运行实例的Stream设置该属性。不支持对调用[aclrtCreateStreamWithConfig](#aclrtCreateStreamWithConfig)接口，将flag设置为ACL_STREAM_PERSISTENT、ACL_STREAM_CPU_SCHEDULE或ACL_STREAM_DEVICE_USE_ONLY创建的Stream设置该属性。设置该属性时，stream参数指定的Stream必须是不在捕获状态的Stream。
+<!-- end id3618 -->
 <!-- npu="950,A3,910b,910,310p,310b" id15 -->
 - 当Stream上设置了遇错即停模式，该Stream所在的Context下的其它Stream也是遇错即停。
 <!-- end id15 -->
@@ -953,6 +1108,9 @@ aclError aclrtGetStreamAttribute(aclrtStream stream, aclrtStreamAttr stmAttrType
 <!-- npu="910,310p,310b" id20 -->
 对于Atlas 200I/500 A2 推理产品、Atlas 推理系列产品、Atlas 训练系列产品，不支持指定默认Stream（即stream参数传入NULL）。
 <!-- end id20 -->
+<!-- npu="950,A3,910b" id3619 -->
+- `ACL_STREAM_LAUNCH_BLOCKING_MODE`属性：仅Ascend 950PR/Ascend 950DT、Atlas A3 训练系列产品/Atlas A3 推理系列产品、Atlas A2 训练系列产品/Atlas A2 推理系列产品支持获取该属性。不支持对使用[aclmdlRIBindStream](15_model_running_instance_management.md#aclmdlRIBindStream)接口绑定模型运行实例的Stream获取该属性。不支持对调用[aclrtCreateStreamWithConfig](#aclrtCreateStreamWithConfig)接口，将flag设置为ACL_STREAM_PERSISTENT、ACL_STREAM_CPU_SCHEDULE或ACL_STREAM_DEVICE_USE_ONLY创建的Stream获取该属性。获取该属性时，stream参数指定的Stream必须是不在捕获状态的Stream。
+<!-- end id3619 -->
 <!-- end id18 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/06_stream_management_res.md#id28 -->
 

@@ -317,6 +317,7 @@ set(runtimeut_common_src_stream_list
     ${TOP_DIR}/src/runtime/core/src/stream/stream_sqcq_manage.cc
     ${TOP_DIR}/src/runtime/core/src/stream/engine_stream_observer.cc
     ${TOP_DIR}/src/runtime/core/src/stream/stream.cc
+    ${TOP_DIR}/src/runtime/feature/launch_blocking/stream_launch_blocking.cc
     ${TOP_DIR}/src/runtime/core/src/stream/ctrl_stream.cc
     ${TOP_DIR}/src/runtime/core/src/stream/coprocessor_stream.cc
     ${TOP_DIR}/src/runtime/core/src/stream/stream_factory.cc
@@ -422,6 +423,7 @@ set(runtimeut_src_tiny_exclude_list
     ${TOP_DIR}/src/runtime/feature/aclgraph/v100/capture_adapt_v100.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/v100/capture_model_adapt_v100.cc
     ${TOP_DIR}/src/runtime/feature/model/v100/capture_adapt.cc
+    ${TOP_DIR}/src/runtime/feature/launch_blocking/stream_launch_blocking.cc
     ${TOP_DIR}/src/runtime/feature/snapshot/device_snapshot.cc
     ${TOP_DIR}/src/runtime/feature/snapshot/snapshot_process_helper.cc
     ${TOP_DIR}/src/runtime/feature/snapshot/snapshot_callback_manager.cc
@@ -491,6 +493,7 @@ set(runtimeut_src_tiny_include_list
     ${TOP_DIR}/src/runtime/feature/aclgraph/tiny/event_capture_stub.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/tiny/stream_capture_stub.cc
     ${TOP_DIR}/src/runtime/feature/model/tiny/model_aclgraph_stub.cc
+    ${TOP_DIR}/src/runtime/feature/launch_blocking/tiny/stream_launch_blocking_tiny_stub.cc
     ${TOP_DIR}/src/runtime/feature/snapshot/tiny/device_snapshot_stub.cc
     ${TOP_DIR}/src/runtime/feature/snapshot/tiny/snapshot_process_helper_stub.cc
     ${TOP_DIR}/src/runtime/feature/snapshot/tiny/snapshot_callback_manager_stub.cc
@@ -980,6 +983,7 @@ add_executable(runtime_utest
     test/rt_utest_agent.cc
     test/rt_utest_aicpu_err_msg.cc
     test/rt_utest_aicpu_timeout.cc
+    test/rt_utest_launch_blocking.cc
     test/rt_utest_aicpu_scheduler_agent.cc
     test/rt_utest_enum_to_string_utils.cc
     test/rt_utest_ttlv.cc
@@ -1484,6 +1488,7 @@ set(RUNTIME_TEST_INC_DIR_COMMON
     ${TOP_DIR}/src/runtime/feature/soma/
     ${TOP_DIR}/src/runtime/feature/cntnotify/
     ${TOP_DIR}/src/runtime/feature/snapshot/
+    ${TOP_DIR}/src/runtime/feature/launch_blocking/
     ${TOP_DIR}/src/runtime/feature/xpu/
     ${TOP_DIR}/src/runtime/core/src/uvm
     ${TOP_DIR}/src/runtime/core/src/event

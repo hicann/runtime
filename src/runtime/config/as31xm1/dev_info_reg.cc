@@ -33,7 +33,6 @@ static const std::unordered_set<RtOptionalFeatureType> CHIP_AS31XM1_FEATURE{
     RtOptionalFeatureType::RT_FEATURE_NOTIFY_WAIT_TIMEOUT,
     RtOptionalFeatureType::RT_FEATURE_TASK_MODEL_EXECUTE_COPY_ONCE,
     RtOptionalFeatureType::RT_FEATURE_DEVICE_HAS_TS_DEAMON,
-    RtOptionalFeatureType::RT_FEATURE_KERNEL_NO_MIX_DOT_REGISTER,
     RtOptionalFeatureType::RT_FEATURE_DEVICE_GET_STARS_VERSION,
     RtOptionalFeatureType::RT_FEATURE_PROFILING_AICPU,
     RtOptionalFeatureType::RT_FEATURE_STREAM_LOCKABLE,

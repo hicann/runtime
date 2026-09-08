@@ -9,15 +9,20 @@
  */
 #include <cstdio>
 #include <stdlib.h>
+#include <array>
+#include <unordered_set>
 
 #include "driver/ascend_hal.h"
 #include "runtime/rt.h"
+#include "runtime/rts/rts_stream.h"
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
+#include "stream_launch_blocking.hpp"
 #define private public
 #define protected public
 #include "engine.hpp"
 #include "event.hpp"
+#include "model.hpp"
 #include "rt_unwrap.h"
 #include "task_res.hpp"
 #include "ctrl_stream.hpp"
@@ -50,6 +55,7 @@
 #include "capture_adapt.hpp"
 #include "data/elf.h"
 #include "task_test_helper.h"
+#include "dev_info_manage.h"
 #include "common/rt_utest_context_reset_helper.hpp"
 using namespace testing;
 using namespace cce::runtime;
@@ -61,6 +67,76 @@ struct StreamDestroyPreCallbackCheck {
     bool called = false;
     rtError_t validationResult = RT_ERROR_INVALID_HANDLE;
     Stream* stream = nullptr;
+};
+
+class LaunchBlockingFlagGuard {
+public:
+    explicit LaunchBlockingFlagGuard(bool enabled)
+        : launchBlockingEnvEnabled_(Runtime::Instance()->launchBlockingEnvEnabled_)
+    {
+        Runtime::Instance()->launchBlockingEnvEnabled_ = enabled;
+    }
+
+    ~LaunchBlockingFlagGuard() { Runtime::Instance()->launchBlockingEnvEnabled_ = launchBlockingEnvEnabled_; }
+
+private:
+    bool launchBlockingEnvEnabled_;
+};
+
+void EnableLaunchBlockingFeature(Stream* const stream)
+{
+    RawDevice* const device = static_cast<RawDevice*>(stream->Device_());
+    ASSERT_NE(device, nullptr);
+    device->featureSet_[static_cast<size_t>(RtOptionalFeatureType::RT_FEATURE_LAUNCH_BLOCKING)] = true;
+}
+
+void FillFeatureSetFromArray(
+    const std::array<bool, FEATURE_MAX_VALUE>& featureSet, std::unordered_set<RtOptionalFeatureType>& features)
+{
+    for (uint32_t index = 0U; index < FEATURE_MAX_VALUE; ++index) {
+        if (featureSet[index]) {
+            features.insert(static_cast<RtOptionalFeatureType>(index));
+        }
+    }
+}
+
+class LaunchBlockingChipFeatureGuard {
+public:
+    LaunchBlockingChipFeatureGuard() : globalChipType_(GlobalContainer::GetRtChipType())
+    {
+        (void)GET_CHIP_FEATURE_SET(CHIP_910_B_93, featureSet_);
+        GlobalContainer::SetRtChipType(CHIP_910_B_93);
+
+        std::unordered_set<RtOptionalFeatureType> features;
+        FillFeatureSetFromArray(featureSet_, features);
+        features.insert(RtOptionalFeatureType::RT_FEATURE_LAUNCH_BLOCKING);
+        (void)DevInfoManage::Instance().RegChipFeatureSet(CHIP_910_B_93, features);
+    }
+
+    ~LaunchBlockingChipFeatureGuard()
+    {
+        std::unordered_set<RtOptionalFeatureType> features;
+        FillFeatureSetFromArray(featureSet_, features);
+        (void)DevInfoManage::Instance().RegChipFeatureSet(CHIP_910_B_93, features);
+        GlobalContainer::SetRtChipType(globalChipType_);
+    }
+
+private:
+    rtChipType_t globalChipType_;
+    std::array<bool, FEATURE_MAX_VALUE> featureSet_{};
+};
+
+class UnsupportedLaunchBlockingChipGuard {
+public:
+    UnsupportedLaunchBlockingChipGuard() : globalChipType_(GlobalContainer::GetRtChipType())
+    {
+        GlobalContainer::SetRtChipType(CHIP_X90);
+    }
+
+    ~UnsupportedLaunchBlockingChipGuard() { GlobalContainer::SetRtChipType(globalChipType_); }
+
+private:
+    rtChipType_t globalChipType_;
 };
 
 void ValidateStreamDestroyPreCallback(rtStream_t stm, rtStreamState state, void* args)
@@ -2385,6 +2461,419 @@ TEST_F(StreamTest, rtsStreamSynchronize_invalidTime2)
 
     error = rtsStreamDestroy(stream, 0x0);
     EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(StreamTest, rtNonBlockingLaunch_flagIgnored)
+{
+    LaunchBlockingChipFeatureGuard chipFeatureGuard;
+    rtStream_t stream = nullptr;
+    rtError_t error = rtStreamCreate(&stream, 5);
+    ASSERT_EQ(error, RT_ERROR_NONE);
+
+    EXPECT_EQ(rtNonBlockingLaunchBegin(stream, 1ULL), RT_ERROR_NONE);
+    EXPECT_EQ(rtNonBlockingLaunchEnd(stream, 1ULL), RT_ERROR_NONE);
+
+    error = rtStreamDestroy(stream);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(StreamTest, rtNonBlockingLaunch_nullStream)
+{
+    LaunchBlockingChipFeatureGuard chipFeatureGuard;
+    LaunchBlockingFlagGuard launchBlockingFlagGuard(false);
+    Context* const ctx = Runtime::Instance()->CurrentContext(true, DEFAULT_DEVICE_ID);
+    ASSERT_NE(ctx, nullptr);
+    Stream* const defaultStream = ctx->DefaultStream_();
+    ASSERT_NE(defaultStream, nullptr);
+
+    EXPECT_FALSE(StreamLaunchBlocking::IsNonBlockingLaunchActive(defaultStream));
+    EXPECT_EQ(rtNonBlockingLaunchBegin(nullptr, 0ULL), RT_ERROR_NONE);
+    EXPECT_TRUE(StreamLaunchBlocking::IsNonBlockingLaunchActive(defaultStream));
+    EXPECT_EQ(rtNonBlockingLaunchEnd(nullptr, 0ULL), RT_ERROR_NONE);
+    EXPECT_FALSE(StreamLaunchBlocking::IsNonBlockingLaunchActive(defaultStream));
+}
+
+TEST_F(StreamTest, rtNonBlockingLaunch_featureNotSupport)
+{
+    rtStream_t stream = nullptr;
+    ASSERT_EQ(rtStreamCreate(&stream, 5), RT_ERROR_NONE);
+    Stream* const streamObj = rt_ut::UnwrapOrNull<Stream>(stream);
+    ASSERT_NE(streamObj, nullptr);
+
+    {
+        UnsupportedLaunchBlockingChipGuard guard;
+        EXPECT_EQ(rtNonBlockingLaunchBegin(stream, 0ULL), ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+        EXPECT_EQ(rtNonBlockingLaunchEnd(stream, 0ULL), ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+        uint32_t launchBlockingMode = RT_STREAM_LAUNCH_BLOCKING_MODE_BLOCKING + 1U;
+        EXPECT_EQ(StreamLaunchBlocking::GetLaunchBlockingMode(streamObj, &launchBlockingMode), RT_ERROR_NONE);
+        EXPECT_EQ(launchBlockingMode, RT_STREAM_LAUNCH_BLOCKING_MODE_CTRL_BY_ENV);
+        EXPECT_FALSE(StreamLaunchBlocking::IsNonBlockingLaunchActive(streamObj));
+    }
+
+    EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
+}
+
+TEST_F(StreamTest, rtNonBlockingLaunch_destroyedStreamInvalidHandle)
+{
+    LaunchBlockingChipFeatureGuard chipFeatureGuard;
+    rtStream_t stream = nullptr;
+    rtError_t error = rtStreamCreate(&stream, 5);
+    ASSERT_EQ(error, RT_ERROR_NONE);
+
+    error = rtStreamDestroy(stream);
+    ASSERT_EQ(error, RT_ERROR_NONE);
+
+    EXPECT_EQ(rtNonBlockingLaunchBegin(stream, 0ULL), ACL_ERROR_RT_INVALID_HANDLE);
+    EXPECT_EQ(rtNonBlockingLaunchEnd(stream, 0ULL), ACL_ERROR_RT_INVALID_HANDLE);
+}
+
+TEST_F(StreamTest, rtNonBlockingLaunch_rejectsUnsupportedStreams)
+{
+    LaunchBlockingChipFeatureGuard chipFeatureGuard;
+    rtStream_t stream = nullptr;
+    ASSERT_EQ(rtStreamCreate(&stream, 5), RT_ERROR_NONE);
+    Stream* const streamObj = rt_ut::UnwrapOrNull<Stream>(stream);
+    ASSERT_NE(streamObj, nullptr);
+    Model model;
+
+    streamObj->SetModel(&model);
+    EXPECT_EQ(rtNonBlockingLaunchBegin(stream, 0ULL), ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(rtNonBlockingLaunchEnd(stream, 0ULL), ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    EXPECT_FALSE(StreamLaunchBlocking::IsNonBlockingLaunchActive(streamObj));
+
+    streamObj->SetModel(nullptr);
+    streamObj->SetBindFlag(true);
+    EXPECT_EQ(rtNonBlockingLaunchBegin(stream, 0ULL), ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(rtNonBlockingLaunchEnd(stream, 0ULL), ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    EXPECT_FALSE(StreamLaunchBlocking::IsNonBlockingLaunchActive(streamObj));
+
+    streamObj->SetBindFlag(false);
+    const uint32_t originalFlags = streamObj->flags_;
+    const std::array<uint32_t, 3U> unsupportedFlags = {RT_STREAM_PERSISTENT, RT_STREAM_AICPU, RT_STREAM_CP_PROCESS_USE};
+    for (const uint32_t flags : unsupportedFlags) {
+        streamObj->flags_ = flags;
+        EXPECT_EQ(rtNonBlockingLaunchBegin(stream, 0ULL), ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+        EXPECT_EQ(rtNonBlockingLaunchEnd(stream, 0ULL), ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+        EXPECT_FALSE(StreamLaunchBlocking::IsNonBlockingLaunchActive(streamObj));
+    }
+    streamObj->flags_ = originalFlags;
+
+    streamObj->SetCaptureStatus(RT_STREAM_CAPTURE_STATUS_ACTIVE);
+    EXPECT_EQ(rtNonBlockingLaunchBegin(stream, 0ULL), ACL_ERROR_RT_STREAM_CAPTURED);
+    EXPECT_EQ(rtNonBlockingLaunchEnd(stream, 0ULL), ACL_ERROR_RT_STREAM_CAPTURED);
+    EXPECT_FALSE(StreamLaunchBlocking::IsNonBlockingLaunchActive(streamObj));
+
+    streamObj->SetCaptureStatus(RT_STREAM_CAPTURE_STATUS_NONE);
+    EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
+}
+
+TEST_F(StreamTest, rtNonBlockingLaunch_endWithoutBegin)
+{
+    LaunchBlockingChipFeatureGuard chipFeatureGuard;
+    rtStream_t stream = nullptr;
+    rtError_t error = rtStreamCreate(&stream, 5);
+    ASSERT_EQ(error, RT_ERROR_NONE);
+
+    EXPECT_EQ(rtNonBlockingLaunchEnd(stream, 0ULL), ACL_ERROR_RT_PARAM_INVALID);
+
+    error = rtStreamDestroy(stream);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(StreamTest, rtNonBlockingLaunch_nestedEndSynchronizeOnce)
+{
+    LaunchBlockingChipFeatureGuard chipFeatureGuard;
+    LaunchBlockingFlagGuard guard(true);
+    rtStream_t stream = nullptr;
+    rtError_t error = rtStreamCreate(&stream, 5);
+    ASSERT_EQ(error, RT_ERROR_NONE);
+    Stream* const streamObj = rt_ut::UnwrapOrNull<Stream>(stream);
+    ASSERT_NE(streamObj, nullptr);
+    EnableLaunchBlockingFeature(streamObj);
+
+    MOCKER_CPP_VIRTUAL(streamObj, &Stream::Synchronize)
+        .expects(once())
+        .with(mockcpp::eq(false), mockcpp::eq(-1))
+        .will(returnValue(RT_ERROR_NONE));
+
+    EXPECT_FALSE(StreamLaunchBlocking::IsNonBlockingLaunchActive(streamObj));
+    EXPECT_EQ(rtNonBlockingLaunchBegin(stream, 0ULL), RT_ERROR_NONE);
+    EXPECT_TRUE(StreamLaunchBlocking::IsNonBlockingLaunchActive(streamObj));
+    EXPECT_EQ(rtNonBlockingLaunchBegin(stream, 0ULL), RT_ERROR_NONE);
+    EXPECT_TRUE(StreamLaunchBlocking::IsNonBlockingLaunchActive(streamObj));
+
+    EXPECT_EQ(rtNonBlockingLaunchEnd(stream, 0ULL), RT_ERROR_NONE);
+    EXPECT_TRUE(StreamLaunchBlocking::IsNonBlockingLaunchActive(streamObj));
+    EXPECT_EQ(rtNonBlockingLaunchEnd(stream, 0ULL), RT_ERROR_NONE);
+    EXPECT_FALSE(StreamLaunchBlocking::IsNonBlockingLaunchActive(streamObj));
+
+    GlobalMockObject::verify();
+    GlobalMockObject::reset();
+
+    error = rtStreamDestroy(stream);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(StreamTest, rtNonBlockingLaunch_defaultModeEndDoesNotSynchronizeWhenEnvOff)
+{
+    LaunchBlockingChipFeatureGuard chipFeatureGuard;
+    LaunchBlockingFlagGuard guard(false);
+    rtStream_t stream = nullptr;
+    rtError_t error = rtStreamCreate(&stream, 5);
+    ASSERT_EQ(error, RT_ERROR_NONE);
+    Stream* const streamObj = rt_ut::UnwrapOrNull<Stream>(stream);
+    ASSERT_NE(streamObj, nullptr);
+    EnableLaunchBlockingFeature(streamObj);
+
+    MOCKER_CPP_VIRTUAL(streamObj, &Stream::Synchronize).expects(never());
+
+    EXPECT_EQ(rtNonBlockingLaunchBegin(stream, 0ULL), RT_ERROR_NONE);
+    EXPECT_EQ(rtNonBlockingLaunchEnd(stream, 0ULL), RT_ERROR_NONE);
+
+    GlobalMockObject::verify();
+    GlobalMockObject::reset();
+
+    error = rtStreamDestroy(stream);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(StreamTest, rtNonBlockingLaunch_syncModeEndSynchronizesWhenEnvOff)
+{
+    LaunchBlockingChipFeatureGuard chipFeatureGuard;
+    LaunchBlockingFlagGuard guard(false);
+    rtStream_t stream = nullptr;
+    rtError_t error = rtStreamCreate(&stream, 5);
+    ASSERT_EQ(error, RT_ERROR_NONE);
+    Stream* const streamObj = rt_ut::UnwrapOrNull<Stream>(stream);
+    ASSERT_NE(streamObj, nullptr);
+    EnableLaunchBlockingFeature(streamObj);
+    ASSERT_EQ(
+        StreamLaunchBlocking::SetLaunchBlockingMode(streamObj, RT_STREAM_LAUNCH_BLOCKING_MODE_BLOCKING), RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(streamObj, &Stream::Synchronize)
+        .expects(once())
+        .with(mockcpp::eq(false), mockcpp::eq(-1))
+        .will(returnValue(RT_ERROR_NONE));
+
+    EXPECT_EQ(rtNonBlockingLaunchBegin(stream, 0ULL), RT_ERROR_NONE);
+    EXPECT_EQ(rtNonBlockingLaunchEnd(stream, 0ULL), RT_ERROR_NONE);
+
+    GlobalMockObject::verify();
+    GlobalMockObject::reset();
+
+    error = rtStreamDestroy(stream);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(StreamTest, rtNonBlockingLaunch_asyncModeEndDoesNotSynchronizeWhenEnvOn)
+{
+    LaunchBlockingChipFeatureGuard chipFeatureGuard;
+    LaunchBlockingFlagGuard guard(true);
+    rtStream_t stream = nullptr;
+    rtError_t error = rtStreamCreate(&stream, 5);
+    ASSERT_EQ(error, RT_ERROR_NONE);
+    Stream* const streamObj = rt_ut::UnwrapOrNull<Stream>(stream);
+    ASSERT_NE(streamObj, nullptr);
+    EnableLaunchBlockingFeature(streamObj);
+    ASSERT_EQ(
+        StreamLaunchBlocking::SetLaunchBlockingMode(streamObj, RT_STREAM_LAUNCH_BLOCKING_MODE_NON_BLOCKING),
+        RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(streamObj, &Stream::Synchronize).expects(never());
+
+    EXPECT_EQ(rtNonBlockingLaunchBegin(stream, 0ULL), RT_ERROR_NONE);
+    EXPECT_EQ(rtNonBlockingLaunchEnd(stream, 0ULL), RT_ERROR_NONE);
+
+    GlobalMockObject::verify();
+    GlobalMockObject::reset();
+
+    error = rtStreamDestroy(stream);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(StreamTest, rtNonBlockingLaunch_outerEndReturnsSynchronizeError)
+{
+    LaunchBlockingChipFeatureGuard chipFeatureGuard;
+    LaunchBlockingFlagGuard guard(false);
+    rtStream_t stream = nullptr;
+    rtError_t error = rtStreamCreate(&stream, 5);
+    ASSERT_EQ(error, RT_ERROR_NONE);
+    Stream* const streamObj = rt_ut::UnwrapOrNull<Stream>(stream);
+    ASSERT_NE(streamObj, nullptr);
+    EnableLaunchBlockingFeature(streamObj);
+    ASSERT_EQ(
+        StreamLaunchBlocking::SetLaunchBlockingMode(streamObj, RT_STREAM_LAUNCH_BLOCKING_MODE_BLOCKING), RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(streamObj, &Stream::Synchronize)
+        .expects(once())
+        .with(mockcpp::eq(false), mockcpp::eq(-1))
+        .will(returnValue(RT_ERROR_DRV_ERR));
+
+    EXPECT_EQ(rtNonBlockingLaunchBegin(stream, 0ULL), RT_ERROR_NONE);
+    EXPECT_EQ(rtNonBlockingLaunchEnd(stream, 0ULL), ACL_ERROR_RT_DRV_INTERNAL_ERROR);
+
+    GlobalMockObject::verify();
+    GlobalMockObject::reset();
+
+    error = rtStreamDestroy(stream);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(StreamTest, rtsStreamLaunchBlockingAttribute)
+{
+    LaunchBlockingChipFeatureGuard guard;
+
+    rtStream_t stream = nullptr;
+    rtError_t error = rtStreamCreate(&stream, 0);
+    ASSERT_EQ(error, RT_ERROR_NONE);
+
+    rtStreamAttrValue_t value = {0};
+    error = rtsStreamGetAttribute(stream, RT_STREAM_ATTR_LAUNCH_BLOCKING_MODE, &value);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(value.launchBlockingMode, RT_STREAM_LAUNCH_BLOCKING_MODE_CTRL_BY_ENV);
+
+    value = {0};
+    value.launchBlockingMode = RT_STREAM_LAUNCH_BLOCKING_MODE_NON_BLOCKING;
+    error = rtsStreamSetAttribute(stream, RT_STREAM_ATTR_LAUNCH_BLOCKING_MODE, &value);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    value = {0};
+    error = rtsStreamGetAttribute(stream, RT_STREAM_ATTR_LAUNCH_BLOCKING_MODE, &value);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(value.launchBlockingMode, RT_STREAM_LAUNCH_BLOCKING_MODE_NON_BLOCKING);
+
+    value = {0};
+    value.launchBlockingMode = RT_STREAM_LAUNCH_BLOCKING_MODE_BLOCKING;
+    error = rtsStreamSetAttribute(stream, RT_STREAM_ATTR_LAUNCH_BLOCKING_MODE, &value);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    value = {0};
+    error = rtsStreamGetAttribute(stream, RT_STREAM_ATTR_LAUNCH_BLOCKING_MODE, &value);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(value.launchBlockingMode, RT_STREAM_LAUNCH_BLOCKING_MODE_BLOCKING);
+
+    value = {0};
+    value.launchBlockingMode = RT_STREAM_LAUNCH_BLOCKING_MODE_BLOCKING + 1U;
+    error = rtsStreamSetAttribute(stream, RT_STREAM_ATTR_LAUNCH_BLOCKING_MODE, &value);
+    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+
+    value = {0};
+    value.launchBlockingMode = 0x100U;
+    error = rtsStreamSetAttribute(stream, RT_STREAM_ATTR_LAUNCH_BLOCKING_MODE, &value);
+    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+
+    error = rtStreamDestroy(stream);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(StreamTest, rtsStreamLaunchBlockingAttribute_nullStreamUsesDefaultStream)
+{
+    LaunchBlockingChipFeatureGuard guard;
+
+    Context* const ctx = Runtime::Instance()->CurrentContext();
+    ASSERT_NE(ctx, nullptr);
+    Stream* const defaultStream = ctx->DefaultStream_();
+    ASSERT_NE(defaultStream, nullptr);
+    ASSERT_EQ(
+        StreamLaunchBlocking::SetLaunchBlockingMode(defaultStream, RT_STREAM_LAUNCH_BLOCKING_MODE_CTRL_BY_ENV),
+        RT_ERROR_NONE);
+
+    rtStreamAttrValue_t value = {};
+    value.launchBlockingMode = RT_STREAM_LAUNCH_BLOCKING_MODE_NON_BLOCKING;
+    EXPECT_EQ(rtsStreamSetAttribute(nullptr, RT_STREAM_ATTR_LAUNCH_BLOCKING_MODE, &value), RT_ERROR_NONE);
+    uint32_t launchBlockingMode = RT_STREAM_LAUNCH_BLOCKING_MODE_CTRL_BY_ENV;
+    EXPECT_EQ(StreamLaunchBlocking::GetLaunchBlockingMode(defaultStream, &launchBlockingMode), RT_ERROR_NONE);
+    EXPECT_EQ(launchBlockingMode, RT_STREAM_LAUNCH_BLOCKING_MODE_NON_BLOCKING);
+
+    value = {};
+    EXPECT_EQ(rtsStreamGetAttribute(nullptr, RT_STREAM_ATTR_LAUNCH_BLOCKING_MODE, &value), RT_ERROR_NONE);
+    EXPECT_EQ(value.launchBlockingMode, RT_STREAM_LAUNCH_BLOCKING_MODE_NON_BLOCKING);
+
+    EXPECT_EQ(
+        StreamLaunchBlocking::SetLaunchBlockingMode(defaultStream, RT_STREAM_LAUNCH_BLOCKING_MODE_CTRL_BY_ENV),
+        RT_ERROR_NONE);
+}
+
+TEST_F(StreamTest, rtsStreamLaunchBlockingAttribute_rejectsUnsupportedStreams)
+{
+    LaunchBlockingChipFeatureGuard guard;
+
+    rtStream_t stream = nullptr;
+    ASSERT_EQ(rtStreamCreate(&stream, 0), RT_ERROR_NONE);
+    Stream* const streamObj = rt_ut::UnwrapOrNull<Stream>(stream);
+    ASSERT_NE(streamObj, nullptr);
+    Model model;
+
+    rtStreamAttrValue_t value = {};
+    value.launchBlockingMode = RT_STREAM_LAUNCH_BLOCKING_MODE_BLOCKING;
+    streamObj->SetModel(&model);
+    EXPECT_EQ(
+        rtsStreamSetAttribute(stream, RT_STREAM_ATTR_LAUNCH_BLOCKING_MODE, &value), ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(
+        rtsStreamGetAttribute(stream, RT_STREAM_ATTR_LAUNCH_BLOCKING_MODE, &value), ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    uint32_t launchBlockingMode = RT_STREAM_LAUNCH_BLOCKING_MODE_BLOCKING + 1U;
+    EXPECT_EQ(StreamLaunchBlocking::GetLaunchBlockingMode(streamObj, &launchBlockingMode), RT_ERROR_NONE);
+    EXPECT_EQ(launchBlockingMode, RT_STREAM_LAUNCH_BLOCKING_MODE_CTRL_BY_ENV);
+
+    streamObj->SetModel(nullptr);
+    streamObj->SetBindFlag(true);
+    EXPECT_EQ(
+        rtsStreamSetAttribute(stream, RT_STREAM_ATTR_LAUNCH_BLOCKING_MODE, &value), ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(
+        rtsStreamGetAttribute(stream, RT_STREAM_ATTR_LAUNCH_BLOCKING_MODE, &value), ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(StreamLaunchBlocking::GetLaunchBlockingMode(streamObj, &launchBlockingMode), RT_ERROR_NONE);
+    EXPECT_EQ(launchBlockingMode, RT_STREAM_LAUNCH_BLOCKING_MODE_CTRL_BY_ENV);
+
+    streamObj->SetBindFlag(false);
+    const uint32_t originalFlags = streamObj->flags_;
+    const std::array<uint32_t, 3U> unsupportedFlags = {RT_STREAM_PERSISTENT, RT_STREAM_AICPU, RT_STREAM_CP_PROCESS_USE};
+    for (const uint32_t flags : unsupportedFlags) {
+        streamObj->flags_ = flags;
+        EXPECT_EQ(
+            rtsStreamSetAttribute(stream, RT_STREAM_ATTR_LAUNCH_BLOCKING_MODE, &value),
+            ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+        EXPECT_EQ(
+            rtsStreamGetAttribute(stream, RT_STREAM_ATTR_LAUNCH_BLOCKING_MODE, &value),
+            ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+        EXPECT_EQ(StreamLaunchBlocking::GetLaunchBlockingMode(streamObj, &launchBlockingMode), RT_ERROR_NONE);
+        EXPECT_EQ(launchBlockingMode, RT_STREAM_LAUNCH_BLOCKING_MODE_CTRL_BY_ENV);
+    }
+    streamObj->flags_ = originalFlags;
+
+    streamObj->SetCaptureStatus(RT_STREAM_CAPTURE_STATUS_ACTIVE);
+    EXPECT_EQ(rtsStreamSetAttribute(stream, RT_STREAM_ATTR_LAUNCH_BLOCKING_MODE, &value), ACL_ERROR_RT_STREAM_CAPTURED);
+    EXPECT_EQ(rtsStreamGetAttribute(stream, RT_STREAM_ATTR_LAUNCH_BLOCKING_MODE, &value), ACL_ERROR_RT_STREAM_CAPTURED);
+    EXPECT_EQ(StreamLaunchBlocking::GetLaunchBlockingMode(streamObj, &launchBlockingMode), RT_ERROR_NONE);
+    EXPECT_EQ(launchBlockingMode, RT_STREAM_LAUNCH_BLOCKING_MODE_CTRL_BY_ENV);
+
+    streamObj->SetCaptureStatus(RT_STREAM_CAPTURE_STATUS_NONE);
+    EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
+}
+
+TEST_F(StreamTest, rtsStreamLaunchBlockingAttribute_featureNotSupport)
+{
+    UnsupportedLaunchBlockingChipGuard guard;
+
+    rtStreamAttrValue_t value = {};
+    value.launchBlockingMode = RT_STREAM_LAUNCH_BLOCKING_MODE_NON_BLOCKING;
+    EXPECT_EQ(
+        rtsStreamSetAttribute(nullptr, RT_STREAM_ATTR_LAUNCH_BLOCKING_MODE, &value), ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+
+    value = {};
+    EXPECT_EQ(
+        rtsStreamGetAttribute(nullptr, RT_STREAM_ATTR_LAUNCH_BLOCKING_MODE, &value), ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+}
+
+TEST_F(StreamTest, rtsStreamLaunchBlockingAttribute_destroyedStreamInvalidHandle)
+{
+    rtStream_t stream = nullptr;
+    rtError_t error = rtStreamCreate(&stream, 0);
+    ASSERT_EQ(error, RT_ERROR_NONE);
+
+    error = rtStreamDestroy(stream);
+    ASSERT_EQ(error, RT_ERROR_NONE);
+
+    rtStreamAttrValue_t value = {0};
+    EXPECT_EQ(rtsStreamSetAttribute(stream, RT_STREAM_ATTR_LAUNCH_BLOCKING_MODE, &value), ACL_ERROR_RT_INVALID_HANDLE);
+    EXPECT_EQ(rtsStreamGetAttribute(stream, RT_STREAM_ATTR_LAUNCH_BLOCKING_MODE, &value), ACL_ERROR_RT_INVALID_HANDLE);
 }
 
 TEST_F(StreamTest, rtsStreamQuery_normal)

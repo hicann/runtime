@@ -1134,31 +1134,35 @@ bool NpuDriver::CheckIsSupportFeature(uint32_t devId, int32_t featureType)
         return false;
     }
 
-    static std::map<drvFeature_t, std::string> featureNameMap = {
-        {FEATURE_SVM_GET_USER_MALLOC_ATTR, "FEATURE_SVM_GET_USER_MALLOC_ATTR"},
-        {FEATURE_MEMCPY_BATCH_ASYNC, "FEATURE_MEMCPY_BATCH_ASYNC"},
-        {FEATURE_TRSDRV_SQ_DEVICE_MEM_PRIORITY, "FEATURE_TRSDRV_SQ_DEVICE_MEM_PRIORITY"},
-        {FEATURE_TRSDRV_SQ_SUPPORT_DYNAMIC_BIND, "FEATURE_TRSDRV_SQ_SUPPORT_DYNAMIC_BIND"},
-        {FEATURE_HOST_PIN_REGISTER_SUPPORT_UVA, "FEATURE_HOST_PIN_REGISTER_SUPPORT_UVA"},
-        {FEATURE_SVM_VMM_NORMAL_GRANULARITY, "FEATURE_SVM_VMM_NORMAL_GRANULARITY"},
-        {FEATURE_TRSDRV_IS_SQ_SUPPORT_DYNAMIC_BIND_VERSION, "FEATURE_TRSDRV_IS_SQ_SUPPORT_DYNAMIC_BIND_VERSION"},
-        {FEATURE_SVM_MEM_HOST_UVA, "FEATURE_SVM_MEM_HOST_UVA"},
-        {FEATURE_DMS_GET_QOS_MASTER_CONFIG, "FEATURE_DMS_GET_QOS_MASTER_CONFIG"},
-        {FEATURE_DMS_QUERY_CHIP_DIE_ID, "FEATURE_DMS_QUERY_CHIP_DIE_ID"},
-        {FEATURE_SVM_MEM_REGISTER_QUERY_AND_GET_ATTR, "FEATURE_SVM_MEM_REGISTER_QUERY_AND_GET_ATTR"},
-        {FEATURE_APM_RES_MAP_REMOTE, "FEATURE_APM_RES_MAP_REMOTE"},
-        {FEATURE_SVM_MEM_REGISTER_HOST_PINNED, "FEATURE_SVM_MEM_REGISTER_HOST_PINNED"},
-        {FEATURE_DMS_GET_BOARD_LOCATION, "FEATURE_DMS_GET_BOARD_LOCATION"},
+    static constexpr const char_t* featureNameTable[] = {
+        "FEATURE_TRSDRV_SQ_DEVICE_MEM_PRIORITY",
+        nullptr, // FEATURE_PROF_AICPU_CHAN is not queried by Runtime.
+        "FEATURE_SVM_GET_USER_MALLOC_ATTR",
+        "FEATURE_MEMCPY_BATCH_ASYNC",
+        "FEATURE_TRSDRV_SQ_SUPPORT_DYNAMIC_BIND",
+        "FEATURE_HOST_PIN_REGISTER_SUPPORT_UVA",
+        "FEATURE_SVM_VMM_NORMAL_GRANULARITY",
+        "FEATURE_TRSDRV_IS_SQ_SUPPORT_DYNAMIC_BIND_VERSION",
+        "FEATURE_SVM_MEM_HOST_UVA",
+        "FEATURE_DMS_GET_QOS_MASTER_CONFIG",
+        "FEATURE_DMS_QUERY_CHIP_DIE_ID",
+        "FEATURE_SVM_MEM_REGISTER_QUERY_AND_GET_ATTR",
+        "FEATURE_APM_RES_MAP_REMOTE",
+        "FEATURE_SVM_MEM_REGISTER_HOST_PINNED",
+        "FEATURE_DMS_GET_BOARD_LOCATION",
     };
+    static_assert(
+        (sizeof(featureNameTable) / sizeof(featureNameTable[0])) == static_cast<size_t>(FEATURE_MAX),
+        "featureNameTable must match drvFeature_t");
 
-    auto iter = featureNameMap.find(static_cast<drvFeature_t>(featureType));
-    if (iter == featureNameMap.end()) {
+    const char_t* const featureName = featureNameTable[static_cast<size_t>(featureType)];
+    if (featureName == nullptr) {
         RT_LOG(RT_LOG_INFO, "featureType %d does not exist", featureType);
         return false;
     }
 
     const bool isSupported = halSupportFeature(devId, static_cast<drvFeature_t>(featureType));
-    RT_LOG(RT_LOG_INFO, "%s %s, drv devId=%u.", (isSupported ? "Support" : "Not support"), iter->second.c_str(), devId);
+    RT_LOG(RT_LOG_INFO, "%s %s, drv devId=%u.", (isSupported ? "Support" : "Not support"), featureName, devId);
     return isSupported;
 }
 

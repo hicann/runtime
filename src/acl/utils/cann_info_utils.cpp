@@ -535,6 +535,8 @@ const char* GetStreamAttrDesc(aclrtStreamAttr attr)
             return "STREAM_ATTR_CACHE_OP_INFO(4)";
         case ACL_STREAM_ATTR_PRIORITY:
             return "STREAM_ATTR_PRIORITY(5)";
+        case ACL_STREAM_LAUNCH_BLOCKING_MODE:
+            return "STREAM_LAUNCH_BLOCKING_MODE(6)";
         default:
             break;
     }

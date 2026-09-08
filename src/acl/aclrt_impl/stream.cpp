@@ -164,6 +164,26 @@ aclError aclrtSynchronizeStreamWithTimeoutImpl(aclrtStream stream, int32_t timeo
     return ACL_SUCCESS;
 }
 
+aclError aclrtNonBlockingLaunchBeginImpl(aclrtStream stream, uint64_t flag)
+{
+    ACL_LOG_INFO("start to execute aclrtNonBlockingLaunchBegin");
+    ACL_CHECK_RESERVED_PARAM_REPORT_RET(flag, 0U, ACL_ERROR_INVALID_PARAM);
+
+    ACL_REQUIRES_RTS_OK(rtNonBlockingLaunchBegin(static_cast<rtStream_t>(stream), flag));
+    ACL_LOG_INFO("successfully execute aclrtNonBlockingLaunchBegin");
+    return ACL_SUCCESS;
+}
+
+aclError aclrtNonBlockingLaunchEndImpl(aclrtStream stream, uint64_t flag)
+{
+    ACL_LOG_INFO("start to execute aclrtNonBlockingLaunchEnd");
+    ACL_CHECK_RESERVED_PARAM_REPORT_RET(flag, 0U, ACL_ERROR_INVALID_PARAM);
+
+    ACL_REQUIRES_RTS_OK(rtNonBlockingLaunchEnd(static_cast<rtStream_t>(stream), flag));
+    ACL_LOG_INFO("successfully execute aclrtNonBlockingLaunchEnd");
+    return ACL_SUCCESS;
+}
+
 aclError aclrtStreamQueryImpl(aclrtStream stream, aclrtStreamStatus* status)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtStreamQuery);

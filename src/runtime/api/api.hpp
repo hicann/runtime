@@ -241,6 +241,8 @@ public:
         Stream* const stm, Event* const evt, const uint32_t timeout = 0U,
         const uint32_t flag = RT_EVENT_WAIT_DEFAULT) = 0;
     virtual rtError_t StreamSynchronize(Stream* const stm, const int32_t timeout = -1) = 0;
+    virtual rtError_t NonBlockingLaunchBegin(Stream* const stream, const uint64_t flag) = 0;
+    virtual rtError_t NonBlockingLaunchEnd(Stream* const stream, const uint64_t flag) = 0;
     virtual rtError_t StreamQuery(Stream* const stm) = 0;
     virtual rtError_t GetStreamId(Stream* const stm, int32_t* const streamId) = 0;
     virtual rtError_t GetSqId(Stream* const stm, uint32_t* const sqId) = 0;
@@ -614,6 +616,10 @@ public:
     virtual rtError_t GetStreamOverflowSwitch(Stream* const stm, uint32_t* const flags) = 0;
     virtual rtError_t SetStreamPriorityValue(Stream* const stm, const uint32_t streamPriority) = 0;
     virtual rtError_t GetStreamPriorityValue(Stream* const stm, uint32_t* const streamPriority) = 0;
+    virtual rtError_t StreamSetAttribute(
+        Stream* const stm, const rtStreamAttr stmAttrId, const rtStreamAttrValue_t* const attrValue) = 0;
+    virtual rtError_t StreamGetAttribute(
+        Stream* const stm, const rtStreamAttr stmAttrId, rtStreamAttrValue_t* const attrValue) = 0;
     virtual rtError_t SetExceptCallback(const rtErrorCallback callback) = 0;
     virtual rtError_t SetTaskAbortCallBack(
         const char_t* regName, void* callback, void* args, TaskAbortCallbackType type) = 0;

@@ -156,6 +156,7 @@ set(runtimeut_common_src_stream_list
     ${TOP_DIR}/src/runtime/core/src/stream/dvpp_grp.cc
     ${TOP_DIR}/src/runtime/core/src/stream/engine_stream_observer.cc
     ${TOP_DIR}/src/runtime/core/src/stream/stream.cc
+    ${TOP_DIR}/src/runtime/feature/launch_blocking/stream_launch_blocking.cc
     ${TOP_DIR}/src/runtime/core/src/stream/stream_factory.cc
     ${TOP_DIR}/src/runtime/core/src/stream/stream_sqcq_manage.cc
 )
@@ -449,6 +450,7 @@ set(RUNTIME_TEST_INC_DIR_COMMON
     ${TOP_DIR}/src/runtime/core/inc/launch
     ${TOP_DIR}/src/runtime/core/inc/model
     ${TOP_DIR}/src/runtime/feature/jetty
+    ${TOP_DIR}/src/runtime/feature/launch_blocking
     ${TOP_DIR}/src/runtime/core/inc/event
     ${TOP_DIR}/src/runtime/core/inc/arg_loader
     ${TOP_DIR}/src/runtime/core/inc/notify

@@ -165,6 +165,7 @@ set(libruntime_v200_stream_common_src_files
     ${RUNTIME_CORE_DIR}/src/stream/stream_sqcq_manage.cc
     ${RUNTIME_CORE_DIR}/src/stream/engine_stream_observer.cc
     ${RUNTIME_CORE_DIR}/src/stream/stream.cc
+    ${RUNTIME_FEATURE_DIR}/launch_blocking/stream_launch_blocking.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/stream_capture.cc
     ${RUNTIME_FEATURE_DIR}/jetty/jetty_manager.cc
     ${RUNTIME_FEATURE_DIR}/jetty/jetty_pool.cc
@@ -516,6 +517,7 @@ set(RUNTIME_INC_DIR_COMMON_V200
     ${RUNTIME_FEATURE_DIR}/ffts
     ${RUNTIME_FEATURE_DIR}/cntnotify
     ${RUNTIME_FEATURE_DIR}/snapshot
+    ${RUNTIME_FEATURE_DIR}/launch_blocking
     ${RUNTIME_FEATURE_DIR}/ccu
     ${RUNTIME_FEATURE_DIR}/xpu
     ${RUNTIME_CORE_DIR}/src/uvm

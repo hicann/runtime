@@ -351,6 +351,16 @@ rtError_t ApiDecorator::StreamSynchronize(Stream* const stm, const int32_t timeo
     return impl_->StreamSynchronize(stm, timeout);
 }
 
+rtError_t ApiDecorator::NonBlockingLaunchBegin(Stream* const stream, const uint64_t flag)
+{
+    return impl_->NonBlockingLaunchBegin(stream, flag);
+}
+
+rtError_t ApiDecorator::NonBlockingLaunchEnd(Stream* const stream, const uint64_t flag)
+{
+    return impl_->NonBlockingLaunchEnd(stream, flag);
+}
+
 rtError_t ApiDecorator::StreamQuery(Stream* const stm) { return impl_->StreamQuery(stm); }
 
 rtError_t ApiDecorator::NopTask(Stream* const stm) { return impl_->NopTask(stm); }
@@ -1523,6 +1533,18 @@ rtError_t ApiDecorator::SetStreamPriorityValue(Stream* const stm, const uint32_t
 rtError_t ApiDecorator::GetStreamPriorityValue(Stream* const stm, uint32_t* const streamPriority)
 {
     return impl_->GetStreamPriorityValue(stm, streamPriority);
+}
+
+rtError_t ApiDecorator::StreamSetAttribute(
+    Stream* const stm, const rtStreamAttr stmAttrId, const rtStreamAttrValue_t* const attrValue)
+{
+    return impl_->StreamSetAttribute(stm, stmAttrId, attrValue);
+}
+
+rtError_t ApiDecorator::StreamGetAttribute(
+    Stream* const stm, const rtStreamAttr stmAttrId, rtStreamAttrValue_t* const attrValue)
+{
+    return impl_->StreamGetAttribute(stm, stmAttrId, attrValue);
 }
 
 rtError_t ApiDecorator::DvppGroupCreate(DvppGrp** grp, const uint32_t flags)

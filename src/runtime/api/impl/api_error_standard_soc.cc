@@ -18,6 +18,7 @@
 #include "event.hpp"
 #include "elf.hpp"
 #include "runtime/kernel.h"
+#include "runtime/rts/rts_stream.h"
 #include "error_message_manage.hpp"
 #include "capture_model_utils.hpp"
 #include "npu_driver.hpp"
@@ -25,8 +26,108 @@
 namespace cce {
 namespace runtime {
 constexpr uint32_t TASK_ABORT_TIMEOUT_MAX = (36 * 60 * 1000U); // 36min
+constexpr uint32_t LAUNCH_BLOCKING_UNSUPPORTED_STREAM_FLAGS =
+    RT_STREAM_PERSISTENT | RT_STREAM_AICPU | RT_STREAM_CP_PROCESS_USE;
 static string g_fusionSubTypeStr[RT_FUSION_END] = {"HCOM", "AICPU", "AIC", "CCU"};
 static unordered_set<string> g_fusionAllowedList{"HCOMAIC", "AICPUAIC", "CCUAIC", "CCU"};
+
+rtError_t ValidateStreamLaunchBlockingSet(const Stream* const stream, const uint32_t launchBlockingMode)
+{
+    const rtChipType_t chipType = Runtime::Instance()->GetChipType();
+    if (!IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_LAUNCH_BLOCKING)) {
+        RT_LOG(RT_LOG_WARNING, "chip type(%d) does not support.", static_cast<int32_t>(chipType));
+        return RT_ERROR_FEATURE_NOT_SUPPORT;
+    }
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
+        launchBlockingMode > RT_STREAM_LAUNCH_BLOCKING_MODE_BLOCKING, RT_ERROR_INVALID_VALUE,
+        "Setting the stream launch blocking mode", RtFmtMsg("UNKNOWN(%u)", launchBlockingMode), "launchBlockingMode",
+        "[0, 3)");
+    if (stream != nullptr) {
+        COND_RETURN_AND_MSG_OUTER(
+            stream->IsModelStream() || stream->GetBindFlag() ||
+                ((stream->Flags() & LAUNCH_BLOCKING_UNSUPPORTED_STREAM_FLAGS) != 0U),
+            RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1016, "Setting the stream launch blocking mode",
+            RtFmtMsg(
+                "Stream (stream_id=%d) does not support launch blocking control because it is a model stream, a bound "
+                "stream, or has RT_STREAM_PERSISTENT, RT_STREAM_AICPU, or RT_STREAM_CP_PROCESS_USE set",
+                stream->Id_()));
+        COND_RETURN_AND_MSG_OUTER(
+            stream->IsCapturing(), RT_ERROR_STREAM_CAPTURED, ErrorCode::EE1016,
+            "Setting the stream launch blocking mode",
+            RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", stream->Id_()));
+    }
+    return RT_ERROR_NONE;
+}
+
+rtError_t ValidateStreamLaunchBlockingGet(const Stream* const stream)
+{
+    const rtChipType_t chipType = Runtime::Instance()->GetChipType();
+    if (!IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_LAUNCH_BLOCKING)) {
+        RT_LOG(RT_LOG_WARNING, "chip type(%d) does not support.", static_cast<int32_t>(chipType));
+        return RT_ERROR_FEATURE_NOT_SUPPORT;
+    }
+    if (stream != nullptr) {
+        COND_RETURN_AND_MSG_OUTER(
+            stream->IsModelStream() || stream->GetBindFlag() ||
+                ((stream->Flags() & LAUNCH_BLOCKING_UNSUPPORTED_STREAM_FLAGS) != 0U),
+            RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1016, "Obtaining the stream launch blocking mode",
+            RtFmtMsg(
+                "Stream (stream_id=%d) does not support launch blocking control because it is a model stream, a bound "
+                "stream, or has RT_STREAM_PERSISTENT, RT_STREAM_AICPU, or RT_STREAM_CP_PROCESS_USE set",
+                stream->Id_()));
+        COND_RETURN_AND_MSG_OUTER(
+            stream->IsCapturing(), RT_ERROR_STREAM_CAPTURED, ErrorCode::EE1016,
+            "Obtaining the stream launch blocking mode",
+            RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", stream->Id_()));
+    }
+    return RT_ERROR_NONE;
+}
+
+rtError_t ApiErrorDecorator::NonBlockingLaunchBegin(Stream* const stream, const uint64_t flag)
+{
+    const rtChipType_t chipType = Runtime::Instance()->GetChipType();
+    if (!IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_LAUNCH_BLOCKING)) {
+        RT_LOG(RT_LOG_WARNING, "chip type(%d) does not support.", static_cast<int32_t>(chipType));
+        return RT_ERROR_FEATURE_NOT_SUPPORT;
+    }
+    Stream* const targetStm = Runtime::Instance()->GetCurStream(stream);
+    NULL_PTR_RETURN(targetStm, RT_ERROR_INVALID_VALUE);
+    COND_RETURN_AND_MSG_OUTER(
+        targetStm->IsModelStream() || targetStm->GetBindFlag() ||
+            ((targetStm->Flags() & LAUNCH_BLOCKING_UNSUPPORTED_STREAM_FLAGS) != 0U),
+        RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1016, "Starting a non-blocking launch section",
+        RtFmtMsg(
+            "Stream (stream_id=%d) does not support launch blocking control because it is a model stream, a bound "
+            "stream, or has RT_STREAM_PERSISTENT, RT_STREAM_AICPU, or RT_STREAM_CP_PROCESS_USE set",
+            targetStm->Id_()));
+    COND_RETURN_AND_MSG_OUTER(
+        targetStm->IsCapturing(), RT_ERROR_STREAM_CAPTURED, ErrorCode::EE1016, "Starting a non-blocking launch section",
+        RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", targetStm->Id_()));
+    return impl_->NonBlockingLaunchBegin(targetStm, flag);
+}
+
+rtError_t ApiErrorDecorator::NonBlockingLaunchEnd(Stream* const stream, const uint64_t flag)
+{
+    const rtChipType_t chipType = Runtime::Instance()->GetChipType();
+    if (!IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_LAUNCH_BLOCKING)) {
+        RT_LOG(RT_LOG_WARNING, "chip type(%d) does not support.", static_cast<int32_t>(chipType));
+        return RT_ERROR_FEATURE_NOT_SUPPORT;
+    }
+    Stream* const targetStm = Runtime::Instance()->GetCurStream(stream);
+    NULL_PTR_RETURN(targetStm, RT_ERROR_INVALID_VALUE);
+    COND_RETURN_AND_MSG_OUTER(
+        targetStm->IsModelStream() || targetStm->GetBindFlag() ||
+            ((targetStm->Flags() & LAUNCH_BLOCKING_UNSUPPORTED_STREAM_FLAGS) != 0U),
+        RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1016, "Ending a non-blocking launch section",
+        RtFmtMsg(
+            "Stream (stream_id=%d) does not support launch blocking control because it is a model stream, a bound "
+            "stream, or has RT_STREAM_PERSISTENT, RT_STREAM_AICPU, or RT_STREAM_CP_PROCESS_USE set",
+            targetStm->Id_()));
+    COND_RETURN_AND_MSG_OUTER(
+        targetStm->IsCapturing(), RT_ERROR_STREAM_CAPTURED, ErrorCode::EE1016, "Ending a non-blocking launch section",
+        RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", targetStm->Id_()));
+    return impl_->NonBlockingLaunchEnd(targetStm, flag);
+}
 
 rtError_t ApiErrorDecorator::WriteValuePtr(void* const writeValueInfo, Stream* const stm, void* const pointedAddr)
 {

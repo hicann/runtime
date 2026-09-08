@@ -12,6 +12,33 @@
 namespace cce {
 namespace runtime {
 
+rtError_t ValidateStreamLaunchBlockingSet(const Stream* const stm, const uint32_t launchBlockingMode)
+{
+    UNUSED(stm);
+    UNUSED(launchBlockingMode);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t ValidateStreamLaunchBlockingGet(const Stream* const stm)
+{
+    UNUSED(stm);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t ApiErrorDecorator::NonBlockingLaunchBegin(Stream* const stream, const uint64_t flag)
+{
+    UNUSED(stream);
+    UNUSED(flag);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t ApiErrorDecorator::NonBlockingLaunchEnd(Stream* const stream, const uint64_t flag)
+{
+    UNUSED(stream);
+    UNUSED(flag);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
 rtError_t ApiErrorDecorator::WriteValuePtr(void* const writeValueInfo, Stream* const stm, void* const pointedAddr)
 {
     UNUSED(writeValueInfo);

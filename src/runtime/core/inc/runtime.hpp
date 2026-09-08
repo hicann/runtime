@@ -404,6 +404,8 @@ public:
 
     bool GetNpuCollectFlag() const { return isNpuCollect; }
 
+    bool IsLaunchBlockingEnvEnabled() const { return launchBlockingEnvEnabled_; }
+
     void SetProfileEnableFlag(bool isEnable)
     {
         if (isEnable) {
@@ -687,6 +689,7 @@ private:
     rtError_t InitLabelAllocator();
     rtError_t InitSetRuntimeVersion();
     void InitNpuCollectPath();
+    void InitLaunchBlocking();
     void InitStreamSyncMode();
     void NotifyProcWhenNewDevice(const uint32_t devId);
     void NotifyProcWhenReleaseDevice(const uint32_t devId) const;
@@ -857,6 +860,9 @@ private:
     bool disableWaitPrep_ = false;
     uint8_t profileEnabled_ = 0U;
     bool isNpuCollect = false; // Corresponding to the environment NPU_COLLECT_PATH
+
+    // Corresponding to the environment ASCEND_RT_LAUNCH_BLOCKING
+    bool launchBlockingEnvEnabled_ = false;
 
     bool enableOstFlag_{true};
 

@@ -42,6 +42,7 @@
 #include <securec.h>
 #include <algorithm>
 #include "task.hpp"
+#include "stream_launch_blocking.hpp"
 
 namespace cce {
 namespace runtime {
@@ -524,11 +525,32 @@ rtError_t CaptureModel::ExecuteCommon(Stream* const stm, int32_t timeout, const 
 }
 rtError_t CaptureModel::Execute(Stream* const stm, int32_t timeout)
 {
-    return ExecuteCommon(stm, timeout, RT_MODEL_CAPTURE_EXECUTE_DEFAULT);
+    Context* const context = Context_();
+    NULL_PTR_RETURN_MSG(context, RT_ERROR_CONTEXT_NULL);
+    Stream* const executeStream = (stm == nullptr) ? context->DefaultStream_() : stm;
+    NULL_STREAM_PTR_RETURN_MSG(executeStream);
+
+    rtError_t error = ExecuteCommon(executeStream, timeout, RT_MODEL_CAPTURE_EXECUTE_DEFAULT);
+    const bool isSyncExecuteStream = ((executeStream->Flags() & RT_STREAM_FORBIDDEN_DEFAULT) != 0U);
+    if ((error == RT_ERROR_NONE) && !isSyncExecuteStream && StreamLaunchBlocking::ShouldLaunchBlock(executeStream)) {
+        executeStream->SetSyncMdlId(Id_());
+        error = executeStream->Synchronize(false, timeout);
+        executeStream->SetSyncMdlId(MODEL_ID_INVALID);
+        ERROR_RETURN(
+            error, "Capture model post execute synchronization failed, stream_id=%d, model_id=%u, retCode=%#x.",
+            executeStream->Id_(), Id_(), error);
+    }
+    return error;
 }
+
 rtError_t CaptureModel::ExecuteAsync(Stream* const stm)
 {
-    return ExecuteCommon(stm, -1, RT_MODEL_CAPTURE_EXECUTE_ASYNC);
+    Context* const context = Context_();
+    NULL_PTR_RETURN_MSG(context, RT_ERROR_CONTEXT_NULL);
+    Stream* const executeStream = (stm == nullptr) ? context->DefaultStream_() : stm;
+    NULL_STREAM_PTR_RETURN_MSG(executeStream);
+
+    return ExecuteCommon(executeStream, -1, RT_MODEL_CAPTURE_EXECUTE_ASYNC);
 }
 
 void CaptureModel::ReleaseNotifyListOnDestroy(std::vector<Notify*>& notifyList)

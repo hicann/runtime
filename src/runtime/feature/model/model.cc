@@ -42,6 +42,7 @@
 #include "task_david.hpp"
 #include "capture_model.hpp"
 #include "logic_sq.hpp"
+#include "stream_launch_blocking.hpp"
 
 namespace cce {
 namespace runtime {
@@ -1374,6 +1375,15 @@ rtError_t Model::GetStreamToAsyncExecute(Stream* stm)
 
         error = ModelSerialSchedPostProc(stm, endGraphNotify_, this);
         ERROR_RETURN_MSG_INNER(error, "Model serial sched post proc failed, stream_id=%d.", stm->Id_());
+    }
+
+    if ((modelType_ != RT_MODEL_CAPTURE_MODEL) && StreamLaunchBlocking::ShouldLaunchBlock(stm)) {
+        stm->SetSyncMdlId(id_);
+        error = stm->Synchronize(false);
+        stm->SetSyncMdlId(MODEL_ID_INVALID);
+        ERROR_GOTO_MSG_INNER(
+            error, ERROR_RELEASE, "Model blocking execute synchronization failed, stream_id=%d, retCode=%#x.",
+            stm->Id_(), static_cast<uint32_t>(error));
     }
 
     if (isDelTmpStream) {

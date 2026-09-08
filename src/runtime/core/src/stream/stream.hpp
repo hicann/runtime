@@ -80,6 +80,7 @@ class EngineStreamObserver;
 class TaskAllocator;
 class CaptureModel;
 class LogicSq;
+class StreamLaunchBlocking;
 
 enum class TagtsSqAllocType : std::uint32_t { SQ_ALLOC_TYPE_RT_DEFAULT = 0U };
 using RtSqAllocType = TagtsSqAllocType;
@@ -971,6 +972,7 @@ public:
 
 private:
     friend class Context;
+    friend class StreamLaunchBlocking;
     void SetDestroyTaskRecycledOnTearDownOutput(bool* const output)
     {
         destroyTaskRecycledOnTearDownOutput_ = output;
@@ -1136,6 +1138,9 @@ private:
     bool isLastLevelCaptureStream_{true};
     Stream* parentCaptureStream_{nullptr}; // 级联场景下的上级流
     Stream* childCaptureStream_{nullptr};  // 级联场景下的下级流（与 parentCaptureStream_ 对称）
+
+    // Null means the default mode with no active non-blocking section.
+    Atomic<StreamLaunchBlocking*> launchBlockingState_{nullptr};
     std::map<uint32_t, std::pair<uint32_t, uint32_t>> posToHwPos_;       // pos -> (logicSqId, hwPos)
     rtStreamCaptureMode streamCaptureMode_{RT_STREAM_CAPTURE_MODE_MAX};
     StreamTaskGroupStatus taskGroupStatus_{StreamTaskGroupStatus::NONE}; // only for single-operator stream

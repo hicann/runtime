@@ -18,6 +18,7 @@
 #include "context.hpp"
 #include "xpu_aicpu_c.hpp"
 #include "task_fail_callback_manager.hpp"
+#include "stream_launch_blocking.hpp"
 
 namespace cce {
 namespace runtime {
@@ -59,7 +60,11 @@ rtError_t ApiImplDavid::LaunchKernelV2(
         }
     }
 
-    return LaunchKernelByArgsWithType(kernel, blockDim, curStm, argsWithType, taskCfg);
+    error = LaunchKernelByArgsWithType(kernel, blockDim, curStm, argsWithType, taskCfg);
+    if ((error == RT_ERROR_NONE) && StreamLaunchBlocking::ShouldLaunchBlock(curStm)) {
+        return curStm->Synchronize(false);
+    }
+    return error;
 }
 
 rtError_t ApiImplDavid::XpuSetTaskFailCallback(const rtXpuDevType devType, const char_t* moduleName, void* callback)

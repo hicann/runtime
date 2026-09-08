@@ -28,7 +28,6 @@ static const std::unordered_set<RtOptionalFeatureType> CHIP_NANO_FEATURE{
     RtOptionalFeatureType::RT_FEATURE_TASK_TRY_RECYCLE_DISABLE_HWTS,
     RtOptionalFeatureType::RT_FEATURE_TASK_MODEL_EXECUTE_COPY_ONCE,
     RtOptionalFeatureType::RT_FEATURE_DEVICE_HAS_TS_DEAMON,
-    RtOptionalFeatureType::RT_FEATURE_KERNEL_NO_MIX_DOT_REGISTER,
     RtOptionalFeatureType::RT_FEATURE_DEVICE_P2P,
     RtOptionalFeatureType::RT_FEATURE_PROFILING_AICPU,
     RtOptionalFeatureType::RT_FEATURE_TASK_PRE_BUILD_SQE,

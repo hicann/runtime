@@ -55,6 +55,7 @@
 #include "stream_factory.hpp"
 #include "device/device_error_proc.hpp"
 #include "stream_state_callback_manager.hpp"
+#include "stream_launch_blocking.hpp"
 #include "heterogenous.h"
 #include "capture_model.hpp"
 #include "capture_model_enum_desc.hpp"
@@ -1350,6 +1351,9 @@ rtError_t ApiImpl::LaunchKernelV2(
             break;
     }
 
+    if ((error == RT_ERROR_NONE) && StreamLaunchBlocking::ShouldLaunchBlock(curStm)) {
+        return curStm->Synchronize(false);
+    }
     return error;
 }
 
@@ -1376,7 +1380,11 @@ rtError_t ApiImpl::LaunchKernel(
     rtStreamLaunchKernelV2ExtendArgs_t launchKernelExtendArgs = {};
     launchKernelExtendArgs.argsInfo = argsInfo;
     launchKernelExtendArgs.taskCfg = &taskCfg;
-    return StreamLaunchKernelV2(kernel, blockDim, curStm, &launchKernelExtendArgs);
+    const rtError_t error = StreamLaunchKernelV2(kernel, blockDim, curStm, &launchKernelExtendArgs);
+    if ((error == RT_ERROR_NONE) && StreamLaunchBlocking::ShouldLaunchBlock(curStm)) {
+        return curStm->Synchronize(false);
+    }
+    return error;
 }
 
 rtError_t ApiImpl::DatadumpInfoLoad(const void* const dumpInfo, const uint32_t length, const uint32_t flag)
@@ -1957,10 +1965,10 @@ rtError_t ApiImpl::SetDeviceFailureMode(uint64_t failureMode)
     return RT_ERROR_NONE;
 }
 
-rtError_t ApiImpl::StreamSetMode(Stream* const stm, const uint64_t stmMode)
+static rtError_t SetStreamFailureModeInternal(Stream* const stm, const uint64_t stmMode)
 {
     RT_LOG(RT_LOG_DEBUG, "set stream mode entry, stream_id=%d, mode=%llu.", stm->Id_(), stmMode);
-    Context* const curCtx = CurrentContext();
+    Context* const curCtx = Runtime::Instance()->CurrentContext(true, DEFAULT_DEVICE_ID);
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     Device* const dev = curCtx->Device_();
     COND_RETURN_AND_MSG_OUTER(
@@ -2000,11 +2008,196 @@ rtError_t ApiImpl::StreamSetMode(Stream* const stm, const uint64_t stmMode)
     return curStm->SetFailMode(failmode);
 }
 
-rtError_t ApiImpl::StreamGetMode(const Stream* const stm, uint64_t* const stmMode)
+static rtError_t GetStreamFailureModeInternal(const Stream* const stm, uint64_t* const stmMode)
 {
     *stmMode = stm->GetMode();
     RT_LOG(RT_LOG_DEBUG, "get stream_id=%d mode entry, mode = %llu.", stm->Id_(), *stmMode);
     return RT_ERROR_NONE;
+}
+
+static rtError_t SetStreamOverflowSwitchInternal(Stream* const stm, const uint32_t flags)
+{
+    Context* const curCtx = Runtime::Instance()->CurrentContext(true, DEFAULT_DEVICE_ID);
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+
+    Stream* const targetStm = (stm == nullptr) ? curCtx->DefaultStream_() : stm;
+    NULL_STREAM_PTR_RETURN_MSG(targetStm);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        targetStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Setting the stream overflow/underflow detection switch");
+    return curCtx->SetStreamOverflowSwitch(targetStm, flags);
+}
+
+static rtError_t GetStreamOverflowSwitchInternal(const Stream* const stm, uint32_t* const flags)
+{
+    Context* const curCtx = Runtime::Instance()->CurrentContext(true, DEFAULT_DEVICE_ID);
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+    const Stream* const targetStm = (stm == nullptr) ? curCtx->DefaultStream_() : stm;
+    NULL_STREAM_PTR_RETURN_MSG(targetStm);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        targetStm, curCtx, RT_ERROR_STREAM_CONTEXT,
+        "Obtaining the overflow/underflow detection flag of a specified stream");
+
+    *flags = Runtime::Instance()->ChipIsHaveStars() ? static_cast<uint32_t>(targetStm->GetOverflowSwtich()) : 1U;
+    return RT_ERROR_NONE;
+}
+
+static rtError_t SetStreamPriorityInternal(Stream* const stm, const uint32_t streamPriority)
+{
+    Context* const curCtx = Runtime::Instance()->CurrentContext(true, DEFAULT_DEVICE_ID);
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+
+    Stream* const targetStm = (stm == nullptr) ? curCtx->DefaultStream_() : stm;
+    NULL_STREAM_PTR_RETURN_MSG(targetStm);
+    return targetStm->Device_()->Driver_()->SetStreamPriorityValue(targetStm, streamPriority);
+}
+
+static rtError_t GetStreamPriorityInternal(Stream* const stm, uint32_t* const streamPriority)
+{
+    Context* const curCtx = Runtime::Instance()->CurrentContext(true, DEFAULT_DEVICE_ID);
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+
+    Stream* const targetStm = (stm == nullptr) ? curCtx->DefaultStream_() : stm;
+    NULL_STREAM_PTR_RETURN_MSG(targetStm);
+    return targetStm->Device_()->Driver_()->GetStreamPriorityValue(targetStm, streamPriority);
+}
+
+static rtError_t SetStreamTagInternal(Stream* const stm, const uint32_t geOpTag)
+{
+    RT_LOG(RT_LOG_DEBUG, "geOpTag=%#x.", geOpTag);
+    Context* const curCtx = Runtime::Instance()->CurrentContext(true, DEFAULT_DEVICE_ID);
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+
+    Stream* const targetStm = (stm == nullptr) ? curCtx->DefaultStream_() : stm;
+    NULL_STREAM_PTR_RETURN_MSG(targetStm);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        targetStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Setting the stream tag");
+    return curCtx->SetStreamTag(targetStm, geOpTag);
+}
+
+static rtError_t GetStreamTagInternal(const Stream* const stm, uint32_t* const geOpTag)
+{
+    Context* const curCtx = Runtime::Instance()->CurrentContext(true, DEFAULT_DEVICE_ID);
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+    const Stream* const targetStm = (stm == nullptr) ? curCtx->DefaultStream_() : stm;
+    NULL_STREAM_PTR_RETURN_MSG(targetStm);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        targetStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Obtaining the stream label");
+
+    *geOpTag = static_cast<uint32_t>(targetStm->GetStreamTag());
+    return RT_ERROR_NONE;
+}
+
+static rtError_t SetStreamCacheOpInfoInternal(const Stream* const stm, const uint32_t cacheOpInfoSwitch)
+{
+    // The ctx is not checked for performance.
+    stm->SetStreamCacheOpInfoOriginSwitch(cacheOpInfoSwitch);
+    RT_LOG(
+        RT_LOG_DEBUG, "device_id=%u, stream_id=%u, cacheOpInfoSwitch=%u.", stm->Device_()->Id_(), stm->Id_(),
+        cacheOpInfoSwitch);
+
+    if (stm->IsCapturing() && stm->GetCaptureStream() != nullptr && stm->GetCaptureStream()->IsOrigCaptureStream()) {
+        CaptureModel* mdl = dynamic_cast<CaptureModel*>(stm->GetCaptureStream()->Model_());
+        RT_LOG(
+            RT_LOG_INFO, "set cache op info switch status, model_id = %u, stream_id=%u, status=%u.", mdl->Id_(),
+            stm->Id_(), cacheOpInfoSwitch);
+        mdl->SetModelCacheOpInfoSwitch(cacheOpInfoSwitch);
+    }
+
+    return RT_ERROR_NONE;
+}
+
+static rtError_t GetStreamCacheOpInfoInternal(const Stream* const stm, uint32_t* const cacheOpInfoSwitch)
+{
+    // The ctx is not checked for performance.
+    // main stream is not closed & this stream is opened
+    *cacheOpInfoSwitch = stm->GetStreamCacheOpInfoSwitch();
+    return RT_ERROR_NONE;
+}
+
+rtError_t ApiImpl::StreamSetAttribute(
+    Stream* const stm, const rtStreamAttr stmAttrId, const rtStreamAttrValue_t* const attrValue)
+{
+    NULL_PTR_RETURN_MSG(attrValue, RT_ERROR_INVALID_VALUE);
+    rtError_t error;
+    switch (stmAttrId) {
+        case RT_STREAM_ATTR_FAILURE_MODE: {
+            error = SetStreamFailureModeInternal(stm, attrValue->failureMode);
+            break;
+        }
+        case RT_STREAM_ATTR_FLOAT_OVERFLOW_CHECK: {
+            error = SetStreamOverflowSwitchInternal(stm, attrValue->overflowSwitch);
+            break;
+        }
+        case RT_STREAM_ATTR_USER_CUSTOM_TAG: {
+            error = SetStreamTagInternal(stm, attrValue->userCustomTag);
+            break;
+        }
+        case RT_STREAM_ATTR_CACHE_OP_INFO: {
+            error = SetStreamCacheOpInfoInternal(stm, attrValue->cacheOpInfoSwitch);
+            break;
+        }
+        case RT_STREAM_ATTR_PRIORITY: {
+            error = SetStreamPriorityInternal(stm, attrValue->streamPriority);
+            break;
+        }
+        case RT_STREAM_ATTR_LAUNCH_BLOCKING_MODE: {
+            error = StreamLaunchBlocking::SetLaunchBlockingMode(stm, attrValue->launchBlockingMode);
+            break;
+        }
+        default: {
+            error = RT_ERROR_INVALID_VALUE;
+            break;
+        }
+    }
+    return error;
+}
+
+rtError_t ApiImpl::StreamGetAttribute(
+    Stream* const stm, const rtStreamAttr stmAttrId, rtStreamAttrValue_t* const attrValue)
+{
+    NULL_PTR_RETURN_MSG(attrValue, RT_ERROR_INVALID_VALUE);
+    rtError_t error;
+    switch (stmAttrId) {
+        case RT_STREAM_ATTR_FAILURE_MODE: {
+            error = GetStreamFailureModeInternal(stm, &attrValue->failureMode);
+            break;
+        }
+        case RT_STREAM_ATTR_FLOAT_OVERFLOW_CHECK: {
+            error = GetStreamOverflowSwitchInternal(stm, &attrValue->overflowSwitch);
+            break;
+        }
+        case RT_STREAM_ATTR_USER_CUSTOM_TAG: {
+            error = GetStreamTagInternal(stm, &attrValue->userCustomTag);
+            break;
+        }
+        case RT_STREAM_ATTR_CACHE_OP_INFO: {
+            error = GetStreamCacheOpInfoInternal(stm, &attrValue->cacheOpInfoSwitch);
+            break;
+        }
+        case RT_STREAM_ATTR_PRIORITY: {
+            error = GetStreamPriorityInternal(stm, &attrValue->streamPriority);
+            break;
+        }
+        case RT_STREAM_ATTR_LAUNCH_BLOCKING_MODE: {
+            error = StreamLaunchBlocking::GetLaunchBlockingMode(stm, &attrValue->launchBlockingMode);
+            break;
+        }
+        default: {
+            error = RT_ERROR_INVALID_VALUE;
+            break;
+        }
+    }
+    return error;
+}
+
+rtError_t ApiImpl::StreamSetMode(Stream* const stm, const uint64_t stmMode)
+{
+    return SetStreamFailureModeInternal(stm, stmMode);
+}
+
+rtError_t ApiImpl::StreamGetMode(const Stream* const stm, uint64_t* const stmMode)
+{
+    return GetStreamFailureModeInternal(stm, stmMode);
 }
 
 rtError_t ApiImpl::EventCreate(Event** const evt, const uint64_t flag)
@@ -5886,48 +6079,22 @@ rtError_t ApiImpl::GetDeviceSatModeForStream(Stream* const stm, rtFloatOverflowM
 
 rtError_t ApiImpl::SetStreamOverflowSwitch(Stream* const stm, const uint32_t flags)
 {
-    Context* const curCtx = CurrentContext();
-    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-
-    Stream* const targetStm = (stm == nullptr) ? curCtx->DefaultStream_() : stm;
-    NULL_STREAM_PTR_RETURN_MSG(targetStm);
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
-        targetStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Setting the stream overflow/underflow detection switch");
-    return curCtx->SetStreamOverflowSwitch(targetStm, flags);
+    return SetStreamOverflowSwitchInternal(stm, flags);
 }
 
 rtError_t ApiImpl::GetStreamOverflowSwitch(Stream* const stm, uint32_t* const flags)
 {
-    Context* const curCtx = CurrentContext();
-    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    Stream* const targetStm = (stm == nullptr) ? curCtx->DefaultStream_() : stm;
-    NULL_STREAM_PTR_RETURN_MSG(targetStm);
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
-        targetStm, curCtx, RT_ERROR_STREAM_CONTEXT,
-        "Obtaining the overflow/underflow detection flag of a specified stream");
-
-    *flags = Runtime::Instance()->ChipIsHaveStars() ? static_cast<uint32_t>(targetStm->GetOverflowSwtich()) : 1U;
-    return RT_ERROR_NONE;
+    return GetStreamOverflowSwitchInternal(stm, flags);
 }
 
 rtError_t ApiImpl::SetStreamPriorityValue(Stream* const stm, const uint32_t streamPriority)
 {
-    Context* const curCtx = CurrentContext();
-    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-
-    Stream* const targetStm = (stm == nullptr) ? curCtx->DefaultStream_() : stm;
-    NULL_STREAM_PTR_RETURN_MSG(targetStm);
-    return targetStm->Device_()->Driver_()->SetStreamPriorityValue(targetStm, streamPriority);
+    return SetStreamPriorityInternal(stm, streamPriority);
 }
 
 rtError_t ApiImpl::GetStreamPriorityValue(Stream* const stm, uint32_t* const streamPriority)
 {
-    Context* const curCtx = CurrentContext();
-    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-
-    Stream* const targetStm = (stm == nullptr) ? curCtx->DefaultStream_() : stm;
-    NULL_STREAM_PTR_RETURN_MSG(targetStm);
-    return targetStm->Device_()->Driver_()->GetStreamPriorityValue(targetStm, streamPriority);
+    return GetStreamPriorityInternal(stm, streamPriority);
 }
 
 rtError_t ApiImpl::DvppGroupCreate(DvppGrp** grp, const uint32_t flags)
@@ -5955,28 +6122,12 @@ rtError_t ApiImpl::DvppWaitGroupReport(DvppGrp* const grp, const rtDvppGrpCallba
 
 rtError_t ApiImpl::SetStreamTag(Stream* const stm, const uint32_t geOpTag)
 {
-    RT_LOG(RT_LOG_DEBUG, "geOpTag=%#x.", geOpTag);
-    Context* const curCtx = CurrentContext();
-    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-
-    Stream* const targetStm = (stm == nullptr) ? curCtx->DefaultStream_() : stm;
-    NULL_STREAM_PTR_RETURN_MSG(targetStm);
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
-        targetStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Setting the stream tag");
-    return curCtx->SetStreamTag(targetStm, geOpTag);
+    return SetStreamTagInternal(stm, geOpTag);
 }
 
 rtError_t ApiImpl::GetStreamTag(Stream* const stm, uint32_t* const geOpTag)
 {
-    Context* const curCtx = CurrentContext();
-    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    Stream* const targetStm = (stm == nullptr) ? curCtx->DefaultStream_() : stm;
-    NULL_STREAM_PTR_RETURN_MSG(targetStm);
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
-        targetStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Obtaining the stream label");
-
-    *geOpTag = static_cast<uint32_t>(targetStm->GetStreamTag());
-    return RT_ERROR_NONE;
+    return GetStreamTagInternal(stm, geOpTag);
 }
 
 rtError_t ApiImpl::GetVisibleDeviceIdByLogicDeviceId(const int32_t logicDeviceId, int32_t* const visibleDeviceId)
@@ -6796,30 +6947,12 @@ rtError_t ApiImpl::GetUserDevIdByLogicDevId(const int32_t logicDevId, int32_t* c
 
 rtError_t ApiImpl::SetStreamCacheOpInfoSwitch(const Stream* const stm, uint32_t cacheOpInfoSwitch)
 {
-    // The ctx is not checked for performance.
-    stm->SetStreamCacheOpInfoOriginSwitch(cacheOpInfoSwitch);
-    RT_LOG(
-        RT_LOG_DEBUG, "device_id=%u, stream_id=%u, cacheOpInfoSwitch=%u.", stm->Device_()->Id_(), stm->Id_(),
-        cacheOpInfoSwitch);
-
-    if (stm->IsCapturing() && stm->GetCaptureStream() != nullptr && stm->GetCaptureStream()->IsOrigCaptureStream()) {
-        CaptureModel* mdl = dynamic_cast<CaptureModel*>(stm->GetCaptureStream()->Model_());
-        RT_LOG(
-            RT_LOG_INFO, "set cache op info switch status, model_id = %u, stream_id=%u, status=%u.", mdl->Id_(),
-            stm->Id_(), cacheOpInfoSwitch);
-        mdl->SetModelCacheOpInfoSwitch(cacheOpInfoSwitch);
-    }
-
-    return RT_ERROR_NONE;
+    return SetStreamCacheOpInfoInternal(stm, cacheOpInfoSwitch);
 }
 
 rtError_t ApiImpl::GetStreamCacheOpInfoSwitch(const Stream* const stm, uint32_t* const cacheOpInfoSwitch)
 {
-    // The ctx is not checked for performance.
-    // main stream is not closed & this stream is opened
-    *cacheOpInfoSwitch = stm->GetStreamCacheOpInfoSwitch();
-
-    return RT_ERROR_NONE;
+    return GetStreamCacheOpInfoInternal(stm, cacheOpInfoSwitch);
 }
 
 rtError_t ApiImpl::ModelDestroyRegisterCallback(Model* const mdl, const rtCallback_t fn, void* ptr)

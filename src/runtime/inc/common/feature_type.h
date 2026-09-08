@@ -108,7 +108,9 @@ enum class RtOptionalFeatureType : std::uint32_t {
     RT_FEATURE_KERNEL_META_TYPE_SU_STACK_SIZE,
     RT_FEATURE_KERNEL_DOT_PROGRAM_ALLOCATOR,
     RT_FEATURE_KERNEL_TILING_TABLE_PHY_CONTIGUOUS,
-    RT_FEATURE_KERNEL_NO_MIX_DOT_REGISTER,
+    // Legacy products do not adapt operators to avoid launch-blocking deadlocks.
+    // Runtime uses this feature to gate the behavior.
+    RT_FEATURE_LAUNCH_BLOCKING,
     RT_FEATURE_KERNEL_TASK_RATION,
     RT_FEATURE_KERNEL_ELF_AICPU_MACHINE,
     RT_FEATURE_KERNEL_ELF_16K_STACK,

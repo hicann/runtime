@@ -48,6 +48,10 @@ extern "C" {
 #define ACL_CONTINUE_ON_FAILURE 0x00000000U
 #define ACL_STOP_ON_FAILURE 0x00000001U
 
+#define ACL_STREAM_LAUNCH_BLOCKING_MODE_CTRL_BY_ENV 0x00000000U
+#define ACL_STREAM_LAUNCH_BLOCKING_MODE_NON_BLOCKING 0x00000001U
+#define ACL_STREAM_LAUNCH_BLOCKING_MODE_BLOCKING 0x00000002U
+
 // for notify | for create notify
 #define ACL_NOTIFY_DEFAULT 0x00000000U
 #define ACL_NOTIFY_DEVICE_USE_ONLY 0x00000001U
@@ -575,6 +579,7 @@ typedef enum {
     ACL_STREAM_ATTR_USER_CUSTOM_TAG = 3,
     ACL_STREAM_ATTR_CACHE_OP_INFO = 4,
     ACL_STREAM_ATTR_PRIORITY = 5,
+    ACL_STREAM_LAUNCH_BLOCKING_MODE = 6,
 } aclrtStreamAttr;
 
 typedef union {
@@ -583,6 +588,7 @@ typedef union {
     uint32_t userCustomTag;
     uint32_t cacheOpInfoSwitch;
     uint32_t streamPriority;
+    uint32_t launchBlockingMode;
     uint32_t reserve[4];
 } aclrtStreamAttrValue;
 
@@ -2824,6 +2830,30 @@ ACL_FUNC_VISIBILITY aclError aclrtSynchronizeStreamWithTimeout(aclrtStream strea
 
 /**
  * @ingroup AscendCL
+ * @brief begin a non-blocking kernel launch section on the specified stream
+ *
+ * @param  stream [IN]   the stream used by subsequent kernel launches; NULL indicates the default stream
+ * @param  flag [IN]     reserved parameter, must be 0
+ *
+ * @retval ACL_SUCCESS The function is successfully executed.
+ * @retval OtherValues Failure
+ */
+ACL_FUNC_VISIBILITY aclError aclrtNonBlockingLaunchBegin(aclrtStream stream, uint64_t flag);
+
+/**
+ * @ingroup AscendCL
+ * @brief end a non-blocking kernel launch section on the specified stream
+ *
+ * @param  stream [IN]   the stream used by previous kernel launches; NULL indicates the default stream
+ * @param  flag [IN]     reserved parameter, must be 0
+ *
+ * @retval ACL_SUCCESS The function is successfully executed.
+ * @retval OtherValues Failure
+ */
+ACL_FUNC_VISIBILITY aclError aclrtNonBlockingLaunchEnd(aclrtStream stream, uint64_t flag);
+
+/**
+ * @ingroup AscendCL
  * @brief Query a stream for completion status.
  *
  * @param  stream [IN]   the stream to query
@@ -3856,8 +3886,9 @@ ACL_FUNC_VISIBILITY aclError aclrtGetStreamAvailableNum(uint32_t* streamCount);
  * @brief set stream attribute
  * @param [in] stream       stream handle
  * @param [in] stmAttrType  stream attribute type, which value can be:
- *                             ACL_STREAM_ATTR_FAILURE_MODE, ACL_STREAM_ATTR_FLOAT_OVERFLOW_CHECK
- *                             or ACL_STREAM_ATTR_USER_CUSTOM_TAG, ACL_STREAM_ATTR_CACHE_OP_INFO
+ *                             ACL_STREAM_ATTR_FAILURE_MODE, ACL_STREAM_ATTR_FLOAT_OVERFLOW_CHECK,
+ *                             ACL_STREAM_ATTR_USER_CUSTOM_TAG, ACL_STREAM_ATTR_CACHE_OP_INFO,
+ *                             ACL_STREAM_ATTR_PRIORITY or ACL_STREAM_LAUNCH_BLOCKING_MODE
  * @param [in] value        stream attribute value
  * @retval ACL_SUCCESS The function is successfully executed.
  * @retval OtherValues Failure
@@ -3870,8 +3901,9 @@ ACL_FUNC_VISIBILITY aclError aclrtSetStreamAttribute(
  * @brief get stream attribute
  * @param [in] stream       stream handle
  * @param [in] stmAttrType  stream attribute type, which value can be:
- *                             ACL_STREAM_ATTR_FAILURE_MODE, ACL_STREAM_ATTR_FLOAT_OVERFLOW_CHECK
- *                             or ACL_STREAM_ATTR_USER_CUSTOM_TAG, ACL_STREAM_ATTR_CACHE_OP_INFO
+ *                             ACL_STREAM_ATTR_FAILURE_MODE, ACL_STREAM_ATTR_FLOAT_OVERFLOW_CHECK,
+ *                             ACL_STREAM_ATTR_USER_CUSTOM_TAG, ACL_STREAM_ATTR_CACHE_OP_INFO,
+ *                             ACL_STREAM_ATTR_PRIORITY or ACL_STREAM_LAUNCH_BLOCKING_MODE
  * @param [out] value       stream attribute value
  * @retval ACL_SUCCESS The function is successfully executed.
  * @retval OtherValues Failure

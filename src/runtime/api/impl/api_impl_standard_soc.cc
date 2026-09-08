@@ -44,6 +44,7 @@
 #include "stream_factory.hpp"
 #include "device/device_error_proc.hpp"
 #include "stream_state_callback_manager.hpp"
+#include "stream_launch_blocking.hpp"
 #include "heterogenous.h"
 #include "capture_model.hpp"
 #include "capture_model_utils.hpp"
@@ -163,6 +164,22 @@ rtError_t ApiImpl::BinaryEnumerateFunctions(
         RT_LOG_DEBUG, "deviceId=%u, prog=%p, numFunctions=%u, actualCount=%u.", deviceId, binHandle, numFunctions,
         *actualCount);
     return RT_ERROR_NONE;
+}
+
+rtError_t ApiImpl::NonBlockingLaunchBegin(Stream* const stream, const uint64_t flag)
+{
+    UNUSED(flag);
+    Stream* const targetStm = Runtime::Instance()->GetCurStream(stream);
+    NULL_STREAM_PTR_RETURN_MSG(targetStm);
+    return StreamLaunchBlocking::NonBlockingLaunchBegin(targetStm);
+}
+
+rtError_t ApiImpl::NonBlockingLaunchEnd(Stream* const stream, const uint64_t flag)
+{
+    UNUSED(flag);
+    Stream* const targetStm = Runtime::Instance()->GetCurStream(stream);
+    NULL_STREAM_PTR_RETURN_MSG(targetStm);
+    return StreamLaunchBlocking::NonBlockingLaunchEnd(targetStm);
 }
 
 rtError_t ApiImpl::CntNotifyCreate(const int32_t deviceId, CountNotify** const cntNotify, const uint32_t flag)

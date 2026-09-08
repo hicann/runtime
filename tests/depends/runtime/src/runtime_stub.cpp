@@ -1553,6 +1553,20 @@ rtError_t aclStub::rtsStreamGetAvailableNum(uint32_t* streamCount)
     return RT_ERROR_NONE;
 }
 
+rtError_t aclStub::rtNonBlockingLaunchBegin(rtStream_t stream, uint64_t flag)
+{
+    (void)stream;
+    (void)flag;
+    return RT_ERROR_NONE;
+}
+
+rtError_t aclStub::rtNonBlockingLaunchEnd(rtStream_t stream, uint64_t flag)
+{
+    (void)stream;
+    (void)flag;
+    return RT_ERROR_NONE;
+}
+
 rtError_t aclStub::rtsStreamSetAttribute(rtStream_t stm, rtStreamAttr stmAttrId, rtStreamAttrValue_t* attrValue)
 {
     (void)stm;
@@ -3888,6 +3902,16 @@ rtError_t rtsValueWait(const void* const devAddr, const uint64_t value, const ui
 rtError_t rtsStreamGetAvailableNum(uint32_t* streamCount)
 {
     return MockFunctionTest::aclStubInstance().rtsStreamGetAvailableNum(streamCount);
+}
+
+rtError_t rtNonBlockingLaunchBegin(rtStream_t stream, uint64_t flag)
+{
+    return MockFunctionTest::aclStubInstance().rtNonBlockingLaunchBegin(stream, flag);
+}
+
+rtError_t rtNonBlockingLaunchEnd(rtStream_t stream, uint64_t flag)
+{
+    return MockFunctionTest::aclStubInstance().rtNonBlockingLaunchEnd(stream, flag);
 }
 
 rtError_t rtsStreamSetAttribute(rtStream_t stm, rtStreamAttr stmAttrId, rtStreamAttrValue_t* attrValue)
