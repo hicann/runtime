@@ -645,24 +645,24 @@ public:
 
     // Notify api
     virtual rtError_t NotifyCreate(
-        const int32_t deviceId, Notify** const retNotify, uint64_t flag = RT_NOTIFY_FLAG_DEFAULT) = 0;
-    virtual rtError_t NotifyDestroy(Notify* const inNotify) = 0;
-    virtual rtError_t NotifyRecord(Notify* const inNotify, Stream* const stm) = 0;
-    virtual rtError_t NotifyReset(Notify* const inNotify) = 0;
+        const int32_t deviceId, Notify** const notify, uint64_t flag = RT_NOTIFY_FLAG_DEFAULT) = 0;
+    virtual rtError_t NotifyDestroy(Notify* const notify) = 0;
+    virtual rtError_t NotifyRecord(Notify* const notify, Stream* const stm) = 0;
+    virtual rtError_t NotifyReset(Notify* const notify) = 0;
     virtual rtError_t ResourceClean(int32_t devId, rtIdType_t type) = 0;
-    virtual rtError_t NotifyWait(Notify* const inNotify, Stream* const stm, const uint32_t timeOut) = 0;
-    virtual rtError_t GetNotifyID(Notify* const inNotify, uint32_t* const notifyID) = 0;
-    virtual rtError_t GetNotifyPhyInfo(Notify* const inNotify, rtNotifyPhyInfo* notifyInfo) = 0;
+    virtual rtError_t NotifyWait(Notify* const notify, Stream* const stm, const uint32_t timeOut) = 0;
+    virtual rtError_t GetNotifyID(Notify* const notify, uint32_t* const notifyId) = 0;
+    virtual rtError_t GetNotifyPhyInfo(Notify* const notify, rtNotifyPhyInfo* notifyInfo) = 0;
     virtual rtError_t IpcSetNotifyName(
-        Notify* const inNotify, char_t* const name, const uint32_t len, const uint64_t flag = 0UL) = 0;
+        Notify* const notify, char_t* const name, const uint32_t len, const uint64_t flag = 0UL) = 0;
     virtual rtError_t IpcOpenNotify(
-        Notify** const retNotify, const char_t* const name, uint32_t flag = RT_NOTIFY_FLAG_DEFAULT) = 0;
-    virtual rtError_t NotifyGetAddrOffset(Notify* const inNotify, uint64_t* const devAddrOffset) = 0;
+        Notify** const notify, const char_t* const name, uint32_t flag = RT_NOTIFY_FLAG_DEFAULT) = 0;
+    virtual rtError_t NotifyGetAddrOffset(Notify* const notify, uint64_t* const devAddrOffset) = 0;
     virtual rtError_t WriteValuePtr(void* const writeValueInfo, Stream* const stm, void* const pointedAddr) = 0;
 
     // CntNotify api
     virtual rtError_t CntNotifyCreate(
-        const int32_t deviceId, CountNotify** const retCntNotify, const uint32_t flag = RT_NOTIFY_FLAG_DEFAULT) = 0;
+        const int32_t deviceId, CountNotify** const cntNotify, const uint32_t flag = RT_NOTIFY_FLAG_DEFAULT) = 0;
     virtual rtError_t CntNotifyDestroy(CountNotify* const inCntNotify) = 0;
     virtual rtError_t CntNotifyRecord(
         CountNotify* const inCntNotify, Stream* const stm, const rtCntNtyRecordInfo_t* const info) = 0;

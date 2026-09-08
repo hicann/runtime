@@ -4248,9 +4248,9 @@ rtError_t ApiErrorDecorator::ModelBindQueue(Model* const mdl, const uint32_t que
     return error;
 }
 
-rtError_t ApiErrorDecorator::NotifyCreate(const int32_t deviceId, Notify** const retNotify, uint64_t flag)
+rtError_t ApiErrorDecorator::NotifyCreate(const int32_t deviceId, Notify** const notify, uint64_t flag)
 {
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(retNotify, RT_ERROR_INVALID_VALUE, "Notify creation");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(notify, RT_ERROR_INVALID_VALUE, "Notify creation");
 
     int32_t realDeviceId;
     rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(
@@ -4264,35 +4264,35 @@ rtError_t ApiErrorDecorator::NotifyCreate(const int32_t deviceId, Notify** const
         std::to_string(RT_NOTIFY_FLAG_DEFAULT) + " , " + std::to_string(RT_NOTIFY_FLAG_DOWNLOAD_TO_DEV) + " , " +
             std::to_string(RT_NOTIFY_FLAG_SHR_ID_SHADOW) + " or " + std::to_string(RT_NOTIFY_FLAG_MAX));
 
-    error = impl_->NotifyCreate(realDeviceId, retNotify, flag);
+    error = impl_->NotifyCreate(realDeviceId, notify, flag);
     ERROR_RETURN(error, "Create notify failed, device id=%d.", deviceId);
     RT_LOG(RT_LOG_INFO, "notify create success");
     return error;
 }
 
-rtError_t ApiErrorDecorator::NotifyDestroy(Notify* const inNotify)
+rtError_t ApiErrorDecorator::NotifyDestroy(Notify* const notify)
 {
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(inNotify, RT_ERROR_INVALID_VALUE, "Notify destruction");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(notify, RT_ERROR_INVALID_VALUE, "Notify destruction");
 
-    const rtError_t error = impl_->NotifyDestroy(inNotify);
+    const rtError_t error = impl_->NotifyDestroy(notify);
     ERROR_RETURN(error, "Destroy notify failed.");
     return error;
 }
 
-rtError_t ApiErrorDecorator::NotifyRecord(Notify* const inNotify, Stream* const stm)
+rtError_t ApiErrorDecorator::NotifyRecord(Notify* const notify, Stream* const stm)
 {
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(inNotify, RT_ERROR_INVALID_VALUE, "Notify recording");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(notify, RT_ERROR_INVALID_VALUE, "Notify recording");
 
-    const rtError_t error = impl_->NotifyRecord(inNotify, stm);
+    const rtError_t error = impl_->NotifyRecord(notify, stm);
     ERROR_RETURN(error, "Record notify failed.");
     return error;
 }
 
-rtError_t ApiErrorDecorator::NotifyReset(Notify* const inNotify)
+rtError_t ApiErrorDecorator::NotifyReset(Notify* const notify)
 {
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(inNotify, RT_ERROR_INVALID_VALUE, "Notify resetting");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(notify, RT_ERROR_INVALID_VALUE, "Notify resetting");
 
-    const rtError_t error = impl_->NotifyReset(inNotify);
+    const rtError_t error = impl_->NotifyReset(notify);
     ERROR_RETURN(error, "Reset notify failed.");
     return error;
 }
@@ -4328,38 +4328,38 @@ rtError_t ApiErrorDecorator::ResourceClean(int32_t devId, rtIdType_t type)
     return error;
 }
 
-rtError_t ApiErrorDecorator::NotifyWait(Notify* const inNotify, Stream* const stm, const uint32_t timeOut)
+rtError_t ApiErrorDecorator::NotifyWait(Notify* const notify, Stream* const stm, const uint32_t timeOut)
 {
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(inNotify, RT_ERROR_INVALID_VALUE, "Waiting for a Notify");
-    const rtError_t error = impl_->NotifyWait(inNotify, stm, timeOut);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(notify, RT_ERROR_INVALID_VALUE, "Waiting for a Notify");
+    const rtError_t error = impl_->NotifyWait(notify, stm, timeOut);
     ERROR_RETURN(error, "NotifyWait failed, timeout=%us", timeOut);
     return error;
 }
 
-rtError_t ApiErrorDecorator::GetNotifyID(Notify* const inNotify, uint32_t* const notifyID)
+rtError_t ApiErrorDecorator::GetNotifyID(Notify* const notify, uint32_t* const notifyId)
 {
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(inNotify, RT_ERROR_INVALID_VALUE, "Obtaining the Notify ID");
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(notifyID, RT_ERROR_INVALID_VALUE, "Obtaining the Notify ID");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(notify, RT_ERROR_INVALID_VALUE, "Obtaining the Notify ID");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(notifyId, RT_ERROR_INVALID_VALUE, "Obtaining the Notify ID");
 
-    const rtError_t error = impl_->GetNotifyID(inNotify, notifyID);
+    const rtError_t error = impl_->GetNotifyID(notify, notifyId);
     ERROR_RETURN(error, "Get notify ID failed.");
     return error;
 }
 
-rtError_t ApiErrorDecorator::GetNotifyPhyInfo(Notify* const inNotify, rtNotifyPhyInfo* notifyInfo)
+rtError_t ApiErrorDecorator::GetNotifyPhyInfo(Notify* const notify, rtNotifyPhyInfo* notifyInfo)
 {
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        inNotify, RT_ERROR_INVALID_VALUE, "Obtaining underlying physical hardware information of Notify");
+        notify, RT_ERROR_INVALID_VALUE, "Obtaining underlying physical hardware information of Notify");
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
         notifyInfo, RT_ERROR_INVALID_VALUE, "Obtaining underlying physical hardware information of Notify");
 
-    return impl_->GetNotifyPhyInfo(inNotify, notifyInfo);
+    return impl_->GetNotifyPhyInfo(notify, notifyInfo);
 }
 
 rtError_t ApiErrorDecorator::IpcSetNotifyName(
-    Notify* const inNotify, char_t* const name, const uint32_t len, const uint64_t flag)
+    Notify* const notify, char_t* const name, const uint32_t len, const uint64_t flag)
 {
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(inNotify, RT_ERROR_INVALID_VALUE, "Setting a Notify as an IPC Notify");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(notify, RT_ERROR_INVALID_VALUE, "Setting a Notify as an IPC Notify");
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(name, RT_ERROR_INVALID_VALUE, "Setting a Notify as an IPC Notify");
     ZERO_RETURN_AND_MSG_OUTER_WITH_FUNC_DESC(len, "Setting a Notify as an IPC Notify");
 
@@ -4375,32 +4375,32 @@ rtError_t ApiErrorDecorator::IpcSetNotifyName(
         RT_ERROR_INVALID_VALUE, "Setting a Notify as an IPC Notify", flag,
         std::to_string(RT_NOTIFY_FLAG_DEFAULT) + " or " + std::to_string(RT_NOTIFY_EXPORT_FLAG_DISABLE_PID_VALIDATION));
 
-    const rtError_t error = impl_->IpcSetNotifyName(inNotify, name, len, flag);
+    const rtError_t error = impl_->IpcSetNotifyName(notify, name, len, flag);
     ERROR_RETURN(error, "Ipc set notify name failed, name=%s, len=%u(bytes).", name, len);
     return error;
 }
 
-rtError_t ApiErrorDecorator::IpcOpenNotify(Notify** const retNotify, const char_t* const name, uint32_t flag)
+rtError_t ApiErrorDecorator::IpcOpenNotify(Notify** const notify, const char_t* const name, uint32_t flag)
 {
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(retNotify, RT_ERROR_INVALID_VALUE, "Enabling IPC Notify");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(notify, RT_ERROR_INVALID_VALUE, "Enabling IPC Notify");
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(name, RT_ERROR_INVALID_VALUE, "Enabling IPC Notify");
 
     constexpr uint32_t maxFlag = (RT_NOTIFY_FLAG_DOWNLOAD_TO_DEV | RT_NOTIFY_IMPORT_FLAG_ENABLE_PEER_ACCESS);
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
         (flag > maxFlag), RT_ERROR_INVALID_VALUE, "Enabling IPC Notify", flag, "[0, " + std::to_string(maxFlag) + "]");
-    const rtError_t error = impl_->IpcOpenNotify(retNotify, name, flag);
+    const rtError_t error = impl_->IpcOpenNotify(notify, name, flag);
     ERROR_RETURN(error, "Ipc open notify failed, name=%s.", name);
     return error;
 }
 
-rtError_t ApiErrorDecorator::NotifyGetAddrOffset(Notify* const inNotify, uint64_t* const devAddrOffset)
+rtError_t ApiErrorDecorator::NotifyGetAddrOffset(Notify* const notify, uint64_t* const devAddrOffset)
 {
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        inNotify, RT_ERROR_INVALID_VALUE, "Obtaining the physical address offset of a Notify object");
+        notify, RT_ERROR_INVALID_VALUE, "Obtaining the physical address offset of a Notify object");
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
         devAddrOffset, RT_ERROR_INVALID_VALUE, "Obtaining the physical address offset of a Notify object");
 
-    const rtError_t error = impl_->NotifyGetAddrOffset(inNotify, devAddrOffset);
+    const rtError_t error = impl_->NotifyGetAddrOffset(notify, devAddrOffset);
     ERROR_RETURN(error, "Get notify address offset failed.");
     return error;
 }

@@ -37,10 +37,9 @@ rtError_t ApiErrorDecorator::WriteValuePtr(void* const writeValueInfo, Stream* c
     return impl_->WriteValuePtr(writeValueInfo, stm, pointedAddr);
 }
 
-rtError_t ApiErrorDecorator::CntNotifyCreate(
-    const int32_t deviceId, CountNotify** const retCntNotify, const uint32_t flag)
+rtError_t ApiErrorDecorator::CntNotifyCreate(const int32_t deviceId, CountNotify** const cntNotify, const uint32_t flag)
 {
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(retCntNotify, RT_ERROR_INVALID_VALUE, "CntNotify creation");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(cntNotify, RT_ERROR_INVALID_VALUE, "CntNotify creation");
     int32_t realDeviceId;
     const rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(
         static_cast<uint32_t>(deviceId), RtPtrToPtr<uint32_t*>(&realDeviceId));
@@ -50,7 +49,7 @@ rtError_t ApiErrorDecorator::CntNotifyCreate(
         !((flag == RT_NOTIFY_FLAG_DEFAULT) || (flag == RT_NOTIFY_FLAG_DOWNLOAD_TO_DEV)), RT_ERROR_INVALID_VALUE,
         "CntNotify creation", NotifyFlagToString(flag), "flag",
         "RT_NOTIFY_FLAG_DEFAULT(0) or RT_NOTIFY_FLAG_DOWNLOAD_TO_DEV(1)");
-    return impl_->CntNotifyCreate(realDeviceId, retCntNotify, flag);
+    return impl_->CntNotifyCreate(realDeviceId, cntNotify, flag);
 }
 
 rtError_t ApiErrorDecorator::CntNotifyDestroy(CountNotify* const inCntNotify)

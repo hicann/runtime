@@ -3992,7 +3992,7 @@ rtError_t ApiImpl::SetIpcMemPid(const char_t* const name, int32_t pid[], const i
     return curCtx->Device_()->Driver_()->SetIpcMemPid(name, pid, num);
 }
 
-rtError_t ApiImpl::NotifyCreate(const int32_t deviceId, Notify** const retNotify, uint64_t flag)
+rtError_t ApiImpl::NotifyCreate(const int32_t deviceId, Notify** const notify, uint64_t flag)
 {
     RT_LOG(RT_LOG_INFO, "Notify create.");
     Context* const curCtx = CurrentContext(true, deviceId);
@@ -4010,31 +4010,31 @@ rtError_t ApiImpl::NotifyCreate(const int32_t deviceId, Notify** const retNotify
         }
     }
 
-    *retNotify = new (std::nothrow) Notify(static_cast<uint32_t>(deviceId), dev->DevGetTsId());
-    COND_RETURN_AND_MSG_OUTER((*retNotify == nullptr), RT_ERROR_NOTIFY_NEW, ErrorCode::EE1013, sizeof(Notify), "new");
+    *notify = new (std::nothrow) Notify(static_cast<uint32_t>(deviceId), dev->DevGetTsId());
+    COND_RETURN_AND_MSG_OUTER((*notify == nullptr), RT_ERROR_NOTIFY_NEW, ErrorCode::EE1013, sizeof(Notify), "new");
 
-    (*retNotify)->SetNotifyFlag(static_cast<uint32_t>(flag));
-    const rtError_t error = (*retNotify)->Setup();
+    (*notify)->SetNotifyFlag(static_cast<uint32_t>(flag));
+    const rtError_t error = (*notify)->Setup();
     if ((error == RT_ERROR_DRV_NO_NOTIFY_RESOURCES) || (error == RT_ERROR_DRV_NO_RESOURCES)) {
         RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1023, "Alloc Notify resource", "Too many Notify objects are created");
     }
-    ERROR_PROC_RETURN_MSG_INNER(error, DELETE_O(*retNotify);
+    ERROR_PROC_RETURN_MSG_INNER(error, DELETE_O(*notify);
                                 , "Notify create failed, setup failed, drv devId=%d, retCode=%#x", deviceId,
                                 static_cast<uint32_t>(error));
     return RT_ERROR_NONE;
 }
 
-rtError_t ApiImpl::NotifyDestroy(Notify* const inNotify)
+rtError_t ApiImpl::NotifyDestroy(Notify* const notify)
 {
     RT_LOG(RT_LOG_INFO, "Notify destroy.");
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
 
-    delete inNotify;
+    delete notify;
     return RT_ERROR_NONE;
 }
 
-rtError_t ApiImpl::NotifyRecord(Notify* const inNotify, Stream* const stm)
+rtError_t ApiImpl::NotifyRecord(Notify* const notify, Stream* const stm)
 {
     RT_LOG(RT_LOG_INFO, "Notify record.");
     Context* const curCtx = CurrentContext();
@@ -4049,8 +4049,8 @@ rtError_t ApiImpl::NotifyRecord(Notify* const inNotify, Stream* const stm)
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
         curStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Notify recording");
 
-    const uint32_t notifyId = inNotify->GetNotifyId();
-    const rtError_t error = inNotify->Record(curStm);
+    const uint32_t notifyId = notify->GetNotifyId();
+    const rtError_t error = notify->Record(curStm);
     ERROR_RETURN_MSG_INNER(
         error, "Notify record failed, notifyId=%u, retCode=%#x.", notifyId, static_cast<uint32_t>(error));
 
@@ -4078,7 +4078,7 @@ rtError_t ApiImpl::ResourceClean(int32_t devId, rtIdType_t type)
     return error;
 }
 
-rtError_t ApiImpl::NotifyWait(Notify* const inNotify, Stream* const stm, const uint32_t timeOut)
+rtError_t ApiImpl::NotifyWait(Notify* const notify, Stream* const stm, const uint32_t timeOut)
 {
     RT_LOG(RT_LOG_INFO, "notify wait, timeout=%us.", timeOut);
     Context* const curCtx = CurrentContext();
@@ -4093,33 +4093,33 @@ rtError_t ApiImpl::NotifyWait(Notify* const inNotify, Stream* const stm, const u
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
         curStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Waiting for a Notify");
     COND_RETURN_AND_MSG_OUTER(
-        inNotify->CheckIpcNotifyDevId() != RT_ERROR_NONE, RT_ERROR_INVALID_VALUE, ErrorCode::EE1012,
+        notify->CheckIpcNotifyDevId() != RT_ERROR_NONE, RT_ERROR_INVALID_VALUE, ErrorCode::EE1012,
         "Waiting for a Notify", dev->Id_(), "current deviceId",
         RtFmtMsg(
             "The device (device_id=%u) cannot deliver the notify wait task."
             " The notify wait task must be delivered on the device (device_id=%u) where the IPC Notify is created",
-            dev->Id_(), inNotify->GetDeviceId()));
+            dev->Id_(), notify->GetDeviceId()));
 
     uint32_t timeOutTmp = timeOut;
     if (!IS_SUPPORT_CHIP_FEATURE(dev->GetChipType(), RtOptionalFeatureType::RT_FEATURE_NOTIFY_WAIT) &&
         (dev->GetTschVersion() < static_cast<uint32_t>(TS_VERSION_WAIT_TIMEOUT_DC))) {
         timeOutTmp = 0U;
     }
-    const rtError_t error = NtyWait(inNotify, curStm, timeOutTmp);
-    const uint32_t notify_id = inNotify->GetNotifyId();
+    const rtError_t error = NtyWait(notify, curStm, timeOutTmp);
+    const uint32_t notifyId = notify->GetNotifyId();
     ERROR_RETURN_MSG_INNER(
-        error, "Notify wait failed, notify_id=%u, time_out = %us, retCode=%#x.", notify_id, timeOutTmp,
+        error, "Notify wait failed, notify_id=%u, time_out = %us, retCode=%#x.", notifyId, timeOutTmp,
         static_cast<uint32_t>(error));
 
     return RT_ERROR_NONE;
 }
 
-rtError_t ApiImpl::GetNotifyID(Notify* const inNotify, uint32_t* const notifyID)
+rtError_t ApiImpl::GetNotifyID(Notify* const notify, uint32_t* const notifyId)
 {
     RT_LOG(RT_LOG_INFO, "Get notify id.");
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    *notifyID = inNotify->GetNotifyId();
+    *notifyId = notify->GetNotifyId();
 
     return RT_ERROR_NONE;
 }

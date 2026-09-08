@@ -313,8 +313,8 @@ RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t
 /**
  * @ingroup dvrt_event
  * @brief Create a notify
- * @param [in] device_id  device id
- * @param [in|out] notify_   notify to be created
+ * @param [in] deviceId  device id
+ * @param [in|out] notify   notify to be created
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
@@ -324,8 +324,8 @@ RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t
 /**
  * @ingroup dvrt_event
  * @brief Create a notify
- * @param [in] device_id  device id
- * @param [in|out] notify_   notify to be created
+ * @param [in] deviceId  device id
+ * @param [in|out] notify   notify to be created
  * @param [in] flag  flag notify flag
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
@@ -336,7 +336,7 @@ RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t
 /**
  * @ingroup dvrt_event
  * @brief Destroy a notify
- * @param [in] notify_   notify to be destroyed
+ * @param [in] notify   notify to be destroyed
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  * @return RT_ERROR_DRV_ERR for driver error
@@ -346,8 +346,8 @@ RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtNotifyD
 /**
  * @ingroup dvrt_event
  * @brief Record a notify
- * @param [in] notify_ notify to be recorded
- * @param [in] stream_  input stream
+ * @param [in] notify notify to be recorded
+ * @param [in] stm  input stream
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  * @return RT_ERROR_STREAM_CONTEXT for stream is not in current ctx
@@ -358,7 +358,7 @@ RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t
 /**
  * @ingroup dvrt_event
  * @brief Reset a notify
- * @param [in] notify_   notify to be destroyed
+ * @param [in] notify   notify to be destroyed
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
@@ -401,8 +401,8 @@ RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t
 /**
  * @ingroup dvrt_event
  * @brief get notify id
- * @param [in] notify_ notify to be get
- * @param [in|out] notify_id   notify id
+ * @param [in] notify notify to be get
+ * @param [in|out] notifyId   notify id
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */

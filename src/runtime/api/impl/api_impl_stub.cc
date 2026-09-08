@@ -49,10 +49,10 @@ rtError_t ApiImpl::BinaryEnumerateFunctions(
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
-rtError_t ApiImpl::CntNotifyCreate(const int32_t deviceId, CountNotify** const retCntNotify, const uint32_t flag)
+rtError_t ApiImpl::CntNotifyCreate(const int32_t deviceId, CountNotify** const cntNotify, const uint32_t flag)
 {
     UNUSED(deviceId);
-    UNUSED(retCntNotify);
+    UNUSED(cntNotify);
     UNUSED(flag);
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
@@ -111,24 +111,24 @@ rtError_t ApiImpl::GetNotifyAddress(Notify* const notify, uint64_t* const notify
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
-rtError_t ApiImpl::NotifyReset(Notify* const inNotify)
+rtError_t ApiImpl::NotifyReset(Notify* const notify)
 {
-    UNUSED(inNotify);
+    UNUSED(notify);
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
-rtError_t ApiImpl::IpcSetNotifyName(Notify* const inNotify, char_t* const name, const uint32_t len, const uint64_t flag)
+rtError_t ApiImpl::IpcSetNotifyName(Notify* const notify, char_t* const name, const uint32_t len, const uint64_t flag)
 {
-    UNUSED(inNotify);
+    UNUSED(notify);
     UNUSED(name);
     UNUSED(len);
     UNUSED(flag);
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
-rtError_t ApiImpl::IpcOpenNotify(Notify** const retNotify, const char_t* const name, uint32_t flag)
+rtError_t ApiImpl::IpcOpenNotify(Notify** const notify, const char_t* const name, uint32_t flag)
 {
-    UNUSED(retNotify);
+    UNUSED(notify);
     UNUSED(name);
     UNUSED(flag);
     return RT_ERROR_FEATURE_NOT_SUPPORT;
@@ -150,16 +150,16 @@ rtError_t ApiImpl::ShrIdSetPodPid(const char* name, uint32_t sdid, int32_t pid)
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
-rtError_t ApiImpl::NotifyGetAddrOffset(Notify* const inNotify, uint64_t* const devAddrOffset)
+rtError_t ApiImpl::NotifyGetAddrOffset(Notify* const notify, uint64_t* const devAddrOffset)
 {
-    UNUSED(inNotify);
+    UNUSED(notify);
     UNUSED(devAddrOffset);
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
-rtError_t ApiImpl::GetNotifyPhyInfo(Notify* const inNotify, rtNotifyPhyInfo* notifyInfo)
+rtError_t ApiImpl::GetNotifyPhyInfo(Notify* const notify, rtNotifyPhyInfo* notifyInfo)
 {
-    UNUSED(inNotify);
+    UNUSED(notify);
     UNUSED(notifyInfo);
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }

@@ -19,7 +19,7 @@
 extern "C" {
 #endif
 
-RTS_API rtError_t rtGetNotifyAddress(rtNotify_t notify, uint64_t* const notifyAddres);
+RTS_API rtError_t rtGetNotifyAddress(rtNotify_t notify, uint64_t* const notifyAddress);
 
 /**
  * @ingroup rt_kernel

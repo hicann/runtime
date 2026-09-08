@@ -165,10 +165,10 @@ rtError_t ApiImpl::BinaryEnumerateFunctions(
     return RT_ERROR_NONE;
 }
 
-rtError_t ApiImpl::CntNotifyCreate(const int32_t deviceId, CountNotify** const retCntNotify, const uint32_t flag)
+rtError_t ApiImpl::CntNotifyCreate(const int32_t deviceId, CountNotify** const cntNotify, const uint32_t flag)
 {
     UNUSED(deviceId);
-    UNUSED(retCntNotify);
+    UNUSED(cntNotify);
     UNUSED(flag);
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
@@ -522,7 +522,7 @@ rtError_t ApiImpl::SetIpcNotifyPid(const char_t* const name, int32_t pid[], cons
     return curCtx->Device_()->Driver_()->SetIpcNotifyPid(name, pid, num);
 }
 
-rtError_t ApiImpl::NotifyReset(Notify* const inNotify)
+rtError_t ApiImpl::NotifyReset(Notify* const notify)
 {
     RT_LOG(RT_LOG_INFO, "notify reset.");
     Context* const curCtx = CurrentContext();
@@ -547,38 +547,38 @@ rtError_t ApiImpl::NotifyReset(Notify* const inNotify)
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
 
-    const uint32_t notifyId = inNotify->GetNotifyId();
-    const rtError_t error = inNotify->Reset(curStm);
+    const uint32_t notifyId = notify->GetNotifyId();
+    const rtError_t error = notify->Reset(curStm);
     ERROR_RETURN_MSG_INNER(
         error, "Notify reset failed, notifyId=%u, retCode=%#x", notifyId, static_cast<uint32_t>(error));
 
     return RT_ERROR_NONE;
 }
 
-rtError_t ApiImpl::GetNotifyPhyInfo(Notify* const inNotify, rtNotifyPhyInfo* notifyInfo)
+rtError_t ApiImpl::GetNotifyPhyInfo(Notify* const notify, rtNotifyPhyInfo* notifyInfo)
 {
     RT_LOG(RT_LOG_INFO, "get phy info.");
-    if (inNotify == nullptr) {
+    if (notify == nullptr) {
         RT_LOG(RT_LOG_INFO, "inNotify is nullptr.");
         RT_LOG(RT_LOG_ERROR, "Get phy info failed.");
         return RT_ERROR_NOTIFY_NULL;
     }
-    notifyInfo->phyId = inNotify->GetPhyDevId();
-    notifyInfo->tsId = inNotify->GetTsId();
-    notifyInfo->shrId = inNotify->GetNotifyId();
+    notifyInfo->phyId = notify->GetPhyDevId();
+    notifyInfo->tsId = notify->GetTsId();
+    notifyInfo->shrId = notify->GetNotifyId();
     notifyInfo->idType = SHR_ID_NOTIFY_TYPE;
-    notifyInfo->flag = (inNotify->IsPod() ? TSDRV_FLAG_SHR_ID_SHADOW : 0U);
+    notifyInfo->flag = (notify->IsPod() ? TSDRV_FLAG_SHR_ID_SHADOW : 0U);
     RT_LOG(RT_LOG_INFO, "notify_id=%u, phyId=%u flag=0x%x.", notifyInfo->shrId, notifyInfo->phyId, notifyInfo->flag);
     return RT_ERROR_NONE;
 }
 
-rtError_t ApiImpl::IpcSetNotifyName(Notify* const inNotify, char_t* const name, const uint32_t len, const uint64_t flag)
+rtError_t ApiImpl::IpcSetNotifyName(Notify* const notify, char_t* const name, const uint32_t len, const uint64_t flag)
 {
     RT_LOG(RT_LOG_INFO, "IpcSetNotifyName, name=%s, len=%u, flag=%#" PRIx64 ".", name, len, flag);
-    const uint32_t notify_id = inNotify->GetNotifyId();
-    rtError_t error = inNotify->CreateIpcNotify(name, len);
+    const uint32_t notifyId = notify->GetNotifyId();
+    rtError_t error = notify->CreateIpcNotify(name, len);
     ERROR_RETURN_MSG_INNER(
-        error, "CreateIpcNotify failed, notify_id=%u, name=%s, len=%u retCode=%#x", notify_id, name, len,
+        error, "CreateIpcNotify failed, notify_id=%u, name=%s, len=%u retCode=%#x", notifyId, name, len,
         static_cast<uint32_t>(error));
 
     if ((flag & RT_NOTIFY_EXPORT_FLAG_DISABLE_PID_VALIDATION) != 0UL) {
@@ -588,7 +588,7 @@ rtError_t ApiImpl::IpcSetNotifyName(Notify* const inNotify, char_t* const name, 
     return RT_ERROR_NONE;
 }
 
-rtError_t ApiImpl::IpcOpenNotify(Notify** const retNotify, const char_t* const name, uint32_t flag)
+rtError_t ApiImpl::IpcOpenNotify(Notify** const notify, const char_t* const name, uint32_t flag)
 {
     RT_LOG(RT_LOG_INFO, "open ipc notify. name=%s, flag=%#x.", name, flag);
     Context* const curCtx = CurrentContext();
@@ -606,24 +606,24 @@ rtError_t ApiImpl::IpcOpenNotify(Notify** const retNotify, const char_t* const n
         }
     }
 
-    *retNotify = new (std::nothrow) Notify(dev->Id_(), dev->DevGetTsId());
-    COND_RETURN_AND_MSG_OUTER((*retNotify == nullptr), RT_ERROR_NOTIFY_NEW, ErrorCode::EE1013, sizeof(Notify), "new");
+    *notify = new (std::nothrow) Notify(dev->Id_(), dev->DevGetTsId());
+    COND_RETURN_AND_MSG_OUTER((*notify == nullptr), RT_ERROR_NOTIFY_NEW, ErrorCode::EE1013, sizeof(Notify), "new");
 
-    const rtError_t error = (*retNotify)->OpenIpcNotify(name, flag);
-    ERROR_PROC_RETURN_MSG_INNER(error, DELETE_O(*retNotify);
+    const rtError_t error = (*notify)->OpenIpcNotify(name, flag);
+    ERROR_PROC_RETURN_MSG_INNER(error, DELETE_O(*notify);
                                 , "Ipc open notify failed, retCode=%#x", static_cast<uint32_t>(error));
     return error;
 }
 
-rtError_t ApiImpl::NotifyGetAddrOffset(Notify* const inNotify, uint64_t* const devAddrOffset)
+rtError_t ApiImpl::NotifyGetAddrOffset(Notify* const notify, uint64_t* const devAddrOffset)
 {
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
 
-    const uint32_t notify_id = inNotify->GetNotifyId();
-    const rtError_t error = inNotify->GetAddrOffset(devAddrOffset);
+    const uint32_t notifyId = notify->GetNotifyId();
+    const rtError_t error = notify->GetAddrOffset(devAddrOffset);
     ERROR_RETURN_MSG_INNER(
-        error, "Notify get addr offset failed, notify_id=%u, retCode=%#x", notify_id, static_cast<uint32_t>(error));
+        error, "Notify get addr offset failed, notify_id=%u, retCode=%#x", notifyId, static_cast<uint32_t>(error));
 
     return RT_ERROR_NONE;
 }

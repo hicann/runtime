@@ -106,12 +106,12 @@ bool IsZeroSizeMemcpy2d(const uint64_t width, const uint64_t height) { return (w
 extern "C" {
 #endif // __cplusplus
 VISIBILITY_DEFAULT
-rtError_t rtGetNotifyAddress(rtNotify_t notify, uint64_t* const notifyAddres)
+rtError_t rtGetNotifyAddress(rtNotify_t notify, uint64_t* const notifyAddress)
 {
     Api* const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     RT_VALIDATE_AND_UNWRAP_OBJECT(notify, Notify, notifyPtr);
-    const rtError_t ret = apiInstance->GetNotifyAddress(notifyPtr, notifyAddres);
+    const rtError_t ret = apiInstance->GetNotifyAddress(notifyPtr, notifyAddress);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
     return ACL_RT_SUCCESS;
 }

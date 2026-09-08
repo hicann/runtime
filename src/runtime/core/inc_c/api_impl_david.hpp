@@ -86,8 +86,7 @@ public:
         const uint32_t flag = RT_EVENT_WAIT_DEFAULT) override;
 
     rtError_t CntNotifyCreate(
-        const int32_t deviceId, CountNotify** const retCntNotify,
-        const uint32_t flag = RT_NOTIFY_FLAG_DEFAULT) override;
+        const int32_t deviceId, CountNotify** const cntNotify, const uint32_t flag = RT_NOTIFY_FLAG_DEFAULT) override;
     rtError_t CntNotifyDestroy(CountNotify* const inCntNotify) override;
     rtError_t CntNotifyRecord(
         CountNotify* const inCntNotify, Stream* const stm, const rtCntNtyRecordInfo_t* const info) override;
@@ -98,9 +97,9 @@ public:
         CountNotify* const inCntNotify, uint64_t* const cntNotifyAddress, rtNotifyType_t const regType) override;
     rtError_t GetCntNotifyId(CountNotify* const inCntNotify, uint32_t* const notifyId) override;
 
-    rtError_t NotifyWait(Notify* const inNotify, Stream* const stm, const uint32_t timeOut) override;
-    rtError_t NotifyRecord(Notify* const inNotify, Stream* const stm) override;
-    rtError_t NotifyReset(Notify* const inNotify) override;
+    rtError_t NotifyWait(Notify* const notify, Stream* const stm, const uint32_t timeOut) override;
+    rtError_t NotifyRecord(Notify* const notify, Stream* const stm) override;
+    rtError_t NotifyReset(Notify* const notify) override;
 
     rtError_t DatadumpInfoLoad(const void* const dumpInfo, const uint32_t length, const uint32_t flag) override;
     rtError_t DebugRegister(

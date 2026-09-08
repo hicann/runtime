@@ -991,47 +991,47 @@ rtError_t ApiDecorator::RdmaDbSend(const uint32_t dbIndex, const uint64_t dbInfo
     return impl_->RdmaDbSend(dbIndex, dbInfo, stm);
 }
 
-rtError_t ApiDecorator::NotifyCreate(const int32_t deviceId, Notify** const retNotify, uint64_t flag)
+rtError_t ApiDecorator::NotifyCreate(const int32_t deviceId, Notify** const notify, uint64_t flag)
 {
-    return impl_->NotifyCreate(deviceId, retNotify, flag);
+    return impl_->NotifyCreate(deviceId, notify, flag);
 }
 
-rtError_t ApiDecorator::NotifyDestroy(Notify* const inNotify) { return impl_->NotifyDestroy(inNotify); }
+rtError_t ApiDecorator::NotifyDestroy(Notify* const notify) { return impl_->NotifyDestroy(notify); }
 
-rtError_t ApiDecorator::NotifyRecord(Notify* const inNotify, Stream* const stm)
+rtError_t ApiDecorator::NotifyRecord(Notify* const notify, Stream* const stm)
 {
-    return impl_->NotifyRecord(inNotify, stm);
+    return impl_->NotifyRecord(notify, stm);
 }
 
-rtError_t ApiDecorator::NotifyWait(Notify* const inNotify, Stream* const stm, const uint32_t timeOut)
+rtError_t ApiDecorator::NotifyWait(Notify* const notify, Stream* const stm, const uint32_t timeOut)
 {
-    return impl_->NotifyWait(inNotify, stm, timeOut);
+    return impl_->NotifyWait(notify, stm, timeOut);
 }
 
-rtError_t ApiDecorator::GetNotifyID(Notify* const inNotify, uint32_t* const notifyID)
+rtError_t ApiDecorator::GetNotifyID(Notify* const notify, uint32_t* const notifyId)
 {
-    return impl_->GetNotifyID(inNotify, notifyID);
+    return impl_->GetNotifyID(notify, notifyId);
 }
 
-rtError_t ApiDecorator::GetNotifyPhyInfo(Notify* const inNotify, rtNotifyPhyInfo* notifyInfo)
+rtError_t ApiDecorator::GetNotifyPhyInfo(Notify* const notify, rtNotifyPhyInfo* notifyInfo)
 {
-    return impl_->GetNotifyPhyInfo(inNotify, notifyInfo);
+    return impl_->GetNotifyPhyInfo(notify, notifyInfo);
 }
 
 rtError_t ApiDecorator::IpcSetNotifyName(
-    Notify* const inNotify, char_t* const name, const uint32_t len, const uint64_t flag)
+    Notify* const notify, char_t* const name, const uint32_t len, const uint64_t flag)
 {
-    return impl_->IpcSetNotifyName(inNotify, name, len, flag);
+    return impl_->IpcSetNotifyName(notify, name, len, flag);
 }
 
-rtError_t ApiDecorator::IpcOpenNotify(Notify** const retNotify, const char_t* const name, uint32_t flag)
+rtError_t ApiDecorator::IpcOpenNotify(Notify** const notify, const char_t* const name, uint32_t flag)
 {
-    return impl_->IpcOpenNotify(retNotify, name, flag);
+    return impl_->IpcOpenNotify(notify, name, flag);
 }
 
-rtError_t ApiDecorator::NotifyGetAddrOffset(Notify* const inNotify, uint64_t* const devAddrOffset)
+rtError_t ApiDecorator::NotifyGetAddrOffset(Notify* const notify, uint64_t* const devAddrOffset)
 {
-    return impl_->NotifyGetAddrOffset(inNotify, devAddrOffset);
+    return impl_->NotifyGetAddrOffset(notify, devAddrOffset);
 }
 
 rtError_t ApiDecorator::StreamSwitchEx(
@@ -1751,7 +1751,7 @@ rtError_t ApiDecorator::StreamStop(Stream* const stm) { return impl_->StreamStop
 
 rtError_t ApiDecorator::StreamAbort(Stream* const stm) { return impl_->StreamAbort(stm); }
 
-rtError_t ApiDecorator::NotifyReset(Notify* const inNotify) { return impl_->NotifyReset(inNotify); }
+rtError_t ApiDecorator::NotifyReset(Notify* const notify) { return impl_->NotifyReset(notify); }
 
 rtError_t ApiDecorator::DebugSetDumpMode(const uint64_t mode) { return impl_->DebugSetDumpMode(mode); }
 
@@ -1985,9 +1985,9 @@ rtError_t ApiDecorator::WriteValuePtr(void* const writeValueInfo, Stream* const 
     return impl_->WriteValuePtr(writeValueInfo, stm, pointedAddr);
 }
 
-rtError_t ApiDecorator::CntNotifyCreate(const int32_t deviceId, CountNotify** const retCntNotify, const uint32_t flag)
+rtError_t ApiDecorator::CntNotifyCreate(const int32_t deviceId, CountNotify** const cntNotify, const uint32_t flag)
 {
-    return impl_->CntNotifyCreate(deviceId, retCntNotify, flag);
+    return impl_->CntNotifyCreate(deviceId, cntNotify, flag);
 }
 
 rtError_t ApiDecorator::CntNotifyDestroy(CountNotify* const inCntNotify)

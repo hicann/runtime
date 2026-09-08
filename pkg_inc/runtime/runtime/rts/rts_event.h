@@ -329,7 +329,7 @@ RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t
  * @ingroup rt_stars
  * @brief create count notify
  * @param [in] deviceId
- * @param [out] retCntNotify: count notify object
+ * @param [out] cntNotify: count notify object
  * @return RT_ERROR_NONE for ok, others failed
  */
 RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t
@@ -340,7 +340,7 @@ RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t
  * @brief create count notify
  * @param [in] deviceId
  * @param [in] flags: For details, see the definition of event.h
- * @param [out] retCntNotify: count notify object
+ * @param [out] cntNotify: count notify object
  * @return RT_ERROR_NONE for ok, others failed
  */
 RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t
@@ -417,7 +417,7 @@ RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t
 /**
  * @ingroup rt_stars
  * @brief create count notify
- * @param [out] retCntNotify: count notify object
+ * @param [out] cntNotify: count notify object
  * @return RT_ERROR_NONE for ok, others failed
  */
 RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t

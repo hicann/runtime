@@ -561,26 +561,25 @@ public:
 
     // Notify api
     rtError_t NotifyCreate(
-        const int32_t deviceId, Notify** const retNotify, uint64_t flag = RT_NOTIFY_FLAG_DEFAULT) override;
-    rtError_t NotifyDestroy(Notify* const inNotify) override;
-    rtError_t NotifyRecord(Notify* const inNotify, Stream* const stm) override;
-    rtError_t NotifyReset(Notify* const inNotify) override;
+        const int32_t deviceId, Notify** const notify, uint64_t flag = RT_NOTIFY_FLAG_DEFAULT) override;
+    rtError_t NotifyDestroy(Notify* const notify) override;
+    rtError_t NotifyRecord(Notify* const notify, Stream* const stm) override;
+    rtError_t NotifyReset(Notify* const notify) override;
     rtError_t ResourceClean(int32_t devId, rtIdType_t type) override;
-    rtError_t NotifyWait(Notify* const inNotify, Stream* const stm, const uint32_t timeOut) override;
-    rtError_t GetNotifyID(Notify* const inNotify, uint32_t* const notifyID) override;
-    rtError_t GetNotifyPhyInfo(Notify* const inNotify, rtNotifyPhyInfo* notifyInfo) override;
+    rtError_t NotifyWait(Notify* const notify, Stream* const stm, const uint32_t timeOut) override;
+    rtError_t GetNotifyID(Notify* const notify, uint32_t* const notifyId) override;
+    rtError_t GetNotifyPhyInfo(Notify* const notify, rtNotifyPhyInfo* notifyInfo) override;
     rtError_t IpcSetNotifyName(
-        Notify* const inNotify, char_t* const name, const uint32_t len, const uint64_t flag) override;
+        Notify* const notify, char_t* const name, const uint32_t len, const uint64_t flag) override;
     rtError_t IpcOpenNotify(
-        Notify** const retNotify, const char_t* const name, uint32_t flag = RT_NOTIFY_FLAG_DEFAULT) override;
+        Notify** const notify, const char_t* const name, uint32_t flag = RT_NOTIFY_FLAG_DEFAULT) override;
 
-    rtError_t NotifyGetAddrOffset(Notify* const inNotify, uint64_t* const devAddrOffset) override;
+    rtError_t NotifyGetAddrOffset(Notify* const notify, uint64_t* const devAddrOffset) override;
     rtError_t WriteValuePtr(void* const writeValueInfo, Stream* const stm, void* const pointedAddr) override;
 
     // CountNotify api
     rtError_t CntNotifyCreate(
-        const int32_t deviceId, CountNotify** const retCntNotify,
-        const uint32_t flag = RT_NOTIFY_FLAG_DEFAULT) override;
+        const int32_t deviceId, CountNotify** const cntNotify, const uint32_t flag = RT_NOTIFY_FLAG_DEFAULT) override;
     rtError_t CntNotifyDestroy(CountNotify* const inCntNotify) override;
     rtError_t CntNotifyRecord(
         CountNotify* const inCntNotify, Stream* const stm, const rtCntNtyRecordInfo_t* const info) override;

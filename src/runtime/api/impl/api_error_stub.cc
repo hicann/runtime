@@ -20,11 +20,10 @@ rtError_t ApiErrorDecorator::WriteValuePtr(void* const writeValueInfo, Stream* c
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
-rtError_t ApiErrorDecorator::CntNotifyCreate(
-    const int32_t deviceId, CountNotify** const retCntNotify, const uint32_t flag)
+rtError_t ApiErrorDecorator::CntNotifyCreate(const int32_t deviceId, CountNotify** const cntNotify, const uint32_t flag)
 {
     UNUSED(deviceId);
-    UNUSED(retCntNotify);
+    UNUSED(cntNotify);
     UNUSED(flag);
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }

@@ -1057,7 +1057,7 @@ rtError_t ApiImplDavid::MemsetAsync(
     return MemSetAsync(curStm, ptr, destMax, val, cnt);
 }
 
-rtError_t ApiImplDavid::CntNotifyCreate(const int32_t deviceId, CountNotify** const retCntNotify, const uint32_t flag)
+rtError_t ApiImplDavid::CntNotifyCreate(const int32_t deviceId, CountNotify** const cntNotify, const uint32_t flag)
 {
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
@@ -1069,13 +1069,13 @@ rtError_t ApiImplDavid::CntNotifyCreate(const int32_t deviceId, CountNotify** co
         ((mc2FeatureFlag == 0U) && (flag == RT_NOTIFY_FLAG_DOWNLOAD_TO_DEV)), RT_ERROR_INVALID_VALUE,
         "CntNotify creation", NotifyFlagToString(flag), "flag", "RT_NOTIFY_FLAG_DEFAULT(0)");
 
-    *retCntNotify = new (std::nothrow) CountNotify(static_cast<uint32_t>(deviceId), dev->DevGetTsId());
+    *cntNotify = new (std::nothrow) CountNotify(static_cast<uint32_t>(deviceId), dev->DevGetTsId());
     COND_RETURN_AND_MSG_OUTER(
-        *retCntNotify == nullptr, RT_ERROR_NOTIFY_NEW, ErrorCode::EE1013, std::to_string(sizeof(CountNotify)), "new");
+        *cntNotify == nullptr, RT_ERROR_NOTIFY_NEW, ErrorCode::EE1013, std::to_string(sizeof(CountNotify)), "new");
 
-    (*retCntNotify)->SetNotifyFlag(flag);
-    rtError_t error = (*retCntNotify)->Setup();
-    ERROR_PROC_RETURN_MSG_INNER(error, DELETE_O(*retCntNotify);
+    (*cntNotify)->SetNotifyFlag(flag);
+    rtError_t error = (*cntNotify)->Setup();
+    ERROR_PROC_RETURN_MSG_INNER(error, DELETE_O(*cntNotify);
                                 , "Count Notify create failed, setup failed, user device_id=%d, retCode=%#x", deviceId,
                                 static_cast<uint32_t>(error));
     return RT_ERROR_NONE;
@@ -1190,7 +1190,7 @@ rtError_t ApiImplDavid::GetCntNotifyAddress(
     return RT_ERROR_NONE;
 }
 
-rtError_t ApiImplDavid::NotifyWait(Notify* const inNotify, Stream* const stm, const uint32_t timeOut)
+rtError_t ApiImplDavid::NotifyWait(Notify* const notify, Stream* const stm, const uint32_t timeOut)
 {
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
@@ -1204,22 +1204,22 @@ rtError_t ApiImplDavid::NotifyWait(Notify* const inNotify, Stream* const stm, co
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
         curStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Waiting for a Notify");
     COND_RETURN_AND_MSG_OUTER(
-        inNotify->CheckIpcNotifyDevId() != RT_ERROR_NONE, RT_ERROR_INVALID_VALUE, ErrorCode::EE1012,
+        notify->CheckIpcNotifyDevId() != RT_ERROR_NONE, RT_ERROR_INVALID_VALUE, ErrorCode::EE1012,
         "Waiting for a Notify", curCtx->Device_()->Id_(), "current deviceId",
         RtFmtMsg(
             "The device (device_id=%u) cannot deliver the notify wait task."
             " The notify wait task must be delivered on the device (device_id=%u) where the IPC Notify is created",
-            curCtx->Device_()->Id_(), inNotify->GetDeviceId()));
+            curCtx->Device_()->Id_(), notify->GetDeviceId()));
     const uint32_t timeOutTmp = timeOut;
-    const rtError_t error = NtyWait(inNotify, curStm, timeOutTmp);
-    const uint32_t notifyId = inNotify->GetNotifyId();
+    const rtError_t error = NtyWait(notify, curStm, timeOutTmp);
+    const uint32_t notifyId = notify->GetNotifyId();
     ERROR_RETURN_MSG_INNER(
         error, "notify wait failed, notify_id=%u, time_out = %u, retCode=%#x", notifyId, timeOutTmp,
         static_cast<uint32_t>(error));
     return RT_ERROR_NONE;
 }
 
-rtError_t ApiImplDavid::NotifyRecord(Notify* const inNotify, Stream* const stm)
+rtError_t ApiImplDavid::NotifyRecord(Notify* const notify, Stream* const stm)
 {
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
@@ -1232,25 +1232,25 @@ rtError_t ApiImplDavid::NotifyRecord(Notify* const inNotify, Stream* const stm)
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
         curStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Notify recording");
 
-    const uint32_t notifyId = inNotify->GetNotifyId();
-    const rtError_t error = NtyRecord(inNotify, curStm);
+    const uint32_t notifyId = notify->GetNotifyId();
+    const rtError_t error = NtyRecord(notify, curStm);
     ERROR_RETURN_MSG_INNER(
         error, "Notify record failed, notify_id=%u, retCode=%#x", notifyId, static_cast<uint32_t>(error));
     return RT_ERROR_NONE;
 }
 
-rtError_t ApiImplDavid::NotifyReset(Notify* const inNotify)
+rtError_t ApiImplDavid::NotifyReset(Notify* const notify)
 {
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     Stream* curStm = curCtx->GetCtrlSQStream();
     NULL_STREAM_PTR_RETURN_MSG(curStm);
 
-    const uint32_t notifyId = inNotify->GetNotifyId();
-    const rtError_t error = NtyReset(inNotify, curStm);
+    const uint32_t notifyId = notify->GetNotifyId();
+    const rtError_t error = NtyReset(notify, curStm);
     ERROR_RETURN_MSG_INNER(
         error, "Notify reset failed, device_id=%u, notify_id=%u, is_ipc_notify=%d, retCode=%#x",
-        curStm->Device_()->Id_(), notifyId, inNotify->IsIpcNotify(), static_cast<uint32_t>(error));
+        curStm->Device_()->Id_(), notifyId, notify->IsIpcNotify(), static_cast<uint32_t>(error));
     return RT_ERROR_NONE;
 }
 
