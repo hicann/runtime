@@ -61,7 +61,8 @@ TEST_F(ADX_SOCK_EPOLL_UTEST, EpollCtl)
     event.events = 1;
     event.data = 1;
     handle = 1;
-    MOCKER(epoll_ctl).stubs().will(returnValue(0));
+    MOCKER(epoll_ctl).stubs().will(returnValue(-1)).then(returnValue(0));
+    EXPECT_EQ(-1, epoll->EpollCtl(handle, event, EPOLL_CTL_ADD));
     EXPECT_EQ(0, epoll->EpollCtl(handle, event, EPOLL_CTL_ADD));
 }
 

@@ -48,6 +48,7 @@ int32_t AdxSockEpoll::EpollCtl(EpollHandle handle, EpollEvent& event, int32_t op
     int32_t ret = epoll_ctl(ep_, op, fd, &ev);
     if (ret < 0) {
         IDE_LOGE("sock epoll ctl process error %d", ret);
+        return IDE_DAEMON_ERROR;
     }
     return IDE_DAEMON_OK;
 }

@@ -15,6 +15,7 @@
 #include "commopts/adx_comm_opt_manager.h"
 #include "commopts/hdc_comm_opt.h"
 #include "commopts/sock_comm_opt.h"
+#include "adx_msg.h"
 #include <arpa/inet.h>
 #include <netinet/tcp.h>
 #include "mmpa_api.h"
@@ -554,4 +555,16 @@ TEST_F(ADX_COMMOPT_MANAGER_UTEST, SockRead)
     handle.type = OptType::NR_COMM;
     ret = AdxCommOptManager::Instance().Read(handle, buffer, length, COMM_OPT_NOBLOCK);
     EXPECT_EQ(ret, -1);
+}
+
+TEST_F(ADX_COMMOPT_MANAGER_UTEST, SockTryReadWaitsForCompleteHeader)
+{
+    SockCommOpt opt;
+    void* buffer = nullptr;
+    int32_t length = 0;
+    constexpr OptHandle session = 1;
+    MOCKER(mmSocketRecv).expects(once()).will(returnValue(static_cast<int32_t>(sizeof(MsgProto)) - 1));
+
+    EXPECT_EQ(IDE_DAEMON_RECV_NODATA, opt.TryRead(session, &buffer, length));
+    EXPECT_EQ(nullptr, buffer);
 }

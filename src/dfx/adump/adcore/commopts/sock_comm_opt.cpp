@@ -216,6 +216,13 @@ int32_t SockCommOpt::Read(const OptHandle handle, IdeRecvBuffT buffer, int32_t& 
     return SockRead(handle, buffer, &length, nonBlockFlag);
 }
 
+int32_t SockCommOpt::TryRead(const OptHandle handle, IdeRecvBuffT buffer, int32_t& length)
+{
+    IDE_CTRL_VALUE_FAILED(handle != ADX_OPT_INVALID_HANDLE, return IDE_DAEMON_ERROR, "sock read input invalid");
+    IDE_CTRL_VALUE_FAILED(buffer != nullptr, return IDE_DAEMON_ERROR, "sock read input invalid");
+    return SockTryRead(handle, buffer, &length);
+}
+
 SharedPtr<AdxDevice> SockCommOpt::GetDevice()
 {
     if (device_ == nullptr) {
