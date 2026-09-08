@@ -160,7 +160,7 @@ TEST_F(FftsPlusTaskLaunchTest, FftsPlusTaskLaunchWithFlagForGetDevAddr)
     void *devArgsAddr = nullptr, *argsHandle = nullptr;
     rtError_t error = rtGetDevArgsAddr(stream_, &argsInfo, &devArgsAddr, &argsHandle);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    printf("==44===%p %p\r\n", devArgsAddr, argsHandle);
+    printf("devArgsAddr=%p, argsHandle=%p\r\n", devArgsAddr, argsHandle);
     handleInfo[0] = argsHandle;
     fftsPlusTaskInfo.argsHandleInfoNum = 1;
     fftsPlusTaskInfo.argsHandleInfoPtr = handleInfo;

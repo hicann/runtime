@@ -113,15 +113,15 @@ def write_all(file_name, content):
 class test_func_conf(object):
     def __init__(self, config_file):
         if not os.path.exists(config_file):
-            print("config file: %s is not exist" % (config_file))
-            raise Exception("config file no exist!")
+            print("config file: %s does not exist" % (config_file))
+            raise Exception("config file does not exist!")
 
         try:
             stream = open(config_file, 'r')
             self.all_func_config = yaml.load(stream, Loader=yaml.SafeLoader)
             stream.close()
         except Exception as e:
-            print("exception happen:\n%s" % str(e))
+            print("exception occurred:\n%s" % str(e))
             raise Exception("load config file failed!")
 
     def get_func_info(self):
@@ -336,11 +336,11 @@ def generate_test_file(func_obj, func_name):
 def add_test_file_mk(func_name):
     test_file = "klee_test_%s.cc"%func_name
     if not os.path.exists(test_file):
-        print(("[error] test file :%s not exists"% test_file))
+        print(("[error] test file: %s does not exist"% test_file))
         return False
     module_mk = "module.mk"
     if not os.path.exists(module_mk):
-        print(("[error] mk file :%s not exists"% module_mk))
+        print(("[error] mk file: %s does not exist"% module_mk))
         return False
     module_template = '''
 include $(CLEAR_VARS)
@@ -389,5 +389,4 @@ def main():
 
 if __name__ == '__main__':
     main()
-
 

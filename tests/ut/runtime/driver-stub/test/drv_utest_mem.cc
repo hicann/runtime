@@ -933,16 +933,10 @@ TEST_F(DrvMemTest, mem_LoadProgram)
 
 TEST_F(DrvMemTest, mem_init_test_001)
 {
-    printf("1111--6 \n");
-
     MOCKER(malloc).stubs().will(returnValue((void*)NULL));
-    printf("1111--7 \n");
     MOCKER(drvMemMgmtQueueFree).stubs().will(returnValue(DRV_ERROR_NONE));
-    printf("1111--8 \n");
     MOCKER(drvResetMgmtHead).stubs();
-    printf("1111--9 \n");
     MOCKER(drvResetMgmtTail).stubs();
-    printf("1111--99 \n");
     drvError_t error = drvMemMgmtInit();
     EXPECT_EQ(error, DRV_ERROR_INVALID_VALUE);
 }

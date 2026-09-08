@@ -118,7 +118,7 @@ def main():
         header = func_info.split("(")[0]
         func_name = header.split(" ")[-1].strip()
         if func_info.strip().startswith("//"):
-            print(func_name + " should be ignore!")
+            print(func_name + " should be ignored!")
             continue
         yaml_content += func_name + ":\n    paras:\n"
         return_type = header[:-len(func_name)].strip()
@@ -142,4 +142,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

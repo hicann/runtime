@@ -41,11 +41,13 @@ protected:
         rtError_t error = ACL_RT_SUCCESS;
 
         if (srcCacheNum > RT_FFTS_MAX_TICKET_CACHE_PER_SUBTASK) {
-            std::cout << "srcCacheNum is over max sub task cache num. srcCacheNum=" << srcCacheNum << std::endl;
+            std::cout << "srcCacheNum exceeds limit, srcCacheNum=" << srcCacheNum
+                      << ", limit=" << RT_FFTS_MAX_TICKET_CACHE_PER_SUBTASK << std::endl;
             return ACL_ERROR_RT_PARAM_INVALID;
         }
         if (dstCacheNum > RT_FFTS_MAX_TICKET_CACHE_PER_SUBTASK) {
-            std::cout << "dstCacheNum is over max sub task cache num. dstCacheNum=" << dstCacheNum << std::endl;
+            std::cout << "dstCacheNum exceeds limit, dstCacheNum=" << dstCacheNum
+                      << ", limit=" << RT_FFTS_MAX_TICKET_CACHE_PER_SUBTASK << std::endl;
             return ACL_ERROR_RT_PARAM_INVALID;
         }
 
@@ -71,7 +73,8 @@ private:
         uint32_t cacheIdx = fftsTask.tickCacheNum;
 
         if (cacheIdx >= RT_FFTS_MAX_TICKET_CACHE_NUM) {
-            std::cout << "cacheIdx is over max ticket cache num. cacheIdx=" << cacheIdx << std::endl;
+            std::cout << "cacheIdx must be less than limit, cacheIdx=" << cacheIdx
+                      << ", limit=" << RT_FFTS_MAX_TICKET_CACHE_NUM << std::endl;
             return ACL_ERROR_RT_PARAM_INVALID;
         }
         rtTicketCache_t& cache = fftsTask.ticketCache[cacheIdx];
@@ -124,7 +127,8 @@ private:
         rtError_t error = ACL_RT_SUCCESS;
         uint32_t taskIdx = fftsTask.subTaskNum;
         if (taskIdx >= RT_FFTS_MAX_SUB_TASK_NUM) {
-            std::cout << "taskIdx is over max sub task num. taskIdx=" << taskIdx << std::endl;
+            std::cout << "taskIdx must be less than limit, taskIdx=" << taskIdx
+                      << ", limit=" << RT_FFTS_MAX_SUB_TASK_NUM << std::endl;
             return ACL_ERROR_RT_PARAM_INVALID;
         }
 
@@ -167,7 +171,8 @@ private:
         rtError_t error = ACL_RT_SUCCESS;
         uint32_t taskIdx = fftsTask.subTaskNum;
         if (taskIdx >= RT_FFTS_MAX_SUB_TASK_NUM) {
-            std::cout << "taskIdx is over max sub task num. taskIdx=" << taskIdx << std::endl;
+            std::cout << "taskIdx must be less than limit, taskIdx=" << taskIdx
+                      << ", limit=" << RT_FFTS_MAX_SUB_TASK_NUM << std::endl;
             return ACL_ERROR_RT_PARAM_INVALID;
         }
 
@@ -206,11 +211,13 @@ protected:
         rtError_t error = ACL_RT_SUCCESS;
 
         if (srcCacheNum > RT_FFTS_MAX_TICKET_CACHE_PER_SUBTASK) {
-            std::cout << "srcCacheNum is over max sub task cache num. srcCacheNum=" << srcCacheNum << std::endl;
+            std::cout << "srcCacheNum exceeds limit, srcCacheNum=" << srcCacheNum
+                      << ", limit=" << RT_FFTS_MAX_TICKET_CACHE_PER_SUBTASK << std::endl;
             return ACL_ERROR_RT_PARAM_INVALID;
         }
         if (dstCacheNum > RT_FFTS_MAX_TICKET_CACHE_PER_SUBTASK) {
-            std::cout << "dstCacheNum is over max sub task cache num. dstCacheNum=" << dstCacheNum << std::endl;
+            std::cout << "dstCacheNum exceeds limit, dstCacheNum=" << dstCacheNum
+                      << ", limit=" << RT_FFTS_MAX_TICKET_CACHE_PER_SUBTASK << std::endl;
             return ACL_ERROR_RT_PARAM_INVALID;
         }
 
@@ -236,7 +243,8 @@ private:
         uint32_t cacheIdx = fftsTask.tickCacheNum;
 
         if (cacheIdx >= RT_FFTS_MAX_TICKET_CACHE_NUM) {
-            std::cout << "cacheIdx is over max ticket cache num. cacheIdx=" << cacheIdx << std::endl;
+            std::cout << "cacheIdx must be less than limit, cacheIdx=" << cacheIdx
+                      << ", limit=" << RT_FFTS_MAX_TICKET_CACHE_NUM << std::endl;
             return ACL_ERROR_RT_PARAM_INVALID;
         }
         rtTicketCache_t& cache = fftsTask.ticketCache[cacheIdx];
@@ -296,7 +304,8 @@ private:
     {
         uint32_t taskIdx = fftsTask.subTaskNum;
         if (taskIdx >= RT_FFTS_MAX_SUB_TASK_NUM) {
-            std::cout << "taskIdx is over max sub task num. taskIdx=" << taskIdx << std::endl;
+            std::cout << "taskIdx must be less than limit, taskIdx=" << taskIdx
+                      << ", limit=" << RT_FFTS_MAX_SUB_TASK_NUM << std::endl;
             return ACL_ERROR_RT_PARAM_INVALID;
         }
 
@@ -346,7 +355,8 @@ private:
     {
         uint32_t taskIdx = fftsTask.subTaskNum;
         if (taskIdx >= RT_FFTS_MAX_SUB_TASK_NUM) {
-            std::cout << "taskIdx is over max sub task num. taskIdx=" << taskIdx << std::endl;
+            std::cout << "taskIdx must be less than limit, taskIdx=" << taskIdx
+                      << ", limit=" << RT_FFTS_MAX_SUB_TASK_NUM << std::endl;
             return ACL_ERROR_RT_PARAM_INVALID;
         }
 

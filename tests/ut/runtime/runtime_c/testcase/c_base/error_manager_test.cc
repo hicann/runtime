@@ -26,7 +26,7 @@ protected:
 
 void* ThreadFunc(void* arg)
 {
-    ReportInterErrMessage("E19999", "This is an inner error!");
+    ReportInterErrMessage("E19999", "This is an internal error!");
     (void)GetErrorMessage();
     return nullptr;
 }
@@ -81,7 +81,7 @@ TEST_F(UtestErrManagerTest, GetErrorMessage)
     REPORT_INPUT_ERROR(
         "E19001", ARRAY("errMsg", "redundancy", "file"),
         ARRAY("The file is corrupted", "this is test information", "a.cc"));
-    ReportInterErrMessage("E19999", "This is an inner error!");
+    ReportInterErrMessage("E19999", "This is an internal error!");
     REPORT_INPUT_ERROR("EH0001", ARRAY("value", "param", "reason"), ARRAY("25", "x", "The value is too small"));
     REPORT_INPUT_ERROR("EH0002", ARRAY("param"), ARRAY("ll"));
     char* errmsg2 = GetErrorMessage();
@@ -90,7 +90,7 @@ TEST_F(UtestErrManagerTest, GetErrorMessage)
                  "        Solution: Fix the error according to the error message.\r\n"
                  "        TraceBack (most recent call last):\r\n"
                  "        Param input.size() < minsize, check invalid\r\n"
-                 "        This is an inner error!\r\n"
+                 "        This is an internal error!\r\n"
                  "        Value 25 for x is invalid. Reason: The value is too small.\r\n"
                  "        Argument ll must not be NULL.\r\n");
     char* errmsg3 = GetErrorMessage();
@@ -121,7 +121,7 @@ TEST_F(UtestErrManagerTest, GetErrorMessageErrorThreadNull)
 
 void* ThreadFuncForInterInit(void* arg)
 {
-    ReportInterErrMessage("E19999", "This is an inner error!");
+    ReportInterErrMessage("E19999", "This is an internal error!");
     char* errmsg = GetErrorMessage();
     return (void*)errmsg;
 }
