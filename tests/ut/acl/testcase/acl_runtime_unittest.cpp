@@ -2647,6 +2647,10 @@ TEST_F(UTEST_ACL_Runtime, aclrtMemcpy2dTest)
     ret = aclrtMemcpy2d(dst, dpitch, src, spitch, width, height, kind);
     EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
 
+    kind = ACL_MEMCPY_DEVICE_TO_DEVICE;
+    ret = aclrtMemcpy2d(dst, dpitch, src, spitch, width, height, kind);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+
     width = 1;
     height = 2;
     kind = ACL_MEMCPY_HOST_TO_DEVICE;

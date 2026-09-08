@@ -210,7 +210,7 @@ bool IsAllZeroSizeBatch(const size_t* const sizes, const size_t numBatches)
 
 aclError CheckMemcpy2dParam(
     const void* const dst, const size_t dpitch, const void* const src, const size_t spitch, const size_t width,
-    const size_t height, const aclrtMemcpyKind kind, rtMemcpyKind_t& rtKind)
+    const size_t height)
 {
     ACL_LOG_DEBUG("start to execute CheckMemcpy2dParam");
     if (IsZeroSizeMemcpy2d(width, height)) {
@@ -236,6 +236,40 @@ aclError CheckMemcpy2dParam(
                  errMsg.c_str()}));
         return ACL_ERROR_INVALID_PARAM;
     }
+
+    return ACL_SUCCESS;
+}
+
+aclError CheckMemcpy2dSyncKind(const aclrtMemcpyKind kind, rtMemcpyKind_t& rtKind)
+{
+    switch (kind) {
+        case ACL_MEMCPY_HOST_TO_DEVICE: {
+            rtKind = RT_MEMCPY_HOST_TO_DEVICE;
+            break;
+        }
+        case ACL_MEMCPY_DEVICE_TO_HOST: {
+            rtKind = RT_MEMCPY_DEVICE_TO_HOST;
+            break;
+        }
+        case ACL_MEMCPY_DEFAULT: {
+            rtKind = RT_MEMCPY_DEFAULT;
+            break;
+        }
+        default: {
+            ACL_LOG_ERROR("[Check][Kind]invalid kind of memcpy, kind = %s", acl::GetMemcpyKindDesc(kind));
+            acl::AclErrorLogManager::ReportInputError(
+                acl::INVALID_VALUE_MSG, std::vector<const char*>({"func", "value", "param", "expect"}),
+                std::vector<const char*>(
+                    {"Checking the synchronous memory copy parameter validity", acl::GetMemcpyKindDesc(kind), "kind",
+                     "ACL_MEMCPY_HOST_TO_DEVICE or ACL_MEMCPY_DEVICE_TO_HOST or ACL_MEMCPY_DEFAULT"}));
+            return ACL_ERROR_INVALID_PARAM;
+        }
+    }
+    return ACL_SUCCESS;
+}
+
+aclError CheckMemcpy2dAsyncKind(const aclrtMemcpyKind kind, rtMemcpyKind_t& rtKind)
+{
     switch (kind) {
         case ACL_MEMCPY_HOST_TO_DEVICE: {
             rtKind = RT_MEMCPY_HOST_TO_DEVICE;
@@ -258,7 +292,7 @@ aclError CheckMemcpy2dParam(
             acl::AclErrorLogManager::ReportInputError(
                 acl::INVALID_VALUE_MSG, std::vector<const char*>({"func", "value", "param", "expect"}),
                 std::vector<const char*>(
-                    {"Checking the synchronous memory copy parameter validity", acl::GetMemcpyKindDesc(kind), "kind",
+                    {"Checking the asynchronous memory copy parameter validity", acl::GetMemcpyKindDesc(kind), "kind",
                      "ACL_MEMCPY_HOST_TO_DEVICE or ACL_MEMCPY_DEVICE_TO_HOST or ACL_MEMCPY_DEVICE_TO_DEVICE or "
                      "ACL_MEMCPY_DEFAULT"}));
             return ACL_ERROR_INVALID_PARAM;
@@ -1023,9 +1057,16 @@ aclError aclrtMemcpy2dImpl(
         spitch, width, height, acl::GetMemcpyKindDesc(kind));
 
     rtMemcpyKind_t rtKind = RT_MEMCPY_RESERVED;
-    const aclError ret = CheckMemcpy2dParam(dst, dpitch, src, spitch, width, height, kind, rtKind);
+    aclError ret = CheckMemcpy2dParam(dst, dpitch, src, spitch, width, height);
     if (ret != ACL_SUCCESS) {
         return ret;
+    }
+
+    if (!IsZeroSizeMemcpy2d(width, height)) {
+        ret = CheckMemcpy2dSyncKind(kind, rtKind);
+        if (ret != ACL_SUCCESS) {
+            return ret;
+        }
     }
 
     ACL_REQUIRES_RTS_OK(rtMemcpy2d(dst, dpitch, src, spitch, width, height, rtKind));
@@ -1048,9 +1089,16 @@ aclError aclrtMemcpy2dAsyncImpl(
         dpitch, spitch, width, height, acl::GetMemcpyKindDesc(kind));
 
     rtMemcpyKind_t rtKindVal = RT_MEMCPY_RESERVED;
-    const aclError ret = CheckMemcpy2dParam(dst, dpitch, src, spitch, width, height, kind, rtKindVal);
+    aclError ret = CheckMemcpy2dParam(dst, dpitch, src, spitch, width, height);
     if (ret != ACL_SUCCESS) {
         return ret;
+    }
+
+    if (!IsZeroSizeMemcpy2d(width, height)) {
+        ret = CheckMemcpy2dAsyncKind(kind, rtKindVal);
+        if (ret != ACL_SUCCESS) {
+            return ret;
+        }
     }
 
     ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(
