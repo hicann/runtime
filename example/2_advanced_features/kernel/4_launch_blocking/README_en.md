@@ -2,13 +2,13 @@
 
 ## Description
 
-This sample demonstrates three ways to control Kernel Launch Blocking. It delays the target stream with a Notify, runs an Ascend C kernel with verifiable output, and checks both the stream status and computation result after each launch.
+This sample demonstrates how to control synchronous and asynchronous Kernel Launch behavior through a process-wide default policy, a per-stream policy, and a temporary non-blocking section.
 
 - Environment control: starts separate processes with `ASCEND_RT_LAUNCH_BLOCKING=0` and `ASCEND_RT_LAUNCH_BLOCKING=1` to verify asynchronous and synchronous launch modes.
-- Per-stream modes: sets `DEFAULT`, `ASYNC`, and `SYNC` through `aclrtSetStreamAttribute` to verify that a stream either inherits or overrides the environment setting.
-- Asynchronous execution range: nests `aclrtNonBlockingLaunchBegin` and `aclrtNonBlockingLaunchEnd` while synchronous mode is enabled. Kernel launches between the two APIs remain asynchronous, the inner `End` does not synchronize, and the outermost `End` synchronizes the stream and restores synchronous mode for subsequent launches.
+- Per-stream control: sets `ACL_STREAM_LAUNCH_BLOCKING_MODE_CTRL_BY_ENV`, `ACL_STREAM_LAUNCH_BLOCKING_MODE_NON_BLOCKING`, and `ACL_STREAM_LAUNCH_BLOCKING_MODE_BLOCKING` through `aclrtSetStreamAttribute` and verifies whether the stream inherits or overrides the environment setting.
+- Temporary non-blocking section: nests `aclrtNonBlockingLaunchBegin` and `aclrtNonBlockingLaunchEnd` while synchronous mode is enabled. Kernel launches inside the section remain asynchronous.
 
-`run.sh` builds the sample once and starts a new process for each environment configuration.
+The sample delays the target stream with a Notify and runs an Ascend C kernel with verifiable output. It determines whether the policy takes effect from the stream status and computation result after Kernel Launch returns; elapsed time is printed for observation only. `run.sh` builds the sample once and starts a new process for each environment configuration.
 
 ## Supported Products
 
@@ -16,8 +16,9 @@ This sample supports the following products:
 
 | Product | Supported |
 | --- | --- |
-| Atlas A2 Training Series Products/Atlas 800I A2 Inference Products/A200I A2 Box Heterogeneous Components | Yes |
 | Ascend 950PR/Ascend 950DT | Yes |
+| Atlas A3 training series products/Atlas A3 inference series products | Yes |
+| Atlas A2 training series products/Atlas A2 inference series products | Yes |
 
 ## Build and Run
 
@@ -49,16 +50,46 @@ Runtime reads the environment variable during initialization, so it cannot be sw
 | `env-control` | `0` | Kernel Launch returns asynchronously; the result is correct after explicit synchronization |
 | `env-control` | `1` | Kernel Launch returns after the stream completes; the result is correct |
 | `stream-mode` | `0` and `1` | `CTRL_BY_ENV` follows the environment, `NON_BLOCKING` forces asynchronous launch, and `BLOCKING` forces synchronous launch |
-| `non-blocking-section` | `1` | Nested launches are asynchronous, the outermost `End` synchronizes, and synchronous mode is restored afterward |
+| `non-blocking-section` | `1` | Launches remain asynchronous in the nested section; the inner `End` does not synchronize, and the outermost `End` restores the synchronous policy and waits for the stream |
 
-## CANN Runtime APIs
+## Control Rules and Notes
 
-- `aclrtSetStreamAttribute` and `aclrtGetStreamAttribute`: set and query the `ACL_STREAM_LAUNCH_BLOCKING_MODE` stream attribute.
-- `aclrtNonBlockingLaunchBegin` and `aclrtNonBlockingLaunchEnd`: mark the start and end points of asynchronous execution for the affected APIs on a stream.
-- `aclrtLaunchKernel`: launch the custom kernel.
-- `aclrtCreateNotify`, `aclrtWaitAndResetNotify`, and `aclrtRecordNotify`: create a controlled stream wait.
-- `aclrtStreamQuery`: inspect the stream status after a Kernel Launch or asynchronous execution range API returns.
-- `aclrtSynchronizeStreamWithTimeout`: wait for an asynchronous kernel to complete.
+Kernel Launch blocking behavior is determined in the following priority order:
+
+1. Kernel Launch remains asynchronous while the stream is inside a non-blocking section marked by `aclrtNonBlockingLaunchBegin` and `aclrtNonBlockingLaunchEnd`.
+2. `ACL_STREAM_LAUNCH_BLOCKING_MODE_NON_BLOCKING` or `ACL_STREAM_LAUNCH_BLOCKING_MODE_BLOCKING` set on a stream overrides the environment variable.
+3. When the stream mode is `ACL_STREAM_LAUNCH_BLOCKING_MODE_CTRL_BY_ENV`, `ASCEND_RT_LAUNCH_BLOCKING` determines the behavior.
+
+Observe the following requirements:
+
+- Runtime reads `ASCEND_RT_LAUNCH_BLOCKING` during initialization. Restart the process after changing it.
+- `aclrtNonBlockingLaunchBegin` and `aclrtNonBlockingLaunchEnd` must be paired on the same stream. `flag` is reserved and must be `0`.
+- Non-blocking sections can be nested. An inner `End` only decreases the nesting depth. The outermost `End` leaves the section and waits for the stream when the restored policy requires synchronous execution.
+- A `nullptr` `stream` argument represents the default stream of the current Context.
+- Model streams, bound streams, streams in the capture stage, and some special streams do not support per-stream Launch Blocking control.
+- This sample demonstrates `aclrtLaunchKernel` on a regular stream. Asynchronous memory copies and Event APIs do not become synchronous because of this feature.
+
+## CANN RUNTIME APIs
+
+The sample uses the following key functions and APIs:
+
+- Initialization and Device management
+  - `aclInit` / `aclFinalize`
+  - `aclrtSetDevice` / `aclrtResetDevice`
+- Stream and Launch Blocking control
+  - `aclrtCreateStream` / `aclrtDestroyStream`
+  - `aclrtSetStreamAttribute` / `aclrtGetStreamAttribute`
+  - `aclrtNonBlockingLaunchBegin` / `aclrtNonBlockingLaunchEnd`
+  - `aclrtStreamQuery` / `aclrtSynchronizeStreamWithTimeout`
+- Kernel loading and execution
+  - `aclrtBinaryLoadFromFile` / `aclrtBinaryGetFunction` / `aclrtBinaryUnLoad`
+  - `aclrtLaunchKernel`
+- Notify control
+  - `aclrtCreateNotify` / `aclrtWaitAndResetNotify`
+  - `aclrtRecordNotify` / `aclrtDestroyNotify`
+- Memory management and data transfer
+  - `aclrtMalloc` / `aclrtFree`
+  - `aclrtMemcpy` / `aclrtMemset`
 
 ## Sample Output
 
@@ -78,5 +109,3 @@ Runtime reads the environment variable during initialization, so it cannot be sw
 [SUCCESS] non-blocking-section
 All launch blocking scenarios passed.
 ```
-
-The sample uses a Notify to create a deterministic wait. Stream status and output data determine whether it passes; elapsed times in the logs are informational only.
