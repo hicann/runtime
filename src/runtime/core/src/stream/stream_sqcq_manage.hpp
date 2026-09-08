@@ -96,6 +96,7 @@ public:
         uint64_t& sqAddr);
     void FillStreamInfoEx(const Stream* const stm, rtStreamInfoExMsg_t& infoEX) const;
     void FillStreamAttrDqsInterChip(const Stream* const stm, rtStreamInfoExMsg_t& infoEX) const;
+    // stm can be nullptr when pre-allocating SQ/CQ resources for the device pool.
     void FillStreamAttrSimt(const Stream* const stm, rtStreamInfoExMsg_t& infoEX) const;
     rtError_t UpdateStreamSqCq(Stream* newStm);
     rtError_t ReAllocSqCqId(const Stream* const newStm);

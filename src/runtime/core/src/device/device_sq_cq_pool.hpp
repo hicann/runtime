@@ -62,7 +62,6 @@ public:
         const std::list<rtDeviceSqCqInfo_t>::iterator begin, const std::list<rtDeviceSqCqInfo_t>::iterator end) const;
 
 private:
-    void FillStreamAttrSimt(rtStreamInfoExMsg_t& infoEX) const;
     Device* device_;
     std::mutex deviceSqCqLock_;
     std::list<rtDeviceSqCqInfo_t> deviceSqCqFreeList_;

@@ -22,39 +22,43 @@ void StreamSqCqManage::FillStreamInfoEx(const Stream* const stm, rtStreamInfoExM
 
 void StreamSqCqManage::FillStreamAttrSimt(const Stream* const stm, rtStreamInfoExMsg_t& infoEX) const
 {
-    if (!stm->Device_()->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_SIMT)) {
+    if (!device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_SIMT)) {
         return;
     }
 
     infoEX.head.type = static_cast<uint32_t>(StreamInfoExHeaderType::TS_SQCQ_NORMAL_TYPE);
-    const uint32_t vfId = stm->Device_()->GetVfId();
+    const uint32_t vfId = device_->GetVfId();
     if (vfId != MAX_UINT32_NUM) {
         infoEX.head.vfid = vfId;
     }
-    if ((stm->Flags() & RT_STREAM_ACSQ_LOCK) != 0U) {
+    if ((stm != nullptr) && ((stm->Flags() & RT_STREAM_ACSQ_LOCK) != 0U)) {
         infoEX.body.validFlag |= static_cast<uint64_t>(InfoExValidFlag::INFO_EX_BODY_FLAG_STREAM);
         infoEX.body.streamFlag.bits.sqLock = 1U;
         infoEX.body.streamFlag.bits.waitLock = 1U;
     }
 
-    if (stm->Device_()->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_KERNEL_EARLY_START) &&
-        Runtime::Instance()->GetEnableOstFlag()) {
-        infoEX.body.validFlag |= static_cast<uint64_t>(InfoExValidFlag::INFO_EX_BODY_FLAG_OST);
+    if (device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_KERNEL_EARLY_START)) {
+        const uint64_t stackPhyAddr = RtPtrToValue(device_->GetStackPhyBase32k());
+        infoEX.body.stackPhyBaseAddrLow = static_cast<uint32_t>(stackPhyAddr);
+        infoEX.body.stackPhyBaseAddrHigh = static_cast<uint32_t>(stackPhyAddr >> UINT32_BIT_NUM);
+        if (Runtime::Instance()->GetEnableOstFlag()) {
+            infoEX.body.validFlag |= static_cast<uint64_t>(InfoExValidFlag::INFO_EX_BODY_FLAG_OST);
+        }
     }
 
-    const uint64_t stackPhyAddr = RtPtrToValue(stm->Device_()->GetSimtStackPhyBase());
-    infoEX.body.kisSimtStkBaseAddrLow = static_cast<uint32_t>(stackPhyAddr);
-    infoEX.body.kisSimtStkBaseAddrHigh = static_cast<uint16_t>(stackPhyAddr >> UINT32_BIT_NUM);
+    const uint64_t simtStackPhyAddr = RtPtrToValue(device_->GetSimtStackPhyBase());
+    infoEX.body.kisSimtStkBaseAddrLow = static_cast<uint32_t>(simtStackPhyAddr);
+    infoEX.body.kisSimtStkBaseAddrHigh = static_cast<uint16_t>(simtStackPhyAddr >> UINT32_BIT_NUM);
     infoEX.body.kisSimtWarpStkSize = device_->GetSimtWarpStkSize();
     infoEX.body.kisSimtDvgWarpStkSize = device_->GetSimtDvgWarpStkSize();
-    infoEX.body.poolId = stm->Device_()->GetPoolId();
-    infoEX.body.poolIdMax = stm->Device_()->GetPoolIdMax();
+    infoEX.body.poolId = device_->GetPoolId();
+    infoEX.body.poolIdMax = device_->GetPoolIdMax();
     RT_LOG(
         RT_LOG_DEBUG,
-        "Alloc sq cq info: validFlag=%llu, poolId=%u, poolIdMax=%u, stackPhyAddr=%#llx,"
+        "Alloc sq cq info: validFlag=%llu, poolId=%u, poolIdMax=%u, simtStackPhyAddr=%#llx,"
         " WarpStkSize=%u, DvgWarpStkSize=%u.",
-        infoEX.body.validFlag, infoEX.body.poolId, infoEX.body.poolIdMax, stackPhyAddr, infoEX.body.kisSimtWarpStkSize,
-        infoEX.body.kisSimtDvgWarpStkSize);
+        infoEX.body.validFlag, infoEX.body.poolId, infoEX.body.poolIdMax, simtStackPhyAddr,
+        infoEX.body.kisSimtWarpStkSize, infoEX.body.kisSimtDvgWarpStkSize);
 }
 
 void StreamSqCqManage::FillStreamAttrDqsInterChip(const Stream* const stm, rtStreamInfoExMsg_t& infoEX) const
@@ -79,6 +83,7 @@ rtError_t StreamSqCqManage::AllocStreamSqCq(
     rtStreamAllocInfo_t* const infoPtr = RtPtrToPtr<rtStreamAllocInfo_t*>(info);
     rtStreamInfoExMsg_t infoEx;
     (void)memset_s(&infoEx, sizeof(rtStreamInfoExMsg_t), 0, sizeof(rtStreamInfoExMsg_t));
+    FillStreamAttrSimt(newStm, infoEx); // for arch920x CoprocessorStream
     infoPtr->streamId = streamId;
     infoPtr->priority = priority;
     infoPtr->satMode = (device_->GetSatMode() == RT_OVERFLOW_MODE_INFNAN) ? 1U : 0U;
@@ -245,6 +250,7 @@ rtError_t StreamSqCqManage::ReAllocSqCqId(const Stream* const newStm)
 
     const std::lock_guard<std::mutex> stmLock(streamMapLock_);
     rtStreamInfoExMsg_t infoEx{};
+    FillStreamAttrSimt(newStm, infoEx); // for arch920x CoprocessorStream
     const uint32_t remoteFlag = ((newStm->Flags() & static_cast<uint32_t>(RT_STREAM_CP_PROCESS_USE)) != 0U) ?
                                     static_cast<uint32_t>(TSDRV_FLAG_REMOTE_ID) :
                                     0U;

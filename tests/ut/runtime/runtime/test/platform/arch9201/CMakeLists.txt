@@ -20,6 +20,7 @@ add_executable(runtime_utest_arch9201
     rt_utest_arch9201_task_profiling.cc
     rt_utest_arch9201_kernel.cc
     rt_utest_arch9201_ost.cc
+    rt_utest_arch9201_stream.cc
     rt_utest_arch9201_die.cc
     rt_utest_macro_value.cc
 )
