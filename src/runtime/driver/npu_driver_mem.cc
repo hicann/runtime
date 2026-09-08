@@ -1046,7 +1046,7 @@ rtError_t NpuDriver::DevMemAllocOnline(
         if (size > HUGE_PAGE_MEM_CRITICAL_VALUE) {
             // HugePage
             temptRet =
-                DevMemAllocHugePageManaged(dptr, size, type, deviceId, moduleId, isLogError, readOnlyFlag, cpOnlyFlag);
+                DevMemAllocHugePageManaged(dptr, size, type, deviceId, moduleId, false, readOnlyFlag, cpOnlyFlag);
             if (temptRet != RT_ERROR_NONE) {
                 temptRet = DevMemAllocManaged(
                     dptr, size, type, deviceId, moduleId, isLogError, readOnlyFlag, starsTillingFlag, cpOnlyFlag);
@@ -1076,9 +1076,10 @@ rtError_t NpuDriver::DevMemAllocOnline(
         if (temptRet != RT_ERROR_NONE) {
             RtLogErrorLevelControl(
                 isLogError,
-                "DevMemAllocHugePageManaged failed: device_id=%u, type=%u, size=%" PRIu64
+                "DevMemAllocHugePageManaged failed: device_id=%u, type=%s, size=%" PRIu64
                 "(bytes), memPolicy=%u(RT_MEMORY_POLICY_HUGE_PAGE_ONLY), drvRetCode=%d!",
-                deviceId, type, size, static_cast<uint32_t>(RT_MEMORY_POLICY_HUGE_PAGE_ONLY), temptRet);
+                deviceId, MemTypeToString(type).c_str(), size, static_cast<uint32_t>(RT_MEMORY_POLICY_HUGE_PAGE_ONLY),
+                temptRet);
             return temptRet;
         }
     } else if (

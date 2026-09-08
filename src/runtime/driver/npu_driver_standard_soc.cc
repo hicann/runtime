@@ -12,6 +12,7 @@
 #include "driver/ascend_inpackage_hal.h"
 #include "driver.hpp"
 #include "runtime.hpp"
+#include "enum_desc.hpp"
 #ifdef CFG_DEV_PLATFORM_PC
 #include "cmodel_driver.h"
 #endif
@@ -1006,8 +1007,9 @@ rtError_t NpuDriver::DevMemAllocHugePageManaged(
             DRV_MALLOC_ERROR_PROCESS(
                 drvRet, moduleId,
                 "Call driver api halMemAlloc failed, drvRetCode=%d, "
-                "size=%" PRIu64 "(bytes), type=%d, moduleId=%hu, drvFlag=%#" PRIx64 ", drvDevId=%u, %s.",
-                static_cast<int32_t>(drvRet), size, type, moduleId, drvFlag, deviceId, errorStr.c_str());
+                "size=%" PRIu64 "(bytes), type=%s, moduleId=%hu, drvFlag=%#" PRIx64 ", drvDevId=%u, %s.",
+                static_cast<int32_t>(drvRet), size, MemTypeToString(type).c_str(), moduleId, drvFlag, deviceId,
+                errorStr.c_str());
         } else {
             RT_LOG(
                 RT_LOG_WARNING,
