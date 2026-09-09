@@ -31,7 +31,7 @@ int32_t GetAllUtilizations(const int32_t deviceId, const rtTypeUtil_t utilType, 
     const rtError_t rtErr = rtGetAllUtilizations(deviceId, utilType, &utilRate);
     if (rtErr == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
         ACL_LOG_WARN(
-            "rtGetAllUtilizations not to support this query, utilType = %d, runtime result = %d.",
+            "rtGetAllUtilizations does not support this query, utilType = %d, runtime result = %d.",
             static_cast<int32_t>(utilType), static_cast<int32_t>(rtErr));
         return DEVICE_UTILIZATION_NOT_SUPPORT;
     }

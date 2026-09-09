@@ -70,7 +70,7 @@ const std::string GetSocVersionStr(const int32_t isHeterogenous)
                 return socVersion;
             }
         }
-        RT_LOG(RT_LOG_WARNING, "The soc version obtained by traverse device is empty");
+        RT_LOG(RT_LOG_WARNING, "The soc version obtained by traversing devices is empty");
     }
 
     return rtInstance->GetSocVersion();

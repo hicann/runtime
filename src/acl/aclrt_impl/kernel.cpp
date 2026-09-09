@@ -596,7 +596,7 @@ aclError aclrtLaunchSIMTKernelWithArgsArrayImpl(
             ACL_LOG_WARN("rtLaunchSIMTKernelWithArgsArray func is invalid, runtime result = %d.", rtErr);
             return ACL_ERROR_RT_INVALID_HANDLE;
         } else if (rtErr == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
-            ACL_LOG_WARN("rtLaunchSIMTKernelWithArgsArray not support, runtime result = %d.", rtErr);
+            ACL_LOG_WARN("rtLaunchSIMTKernelWithArgsArray is not supported, runtime result = %d.", rtErr);
             return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
         } else {
             return ACL_GET_ERRCODE_RTS(rtErr);
@@ -636,7 +636,7 @@ aclError aclrtLaunchSIMTKernelWithHostArgsImpl(
             ACL_LOG_WARN("rtLaunchSIMTKernelWithHostArgs func is invalid, runtime result = %d.", rtErr);
             return ACL_ERROR_RT_INVALID_HANDLE;
         } else if (rtErr == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
-            ACL_LOG_WARN("rtLaunchSIMTKernelWithHostArgs not support, runtime result = %d.", rtErr);
+            ACL_LOG_WARN("rtLaunchSIMTKernelWithHostArgs is not supported, runtime result = %d.", rtErr);
             return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
         } else {
             return ACL_GET_ERRCODE_RTS(rtErr);

@@ -1946,7 +1946,7 @@ rtError_t NpuDriver::MemGetInfoEx(
     }
 
     RT_LOG(
-        RT_LOG_INFO, "curMemInfoType=%s, drvMemType=%u, free=%" PRIu64 ", hug_free=%" PRIu64,
+        RT_LOG_INFO, "curMemInfoType=%s, drvMemType=%u, free=%" PRIu64 ", huge_free=%" PRIu64,
         MemInfoTypeToString(curMemInfoType).c_str(), type, static_cast<uint64_t>(info.phy_info.free),
         static_cast<uint64_t>(info.phy_info.huge_free));
 
@@ -2576,7 +2576,7 @@ rtError_t NpuDriver::CheckSupportPcieBarCopy(const uint32_t deviceId, uint32_t& 
 
     if ((outVal.support_feature & inVal.support_feature) != 0ULL) {
         val = RT_CAPABILITY_SUPPORT;
-        RT_LOG(RT_LOG_INFO, "chip type=%d, drv support pcie bar copy", static_cast<int32_t>(chipType_));
+        RT_LOG(RT_LOG_INFO, "chip type=%d, drv supports pcie bar copy", static_cast<int32_t>(chipType_));
     }
     return RT_ERROR_NONE;
 }

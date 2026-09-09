@@ -99,7 +99,7 @@ bool JsonParser::IsValidFileName(const char_t* const fileName)
             acl::INVALID_PATH_MSG, std::vector<const char*>({"path", "reason"}),
             std::vector<const char*>({fileName, formatErrMsg.c_str()}));
         ACL_LOG_ERROR(
-            "[Trans][RealPath]the file path %s is not like a real path, mmRealPath return %d, "
+            "[Trans][RealPath]the file path %s is not like a real path, mmRealPath returns %d, "
             "errMessage is %s",
             fileName, ret, formatErrMsg.c_str());
         return false;
@@ -186,7 +186,7 @@ void JsonParser::GetMaxNestedLayers(
 aclError JsonParser::ParseJson(const char_t* const fileName, const char_t* const configStr, nlohmann::json& js)
 {
     if (strlen(configStr) == 0UL) {
-        ACL_LOG_DEBUG("buffer is empty, no need parse json.");
+        ACL_LOG_DEBUG("buffer is empty, no need to parse json.");
         return ACL_SUCCESS;
     }
     try {

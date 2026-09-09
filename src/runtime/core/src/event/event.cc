@@ -1099,7 +1099,8 @@ rtError_t Event::Synchronize(int32_t timeout)
     rtError_t error = RT_ERROR_NONE;
     if (!HasRecord()) {
         const int32_t device_id = (device_ == nullptr) ? -1 : static_cast<int32_t>(device_->Id_());
-        RT_LOG(RT_LOG_INFO, "No record to be synchronize, return suc. device_id=%d, event_id=%d", device_id, eventId_);
+        RT_LOG(
+            RT_LOG_INFO, "No record to synchronize; returning success, device_id=%d, event_id=%d", device_id, eventId_);
         return RT_ERROR_NONE;
     }
 
@@ -1208,8 +1209,7 @@ rtError_t Event::QueryEventStatus(rtEventStatus_t* const status)
     rtError_t error = RT_ERROR_NONE;
     // No record , newMode return RT_EVENT_RECORDED oldMode return RT_EVENT_INIT
     if (!HasRecord()) {
-        RT_LOG(
-            RT_LOG_INFO, "device_id=%u, event_id=%d no record to be query, return recorded.", device_->Id_(), eventId_);
+        RT_LOG(RT_LOG_INFO, "device_id=%u, event_id=%d has no record; returning status.", device_->Id_(), eventId_);
         *status = (isNewMode_) ? RT_EVENT_RECORDED : RT_EVENT_INIT;
         return error;
     }

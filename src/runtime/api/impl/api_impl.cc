@@ -1607,8 +1607,8 @@ rtError_t ApiImpl::StreamWaitEvent(Stream* const stm, Event* const evt, const ui
             if ((!(evt->IsNewMode())) && (evt->GetEventFlag() != RT_EVENT_EXTERNAL)) {
                 RT_LOG(
                     RT_LOG_WARNING,
-                    "Event created via the API rtEventCreate and rtEventCreateWithFlag are not"
-                    " supported, except for the RT_EVENT_EXTERNAL type, mode=%d, flag=%" PRIu64 "",
+                    "Only RT_EVENT_EXTERNAL events from rtEventCreate or rtEventCreateWithFlag are supported, "
+                    "mode=%d, flag=%" PRIu64 "",
                     evt->IsNewMode(), evt->GetEventFlag());
                 return RT_ERROR_FEATURE_NOT_SUPPORT;
             }
@@ -1698,7 +1698,7 @@ rtError_t ApiImpl::StreamSynchronize(Stream* const stm, const int32_t timeout)
     }
     RT_LOG(RT_LOG_INFO, "stream_id=%d.", curStm->Id_());
     rtError_t errCode = curStm->CheckContextStatus();
-    ERROR_RETURN(errCode, "context is abort, status=%#x.", static_cast<uint32_t>(errCode));
+    ERROR_RETURN(errCode, "context is aborted, status=%#x.", static_cast<uint32_t>(errCode));
     errCode = curStm->Synchronize(false, timeout);
     if (errCode == RT_ERROR_STREAM_SYNC_TIMEOUT) {
         (void)GetStreamTimeoutSnapshotMsg();
@@ -1749,7 +1749,7 @@ rtError_t ApiImpl::StreamQuery(Stream* const stm)
         NULL_STREAM_PTR_RETURN_MSG(curStm);
     }
     rtError_t error = curStm->CheckContextStatus();
-    COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "context is abort, status=%#x.", static_cast<uint32_t>(error));
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "context is aborted, status=%#x.", static_cast<uint32_t>(error));
     error = curStm->Query();
     COND_RETURN_ERROR(
         (error != RT_ERROR_NONE) && (error != RT_ERROR_STREAM_NOT_COMPLETE), error, "Query stream failed.");
@@ -1824,7 +1824,7 @@ rtError_t ApiImpl::GetMaxStreamAndTask(
 {
     const Runtime* const rt = Runtime::Instance();
     if (!rt->HaveDevice() && !rt->GetIsUserSetSocVersion()) {
-        RT_LOG(RT_LOG_WARNING, "No device exists, Resources cannot be queried without set soc version.");
+        RT_LOG(RT_LOG_WARNING, "No device; set soc version before querying resources.");
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
 
@@ -1945,9 +1945,7 @@ rtError_t ApiImpl::SetDeviceFailureMode(uint64_t failureMode)
     failureMode &= 0x1U;
     const uint64_t currentMode = dev->GetDevFailureMode();
     if (currentMode == failureMode) {
-        RT_LOG(
-            RT_LOG_INFO, "Input mode is same with the current mode which is %llu, device_id=%u.", failureMode,
-            dev->Id_());
+        RT_LOG(RT_LOG_INFO, "Input mode unchanged, mode=%llu, device_id=%u.", failureMode, dev->Id_());
         return RT_ERROR_NONE;
     }
 
@@ -1985,9 +1983,7 @@ static rtError_t SetStreamFailureModeInternal(Stream* const stm, const uint64_t 
 
     const uint64_t failmode = (stmMode & 0x1U);
     if (curStm->GetFailureMode() == failmode) {
-        RT_LOG(
-            RT_LOG_INFO, "input mode is same with the current mode which is %llu stream_id=%d.", failmode,
-            curStm->Id_());
+        RT_LOG(RT_LOG_INFO, "input mode unchanged, mode=%llu, stream_id=%d.", failmode, curStm->Id_());
         return RT_ERROR_NONE;
     }
 
@@ -2276,7 +2272,7 @@ rtError_t ApiImpl::EventDestroySync(Event* evt)
     Device* const dev = curCtx->Device_();
     NULL_PTR_RETURN_MSG(dev, RT_ERROR_DEVICE_NULL);
     if ((!dev->IsStarsPlatform()) && (!dev->CheckFeatureSupport(TS_FEATURE_EVENT_DESTROY_SYNC_FIX))) {
-        RT_LOG(RT_LOG_WARNING, "ts not support event destroy sync in this drv, revert event destroy.");
+        RT_LOG(RT_LOG_WARNING, "ts does not support event destroy sync; reverting to event destroy.");
         return EventDestroy(evt);
     }
 
@@ -2411,7 +2407,7 @@ rtError_t ApiImpl::EventSynchronize(Event* const evt, const int32_t timeout)
     rtError_t error = RT_ERROR_NONE;
     if (eventCtx != nullptr) {
         error = eventCtx->CheckStatus();
-        ERROR_RETURN(error, "context is abort, status=%#x.", static_cast<uint32_t>(error));
+        ERROR_RETURN(error, "context is aborted, status=%#x.", static_cast<uint32_t>(error));
     }
     RT_LOG(RT_LOG_DEBUG, "Event synchronize entry, timeout=%dms.", timeout);
     if (evt->GetEventFlag() == RT_EVENT_IPC) {
@@ -3935,7 +3931,7 @@ rtError_t ApiImpl::ModelAbort(Model* const mdl)
             dev->GetTschVersion() < static_cast<uint32_t>(TS_VERSION_TS_MODEL_ABORT), RT_ERROR_FEATURE_NOT_SUPPORT,
             ErrorCode::EE1015, "Aborting the model running instance", "");
         if (!IS_SUPPORT_CHIP_FEATURE(dev->GetChipType(), RtOptionalFeatureType::RT_FEATURE_MODEL_ABORT)) {
-            RT_LOG(RT_LOG_ERROR, "feature not supported. Ts model cannot be abort in current device");
+            RT_LOG(RT_LOG_ERROR, "ts model abort is not supported on this device.");
             RT_LOG_OUTER_MSG_WITH_FUNC_DESC(ErrorCode::EE1005, "aborting the model running instance");
             return RT_ERROR_FEATURE_NOT_SUPPORT;
         }
@@ -5927,7 +5923,7 @@ rtError_t ApiImpl::QueryDevPid(rtBindHostpidInfo_t* const info, int32_t* const d
 
 rtError_t ApiImpl::BuffAlloc(const uint64_t size, void** buff)
 {
-    RT_LOG(RT_LOG_INFO, "Start to alloc buff, size is %" PRIu64, size);
+    RT_LOG(RT_LOG_INFO, "Buffer allocation, size=%" PRIu64 "B.", size);
     return NpuDriver::BuffAlloc(size, buff);
 }
 
@@ -6540,7 +6536,7 @@ rtError_t ApiImpl::GetServerIDBySDID(uint32_t sdid, uint32_t* srvId)
 
 rtError_t ApiImpl::ModelNameSet(Model* const mdl, const char_t* const name)
 {
-    RT_LOG(RT_LOG_INFO, "model name set, mode_id=%u, name=%s", mdl->Id_(), name);
+    RT_LOG(RT_LOG_INFO, "model name set, model_id=%u, name=%s", mdl->Id_(), name);
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     COND_RETURN_AND_MSG_INVALID_CONTEXT_MODEL_WITH_FUNC_DESC(

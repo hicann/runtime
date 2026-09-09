@@ -51,7 +51,7 @@ rtError_t CheckCurCtxValid(const int32_t devId)
     if (Runtime::Instance()->GetSetDefaultDevIdFlag()) {
         Context* const curCtx = Runtime::Instance()->CurrentContext(true, devId);
         if (RtIsHeterogenous()) {
-            RT_LOG(RT_LOG_DEBUG, "Heterogenous do not check ctx.");
+            RT_LOG(RT_LOG_DEBUG, "Heterogeneous does not check ctx.");
             return RT_ERROR_NONE;
         }
         CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);

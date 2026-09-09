@@ -62,7 +62,7 @@ rtError_t QueryDcacheLockStatus(uint32_t deviceId, uint32_t tsId, const void* dc
          static_cast<uint64_t>(ackInfo.stack_phy_base_l));
     if (ackStackPhyBase != stackPhyBase) {
         RT_LOG(
-            RT_LOG_EVENT, "Stack addr=0x%llx for ts buffer mode is not same with current stack addr=0x%llx.",
+            RT_LOG_EVENT, "Stack addr=0x%llx for ts buffer mode is not the same as current stack addr=0x%llx.",
             ackStackPhyBase, stackPhyBase);
     }
 

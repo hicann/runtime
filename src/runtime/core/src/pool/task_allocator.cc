@@ -87,7 +87,7 @@ void TaskAllocator::FreeById(const Stream* const stm, const int32_t taskId, bool
     const int32_t bufferId = idManager->mapTaskIds[taskId];
     if (bufferId < 0) {
         idLock.unlock();
-        RT_LOG_INNER_MSG(RT_LOG_ERROR, "Invalid para, stream_id=%d and task_id=%d does not exist", streamId, taskId);
+        RT_LOG_INNER_MSG(RT_LOG_ERROR, "Invalid para, stream_id=%d and task_id=%d do not exist", streamId, taskId);
         return;
     }
 
@@ -177,7 +177,7 @@ void* TaskAllocator::GetItemById(const int32_t streamId, const int32_t taskId, r
     COND_PROC_RETURN_ERROR_MSG_INNER(
         ((taskId >= static_cast<int32_t>(MAX_UINT16_NUM)) || (taskId < 0)), nullptr, errCode = RT_ERROR_TASK_ID_INVALID,
         "Get item by id failed, invalid task_id, current taskId is %d"
-        "valid task range is [%u, %u)",
+        " valid task range is [%u, %u)",
         taskId, 0U, MAX_UINT16_NUM);
     COND_PROC_RETURN_ERROR_MSG_INNER(
         (static_cast<uint32_t>(streamId) >= RT_MAX_STREAM_ID), nullptr, errCode = RT_ERROR_STREAM_INVALID,

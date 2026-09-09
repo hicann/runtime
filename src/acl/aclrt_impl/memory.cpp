@@ -1180,7 +1180,7 @@ aclError aclrtMallocPhysicalImpl(
     if (isDeviceAlloc && ((prop->memAttr == ACL_DDR_MEM_HUGE) || (prop->memAttr == ACL_DDR_MEM_NORMAL) ||
                           (prop->memAttr == ACL_DDR_MEM_P2P_HUGE) || (prop->memAttr == ACL_DDR_MEM_P2P_NORMAL))) {
         ACL_LOG_ERROR(
-            "memAttr [%s] only support MEM_LOCATION_TYPE_HOST(0) or MEM_LOCATION_TYPE_HOST_NUMA(4).",
+            "memAttr [%s] only supports MEM_LOCATION_TYPE_HOST(0) or MEM_LOCATION_TYPE_HOST_NUMA(4).",
             acl::GetMemAttrDesc(prop->memAttr));
         std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__);
         acl::AclErrorLogManager::ReportInputError(
@@ -1356,7 +1356,7 @@ aclError aclrtMemSetPidToShareableHandleV2Impl(
     void* shareableHandle, aclrtMemSharedHandleType shareType, int32_t* pid, size_t pidNum)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtMemSetPidToShareableHandleV2);
-    ACL_LOG_DEBUG("start to execute AclrtMemSetPidToShareableHandleV2");
+    ACL_LOG_DEBUG("start to execute aclrtMemSetPidToShareableHandleV2");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(shareableHandle);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(pid);
     ACL_REQUIRES_POSITIVE_REPORT(pidNum);
@@ -1385,7 +1385,7 @@ aclError aclrtMemGetAllocationGranularityImpl(
     if (isDeviceAlloc && ((prop->memAttr == ACL_DDR_MEM_HUGE) || (prop->memAttr == ACL_DDR_MEM_NORMAL) ||
                           (prop->memAttr == ACL_DDR_MEM_P2P_HUGE) || (prop->memAttr == ACL_DDR_MEM_P2P_NORMAL))) {
         ACL_LOG_ERROR(
-            "memAttr [%s] only support MEM_LOCATION_TYPE_HOST(0) or MEM_LOCATION_TYPE_HOST_NUMA(4).",
+            "memAttr [%s] only supports MEM_LOCATION_TYPE_HOST(0) or MEM_LOCATION_TYPE_HOST_NUMA(4).",
             acl::GetMemAttrDesc(prop->memAttr));
         std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__);
         acl::AclErrorLogManager::ReportInputError(
@@ -2381,7 +2381,7 @@ static aclError CheckMemcpyFromSymbol(void* dst, const void* symbol, size_t coun
 
     if ((kind != ACL_MEMCPY_DEVICE_TO_HOST) && (kind != ACL_MEMCPY_DEFAULT)) {
         ACL_LOG_ERROR(
-            "[Check][Kind]kind[%s] only support ACL_MEMCPY_DEVICE_TO_HOST or ACL_MEMCPY_DEFAULT",
+            "[Check][Kind]kind[%s] only supports ACL_MEMCPY_DEVICE_TO_HOST or ACL_MEMCPY_DEFAULT",
             acl::GetMemcpyKindDesc(kind));
         acl::AclErrorLogManager::ReportInputError(
             acl::INVALID_VALUE_MSG, std::vector<const char*>({"func", "value", "param", "expect"}),
@@ -2454,7 +2454,7 @@ static aclError CheckMemcpyToSymbol(const void* symbol, const void* src, aclrtMe
 
     if ((kind != ACL_MEMCPY_HOST_TO_DEVICE) && (kind != ACL_MEMCPY_DEFAULT)) {
         ACL_LOG_ERROR(
-            "[Check][Kind]kind[%s] only support ACL_MEMCPY_HOST_TO_DEVICE or ACL_MEMCPY_DEFAULT",
+            "[Check][Kind]kind[%s] only supports ACL_MEMCPY_HOST_TO_DEVICE or ACL_MEMCPY_DEFAULT",
             acl::GetMemcpyKindDesc(kind));
         acl::AclErrorLogManager::ReportInputError(
             acl::INVALID_VALUE_MSG, std::vector<const char*>({"func", "value", "param", "expect"}),

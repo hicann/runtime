@@ -448,7 +448,7 @@ static void ReleaseArgsHandleForFftsPlusTask(TaskInfo* taskInfo)
                 RT_LOG(
                     RT_LOG_INFO,
                     "device_id=%u, stream_id=%d, task_id=%u, argsHandleInfoNum=%u, argHdl=%#" PRIx64
-                    ", argdevaddr=%#" PRIx64 "argsHandleInfoPtr=%p",
+                    ", argdevaddr=%#" PRIx64 ", argsHandleInfoPtr=%p",
                     stm->Device_()->Id_(), stm->Id_(), taskInfo->id, fftsPlusTask->argsHandleInfoNum, argHdl,
                     argHdl->argsAlloc->GetDevAddr(argHdl->kerArgs), fftsPlusTask->argsHandleInfoPtr);
                 const bool isModel = (stm->Model_() != nullptr);
@@ -900,7 +900,7 @@ static void TaskFailCallBackForFftsPlusTask(
     RT_LOG(
         RT_LOG_ERROR,
         "fftsplus streamId=%d, taskId=%u, context_id=%u, expandType=EXCEPTION_FFTS_PLUS(%u), rtCode=%#x,[%s], "
-        "psStart=0x%llx, kernel_name=%s, binHandle=%p, binSize=%u.",
+        "pcStart=0x%llx, kernel_name=%s, binHandle=%p, binSize=%u.",
         streamId, exceptionInfo.taskid, exceptionInfo.expandInfo.u.fftsPlusInfo.contextId,
         exceptionInfo.expandInfo.type, rtErrCode, retDes, info.pcStart, kernelName.c_str(), kernelInfo.bin,
         kernelInfo.binSize);

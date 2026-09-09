@@ -46,7 +46,7 @@ rtError_t JettyManager::AllocJettyWithRetry(
     rtError_t errorTmp = RT_ERROR_NONE;
     do {
         error = curCtx->CheckStatus();
-        ERROR_RETURN(error, "context is abort, status=%#x.", static_cast<uint32_t>(error));
+        ERROR_RETURN(error, "context is aborted, status=%#x.", static_cast<uint32_t>(error));
         (void)PreAllocJetty(type);
         error = jettyPool_->AllocJetty(type, jettyInfo);
         COND_PROC(error != RT_ERROR_NONE, errorTmp = curCtx->TryRecycleCaptureModelJettyResource(excludeMdl, type));

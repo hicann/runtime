@@ -114,7 +114,7 @@ RTS_API rtError_t rtEschedQueryInfo(
     if (!IS_SUPPORT_CHIP_FEATURE(
             rtInstance->GetChipType(), RtOptionalFeatureType::RT_FEATURE_DRIVER_ESCHED_QUERY_INFO)) {
         RT_LOG(
-            RT_LOG_ERROR, "Chip type %s(%d) does not support.", ChipTypeToName(rtInstance->GetChipType()),
+            RT_LOG_ERROR, "Chip type %s(%d) does not support this feature.", ChipTypeToName(rtInstance->GetChipType()),
             static_cast<int32_t>(rtInstance->GetChipType()));
         return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_FEATURE_NOT_SUPPORT);
     }

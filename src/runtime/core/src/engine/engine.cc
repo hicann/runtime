@@ -158,7 +158,7 @@ rtError_t Engine::SubmitTask(TaskInfo* const workTask, uint32_t* const flipTaskI
 {
     rtError_t ret = workTask->stream->CheckContextTaskSend(workTask);
     ERROR_RETURN(
-        ret, "Failed to check the context status for the task. Reason: context is abort, status=%#x.",
+        ret, "Failed to check the context status for the task. Reason: context is aborted, status=%#x.",
         static_cast<uint32_t>(ret));
     if (workTask->stream->taskResMang_ == nullptr) {
         // for non-fast scenarios
@@ -205,7 +205,7 @@ rtError_t Engine::SubmitTaskNormal(TaskInfo* const workTask, uint32_t* const fli
             (void)workTask->stream->Model_()->SaveAicpuStreamTask(workTask->stream, &command);
         }
         RT_LOG(
-            RT_LOG_DEBUG, "aicpu stream, no need sent to ts,stream_id=%u, task_id=%u, task_type=%d (%s).",
+            RT_LOG_DEBUG, "aicpu stream, no need to send to ts, stream_id=%u, task_id=%u, task_type=%d (%s).",
             static_cast<uint32_t>(workTask->stream->Id_()), static_cast<uint32_t>(workTask->id),
             static_cast<int32_t>(workTask->type), workTask->typeName);
         Complete(workTask, RT_MAX_DEV_NUM);
@@ -520,7 +520,7 @@ bool Engine::ProcessTaskDavinciList(Stream* const stm, const uint16_t endTaskId,
 
     const std::unique_lock<std::mutex> lk(davinciTaskListMutex_);
     if (stm == nullptr) {
-        RT_LOG(RT_LOG_INFO, "stm is null, task is already delete, endTaskId=%hu.", endTaskId);
+        RT_LOG(RT_LOG_INFO, "stm is null, task is already deleted, endTaskId=%hu.", endTaskId);
         return false;
     }
     const bool disableThreadFlag = Runtime::Instance()->GetDisableThread();
@@ -689,8 +689,8 @@ rtError_t Engine::TryAddTaskToStream(TaskInfo* const workTask)
         error = stm->AddTaskToStream(workTask);
         RT_LOG(
             RT_LOG_INFO,
-            "bindFlag=%u, stream_id=%d, task_id=%hu, task_type=%d(%s), head=%u, tail=%u, delay recycle task num=%zu"
-            "isSupportASyncRecycle=%d, isNeedPostProc=%d, davincHead=%u, davincTail=%u, taskHead=%u, taskTail=%u",
+            "bindFlag=%u, stream_id=%d, task_id=%hu, task_type=%d(%s), head=%u, tail=%u, delay recycle task num=%zu, "
+            "isSupportASyncRecycle=%d, isNeedPostProc=%d, davinciHead=%u, davinciTail=%u, taskHead=%u, taskTail=%u",
             workTask->bindFlag, stm->Id_(), workTask->id, static_cast<int32_t>(workTask->type), workTask->typeName,
             stm->GetTaskPersistentHeadValue(), stm->GetDelayRecycleTaskSqeNum(), stm->GetDelayRecycleTaskSize(),
             stm->GetIsSupportASyncRecycle(), stm->IsNeedPostProc(workTask), stm->GetDavinciTaskHead(),
@@ -703,7 +703,7 @@ rtError_t Engine::TryAddTaskToStream(TaskInfo* const workTask)
             error = stm->CheckContextTaskSend(workTask);
             COND_RETURN_ERROR(
                 error != RT_ERROR_NONE, error,
-                "Failed to check the context status for the task. Reason: context is abort, status=%#x.",
+                "Failed to check the context status for the task. Reason: context is aborted, status=%#x.",
                 static_cast<uint32_t>(error));
         } else {
             break;
@@ -881,7 +881,7 @@ void Engine::ReportTimeoutProc(
         RT_LOG(
             RT_LOG_EVENT,
             "report timeout!streamId=%u,taskId=%u,execId=%u,pendingNum=%u,reportCount=%" PRIu64
-            ",parseTaskCount=%" PRIu64 ",msec=%" PRIu64 ",curSec=%" PRIu64 ",model=%s,modelId=%d",
+            ",parseTaskCount=%" PRIu64 ",msec=%" PRIu64 ",curMsec=%" PRIu64 ",model=%s,modelId=%d",
             streamId, taskId, execId, pendingTaskNum, reportCount_, parseTaskCount_, msec, curmsec, mdlName.c_str(),
             mdlId);
 
@@ -1137,7 +1137,7 @@ rtError_t Engine::SendTask(TaskInfo* const workTask, uint16_t& taskId, uint32_t*
             error = stm->CheckContextTaskSend(workTask);
             COND_RETURN_ERROR(
                 error != RT_ERROR_NONE, error,
-                "Failed to check the context status for the task. Reason: context is abort, status=%#x.",
+                "Failed to check the context status for the task. Reason: context is aborted, status=%#x.",
                 static_cast<uint32_t>(error));
         }
         tryCount++;
@@ -1231,7 +1231,7 @@ rtError_t Engine::SendTask(TaskInfo* const workTask, uint16_t& taskId, uint32_t*
     RT_LOG(
         RT_LOG_DEBUG,
         "device_id=%u, ts_id=%u, sq_id=%u, cq_id=%u, stream_id=%d, task_id=%hu, task_type=%u(%s), "
-        "isSupportASyncRecycle=%d, isNeedPostProc=%d, davincHead=%u, davincTail=%u, taskHead=%u, taskTail=%u, "
+        "isSupportASyncRecycle=%d, isNeedPostProc=%d, davinciHead=%u, davinciTail=%u, taskHead=%u, taskTail=%u, "
         "bindFlag=%d, head=%u, tail=%u, lastTail=%u, delay recycle num=%zu.",
         devId, tsId, sqId, cqId, stm->Id_(), workTask->id, static_cast<uint32_t>(workTask->type), workTask->typeName,
         stm->GetIsSupportASyncRecycle(), stm->IsNeedPostProc(workTask), stm->GetDavinciTaskHead(),

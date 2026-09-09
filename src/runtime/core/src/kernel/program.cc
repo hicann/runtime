@@ -1322,8 +1322,7 @@ rtError_t Program::ProcCpuKernelH2DMem(bool isLoadCpuSo, Device* const device)
     const std::string opName = isLoadCpuSo ? LOAD_CPU_SO : DELETE_CPU_SO;
     const rtKernelLaunchNames_t launchName = {nullptr, opName.c_str(), ""};
     ERROR_RETURN_MSG_INNER(
-        Runtime::Instance()->StartAicpuSd(device),
-        "Cpu kernel launch failed, check and start tsd open aicpu sd error.");
+        Runtime::Instance()->StartAicpuSd(device), "Failed to start AICPU SD when launching CPU kernel.");
 
     // only 1 so
     BatchProcCpuOpFromBufArgs batchCpuSo = {.soNum = 1U, .args = RtPtrToValue(args)};

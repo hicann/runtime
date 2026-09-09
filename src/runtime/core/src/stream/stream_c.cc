@@ -858,7 +858,7 @@ static rtError_t CallbackLaunchForDavid(
     if (isBlock) {
         error = GetNotifyInfoForCallbackLaunchWithBlock(stm, notifyId, notify);
         ERROR_RETURN_MSG_INNER(
-            error, "Failed to get notify info, stream_id=%d maybe have capture stream_id=%d, error=%#x.", streamId,
+            error, "Failed to get notify info, stream_id=%d may have capture stream_id=%d, error=%#x.", streamId,
             dstStm->Id_(), static_cast<uint32_t>(error));
     }
 

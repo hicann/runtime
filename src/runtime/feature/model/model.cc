@@ -990,7 +990,7 @@ rtError_t Model::LoadCompleteByStreamPrep(Stream*& stream)
             "delivery end in the stream.");
         error = context_->StreamCreate(static_cast<uint32_t>(RT_STREAM_PRIORITY_DEFAULT), 0U, &stream);
         ERROR_RETURN_MSG_INNER(error, "Failed to create model load stream, retCode=%#x.", static_cast<uint32_t>(error));
-        RT_LOG(RT_LOG_DEBUG, "create a aicpu stream for model load, model_id=%u, stream_id=%d.", Id_(), stream->Id_());
+        RT_LOG(RT_LOG_DEBUG, "create an aicpu stream for model load, model_id=%u, stream_id=%d.", Id_(), stream->Id_());
     } else if (dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ)) {
         COND_RETURN_AND_MSG_OUTER(
             streams_.empty(), RT_ERROR_MODEL_STREAM, ErrorCode::EE1018, "Ending model running instance build",
@@ -1077,7 +1077,8 @@ rtError_t Model::LoadCompleteByStreamPostp(Stream* const stream)
         error = context_->StreamDestroy(stream);
         ERROR_RETURN_MSG_INNER(
             error, "Failed to destroy model load stream, retCode=%#x.", static_cast<uint32_t>(error));
-        RT_LOG(RT_LOG_DEBUG, "destroy a aicpu stream for model load, model_id=%u, stream_id=%d.", Id_(), stream->Id_());
+        RT_LOG(
+            RT_LOG_DEBUG, "destroy an aicpu stream for model load, model_id=%u, stream_id=%d.", Id_(), stream->Id_());
     }
 
     return RT_ERROR_NONE;
@@ -1254,7 +1255,7 @@ rtError_t Model::GetStreamToSyncExecute(int32_t timeout)
             const rtError_t error1 = ModelAbort();
             COND_PROC(
                 error1 != RT_ERROR_NONE, RT_LOG(
-                                             RT_LOG_ERROR, "model abort failed=%#x,stmId=%d,mdlId=%u,mdlName=%s",
+                                             RT_LOG_ERROR, "model abort failed=%#x, stmId=%d, mdlId=%u, mdlName=%s",
                                              error1, executeStream->Id_(), Id_(), GetName().c_str()));
         }
     }
@@ -1331,7 +1332,7 @@ rtError_t Model::GetStreamToAsyncExecute(Stream* stm)
                 error, "Fail to create model exe stream, retCode=%#x.", static_cast<uint32_t>(error));
             RT_LOG(
                 RT_LOG_DEBUG,
-                "create a aicpu stream for model execute, model_id=%u, "
+                "create an aicpu stream for model execute, model_id=%u, "
                 "stream_id=%d.",
                 modelId, stm->Id_());
             isDelTmpStream = true;
@@ -1391,7 +1392,8 @@ rtError_t Model::GetStreamToAsyncExecute(Stream* stm)
         COND_PROC_RETURN_ERROR(error != RT_ERROR_NONE, error, SetExeStream(nullptr);
                                , "fail to destroy model exe stream, retCode=%#x", static_cast<uint32_t>(error));
         RT_LOG(
-            RT_LOG_DEBUG, "destroy a aicpu stream for model execute, model_id=%u, stream_id=%u.", modelId, tmpStreamId);
+            RT_LOG_DEBUG, "destroy an aicpu stream for model execute, model_id=%u, stream_id=%u.", modelId,
+            tmpStreamId);
     }
 
     return RT_ERROR_NONE;
@@ -1456,7 +1458,7 @@ rtError_t Model::AiCpuModelSyncExecute()
         ERROR_RETURN_MSG_INNER(error, "Fail to create model exe stream, retCode=%#x.", static_cast<uint32_t>(error));
         RT_LOG(
             RT_LOG_DEBUG,
-            "create a aicpu stream for model execute, model_id=%u, "
+            "create an aicpu stream for model execute, model_id=%u, "
             "stream_id=%d.",
             modelId, stm->Id_());
         isDelTmpStream = true;
@@ -1474,7 +1476,8 @@ rtError_t Model::AiCpuModelSyncExecute()
         COND_PROC_RETURN_ERROR(error != RT_ERROR_NONE, error, SetExeStream(nullptr);
                                , "fail to destroy model exe stream, retCode=%#x", static_cast<uint32_t>(error));
         RT_LOG(
-            RT_LOG_DEBUG, "destroy a aicpu stream for model execute, model_id=%u, stream_id=%d.", modelId, tmpStreamId);
+            RT_LOG_DEBUG, "destroy an aicpu stream for model execute, model_id=%u, stream_id=%d.", modelId,
+            tmpStreamId);
     }
 
     return RT_ERROR_NONE;
@@ -1533,7 +1536,7 @@ rtError_t Model::ExecuteAsync(Stream* const stm)
         (curStm != nullptr) && (curStm->Context_() != context_), RT_ERROR_STREAM_CONTEXT, ErrorCode::EE1010, "Model",
         "stream", RtFmtMsg("stream_id=%u, stream_ctx=%p, cur_ctx=%p", curStm->Id_(), curStm->Context_(), context_));
     COND_RETURN_WARN(
-        GetModelExecutorType() == EXECUTOR_AICPU, RT_ERROR_FEATURE_NOT_SUPPORT, "feature does not support!");
+        GetModelExecutorType() == EXECUTOR_AICPU, RT_ERROR_FEATURE_NOT_SUPPORT, "feature is not supported!");
 
     error = GetStreamToAsyncExecute(curStm);
     return error;
@@ -1802,7 +1805,7 @@ rtError_t Model::PacketAicpuModelInfo()
         ERROR_GOTO_MSG_INNER(
             error, PACKAGE_AICPU_FAIL,
             "Packet aicpu task information failed, modelId=%d, deviceId=%u, "
-            "retCode=%#x!",
+            " retCode=%#x!",
             id_, dev->Id_(), static_cast<uint32_t>(error));
     }
 

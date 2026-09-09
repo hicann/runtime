@@ -2274,7 +2274,7 @@ rtError_t ApiErrorDecorator::MemAdvise(void* devPtr, uint64_t count, uint32_t ad
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(devPtr, RT_ERROR_INVALID_VALUE, "Providing the memory access policy");
     ZERO_RETURN_AND_MSG_OUTER_WITH_FUNC_DESC(count, "Providing the memory access policy");
     const rtError_t error = impl_->MemAdvise(devPtr, count, advise);
-    ERROR_RETURN(error, "memory advise failed, count=%" PRIu64 ", advise=%u", count, advise);
+    ERROR_RETURN(error, "memory advise failed, count=%" PRIu64 "B, advise=%u", count, advise);
     return error;
 }
 
@@ -2312,7 +2312,7 @@ rtError_t ApiErrorDecorator::MemCopySync(
     const rtError_t error = impl_->MemCopySync(dst, destMax, src, cnt, kind, checkKind);
     COND_RETURN_ERROR(
         (error != RT_ERROR_NONE) && (error != RT_ERROR_DRV_NOT_SUPPORT), error,
-        "Memory copy sync failed, cnt=%" PRIu64 ", kind=%s.", cnt, MemcpyKindToStr(kind));
+        "Memory copy sync failed, cnt=%" PRIu64 "B, kind=%s.", cnt, MemcpyKindToStr(kind));
     return error;
 }
 
@@ -2335,7 +2335,7 @@ rtError_t ApiErrorDecorator::MemCopySyncEx(
     const rtError_t error = impl_->MemCopySyncEx(dst, destMax, src, cnt, kind);
     COND_RETURN_ERROR(
         (error != RT_ERROR_NONE) && (error != RT_ERROR_DRV_NOT_SUPPORT), error,
-        "Memory copy sync failed, cnt=%" PRIu64 ", kind=%s.", cnt, MemcpyKindToStr(kind));
+        "Memory copy sync failed, cnt=%" PRIu64 "B, kind=%s.", cnt, MemcpyKindToStr(kind));
     return error;
 }
 
@@ -2439,7 +2439,7 @@ rtError_t ApiErrorDecorator::MemcpyAsync(
 
     COND_RETURN_ERROR(
         (error != RT_ERROR_NONE) && (error != RT_ERROR_FEATURE_NOT_SUPPORT), error,
-        "Memcpy async failed, count=%" PRIu64 ", kind=%s, isInvolvePageableMemory=%d", cnt, MemcpyKindToStr(copyKind),
+        "Memcpy async failed, count=%" PRIu64 "B, kind=%s, pageableMemory=%d", cnt, MemcpyKindToStr(copyKind),
         isD2HorH2DInvolvePageableMemory);
     return error;
 }
@@ -2516,7 +2516,7 @@ rtError_t ApiErrorDecorator::MemcpyAsyncPtr(
         }
     }
     const rtError_t error = impl_->MemcpyAsyncPtr(memcpyAddrInfo, destMax, count, stm, cfgInfo, isMemcpyDesc);
-    ERROR_RETURN_MSG_INNER(error, "Memcpy async ptr failed, stream=%p, count=%" PRIu64 ".", stm, count);
+    ERROR_RETURN_MSG_INNER(error, "Memcpy async ptr failed, stream=%p, count=%" PRIu64 "B.", stm, count);
     return error;
 }
 
@@ -6666,7 +6666,7 @@ rtError_t ApiErrorDecorator::GetPrimaryCtxState(const int32_t devId, uint32_t* f
 
     error =
         rtInstance->ChgUserDevIdToDeviceId(static_cast<uint32_t>(devId), RtPtrToPtr<uint32_t*>(&realDeviceId), true);
-    COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "input error deviceId:%d is err:%#x", devId, error);
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "invalid input deviceId=%d, retCode=%#x", devId, error);
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
         ((realDeviceId < 0) || (realDeviceId >= deviceCnt)), RT_ERROR_DEVICE_ID,
         "Obtaining the status of the default context", realDeviceId, "[0, " + std::to_string(deviceCnt) + ")");

@@ -269,7 +269,7 @@ Segment* SegmentManager::SingleStreamReuse(size_t size, const int32_t streamId, 
     }
 
     flag = ReuseFlag::REUSE_FLAG_NONE;
-    RT_LOG(RT_LOG_DEBUG, "Single stream do not reuse any segment, flag=%d.", static_cast<int32_t>(flag));
+    RT_LOG(RT_LOG_DEBUG, "Single stream does not reuse any segment, flag=%d.", static_cast<int32_t>(flag));
     return curStmSeg;
 }
 
@@ -303,7 +303,7 @@ Segment* SegmentManager::StreamEventReuse(size_t size, const int32_t streamId, R
     }
 
     flag = ReuseFlag::REUSE_FLAG_NONE;
-    RT_LOG(RT_LOG_DEBUG, "Stream event do not reuse any segment, flag=%d.", static_cast<int32_t>(flag));
+    RT_LOG(RT_LOG_DEBUG, "Stream event does not reuse any segment, flag=%d.", static_cast<int32_t>(flag));
     return eventStmSeg;
 }
 
@@ -329,7 +329,7 @@ Segment* SegmentManager::StreamInternalReuse(size_t size, const int32_t streamId
     }
 
     flag = ReuseFlag::REUSE_FLAG_NONE;
-    RT_LOG(RT_LOG_DEBUG, "Stream do not reuse any segment internally, flag=%d.", static_cast<int32_t>(flag));
+    RT_LOG(RT_LOG_DEBUG, "Stream does not reuse any segment internally, flag=%d.", static_cast<int32_t>(flag));
     return otherStmSeg;
 }
 

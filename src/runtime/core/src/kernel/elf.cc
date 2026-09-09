@@ -766,12 +766,12 @@ void ParseElfStackInfoHeader(rtElfData* const elfData)
     const uint64_t elfVersion = elfData->elf_header.e_version;
     const uint32_t stackType = static_cast<uint32_t>(GET_STACK_TYPE(elfVersion));
     if (GET_VERSION_MAGIC(elfVersion) != ELF_VERSION_MAGIC) {
-        RT_LOG(RT_LOG_EVENT, "Check elf version is not match, elfVersion=%llu.", elfVersion);
+        RT_LOG(RT_LOG_EVENT, "Check elf version does not match, elfVersion=%llu.", elfVersion);
         return;
     }
 
     if ((stackType != KERNEL_STACK_TYPE_16K) && (stackType != KERNEL_STACK_TYPE_32K)) {
-        RT_LOG(RT_LOG_EVENT, "Check elf stack type is not match, stackType=%u.", stackType);
+        RT_LOG(RT_LOG_EVENT, "Check elf stack type does not match, stackType=%u.", stackType);
         return;
     }
 
@@ -1272,7 +1272,7 @@ RtKernel* GetKernels(rtElfData* const elfData)
         ParseSymbols(stringTab, symTab.get(), numSyms, elfData);
         funcNum = GetFuncNum(symTab.get(), numSyms);
         if (funcNum < 1U) {
-            RT_LOG(RT_LOG_ERROR, "funcNum is error.");
+            RT_LOG(RT_LOG_ERROR, "funcNum is invalid.");
             return nullptr;
         }
 

@@ -454,8 +454,8 @@ rtError_t CaptureModel::PreModelExecute(Stream* const stm, ExternalEventRefreshI
     error = InitAllSubCaptureModelCondTaskByDefValue();
     COND_RETURN_ERROR_MSG_INNER(
         error != RT_ERROR_NONE, error,
-        "Failed to initial sub acl graph condition value, stream_id=%d, model_id=%u, retCode=%#x.", stm->Id_(), Id_(),
-        static_cast<uint32_t>(error));
+        "Failed to initialize sub acl graph condition value, stream_id=%d, model_id=%u, retCode=%#x.", stm->Id_(),
+        Id_(), static_cast<uint32_t>(error));
 
     error = PrepareExternalEventRefreshInfo(refreshInfo);
     COND_RETURN_ERROR_MSG_INNER(
@@ -677,7 +677,7 @@ rtError_t CaptureModel::AllocateExternalRefreshTable()
         externalEventRefreshDeviceBase_ = nullptr;
         externalEventRefreshLayout_ = {};
         ERROR_RETURN_MSG_INNER(
-            error, "Allocate external refresh device table failed, model_id=%u, size=%lu, retCode=%#x.", Id_(),
+            error, "Allocate external refresh device table failed, model_id=%u, size=%lu(bytes), retCode=%#x.", Id_(),
             totalSize, error);
     }
     return RT_ERROR_NONE;
@@ -1160,7 +1160,7 @@ rtError_t CaptureModel::BuildSqCq(Stream* const exeStream)
     SetRootExeStreamIdAll(static_cast<uint32_t>(exeStream->Id_()));
     rtError_t error = BindJettyForUbdma();
     COND_RETURN_ERROR(
-        error != RT_ERROR_NONE, error, "bind jettys for streams failed, stream_id=%d, model_id=%u", exeStream->Id_(),
+        error != RT_ERROR_NONE, error, "bind jetties for streams failed, stream_id=%d, model_id=%u", exeStream->Id_(),
         Id_());
 
     /* model execute repeat */

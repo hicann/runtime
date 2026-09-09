@@ -694,7 +694,7 @@ aclError GetOrMallocHostMem(const acltdtChannelHandle* handle, acltdtDataset* da
     ACL_REQUIRES_OK(EnsureCurrentThreadHasContext(handle));
     if (bufLen > dataset->sharedMemSize_) {
         const size_t mallocSize = GetMallocSize(bufLen);
-        ACL_LOG_INFO("need mallochost size %zu, bufLen is %zu", mallocSize, bufLen);
+        ACL_LOG_INFO("need malloc host size %zu, bufLen is %zu", mallocSize, bufLen);
         void* outHostAddr = nullptr;
         ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(
             rtMallocHost(&outHostAddr, mallocSize, acl::ACL_MODE_ID_U16), rtMallocHost);

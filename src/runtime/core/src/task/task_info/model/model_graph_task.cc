@@ -32,7 +32,7 @@ rtError_t AddEndGraphTaskInit(
     taskInfo->u.addEndGraphTask.datadumpFlag = flags;
     RT_LOG(
         RT_LOG_DEBUG,
-        "Create end graph task,mode_id=%u,executor flag=%u,task_id=%u,task_type=%d(%s),"
+        "Create end graph task,model_id=%u,executor flag=%u,task_id=%u,task_type=%d(%s),"
         "stream_id=%d,datadumpFlag=%u.",
         modelId, exeFlag, static_cast<uint32_t>(taskInfo->id), static_cast<int32_t>(taskInfo->type), taskInfo->typeName,
         taskInfo->stream->Id_(), static_cast<uint32_t>(taskInfo->u.addEndGraphTask.datadumpFlag));
@@ -65,7 +65,7 @@ rtError_t AddModelExitTaskInit(TaskInfo* taskInfo, const uint32_t modelId)
     taskInfo->u.addModelExitTask.modelId = modelId;
     taskInfo->u.addModelExitTask.streamId = static_cast<uint32_t>(stm->Id_());
     RT_LOG(
-        RT_LOG_DEBUG, "Create model exit task,mode_id=%u,task_id=%u,task_type=%d(%s),stream_id=%d.", modelId,
+        RT_LOG_DEBUG, "Create model exit task,model_id=%u,task_id=%u,task_type=%d(%s),stream_id=%d.", modelId,
         static_cast<uint32_t>(taskInfo->id), static_cast<int32_t>(taskInfo->type), taskInfo->typeName,
         static_cast<uint32_t>(taskInfo->stream->Id_()));
     return RT_ERROR_NONE;

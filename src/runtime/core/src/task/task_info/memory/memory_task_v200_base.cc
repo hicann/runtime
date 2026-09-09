@@ -608,7 +608,7 @@ void ConstructDavidSqeForMemWaitValueTask(TaskInfo* taskInfo, void* const sqe, c
 
     RT_LOG(
         RT_LOG_INFO,
-        "swapBufferBaseAddr=0x%llx, swapBufferUpdateAddr=0x%llx, sqSwapShif=%u, sqId=%u, "
+        "swapBufferBaseAddr=0x%llx, swapBufferUpdateAddr=0x%llx, sqSwapShift=%u, sqId=%u, "
         "swapBufferProfCfgOffset=%u, swapBufferUpdateValue=0x%llx.",
         fcPara.swapBufferBaseAddr, fcPara.swapBufferUpdateAddr, fcPara.sqSwapShift, fcPara.sqId,
         fcPara.swapBufferProfCfgOffset, fcPara.swapBufferUpdateValue);

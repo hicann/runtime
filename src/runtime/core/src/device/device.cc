@@ -121,7 +121,7 @@ rtError_t GroupDevice::GroupInfoSetup()
     if ((groupInfoCache_.size() > 1U) && (defaultGroup_ == -1)) {
         RT_LOG(
             RT_LOG_WARNING, "Multiple groups have been created, but no default group exists."
-                            "Please use rtSetGroup to set a group first!");
+                            " Please use rtSetGroup to set a group first!");
     }
 
     return RT_ERROR_NONE;
@@ -154,7 +154,7 @@ rtError_t GroupDevice::GetGroupInfo(const int32_t grpId, rtGroupInfo_t* const in
 
     if (groupInfoCache_.empty() || ((grpId != -1) && (groupInfoCache_.find(grpId) == groupInfoCache_.end()))) {
         RT_LOG_INNER_MSG(
-            RT_LOG_ERROR, "Failed to get group info, groupId=%d, count=%u, groupInfo size=%zu(bytes).", grpId, cnt,
+            RT_LOG_ERROR, "Failed to get group info, groupId=%d, count=%u, groupInfo count=%zu.", grpId, cnt,
             groupInfoCache_.size());
         return RT_ERROR_GROUP_NOT_CREATE;
     }

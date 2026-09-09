@@ -483,7 +483,7 @@ rtError_t StreamSqCqManage::DeAllocStreamSqCq(const uint32_t streamId, const uin
     } else {
         RT_LOG(
             RT_LOG_INFO,
-            "[SqCqManage]end to release sq, sq is also reuse, sq_id=%u, cq_id=%u, stream_id=%u, "
+            "[SqCqManage]end to release sq, sq is also reused, sq_id=%u, cq_id=%u, stream_id=%u, "
             "is_sq_need_release=%u, drv_flag=%#x.",
             sqId, cqId, streamId, isSqIdNeedRelease, drvFlag);
     }

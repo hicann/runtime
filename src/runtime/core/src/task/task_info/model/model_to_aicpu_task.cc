@@ -55,7 +55,7 @@ rtError_t ModelToAicpuTaskInit(
     taskInfo->u.modelToAicpuTask.modelArgPtr = modelPtr;
     RT_LOG(
         RT_LOG_DEBUG,
-        "Create model to aicpu task,mode_id=%u,executor flag=%u,cmd_type=%u,stream_id=%d, "
+        "Create model to aicpu task,model_id=%u,executor flag=%u,cmd_type=%u,stream_id=%d, "
         "task_id=%u, task_type=%d(%s).",
         taskInfo->u.modelToAicpuTask.modelId, taskInfo->u.modelToAicpuTask.executorFlag,
         taskInfo->u.modelToAicpuTask.cmdType, taskInfo->stream->Id_(), static_cast<uint32_t>(taskInfo->id),

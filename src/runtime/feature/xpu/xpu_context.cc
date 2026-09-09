@@ -70,13 +70,13 @@ rtError_t XpuContext::StreamCreate(
     rtError_t error = RT_ERROR_NONE;
     if (prio != RT_STREAM_PRIORITY_DEFAULT) {
         error = RT_ERROR_INVALID_VALUE;
-        RT_LOG(RT_LOG_ERROR, "Stream create failed, priority is not support, priority=%u.", prio);
+        RT_LOG(RT_LOG_ERROR, "Stream create failed, priority is not supported, priority=%u.", prio);
         return error;
     }
 
     if (!(flag == RT_STREAM_DEFAULT) && !((flag & RT_STREAM_FAST_LAUNCH) != 0U)) {
         error = RT_ERROR_INVALID_VALUE;
-        RT_LOG(RT_LOG_ERROR, "Stream create failed, stream flag is not support, flag=%u.", flag);
+        RT_LOG(RT_LOG_ERROR, "Stream create failed, stream flag is not supported, flag=%u.", flag);
         return error;
     }
 

@@ -4696,7 +4696,7 @@ rtError_t Stream::ModelTaskUpdate(
         (error == RT_ERROR_DRV_IOCTRL),
         RT_LOG(RT_LOG_ERROR, "MemTranslate offset may be used up, please reduce IFA update task num."));
 
-    ERROR_GOTO(error, ERROR_TASK, "Failed to init model update task.error=%d.", error);
+    ERROR_GOTO(error, ERROR_TASK, "Failed to init model update task. error=%d.", error);
 
     RT_LOG(RT_LOG_DEBUG, "SubmitTask streamId_=%u tsk->id=%u.", Id_(), tsk->id);
     error = device_->SubmitTask(tsk);

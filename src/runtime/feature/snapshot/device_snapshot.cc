@@ -141,8 +141,8 @@ rtError_t DeviceSnapshot::OpMemoryBackup(void)
     }
     COND_RETURN_ERROR(
         (offset != opTotalHostMemSize), RT_ERROR_INVALID_VALUE,
-        "offset not equal host memory size, offset=%lu, host memory size=%lu, devId=%d", offset, opTotalHostMemSize,
-        device_->Id_());
+        "offset is not equal to host memory size, offset=%lu, host memory size=%lu, devId=%d", offset,
+        opTotalHostMemSize, device_->Id_());
     RT_LOG(RT_LOG_DEBUG, "hostAddr=%p, opTotalHostMemSize=%zu.", opBackupAddr.get(), opTotalHostMemSize);
     return error;
 }
@@ -180,8 +180,8 @@ rtError_t DeviceSnapshot::OpMemoryRestore(void)
     }
     COND_RETURN_ERROR(
         (offset != opTotalHostMemSize), RT_ERROR_INVALID_VALUE,
-        "offset not equal host memory size, offset=%lu, host memory size=%lu, devId=%d", offset, opTotalHostMemSize,
-        device_->Id_());
+        "offset is not equal to host memory size, offset=%lu, host memory size=%lu, devId=%d", offset,
+        opTotalHostMemSize, device_->Id_());
     const rtError_t error = stm->Synchronize();
     ERROR_RETURN(error, "Synchronize failed, streamId=%d, retCode=%#x.", stm->Id_(), error);
     RT_LOG(RT_LOG_DEBUG, "hostAddr=%p, opTotalHostMemSize=%zu, offset=%zu.", hostAddr, opTotalHostMemSize, offset);

@@ -752,7 +752,7 @@ static void RecordSdmaErrorInfo(
         RT_LOG_CALL_MSG(
             ERR_MODULE_GE,
             "The error from device(chipId:%u, dieId:%u), "
-            "serial number is %" PRIu64 ".there is a sdma error, sdma channel is %hhu, "
+            "serial number is %" PRIu64 ". there is a sdma error, sdma channel is %hhu, "
             "sdmaChFsmState=0x%x, sdmaChFree=0x%x, irqStatus=0x%x, cqeStatus=0x%x ",
             info->u.sdmaErrorInfo.comm.chipId, info->u.sdmaErrorInfo.comm.dieId, errorNumber,
             info->u.sdmaErrorInfo.sdma.starsInfoForDavid[coreIdx].sdmaChannelId,
@@ -969,7 +969,7 @@ rtError_t ProcessStarsV2CoreTimeoutDfxInfo(
     }
 
     if (!(RtPtrToUnConstPtr<Device*>(dev))->CheckFeatureSupport(TS_FEATURE_AICORE_TIMEOUT_DFX)) {
-        RT_LOG(RT_LOG_WARNING, "feature not support because tsch version too low.");
+        RT_LOG(RT_LOG_WARNING, "feature is not supported because the tsch version is too low.");
         return RT_ERROR_NONE;
     }
     if (common.coreNum > (RT_STARS_V2_AICORE_NUM + RT_STARS_V2_AIVECTOR_NUM)) {

@@ -360,7 +360,7 @@ rtError_t ContextManage::DeviceTaskAbort(const int32_t devId, const uint32_t tim
 
     std::unique_lock<std::mutex> taskLock(g_ctxManLock);
     const bool isSupport = IsSupportDeviceAbort(devId);
-    COND_RETURN_WARN((isSupport == false), RT_ERROR_FEATURE_NOT_SUPPORT, "Not support DeviceTaskAbort");
+    COND_RETURN_WARN((isSupport == false), RT_ERROR_FEATURE_NOT_SUPPORT, "DeviceTaskAbort is not supported");
 
     rtError_t error = DeviceAbort(devId);
     mmGetTimeOfDay(&tv[++index], nullptr);

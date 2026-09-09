@@ -114,15 +114,15 @@ def implement_function(func):
 def generate_stub_file(inc_dir):
     """input inc_dir and return relevant contents"""
     acl_header_files, tdt_channel_header_files, tdt_queue_header_files, prof_header_files = collect_header_files(inc_dir)
-    print("header files has been generated")
+    print("header files have been generated")
     acl_content = generate_function(acl_header_files, inc_dir)
-    print("acl_content has been generate")
+    print("acl_content has been generated")
     tdt_channel_content = generate_function(tdt_channel_header_files, inc_dir)
-    print("tdt_channel_content has been generate")
+    print("tdt_channel_content has been generated")
     tdt_queue_content = generate_function(tdt_queue_header_files, inc_dir)
-    print("tdt_queue_content has been generate")
+    print("tdt_queue_content has been generated")
     prof_content = generate_function(prof_header_files, inc_dir)
-    print("prof_content has been generate")
+    print("prof_content has been generated")
     return acl_content, tdt_channel_content, tdt_queue_content, prof_content
 
 

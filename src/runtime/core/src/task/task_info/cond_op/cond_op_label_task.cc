@@ -36,7 +36,7 @@ void ToCommandBodyForLabelSetTask(TaskInfo* taskInfo, rtCommand_t* const command
         uint64_t pptr;
         const rtError_t error = taskInfo->stream->Device_()->Driver_()->MemAddressTranslate(
             static_cast<int32_t>(stm->Device_()->Id_()), RtPtrToValue(taskInfo->u.labelSetTask.devDstAddr), &pptr);
-        COND_RETURN_VOID(error != RT_ERROR_NONE, "convert memory address from virtual to physic failed");
+        COND_RETURN_VOID(error != RT_ERROR_NONE, "convert memory address from virtual to physical failed");
         command->u.labelSetTask.labelPtr = pptr;
         RT_LOG(RT_LOG_DEBUG, "ts support 64k table,add label dev addr=%" PRIu64 " to command.", pptr);
     }
@@ -88,7 +88,7 @@ rtError_t LabelSwitchTaskInit(
     const rtError_t error = taskInfo->stream->Device_()->Driver_()->MemAddressTranslate(
         static_cast<int32_t>(taskInfo->stream->Device_()->Id_()), RtPtrToValue(ptr), &physicPtr);
     COND_RETURN_ERROR(
-        (error != RT_ERROR_NONE), error, "Convert memory address from virtual to physic failed, retCode=%#x.", error);
+        (error != RT_ERROR_NONE), error, "Convert memory address from virtual to physical failed, retCode=%#x.", error);
 
     labelSwitchTask->pptr = physicPtr;
     labelSwitchTask->condition = cond;

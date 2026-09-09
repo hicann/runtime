@@ -667,7 +667,7 @@ static rtError_t GetBuffIovec(struct buff_iovec* const vec, const rtMemQueueBuff
     for (uint32_t i = 0U; i < inBuf->buffCount; ++i) {
         COND_RETURN_ERROR(
             len > (SIZE_MAX - inBuf->buffInfo[i].len), RT_ERROR_INVALID_VALUE,
-            "Overflow occur when calculate total size, current len is %zu, added len is %zu.", len,
+            "Overflow occurs when calculating total size, current len is %zu, added len is %zu.", len,
             inBuf->buffInfo[i].len);
         len += inBuf->buffInfo[i].len;
     }

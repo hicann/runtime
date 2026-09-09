@@ -469,14 +469,14 @@ void ParseExtendInfo(
     while (offset < extInfoLen) {
         const uint64_t extInfoBuf = RtPtrToValue(extInfos + offset);
         COND_RETURN_VOID(
-            offset > (SIZE_MAX - (sizeof(int32_t) + sizeof(uint32_t))), "Overflow occur when parse extend info");
+            offset > (SIZE_MAX - (sizeof(int32_t) + sizeof(uint32_t))), "Overflow occurs when parsing extend info");
         if ((offset + sizeof(int32_t) + sizeof(uint32_t)) > extInfoLen) {
             break;
         }
         offset += (sizeof(int32_t) + sizeof(uint32_t));
         const int32_t infoType = *(RtValueToPtr<int32_t*>(extInfoBuf));
         const size_t infoLen = static_cast<size_t>(*(RtValueToPtr<uint32_t*>(extInfoBuf + sizeof(int32_t))));
-        COND_RETURN_VOID(offset > (SIZE_MAX - infoLen), "Overflow occur when parse extend info");
+        COND_RETURN_VOID(offset > (SIZE_MAX - infoLen), "Overflow occurs when parsing extend info");
         if ((offset + infoLen) > extInfoLen) {
             break;
         }
@@ -588,7 +588,7 @@ void GetFirstExtendInfoForAicpuTask(TaskInfo* taskInfo, const uint32_t devId, st
     // copy extInfos from device, buffer need align to 64
     COND_RETURN_VOID(
         extInfoLen > (UINT64_MAX - alignBytes),
-        "Overflow occur when align to %" PRIu64 " for aicpu extend info, extendInfo=%" PRIu64 ".", alignBytes,
+        "Overflow occurs when aligning to %" PRIu64 " for aicpu extend info, extendInfo=%" PRIu64 ".", alignBytes,
         extInfoLen);
     buffBytes = extInfoLen + alignBytes;
     tmpBuff.reset(new (std::nothrow) char_t[buffBytes]);

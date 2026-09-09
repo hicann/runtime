@@ -442,7 +442,8 @@ static rtError_t AllocSvmMemForDqsZeroCopyTask(TaskInfo* const taskInfo, const D
     dqsZeroCopyTask->offsetPtr = offset;
     dqsZeroCopyTask->allocSize = allocSize;
     RT_LOG(
-        RT_LOG_INFO, "Alloc svm mem for DqsZeroCopy with offset, destAddr=%#llx, offsetAddr=%#llx, size=%" PRIu64, dest,
+        RT_LOG_INFO,
+        "Alloc svm mem for DqsZeroCopy with offset, destAddr=%#llx, offsetAddr=%#llx, size=%" PRIu64 "(bytes)", dest,
         offset, allocSize);
     return RT_ERROR_NONE;
 }
@@ -750,7 +751,7 @@ static rtError_t PrepareSqeInfoForDqsInterChipMemcpyTask(
         fieldOffset = offsetof(stars_dqs_inter_chip_space_t, mbuf_data_memcpy_sqe);
     } else {
         RT_LOG(
-            RT_LOG_ERROR, "Invaild type, streamId=%d, type=%s(%d).", stm->Id_(), DqsInterChipTaskTypeName(type),
+            RT_LOG_ERROR, "Invalid type, streamId=%d, type=%s(%d).", stm->Id_(), DqsInterChipTaskTypeName(type),
             static_cast<int32_t>(type));
         return RT_ERROR_INVALID_VALUE;
     }
@@ -915,7 +916,7 @@ static rtError_t PrepareSqeInfoForDqsInterChipPostProcTask(TaskInfo* const taskI
         RT_MEMCPY_HOST_TO_DEVICE);
     if (ret != RT_ERROR_NONE) {
         (void)FreeDqsCommonTaskFuncCall(commonTaskInfo, taskInfo);
-        RT_LOG(RT_LOG_ERROR, "MemCopySync for DqsInterChipPreProcTask failed, retCode=%#x", ret);
+        RT_LOG(RT_LOG_ERROR, "MemCopySync for DqsInterChipPostProcTask failed, retCode=%#x", ret);
     }
 
     return ret;
@@ -1679,7 +1680,7 @@ static rtError_t PrepareSqeInfoForDqsConditionCopyTask(TaskInfo* taskInfo, const
         RT_MEMCPY_DEVICE_TO_DEVICE);
     if (ret != RT_ERROR_NONE) {
         (void)FreeDqsCommonTaskFuncCall(commonTaskInfo, taskInfo);
-        RT_LOG(RT_LOG_ERROR, "MemCopySync for Dqs prepare func call failed, retCode=%#x.", ret);
+        RT_LOG(RT_LOG_ERROR, "MemCopySync for Dqs condition copy func call failed, retCode=%#x.", ret);
     }
 
     return ret;
@@ -1786,7 +1787,7 @@ static rtError_t PrepareSqeInfoForDqsAdspcTask(
         RT_MEMCPY_HOST_TO_DEVICE);
     if (ret != RT_ERROR_NONE) {
         (void)FreeDqsCommonTaskFuncCall(commonTaskInfo, taskInfo);
-        RT_LOG(RT_LOG_ERROR, "MemCopySync for Dqs Dequeue func call failed,retCode=%#x.", ret);
+        RT_LOG(RT_LOG_ERROR, "MemCopySync for DqsAdspcTask func call failed, retCode=%#x.", ret);
     }
     return ret;
 }

@@ -183,7 +183,7 @@ rtError_t rtLaunchDvppTask(const void* sqe, uint32_t sqeLen, rtStream_t stm, rtD
     const rtChipType_t chipType = rtInstance->GetChipType();
     const bool isNotSupport = !IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_TASK_DVPP);
     COND_RETURN_WARN(
-        isNotSupport, ACL_ERROR_RT_FEATURE_NOT_SUPPORT, "chip type(%d) does not support.",
+        isNotSupport, ACL_ERROR_RT_FEATURE_NOT_SUPPORT, "chip type(%d) does not support this feature.",
         static_cast<int32_t>(chipType));
 
     Api* const apiInstance = Api::Instance();
@@ -208,7 +208,8 @@ rtError_t rtsLaunchRandomNumTask(const rtRandomNumTaskInfo_t* taskInfo, const rt
     const rtChipType_t chipType = rtInstance->GetChipType();
     COND_RETURN_WARN(
         !IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_TASK_RAND_GENERATOR),
-        ACL_ERROR_RT_FEATURE_NOT_SUPPORT, "chip type(%d) does not support.", static_cast<int32_t>(chipType));
+        ACL_ERROR_RT_FEATURE_NOT_SUPPORT, "chip type(%d) does not support this feature.",
+        static_cast<int32_t>(chipType));
     Api* const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);

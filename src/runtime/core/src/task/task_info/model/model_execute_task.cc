@@ -73,7 +73,7 @@ void SetStarsResultForModelExecuteTask(TaskInfo* const taskInfo, const rtCqRepor
         if ((starsDefineErrorCode & static_cast<uint32_t>(RT_STARS_CQE_ERR_TYPE_EXCEPTION)) != 0U) {
             taskInfo->errorCode = TS_ERROR_ILLEGAL_PARAM;
             RT_LOG(
-                RT_LOG_ERROR, "model status is busy when execute, model_id=%u, stream_id=%hu, task_id=%hu",
+                RT_LOG_ERROR, "model status is busy during execution, model_id=%u, stream_id=%hu, task_id=%hu",
                 modelExecuteTaskInfo->modelId, taskInfo->stream->Id_(), taskInfo->id);
             return;
         }

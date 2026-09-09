@@ -213,7 +213,7 @@ rtError_t CbSubscribe::Delete(const uint64_t threadId, Stream* const stm)
         if (event != nullptr) {
             const rtError_t error = event->WaitForBusy();
             COND_PROC_RETURN_ERROR(
-                (error != RT_ERROR_NONE), error, subscribeLock_.unlock(), "stream_id=%d is abort", stm->Id_());
+                (error != RT_ERROR_NONE), error, subscribeLock_.unlock(), "stream_id=%d is aborted", stm->Id_());
             delete event;
         }
     }
@@ -285,7 +285,7 @@ rtError_t CbSubscribe::Delete(Stream* const stm)
         if (event != nullptr) {
             const rtError_t error = event->WaitForBusy();
             COND_PROC_RETURN_ERROR(
-                (error != RT_ERROR_NONE), error, subscribeLock_.unlock(), "stream_id=%d is abort", stm->Id_());
+                (error != RT_ERROR_NONE), error, subscribeLock_.unlock(), "stream_id=%d is aborted", stm->Id_());
             delete event;
         }
     }
@@ -530,7 +530,7 @@ void CbSubscribe::DeleteAll()
                 const rtError_t error = event->WaitForBusy();
                 if (error != RT_ERROR_NONE) {
                     subscribeLock_.unlock();
-                    RT_LOG(RT_LOG_ERROR, "Stream is abort");
+                    RT_LOG(RT_LOG_ERROR, "Stream is aborted");
                     return;
                 }
                 delete event;

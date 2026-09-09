@@ -327,7 +327,8 @@ rtError_t DavidEvent::QueryEventStatus(rtEventStatus_t* const status)
     // No record , newMode return RT_EVENT_RECORDED oldMode return RT_EVENT_INIT
     if (!HasRecord()) {
         RT_LOG(
-            RT_LOG_INFO, "device_id=%u, event_id=%d no record to be query, return recorded.", device_->Id_(), eventId_);
+            RT_LOG_INFO, "device_id=%u, event_id=%d no record to be queried, return recorded.", device_->Id_(),
+            eventId_);
         *status = (isNewMode_) ? RT_EVENT_RECORDED : RT_EVENT_INIT;
         return error;
     }

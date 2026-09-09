@@ -402,7 +402,9 @@ rtError_t ApiErrorDecorator::FusionLaunch(void* const fusionInfo, Stream* const 
 {
     Runtime* const rtInstance = Runtime::Instance();
     if (!IS_SUPPORT_CHIP_FEATURE(rtInstance->GetChipType(), RtOptionalFeatureType::RT_FEATURE_TASK_FUSION)) {
-        RT_LOG(RT_LOG_WARNING, "Chip type(%d) does not support.", static_cast<int32_t>(rtInstance->GetChipType()));
+        RT_LOG(
+            RT_LOG_WARNING, "Chip type(%d) does not support this feature.",
+            static_cast<int32_t>(rtInstance->GetChipType()));
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
     // 1. check args  sub & 0x7 != 0
@@ -570,7 +572,7 @@ rtError_t ApiErrorDecorator::FftsPlusTaskLaunch(
         RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, "Function Flow Task Scheduler (FFTS) Plus task delivery",
         "fftsPlusTaskInfo->descBufLen or fftsPlusTaskInfo->fftsPlusSqe->totalContextNum",
         RtFmtMsg(
-            "Parameter fftsPlusTaskInfo->descBufLen %zu should equal to the product of parameter"
+            "Parameter fftsPlusTaskInfo->descBufLen %zu should equal the product of parameter"
             " fftsPlusTaskInfo->fftsPlusSqe->totalContextNum %u and %u",
             fftsPlusTaskInfo->descBufLen, static_cast<uint32_t>(sqe->totalContextNum), CONTEXT_LEN));
 

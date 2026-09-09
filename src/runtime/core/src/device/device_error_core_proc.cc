@@ -1095,7 +1095,7 @@ static void AddExceptionRegInfo(
     COND_RETURN_NORMAL(
         type != AICORE_ERROR && type != AIVECTOR_ERROR && type != FFTS_PLUS_AICORE_ERROR &&
             type != FFTS_PLUS_AIVECTOR_ERROR,
-        "the type[%hu] not match", type);
+        "the type[%hu] does not match", type);
     COND_RETURN_VOID(
         errTaskPtr == nullptr || errTaskPtr->stream == nullptr || errTaskPtr->stream->Device_() == nullptr,
         "Cannot get the device by errTaskPtr");
@@ -1471,7 +1471,7 @@ void DeviceErrorProc::ProcessStarsTimeoutDfxSlotInfo4FftsPlus(
 
     std::string kernelName;
     for (uint32_t i = 0U; i < mapAddr.size(); i++) {
-        RT_LOG(RT_LOG_DEBUG, "contextype=%hu, map[%u]=%#" PRIx64 ".", contextInfo.contextType, i, mapAddr[i]);
+        RT_LOG(RT_LOG_DEBUG, "contextType=%hu, map[%u]=%#" PRIx64 ".", contextInfo.contextType, i, mapAddr[i]);
         if (mapAddr[i] == slotInfo.pcStart) {
             kernelName = dev->LookupKernelNameByAddr(mapAddr[i]);
             break;

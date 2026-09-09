@@ -65,7 +65,7 @@ rtError_t InitFuncCallParaForStreamActiveTask(
                                       (dieOffset * static_cast<uint64_t>(dieId)) + chipAddr;
 
             RT_LOG(
-                RT_LOG_DEBUG, "Get device info ok, deviceId=%u, chipId=%" PRId64 ", dieId=%" PRId64 "fsm=0x%llx",
+                RT_LOG_DEBUG, "Get device info ok, deviceId=%u, chipId=%" PRId64 ", dieId=%" PRId64 ", fsm=0x%llx",
                 deviceId, chipId, dieId, fcPara.rtSqFsmStateAddr);
         }
 

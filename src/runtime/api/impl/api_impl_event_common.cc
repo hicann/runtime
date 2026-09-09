@@ -56,7 +56,7 @@ rtError_t ApiImplEvent::EventQuery(Event* const evt)
     Context* eventCtx = evt->Context_();
     if (eventCtx != nullptr) {
         const rtError_t error = eventCtx->CheckStatus();
-        ERROR_RETURN(error, "context is abort, status=%#x.", static_cast<uint32_t>(error));
+        ERROR_RETURN(error, "context is aborted, status=%#x.", static_cast<uint32_t>(error));
     }
     return evt->Query();
 }

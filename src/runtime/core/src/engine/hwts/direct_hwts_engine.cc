@@ -400,9 +400,9 @@ rtError_t DirectHwtsEngine::SyncTask(
         const bool isReturnNoError =
             (ctxStatus != RT_ERROR_NONE) && (ctx != nullptr) && (ctx->GetFailureError() != RT_ERROR_NONE);
         COND_RETURN_ERROR(
-            isReturnNoError, RT_ERROR_NONE, "context is abort, status=%#x.", static_cast<uint32_t>(ctxStatus));
+            isReturnNoError, RT_ERROR_NONE, "context is aborted, status=%#x.", static_cast<uint32_t>(ctxStatus));
         COND_RETURN_ERROR(
-            ctxStatus != RT_ERROR_NONE, ctxStatus, "context is abort, status=%#x.", static_cast<uint32_t>(ctxStatus));
+            ctxStatus != RT_ERROR_NONE, ctxStatus, "context is aborted, status=%#x.", static_cast<uint32_t>(ctxStatus));
 
         COND_PROC(remainTime > 0, (irqWait = (remainTime >= waitTimeout_) ? waitTimeout_ : remainTime));
         waitInfo.timeout = irqWait;
@@ -459,7 +459,7 @@ rtError_t DirectHwtsEngine::SyncTask(
 
         const bool abortFlag = (device_->GetIsRingbufferGetErr()) && (abortTryCount++ >= 3) && (ctx != nullptr) &&
                                ctx->GetCtxMode() == STOP_ON_FAILURE && (stm != ctx->DefaultStream_());
-        COND_RETURN_ERROR(abortFlag, RT_ERROR_NONE, "Task Wait:context is failure ABORT.");
+        COND_RETURN_ERROR(abortFlag, RT_ERROR_NONE, "Task wait: context is aborted.");
 
         if (unlikely(
                 ((error != RT_ERROR_NONE) && (error != RT_ERROR_SOCKET_CLOSE)) || (logicReport == nullptr) ||

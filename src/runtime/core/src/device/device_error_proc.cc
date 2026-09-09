@@ -1194,7 +1194,7 @@ rtError_t DeviceErrorProc::ProcessStarsWaitTimeoutErrorInfo(
     } else {
         RT_LOG_CALL_MSG(
             ERR_MODULE_SYSTEM,
-            "type = %hhu,The error from device(chipId:%u, dieId:%u), serial number is %" PRIu64 ", "
+            "type = %hhu, The error from device(chipId:%u, dieId:%u), serial number is %" PRIu64 ", "
             "event wait timeout occurred during task execution, stream_id:%hu, sq_id:%hu, task_id:%hu.",
             type, info->u.timeoutErrorInfo.chipId, info->u.timeoutErrorInfo.dieId, errorNumber,
             info->u.timeoutErrorInfo.streamId, info->u.timeoutErrorInfo.sqId, info->u.timeoutErrorInfo.taskId);
@@ -1771,7 +1771,7 @@ rtError_t DeviceErrorProc::ProcessOneElementInRingBufferImpl(
     }
     constexpr size_t headSize = sizeof(DevRingBufferCtlInfo);
     RT_LOG(
-        RT_LOG_INFO, "it need to process %u errMessages, headSize=%zu, elementSize=%zu.",
+        RT_LOG_INFO, "it needs to process %u errMessages, headSize=%zu, elementSize=%zu.",
         (tail + ctlInfo->ringBufferLen - head) % ctlInfo->ringBufferLen, headSize, elementSize);
 
     bool needQueryPageFaultInfo = false;

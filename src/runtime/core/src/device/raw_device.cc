@@ -883,7 +883,7 @@ rtError_t RawDevice::AllocStackPhyAddrForDcache()
     }
 
     RT_LOG(
-        RT_LOG_DEBUG, "AllocStackPhyBase device_id=%u, stackPhyBase16k_=0x%llx, stackPhySize=%u.", deviceId_,
+        RT_LOG_DEBUG, "AllocStackPhyBase device_id=%u, stackPhyBase16k_=0x%llx, stackPhySize=%uB.", deviceId_,
         RtPtrToValue(stackPhyBase16k_), stackPhySize);
     stackAddrIsDcache_ = true;
     stackPhyBase32kAlign_ = stackPhyBase32k_;
@@ -902,7 +902,7 @@ rtError_t RawDevice::AllocStackPhyBaseForCloudV2()
         (error != RT_ERROR_NONE) || (stackPhyBase32k_ == nullptr), error,
         "Alloc stack phy base failed, mem alloc failed, retCode=%#x.", static_cast<uint32_t>(error));
     RT_LOG(
-        RT_LOG_INFO, "device_id=%u, stackPhyBase32k_=0x%llx, stackPhySize=%u.", Id_(), RtPtrToValue(stackPhyBase32k_),
+        RT_LOG_INFO, "device_id=%u, stackPhyBase32k_=0x%llx, stackPhySize=%uB.", Id_(), RtPtrToValue(stackPhyBase32k_),
         stackPhySize);
     stackPhyBase32kAlign_ = stackPhyBase32k_;
     // alloc 16k stack for aic/aiv
@@ -913,7 +913,7 @@ rtError_t RawDevice::AllocStackPhyBaseForCloudV2()
     stackPhySize = static_cast<uint64_t>(RT_SCALAR_BUFFER_SIZE_16K_75);
     error = driver_->DevMemAlloc(&stackPhyBase16k_, stackPhySize, RT_MEMORY_DDR, Id_());
     RT_LOG(
-        RT_LOG_DEBUG, "AllocStackPhyBase device_id=%u, stackPhyBase16k_=0x%llx, stackPhySize=%u.", Id_(),
+        RT_LOG_DEBUG, "AllocStackPhyBase device_id=%u, stackPhyBase16k_=0x%llx, stackPhySize=%uB.", Id_(),
         RtPtrToValue(stackPhyBase16k_), stackPhySize);
     if ((error != RT_ERROR_NONE) || (stackPhyBase16k_ == nullptr)) {
         (void)driver_->DevMemFree(stackPhyBase32k_, Id_());
@@ -943,7 +943,7 @@ rtError_t RawDevice::AllocStackPhyBase()
 
     const rtError_t error = driver_->DevMemAlloc(&stackPhyBase32k_, stackPhySize, RT_MEMORY_DDR, Id_());
     RT_LOG(
-        RT_LOG_INFO, "AllocStackPhyBase device_id=%u, stackPhyBase32k_=0x%llx, stackPhySize=%u.", Id_(),
+        RT_LOG_INFO, "AllocStackPhyBase device_id=%u, stackPhyBase32k_=0x%llx, stackPhySize=%uB.", Id_(),
         RtPtrToValue(stackPhyBase32k_), stackPhySize);
     COND_RETURN_ERROR(
         (error != RT_ERROR_NONE) || (stackPhyBase32k_ == nullptr), error,
@@ -983,8 +983,8 @@ rtError_t RawDevice::AllocCustomerStackPhyBase()
         static_cast<uint32_t>(error), totalCoreNum, customerStackSize, stackPhySize);
 
     RT_LOG(
-        RT_LOG_INFO, "device_id=%u, customerStackPhyBase_=%p, stackPhySize=%#" PRIx64 ".", Id_(), customerStackPhyBase_,
-        stackPhySize);
+        RT_LOG_INFO, "device_id=%u, customerStackPhyBase_=%p, stackPhySize=%#" PRIx64 "B.", Id_(),
+        customerStackPhyBase_, stackPhySize);
     deviceAllocStackSize_ = customerStackSize;
     SetDeviceCustomerStackLevel(customerStackSize);
     return RT_ERROR_NONE;
@@ -1108,7 +1108,7 @@ rtError_t RawDevice::InitSwapBufferInfo()
 
 rtError_t RawDevice::Start()
 {
-    COND_RETURN_INFO(primaryStream_ != nullptr, RT_ERROR_NONE, "there has primaryStream");
+    COND_RETURN_INFO(primaryStream_ != nullptr, RT_ERROR_NONE, "primaryStream exists");
     rtError_t error = AllocSimtStackPhyBase(GetChipType());
     ERROR_RETURN(error, "Alloc simt stack phy base failed, retCode=%#x.", static_cast<uint32_t>(error));
 
@@ -1906,7 +1906,7 @@ rtError_t RawDevice::FreeEventIdFromDrv(const int32_t eventId, const uint32_t ev
         ERROR_RETURN(
             error,
             "Event id tear down failed, device_id=%u, event_id=%d,"
-            "retCode=%#x",
+            " retCode=%#x",
             Id_(), eventId, static_cast<uint32_t>(error));
         RT_LOG(RT_LOG_INFO, "device_id=%u, event_id=%d tear down.", Id_(), eventId);
         return error;
@@ -1915,7 +1915,7 @@ rtError_t RawDevice::FreeEventIdFromDrv(const int32_t eventId, const uint32_t ev
         ERROR_RETURN(
             error,
             "Event id tear down failed, device_id=%u, event_id=%d,"
-            "retCode=%#x",
+            " retCode=%#x",
             Id_(), eventId, static_cast<uint32_t>(error));
         RT_LOG(RT_LOG_INFO, "device_id=%u, event_id=%d tear down.", Id_(), eventId);
         return error;
@@ -2759,7 +2759,7 @@ void RawDevice::SetBaseTime()
         return;
     }
     baseTime_ = currTime;
-    RT_LOG(RT_LOG_DEBUG, "set device base time %" PRId64, baseTime_.load());
+    RT_LOG(RT_LOG_DEBUG, "device base time=%" PRId64 "ms", baseTime_.load());
 }
 
 int64_t RawDevice::GetDeviceCurrentTime() const

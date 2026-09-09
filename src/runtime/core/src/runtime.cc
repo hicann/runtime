@@ -3363,7 +3363,7 @@ void Runtime::TsTimelineStart(const uint64_t profConfig, uint64_t& type, Device*
         if ((dev->GetDevProfStatus() & PROF_SCHEDULE_TIMELINE_MASK) == 0ULL) {
             type |= PROF_SCHEDULE_TIMELINE_MASK;
         } else {
-            RT_LOG(RT_LOG_WARNING, "ts timeline has already enabled");
+            RT_LOG(RT_LOG_WARNING, "ts timeline already enabled");
         }
     }
 }
@@ -3378,10 +3378,10 @@ void Runtime::TsTimelineStart(const uint64_t profConfig, bool& needOpenTimeline,
                 dev->SetDevProfStatus(PROF_SCHEDULE_TIMELINE_MASK, true);
                 needOpenTimeline = true;
             } else {
-                RT_LOG(RT_LOG_WARNING, "ts timeline has already enabled");
+                RT_LOG(RT_LOG_WARNING, "ts timeline already enabled");
             }
         } else { // acl already open timeline
-            RT_LOG(RT_LOG_WARNING, "ts timeline has already enabled");
+            RT_LOG(RT_LOG_WARNING, "ts timeline already enabled");
             if ((dev->GetDevProfStatus() & PROF_SCHEDULE_TIMELINE_MASK) == 0ULL) {
                 dev->SetDevProfStatus(PROF_SCHEDULE_TIMELINE_MASK, true);
             }
@@ -3394,10 +3394,10 @@ void Runtime::TsTimelineStart(const uint64_t profConfig, bool& needOpenTimeline,
                 dev->SetDevProfStatus(PROF_TASK_TIME_MASK, true);
                 needOpenTimeline = true;
             } else {
-                RT_LOG(RT_LOG_WARNING, "ts timeline has already enabled");
+                RT_LOG(RT_LOG_WARNING, "ts timeline already enabled");
             }
         } else { // ge already open timeline
-            RT_LOG(RT_LOG_WARNING, "ts timeline has already enabled");
+            RT_LOG(RT_LOG_WARNING, "ts timeline already enabled");
             if ((dev->GetDevProfStatus() & PROF_TASK_TIME_MASK) == 0ULL) {
                 dev->SetDevProfStatus(PROF_TASK_TIME_MASK, true);
             }
@@ -3415,7 +3415,7 @@ void Runtime::AicMetricStart(const uint64_t profConfig, uint64_t& type, const De
             if ((dev->GetDevProfStatus() & PROF_AICORE_METRICS_MASK) == 0ULL) { // disabled
                 type |= PROF_AICORE_METRICS_MASK;
             } else {
-                RT_LOG(RT_LOG_WARNING, "aicore metrics has already enabled, devId=%u", devId);
+                RT_LOG(RT_LOG_WARNING, "aicore metrics already enabled, devId=%u", devId);
             }
         }
     }
@@ -3428,7 +3428,7 @@ void Runtime::AivMetricStart(const uint64_t profConfig, uint64_t& type, const De
             if ((dev->GetDevProfStatus() & PROF_AIVECTORCORE_METRICS_MASK) == 0ULL) { // disabled
                 type |= PROF_AIVECTORCORE_METRICS_MASK;
             } else {
-                RT_LOG(RT_LOG_WARNING, "aivector metrics has already enabled, devId=%u", devId);
+                RT_LOG(RT_LOG_WARNING, "aivector metrics already enabled, devId=%u", devId);
             }
         } else {
             RT_LOG(RT_LOG_WARNING, "AIVector metrics are not supported");
@@ -3447,7 +3447,7 @@ void Runtime::HwtsLogStart(const uint64_t profConfig, uint64_t& type, const Devi
     if ((dev->GetDevProfStatus() & PROF_TASK_TIME_MASK) == 0ULL) { // disabled
         type |= PROF_TASK_TIME_MASK;
     } else {
-        RT_LOG(RT_LOG_WARNING, "hwts log has already enabled, devId=%u", dev->Id_());
+        RT_LOG(RT_LOG_WARNING, "hwts log already enabled, devId=%u", dev->Id_());
     }
 }
 
@@ -3458,7 +3458,7 @@ void Runtime::AiCpuTraceStart(const uint64_t profConfig, uint64_t& type, const D
         return;
     }
     if ((dev->GetDevProfStatus() & PROF_AICPU_TRACE_MASK) != 0ULL) {
-        RT_LOG(RT_LOG_WARNING, "aicpu profiling has already enabled, devId=%u", devId);
+        RT_LOG(RT_LOG_WARNING, "aicpu profiling already enabled, devId=%u", devId);
         return;
     }
     // disabled
@@ -3473,7 +3473,7 @@ void Runtime::AiCpuModelTraceStart(const uint64_t profConfig, uint64_t& type, co
         return;
     }
     if ((dev->GetDevProfStatus() & PROF_AICPU_MODEL_MASK) != 0ULL) {
-        RT_LOG(RT_LOG_WARNING, "aicpu model profiling has already enabled, devId=%u", dev->Id_());
+        RT_LOG(RT_LOG_WARNING, "aicpu model profiling already enabled, devId=%u", dev->Id_());
         return;
     }
     // disabled
@@ -3562,7 +3562,7 @@ rtError_t Runtime::RuntimeProfileLogStart(const uint64_t profConfig, const int32
         profiler_->SetProfLogEnable(true);
         RT_LOG(RT_LOG_INFO, "Start");
     } else {
-        RT_LOG(RT_LOG_WARNING, "api profile log has already enabled");
+        RT_LOG(RT_LOG_WARNING, "api profile log already enabled");
     }
 
     profConfLock_.Unlock();
@@ -3631,7 +3631,7 @@ rtError_t Runtime::RuntimeApiProfilerStart(const uint64_t profConfig, int32_t nu
     }
 
     if ((apiProfilingType_ & PROF_RUNTIME_API_MASK) != 0ULL) {
-        RT_LOG(RT_LOG_WARNING, "api profiling has already enabled");
+        RT_LOG(RT_LOG_WARNING, "api profiling already enabled");
         profConfLock_.Unlock();
         return RT_ERROR_NONE;
     }
@@ -3729,7 +3729,7 @@ rtError_t Runtime::RuntimeTrackProfilerStart(
                 }
             }
         } else {
-            RT_LOG(RT_LOG_WARNING, "runtime track profiling has already enabled");
+            RT_LOG(RT_LOG_WARNING, "runtime track profiling already enabled");
         }
     }
     profConfLock_.Unlock();
@@ -4978,7 +4978,7 @@ rtError_t Runtime::BinaryLoad(const Device* const device, Program* const prog)
 
     if (error != RT_ERROR_NONE) {
         RT_LOG(
-            RT_LOG_ERROR, "Malloc device program failed, retCode=%#x, size = %llu", static_cast<uint32_t>(error),
+            RT_LOG_ERROR, "Malloc device program failed, retCode=%#x, size=%lluB", static_cast<uint32_t>(error),
             static_cast<uint64_t>(devSize + INSTR_ALIGN_SIZE));
         return error;
     }
@@ -5371,7 +5371,7 @@ rtError_t Runtime::GetBinBuffer(
     } else {
         // do nothing
     }
-    RT_LOG(RT_LOG_INFO, "Get bin addr %p, bin size %u", *bin, *binSize);
+    RT_LOG(RT_LOG_INFO, "Bin addr=%p, size=%uB", *bin, *binSize);
     return RT_ERROR_NONE;
 }
 
@@ -5830,7 +5830,7 @@ rtError_t Runtime::SaveModelAllDataToHost(void)
             static_cast<void*>(node->hostAddr), node->memSize, node->devAddr, node->memSize, RT_MEMCPY_DEVICE_TO_HOST);
         if (ret != RT_ERROR_NONE) {
             RT_LOG(
-                RT_LOG_ERROR, "MemCopySync fail! src=0x%llx, dst=0x%llx, len=%lu.", node->devAddr, node->hostAddr,
+                RT_LOG_ERROR, "MemCopySync fail! src=0x%llx, dst=0x%llx, len=%luB.", node->devAddr, node->hostAddr,
                 node->memSize);
             DeleteModuleBackupPoint();
             break;
@@ -6007,14 +6007,14 @@ rtError_t Runtime::RestoreModule(void) const
             error = Program::BinaryPoolMemCopySync(
                 devAddr, static_cast<uint32_t>(memSize), hostAddr, device, node->readonly);
             COND_RETURN_ERROR_MSG_INNER(
-                error != RT_ERROR_NONE, error, "BinaryPoolMemCopySync failed, device_id=%u, src=%p, dest=%p, len=%u.",
+                error != RT_ERROR_NONE, error, "BinaryPoolMemCopySync failed, device_id=%u, src=%p, dest=%p, len=%uB.",
                 node->devId, hostAddr, devAddr, memSize);
         } else {
             const uint32_t adviseSize = static_cast<uint32_t>(node->memSize + INSTR_ALIGN_SIZE);
             error = Program::BinaryMemCopySync(
                 devAddr, adviseSize, static_cast<uint32_t>(memSize), hostAddr, device, node->readonly);
             COND_RETURN_ERROR_MSG_INNER(
-                error != RT_ERROR_NONE, error, "BinaryMemCopySync failed, device_id=%u, src=%p, dest=%p, len=%u.",
+                error != RT_ERROR_NONE, error, "BinaryMemCopySync failed, device_id=%u, src=%p, dest=%p, len=%uB.",
                 node->devId, hostAddr, devAddr, memSize);
         }
 

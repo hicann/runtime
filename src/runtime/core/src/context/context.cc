@@ -1145,7 +1145,7 @@ rtError_t Context::TaskReclaimforSyncDevice(const mmTimespec startTime, int32_t 
             syncStream->isDeviceSyncFlag = false;
             const rtError_t ctxStatus = CheckStatus(syncStream);
             COND_RETURN_ERROR(
-                ctxStatus != RT_ERROR_NONE, ctxStatus, "context is abort, status=%#x.",
+                ctxStatus != RT_ERROR_NONE, ctxStatus, "context is aborted, status=%#x.",
                 static_cast<uint32_t>(ctxStatus));
 
             COND_RETURN_ERROR_MSG_INNER(
@@ -1232,7 +1232,7 @@ rtError_t Context::Synchronize(int32_t timeout)
         }
         COND_RETURN_ERROR(
             syncStream->IsCapturing(), RT_ERROR_STREAM_CAPTURED,
-            "Not allow to synchronize captured-stream, device_id=%u, stream_id=%d.", device_->Id_(), syncStream->Id_());
+            "Cannot synchronize captured stream, device_id=%u, stream_id=%d.", device_->Id_(), syncStream->Id_());
         // CONTINUE_ON_FAILURE need sync to get error code.
         COND_PROC(syncStream->IsSyncFinished() && (GetCtxMode() == ABORT_ON_FAILURE), continue;);
         syncStreams.push_back(syncStream);
@@ -1241,7 +1241,7 @@ rtError_t Context::Synchronize(int32_t timeout)
     (void)TaskReclaimforSyncDevice(startTime, timeout);
     const rtError_t error = CheckStatus();
     COND_PROC_RETURN_ERROR(error != RT_ERROR_NONE, error, PopContextErrMsg();
-                           , "context is abort, status=%#x.", static_cast<uint32_t>(error));
+                           , "context is aborted, status=%#x.", static_cast<uint32_t>(error));
     return SyncStreamsWithTimeout(syncStreams, timeout, startTime);
 }
 
@@ -1328,7 +1328,7 @@ rtError_t Context::DebugRegister(
     *streamId = static_cast<uint32_t>(dftStm->Id_());
     TaskInfo* rtDbgRegTask = nullptr;
 
-    COND_RETURN_WARN(mdl->IsDebugRegister(), RT_ERROR_DEBUG_REGISTER_FAILED, "model repeat debug register!");
+    COND_RETURN_WARN(mdl->IsDebugRegister(), RT_ERROR_DEBUG_REGISTER_FAILED, "model already debug registered!");
     if (device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ)) {
         RtDebugRegisterParam param = {addr, mdl->Id_(), flag};
         error =
@@ -1370,7 +1370,7 @@ rtError_t Context::DebugUnRegister(Model* const mdl)
     const int32_t streamId = dftStm->Id_();
     TaskInfo* rtDbgUnregTask = nullptr;
 
-    COND_RETURN_WARN(!mdl->IsDebugRegister(), RT_ERROR_DEBUG_UNREGISTER_FAILED, "model is not debug register!");
+    COND_RETURN_WARN(!mdl->IsDebugRegister(), RT_ERROR_DEBUG_UNREGISTER_FAILED, "model is not debug registered!");
 
     if (device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ)) {
         RtDebugUnRegisterParam param = {mdl->Id_()};
@@ -1416,7 +1416,8 @@ rtError_t Context::DebugRegisterForStream(
     NULL_PTR_RETURN_MSG(setStm, RT_ERROR_STREAM_NULL);
     *streamId = static_cast<uint32_t>(setStm->Id_());
 
-    COND_RETURN_WARN(debugStream->IsDebugRegister(), RT_ERROR_DEBUG_REGISTER_FAILED, "stream repeat debug register!");
+    COND_RETURN_WARN(
+        debugStream->IsDebugRegister(), RT_ERROR_DEBUG_REGISTER_FAILED, "stream already debug registered!");
 
     RT_LOG(RT_LOG_INFO, "send task stream_id=%d, debug_stream_id=%d.", setStm->Id_(), debugStream->Id_());
 
@@ -1462,7 +1463,7 @@ rtError_t Context::DebugUnRegisterForStream(Stream* const debugStream)
     NULL_PTR_RETURN_MSG(setStm, RT_ERROR_STREAM_NULL);
 
     COND_RETURN_WARN(
-        !debugStream->IsDebugRegister(), RT_ERROR_DEBUG_UNREGISTER_FAILED, "stream is not debug register!");
+        !debugStream->IsDebugRegister(), RT_ERROR_DEBUG_UNREGISTER_FAILED, "stream is not debug registered!");
 
     TaskInfo submitTask = {};
     rtError_t errorReason;
@@ -3333,7 +3334,7 @@ rtError_t Context::NpuClearFloatStatus(const uint32_t checkMode, Stream* const s
     error = device_->SubmitTask(rtNpuClearFloatStatusTask);
     ERROR_GOTO(error, ERROR_RECYCLE, "Failed to submit NPUClearFloatStatus task, retCode=%#x.", error);
 
-    RT_LOG(RT_LOG_INFO, "success to submit NpuClearFloatStatus task.");
+    RT_LOG(RT_LOG_INFO, "NpuClearFloatStatus task submitted.");
 
     GET_THREAD_TASKID_AND_STREAMID(rtNpuClearFloatStatusTask, streamId);
     return error;
@@ -3367,7 +3368,7 @@ rtError_t Context::SetStreamOverflowSwitch(Stream* const stm, const uint32_t fla
     }
 
     stm->SetOverflowSwitch(flags != 0U);
-    RT_LOG(RT_LOG_INFO, "success to submit OverflowSwitchSetTask task.");
+    RT_LOG(RT_LOG_INFO, "OverflowSwitchSetTask submitted.");
     return error;
 ERROR_RECYCLE:
     (void)device_->GetTaskFactory()->Recycle(tsk);

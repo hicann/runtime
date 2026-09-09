@@ -45,7 +45,8 @@ static inline void InvokeCallBack(
     uint32_t userDeviceId = 0U;
     const rtError_t error = Runtime::Instance()->GetUserDevIdByDeviceId(dev->Id_(), &userDeviceId);
     COND_RETURN_VOID(
-        (error != RT_ERROR_NONE), "Convert drv devId:%u is err:%#x", dev->Id_(), static_cast<uint32_t>(error));
+        (error != RT_ERROR_NONE), "Failed to convert drv device id, devId=%u, retCode=%#x", dev->Id_(),
+        static_cast<uint32_t>(error));
     rtDvppGrpRptInfo_t dvppReport = {};
     dvppReport.deviceId = userDeviceId;
     dvppReport.streamId = streamId;
@@ -67,7 +68,8 @@ static inline void InvokeCallBack(
     uint32_t userDeviceId = 0U;
     const rtError_t error = Runtime::Instance()->GetUserDevIdByDeviceId(dev->Id_(), &userDeviceId);
     COND_RETURN_VOID(
-        (error != RT_ERROR_NONE), "Convert drv devId:%u is err:%#x", dev->Id_(), static_cast<uint32_t>(error));
+        (error != RT_ERROR_NONE), "Failed to convert drv device id, devId=%u, retCode=%#x", dev->Id_(),
+        static_cast<uint32_t>(error));
     rtDvppGrpRptInfo_t dvppReport = {};
     dvppReport.deviceId = userDeviceId;
     dvppReport.streamId = streamId;

@@ -524,7 +524,7 @@ bool Context::CheckSubModelsIsEndCapture(const Stream* const captureStream) cons
     captureModel->ClearCachedAllSubModels();
     bool isEndCapture = captureModel->CheckSubModelsIsEndCapture();
     COND_RETURN_ERROR(
-        !isEndCapture, false, "sub capture model is not end capture, capture model_id=%d.", captureModel->Id_());
+        !isEndCapture, false, "sub capture model has not ended capture, capture model_id=%d.", captureModel->Id_());
 
     return true;
 }
@@ -897,7 +897,7 @@ rtError_t Context::StreamBeginTaskUpdate(Stream* const stm, TaskGroup* handle) c
         "Marking the start of the task to be updated", "The stream is already in task update or sample mode");
 
     COND_RETURN_ERROR_MSG_INNER(
-        handle->isUpdate, RT_ERROR_STREAM_TASKGRP_STATUS, "The handle only can be updated by one stream.");
+        handle->isUpdate, RT_ERROR_STREAM_TASKGRP_STATUS, "The handle can only be updated by one stream.");
 
     const rtError_t ret = stm->UpdateTaskGroupStatus(StreamTaskGroupStatus::UPDATE);
     ERROR_RETURN(

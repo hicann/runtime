@@ -131,7 +131,7 @@ rtError_t ApiImpl::KernelArgsFinalize(RtArgsHandle* argsHandle)
 {
     // 需要判断是否做overflow隐藏参数处理, 如果在GetPlaceHolderBuffer处理过，不再处理
     rtError_t error = ProcessOverFlowArgs(argsHandle);
-    ERROR_RETURN(error, "process over flow args failed,retCode=%#x.", error);
+    ERROR_RETURN(error, "process overflow args failed,retCode=%#x.", error);
 
     Kernel* kernel = RtPtrToPtr<Kernel*>(argsHandle->funcHandle);
     const KernelRegisterType regType = kernel->GetKernelRegisterType();
@@ -319,7 +319,7 @@ rtError_t ApiImpl::KernelArgsGetPlaceHolderBuffer(
 
     // 需要判断是否做overflow隐藏参数处理
     const rtError_t error = ProcessOverFlowArgs(argsHandle);
-    ERROR_RETURN(error, "process over flow args failed,retCode=%#x.", error);
+    ERROR_RETURN(error, "process overflow args failed,retCode=%#x.", error);
 
     const Kernel* const kernel = RtPtrToPtr<Kernel*>(argsHandle->funcHandle);
     // CPU Kernel是紧密排布， 所以做1字节对齐，非CPU Kernel（AIC/AIC）仍然是8字节对齐

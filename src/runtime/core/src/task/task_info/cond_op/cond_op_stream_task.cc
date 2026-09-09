@@ -282,7 +282,7 @@ rtError_t StreamSwitchTaskInitV1(
         static_cast<int32_t>(stm->Device_()->Id_()), streamSwitchTask->ptr, &physicPtr);
     COND_RETURN_ERROR(
         (error != RT_ERROR_NONE), error,
-        "Convert memory address[%#" PRIx64 "] from virtual to dma physic failed, retCode=%#x.", streamSwitchTask->ptr,
+        "Convert memory address[%#" PRIx64 "] from virtual to dma physical failed, retCode=%#x.", streamSwitchTask->ptr,
         error);
     streamSwitchTask->phyPtr = physicPtr;
 
@@ -324,7 +324,7 @@ rtError_t StreamSwitchTaskInitV2(
         error = taskInfo->stream->Device_()->Driver_()->MemAddressTranslate(devId, streamSwitchTask->ptr, &physicPtr);
         COND_RETURN_ERROR(
             (error != RT_ERROR_NONE), error,
-            "Convert memory address to dma physic failed, retCode=%#x, ptr=%#" PRIx64 ".", error,
+            "Convert memory address to dma physical failed, retCode=%#x, ptr=%#" PRIx64 ".", error,
             streamSwitchTask->ptr);
 
         uint64_t physicValuePtr = 0UL;
@@ -332,7 +332,7 @@ rtError_t StreamSwitchTaskInitV2(
             taskInfo->stream->Device_()->Driver_()->MemAddressTranslate(devId, RtPtrToValue(valPtr), &physicValuePtr);
         COND_RETURN_ERROR(
             (error != RT_ERROR_NONE), error,
-            "Convert memory address to dma physic failed, retCode=%#x, valuePtr=%#" PRIx64 ".", error,
+            "Convert memory address to dma physical failed, retCode=%#x, valuePtr=%#" PRIx64 ".", error,
             streamSwitchTask->valuePtr);
 
         streamSwitchTask->phyPtr = physicPtr;
@@ -494,12 +494,12 @@ rtError_t MemAddrTransForStreamLabelSwitchByIndexTask(TaskInfo* taskInfo)
     const int32_t devId = static_cast<int32_t>(taskInfo->stream->Device_()->Id_());
     rtError_t error = taskInfo->stream->Device_()->Driver_()->MemAddressTranslate(
         devId, RtPtrToValue(stmLblSwiByIdx->indexPtr), &physicIndexPtr);
-    COND_RETURN_ERROR((error != RT_ERROR_NONE), error, "Convert memory address from virtual to physic failed.");
+    COND_RETURN_ERROR((error != RT_ERROR_NONE), error, "Convert memory address from virtual to physical failed.");
     stmLblSwiByIdx->phyIndexPtr = physicIndexPtr;
 
     error = taskInfo->stream->Device_()->Driver_()->MemAddressTranslate(
         devId, RtPtrToValue(stmLblSwiByIdx->labelInfoPtr), &physicLabelInfoPtr);
-    COND_RETURN_ERROR((error != RT_ERROR_NONE), error, "Convert memory address from virtual to physic failed.");
+    COND_RETURN_ERROR((error != RT_ERROR_NONE), error, "Convert memory address from virtual to physical failed.");
     stmLblSwiByIdx->phyLabelInfoPtr = physicLabelInfoPtr;
 
     RT_LOG(

@@ -591,7 +591,7 @@ rtError_t ApiImplDavid::LaunchKernelByArgsWithType(
 {
     rtError_t error = RT_ERROR_NONE;
     RT_LOG(
-        RT_LOG_DEBUG, "LaunchKernelByArgsWithType, device_id=%u, add stream_id=%d, blockDim=%u, argsType=%u.",
+        RT_LOG_DEBUG, "LaunchKernelByArgsWithType, device_id=%u, stream_id=%d, blockDim=%u, argsType=%u.",
         stm->Device_()->Id_(), stm->Id_(), coreDim, static_cast<uint32_t>(argsWithType->type));
     switch (argsWithType->type) {
         case RT_ARGS_NON_CPU_EX: {
@@ -683,7 +683,7 @@ rtError_t ApiImplDavid::StreamWaitEvent(
             if ((!(evt->IsNewMode())) && (evt->GetEventFlag() != RT_EVENT_EXTERNAL)) {
                 RT_LOG(
                     RT_LOG_WARNING,
-                    "Event created via the API rtEventCreate and rtEventCreateWithFlag are not"
+                    "Events created via the APIs rtEventCreate and rtEventCreateWithFlag are not"
                     " supported, except for the RT_EVENT_EXTERNAL type, mode=%d, flag=%" PRIu64 "",
                     evt->IsNewMode(), evt->GetEventFlag());
                 return RT_ERROR_FEATURE_NOT_SUPPORT;
@@ -1496,7 +1496,7 @@ rtError_t ApiImplDavid::UbDirectSend(rtUbWqeInfo_t* const wqeInfo, Stream* const
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
         curStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Delivering a UB Direct task");
     COND_RETURN_ERROR_MSG_INNER(
-        curStm->GetBindFlag(), RT_ERROR_STREAM_INVALID, "UbDirectSend not support model stream, stream_id=%d.",
+        curStm->GetBindFlag(), RT_ERROR_STREAM_INVALID, "UbDirectSend does not support model stream, stream_id=%d.",
         curStm->Id_());
     COND_RETURN_WARN(
         curStm->IsCapturing(), RT_ERROR_FEATURE_NOT_SUPPORT, "Ub direct tasks cannot be delivered in capture mode.");
@@ -2044,7 +2044,8 @@ rtError_t ApiImplDavid::StreamStop(Stream* const stm)
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
         stm, curCtx, RT_ERROR_STREAM_CONTEXT, "Stopping the running tasks in a stream");
     COND_RETURN_ERROR_MSG_INNER(
-        stm->GetBindFlag(), RT_ERROR_STREAM_INVALID, "StreamStop not support model stream, stream_id=%d.", stm->Id_());
+        stm->GetBindFlag(), RT_ERROR_STREAM_INVALID, "StreamStop does not support model stream, stream_id=%d.",
+        stm->Id_());
     return stm->StreamStop();
 }
 rtError_t ApiImplDavid::StreamRecover(Stream* const stm)
@@ -2084,7 +2085,7 @@ rtError_t ApiImplDavid::GetMemUceInfo(const uint32_t deviceId, rtMemUceInfo* mem
     rtErrorInfo errorInfo = {};
     error = GetMemUceInfoProc(deviceId, &errorInfo);
     COND_RETURN_WARN(
-        error == RT_ERROR_FEATURE_NOT_SUPPORT, RT_ERROR_FEATURE_NOT_SUPPORT, "Not support get mem uce info.");
+        error == RT_ERROR_FEATURE_NOT_SUPPORT, RT_ERROR_FEATURE_NOT_SUPPORT, "Getting mem uce info is not supported.");
     if (error != RT_ERROR_NONE) {
         RT_LOG(RT_LOG_ERROR, "Get mem uce info failed, drv devId=%u, error=%d.", deviceId, error);
         return error;
@@ -2124,7 +2125,8 @@ static rtError_t L2BufferErrProc(const uint32_t deviceId, rtErrorInfo* const err
     const rtError_t error = NpuDriver::GetDeviceInfoByBuff(
         deviceId, MODULE_TYPE_L2BUFF, INFO_TYPE_L2BUFF_RESUME_CNT, static_cast<void*>(&resume_cnt), &buf_size);
     COND_RETURN_WARN(
-        error == RT_ERROR_FEATURE_NOT_SUPPORT, RT_ERROR_FEATURE_NOT_SUPPORT, "Not support get fault event info.");
+        error == RT_ERROR_FEATURE_NOT_SUPPORT, RT_ERROR_FEATURE_NOT_SUPPORT,
+        "Getting fault event info is not supported.");
     if ((error != RT_ERROR_NONE) || (resume_cnt == MAX_UINT32_NUM) || (buf_size != sizeof(resume_cnt))) {
         RT_LOG(
             RT_LOG_ERROR, "Calling drv api halGetDeviceInfoByBuff failed, resume_cnt=%u, buf_size=%d, error=%#x.",
@@ -2227,7 +2229,7 @@ static rtError_t L2BufferErrorResume(Device* const dev, const uint32_t deviceId)
     const rtError_t error = NpuDriver::SetDeviceInfoByBuff(
         deviceId, MODULE_TYPE_L2BUFF, INFO_TYPE_L2BUFF_RESUME, static_cast<void*>(&buf_context), sizeof(buf_context));
     COND_RETURN_WARN(
-        error == RT_ERROR_FEATURE_NOT_SUPPORT, RT_ERROR_FEATURE_NOT_SUPPORT, "Not support l2 buffer resume.");
+        error == RT_ERROR_FEATURE_NOT_SUPPORT, RT_ERROR_FEATURE_NOT_SUPPORT, "L2 buffer resume is not supported.");
     COND_PROC(
         (error != RT_ERROR_NONE), RT_LOG(
                                       RT_LOG_ERROR, "L2 buffer err repair failed, deviceId=%u, retCode=%#x.", deviceId,
@@ -2242,7 +2244,7 @@ static rtError_t L3PortRepairResume(Device* const dev)
     repairInfo.fault_type = HAL_REPAIR_FAULT_TYPE_UBMEM;
     const rtError_t error = NpuDriver::L3PortRepair(dev->Id_(), &repairInfo);
     COND_RETURN_WARN(
-        error == RT_ERROR_FEATURE_NOT_SUPPORT, RT_ERROR_FEATURE_NOT_SUPPORT, "Not support l3 prot resume.");
+        error == RT_ERROR_FEATURE_NOT_SUPPORT, RT_ERROR_FEATURE_NOT_SUPPORT, "L3 port resume is not supported.");
     COND_PROC(
         (error != RT_ERROR_NONE), RT_LOG(
                                       RT_LOG_ERROR, "l3 port err repair failed, deviceId=%u, retCode=%#x.", dev->Id_(),

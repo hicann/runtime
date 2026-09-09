@@ -615,7 +615,7 @@ aclError QueueProcessor::acltdtEnqueueData(
         return ret;
     }
 
-    ACL_LOG_INFO("success to execute acltdtEnqueueData, device is %d, qid is %u", deviceId, qid);
+    ACL_LOG_INFO("successfully executed acltdtEnqueueData, device is %d, qid is %u", deviceId, qid);
     return ACL_SUCCESS;
 }
 
@@ -667,7 +667,7 @@ aclError QueueProcessor::acltdtDequeueData(
     }
 
     ACL_LOG_INFO(
-        "success to execute acltdtDequeueData, device is %d, qid is %u, retDataSize is %zu bytes", deviceId, qid,
+        "successfully executed acltdtDequeueData, device is %d, qid is %u, retDataSize is %zu bytes", deviceId, qid,
         *retDataSize);
     return ACL_SUCCESS;
 }

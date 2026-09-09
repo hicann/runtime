@@ -76,7 +76,7 @@ NpuDriver::NpuDriver() : Driver()
     }
 
     COND_RETURN_NORMAL(
-        (drvRet == DRV_ERROR_NOT_SUPPORT), "halGetDeviceInfo not support in helper: drvRetCode=%d, ",
+        (drvRet == DRV_ERROR_NOT_SUPPORT), "halGetDeviceInfo is not supported in helper, drvRetCode=%d.",
         static_cast<int32_t>(DRV_ERROR_NOT_SUPPORT));
     if (drvRet != DRV_ERROR_NONE) {
         DRV_ERROR_PROCESS(
@@ -644,7 +644,7 @@ rtError_t NpuDriver::CheckIpcMapRoute(const char_t* const name, uint64_t attr, u
     const drvError_t drvRet = halShmemMapRouteCheck(name, devId, static_cast<uint32_t>(attr));
     if (drvRet == DRV_ERROR_NOT_EXIST) {
         RT_LOG(
-            RT_LOG_WARNING, "attr=%" PRIu64 " is not exist, drvRetCode=%d, name=%s, devId=%u.", attr,
+            RT_LOG_WARNING, "attr=%" PRIu64 " does not exist, drvRetCode=%d, name=%s, devId=%u.", attr,
             static_cast<int32_t>(drvRet), name, devId);
         return RT_ERROR_DRV_LINK_TYPE_NOT_SUPPORTED;
     }

@@ -1307,8 +1307,8 @@ rtError_t DavidStream::StreamTaskClean()
         devId, tsId, streamId_, sqId_);
     COND_RETURN_AND_MSG_INNER(
         (enable != false), RT_ERROR_STREAM_INVALID,
-        "Sq must be disable when clean task, device_id=%u, ts_id=%d, stream_id=%d, sq_id=%d", devId, tsId, streamId_,
-        sqId_);
+        "Sq must be disabled when cleaning task, device_id=%u, ts_id=%d, stream_id=%d, sq_id=%d", devId, tsId,
+        streamId_, sqId_);
     if (IsAutoSplitSq() && !IsSlaveStream() && autoSplitCtx_ != nullptr) {
         for (Stream* slave : autoSplitCtx_->slaveStreams) {
             error = Model_()->UnbindStream(slave, false);

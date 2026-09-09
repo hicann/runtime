@@ -313,7 +313,7 @@ def generate_stub_file(ge_inc_dir, runtime_inc_dir):
     """input inc_dir and return relevant contents"""
     ge_header_files = []
     runtime_header_files = collect_header_files(runtime_inc_dir, PathType.RUNTIME_INC)
-    logging.info("header files has been generated")
+    logging.info("header files have been generated")
     acl_content = generate_function(ge_header_files, runtime_header_files, ge_inc_dir, runtime_inc_dir)
     logging.info("acl_content has been generated")
     return acl_content
@@ -342,7 +342,7 @@ def generate_function(ge_header_files, runtime_header_files, ge_inc_dir, runtime
     content = includes
     content.append('// LCOV_EXCL_START\n')
     content.append(HANDLE_GET)
-    logging.info("include concent build success")
+    logging.info("include content built successfully")
     total = 0
     content.append('\n')
     content.append('extern "C" {\n')
@@ -350,7 +350,7 @@ def generate_function(ge_header_files, runtime_header_files, ge_inc_dir, runtime
     # generate implement
     total += process_headers(ge_header_files, ge_inc_dir, content)
     total += process_headers(runtime_header_files, runtime_inc_dir, content)
-    logging.info("implement concent build success")
+    logging.info("implementation content built successfully")
     logging.info('total functions number is %s', total)
     content.append('} // extern "C"\n')
     content.append('\n')

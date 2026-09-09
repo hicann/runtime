@@ -1237,7 +1237,7 @@ __attribute__((visibility("default"))) uint32_t PlatformInfoManager::GetPlatform
     auto iter = device_platform_infos_map_.find(device_id);
     if (iter == device_platform_infos_map_.end()) {
         if (real_soc.empty()) {
-            PF_LOGW("Not initialize soc_version of optional_infos.");
+            PF_LOGW("The soc_version of optional_infos is not initialized.");
             return PLATFORM_FAILED;
         }
         if (platform_infos_map_.find(real_soc) == platform_infos_map_.end()) {
@@ -1423,7 +1423,7 @@ uint32_t PlatformInfoManager::InitRuntimePlatformInfos(const std::string& SoCVer
         args_values.push_back("SoCVersion");
         args_values.push_back("SocVersion may be incorrect");
         REPORT_PREDEFINED_ERRMSG_3PARAMS(errLevel.c_str(), args_keys, args_values);
-        PF_LOGE("Not find platformInfos, SocVersion: [%s]", SoCVersion.c_str());
+        PF_LOGE("Cannot find platformInfos, SocVersion: [%s].", SoCVersion.c_str());
         return PLATFORM_FAILED;
     }
     PlatformInfosUtils::GetInstance().Clone(runtime_platform_infos_, it->second);

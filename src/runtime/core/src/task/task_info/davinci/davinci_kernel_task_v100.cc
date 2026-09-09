@@ -101,7 +101,7 @@ static rtError_t RuntimeDevMemAlloc(void** const dptr, const uint64_t size, cons
     // when alloc small page HBM OOM, try Alloc huge page.
     rtError_t ret = (dev->Driver_())->DevMemAlloc(dptr, size, type, dev->Id_(), MODULEID_RUNTIME, false);
     if (ret == RT_ERROR_DRV_OUT_MEMORY) {
-        RT_LOG(RT_LOG_WARNING, "device_id=%u alloc small page mem OOM, alloc huge page size=%u.", dev->Id_(), size);
+        RT_LOG(RT_LOG_WARNING, "device_id=%u alloc small page mem OOM, alloc huge page size=%uB.", dev->Id_(), size);
         ret = (dev->Driver_())->DevMemAlloc(dptr, size, RT_MEMORY_POLICY_HUGE_PAGE_ONLY, dev->Id_());
     }
     return ret;
@@ -884,7 +884,7 @@ void ConstructAICoreSqeForDavinciTask(TaskInfo* const taskInfo, rtStarsSqe_t* co
 
     RT_LOG(
         RT_LOG_INFO,
-        "bindFlag=%d, biuperfProfFla=%d, fftsType=%u, funcType=%u, prefetchCnt1=%u, chipType=%u, "
+        "bindFlag=%d, biuperfProfFlag=%d, fftsType=%u, funcType=%u, prefetchCnt1=%u, chipType=%u, "
         "cfgInfo schemMode=%u, taskType=%u, kernelFlag=%u, l2CacheProfFlag=%u, kernelCredit=%u, kernelAttrType=%s, "
         "minStackSize=%u(bytes), stackSize=%u(bytes), stackPhyBase=%#llx.",
         stm->GetBindFlag(), Runtime::Instance()->GetBiuperfProfFlag(), sqe->fftsType, funcType, prefetchCnt1,

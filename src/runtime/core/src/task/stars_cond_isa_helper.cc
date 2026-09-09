@@ -83,7 +83,7 @@ void ConvertConditionToBranchFunc3(
             break;
         default:
             RT_LOG(
-                RT_LOG_WARNING, "condition=UNKNOWN(%d) does not support, use equal instead.",
+                RT_LOG_WARNING, "condition=UNKNOWN(%d) is not supported, use equal instead.",
                 static_cast<int32_t>(condition));
             func3 = RT_STARS_COND_ISA_BRANCH_FUNC3_BEQ;
             isNeedReverseCmpReg = false;
@@ -1293,7 +1293,7 @@ void ConvertConditionToOpAndBranchFunc(
             break;
 
         default:
-            RT_LOG(RT_LOG_WARNING, "condition=%u does not support.", flag);
+            RT_LOG(RT_LOG_WARNING, "condition=%u is not supported.", flag);
             break;
     }
 }
@@ -1312,7 +1312,7 @@ void ConvertOpToReverseOp(const rtStarsCondIsaBranchFunc3_t branchFunc, rtStarsC
             break;
 
         default:
-            RT_LOG(RT_LOG_WARNING, "branchFunc=%u does not support.", branchFunc);
+            RT_LOG(RT_LOG_WARNING, "branchFunc=%u is not supported.", branchFunc);
             break;
     }
 }

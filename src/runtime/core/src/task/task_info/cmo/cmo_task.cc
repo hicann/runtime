@@ -48,7 +48,7 @@ rtError_t CmoTaskInit(
                 cmoTsk->cmoSqeInfo.lengthInner);
             return RT_ERROR_NONE;
         } else {
-            RT_LOG(RT_LOG_WARNING, "CMO task stream does not support in model.");
+            RT_LOG(RT_LOG_WARNING, "CMO task stream is not supported in the model.");
             return RT_ERROR_FEATURE_NOT_SUPPORT;
         }
     } else if (cmoModel == nullptr) {

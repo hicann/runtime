@@ -631,7 +631,7 @@ rtError_t ApiImpl::ExportToShareableHandleV2(
         error = NpuDriver::GetServerId(devId, &localServerId);
         COND_RETURN_ERROR_MSG_INNER(
             error != RT_ERROR_NONE, error,
-            "This device does not support cross-server communication drv devId=%u localServerId=%" PRId64 "err:%#x",
+            "This device does not support cross-server communication drv devId=%u localServerId=%" PRId64 " err:%#x",
             devId, localServerId, static_cast<uint32_t>(error));
     }
     uint64_t drvFlags = 0UL;
