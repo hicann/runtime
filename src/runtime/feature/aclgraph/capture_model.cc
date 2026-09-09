@@ -394,6 +394,22 @@ std::vector<CaptureModel*>& CaptureModel::GetAllSubCaptureModels()
     return cachedAllSubModels_;
 }
 
+uint32_t CaptureModel::GetSubModelStreamIdBySqId(const uint16_t sqId)
+{
+    auto& allSubModels = GetAllSubCaptureModels();
+    for (CaptureModel* subModel : allSubModels) {
+        const uint32_t subStreamId = subModel->GetStreamIdBySqId(sqId);
+        if (subStreamId != UINT32_MAX) {
+            RT_LOG(
+                RT_LOG_DEBUG,
+                "Found stream id in submodel, parent_model_id=%u, sub_model_id=%u, sq_id=%hu, stream_id=%u", Id_(),
+                subModel->Id_(), sqId, subStreamId);
+            return subStreamId;
+        }
+    }
+    return UINT32_MAX;
+}
+
 void CaptureModel::ClearCachedAllSubModels() { cachedAllSubModels_.clear(); }
 
 rtError_t CaptureModel::InitAllSubCaptureModelCondTaskByDefValue()

@@ -305,6 +305,7 @@ public:
     rtError_t StoreCondHandleTaskInfo(const int32_t streamId, const uint16_t taskId, CondHandle* condHandle);
     bool CheckSubModelsIsEndCapture();
     void ClearCachedAllSubModels();
+    uint32_t GetSubModelStreamIdBySqId(const uint16_t sqId);
 
     rtError_t MarkStreamActiveTask(TaskInfo* streamActiveTask); // the task of stream active is need updated
                                                                 // after sq cq is allocated

@@ -373,32 +373,7 @@ uint32_t FindStreamIdInSubModels(CaptureModel* const parentModel, const uint16_t
     if (parentModel == nullptr) {
         return UINT32_MAX;
     }
-
-    for (const auto& entry : parentModel->GetCondHandleTaskMap()) {
-        CondHandle* condHandle = entry.second;
-        if (condHandle == nullptr) {
-            continue;
-        }
-        for (Model* subModel : condHandle->GetSubCaptureModels()) {
-            CaptureModel* subCaptureModel = dynamic_cast<CaptureModel*>(subModel);
-            if (subCaptureModel == nullptr) {
-                continue;
-            }
-            uint32_t subStreamId = subCaptureModel->GetStreamIdBySqId(sqId);
-            if (subStreamId != UINT32_MAX) {
-                RT_LOG(
-                    RT_LOG_WARNING,
-                    "Found stream id in submodel, parent_model_id=%u, sub_model_id=%u, sq_id=%hu, stream_id=%u",
-                    parentModel->Id_(), subCaptureModel->Id_(), sqId, subStreamId);
-                return subStreamId;
-            }
-            subStreamId = FindStreamIdInSubModels(subCaptureModel, sqId);
-            if (subStreamId != UINT32_MAX) {
-                return subStreamId;
-            }
-        }
-    }
-    return UINT32_MAX;
+    return parentModel->GetSubModelStreamIdBySqId(sqId);
 }
 
 bool IsTaskBelongToSubCaptureMdl(const TaskInfo* const task)
