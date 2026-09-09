@@ -3,7 +3,7 @@
 ## 描述
 本样例展示了采集并落盘性能数据。通过调用API方式使能性能数据采集功能，从而自动采集性能原始数据。采集性能原始数据成功后，可将采集的原始数据拷贝到装有工具的开发环境上进行原始性能数据解析，可视化展示原始性能数据解析结果。
 
-本样例默认将`aclprofInit`的输出路径设置为`./output`。运行结束后的产物路径、解析命令和字段含义请参见[Profiling产物解读](../../../../docs/zh/profiling_ref/profiling_artifact_analysis.md)。
+本样例默认将`aclprofInit`的输出路径设置为`./output`。运行结束后的产物路径、解析命令和字段含义请参见[Profiling产物解读](../profiling_artifact_analysis.md)。
 
 ## 产品支持情况
 

@@ -4,7 +4,7 @@
 
 ## 产物解读
 
-Profiling产物路径、解析命令和字段含义请参见[Profiling产物解读](../../../docs/zh/profiling_ref/profiling_artifact_analysis.md)。
+Profiling产物路径、解析命令和字段含义请参见[Profiling产物解读](./profiling_artifact_analysis.md)。
 
 ## 样例列表
 

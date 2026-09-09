@@ -1,6 +1,6 @@
 # 19-01 Profiling数据采集接口
 
-本章节描述Profiling数据采集的核心接口，用于性能采集的初始化、配置、启停控制。Profiling产物路径、解析命令和字段含义请参见[Profiling产物解读](../profiling_ref/profiling_artifact_analysis.md)。
+本章节描述Profiling数据采集的核心接口，用于性能采集的初始化、配置、启停控制。
 
 - [`aclError aclprofInit(const char *profilerResultPath, size_t length)`](#aclprofInit)：初始化Profiling，目前用于设置保存性能数据的文件的路径。
 - [`aclError aclprofSetConfig(aclprofConfigType configType, const char *config, size_t configLength)`](#aclprofSetConfig)：aclprofCreateConfig接口的扩展接口，用于设置性能数据采集参数。

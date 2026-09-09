@@ -1,6 +1,6 @@
 # Profiling产物解读
 
-本文介绍Profiling数据采集后的产物目录、解析导出命令和常见字段含义。采集接口的调用顺序和参数约束请参见[Profiling数据采集接口](../api_ref/19-01_data_profiling_apis.md)。
+本文介绍Profiling数据采集后的产物目录、解析导出命令和常见字段含义。采集接口的调用顺序和参数约束请参见[Profiling数据采集接口](../../../docs/zh/api_ref/19-01_data_profiling_apis.md)，样例入口请参见[Profiling样例](./README.md)。
 
 ## 产物路径
 

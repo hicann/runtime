@@ -3,7 +3,7 @@
 ## Description
 This sample demonstrates how to collect and save performance data to disk. You can enable performance data collection by calling APIs, which automatically collects raw performance data. After successfully collecting raw performance data, you can copy the collected raw data to a development environment with tools installed for parsing, and visualize the parsed results of the raw performance data.
 
-This sample sets the `aclprofInit` output path to `./output` by default. After the sample finishes, the raw Profiling data is generated in the `output` directory of the sample. For parsing commands, parameters, common fields, and analysis suggestions, see [Artifact Analysis](../README_en.md#artifact-analysis).
+This sample sets the `aclprofInit` output path to `./output` by default. After the sample finishes, the raw Profiling data is generated in the `output` directory of the sample. For parsing commands, parameters, common fields, and analysis suggestions, see [Profiling artifact analysis](../profiling_artifact_analysis_en.md).
 
 ## Product Support
 

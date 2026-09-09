@@ -1,6 +1,6 @@
 # 18. Dump配置
 
-本章节描述CANN Runtime的Dump配置接口，用于算子数据Dump的初始化、配置及回调注册。Dump文件路径、转换命令和字段含义请参见[Dump产物解读](../dump_ref/dump_artifact_analysis.md)。
+本章节描述CANN Runtime的Dump配置接口，用于算子数据Dump的初始化、配置及回调注册。
 
 - [`aclError aclmdlInitDump()`](#aclmdlInitDump)：Dump初始化。
 - [`aclError aclmdlSetDump(const char *dumpCfgPath)`](#aclmdlSetDump)：设置Dump参数。
@@ -282,7 +282,7 @@ aclError aclmdlSetDump(const char *dumpCfgPath)
 - 不配置dump\_debug或将dump\_debug配置为off表示不开启溢出算子配置。
 - 若开启溢出算子配置，则dump\_path必须配置，表示导出dump文件的存储路径。
 
-    获取导出的数据文件后，可先参见[Dump产物解读](../dump_ref/dump_artifact_analysis.md)完成仓内路径定位、转换命令和字段解读；更多精度比对方法请参见[《精度调试工具用户指南》](https://hiascend.com/document/redirect/CannCommunityToolAccucacy)。
+    获取导出的数据文件后，文件的解析请参见[《精度调试工具用户指南》](https://hiascend.com/document/redirect/CannCommunityToolAccucacy)。
 
     dump\_path支持配置绝对路径或相对路径：
 
@@ -326,7 +326,7 @@ aclError aclmdlSetDump(const char *dumpCfgPath)
 
 - 开启算子Dump Watch模式，则dump\_path必须配置，表示导出dump文件的存储路径。
 
-    此处收集的dump文件无法通过文本工具直接查看其内容，若需查看dump文件内容，可先参见[Dump产物解读](../dump_ref/dump_artifact_analysis.md)将dump文件转换为numpy格式文件后，再通过Python查看numpy格式文件；更多精度比对方法请参见[《精度调试工具用户指南》](https://hiascend.com/document/redirect/CannCommunityToolAccucacy)。
+    此处收集的dump文件无法通过文本工具直接查看其内容，若需查看dump文件内容，先将dump文件转换为numpy格式文件后，再通过Python查看numpy格式文件，详细转换步骤请参见[《精度调试工具用户指南》](https://hiascend.com/document/redirect/CannCommunityToolAccucacy)。
 
     dump\_path支持配置绝对路径或相对路径：
 
