@@ -297,7 +297,11 @@ void CoreDumpBaseProcess(uint32_t chipType)
     exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.elfDataFlag = 1;
 
     // test collect kernel .o .json file
-    (void)setenv("ASCEND_CACHE_PATH", ASCEND_CACHE_PATH, 1);
+    system("mkdir -p /tmp/adump_coredump_utest/kernel_meta");
+    system("echo '\"kernelName\": \"Custom_3ee04b5d550e4239498c29151be6bb5c\"' > "
+           "/tmp/adump_coredump_utest/kernel_meta/Custom_3ee04b5d550e4239498c29151be6bb5c_mix_aic.json");
+    system("echo 'test.o' > /tmp/adump_coredump_utest/kernel_meta/Custom_3ee04b5d550e4239498c29151be6bb5c_mix_aic.o");
+    (void)setenv("ASCEND_CACHE_PATH", "/tmp/adump_coredump_utest", 1);
     (void)setenv("ASCEND_CUSTOM_OPP_PATH", ASCEND_CUSTOM_OPP_PATH, 1);
     char binData[] = "BIN_DATA";
     exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.bin = static_cast<rtBinHandle>(binData);
