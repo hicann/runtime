@@ -62,7 +62,7 @@ Runtime::~Runtime()
     (void)WaitMonitorExit();
     for (uint32_t i = 0U; i < RT_MAX_DEV_NUM; i++) {
         for (uint32_t j = 0U; j < tsNum_; j++) {
-            Context *context = priCtxs_[i][j].GetVal(false);
+            Context* context = priCtxs_[i][j].GetVal(false);
             priCtxs_[i][j].ResetVal();
             if (context != nullptr) {
                 if (context->GetCount() == 0ULL) {
@@ -76,7 +76,7 @@ Runtime::~Runtime()
             }
         }
     }
-    Context *context = GetXpuCtxt();
+    Context* context = GetXpuCtxt();
     if (context != nullptr) {
         const rtError_t ret = ContextManage::EraseContextFromSet(context);
         if (ret != RT_ERROR_CONTEXT_NULL) {
@@ -90,6 +90,7 @@ Runtime::~Runtime()
             }
         }
     }
+    InnerThreadLocalContainer::SetCurrentResLimitStream(nullptr);
     for (uint32_t i = 0U; i < maxProgramNum_; i++) {
         if (programAllocator_ == nullptr) {
             break;
@@ -98,8 +99,8 @@ Runtime::~Runtime()
             continue;
         }
 
-        RefObject<Program *> * const programItem = programAllocator_->GetDataToItem(i);
-        Program *programInst = programItem->GetVal(false);
+        RefObject<Program*>* const programItem = programAllocator_->GetDataToItem(i);
+        Program* programInst = programItem->GetVal(false);
         if (programInst != nullptr) {
             delete programInst;
             programInst = nullptr;
@@ -147,5 +148,5 @@ Runtime::~Runtime()
     DeleteModuleBackupPoint();
 }
 
-}  // namespace runtime
-}  // namespace cce
+} // namespace runtime
+} // namespace cce
