@@ -113,8 +113,9 @@ rtError_t GetIsCmdListNotFreeValByDvppCfg(rtDvppCfg_t* cfg, bool& isCmdListNotFr
                 break;
             default:
                 RT_LOG(
-                    RT_LOG_ERROR, "dvpp cfg attr id[%u] is invalid, should be [1, %u)", cfg->attrs[idx].id,
-                    RT_DVPP_MAX);
+                    RT_LOG_ERROR, "dvpp cfg attr id=%s(%d) is invalid, should be [1, %u)",
+                    (cfg->attrs[idx].id == RT_DVPP_MAX) ? "DVPP_MAX" : "UNKNOWN",
+                    static_cast<int32_t>(cfg->attrs[idx].id), RT_DVPP_MAX);
                 return RT_ERROR_INVALID_VALUE;
         }
     }

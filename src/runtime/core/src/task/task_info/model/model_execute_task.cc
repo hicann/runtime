@@ -174,9 +174,9 @@ void ReportErrorInfoForModelExecuteTask(TaskInfo* const taskInfo, const uint32_t
         subModelId = captureModel->Id_();
     }
     RT_LOG(
-        RT_LOG_ERROR, "Real fault task, device_id=%u, sub_model_id=%u, stream_id=%d, task_id=%hu, type=%d[%s].",
-        taskPtr->stream->Device_()->Id_(), subModelId, taskPtr->stream->Id_(), taskPtr->id, taskPtr->type,
-        taskPtr->typeName);
+        RT_LOG_ERROR, "Real fault task, device_id=%u, sub_model_id=%u, stream_id=%d, task_id=%hu, type=%s(%d).",
+        taskPtr->stream->Device_()->Id_(), subModelId, taskPtr->stream->Id_(), taskPtr->id, taskPtr->typeName,
+        static_cast<int32_t>(taskPtr->type));
 
     if (unlikely(taskPtr->type == TS_TASK_TYPE_FFTS_PLUS)) {
         taskPtr->errorCode = errorCode;

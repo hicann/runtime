@@ -1070,7 +1070,7 @@ rtError_t ApiImpl::RegisterCpuFunc(
         RtFmtMsg(
             "%s(%d)", (kernelRegType == RT_KERNEL_REG_TYPE_NON_CPU) ? "KERNEL_REG_TYPE_NON_CPU" : "UNKNOWN",
             static_cast<int32_t>(kernelRegType)),
-        "kernelRegType", std::to_string(RT_KERNEL_REG_TYPE_CPU));
+        "kernelRegType", "KERNEL_REG_TYPE_CPU(0)");
     Kernel* kernel = nullptr;
     // 注册cpu kernel
     rtError_t error = prog->RegisterSingleCpuKernel(funcName, kernelName, &kernel);
@@ -1708,9 +1708,8 @@ rtError_t ApiImpl::StreamSynchronize(Stream* const stm, const int32_t timeout)
         curStm->GetCurrentRunningTaskInfo(taskId, taskType, taskTypeName);
         RT_LOG_OUTER_MSG(
             RT_STREAM_SYNC_TIMEOUT_INNER_ERROR,
-            "Stream synchronize timeout, the current task is type_name=%s, device_id=%u, stream_id=%d, task_id=%u, "
-            "task_type=%d",
-            taskTypeName, curStm->Device_()->Id_(), curStm->Id_(), taskId, taskType);
+            "Stream synchronize timeout, the current task is task_type=%s(%d), device_id=%u, stream_id=%d, task_id=%u",
+            taskTypeName, taskType, curStm->Device_()->Id_(), curStm->Id_(), taskId);
     } else {
         if ((curStm->Device_()->GetIsRingbufferGetErr()) && (curCtx->GetFailureError() == RT_ERROR_NONE) &&
             (curCtx->GetCtxMode() != CONTINUE_ON_FAILURE)) {

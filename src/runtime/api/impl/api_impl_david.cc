@@ -1181,7 +1181,7 @@ rtError_t ApiImplDavid::GetCntNotifyAddress(
         COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
             (regType != NOTIFY_CNT_ST_SLICE), RT_ERROR_INVALID_VALUE,
             "Obtaining the on-device address of a CntNotify object",
-            RtFmtMsg("UNKNOWN(%d)", static_cast<int32_t>(regType)), "regType", std::to_string(NOTIFY_CNT_ST_SLICE));
+            RtFmtMsg("UNKNOWN(%d)", static_cast<int32_t>(regType)), "regType", "NOTIFY_CNT_ST_SLICE(1)");
     } else {
         COND_RETURN_ERROR(
             regType == NOTIFY_TABLE_SLICE, RT_ERROR_INVALID_VALUE,

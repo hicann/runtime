@@ -251,11 +251,11 @@ aclError acltdtAllocBuf(size_t size, uint32_t type, acltdtBuf* buf)
 {
     if ((type != static_cast<uint32_t>(ACL_TDT_NORMAL_MEM)) && (type != static_cast<uint32_t>(ACL_TDT_DVPP_MEM))) {
         const char_t* argList[] = {"func", "value", "param", "expect"};
-        std::string expect = "[" + std::to_string(ACL_TDT_NORMAL_MEM) + ", " + std::to_string(ACL_TDT_DVPP_MEM) + "]";
+        const std::string expect = "TDT_NORMAL_MEM(0) or TDT_DVPP_MEM(1)";
         const std::string typeVal = acl::GetAllocBufTypeDesc(static_cast<acltdtAllocBufType>(type));
         const char_t* argVal[] = {__func__, typeVal.c_str(), "type", expect.c_str()};
         acl::AclErrorLogManager::ReportInputErrorWithChar(acl::INVALID_VALUE_MSG, argList, argVal, 4UL);
-        ACL_LOG_ERROR("[Check][Param]param type must be equal to 0 or 1 currently");
+        ACL_LOG_ERROR("[Check][Param]param type must be TDT_NORMAL_MEM(0) or TDT_DVPP_MEM(1) currently");
         return ACL_ERROR_INVALID_PARAM;
     }
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(buf);

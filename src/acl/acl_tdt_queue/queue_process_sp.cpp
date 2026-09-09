@@ -199,8 +199,10 @@ aclError QueueProcessorSp::acltdtAllocBuf(const size_t size, const uint32_t type
             acl::INVALID_VALUE_MSG, std::vector<const char*>({"func", "value", "param", "expect"}),
             std::vector<const char*>(
                 {__func__, acl::GetAllocBufTypeDesc(static_cast<acltdtAllocBufType>(type)), "type",
-                 "[ACL_TDT_NORMAL_MEM, ACL_TDT_DVPP_MEM]"}));
-        ACL_LOG_ERROR("[Check][Param]Invalid type=%u; expected 0 or 1.", type);
+                 "TDT_NORMAL_MEM(0) or TDT_DVPP_MEM(1)"}));
+        ACL_LOG_ERROR(
+            "[Check][Param]Invalid type=%s; expected TDT_NORMAL_MEM(0) or TDT_DVPP_MEM(1).",
+            acl::GetAllocBufTypeDesc(static_cast<acltdtAllocBufType>(type)));
         return ACL_ERROR_INVALID_PARAM;
     }
     ACL_REQUIRES_OK(QueryAllocGroup());

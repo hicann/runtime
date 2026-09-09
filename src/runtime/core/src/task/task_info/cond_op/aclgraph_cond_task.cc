@@ -275,8 +275,9 @@ rtError_t CheckCondTaskParamsSize(rtCondTaskParams params)
                 "Verifying the number of parameters of a conditional task", params.size, "greater than 0");
             return RT_ERROR_NONE;
         default:
-            COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
-                true, RT_ERROR_INVALID_VALUE, "Verifying the number of parameters of a conditional task", params.type,
+            COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
+                true, RT_ERROR_INVALID_VALUE, "Verifying the number of parameters of a conditional task",
+                CondTaskTypeToString(params.type), "params.type",
                 "[0, " + std::to_string(RT_COND_TASK_TYPE_SWITCH) + "]");
     }
 }

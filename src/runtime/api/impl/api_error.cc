@@ -3073,9 +3073,9 @@ rtError_t ApiErrorDecorator::ReduceAsync(
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
         src, RT_ERROR_INVALID_VALUE, "Asynchronously performing the Reduce operation");
     ZERO_RETURN_AND_MSG_OUTER_WITH_FUNC_DESC(cnt, "Asynchronously performing the Reduce operation");
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
         (kind >= RT_RECUDE_KIND_END) || (kind < RT_MEMCPY_SDMA_AUTOMATIC_ADD), RT_ERROR_INVALID_VALUE,
-        "Asynchronously performing the Reduce operation", kind,
+        "Asynchronously performing the Reduce operation", ReduceKindToString(kind), "kind",
         RtFmtMsg("[%u, %u)", RT_MEMCPY_SDMA_AUTOMATIC_ADD, RT_RECUDE_KIND_END));
     COND_RETURN_AND_MSG_OUTER(
         (kind == RT_MEMCPY_SDMA_AUTOMATIC_ADD) && (cnt > MAX_MEMCPY_SIZE_OF_D2D), RT_ERROR_INVALID_VALUE,
@@ -3083,9 +3083,9 @@ rtError_t ApiErrorDecorator::ReduceAsync(
         RtFmtMsg(
             "If parameter kind equals RT_MEMCPY_SDMA_AUTOMATIC_ADD(10), the range of parameter cnt should be (0, %u]",
             MAX_MEMCPY_SIZE_OF_D2D));
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
         (type >= RT_DATA_TYPE_END) || (type < RT_DATA_TYPE_FP32), RT_ERROR_INVALID_VALUE,
-        "Asynchronously performing the Reduce operation", type,
+        "Asynchronously performing the Reduce operation", DataTypeToString(type), "type",
         "[" + std::to_string(RT_DATA_TYPE_FP32) + ", " + std::to_string(RT_DATA_TYPE_END) + ")");
 
     const rtError_t error = impl_->ReduceAsync(dst, src, cnt, kind, type, stm, cfgInfo);
@@ -3104,16 +3104,16 @@ rtError_t ApiErrorDecorator::ReduceAsyncV2(
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
         overflowAddr, RT_ERROR_INVALID_VALUE, "Asynchronously performing the Reduce operation");
     ZERO_RETURN_AND_MSG_OUTER_WITH_FUNC_DESC(cnt, "Asynchronously performing the Reduce operation");
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
         (kind != RT_MEMCPY_SDMA_AUTOMATIC_ADD), RT_ERROR_INVALID_VALUE,
         "Asynchronously performing the Reduce operation", ReduceKindToString(kind), "kind",
         ReduceKindToString(RT_MEMCPY_SDMA_AUTOMATIC_ADD));
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
         (cnt > MAX_MEMCPY_SIZE_OF_D2D), RT_ERROR_INVALID_VALUE, "Asynchronously performing the Reduce operation", cnt,
         "(0, " + std::to_string(MAX_MEMCPY_SIZE_OF_D2D) + "]");
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
         (type >= RT_DATA_TYPE_END) || (type < RT_DATA_TYPE_FP32), RT_ERROR_INVALID_VALUE,
-        "Asynchronously performing the Reduce operation", type,
+        "Asynchronously performing the Reduce operation", DataTypeToString(type), "type",
         "[" + std::to_string(RT_DATA_TYPE_FP32) + ", " + std::to_string(RT_DATA_TYPE_END) + ")");
 
     const rtError_t error = impl_->ReduceAsyncV2(dst, src, cnt, kind, type, stm, overflowAddr);
@@ -3711,7 +3711,7 @@ rtError_t ApiErrorDecorator::GetDeviceInfo(
 {
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
         moduleType == MODULE_TYPE_HOST_AICPU, RT_ERROR_INVALID_VALUE, "Obtaining information about a specified device",
-        moduleType, "not equal to " + std::to_string(MODULE_TYPE_HOST_AICPU));
+        moduleType, "not equal to HOST_AICPU(8)");
     uint32_t realDeviceId;
     rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(deviceId, &realDeviceId);
     COND_RETURN_ERROR(
@@ -4488,10 +4488,10 @@ rtError_t ApiErrorDecorator::ModelBindQueue(Model* const mdl, const uint32_t que
     COND_RETURN_AND_MSG_OUTER(
         mdl->GetModelType() == RT_MODEL_CAPTURE_MODEL, RT_ERROR_INVALID_VALUE, ErrorCode::EE1016,
         "Binding a queue to a model", "ACL Graph mode is not supported");
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
         (flag != RT_MODEL_INPUT_QUEUE) && (flag != RT_MODEL_OUTPUT_QUEUE), RT_ERROR_INVALID_VALUE,
-        "Binding a queue to a model", flag,
-        std::to_string(RT_MODEL_INPUT_QUEUE) + " or " + std::to_string(RT_MODEL_OUTPUT_QUEUE));
+        "Binding a queue to a model", RtFmtMsg("UNKNOWN(%d)", static_cast<int32_t>(flag)), "flag",
+        "MODEL_INPUT_QUEUE(0) or MODEL_OUTPUT_QUEUE(1)");
     const rtError_t error = impl_->ModelBindQueue(mdl, queueId, flag);
     ERROR_RETURN(
         error, "Model bind queue failed, queueId=%u, flag=%s(%d).", queueId,
@@ -6199,10 +6199,11 @@ rtError_t ApiErrorDecorator::CleanDeviceSatStatus(Stream* const stm)
 
 rtError_t ApiErrorDecorator::GetAllUtilizations(const int32_t devId, const rtTypeUtil_t kind, uint8_t* const util)
 {
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
         (kind >= RT_UTIL_TYPE_MAX) || (kind < 0), RT_ERROR_INVALID_VALUE,
-        "Querying the usage of Cube, Vector, and AI CPU on the device", kind,
-        "[0, " + std::to_string(RT_UTIL_TYPE_MAX) + ")");
+        "Querying the usage of Cube, Vector, and AI CPU on the device",
+        RtFmtMsg("%s(%d)", (kind == RT_UTIL_TYPE_MAX) ? "UTIL_TYPE_MAX" : "UNKNOWN", static_cast<int32_t>(kind)),
+        "kind", "[0, " + std::to_string(RT_UTIL_TYPE_MAX) + ")");
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
         util, RT_ERROR_INVALID_VALUE, "Querying the usage of Cube, Vector, and AI CPU on the device");
     int32_t realDeviceId;
@@ -6552,7 +6553,7 @@ rtError_t ApiErrorDecorator::StreamClear(Stream* const stm, rtClearStep_t step)
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(curStm, RT_ERROR_INVALID_VALUE, "Clearing tasks in a stream");
     COND_RETURN_ERROR(
         (step > RT_STREAM_CLEAR) || (step < RT_STREAM_STOP), RT_ERROR_INVALID_VALUE,
-        "Invalid clearStop, current step=%d, valid range is [%d, %d].", step, RT_STREAM_STOP, RT_STREAM_CLEAR);
+        "Invalid clearStop, current step=UNKNOWN(%d), valid range is [%d, %d].", step, RT_STREAM_STOP, RT_STREAM_CLEAR);
     const rtError_t ret = impl_->StreamClear(curStm, step);
     RT_LOG(RT_LOG_EVENT, "Clear stream_id=%d, step=%u, ret = %u", curStm->Id_(), step, static_cast<uint32_t>(ret));
     return ret;

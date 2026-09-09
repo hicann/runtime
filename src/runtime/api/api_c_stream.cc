@@ -64,7 +64,12 @@ rtError_t rtsStreamCreate(rtStream_t* stream, rtStreamCreateConfig_t* config)
                     break;
                 default:
                     RT_LOG_OUTER_MSG_WITH_FUNC(
-                        ErrorCode::EE1003, config->attrs[i].id, "config->attrs[" + std::to_string(i) + "].id",
+                        ErrorCode::EE1003,
+                        RtFmtMsg(
+                            "%s(%d)",
+                            (config->attrs[i].id == RT_STREAM_CREATE_ATTR_MAX) ? "STREAM_CREATE_ATTR_MAX" : "UNKNOWN",
+                            static_cast<int32_t>(config->attrs[i].id)),
+                        "config->attrs[" + std::to_string(i) + "].id",
                         "[" + std::to_string(RT_STREAM_CREATE_ATTR_FLAGS) + ", " +
                             std::to_string(RT_STREAM_CREATE_ATTR_MAX) + ")");
                     return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_INVALID_VALUE);

@@ -436,8 +436,8 @@ rtError_t AsyncHwtsEngine::SubmitPush(TaskInfo* const workTask, uint32_t* const 
     TIMESTAMP_END(PushTask);
     if (error != RT_ERROR_NONE) {
         RT_LOG_INNER_MSG(
-            RT_LOG_ERROR, "Failed to push task, stream_id=%d, task_id=%hu, task_type=%d, task_name=%s, retCode=%#x.",
-            workTask->stream->Id_(), workTask->id, static_cast<int32_t>(workTask->type), workTask->typeName,
+            RT_LOG_ERROR, "Failed to push task, stream_id=%d, task_id=%hu, task_type=%s(%d), retCode=%#x.",
+            workTask->stream->Id_(), workTask->id, workTask->typeName, static_cast<int32_t>(workTask->type),
             static_cast<uint32_t>(error));
         workTask->error = TASK_ERROR_SUBMIT_FAIL;
         TaskFinished(deviceId, workTask);

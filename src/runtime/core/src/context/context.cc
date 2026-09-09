@@ -1084,9 +1084,9 @@ rtError_t Context::SyncStreamsWithTimeout(
             syncStream->GetCurrentRunningTaskInfo(taskId, taskType, taskTypeName);
             RT_LOG_OUTER_MSG(
                 RT_STREAM_SYNC_TIMEOUT_INNER_ERROR,
-                "Stream synchronize timeout, the current task is type_name=%s, device_id=%u, stream_id=%d, task_id=%u, "
-                "task_type=%d.",
-                taskTypeName, syncStream->Device_()->Id_(), syncStream->Id_(), taskId, taskType);
+                "Stream synchronize timeout, the current task is task_type=%s(%d), device_id=%u, stream_id=%d, "
+                "task_id=%u.",
+                taskTypeName, taskType, syncStream->Device_()->Id_(), syncStream->Id_(), taskId);
             return RT_ERROR_STREAM_SYNC_TIMEOUT;
         }
 

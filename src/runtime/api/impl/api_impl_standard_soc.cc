@@ -1450,8 +1450,8 @@ rtError_t ApiImpl::TaskGetParams(rtTask_t task, rtTaskParams* const params)
             "The current task type RT_TASK_DEFAULT does not support obtaining of parameters."
             " Only task types other than RT_TASK_DEFAULT supports obtaining of parameters");
         RT_LOG(
-            RT_LOG_ERROR, "streamId=%d, taskId=%u, alloc taskType=%d, taskName=%s, taskOwner=TASK_INNER(%u).",
-            taskInfo->stream->Id_(), taskInfo->id, taskInfo->type, taskInfo->typeName,
+            RT_LOG_ERROR, "streamId=%d, taskId=%u, alloc taskType=%s(%d), taskOwner=TASK_INNER(%u).",
+            taskInfo->stream->Id_(), taskInfo->id, taskInfo->typeName, static_cast<int32_t>(taskInfo->type),
             static_cast<uint32_t>(taskInfo->taskOwner));
         return RT_ERROR_INVALID_VALUE;
     }
@@ -1512,8 +1512,7 @@ rtError_t ApiImpl::TaskGetParams(rtTask_t task, rtTaskParams* const params)
                 "The current task type RT_TASK_DEFAULT does not support obtaining of parameters."
                 " Only task types other than RT_TASK_DEFAULT supports obtaining of parameters");
             RT_LOG(
-                RT_LOG_ERROR,
-                "now this task doesn't support get params, stream_id=%d, task_id=%hu, typeName=%s, task type=%d",
+                RT_LOG_ERROR, "now this task doesn't support get params, stream_id=%d, task_id=%hu, task_type=%s(%d)",
                 stm->Id_(), taskInfo->id, taskInfo->typeName, taskInfo->type);
             error = RT_ERROR_INVALID_VALUE;
             break;

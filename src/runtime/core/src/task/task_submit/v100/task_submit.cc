@@ -649,9 +649,8 @@ rtError_t SubmitTaskStars(TaskInfo* submitTask, Stream* stm, uint32_t* const fli
     taskId = submitTask->id;
     COND_RETURN_ERROR(
         error != RT_ERROR_NONE, error,
-        "AllocTaskAndSendStars fail, streamId=%d, taskId=%hu, taskType=%u,"
-        " taskName=%s, retCode=%#x",
-        stm->Id_(), submitTask->id, submitTask->type, submitTask->typeName, error);
+        "AllocTaskAndSendStars fail, streamId=%d, taskId=%hu, taskType=%s(%d), retCode=%#x", stm->Id_(), submitTask->id,
+        submitTask->typeName, static_cast<int32_t>(submitTask->type), error);
 
     engine->AddPendingNum();
     // simu stars report

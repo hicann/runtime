@@ -823,8 +823,12 @@ static rtError_t OpenIpcNotifyWithFlag(
         RT_LOG(
             RT_LOG_ERROR,
             "[drv api] halShrIdOpen return type invalid: name=%s, "
-            "id_type[%d] != SHR_ID_NOTIFY_TYPE.",
-            openPara.name, static_cast<int32_t>(drvInfo.id_type));
+            "id_type=%s(%d), expected=SHR_ID_NOTIFY_TYPE(0).",
+            openPara.name,
+            (drvInfo.id_type == SHR_ID_EVENT_TYPE) ?
+                "SHR_ID_EVENT_TYPE" :
+                ((drvInfo.id_type == SHR_ID_TYPE_MAX) ? "SHR_ID_TYPE_MAX" : "UNKNOWN"),
+            static_cast<int32_t>(drvInfo.id_type));
         (void)halShrIdClose(openPara.name);
         return RT_ERROR_DRV_NO_NOTIFY_RESOURCES;
     }

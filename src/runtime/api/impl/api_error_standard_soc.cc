@@ -420,7 +420,10 @@ rtError_t ApiErrorDecorator::FusionLaunch(void* const fusionInfo, Stream* const 
         const rtFusionType_t subKernelType = fusionTask->subTask[idx].type;
         COND_RETURN_AND_MSG_OUTER(
             (subKernelType >= RT_FUSION_END), RT_ERROR_INVALID_VALUE, ErrorCode::EE1012, "Fused operator task delivery",
-            subKernelType, "fusion subtask type",
+            RtFmtMsg(
+                "%s(%d)", (subKernelType == RT_FUSION_END) ? "FUSION_END" : "UNKNOWN",
+                static_cast<int32_t>(subKernelType)),
+            "fusion subtask type",
             RtFmtMsg(
                 "The value range of attribute type of parameter subtask whose index is %u should be (0, %u)", idx,
                 RT_FUSION_END));
