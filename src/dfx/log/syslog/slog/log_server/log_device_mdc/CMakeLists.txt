@@ -291,7 +291,9 @@ set_target_properties(slogd PROPERTIES
 if (PRODUCT)
 if ((${PRODUCT} STREQUAL "ascend610") OR
     (${PRODUCT} STREQUAL "mc62cm12a") OR 
-    (${PRODUCT} STREQUAL "mc62cm12aesl"))
+    (${PRODUCT} STREQUAL "mc62cm12aesl") OR
+    (${PRODUCT} STREQUAL "mc32dm11a") OR
+    (${PRODUCT} STREQUAL "mc32dm11aesl"))
     add_custom_target(slogDeviceFiles
         COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/../../etc/mdc/slog.conf ${CMAKE_CURRENT_BINARY_DIR}/slog.conf
         COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/../../etc/mdc/log.yaml ${CMAKE_CURRENT_BINARY_DIR}
@@ -300,9 +302,7 @@ if ((${PRODUCT} STREQUAL "ascend610") OR
 
 # ascend610Lite and mc62cm12a series: MDC Lite configuration (3 files)
 elseif ((${PRODUCT} STREQUAL "ascend610Lite") OR 
-        (${PRODUCT} STREQUAL "ascend610Liteesl") OR 
-        (${PRODUCT} STREQUAL "mc32dm11a") OR 
-        (${PRODUCT} STREQUAL "mc32dm11aesl"))
+        (${PRODUCT} STREQUAL "ascend610Liteesl"))
     add_custom_target(slogDeviceFiles
         COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/../../etc/mdc_610lite/slog.conf ${CMAKE_CURRENT_BINARY_DIR}/slog.conf
         COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/../../etc/mdc/log.yaml ${CMAKE_CURRENT_BINARY_DIR}
