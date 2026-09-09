@@ -568,7 +568,7 @@ void ExceptionDumper::DumpCallbackData(
             IDE_LOGW("Dump callback data to file failed.");
         }
 
-        // 先落 _host.o(同步)，DumpKernelErrorSymbols 内定位偏移后对其批量 symbolize。
+        // 先落 _host.o(同步)，DumpKernelErrorSymbols 内定位偏移后对其逐偏移 symbolize。
         ret = argsCallback.DumpKernelBin();
         if (ret != ADUMP_SUCCESS) {
             IDE_LOGW("Dump callback kernel bin failed.");
@@ -584,7 +584,7 @@ void ExceptionDumper::DumpCallbackData(
 
         IDE_LOGI("Dump callback data finished, kernelName=%s.", info.kernelName);
     }
-    // 各 core 的源码解析已在 DumpKernelErrorSymbols → 批量 symbolize 内完成并回填，
+    // 各 core 的源码解析已在 DumpKernelErrorSymbols → 逐偏移 symbolize 内完成并回填，
     // 此处只在工具可用时统一打印聚类汇总（工具不可用时汇总无源码信息、无增量价值）。
     if (KernelSourceSymbolizer::IsAvailable()) {
         KernelSymbolLocator::PrintClassificationSummary(allLocations);

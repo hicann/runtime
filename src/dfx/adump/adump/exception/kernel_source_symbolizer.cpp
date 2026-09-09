@@ -33,6 +33,7 @@
 #include "sys_utils.h"
 #include "log/adx_log.h"
 #include "log/hdc_log.h"
+#include "log_types.h"
 
 // environ 由 <unistd.h> 声明（posix_spawn 需要当前进程环境变量表），无需再以 extern 方式引用外部变量。
 
@@ -40,6 +41,10 @@ namespace Adx {
 namespace {
 // 异常现场，宁可快速降级也不阻塞落盘：单次子进程解析超时 3 秒。
 constexpr int64_t SYMBOLIZER_TIMEOUT_MS = 3000;
+// 逐偏移连续失败上限：工具级失败（spawn 失败/超时）连续达到该值即跳过剩余偏移，
+// 病理全挂死场景总耗时收敛为 3×超时，避免长尾拖垮异常处理链路；
+// 偶发失败后恢复或解析为 unknown 均不计入（工具应答即重置计数，保持逐偏移隔离语义）。
+constexpr size_t MAX_CONSECUTIVE_SYMBOLIZE_FAILURES = 3U;
 // 超时回收：SIGTERM 后给子进程的自行退出宽限期，到期再 SIGKILL。
 constexpr int64_t SYMBOLIZER_TERM_GRACE_MS = 200;
 // 宽限期内轮询 waitpid(WNOHANG) 的睡眠间隔（10ms）。
@@ -51,6 +56,16 @@ constexpr char CANN_SYMBOLIZER_REL[] = "/bin/llvm-symbolizer";
 // 系统默认安装位置回退。
 constexpr char SYSTEM_SYMBOLIZER[] = "/usr/bin/llvm-symbolizer";
 constexpr char UNKNOWN_MARK[] = "??";
+// dlog 单条日志 msg 缓冲上限为 log_types.h 的 MSG_LENGTH（单源 include，上游变更经编译期传导），
+// 用户内容最后写入，之前拼接：级别/模块/PID/进程名/时间戳基座(≤96，dlog_message.c 基座格式)，
+// [__FILE__:__LINE__](绝对路径最坏假设 ≤136，随检出目录深度环境相关)，[tid:N](≤17)，
+// tag 下游前缀 [%d,%u,%u,%d](≤27)，换行与结尾符(2)，最坏合计 ≈278，取整预留 320。
+// 超预留环境（如 CI 深路径）下降级语义：仅丢 chunk 尾部，不丢整行。UT 硬编码 704 断言锁定派生契约。
+constexpr size_t LOG_HEADER_RESERVE = 320U;
+constexpr size_t MAX_LOG_CHUNK_SIZE = MSG_LENGTH - LOG_HEADER_RESERVE; // 704
+// 逐行打印后多设备并发的 raw 输出需保证标签行+全部 chunk 连续（slog
+// 只保证单条原子）：序列锁仅包裹打印段，符号化计算不持锁。
+std::mutex g_rawPrintMutex;
 
 int64_t NowMs()
 {
@@ -249,7 +264,8 @@ bool SpawnSymbolizer(const std::string& tool, SymbolizerProc& proc)
     (void)posix_spawn_file_actions_addclose(&actions, outPipe[1]);
 
     // 无 shell、无附加参数：目标文件随每行 stdin 以 "文件" 地址 形式给出，文件名与地址均来自受控数据。
-    // 不依赖 -f/-C/-i 约束输出格式，解析端按空行分块、只取块内位置行（file:line:col），忽略函数名与内联多帧。
+    // 不依赖 -f/-C/-i
+    // 约束输出格式，解析端不依赖空行与块边界：单偏移单进程，首条位置行=最内层帧、末条=最外层帧，忽略函数名行。
     char argExe[] = "llvm-symbolizer";
     char* const argv[] = {argExe, nullptr};
 
@@ -459,7 +475,7 @@ bool IsLocationLine(const std::string& line, size_t& colPos, size_t& linePos)
 }
 
 // 从一行 file:line:col 文本填充 res 的源码位置；从右侧解析 line 与 column，兼容路径含冒号。
-void FillLocation(const std::string& line, size_t colPos, size_t linePos, SymbolizeResult& res)
+void FillLocation(const std::string& line, size_t colPos, size_t linePos, SourceLocation& res)
 {
     res.srcFile = line.substr(0, linePos);
     res.srcLine = ParseDecU32(line.substr(linePos + 1, colPos - linePos - 1));
@@ -467,37 +483,70 @@ void FillLocation(const std::string& line, size_t colPos, size_t linePos, Symbol
     res.ok = (res.srcFile != UNKNOWN_MARK) && !res.srcFile.empty();
 }
 
-// 解析 llvm-symbolizer 默认输出：不依赖固定行数，按空行把输出切成块，第 i 块对应第 i 个偏移。
-// 块内可能混有函数名行与（内联展开的）多组位置行；只取块内第一条位置行（file:line:col），
-// 即最内层帧的源码位置，函数名行与外层内联帧一律忽略。
-void ParseSymbolizerOutput(const std::string& output, std::vector<SymbolizeResult>& results)
+// 解析单偏移输出：不依赖空行数量或块边界——空行只是输出内容，不承担结果分隔职责；
+// 首条位置行填 innermost（最内层帧），每条位置行覆盖 outermost（末条胜出=最外层帧）。
+// llvm-symbolizer 默认内联帧序为 innermost-first（19.1.7 实测）；双帧保留使版本差异不丢信息，仅可能标签互换。
+void ParseSingleResult(const std::string& output, SymbolizeResult& res)
 {
     std::istringstream iss(output);
     std::string line;
-    size_t idx = 0;
-    bool blockHasLoc = false;  // 当前块是否已取到位置行
-    bool blockStarted = false; // 当前块是否已出现任何非空行
-    while (idx < results.size() && std::getline(iss, line)) {
-        if (line.empty()) {
-            // 空行 = 块边界：已开始的块结束，推进到下一个偏移。
-            if (blockStarted) {
-                ++idx;
-                blockHasLoc = false;
-                blockStarted = false;
-            }
-            continue;
-        }
-        blockStarted = true;
+    bool hasInner = false;
+    while (std::getline(iss, line)) {
         size_t colPos = 0;
         size_t linePos = 0;
-        // 每块只认第一条位置行，后续内联外层帧与函数名行忽略。
-        if (!blockHasLoc && IsLocationLine(line, colPos, linePos)) {
-            FillLocation(line, colPos, linePos, results[idx]);
-            blockHasLoc = true;
+        if (IsLocationLine(line, colPos, linePos)) {
+            if (!hasInner) {
+                FillLocation(line, colPos, linePos, res.innermost);
+                hasInner = true;
+            }
+            FillLocation(line, colPos, linePos, res.outermost);
         }
     }
 }
 } // namespace
+
+// 无换行符的末行若以 \r 结尾（如输出被截断），该 \r 按行尾残留剥离。
+std::vector<std::string> KernelSourceSymbolizer::SplitRawOutputForLog(const std::string& output)
+{
+    std::vector<std::string> chunks;
+    size_t off = 0;
+    const size_t len = output.size();
+    while (off < len) {
+        size_t end = output.find('\n', off);
+        if (end == std::string::npos) {
+            end = len;
+        } else {
+            ++end; // 包含换行符；off 后续跳至 end 即下一行首
+        }
+        // 行内容 [off, end) 含换行符时 end-1 为 '\n'，去尾 \r 前先剥掉换行符长度。
+        size_t lineEnd = (end > off && output[end - 1] == '\n') ? end - 1 : end;
+        if (lineEnd > off && output[lineEnd - 1] == '\r') {
+            --lineEnd;
+        }
+        const size_t lineLen = lineEnd - off;
+        if (lineLen == 0) {
+            off = end;
+            continue;
+        }
+        // 块内分 chunk
+        size_t pos = 0;
+        while (pos < lineLen) {
+            size_t chunkSize = (lineLen - pos < MAX_LOG_CHUNK_SIZE) ? (lineLen - pos) : MAX_LOG_CHUNK_SIZE;
+            // UTF-8 感知切分：切点（本块最后一个字节位置）落在多字节字符的续字节上时回退到字符边界
+            // （最多回退 3 字节：4 字节字符至多 3 个续字节；非法序列宁可断字节也不回退到 0，避免死循环）。
+            size_t fallback = 0;
+            while (chunkSize > 1 && fallback < 3 &&
+                   (static_cast<unsigned char>(output[off + pos + chunkSize - 1]) & 0xC0U) == 0x80U) {
+                --chunkSize;
+                ++fallback;
+            }
+            chunks.push_back(output.substr(off + pos, chunkSize));
+            pos += chunkSize;
+        }
+        off = end;
+    }
+    return chunks;
+}
 
 #ifdef __ADUMP_LLT
 void KernelSourceSymbolizer::ResetLocateCacheForTest()
@@ -555,23 +604,41 @@ bool KernelSourceSymbolizer::Symbolize(
     if (tool.empty()) {
         return false;
     }
-    // 单 .o 一次校验：无效则整体失败，results 保持占位（ok=false）。
+    // 单 .o 一次校验：无效则整体失败，results 保持占位（默认 unknown）。
     Path path(oFilePath);
     if (oFilePath.empty() || !path.RealPath()) {
         IDE_LOGW("Symbolize: invalid .o path, skip. path=%s.", oFilePath.c_str());
         return false;
     }
 
-    // 该 .o 的所有偏移按序写入 stdin：文件名加引号以容忍路径中的空格；地址十六进制。
-    std::ostringstream oss;
-    for (uint64_t off : offsets) {
-        oss << "\"" << path.GetString() << "\" 0x" << std::hex << off << "\n";
+    // 逐偏移独立 symbolize：单次失败只丢自身并继续，全部成功（outermost 有效）才返回 true。
+    bool allResolved = true;
+    size_t consecutiveFailures = 0;
+    for (size_t i = 0; i < offsets.size(); ++i) {
+        std::ostringstream oss;
+        oss << "\"" << path.GetString() << "\" 0x" << std::hex << offsets[i] << "\n";
+        if (!RunSymbolizer(tool, oss.str(), offsets[i], results[i])) {
+            IDE_LOGW("Symbolize: offset 0x%lx failed, keep unknown and continue.", offsets[i]);
+            allResolved = false;
+            ++consecutiveFailures;
+            if (consecutiveFailures >= MAX_CONSECUTIVE_SYMBOLIZE_FAILURES && i + 1 < offsets.size()) {
+                IDE_LOGW(
+                    "Symbolize: %zu consecutive failures, skip remaining %zu offsets.", consecutiveFailures,
+                    offsets.size() - i - 1);
+                break;
+            }
+            continue;
+        }
+        consecutiveFailures = 0;
+        if (!results[i].outermost.ok) {
+            allResolved = false;
+        }
     }
-    return RunSymbolizer(tool, oss.str(), results);
+    return allResolved;
 }
 
 bool KernelSourceSymbolizer::RunSymbolizer(
-    const std::string& tool, const std::string& inputLines, std::vector<SymbolizeResult>& results)
+    const std::string& tool, const std::string& inputLine, uint64_t offset, SymbolizeResult& result)
 {
     // 写 stdin 前先忽略 SIGPIPE，子进程早退关闭读端时 write 返回 EPIPE 走降级，而非终止宿主进程。
     IgnoreSigPipeOnce();
@@ -581,14 +648,14 @@ bool KernelSourceSymbolizer::RunSymbolizer(
     }
 
     std::string output;
-    const bool ok = PumpSymbolizerIo(proc, inputLines, output);
+    const bool ok = PumpSymbolizerIo(proc, inputLine, output);
     (void)close(proc.outFd);
     proc.outFd = -1;
 
     if (!ok) {
         IDE_LOGW(
-            "Symbolize: llvm-symbolizer timed out after %ldms, terminate child pid=%d.", SYMBOLIZER_TIMEOUT_MS,
-            proc.pid);
+            "Symbolize: llvm-symbolizer timed out after %ldms for offset 0x%lx, terminate child pid=%d.",
+            SYMBOLIZER_TIMEOUT_MS, offset, proc.pid);
     }
     // 回收纳入宽限 deadline：先 SIGTERM 通知、限时等待、必要时 SIGKILL 兜底，
     // 即便子进程关闭 stdout 后仍挂住，也不会在此无界阻塞。
@@ -597,11 +664,20 @@ bool KernelSourceSymbolizer::RunSymbolizer(
         return false;
     }
 
-    // 原样打印 llvm-symbolizer 的完整原始输出，便于现场直接查看未经加工的解析结果。
-    if (!output.empty()) {
-        IDE_LOGE("[Dump][Exception][Symbolize] llvm-symbolizer raw output:\n%s", output.c_str());
+    // 该偏移的原始输出独立分块打印：日志头带 offset 便于多偏移/多设备场景关联，空行跳过、超长行分块。
+    const std::vector<std::string> chunks = SplitRawOutputForLog(output);
+    {
+        std::lock_guard<std::mutex> lock(g_rawPrintMutex);
+        if (!chunks.empty()) {
+            IDE_LOGE(
+                "[Dump][Exception][Symbolize] llvm-symbolizer raw output for offset 0x%lx (total %zu bytes):", offset,
+                output.size());
+            for (const std::string& chunk : chunks) {
+                IDE_LOGE("%s", chunk.c_str());
+            }
+        }
     }
-    ParseSymbolizerOutput(output, results);
+    ParseSingleResult(output, result);
     return true;
 }
 

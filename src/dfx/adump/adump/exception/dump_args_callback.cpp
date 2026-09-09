@@ -84,7 +84,7 @@ int32_t DumpArgsCallback::DumpKernelErrorSymbols(ErrorLocation& outLocation)
         ret == ADUMP_SUCCESS, return ADUMP_FAILED,
         "Get exception register information failed for callback exception. ret=%d", ret);
 
-    // 构建 ErrorLocation：LocateErrorSymbolsForCore 内部定位偏移后对该 .o 批量 symbolize 并回填 src。
+    // 构建 ErrorLocation：LocateErrorSymbolsForCore 内部定位偏移后对该 .o 逐偏移 symbolize 并回填 src。
     ret = locator.LocateErrorSymbolsForCore(info_.coreId, info_.coreType, exceptionRegInfo, outLocation);
     IDE_CTRL_VALUE_WARN(
         ret == ADUMP_SUCCESS, return ADUMP_FAILED,
