@@ -2063,7 +2063,10 @@ TEST_F(StreamTest, SetFailureMode)
     stream->taskResMang_ = nullptr;
     TaskInfo kernTask = {};
     kernTask.stream = stream.get();
-    MOCKER_CPP(&Stream::AllocTask).stubs().will(returnValue(&kernTask));
+    MOCKER_CPP(static_cast<TaskInfo* (Stream::*)(TaskInfo*, tsTaskType_t, rtError_t&, uint32_t, UpdateTaskFlag)>(
+                   &Stream::AllocTask))
+        .stubs()
+        .will(returnValue(&kernTask));
     MOCKER_CPP_VIRTUAL(device.get(), &RawDevice::SubmitTask).stubs().will(returnValue(RT_ERROR_NONE));
     Runtime::maxProgramNum_ = 0;
     rtError_t error = stream->SetFailMode(STOP_ON_FAILURE);
@@ -3271,7 +3274,10 @@ TEST_F(StreamTest, SendFlipTaskWithStreamId_SuccessPath)
         .stubs()
         .with(mockcpp::any())
         .will(returnValue(ctrlStream));
-    MOCKER_CPP(&Stream::AllocTask).stubs().will(returnValue(flipTaskPtr));
+    MOCKER_CPP(static_cast<TaskInfo* (Stream::*)(TaskInfo*, tsTaskType_t, rtError_t&, uint32_t, UpdateTaskFlag)>(
+                   &Stream::AllocTask))
+        .stubs()
+        .will(returnValue(flipTaskPtr));
     MOCKER_CPP_VIRTUAL(stubDevice, &RawDevice::SubmitTask)
         .stubs()
         .with(mockcpp::any())
@@ -3353,7 +3359,8 @@ TEST_F(StreamTest, SendFlipTaskWithStreamId_AllocTaskFail)
         .stubs()
         .with(mockcpp::any())
         .will(returnValue(ctrlStream));
-    MOCKER_CPP(&Stream::AllocTask)
+    MOCKER_CPP(static_cast<TaskInfo* (Stream::*)(TaskInfo*, tsTaskType_t, rtError_t&, uint32_t, UpdateTaskFlag)>(
+                   &Stream::AllocTask))
         .stubs()
         .with(mockcpp::any(), mockcpp::any(), outBound(RT_ERROR_TASK_NOT_SUPPORT), mockcpp::any(), mockcpp::any())
         .will(returnValue(static_cast<TaskInfo*>(nullptr)));

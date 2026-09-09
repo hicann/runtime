@@ -39,10 +39,12 @@ rtError_t ProfTraceEx(const uint64_t id, const uint64_t modelId, const uint16_t 
     uint32_t pos = 0xFFFFU;
     Stream* dstStm = stm;
     stm->StreamLock();
-    error = AllocTaskInfoForCapture(&rtProfTraceExTask, stm, pos, dstStm);
-    ERROR_PROC_RETURN_MSG_INNER(error, stm->StreamUnLock();, "Failed to allocate task, stream_id=%d, retCode=%#x.",
-                                                           stm->Id_(), static_cast<uint32_t>(error));
-    SaveTaskCommonInfo(rtProfTraceExTask, dstStm, pos);
+    rtProfTraceExTask = stm->AllocTask(nullptr, TS_TASK_TYPE_PROFILER_TRACE_EX, error);
+    COND_PROC_RETURN_ERROR_MSG_INNER(rtProfTraceExTask == nullptr, error, stm->StreamUnLock();
+                                     , "Failed to allocate task, stream_id=%d, retCode=%#x.", stm->Id_(),
+                                     static_cast<uint32_t>(error));
+    pos = rtProfTraceExTask->id;
+    dstStm = rtProfTraceExTask->stream;
     (void)ProfilerTraceExTaskInit(rtProfTraceExTask, id, modelId, tagId);
     rtProfTraceExTask->stmArgPos = static_cast<DavidStream*>(dstStm)->GetArgPos();
     error = DavidSendTask(rtProfTraceExTask, dstStm);
@@ -81,22 +83,24 @@ void ProfStart(Profiler* const profiler, const uint64_t profConfig, const uint32
                 error != RT_ERROR_NONE, "stream_id=%d check failed, retCode=%#x.", stream->Id_(),
                 static_cast<uint32_t>(error));
             uint32_t pos = 0xFFFFU;
+            Stream* dstStm = stream;
             stream->StreamLock();
-            error = AllocTaskInfo(&tsk, stream, pos);
-            if (error != RT_ERROR_NONE) {
+            tsk = stream->AllocTask(nullptr, TS_TASK_TYPE_PROFILING_ENABLE, error);
+            if (tsk == nullptr) {
                 stream->StreamUnLock();
                 RT_LOG(
                     RT_LOG_ERROR, "stream_id=%d alloc task failed, retCode=%#x.", stream->Id_(),
                     static_cast<uint32_t>(error));
                 return;
             }
+            pos = tsk->id;
+            dstStm = tsk->stream;
 
-            SaveTaskCommonInfo(tsk, stream, pos);
             (void)ProfilingEnableTaskInit(tsk, static_cast<uint64_t>(pid), profCfg);
-            error = DavidSendTask(tsk, stream);
+            error = DavidSendTask(tsk, dstStm);
             if (error != RT_ERROR_NONE) {
                 TaskUnInitProc(tsk);
-                TaskRollBack(stream, pos);
+                TaskRollBack(dstStm, pos);
                 stream->StreamUnLock();
                 RT_LOG(
                     RT_LOG_ERROR, "stream_id=%d send task failed, retCode=%#x.", stream->Id_(),
@@ -131,22 +135,24 @@ void ProfStop(Profiler* const profiler, const uint64_t profConfig, const uint32_
                 error != RT_ERROR_NONE, "stream_id=%d check failed, retCode=%#x.", stream->Id_(),
                 static_cast<uint32_t>(error));
             uint32_t pos = 0xFFFFU;
+            Stream* dstStm = stream;
             stream->StreamLock();
             TaskInfo* tsk = nullptr;
-            error = AllocTaskInfo(&tsk, stream, pos);
-            if (error != RT_ERROR_NONE) {
+            tsk = stream->AllocTask(nullptr, TS_TASK_TYPE_PROFILING_DISABLE, error);
+            if (tsk == nullptr) {
                 stream->StreamUnLock();
                 RT_LOG(
                     RT_LOG_ERROR, "stream_id=%d alloc task failed, retCode=%#x.", stream->Id_(),
                     static_cast<uint32_t>(error));
                 return;
             }
-            SaveTaskCommonInfo(tsk, stream, pos);
+            pos = tsk->id;
+            dstStm = tsk->stream;
             (void)ProfilingDisableTaskInit(tsk, static_cast<uint64_t>(pid), profCfg);
-            error = DavidSendTask(tsk, stream);
+            error = DavidSendTask(tsk, dstStm);
             if (error != RT_ERROR_NONE) {
                 TaskUnInitProc(tsk);
-                TaskRollBack(stream, pos);
+                TaskRollBack(dstStm, pos);
                 stream->StreamUnLock();
                 RT_LOG(
                     RT_LOG_ERROR, "stream_id=%d send task failed, retCode=%#x.", stream->Id_(),
@@ -175,18 +181,21 @@ rtError_t DavidAllocAndSendFlipTask(Stream* const stream, uint32_t prePos, uint3
 
     uint32_t pos = 0xFFFFU;
     TaskInfo* tsk = nullptr;
-    rtError_t error = AllocTaskInfo(&tsk, stream, pos);
-    if (error != RT_ERROR_NONE) {
+    Stream* dstStm = stream;
+    rtError_t error = RT_ERROR_NONE;
+    tsk = stream->AllocTask(nullptr, TS_TASK_TYPE_FLIP, error);
+    if (tsk == nullptr) {
         RT_LOG(RT_LOG_ERROR, "stream_id=%d alloc task failed, retCode=%#x.", stream->Id_(), error);
         return error;
     }
-    SaveTaskCommonInfo(tsk, stream, pos);
+    pos = tsk->id;
+    dstStm = tsk->stream;
     FlipTaskInit(tsk, stream->GetTaskIdFlipNum());
-    tsk->stmArgPos = (static_cast<DavidStream*>(stream))->GetArgPos();
-    error = DavidSendTask(tsk, stream);
+    tsk->stmArgPos = (static_cast<DavidStream*>(dstStm))->GetArgPos();
+    error = DavidSendTask(tsk, dstStm);
     if (error != RT_ERROR_NONE) {
         TaskUnInitProc(tsk);
-        TaskRollBack(stream, pos);
+        TaskRollBack(dstStm, pos);
         stream->SetTaskIdFlipNum(oriFlipNum);
         RT_LOG(
             RT_LOG_ERROR, "stream_id=%d send task failed, retCode=%#x.", stream->Id_(), static_cast<uint32_t>(error));

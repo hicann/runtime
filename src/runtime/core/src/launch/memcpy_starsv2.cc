@@ -54,10 +54,12 @@ rtError_t MemcopyAsyncPtr(
         stm->StreamUnLock();
     };
     stm->StreamLock();
-    error = AllocTaskInfoForCapture(&cpyAsyncTask, stm, pos, dstStm);
-    ERROR_PROC_RETURN_MSG_INNER(error, stm->StreamUnLock();, "Failed to alloc task, stream_id=%d, retCode=%#x.",
-                                                           stm->Id_(), static_cast<uint32_t>(error));
-    SaveTaskCommonInfo(cpyAsyncTask, dstStm, pos);
+    cpyAsyncTask = stm->AllocTask(nullptr, TS_TASK_TYPE_MEMCPY, error);
+    COND_PROC_RETURN_ERROR_MSG_INNER(cpyAsyncTask == nullptr, error, stm->StreamUnLock();
+                                     , "Failed to alloc task, stream_id=%d, retCode=%#x.", stm->Id_(),
+                                     static_cast<uint32_t>(error));
+    pos = cpyAsyncTask->id;
+    dstStm = cpyAsyncTask->stream;
     ScopeGuard tskErrRecycle(errRecycle);
     error = MemcpyAsyncTaskInitV1(cpyAsyncTask, static_cast<rtDavidMemcpyAddrInfo*>(memcpyAddrInfo), count);
     ERROR_RETURN_MSG_INNER(
@@ -96,10 +98,12 @@ rtError_t Memcpy2DAsync(
     const uint32_t sqeNum =
         GetSqeNumForMemcopyAsync(kind, false, UINT32_MAX, static_cast<uint32_t>(rtAsyncCpyMethod::RT_ASYNC_CPY_2D));
     stm->StreamLock();
-    error = AllocTaskInfoForCapture(&taskAsync2d, stm, pos, dstStm, sqeNum);
-    ERROR_PROC_RETURN_MSG_INNER(error, stm->StreamUnLock();, "Failed to alloc task, stream_id=%d, retCode=%#x.",
-                                                           stm->Id_(), static_cast<uint32_t>(error));
-    SaveTaskCommonInfo(taskAsync2d, dstStm, pos, sqeNum);
+    taskAsync2d = stm->AllocTask(nullptr, TS_TASK_TYPE_MEMCPY, error, sqeNum);
+    COND_PROC_RETURN_ERROR_MSG_INNER(taskAsync2d == nullptr, error, stm->StreamUnLock();
+                                     , "Failed to alloc task, stream_id=%d, retCode=%#x.", stm->Id_(),
+                                     static_cast<uint32_t>(error));
+    pos = taskAsync2d->id;
+    dstStm = taskAsync2d->stream;
     ScopeGuard tskErrRecycle(errRecycle);
     error = MemcpyAsyncTaskInitV2(taskAsync2d, dst, dstPitch, src, srcPitch, width, height, kind, fixedSize);
     taskAsync2d->u.memcpyAsyncTaskInfo.copyMethod = static_cast<uint8_t>(rtAsyncCpyMethod::RT_ASYNC_CPY_2D);
@@ -149,10 +153,12 @@ rtError_t MemcopyBatchAsync(
     const uint32_t sqeNum = GetSqeNumForMemcopyAsync(
         RT_MEMCPY_RESERVED, false, UINT32_MAX, static_cast<uint32_t>(rtAsyncCpyMethod::RT_ASYNC_CPY_BATCH));
     stm->StreamLock();
-    error = AllocTaskInfoForCapture(&taskAsyncBatch, stm, pos, dstStm, sqeNum);
-    ERROR_PROC_RETURN_MSG_INNER(error, stm->StreamUnLock();, "Failed to alloc task, stream_id=%d, retCode=%#x.",
-                                                           stm->Id_(), static_cast<uint32_t>(error));
-    SaveTaskCommonInfo(taskAsyncBatch, dstStm, pos, sqeNum);
+    taskAsyncBatch = stm->AllocTask(nullptr, TS_TASK_TYPE_MEMCPY, error, sqeNum);
+    COND_PROC_RETURN_ERROR_MSG_INNER(taskAsyncBatch == nullptr, error, stm->StreamUnLock();
+                                     , "Failed to alloc task, stream_id=%d, retCode=%#x.", stm->Id_(),
+                                     static_cast<uint32_t>(error));
+    pos = taskAsyncBatch->id;
+    dstStm = taskAsyncBatch->stream;
     ScopeGuard tskErrRecycle(errRecycle);
     error = MemcpyAsyncBatchTaskInit(taskAsyncBatch, batchInfo);
     taskAsyncBatch->u.memcpyAsyncTaskInfo.copyMethod = static_cast<uint8_t>(rtAsyncCpyMethod::RT_ASYNC_CPY_BATCH);
@@ -219,10 +225,12 @@ rtError_t MemcopyAsync(
         stm->StreamUnLock();
     };
     stm->StreamLock();
-    error = AllocTaskInfoForCapture(&rtMemcpyAsyncTask, stm, pos, dstStm, sqeNum);
-    ERROR_PROC_RETURN_MSG_INNER(error, stm->StreamUnLock();, "Failed to alloc task, stream_id=%d, retCode=%#x.",
-                                                           stm->Id_(), static_cast<uint32_t>(error));
-    SaveTaskCommonInfo(rtMemcpyAsyncTask, dstStm, pos, sqeNum);
+    rtMemcpyAsyncTask = stm->AllocTask(nullptr, TS_TASK_TYPE_MEMCPY, error, sqeNum);
+    COND_PROC_RETURN_ERROR_MSG_INNER(rtMemcpyAsyncTask == nullptr, error, stm->StreamUnLock();
+                                     , "Failed to alloc task, stream_id=%d, retCode=%#x.", stm->Id_(),
+                                     static_cast<uint32_t>(error));
+    pos = rtMemcpyAsyncTask->id;
+    dstStm = rtMemcpyAsyncTask->stream;
     ScopeGuard tskErrRecycle(errRecycle);
     error = MemcpyAsyncTaskInitV3(rtMemcpyAsyncTask, kind, src, dst, cpySize, cfgInfo, addrCfg);
     ERROR_RETURN_MSG_INNER(
@@ -264,11 +272,12 @@ rtError_t DevMemSetAsyncByMemset(
     };
     stm->StreamLock();
 
-    error = AllocTaskInfoForCapture(&memsetTask, stm, pos, dstStm);
-    ERROR_PROC_RETURN_MSG_INNER(error, stm->StreamUnLock();
-                                , "Failed to alloc task for Memset, stream_id=%d, retCode=%#x.", stm->Id_(),
-                                static_cast<uint32_t>(error));
-    SaveTaskCommonInfo(memsetTask, dstStm, pos);
+    memsetTask = stm->AllocTask(nullptr, TS_TASK_TYPE_MEMSET, error);
+    COND_PROC_RETURN_ERROR_MSG_INNER(memsetTask == nullptr, error, stm->StreamUnLock();
+                                     , "Failed to alloc task for Memset, stream_id=%d, retCode=%#x.", stm->Id_(),
+                                     static_cast<uint32_t>(error));
+    pos = memsetTask->id;
+    dstStm = memsetTask->stream;
     ScopeGuard tskErrRecycle(errRecycle);
     MemsetAsyncTaskInit(memsetTask, ptr, destMax, fillVal, fillCount);
 

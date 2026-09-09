@@ -223,15 +223,6 @@ rtError_t CheckTaskCanSend(Stream* const stm)
     return RT_ERROR_NONE;
 }
 
-rtError_t AllocTaskInfo(TaskInfo** taskInfo, Stream* const stm, uint32_t& pos, uint32_t sqeNum)
-{
-    UNUSED(taskInfo);
-    UNUSED(stm);
-    UNUSED(pos);
-    UNUSED(sqeNum);
-    return RT_ERROR_NONE;
-}
-
 rtError_t DavidSendTask(TaskInfo* taskInfo, Stream* const stm)
 {
     UNUSED(stm);
@@ -239,11 +230,10 @@ rtError_t DavidSendTask(TaskInfo* taskInfo, Stream* const stm)
     return RT_ERROR_NONE;
 }
 
-void SaveTaskCommonInfo(TaskInfo* taskInfo, Stream* const stm, uint32_t pos, uint32_t sqeNum)
+void SaveTaskCommonInfo(TaskInfo* taskInfo, Stream* stm, uint32_t sqeNum)
 {
     UNUSED(taskInfo);
     UNUSED(stm);
-    UNUSED(pos);
     UNUSED(sqeNum);
     return;
 }

@@ -5127,12 +5127,16 @@ TEST_F(DavidTaskTest1, load_args_for_aicpu_task)
 TEST_F(DavidTaskTest, stream_launch_aicpu_kernel_preserves_name_address_precedence)
 {
     TaskInfo taskInfo = {};
+    taskInfo.stream = stream_;
     g_aicpuTask = &taskInfo;
     g_aicpuArgsAddr = reinterpret_cast<void*>(0x10000U);
     StarsArgLoaderResult loadResult = {};
     loadResult.kerArgs = g_aicpuArgsAddr;
     MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER(AllocTaskInfoForCapture).stubs().will(invoke(AllocAicpuTaskStub));
+    MOCKER_CPP(static_cast<TaskInfo* (Stream::*)(TaskInfo*, tsTaskType_t, rtError_t&, uint32_t, UpdateTaskFlag)>(
+                   &Stream::AllocTask))
+        .stubs()
+        .will(returnValue(g_aicpuTask));
     MOCKER_CPP(&DavidStream::LoadArgsInfo<rtAicpuArgsEx_t>)
         .stubs()
         .with(mockcpp::any(), mockcpp::any(), outBoundP(&loadResult, sizeof(loadResult)), mockcpp::any())

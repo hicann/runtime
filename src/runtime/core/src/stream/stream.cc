@@ -4909,46 +4909,59 @@ rtError_t Stream::UpdateTask(TaskInfo** updateTask)
     return RT_ERROR_NONE;
 }
 
+TaskInfo* Stream::HandleTaskGroupUpdate(tsTaskType_t taskType, UpdateTaskFlag flag, rtError_t& errorReason)
+{
+    if (flag != UpdateTaskFlag::SUPPORT) {
+        RT_LOG_OUTER_MSG_IMPL(
+            ErrorCode::EE1006, "Updating the task group",
+            RtFmtMsg(
+                "Task type %s(%u)", GetTaskDescByType(static_cast<uint32_t>(taskType)),
+                static_cast<uint32_t>(taskType)),
+            "Only tasks running on Cube Core or Vector Core support task group update");
+        errorReason = RT_ERROR_TASK_NOT_SUPPORT;
+        return nullptr;
+    }
+    TaskInfo* updateTask = nullptr;
+    errorReason = UpdateTask(&updateTask);
+    if (errorReason != RT_ERROR_NONE) {
+        return nullptr;
+    }
+    return updateTask;
+}
+
+TaskInfo* Stream::AllocCaptureTask(tsTaskType_t taskType, uint32_t sqeNum, TaskInfo* pTask, rtError_t& errorReason)
+{
+    TaskInfo* captureTask = pTask;
+    errorReason = AllocCaptureTaskImpl(taskType, sqeNum, &captureTask);
+    if (errorReason == RT_ERROR_STREAM_CAPTURE_EXIT) {
+        return AllocNonCaptureTask(this, pTask, taskType, errorReason, sqeNum);
+    }
+
+    if (errorReason != RT_ERROR_NONE) {
+        return nullptr;
+    }
+    return captureTask;
+}
+
 TaskInfo* Stream::AllocTask(
     TaskInfo* pTask, tsTaskType_t taskType, rtError_t& errorReason, uint32_t sqeNum, UpdateTaskFlag flag)
 {
     errorReason = RT_ERROR_TASK_NEW;
-    /* update task group scene */
-    if (IsTaskGroupUpdate()) {
-        TaskInfo* updateTask = nullptr;
-        if (flag == UpdateTaskFlag::SUPPORT) {
-            errorReason = UpdateTask(&updateTask);
-            return updateTask;
-        } else if (flag != UpdateTaskFlag::NOT_SUPPORT_AND_SKIP) {
-            RT_LOG_OUTER_MSG_IMPL(
-                ErrorCode::EE1006, "Updating the task group",
-                RtFmtMsg(
-                    "Task type %s(%u)", GetTaskDescByType(static_cast<uint32_t>(taskType)),
-                    static_cast<uint32_t>(taskType)),
-                "Only tasks running on Cube Core or Vector Core support task group update");
-            errorReason = RT_ERROR_TASK_NOT_SUPPORT;
-            return updateTask;
-        } else {
-            // do nothing
-        }
+    if (IsTaskGroupUpdate() && flag != UpdateTaskFlag::NOT_SUPPORT_AND_SKIP) {
+        return HandleTaskGroupUpdate(taskType, flag, errorReason);
     }
 
-    /* capture sense */
-    if ((GetCaptureStatus() != RT_STREAM_CAPTURE_STATUS_NONE)) {
-        TaskInfo* captureTask = pTask;
-        const rtError_t error = AllocCaptureTask(taskType, sqeNum, &captureTask);
-        if (error != RT_ERROR_STREAM_CAPTURE_EXIT) {
-            errorReason = error;
-            return error == RT_ERROR_NONE ? captureTask : nullptr;
-        }
+    if (IsAutoSplitSq()) {
+        TaskInfo* task = nullptr;
+        errorReason = AllocAutoSplitTaskInfo(&task, this, sqeNum);
+        return task;
     }
 
-    if (taskResMang_ == nullptr) {
-        return device_->GetTaskFactory()->Alloc(this, taskType, errorReason);
-    } else {
-        pTask->stream = this;
-        return pTask;
+    if (GetCaptureStatus() != RT_STREAM_CAPTURE_STATUS_NONE) {
+        return AllocCaptureTask(taskType, sqeNum, pTask, errorReason);
     }
+
+    return AllocNonCaptureTask(this, pTask, taskType, errorReason, sqeNum);
 }
 
 rtError_t Stream::TaskReclaim(void)

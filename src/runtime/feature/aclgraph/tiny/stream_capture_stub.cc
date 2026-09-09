@@ -28,28 +28,11 @@ void Stream::UpdateCascadeCaptureStreamInfo(Stream* newCaptureStream, Stream* cu
     UNUSED(curCaptureStream);
 }
 
-rtError_t Stream::AllocCaptureTaskWithLock(tsTaskType_t taskType, uint32_t sqeNum, TaskInfo** task)
+rtError_t Stream::AllocCaptureTaskImpl(tsTaskType_t taskType, uint32_t sqeNum, TaskInfo** task)
 {
     UNUSED(taskType);
     UNUSED(sqeNum);
     UNUSED(task);
-    return RT_ERROR_STREAM_CAPTURE_EXIT;
-}
-
-rtError_t Stream::AllocCaptureTaskWithoutLock(tsTaskType_t taskType, uint32_t sqeNum, TaskInfo** task)
-{
-    UNUSED(taskType);
-    UNUSED(sqeNum);
-    UNUSED(task);
-    return RT_ERROR_STREAM_CAPTURE_EXIT;
-}
-
-rtError_t Stream::AllocCaptureTask(tsTaskType_t taskType, uint32_t sqeNum, TaskInfo** task, bool isNeedLock)
-{
-    UNUSED(taskType);
-    UNUSED(sqeNum);
-    UNUSED(task);
-    UNUSED(isNeedLock);
     return RT_ERROR_STREAM_CAPTURE_EXIT;
 }
 

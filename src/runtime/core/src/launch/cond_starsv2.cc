@@ -86,11 +86,16 @@ rtError_t CondStreamActive(
         stm->StreamUnLock();
     };
     stm->StreamLock();
-    error = alreadyCascaded ? AllocTaskInfoOnAutoSplitStream(dstStm, 1U, &tsk, pos) :
-                              AllocTaskInfoForCapture(&tsk, stm, pos, dstStm);
-    ERROR_PROC_RETURN_MSG_INNER(error, stm->StreamUnLock();, "Failed to allocate task, stream_id=%d, retCode=%#x.",
-                                                           stm->Id_(), static_cast<uint32_t>(error));
-    SaveTaskCommonInfo(tsk, dstStm, pos);
+    if (alreadyCascaded) {
+        error = AllocTaskInfoOnAutoSplitStream(dstStm, 1U, &tsk, pos);
+    } else {
+        tsk = stm->AllocTask(nullptr, TS_TASK_TYPE_STREAM_ACTIVE, error);
+    }
+    COND_PROC_RETURN_ERROR_MSG_INNER(tsk == nullptr, error, stm->StreamUnLock();
+                                     , "Failed to allocate task, stream_id=%d, retCode=%#x.", stm->Id_(),
+                                     static_cast<uint32_t>(error));
+    pos = tsk->id;
+    dstStm = tsk->stream;
     ScopeGuard tskErrRecycle(errRecycle);
     error = StreamActiveTaskInit(tsk, activeStream);
     ERROR_RETURN_MSG_INNER(
@@ -102,7 +107,7 @@ rtError_t CondStreamActive(
         static_cast<uint32_t>(error));
     tskErrRecycle.ReleaseGuard();
     stm->StreamUnLock();
-    SET_THREAD_TASKID_AND_STREAMID(streamId, tsk->taskSn);
+    SET_THREAD_TASKID_AND_STREAMID(dstStm->GetExposedStreamId(), tsk->taskSn);
     return error;
 }
 
@@ -124,10 +129,12 @@ rtError_t CondStreamSwitchEx(
         stm->StreamUnLock();
     };
     stm->StreamLock();
-    error = AllocTaskInfoForCapture(&rtStreamSwitchTask, stm, pos, dstStm);
-    ERROR_PROC_RETURN_MSG_INNER(error, stm->StreamUnLock();, "Failed to allocate task, stream_id=%d, retCode=%#x.",
-                                                           streamId, static_cast<uint32_t>(error));
-    SaveTaskCommonInfo(rtStreamSwitchTask, dstStm, pos);
+    rtStreamSwitchTask = stm->AllocTask(nullptr, TS_TASK_TYPE_STREAM_SWITCH, error);
+    COND_PROC_RETURN_ERROR_MSG_INNER(rtStreamSwitchTask == nullptr, error, stm->StreamUnLock();
+                                     , "Failed to allocate task, stream_id=%d, retCode=%#x.", streamId,
+                                     static_cast<uint32_t>(error));
+    pos = rtStreamSwitchTask->id;
+    dstStm = rtStreamSwitchTask->stream;
     ScopeGuard tskErrRecycle(errRecycle);
     error = StreamSwitchTaskInitV2(rtStreamSwitchTask, ptr, condition, trueStream, valuePtr, dataType);
     ERROR_RETURN_MSG_INNER(
@@ -173,10 +180,12 @@ rtError_t CondMemWaitValue(const void* const devAddr, const uint64_t value, cons
         stm->StreamUnLock();
     };
     stm->StreamLock();
-    error = AllocTaskInfoForCapture(&rtMemWaitValueTask, stm, pos, dstStm, MEM_WAIT_V2_SQE_NUM);
-    ERROR_PROC_RETURN_MSG_INNER(error, stm->StreamUnLock();, "Failed to allocate task, stream_id=%d, retCode=%#x.",
-                                                           streamId, static_cast<uint32_t>(error));
-    SaveTaskCommonInfo(rtMemWaitValueTask, dstStm, pos, MEM_WAIT_V2_SQE_NUM);
+    rtMemWaitValueTask = stm->AllocTask(nullptr, TS_TASK_TYPE_MEM_WAIT_VALUE, error, MEM_WAIT_V2_SQE_NUM);
+    COND_PROC_RETURN_ERROR_MSG_INNER(rtMemWaitValueTask == nullptr, error, stm->StreamUnLock();
+                                     , "Failed to allocate task, stream_id=%d, retCode=%#x.", streamId,
+                                     static_cast<uint32_t>(error));
+    pos = rtMemWaitValueTask->id;
+    dstStm = rtMemWaitValueTask->stream;
     ScopeGuard tskErrRecycle(errRecycle);
     rtMemWaitValueTask->typeName = "MEM_WAIT_VALUE";
     rtMemWaitValueTask->type = TS_TASK_TYPE_MEM_WAIT_VALUE;
@@ -219,11 +228,13 @@ rtError_t SubmitCaptureConditionTask(CondHandle* condHandle, Stream* const stm)
     };
 
     stm->StreamLock();
-    error = AllocTaskInfoForCapture(&condTask, stm, pos, dstStm, sqeNum);
-    ERROR_PROC_RETURN_MSG_INNER(error, stm->StreamUnLock();, "Failed to alloc task, stream_id=%d, retCode=%#x.",
-                                                           streamId, static_cast<uint32_t>(error));
+    condTask = stm->AllocTask(nullptr, TS_TASK_TYPE_CAPTURE_CONDITION, error, sqeNum);
+    COND_PROC_RETURN_ERROR_MSG_INNER(condTask == nullptr, error, stm->StreamUnLock();
+                                     , "Failed to alloc task, stream_id=%d, retCode=%#x.", streamId,
+                                     static_cast<uint32_t>(error));
     ScopeGuard tskErrRecycle(errRecycle);
-    SaveTaskCommonInfo(condTask, dstStm, pos, sqeNum);
+    pos = condTask->id;
+    dstStm = condTask->stream;
 
     error = CaptureConditionTaskInit(condTask, condHandle);
     ERROR_RETURN(

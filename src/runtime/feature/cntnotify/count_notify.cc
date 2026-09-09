@@ -98,15 +98,17 @@ rtError_t CountNotify::Record(Stream* const streamIn, const rtCntNtyRecordInfo_t
     rtCntNtyRecordInfo_t cntInfo = {info->mode, info->value};
     Stream* dstStm = streamIn;
     streamIn->StreamLock();
-    error = AllocTaskInfoForCapture(&recordTask, streamIn, pos, dstStm);
-    ERROR_PROC_RETURN_MSG_INNER(error, streamIn->StreamUnLock();, "Failed to alloc task, stream_id=%d, retCode=%#x.",
-                                                                streamIn->Id_(), static_cast<uint32_t>(error));
+    recordTask = streamIn->AllocTask(nullptr, TS_TASK_TYPE_NOTIFY_RECORD, error);
+    COND_PROC_RETURN_ERROR_MSG_INNER(recordTask == nullptr, error, streamIn->StreamUnLock();
+                                     , "Failed to alloc task, stream_id=%d, retCode=%#x.", streamIn->Id_(),
+                                     static_cast<uint32_t>(error));
+    pos = recordTask->id;
+    dstStm = recordTask->stream;
     std::function<void()> const errRecycle = [&recordTask, &streamIn, &pos, &dstStm]() {
         TaskUnInitProc(recordTask);
         TaskRollBack(dstStm, pos);
         streamIn->StreamUnLock();
     };
-    SaveTaskCommonInfo(recordTask, dstStm, pos);
     ScopeGuard tskErrRecycle(errRecycle);
     error = NotifyRecordTaskInit(
         recordTask, notifyid_, static_cast<int32_t>(deviceId_), phyId_, nullptr, &cntInfo, static_cast<void*>(this),
@@ -171,10 +173,12 @@ rtError_t CountNotify::Wait(Stream* const streamIn, const rtCntNtyWaitInfo_t* co
         streamIn->StreamUnLock();
     };
     streamIn->StreamLock();
-    error = AllocTaskInfoForCapture(&waitTask, streamIn, pos, dstStm);
-    ERROR_PROC_RETURN_MSG_INNER(error, streamIn->StreamUnLock();, "Failed to alloc task, stream_id=%d, retCode=%#x.",
-                                                                streamIn->Id_(), static_cast<uint32_t>(error));
-    SaveTaskCommonInfo(waitTask, dstStm, pos);
+    waitTask = streamIn->AllocTask(nullptr, TS_TASK_TYPE_NOTIFY_WAIT, error);
+    COND_PROC_RETURN_ERROR_MSG_INNER(waitTask == nullptr, error, streamIn->StreamUnLock();
+                                     , "Failed to alloc task, stream_id=%d, retCode=%#x.", streamIn->Id_(),
+                                     static_cast<uint32_t>(error));
+    pos = waitTask->id;
+    dstStm = waitTask->stream;
     ScopeGuard tskErrRecycle(errRecycle);
     error = NotifyWaitTaskInit(waitTask, notifyid_, info->timeout, &cntNtfyInfo, static_cast<void*>(this), true);
     ERROR_RETURN_MSG_INNER(

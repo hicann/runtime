@@ -366,10 +366,11 @@ TEST_F(ApiTestUb, cmo_addr_test_submit_02)
     EXPECT_EQ(error, RT_ERROR_NONE);
     Model* realModel = rt_ut::UnwrapOrNull<Model>(model);
     stream_->SetModel(realModel);
-    MOCKER(AllocTaskInfo)
+    MOCKER_CPP(static_cast<TaskInfo* (Stream::*)(TaskInfo*, tsTaskType_t, rtError_t&, uint32_t, UpdateTaskFlag)>(
+                   &Stream::AllocTask))
         .stubs()
-        .with(mockcpp::any(), mockcpp::any(), outBound(pos))
-        .will(returnValue(RT_ERROR_INVALID_VALUE));
+        .with(mockcpp::any(), mockcpp::any(), outBound(RT_ERROR_INVALID_VALUE), mockcpp::any(), mockcpp::any())
+        .will(returnValue(static_cast<TaskInfo*>(nullptr)));
     error = rtCmoAddrTaskLaunch(cmoAddrPtr, infoSize, RT_CMO_INVALID, streamHandle_, 0);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
     stream_->SetModel(nullptr);
@@ -588,6 +589,11 @@ TEST_F(ApiTestUb, allocTaskInfo_taskResMang_null)
     (rt_ut::UnwrapOrNull<Stream>(stream))->ReleaseStreamTaskRes();
     EXPECT_EQ((rt_ut::UnwrapOrNull<Stream>(stream))->taskResMang_, nullptr);
     MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(static_cast<TaskInfo* (Stream::*)(TaskInfo*, tsTaskType_t, rtError_t&, uint32_t, UpdateTaskFlag)>(
+                   &Stream::AllocTask))
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), outBound(RT_ERROR_INVALID_VALUE), mockcpp::any(), mockcpp::any())
+        .will(returnValue(static_cast<TaskInfo*>(nullptr)));
     (rt_ut::UnwrapOrNull<Stream>(stream))->Context_()->SetCtxMode(STOP_ON_FAILURE);
     (rt_ut::UnwrapOrNull<Stream>(stream))->Context_()->SetFailureError(ACL_ERROR_RT_PARAM_INVALID);
     (rt_ut::UnwrapOrNull<Stream>(stream))->SetFailureMode(STOP_ON_FAILURE);

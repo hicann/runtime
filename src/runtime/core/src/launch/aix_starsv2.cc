@@ -236,14 +236,15 @@ rtError_t UpdateDavidKernelTaskSubmit(TaskInfo* const updateTask, Stream* const 
 
     // 申请memcpyAsync task
     const uint32_t sqeNum = GetSqeNumForMemcopyAsync(RT_MEMCPY_HOST_TO_DEVICE);
-    error = AllocTaskInfo(&rtMemcpyAsyncTask, stm, pos, sqeNum);
-    ERROR_PROC_RETURN_MSG_INNER(error, (void)stm->Device_()->Driver_()->HostMemFree(srcHostAddr);
-                                , "Failed to allocate task, stream_id=%d, retCode=%#x.", stm->Id_(),
-                                static_cast<uint32_t>(error));
+    rtMemcpyAsyncTask =
+        stm->AllocTask(nullptr, TS_TASK_TYPE_MEMCPY, error, sqeNum, UpdateTaskFlag::NOT_SUPPORT_AND_SKIP);
+    COND_PROC_RETURN_ERROR_MSG_INNER(
+        rtMemcpyAsyncTask == nullptr, error, (void)stm->Device_()->Driver_()->HostMemFree(srcHostAddr);
+        , "Failed to allocate task, stream_id=%d, retCode=%#x.", stm->Id_(), static_cast<uint32_t>(error));
+    pos = rtMemcpyAsyncTask->id;
 
     ScopeGuard tskErrRecycle(errRecycle);
     // 赋值memcpyAsync task
-    SaveTaskCommonInfo(rtMemcpyAsyncTask, stm, pos, sqeNum);
     // 初始化memcpyAsyncTask
     (void)MemcpyAsyncTaskCommonInit(rtMemcpyAsyncTask);
     MemcpyAsyncTaskInfo* memcpyAsyncTaskInfo = &(rtMemcpyAsyncTask->u.memcpyAsyncTaskInfo);
@@ -365,10 +366,11 @@ rtError_t StreamLaunchKernelV1(
     };
 
     stm->StreamLock();
-    error = AllocTaskInfoForCapture(&kernelTask, stm, pos, dstStm, 1U, true);
+    kernelTask = stm->AllocTask(nullptr, TS_TASK_TYPE_KERNEL_AICORE, error, 1U, UpdateTaskFlag::SUPPORT);
     ScopeGuard tskErrRecycle(errRecycle);
-    ERROR_RETURN_MSG_INNER(
-        error, "Failed to allocate task, stream_id=%d, retCode=%#x.", stm->Id_(), static_cast<uint32_t>(error));
+    COND_RETURN_ERROR_MSG_INNER(
+        kernelTask == nullptr, error, "Failed to allocate task, stream_id=%d, retCode=%#x.", stm->Id_(),
+        static_cast<uint32_t>(error));
 
     if (kernelTask->isUpdateSinkSqe == 1U) { // 此处失败，仅本次任务不更新，但继续保留老任务
         error = CheckUpdateDavidTaskInfo(kernelTask, registeredKernel, stm);
@@ -376,7 +378,8 @@ rtError_t StreamLaunchKernelV1(
             error, "Failed to check update task info, stream_id=%d, kernelAttrType=%s, retCode=%#x.", stm->Id_(),
             KernelAttrTypeToString(kernelAttrType).c_str(), static_cast<uint32_t>(error));
     } else {
-        SaveTaskCommonInfo(kernelTask, dstStm, pos);
+        pos = kernelTask->id;
+        dstStm = kernelTask->stream;
     }
 
     AicTaskInit(kernelTask, registeredKernel, kernelAttrType, static_cast<uint16_t>(coreDim), taskCfg, false);
@@ -484,10 +487,11 @@ rtError_t StreamLaunchKernelWithHandle(
         stm->StreamUnLock();
     };
     stm->StreamLock();
-    error = AllocTaskInfoForCapture(&kernelTask, stm, pos, dstStm, 1U, true);
+    kernelTask = stm->AllocTask(nullptr, TS_TASK_TYPE_KERNEL_AICORE, error, 1U, UpdateTaskFlag::SUPPORT);
     ScopeGuard tskErrRecycle(errRecycle);
-    ERROR_RETURN_MSG_INNER(
-        error, "Failed to allocate task, stream_id=%d, retCode=%#x.", stm->Id_(), static_cast<uint32_t>(error));
+    COND_RETURN_ERROR_MSG_INNER(
+        kernelTask == nullptr, error, "Failed to allocate task, stream_id=%d, retCode=%#x.", stm->Id_(),
+        static_cast<uint32_t>(error));
 
     if (kernelTask->isUpdateSinkSqe == 1U) {
         error = CheckUpdateDavidTaskInfo(kernelTask, registeredKernel, stm);
@@ -495,7 +499,8 @@ rtError_t StreamLaunchKernelWithHandle(
             error, "Failed to check update task info, stream_id=%d, retCode=%#x.", stm->Id_(),
             static_cast<uint32_t>(error));
     } else {
-        SaveTaskCommonInfo(kernelTask, dstStm, pos);
+        pos = kernelTask->id;
+        dstStm = kernelTask->stream;
     }
 
     AicTaskInit(kernelTask, registeredKernel, kernelAttrType, static_cast<uint16_t>(coreDim), taskCfg, false);
@@ -610,17 +615,19 @@ rtError_t StreamLaunchKernelV2(
         stm->StreamUnLock();
     };
     stm->StreamLock();
-    error = AllocTaskInfoForCapture(&kernelTask, stm, pos, dstStm, 1U, true);
+    kernelTask = stm->AllocTask(nullptr, TS_TASK_TYPE_KERNEL_AICORE, error, 1U, UpdateTaskFlag::SUPPORT);
     ScopeGuard tskErrRecycle(errRecycle);
-    ERROR_RETURN_MSG_INNER(
-        error, "Failed to allocate task, stream_id=%d, retCode=%#x.", stm->Id_(), static_cast<uint32_t>(error));
+    COND_RETURN_ERROR_MSG_INNER(
+        kernelTask == nullptr, error, "Failed to allocate task, stream_id=%d, retCode=%#x.", stm->Id_(),
+        static_cast<uint32_t>(error));
     if (kernelTask->isUpdateSinkSqe == 1U) {
         error = CheckUpdateDavidTaskInfo(kernelTask, kernel, stm);
         ERROR_RETURN(
             error, "Failed to check update task info, stream_id=%d, kernelAttrType=%s, retCode=%#x.", stm->Id_(),
             KernelAttrTypeToString(kernelAttrType).c_str(), static_cast<uint32_t>(error));
     } else {
-        SaveTaskCommonInfo(kernelTask, dstStm, pos);
+        pos = kernelTask->id;
+        dstStm = kernelTask->stream;
     }
     AicTaskInit(kernelTask, kernel, kernelAttrType, static_cast<uint16_t>(coreDim), extendAgrs->taskCfg, false);
 

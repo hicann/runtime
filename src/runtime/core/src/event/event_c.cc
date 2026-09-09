@@ -34,16 +34,18 @@ rtError_t EvtRecord(Event* const evt, Stream* const stm)
     uint32_t pos = 0xFFFFU;
     Stream* dstStm = stm;
     stm->StreamLock();
-    error = AllocTaskInfoForCapture(&tsk, stm, pos, dstStm);
-    ERROR_PROC_RETURN_MSG_INNER(error, stm->StreamUnLock();, "Failed to allocate task, stream_id=%d, retCode=%#x.",
-                                                           stm->Id_(), static_cast<uint32_t>(error));
+    tsk = stm->AllocTask(nullptr, TS_TASK_TYPE_DAVID_EVENT_RECORD, error);
+    COND_PROC_RETURN_ERROR_MSG_INNER(tsk == nullptr, error, stm->StreamUnLock();
+                                     , "Failed to allocate task, stream_id=%d, retCode=%#x.", stm->Id_(),
+                                     static_cast<uint32_t>(error));
+    pos = tsk->id;
+    dstStm = tsk->stream;
 
     if (davidEvt->IsNewMode() || davidEvt->GetEventFlag() == RT_EVENT_DEFAULT) {
         (void)davidEvt->AllocEventIdResource(dstStm, newEventId);
         davidEvt->SetEventId(newEventId);
     }
 
-    SaveTaskCommonInfo(tsk, dstStm, pos);
     (void)DavidEventRecordTaskInit(tsk, davidEvt, newEventId);
     SetSqPos(tsk, pos);
     tsk->stmArgPos = (static_cast<DavidStream*>(dstStm))->GetArgPos();
@@ -78,11 +80,13 @@ rtError_t EvtRecordSoftwareMode(Event* const evt, Stream* const stm)
     uint32_t pos = 0xFFFFU;
     Stream* dstStm = stm;
     stm->StreamLock();
-    error = AllocTaskInfoForCapture(&tsk, stm, pos, dstStm);
-    ERROR_PROC_RETURN_MSG_INNER(error, stm->StreamUnLock();, "Failed to allocate task, stream_id=%d, retCode=%#x.",
-                                                           stm->Id_(), static_cast<uint32_t>(error));
+    tsk = stm->AllocTask(nullptr, TS_TASK_TYPE_DAVID_EVENT_RECORD, error);
+    COND_PROC_RETURN_ERROR_MSG_INNER(tsk == nullptr, error, stm->StreamUnLock();
+                                     , "Failed to allocate task, stream_id=%d, retCode=%#x.", stm->Id_(),
+                                     static_cast<uint32_t>(error));
+    pos = tsk->id;
+    dstStm = tsk->stream;
 
-    SaveTaskCommonInfo(tsk, dstStm, pos);
     (void)MemWriteValueTaskInit(tsk, eventAddr, 1UL);
     tsk->typeName = "EVENT_RECORD";
     tsk->type = (!dstStm->GetBindFlag()) ? TS_TASK_TYPE_MEM_WRITE_VALUE : TS_TASK_TYPE_CAPTURE_RECORD;
@@ -133,11 +137,12 @@ rtError_t ProcStreamRecordTask(Stream* const stm, int32_t timeout)
         COND_PROC_RETURN_AND_MSG_ALLOC_FAILED(lastHalfRecord == nullptr, RT_ERROR_EVENT_NEW, stm->StreamUnLock();
                                               , sizeof(DavidEvent), "new");
     }
-    error = AllocTaskInfo(&tsk, stm, pos);
-    ERROR_PROC_RETURN_MSG_INNER(error, stm->StreamUnLock();, "Failed to allocate task, stream_id=%d, retCode=%#x.",
-                                                           stm->Id_(), static_cast<uint32_t>(error));
+    tsk = stm->AllocTask(nullptr, TS_TASK_TYPE_DAVID_EVENT_RECORD, error, 1U, UpdateTaskFlag::NOT_SUPPORT_AND_SKIP);
+    COND_PROC_RETURN_ERROR_MSG_INNER(tsk == nullptr, error, stm->StreamUnLock();
+                                     , "Failed to allocate task, stream_id=%d, retCode=%#x.", stm->Id_(),
+                                     static_cast<uint32_t>(error));
+    pos = tsk->id;
     ScopeGuard tskErrRecycle(errRecycle);
-    SaveTaskCommonInfo(tsk, stm, pos);
     error = DavidEventRecordTaskInit(tsk, lastHalfRecord, lastHalfRecord->EventId_());
     ERROR_RETURN(
         error, "Failed to initialize event, stream_id=%d, retCode=%#x.", stm->Id_(), static_cast<uint32_t>(error));
@@ -189,10 +194,12 @@ rtError_t EvtWait(Event* const evt, Stream* const stm, const uint32_t timeout)
     uint32_t pos = 0xFFFFU;
     Stream* dstStm = stm;
     stm->StreamLock();
-    error = AllocTaskInfoForCapture(&tsk, stm, pos, dstStm);
-    ERROR_PROC_RETURN_MSG_INNER(error, stm->StreamUnLock();, "Failed to allocate task, stream_id=%d, retCode=%#x.",
-                                                           stm->Id_(), static_cast<uint32_t>(error));
-    SaveTaskCommonInfo(tsk, dstStm, pos);
+    tsk = stm->AllocTask(nullptr, TS_TASK_TYPE_DAVID_EVENT_WAIT, error);
+    COND_PROC_RETURN_ERROR_MSG_INNER(tsk == nullptr, error, stm->StreamUnLock();
+                                     , "Failed to allocate task, stream_id=%d, retCode=%#x.", stm->Id_(),
+                                     static_cast<uint32_t>(error));
+    pos = tsk->id;
+    dstStm = tsk->stream;
     DavidEventWaitTaskInit(tsk, davidEvt, eventId, timeout);
 
     tsk->stmArgPos = static_cast<DavidStream*>(dstStm)->GetArgPos();
@@ -225,10 +232,12 @@ rtError_t EvtWaitSoftwareMode(Event* const evt, Stream* const stm)
     uint32_t pos = 0xFFFFU;
     Stream* dstStm = stm;
     stm->StreamLock();
-    error = AllocTaskInfoForCapture(&tsk, stm, pos, dstStm, MEM_WAIT_V2_SQE_NUM);
-    ERROR_PROC_RETURN_MSG_INNER(error, stm->StreamUnLock();, "Failed to allocate task, stream_id=%d, retCode=%#x.",
-                                                           stm->Id_(), static_cast<uint32_t>(error));
-    SaveTaskCommonInfo(tsk, dstStm, pos, MEM_WAIT_V2_SQE_NUM);
+    tsk = stm->AllocTask(nullptr, TS_TASK_TYPE_MEM_WAIT_VALUE, error, MEM_WAIT_V2_SQE_NUM);
+    COND_PROC_RETURN_ERROR_MSG_INNER(tsk == nullptr, error, stm->StreamUnLock();
+                                     , "Failed to allocate task, stream_id=%d, retCode=%#x.", stm->Id_(),
+                                     static_cast<uint32_t>(error));
+    pos = tsk->id;
+    dstStm = tsk->stream;
     tsk->typeName = "EVENT_WAIT";
     tsk->type = (!dstStm->GetBindFlag()) ? TS_TASK_TYPE_MEM_WAIT_VALUE : TS_TASK_TYPE_CAPTURE_WAIT;
     error = MemWaitValueTaskInit(tsk, eventAddr, 1UL, 0U);
@@ -273,10 +282,12 @@ rtError_t EvtReset(Event* const evt, Stream* const stm)
 
     Stream* dstStm = stm;
     stm->StreamLock();
-    error = AllocTaskInfoForCapture(&tsk, stm, pos, dstStm);
-    ERROR_PROC_RETURN_MSG_INNER(error, stm->StreamUnLock();, "Failed to allocate task, stream_id=%d, retCode=%#x.",
-                                                           stm->Id_(), static_cast<uint32_t>(error));
-    SaveTaskCommonInfo(tsk, dstStm, pos);
+    tsk = stm->AllocTask(nullptr, TS_TASK_TYPE_DAVID_EVENT_RESET, error);
+    COND_PROC_RETURN_ERROR_MSG_INNER(tsk == nullptr, error, stm->StreamUnLock();
+                                     , "Failed to allocate task, stream_id=%d, retCode=%#x.", stm->Id_(),
+                                     static_cast<uint32_t>(error));
+    pos = tsk->id;
+    dstStm = tsk->stream;
     DavidEventResetTaskInit(tsk, davidEvt, eventId);
     tsk->stmArgPos = static_cast<DavidStream*>(dstStm)->GetArgPos();
     error = DavidSendTask(tsk, dstStm);
@@ -309,11 +320,13 @@ rtError_t EvtResetSoftwareMode(Event* const evt, Stream* const stm)
     uint32_t pos = 0xFFFFU;
     Stream* dstStm = stm;
     stm->StreamLock();
-    error = AllocTaskInfoForCapture(&tsk, stm, pos, dstStm);
-    ERROR_PROC_RETURN_MSG_INNER(error, stm->StreamUnLock();, "Failed to allocate task, stream_id=%d, retCode=%#x.",
-                                                           stm->Id_(), static_cast<uint32_t>(error));
+    tsk = stm->AllocTask(nullptr, TS_TASK_TYPE_MEM_WRITE_VALUE, error);
+    COND_PROC_RETURN_ERROR_MSG_INNER(tsk == nullptr, error, stm->StreamUnLock();
+                                     , "Failed to allocate task, stream_id=%d, retCode=%#x.", stm->Id_(),
+                                     static_cast<uint32_t>(error));
+    pos = tsk->id;
+    dstStm = tsk->stream;
 
-    SaveTaskCommonInfo(tsk, dstStm, pos);
     (void)MemWriteValueTaskInit(tsk, eventAddr, 0UL);
     tsk->typeName = "EVENT_RESET";
     tsk->type = TS_TASK_TYPE_MEM_WRITE_VALUE;

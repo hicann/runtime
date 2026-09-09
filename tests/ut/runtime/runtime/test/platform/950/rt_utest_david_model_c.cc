@@ -171,7 +171,11 @@ TEST_F(TaskTestDavidModelC, TestModelDebugRegister_AllocTaskInfoFail)
 
     MockIsSupportFeatureFalse();
     MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER(AllocTaskInfo).stubs().will(returnValue(RT_ERROR_MEMORY_ALLOCATION));
+    MOCKER_CPP(static_cast<TaskInfo* (Stream::*)(TaskInfo*, tsTaskType_t, rtError_t&, uint32_t, UpdateTaskFlag)>(
+                   &Stream::AllocTask))
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), outBound(RT_ERROR_INVALID_VALUE), mockcpp::any(), mockcpp::any())
+        .will(returnValue(static_cast<TaskInfo*>(nullptr)));
 
     uint32_t streamId = 0U;
     uint32_t taskId = 0U;
@@ -189,7 +193,10 @@ TEST_F(TaskTestDavidModelC, TestModelDebugRegister_SyncTimeout)
 
     MockIsSupportFeatureFalse();
     MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER(AllocTaskInfo).stubs().will(invoke(AllocTaskInfoSuccessMock));
+    MOCKER_CPP(static_cast<TaskInfo* (Stream::*)(TaskInfo*, tsTaskType_t, rtError_t&, uint32_t, UpdateTaskFlag)>(
+                   &Stream::AllocTask))
+        .stubs()
+        .will(returnValue(&g_mockTaskInfo));
     MOCKER(DebugRegisterTaskInit).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER(DavidSendTask).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(stream_, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_STREAM_SYNC_TIMEOUT));
@@ -227,7 +234,11 @@ TEST_F(TaskTestDavidModelC, TestModelDebugUnRegister_AllocTaskInfoFail)
 
     MockIsSupportFeatureFalse();
     MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER(AllocTaskInfo).stubs().will(returnValue(RT_ERROR_MEMORY_ALLOCATION));
+    MOCKER_CPP(static_cast<TaskInfo* (Stream::*)(TaskInfo*, tsTaskType_t, rtError_t&, uint32_t, UpdateTaskFlag)>(
+                   &Stream::AllocTask))
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), outBound(RT_ERROR_INVALID_VALUE), mockcpp::any(), mockcpp::any())
+        .will(returnValue(static_cast<TaskInfo*>(nullptr)));
 
     rtError_t ret = ModelDebugUnRegister(mdl, stream_);
     EXPECT_NE(ret, RT_ERROR_NONE);
@@ -244,7 +255,10 @@ TEST_F(TaskTestDavidModelC, TestModelDebugUnRegister_SyncTimeout)
 
     MockIsSupportFeatureFalse();
     MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER(AllocTaskInfo).stubs().will(invoke(AllocTaskInfoSuccessMock));
+    MOCKER_CPP(static_cast<TaskInfo* (Stream::*)(TaskInfo*, tsTaskType_t, rtError_t&, uint32_t, UpdateTaskFlag)>(
+                   &Stream::AllocTask))
+        .stubs()
+        .will(returnValue(&g_mockTaskInfo));
     MOCKER(DebugUnRegisterTaskInit).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER(DavidSendTask).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(stream_, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_STREAM_SYNC_TIMEOUT));
@@ -276,7 +290,11 @@ TEST_F(TaskTestDavidModelC, TestAicpuMdlDestroy_AllocTaskInfoFail)
     ASSERT_NE(mdl, nullptr);
 
     MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER(AllocTaskInfo).stubs().will(returnValue(RT_ERROR_MEMORY_ALLOCATION));
+    MOCKER_CPP(static_cast<TaskInfo* (Stream::*)(TaskInfo*, tsTaskType_t, rtError_t&, uint32_t, UpdateTaskFlag)>(
+                   &Stream::AllocTask))
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), outBound(RT_ERROR_INVALID_VALUE), mockcpp::any(), mockcpp::any())
+        .will(returnValue(static_cast<TaskInfo*>(nullptr)));
 
     rtError_t ret = AicpuMdlDestroy(mdl);
     EXPECT_NE(ret, RT_ERROR_NONE);
@@ -291,7 +309,10 @@ TEST_F(TaskTestDavidModelC, TestAicpuMdlDestroy_SyncTimeout)
     ASSERT_NE(mdl, nullptr);
 
     MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER(AllocTaskInfo).stubs().will(invoke(AllocTaskInfoSuccessMock));
+    MOCKER_CPP(static_cast<TaskInfo* (Stream::*)(TaskInfo*, tsTaskType_t, rtError_t&, uint32_t, UpdateTaskFlag)>(
+                   &Stream::AllocTask))
+        .stubs()
+        .will(returnValue(&g_mockTaskInfo));
     MOCKER(ModelToAicpuTaskInit).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER(DavidSendTask).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(stream_, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_STREAM_SYNC_TIMEOUT));
@@ -309,7 +330,10 @@ TEST_F(TaskTestDavidModelC, TestAicpuMdlDestroy_SyncError)
     ASSERT_NE(mdl, nullptr);
 
     MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER(AllocTaskInfo).stubs().will(invoke(AllocTaskInfoSuccessMock));
+    MOCKER_CPP(static_cast<TaskInfo* (Stream::*)(TaskInfo*, tsTaskType_t, rtError_t&, uint32_t, UpdateTaskFlag)>(
+                   &Stream::AllocTask))
+        .stubs()
+        .will(returnValue(&g_mockTaskInfo));
     MOCKER(ModelToAicpuTaskInit).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER(DavidSendTask).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(stream_, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
@@ -348,7 +372,10 @@ TEST_F(TaskTestDavidModelC, TestMdlBindTaskSubmit_MaintainceTaskInitFail)
     Stream* stm = rt_ut::UnwrapOrNull<Stream>(stream);
 
     MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER(AllocTaskInfo).stubs().will(invoke(AllocTaskInfoSuccessMock));
+    MOCKER_CPP(static_cast<TaskInfo* (Stream::*)(TaskInfo*, tsTaskType_t, rtError_t&, uint32_t, UpdateTaskFlag)>(
+                   &Stream::AllocTask))
+        .stubs()
+        .will(returnValue(&g_mockTaskInfo));
     MOCKER(DavidModelMaintainceTaskInit).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
     MOCKER(TaskUnInitProc).stubs();
     MOCKER(TaskRollBack).stubs();
@@ -370,7 +397,10 @@ TEST_F(TaskTestDavidModelC, TestMdlBindTaskSubmit_SendTaskFail)
     Stream* stm = rt_ut::UnwrapOrNull<Stream>(stream);
 
     MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER(AllocTaskInfo).stubs().will(invoke(AllocTaskInfoSuccessMock));
+    MOCKER_CPP(static_cast<TaskInfo* (Stream::*)(TaskInfo*, tsTaskType_t, rtError_t&, uint32_t, UpdateTaskFlag)>(
+                   &Stream::AllocTask))
+        .stubs()
+        .will(returnValue(&g_mockTaskInfo));
     MOCKER(DavidModelMaintainceTaskInit).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER(DavidSendTask).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
     MOCKER(TaskUnInitProc).stubs();
@@ -425,7 +455,10 @@ TEST_F(TaskTestDavidModelC, TestModelLoadCompleteByStream_SubmitLoadCompleteDire
     MOCKER_CPP_VIRTUAL(stream_, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
 
     MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER(AllocTaskInfo).stubs().will(invoke(AllocTaskInfoSuccessMock));
+    MOCKER_CPP(static_cast<TaskInfo* (Stream::*)(TaskInfo*, tsTaskType_t, rtError_t&, uint32_t, UpdateTaskFlag)>(
+                   &Stream::AllocTask))
+        .stubs()
+        .will(returnValue(&g_mockTaskInfo));
     MOCKER(DavidModelMaintainceTaskInit).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER(DavidSendTask).stubs().will(returnValue(RT_ERROR_NONE));
 

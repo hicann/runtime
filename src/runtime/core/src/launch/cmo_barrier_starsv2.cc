@@ -41,10 +41,12 @@ rtError_t CmoTaskLaunch(const rtCmoTaskInfo_t* const taskInfo, Stream* const stm
         stm->StreamUnLock();
     };
     stm->StreamLock();
-    error = AllocTaskInfoForCapture(&rtCmoTask, stm, pos, dstStm);
-    ERROR_PROC_RETURN_MSG_INNER(error, stm->StreamUnLock();, "Failed to allocate CMO task, stream_id=%d, retCode=%#x.",
-                                                           streamId, static_cast<uint32_t>(error));
-    SaveTaskCommonInfo(rtCmoTask, dstStm, pos);
+    rtCmoTask = stm->AllocTask(nullptr, TS_TASK_TYPE_CMO, error);
+    COND_PROC_RETURN_ERROR_MSG_INNER(rtCmoTask == nullptr, error, stm->StreamUnLock();
+                                     , "Failed to allocate CMO task, stream_id=%d, retCode=%#x.", streamId,
+                                     static_cast<uint32_t>(error));
+    pos = rtCmoTask->id;
+    dstStm = rtCmoTask->stream;
     ScopeGuard tskErrRecycle(errRecycle);
     // must be original stream
     error = CmoTaskInit(rtCmoTask, taskInfo, stm, flag);

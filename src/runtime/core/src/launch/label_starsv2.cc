@@ -34,10 +34,12 @@ rtError_t CondLabelSwitchByIndex(void* const ptr, const uint32_t maxIndex, void*
         stm->StreamUnLock();
     };
     stm->StreamLock();
-    error = AllocTaskInfoForCapture(&rtStreamLabelSwitchIndexTask, stm, pos, dstStm);
-    ERROR_PROC_RETURN_MSG_INNER(error, stm->StreamUnLock();, "Failed to alloc task, stream_id=%d, retCode=%#x.",
-                                                           streamId, static_cast<uint32_t>(error));
-    SaveTaskCommonInfo(rtStreamLabelSwitchIndexTask, dstStm, pos);
+    rtStreamLabelSwitchIndexTask = stm->AllocTask(nullptr, TS_TASK_TYPE_STREAM_LABEL_SWITCH_BY_INDEX, error);
+    COND_PROC_RETURN_ERROR_MSG_INNER(rtStreamLabelSwitchIndexTask == nullptr, error, stm->StreamUnLock();
+                                     , "Failed to alloc task, stream_id=%d, retCode=%#x.", streamId,
+                                     static_cast<uint32_t>(error));
+    pos = rtStreamLabelSwitchIndexTask->id;
+    dstStm = rtStreamLabelSwitchIndexTask->stream;
     ScopeGuard tskErrRecycle(errRecycle);
     error = StreamLabelSwitchByIndexTaskInit(
         rtStreamLabelSwitchIndexTask, RtPtrToUnConstPtr<void* const>(ptr), maxIndex, labelInfoPtr);
@@ -87,11 +89,13 @@ rtError_t CondLabelSet(Label* const lbl, Stream* const stm)
     Stream* dstStm = stm;
 
     stm->StreamLock();
-    error = AllocTaskInfoForCapture(&labelTask, stm, pos, dstStm);
-    ERROR_PROC_RETURN_MSG_INNER(error, stm->StreamUnLock();, "Failed to alloc task, stream_id=%d, retCode=%#x.",
-                                                           streamId, static_cast<uint32_t>(error));
+    labelTask = stm->AllocTask(nullptr, TS_TASK_TYPE_LABEL_SET, error);
+    COND_PROC_RETURN_ERROR_MSG_INNER(labelTask == nullptr, error, stm->StreamUnLock();
+                                     , "Failed to alloc task, stream_id=%d, retCode=%#x.", streamId,
+                                     static_cast<uint32_t>(error));
 
-    SaveTaskCommonInfo(labelTask, dstStm, pos);
+    pos = labelTask->id;
+    dstStm = labelTask->stream;
     (void)LabelSetTaskInit(labelTask, lbl->Id_(), lbl->DevDstAddr_());
 
     uint32_t realPos = pos;

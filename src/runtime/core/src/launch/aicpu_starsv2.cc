@@ -93,10 +93,12 @@ rtError_t StreamLaunchKernelEx(const void* const args, const uint32_t argsSize, 
         stm->StreamUnLock();
     };
     stm->StreamLock();
-    error = AllocTaskInfoForCapture(&kernelTask, stm, pos, dstStm);
-    ERROR_PROC_RETURN_MSG_INNER(error, stm->StreamUnLock();, "Alloc task failed, stream_id=%d, retCode=%#x.", streamId,
-                                                           static_cast<uint32_t>(error));
-    SaveTaskCommonInfo(kernelTask, dstStm, pos);
+    kernelTask = stm->AllocTask(nullptr, TS_TASK_TYPE_KERNEL_AICPU, error);
+    COND_PROC_RETURN_ERROR_MSG_INNER(kernelTask == nullptr, error, stm->StreamUnLock();
+                                     , "Alloc task failed, stream_id=%d, retCode=%#x.", streamId,
+                                     static_cast<uint32_t>(error));
+    pos = kernelTask->id;
+    dstStm = kernelTask->stream;
     ScopeGuard tskErrRecycle(errRecycle);
     AicpuTaskInit(kernelTask, 1U, flags);
     RT_LOG(
@@ -211,11 +213,13 @@ rtError_t StreamLaunchCpuKernel(
     const bool useArgPool = UseArgsPool(davidStm, argsInfo, false);
 
     stm->StreamLock();
-    error = AllocTaskInfoForCapture(&kernelTask, stm, pos, dstStm);
+    kernelTask = stm->AllocTask(nullptr, TS_TASK_TYPE_KERNEL_AICPU, error);
     ScopeGuard tskErrRecycle(errRecycle);
-    ERROR_RETURN_MSG_INNER(
-        error, "Alloc task failed, stream_id=%d, retCode=%#x.", streamId, static_cast<uint32_t>(error));
-    SaveTaskCommonInfo(kernelTask, dstStm, pos);
+    COND_RETURN_ERROR_MSG_INNER(
+        kernelTask == nullptr, error, "Alloc task failed, stream_id=%d, retCode=%#x.", streamId,
+        static_cast<uint32_t>(error));
+    pos = kernelTask->id;
+    dstStm = kernelTask->stream;
     AicpuTaskInit(kernelTask, static_cast<uint16_t>(coreDim), flag);
 
     error = static_cast<DavidStream*>(dstStm)->LoadArgsInfo(argsInfo, useArgPool, &result);
@@ -353,11 +357,13 @@ rtError_t StreamLaunchCpuKernelExWithArgs(
         stm->StreamUnLock();
     };
     stm->StreamLock();
-    error = AllocTaskInfoForCapture(&kernelTask, stm, pos, dstStm);
+    kernelTask = stm->AllocTask(nullptr, TS_TASK_TYPE_KERNEL_AICPU, error);
     ScopeGuard tskErrRecycle(errRecycle);
-    ERROR_RETURN_MSG_INNER(
-        error, "Alloc task failed, stream_id=%d, retCode=%#x.", stm->Id_(), static_cast<uint32_t>(error));
-    SaveTaskCommonInfo(kernelTask, dstStm, pos);
+    COND_RETURN_ERROR_MSG_INNER(
+        kernelTask == nullptr, error, "Alloc task failed, stream_id=%d, retCode=%#x.", stm->Id_(),
+        static_cast<uint32_t>(error));
+    pos = kernelTask->id;
+    dstStm = kernelTask->stream;
     AicpuTaskInit(kernelTask, static_cast<uint16_t>(coreDim), flag);
     error = static_cast<DavidStream*>(dstStm)->LoadArgsInfo(argsInfo, useArgPool, &result);
     ERROR_RETURN_MSG_INNER(

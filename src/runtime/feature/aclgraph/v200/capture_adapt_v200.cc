@@ -32,8 +32,6 @@ bool StreamFlagIsSupportCapture(uint32_t flag)
     return true;
 }
 
-uint32_t GetCaptureStreamFlag() { return RT_STREAM_PERSISTENT; }
-
 rtError_t GetCaptureEventFromTask(
     const Device* const dev, uint32_t streamId, uint32_t pos, Event*& eventPtr, CaptureCntNotify& cntInfo)
 {

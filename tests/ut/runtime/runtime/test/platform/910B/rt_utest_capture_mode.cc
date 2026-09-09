@@ -2551,7 +2551,10 @@ TEST_F(CloudV2CaptureModelTest, RecordSoftwareEvent_Success)
 
     TaskInfo taskInfo = {};
     taskInfo.stream = stm;
-    MOCKER_CPP(&Stream::AllocTask).stubs().will(returnValue(&taskInfo));
+    MOCKER_CPP(static_cast<TaskInfo* (Stream::*)(TaskInfo*, tsTaskType_t, rtError_t&, uint32_t, UpdateTaskFlag)>(
+                   &Stream::AllocTask))
+        .stubs()
+        .will(returnValue(&taskInfo));
     MOCKER_CPP_VIRTUAL(stm->Device_(), &Device::AllocExpandingPoolEvent).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(stm->Device_(), &Device::SubmitTask).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP(&TaskFactory::Recycle).stubs().will(returnValue(RT_ERROR_NONE));
@@ -2591,7 +2594,10 @@ TEST_F(CloudV2CaptureModelTest, RecordSoftwareEvent_AllocEventFail)
 
     TaskInfo taskInfo = {};
     taskInfo.stream = stm;
-    MOCKER_CPP(&Stream::AllocTask).stubs().will(returnValue(&taskInfo));
+    MOCKER_CPP(static_cast<TaskInfo* (Stream::*)(TaskInfo*, tsTaskType_t, rtError_t&, uint32_t, UpdateTaskFlag)>(
+                   &Stream::AllocTask))
+        .stubs()
+        .will(returnValue(&taskInfo));
     MOCKER_CPP_VIRTUAL(stm->Device_(), &Device::AllocExpandingPoolEvent)
         .stubs()
         .will(returnValue(RT_ERROR_INVALID_VALUE));
@@ -2632,7 +2638,10 @@ TEST_F(CloudV2CaptureModelTest, RecordSoftwareEvent_SubmitTaskFail)
 
     TaskInfo taskInfo = {};
     taskInfo.stream = stm;
-    MOCKER_CPP(&Stream::AllocTask).stubs().will(returnValue(&taskInfo));
+    MOCKER_CPP(static_cast<TaskInfo* (Stream::*)(TaskInfo*, tsTaskType_t, rtError_t&, uint32_t, UpdateTaskFlag)>(
+                   &Stream::AllocTask))
+        .stubs()
+        .will(returnValue(&taskInfo));
     MOCKER_CPP_VIRTUAL(stm->Device_(), &Device::AllocExpandingPoolEvent).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(stm->Device_(), &Device::SubmitTask).stubs().will(returnValue(RT_ERROR_STREAM_FULL));
     MOCKER_CPP(&TaskFactory::Recycle).stubs().will(returnValue(RT_ERROR_NONE));

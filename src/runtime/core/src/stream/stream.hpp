@@ -846,9 +846,8 @@ public:
         TaskInfo* pTask, tsTaskType_t taskType, rtError_t& errorReason, uint32_t sqeNum = 1U,
         UpdateTaskFlag flag = UpdateTaskFlag::NOT_SUPPORT);
     rtError_t TaskReclaim(void);
-    rtError_t AllocCaptureTaskWithLock(tsTaskType_t taskType, uint32_t sqeNum, TaskInfo** task);
-    rtError_t AllocCaptureTaskWithoutLock(tsTaskType_t taskType, uint32_t sqeNum, TaskInfo** task);
-    rtError_t AllocCaptureTask(tsTaskType_t taskType, uint32_t sqeNum, TaskInfo** task, bool isNeedLock = true);
+    TaskInfo* AllocCaptureTask(tsTaskType_t taskType, uint32_t sqeNum, TaskInfo* pTask, rtError_t& errorReason);
+    TaskInfo* HandleTaskGroupUpdate(tsTaskType_t taskType, UpdateTaskFlag flag, rtError_t& errorReason);
     void GetTaskEventIdOrNotifyId(TaskInfo* taskInfo, int32_t& eventId, uint32_t& notifyId, uint64_t& devAddr) const;
     rtError_t AllocAutoSplitSqAddr();
 
@@ -973,6 +972,7 @@ public:
 private:
     friend class Context;
     friend class StreamLaunchBlocking;
+    rtError_t AllocCaptureTaskImpl(tsTaskType_t taskType, uint32_t sqeNum, TaskInfo** task);
     void SetDestroyTaskRecycledOnTearDownOutput(bool* const output)
     {
         destroyTaskRecycledOnTearDownOutput_ = output;

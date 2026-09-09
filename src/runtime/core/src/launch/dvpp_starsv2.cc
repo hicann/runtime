@@ -39,10 +39,12 @@ rtError_t StarsLaunchDvppRRProcess(Stream* const stm)
         writeValueTask = nullptr;
         Stream* dstStm = stm;
         stm->StreamLock();
-        error = AllocTaskInfoForCapture(&writeValueTask, stm, pos, dstStm);
-        ERROR_PROC_RETURN_MSG_INNER(error, stm->StreamUnLock();, "Failed to allocate task, stream_id=%d, retCode=%#x.",
-                                                               streamId, static_cast<uint32_t>(error));
-        SaveTaskCommonInfo(writeValueTask, dstStm, pos);
+        writeValueTask = stm->AllocTask(nullptr, TS_TASK_TYPE_WRITE_VALUE, error);
+        COND_PROC_RETURN_ERROR_MSG_INNER(writeValueTask == nullptr, error, stm->StreamUnLock();
+                                         , "Failed to allocate task, stream_id=%d, retCode=%#x.", streamId,
+                                         static_cast<uint32_t>(error));
+        pos = writeValueTask->id;
+        dstStm = writeValueTask->stream;
         (void)WriteValueTaskInit(writeValueTask, addr, WRITE_VALUE_SIZE_32_BYTE, &(value[0U]), TASK_WR_CQE_NEVER);
         writeValueTask->stmArgPos = static_cast<DavidStream*>(dstStm)->GetArgPos();
         error = DavidSendTask(writeValueTask, dstStm);
@@ -80,10 +82,12 @@ rtError_t StarsLaunch(const void* const sqe, const uint32_t sqeLen, Stream* cons
         stm->StreamUnLock();
     };
     stm->StreamLock();
-    error = AllocTaskInfoForCapture(&starsTask, stm, pos, dstStm);
-    ERROR_PROC_RETURN_MSG_INNER(error, stm->StreamUnLock();, "Failed to allocate task, stream_id=%d, retCode=%#x.",
-                                                           streamId, static_cast<uint32_t>(error));
-    SaveTaskCommonInfo(starsTask, dstStm, pos);
+    starsTask = stm->AllocTask(nullptr, TS_TASK_TYPE_STARS_COMMON, error);
+    COND_PROC_RETURN_ERROR_MSG_INNER(starsTask == nullptr, error, stm->StreamUnLock();
+                                     , "Failed to allocate task, stream_id=%d, retCode=%#x.", streamId,
+                                     static_cast<uint32_t>(error));
+    pos = starsTask->id;
+    dstStm = starsTask->stream;
     ScopeGuard tskErrRecycle(errRecycle);
     error = StarsCommonTaskInit(starsTask, *commonSqe, flag);
     ERROR_RETURN_MSG_INNER(
@@ -131,10 +135,12 @@ rtError_t LaunchMultipleTaskInfo(
         stm->StreamUnLock();
     };
     stm->StreamLock();
-    error = AllocTaskInfoForCapture(&multipleTask, stm, pos, dstStm, sqeNum);
-    ERROR_PROC_RETURN_MSG_INNER(error, stm->StreamUnLock();, "Failed to allocate task, stream_id=%d, retCode=%#x.",
-                                                           streamId, static_cast<uint32_t>(error));
-    SaveTaskCommonInfo(multipleTask, dstStm, pos, sqeNum);
+    multipleTask = stm->AllocTask(nullptr, TS_TASK_TYPE_MULTIPLE_TASK, error, sqeNum);
+    COND_PROC_RETURN_ERROR_MSG_INNER(multipleTask == nullptr, error, stm->StreamUnLock();
+                                     , "Failed to allocate task, stream_id=%d, retCode=%#x.", streamId,
+                                     static_cast<uint32_t>(error));
+    pos = multipleTask->id;
+    dstStm = multipleTask->stream;
     ScopeGuard tskErrRecycle(errRecycle);
     error = DavinciMultipleTaskInit(multipleTask, multipleTaskInfo, flag);
     ERROR_RETURN_MSG_INNER(

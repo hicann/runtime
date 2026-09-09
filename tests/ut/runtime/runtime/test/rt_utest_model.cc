@@ -2561,6 +2561,7 @@ TEST_F(ModelTest, mdl_abort_aicpu_success)
     model->context_ = ctx;
     model->SetModelExecutorType(EXECUTOR_AICPU);
     TaskInfo task = {};
+    task.stream = newStm;
     TaskInfo* tmpTask = &task;
 
     MOCKER_CPP_VIRTUAL(ctx, &Context::StreamCreate)
@@ -2571,7 +2572,10 @@ TEST_F(ModelTest, mdl_abort_aicpu_success)
         .will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(ctx, &Context::StreamDestroy).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER(AllocTaskInfo).stubs().with(outBoundP(&tmpTask)).will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(static_cast<TaskInfo* (Stream::*)(TaskInfo*, tsTaskType_t, rtError_t&, uint32_t, UpdateTaskFlag)>(
+                   &Stream::AllocTask))
+        .stubs()
+        .will(returnValue(tmpTask));
     MOCKER(SaveTaskCommonInfo).stubs();
     MOCKER(ModelToAicpuTaskInit).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER(DavidSendTask).stubs().will(returnValue(RT_ERROR_NONE));

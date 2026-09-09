@@ -1853,9 +1853,8 @@ TEST_F(TaskTestDavid, TestAllocAutoSplitTaskInfo)
     realStream->SetAutoSplitSq(true);
     realStream->SetAutoSplitCtx(autoSplitCtx);
 
-    uint32_t pos = 0xFFFFU;
-    Stream* dstStm = realStream;
-    rtError_t error = AllocTaskInfoForCapture(&taskInfo, realStream, pos, dstStm, 1U, true);
+    rtError_t error = RT_ERROR_NONE;
+    taskInfo = realStream->AllocTask(nullptr, TS_TASK_TYPE_RESERVED, error, 1U);
     EXPECT_EQ(error, RT_ERROR_NONE);
     realStream->SetAutoSplitCtx(nullptr);
     realStream->SetAutoSplitSq(false);
@@ -1878,9 +1877,8 @@ TEST_F(TaskTestDavid, TestAllocAutoSplitTaskInfo2)
     realStream->SetAutoSplitSq(true);
     realStream->SetAutoSplitCtx(autoSplitCtx);
 
-    uint32_t pos = 0xFFFFU;
-    Stream* dstStm = realStream;
-    rtError_t error = AllocTaskInfoForCapture(&taskInfo, realStream, pos, dstStm, 3270U, true);
+    rtError_t error = RT_ERROR_NONE;
+    taskInfo = realStream->AllocTask(nullptr, TS_TASK_TYPE_RESERVED, error, 3270U);
     EXPECT_EQ(error, RT_ERROR_NONE);
     realStream->SetAutoSplitCtx(nullptr);
     realStream->SetAutoSplitSq(false);
@@ -1889,7 +1887,8 @@ TEST_F(TaskTestDavid, TestAllocAutoSplitTaskInfo2)
 
 TEST_F(TaskTestDavid, TestTaskInfoAllocationWithQueueFull)
 {
-    TaskInfo* taskInfo = nullptr;
+    TaskInfo taskInfoMem = {};
+    TaskInfo* mockTask = &taskInfoMem;
     rtStream_t stream;
     Stream* stm;
     Device* dev;
@@ -1899,14 +1898,15 @@ TEST_F(TaskTestDavid, TestTaskInfoAllocationWithQueueFull)
     TaskResManageDavid* taskResMang = ((TaskResManageDavid*)(rt_ut::UnwrapOrNull<Stream>(stream)->taskResMang_));
     MOCKER_CPP(&TaskResManageDavid::AllocTaskInfoAndPos)
         .stubs()
+        .with(mockcpp::any(), mockcpp::any(), outBoundP(&mockTask), mockcpp::any())
         .will(returnValue(RT_ERROR_TASKRES_QUEUE_FULL))
         .then(returnValue(RT_ERROR_NONE));
     MOCKER_CPP(&Stream::IsSeparateSendAndRecycle).stubs().will(returnValue(true));
     MOCKER_CPP(&Runtime::AllocTaskSn).stubs().will(ignoreReturnValue());
 
-    uint32_t pos = 0;
     uint32_t sqeNum = 1;
-    rtError_t error = AllocTaskInfo(&taskInfo, rt_ut::UnwrapOrNull<Stream>(stream), pos, sqeNum);
+    rtError_t error = RT_ERROR_NONE;
+    TaskInfo* taskInfo = rt_ut::UnwrapOrNull<Stream>(stream)->AllocTask(nullptr, TS_TASK_TYPE_RESERVED, error, sqeNum);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     taskResMang->ReleaseTaskResource(rt_ut::UnwrapOrNull<Stream>(stream));
@@ -1915,7 +1915,8 @@ TEST_F(TaskTestDavid, TestTaskInfoAllocationWithQueueFull)
 
 TEST_F(TaskTestDavid, TestTaskInfoAllocationWithQueueFull2)
 {
-    TaskInfo* taskInfo = nullptr;
+    TaskInfo taskInfoMem = {};
+    TaskInfo* mockTask = &taskInfoMem;
     rtStream_t stream;
     Stream* stm;
     Device* dev;
@@ -1925,14 +1926,15 @@ TEST_F(TaskTestDavid, TestTaskInfoAllocationWithQueueFull2)
     TaskResManageDavid* taskResMang = ((TaskResManageDavid*)(rt_ut::UnwrapOrNull<Stream>(stream)->taskResMang_));
     MOCKER_CPP(&TaskResManageDavid::AllocTaskInfoAndPos)
         .stubs()
+        .with(mockcpp::any(), mockcpp::any(), outBoundP(&mockTask), mockcpp::any())
         .will(returnValue(RT_ERROR_TASKRES_QUEUE_FULL))
         .then(returnValue(RT_ERROR_NONE));
     MOCKER_CPP(&Stream::IsSeparateSendAndRecycle).stubs().will(returnValue(false));
     MOCKER_CPP(&Runtime::AllocTaskSn).stubs().will(ignoreReturnValue());
 
-    uint32_t pos = 0;
     uint32_t sqeNum = 1;
-    rtError_t error = AllocTaskInfo(&taskInfo, rt_ut::UnwrapOrNull<Stream>(stream), pos, sqeNum);
+    rtError_t error = RT_ERROR_NONE;
+    TaskInfo* taskInfo = rt_ut::UnwrapOrNull<Stream>(stream)->AllocTask(nullptr, TS_TASK_TYPE_RESERVED, error, sqeNum);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     taskResMang->ReleaseTaskResource(rt_ut::UnwrapOrNull<Stream>(stream));
@@ -2049,10 +2051,9 @@ TEST_F(TaskTestDavid, AllocCaptureTask)
     error = rtStreamGetCaptureInfo(stream1, &status, &model1);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    uint32_t pos = 0xFFFFU;
-    Stream* dstStm = rt_ut::UnwrapOrNull<Stream>(stream1);
     TaskInfo* taskInfo = nullptr;
-    error = AllocTaskInfoForCapture(&taskInfo, rt_ut::UnwrapOrNull<Stream>(stream1), pos, dstStm, 1U, true);
+    error = RT_ERROR_NONE;
+    taskInfo = rt_ut::UnwrapOrNull<Stream>(stream1)->AllocTask(nullptr, TS_TASK_TYPE_RESERVED, error, 1U);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     (void)dev->GetTaskFactory()->Recycle(taskInfo);
@@ -2106,12 +2107,11 @@ TEST_F(TaskTestDavid, AllocCaptureStreamNotify)
     error = rtStreamGetCaptureInfo(stream1, &status, &model1);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    uint32_t pos = 0xFFFFU;
-    Stream* dstStm = rt_ut::UnwrapOrNull<Stream>(stream1);
     Stream* captureStream = (rt_ut::UnwrapOrNull<Stream>(stream1))->GetCaptureStream();
     TaskInfo* taskInfo2 = nullptr;
-    error = AllocTaskInfoForCapture(&taskInfo2, static_cast<Stream*>(captureStream), pos, dstStm, 1U, true);
-    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = RT_ERROR_NONE;
+    taskInfo2 = static_cast<Stream*>(captureStream)->AllocTask(nullptr, TS_TASK_TYPE_RESERVED, error, 1U);
+    EXPECT_NE(taskInfo2, nullptr);
     (void)dev->GetTaskFactory()->Recycle(taskInfo2);
 
     error = rtStreamEndCapture(stream1, &model1);
@@ -3343,4 +3343,33 @@ TEST_F(TaskTestDavid, StreamLaunchSimtArgsHostDispatchToLoadSimtHostArgs)
     TaskResManageDavid* taskResMang = ((TaskResManageDavid*)(stream_->taskResMang_));
     taskResMang->ResetTaskRes();
     delete kernel;
+}
+
+TEST_F(TaskTestDavid, HandleTaskGroupUpdateUnsupportedFlag)
+{
+    rtError_t error = RT_ERROR_NONE;
+    TaskInfo* result = stream_->HandleTaskGroupUpdate(TS_TASK_TYPE_RESERVED, UpdateTaskFlag::NOT_SUPPORT, error);
+    EXPECT_EQ(result, nullptr);
+    EXPECT_EQ(error, RT_ERROR_TASK_NOT_SUPPORT);
+}
+
+TEST_F(TaskTestDavid, AllocCaptureTaskByTaskResAllocFail)
+{
+    rtStream_t stream;
+    ASSERT_EQ(rtStreamCreate(&stream, 0), RT_ERROR_NONE);
+    Stream* stm = rt_ut::UnwrapOrNull<Stream>(stream);
+    Stream* captureStm = stm;
+    stm->UpdateCaptureStream(captureStm);
+    stm->SetCaptureStatus(RT_STREAM_CAPTURE_STATUS_ACTIVE);
+
+    MOCKER_CPP(&TaskResManageDavid::AllocTaskInfoAndPos).stubs().will(returnValue(RT_ERROR_TASKRES_QUEUE_FULL));
+
+    TaskInfo* task = nullptr;
+    rtError_t ret = AllocCaptureTaskByTaskRes(captureStm, 1U, &task);
+    EXPECT_EQ(ret, RT_ERROR_TASKRES_QUEUE_FULL);
+    EXPECT_EQ(task, nullptr);
+
+    stm->SetCaptureStatus(RT_STREAM_CAPTURE_STATUS_NONE);
+    stm->UpdateCaptureStream(nullptr);
+    rtStreamDestroy(stream);
 }

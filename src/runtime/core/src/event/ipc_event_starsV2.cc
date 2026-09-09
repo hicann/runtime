@@ -26,24 +26,25 @@ rtError_t IpcEvent::IpcEventRecordStarsV2(Stream* const stm)
 
     TaskInfo* tsk = nullptr;
     uint32_t pos = 0xFFFFU;
+    Stream* dstStm = stm;
     stm->StreamLock();
 
-    error = AllocTaskInfo(&tsk, stm, pos);
-    ERROR_PROC_RETURN_MSG_INNER(error, stm->StreamUnLock();
-                                , "Failed to allocate task when ipc record, stream_id=%d, retCode=%#x.", stm->Id_(),
-                                static_cast<uint32_t>(error));
+    tsk = stm->AllocTask(nullptr, TS_TASK_TYPE_IPC_RECORD, error);
+    COND_PROC_RETURN_ERROR_MSG_INNER(tsk == nullptr, error, stm->StreamUnLock();
+                                     , "Failed to allocate task when ipc record, stream_id=%d, retCode=%#x.",
+                                     stm->Id_(), static_cast<uint32_t>(error));
+    pos = tsk->id;
+    dstStm = tsk->stream;
 
     uint16_t curIndex = 0U;
     error = GetIpcRecordIndex(&curIndex);
-    ERROR_PROC_RETURN_MSG_INNER(error, TaskRollBack(stm, pos); stm->StreamUnLock();
+    ERROR_PROC_RETURN_MSG_INNER(error, TaskRollBack(dstStm, pos); stm->StreamUnLock();
                                 , "Failed to get ipc record index. Reason: context is abort, status=%#x.",
                                 static_cast<uint32_t>(error));
 
-    SaveTaskCommonInfo(tsk, stm, pos);
-
     uint8_t* addr = RtPtrToPtr<uint8_t*>(currentDeviceMem_) + curIndex;
     error = MemWriteValueTaskInit(tsk, RtPtrToPtr<void*>(addr), static_cast<uint64_t>(1U));
-    ERROR_PROC_RETURN_MSG_INNER(error, TaskRollBack(stm, pos); stm->StreamUnLock(); IpcVaLock();
+    ERROR_PROC_RETURN_MSG_INNER(error, TaskRollBack(dstStm, pos); stm->StreamUnLock(); IpcVaLock();
                                 ipcHandleVa_->deviceMemRef[ipcHandleVa_->currentIndex]--; IpcEventCountSub();
                                 IpcVaUnLock();
                                 , "Failed to initialize mem write value task, stream_id=%d, task_id=%hu, retCode=%#x.",
@@ -56,14 +57,14 @@ rtError_t IpcEvent::IpcEventRecordStarsV2(Stream* const stm)
     memWriteValueTask->event = this;
     memWriteValueTask->awSize = RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT;
 
-    error = DavidSendTask(tsk, stm);
-    ERROR_PROC_RETURN_MSG_INNER(error, TaskUnInitProc(tsk); TaskRollBack(stm, pos); stm->StreamUnLock();
+    error = DavidSendTask(tsk, dstStm);
+    ERROR_PROC_RETURN_MSG_INNER(error, TaskUnInitProc(tsk); TaskRollBack(dstStm, pos); stm->StreamUnLock();
                                 , "Failed to submit ipc record task, retCode=%#x.", static_cast<uint32_t>(error));
 
     stm->StreamUnLock();
 
-    SET_THREAD_TASKID_AND_STREAMID(stm->Id_(), tsk->taskSn);
-    error = SubmitTaskPostProc(stm, pos);
+    SET_THREAD_TASKID_AND_STREAMID(dstStm->GetExposedStreamId(), tsk->taskSn);
+    error = SubmitTaskPostProc(dstStm, pos);
     ERROR_RETURN(error, "Failed to recycle task, stream_id=%d, retCode=%#x.", stm->Id_(), static_cast<uint32_t>(error));
 
     eventStatus_ = INIT;
@@ -95,25 +96,26 @@ rtError_t IpcEvent::IpcEventWaitStarsV2(Stream* const stm)
 
     TaskInfo* tsk = nullptr;
     uint32_t pos = 0xFFFFU;
+    Stream* dstStm = stm;
     stm->StreamLock();
 
-    error = AllocTaskInfo(&tsk, stm, pos, MEM_WAIT_V2_SQE_NUM);
-    if (error != RT_ERROR_NONE) {
+    tsk = stm->AllocTask(nullptr, TS_TASK_TYPE_IPC_WAIT, error, MEM_WAIT_V2_SQE_NUM);
+    if (tsk == nullptr) {
         stm->StreamUnLock();
         IpcVaLock();
         ipcHandleVa_->deviceMemRef[ipcHandleVa_->currentIndex]--;
         IpcEventCountSub();
         IpcVaUnLock();
-        ERROR_RETURN_MSG_INNER(
-            error, "Failed to allocate task when ipc wait, stream_id=%d, retCode=%#x.", stm->Id_(),
+        COND_RETURN_ERROR_MSG_INNER(
+            tsk == nullptr, error, "Failed to allocate task when ipc wait, stream_id=%d, retCode=%#x.", stm->Id_(),
             static_cast<uint32_t>(error));
     }
-
-    SaveTaskCommonInfo(tsk, stm, pos, MEM_WAIT_V2_SQE_NUM);
+    pos = tsk->id;
+    dstStm = tsk->stream;
 
     uint8_t* addr = RtPtrToPtr<uint8_t*>(currentDeviceMem_) + curIndex;
     error = MemWaitValueTaskInit(tsk, RtPtrToPtr<void*>(addr), 1, 0x0);
-    ERROR_PROC_RETURN_MSG_INNER(error, TaskRollBack(stm, pos); stm->StreamUnLock(); IpcVaLock();
+    ERROR_PROC_RETURN_MSG_INNER(error, TaskRollBack(dstStm, pos); stm->StreamUnLock(); IpcVaLock();
                                 ipcHandleVa_->deviceMemRef[ipcHandleVa_->currentIndex]--; IpcEventCountSub();
                                 IpcVaUnLock();
                                 , "Failed to initialize mem wait value task, stream_id=%d, task_id=%hu, retCode=%#x.",
@@ -127,13 +129,13 @@ rtError_t IpcEvent::IpcEventWaitStarsV2(Stream* const stm)
     memWaitValueTask->event = this;
     memWaitValueTask->awSize = RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT;
 
-    error = DavidSendTask(tsk, stm);
-    ERROR_PROC_RETURN_MSG_INNER(error, TaskUnInitProc(tsk); TaskRollBack(stm, pos); stm->StreamUnLock();
+    error = DavidSendTask(tsk, dstStm);
+    ERROR_PROC_RETURN_MSG_INNER(error, TaskUnInitProc(tsk); TaskRollBack(dstStm, pos); stm->StreamUnLock();
                                 , "Failed to submit ipc wait task, retCode=%#x.", static_cast<uint32_t>(error));
     stm->StreamUnLock();
 
-    SET_THREAD_TASKID_AND_STREAMID(stm->Id_(), tsk->taskSn);
-    error = SubmitTaskPostProc(stm, pos);
+    SET_THREAD_TASKID_AND_STREAMID(dstStm->GetExposedStreamId(), tsk->taskSn);
+    error = SubmitTaskPostProc(dstStm, pos);
     ERROR_RETURN_MSG_INNER(
         error, "Failed to submit task post proc, stream_id=%d, retCode=%#x.", stm->Id_(), static_cast<uint32_t>(error));
 

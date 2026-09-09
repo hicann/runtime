@@ -14,6 +14,7 @@
 #include "task_submit.hpp"
 #include "task_recycle.hpp"
 #include "task.hpp"
+#include "capture_adapt.hpp"
 #include "stream_david.hpp"
 #include "engine.hpp"
 #include "profiler.hpp"
@@ -137,6 +138,8 @@ static rtError_t ExpandHostSqeBufferLocked(Stream* const stm)
     return RT_ERROR_NONE;
 }
 
+static rtError_t AllocTaskInfo(TaskInfo** taskInfo, Stream* const stm, uint32_t& pos, uint32_t sqeNum);
+
 // 获取 auto-split stream 的当前活跃 stream（可能是 master 或最新的 slave）
 // 注意：调用此函数前必须持有 StreamLock()
 static Stream* GetAutoSplitCurStream(AutoSplitSqContext* masterCtx) noexcept
@@ -230,16 +233,15 @@ rtError_t AllocTaskInfoOnAutoSplitStream(Stream* curStream, uint32_t sqeNum, Tas
             curStream->GetExposedStreamId(), curStream->Id_(), error);
         return error;
     }
-    (*taskInfo)->stream = curStream;
     Runtime::Instance()->AllocTaskSn((*taskInfo)->taskSn);
     pos = (*taskInfo)->id;
+    SaveTaskCommonInfo(*taskInfo, curStream, sqeNum);
 
     splitCtx->curStreamSqeCount += sqeNum;
     return RT_ERROR_NONE;
 }
 
-static rtError_t AllocAutoSplitTaskInfo(
-    TaskInfo** taskInfo, Stream* const stm, uint32_t& pos, Stream*& dstStm, uint32_t sqeNum)
+rtError_t AllocAutoSplitTaskInfo(TaskInfo** taskInfo, Stream* const stm, uint32_t sqeNum)
 {
     RT_LOG(
         RT_LOG_DEBUG, "Enter AllocAutoSplitTaskInfo, master_stream_id=%d, sqeNum=%u", stm->GetExposedStreamId(),
@@ -271,132 +273,56 @@ static rtError_t AllocAutoSplitTaskInfo(
         "AllocAutoSplitTaskInfo failed because splitCtx cannot be a NULL pointer, stream_id=%d.", curStream->Id_());
 
     // 分配 TaskInfo
+    uint32_t pos = 0;
     error = AllocTaskInfoOnAutoSplitStream(curStream, sqeNum, taskInfo, pos);
     COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "Alloc task info failed.");
 
-    dstStm = curStream;
     RT_LOG(
         RT_LOG_DEBUG, "Alloc auto-split task, master_stream_id=%d, cur_stream_id=%d, sqeNum=%u, ctxSqeNum=%u",
         stm->GetExposedStreamId(), curStream->Id_(), sqeNum, splitCtx->curStreamSqeCount);
     return RT_ERROR_NONE;
 }
 
-static rtError_t AllocCaptureTaskInfo(
-    TaskInfo** taskInfo, Stream* const stm, uint32_t& pos, Stream*& dstStm, uint32_t sqeNum)
+bool NeedCascadeExpandStream(Stream* captureStm)
 {
-    std::unique_lock<std::mutex> lk(stm->GetCaptureLock());
-    Stream* curCaptureStream = stm->GetCaptureStream();
-    rtError_t ret = RT_ERROR_NONE;
-    if (curCaptureStream == nullptr) {
-        /* stm exit capture mode */
-        return RT_ERROR_STREAM_CAPTURE_EXIT;
+    if (captureStm->taskResMang_ != nullptr) {
+        TaskResManageDavid* taskResMang = RtPtrToPtr<TaskResManageDavid*, TaskResManage*>(captureStm->taskResMang_);
+        return (static_cast<uint32_t>(taskResMang->GetTaskPosTail()) + CAPTURE_TASK_RESERVED_NUM) >=
+               captureStm->GetSqDepth();
     }
-    if (unlikely(curCaptureStream->Flags() & RT_STREAM_PERSISTENT) == 0U) {
-        return RT_ERROR_STREAM_INVALID;
-    }
-
-    if (curCaptureStream->IsSoftwareSqEnable()) {
-        // david taskType传无效值，后面填充参数的时候会刷新
-        ret = stm->AllocCaptureTask(TS_TASK_TYPE_RESERVED, sqeNum, taskInfo, false);
-        ERROR_RETURN(
-            ret, "alloc capture task failed, retCode=%#x, device_id=%u, stream_id=%d, sqeNum=%u", ret,
-            stm->Device_()->Id_(), stm->Id_(), sqeNum);
-
-        pos = (*taskInfo)->id; // 这里返回task id作为pos，主要是为了任务下发失败时的任务回收。
-        dstStm = stm->GetCaptureStream();
-        return RT_ERROR_NONE;
-    }
-
-    COND_PROC_RETURN_ERROR(
-        stm->IsTaskGroupBreak(), RT_ERROR_STREAM_TASKGRP_INTR, stm->SetTaskGroupErrCode(RT_ERROR_STREAM_TASKGRP_INTR),
-        "the task group interrupted.");
-
-    const uint32_t rtsqDepth = stm->GetSqDepth();
-    TaskResManageDavid* taskResMang = RtPtrToPtr<TaskResManageDavid*, TaskResManage*>(curCaptureStream->taskResMang_);
-    if ((static_cast<uint32_t>(taskResMang->GetTaskPosTail()) + CAPTURE_TASK_RESERVED_NUM) >= rtsqDepth) {
-        Stream* newCaptureStream = nullptr;
-        rtError_t error = stm->AllocCascadeCaptureStream(newCaptureStream, curCaptureStream);
-        COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error);
-        Context* const ctx = stm->Context_();
-        if (ctx == nullptr) {
-            stm->SingleStreamTerminateCapture();
-            RT_LOG_INNER_MSG(
-                RT_LOG_ERROR,
-                "AllocCaptureTaskInfo failed because ctx cannot be a NULL pointer, device_id=%u, original "
-                "stream_id=%d.",
-                stm->Device_()->Id_(), stm->Id_());
-            return RT_ERROR_CONTEXT_NULL;
-        }
-        error = CondStreamActive(newCaptureStream, curCaptureStream);
-        if (error != RT_ERROR_NONE) {
-            ctx->FreeCascadeCaptureStream(newCaptureStream);
-            stm->SingleStreamTerminateCapture();
-            RT_LOG(
-                RT_LOG_ERROR, "stream active failed, device_id=%u, original stream_id=%d.", stm->Device_()->Id_(),
-                stm->Id_());
-            return error;
-        }
-        stm->UpdateCascadeCaptureStreamInfo(newCaptureStream, curCaptureStream);
-        curCaptureStream = newCaptureStream;
-    }
-    dstStm = curCaptureStream;
-    taskResMang = RtPtrToPtr<TaskResManageDavid*, TaskResManage*>(curCaptureStream->taskResMang_);
-    if (taskResMang->AllocTaskInfoAndPos(sqeNum, pos, taskInfo) == RT_ERROR_NONE) {
-        Runtime::Instance()->AllocTaskSn((*taskInfo)->taskSn);
-    } else {
-        stm->SingleStreamTerminateCapture();
-    }
-    return ret;
+    return (captureStm->GetCaptureSqeNum() + CAPTURE_TASK_RESERVED_NUM +
+            captureStm->Device_()->GetDevProperties().expandStreamRsvTaskNum) >= captureStm->GetSqDepth();
 }
 
-rtError_t AllocTaskInfoForCapture(
-    TaskInfo** taskInfo, Stream* const stm, uint32_t& pos, Stream*& dstStm, uint32_t sqeNum, bool isKernelLaunch)
+rtError_t AllocCaptureTaskByTaskRes(Stream* captureStm, uint32_t sqeNum, TaskInfo** task)
 {
-    if ((taskInfo == nullptr) || (stm == nullptr) ||
-        ((stm->taskResMang_ == nullptr) && (!stm->IsSoftwareSqEnable()) && (!stm->IsAutoSplitSq()))) {
-        return RT_ERROR_INVALID_VALUE;
+    TaskResManageDavid* taskResMang = RtPtrToPtr<TaskResManageDavid*, TaskResManage*>(captureStm->taskResMang_);
+    uint32_t pos = 0;
+    const rtError_t error = taskResMang->AllocTaskInfoAndPos(sqeNum, pos, task);
+    if (error != RT_ERROR_NONE) {
+        RT_LOG(RT_LOG_ERROR, "AllocTaskInfoAndPos failed, retCode=%#x.", static_cast<uint32_t>(error));
+        return error;
     }
+    Runtime::Instance()->AllocTaskSn((*task)->taskSn);
+    SaveTaskCommonInfo(*task, captureStm, sqeNum);
+    return RT_ERROR_NONE;
+}
 
-    rtError_t error = RT_ERROR_NONE;
-
-    // 处理 TaskGroupUpdate
-    if (stm->IsTaskGroupUpdate()) {
-        if (isKernelLaunch) {
-            error = stm->UpdateTask(taskInfo);
-            return error;
-        } else {
-            RT_LOG_OUTER_MSG_IMPL(
-                ErrorCode::EE1006, "Updating the task group", "The current task type",
-                "Only tasks running on Cube Core or Vector Core support task group update");
-            return RT_ERROR_TASK_NOT_SUPPORT;
-        }
+TaskInfo* AllocNonCaptureTask(
+    Stream* stm, TaskInfo* pTask, tsTaskType_t taskType, rtError_t& errorReason, uint32_t sqeNum)
+{
+    UNUSED(pTask);
+    if (stm->taskResMang_ == nullptr) {
+        TaskInfo* task = stm->Device_()->GetTaskFactory()->Alloc(stm, taskType, errorReason);
+        NULL_PTR_RETURN_MSG(task, nullptr);
+        Runtime::Instance()->AllocTaskSn(task->taskSn);
+        SaveTaskCommonInfo(task, stm, sqeNum);
+        return task;
     }
-
-    // 自动切分场景单独处理
-    if (stm->IsAutoSplitSq()) {
-        return AllocAutoSplitTaskInfo(taskInfo, stm, pos, dstStm, sqeNum);
-    }
-
-    if (stm->GetCaptureStatus() != RT_STREAM_CAPTURE_STATUS_NONE) {
-        error = AllocCaptureTaskInfo(taskInfo, stm, pos, dstStm, sqeNum);
-        if (error != RT_ERROR_STREAM_CAPTURE_EXIT) {
-            return error;
-        }
-    }
-    dstStm = stm;
-
-    if (stm->taskResMang_ == nullptr) { // 模型流上下发的notify要从这里申请task
-        *taskInfo = stm->Device_()->GetTaskFactory()->Alloc(stm, TS_TASK_TYPE_RESERVED, error);
-        NULL_PTR_RETURN_MSG(*taskInfo, error);
-        stm->AddCaptureSqeNum(sqeNum);
-        (*taskInfo)->stream = stm;
-        Runtime::Instance()->AllocTaskSn((*taskInfo)->taskSn);
-        pos = (*taskInfo)->id;
-
-        return RT_ERROR_NONE;
-    }
-
-    return AllocTaskInfo(taskInfo, stm, pos, sqeNum);
+    TaskInfo* task = nullptr;
+    uint32_t pos = 0;
+    errorReason = AllocTaskInfo(&task, stm, pos, sqeNum);
+    return task;
 }
 
 static void TryToReclaimTask(Stream* const stm, bool needLog)
@@ -414,7 +340,7 @@ static void TryToReclaimTask(Stream* const stm, bool needLog)
     return;
 }
 
-rtError_t AllocTaskInfo(TaskInfo** taskInfo, Stream* const stm, uint32_t& pos, uint32_t sqeNum)
+static rtError_t AllocTaskInfo(TaskInfo** taskInfo, Stream* const stm, uint32_t& pos, uint32_t sqeNum)
 {
     if ((taskInfo == nullptr) || (stm == nullptr) || (stm->taskResMang_ == nullptr)) {
         return RT_ERROR_INVALID_VALUE;
@@ -451,6 +377,7 @@ rtError_t AllocTaskInfo(TaskInfo** taskInfo, Stream* const stm, uint32_t& pos, u
     /* alloc dfx task id for current process, if send failed, no need to roll back */
     if (error == RT_ERROR_NONE) {
         Runtime::Instance()->AllocTaskSn((*taskInfo)->taskSn);
+        SaveTaskCommonInfo(*taskInfo, stm, sqeNum);
     }
 
     RT_LOG(
@@ -657,10 +584,9 @@ rtError_t CheckTaskCanSend(Stream* const stm)
     return RT_ERROR_NONE;
 }
 
-void SaveTaskCommonInfo(TaskInfo* taskInfo, Stream* const stm, uint32_t pos, uint32_t sqeNum)
+void SaveTaskCommonInfo(TaskInfo* taskInfo, Stream* stm, uint32_t sqeNum)
 {
     InitByStream(taskInfo, stm);
-    taskInfo->id = pos;
     taskInfo->sqeNum = static_cast<uint8_t>(sqeNum);
     taskInfo->flipNum = stm->GetTaskIdFlipNum();
     SetTaskTag(taskInfo);

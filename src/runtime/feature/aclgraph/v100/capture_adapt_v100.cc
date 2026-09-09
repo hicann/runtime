@@ -10,7 +10,9 @@
 
 #include "capture_adapt.hpp"
 #include "task_info.hpp"
+#include "task.hpp"
 #include "capture_model.hpp"
+#include "runtime.hpp"
 #include "thread_local_container.hpp"
 #include "error_message_manage.hpp"
 #include "context.hpp"
@@ -32,8 +34,6 @@ bool StreamFlagIsSupportCapture(uint32_t flag)
 
     return true;
 }
-
-uint32_t GetCaptureStreamFlag() { return RT_STREAM_DEFAULT; }
 
 rtError_t GetCaptureEventFromTask(
     const Device* const dev, uint32_t streamId, uint32_t pos, Event*& eventPtr, CaptureCntNotify& cntInfo)
@@ -80,6 +80,43 @@ rtError_t SendNopTask(const Context* const curCtx, Stream* const stm) { return c
 bool TaskTypeIsSupportTaskGroup(const TaskInfo* const task)
 {
     return ((task->type == TS_TASK_TYPE_KERNEL_AICORE) || (task->type == TS_TASK_TYPE_KERNEL_AIVEC));
+}
+
+bool NeedCascadeExpandStream(Stream* captureStm)
+{
+    return (captureStm->GetCaptureSqeNum() + CAPTURE_TASK_RESERVED_NUM +
+            captureStm->Device_()->GetDevProperties().expandStreamRsvTaskNum) >= captureStm->GetSqDepth();
+}
+
+rtError_t AllocCaptureTaskByTaskRes(Stream* captureStm, uint32_t sqeNum, TaskInfo** task)
+{
+    if ((task == nullptr) || (*task == nullptr)) {
+        return RT_ERROR_TASK_NULL;
+    }
+    captureStm->AddCaptureSqeNum(sqeNum);
+    (*task)->stream = captureStm;
+    return RT_ERROR_NONE;
+}
+
+rtError_t AllocAutoSplitTaskInfo(TaskInfo** taskInfo, Stream* const stm, uint32_t sqeNum)
+{
+    UNUSED(taskInfo);
+    UNUSED(stm);
+    UNUSED(sqeNum);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+TaskInfo* AllocNonCaptureTask(
+    Stream* stm, TaskInfo* pTask, tsTaskType_t taskType, rtError_t& errorReason, uint32_t sqeNum)
+{
+    UNUSED(sqeNum);
+    if (stm->taskResMang_ == nullptr) {
+        return stm->Device_()->GetTaskFactory()->Alloc(stm, taskType, errorReason);
+    } else {
+        NULL_PTR_RETURN_MSG(pTask, nullptr);
+        pTask->stream = stm;
+        return pTask;
+    }
 }
 } // namespace runtime
 } // namespace cce

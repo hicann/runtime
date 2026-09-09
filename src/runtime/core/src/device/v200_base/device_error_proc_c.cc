@@ -1002,22 +1002,25 @@ rtError_t ProcRingBufferTaskDavid(
     ERROR_RETURN_MSG_INNER(
         error, "Failed to check stream, stream_id=%d, retCode=%#x.", stm->Id_(), static_cast<uint32_t>(error));
     uint32_t pos = 0xFFFFU;
-    std::function<void()> const errRecycle = [&tsk, &stm, &pos]() {
+    Stream* dstStm = stm;
+    std::function<void()> const errRecycle = [&tsk, &dstStm, &pos, &stm]() {
         TaskUnInitProc(tsk);
-        TaskRollBack(stm, pos);
+        TaskRollBack(dstStm, pos);
         stm->StreamUnLock();
     };
     stm->StreamLock();
-    error = AllocTaskInfo(&tsk, stm, pos);
-    ERROR_PROC_RETURN_MSG_INNER(error, stm->StreamUnLock();, "Failed to alloc task, stream_id=%d, retCode=%#x.",
-                                                           stm->Id_(), static_cast<uint32_t>(error));
-    SaveTaskCommonInfo(tsk, stm, pos);
+    tsk = stm->AllocTask(nullptr, TS_TASK_TYPE_DEVICE_RINGBUFFER_CONTROL, error);
+    COND_PROC_RETURN_ERROR_MSG_INNER(tsk == nullptr, error, stm->StreamUnLock();
+                                     , "Failed to alloc task, stream_id=%d, retCode=%#x.", stm->Id_(),
+                                     static_cast<uint32_t>(error));
+    pos = tsk->id;
+    dstStm = tsk->stream;
     error = RingBufferMaintainTaskInit(tsk, devMem, delFlag, len);
     ScopeGuard tskErrRecycle(errRecycle);
     ERROR_RETURN_MSG_INNER(
         error, "Failed to init create ringbuffer task, stream_id=%d, retCode=%#x.", stm->Id_(),
         static_cast<uint32_t>(error));
-    error = DavidSendTask(tsk, stm);
+    error = DavidSendTask(tsk, dstStm);
     ERROR_RETURN_MSG_INNER(
         error, "Failed to submit task, stream_id=%d, retCode=%#x.", stm->Id_(), static_cast<uint32_t>(error));
     tskErrRecycle.ReleaseGuard();

@@ -18,16 +18,36 @@ TEST_F(ApiDavidTest, AllocTaskInfoForCapture_UpdateTask)
     EXPECT_EQ(error, ACL_RT_SUCCESS);
     error = (rt_ut::UnwrapOrNull<Stream>(stream))->UpdateTaskGroupStatus(StreamTaskGroupStatus::UPDATE);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    Stream* dstStm = rt_ut::UnwrapOrNull<Stream>(stream);
-    uint32_t pos = 0;
 
-    error = AllocTaskInfoForCapture(&task, rt_ut::UnwrapOrNull<Stream>(stream), pos, dstStm);
-    EXPECT_EQ(error, RT_ERROR_TASK_NOT_SUPPORT);
-    error = AllocTaskInfoForCapture(&task, rt_ut::UnwrapOrNull<Stream>(stream), pos, dstStm, 1, true);
-    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+    Stream* stm = rt_ut::UnwrapOrNull<Stream>(stream);
+    rtError_t allocError = RT_ERROR_NONE;
+    task = stm->AllocTask(nullptr, TS_TASK_TYPE_RESERVED, allocError);
+    EXPECT_EQ(task, nullptr);
+    EXPECT_NE(allocError, RT_ERROR_NONE);
 
     error = (rt_ut::UnwrapOrNull<Stream>(stream))->UpdateTaskGroupStatus(StreamTaskGroupStatus::NONE);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    error = rtStreamDestroy(stream);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiDavidTest, AllocTask_UpdateTaskFail)
+{
+    rtStream_t stream;
+    rtError_t error = rtStreamCreate(&stream, 0);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+    Stream* stm = rt_ut::UnwrapOrNull<Stream>(stream);
+    error = stm->UpdateTaskGroupStatus(StreamTaskGroupStatus::UPDATE);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP(&Stream::UpdateTask).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+
+    rtError_t allocError = RT_ERROR_NONE;
+    TaskInfo* task = stm->AllocTask(nullptr, TS_TASK_TYPE_KERNEL_AICORE, allocError, 1U, UpdateTaskFlag::SUPPORT);
+    EXPECT_EQ(task, nullptr);
+    EXPECT_EQ(allocError, RT_ERROR_INVALID_VALUE);
+
+    stm->UpdateTaskGroupStatus(StreamTaskGroupStatus::NONE);
     error = rtStreamDestroy(stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }

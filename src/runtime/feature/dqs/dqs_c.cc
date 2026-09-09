@@ -244,25 +244,27 @@ static rtError_t LaunchDqsTaskByType(
         error, "Failed to check if task can be sent, streamId=%d, retCode=%#x.", streamId,
         static_cast<uint32_t>(error));
     uint32_t pos = RT_DEFAULT_POS;
+    Stream* dstStm = stm;
     stm->StreamLock();
-    error = AllocTaskInfo(&task, stm, pos);
-    ERROR_PROC_RETURN_MSG_INNER(error, stm->StreamUnLock();, "streamId=%d alloc [%s] failed, retCode=%#x.", streamId,
-                                                           taskInitInfo->taskDesc, static_cast<uint32_t>(error));
-
-    SaveTaskCommonInfo(task, stm, pos);
+    task = stm->AllocTask(nullptr, TS_TASK_TYPE_RESERVED, error);
+    COND_PROC_RETURN_ERROR_MSG_INNER(task == nullptr, error, stm->StreamUnLock();
+                                     , "streamId=%d alloc [%s] failed, retCode=%#x.", streamId, taskInitInfo->taskDesc,
+                                     static_cast<uint32_t>(error));
+    pos = task->id;
+    dstStm = task->stream;
 
     error = taskInitInfo->taskInitFunc(task, stm, cfg);
     ERROR_PROC_RETURN_MSG_INNER(
-        error, RollbackAndRecycle(task, stm, pos), "[%s] init failed, streamId=%d, retCode=%#x.",
+        error, RollbackAndRecycle(task, dstStm, pos), "[%s] init failed, streamId=%d, retCode=%#x.",
         taskInitInfo->taskDesc, streamId, static_cast<uint32_t>(error));
 
-    error = DavidSendTask(task, stm);
+    error = DavidSendTask(task, dstStm);
     ERROR_PROC_RETURN_MSG_INNER(
-        error, RollbackAndRecycle(task, stm, pos), "[%s] submit failed, streamId=%d, retCode=%#x.",
+        error, RollbackAndRecycle(task, dstStm, pos), "[%s] submit failed, streamId=%d, retCode=%#x.",
         taskInitInfo->taskDesc, streamId, static_cast<uint32_t>(error));
     stm->StreamUnLock();
 
-    SET_THREAD_TASKID_AND_STREAMID(streamId, task->taskSn);
+    SET_THREAD_TASKID_AND_STREAMID(dstStm->GetExposedStreamId(), task->taskSn);
 
     return error;
 }
@@ -284,25 +286,27 @@ static rtError_t LaunchDqsInterChipTaskByType(
         error, "Failed to check if task can be sent, streamId=%d, retCode=%#x.", streamId,
         static_cast<uint32_t>(error));
     uint32_t pos = RT_DEFAULT_POS;
+    Stream* dstStm = stm;
     stm->StreamLock();
-    error = AllocTaskInfo(&task, stm, pos);
-    ERROR_PROC_RETURN_MSG_INNER(error, stm->StreamUnLock();, "streamId=%d alloc [%s] failed, retCode=%#x.", streamId,
-                                                           taskInitInfo->taskDesc, static_cast<uint32_t>(error));
-
-    SaveTaskCommonInfo(task, stm, pos);
+    task = stm->AllocTask(nullptr, TS_TASK_TYPE_RESERVED, error);
+    COND_PROC_RETURN_ERROR_MSG_INNER(task == nullptr, error, stm->StreamUnLock();
+                                     , "streamId=%d alloc [%s] failed, retCode=%#x.", streamId, taskInitInfo->taskDesc,
+                                     static_cast<uint32_t>(error));
+    pos = task->id;
+    dstStm = task->stream;
 
     error = taskInitInfo->taskInitFunc(task, blockIdx, type);
     ERROR_PROC_RETURN_MSG_INNER(
-        error, RollbackAndRecycle(task, stm, pos), "[%s] init failed, streamId=%d, retCode=%#x.",
+        error, RollbackAndRecycle(task, dstStm, pos), "[%s] init failed, streamId=%d, retCode=%#x.",
         taskInitInfo->taskDesc, streamId, static_cast<uint32_t>(error));
 
-    error = DavidSendTask(task, stm);
+    error = DavidSendTask(task, dstStm);
     ERROR_PROC_RETURN_MSG_INNER(
-        error, RollbackAndRecycle(task, stm, pos), "[%s] submit failed, streamId=%d, retCode=%#x.",
+        error, RollbackAndRecycle(task, dstStm, pos), "[%s] submit failed, streamId=%d, retCode=%#x.",
         taskInitInfo->taskDesc, streamId, static_cast<uint32_t>(error));
     stm->StreamUnLock();
 
-    SET_THREAD_TASKID_AND_STREAMID(streamId, task->taskSn);
+    SET_THREAD_TASKID_AND_STREAMID(dstStm->GetExposedStreamId(), task->taskSn);
 
     return error;
 }

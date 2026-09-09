@@ -835,6 +835,11 @@ TEST_F(EventTestDavid, GetCaptureEvent1)
     rtError_t error = apiImpl.GetCaptureEvent(stm, evt, &curEvent);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
+    MOCKER_CPP(static_cast<TaskInfo* (Stream::*)(TaskInfo*, tsTaskType_t, rtError_t&, uint32_t, UpdateTaskFlag)>(
+                   &Stream::AllocTask))
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), outBound(RT_ERROR_INVALID_VALUE), mockcpp::any(), mockcpp::any())
+        .will(returnValue(static_cast<TaskInfo*>(nullptr)));
     error = apiImpl.CaptureRecordEvent(stm->Context_(), evt, stm);
     EXPECT_NE(error, RT_ERROR_NONE);
 
@@ -901,6 +906,11 @@ TEST_F(EventTestDavid, GetCaptureEvent3)
     rtError_t error = apiImpl.GetCaptureEvent(stm, evt, &curEvent);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
+    MOCKER_CPP(static_cast<TaskInfo* (Stream::*)(TaskInfo*, tsTaskType_t, rtError_t&, uint32_t, UpdateTaskFlag)>(
+                   &Stream::AllocTask))
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), outBound(RT_ERROR_INVALID_VALUE), mockcpp::any(), mockcpp::any())
+        .will(returnValue(static_cast<TaskInfo*>(nullptr)));
     error = apiImpl.CaptureRecordEvent(stm->Context_(), evt, stm);
     EXPECT_NE(error, RT_ERROR_NONE);
 
@@ -964,12 +974,13 @@ TEST_F(EventTestDavid, EvtRecordSoftwareMode1)
     rtStreamCreate(&stream, 0);
     Stream* stm = rt_ut::UnwrapOrNull<Stream>(stream);
     TaskInfo task = {};
+    task.stream = stm;
     TaskInfo* taskOut = &task;
     MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER(AllocTaskInfoForCapture)
+    MOCKER_CPP(static_cast<TaskInfo* (Stream::*)(TaskInfo*, tsTaskType_t, rtError_t&, uint32_t, UpdateTaskFlag)>(
+                   &Stream::AllocTask))
         .stubs()
-        .with(outBoundP(&taskOut), mockcpp::any(), mockcpp::any(), mockcpp::any())
-        .will(returnValue(RT_ERROR_NONE));
+        .will(returnValue(taskOut));
     MOCKER(DavidSendTask).stubs().will(invoke(CheckRecordOwnerThenFail));
 
     rtError_t error = EvtRecordSoftwareMode(evt, stm);
@@ -1010,11 +1021,12 @@ TEST_F(EventTestDavid, EvtWaitSoftwareMode1)
     evt->PublishSoftwareRecordResource(eventAddr, 7);
 
     TaskInfo task1 = {};
+    task1.stream = stm;
     TaskInfo* tmpTask = &task1;
-    MOCKER(AllocTaskInfoForCapture)
+    MOCKER_CPP(static_cast<TaskInfo* (Stream::*)(TaskInfo*, tsTaskType_t, rtError_t&, uint32_t, UpdateTaskFlag)>(
+                   &Stream::AllocTask))
         .stubs()
-        .with(outBoundP(&tmpTask), mockcpp::any(), mockcpp::any(), mockcpp::any())
-        .will(returnValue(RT_ERROR_NONE));
+        .will(returnValue(tmpTask));
     MOCKER(MemWaitValueTaskInit).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER(DavidSendTask).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER(SubmitTaskPostProc).stubs().will(returnValue(RT_ERROR_NONE));
@@ -1100,7 +1112,11 @@ TEST_F(EventTestDavid, EvtWaitSoftwareMode5)
     void* eventAddr = malloc(RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT);
     evt->SetEventAddr(eventAddr);
 
-    MOCKER(AllocTaskInfoForCapture).stubs().will(returnValue(ACL_ERROR_RT_RESOURCE_ALLOC_FAIL));
+    MOCKER_CPP(static_cast<TaskInfo* (Stream::*)(TaskInfo*, tsTaskType_t, rtError_t&, uint32_t, UpdateTaskFlag)>(
+                   &Stream::AllocTask))
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), outBound(RT_ERROR_INVALID_VALUE), mockcpp::any(), mockcpp::any())
+        .will(returnValue(static_cast<TaskInfo*>(nullptr)));
 
     error = EvtWaitSoftwareMode(evt, stm);
     EXPECT_NE(error, RT_ERROR_NONE);
@@ -1126,11 +1142,12 @@ TEST_F(EventTestDavid, EvtWaitSoftwareMode6)
     evt->SetEventAddr(eventAddr);
 
     TaskInfo task1 = {};
+    task1.stream = stm;
     TaskInfo* tmpTask = &task1;
-    MOCKER(AllocTaskInfoForCapture)
+    MOCKER_CPP(static_cast<TaskInfo* (Stream::*)(TaskInfo*, tsTaskType_t, rtError_t&, uint32_t, UpdateTaskFlag)>(
+                   &Stream::AllocTask))
         .stubs()
-        .with(outBoundP(&tmpTask), mockcpp::any(), mockcpp::any(), mockcpp::any())
-        .will(returnValue(RT_ERROR_NONE));
+        .will(returnValue(tmpTask));
     MOCKER(MemWaitValueTaskInit).stubs().will(returnValue(RT_ERROR_DRV_ERR));
 
     error = EvtWaitSoftwareMode(evt, stm);
@@ -1158,11 +1175,12 @@ TEST_F(EventTestDavid, EvtWaitSoftwareMode7)
     evt->PublishSoftwareRecordResource(eventAddr, 7);
 
     TaskInfo task1 = {};
+    task1.stream = stm;
     TaskInfo* tmpTask = &task1;
-    MOCKER(AllocTaskInfoForCapture)
+    MOCKER_CPP(static_cast<TaskInfo* (Stream::*)(TaskInfo*, tsTaskType_t, rtError_t&, uint32_t, UpdateTaskFlag)>(
+                   &Stream::AllocTask))
         .stubs()
-        .with(outBoundP(&tmpTask), mockcpp::any(), mockcpp::any(), mockcpp::any())
-        .will(returnValue(RT_ERROR_NONE));
+        .will(returnValue(tmpTask));
     MOCKER(MemWaitValueTaskInit).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER(DavidSendTask).stubs().will(returnValue(RT_ERROR_DRV_ERR));
 
@@ -1194,11 +1212,12 @@ TEST_F(EventTestDavid, EvtWaitSoftwareMode8)
     evt->PublishSoftwareRecordResource(eventAddr, 7);
 
     TaskInfo task1 = {};
+    task1.stream = stm;
     TaskInfo* tmpTask = &task1;
-    MOCKER(AllocTaskInfoForCapture)
+    MOCKER_CPP(static_cast<TaskInfo* (Stream::*)(TaskInfo*, tsTaskType_t, rtError_t&, uint32_t, UpdateTaskFlag)>(
+                   &Stream::AllocTask))
         .stubs()
-        .with(outBoundP(&tmpTask), mockcpp::any(), mockcpp::any(), mockcpp::any())
-        .will(returnValue(RT_ERROR_NONE));
+        .will(returnValue(tmpTask));
     MOCKER(MemWaitValueTaskInit).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER(DavidSendTask).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER(SubmitTaskPostProc).stubs().will(returnValue(RT_ERROR_DRV_ERR));
@@ -1233,11 +1252,12 @@ TEST_F(EventTestDavid, EvtResetSoftwareMode1)
     evt->SetEventAddr(eventAddr);
 
     TaskInfo task1 = {};
+    task1.stream = stm;
     TaskInfo* tmpTask = &task1;
-    MOCKER(AllocTaskInfoForCapture)
+    MOCKER_CPP(static_cast<TaskInfo* (Stream::*)(TaskInfo*, tsTaskType_t, rtError_t&, uint32_t, UpdateTaskFlag)>(
+                   &Stream::AllocTask))
         .stubs()
-        .with(outBoundP(&tmpTask), mockcpp::any(), mockcpp::any(), mockcpp::any())
-        .will(returnValue(RT_ERROR_NONE));
+        .will(returnValue(tmpTask));
     MOCKER(MemWaitValueTaskInit).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER(DavidSendTask).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER(SubmitTaskPostProc).stubs().will(returnValue(RT_ERROR_NONE));
@@ -1322,6 +1342,12 @@ TEST_F(EventTestDavid, CaptureExternalRecordRegistersPlaceholder)
     captureModel->context_ = stream_->Context_();
 
     ApiImplDavid apiImpl;
+    TaskInfo phTask = {};
+    phTask.stream = stream_;
+    MOCKER_CPP(static_cast<TaskInfo* (Stream::*)(TaskInfo*, tsTaskType_t, rtError_t&, uint32_t, UpdateTaskFlag)>(
+                   &Stream::AllocTask))
+        .stubs()
+        .will(returnValue(&phTask));
     MOCKER(DavidSendTask).stubs().will(returnValue(RT_ERROR_NONE));
     ASSERT_EQ(apiImpl.CaptureExternalEventRecord(evt, stream_), RT_ERROR_NONE);
 
@@ -1349,6 +1375,12 @@ TEST_F(EventTestDavid, EventRecordExternalDispatchesThroughApiImpl)
     captureModel->context_ = stream_->Context_();
 
     ApiImplDavid apiImpl;
+    TaskInfo phTask = {};
+    phTask.stream = stream_;
+    MOCKER_CPP(static_cast<TaskInfo* (Stream::*)(TaskInfo*, tsTaskType_t, rtError_t&, uint32_t, UpdateTaskFlag)>(
+                   &Stream::AllocTask))
+        .stubs()
+        .will(returnValue(&phTask));
     MOCKER(CheckCaptureModelSupportExternalEvent)
         .stubs()
         .will(returnValue(RT_ERROR_NONE))
@@ -1379,6 +1411,12 @@ TEST_F(EventTestDavid, CaptureExternalWaitRegistersPlaceholder)
     captureModel->context_ = stream_->Context_();
 
     ApiImplDavid apiImpl;
+    TaskInfo phTask = {};
+    phTask.stream = stream_;
+    MOCKER_CPP(static_cast<TaskInfo* (Stream::*)(TaskInfo*, tsTaskType_t, rtError_t&, uint32_t, UpdateTaskFlag)>(
+                   &Stream::AllocTask))
+        .stubs()
+        .will(returnValue(&phTask));
     MOCKER(DavidSendTask).stubs().will(returnValue(RT_ERROR_NONE));
     ASSERT_EQ(apiImpl.CaptureExternalEventWait(evt, stream_), RT_ERROR_NONE);
 
@@ -1406,6 +1444,12 @@ TEST_F(EventTestDavid, StreamWaitExternalDispatchesThroughApiImpl)
     captureModel->context_ = stream_->Context_();
 
     ApiImplDavid apiImpl;
+    TaskInfo phTask = {};
+    phTask.stream = stream_;
+    MOCKER_CPP(static_cast<TaskInfo* (Stream::*)(TaskInfo*, tsTaskType_t, rtError_t&, uint32_t, UpdateTaskFlag)>(
+                   &Stream::AllocTask))
+        .stubs()
+        .will(returnValue(&phTask));
     MOCKER(CheckCaptureModelSupportExternalEvent)
         .stubs()
         .will(returnValue(RT_ERROR_NONE))

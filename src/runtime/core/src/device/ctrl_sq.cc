@@ -124,21 +124,24 @@ rtError_t CtrlSQ::CreateDavidCtrlMsg(RtCtrlMsgType msgType, const RtCtrlMsgParam
     // 根据type找到对应的setupFunc
     const uint32_t idx = static_cast<uint32_t>(msgType);
     uint32_t pos = 0xFFFFU;
+    Stream* dstStm = stream_;
     stream_->StreamLock();
-    error = AllocTaskInfo(&taskInfo, stream_, pos);
-    ERROR_PROC_RETURN_MSG_INNER(error, stream_->StreamUnLock();, "Failed to alloc task, stream_id=%d, retCode=%#x.",
-                                                               stream_->Id_(), static_cast<uint32_t>(error));
+    taskInfo = stream_->AllocTask(nullptr, TS_TASK_TYPE_RESERVED, error);
+    COND_PROC_RETURN_ERROR_MSG_INNER(taskInfo == nullptr, error, stream_->StreamUnLock();
+                                     , "Failed to alloc task, stream_id=%d, retCode=%#x.", stream_->Id_(),
+                                     static_cast<uint32_t>(error));
+    pos = taskInfo->id;
+    dstStm = taskInfo->stream;
     RT_LOG(RT_LOG_INFO, "taskInfo type, type=%u, taskType=%u.", taskInfo->type, param.taskType);
 
-    SaveTaskCommonInfo(taskInfo, stream_, pos);
     // 根据type找到对应的setupFunc
     error = ctrlMsgHandlerArr[idx](taskInfo, param);
-    COND_PROC_RETURN_ERROR(error != RT_ERROR_NONE, error, TaskUnInitProc(taskInfo); TaskRollBack(stream_, pos);
+    COND_PROC_RETURN_ERROR(error != RT_ERROR_NONE, error, TaskUnInitProc(taskInfo); TaskRollBack(dstStm, pos);
                            stream_->StreamUnLock();, "Failed to set up ctrl msg, msg_type=%s(%u), error=%#x.",
                                                    CtrlMsgTypeName(msgType), idx, static_cast<uint32_t>(error));
 
-    error = DavidSendTask(taskInfo, stream_);
-    COND_PROC_RETURN_ERROR(error != RT_ERROR_NONE, error, TaskUnInitProc(taskInfo); TaskRollBack(stream_, pos);
+    error = DavidSendTask(taskInfo, dstStm);
+    COND_PROC_RETURN_ERROR(error != RT_ERROR_NONE, error, TaskUnInitProc(taskInfo); TaskRollBack(dstStm, pos);
                            stream_->StreamUnLock();, "Failed to submit task, msg_type=%s(%u), error=%#x.",
                                                    CtrlMsgTypeName(msgType), idx, static_cast<uint32_t>(error));
     stream_->StreamUnLock();

@@ -678,7 +678,10 @@ TEST_F(EventTest910B, CrossDeviceEventWaitAllocTaskFail)
     evt->device_ = srcDevice;
     TaskInfo* tsk = nullptr;
     MOCKER_CPP(&Runtime::GetDevice).stubs().will(returnValue((Device*)srcDevice));
-    MOCKER_CPP(&Stream::AllocTask).stubs().will(returnValue(tsk));
+    MOCKER_CPP(static_cast<TaskInfo* (Stream::*)(TaskInfo*, tsTaskType_t, rtError_t&, uint32_t, UpdateTaskFlag)>(
+                   &Stream::AllocTask))
+        .stubs()
+        .will(returnValue(tsk));
 
     error = evt->Wait(stm, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);

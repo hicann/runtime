@@ -855,9 +855,6 @@ TEST_F(TinyStubTest, capture_adapt_stub)
     bool ret = StreamFlagIsSupportCapture(0);
     EXPECT_EQ(ret, true);
 
-    uint32_t flag = GetCaptureStreamFlag();
-    EXPECT_EQ(flag, RT_STREAM_DEFAULT);
-
     Event* event = nullptr;
     CaptureCntNotify cntInfo;
     rtError_t err = GetCaptureEventFromTask(nullptr, 0, 0, event, cntInfo);
@@ -874,6 +871,11 @@ TEST_F(TinyStubTest, capture_adapt_stub)
 
     TaskInfo* task = GetStreamTaskInfo(nullptr, 0, 0);
     EXPECT_EQ(task, nullptr);
+
+    EXPECT_EQ(NeedCascadeExpandStream(nullptr), false);
+
+    rtError_t capErr = AllocCaptureTaskByTaskRes(nullptr, 0, &task);
+    EXPECT_EQ(capErr, RT_ERROR_FEATURE_NOT_SUPPORT);
 }
 
 TEST_F(TinyStubTest, capture_model_utils_stub)
@@ -1069,6 +1071,7 @@ TEST_F(TinyStubTest, logic_sq_stub)
 TEST_F(TinyStubTest, stream_capture_stub)
 {
     Stream stream(static_cast<Device*>(nullptr), 0, 0);
+    stream.taskResMang_ = reinterpret_cast<TaskResManage*>(0x1);
     stream.SingleStreamTerminateCapture();
     EXPECT_EQ(stream.GetCaptureStatus(), RT_STREAM_CAPTURE_STATUS_INVALIDATED);
 
@@ -1079,14 +1082,9 @@ TEST_F(TinyStubTest, stream_capture_stub)
     stream.UpdateCascadeCaptureStreamInfo(nullptr, nullptr);
 
     TaskInfo* task = nullptr;
-    ret = stream.AllocCaptureTaskWithLock(TS_TASK_TYPE_KERNEL_AICORE, 0, &task);
-    EXPECT_EQ(ret, RT_ERROR_STREAM_CAPTURE_EXIT);
-
-    ret = stream.AllocCaptureTaskWithoutLock(TS_TASK_TYPE_KERNEL_AICORE, 0, &task);
-    EXPECT_EQ(ret, RT_ERROR_STREAM_CAPTURE_EXIT);
-
-    ret = stream.AllocCaptureTask(TS_TASK_TYPE_KERNEL_AICORE, 0, &task, true);
-    EXPECT_EQ(ret, RT_ERROR_STREAM_CAPTURE_EXIT);
+    rtError_t allocError = RT_ERROR_NONE;
+    task = stream.AllocCaptureTask(TS_TASK_TYPE_KERNEL_AICORE, 0, nullptr, allocError);
+    EXPECT_EQ(allocError, RT_ERROR_STREAM_CAPTURE_EXIT);
 
     stream.EnterCapture(nullptr);
     EXPECT_EQ(stream.GetCaptureStatus(), RT_STREAM_CAPTURE_STATUS_ACTIVE);

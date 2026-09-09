@@ -13,6 +13,8 @@
 #include "context.hpp"
 #include "capture_model.hpp"
 #include "task.hpp"
+#include "task_david.hpp"
+#include "capture_adapt.hpp"
 
 namespace cce {
 namespace runtime {
@@ -67,17 +69,11 @@ void Stream::UpdateCascadeCaptureStreamInfo(Stream* newCaptureStream, Stream* cu
     UpdateCaptureStream(newCaptureStream);
 }
 
-rtError_t Stream::AllocCaptureTaskWithLock(tsTaskType_t taskType, uint32_t sqeNum, TaskInfo** task)
+rtError_t Stream::AllocCaptureTaskImpl(tsTaskType_t taskType, uint32_t sqeNum, TaskInfo** task)
 {
     std::unique_lock<std::mutex> lk(captureLock_);
-    return AllocCaptureTaskWithoutLock(taskType, sqeNum, task);
-}
-
-rtError_t Stream::AllocCaptureTaskWithoutLock(tsTaskType_t taskType, uint32_t sqeNum, TaskInfo** task)
-{
     Stream* curCaptureStream = GetCaptureStream();
     if (curCaptureStream == nullptr) {
-        /* stm exit capture mode */
         return RT_ERROR_STREAM_CAPTURE_EXIT;
     }
 
@@ -85,13 +81,12 @@ rtError_t Stream::AllocCaptureTaskWithoutLock(tsTaskType_t taskType, uint32_t sq
         IsTaskGroupBreak(), RT_ERROR_STREAM_TASKGRP_INTR, SetTaskGroupErrCode(RT_ERROR_STREAM_TASKGRP_INTR),
         "the task group interrupted.");
 
-    if ((curCaptureStream->GetCaptureSqeNum() + CAPTURE_TASK_RESERVED_NUM +
-         device_->GetDevProperties().expandStreamRsvTaskNum) >= curCaptureStream->GetSqDepth()) {
+    if (NeedCascadeExpandStream(curCaptureStream)) {
         Stream* newCaptureStream = nullptr;
         Context* const ctx = Context_();
         if (ctx == nullptr) {
-            SingleStreamTerminateCapture();
             RT_LOG(RT_LOG_ERROR, "context is null, device_id=%u, original stream_id=%d.", device_->Id_(), Id_());
+            SingleStreamTerminateCapture();
             return RT_ERROR_CONTEXT_NULL;
         }
         rtError_t error = AllocCascadeCaptureStream(newCaptureStream, curCaptureStream);
@@ -106,34 +101,30 @@ rtError_t Stream::AllocCaptureTaskWithoutLock(tsTaskType_t taskType, uint32_t sq
         UpdateCascadeCaptureStreamInfo(newCaptureStream, curCaptureStream);
         curCaptureStream = newCaptureStream;
     }
-    rtError_t errCode = RT_ERROR_TASK_NEW;
+
     if (curCaptureStream->taskResMang_ == nullptr) {
+        rtError_t errCode = RT_ERROR_TASK_NEW;
         *task = device_->GetTaskFactory()->Alloc(curCaptureStream, taskType, errCode);
-    }
-    if (*task != nullptr) {
+        if (*task == nullptr) {
+            SingleStreamTerminateCapture();
+            return errCode;
+        }
         curCaptureStream->AddCaptureSqeNum(sqeNum);
-        (*task)->stream = curCaptureStream;
-        Runtime::Instance()->AllocTaskSn((*task)->taskSn); // 只有A5用了这个字段，其他形态的分配了不用
-    } else {
+        Runtime::Instance()->AllocTaskSn((*task)->taskSn);
+        SaveTaskCommonInfo(*task, curCaptureStream, sqeNum);
+        RT_LOG(
+            RT_LOG_INFO,
+            "Alloc task in capture stream successfully, device id=%u, origin stream_id=%d, capture stream_id=%d, "
+            "task sequence id=%u.",
+            device_->Id_(), Id_(), curCaptureStream->Id_(), (*task)->modelSeqId);
+        return RT_ERROR_NONE;
+    }
+
+    rtError_t ret = AllocCaptureTaskByTaskRes(curCaptureStream, sqeNum, task);
+    if (ret != RT_ERROR_NONE) {
         SingleStreamTerminateCapture();
-        return errCode;
     }
-
-    RT_LOG(
-        RT_LOG_INFO,
-        "Alloc task in capture stream successfully, device id=%u, origin stream_id=%d, capture stream_id=%d, "
-        "task sequence id=%u.",
-        device_->Id_(), Id_(), curCaptureStream->Id_(), (*task)->modelSeqId);
-    return RT_ERROR_NONE;
-}
-
-rtError_t Stream::AllocCaptureTask(tsTaskType_t taskType, uint32_t sqeNum, TaskInfo** task, bool isNeedLock)
-{
-    if (isNeedLock) {
-        return AllocCaptureTaskWithLock(taskType, sqeNum, task);
-    } else {
-        return AllocCaptureTaskWithoutLock(taskType, sqeNum, task);
-    }
+    return ret;
 }
 
 void Stream::EnterCapture(const Stream* const captureStream)

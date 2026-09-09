@@ -488,10 +488,10 @@ rtError_t LaunchFusionKernel(Stream* stm, void* const fusionKernelInfo, rtFusion
         stm->StreamUnLock();
     };
     stm->StreamLock();
-    error = AllocTaskInfoForCapture(&taskInfo, stm, pos, dstStm, sqeLen, true);
-    ERROR_PROC_RETURN_MSG_INNER(error, stm->StreamUnLock(); rt->PutProgram(prog);
-                                , "stream_id=%d alloc task failed, retCode=%#x.", stm->Id_(),
-                                static_cast<uint32_t>(error));
+    taskInfo = stm->AllocTask(nullptr, TS_TASK_TYPE_FUSION_KERNEL, error, sqeLen, UpdateTaskFlag::SUPPORT);
+    COND_PROC_RETURN_ERROR_MSG_INNER(taskInfo == nullptr, error, stm->StreamUnLock(); rt->PutProgram(prog);
+                                     , "stream_id=%d alloc task failed, retCode=%#x.", stm->Id_(),
+                                     static_cast<uint32_t>(error));
     ScopeGuard tskErrRecycle(errRecycle);
     if (taskInfo->isUpdateSinkSqe == 1U) {
         uint8_t aicAivType = 0U;
@@ -501,7 +501,8 @@ rtError_t LaunchFusionKernel(Stream* stm, void* const fusionKernelInfo, rtFusion
             error, "Failed to check update fusion task info, stream_id=%d, kernelType=%u, retCode=%#x.", stm->Id_(),
             aicAivType, static_cast<uint32_t>(error));
     } else {
-        SaveTaskCommonInfo(taskInfo, dstStm, pos, sqeLen);
+        pos = taskInfo->id;
+        dstStm = taskInfo->stream;
     }
     FusionKernelTaskProc(fusionKernel, taskInfo, &aicAivInfo, &launchTaskCfg, ccuArgSize);
 

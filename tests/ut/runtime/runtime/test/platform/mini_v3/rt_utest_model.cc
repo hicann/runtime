@@ -112,7 +112,10 @@ TEST_F(ModelTest, model_abort)
         .will(returnValue(RT_ERROR_NONE));
 
     TaskInfo* kernTask = new TaskInfo();
-    MOCKER_CPP(&Stream::AllocTask).stubs().will(returnValue(kernTask));
+    MOCKER_CPP(static_cast<TaskInfo* (Stream::*)(TaskInfo*, tsTaskType_t, rtError_t&, uint32_t, UpdateTaskFlag)>(
+                   &Stream::AllocTask))
+        .stubs()
+        .will(returnValue(kernTask));
     MOCKER(ModelMaintainceTaskInit).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL((RawDevice*)dev, &RawDevice::SubmitTask).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(stream, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));

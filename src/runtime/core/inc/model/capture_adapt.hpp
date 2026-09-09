@@ -21,7 +21,6 @@ struct CaptureCntNotify {
 };
 
 bool StreamFlagIsSupportCapture(uint32_t flag);
-uint32_t GetCaptureStreamFlag();
 rtError_t GetCaptureEventFromTask(
     const Device* const dev, uint32_t streamId, uint32_t pos, Event*& eventPtr, CaptureCntNotify& cntInfo);
 rtError_t ResetCaptureEventsProc(const CaptureModel* const captureModel, Stream* const stm);
@@ -30,6 +29,12 @@ rtError_t SendNopTask(const Context* const curCtx, Stream* const stm);
 bool TaskTypeIsSupportTaskGroup(const TaskInfo* const task);
 void ConstructStarsSqeForNotifyRecordTask(TaskInfo* taskInfo, uint8_t* const command);
 void ConstructStarsSqeForConditionNotifyWait(TaskInfo* taskInfo, uint8_t* const command);
+
+bool NeedCascadeExpandStream(Stream* captureStm);
+rtError_t AllocCaptureTaskByTaskRes(Stream* captureStm, uint32_t sqeNum, TaskInfo** task);
+rtError_t AllocAutoSplitTaskInfo(TaskInfo** taskInfo, Stream* const stm, uint32_t sqeNum);
+TaskInfo* AllocNonCaptureTask(
+    Stream* stm, TaskInfo* pTask, tsTaskType_t taskType, rtError_t& errorReason, uint32_t sqeNum);
 
 } // namespace runtime
 } // namespace cce

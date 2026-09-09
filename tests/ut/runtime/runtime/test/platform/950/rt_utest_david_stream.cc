@@ -819,7 +819,11 @@ TEST_F(DavidStreamTest, DavidrtModelAbortByid)
 
 TEST_F(DavidStreamTest, record_task_fail_0)
 {
-    MOCKER(AllocTaskInfo).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    MOCKER_CPP(static_cast<TaskInfo* (Stream::*)(TaskInfo*, tsTaskType_t, rtError_t&, uint32_t, UpdateTaskFlag)>(
+                   &Stream::AllocTask))
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), outBound(RT_ERROR_INVALID_VALUE), mockcpp::any(), mockcpp::any())
+        .will(returnValue(static_cast<TaskInfo*>(nullptr)));
     rtError_t res = ((DavidStream*)stream_)->SubmitRecordTask(200);
     EXPECT_NE(res, RT_ERROR_NONE);
 }

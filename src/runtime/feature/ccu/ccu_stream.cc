@@ -33,10 +33,12 @@ rtError_t StreamCCULaunch(Stream* stm, rtCcuTaskInfo_t* taskInfo)
 
     Stream* dstStm = stm;
     stm->StreamLock();
-    error = AllocTaskInfoForCapture(&ccuLaunchTask, stm, pos, dstStm, sqeNum);
-    ERROR_PROC_RETURN_MSG_INNER(error, stm->StreamUnLock();, "stream_id=%d alloc ccuLaunch task failed, retCode=%#x.",
-                                                           stm->Id_(), static_cast<uint32_t>(error));
-    SaveTaskCommonInfo(ccuLaunchTask, dstStm, pos, sqeNum);
+    ccuLaunchTask = stm->AllocTask(nullptr, TS_TASK_TYPE_CCU_LAUNCH, error, sqeNum);
+    COND_PROC_RETURN_ERROR_MSG_INNER(ccuLaunchTask == nullptr, error, stm->StreamUnLock();
+                                     , "stream_id=%d alloc ccuLaunch task failed, retCode=%#x.", stm->Id_(),
+                                     static_cast<uint32_t>(error));
+    pos = ccuLaunchTask->id;
+    dstStm = ccuLaunchTask->stream;
     CcuLaunchTaskInit(ccuLaunchTask, taskInfo);
     ccuLaunchTask->stmArgPos = static_cast<DavidStream*>(dstStm)->GetArgPos();
     error = DavidSendTask(ccuLaunchTask, dstStm);

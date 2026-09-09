@@ -1936,17 +1936,19 @@ rtError_t MdlAbort(Model* const mdl)
         error, "Failed to check stream, stream_id=%d, retCode=%#x.", streamObj->Id_(), static_cast<uint32_t>(error));
     const uint32_t executorFlag = mdl->GetModelExecutorType();
     uint32_t pos = 0xFFFFU;
+    Stream* dstStm = streamObj;
     streamObj->StreamLock();
-    error = AllocTaskInfo(&executeTask, streamObj, pos);
+    executeTask = streamObj->AllocTask(nullptr, TS_TASK_TYPE_MODEL_TO_AICPU, error);
     ERROR_PROC_RETURN_MSG_INNER(error, streamObj->StreamUnLock();,
                                                                  "Failed to allocate task, stream_id=%d, retCode=%#x.",
                                                                  streamObj->Id_(), static_cast<uint32_t>(error));
-    SaveTaskCommonInfo(executeTask, streamObj, pos);
+    pos = executeTask->id;
+    dstStm = executeTask->stream;
     (void)ModelToAicpuTaskInit(
         executeTask, mdl->Id_(), static_cast<uint32_t>(TS_AICPU_MODEL_ABORT), executorFlag,
         RtPtrToValue(mdl->GetAicpuModelInfo()));
-    error = DavidSendTask(executeTask, streamObj);
-    ERROR_PROC_RETURN_MSG_INNER(error, TaskUnInitProc(executeTask); TaskRollBack(streamObj, pos);
+    error = DavidSendTask(executeTask, dstStm);
+    ERROR_PROC_RETURN_MSG_INNER(error, TaskUnInitProc(executeTask); TaskRollBack(dstStm, pos);
                                 streamObj->StreamUnLock();
                                 , "Failed to submit model abort task, error=%#x.", static_cast<uint32_t>(error));
     streamObj->StreamUnLock();

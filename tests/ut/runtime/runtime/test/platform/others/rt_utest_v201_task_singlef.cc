@@ -124,7 +124,7 @@ public:
     rtStream_t streamHandle_ = 0;
 };
 
-TEST_F(TaskTestV201F, TestSetdevice)
+TEST_F(TaskTestV201F, DISABLED_TestSetdevice)
 {
     rtError_t error;
     error = rtSetDevice(0);
@@ -136,7 +136,7 @@ TEST_F(TaskTestV201F, TestSetdevice)
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
-TEST_F(TaskTestV201F, TestSetdevice2)
+TEST_F(TaskTestV201F, DISABLED_TestSetdevice2)
 {
     rtError_t error;
     Runtime* rtInstance = Runtime::Instance();

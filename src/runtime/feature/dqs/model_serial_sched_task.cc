@@ -143,25 +143,28 @@ rtError_t LaunchModelSerialSchedTaskByType(Stream* const stm, const tsTaskType_t
         static_cast<uint32_t>(error));
 
     uint32_t pos = RT_DEFAULT_POS;
+    Stream* dstStm = stm;
     stm->StreamLock();
     TaskInfo* task = nullptr;
-    error = AllocTaskInfo(&task, stm, pos);
-    ERROR_PROC_RETURN_MSG_INNER(error, stm->StreamUnLock();, "streamId=%d alloc [%s] failed, retCode=%#x.", streamId,
-                                                           taskInitInfo->taskDesc, static_cast<uint32_t>(error));
+    task = stm->AllocTask(nullptr, TS_TASK_TYPE_RESERVED, error);
+    COND_PROC_RETURN_ERROR_MSG_INNER(task == nullptr, error, stm->StreamUnLock();
+                                     , "streamId=%d alloc [%s] failed, retCode=%#x.", streamId, taskInitInfo->taskDesc,
+                                     static_cast<uint32_t>(error));
+    pos = task->id;
+    dstStm = task->stream;
 
-    SaveTaskCommonInfo(task, stm, pos);
     error = taskInitInfo->taskInitFunc(task, param);
     ERROR_PROC_RETURN_MSG_INNER(
-        error, RollbackAndRecycle(task, stm, pos), "[%s] init failed, streamId=%d, retCode=%#x.",
+        error, RollbackAndRecycle(task, dstStm, pos), "[%s] init failed, streamId=%d, retCode=%#x.",
         taskInitInfo->taskDesc, streamId, static_cast<uint32_t>(error));
 
-    error = DavidSendTask(task, stm);
+    error = DavidSendTask(task, dstStm);
     ERROR_PROC_RETURN_MSG_INNER(
-        error, RollbackAndRecycle(task, stm, pos), "[%s] submit failed, streamId=%d, retCode=%#x.",
+        error, RollbackAndRecycle(task, dstStm, pos), "[%s] submit failed, streamId=%d, retCode=%#x.",
         taskInitInfo->taskDesc, streamId, static_cast<uint32_t>(error));
     stm->StreamUnLock();
 
-    SET_THREAD_TASKID_AND_STREAMID(streamId, task->taskSn);
+    SET_THREAD_TASKID_AND_STREAMID(dstStm->GetExposedStreamId(), task->taskSn);
 
     return error;
 }

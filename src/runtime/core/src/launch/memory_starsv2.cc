@@ -90,10 +90,13 @@ rtError_t SubmitReduceTask(
         stm->StreamUnLock();
     };
     stm->StreamLock();
-    rtError_t error = AllocTaskInfoForCapture(&rtMemcpyAsyncTask, stm, pos, dstStm);
-    ERROR_PROC_RETURN_MSG_INNER(error, stm->StreamUnLock();, "stream_id=%d alloc ccuLaunch task failed, retCode=%#x.",
-                                                           stm->Id_(), static_cast<uint32_t>(error));
-    SaveTaskCommonInfo(rtMemcpyAsyncTask, dstStm, pos);
+    rtError_t error = RT_ERROR_NONE;
+    rtMemcpyAsyncTask = stm->AllocTask(nullptr, TS_TASK_TYPE_MEMCPY, error);
+    COND_PROC_RETURN_ERROR_MSG_INNER(rtMemcpyAsyncTask == nullptr, error, stm->StreamUnLock();
+                                     , "stream_id=%d alloc ccuLaunch task failed, retCode=%#x.", stm->Id_(),
+                                     static_cast<uint32_t>(error));
+    pos = rtMemcpyAsyncTask->id;
+    dstStm = rtMemcpyAsyncTask->stream;
     ScopeGuard tskErrRecycle(errRecycle);
     error = MemcpyAsyncTaskInitV3(rtMemcpyAsyncTask, kind, src, dst, cpySize, cfgInfo, nullptr);
     ERROR_RETURN_MSG_INNER(
@@ -128,10 +131,12 @@ rtError_t MemWriteValue(const void* const devAddr, const uint64_t value, const u
         stm->StreamUnLock();
     };
     stm->StreamLock();
-    error = AllocTaskInfoForCapture(&rtMemWriteValueTask, stm, pos, dstStm);
-    ERROR_PROC_RETURN_MSG_INNER(error, stm->StreamUnLock();, "Failed to allocate task, stream_id=%d, retCode=%#x.",
-                                                           streamId, static_cast<uint32_t>(error));
-    SaveTaskCommonInfo(rtMemWriteValueTask, dstStm, pos);
+    rtMemWriteValueTask = stm->AllocTask(nullptr, TS_TASK_TYPE_MEM_WRITE_VALUE, error);
+    COND_PROC_RETURN_ERROR_MSG_INNER(rtMemWriteValueTask == nullptr, error, stm->StreamUnLock();
+                                     , "Failed to allocate task, stream_id=%d, retCode=%#x.", streamId,
+                                     static_cast<uint32_t>(error));
+    pos = rtMemWriteValueTask->id;
+    dstStm = rtMemWriteValueTask->stream;
     ScopeGuard tskErrRecycle(errRecycle);
     rtMemWriteValueTask->typeName = "MEM_WRITE_VALUE";
     rtMemWriteValueTask->type = TS_TASK_TYPE_MEM_WRITE_VALUE;

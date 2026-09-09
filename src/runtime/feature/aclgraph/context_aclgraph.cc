@@ -120,9 +120,9 @@ rtError_t Context::AllocCascadeCaptureStream(
     }
 
     CaptureModel* captureModelTmp = dynamic_cast<CaptureModel*>(captureModel);
-    const uint32_t flag = GetCaptureStreamFlag();
     /* create capture stream */
-    rtError_t error = StreamCreate(0U, flag, &newCaptureStreamTmp, nullptr, captureModelTmp->IsSoftwareSqEnable());
+    rtError_t error =
+        StreamCreate(0U, RT_STREAM_PERSISTENT, &newCaptureStreamTmp, nullptr, captureModelTmp->IsSoftwareSqEnable());
     if (error != RT_ERROR_NONE) {
         RT_LOG(
             RT_LOG_ERROR, "Capture stream create failed, device_id=%u, original stream_id=%d, retCode=%#x.",
@@ -200,9 +200,9 @@ rtError_t Context::StreamAddToCaptureModelProc(Stream* const stm, Model* const c
         return RT_ERROR_MODEL_CAPTURE_STATUS;
     }
 
-    const uint32_t flag = GetCaptureStreamFlag();
     /* create capture stream */
-    rtError_t error = StreamCreate(0U, flag, &captureStream, nullptr, captureModelTmp->IsSoftwareSqEnable());
+    rtError_t error =
+        StreamCreate(0U, RT_STREAM_PERSISTENT, &captureStream, nullptr, captureModelTmp->IsSoftwareSqEnable());
     if (error != RT_ERROR_NONE) {
         RT_LOG(
             RT_LOG_ERROR, "Capture stream create failed, device_id=%u, original stream_id=%d, retCode=%#x.",

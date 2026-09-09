@@ -264,26 +264,29 @@ rtError_t DavidStream::SubmitMaintenanceTask(
     (void)logicCqId;
     TaskInfo* tsk = nullptr;
     uint32_t pos = 0xFFFFU;
+    Stream* dstStm = this;
     rtError_t error = CheckTaskCanSend(this);
     ERROR_RETURN_MSG_INNER(
         error, "Failed to check if task can be sent, stream_id=%d, target_stream_id=%d, retCode=%#x.", streamId_,
         targetStmId, static_cast<uint32_t>(error));
     StreamLock();
-    error = AllocTaskInfo(&tsk, this, pos);
-    ERROR_PROC_RETURN_MSG_INNER(error, StreamUnLock();,
-                                                      "Failed to alloc task, stream_id=%d, target_stream_id=%d,"
-                                                      " retCode=%#x.",
-                                                      streamId_, targetStmId, static_cast<uint32_t>(error));
-    SaveTaskCommonInfo(tsk, this, pos);
+    tsk = AllocTask(nullptr, TS_TASK_TYPE_MAINTENANCE, error);
+    COND_PROC_RETURN_ERROR_MSG_INNER(tsk == nullptr, error, StreamUnLock();
+                                     ,
+                                     "Failed to alloc task, stream_id=%d, target_stream_id=%d,"
+                                     " retCode=%#x.",
+                                     streamId_, targetStmId, static_cast<uint32_t>(error));
+    pos = tsk->id;
+    dstStm = tsk->stream;
     (void)MaintenanceTaskInit(tsk, type, static_cast<uint32_t>(targetStmId), isForceRecycle);
     tsk->isCqeNeedConcern = true;
-    error = DavidSendTask(tsk, this);
-    ERROR_PROC_RETURN_MSG_INNER(error, TaskUnInitProc(tsk); TaskRollBack(this, pos); StreamUnLock();
+    error = DavidSendTask(tsk, dstStm);
+    ERROR_PROC_RETURN_MSG_INNER(error, TaskUnInitProc(tsk); TaskRollBack(dstStm, pos); StreamUnLock();
                                 , "Failed to submit task, retCode=%#x, stream_id=%d, target_stream_id=%d, pos=%u.",
                                 static_cast<uint32_t>(error), streamId_, targetStmId, pos);
     StreamUnLock();
     const bool isNeedStreamSync = (tsk->isNeedStreamSync == 0U) ? false : true;
-    error = SubmitTaskPostProc(this, pos, isNeedStreamSync);
+    error = SubmitTaskPostProc(dstStm, pos, isNeedStreamSync);
     ERROR_RETURN_MSG_INNER(
         error, "Failed to submit task post-process, stream_id=%d, target_stream_id=%d, retCode=%#x.", streamId_,
         targetStmId, static_cast<uint32_t>(error));

@@ -190,7 +190,11 @@ TEST_F(IpcEventStarsV2Test, RecordStarsV2_Success)
     ASSERT_EQ(error, ACL_RT_SUCCESS);
 
     MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER(AllocTaskInfo).stubs().will(invoke(AllocTaskInfoMock));
+    g_mockTask.stream = rt_ut::UnwrapOrNull<Stream>(stream);
+    MOCKER_CPP(static_cast<TaskInfo* (Stream::*)(TaskInfo*, tsTaskType_t, rtError_t&, uint32_t, UpdateTaskFlag)>(
+                   &Stream::AllocTask))
+        .stubs()
+        .will(returnValue(&g_mockTask));
     MOCKER(DavidSendTask).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER(SubmitTaskPostProc).stubs().will(returnValue(RT_ERROR_NONE));
 
@@ -202,6 +206,7 @@ TEST_F(IpcEventStarsV2Test, RecordStarsV2_Success)
     EXPECT_EQ(error, ACL_RT_SUCCESS);
     EXPECT_TRUE(g_mockTask.needPostProc);
 
+    g_mockTask = {};
     rtStreamDestroy(stream);
     rtEventDestroy(event);
 }
@@ -227,7 +232,11 @@ TEST_F(IpcEventStarsV2Test, WaitStarsV2_Success)
     handleVa->deviceMemRef[0] = 1;
 
     MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER(AllocTaskInfo).stubs().will(invoke(AllocTaskInfoMock));
+    g_mockTask.stream = rt_ut::UnwrapOrNull<Stream>(stream);
+    MOCKER_CPP(static_cast<TaskInfo* (Stream::*)(TaskInfo*, tsTaskType_t, rtError_t&, uint32_t, UpdateTaskFlag)>(
+                   &Stream::AllocTask))
+        .stubs()
+        .will(returnValue(&g_mockTask));
     MOCKER(DavidSendTask).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER(SubmitTaskPostProc).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER(MemWaitValueTaskInit).stubs().will(returnValue(RT_ERROR_NONE));
@@ -238,6 +247,7 @@ TEST_F(IpcEventStarsV2Test, WaitStarsV2_Success)
     EXPECT_EQ(error, ACL_RT_SUCCESS);
     EXPECT_TRUE(g_mockTask.needPostProc);
 
+    g_mockTask = {};
     rtStreamDestroy(stream);
     rtEventDestroy(event);
 }
@@ -263,7 +273,11 @@ TEST_F(IpcEventStarsV2Test, WaitStarsV2_AllocFail)
     handleVa->deviceMemRef[0] = 1;
 
     MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER(AllocTaskInfo).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    MOCKER_CPP(static_cast<TaskInfo* (Stream::*)(TaskInfo*, tsTaskType_t, rtError_t&, uint32_t, UpdateTaskFlag)>(
+                   &Stream::AllocTask))
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), outBound(RT_ERROR_INVALID_VALUE), mockcpp::any(), mockcpp::any())
+        .will(returnValue(static_cast<TaskInfo*>(nullptr)));
     MOCKER(DavidSendTask).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER(SubmitTaskPostProc).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER(MemWaitValueTaskInit).stubs().will(returnValue(RT_ERROR_NONE));
@@ -398,6 +412,8 @@ TEST_F(IpcEventStarsV2Test, TryFreeEventIdAndCheckCanBeDelete_RefCountZero)
     uint32_t testIndex = 0;
     handleVa->deviceMemRef[testIndex] = 0;
     ipcEvent->totalTaskCnt_ = 1;
+    uint8_t testMem = 0xFF;
+    ipcEvent->currentHostMem_ = &testMem;
 
     bool canDelete = ipcEvent->TryFreeEventIdAndCheckCanBeDelete(static_cast<int32_t>(testIndex), false);
 
