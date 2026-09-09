@@ -25,6 +25,7 @@
 #include "context.hpp"
 #include "context_manage.hpp"
 #include "event.hpp"
+#include "notify.hpp"
 
 namespace cce {
 namespace runtime {
@@ -363,15 +364,21 @@ static bool FillNotifyTrackInfo(const TaskInfo& taskInfo, struct MsprofRuntimeTr
         }
         case TS_TASK_TYPE_NOTIFY_WAIT: {
             const NotifyWaitTaskInfo& waitInfo = taskInfo.u.notifywaitTask;
-            if (waitInfo.isEndGraphNotify && (waitInfo.captureModel != nullptr)) {
-                return false;
-            }
             if (waitInfo.isCountNotify) {
                 runtimeTrack.taskType = static_cast<uint64_t>(ProfTaskType::PROF_TASK_TYPE_COUNT_NOTIFY_WAIT);
             }
             notifyKey = static_cast<uint64_t>(waitInfo.notifyId);
             break;
         }
+        case TS_TASK_TYPE_ENDGRAPH_NOTIFY_WAIT: {
+            const EndGraphNotifyWaitTaskInfo& waitInfo = taskInfo.u.endGraphNotifyWaitTask;
+            if (waitInfo.isSoftwareSqCaptureModel) {
+                return false;
+            }
+            notifyKey = static_cast<uint64_t>(waitInfo.notifyId);
+            break;
+        }
+
         default:
             return false;
     }
@@ -418,12 +425,13 @@ void Profiler::ModifyTrackData(TaskInfo* const taskInfo, const uint32_t devId, R
         trackData->compactInfo.data.runtimeTrack.taskId = GetProfTaskId(taskInfo);
     }
     uint32_t taskType = taskInfo->type;
-    // model exec 的notify wait,给prof上报的type做适配修改
-    if (taskInfo->type == TS_TASK_TYPE_NOTIFY_WAIT &&
-        (taskInfo->u.notifywaitTask.isEndGraphNotify && taskInfo->u.notifywaitTask.captureModel != nullptr)) {
+    // model exec 的 endGraph notify wait，给 prof 上报的 type 做适配修改。
+    if ((taskInfo->type == TS_TASK_TYPE_ENDGRAPH_NOTIFY_WAIT) &&
+        taskInfo->u.endGraphNotifyWaitTask.isSoftwareSqCaptureModel &&
+        (taskInfo->u.endGraphNotifyWaitTask.endGraphModel != nullptr)) {
         taskType = static_cast<uint32_t>(ProfTaskType::PROF_TASK_TYPE_MODEL_WAIT_COMPLETE);
         trackData->compactInfo.data.runtimeTrack.extInfo.modelInfo.modelId =
-            taskInfo->u.notifywaitTask.captureModel->Id_();
+            taskInfo->u.endGraphNotifyWaitTask.endGraphModel->Id_();
     }
     if (taskType == TS_TASK_TYPE_MODEL_EXECUTE) {
         trackData->compactInfo.data.runtimeTrack.extInfo.modelInfo.modelId = taskInfo->u.modelExecuteTaskInfo.modelId;

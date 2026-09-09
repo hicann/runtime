@@ -61,7 +61,7 @@ void ConstructSqeForIpcNotifyRecordTask(TaskInfo* taskInfo, rtDavidSqe_t* const 
         sqe->subType);
 }
 
-void ReleaseResourceForNotifyWaitTaskOnlModel(TaskInfo* const taskInfo) { UNUSED(taskInfo); }
+void ReleaseResourceForEndGraphNotifyWaitTaskOnlModel(const TaskInfo* taskInfo) { UNUSED(taskInfo); }
 
 static bool NotifyTaskRegister()
 {
@@ -85,13 +85,25 @@ static bool NotifyTaskRegister()
         .setResultFunc = nullptr,
         .setStarsResultFunc = &SetStarsResultCommonForDavid,
     };
+    TaskFuncSingle endGraphNotifyWaitFuncs = {
+        .toCommandFunc = &ToCommandBodyForEndGraphNotifyWaitTask,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccessForEndGraphNotifyWaitTask,
+        .taskUnInitFunc = &EndGraphNotifyWaitTaskUnInit,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoForEndGraphNotifyWaitTask,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+    };
 
     const auto& chips = GetV201Chips();
     for (const auto chip : chips) {
         RegTaskFunc(chip, TS_TASK_TYPE_NOTIFY_RECORD, notifyRecordFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_NOTIFY_WAIT, notifyWaitFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_ENDGRAPH_NOTIFY_WAIT, endGraphNotifyWaitFuncs);
         RegDavidSqeFunc(chip, TS_TASK_TYPE_NOTIFY_RECORD, &ConstructDavidSqeForNotifyRecordTask);
         RegDavidSqeFunc(chip, TS_TASK_TYPE_NOTIFY_WAIT, &ConstructDavidSqeForNotifyWaitTask);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_ENDGRAPH_NOTIFY_WAIT, &ConstructDavidSqeForNotifyWaitTask);
     }
 
     return true;

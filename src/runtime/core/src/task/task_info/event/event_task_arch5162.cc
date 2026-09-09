@@ -51,21 +51,27 @@ void ConstructSqeForNotifyRecordTask(TaskInfo* taskInfo, rtStarsSqe_t* const com
 static void ConstructSqeForNotifyWaitTask(TaskInfo* taskInfo, rtStarsSqe_t* const command)
 {
     (void)memset_s(command, sizeof(rtStarsSqe_t), 0, sizeof(rtStarsSqe_t));
-    NotifyWaitTaskInfo* notifyWaitTask = &(taskInfo->u.notifywaitTask);
+    const bool isEndGraphNotifyWait = taskInfo->type == TS_TASK_TYPE_ENDGRAPH_NOTIFY_WAIT;
+    const uint32_t notifyId =
+        isEndGraphNotifyWait ? taskInfo->u.endGraphNotifyWaitTask.notifyId : taskInfo->u.notifywaitTask.notifyId;
+    const uint32_t timeout =
+        isEndGraphNotifyWait ? taskInfo->u.endGraphNotifyWaitTask.timeout : taskInfo->u.notifywaitTask.timeout;
     Stream* const stm = taskInfo->stream;
     RtStarsNotifySqe* const sqe = &(command->notifySqe);
     sqe->header.type = RT_STARS_SQE_TYPE_NOTIFY_WAIT;
     sqe->header.wrCqe = stm->GetStarsWrCqeFlag();
     sqe->header.taskId = taskInfo->id;
     sqe->header.rtStreamId = static_cast<uint16_t>(stm->Id_());
-    sqe->notify_id = static_cast<uint16_t>(notifyWaitTask->notifyId);
-    sqe->timeoutEn = notifyWaitTask->timeout > 0 ? 1U : 0U;
+    sqe->notify_id = static_cast<uint16_t>(notifyId);
+    sqe->timeoutEn = timeout > 0U ? 1U : 0U;
 
-    PrintSqe(command, "Notify Wait Task");
-    RT_LOG(RT_LOG_INFO, "NotifyWaitTask stream_id=%d task_id=%hu.", taskInfo->stream->Id_(), taskInfo->id);
+    PrintSqe(command, isEndGraphNotifyWait ? "EndGraph Notify Wait Task" : "Notify Wait Task");
+    RT_LOG(
+        RT_LOG_INFO, "%s stream_id=%d task_id=%hu.", isEndGraphNotifyWait ? "EndGraphNotifyWaitTask" : "NotifyWaitTask",
+        taskInfo->stream->Id_(), taskInfo->id);
 }
 
-void ReleaseResourceForNotifyWaitTaskOnlModel(TaskInfo* const taskInfo) { UNUSED(taskInfo); }
+void ReleaseResourceForEndGraphNotifyWaitTaskOnlModel(const TaskInfo* taskInfo) { UNUSED(taskInfo); }
 #endif
 
 #if F_DESC("EventRecordTask")
@@ -198,6 +204,16 @@ static bool EventTaskRegister()
         .setResultFunc = &SetResultCommon,
         .setStarsResultFunc = &SetStarsResultCommon,
     };
+    TaskFuncSingle endGraphNotifyWaitFuncs = {
+        .toCommandFunc = nullptr,
+        .toSqeFunc = &ConstructSqeForNotifyWaitTask,
+        .doCompleteSuccFunc = &DoCompleteSuccessForEndGraphNotifyWaitTask,
+        .taskUnInitFunc = &EndGraphNotifyWaitTaskUnInit,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoForEndGraphNotifyWaitTask,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultCommon,
+    };
     TaskFuncSingle notifyRecordFuncs = {
         .toCommandFunc = nullptr,
         .toSqeFunc = &ConstructSqeForNotifyRecordTask,
@@ -213,6 +229,7 @@ static bool EventTaskRegister()
     RegTaskFunc(CHIP_5162A, TS_TASK_TYPE_EVENT_RECORD, eventRecordFuncs);
     RegTaskFunc(CHIP_5162A, TS_TASK_TYPE_EVENT_RESET, eventResetFuncs);
     RegTaskFunc(CHIP_5162A, TS_TASK_TYPE_NOTIFY_WAIT, notifyWaitFuncs);
+    RegTaskFunc(CHIP_5162A, TS_TASK_TYPE_ENDGRAPH_NOTIFY_WAIT, endGraphNotifyWaitFuncs);
     RegTaskFunc(CHIP_5162A, TS_TASK_TYPE_NOTIFY_RECORD, notifyRecordFuncs);
 
     return true;

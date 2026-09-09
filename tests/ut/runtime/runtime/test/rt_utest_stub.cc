@@ -230,6 +230,15 @@ TEST_F(TinyStubTest, api_c_stub)
     EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
 }
 
+TEST_F(TinyStubTest, ModelTaskUpdateUnsupported)
+{
+    ApiErrorDecorator api(nullptr);
+    EXPECT_EQ(api.ModelTaskUpdate(nullptr, 0U, nullptr, nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
+
+    rtMdlTaskUpdateInfo_t updateInfo = {};
+    EXPECT_EQ(api.ModelTaskUpdate(nullptr, 0U, nullptr, &updateInfo), RT_ERROR_FEATURE_NOT_SUPPORT);
+}
+
 TEST_F(TinyStubTest, api_error_stub)
 {
     ApiImpl impl;

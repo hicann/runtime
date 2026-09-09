@@ -162,6 +162,7 @@ static TaskTypeRegisterInfo g_taskDesc[] = {
     {TS_TASK_TYPE_MODEL_SERIAL_SCHED_PREPROC, "MODEL_SERIAL_SCHED_PRE_PROC"},
     {TS_TASK_TYPE_MODEL_SERIAL_SCHED_NOTIFY_WAIT, "MODEL_SERIAL_SCHED_NOTIFY_WAIT"},
     {TS_TASK_TYPE_MODEL_SERIAL_SCHED_POSTPROC, "MODEL_SERIAL_SCHED_POST_PROC"},
+    {TS_TASK_TYPE_ENDGRAPH_NOTIFY_WAIT, "ENDGRAPH_NOTIFY_WAIT"},
 };
 
 #if F_DESC("pkgStat")
@@ -869,8 +870,8 @@ TaskInfo* GetRealReportFaultTask(TaskInfo* taskInfo, const void* info)
     const tsTaskType_t type = taskInfo->type;
     if (type == TS_TASK_TYPE_MODEL_EXECUTE) {
         return GetRealReportFaultTaskForModelExecuteTask(taskInfo);
-    } else if (type == TS_TASK_TYPE_NOTIFY_WAIT) {
-        return GetRealReportFaultTaskForNotifyWaitTask(taskInfo, info);
+    } else if (type == TS_TASK_TYPE_ENDGRAPH_NOTIFY_WAIT) {
+        return GetRealReportFaultTaskForEndGraphNotifyWaitTask(taskInfo, info);
     } else {
         return taskInfo;
     }
@@ -883,9 +884,10 @@ void SetEndGraphNotifyWaitSqPos(TaskInfo* taskInfo, const uint32_t pos)
         return;
     }
 
-    if ((taskInfo->type == TS_TASK_TYPE_NOTIFY_WAIT) && (taskInfo->u.notifywaitTask.isEndGraphNotify)) {
+    if ((taskInfo->type == TS_TASK_TYPE_ENDGRAPH_NOTIFY_WAIT) &&
+        taskInfo->u.endGraphNotifyWaitTask.isSoftwareSqCaptureModel) {
         (void)taskInfo->stream->Device_()->StoreEndGraphNotifyInfo(
-            static_cast<uint32_t>(taskInfo->stream->Id_()), taskInfo->u.notifywaitTask.captureModel, pos);
+            static_cast<uint32_t>(taskInfo->stream->Id_()), taskInfo->u.endGraphNotifyWaitTask.endGraphModel, pos);
     }
 
     return;
@@ -909,9 +911,11 @@ void SetSqPos(TaskInfo* taskInfo, const uint32_t pos)
             if (davidEventRecordInfo->event != nullptr) {
                 davidEventRecordInfo->event->SetRecordPos(static_cast<uint16_t>(pos));
             }
-        } else if ((taskInfo->type == TS_TASK_TYPE_NOTIFY_WAIT) && (taskInfo->u.notifywaitTask.isEndGraphNotify)) {
+        } else if (
+            (taskInfo->type == TS_TASK_TYPE_ENDGRAPH_NOTIFY_WAIT) &&
+            taskInfo->u.endGraphNotifyWaitTask.isSoftwareSqCaptureModel) {
             (void)taskInfo->stream->Device_()->StoreEndGraphNotifyInfo(
-                taskInfo->stream->Id_(), taskInfo->u.notifywaitTask.captureModel, pos);
+                taskInfo->stream->Id_(), taskInfo->u.endGraphNotifyWaitTask.endGraphModel, pos);
         } else {
             // no operation
         }

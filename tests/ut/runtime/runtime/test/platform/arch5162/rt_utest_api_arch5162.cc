@@ -10,6 +10,7 @@
 #include "gtest/gtest.h"
 #include "runtime/rt.h"
 #include "api_impl.hpp"
+#include "api_error.hpp"
 #include "aicpu_dfx.hpp"
 
 using namespace cce::runtime;
@@ -39,3 +40,13 @@ TEST(Arch5162ApiTest, GetDeviceReturnsFixedDeviceId)
 }
 
 TEST(Arch5162ApiTest, GetDeviceRejectsNullOutput) { EXPECT_EQ(rtGetDevice(nullptr), ACL_ERROR_RT_PARAM_INVALID); }
+
+TEST(Arch5162ApiTest, ModelTaskUpdateApiErrorStub_NotSupport)
+{
+    ApiErrorDecorator api(nullptr);
+    EXPECT_EQ(api.ModelTaskUpdate(nullptr, 0U, nullptr, nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
+
+    rtMdlTaskUpdateInfo_t updateInfo = {};
+    EXPECT_EQ(api.ModelTaskUpdate(nullptr, 0U, nullptr, &updateInfo), RT_ERROR_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(rtModelTaskUpdate(nullptr, 0U, nullptr, nullptr), ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+}

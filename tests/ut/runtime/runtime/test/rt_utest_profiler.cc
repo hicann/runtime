@@ -4641,15 +4641,23 @@ TEST_F(ProfilerTest, FillRecordWaitTrackInfo_NotifyWaitKinds)
     EXPECT_EQ(countTrack.taskType, static_cast<uint64_t>(ProfTaskType::PROF_TASK_TYPE_COUNT_NOTIFY_WAIT));
     EXPECT_EQ(countTrack.extInfo.notifyInfo.key, static_cast<uint64_t>(notifyId));
 
-    notifyTask.u.notifywaitTask.isCountNotify = false;
-    notifyTask.u.notifywaitTask.isEndGraphNotify = true;
-    notifyTask.u.notifywaitTask.captureModel = reinterpret_cast<Model*>(static_cast<uintptr_t>(1U));
-    MsprofRuntimeTrack endGraphTrack = {};
-    endGraphTrack.taskType = static_cast<uint64_t>(ProfTaskType::PROF_TASK_TYPE_MODEL_WAIT_COMPLETE);
-    endGraphTrack.extInfo.modelInfo.modelId = 7U;
-    EXPECT_FALSE(FillRecordWaitTrackInfo(notifyTask, endGraphTrack));
-    EXPECT_EQ(endGraphTrack.taskType, static_cast<uint64_t>(ProfTaskType::PROF_TASK_TYPE_MODEL_WAIT_COMPLETE));
-    EXPECT_EQ(endGraphTrack.extInfo.modelInfo.modelId, 7U);
+    notifyTask.type = TS_TASK_TYPE_ENDGRAPH_NOTIFY_WAIT;
+    notifyTask.u.endGraphNotifyWaitTask.notifyId = notifyId;
+    notifyTask.u.endGraphNotifyWaitTask.isSoftwareSqCaptureModel = false;
+    MsprofRuntimeTrack endGraphNotifyTrack = {};
+    endGraphNotifyTrack.taskType = notifyTask.type;
+    EXPECT_TRUE(FillRecordWaitTrackInfo(notifyTask, endGraphNotifyTrack));
+    EXPECT_EQ(endGraphNotifyTrack.taskType, static_cast<uint64_t>(TS_TASK_TYPE_ENDGRAPH_NOTIFY_WAIT));
+    EXPECT_EQ(endGraphNotifyTrack.extInfo.notifyInfo.key, static_cast<uint64_t>(notifyId));
+
+    notifyTask.u.endGraphNotifyWaitTask.endGraphModel = reinterpret_cast<Model*>(static_cast<uintptr_t>(1U));
+    notifyTask.u.endGraphNotifyWaitTask.isSoftwareSqCaptureModel = true;
+    MsprofRuntimeTrack softwareEndGraphTrack = {};
+    softwareEndGraphTrack.taskType = static_cast<uint64_t>(ProfTaskType::PROF_TASK_TYPE_MODEL_WAIT_COMPLETE);
+    softwareEndGraphTrack.extInfo.modelInfo.modelId = 7U;
+    EXPECT_FALSE(FillRecordWaitTrackInfo(notifyTask, softwareEndGraphTrack));
+    EXPECT_EQ(softwareEndGraphTrack.taskType, static_cast<uint64_t>(ProfTaskType::PROF_TASK_TYPE_MODEL_WAIT_COMPLETE));
+    EXPECT_EQ(softwareEndGraphTrack.extInfo.modelInfo.modelId, 7U);
 }
 
 TEST_F(ProfilerTest, FillRecordWaitTrackInfo_CaptureExternalAndIpc)

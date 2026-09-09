@@ -1772,8 +1772,7 @@ TEST_F(StarsTaskTest, DoCompleteStarsError_1)
     TaskInfo task = {};
     InitByStream(&task, stream);
 
-    task.u.notifywaitTask.u.notify = notify;
-    ret = NotifyWaitTaskInit(&task, 0, 0, nullptr, notify, false);
+    ret = EndGraphNotifyWaitTaskInit(&task, 0, 0, notify);
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
     rtStarsSqe_t sqe;

@@ -102,6 +102,12 @@ static void CheckRtMemGetAllocationGranularityByPolicy(
     GlobalContainer::SetRtChipType(oriChipType);
 }
 
+TEST_F(ApiTest, ModelTaskUpdateNullDestination)
+{
+    ApiErrorDecorator api(nullptr);
+    EXPECT_EQ(api.ModelTaskUpdate(nullptr, 0U, nullptr, nullptr), RT_ERROR_INVALID_VALUE);
+}
+
 TEST_F(ApiTest, util_test)
 {
     rtError_t error;

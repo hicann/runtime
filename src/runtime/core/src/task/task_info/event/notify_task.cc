@@ -42,7 +42,7 @@ void ReleaseExternalEventsRes(TaskInfo* taskInfo)
     if (taskInfo == nullptr) {
         return;
     }
-    auto* resources = taskInfo->u.notifywaitTask.externalEventsRes;
+    auto* resources = taskInfo->u.endGraphNotifyWaitTask.externalEventsRes;
     if (resources == nullptr) {
         return;
     }
@@ -54,7 +54,7 @@ void ReleaseExternalEventsRes(TaskInfo* taskInfo)
     }
     resources->clear();
     delete resources;
-    taskInfo->u.notifywaitTask.externalEventsRes = nullptr;
+    taskInfo->u.endGraphNotifyWaitTask.externalEventsRes = nullptr;
 }
 } // namespace
 
@@ -319,9 +319,6 @@ rtError_t NotifyWaitTaskInit(
     notifyWaitTask->notifyId = notifyIndex;
     notifyWaitTask->timeout = timeOutNum;
     notifyWaitTask->timestamp = 0ULL;
-    notifyWaitTask->isEndGraphNotify = false;
-    notifyWaitTask->captureModel = nullptr;
-    notifyWaitTask->externalEventsRes = nullptr;
     notifyWaitTask->isCountNotify = isCountNotify;
     if (isCountNotify) {
         if (inNotify == nullptr) {
@@ -337,6 +334,7 @@ rtError_t NotifyWaitTaskInit(
 
 rtError_t AttachExternalEventsRes(TaskInfo* taskInfo, Model* captureModel)
 {
+    COND_RETURN_ERROR((taskInfo == nullptr), RT_ERROR_TASK_NULL, "taskInfo is nullptr.");
     CaptureModel* const captureMdl = dynamic_cast<CaptureModel*>(captureModel);
     std::vector<EventResource>* const externalEvents =
         (captureMdl == nullptr) ? nullptr : captureMdl->GetCurReplayExternalEventsRes();
@@ -351,11 +349,37 @@ rtError_t AttachExternalEventsRes(TaskInfo* taskInfo, Model* captureModel)
     // 将capture model本轮replay持有的events及其释放责任转移给endGraph notify wait任务，在任务结束时释放Events引用。
     // 转移后captureMdl->GetCurReplayExternalEventsRes关联的资源列表变为空vector。
     eventsRes->swap(*externalEvents);
-    taskInfo->u.notifywaitTask.externalEventsRes = eventsRes;
+    taskInfo->u.endGraphNotifyWaitTask.externalEventsRes = eventsRes;
     return RT_ERROR_NONE;
 }
 
-void NotifyWaitTaskUnInit(TaskInfo* taskInfo) { ReleaseExternalEventsRes(taskInfo); }
+rtError_t EndGraphNotifyWaitTaskInit(
+    TaskInfo* taskInfo, const uint32_t notifyIndex, const uint32_t timeOutNum, Notify* notify)
+{
+    COND_RETURN_ERROR((notify == nullptr), RT_ERROR_NOTIFY_NULL, "notify is nullptr.");
+    TaskCommonInfoInit(taskInfo);
+    taskInfo->type = TS_TASK_TYPE_ENDGRAPH_NOTIFY_WAIT;
+    taskInfo->typeName = "ENDGRAPH_NOTIFY_WAIT";
+
+    EndGraphNotifyWaitTaskInfo* const endGraphWaitTask = &(taskInfo->u.endGraphNotifyWaitTask);
+    endGraphWaitTask->notify = notify;
+    endGraphWaitTask->endGraphModel = notify->GetEndGraphModel();
+    endGraphWaitTask->timestamp = 0ULL;
+    endGraphWaitTask->notifyId = notifyIndex;
+    endGraphWaitTask->timeout = timeOutNum;
+    endGraphWaitTask->externalEventsRes = nullptr;
+    CaptureModel* const captureModel = dynamic_cast<CaptureModel*>(endGraphWaitTask->endGraphModel);
+    endGraphWaitTask->isSoftwareSqCaptureModel = (captureModel != nullptr) && captureModel->IsSoftwareSqEnable();
+    taskInfo->needPostProc = endGraphWaitTask->isSoftwareSqCaptureModel;
+
+    if (endGraphWaitTask->isSoftwareSqCaptureModel) {
+        const rtError_t ret = AttachExternalEventsRes(taskInfo, captureModel);
+        COND_RETURN_ERROR(ret != RT_ERROR_NONE, ret, "Attach external events resources failed, retCode=%#x.", ret);
+    }
+    return RT_ERROR_NONE;
+}
+
+void EndGraphNotifyWaitTaskUnInit(TaskInfo* taskInfo) { ReleaseExternalEventsRes(taskInfo); }
 
 static void MapNotifyErrorCodeForFastRecovery(TaskInfo* taskInfo, const uint32_t devId)
 {
@@ -416,13 +440,7 @@ static void ReportNotifyErrorForNotifyWaitTask(TaskInfo* taskInfo, const uint32_
 void DoCompleteSuccessForNotifyWaitTask(TaskInfo* taskInfo, const uint32_t devId)
 {
     if (unlikely(taskInfo->errorCode != static_cast<uint32_t>(RT_ERROR_NONE))) {
-        if ((!taskInfo->u.notifywaitTask.isCountNotify) && (taskInfo->u.notifywaitTask.u.notify != nullptr) &&
-            (taskInfo->u.notifywaitTask.u.notify->GetEndGraphModel() != nullptr)) {
-            ReportModelEndGraphErrorForNotifyWaitTask(taskInfo, devId);
-            ReleaseResourceForNotifyWaitTaskOnlModel(taskInfo);
-        } else {
-            ReportNotifyErrorForNotifyWaitTask(taskInfo, devId);
-        }
+        ReportNotifyErrorForNotifyWaitTask(taskInfo, devId);
     }
 
     if (Runtime::Instance()->ChipIsHaveStars() && (taskInfo->bindFlag == 0U)) {
@@ -433,14 +451,6 @@ void DoCompleteSuccessForNotifyWaitTask(TaskInfo* taskInfo, const uint32_t devId
             " device_id=%u",
             taskInfo->u.notifywaitTask.notifyId, stream->Id_(), taskInfo->id, stream->GetSqId(),
             stream->Device_()->Id_());
-        PrintDfxInfoForRdmaPiValueModifyTask(taskInfo, devId);
-    }
-
-    if ((taskInfo->u.notifywaitTask.isEndGraphNotify) && (taskInfo->u.notifywaitTask.captureModel != nullptr)) {
-        ReleaseExternalEventsRes(taskInfo);
-        // 当前 stream均为单算子执行流的 pos，不需要转换为 logicSq hwPos。
-        taskInfo->stream->Device_()->DeleteEndGraphNotifyInfo(
-            taskInfo->stream->Id_(), taskInfo->u.notifywaitTask.captureModel, taskInfo->pos, taskInfo->errorCode);
     }
 }
 
@@ -464,14 +474,65 @@ void ToCommandBodyForNotifyWaitTask(TaskInfo* taskInfo, rtCommand_t* const comma
     command->taskInfoFlag = taskInfo->stream->GetTaskRevFlag(taskInfo->bindFlag);
 }
 
-TaskInfo* GetRealReportFaultTaskForNotifyWaitTask(TaskInfo* taskInfo, const void* info)
+void DoCompleteSuccessForEndGraphNotifyWaitTask(TaskInfo* taskInfo, const uint32_t devId)
 {
-    Notify* const notify = taskInfo->u.notifywaitTask.u.notify;
-    if (unlikely(notify == nullptr)) {
-        return nullptr;
+    EndGraphNotifyWaitTaskInfo* const endGraphWaitTask = &(taskInfo->u.endGraphNotifyWaitTask);
+    if (unlikely(taskInfo->errorCode != static_cast<uint32_t>(RT_ERROR_NONE))) {
+        if (endGraphWaitTask->endGraphModel != nullptr) {
+            ReportEndGraphWaitError(taskInfo, devId);
+            ReleaseResourceForEndGraphNotifyWaitTaskOnlModel(taskInfo);
+        } else {
+            Stream* const stream = taskInfo->stream;
+            RT_LOG(
+                RT_LOG_ERROR, "EndGraph notify wait execution error occurred, retCode=%#x, [%s].", taskInfo->errorCode,
+                GetTsErrCodeDesc(taskInfo->errorCode));
+            stream->SetErrCode(taskInfo->errorCode);
+            PrintErrorInfoForEndGraphNotifyWaitTask(taskInfo, devId);
+            TaskFailCallBack(
+                static_cast<uint32_t>(stream->Id_()), static_cast<uint32_t>(taskInfo->id), taskInfo->tid,
+                taskInfo->errorCode, stream->Device_());
+        }
     }
 
-    if (notify->GetEndGraphModel() != nullptr) {
+    if (Runtime::Instance()->ChipIsHaveStars() && (taskInfo->bindFlag == 0U)) {
+        Stream* const stream = taskInfo->stream;
+        RT_LOG(
+            RT_LOG_INFO,
+            "[DFX_SYNC] endGraph notify wait finish. notify_id=%u, stream_id=%d, task_id=%hu, sq_id=%u, "
+            "device_id=%u",
+            endGraphWaitTask->notifyId, stream->Id_(), taskInfo->id, stream->GetSqId(), stream->Device_()->Id_());
+        PrintDfxInfoForRdmaPiValueModifyTask(taskInfo, devId);
+    }
+
+    if (endGraphWaitTask->isSoftwareSqCaptureModel) {
+        ReleaseExternalEventsRes(taskInfo);
+        // 当前 stream均为单算子执行流的 pos，不需要转换为 logicSq hwPos。
+        taskInfo->stream->Device_()->DeleteEndGraphNotifyInfo(
+            taskInfo->stream->Id_(), endGraphWaitTask->endGraphModel, taskInfo->pos, taskInfo->errorCode);
+    }
+}
+
+void PrintErrorInfoForEndGraphNotifyWaitTask(TaskInfo* const taskInfo, const uint32_t devId)
+{
+    const int32_t streamId = taskInfo->stream->Id_();
+    Stream* const reportStream = GetReportStream(taskInfo->stream);
+    STREAM_REPORT_ERR_MSG(
+        reportStream, ERR_MODULE_RTS,
+        "EndGraph notify wait execution failed, device_id=%u, stream_id=%d, %s=%u, flip_num=%hu, notify_id=%u.", devId,
+        streamId, TaskIdDesc(), taskInfo->id, taskInfo->flipNum, taskInfo->u.endGraphNotifyWaitTask.notifyId);
+}
+
+void ToCommandBodyForEndGraphNotifyWaitTask(TaskInfo* taskInfo, rtCommand_t* const command)
+{
+    command->u.notifywaitTask.notifyid = static_cast<uint16_t>(taskInfo->u.endGraphNotifyWaitTask.notifyId);
+    command->u.notifywaitTask.timeout = static_cast<uint32_t>(taskInfo->u.endGraphNotifyWaitTask.timeout);
+    command->taskInfoFlag = taskInfo->stream->GetTaskRevFlag(taskInfo->bindFlag);
+}
+
+TaskInfo* GetRealReportFaultTaskForEndGraphNotifyWaitTask(const TaskInfo* taskInfo, const void* info)
+{
+    Model* const endGraphModel = taskInfo->u.endGraphNotifyWaitTask.endGraphModel;
+    if (endGraphModel != nullptr) {
         rtStarsCqeSwStatus_t sw_status;
         sw_status.value = *(static_cast<const uint32_t*>(info));
         uint16_t streamId = sw_status.model_exec.stream_id;
@@ -479,7 +540,6 @@ TaskInfo* GetRealReportFaultTaskForNotifyWaitTask(TaskInfo* taskInfo, const void
         Device* const dev = taskInfo->stream->Device_();
         if ((dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_MODEL_ACL_GRAPH_SOFTWARE_ENABLE)) &&
             (dev->CheckFeatureSupport(TS_FEATURE_SOFTWARE_SQ_ENABLE))) {
-            Model* endGraphModel = notify->GetEndGraphModel();
             streamId = endGraphModel->GetStreamIdBySqId(sw_status.model_exec_ex.sq_id);
             if ((streamId == UINT16_MAX) && (endGraphModel->GetModelType() == RT_MODEL_CAPTURE_MODEL)) {
                 CaptureModel* captureModel = dynamic_cast<CaptureModel*>(endGraphModel);

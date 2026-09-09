@@ -1072,6 +1072,13 @@ static void PrintSnapshotInfo(TaskInfo* const tsk, char_t* const errStr, int32_t
                 notifyWaitTask->notifyId);
             break;
         }
+        case TS_TASK_TYPE_ENDGRAPH_NOTIFY_WAIT: {
+            EndGraphNotifyWaitTaskInfo* const endGraphWaitTask = &(tsk->u.endGraphNotifyWaitTask);
+            ret = sprintf_s(
+                errStr + countNum, (static_cast<size_t>(MSG_LENGTH) - static_cast<uint64_t>(countNum)), ", NotifyId=%u",
+                endGraphWaitTask->notifyId);
+            break;
+        }
         case TS_TASK_TYPE_KERNEL_AICORE: {
             std::string kernelNameStr;
             AicTaskInfo* const aicTask = &(tsk->u.aicTaskInfo);

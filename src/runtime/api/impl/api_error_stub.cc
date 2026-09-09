@@ -497,5 +497,15 @@ rtError_t ApiErrorDecorator::HostGetDevicePointerAddrRange(rtAddrRange* addrRang
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
+rtError_t ApiErrorDecorator::ModelTaskUpdate(
+    Stream* desStm, uint32_t desTaskId, Stream* sinkStm, rtMdlTaskUpdateInfo_t* para)
+{
+    UNUSED(desStm);
+    UNUSED(desTaskId);
+    UNUSED(sinkStm);
+    UNUSED(para);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
 } // namespace runtime
 } // namespace cce

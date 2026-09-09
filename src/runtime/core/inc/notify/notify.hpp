@@ -35,9 +35,8 @@ public:
     rtError_t Setup();
     rtError_t SetupWithoutAllocNtyId();
     rtError_t ReAllocId() const;
-    rtError_t Wait(
-        Stream* const streamIn, const uint32_t timeOut, const bool isEndGraphNotify = false,
-        Model* const captureModel = nullptr);
+    rtError_t Wait(Stream* const streamIn, const uint32_t timeOut);
+    rtError_t EndGraphWait(Stream* const streamIn, const uint32_t timeOut);
     rtError_t Reset(Stream* const streamIn) const;
     rtError_t CreateIpcNotify(char_t* const ipcNotifyName, const uint32_t len);
     rtError_t OpenIpcNotify(const char_t* const ipcNotifyName, uint32_t flag);

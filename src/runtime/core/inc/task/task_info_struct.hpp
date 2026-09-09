@@ -350,11 +350,17 @@ struct NotifyWaitTaskInfo {
     uint32_t notifyId;
     uint32_t timeout;
     bool isCountNotify;
-    bool isEndGraphNotify;
-    Model* captureModel;
     CountNotifyWaitInfo cntNtfyInfo;
-    // endGraph notify执行完成后释放external record和wait事件资源
+};
+
+struct EndGraphNotifyWaitTaskInfo {
+    Notify* notify;
+    Model* endGraphModel;
+    uint64_t timestamp;
+    uint32_t notifyId;
+    uint32_t timeout;
     std::vector<EventResource>* externalEventsRes;
+    bool isSoftwareSqCaptureModel;
 };
 
 struct LabelSetTaskInfo {

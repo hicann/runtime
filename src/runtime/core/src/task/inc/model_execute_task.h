@@ -28,7 +28,7 @@ rtError_t AllocFuncCallMemForModelExecuteTask(TaskInfo* const taskInfo, rtStarsM
 rtError_t ConstructFuncCallParaForModelExecuteTask(TaskInfo* taskInfo, rtStarsModelExeFuncCallPara_t& funcCallPara);
 rtError_t PrepareSqeInfoForModelExecuteTask(TaskInfo* const taskInfo);
 rtError_t FreeFuncCallHostMemAndSvmMem(TaskInfo* const taskInfo);
-void ReportModelEndGraphErrorForNotifyWaitTask(TaskInfo* taskInfo, const uint32_t devId);
+void ReportEndGraphWaitError(const TaskInfo* taskInfo, const uint32_t devId);
 void ReportErrorInfoForModelExecuteTask(TaskInfo* const taskInfo, const uint32_t devId);
 rtError_t WaitExecFinishForModelExecuteTask(const TaskInfo* const taskInfo);
 void ModelExecuteTaskaProcError(TaskInfo* const taskInfo, const uint32_t errCode);

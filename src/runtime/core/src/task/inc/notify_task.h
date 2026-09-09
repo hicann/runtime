@@ -29,13 +29,20 @@ rtError_t GetIpcSqeWriteAddrForNotifyRecordTask(TaskInfo* taskInfo, uint64_t& ad
 rtError_t NotifyWaitTaskInit(
     TaskInfo* taskInfo, const uint32_t notifyIndex, const uint32_t timeOutNum,
     const CountNotifyWaitInfo* const cntNtfyInfo, void* const inNotify, const bool isCountNotify = false);
-rtError_t AttachExternalEventsRes(TaskInfo* taskInfo, Model* captureModel);
-void NotifyWaitTaskUnInit(TaskInfo* taskInfo);
 void ToCommandBodyForNotifyWaitTask(TaskInfo* taskInfo, rtCommand_t* const command);
 void DoCompleteSuccessForNotifyWaitTask(TaskInfo* taskInfo, const uint32_t devId);
 void PrintErrorInfoForNotifyWaitTask(TaskInfo* const taskInfo, const uint32_t devId);
-TaskInfo* GetRealReportFaultTaskForNotifyWaitTask(TaskInfo* taskInfo, const void* info);
-void ReleaseResourceForNotifyWaitTaskOnlModel(TaskInfo* const taskInfo);
+rtError_t AttachExternalEventsRes(TaskInfo* taskInfo, Model* captureModel);
+void NotifyWaitTaskUnInit(TaskInfo* taskInfo);
+TaskInfo* GetRealReportFaultTaskForNotifyWaitTask(TaskInfo* const taskInfo, const void* info);
+rtError_t EndGraphNotifyWaitTaskInit(
+    TaskInfo* taskInfo, const uint32_t notifyIndex, const uint32_t timeOutNum, Notify* notify);
+void EndGraphNotifyWaitTaskUnInit(TaskInfo* taskInfo);
+void ToCommandBodyForEndGraphNotifyWaitTask(TaskInfo* taskInfo, rtCommand_t* const command);
+void DoCompleteSuccessForEndGraphNotifyWaitTask(TaskInfo* taskInfo, const uint32_t devId);
+void PrintErrorInfoForEndGraphNotifyWaitTask(TaskInfo* const taskInfo, const uint32_t devId);
+TaskInfo* GetRealReportFaultTaskForEndGraphNotifyWaitTask(const TaskInfo* taskInfo, const void* info);
+void ReleaseResourceForEndGraphNotifyWaitTaskOnlModel(const TaskInfo* taskInfo);
 } // namespace runtime
 } // namespace cce
 #endif // RUNTIME_NOTIFY_TASK_H

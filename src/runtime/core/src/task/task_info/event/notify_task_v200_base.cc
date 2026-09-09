@@ -42,22 +42,27 @@ void ConstructDavidSqeForNotifyWaitTask(TaskInfo* taskInfo, void* const sqe, con
 {
     rtDavidSqe_t* davidSqe = static_cast<rtDavidSqe_t*>(sqe);
     UNUSED(sqeInfo);
-    NotifyWaitTaskInfo* notifyWaitTask = &(taskInfo->u.notifywaitTask);
+    const bool isEndGraphNotifyWait = (taskInfo->type == TS_TASK_TYPE_ENDGRAPH_NOTIFY_WAIT);
+    const NotifyWaitTaskInfo* const notifyWaitTask = isEndGraphNotifyWait ? nullptr : &(taskInfo->u.notifywaitTask);
+    const uint32_t notifyId =
+        isEndGraphNotifyWait ? taskInfo->u.endGraphNotifyWaitTask.notifyId : notifyWaitTask->notifyId;
+    const uint32_t timeout =
+        isEndGraphNotifyWait ? taskInfo->u.endGraphNotifyWaitTask.timeout : notifyWaitTask->timeout;
     Stream* const stream = taskInfo->stream;
 
     ConstructDavidSqeForHeadCommon(taskInfo, davidSqe);
     RtDavidStarsNotifySqe* const notifySqe = &(davidSqe->notifySqe);
     notifySqe->kernelCredit = RT_STARS_NEVER_TIMEOUT_KERNEL_CREDIT;
     notifySqe->header.type = RT_DAVID_SQE_TYPE_NOTIFY_WAIT;
-    notifySqe->notifyId = notifyWaitTask->notifyId;
-    notifySqe->timeout = notifyWaitTask->timeout;
+    notifySqe->notifyId = notifyId;
+    notifySqe->timeout = timeout;
     notifySqe->cntFlag = false;
     notifySqe->clrFlag = true;
     notifySqe->waitModeBit = 0U;
     notifySqe->recordModeBit = 0U;
     notifySqe->cntValue = 0U;
     notifySqe->subType = NOTIFY_SUB_TYPE_SINGLE_NOTIFY_WAIT;
-    if (notifyWaitTask->isCountNotify) {
+    if ((!isEndGraphNotifyWait) && notifyWaitTask->isCountNotify) {
         notifySqe->cntFlag = true;
         notifySqe->cntValue = notifyWaitTask->cntNtfyInfo.value;
         notifySqe->clrFlag = notifyWaitTask->cntNtfyInfo.isClear;
@@ -68,7 +73,7 @@ void ConstructDavidSqeForNotifyWaitTask(TaskInfo* taskInfo, void* const sqe, con
             notifySqe->bitmap = 1U;
         }
     }
-    PrintDavidSqe(davidSqe, "NotifyWaitTask");
+    PrintDavidSqe(davidSqe, isEndGraphNotifyWait ? "EndGraphNotifyWaitTask" : "NotifyWaitTask");
     RT_LOG(
         RT_LOG_INFO,
         "notify_wait: device_id=%u, stream_id=%u, task_id=%u, task_sn=%u, sq_id=%u, notify_id=%u, "

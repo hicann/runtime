@@ -94,6 +94,7 @@ typedef struct tagTaskInfoStru {
         RdmaDbSendTaskInfo rdmaDbSendTask;
         NotifyRecordTaskInfo notifyrecordTask;
         NotifyWaitTaskInfo notifywaitTask;
+        EndGraphNotifyWaitTaskInfo endGraphNotifyWaitTask;
         StreamSwitchTaskInfo streamswitchTask;
         StreamActiveTaskInfo streamactiveTask;
         LabelSetTaskInfo labelSetTask;

@@ -30,6 +30,7 @@ static std::map<uint16_t, const char_t*> g_taskType2String = {
     {TS_TASK_TYPE_MODEL_MAINTAINCE, "model maintenance"},
     {TS_TASK_TYPE_MODEL_EXECUTE, "model execute"},
     {TS_TASK_TYPE_NOTIFY_WAIT, "notify wait"},
+    {TS_TASK_TYPE_ENDGRAPH_NOTIFY_WAIT, "endGraph notify wait"},
     {TS_TASK_TYPE_NOTIFY_RECORD, "notify record"},
     {TS_TASK_TYPE_RDMA_SEND, "rdma send"},
     {TS_TASK_TYPE_STREAM_SWITCH, "stream switch"},

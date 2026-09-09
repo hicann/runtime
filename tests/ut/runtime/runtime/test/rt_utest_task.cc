@@ -1548,6 +1548,32 @@ TEST_F(TaskTest, notify_wait_record_task_fail)
     CountNotifyWaitInfo cntNtfyInfo = {WAIT_EQUAL_MODE, 1U, false};
     error = NotifyWaitTaskInit(&notify_wait_task, 0, 0, &cntNtfyInfo, count_notify, true);
     EXPECT_EQ(error, RT_ERROR_NONE);
+
+    TaskInfo end_graph_notify_wait_task_null = {};
+    InitByStream(&end_graph_notify_wait_task_null, stream_);
+    error = EndGraphNotifyWaitTaskInit(&end_graph_notify_wait_task_null, 1U, 2U, nullptr);
+    EXPECT_EQ(error, RT_ERROR_NOTIFY_NULL);
+
+    Notify notify(0U, 0U);
+    TaskInfo end_graph_notify_wait_task = {};
+    InitByStream(&end_graph_notify_wait_task, stream_);
+    error = EndGraphNotifyWaitTaskInit(&end_graph_notify_wait_task, 1U, 2U, &notify);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(end_graph_notify_wait_task.type, TS_TASK_TYPE_ENDGRAPH_NOTIFY_WAIT);
+    EXPECT_STREQ(end_graph_notify_wait_task.typeName, "ENDGRAPH_NOTIFY_WAIT");
+    EXPECT_EQ(end_graph_notify_wait_task.u.endGraphNotifyWaitTask.notify, &notify);
+    EXPECT_EQ(end_graph_notify_wait_task.u.endGraphNotifyWaitTask.notifyId, 1U);
+    EXPECT_EQ(end_graph_notify_wait_task.u.endGraphNotifyWaitTask.timeout, 2U);
+    EXPECT_EQ(end_graph_notify_wait_task.u.endGraphNotifyWaitTask.endGraphModel, nullptr);
+    EXPECT_FALSE(end_graph_notify_wait_task.u.endGraphNotifyWaitTask.isSoftwareSqCaptureModel);
+    EXPECT_EQ(end_graph_notify_wait_task.u.endGraphNotifyWaitTask.externalEventsRes, nullptr);
+    EXPECT_FALSE(end_graph_notify_wait_task.needPostProc);
+    const TaskInfo& readOnlyTask = end_graph_notify_wait_task;
+    rtCommand_t command = {};
+    ToCommandBodyForEndGraphNotifyWaitTask(&end_graph_notify_wait_task, &command);
+    EXPECT_EQ(command.u.notifywaitTask.notifyid, 1U);
+    EXPECT_EQ(command.u.notifywaitTask.timeout, 2U);
+    EXPECT_EQ(GetRealReportFaultTaskForEndGraphNotifyWaitTask(&readOnlyTask, nullptr), nullptr);
     delete count_notify;
 }
 

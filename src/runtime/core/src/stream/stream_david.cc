@@ -338,6 +338,9 @@ static void GetEventIdOrNotifyId(
             notifyWaitTask = &(taskInfo->u.notifywaitTask);
             notifyId = notifyWaitTask->notifyId;
             break;
+        case TS_TASK_TYPE_ENDGRAPH_NOTIFY_WAIT:
+            notifyId = taskInfo->u.endGraphNotifyWaitTask.notifyId;
+            break;
         case TS_TASK_TYPE_NOTIFY_RECORD:
             notifyRecord = &(taskInfo->u.notifyrecordTask);
             notifyId = notifyRecord->notifyId;

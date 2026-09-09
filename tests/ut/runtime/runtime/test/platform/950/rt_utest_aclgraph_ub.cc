@@ -2936,11 +2936,11 @@ TEST_F(NormalModelJettyTest, NotifyWaitTask_HwFailureSoftRelease)
     TaskInfo taskInfo = {};
     taskInfo.errorCode = TS_ERROR_TASK_TIMEOUT;
     taskInfo.stream = stream_;
-    taskInfo.u.notifywaitTask.u.notify = notify;
-    taskInfo.u.notifywaitTask.isCountNotify = false;
-    taskInfo.type = TS_TASK_TYPE_MODEL_EXECUTE;
+    taskInfo.u.endGraphNotifyWaitTask.notify = notify;
+    taskInfo.u.endGraphNotifyWaitTask.endGraphModel = mdl_;
+    taskInfo.type = TS_TASK_TYPE_ENDGRAPH_NOTIFY_WAIT;
 
-    DoCompleteSuccessForNotifyWaitTask(&taskInfo, 0);
+    DoCompleteSuccessForEndGraphNotifyWaitTask(&taskInfo, 0);
 
     EXPECT_EQ(ctx->jettyHandle, 0U);
     EXPECT_NE(mgr->GetStreamJettyContext(streamId, JettyType::JETTY_TYPE_H2D), nullptr);
@@ -2951,25 +2951,24 @@ TEST_F(NormalModelJettyTest, NotifyWaitTask_HwFailureSoftRelease)
     delete notify;
 }
 
-TEST_F(NormalModelJettyTest, NotifyWaitTask_OnlModelRelease_NullEndGraphModel)
+TEST_F(NormalModelJettyTest, EndGraphNotifyWaitTask_OnlModelRelease_NullEndGraphModel)
 {
     Notify* notify = new Notify(0, 0);
 
     TaskInfo taskInfo = {};
     taskInfo.errorCode = TS_ERROR_TASK_TIMEOUT;
     taskInfo.stream = stream_;
-    taskInfo.u.notifywaitTask.u.notify = notify;
-    taskInfo.u.notifywaitTask.isCountNotify = false;
-    taskInfo.type = TS_TASK_TYPE_MODEL_EXECUTE;
+    taskInfo.u.endGraphNotifyWaitTask.notify = notify;
+    taskInfo.type = TS_TASK_TYPE_ENDGRAPH_NOTIFY_WAIT;
 
-    ReleaseResourceForNotifyWaitTaskOnlModel(&taskInfo);
+    ReleaseResourceForEndGraphNotifyWaitTaskOnlModel(&taskInfo);
 
     EXPECT_FALSE(mdl_->GetNeedRebindJetty());
 
     delete notify;
 }
 
-TEST_F(NormalModelJettyTest, NotifyWaitTask_OnlModelRelease_NotNormalModel)
+TEST_F(NormalModelJettyTest, EndGraphNotifyWaitTask_OnlModelRelease_NotNormalModel)
 {
     CaptureModel* captureModel = new CaptureModel(RT_MODEL_CAPTURE_MODEL);
     captureModel->context_ = context_;
@@ -2979,11 +2978,11 @@ TEST_F(NormalModelJettyTest, NotifyWaitTask_OnlModelRelease_NotNormalModel)
     TaskInfo taskInfo = {};
     taskInfo.errorCode = TS_ERROR_TASK_TIMEOUT;
     taskInfo.stream = stream_;
-    taskInfo.u.notifywaitTask.u.notify = notify;
-    taskInfo.u.notifywaitTask.isCountNotify = false;
-    taskInfo.type = TS_TASK_TYPE_MODEL_EXECUTE;
+    taskInfo.u.endGraphNotifyWaitTask.notify = notify;
+    taskInfo.u.endGraphNotifyWaitTask.endGraphModel = captureModel;
+    taskInfo.type = TS_TASK_TYPE_ENDGRAPH_NOTIFY_WAIT;
 
-    ReleaseResourceForNotifyWaitTaskOnlModel(&taskInfo);
+    ReleaseResourceForEndGraphNotifyWaitTaskOnlModel(&taskInfo);
 
     EXPECT_FALSE(captureModel->GetNeedRebindJetty());
 
@@ -2991,7 +2990,7 @@ TEST_F(NormalModelJettyTest, NotifyWaitTask_OnlModelRelease_NotNormalModel)
     delete captureModel;
 }
 
-TEST_F(NormalModelJettyTest, NotifyWaitTask_OnlModelRelease_NullStreamInList)
+TEST_F(NormalModelJettyTest, EndGraphNotifyWaitTask_OnlModelRelease_NullStreamInList)
 {
     Notify* notify = new Notify(0, 0);
     notify->SetEndGraphModel(mdl_);
@@ -2999,12 +2998,12 @@ TEST_F(NormalModelJettyTest, NotifyWaitTask_OnlModelRelease_NullStreamInList)
     TaskInfo taskInfo = {};
     taskInfo.errorCode = TS_ERROR_TASK_TIMEOUT;
     taskInfo.stream = stream_;
-    taskInfo.u.notifywaitTask.u.notify = notify;
-    taskInfo.u.notifywaitTask.isCountNotify = false;
-    taskInfo.type = TS_TASK_TYPE_MODEL_EXECUTE;
+    taskInfo.u.endGraphNotifyWaitTask.notify = notify;
+    taskInfo.u.endGraphNotifyWaitTask.endGraphModel = mdl_;
+    taskInfo.type = TS_TASK_TYPE_ENDGRAPH_NOTIFY_WAIT;
 
     mdl_->streams_.push_back(nullptr);
-    ReleaseResourceForNotifyWaitTaskOnlModel(&taskInfo);
+    ReleaseResourceForEndGraphNotifyWaitTaskOnlModel(&taskInfo);
     mdl_->streams_.remove(nullptr);
 
     EXPECT_TRUE(mdl_->GetNeedRebindJetty());

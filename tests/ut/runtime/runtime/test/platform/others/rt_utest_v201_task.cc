@@ -2315,7 +2315,25 @@ TEST_F(TaskTestV201, GetStreamTaskInfo_NullStream)
     EXPECT_EQ(result, nullptr);
 }
 
-TEST_F(TaskTestV201, ReleaseResourceForNotifyWaitTaskOnlModel_Noop)
+TEST_F(TaskTestV201, ReleaseResourceForEndGraphNotifyWaitTaskOnlModel_Noop)
 {
-    EXPECT_NO_THROW(ReleaseResourceForNotifyWaitTaskOnlModel(nullptr));
+    EXPECT_NO_THROW(ReleaseResourceForEndGraphNotifyWaitTaskOnlModel(nullptr));
+}
+
+TEST_F(TaskTestV201, EndGraphNotifyWaitReadOnlyTask)
+{
+    Notify notify(0U, 0U);
+    TaskInfo task = {};
+    InitByStream(&task, stream_);
+    ASSERT_EQ(EndGraphNotifyWaitTaskInit(&task, 3U, 5U, &notify), RT_ERROR_NONE);
+
+    const TaskInfo& readOnlyTask = task;
+    rtDavidSqe_t sqe = {};
+    const TaskSqeInfo sqeInfo = {};
+    ConstructDavidSqeForNotifyWaitTask(&task, &sqe, sqeInfo);
+    EXPECT_EQ(sqe.notifySqe.notifyId, 3U);
+    EXPECT_EQ(sqe.notifySqe.timeout, 5U);
+    EXPECT_EQ(sqe.notifySqe.header.type, RT_DAVID_SQE_TYPE_NOTIFY_WAIT);
+    EXPECT_FALSE(sqe.notifySqe.cntFlag);
+    EXPECT_NO_THROW(ReleaseResourceForEndGraphNotifyWaitTaskOnlModel(&readOnlyTask));
 }

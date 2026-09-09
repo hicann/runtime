@@ -790,6 +790,30 @@ TEST_F(Arch5162TaskTest, ConstructSqeForNotifyWaitTask)
     delete device;
 }
 
+TEST_F(Arch5162TaskTest, ConstructSqeForEndGraphNotifyWaitTask)
+{
+    MOCKER(PrintSqe).stubs();
+    RawDevice* device = new RawDevice(0);
+    Stream* stream = new Stream(device, 0);
+    EXPECT_NE(stream, nullptr);
+    TaskInfo taskInfo = {};
+    taskInfo.type = TS_TASK_TYPE_ENDGRAPH_NOTIFY_WAIT;
+    taskInfo.stream = stream;
+    taskInfo.id = 1;
+    taskInfo.u.endGraphNotifyWaitTask.notifyId = 101;
+    taskInfo.u.endGraphNotifyWaitTask.timeout = 1;
+    rtStarsSqe_t sqe = {};
+    memset_s(&sqe, sizeof(sqe), 0, sizeof(sqe));
+    PfnTaskToSqe toSqeFunc = g_taskFuncArrays[CHIP_5162A].toSqeFunc[TS_TASK_TYPE_ENDGRAPH_NOTIFY_WAIT];
+    ASSERT_NE(toSqeFunc, nullptr);
+    toSqeFunc(&taskInfo, &sqe);
+    EXPECT_EQ(sqe.notifySqe.header.type, RT_STARS_SQE_TYPE_NOTIFY_WAIT);
+    EXPECT_EQ(sqe.notifySqe.notify_id, 101);
+    EXPECT_EQ(sqe.notifySqe.timeoutEn, 1);
+    delete stream;
+    delete device;
+}
+
 TEST_F(Arch5162TaskTest, ConstructSqeForEventRecordTask)
 {
     MOCKER(PrintSqe).stubs();

@@ -4325,51 +4325,6 @@ rtError_t ApiErrorDecorator::ModelSetSchGroupId(Model* const mdl, const int16_t 
     return error;
 }
 
-rtError_t ApiErrorDecorator::ModelTaskUpdate(
-    Stream* desStm, uint32_t desTaskId, Stream* sinkStm, rtMdlTaskUpdateInfo_t* para)
-{
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        desStm, RT_ERROR_INVALID_VALUE, "Updating PC and other information of the target SQE in the target stream");
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        sinkStm, RT_ERROR_INVALID_VALUE, "Updating PC and other information of the target SQE in the target stream");
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        para, RT_ERROR_INVALID_VALUE, "Updating PC and other information of the target SQE in the target stream");
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        para->tilingKeyAddr, RT_ERROR_INVALID_VALUE,
-        "Updating PC and other information of the target SQE in the target stream");
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        para->blockDimAddr, RT_ERROR_INVALID_VALUE,
-        "Updating PC and other information of the target SQE in the target stream");
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        para->hdl, RT_ERROR_INVALID_VALUE, "Updating PC and other information of the target SQE in the target stream");
-
-    const rtChipType_t chipType = Runtime::Instance()->GetChipType();
-
-    if (!sinkStm->Device_()->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_MODEL_UPDATE_SQE_TILING_KEY)) {
-        RT_LOG(RT_LOG_WARNING, "unsupported chip type (%d)", chipType);
-        return RT_ERROR_FEATURE_NOT_SUPPORT;
-    }
-
-    const uint32_t tschVersion = sinkStm->Device_()->GetTschVersion();
-    const bool isSupport = sinkStm->Device_()->CheckFeatureSupport(TS_FEATURE_TILING_KEY_SINK);
-    if (!isSupport) {
-        RT_LOG(
-            RT_LOG_WARNING, "unsupported task type (ModelTaskUpdate) in current ts version, tschVersion=%u",
-            tschVersion);
-        return RT_ERROR_FEATURE_NOT_SUPPORT;
-    }
-
-    if ((desStm->GetBindFlag() != true) || (sinkStm->GetBindFlag() != true)) {
-        RT_LOG(RT_LOG_ERROR, "model update task does not support non-model scenario.");
-        return RT_ERROR_STREAM_MODEL;
-    }
-
-    const rtError_t error = impl_->ModelTaskUpdate(desStm, desTaskId, sinkStm, para);
-    ERROR_RETURN(
-        error, "ModelTaskUpdate failed, desStm=%d.desTaskId=%u,sinkStm=%d", desStm->Id_(), desTaskId, sinkStm->Id_());
-    return error;
-}
-
 rtError_t ApiErrorDecorator::ModelEndGraph(Model* const mdl, Stream* const stm, const uint32_t flags)
 {
     Stream* curStm = Runtime::Instance()->GetCurStream(stm);

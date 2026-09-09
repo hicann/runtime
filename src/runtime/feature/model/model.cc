@@ -1185,7 +1185,7 @@ rtError_t Model::SynchronizeExecute(Stream* const stm, int32_t timeout)
         error, "Failed to submit exeTask, stream_id=%d, retCode=%#x.", stm->Id_(), static_cast<uint32_t>(error));
     time2 = GetTimeInterval(timeBegin);
     if ((dev->IsStarsPlatform()) && (executeType != EXECUTOR_AICPU)) {
-        error = NtyWait(endGraphNotify_, stm, MAX_UINT32_NUM);
+        error = EndGraphNtyWait(endGraphNotify_, stm, MAX_UINT32_NUM);
         ERROR_RETURN_MSG_INNER(error, "Failed to wait notify, retCode=%#x.", static_cast<uint32_t>(error));
 
         error = ModelSerialSchedPostProc(stm, endGraphNotify_, this);
@@ -1362,16 +1362,7 @@ rtError_t Model::GetStreamToAsyncExecute(Stream* stm)
     ERROR_GOTO_MSG_INNER(error, ERROR_RELEASE, "Failed to submit execution task, stream_id=%d.", stm->Id_());
 
     if ((dev->IsStarsPlatform()) && (GetModelExecutorType() != EXECUTOR_AICPU)) {
-        if (modelType_ == RT_MODEL_CAPTURE_MODEL) {
-            const CaptureModel* const captureMdl = dynamic_cast<CaptureModel const*>(this);
-            if (captureMdl->IsSoftwareSqEnable()) {
-                error = NtyWait(endGraphNotify_, stm, MAX_UINT32_NUM, true, this);
-            } else {
-                error = NtyWait(endGraphNotify_, stm, MAX_UINT32_NUM);
-            }
-        } else {
-            error = NtyWait(endGraphNotify_, stm, MAX_UINT32_NUM);
-        }
+        error = EndGraphNtyWait(endGraphNotify_, stm, MAX_UINT32_NUM);
         ERROR_RETURN_MSG_INNER(error, "Failed to wait notify, retCode=%#x.", static_cast<uint32_t>(error));
 
         error = ModelSerialSchedPostProc(stm, endGraphNotify_, this);

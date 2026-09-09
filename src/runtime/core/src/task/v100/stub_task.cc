@@ -89,11 +89,14 @@ rtError_t MdlUnBindTaskSubmit(Model* const mdl, Stream* const streamIn, const bo
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
-rtError_t NtyWait(
-    Notify* const inNotify, Stream* const streamIn, const uint32_t timeOut, const bool isEndGraphNotify,
-    Model* const captureModel)
+rtError_t NtyWait(Notify* const inNotify, Stream* const streamIn, const uint32_t timeOut)
 {
-    return inNotify->Wait(streamIn, timeOut, isEndGraphNotify, captureModel);
+    return inNotify->Wait(streamIn, timeOut);
+}
+
+rtError_t EndGraphNtyWait(Notify* const inNotify, Stream* const streamIn, const uint32_t timeOut)
+{
+    return inNotify->EndGraphWait(streamIn, timeOut);
 }
 
 rtError_t ModelSerialSchedPostProc(Stream* const stm, Notify* const notify, Model* const model)

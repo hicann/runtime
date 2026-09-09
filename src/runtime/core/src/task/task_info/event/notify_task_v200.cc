@@ -48,13 +48,13 @@ void ConstructSqeForIpcNotifyRecordTask(TaskInfo* taskInfo, rtDavidSqe_t* const 
         sqe->subType);
 }
 
-void ReleaseResourceForNotifyWaitTaskOnlModel(TaskInfo* const taskInfo)
+void ReleaseResourceForEndGraphNotifyWaitTaskOnlModel(const TaskInfo* taskInfo)
 {
     if (!Runtime::Instance()->GetConnectUbFlag()) {
         return;
     }
 
-    Model* model = taskInfo->u.notifywaitTask.u.notify->GetEndGraphModel();
+    Model* model = taskInfo->u.endGraphNotifyWaitTask.endGraphModel;
     if (model == nullptr || model->GetModelType() != ModelType::RT_MODEL_NORMAL) {
         return;
     }
@@ -90,9 +90,19 @@ static bool NotifyTaskRegister()
         .toCommandFunc = &ToCommandBodyForNotifyWaitTask,
         .toSqeFunc = nullptr,
         .doCompleteSuccFunc = &DoCompleteSuccessForNotifyWaitTask,
-        .taskUnInitFunc = &NotifyWaitTaskUnInit,
+        .taskUnInitFunc = nullptr,
         .waitAsyncCpCompleteFunc = nullptr,
         .printErrorInfoFunc = &PrintErrorInfoForNotifyWaitTask,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+    };
+    TaskFuncSingle endGraphNotifyWaitFuncs = {
+        .toCommandFunc = &ToCommandBodyForEndGraphNotifyWaitTask,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccessForEndGraphNotifyWaitTask,
+        .taskUnInitFunc = &EndGraphNotifyWaitTaskUnInit,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoForEndGraphNotifyWaitTask,
         .setResultFunc = nullptr,
         .setStarsResultFunc = &SetStarsResultCommonForDavid,
     };
@@ -101,8 +111,10 @@ static bool NotifyTaskRegister()
     for (const auto chip : chips) {
         RegTaskFunc(chip, TS_TASK_TYPE_NOTIFY_RECORD, notifyRecordFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_NOTIFY_WAIT, notifyWaitFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_ENDGRAPH_NOTIFY_WAIT, endGraphNotifyWaitFuncs);
         RegDavidSqeFunc(chip, TS_TASK_TYPE_NOTIFY_RECORD, &ConstructDavidSqeForNotifyRecordTask);
         RegDavidSqeFunc(chip, TS_TASK_TYPE_NOTIFY_WAIT, &ConstructDavidSqeForNotifyWaitTask);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_ENDGRAPH_NOTIFY_WAIT, &ConstructDavidSqeForNotifyWaitTask);
     }
 
     return true;

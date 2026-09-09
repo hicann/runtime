@@ -496,7 +496,7 @@ void Stream::ProcArgRecycleList(void)
 bool Stream::IsReclaimAsync(const TaskInfo* const tsk) const
 {
     if ((tsk->type == TS_TASK_TYPE_FFTS_PLUS) || (tsk->type == TS_TASK_TYPE_NOTIFY_WAIT) ||
-        (tsk->type == TS_TASK_TYPE_NOTIFY_RECORD)) {
+        (tsk->type == TS_TASK_TYPE_ENDGRAPH_NOTIFY_WAIT) || (tsk->type == TS_TASK_TYPE_NOTIFY_RECORD)) {
         return true;
     }
     if (tsk->type == TS_TASK_TYPE_MEMCPY) {
@@ -535,7 +535,9 @@ bool Stream::IsNeedPostProc(const TaskInfo* const tsk) const
                 (tsk->u.aicTaskInfo.comm.argsSize <= RTS_LITE_PCIE_BAR_COPY_SIZE)) {
                 return false;
             }
-        } else if ((tsk->type == TS_TASK_TYPE_NOTIFY_WAIT) || (tsk->type == TS_TASK_TYPE_NOTIFY_RECORD)) {
+        } else if (
+            (tsk->type == TS_TASK_TYPE_NOTIFY_WAIT) || (tsk->type == TS_TASK_TYPE_ENDGRAPH_NOTIFY_WAIT) ||
+            (tsk->type == TS_TASK_TYPE_NOTIFY_RECORD)) {
             return false;
         } else {
             // do nothing
@@ -5014,6 +5016,9 @@ void Stream::GetTaskEventIdOrNotifyId(TaskInfo* taskInfo, int32_t& eventId, uint
         case TS_TASK_TYPE_NOTIFY_WAIT:
             notifyWaitTask = &(taskInfo->u.notifywaitTask);
             notifyId = notifyWaitTask->notifyId;
+            break;
+        case TS_TASK_TYPE_ENDGRAPH_NOTIFY_WAIT:
+            notifyId = taskInfo->u.endGraphNotifyWaitTask.notifyId;
             break;
         case TS_TASK_TYPE_NOTIFY_RECORD:
             notifyRecord = &(taskInfo->u.notifyrecordTask);

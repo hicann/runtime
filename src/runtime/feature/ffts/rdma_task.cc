@@ -249,12 +249,12 @@ void PrintDfxInfoForRdmaPiValueModifyTask(const TaskInfo* taskInfo, const uint32
         return;
     }
 
-    if ((taskInfo->u.notifywaitTask.isCountNotify) || (taskInfo->u.notifywaitTask.u.notify == nullptr) ||
-        (taskInfo->u.notifywaitTask.u.notify->GetEndGraphModel() == nullptr)) {
+    const EndGraphNotifyWaitTaskInfo& endGraphWaitTask = taskInfo->u.endGraphNotifyWaitTask;
+    if (endGraphWaitTask.endGraphModel == nullptr) {
         return;
     }
 
-    Model* mdl = taskInfo->u.notifywaitTask.u.notify->GetEndGraphModel();
+    Model* mdl = endGraphWaitTask.endGraphModel;
     if (mdl->GetModelType() != RT_MODEL_CAPTURE_MODEL) {
         return;
     }

@@ -263,6 +263,7 @@ TEST_F(CloudV2DoCompleteSuccessForNotifyWaitTaskTest, dfx_case)
     TaskInfo taskInfo = {};
     taskInfo.errorCode = RT_ERROR_WAIT_TIMEOUT;
     taskInfo.bindFlag = true;
+    taskInfo.stream = stream_;
     Notify notify(0, 1);
     Model* model = new Model();
     notify.SetEndGraphModel(model);

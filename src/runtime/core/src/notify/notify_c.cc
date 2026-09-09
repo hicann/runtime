@@ -23,9 +23,9 @@
 namespace cce {
 namespace runtime {
 
-rtError_t NtyWait(
-    Notify* const inNotify, Stream* const streamIn, const uint32_t timeOut, const bool isEndGraphNotify,
-    Model* const captureModel)
+namespace {
+rtError_t SubmitNotifyWait(
+    Notify* const inNotify, Stream* const streamIn, const uint32_t timeOut, const bool isEndGraphNotify)
 {
     TaskInfo* waitTask = nullptr;
     rtError_t error = CheckTaskCanSend(streamIn);
@@ -34,7 +34,8 @@ rtError_t NtyWait(
     uint32_t pos = 0xFFFFU;
     Stream* dstStm = streamIn;
     streamIn->StreamLock();
-    waitTask = streamIn->AllocTask(nullptr, TS_TASK_TYPE_NOTIFY_WAIT, error);
+    const tsTaskType_t taskType = isEndGraphNotify ? TS_TASK_TYPE_ENDGRAPH_NOTIFY_WAIT : TS_TASK_TYPE_NOTIFY_WAIT;
+    waitTask = streamIn->AllocTask(nullptr, taskType, error);
     COND_PROC_RETURN_ERROR_MSG_INNER(waitTask == nullptr, error, streamIn->StreamUnLock();
                                      , "Failed to alloc task, stream_id=%d, retCode=%#x.", streamIn->Id_(),
                                      static_cast<uint32_t>(error));
@@ -46,19 +47,13 @@ rtError_t NtyWait(
         streamIn->StreamUnLock();
     };
     ScopeGuard tskErrRecycle(errRecycle);
-    error = NotifyWaitTaskInit(waitTask, inNotify->GetNotifyId(), timeOut, nullptr, inNotify);
+    error = isEndGraphNotify ? EndGraphNotifyWaitTaskInit(waitTask, inNotify->GetNotifyId(), timeOut, inNotify) :
+                               NotifyWaitTaskInit(waitTask, inNotify->GetNotifyId(), timeOut, nullptr, inNotify);
     ERROR_RETURN(
         error, "Failed to initialize notify wait task, stream_id=%d, retCode=%#x", streamIn->Id_(),
         static_cast<uint32_t>(error));
-    error = AttachExternalEventsRes(waitTask, captureModel);
-    ERROR_RETURN(
-        error, "Failed to attach external events resources to graph end notify wait, stream_id=%d, retCode=%#x.",
-        streamIn->Id_(), static_cast<uint32_t>(error));
     RT_LOG(RT_LOG_INFO, "stream_id=%d notify_id=%u.", streamIn->Id_(), inNotify->GetNotifyId());
     waitTask->stmArgPos = static_cast<DavidStream*>(dstStm)->GetArgPos();
-    waitTask->u.notifywaitTask.isEndGraphNotify = isEndGraphNotify;
-    waitTask->u.notifywaitTask.captureModel = captureModel;
-    waitTask->needPostProc = isEndGraphNotify;
 
     error = DavidSendTask(waitTask, dstStm);
     ERROR_RETURN_MSG_INNER(
@@ -71,6 +66,17 @@ rtError_t NtyWait(
     ERROR_RETURN(
         error, "Failed to recycle task, stream_id=%d, retCode=%#x.", streamIn->Id_(), static_cast<uint32_t>(error));
     return RT_ERROR_NONE;
+}
+} // namespace
+
+rtError_t NtyWait(Notify* const inNotify, Stream* const streamIn, const uint32_t timeOut)
+{
+    return SubmitNotifyWait(inNotify, streamIn, timeOut, false);
+}
+
+rtError_t EndGraphNtyWait(Notify* const inNotify, Stream* const streamIn, const uint32_t timeOut)
+{
+    return SubmitNotifyWait(inNotify, streamIn, timeOut, true);
 }
 
 rtError_t NtyRecord(Notify* const inNotify, Stream* const streamIn)

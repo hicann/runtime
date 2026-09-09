@@ -313,14 +313,14 @@ bool ModelIsExistInContext(const Model* mdl, const Stream* stream)
     return false;
 }
 
-void ReportModelEndGraphErrorForNotifyWaitTask(TaskInfo* taskInfo, const uint32_t devId)
+void ReportEndGraphWaitError(const TaskInfo* taskInfo, const uint32_t devId)
 {
     if (!Runtime::Instance()->ChipIsHaveStars()) {
         return;
     }
 
     RT_LOG(RT_LOG_DEBUG, "Report model endGraph errcode=0x%x.", taskInfo->errorCode);
-    Model* mdl = taskInfo->u.notifywaitTask.u.notify->GetEndGraphModel();
+    Model* mdl = taskInfo->u.endGraphNotifyWaitTask.endGraphModel;
     if (!ModelIsExistInContext(mdl, taskInfo->stream)) {
         RT_LOG(RT_LOG_ERROR, "this model is not in current context.");
         return;

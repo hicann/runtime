@@ -131,6 +131,16 @@ void EngineLogObserver::TaskLaunchedEx(const uint32_t devId, TaskInfo* const tsk
                 devId, tsk->stream->Id_(), tsk->id, notifyId, task_launched_num_);
             break;
         }
+        case TS_TASK_TYPE_ENDGRAPH_NOTIFY_WAIT: {
+            notifyId = isStarsCqe ? command->cmdBuf.u.starsSqe[0].notifySqe.notify_id :
+                                    command->cmdBuf.cmd.u.notifywaitTask.notifyid;
+            RT_LOG(
+                RT_LOG_DEBUG,
+                "device_id=%u, stream_id=%d, task_id=%hu, notify_id=%hu,"
+                "task_type=EndGraphNotifyWait, task_launched_num=%" PRIu64,
+                devId, tsk->stream->Id_(), tsk->id, notifyId, task_launched_num_);
+            break;
+        }
 
         case TS_TASK_TYPE_MEMCPY: {
             RT_LOG(

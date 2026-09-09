@@ -500,7 +500,7 @@ TEST_F(ExternalEventTaskTest910B, SoftwareEventWaitSubmitFailureRecyclesTask)
     EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
 }
 
-TEST_F(ExternalEventTaskTest910B, NotifyWaitOwnerAllocationFailureKeepsReplayResources)
+TEST_F(ExternalEventTaskTest910B, EndGraphNotifyWaitOwnerAllocationFailureKeepsReplayResources)
 {
     rtStream_t stream = nullptr;
     ASSERT_EQ(rtStreamCreate(&stream, 0), RT_ERROR_NONE);
@@ -510,18 +510,20 @@ TEST_F(ExternalEventTaskTest910B, NotifyWaitOwnerAllocationFailureKeepsReplayRes
     notify.notifyid_ = 0U;
     CaptureModel captureModel;
     captureModel.context_ = streamObj->Context_();
+    captureModel.SetSoftwareSqEnable();
     std::vector<EventResource> retainedResources;
     retainedResources.push_back({nullptr, 0U, INVALID_EVENT_ID});
     captureModel.curReplayExternalEventsRes_ = &retainedResources;
+    notify.SetEndGraphModel(&captureModel);
     MOCKER(static_cast<NothrowNewFunc>(&operator new)).expects(once()).will(invoke(NothrowNewFail));
 
-    EXPECT_EQ(notify.Wait(streamObj, 0U, true, &captureModel), RT_ERROR_MEMORY_ALLOCATION);
+    EXPECT_EQ(notify.EndGraphWait(streamObj, 0U), RT_ERROR_MEMORY_ALLOCATION);
 
     EXPECT_EQ(retainedResources.size(), 1U);
     EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
 }
 
-TEST_F(ExternalEventTaskTest910B, NotifyWaitSubmitFailureReleasesExternalWaitRetainedOwner)
+TEST_F(ExternalEventTaskTest910B, EndGraphNotifyWaitSubmitFailureReleasesExternalWaitRetainedOwner)
 {
     rtStream_t stream = nullptr;
     ASSERT_EQ(rtStreamCreate(&stream, 0), RT_ERROR_NONE);
@@ -532,6 +534,7 @@ TEST_F(ExternalEventTaskTest910B, NotifyWaitSubmitFailureReleasesExternalWaitRet
     Event event(streamObj->Device_(), RT_EVENT_DEFAULT, nullptr);
     CaptureModel captureModel;
     captureModel.context_ = streamObj->Context_();
+    captureModel.SetSoftwareSqEnable();
     uint8_t eventStatus = 1U;
     const int32_t eventId = 7;
     EnableSoftwareRecord(&event, &eventStatus, eventId);
@@ -539,9 +542,10 @@ TEST_F(ExternalEventTaskTest910B, NotifyWaitSubmitFailureReleasesExternalWaitRet
     std::vector<EventResource> retainedResources;
     retainedResources.push_back({&event, reinterpret_cast<uint64_t>(&eventStatus), eventId});
     captureModel.curReplayExternalEventsRes_ = &retainedResources;
+    notify.SetEndGraphModel(&captureModel);
     MOCKER_CPP_VIRTUAL(streamObj->Device_(), &Device::SubmitTask).stubs().will(returnValue(RT_ERROR_DRV_ERR));
 
-    EXPECT_EQ(notify.Wait(streamObj, 0U, true, &captureModel), RT_ERROR_DRV_ERR);
+    EXPECT_EQ(notify.EndGraphWait(streamObj, 0U), RT_ERROR_DRV_ERR);
 
     EXPECT_TRUE(retainedResources.empty());
     EXPECT_EQ(event.idMap_.find(eventId), event.idMap_.end());

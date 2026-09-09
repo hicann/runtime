@@ -219,7 +219,8 @@ typedef enum tagTsTaskType {
     TS_TASK_TYPE_MODEL_SERIAL_SCHED_PREPROC = 136,     /* model serial sched preproc */
     TS_TASK_TYPE_MODEL_SERIAL_SCHED_NOTIFY_WAIT = 137, /* model serial sched notify wait */
     TS_TASK_TYPE_MODEL_SERIAL_SCHED_POSTPROC = 138,    /* model serial sched postproc */
-    TS_TASK_TYPE_RESERVED = 139,
+    TS_TASK_TYPE_ENDGRAPH_NOTIFY_WAIT = 139,           /* model end graph notify wait */
+    TS_TASK_TYPE_RESERVED = 140,
 } tsTaskType_t;
 
 enum class ProfTaskType : uint16_t {

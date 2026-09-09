@@ -137,19 +137,19 @@ TEST_F(EventTest910B, SwitchToSoftwareModeFailsAfterRecord)
     }
 }
 
-TEST(EventNotifyWaitTaskTest, NotifyWaitTaskUnInitClearsExternalWaitRetainedOwner)
+TEST(EventNotifyWaitTaskTest, EndGraphNotifyWaitTaskUnInitClearsExternalWaitRetainedOwner)
 {
     TaskInfo task = {};
     auto* resources = new std::vector<EventResource>;
     resources->push_back({nullptr, 0U, INVALID_EVENT_ID});
-    task.u.notifywaitTask.externalEventsRes = resources;
+    task.u.endGraphNotifyWaitTask.externalEventsRes = resources;
 
-    NotifyWaitTaskUnInit(&task);
+    EndGraphNotifyWaitTaskUnInit(&task);
 
-    EXPECT_EQ(task.u.notifywaitTask.externalEventsRes, nullptr);
+    EXPECT_EQ(task.u.endGraphNotifyWaitTask.externalEventsRes, nullptr);
 }
 
-TEST_F(EventTest910B, NotifyWaitCompletionReleasesRetainedEventsAndUninitIsIdempotent)
+TEST_F(EventTest910B, EndGraphNotifyWaitCompletionReleasesRetainedEventsAndUninitIsIdempotent)
 {
     rtStream_t stream = nullptr;
     ASSERT_EQ(rtStreamCreate(&stream, 0), RT_ERROR_NONE);
@@ -165,23 +165,23 @@ TEST_F(EventTest910B, NotifyWaitCompletionReleasesRetainedEventsAndUninitIsIdemp
     auto* resources = new std::vector<EventResource>;
     resources->push_back({&event, 0x12340000U, 1004});
     resources->push_back({&event, 0x12340000U, 1004});
-    task.u.notifywaitTask.externalEventsRes = resources;
-    task.u.notifywaitTask.isEndGraphNotify = true;
+    task.u.endGraphNotifyWaitTask.externalEventsRes = resources;
     CaptureModel captureModel;
     captureModel.context_ = rt_ut::UnwrapOrNull<Stream>(stream)->Context_();
-    task.u.notifywaitTask.captureModel = &captureModel;
+    task.u.endGraphNotifyWaitTask.endGraphModel = &captureModel;
+    task.u.endGraphNotifyWaitTask.isSoftwareSqCaptureModel = true;
     task.stream = rt_ut::UnwrapOrNull<Stream>(stream);
 
-    DoCompleteSuccessForNotifyWaitTask(&task, device_->Id_());
+    DoCompleteSuccessForEndGraphNotifyWaitTask(&task, device_->Id_());
 
-    EXPECT_EQ(task.u.notifywaitTask.externalEventsRes, nullptr);
+    EXPECT_EQ(task.u.endGraphNotifyWaitTask.externalEventsRes, nullptr);
     EXPECT_EQ(event.EventId_(), 1004);
     EXPECT_TRUE(event.idMap_.empty());
-    NotifyWaitTaskUnInit(&task);
+    EndGraphNotifyWaitTaskUnInit(&task);
     EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
 }
 
-TEST_F(EventTest910B, NotifyWaitTaskUnInitSkipsRetainedEventWhenLaunchEventAddrIsZero)
+TEST_F(EventTest910B, EndGraphNotifyWaitTaskUnInitSkipsRetainedEventWhenLaunchEventAddrIsZero)
 {
     Event event(device_, RT_EVENT_DEFAULT, nullptr);
     event.isNewMode_ = true;
@@ -192,11 +192,11 @@ TEST_F(EventTest910B, NotifyWaitTaskUnInitSkipsRetainedEventWhenLaunchEventAddrI
     TaskInfo task = {};
     auto* resources = new std::vector<EventResource>;
     resources->push_back({&event, 0U, 1004});
-    task.u.notifywaitTask.externalEventsRes = resources;
+    task.u.endGraphNotifyWaitTask.externalEventsRes = resources;
 
-    NotifyWaitTaskUnInit(&task);
+    EndGraphNotifyWaitTaskUnInit(&task);
 
-    EXPECT_EQ(task.u.notifywaitTask.externalEventsRes, nullptr);
+    EXPECT_EQ(task.u.endGraphNotifyWaitTask.externalEventsRes, nullptr);
     EXPECT_EQ(event.EventId_(), 1004);
 }
 

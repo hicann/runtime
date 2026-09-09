@@ -318,6 +318,7 @@ TEST_F(TaskTestDavid, NtyWaitSubmitFailureReleasesExternalWaitRetainedOwner)
     Event event(stream_->Device_(), RT_EVENT_DEFAULT, nullptr);
     CaptureModel captureModel;
     captureModel.context_ = stream_->Context_();
+    captureModel.SetSoftwareSqEnable();
     uint8_t eventStatus = 1U;
     const int32_t eventId = 7;
     ASSERT_EQ(event.TrySwitchToSoftwareMode(), RT_ERROR_NONE);
@@ -332,7 +333,8 @@ TEST_F(TaskTestDavid, NtyWaitSubmitFailureReleasesExternalWaitRetainedOwner)
     MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER(DavidSendTask).stubs().will(returnValue(RT_ERROR_DRV_ERR));
 
-    EXPECT_EQ(NtyWait(notifyObj, stream_, 0U, true, &captureModel), RT_ERROR_DRV_ERR);
+    notifyObj->SetEndGraphModel(&captureModel);
+    EXPECT_EQ(EndGraphNtyWait(notifyObj, stream_, 0U), RT_ERROR_DRV_ERR);
 
     EXPECT_TRUE(retainedResources.empty());
     EXPECT_EQ(event.idMap_.find(eventId), event.idMap_.end());
@@ -347,13 +349,15 @@ TEST_F(TaskTestDavid, NtyWaitOwnerAllocationFailureKeepsReplayResources)
     ASSERT_NE(notifyObj, nullptr);
     CaptureModel captureModel;
     captureModel.context_ = stream_->Context_();
+    captureModel.SetSoftwareSqEnable();
     std::vector<EventResource> retainedResources;
     retainedResources.push_back({nullptr, 0U, INVALID_EVENT_ID});
     captureModel.curReplayExternalEventsRes_ = &retainedResources;
     MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER(static_cast<NothrowNewFunc>(&operator new)).expects(once()).will(invoke(NothrowNewFail));
 
-    EXPECT_EQ(NtyWait(notifyObj, stream_, 0U, true, &captureModel), RT_ERROR_MEMORY_ALLOCATION);
+    notifyObj->SetEndGraphModel(&captureModel);
+    EXPECT_EQ(EndGraphNtyWait(notifyObj, stream_, 0U), RT_ERROR_MEMORY_ALLOCATION);
 
     EXPECT_EQ(retainedResources.size(), 1U);
     EXPECT_EQ(rtNotifyDestroy(notify), RT_ERROR_NONE);

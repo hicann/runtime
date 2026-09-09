@@ -339,32 +339,24 @@ ERROR_RECYCLE_WAIT:
     return error;
 }
 
-rtError_t Notify::Wait(
-    Stream* const streamIn, const uint32_t timeOut, const bool isEndGraphNotify, Model* const captureModel)
+namespace {
+rtError_t SubmitNotifyWaitTask(
+    Notify* const notify, Stream* const stream, const uint32_t timeout, const bool isEndGraphNotify)
 {
-    if ((notifyid_ >> RT_NOTIFY_REVISED_OFFSET) > 0U) {
-        return RevisedWait(streamIn, timeOut);
-    }
-
-    Device* const dev = streamIn->Device_();
+    Device* const dev = stream->Device_();
     TaskInfo submitTask = {};
     rtError_t errorReason;
-    TaskInfo* waitTask = streamIn->AllocTask(&submitTask, TS_TASK_TYPE_NOTIFY_WAIT, errorReason);
+    const tsTaskType_t taskType = isEndGraphNotify ? TS_TASK_TYPE_ENDGRAPH_NOTIFY_WAIT : TS_TASK_TYPE_NOTIFY_WAIT;
+    TaskInfo* waitTask = stream->AllocTask(&submitTask, taskType, errorReason);
     NULL_PTR_RETURN_MSG(waitTask, errorReason);
     std::function<void()> const errRecycle = [&dev, &waitTask]() { (void)dev->GetTaskFactory()->Recycle(waitTask); };
     ScopeGuard waitTaskRecycle(errRecycle);
 
-    rtError_t error = NotifyWaitTaskInit(waitTask, notifyid_, timeOut, nullptr, this);
+    rtError_t error = isEndGraphNotify ? EndGraphNotifyWaitTaskInit(waitTask, notify->GetNotifyId(), timeout, notify) :
+                                         NotifyWaitTaskInit(waitTask, notify->GetNotifyId(), timeout, nullptr, notify);
     if (error != RT_ERROR_NONE) {
         return error;
     }
-
-    waitTask->u.notifywaitTask.isEndGraphNotify = isEndGraphNotify;
-    waitTask->u.notifywaitTask.captureModel = captureModel;
-    error = AttachExternalEventsRes(waitTask, captureModel);
-    ERROR_RETURN(
-        error, "Failed to attach external events resources to graph end notify wait, stream_id=%d, retCode=%#x.",
-        streamIn->Id_(), static_cast<uint32_t>(error));
 
     error = dev->SubmitTask(waitTask);
     if (error != RT_ERROR_NONE) {
@@ -372,9 +364,26 @@ rtError_t Notify::Wait(
     }
     waitTaskRecycle.ReleaseGuard();
 
-    GET_THREAD_TASKID_AND_STREAMID(waitTask, streamIn->Id_());
+    GET_THREAD_TASKID_AND_STREAMID(waitTask, stream->Id_());
 
     return RT_ERROR_NONE;
+}
+} // namespace
+
+rtError_t Notify::Wait(Stream* const streamIn, const uint32_t timeOut)
+{
+    if ((notifyid_ >> RT_NOTIFY_REVISED_OFFSET) > 0U) {
+        return RevisedWait(streamIn, timeOut);
+    }
+    return SubmitNotifyWaitTask(this, streamIn, timeOut, false);
+}
+
+rtError_t Notify::EndGraphWait(Stream* const streamIn, const uint32_t timeOut)
+{
+    if ((notifyid_ >> RT_NOTIFY_REVISED_OFFSET) > 0U) {
+        return RevisedWait(streamIn, timeOut);
+    }
+    return SubmitNotifyWaitTask(this, streamIn, timeOut, true);
 }
 
 rtError_t Notify::SetName(const char_t* const nameIn)
