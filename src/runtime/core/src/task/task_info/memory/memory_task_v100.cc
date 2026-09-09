@@ -811,10 +811,10 @@ static void MixKernelUpdateDebug(TaskInfo* const updateTask, const rtFftsPlusMix
         RT_LOG_INFO, "update mix kernel, device_id=%u, stream_id=%u, task_id=%hu", stream->Device_()->Id_(),
         stream->Id_(), updateTask->id);
 
-    RT_LOG(RT_LOG_INFO, "old context debug info");
+    RT_LOG(RT_LOG_INFO, "old context info");
     ShowDavinciTaskMixDebug(&oldFftsCtx);
 
-    RT_LOG(RT_LOG_INFO, "new context debug info");
+    RT_LOG(RT_LOG_INFO, "new context info");
     ShowDavinciTaskMixDebug(newFftsCtx);
     return;
 }

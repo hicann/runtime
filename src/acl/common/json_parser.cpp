@@ -391,7 +391,7 @@ aclError JsonParser::GetEventModeFromFile(const char_t* const fileName, uint8_t&
 
     // 校验 event_mode 是否为合法整数，只允许 0 或 1
     if ((eventModeStr != "0") && (eventModeStr != "1")) {
-        ACL_LOG_ERROR("event_mode value [%s] in json is not a valid integer.", eventModeStr.c_str());
+        ACL_LOG_ERROR("event_mode=%s is invalid, expected 0 or 1.", eventModeStr.c_str());
         acl::AclErrorLogManager::ReportInputError(
             acl::INVALID_PARAM_REASON_MSG, std::vector<const char*>({"func", "value", "param", "reason"}),
             std::vector<const char*>(

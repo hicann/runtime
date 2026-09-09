@@ -2093,8 +2093,8 @@ rtError_t RawDevice::AddAddrKernelNameMapTable(rtAddrKernelName_t& mapInfo)
         addrKernelNameMap_.mapInfo.insert(std::pair<uint64_t, std::string>(mapInfo.addr, mapInfo.kernelName));
     COND_RETURN_INFO(
         !ret.second, RT_ERROR_KERNEL_OFFSET,
-        "Can not insert deviceId:%u, name:%s, addr:%#" PRIx64 ", retName:%s, retAddr:%#" PRIx64 ".", deviceId_,
-        mapInfo.kernelName.c_str(), mapInfo.addr, ret.first->second.c_str(), ret.first->first);
+        "Kernel address is already mapped, deviceId=%u, name=%s, addr=%#" PRIx64 ", mappedName=%s.", deviceId_,
+        mapInfo.kernelName.c_str(), mapInfo.addr, ret.first->second.c_str());
     RT_LOG(
         RT_LOG_DEBUG, "insert deviceId:%u success, name:%s, addr:%#" PRIx64 ".", deviceId_, mapInfo.kernelName.c_str(),
         mapInfo.addr);
@@ -2705,7 +2705,9 @@ rtError_t RawDevice::SetSupportHcomcpuFlag()
 
 rtError_t RawDevice::SetQosCfg(const QosMasterConfigType& qosCfg, uint32_t index)
 {
-    COND_RETURN_ERROR(index >= MAX_ACC_QOS_CFG_NUM, RT_ERROR_INVALID_VALUE, "index is invalid, index=%u.", index);
+    COND_RETURN_ERROR(
+        index >= MAX_ACC_QOS_CFG_NUM, RT_ERROR_INVALID_VALUE, "invalid index=%u, range=[0, %u).", index,
+        MAX_ACC_QOS_CFG_NUM);
 
     aicoreQosCfgs_.aicoreQosCfg[index].type = qosCfg.type;
     aicoreQosCfgs_.aicoreQosCfg[index].mpamId = qosCfg.mpamId;

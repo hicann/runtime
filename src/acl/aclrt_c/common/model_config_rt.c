@@ -44,7 +44,7 @@ aclError GetMemTypeFromPolicy(aclrtMemMallocPolicy policy, rtMemType_t* type)
     } else if (((uint32_t)policy & POLICY_MASK_HIGH_BIT) == ACL_MEM_TYPE_HIGH_BAND_WIDTH) {
         flags = RT_MEMORY_HBM;
     } else {
-        ACL_LOG_WARN("invalid policy high bit!");
+        ACL_LOG_WARN("invalid policy high bit, policy=%u.", (uint32_t)policy);
     }
 
     size_t pageMapLen = sizeof(g_pageMap) / sizeof(g_pageMap[0]);
@@ -52,7 +52,7 @@ aclError GetMemTypeFromPolicy(aclrtMemMallocPolicy policy, rtMemType_t* type)
     struct PageType pagePair = {(uint32_t)policy & POLICY_MASK_LOW_BIT, 0};
     struct PageType* searchRet = (struct PageType*)bsearch(&pagePair, g_pageMap, pageMapLen, pagePairLen, Compare);
     if (searchRet == NULL) {
-        ACL_LOG_ERROR("invalid policy low bit!");
+        ACL_LOG_ERROR("invalid policy low bit, policy=%u.", (uint32_t)policy);
         return ACL_ERROR_INVALID_PARAM;
     }
     flags |= (*searchRet).rtPageTypeBit;

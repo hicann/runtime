@@ -1744,7 +1744,7 @@ rtError_t Context::StreamsKill(void)
     std::unique_lock<std::mutex> taskLock(streamLock_);
     uint32_t result;
     error = defaultStream_->TaskAbortByType(result, OP_ABORT_APP);
-    ERROR_RETURN(error, "retCode=%#x.", error);
+    ERROR_RETURN(error, "stream abort failed, retCode=%#x.", error);
     return error;
 }
 
@@ -1753,7 +1753,7 @@ rtError_t Context::StreamsQuery(uint32_t& status)
     rtError_t error;
     std::unique_lock<std::mutex> taskLock(streamLock_);
     error = defaultStream_->QuerySq(APP_ABORT_STS_QUERY_BY_PID, status);
-    ERROR_RETURN(error, "retCode=%#x.", error);
+    ERROR_RETURN(error, "abort status query failed, retCode=%#x.", error);
     return error;
 }
 
@@ -1772,7 +1772,7 @@ rtError_t Context::StreamsTaskClean(void)
     }
     if (isPrimary_ && device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ)) {
         error = GetCtrlSQStream()->ResClear();
-        ERROR_RETURN(error, "retCode=%#x.", error);
+        ERROR_RETURN(error, "control SQ cleanup failed, retCode=%#x.", error);
     }
 
     Device_()->Driver_()->ResourceReset(Device_()->Id_(), Device_()->DevGetTsId(), DRV_EVENT_ID);
@@ -1790,11 +1790,11 @@ rtError_t Context::StreamsUpdate(void)
             continue;
         }
         error = stream->SqCqUpdate();
-        ERROR_RETURN(error, "retCode=%#x.", error);
+        ERROR_RETURN(error, "SQ/CQ update failed, stream_id=%d, retCode=%#x.", stream->Id_(), error);
     }
     if (isPrimary_ && device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ)) {
         error = GetCtrlSQStream()->SqCqUpdate();
-        ERROR_RETURN(error, "retCode=%#x.", error);
+        ERROR_RETURN(error, "control SQ/CQ update failed, retCode=%#x.", error);
     }
     return error;
 }
@@ -1811,7 +1811,7 @@ rtError_t Context::StreamsRestore(void)
     }
     if (isPrimary_ && device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ)) {
         error = GetCtrlSQStream()->Restore();
-        ERROR_RETURN(error, "retCode=%#x.", error);
+        ERROR_RETURN(error, "control SQ restore failed, retCode=%#x.", error);
     }
     return RT_ERROR_NONE;
 }

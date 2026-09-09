@@ -914,7 +914,7 @@ bool DirectHwtsEngine::HandleShmTask(const uint32_t streamId, const bool limited
             (shareMemInfo.firstErrorCode != static_cast<uint32_t>(RT_ERROR_NONE)) && newErrCode1;
         if (isNeedHandleFirstError) {
             RT_LOG(
-                RT_LOG_INFO, "First errCode detected: stream_id=%u, task_id=%u, retCode=%#x", streamId,
+                RT_LOG_INFO, "First task status received, stream_id=%u, task_id=%u, retCode=%#x.", streamId,
                 shareMemInfo.taskId1, shareMemInfo.firstErrorCode);
             lastInfo->taskId1 = shareMemInfo.taskId1;
             lastInfo->firstErrorCode = shareMemInfo.firstErrorCode;
@@ -928,7 +928,7 @@ bool DirectHwtsEngine::HandleShmTask(const uint32_t streamId, const bool limited
         if (isNeedHandleLastError) {
             // Set to stream and return for last error.
             RT_LOG(
-                RT_LOG_INFO, "Last errCode detected: stream_id=%u, task_id=%u, retCode=%#x", streamId,
+                RT_LOG_INFO, "Last task status received, stream_id=%u, task_id=%u, retCode=%#x.", streamId,
                 shareMemInfo.taskId2, shareMemInfo.lastErrorCode);
             lastInfo->taskId2 = shareMemInfo.taskId2;
             lastInfo->lastErrorCode = shareMemInfo.lastErrorCode;
@@ -967,7 +967,7 @@ bool DirectHwtsEngine::HandleShmTask(const uint32_t streamId, const bool limited
     } else {
         if (shareMemInfo.firstErrorCode != static_cast<uint32_t>(RT_ERROR_NONE)) {
             RT_LOG(
-                RT_LOG_INFO, "First errCode detected: stream_id=%u, task_id=%u, retCode=%#x.", streamId,
+                RT_LOG_INFO, "First task status received, stream_id=%u, task_id=%u, retCode=%#x.", streamId,
                 shareMemInfo.taskId1, shareMemInfo.firstErrorCode);
             ReportLastError(streamId, shareMemInfo.taskId1, shareMemInfo.firstErrorCode, shareMemInfo.payLoad);
             reportError = true;
@@ -977,7 +977,7 @@ bool DirectHwtsEngine::HandleShmTask(const uint32_t streamId, const bool limited
         if (shareMemInfo.lastErrorCode != static_cast<uint32_t>(RT_ERROR_NONE)) {
             // Set to stream and return for last error.
             RT_LOG(
-                RT_LOG_INFO, "Last errCode detected: stream_id=%u, task_id=%u, retCode=%#x.", streamId,
+                RT_LOG_INFO, "Last task status received, stream_id=%u, task_id=%u, retCode=%#x.", streamId,
                 shareMemInfo.taskId2, shareMemInfo.lastErrorCode);
             const bool isNeedReportLastError = (!reportError) || TaskIdIsGT(shareMemInfo.taskId2, shareMemInfo.taskId1);
             if (isNeedReportLastError) {
@@ -994,7 +994,7 @@ bool DirectHwtsEngine::HandleShmTask(const uint32_t streamId, const bool limited
 
         rtShmQuery_t* const shmInfo = new (std::nothrow) rtShmQuery_t;
         if (shmInfo == nullptr) {
-            RT_LOG(RT_LOG_INFO, "struct ShmQuery <new> exception, stream_id=%u.", streamId);
+            RT_LOG(RT_LOG_WARNING, "shared memory query allocation was not successful, stream_id=%u.", streamId);
             return false;
         }
         shmInfo->taskId = shareMemInfo.taskId;

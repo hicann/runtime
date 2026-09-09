@@ -380,7 +380,8 @@ rtError_t GetDsaSqeByRandomNumTask(const rtRandomNumTaskInfo_t* taskInfo, TaskIn
     ERROR_GOTO_MSG_INNER(error, ERROR_FREE, "SetRandomSqeDiffInfo failed, retCode=%#x.", static_cast<uint32_t>(error));
 
     error = SetRandomSqeCommonInfo(taskInfo, commonTask, sqe, randomParam, devMem);
-    ERROR_GOTO_MSG_INNER(error, ERROR_FREE, "SetRandomSqeDiffInfo failed, retCode=%#x.", static_cast<uint32_t>(error));
+    ERROR_GOTO_MSG_INNER(
+        error, ERROR_FREE, "SetRandomSqeCommonInfo failed, retCode=%#x.", static_cast<uint32_t>(error));
 
     return RT_ERROR_NONE;
 

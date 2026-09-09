@@ -662,8 +662,7 @@ rtError_t Stream::Setup()
         memset_s(posToTaskIdMap_, posToTaskIdMapSize_ * sizeof(uint16_t), 0XFF, posToTaskIdMapSize_ * sizeof(uint16_t));
     if (ret != EOK) {
         RT_LOG_INNER_MSG(
-            RT_LOG_ERROR,
-            "Failed to call memset_s to set posToTaskIdMap_, dest=%p, dest_max=%zu, c=0xFF, count=%zu, retCode=%d.",
+            RT_LOG_ERROR, "memset_s failed for posToTaskIdMap_, dest=%p, dest_max=%zu, c=0xFF, count=%zu, retCode=%d.",
             posToTaskIdMap_, posToTaskIdMapSize_ * sizeof(uint16_t), posToTaskIdMapSize_ * sizeof(uint16_t), ret);
         return RT_ERROR_SEC_HANDLE;
     }
@@ -888,8 +887,8 @@ rtError_t Stream::SetupWithoutBindSq()
         memset_s(posToTaskIdMap_, posToTaskIdMapSize_ * sizeof(uint16_t), 0XFF, posToTaskIdMapSize_ * sizeof(uint16_t));
     COND_RETURN_ERROR_MSG_INNER(
         ret != EOK, RT_ERROR_STREAM_NEW,
-        "Failed to call memset_s to set posToTaskIdMap_, dest=%p, dest_max=%zu, c=0xFF, count=%zu, retCode=%d.",
-        posToTaskIdMap_, posToTaskIdMapSize_ * sizeof(uint16_t), posToTaskIdMapSize_ * sizeof(uint16_t), ret);
+        "memset_s failed for posToTaskIdMap_, dest=%p, dest_max=%zu, c=0xFF, count=%zu, retCode=%d.", posToTaskIdMap_,
+        posToTaskIdMapSize_ * sizeof(uint16_t), posToTaskIdMapSize_ * sizeof(uint16_t), ret);
 
     error = CreateStreamArgRes(); // only for stars v2
     COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "New args res manage failed.");
@@ -921,8 +920,8 @@ rtError_t Stream::SetupWithoutBindSq()
     ret = memset_s(sqeBuffer_, sqeBufferSize_, 0U, sqeBufferSize_);
     COND_RETURN_ERROR_MSG_INNER(
         ret != EOK, RT_ERROR_STREAM_NEW,
-        "Failed to call memset_s to set sqeBuffer_, dest=%p, dest_max=%u, c=0, count=%u, retCode=%d.", sqeBuffer_,
-        sqeBufferSize_, sqeBufferSize_, ret);
+        "memset_s failed for sqeBuffer_, dest=%p, dest_max=%u, c=0, count=%u, retCode=%d.", sqeBuffer_, sqeBufferSize_,
+        sqeBufferSize_, ret);
 
     /* pre alloc sq and cq */
     device_->GetDeviceSqCqManage()->PreAllocSqCq();
@@ -965,8 +964,8 @@ rtError_t Stream::AllocPosToTaskIdMap()
         memset_s(posToTaskIdMap_, posToTaskIdMapSize_ * sizeof(uint16_t), 0XFF, posToTaskIdMapSize_ * sizeof(uint16_t));
     COND_RETURN_ERROR_MSG_INNER(
         ret != EOK, RT_ERROR_STREAM_NEW,
-        "Failed to call memset_s to set posToTaskIdMap_, dest=%p, dest_max=%zu, c=0xFF, count=%zu, retCode=%d.",
-        posToTaskIdMap_, posToTaskIdMapSize_ * sizeof(uint16_t), posToTaskIdMapSize_ * sizeof(uint16_t), ret);
+        "memset_s failed for posToTaskIdMap_, dest=%p, dest_max=%zu, c=0xFF, count=%zu, retCode=%d.", posToTaskIdMap_,
+        posToTaskIdMapSize_ * sizeof(uint16_t), posToTaskIdMapSize_ * sizeof(uint16_t), ret);
 
     return RT_ERROR_NONE;
 }
@@ -992,8 +991,8 @@ rtError_t Stream::AllocSqeBufferForAutoSplit()
     const errno_t ret = memset_s(sqeBuffer_, sqeBufferSize_, 0U, sqeBufferSize_);
     COND_RETURN_ERROR_MSG_INNER(
         ret != EOK, RT_ERROR_STREAM_NEW,
-        "Failed to call memset_s to set sqeBuffer_, dest=%p, dest_max=%u, c=0, count=%u, retCode=%d.", sqeBuffer_,
-        sqeBufferSize_, sqeBufferSize_, ret);
+        "memset_s failed for sqeBuffer_, dest=%p, dest_max=%u, c=0, count=%u, retCode=%d.", sqeBuffer_, sqeBufferSize_,
+        sqeBufferSize_, ret);
 
     return RT_ERROR_NONE;
 }
@@ -3541,7 +3540,7 @@ rtError_t Stream::HandleTaskUpdate(
         RtPtrToPtr<void*, rtStarsSqe_t*>(cmdLocal.cmdBuf.u.starsSqe), sendSqeNum * sizeof(rtStarsSqe_t));
     COND_RETURN_ERROR_MSG_INNER(
         ret != EOK, RT_ERROR_INVALID_VALUE,
-        "Failed to call memcpy_s, dest=%p, dest_max=%zu, src=%p, count=%zu, retCode=%d, device_id=%u, stream_id=%d, "
+        "memcpy_s failed, dest=%p, dest_max=%zu, src=%p, count=%zu, retCode=%d, device_id=%u, stream_id=%d, "
         "task_id=%hu, task_type=%d(%s).",
         sqeBufferBackup + sizeof(rtStarsSqe_t) * workTask->pos, sendSqeNum * sizeof(rtStarsSqe_t),
         cmdLocal.cmdBuf.u.starsSqe, sendSqeNum * sizeof(rtStarsSqe_t), ret, device_->Id_(), streamId_, workTask->id,
@@ -3589,7 +3588,7 @@ rtError_t Stream::HandleTaskDefault(
         RtPtrToPtr<void*>(oldhostSqeAddr), sendSqeNum * sizeof(rtStarsSqe_t));
     COND_RETURN_ERROR_MSG_INNER(
         ret != EOK, RT_ERROR_INVALID_VALUE,
-        "Failed to call memcpy_s, dest=%p, dest_max=%zu, src=%p, count=%zu, retCode=%d, device_id=%u, stream_id=%d, "
+        "memcpy_s failed, dest=%p, dest_max=%zu, src=%p, count=%zu, retCode=%d, device_id=%u, stream_id=%d, "
         "task_id=%hu, task_type=%d(%s).",
         sqeBufferBackup + sizeof(rtStarsSqe_t) * taskPos, sendSqeNum * sizeof(rtStarsSqe_t), oldhostSqeAddr,
         sendSqeNum * sizeof(rtStarsSqe_t), ret, device_->Id_(), streamId_, workTask->id, workTask->type,
@@ -3610,8 +3609,8 @@ rtError_t Stream::UpdateAllPersistentTask()
         memset_s(posToTaskIdMap_, posToTaskIdMapSize_ * sizeof(uint16_t), 0XFF, posToTaskIdMapSize_ * sizeof(uint16_t));
     COND_RETURN_ERROR_MSG_INNER(
         ret != EOK, RT_ERROR_STREAM_NEW,
-        "Failed to call memset_s to set posToTaskIdMap_, dest=%p, dest_max=%zu, c=0xFF, count=%zu, retCode=%d.",
-        posToTaskIdMap_, posToTaskIdMapSize_ * sizeof(uint16_t), posToTaskIdMapSize_ * sizeof(uint16_t), ret);
+        "memset_s failed for posToTaskIdMap_, dest=%p, dest_max=%zu, c=0xFF, count=%zu, retCode=%d.", posToTaskIdMap_,
+        posToTaskIdMapSize_ * sizeof(uint16_t), posToTaskIdMapSize_ * sizeof(uint16_t), ret);
     Model* mdl = Model_();
     CaptureModel* captureModel = dynamic_cast<CaptureModel*>(mdl);
     // 存在融合后sqe变多的场景，这里的buffer是按内存64字节逐个访问，为了提升性能不做memset
@@ -4081,7 +4080,7 @@ rtError_t Stream::StarsWaitForTask(const uint32_t taskId, const bool isNeedWaitS
         if ((tryCount % perSchedYield) == 0U) {
             if (timeout > 0) {
                 const uint64_t count = GetTimeInterval(beginTime);
-                COND_RETURN_INFO(
+                COND_RETURN_WARN(
                     (count >= static_cast<uint64_t>(timeout)), RT_ERROR_STREAM_SYNC_TIMEOUT,
                     "SchedYield stream sync timeout, device_id=%u, stream_id=%d, time=%lums, timeout=%dms, "
                     "tryCount=%u",
@@ -4112,7 +4111,7 @@ rtError_t Stream::GetTaskIdByPos(const uint16_t recycleHead, uint32_t& taskId)
     posToTaskIdMapLock_.lock();
     if (unlikely(recycleHead >= rtsqDepth) || (posToTaskIdMap_[recycleHead] == MAX_UINT16_NUM)) {
         posToTaskIdMapLock_.unlock();
-        RT_LOG(RT_LOG_DEBUG, "fail, recycleHead=%hu.", recycleHead);
+        RT_LOG(RT_LOG_DEBUG, "invalid recycleHead=%hu, rtsqDepth=%u.", recycleHead, rtsqDepth);
         return RT_ERROR_INVALID_VALUE;
     }
 

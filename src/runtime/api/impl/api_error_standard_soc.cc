@@ -182,7 +182,7 @@ rtError_t ApiErrorDecorator::CntNotifyWaitWithTimeout(
         (info->mode >= WAIT_MODE_MAX), RT_ERROR_INVALID_VALUE, "Waiting for CntNotify", WaitModeToString(info->mode),
         "info->mode", "[0, " + std::to_string(WAIT_MODE_MAX) + ")");
     const rtError_t error = impl_->CntNotifyWaitWithTimeout(inCntNotify, stm, info);
-    ERROR_RETURN(error, "count notify record failed.");
+    ERROR_RETURN(error, "count notify wait failed.");
     return error;
 }
 

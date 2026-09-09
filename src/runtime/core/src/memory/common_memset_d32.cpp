@@ -45,8 +45,8 @@ static rtError_t MemsetD32OnDeviceSingleBlock(
     const rtError_t allocError = device->Driver_()->HostMemAlloc(&tempHostBuf, curBytes, device->Id_(), 0, 0);
     if (allocError != RT_ERROR_NONE) {
         RT_LOG(
-            RT_LOG_ERROR, "Failed to allocate temp host memory for block, size=%" PRIu64 ", retCode=%#x.", curBytes,
-            static_cast<uint32_t>(allocError));
+            RT_LOG_ERROR, "Failed to allocate temp host memory for block, size=%" PRIu64 "(bytes), retCode=%#x.",
+            curBytes, static_cast<uint32_t>(allocError));
         return allocError;
     }
 
@@ -127,7 +127,7 @@ rtError_t MemsetD32OnDeviceByBatch(void* dst, uint64_t destMax, uint32_t value, 
     const rtError_t allocError = device->Driver_()->HostMemAlloc(&fillBuf, MEMSET_BATCH_BUF_SIZE, device->Id_(), 0, 0);
     if (allocError != RT_ERROR_NONE) {
         RT_LOG(
-            RT_LOG_ERROR, "Failed to allocate host buffer for batch memset, size=%" PRIu64 ", retCode=%#x.",
+            RT_LOG_ERROR, "Failed to allocate host buffer for batch memset, size=%" PRIu64 "(bytes), retCode=%#x.",
             MEMSET_BATCH_BUF_SIZE, static_cast<uint32_t>(allocError));
         return allocError;
     }

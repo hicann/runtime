@@ -832,8 +832,8 @@ rtError_t NpuDriver::AsyncDmaWqeConvert(const uint32_t devId, AsyncWqeInputPara*
             break;
         default:
             RT_LOG(
-                RT_LOG_ERROR, "Unsupported wqeType=UNKNOWN(%d), devId=%u.", static_cast<int32_t>(inParam->wqeType),
-                devId);
+                RT_LOG_ERROR, "Unsupported wqeType=UNKNOWN(%d), expected NORMAL, BATCH, 2D or NOP, devId=%u.",
+                static_cast<int32_t>(inParam->wqeType), devId);
             return RT_ERROR_INVALID_VALUE;
     }
 

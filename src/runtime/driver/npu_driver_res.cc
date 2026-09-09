@@ -427,7 +427,9 @@ rtError_t NpuDriver::TaskAbortByType(
     ts_ctrl_msg_body_t killIn = {};
     ts_ctrl_msg_body_t killAck = {};
     size_t ackCount = sizeof(ts_ctrl_msg_body_t);
-    COND_RETURN_ERROR((opType >= OP_INVALID), RT_ERROR_INVALID_VALUE, "Invalid abort param");
+    COND_RETURN_ERROR(
+        (opType >= OP_INVALID), RT_ERROR_INVALID_VALUE, "Invalid abort opType=%u, range=[0, %u).", opType,
+        static_cast<uint32_t>(OP_INVALID));
     killIn.type = opType;
     if (opType == OP_ABORT_STREAM || opType == OP_STOP_STREAM) {
         killIn.u.kill_stream_info.sq_id = targetId;
@@ -501,7 +503,9 @@ rtError_t NpuDriver::RecoverAbortByType(
     ts_ctrl_msg_body_t recoverIn = {};
     ts_ctrl_msg_body_t recoverAck = {};
     size_t ackCount = sizeof(ts_ctrl_msg_body_t);
-    COND_RETURN_ERROR((opType >= OP_INVALID), RT_ERROR_INVALID_VALUE, "Invalid recover param");
+    COND_RETURN_ERROR(
+        (opType >= OP_INVALID), RT_ERROR_INVALID_VALUE, "Invalid recover opType=%u, range=[0, %u).", opType,
+        static_cast<uint32_t>(OP_INVALID));
     recoverIn.type = opType;
     if (opType == OP_RECOVER_STREAM) {
         recoverIn.u.recover_stream_info.sq_id = targetId;
@@ -1297,7 +1301,7 @@ rtError_t NpuDriver::ReAllocResourceId(
     if ((drvRet != DRV_ERROR_NONE) || (resourceId != resAllocOutput.resourceId)) {
         DRV_ERROR_PROCESS(
             drvRet,
-            "Call driver api halResourceIdAlloc failed, drvRetCode=%d, drvDevId=%u, priority=%u, "
+            "halResourceIdAlloc call failed, drvRetCode=%d, drvDevId=%u, priority=%u, "
             "tsId=%u, resourceId=%u, resAllocOutput.resourceId=%u, idType=%s(%d).",
             static_cast<int32_t>(drvRet), deviceId, priority, tsId, resourceId, resAllocOutput.resourceId,
             DrvIdTypeName(idType), static_cast<int32_t>(idType));
@@ -2253,7 +2257,7 @@ rtError_t NpuDriver::CommandSend(
     if (unlikely(drvRet != DRV_ERROR_NONE)) {
         DRV_ERROR_PROCESS(
             drvRet,
-            "Call driver api halSqMsgSend failed, drvRetCode=%d, drvDevId=%u, tsId=%u, sqId=%u, "
+            "halSqMsgSend call failed, drvRetCode=%d, drvDevId=%u, tsId=%u, sqId=%u, "
             "reportCount=%u, cmdCount=%u.",
             static_cast<int32_t>(drvRet), deviceId, tsId, sqId, reportCount, cmdCount);
         return RT_GET_DRV_ERRCODE(drvRet);
@@ -2396,7 +2400,7 @@ rtError_t NpuDriver::LogicCqReportV2(
     if ((drvReportGetRet != DRV_ERROR_NONE) && (drvReportGetRet != DRV_ERROR_SOCKET_CLOSE)) {
         DRV_ERROR_PROCESS(
             drvReportGetRet,
-            "Call driver api halCqReportRecv failed, drvRetCode=%d, drvDevId=%u, tsId=%u, "
+            "halCqReportRecv call failed, drvRetCode=%d, drvDevId=%u, tsId=%u, "
             "type=DRV_LOGIC_TYPE(%u), cqId=%u.",
             static_cast<int32_t>(drvReportGetRet), waitInfo.devId, repRecvInfo.tsId,
             static_cast<uint32_t>(repRecvInfo.type), repRecvInfo.cqId);
@@ -2457,7 +2461,7 @@ rtError_t NpuDriver::LogicCqReport(const LogicCqWaitInfo& waitInfo, rtLogicRepor
     if (drvReportGetRet != DRV_ERROR_NONE) {
         DRV_ERROR_PROCESS(
             drvReportGetRet,
-            "Call driver api halCqReportGet failed, drvRetCode=%d, drvDevId=%u, tsId=%u, "
+            "halCqReportGet call failed, drvRetCode=%d, drvDevId=%u, tsId=%u, "
             "type=DRV_LOGIC_TYPE(%u), cqId=%u.",
             static_cast<int32_t>(drvReportGetRet), waitInfo.devId, repGetInputInfo.tsId,
             static_cast<uint32_t>(repGetInputInfo.type), repGetInputInfo.cqId);

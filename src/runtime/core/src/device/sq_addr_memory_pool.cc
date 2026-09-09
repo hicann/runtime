@@ -77,7 +77,9 @@ uint32_t SqAddrMemoryOrder::GetMemOrderTypeByMemSize(const uint32_t memSize) con
 uint32_t SqAddrMemoryOrder::GetMemOrderSizeByMemOrderType(const uint32_t memOrderType) const
 {
     if (memOrderType >= SQ_ADDR_MEM_ORDER_TYPE_MAX) {
-        RT_LOG(RT_LOG_ERROR, "invalid memOrderType=%u", memOrderType);
+        RT_LOG(
+            RT_LOG_ERROR, "invalid memOrderType=%u, range=[0, %u).", memOrderType,
+            static_cast<uint32_t>(SQ_ADDR_MEM_ORDER_TYPE_MAX));
         return UINT32_MAX;
     }
 
@@ -163,7 +165,8 @@ rtError_t SqAddrMemoryOrder::AllocSqAddr(const uint32_t memOrderType, uint64_t**
     }
 
     BufferAllocator* sqAddrAllocator = FindSqMemPoolByMemOrderType(memOrderType);
-    COND_RETURN_WARN(sqAddrAllocator == nullptr, RT_ERROR_INVALID_VALUE, "invalid memOrderType=%u.", memOrderType);
+    COND_RETURN_WARN(
+        sqAddrAllocator == nullptr, RT_ERROR_INVALID_VALUE, "SQ allocator unavailable, memOrderType=%u.", memOrderType);
 
     *sqAddr = RtPtrToPtr<uint64_t*, void*>(sqAddrAllocator->AllocItem());
     if (*sqAddr == nullptr) {
@@ -183,7 +186,8 @@ rtError_t SqAddrMemoryOrder::FreeSqAddr(const uint64_t* sqAddr, const uint32_t m
     }
 
     BufferAllocator* sqAddrAllocator = FindSqMemPoolByMemOrderType(memOrderType);
-    COND_RETURN_WARN(sqAddrAllocator == nullptr, RT_ERROR_INVALID_VALUE, "invalid memOrderType=%u.", memOrderType);
+    COND_RETURN_WARN(
+        sqAddrAllocator == nullptr, RT_ERROR_INVALID_VALUE, "SQ allocator unavailable, memOrderType=%u.", memOrderType);
 
     const int32_t id = sqAddrAllocator->GetIdByItem(RtPtrToPtr<const void* const, const uint64_t*>(sqAddr));
     if (id < 0) {

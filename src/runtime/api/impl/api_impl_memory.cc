@@ -239,7 +239,7 @@ rtError_t ApiImpl::HostUnregister(void* ptr)
             ErasePinnedMemory(ptr);
         }
         if ((!isMapped) && (!isPinned)) {
-            RT_LOG(RT_LOG_INFO, "set to error RT_ERROR_HOST_MEMORY_NOT_REGISTERED because of not registered.");
+            RT_LOG(RT_LOG_WARNING, "host memory is not registered.");
             error = RT_ERROR_HOST_MEMORY_NOT_REGISTERED;
         }
     }
@@ -895,7 +895,7 @@ rtError_t ApiImpl::MemMallocPhysical(rtMemHandle* handle, size_t size, rtMallocP
         type = 0UL;
         pgType = 0UL;
     } else {
-        RT_LOG(RT_LOG_ERROR, "invalid policy %#llx", policy);
+        RT_LOG(RT_LOG_ERROR, "invalid policy=%#llx, expected HBM huge-only or normal-only.", policy);
         return RT_ERROR_INVALID_VALUE;
     }
 

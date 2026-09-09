@@ -105,7 +105,7 @@ void* H2HCopyMgr::MallocBuffer(const size_t size, void* const para)
     void* addr = nullptr;
     addr = malloc(size);
     if (addr == nullptr) {
-        RT_LOG(RT_LOG_ERROR, "malloc Host addr failed, retCode=%#x, size=%u(bytes)", size);
+        RT_LOG(RT_LOG_ERROR, "malloc host memory failed, size=%zu(bytes).", size);
         return nullptr;
     }
     return addr;

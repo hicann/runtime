@@ -126,7 +126,7 @@ aclError InitSocVersion()
         char_t socVersion[SOC_VERSION_LEN] = {};
         const auto rtErr = rtGetSocVersion(socVersion, static_cast<uint32_t>(sizeof(socVersion)));
         if (rtErr != RT_ERROR_NONE) {
-            ACL_LOG_INFO("Cannot get soc version, runtime errorCode is %d", static_cast<int32_t>(rtErr));
+            ACL_LOG_INFO("Cannot get soc version, runtime retCode=%d", static_cast<int32_t>(rtErr));
             return ACL_GET_ERRCODE_RTS(rtErr);
         }
         aclSocVersion = std::string(socVersion);
@@ -192,7 +192,7 @@ const char* aclrtGetSocNameImpl()
     // get socVersion
     const auto ret = acl::InitSocVersion();
     if (ret != ACL_SUCCESS) {
-        ACL_LOG_INFO("Cannot init soc version, errorCode = %d", ret);
+        ACL_LOG_INFO("Cannot init soc version, retCode = %d", ret);
         return nullptr;
     }
     ACL_LOG_INFO("execute aclrtGetSocName successfully");

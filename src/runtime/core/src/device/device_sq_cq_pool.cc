@@ -158,7 +158,7 @@ rtError_t DeviceSqCqPool::AllocSqCq(const uint32_t allcocNum, rtDeviceSqCqInfo_t
     const std::lock_guard<std::mutex> deviceSqCqLock(deviceSqCqLock_);
     if (deviceSqCqFreeList_.size() < allcocNum) {
         const rtError_t error = BatchAllocSqCq(allcocNum - static_cast<uint32_t>(deviceSqCqFreeList_.size()));
-        COND_RETURN_INFO(
+        COND_RETURN_WARN(
             (error != RT_ERROR_NONE), error, "Unable to allocate SQ and CQ, allocNum=%u, retCode=%#x.", allcocNum,
             static_cast<uint32_t>(error));
     }

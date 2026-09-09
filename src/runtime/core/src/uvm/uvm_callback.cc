@@ -177,7 +177,9 @@ void UvmCallback::PrefetchCallbackWrapper(void* userData)
     }
 
     if (params->location.type > DRV_UVM_LOCATION_TYPE_HOST_NUMA) {
-        RT_LOG(RT_LOG_ERROR, "Invalid memory side");
+        RT_LOG(
+            RT_LOG_ERROR, "Invalid memory location type=%u, range=[0, %u].",
+            static_cast<uint32_t>(params->location.type), static_cast<uint32_t>(DRV_UVM_LOCATION_TYPE_HOST_NUMA));
         DELETE_O(params);
         return;
     }

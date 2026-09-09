@@ -184,7 +184,7 @@ rtError_t SyncTaskForSeparateSendAndRecycle(Stream* const stm, const uint32_t ta
         (dev->GetDeviceStatus() == RT_ERROR_DEVICE_TASK_ABORT), RT_ERROR_DEVICE_TASK_ABORT,
         "Device is in the abort state.");
     RT_LOG(
-        RT_LOG_INFO, "device_id=%d, stream_id=%d, taskResPos=%u timeout=%u.", stm->Device_()->Id_(), stm->Id_(),
+        RT_LOG_INFO, "device_id=%d, stream_id=%d, taskResPos=%u timeout=%dms.", stm->Device_()->Id_(), stm->Id_(),
         taskResPos, timeout);
 
     rtError_t error;

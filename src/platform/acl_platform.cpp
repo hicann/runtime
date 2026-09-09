@@ -111,7 +111,7 @@ aclError aclplatformGetDeviceInfo(aclplatformDevInfo infoType, char* value, uint
     // --- parameter validation ---
     const uint32_t info_idx = static_cast<uint32_t>(infoType);
     if (info_idx >= static_cast<uint32_t>(kDevInfoTable.size())) {
-        PF_LOGE("Invalid info type %u.", info_idx);
+        PF_LOGE("Invalid info type=%u, valid range=[0, %zu).", info_idx, kDevInfoTable.size());
         return ACL_ERROR_INVALID_PARAM;
     }
     if (value == nullptr) {
@@ -151,7 +151,10 @@ aclError aclplatformGetInstructionInfo(aclplatformCoreType type, const char* ins
 {
     // --- parameter validation ---
     if (type != ACL_PLATFORM_CORE_TYPE_AI_CORE && type != ACL_PLATFORM_CORE_TYPE_VECTOR_CORE) {
-        PF_LOGE("Invalid core type %d.", static_cast<int>(type));
+        PF_LOGE(
+            "Invalid core type=%d. Expected ACL_PLATFORM_CORE_TYPE_AI_CORE(0) or "
+            "ACL_PLATFORM_CORE_TYPE_VECTOR_CORE(1).",
+            static_cast<int>(type));
         return ACL_ERROR_INVALID_PARAM;
     }
     if (instruction == nullptr) {

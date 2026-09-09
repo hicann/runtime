@@ -418,7 +418,7 @@ rtError_t ApiImpl::GetDeviceVirtualInfo(uint32_t deviceId, int64_t* val) const
         } else if (split_mode == RT_VMNG_VIRTUAL_SPLIT_MODE || split_mode == RT_VMNG_CONTAINER_SPLIT_MODE) {
             *val = static_cast<int64_t>(RT_SPLIT_MODE);
         } else {
-            RT_LOG(RT_LOG_INFO, "Invalid split mode, Invalid=%d.", split_mode);
+            RT_LOG(RT_LOG_WARNING, "Invalid split mode=%u.", split_mode);
         }
     } else {
         DRV_ERROR_PROCESS(

@@ -177,7 +177,7 @@ aclError aclrtBinaryGetDevAddressImpl(const aclrtBinHandle binHandle, void** bin
 
     const auto rtErr = rtsBinaryGetDevAddress(binHandle, binAddr, &tempBinSize);
     if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_INFO("get bin address failed, runtime result = %d", rtErr);
+        ACL_LOG_WARN("get bin address failed, runtime result = %d", rtErr);
         return ACL_GET_ERRCODE_RTS(rtErr);
     }
     *binSize = static_cast<size_t>(tempBinSize);

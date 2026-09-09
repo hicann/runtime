@@ -548,7 +548,7 @@ rtError_t ApiProfileLogDecorator::NameStream(Stream* const stm, const char_t* co
 
     const uint32_t nameLen = strnlen(name, static_cast<size_t>(M_PROF_STREAM_NAME_LEN));
     if (nameLen >= static_cast<uint32_t>(M_PROF_STREAM_NAME_LEN)) {
-        RT_LOG(RT_LOG_ERROR, "stream name too long, range[0, %u).", M_PROF_STREAM_NAME_LEN);
+        RT_LOG(RT_LOG_ERROR, "stream name too long, length=%u, range=[0, %u).", nameLen, M_PROF_STREAM_NAME_LEN);
         return RT_ERROR_PROF_NAME;
     }
     stm->SetName(name);

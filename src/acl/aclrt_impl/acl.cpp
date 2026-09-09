@@ -1257,7 +1257,7 @@ static std::string GetFaultEventInfo()
     int32_t deviceId = 0;
     auto ret = rtGetDevice(&deviceId);
     if (ret != RT_ERROR_NONE) {
-        ACL_LOG_INFO("Cannot get device id, runtime errorCode is %d", static_cast<int32_t>(ret));
+        ACL_LOG_INFO("Cannot get device id, runtime retCode=%d", static_cast<int32_t>(ret));
         return faultInfo;
     }
 
@@ -1267,8 +1267,7 @@ static std::string GetFaultEventInfo()
     uint32_t eventCount = 0U;
     ret = rtGetFaultEvent(deviceId, &filter, &faultEventInfo[0U], maxFaultNum, &eventCount);
     if (ret != RT_ERROR_NONE || eventCount == 0UL) {
-        ACL_LOG_INFO(
-            "Cannot get fault event of device %d, runtime errorCode is %d", deviceId, static_cast<int32_t>(ret));
+        ACL_LOG_INFO("Cannot get fault event of device %d, runtime retCode=%d", deviceId, static_cast<int32_t>(ret));
         return faultInfo;
     }
 

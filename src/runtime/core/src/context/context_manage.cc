@@ -368,7 +368,9 @@ rtError_t ContextManage::DeviceTaskAbort(const int32_t devId, const uint32_t tim
 
     timeCost = (static_cast<uint64_t>(tv[index].tv_sec) * RT_MS_PER_S) +
                (static_cast<uint64_t>(tv[index].tv_usec) / RT_US_TO_MS) - startTime;
-    COND_GOTO_ERROR(((timeout != 0U) && (timeCost > timeout)), TIMEINFO, error, RT_ERROR_WAIT_TIMEOUT, "timeout.");
+    COND_GOTO_ERROR(
+        ((timeout != 0U) && (timeCost > timeout)), TIMEINFO, error, RT_ERROR_WAIT_TIMEOUT,
+        "task abort timeout, elapsed=%llums, limit=%ums.", static_cast<unsigned long long>(timeCost), timeout);
     error = rtInstance->TaskAbortCallBack(devId, RT_DEVICE_ABORT_PRE, (timeout != 0U) ? (timeout - timeCost) : timeout);
     mmGetTimeOfDay(&tv[++index], nullptr);
     ERROR_GOTO_MSG_INNER(error, TIMEINFO, "Failed to abort pre callback, retCode=%#x.", static_cast<uint32_t>(error));
@@ -379,14 +381,18 @@ rtError_t ContextManage::DeviceTaskAbort(const int32_t devId, const uint32_t tim
 
     timeCost = (static_cast<uint64_t>(tv[index].tv_sec) * RT_MS_PER_S) +
                (static_cast<uint64_t>(tv[index].tv_usec) / RT_US_TO_MS) - startTime;
-    COND_GOTO_ERROR(((timeout != 0U) && (timeCost > timeout)), TIMEINFO, error, RT_ERROR_WAIT_TIMEOUT, "timeout.");
+    COND_GOTO_ERROR(
+        ((timeout != 0U) && (timeCost > timeout)), TIMEINFO, error, RT_ERROR_WAIT_TIMEOUT,
+        "task abort timeout, elapsed=%llums, limit=%ums.", static_cast<unsigned long long>(timeCost), timeout);
     error = DeviceQuery(devId, APP_ABORT_KILL_FINISH, (timeout != 0U) ? (timeout - timeCost) : timeout);
     mmGetTimeOfDay(&tv[++index], nullptr);
     ERROR_GOTO_MSG_INNER(error, TIMEINFO, "Failed to query device status, retCode=%#x.", static_cast<uint32_t>(error));
 
     timeCost = (static_cast<uint64_t>(tv[index].tv_sec) * RT_MS_PER_S) +
                (static_cast<uint64_t>(tv[index].tv_usec) / RT_US_TO_MS) - startTime;
-    COND_GOTO_ERROR(((timeout != 0U) && (timeCost > timeout)), TIMEINFO, error, RT_ERROR_WAIT_TIMEOUT, "timeout.");
+    COND_GOTO_ERROR(
+        ((timeout != 0U) && (timeCost > timeout)), TIMEINFO, error, RT_ERROR_WAIT_TIMEOUT,
+        "task abort timeout, elapsed=%llums, limit=%ums.", static_cast<unsigned long long>(timeCost), timeout);
     error =
         rtInstance->TaskAbortCallBack(devId, RT_DEVICE_ABORT_POST, (timeout != 0U) ? (timeout - timeCost) : timeout);
     mmGetTimeOfDay(&tv[++index], nullptr);
@@ -394,7 +400,9 @@ rtError_t ContextManage::DeviceTaskAbort(const int32_t devId, const uint32_t tim
 
     timeCost = (static_cast<uint64_t>(tv[index].tv_sec) * RT_MS_PER_S) +
                (static_cast<uint64_t>(tv[index].tv_usec) / RT_US_TO_MS) - startTime;
-    COND_GOTO_ERROR(((timeout != 0U) && (timeCost > timeout)), TIMEINFO, error, RT_ERROR_WAIT_TIMEOUT, "timeout.");
+    COND_GOTO_ERROR(
+        ((timeout != 0U) && (timeCost > timeout)), TIMEINFO, error, RT_ERROR_WAIT_TIMEOUT,
+        "task abort timeout, elapsed=%llums, limit=%ums.", static_cast<unsigned long long>(timeCost), timeout);
 
     error = DeviceQuery(devId, APP_ABORT_TERMINATE_FINISH, (timeout != 0U) ? (timeout - timeCost) : timeout);
     ERROR_GOTO_MSG_INNER(

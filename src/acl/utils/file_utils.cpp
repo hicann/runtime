@@ -23,7 +23,9 @@ aclError GetSoRealPath(std::string& path)
     }
 
     if (strlen(dlInfo.dli_fname) >= MMPA_MAX_PATH) {
-        ACL_LOG_WARN("The shared library path is too long!");
+        ACL_LOG_WARN(
+            "Shared library path is too long, length=%zu, limit=%zu.", strlen(dlInfo.dli_fname),
+            static_cast<size_t>(MMPA_MAX_PATH));
         return ACL_ERROR_INTERNAL_ERROR;
     }
 

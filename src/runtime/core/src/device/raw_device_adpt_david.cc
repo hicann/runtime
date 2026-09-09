@@ -52,8 +52,8 @@ rtError_t RawDevice::AllocSimtStackPhyBase(const rtChipType_t chipType)
 
     const rtError_t error = driver_->DevMemAlloc(&simtStackPhyBase_, stackPhySize, RT_MEMORY_DDR, deviceId_);
     RT_LOG(
-        RT_LOG_DEBUG, "AllocStackPhyBase device_id=%u, simtStackPhyBase_=0x%llx, stackPhySize=%u.", deviceId_,
-        RtPtrToValue(simtStackPhyBase_), stackPhySize);
+        RT_LOG_DEBUG, "AllocStackPhyBase device_id=%u, simtStackPhyBase_=0x%llx, stackPhySize=%llu(bytes).", deviceId_,
+        RtPtrToValue(simtStackPhyBase_), static_cast<unsigned long long>(stackPhySize));
     COND_RETURN_ERROR(
         (error != RT_ERROR_NONE) || (simtStackPhyBase_ == nullptr), error,
         "Alloc simt stack phy base failed, mem alloc failed, retCode=%#x.", static_cast<uint32_t>(error));
@@ -112,8 +112,9 @@ rtError_t RawDevice::AllocStackPhyBaseDavid()
     RT_LOG(
         RT_LOG_INFO,
         "device_id=%u, stackPhyBase32k_=0x%llx, stackPhyBase32kAlign_=0x%llx, "
-        "stackPhySize=%u.",
-        deviceId_, RtPtrToValue(stackPhyBase32k_), RtPtrToValue(stackPhyBase32kAlign_), stackPhySize);
+        "stackPhySize=%llu(bytes).",
+        deviceId_, RtPtrToValue(stackPhyBase32k_), RtPtrToValue(stackPhyBase32kAlign_),
+        static_cast<unsigned long long>(stackPhySize));
     return RT_ERROR_NONE;
 }
 

@@ -1094,14 +1094,14 @@ rtError_t ApiImpl::BinaryUnLoad(Program* const binHandle)
         RT_LOG(RT_LOG_DEBUG, "BinaryUnLoad deviceId=%u, prog=0x%x.", dev->Id_(), binHandle);
         error = Runtime::Instance()->BinaryUnLoad(dev, binHandle);
         if (error != RT_ERROR_NONE) {
-            RT_LOG(RT_LOG_WARNING, "register program failed, retCode=%#x", error);
+            RT_LOG(RT_LOG_WARNING, "binary unload failed, retCode=%#x", error);
             return error;
         }
     } else {
         for (uint32_t i = 0U; i < RT_MAX_DEV_NUM; i++) {
             rtError_t tmpError = binHandle->FreeSoAndNameByDeviceId(i);
             if (tmpError != RT_ERROR_NONE) {
-                RT_LOG(RT_LOG_WARNING, "free program device_id=%u memory failed, retCode=%#x", i, error);
+                RT_LOG(RT_LOG_WARNING, "free program device_id=%u memory failed, retCode=%#x", i, tmpError);
                 error = (error != RT_ERROR_NONE) ? tmpError : error;
             }
         }
@@ -2666,7 +2666,10 @@ static rtError_t LaunchAsyncCopy(
             (static_cast<char_t*>(dst)) + doneSize, destMax - doneSize, (static_cast<const char_t*>(src)) + doneSize,
             doingSize, kind, stm, &realSize, nullptr, cfgInfo, addrCfg);
         if (error != RT_ERROR_NONE) {
-            RT_LOG(RT_LOG_ERROR, "cnt=%lld, doingSize=%lld, realSize=%lld.", cnt, doingSize, realSize);
+            RT_LOG(
+                RT_LOG_ERROR,
+                "MemcpyAsync failed, retCode=%#x, count=%" PRIu64 ", doingSize=%" PRIu64 ", realSize=%" PRIu64 ".",
+                static_cast<uint32_t>(error), cnt, doingSize, realSize);
             return error;
         }
         doneSize += realSize;

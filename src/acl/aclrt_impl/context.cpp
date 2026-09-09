@@ -79,7 +79,7 @@ aclError aclrtGetCurrentContextImpl(aclrtContext* context)
     rtContext_t rtCtx = nullptr;
     const rtError_t rtErr = rtCtxGetCurrent(&rtCtx);
     if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_INFO("Cannot get current context, runtime errorCode is %d", static_cast<int32_t>(rtErr));
+        ACL_LOG_INFO("Cannot get current context, runtime retCode=%d", static_cast<int32_t>(rtErr));
         return ACL_GET_ERRCODE_RTS(rtErr);
     }
 

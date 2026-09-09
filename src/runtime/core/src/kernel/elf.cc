@@ -191,8 +191,7 @@ std::unique_ptr<char_t[]> GetStringTableCopy(const char_t* const src, const uint
     if (ret != EOK) {
         RT_LOG_INNER_MSG(
             RT_LOG_ERROR,
-            "Failed to call memcpy_s to copy string table, dest=%p, dest_max=%" PRIu64 ", src=%p, count=%" PRIu64
-            ", retCode=%d.",
+            "memcpy_s failed for string table, dest=%p, dest_max=%" PRIu64 ", src=%p, count=%" PRIu64 ", retCode=%d.",
             stringTbl, size, src, size, ret);
         return nullptr;
     }
@@ -816,13 +815,15 @@ void ParseElfBinaryMetaInfo(rtElfData* const elfData, const uint8_t* buf, uint64
 void ParseElfStackInfoFromSection(rtElfData* const elfData, const uint8_t* buf, uint32_t bufLen)
 {
     if ((bufLen < sizeof(uint64_t)) || ((bufLen % sizeof(uint64_t)) != 0U)) {
-        RT_LOG(RT_LOG_ERROR, "stack info is invalid, bufLen=%u", bufLen);
+        RT_LOG(RT_LOG_ERROR, "invalid bufLen=%u, min=%zu, multiple=%zu.", bufLen, sizeof(uint64_t), sizeof(uint64_t));
         return;
     }
 
     const uint64_t stackSize = static_cast<uint64_t>(GetByte(buf, sizeof(uint64_t)));
     if ((stackSize != KERNEL_STACK_SIZE_16K) && (stackSize != KERNEL_STACK_SIZE_32K)) {
-        RT_LOG(RT_LOG_EVENT, "stack size is invalid, stackSize=%llu", stackSize);
+        RT_LOG(
+            RT_LOG_EVENT, "invalid stackSize=%lluB, expected=%uB or %uB.", static_cast<unsigned long long>(stackSize),
+            KERNEL_STACK_SIZE_16K, KERNEL_STACK_SIZE_32K);
         return;
     }
 
@@ -1523,7 +1524,7 @@ static int32_t GetFileHeader(rtElfData* const elfData)
         elfData->elf_header.e_ident, static_cast<size_t>(EI_NIDENT), elfData->obj_ptr, static_cast<size_t>(EI_NIDENT));
     COND_RETURN_ERROR_MSG_CALL(
         ERR_MODULE_SYSTEM, ret != EOK, ELF_FAIL,
-        "Failed to call memcpy_s to copy the elf_header.e_ident, dest=%p, dest_max=%zu, src=%p, count=%zu, retCode=%d.",
+        "memcpy_s failed for elf_header.e_ident, dest=%p, dest_max=%zu, src=%p, count=%zu, retCode=%d.",
         elfData->elf_header.e_ident, static_cast<size_t>(EI_NIDENT), elfData->obj_ptr, static_cast<size_t>(EI_NIDENT),
         ret);
     elfData->obj_ptr += EI_NIDENT;
@@ -1544,8 +1545,8 @@ static int32_t GetFileHeader(rtElfData* const elfData)
         ret = memcpy_s(&hdr[0], tmpSize, elfData->obj_ptr, tmpSize);
         COND_RETURN_ERROR_MSG_CALL(
             ERR_MODULE_SYSTEM, ret != EOK, ELF_FAIL,
-            "Failed to call memcpy_s to copy elf header, dest=%p, dest_max=%zu, src=%p, count=%zu, retCode=%d.",
-            &hdr[0], tmpSize, elfData->obj_ptr, tmpSize, ret);
+            "memcpy_s failed for ELF header, dest=%p, dest_max=%zu, src=%p, count=%zu, retCode=%d.", &hdr[0], tmpSize,
+            elfData->obj_ptr, tmpSize, ret);
         elfData->obj_ptr += tmpSize;
         elfData->elf_header.e_type = static_cast<uint16_t>(GetByte(static_cast<const uint8_t*>(&hdr[0]), 2));
         elfData->elf_header.e_machine = static_cast<uint16_t>(GetByte(static_cast<const uint8_t*>(hdr + 2), 2));
@@ -1778,8 +1779,8 @@ rtError_t GetBinaryMetaInfo(
         const errno_t ret = memcpy_s(data[i], dataSize[i], metaInfo[i].first, metaInfo[i].second);
         COND_RETURN_ERROR_MSG_CALL(
             ERR_MODULE_SYSTEM, ret != EOK, ELF_FAIL,
-            "Failed to call memcpy_s to copy metaInfo, dest=%p, dest_max=%zu, src=%p, count=%u, retCode=%d.", data[i],
-            dataSize[i], metaInfo[i].first, metaInfo[i].second, ret);
+            "memcpy_s failed for metaInfo, dest=%p, dest_max=%zu, src=%p, count=%u, retCode=%d.", data[i], dataSize[i],
+            metaInfo[i].first, metaInfo[i].second, ret);
 
         RT_LOG(RT_LOG_INFO, "Get meta info segment, type=%u, size=%zu", type, dataSize[i]);
     }
@@ -1840,7 +1841,7 @@ rtError_t GetFunctionMetaInfo(
     const errno_t ret = memcpy_s(data, length, metaInfo[0].first, metaInfo[0].second);
     COND_RETURN_ERROR_MSG_CALL(
         ERR_MODULE_SYSTEM, ret != EOK, ELF_FAIL,
-        "Failed to call memcpy_s to copy metaInfo, dest=%p, dest_max=%u, src=%p, count=%u, retCode=%d.", data, length,
+        "memcpy_s failed for metaInfo, dest=%p, dest_max=%u, src=%p, count=%u, retCode=%d.", data, length,
         metaInfo[0].first, metaInfo[0].second, ret);
     return RT_ERROR_NONE;
 }

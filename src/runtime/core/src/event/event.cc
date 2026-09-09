@@ -986,7 +986,7 @@ void Event::UpdateTimeline()
     error =
         device_->GetStreamSqCqManage()->GetStreamSharedPtrById(static_cast<uint32_t>(latestRecordInfo.streamId), stm);
     COND_RETURN_NORMAL(
-        ((error != RT_ERROR_NONE) || (stm == nullptr)), "Failed to query stream, stream_id=%d, retCode=%#x.",
+        ((error != RT_ERROR_NONE) || (stm == nullptr)), "Stream query unsuccessful, stream_id=%d, retCode=%#x.",
         latestRecordInfo.streamId, static_cast<uint32_t>(error));
     bool updateFlag = false;
     for (auto& item : recordResetMap_) {

@@ -142,14 +142,14 @@ rtError_t MemWriteValue(const void* const devAddr, const uint64_t value, const u
     rtMemWriteValueTask->type = TS_TASK_TYPE_MEM_WRITE_VALUE;
     error = MemWriteValueTaskInit(rtMemWriteValueTask, devAddr, value);
     ERROR_RETURN_MSG_INNER(
-        error, "Failed to initialize memory wait value task, stream_id=%d, retCode=%#x.", streamId,
+        error, "Failed to initialize memory write value task, stream_id=%d, retCode=%#x.", streamId,
         static_cast<uint32_t>(error));
     MemWriteValueTaskInfo* memWriteValueTask = &rtMemWriteValueTask->u.memWriteValueTask;
     memWriteValueTask->awSize = RT_STARS_WRITE_VALUE_SIZE_TYPE_64BIT;
     rtMemWriteValueTask->stmArgPos = static_cast<DavidStream*>(dstStm)->GetArgPos();
     error = DavidSendTask(rtMemWriteValueTask, dstStm);
     ERROR_RETURN_MSG_INNER(
-        error, "Failed to submit memory wait value task, stream_id=%d, pos=%u, retCode=%#x.", streamId, pos,
+        error, "Failed to submit memory write value task, stream_id=%d, pos=%u, retCode=%#x.", streamId, pos,
         static_cast<uint32_t>(error));
     tskErrRecycle.ReleaseGuard();
     stm->StreamUnLock();

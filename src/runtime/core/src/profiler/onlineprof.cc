@@ -65,7 +65,7 @@ rtError_t OnlineProf::OnlineProfMalloc(Stream* const stm)
     memRet = memset_s(hostRtMem, ONLINEPROF_MEM_SIZE, 0, ONLINEPROF_MEM_SIZE);
     COND_GOTO_ERROR_MSG_AND_ASSIGN_CALL(
         ERR_MODULE_SYSTEM, memRet != EOK, ERROR_FREE, ret, RT_ERROR_SEC_HANDLE,
-        "Failed to call memset_s to clear online profiling host runtime memory, "
+        "memset_s failed for profiling runtime memory, "
         "dest=%p, dest_max=%u, count=%u, retCode=%d.",
         hostRtMem, ONLINEPROF_MEM_SIZE, ONLINEPROF_MEM_SIZE, static_cast<int32_t>(memRet));
 
@@ -79,7 +79,7 @@ rtError_t OnlineProf::OnlineProfMalloc(Stream* const stm)
     memRet = memset_s(hostTsMem, ONLINEPROF_MEM_SIZE, 0, ONLINEPROF_MEM_SIZE);
     COND_GOTO_ERROR_MSG_AND_ASSIGN_CALL(
         ERR_MODULE_SYSTEM, memRet != EOK, ERROR_FREE, ret, RT_ERROR_SEC_HANDLE,
-        "Failed to call memset_s to clear online profiling host task scheduler memory, "
+        "memset_s failed for profiling scheduler memory, "
         "dest=%p, dest_max=%u, count=%u, retCode=%d.",
         hostTsMem, ONLINEPROF_MEM_SIZE, ONLINEPROF_MEM_SIZE, static_cast<int32_t>(memRet));
 
@@ -208,7 +208,8 @@ rtError_t OnlineProf::GetOnlineProfilingData(
     for (uint32_t profDataIndex = 0U; profDataIndex < profDataNum; profDataIndex++) {
         const uint64_t readIndex = *rtReadAddr;
         if (readIndex >= MAX_ONLINEPROF_NUM) {
-            RT_LOG_INNER_MSG(RT_LOG_ERROR, "Failed to read data, read index=%" PRIu64 " is invalid.", readIndex);
+            RT_LOG_INNER_MSG(
+                RT_LOG_ERROR, "Invalid readIndex=%" PRIu64 ", range=[0, %u).", readIndex, MAX_ONLINEPROF_NUM);
             break;
         }
 

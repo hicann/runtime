@@ -41,8 +41,8 @@ static rtError_t CheckMemoryParam(const rtDebugMemoryParam_t* const param)
         COND_RETURN_ERROR(
             (!isValid), RT_ERROR_INVALID_VALUE,
             "The read memory boundary exceeds the hardware memory boundary of the specified memory type,"
-            " debugMemType=%s(%d), srcAddr=0x%llx, memLen=%llu.",
-            DebugMemoryTypeName(param->debugMemType), param->debugMemType, param->srcAddr, param->memLen);
+            " debugMemType=%s(%d), srcAddr=0x%llx, memLen=%llu, boundary=%llu.",
+            DebugMemoryTypeName(param->debugMemType), param->debugMemType, param->srcAddr, param->memLen, iter->second);
     }
     if (param->debugMemType == RT_MEM_TYPE_REGISTER) {
         COND_RETURN_ERROR(

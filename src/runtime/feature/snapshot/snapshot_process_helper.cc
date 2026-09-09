@@ -76,7 +76,7 @@ rtError_t SnapShotResourceRestore(ContextDataManage& ctxMan)
                 continue;
             }
             ret = ctx->StreamsTaskClean();
-            ERROR_RETURN(ret, "clean stream, ret=%#x.", ret);
+            ERROR_RETURN(ret, "clean stream task failed, retCode=%#x.", ret);
             ret = ctx->StreamsRestore();
             ERROR_RETURN(ret, "Realloc stream id failed, ret=%#x.", ret);
         }

@@ -145,7 +145,7 @@ static rtError_t PollingSqDisable(const rtCqReport_t* logicCq, Stream* const fai
             if (spendTime > getSqTimeout) {
                 failStm->SetStreamStatus(StreamStatus::ABNORMAL);
                 RT_LOG(
-                    RT_LOG_ERROR, "sq disable timeout, stream_id=%d, sync remainTime=%d.", failStm->Id_(),
+                    RT_LOG_ERROR, "sq disable timeout, stream_id=%d, sync remainTime=%dms.", failStm->Id_(),
                     failStm->GetSyncRemainTime());
                 return RT_ERROR_REPORT_TIMEOUT;
             }

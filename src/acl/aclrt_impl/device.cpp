@@ -75,7 +75,7 @@ aclError aclrtSetDeviceWithoutTsdVXXImpl(int32_t deviceId)
     ACL_LOG_INFO("start to execute aclrtSetDeviceWithoutTsdVXX, deviceId = %d.", deviceId);
     const std::string& socVersion = acl::GetSocVersion();
     if (strncmp(socVersion.c_str(), "Ascend910", (sizeof("Ascend910") - 1UL)) != 0) {
-        ACL_LOG_INFO("The soc version is not Ascend910, which is not supported");
+        ACL_LOG_WARN("The soc version is not Ascend910, which is not supported");
         acl::AclErrorLogManager::ReportInputError(
             acl::UNSUPPORTED_SYSTEM_MSG, {"func"},
             {"aclrtSetDeviceWithoutTsdVXX, only Ascend 910 chips are supported"});

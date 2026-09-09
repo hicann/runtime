@@ -1078,7 +1078,7 @@ acltdtChannelHandle* acltdtCreateChannelWithCapacity(uint32_t deviceId, const ch
     // queue init should be invoked when device is open
     const auto rtError = rtMemQueueInit(deviceId);
     if (rtError == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
-        ACL_LOG_INFO("queue init failed due to runtime does not support.");
+        ACL_LOG_INFO("runtime does not support queue init.");
         ACL_DELETE_AND_SET_NULL(handle);
         return nullptr;
     }

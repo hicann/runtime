@@ -514,7 +514,8 @@ rtError_t Notify::OpenIpcNotify(const char_t* const ipcNotifyName, uint32_t flag
     }
     COND_RETURN_ERROR(
         ((isPod_ == true) && (srvId_ > RT_NOTIFY_MAX_SRV_ID)), RT_ERROR_INVALID_VALUE,
-        "phyId_=%#x, srvId=%u, chipId=%u, dieId=%u, adcDieId=%u", phyId_, srvId_, chipId_, dieId_, adcDieId_);
+        "invalid srvId=%u, range=[0, %u], phyId_=%#x, chipId=%u, dieId=%u, adcDieId=%u", srvId_, RT_NOTIFY_MAX_SRV_ID,
+        phyId_, chipId_, dieId_, adcDieId_);
     return error;
 }
 } // namespace runtime

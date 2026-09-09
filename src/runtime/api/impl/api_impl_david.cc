@@ -990,7 +990,10 @@ rtError_t ApiImplDavid::MemcpyAsync(
             (static_cast<char_t*>(dst)) + doneSize, destMax - doneSize, (static_cast<const char_t*>(src)) + doneSize,
             doingSize, kind, curStm, &realSize, nullptr, cfgInfo, addrCfg);
         if (error != RT_ERROR_NONE) {
-            RT_LOG(RT_LOG_ERROR, "cnt=%lld, doingSize=%lld, realSize=%lld.", cnt, doingSize, realSize);
+            RT_LOG(
+                RT_LOG_ERROR,
+                "MemcpyAsync failed, retCode=%#x, count=%" PRIu64 ", doingSize=%" PRIu64 ", realSize=%" PRIu64 ".",
+                static_cast<uint32_t>(error), cnt, doingSize, realSize);
             return error;
         }
         doneSize += realSize;

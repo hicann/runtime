@@ -131,7 +131,9 @@ void RawDevice::InsertResInit(rtDevResLimitType_t type, uint32_t value)
     if (type < RT_DEV_RES_TYPE_MAX && type >= 0) {
         resInitArray_[type] = value;
     } else {
-        RT_LOG(RT_LOG_WARNING, "illegal device resource type");
+        RT_LOG(
+            RT_LOG_WARNING, "illegal device resource type=%d, valid range=[0, %d).", static_cast<int32_t>(type),
+            static_cast<int32_t>(RT_DEV_RES_TYPE_MAX));
     }
 }
 
@@ -140,7 +142,9 @@ uint32_t RawDevice::GetResInitValue(const rtDevResLimitType_t type) const
     if (type < RT_DEV_RES_TYPE_MAX && type >= 0) {
         return resInitArray_[type];
     }
-    RT_LOG(RT_LOG_WARNING, "illegal device resource type");
+    RT_LOG(
+        RT_LOG_WARNING, "illegal device resource type=%d, valid range=[0, %d).", static_cast<int32_t>(type),
+        static_cast<int32_t>(RT_DEV_RES_TYPE_MAX));
     return 0;
 }
 
@@ -149,7 +153,9 @@ void RawDevice::InsertResLimit(rtDevResLimitType_t type, uint32_t value)
     if (type < RT_DEV_RES_TYPE_MAX && type >= 0) {
         resLimitArray_[type] = value;
     } else {
-        RT_LOG(RT_LOG_WARNING, "illegal device resource type");
+        RT_LOG(
+            RT_LOG_WARNING, "illegal device resource type=%d, valid range=[0, %d).", static_cast<int32_t>(type),
+            static_cast<int32_t>(RT_DEV_RES_TYPE_MAX));
     }
 }
 
@@ -158,7 +164,9 @@ uint32_t RawDevice::GetResValue(const rtDevResLimitType_t type) const
     if (type < RT_DEV_RES_TYPE_MAX && type >= 0) {
         return resLimitArray_[type];
     }
-    RT_LOG(RT_LOG_WARNING, "illegal device resource type");
+    RT_LOG(
+        RT_LOG_WARNING, "illegal device resource type=%d, valid range=[0, %d).", static_cast<int32_t>(type),
+        static_cast<int32_t>(RT_DEV_RES_TYPE_MAX));
     return 0U;
 }
 

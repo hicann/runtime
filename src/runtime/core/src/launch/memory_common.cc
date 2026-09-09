@@ -133,14 +133,14 @@ rtError_t DevMemSetAsyncByMemcpy(
     Driver* const driver = stm->Device_()->Driver_();
     // driver->HostMemAlloc接口内已经默认做了512字节对齐
     rtError_t error = driver->HostMemAlloc(&hostPtr, setSize, stm->Device_()->Id_());
-    ERROR_RETURN(error, "Alloc host mem failed, size=%" PRIu64 ", retCode=%#x.", setSize, static_cast<uint32_t>(error));
+    ERROR_RETURN(error, "Host alloc failed, size=%" PRIu64 "B, retCode=%#x.", setSize, static_cast<uint32_t>(error));
     NULL_PTR_RETURN_MSG(hostPtr, RT_ERROR_MEMORY_ALLOCATION);
     // hostPtrGuard takes ownership: deleter calls HostMemFree on last reference.
     // Do NOT manually call HostMemFree after this point — shared_ptr handles it.
     hostPtrGuard.reset(hostPtr, [driver](void* p) { (void)driver->HostMemFree(p); });
     const errno_t ret = memset_s(hostPtr, setSize, static_cast<int32_t>(fillVal), setSize);
     if (ret != EOK) {
-        RT_LOG(RT_LOG_ERROR, "memset_s failed, retCode=%d, size=%" PRIu64, ret, setSize);
+        RT_LOG(RT_LOG_ERROR, "memset_s failed, retCode=%d, size=%" PRIu64 "B", ret, setSize);
         return RT_ERROR_SEC_HANDLE;
     }
 

@@ -94,7 +94,8 @@ rtError_t AllocCpyTmpMem(
         cpyType = RT_MEMCPY_HOST_TO_DEVICE;
         COND_RETURN_ERROR_MSG_INNER(
             ((MAX_UINT64_NUM - addrSize) < ASYNC_MEMORY_SIZE), RT_ERROR_INVALID_VALUE,
-            "The requested memory is too large and cannot be aligned, size=%" PRIu64 "(bytes).", addrSize);
+            "Size=%" PRIu64 "B exceeds max=%" PRIu64 "B.", addrSize,
+            MAX_UINT64_NUM - static_cast<uint64_t>(ASYNC_MEMORY_SIZE));
 
         if (stream->Device_()->IsAddrFlatDev()) {
             error = driver->HostMemAlloc(
@@ -168,7 +169,8 @@ rtError_t AllocCpyTmpMemForDavid(
         cpyType = RT_MEMCPY_HOST_TO_DEVICE;
         COND_RETURN_ERROR_MSG_INNER(
             ((MAX_UINT64_NUM - addrSize) < asyncMemorySize), RT_ERROR_INVALID_VALUE,
-            "The requested memory is too large and cannot be aligned, size=%" PRIu64 "(bytes).", addrSize);
+            "Size=%" PRIu64 "B exceeds max=%" PRIu64 "B.", addrSize,
+            MAX_UINT64_NUM - static_cast<uint64_t>(asyncMemorySize));
         error =
             driver->HostMemAlloc(&memcpyAsyncTaskInfo->srcPtr, (addrSize + asyncMemorySize), stream->Device_()->Id_());
         COND_RETURN_ERROR(
@@ -990,7 +992,7 @@ void RecycleTaskResourceForMemcpyAsyncTask(TaskInfo* const taskInfo)
         if (rc != EOK) {
             RT_LOG_INNER_MSG(
                 RT_LOG_ERROR,
-                "Failed to call memcpy_s to copy memcpyAsyncTaskInfo->destPtr,"
+                "memcpy_s failed for destPtr,"
                 " src=%p, dest=%p, dest_max=%" PRIu64 ", count=%" PRIu64 ", retCode=%#x.",
                 memcpyAsyncTaskInfo->destPtr, memcpyAsyncTaskInfo->originalDes, memcpyAsyncTaskInfo->size,
                 memcpyAsyncTaskInfo->size, rc);

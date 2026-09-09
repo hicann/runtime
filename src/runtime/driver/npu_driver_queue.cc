@@ -806,10 +806,10 @@ rtError_t NpuDriver::MemQueueQuery(
         static_cast<int32_t>(cmd));
     COND_RETURN_WARN(
         static_cast<size_t>(inLen) < sizeof(int32_t), RT_ERROR_INVALID_VALUE,
-        "[drv api] outputLen=%u(bytes) < %zu(bytes).", inLen, sizeof(int32_t));
+        "[drv api] inputLen=%u(bytes) < %zu(bytes).", inLen, sizeof(int32_t));
     COND_RETURN_WARN(
         static_cast<size_t>(*outLen) < sizeof(rtMemQueueShareAttr_t), RT_ERROR_INVALID_VALUE,
-        "[drv api] outputLen=%u(bytes) < %zu(bytes).", inLen, sizeof(rtMemQueueShareAttr_t));
+        "[drv api] outputLen=%u(bytes) < %zu(bytes).", *outLen, sizeof(rtMemQueueShareAttr_t));
 
     const QueueQueryCmdType drvCmd = static_cast<QueueQueryCmdType>(cmd);
 

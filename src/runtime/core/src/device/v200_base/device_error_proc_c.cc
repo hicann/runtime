@@ -802,7 +802,7 @@ void CheckAixErrorClassInFusionKernel(
 
     if ((info->u.fusionKernelErrorInfo.cqeStatus & FUSION_CQE_STATUS_ERROR_MASK) != FUSION_CQE_STATUS_ONLY_AIX_ERROR) {
         RT_LOG(
-            RT_LOG_INFO, "Fusion task not only happens aicore exception, cqeStatus=0x%x.",
+            RT_LOG_INFO, "Fusion task contains other status types, cqeStatus=0x%x.",
             info->u.fusionKernelErrorInfo.cqeStatus);
         return;
     }
@@ -973,7 +973,9 @@ rtError_t ProcessStarsV2CoreTimeoutDfxInfo(
         return RT_ERROR_NONE;
     }
     if (common.coreNum > (RT_STARS_V2_AICORE_NUM + RT_STARS_V2_AIVECTOR_NUM)) {
-        RT_LOG(RT_LOG_ERROR, "invalid coreNum: %u.", common.coreNum);
+        RT_LOG(
+            RT_LOG_ERROR, "invalid coreNum=%u, max=%u.", static_cast<uint32_t>(common.coreNum),
+            static_cast<uint32_t>(RT_STARS_V2_AICORE_NUM + RT_STARS_V2_AIVECTOR_NUM));
         return RT_ERROR_NONE;
     }
     // only print the core info where subError!=0(current_pc0==current_pc1)

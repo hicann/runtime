@@ -227,7 +227,7 @@ rtError_t CheckCaptureModelSupportSoftwareSq(const Device* const dev)
     }
 
     if (!(dev->CheckFeatureSupport(TS_FEATURE_SOFTWARE_SQ_ENABLE))) {
-        RT_LOG(RT_LOG_WARNING, "tsfw does not support");
+        RT_LOG(RT_LOG_WARNING, "TS firmware does not support software SQ.");
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
 
@@ -282,7 +282,7 @@ rtError_t CheckCaptureModelSupportCondOp(Device* const dev)
     }
 
     if (!(dev->CheckFeatureSupport(TS_FEATURE_ACLGRAPH_COND_OP))) {
-        RT_LOG(RT_LOG_WARNING, "tsfw does not support aclgraph condition operator, device_id=%u.", dev->Id_());
+        RT_LOG(RT_LOG_WARNING, "TS firmware does not support aclgraph condition operator, device_id=%u.", dev->Id_());
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
 

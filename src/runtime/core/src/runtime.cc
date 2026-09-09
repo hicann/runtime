@@ -1209,7 +1209,7 @@ rtError_t Runtime::InitCbSubscribe()
         error = halTsdrvCtl(RT_DEV_ZERO, TSDRV_CTL_CMD_CB_GROUP_NUM_GET, nullptr, 0, &maxGrpNum, &outSize);
     }
     if (error != DRV_ERROR_NONE) {
-        RT_LOG(RT_LOG_INFO, "Failed to get group num, use default value");
+        RT_LOG(RT_LOG_INFO, "Group count unavailable; use default.");
         maxGrpNum = RT_THREAD_GROUP_ID_MAX;
     }
 
@@ -4424,7 +4424,8 @@ rtError_t Runtime::TaskAbortCallBack(int32_t devId, rtTaskAbortStage_t stage, ui
             }
             auto callback = info.second.callbackV2;
             error = callback(userDeviceId, newStage, timeout, args);
-            ERROR_RETURN_MSG_INNER(error, "regName:%s retCode=%#x.", info.first.c_str(), error);
+            ERROR_RETURN_MSG_INNER(
+                error, "task abort callback failed, regName=%s, retCode=%#x.", info.first.c_str(), error);
         } else {
             RT_LOG_INNER_MSG(
                 RT_LOG_ERROR, "Notify task abort type UNKNOWN(%u) is invalid.", static_cast<uint32_t>(type));
@@ -5384,8 +5385,7 @@ rtError_t Runtime::FreeKernelBin(char_t* const buffer) const
 rtError_t Runtime::GetWatchDogDevStatus(uint32_t deviceId, rtDeviceStatus* deviceStatus)
 {
     if (deviceId > RT_MAX_DEV_NUM) {
-        RT_LOG_INNER_MSG(
-            RT_LOG_ERROR, "GetWatchDogDevStatus failed, param deviceId is invalid, drv devId=%u.", deviceId);
+        RT_LOG_INNER_MSG(RT_LOG_ERROR, "Invalid deviceId=%u, range=[0, %u].", deviceId, RT_MAX_DEV_NUM);
         return RT_ERROR_DEVICE_ID;
     }
     const std::unique_lock<std::mutex> lk(watchDogDevStatusMutex_);
@@ -5406,8 +5406,8 @@ rtError_t Runtime::SetWatchDogDevStatus(const Device* device, rtDeviceStatus dev
         const uint32_t tsId = device->DevGetTsId();
         if ((deviceId > RT_MAX_DEV_NUM) || (tsId >= RT_MAX_TS_NUM)) {
             RT_LOG_INNER_MSG(
-                RT_LOG_ERROR, "SetWatchDogDevStatus failed, param device is invalid, devId=%u, tsId=%u.", deviceId,
-                tsId);
+                RT_LOG_ERROR, "Invalid deviceId=%u range=[0, %u], tsId=%u range=[0, %u).", deviceId, RT_MAX_DEV_NUM,
+                tsId, RT_MAX_TS_NUM);
             return RT_ERROR_DEVICE_ID;
         }
         const std::unique_lock<std::mutex> lk(watchDogDevStatusMutex_);

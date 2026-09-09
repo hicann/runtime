@@ -332,7 +332,7 @@ aclError GetAlignedAndPaddingSize(const size_t size, const bool isPadding, size_
 
     // check overflow before alignment calculation
     if ((size + appendSize) < size) {
-        ACL_LOG_INNER_ERROR("[Check][Size]size too large: %zu", size);
+        ACL_LOG_INNER_ERROR("[Check][Size]size=%zu exceeds maxSize=%zu.", size, SIZE_MAX - appendSize);
         return ACL_ERROR_INVALID_PARAM;
     }
 
@@ -1120,7 +1120,7 @@ aclError aclrtReserveMemAddressImpl(void** virPtr, size_t size, size_t alignment
 
     ACL_REQUIRES_POSITIVE_REPORT(size);
     // flags参数取1，为了早期接口兼容性保留
-    ACL_CHECK_INVALID_VALUE_WITH_EXPECT((flags == 0ULL) || (flags == 1ULL), flags, "0");
+    ACL_CHECK_INVALID_VALUE_WITH_EXPECT((flags == 0ULL) || (flags == 1ULL), flags, "0 or 1");
 
     ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(
         rtReserveMemAddress(virPtr, size, alignment, expectPtr, flags), rtReserveMemAddress);
@@ -2116,7 +2116,7 @@ aclError aclrtReserveMemAddressNoUCMemoryImpl(
 
     ACL_REQUIRES_POSITIVE_REPORT(size);
     // flags参数取1，为了早期接口兼容性保留
-    ACL_CHECK_INVALID_VALUE_WITH_EXPECT((flags == 0ULL) || (flags == 1ULL), flags, "0");
+    ACL_CHECK_INVALID_VALUE_WITH_EXPECT((flags == 0ULL) || (flags == 1ULL), flags, "0 or 1");
 
     flags = flags | FLAG_START_DYNAMIC_ALLOC_MEM; // bit 9置1
     ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(

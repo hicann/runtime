@@ -40,7 +40,7 @@ rtError_t MemcopyAsyncPtr(
 
     error = dev->Driver_()->MemCopySync(memcpyAddrInfo, cpySize, &sdmaSqe, cpySize, RT_MEMCPY_HOST_TO_DEVICE);
     ERROR_RETURN(
-        error, "Failed to memory copy info, device_id=%u, size=%u, retCode=%#x.", dev->Id_(), cpySize,
+        error, "Failed to memory copy info, device_id=%u, size=%u(bytes), retCode=%#x.", dev->Id_(), cpySize,
         static_cast<uint32_t>(error));
     error = CheckTaskCanSend(stm);
     ERROR_RETURN_MSG_INNER(

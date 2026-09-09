@@ -321,13 +321,13 @@ uint64_t PidTidFetcher::GetCurrentUserTid(void)
 
 Thread* OsalFactory::CreateThread(const char_t* const name, ThreadRunnable* const runnable, void* const param)
 {
-    RT_LOG(RT_LOG_INFO, "Runtime_alloc_size %zu", sizeof(LocalThread));
+    RT_LOG(RT_LOG_INFO, "Alloc size=%zuB", sizeof(LocalThread));
     return new (std::nothrow) LocalThread(name, runnable, param);
 }
 
 Notifier* OsalFactory::CreateNotifier()
 {
-    RT_LOG(RT_LOG_INFO, "Runtime_alloc_size %zu", sizeof(LocalNotifier));
+    RT_LOG(RT_LOG_INFO, "Alloc size=%zuB", sizeof(LocalNotifier));
     return new (std::nothrow) LocalNotifier();
 }
 
