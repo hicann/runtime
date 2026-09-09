@@ -14,6 +14,20 @@
 namespace cce {
 namespace runtime {
 
+rtError_t ApiImpl::NonBlockingLaunchBegin(Stream* const stream, const uint64_t flag)
+{
+    UNUSED(stream);
+    UNUSED(flag);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t ApiImpl::NonBlockingLaunchEnd(Stream* const stream, const uint64_t flag)
+{
+    UNUSED(stream);
+    UNUSED(flag);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
 rtError_t ApiImpl::FlushCache(const uint64_t base, const size_t len)
 {
     RT_LOG(RT_LOG_INFO, "flush cache base=%" PRIu64 ", len=%zu.", base, len);

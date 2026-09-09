@@ -19,6 +19,7 @@
 #include "profiler.hpp"
 #include "thread_local_container.hpp"
 #include "global_state_manager.hpp"
+#include "stream.hpp"
 #include <vector>
 #define INVALID_UINT32 (0xFFFFFFFFU)
 
@@ -439,64 +440,24 @@ VISIBILITY_DEFAULT
 rtError_t rtsStreamSetAttribute(rtStream_t stm, rtStreamAttr stmAttrId, rtStreamAttrValue_t* attrValue)
 {
     PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(attrValue, RT_ERROR_INVALID_VALUE);
-    rtError_t error;
     const Runtime* const rtInstance = Runtime::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
     Api* const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
 
-    switch (stmAttrId) {
-        case RT_STREAM_ATTR_FAILURE_MODE: {
-            COND_RETURN_WARN(
-                !IS_SUPPORT_CHIP_FEATURE(
-                    rtInstance->GetChipType(), RtOptionalFeatureType::RT_FEATURE_STREAM_ATTR_FAILURE_MODE),
-                ACL_ERROR_RT_FEATURE_NOT_SUPPORT, "chip type(%d) does not support.",
-                static_cast<int32_t>(rtInstance->GetChipType()));
-            error = apiInstance->StreamSetMode(exeStream, attrValue->failureMode);
-            break;
-        }
-        case RT_STREAM_ATTR_FLOAT_OVERFLOW_CHECK: {
-            if (!IS_SUPPORT_CHIP_FEATURE(
-                    rtInstance->GetChipType(), RtOptionalFeatureType::RT_FEATURE_STREAM_ATTR_OVERFLOW_CHECK)) {
-                RT_LOG(
-                    RT_LOG_WARNING, "chip type(%d) does not support, return success.",
-                    static_cast<int32_t>(rtInstance->GetChipType()));
-                return ACL_RT_SUCCESS;
-            }
-            error = apiInstance->SetStreamOverflowSwitch(exeStream, attrValue->overflowSwitch);
-            break;
-        }
-        case RT_STREAM_ATTR_USER_CUSTOM_TAG: {
-            if (!IS_SUPPORT_CHIP_FEATURE(
-                    rtInstance->GetChipType(), RtOptionalFeatureType::RT_FEATURE_STREAM_ATTR_USER_CUSTOM_TAG)) {
-                RT_LOG(
-                    RT_LOG_WARNING, "chip type(%d) does not support, return success.",
-                    static_cast<int32_t>(rtInstance->GetChipType()));
-                return ACL_RT_SUCCESS;
-            }
-            error = apiInstance->SetStreamTag(exeStream, attrValue->userCustomTag);
-            break;
-        }
-        case RT_STREAM_ATTR_CACHE_OP_INFO: {
-            error = apiInstance->SetStreamCacheOpInfoSwitch(exeStream, attrValue->cacheOpInfoSwitch);
-            break;
-        }
-        case RT_STREAM_ATTR_PRIORITY: {
-            error = apiInstance->SetStreamPriorityValue(exeStream, attrValue->streamPriority);
-            break;
-        }
-        default:
-            RT_LOG_OUTER_MSG_WITH_FUNC(
-                ErrorCode::EE1003,
-                RtFmtMsg(
-                    "%s(%d)", (stmAttrId == RT_STREAM_ATTR_MAX) ? "STREAM_ATTR_MAX" : "UNKNOWN",
-                    static_cast<int32_t>(stmAttrId)),
-                "stmAttrId",
-                "[" + std::to_string(RT_STREAM_ATTR_FAILURE_MODE) + ", " + std::to_string(RT_STREAM_ATTR_MAX) + ")");
-            error = RT_ERROR_INVALID_VALUE;
-            break;
+    if ((stmAttrId < RT_STREAM_ATTR_FAILURE_MODE) || (stmAttrId >= RT_STREAM_ATTR_MAX)) {
+        RT_LOG_OUTER_MSG_WITH_FUNC(
+            ErrorCode::EE1003,
+            RtFmtMsg(
+                "%s(%d)", (stmAttrId == RT_STREAM_ATTR_MAX) ? "STREAM_ATTR_MAX" : "UNKNOWN",
+                static_cast<int32_t>(stmAttrId)),
+            "stmAttrId",
+            "[" + std::to_string(RT_STREAM_ATTR_FAILURE_MODE) + ", " + std::to_string(RT_STREAM_ATTR_MAX) + ")");
+        ERROR_RETURN_WITH_EXT_ERRCODE(RT_ERROR_INVALID_VALUE);
     }
+    const rtError_t error = apiInstance->StreamSetAttribute(exeStream, stmAttrId, attrValue);
+    COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }
@@ -505,52 +466,24 @@ VISIBILITY_DEFAULT
 rtError_t rtsStreamGetAttribute(rtStream_t stm, rtStreamAttr stmAttrId, rtStreamAttrValue_t* attrValue)
 {
     PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(attrValue, RT_ERROR_INVALID_VALUE);
-    rtError_t error;
     const Runtime* const rtInstance = Runtime::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
     Api* const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
 
-    switch (stmAttrId) {
-        case RT_STREAM_ATTR_FAILURE_MODE: {
-            error = apiInstance->StreamGetMode(exeStream, &attrValue->failureMode);
-            break;
-        }
-        case RT_STREAM_ATTR_FLOAT_OVERFLOW_CHECK: {
-            error = apiInstance->GetStreamOverflowSwitch(exeStream, &attrValue->overflowSwitch);
-            break;
-        }
-        case RT_STREAM_ATTR_USER_CUSTOM_TAG: {
-            if (!IS_SUPPORT_CHIP_FEATURE(
-                    rtInstance->GetChipType(), RtOptionalFeatureType::RT_FEATURE_STREAM_ATTR_USER_CUSTOM_TAG)) {
-                RT_LOG(
-                    RT_LOG_WARNING, "chip type(%d) does not support, return success.",
-                    static_cast<int32_t>(rtInstance->GetChipType()));
-                return ACL_RT_SUCCESS;
-            }
-            error = apiInstance->GetStreamTag(exeStream, &attrValue->userCustomTag);
-            break;
-        }
-        case RT_STREAM_ATTR_CACHE_OP_INFO: {
-            error = apiInstance->GetStreamCacheOpInfoSwitch(exeStream, &attrValue->cacheOpInfoSwitch);
-            break;
-        }
-        case RT_STREAM_ATTR_PRIORITY: {
-            error = apiInstance->GetStreamPriorityValue(exeStream, &attrValue->streamPriority);
-            break;
-        }
-        default:
-            RT_LOG_OUTER_MSG_WITH_FUNC(
-                ErrorCode::EE1003,
-                RtFmtMsg(
-                    "%s(%d)", (stmAttrId == RT_STREAM_ATTR_MAX) ? "STREAM_ATTR_MAX" : "UNKNOWN",
-                    static_cast<int32_t>(stmAttrId)),
-                "stmAttrId",
-                "[" + std::to_string(RT_STREAM_ATTR_FAILURE_MODE) + ", " + std::to_string(RT_STREAM_ATTR_MAX) + ")");
-            error = RT_ERROR_INVALID_VALUE;
-            break;
+    if ((stmAttrId < RT_STREAM_ATTR_FAILURE_MODE) || (stmAttrId >= RT_STREAM_ATTR_MAX)) {
+        RT_LOG_OUTER_MSG_WITH_FUNC(
+            ErrorCode::EE1003,
+            RtFmtMsg(
+                "%s(%d)", (stmAttrId == RT_STREAM_ATTR_MAX) ? "STREAM_ATTR_MAX" : "UNKNOWN",
+                static_cast<int32_t>(stmAttrId)),
+            "stmAttrId",
+            "[" + std::to_string(RT_STREAM_ATTR_FAILURE_MODE) + ", " + std::to_string(RT_STREAM_ATTR_MAX) + ")");
+        ERROR_RETURN_WITH_EXT_ERRCODE(RT_ERROR_INVALID_VALUE);
     }
+    const rtError_t error = apiInstance->StreamGetAttribute(exeStream, stmAttrId, attrValue);
+    COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }

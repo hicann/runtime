@@ -10,6 +10,7 @@
 #include <cinttypes>
 #include <iomanip>
 #include "stream.hpp"
+#include "stream_launch_blocking.hpp"
 #include "device_enum_desc.hpp"
 #include "model_update_task.h"
 #include "runtime_handle_guard.h"
@@ -162,6 +163,8 @@ Stream::Stream(const Context* const stmCtx, const uint32_t prio, const uint32_t 
 
 Stream::~Stream()
 {
+    // Release optional state before the process-exit and device-fault early returns below.
+    StreamLaunchBlocking::ReleaseLaunchBlockingState(this);
     ResetEmbeddedInnerHandle<Stream>(this);
     Runtime* const rt = Runtime::Instance();
     if (Runtime::IsProcessExiting(rt)) {

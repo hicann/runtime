@@ -160,6 +160,8 @@
     _(aclError, aclrtDestroyStreamForce, (aclrtStream stream), (stream))                                               \
     _(aclError, aclrtSynchronizeStream, (aclrtStream stream), (stream))                                                \
     _(aclError, aclrtSynchronizeStreamWithTimeout, (aclrtStream stream, int32_t timeout), (stream, timeout))           \
+    _(aclError, aclrtNonBlockingLaunchBegin, (aclrtStream stream, uint64_t flag), (stream, flag))                      \
+    _(aclError, aclrtNonBlockingLaunchEnd, (aclrtStream stream, uint64_t flag), (stream, flag))                        \
     _(aclError, aclrtStreamQuery, (aclrtStream stream, aclrtStreamStatus * status), (stream, status))                  \
     _(aclError, aclrtStreamGetPriority, (aclrtStream stream, uint32_t * priority), (stream, priority))                 \
     _(aclError, aclrtStreamGetFlags, (aclrtStream stream, uint32_t * flags), (stream, flags))                          \

@@ -142,6 +142,7 @@ set(runtimeut_src_aclgraph_list
 )
 
 set(runtimeut_common_src_stream_list
+    ${TOP_DIR}/src/runtime/feature/launch_blocking/stream_launch_blocking.cc
     ${TOP_DIR}/src/runtime/core/src/stream/stream_sqcq_manage.cc
     ${TOP_DIR}/src/runtime/core/src/stream/engine_stream_observer.cc
     ${TOP_DIR}/src/runtime/core/src/stream/stream.cc
@@ -551,6 +552,7 @@ set(RUNTIME_TEST_INC_DIR_COMMON
     ${TOP_DIR}/src/runtime/core/src/memory/
     ${TOP_DIR}/src/runtime/feature/soma/
     ${TOP_DIR}/src/runtime/feature/snapshot/
+    ${TOP_DIR}/src/runtime/feature/launch_blocking/
     ${TOP_DIR}/src/runtime/feature/xpu/
     ${TOP_DIR}/src/runtime/core/src/event
     ${C_SEC_INCLUDE}

@@ -1083,6 +1083,7 @@ typedef union {
     uint32_t userCustomTag; 
     uint32_t cacheOpInfoSwitch;
     uint32_t streamPriority;
+    uint32_t launchBlockingMode;
     uint32_t reserve[4];
 } aclrtStreamAttrValue;
 ```
@@ -1094,6 +1095,7 @@ typedef union {
 | userCustomTag | 设置aclrtStreamAttr中的ACL_STREAM_ATTR_USER_CUSTOM_TAG（表示溢出检测分组标签）属性时，属性值的取值范围：0~uint32_t类型的最大值。 |
 | cacheOpInfoSwitch | 设置aclrtStreamAttr中的ACL_STREAM_ATTR_CACHE_OP_INFO （表示算子信息缓存开关）属性时，属性值的取值如下：<br><br>  - 0：关闭算子信息缓存开关。默认值为0。<br>  - 1：开启算子信息缓存开关。 |
 | streamPriority | 设置aclrtStreamAttr中的ACL_STREAM_ATTR_PRIORITY （表示stream优先级）属性时，属性值的取值范围：0~7 值越小优先级级别越高，默认值为0。|
+| launchBlockingMode | 设置aclrtStreamAttr中的ACL_STREAM_LAUNCH_BLOCKING_MODE属性时，用于控制以下接口在指定Stream上的执行模式为同步模式或异步模式：<br><br>  - aclrtLaunchKernel<br>  - aclrtLaunchKernelV2<br>  - aclrtLaunchKernelWithConfig<br>  - aclrtLaunchKernelWithHostArgs<br>  - aclrtLaunchKernelWithArgsArray<br>  - aclrtLaunchSIMTKernelWithArgsArray<br>  - aclrtLaunchSIMTKernelWithHostArgs<br>  - aclmdlRIExecuteAsync<br><br>属性值为如下宏：<br><br>  - ACL_STREAM_LAUNCH_BLOCKING_MODE_CTRL_BY_ENV：默认值。上述接口的执行模式由ASCEND_RT_LAUNCH_BLOCKING环境变量控制。环境变量配置为1时采用同步模式，其他情况采用异步模式。<br>  - ACL_STREAM_LAUNCH_BLOCKING_MODE_NON_BLOCKING：上述接口采用异步模式。<br>  - ACL_STREAM_LAUNCH_BLOCKING_MODE_BLOCKING：上述接口采用同步模式。<br><br>宏的定义如下：<br>#define ACL_STREAM_LAUNCH_BLOCKING_MODE_CTRL_BY_ENV 0x00000000U<br>#define ACL_STREAM_LAUNCH_BLOCKING_MODE_NON_BLOCKING 0x00000001U<br>#define ACL_STREAM_LAUNCH_BLOCKING_MODE_BLOCKING 0x00000002U<br><br>在[aclrtNonBlockingLaunchBegin](06_stream_management.md#aclrtNonBlockingLaunchBegin)和[aclrtNonBlockingLaunchEnd](06_stream_management.md#aclrtNonBlockingLaunchEnd)接口之间，指定Stream保持异步模式，不执行同步等待。 |
 | reserve | 预留值。 |
 
 <br>

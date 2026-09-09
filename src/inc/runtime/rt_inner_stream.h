@@ -43,6 +43,26 @@ RTS_API rtError_t rtStreamGetTasks(rtStream_t const stm, rtTask_t* tasks, uint32
  */
 RTS_API rtError_t rtStreamWaitEventWithFlag(rtStream_t stm, rtEvent_t evt, uint32_t timeout, uint32_t flag);
 
+/**
+ * @ingroup dvrt_stream
+ * @brief begin a non-blocking kernel launch section on a stream
+ * @param [in] stream stream handle
+ * @param [in] flag reserved parameter
+ * @return RT_ERROR_NONE for ok
+ * @return RT_ERROR_INVALID_VALUE for error input
+ */
+RTS_API rtError_t rtNonBlockingLaunchBegin(rtStream_t stream, uint64_t flag);
+
+/**
+ * @ingroup dvrt_stream
+ * @brief end a non-blocking kernel launch section on a stream
+ * @param [in] stream stream handle
+ * @param [in] flag reserved parameter
+ * @return RT_ERROR_NONE for ok
+ * @return RT_ERROR_INVALID_VALUE for error input
+ */
+RTS_API rtError_t rtNonBlockingLaunchEnd(rtStream_t stream, uint64_t flag);
+
 #if defined(__cplusplus)
 }
 #endif

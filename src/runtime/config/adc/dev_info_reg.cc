@@ -26,7 +26,6 @@ static const std::unordered_set<RtOptionalFeatureType> CHIP_ADC_FEATURE{
     RtOptionalFeatureType::RT_FEATURE_DEVICE_GROUP_THREAD_LOCAL,
     RtOptionalFeatureType::RT_FEATURE_TASK_MODEL_EXECUTE_COPY_ONCE,
     RtOptionalFeatureType::RT_FEATURE_DEVICE_HAS_TS_DEAMON,
-    RtOptionalFeatureType::RT_FEATURE_KERNEL_NO_MIX_DOT_REGISTER,
     RtOptionalFeatureType::RT_FEATURE_MODEL_SCHED_GROUP,
     RtOptionalFeatureType::RT_FEATURE_PROFILING_AICPU,
     RtOptionalFeatureType::RT_FEATURE_PROFILING_ADC,

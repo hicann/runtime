@@ -3876,6 +3876,10 @@ TEST_F(NpuDriverTest, CheckIsSupportFeature_invalid)
     ret = rawDrv->CheckIsSupportFeature(0, feature);
     EXPECT_FALSE(ret);
 
+    feature = static_cast<int32_t>(FEATURE_PROF_AICPU_CHAN);
+    ret = rawDrv->CheckIsSupportFeature(0, feature);
+    EXPECT_FALSE(ret);
+
     delete rawDrv;
 }
 

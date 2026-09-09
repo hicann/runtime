@@ -2272,6 +2272,7 @@ typedef enum {
     ACL_STREAM_ATTR_USER_CUSTOM_TAG      = 3, 
     ACL_STREAM_ATTR_CACHE_OP_INFO        = 4, 
     ACL_STREAM_ATTR_PRIORITY             = 5,
+    ACL_STREAM_LAUNCH_BLOCKING_MODE           = 6,
 } aclrtStreamAttr;
 ```
 
@@ -2282,17 +2283,21 @@ typedef enum {
 | ACL_STREAM_ATTR_USER_CUSTOM_TAG | 设置Stream上的溢出检测分组标签，以确定溢出发生时检测的粒度。如果不设置分组标签，默认为进程粒度。如果设置了分组标签，则仅检测与发生溢出的Stream具有相同分组标签的Stream。 |
 | ACL_STREAM_ATTR_CACHE_OP_INFO | 基于捕获方式构建模型运行实例场景下，通过该属性设置Stream的算子信息缓存开关，以便于控制后续采集性能数据时是否附带算子信息。<br>该属性需与其它接口配合使用，请参见[aclrtCacheLastTaskOpInfo](24_other_APIs.md#aclrtCacheLastTaskOpInfo)中的接口调用流程。<br>跨Stream的任务捕获时，与主流关联的其他Stream，其算子信息缓存开关状态与主流一致。 |
 | ACL_STREAM_ATTR_PRIORITY | 基于该属性值动态设置/查询stream优先级。 |
+| ACL_STREAM_LAUNCH_BLOCKING_MODE | 用于控制以下接口在指定Stream上的执行模式为同步模式或异步模式：<br><br>  - aclrtLaunchKernel<br>  - aclrtLaunchKernelV2<br>  - aclrtLaunchKernelWithConfig<br>  - aclrtLaunchKernelWithHostArgs<br>  - aclrtLaunchKernelWithArgsArray<br>  - aclrtLaunchSIMTKernelWithArgsArray<br>  - aclrtLaunchSIMTKernelWithHostArgs<br>  - aclmdlRIExecuteAsync<br><br>通过[aclrtSetStreamAttribute](06_stream_management.md#aclrtSetStreamAttribute)接口设置，通过[aclrtGetStreamAttribute](06_stream_management.md#aclrtGetStreamAttribute)接口获取。属性值说明请参见[aclrtStreamAttrValue](25-04_Structs.md#aclrtStreamAttrValue)中的launchBlockingMode。 |
 
 <!-- npu="950,A3,910b" id84 -->
 对于Ascend 950PR/Ascend 950DT、Atlas A3 训练系列产品/Atlas A3 推理系列产品、Atlas A2 训练系列产品/Atlas A2 推理系列产品，支持设置Stream优先级。
+对于Ascend 950PR/Ascend 950DT、Atlas A3 训练系列产品/Atlas A3 推理系列产品、Atlas A2 训练系列产品/Atlas A2 推理系列产品，支持设置或获取`ACL_STREAM_LAUNCH_BLOCKING_MODE`属性。
 <!-- end id84 -->
 
 <!-- npu="910,310p,310b" id82 -->
 对于Atlas 200I/500 A2 推理产品、Atlas 推理系列产品、Atlas 训练系列产品，不支持设置Stream优先级。
+对于Atlas 200I/500 A2 推理产品、Atlas 推理系列产品、Atlas 训练系列产品，不支持设置或获取`ACL_STREAM_LAUNCH_BLOCKING_MODE`属性。
 <!-- end id82 -->
 
 <!-- npu="IPV350" id83 -->
 当前不支持设置Stream优先级。
+当前不支持设置或获取`ACL_STREAM_LAUNCH_BLOCKING_MODE`属性。
 <!-- end id83 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/25-02_Enumerations_res.md#id15 -->
 
@@ -2502,4 +2507,3 @@ typedef enum aclrtDeviceLimit {
 - `ACL_RT_DEV_LIMIT_SIMD_PRINTF_FIFO_SIZE_PER_CORE`：用于控制每个Core上SIMD算子可以Printf打印的空间大小，单位Byte。默认值为32768Byte（即32KB）。设置为`ACL_RT_DEV_LIMIT_SIMD_PRINTF_FIFO_SIZE_PER_CORE`类型时，value取值必须是8Byte的整数倍，如果传入的不是8Byte的整数倍，则接口内部会自动向上取整，确保其为8Byte的整数倍。value的取值范围为[1024, 67108864]Byte，即[1KB, 64MB]。
 
 - `ACL_RT_DEV_LIMIT_SIMT_PRINTF_FIFO_SIZE`：用于控制SIMT算子可以Printf打印的空间大小，单位Byte。默认值为2097152Byte（即2MB）。设置为`ACL_RT_DEV_LIMIT_SIMT_PRINTF_FIFO_SIZE`类型时，value取值必须是8Byte的整数倍，如果传入的不是8Byte的整数倍，则接口内部会自动向上取整，确保其为8Byte的整数倍。value的取值范围为[1048576, 67108864]Byte，即[1, 64]MB。
-

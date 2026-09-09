@@ -1605,14 +1605,268 @@ rtError_t ApiErrorDecorator::SetDeviceFailureMode(uint64_t failureMode)
     return impl_->SetDeviceFailureMode(failureMode);
 }
 
+static rtError_t ValidateStreamFailureModeSet(Stream* const stm, Stream*& targetStm)
+{
+    targetStm = Runtime::Instance()->GetCurStream(stm);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
+        targetStm, RT_ERROR_INVALID_VALUE, "Setting the error handling mode of a stream");
+    COND_RETURN_WARN(
+        (targetStm->Flags() & RT_STREAM_CP_PROCESS_USE) != 0U, RT_ERROR_FEATURE_NOT_SUPPORT,
+        "Coprocessor stream flag=%u is not supported, stream_id=%d", targetStm->Flags(), targetStm->Id_());
+    return RT_ERROR_NONE;
+}
+
+static rtError_t ValidateStreamFailureModeGet(Stream* const stm, uint64_t* const stmMode, Stream*& targetStm)
+{
+    targetStm = Runtime::Instance()->GetCurStream(stm);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
+        targetStm, RT_ERROR_INVALID_VALUE, "Obtaining the error handling mode of a stream");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
+        stmMode, RT_ERROR_INVALID_VALUE, "Obtaining the error handling mode of a stream");
+    return RT_ERROR_NONE;
+}
+
+static rtError_t ValidateStreamOverflowSwitchSet(const Stream* const stm, const uint32_t flags)
+{
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+        flags >= static_cast<uint32_t>(RT_OVERFLOW_MODE_UNDEF), RT_ERROR_INVALID_VALUE,
+        "Setting the stream overflow/underflow detection switch", flags,
+        "[" + std::to_string(RT_OVERFLOW_MODE_SATURATION) + ", " + std::to_string(RT_OVERFLOW_MODE_UNDEF) + ")");
+    COND_RETURN_AND_MSG_OUTER(
+        (stm != nullptr) && (stm->IsCapturing()), RT_ERROR_STREAM_CAPTURED, ErrorCode::EE1016,
+        "Setting the stream overflow/underflow detection switch",
+        RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", stm->Id_()));
+    return RT_ERROR_NONE;
+}
+
+static rtError_t ValidateStreamPrioritySet(
+    const Stream* const stm, const uint32_t streamPriority, uint32_t& targetPriority)
+{
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(stm, RT_ERROR_INVALID_VALUE, "Setting the stream priority");
+    COND_RETURN_ERROR(
+        (stm->Flags() & RT_STREAM_FORBIDDEN_DEFAULT) != 0U, RT_ERROR_FEATURE_NOT_SUPPORT,
+        "The stream with flag %u does not support priority setting.", stm->Flags());
+    COND_RETURN_AND_MSG_OUTER(
+        (stm->Flags() & RT_STREAM_AICPU) != 0U, RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1006,
+        "Setting the stream priority", "Parameter stm->Flags() value " + std::to_string(stm->Flags()),
+        "The current stream is used to carry AI CPU scheduling tasks and does not support priority setting");
+    const int32_t validPriority = static_cast<int32_t>(streamPriority);
+    targetPriority = streamPriority;
+    if (validPriority < RT_STREAM_GREATEST_PRIORITY) {
+        targetPriority = RT_STREAM_GREATEST_PRIORITY;
+    } else if (validPriority > RT_STREAM_LEAST_PRIORITY) {
+        targetPriority = RT_STREAM_LEAST_PRIORITY;
+    } else {
+        // no operation
+    }
+    if (targetPriority != streamPriority) {
+        RT_LOG(
+            RT_LOG_INFO, "Input priority=%d is out of range [%u, %u], adjusted to %u", validPriority,
+            RT_STREAM_GREATEST_PRIORITY, RT_STREAM_LEAST_PRIORITY, targetPriority);
+    }
+    return RT_ERROR_NONE;
+}
+
+static rtError_t ValidateStreamPriorityGet(const Stream* const stm, uint32_t* const streamPriority)
+{
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(streamPriority, RT_ERROR_INVALID_VALUE, "Obtaining the stream priority");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(stm, RT_ERROR_INVALID_VALUE, "Obtaining the stream priority");
+    COND_RETURN_ERROR(
+        (stm->Flags() & RT_STREAM_FORBIDDEN_DEFAULT) != 0U, RT_ERROR_FEATURE_NOT_SUPPORT,
+        "The stream with flag %u does not support priority setting.", stm->Flags());
+    COND_RETURN_AND_MSG_OUTER(
+        (stm->Flags() & RT_STREAM_AICPU) != 0U, RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1006,
+        "Obtaining the stream priority", "Parameter stm->Flags() value " + std::to_string(stm->Flags()),
+        "The current stream is used to carry AI CPU scheduling tasks and does not support priority getting");
+    return RT_ERROR_NONE;
+}
+
+static rtError_t ValidateStreamTagSet(const Stream* const stm)
+{
+    COND_RETURN_AND_MSG_OUTER(
+        (stm != nullptr) && (stm->IsCapturing()), RT_ERROR_STREAM_CAPTURED, ErrorCode::EE1016, "Setting the stream tag",
+        RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", stm->Id_()));
+    return RT_ERROR_NONE;
+}
+
+static rtError_t ValidateStreamCacheOpInfoSet(
+    const Stream* const stm, const uint32_t cacheOpInfoSwitch, Stream*& targetStm)
+{
+    targetStm = Runtime::Instance()->GetCurStream(const_cast<Stream*>(stm));
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
+        targetStm, RT_ERROR_INVALID_VALUE, "Setting the switch for caching operator information in a stream");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
+        (cacheOpInfoSwitch != 0U) && (cacheOpInfoSwitch != 1U), RT_ERROR_INVALID_VALUE,
+        "Setting the switch for caching operator information in a stream", RtFmtMsg("%u", cacheOpInfoSwitch),
+        "cacheOpInfoSwitch", "0 or 1");
+    return RT_ERROR_NONE;
+}
+
+static rtError_t ValidateStreamCacheOpInfoGet(
+    const Stream* const stm, uint32_t* const cacheOpInfoSwitch, Stream*& targetStm)
+{
+    targetStm = Runtime::Instance()->GetCurStream(const_cast<Stream*>(stm));
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
+        targetStm, RT_ERROR_INVALID_VALUE, "Querying whether the operator information is cached");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
+        cacheOpInfoSwitch, RT_ERROR_INVALID_VALUE, "Querying whether the operator information is cached");
+    return RT_ERROR_NONE;
+}
+
+rtError_t ApiErrorDecorator::StreamSetAttribute(
+    Stream* const stm, const rtStreamAttr stmAttrId, const rtStreamAttrValue_t* const attrValue)
+{
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(attrValue, RT_ERROR_INVALID_VALUE, "Setting a stream attribute");
+    Stream* targetStm = stm;
+    rtStreamAttrValue_t normalizedValue = {};
+    const rtStreamAttrValue_t* targetValue = attrValue;
+    rtError_t error;
+    switch (stmAttrId) {
+        case RT_STREAM_ATTR_FAILURE_MODE: {
+            const rtChipType_t chipType = Runtime::Instance()->GetChipType();
+            COND_RETURN_WARN(
+                !IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_STREAM_ATTR_FAILURE_MODE),
+                ACL_ERROR_RT_FEATURE_NOT_SUPPORT, "chip type(%d) does not support.", static_cast<int32_t>(chipType));
+            error = ValidateStreamFailureModeSet(stm, targetStm);
+#ifndef CFG_DEV_PLATFORM_PC
+            if (error == RT_ERROR_NONE) {
+                error = impl_->StreamSetAttribute(targetStm, stmAttrId, targetValue);
+                ERROR_RETURN(error, "set stream mode failed.");
+            }
+#else
+            if (error == RT_ERROR_NONE) {
+                RT_LOG(RT_LOG_DEBUG, "no need set stream mode.");
+            }
+#endif
+            break;
+        }
+        case RT_STREAM_ATTR_FLOAT_OVERFLOW_CHECK: {
+            const rtChipType_t chipType = Runtime::Instance()->GetChipType();
+            if (!IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_STREAM_ATTR_OVERFLOW_CHECK)) {
+                RT_LOG(
+                    RT_LOG_WARNING, "chip type(%d) does not support, return success.", static_cast<int32_t>(chipType));
+                return RT_ERROR_NONE;
+            }
+            error = ValidateStreamOverflowSwitchSet(stm, attrValue->overflowSwitch);
+            if (error == RT_ERROR_NONE) {
+                error = impl_->StreamSetAttribute(targetStm, stmAttrId, targetValue);
+            }
+            break;
+        }
+        case RT_STREAM_ATTR_USER_CUSTOM_TAG: {
+            const rtChipType_t chipType = Runtime::Instance()->GetChipType();
+            if (!IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_STREAM_ATTR_USER_CUSTOM_TAG)) {
+                RT_LOG(
+                    RT_LOG_WARNING, "chip type(%d) does not support, return success.", static_cast<int32_t>(chipType));
+                return RT_ERROR_NONE;
+            }
+            error = ValidateStreamTagSet(stm);
+            if (error == RT_ERROR_NONE) {
+                error = impl_->StreamSetAttribute(targetStm, stmAttrId, targetValue);
+                ERROR_RETURN(error, "set stream geOpTag failed.");
+            }
+            break;
+        }
+        case RT_STREAM_ATTR_CACHE_OP_INFO: {
+            error = ValidateStreamCacheOpInfoSet(stm, attrValue->cacheOpInfoSwitch, targetStm);
+            if (error == RT_ERROR_NONE) {
+                error = impl_->StreamSetAttribute(targetStm, stmAttrId, targetValue);
+            }
+            break;
+        }
+        case RT_STREAM_ATTR_PRIORITY: {
+            normalizedValue.streamPriority = attrValue->streamPriority;
+            error = ValidateStreamPrioritySet(stm, attrValue->streamPriority, normalizedValue.streamPriority);
+            if (error == RT_ERROR_NONE) {
+                targetValue = &normalizedValue;
+                error = impl_->StreamSetAttribute(targetStm, stmAttrId, targetValue);
+            }
+            break;
+        }
+        case RT_STREAM_ATTR_LAUNCH_BLOCKING_MODE: {
+            error = ValidateStreamLaunchBlockingSet(stm, attrValue->launchBlockingMode);
+            if (error == RT_ERROR_NONE) {
+                error = impl_->StreamSetAttribute(targetStm, stmAttrId, targetValue);
+            }
+            break;
+        }
+        default: {
+            RT_LOG_OUTER_MSG_INVALID_PARAM(
+                stmAttrId,
+                "[" + std::to_string(RT_STREAM_ATTR_FAILURE_MODE) + ", " + std::to_string(RT_STREAM_ATTR_MAX) + ")");
+            error = RT_ERROR_INVALID_VALUE;
+            break;
+        }
+    }
+    return error;
+}
+
+rtError_t ApiErrorDecorator::StreamGetAttribute(
+    Stream* const stm, const rtStreamAttr stmAttrId, rtStreamAttrValue_t* const attrValue)
+{
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(attrValue, RT_ERROR_INVALID_VALUE, "Obtaining a stream attribute");
+    Stream* targetStm = stm;
+    rtError_t error;
+    switch (stmAttrId) {
+        case RT_STREAM_ATTR_FAILURE_MODE: {
+            error = ValidateStreamFailureModeGet(stm, &attrValue->failureMode, targetStm);
+            if (error == RT_ERROR_NONE) {
+                error = impl_->StreamGetAttribute(targetStm, stmAttrId, attrValue);
+            }
+            break;
+        }
+        case RT_STREAM_ATTR_FLOAT_OVERFLOW_CHECK: {
+            error = impl_->StreamGetAttribute(targetStm, stmAttrId, attrValue);
+            break;
+        }
+        case RT_STREAM_ATTR_USER_CUSTOM_TAG: {
+            const rtChipType_t chipType = Runtime::Instance()->GetChipType();
+            if (!IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_STREAM_ATTR_USER_CUSTOM_TAG)) {
+                RT_LOG(
+                    RT_LOG_WARNING, "chip type(%d) does not support, return success.", static_cast<int32_t>(chipType));
+                return RT_ERROR_NONE;
+            }
+            error = impl_->StreamGetAttribute(targetStm, stmAttrId, attrValue);
+            ERROR_RETURN(error, "get stream geOpTag failed.");
+            break;
+        }
+        case RT_STREAM_ATTR_CACHE_OP_INFO: {
+            error = ValidateStreamCacheOpInfoGet(stm, &attrValue->cacheOpInfoSwitch, targetStm);
+            if (error == RT_ERROR_NONE) {
+                error = impl_->StreamGetAttribute(targetStm, stmAttrId, attrValue);
+            }
+            break;
+        }
+        case RT_STREAM_ATTR_PRIORITY: {
+            error = ValidateStreamPriorityGet(stm, &attrValue->streamPriority);
+            if (error == RT_ERROR_NONE) {
+                error = impl_->StreamGetAttribute(targetStm, stmAttrId, attrValue);
+            }
+            break;
+        }
+        case RT_STREAM_ATTR_LAUNCH_BLOCKING_MODE: {
+            error = ValidateStreamLaunchBlockingGet(stm);
+            if (error == RT_ERROR_NONE) {
+                error = impl_->StreamGetAttribute(targetStm, stmAttrId, attrValue);
+            }
+            break;
+        }
+        default: {
+            RT_LOG_OUTER_MSG_INVALID_PARAM(
+                stmAttrId,
+                "[" + std::to_string(RT_STREAM_ATTR_FAILURE_MODE) + ", " + std::to_string(RT_STREAM_ATTR_MAX) + ")");
+            error = RT_ERROR_INVALID_VALUE;
+            break;
+        }
+    }
+    return error;
+}
+
 rtError_t ApiErrorDecorator::StreamSetMode(Stream* const stm, const uint64_t stmMode)
 {
-    Stream* curStm = Runtime::Instance()->GetCurStream(stm);
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        curStm, RT_ERROR_INVALID_VALUE, "Setting the error handling mode of a stream");
-    COND_RETURN_WARN(
-        (curStm->Flags() & RT_STREAM_CP_PROCESS_USE) != 0U, RT_ERROR_FEATURE_NOT_SUPPORT,
-        "Coprocessor stream flag=%u is not supported, stream_id=%d", curStm->Flags(), curStm->Id_());
+    Stream* curStm = nullptr;
+    const rtError_t checkError = ValidateStreamFailureModeSet(stm, curStm);
+    COND_RETURN_WITH_NOLOG(checkError != RT_ERROR_NONE, checkError);
 #ifndef CFG_DEV_PLATFORM_PC
     const rtError_t error = impl_->StreamSetMode(curStm, stmMode);
     ERROR_RETURN(error, "set stream mode failed.");
@@ -1625,11 +1879,9 @@ rtError_t ApiErrorDecorator::StreamSetMode(Stream* const stm, const uint64_t stm
 
 rtError_t ApiErrorDecorator::StreamGetMode(const Stream* const stm, uint64_t* const stmMode)
 {
-    Stream* curStm = Runtime::Instance()->GetCurStream(const_cast<Stream*>(stm));
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        curStm, RT_ERROR_INVALID_VALUE, "Obtaining the error handling mode of a stream");
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        stmMode, RT_ERROR_INVALID_VALUE, "Obtaining the error handling mode of a stream");
+    Stream* curStm = nullptr;
+    const rtError_t error = ValidateStreamFailureModeGet(const_cast<Stream*>(stm), stmMode, curStm);
+    COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
     return impl_->StreamGetMode(curStm, stmMode);
 }
 
@@ -2875,22 +3127,21 @@ rtMemcpyKind_t ApiErrorDecorator::GetMemCpyKind(const rtMemcpyKind_t kind, const
         return kind;
     }
 
-    static const std::unordered_map<rtMemcpyKind, rtMemcpyKind_t> KIND_MAP = {
-        {RT_MEMCPY_KIND_HOST_TO_HOST, RT_MEMCPY_HOST_TO_HOST},
-        {RT_MEMCPY_KIND_HOST_TO_DEVICE, RT_MEMCPY_HOST_TO_DEVICE},
-        {RT_MEMCPY_KIND_DEVICE_TO_HOST, RT_MEMCPY_DEVICE_TO_HOST},
-        {RT_MEMCPY_KIND_DEVICE_TO_DEVICE, RT_MEMCPY_DEVICE_TO_DEVICE},
-        {RT_MEMCPY_KIND_DEFAULT, RT_MEMCPY_DEFAULT},
-        {RT_MEMCPY_KIND_HOST_TO_BUF_TO_DEVICE, RT_MEMCPY_HOST_TO_DEVICE_EX},
-        {RT_MEMCPY_KIND_INNER_DEVICE_TO_DEVICE, RT_MEMCPY_DEVICE_TO_DEVICE},
-        {RT_MEMCPY_KIND_INTER_DEVICE_TO_DEVICE, RT_MEMCPY_DEVICE_TO_DEVICE},
-        {RT_MEMCPY_KIND_MAX, RT_MEMCPY_RESERVED}};
-    const auto iter = KIND_MAP.find(newKind);
-    if (iter != KIND_MAP.end()) {
-        return iter->second;
-    } else {
+    static constexpr rtMemcpyKind_t KIND_MAP[] = {
+        RT_MEMCPY_HOST_TO_HOST,      // RT_MEMCPY_KIND_HOST_TO_HOST
+        RT_MEMCPY_HOST_TO_DEVICE,    // RT_MEMCPY_KIND_HOST_TO_DEVICE
+        RT_MEMCPY_DEVICE_TO_HOST,    // RT_MEMCPY_KIND_DEVICE_TO_HOST
+        RT_MEMCPY_DEVICE_TO_DEVICE,  // RT_MEMCPY_KIND_DEVICE_TO_DEVICE
+        RT_MEMCPY_DEFAULT,           // RT_MEMCPY_KIND_DEFAULT
+        RT_MEMCPY_HOST_TO_DEVICE_EX, // RT_MEMCPY_KIND_HOST_TO_BUF_TO_DEVICE
+        RT_MEMCPY_DEVICE_TO_DEVICE,  // RT_MEMCPY_KIND_INNER_DEVICE_TO_DEVICE
+        RT_MEMCPY_DEVICE_TO_DEVICE   // RT_MEMCPY_KIND_INTER_DEVICE_TO_DEVICE
+    };
+    const size_t index = static_cast<size_t>(newKind);
+    if (index >= (sizeof(KIND_MAP) / sizeof(KIND_MAP[0]))) {
         return RT_MEMCPY_RESERVED;
     }
+    return KIND_MAP[index];
 }
 
 rtError_t ApiErrorDecorator::MemCopy2DCheckParam(
@@ -5783,14 +6034,8 @@ rtError_t ApiErrorDecorator::GetDeviceSatModeForStream(
 
 rtError_t ApiErrorDecorator::SetStreamOverflowSwitch(Stream* const stm, const uint32_t flags)
 {
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
-        flags >= static_cast<uint32_t>(RT_OVERFLOW_MODE_UNDEF), RT_ERROR_INVALID_VALUE,
-        "Setting the stream overflow/underflow detection switch", flags,
-        "[" + std::to_string(RT_OVERFLOW_MODE_SATURATION) + ", " + std::to_string(RT_OVERFLOW_MODE_UNDEF) + ")");
-    COND_RETURN_AND_MSG_OUTER(
-        (stm != nullptr) && (stm->IsCapturing()), RT_ERROR_STREAM_CAPTURED, ErrorCode::EE1016,
-        "Setting the stream overflow/underflow detection switch",
-        RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", stm->Id_()));
+    const rtError_t error = ValidateStreamOverflowSwitchSet(stm, flags);
+    COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
     return impl_->SetStreamOverflowSwitch(stm, flags);
 }
 rtError_t ApiErrorDecorator::GetStreamOverflowSwitch(Stream* const stm, uint32_t* const flags)
@@ -5802,42 +6047,16 @@ rtError_t ApiErrorDecorator::GetStreamOverflowSwitch(Stream* const stm, uint32_t
 
 rtError_t ApiErrorDecorator::SetStreamPriorityValue(Stream* const stm, const uint32_t streamPriority)
 {
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(stm, RT_ERROR_INVALID_VALUE, "Setting the stream priority");
-    COND_RETURN_ERROR(
-        (stm->Flags() & RT_STREAM_FORBIDDEN_DEFAULT) != 0U, RT_ERROR_FEATURE_NOT_SUPPORT,
-        "The stream with flag %u does not support priority setting.", stm->Flags());
-    COND_RETURN_AND_MSG_OUTER(
-        (stm->Flags() & RT_STREAM_AICPU) != 0U, RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1006,
-        "Setting the stream priority", "Parameter stm->Flags() value " + std::to_string(stm->Flags()),
-        "The current stream is used to carry AI CPU scheduling tasks and does not support priority setting");
-    const int32_t validPriority = static_cast<int32_t>(streamPriority);
     uint32_t priority = streamPriority;
-    if (validPriority < RT_STREAM_GREATEST_PRIORITY) {
-        priority = RT_STREAM_GREATEST_PRIORITY;
-    } else if (validPriority > RT_STREAM_LEAST_PRIORITY) {
-        priority = RT_STREAM_LEAST_PRIORITY;
-    } else {
-        // no operation
-    }
-    if (priority != streamPriority) {
-        RT_LOG(
-            RT_LOG_INFO, "Input priority=%d is out of range [%u, %u], adjusted to %u", validPriority,
-            RT_STREAM_GREATEST_PRIORITY, RT_STREAM_LEAST_PRIORITY, priority);
-    }
+    const rtError_t error = ValidateStreamPrioritySet(stm, streamPriority, priority);
+    COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
     return impl_->SetStreamPriorityValue(stm, priority);
 }
 
 rtError_t ApiErrorDecorator::GetStreamPriorityValue(Stream* const stm, uint32_t* const streamPriority)
 {
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(streamPriority, RT_ERROR_INVALID_VALUE, "Obtaining the stream priority");
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(stm, RT_ERROR_INVALID_VALUE, "Obtaining the stream priority");
-    COND_RETURN_ERROR(
-        (stm->Flags() & RT_STREAM_FORBIDDEN_DEFAULT) != 0U, RT_ERROR_FEATURE_NOT_SUPPORT,
-        "The stream with flag %u does not support priority setting.", stm->Flags());
-    COND_RETURN_AND_MSG_OUTER(
-        (stm->Flags() & RT_STREAM_AICPU) != 0U, RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1006,
-        "Obtaining the stream priority", "Parameter stm->Flags() value " + std::to_string(stm->Flags()),
-        "The current stream is used to carry AI CPU scheduling tasks and does not support priority getting");
+    const rtError_t error = ValidateStreamPriorityGet(stm, streamPriority);
+    COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
     return impl_->GetStreamPriorityValue(stm, streamPriority);
 }
 
@@ -5884,9 +6103,8 @@ rtError_t ApiErrorDecorator::DvppWaitGroupReport(
 
 rtError_t ApiErrorDecorator::SetStreamTag(Stream* const stm, const uint32_t geOpTag)
 {
-    COND_RETURN_AND_MSG_OUTER(
-        (stm != nullptr) && (stm->IsCapturing()), RT_ERROR_STREAM_CAPTURED, ErrorCode::EE1016, "Setting the stream tag",
-        RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", stm->Id_()));
+    const rtError_t checkError = ValidateStreamTagSet(stm);
+    COND_RETURN_WITH_NOLOG(checkError != RT_ERROR_NONE, checkError);
     const rtError_t error = impl_->SetStreamTag(stm, geOpTag);
     ERROR_RETURN(error, "set stream geOpTag failed.");
     return error;
@@ -6697,24 +6915,17 @@ rtError_t ApiErrorDecorator::GetDeviceUuid(const int32_t devId, rtUuid_t* uuid)
 
 rtError_t ApiErrorDecorator::SetStreamCacheOpInfoSwitch(const Stream* const stm, uint32_t cacheOpInfoSwitch)
 {
-    Stream* curStm = Runtime::Instance()->GetCurStream(const_cast<Stream*>(stm));
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        curStm, RT_ERROR_INVALID_VALUE, "Setting the switch for caching operator information in a stream");
-    if (cacheOpInfoSwitch != 0U && cacheOpInfoSwitch != 1U) {
-        return RT_ERROR_INVALID_VALUE;
-    }
-
+    Stream* curStm = nullptr;
+    const rtError_t error = ValidateStreamCacheOpInfoSet(stm, cacheOpInfoSwitch, curStm);
+    COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
     return impl_->SetStreamCacheOpInfoSwitch(curStm, cacheOpInfoSwitch);
 }
 
 rtError_t ApiErrorDecorator::GetStreamCacheOpInfoSwitch(const Stream* const stm, uint32_t* const cacheOpInfoSwitch)
 {
-    Stream* curStm = Runtime::Instance()->GetCurStream(const_cast<Stream*>(stm));
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        curStm, RT_ERROR_INVALID_VALUE, "Querying whether the operator information is cached");
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        cacheOpInfoSwitch, RT_ERROR_INVALID_VALUE, "Querying whether the operator information is cached");
-
+    Stream* curStm = nullptr;
+    const rtError_t error = ValidateStreamCacheOpInfoGet(stm, cacheOpInfoSwitch, curStm);
+    COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
     return impl_->GetStreamCacheOpInfoSwitch(curStm, cacheOpInfoSwitch);
 }
 

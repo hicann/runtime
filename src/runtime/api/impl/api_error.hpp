@@ -16,6 +16,11 @@
 
 namespace cce {
 namespace runtime {
+
+// Keep launch-blocking validation in the standard/tiny source split so tiny retains its unsupported stub.
+rtError_t ValidateStreamLaunchBlockingSet(const Stream* const stm, const uint32_t launchBlockingMode);
+rtError_t ValidateStreamLaunchBlockingGet(const Stream* const stm);
+
 class ApiErrorDecorator : public ApiDecorator {
 public:
     explicit ApiErrorDecorator(Api* const impl);
@@ -137,6 +142,8 @@ public:
         Stream* const stm, Event* const evt, const uint32_t timeout,
         const uint32_t flag = RT_EVENT_WAIT_DEFAULT) override;
     rtError_t StreamSynchronize(Stream* const stm, const int32_t timeout) override;
+    rtError_t NonBlockingLaunchBegin(Stream* const stream, const uint64_t flag) override;
+    rtError_t NonBlockingLaunchEnd(Stream* const stream, const uint64_t flag) override;
     rtError_t StreamQuery(Stream* const stm) override;
     rtError_t GetStreamId(Stream* const stm, int32_t* const streamId) override;
     rtError_t GetSqId(Stream* const stm, uint32_t* const sqId) override;
@@ -474,6 +481,10 @@ public:
     rtError_t GetStreamOverflowSwitch(Stream* const stm, uint32_t* const flags) override;
     rtError_t SetStreamPriorityValue(Stream* const stm, const uint32_t streamPriority) override;
     rtError_t GetStreamPriorityValue(Stream* const stm, uint32_t* const streamPriority) override;
+    rtError_t StreamSetAttribute(
+        Stream* const stm, const rtStreamAttr stmAttrId, const rtStreamAttrValue_t* const attrValue) override;
+    rtError_t StreamGetAttribute(
+        Stream* const stm, const rtStreamAttr stmAttrId, rtStreamAttrValue_t* const attrValue) override;
     // model
     rtError_t ModelCreate(Model** const mdl, const uint32_t flag) override;
     rtError_t ModelSetExtId(Model* const mdl, const uint32_t extId) override;

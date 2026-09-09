@@ -23,6 +23,14 @@ RUNTIME_API(standard_soc, rtError_t, rtsPersistentTaskClean,
     (rtStream_t stm),
     (stm), FEATURE_NOT_SUPPORT, EXPORT)
 
+RUNTIME_API(standard_soc, rtError_t, rtNonBlockingLaunchBegin,
+    (rtStream_t stream, uint64_t flag),
+    (stream, flag), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(standard_soc, rtError_t, rtNonBlockingLaunchEnd,
+    (rtStream_t stream, uint64_t flag),
+    (stream, flag), FEATURE_NOT_SUPPORT, EXPORT)
+
 RUNTIME_API(standard_soc, rtError_t, rtMemcpyAsyncWithOffset,
     ( void** dst, uint64_t dstMax, uint64_t dstDataOffset, const void** src, uint64_t cnt,
     uint64_t srcDataOffset, rtMemcpyKind kind, rtStream_t stm),

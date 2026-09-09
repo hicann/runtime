@@ -29,13 +29,19 @@ RT_RUNTIME_DEPRECATED_DECLS_BEGIN
 #define RT_STREAM_FAILURE_MODE_CONTINUE_ON_FAILURE (0x0U) // 默认值，task出错时，处理完异常后继续执行流上的任务
 #define RT_STREAM_FAILURE_MODE_STOP_ON_FAILURE (0x1U) // 遇错即停
 
+// Launch blocking mode
+#define RT_STREAM_LAUNCH_BLOCKING_MODE_CTRL_BY_ENV (0x0U)
+#define RT_STREAM_LAUNCH_BLOCKING_MODE_NON_BLOCKING (0x1U)
+#define RT_STREAM_LAUNCH_BLOCKING_MODE_BLOCKING (0x2U)
+
 typedef enum {
     RT_STREAM_ATTR_FAILURE_MODE = 1,
     RT_STREAM_ATTR_FLOAT_OVERFLOW_CHECK = 2,
     RT_STREAM_ATTR_USER_CUSTOM_TAG = 3,
     RT_STREAM_ATTR_CACHE_OP_INFO = 4,
     RT_STREAM_ATTR_PRIORITY = 5,
-    RT_STREAM_ATTR_MAX = 6,
+    RT_STREAM_ATTR_LAUNCH_BLOCKING_MODE = 6,
+    RT_STREAM_ATTR_MAX = 7,
 } rtStreamAttr;
 
 typedef union {
@@ -44,6 +50,7 @@ typedef union {
     uint32_t userCustomTag;
     uint32_t cacheOpInfoSwitch;
     uint32_t streamPriority;
+    uint32_t launchBlockingMode;
     uint32_t rsv[4];
 } rtStreamAttrValue_t;
 

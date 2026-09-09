@@ -119,6 +119,8 @@ public:
         void* const outputAddrPtr, const uint64_t outputSize, const uint32_t checkMode, Stream* const stm) override;
     rtError_t NpuClearFloatDebugStatus(const uint32_t checkMode, Stream* const stm) override;
     rtError_t GetDeviceSatStatus(void* const outputAddrPtr, const uint64_t outputSize, Stream* const stm) override;
+    rtError_t StreamSetAttribute(
+        Stream* const stm, const rtStreamAttr stmAttrId, const rtStreamAttrValue_t* const attrValue) override;
     rtError_t SetStreamOverflowSwitch(Stream* const stm, const uint32_t flags) override;
     rtError_t SetStreamTag(Stream* const stm, const uint32_t geOpTag) override;
     rtError_t UbDbSend(rtUbDbInfo_t* const dbInfo, Stream* const stm) override;

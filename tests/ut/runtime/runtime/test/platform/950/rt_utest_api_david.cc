@@ -13,6 +13,8 @@
 #include "securec.h"
 #include "runtime/rt.h"
 #include "runtime/event.h"
+#include "runtime/rts/rts_stream.h"
+#include "stream_launch_blocking.hpp"
 #define private public
 #define protected public
 #include "runtime.hpp"
@@ -8789,6 +8791,89 @@ TEST_F(ApiDavidTest, TestLaunchKernelV2)
     delete device;
     delete k1;
 }
+
+TEST_F(ApiDavidTest, LaunchKernelV2StandardAicpuBlocks)
+{
+    constexpr uint32_t testKernelId = 10U;
+    PlainProgram program(RT_KERNEL_ATTR_TYPE_AICPU);
+    Kernel kernel("aicpu", 0ULL, &program, RT_KERNEL_ATTR_TYPE_AICPU, testKernelId);
+    kernel.userParaNum_ = 0U;
+    kernel.systemParaNum_ = 0U;
+    kernel.isSupportOverFlow_ = false;
+    kernel.isNeedSetFftsAddrInArg_ = false;
+    kernel.SetKernelRegisterType(RT_KERNEL_REG_TYPE_CPU);
+
+    RtArgsWithType argsWithType = {};
+    argsWithType.type = RT_ARGS_CPU_EX;
+    ASSERT_EQ(
+        StreamLaunchBlocking::SetLaunchBlockingMode(stream_, RT_STREAM_LAUNCH_BLOCKING_MODE_BLOCKING), RT_ERROR_NONE);
+    static_cast<RawDevice*>(device_)
+        ->featureSet_[static_cast<size_t>(RtOptionalFeatureType::RT_FEATURE_LAUNCH_BLOCKING)] = true;
+
+    MOCKER_CPP(&ApiImplDavid::CpuKernelLaunchExAll).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(stream_, &Stream::Synchronize)
+        .expects(once())
+        .with(eq(false), eq(-1))
+        .will(returnValue(RT_ERROR_NONE));
+
+    ApiImplDavid apiImpl;
+    EXPECT_EQ(apiImpl.LaunchKernelV2(&kernel, 1U, &argsWithType, stream_, nullptr), RT_ERROR_NONE);
+    GlobalMockObject::verify();
+}
+
+TEST_F(ApiDavidTest, LaunchKernelV2AllArgumentTypesBlockAtEntry)
+{
+    constexpr uint32_t testKernelId = 10U;
+    PlainProgram program(RT_KERNEL_ATTR_TYPE_AICPU);
+    Kernel kernel("kernel", 0ULL, &program, RT_KERNEL_ATTR_TYPE_AICPU, testKernelId);
+    const ArgsType argsTypes[] = {RT_ARGS_NON_CPU_EX, RT_ARGS_CPU_EX,     RT_ARGS_HANDLE,
+                                  RT_ARGS_ARRAY,      RT_SIMT_ARGS_ARRAY, RT_SIMT_ARGS_HOST};
+    constexpr uint32_t argsTypeCount = sizeof(argsTypes) / sizeof(argsTypes[0]);
+
+    ASSERT_EQ(
+        StreamLaunchBlocking::SetLaunchBlockingMode(stream_, RT_STREAM_LAUNCH_BLOCKING_MODE_BLOCKING), RT_ERROR_NONE);
+    static_cast<RawDevice*>(device_)
+        ->featureSet_[static_cast<size_t>(RtOptionalFeatureType::RT_FEATURE_LAUNCH_BLOCKING)] = true;
+    MOCKER_CPP(&ApiImplDavid::LaunchKernelByArgsWithType)
+        .expects(exactly(argsTypeCount))
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(stream_, &Stream::Synchronize)
+        .expects(exactly(argsTypeCount))
+        .with(eq(false), eq(-1))
+        .will(returnValue(RT_ERROR_NONE));
+
+    ApiImplDavid apiImpl;
+    for (const ArgsType argsType : argsTypes) {
+        RtArgsWithType argsWithType = {};
+        argsWithType.type = argsType;
+        EXPECT_EQ(apiImpl.LaunchKernelV2(&kernel, 1U, &argsWithType, stream_, nullptr), RT_ERROR_NONE);
+    }
+    GlobalMockObject::verify();
+}
+
+TEST_F(ApiDavidTest, LaunchKernelV2ReturnsLaunchBlockingSyncError)
+{
+    constexpr uint32_t testKernelId = 10U;
+    PlainProgram program(RT_KERNEL_ATTR_TYPE_AICPU);
+    Kernel kernel("aicpu", 0ULL, &program, RT_KERNEL_ATTR_TYPE_AICPU, testKernelId);
+    RtArgsWithType argsWithType = {};
+    argsWithType.type = RT_ARGS_CPU_EX;
+
+    ASSERT_EQ(
+        StreamLaunchBlocking::SetLaunchBlockingMode(stream_, RT_STREAM_LAUNCH_BLOCKING_MODE_BLOCKING), RT_ERROR_NONE);
+    static_cast<RawDevice*>(device_)
+        ->featureSet_[static_cast<size_t>(RtOptionalFeatureType::RT_FEATURE_LAUNCH_BLOCKING)] = true;
+    MOCKER_CPP(&ApiImplDavid::LaunchKernelByArgsWithType).expects(once()).will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(stream_, &Stream::Synchronize)
+        .expects(once())
+        .with(eq(false), eq(-1))
+        .will(returnValue(RT_ERROR_STREAM_SYNC_TIMEOUT));
+
+    ApiImplDavid apiImpl;
+    EXPECT_EQ(apiImpl.LaunchKernelV2(&kernel, 1U, &argsWithType, stream_, nullptr), RT_ERROR_STREAM_SYNC_TIMEOUT);
+    GlobalMockObject::verify();
+}
+
 TEST_F(ApiDavidTest, rtsCntNotify_0002)
 {
     rtCntNotify_t inNotify;

@@ -1399,6 +1399,30 @@ rtError_t rtsPersistentTaskClean(rtStream_t stm)
 }
 
 VISIBILITY_DEFAULT
+rtError_t rtNonBlockingLaunchBegin(rtStream_t stream, uint64_t flag)
+{
+    Api* const apiInstance = Api::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stream, Stream, targetStream);
+    const rtError_t error = apiInstance->NonBlockingLaunchBegin(targetStream, flag);
+    COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    ERROR_RETURN_WITH_EXT_ERRCODE(error);
+    return ACL_RT_SUCCESS;
+}
+
+VISIBILITY_DEFAULT
+rtError_t rtNonBlockingLaunchEnd(rtStream_t stream, uint64_t flag)
+{
+    Api* const apiInstance = Api::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stream, Stream, targetStream);
+    const rtError_t error = apiInstance->NonBlockingLaunchEnd(targetStream, flag);
+    COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    ERROR_RETURN_WITH_EXT_ERRCODE(error);
+    return ACL_RT_SUCCESS;
+}
+
+VISIBILITY_DEFAULT
 rtError_t rtCacheLastTaskOpInfo(const void* const infoPtr, const size_t infoSize)
 {
     const Runtime* const rtInstance = Runtime::Instance();

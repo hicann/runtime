@@ -1061,6 +1061,32 @@ TEST_F(CloudV2CaptureModelTest, capture_mode_api_hardsq)
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
+TEST_F(CloudV2CaptureModelTest, capture_model_execute_with_null_stream)
+{
+    rtStream_t captureStream;
+    rtModel_t model;
+    void* devPtr;
+
+    rtError_t error = rtMalloc(&devPtr, 64U, RT_MEMORY_HBM, DEFAULT_MODULEID);
+    ASSERT_EQ(error, RT_ERROR_NONE);
+    error = rtStreamCreate(&captureStream, 0);
+    ASSERT_EQ(error, RT_ERROR_NONE);
+    error = rtStreamBeginCapture(captureStream, RT_STREAM_CAPTURE_MODE_GLOBAL);
+    ASSERT_EQ(error, RT_ERROR_NONE);
+    error = rtsValueWrite(devPtr, 0U, 0U, captureStream);
+    ASSERT_EQ(error, RT_ERROR_NONE);
+    error = rtStreamEndCapture(captureStream, &model);
+    ASSERT_EQ(error, RT_ERROR_NONE);
+
+    EXPECT_EQ(rtModelExecute(model, nullptr, 0U), RT_ERROR_NONE);
+
+    CaptureModel* captureModel = static_cast<CaptureModel*>(rt_ut::UnwrapOrNull<Model>(model));
+    captureModel->CaptureModelExecuteFinish(RT_ERROR_NONE);
+    EXPECT_EQ(rtModelDestroy(model), RT_ERROR_NONE);
+    EXPECT_EQ(rtStreamDestroy(captureStream), RT_ERROR_NONE);
+    EXPECT_EQ(rtFree(devPtr), RT_ERROR_NONE);
+}
+
 TEST_F(CloudV2CaptureModelTest, capture_mode_api_normal)
 {
     rtError_t error;

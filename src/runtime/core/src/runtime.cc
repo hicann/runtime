@@ -68,6 +68,8 @@
 namespace cce {
 namespace runtime {
 namespace {
+// Launch blocking is enabled only when the environment variable is exactly "1".
+constexpr char_t LAUNCH_BLOCKING_ENABLE_VALUE[] = "1";
 constexpr uint32_t TSD_OK = 0U;
 constexpr int64_t RTS_INVALID_HARDWARE_VERSION = 0xFFFFFFFFFFFFFFFFLL;
 constexpr uint32_t TSD_SUBPROCESS_NUM_EXCEED_THE_LIMIT = 100U;
@@ -1319,6 +1321,27 @@ void Runtime::InitNpuCollectPath()
     return;
 }
 
+void Runtime::InitLaunchBlocking()
+{
+    launchBlockingEnvEnabled_ = false;
+    if (!IS_SUPPORT_CHIP_FEATURE(chipType_, RtOptionalFeatureType::RT_FEATURE_LAUNCH_BLOCKING)) {
+        return;
+    }
+
+    char_t launchBlockingEnv[sizeof(LAUNCH_BLOCKING_ENABLE_VALUE)] = {};
+    launchBlockingEnvEnabled_ =
+        ((mmGetEnv("ASCEND_RT_LAUNCH_BLOCKING", launchBlockingEnv, sizeof(launchBlockingEnv)) == EN_OK) &&
+         (strcmp(launchBlockingEnv, LAUNCH_BLOCKING_ENABLE_VALUE) == 0));
+    if (launchBlockingEnvEnabled_) {
+        RT_LOG(
+            RT_LOG_EVENT,
+            "ASCEND_RT_LAUNCH_BLOCKING is enabled. Kernel and model launches may run synchronously for operator "
+            "debugging, which may significantly impact performance. Composite operators with task dependencies may "
+            "deadlock unless non-blocking launch APIs or stream attributes are used.");
+    }
+    return;
+}
+
 void Runtime::InitStreamSyncMode()
 {
     // StreamSyncEschedMode for 310P helper scene
@@ -1597,6 +1620,7 @@ rtError_t Runtime::Init()
     excptCallBack_ = nullptr;
 
     InitNpuCollectPath();
+    InitLaunchBlocking();
     InitStreamSyncMode();
 
     FindDcacheLockOp();

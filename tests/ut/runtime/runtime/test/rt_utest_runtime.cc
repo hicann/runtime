@@ -8,6 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include <new>
+#include <cstdlib>
+#include <string>
 
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
@@ -40,6 +42,41 @@ using namespace cce::runtime;
 #define PROF_TASK_TIME_MASK 0x00000002ULL
 #define PROF_AICORE_METRICS 0x00000004ULL
 
+namespace {
+constexpr const char_t* LAUNCH_BLOCKING_ENV = "ASCEND_RT_LAUNCH_BLOCKING";
+
+class LaunchBlockingStateGuard {
+public:
+    explicit LaunchBlockingStateGuard(Runtime* rt)
+        : rt_(rt), chipType_(rt->GetChipType()), launchBlockingEnvEnabled_(rt->launchBlockingEnvEnabled_)
+    {
+        const char_t* env = getenv(LAUNCH_BLOCKING_ENV);
+        if (env != nullptr) {
+            hasEnv_ = true;
+            envValue_ = env;
+        }
+    }
+
+    ~LaunchBlockingStateGuard()
+    {
+        rt_->SetChipType(chipType_);
+        rt_->launchBlockingEnvEnabled_ = launchBlockingEnvEnabled_;
+        if (hasEnv_) {
+            setenv(LAUNCH_BLOCKING_ENV, envValue_.c_str(), 1);
+        } else {
+            unsetenv(LAUNCH_BLOCKING_ENV);
+        }
+    }
+
+private:
+    Runtime* rt_;
+    rtChipType_t chipType_;
+    bool launchBlockingEnvEnabled_;
+    bool hasEnv_ = false;
+    std::string envValue_;
+};
+} // namespace
+
 class RuntimeTest : public testing::Test {
 protected:
     static void SetUpTestCase() {}
@@ -59,6 +96,56 @@ protected:
         ut::ResetPrimaryDeviceIfActiveWithDeviceDown();
     }
 };
+
+TEST_F(RuntimeTest, InitLaunchBlockingCloudV2EnvOn)
+{
+    Runtime* rtInstance = (Runtime*)Runtime::Instance();
+    LaunchBlockingStateGuard guard(rtInstance);
+    setenv(LAUNCH_BLOCKING_ENV, "1", 1);
+
+    rtInstance->SetChipType(CHIP_910_B_93);
+    rtInstance->InitLaunchBlocking();
+
+    EXPECT_TRUE(rtInstance->IsLaunchBlockingEnvEnabled());
+}
+
+TEST_F(RuntimeTest, InitLaunchBlockingDavidEnvOn)
+{
+    Runtime* rtInstance = (Runtime*)Runtime::Instance();
+    LaunchBlockingStateGuard guard(rtInstance);
+    setenv(LAUNCH_BLOCKING_ENV, "1", 1);
+
+    rtInstance->SetChipType(CHIP_DAVID);
+    rtInstance->InitLaunchBlocking();
+
+    EXPECT_TRUE(rtInstance->IsLaunchBlockingEnvEnabled());
+}
+
+TEST_F(RuntimeTest, InitLaunchBlockingSupportedChipEnvUnset)
+{
+    Runtime* rtInstance = (Runtime*)Runtime::Instance();
+    LaunchBlockingStateGuard guard(rtInstance);
+    unsetenv(LAUNCH_BLOCKING_ENV);
+    rtInstance->launchBlockingEnvEnabled_ = true;
+
+    rtInstance->SetChipType(CHIP_910_B_93);
+    rtInstance->InitLaunchBlocking();
+
+    EXPECT_FALSE(rtInstance->IsLaunchBlockingEnvEnabled());
+}
+
+TEST_F(RuntimeTest, InitLaunchBlockingUnsupportedChipEnvOn)
+{
+    Runtime* rtInstance = (Runtime*)Runtime::Instance();
+    LaunchBlockingStateGuard guard(rtInstance);
+    setenv(LAUNCH_BLOCKING_ENV, "1", 1);
+    rtInstance->launchBlockingEnvEnabled_ = true;
+
+    rtInstance->SetChipType(CHIP_ASCEND_350);
+    rtInstance->InitLaunchBlocking();
+
+    EXPECT_FALSE(rtInstance->IsLaunchBlockingEnvEnabled());
+}
 
 TEST_F(RuntimeTest, binanry_reg_null_data)
 {

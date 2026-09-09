@@ -61,6 +61,7 @@ set(RUNTIME_INC_DIR_COMMON_PLATFORM
     ${RUNTIME_CORE_DIR}/src/kernel/args
     ${RUNTIME_CORE_DIR}/src/memory
     ${RUNTIME_FEATURE_DIR}/soma
+    ${RUNTIME_FEATURE_DIR}/launch_blocking
     ${RUNTIME_FEATURE_DIR}/cntnotify
     ${RUNTIME_FEATURE_DIR}/ccu
     ${RUNTIME_CORE_DIR}/src/uvm

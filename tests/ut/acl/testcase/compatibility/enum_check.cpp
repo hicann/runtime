@@ -795,6 +795,12 @@ TEST_F(UTEST_ACL_compatibility_enum_check, aclrtStreamAttr)
     value = (aclrtStreamAttr)4;
     EXPECT_EQ(value, ACL_STREAM_ATTR_CACHE_OP_INFO);
 
+    value = (aclrtStreamAttr)5;
+    EXPECT_EQ(value, ACL_STREAM_ATTR_PRIORITY);
+
+    value = (aclrtStreamAttr)6;
+    EXPECT_EQ(value, ACL_STREAM_LAUNCH_BLOCKING_MODE);
+
     EXPECT_EQ(sizeof(aclrtStreamAttr), 4);
 }
 

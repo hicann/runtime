@@ -40,6 +40,7 @@
 #include "uma_arg_loader.hpp"
 #include "task_test_helper.h"
 #include "stars_cond_isa_define.hpp"
+#include "stars_cond_isa_helper.hpp"
 #include "thread_local_container.hpp"
 #include "raw_device.hpp"
 #include "task_execute_time.h"
@@ -168,6 +169,19 @@ TEST_F(StarsTaskTest, CheckSqeSize)
     EXPECT_EQ(sizeof(RtStarsRdmaSinkSqe1), sqeSize);
     EXPECT_EQ(sizeof(RtStarsRdmaSinkSqe2), sqeSize);
     EXPECT_EQ(sizeof(RtStarsStreamResetHeadSqe), sqeSize);
+}
+
+TEST_F(StarsTaskTest, GetNotCondition)
+{
+    EXPECT_EQ(GetNotCondition(RT_EQUAL), RT_NOT_EQUAL);
+    EXPECT_EQ(GetNotCondition(RT_NOT_EQUAL), RT_EQUAL);
+    EXPECT_EQ(GetNotCondition(RT_GREATER), RT_LESS_OR_EQUAL);
+    EXPECT_EQ(GetNotCondition(RT_GREATER_OR_EQUAL), RT_LESS);
+    EXPECT_EQ(GetNotCondition(RT_LESS), RT_GREATER_OR_EQUAL);
+    EXPECT_EQ(GetNotCondition(RT_LESS_OR_EQUAL), RT_GREATER);
+
+    const auto invalidCondition = static_cast<rtCondition_t>(109);
+    EXPECT_EQ(GetNotCondition(invalidCondition), invalidCondition);
 }
 
 TEST_F(StarsTaskTest, StreamSwitch)

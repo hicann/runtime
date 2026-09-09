@@ -9,11 +9,16 @@
  */
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
+#include <array>
 #include <unistd.h>
 #include <memory>
+#include <unordered_set>
 #include "runtime/rt.h"
+#include "runtime/rts/rts_stream.h"
+#include "stream_launch_blocking.hpp"
 #define private public
 #define protected public
+#include "runtime.hpp"
 #include "scheduler.hpp"
 #include "event.hpp"
 #include "raw_device.hpp"
@@ -37,9 +42,55 @@
 #include "npu_driver.hpp"
 #include "task_david.hpp"
 #include "model_to_aicpu_task.h"
+#include "dev_info_manage.h"
 
 using namespace testing;
 using namespace cce::runtime;
+
+namespace {
+void FillFeatureSetFromArray(
+    const std::array<bool, FEATURE_MAX_VALUE>& featureSet, std::unordered_set<RtOptionalFeatureType>& features)
+{
+    for (uint32_t index = 0U; index < FEATURE_MAX_VALUE; ++index) {
+        if (featureSet[index]) {
+            features.insert(static_cast<RtOptionalFeatureType>(index));
+        }
+    }
+}
+
+class LaunchBlockingChipFeatureGuard {
+public:
+    LaunchBlockingChipFeatureGuard() : globalChipType_(GlobalContainer::GetRtChipType())
+    {
+        (void)GET_CHIP_FEATURE_SET(CHIP_910_B_93, featureSet_);
+        GlobalContainer::SetRtChipType(CHIP_910_B_93);
+
+        std::unordered_set<RtOptionalFeatureType> features;
+        FillFeatureSetFromArray(featureSet_, features);
+        features.insert(RtOptionalFeatureType::RT_FEATURE_LAUNCH_BLOCKING);
+        (void)DevInfoManage::Instance().RegChipFeatureSet(CHIP_910_B_93, features);
+    }
+
+    ~LaunchBlockingChipFeatureGuard()
+    {
+        std::unordered_set<RtOptionalFeatureType> features;
+        FillFeatureSetFromArray(featureSet_, features);
+        (void)DevInfoManage::Instance().RegChipFeatureSet(CHIP_910_B_93, features);
+        GlobalContainer::SetRtChipType(globalChipType_);
+    }
+
+private:
+    rtChipType_t globalChipType_;
+    std::array<bool, FEATURE_MAX_VALUE> featureSet_{};
+};
+
+void EnableLaunchBlockingFeature(Stream* const stream)
+{
+    RawDevice* const device = static_cast<RawDevice*>(stream->Device_());
+    ASSERT_NE(device, nullptr);
+    device->featureSet_[static_cast<size_t>(RtOptionalFeatureType::RT_FEATURE_LAUNCH_BLOCKING)] = true;
+}
+} // namespace
 
 class ModelTest : public testing::Test {
 protected:
@@ -51,6 +102,7 @@ protected:
 
     virtual void TearDown()
     {
+        static_cast<Runtime*>(Runtime::Instance())->launchBlockingEnvEnabled_ = false;
         GlobalMockObject::verify();
         GlobalMockObject::reset();
         ut::ForceResetPrimaryDeviceIfActive();
@@ -81,6 +133,308 @@ TEST_F(ModelTest, PrintErrorInfoForModelToAicpuTaskCmdTypeName)
     verifyCmdType(TS_AICPU_MODEL_ABORT, "TS_AICPU_MODEL_ABORT");
     verifyCmdType(TS_AICPU_MODEL_RESERVED, "TS_AICPU_MODEL_RESERVED");
     verifyCmdType(MAX_UINT32_NUM, "UNKNOWN");
+}
+
+TEST_F(ModelTest, ModelExecuteUsesBlockingPathWhenLaunchBlockingEnabled)
+{
+    rtModel_t rtModel = nullptr;
+    rtStream_t rtStream = nullptr;
+    ASSERT_EQ(rtModelCreate(&rtModel, 0), RT_ERROR_NONE);
+    ASSERT_EQ(rtStreamCreate(&rtStream, 0), RT_ERROR_NONE);
+
+    Model* const model = rt_ut::UnwrapOrNull<Model>(rtModel);
+    Stream* const stream = rt_ut::UnwrapOrNull<Stream>(rtStream);
+    ASSERT_NE(model, nullptr);
+    ASSERT_NE(stream, nullptr);
+    EnableLaunchBlockingFeature(stream);
+    ASSERT_EQ(
+        StreamLaunchBlocking::SetLaunchBlockingMode(stream, RT_STREAM_LAUNCH_BLOCKING_MODE_CTRL_BY_ENV), RT_ERROR_NONE);
+    MOCKER_CPP_VIRTUAL(model, &Model::Execute)
+        .expects(once())
+        .with(eq(stream), eq(-1))
+        .will(returnValue(RT_ERROR_NONE));
+
+    static_cast<Runtime*>(Runtime::Instance())->launchBlockingEnvEnabled_ = true;
+    EXPECT_EQ(rtModelExecute(rtModel, rtStream, 0), RT_ERROR_NONE);
+
+    EXPECT_EQ(rtStreamDestroy(rtStream), RT_ERROR_NONE);
+    EXPECT_EQ(rtModelDestroy(rtModel), RT_ERROR_NONE);
+}
+
+TEST_F(ModelTest, ModelExecuteKeepsAsyncPathWhenLaunchBlockingDisabled)
+{
+    rtModel_t rtModel = nullptr;
+    rtStream_t rtStream = nullptr;
+    ASSERT_EQ(rtModelCreate(&rtModel, 0), RT_ERROR_NONE);
+    ASSERT_EQ(rtStreamCreate(&rtStream, 0), RT_ERROR_NONE);
+
+    Model* const model = rt_ut::UnwrapOrNull<Model>(rtModel);
+    Stream* const stream = rt_ut::UnwrapOrNull<Stream>(rtStream);
+    ASSERT_NE(model, nullptr);
+    ASSERT_NE(stream, nullptr);
+    EnableLaunchBlockingFeature(stream);
+    ASSERT_EQ(
+        StreamLaunchBlocking::SetLaunchBlockingMode(stream, RT_STREAM_LAUNCH_BLOCKING_MODE_CTRL_BY_ENV), RT_ERROR_NONE);
+    MOCKER_CPP_VIRTUAL(model, &Model::Execute)
+        .expects(once())
+        .with(eq(stream), eq(-1))
+        .will(returnValue(RT_ERROR_NONE));
+
+    static_cast<Runtime*>(Runtime::Instance())->launchBlockingEnvEnabled_ = false;
+    EXPECT_EQ(rtModelExecute(rtModel, rtStream, 0), RT_ERROR_NONE);
+
+    EXPECT_EQ(rtStreamDestroy(rtStream), RT_ERROR_NONE);
+    EXPECT_EQ(rtModelDestroy(rtModel), RT_ERROR_NONE);
+}
+
+TEST_F(ModelTest, ModelExecuteUsesAsyncPathForStreamAsyncMode)
+{
+    rtModel_t rtModel = nullptr;
+    rtStream_t rtStream = nullptr;
+    ASSERT_EQ(rtModelCreate(&rtModel, 0), RT_ERROR_NONE);
+    ASSERT_EQ(rtStreamCreate(&rtStream, 0), RT_ERROR_NONE);
+
+    Model* const model = rt_ut::UnwrapOrNull<Model>(rtModel);
+    Stream* const stream = rt_ut::UnwrapOrNull<Stream>(rtStream);
+    ASSERT_NE(model, nullptr);
+    ASSERT_NE(stream, nullptr);
+    EnableLaunchBlockingFeature(stream);
+    ASSERT_EQ(
+        StreamLaunchBlocking::SetLaunchBlockingMode(stream, RT_STREAM_LAUNCH_BLOCKING_MODE_NON_BLOCKING),
+        RT_ERROR_NONE);
+    MOCKER_CPP_VIRTUAL(model, &Model::Execute)
+        .expects(once())
+        .with(eq(stream), eq(-1))
+        .will(returnValue(RT_ERROR_NONE));
+
+    static_cast<Runtime*>(Runtime::Instance())->launchBlockingEnvEnabled_ = true;
+    EXPECT_EQ(rtModelExecute(rtModel, rtStream, 0), RT_ERROR_NONE);
+
+    EXPECT_EQ(rtStreamDestroy(rtStream), RT_ERROR_NONE);
+    EXPECT_EQ(rtModelDestroy(rtModel), RT_ERROR_NONE);
+}
+
+TEST_F(ModelTest, ModelExecuteUsesBlockingPathForStreamSyncMode)
+{
+    rtModel_t rtModel = nullptr;
+    rtStream_t rtStream = nullptr;
+    ASSERT_EQ(rtModelCreate(&rtModel, 0), RT_ERROR_NONE);
+    ASSERT_EQ(rtStreamCreate(&rtStream, 0), RT_ERROR_NONE);
+
+    Model* const model = rt_ut::UnwrapOrNull<Model>(rtModel);
+    Stream* const stream = rt_ut::UnwrapOrNull<Stream>(rtStream);
+    ASSERT_NE(model, nullptr);
+    ASSERT_NE(stream, nullptr);
+    EnableLaunchBlockingFeature(stream);
+    ASSERT_EQ(
+        StreamLaunchBlocking::SetLaunchBlockingMode(stream, RT_STREAM_LAUNCH_BLOCKING_MODE_BLOCKING), RT_ERROR_NONE);
+    MOCKER_CPP_VIRTUAL(model, &Model::Execute)
+        .expects(once())
+        .with(eq(stream), eq(-1))
+        .will(returnValue(RT_ERROR_NONE));
+
+    static_cast<Runtime*>(Runtime::Instance())->launchBlockingEnvEnabled_ = false;
+    EXPECT_EQ(rtModelExecute(rtModel, rtStream, 0), RT_ERROR_NONE);
+
+    EXPECT_EQ(rtStreamDestroy(rtStream), RT_ERROR_NONE);
+    EXPECT_EQ(rtModelDestroy(rtModel), RT_ERROR_NONE);
+}
+
+TEST_F(ModelTest, ModelExecuteUsesAsyncPathInsideNonBlockingSection)
+{
+    LaunchBlockingChipFeatureGuard chipFeatureGuard;
+    rtModel_t rtModel = nullptr;
+    rtStream_t rtStream = nullptr;
+    ASSERT_EQ(rtModelCreate(&rtModel, 0), RT_ERROR_NONE);
+    ASSERT_EQ(rtStreamCreate(&rtStream, 0), RT_ERROR_NONE);
+
+    Model* const model = rt_ut::UnwrapOrNull<Model>(rtModel);
+    Stream* const stream = rt_ut::UnwrapOrNull<Stream>(rtStream);
+    ASSERT_NE(model, nullptr);
+    ASSERT_NE(stream, nullptr);
+    EnableLaunchBlockingFeature(stream);
+    ASSERT_EQ(
+        StreamLaunchBlocking::SetLaunchBlockingMode(stream, RT_STREAM_LAUNCH_BLOCKING_MODE_BLOCKING), RT_ERROR_NONE);
+    MOCKER_CPP_VIRTUAL(stream, &Stream::Synchronize)
+        .expects(once())
+        .with(eq(false), eq(-1))
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(model, &Model::Execute)
+        .expects(once())
+        .with(eq(stream), eq(-1))
+        .will(returnValue(RT_ERROR_NONE));
+
+    ASSERT_EQ(rtNonBlockingLaunchBegin(rtStream, 0ULL), RT_ERROR_NONE);
+    EXPECT_EQ(rtModelExecute(rtModel, rtStream, 0), RT_ERROR_NONE);
+    EXPECT_EQ(rtNonBlockingLaunchEnd(rtStream, 0ULL), RT_ERROR_NONE);
+
+    EXPECT_EQ(rtStreamDestroy(rtStream), RT_ERROR_NONE);
+    EXPECT_EQ(rtModelDestroy(rtModel), RT_ERROR_NONE);
+}
+
+TEST_F(ModelTest, ModelExecuteWithNullStreamUsesDefaultStreamMode)
+{
+    rtModel_t rtModel = nullptr;
+    ASSERT_EQ(rtModelCreate(&rtModel, 0), RT_ERROR_NONE);
+
+    Model* const model = rt_ut::UnwrapOrNull<Model>(rtModel);
+    Context* const context = Runtime::Instance()->CurrentContext();
+    ASSERT_NE(context, nullptr);
+    Stream* const defaultStream = context->DefaultStream_();
+    ASSERT_NE(model, nullptr);
+    ASSERT_NE(defaultStream, nullptr);
+    EnableLaunchBlockingFeature(defaultStream);
+    ASSERT_EQ(
+        StreamLaunchBlocking::SetLaunchBlockingMode(defaultStream, RT_STREAM_LAUNCH_BLOCKING_MODE_NON_BLOCKING),
+        RT_ERROR_NONE);
+    MOCKER_CPP_VIRTUAL(model, &Model::Execute)
+        .expects(once())
+        .with(eq(static_cast<Stream*>(nullptr)), eq(-1))
+        .will(returnValue(RT_ERROR_NONE));
+
+    static_cast<Runtime*>(Runtime::Instance())->launchBlockingEnvEnabled_ = true;
+    EXPECT_EQ(rtModelExecute(rtModel, nullptr, 0), RT_ERROR_NONE);
+
+    EXPECT_EQ(rtModelDestroy(rtModel), RT_ERROR_NONE);
+}
+
+TEST_F(ModelTest, ExecuteWithBlockingWaitsAfterSubmittingModelTask)
+{
+    rtModel_t rtModel = nullptr;
+    rtStream_t rtStream = nullptr;
+    ASSERT_EQ(rtModelCreate(&rtModel, 0), RT_ERROR_NONE);
+    ASSERT_EQ(rtStreamCreate(&rtStream, 0), RT_ERROR_NONE);
+
+    Model* const model = rt_ut::UnwrapOrNull<Model>(rtModel);
+    Stream* const stream = rt_ut::UnwrapOrNull<Stream>(rtStream);
+    ASSERT_NE(model, nullptr);
+    ASSERT_NE(stream, nullptr);
+    model->SetModelExecutorType(EXECUTOR_AICPU);
+    EnableLaunchBlockingFeature(stream);
+    ASSERT_EQ(
+        StreamLaunchBlocking::SetLaunchBlockingMode(stream, RT_STREAM_LAUNCH_BLOCKING_MODE_BLOCKING), RT_ERROR_NONE);
+    MOCKER_CPP(&Model::SubmitExecuteTask).expects(once()).will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(stream, &Stream::Synchronize)
+        .expects(once())
+        .with(eq(false), eq(-1))
+        .will(returnValue(RT_ERROR_DRV_ERR));
+
+    EXPECT_EQ(model->Execute(stream, -1), RT_ERROR_DRV_ERR);
+    EXPECT_EQ(stream->SyncMdlId(), MODEL_ID_INVALID);
+
+    EXPECT_EQ(rtStreamDestroy(rtStream), RT_ERROR_NONE);
+    EXPECT_EQ(rtModelDestroy(rtModel), RT_ERROR_NONE);
+}
+
+TEST_F(ModelTest, CaptureModelExecuteWithoutBlockingDoesNotSynchronize)
+{
+    rtStream_t rtStream = nullptr;
+    ASSERT_EQ(rtStreamCreate(&rtStream, 0), RT_ERROR_NONE);
+    Stream* const stream = rt_ut::UnwrapOrNull<Stream>(rtStream);
+    ASSERT_NE(stream, nullptr);
+    CaptureModel model;
+    model.context_ = stream->Context_();
+    EnableLaunchBlockingFeature(stream);
+    ASSERT_EQ(
+        StreamLaunchBlocking::SetLaunchBlockingMode(stream, RT_STREAM_LAUNCH_BLOCKING_MODE_NON_BLOCKING),
+        RT_ERROR_NONE);
+    MOCKER_CPP(&CaptureModel::ExecuteCommon)
+        .expects(once())
+        .with(eq(stream), eq(25), mockcpp::any())
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(stream, &Stream::Synchronize).expects(never());
+
+    EXPECT_EQ(model.Execute(stream, 25), RT_ERROR_NONE);
+
+    EXPECT_EQ(rtStreamDestroy(rtStream), RT_ERROR_NONE);
+}
+
+TEST_F(ModelTest, CaptureModelExecuteWithBlockingSynchronizesAfterReplay)
+{
+    rtStream_t rtStream = nullptr;
+    ASSERT_EQ(rtStreamCreate(&rtStream, 0), RT_ERROR_NONE);
+    Stream* const stream = rt_ut::UnwrapOrNull<Stream>(rtStream);
+    ASSERT_NE(stream, nullptr);
+    CaptureModel model;
+    model.context_ = stream->Context_();
+    EnableLaunchBlockingFeature(stream);
+    ASSERT_EQ(
+        StreamLaunchBlocking::SetLaunchBlockingMode(stream, RT_STREAM_LAUNCH_BLOCKING_MODE_BLOCKING), RT_ERROR_NONE);
+    MOCKER_CPP(&CaptureModel::ExecuteCommon)
+        .expects(once())
+        .with(eq(stream), eq(25), mockcpp::any())
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(stream, &Stream::Synchronize)
+        .expects(once())
+        .with(eq(false), eq(25))
+        .will(returnValue(RT_ERROR_STREAM_SYNC_TIMEOUT));
+
+    EXPECT_EQ(model.Execute(stream, 25), RT_ERROR_STREAM_SYNC_TIMEOUT);
+    EXPECT_EQ(stream->SyncMdlId(), MODEL_ID_INVALID);
+
+    EXPECT_EQ(rtStreamDestroy(rtStream), RT_ERROR_NONE);
+}
+
+TEST_F(ModelTest, CaptureModelExecuteWithForbiddenStreamDoesNotSynchronizeAgain)
+{
+    rtStream_t rtStream = nullptr;
+    ASSERT_EQ(rtStreamCreateWithFlags(&rtStream, 0, RT_STREAM_FORBIDDEN_DEFAULT), RT_ERROR_NONE);
+    Stream* const stream = rt_ut::UnwrapOrNull<Stream>(rtStream);
+    ASSERT_NE(stream, nullptr);
+    CaptureModel model;
+    model.context_ = stream->Context_();
+    EnableLaunchBlockingFeature(stream);
+    static_cast<Runtime*>(Runtime::Instance())->launchBlockingEnvEnabled_ = true;
+    MOCKER_CPP(&CaptureModel::ExecuteCommon)
+        .expects(once())
+        .with(eq(stream), eq(25), mockcpp::any())
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(stream, &Stream::Synchronize).expects(never());
+
+    EXPECT_EQ(model.Execute(stream, 25), RT_ERROR_NONE);
+
+    EXPECT_EQ(rtStreamDestroy(rtStream), RT_ERROR_NONE);
+}
+
+TEST_F(ModelTest, CaptureModelExecuteWithNullStreamSynchronizesDefaultStream)
+{
+    Context* const context = Runtime::Instance()->CurrentContext();
+    ASSERT_NE(context, nullptr);
+    Stream* const defaultStream = context->DefaultStream_();
+    ASSERT_NE(defaultStream, nullptr);
+    CaptureModel model;
+    model.context_ = context;
+    EnableLaunchBlockingFeature(defaultStream);
+    ASSERT_EQ(
+        StreamLaunchBlocking::SetLaunchBlockingMode(defaultStream, RT_STREAM_LAUNCH_BLOCKING_MODE_BLOCKING),
+        RT_ERROR_NONE);
+    MOCKER_CPP(&CaptureModel::ExecuteCommon)
+        .expects(once())
+        .with(eq(defaultStream), eq(25), mockcpp::any())
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(defaultStream, &Stream::Synchronize)
+        .expects(once())
+        .with(eq(false), eq(25))
+        .will(returnValue(RT_ERROR_NONE));
+
+    EXPECT_EQ(model.Execute(nullptr, 25), RT_ERROR_NONE);
+    EXPECT_EQ(defaultStream->SyncMdlId(), MODEL_ID_INVALID);
+}
+
+TEST_F(ModelTest, CaptureModelExecuteAsyncWithNullStreamUsesDefaultStream)
+{
+    Context* const context = Runtime::Instance()->CurrentContext();
+    ASSERT_NE(context, nullptr);
+    Stream* const defaultStream = context->DefaultStream_();
+    ASSERT_NE(defaultStream, nullptr);
+    CaptureModel model;
+    model.context_ = context;
+    MOCKER_CPP(&CaptureModel::ExecuteCommon)
+        .expects(once())
+        .with(eq(defaultStream), eq(-1), mockcpp::any())
+        .will(returnValue(RT_ERROR_NONE));
+
+    EXPECT_EQ(model.ExecuteAsync(nullptr), RT_ERROR_NONE);
 }
 
 TEST_F(ModelTest, TestModelSetupWithDevMemAllocFailed)
