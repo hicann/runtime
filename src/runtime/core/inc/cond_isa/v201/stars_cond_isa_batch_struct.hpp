@@ -162,12 +162,6 @@ struct RtStarsDqsBatchDequeueFc {
     RtStarsCondOpSystemCsr wPopErr;
     RtStarsCondOpErrorInstr popErr;
     RtStarsCondOpSystemCsr wHandleErr;
-    RtStarsCondOpLoad ldrMbuffMangAddr1;
-    RtStarsCondOpLLWI llwiAddrMask2;
-    RtStarsCondOpLHWI lhwiAddrMask2;
-    RtStarsCondOpSystemCsr csrrcMbufManag1;
-    RtStarsCondOpStore swHanleForFree1;
-    RtStarsCondOpSystemCsr csrrsMbufManag1;
     RtStarsCondOpErrorInstr err;
 
     RtStarsCondOpNop end;

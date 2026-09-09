@@ -898,14 +898,6 @@ void ConstructDqsBatchDequeueFc(RtStarsDqsBatchDequeueFc& fc, const RtStarsDqsBa
 
     // handle_error:
     ConstructSystemCsr(r9, r0, RT_STARS_COND_CSR_CSQ_STATUS_REG, RT_STARS_COND_ISA_SYSTEM_FUNC3_CSRRW, fc.wHandleErr);
-    ConstructLoad(r4, 0U, r5, RT_STARS_COND_ISA_LOAD_FUNC3_LDR, fc.ldrMbuffMangAddr1);
-    ConstructLLWI(r1, AXI_USER_VA_CFG_MASK, fc.llwiAddrMask2);
-    ConstructLHWI(r1, AXI_USER_VA_CFG_MASK, fc.lhwiAddrMask2);
-    ConstructSystemCsr(
-        r1, r0, RT_STARS_COND_CSR_AXI_USER_REG, RT_STARS_COND_ISA_SYSTEM_FUNC3_CSRRC, fc.csrrcMbufManag1);
-    ConstructStore(r4, r8, 0U, RT_STARS_COND_ISA_STORE_FUNC3_SW, fc.swHanleForFree1);
-    ConstructSystemCsr(
-        r1, r0, RT_STARS_COND_CSR_AXI_USER_REG, RT_STARS_COND_ISA_SYSTEM_FUNC3_CSRRS, fc.csrrsMbufManag1);
 
     ConstructErrorInstr(fc.err);
     // end:
