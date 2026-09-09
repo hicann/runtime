@@ -44,7 +44,7 @@ struct ErrorLocation {
     bool hasSymbol = false;
     std::string symbolName;    // FindBestMatchedSymbol 命中的函数符号名
     uint64_t symbolOffset = 0; // fixedPCOffset - symbol.offset
-    SymbolizeResult src;       // llvm-symbolizer 解析出的源码信息
+    SymbolizeResult src;       // llvm-symbolizer 解析出的源码信息（innermost/outermost 双帧）
     std::string oFilePath;     // 实际用于 symbolize 的 .o
     bool skipped = false;      // fixedCurrentPC < fixedStartPC 等无法定位的情形
 };
@@ -62,7 +62,7 @@ public:
     void SetOFilePath(const std::string& oFilePath);
 
     // 定位并打印所有异常 core 的错误符号，同时把每个 core 的定位结果收集到 outLocations。
-    // 每个 core 拿到偏移后即刻 symbolize 并回填 src（RunSymbolizer 原样打印原始输出）。
+    // 每个 core 拿到偏移后逐偏移 symbolize 并回填 src（RunSymbolizer 按行打印原始输出：空行跳过、超长分块）。
     int32_t LocateErrorSymbols(const ExceptionRegInfo& regInfo, std::vector<ErrorLocation>& outLocations);
     // 构建指定 core 的 ErrorLocation（定位 + 打印错误寄存器 + 即刻 symbolize 回填 src）。
     int32_t LocateErrorSymbolsForCore(
@@ -81,6 +81,10 @@ public:
     // 按 (oFilePath, fixedPCOffset) 对异常 core 聚类，统一打印分类汇总到 adump 日志。
     static void PrintClassificationSummary(const std::vector<ErrorLocation>& locations);
 
+    // 构建单个聚类分组的汇总文本（三行：oFile/偏移/symbol、outerSrc/innerSrc、cores 列表），供打印与 UT 共用。
+    static std::string BuildGroupSummaryText(
+        size_t index, const ErrorLocation& loc, const std::vector<const ErrorLocation*>& cores);
+
     static void ClearCache();
 
 private:
@@ -91,7 +95,7 @@ private:
     std::string oFilePath_;
 
     int32_t ParseElfSymbols(const char* elf, size_t elfSize, KernelSymbolSet& symbols);
-    // 定位单个 core 的错误寄存器/PC/symbol 并回填 outLocation（不做 symbolize，源码解析统一批量执行）。
+    // 定位单个 core 的错误寄存器/PC/symbol 并回填 outLocation（不做 symbolize，源码解析统一逐偏移执行）。
     void PrintErrorForCore(rtExceptionErrRegInfo_t coreInfo, ErrorLocation& outLocation);
     // 每行寄存器数：12 * REG_ITEM_MAX_LEN = 360 字节，连同日志头仍低于 slog 单条上限 1024 字节。
     static constexpr size_t REG_NUM_PER_LINE = 12U;
@@ -102,8 +106,8 @@ private:
     // 按 fixedPCOffset 匹配最优符号并回填 outLocation，未命中时打印符号区间辅助定位。
     void MatchSymbolForCore(
         const rtExceptionErrRegInfo_t& coreInfo, uint64_t fixedPCOffset, ErrorLocation& outLocation);
-    // 对同一 .o(oFilePath_) 下所有未跳过 core 的偏移一次性批量 symbolize，按序回填各 loc.src。
-    // 单进程处理全部偏移，最坏耗时收敛为单次超时，避免逐核各起进程导致的 coreNum×timeout 放大。
+    // 对同一 .o(oFilePath_) 下所有未跳过 core 的偏移逐偏移 symbolize，按序回填各 loc.src。
+    // 逐偏移独立进程：单偏移失败只丢自身、其余继续；代价是最坏 N×3s（典型每偏移几十 ms）。
     void SymbolizeCollectedLocations(std::vector<ErrorLocation>& locations) const;
     void ResetState();
     bool GetCorrectedStartPC(const rtExceptionErrRegInfo& coreInfo, uint64_t& startPC) const;

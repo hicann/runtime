@@ -25,6 +25,9 @@
 namespace Adx {
 namespace {
 std::mutex g_cacheMutex;
+// 逐行打印后多设备并发的汇总打印需保证标签行+全部 chunk 连续（slog
+// 只保证单条原子）：序列锁仅包裹打印段，汇总计算不持锁。
+std::mutex g_summaryPrintMutex;
 
 // 符号过滤计数关系：
 // total = accepted + nonFunc + invalidSection + invalidName。
@@ -469,6 +472,15 @@ struct SummaryGroup {
     std::vector<const ErrorLocation*> cores;
 };
 
+// 格式化 SourceLocation 为可读字符串：ok 时 "file:line:col"，否则 "unknown"。
+std::string FormatSourceLocation(const SourceLocation& loc)
+{
+    if (!loc.ok) {
+        return "unknown";
+    }
+    return loc.srcFile + ":" + std::to_string(loc.srcLine) + ":" + std::to_string(loc.srcColumn);
+}
+
 // 按 (oFilePath, fixedPCOffset) 聚类：命中已有组则追加 core，否则新建组并拷贝定位信息。
 std::vector<SummaryGroup> BuildSummaryGroups(const std::vector<ErrorLocation>& locations)
 {
@@ -496,30 +508,19 @@ std::vector<SummaryGroup> BuildSummaryGroups(const std::vector<ErrorLocation>& l
     return groups;
 }
 
-// 打印单个分组：core 列表、symbol+偏移、func、source 行号，缺失信息统一显示 unknown。
+// 打印单个分组：core 列表、symbol+偏移、双帧 source 行号，缺失信息统一显示 unknown。
 void PrintSummaryGroup(size_t index, const SummaryGroup& g)
 {
-    std::ostringstream coresOss;
-    for (size_t c = 0; c < g.cores.size(); ++c) {
-        if (c != 0) {
-            coresOss << ",";
-        }
-        coresOss << "{id=" << g.cores[c]->coreId << ",type=" << g.cores[c]->coreType << "}";
+    const std::string text = KernelSymbolLocator::BuildGroupSummaryText(index, *g.cores[0], g.cores);
+    const std::vector<std::string> chunks = KernelSourceSymbolizer::SplitRawOutputForLog(text);
+    if (chunks.empty()) {
+        return; // 防御：每组至少一行，理论上不可达
     }
-    std::ostringstream symbolOss;
-    if (g.hasSymbol) {
-        symbolOss << g.symbolName << "+0x" << std::hex << g.symbolOffset;
-    } else {
-        symbolOss << "unknown";
+    std::lock_guard<std::mutex> lock(g_summaryPrintMutex);
+    IDE_LOGE("[Dump][Exception][Symbolize] Group[%zu] summary (cores=%zu):", index, g.cores.size());
+    for (const std::string& chunk : chunks) {
+        IDE_LOGE("%s", chunk.c_str());
     }
-    const std::string sourceStr =
-        g.src.ok ? (g.src.srcFile + ":" + std::to_string(g.src.srcLine) + ":" + std::to_string(g.src.srcColumn)) :
-                   "unknown";
-    IDE_LOGE(
-        "[Dump][Exception][Symbolize] Group[%zu] oFile=%s fixedPCOffset=0x%lx symbol=%s "
-        "source=%s cores=[%s]",
-        index, g.oFilePath.empty() ? "unknown" : g.oFilePath.c_str(), g.fixedPCOffset, symbolOss.str().c_str(),
-        sourceStr.c_str(), coresOss.str().c_str());
 }
 } // namespace
 
@@ -724,7 +725,7 @@ void KernelSymbolLocator::PrintErrorForCore(rtExceptionErrRegInfo_t coreInfo, Er
         coreInfo.coreId, coreType, coreInfo.startPC, fixedStartPC, coreInfo.currentPC, fixedCurrentPC, fixedPCOffset);
 
     // 源码解析不在此逐核进行：偏移已回填 outLocation.fixedPCOffset，由 SymbolizeCollectedLocations
-    // 收齐所有核后对同一 .o 一次性批量 symbolize，避免每核各起一个 llvm-symbolizer 进程放大超时。
+    // 收齐所有核后对同一 .o 逐偏移独立 symbolize，单偏移失败只丢自身、其余继续；最坏 N×3s 为已接受权衡。
     MatchSymbolForCore(coreInfo, fixedPCOffset, outLocation);
 }
 
@@ -771,13 +772,12 @@ void KernelSymbolLocator::SymbolizeCollectedLocations(std::vector<ErrorLocation>
     if (offsets.empty()) {
         return;
     }
-    // 同一 .o 的全部偏移由一个 llvm-symbolizer 进程一次解析，最坏耗时收敛为单次超时。
+    // 逐偏移 best-effort：返回值仅指示是否全部成功，部分失败不阻断回填。
     std::vector<SymbolizeResult> results;
     if (!KernelSourceSymbolizer::Symbolize(oFilePath_, offsets, results)) {
         IDE_LOGW(
-            "Symbolize kernel source failed for all cores, oFile=%s, offsetCount=%zu.", oFilePath_.c_str(),
+            "Symbolize kernel source failed for some or all cores, oFile=%s, offsetCount=%zu.", oFilePath_.c_str(),
             offsets.size());
-        return;
     }
     for (size_t k = 0; k < idxMap.size() && k < results.size(); ++k) {
         locations[idxMap[k]].src = results[k];
@@ -793,7 +793,8 @@ int32_t KernelSymbolLocator::LocateErrorSymbols(
         exceptionRegInfo.errRegInfo != nullptr && exceptionRegInfo.coreNum != 0, return ADUMP_FAILED,
         "Exception register info is null or core num is zero.");
 
-    // 先逐核定位偏移与符号，再对同一 .o 的所有偏移一次性批量 symbolize，避免逐核各起进程放大超时。
+    // 先逐核定位偏移与符号，再对同一 .o 的所有偏移逐偏移独立 symbolize，单偏移失败只丢自身、其余继续；最坏 N×3s
+    // 为已接受权衡。
     for (uint32_t i = 0; i < exceptionRegInfo.coreNum; i++) {
         ErrorLocation loc;
         PrintErrorForCore(exceptionRegInfo.errRegInfo[i], loc);
@@ -845,6 +846,36 @@ void KernelSymbolLocator::PrintClassificationSummary(const std::vector<ErrorLoca
     for (size_t i = 0; i < groups.size(); ++i) {
         PrintSummaryGroup(i, groups[i]);
     }
+}
+
+std::string KernelSymbolLocator::BuildGroupSummaryText(
+    size_t index, const ErrorLocation& loc, const std::vector<const ErrorLocation*>& cores)
+{
+    std::ostringstream oss;
+    oss << "Group[" << index << "] oFile=" << (loc.oFilePath.empty() ? "unknown" : loc.oFilePath) << " fixedPCOffset=0x"
+        << std::hex << loc.fixedPCOffset << std::dec;
+    if (loc.hasSymbol) {
+        oss << " symbol=" << loc.symbolName << "+0x" << std::hex << loc.symbolOffset << std::dec << "\n";
+    } else {
+        oss << " symbol=unknown\n";
+    }
+    oss << "Group[" << index << "] outerSrc=" << FormatSourceLocation(loc.src.outermost)
+        << " innerSrc=" << FormatSourceLocation(loc.src.innermost) << "\n";
+    // cores 数量多时按 12 个/行拆分（沿用寄存器行 REG_NUM_PER_LINE 语义），每行自带 Group[N]
+    // 前缀与字段名，分块续传时保持自描述。
+    constexpr size_t CORES_PER_LINE = 12U;
+    for (size_t begin = 0; begin < cores.size(); begin += CORES_PER_LINE) {
+        const size_t end = std::min(begin + CORES_PER_LINE, cores.size());
+        oss << "Group[" << index << "] cores=[";
+        for (size_t c = begin; c < end; ++c) {
+            if (c != begin) {
+                oss << ",";
+            }
+            oss << "{id=" << cores[c]->coreId << ",type=" << cores[c]->coreType << "}";
+        }
+        oss << "]\n";
+    }
+    return oss.str();
 }
 
 uint64_t KernelSymbolLocator::FixPcByErrorRegs(const rtExceptionErrRegInfo_t& coreInfo)
