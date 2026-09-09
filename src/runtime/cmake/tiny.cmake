@@ -177,6 +177,7 @@ set(libruntime_stream_common_src_files
 set(libruntime_stream_src_files
     ${libruntime_stream_common_src_files}
 
+    ${RUNTIME_CORE_DIR}/src/stream/stream_task_stars.cc
     ${RUNTIME_CORE_DIR}/src/stream/v100/stream_creator_c.cc
 )
 
@@ -187,6 +188,8 @@ set(libruntime_profile_src_files
     ${RUNTIME_CORE_DIR}/src/profiler/prof_map_ge_model_device.cc
     ${RUNTIME_CORE_DIR}/src/profiler/profile_log_record.cc
     ${RUNTIME_CORE_DIR}/src/profiler/npu_driver_record.cc
+    ${RUNTIME_CORE_DIR}/src/profiler/profiler_task_stars.cc
+    ${RUNTIME_CORE_DIR}/src/profiler/profiler_task_common.cc
 )
 set(libruntime_arg_loader_files
     ${RUNTIME_CORE_DIR}/src/kernel/arg_loader/uma_arg_loader.cc
@@ -510,6 +513,8 @@ set(libruntime_v100_src_files
     ${RUNTIME_CORE_DIR}/src/profiler/api_profile_log_decorator.cc
     ${RUNTIME_CORE_DIR}/src/profiler/profile_log_record.cc
     ${RUNTIME_CORE_DIR}/src/profiler/npu_driver_record.cc
+    ${RUNTIME_CORE_DIR}/src/profiler/profiler_task_stars.cc
+    ${RUNTIME_CORE_DIR}/src/profiler/profiler_task_common.cc
     ${libruntime_arg_loader_files}
     ${RUNTIME_CORE_DIR}/src/device/device_state_callback_manager.cc
     ${RUNTIME_CORE_DIR}/src/stream/stream_state_callback_manager.cc

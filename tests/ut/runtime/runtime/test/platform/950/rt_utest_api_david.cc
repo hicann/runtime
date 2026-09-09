@@ -5911,7 +5911,7 @@ TEST_F(ApiDavidTest, test_overflow_switch_task_on_david)
     uint64_t newSqAddr = reinterpret_cast<uint64_t>(sqe);
     stream_->SetSqBaseAddr(newSqAddr);
 
-    MOCKER(SetOverflowSwitchOnStream).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(StreamSetOverflowSwitch).stubs().will(returnValue(RT_ERROR_NONE));
     ret = rtSetStreamOverflowSwitch(streamHandle_, 1U);
     EXPECT_EQ(ret, ACL_RT_SUCCESS);
     ret = rtGetStreamOverflowSwitch(streamHandle_, &flags);
@@ -11195,7 +11195,7 @@ TEST_F(ApiDavidTest, StreamDatadumpInfoLoad_CheckTaskFail)
     MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
 
     uint8_t dumpInfo[16] = {};
-    rtError_t error = StreamDatadumpInfoLoad(dumpInfo, sizeof(dumpInfo), stream_);
+    rtError_t error = StreamDatadumpInfoLoad(dumpInfo, sizeof(dumpInfo), 0U, stream_);
     EXPECT_NE(error, RT_ERROR_NONE);
 }
 
@@ -11215,7 +11215,7 @@ TEST_F(ApiDavidTest, StreamDatadumpInfoLoad_SyncTimeout)
     MOCKER_CPP_VIRTUAL(stream_, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_STREAM_SYNC_TIMEOUT));
 
     uint8_t dumpInfo[16] = {};
-    rtError_t error = StreamDatadumpInfoLoad(dumpInfo, sizeof(dumpInfo), stream_);
+    rtError_t error = StreamDatadumpInfoLoad(dumpInfo, sizeof(dumpInfo), 0U, stream_);
     EXPECT_EQ(error, RT_ERROR_STREAM_SYNC_TIMEOUT);
 
     stream_->SetSqBaseAddr(oldSqAddr);
@@ -11238,7 +11238,7 @@ TEST_F(ApiDavidTest, StreamDatadumpInfoLoad_SyncOtherError)
     MOCKER_CPP_VIRTUAL(stream_, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_DRV_ERR));
 
     uint8_t dumpInfo[16] = {};
-    rtError_t error = StreamDatadumpInfoLoad(dumpInfo, sizeof(dumpInfo), stream_);
+    rtError_t error = StreamDatadumpInfoLoad(dumpInfo, sizeof(dumpInfo), 0U, stream_);
     EXPECT_NE(error, RT_ERROR_NONE);
 
     stream_->SetSqBaseAddr(oldSqAddr);
@@ -11280,15 +11280,15 @@ TEST_F(ApiDavidTest, SyncGetDeviceMsg_DavidSendTaskFail)
     EXPECT_NE(error, RT_ERROR_NONE);
 }
 
-TEST_F(ApiDavidTest, SetOverflowSwitchOnStream_CheckTaskFail)
+TEST_F(ApiDavidTest, StreamSetOverflowSwitch_CheckTaskFail)
 {
     MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
 
-    rtError_t error = SetOverflowSwitchOnStream(stream_, 1U);
+    rtError_t error = StreamSetOverflowSwitch(stream_, 1U, nullptr);
     EXPECT_NE(error, RT_ERROR_NONE);
 }
 
-TEST_F(ApiDavidTest, SetOverflowSwitchOnStream_AllocTaskInfoForCaptureFail)
+TEST_F(ApiDavidTest, StreamSetOverflowSwitch_AllocTaskInfoForCaptureFail)
 {
     MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP(static_cast<TaskInfo* (Stream::*)(TaskInfo*, tsTaskType_t, rtError_t&, uint32_t, UpdateTaskFlag)>(
@@ -11297,11 +11297,11 @@ TEST_F(ApiDavidTest, SetOverflowSwitchOnStream_AllocTaskInfoForCaptureFail)
         .with(mockcpp::any(), mockcpp::any(), outBound(RT_ERROR_INVALID_VALUE), mockcpp::any(), mockcpp::any())
         .will(returnValue(static_cast<TaskInfo*>(nullptr)));
 
-    rtError_t error = SetOverflowSwitchOnStream(stream_, 1U);
+    rtError_t error = StreamSetOverflowSwitch(stream_, 1U, nullptr);
     EXPECT_NE(error, RT_ERROR_NONE);
 }
 
-TEST_F(ApiDavidTest, SetOverflowSwitchOnStream_SubmitTaskPostProcFail)
+TEST_F(ApiDavidTest, StreamSetOverflowSwitch_SubmitTaskPostProcFail)
 {
     rtDavidSqe_t* sqe = (rtDavidSqe_t*)malloc(3 * sizeof(rtDavidSqe_t));
     uint64_t oldSqAddr = stream_->GetSqBaseAddr();
@@ -11319,7 +11319,7 @@ TEST_F(ApiDavidTest, SetOverflowSwitchOnStream_SubmitTaskPostProcFail)
     MOCKER(DavidSendTask).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER(SubmitTaskPostProc).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
 
-    rtError_t error = SetOverflowSwitchOnStream(stream_, 1U);
+    rtError_t error = StreamSetOverflowSwitch(stream_, 1U, nullptr);
     EXPECT_NE(error, RT_ERROR_NONE);
 
     stream_->SetSqBaseAddr(oldSqAddr);
@@ -11367,7 +11367,7 @@ TEST_F(ApiDavidTest, StreamAicpuInfoLoad_CheckTaskFail)
     MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
 
     uint8_t aicpuInfo[16] = {};
-    rtError_t error = StreamAicpuInfoLoad(stream_, aicpuInfo, sizeof(aicpuInfo));
+    rtError_t error = StreamAicpuInfoLoad(stream_, aicpuInfo, sizeof(aicpuInfo), device_);
     EXPECT_NE(error, RT_ERROR_NONE);
 }
 
@@ -11381,7 +11381,7 @@ TEST_F(ApiDavidTest, StreamAicpuInfoLoad_AllocTaskInfoFail)
         .will(returnValue(static_cast<TaskInfo*>(nullptr)));
 
     uint8_t aicpuInfo[16] = {};
-    rtError_t error = StreamAicpuInfoLoad(stream_, aicpuInfo, sizeof(aicpuInfo));
+    rtError_t error = StreamAicpuInfoLoad(stream_, aicpuInfo, sizeof(aicpuInfo), device_);
     EXPECT_NE(error, RT_ERROR_NONE);
 }
 
@@ -11401,7 +11401,7 @@ TEST_F(ApiDavidTest, StreamAicpuInfoLoad_SyncTimeout)
     MOCKER_CPP_VIRTUAL(stream_, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_STREAM_SYNC_TIMEOUT));
 
     uint8_t aicpuInfo[16] = {};
-    rtError_t error = StreamAicpuInfoLoad(stream_, aicpuInfo, sizeof(aicpuInfo));
+    rtError_t error = StreamAicpuInfoLoad(stream_, aicpuInfo, sizeof(aicpuInfo), device_);
     EXPECT_EQ(error, RT_ERROR_STREAM_SYNC_TIMEOUT);
 
     stream_->SetSqBaseAddr(oldSqAddr);
@@ -11424,7 +11424,7 @@ TEST_F(ApiDavidTest, StreamAicpuInfoLoad_SyncOtherError)
     MOCKER_CPP_VIRTUAL(stream_, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_DRV_ERR));
 
     uint8_t aicpuInfo[16] = {};
-    rtError_t error = StreamAicpuInfoLoad(stream_, aicpuInfo, sizeof(aicpuInfo));
+    rtError_t error = StreamAicpuInfoLoad(stream_, aicpuInfo, sizeof(aicpuInfo), device_);
     EXPECT_NE(error, RT_ERROR_NONE);
 
     stream_->SetSqBaseAddr(oldSqAddr);

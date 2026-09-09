@@ -119,21 +119,11 @@ public:
     // Wait event recorded to complete.
     rtError_t Synchronize(int32_t timeout);
 
-    rtError_t DatadumpInfoLoad(const void* const dumpInfo, const uint32_t length, const uint32_t flag);
-
-    rtError_t AicpuInfoLoad(const void* const aicpuInfo, const uint32_t length);
-
     rtError_t DebugRegister(
         Model* const mdl, const uint32_t flag, const void* const addr, uint32_t* const streamId,
         uint32_t* const taskId);
 
     rtError_t DebugUnRegister(Model* const mdl);
-
-    rtError_t DebugRegisterForStream(
-        Stream* const debugStream, const uint32_t flag, const void* const addr, uint32_t* const streamId,
-        uint32_t* const taskId);
-
-    rtError_t DebugUnRegisterForStream(Stream* const debugStream);
 
     rtError_t GetDevArgsAddr(
         Stream* const stm, const rtArgsEx_t* const argsInfo, void** const devArgsAddr, void** const argsHandle) const;
@@ -249,13 +239,7 @@ public:
 
     rtError_t RdmaDbSend(const uint32_t dbIndex, const uint64_t dbInfo, Stream* const stm);
 
-    rtError_t ProfilerTrace(const uint64_t id, const bool notifyFlag, const uint32_t flags, Stream* const stm);
-
-    rtError_t ProfilerTraceEx(const uint64_t id, const uint64_t modelId, const uint16_t tagId, Stream* stm);
-
     rtError_t SetStreamSqLockUnlock(Stream* const stm, const bool isLock);
-
-    rtError_t NopTask(Stream* const stm) const;
 
     rtError_t CopyTilingTabToDev(
         Program* const programHdl, const Device* const device, void** devCopyMem, uint32_t* TilingTabLen);
@@ -309,25 +293,13 @@ public:
     void PutModule(Module* const delModule);
     rtError_t ReleaseModule(const uint32_t id);
 
-    rtError_t StartOnlineProf(Stream* const stm, const uint32_t sampleNum);
-    rtError_t StopOnlineProf(Stream* const stm);
     rtError_t GetOnlineProfData(
         const Stream* const stm, rtProfDataInfo_t* const pProfData, const uint32_t profDataNum) const;
 
-    rtError_t AdcProfiler(Stream* const stm, const uint64_t addr, const uint32_t length);
     rtError_t LabelSwitchListCreate(Label** const labels, const size_t num, void** const labelList) const;
 
     rtError_t FftsPlusTaskLaunch(
         const rtFftsPlusTaskInfo_t* const fftsPlusTaskInfo, Stream* const stm, const uint32_t flag);
-    rtError_t CmoAddrTaskLaunch(
-        rtCmoAddrInfo* const cmoAddrInfo, const uint64_t destMax, const rtCmoOpCode_t cmoOpCode, Stream* const stm,
-        const uint32_t flag);
-    rtError_t NpuGetFloatStatus(
-        void* const outputAddrPtr, const uint64_t outputSize, const uint32_t checkMode, Stream* const stm,
-        bool isDebug = false);
-    rtError_t NpuClearFloatStatus(const uint32_t checkMode, Stream* const stm, bool isDebug = false);
-    rtError_t SetStreamOverflowSwitch(Stream* const stm, const uint32_t flags);
-
     rtError_t DvppGroupCreate(DvppGrp** grp, const uint32_t flags);
     rtError_t DvppGroupDestory(DvppGrp* grp);
     rtError_t DvppWaitGroupReport(DvppGrp* const grp, const rtDvppGrpCallback callBackFunc, const int32_t timeout);

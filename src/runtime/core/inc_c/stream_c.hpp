@@ -15,6 +15,7 @@
 #include "program.hpp"
 #include "starsv2_base.hpp"
 #include "runtime_intf.hpp"
+#include "stream_task_c.hpp"
 namespace cce {
 namespace runtime {
 rtError_t StreamLaunchKernelPrepare(
@@ -23,31 +24,16 @@ rtError_t StreamLaunchKernelPrepare(
 void StreamLaunchKernelRecycle(
     StarsArgLoaderResult& result, TaskInfo*& recycleTask, const Program* const prog, Stream* stm);
 
-rtError_t CmoAddrTaskLaunchForDavid(
-    rtDavidCmoAddrInfo* const cmoAddrInfo, const rtCmoOpCode_t cmoOpCode, Stream* const stm);
 rtError_t CallbackLaunchForDavidWithBlock(
     const rtCallback_t callBackFunc, void* const fnData, Stream* const stm, const uint64_t threadId);
 rtError_t CallbackLaunchForDavidNoBlock(
     const rtCallback_t callBackFunc, void* const fnData, Stream* const stm, const uint64_t threadId);
-rtError_t StreamDatadumpInfoLoad(const void* const dumpInfo, const uint32_t length, Stream* const dftStm);
-rtError_t StreamDebugRegister(
-    Stream* const debugStream, const uint32_t flag, const void* const addr, uint32_t* const streamId,
-    uint32_t* const taskId);
-rtError_t StreamDebugUnRegister(Stream* const debugStream);
-rtError_t StreamNpuGetFloatStatus(
-    void* const outputAddrPtr, const uint64_t outputSize, const uint32_t checkMode, Stream* const stm,
-    bool isDebug = false);
-rtError_t StreamNpuClearFloatStatus(const uint32_t checkMode, Stream* const stm, bool isDebug = false);
 rtError_t StreamGetSatStatus(const uint64_t outputSize, Stream* const curStm);
 rtError_t SyncGetDeviceMsg(
     Device* const dev, const void* const devMemAddr, const uint32_t devMemSize, const rtGetDevMsgType_t getDevMsgType);
-rtError_t SetOverflowSwitchOnStream(Stream* const stm, const uint32_t flags);
 rtError_t SetTagOnStream(Stream* const stm, const uint32_t geOpTag);
 rtError_t StreamUbDbSend(const rtUbDbInfo_t* const dbInfo, Stream* const stm, const uint16_t source);
 rtError_t StreamUbDirectSend(rtUbWqeInfo_t* const wqeInfo, Stream* const stm);
-
-rtError_t StreamNopTask(Stream* const stm);
-rtError_t StreamAicpuInfoLoad(Stream* const dftStm, const void* const aicpuInfo, const uint32_t length);
 
 rtError_t SetTimeoutConfigTaskSubmitDavid(Stream* const stm, const rtTaskTimeoutType_t type, const uint32_t timeout);
 

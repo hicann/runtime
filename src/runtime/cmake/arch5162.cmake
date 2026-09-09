@@ -154,6 +154,7 @@ set(libruntime_stream_common_src_files
 # v100
 set(libruntime_stream_src_files
     ${libruntime_stream_common_src_files}
+    ${RUNTIME_CORE_DIR}/src/stream/stream_task_stars.cc
     ${RUNTIME_CORE_DIR}/src/stream/v100/stream_creator_c.cc
 )
 
@@ -163,6 +164,8 @@ set(libruntime_profile_src_files
     ${RUNTIME_CORE_DIR}/src/profiler/onlineprof.cc
     ${RUNTIME_CORE_DIR}/src/profiler/prof_map_ge_model_device.cc
     ${RUNTIME_CORE_DIR}/src/profiler/profiler.cc
+    ${RUNTIME_CORE_DIR}/src/profiler/profiler_task_stars.cc
+    ${RUNTIME_CORE_DIR}/src/profiler/profiler_task_common.cc
 )
 
 set(libruntime_arg_loader_files

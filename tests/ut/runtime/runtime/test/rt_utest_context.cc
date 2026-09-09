@@ -25,6 +25,8 @@
 #include "label_c.hpp"
 #include "dvpp_c.hpp"
 #include "cmo_barrier_c.hpp"
+#include "stream_task_c.hpp"
+#include "profiler_c.hpp"
 #include "profiling_task.h"
 #include "cond_op_stream_task.h"
 #include "reduce_task.h"
@@ -155,7 +157,7 @@ TEST_F(ContextTest, NpuGetFloatStatus_abnormal_001)
     Engine* engine = new AsyncHwtsEngine(nullptr);
     MOCKER_CPP_VIRTUAL(engine, &Engine::SubmitTaskNormal).stubs().will(returnValue(RT_ERROR_NONE));
 
-    error = ctx->NpuGetFloatStatus(nullptr, 0U, 0U, stm, true);
+    error = StreamNpuGetFloatStatus(nullptr, 0U, 0U, stm, true);
     EXPECT_EQ(error, RT_ERROR_NONE);
     stm->taskResMang_ = preTaskResMng;
     (void)((Runtime*)Runtime::Instance())->PrimaryContextRelease(devId);
@@ -201,7 +203,7 @@ TEST_F(ContextTest, NpuClearFloatStatus_abnormal_001)
     Engine* engine = new AsyncHwtsEngine(nullptr);
     MOCKER_CPP_VIRTUAL(engine, &Engine::SubmitTaskNormal).stubs().will(returnValue(RT_ERROR_NONE));
 
-    error = ctx->NpuClearFloatStatus(0U, stm, true);
+    error = StreamNpuClearFloatStatus(0U, stm, true);
     EXPECT_EQ(error, RT_ERROR_NONE);
     stm->taskResMang_ = preTaskResMng;
     (void)((Runtime*)Runtime::Instance())->PrimaryContextRelease(devId);
@@ -1284,9 +1286,9 @@ TEST_F(ContextTest, SetStreamOverflowSwitch_Test)
         .stubs()
         .will(returnValue(RT_ERROR_DRV_ERR))
         .then(returnValue(RT_ERROR_NONE));
-    error = ctx->SetStreamOverflowSwitch(stmPtr, 0);
+    error = StreamSetOverflowSwitch(stmPtr, 0, ctx->DefaultStream_());
     EXPECT_EQ(error, RT_ERROR_DRV_ERR);
-    error = ctx->SetStreamOverflowSwitch(stmPtr, 0);
+    error = StreamSetOverflowSwitch(stmPtr, 0, ctx->DefaultStream_());
     EXPECT_EQ(error, RT_ERROR_NONE);
     stmPtr->taskResMang_ = nullptr;
     GlobalMockObject::verify();
@@ -4086,9 +4088,9 @@ TEST_F(ContextTest, AdcProfiler_test)
     MOCKER(AdcProfTaskInit).stubs().will(returnValue(1)).then(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(ctx->device_, &Device::SubmitTask).stubs().will(returnValue(1));
     MOCKER_CPP(&TaskFactory::Recycle).stubs().will(returnValue(RT_ERROR_NONE));
-    error = ctx->AdcProfiler(stream, 0, 0);
+    error = AdcProfiler(stream, 0, 0);
     EXPECT_EQ(error, 1);
-    error = ctx->AdcProfiler(stream, 0, 0);
+    error = AdcProfiler(stream, 0, 0);
     EXPECT_EQ(error, 1);
 
     (void)((Runtime*)Runtime::Instance())->PrimaryContextRelease(devId);
@@ -4116,7 +4118,7 @@ TEST_F(ContextTest, AdcProfilerExt_test)
     int tmpMemory;
     auto preVal = stream->taskResMang_;
     stream->taskResMang_ = reinterpret_cast<TaskResManage*>(&tmpMemory);
-    error = ctx->AdcProfiler(stream, 0, 0);
+    error = AdcProfiler(stream, 0, 0);
     EXPECT_EQ(error, RT_ERROR_STREAM_INVALID);
     (void)((Runtime*)Runtime::Instance())->PrimaryContextRelease(devId);
     stream->taskResMang_ = preVal;
@@ -4163,10 +4165,10 @@ TEST_F(ContextTest, StartOnlineProf_test)
     MOCKER(OnlineProfEnableTaskInit).stubs().will(returnValue(1)).then(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(ctx->device_, &Device::SubmitTask).stubs().will(returnValue(1));
     MOCKER_CPP(&TaskFactory::Recycle).stubs().will(returnValue(RT_ERROR_NONE));
-    error = ctx->StartOnlineProf(streamA, 1);
+    error = StartOnlineProf(streamA, 1);
     EXPECT_EQ(error, 1);
 
-    error = ctx->StartOnlineProf(streamB, 2);
+    error = StartOnlineProf(streamB, 2);
     EXPECT_EQ(error, 1);
 
     (void)((Runtime*)Runtime::Instance())->PrimaryContextRelease(devId);
@@ -4208,7 +4210,7 @@ TEST_F(ContextTest, ProfilerTraceEx_test)
     MOCKER_CPP_VIRTUAL(ctx->device_, &Device::SubmitTask).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP(&TaskFactory::Recycle).stubs().will(returnValue(RT_ERROR_NONE));
     stream->streamId_ = MAX_INT32_NUM;
-    error = ctx->ProfilerTraceEx(0, 0, 0, stream);
+    error = ProfTraceEx(0, 0, 0, stream, ctx);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     ctx->defaultStream_->taskResMang_ = preVal_defaultStream;
@@ -4217,6 +4219,116 @@ TEST_F(ContextTest, ProfilerTraceEx_test)
     stream->taskResMang_ = preVal;
     delete stream;
     delete device;
+    GlobalMockObject::verify();
+}
+
+TEST_F(ContextTest, RefactoredStreamTaskSuccessPaths)
+{
+    int32_t devId;
+    ASSERT_EQ(rtGetDevice(&devId), RT_ERROR_NONE);
+    RefObject<Context*>* const refObject =
+        static_cast<RefObject<Context*>*>(Runtime::Instance()->PrimaryContextRetain(devId));
+    ASSERT_NE(refObject, nullptr);
+    Context* const ctx = refObject->GetVal();
+    ASSERT_NE(ctx, nullptr);
+    Device* const device = ctx->device_;
+    ASSERT_NE(device, nullptr);
+
+    Stream* stream = new Stream(device, 0);
+    ASSERT_NE(stream, nullptr);
+    TaskResManage taskResManage;
+    TaskResManage* const oldTaskResManage = stream->taskResMang_;
+    stream->taskResMang_ = &taskResManage;
+
+    MOCKER_CPP_VIRTUAL(device, &Device::IsSupportFeature).stubs().will(returnValue(false));
+    MOCKER_CPP_VIRTUAL(device, &Device::SubmitTask).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(stream, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(&TaskFactory::Recycle).stubs().will(returnValue(RT_ERROR_NONE));
+
+    EXPECT_EQ(StreamNopTask(stream), RT_ERROR_NONE);
+
+    Model model;
+    stream->SetModel(&model);
+    rtCmoAddrInfo cmoAddrInfo = {};
+    NpuDriver* const driver = static_cast<NpuDriver*>(device->Driver_());
+    ASSERT_NE(driver, nullptr);
+    MOCKER_CPP_VIRTUAL(driver, &NpuDriver::MemCopySync).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(driver, &NpuDriver::GetRunMode)
+        .stubs()
+        .will(returnValue(static_cast<uint32_t>(RT_RUN_MODE_OFFLINE)));
+    EXPECT_EQ(StreamCmoAddrTaskLaunch(&cmoAddrInfo, sizeof(cmoAddrInfo), RT_CMO_WRITEBACK, stream, 0U), RT_ERROR_NONE);
+    stream->SetModel(nullptr);
+
+    uint8_t loadInfo[16] = {};
+    MOCKER(DataDumpLoadInfoTaskInit).stubs().will(returnValue(RT_ERROR_NONE)).then(returnValue(RT_ERROR_INVALID_VALUE));
+    EXPECT_EQ(StreamDatadumpInfoLoad(loadInfo, sizeof(loadInfo), RT_KERNEL_DEFAULT, stream), RT_ERROR_NONE);
+    EXPECT_EQ(StreamDatadumpInfoLoad(loadInfo, sizeof(loadInfo), RT_KERNEL_DEFAULT, stream), RT_ERROR_INVALID_VALUE);
+
+    MOCKER(AicpuInfoLoadTaskInit).stubs().will(returnValue(RT_ERROR_NONE));
+    EXPECT_EQ(StreamAicpuInfoLoad(stream, loadInfo, sizeof(loadInfo), device), RT_ERROR_NONE);
+
+    RawDevice* const rawDevice = static_cast<RawDevice*>(device);
+    const bool oldIsStars = rawDevice->properties_.isStars;
+    rawDevice->properties_.isStars = true;
+    uint32_t streamId = 0U;
+    uint32_t taskId = 0U;
+    uint64_t debugAddr = 0U;
+    MOCKER(DebugRegisterForStreamTaskInit).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(DebugUnRegisterForStreamTaskInit).stubs().will(returnValue(RT_ERROR_NONE));
+    EXPECT_EQ(StreamDebugRegister(stream, 0U, &debugAddr, &streamId, &taskId, stream), RT_ERROR_NONE);
+    EXPECT_TRUE(stream->IsDebugRegister());
+    EXPECT_EQ(StreamDebugUnRegister(stream, stream), RT_ERROR_NONE);
+    EXPECT_FALSE(stream->IsDebugRegister());
+    rawDevice->properties_.isStars = oldIsStars;
+
+    stream->taskResMang_ = oldTaskResManage;
+    delete stream;
+    (void)Runtime::Instance()->PrimaryContextRelease(devId);
+    GlobalMockObject::verify();
+}
+
+TEST_F(ContextTest, RefactoredProfilerTaskPaths)
+{
+    int32_t devId;
+    ASSERT_EQ(rtGetDevice(&devId), RT_ERROR_NONE);
+    RefObject<Context*>* const refObject =
+        static_cast<RefObject<Context*>*>(Runtime::Instance()->PrimaryContextRetain(devId));
+    ASSERT_NE(refObject, nullptr);
+    Context* const ctx = refObject->GetVal();
+    ASSERT_NE(ctx, nullptr);
+
+    Device* const device = ctx->device_;
+    ASSERT_NE(device, nullptr);
+    Stream* stream = new Stream(device, 0);
+    ASSERT_NE(stream, nullptr);
+    TaskResManage taskResManage;
+    TaskResManage* const oldTaskResManage = stream->taskResMang_;
+    stream->taskResMang_ = &taskResManage;
+
+    MOCKER_CPP_VIRTUAL(device, &Device::SubmitTask).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(stream, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(&TaskFactory::Recycle).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(ProfilerTraceTaskInit).stubs().will(returnValue(RT_ERROR_NONE)).then(returnValue(RT_ERROR_INVALID_VALUE));
+
+    EXPECT_EQ(ProfilerTrace(1U, false, 0U, stream), RT_ERROR_NONE);
+    EXPECT_EQ(ProfilerTrace(1U, false, 0U, stream), RT_ERROR_INVALID_VALUE);
+
+    Stream onlineStreamSelector(device, 0);
+    onlineStreamSelector.streamId_ = MAX_INT32_NUM;
+    Stream* const oldOnlineStream = ctx->onlineStream_;
+    ctx->onlineStream_ = stream;
+    EXPECT_EQ(ProfTraceEx(1U, 2U, 3U, &onlineStreamSelector, ctx), RT_ERROR_NONE);
+    ctx->onlineStream_ = oldOnlineStream;
+
+    MOCKER(OnlineProfDisableTaskInit).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    EXPECT_EQ(StopOnlineProf(stream), RT_ERROR_INVALID_VALUE);
+
+    MOCKER(AdcProfTaskInit).stubs().will(returnValue(RT_ERROR_NONE));
+    EXPECT_EQ(AdcProfiler(stream, 0U, 0U), RT_ERROR_NONE);
+
+    stream->taskResMang_ = oldTaskResManage;
+    delete stream;
+    (void)Runtime::Instance()->PrimaryContextRelease(devId);
     GlobalMockObject::verify();
 }
 
@@ -4333,10 +4445,10 @@ TEST_F(ContextTest, CmoAddrTaskLaunch_test)
     MOCKER_CPP_VIRTUAL(ctx->device_, &Device::SubmitTask).stubs().will(returnValue(1));
     MOCKER_CPP(&TaskFactory::Recycle).stubs().will(returnValue(RT_ERROR_NONE));
 
-    error = ctx->NpuClearFloatStatus(0U, stream, true);
+    error = StreamNpuClearFloatStatus(0U, stream, true);
     EXPECT_EQ(error, 1);
 
-    error = ctx->NpuGetFloatStatus(nullptr, 0, 0, stream, true);
+    error = StreamNpuGetFloatStatus(nullptr, 0, 0, stream, true);
     EXPECT_EQ(error, 1);
 
     (void)((Runtime*)Runtime::Instance())->PrimaryContextRelease(devId);
@@ -4372,7 +4484,7 @@ TEST_F(ContextTest, NpuClearFloatStatus_test)
     MOCKER_CPP_VIRTUAL(ctx->device_->Driver_(), &Driver::GetRunMode).stubs().will(returnValue(1));
     MOCKER_CPP(&TaskFactory::Recycle).stubs().will(returnValue(RT_ERROR_NONE));
 
-    error = ctx->CmoAddrTaskLaunch(nullptr, 0, RT_CMO_WRITEBACK, stream, 0);
+    error = StreamCmoAddrTaskLaunch(nullptr, 0, RT_CMO_WRITEBACK, stream, 0);
     EXPECT_NE(error, RT_ERROR_NONE);
 
     (void)((Runtime*)Runtime::Instance())->PrimaryContextRelease(devId);
@@ -4753,7 +4865,7 @@ TEST_F(ContextTest, NopTask_test)
 
     MOCKER(NopTaskInit).stubs().will(returnValue(1));
     MOCKER_CPP(&TaskFactory::Recycle).stubs().will(returnValue(RT_ERROR_NONE));
-    error = ctx->NopTask(stream);
+    error = StreamNopTask(stream);
     EXPECT_EQ(error, 1);
 
     (void)((Runtime*)Runtime::Instance())->PrimaryContextRelease(devId);

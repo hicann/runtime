@@ -147,12 +147,16 @@ static void InitStarsCmoSqeForDavid(
     sdmaSqe->srcSubStreamId = static_cast<uint16_t>(stm->Device_()->GetSSID_());
 }
 
-rtError_t CmoAddrTaskLaunchForDavid(
-    rtDavidCmoAddrInfo* const cmoAddrInfo, const rtCmoOpCode_t cmoOpCode, Stream* const stm)
+rtError_t StreamCmoAddrTaskLaunch(
+    void* const cmoAddrInfo, const uint64_t destMax, const rtCmoOpCode_t cmoOpCode, Stream* const stm,
+    const uint32_t flag)
 {
+    UNUSED(destMax);
+    UNUSED(flag);
     rtError_t error = RT_ERROR_NONE;
     const int32_t streamId = stm->Id_();
     Device* dev = stm->Device_();
+    rtDavidCmoAddrInfo* const davidCmoAddrInfo = static_cast<rtDavidCmoAddrInfo*>(cmoAddrInfo);
 
     COND_RETURN_ERROR(
         (stm->Model_() == nullptr), RT_ERROR_MODEL_NULL,
@@ -181,25 +185,25 @@ rtError_t CmoAddrTaskLaunchForDavid(
     // fill in head args
     InitStarsCmoSqeForDavid(&sdmaCmoSqe, dstStm, cmoOpCode);
     RT_LOG(
-        RT_LOG_DEBUG, "cmoAddrInfo=0x%llx, cmoOpCode=%s, device_id=%u, stream_id=%d.", RtPtrToValue(cmoAddrInfo),
+        RT_LOG_DEBUG, "cmoAddrInfo=0x%llx, cmoOpCode=%s, device_id=%u, stream_id=%d.", RtPtrToValue(davidCmoAddrInfo),
         CmoOpCodeToString(cmoOpCode).c_str(), dev->Id_(), streamId);
     Driver* const devDrv = dev->Driver_();
     if (devDrv != nullptr) {
         constexpr uint64_t dstMax = 28ULL;
-        error = devDrv->MemCopySync(cmoAddrInfo, dstMax, &sdmaCmoSqe, dstMax, RT_MEMCPY_HOST_TO_DEVICE);
+        error = devDrv->MemCopySync(davidCmoAddrInfo, dstMax, &sdmaCmoSqe, dstMax, RT_MEMCPY_HOST_TO_DEVICE);
         ERROR_RETURN_MSG_INNER(
             error, "Failed to memory copy stream info, device_id=%u, size=%" PRIu64 ", retCode=%#x.", dev->Id_(),
             dstMax, static_cast<uint32_t>(error));
 
         if (devDrv->GetRunMode() == RT_RUN_MODE_ONLINE) {
-            error = dev->Driver_()->DevMemFlushCache(RtPtrToValue(cmoAddrInfo), dstMax);
+            error = dev->Driver_()->DevMemFlushCache(RtPtrToValue(davidCmoAddrInfo), dstMax);
             ERROR_RETURN_MSG_INNER(
                 error, "Failed to flush stream info, device_id=%u, retCode=%#x.", dev->Id_(),
                 static_cast<uint32_t>(error));
         }
     }
     ScopeGuard tskErrRecycle(errRecycle);
-    (void)CmoAddrTaskInit(cmoAddrTask, cmoAddrInfo, cmoOpCode);
+    (void)CmoAddrTaskInit(cmoAddrTask, davidCmoAddrInfo, cmoOpCode);
     cmoAddrTask->stmArgPos = static_cast<DavidStream*>(dstStm)->GetArgPos();
     error = DavidSendTask(cmoAddrTask, dstStm);
     ERROR_RETURN_MSG_INNER(
@@ -213,8 +217,10 @@ rtError_t CmoAddrTaskLaunchForDavid(
     return error;
 }
 
-rtError_t StreamDatadumpInfoLoad(const void* const dumpInfo, const uint32_t length, Stream* const dftStm)
+rtError_t StreamDatadumpInfoLoad(
+    const void* const dumpInfo, const uint32_t length, const uint32_t flag, Stream* const dftStm)
 {
+    UNUSED(flag);
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(dftStm, RT_ERROR_STREAM_NULL, "Dump information loading");
     Device* device = dftStm->Device_();
     if (device->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ)) {
@@ -255,8 +261,9 @@ rtError_t StreamDatadumpInfoLoad(const void* const dumpInfo, const uint32_t leng
 
 rtError_t StreamDebugRegister(
     Stream* const debugStream, const uint32_t flag, const void* const addr, uint32_t* const streamId,
-    uint32_t* const taskId)
+    uint32_t* const taskId, Stream* const defaultStm)
 {
+    UNUSED(defaultStm);
     rtError_t error = RT_ERROR_NONE;
     const int32_t stmId = debugStream->Id_();
     *streamId = static_cast<uint32_t>(stmId);
@@ -298,8 +305,9 @@ rtError_t StreamDebugRegister(
     return error;
 }
 
-rtError_t StreamDebugUnRegister(Stream* const debugStream)
+rtError_t StreamDebugUnRegister(Stream* const debugStream, Stream* const defaultStm)
 {
+    UNUSED(defaultStm);
     rtError_t error = RT_ERROR_NONE;
     COND_RETURN_WARN(
         !debugStream->IsDebugRegister(), RT_ERROR_DEBUG_UNREGISTER_FAILED,
@@ -485,8 +493,9 @@ rtError_t SyncGetDeviceMsg(
     return RT_ERROR_NONE;
 }
 
-rtError_t SetOverflowSwitchOnStream(Stream* const stm, const uint32_t flags)
+rtError_t StreamSetOverflowSwitch(Stream* const stm, const uint32_t flags, Stream* const defaultStm)
 {
+    UNUSED(defaultStm);
     TaskInfo* tsk = nullptr;
     rtError_t error = CheckTaskCanSend(stm);
     ERROR_RETURN_MSG_INNER(
@@ -668,13 +677,15 @@ rtError_t StreamNopTask(Stream* const stm)
     return RT_ERROR_NONE;
 }
 
-rtError_t StreamAicpuInfoLoad(Stream* const dftStm, const void* const aicpuInfo, const uint32_t length)
+rtError_t StreamAicpuInfoLoad(
+    Stream* const dftStm, const void* const aicpuInfo, const uint32_t length, Device* const device)
 {
+    UNUSED(device);
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(dftStm, RT_ERROR_STREAM_NULL, "Loading AI CPU information to the device");
-    Device* device = dftStm->Device_();
-    if (device->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ)) {
+    Device* const streamDevice = dftStm->Device_();
+    if (streamDevice->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ)) {
         RtAicpuInfoLoadParam param = {aicpuInfo, length};
-        return device->GetCtrlSQ().SendAicpuInfoLoadMsg(RtCtrlMsgType::RT_CTRL_MSG_AICPU_INFOLOAD, param);
+        return streamDevice->GetCtrlSQ().SendAicpuInfoLoadMsg(RtCtrlMsgType::RT_CTRL_MSG_AICPU_INFOLOAD, param);
     }
 
     TaskInfo* rtAicpuLoadInfoTask = nullptr;

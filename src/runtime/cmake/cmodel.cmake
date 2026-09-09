@@ -253,6 +253,7 @@ set(libruntime_cmodel_stream_common_src_files
 set(libruntime_cmodel_stream_src_files
     ${libruntime_cmodel_stream_common_src_files}
 
+    ${RUNTIME_CORE_DIR}/src/stream/stream_task_stars.cc
     ${RUNTIME_CORE_DIR}/src/stream/v100/stream_creator_c.cc
 )
 
@@ -273,6 +274,7 @@ set(libruntime_cmodel_profile_src_files
     ${RUNTIME_CORE_DIR}/src/profiler/prof_map_ge_model_device.cc
     ${RUNTIME_CORE_DIR}/src/profiler/profile_log_record.cc
     ${RUNTIME_CORE_DIR}/src/profiler/npu_driver_record.cc
+    ${RUNTIME_CORE_DIR}/src/profiler/profiler_task_common.cc
 )
 
 set(libruntime_cmodel_aclrt_impl_src_files
@@ -464,6 +466,7 @@ set(libruntime_cmodel_src_files
     ${RUNTIME_FEATURE_DIR}/soma/stream_mem_pool.cc
     ${RUNTIME_CORE_DIR}/src/launch/label.cc
     ${RUNTIME_CORE_DIR}/src/launch/aicpu_stars.cc
+    ${RUNTIME_CORE_DIR}/src/profiler/profiler_task_stars.cc
     ${RUNTIME_CORE_DIR}/src/event/event.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/event_capture.cc
     ${RUNTIME_CORE_DIR}/src/notify/notify.cc

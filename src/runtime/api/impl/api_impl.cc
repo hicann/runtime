@@ -20,6 +20,8 @@
 #include "spec/base_info.hpp"
 #include "common_task.h"
 #include "cmo_barrier_c.hpp"
+#include "stream_task_c.hpp"
+#include "profiler_c.hpp"
 #include "maintenance_task.h"
 #include "stream_task.h"
 #include "api_impl.hpp"
@@ -1300,7 +1302,7 @@ rtError_t ApiImpl::LaunchKernelV2(
 
         const uint8_t prefetchCnt = props.taskPrefetchCount;
         for (uint8_t cntIdx = 0U; cntIdx < prefetchCnt; cntIdx++) {
-            error = curCtx->NopTask(curStm);
+            error = StreamNopTask(curStm);
             ERROR_RETURN_MSG_INNER(error, "launch nop task error, error=%#x.", error);
         }
     }
@@ -1399,7 +1401,7 @@ rtError_t ApiImpl::DatadumpInfoLoad(const void* const dumpInfo, const uint32_t l
         rtInstance->StartAicpuSd(curCtx->Device_()),
         "Data dump info load failed, check and start tsd open aicpu sd error.");
 
-    return curCtx->DatadumpInfoLoad(dumpInfo, length, flag);
+    return StreamDatadumpInfoLoad(dumpInfo, length, flag, curCtx->DefaultStream_());
 }
 
 rtError_t ApiImpl::AicpuInfoLoad(const void* const aicpuInfo, const uint32_t length)
@@ -1414,7 +1416,7 @@ rtError_t ApiImpl::AicpuInfoLoad(const void* const aicpuInfo, const uint32_t len
         rtInstance->StartAicpuSd(curCtx->Device_()),
         "aicpu info load failed, check and start tsd open aicpu sd error.");
 
-    return curCtx->AicpuInfoLoad(aicpuInfo, length);
+    return StreamAicpuInfoLoad(curCtx->DefaultStream_(), aicpuInfo, length, curCtx->Device_());
 }
 
 rtError_t ApiImpl::SetupArgument(const void* const setupArg, const uint32_t size, const uint32_t offset)
@@ -2019,7 +2021,7 @@ static rtError_t SetStreamOverflowSwitchInternal(Stream* const stm, const uint32
     NULL_STREAM_PTR_RETURN_MSG(targetStm);
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
         targetStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Setting the stream overflow/underflow detection switch");
-    return curCtx->SetStreamOverflowSwitch(targetStm, flags);
+    return StreamSetOverflowSwitch(targetStm, flags, curCtx->DefaultStream_());
 }
 
 static rtError_t GetStreamOverflowSwitchInternal(const Stream* const stm, uint32_t* const flags)
@@ -3683,7 +3685,7 @@ rtError_t ApiImpl::StartOnlineProf(Stream* const stm, const uint32_t sampleNum)
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
         curStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Delivering a profiling request");
 
-    return curCtx->StartOnlineProf(curStm, sampleNum);
+    return cce::runtime::StartOnlineProf(curStm, sampleNum);
 }
 
 rtError_t ApiImpl::StopOnlineProf(Stream* const stm)
@@ -3704,7 +3706,7 @@ rtError_t ApiImpl::StopOnlineProf(Stream* const stm)
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
         curStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Stopping a profiling task");
 
-    return curCtx->StopOnlineProf(curStm);
+    return cce::runtime::StopOnlineProf(curStm);
 }
 
 rtError_t ApiImpl::GetOnlineProfData(Stream* const stm, rtProfDataInfo_t* const pProfData, const uint32_t profDataNum)
@@ -3738,7 +3740,7 @@ rtError_t ApiImpl::AdcProfiler(const uint64_t addr, const uint32_t length)
     NULL_STREAM_PTR_RETURN_MSG(stm);
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
         stm, curCtx, RT_ERROR_STREAM_CONTEXT, "Delivering a profiling task");
-    return curCtx->AdcProfiler(stm, addr, length);
+    return cce::runtime::AdcProfiler(stm, addr, length);
 }
 
 rtError_t ApiImpl::SetMsprofReporterCallback(const MsprofReporterCallback callback)
@@ -4005,7 +4007,7 @@ rtError_t ApiImpl::DebugRegisterForStream(
 
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
         stm, curCtx, RT_ERROR_STREAM_CONTEXT, "Registering a debugging callback for a stream");
-    return curCtx->DebugRegisterForStream(stm, flag, addr, streamId, taskId);
+    return StreamDebugRegister(stm, flag, addr, streamId, taskId, curCtx->DefaultStream_());
 }
 
 rtError_t ApiImpl::DebugUnRegisterForStream(Stream* const stm)
@@ -4016,7 +4018,7 @@ rtError_t ApiImpl::DebugUnRegisterForStream(Stream* const stm)
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
         stm, curCtx, RT_ERROR_STREAM_CONTEXT, "Deregistering the debugging callback of a stream");
 
-    return curCtx->DebugUnRegisterForStream(stm);
+    return StreamDebugUnRegister(stm, curCtx->DefaultStream_());
 }
 
 rtError_t ApiImpl::ModelSetSchGroupId(Model* const mdl, const int16_t schGrpId)
@@ -4151,7 +4153,7 @@ rtError_t ApiImpl::NopTask(Stream* const stm)
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
         stm, curCtx, RT_ERROR_STREAM_CONTEXT, "Executing a No-Operation (NOP) task");
 
-    return curCtx->NopTask(stm);
+    return StreamNopTask(stm);
 }
 
 rtError_t ApiImpl::IpcDestroyMemoryName(const char_t* const name)
@@ -4464,7 +4466,7 @@ rtError_t ApiImpl::ProfilerTrace(const uint64_t id, const bool notifyFlag, const
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
         curStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Delivering a profiling task with tracepoint");
 
-    return curCtx->ProfilerTrace(id, notifyFlag, flags, curStm);
+    return cce::runtime::ProfilerTrace(id, notifyFlag, flags, curStm);
 }
 
 rtError_t ApiImpl::ProfilerTraceEx(const uint64_t id, const uint64_t modelId, const uint16_t tagId, Stream* stm)
@@ -4479,7 +4481,7 @@ rtError_t ApiImpl::ProfilerTraceEx(const uint64_t id, const uint64_t modelId, co
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
         stm, curCtx, RT_ERROR_STREAM_CONTEXT, "Delivering a profiling task with tracepoint");
 
-    return curCtx->ProfilerTraceEx(id, modelId, tagId, stm);
+    return ProfTraceEx(id, modelId, tagId, stm, curCtx);
 }
 
 rtError_t ApiImpl::SubscribeReport(const uint64_t threadId, Stream* const stm)
@@ -5360,7 +5362,7 @@ rtError_t ApiImpl::NpuClearFloatStatus(const uint32_t checkMode, Stream* const s
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
         curStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Clearing the Float exception status flag of the NPU");
 
-    return curCtx->NpuClearFloatStatus(checkMode, curStm, false);
+    return StreamNpuClearFloatStatus(checkMode, curStm, false);
 }
 
 rtError_t ApiImpl::NpuGetFloatStatus(
@@ -5377,7 +5379,7 @@ rtError_t ApiImpl::NpuGetFloatStatus(
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
         curStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Obtaining the Float exception status of the NPU");
 
-    return curCtx->NpuGetFloatStatus(outputAddrPtr, outputSize, checkMode, curStm, false);
+    return StreamNpuGetFloatStatus(outputAddrPtr, outputSize, checkMode, curStm, false);
 }
 
 rtError_t ApiImpl::NpuClearFloatDebugStatus(const uint32_t checkMode, Stream* const stm)
@@ -5399,7 +5401,7 @@ rtError_t ApiImpl::NpuClearFloatDebugStatus(const uint32_t checkMode, Stream* co
             return RT_ERROR_FEATURE_NOT_SUPPORT;
         }
 
-        return curCtx->NpuClearFloatStatus(checkMode, stm, true);
+        return StreamNpuClearFloatStatus(checkMode, stm, true);
     } else if (
         curCtx->Device_()->GetDevProperties().tsOverflowHandling == TsOverflowHandling::TS_OVER_FLOW_HANDING_FROM_MEM) {
         uint8_t hostTmp = 0;
@@ -5437,7 +5439,7 @@ rtError_t ApiImpl::NpuGetFloatDebugStatus(
             RT_LOG(RT_LOG_WARNING, "The current ts version does not support NpuGetFloatDebugStatus");
             return RT_ERROR_FEATURE_NOT_SUPPORT;
         }
-        return curCtx->NpuGetFloatStatus(outputAddrPtr, outputSize, checkMode, stm, true);
+        return StreamNpuGetFloatStatus(outputAddrPtr, outputSize, checkMode, stm, true);
     } else if (
         curCtx->Device_()->GetDevProperties().tsOverflowHandling == TsOverflowHandling::TS_OVER_FLOW_HANDING_FROM_MEM) {
         uint8_t hostTmp = 0;
@@ -6020,7 +6022,7 @@ rtError_t ApiImpl::CmoAddrTaskLaunch(
         curStm, curCtx, RT_ERROR_STREAM_CONTEXT,
         "Using the memory descriptor to operate the cache memory on the device");
 
-    return curCtx->CmoAddrTaskLaunch(static_cast<rtCmoAddrInfo*>(cmoAddrInfo), destMax, cmoOpCode, curStm, flag);
+    return StreamCmoAddrTaskLaunch(cmoAddrInfo, destMax, cmoOpCode, curStm, flag);
 }
 
 rtError_t ApiImpl::BarrierTaskLaunch(const rtBarrierTaskInfo_t* const taskInfo, Stream* const stm, const uint32_t flag)

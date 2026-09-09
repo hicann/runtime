@@ -55,6 +55,8 @@
 #include "label_c.hpp"
 #include "dvpp_c.hpp"
 #include "cmo_barrier_c.hpp"
+#include "stream_task_c.hpp"
+#include "profiler_c.hpp"
 #include "barrier_task.h"
 #include "stream_task.h"
 #include "task_info_v100.h"
@@ -2612,10 +2614,10 @@ TEST_F(CloudV2ContextTest, StartOnlineProf_invalid_param)
 
     Stream* stream = new Stream(ctx->Device_(), 0);
     EXPECT_NE(stream, nullptr);
-    EXPECT_EQ(ctx->StartOnlineProf(stream, 0U), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(StartOnlineProf(stream, 0U), RT_ERROR_INVALID_VALUE);
 
     EXPECT_EQ(ctx->Device_()->DevSetOnlineProfStart(true), RT_ERROR_NONE);
-    EXPECT_EQ(ctx->StartOnlineProf(stream, 1U), RT_ERROR_PROF_START);
+    EXPECT_EQ(StartOnlineProf(stream, 1U), RT_ERROR_PROF_START);
     EXPECT_EQ(ctx->Device_()->DevSetOnlineProfStart(false), RT_ERROR_NONE);
 
     delete stream;
@@ -2720,9 +2722,9 @@ TEST_F(CloudV2ContextTest, AdcProfiler_test)
     MOCKER(AdcProfTaskInit).stubs().will(returnValue(1)).then(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(ctx->device_, &Device::SubmitTask).stubs().will(returnValue(1));
     MOCKER_CPP(&TaskFactory::Recycle).stubs().will(returnValue(RT_ERROR_NONE));
-    error = ctx->AdcProfiler(stream, 0, 0);
+    error = AdcProfiler(stream, 0, 0);
     EXPECT_EQ(error, 1);
-    error = ctx->AdcProfiler(stream, 0, 0);
+    error = AdcProfiler(stream, 0, 0);
     EXPECT_EQ(error, 1);
 
     (void)((Runtime*)Runtime::Instance())->PrimaryContextRelease(devId);
@@ -2761,7 +2763,7 @@ TEST_F(CloudV2ContextTest, ProfilerTraceEx_test)
     MOCKER_CPP_VIRTUAL(ctx->device_, &Device::SubmitTask).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP(&TaskFactory::Recycle).stubs().will(returnValue(RT_ERROR_NONE));
     stream->streamId_ = MAX_INT32_NUM;
-    error = ctx->ProfilerTraceEx(0, 0, 0, stream);
+    error = ProfTraceEx(0, 0, 0, stream, ctx);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     ctx->defaultStream_->taskResMang_ = preVal_defaultStream;
@@ -2886,10 +2888,10 @@ TEST_F(CloudV2ContextTest, CmoAddrTaskLaunch_test)
     MOCKER_CPP_VIRTUAL(ctx->device_, &Device::SubmitTask).stubs().will(returnValue(1));
     MOCKER_CPP(&TaskFactory::Recycle).stubs().will(returnValue(RT_ERROR_NONE));
 
-    error = ctx->NpuClearFloatStatus(0U, stream, true);
+    error = StreamNpuClearFloatStatus(0U, stream, true);
     EXPECT_EQ(error, 1);
 
-    error = ctx->NpuGetFloatStatus(nullptr, 0, 0, stream, true);
+    error = StreamNpuGetFloatStatus(nullptr, 0, 0, stream, true);
     EXPECT_EQ(error, 1);
 
     (void)((Runtime*)Runtime::Instance())->PrimaryContextRelease(devId);
@@ -2925,7 +2927,7 @@ TEST_F(CloudV2ContextTest, NpuClearFloatStatus_test)
     MOCKER_CPP_VIRTUAL(ctx->device_->Driver_(), &Driver::GetRunMode).stubs().will(returnValue(1));
     MOCKER_CPP(&TaskFactory::Recycle).stubs().will(returnValue(RT_ERROR_NONE));
 
-    error = ctx->CmoAddrTaskLaunch(nullptr, 0, RT_CMO_WRITEBACK, stream, 0);
+    error = StreamCmoAddrTaskLaunch(nullptr, 0, RT_CMO_WRITEBACK, stream, 0);
     EXPECT_NE(error, RT_ERROR_NONE);
 
     (void)((Runtime*)Runtime::Instance())->PrimaryContextRelease(devId);
@@ -3260,7 +3262,7 @@ TEST_F(CloudV2ContextTest, NopTask_test)
 
     MOCKER(NopTaskInit).stubs().will(returnValue(1));
     MOCKER_CPP(&TaskFactory::Recycle).stubs().will(returnValue(RT_ERROR_NONE));
-    error = ctx->NopTask(stream);
+    error = StreamNopTask(stream);
     EXPECT_EQ(error, 1);
 
     (void)((Runtime*)Runtime::Instance())->PrimaryContextRelease(devId);
@@ -3696,7 +3698,9 @@ TEST_F(CloudV2ContextTest, AicpuInfoLoadSubmitAndSyncFailed)
     MOCKER(AicpuInfoLoadTaskInit).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(ctx->device_, &Device::SubmitTask).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
     MOCKER_CPP(&TaskFactory::Recycle).stubs().will(returnValue(RT_ERROR_NONE));
-    EXPECT_EQ(ctx->AicpuInfoLoad(&aicpuInfo, sizeof(aicpuInfo)), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(
+        StreamAicpuInfoLoad(ctx->DefaultStream_(), &aicpuInfo, sizeof(aicpuInfo), ctx->Device_()),
+        RT_ERROR_INVALID_VALUE);
     GlobalMockObject::verify();
     GlobalMockObject::reset();
 
@@ -3704,7 +3708,9 @@ TEST_F(CloudV2ContextTest, AicpuInfoLoadSubmitAndSyncFailed)
     MOCKER(AicpuInfoLoadTaskInit).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(ctx->device_, &Device::SubmitTask).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(ctx->defaultStream_, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
-    EXPECT_EQ(ctx->AicpuInfoLoad(&aicpuInfo, sizeof(aicpuInfo)), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(
+        StreamAicpuInfoLoad(ctx->DefaultStream_(), &aicpuInfo, sizeof(aicpuInfo), ctx->Device_()),
+        RT_ERROR_INVALID_VALUE);
 
     ReleasePrimaryContext(devId);
     GlobalMockObject::verify();
@@ -3733,21 +3739,26 @@ TEST_F(CloudV2ContextTest, DebugRegisterForStreamInitSubmitAndSyncFailed)
     MOCKER_CPP_VIRTUAL(ctx->device_, &Device::IsSupportFeature).stubs().will(returnValue(false));
     MOCKER(DebugRegisterForStreamTaskInit).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
     MOCKER_CPP(&TaskFactory::Recycle).stubs().will(returnValue(RT_ERROR_NONE));
-    EXPECT_EQ(ctx->DebugRegisterForStream(debugStream, 0U, &addr, &streamId, &taskId), RT_ERROR_DEBUG_REGISTER_FAILED);
+    EXPECT_EQ(
+        StreamDebugRegister(debugStream, 0U, &addr, &streamId, &taskId, ctx->DefaultStream_()),
+        RT_ERROR_DEBUG_REGISTER_FAILED);
     GlobalMockObject::verify();
 
     MOCKER_CPP_VIRTUAL(ctx->device_, &Device::IsSupportFeature).stubs().will(returnValue(false));
     MOCKER(DebugRegisterForStreamTaskInit).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(ctx->device_, &Device::SubmitTask).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
     MOCKER_CPP(&TaskFactory::Recycle).stubs().will(returnValue(RT_ERROR_NONE));
-    EXPECT_EQ(ctx->DebugRegisterForStream(debugStream, 0U, &addr, &streamId, &taskId), RT_ERROR_DEBUG_REGISTER_FAILED);
+    EXPECT_EQ(
+        StreamDebugRegister(debugStream, 0U, &addr, &streamId, &taskId, ctx->DefaultStream_()),
+        RT_ERROR_DEBUG_REGISTER_FAILED);
     GlobalMockObject::verify();
 
     MOCKER_CPP_VIRTUAL(ctx->device_, &Device::IsSupportFeature).stubs().will(returnValue(false));
     MOCKER(DebugRegisterForStreamTaskInit).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(ctx->device_, &Device::SubmitTask).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(ctx->defaultStream_, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
-    EXPECT_EQ(ctx->DebugRegisterForStream(debugStream, 0U, &addr, &streamId, &taskId), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(
+        StreamDebugRegister(debugStream, 0U, &addr, &streamId, &taskId, ctx->DefaultStream_()), RT_ERROR_INVALID_VALUE);
     EXPECT_FALSE(debugStream->IsDebugRegister());
 
     rawDevice->properties_ = oldProps;
@@ -3777,7 +3788,7 @@ TEST_F(CloudV2ContextTest, DebugUnRegisterForStreamSubmitAndSyncFailed)
     MOCKER(DebugUnRegisterForStreamTaskInit).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(ctx->device_, &Device::SubmitTask).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
     MOCKER_CPP(&TaskFactory::Recycle).stubs().will(returnValue(RT_ERROR_NONE));
-    EXPECT_EQ(ctx->DebugUnRegisterForStream(debugStream), RT_ERROR_DEBUG_UNREGISTER_FAILED);
+    EXPECT_EQ(StreamDebugUnRegister(debugStream, ctx->DefaultStream_()), RT_ERROR_DEBUG_UNREGISTER_FAILED);
     EXPECT_TRUE(debugStream->IsDebugRegister());
     GlobalMockObject::verify();
 
@@ -3786,7 +3797,7 @@ TEST_F(CloudV2ContextTest, DebugUnRegisterForStreamSubmitAndSyncFailed)
     MOCKER(DebugUnRegisterForStreamTaskInit).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(ctx->device_, &Device::SubmitTask).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(ctx->defaultStream_, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
-    EXPECT_EQ(ctx->DebugUnRegisterForStream(debugStream), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(StreamDebugUnRegister(debugStream, ctx->DefaultStream_()), RT_ERROR_INVALID_VALUE);
     EXPECT_TRUE(debugStream->IsDebugRegister());
 
     debugStream->SetDebugRegister(false);

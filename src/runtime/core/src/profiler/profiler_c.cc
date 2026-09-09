@@ -20,7 +20,18 @@
 namespace cce {
 namespace runtime {
 
-rtError_t ProfTraceEx(const uint64_t id, const uint64_t modelId, const uint16_t tagId, Stream* stm, const Context* ctx)
+// ApiImpl::ProfilerTrace is also linked into David libraries and requires a platform definition.
+rtError_t ProfilerTrace(const uint64_t id, const bool notifyFlag, const uint32_t flags, Stream* const stm)
+{
+    UNUSED(id);
+    UNUSED(notifyFlag);
+    UNUSED(flags);
+    UNUSED(stm);
+    return RT_ERROR_NONE;
+}
+
+rtError_t ProfTraceEx(
+    const uint64_t id, const uint64_t modelId, const uint16_t tagId, Stream* stm, const Context* const ctx)
 {
     RT_LOG(
         RT_LOG_INFO, "id=%" PRIu64 ", modelId=%" PRIu64 ", tagId=%hu, stream_id=%d.", id, modelId, tagId, stm->Id_());

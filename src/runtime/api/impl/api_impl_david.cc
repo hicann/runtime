@@ -411,8 +411,6 @@ rtError_t ApiImplDavid::CmoTaskLaunch(const rtCmoTaskInfo_t* const taskInfo, Str
 rtError_t ApiImplDavid::CmoAddrTaskLaunch(
     void* cmoAddrInfo, const uint64_t destMax, const rtCmoOpCode_t cmoOpCode, Stream* const stm, const uint32_t flag)
 {
-    UNUSED(destMax);
-    UNUSED(flag);
     RT_LOG(RT_LOG_DEBUG, "Cmo addr task launch, opCode=%s.", CmoOpCodeToString(cmoOpCode).c_str());
 
     Context* const curCtx = CurrentContext();
@@ -427,7 +425,7 @@ rtError_t ApiImplDavid::CmoAddrTaskLaunch(
         curStm, curCtx, RT_ERROR_STREAM_CONTEXT,
         "Using the memory descriptor to operate the cache memory on the device");
 
-    return CmoAddrTaskLaunchForDavid(static_cast<rtDavidCmoAddrInfo*>(cmoAddrInfo), cmoOpCode, curStm);
+    return StreamCmoAddrTaskLaunch(cmoAddrInfo, destMax, cmoOpCode, curStm, flag);
 }
 
 rtError_t ApiImplDavid::EventCreate(Event** const evt, const uint64_t flag)
@@ -1264,7 +1262,6 @@ rtError_t ApiImplDavid::NotifyReset(Notify* const notify)
 
 rtError_t ApiImplDavid::DatadumpInfoLoad(const void* const dumpInfo, const uint32_t length, const uint32_t flag)
 {
-    UNUSED(flag);
     RT_LOG(RT_LOG_DEBUG, "length=%u, flag=%u.", length, flag);
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
@@ -1274,7 +1271,7 @@ rtError_t ApiImplDavid::DatadumpInfoLoad(const void* const dumpInfo, const uint3
     ERROR_RETURN_MSG_INNER(
         rtInstance->StartAicpuSd(curCtx->Device_()),
         "Data dump info load failed, check and start tsd open aicpu sd error.");
-    return StreamDatadumpInfoLoad(dumpInfo, length, curCtx->DefaultStream_());
+    return StreamDatadumpInfoLoad(dumpInfo, length, flag, curCtx->DefaultStream_());
 }
 
 rtError_t ApiImplDavid::DebugRegister(
@@ -1306,7 +1303,7 @@ rtError_t ApiImplDavid::DebugRegisterForStream(
 
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
         stm, curCtx, RT_ERROR_STREAM_CONTEXT, "Registering a debugging callback for a stream");
-    return StreamDebugRegister(stm, flag, addr, streamId, taskId);
+    return StreamDebugRegister(stm, flag, addr, streamId, taskId, nullptr);
 }
 
 rtError_t ApiImplDavid::DebugUnRegisterForStream(Stream* const stm)
@@ -1316,7 +1313,7 @@ rtError_t ApiImplDavid::DebugUnRegisterForStream(Stream* const stm)
 
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
         stm, curCtx, RT_ERROR_STREAM_CONTEXT, "Deregistering the debugging callback of a stream");
-    return StreamDebugUnRegister(stm);
+    return StreamDebugUnRegister(stm, nullptr);
 }
 
 rtError_t ApiImplDavid::GetDevRunningStreamSnapshotMsg(const rtGetMsgCallback callback)
@@ -1423,7 +1420,7 @@ static rtError_t SetStreamOverflowSwitchInternal(Stream* const stm, const uint32
     NULL_STREAM_PTR_RETURN_MSG(targetStm);
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
         targetStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Setting the stream overflow/underflow detection switch");
-    return SetOverflowSwitchOnStream(targetStm, flags);
+    return StreamSetOverflowSwitch(targetStm, flags, nullptr);
 }
 
 static rtError_t SetStreamTagInternal(Stream* const stm, const uint32_t geOpTag)
@@ -1537,7 +1534,7 @@ rtError_t ApiImplDavid::AicpuInfoLoad(const void* const aicpuInfo, const uint32_
     ERROR_RETURN_MSG_INNER(
         rtInstance->StartAicpuSd(curCtx->Device_()),
         "aicpu info load failed, check and start tsd open aicpu sd error.");
-    return StreamAicpuInfoLoad(curCtx->DefaultStream_(), aicpuInfo, length);
+    return StreamAicpuInfoLoad(curCtx->DefaultStream_(), aicpuInfo, length, curCtx->Device_());
 }
 
 rtError_t ApiImplDavid::SubscribeReport(const uint64_t threadId, Stream* const stm)
@@ -1746,9 +1743,6 @@ rtError_t ApiImplDavid::LabelSet(Label* const lbl, Stream* const stm)
 
 rtError_t ApiImplDavid::ProfilerTrace(const uint64_t id, const bool notifyFlag, const uint32_t flags, Stream* const stm)
 {
-    UNUSED(id);
-    UNUSED(notifyFlag);
-    UNUSED(flags);
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
 
@@ -1759,7 +1753,7 @@ rtError_t ApiImplDavid::ProfilerTrace(const uint64_t id, const bool notifyFlag, 
     }
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
         curStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Delivering a profiling task with tracepoint");
-    return RT_ERROR_NONE;
+    return cce::runtime::ProfilerTrace(id, notifyFlag, flags, curStm);
 }
 
 rtError_t ApiImplDavid::ProfilerTraceEx(const uint64_t id, const uint64_t modelId, const uint16_t tagId, Stream* stm)

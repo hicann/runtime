@@ -16,6 +16,7 @@
 #include "thread_local_container.hpp"
 #include "error_message_manage.hpp"
 #include "context.hpp"
+#include "stream_task_c.hpp"
 #include "task.hpp"
 
 namespace cce {
@@ -75,7 +76,11 @@ rtError_t ResetCaptureEventsProc(const CaptureModel* const captureModel, Stream*
     return RT_ERROR_NONE;
 }
 
-rtError_t SendNopTask(const Context* const curCtx, Stream* const stm) { return curCtx->NopTask(stm); }
+rtError_t SendNopTask(const Context* const curCtx, Stream* const stm)
+{
+    UNUSED(curCtx);
+    return StreamNopTask(stm);
+}
 
 bool TaskTypeIsSupportTaskGroup(const TaskInfo* const task)
 {

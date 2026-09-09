@@ -14,7 +14,16 @@
 
 namespace cce {
 namespace runtime {
-rtError_t ProfTraceEx(const uint64_t id, const uint64_t modelId, const uint16_t tagId, Stream* stm, const Context* ctx);
+class Context;
+class Stream;
+
+rtError_t ProfilerTrace(const uint64_t id, const bool notifyFlag, const uint32_t flags, Stream* const stm);
+rtError_t ProfTraceEx(
+    const uint64_t id, const uint64_t modelId, const uint16_t tagId, Stream* stm, const Context* const ctx);
+rtError_t AdcProfiler(Stream* const stm, const uint64_t addr, const uint32_t length);
+rtError_t StartOnlineProf(Stream* const stm, const uint32_t sampleNum);
+rtError_t StopOnlineProf(Stream* const stm);
+
 void ProfStart(Profiler* const profiler, const uint64_t profConfig, const uint32_t devId, const Device* const dev);
 void ProfStop(Profiler* const profiler, const uint64_t profConfig, const uint32_t devId, const Device* const dev);
 rtError_t DavidAllocAndSendFlipTask(Stream* const stream, uint32_t prePos, uint32_t sqeNum = 1U);

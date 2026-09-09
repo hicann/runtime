@@ -153,6 +153,7 @@ set(runtimeut_common_src_stream_list
 
 set(runtimeut_src_stream_list
     ${runtimeut_common_src_stream_list}
+    ${TOP_DIR}/src/runtime/core/src/stream/stream_task_stars.cc
     ${TOP_DIR}/src/runtime/core/src/stream/v100/stream_creator_c.cc
 )
 
@@ -165,6 +166,8 @@ set(runtimeut_src_profile_list
     ${TOP_DIR}/src/runtime/core/src/profiler/prof_map_ge_model_device.cc
     ${TOP_DIR}/src/runtime/core/src/profiler/profile_log_record.cc
     ${TOP_DIR}/src/runtime/core/src/profiler/npu_driver_record.cc
+    ${TOP_DIR}/src/runtime/core/src/profiler/profiler_task_stars.cc
+    ${TOP_DIR}/src/runtime/core/src/profiler/profiler_task_common.cc
 )
 
 set(runtime_src_arg_loader_list

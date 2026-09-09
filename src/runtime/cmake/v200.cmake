@@ -204,6 +204,7 @@ set(libruntime_v200_profile_src_files
     ${RUNTIME_CORE_DIR}/src/profiler/prof_map_ge_model_device.cc
     ${RUNTIME_CORE_DIR}/src/profiler/profile_log_record.cc
     ${RUNTIME_CORE_DIR}/src/profiler/npu_driver_record.cc
+    ${RUNTIME_CORE_DIR}/src/profiler/profiler_task_common.cc
 )
 set(libruntime_v200_arg_loader_files
     ${RUNTIME_CORE_DIR}/src/kernel/arg_loader/uma_arg_loader.cc

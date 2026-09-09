@@ -53,6 +53,7 @@
 #include "task_res.hpp"
 #include "dvpp_c.hpp"
 #include "api_impl.hpp"
+#include "stream_task_c.hpp"
 #include "common/rt_utest_context_reset_helper.hpp"
 using namespace testing;
 using namespace cce::runtime;
@@ -63,9 +64,9 @@ rtError_t stubGetHardVerBySocVer(const uint32_t deviceId, int64_t& hardwareVersi
     return DRV_ERROR_NONE;
 }
 
-rtError_t StubSetStreamOverflowSwitch(Context* ctx, Stream* const stm, const uint32_t flags)
+rtError_t StubSetStreamOverflowSwitch(Stream* const stm, const uint32_t flags, Stream* const defaultStm)
 {
-    UNUSED(ctx);
+    UNUSED(defaultStm);
     if (stm != nullptr) {
         stm->SetOverflowSwitch(flags != 0U);
     }
@@ -915,7 +916,7 @@ TEST_F(StarsTaskTest, OverflowSwitch)
 
     ret = rtSetDeviceSatMode(RT_OVERFLOW_MODE_INFNAN);
     EXPECT_EQ(ret, ACL_RT_SUCCESS);
-    MOCKER_CPP(&Context::SetStreamOverflowSwitch).stubs().will(invoke(StubSetStreamOverflowSwitch));
+    MOCKER(StreamSetOverflowSwitch).stubs().will(invoke(StubSetStreamOverflowSwitch));
     ret = rtSetStreamOverflowSwitch(stream, 1U);
     EXPECT_EQ(ret, ACL_RT_SUCCESS);
     ret = rtGetStreamOverflowSwitch(stream, &flags);
