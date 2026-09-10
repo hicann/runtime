@@ -103,6 +103,7 @@ constexpr uint32_t RT_MC62CM12A_CORE_NUM_PER_DIE = 8U;
 constexpr uint32_t RT_MC62CM12A_MAX_DIE_NUM = 2U;
 constexpr uint32_t RT_MC62CM12A_SCALAR_BUFFER_SIZE =
     (32U * 1024U * RT_MC62CM12A_CORE_NUM_PER_DIE * RT_MC62CM12A_MAX_DIE_NUM);
+static constexpr uint32_t RT_SIMT_UB_SIZE_DEFAULT = 256U * 1024U; // UBSize 256KB
 
 static const DevProperties CHIP_MC62CM12A_PROPERTIES = {
     .engineType = "STARS",
@@ -238,6 +239,7 @@ static const DevProperties CHIP_MC62CM12A_PROPERTIES = {
     .swapBufferUpdateRegOffset = 0UL,
     .sqSwapShift = 0U,
     .swapBufferProfCfgOffset = 0U,
+    .simtUbSize = RT_SIMT_UB_SIZE_DEFAULT,
     .taskFailPrintFlushTimeoutMs = 300U,
 };
 

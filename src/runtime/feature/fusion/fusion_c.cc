@@ -110,8 +110,8 @@ static rtError_t CheckFusionDynSizeValid(TaskInfo* taskInfo, const rtFunsionTask
                 continue;
             }
 
-            const rtError_t ret =
-                CheckAndGetTotalShareMemorySize(kernel, aicPart->dynamicShareMemSize, aicPart->simtDcuSmSize);
+            const rtError_t ret = CheckAndGetTotalShareMemorySize(
+                kernel, taskInfo->stream, aicPart->dynamicShareMemSize, aicPart->simtDcuSmSize);
             if (ret != RT_ERROR_NONE) {
                 return ret;
             }

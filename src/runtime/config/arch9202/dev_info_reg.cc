@@ -131,6 +131,7 @@ constexpr uint32_t ICACHE_PREFETCH_UNIT = 512U;
 static constexpr uint32_t RT_STARS_MAX_KERNEL_CREDIT_UINT32 = 254U;        // STARS MAX KERNEL_CREDIT = 255.
 static constexpr uint32_t RT_STARS_DEFAULT_KERNEL_CREDIT_UINT32 = 254U;
 static constexpr float64_t RT_STARS_TASK_KERNEL_CREDIT_SCALE_MIN = 0.001F; // 0.001(us) = 1ns
+static constexpr uint32_t RT_SIMT_UB_SIZE_920X = 384U * 1024U;             // UBSize 384KB
 
 static const DevProperties CHIP_CLOUD_V6_PROPERTIES = {
     .engineType = "STARS",
@@ -265,6 +266,7 @@ static const DevProperties CHIP_CLOUD_V6_PROPERTIES = {
     .swapBufferUpdateRegOffset = DAVID_SWAPBUFF_INFO_UPDATE_REG_OFFSET,
     .sqSwapShift = 7U,
     .swapBufferProfCfgOffset = 64U,
+    .simtUbSize = RT_SIMT_UB_SIZE_920X,
     .taskFailPrintFlushTimeoutMs = TASK_FAIL_PRINT_FLUSH_TIMEOUT_DEFAULT,
     .memsetTaskSupport = MemsetTaskSupportType::MEMSET_TASK_SUPPORT,
     .icachePrefetchUnits = ICACHE_PREFETCH_UNIT,

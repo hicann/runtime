@@ -142,6 +142,7 @@ const uint32_t RT_ATOMIC_CAPS_TYPE2 =
 const uint32_t RT_ATOMIC_CAPS_TYPE3 = RT_ATOMIC_CAPABILITY_SCALAR16 | RT_ATOMIC_CAPABILITY_SCALAR32;
 const uint32_t RT_ATOMIC_CAPS_TYPE4 = RT_ATOMIC_CAPABILITY_SIGNED | RT_ATOMIC_CAPABILITY_SCALAR8 |
                                       RT_ATOMIC_CAPABILITY_SCALAR16 | RT_ATOMIC_CAPABILITY_SCALAR32;
+static constexpr uint32_t RT_SIMT_UB_SIZE_DEFAULT = 256U * 1024U; // UBSize 256KB
 
 static constexpr std::array<uint32_t, RT_ATOMIC_OPERATION_MAX_VAL> GetDavidAtomicCaps()
 {
@@ -307,6 +308,7 @@ static const DevProperties CHIP_DAVID_PROPERTIES = {
     .swapBufferUpdateRegOffset = DAVID_SWAPBUFF_INFO_UPDATE_REG_OFFSET,
     .sqSwapShift = 6U,
     .swapBufferProfCfgOffset = 32U,
+    .simtUbSize = RT_SIMT_UB_SIZE_DEFAULT,
     .taskFailPrintFlushTimeoutMs = TASK_FAIL_PRINT_FLUSH_TIMEOUT_DEFAULT,
     .memsetTaskSupport = MemsetTaskSupportType::MEMSET_TASK_SUPPORT,
 };

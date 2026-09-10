@@ -40,7 +40,7 @@ rtError_t LaunchUpdateKernelSubmit(
     const Context* ctx, TaskInfo* updateTask, Stream* stm, const rtArgsEx_t* argsInfo, StarsArgLoaderResult& result);
 rtError_t UpdateDavidKernelTaskSubmit(TaskInfo* const updateTask, Stream* const stm, uint32_t sqeLen = 1U);
 rtError_t CheckAndGetTotalShareMemorySize(
-    const Kernel* const kernel, uint32_t dynamicShareMemSize, uint32_t& simtDcuSmSize);
+    const Kernel* const kernel, const Stream* const stm, uint32_t dynamicShareMemSize, uint32_t& simtDcuSmSize);
 
 rtError_t StreamLaunchSimtArgsArray(
     Kernel* kernel, const uint32_t coreDim, Stream* stm, SimtArgsArray* simtArgsArray, TaskCfg& taskCfg);

@@ -33,20 +33,23 @@ TIMESTAMP_EXTERN(rtKernelLaunchWithHandle_SubMit);
 TIMESTAMP_EXTERN(rtLaunchKernel_SubMit);
 
 rtError_t CheckAndGetTotalShareMemorySize(
-    const Kernel* const kernel, uint32_t dynamicShareMemSize, uint32_t& simtDcuSmSize)
+    const Kernel* const kernel, const Stream* const stm, uint32_t dynamicShareMemSize, uint32_t& simtDcuSmSize)
 {
     /*
-        aic only - 1982:      校验dynamicSmSize必须是0, sqe中dcuSmSize=256K
-        simd     - 1982&1952: 校验compilerAllocUbSize+dynamicSmSize<=256K, sqe中dcuSmSize=256K
-        simt     - 1982&1952: 校验compilerAllocUbSize+dynamicSmSize+dcache(32K)<=256K,
+        aic only - 1982:      校验dynamicSmSize必须是0, sqe中dcuSmSize=ubSize
+        simd     - 1982&1952: 校验compilerAllocUbSize+dynamicSmSize<=ubSize, sqe中dcuSmSize=ubSize
+        simt     - 1982&1952: 校验compilerAllocUbSize+dynamicSmSize+dcache(32K)<=ubSize,
        sqe中dcuSmSize=compilerAllocUbSize+dynamicSmSize
+        ubSize由dev properties中simtUbSize配置, 默认形态为256K, arch9201形态为384K
     */
     const uint32_t kernelVfType = kernel->KernelVfType_();
     bool canUseSimt = (kernelVfType != 0);
     bool simtFlag = (kernelVfType == static_cast<uint32_t>(AivTypeFlag::AIV_TYPE_SIMT_VF_ONLY)) ||
                     (kernelVfType == static_cast<uint32_t>(AivTypeFlag::AIV_TYPE_SIMD_SIMT_MIX_VF));
+    const uint32_t simtUbSize = stm->Device_()->GetDevProperties().simtUbSize;
+    const uint32_t ubSize = (simtUbSize != 0U) ? simtUbSize : RT_SIMT_UB_SIZE;
     uint32_t totalSmSize = kernel->ShareMemSize_() + dynamicShareMemSize;
-    uint32_t maxSmSize = simtFlag ? RT_SIMT_REMAIN_UB_SIZE : RT_SIMT_UB_SIZE;
+    uint32_t maxSmSize = simtFlag ? (ubSize - RT_SIMT_DCACHE_MIN_SIZE) : ubSize;
     maxSmSize = canUseSimt ? maxSmSize : 0U;
     /* simt dcu_size should 128 Byte align */
     totalSmSize = simtFlag ? ((totalSmSize + RT_SIMT_SHARE_MEM_ALIGN_LEN - 1) / RT_SIMT_SHARE_MEM_ALIGN_LEN *
@@ -63,7 +66,7 @@ rtError_t CheckAndGetTotalShareMemorySize(
         return RT_ERROR_INVALID_VALUE;
     }
 
-    simtDcuSmSize = simtFlag ? totalSmSize : RT_SIMT_UB_SIZE;
+    simtDcuSmSize = simtFlag ? totalSmSize : ubSize;
     return RT_ERROR_NONE;
 }
 
@@ -74,7 +77,8 @@ rtError_t CheckDynSizeValid(TaskInfo* const taskInfo, const Kernel* const kernel
     }
 
     AicTaskInfo* aicTaskInfo = &(taskInfo->u.aicTaskInfo);
-    return CheckAndGetTotalShareMemorySize(kernel, aicTaskInfo->dynamicShareMemSize, aicTaskInfo->simtDcuSmSize);
+    return CheckAndGetTotalShareMemorySize(
+        kernel, taskInfo->stream, aicTaskInfo->dynamicShareMemSize, aicTaskInfo->simtDcuSmSize);
 }
 
 static void SetArgsAix(
