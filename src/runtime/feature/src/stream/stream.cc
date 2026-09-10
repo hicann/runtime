@@ -1561,7 +1561,8 @@ rtError_t Stream::GetFinishedTaskIdBySqHead(uint16_t &sqHead, uint32_t &finished
         return RT_ERROR_NONE;
     }
     // sqHead - 1位置读到的任务不能比入口时的最新任务更新。
-    if ((endTaskId != MAX_UINT16_NUM) && TASK_ID_GT(endTaskId, lastId)) {
+    const bool isDavidStream = device_->IsDavidPlatform();
+    if ((!isDavidStream) && (endTaskId != MAX_UINT16_NUM) && TASK_ID_GT(endTaskId, lastId)) {
         return RT_ERROR_NONE;
     }
     RT_LOG(
