@@ -520,12 +520,13 @@ rtError_t ApiImplDavid::EventRecord(Event* const evt, Stream* const stm, const u
         COND_RETURN_WARN(
             !evt->IsNewMode(), RT_ERROR_FEATURE_NOT_SUPPORT,
             "Not support call rtEventCreate or rtEventCreateWithFlag without external flag, mode=%d", evt->IsNewMode());
-        COND_RETURN_ERROR_MSG_INNER(
-            !StreamFlagIsSupportCapture(curStm->Flags()), RT_ERROR_STREAM_INVALID,
-            "stream flag does not support capture to model, flag=%u.", curStm->Flags());
-        COND_RETURN_ERROR_MSG_INNER(
-            curStm == curCtx->DefaultStream_(), RT_ERROR_STREAM_CAPTURE_IMPLICIT,
-            "A disallowed implicit dependency from default stream.");
+        COND_RETURN_AND_MSG_OUTER(
+            !StreamFlagIsSupportCapture(curStm->Flags()), RT_ERROR_STREAM_INVALID, ErrorCode::EE1011, "Event recording",
+            std::to_string(curStm->Flags()), "stream flag",
+            RtFmtMsg("Stream (stream_id=%d) does not support the ACL Graph", curStm->Id_()));
+        COND_RETURN_AND_MSG_OUTER(
+            curStm == curCtx->DefaultStream_(), RT_ERROR_STREAM_CAPTURE_IMPLICIT, ErrorCode::EE1017, "Event recording",
+            "stream", RtFmtMsg("The default stream (stream_id=%d) cannot be used in the ACL Graph", curStm->Id_()));
         COND_RETURN_WARN(
             evt->IsEventWithoutWaitTask(), RT_ERROR_NONE,
             "The event flag %" PRIu64 " is not supported in capture mode.", evt->GetEventFlag());
@@ -567,15 +568,18 @@ rtError_t ApiImplDavid::EventReset(Event* const evt, Stream* const stm)
     }
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(curStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Event reset");
     if (evt->IsCapturing()) {
-        COND_RETURN_ERROR_MSG_INNER(
-            !StreamFlagIsSupportCapture(curStm->Flags()), RT_ERROR_STREAM_INVALID,
-            "stream flag does not support capture to model, flag=%u.", curStm->Flags());
-        COND_RETURN_ERROR_MSG_INNER(
-            curStm == curCtx->DefaultStream_(), RT_ERROR_STREAM_CAPTURE_IMPLICIT,
-            "A disallowed implicit dependency from default stream.");
-        COND_RETURN_ERROR_MSG_INNER(
-            evt->IsEventWithoutWaitTask(), RT_ERROR_INVALID_VALUE,
-            "The event flag %" PRIu64 " is not supported in capture mode.", evt->GetEventFlag());
+        COND_RETURN_AND_MSG_OUTER(
+            !StreamFlagIsSupportCapture(curStm->Flags()), RT_ERROR_STREAM_INVALID, ErrorCode::EE1011, "Event reset",
+            std::to_string(curStm->Flags()), "stream flag",
+            RtFmtMsg("Stream (stream_id=%d) does not support the ACL Graph", curStm->Id_()));
+        COND_RETURN_AND_MSG_OUTER(
+            curStm == curCtx->DefaultStream_(), RT_ERROR_STREAM_CAPTURE_IMPLICIT, ErrorCode::EE1017, "Event reset",
+            "stream", RtFmtMsg("The default stream (stream_id=%d) cannot be used in the ACL Graph", curStm->Id_()));
+        COND_RETURN_AND_MSG_OUTER(
+            evt->IsEventWithoutWaitTask(), RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, "Event reset",
+            std::to_string(evt->GetEventFlag()), "event flag",
+            RtFmtMsg("Event (event_id=%d) does not support the ACL Graph", evt->EventId_()));
+
         const std::lock_guard<std::mutex> lk(curCtx->GetCaptureLock());
         if (evt->IsCapturing()) {
             const rtError_t retCode = CaptureResetEvent(evt, curStm);
@@ -669,15 +673,18 @@ rtError_t ApiImplDavid::StreamWaitEvent(
         return Starsv2CaptureExternalEventWait(evt, curStm);
     }
     if (evt->IsCapturing()) {
-        COND_RETURN_ERROR_MSG_INNER(
-            !StreamFlagIsSupportCapture(curStm->Flags()), RT_ERROR_STREAM_INVALID,
-            "stream flag does not support capture to model, flag=%u, stream_id=%d.", curStm->Flags(), curStm->Id_());
-        COND_RETURN_ERROR_MSG_INNER(
-            curStm == curCtx->DefaultStream_(), RT_ERROR_STREAM_CAPTURE_IMPLICIT,
-            "A disallowed implicit dependency from default stream.");
-        COND_RETURN_ERROR_MSG_INNER(
-            evt->IsEventWithoutWaitTask(), RT_ERROR_INVALID_VALUE,
-            "The event flag %" PRIu64 " is not supported in capture mode.", evt->GetEventFlag());
+        COND_RETURN_AND_MSG_OUTER(
+            !StreamFlagIsSupportCapture(curStm->Flags()), RT_ERROR_STREAM_INVALID, ErrorCode::EE1011,
+            "Triggering event waiting", std::to_string(curStm->Flags()), "stream flag",
+            RtFmtMsg("Stream (stream_id=%d) does not support the ACL Graph", curStm->Id_()));
+        COND_RETURN_AND_MSG_OUTER(
+            curStm == curCtx->DefaultStream_(), RT_ERROR_STREAM_CAPTURE_IMPLICIT, ErrorCode::EE1017,
+            "Triggering event waiting", "stream",
+            RtFmtMsg("The default stream (stream_id=%d) cannot be used in the ACL Graph", curStm->Id_()));
+        COND_RETURN_AND_MSG_OUTER(
+            evt->IsEventWithoutWaitTask(), RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, "Triggering event waiting",
+            std::to_string(evt->GetEventFlag()), "event flag",
+            RtFmtMsg("Event (event_id=%d) does not support the ACL Graph", evt->EventId_()));
         const std::lock_guard<std::mutex> lk(curCtx->GetCaptureLock());
         if (evt->IsCapturing()) {
             const rtError_t retCode = CaptureWaitEvent(curCtx, curStm, evt, timeout);
