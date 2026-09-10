@@ -12,6 +12,10 @@
 namespace cce {
 namespace runtime {
 
+void ModelExecuteGroupLock(Stream* const stm) { UNUSED(stm); }
+
+void ModelExecuteGroupUnLock(Stream* const stm) { UNUSED(stm); }
+
 rtError_t ModelSerialSchedPreProc(Stream* const stm, Notify* const notify, Model* const model)
 {
     UNUSED(stm);

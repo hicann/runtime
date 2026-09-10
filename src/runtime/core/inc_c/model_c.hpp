@@ -26,6 +26,8 @@ rtError_t MdlAbort(Model* const mdl);
 rtError_t MdlAddEndGraph(Model* const mdl, Stream* const stm, const uint32_t flags);
 rtError_t ModelSerialSchedPreProc(Stream* const stm, Notify* const notify, Model* const model);
 rtError_t ModelSerialSchedPostProc(Stream* const stm, Notify* const notify, Model* const model);
+void ModelExecuteGroupLock(Stream* const stm);
+void ModelExecuteGroupUnLock(Stream* const stm);
 rtError_t MdlBindTaskSubmit(Model* const mdl, Stream* const streamIn, const uint32_t flag);
 rtError_t MdlUnBindTaskSubmit(Model* const mdl, Stream* const streamIn, const bool force);
 } // namespace runtime

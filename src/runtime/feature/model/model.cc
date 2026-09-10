@@ -1180,6 +1180,15 @@ rtError_t Model::SynchronizeExecute(Stream* const stm, int32_t timeout)
     bool isNeedExecuteTimeoutMinotor =
         dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_MODEL_EXECUTE_TIMEOUT_MONITOR);
     time1 = GetTimeInterval(timeBegin);
+    const bool needExecuteGroupLock = dev->IsStarsPlatform() && (executeType != EXECUTOR_AICPU);
+    if (needExecuteGroupLock) {
+        ModelExecuteGroupLock(stm);
+    }
+    ScopeGuard executeGroupGuard([stm, needExecuteGroupLock]() {
+        if (needExecuteGroupLock) {
+            ModelExecuteGroupUnLock(stm);
+        }
+    });
     error = SubmitExecuteTask(stm);
     ERROR_RETURN_MSG_INNER(
         error, "Failed to submit exeTask, stream_id=%d, retCode=%#x.", stm->Id_(), static_cast<uint32_t>(error));
@@ -1190,6 +1199,9 @@ rtError_t Model::SynchronizeExecute(Stream* const stm, int32_t timeout)
 
         error = ModelSerialSchedPostProc(stm, endGraphNotify_, this);
         ERROR_RETURN_MSG_INNER(error, "Model serial sched post proc failed, stream_id=%d.", stm->Id_());
+
+        executeGroupGuard.ReleaseGuard();
+        ModelExecuteGroupUnLock(stm);
 
         error = stm->Synchronize(false, timeout);
         ERROR_RETURN_MSG_INNER(
@@ -1324,6 +1336,12 @@ rtError_t Model::GetStreamToAsyncExecute(Stream* stm)
     bool isDelTmpStream = false;
     int32_t tmpStreamId = 0;
     const uint32_t modelId = Id_();
+    bool executeGroupLocked = false;
+    ScopeGuard executeGroupGuard([&stm, &executeGroupLocked]() {
+        if (executeGroupLocked) {
+            ModelExecuteGroupUnLock(stm);
+        }
+    });
 
     if (stm == nullptr) {
         if (NeedLoadAicpuModelTask()) {
@@ -1358,6 +1376,10 @@ rtError_t Model::GetStreamToAsyncExecute(Stream* stm)
             stm->Id_(), modelId);
     }
 
+    if (dev->IsStarsPlatform() && (GetModelExecutorType() != EXECUTOR_AICPU)) {
+        ModelExecuteGroupLock(stm);
+        executeGroupLocked = true;
+    }
     error = SubmitExecuteTask(stm);
     ERROR_GOTO_MSG_INNER(error, ERROR_RELEASE, "Failed to submit execution task, stream_id=%d.", stm->Id_());
 
@@ -1367,6 +1389,11 @@ rtError_t Model::GetStreamToAsyncExecute(Stream* stm)
 
         error = ModelSerialSchedPostProc(stm, endGraphNotify_, this);
         ERROR_RETURN_MSG_INNER(error, "Model serial sched post proc failed, stream_id=%d.", stm->Id_());
+    }
+
+    if (executeGroupLocked) {
+        ModelExecuteGroupUnLock(stm);
+        executeGroupLocked = false;
     }
 
     if ((modelType_ != RT_MODEL_CAPTURE_MODEL) && StreamLaunchBlocking::ShouldLaunchBlock(stm)) {

@@ -253,6 +253,9 @@ public:
     void StreamLock();
     void StreamUnLock();
 
+    void ModelExecuteGroupLock();
+    void ModelExecuteGroupUnLock();
+
     void StreamSyncLock();
     bool StreamSyncTryLock(uint64_t time);
 
@@ -1021,7 +1024,8 @@ public:
     bool isModelExcel = false;
     bool isModelComplete = false;
     bool isForceRecycle_ = false;
-    std::mutex streamMutex_; // Guard for stream exclusive.
+    std::mutex streamMutex_;            // Guard for stream exclusive.
+    std::mutex modelExecuteGroupMutex_; // Guard for an atomic group of model execute tasks.
     std::mutex recycleMutex_;
 
 protected:

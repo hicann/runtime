@@ -2620,6 +2620,10 @@ void Stream::StreamLock() { streamMutex_.lock(); }
 
 void Stream::StreamUnLock() { streamMutex_.unlock(); }
 
+void Stream::ModelExecuteGroupLock() { modelExecuteGroupMutex_.lock(); }
+
+void Stream::ModelExecuteGroupUnLock() { modelExecuteGroupMutex_.unlock(); }
+
 void Stream::StreamSyncLock() { streamSyncMutex_.lock(); }
 
 bool Stream::StreamSyncTryLock(uint64_t time) { return streamSyncMutex_.try_lock_for(std::chrono::milliseconds(time)); }

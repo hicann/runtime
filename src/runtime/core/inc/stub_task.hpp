@@ -49,6 +49,10 @@ rtError_t EndGraphNtyWait(Notify* const inNotify, Stream* const streamIn, const 
 
 rtError_t ModelSerialSchedPostProc(Stream* const stm, Notify* const notify, Model* const model);
 
+void ModelExecuteGroupLock(Stream* const stm);
+
+void ModelExecuteGroupUnLock(Stream* const stm);
+
 rtError_t SyncGetDeviceMsg(
     Device* const dev, const void* const devMemAddr, const uint32_t devMemSize, const rtGetDevMsgType_t getDevMsgType);
 

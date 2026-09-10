@@ -107,6 +107,10 @@ rtError_t ModelSerialSchedPostProc(Stream* const stm, Notify* const notify, Mode
     return RT_ERROR_NONE;
 }
 
+void ModelExecuteGroupLock(Stream* const stm) { UNUSED(stm); }
+
+void ModelExecuteGroupUnLock(Stream* const stm) { UNUSED(stm); }
+
 rtError_t SyncGetDevMsg(
     Device* const dev, const void* const devMemAddr, const uint32_t devMemSize, const rtGetDevMsgType_t getDevMsgType)
 {

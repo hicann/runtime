@@ -15,6 +15,20 @@ namespace cce {
 namespace runtime {
 constexpr uint32_t MC32_CORE_NUM_PER_DIE = 4U;
 
+void ModelExecuteGroupLock(Stream* const stm)
+{
+    if (stm->Device_()->GetDevProperties().aivNumPerDie != MC32_CORE_NUM_PER_DIE) {
+        stm->ModelExecuteGroupLock();
+    }
+}
+
+void ModelExecuteGroupUnLock(Stream* const stm)
+{
+    if (stm->Device_()->GetDevProperties().aivNumPerDie != MC32_CORE_NUM_PER_DIE) {
+        stm->ModelExecuteGroupUnLock();
+    }
+}
+
 rtError_t ModelSerialSchedPreProc(Stream* const stm, Notify* const notify, Model* const model)
 {
     NULL_PTR_RETURN(notify, RT_ERROR_INVALID_VALUE);
