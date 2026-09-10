@@ -22,6 +22,7 @@
 #include "cmo_barrier_c.hpp"
 #include "stream_task_c.hpp"
 #include "profiler_c.hpp"
+#include "device_debug_c.hpp"
 #include "maintenance_task.h"
 #include "stream_task.h"
 #include "api_impl.hpp"
@@ -6522,21 +6523,21 @@ rtError_t ApiImpl::DebugSetDumpMode(const uint64_t mode)
     RT_LOG(RT_LOG_INFO, "set debug mode %llu start", mode);
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    return curCtx->DebugSetDumpMode(mode);
+    return cce::runtime::DebugSetDumpMode(mode, curCtx->Device_());
 }
 
 rtError_t ApiImpl::DebugGetStalledCore(rtDbgCoreInfo_t* const coreInfo)
 {
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    return curCtx->DebugGetStalledCore(coreInfo);
+    return cce::runtime::DebugGetStalledCore(coreInfo, curCtx->Device_());
 }
 
 rtError_t ApiImpl::DebugReadAICore(rtDebugMemoryParam_t* const param)
 {
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    return curCtx->DebugReadAICore(param);
+    return cce::runtime::DebugReadAICore(param, curCtx->Device_());
 }
 
 rtError_t ApiImpl::GetExceptionRegInfo(

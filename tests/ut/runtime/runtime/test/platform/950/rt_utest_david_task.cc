@@ -14,6 +14,7 @@
 #include <unistd.h>
 #include <fstream>
 #include <cstdio>
+#include <vector>
 
 #include "driver/ascend_hal.h"
 #include "runtime/rt.h"
@@ -56,7 +57,6 @@
 #include "program.hpp"
 #include "memcpy_c.hpp"
 #include "model_c.hpp"
-#include "coredump_c.hpp"
 #include "task_recycle.hpp"
 #include "securec.h"
 #include "npu_driver.hpp"
@@ -100,6 +100,32 @@ static void* NothrowNewFail(size_t size, const std::nothrow_t& tag)
 }
 
 namespace {
+std::vector<RtDebugSendInfo> g_davidDebugRequests;
+
+rtError_t RecordDavidDebugRequest(
+    Driver* const driver, const uint32_t sqId, uint8_t* const sqe, const uint32_t deviceId, const uint32_t tsId)
+{
+    UNUSED(driver);
+    UNUSED(sqId);
+    UNUSED(deviceId);
+    UNUSED(tsId);
+    g_davidDebugRequests.push_back(*RtPtrToPtr<RtDebugSendInfo*>(sqe));
+    return RT_ERROR_NONE;
+}
+
+rtError_t SetInvalidDavidDebugReport(
+    Driver* const driver, const uint32_t devId, const uint32_t tsId, const uint32_t cqId, uint8_t* const report,
+    uint32_t& realCnt)
+{
+    UNUSED(driver);
+    UNUSED(devId);
+    UNUSED(tsId);
+    UNUSED(cqId);
+    realCnt = 1U;
+    RtPtrToPtr<rtDebugReportInfo_t*>(report)->returnVal = 1U;
+    return RT_ERROR_NONE;
+}
+
 uint32_t GetCondIsaWord(const RtStarsCondOpStreamActiveR& op)
 {
     uint32_t word = 0U;
@@ -679,6 +705,103 @@ TEST_F(TaskTestDavid, TestModelUbSubmitExecuteTask)
     EXPECT_EQ(ret, RT_ERROR_NONE);
     ret = rtStreamDestroy(stream);
     EXPECT_EQ(ret, RT_ERROR_NONE);
+}
+
+TEST_F(TaskTestDavid, DebugReadAICore_register_direct_uses_va_and_releases_memory)
+{
+    Context* const ctx = Runtime::Instance()->CurrentContext();
+    ASSERT_NE(ctx, nullptr);
+    Device* const device = ctx->Device_();
+    Driver* const driver = device->Driver_();
+    device->SetCoredumpEnable();
+    uint8_t buffer[4096U] = {};
+    uint8_t output[4113U] = {};
+    void* deviceMemory = buffer;
+    MOCKER_CPP_VIRTUAL(driver, &Driver::DevMemAlloc)
+        .stubs()
+        .with(outBoundP(&deviceMemory, sizeof(deviceMemory)))
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::MemAddressTranslate).expects(never());
+    MOCKER_CPP_VIRTUAL(driver, &Driver::DevMemFree)
+        .expects(once())
+        .with(eq(deviceMemory), eq(device->Id_()))
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::MemSetSync).expects(exactly(2)).will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::MemCopySync).expects(exactly(2)).will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::DebugSqTaskSend).expects(exactly(3)).will(invoke(RecordDavidDebugRequest));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::DebugCqReport).expects(exactly(3)).will(returnValue(RT_ERROR_NONE));
+
+    rtDebugMemoryParam_t param = {};
+    param.debugMemType = RT_MEM_TYPE_REGISTER_DIRECT;
+    param.dstAddr = PtrToValue(output);
+    param.memLen = sizeof(output);
+    g_davidDebugRequests.clear();
+    ApiImplDavid api;
+    EXPECT_EQ(api.DebugReadAICore(&param), RT_ERROR_NONE);
+    ASSERT_EQ(g_davidDebugRequests.size(), 3U);
+    for (size_t index = 0U; index < 2U; ++index) {
+        const auto& request = g_davidDebugRequests[index];
+        const auto* memoryParam = RtPtrToPtr<const rtStarsLocalMemoryParam_t*>(request.params);
+        EXPECT_EQ(request.reqId, READ_REGISTER_DIRECT_BY_CURPROCESS);
+        EXPECT_EQ(memoryParam->dstAddr, PtrToValue(buffer));
+        EXPECT_EQ(memoryParam->srcAddr, index * 4096U);
+        EXPECT_EQ(memoryParam->memLen, (index == 0U) ? 4096U : 17U);
+    }
+    EXPECT_EQ(g_davidDebugRequests.back().reqId, RELEASE_COREDUMP_MEMORY);
+    GlobalMockObject::verify();
+}
+
+TEST_F(TaskTestDavid, DebugReadAICore_release_report_failure_frees_memory)
+{
+    Context* const ctx = Runtime::Instance()->CurrentContext();
+    ASSERT_NE(ctx, nullptr);
+    Device* const device = ctx->Device_();
+    Driver* const driver = device->Driver_();
+    device->SetCoredumpEnable();
+    uint8_t buffer[4096U] = {};
+    void* deviceMemory = buffer;
+    MOCKER_CPP_VIRTUAL(driver, &Driver::DevMemAlloc)
+        .stubs()
+        .with(outBoundP(&deviceMemory, sizeof(deviceMemory)))
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::DevMemFree)
+        .expects(once())
+        .with(eq(deviceMemory), eq(device->Id_()))
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::MemSetSync).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::MemCopySync).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::DebugSqTaskSend).expects(exactly(2)).will(invoke(RecordDavidDebugRequest));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::DebugCqReport)
+        .expects(exactly(2))
+        .will(returnValue(RT_ERROR_NONE))
+        .then(invoke(SetInvalidDavidDebugReport));
+
+    rtDebugMemoryParam_t param = {};
+    param.debugMemType = RT_MEM_TYPE_L0A;
+    param.memLen = 8U;
+    g_davidDebugRequests.clear();
+    ApiImplDavid api;
+    EXPECT_EQ(api.DebugReadAICore(&param), RT_ERROR_INVALID_VALUE);
+    ASSERT_EQ(g_davidDebugRequests.size(), 2U);
+    EXPECT_EQ(g_davidDebugRequests.back().reqId, RELEASE_COREDUMP_MEMORY);
+    GlobalMockObject::verify();
+}
+
+TEST_F(TaskTestDavid, DebugReadAICore_l1_boundary)
+{
+    Context* const ctx = Runtime::Instance()->CurrentContext();
+    ASSERT_NE(ctx, nullptr);
+    Device* const device = ctx->Device_();
+    device->SetCoredumpEnable();
+    MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::DevMemAlloc).expects(never());
+
+    rtDebugMemoryParam_t param = {};
+    param.debugMemType = RT_MEM_TYPE_L1;
+    param.srcAddr = 524288U;
+    param.memLen = 1U;
+    ApiImplDavid api;
+    EXPECT_EQ(api.DebugReadAICore(&param), RT_ERROR_INVALID_VALUE);
+    GlobalMockObject::verify();
 }
 
 TEST_F(TaskTestDavid, read_aicore_mem)

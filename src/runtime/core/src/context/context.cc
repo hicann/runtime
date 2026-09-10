@@ -72,10 +72,6 @@
 namespace cce {
 namespace runtime {
 namespace {
-constexpr uint64_t DEBUG_DEVMEM_LEN = 4096U;
-constexpr uint64_t L0A_SIZE = 65536;                            // 同L0B_SIZE
-constexpr uint64_t L0C_SIZE = 262144;                           // 同UB_SIZE
-constexpr uint64_t L1_SIZE = 1048576;
 constexpr uint64_t STREAM_ABORT_TIMEOUT = (60UL * RT_MS_PER_S); // 60s
 constexpr uint64_t REDUCE_ALIGN_SIZE = 0x4ULL;
 constexpr uint64_t REDUCE16_ALIGN_SIZE = 0x2ULL;
@@ -121,36 +117,6 @@ const char_t* ContextStateToString(const ContextState state)
         default:
             return "UNKNOWN";
     }
-}
-
-rtError_t CheckMemoryParam(const rtDebugMemoryParam_t* const param)
-{
-    static const std::map<rtDebugMemoryType_t, uint64_t> BUFFER_SIZE = {
-        {RT_MEM_TYPE_L0A, L0A_SIZE}, {RT_MEM_TYPE_L0B, L0A_SIZE}, {RT_MEM_TYPE_L0C, L0C_SIZE},
-        {RT_MEM_TYPE_UB, L0C_SIZE},  {RT_MEM_TYPE_L1, L1_SIZE},
-    };
-
-    NULL_PTR_RETURN_MSG(param, RT_ERROR_INVALID_VALUE);
-    const auto& iter = BUFFER_SIZE.find(param->debugMemType);
-    if (iter != BUFFER_SIZE.end()) {
-        const bool isValid = ((param->srcAddr + param->memLen) <= iter->second);
-        COND_RETURN_ERROR(
-            (!isValid), RT_ERROR_INVALID_VALUE,
-            "The read memory boundary exceeds the hardware memory boundary of the specified memory type,"
-            " debugMemType=%s(%d), srcAddr=0x%llx, memLen=%llu.",
-            DebugMemoryTypeName(param->debugMemType), param->debugMemType, param->srcAddr, param->memLen);
-    }
-    if (param->debugMemType == RT_MEM_TYPE_REGISTER) {
-        COND_RETURN_ERROR(
-            (param->elementSize == 0U), RT_ERROR_INVALID_VALUE,
-            "CheckMemoryParam failed, elementSize cannot be 0, debugMemType=%s(%d), srcAddr=0x%llx, memLen=%llu.",
-            DebugMemoryTypeName(param->debugMemType), param->debugMemType, param->srcAddr, param->memLen);
-        COND_RETURN_ERROR(
-            (param->memLen % param->elementSize != 0), RT_ERROR_INVALID_VALUE,
-            "The read memory length %llu is not aligned with the register bit width %u.", param->memLen,
-            param->elementSize);
-    }
-    return RT_ERROR_NONE;
 }
 
 rtError_t CheckCoreParam(const uint32_t coreType, const uint32_t coreId)
@@ -2554,22 +2520,6 @@ rtError_t Context::StreamAbort(Stream* const stm)
     return RT_ERROR_NONE;
 }
 
-rtError_t Context::SendAndRecvDebugTask(RtDebugSendInfo* const sendInfo, rtDebugReportInfo_t* const reportInfo) const
-{
-    Driver* const devDrv = device_->Driver_();
-    auto ret = devDrv->DebugSqTaskSend(
-        device_->GetDebugSqId(), RtPtrToPtr<uint8_t*, RtDebugSendInfo*>(sendInfo), device_->Id_(),
-        device_->DevGetTsId());
-    ERROR_RETURN(ret, "DebugSqTaskSend fail, retCode=%#x.", ret);
-
-    uint32_t realReportCnt = 0U;
-    ret = devDrv->DebugCqReport(
-        device_->Id_(), device_->DevGetTsId(), device_->GetDebugCqId(),
-        RtPtrToPtr<uint8_t*, rtDebugReportInfo_t*>(reportInfo), realReportCnt);
-    ERROR_RETURN(ret, "DebugCqReport fail, retCode=%#x.", ret);
-    return RT_ERROR_NONE;
-}
-
 Stream* Context::GetCtrlSQStream() const { return device_->GetCtrlSQStream(DefaultStream_()); }
 
 rtError_t Context::CheckStatus(const Stream* const stm, const bool isBlockDefault)
@@ -2705,135 +2655,6 @@ rtError_t Context::GetStackBuffer(
         *stack = ValueToPtr(PtrToValue(stackPhyBase) + (*stackSize) * (aicNum + coreId));
     }
     RT_LOG(RT_LOG_INFO, "Get stack addr %p, stackSize %u", *stack, *stackSize);
-    return RT_ERROR_NONE;
-}
-
-rtError_t Context::DebugSetDumpMode(const uint64_t mode)
-{
-    COND_RETURN_ERROR(
-        !device_->CheckFeatureSupport(TS_FEATURE_COREDUMP), RT_ERROR_DRV_NOT_SUPPORT,
-        "Current device does not support core dump!");
-    Driver* const devDrv = device_->Driver_();
-    COND_RETURN_ERROR((devDrv == nullptr), RT_ERROR_DRV_NULL, "devDrv is null!");
-    RT_LOG(RT_LOG_INFO, "Start to create debug dump sqcq.");
-    uint32_t debugSqId = 0U;
-    uint32_t debugCqId = 0U;
-    auto ret = devDrv->DebugSqCqAllocate(device_->Id_(), device_->DevGetTsId(), debugSqId, debugCqId);
-    ERROR_RETURN(ret, "DebugSqCqAllocate fail, retCode=%#x.", ret);
-    RT_LOG(RT_LOG_INFO, "Create debug dump sqcq success, sq_id is %u, cq_id is %u.", debugSqId, debugCqId);
-    device_->SetDebugSqId(debugSqId);
-    device_->SetDebugCqId(debugCqId);
-
-    RtDebugSendInfo sendInfo = {};
-    sendInfo.reqId = SET_DEBUG_MODE;
-    sendInfo.isReturn = true;
-    sendInfo.dataLen = static_cast<uint32_t>(sizeof(int64_t));
-    uint64_t* param = RtPtrToPtr<uint64_t*, uint8_t*>(sendInfo.params);
-    *param = mode;
-
-    rtDebugReportInfo_t reportInfo = {};
-    ret = SendAndRecvDebugTask(&sendInfo, &reportInfo);
-    ERROR_RETURN(ret, "SendAndRecvDebugTask fail, retCode=%#x.", ret);
-    COND_RETURN_ERROR(
-        (reportInfo.returnVal != 0U), RT_ERROR_INVALID_VALUE, "SendAndRecvDebugTask get report val %u invalid!.",
-        reportInfo.returnVal);
-    device_->SetCoredumpEnable();
-    RT_LOG(RT_LOG_INFO, "Set dump mode success.");
-    return RT_ERROR_NONE;
-}
-
-rtError_t Context::DebugGetStalledCore(rtDbgCoreInfo_t* const coreInfo)
-{
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        coreInfo, RT_ERROR_INVALID_VALUE, "Obtaining the physical ID of the stalled AI Core in the current process");
-    COND_RETURN_ERROR((!device_->IsCoredumpEnable()), RT_ERROR_INVALID_VALUE, "Coredump mode is disabled!");
-    RT_LOG(RT_LOG_INFO, "Start to get core info.");
-    RtDebugSendInfo sendInfo = {};
-    sendInfo.reqId = GET_STALLED_AICINFO_BY_PID;
-    sendInfo.isReturn = true;
-
-    rtDebugReportInfo_t reportInfo = {};
-    const auto ret = SendAndRecvDebugTask(&sendInfo, &reportInfo);
-    ERROR_RETURN(ret, "SendAndRecvDebugTask fail, retCode=%#x.", ret);
-    COND_RETURN_ERROR(
-        (reportInfo.returnVal != 0U), RT_ERROR_INVALID_VALUE, "Get core info get report val %u invalid!.",
-        reportInfo.returnVal);
-    rtDbgCoreInfo_t* tmp = RtPtrToPtr<rtDbgCoreInfo_t*, uint8_t*>(reportInfo.data);
-    *coreInfo = *tmp;
-    RT_LOG(
-        RT_LOG_INFO, "Get core info, bitmap info is 0x%llx 0x%llx 0x%llx 0x%llx", coreInfo->aicBitmap0,
-        coreInfo->aicBitmap1, coreInfo->aivBitmap0, coreInfo->aivBitmap1);
-    return RT_ERROR_NONE;
-}
-
-rtError_t Context::DebugReadAICore(rtDebugMemoryParam_t* const param)
-{
-    COND_RETURN_ERROR((!device_->IsCoredumpEnable()), RT_ERROR_INVALID_VALUE, "Coredump mode is disabled!");
-    auto ret = CheckMemoryParam(param);
-    ERROR_RETURN(ret, "CheckMemoryParam fail.");
-    RT_LOG(
-        RT_LOG_INFO,
-        "Start to DebugReadAICore, coreType=%u, coreId=%u, debugMemType=%u, elementSize=%u, "
-        "memLen=%llu, srcAddr=0x%llx, dstAddr=0x%llx.",
-        param->coreType, param->coreId, param->debugMemType, param->elementSize, param->memLen, param->srcAddr,
-        param->dstAddr);
-
-    Driver* const devDrv = device_->Driver_();
-    const uint32_t deviceId = device_->Id_();
-    void* devMem = nullptr;
-    uint64_t physicPtr = 0U;
-    ret = devDrv->DevMemAlloc(&devMem, DEBUG_DEVMEM_LEN, RT_MEMORY_HBM, deviceId);
-    ERROR_RETURN(ret, "Failed to allocate device memory, retCode=%#x.", ret);
-    ScopeGuard guard([&devMem, &devDrv, &deviceId]() { (void)devDrv->DevMemFree(devMem, deviceId); });
-    ret = devDrv->MemAddressTranslate(static_cast<int32_t>(deviceId), PtrToValue(devMem), &physicPtr);
-    ERROR_RETURN(ret, "Failed to translate device memory address, ptr=%p, retCode=%#x.", devMem, ret);
-    RT_LOG(RT_LOG_INFO, "Malloc tmp buffer, vptr=%p, pptr=0x%llx.", devMem, physicPtr);
-
-    uint64_t remainSize = param->memLen;
-    uint64_t offset = 0U;
-    while (remainSize > 0U) {
-        RtDebugSendInfo sendInfo = {};
-        sendInfo.reqId = (param->debugMemType == RT_MEM_TYPE_REGISTER) ? READ_REGISTER_BY_CURPROCESS :
-                                                                         READ_LOCAL_MEMORY_BY_CURPROCESS;
-        sendInfo.isReturn = true;
-        sendInfo.dataLen = static_cast<uint32_t>(sizeof(rtStarsLocalMemoryParam_t));
-        rtStarsLocalMemoryParam_t* memoryParam = RtPtrToPtr<rtStarsLocalMemoryParam_t*, uint8_t*>(sendInfo.params);
-        memoryParam->coreType = param->coreType;
-        memoryParam->coreId = param->coreId;
-        memoryParam->debugMemType = param->debugMemType; // 读取local mem时，rts枚举取值当前与ts侧的定义一致
-        memoryParam->elementSize = param->elementSize;
-        memoryParam->srcAddr = param->srcAddr + offset;
-        memoryParam->dstAddr = physicPtr;
-        if (remainSize > DEBUG_DEVMEM_LEN) {
-            memoryParam->memLen = DEBUG_DEVMEM_LEN;
-            remainSize -= DEBUG_DEVMEM_LEN;
-        } else {
-            memoryParam->memLen = remainSize;
-            remainSize = 0U;
-        }
-
-        ret = devDrv->MemSetSync(devMem, DEBUG_DEVMEM_LEN, 0U, DEBUG_DEVMEM_LEN);
-        ERROR_RETURN(ret, "Failed to set device memory, addr=%p, retCode=%#x.", devMem, ret);
-        rtDebugReportInfo_t reportInfo = {};
-        ret = SendAndRecvDebugTask(&sendInfo, &reportInfo);
-        COND_RETURN_ERROR(
-            ((ret != RT_ERROR_NONE) || (reportInfo.returnVal != 0U)), RT_ERROR_INVALID_VALUE,
-            "DebugReadAICore failed, retCode=%#x, reportVal=%u, coreType=%u, coreId=%u, debugMemType=%s(%u), "
-            "elementSize=%u, memLen=%llu, srcAddr=0x%llx, dstAddr=0x%llx.",
-            ret, reportInfo.returnVal, param->coreType, param->coreId, DebugMemoryTypeName(param->debugMemType),
-            static_cast<uint32_t>(param->debugMemType), memoryParam->elementSize, memoryParam->memLen,
-            memoryParam->srcAddr, memoryParam->dstAddr);
-
-        ret = devDrv->MemCopySync(
-            ValueToPtr(param->dstAddr + offset), memoryParam->memLen, devMem, memoryParam->memLen,
-            RT_MEMCPY_DEVICE_TO_HOST);
-        ERROR_RETURN(
-            ret, "Failed to copy memory, retCode=%#x, dstAddr=0x%llx, srcAddr=%p, memLen=%llu.", ret,
-            param->dstAddr + offset, devMem, memoryParam->memLen);
-
-        offset += memoryParam->memLen;
-    }
-    RT_LOG(RT_LOG_INFO, "ReadAICore success");
     return RT_ERROR_NONE;
 }
 

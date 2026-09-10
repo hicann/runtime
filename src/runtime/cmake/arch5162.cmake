@@ -225,6 +225,8 @@ set(libruntime_src_files_include_for_arch5162
 )
 
 set(runtime_src_device_list
+    ${RUNTIME_CORE_DIR}/src/device/device_debug_common.cc
+    ${RUNTIME_CORE_DIR}/src/device/device_debug_stars.cc
     ${RUNTIME_CORE_DIR}/src/device/device_sq_cq_pool.cc
     ${RUNTIME_CORE_DIR}/src/device/ini_parse_utils.cc
     ${RUNTIME_CORE_DIR}/src/device/raw_device.cc

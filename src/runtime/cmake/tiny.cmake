@@ -277,6 +277,8 @@ set(libruntime_common_src_files
     ${RUNTIME_CORE_DIR}/src/device/ctrl_sq.cc
 
     ${RUNTIME_CORE_DIR}/src/device/device.cc
+    ${RUNTIME_CORE_DIR}/src/device/device_debug_common.cc
+    ${RUNTIME_CORE_DIR}/src/device/device_debug_stars.cc
     ${RUNTIME_CORE_DIR}/src/device/raw_device.cc
     ${RUNTIME_CORE_DIR}/src/device/raw_device_res.cc
     ${RUNTIME_CORE_DIR}/src/device/raw_device_adpt_comm.cc
@@ -424,6 +426,8 @@ set(libruntime_v100_src_files
     ${RUNTIME_API_DIR}/impl/v100/api_impl_creator_c.cc
 
     ${RUNTIME_CORE_DIR}/src/device/device.cc
+    ${RUNTIME_CORE_DIR}/src/device/device_debug_common.cc
+    ${RUNTIME_CORE_DIR}/src/device/device_debug_stars.cc
     ${RUNTIME_CORE_DIR}/src/device/raw_device.cc
     ${RUNTIME_CORE_DIR}/src/device/raw_device_res.cc
     ${RUNTIME_CORE_DIR}/src/device/raw_device_adpt_comm.cc

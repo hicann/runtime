@@ -279,6 +279,8 @@ set(runtimeut_910b_src_list
     ${TOP_DIR}/src/runtime/core/src/context/context.cc
     ${TOP_DIR}/src/runtime/core/src/context/context_standard_soc.cc
     ${TOP_DIR}/src/runtime/core/src/device/device.cc
+    ${TOP_DIR}/src/runtime/core/src/device/device_debug_common.cc
+    ${TOP_DIR}/src/runtime/core/src/device/device_debug_stars.cc
     ${TOP_DIR}/src/runtime/core/src/device/raw_device.cc
     ${TOP_DIR}/src/runtime/core/src/device/raw_device_res.cc
     ${TOP_DIR}/src/runtime/feature/snapshot/device_snapshot.cc

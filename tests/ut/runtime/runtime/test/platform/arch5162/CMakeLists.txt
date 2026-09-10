@@ -216,6 +216,8 @@ set(runtimeut_src_aclgraph_list
 )
 
 set(runtimeut_src_device_list
+    ${TOP_DIR}/src/runtime/core/src/device/device_debug_common.cc
+    ${TOP_DIR}/src/runtime/core/src/device/device_debug_stars.cc
     ${TOP_DIR}/src/runtime/core/src/device/device_sq_cq_pool.cc
     ${TOP_DIR}/src/runtime/core/src/device/ini_parse_utils.cc
     ${TOP_DIR}/src/runtime/core/src/device/raw_device.cc

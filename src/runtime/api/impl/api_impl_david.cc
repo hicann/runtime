@@ -35,6 +35,7 @@
 #include "cmo_barrier_c.hpp"
 #include "profiler_c.hpp"
 #include "coredump_c.hpp"
+#include "device_debug_c.hpp"
 #include "thread_local_container.hpp"
 #include "inner_thread_local.hpp"
 #include "device_msg_handler.hpp"
@@ -2316,7 +2317,10 @@ rtError_t ApiImplDavid::GetStackBuffer(
     return GetStackBufferInfo(binHandle, deviceId, stackType, coreType, coreId, stack, stackSize);
 }
 
-rtError_t ApiImplDavid::DebugReadAICore(rtDebugMemoryParam_t* const param) { return ReadAICoreDebugInfo(param); }
+rtError_t ApiImplDavid::DebugReadAICore(rtDebugMemoryParam_t* const param)
+{
+    return cce::runtime::DebugReadAICore(param);
+}
 
 rtError_t ApiImplDavid::StarsLaunchSubscribeProc(
     Stream* const stm, const rtCallback_t callBackFunc, void* const fnData, const bool needSubscribe,

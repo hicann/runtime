@@ -279,6 +279,8 @@ set(libruntime_v200_v201_common_src_files
     ${RUNTIME_CORE_DIR}/src/uvm/uvm_callback.cc
     ${RUNTIME_CORE_DIR}/src/context/context.cc
     ${RUNTIME_CORE_DIR}/src/device/device.cc
+    ${RUNTIME_CORE_DIR}/src/device/device_debug_common.cc
+    ${RUNTIME_CORE_DIR}/src/device/device_debug_starsv2.cc
     ${RUNTIME_CORE_DIR}/src/device/raw_device.cc
     ${RUNTIME_CORE_DIR}/src/device/raw_device_res.cc
     ${RUNTIME_FEATURE_DIR}/snapshot/device_snapshot.cc

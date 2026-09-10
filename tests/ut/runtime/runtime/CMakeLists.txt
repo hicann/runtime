@@ -206,6 +206,8 @@ set(runtimeut_src_david_series_common_c_list
     ${TOP_DIR}/src/runtime/feature/ccu/ccu_stream.cc
     ${TOP_DIR}/src/runtime/core/src/dfx/coredump_c.cc
     ${TOP_DIR}/src/runtime/core/src/dfx/fast_recover.cc
+    ${TOP_DIR}/src/runtime/core/src/device/device_debug_common.cc
+    ${TOP_DIR}/src/runtime/core/src/device/device_debug_starsv2.cc
     ${TOP_DIR}/src/runtime/core/src/launch/memory_common.cc
     ${TOP_DIR}/src/runtime/core/src/launch/memcpy_starsv2.cc
     ${TOP_DIR}/src/runtime/core/src/launch/memory_starsv2.cc
@@ -611,6 +613,8 @@ set(runtimeut_src_list
     ${TOP_DIR}/src/runtime/core/src/context/context.cc
     ${TOP_DIR}/src/runtime/core/src/context/context_standard_soc.cc
     ${TOP_DIR}/src/runtime/core/src/device/device.cc
+    ${TOP_DIR}/src/runtime/core/src/device/device_debug_common.cc
+    ${TOP_DIR}/src/runtime/core/src/device/device_debug_stars.cc
     ${TOP_DIR}/src/runtime/core/src/device/raw_device.cc
     ${TOP_DIR}/src/runtime/core/src/device/raw_device_res.cc
     ${TOP_DIR}/src/runtime/core/src/dfx/fast_recover.cc

@@ -65,8 +65,6 @@ class Model;
 class Label;
 struct ArgLoaderResult;
 class DvppGrp;
-struct RtDebugSendInfo;
-struct rtDebugReportInfo_t;
 
 enum class TearDownStatus : uint8_t {
     TEARDOWN_NOT_EXECUTE = 0, // TDT threads is idle
@@ -253,9 +251,6 @@ public:
     rtError_t GetStackBuffer(
         const rtBinHandle binHandle, const uint32_t coreType, const uint32_t coreId, const void** stack,
         uint32_t* stackSize) const;
-    rtError_t DebugSetDumpMode(const uint64_t mode);
-    rtError_t DebugGetStalledCore(rtDbgCoreInfo_t* const coreInfo);
-    rtError_t DebugReadAICore(rtDebugMemoryParam_t* const param);
     rtError_t GetExceptionRegInfo(
         const rtExceptionInfo_t* const exceptionInfo, rtExceptionErrRegInfo_t** exceptionErrRegInfo,
         uint32_t* num) const;
@@ -443,7 +438,6 @@ public:
     rtError_t UpdateEndGraphTask(Stream* const origCaptureStream, Stream* const exeStream, Notify* ntf) const;
     rtError_t UpdateSuModelExeStreamNotifyWaitSqe(TaskInfo* taskInfo, Stream* const exeStream) const;
     rtError_t GetCaptureModelEndGraphNotify(Model* const mdl, Stream* const stm, Notify*& ntf) const;
-    rtError_t SendAndRecvDebugTask(RtDebugSendInfo* const sendInfo, rtDebugReportInfo_t* const reportInfo) const;
     uint64_t GetCallBackThreadId() const { return callBackThreadId_; }
     rtError_t CreateContextCallBackThread();
     void DestroyContextCallBackThread();

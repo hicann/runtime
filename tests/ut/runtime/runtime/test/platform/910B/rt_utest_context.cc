@@ -57,16 +57,32 @@
 #include "cmo_barrier_c.hpp"
 #include "stream_task_c.hpp"
 #include "profiler_c.hpp"
+#include "device_debug_c.hpp"
 #include "barrier_task.h"
 #include "stream_task.h"
 #include "task_info_v100.h"
 #include "../../data/elf.h"
 #include "../../common/rt_utest_context_reset_helper.hpp"
 
+#include <vector>
+
 using namespace testing;
 using namespace cce::runtime;
 
 namespace {
+std::vector<RtDebugSendInfo> g_starsDebugRequests;
+
+rtError_t RecordStarsDebugRequest(
+    Driver* const driver, const uint32_t sqId, uint8_t* const sqe, const uint32_t deviceId, const uint32_t tsId)
+{
+    UNUSED(driver);
+    UNUSED(sqId);
+    UNUSED(deviceId);
+    UNUSED(tsId);
+    g_starsDebugRequests.push_back(*RtPtrToPtr<RtDebugSendInfo*>(sqe));
+    return RT_ERROR_NONE;
+}
+
 Context* GetPrimaryContext(int32_t& devId, RefObject<Context*>*& refObject)
 {
     EXPECT_EQ(rtGetDevice(&devId), RT_ERROR_NONE);
@@ -76,6 +92,19 @@ Context* GetPrimaryContext(int32_t& devId, RefObject<Context*>*& refObject)
 }
 
 void ReleasePrimaryContext(const int32_t devId) { (void)((Runtime*)Runtime::Instance())->PrimaryContextRelease(devId); }
+
+rtError_t SetInvalidDebugReport(
+    Driver* const driver, const uint32_t devId, const uint32_t tsId, const uint32_t cqId, uint8_t* const report,
+    uint32_t& realCnt)
+{
+    UNUSED(driver);
+    UNUSED(devId);
+    UNUSED(tsId);
+    UNUSED(cqId);
+    realCnt = 1U;
+    RtPtrToPtr<rtDebugReportInfo_t*>(report)->returnVal = 1U;
+    return RT_ERROR_NONE;
+}
 
 class RestoreFailedStream : public Stream {
 public:
@@ -2440,6 +2469,159 @@ TEST_F(CloudV2ContextTest, NONFAIL_SYNCHRONIZE_TEST)
     (void)((Runtime*)Runtime::Instance())->PrimaryContextRelease(0);
 }
 
+TEST_F(CloudV2ContextTest, SendAndRecvDebugTask_sq_send_failed)
+{
+    Context* const ctx = Runtime::Instance()->CurrentContext();
+    ASSERT_NE(ctx, nullptr);
+    Device* const device = ctx->Device_();
+    ASSERT_NE(device, nullptr);
+    Driver* const driver = device->Driver_();
+    ASSERT_NE(driver, nullptr);
+
+    MOCKER_CPP_VIRTUAL(driver, &Driver::DebugSqTaskSend).stubs().will(returnValue(RT_ERROR_DRV_ERR));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::DebugCqReport).expects(never());
+
+    RtDebugSendInfo sendInfo = {};
+    rtDebugReportInfo_t reportInfo = {};
+    EXPECT_EQ(SendAndRecvDebugTask(&sendInfo, &reportInfo, device), RT_ERROR_DRV_ERR);
+}
+
+TEST_F(CloudV2ContextTest, SendAndRecvDebugTask_cq_report_failed)
+{
+    Context* const ctx = Runtime::Instance()->CurrentContext();
+    ASSERT_NE(ctx, nullptr);
+    Device* const device = ctx->Device_();
+    ASSERT_NE(device, nullptr);
+    Driver* const driver = device->Driver_();
+    ASSERT_NE(driver, nullptr);
+
+    MOCKER_CPP_VIRTUAL(driver, &Driver::DebugSqTaskSend).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::DebugCqReport).stubs().will(returnValue(RT_ERROR_DRV_ERR));
+
+    RtDebugSendInfo sendInfo = {};
+    rtDebugReportInfo_t reportInfo = {};
+    EXPECT_EQ(SendAndRecvDebugTask(&sendInfo, &reportInfo, device), RT_ERROR_DRV_ERR);
+}
+
+TEST_F(CloudV2ContextTest, DebugSetDumpMode_invalid_report_does_not_enable_coredump)
+{
+    Context* const ctx = Runtime::Instance()->CurrentContext();
+    ASSERT_NE(ctx, nullptr);
+    Device* const device = ctx->Device_();
+    ASSERT_NE(device, nullptr);
+    Driver* const driver = device->Driver_();
+    ASSERT_NE(driver, nullptr);
+
+    MOCKER_CPP_VIRTUAL(device, &Device::CheckFeatureSupport).stubs().will(returnValue(true));
+    MOCKER_CPP_VIRTUAL(device, &Device::SetCoredumpEnable).expects(never());
+    MOCKER_CPP_VIRTUAL(driver, &Driver::DebugSqCqAllocate).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::DebugSqTaskSend).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::DebugCqReport).stubs().will(invoke(SetInvalidDebugReport));
+
+    EXPECT_EQ(DebugSetDumpMode(RT_DEBUG_DUMP_ON_EXCEPTION, device), RT_ERROR_INVALID_VALUE);
+}
+
+TEST_F(CloudV2ContextTest, DebugGetStalledCore_invalid_report_preserves_output)
+{
+    Context* const ctx = Runtime::Instance()->CurrentContext();
+    ASSERT_NE(ctx, nullptr);
+    Device* const device = ctx->Device_();
+    Driver* const driver = device->Driver_();
+    device->SetCoredumpEnable();
+    MOCKER_CPP_VIRTUAL(driver, &Driver::DebugSqTaskSend).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::DebugCqReport).stubs().will(invoke(SetInvalidDebugReport));
+
+    rtDbgCoreInfo_t coreInfo = {1U, 2U, 3U, 4U};
+    EXPECT_EQ(DebugGetStalledCore(&coreInfo, device), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(coreInfo.aicBitmap0, 1U);
+    EXPECT_EQ(coreInfo.aicBitmap1, 2U);
+    EXPECT_EQ(coreInfo.aivBitmap0, 3U);
+    EXPECT_EQ(coreInfo.aivBitmap1, 4U);
+}
+
+TEST_F(CloudV2ContextTest, DebugReadAICore_translate_failure_frees_memory)
+{
+    Context* const ctx = Runtime::Instance()->CurrentContext();
+    ASSERT_NE(ctx, nullptr);
+    Device* const device = ctx->Device_();
+    Driver* const driver = device->Driver_();
+    device->SetCoredumpEnable();
+    uint8_t buffer[4096U] = {};
+    void* deviceMemory = buffer;
+    MOCKER_CPP_VIRTUAL(driver, &Driver::DevMemAlloc)
+        .stubs()
+        .with(outBoundP(&deviceMemory, sizeof(deviceMemory)))
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::MemAddressTranslate).stubs().will(returnValue(RT_ERROR_DRV_ERR));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::DevMemFree)
+        .expects(once())
+        .with(eq(deviceMemory), eq(device->Id_()))
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::DebugSqTaskSend).expects(never());
+
+    rtDebugMemoryParam_t param = {};
+    param.debugMemType = RT_MEM_TYPE_L0A;
+    param.memLen = 8U;
+    EXPECT_EQ(DebugReadAICore(&param, device), RT_ERROR_DRV_ERR);
+}
+
+TEST_F(CloudV2ContextTest, DebugReadAICore_l1_chunks_use_physical_address)
+{
+    Context* const ctx = Runtime::Instance()->CurrentContext();
+    ASSERT_NE(ctx, nullptr);
+    Device* const device = ctx->Device_();
+    Driver* const driver = device->Driver_();
+    device->SetCoredumpEnable();
+    uint8_t buffer[4096U] = {};
+    uint8_t output[4113U] = {};
+    void* deviceMemory = buffer;
+    uint64_t physicalAddress = 0x12345000U;
+    MOCKER_CPP_VIRTUAL(driver, &Driver::DevMemAlloc)
+        .stubs()
+        .with(outBoundP(&deviceMemory, sizeof(deviceMemory)))
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::MemAddressTranslate)
+        .expects(once())
+        .with(eq(static_cast<int32_t>(device->Id_())), eq(PtrToValue(deviceMemory)), outBoundP(&physicalAddress))
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::DevMemFree)
+        .expects(once())
+        .with(eq(deviceMemory), eq(device->Id_()))
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::MemSetSync).expects(exactly(2)).will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::DebugSqTaskSend).expects(exactly(2)).will(invoke(RecordStarsDebugRequest));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::DebugCqReport).expects(exactly(2)).will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::MemCopySync)
+        .expects(once())
+        .with(
+            eq(static_cast<void*>(output)), eq(uint64_t{4096U}), eq(static_cast<const void*>(buffer)),
+            eq(uint64_t{4096U}), eq(RT_MEMCPY_DEVICE_TO_HOST))
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::MemCopySync)
+        .expects(once())
+        .with(
+            eq(static_cast<void*>(output + 4096U)), eq(uint64_t{17U}), eq(static_cast<const void*>(buffer)),
+            eq(uint64_t{17U}), eq(RT_MEMCPY_DEVICE_TO_HOST))
+        .will(returnValue(RT_ERROR_NONE));
+
+    rtDebugMemoryParam_t param = {};
+    param.debugMemType = RT_MEM_TYPE_L1;
+    param.srcAddr = 1048576U - sizeof(output);
+    param.dstAddr = PtrToValue(output);
+    param.memLen = sizeof(output);
+    g_starsDebugRequests.clear();
+    EXPECT_EQ(DebugReadAICore(&param, device), RT_ERROR_NONE);
+    ASSERT_EQ(g_starsDebugRequests.size(), 2U);
+    for (size_t index = 0U; index < g_starsDebugRequests.size(); ++index) {
+        const auto& request = g_starsDebugRequests[index];
+        const auto* memoryParam = RtPtrToPtr<const rtStarsLocalMemoryParam_t*>(request.params);
+        EXPECT_EQ(request.reqId, READ_LOCAL_MEMORY_BY_CURPROCESS);
+        EXPECT_EQ(memoryParam->dstAddr, physicalAddress);
+        EXPECT_EQ(memoryParam->srcAddr, param.srcAddr + index * 4096U);
+        EXPECT_EQ(memoryParam->memLen, (index == 0U) ? 4096U : 17U);
+    }
+}
+
 TEST_F(CloudV2ContextTest, DebugReadAICore_invalid_param)
 {
     GlobalMockObject::verify();
@@ -2454,23 +2636,23 @@ TEST_F(CloudV2ContextTest, DebugReadAICore_invalid_param)
     EXPECT_NE(ctx, nullptr);
     ctx->Device_()->SetCoredumpEnable();
 
-    EXPECT_EQ(ctx->DebugGetStalledCore(nullptr), RT_ERROR_INVALID_VALUE);
-    EXPECT_EQ(ctx->DebugReadAICore(nullptr), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(DebugGetStalledCore(nullptr, ctx->Device_()), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(DebugReadAICore(nullptr, ctx->Device_()), RT_ERROR_INVALID_VALUE);
 
     rtDebugMemoryParam_t param = {};
     param.debugMemType = RT_MEM_TYPE_L0A;
     param.srcAddr = 65536U;
     param.memLen = 1U;
-    EXPECT_EQ(ctx->DebugReadAICore(&param), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(DebugReadAICore(&param, ctx->Device_()), RT_ERROR_INVALID_VALUE);
 
     param = {};
     param.debugMemType = RT_MEM_TYPE_REGISTER;
     param.elementSize = 0U;
     param.memLen = 4U;
-    EXPECT_EQ(ctx->DebugReadAICore(&param), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(DebugReadAICore(&param, ctx->Device_()), RT_ERROR_INVALID_VALUE);
 
     param.elementSize = 3U;
-    EXPECT_EQ(ctx->DebugReadAICore(&param), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(DebugReadAICore(&param, ctx->Device_()), RT_ERROR_INVALID_VALUE);
 
     (void)((Runtime*)Runtime::Instance())->PrimaryContextRelease(devId);
     GlobalMockObject::verify();

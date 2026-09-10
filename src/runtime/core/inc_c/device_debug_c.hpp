@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2025 Huawei Technologies Co., Ltd.
+ * Copyright (c) 2026 Huawei Technologies Co., Ltd.
  * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
  * CANN Open Software License Agreement Version 2.0 (the "License").
  * Please refer to the License for details. You may not use this file except in compliance with the License.
@@ -7,19 +7,28 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
-#ifndef __CCE_RUNTIME_COREDUMP_C_HPP__
-#define __CCE_RUNTIME_COREDUMP_C_HPP__
+#ifndef CCE_RUNTIME_DEVICE_DEBUG_C_HPP
+#define CCE_RUNTIME_DEVICE_DEBUG_C_HPP
 
 #include "task_info.hpp"
 
 namespace cce {
 namespace runtime {
 
-rtError_t GetStackBufferInfo(
-    const rtBinHandle binHandle, uint32_t deviceId, const uint32_t stackType, const uint32_t coreType,
-    const uint32_t coreId, const void** stack, uint32_t* stackSize);
+class Device;
+struct RtDebugSendInfo;
+struct rtDebugReportInfo_t;
+
+rtError_t SendAndRecvDebugTask(
+    RtDebugSendInfo* const sendInfo, rtDebugReportInfo_t* const reportInfo, Device* const device);
+
+rtError_t DebugSetDumpMode(const uint64_t mode, Device* const device);
+
+rtError_t DebugGetStalledCore(rtDbgCoreInfo_t* const coreInfo, Device* const device);
+
+rtError_t DebugReadAICore(const rtDebugMemoryParam_t* const param, Device* const device = nullptr);
 
 } // namespace runtime
 } // namespace cce
 
-#endif // __CCE_RUNTIME_COREDUMP_C_HPP__
+#endif // CCE_RUNTIME_DEVICE_DEBUG_C_HPP

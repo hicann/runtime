@@ -420,6 +420,8 @@ set(libruntime_cmodel_src_files
     ${RUNTIME_CORE_DIR}/src/device/ctrl_sq.cc
     ${RUNTIME_DIR}/src/runtime/driver/v100/
     ${RUNTIME_CORE_DIR}/src/device/device.cc
+    ${RUNTIME_CORE_DIR}/src/device/device_debug_common.cc
+    ${RUNTIME_CORE_DIR}/src/device/device_debug_stars.cc
     ${RUNTIME_CORE_DIR}/src/device/raw_device.cc
     ${RUNTIME_CORE_DIR}/src/device/raw_device_res_camodel.cc
     ${RUNTIME_FEATURE_DIR}/snapshot/device_snapshot.cc
@@ -558,6 +560,8 @@ set(libruntime_cmodel_v200_src_files
 
     ${RUNTIME_CORE_DIR}/src/context/context.cc
     ${RUNTIME_CORE_DIR}/src/device/device.cc
+    ${RUNTIME_CORE_DIR}/src/device/device_debug_common.cc
+    ${RUNTIME_CORE_DIR}/src/device/device_debug_starsv2.cc
     ${RUNTIME_CORE_DIR}/src/device/raw_device.cc
     ${RUNTIME_CORE_DIR}/src/device/raw_device_res_camodel.cc
     ${RUNTIME_FEATURE_DIR}/snapshot/device_snapshot.cc
