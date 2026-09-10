@@ -12,7 +12,7 @@
 #define CCE_RUNTIME_STREAM_TASK_C_HPP
 
 #include "runtime/base.h"
-#include "runtime/rt_stars_define.h"
+#include "runtime/rt_external_stars_define.h"
 
 namespace cce {
 namespace runtime {
@@ -32,19 +32,19 @@ rtError_t StreamNpuGetFloatStatus(
 
 rtError_t StreamNpuClearFloatStatus(const uint32_t checkMode, Stream* const stm, bool isDebug = false);
 
-rtError_t StreamSetOverflowSwitch(Stream* const targetStm, const uint32_t flags, Stream* const defaultStm);
+rtError_t StreamSetOverflowSwitch(Stream* const stm, const uint32_t flags, Stream* const defaultStm);
 
 rtError_t StreamDatadumpInfoLoad(
-    const void* const dumpInfo, const uint32_t length, const uint32_t flag, Stream* const defaultStm);
+    const void* const dumpInfo, const uint32_t length, const uint32_t flag, Stream* const dftStm);
 
 rtError_t StreamAicpuInfoLoad(
-    Stream* const defaultStm, const void* const aicpuInfo, const uint32_t length, Device* const device);
+    Stream* const dftStm, const void* const aicpuInfo, const uint32_t length, Device* const device);
 
 rtError_t StreamDebugRegister(
-    Stream* const debugStm, const uint32_t flag, const void* const addr, uint32_t* const streamId,
+    Stream* const debugStream, const uint32_t flag, const void* const addr, uint32_t* const streamId,
     uint32_t* const taskId, Stream* const defaultStm);
 
-rtError_t StreamDebugUnRegister(Stream* const debugStm, Stream* const defaultStm);
+rtError_t StreamDebugUnRegister(Stream* const debugStream, Stream* const defaultStm);
 
 } // namespace runtime
 } // namespace cce

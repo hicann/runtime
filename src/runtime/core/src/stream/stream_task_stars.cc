@@ -180,14 +180,14 @@ ERROR_RECYCLE:
     return error;
 }
 
-rtError_t StreamSetOverflowSwitch(Stream* const targetStm, const uint32_t flags, Stream* const defaultStm)
+rtError_t StreamSetOverflowSwitch(Stream* const stm, const uint32_t flags, Stream* const defaultStm)
 {
     rtError_t error = RT_ERROR_NONE;
     TaskInfo* tsk = nullptr;
-    Device* const device = targetStm->Device_();
+    Device* const device = stm->Device_();
     if (device->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ)) {
         uint32_t flipTaskId = 0;
-        RtOverflowSwitchSetParam param = {targetStm, flags};
+        RtOverflowSwitchSetParam param = {stm, flags};
         error = device->GetCtrlSQ().SendOverflowSwitchSetMsg(
             RtCtrlMsgType::RT_CTRL_MSG_SET_OVERFLOW_SWITCH, param, &flipTaskId);
         ERROR_RETURN(error, "Failed to send overflow switch set message, retCode=%#x.", error);
@@ -199,13 +199,13 @@ rtError_t StreamSetOverflowSwitch(Stream* const targetStm, const uint32_t flags,
         tsk = defaultStm->AllocTask(&submitTask, TS_TASK_TYPE_SET_OVERFLOW_SWITCH, errorReason);
         NULL_PTR_RETURN(tsk, errorReason);
 
-        (void)OverflowSwitchSetTaskInit(tsk, targetStm, flags);
+        (void)OverflowSwitchSetTaskInit(tsk, stm, flags);
         error = device->SubmitTask(tsk);
         ERROR_GOTO(error, ERROR_RECYCLE, "Failed to submit OverflowSwitchSetTask, retCode=%#x.", error);
         GET_THREAD_TASKID_AND_STREAMID(tsk, defaultStm->Id_());
     }
 
-    targetStm->SetOverflowSwitch(flags != 0U);
+    stm->SetOverflowSwitch(flags != 0U);
     RT_LOG(RT_LOG_INFO, "OverflowSwitchSetTask submitted.");
     return error;
 ERROR_RECYCLE:
@@ -214,12 +214,12 @@ ERROR_RECYCLE:
 }
 
 rtError_t StreamDatadumpInfoLoad(
-    const void* const dumpInfo, const uint32_t length, const uint32_t flag, Stream* const defaultStm)
+    const void* const dumpInfo, const uint32_t length, const uint32_t flag, Stream* const dftStm)
 {
     rtError_t error;
-    NULL_PTR_RETURN_MSG(defaultStm, RT_ERROR_STREAM_NULL);
-    Device* const device = defaultStm->Device_();
-    const int32_t streamId = defaultStm->Id_();
+    NULL_PTR_RETURN_MSG(dftStm, RT_ERROR_STREAM_NULL);
+    Device* const device = dftStm->Device_();
+    const int32_t streamId = dftStm->Id_();
     const tsAicpuKernelType kernelType =
         ((flag & RT_KERNEL_CUSTOM_AICPU) != 0U) ? TS_AICPU_KERNEL_CUSTOM_AICPU : TS_AICPU_KERNEL_AICPU;
 
@@ -230,7 +230,7 @@ rtError_t StreamDatadumpInfoLoad(
 
     TaskInfo submitTask = {};
     rtError_t errorReason;
-    TaskInfo* rtDumpLoadInfoTask = defaultStm->AllocTask(&submitTask, TS_TASK_TYPE_DATADUMP_LOADINFO, errorReason);
+    TaskInfo* rtDumpLoadInfoTask = dftStm->AllocTask(&submitTask, TS_TASK_TYPE_DATADUMP_LOADINFO, errorReason);
     NULL_PTR_RETURN_MSG(rtDumpLoadInfoTask, errorReason);
 
     error = DataDumpLoadInfoTaskInit(rtDumpLoadInfoTask, dumpInfo, length, static_cast<uint16_t>(kernelType));
@@ -242,32 +242,32 @@ rtError_t StreamDatadumpInfoLoad(
     error = device->SubmitTask(rtDumpLoadInfoTask);
     ERROR_GOTO_MSG_INNER(error, ERROR_RECYCLE, "Failed to submit data dump info load task, retCode=%#x.", error);
 
-    error = defaultStm->Synchronize();
+    error = dftStm->Synchronize();
     ERROR_RETURN_MSG_INNER(error, "Failed to synchronize data dump info load task, retCode=%#x.", error);
 
     return error;
 
 ERROR_RECYCLE:
-    defaultStm->SetErrCode(0U);
+    dftStm->SetErrCode(0U);
     (void)device->GetTaskFactory()->Recycle(rtDumpLoadInfoTask);
     return error;
 }
 
 rtError_t StreamAicpuInfoLoad(
-    Stream* const defaultStm, const void* const aicpuInfo, const uint32_t length, Device* const device)
+    Stream* const dftStm, const void* const aicpuInfo, const uint32_t length, Device* const device)
 {
     if (device->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ)) {
         RtAicpuInfoLoadParam param = {aicpuInfo, length};
         return device->GetCtrlSQ().SendAicpuInfoLoadMsg(RtCtrlMsgType::RT_CTRL_MSG_AICPU_INFOLOAD, param);
     }
-    NULL_PTR_RETURN_MSG(defaultStm, RT_ERROR_STREAM_NULL);
+    NULL_PTR_RETURN_MSG(dftStm, RT_ERROR_STREAM_NULL);
 
     TaskInfo submitTask = {};
     rtError_t errorReason;
-    TaskInfo* rtAicpuLoadInfoTask = defaultStm->AllocTask(&submitTask, TS_TASK_TYPE_AICPU_INFO_LOAD, errorReason);
+    TaskInfo* rtAicpuLoadInfoTask = dftStm->AllocTask(&submitTask, TS_TASK_TYPE_AICPU_INFO_LOAD, errorReason);
     NULL_PTR_RETURN_MSG(rtAicpuLoadInfoTask, errorReason);
 
-    const int32_t streamId = defaultStm->Id_();
+    const int32_t streamId = dftStm->Id_();
     rtError_t error = AicpuInfoLoadTaskInit(rtAicpuLoadInfoTask, aicpuInfo, length);
     ERROR_GOTO_MSG_INNER(
         error, ERROR_RECYCLE, "Failed to init AI CPU info load task, stream_id=%d, task_id=%" PRIu16 ", retCode=%#x.",
@@ -276,35 +276,36 @@ rtError_t StreamAicpuInfoLoad(
     error = device->SubmitTask(rtAicpuLoadInfoTask);
     ERROR_GOTO_MSG_INNER(error, ERROR_RECYCLE, "Failed to submit AI CPU info load task, retCode=%#x.", error);
 
-    error = defaultStm->Synchronize();
+    error = dftStm->Synchronize();
     ERROR_RETURN_MSG_INNER(error, "Failed to synchronize AI CPU info load task, retCode=%#x.", error);
 
     return error;
 
 ERROR_RECYCLE:
-    defaultStm->SetErrCode(0U);
+    dftStm->SetErrCode(0U);
     (void)device->GetTaskFactory()->Recycle(rtAicpuLoadInfoTask);
     return error;
 }
 
 rtError_t StreamDebugRegister(
-    Stream* const debugStm, const uint32_t flag, const void* const addr, uint32_t* const streamId,
+    Stream* const debugStream, const uint32_t flag, const void* const addr, uint32_t* const streamId,
     uint32_t* const taskId, Stream* const defaultStm)
 {
     rtError_t error;
-    Device* const device = debugStm->Device_();
+    Device* const device = debugStream->Device_();
     Stream* setStm = nullptr;
     if (device->IsStarsPlatform() == true) {
-        setStm = debugStm;
+        setStm = debugStream;
     } else {
         setStm = defaultStm;
     }
     NULL_PTR_RETURN_MSG(setStm, RT_ERROR_STREAM_NULL);
     *streamId = static_cast<uint32_t>(setStm->Id_());
 
-    COND_RETURN_WARN(debugStm->IsDebugRegister(), RT_ERROR_DEBUG_REGISTER_FAILED, "stream already debug registered!");
+    COND_RETURN_WARN(
+        debugStream->IsDebugRegister(), RT_ERROR_DEBUG_REGISTER_FAILED, "stream already debug registered!");
 
-    RT_LOG(RT_LOG_INFO, "send task stream_id=%d, debug_stream_id=%d.", setStm->Id_(), debugStm->Id_());
+    RT_LOG(RT_LOG_INFO, "send task stream_id=%d, debug_stream_id=%d.", setStm->Id_(), debugStream->Id_());
 
     TaskInfo submitTask = {};
     rtError_t errorReason;
@@ -312,12 +313,12 @@ rtError_t StreamDebugRegister(
     NULL_PTR_RETURN_MSG(rtDbgRegStreamTask, errorReason);
 
     *taskId = static_cast<uint32_t>(rtDbgRegStreamTask->id);
-    error = DebugRegisterForStreamTaskInit(rtDbgRegStreamTask, static_cast<uint32_t>(debugStm->Id_()), addr, flag);
+    error = DebugRegisterForStreamTaskInit(rtDbgRegStreamTask, static_cast<uint32_t>(debugStream->Id_()), addr, flag);
     ERROR_GOTO_MSG_INNER(
         error, ERROR_RECYCLE,
         "Failed to init debug register for stream task, stream_id=%d, debug_stream_id=%d, task_id=%" PRIu16
         ", retCode=%#x.",
-        *streamId, debugStm->Id_(), rtDbgRegStreamTask->id, error);
+        *streamId, debugStream->Id_(), rtDbgRegStreamTask->id, error);
 
     error = device->SubmitTask(rtDbgRegStreamTask);
     ERROR_GOTO_MSG_INNER(error, ERROR_RECYCLE, "Failed to submit debug register for stream task, retCode=%#x.", error);
@@ -328,7 +329,7 @@ rtError_t StreamDebugRegister(
         error = setStm->Synchronize();
         ERROR_RETURN_MSG_INNER(error, "Failed to synchronize debug register for stream task, retCode=%#x.", error);
     }
-    debugStm->SetDebugRegister(true);
+    debugStream->SetDebugRegister(true);
     return error;
 
 ERROR_RECYCLE:
@@ -336,19 +337,20 @@ ERROR_RECYCLE:
     return RT_ERROR_DEBUG_REGISTER_FAILED;
 }
 
-rtError_t StreamDebugUnRegister(Stream* const debugStm, Stream* const defaultStm)
+rtError_t StreamDebugUnRegister(Stream* const debugStream, Stream* const defaultStm)
 {
     rtError_t error;
-    Device* const device = debugStm->Device_();
+    Device* const device = debugStream->Device_();
     Stream* setStm = nullptr;
     if (device->IsStarsPlatform() == true) {
-        setStm = debugStm;
+        setStm = debugStream;
     } else {
         setStm = defaultStm;
     }
     NULL_PTR_RETURN_MSG(setStm, RT_ERROR_STREAM_NULL);
 
-    COND_RETURN_WARN(!debugStm->IsDebugRegister(), RT_ERROR_DEBUG_UNREGISTER_FAILED, "stream is not debug registered!");
+    COND_RETURN_WARN(
+        !debugStream->IsDebugRegister(), RT_ERROR_DEBUG_UNREGISTER_FAILED, "stream is not debug registered!");
 
     TaskInfo submitTask = {};
     rtError_t errorReason;
@@ -356,7 +358,7 @@ rtError_t StreamDebugUnRegister(Stream* const debugStm, Stream* const defaultStm
         setStm->AllocTask(&submitTask, TS_TASK_TYPE_DEBUG_UNREGISTER_FOR_STREAM, errorReason);
     NULL_PTR_RETURN_MSG(rtDbgUnregStreamTask, errorReason);
 
-    (void)DebugUnRegisterForStreamTaskInit(rtDbgUnregStreamTask, debugStm->Id_());
+    (void)DebugUnRegisterForStreamTaskInit(rtDbgUnregStreamTask, debugStream->Id_());
 
     error = device->SubmitTask(rtDbgUnregStreamTask);
     ERROR_GOTO_MSG_INNER(
@@ -366,7 +368,7 @@ rtError_t StreamDebugUnRegister(Stream* const debugStm, Stream* const defaultStm
         error = setStm->Synchronize();
         ERROR_RETURN_MSG_INNER(error, "Failed to synchronize debug unregister for stream task, retCode=%#x.", error);
     }
-    debugStm->SetDebugRegister(false);
+    debugStream->SetDebugRegister(false);
 
     return error;
 
