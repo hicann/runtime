@@ -4,6 +4,7 @@
 
 ## 场景主题
 
+- [image_processing](./image_processing/README.md)：单 Device 图像处理中的二维数据准备、传输与结果校验。
 - [training_pipeline](./training_pipeline/README.md)：训练流水线中的初始化、数据准备、执行、同步与性能采集。
 - [multi_device_inference](./multi_device_inference/README.md)：多设备推理中的设备选择、数据交互和调度。
 - [fault_tolerant_exec](./fault_tolerant_exec/README.md)：容错执行中的失败诊断、恢复和降级处理。
