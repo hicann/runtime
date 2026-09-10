@@ -620,50 +620,50 @@ rtError_t ApiProfileLogDecorator::ModelExecuteAsync(Model* const mdl, Stream* co
     return error;
 }
 
-rtError_t ApiProfileLogDecorator::NotifyCreate(const int32_t deviceId, Notify** const retNotify, uint64_t flag)
+rtError_t ApiProfileLogDecorator::NotifyCreate(const int32_t deviceId, Notify** const notify, uint64_t flag)
 {
     ProfileLogRecord record(PROFILE_RECORD_TYPE_RT_CALL_RT, RT_PROF_API_NotifyCreate, profiler_);
-    const rtError_t error = impl_->NotifyCreate(deviceId, retNotify, flag);
+    const rtError_t error = impl_->NotifyCreate(deviceId, notify, flag);
     record.SaveRecord();
     return error;
 }
 
-rtError_t ApiProfileLogDecorator::NotifyDestroy(Notify* const inNotify)
+rtError_t ApiProfileLogDecorator::NotifyDestroy(Notify* const notify)
 {
     ProfileLogRecord record(PROFILE_RECORD_TYPE_RT_CALL_RT, RT_PROF_API_NotifyDestroy, profiler_);
-    const rtError_t error = impl_->NotifyDestroy(inNotify);
+    const rtError_t error = impl_->NotifyDestroy(notify);
     record.SaveRecord();
     return error;
 }
 
-rtError_t ApiProfileLogDecorator::NotifyRecord(Notify* const inNotify, Stream* const stm)
+rtError_t ApiProfileLogDecorator::NotifyRecord(Notify* const notify, Stream* const stm)
 {
     ProfileLogRecord record(PROFILE_RECORD_TYPE_RT_CALL_RT, RT_PROF_API_NotifyRecord, profiler_);
-    const rtError_t error = impl_->NotifyRecord(inNotify, stm);
+    const rtError_t error = impl_->NotifyRecord(notify, stm);
     record.SaveRecord();
     return error;
 }
 
-rtError_t ApiProfileLogDecorator::NotifyReset(Notify* const inNotify)
+rtError_t ApiProfileLogDecorator::NotifyReset(Notify* const notify)
 {
     ProfileLogRecord record(PROFILE_RECORD_TYPE_RT_CALL_RT, RT_PROF_API_NOTIFY_RESET, profiler_);
-    const rtError_t error = impl_->NotifyReset(inNotify);
+    const rtError_t error = impl_->NotifyReset(notify);
     record.SaveRecord();
     return error;
 }
 
-rtError_t ApiProfileLogDecorator::NotifyWait(Notify* const inNotify, Stream* const stm, const uint32_t timeOut)
+rtError_t ApiProfileLogDecorator::NotifyWait(Notify* const notify, Stream* const stm, const uint32_t timeOut)
 {
     ProfileLogRecord record(PROFILE_RECORD_TYPE_RT_CALL_RT, RT_PROF_API_NotifyWait, profiler_);
-    const rtError_t error = impl_->NotifyWait(inNotify, stm, timeOut);
+    const rtError_t error = impl_->NotifyWait(notify, stm, timeOut);
     record.SaveRecord();
     return error;
 }
 
-rtError_t ApiProfileLogDecorator::IpcOpenNotify(Notify** const retNotify, const char_t* const name, uint32_t flag)
+rtError_t ApiProfileLogDecorator::IpcOpenNotify(Notify** const notify, const char_t* const name, uint32_t flag)
 {
     ProfileLogRecord record(PROFILE_RECORD_TYPE_RT_CALL_RT, RT_PROF_API_IpcOpenNotify, profiler_);
-    const rtError_t error = impl_->IpcOpenNotify(retNotify, name, flag);
+    const rtError_t error = impl_->IpcOpenNotify(notify, name, flag);
     record.SaveRecord();
     return error;
 }

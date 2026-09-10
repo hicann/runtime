@@ -29,10 +29,10 @@ rtError_t ApiProfileDecorator::UbDirectSend(rtUbWqeInfo_t* const wqeInfo, Stream
 }
 
 rtError_t ApiProfileDecorator::CntNotifyCreate(
-    const int32_t deviceId, CountNotify** const retCntNotify, const uint32_t flag)
+    const int32_t deviceId, CountNotify** const cntNotify, const uint32_t flag)
 {
     CallApiBegin(RT_PROF_API_COUNT_NOTIFY_CREATE);
-    const rtError_t error = impl_->CntNotifyCreate(deviceId, retCntNotify, flag);
+    const rtError_t error = impl_->CntNotifyCreate(deviceId, cntNotify, flag);
     CallApiEnd(error);
     return error;
 }

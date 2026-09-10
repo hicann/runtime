@@ -30,10 +30,10 @@ rtError_t ApiProfileLogDecorator::UbDirectSend(rtUbWqeInfo_t* const wqeInfo, Str
 }
 
 rtError_t ApiProfileLogDecorator::CntNotifyCreate(
-    const int32_t deviceId, CountNotify** const retCntNotify, const uint32_t flag)
+    const int32_t deviceId, CountNotify** const cntNotify, const uint32_t flag)
 {
     ProfileLogRecord record(PROFILE_RECORD_TYPE_RT_CALL_RT, RT_PROF_API_COUNT_NOTIFY_CREATE, profiler_);
-    const rtError_t error = impl_->CntNotifyCreate(deviceId, retCntNotify, flag);
+    const rtError_t error = impl_->CntNotifyCreate(deviceId, cntNotify, flag);
     record.SaveRecord();
     return error;
 }

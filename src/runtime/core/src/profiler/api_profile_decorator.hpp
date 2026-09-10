@@ -215,16 +215,15 @@ public:
     rtError_t RDMASend(const uint32_t sqIndex, const uint32_t wqeIndex, Stream* const stm) override;
     rtError_t RdmaDbSend(const uint32_t dbIndex, const uint64_t dbInfo, Stream* const stm) override;
     rtError_t NotifyCreate(
-        const int32_t deviceId, Notify** const retNotify, uint64_t flag = RT_NOTIFY_FLAG_DEFAULT) override;
-    rtError_t NotifyDestroy(Notify* const inNotify) override;
-    rtError_t NotifyRecord(Notify* const inNotify, Stream* const stm) override;
-    rtError_t NotifyReset(Notify* const inNotify) override;
-    rtError_t NotifyWait(Notify* const inNotify, Stream* const stm, const uint32_t timeOut) override;
+        const int32_t deviceId, Notify** const notify, uint64_t flag = RT_NOTIFY_FLAG_DEFAULT) override;
+    rtError_t NotifyDestroy(Notify* const notify) override;
+    rtError_t NotifyRecord(Notify* const notify, Stream* const stm) override;
+    rtError_t NotifyReset(Notify* const notify) override;
+    rtError_t NotifyWait(Notify* const notify, Stream* const stm, const uint32_t timeOut) override;
     rtError_t IpcOpenNotify(
-        Notify** const retNotify, const char_t* const name, uint32_t flag = RT_NOTIFY_FLAG_DEFAULT) override;
+        Notify** const notify, const char_t* const name, uint32_t flag = RT_NOTIFY_FLAG_DEFAULT) override;
     rtError_t CntNotifyCreate(
-        const int32_t deviceId, CountNotify** const retCntNotify,
-        const uint32_t flag = RT_NOTIFY_FLAG_DEFAULT) override;
+        const int32_t deviceId, CountNotify** const cntNotify, const uint32_t flag = RT_NOTIFY_FLAG_DEFAULT) override;
     rtError_t CntNotifyDestroy(CountNotify* const inCntNotify) override;
     rtError_t CntNotifyRecord(
         CountNotify* const inCntNotify, Stream* const stm, const rtCntNtyRecordInfo_t* const info) override;

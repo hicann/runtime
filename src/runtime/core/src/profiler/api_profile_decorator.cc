@@ -1077,50 +1077,50 @@ rtError_t ApiProfileDecorator::ModelExecuteAsync(Model* const mdl, Stream* const
     return error;
 }
 
-rtError_t ApiProfileDecorator::NotifyCreate(const int32_t deviceId, Notify** const retNotify, uint64_t flag)
+rtError_t ApiProfileDecorator::NotifyCreate(const int32_t deviceId, Notify** const notify, uint64_t flag)
 {
     CallApiBegin(RT_PROF_API_NotifyCreate);
-    const rtError_t error = impl_->NotifyCreate(deviceId, retNotify, flag);
+    const rtError_t error = impl_->NotifyCreate(deviceId, notify, flag);
     CallApiEnd(error);
     return error;
 }
 
-rtError_t ApiProfileDecorator::NotifyDestroy(Notify* const inNotify)
+rtError_t ApiProfileDecorator::NotifyDestroy(Notify* const notify)
 {
     CallApiBegin(RT_PROF_API_NotifyDestroy);
-    const rtError_t error = impl_->NotifyDestroy(inNotify);
+    const rtError_t error = impl_->NotifyDestroy(notify);
     CallApiEnd(error);
     return error;
 }
 
-rtError_t ApiProfileDecorator::NotifyRecord(Notify* const inNotify, Stream* const stm)
+rtError_t ApiProfileDecorator::NotifyRecord(Notify* const notify, Stream* const stm)
 {
     CallApiBegin(RT_PROF_API_NotifyRecord);
-    const rtError_t error = impl_->NotifyRecord(inNotify, stm);
+    const rtError_t error = impl_->NotifyRecord(notify, stm);
     CallApiEnd(error);
     return error;
 }
 
-rtError_t ApiProfileDecorator::NotifyReset(Notify* const inNotify)
+rtError_t ApiProfileDecorator::NotifyReset(Notify* const notify)
 {
     CallApiBegin(RT_PROF_API_NOTIFY_RESET);
-    const rtError_t error = impl_->NotifyReset(inNotify);
+    const rtError_t error = impl_->NotifyReset(notify);
     CallApiEnd(error);
     return error;
 }
 
-rtError_t ApiProfileDecorator::NotifyWait(Notify* const inNotify, Stream* const stm, const uint32_t timeOut)
+rtError_t ApiProfileDecorator::NotifyWait(Notify* const notify, Stream* const stm, const uint32_t timeOut)
 {
     CallApiBegin(RT_PROF_API_NotifyWait);
-    const rtError_t error = impl_->NotifyWait(inNotify, stm, timeOut);
+    const rtError_t error = impl_->NotifyWait(notify, stm, timeOut);
     CallApiEnd(error);
     return error;
 }
 
-rtError_t ApiProfileDecorator::IpcOpenNotify(Notify** const retNotify, const char_t* const name, uint32_t flag)
+rtError_t ApiProfileDecorator::IpcOpenNotify(Notify** const notify, const char_t* const name, uint32_t flag)
 {
     CallApiBegin(RT_PROF_API_IpcOpenNotify);
-    const rtError_t error = impl_->IpcOpenNotify(retNotify, name, flag);
+    const rtError_t error = impl_->IpcOpenNotify(notify, name, flag);
     CallApiEnd(error);
     return error;
 }
