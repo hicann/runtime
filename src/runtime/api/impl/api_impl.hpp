@@ -815,6 +815,8 @@ public:
     rtError_t RegisterParseDfxInfoFunc(rtParseDfxInfoFunc func) override;
 
 protected:
+    static rtError_t CheckEventAndStreamDevice(
+        const Event* const evt, const Stream* const stm, const char_t* const funcDesc);
     void ProcessHostFunc(
         const uint64_t funcAddr, const uint64_t fnDataAddr, Device* const dev, const uint16_t streamId) const;
     virtual rtError_t GetDeviceSimtInfo(rtDevAttr attr, int64_t* val);

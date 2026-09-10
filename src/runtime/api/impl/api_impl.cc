@@ -2300,6 +2300,10 @@ rtError_t ApiImpl::EventRecord(Event* const evt, Stream* const stm, const uint32
         curStm = curCtx->DefaultStream_();
         NULL_STREAM_PTR_RETURN_MSG(curStm);
     }
+    const rtError_t checkRet = CheckEventAndStreamDevice(evt, curStm, "Event recording");
+    if (checkRet != RT_ERROR_NONE) {
+        return checkRet;
+    }
     const bool supportFlag = (evt->IsNewMode() || (evt->GetEventFlag() == RT_EVENT_DEFAULT)) && curStm->IsModelStream();
     COND_RETURN_WARN(
         supportFlag, RT_ERROR_FEATURE_NOT_SUPPORT,
@@ -2363,6 +2367,10 @@ rtError_t ApiImpl::EventReset(Event* const evt, Stream* const stm)
         curStm = curCtx->DefaultStream_();
         NULL_STREAM_PTR_RETURN_MSG(curStm);
     }
+    const rtError_t checkRet = CheckEventAndStreamDevice(evt, curStm, "Event reset");
+    if (checkRet != RT_ERROR_NONE) {
+        return checkRet;
+    }
     const bool supportFlag = (evt->IsNewMode()) || ((!evt->IsNotify()) && (evt->GetEventFlag() == RT_EVENT_DEFAULT) &&
                                                     curStm->IsModelStream());
     COND_RETURN_WARN(
@@ -2401,6 +2409,22 @@ rtError_t ApiImpl::EventReset(Event* const evt, Stream* const stm)
     }
 
     return evt->Reset(curStm);
+}
+
+rtError_t ApiImpl::CheckEventAndStreamDevice(
+    const Event* const evt, const Stream* const stm, const char_t* const funcDesc)
+{
+    const Device* const evtDevice = evt->Device_();
+    NULL_PTR_RETURN(evtDevice, RT_ERROR_DRV_NULL);
+    const Device* const stmDevice = stm->Device_();
+    NULL_PTR_RETURN(stmDevice, RT_ERROR_DRV_NULL);
+    COND_RETURN_AND_MSG_OUTER(
+        evtDevice->Id_() != stmDevice->Id_(), RT_ERROR_INVALID_VALUE, ErrorCode::EE1022, funcDesc,
+        RtFmtMsg("%u and %u", evtDevice->Id_(), stmDevice->Id_()), "event device ID and stream device ID",
+        RtFmtMsg(
+            "The event and stream (stream_id=%d) belong to different devices. Create them on the same device",
+            stm->Id_()));
+    return RT_ERROR_NONE;
 }
 
 rtError_t ApiImpl::EventSynchronize(Event* const evt, const int32_t timeout)
@@ -7312,44 +7336,6 @@ rtError_t ApiImpl::CacheLastTaskOpInfo(const void* const infoPtr, const size_t i
 
     CaptureModel* captureMdl = dynamic_cast<CaptureModel*>(mdl);
     return captureMdl->CacheLastTaskOpInfo(infoPtr, infoSize, stm);
-}
-
-rtError_t ApiImpl::FunctionGetAttribute(rtFuncHandle funcHandle, rtFuncAttribute attrType, int64_t* attrValue)
-{
-    const Kernel* const kernel = RtPtrToPtr<Kernel*>(funcHandle);
-    switch (attrType) {
-        case RT_FUNCTION_ATTR_KERNEL_TYPE: {
-            *attrValue = static_cast<int64_t>(kernel->GetKernelAttrType());
-            COND_RETURN_ERROR_MSG_INNER(
-                *attrValue == static_cast<int64_t>(RT_KERNEL_ATTR_TYPE_INVALID), RT_ERROR_INVALID_VALUE,
-                "Invalid kernel type.");
-            break;
-        }
-        case RT_FUNCTION_ATTR_KERNEL_RATIO: {
-            uint32_t taskRatio = kernel->GetTaskRation();
-            uint32_t mixType = kernel->GetMixType();
-            uint16_t ratio[2];
-            ComputeRatio(ratio, mixType, taskRatio);
-            uint16_t* ratioArr = RtPtrToPtr<uint16_t*>(attrValue);
-            ratioArr[1] = ratio[0]; // aicratio
-            ratioArr[0] = ratio[1]; // aivratio
-            RT_LOG(RT_LOG_DEBUG, "mixType=%u, ratio[0]=%u, ratio[1]=%u.", mixType, ratio[0], ratio[1]);
-            break;
-        }
-        case RT_FUNCTION_ATTR_KERNEL_SCHED_MODE: {
-            *attrValue = static_cast<int64_t>(kernel->GetSchedMode());
-            break;
-        }
-        default: {
-            if (attrType == RT_FUNCTION_ATTR_MAX) {
-                RT_LOG(RT_LOG_WARNING, "Invalid attrType=FUNCTION_ATTR_MAX(4)");
-            } else {
-                RT_LOG(RT_LOG_WARNING, "Invalid attrType=UNKNOWN(%d)", static_cast<int32_t>(attrType));
-            }
-            break;
-        }
-    }
-    return RT_ERROR_NONE;
 }
 
 rtError_t ApiImpl::FunctionGetBinary(const Kernel* const funcHandle, Program** const binHandle)

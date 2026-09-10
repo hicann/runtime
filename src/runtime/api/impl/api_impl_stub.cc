@@ -790,6 +790,14 @@ rtError_t ApiImpl::HostGetDevicePointerAddrRange(rtAddrRange* addrRange, uint32_
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
+rtError_t ApiImpl::FunctionGetAttribute(rtFuncHandle funcHandle, rtFuncAttribute attrType, int64_t* attrValue)
+{
+    UNUSED(funcHandle);
+    UNUSED(attrType);
+    UNUSED(attrValue);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
 rtError_t ApiImpl::TaskGetParams(rtTask_t task, rtTaskParams* const params)
 {
     UNUSED(task);

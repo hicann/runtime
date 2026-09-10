@@ -492,6 +492,10 @@ rtError_t ApiImplDavid::EventRecord(Event* const evt, Stream* const stm, const u
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     Stream* const curStm = (stm == nullptr) ? curCtx->DefaultStream_() : stm;
     NULL_STREAM_PTR_RETURN_MSG(curStm);
+    const rtError_t checkRet = CheckEventAndStreamDevice(evt, curStm, "Event recording");
+    if (checkRet != RT_ERROR_NONE) {
+        return checkRet;
+    }
     const bool supportFlag = (evt->IsNewMode() || (evt->GetEventFlag() == RT_EVENT_DEFAULT)) && curStm->IsModelStream();
     COND_RETURN_WARN(
         supportFlag, RT_ERROR_FEATURE_NOT_SUPPORT,
@@ -546,6 +550,10 @@ rtError_t ApiImplDavid::EventReset(Event* const evt, Stream* const stm)
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     Stream* const curStm = (stm == nullptr) ? curCtx->DefaultStream_() : stm;
     NULL_STREAM_PTR_RETURN_MSG(curStm);
+    const rtError_t checkRet = CheckEventAndStreamDevice(evt, curStm, "Event reset");
+    if (checkRet != RT_ERROR_NONE) {
+        return checkRet;
+    }
     const bool supportFlag =
         (evt->IsNewMode()) || ((evt->GetEventFlag() == RT_EVENT_DEFAULT) && curStm->IsModelStream());
     COND_RETURN_WARN(

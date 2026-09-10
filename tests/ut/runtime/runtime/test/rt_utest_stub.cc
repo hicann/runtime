@@ -317,6 +317,8 @@ TEST_F(TinyStubTest, api_error_stub)
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
     ret = api.HostGetDevicePointerAddrRange(nullptr, nullptr);
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
+    ret = api.FunctionGetAttribute(nullptr, RT_FUNCTION_ATTR_MAX, nullptr);
+    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
     ret = api.GetDevicePCIBusId(0, nullptr, 0);
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
     ret = api.GetDeviceByPCIBusId(nullptr, nullptr);
@@ -432,6 +434,8 @@ TEST_F(TinyStubTest, api_impl_stub)
     ret = impl.MemsetD32Async(nullptr, 0, 0, 0, nullptr);
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
     ret = impl.HostGetDevicePointerAddrRange(nullptr, nullptr);
+    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
+    ret = impl.FunctionGetAttribute(nullptr, RT_FUNCTION_ATTR_MAX, nullptr);
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
     ret = impl.GetDeviceByPCIBusId(nullptr, nullptr);
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);

@@ -1304,6 +1304,17 @@ TEST_F(EventTestDavid, EventResetSoftwareModeDispatchesSoftwareHelper)
     rtEventDestroy(event);
 }
 
+TEST_F(EventTestDavid, EventRecordAndResetRejectCrossDevice)
+{
+    RawDevice eventDevice(1U);
+    eventDevice.SetChipType(CHIP_DAVID);
+    DavidEvent event(&eventDevice, RT_EVENT_DEFAULT, nullptr, false);
+    ApiImplDavid apiImpl;
+
+    EXPECT_EQ(apiImpl.EventRecord(&event, stream_, RT_EVENT_RECORD_DEFAULT), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(apiImpl.EventReset(&event, stream_), RT_ERROR_INVALID_VALUE);
+}
+
 TEST_F(EventTestDavid, StreamWaitSoftwareModeAfterResetDispatchesSoftwareHelper)
 {
     rtEvent_t event = nullptr;

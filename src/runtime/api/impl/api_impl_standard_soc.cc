@@ -1429,6 +1429,44 @@ rtError_t ApiImpl::HostGetDevicePointerAddrRange(rtAddrRange* addrRange, uint32_
     return error;
 }
 
+rtError_t ApiImpl::FunctionGetAttribute(rtFuncHandle funcHandle, rtFuncAttribute attrType, int64_t* attrValue)
+{
+    const Kernel* const kernel = RtPtrToPtr<Kernel*>(funcHandle);
+    switch (attrType) {
+        case RT_FUNCTION_ATTR_KERNEL_TYPE: {
+            *attrValue = static_cast<int64_t>(kernel->GetKernelAttrType());
+            COND_RETURN_ERROR_MSG_INNER(
+                *attrValue == static_cast<int64_t>(RT_KERNEL_ATTR_TYPE_INVALID), RT_ERROR_INVALID_VALUE,
+                "Invalid kernel type.");
+            break;
+        }
+        case RT_FUNCTION_ATTR_KERNEL_RATIO: {
+            uint32_t taskRatio = kernel->GetTaskRation();
+            uint32_t mixType = kernel->GetMixType();
+            uint16_t ratio[2];
+            ComputeRatio(ratio, mixType, taskRatio);
+            uint16_t* ratioArr = RtPtrToPtr<uint16_t*>(attrValue);
+            ratioArr[1] = ratio[0]; // aicratio
+            ratioArr[0] = ratio[1]; // aivratio
+            RT_LOG(RT_LOG_DEBUG, "mixType=%u, ratio[0]=%u, ratio[1]=%u.", mixType, ratio[0], ratio[1]);
+            break;
+        }
+        case RT_FUNCTION_ATTR_KERNEL_SCHED_MODE: {
+            *attrValue = static_cast<int64_t>(kernel->GetSchedMode());
+            break;
+        }
+        default: {
+            if (attrType == RT_FUNCTION_ATTR_MAX) {
+                RT_LOG(RT_LOG_WARNING, "Invalid attrType=FUNCTION_ATTR_MAX(4)");
+            } else {
+                RT_LOG(RT_LOG_WARNING, "Invalid attrType=UNKNOWN(%d)", static_cast<int32_t>(attrType));
+            }
+            break;
+        }
+    }
+    return RT_ERROR_NONE;
+}
+
 rtError_t ApiImpl::TaskGetParams(rtTask_t task, rtTaskParams* const params)
 {
     const TaskInfo* const taskInfo = RtPtrToPtr<const TaskInfo*>(task);

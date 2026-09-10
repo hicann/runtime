@@ -7447,38 +7447,6 @@ rtError_t ApiErrorDecorator::CacheLastTaskExtendInfo(const char* const extendInf
     return impl_->CacheLastTaskExtendInfo(extendInfoPtr, validSize);
 }
 
-rtError_t ApiErrorDecorator::FunctionGetAttribute(rtFuncHandle funcHandle, rtFuncAttribute attrType, int64_t* attrValue)
-{
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        funcHandle, RT_ERROR_INVALID_VALUE, "Obtaining kernel function attributes");
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(attrValue, RT_ERROR_INVALID_VALUE, "Obtaining kernel function attributes");
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
-        ((static_cast<uint32_t>(attrType) < RT_FUNCTION_ATTR_KERNEL_TYPE) ||
-         (static_cast<uint32_t>(attrType) >= RT_FUNCTION_ATTR_MAX)),
-        RT_ERROR_INVALID_VALUE, "Obtaining kernel function attributes",
-        (attrType == RT_FUNCTION_ATTR_MAX) ? "FUNCTION_ATTR_MAX(4)" :
-                                             RtFmtMsg("UNKNOWN(%d)", static_cast<int32_t>(attrType)),
-        "attrType",
-        "[" + std::to_string(RT_FUNCTION_ATTR_KERNEL_TYPE) + ", " + std::to_string(RT_FUNCTION_ATTR_MAX) + ")");
-
-    if (attrType == RT_FUNCTION_ATTR_KERNEL_RATIO) {
-        const Runtime* const rtInstance = Runtime::Instance();
-        NULL_PTR_RETURN_MSG(rtInstance, RT_ERROR_INSTANCE_NULL);
-        const rtChipType_t chipType = rtInstance->GetChipType();
-        COND_RETURN_WARN(
-            !IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_MODEL_ACL_GRAPH),
-            ACL_ERROR_RT_FEATURE_NOT_SUPPORT, "chip type(%d) does not support rtFunctionGetAttribute api, return.",
-            static_cast<int32_t>(chipType));
-        const Kernel* const kernel = RtPtrToPtr<Kernel*>(funcHandle);
-        const KernelRegisterType kernelRegType = kernel->GetKernelRegisterType();
-        COND_RETURN_AND_MSG_OUTER(
-            kernelRegType != RT_KERNEL_REG_TYPE_NON_CPU, RT_ERROR_INVALID_VALUE, ErrorCode::EE1017,
-            "Obtaining kernel function attributes", "funcHandle",
-            "The funcHandle obtained after registering the AI CPU operator is not supported");
-    }
-    return impl_->FunctionGetAttribute(funcHandle, attrType, attrValue);
-}
-
 rtError_t ApiErrorDecorator::FunctionGetBinary(const Kernel* const funcHandle, Program** const binHandle)
 {
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(

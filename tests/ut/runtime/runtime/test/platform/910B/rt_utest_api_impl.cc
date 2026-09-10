@@ -2124,3 +2124,18 @@ TEST_F(CloudV2ApiImplTest, ApiErrorDecorator_MemMapSetLink_adviceLink_out_of_ran
     rtError_t error = apiErrorDec.MemMapSetLink(handle, RT_MEM_ACCESS_LINK_MAX);
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
 }
+
+TEST_F(CloudV2ApiImplTest, EventRecordAndResetRejectCrossDevice)
+{
+    rtContext_t current = nullptr;
+    ASSERT_EQ(rtCtxGetCurrent(&current), RT_ERROR_NONE);
+    ASSERT_NE(current, nullptr);
+
+    Stream stream(static_cast<Context*>(current), 0U);
+    RawDevice eventDevice(1U);
+    Event event(&eventDevice, RT_EVENT_DEFAULT, nullptr);
+    ApiImpl apiImpl;
+
+    EXPECT_EQ(apiImpl.EventRecord(&event, &stream, RT_EVENT_RECORD_DEFAULT), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(apiImpl.EventReset(&event, &stream), RT_ERROR_INVALID_VALUE);
+}

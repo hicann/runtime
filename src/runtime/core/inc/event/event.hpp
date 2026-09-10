@@ -200,7 +200,7 @@ public:
 
 protected:
     bool AreTaskMapsEmptyLocked();
-    Device* device_;
+    Device* device_; // 创建Event时，所在的设备
     RecordTaskInfo latestRecord_;
     Atomic<bool> isNeedDestroy_;
     int32_t eventId_;
