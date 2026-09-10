@@ -242,6 +242,7 @@ aclError CheckMemcpy2dParam(
 
 aclError CheckMemcpy2dSyncKind(const aclrtMemcpyKind kind, rtMemcpyKind_t& rtKind)
 {
+    aclError ret = ACL_SUCCESS;
     switch (kind) {
         case ACL_MEMCPY_HOST_TO_DEVICE: {
             rtKind = RT_MEMCPY_HOST_TO_DEVICE;
@@ -262,14 +263,16 @@ aclError CheckMemcpy2dSyncKind(const aclrtMemcpyKind kind, rtMemcpyKind_t& rtKin
                 std::vector<const char*>(
                     {"Checking the synchronous memory copy parameter validity", acl::GetMemcpyKindDesc(kind), "kind",
                      "ACL_MEMCPY_HOST_TO_DEVICE or ACL_MEMCPY_DEVICE_TO_HOST or ACL_MEMCPY_DEFAULT"}));
-            return ACL_ERROR_INVALID_PARAM;
+            ret = ACL_ERROR_INVALID_PARAM;
+            break;
         }
     }
-    return ACL_SUCCESS;
+    return ret;
 }
 
 aclError CheckMemcpy2dAsyncKind(const aclrtMemcpyKind kind, rtMemcpyKind_t& rtKind)
 {
+    aclError ret = ACL_SUCCESS;
     switch (kind) {
         case ACL_MEMCPY_HOST_TO_DEVICE: {
             rtKind = RT_MEMCPY_HOST_TO_DEVICE;
@@ -295,10 +298,11 @@ aclError CheckMemcpy2dAsyncKind(const aclrtMemcpyKind kind, rtMemcpyKind_t& rtKi
                     {"Checking the asynchronous memory copy parameter validity", acl::GetMemcpyKindDesc(kind), "kind",
                      "ACL_MEMCPY_HOST_TO_DEVICE or ACL_MEMCPY_DEVICE_TO_HOST or ACL_MEMCPY_DEVICE_TO_DEVICE or "
                      "ACL_MEMCPY_DEFAULT"}));
-            return ACL_ERROR_INVALID_PARAM;
+            ret = ACL_ERROR_INVALID_PARAM;
+            break;
         }
     }
-    return ACL_SUCCESS;
+    return ret;
 }
 } // namespace
 
