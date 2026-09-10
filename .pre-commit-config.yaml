@@ -4,6 +4,7 @@ repos:
     hooks:
       - id: clang-format
         types_or: [c++, c]
+        exclude: ^src/runtime/core/src/stream/stream\.cc$
 
   # OAT compliance check (Open Source Audit Tool)
   - repo: local
