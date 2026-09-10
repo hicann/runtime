@@ -10,3 +10,4 @@
 - [3_binary_get_function_count](./3_binary_get_function_count/README.md)：演示查询 Kernel 二进制中的核函数数量。
 - [4_launch_blocking](./4_launch_blocking/README.md)：演示 Kernel Launch Blocking 的环境变量控制、流级三态及嵌套非阻塞区间。
 - [5_fdtd_stencil](./5_fdtd_stencil/README.md)：演示通过 Kernel 属性和 Device 变量配置执行三维有限差分模板更新。
+- [6_memory_loaded_vector_add](./6_memory_loaded_vector_add/README.md)：演示从 Host 内存加载 Kernel 二进制并执行向量加法。
