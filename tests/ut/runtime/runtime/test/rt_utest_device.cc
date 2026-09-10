@@ -1623,6 +1623,7 @@ TEST_F(DeviceTest, CtrlMsgTypeErrorLogs)
 {
     RawDevice device(0);
     device.chipType_ = CHIP_CLOUD;
+    device.properties_.isStarsV2 = false;
     TaskFactory taskFactory(&device);
     device.taskFactory_ = &taskFactory;
     Stream stream(&device, 0);
