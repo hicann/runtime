@@ -13,7 +13,6 @@
 #include "context.hpp"
 #include "error_message_manage.hpp"
 #include "runtime.hpp"
-#include "runtime/rts/rts_stream.h"
 #include "stream.hpp"
 
 namespace cce {
