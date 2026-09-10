@@ -15,6 +15,7 @@
 #include "logic_sq.hpp"
 #include "logic_sq_utils.hpp"
 #include "logic_sq_manage.hpp"
+#include "capture_session.hpp"
 #include "context.hpp"
 #include "stream_sqcq_manage.hpp"
 #include "event.hpp"
@@ -878,7 +879,9 @@ rtError_t CaptureModel::AddStreamToCaptureModel(Stream* const stm)
     int32_t streamId = stm->Id_();
     auto it = addStreamMap_.find(stm);
     if (it == addStreamMap_.end()) {
-        rtError_t error = Context_()->StreamAddToCaptureModelProc(stm, this);
+        CaptureSession* const captureSession = GetCaptureSession(Context_());
+        NULL_PTR_RETURN_MSG(captureSession, RT_ERROR_CONTEXT_BASE);
+        rtError_t error = captureSession->StreamAddToCaptureModelProc(stm, this);
         if ((error != RT_ERROR_NONE) || (stm->GetCaptureStream() == nullptr)) {
             RT_LOG(
                 RT_LOG_ERROR,
@@ -1152,8 +1155,9 @@ rtError_t CaptureModel::UpdateNotifyId(Stream* const exeStream)
         loadCompleteNotifyId_ = ntf->GetNotifyId();
     }
 
-    Context* context = origCaptureStream->Context_();
-    return context->UpdateEndGraphTask(origCaptureStream, exeStream, ntf);
+    CaptureSession* const captureSession = GetCaptureSession(origCaptureStream->Context_());
+    NULL_PTR_RETURN_MSG(captureSession, RT_ERROR_CONTEXT_BASE);
+    return captureSession->UpdateEndGraphTask(origCaptureStream, exeStream, ntf);
 }
 
 void CaptureModel::GetSqCqTotalNum(uint32_t& logicSqNum)
@@ -2163,8 +2167,9 @@ rtError_t CaptureModel::UpdateCondTaskNotifyWaitSqe(Stream* const exeStream)
                 "task type is not capture condition, stream_id=%d, task_id=%u.", streamId, taskId);
 
             taskInfo->u.captureConditionTask.notifyId = condHandle->GetSubModelNotify()->GetNotifyId();
-            Context* context = dstStream->Context_();
-            error = context->UpdateSuModelExeStreamNotifyWaitSqe(taskInfo, exeStream);
+            CaptureSession* const captureSession = GetCaptureSession(dstStream->Context_());
+            NULL_PTR_RETURN_MSG(captureSession, RT_ERROR_CONTEXT_BASE);
+            error = captureSession->UpdateSuModelExeStreamNotifyWaitSqe(taskInfo, exeStream);
             COND_RETURN_ERROR(
                 error != RT_ERROR_NONE, error, "update cond task notify wait sqe failed, stream_id=%d, task_id=%u.",
                 streamId, taskId);

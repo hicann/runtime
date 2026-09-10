@@ -127,6 +127,7 @@ set(common_src_files
 
 set(libruntime_context_src_files
     ${RUNTIME_CORE_DIR}/src/context/context.cc
+    ${RUNTIME_CORE_DIR}/src/context/context_dfx.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/context_aclgraph.cc
     ${RUNTIME_CORE_DIR}/src/context/context_manage.cc
 )
@@ -352,6 +353,7 @@ set(libruntime_v100_src_files
     ${RUNTIME_FEATURE_DIR}/aclgraph/logic_sq_manage.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/cond_handle.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/capture_model_utils.cc
+    ${RUNTIME_FEATURE_DIR}/aclgraph/capture_session.cc
     ${RUNTIME_CORE_DIR}/src/kernel/args/args_handle_allocator.cc
     ${RUNTIME_CORE_DIR}/src/kernel/args/para_convertor.cc
     ${RUNTIME_CORE_DIR}/src/kernel/v100/kernel.cc

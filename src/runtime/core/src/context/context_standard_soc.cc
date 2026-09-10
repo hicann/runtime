@@ -43,6 +43,30 @@
 
 namespace cce {
 namespace runtime {
+
+rtError_t Context::CreateNotify(Notify** notify, uint32_t flag)
+{
+    const uint32_t deviceId = device_->Id_();
+    *notify = new (std::nothrow) Notify(deviceId, device_->DevGetTsId());
+    COND_RETURN_AND_MSG_OUTER(*notify == nullptr, RT_ERROR_NOTIFY_NEW, ErrorCode::EE1013, sizeof(Notify), "new");
+
+    (*notify)->SetNotifyFlag(flag);
+    const rtError_t error = (*notify)->Setup();
+    if (error != RT_ERROR_NONE) {
+        RT_LOG(
+            RT_LOG_ERROR, "Notify create failed, setup failed, device_id=%d, retCode=%#x", deviceId,
+            static_cast<uint32_t>(error));
+        if ((error == RT_ERROR_DRV_NO_NOTIFY_RESOURCES) || (error == RT_ERROR_DRV_NO_RESOURCES)) {
+            RT_LOG_OUTER_MSG_IMPL(
+                ErrorCode::EE1023, "Alloc Notify resource", "Too many ACL graphs are executed concurrently");
+        }
+        DELETE_O(*notify);
+        return error;
+    }
+
+    return RT_ERROR_NONE;
+}
+
 rtError_t Context::RDMASend(const uint32_t sqIndex, const uint32_t wqeIndex, Stream* const stm)
 {
     rtError_t error;

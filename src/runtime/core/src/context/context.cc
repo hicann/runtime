@@ -9,6 +9,7 @@
  */
 #include "context.hpp"
 #include "driver_enum_desc.hpp"
+#include "capture_ops.hpp"
 #include "davinci_kernel_task.h"
 #include "maintenance_task.h"
 #include "model_graph_task.h"
@@ -76,6 +77,7 @@ constexpr uint64_t STREAM_ABORT_TIMEOUT = (60UL * RT_MS_PER_S); // 60s
 constexpr uint64_t REDUCE_ALIGN_SIZE = 0x4ULL;
 constexpr uint64_t REDUCE16_ALIGN_SIZE = 0x2ULL;
 constexpr uint64_t AICPU_CPU_SO_KERNEL_TIMEOUT_US = 1091ULL * 1000ULL * 1000ULL;
+std::atomic<const CaptureOps*> g_captureOps{nullptr};
 
 bool ShouldRestoreStreamAfterTearDownFailure(
     const Stream* const stm, const bool willDeleteOnTearDown, const bool destroyTaskRecycledStream,
@@ -149,6 +151,10 @@ rtError_t CheckMemAddrAlign2B(const uint64_t memAddr)
     return ((memAddr % REDUCE16_ALIGN_SIZE) != 0ULL) ? RT_ERROR_MEMORY_ADDRESS_UNALIGNED : RT_ERROR_NONE;
 }
 } // namespace
+
+void RegisterCaptureOps(const CaptureOps* captureOps) { g_captureOps.store(captureOps, std::memory_order_release); }
+
+const CaptureOps* GetCaptureOps() { return g_captureOps.load(std::memory_order_acquire); }
 
 static rtError_t LaunchAicpuKernelForCpuSoImpl(
     const rtKernelLaunchNames_t* const launchNames, const rtArgsEx_t* const argsInfo, Stream* const stm,
@@ -241,6 +247,28 @@ Context::Context(Device* const ctxDevice, const bool primaryCtx)
 
 Context::~Context() { ReleaseResourcesAfterTearDown(); }
 
+ContextExtension* Context::GetExtension() const
+{
+    const std::lock_guard<std::mutex> lock(extensionLock_);
+    return extension_.get();
+}
+
+ContextExtension* Context::EnsureExtension() const
+{
+    const std::lock_guard<std::mutex> lock(extensionLock_);
+    if (extension_ != nullptr) {
+        return extension_.get();
+    }
+
+    const CaptureOps* const captureOps = GetCaptureOps();
+    if ((captureOps == nullptr) || (captureOps->createContextExtension == nullptr)) {
+        return nullptr;
+    }
+
+    extension_.reset(captureOps->createContextExtension(const_cast<Context*>(this)));
+    return extension_.get();
+}
+
 void Context::ReleaseResourcesAfterTearDown()
 {
     bool expected = false;
@@ -313,8 +341,10 @@ void Context::ResetResourceFieldsAfterTearDown()
     device_ = nullptr;
     failureError_.Set(RT_ERROR_NONE);
     lastErr_.Set(ACL_RT_SUCCESS);
-    captureMode_ = RT_STREAM_CAPTURE_MODE_MAX;
-    (void)memset_s(captureModeRefNum_, sizeof(captureModeRefNum_), 0, sizeof(captureModeRefNum_));
+    {
+        const std::lock_guard<std::mutex> lock(extensionLock_);
+        extension_.reset();
+    }
     isForceReset_ = false;
     ctxMode_ = CONTINUE_ON_FAILURE;
     tearDownStatus_.store(TearDownStatus::TEARDOWN_NOT_EXECUTE, std::memory_order_release);

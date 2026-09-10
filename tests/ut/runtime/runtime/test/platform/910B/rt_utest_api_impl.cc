@@ -40,6 +40,7 @@
 #include "device_error_proc.hpp"
 #include "snapshot_process_helper.hpp"
 #include "device_snapshot.hpp"
+#include "runtime/feature/aclgraph/capture_session.hpp"
 #undef private
 #include <string>
 #include "driver/ascend_hal.h"
@@ -1991,26 +1992,32 @@ TEST_F(CloudV2ApiImplTest, CheckCaptureModeSupport_RelaxedMode_EE1016)
 {
     Device* device = ((Runtime*)Runtime::Instance())->DeviceRetain(0, 0);
     Context ctx(device, false);
+    CaptureSession* const captureSession = GetCaptureSession(&ctx);
+    ASSERT_NE(captureSession, nullptr);
+    EXPECT_EQ(captureSession, GetCaptureSession(&ctx));
+    EXPECT_TRUE(IsCaptureSessionExist(&ctx));
 
-    // Mock IsCaptureModeSupport 返回 false，触发错误上报
-    MOCKER_CPP(&Context::IsCaptureModeSupport).stubs().will(returnValue(false));
-
-    // Mock GetThreadCaptureMode 返回 RELAXED
-    MOCKER_CPP(&InnerThreadLocalContainer::GetThreadCaptureMode)
-        .stubs()
-        .will(returnValue(RT_STREAM_CAPTURE_MODE_RELAXED));
-
-    // Mock GetContextCaptureMode
-    MOCKER_CPP(&Context::GetContextCaptureMode).stubs().will(returnValue(RT_STREAM_CAPTURE_MODE_GLOBAL));
-
-    // Mock GetCurrentTid
-    MOCKER_CPP(&PidTidFetcher::GetCurrentTid).stubs().will(returnValue(12345));
+    const rtStreamCaptureMode oldThreadMode = InnerThreadLocalContainer::GetThreadCaptureMode();
+    const rtStreamCaptureMode oldExchangeMode = InnerThreadLocalContainer::GetThreadExchangeCaptureMode();
+    captureSession->captureMode_ = RT_STREAM_CAPTURE_MODE_GLOBAL;
+    InnerThreadLocalContainer::SetThreadCaptureMode(RT_STREAM_CAPTURE_MODE_RELAXED);
+    InnerThreadLocalContainer::SetThreadExchangeCaptureMode(RT_STREAM_CAPTURE_MODE_GLOBAL);
 
     bool result = CheckCaptureModeSupport(&ctx, "TestFunc");
     EXPECT_FALSE(result);
 
-    GlobalMockObject::verify();
-    ((Runtime*)Runtime::Instance())->DeviceRelease(device);
+    InnerThreadLocalContainer::SetThreadCaptureMode(oldThreadMode);
+    InnerThreadLocalContainer::SetThreadExchangeCaptureMode(oldExchangeMode);
+}
+
+TEST_F(CloudV2ApiImplTest, CheckCaptureModeSupportWithoutSession)
+{
+    Device* device = ((Runtime*)Runtime::Instance())->DeviceRetain(0, 0);
+    Context ctx(device, false);
+    ASSERT_FALSE(IsCaptureSessionExist(&ctx));
+
+    EXPECT_TRUE(CheckCaptureModeSupport(&ctx, "TestFunc"));
+    EXPECT_FALSE(IsCaptureSessionExist(&ctx));
 }
 
 TEST_F(CloudV2ApiImplTest, rtsModelBindStream_StreamAlreadyBound)
@@ -2074,26 +2081,20 @@ TEST_F(CloudV2ApiImplTest, CheckCaptureModeSupport_NonRelaxedMode_EE1016)
 {
     Device* device = ((Runtime*)Runtime::Instance())->DeviceRetain(0, 0);
     Context ctx(device, false);
+    CaptureSession* const captureSession = GetCaptureSession(&ctx);
+    ASSERT_NE(captureSession, nullptr);
 
-    // Mock IsCaptureModeSupport 返回 false，触发错误上报
-    MOCKER_CPP(&Context::IsCaptureModeSupport).stubs().will(returnValue(false));
-
-    // Mock GetThreadCaptureMode 返回 GLOBAL（非 RELAXED）
-    MOCKER_CPP(&InnerThreadLocalContainer::GetThreadCaptureMode)
-        .stubs()
-        .will(returnValue(RT_STREAM_CAPTURE_MODE_GLOBAL));
-
-    // Mock GetContextCaptureMode
-    MOCKER_CPP(&Context::GetContextCaptureMode).stubs().will(returnValue(RT_STREAM_CAPTURE_MODE_THREAD_LOCAL));
-
-    // Mock GetCurrentTid
-    MOCKER_CPP(&PidTidFetcher::GetCurrentTid).stubs().will(returnValue(67890));
+    const rtStreamCaptureMode oldThreadMode = InnerThreadLocalContainer::GetThreadCaptureMode();
+    const rtStreamCaptureMode oldExchangeMode = InnerThreadLocalContainer::GetThreadExchangeCaptureMode();
+    captureSession->captureMode_ = RT_STREAM_CAPTURE_MODE_THREAD_LOCAL;
+    InnerThreadLocalContainer::SetThreadCaptureMode(RT_STREAM_CAPTURE_MODE_GLOBAL);
+    InnerThreadLocalContainer::SetThreadExchangeCaptureMode(RT_STREAM_CAPTURE_MODE_THREAD_LOCAL);
 
     bool result = CheckCaptureModeSupport(&ctx, "TestFunc");
     EXPECT_FALSE(result);
 
-    GlobalMockObject::verify();
-    ((Runtime*)Runtime::Instance())->DeviceRelease(device);
+    InnerThreadLocalContainer::SetThreadCaptureMode(oldThreadMode);
+    InnerThreadLocalContainer::SetThreadExchangeCaptureMode(oldExchangeMode);
 }
 
 TEST_F(CloudV2ApiImplTest, ApiImpl_MemMapSetLink_success)

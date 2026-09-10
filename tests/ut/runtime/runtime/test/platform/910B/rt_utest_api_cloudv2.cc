@@ -49,6 +49,7 @@
 #include "task_fail_callback_manager.hpp"
 #include "model.hpp"
 #include "capture_model.hpp"
+#include "runtime/feature/aclgraph/capture_session.hpp"
 #include "capture_model_utils.hpp"
 #include "subscribe.hpp"
 #include <fstream>
@@ -585,10 +586,12 @@ TEST_F(RtApiTest, capture_api_20)
     Model* modelEx = rt_ut::UnwrapOrNull<Model>(model);
     Stream* streamEx = rt_ut::UnwrapOrNull<Stream>(stream);
     Context* ctx = static_cast<Context*>(current);
-    error = ctx->StreamAddToCaptureModelProc(streamEx, modelEx);
+    CaptureSession* captureSession = GetCaptureSession(ctx);
+    ASSERT_NE(captureSession, nullptr);
+    error = captureSession->StreamAddToCaptureModelProc(streamEx, modelEx);
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
 
-    error = ctx->StreamAddToCaptureModelProc(streamEx, NULL);
+    error = captureSession->StreamAddToCaptureModelProc(streamEx, NULL);
     EXPECT_EQ(error, RT_ERROR_MODEL_NULL);
 
     error = rtStreamDestroy(stream);
@@ -620,7 +623,9 @@ TEST_F(RtApiTest, capture_api_21)
     Model* modelEx = rt_ut::UnwrapOrNull<Model>(model);
     Stream* streamEx = rt_ut::UnwrapOrNull<Stream>(stream);
     Context* ctx = static_cast<Context*>(current);
-    error = ctx->StreamAddToCaptureModelProc(streamEx, modelEx);
+    CaptureSession* captureSession = GetCaptureSession(ctx);
+    ASSERT_NE(captureSession, nullptr);
+    error = captureSession->StreamAddToCaptureModelProc(streamEx, modelEx);
     EXPECT_EQ(error, RT_ERROR_MODEL_CAPTURE_STATUS);
 
     error = rtStreamDestroy(stream);
@@ -655,7 +660,9 @@ TEST_F(RtApiTest, capture_api_22)
     Model* modelEx = rt_ut::UnwrapOrNull<Model>(captureMdl);
     Stream* streamEx = rt_ut::UnwrapOrNull<Stream>(stream);
     Context* ctx = static_cast<Context*>(current);
-    error = ctx->StreamAddToCaptureModelProc(streamEx, modelEx);
+    CaptureSession* captureSession = GetCaptureSession(ctx);
+    ASSERT_NE(captureSession, nullptr);
+    error = captureSession->StreamAddToCaptureModelProc(streamEx, modelEx);
     EXPECT_EQ(error, RT_ERROR_STREAM_CAPTURED);
 
     ctx->FreeCascadeCaptureStream(NULL);
@@ -861,7 +868,7 @@ TEST_F(RtApiTest, capture_api_31)
     error = rtStreamAddToModel(addStream, model);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    MOCKER_CPP(&Context::AddNotifyToAddedCaptureStream).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    MOCKER_CPP(&CaptureSession::AddNotifyToAddedCaptureStream).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
 
     error = rtStreamEndCapture(stream, &model);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
@@ -896,7 +903,7 @@ TEST_F(RtApiTest, capture_api_32)
     error = rtStreamGetCaptureInfo(stream, &status, &model);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    MOCKER_CPP(&Context::StreamAddToCaptureModelProc).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    MOCKER_CPP(&CaptureSession::StreamAddToCaptureModelProc).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
     error = rtStreamAddToModel(addStream, model);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
@@ -936,7 +943,7 @@ TEST_F(RtApiTest, capture_api_33)
     error = rtStreamAddToModel(addStream, model);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    MOCKER_CPP(&Context::SetNotifyForExeModel).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    MOCKER_CPP(&CaptureSession::SetNotifyForExeModel).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
 
     error = rtStreamEndCapture(stream, &model);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);

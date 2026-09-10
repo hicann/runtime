@@ -116,6 +116,7 @@ set(runtimeut_src_api_list
 
 set(runtimeut_src_context_list
     ${TOP_DIR}/src/runtime/core/src/context/context.cc
+    ${TOP_DIR}/src/runtime/core/src/context/context_dfx.cc
     ${TOP_DIR}/src/runtime/core/src/context/context_standard_soc.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/context_standard_soc_aclgraph.cc
     ${TOP_DIR}/src/runtime/feature/ffts/context_ffts_standard_soc.cc
@@ -135,6 +136,7 @@ set(runtimeut_src_aclgraph_list
     ${TOP_DIR}/src/runtime/feature/aclgraph/logic_sq_manage.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/cond_handle.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/capture_model_utils.cc
+    ${TOP_DIR}/src/runtime/feature/aclgraph/capture_session.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/event_capture.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/stream_capture.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/cond_op/aclgraph_cond_task.cc
@@ -277,6 +279,7 @@ set(runtimeut_910b_src_list
     ${TOP_DIR}/src/runtime/api/impl/api_impl_uvm.cc
     ${TOP_DIR}/src/runtime/core/src/uvm/uvm_callback.cc
     ${TOP_DIR}/src/runtime/core/src/context/context.cc
+    ${TOP_DIR}/src/runtime/core/src/context/context_dfx.cc
     ${TOP_DIR}/src/runtime/core/src/context/context_standard_soc.cc
     ${TOP_DIR}/src/runtime/core/src/device/device.cc
     ${TOP_DIR}/src/runtime/core/src/device/device_debug_common.cc

@@ -1341,12 +1341,9 @@ TEST_F(TinyStubTest, context_capture_basic_stub)
     dev->Init();
     Context ctx(dev, 0);
     ctx.Init();
-    EXPECT_EQ(ctx.StreamBeginCapture(nullptr, RT_STREAM_CAPTURE_MODE_GLOBAL), RT_ERROR_FEATURE_NOT_SUPPORT);
-    Model* model = nullptr;
-    EXPECT_EQ(ctx.StreamEndCapture(nullptr, &model), RT_ERROR_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(ctx.EnsureExtension(), nullptr);
     Stream* newStream = nullptr;
     EXPECT_EQ(ctx.AllocCascadeCaptureStream(nullptr, nullptr, &newStream), RT_ERROR_FEATURE_NOT_SUPPORT);
-    EXPECT_EQ(ctx.UpdateEndGraphTask(nullptr, nullptr, nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
     delete dev;
     dev = nullptr;
     ctx.device_ = nullptr;
@@ -1362,7 +1359,6 @@ TEST_F(TinyStubTest, context_capture_model_stub)
     EXPECT_EQ(ctx.ModelGetNodes(nullptr, &num), RT_ERROR_FEATURE_NOT_SUPPORT);
     EXPECT_EQ(ctx.ModelDebugDotPrint(nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
     EXPECT_EQ(ctx.ModelDebugJsonPrint(nullptr, nullptr, 0), RT_ERROR_FEATURE_NOT_SUPPORT);
-    EXPECT_EQ(ctx.StreamAddToModel(nullptr, nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
     delete dev;
     dev = nullptr;
     ctx.device_ = nullptr;
@@ -1374,8 +1370,6 @@ TEST_F(TinyStubTest, context_capture_task_stub)
     dev->Init();
     Context ctx(dev, 0);
     ctx.Init();
-    rtStreamCaptureMode mode;
-    EXPECT_EQ(ctx.ThreadExchangeCaptureMode(&mode), RT_ERROR_FEATURE_NOT_SUPPORT);
     EXPECT_EQ(ctx.StreamBeginTaskGrp(nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
     TaskGroup* taskGrp = nullptr;
     EXPECT_EQ(ctx.StreamEndTaskGrp(nullptr, &taskGrp), RT_ERROR_FEATURE_NOT_SUPPORT);
@@ -1392,12 +1386,9 @@ TEST_F(TinyStubTest, context_capture_notify_stub)
     dev->Init();
     Context ctx(dev, 0);
     ctx.Init();
-    EXPECT_EQ(ctx.StreamAddToCaptureModelProc(nullptr, nullptr, false), RT_ERROR_FEATURE_NOT_SUPPORT);
     ctx.FreeCascadeCaptureStream(nullptr);
     Notify* notify = nullptr;
     EXPECT_EQ(ctx.CreateNotify(&notify, 0), RT_ERROR_FEATURE_NOT_SUPPORT);
-    EXPECT_EQ(ctx.AddNotifyToAddedCaptureStream(nullptr, nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
-    EXPECT_EQ(ctx.SetNotifyForExeModel(nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
     uint64_t notifyAddr = 0UL;
     EXPECT_EQ(ctx.GetNotifyAddress(nullptr, notifyAddr, nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
     delete dev;
@@ -1411,13 +1402,6 @@ TEST_F(TinyStubTest, context_capture_info_stub)
     dev->Init();
     Context ctx(dev, 0);
     ctx.Init();
-    rtStreamCaptureStatus status;
-    Model* model = nullptr;
-    EXPECT_EQ(ctx.StreamGetCaptureInfo(nullptr, &status, &model), RT_ERROR_FEATURE_NOT_SUPPORT);
-    ctx.CaptureModeEnter(nullptr, RT_STREAM_CAPTURE_MODE_GLOBAL);
-    ctx.CaptureModeExit(nullptr);
-    EXPECT_EQ(ctx.CheckCaptureModelValidity(nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
-    EXPECT_FALSE(ctx.IsCaptureModeSupport());
     delete dev;
     dev = nullptr;
     ctx.device_ = nullptr;

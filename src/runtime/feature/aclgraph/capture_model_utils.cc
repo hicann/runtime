@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "capture_model_utils.hpp"
+#include "capture_session.hpp"
 #include "capture_model_enum_desc.hpp"
 #include "enum_desc.hpp"
 #include "inner_thread_local.hpp"
@@ -162,7 +163,9 @@ rtError_t GetCaptureStream(Context* const ctx, Stream* const stm, const Event* c
         captureMdl == nullptr, RT_ERROR_MODEL_NULL, "Capture model is invalid, stream_id=%d, event_id=[%d->%d].",
         stm->Id_(), evt->EventId_(), captureEvt->EventId_());
 
-    const rtError_t error = ctx->StreamAddToCaptureModelProc(stm, captureMdl);
+    CaptureSession* const captureSession = GetCaptureSession(ctx);
+    NULL_PTR_RETURN_MSG(captureSession, RT_ERROR_CONTEXT_BASE);
+    const rtError_t error = captureSession->StreamAddToCaptureModelProc(stm, captureMdl);
     ERROR_RETURN_MSG_INNER(
         error, "New capture stream failed, stream_id=%d, event_id=[%d->%d].", stm->Id_(), evt->EventId_(),
         captureEvt->EventId_());
@@ -289,10 +292,10 @@ rtError_t CheckCaptureModelSupportCondOp(Device* const dev)
     return RT_ERROR_NONE;
 }
 
-static void ReportCaptureModeError(const Context* ctx, const char* funcName)
+static void ReportCaptureModeError(const CaptureSession* captureSession, const char* funcName)
 {
     const rtStreamCaptureMode threadCaptureMode = InnerThreadLocalContainer::GetThreadCaptureMode();
-    const rtStreamCaptureMode contextCaptureMode = ctx->GetContextCaptureMode();
+    const rtStreamCaptureMode contextCaptureMode = captureSession->GetContextCaptureMode();
     const uint32_t threadId = PidTidFetcher::GetCurrentTid();
 
     std::ostringstream oss;
@@ -320,8 +323,13 @@ static void ReportCaptureModeError(const Context* ctx, const char* funcName)
 
 bool CheckCaptureModeSupport(const Context* ctx, const char* funcName)
 {
-    if (!ctx->IsCaptureModeSupport()) {
-        ReportCaptureModeError(ctx, funcName);
+    if (!IsCaptureSessionExist(ctx)) {
+        return true;
+    }
+
+    const CaptureSession* const captureSession = GetCaptureSession(ctx);
+    if ((captureSession != nullptr) && (!captureSession->IsCaptureModeSupport())) {
+        ReportCaptureModeError(captureSession, funcName);
         return false;
     }
     return true;

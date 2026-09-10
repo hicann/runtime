@@ -15,6 +15,7 @@
 #include "cond_handle/cond_handle.hpp"
 #include "api_handle_guard.h"
 #include "capture_model_utils.hpp"
+#include "../capture_session.hpp"
 #include "aclgraph_cond_task.h"
 #include "cond_enum_desc.hpp"
 
@@ -36,7 +37,9 @@ rtError_t ApiImpl::StreamBeginCapture(Stream* const stm, const rtStreamCaptureMo
     COND_RETURN_AND_MSG_OUTER(
         (stm == curCtx->DefaultStream_()), RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1017, "Stream begin capture",
         "stream", RtFmtMsg("The default stream (stream_id=%d) cannot be used in the ACL Graph", stm->Id_()));
-    return curCtx->StreamBeginCapture(stm, mode, mdl);
+    CaptureSession* const captureSession = GetCaptureSession(curCtx);
+    NULL_PTR_RETURN_MSG(captureSession, RT_ERROR_CONTEXT_BASE);
+    return captureSession->StreamBeginCapture(stm, mode, mdl);
 }
 
 rtError_t ApiImpl::StreamEndCapture(Stream* const stm, Model** const captureMdl)
@@ -63,7 +66,9 @@ rtError_t ApiImpl::StreamEndCapture(Stream* const stm, Model** const captureMdl)
         "stream", RtFmtMsg("The default stream (stream_id=%d) cannot be used in the ACL Graph", stm->Id_()));
 
     Model* mdl = nullptr;
-    rtError_t ret = curCtx->StreamEndCapture(stm, &mdl);
+    CaptureSession* const captureSession = GetCaptureSession(curCtx);
+    NULL_PTR_RETURN_MSG(captureSession, RT_ERROR_CONTEXT_BASE);
+    rtError_t ret = captureSession->StreamEndCapture(stm, &mdl);
     if (ret != RT_ERROR_NONE) {
         if (!isSubCaptureModel) {
             *captureMdl = nullptr;
@@ -164,7 +169,9 @@ rtError_t ApiImpl::StreamAddToModel(Stream* const stm, Model* const captureMdl)
         (stm == curCtx->DefaultStream_()), RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1017, "rtStreamAddToModel",
         "stream", RtFmtMsg("The default stream (stream_id=%d) cannot be used in the ACL Graph", stm->Id_()));
 
-    return curCtx->StreamAddToModel(stm, captureMdl);
+    CaptureSession* const captureSession = GetCaptureSession(curCtx);
+    NULL_PTR_RETURN_MSG(captureSession, RT_ERROR_CONTEXT_BASE);
+    return captureSession->StreamAddToModel(stm, captureMdl);
 }
 
 rtError_t ApiImpl::ThreadExchangeCaptureMode(rtStreamCaptureMode* const mode)
@@ -172,7 +179,9 @@ rtError_t ApiImpl::ThreadExchangeCaptureMode(rtStreamCaptureMode* const mode)
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
 
-    return curCtx->ThreadExchangeCaptureMode(mode);
+    CaptureSession* const captureSession = GetCaptureSession(curCtx);
+    NULL_PTR_RETURN_MSG(captureSession, RT_ERROR_CONTEXT_BASE);
+    return captureSession->ThreadExchangeCaptureMode(mode);
 }
 
 rtError_t ApiImpl::StreamBeginTaskGrp(Stream* const stm)

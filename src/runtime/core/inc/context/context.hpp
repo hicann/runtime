@@ -33,6 +33,7 @@
 #endif
 #include "profiler_struct.hpp"
 #include "context_manage.hpp"
+#include "context_extension.hpp"
 #include "rts/rts.h"
 #include "mmpa_linux.h"
 #include "cond_handle.hpp"
@@ -150,13 +151,6 @@ public:
 
     rtError_t StreamsUpdate(void);
 
-    rtError_t StreamBeginCapture(Stream* const stm, const rtStreamCaptureMode mode, Model* const mdl = nullptr);
-
-    rtError_t StreamEndCapture(Stream* const stm, Model** const captureMdl);
-
-    rtError_t StreamGetCaptureInfo(
-        const Stream* const stm, rtStreamCaptureStatus* const status, Model** const captureMdl) const;
-
     rtError_t StreamBeginTaskUpdate(Stream* const stm, TaskGroup* handle) const;
 
     rtError_t StreamEndTaskUpdate(Stream* const stm) const;
@@ -172,15 +166,9 @@ public:
 
     rtError_t ModelDebugJsonPrint(const Model* const mdl, const char* path, const uint32_t flags);
 
-    rtError_t StreamAddToModel(Stream* const stm, Model* const captureMdl);
-
-    rtError_t ThreadExchangeCaptureMode(rtStreamCaptureMode* const mode) const;
-
     rtError_t StreamBeginTaskGrp(Stream* const stm);
 
     rtError_t StreamEndTaskGrp(Stream* const stm, TaskGroup** const handle) const;
-
-    rtError_t StreamAddToCaptureModelProc(Stream* const stm, Model* const captureMdl, const bool isOriginal = false);
 
     rtError_t ModelCreate(Model** const result, ModelType type = RT_MODEL_NORMAL);
 
@@ -189,10 +177,6 @@ public:
     void FreeCascadeCaptureStream(Stream* const cascadeCaptureStm);
 
     rtError_t CreateNotify(Notify** notify, uint32_t flag);
-
-    rtError_t AddNotifyToAddedCaptureStream(Stream* const oriSingleStm, CaptureModel* const captureMdl);
-
-    rtError_t SetNotifyForExeModel(CaptureModel* const captureMdl);
 
     rtError_t ModelDestroy(Model* mdl);
 
@@ -209,8 +193,6 @@ public:
     rtError_t ModelLoadComplete(Model* const mdl) const;
 
     rtError_t ModelAddEndGraph(Model* const mdl, Stream* const stm, const uint32_t flags);
-
-    bool CheckSubModelsIsEndCapture(const Stream* const captureStream) const;
 
     rtError_t ModelExecutorSet(Model* const mdl, const uint8_t flags) const;
 
@@ -415,15 +397,8 @@ public:
 
     std::mutex& GetCaptureLock() { return captureLock_; }
 
-    rtStreamCaptureMode GetContextCaptureMode(void) const { return captureMode_; }
-
-    void SetContextCaptureMode(rtStreamCaptureMode mode) { captureMode_ = mode; }
-
-    uint32_t GetCaptureModeRefNum(rtStreamCaptureMode mode) { return captureModeRefNum_[mode]; }
-
-    void CaptureModeEnter(Stream* const stm, rtStreamCaptureMode mode);
-    void CaptureModeExit(Stream* const stm);
-    bool IsCaptureModeSupport(void) const;
+    ContextExtension* GetExtension() const;
+    ContextExtension* EnsureExtension() const;
 
     const std::list<Model*>& GetModelList() const { return models_; }
 
@@ -435,8 +410,6 @@ public:
 
     bool IsContextForceReset() const { return isForceReset_; }
 
-    rtError_t UpdateEndGraphTask(Stream* const origCaptureStream, Stream* const exeStream, Notify* ntf) const;
-    rtError_t UpdateSuModelExeStreamNotifyWaitSqe(TaskInfo* taskInfo, Stream* const exeStream) const;
     rtError_t GetCaptureModelEndGraphNotify(Model* const mdl, Stream* const stm, Notify*& ntf) const;
     uint64_t GetCallBackThreadId() const { return callBackThreadId_; }
     rtError_t CreateContextCallBackThread();
@@ -488,7 +461,6 @@ private:
 
     void TryAllocFastCq();
 
-    rtError_t CheckCaptureModelValidity(Model* const captureMdl) const;
     rtError_t SetOverflowAddr();
 
 protected:
@@ -522,8 +494,8 @@ private:
     Atomic<rtError_t> failureError_;
     Atomic<rtError_t> lastErr_;
     std::mutex captureLock_;
-    rtStreamCaptureMode captureMode_{RT_STREAM_CAPTURE_MODE_MAX};
-    uint32_t captureModeRefNum_[RT_STREAM_CAPTURE_MODE_MAX] = {0U};
+    mutable std::mutex extensionLock_;
+    mutable std::unique_ptr<ContextExtension> extension_;
     bool isForceReset_ = false;
     Atomic<bool> callBackThreadExist_;
     ContextCallBack threadCallBack_;

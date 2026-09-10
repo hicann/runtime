@@ -37,6 +37,7 @@
 #define private public
 #define protected public
 #include "capture_model.hpp"
+#include "runtime/feature/aclgraph/capture_session.hpp"
 #include "capture_model_utils.hpp"
 #include "memcpy_c.hpp"
 #include "stream.hpp"
@@ -1166,7 +1167,9 @@ TEST_F(CaptureModelJettyTest, UpdateEndGraphTask_NullTask)
     Stream* exeStream = new Stream(device_, 0);
     Notify ntf(0, 0);
 
-    rtError_t error = currentCtx->UpdateEndGraphTask(stream_, exeStream, &ntf);
+    CaptureSession* captureSession = GetCaptureSession(currentCtx);
+    ASSERT_NE(captureSession, nullptr);
+    rtError_t error = captureSession->UpdateEndGraphTask(stream_, exeStream, &ntf);
     EXPECT_NE(error, RT_ERROR_NONE);
 
     delete exeStream;
@@ -2512,7 +2515,9 @@ TEST_F(CaptureModelJettyTest, UpdateEndGraphTask_TaskTypeMismatch)
     Stream* exeStream = new Stream(device_, 0);
     Notify ntf(0, 0);
 
-    rtError_t error = currentCtx->UpdateEndGraphTask(stream_, exeStream, &ntf);
+    CaptureSession* captureSession = GetCaptureSession(currentCtx);
+    ASSERT_NE(captureSession, nullptr);
+    rtError_t error = captureSession->UpdateEndGraphTask(stream_, exeStream, &ntf);
     EXPECT_EQ(error, RT_ERROR_STREAM_CAPTURED);
 
     delete exeStream;

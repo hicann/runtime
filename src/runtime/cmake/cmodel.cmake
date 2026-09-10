@@ -234,6 +234,7 @@ set(common_src_files_cmodel
 
 set(libruntime_cmodel_context_src_files
     ${RUNTIME_CORE_DIR}/src/context/context.cc
+    ${RUNTIME_CORE_DIR}/src/context/context_dfx.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/context_aclgraph.cc
     ${RUNTIME_CORE_DIR}/src/context/context_manage.cc
 )
@@ -449,6 +450,7 @@ set(libruntime_cmodel_src_files
     ${RUNTIME_FEATURE_DIR}/aclgraph/logic_sq_manage.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/cond_handle.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/capture_model_utils.cc
+    ${RUNTIME_FEATURE_DIR}/aclgraph/capture_session.cc
     ${RUNTIME_FEATURE_DIR}/model/v100/capture_adapt.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/v100/capture_adapt_v100.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/v100/capture_model_adapt_v100.cc
@@ -559,6 +561,7 @@ set(libruntime_cmodel_v200_src_files
     ${RUNTIME_API_DIR}/impl/v200/api_impl_creator_c.cc
 
     ${RUNTIME_CORE_DIR}/src/context/context.cc
+    ${RUNTIME_CORE_DIR}/src/context/context_dfx.cc
     ${RUNTIME_CORE_DIR}/src/device/device.cc
     ${RUNTIME_CORE_DIR}/src/device/device_debug_common.cc
     ${RUNTIME_CORE_DIR}/src/device/device_debug_starsv2.cc
@@ -591,6 +594,7 @@ set(libruntime_cmodel_v200_src_files
     ${RUNTIME_FEATURE_DIR}/aclgraph/logic_sq_manage.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/cond_handle.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/capture_model_utils.cc
+    ${RUNTIME_FEATURE_DIR}/aclgraph/capture_session.cc
     ${RUNTIME_FEATURE_DIR}/model/v200_base/capture_adapt.cc
     ${RUNTIME_FEATURE_DIR}/model/v200/model_c.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/v200/capture_adapt_v200.cc

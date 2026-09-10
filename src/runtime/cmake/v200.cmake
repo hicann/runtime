@@ -157,6 +157,7 @@ set(libruntime_v201_task_src_files
 
 set(libruntime_v200_context_src_files
     ${RUNTIME_CORE_DIR}/src/context/context.cc
+    ${RUNTIME_CORE_DIR}/src/context/context_dfx.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/context_aclgraph.cc
     ${RUNTIME_CORE_DIR}/src/context/context_manage.cc
 )
@@ -278,6 +279,7 @@ set(libruntime_v200_v201_common_src_files
     ${RUNTIME_API_DIR}/impl/api_impl_esched.cc
     ${RUNTIME_CORE_DIR}/src/uvm/uvm_callback.cc
     ${RUNTIME_CORE_DIR}/src/context/context.cc
+    ${RUNTIME_CORE_DIR}/src/context/context_dfx.cc
     ${RUNTIME_CORE_DIR}/src/device/device.cc
     ${RUNTIME_CORE_DIR}/src/device/device_debug_common.cc
     ${RUNTIME_CORE_DIR}/src/device/device_debug_starsv2.cc
@@ -311,6 +313,7 @@ set(libruntime_v200_v201_common_src_files
     ${RUNTIME_FEATURE_DIR}/aclgraph/logic_sq_manage.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/cond_handle.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/capture_model_utils.cc
+    ${RUNTIME_FEATURE_DIR}/aclgraph/capture_session.cc
     ${RUNTIME_CORE_DIR}/src/kernel/arg_loader/arg_loader_ub.cc
     ${RUNTIME_CORE_DIR}/src/kernel/arg_loader/load_policy.cc
     ${RUNTIME_CORE_DIR}/src/kernel/arg_loader/stars_arg_manager.cc
