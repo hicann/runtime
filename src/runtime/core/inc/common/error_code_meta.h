@@ -11,7 +11,7 @@
 #ifndef RUNTIME_ERROR_CODE_META_H
 #define RUNTIME_ERROR_CODE_META_H
 
-#include "dlog_pub.h" // DLOG_ERROR, DLOG_WARN
+#include "log_types.h" // DLOG_ERROR, DLOG_WARN
 
 // ============================================================
 //  X-Macro 错误码元数据表

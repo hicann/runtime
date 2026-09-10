@@ -318,7 +318,7 @@ public:
 
     void SetFuncCallInstrSize(uint16_t size) { funcCallInstrSize_ = size; }
 
-    void ResetFuncCallMem(Device* const dev);
+    void ResetFuncCallMem(const Device* const dev);
 
 private:
     /*

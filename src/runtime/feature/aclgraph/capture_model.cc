@@ -150,7 +150,7 @@ rtError_t CaptureModel::LoadCompleteByStreamPrep(Stream*& stream)
 {
     UNUSED(stream);
 
-    rtError_t error = UpdateLabelCountPtr();
+    const rtError_t error = UpdateLabelCountPtr();
     if (error != RT_ERROR_NONE) {
         ERROR_RETURN_MSG_INNER(error, "Failed to copy label count, retCode=%#x.", static_cast<uint32_t>(error));
     }
@@ -160,7 +160,7 @@ rtError_t CaptureModel::LoadCompleteByStreamPrep(Stream*& stream)
 rtError_t CaptureModel::LoadCompleteByStreamPostp(Stream* const stream)
 {
     stream->isModelComplete = true;
-    rtError_t error = stream->Synchronize();
+    const rtError_t error = stream->Synchronize();
     ERROR_RETURN_MSG_INNER(error, "Failed to synchronize default stream, retCode=%#x.", static_cast<uint32_t>(error));
     SetModelLoadComplete(true);
     SetFirstExecute(true);
@@ -200,9 +200,7 @@ rtError_t CaptureModel::LoadCompleteByStream(void)
     rtError_t error = LoadCompleteByStreamPrep(stream);
     ERROR_RETURN_MSG_INNER(error, "Preprocess of load completion failed, retCode=%#x.", static_cast<uint32_t>(error));
 
-    TaskInfo submitTaskInfo = {};
     TaskInfo* maintainceTask = nullptr;
-    rtError_t errorReason;
     Device* const dev = Context_()->Device_();
 
     if (dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ)) {
@@ -210,6 +208,8 @@ rtError_t CaptureModel::LoadCompleteByStream(void)
         error = dev->GetCtrlSQ().SendModelLoadCompleteMsg(this, GetFirstTaskId());
         ERROR_RETURN_MSG_INNER(error, "SendModelLoadCompleteMsg failed, retCode=%#x.", static_cast<uint32_t>(error));
     } else {
+        TaskInfo submitTaskInfo = {};
+        rtError_t errorReason;
         stream = Context_()->DefaultStream_();
         maintainceTask = stream->AllocTask(&submitTaskInfo, TS_TASK_TYPE_MODEL_MAINTAINCE, errorReason);
         NULL_PTR_RETURN_MSG(maintainceTask, errorReason);
