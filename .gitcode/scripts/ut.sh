@@ -22,10 +22,18 @@ function LOG_DO() {
 }
 
 echo $(grep -E "^VERSION_ID=" /etc/os-release | cut -d'"' -f2)
-if [[ "${TARGET_BRANCH}" = "master" ]]; then
-    sudo update-alternatives --set gcc /usr/bin/gcc-15
+if sudo update-alternatives --set gcc /usr/bin/gcc-16 2>/dev/null; then
+    echo "Switched to gcc-16"
+elif sudo update-alternatives --set gcc /usr/bin/gcc-15 2>/dev/null; then
+    echo "Switched to gcc-15"
+elif sudo update-alternatives --set gcc /usr/bin/gcc-14 2>/dev/null; then
+    echo "gcc-16/15 not available, fell back to gcc-14"
+elif [[ -f "/opt/rh/devtoolset-7.3.1/enable" ]]; then
+    echo "gcc-16/15/14 not available, falling back to devtoolset-7.3.1"
+    source /opt/rh/devtoolset-7.3.1/enable
 else
-    sudo update-alternatives --set gcc /usr/bin/gcc-14
+    echo "ERROR: No compatible GCC toolchain found for release branch" >&2
+    exit 1
 fi
 
 if gcc --version | head -n1 | grep -q "15\."; then
