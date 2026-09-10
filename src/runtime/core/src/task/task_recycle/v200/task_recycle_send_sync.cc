@@ -96,9 +96,7 @@ static rtError_t SyncTaskEarlyBreak(const Stream* const stm, bool& breakFlag)
 
     COND_PROC_RETURN_ERROR(
         stm->GetFailureMode() == ABORT_ON_FAILURE, RT_ERROR_NONE,
-        (void)FinishedTaskReclaim(
-            stm, false, (dynamic_cast<TaskResManageDavid*>(stm->taskResMang_))->GetTaskPosHead(),
-            (dynamic_cast<TaskResManageDavid*>(stm->taskResMang_))->GetTaskPosTail()),
+        (void)FinishedTaskReclaim(stm, false, stm->taskResMang_->GetResHead(), stm->taskResMang_->GetResTail()),
         "stream is in failure abort and need to reclaim all, device_id=%u, stream_id=%u.", dev->Id_(), streamId);
     error = stm->CheckContextStatus(false);
     COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "context is abort, status=%#x.", static_cast<uint32_t>(error));

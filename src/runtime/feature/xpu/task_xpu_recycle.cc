@@ -67,8 +67,7 @@ static bool TprtGetPublicTask(
         }
         return true;
     }
-    TaskInfo* delWorkTask =
-        (dynamic_cast<TaskResManageDavid*>(stm->taskResMang_))->GetTaskInfo(static_cast<uint32_t>(delPos));
+    TaskInfo* delWorkTask = stm->taskResMang_->GetTaskInfo(static_cast<uint32_t>(delPos));
     if (unlikely(delWorkTask == nullptr)) {
         // maybe random order occurred
         RT_LOG(
@@ -141,7 +140,7 @@ static rtError_t XpuFinishedTaskReclaim(const Stream* const stm, const uint16_t 
     uint16_t recycleHead = tarPos;
 
     const uint32_t pos = (recycleHead == 0U) ? (stm->GetSqDepth() - 1U) : (recycleHead - 1U);
-    TaskInfo* const workTask = (dynamic_cast<TaskResManageDavid*>(stm->taskResMang_))->GetTaskInfo(pos);
+    TaskInfo* const workTask = stm->taskResMang_->GetTaskInfo(pos);
     if (workTask == nullptr) { // Released already.
         RT_LOG(RT_LOG_WARNING, "Get null task from stream_id=%u, pos=%u.", stm->Id_(), pos);
         return ret;
@@ -275,7 +274,7 @@ static rtError_t XpuProcReport(
         TaskInfo* reportTask = nullptr;
         (void)dev->GetStreamSqCqManage()->GetStreamById(streamId, &recycleStm);
         if ((recycleStm != nullptr) && (recycleStm->taskResMang_ != nullptr)) {
-            reportTask = (dynamic_cast<TaskResManageDavid*>(recycleStm->taskResMang_))->GetTaskInfo(pos);
+            reportTask = recycleStm->taskResMang_->GetTaskInfo(pos);
         }
         /* 这里能判断pos和stream id的合法性，因此后续不需要再判断 */
         if (unlikely(reportTask == nullptr)) {
@@ -337,15 +336,13 @@ rtError_t XpuRecycleTaskBySqHead(const Stream* const stm)
     const rtError_t error = XpuGetDrvSqHead(stm, sqHead, true);
     COND_RETURN_ERROR_MSG_INNER(
         error != RT_ERROR_NONE, error, "XpuGetDrvSqHead failed, retCode=%#x.", static_cast<uint32_t>(error));
-    TaskResManageDavid* taskManage = nullptr;
     if (stm->taskResMang_ == nullptr) {
         return RT_ERROR_STREAM_INVALID;
     }
-    taskManage = dynamic_cast<TaskResManageDavid*>(stm->taskResMang_);
     if (unlikely(stm->GetFailureMode() == ABORT_ON_FAILURE)) {
-        sqHead = taskManage->GetTaskPosTail();
+        sqHead = stm->taskResMang_->GetResTail();
     }
-    return XpuFinishedTaskReclaim(stm, taskManage->GetTaskPosHead(), sqHead);
+    return XpuFinishedTaskReclaim(stm, stm->taskResMang_->GetResHead(), sqHead);
 }
 
 void XpuRecycleTaskProcCqe(const Stream* const stm)

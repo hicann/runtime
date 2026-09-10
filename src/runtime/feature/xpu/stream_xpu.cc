@@ -137,11 +137,7 @@ rtError_t XpuStream::StarsAddTaskToStream(TaskInfo* const tsk, const uint32_t se
     return RT_ERROR_NONE;
 }
 
-uint32_t XpuStream::GetCurSqPos() const
-{
-    TaskResManageDavid* taskRes = RtPtrToPtr<TaskResManageDavid*>(taskResMang_);
-    return static_cast<uint32_t>(taskRes->GetTaskPosTail());
-}
+uint32_t XpuStream::GetCurSqPos() const { return static_cast<uint32_t>(taskResMang_->GetResTail()); }
 
 rtError_t XpuStream::StarsGetPublicTaskHead(
     TaskInfo* workTask, const bool isTaskBind, const uint16_t tailTaskId, uint16_t* const delTaskId)
@@ -152,8 +148,7 @@ rtError_t XpuStream::StarsGetPublicTaskHead(
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
         taskResMang_, RT_ERROR_INVALID_VALUE,
         "Obtaining the ID of the next task to be reclaimed from the stream task queue");
-    TaskResManageDavid* taskRes = RtPtrToPtr<TaskResManageDavid*>(taskResMang_);
-    const uint32_t taskResTail = taskRes->GetTaskPosTail();
+    const uint32_t taskResTail = taskResMang_->GetResTail();
     const std::lock_guard<std::mutex> stmLock(publicTaskMutex_);
     if (publicQueueHead_ != publicQueueTail_) {
         const uint32_t fixTaskPos = taskPublicBuff_[publicQueueHead_];
@@ -275,7 +270,7 @@ rtError_t XpuStream::TearDown(const bool terminal, bool flag)
     }
 
     uint32_t sqStatus = static_cast<uint32_t>(TPRT_SQ_STATE_IS_RUNNING);
-    while (!((dynamic_cast<TaskResManageDavid*>(taskResMang_))->IsEmpty())) {
+    while (!taskResMang_->IsEmpty()) {
         error = xpuDrv->GetSqState(Device_()->Id_(), GetSqId(), sqStatus);
         COND_RETURN_ERROR(
             (error != RT_ERROR_NONE), error, "Failed to query SQ status, stream_id=%d, retCode=%#x.", streamId_,
@@ -318,7 +313,7 @@ uint32_t XpuStream::GetArgPos() const
 uint32_t XpuStream::GetPendingNum() const
 {
     if (likely(taskResMang_ != nullptr)) {
-        return (dynamic_cast<TaskResManageDavid*>(taskResMang_))->GetPendingNum();
+        return taskResMang_->GetPendingNum();
     }
     return 0U;
 }
@@ -326,7 +321,7 @@ uint32_t XpuStream::GetPendingNum() const
 uint32_t XpuStream::GetTaskPosHead() const
 {
     if (likely(taskResMang_ != nullptr)) {
-        return (dynamic_cast<TaskResManageDavid*>(taskResMang_))->GetTaskPosHead();
+        return taskResMang_->GetResHead();
     }
     return 0U;
 }
@@ -334,7 +329,7 @@ uint32_t XpuStream::GetTaskPosHead() const
 uint32_t XpuStream::GetTaskPosTail() const
 {
     if (likely(taskResMang_ != nullptr)) {
-        return (dynamic_cast<TaskResManageDavid*>(taskResMang_))->GetTaskPosTail();
+        return taskResMang_->GetResTail();
     }
     return 0U;
 }
@@ -365,8 +360,7 @@ rtError_t XpuStream::GetFinishedTaskIdBySqHead(uint16_t& sqHead, uint32_t& finis
     }
     uint32_t endTaskId = MAX_UINT32_NUM;
     uint32_t nextTaskId = MAX_UINT32_NUM;
-    TaskInfo* exeWorkTask =
-        (dynamic_cast<TaskResManageDavid*>(taskResMang_))->GetTaskInfo(static_cast<uint32_t>(sqHead));
+    TaskInfo* exeWorkTask = taskResMang_->GetTaskInfo(static_cast<uint32_t>(sqHead));
     if (unlikely(exeWorkTask != nullptr)) {
         nextTaskId = exeWorkTask->taskSn;
     } else {
@@ -375,8 +369,7 @@ rtError_t XpuStream::GetFinishedTaskIdBySqHead(uint16_t& sqHead, uint32_t& finis
     }
 
     uint16_t finishedPos = (sqHead + rtsqDepth - 1) % rtsqDepth;
-    TaskInfo* latestRecycleTask =
-        (dynamic_cast<TaskResManageDavid*>(taskResMang_))->GetTaskInfo(static_cast<uint32_t>(finishedPos));
+    TaskInfo* latestRecycleTask = taskResMang_->GetTaskInfo(static_cast<uint32_t>(finishedPos));
     if (unlikely(latestRecycleTask != nullptr)) {
         endTaskId = latestRecycleTask->taskSn;
     } else {

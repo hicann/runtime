@@ -299,6 +299,18 @@ void TaskResManage::RecycleResHead()
 
 uint16_t TaskResManage::GetResHead() const { return taskResHead_; }
 
+uint16_t TaskResManage::GetResTail() const { return taskResTail_; }
+
+void TaskResManage::GetHeadTail(uint16_t& head, uint16_t& tail) const
+{
+    head = taskResHead_;
+    tail = taskResTail_;
+}
+
+bool TaskResManage::IsEmpty() const { return taskResHead_ == taskResTail_; }
+
+uint16_t TaskResManage::GetPendingNum() { return (taskResTail_ + taskPoolNum_ - taskResHead_) % taskPoolNum_; }
+
 bool TaskResManage::RecycleTaskInfoOn(uint32_t taskId)
 {
     const uint32_t taskDesHeadIdx = taskId % taskPoolNum_;

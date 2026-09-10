@@ -186,12 +186,12 @@ protected:
         Driver* drv = ((Runtime*)Runtime::Instance())->driverFactory_.GetDriver(NPU_DRIVER);
         MOCKER_CPP_VIRTUAL(drv, &Driver::GetSqHead)
             .stubs()
-            .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(taskResMang->GetTaskPosTail()))
+            .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(taskResMang->GetResTail()))
             .will(returnValue(RT_ERROR_NONE));
         taskResMang->ResetTaskRes();
         MOCKER_CPP_VIRTUAL(driver, &Driver::GetSqHead)
             .stubs()
-            .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(taskResMang->GetTaskPosTail()))
+            .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(taskResMang->GetResTail()))
             .will(returnValue(RT_ERROR_NONE));
 
         rtStreamDestroy(streamHandle_);
@@ -5381,7 +5381,7 @@ protected:
         taskResMang->ResetTaskRes();
         MOCKER_CPP_VIRTUAL(driver, &Driver::GetSqHead)
             .stubs()
-            .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(taskResMang->GetTaskPosTail()))
+            .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(taskResMang->GetResTail()))
             .will(returnValue(RT_ERROR_NONE));
         rtStreamDestroy(streamHandle_);
         rtStreamDestroy(streamHandleDvpp_);
@@ -5440,7 +5440,7 @@ TEST_F(UbStreamTest1, LaunchKernel_Lite)
     TaskResManageDavid* taskResMang = ((TaskResManageDavid*)(rt_ut::UnwrapOrNull<Stream>(liteStream)->taskResMang_));
     MOCKER_CPP_VIRTUAL(device_->Driver_(), &Driver::GetSqHead)
         .stubs()
-        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(taskResMang->GetTaskPosTail()))
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(taskResMang->GetResTail()))
         .will(returnValue(RT_ERROR_NONE));
     error = rtStreamSynchronize(liteStream);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -5484,7 +5484,7 @@ TEST_F(UbStreamTest1, LaunchKernel_Lite_Sync)
     TaskResManageDavid* taskResMang = ((TaskResManageDavid*)(rt_ut::UnwrapOrNull<Stream>(liteStream)->taskResMang_));
     MOCKER_CPP_VIRTUAL(device_->Driver_(), &Driver::GetSqHead)
         .stubs()
-        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(taskResMang->GetTaskPosTail()))
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(taskResMang->GetResTail()))
         .will(returnValue(RT_ERROR_NONE));
     taskResMang->ResetTaskRes();
 
@@ -5890,7 +5890,7 @@ protected:
 
         MOCKER_CPP_VIRTUAL(driver, &Driver::GetSqHead)
             .stubs()
-            .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(taskResMang->GetTaskPosTail()))
+            .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(taskResMang->GetResTail()))
             .will(returnValue(RT_ERROR_NONE));
         rtStreamDestroy(streamHandle_);
         stream_ = nullptr;
@@ -11086,7 +11086,7 @@ protected:
         // Driver *drv = ((Runtime *)Runtime::Instance())->driverFactory_.GetDriver(NPU_DRIVER);
         // MOCKER_CPP_VIRTUAL(drv, &Driver::GetSqHead)
         //     .stubs()
-        //     .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(taskResMang->GetTaskPosTail()))
+        //     .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(taskResMang->GetResTail()))
         //     .will(returnValue(RT_ERROR_NONE));
         rtStreamDestroy(streamHandle_);
         rtStreamDestroy(streamHandleDvpp_);
@@ -15476,7 +15476,7 @@ TEST_F(UbStreamTest3, fusion_launch_api_test_ub_stream_error)
     TaskResManageDavid* taskResMang = ((TaskResManageDavid*)(stm->taskResMang_));
     MOCKER_CPP_VIRTUAL(drv, &Driver::GetSqHead)
         .stubs()
-        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(taskResMang->GetTaskPosTail()))
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(taskResMang->GetResTail()))
         .will(returnValue(RT_ERROR_NONE));
     error = rtStreamDestroy(liteStream);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -15559,7 +15559,7 @@ TEST_F(UbStreamTest3, multi_ccu_subtasks_for_fusion_kernel_launch_single_die)
     TaskResManageDavid* taskResMang = ((TaskResManageDavid*)(stream_->taskResMang_));
     MOCKER_CPP_VIRTUAL(drv, &Driver::GetSqHead)
         .stubs()
-        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(taskResMang->GetTaskPosTail()))
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(taskResMang->GetResTail()))
         .will(returnValue(RT_ERROR_NONE));
     error = rtStreamSynchronize(streamHandle_);
     EXPECT_EQ(error, RT_ERROR_NONE);

@@ -126,8 +126,11 @@ protected:
 
 TEST_F(DavidTaskRecycleTest, TestTaskRes)
 {
-    TaskResManageDavid* taskResMng = new (std::nothrow) TaskResManageDavid;
+    TaskResManageDavid* davidTaskResMng = new (std::nothrow) TaskResManageDavid;
+    TaskResManage* taskResMng = davidTaskResMng;
     taskResMng->taskPoolNum_ = 2049;
+    taskResMng->taskResHead_ = 7U;
+    taskResMng->taskResTail_ = 8U;
     Device* device = ((Runtime*)Runtime::Instance())->DeviceRetain(0, 0);
     uint32_t support = RT_CAPABILITY_SUPPORT;
     MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::CheckSupportPcieBarCopy)
@@ -144,15 +147,19 @@ TEST_F(DavidTaskRecycleTest, TestTaskRes)
     EXPECT_EQ(error, RT_ERROR_NONE);
     bool ret = taskResMng->CreateTaskRes(rt_ut::UnwrapOrNull<Stream>(stream));
     EXPECT_EQ(ret, true);
+    EXPECT_TRUE(taskResMng->IsEmpty());
+    EXPECT_EQ(taskResMng->GetResHead(), 0U);
+    EXPECT_EQ(taskResMng->GetResTail(), 0U);
+    EXPECT_EQ(taskResMng->GetPendingNum(), 0U);
 
     uint32_t pos = UINT32_MAX;
     TaskInfo* task = nullptr;
-    error = taskResMng->AllocTaskInfoAndPos(3U, pos, &task);
+    error = davidTaskResMng->AllocTaskInfoAndPos(3U, pos, &task);
     EXPECT_EQ(error, RT_ERROR_NONE);
     EXPECT_EQ(pos, 0);
 
     for (uint32_t i = 0; i < 64; i++) {
-        error = taskResMng->AllocTaskInfoAndPos(1U, pos, &task);
+        error = davidTaskResMng->AllocTaskInfoAndPos(1U, pos, &task);
         EXPECT_EQ(error, RT_ERROR_NONE);
         EXPECT_EQ(pos, 3 + i);
     }
@@ -162,6 +169,10 @@ TEST_F(DavidTaskRecycleTest, TestTaskRes)
     taskResMng->GetHeadTail(head, tail);
     EXPECT_EQ(head, 0);
     EXPECT_EQ(tail, 67);
+    EXPECT_FALSE(taskResMng->IsEmpty());
+    EXPECT_EQ(taskResMng->GetResHead(), 0U);
+    EXPECT_EQ(taskResMng->GetResTail(), 67U);
+    EXPECT_EQ(taskResMng->GetPendingNum(), 67U);
     TaskInfo* getTask = taskResMng->GetTaskInfo(10);
     EXPECT_NE(getTask, nullptr);
     getTask = taskResMng->GetTaskInfo(66);
@@ -175,23 +186,26 @@ TEST_F(DavidTaskRecycleTest, TestTaskRes)
     getTask = taskResMng->GetTaskInfo(2);
     EXPECT_NE(getTask, nullptr);
 
-    bool recycleFlag = taskResMng->RecycleTaskInfo(0, 3);
+    bool recycleFlag = davidTaskResMng->RecycleTaskInfo(0, 3);
     EXPECT_EQ(recycleFlag, true);
-    recycleFlag = taskResMng->RecycleTaskInfo(50, 1);
+    recycleFlag = davidTaskResMng->RecycleTaskInfo(50, 1);
     EXPECT_EQ(recycleFlag, true);
 
     taskResMng->GetHeadTail(head, tail);
     EXPECT_EQ(head, 51);
     EXPECT_EQ(tail, 67);
+    EXPECT_EQ(taskResMng->GetResHead(), 51U);
+    EXPECT_EQ(taskResMng->GetResTail(), 67U);
+    EXPECT_EQ(taskResMng->GetPendingNum(), 16U);
 
-    error = taskResMng->AllocTaskInfoAndPos(2049, pos, &task);
+    error = davidTaskResMng->AllocTaskInfoAndPos(2049, pos, &task);
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
 
-    recycleFlag = taskResMng->RecycleTaskInfo(2049, 1);
+    recycleFlag = davidTaskResMng->RecycleTaskInfo(2049, 1);
     EXPECT_EQ(recycleFlag, false);
-    recycleFlag = taskResMng->RecycleTaskInfo(49, 1);
+    recycleFlag = davidTaskResMng->RecycleTaskInfo(49, 1);
     EXPECT_EQ(recycleFlag, false);
-    recycleFlag = taskResMng->RecycleTaskInfo(67, 1);
+    recycleFlag = davidTaskResMng->RecycleTaskInfo(67, 1);
     EXPECT_EQ(recycleFlag, false);
 
     getTask = taskResMng->GetTaskInfo(2049);
@@ -203,18 +217,21 @@ TEST_F(DavidTaskRecycleTest, TestTaskRes)
     getTask = taskResMng->GetTaskInfo(67);
     EXPECT_EQ(getTask, nullptr);
 
-    recycleFlag = taskResMng->RecycleTaskInfo(50, 1);
+    recycleFlag = davidTaskResMng->RecycleTaskInfo(50, 1);
     EXPECT_EQ(recycleFlag, true);
-    recycleFlag = taskResMng->RecycleTaskInfo(66, 1);
+    recycleFlag = davidTaskResMng->RecycleTaskInfo(66, 1);
     EXPECT_EQ(recycleFlag, true);
 
     for (uint32_t i = 0; i < 2000; i++) {
-        error = taskResMng->AllocTaskInfoAndPos(1U, pos, &task);
+        error = davidTaskResMng->AllocTaskInfoAndPos(1U, pos, &task);
         EXPECT_EQ(error, RT_ERROR_NONE);
     }
     taskResMng->GetHeadTail(head, tail);
     EXPECT_EQ(head, 67);
     EXPECT_EQ(tail, 18);
+    EXPECT_EQ(taskResMng->GetResHead(), 67U);
+    EXPECT_EQ(taskResMng->GetResTail(), 18U);
+    EXPECT_EQ(taskResMng->GetPendingNum(), 2000U);
 
     getTask = taskResMng->GetTaskInfo(67);
     EXPECT_NE(getTask, nullptr);
@@ -225,29 +242,33 @@ TEST_F(DavidTaskRecycleTest, TestTaskRes)
     getTask = taskResMng->GetTaskInfo(18);
     EXPECT_EQ(getTask, nullptr);
 
-    recycleFlag = taskResMng->RecycleTaskInfo(65, 1);
+    recycleFlag = davidTaskResMng->RecycleTaskInfo(65, 1);
     EXPECT_EQ(recycleFlag, false);
-    recycleFlag = taskResMng->RecycleTaskInfo(18, 1);
+    recycleFlag = davidTaskResMng->RecycleTaskInfo(18, 1);
     EXPECT_EQ(recycleFlag, false);
-    recycleFlag = taskResMng->RecycleTaskInfo(66, 1);
+    recycleFlag = davidTaskResMng->RecycleTaskInfo(66, 1);
     EXPECT_EQ(recycleFlag, true);
-    recycleFlag = taskResMng->RecycleTaskInfo(17, 1);
+    recycleFlag = davidTaskResMng->RecycleTaskInfo(17, 1);
     EXPECT_EQ(recycleFlag, true);
 
     taskResMng->ResetTaskRes();
+    EXPECT_TRUE(taskResMng->IsEmpty());
+    EXPECT_EQ(taskResMng->GetResHead(), 0U);
+    EXPECT_EQ(taskResMng->GetResTail(), 0U);
+    EXPECT_EQ(taskResMng->GetPendingNum(), 0U);
     getTask = taskResMng->GetTaskInfo(0);
     EXPECT_EQ(getTask, nullptr);
 
     for (uint32_t i = 0; i < 2048; i++) {
-        error = taskResMng->AllocTaskInfoAndPos(1U, pos, &task);
+        error = davidTaskResMng->AllocTaskInfoAndPos(1U, pos, &task);
         EXPECT_EQ(error, RT_ERROR_NONE);
     }
-    error = taskResMng->AllocTaskInfoAndPos(1U, pos, &task);
+    error = davidTaskResMng->AllocTaskInfoAndPos(1U, pos, &task);
     EXPECT_EQ(error, RT_ERROR_TASKRES_QUEUE_FULL);
-    taskResMng->RollbackTail(pos);
+    davidTaskResMng->RollbackTail(pos);
 
     taskResMng->ResetTaskRes();
-    error = taskResMng->AllocTaskInfoAndPos(3U, pos, &task);
+    error = davidTaskResMng->AllocTaskInfoAndPos(3U, pos, &task);
     EXPECT_EQ(error, RT_ERROR_NONE);
     getTask = taskResMng->GetTaskInfo(pos);
     EXPECT_NE(getTask, nullptr);
@@ -258,7 +279,7 @@ TEST_F(DavidTaskRecycleTest, TestTaskRes)
     taskResMng->ReleaseTaskResource(rt_ut::UnwrapOrNull<Stream>(stream));
     rtStreamDestroy(stream);
     ((Runtime*)Runtime::Instance())->DeviceRelease(device);
-    delete taskResMng;
+    delete davidTaskResMng;
 }
 
 TEST_F(DavidTaskRecycleTest, SyncTaskRecycleBySqHead)

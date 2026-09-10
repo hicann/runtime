@@ -4160,7 +4160,7 @@ protected:
         TaskResManageDavid* taskResMang = ((TaskResManageDavid*)(static_cast<Stream*>(stream_)->taskResMang_));
         MOCKER_CPP_VIRTUAL(driver, &Driver::GetSqHead)
             .stubs()
-            .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(taskResMang->GetTaskPosTail()))
+            .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(taskResMang->GetResTail()))
             .will(returnValue(RT_ERROR_NONE));
     }
 
@@ -4178,7 +4178,7 @@ protected:
             taskResMang->ResetTaskRes();
             MOCKER_CPP_VIRTUAL(driver, &Driver::GetSqHead)
                 .stubs()
-                .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(taskResMang->GetTaskPosTail()))
+                .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(taskResMang->GetResTail()))
                 .will(returnValue(RT_ERROR_NONE));
             Stream* dft = stream_->Context_()->DefaultStream_();
             taskResMang = ((TaskResManageDavid*)(static_cast<Stream*>(dft)->taskResMang_));
@@ -4641,7 +4641,7 @@ TEST_F(ApiDavidTest, count_notify_create_destory)
     driver = ((Runtime*)Runtime::Instance())->driverFactory_.GetDriver(NPU_DRIVER);
     MOCKER_CPP_VIRTUAL(driver, &Driver::GetSqHead)
         .stubs()
-        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(taskResMang->GetTaskPosTail()))
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(taskResMang->GetResTail()))
         .will(returnValue(RT_ERROR_NONE));
 
     MOCKER(halResourceIdAlloc).stubs().will(returnValue(DRV_ERROR_NONE));
@@ -5050,7 +5050,7 @@ TEST_F(ApiDavidTest, test_model_kinds_task_on_david)
     TaskResManageDavid* taskResMang = ((TaskResManageDavid*)(static_cast<Stream*>(defaultStm)->taskResMang_));
     MOCKER_CPP_VIRTUAL(driver, &Driver::GetSqHead)
         .stubs()
-        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(taskResMang->GetTaskPosTail()))
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(taskResMang->GetResTail()))
         .will(returnValue(RT_ERROR_NONE));
 
     uint32_t oldFlags = stream_->Flags();
@@ -5122,7 +5122,7 @@ TEST_F(ApiDavidTest, test_model_ub_get_jetty_info)
     TaskResManageDavid* taskResMang = ((TaskResManageDavid*)(static_cast<Stream*>(defaultStm)->taskResMang_));
     MOCKER_CPP_VIRTUAL(driver, &Driver::GetSqHead)
         .stubs()
-        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(taskResMang->GetTaskPosTail()))
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(taskResMang->GetResTail()))
         .will(returnValue(RT_ERROR_NONE));
 
     uint32_t oldFlags = stream_->Flags();
@@ -5228,7 +5228,7 @@ TEST_F(ApiDavidTest, test_model_kinds_task_on_david1)
     TaskResManageDavid* taskResMang = ((TaskResManageDavid*)(static_cast<Stream*>(stream_)->taskResMang_));
     MOCKER_CPP_VIRTUAL(driver, &Driver::GetSqTail)
         .stubs()
-        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(taskResMang->GetTaskPosTail()))
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(taskResMang->GetResTail()))
         .will(returnValue(RT_ERROR_NONE));
     error = rtModelUnbindStream(model, streamHandle_);
     EXPECT_EQ(error, RT_ERROR_NONE);

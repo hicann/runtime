@@ -122,7 +122,7 @@ protected:
         TaskResManageDavid* taskResMang = ((TaskResManageDavid*)(static_cast<Stream*>(stream_)->taskResMang_));
         MOCKER_CPP_VIRTUAL(driver, &Driver::GetSqHead)
             .stubs()
-            .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(taskResMang->GetTaskPosTail()))
+            .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(taskResMang->GetResTail()))
             .will(returnValue(RT_ERROR_NONE));
 
         grp_ = new DvppGrp(device_, 0);
@@ -830,7 +830,7 @@ protected:
         TaskResManageDavid* taskResMang = ((TaskResManageDavid*)(static_cast<Stream*>(stream_)->taskResMang_));
         MOCKER_CPP_VIRTUAL(driver, &Driver::GetSqHead)
             .stubs()
-            .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(taskResMang->GetTaskPosTail()))
+            .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(taskResMang->GetResTail()))
             .will(returnValue(RT_ERROR_NONE));
 
         grp_ = new DvppGrp(device_, 0);
@@ -1067,7 +1067,7 @@ protected:
         TaskResManageDavid* taskResMang = ((TaskResManageDavid*)(static_cast<Stream*>(stream_)->taskResMang_));
         MOCKER_CPP_VIRTUAL(driver, &Driver::GetSqHead)
             .stubs()
-            .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(taskResMang->GetTaskPosTail()))
+            .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(taskResMang->GetResTail()))
             .will(returnValue(RT_ERROR_NONE));
 
         for (uint32_t i = 0; i < sizeof(binary_) / sizeof(uint32_t); i++) {
@@ -1176,7 +1176,7 @@ TEST_F(ApiTestUb2, ub_direct_wqe_send_test_normal)
     driver = ((Runtime*)Runtime::Instance())->driverFactory_.GetDriver(NPU_DRIVER);
     MOCKER_CPP_VIRTUAL(driver, &Driver::GetSqHead)
         .stubs()
-        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(taskResMang->GetTaskPosTail()))
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(taskResMang->GetResTail()))
         .will(returnValue(RT_ERROR_NONE));
 
     const uint32_t sqDepth = stream_->Device_()->GetDevProperties().rtsqDepth;
@@ -1331,7 +1331,7 @@ TEST_F(ApiTestUb2, ub_doorbell_send_test_normal)
     driver = ((Runtime*)Runtime::Instance())->driverFactory_.GetDriver(NPU_DRIVER);
     MOCKER_CPP_VIRTUAL(driver, &Driver::GetSqHead)
         .stubs()
-        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(taskResMang->GetTaskPosTail()))
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(taskResMang->GetResTail()))
         .will(returnValue(RT_ERROR_NONE));
 
     const uint32_t sqDepth = stream_->Device_()->GetDevProperties().rtsqDepth;

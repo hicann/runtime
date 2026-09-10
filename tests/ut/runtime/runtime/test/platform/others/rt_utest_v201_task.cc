@@ -239,7 +239,7 @@ protected:
         TaskResManageDavid* taskResMang = ((TaskResManageDavid*)(static_cast<Stream*>(stream_)->taskResMang_));
         MOCKER_CPP_VIRTUAL(driver, &Driver::GetSqHead)
             .stubs()
-            .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(taskResMang->GetTaskPosTail()))
+            .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(taskResMang->GetResTail()))
             .will(returnValue(RT_ERROR_NONE));
     }
 
@@ -275,6 +275,29 @@ public:
     Engine* engine_ = nullptr;
     rtStream_t streamHandle_ = 0;
 };
+
+TEST_F(TaskTestV201, TaskResStateDispatchesThroughBasePointer)
+{
+    TaskResManage* taskResMng = stream_->taskResMang_;
+    ASSERT_NE(taskResMng, nullptr);
+    TaskResManageDavid* davidTaskResMng = dynamic_cast<TaskResManageDavid*>(taskResMng);
+    ASSERT_NE(davidTaskResMng, nullptr);
+    taskResMng->taskResHead_ = 7U;
+    taskResMng->taskResTail_ = 8U;
+
+    uint32_t pos = UINT32_MAX;
+    TaskInfo* task = nullptr;
+    EXPECT_EQ(davidTaskResMng->AllocTaskInfoAndPos(2U, pos, &task), RT_ERROR_NONE);
+    EXPECT_EQ(pos, 0U);
+    EXPECT_EQ(taskResMng->GetResHead(), 0U);
+    EXPECT_EQ(taskResMng->GetResTail(), 2U);
+    EXPECT_EQ(taskResMng->GetPendingNum(), 2U);
+    EXPECT_FALSE(taskResMng->IsEmpty());
+    EXPECT_EQ(taskResMng->GetTaskInfo(1U), task);
+
+    taskResMng->ResetTaskRes();
+    EXPECT_TRUE(taskResMng->IsEmpty());
+}
 
 TEST_F(TaskTestV201, Test_GetTsId)
 {

@@ -23,18 +23,15 @@ public:
     void ResetTaskRes() override;
     bool RecycleTaskInfo(uint32_t pos, uint32_t sqeNum);
     rtError_t AllocTaskInfoAndPos(uint32_t sqeNum, uint32_t& pos, TaskInfo** task, bool needLog = true);
-    void GetHeadTail(uint16_t& head, uint16_t& tail) const;
+    uint16_t GetResHead() const override;
+    uint16_t GetResTail() const override;
+    void GetHeadTail(uint16_t& head, uint16_t& tail) const override;
+    bool IsEmpty() const override;
+    uint16_t GetPendingNum() override;
     void RollbackTail(uint16_t pos);
-
-    uint16_t GetTaskPosHead() const { return taskResAHead_.Value(); }
-
-    uint16_t GetTaskPosTail() const { return taskResATail_.Value(); }
-
-    bool IsEmpty() const { return taskResAHead_.Value() == taskResATail_.Value(); }
 
     uint64_t GetAllocNum() const { return allocNum_; }
 
-    uint16_t GetPendingNum();
     bool IsRecyclePosValid(uint16_t recyclePos) const;
     bool CreateTaskRes(Stream* stm) override;
     void ShowDfxInfo(void) const override;

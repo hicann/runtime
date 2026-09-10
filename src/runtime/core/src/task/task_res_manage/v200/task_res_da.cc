@@ -199,11 +199,17 @@ bool TaskResManageDavid::RecycleTaskInfo(uint32_t pos, uint32_t sqeNum)
     return true;
 }
 
+uint16_t TaskResManageDavid::GetResHead() const { return taskResAHead_.Value(); }
+
+uint16_t TaskResManageDavid::GetResTail() const { return taskResATail_.Value(); }
+
 void TaskResManageDavid::GetHeadTail(uint16_t& head, uint16_t& tail) const
 {
     head = taskResAHead_.Value();
     tail = taskResATail_.Value();
 }
+
+bool TaskResManageDavid::IsEmpty() const { return taskResAHead_.Value() == taskResATail_.Value(); }
 
 // only used for errors after AllocTaskInfoAndPos in StreamLock domain
 void TaskResManageDavid::RollbackTail(uint16_t pos)

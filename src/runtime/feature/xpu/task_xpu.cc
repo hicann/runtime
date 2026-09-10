@@ -132,8 +132,7 @@ rtError_t XpuSendTask(TaskInfo* taskInfo, Stream* const stm)
 
 rtError_t XpuCheckTaskCanSend(Stream* const stm)
 {
-    TaskResManageDavid* taskResManag = RtPtrToPtr<TaskResManageDavid*, TaskResManage*>(stm->taskResMang_);
-    if (unlikely(taskResManag == nullptr)) {
+    if (unlikely(stm->taskResMang_ == nullptr)) {
         RT_LOG(
             RT_LOG_WARNING, "device_id=%u stream_id=%d(flags=0x%x) does not support send task.", stm->Device_()->Id_(),
             stm->Id_(), stm->Flags());

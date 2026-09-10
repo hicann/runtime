@@ -505,6 +505,11 @@ classDiagram
         +RecycleTaskInfoO1()
         +RecycleTaskInfoOn()
         +GetTaskInfo()  // 获取task 指针
+        +GetResHead()  // 获取下一个待回收位置
+        +GetResTail()  // 获取下一个待分配位置
+        +GetHeadTail()  // 获取待回收和待分配位置
+        +IsEmpty()  // 判断任务资源队列是否为空
+        +GetPendingNum()  // 获取待回收任务资源数量
         +CreateTaskRes()  // 创建 StreamTaskRes 资源
         +ReleaseTaskResource()  // 释放 StreamTaskRes 资源
         +Load()
@@ -517,9 +522,9 @@ classDiagram
         +AllocTaskInfoAndPos()  // 分配Task 指针
         +RecycleTaskInfo()  // 回收Task 指针
         +RollbackTail()
-        +GetHeadTail()   
-        +GetTaskPosHead()
-        +GetTaskPosTail()
+        +GetResHead()
+        +GetResTail()
+        +GetHeadTail()
         +IsEmpty()
         +GetAllocNum()
         +GetPendingNum()

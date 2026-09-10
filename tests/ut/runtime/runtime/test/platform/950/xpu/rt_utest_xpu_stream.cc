@@ -485,3 +485,59 @@ TEST_F(XpuStreamTest, get_finished_task_id_by_sq_head_when_task_info_null)
     rtResetXpuDevice(RT_DEV_TYPE_DPU, 0);
     delete result;
 }
+
+TEST_F(XpuStreamTest, TaskResStateDispatchesThroughBasePointer)
+{
+    MOCKER(drvGetPlatformInfo).stubs().will(invoke(drvGetPlatformInfo_online));
+    MOCKER_CPP(&XpuDevice::ParseXpuConfigInfo).stubs().will(invoke(ParseXpuConfigInfo_mock));
+    ut::MockXpuTprtRuntime();
+
+    rtError_t error = rtSetXpuDevice(RT_DEV_TYPE_DPU, 0);
+    ASSERT_EQ(error, ACL_RT_SUCCESS);
+    Runtime* rt = (Runtime*)Runtime::Instance();
+    XpuContext* context = static_cast<XpuContext*>(rt->GetXpuCtxt());
+    if (context == nullptr) {
+        ADD_FAILURE() << "Failed to get XPU context";
+        (void)rtResetXpuDevice(RT_DEV_TYPE_DPU, 0);
+        return;
+    }
+
+    Stream* result = nullptr;
+    error = context->StreamCreate(RT_STREAM_PRIORITY_DEFAULT, 0U, &result);
+    if (error != RT_ERROR_NONE || context->StreamList_().empty()) {
+        ADD_FAILURE() << "Failed to create XPU stream, retCode=" << error;
+        (void)rtResetXpuDevice(RT_DEV_TYPE_DPU, 0);
+        return;
+    }
+
+    XpuStream* stream = static_cast<XpuStream*>(context->StreamList_().front());
+    TaskResManage* taskResMng = stream->taskResMang_;
+    if (taskResMng == nullptr) {
+        ADD_FAILURE() << "Task resource manager is null";
+        (void)rtResetXpuDevice(RT_DEV_TYPE_DPU, 0);
+        return;
+    }
+    TaskResManageDavid* xpuTaskResMng = dynamic_cast<TaskResManageDavid*>(taskResMng);
+    if (xpuTaskResMng == nullptr) {
+        ADD_FAILURE() << "Unexpected task resource manager type";
+        (void)rtResetXpuDevice(RT_DEV_TYPE_DPU, 0);
+        return;
+    }
+    taskResMng->taskResHead_ = 7U;
+    taskResMng->taskResTail_ = 8U;
+
+    uint32_t pos = UINT32_MAX;
+    TaskInfo* task = nullptr;
+    EXPECT_EQ(xpuTaskResMng->AllocTaskInfoAndPos(2U, pos, &task), RT_ERROR_NONE);
+    EXPECT_EQ(pos, 0U);
+    EXPECT_EQ(taskResMng->GetResHead(), 0U);
+    EXPECT_EQ(taskResMng->GetResTail(), 2U);
+    EXPECT_EQ(taskResMng->GetPendingNum(), 2U);
+    EXPECT_FALSE(taskResMng->IsEmpty());
+    EXPECT_EQ(taskResMng->GetTaskInfo(1U), task);
+    EXPECT_TRUE(xpuTaskResMng->RecycleTaskInfo(pos, 2U));
+    EXPECT_TRUE(taskResMng->IsEmpty());
+
+    taskResMng->ResetTaskRes();
+    (void)rtResetXpuDevice(RT_DEV_TYPE_DPU, 0);
+}

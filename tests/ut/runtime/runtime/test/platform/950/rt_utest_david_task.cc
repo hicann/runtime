@@ -234,7 +234,7 @@ protected:
         TaskResManageDavid* taskResMang = ((TaskResManageDavid*)(static_cast<Stream*>(stream_)->taskResMang_));
         MOCKER_CPP_VIRTUAL(driver, &Driver::GetSqHead)
             .stubs()
-            .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(taskResMang->GetTaskPosTail()))
+            .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(taskResMang->GetResTail()))
             .will(returnValue(RT_ERROR_NONE));
     }
 
@@ -3188,11 +3188,11 @@ TEST_F(TaskTestDavid, CpuKernelLaunchWithDeviceArgsSendFail)
     argsInfo.argsSize = sizeof(uint64_t);
     argsInfo.isNoNeedH2DCopy = 1U;
     TaskResManageDavid* const taskRes = static_cast<TaskResManageDavid*>(stream_->taskResMang_);
-    const uint32_t tail = taskRes->GetTaskPosTail();
+    const uint32_t tail = taskRes->GetResTail();
     MOCKER(DavidSendTask).stubs().will(returnValue(RT_ERROR_DRV_ERR));
 
     EXPECT_EQ(StreamLaunchCpuKernel(&name, 1U, &argsInfo, stream_, RT_KERNEL_DEFAULT), RT_ERROR_DRV_ERR);
-    EXPECT_EQ(taskRes->GetTaskPosTail(), tail);
+    EXPECT_EQ(taskRes->GetResTail(), tail);
 }
 
 TEST_F(TaskTestDavid, KernelLaunchExForAicpuStream)

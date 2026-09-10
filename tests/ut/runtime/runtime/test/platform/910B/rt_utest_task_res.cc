@@ -174,6 +174,57 @@ TEST_F(TaskResManageTest, TestAllocTaskResIdFailed)
     delete taskResMng;
 }
 
+TEST_F(TaskResManageTest, TaskResStateAndLookupThroughBasePointer)
+{
+    TaskRes taskRes[8] = {};
+    TaskResManage taskResManager;
+    TaskResManage* taskResMng = &taskResManager;
+    taskResMng->taskPoolNum_ = 8U;
+    taskResMng->taskRes_ = taskRes;
+
+    uint16_t head = UINT16_MAX;
+    uint16_t tail = UINT16_MAX;
+    EXPECT_EQ(taskResMng->GetResHead(), 0U);
+    EXPECT_EQ(taskResMng->GetResTail(), 0U);
+    taskResMng->GetHeadTail(head, tail);
+    EXPECT_EQ(head, 0U);
+    EXPECT_EQ(tail, 0U);
+    EXPECT_TRUE(taskResMng->IsEmpty());
+    EXPECT_EQ(taskResMng->GetPendingNum(), 0U);
+
+    taskResMng->taskResHead_ = 6U;
+    taskResMng->taskResTail_ = 2U;
+    taskRes[6U].taskInfo.id = 14U;
+    taskRes[7U].taskInfo.id = UINT16_MAX;
+    taskRes[0U].taskInfo.id = 16U;
+    taskRes[1U].taskInfo.id = 17U;
+
+    taskResMng->GetHeadTail(head, tail);
+    EXPECT_EQ(head, 6U);
+    EXPECT_EQ(tail, 2U);
+    EXPECT_FALSE(taskResMng->IsEmpty());
+    EXPECT_EQ(taskResMng->GetPendingNum(), 4U);
+    EXPECT_EQ(taskResMng->GetTaskInfo(14U), &taskRes[6U].taskInfo);
+    EXPECT_EQ(taskResMng->GetTaskInfo(15U), nullptr);
+    EXPECT_EQ(taskResMng->GetTaskInfo(22U), nullptr);
+
+    taskRes[6U].taskInfo.id = 22U;
+    EXPECT_EQ(taskResMng->GetTaskInfo(14U), nullptr);
+    EXPECT_EQ(taskResMng->GetTaskInfo(22U), &taskRes[6U].taskInfo);
+
+    taskResMng->RecycleResHead();
+    EXPECT_EQ(taskResMng->GetResHead(), 7U);
+    EXPECT_EQ(taskResMng->GetPendingNum(), 3U);
+
+    taskResMng->taskResHead_ = 2U;
+    taskResMng->taskResTail_ = 1U;
+    EXPECT_EQ(taskResMng->GetPendingNum(), 7U);
+
+    taskResMng->ResetTaskRes();
+    EXPECT_TRUE(taskResMng->IsEmpty());
+    EXPECT_EQ(taskResMng->GetPendingNum(), 0U);
+}
+
 TEST_F(TaskResManageTest, TestEventRecordWithStreamFastLaunch)
 {
     rtError_t error;

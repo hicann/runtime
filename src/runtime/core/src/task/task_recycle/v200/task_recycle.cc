@@ -95,14 +95,14 @@ static rtError_t SendingProcReport(const Stream* const stm, const bool limited, 
 {
     if (!stm->GetNeedRecvCqeFlag()) {
         if (!stm->IsExistCqe()) {
-            const uint32_t taskHead = ((dynamic_cast<TaskResManageDavid*>(stm->taskResMang_)))->GetTaskPosHead();
+            const uint32_t taskHead = stm->taskResMang_->GetResHead();
             return FinishedTaskReclaim(stm, limited, static_cast<uint16_t>(taskHead), sqHead);
         }
     }
 
     ProcLogicCqUntilEmpty(stm);
     // process finish task by sqHead
-    const uint32_t taskHead = (dynamic_cast<TaskResManageDavid*>(stm->taskResMang_))->GetTaskPosHead();
+    const uint32_t taskHead = stm->taskResMang_->GetResHead();
     return FinishedTaskReclaim(stm, limited, static_cast<uint16_t>(taskHead), sqHead);
 }
 
@@ -112,19 +112,19 @@ static rtError_t SendingProcReport(const Stream* const stm, const bool limited, 
 // Do task recycling every 64 tasks send
 rtError_t TryRecycleTask(Stream* const stm)
 {
-    TaskResManageDavid* taskResMang = dynamic_cast<TaskResManageDavid*>(stm->taskResMang_);
+    TaskResManageDavid* const taskResMang = dynamic_cast<TaskResManageDavid*>(stm->taskResMang_);
     const rtError_t deviceStatus = stm->Device_()->GetDeviceStatus();
     const rtError_t streamAbortStatus = stm->GetAbortStatus();
     COND_RETURN_ERROR(
         (deviceStatus == RT_ERROR_DEVICE_TASK_ABORT), deviceStatus,
         "stream is in device task abort status, try recycle task fail, stream_id=%d, task_head=%u,"
         "task_tail=%u, pendingNum=%hu.",
-        stm->Id_(), taskResMang->GetTaskPosHead(), taskResMang->GetTaskPosTail(), taskResMang->GetPendingNum());
+        stm->Id_(), taskResMang->GetResHead(), taskResMang->GetResTail(), taskResMang->GetPendingNum());
     COND_RETURN_ERROR(
         (streamAbortStatus == RT_ERROR_STREAM_ABORT), streamAbortStatus,
         "stream is in stream abort status, try recycle task fail, stream_id=%d, task_head=%u,"
         "task_tail=%u, pendingNum=%hu.",
-        stm->Id_(), taskResMang->GetTaskPosHead(), taskResMang->GetTaskPosTail(), taskResMang->GetPendingNum());
+        stm->Id_(), taskResMang->GetResHead(), taskResMang->GetResTail(), taskResMang->GetPendingNum());
 
     // recycle every 64 task
     if (stm->GetBindFlag() || stm->IsBindDvppGrp() ||
@@ -144,7 +144,7 @@ rtError_t TryRecycleTask(Stream* const stm)
         if (stm->GetRecycleFlag()) {
             (void)SendingProcReport(stm, true, sqHead);
             RT_LOG(RT_LOG_INFO, "streamId=%d, sqHead=%hu.", stm->Id_(), sqHead);
-            if (taskResMang->GetTaskPosHead() == sqHead) {
+            if (taskResMang->GetResHead() == sqHead) {
                 stm->SetRecycleFlag(false);
             }
             stm->StreamSyncUnLock();
@@ -154,7 +154,7 @@ rtError_t TryRecycleTask(Stream* const stm)
         if (head != sqHead) {
             (void)SendingProcReport(stm, true, sqHead);
             RT_LOG(RT_LOG_INFO, "streamId=%d, tail=%hu, sqHead=%hu.", stm->Id_(), tail, sqHead);
-            if (taskResMang->GetTaskPosHead() != sqHead) {
+            if (taskResMang->GetResHead() != sqHead) {
                 stm->SetRecycleFlag(true);
             }
         }
@@ -179,7 +179,7 @@ rtError_t TaskReclaimByStream(const Stream* const stm, const bool limited, const
 
     uint16_t head = 0U;
     uint16_t tail = 0U;
-    (dynamic_cast<TaskResManageDavid*>(stm->taskResMang_))->GetHeadTail(head, tail);
+    stm->taskResMang_->GetHeadTail(head, tail);
 
     rtError_t error;
     if (unlikely(stm->GetFailureMode() == ABORT_ON_FAILURE) || stm->isForceRecycle_) {
@@ -251,11 +251,11 @@ void RecycleModelBindStreamAllTask(Stream* const stm, const bool cleanFlag)
     uint16_t head = 0U;
     uint16_t tail = 0U;
     stm->StreamSyncLock();
-    (dynamic_cast<TaskResManageDavid*>(stm->taskResMang_))->GetHeadTail(head, tail);
+    stm->taskResMang_->GetHeadTail(head, tail);
     RT_LOG(RT_LOG_INFO, "stream_id=%d, head=%hu, tail=%hu.", stm->Id_(), head, tail);
     TaskInfo* nextTask = nullptr;
     for (uint32_t i = head; i < tail;) {
-        nextTask = (dynamic_cast<TaskResManageDavid*>(stm->taskResMang_))->GetTaskInfo(i);
+        nextTask = stm->taskResMang_->GetTaskInfo(i);
         if (unlikely(nextTask == nullptr)) {
             i++;
             continue;
@@ -267,7 +267,7 @@ void RecycleModelBindStreamAllTask(Stream* const stm, const bool cleanFlag)
         i = static_cast<uint32_t>(nextTask->id) + nextTask->sqeNum;
     }
 
-    (dynamic_cast<TaskResManageDavid*>(stm->taskResMang_))->ResetTaskRes();
+    stm->taskResMang_->ResetTaskRes();
     stm->StreamSyncUnLock();
 }
 
@@ -279,8 +279,7 @@ rtError_t RecycleTaskBySqHead(Stream* const stm)
     COND_PROC(error != RT_ERROR_NONE, return error);
     COND_PROC((endTaskId == MAX_UINT32_NUM), return RT_ERROR_NONE);
     stm->SetExecuteEndTaskId(endTaskId);
-    return FinishedTaskReclaim(
-        stm, false, (dynamic_cast<TaskResManageDavid*>(stm->taskResMang_))->GetTaskPosHead(), sqHead);
+    return FinishedTaskReclaim(stm, false, stm->taskResMang_->GetResHead(), sqHead);
 }
 
 rtError_t RecycleTaskBySqHeadForRecycleThread(Stream* const stm)
@@ -293,9 +292,7 @@ rtError_t RecycleTaskBySqHeadForRecycleThread(Stream* const stm)
             stm->Device_()->Id_(), stm->Id_(), stm->GetLastTaskId(), stm->GetFailureMode());
         const uint32_t lastTaskId = stm->GetLastTaskId();
         stm->SetExecuteEndTaskId(static_cast<uint16_t>(lastTaskId));
-        return FinishedTaskReclaim(
-            stm, false, (dynamic_cast<TaskResManageDavid*>(stm->taskResMang_))->GetTaskPosHead(),
-            (dynamic_cast<TaskResManageDavid*>(stm->taskResMang_))->GetTaskPosTail());
+        return FinishedTaskReclaim(stm, false, stm->taskResMang_->GetResHead(), stm->taskResMang_->GetResTail());
     }
 
     return RecycleTaskBySqHead(stm);
@@ -331,8 +328,8 @@ void RecycleThreadDoForStarsV2(Device* deviceInfo)
         COND_PROC(noProcessFlag || (stream.get()->Model_() != nullptr), stream.get()->SetThreadProcFlag(false);
                   stream.get()->StreamRecycleUnlock(); stream.reset(); continue);
 
-        COND_PROC((((dynamic_cast<TaskResManageDavid*>(stream.get()->taskResMang_))->IsEmpty()) ||
-                   (stream.get()->IsBindDvppGrp()) || (!stream.get()->IsSeparateSendAndRecycle())),
+        COND_PROC(((stream.get()->taskResMang_->IsEmpty()) || (stream.get()->IsBindDvppGrp()) ||
+                   (!stream.get()->IsSeparateSendAndRecycle())),
                   stream.get()->SetThreadProcFlag(false);
                   stream.get()->StreamRecycleUnlock(); stream.reset(); continue);
         ret = TaskReclaimForSeparatedStm(stream.get());

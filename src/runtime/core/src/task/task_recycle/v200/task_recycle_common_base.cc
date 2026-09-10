@@ -223,11 +223,10 @@ rtError_t AdjustRecycleTaskID(const Stream* const stm, const uint32_t endTaskId,
     const uint16_t nextPos = ((recyclePos + 1) % rtsqDepth);
     bool taskIsFinished = true;
     uint16_t nextTaskId = 0;
-    TaskResManageDavid* taskResMang = dynamic_cast<TaskResManageDavid*>(stm->taskResMang_);
-    if (taskResMang->GetTaskPosTail() != nextPos) {
-        TaskInfo* curentTaskInfo = taskResMang->GetTaskInfo(recyclePos);
+    if (stm->taskResMang_->GetResTail() != nextPos) {
+        TaskInfo* curentTaskInfo = stm->taskResMang_->GetTaskInfo(recyclePos);
         if ((curentTaskInfo != nullptr) && (curentTaskInfo->type == TS_TASK_TYPE_MEM_WAIT_VALUE)) {
-            TaskInfo* nextTaskInfo = taskResMang->GetTaskInfo(nextPos);
+            TaskInfo* nextTaskInfo = stm->taskResMang_->GetTaskInfo(nextPos);
             if ((nextTaskInfo != nullptr)) {
                 nextTaskId = nextTaskInfo->id;
                 if (nextTaskId == endTaskId) {
@@ -261,7 +260,7 @@ rtError_t FinishedTaskReclaim(const Stream* const stm, const bool limited, const
     }
 
     const uint32_t pos = (recycleHead == 0U) ? (stm->GetSqDepth() - 1U) : (recycleHead - 1U);
-    TaskInfo* const workTask = (dynamic_cast<TaskResManageDavid*>(stm->taskResMang_))->GetTaskInfo(pos);
+    TaskInfo* const workTask = stm->taskResMang_->GetTaskInfo(pos);
     if (workTask == nullptr) { // Released already.
         RT_LOG(RT_LOG_WARNING, "Get null task from stream_id=%u, pos=%u.", stm->Id_(), pos);
         return ret;
@@ -305,7 +304,7 @@ TaskInfo* GetTaskInfo(const Device* const dev, uint32_t streamId, uint32_t pos, 
     }
 
     if (recycleStm->taskResMang_ != nullptr) {
-        reportTask = (dynamic_cast<TaskResManageDavid*>(recycleStm->taskResMang_))->GetTaskInfo(pos);
+        reportTask = recycleStm->taskResMang_->GetTaskInfo(pos);
     }
     return reportTask;
 }

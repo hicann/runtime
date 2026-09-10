@@ -35,7 +35,11 @@ public:
     virtual void ResetTaskRes();
     TaskInfo* GetHeadTaskInfo() const;
     void RecycleResHead();
-    uint16_t GetResHead() const;
+    virtual uint16_t GetResHead() const;
+    virtual uint16_t GetResTail() const;
+    virtual void GetHeadTail(uint16_t& head, uint16_t& tail) const;
+    virtual bool IsEmpty() const;
+    virtual uint16_t GetPendingNum();
     virtual bool CreateTaskRes(Stream* stm);
     void ReleaseTaskResource(Stream* stm);
     void ReleaseHostStateOnExit();

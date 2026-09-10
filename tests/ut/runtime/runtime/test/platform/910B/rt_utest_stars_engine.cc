@@ -331,6 +331,30 @@ TEST_F(CloudV2StarsEngineTest, AddTaskToStream2)
     stream_->SetBindFlag(false);
 }
 
+TEST_F(CloudV2StarsEngineTest, RecycleSeparatedStreamAdvancesTaskResHead)
+{
+    TaskResManage* taskResMng = stream_->taskResMang_;
+    ASSERT_NE(taskResMng, nullptr);
+    ASSERT_NE(taskResMng->taskRes_, nullptr);
+    taskResMng->ResetTaskRes();
+
+    TaskInfo* task0 = taskResMng->AllocTaskInfoByTaskResId(stream_, 0U, 0U, TS_TASK_TYPE_NOP);
+    TaskInfo* task1 = taskResMng->AllocTaskInfoByTaskResId(stream_, 1U, 1U, TS_TASK_TYPE_NOP);
+    ASSERT_NE(task0, nullptr);
+    ASSERT_NE(task1, nullptr);
+    task0->pos = 0U;
+    task1->pos = 1U;
+
+    engine_->pendingNum_.Set(2U);
+    MOCKER_CPP(&TaskFactory::Recycle).stubs().will(returnValue(0));
+
+    EXPECT_EQ(engine_->RecycleSeparatedStmByFinishedId(stream_, 1U), RT_ERROR_NONE);
+    EXPECT_EQ(taskResMng->GetResHead(), 2U);
+    EXPECT_EQ(taskResMng->GetResTail(), 2U);
+    EXPECT_TRUE(taskResMng->IsEmpty());
+    EXPECT_EQ(engine_->GetPendingNum(), 0U);
+}
+
 TEST_F(CloudV2StarsEngineTest, SendTask)
 {
     rtError_t err = RT_ERROR_NONE;

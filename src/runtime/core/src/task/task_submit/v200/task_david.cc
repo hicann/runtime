@@ -286,8 +286,7 @@ rtError_t AllocAutoSplitTaskInfo(TaskInfo** taskInfo, Stream* const stm, uint32_
 bool NeedCascadeExpandStream(Stream* captureStm)
 {
     if (captureStm->taskResMang_ != nullptr) {
-        TaskResManageDavid* taskResMang = RtPtrToPtr<TaskResManageDavid*, TaskResManage*>(captureStm->taskResMang_);
-        return (static_cast<uint32_t>(taskResMang->GetTaskPosTail()) + CAPTURE_TASK_RESERVED_NUM) >=
+        return (static_cast<uint32_t>(captureStm->taskResMang_->GetResTail()) + CAPTURE_TASK_RESERVED_NUM) >=
                captureStm->GetSqDepth();
     }
     return (captureStm->GetCaptureSqeNum() + CAPTURE_TASK_RESERVED_NUM +
@@ -574,8 +573,7 @@ rtError_t CheckTaskCanSend(Stream* const stm)
         (streamAbortStatus == RT_ERROR_STREAM_ABORT), RT_ERROR_STREAM_ABORT_SEND_TASK_FAIL,
         "The stream %d is in abort state, device_id=%u.", stm->Id_(), stm->Device_()->Id_());
 
-    TaskResManageDavid* taskResManag = RtPtrToPtr<TaskResManageDavid*, TaskResManage*>(stm->taskResMang_);
-    if (unlikely(taskResManag == nullptr) && (!stm->IsSoftwareSqEnable()) && (!stm->IsAutoSplitSq())) {
+    if (unlikely(stm->taskResMang_ == nullptr) && (!stm->IsSoftwareSqEnable()) && (!stm->IsAutoSplitSq())) {
         RT_LOG(
             RT_LOG_WARNING, "device_id=%u stream_id=%d(flags=0x%x) does not support send task.", stm->Device_()->Id_(),
             stm->Id_(), stm->Flags());
