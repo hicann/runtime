@@ -54,6 +54,14 @@ rtError_t CtxStreamTaskClean(Context* const ctx)
     return error;
 }
 
+static bool IsContextOnDfxCapableDevice(Context* const ctx, const int32_t devId)
+{
+    if (!ContextManage::IsContextOnDevice(ctx, devId)) {
+        return false;
+    }
+    return ctx->Device_()->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DFX_FAST_RECOVER);
+}
+
 rtError_t DeviceTaskSendStop(const int32_t devId, const uint64_t timeRemain)
 {
     RT_LOG(RT_LOG_INFO, "DeviceStop[%u] start", devId);
@@ -61,7 +69,7 @@ rtError_t DeviceTaskSendStop(const int32_t devId, const uint64_t timeRemain)
     const uint64_t startTime = ClockGetTimeUs();
     const ReadProtect rp(&ContextDataManage::Instance().GetSetRwLock());
     for (Context* const ctx : ContextDataManage::Instance().GetSetObj()) {
-        COND_PROC(!ContextManage::IsContextOnDevice(ctx, devId), continue);
+        COND_PROC(!IsContextOnDfxCapableDevice(ctx, devId), continue);
         ctx->Device_()->SetDeviceStatus(RT_ERROR_DEVICE_TASK_ABORT);
         ctx->SetFailureError(RT_ERROR_DEVICE_TASK_ABORT);
         ctx->SetStreamsStatus(RT_ERROR_DEVICE_TASK_ABORT);
@@ -84,7 +92,7 @@ rtError_t DavidDeviceKill(const int32_t devId, const uint32_t op, const uint64_t
     uint64_t count = 0U;
     const ReadProtect rp(&ContextDataManage::Instance().GetSetRwLock());
     for (Context* const ctx : ContextDataManage::Instance().GetSetObj()) {
-        COND_PROC(!ContextManage::IsContextOnDevice(ctx, devId), continue);
+        COND_PROC(!IsContextOnDfxCapableDevice(ctx, devId), continue);
 
         uint32_t result = static_cast<uint32_t>(TS_ERROR_APP_QUEUE_FULL);
         while (result == static_cast<uint32_t>(TS_ERROR_APP_QUEUE_FULL)) {
@@ -134,7 +142,7 @@ rtError_t DavidDeviceQuery(const int32_t devId, const uint32_t op, const uint64_
     const uint64_t startTime = ClockGetTimeUs();
     const ReadProtect rp(&ContextDataManage::Instance().GetSetRwLock());
     for (Context* const ctx : ContextDataManage::Instance().GetSetObj()) {
-        COND_PROC(!ContextManage::IsContextOnDevice(ctx, devId), continue);
+        COND_PROC(!IsContextOnDfxCapableDevice(ctx, devId), continue);
         uint64_t count = 0U;
         uint32_t status = 0U;
         while (true) {
@@ -186,7 +194,7 @@ rtError_t DeviceTaskSendResume(const int32_t devId, const uint64_t timeRemain)
     const uint64_t startTime = ClockGetTimeUs();
     const ReadProtect rp(&ContextDataManage::Instance().GetSetRwLock());
     for (Context* const ctx : ContextDataManage::Instance().GetSetObj()) {
-        COND_PROC(!ContextManage::IsContextOnDevice(ctx, devId), continue);
+        COND_PROC(!IsContextOnDfxCapableDevice(ctx, devId), continue);
         dev = ctx->Device_();
         error = CtxStreamTaskClean(ctx);
         ERROR_RETURN(error, "ctx task clean fail, retCode=%#x.", error);
@@ -208,7 +216,7 @@ rtError_t DeviceTaskSendResume(const int32_t devId, const uint64_t timeRemain)
         (void)Runtime::Instance()->SetWatchDogDevStatus(dev, RT_DEVICE_STATUS_NORMAL);
     }
     for (Context* const ctx : ContextDataManage::Instance().GetSetObj()) {
-        COND_PROC(!ContextManage::IsContextOnDevice(ctx, devId), continue);
+        COND_PROC(!IsContextOnDfxCapableDevice(ctx, devId), continue);
         ctx->SetStreamsStatus(RT_ERROR_NONE);
         ctx->SetFailureError(RT_ERROR_NONE);
     }
