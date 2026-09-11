@@ -144,17 +144,6 @@
       }
     },
     {
-      "errClass": "runtime Errors",
-      "errTitle": "Execution_Error_Stream_Synchronize_Timeout",
-      "ErrCode": "EE1024",
-      "ErrMessage": "%s failed. Reason: AI CPU operator execution timed out on device %s. In addition, an OOM event occurred on the device within %s seconds.",
-      "Arglist": "func_name, devId, oom_window",
-      "suggestion": {
-        "Possible Cause": "1. The AI CPU operator may be stuck or fail to respond due to OOM. 2. For a GetNext operator, its preprocessing time may be too long. 3. For a custom operator, it contains an ultra-large loop in the implementation logic or its input and output shapes are too large. 4. The input and output shapes of a built-in operator are too large.",
-        "Solution": "1. Check the device memory usage, and reduce the memory occupied by the operator or free unused memory. 2. For a GetNext operator, check its preprocessing or use the aclrtSetOpExecuteTimeOut interface to adjust the timeout. 3. For a custom operator, ensure that the logic design is proper or modify the shape. 4. If the input and output shapes are too large, modify the shape or use the aclrtSetOpExecuteTimeOut interface to adjust the timeout."
-      }
-    },
-    {
       "errClass": "AI CPU Errors",
       "errTitle": "Invalid_Argument",
       "ErrCode": "E39001",
@@ -665,6 +654,17 @@
       "suggestion": {
         "Possible Cause": "N/A",
         "Solution": "For details about the troubleshooting method, search for the keyword \"EE1023\" on https://www.hiascend.com/document/."
+      }
+    },
+    {
+      "errClass": "RTS Errors",
+      "errTitle": "Execution_Error_Stream_Synchronize_Timeout",
+      "ErrCode": "EE1024",
+      "ErrMessage": "%s failed. Reason: AI CPU operator execution timed out on device %s. In addition, an OOM event occurred on the device within %s seconds.",
+      "Arglist": "func_name, devId, oom_window",
+      "suggestion": {
+        "Possible Cause": "1. The AI CPU operator may be stuck or fail to respond due to OOM. 2. For a GetNext operator, its preprocessing time may be too long. 3. For a custom operator, it contains an ultra-large loop in the implementation logic or its input and output shapes are too large. 4. The input and output shapes of a built-in operator are too large.",
+        "Solution": "1. Check the device memory usage, and reduce the memory occupied by the operator or free unused memory. 2. For a GetNext operator, check its preprocessing or use the aclrtSetOpExecuteTimeOut interface to adjust the timeout. 3. For a custom operator, ensure that the logic design is proper or modify the shape. 4. If the input and output shapes are too large, modify the shape or use the aclrtSetOpExecuteTimeOut interface to adjust the timeout."
       }
     },
     {
