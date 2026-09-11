@@ -20,7 +20,6 @@
 #include "utils/data_type_utils.h"
 
 namespace {
-constexpr uint32_t ACL_ERROR_INVALID_EXCEPTION_INFO = 0xFFFFFFFFU;
 constexpr char ACLRT_EXCEPTION_CALLBACK_REG_PREFIX[] = "__ACLRT_EXCEPTION_CALLBACK_REGISTER__:";
 
 std::string MakeExceptionCallbackRegName(rtTaskFailCallback callback)

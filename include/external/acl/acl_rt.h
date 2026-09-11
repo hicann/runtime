@@ -1294,6 +1294,7 @@ ACL_FUNC_VISIBILITY uint32_t aclrtGetErrorCodeFromExceptionInfo(const aclrtExcep
  * @param info [OUT]   dev args len of exception information
  *
  * @retval ACL_SUCCESS The function is successfully executed.
+ * @retval ACL_ERROR_INVALID_EXCEPTION_INFO The info pointer is NULL or the exception type is invalid.
  * @retval OtherValues Failure
  */
 ACL_FUNC_VISIBILITY aclError aclrtGetArgsFromExceptionInfo(
@@ -1307,6 +1308,7 @@ ACL_FUNC_VISIBILITY aclError aclrtGetArgsFromExceptionInfo(
  * @param info [OUT]   kernel func of exception information
  *
  * @retval ACL_SUCCESS The function is successfully executed.
+ * @retval ACL_ERROR_INVALID_EXCEPTION_INFO The info pointer is NULL.
  * @retval OtherValues Failure
  */
 ACL_FUNC_VISIBILITY aclError aclrtGetFuncHandleFromExceptionInfo(const aclrtExceptionInfo* info, aclrtFuncHandle* func);

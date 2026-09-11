@@ -63,6 +63,7 @@ typedef void* aclrtTaskGrp;
 
 static const int ACL_ERROR_NONE = 0;
 static const int ACL_SUCCESS = 0;
+static const int ACL_ERROR_INVALID_EXCEPTION_INFO = -1;
 
 static const int ACL_ERROR_INVALID_PARAM = 100000;
 static const int ACL_ERROR_UNINITIALIZE = 100001;
