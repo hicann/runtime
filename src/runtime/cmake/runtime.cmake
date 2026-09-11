@@ -620,6 +620,7 @@ macro(add_runtime_api_library target_name)
         $<TARGET_OBJECTS:runtime_platform_kirin>
         $<TARGET_OBJECTS:runtime_platform_others>
         $<TARGET_OBJECTS:runtime_platform_tiny>
+        $<TARGET_OBJECTS:runtime_platform_arch5162>
     )
 
     target_compile_definitions(${target_name} PRIVATE

@@ -15,6 +15,8 @@
 namespace cce {
 namespace runtime {
 
+REGISTER_PLATFORM_LIB_INFO(CHIP_5162A, "libruntime_v100.so");
+
 static const std::unordered_set<RtOptionalFeatureType> CHIP_5162A_FEATURE{
     RtOptionalFeatureType::RT_FEATURE_MODEL_ABORT,
     RtOptionalFeatureType::RT_FEATURE_MODEL_ABORT_USE_DEFAULT_STREAM,
