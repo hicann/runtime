@@ -644,24 +644,52 @@ TEST_F(UTEST_tensor_data_transfer, acltdtSendTensorV2_Device)
     EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
     dataset->blobs[0]->tdtType = ACL_TENSOR_DATA_TENSOR;
 
-    // SaveCtrlSharedPtrToVec中不分配内存，也不拷贝
-    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtMalloc).WillRepeatedly(Return(RT_ERROR_NONE));
-    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtMemcpy).WillRepeatedly(Return(RT_ERROR_NONE));
-    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtMemQueueEnQueueBuff(_, _, _, _))
-        .WillOnce(Return((ACL_ERROR_RT_QUEUE_FULL)))
-        .WillOnce(Return((ACL_ERROR_RT_INTERNAL_ERROR)))
-        .WillRepeatedly(Return((RT_ERROR_NONE)));
-    ret = acltdtSendTensorV2(handle, dataset, timeout);
-    EXPECT_EQ(ret, ACL_ERROR_RT_QUEUE_FULL);
-
-    ret = acltdtSendTensorV2(handle, dataset, timeout);
-    EXPECT_EQ(ret, ACL_ERROR_RT_INTERNAL_ERROR);
-
-    ret = acltdtSendTensorV2(handle, dataset, timeout);
-    EXPECT_EQ(ret, ACL_SUCCESS);
+    uint8_t deviceCtrl[128] = {};
+    auto& mock = MockFunctionTest::aclStubInstance();
+    EXPECT_CALL(mock, rtMalloc(_, _, _, _))
+        .Times(3)
+        .WillRepeatedly(DoAll(SetArgPointee<0>(static_cast<void*>(deviceCtrl)), Return(RT_ERROR_NONE)));
+    EXPECT_CALL(mock, rtMemcpy(deviceCtrl, _, _, _, RT_MEMCPY_HOST_TO_DEVICE))
+        .Times(3)
+        .WillRepeatedly(Return(RT_ERROR_NONE));
+    for (const auto result : {ACL_ERROR_RT_QUEUE_FULL, ACL_ERROR_RT_INTERNAL_ERROR, ACL_SUCCESS}) {
+        InSequence sequence;
+        EXPECT_CALL(mock, rtMemQueueEnQueueBuff(_, _, _, _)).WillOnce(Return(result));
+        EXPECT_CALL(mock, rtFree(deviceCtrl)).WillOnce(Return(RT_ERROR_NONE));
+        EXPECT_EQ(acltdtSendTensorV2(handle, dataset, timeout), result);
+    }
     acltdtDestroyDataItem(dataItem);
     acltdtDestroyChannel(handle);
     acltdtDestroyDataset(dataset);
+}
+
+TEST_F(UTEST_tensor_data_transfer, acltdtSendTensorV2_DeviceSecondCopyFails)
+{
+    acltdtChannelHandle handle(0, "test");
+    const int64_t dims[] = {1};
+    int32_t tensorData = 0;
+    acltdtDataItem item(
+        ACL_TENSOR_DATA_TENSOR, dims, 1, "[1]", ACL_INT32, "int32", std::shared_ptr<void>(&tensorData, [](void*) {}),
+        sizeof(tensorData));
+    acltdtDataset dataset;
+    dataset.memType = MEM_DEVICE;
+    dataset.blobs = {&item, &item};
+    uint8_t deviceCtrl[2][128] = {};
+    auto& mock = MockFunctionTest::aclStubInstance();
+    EXPECT_CALL(mock, rtMemQueueEnQueueBuff(_, _, _, _)).Times(0);
+
+    InSequence sequence;
+    EXPECT_CALL(mock, rtMalloc(_, _, _, _))
+        .WillOnce(DoAll(SetArgPointee<0>(static_cast<void*>(deviceCtrl[0])), Return(RT_ERROR_NONE)));
+    EXPECT_CALL(mock, rtMemcpy(deviceCtrl[0], _, _, _, RT_MEMCPY_HOST_TO_DEVICE)).WillOnce(Return(RT_ERROR_NONE));
+    EXPECT_CALL(mock, rtMalloc(_, _, _, _))
+        .WillOnce(DoAll(SetArgPointee<0>(static_cast<void*>(deviceCtrl[1])), Return(RT_ERROR_NONE)));
+    EXPECT_CALL(mock, rtMemcpy(deviceCtrl[1], _, _, _, RT_MEMCPY_HOST_TO_DEVICE))
+        .WillOnce(Return(ACL_ERROR_RT_PARAM_INVALID));
+    EXPECT_CALL(mock, rtFree(deviceCtrl[1])).WillOnce(Return(RT_ERROR_NONE));
+    EXPECT_CALL(mock, rtFree(deviceCtrl[0])).WillOnce(Return(RT_ERROR_NONE));
+
+    EXPECT_EQ(acltdtSendTensorV2(&handle, &dataset, 300), ACL_ERROR_RT_PARAM_INVALID);
 }
 
 TEST_F(UTEST_tensor_data_transfer, acltdtReceiveTensorV2)

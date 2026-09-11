@@ -492,14 +492,14 @@ aclError SaveCtrlSharedPtrToVec(
     void* ctrlPtr = ctrlSharedPtr.get();
     if (memType == MEM_DEVICE) {
         uint8_t* devPtr = nullptr;
+        ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(
+            rtMalloc(reinterpret_cast<void**>(&devPtr), qItem.len, RT_MEMORY_DEFAULT, acl::ACL_MODE_ID_U16), rtMalloc);
         std::shared_ptr<uint8_t> ctrlSharedDevPtr;
         ctrlSharedDevPtr.reset(devPtr, [](void* p) {
             if (p != nullptr) {
                 (void)rtFree(p);
             }
         });
-        ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(
-            rtMalloc(reinterpret_cast<void**>(&devPtr), qItem.len, RT_MEMORY_DEFAULT, acl::ACL_MODE_ID_U16), rtMalloc);
         ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(
             rtMemcpy(devPtr, qItem.len, ctrlPtr, qItem.len, RT_MEMCPY_HOST_TO_DEVICE), rtMemcpy);
         qItem.addr = devPtr;
