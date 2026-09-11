@@ -2,6 +2,10 @@
 
 This directory focuses on failure diagnosis, recovery, and degradation handling in fault-tolerant execution scenarios.
 
+## Sample List
+
+- [0_model_task_fallback](./0_model_task_fallback/README_en.md): Identifies model tasks, switches the main task to backup input, disables optional post-processing, and verifies the fallback output.
+
 ## Key Points
 
 - Recovery process after failure detection.
