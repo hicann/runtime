@@ -28,6 +28,7 @@
 #include "system_api_stub.h"
 #include "securec.h"
 #include "log_common.h"
+#include "log_file_util.h"
 
 #include <string>
 #include <cstring>
@@ -35,6 +36,7 @@
 #include <dlfcn.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <errno.h>
 
 using namespace std;
 using namespace testing;
@@ -43,6 +45,7 @@ using namespace testing;
  * exposed here so each test can reset the platform-info cache. */
 extern "C" {
 extern uint32_t g_platform;
+bool CheckPathValid(const char* ppath);
 }
 
 /* ──────────────────────────────────────────────────────────────────────── *
@@ -67,6 +70,8 @@ protected:
 
     virtual void SetUp()
     {
+        (void)memset_s(m_originCwd, sizeof(m_originCwd), 0, sizeof(m_originCwd));
+        (void)getcwd(m_originCwd, sizeof(m_originCwd));
         system("rm -rf " PATH_ROOT "/*");
         setenv("ASCEND_PROCESS_LOG_PATH", PATH_ROOT, 1);
         ResetErrLog();
@@ -75,8 +80,16 @@ protected:
     virtual void TearDown()
     {
         PlogFileMgrExit();
+        // restore cwd/env for subsequent cases even when a test aborts midway
+        if (m_originCwd[0] != '\0') {
+            (void)chdir(m_originCwd);
+        }
+        unsetenv("ASCEND_WORK_PATH");
+        setenv("ASCEND_PROCESS_LOG_PATH", PATH_ROOT, 1);
         GlobalMockObject::verify();
     }
+
+    char m_originCwd[TOOL_MAX_PATH] = {0};
 };
 
 static int CountFilesInDir(const char* dir)
@@ -256,6 +269,209 @@ TEST_F(PlogFileMgrCovUtest, FileMgrInit_WorkPathFallback)
     ASSERT_NE(nullptr, fl);
     EXPECT_NE(nullptr, strstr(fl->rootPath, "log"));
     // restore for subsequent tests
+    unsetenv("ASCEND_WORK_PATH");
+    setenv("ASCEND_PROCESS_LOG_PATH", PATH_ROOT, 1);
+}
+
+/* TC: PlogGetEnvPath ASCEND_WORK_PATH multi-level relative path (issue #937):
+ * a non-existent multi-level relative path must be created under the current
+ * working directory and host logs must fall under <cwd>/wk1/wk2/log, not the
+ * truncated <cwd>/wk1/log. */
+TEST_F(PlogFileMgrCovUtest, FileMgrInit_WorkPathMultiLevelRelative)
+{
+    unsetenv("ASCEND_PROCESS_LOG_PATH");
+    char tmpCwd[300] = {0};
+    char cmd[300] = {0};
+    (void)snprintf_s(tmpCwd, sizeof(tmpCwd), sizeof(tmpCwd) - 1U, "%s/plog_relpath_wk", PATH_ROOT);
+    (void)snprintf_s(cmd, sizeof(cmd), sizeof(cmd) - 1U, "rm -rf %s && mkdir -p %s", tmpCwd, tmpCwd);
+    EXPECT_EQ(0, system(cmd));
+    EXPECT_EQ(0, chdir(tmpCwd));
+
+    setenv("ASCEND_WORK_PATH", "wk1/wk2", 1);
+    EXPECT_EQ(LOG_SUCCESS, PlogFileMgrInit());
+    PlogFileMgrInfo* fl = PlogGetFileMgrInfo();
+    EXPECT_NE(nullptr, fl);
+    if (fl != nullptr) {
+        EXPECT_NE(nullptr, strstr(fl->rootPath, "/wk1/wk2/log"));
+    }
+
+    char msg[64] = "issue937 multi-level relative work path";
+    EXPECT_EQ(LOG_SUCCESS, PlogWriteHostLog(DEBUG_LOG, msg, (uint32_t)strlen(msg)));
+    char debugDir[300] = {0};
+    (void)snprintf_s(debugDir, sizeof(debugDir), sizeof(debugDir) - 1U, "%s/wk1/wk2/log/debug/plog", tmpCwd);
+    EXPECT_GE(CountFilesInDir(debugDir), 1);
+
+    // cleanup: exit file manager, restore cwd and env; TearDown enforces the
+    // same restoration even if a check above aborts the test
+    PlogFileMgrExit();
+    unsetenv("ASCEND_WORK_PATH");
+    setenv("ASCEND_PROCESS_LOG_PATH", PATH_ROOT, 1);
+    EXPECT_EQ(0, chdir(m_originCwd));
+    (void)snprintf_s(cmd, sizeof(cmd), sizeof(cmd) - 1U, "rm -rf %s", tmpCwd);
+    (void)system(cmd);
+}
+
+/* TC: LogMkdirRecur creates a non-existent multi-level relative path under
+ * the current working directory, level by level, and keeps the absolute-path
+ * behaviour unchanged. */
+TEST_F(PlogFileMgrCovUtest, LogMkdirRecur_RelativeMultiLevel)
+{
+    char tmpCwd[300] = {0};
+    char cmd[300] = {0};
+    (void)snprintf_s(tmpCwd, sizeof(tmpCwd), sizeof(tmpCwd) - 1U, "%s/plog_mkdir_recur", PATH_ROOT);
+    (void)snprintf_s(cmd, sizeof(cmd), sizeof(cmd) - 1U, "rm -rf %s && mkdir -p %s", tmpCwd, tmpCwd);
+    EXPECT_EQ(0, system(cmd));
+    EXPECT_EQ(0, chdir(tmpCwd));
+
+    EXPECT_EQ(SUCCESS, LogMkdirRecur("mr1/mr2/mr3"));
+    struct stat st = {0};
+    EXPECT_EQ(0, stat("mr1/mr2/mr3", &st));
+    EXPECT_TRUE(S_ISDIR(st.st_mode));
+
+    char absDir[300] = {0};
+    (void)snprintf_s(absDir, sizeof(absDir), sizeof(absDir) - 1U, "%s/abs1/abs2", tmpCwd);
+    EXPECT_EQ(SUCCESS, LogMkdirRecur(absDir));
+    EXPECT_EQ(0, stat(absDir, &st));
+    EXPECT_TRUE(S_ISDIR(st.st_mode));
+
+    // cleanup (also enforced by TearDown)
+    EXPECT_EQ(0, chdir(m_originCwd));
+    (void)snprintf_s(cmd, sizeof(cmd), sizeof(cmd) - 1U, "rm -rf %s", tmpCwd);
+    (void)system(cmd);
+}
+
+/* TC: GetValidPath ENOENT fallback (LogBuildAbsolutePath): rebuilds the full
+ * absolute path without dropping components, copies absolute paths as-is,
+ * rejects paths containing ".." and oversize cwd+path combinations instead of
+ * silently truncating them. ToolRealPath/CheckPathValid are mocked so the
+ * fallback branches are reached without racing on a deleted directory. */
+TEST_F(PlogFileMgrCovUtest, GetValidPath_EnoentFallback)
+{
+    char path[TOOL_MAX_PATH] = {0};
+    char validPath[TOOL_MAX_PATH] = {0};
+    char expect[TOOL_MAX_PATH] = {0};
+
+    // relative path fallback: validPath == <cwd>/relx
+    (void)snprintf_s(path, sizeof(path), sizeof(path) - 1U, "relx");
+    errno = ENOENT;
+    MOCKER(CheckPathValid).stubs().will(returnValue(true));
+    MOCKER(ToolRealPath).stubs().will(returnValue(SYS_ERROR));
+    EXPECT_EQ(SYS_OK, GetValidPath(path, (int32_t)sizeof(path), validPath, (int32_t)sizeof(validPath)));
+    GlobalMockObject::reset();
+    char cwd[TOOL_MAX_PATH] = {0};
+    EXPECT_NE(nullptr, getcwd(cwd, sizeof(cwd)));
+    (void)snprintf_s(expect, sizeof(expect), sizeof(expect) - 1U, "%s/relx", cwd);
+    EXPECT_STREQ(expect, validPath);
+
+    // absolute path fallback: copied as-is
+    (void)snprintf_s(path, sizeof(path), sizeof(path) - 1U, "%s/absfb", PATH_ROOT);
+    errno = ENOENT;
+    MOCKER(CheckPathValid).stubs().will(returnValue(true));
+    MOCKER(ToolRealPath).stubs().will(returnValue(SYS_ERROR));
+    EXPECT_EQ(SYS_OK, GetValidPath(path, (int32_t)sizeof(path), validPath, (int32_t)sizeof(validPath)));
+    GlobalMockObject::reset();
+    EXPECT_STREQ(path, validPath);
+
+    // path containing a ".." component is rejected
+    (void)snprintf_s(path, sizeof(path), sizeof(path) - 1U, "a/../b");
+    errno = ENOENT;
+    MOCKER(CheckPathValid).stubs().will(returnValue(true));
+    MOCKER(ToolRealPath).stubs().will(returnValue(SYS_ERROR));
+    EXPECT_EQ(SYS_ERROR, GetValidPath(path, (int32_t)sizeof(path), validPath, (int32_t)sizeof(validPath)));
+    GlobalMockObject::reset();
+
+    // "a..b" is a normal component, not a parent-directory reference
+    (void)snprintf_s(path, sizeof(path), sizeof(path) - 1U, "a..b");
+    errno = ENOENT;
+    MOCKER(CheckPathValid).stubs().will(returnValue(true));
+    MOCKER(ToolRealPath).stubs().will(returnValue(SYS_ERROR));
+    EXPECT_EQ(SYS_OK, GetValidPath(path, (int32_t)sizeof(path), validPath, (int32_t)sizeof(validPath)));
+    GlobalMockObject::reset();
+    (void)snprintf_s(expect, sizeof(expect), sizeof(expect) - 1U, "%s/a..b", cwd);
+    EXPECT_STREQ(expect, validPath);
+
+    // oversize cwd+path is rejected instead of silently truncated
+    (void)memset_s(path, sizeof(path), 'a', TOOL_MAX_PATH - 6U);
+    errno = ENOENT;
+    MOCKER(CheckPathValid).stubs().will(returnValue(true));
+    MOCKER(ToolRealPath).stubs().will(returnValue(SYS_ERROR));
+    EXPECT_EQ(SYS_ERROR, GetValidPath(path, (int32_t)sizeof(path), validPath, (int32_t)sizeof(validPath)));
+    GlobalMockObject::reset();
+}
+
+/* TC: ASCEND_WORK_PATH as a non-existent multi-level absolute path is created
+ * and logs fall under the configured path. */
+TEST_F(PlogFileMgrCovUtest, FileMgrInit_WorkPathAbsoluteMultiLevel)
+{
+    unsetenv("ASCEND_PROCESS_LOG_PATH");
+    char absRoot[300] = {0};
+    (void)snprintf_s(absRoot, sizeof(absRoot), sizeof(absRoot) - 1U, "%s/plog_abspath_wk/wk1/wk2", PATH_ROOT);
+    setenv("ASCEND_WORK_PATH", absRoot, 1);
+    EXPECT_EQ(LOG_SUCCESS, PlogFileMgrInit());
+    PlogFileMgrInfo* fl = PlogGetFileMgrInfo();
+    EXPECT_NE(nullptr, fl);
+    if (fl != nullptr) {
+        EXPECT_NE(nullptr, strstr(fl->rootPath, "/plog_abspath_wk/wk1/wk2/log"));
+    }
+
+    // cleanup (also enforced by TearDown)
+    PlogFileMgrExit();
+    unsetenv("ASCEND_WORK_PATH");
+    setenv("ASCEND_PROCESS_LOG_PATH", PATH_ROOT, 1);
+}
+
+/* TC: ASCEND_WORK_PATH longer than MAX_FILEDIR_LEN (255) must be rejected
+ * instead of being silently truncated into a wrong rootPath; the manager
+ * falls back to the default home path. The overlong directory is created in
+ * advance so that CheckPathValid/realpath succeed and the truncation point
+ * of PlogGetEnvPath is actually reached. */
+TEST_F(PlogFileMgrCovUtest, FileMgrInit_WorkPathTooLongFallbackDefault)
+{
+    unsetenv("ASCEND_PROCESS_LOG_PATH");
+    // PATH_ROOT(38) + "/toolong_" + 240*'a' = 287 bytes > MAX_FILEDIR_LEN(255)
+    char longRoot[TOOL_MAX_PATH] = {0};
+    char cmd[TOOL_MAX_PATH] = {0};
+    (void)snprintf_s(longRoot, sizeof(longRoot), sizeof(longRoot) - 1U, "%s/toolong_", PATH_ROOT);
+    (void)memset_s(longRoot + strlen(longRoot), sizeof(longRoot) - strlen(longRoot), 'a', 240U);
+    (void)snprintf_s(cmd, sizeof(cmd), sizeof(cmd) - 1U, "mkdir -p %s", longRoot);
+    EXPECT_EQ(0, system(cmd));
+    setenv("ASCEND_WORK_PATH", longRoot, 1);
+
+    EXPECT_EQ(LOG_SUCCESS, PlogFileMgrInit());
+    PlogFileMgrInfo* fl = PlogGetFileMgrInfo();
+    EXPECT_NE(nullptr, fl);
+    if (fl != nullptr) {
+        EXPECT_NE(nullptr, strstr(fl->rootPath, "ascend"));
+        EXPECT_EQ(nullptr, strstr(fl->rootPath, "toolong_"));
+    }
+
+    // cleanup (also enforced by TearDown)
+    PlogFileMgrExit();
+    unsetenv("ASCEND_WORK_PATH");
+    setenv("ASCEND_PROCESS_LOG_PATH", PATH_ROOT, 1);
+    (void)snprintf_s(cmd, sizeof(cmd), sizeof(cmd) - 1U, "rm -rf %s", longRoot);
+    (void)system(cmd);
+}
+
+/* TC: ASCEND_WORK_PATH within MAX_FILEDIR_LEN keeps using the env path. */
+TEST_F(PlogFileMgrCovUtest, FileMgrInit_WorkPathNearLimitAccepted)
+{
+    unsetenv("ASCEND_PROCESS_LOG_PATH");
+    // PATH_ROOT(38) + "/ok_" + 190*'b' = 232 bytes, plus "/log/" fits 255
+    char nearRoot[TOOL_MAX_PATH] = {0};
+    (void)snprintf_s(nearRoot, sizeof(nearRoot), sizeof(nearRoot) - 1U, "%s/ok_", PATH_ROOT);
+    (void)memset_s(nearRoot + strlen(nearRoot), sizeof(nearRoot) - strlen(nearRoot), 'b', 190U);
+    setenv("ASCEND_WORK_PATH", nearRoot, 1);
+
+    EXPECT_EQ(LOG_SUCCESS, PlogFileMgrInit());
+    PlogFileMgrInfo* fl = PlogGetFileMgrInfo();
+    EXPECT_NE(nullptr, fl);
+    if (fl != nullptr) {
+        EXPECT_NE(nullptr, strstr(fl->rootPath, "/ok_"));
+    }
+
+    // cleanup (also enforced by TearDown)
+    PlogFileMgrExit();
     unsetenv("ASCEND_WORK_PATH");
     setenv("ASCEND_PROCESS_LOG_PATH", PATH_ROOT, 1);
 }

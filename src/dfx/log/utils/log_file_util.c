@@ -42,7 +42,13 @@ LogRt LogMkdirRecur(const char* fullPath)
             continue;
         }
         char nextDir[MAX_FILEDIR_LEN + 1U] = {0};
-        int32_t ret = snprintf_s(nextDir, MAX_FILEDIR_LEN + 1U, MAX_FILEDIR_LEN, "/%s", token);
+        int32_t ret;
+        // relative path: create the first level without a leading separator, under cwd
+        if ((path[0] == '\0') && (fullPath[0] != FILE_SEPARATOR[0])) {
+            ret = snprintf_s(nextDir, MAX_FILEDIR_LEN + 1U, MAX_FILEDIR_LEN, "%s", token);
+        } else {
+            ret = snprintf_s(nextDir, MAX_FILEDIR_LEN + 1U, MAX_FILEDIR_LEN, "/%s", token);
+        }
         if (ret == -1) {
             SELF_LOG_ERROR("copy data failed, strerr=%s.", strerror(ToolGetErrorCode()));
             err = STR_COPY_FAILED;
@@ -151,6 +157,66 @@ STATIC bool CheckPathValid(const char* ppath)
     return false;
 }
 
+/**
+ * @brief       : check whether a path contains a parent-directory ("..") component
+ * @param [in]  : path    path to check
+ * @return      : true: contains; false: not
+ */
+STATIC bool LogPathHasParentDir(const char* path)
+{
+    const char* seg = path;
+    const char* cur = path;
+    while (*cur != '\0') {
+        if (*cur == FILE_SEPARATOR[0]) {
+            if (((size_t)(cur - seg) == 2U) && (seg[0] == '.') && (seg[1] == '.')) {
+                return true;
+            }
+            seg = cur + 1;
+        }
+        cur++;
+    }
+    return (((size_t)(cur - seg) == 2U) && (seg[0] == '.') && (seg[1] == '.'));
+}
+
+/**
+ * @brief       : build the full absolute path for a path whose realpath failed
+ *                with ENOENT; glibc realpath leaves only the resolved prefix in
+ *                the resolved buffer and drops the trailing components, so the
+ *                absolute path is rebuilt here to keep every component.
+ *                The rebuilt path is not canonicalized like realpath does
+ *                (symlinks are not resolved), so callers must not compare it
+ *                with realpath-style canonical paths.
+ * @param [in]  : path          trimmed path
+ * @param [out] : validPath     buffer to save the absolute path
+ * @param [in]  : validPathLen  length of validPath
+ * @return      : SYS_OK: succeed; SYS_ERROR: failed
+ */
+STATIC int32_t LogBuildAbsolutePath(const char* path, char* validPath, int32_t validPathLen)
+{
+    char cwd[TOOL_MAX_PATH] = {0};
+    int32_t ret;
+    if (path[0] == FILE_SEPARATOR[0]) {
+        // snprintf_s returns -1 on truncation, so an oversize path is rejected
+        ret = snprintf_s(validPath, (size_t)validPathLen, (size_t)validPathLen - 1U, "%s", path);
+        if (ret == -1) {
+            SELF_LOG_WARN("path is too long, length=%d.", (int32_t)strlen(path));
+            return SYS_ERROR;
+        }
+        return SYS_OK;
+    }
+
+    if (getcwd(cwd, sizeof(cwd)) == NULL) {
+        SELF_LOG_WARN("can not get cwd, strerr=%s.", strerror(ToolGetErrorCode()));
+        return SYS_ERROR;
+    }
+    ret = snprintf_s(validPath, (size_t)validPathLen, (size_t)validPathLen - 1U, "%s%s%s", cwd, FILE_SEPARATOR, path);
+    if (ret == -1) {
+        SELF_LOG_WARN("cwd plus path is too long, cwdLen=%d, pathLen=%d.", (int32_t)strlen(cwd), (int32_t)strlen(path));
+        return SYS_ERROR;
+    }
+    return SYS_OK;
+}
+
 int32_t GetValidPath(char* path, int32_t pathLen, char* validPath, int32_t validPathLen)
 {
     if ((path == NULL) || (validPath == NULL) || (validPathLen < TOOL_MAX_PATH)) {
@@ -162,9 +228,20 @@ int32_t GetValidPath(char* path, int32_t pathLen, char* validPath, int32_t valid
     }
 
     LogStrTrimEnd(path, pathLen);
-    if ((ToolRealPath(path, validPath, validPathLen) != SYS_OK) && (ToolGetErrorCode() != ENOENT)) {
-        SELF_LOG_WARN("can not get realpath, file=%s, strerr=%s.", path, strerror(ToolGetErrorCode()));
-        return SYS_ERROR;
+    if (ToolRealPath(path, validPath, validPathLen) != SYS_OK) {
+        if (ToolGetErrorCode() != ENOENT) {
+            SELF_LOG_WARN("can not get realpath, file=%s, strerr=%s.", path, strerror(ToolGetErrorCode()));
+            return SYS_ERROR;
+        }
+        if (LogPathHasParentDir(path)) {
+            SELF_LOG_WARN("path %s contains \"..\" and cannot be canonicalized, refuse to build absolute path.", path);
+            return SYS_ERROR;
+        }
+        SELF_LOG_INFO("path %s does not exist, build absolute path directly.", path);
+        if (LogBuildAbsolutePath(path, validPath, validPathLen) != SYS_OK) {
+            SELF_LOG_WARN("build absolute path failed, file=%s.", path);
+            return SYS_ERROR;
+        }
     }
     return SYS_OK;
 }
