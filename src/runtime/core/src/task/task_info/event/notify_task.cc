@@ -110,7 +110,6 @@ rtError_t NotifyRecordTaskInit(
 
 void DoCompleteSuccessForNotifyRecordTask(TaskInfo* taskInfo, const uint32_t devId)
 {
-    UNUSED(devId);
     if (Runtime::Instance()->ChipIsHaveStars() && (taskInfo->bindFlag == 0U)) {
         NotifyRecordTaskInfo* notifyRecord = &(taskInfo->u.notifyrecordTask);
         Stream* const stream = taskInfo->stream;
@@ -121,6 +120,7 @@ void DoCompleteSuccessForNotifyRecordTask(TaskInfo* taskInfo, const uint32_t dev
             notifyRecord->notifyId, stream->Id_(), taskInfo->id, stream->GetSqId(), stream->Device_()->Id_(),
             notifyRecord->uInfo.singleBitNtfyInfo.isIpc, notifyRecord->deviceId);
     }
+    DoCompleteSuccess(taskInfo, devId);
 }
 
 rtError_t NotifyResetTaskInit(
