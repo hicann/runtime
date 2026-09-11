@@ -179,6 +179,7 @@ rtError_t StreamCmoAddrTaskLaunch(
     COND_PROC_RETURN_ERROR_MSG_INNER(cmoAddrTask == nullptr, error, stm->StreamUnLock();
                                      , "Failed to allocate task, stream_id=%d, retCode=%#x.", stm->Id_(),
                                      static_cast<uint32_t>(error));
+    ScopeGuard tskErrRecycle(errRecycle);
     pos = cmoAddrTask->id;
     dstStm = cmoAddrTask->stream;
     RtDavidStarsMemcpySqe sdmaCmoSqe = {};
@@ -202,7 +203,6 @@ rtError_t StreamCmoAddrTaskLaunch(
                 static_cast<uint32_t>(error));
         }
     }
-    ScopeGuard tskErrRecycle(errRecycle);
     (void)CmoAddrTaskInit(cmoAddrTask, davidCmoAddrInfo, cmoOpCode);
     cmoAddrTask->stmArgPos = static_cast<DavidStream*>(dstStm)->GetArgPos();
     error = DavidSendTask(cmoAddrTask, dstStm);
