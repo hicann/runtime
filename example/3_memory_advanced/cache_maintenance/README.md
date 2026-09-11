@@ -2,6 +2,10 @@
 
 本目录聚焦缓存维护、一致性控制以及相关性能影响分析主题。
 
+## 样例列表
+
+- [0_prefetch_strategy_comparison](./0_prefetch_strategy_comparison/README.md)：对等价工作集分别执行直接和描述符式预取，并验证计算结果一致。
+
 ## 建议关注
 
 - 缓存刷新与一致性相关接口或机制。

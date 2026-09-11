@@ -2,6 +2,10 @@
 
 This directory focuses on cache maintenance, consistency control, and related performance impact analysis topics.
 
+## Samples
+
+- [0_prefetch_strategy_comparison](./0_prefetch_strategy_comparison/README_en.md): Applies direct and descriptor-based prefetch to equivalent worksets and verifies identical computation results.
+
 ## Key Points
 
 - Cache flush and consistency-related interfaces or mechanisms.
