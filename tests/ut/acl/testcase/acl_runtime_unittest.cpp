@@ -2882,7 +2882,7 @@ TEST_F(UTEST_ACL_Runtime, aclrtGetArgsFromExceptionInfo_failed_with_invalid_exce
     // 测试 RT_EXCEPTION_INVALID (0) 类型
     exceptionInfo.expandInfo.type = RT_EXCEPTION_INVALID;
     auto ret = aclrtGetArgsFromExceptionInfo(&exceptionInfo, &devArgs, &devArgsLen);
-    EXPECT_EQ(ret, static_cast<aclError>(0xFFFFFFFFU)); // ACL_ERROR_INVALID_EXCEPTION_INFO
+    EXPECT_EQ(ret, static_cast<aclError>(ACL_ERROR_INVALID_EXCEPTION_INFO));
 
     // 测试 RT_EXCEPTION_UB 类型
     exceptionInfo.expandInfo.type = RT_EXCEPTION_UB;
@@ -9246,9 +9246,8 @@ TEST_F(UTEST_ACL_Runtime, aclrtGetArgsFromExceptionInfo)
 {
     void* devArgs = nullptr;
     uint32_t devArgsLen = 0;
-    const uint32_t ACL_ERROR_INVALID_EXCEPTION_INFO = 0xFFFFFFFFU;
     auto ret = aclrtGetArgsFromExceptionInfo(nullptr, &devArgs, &devArgsLen);
-    EXPECT_EQ(ret, ACL_ERROR_INVALID_EXCEPTION_INFO);
+    EXPECT_EQ(ret, static_cast<aclError>(ACL_ERROR_INVALID_EXCEPTION_INFO));
 
     aclrtExceptionInfo exceptionInfo;
     (void)memset_s(&exceptionInfo, sizeof(aclrtExceptionInfo), 0, sizeof(aclrtExceptionInfo));
@@ -9286,10 +9285,9 @@ TEST_F(UTEST_ACL_Runtime, aclrtGetFuncHandleFromExceptionInfo)
 {
     aclrtExceptionInfo info;
     aclrtFuncHandle func;
-    const uint32_t ACL_ERROR_INVALID_EXCEPTION_INFO = 0xFFFFFFFFU;
 
     auto ret = aclrtGetFuncHandleFromExceptionInfo(nullptr, &func);
-    EXPECT_EQ(ret, ACL_ERROR_INVALID_EXCEPTION_INFO);
+    EXPECT_EQ(ret, static_cast<aclError>(ACL_ERROR_INVALID_EXCEPTION_INFO));
 
     ret = aclrtGetFuncHandleFromExceptionInfo(&info, &func);
     EXPECT_EQ(ret, ACL_SUCCESS);

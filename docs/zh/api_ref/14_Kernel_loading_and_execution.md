@@ -522,6 +522,8 @@ aclError aclrtGetArgsFromExceptionInfo(const aclrtExceptionInfo *info, void **de
 
 返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
+当info为空指针时，返回ACL_ERROR_INVALID_EXCEPTION_INFO。
+
 <br>
 <br>
 <br>
@@ -573,6 +575,8 @@ aclError aclrtGetFuncHandleFromExceptionInfo(const aclrtExceptionInfo *info, acl
 ### 返回值说明
 
 返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
+
+当info为空指针时，返回ACL_ERROR_INVALID_EXCEPTION_INFO。
 
 <br>
 <br>
