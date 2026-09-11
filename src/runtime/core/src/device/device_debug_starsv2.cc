@@ -142,15 +142,15 @@ static rtError_t DebugReleaseDevMem(const Context* curCtx)
     return RT_ERROR_NONE;
 }
 
-rtError_t DebugReadAICore(const rtDebugMemoryParam_t* const param, Device* const inputDevice)
+rtError_t DebugReadAICore(const rtDebugMemoryParam_t* const param, const Device* const device)
 {
-    UNUSED(inputDevice);
+    UNUSED(device);
     const Runtime* const rt = Runtime::Instance();
     Context* curCtx = rt->CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    const Device* device = curCtx->Device_();
-    NULL_PTR_RETURN(device, RT_ERROR_DEVICE_NULL);
-    COND_RETURN_ERROR((!device->IsCoredumpEnable()), RT_ERROR_INVALID_VALUE, "Coredump mode is disabled.");
+    const Device* curDevice = curCtx->Device_();
+    NULL_PTR_RETURN(curDevice, RT_ERROR_DEVICE_NULL);
+    COND_RETURN_ERROR((!curDevice->IsCoredumpEnable()), RT_ERROR_INVALID_VALUE, "Coredump mode is disabled.");
 
     rtError_t ret = CheckMemoryParam(param);
     COND_RETURN_WITH_NOLOG((ret != RT_ERROR_NONE), ret);
@@ -161,9 +161,9 @@ rtError_t DebugReadAICore(const rtDebugMemoryParam_t* const param, Device* const
         param->coreType, param->coreId, param->debugMemType, param->elementSize, param->memLen, param->srcAddr,
         param->dstAddr);
 
-    Driver* const devDrv = device->Driver_();
+    Driver* const devDrv = curDevice->Driver_();
     NULL_PTR_RETURN(devDrv, RT_ERROR_DRV_PTRNULL);
-    const uint32_t deviceId = device->Id_();
+    const uint32_t deviceId = curDevice->Id_();
     void* devMem = nullptr;
     ret = devDrv->DevMemAlloc(&devMem, COREDUMP_MEM_SIZE, RT_MEMORY_HBM, deviceId);
     COND_RETURN_ERROR((ret != RT_ERROR_NONE), ret, "malloc mem fail, ret=%u", ret);

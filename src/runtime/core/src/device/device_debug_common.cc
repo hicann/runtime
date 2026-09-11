@@ -19,7 +19,7 @@ namespace cce {
 namespace runtime {
 
 rtError_t SendAndRecvDebugTask(
-    RtDebugSendInfo* const sendInfo, rtDebugReportInfo_t* const reportInfo, Device* const device)
+    RtDebugSendInfo* const sendInfo, rtDebugReportInfo_t* const reportInfo, const Device* const device)
 {
     Driver* const devDrv = device->Driver_();
     auto ret = devDrv->DebugSqTaskSend(
@@ -68,7 +68,7 @@ rtError_t DebugSetDumpMode(const uint64_t mode, Device* const device)
     return RT_ERROR_NONE;
 }
 
-rtError_t DebugGetStalledCore(rtDbgCoreInfo_t* const coreInfo, Device* const device)
+rtError_t DebugGetStalledCore(rtDbgCoreInfo_t* const coreInfo, const Device* const device)
 {
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
         coreInfo, RT_ERROR_INVALID_VALUE, "Obtaining the physical ID of the stalled AI Core in the current process");

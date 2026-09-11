@@ -16,7 +16,7 @@ namespace cce {
 namespace runtime {
 
 rtError_t GetStackBufferInfo(
-    const rtBinHandle binHandle, uint32_t deviceId, const uint32_t stackType, const uint32_t coreType,
+    rtBinHandle const binHandle, uint32_t deviceId, const uint32_t stackType, const uint32_t coreType,
     const uint32_t coreId, const void** stack, uint32_t* stackSize);
 
 } // namespace runtime

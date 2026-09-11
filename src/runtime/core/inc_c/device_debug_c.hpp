@@ -10,7 +10,8 @@
 #ifndef CCE_RUNTIME_DEVICE_DEBUG_C_HPP
 #define CCE_RUNTIME_DEVICE_DEBUG_C_HPP
 
-#include "task_info.hpp"
+#include "runtime/dev.h"
+#include "runtime/mem.h"
 
 namespace cce {
 namespace runtime {
@@ -20,13 +21,13 @@ struct RtDebugSendInfo;
 struct rtDebugReportInfo_t;
 
 rtError_t SendAndRecvDebugTask(
-    RtDebugSendInfo* const sendInfo, rtDebugReportInfo_t* const reportInfo, Device* const device);
+    RtDebugSendInfo* const sendInfo, rtDebugReportInfo_t* const reportInfo, const Device* const device);
 
 rtError_t DebugSetDumpMode(const uint64_t mode, Device* const device);
 
-rtError_t DebugGetStalledCore(rtDbgCoreInfo_t* const coreInfo, Device* const device);
+rtError_t DebugGetStalledCore(rtDbgCoreInfo_t* const coreInfo, const Device* const device);
 
-rtError_t DebugReadAICore(const rtDebugMemoryParam_t* const param, Device* const device = nullptr);
+rtError_t DebugReadAICore(const rtDebugMemoryParam_t* const param, const Device* const device = nullptr);
 
 } // namespace runtime
 } // namespace cce

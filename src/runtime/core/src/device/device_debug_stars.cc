@@ -58,7 +58,7 @@ rtError_t CheckMemoryParam(const rtDebugMemoryParam_t* const param)
 
 } // namespace
 
-rtError_t DebugReadAICore(const rtDebugMemoryParam_t* const param, Device* const device)
+rtError_t DebugReadAICore(const rtDebugMemoryParam_t* const param, const Device* const device)
 {
     COND_RETURN_ERROR((!device->IsCoredumpEnable()), RT_ERROR_INVALID_VALUE, "Coredump mode is disabled!");
     auto ret = CheckMemoryParam(param);
