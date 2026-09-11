@@ -671,7 +671,7 @@ aclError aclrtHostRegister(T *ptr, uint64_t size, uint32_t flag)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| ptr | 输入 | Host内存地址。<br>Host内存地址需4K页对齐。<br>当os内核版本为5.10或更低时，使用非锁页内存会导致异常，因此必须调用aclrtMallocHost接口来申请Host锁页内存。<br>当os内核版本为5.10以上时，支持使用非锁页的Host内存，因此既支持调用aclrtMallocHost接口申请Host锁页内存，也支持使用malloc接口申请Host非锁页内存。 |
+| ptr | 输入 | Host内存地址。<br>支持直接传入通过aclrtMallocHost或aclrtMallocHostWithCfg接口申请的Host内存地址，也支持对该Host内存地址进行地址偏移后传入，但偏移后的内存地址需要满足4KB页对齐要求。<br>当os内核版本为5.10或更低时，使用非锁页内存会导致异常，因此必须调用aclrtMallocHost或aclrtMallocHostWithCfg接口来申请Host锁页内存。<br>当os内核版本为5.10以上时，支持使用非锁页的Host内存，因此既支持调用aclrtMallocHost或aclrtMallocHostWithCfg接口申请Host锁页内存，也支持使用malloc接口申请Host非锁页内存。使用malloc接口申请的Host内存无需4KB页对齐。 |
 | size | 输入 | 内存大小，单位Byte。 |
 | type | 输入 | 内存注册类型。类型定义请参见[aclrtHostRegisterType](25-02_Enumerations.md#aclrtHostRegisterType)。 |
 | devPtr | 输出 | Host内存映射成的Device可访问的内存地址。<br>该地址仅支持在Device上访问，例如作为核函数的参数，供Device的AI Core访问。若涉及Host侧的内存处理，需使用原始Host内存地址。 |
