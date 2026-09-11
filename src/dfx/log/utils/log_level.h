@@ -127,7 +127,7 @@ typedef struct TagModuleInfo {
         SINGL_MODULE_MAP(ASYS, MODULE_INIT_LOG_LEVEL),     SINGL_MODULE_MAP(ATRACE, MODULE_INIT_LOG_LEVEL),        \
         MULTI_MODULE_MAP(RTC, MODULE_INIT_LOG_LEVEL),      SINGL_MODULE_MAP(SYSMONITOR, MODULE_INIT_LOG_LEVEL),    \
         SINGL_MODULE_MAP(AML, MODULE_INIT_LOG_LEVEL),      SINGL_MODULE_MAP(ADETECT, MODULE_INIT_LOG_LEVEL),       \
-        {NULL, -1, false, -1, {-1, -1, -1, -1}, -1}}
+        SINGL_MODULE_MAP(ACLRTC, MODULE_INIT_LOG_LEVEL),   {NULL, -1, false, -1, {-1, -1, -1, -1}, -1}}
 
 typedef struct TagLevelInfo {
     const char* levelName;
