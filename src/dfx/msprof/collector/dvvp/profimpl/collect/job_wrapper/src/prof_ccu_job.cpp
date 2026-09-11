@@ -76,6 +76,13 @@ int32_t ProfCcuBaseJob::StopCcuChannel(
     return PROFILING_SUCCESS;
 }
 
+void ProfCcuBaseJob::InitCcuChannelConfig()
+{
+    needSecondCcuChannel_ = Platform::instance()->GetCcuDieNum() > DAVID_LITE_CCU_DIE_NUM;
+}
+
+bool ProfCcuBaseJob::NeedSecondCcuChannel() const { return needSecondCcuChannel_; }
+
 ProfCcuInstrJob::ProfCcuInstrJob() : ProfCcuBaseJob(PROF_CHANNEL_CCU_INSTR_CCU0, PROF_CHANNEL_CCU_INSTR_CCU1) {}
 
 ProfCcuInstrJob::~ProfCcuInstrJob() {}
@@ -92,6 +99,7 @@ int32_t ProfCcuInstrJob::Init(const SHARED_PTR_ALIA<CollectionJobCfg> cfg)
         MSPROF_LOGI("Ccu instruction not enabled with ccuInstr switch off.");
         return PROFILING_FAILED;
     }
+    InitCcuChannelConfig();
     return PROFILING_SUCCESS;
 }
 
@@ -108,12 +116,14 @@ int32_t ProfCcuInstrJob::Process()
         return ret;
     }
 
-    std::string filePathCcu1 = BindFileWithChannel(collectionJobCfg_->jobParams.dataPath + CCU1_INSTRUCTION_NAME);
-    ret = StartCcuChannel(
-        collectionJobCfg_->comParams->params->job_id, collectionJobCfg_->comParams->devId, channelIdCcu1_,
-        filePathCcu1);
-    if (ret != PROFILING_SUCCESS) {
-        return ret;
+    if (NeedSecondCcuChannel()) {
+        std::string filePathCcu1 = BindFileWithChannel(collectionJobCfg_->jobParams.dataPath + CCU1_INSTRUCTION_NAME);
+        ret = StartCcuChannel(
+            collectionJobCfg_->comParams->params->job_id, collectionJobCfg_->comParams->devId, channelIdCcu1_,
+            filePathCcu1);
+        if (ret != PROFILING_SUCCESS) {
+            return ret;
+        }
     }
     return ret;
 }
@@ -127,10 +137,12 @@ int32_t ProfCcuInstrJob::Uninit()
         return ret;
     }
 
-    ret = StopCcuChannel(
-        collectionJobCfg_->comParams->params->job_id, collectionJobCfg_->comParams->devId, channelIdCcu1_);
-    if (ret != PROFILING_SUCCESS) {
-        return ret;
+    if (NeedSecondCcuChannel()) {
+        ret = StopCcuChannel(
+            collectionJobCfg_->comParams->params->job_id, collectionJobCfg_->comParams->devId, channelIdCcu1_);
+        if (ret != PROFILING_SUCCESS) {
+            return ret;
+        }
     }
     return ret;
 }
@@ -155,6 +167,7 @@ int32_t ProfCcuStatJob::Init(const SHARED_PTR_ALIA<CollectionJobCfg> cfg)
         MSPROF_LOGI("Ccu statistic not enabled with ccuInstr switch off.");
         return PROFILING_FAILED;
     }
+    InitCcuChannelConfig();
     return PROFILING_SUCCESS;
 }
 
@@ -171,12 +184,14 @@ int32_t ProfCcuStatJob::Process()
         return ret;
     }
 
-    std::string filePathCcu1 = BindFileWithChannel(collectionJobCfg_->jobParams.dataPath + CCU1_STATISTIC_NAME);
-    ret = StartCcuChannel(
-        collectionJobCfg_->comParams->params->job_id, collectionJobCfg_->comParams->devId, channelIdCcu1_,
-        filePathCcu1);
-    if (ret != PROFILING_SUCCESS) {
-        return ret;
+    if (NeedSecondCcuChannel()) {
+        std::string filePathCcu1 = BindFileWithChannel(collectionJobCfg_->jobParams.dataPath + CCU1_STATISTIC_NAME);
+        ret = StartCcuChannel(
+            collectionJobCfg_->comParams->params->job_id, collectionJobCfg_->comParams->devId, channelIdCcu1_,
+            filePathCcu1);
+        if (ret != PROFILING_SUCCESS) {
+            return ret;
+        }
     }
     return ret;
 }
@@ -190,10 +205,12 @@ int32_t ProfCcuStatJob::Uninit()
         return ret;
     }
 
-    ret = StopCcuChannel(
-        collectionJobCfg_->comParams->params->job_id, collectionJobCfg_->comParams->devId, channelIdCcu1_);
-    if (ret != PROFILING_SUCCESS) {
-        return ret;
+    if (NeedSecondCcuChannel()) {
+        ret = StopCcuChannel(
+            collectionJobCfg_->comParams->params->job_id, collectionJobCfg_->comParams->devId, channelIdCcu1_);
+        if (ret != PROFILING_SUCCESS) {
+            return ret;
+        }
     }
     return ret;
 }

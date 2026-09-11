@@ -379,6 +379,22 @@ std::vector<BiuPerfChannelInfo> Platform::GetBiuPerfChannelInfos(
     return platform_->GetBiuPerfChannelInfos(groupVector, groupNum);
 }
 
+uint16_t Platform::GetBiuPerfGroupNum() const
+{
+    if (platform_ == nullptr) {
+        return BIU_PERF_HIGHER_GROUP_NUM;
+    }
+    return platform_->GetBiuPerfGroupNum();
+}
+
+uint16_t Platform::GetCcuDieNum() const
+{
+    if (platform_ == nullptr) {
+        return DAVID_CCU_DIE_NUM;
+    }
+    return platform_->GetCcuDieNum();
+}
+
 int32_t Platform::InitOnlineAnalyzer()
 {
     if (platform_ == nullptr) {

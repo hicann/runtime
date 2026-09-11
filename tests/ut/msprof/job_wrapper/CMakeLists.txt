@@ -129,6 +129,7 @@ if(NOT BUILD_PROFILING_OPEN_PROJECT)
     list(APPEND profilerSrcFiles
         ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/nano_platform.cpp
         ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/david_platform.cpp
+        ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/david_lite_platform.cpp
         ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/david_v121_platform.cpp
     )
 endif()

@@ -27,6 +27,8 @@ namespace Collect {
 namespace Platform {
 constexpr uint16_t MAX_COLLECT_MONITOR_NUM = 8;
 constexpr uint16_t MAX_DAVID_MONITOR_NUM = 10;
+constexpr uint16_t DAVID_CCU_DIE_NUM = 2;
+constexpr uint16_t DAVID_LITE_CCU_DIE_NUM = 1;
 constexpr char INTERFACE_AIRTHMETICUTILIZATION[] = "0x49,0x4a,0x4b,0x4c,0x4d,0x4e,0x4f";
 constexpr char INTERFACE_PIPEUTILIZATION[] = "0x8,0xa,0x9,0xb,0xc,0xd,0x54,0x55";
 constexpr char INTERFACE_PIPEUTILIZATIONEXCT[] = "0x416,0x417,0x9,0x302,0xc,0x303,0x54,0x55";
@@ -54,6 +56,7 @@ enum PlatformTypeEnum {
     CHIP_MDC_MINI_V3 = 11,
     CHIP_MDC_LITE = 12,
     CHIP_CLOUD_V3 = 15,
+    CHIP_CLOUD_V3_LITE = 19,
     CHIP_CLOUD_V4 = 16,
     CHIP_MDC_V2 = 17,
     CHIP_MDC_LITE_V2 = 18,
@@ -250,6 +253,9 @@ public:
     virtual uint16_t GetQosMonitorNumber() const;
     virtual std::vector<BiuPerfChannelInfo> GetBiuPerfChannelInfos(
         const std::vector<uint32_t>& groupVector, uint32_t groupNum) const;
+    // Returns the number of BIU profiling groups supported by the platform. Zero means unsupported.
+    virtual uint16_t GetBiuPerfGroupNum() const;
+    virtual uint16_t GetCcuDieNum() const;
     virtual int32_t InitOnlineAnalyzer();
     virtual uint32_t GetMetricsPmuNum(const std::string& name) const;
     virtual std::string GetMetricsTopName(const std::string& name) const;

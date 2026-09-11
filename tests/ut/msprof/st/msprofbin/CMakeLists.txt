@@ -88,6 +88,7 @@ set(common_file
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/mini_platform.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/cloud_v2_platform.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/david_platform.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/david_lite_platform.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/cloud_platform.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/dc_platform.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/mdc_lite_platform.cpp

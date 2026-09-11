@@ -10,11 +10,13 @@
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
 #include "ai_drv_prof_api.h"
+#include "config/config.h"
 #include "errno/error_code.h"
 #include "platform/platform.h"
 #include "prof_ccu_job.h"
 
 using namespace analysis::dvvp::common::error;
+using namespace analysis::dvvp::common::config;
 using namespace Analysis::Dvvp::Common::Platform;
 
 namespace {
@@ -63,8 +65,9 @@ TEST_F(JOB_WRAPPER_CCU_INSTRUCTION_JOB_TEST, Process)
         .will(returnValue(false))
         .then(returnValue(true));
 
+    collectionJobCfg_->comParams->params->ccuInstr = "on";
     auto ccuInstrJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfCcuInstrJob>();
-    ccuInstrJob->Init(collectionJobCfg_);
+    ASSERT_EQ(PROFILING_SUCCESS, ccuInstrJob->Init(collectionJobCfg_));
     EXPECT_EQ(PROFILING_FAILED, ccuInstrJob->Process());
 
     MOCKER(prof_drv_start)
@@ -75,6 +78,24 @@ TEST_F(JOB_WRAPPER_CCU_INSTRUCTION_JOB_TEST, Process)
         .then(returnValue(PROFILING_SUCCESS));
     EXPECT_EQ(PROFILING_FAILED, ccuInstrJob->Process());
     EXPECT_EQ(PROFILING_FAILED, ccuInstrJob->Process());
+    EXPECT_EQ(PROFILING_SUCCESS, ccuInstrJob->Process());
+}
+
+TEST_F(JOB_WRAPPER_CCU_INSTRUCTION_JOB_TEST, DavidLiteStartsOnlyDieZeroInstructionChannel)
+{
+    MOCKER_CPP(
+        &Analysis::Dvvp::Common::Platform::Platform::GetCcuDieNum,
+        uint16_t(Analysis::Dvvp::Common::Platform::Platform::*)() const)
+        .stubs()
+        .will(returnValue(static_cast<uint16_t>(DAVID_LITE_CCU_DIE_NUM)))
+        .then(returnValue(static_cast<uint16_t>(DAVID_CCU_DIE_NUM)));
+    MOCKER_CPP(&analysis::dvvp::driver::DrvChannelsMgr::ChannelIsValid).stubs().will(returnValue(true));
+    MOCKER(prof_drv_start).expects(once()).will(returnValue(PROFILING_SUCCESS));
+
+    // ccuInstr is the shared switch used by both CCU instruction and statistic jobs.
+    collectionJobCfg_->comParams->params->ccuInstr = "on";
+    auto ccuInstrJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfCcuInstrJob>();
+    ASSERT_EQ(PROFILING_SUCCESS, ccuInstrJob->Init(collectionJobCfg_));
     EXPECT_EQ(PROFILING_SUCCESS, ccuInstrJob->Process());
 }
 
@@ -119,8 +140,9 @@ TEST_F(JOB_WRAPPER_CCU_STATISTIC_JOB_TEST, Process)
         .will(returnValue(false))
         .then(returnValue(true));
 
+    collectionJobCfg_->comParams->params->ccuInstr = "on";
     auto ccuStatJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfCcuStatJob>();
-    ccuStatJob->Init(collectionJobCfg_);
+    ASSERT_EQ(PROFILING_SUCCESS, ccuStatJob->Init(collectionJobCfg_));
     EXPECT_EQ(PROFILING_FAILED, ccuStatJob->Process());
 
     MOCKER(prof_drv_start)
@@ -134,6 +156,46 @@ TEST_F(JOB_WRAPPER_CCU_STATISTIC_JOB_TEST, Process)
     EXPECT_EQ(PROFILING_SUCCESS, ccuStatJob->Process());
 }
 
+TEST_F(JOB_WRAPPER_CCU_STATISTIC_JOB_TEST, DavidLiteStartsOnlyDieZeroStatisticChannelWithCcuInstrSwitch)
+{
+    MOCKER_CPP(
+        &Analysis::Dvvp::Common::Platform::Platform::GetCcuDieNum,
+        uint16_t(Analysis::Dvvp::Common::Platform::Platform::*)() const)
+        .stubs()
+        .will(returnValue(static_cast<uint16_t>(DAVID_LITE_CCU_DIE_NUM)));
+    MOCKER_CPP(
+        &Analysis::Dvvp::Common::Platform::Platform::CheckIfSupport,
+        bool(Analysis::Dvvp::Common::Platform::Platform::*)(const PlatformFeature) const)
+        .stubs()
+        .will(returnValue(true));
+    MOCKER_CPP(&analysis::dvvp::driver::DrvChannelsMgr::ChannelIsValid).stubs().will(returnValue(true));
+    MOCKER(prof_drv_start).expects(once()).will(returnValue(PROFILING_SUCCESS));
+
+    // ccuInstr is the shared switch used by both CCU instruction and statistic jobs.
+    collectionJobCfg_->comParams->params->ccuInstr = "on";
+    auto ccuStatJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfCcuStatJob>();
+    ASSERT_EQ(PROFILING_SUCCESS, ccuStatJob->Init(collectionJobCfg_));
+    EXPECT_EQ(PROFILING_SUCCESS, ccuStatJob->Process());
+}
+
+TEST_F(JOB_WRAPPER_CCU_INSTRUCTION_JOB_TEST, DavidLiteStopsOnlyDieZeroInstructionChannel)
+{
+    MOCKER_CPP(
+        &Analysis::Dvvp::Common::Platform::Platform::GetCcuDieNum,
+        uint16_t(Analysis::Dvvp::Common::Platform::Platform::*)() const)
+        .stubs()
+        .will(returnValue(static_cast<uint16_t>(DAVID_LITE_CCU_DIE_NUM)))
+        .then(returnValue(static_cast<uint16_t>(DAVID_CCU_DIE_NUM)));
+    MOCKER_CPP(&analysis::dvvp::driver::DrvChannelsMgr::ChannelIsValid).stubs().will(returnValue(true));
+    MOCKER(prof_stop).expects(once()).will(returnValue(PROFILING_SUCCESS));
+
+    // ccuInstr is the shared switch used by both CCU instruction and statistic jobs.
+    collectionJobCfg_->comParams->params->ccuInstr = "on";
+    auto ccuInstrJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfCcuInstrJob>();
+    ASSERT_EQ(PROFILING_SUCCESS, ccuInstrJob->Init(collectionJobCfg_));
+    EXPECT_EQ(PROFILING_SUCCESS, ccuInstrJob->Uninit());
+}
+
 TEST_F(JOB_WRAPPER_CCU_STATISTIC_JOB_TEST, Uninit)
 {
     auto ccuStatJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfCcuStatJob>();
@@ -143,6 +205,28 @@ TEST_F(JOB_WRAPPER_CCU_STATISTIC_JOB_TEST, Uninit)
         .will(returnValue(false))
         .then(returnValue(true));
     EXPECT_EQ(PROFILING_FAILED, ccuStatJob->Uninit());
+    EXPECT_EQ(PROFILING_SUCCESS, ccuStatJob->Uninit());
+}
+
+TEST_F(JOB_WRAPPER_CCU_STATISTIC_JOB_TEST, DavidLiteStopsOnlyDieZeroStatisticChannel)
+{
+    MOCKER_CPP(
+        &Analysis::Dvvp::Common::Platform::Platform::GetCcuDieNum,
+        uint16_t(Analysis::Dvvp::Common::Platform::Platform::*)() const)
+        .stubs()
+        .will(returnValue(static_cast<uint16_t>(DAVID_LITE_CCU_DIE_NUM)))
+        .then(returnValue(static_cast<uint16_t>(DAVID_CCU_DIE_NUM)));
+    MOCKER_CPP(
+        &Analysis::Dvvp::Common::Platform::Platform::CheckIfSupport,
+        bool(Analysis::Dvvp::Common::Platform::Platform::*)(const PlatformFeature) const)
+        .stubs()
+        .will(returnValue(true));
+    MOCKER_CPP(&analysis::dvvp::driver::DrvChannelsMgr::ChannelIsValid).stubs().will(returnValue(true));
+    MOCKER(prof_stop).expects(once()).will(returnValue(PROFILING_SUCCESS));
+
+    collectionJobCfg_->comParams->params->ccuInstr = "on";
+    auto ccuStatJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfCcuStatJob>();
+    ASSERT_EQ(PROFILING_SUCCESS, ccuStatJob->Init(collectionJobCfg_));
     EXPECT_EQ(PROFILING_SUCCESS, ccuStatJob->Uninit());
 }
 } // namespace

@@ -31,6 +31,7 @@
 
 namespace {
 std::vector<int32_t> g_startedChannels;
+std::vector<uint32_t> g_requestedGroupVector;
 
 int32_t DrvInstrProfileStartStub(
     const uint32_t devId, const analysis::dvvp::driver::AI_DRV_CHANNEL channelId, void* userData, size_t dataSize)
@@ -40,6 +41,15 @@ int32_t DrvInstrProfileStartStub(
     (void)dataSize;
     g_startedChannels.push_back(static_cast<int32_t>(channelId));
     return analysis::dvvp::common::error::PROFILING_SUCCESS;
+}
+
+std::vector<::Dvvp::Collect::Platform::BiuPerfChannelInfo> CaptureBiuPerfChannelInfos(
+    Analysis::Dvvp::Common::Platform::Platform* platform, const std::vector<uint32_t>& groupVector, uint32_t groupNum)
+{
+    (void)platform;
+    (void)groupNum;
+    g_requestedGroupVector = groupVector;
+    return {};
 }
 
 // Records the config size received by DrvInstrProfileStart, used to verify the struct chosen for
@@ -84,7 +94,7 @@ protected:
         comParams->params = params;
         comParams->jobCtx = jobCtx;
         collectionJobCfg_->comParams = comParams;
-        collectionJobCfg_->jobParams.events = std::make_shared<std::vector<std::string> >(0);
+        collectionJobCfg_->jobParams.events = std::make_shared<std::vector<std::string>>(0);
     }
     virtual void TearDown()
     {
@@ -159,6 +169,76 @@ TEST_F(JOB_WRAPPER_PROF_BIU_PERF_JOB_TEST, MdcV2InstrProfilingOnlyStartsWhitelis
 
     std::vector<int32_t> expectedChannels = {11, 17, 20, 26};
     EXPECT_EQ(expectedChannels, g_startedChannels);
+}
+
+TEST_F(JOB_WRAPPER_PROF_BIU_PERF_JOB_TEST, DavidLiteStartsOnlyFirstThreeBiuGroups)
+{
+    g_startedChannels.clear();
+    g_requestedGroupVector.clear();
+    MOCKER_CPP(
+        &Analysis::Dvvp::Common::Platform::Platform::CheckIfSupport,
+        bool(Analysis::Dvvp::Common::Platform::Platform::*)(const Dvvp::Collect::Platform::PlatformFeature) const)
+        .stubs()
+        .will(returnValue(true));
+    MOCKER_CPP(
+        &Analysis::Dvvp::Common::Platform::Platform::GetBiuPerfGroupNum,
+        uint16_t(Analysis::Dvvp::Common::Platform::Platform::*)() const)
+        .stubs()
+        .will(returnValue(static_cast<uint16_t>(BIU_PERF_LOWER_GROUP_NUM)));
+    MOCKER_CPP(
+        &Analysis::Dvvp::Common::Platform::Platform::GetBiuPerfChannelInfos,
+        std::vector<BiuPerfChannelInfo>(Analysis::Dvvp::Common::Platform::Platform::*)(
+            const std::vector<uint32_t>&, uint32_t) const)
+        .stubs()
+        .will(invoke(CaptureBiuPerfChannelInfos));
+    int64_t aiCoreNum = 36;
+    MOCKER(analysis::dvvp::driver::DrvGetAiCoreNum)
+        .stubs()
+        .with(any(), outBound(aiCoreNum))
+        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&analysis::dvvp::driver::DrvChannelsMgr::ChannelIsValid).stubs().will(returnValue(true));
+    MOCKER(analysis::dvvp::driver::DrvInstrProfileStart).stubs().will(invoke(DrvInstrProfileStartStub));
+
+    auto profBiuPerfJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfBiuPerfJob>();
+    collectionJobCfg_->comParams->params->instrProfiling = "on";
+    collectionJobCfg_->comParams->params->pcSampling = "off";
+    collectionJobCfg_->comParams->params->hostProfiling = false;
+    ASSERT_EQ(PROFILING_SUCCESS, profBiuPerfJob->Init(collectionJobCfg_));
+    ASSERT_EQ(PROFILING_SUCCESS, profBiuPerfJob->Process());
+
+    const std::vector<int32_t> expectedChannels = {
+        static_cast<int32_t>(PROF_CHANNEL_BIU_GROUP0_AIC),  static_cast<int32_t>(PROF_CHANNEL_BIU_GROUP0_AIV0),
+        static_cast<int32_t>(PROF_CHANNEL_BIU_GROUP0_AIV1), static_cast<int32_t>(PROF_CHANNEL_BIU_GROUP1_AIC),
+        static_cast<int32_t>(PROF_CHANNEL_BIU_GROUP1_AIV0), static_cast<int32_t>(PROF_CHANNEL_BIU_GROUP1_AIV1),
+        static_cast<int32_t>(PROF_CHANNEL_BIU_GROUP2_AIC),  static_cast<int32_t>(PROF_CHANNEL_BIU_GROUP2_AIV0),
+        static_cast<int32_t>(PROF_CHANNEL_BIU_GROUP2_AIV1),
+    };
+    EXPECT_EQ(expectedChannels, g_startedChannels);
+    const std::vector<uint32_t> expectedGroupVector = {0, 18, 35};
+    EXPECT_EQ(expectedGroupVector, g_requestedGroupVector);
+}
+
+TEST_F(JOB_WRAPPER_PROF_BIU_PERF_JOB_TEST, InitFailsWhenPlatformHasNoBiuPerfGroup)
+{
+    MOCKER_CPP(
+        &Analysis::Dvvp::Common::Platform::Platform::CheckIfSupport,
+        bool(Analysis::Dvvp::Common::Platform::Platform::*)(const Dvvp::Collect::Platform::PlatformFeature) const)
+        .stubs()
+        .will(returnValue(true));
+    MOCKER_CPP(
+        &Analysis::Dvvp::Common::Platform::Platform::GetBiuPerfGroupNum,
+        uint16_t(Analysis::Dvvp::Common::Platform::Platform::*)() const)
+        .stubs()
+        .will(returnValue(static_cast<uint16_t>(BIU_PERF_GROUP_NUM_INVALID)));
+    int64_t aiCoreNum = 8;
+    MOCKER(analysis::dvvp::driver::DrvGetAiCoreNum)
+        .stubs()
+        .with(any(), outBound(aiCoreNum))
+        .will(returnValue(PROFILING_SUCCESS));
+
+    auto profBiuPerfJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfBiuPerfJob>();
+    collectionJobCfg_->comParams->params->instrProfiling = "on";
+    EXPECT_EQ(PROFILING_FAILED, profBiuPerfJob->Init(collectionJobCfg_));
 }
 
 // New driver version: Process should use BiuProfileConfigTV2 (with reportDataLoss) as the parameter.

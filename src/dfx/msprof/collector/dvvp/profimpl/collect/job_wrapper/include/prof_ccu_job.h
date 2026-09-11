@@ -30,10 +30,13 @@ protected:
     int32_t StartCcuChannel(
         const std::string& jobId, int32_t deviceId, AI_DRV_CHANNEL channelId, const std::string& filePath);
     int32_t StopCcuChannel(const std::string& jobId, int32_t deviceId, AI_DRV_CHANNEL channelId) const;
+    void InitCcuChannelConfig();
+    bool NeedSecondCcuChannel() const;
 
 protected:
     AI_DRV_CHANNEL channelIdCcu0_;
     AI_DRV_CHANNEL channelIdCcu1_;
+    bool needSecondCcuChannel_{false};
 };
 
 class ProfCcuInstrJob : public ProfCcuBaseJob {

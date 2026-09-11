@@ -28,6 +28,9 @@ public:
     int32_t Uninit() override;
 
 private:
+    int32_t CheckBiuPerfInitConfig(const SHARED_PTR_ALIA<CollectionJobCfg>& cfg) const;
+    void SetBiuPerfMode(const SHARED_PTR_ALIA<CollectionJobCfg>& cfg);
+    int32_t InitGroupConfig(int64_t aiCoreNum);
     uint32_t GenGroupVector(int64_t aiCoreNum);
     std::vector<::Dvvp::Collect::Platform::BiuPerfChannelInfo> GetBiuChannelInfos() const;
 

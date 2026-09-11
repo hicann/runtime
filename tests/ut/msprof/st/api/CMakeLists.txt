@@ -198,6 +198,7 @@ set(PROFIMPL_SRC_FILE
 if(NOT BUILD_PROFILING_OPEN_PROJECT)
     list(APPEND PROFIMPL_SRC_FILE
         ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/david_platform.cpp
+        ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/david_lite_platform.cpp
         ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/david_v121_platform.cpp
         ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/modena_platform.cpp
         ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/mdc_lite_platform.cpp

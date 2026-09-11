@@ -10,6 +10,7 @@
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
 #include "acl/acl_prof.h"
+#include "config/config.h"
 #include "config_manager.h"
 #include "errno/error_code.h"
 #include "message/prof_params.h"
@@ -22,6 +23,7 @@
 #include "validation/param_validation.h"
 #include "cloud_v2_platform.h"
 #include "david_platform.h"
+#include "david_lite_platform.h"
 #include "david_v121_platform.h"
 #include "mdc_lite_v2_platform.h"
 #include "mdc_v2_platform.h"
@@ -31,6 +33,7 @@
 using namespace Analysis::Dvvp::Common::Platform;
 using namespace Analysis::Dvvp::Common::Config;
 using namespace analysis::dvvp::common::error;
+using namespace analysis::dvvp::common::config;
 using namespace analysis::dvvp::common::validation;
 using namespace Dvvp::Collect::Platform;
 
@@ -383,6 +386,54 @@ TEST_F(PLATFORM_UTEST, ApiStatsFeatureSupportedOnCloudAndDavidPlatforms)
     EXPECT_TRUE(cloudV2Platform.FeatureIsSupport(PLATFORM_API_STATS));
     EXPECT_TRUE(davidPlatform.FeatureIsSupport(PLATFORM_API_STATS));
     EXPECT_TRUE(davidV121Platform.FeatureIsSupport(PLATFORM_API_STATS));
+}
+
+TEST_F(PLATFORM_UTEST, DavidLitePlatformKeepsDavidFeaturesAndLimitsDieChannels)
+{
+    DavidLitePlatform davidLitePlatform;
+    EXPECT_TRUE(davidLitePlatform.FeatureIsSupport(PLATFORM_TASK_AIC_METRICS));
+    EXPECT_TRUE(davidLitePlatform.FeatureIsSupport(PLATFORM_TASK_CCU_INSTRUTION));
+    EXPECT_TRUE(davidLitePlatform.FeatureIsSupport(PLATFORM_TASK_PC_SAMPLING));
+    EXPECT_EQ(BIU_PERF_LOWER_GROUP_NUM, davidLitePlatform.GetBiuPerfGroupNum());
+    EXPECT_EQ(DAVID_LITE_CCU_DIE_NUM, davidLitePlatform.GetCcuDieNum());
+}
+
+TEST_F(PLATFORM_UTEST, DavidLitePlatformMatchesDavidFeatures)
+{
+    DavidPlatform davidPlatform;
+    DavidLitePlatform davidLitePlatform;
+
+    for (int feature = PLATFORM_FEATURE_INVALID; feature < PLATFORM_COLLECTOR_TYPES_MAX; ++feature) {
+        const auto platformFeature = static_cast<PlatformFeature>(feature);
+        EXPECT_EQ(davidPlatform.FeatureIsSupport(platformFeature), davidLitePlatform.FeatureIsSupport(platformFeature))
+            << "feature: " << feature;
+    }
+    EXPECT_EQ(davidPlatform.GetMaxMonitorNumber(), davidLitePlatform.GetMaxMonitorNumber());
+    EXPECT_EQ(davidPlatform.GetQosMonitorNumber(), davidLitePlatform.GetQosMonitorNumber());
+    EXPECT_EQ(davidPlatform.GetSmmuDFXOffset(), davidLitePlatform.GetSmmuDFXOffset());
+    EXPECT_EQ(davidPlatform.GetSmmuDFXRegMask(), davidLitePlatform.GetSmmuDFXRegMask());
+    EXPECT_EQ(davidPlatform.GetL2CacheEvents(), davidLitePlatform.GetL2CacheEvents());
+}
+
+TEST_F(PLATFORM_UTEST, DavidLitePlatformUsesRequestedGroupRange)
+{
+    DavidLitePlatform davidLitePlatform;
+    const std::vector<uint32_t> groupVector = {0, 1, 2};
+    const auto channelInfos = davidLitePlatform.GetBiuPerfChannelInfos(groupVector, BIU_PERF_LOWER_GROUP_NUM);
+
+    EXPECT_EQ(static_cast<size_t>(BIU_PERF_LOWER_GROUP_NUM * INSTR_PROFILING_GROUP_CHANNEL_NUM), channelInfos.size());
+    for (const auto& channelInfo : channelInfos) {
+        EXPECT_LT(channelInfo.groupId, static_cast<uint32_t>(BIU_PERF_LOWER_GROUP_NUM));
+        EXPECT_LT(channelInfo.groupNo, static_cast<uint32_t>(BIU_PERF_LOWER_GROUP_NUM));
+    }
+}
+
+TEST_F(PLATFORM_UTEST, DavidLitePlatformCanBeCreatedByReflection)
+{
+    auto platform = PlatformReflection::CreatePlatformClass(CHIP_CLOUD_V3_LITE);
+    ASSERT_NE(nullptr, platform);
+    EXPECT_EQ(BIU_PERF_LOWER_GROUP_NUM, platform->GetBiuPerfGroupNum());
+    EXPECT_EQ(DAVID_LITE_CCU_DIE_NUM, platform->GetCcuDieNum());
 }
 
 // 通用服务器场景：libascend_hal.so dlopen 失败时，Platform::Init 不返回失败，

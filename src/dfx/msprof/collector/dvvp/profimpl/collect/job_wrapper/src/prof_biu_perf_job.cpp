@@ -1,12 +1,12 @@
 /**
- * Copyright (c) 2025 Huawei Technologies Co., Ltd.
- * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
- * CANN Open Software License Agreement Version 2.0 (the "License").
- * Please refer to the License for details. You may not use this file except in compliance with the License.
- * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
- * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
- * See LICENSE in the root of the software repository for the full text of the License.
- */
+ * Copyright (c) 2025 Huawei Technologies Co., Ltd.
+ * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
+ * CANN Open Software License Agreement Version 2.0 (the "License").
+ * Please refer to the License for details. You may not use this file except in compliance with the License.
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+ * See LICENSE in the root of the software repository for the full text of the License.
+ */
 
 #include "prof_biu_perf_job.h"
 #include <string>
@@ -30,10 +30,29 @@ int32_t ProfBiuPerfJob::Init(const SHARED_PTR_ALIA<CollectionJobCfg> cfg)
 {
     CHECK_JOB_CONTEXT_PARAM_RET(cfg, return PROFILING_FAILED);
     collectionJobCfg_ = cfg;
+    if (CheckBiuPerfInitConfig(cfg) != PROFILING_SUCCESS) {
+        return PROFILING_FAILED;
+    }
+    SetBiuPerfMode(cfg);
+    int64_t aiCoreNum = 0;
+    int32_t ret = DrvGetAiCoreNum(collectionJobCfg_->comParams->devId, aiCoreNum);
+    if (ret != PROFILING_SUCCESS) {
+        MSPROF_LOGE("[ProfBiuPerfJob]Failed to DrvGetAiCoreNum, deviceId=%d", collectionJobCfg_->comParams->devId);
+        return PROFILING_FAILED;
+    }
+    if (InitGroupConfig(aiCoreNum) != PROFILING_SUCCESS) {
+        return PROFILING_FAILED;
+    }
+    MSPROF_LOGI("Biu perf init success with aicore num %" PRId64 " and %u groups.", aiCoreNum, groupNum_);
+    return PROFILING_SUCCESS;
+}
+
+int32_t ProfBiuPerfJob::CheckBiuPerfInitConfig(const SHARED_PTR_ALIA<CollectionJobCfg>& cfg) const
+{
     if (cfg->comParams->params->hostProfiling ||
         (!Platform::instance()->CheckIfSupport(PLATFORM_TASK_INSTR_PROFILING) &&
          !Platform::instance()->CheckIfSupport(PLATFORM_TASK_PC_SAMPLING))) {
-        MSPROF_LOGI("Biu perf job does not support.");
+        MSPROF_LOGI("Biu perf job is not supported.");
         return PROFILING_FAILED;
     }
 
@@ -52,32 +71,43 @@ int32_t ProfBiuPerfJob::Init(const SHARED_PTR_ALIA<CollectionJobCfg> cfg)
         MSPROF_LOGI("Pc sampling job is not enabled.");
         return PROFILING_FAILED;
     }
+    return PROFILING_SUCCESS;
+}
 
+void ProfBiuPerfJob::SetBiuPerfMode(const SHARED_PTR_ALIA<CollectionJobCfg>& cfg)
+{
     if (cfg->jobParams.biuPcSamplingMode == PC_SAMPLING_MODE ||
-        (cfg->jobParams.biuPcSamplingMode == BIU_PC_SAMPLING_AUTO_MODE && pcSamplingEnabled)) {
+        (cfg->jobParams.biuPcSamplingMode == BIU_PC_SAMPLING_AUTO_MODE &&
+         cfg->comParams->params->pcSampling.compare(MSVP_PROF_ON) == 0)) {
         biuPcSamplingMode_ = PC_SAMPLING_MODE;
         profBiuPerfJobName_ = "pc_sampling_";
         MSPROF_LOGI("Biu perf job is pc sampling.");
-    } else {
-        biuPcSamplingMode_ = BIU_PERF_MONITOR_MODE;
-        profBiuPerfJobName_ = "biu_perf_";
-        MSPROF_LOGI("Biu perf job is perf monitor.");
+        return;
     }
-    int64_t aiCoreNum = 0;
-    int32_t ret = DrvGetAiCoreNum(collectionJobCfg_->comParams->devId, aiCoreNum);
-    if (ret != PROFILING_SUCCESS) {
-        MSPROF_LOGE("[ProfBiuPerfJob]Failed to DrvGetAiCoreNum, deviceId=%d", collectionJobCfg_->comParams->devId);
-        return PROFILING_FAILED;
-    }
+    biuPcSamplingMode_ = BIU_PERF_MONITOR_MODE;
+    profBiuPerfJobName_ = "biu_perf_";
+    MSPROF_LOGI("Biu perf job is perf monitor.");
+}
+
+int32_t ProfBiuPerfJob::InitGroupConfig(int64_t aiCoreNum)
+{
+    groupNum_ = BIU_PERF_LOWER_GROUP_NUM;
     if (aiCoreNum > DAVID_DIE0_AICORE_NUM) {
         groupNum_ = BIU_PERF_HIGHER_GROUP_NUM;
+    }
+    uint32_t platformGroupNum = Platform::instance()->GetBiuPerfGroupNum();
+    if (platformGroupNum == BIU_PERF_GROUP_NUM_INVALID) {
+        MSPROF_LOGE("[ProfBiuPerfJob]Platform does not support BIU perf profiling.");
+        return PROFILING_FAILED;
+    }
+    if (groupNum_ > platformGroupNum) {
+        groupNum_ = platformGroupNum;
     }
     uint32_t groupVectorNum = GenGroupVector(aiCoreNum);
     if (groupVectorNum != groupNum_) {
         MSPROF_LOGE("[ProfBiuPerfJob]Create group vector number %u is different from %u.", groupVectorNum, groupNum_);
         return PROFILING_FAILED;
     }
-    MSPROF_LOGI("Biu perf init success with aicore num %" PRId64 " and %u groups.", aiCoreNum, groupNum_);
     return PROFILING_SUCCESS;
 }
 
@@ -87,14 +117,14 @@ uint32_t ProfBiuPerfJob::GenGroupVector(int64_t aiCoreNum)
         aiCoreNum < 0 || aiCoreNum > std::numeric_limits<uint32_t>::max(), return 0,
         "Aicore number %" PRId64 " is abnormal.", aiCoreNum);
     uint32_t lowerCore = aiCoreNum;
-    if (aiCoreNum > DAVID_DIE0_AICORE_NUM) {
+    if (groupNum_ > BIU_PERF_LOWER_GROUP_NUM && aiCoreNum > DAVID_DIE0_AICORE_NUM) {
         lowerCore = static_cast<uint32_t>(aiCoreNum) >> 1;
     }
     // die 0
     groupVector_.push_back(0);
     groupVector_.push_back(lowerCore >> 1);
     groupVector_.push_back(lowerCore - 1);
-    if (aiCoreNum > DAVID_DIE0_AICORE_NUM) {
+    if (groupNum_ > BIU_PERF_LOWER_GROUP_NUM && aiCoreNum > DAVID_DIE0_AICORE_NUM) {
         // die 1
         groupVector_.push_back(lowerCore);
         groupVector_.push_back(aiCoreNum - (lowerCore >> 1));

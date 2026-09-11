@@ -141,6 +141,7 @@ if(NOT BUILD_PROFILING_OPEN_PROJECT)
         profimpl/platform/nano_platform.cpp
         profimpl/platform/mdc_mini_v3_platform.cpp
         profimpl/platform/david_platform.cpp
+        profimpl/platform/david_lite_platform.cpp
         profimpl/platform/david_v121_platform.cpp
         profimpl/platform/mdc_lite_platform.cpp
         profimpl/platform/mini_platform.cpp

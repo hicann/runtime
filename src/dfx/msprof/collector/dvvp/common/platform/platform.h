@@ -132,6 +132,8 @@ public:
     uint16_t GetMaxMonitorNumber() const;
     std::vector<::Dvvp::Collect::Platform::BiuPerfChannelInfo> GetBiuPerfChannelInfos(
         const std::vector<uint32_t>& groupVector, uint32_t groupNum) const;
+    uint16_t GetBiuPerfGroupNum() const;
+    uint16_t GetCcuDieNum() const;
     int32_t InitOnlineAnalyzer();
     uint32_t GetMetricsPmuNum(const std::string& name) const;
     std::string GetMetricsTopName(const std::string& name) const;

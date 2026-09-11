@@ -138,6 +138,23 @@ TEST_F(COMMON_CONFIG_MANAGER_TEST, GetPlatformTypeModena)
 }
 #endif // BUILD_PROFILING_OPEN_PROJECT
 
+TEST_F(COMMON_CONFIG_MANAGER_TEST, GetPlatformTypeDavidLite)
+{
+    GlobalMockObject::verify();
+    auto configManager = Analysis::Dvvp::Common::Config::ConfigManager::instance();
+    configManager->Uninit();
+    configManager->configMap_.clear();
+    configManager->configMap_[TYPE_CONFIG] = "19";
+
+    EXPECT_EQ(PlatformType::CHIP_CLOUD_V3_LITE, configManager->GetPlatformType());
+    configManager->InitFrequency();
+    EXPECT_EQ("1000", configManager->GetFrequency());
+    EXPECT_EQ("800", configManager->GetAicDefFrequency());
+
+    configManager->configMap_.clear();
+    configManager->Uninit();
+}
+
 TEST_F(COMMON_CONFIG_MANAGER_TEST, GetVersionSpecificMetrics)
 {
     GlobalMockObject::verify();

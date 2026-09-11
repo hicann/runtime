@@ -295,6 +295,7 @@ enum MsprofReporterId { API_EVENT = 0, COMPACT = 1, ADDITIONAL = 2, ADPROF = 3, 
 constexpr int32_t DAVID_DIE0_AICORE_NUM = 18;              // die 18
 constexpr int32_t BIU_PERF_LOWER_GROUP_NUM = 3;            // biu profiling group id 0 ~ 2
 constexpr int32_t BIU_PERF_HIGHER_GROUP_NUM = 6;           // biu profiling group id 0 ~ 5
+constexpr uint32_t BIU_PERF_GROUP_NUM_INVALID = 0;         // zero means the platform does not support BIU profiling
 constexpr int32_t DEFAULT_BIU_PERF_CYCLE = 16;
 constexpr int32_t INSTR_PROFILING_GROUP_MAX_NUM = 25;      // instr profiling group id 0 ~ 24
 constexpr int32_t INSTR_PROFILING_GROUP_CHANNEL_NUM = 3;   // instr profiling group contains 3 channel

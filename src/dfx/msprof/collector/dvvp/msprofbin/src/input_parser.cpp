@@ -1416,6 +1416,7 @@ void InputParser::InitClosedBlackLists(std::map<PlatformType, std::vector<Msprof
     platformArgsType[PlatformType::CHIP_TINY_V1] = mdcMiniV3BlackSwith;
     platformArgsType[PlatformType::CHIP_MDC_LITE] = mdcLiteBlackSwith;
     platformArgsType[PlatformType::CHIP_CLOUD_V3] = davidBlackSwith;
+    platformArgsType[PlatformType::CHIP_CLOUD_V3_LITE] = davidBlackSwith;
     platformArgsType[PlatformType::CHIP_CLOUD_V4] = david121BlackSwith;
     platformArgsType[PlatformType::CHIP_MDC_V2] = mdcV2BlackSwith;
     platformArgsType[PlatformType::CHIP_MDC_LITE_V2] = mdcLiteV2BlackSwith;
@@ -2160,7 +2161,8 @@ void ArgsManager::AddIoArgs()
                              "the default value is 100, unit Hz.");
     }
 #ifndef BUILD_PROFILING_OPEN_PROJECT
-    if (ConfigManager::instance()->GetPlatformType() == PlatformType::CHIP_CLOUD_V3) {
+    PlatformType platformType = ConfigManager::instance()->GetPlatformType();
+    if (platformType == PlatformType::CHIP_CLOUD_V3 || platformType == PlatformType::CHIP_CLOUD_V3_LITE) {
         ioArgs.SetDetail("UB acquisition switch, the default value is off.");
         ioFreqArgs.SetDetail("UB acquisition frequency, range 1 ~ 100, "
                              "the default value is 100, unit Hz.");
@@ -2198,7 +2200,8 @@ void ArgsManager::AddInterArgs()
             "50"};
     }
 #ifndef BUILD_PROFILING_OPEN_PROJECT
-    if (ConfigManager::instance()->GetPlatformType() == PlatformType::CHIP_CLOUD_V3) {
+    PlatformType platformType = ConfigManager::instance()->GetPlatformType();
+    if (platformType == PlatformType::CHIP_CLOUD_V3 || platformType == PlatformType::CHIP_CLOUD_V3_LITE) {
         interArgs.SetDetail("PCIE, CCU, SIO and UB acquisition switch, the default value is off.");
         interFreq.SetDetail("PCIE, CCU, SIO and UB acquisition frequency, range 1 ~ 50, "
                             "the default value is 50, unit Hz.");

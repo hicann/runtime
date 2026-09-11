@@ -65,6 +65,7 @@ enum class StPlatformType {
     CHIP_MDC_MINI_V3 = 11,
     CHIP_MDC_LITE = 12,
     CHIP_CLOUD_V3 = 15,
+    CHIP_CLOUD_V3_LITE = 19,
     CHIP_CLOUD_V4 = 16,
     CHIP_MDC_LITE_V2 = 18,
     CHIP_5162A = 21,

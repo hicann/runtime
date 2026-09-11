@@ -80,6 +80,7 @@ set(acpBinCpp
 if(NOT BUILD_PROFILING_OPEN_PROJECT)
     list(APPEND acpBinCpp
         ../profimpl/platform/david_platform.cpp
+        ../profimpl/platform/david_lite_platform.cpp
         ../profimpl/platform/david_v121_platform.cpp
     )
 endif()
@@ -209,6 +210,7 @@ set(profinjCpp
 if(NOT BUILD_PROFILING_OPEN_PROJECT)
     list(APPEND profinjCpp
         ../profimpl/platform/david_platform.cpp
+        ../profimpl/platform/david_lite_platform.cpp
         ../profimpl/platform/david_v121_platform.cpp
     )
 endif()

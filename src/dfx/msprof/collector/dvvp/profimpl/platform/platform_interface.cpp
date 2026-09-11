@@ -159,6 +159,10 @@ uint16_t PlatformInterface::GetMaxMonitorNumber() const { return MAX_COLLECT_MON
 
 uint16_t PlatformInterface::GetQosMonitorNumber() const { return MAX_COLLECT_MONITOR_NUM; }
 
+uint16_t PlatformInterface::GetBiuPerfGroupNum() const { return BIU_PERF_HIGHER_GROUP_NUM; }
+
+uint16_t PlatformInterface::GetCcuDieNum() const { return DAVID_CCU_DIE_NUM; }
+
 std::vector<BiuPerfChannelInfo> PlatformInterface::GetBiuPerfChannelInfos(
     const std::vector<uint32_t>& groupVector, uint32_t groupNum) const
 {

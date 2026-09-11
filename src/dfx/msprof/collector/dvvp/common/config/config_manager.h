@@ -38,6 +38,7 @@ enum class PlatformType {
     CHIP_MDC_MINI_V3 = 11,
     CHIP_MDC_LITE = 12,
     CHIP_CLOUD_V3 = 15,
+    CHIP_CLOUD_V3_LITE = 19,
     CHIP_CLOUD_V4 = 16,
     CHIP_MDC_V2 = 17,
     CHIP_MDC_LITE_V2 = 18,
@@ -66,6 +67,7 @@ const std::map<PlatformType, std::string> FREQUENCY_TYPE = {
     {PlatformType::CHIP_TINY_V1, "48"},
     {PlatformType::CHIP_MDC_LITE, "38.4"},
     {PlatformType::CHIP_CLOUD_V3, "1000"},
+    {PlatformType::CHIP_CLOUD_V3_LITE, "1000"},
     {PlatformType::CHIP_CLOUD_V4, "1000"},
     {PlatformType::CHIP_MDC_V2, "38.4"},
     {PlatformType::CHIP_MDC_LITE_V2, "38.4"},
@@ -73,6 +75,7 @@ const std::map<PlatformType, std::string> FREQUENCY_TYPE = {
 #endif // BUILD_PROFILING_OPEN_PROJECT
 };
 
+// clang-format off
 const std::map<PlatformType, std::string> AIC_TYPE = {
 #ifndef BUILD_PROFILING_OPEN_PROJECT
     {PlatformType::MINI_TYPE, "680"},
@@ -89,12 +92,14 @@ const std::map<PlatformType, std::string> AIC_TYPE = {
     {PlatformType::CHIP_TINY_V1, "1250"},
     {PlatformType::CHIP_MDC_LITE, "1250"},
     {PlatformType::CHIP_CLOUD_V3, "800"},
+    {PlatformType::CHIP_CLOUD_V3_LITE, "800"},
     {PlatformType::CHIP_CLOUD_V4, "1650"},
     {PlatformType::CHIP_MDC_V2, "1400"},
     {PlatformType::CHIP_MDC_LITE_V2, "1500"},
     {PlatformType::CHIP_5162A, "20"}
 #endif // BUILD_PROFILING_OPEN_PROJECT
 };
+// clang-format on
 
 class ConfigManager : public analysis::dvvp::common::singleton::Singleton<ConfigManager> {
 public:
