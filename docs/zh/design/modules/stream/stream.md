@@ -212,22 +212,31 @@ flowchart TD
 
 ```cpp
 // 1. 任务分配
-// 文件位置：src/runtime/core/src/stream/stream.cc:4544-4579
-TaskInfo* Stream::AllocTask(TaskInfo* pTask, tsTaskType_t taskType,
-                            rtError_t& errorReason, uint32_t sqeNum,
-                            UpdateTaskFlag flag) {
-    // 正常分配
-    if (taskResMang_ == nullptr) {
-        return device_->GetTaskFactory()->Alloc(this, taskType, errorReason);
-    } else {
-        pTask->stream = this;
-        return pTask;
+// 文件位置：src/runtime/core/src/stream/stream.cc:4937-4956
+TaskInfo* Stream::AllocTask(
+    TaskInfo* pTask, tsTaskType_t taskType, rtError_t& errorReason, uint32_t sqeNum,
+    UpdateTaskFlag flag) {
+    // TaskGroup 更新路径
+    if (IsTaskGroupUpdate() && flag != UpdateTaskFlag::NOT_SUPPORT_AND_SKIP) {
+        return HandleTaskGroupUpdate(taskType, flag, errorReason);
     }
+    // AutoSplit 路径
+    if (IsAutoSplitSq()) {
+        TaskInfo* task = nullptr;
+        errorReason = AllocAutoSplitTaskInfo(&task, this, sqeNum);
+        return task;
+    }
+    // 捕获路径
+    if (GetCaptureStatus() != RT_STREAM_CAPTURE_STATUS_NONE) {
+        return AllocCaptureTask(taskType, sqeNum, pTask, errorReason);
+    }
+    // 非捕获路径
+    return AllocNonCaptureTask(this, pTask, taskType, errorReason, sqeNum);
 }
 
 // 2. 填充 TaskInfo（以 AICore 任务为例）
 // 文件位置：src/runtime/core/src/task/task_info.hpp
-TaskInfo* taskInfo = stream->AllocTask(nullptr, TS_TASK_TYPE_KERNEL_AICORE, error);
+TaskInfo* taskInfo = stream->AllocTask(nullptr, TS_TASK_TYPE_KERNEL_AICORE, error, 1U);
 taskInfo->type = TS_TASK_TYPE_KERNEL_AICORE;
 taskInfo->typeName = "AICoreKernel";
 taskInfo->stream = stream;

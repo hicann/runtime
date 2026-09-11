@@ -153,7 +153,7 @@ sequenceDiagram
             App->>Stream: aclrtRecordEvent(event, stream)
             Stream->>Stream: StreamLock() <br/> 允许单流多线程下发任务
             Stream->>EventSub: AllocEventIdResource(CntNotifyId) <br/> 或 GetIpcRecordIndex(CAS锁)
-            Stream->>Stream: AllocTaskInfo + EventRecordTaskInit
+            Stream->>Stream: AllocTask + EventRecordTaskInit
             Stream->>Stream: 组装 SQE
             Stream->>Driver: halSqTaskSend(devId, &sendInfo)
             Driver->>HW: SQE 写入执行地址
@@ -170,7 +170,7 @@ sequenceDiagram
         else Wait 下发慢路径
             App->>Stream: aclrtStreamWaitEvent(stream, event)
             Stream->>Stream: StreamLock()
-            Stream->>Stream: AllocTaskInfo + EventWaitTaskInit
+            Stream->>Stream: AllocTask + EventWaitTaskInit
             Stream->>Driver: halSqTaskSend(devId, &sendInfo)
             Driver->>HW: SQE 写入执行地址
             Stream->>Stream: StreamUnLock()
@@ -195,7 +195,7 @@ flowchart TD
 
     A["aclrtRecordEvent"]:::userStyle --> B["EvtRecord"]:::userStyle
     B --> C["CheckTaskCanSend<br/>检查流上下文状态"]:::allocStyle
-    C --> D["StreamLock + AllocTaskInfo<br/>分配任务和位置"]:::lockStyle
+    C --> D["StreamLock + AllocTask<br/>分配任务和位置"]:::lockStyle
     D --> E{"isNewMode 或<br/>RT_EVENT_DEFAULT?"}:::decisionStyle
     E -->|是| F["AllocEventIdResource<br/>CntNotifyId 分配"]:::allocStyle
     E -->|否| G["使用已有 eventId"]:::allocStyle
@@ -234,7 +234,7 @@ flowchart TD
     D -->|否| F{"未 Record 且<br/>非 EXTERNAL/DDSYNC_NS?"}:::decisionStyle
     F -->|是| G["返回错误<br/>不能 Wait 未 Record 的 Event"]:::errorStyle
     F -->|否| H["CheckTaskCanSend"]:::allocStyle
-    H --> I["StreamLock + AllocTaskInfo"]:::lockStyle
+    H --> I["StreamLock + AllocTask"]:::lockStyle
     I --> J["DavidEventWaitTaskInit<br/>初始化 Wait SQE"]:::successStyle
     J --> K["DavidSendTask<br/>提交到硬件"]:::successStyle
     K --> L["StreamUnLock + SubmitTaskPostProc"]:::lockStyle
@@ -259,7 +259,7 @@ flowchart TD
 
     A["IPC Record"]:::userStyle --> B["IpcEventRecordStarsV2"]:::ipcStyle
     B --> C["CheckTaskCanSend"]:::ipcStyle
-    C --> D["StreamLock + AllocTaskInfo"]:::lockStyle
+    C --> D["StreamLock + AllocTask"]:::lockStyle
     D --> E["GetIpcRecordIndex<br/>CAS 锁分配空闲索引"]:::ipcStyle
     E --> F["MemWriteValueTaskInit<br/>写入地址 = currentDeviceMem_ + curIndex<br/>写入值 = 1"]:::ipcStyle
     F --> G["DavidSendTask<br/>提交硬件写入"]:::successStyle
@@ -291,7 +291,7 @@ flowchart TD
     D -->|是| E["已完成或未记录<br/>直接返回成功"]:::successStyle
     D -->|否| F["deviceMemRef++<br/>IpcEventCountAdd"]:::ipcStyle
     F --> G["IpcVaUnLock"]:::lockStyle
-    G --> H["StreamLock + AllocTaskInfo"]:::lockStyle
+    G --> H["StreamLock + AllocTask"]:::lockStyle
     H --> I["MemWaitValueTaskInit<br/>等待地址 = currentDeviceMem_ + curIndex<br/>等待值 ≠ 0"]:::ipcStyle
     I --> J["DavidSendTask<br/>提交硬件等待"]:::successStyle
     J --> K["StreamUnLock + SubmitTaskPostProc"]:::lockStyle

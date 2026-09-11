@@ -4948,6 +4948,7 @@ TaskInfo* Stream::AllocCaptureTask(tsTaskType_t taskType, uint32_t sqeNum, TaskI
     return captureTask;
 }
 
+// pTask: stars v2 路径传 nullptr；stars v1 路径传 &submitTask（临时变量）, 不能为空
 TaskInfo* Stream::AllocTask(
     TaskInfo* pTask, tsTaskType_t taskType, rtError_t& errorReason, uint32_t sqeNum, UpdateTaskFlag flag)
 {

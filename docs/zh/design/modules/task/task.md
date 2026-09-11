@@ -135,9 +135,8 @@ sequenceDiagram
 
     User->>Stream: aclrtLaunchKernel
     Stream->>Stream: StreamLock() <br/> 允许单流多线程下发任务，taskId严格保序
-    Stream->>TaskResMang: AllocTaskInfoAndPos(sqeNum, pos, taskInfo)
-    TaskResMang-->>Stream: task指针 TaskInfo* + pos
-    Stream->>Stream: SaveTaskCommonInfo(taskInfo, stm, pos, sqeNum)  <br/> taskInfo 公共头信息保存
+    Stream->>Stream: AllocTask(taskType, sqeNum) <br/> 内部调用 AllocTaskInfo + SaveTaskCommonInfo
+    Stream-->>Stream: task指针 TaskInfo*（id/pos 由 task->id 获取）
     Stream->>Stream: 根据任务类型填充 TaskInfo.u.xxx
     rect rgba(245, 237, 244, 0.62)
         alt DavidSendTask
@@ -171,8 +170,8 @@ flowchart TD
     classDef successStyle fill:#E0F7FA,stroke:#00838F,stroke-width:2px,color:#004D40
 
     A["用户 API 调用"]:::userStyle --> B["Stream::StreamLock"]:::lockStyle
-    B --> C["AllocTaskInfoForCapture"]:::allocStyle
-    C --> D["AllocTaskInfo(taskInfo, stm, pos, sqeNum)"]:::allocStyle
+    B --> C["AllocTask(taskType, sqeNum)"]:::allocStyle
+    C --> D["AllocTaskInfo → AllocTaskInfoAndPos(sqeNum, pos, taskInfo)"]:::allocStyle
     D --> E["TaskResManageDavid::AllocTaskInfoAndPos(sqeNum, pos, taskInfo)"]:::allocStyle
     E --> F{"taskResMang_ 队列已满？"}:::decisionStyle
 
@@ -185,8 +184,8 @@ flowchart TD
 
     F -->|否| H["分配 taskInfo <br> 更新 taskResATail_"]:::successStyle
     H --> L["Runtime::AllocTaskSn(taskSn)<br>分配全局唯一序列号"]:::successStyle
-    L --> M["SaveTaskCommonInfo(taskInfo, stm, pos, sqeNum)"]:::successStyle
-    M --> N["InitByStream + 设置 id/flipNum/sqeNum"]:::successStyle
+    L --> M["SaveTaskCommonInfo → InitByStream<br/>统一设置 stream/tid/bindFlag/serial/sqeNum"]:::successStyle
+    M --> N["根据任务类型填充 TaskInfo.u.xxx"]:::successStyle
     N --> O["组装SQE，并发送"]:::successStyle
     O --> P["Stream::StreamUnLock"]:::lockStyle
     P --> Q["返回 RT_ERROR_NONE"]:::successStyle
@@ -209,7 +208,7 @@ flowchart TD
     G --> H["TaskAllocator::AllocId() ->全局 device级TaskId"]:::allocStyle
     H --> I["TaskAllocator::GetItemById -> 获取TaskInfo 指针"]:::allocStyle
     I --> L["Runtime::AllocTaskSn() -> 获取全局 taskSn 保序ID"]:::allocStyle
-    L --> M["SaveTaskCommonInfo(taskInfo, stm, pos, sqeNum)"]:::allocStyle
+    L --> M["SaveTaskCommonInfo → InitByStream<br/>统一设置 stream/tid/bindFlag/serial/sqeNum"]:::allocStyle
     M --> O["组装SQE，并发送"]:::allocStyle
     O --> P["Stream::StreamUnLock"]:::lockStyle
     P --> Q["返回 RT_ERROR_NONE"]:::successStyle
@@ -290,7 +289,7 @@ rtError_t TaskResManageDavid::AllocTaskInfoAndPos(uint32_t sqeNum, uint32_t &pos
 
 ```cpp
 // task_david.cc
-rtError_t AllocTaskInfo(TaskInfo **taskInfo, Stream *stm, uint32_t &pos, uint32_t sqeNum) {
+static rtError_t AllocTaskInfo(TaskInfo** taskInfo, Stream* const stm, uint32_t& pos, uint32_t sqeNum) {
     TaskResManageDavid *taskResMang = ...;
     rtError_t error = taskResMang->AllocTaskInfoAndPos(sqeNum, pos, taskInfo);
     
@@ -304,6 +303,7 @@ rtError_t AllocTaskInfo(TaskInfo **taskInfo, Stream *stm, uint32_t &pos, uint32_
     }
     if (error == RT_ERROR_NONE) {
         Runtime::Instance()->AllocTaskSn((*taskInfo)->taskSn);
+        SaveTaskCommonInfo(*taskInfo, stm, sqeNum);  // 内部调用 InitByStream 统一设置公共头信息
     }
     return error;
 }
@@ -559,7 +559,7 @@ classDiagram
 | TaskResManageDavid | `core/inc/task/task_res_da.hpp` | 原子 head/tail<br> AllocTaskInfoAndPos |
 | TaskResManage 实现 | `core/src/task/task_res_manage/task_res.cc` | v100 分配/回收/Load |
 | TaskResManageDavid 实现 | `core/src/task/task_res_manage/v200/task_res_da.cc` | David 分配/回收/回滚 |
-| David 任务下发 | `core/src/task/task_submit/v200/task_david.cc` | AllocTaskInfo <br> DavidSendTask |
+| David 任务下发 | `core/src/task/task_submit/v200/task_david.cc` | AllocTask（统一入口）<br>AllocTaskInfo <br> SaveTaskCommonInfo <br> DavidSendTask |
 | David 任务回收 | `core/src/task/task_recycle/v200/task_recycle.cc` | TryRecycleTask <br> 回收线程 |
 | 回收公共逻辑 | `core/src/task/task_recycle/v200/task_recycle_common_base.cc` | TaskReclaimForSeparatedStm <br> 回收CQE、回收Task |
 ---

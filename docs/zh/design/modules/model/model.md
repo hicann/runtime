@@ -285,7 +285,7 @@ sequenceDiagram
         RT-->>ACL: success
         ACL-->>App: ACL_SUCCESS
     else 非 AutoSplit 模式
-        RT->>Stream: AllocTaskInfo()
+        RT->>Stream: AllocTask()
         Stream->>Stream: 记录到 delayRecycleTaskid_
         Stream->>Stream: SQE 直接写入硬件 SQ
         Stream->>HW: SQE 直接写入硬件 SQ
@@ -663,7 +663,7 @@ flowchart TD
     P1 --> Q1["任务分配完成<br/>等待 LoadComplete 批量下发"]
     
     %% 非 AutoSplit 路径
-    J -->|否 非 AutoSplit 模式| E2["AllocTaskInfo()"]
+    J -->|否 非 AutoSplit 模式| E2["AllocTask()"]
     E2 --> F2["记录到 delayRecycleTaskid_"]
     F2 --> G2["SQE 直接写入设备 SQ"]
     G2 --> Q2["任务实时提交完成"]

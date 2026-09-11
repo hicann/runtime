@@ -131,7 +131,7 @@ sequenceDiagram
     Fusion->>Fusion: FusionKernelTaskPreProc<br/>预处理子任务
     Fusion->>Kernel: 获取注册好的算子信息
     Kernel->>Fusion: 返回算子pc地址等信息
-    Fusion->>Stream: AllocTaskInfo<br/>分配任务信息
+    Fusion->>Stream: AllocTask<br/>分配任务信息
     Fusion->>Fusion: FusionKernelTaskProc<br/>处理子任务
     Fusion->>Fusion: ConstructDavidSqe<br/>构建SQE
     Fusion->>Stream: DavidSendTask<br/>发送任务

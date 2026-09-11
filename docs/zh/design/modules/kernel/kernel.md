@@ -158,7 +158,7 @@ sequenceDiagram
         acl->>Api: LaunchKernel(kernel*, numBlocks, argsInfo, stream)
         Api->>Kernel: GetFunctionDevAddr(kernelPc1, kernelPc2)
         Note over Kernel: baseAddrAlign + offset → 计算设备侧地址
-        Api->>Stream: AllocTaskInfo + AicTaskInit [分配并初始化任务]
+        Api->>Stream: AllocTask + AicTaskInit [分配并初始化任务]
         Api->>Stream: LoadArgsInfo [通过 ArgManager 加载内核参数到设备]
         Api->>Stream: 构造 SQE + 提交到设备
         Stream->>Device: SQE 写入 SQ → 硬件执行
@@ -316,7 +316,7 @@ flowchart TD
     C --> D[Kernel::GetFunctionDevAddr]
     D --> E[baseAddrAlign + offset → kernelPc1/kernelPc2]
     C --> F[StreamLaunchKernelV2]
-    F --> G[AllocTaskInfoForCapture<br/>分配 TaskInfo]
+    F --> G[AllocTask<br/>分配 TaskInfo]
     G --> H[AicTaskInit<br/>初始化内核任务信息]
     H --> I[LoadArgsInfo<br/>ArgManager 加载内核参数到设备]
     I --> J[填充 AicTaskInfo<br/>funcAddr=kernelPc1, progHandle]
@@ -341,8 +341,9 @@ rtError_t StreamLaunchKernelV2(Kernel *kernel, const uint32_t coreDim, Stream *s
     Program * const prog = kernel->Program_();
     // 获取设备侧函数地址
     error = kernel->GetFunctionDevAddr(kernelPc1, kernelPc2);
-    // 分配 TaskInfo
-    error = AllocTaskInfoForCapture(&kernelTask, stm, pos, dstStm, 1U, true);
+    // 分配 TaskInfo（统一入口，内部处理 capture/non-capture/auto-split 分发）
+    // stars v2 路径传 nullptr，stars v1 路径传 &submitTask（临时变量）
+    kernelTask = stm->AllocTask(nullptr, TS_TASK_TYPE_KERNEL_AICORE, error, 1U, UpdateTaskFlag::SUPPORT);
     // 初始化内核任务
     AicTaskInit(kernelTask, kernelAttrType, static_cast<uint16_t>(coreDim), extendAgrs->taskCfg, false);
     // 加载参数
