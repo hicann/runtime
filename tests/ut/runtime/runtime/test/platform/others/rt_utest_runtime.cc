@@ -205,6 +205,28 @@ TEST_F(ChipRuntimeTest, ParseIniFile_Success)
     EXPECT_EQ(iniAttrs.normalStreamDepth, 8192U);
     EXPECT_EQ(iniAttrs.hugeStreamNum, 16U);
     EXPECT_EQ(iniAttrs.hugeStreamDepth, 4096U);
+    EXPECT_EQ(iniAttrs.modelScheduleSoftware, 1U);
+}
+
+TEST_F(ChipRuntimeTest, UpdateDevPropertiesFromIniAttrs_ModelScheduleSoftwareOnlyAcceptsOne)
+{
+    Runtime* rtInstance = (Runtime*)Runtime::Instance();
+    DevProperties origProps;
+    ASSERT_EQ(GET_DEV_PROPERTIES(CHIP_CLOUD, origProps), RT_ERROR_NONE);
+
+    RtIniAttributes iniAttrs = {};
+    iniAttrs.modelScheduleSoftware = 1U;
+    rtInstance->UpdateDevPropertiesFromIniAttrs(CHIP_CLOUD, iniAttrs);
+    DevProperties updatedProps;
+    ASSERT_EQ(GET_DEV_PROPERTIES(CHIP_CLOUD, updatedProps), RT_ERROR_NONE);
+    EXPECT_TRUE(updatedProps.modelScheduleSoftware);
+
+    iniAttrs.modelScheduleSoftware = 2U;
+    rtInstance->UpdateDevPropertiesFromIniAttrs(CHIP_CLOUD, iniAttrs);
+    ASSERT_EQ(GET_DEV_PROPERTIES(CHIP_CLOUD, updatedProps), RT_ERROR_NONE);
+    EXPECT_FALSE(updatedProps.modelScheduleSoftware);
+
+    SET_DEV_PROPERTIES(CHIP_CLOUD, origProps);
 }
 
 TEST_F(ChipRuntimeTest, ParseIniFile_MixedInvalidInput_KeepDefaultForBadFields)
@@ -216,6 +238,7 @@ TEST_F(ChipRuntimeTest, ParseIniFile_MixedInvalidInput_KeepDefaultForBadFields)
     EXPECT_EQ(iniAttrs.normalStreamDepth, 0U);
     EXPECT_EQ(iniAttrs.hugeStreamNum, 0U);
     EXPECT_EQ(iniAttrs.hugeStreamDepth, 256U);
+    EXPECT_EQ(iniAttrs.modelScheduleSoftware, 0U);
 }
 
 TEST_F(ChipRuntimeTest, ParseIniFile_QueryError_SkipRemainingFields)

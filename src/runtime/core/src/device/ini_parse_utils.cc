@@ -131,6 +131,23 @@ static void GetArchInfoFromIniFile(const std::string& socVersion, RtIniAttribute
     RT_LOG(RT_LOG_INFO, "iniAttrs: socVersion=%s, npuArch=%ld.", socVersion.c_str(), iniAttrs.npuArch);
 }
 
+static void GetModelScheduleSoftwareFromIniFile(const std::string& socVersion, RtIniAttributes& iniAttrs)
+{
+    std::string value;
+    const int32_t ret = PlatformManagerV2::Instance().GetSocSpec(
+        socVersion, platform_config::kSocInfoSection, platform_config::kModelScheduleSoftwareField, value);
+    if (ret == RT_ERROR_NOT_FOUND) {
+        return;
+    }
+    if (ret != RT_ERROR_NONE) {
+        RT_LOG(
+            RT_LOG_WARNING, "Get model schedule software config failed for socVersion[%s], ret=%d, keep disabled.",
+            socVersion.c_str(), ret);
+        return;
+    }
+    iniAttrs.modelScheduleSoftware = (value == "1") ? 1U : 0U;
+}
+
 void ParseIniFile(const std::string& socVersion, RtIniAttributes& iniAttrs)
 {
     if (socVersion.empty()) {
@@ -140,6 +157,7 @@ void ParseIniFile(const std::string& socVersion, RtIniAttributes& iniAttrs)
 
     GetStreamSpecFromIniFile(socVersion, iniAttrs);
     GetArchInfoFromIniFile(socVersion, iniAttrs);
+    GetModelScheduleSoftwareFromIniFile(socVersion, iniAttrs);
 }
 
 } // namespace runtime

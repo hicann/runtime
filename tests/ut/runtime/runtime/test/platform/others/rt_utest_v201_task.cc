@@ -2117,6 +2117,11 @@ TEST_F(TaskTestV201, Test_StarsSetResultForModelSerialSchedTask)
 
 TEST_F(TaskTestV201, Test_ModelSerialSchedPreProc_EmptyHeadStream)
 {
+    DevProperties origProps = stream_->Device_()->GetDevProperties();
+    DevProperties props = origProps;
+    props.modelScheduleSoftware = true;
+    stream_->Device_()->RefreshDevProperties(props);
+
     rtModel_t model;
     rtError_t ret = rtModelCreate(&model, 0);
     ASSERT_EQ(ret, RT_ERROR_NONE);
@@ -2139,6 +2144,7 @@ TEST_F(TaskTestV201, Test_ModelSerialSchedPreProc_EmptyHeadStream)
     ret = ModelSerialSchedPreProc(stream_, notify, mdl);
     EXPECT_NE(ret, RT_ERROR_NONE);
 
+    stream_->Device_()->RefreshDevProperties(origProps);
     delete notify;
     ret = rtModelDestroy(model);
     EXPECT_EQ(ret, RT_ERROR_NONE);
@@ -2146,6 +2152,11 @@ TEST_F(TaskTestV201, Test_ModelSerialSchedPreProc_EmptyHeadStream)
 
 TEST_F(TaskTestV201, Test_ModelSerialSchedPostProc_EmptyHeadStream)
 {
+    DevProperties origProps = stream_->Device_()->GetDevProperties();
+    DevProperties props = origProps;
+    props.modelScheduleSoftware = true;
+    stream_->Device_()->RefreshDevProperties(props);
+
     rtModel_t model;
     rtError_t ret = rtModelCreate(&model, 0);
     ASSERT_EQ(ret, RT_ERROR_NONE);
@@ -2168,12 +2179,13 @@ TEST_F(TaskTestV201, Test_ModelSerialSchedPostProc_EmptyHeadStream)
     ret = ModelSerialSchedPostProc(stream_, notify, mdl);
     EXPECT_NE(ret, RT_ERROR_NONE);
 
+    stream_->Device_()->RefreshDevProperties(origProps);
     delete notify;
     ret = rtModelDestroy(model);
     EXPECT_EQ(ret, RT_ERROR_NONE);
 }
 
-TEST_F(TaskTestV201, Test_ModelSerialSchedPreProc_Mc32EarlyReturn)
+TEST_F(TaskTestV201, Test_ModelSerialSchedPreProc_DisabledEarlyReturn)
 {
     rtModel_t model;
     rtError_t ret = rtModelCreate(&model, 0);
@@ -2186,7 +2198,7 @@ TEST_F(TaskTestV201, Test_ModelSerialSchedPreProc_Mc32EarlyReturn)
 
     DevProperties origProps = stream_->Device_()->GetDevProperties();
     DevProperties props = origProps;
-    props.aivNumPerDie = 4U;
+    props.modelScheduleSoftware = false;
     stream_->Device_()->RefreshDevProperties(props);
 
     ret = ModelSerialSchedPreProc(stream_, notify, mdl);
@@ -2198,7 +2210,7 @@ TEST_F(TaskTestV201, Test_ModelSerialSchedPreProc_Mc32EarlyReturn)
     EXPECT_EQ(ret, RT_ERROR_NONE);
 }
 
-TEST_F(TaskTestV201, Test_ModelSerialSchedPostProc_Mc32EarlyReturn)
+TEST_F(TaskTestV201, Test_ModelSerialSchedPostProc_DisabledEarlyReturn)
 {
     rtModel_t model;
     rtError_t ret = rtModelCreate(&model, 0);
@@ -2211,7 +2223,7 @@ TEST_F(TaskTestV201, Test_ModelSerialSchedPostProc_Mc32EarlyReturn)
 
     DevProperties origProps = stream_->Device_()->GetDevProperties();
     DevProperties props = origProps;
-    props.aivNumPerDie = 4U;
+    props.modelScheduleSoftware = false;
     stream_->Device_()->RefreshDevProperties(props);
 
     ret = ModelSerialSchedPostProc(stream_, notify, mdl);

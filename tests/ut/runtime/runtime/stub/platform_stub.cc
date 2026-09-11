@@ -212,7 +212,8 @@ const std::map<std::string, StubFieldMap> kSocInfoMap = {
      {{"normal_stream_num", "64"},
       {"normal_stream_depth", "8192"},
       {"huge_stream_num", "16"},
-      {"huge_stream_depth", "4096"}}},
+      {"huge_stream_depth", "4096"},
+      {"model_schedule_software", "1"}}},
     {"Ascend960DT_961BY",
      {{"normal_stream_num", "65535"},
       {"normal_stream_depth", "2049"},
@@ -272,6 +273,10 @@ int32_t GetSoCInfoSocSpec(const std::string& socVersion, const std::string& key,
         }
         if (key == "huge_stream_depth") {
             value = "256";
+            return RT_ERROR_NONE;
+        }
+        if (key == "model_schedule_software") {
+            value = "1abc";
             return RT_ERROR_NONE;
         }
     }

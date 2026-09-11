@@ -318,6 +318,7 @@ struct DevProperties final {
     uint32_t taskFailPrintFlushTimeoutMs = TASK_FAIL_PRINT_FLUSH_TIMEOUT_DEFAULT;
     MemsetTaskSupportType memsetTaskSupport = MemsetTaskSupportType::MEMSET_TASK_NOT_SUPPORT;
     uint32_t icachePrefetchUnits = ICACHE_PREFETCH_DEFAULT_UNIT;
+    bool modelScheduleSoftware = false;
 };
 } // namespace runtime
 } // namespace cce

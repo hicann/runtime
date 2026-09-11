@@ -492,6 +492,7 @@ void Runtime::UpdateDevPropertiesFromIniAttrs(const rtChipType_t chipTypeValue, 
     }
 
     props.npuArch = iniAttrs.npuArch;
+    props.modelScheduleSoftware = (iniAttrs.modelScheduleSoftware == 1U);
 
     SET_DEV_PROPERTIES(chipTypeValue, props);
 }
