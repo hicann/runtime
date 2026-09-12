@@ -55,7 +55,7 @@ static const std::unordered_map<uint64_t, std::string> g_davidErrorMapInfo = {
     {CUBE_L0C_ECC, "A multi-bit ECC error occurs when CUBE reads L0C. See the RAS alarm handling."},
     {CUBE_ILLEGAL_INSTR, "The CUBE instruction is abnormal. "
                          "Possible cause: The parameter violates the instruction constraints, the binary version does "
-                         "not match, or the instruction is overwritten"},
+                         "not match, or the instruction is overwritten."},
     {CUBE_ERR_HSET_CNT_OVF, "An overflow error occurs in the CUBE HSET counter."},
     {CUBE_ERR_HSET_CNT_UNF, "An underflow error occurs in the CUBE HSET counter."},
     {CUBE_ERR_PBUF_WRAP_AROUND, "The address for CUBE to operate FIXP buffer is out of bounds."},
@@ -80,7 +80,7 @@ static const std::unordered_map<uint64_t, std::string> g_davidErrorMapInfo = {
     {MTE_NDDMA_REG_BUF_ECC,
      "A multi-bit ECC error occurs when MTE reads NDDMA request buffer. See the RAS alarm handling."},
     {MTE_L1_ECC, "A multi-bit ECC error occurs when MTE2 and MTE3 read L1. See the RAS alarm handling."},
-    {MTE_CFG_REG_PARITY, "A parity error occurs when AICore reads the CFG register. See the RAS alarm handling"},
+    {MTE_CFG_REG_PARITY, "A parity error occurs when AICore reads the CFG register. See the RAS alarm handling."},
     {MTE_L0A_RDWR_CFLT, "CUBE L0A memory read write conflict."},
     {MTE_L0B_RDWR_CFLT, "CUBE L0B memory read write conflict."},
     {MTE_OFFSET_MISALIGN, "MTE gather/scatter dma instruction offset misalign."},
@@ -93,7 +93,7 @@ static const std::unordered_map<uint64_t, std::string> g_davidErrorMapInfo = {
     {MTE_BIF_CFG_REG_PARITY, "BIF configuration parity error."},
     {MTE_INSTR_ILLEGAL_CFG, "The MTE instruction is abnormal. "
                             "Possible cause: The parameter violates the instruction constraints, the binary version "
-                            "does not match, or the instruction is overwritten"},
+                            "does not match, or the instruction is overwritten."},
     {MTE_ATM_ADD_ADDR_MISALIGN, "The MTE atomic instruction address is not aligned."},
     {MTE_INSTR_ADDR_MISALIGN, "The MTE non-atomic instruction address is not aligned."},
     {MTE_GDMA_READ_OVERFLOW, "The address for MTE2 to read UB and MTE3 to read L1/UB is out of bounds."},
@@ -158,8 +158,8 @@ static const std::unordered_map<uint64_t, std::string> g_davidErrorMapInfo = {
 
     // RINGBUFFER_L1_ERROR_1_OFFSET
     {L1_ERR_FIFO_PARITY, "L1/FIXP fifo parity."},
-    {FIXP_BIU_RDWR_RESP, "The address for fixpipe to write GM is invalid"},
-    {FIXP_STB_ECC_ERR, "A multi-bit ECC error occurs when fixpipe reads STB buffer. See the RAS alarm handling"},
+    {FIXP_BIU_RDWR_RESP, "The address for fixpipe to write GM is invalid."},
+    {FIXP_STB_ECC_ERR, "A multi-bit ECC error occurs when fixpipe reads STB buffer. See the RAS alarm handling."},
     {FIXP_FBUF_WR_OVERFLOW, "The address for fixpipe to write FBUF is out of bounds."},
     {FIXP_FBUF_RD_OVERFLOW, "The address for fixpipe to read FBUF is out of bounds."},
     {FIXP_OUT_WR_OVERFLOW, "An overflow error occurs when the FIXP write."},
@@ -198,7 +198,7 @@ static const std::unordered_map<uint64_t, std::string> g_davidErrorMapInfo = {
     {SU_CCU_ADDR_ERR_T0,
      "The address for scalar to use is unaligned or out of bounds "
      "The GM address exceeds 48 bits, or the on-chip buffer address exceeds the size of the buffer."},
-    {SU_CCU_BUS_ERR_T0, "The address for scalar to access GM is invalid"},
+    {SU_CCU_BUS_ERR_T0, "The address for scalar to access GM is invalid."},
     {SU_CCU_DC_DATA_ECC_T0,
      "A multi-bit ECC error occurs when scalar accesses dcache data. See the RAS alarm handling."},
     {SU_CCU_DC_TAG_ECC_T0, "A multi-bit ECC error occurs when scalar accesses dcache tag. See the RAS alarm handling."},
@@ -248,7 +248,7 @@ static const std::unordered_map<uint64_t, std::string> g_davidErrorMapInfo = {
     {VEC_ERR_UB_ARB_DATA_EXCP_MTE_T0, "Data from the MTE is abnormal."},
     {VEC_ERR_UB_ARB_DATA_EXCP_SU_T0, "Data from the CCU is abnormal."},
     {VEC_ERR_UB_ARB_DATA_EXCP_VEC_T0, "Data from the VEC is abnormal."},
-    {VEC_ERR_INSTR_TIMEOUT_T0, "VEC VF execution timeout. Check the configuration of Runtime"},
+    {VEC_ERR_INSTR_TIMEOUT_T0, "VEC VF execution timeout. Check the configuration of Runtime."},
     {VEC_ERR_SU_PLD_UNDEF_T0, "The non-VF instruction is abnormal. Possible cause: "
                               "The parameter violates the instruction constraints, the binary version does not match, "
                               "or the instruction is overwritten."},
