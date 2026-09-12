@@ -11,6 +11,8 @@
 #ifndef TSD_WEAK_ASCEND_HAL_H
 #define TSD_WEAK_ASCEND_HAL_H
 
+#include "driver/ascend_hal_base.h"
+#include "driver/ascend_hal_error.h"
 #include "driver/ascend_inpackage_hal.h"
 
 extern "C" {

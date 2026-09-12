@@ -23,7 +23,6 @@
 #include "package_check_code_service.h"
 #include "package_loader.h"
 #include "hdc_message_builder.h"
-#include "driver/ascend_hal.h"
 #include "proto/tsd_message.pb.h"
 #include "basic_define.h"
 

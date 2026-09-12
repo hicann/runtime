@@ -13,7 +13,7 @@
 
 #include <memory>
 #include "device_comm.h"
-#include "driver/ascend_hal.h"
+#include "driver/ascend_hal_base.h"
 #include "proto/tsd_message.pb.h"
 #include "tsd/status.h"
 #include "tsd_version_verify.h"

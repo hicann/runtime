@@ -8,8 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#include "driver/ascend_hal.h"
-#include "driver/ascend_inpackage_hal.h"
+#include "driver/ascend_hal_base.h"
+#include "driver/ascend_hal_error.h"
 
 int halGetDeviceVfMax(unsigned int devId, unsigned int* vf_max_num)
 {
