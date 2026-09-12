@@ -11,10 +11,8 @@
 #include "package_env_info.h"
 #include <string>
 #include <vector>
-#include "driver/ascend_hal.h"
 #include "capability_manager.h"
 #include "env_internal_api.h"
-#include "error_manager.h"
 #include "platform_info.h"
 #include "tsd_log.h"
 #include "tsd/status.h"
