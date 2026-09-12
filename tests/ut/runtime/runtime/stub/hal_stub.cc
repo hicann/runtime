@@ -147,6 +147,9 @@ drvError_t halRepairFault(uint32_t devid, halRepairFaultInfo* info)
 
 int64_t g_device_driver_version_stub = 1;
 int64_t g_device_driver_chassis_id_stub = 0xABCD;
+// UT error injection switch: when set to a non-zero infoType, halGetDeviceInfo returns DRV_ERROR_NOT_SUPPORT
+// for that infoType; 0 means no injection.
+int32_t g_hal_device_info_not_support_info_type_stub = 0;
 void halSetDeviceInfoEncap(int32_t moduleType, int32_t infoType, int64_t value)
 {
     if (moduleType == MODULE_TYPE_SYSTEM && infoType == INFO_TYPE_VERSION) {
@@ -156,6 +159,10 @@ void halSetDeviceInfoEncap(int32_t moduleType, int32_t infoType, int64_t value)
 
 drvError_t halGetDeviceInfo(uint32_t devId, int32_t moduleType, int32_t infoType, int64_t* value)
 {
+    if ((g_hal_device_info_not_support_info_type_stub != 0) &&
+        (infoType == g_hal_device_info_not_support_info_type_stub)) {
+        return DRV_ERROR_NOT_SUPPORT;
+    }
     if (value) {
         if (moduleType == MODULE_TYPE_SYSTEM && infoType == INFO_TYPE_CORE_NUM) {
             *value = g_device_driver_version_stub;
