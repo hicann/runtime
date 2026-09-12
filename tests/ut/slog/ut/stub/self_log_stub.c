@@ -17,7 +17,7 @@ void LogPrintSys(int priority, const char* format, ...)
     va_list args;
     va_start(args, format);
     char msg[MSG_LENGTH] = {0};
-    vsprintf(msg, format, args);
+    (void)vsnprintf(msg, sizeof(msg), format, args);
     va_end(args);
     if (priority == LOG_ERR) {
         g_errLogNum++;
@@ -56,7 +56,7 @@ void LogPrintSelf(const char* format, ...)
     va_list args;
     va_start(args, format);
     char msg[MSG_LENGTH] = {0};
-    vsprintf(msg, format, args);
+    (void)vsnprintf(msg, sizeof(msg), format, args);
     va_end(args);
     char* ret = strstr(msg, "[ERROR]");
     if (ret != NULL) {

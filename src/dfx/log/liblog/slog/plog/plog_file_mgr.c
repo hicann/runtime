@@ -819,9 +819,11 @@ STATIC LogStatus PlogGetEnvPath(char* path)
         err = strncat_s(envPath, TOOL_MAX_PATH, subPath, strlen(subPath));
         TWO_ACT_NO_LOG(err != EOK, XFREE(envPath), return LOG_FAILURE);
     }
-    int32_t ret = snprintf_truncated_s(path, MAX_FILEDIR_LEN + 1U, "%s", envPath);
+    int32_t ret = snprintf_s(path, MAX_FILEDIR_LEN + 1U, MAX_FILEDIR_LEN, "%s", envPath);
     XFREE(envPath);
-    ONE_ACT_ERR_LOG(ret < 0, return LOG_FAILURE, "get path failed, ret=%d.", ret);
+    ONE_ACT_ERR_LOG(
+        ret == -1, return LOG_FAILURE,
+        "env log path exceeds max dir length %u, refuse to truncate it, use default path instead.", MAX_FILEDIR_LEN);
     SELF_LOG_INFO("get env success, host log file path: %s", path);
     return LOG_SUCCESS;
 }
