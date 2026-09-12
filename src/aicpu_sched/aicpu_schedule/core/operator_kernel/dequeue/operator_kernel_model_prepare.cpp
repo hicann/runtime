@@ -262,8 +262,8 @@ int32_t OperatorKernelModelPrepare::CopyDequeueDataPtrToInputAddr(
         if (*(PtrAdd<const uint32_t>(inputIndexList, msgInfo.inputAddrNum, addrIndex)) < inputsData.size()) {
             inputAddrPtr = PtrToPtr<void, uint64_t>(ValueToPtr(
                 static_cast<uintptr_t>(*(PtrAdd<uint64_t>(inputAddrList, msgInfo.inputAddrNum, addrIndex)))));
-            *(inputAddrPtr) = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(inputsData[static_cast<size_t>(
-                *(PtrAdd<const uint32_t>(inputIndexList, msgInfo.inputAddrNum, addrIndex)))]));
+            *(inputAddrPtr) = PtrToValue(inputsData[static_cast<size_t>(
+                *(PtrAdd<const uint32_t>(inputIndexList, msgInfo.inputAddrNum, addrIndex)))]);
         } else {
             aicpusd_err(
                 "Prepare dequeue mbuf index out of range, index:[%u], inputIndexList[addrIndex]:[%zu], "
@@ -348,8 +348,7 @@ int32_t OperatorKernelModelPrepare::GetDataPtrsFromMbufs(
         }
     } else if (msgInfo.outputMbufNum == msgInfo.outQueueNum) {
         for (uint32_t i = 0U; i < msgInfo.outputMbufNum; i++) {
-            ret = OperatorKernelCommon::GetMbufDataPtr(
-                reinterpret_cast<uint64_t>(reinterpret_cast<uintptr_t>(&(mbufPtrStore[i]))), &dataPtr);
+            ret = OperatorKernelCommon::GetMbufDataPtr(PtrToValue(&(mbufPtrStore[i])), &dataPtr);
             if (ret != AICPU_SCHEDULE_OK) {
                 aicpusd_err("Failed to get mbuf data addr.");
                 return ret;
@@ -435,8 +434,7 @@ int32_t OperatorKernelModelPrepare::GetMbufListDataPtr(
         return AICPU_SCHEDULE_ERROR_FROM_DRV;
     }
 
-    const auto ret = OperatorKernelCommon::GetMbufDataPtr(
-        static_cast<uint64_t>(reinterpret_cast<uintptr_t>(&dataMbuf)), dataAddrPtr);
+    const auto ret = OperatorKernelCommon::GetMbufDataPtr(PtrToValue(&dataMbuf), dataAddrPtr);
     if (ret != AICPU_SCHEDULE_OK) {
         aicpusd_err("Failed to get mbuf data addr. ret is [%d]", ret);
         return ret;

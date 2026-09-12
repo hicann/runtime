@@ -223,9 +223,9 @@ public:
      */
     void ClearBaseDumpData();
     bool IsSupportKfcDump();
-    const std::string& GetDumpPath() { return dumpPath_; }
-    uint32_t GetDeviceId() { return deviceId_; }
-    int32_t GetHostPid() { return hostPid_; }
+    const std::string& GetDumpPath() const { return dumpPath_; }
+    uint32_t GetDeviceId() const { return deviceId_; }
+    int32_t GetHostPid() const { return hostPid_; }
     const std::string& GetOpName() { return opName_; }
     void GetKfcDumpInfo(std::shared_ptr<KfcDumpInfo> dumpInfo);
     StatusCode Dump(
@@ -586,12 +586,12 @@ template <typename T>
 class NormalDataStats : public DataStats<T> {
 public:
     NormalDataStats(uint64_t dataAddr, uint64_t dataSize) : DataStats<T>(dataAddr, dataSize) {}
-    ~NormalDataStats() = default;
+    ~NormalDataStats() override = default;
 
 protected:
-    inline bool IsNan(T ele) const { return std::isnan(ele); }
+    inline bool IsNan(T ele) const override { return std::isnan(ele); }
 
-    inline bool IsInf(T ele) const { return std::isinf(ele); }
+    inline bool IsInf(T ele) const override { return std::isinf(ele); }
 
 private:
     NormalDataStats(NormalDataStats const&) = delete;
@@ -603,9 +603,9 @@ private:
 class Uint8DataStats : public NormalDataStats<uint8_t> {
 public:
     Uint8DataStats(uint64_t dataAddr, uint64_t dataSize) : NormalDataStats<uint8_t>(dataAddr, dataSize) {}
-    ~Uint8DataStats() = default;
+    ~Uint8DataStats() override = default;
 
-    inline std::string GetDataStatsStr()
+    inline std::string GetDataStatsStr() override
     {
         Stats();
         std::ostringstream oss;
@@ -624,9 +624,9 @@ private:
 class Int8DataStats : public NormalDataStats<int8_t> {
 public:
     Int8DataStats(uint64_t dataAddr, uint64_t dataSize) : NormalDataStats<int8_t>(dataAddr, dataSize) {}
-    ~Int8DataStats() = default;
+    ~Int8DataStats() override = default;
 
-    inline std::string GetDataStatsStr()
+    inline std::string GetDataStatsStr() override
     {
         Stats();
         std::ostringstream oss;
@@ -645,12 +645,12 @@ private:
 class EigenDataStats : public DataStats<Eigen::half> {
 public:
     EigenDataStats(uint64_t dataAddr, uint64_t dataSize) : DataStats<Eigen::half>(dataAddr, dataSize) {}
-    ~EigenDataStats() = default;
+    ~EigenDataStats() override = default;
 
 protected:
-    inline bool IsNan(Eigen::half ele) const { return Eigen::numext::isnan(ele); }
+    inline bool IsNan(Eigen::half ele) const override { return Eigen::numext::isnan(ele); }
 
-    inline bool IsInf(Eigen::half ele) const { return Eigen::numext::isinf(ele); }
+    inline bool IsInf(Eigen::half ele) const override { return Eigen::numext::isinf(ele); }
 
 private:
     EigenDataStats(EigenDataStats const&) = delete;
