@@ -16,6 +16,7 @@
 #include "package_manager.h"
 #include "device_comm_agent.h"
 #include "hdc_message_builder.h"
+#include "driver/ascend_hal_external.h"
 
 #include <chrono>
 

@@ -20,8 +20,7 @@
 #include "tsd_util_func.h"
 #include "env_internal_api.h"
 #include "hdc_message_builder.h"
-#include "weak_ascend_hal.h"
-#include "driver/ascend_hal.h"
+#include "driver/ascend_hal_base.h"
 #include "common/type_def.h"
 
 namespace {
