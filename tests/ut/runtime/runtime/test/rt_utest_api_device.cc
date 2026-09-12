@@ -9,6 +9,7 @@
  */
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
+#include "driver/ascend_hal.h"
 #define private public
 #include "config.h"
 #include "runtime.hpp"
@@ -29,6 +30,9 @@ using namespace testing;
 using namespace cce::runtime;
 
 extern int64_t g_device_driver_chassis_id_stub;
+extern int32_t g_hal_device_info_not_support_info_type_stub;
+void ClearLastDlogRecordLine();
+bool DlogRecordContains(const std::string& keyword);
 
 class ApiDeviceTest : public testing::Test {
 protected:
@@ -200,6 +204,20 @@ TEST_F(ApiDeviceTest, TestRtsDeviceGetInfoSuperPodChassisIdMapping)
     const rtError_t error = rtsDeviceGetInfo(devid, RT_DEV_ATTR_SUPER_POD_CHASSIS_ID, &val);
     EXPECT_EQ(error, RT_ERROR_NONE);
     EXPECT_EQ(val, g_device_driver_chassis_id_stub);
+}
+
+TEST_F(ApiDeviceTest, TestRtsDeviceGetInfoNotSupportSilent)
+{
+    constexpr int32_t devid = 0;
+    int64_t val = 123;
+    g_hal_device_info_not_support_info_type_stub = INFO_TYPE_CHASSIS_ID;
+    ClearLastDlogRecordLine();
+    const rtError_t error = rtsDeviceGetInfo(devid, RT_DEV_ATTR_SUPER_POD_CHASSIS_ID, &val);
+    g_hal_device_info_not_support_info_type_stub = 0;
+    EXPECT_EQ(error, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    // Expected not-support behavior must not trigger the fallback ErrMsg(EE1001) reporting.
+    EXPECT_FALSE(DlogRecordContains("rtsDeviceGetInfo execution failed"));
+    EXPECT_EQ(val, static_cast<int64_t>(123));
 }
 
 TEST_F(ApiDeviceTest, TestRtsDeviceGetInfo_abnormal_1)
