@@ -64,7 +64,7 @@ static uint32_t GetDieOffset(const Device* device, const uint32_t coreType, cons
 }
 
 rtError_t GetStackBufferInfo(
-    rtBinHandle const binHandle, uint32_t deviceId, const uint32_t stackType, const uint32_t coreType,
+    const Program* const programHdl, uint32_t deviceId, const uint32_t stackType, const uint32_t coreType,
     const uint32_t coreId, const void** stack, uint32_t* stackSize)
 {
     UNUSED(deviceId);
@@ -75,7 +75,6 @@ rtError_t GetStackBufferInfo(
     NULL_PTR_RETURN(device, RT_ERROR_DEVICE_NULL);
     const auto ret = CheckCoreParam(device, stackType, coreType, coreId);
     COND_RETURN_WITH_NOLOG((ret != RT_ERROR_NONE), ret);
-    Program* const programHdl = RtPtrToPtr<Program*>(binHandle);
     if (stackType == RT_STACK_TYPE_SIMT) {
         const uint32_t simtWarpStkSize = device->GetSimtWarpStkSize();
         const uint32_t simtDvgWarpStkSize = device->GetSimtDvgWarpStkSize();

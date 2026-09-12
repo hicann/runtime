@@ -10,8 +10,8 @@
 #ifndef CCE_RUNTIME_DEVICE_DEBUG_C_HPP
 #define CCE_RUNTIME_DEVICE_DEBUG_C_HPP
 
-#include "runtime/dev.h"
-#include "runtime/mem.h"
+#include "runtime/rt_external_device.h"
+#include "runtime/rt_external_mem.h"
 
 namespace cce {
 namespace runtime {

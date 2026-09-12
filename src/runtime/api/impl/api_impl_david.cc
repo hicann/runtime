@@ -2321,7 +2321,8 @@ rtError_t ApiImplDavid::GetStackBuffer(
     RT_LOG(
         RT_LOG_DEBUG, "Get stack buffer, bin handle %p, stackType %u, coreType %u, coreId %u", binHandle, stackType,
         coreType, coreId);
-    return GetStackBufferInfo(binHandle, deviceId, stackType, coreType, coreId, stack, stackSize);
+    return GetStackBufferInfo(
+        RtPtrToPtr<const Program*>(binHandle), deviceId, stackType, coreType, coreId, stack, stackSize);
 }
 
 rtError_t ApiImplDavid::DebugReadAICore(rtDebugMemoryParam_t* const param)

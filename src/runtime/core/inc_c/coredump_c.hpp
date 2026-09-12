@@ -10,13 +10,15 @@
 #ifndef __CCE_RUNTIME_COREDUMP_C_HPP__
 #define __CCE_RUNTIME_COREDUMP_C_HPP__
 
-#include "task_info.hpp"
+#include "runtime/base.h"
 
 namespace cce {
 namespace runtime {
 
+class Program;
+
 rtError_t GetStackBufferInfo(
-    rtBinHandle const binHandle, uint32_t deviceId, const uint32_t stackType, const uint32_t coreType,
+    const Program* const programHdl, uint32_t deviceId, const uint32_t stackType, const uint32_t coreType,
     const uint32_t coreId, const void** stack, uint32_t* stackSize);
 
 } // namespace runtime
