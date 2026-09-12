@@ -24,6 +24,17 @@ bool IsAicAivBiuPerfStreamSupported(const Stream* const stm)
     return true;
 }
 
+static void UpdateDataDumpAICpuKernelCredit(TaskInfo* const taskInfo, RtDavidStarsAicpuKernelSqe* const aicpuKernelSqe)
+{
+    AicpuTaskInfo* aicpuTaskInfo = &(taskInfo->u.aicpuTaskInfo);
+    const uint8_t kernelFlag = aicpuTaskInfo->comm.kernelFlag;
+    if ((kernelFlag & RT_KERNEL_DUMPFLAG) != 0U) {
+        aicpuKernelSqe->kernelCredit = RT_STARS_NEVER_TIMEOUT_KERNEL_CREDIT;
+    }
+
+    return;
+}
+
 void ConstructDavidAICpuSqeForDavinciTask(TaskInfo* const taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo)
 {
     rtDavidSqe_t* davidSqe = static_cast<rtDavidSqe_t*>(sqe);
@@ -34,6 +45,9 @@ void ConstructDavidAICpuSqeForDavinciTask(TaskInfo* const taskInfo, void* const 
     // swap buffer use host pid
     aicpuKernelSqe->header.type = RT_DAVID_SQE_TYPE_AICPU_D;
     UpdateDavidAICpuKernelSqeForDavinciTask(aicpuKernelSqe);
+
+    // v201基准刻度较小，aicpu算子做永不超时，datadump在公共逻辑有遗漏，此处独立刷新
+    UpdateDataDumpAICpuKernelCredit(taskInfo, aicpuKernelSqe);
 
     PrintDavidSqe(davidSqe, "AICpuTask");
     RT_LOG(
