@@ -29,7 +29,7 @@ enum HostTimerHandlerTag {
 static const std::string PROF_HOST_TOOL_NAME[PROF_HOST_MAX_TAG] = {"perf", "ltrace", "iotop", "cca"};
 
 static const std::string PROF_HOST_PROCESS_CMD[PROF_HOST_MAX_TAG] = {
-    "perf trace -T --syscalls", "ltrace -ttt -T -e pthread_", "iotop -b -d", "cca-ms-collector -freq "};
+    "perf trace -T --syscalls", "ltrace -ttt -T -e pthread_", "iotop -b -d", "cca-ms-collector -mode"};
 
 const std::string PROF_HOST_OUTDATA[PROF_HOST_MAX_TAG] = {
     "data/host_syscall.data", "data/host_pthreadcall.data", "data/host_disk.data", "data/"};

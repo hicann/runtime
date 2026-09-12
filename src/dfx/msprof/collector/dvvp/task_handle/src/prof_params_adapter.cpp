@@ -461,6 +461,10 @@ void ProfParamsAdapter::SetHostSysParam(
             params->host_osrt_profiling = "on";
         } else if (sysSwitch == HOST_SYS_NUMA) {
             params->host_numa_profiling = "on";
+        } else if (sysSwitch == HOST_SYS_THREADS_SYNC) {
+            params->host_threads_sync_profiling = "on";
+        } else if (sysSwitch == HOST_SYS_CACHE) {
+            params->host_cache_profiling = "on";
         }
     }
 }

@@ -1162,7 +1162,9 @@ void ArgsManager::AddHostArgs()
 #if (defined(_WIN32) || defined(_WIN64) || defined(_MSC_VER))
     return;
 #endif
-    Args hostSys = {"host-sys", "The host-sys data type, include cpu, mem, disk, network, osrt", HOST_SYS_CPU};
+    Args hostSys = {
+        "host-sys", "The host-sys data type, include cpu, mem, disk, network, osrt, numa, threads-sync, cache",
+        HOST_SYS_CPU};
     Args hostSysPid = {
         "host-sys-pid", "Set the PID of the app process for "
                         "which you want to collect performance data."};

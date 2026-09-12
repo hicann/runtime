@@ -568,6 +568,18 @@ TEST_F(JOB_WRAPPER_PROF_HOST_CCA_MS_JOB_TEST, Init)
     EXPECT_EQ(PROFILING_FAILED, profHostCcaMsJob->Init(collectionJobCfg_));
     collectionJobCfg_->comParams->params->host_numa_profiling = "on";
     EXPECT_EQ(PROFILING_SUCCESS, profHostCcaMsJob->Init(collectionJobCfg_));
+
+    collectionJobCfg_->comParams->params->host_numa_profiling = "off";
+    collectionJobCfg_->comParams->params->host_threads_sync_profiling = "off";
+    EXPECT_EQ(PROFILING_FAILED, profHostCcaMsJob->Init(collectionJobCfg_));
+    collectionJobCfg_->comParams->params->host_threads_sync_profiling = "on";
+    EXPECT_EQ(PROFILING_SUCCESS, profHostCcaMsJob->Init(collectionJobCfg_));
+
+    collectionJobCfg_->comParams->params->host_threads_sync_profiling = "off";
+    collectionJobCfg_->comParams->params->host_cache_profiling = "off";
+    EXPECT_EQ(PROFILING_FAILED, profHostCcaMsJob->Init(collectionJobCfg_));
+    collectionJobCfg_->comParams->params->host_cache_profiling = "on";
+    EXPECT_EQ(PROFILING_SUCCESS, profHostCcaMsJob->Init(collectionJobCfg_));
 }
 
 TEST_F(JOB_WRAPPER_PROF_HOST_CCA_MS_JOB_TEST, Process)
@@ -983,12 +995,30 @@ TEST_F(JOB_WRAPPER_PROF_HOST_SERVER_TEST, GetCollectCcaMSCmd)
         .will(returnValue(true))
         .then(returnValue(false));
 
+    int32_t profiling_status = PROFILING_FAILED;
+    std::string profHostCmd = "";
     auto profHostService = std::make_shared<Analysis::Dvvp::JobWrapper::ProfHostService>();
     profHostService->Init(collectionJobCfg_, PROF_HOST_CCA_MS);
-    std::string test = "test";
-    EXPECT_EQ(PROFILING_FAILED, profHostService->GetCollectCcaMSCmd(-1, test));
+    EXPECT_EQ(PROFILING_FAILED, profHostService->GetCollectCcaMSCmd(-1, profHostCmd));
 
-    EXPECT_EQ(PROFILING_SUCCESS, profHostService->GetCollectCcaMSCmd(1, test));
+    collectionJobCfg_->comParams->params->host_sys_pid = 1234;
+    collectionJobCfg_->comParams->params->hostProfilingSamplingInterval = 100;
+    collectionJobCfg_->comParams->params->host_numa_profiling = "on";
+    profiling_status = profHostService->GetCollectCcaMSCmd(1234, profHostCmd);
+    EXPECT_EQ(PROFILING_SUCCESS, profiling_status);
+    EXPECT_EQ("cca-ms-collector -mode numa -freq 100 -pid 1234", profHostCmd);
+
+    collectionJobCfg_->comParams->params->host_numa_profiling = "off";
+    collectionJobCfg_->comParams->params->host_threads_sync_profiling = "on";
+    collectionJobCfg_->comParams->params->host_cache_profiling = "on";
+    profiling_status = profHostService->GetCollectCcaMSCmd(1234, profHostCmd);
+    EXPECT_EQ(PROFILING_SUCCESS, profiling_status);
+    EXPECT_EQ("cca-ms-collector -mode threads-sync,llc -pid 1234", profHostCmd);
+
+    collectionJobCfg_->comParams->params->host_threads_sync_profiling = "off";
+    profiling_status = profHostService->GetCollectCcaMSCmd(1234, profHostCmd);
+    EXPECT_EQ(PROFILING_SUCCESS, profiling_status);
+    EXPECT_EQ("cca-ms-collector -mode llc -pid 1234", profHostCmd);
 }
 
 TEST_F(JOB_WRAPPER_PROF_HOST_SERVER_TEST, GetCmdStr)
@@ -1023,6 +1053,9 @@ TEST_F(JOB_WRAPPER_PROF_HOST_SERVER_TEST, GetCmdStr)
 
     profHostService->hostTimerTag_ = PROF_HOST_CCA_MS;
     EXPECT_EQ(PROFILING_FAILED, profHostService->GetCmdStr(-1, test));
+    collectionJobCfg_->comParams->params->host_threads_sync_profiling = "off";
+    collectionJobCfg_->comParams->params->host_cache_profiling = "on";
+    collectionJobCfg_->comParams->params->host_numa_profiling = "off";
     EXPECT_EQ(PROFILING_SUCCESS, profHostService->GetCmdStr(1, test));
     EXPECT_EQ(true, test.find(PROF_HOST_TOOL_NAME[profHostService->hostTimerTag_]) != std::string::npos);
 }

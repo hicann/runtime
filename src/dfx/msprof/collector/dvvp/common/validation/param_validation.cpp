@@ -891,8 +891,9 @@ bool ParamValidation::CheckHostSysOptionsIsValid(const std::string& hostSysOptio
         return false;
     }
 
-    const std::vector<std::string> hostSysWhiteList = {HOST_SYS_CPU,     HOST_SYS_MEM,  HOST_SYS_DISK,
-                                                       HOST_SYS_NETWORK, HOST_SYS_OSRT, HOST_SYS_NUMA};
+    const std::vector<std::string> hostSysWhiteList = {HOST_SYS_CPU,          HOST_SYS_MEM,  HOST_SYS_DISK,
+                                                       HOST_SYS_NETWORK,      HOST_SYS_OSRT, HOST_SYS_NUMA,
+                                                       HOST_SYS_THREADS_SYNC, HOST_SYS_CACHE};
 
     for (size_t j = 0; j < hostSysWhiteList.size(); j++) {
         if (hostSysOptions.compare(hostSysWhiteList[j]) == 0) {

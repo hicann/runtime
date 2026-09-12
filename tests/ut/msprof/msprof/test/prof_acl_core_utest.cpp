@@ -4803,7 +4803,7 @@ TEST_F(MSPROF_ACL_CORE_UTEST, ProfSetConfigWillCheckConfigWhenPlatformSupported)
     config = "write";
     EXPECT_EQ(ACL_SUCCESS, Msprofiler::AclApi::ProfSetConfig(configType, config.c_str(), config.size()));
     configType = ACL_PROF_HOST_SYS;
-    config = "cpu,mem,disk,network,osrt";
+    config = "cpu,mem,disk,network,osrt,numa,threads-sync,cache";
     EXPECT_EQ(ACL_SUCCESS, Msprofiler::AclApi::ProfSetConfig(configType, config.c_str(), config.size()));
     configType = ACL_PROF_STORAGE_LIMIT;
     config = "100MB";
@@ -6398,13 +6398,15 @@ TEST_F(MSPROF_ACL_CORE_UTEST, ProfParamsAdapter_SetHostSysParam_AllSwitches)
 {
     auto a = NewAdapter();
     auto p = NewParams();
-    a->SetHostSysParam("cpu,mem,network,disk,osrt,numa,unknown", p);
+    a->SetHostSysParam("cpu,mem,network,disk,osrt,numa,threads-sync,cache,unknown", p);
     EXPECT_EQ("on", p->host_cpu_profiling);
     EXPECT_EQ("on", p->host_mem_profiling);
     EXPECT_EQ("on", p->host_network_profiling);
     EXPECT_EQ("on", p->host_disk_profiling);
     EXPECT_EQ("on", p->host_osrt_profiling);
     EXPECT_EQ("on", p->host_numa_profiling);
+    EXPECT_EQ("on", p->host_threads_sync_profiling);
+    EXPECT_EQ("on", p->host_cache_profiling);
 }
 
 TEST_F(MSPROF_ACL_CORE_UTEST, ProfParamsAdapter_SetHostSysUsageParam_AllSwitches)

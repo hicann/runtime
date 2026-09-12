@@ -410,10 +410,13 @@ int32_t ProfHostCcaMsJob::Init(const SHARED_PTR_ALIA<CollectionJobCfg> cfg)
     }
 
     collectionJobCfg_ = cfg;
-    if (collectionJobCfg_->comParams->params->host_numa_profiling.compare(MSVP_PROF_ON) != 0) {
+    if (collectionJobCfg_->comParams->params->host_threads_sync_profiling.compare(MSVP_PROF_OFF) == 0 &&
+        collectionJobCfg_->comParams->params->host_cache_profiling.compare(MSVP_PROF_OFF) == 0 &&
+        collectionJobCfg_->comParams->params->host_numa_profiling.compare(MSVP_PROF_OFF) == 0) {
         MSPROF_LOGI("Host_CcaMS_profiling not enabled");
         return PROFILING_FAILED;
     }
+
     return PROFILING_SUCCESS;
 }
 
@@ -727,17 +730,48 @@ int32_t ProfHostService::GetCollectCcaMSCmd(int32_t pid, std::string& profHostCm
         return PROFILING_FAILED;
     }
 
+    bool optionIsFirst = true;
     std::stringstream ssPerfHostCmd;
-    ssPerfHostCmd << "cca-ms-collector ";
-    ssPerfHostCmd << "-freq ";
-    ssPerfHostCmd << collectionJobCfg_->comParams->params->hostProfilingSamplingInterval << " ";
-    if (!collectionJobCfg_->comParams->tmpResultDir.empty()) {
-        ssPerfHostCmd << "-result-dir ";
-        ssPerfHostCmd << profHostOutDir_ << " ";
-    }
-    ssPerfHostCmd << pid;
+    ssPerfHostCmd << "cca-ms-collector -mode ";
 
+    if (collectionJobCfg_->comParams->params->host_threads_sync_profiling.compare(MSVP_PROF_OFF) == 0 &&
+        collectionJobCfg_->comParams->params->host_cache_profiling.compare(MSVP_PROF_OFF) == 0 &&
+        collectionJobCfg_->comParams->params->host_numa_profiling.compare(MSVP_PROF_OFF) == 0) {
+        return PROFILING_FAILED;
+    }
+
+    if (collectionJobCfg_->comParams->params->host_threads_sync_profiling.compare(MSVP_PROF_ON) == 0) {
+        ssPerfHostCmd << "threads-sync";
+        optionIsFirst = false;
+    }
+
+    if (collectionJobCfg_->comParams->params->host_cache_profiling.compare(MSVP_PROF_ON) == 0) {
+        if (!optionIsFirst) {
+            ssPerfHostCmd << ",";
+        }
+        ssPerfHostCmd << "llc";
+        optionIsFirst = false;
+    }
+
+    if (collectionJobCfg_->comParams->params->host_numa_profiling.compare(MSVP_PROF_ON) == 0) {
+        if (!optionIsFirst) {
+            ssPerfHostCmd << ",";
+        }
+        ssPerfHostCmd << "numa";
+        optionIsFirst = false;
+
+        ssPerfHostCmd << " -freq ";
+        ssPerfHostCmd << collectionJobCfg_->comParams->params->hostProfilingSamplingInterval;
+    }
+
+    if (!collectionJobCfg_->comParams->tmpResultDir.empty()) {
+        ssPerfHostCmd << " -result-dir ";
+        ssPerfHostCmd << profHostOutDir_;
+    }
+
+    ssPerfHostCmd << " -pid " << pid;
     profHostCmd = ssPerfHostCmd.str();
+    MSPROF_LOGI("cca-ms-collector cmd: %s", profHostCmd.c_str());
     return PROFILING_SUCCESS;
 }
 

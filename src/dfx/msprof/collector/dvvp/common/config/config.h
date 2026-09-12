@@ -244,6 +244,8 @@ constexpr char HOST_SYS_DISK[] = "disk";
 constexpr char HOST_SYS_NETWORK[] = "network";
 constexpr char HOST_SYS_OSRT[] = "osrt"; // os_runtime: system call && pthread
 constexpr char HOST_SYS_NUMA[] = "numa";
+constexpr char HOST_SYS_THREADS_SYNC[] = "threads-sync";
+constexpr char HOST_SYS_CACHE[] = "cache";
 
 constexpr char OUTPUT_RECORD[] = "profiling_output_record";
 

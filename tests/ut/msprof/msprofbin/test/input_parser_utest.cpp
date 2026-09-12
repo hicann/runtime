@@ -123,7 +123,7 @@ TEST_F(INPUT_PARSER_UTEST, MsprofHostCheckValid)
     cmdInfo.args[ARGS_HOST_SYS] = "cpu,mem";
     EXPECT_EQ(PROFILING_SUCCESS, parser.MsprofHostCheckValid(cmdInfo, ARGS_HOST_SYS));
 
-    cmdInfo.args[ARGS_HOST_SYS] = "numa";
+    cmdInfo.args[ARGS_HOST_SYS] = "numa,threads-sync,cache";
     EXPECT_EQ(PROFILING_SUCCESS, parser.MsprofHostCheckValid(cmdInfo, ARGS_HOST_SYS));
 
     cmdInfo.args[ARGS_HOST_SYS] = "cpu,mem,network,osrt";

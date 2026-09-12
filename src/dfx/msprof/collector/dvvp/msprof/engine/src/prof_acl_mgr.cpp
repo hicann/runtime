@@ -144,7 +144,7 @@ std::string GetFixedJsonConfigInvalidReason(const std::string& config)
         return "Please input 'read' or 'write'";
     }
     if (config == "host_sys") {
-        return "Please input one or more of 'cpu', 'mem', 'disk', 'network', 'osrt' or 'numa'";
+        return "Please input one or more of 'cpu', 'mem', 'disk', 'network', 'osrt', 'numa', 'threads-sync' or 'cache'";
     }
     if (config == "host_sys_usage") {
         return "Please input 'cpu' or 'mem'";

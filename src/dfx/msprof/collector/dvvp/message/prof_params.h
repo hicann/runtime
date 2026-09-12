@@ -184,6 +184,8 @@ struct ProfileParams : public BaseInfo {
     std::string host_disk_profiling;
     std::string host_osrt_profiling;
     std::string host_numa_profiling;
+    std::string host_threads_sync_profiling;
+    std::string host_cache_profiling;
     std::string pureCpu;
 
     // app cpu/memory/network usage on host
@@ -290,6 +292,8 @@ struct ProfileParams : public BaseInfo {
           host_disk_profiling("off"),
           host_osrt_profiling("off"),
           host_numa_profiling("off"),
+          host_threads_sync_profiling("off"),
+          host_cache_profiling("off"),
           pureCpu("off"),
           hostProfiling(false),
           host_cpu_profiling("off"),
@@ -366,7 +370,8 @@ struct ProfileParams : public BaseInfo {
             host_mem_profiling.compare("on") == 0 || hostAllPidCpuProfiling.compare("on") == 0 ||
             hostAllPidMemProfiling.compare("on") == 0 || host_network_profiling.compare("on") == 0 ||
             host_disk_profiling.compare("on") == 0 || host_osrt_profiling.compare("on") == 0 ||
-            host_numa_profiling.compare("on") == 0 || msproftx.compare("on") == 0) {
+            host_numa_profiling.compare("on") == 0 || host_threads_sync_profiling.compare("on") == 0 ||
+            host_cache_profiling.compare("on") == 0 || msproftx.compare("on") == 0) {
             return true;
         }
         return false;
@@ -458,6 +463,8 @@ struct ProfileParams : public BaseInfo {
         SET_VALUE(object, host_disk_profiling);
         SET_VALUE(object, host_osrt_profiling);
         SET_VALUE(object, host_numa_profiling);
+        SET_VALUE(object, host_threads_sync_profiling);
+        SET_VALUE(object, host_cache_profiling);
         SET_VALUE(object, host_disk_freq);
         SET_VALUE(object, stars_acsq_task);
         SET_VALUE(object, taskBlock);
@@ -530,6 +537,8 @@ struct ProfileParams : public BaseInfo {
         FROM_STRING_VALUE(object, host_disk_profiling);
         FROM_STRING_VALUE(object, host_osrt_profiling);
         FROM_STRING_VALUE(object, host_numa_profiling);
+        FROM_STRING_VALUE(object, host_threads_sync_profiling);
+        FROM_STRING_VALUE(object, host_cache_profiling);
         FROM_INT_VALUE(object, host_disk_freq, DEFAULT_PROFILING_INTERVAL_10MS);
         FROM_STRING_VALUE(object, host_mem_profiling);
         FROM_STRING_VALUE(object, host_network_profiling);
