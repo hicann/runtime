@@ -112,7 +112,7 @@ int32_t OperatorKernelModelBatchDequeue::DoModelDequeue(BufEnQueueInfo& bufInfo,
 // if max(inputs timestamp-alignOffset)-min(inputs timestamp-alignOffset) < alignInterval, return ok
 // else delete oldest data, then re-dequeue data until inputs timestamp alignment is satisfied or the queue is empty.
 int32_t OperatorKernelModelBatchDequeue::AlignBatchDequeue(
-    BatchDequeueInfo& batchDeqInfo, const RunContext& taskContext)
+    BatchDequeueInfo& batchDeqInfo, const RunContext& taskContext) const
 {
     // model has been checked, not nullptr
     auto& inputsIsDequeue = AicpuModelManager::GetInstance().GetModel(taskContext.modelId)->MutableInputsIsDequeue();

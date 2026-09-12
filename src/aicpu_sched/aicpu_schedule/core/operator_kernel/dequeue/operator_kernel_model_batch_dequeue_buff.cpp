@@ -167,8 +167,7 @@ int32_t OperatorKernelModelBatchDequeueBuff::DequeueBuff(
     }
 
     void* dataAddrPtr = nullptr;
-    drvRet = OperatorKernelCommon::GetMbufDataPtr(
-        static_cast<uint64_t>(reinterpret_cast<uintptr_t>(&outMBuf)), &dataAddrPtr);
+    drvRet = OperatorKernelCommon::GetMbufDataPtr(PtrToValue(&outMBuf), &dataAddrPtr);
     if (drvRet != AICPU_SCHEDULE_OK) {
         aicpusd_err("Failed to get mbuf data addr. ret is [%d]", drvRet);
         return drvRet;

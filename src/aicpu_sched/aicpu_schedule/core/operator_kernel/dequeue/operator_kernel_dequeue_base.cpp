@@ -38,7 +38,7 @@ int32_t OperatorKernelDequeueBase::DequeueTask(
         if (ret == DRV_ERROR_NONE) {
             // guard taskMBuf
             const auto guardRet =
-                BufManager::GetInstance().GuardBuf(reinterpret_cast<Mbuf*>(taskMBuf), taskContext.modelId);
+                BufManager::GetInstance().GuardBuf(PtrToPtr<void, Mbuf>(taskMBuf), taskContext.modelId);
             if (guardRet != AICPU_SCHEDULE_OK) {
                 aicpusd_err("BufManager guard dequeue failed, modelId[%u], ret[%d].", taskContext.modelId, guardRet);
                 return guardRet;

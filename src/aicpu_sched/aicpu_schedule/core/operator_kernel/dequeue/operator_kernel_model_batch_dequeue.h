@@ -26,7 +26,7 @@ private:
     int32_t CheckAndParseBatchDequeueParams(
         const AicpuTaskInfo& kernelTaskInfo, const RunContext& taskContext, BatchDequeueInfo& batchDeqInfo) const;
     int32_t DoModelDequeue(BufEnQueueInfo& bufInfo, const RunContext& taskContext) const;
-    int32_t AlignBatchDequeue(BatchDequeueInfo& batchDeqInfo, const RunContext& taskContext);
+    int32_t AlignBatchDequeue(BatchDequeueInfo& batchDeqInfo, const RunContext& taskContext) const;
 };
 } // namespace AicpuSchedule
 #endif // OPERATOR_KERNEL_MODEL_BATCH_DEQUEUE_H
