@@ -301,3 +301,7 @@ Runtime provides development guides and API references. For details, refer to [R
 - [Contributing Guide](CONTRIBUTING_en.md)
 - [Security Statement](SECURITY_en.md)
 - [License](LICENSE)
+
+## Contact Us
+
+<img src="./docs/figures/runtime-assistant-wechat.jpg" alt="Runtime Assistant WeChat QR code" width="400">
