@@ -37,8 +37,8 @@ static rtError_t CheckCoreParam(
         "Verifying the validity of the compute core type and stack type", coreType,
         "[0, " + std::to_string(RT_CORE_TYPE_AIV) + "]");
 
-    uint32_t aicNum = device->GetDevProperties().aicNum;
-    uint32_t aivNum = device->GetDevProperties().aivNum;
+    const uint32_t aicNum = device->GetDevProperties().aicNum;
+    const uint32_t aivNum = device->GetDevProperties().aivNum;
     if (coreType == RT_CORE_TYPE_AIC) {
         COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
             (coreId >= aicNum), RT_ERROR_INVALID_VALUE,

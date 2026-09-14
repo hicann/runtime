@@ -1441,8 +1441,8 @@ rtError_t ApiImpl::FunctionGetAttribute(rtFuncHandle funcHandle, rtFuncAttribute
             break;
         }
         case RT_FUNCTION_ATTR_KERNEL_RATIO: {
-            uint32_t taskRatio = kernel->GetTaskRation();
-            uint32_t mixType = kernel->GetMixType();
+            const uint32_t taskRatio = kernel->GetTaskRation();
+            const uint32_t mixType = kernel->GetMixType();
             uint16_t ratio[2];
             ComputeRatio(ratio, mixType, taskRatio);
             uint16_t* ratioArr = RtPtrToPtr<uint16_t*>(attrValue);
