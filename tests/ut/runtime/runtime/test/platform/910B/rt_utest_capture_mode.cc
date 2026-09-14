@@ -17,6 +17,7 @@
 #include "runtime.hpp"
 #include "model.hpp"
 #include "capture_model.hpp"
+#include "capture_adapt.hpp"
 #include "cond_handle/cond_handle.hpp"
 #include "rt_unwrap.h"
 #include "rt_capture_model_mock_helper.hpp"
@@ -24,7 +25,9 @@
 #include "module.hpp"
 #include "notify.hpp"
 #include "event.hpp"
+#include "event_c.hpp"
 #include "task_info.hpp"
+#include "event_task.h"
 #include "memory_task.h"
 #include "ffts_task.h"
 #include "device/device_error_proc.hpp"
@@ -130,6 +133,54 @@ TEST_F(CloudV2CaptureModelTest, CheckCaptureModelForUpdateRefreshesSupportResult
     EXPECT_EQ(CheckCaptureModelForUpdate(streamObj), RT_ERROR_FEATURE_NOT_SUPPORT);
     EXPECT_EQ(CheckCaptureModelForUpdate(streamObj), RT_ERROR_DRV_NOT_SUPPORT);
     EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
+}
+
+TEST_F(CloudV2CaptureModelTest, CaptureModelPreviousExecutionDependency)
+{
+    rtStream_t streamHandle = nullptr;
+    ASSERT_EQ(rtStreamCreate(&streamHandle, 0), RT_ERROR_NONE);
+    Stream* const stream = rt_ut::UnwrapOrNull<Stream>(streamHandle);
+    ASSERT_NE(stream, nullptr);
+
+    Event event;
+    CaptureModel captureModel;
+    captureModel.context_ = stream->Context_();
+    captureModel.executionOrderEvent_ = &event;
+
+    MOCKER(EvtWait).expects(once()).with(&event, stream, MAX_UINT32_NUM).will(returnValue(RT_ERROR_INVALID_VALUE));
+
+    captureModel.SetExeStream(nullptr);
+    EXPECT_EQ(captureModel.AddPreviousExecutionDependency(stream), RT_ERROR_NONE);
+    captureModel.SetExeStream(stream);
+    EXPECT_EQ(captureModel.AddPreviousExecutionDependency(stream), RT_ERROR_NONE);
+
+    Stream previousStream(stream->Device_(), 0U);
+    captureModel.SetExeStream(&previousStream);
+    EXPECT_EQ(captureModel.AddPreviousExecutionDependency(stream), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(captureModel.GetExeStream(), &previousStream);
+
+    captureModel.executionOrderEvent_ = nullptr;
+    captureModel.SetExeStream(nullptr);
+    EXPECT_EQ(rtStreamDestroy(streamHandle), RT_ERROR_NONE);
+}
+
+TEST_F(CloudV2CaptureModelTest, CaptureModelExecutionOrderEventUsesV100Event)
+{
+    Context* const context = Runtime::Instance()->CurrentContext();
+    ASSERT_NE(context, nullptr);
+    Device* const device = context->Device_();
+    ASSERT_NE(device, nullptr);
+
+    CaptureModel captureModel;
+    Model* const model = &captureModel;
+    ASSERT_EQ(model->Setup(context), RT_ERROR_NONE);
+    Event*& event = captureModel.executionOrderEvent_;
+    ASSERT_NE(event, nullptr);
+    EXPECT_EQ(event->EventOwner_(), EventOwner::EVENT_INNER);
+    EXPECT_TRUE(event->isNewMode_);
+
+    TryToFreeEventIdAndDestroyEvent(&event, event->EventId_(), true);
+    EXPECT_EQ(event, nullptr);
 }
 
 TEST_F(CloudV2CaptureModelTest, SUBMIT_RDMA_PI_VALUE_MODIFY_TASK)

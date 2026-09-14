@@ -39,6 +39,7 @@
 #include "event_david.hpp"
 #include "raw_device.hpp"
 #include "task_info.hpp"
+#include "event_task.h"
 #include "context.hpp"
 #include "stream_david.hpp"
 #include "stars_david.hpp"
@@ -297,6 +298,47 @@ TEST_F(TaskTestDavid, TestDavidModelMaintainceTaskInit)
     rtError_t error = DavidModelMaintainceTaskInit(&task, MMT_STREAM_ADD, nullptr, stream_, RT_MODEL_HEAD_STREAM, 0U);
     EXPECT_EQ(task.type, TS_TASK_TYPE_MODEL_MAINTAINCE);
     EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(TaskTestDavid, CaptureModelPreviousExecutionDependency)
+{
+    Event event;
+    CaptureModel captureModel;
+    captureModel.context_ = stream_->Context_();
+    captureModel.executionOrderEvent_ = &event;
+
+    MOCKER(EvtWait).expects(once()).with(&event, stream_, MAX_UINT32_NUM).will(returnValue(RT_ERROR_INVALID_VALUE));
+
+    captureModel.SetExeStream(nullptr);
+    EXPECT_EQ(captureModel.AddPreviousExecutionDependency(stream_), RT_ERROR_NONE);
+    captureModel.SetExeStream(stream_);
+    EXPECT_EQ(captureModel.AddPreviousExecutionDependency(stream_), RT_ERROR_NONE);
+
+    Stream previousStream(stream_->Device_(), 0U);
+    captureModel.SetExeStream(&previousStream);
+    EXPECT_EQ(captureModel.AddPreviousExecutionDependency(stream_), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(captureModel.GetExeStream(), &previousStream);
+
+    captureModel.executionOrderEvent_ = nullptr;
+    captureModel.SetExeStream(nullptr);
+}
+
+TEST_F(TaskTestDavid, CaptureModelExecutionOrderEventUsesDavidCountNotify)
+{
+    Context* const context = Runtime::Instance()->CurrentContext();
+    ASSERT_NE(context, nullptr);
+
+    CaptureModel captureModel;
+    Model* const model = &captureModel;
+    ASSERT_EQ(model->Setup(context), RT_ERROR_NONE);
+    Event*& event = captureModel.executionOrderEvent_;
+    const DavidEvent* const davidEvent = dynamic_cast<const DavidEvent*>(event);
+    ASSERT_NE(davidEvent, nullptr);
+    EXPECT_EQ(davidEvent->EventOwner_(), EventOwner::EVENT_INNER);
+    EXPECT_TRUE(davidEvent->IsCntNotify());
+
+    TryToFreeEventIdAndDestroyEvent(&event, event->EventId_(), true);
+    EXPECT_EQ(event, nullptr);
 }
 
 TEST_F(TaskTestDavid, AicAivBiuPerfStreamSupportKeepsBindLimit)

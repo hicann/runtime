@@ -41,6 +41,7 @@
 #include "model_maintaince_task.h"
 #include "memcpy_c.hpp"
 #include "notify_c.hpp"
+#include "event_c.hpp"
 #include <securec.h>
 #include <algorithm>
 #include "task.hpp"
@@ -100,6 +101,10 @@ CaptureModel::~CaptureModel() noexcept
         return;
     }
     ReleaseExternalRefreshTable();
+
+    if (executionOrderEvent_ != nullptr) {
+        TryToFreeEventIdAndDestroyEvent(&executionOrderEvent_, executionOrderEvent_->EventId_(), true);
+    }
 
     // 清空capturestream和单算子流关系
     singleOperStmIdAndCaptureStmIdMap_.clear();
@@ -462,7 +467,13 @@ rtError_t CaptureModel::CheckExecuteReady(void) const
 
 rtError_t CaptureModel::PreModelExecute(Stream* const stm, ExternalEventRefreshInfo* refreshInfo)
 {
-    rtError_t error = SetNotifyBeforeExecute(stm, this);
+    rtError_t error = AddPreviousExecutionDependency(stm);
+    COND_RETURN_ERROR_MSG_INNER(
+        error != RT_ERROR_NONE, error,
+        "Failed to wait for previous model execution, stream_id=%d, model_id=%u, retCode=%#x.", stm->Id_(), Id_(),
+        static_cast<uint32_t>(error));
+
+    error = SetNotifyBeforeExecute(stm, this);
     COND_RETURN_ERROR_MSG_INNER(
         error != RT_ERROR_NONE, error,
         "Set notify before model execute failed, stream_id=%d, model_id=%u, retCode=%#x.", stm->Id_(), Id_(),
@@ -522,12 +533,19 @@ rtError_t CaptureModel::PostModelExecute(Stream* const stm, ExternalEventRefresh
     COND_RETURN_ERROR(
         error != RT_ERROR_NONE, error, "Set notify after model execute failed, stream_id=%d, model_id=%u, retCode=%#x.",
         stm->Id_(), Id_(), static_cast<uint32_t>(error));
+
+    error = EvtRecord(executionOrderEvent_, stm);
+    COND_RETURN_ERROR_MSG_INNER(
+        error != RT_ERROR_NONE, error,
+        "Failed to record model execution order event, stream_id=%d, model_id=%u, retCode=%#x.", stm->Id_(), Id_(),
+        static_cast<uint32_t>(error));
     return RT_ERROR_NONE;
 }
 
 rtError_t CaptureModel::ExecuteCommon(Stream* const stm, int32_t timeout, const uint8_t executeMode)
 {
     RT_LOG(RT_LOG_INFO, "capture model execute, model_id=%u!", Id_());
+    const std::lock_guard<std::mutex> executeLock(executionOrderMutex_);
     rtError_t error = CheckExecuteReady();
     if (error != RT_ERROR_NONE) {
         return error;
@@ -543,6 +561,16 @@ rtError_t CaptureModel::ExecuteCommon(Stream* const stm, int32_t timeout, const 
         return error;
     }
     return PostModelExecute(stm, &refreshInfo);
+}
+
+rtError_t CaptureModel::AddPreviousExecutionDependency(Stream* const stm) const
+{
+    const Stream* const previousStream = GetExeStream();
+    if ((previousStream == nullptr) || (previousStream == stm)) {
+        return RT_ERROR_NONE;
+    }
+
+    return EvtWait(executionOrderEvent_, stm, MAX_UINT32_NUM);
 }
 rtError_t CaptureModel::Execute(Stream* const stm, int32_t timeout)
 {

@@ -123,5 +123,18 @@ TaskInfo* AllocNonCaptureTask(
         return pTask;
     }
 }
+
+rtError_t CaptureModel::InitExecutionOrderEvent()
+{
+    Context* const ctx = Context_();
+    Device* const dev = ctx->Device_();
+    executionOrderEvent_ = new (std::nothrow) Event(dev, RT_EVENT_DEFAULT, ctx, false, true);
+    COND_RETURN_AND_MSG_OUTER(
+        executionOrderEvent_ == nullptr, RT_ERROR_EVENT_NEW, ErrorCode::EE1013, sizeof(Event), "new");
+    executionOrderEvent_->SetEventOwner(EventOwner::EVENT_INNER);
+    dev->PushEvent(executionOrderEvent_);
+    return RT_ERROR_NONE;
+}
+
 } // namespace runtime
 } // namespace cce

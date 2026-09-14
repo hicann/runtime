@@ -15,6 +15,8 @@
 #include "task_info_v100.h"
 #include "maintenance_task.h"
 #include "aclgraph_cond_task.h"
+#include "event.hpp"
+#include "event_c.hpp"
 
 namespace cce {
 namespace runtime {
@@ -98,6 +100,10 @@ rtError_t EndGraphNtyWait(Notify* const inNotify, Stream* const streamIn, const 
 {
     return inNotify->EndGraphWait(streamIn, timeOut);
 }
+
+rtError_t EvtRecord(Event* const evt, Stream* const stm) { return evt->Record(stm); }
+
+rtError_t EvtWait(Event* const evt, Stream* const stm, const uint32_t timeout) { return evt->Wait(stm, timeout); }
 
 rtError_t ModelSerialSchedPostProc(Stream* const stm, Notify* const notify, Model* const model)
 {

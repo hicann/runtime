@@ -198,6 +198,9 @@ rtError_t Model::Setup(Context* const contextIn)
         }
     }
     InitEmbeddedInnerHandle<Model>(this);
+    if (modelType_ == RT_MODEL_CAPTURE_MODEL) {
+        return static_cast<CaptureModel*>(this)->InitExecutionOrderEvent();
+    }
     return error;
 }
 

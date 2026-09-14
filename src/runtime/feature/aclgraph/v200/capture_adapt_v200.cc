@@ -11,7 +11,9 @@
 #include "capture_adapt.hpp"
 #include "task_recycle.hpp"
 #include "capture_model.hpp"
+#include "context.hpp"
 #include "event_c.hpp"
+#include "event_david.hpp"
 #include "stream_c.hpp"
 #include "thread_local_container.hpp"
 #include "stream_sqcq_manage.hpp"
@@ -107,5 +109,19 @@ bool TaskTypeIsSupportTaskGroup(const TaskInfo* const task)
     }
     return false;
 }
+
+rtError_t CaptureModel::InitExecutionOrderEvent()
+{
+    Context* const ctx = Context_();
+    Device* const dev = ctx->Device_();
+    executionOrderEvent_ = new (std::nothrow) DavidEvent(dev, RT_EVENT_DEFAULT, ctx, true);
+    COND_RETURN_AND_MSG_OUTER(
+        executionOrderEvent_ == nullptr, RT_ERROR_EVENT_NEW, ErrorCode::EE1013, std::to_string(sizeof(DavidEvent)),
+        "new");
+    executionOrderEvent_->SetEventOwner(EventOwner::EVENT_INNER);
+    dev->PushEvent(executionOrderEvent_);
+    return RT_ERROR_NONE;
+}
+
 } // namespace runtime
 } // namespace cce

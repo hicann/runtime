@@ -35,6 +35,8 @@ rtError_t CaptureModel::LoadCompleteByStreamPostp(Stream* const stream)
 
 rtError_t CaptureModel::LoadCompleteByStream() { return RT_ERROR_FEATURE_NOT_SUPPORT; }
 
+rtError_t CaptureModel::InitExecutionOrderEvent() { return RT_ERROR_NONE; }
+
 rtError_t CaptureModel::Execute(Stream* const stm, int32_t timeout)
 {
     UNUSED(stm);

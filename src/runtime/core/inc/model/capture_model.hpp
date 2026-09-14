@@ -92,6 +92,7 @@ public:
     rtError_t Execute(Stream* const stm, int32_t timeout = -1) override;
     rtError_t ExecuteAsync(Stream* const stm) override;
     rtError_t TearDown() override;
+    rtError_t InitExecutionOrderEvent();
     rtError_t AddStreamToCaptureModel(Stream* const stm);
     rtError_t SetNotifyBeforeExecute(Stream* const exeStm, CaptureModel* const captureMdl);
     rtError_t SetNotifyAfterExecute(Stream* const exeStm, CaptureModel* const captureMdl);
@@ -339,6 +340,7 @@ private:
         Stream* const stm, int32_t timeout, const uint8_t executeMode, ExternalEventRefreshInfo* refreshInfo);
     rtError_t PostModelExecute(Stream* const stm, ExternalEventRefreshInfo* refreshInfo);
     rtError_t ExecuteCommon(Stream* const stm, int32_t timeout, const uint8_t executeMode);
+    rtError_t AddPreviousExecutionDependency(Stream* const stm) const;
     rtError_t BindSqCqAndSendSqe(void);
     rtError_t RebuildAllExternalTaskSqes() const;
     // capture end阶段创建external refresh表并替换record/wait占位任务。
@@ -382,6 +384,8 @@ private:
     std::vector<Notify*> addStreamNotifyList_;
     std::vector<Notify*> executeNotifyList_;
     std::mutex notifyMutex_;
+    std::mutex executionOrderMutex_;
+    Event* executionOrderEvent_{nullptr};
     std::mutex taskGroupListMutex_;
     std::set<uint16_t> taskGroupStmIds_;
     std::vector<std::unique_ptr<TaskGroup>> taskGroupList_;
