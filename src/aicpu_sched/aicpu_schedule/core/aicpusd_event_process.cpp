@@ -734,7 +734,7 @@ int32_t AicpuEventProcess::ProcessResponseInfo(
 
 int32_t AicpuEventProcess::ExecuteTsKernelTask(
     aicpu::HwtsTsKernel& tsKernelInfo, const uint32_t threadIndex, const uint64_t drvSubmitTick,
-    const uint64_t drvSchedTick, const uint64_t streamId, const uint64_t taskId)
+    const uint64_t drvSchedTick, const uint64_t streamId, const uint64_t taskId) const
 {
     const aicpu::KernelType kernelType = static_cast<const aicpu::KernelType>(tsKernelInfo.kernelType);
     if (((kernelType == aicpu::KernelType::KERNEL_TYPE_CCE) || (kernelType == aicpu::KernelType::KERNEL_TYPE_AICPU)) &&
@@ -844,7 +844,7 @@ AicpuExtendSoPlatformFuncPtr AicpuEventProcess::GetAicpuExtendSoPlatformFuncPtr(
     }
 
     platformFuncPtr_ =
-        reinterpret_cast<AicpuExtendSoPlatformFuncPtr>(dlsym(RTLD_DEFAULT, EXTEND_SO_PLATFORM_FUNC_NAME.c_str()));
+        PtrToFunctionPtr<void, AicpuExtendSoPlatformFuncPtr>(dlsym(RTLD_DEFAULT, EXTEND_SO_PLATFORM_FUNC_NAME.c_str()));
     if (platformFuncPtr_ == nullptr) {
         aicpusd_err("failed to find func:%s, err:%s", EXTEND_SO_PLATFORM_FUNC_NAME.c_str(), dlerror());
     }

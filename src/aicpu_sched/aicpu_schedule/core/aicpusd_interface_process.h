@@ -150,7 +150,7 @@ private:
 
     AicpuScheduleInterface& operator=(AicpuScheduleInterface&) = delete;
 
-    int32_t BuildAndSetContext(const uint32_t deviceId, const pid_t hostPid, const uint32_t vfId);
+    int32_t BuildAndSetContext(const uint32_t deviceId, const pid_t hostPid, const uint32_t vfId) const;
 
     /**
      * @ingroup AicpuScheduleInterface

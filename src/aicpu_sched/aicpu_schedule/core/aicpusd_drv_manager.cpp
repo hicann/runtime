@@ -115,7 +115,7 @@ int32_t AicpuDrvManager::GetNormalAicpuDCpuInfo(const std::vector<uint32_t>& dev
     return AICPU_SCHEDULE_OK;
 }
 int32_t AicpuDrvManager::AicpuGetDeviceInfo(
-    const uint32_t deviceId, const DEV_MODULE_TYPE moduleType, const DEV_INFO_TYPE infoType, int64_t* value) const
+    uint32_t deviceId, const DEV_MODULE_TYPE moduleType, const DEV_INFO_TYPE infoType, int64_t* value) const
 {
     if (value == nullptr) {
         aicpusd_err(

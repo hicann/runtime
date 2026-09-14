@@ -102,7 +102,7 @@ int32_t AicpuSdCustDumpProcess::DatadumpTaskProcess(const event_info& drvEventIn
     return AICPU_SCHEDULE_OK;
 }
 int32_t AicpuSdCustDumpProcess::DoUdfDatadumpSubmitEventSync(
-    const char_t* const msg, const uint32_t len, struct event_proc_result& rsp) const
+    const char_t* const msg, const uint32_t len, struct event_proc_result* rsp) const
 {
     UNUSED(msg);
     UNUSED(len);
