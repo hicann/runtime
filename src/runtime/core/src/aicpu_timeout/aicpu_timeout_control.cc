@@ -25,7 +25,7 @@ constexpr const char_t* AICPU_CHECK_SUPPORTED_KERNEL_NAME = "CheckKernelSupporte
 constexpr const char_t* AICPU_CLOSE_MONITOR_KERNEL_NAME = "CloseAicpuMonitor";
 constexpr uint32_t AICPU_KERNEL_SUPPORTED = 0U;
 constexpr uint8_t AICPU_MONITOR_RESULT_UNSET = UINT8_MAX;
-constexpr int32_t AICPU_MONITOR_COMPAT_KERNEL_SYNC_TIMEOUT_MS = 10000;
+constexpr int32_t AICPU_MONITOR_COMPAT_KERNEL_SYNC_TIMEOUT_MS = 1091 * 1000;
 
 struct CloseAicpuMonitorArgs {
     uint8_t monitorEnabled;

@@ -498,7 +498,7 @@ TEST_F(AicpuTimeoutTest, CheckKernelSupportedReturnsDeviceResultAndFreesAllBuffe
     EXPECT_TRUE(supported);
     EXPECT_EQ(g_freeCount, 3U);
     EXPECT_FALSE(g_syncNeedWaitSyncCq);
-    EXPECT_EQ(g_syncTimeout, 10000);
+    EXPECT_EQ(g_syncTimeout, 1091000);
 }
 
 TEST_F(AicpuTimeoutTest, BuiltinKernelRejectsNullStream)
@@ -647,6 +647,8 @@ TEST_F(AicpuTimeoutTest, CloseMonitorReturnsDeviceSuccess)
     EXPECT_EQ(AicpuTimeoutControl::CloseAicpuMonitor(&device_, closed), RT_ERROR_NONE);
     EXPECT_TRUE(closed);
     EXPECT_EQ(g_freeCount, 1U);
+    EXPECT_FALSE(g_syncNeedWaitSyncCq);
+    EXPECT_EQ(g_syncTimeout, 1091000);
 }
 
 TEST_F(AicpuTimeoutTest, CloseMonitorReturnsAllocFailure)
