@@ -101,11 +101,14 @@ TraStatus ScdElfStep(ScdElf* elf, uintptr_t pc, ScdRegs* regs, bool isFirstStack
     dwarf.loadBias = elf->loadBias;
     SCD_DLOG_DBG("dwarf.ehFrameHdrOffset = 0x%llx, dwarf.loadBias = 0x%llx.", dwarf.ehFrameHdrOffset, dwarf.loadBias);
     dwarf.fdeCount = ScdElfGetFdeNum(elf);
-    uintptr_t nextPc;
+    uintptr_t nextPc = 0;
     // when the address read from the elf file is compared with the address in the memory, bias offset is required
     // pc is the address in the memory, so it needs to be subtracted by the bias offset
     TraStatus ret = ScdDwarfStep(&dwarf, regs, &args, pc - dwarf.loadBias, &nextPc);
-    ScdRegsSetPc(regs, nextPc);
+    // ScdDwarfStep does not write *nextPc on failure paths, only update pc after a successful step
+    if (ret == TRACE_SUCCESS) {
+        ScdRegsSetPc(regs, nextPc);
+    }
     return ret;
 }
 
