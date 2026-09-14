@@ -11,3 +11,4 @@
 - [4_launch_blocking](./4_launch_blocking/README.md)：演示 Kernel Launch Blocking 的环境变量控制、流级三态及嵌套非阻塞区间。
 - [5_fdtd_stencil](./5_fdtd_stencil/README.md)：演示通过 Kernel 属性和 Device 变量配置执行三维有限差分模板更新。
 - [6_memory_loaded_vector_add](./6_memory_loaded_vector_add/README.md)：演示从 Host 内存加载 Kernel 二进制并执行向量加法。
+- [7_binary_introspection](./7_binary_introspection/README.md)：演示加载后查询 Kernel 二进制、函数参数、代码段和 Device 全局变量元数据。
