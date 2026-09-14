@@ -1214,7 +1214,7 @@ static bool GetVencJpegHuffmanParamFromPydict(PyObject* pyDict, hi_venc_jpeg_huf
     PyObject* pyDcTables = PyDict_GetItemString(pyDict, "dc_tables");
     CHECK_BOOL(
         pyDcTables != nullptr && PyList_Check(pyDcTables) != 0, "the dc_tables argument is missing or not a list",
-        PyErr_ValueError);
+        PyExc_TypeError);
     int len = static_cast<int>(PyList_Size(pyDcTables));
     for (int i = 0; i < len; i++) {
         CHECK_BOOL(GetVencHuffmanDcTableFromPydict(PyList_GetItem(pyDcTables, i), param.dc_tables[i]));
@@ -1223,7 +1223,7 @@ static bool GetVencJpegHuffmanParamFromPydict(PyObject* pyDict, hi_venc_jpeg_huf
     PyObject* pyAcTables = PyDict_GetItemString(pyDict, "ac_tables");
     CHECK_BOOL(
         pyAcTables != nullptr && PyList_Check(pyAcTables) != 0, "the ac_tables argument is missing or not a list",
-        PyErr_ValueError);
+        PyExc_TypeError);
     len = static_cast<int>(PyList_Size(pyAcTables));
     for (int i = 0; i < len; i++) {
         CHECK_BOOL(GetVencHuffmanAcTableFromPydict(PyList_GetItem(pyAcTables, i), param.ac_tables[i]));
