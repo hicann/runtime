@@ -20,6 +20,7 @@
 #include "raw_device.hpp"
 #include "api.hpp"
 #include "api_impl.hpp"
+#include "api_impl_creator.hpp"
 #include "api_impl_event.hpp"
 #include "api_error.hpp"
 #include "api_decorator.hpp"
@@ -742,6 +743,11 @@ TEST_F(TinyStubTest, easy_model_stub)
 
 TEST_F(TinyStubTest, npu_snapshot_stub)
 {
+    EXPECT_FALSE(IsImplSnapshotSupported());
+    ApiSnapshot* apiImplSnapshot = CreateImplSnapshotAndGet();
+    EXPECT_EQ(apiImplSnapshot, nullptr);
+    DestroyImplSnapshot(apiImplSnapshot);
+
     auto ret = rtSnapShotProcessLock();
     EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ret = rtSnapShotProcessUnlock();

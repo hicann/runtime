@@ -11,9 +11,18 @@
 #include "runtime/rt.h"
 #include "api_impl.hpp"
 #include "api_error.hpp"
+#include "api_impl_creator.hpp"
 #include "aicpu_dfx.hpp"
 
 using namespace cce::runtime;
+
+TEST(Arch5162ApiTest, SnapshotApiImplStub_NotSupport)
+{
+    EXPECT_FALSE(IsImplSnapshotSupported());
+    ApiSnapshot* apiImplSnapshot = CreateImplSnapshotAndGet();
+    EXPECT_EQ(apiImplSnapshot, nullptr);
+    DestroyImplSnapshot(apiImplSnapshot);
+}
 
 TEST(Arch5162ApiTest, KernelArgsApiImplStub_NotSupport)
 {

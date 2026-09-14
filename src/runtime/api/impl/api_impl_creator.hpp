@@ -17,6 +17,7 @@ namespace runtime {
 class ApiMbuf;
 class ApiEvent;
 class ApiEsched;
+class ApiSnapshot;
 
 Api* CreateImplAndGet();
 bool IsImplMbufSupported();
@@ -27,6 +28,9 @@ ApiEvent* CreateImplEventAndGet();
 bool IsImplEschedSupported();
 ApiEsched* CreateImplEschedAndGet();
 void DestroyImplEsched(ApiEsched*& apiImplEsched);
+bool IsImplSnapshotSupported();
+ApiSnapshot* CreateImplSnapshotAndGet();
+void DestroyImplSnapshot(ApiSnapshot*& apiImplSnapshot);
 } // namespace runtime
 } // namespace cce
 

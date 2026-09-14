@@ -330,11 +330,13 @@ Runtime::Runtime() : RuntimeIntf()
     apiSoma_ = nullptr;
     apiEvent_ = nullptr;
     apiEsched_ = nullptr;
+    apiSnapshot_ = nullptr;
     apiImpl_ = nullptr;
     apiImplMbuf_ = nullptr;
     apiImplSoma_ = nullptr;
     apiImplEvent_ = nullptr;
     apiImplEsched_ = nullptr;
+    apiImplSnapshot_ = nullptr;
     logger_ = nullptr;
     apiError_ = nullptr;
     profiler_ = nullptr;
@@ -1124,6 +1126,13 @@ rtError_t Runtime::InitApiImplies()
             return RT_ERROR_API_NEW;
         }
     }
+
+    if (IsImplSnapshotSupported()) {
+        apiImplSnapshot_ = CreateImplSnapshotAndGet();
+        if (apiImplSnapshot_ == nullptr) {
+            return RT_ERROR_API_NEW;
+        }
+    }
     return RT_ERROR_NONE;
 }
 
@@ -1585,6 +1594,7 @@ rtError_t Runtime::Init()
     apiSoma_ = apiImplSoma_; // apiImplSoma_ no Profiler and Decorator
     apiEvent_ = apiImplEvent_;
     apiEsched_ = apiImplEsched_;
+    apiSnapshot_ = apiImplSnapshot_;
 
     error = InitThreadGuard();
     COND_GOTO_ERROR_MSG_AND_ASSIGN_CALL(
@@ -1642,6 +1652,7 @@ INIT_FAIL:
     DELETE_O(apiImplSoma_);
     DELETE_O(apiImplEvent_);
     DestroyImplEsched(apiImplEsched_);
+    DestroyImplSnapshot(apiImplSnapshot_);
     return error;
 }
 

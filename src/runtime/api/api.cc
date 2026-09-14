@@ -11,6 +11,7 @@
 #include "api_esched.hpp"
 #include "api_event.hpp"
 #include "api_mbuf.hpp"
+#include "api_snapshot.hpp"
 #include "api_soma.hpp"
 #include "thread_local_container.hpp"
 
@@ -65,6 +66,16 @@ ApiEsched* ApiEsched::Instance()
         return nullptr;
     }
     return rtInstance->ApiEsched_();
+}
+
+ApiSnapshot* ApiSnapshot::Instance()
+{
+    const Runtime* const rtInstance = Runtime::Instance();
+    if (unlikely(rtInstance == nullptr)) {
+        RT_LOG(RT_LOG_ERROR, "Runtime::Instance == nullptr");
+        return nullptr;
+    }
+    return rtInstance->ApiSnapshot_();
 }
 
 } // namespace runtime

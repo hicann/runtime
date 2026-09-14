@@ -178,6 +178,7 @@ set(libruntime_callback_files
 set(libruntime_src_files_optional
     ${RUNTIME_API_DIR}/impl/api_error_standard_soc.cc
     ${RUNTIME_API_DIR}/impl/api_impl_standard_soc.cc
+    ${RUNTIME_API_DIR}/impl/api_impl_snapshot.cc
     ${RUNTIME_API_DIR}/impl/api_impl_soma.cc
     ${RUNTIME_API_DIR}/impl/api_error_uvm.cc
     ${RUNTIME_API_DIR}/impl/api_impl_uvm.cc

@@ -113,6 +113,7 @@ set(runtimeut_src_api_impl_list
     ${TOP_DIR}/src/runtime/api/impl/api_impl_event_common.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_mbuf_stub.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_esched_stub.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_snapshot_stub.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_stub.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_arch5162.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_memory_stub.cc

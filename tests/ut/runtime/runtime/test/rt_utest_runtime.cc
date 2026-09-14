@@ -19,8 +19,11 @@
 #include "npu_driver.hpp"
 #include "api_esched.hpp"
 #include "api_event.hpp"
+#include "api_snapshot.hpp"
 #include "api_impl.hpp"
 #include "api_impl_creator.hpp"
+#include "api_impl_snapshot.hpp"
+#include "global_state_manager.hpp"
 #include "program.hpp"
 #include "profiler.hpp"
 #include "api_profile_decorator.hpp"
@@ -248,6 +251,14 @@ TEST_F(RuntimeTest, ApiEschedInstanceInitialized)
     EXPECT_EQ(ApiEsched::Instance(), runtime->ApiEsched_());
 }
 
+TEST_F(RuntimeTest, ApiSnapshotInstanceInitialized)
+{
+    const Runtime* const runtime = Runtime::Instance();
+    ASSERT_NE(runtime, nullptr);
+    ASSERT_NE(runtime->ApiSnapshot_(), nullptr);
+    EXPECT_EQ(ApiSnapshot::Instance(), runtime->ApiSnapshot_());
+}
+
 TEST_F(RuntimeTest, CreateImplMbufAndGetFailed)
 {
     MOCKER(static_cast<NothrowNewFunc>(&operator new)).expects(once()).will(invoke(NothrowNewFailStub));
@@ -260,6 +271,13 @@ TEST_F(RuntimeTest, CreateImplEschedAndGetFailed)
     MOCKER(static_cast<NothrowNewFunc>(&operator new)).expects(once()).will(invoke(NothrowNewFailStub));
 
     EXPECT_EQ(CreateImplEschedAndGet(), nullptr);
+}
+
+TEST_F(RuntimeTest, CreateImplSnapshotAndGetFailed)
+{
+    MOCKER(static_cast<NothrowNewFunc>(&operator new)).expects(once()).will(invoke(NothrowNewFailStub));
+
+    EXPECT_EQ(CreateImplSnapshotAndGet(), nullptr);
 }
 
 TEST_F(RuntimeTest, DestroyImplMbufSuccess)
@@ -280,6 +298,30 @@ TEST_F(RuntimeTest, DestroyImplEschedSuccess)
     DestroyImplEsched(apiImplEsched);
 
     EXPECT_EQ(apiImplEsched, nullptr);
+}
+
+TEST_F(RuntimeTest, DestroyImplSnapshotSuccess)
+{
+    ApiSnapshot* apiImplSnapshot = CreateImplSnapshotAndGet();
+    ASSERT_NE(apiImplSnapshot, nullptr);
+
+    DestroyImplSnapshot(apiImplSnapshot);
+
+    EXPECT_EQ(apiImplSnapshot, nullptr);
+}
+
+TEST_F(RuntimeTest, ApiImplSnapshotRejectsInvalidProcessState)
+{
+    ApiImplSnapshot apiImplSnapshot;
+    GlobalStateManager& stateManager = GlobalStateManager::GetInstance();
+
+    stateManager.SetCurrentState(RT_PROCESS_STATE_RUNNING);
+    EXPECT_EQ(apiImplSnapshot.SnapShotProcessBackup(), RT_ERROR_SNAPSHOT_BACKUP_FAILED);
+
+    stateManager.SetCurrentState(RT_PROCESS_STATE_LOCKED);
+    EXPECT_EQ(apiImplSnapshot.SnapShotProcessRestore(), RT_ERROR_SNAPSHOT_RESTORE_FAILED);
+
+    stateManager.SetCurrentState(RT_PROCESS_STATE_RUNNING);
 }
 
 TEST_F(RuntimeTest, InitApiImpliesCreateMbufFailed)

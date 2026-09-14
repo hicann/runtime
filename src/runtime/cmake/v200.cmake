@@ -222,6 +222,7 @@ set(libruntime_v200_callback_files
 set(libruntime_v200_src_files_exclude_for_tiny
     ${RUNTIME_API_DIR}/impl/api_error_standard_soc.cc
     ${RUNTIME_API_DIR}/impl/api_impl_standard_soc.cc
+    ${RUNTIME_API_DIR}/impl/api_impl_snapshot.cc
     ${RUNTIME_API_DIR}/impl/api_impl_soma.cc
     ${RUNTIME_API_DIR}/impl/api_error_uvm.cc
     ${RUNTIME_API_DIR}/impl/api_impl_uvm.cc

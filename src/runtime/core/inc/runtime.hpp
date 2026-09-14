@@ -135,6 +135,7 @@ static inline bool IsAbortError(rtError_t error)
 
 class Api;
 class ApiEsched;
+class ApiSnapshot;
 class Context;
 class Device;
 class Kernel;
@@ -205,6 +206,8 @@ public:
     ApiEvent* ApiEvent_() const override { return apiEvent_; }
 
     ApiEsched* ApiEsched_() const override { return apiEsched_; }
+
+    ApiSnapshot* ApiSnapshot_() const override { return apiSnapshot_; }
 
     Api* ApiImpl_() const override { return apiImpl_; }
 
@@ -913,6 +916,8 @@ private:
     bool isRuntimeExiting_{false};
     ApiEvent* apiEvent_;
     ApiEvent* apiImplEvent_;
+    ApiSnapshot* apiSnapshot_;
+    ApiSnapshot* apiImplSnapshot_;
 };
 } // namespace runtime
 } // namespace cce
