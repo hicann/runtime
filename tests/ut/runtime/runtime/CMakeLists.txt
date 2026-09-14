@@ -288,7 +288,6 @@ set(runtimeut_src_context_list
     ${TOP_DIR}/src/runtime/core/src/context/context.cc
     ${TOP_DIR}/src/runtime/core/src/context/context_dfx.cc
     ${TOP_DIR}/src/runtime/core/src/context/context_standard_soc.cc
-    ${TOP_DIR}/src/runtime/feature/aclgraph/context_standard_soc_aclgraph.cc
     ${TOP_DIR}/src/runtime/feature/ffts/context_ffts_standard_soc.cc
     ${TOP_DIR}/src/runtime/core/src/context/context_manage.cc
 )
@@ -298,7 +297,6 @@ set(runtimeut_src_aclgraph_list
     ${TOP_DIR}/src/runtime/feature/aclgraph/v100/api_impl_aclgraph.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/v100/api_impl_capture_event.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/api_error_aclgraph.cc
-    ${TOP_DIR}/src/runtime/feature/aclgraph/context_aclgraph.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/model_aclgraph.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/capture_model.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/logic_sq.cc
@@ -415,7 +413,6 @@ set(runtimeut_src_tiny_exclude_list
     ${TOP_DIR}/src/runtime/feature/aclgraph/api_error_aclgraph.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/v100/api_impl_aclgraph.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/v100/api_impl_capture_event.cc
-    ${TOP_DIR}/src/runtime/feature/aclgraph/context_aclgraph.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/model_aclgraph.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/capture_model.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/logic_sq.cc
@@ -437,7 +434,6 @@ set(runtimeut_src_tiny_exclude_list
     ${TOP_DIR}/src/runtime/feature/snapshot/snapshot_process_helper.cc
     ${TOP_DIR}/src/runtime/feature/snapshot/snapshot_callback_manager.cc
     ${TOP_DIR}/src/runtime/feature/snapshot/v100/device_snapshot_adapter.cc
-    ${TOP_DIR}/src/runtime/feature/aclgraph/context_standard_soc_aclgraph.cc
     ${TOP_DIR}/src/runtime/feature/ffts/context_ffts_standard_soc.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_standard_soc.cc
     ${TOP_DIR}/src/runtime/core/src/engine/hwts/direct_hwts_engine.cc
@@ -496,7 +492,6 @@ set(runtimeut_src_tiny_include_list
     ${TOP_DIR}/src/runtime/core/src/dfx/fast_recover.cc
     ${TOP_DIR}/src/runtime/api/impl/v100/api_impl_v100.cc
     ${TOP_DIR}/src/runtime/core/src/context/context_stub.cc
-    ${TOP_DIR}/src/runtime/feature/aclgraph/tiny/context_aclgraph_stub.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/tiny/capture_adapt_stub.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/tiny/capture_model_stub.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/tiny/capture_model_utils_stub.cc

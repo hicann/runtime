@@ -235,7 +235,6 @@ set(common_src_files_cmodel
 set(libruntime_cmodel_context_src_files
     ${RUNTIME_CORE_DIR}/src/context/context.cc
     ${RUNTIME_CORE_DIR}/src/context/context_dfx.cc
-    ${RUNTIME_FEATURE_DIR}/aclgraph/context_aclgraph.cc
     ${RUNTIME_CORE_DIR}/src/context/context_manage.cc
 )
 
@@ -344,7 +343,6 @@ set(libruntime_cmodel_src_files_optional
     ${RUNTIME_API_DIR}/impl/api_error_uvm.cc
     ${RUNTIME_API_DIR}/impl/api_impl_uvm.cc
     ${RUNTIME_CORE_DIR}/src/context/context_standard_soc.cc
-    ${RUNTIME_FEATURE_DIR}/aclgraph/context_standard_soc_aclgraph.cc
     ${RUNTIME_FEATURE_DIR}/ffts/context_ffts_standard_soc.cc
     ${RUNTIME_CORE_DIR}/src/dfx/fp16_t.cpp
     ${RUNTIME_CORE_DIR}/src/dfx/hifloat.cpp

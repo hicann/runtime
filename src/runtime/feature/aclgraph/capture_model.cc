@@ -16,6 +16,7 @@
 #include "logic_sq_utils.hpp"
 #include "logic_sq_manage.hpp"
 #include "capture_session.hpp"
+#include "jetty_pool.h"
 #include "context.hpp"
 #include "stream_sqcq_manage.hpp"
 #include "event.hpp"
@@ -1112,7 +1113,7 @@ rtError_t CaptureModel::AllocSqCqProc(const uint32_t logicSqNum) const
         ERROR_RETURN(error, "context is abort, status=%#x.", static_cast<uint32_t>(error));
         error = Context_()->Device_()->GetDeviceSqCqManage()->AllocSqCq(logicSqNum, sqCqArray_);
         totalResNum = Context_()->Device_()->GetDeviceSqCqManage()->GetSqCqPoolTotalResNum();
-        COND_PROC(error != RT_ERROR_NONE, errorTmp = Context_()->TryRecycleCaptureModelResource(logicSqNum, 0U, this));
+        COND_PROC(error != RT_ERROR_NONE, errorTmp = Context_()->TryRecycleModelResource(logicSqNum, 0U, this));
         COND_RETURN_ERROR(
             (errorTmp != RT_ERROR_NONE), errorTmp, "release resource failed, model_id=%u, retCode=%#x.", Id_(),
             static_cast<uint32_t>(errorTmp));
@@ -1149,7 +1150,7 @@ rtError_t CaptureModel::UpdateNotifyId(Stream* const exeStream)
         error = Context_()->CheckStatus();
         ERROR_RETURN(error, "context is abort, status=%#x.", static_cast<uint32_t>(error));
         error = ntf->AllocId();
-        COND_PROC(error != RT_ERROR_NONE, errorTmp = Context_()->TryRecycleCaptureModelResource(0U, 1U, this));
+        COND_PROC(error != RT_ERROR_NONE, errorTmp = Context_()->TryRecycleModelResource(0U, 1U, this));
         COND_PROC(errorTmp != RT_ERROR_NONE, mmSleep(1U));
     } while (error != RT_ERROR_NONE);
 
@@ -1266,6 +1267,45 @@ void CaptureModel::DeconstructSqCq(void)
 
     (void)ReleaseSqCqAndNotifyId(releaseSqNum, releaseNtyNum);
     return;
+}
+
+rtError_t CaptureModel::TryRecycleResource(uint32_t& releaseSqNum, uint32_t& releaseNtyNum)
+{
+    releaseSqNum = 0U;
+    releaseNtyNum = 0U;
+    if (!IsSoftwareSqEnable() || !ModelSqOperTryLock()) {
+        return RT_ERROR_NONE;
+    }
+
+    const rtError_t error = ReleaseSqCqAndNotifyId(releaseSqNum, releaseNtyNum);
+    ModelSqOperUnLock();
+    return error;
+}
+
+rtError_t CaptureModel::TryRecycleResource(const JettyType type, uint32_t& releaseNum)
+{
+    releaseNum = 0U;
+    if (!IsSoftwareSqEnable() || IsCaptureModelRunning() || !ModelSqOperTryLock()) {
+        return RT_ERROR_NONE;
+    }
+
+    uint32_t h2dCount = 0U;
+    uint32_t d2dInBoardCount = 0U;
+    uint32_t d2dCrossBoardCount = 0U;
+    const rtError_t error = RecycleAllJetty(h2dCount, d2dInBoardCount, d2dCrossBoardCount);
+    ModelSqOperUnLock();
+    if (error != RT_ERROR_NONE) {
+        return error;
+    }
+
+    if (type == JettyType::JETTY_TYPE_H2D) {
+        releaseNum = h2dCount;
+    } else if (type == JettyType::JETTY_TYPE_D2D_IN_BOARD) {
+        releaseNum = d2dInBoardCount;
+    } else {
+        releaseNum = d2dCrossBoardCount;
+    }
+    return RT_ERROR_NONE;
 }
 
 rtError_t CaptureModel::ReleaseSqCqAndNotifyId(uint32_t& releaseSqNum, uint32_t& releaseNtyNum)
@@ -1901,7 +1941,7 @@ rtError_t CaptureModel::ModelEndGraph()
             error == RT_ERROR_DRV_NO_NOTIFY_RESOURCES && loopCnt == 1U,
             RT_LOG(RT_LOG_EVENT, "Begin for trying free Notify for model %u", Id_()));
         COND_PROC(error == RT_ERROR_DRV_NO_NOTIFY_RESOURCES, mmSleep(1U));
-        COND_PROC(error == RT_ERROR_DRV_NO_NOTIFY_RESOURCES, Context_()->TryRecycleCaptureModelResource(0U, 1U, this));
+        COND_PROC(error == RT_ERROR_DRV_NO_NOTIFY_RESOURCES, Context_()->TryRecycleModelResource(0U, 1U, this));
     } while (error == RT_ERROR_DRV_NO_NOTIFY_RESOURCES && loopCnt < 3000U);
 
     COND_PROC(loopCnt > 1U, RT_LOG(RT_LOG_EVENT, "End for trying free Notify"));

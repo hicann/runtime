@@ -665,9 +665,9 @@ TEST_F(RtApiTest, capture_api_22)
     error = captureSession->StreamAddToCaptureModelProc(streamEx, modelEx);
     EXPECT_EQ(error, RT_ERROR_STREAM_CAPTURED);
 
-    ctx->FreeCascadeCaptureStream(NULL);
+    captureSession->FreeCascadeCaptureStream(NULL);
     Stream* streamNew = NULL;
-    error = ctx->AllocCascadeCaptureStream(streamEx, NULL, &streamNew);
+    error = captureSession->AllocCascadeCaptureStream(streamEx, NULL, &streamNew);
 
     error = rtStreamEndCapture(stream, &model);
     EXPECT_EQ(error, RT_ERROR_NONE);

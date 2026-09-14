@@ -167,6 +167,20 @@ rtError_t CaptureModel::BuildSqCq(Stream* const exeStream)
 
 void CaptureModel::DeconstructSqCq(void) {}
 
+rtError_t CaptureModel::TryRecycleResource(uint32_t& releaseSqNum, uint32_t& releaseNtyNum)
+{
+    releaseSqNum = 0U;
+    releaseNtyNum = 0U;
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t CaptureModel::TryRecycleResource(const JettyType type, uint32_t& releaseNum)
+{
+    UNUSED(type);
+    releaseNum = 0U;
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
 rtError_t CaptureModel::ReleaseSqCqAndNotifyId(uint32_t& releaseSqNum, uint32_t& releaseNtyNum)
 {
     UNUSED(releaseSqNum);

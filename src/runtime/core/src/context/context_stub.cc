@@ -38,15 +38,6 @@ rtError_t Context::RdmaDbSend(const uint32_t dbIndex, const uint64_t dbInfo, Str
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
-rtError_t Context::AllocCascadeCaptureStream(
-    const Stream* const stm, Model* const captureModel, Stream** newCaptureStream)
-{
-    UNUSED(stm);
-    UNUSED(captureModel);
-    UNUSED(newCaptureStream);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
 rtError_t Context::ModelGetNodes(const Model* const mdl, uint32_t* const num)
 {
     UNUSED(mdl);
@@ -67,34 +58,6 @@ rtError_t Context::ModelDebugJsonPrint(const Model* const mdl, const char* path,
     UNUSED(flags);
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
-
-rtError_t Context::StreamBeginTaskGrp(Stream* const stm)
-{
-    UNUSED(stm);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
-rtError_t Context::StreamEndTaskGrp(Stream* const stm, TaskGroup** const handle) const
-{
-    UNUSED(stm);
-    UNUSED(handle);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
-rtError_t Context::StreamBeginTaskUpdate(Stream* const stm, TaskGroup* handle) const
-{
-    UNUSED(stm);
-    UNUSED(handle);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
-rtError_t Context::StreamEndTaskUpdate(Stream* const stm) const
-{
-    UNUSED(stm);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
-void Context::FreeCascadeCaptureStream(Stream* const cascadeCaptureStm) { UNUSED(cascadeCaptureStm); }
 
 rtError_t Context::CreateNotify(Notify** notify, uint32_t flag)
 {

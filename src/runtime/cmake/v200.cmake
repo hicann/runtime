@@ -158,7 +158,6 @@ set(libruntime_v201_task_src_files
 set(libruntime_v200_context_src_files
     ${RUNTIME_CORE_DIR}/src/context/context.cc
     ${RUNTIME_CORE_DIR}/src/context/context_dfx.cc
-    ${RUNTIME_FEATURE_DIR}/aclgraph/context_aclgraph.cc
     ${RUNTIME_CORE_DIR}/src/context/context_manage.cc
 )
 
@@ -228,7 +227,6 @@ set(libruntime_v200_src_files_exclude_for_tiny
     ${RUNTIME_API_DIR}/impl/api_impl_uvm.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/v200/api_impl_david_capture_event.cc
     ${RUNTIME_CORE_DIR}/src/context/context_standard_soc.cc
-    ${RUNTIME_FEATURE_DIR}/aclgraph/context_standard_soc_aclgraph.cc
     ${RUNTIME_FEATURE_DIR}/ffts/context_ffts_standard_soc.cc
     ${RUNTIME_CORE_DIR}/src/dfx/fp16_t.cpp
     ${RUNTIME_CORE_DIR}/src/dfx/hifloat.cpp

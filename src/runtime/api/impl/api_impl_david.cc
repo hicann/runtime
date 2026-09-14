@@ -15,6 +15,7 @@
 #include "runtime_handle_guard.h"
 #include "context.hpp"
 #include "context_manage.hpp"
+#include "capture_ops.hpp"
 #include "stream_c.hpp"
 #include "aix_c.hpp"
 #include "aicpu_c.hpp"
@@ -2425,7 +2426,11 @@ rtError_t ApiImplDavid::StreamAddCondTask(rtCondTaskParams params, Stream* const
 
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    error = curCtx->CreateSubCaptureModels(realHandle, params, stm);
+    const CaptureOps* const captureOps = GetCaptureOps();
+    COND_RETURN_ERROR(
+        (captureOps == nullptr) || (captureOps->createSubCaptureModels == nullptr), RT_ERROR_FEATURE_NOT_SUPPORT,
+        "ACL Graph capture ops is not registered.");
+    error = captureOps->createSubCaptureModels(curCtx, realHandle, params, stm);
     ERROR_RETURN_MSG_INNER(
         error, "Create sub capture model failed, condition type=%s, condition size=%u, retCode=%#x.",
         CondTaskTypeToString(params.type).c_str(), params.size, static_cast<uint32_t>(error));

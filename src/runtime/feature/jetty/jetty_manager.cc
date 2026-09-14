@@ -49,7 +49,7 @@ rtError_t JettyManager::AllocJettyWithRetry(
         ERROR_RETURN(error, "context is aborted, status=%#x.", static_cast<uint32_t>(error));
         (void)PreAllocJetty(type);
         error = jettyPool_->AllocJetty(type, jettyInfo);
-        COND_PROC(error != RT_ERROR_NONE, errorTmp = curCtx->TryRecycleCaptureModelJettyResource(excludeMdl, type));
+        COND_PROC(error != RT_ERROR_NONE, errorTmp = curCtx->TryRecycleModelJettyResource(excludeMdl, type));
         COND_RETURN_ERROR(
             (errorTmp != RT_ERROR_NONE), errorTmp, "release resource failed, stream_id=%u, retCode=%#x.", streamId,
             static_cast<uint32_t>(errorTmp));

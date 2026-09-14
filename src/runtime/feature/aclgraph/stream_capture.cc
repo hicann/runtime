@@ -12,6 +12,7 @@
 #include "runtime.hpp"
 #include "context.hpp"
 #include "capture_model.hpp"
+#include "capture_session.hpp"
 #include "task.hpp"
 #include "task_david.hpp"
 #include "capture_adapt.hpp"
@@ -34,7 +35,10 @@ void Stream::SingleStreamTerminateCapture()
 rtError_t Stream::AllocCascadeCaptureStream(Stream*& newCaptureStream, const Stream* const curCaptureStream)
 {
     Context* const ctx = Context_();
-    const rtError_t error = ctx->AllocCascadeCaptureStream(this, curCaptureStream->Model_(), &newCaptureStream);
+    CaptureSession* const captureSession = GetCaptureSession(ctx);
+    NULL_PTR_RETURN_MSG(captureSession, RT_ERROR_CONTEXT_BASE);
+    const rtError_t error =
+        captureSession->AllocCascadeCaptureStream(this, curCaptureStream->Model_(), &newCaptureStream);
     if ((error != RT_ERROR_NONE) || (newCaptureStream == nullptr)) {
         SingleStreamTerminateCapture();
         RT_LOG(
@@ -93,7 +97,10 @@ rtError_t Stream::AllocCaptureTaskImpl(tsTaskType_t taskType, uint32_t sqeNum, T
         COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error);
         error = CondStreamActive(newCaptureStream, curCaptureStream);
         if (error != RT_ERROR_NONE) {
-            ctx->FreeCascadeCaptureStream(newCaptureStream);
+            CaptureSession* const captureSession = GetCaptureSession(ctx);
+            if (captureSession != nullptr) {
+                captureSession->FreeCascadeCaptureStream(newCaptureStream);
+            }
             SingleStreamTerminateCapture();
             RT_LOG(RT_LOG_ERROR, "stream active failed, device_id=%u, original stream_id=%d.", device_->Id_(), Id_());
             return error;

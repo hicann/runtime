@@ -118,7 +118,6 @@ set(runtimeut_src_context_list
     ${TOP_DIR}/src/runtime/core/src/context/context.cc
     ${TOP_DIR}/src/runtime/core/src/context/context_dfx.cc
     ${TOP_DIR}/src/runtime/core/src/context/context_standard_soc.cc
-    ${TOP_DIR}/src/runtime/feature/aclgraph/context_standard_soc_aclgraph.cc
     ${TOP_DIR}/src/runtime/feature/ffts/context_ffts_standard_soc.cc
     ${TOP_DIR}/src/runtime/core/src/context/context_manage.cc
 )
@@ -128,7 +127,6 @@ set(runtimeut_src_aclgraph_list
     ${TOP_DIR}/src/runtime/feature/aclgraph/v100/api_impl_aclgraph.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/v100/api_impl_capture_event.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/api_error_aclgraph.cc
-    ${TOP_DIR}/src/runtime/feature/aclgraph/context_aclgraph.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/model_aclgraph.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/capture_model.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/logic_sq.cc

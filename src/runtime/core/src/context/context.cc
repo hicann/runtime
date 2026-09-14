@@ -1760,6 +1760,65 @@ bool Context::TryDeleteIfNeeded()
     return true;
 }
 
+rtError_t Context::TryRecycleModelResource(
+    const uint32_t allocSqNum, const uint32_t ntfCnt, const Model* const excludeMdl)
+{
+    rtError_t error = RT_ERROR_NONE;
+    uint32_t totalReleaseSqNum = 0U;
+    uint32_t totalReleaseNtfNum = 0U;
+
+    modelLock_.Lock();
+    for (Model* const model : models_) {
+        if ((allocSqNum <= totalReleaseSqNum) && (ntfCnt <= totalReleaseNtfNum)) {
+            break;
+        }
+        if ((model == nullptr) || (model == excludeMdl)) {
+            continue;
+        }
+
+        uint32_t releaseSqNum = 0U;
+        uint32_t releaseNtyNum = 0U;
+        error = model->TryRecycleResource(releaseSqNum, releaseNtyNum);
+        if (error != RT_ERROR_NONE) {
+            break;
+        }
+        totalReleaseSqNum += releaseSqNum;
+        totalReleaseNtfNum += releaseNtyNum;
+    }
+    modelLock_.Unlock();
+
+    return error;
+}
+
+rtError_t Context::TryRecycleModelJettyResource(const Model* const excludeMdl, const JettyType type)
+{
+    if (!Runtime::Instance()->GetConnectUbFlag()) {
+        return RT_ERROR_NONE;
+    }
+
+    rtError_t error = RT_ERROR_NONE;
+    uint32_t totalRelease = 0U;
+    modelLock_.Lock();
+    for (Model* const model : models_) {
+        if (totalRelease > 0U) {
+            break;
+        }
+        if ((model == nullptr) || (model == excludeMdl)) {
+            continue;
+        }
+
+        uint32_t releaseNum = 0U;
+        error = model->TryRecycleResource(type, releaseNum);
+        if (error != RT_ERROR_NONE) {
+            break;
+        }
+        totalRelease += releaseNum;
+    }
+    modelLock_.Unlock();
+
+    return error;
+}
+
 rtError_t Context::ModelCreate(Model** const result, ModelType type)
 {
     rtError_t error = RT_ERROR_NONE;
@@ -1790,6 +1849,13 @@ ERROR_RECYCLE:
 ERROR_RETURN:
     *result = nullptr;
     return error;
+}
+
+void Context::DetachModel(Model* mdl)
+{
+    modelLock_.Lock();
+    models_.remove(mdl);
+    modelLock_.Unlock();
 }
 
 void Context::SubModelDestroy(Model* subMdl)

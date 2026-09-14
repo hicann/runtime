@@ -1935,11 +1935,11 @@ TEST_F(CloudV2CaptureModelTest, capture_mode_try_recycle)
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = (RtPtrToPtr<Context*>(ctx))
-                ->TryRecycleCaptureModelResource(1, 1, static_cast<CaptureModel*>(rt_ut::UnwrapOrNull<Model>(model3)));
+                ->TryRecycleModelResource(1, 1, static_cast<CaptureModel*>(rt_ut::UnwrapOrNull<Model>(model3)));
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = (RtPtrToPtr<Context*>(ctx))
-                ->TryRecycleCaptureModelJettyResource(
+                ->TryRecycleModelJettyResource(
                     static_cast<CaptureModel*>(rt_ut::UnwrapOrNull<Model>(model3)), JettyType::JETTY_TYPE_H2D);
     EXPECT_EQ(error, RT_ERROR_NONE);
 

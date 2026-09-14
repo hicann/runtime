@@ -21,6 +21,7 @@
 #include "runtime.hpp"
 #include "context.hpp"
 #include "capture_model.hpp"
+#include "runtime/feature/aclgraph/capture_session.hpp"
 #include "cond_c.hpp"
 #include "label_c.hpp"
 #include "dvpp_c.hpp"
@@ -5937,6 +5938,8 @@ TEST_F(ContextTest, StreamEndTaskGrpReportsPreviousApiError)
     ASSERT_NE(captureStm, nullptr);
     Context* const ctx = stm->Context_();
     ASSERT_NE(ctx, nullptr);
+    CaptureSession* const captureSession = GetCaptureSession(ctx);
+    ASSERT_NE(captureSession, nullptr);
 
     CaptureModel captureModel;
     captureModel.context_ = ctx;
@@ -5950,7 +5953,7 @@ TEST_F(ContextTest, StreamEndTaskGrpReportsPreviousApiError)
     captureModel.SetTaskGroupErrCode(RT_ERROR_TASK_NOT_SUPPORT);
 
     TaskGroup* handle = nullptr;
-    EXPECT_EQ(ctx->StreamEndTaskGrp(stm, &handle), RT_ERROR_TASK_NOT_SUPPORT);
+    EXPECT_EQ(captureSession->StreamEndTaskGrp(stm, &handle), RT_ERROR_TASK_NOT_SUPPORT);
     EXPECT_EQ(handle, nullptr);
     EXPECT_EQ(stm->GetTaskGroupStatus(), StreamTaskGroupStatus::NONE);
     EXPECT_EQ(captureStm->GetCurrentTaskGroup(), nullptr);
@@ -5976,6 +5979,8 @@ TEST_F(ContextTest, StreamEndTaskGrpReportsInvalidatedCapture)
     ASSERT_NE(captureStm, nullptr);
     Context* const ctx = stm->Context_();
     ASSERT_NE(ctx, nullptr);
+    CaptureSession* const captureSession = GetCaptureSession(ctx);
+    ASSERT_NE(captureSession, nullptr);
 
     CaptureModel captureModel;
     captureModel.context_ = ctx;
@@ -5989,7 +5994,7 @@ TEST_F(ContextTest, StreamEndTaskGrpReportsInvalidatedCapture)
     captureModel.InsertTaskGroupStreamId(static_cast<uint16_t>(captureStm->Id_()));
 
     TaskGroup* handle = nullptr;
-    EXPECT_EQ(ctx->StreamEndTaskGrp(stm, &handle), RT_ERROR_STREAM_CAPTURE_INVALIDATED);
+    EXPECT_EQ(captureSession->StreamEndTaskGrp(stm, &handle), RT_ERROR_STREAM_CAPTURE_INVALIDATED);
     EXPECT_EQ(handle, nullptr);
     EXPECT_EQ(stm->GetTaskGroupStatus(), StreamTaskGroupStatus::NONE);
     EXPECT_EQ(captureStm->GetCurrentTaskGroup(), nullptr);
@@ -6010,6 +6015,8 @@ TEST_F(ContextTest, StreamEndTaskUpdate_UnupdatedTasks_ReturnsTaskGrpUpdateError
     ASSERT_NE(stm, nullptr);
     Context* const ctx = stm->Context_();
     ASSERT_NE(ctx, nullptr);
+    CaptureSession* const captureSession = GetCaptureSession(ctx);
+    ASSERT_NE(captureSession, nullptr);
 
     ASSERT_EQ(stm->UpdateTaskGroupStatus(StreamTaskGroupStatus::UPDATE), RT_ERROR_NONE);
     std::unique_ptr<TaskGroup> taskGroup(new TaskGroup);
@@ -6019,7 +6026,7 @@ TEST_F(ContextTest, StreamEndTaskUpdate_UnupdatedTasks_ReturnsTaskGrpUpdateError
     taskGroup->updateTaskIndex = 1U;
     stm->updateTaskGroup_ = taskGroup.get();
 
-    EXPECT_EQ(ctx->StreamEndTaskUpdate(stm), RT_ERROR_STREAM_TASKGRP_UPDATE);
+    EXPECT_EQ(captureSession->StreamEndTaskUpdate(stm), RT_ERROR_STREAM_TASKGRP_UPDATE);
     EXPECT_EQ(stm->GetTaskGroupStatus(), StreamTaskGroupStatus::NONE);
 
     stm->updateTaskGroup_ = nullptr;
@@ -6035,6 +6042,8 @@ TEST_F(ContextTest, StreamEndTaskUpdate_AllTasksUpdated_ReturnsSuccess)
     ASSERT_NE(stm, nullptr);
     Context* const ctx = stm->Context_();
     ASSERT_NE(ctx, nullptr);
+    CaptureSession* const captureSession = GetCaptureSession(ctx);
+    ASSERT_NE(captureSession, nullptr);
 
     ASSERT_EQ(stm->UpdateTaskGroupStatus(StreamTaskGroupStatus::UPDATE), RT_ERROR_NONE);
     std::unique_ptr<TaskGroup> taskGroup(new TaskGroup);
@@ -6043,7 +6052,7 @@ TEST_F(ContextTest, StreamEndTaskUpdate_AllTasksUpdated_ReturnsSuccess)
     taskGroup->updateTaskIndex = 1U;
     stm->updateTaskGroup_ = taskGroup.get();
 
-    EXPECT_EQ(ctx->StreamEndTaskUpdate(stm), RT_ERROR_NONE);
+    EXPECT_EQ(captureSession->StreamEndTaskUpdate(stm), RT_ERROR_NONE);
     EXPECT_EQ(stm->GetTaskGroupStatus(), StreamTaskGroupStatus::NONE);
 
     stm->updateTaskGroup_ = nullptr;
@@ -6057,10 +6066,12 @@ TEST_F(ContextTest, StreamBeginTaskUpdateReportsStatusOnUpdateFailure)
     ASSERT_EQ(rtStreamCreate(&stream, 0), RT_ERROR_NONE);
     Stream* const stm = rt_ut::UnwrapOrNull<Stream>(stream);
     ASSERT_NE(stm, nullptr);
+    CaptureSession* const captureSession = GetCaptureSession(stm->Context_());
+    ASSERT_NE(captureSession, nullptr);
 
     TaskGroup taskGroup;
     MOCKER_CPP(&Stream::UpdateTaskGroupStatus).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
-    EXPECT_EQ(stm->Context_()->StreamBeginTaskUpdate(stm, &taskGroup), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(captureSession->StreamBeginTaskUpdate(stm, &taskGroup), RT_ERROR_INVALID_VALUE);
 
     GlobalMockObject::verify();
     EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);

@@ -720,7 +720,7 @@ rtError_t Stream::Setup()
     if (error == RT_ERROR_DRV_NO_RESOURCES) {
         DeviceSqCqPool* sqcqPool = device_->GetDeviceSqCqManage();
         if ((sqcqPool->GetSqCqPoolFreeResNum() == 0U) && (Context_() != nullptr)) {
-            (void)Context_()->TryRecycleCaptureModelResource(1U, 0U, nullptr);
+            (void)Context_()->TryRecycleModelResource(1U, 0U, nullptr);
         }
 
         if ((sqcqPool != nullptr) && (sqcqPool->GetSqCqPoolFreeResNum() != 0U)) {
@@ -1019,7 +1019,7 @@ rtError_t Stream::AllocSqCqForAutoSplitWithRetry()
             GetExposedStreamId(), Id_());
         DeviceSqCqPool* sqcqPool = device_->GetDeviceSqCqManage();
         if ((sqcqPool->GetSqCqPoolFreeResNum() == 0U) && (Context_() != nullptr)) {
-            Context_()->TryRecycleCaptureModelResource(1U, 0U, nullptr);
+            Context_()->TryRecycleModelResource(1U, 0U, nullptr);
         }
 
         if ((sqcqPool != nullptr) && (sqcqPool->GetSqCqPoolFreeResNum() != 0U)) {

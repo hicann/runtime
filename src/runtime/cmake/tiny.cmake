@@ -234,7 +234,6 @@ set(libruntime_src_files_include_for_tiny
     ${RUNTIME_FEATURE_DIR}/snapshot/tiny/snapshot_callback_manager_stub.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/tiny/capture_model_utils_stub.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/tiny/capture_model_stub.cc
-    ${RUNTIME_FEATURE_DIR}/aclgraph/tiny/context_aclgraph_stub.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/tiny/event_capture_stub.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/tiny/capture_adapt_stub.cc
     ${RUNTIME_API_DIR}/impl/api_decorator_stub.cc

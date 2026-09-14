@@ -10,14 +10,21 @@
 #ifndef CCE_RUNTIME_CAPTURE_OPS_HPP
 #define CCE_RUNTIME_CAPTURE_OPS_HPP
 
+#include "runtime/base.h"
+#include "runtime/rt_inner_model.h"
+
 namespace cce {
 namespace runtime {
 
+class CondHandle;
 class Context;
 class ContextExtension;
+class Stream;
 
 struct CaptureOps {
     ContextExtension* (*createContextExtension)(Context* ctx);
+    void (*freeCascadeCaptureStream)(Context* ctx, Stream* cascadeCaptureStream);
+    rtError_t (*createSubCaptureModels)(Context* ctx, CondHandle* condHandle, rtCondTaskParams params, Stream* stm);
 };
 
 void RegisterCaptureOps(const CaptureOps* captureOps);

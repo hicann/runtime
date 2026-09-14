@@ -12,15 +12,18 @@
 
 #include "context_extension.hpp"
 #include "runtime/base.h"
+#include "runtime/rt_inner_model.h"
 
 namespace cce {
 namespace runtime {
 
 class Context;
 class CaptureModel;
+class CondHandle;
 class Model;
 class Notify;
 class Stream;
+class TaskGroup;
 struct tagTaskInfoStru;
 typedef tagTaskInfoStru TaskInfo;
 
@@ -39,6 +42,14 @@ public:
     rtError_t StreamEndCapture(Stream* const stm, Model** const captureMdl);
     rtError_t StreamAddToCaptureModelProc(Stream* const stm, Model* const captureMdl, const bool isOriginal = false);
     rtError_t StreamAddToModel(Stream* const stm, Model* const captureMdl);
+    rtError_t AllocCascadeCaptureStream(const Stream* const stm, Model* const captureModel, Stream** newCaptureStream);
+    void FreeCascadeCaptureStream(Stream* const cascadeCaptureStm);
+    rtError_t StreamBeginTaskGrp(Stream* const stm);
+    rtError_t StreamEndTaskGrp(Stream* const stm, TaskGroup** const handle) const;
+    rtError_t StreamBeginTaskUpdate(Stream* const stm, TaskGroup* handle) const;
+    rtError_t StreamEndTaskUpdate(Stream* const stm) const;
+    rtError_t CreateSubCaptureModels(CondHandle* condHandle, rtCondTaskParams params, Stream* const stm);
+    rtError_t StreamAddCondTask(CondHandle* condHandle, rtCondTaskParams params, Stream* const stm, uint32_t flags);
     rtError_t UpdateEndGraphTask(Stream* const origCaptureStream, Stream* const exeStream, Notify* ntf) const;
     rtError_t UpdateSuModelExeStreamNotifyWaitSqe(TaskInfo* taskInfo, Stream* const exeStream) const;
 
@@ -47,6 +58,7 @@ private:
     rtError_t CheckCaptureModelValidity(Model* const captureMdl) const;
     rtError_t AddNotifyToAddedCaptureStream(Stream* const oriSingleStm, CaptureModel* const captureMdl);
     rtError_t SetNotifyForExeModel(CaptureModel* const captureMdl);
+    rtError_t SubmitCaptureConditionTask(CondHandle* condHandle, Stream* const stm);
     bool CheckSubModelsIsEndCapture(const Stream* const captureStream) const;
     void ClearCaptureModel(Stream* const stm, Model* mdl = nullptr);
 

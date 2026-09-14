@@ -2335,7 +2335,7 @@ TEST_F(DeviceTest, StreamSetupTryAllocWithContextRecycleResource)
     stream->SetContext(ctx);
 
     MOCKER_CPP(&StreamSqCqManage::AllocStreamSqCq).stubs().will(returnValue(RT_ERROR_DRV_NO_RESOURCES));
-    MOCKER_CPP(&Context::TryRecycleCaptureModelResource).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(&Context::TryRecycleModelResource).stubs().will(returnValue(RT_ERROR_NONE));
 
     rtError_t ret = stream->Setup();
     ASSERT_EQ(ret, RT_ERROR_DRV_NO_RESOURCES);

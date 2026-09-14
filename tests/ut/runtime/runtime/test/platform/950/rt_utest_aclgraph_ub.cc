@@ -1139,7 +1139,7 @@ TEST_F(CaptureModelJettyTest, ReleaseJetty_Success)
     EXPECT_EQ(error3, RT_ERROR_NONE);
 }
 
-TEST_F(CaptureModelJettyTest, TryRecycleCaptureModelJettyResource_Success)
+TEST_F(CaptureModelJettyTest, TryRecycleModelJettyResource_Success)
 {
     captureModel_->ModelPushFrontStream(stream_);
     SetupJettyContext(stream_, JettyType::JETTY_TYPE_H2D, 100, false);
@@ -1154,7 +1154,7 @@ TEST_F(CaptureModelJettyTest, TryRecycleCaptureModelJettyResource_Success)
 
     MOCKER(StreamUbDbSend).stubs().will(returnValue(RT_ERROR_NONE));
 
-    rtError_t error = currentCtx->TryRecycleCaptureModelJettyResource(nullptr, JettyType::JETTY_TYPE_H2D);
+    rtError_t error = currentCtx->TryRecycleModelJettyResource(nullptr, JettyType::JETTY_TYPE_H2D);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     currentCtx->models_.remove(captureModel_);

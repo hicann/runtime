@@ -209,7 +209,6 @@ set(runtimeut_src_aclgraph_list
     ${TOP_DIR}/src/runtime/feature/aclgraph/event_capture_arch5162.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/tiny/capture_adapt_stub.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/tiny/capture_model_stub.cc
-    ${TOP_DIR}/src/runtime/feature/aclgraph/tiny/context_aclgraph_stub.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/tiny/capture_model_utils_stub.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/tiny/stream_capture_stub.cc
     ${TOP_DIR}/src/runtime/feature/model/tiny/model_aclgraph_stub.cc

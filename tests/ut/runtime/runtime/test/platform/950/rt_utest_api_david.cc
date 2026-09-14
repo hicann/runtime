@@ -77,6 +77,7 @@
 #include "stream_sqcq_manage.hpp"
 #include "stars_cond_isa_helper.hpp"
 #include "capture_model_utils.hpp"
+#include "runtime/feature/aclgraph/capture_session.hpp"
 #include "cmo_task.h"
 #include "model_execute_task.h"
 #include "dvpp_c.hpp"
@@ -8442,7 +8443,7 @@ TEST_F(ApiDavidTest, captureStreamCascade)
     MOCKER(DavidSendTask).stubs().will(returnValue(RT_ERROR_DRV_ERR));
     error = rtEventRecord(event, stream);
     EXPECT_NE(error, ACL_RT_SUCCESS);
-    MOCKER_CPP(&Context::AllocCascadeCaptureStream).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(&CaptureSession::AllocCascadeCaptureStream).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER(CondStreamActive).stubs().will(returnValue(RT_ERROR_DRV_ERR));
     error = rtEventRecord(event, stream);
     EXPECT_NE(error, ACL_RT_SUCCESS);

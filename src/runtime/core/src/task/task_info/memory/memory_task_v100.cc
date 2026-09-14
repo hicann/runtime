@@ -13,6 +13,7 @@
 #include "stream.hpp"
 #include "runtime.hpp"
 #include "context.hpp"
+#include "capture_model.hpp"
 #include "task_info.hpp"
 #include "runtime_task_manager.h"
 #include "error_code.h"

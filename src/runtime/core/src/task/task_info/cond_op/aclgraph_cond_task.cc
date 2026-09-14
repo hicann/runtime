@@ -13,6 +13,7 @@
 #include "cond_enum_desc.hpp"
 #include "stars_cond_isa_helper.hpp"
 #include "context.hpp"
+#include "capture_model.hpp"
 #include "aclgraph_cond_task.h"
 #include "model.hpp"
 #include "notify.hpp"

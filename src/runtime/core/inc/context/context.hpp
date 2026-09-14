@@ -23,7 +23,6 @@
 #include "kernel.hpp"
 #include "program.hpp"
 #include "model.hpp"
-#include "capture_model.hpp"
 #include "jetty_pool.h"
 #include "label.hpp"
 #include "rw_lock.h"
@@ -36,7 +35,6 @@
 #include "context_extension.hpp"
 #include "rts/rts.h"
 #include "mmpa_linux.h"
-#include "cond_handle.hpp"
 
 #define CHECK_CONTEXT_VALID_WITH_RETURN(tmpCtx, ERRCODE)               \
     {                                                                  \
@@ -56,7 +54,6 @@ namespace runtime {
 class Device;
 class Stream;
 class Module;
-class CaptureModel;
 class Program;
 class Kernel;
 class DavinciKernelTask;
@@ -151,36 +148,21 @@ public:
 
     rtError_t StreamsUpdate(void);
 
-    rtError_t StreamBeginTaskUpdate(Stream* const stm, TaskGroup* handle) const;
-
-    rtError_t StreamEndTaskUpdate(Stream* const stm) const;
-
-    rtError_t StreamAddCondTask(CondHandle* condHandle, rtCondTaskParams params, Stream* const stm, uint32_t flags);
-    rtError_t SubmitCaptureConditionTask(CondHandle* condHandle, Stream* const stm);
-
     rtError_t ModelGetNodes(const Model* const mdl, uint32_t* const num);
-
-    rtError_t CreateSubCaptureModels(CondHandle* condHandle, rtCondTaskParams params, Stream* const stm);
 
     rtError_t ModelDebugDotPrint(const Model* const mdl);
 
     rtError_t ModelDebugJsonPrint(const Model* const mdl, const char* path, const uint32_t flags);
 
-    rtError_t StreamBeginTaskGrp(Stream* const stm);
-
-    rtError_t StreamEndTaskGrp(Stream* const stm, TaskGroup** const handle) const;
-
     rtError_t ModelCreate(Model** const result, ModelType type = RT_MODEL_NORMAL);
-
-    rtError_t AllocCascadeCaptureStream(const Stream* const stm, Model* const captureModel, Stream** newCaptureStream);
-
-    void FreeCascadeCaptureStream(Stream* const cascadeCaptureStm);
 
     rtError_t CreateNotify(Notify** notify, uint32_t flag);
 
     rtError_t ModelDestroy(Model* mdl);
 
     void SubModelDestroy(Model* subMdl);
+
+    void DetachModel(Model* mdl);
 
     rtError_t ModelBindStream(Model* const mdl, Stream* const stm, const uint32_t flag);
 
@@ -422,9 +404,8 @@ public:
     void SetCtxMode(const TsStreamFailureMode flag) { ctxMode_ = flag; }
     rtError_t SyncAllStreamToGetError();
     void ProcessReportFastRingBuffer() const;
-    rtError_t TryRecycleCaptureModelResource(
-        const uint32_t allocSqNum, const uint32_t ntfCnt, const CaptureModel* const excludeMdl);
-    rtError_t TryRecycleCaptureModelJettyResource(const CaptureModel* const excludeMdl, JettyType type);
+    rtError_t TryRecycleModelResource(const uint32_t allocSqNum, const uint32_t ntfCnt, const Model* const excludeMdl);
+    rtError_t TryRecycleModelJettyResource(const Model* const excludeMdl, JettyType type);
 
     void PushContextErrMsg();
     void PopContextErrMsg();

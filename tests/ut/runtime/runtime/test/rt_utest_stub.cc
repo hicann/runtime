@@ -531,7 +531,7 @@ TEST_F(TinyStubTest, context_stub)
     Context ctx(dev, 0);
     ctx.Init();
     rtError_t ret = RT_ERROR_NONE;
-    ctx.TryRecycleCaptureModelResource(1, 1, nullptr);
+    ctx.TryRecycleModelResource(1, 1, nullptr);
     ret = ctx.FftsPlusTaskLaunch(nullptr, nullptr, 0);
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
     ret = ctx.RDMASend(0, 0, nullptr);
@@ -1348,8 +1348,6 @@ TEST_F(TinyStubTest, context_capture_basic_stub)
     Context ctx(dev, 0);
     ctx.Init();
     EXPECT_EQ(ctx.EnsureExtension(), nullptr);
-    Stream* newStream = nullptr;
-    EXPECT_EQ(ctx.AllocCascadeCaptureStream(nullptr, nullptr, &newStream), RT_ERROR_FEATURE_NOT_SUPPORT);
     delete dev;
     dev = nullptr;
     ctx.device_ = nullptr;
@@ -1370,29 +1368,12 @@ TEST_F(TinyStubTest, context_capture_model_stub)
     ctx.device_ = nullptr;
 }
 
-TEST_F(TinyStubTest, context_capture_task_stub)
-{
-    RawDevice* dev = new RawDevice(0);
-    dev->Init();
-    Context ctx(dev, 0);
-    ctx.Init();
-    EXPECT_EQ(ctx.StreamBeginTaskGrp(nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
-    TaskGroup* taskGrp = nullptr;
-    EXPECT_EQ(ctx.StreamEndTaskGrp(nullptr, &taskGrp), RT_ERROR_FEATURE_NOT_SUPPORT);
-    EXPECT_EQ(ctx.StreamBeginTaskUpdate(nullptr, taskGrp), RT_ERROR_FEATURE_NOT_SUPPORT);
-    EXPECT_EQ(ctx.StreamEndTaskUpdate(nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
-    delete dev;
-    dev = nullptr;
-    ctx.device_ = nullptr;
-}
-
 TEST_F(TinyStubTest, context_capture_notify_stub)
 {
     RawDevice* dev = new RawDevice(0);
     dev->Init();
     Context ctx(dev, 0);
     ctx.Init();
-    ctx.FreeCascadeCaptureStream(nullptr);
     Notify* notify = nullptr;
     EXPECT_EQ(ctx.CreateNotify(&notify, 0), RT_ERROR_FEATURE_NOT_SUPPORT);
     uint64_t notifyAddr = 0UL;

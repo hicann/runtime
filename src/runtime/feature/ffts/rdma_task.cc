@@ -13,6 +13,7 @@
 #include "runtime.hpp"
 #include "stars_cond_isa_helper.hpp"
 #include "context.hpp"
+#include "capture_model.hpp"
 #include "rdma_task.h"
 #include "inner_thread_local.hpp"
 #include "task.hpp"

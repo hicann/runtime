@@ -44,7 +44,7 @@ rtError_t CoprocessorStream::Setup()
         DeviceSqCqPool* sqcqPool = device_->GetDeviceSqCqManage();
         if (sqcqPool != nullptr) {
             if ((sqcqPool->GetSqCqPoolFreeResNum() == 0U) && (Context_() != nullptr)) {
-                (void)Context_()->TryRecycleCaptureModelResource(1U, 0U, nullptr);
+                (void)Context_()->TryRecycleModelResource(1U, 0U, nullptr);
             }
 
             if ((sqcqPool->GetSqCqPoolFreeResNum() != 0U) && (sqcqPool->TryFreeSqCqToDrv() == RT_ERROR_NONE)) {

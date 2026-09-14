@@ -14,6 +14,7 @@
 #include "stream.hpp"
 #include "cond_handle/cond_handle.hpp"
 #include "api_handle_guard.h"
+#include "capture_model.hpp"
 #include "capture_model_utils.hpp"
 #include "../capture_session.hpp"
 #include "aclgraph_cond_task.h"
@@ -87,7 +88,9 @@ rtError_t ApiImpl::StreamBeginTaskUpdate(Stream* const stm, TaskGroup* handle)
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
         stm, curCtx, RT_ERROR_STREAM_CONTEXT, "Marking the start of the task to be updated");
-    return curCtx->StreamBeginTaskUpdate(stm, handle);
+    CaptureSession* const captureSession = GetCaptureSession(curCtx);
+    NULL_PTR_RETURN_MSG(captureSession, RT_ERROR_CONTEXT_BASE);
+    return captureSession->StreamBeginTaskUpdate(stm, handle);
 }
 
 rtError_t ApiImpl::StreamEndTaskUpdate(Stream* const stm)
@@ -96,7 +99,9 @@ rtError_t ApiImpl::StreamEndTaskUpdate(Stream* const stm)
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
         stm, curCtx, RT_ERROR_STREAM_CONTEXT, "Marking the end of the task to be updated");
-    return curCtx->StreamEndTaskUpdate(stm);
+    CaptureSession* const captureSession = GetCaptureSession(curCtx);
+    NULL_PTR_RETURN_MSG(captureSession, RT_ERROR_CONTEXT_BASE);
+    return captureSession->StreamEndTaskUpdate(stm);
 }
 
 rtError_t ApiImpl::StreamGetCaptureInfo(
@@ -191,7 +196,9 @@ rtError_t ApiImpl::StreamBeginTaskGrp(Stream* const stm)
 
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
         stm, curCtx, RT_ERROR_STREAM_CONTEXT, "Marking the start of a task group");
-    return curCtx->StreamBeginTaskGrp(stm);
+    CaptureSession* const captureSession = GetCaptureSession(curCtx);
+    NULL_PTR_RETURN_MSG(captureSession, RT_ERROR_CONTEXT_BASE);
+    return captureSession->StreamBeginTaskGrp(stm);
 }
 
 rtError_t ApiImpl::StreamEndTaskGrp(Stream* const stm, TaskGroup** const handle)
@@ -201,7 +208,9 @@ rtError_t ApiImpl::StreamEndTaskGrp(Stream* const stm, TaskGroup** const handle)
 
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
         stm, curCtx, RT_ERROR_STREAM_CONTEXT, "Marking the end of a task group");
-    return curCtx->StreamEndTaskGrp(stm, handle);
+    CaptureSession* const captureSession = GetCaptureSession(curCtx);
+    NULL_PTR_RETURN_MSG(captureSession, RT_ERROR_CONTEXT_BASE);
+    return captureSession->StreamEndTaskGrp(stm, handle);
 }
 
 rtError_t ApiImpl::ModelCondHandleCreate(
@@ -298,12 +307,14 @@ rtError_t ApiImpl::StreamAddCondTask(rtCondTaskParams params, Stream* const stm,
 
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    error = curCtx->CreateSubCaptureModels(realHandle, params, stm);
+    CaptureSession* const captureSession = GetCaptureSession(curCtx);
+    NULL_PTR_RETURN_MSG(captureSession, RT_ERROR_CONTEXT_BASE);
+    error = captureSession->CreateSubCaptureModels(realHandle, params, stm);
     ERROR_RETURN_MSG_INNER(
         error, "Create sub capture model failed, condition type=%s, condition size=%u, retCode=%#x.",
         CondTaskTypeToString(params.type).c_str(), params.size, static_cast<uint32_t>(error));
 
-    return curCtx->StreamAddCondTask(realHandle, params, stm, flags);
+    return captureSession->StreamAddCondTask(realHandle, params, stm, flags);
 }
 
 } // namespace runtime

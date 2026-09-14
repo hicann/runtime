@@ -32,6 +32,7 @@ class LabelAllocator;
 class Label;
 class Notify;
 class CondHandle;
+enum class JettyType : uint8_t;
 extern bool g_isAddrFlatDevice;
 enum rtDevStringNameT : uint8_t { RT_DEV_STRING_ENDGRAPH, RT_DEV_STRING_ACTIVE_STREAM, RT_DEV_STRING_RESERVED };
 
@@ -281,6 +282,20 @@ public:
     void* GetDfxPtr() const { return dfxPtr_; }
 
     ModelType GetModelType() const { return modelType_; }
+
+    virtual rtError_t TryRecycleResource(uint32_t& releaseSqNum, uint32_t& releaseNtyNum)
+    {
+        releaseSqNum = 0U;
+        releaseNtyNum = 0U;
+        return RT_ERROR_NONE;
+    }
+
+    virtual rtError_t TryRecycleResource(const JettyType type, uint32_t& releaseNum)
+    {
+        UNUSED(type);
+        releaseNum = 0U;
+        return RT_ERROR_NONE;
+    }
 
     bool IsModelLoadComplete() const { return isModelComplete_; }
     rtError_t MemWaitDevAlloc(void** devMem, const Device* const dev);

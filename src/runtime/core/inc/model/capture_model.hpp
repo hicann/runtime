@@ -283,6 +283,8 @@ public:
     // endGraph + alloc sq cq + Send sqe + bind sq cq + load complete + update task
     rtError_t BuildSqCq(Stream* const exeStream);
     void DeconstructSqCq(void);
+    rtError_t TryRecycleResource(uint32_t& releaseSqNum, uint32_t& releaseNtyNum) override;
+    rtError_t TryRecycleResource(const JettyType type, uint32_t& releaseNum) override;
     rtError_t ReleaseSqCqAndNotifyId(uint32_t& releaseSqNum, uint32_t& releaseNtyNum);
     void CaptureModelExecuteFinish(const uint32_t errCode);
 

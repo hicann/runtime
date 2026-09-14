@@ -46,6 +46,7 @@
 #include "model.hpp"
 #include "task.hpp"
 #include "capture_model.hpp"
+#include "runtime/feature/aclgraph/capture_session.hpp"
 #include "subscribe.hpp"
 #include <fstream>
 #include <stdio.h>
@@ -920,7 +921,7 @@ TEST_F(ApiCloudV2DisableThreadTest, task_group_capture_invalid)
     MOCKER_CPP(&Stream::StarsWaitForTask).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP(&Stream::IsStreamFull).stubs().will(returnValue(false));
     MOCKER_CPP_VIRTUAL(stream, &Stream::AddTaskToList).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP(&Context::AllocCascadeCaptureStream).stubs().will(returnValue(RT_ERROR_DRV_NO_RESOURCES));
+    MOCKER_CPP(&CaptureSession::AllocCascadeCaptureStream).stubs().will(returnValue(RT_ERROR_DRV_NO_RESOURCES));
 
     error = rtStreamCreate(&stream1, 0);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
