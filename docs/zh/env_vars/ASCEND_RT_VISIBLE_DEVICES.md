@@ -11,12 +11,12 @@
 
     多个Device ID之间以英文逗号分隔，不能包含其它字符或无效的Device ID，若包含其它字符或无效的Device ID，则只读取其它字符或无效Device ID之前的Device ID。例如，若设置“export ASCEND\_RT\_VISIBLE\_DEVICES=1, 2,3”环境变量设置命令中，2前面有一个空格，则这时只读取空格之前的Device ID，也就是1；若设置“export ASCEND\_RT\_VISIBLE\_DEVICES=1,3,8”环境变量设置命令中，8是无效的Device ID，则这时只读取8之前的Device ID，也就是1和3。
 
->**须知：** 
+>**须知：**
 >
 >- 该环境变量为试用环境变量，后续版本可能存在变更，不支持应用于生产环境中。
 >- 仅支持指定的Device ID按照升序配置。
->- 不支持使用DCMI接口时使用该环境变量。DCMI接口说明请参见[《DCMI API参考》](https://support.huawei.com/enterprise/zh/ascend-computing/ascend-hdk-pid-252764743?category=developer-documents&subcategory=api-reference)。
->- 不支持使用HCCN Tool接口时使用该环境变量。HCCN Tool接口说明请参见[《HCCN Tool 接口参考》](https://support.huawei.com/enterprise/zh/ascend-computing/ascend-hdk-pid-252764743?category=developer-documents&subcategory=interface-reference)。
+>- 不支持使用DCMI接口时使用该环境变量。DCMI接口说明请参见《[DCMI API参考](https://support.huawei.com/enterprise/zh/ascend-computing/ascend-hdk-pid-252764743?category=developer-documents&subcategory=api-reference)》。
+>- 不支持使用HCCN Tool接口时使用该环境变量。HCCN Tool接口说明请参见《[HCCN Tool 接口参考](https://support.huawei.com/enterprise/zh/ascend-computing/ascend-hdk-pid-252764743?category=developer-documents&subcategory=interface-reference)》。
 >- 不支持使用Profiling功能时使用该环境变量。
 
 **该环境变量使用场景：**
