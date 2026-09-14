@@ -29,6 +29,7 @@
 #include "event_david.hpp"
 #include "raw_device.hpp"
 #include "task_info.hpp"
+#include "runtime_task_manager.h"
 #include "memory_task.h"
 #include "event_task.h"
 #include "context.hpp"
@@ -379,6 +380,27 @@ TEST_F(EventTestDavid, TestDoCompleteSuccessForDavidEventRecordTask)
     delete evt;
 }
 
+TEST_F(EventTestDavid, TestDoCompleteSuccessForNotifyRecordTaskSetsStreamErrorCode)
+{
+    const rtChipType_t chipTypes[] = {CHIP_DAVID, CHIP_CLOUD_V5, CHIP_CLOUD_V6};
+    for (const auto chipType : chipTypes) {
+        SCOPED_TRACE(static_cast<int32_t>(chipType));
+        PfnDoCompleteSucc completeFunc = g_taskFuncArrays[chipType].doCompleteSuccFunc[TS_TASK_TYPE_NOTIFY_RECORD];
+        ASSERT_NE(completeFunc, nullptr);
+
+        TaskInfo task = {};
+        InitByStream(&task, stream_);
+        task.type = TS_TASK_TYPE_NOTIFY_RECORD;
+        task.typeName = const_cast<char_t*>("NOTIFY_RECORD");
+        task.errorCode = TS_ERROR_TASK_EXCEPTION;
+        stream_->SetErrCode(RT_ERROR_NONE);
+
+        completeFunc(&task, 0U);
+
+        EXPECT_EQ(stream_->GetErrCode(), TS_ERROR_TASK_EXCEPTION);
+    }
+}
+
 TEST_F(EventTestDavid, TestToConstructDavidEventRecordTask)
 {
     TaskInfo task = {};
@@ -423,6 +445,71 @@ TEST_F(EventTestDavid, TestSetStarsResultForDavidEventRecordTask)
     report.errorType = 0U;
     SetStarsResultForDavidEventRecordTask(&task, report);
     EXPECT_EQ(task.errorCode, 0U);
+}
+
+TEST_F(EventTestDavid, TestDavidEventRecordSetStarsResultMapsErrorTypeForTargetChips)
+{
+    const rtChipType_t chipTypes[] = {CHIP_DAVID, CHIP_CLOUD_V5, CHIP_CLOUD_V6};
+    const uint32_t expectedErrorCodes[TS_STARS_ERROR_MAX_INDEX] = {
+        TS_ERROR_TASK_EXCEPTION, TS_ERROR_TASK_BUS_ERROR,          TS_ERROR_TASK_TIMEOUT,
+        TS_ERROR_TASK_SQE_ERROR, TS_ERROR_TASK_RES_CONFLICT_ERROR, TS_ERROR_TASK_SW_STATUS_ERROR};
+    for (const auto chipType : chipTypes) {
+        PfnTaskSetStarsResult setStarsResultFunc =
+            g_taskFuncArrays[chipType].setStarsResultFunc[TS_TASK_TYPE_DAVID_EVENT_RECORD];
+        ASSERT_NE(setStarsResultFunc, nullptr);
+        for (uint32_t errorIndex = 0U; errorIndex < TS_STARS_ERROR_MAX_INDEX; ++errorIndex) {
+            SCOPED_TRACE(static_cast<int32_t>(chipType));
+            SCOPED_TRACE(errorIndex);
+            TaskInfo task = {};
+            rtCqReport_t report = {};
+            report.errorType = static_cast<uint8_t>(1U << errorIndex);
+            report.errorCode = TS_SUCCESS;
+
+            setStarsResultFunc(&task, report);
+
+            EXPECT_EQ(task.errorCode, expectedErrorCodes[errorIndex]);
+        }
+    }
+}
+
+TEST_F(EventTestDavid, TestDavidEventWaitSetStarsResultMapsErrorTypeForTargetChips)
+{
+    const rtChipType_t chipTypes[] = {CHIP_DAVID, CHIP_CLOUD_V5, CHIP_CLOUD_V6};
+    for (const auto chipType : chipTypes) {
+        SCOPED_TRACE(static_cast<int32_t>(chipType));
+        PfnTaskSetStarsResult setStarsResultFunc =
+            g_taskFuncArrays[chipType].setStarsResultFunc[TS_TASK_TYPE_DAVID_EVENT_WAIT];
+        ASSERT_NE(setStarsResultFunc, nullptr);
+
+        TaskInfo task = {};
+        rtCqReport_t report = {};
+        report.errorType = RT_STARS_CQE_ERR_TYPE_TASK_TIMEOUT;
+        report.errorCode = TS_SUCCESS;
+
+        setStarsResultFunc(&task, report);
+
+        EXPECT_EQ(task.errorCode, TS_ERROR_TASK_TIMEOUT);
+    }
+}
+
+TEST_F(EventTestDavid, TestDavidEventWaitSetStarsResultPreservesErrorCodeForTargetChips)
+{
+    const rtChipType_t chipTypes[] = {CHIP_DAVID, CHIP_CLOUD_V5, CHIP_CLOUD_V6};
+    for (const auto chipType : chipTypes) {
+        SCOPED_TRACE(static_cast<int32_t>(chipType));
+        PfnTaskSetStarsResult setStarsResultFunc =
+            g_taskFuncArrays[chipType].setStarsResultFunc[TS_TASK_TYPE_DAVID_EVENT_WAIT];
+        ASSERT_NE(setStarsResultFunc, nullptr);
+
+        TaskInfo task = {};
+        rtCqReport_t report = {};
+        report.errorType = RT_STARS_CQE_ERR_TYPE_EXCEPTION;
+        report.errorCode = TS_ERROR_END_OF_SEQUENCE;
+
+        setStarsResultFunc(&task, report);
+
+        EXPECT_EQ(task.errorCode, TS_ERROR_END_OF_SEQUENCE);
+    }
 }
 
 TEST_F(EventTestDavid, TestElapsedTime)

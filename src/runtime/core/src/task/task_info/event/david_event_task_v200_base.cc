@@ -73,7 +73,16 @@ void SetStarsResultForDavidEventRecordTask(TaskInfo* const taskInfo, const rtCqR
     if ((logicCq.errorType & RT_STARS_EXIST_ERROR) == 0U) {
         eventRecordTaskInfo->timestamp = logicCq.u1.timeStamp;
     } else {
-        taskInfo->errorCode = logicCq.errorCode;
+        if (logicCq.errorCode != TS_SUCCESS) {
+            taskInfo->errorCode = logicCq.errorCode;
+        } else {
+            static uint32_t errMap[TS_STARS_ERROR_MAX_INDEX] = {
+                TS_ERROR_TASK_EXCEPTION, TS_ERROR_TASK_BUS_ERROR,          TS_ERROR_TASK_TIMEOUT,
+                TS_ERROR_TASK_SQE_ERROR, TS_ERROR_TASK_RES_CONFLICT_ERROR, TS_ERROR_TASK_SW_STATUS_ERROR};
+            const uint32_t errorIndex =
+                static_cast<uint32_t>(BitScan(static_cast<uint64_t>(logicCq.errorType) & RT_STARS_EXIST_ERROR));
+            taskInfo->errorCode = errMap[errorIndex];
+        }
     }
 }
 
@@ -394,7 +403,7 @@ static bool EventTaskRegister()
         .waitAsyncCpCompleteFunc = nullptr,
         .printErrorInfoFunc = &PrintErrorInfoForDavidEventWaitTask,
         .setResultFunc = nullptr,
-        .setStarsResultFunc = &SetStarsResultForEventWaitTask,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
     };
     TaskFuncSingle davidEventResetFuncs = {
         .toCommandFunc = nullptr,
