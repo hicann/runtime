@@ -698,17 +698,6 @@ extern "C" LOG_FUNC_VISIBILITY __attribute((weak)) int32_t acllogCheckDebugLevel
     if (!IsAcllogValidModuleId(moduleId) || !IsAcllogCheckLogTypeMask(GetAcllogLogTypeMask(moduleId))) {
         return FALSE;
     }
-    const uint32_t typeMask = GetAcllogLogTypeMask(moduleId);
-    if (IsAcllogUserModuleId(GetAcllogModuleId(moduleId))) {
-        if (logLevel == DLOG_EVENT) {
-            return GetGlobalEnableEventVar() ? TRUE : FALSE;
-        }
-        const int32_t moduleLevel = GetGlobalLogTypeLevelVar(typeMask);
-        if ((logLevel < moduleLevel) || (logLevel >= LOG_MAX_LEVEL)) {
-            return FALSE;
-        }
-        return DlogCheckLogLevel(logLevel);
-    }
     return CheckLogLevel(moduleId, logLevel);
 }
 

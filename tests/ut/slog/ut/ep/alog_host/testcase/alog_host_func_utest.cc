@@ -1542,7 +1542,23 @@ TEST_F(EP_ALOG_HOST_FUNC_UTEST, DlogPrint_HostLogWithUnifiedSwitch)
     unsetenv("ASCEND_PROCESS_LOG_PATH");
     SetUnifiedSwitch(false);
 }
+TEST_F(EP_ALOG_HOST_FUNC_UTEST, AcllogCheckDebugLevelWithUnifiedLog)
+{
+    setenv("ASCEND_GLOBAL_LOG_LEVEL", "3", 1);
+    SetUnifiedSwitch(false);
+    DlogConstructor();
+    DlogDestructor();
 
+    setenv("ASCEND_GLOBAL_LOG_LEVEL", "1", 1);
+    SetUnifiedSwitch(true);
+    DlogConstructor();
+
+    EXPECT_EQ(1, acllogCheckDebugLevel(0xff00, DLOG_INFO));
+
+    DlogDestructor();
+    SetUnifiedSwitch(false);
+    unsetenv("ASCEND_GLOBAL_LOG_LEVEL");
+}
 // The deferred transfer must run at the first API entry, BEFORE the entry's
 // forwarding check falls through to the local write path: a process whose
 // write path is delegated (plog transferred, no local write callback) must
