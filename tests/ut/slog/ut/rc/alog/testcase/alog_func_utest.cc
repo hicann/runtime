@@ -12,7 +12,9 @@
 #include "self_log_stub.h"
 #include "alog_stub.h"
 #include "dlog_attr.h"
+#include "dlog_core.h"
 #include "alog_to_slog.h"
+#include "dlog_drv.h"
 #include "ascend_hal.h"
 #include "dlfcn.h"
 
@@ -22,7 +24,6 @@ using namespace std;
 using namespace testing;
 
 extern "C" {
-void DllMain(void);
 void DlogFree(void);
 }
 
@@ -62,7 +63,7 @@ protected:
     }
 
 public:
-    static void DlogConstructor() { DllMain(); }
+    static void DlogConstructor() { DlogInit(); }
 
     static void DlogDestructor() { DlogFree(); }
 
@@ -335,4 +336,135 @@ TEST_F(RC_ALOG_FUNC_UTEST, compatibility)
     EXPECT_EQ(LOG_FAILURE, AlogTransferToSlog());
     EXPECT_EQ(LOG_FAILURE, AlogTransferToSlog());
     EXPECT_EQ(LOG_FAILURE, AlogTransferToSlog());
+}
+
+// Registration runs from DlogInit; the driver must receive the log callback
+// via halCtl, preferring the RUN_LOG handle.
+TEST_F(RC_ALOG_FUNC_UTEST, DlogInitRegistersDriverLog)
+{
+    GlobalMockObject::reset();
+    MOCKER(ShMemRead).stubs().will(invoke(ShMemRead_stub));
+    MOCKER(CreatSocket).stubs().will(invoke(CreatSocket_stub));
+    MOCKER(dlopen).stubs().will(invoke(logDlopen));
+    MOCKER(dlclose).stubs().will(invoke(logDlclose));
+    MOCKER(dlsym).stubs().will(invoke(logDlsym));
+
+    ResetDrvRegCall();
+    setenv("ASCEND_GLOBAL_LOG_LEVEL", "0", 1);
+    SetShmem(MSGTYPE_TAG);
+    int32_t probeBefore = DlogCheckSocket("probe");
+    DlogConstructor();
+    const DrvRegCallRecord* reg = GetDrvRegCall();
+    EXPECT_EQ(1, reg->registerCalls);
+    EXPECT_EQ(HAL_CTL_REGISTER_RUN_LOG_OUT_HANDLE, reg->lastCmd);
+    ASSERT_NE((void*)nullptr, (void*)reg->callback);
+
+    // The registration level must follow the level already applied by the
+    // init (env here sets global DEBUG), not a re-read of a default.
+    EXPECT_EQ((uint32_t)DLOG_DEBUG, (uint32_t)reg->lastLogLevel);
+
+    // The driver probes the new callback synchronously inside halCtl; the
+    // probe line must reach the write path instead of being dropped.
+    EXPECT_EQ(1, reg->probeCalls);
+    EXPECT_EQ(probeBefore + 1, DlogCheckSocket("probe"));
+
+    // The registered sink is the product DlogDriverLog, not the stub's sink, so
+    // verify it routes onto the write path indirectly via the stubbed socket.
+    int32_t before = DlogCheckSocket("ERROR");
+    reg->callback(DRV, DLOG_ERROR, "[DlogInitRegistersDriverLog] sink check.");
+    int32_t after = DlogCheckSocket("ERROR");
+    EXPECT_EQ(before + 1, after);
+
+    DlogDestructor();
+    unsetenv("ASCEND_GLOBAL_LOG_LEVEL");
+}
+
+// A driver-owned module configured with its own level must have that level
+// re-sent after registration: registration carries only the global level, so
+// a differing per-module setting (shmem or env) must not be lost to it.
+TEST_F(RC_ALOG_FUNC_UTEST, PerModuleLevelResyncAfterRegister)
+{
+    GlobalMockObject::reset();
+    MOCKER(ShMemRead).stubs().will(invoke(ShMemRead_stub));
+    MOCKER(CreatSocket).stubs().will(invoke(CreatSocket_stub));
+    MOCKER(dlopen).stubs().will(invoke(logDlopen));
+    MOCKER(dlclose).stubs().will(invoke(logDlclose));
+    MOCKER(dlsym).stubs().will(invoke(logDlsym));
+
+    // global INFO (1) via env, UNIFIEDBUS alone at DEBUG (0) via module env.
+    setenv("ASCEND_GLOBAL_LOG_LEVEL", "1", 1);
+    setenv("ASCEND_MODULE_LOG_LEVEL", "UNIFIEDBUS=0", 1);
+
+    ResetDrvRegCall();
+    SetShmem(MSGTYPE_TAG);
+    DlogConstructor();
+
+    // The post-registration resync must re-send UNIFIEDBUS's own level: the LAST
+    // dispatch is UNIFIEDBUS at DEBUG, and it happens after the registration
+    // (registerCalls == 1 at this point). Prior-test module state may add
+    // extra DRV dispatches, so only the tail is asserted.
+    const DrvRegCallRecord* reg = GetDrvRegCall();
+    ASSERT_EQ(1, reg->registerCalls);
+    const DrvLevelCallRecord* rec = GetDrvLevelCall();
+    ASSERT_GE(rec->jNum, 1);
+    EXPECT_EQ(0, rec->jLevels[rec->jNum - 1]); // UNIFIEDBUS DEBUG
+    EXPECT_EQ(UNIFIEDBUS, rec->jMods[rec->jNum - 1]);
+    EXPECT_EQ(1, rec->jSizes[rec->jNum - 1]);
+
+    DlogDestructor();
+    unsetenv("ASCEND_GLOBAL_LOG_LEVEL");
+    unsetenv("ASCEND_MODULE_LOG_LEVEL");
+}
+
+// plog is not compiled on the device side, so the level dispatch must go
+// through DlogSetDriverLogLevel and still reach the driver symbol.
+TEST_F(RC_ALOG_FUNC_UTEST, DlogSetDriverLogLevelReachesDriver)
+{
+    GlobalMockObject::reset();
+    MOCKER(dlopen).stubs().will(invoke(logDlopen));
+    MOCKER(dlclose).stubs().will(invoke(logDlclose));
+    MOCKER(dlsym).stubs().will(invoke(logDlsym));
+
+    // A single driver-owned module forwards exactly that module.
+    ResetDrvLevelCall();
+    DlogSetDriverLogLevel(UNIFIEDBUS, DLOG_ERROR);
+    const DrvLevelCallRecord* rec = GetDrvLevelCall();
+    EXPECT_EQ(1, rec->callCount);
+    EXPECT_EQ(DLOG_ERROR, rec->level);
+    EXPECT_EQ(1, rec->size);
+    EXPECT_EQ(UNIFIEDBUS, rec->mods[0]);
+
+    ResetDrvLevelCall();
+    DlogSetDriverLogLevel(DRV, DLOG_INFO);
+    rec = GetDrvLevelCall();
+    EXPECT_EQ(1, rec->callCount);
+    EXPECT_EQ(DLOG_INFO, rec->level);
+    EXPECT_EQ(1, rec->size);
+    EXPECT_EQ(DRV, rec->mods[0]);
+
+    // ALL_MODULE fans out to both driver-owned modules in one call.
+    ResetDrvLevelCall();
+    DlogSetDriverLogLevel(ALL_MODULE, DLOG_WARN);
+    rec = GetDrvLevelCall();
+    EXPECT_EQ(1, rec->callCount);
+    EXPECT_EQ(2, rec->size);
+    EXPECT_EQ(DRV, rec->mods[0]);
+    EXPECT_EQ(UNIFIEDBUS, rec->mods[1]);
+
+    // DLOG_NULL is a valid level; the driver converts it to ERROR for UNIFIEDBUS.
+    ResetDrvLevelCall();
+    DlogSetDriverLogLevel(UNIFIEDBUS, DLOG_NULL);
+    rec = GetDrvLevelCall();
+    EXPECT_EQ(1, rec->callCount);
+    EXPECT_EQ(DLOG_NULL, rec->level);
+
+    // Modules the driver does not own must not reach it.
+    ResetDrvLevelCall();
+    DlogSetDriverLogLevel(SLOG, DLOG_DEBUG);
+    EXPECT_EQ(0, GetDrvLevelCall()->callCount);
+
+    // Out-of-range levels must not reach it either.
+    ResetDrvLevelCall();
+    DlogSetDriverLogLevel(UNIFIEDBUS, DLOG_NULL + 1);
+    EXPECT_EQ(0, GetDrvLevelCall()->callCount);
 }

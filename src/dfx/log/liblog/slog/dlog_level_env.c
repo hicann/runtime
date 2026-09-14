@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "dlog_level_mgr.h"
+#include "dlog_drv.h"
 #include "dlog_common.h"
 #include "mmpa_api.h"
 
@@ -175,7 +176,17 @@ void DlogLevelInitByEnv(void)
 }
 
 #if defined LOG_CPP || defined APP_LOG
-void DlogLevelInit(void) { DlogLevelInitByEnv(); }
+/*
+ * Application-library level init: env only, unchanged; after the env init has
+ * applied the levels, dispatch the driver-owned modules (DRV/UNIFIEDBUS) to the
+ * driver - same as the shmem path does for system processes - so the driver
+ * filters at the same level this process applies.
+ */
+void DlogLevelInit(void)
+{
+    DlogLevelInitByEnv();
+    DlogSetDriverLogLevel((int32_t)ALL_MODULE, DlogGetLogTypeLevelByModuleId(ALL_MODULE, DEBUG_LOG_MASK));
+}
 #endif // ifdef LOG_CPP
 
 #ifdef __cplusplus

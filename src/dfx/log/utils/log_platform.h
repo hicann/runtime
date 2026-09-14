@@ -35,4 +35,11 @@
 #define DESTRUCTOR __attribute__((destructor))
 #endif
 
+/* Thread-local storage specifier, usable from C and C++ translation units. */
+#if defined(_MSC_VER)
+#define LOG_THREAD_LOCAL __declspec(thread)
+#else
+#define LOG_THREAD_LOCAL __thread
+#endif
+
 #endif

@@ -10,6 +10,7 @@
 
 #include "dlog_core.h"
 
+#include <pthread.h>
 #include <stdatomic.h>
 
 #include "securec.h"
@@ -24,6 +25,7 @@
 #include "dlog_time.h"
 #include "log_time.h"
 #include "alog_to_slog.h"
+#include "dlog_drv.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -38,7 +40,7 @@ STATIC bool g_hasRegistered = false;
  * @brief       : check dlog init or not
  * @return      : true inited; false not-inited
  */
-STATIC INLINE bool DlogIsInited(void) { return g_dlogIsInited; }
+bool DlogIsInited(void) { return g_dlogIsInited; }
 
 /**
  * @brief       : set dlog init flag
@@ -75,12 +77,27 @@ STATIC void DlogAtForkParent(void)
 /**
  * @brief       : child_process will call it after fork()
  */
+#ifdef LOG_CPP
+STATIC void DlogForkResetTransferToSlog(void);
+#endif
 STATIC void DlogAtForkChild(void)
 {
     if (g_dlogCallback.funcAtFork != NULL) {
         g_dlogCallback.funcAtFork(ATFORK_CHILD);
     }
     SlogUnlock();
+
+    /*
+     * The child inherits mutexes that may have been held by threads that no
+     * longer exist - any operation on them would block forever (POSIX.1-2024
+     * makes even unlocking a fork-held mutex undefined in the child).
+     * Re-initialize the latches directly (single-threaded, no lock needed)
+     * and drop the stale driver-library state; the next use re-resolves.
+     */
+#ifdef LOG_CPP
+    DlogForkResetTransferToSlog();
+#endif
+    DlogForkResetDriverLog();
 }
 
 static atomic_bool g_logCtrlSwitch = false;
@@ -277,11 +294,10 @@ STATIC bool CheckLogLevelInner(const LogMsgArg* msgArg)
  */
 STATIC int32_t InitLogAndCheckLogLevel(const LogMsgArg* msgArg)
 {
-    if (!DlogIsInited()) {
-        DlogInit();
-        if (!CheckLogLevelInner(msgArg)) {
-            return FALSE;
-        }
+    /* Init already ran at the DlogWriteInner entry, before the write lock;
+     * only the level check remains here. */
+    if (!CheckLogLevelInner(msgArg)) {
+        return FALSE;
     }
     return TRUE;
 }
@@ -451,6 +467,17 @@ RESTORE_SIGPIPE:
  */
 int32_t DlogWriteInner(LogMsgArg* msgArg, const char* fmt, va_list v)
 {
+    /*
+     * Lazy init must run before the write lock below: DlogInit registers the
+     * driver log callback at its end, and the driver probes the new callback
+     * synchronously from inside halCtl - that probe re-enters this function
+     * and needs to take the lock itself. After this point DlogIsInited is
+     * true, so the re-entrant probe skips straight to the write.
+     */
+    if (!DlogIsInited()) {
+        DlogInit();
+    }
+
     // Fast path: skip formatting and the socket/file-handle lock when the log is filtered.
     ONE_ACT_NO_LOG(CheckLogLevelAfterInited(msgArg) == false, return LOG_FAILURE);
 
@@ -521,11 +548,7 @@ STATIC INLINE bool DlogCheckInit(void)
     return false;
 }
 
-/**
- * @brief       : initialize dynamic library
- * @return      : NA
- */
-void DlogInit(void)
+STATIC void DlogInitLocal(void)
 {
     ONE_ACT_INFO_LOG(DlogCheckInit(), return, "dlog has been inited.");
 
@@ -539,31 +562,206 @@ void DlogInit(void)
 
     // sync time zone
     DlogInitGlobalAttr();
-    DlogLevelInit();
-
+    /*
+     * Set the init flag BEFORE DlogLevelInit: the level init dispatches to the
+     * driver, which dlopens libascend_hal.so, and a constructor of that
+     * library may log through this library's write path. Without the flag set,
+     * that log re-enters DlogInit -> DlogInitLocal -> DlogLevelInit ->
+     * DlogSetDriverLogLevel -> DlogDrvLibFunc, self-deadlocking on
+     * g_drvLibMutex (same thread, non-recursive). With the flag set, the
+     * constructor log goes straight to the write path using the statically
+     * initialized default levels.
+     */
     DlogSetInited(true);
+    DlogLevelInit();
 }
 
+/**
+ * @brief       : initialize dynamic library
+ * @return      : NA
+ */
+void DlogInit(void)
+{
+#ifdef LOG_CPP
+    /*
+     * Local init runs BEFORE the transfer attempt: it populates the user attr
+     * (pid, deviceId, type) that every write tags into its message head. The
+     * driver probes the callback synchronously during registration below, and a
+     * probe written with a zeroed attr (hostPid=0) is misrouted by slogd on the
+     * device side. When the transfer succeeds the local level state is simply
+     * superseded by slog.
+     */
+    DlogInitLocal();
+#ifdef PROCESS_LOG
+    if (DlogTryTransferToSlog() == LOG_SUCCESS) {
+        /*
+         * Host build delegated to the unified log library: it owns the write
+         * path and the driver registration as well - its own plog registers
+         * the callback after the plog write callback is in place. Registering
+         * here would overwrite its handle, and driver logs re-entering this
+         * library's DlogWriteInner would fall into the socket/shm path,
+         * because the local plog registered no write callback in transferred
+         * mode. Device builds (!PROCESS_LOG) keep registering: their write
+         * path IS the socket path, and the acting logger owns the callback.
+         */
+        return;
+    }
+#endif
+#else
+    DlogInitLocal();
+#endif
+
+#if !defined(PROCESS_LOG) || defined(LOG_CPP)
+    /*
+     * Register the driver log callback, after the init flag is set: the driver
+     * calls the sink synchronously while registering, and that call must not
+     * re-run DlogInit (the init flag above then drops it). halCtl may block
+     * inside the driver, so this may hold the write lock when DlogInit is
+     * reached from the first write.
+     * - LOG_CPP builds (host alog/slog, device alog): when plog is linked, its
+     *   constructor has already registered the write callback by the time the
+     *   first write arrives, so the driver's synchronous probe lands in plog.
+     * - !PROCESS_LOG without LOG_CPP (device slog): no plog is linked, nothing
+     *   else would register.
+     * unified_dlog (PROCESS_LOG without LOG_CPP) is excluded here: its DllMain
+     * runs before plog's constructor, so the registration is triggered from
+     * PlogInitHostLog instead, after the plog write callback is in place.
+     */
+    DlogInitDriverLog();
+#endif
+}
+
+#ifdef LOG_CPP
+/*
+ * Latch for the deferred transfer: attempted at most once per init cycle.
+ * A mutex latch rather than pthread_once is deliberate - DlogFree re-arms it
+ * for the next init cycle, and resetting a pthread_once control that another
+ * thread may still be blocked on is undefined behaviour, while a
+ * mutex-serialized re-arm is well defined.
+ *
+ * The unlocked fast-path read of g_dlogTransferDone is the whole per-entry
+ * cost: DONE is published with release semantics only after g_dlogTransferRet
+ * holds the final result, so a DONE readout always sees it.
+ */
+STATIC pthread_mutex_t g_dlogTransferMutex = PTHREAD_MUTEX_INITIALIZER;
+STATIC int32_t g_dlogTransferRet = LOG_FAILURE;
+STATIC _Atomic bool g_dlogTransferDone = false;
+
+/*
+ * Same-thread re-entrancy guard: the attempt dlopens the slog library, and a
+ * constructor of the loaded library may log through this library's entries
+ * while the attempt is still running - re-entering would self-deadlock on the
+ * latch mutex. The re-entrant call reports the current state instead, and the
+ * log takes the local path, exactly as if the attempt had failed.
+ */
+STATIC LOG_THREAD_LOCAL bool g_dlogInTransfer = false;
+
+STATIC void DlogTransferToSlogLocked(void)
+{
+    g_dlogTransferRet = LOG_FAILURE;
+    if (AlogTryUseSlog() == LOG_SUCCESS) {
+        DlogSetInited(true);
+        g_dlogTransferRet = LOG_SUCCESS;
+    }
+}
+
+/* Fork-child reset for the transfer latch: re-initialize the mutex (may have
+ * been held by a thread that no longer exists in the child) and the latch
+ * state. Single-threaded child, no lock needed. */
+STATIC void DlogForkResetTransferToSlog(void)
+{
+    g_dlogTransferMutex = (pthread_mutex_t)PTHREAD_MUTEX_INITIALIZER;
+    g_dlogTransferRet = LOG_FAILURE;
+    atomic_store_explicit(&g_dlogTransferDone, false, memory_order_relaxed);
+    g_dlogInTransfer = false;
+}
+#endif
+
+/*
+ * Deferred driver resolution: switch alog to slog at most once, from a
+ * normal API entry point (first log write, DlogSetAttr, DlogInit) - never from a
+ * load-time constructor, which would dlopen libascend_hal.so (a libslog.so
+ * consumer) while the library is still initialising. Safe to call repeatedly.
+ * Returns LOG_SUCCESS when writes are being forwarded to slog.
+ */
 STATIC CONSTRUCTOR void DllMain(void)
 {
 #ifdef LOG_CPP
-    if (!DlogIsInited()) {
-        if (AlogTryUseSlog() == LOG_SUCCESS) {
-            DlogSetInited(true);
-            return;
-        }
-    }
-#endif
+    /*
+     * LOG_CPP builds keep everything deferred: the transfer dlopens the driver
+     * library (a libslog.so consumer), which must not happen from a load-time
+     * constructor. Registration then rides on the first write's DlogInit.
+     */
+#else
+    /*
+     * Init at load time: establishes the current pid and the level state, and
+     * (without plog in this build, i.e. the device slog library) registers the
+     * driver callback while no write lock can be held. Builds with plog keep
+     * the registration out of DlogInit until the plog write callback exists.
+     */
     DlogInit();
+#endif
 }
+int32_t DlogTryTransferToSlog(void)
+{
+#ifdef LOG_CPP
+    if (g_dlogInTransfer) {
+        return g_dlogTransferRet;
+    }
+    if (atomic_load_explicit(&g_dlogTransferDone, memory_order_acquire)) {
+        return g_dlogTransferRet;
+    }
+    g_dlogInTransfer = true;
+    (void)pthread_mutex_lock(&g_dlogTransferMutex);
+    if (!atomic_load_explicit(&g_dlogTransferDone, memory_order_relaxed)) {
+        DlogTransferToSlogLocked();
+        atomic_store_explicit(&g_dlogTransferDone, true, memory_order_release);
+    }
+    /* Snapshot under the mutex: a concurrent DlogResetTransferToSlog (DlogFree)
+     * between the unlock and the read would otherwise flip the result. */
+    const int32_t ret = g_dlogTransferRet;
+    (void)pthread_mutex_unlock(&g_dlogTransferMutex);
+    g_dlogInTransfer = false;
+    return ret;
+#else
+    return LOG_FAILURE;
+#endif
+}
+
+#ifdef LOG_CPP
+/* Re-arm the transfer latch for the next init cycle. Mutex-serialized with
+ * the attempt, so this is well defined even if another thread is still inside
+ * DlogTryTransferToSlog. */
+STATIC void DlogResetTransferToSlog(void)
+{
+    (void)pthread_mutex_lock(&g_dlogTransferMutex);
+    g_dlogTransferRet = LOG_FAILURE;
+    atomic_store_explicit(&g_dlogTransferDone, false, memory_order_release);
+    (void)pthread_mutex_unlock(&g_dlogTransferMutex);
+}
+#endif
 
 STATIC DESTRUCTOR void DlogFree(void)
 {
+    /*
+     * Stop the driver callbacks BEFORE any write-path resource goes away: the
+     * steps below close the socket and drop the slog handles, and a driver
+     * log firing in that window would fall into the socket path (re-creating
+     * the socket at exit) or into already-released resources. No-op unless
+     * this library registered the callback itself; plog builds already
+     * unregistered in ProcessLogFree, this covers the builds without plog.
+     */
+    DlogUnregisterDriverLog();
     SlogLock();
     CloseLogInternal();
     SlogUnlock();
     AlogCloseSlogLib();
     AlogCloseDrvLib();
+    DlogResetDriverLog();
+#ifdef LOG_CPP
+    /* Re-arm the transfer for the next init cycle. */
+    DlogResetTransferToSlog();
+#endif
     DlogSetInited(false);
 }
 

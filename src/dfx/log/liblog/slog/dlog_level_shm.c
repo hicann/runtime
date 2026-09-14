@@ -9,6 +9,8 @@
  */
 #include "dlog_level_mgr.h"
 #include "dlog_attr.h"
+#include "dlog_drv.h"
+#include "dlog_message.h"
 #include "log_file_info.h"
 #include "dlog_common.h"
 
@@ -43,6 +45,35 @@ STATIC int32_t GetEventLevel(char levelChar)
     return level;
 }
 
+/*
+ * After a shmem level refresh, the driver-owned modules (DRV/UNIFIEDBUS) must be
+ * pushed down to the driver, which converts and forwards them to UNIFIEDBUS. Only the
+ * debug level is forwarded - the driver keeps a single level per module.
+ */
+STATIC void SyncLevelToDriver(uint32_t moduleId)
+{
+    const uint32_t realModuleId = moduleId & MODULE_ID_MASK;
+    int32_t level = DlogGetLogTypeLevelByModuleId(realModuleId, DEBUG_LOG_MASK);
+    if ((realModuleId != ALL_MODULE) && ((level < LOG_MIN_LEVEL) || (level > LOG_MAX_LEVEL))) {
+        /* ALL_MODULE already reads the global level directly, so the fallback
+         * would read the same value again; a concrete module falls back to the
+         * global level when its own is not set. */
+        level = GetGlobalLogTypeLevelVar(DLOG_GLOBAL_TYPE_MASK);
+    }
+    if ((level < LOG_MIN_LEVEL) || (level > LOG_MAX_LEVEL)) {
+        return;
+    }
+    if (((realModuleId == (uint32_t)DRV) || (realModuleId == (uint32_t)UNIFIEDBUS)) &&
+        (level == GetGlobalLogTypeLevelVar(DLOG_GLOBAL_TYPE_MASK))) {
+        /* ParseGlobalLevel -> SyncLevelToDriver(ALL_MODULE) already dispatched
+         * DRV and UNIFIEDBUS with the global level via the fan-out; dispatching the
+         * same level again per-module is redundant. Only a per-module override
+         * (level != global) needs its own dispatch. */
+        return;
+    }
+    DlogSetDriverLogLevel((int32_t)realModuleId, level);
+}
+
 /**
  * @brief ParseGlobalLevel: parse global and event level
  * @param [in] : levelStr       level string from shmem
@@ -56,6 +87,8 @@ STATIC void ParseGlobalLevel(const char* levelStr)
     DlogSetLogTypeLevelToAllModule(GetGlobalLevel(levelStr[0]), DLOG_GLOBAL_TYPE_MASK);
     // event
     SetGlobalEnableEventVar(GetEventLevel(levelStr[0]));
+    // a global change must reach the driver-owned modules too
+    SyncLevelToDriver(ALL_MODULE);
 }
 
 /**
@@ -70,6 +103,7 @@ STATIC void ParseModuleLevel(const char* levelStr, int32_t num, const ModuleInfo
     ONE_ACT_NO_LOG(moduleInfos == NULL, return);
     if ((levelStr == NULL) || (num < 0) || ((uint32_t)num >= LogStrlen(levelStr))) {
         (void)DlogSetLogTypeLevelByModuleId(moduleInfos->moduleId, DLOG_DEBUG_DEFAULT_LEVEL, DEBUG_LOG_MASK);
+        SyncLevelToDriver(moduleInfos->moduleId);
         return;
     }
 
@@ -82,6 +116,7 @@ STATIC void ParseModuleLevel(const char* levelStr, int32_t num, const ModuleInfo
         levelr = DLOG_RUN_DEFAULT_LEVEL;
     }
     (void)DlogSetLogTypeLevelByModuleId(moduleInfos->moduleId, levell, DEBUG_LOG_MASK);
+    SyncLevelToDriver(moduleInfos->moduleId);
 }
 
 /**

@@ -21,6 +21,18 @@ int32_t DlogWriteInner(LogMsgArg* msgArg, const char* fmt, va_list v);
 void DlogRefreshCache(void);
 int32_t DlogCheckLogLevel(int32_t logLevel);
 
+/*
+ * Deferred driver resolution: switch alog to slog at most once, from a
+ * normal API entry point (first log write, DlogSetAttr, DlogInit) - never from a
+ * load-time constructor, which would dlopen libascend_hal.so (a libslog.so
+ * consumer) while the library is still initialising. Safe to call repeatedly.
+ * Returns LOG_SUCCESS when writes are being forwarded to slog.
+ */
+int32_t DlogTryTransferToSlog(void);
+
+/* Whether DlogInit has completed. Guards re-entrant writes from the driver. */
+bool DlogIsInited(void);
+
 #ifdef __cplusplus
 }
 #endif // __cplusplus

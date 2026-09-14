@@ -13,6 +13,10 @@ using namespace std;
 using namespace testing;
 
 #include <dlfcn.h>
+#include <atomic>
+#include <chrono>
+#include <thread>
+#include <vector>
 #include "slog.h"
 #include "plog.h"
 #include "acl_log.h"
@@ -21,19 +25,21 @@ using namespace testing;
 #include "plog_drv.h"
 #include "plog_file_mgr.h"
 #include "self_log_stub.h"
+#include "dlog_drv.h"
 #include "ascend_hal_stub.h"
 #include "system_api_stub.h"
-#include "plog_driver_log.h"
+#include "plog_driver_api.h"
 #include "plog_stub.h"
 #include "alog_to_slog.h"
 #include "plog_to_dlog.h"
 
 extern "C" {
-void DllMain(void);
 void DlogFree(void);
+void DlogInit(void);
 int32_t ProcessLogInit(void);
 int32_t ProcessLogFree(void);
-void PlogDriverLog(int32_t moduleId, int32_t level, const char* fmt, ...);
+int32_t IsSocketConnected(void);
+
 extern bool g_dlogLevelChanged;
 extern int32_t g_plogSyncMode;
 }
@@ -77,7 +83,7 @@ protected:
 public:
     static void DlogConstructor()
     {
-        DllMain();
+        DlogInit();
         (void)ProcessLogInit();
     }
 
@@ -746,18 +752,202 @@ TEST_F(EP_ALOG_HOST_FUNC_UTEST, PlogWriteDeviceLogNull)
     PlogFileMgrExit();
 }
 
+// registration/unregistration is unified in dlog_drv.c and driven by
+// DlogInit / DlogFree on both host and device sides.
 TEST_F(EP_ALOG_HOST_FUNC_UTEST, DlogRegisterToDriver)
 {
-    DlogConstructor();
+    DlogResetDriverLog();
+    DlogConstructor(); /* DlogInit registers via halCtl (RUN_LOG first) */
+
     SetDrvCrlCmd(HAL_CTL_REGISTER_LOG_OUT_HANDLE);
-    PlogRegisterDriverLog();
+    DlogResetDriverLog();
+    DlogInitDriverLog(); /* re-register falls back to the generic handle */
 
-    SetDrvCrlCmd(HAL_CTL_REGISTER_RUN_LOG_OUT_HANDLE);
-    PlogRegisterDriverLog();
+    DlogDestructor();    /* DlogFree unregisters via HAL_CTL_UNREGISTER_LOG_OUT_HANDLE */
+    EXPECT_EQ(0, GetErrLogNum());
+}
 
-    PlogUnregisterDriverLog();
+// unregister must be idempotent and safe without a prior register,
+// since the level-dispatch path may run either side of it.
+TEST_F(EP_ALOG_HOST_FUNC_UTEST, DlogUnregisterFromDriverIsSafe)
+{
+    DlogResetDriverLog();
+    DlogConstructor();
+
+    // Unregister with no register in this cycle.
+    DlogUnregisterDriverLog();
+    DlogUnregisterDriverLog();
+
+    // Setting a level after unregister must not crash or report an error. The
+    // driver-side symbol is absent here, so this exercises the NOT_SUPPORT path.
+    EXPECT_EQ(SYS_OK, dlog_setlevel(UNIFIEDBUS, DLOG_ERROR, 0));
+
     DlogDestructor();
     EXPECT_EQ(0, GetErrLogNum());
+}
+
+// UNIFIEDBUS module is a valid module id and its level round-trips.
+TEST_F(EP_ALOG_HOST_FUNC_UTEST, DlogSetLevelForUbModule)
+{
+    DlogConstructor();
+    int32_t enableEvent = 0;
+
+    EXPECT_EQ(SYS_OK, dlog_setlevel(UNIFIEDBUS, DLOG_ERROR, 0));
+    EXPECT_EQ(DLOG_ERROR, dlog_getlevel(UNIFIEDBUS, &enableEvent));
+
+    EXPECT_EQ(SYS_OK, dlog_setlevel(UNIFIEDBUS, DLOG_DEBUG, 0));
+    EXPECT_EQ(DLOG_DEBUG, dlog_getlevel(UNIFIEDBUS, &enableEvent));
+
+    DlogDestructor();
+}
+
+// UNIFIEDBUS reuses discarded id 15, so INVALID_MODULE_ID stays at 76. Guards
+// against a regression that would shift the sentinel or accept an out-of-range id.
+TEST_F(EP_ALOG_HOST_FUNC_UTEST, DlogSetLevelModuleIdBoundary)
+{
+    DlogConstructor();
+
+    EXPECT_EQ(SYS_ERROR, dlog_setlevel(INVALID_MODULE_ID, DLOG_ERROR, 0));
+    EXPECT_EQ(SYS_ERROR, dlog_setlevel(INVALID_MODULE_ID + 1, DLOG_ERROR, 0));
+    EXPECT_EQ(SYS_OK, dlog_setlevel(INVALID_MODULE_ID - 1, DLOG_ERROR, 0));
+
+    DlogDestructor();
+}
+
+// UNIFIEDBUS occupies the previously-discarded slot 15, so no existing module
+// may shift. A misaligned DEFINE_MODULE_LEVEL table would leak levels across modules.
+TEST_F(EP_ALOG_HOST_FUNC_UTEST, DlogModuleLevelTableStaysAligned)
+{
+    DlogConstructor();
+    int32_t enableEvent = 0;
+
+    // Neighbours of the reused slot, plus the tail of the table.
+    EXPECT_EQ(SYS_OK, dlog_setlevel(SLOG, DLOG_DEBUG, 0));
+    EXPECT_EQ(SYS_OK, dlog_setlevel(HIXL, DLOG_INFO, 0));
+    EXPECT_EQ(SYS_OK, dlog_setlevel(UNIFIEDBUS, DLOG_ERROR, 0));
+    EXPECT_EQ(SYS_OK, dlog_setlevel(DEVMM, DLOG_WARN, 0));
+    EXPECT_EQ(SYS_OK, dlog_setlevel(ADETECT, DLOG_WARN, 0));
+
+    // Each must read back its own level, not a neighbour's.
+    EXPECT_EQ(DLOG_DEBUG, dlog_getlevel(SLOG, &enableEvent));
+    EXPECT_EQ(DLOG_INFO, dlog_getlevel(HIXL, &enableEvent));
+    EXPECT_EQ(DLOG_ERROR, dlog_getlevel(UNIFIEDBUS, &enableEvent));
+    EXPECT_EQ(DLOG_WARN, dlog_getlevel(DEVMM, &enableEvent));
+    EXPECT_EQ(DLOG_WARN, dlog_getlevel(ADETECT, &enableEvent));
+
+    DlogDestructor();
+}
+
+// Level dispatch toward the driver must tolerate an unresolved
+// drv_log_set_module_log_level symbol (driver has not shipped it yet).
+TEST_F(EP_ALOG_HOST_FUNC_UTEST, DlogSetLevelDispatchNoDriverSymbol)
+{
+    DlogConstructor();
+
+    // DRV and UNIFIEDBUS go down the driver path; ALL_MODULE fans out to both.
+    EXPECT_EQ(SYS_OK, dlog_setlevel(DRV, DLOG_WARN, 0));
+    EXPECT_EQ(SYS_OK, dlog_setlevel(UNIFIEDBUS, DLOG_WARN, 0));
+    EXPECT_EQ(SYS_OK, dlog_setlevel(-1, DLOG_WARN, 0));
+    // A module the driver does not own must be a no-op on that path.
+    EXPECT_EQ(SYS_OK, dlog_setlevel(SLOG, DLOG_WARN, 0));
+
+    DlogDestructor();
+    EXPECT_EQ(0, GetErrLogNum());
+}
+
+// The level change must actually reach the driver symbol. Records every
+// drv_log_set_module_log_level call so the module fan-out can be asserted.
+namespace {
+struct DrvLevelCall {
+    int32_t level;
+    int32_t mods[8];
+    int32_t size;
+};
+std::vector<DrvLevelCall> g_drvLevelCalls;
+
+int32_t RecordDrvSetModuleLogLevel(int32_t level, int32_t* moduleIds, int32_t size)
+{
+    DrvLevelCall call = {level, {0}, size};
+    for (int32_t i = 0; (i < size) && (i < 8); i++) {
+        call.mods[i] = moduleIds[i];
+    }
+    g_drvLevelCalls.push_back(call);
+    return 0;
+}
+} // namespace
+
+TEST_F(EP_ALOG_HOST_FUNC_UTEST, DlogSetLevelReachesDriverAdapter)
+{
+    DlogResetDriverLog();
+    SetDrvLevelSymbol(RecordDrvSetModuleLogLevel);
+    DlogConstructor();
+
+    // A single driver-owned module forwards exactly that module.
+    g_drvLevelCalls.clear();
+    EXPECT_EQ(SYS_OK, dlog_setlevel(UNIFIEDBUS, DLOG_ERROR, 0));
+    ASSERT_EQ(1U, g_drvLevelCalls.size());
+    EXPECT_EQ(DLOG_ERROR, g_drvLevelCalls[0].level);
+    EXPECT_EQ(1, g_drvLevelCalls[0].size);
+    EXPECT_EQ(UNIFIEDBUS, g_drvLevelCalls[0].mods[0]);
+
+    g_drvLevelCalls.clear();
+    EXPECT_EQ(SYS_OK, dlog_setlevel(DRV, DLOG_INFO, 0));
+    ASSERT_EQ(1U, g_drvLevelCalls.size());
+    EXPECT_EQ(DLOG_INFO, g_drvLevelCalls[0].level);
+    EXPECT_EQ(1, g_drvLevelCalls[0].size);
+    EXPECT_EQ(DRV, g_drvLevelCalls[0].mods[0]);
+
+    // ALL_MODULE fans out to both driver-owned modules in one call.
+    g_drvLevelCalls.clear();
+    EXPECT_EQ(SYS_OK, dlog_setlevel(-1, DLOG_WARN, 0));
+    ASSERT_EQ(1U, g_drvLevelCalls.size());
+    EXPECT_EQ(DLOG_WARN, g_drvLevelCalls[0].level);
+    EXPECT_EQ(2, g_drvLevelCalls[0].size);
+    EXPECT_EQ(DRV, g_drvLevelCalls[0].mods[0]);
+    EXPECT_EQ(UNIFIEDBUS, g_drvLevelCalls[0].mods[1]);
+
+    // A module the driver does not own must not reach the driver at all.
+    g_drvLevelCalls.clear();
+    EXPECT_EQ(SYS_OK, dlog_setlevel(SLOG, DLOG_DEBUG, 0));
+    EXPECT_EQ(0U, g_drvLevelCalls.size());
+
+    // A rejected level must not reach the driver either.
+    g_drvLevelCalls.clear();
+    EXPECT_EQ(SYS_ERROR, dlog_setlevel(UNIFIEDBUS, DLOG_NULL + 1, 0));
+    EXPECT_EQ(0U, g_drvLevelCalls.size());
+
+    // DLOG_NULL (4) is a valid level and must be forwarded: the driver converts it
+    // to ERROR before handing it to UNIFIEDBUS, since UNIFIEDBUS has no "print nothing" level.
+    g_drvLevelCalls.clear();
+    EXPECT_EQ(SYS_OK, dlog_setlevel(UNIFIEDBUS, DLOG_NULL, 0));
+    ASSERT_EQ(1U, g_drvLevelCalls.size());
+    EXPECT_EQ(DLOG_NULL, g_drvLevelCalls[0].level);
+    EXPECT_EQ(1, g_drvLevelCalls[0].size);
+    EXPECT_EQ(UNIFIEDBUS, g_drvLevelCalls[0].mods[0]);
+
+    DlogDestructor();
+    SetDrvLevelSymbol(nullptr);
+}
+
+// with the module level at DLOG_NULL, records still must not be written
+// locally - the driver silences UNIFIEDBUS upstream, and log drops anything that arrives.
+TEST_F(EP_ALOG_HOST_FUNC_UTEST, UbLogNotWrittenWhenLevelIsNull)
+{
+    setenv("ASCEND_PROCESS_LOG_PATH", PATH_ROOT, 1);
+    DlogConstructor();
+
+    EXPECT_EQ(SYS_OK, dlog_setlevel(UNIFIEDBUS, DLOG_NULL, 0));
+    for (int i = 0; i < 10; i++) {
+        dlog_error(UNIFIEDBUS | DEBUG_LOG_MASK, "ub record that must not be written.");
+        dlog_warn(UNIFIEDBUS | DEBUG_LOG_MASK, "ub record that must not be written.");
+        dlog_info(UNIFIEDBUS | DEBUG_LOG_MASK, "ub record that must not be written.");
+        dlog_debug(UNIFIEDBUS | DEBUG_LOG_MASK, "ub record that must not be written.");
+    }
+
+    DlogDestructor();
+
+    EXPECT_EQ(0, DlogCheckHostPrintNum(PATH_ROOT, "debug"));
+    unsetenv("ASCEND_PROCESS_LOG_PATH");
 }
 
 TEST_F(EP_ALOG_HOST_FUNC_UTEST, DlogWriteDeviceLog)
@@ -1256,13 +1446,11 @@ TEST_F(EP_ALOG_HOST_FUNC_UTEST, DlogAllInterface)
     DlogWithKVInnerForC(0, DLOG_INFO, stKeyValue, 1, "test log interface");
     DlogRecordForC(0, DLOG_INFO, "test log interface");
 
-    PlogDriverLog(0, DLOG_INFO, "test log interface");
-
     // 释放
     DlogDestructor();
     unsetenv("ASCEND_GLOBAL_LOG_LEVEL");
     unsetenv("ASCEND_PROCESS_LOG_PATH");
-    EXPECT_EQ(12, DlogCheckHostPrintNum(PATH_ROOT, "debug"));
+    EXPECT_EQ(11, DlogCheckHostPrintNum(PATH_ROOT, "debug"));
     EXPECT_EQ(1, DlogCheckHostPrintNum(PATH_ROOT, "run"));
     EXPECT_EQ(0, DlogCheckHostPrintNum(PATH_ROOT, "security"));
 }
@@ -1353,4 +1541,76 @@ TEST_F(EP_ALOG_HOST_FUNC_UTEST, DlogPrint_HostLogWithUnifiedSwitch)
     unsetenv("ASCEND_GLOBAL_LOG_LEVEL");
     unsetenv("ASCEND_PROCESS_LOG_PATH");
     SetUnifiedSwitch(false);
+}
+
+// The deferred transfer must run at the first API entry, BEFORE the entry's
+// forwarding check falls through to the local write path: a process whose
+// write path is delegated (plog transferred, no local write callback) must
+// forward even its very first log line. Without the entry-level attempt the
+// first write falls into the local socket/shm path (DlogInitMsgType reads the
+// slogd shmem, CreatSocket connects to slogd) instead of the plog sink of the
+// resolved library.
+TEST_F(EP_ALOG_HOST_FUNC_UTEST, DlogPrint_FirstWriteForwardedAfterTransfer)
+{
+    SetUnifiedSwitch(true);
+
+    // No DlogConstructor here: the first API call must resolve the write path
+    // on its own, exactly like a process that logs before any explicit init.
+    const int32_t forwardedBefore = GetSlogFuncCallCount(DLOG_VA_LIST);
+    dlog_error(SLOG | DEBUG_LOG_MASK, "[EP_ALOG_HOST_FUNC_UTEST][FirstWrite] must be forwarded.");
+    EXPECT_EQ(forwardedBefore + 1, GetSlogFuncCallCount(DLOG_VA_LIST));
+
+    // The misroute this guards against marks the local socket connected on
+    // the way to slogd; a forwarded first write never touches it.
+    EXPECT_EQ(FALSE, IsSocketConnected());
+
+    DlogDestructor();
+    SetUnifiedSwitch(false);
+}
+
+// Concurrency smoke test: several writers and a level setter hammering the
+// write path at once, verifying no crash and a sane level system afterwards.
+// The level flips use a non-driver-owned module on purpose: the
+// driver-dispatch path resolves its symbol through the mocked dlsym, and
+// mockcpp's dispatcher is not thread-safe, so it must stay out of the threaded
+// region. The dispatch path's own locking (dlog_drv.c mutexes) is covered by
+// review and by the single-threaded dispatch tests above; concurrent DlogFree
+// is out of scope because teardown-vs-logger is serialized by the same locks
+// (unregister-before-free plus the write-lock callback checks).
+TEST_F(EP_ALOG_HOST_FUNC_UTEST, DlogConcurrentWriteAndSetLevel)
+{
+    setenv("ASCEND_PROCESS_LOG_PATH", PATH_ROOT, 1);
+    DlogConstructor();
+
+    std::atomic<bool> stop(false);
+    std::vector<std::thread> threads;
+    for (int i = 0; i < 4; i++) {
+        threads.emplace_back([&stop]() {
+            while (!stop.load()) {
+                dlog_error(SLOG | DEBUG_LOG_MASK, "[ConcurrencyStress] writer line.");
+                dlog_info(SLOG | DEBUG_LOG_MASK, "[ConcurrencyStress] writer line.");
+            }
+        });
+    }
+    threads.emplace_back([&stop]() {
+        while (!stop.load()) {
+            (void)dlog_setlevel(SLOG, DLOG_DEBUG, 0);
+            (void)dlog_setlevel(SLOG, DLOG_ERROR, 0);
+        }
+    });
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(300));
+    stop.store(true);
+    for (auto& t : threads) {
+        t.join();
+    }
+
+    // The level system must still be consistent after the hammering.
+    int32_t enableEvent = 0;
+    EXPECT_EQ(SYS_OK, dlog_setlevel(SLOG, DLOG_INFO, 0));
+    EXPECT_EQ(DLOG_INFO, dlog_getlevel(SLOG, &enableEvent));
+    EXPECT_EQ(0, GetErrLogNum());
+
+    DlogDestructor();
+    unsetenv("ASCEND_PROCESS_LOG_PATH");
 }

@@ -52,4 +52,9 @@ int32_t AlogTryUseSlog(void)
 }
 #endif
 
-void AlogCloseDrvLib(void) { (void)UnloadRuntimeDll(g_drvLibHandle); }
+void AlogCloseDrvLib(void)
+{
+    (void)UnloadRuntimeDll(g_drvLibHandle);
+    /* Drop the handle with the library; the next device-side check re-resolves. */
+    g_drvLibHandle = NULL;
+}

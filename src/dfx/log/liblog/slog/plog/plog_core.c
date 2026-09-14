@@ -15,7 +15,7 @@
 #include "log_print.h"
 #include "dlog_common.h"
 #include "dlog_attr.h"
-#include "plog_driver_log.h"
+#include "dlog_drv.h"
 #include "plog_host_log.h"
 #include "plog_device_log.h"
 #include "plog_file_mgr.h"
@@ -39,23 +39,30 @@ STATIC LogStatus PlogInitHostLog(bool isDrvExist)
     ret = PlogHostMgrInit();
     ONE_ACT_ERR_LOG(ret != LOG_SUCCESS, return LOG_FAILURE, "init plog host resource failed, ret=%d.", ret);
 
+#ifndef LOG_CPP
+    /* unified_dlog (built without LOG_CPP): dlog_core's DllMain ran before
+     * this constructor and deliberately skipped the driver registration, so
+     * register here, after the plog write callback is in place - the driver
+     * probes the callback synchronously from inside halCtl, and before
+     * PlogHostMgrInit that probe would fall into the socket/shm path. */
     if (isDrvExist) {
-        PlogRegisterDriverLog(); // register DlogInner function to Hal
+        DlogInitDriverLog();
     }
+#else
+    /* LOG_CPP builds keep registering from the first write's DlogInit: their
+     * local init is deferred to that point, and the driver's synchronous
+     * probe must not run before the init flag is set. */
+    (void)isDrvExist;
+#endif
 
     return LOG_SUCCESS;
 }
 
 /**
  * @brief       : free resource for host log
- * @param [in]  : isDrvExist        driver need to printf log by plog or not
  */
-STATIC void PlogFreeHostLog(bool isDrvExist)
+STATIC void PlogFreeHostLog(void)
 {
-    if (isDrvExist) {
-        PlogUnregisterDriverLog(); // unregister DlogInner function to Hal
-    }
-
     PlogHostMgrExit();
     PlogFileMgrExit();
 }
@@ -80,11 +87,11 @@ STATIC int32_t PlogInitForPlatformHost(void)
     if (PlogCheckRealHost()) {
         // EP host
         LogStatus ret = PlogInitHostLog(true);
-        TWO_ACT_ERR_LOG(ret != LOG_SUCCESS, PlogFreeHostLog(true), return -1, "init host log failed, ret=%d.", ret);
+        TWO_ACT_ERR_LOG(ret != LOG_SUCCESS, PlogFreeHostLog(), return -1, "init host log failed, ret=%d.", ret);
         ret = PlogDeviceMgrInit();
         if (ret != LOG_SUCCESS) {
             PlogDeviceMgrExit();
-            PlogFreeHostLog(true);
+            PlogFreeHostLog();
             SELF_LOG_ERROR("init device log failed, ret=%d.", ret);
             return -1;
         }
@@ -92,7 +99,7 @@ STATIC int32_t PlogInitForPlatformHost(void)
     } else {
         // 51helper、headfwk、pooling
         LogStatus ret = PlogInitHostLog(true);
-        TWO_ACT_ERR_LOG(ret != LOG_SUCCESS, PlogFreeHostLog(true), return -1, "init host log failed, ret=%d.", ret);
+        TWO_ACT_ERR_LOG(ret != LOG_SUCCESS, PlogFreeHostLog(), return -1, "init host log failed, ret=%d.", ret);
         SELF_LOG_INFO("Log init finished for process, platform is host, only init host.");
     }
 
@@ -115,7 +122,7 @@ CONSTRUCTOR int32_t ProcessLogInit(void)
         g_isWorkerMachine = true;
 
         int32_t ret = PlogInitHostLog(false);
-        TWO_ACT_ERR_LOG(ret != LOG_SUCCESS, PlogFreeHostLog(false), return -1, "init host log failed, ret=%d.", ret);
+        TWO_ACT_ERR_LOG(ret != LOG_SUCCESS, PlogFreeHostLog(), return -1, "init host log failed, ret=%d.", ret);
         SELF_LOG_INFO("Log init finished for process, without driver library.");
         return 0;
     }
@@ -131,7 +138,7 @@ CONSTRUCTOR int32_t ProcessLogInit(void)
     } else {
         // compiler machine
         int32_t ret = PlogInitHostLog(true);
-        TWO_ACT_ERR_LOG(ret != LOG_SUCCESS, PlogFreeHostLog(true), return -1, "init host log failed, ret=%d.", ret);
+        TWO_ACT_ERR_LOG(ret != LOG_SUCCESS, PlogFreeHostLog(), return -1, "init host log failed, ret=%d.", ret);
         SELF_LOG_INFO("Log init finished for process, platform is [%u], only init host log.", platform);
     }
 
@@ -148,7 +155,7 @@ DESTRUCTOR int32_t ProcessLogFree(void)
         return 0;
     }
     if (g_isWorkerMachine) {
-        PlogFreeHostLog(false);
+        PlogFreeHostLog();
         SELF_LOG_INFO("Log uninit finished, without driver library.");
         return 0;
     }
@@ -160,11 +167,13 @@ DESTRUCTOR int32_t ProcessLogFree(void)
         (platform != PLATFORM_INVALID_VALUE) && (platform != HOST_SIDE), (void)DrvFunctionsUninit(), return 0,
         "can't support platform[%u], only support host.", platform);
 
-    // call PlogUnregisterDriverLog before free device resources,
-    // avoid HDC print ERROR log to /root/ascend/plog when process destructor
-    PlogUnregisterDriverLog();
+    /* Stop the driver calling into the write path BEFORE the plog buffers and
+     * the write callback are freed - a callback firing after PlogFreeHostLog
+     * would find no plog sink and fall into the socket path. DlogFree repeats
+     * this idempotently for the libraries that registered from DlogInit. */
+    DlogUnregisterDriverLog();
     PlogDeviceMgrExit();
-    PlogFreeHostLog(false);
+    PlogFreeHostLog();
     (void)DrvFunctionsUninit();
     SELF_LOG_INFO("Log uninit finished.");
     return 0;

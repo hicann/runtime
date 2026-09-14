@@ -31,9 +31,9 @@ using namespace testing;
 #include "log_file_util.h"
 
 extern "C" {
-void DllMain(void);
 void DlogFree(void);
-void PlogDriverLog(int32_t moduleId, int32_t level, const char* fmt, ...);
+void DlogInit(void);
+
 void DlogInitServerType(void);
 }
 
@@ -73,7 +73,7 @@ protected:
 public:
     void DlogConstructor()
     {
-        DllMain();
+        DlogInit();
         (void)ProcessLogInit();
     }
 
@@ -313,7 +313,7 @@ static int Issue768RunStdoutE2eScenario(const char* newVal, const char* oldVal, 
     }
     setenv("ASCEND_GLOBAL_LOG_LEVEL", "0", 1);
     setenv("ASCEND_PROCESS_LOG_PATH", PATH_ROOT, 1);
-    DllMain();
+    DlogInit();
     (void)ProcessLogInit();
     dlog_error(SLOG | DEBUG_LOG_MASK, "[EP_ALOG_HOST_EXCP_UTEST][issue768] e2e stdout switch test.");
     (void)ProcessLogFree();
@@ -484,8 +484,6 @@ TEST_F(EP_ALOG_HOST_EXCP_UTEST, DlogInvalidModuleId)
     DlogInnerForC(-1, DLOG_INFO, "test invalid module id");
     DlogWithKVInnerForC(-1, DLOG_INFO, stKeyValue, 1, "test invalid module id");
     DlogRecordForC(-1, DLOG_INFO, "test invalid module id");
-
-    PlogDriverLog(-1, DLOG_INFO, "test invalid module id");
 
     // 释放
     DlogDestructor();

@@ -16,6 +16,7 @@ set(slogSrc
     ${LOG_SOURCE_PATH}/liblog/slog/plog/plog_callback.cpp
     ${LOG_SOURCE_PATH}/liblog/slog/slog_api.cpp
     ${LOG_SOURCE_PATH}/liblog/slog/dlog_core.c
+    ${LOG_SOURCE_PATH}/liblog/slog/dlog_drv.c
     ${LOG_SOURCE_PATH}/liblog/slog/dlog_message.c
     ${LOG_SOURCE_PATH}/liblog/slog/dlog_console.c
     ${LOG_SOURCE_PATH}/liblog/slog/dlog_time.c

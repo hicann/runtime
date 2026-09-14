@@ -38,6 +38,39 @@ void* logDlsym(void* handle, const char* funcName);
 
 int32_t GetSlogFuncCallCount(int32_t index);
 
+/* capture of the device-side log level dispatch toward the driver */
+#define DRV_LEVEL_REC_MAX 8
+typedef struct {
+    int32_t callCount;
+    int32_t level;
+    int32_t size;
+    int32_t mods[DRV_LEVEL_REC_MAX];
+    /* per-call journal: last DRV_LEVEL_REC_MAX dispatches, newest last */
+    int32_t jLevels[DRV_LEVEL_REC_MAX];
+    int32_t jMods[DRV_LEVEL_REC_MAX];
+    int32_t jSizes[DRV_LEVEL_REC_MAX];
+    int32_t jNum;
+} DrvLevelCallRecord;
+
+int32_t drv_log_set_module_log_level(int32_t level, int32_t* moduleIds, int32_t size);
+void ResetDrvLevelCall(void);
+const DrvLevelCallRecord* GetDrvLevelCall(void);
+
+/* capture of the device-side registration toward the driver */
+typedef struct {
+    int32_t registerCalls;
+    int32_t lastCmd;
+    int32_t lastLogLevel;
+    int32_t callbackCalls;
+    int32_t lastModuleId;
+    int32_t probeCalls;
+    void (*callback)(int, int, const char*, ...);
+} DrvRegCallRecord;
+
+/* halCtl comes from ascend_hal.h, which alog_stub.c includes. */
+void ResetDrvRegCall(void);
+const DrvRegCallRecord* GetDrvRegCall(void);
+
 void SetShmem(uint8_t msgType);
 ShmErr ShMemRead_stub(int32_t shmId, char* value, size_t len, size_t offset);
 int32_t CreatSocket_stub(uint32_t devId);

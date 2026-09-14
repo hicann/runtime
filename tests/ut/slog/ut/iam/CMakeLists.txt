@@ -14,6 +14,7 @@ add_executable(iam_slog_utest
     ${LOG_SOURCE_PATH}/liblog/slog/alog_to_slog.c
     ${LOG_SOURCE_PATH}/liblog/slog/dlog_async_process.c
     ${LOG_SOURCE_PATH}/liblog/slog/dlog_core_iam.c
+    ${LOG_SOURCE_PATH}/liblog/slog/dlog_drv.c
     ${LOG_SOURCE_PATH}/liblog/slog/dlog_iam.c
     ${LOG_SOURCE_PATH}/liblog/slog/dlog_level_iam.c
     ${LOG_SOURCE_PATH}/liblog/slog/dlog_level_mgr.c
@@ -77,6 +78,7 @@ add_executable(iam_app_slog_utest
     ${LOG_SOURCE_PATH}/liblog/slog/alog_to_slog.c
     ${LOG_SOURCE_PATH}/liblog/slog/dlog_async_process.c
     ${LOG_SOURCE_PATH}/liblog/slog/dlog_core_iam.c
+    ${LOG_SOURCE_PATH}/liblog/slog/dlog_drv.c
     ${LOG_SOURCE_PATH}/liblog/slog/dlog_iam.c
     ${LOG_SOURCE_PATH}/liblog/slog/dlog_level_env.c
     ${LOG_SOURCE_PATH}/liblog/slog/dlog_level_mgr.c

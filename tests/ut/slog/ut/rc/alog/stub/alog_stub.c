@@ -13,9 +13,11 @@
 #include "ascend_hal.h"
 
 int32_t g_handle = 0;
-#define MAP_SIZE 1
+#define MAP_SIZE 3
 static SymbolInfo g_drvMap[MAP_SIZE] = {
     {"drvGetPlatformInfo", (void*)drvGetPlatformInfo},
+    {"drv_log_set_module_log_level", (void*)drv_log_set_module_log_level},
+    {"halCtl", (void*)halCtl},
 };
 
 drvError_t drvGetPlatformInfo(uint32_t* info)
@@ -23,6 +25,70 @@ drvError_t drvGetPlatformInfo(uint32_t* info)
     *info = 0; // DEVICE_SIDE
     return DRV_ERROR_NONE;
 }
+
+/* record what the device-side level dispatch hands the driver. */
+static DrvLevelCallRecord g_drvLevelCall;
+
+int32_t drv_log_set_module_log_level(int32_t level, int32_t* moduleIds, int32_t size)
+{
+    g_drvLevelCall.callCount++;
+    g_drvLevelCall.level = level;
+    g_drvLevelCall.size = size;
+    for (int32_t i = 0; (i < size) && (i < DRV_LEVEL_REC_MAX); i++) {
+        g_drvLevelCall.mods[i] = moduleIds[i];
+    }
+    if (g_drvLevelCall.jNum < DRV_LEVEL_REC_MAX) {
+        g_drvLevelCall.jLevels[g_drvLevelCall.jNum] = level;
+        g_drvLevelCall.jMods[g_drvLevelCall.jNum] = (size > 0) ? moduleIds[0] : -1;
+        g_drvLevelCall.jSizes[g_drvLevelCall.jNum] = size;
+        g_drvLevelCall.jNum++;
+    }
+    return 0;
+}
+
+/* capture what the device-side registration hands the driver. */
+static DrvRegCallRecord g_drvRegCall;
+
+void ResetDrvRegCall(void) { (void)memset_s(&g_drvRegCall, sizeof(g_drvRegCall), 0, sizeof(g_drvRegCall)); }
+
+const DrvRegCallRecord* GetDrvRegCall(void) { return &g_drvRegCall; }
+
+static void DlogDriverLogSink(int moduleId, int level, const char* fmt, ...)
+{
+    (void)level;
+    (void)fmt;
+    g_drvRegCall.callbackCalls++;
+    g_drvRegCall.lastModuleId = moduleId;
+}
+
+drvError_t halCtl(int cmd, void* param_value, size_t param_value_size, void* out_value, size_t* out_size_ret)
+{
+    (void)param_value_size;
+    (void)out_value;
+    (void)out_size_ret;
+    if ((cmd == HAL_CTL_REGISTER_RUN_LOG_OUT_HANDLE) || (cmd == HAL_CTL_REGISTER_LOG_OUT_HANDLE)) {
+        g_drvRegCall.registerCalls++;
+        g_drvRegCall.lastCmd = cmd;
+        struct log_out_handle* handle = (struct log_out_handle*)param_value;
+        if (handle != NULL) {
+            g_drvRegCall.lastLogLevel = handle->logLevel;
+            g_drvRegCall.callback = handle->DlogInner;
+            /* Behave like the real driver: probe the new callback
+             * synchronously from inside the register call. */
+            g_drvRegCall.probeCalls++;
+            handle->DlogInner(10, 3, "[probe] drv log register test.");
+        }
+        return DRV_ERROR_NONE;
+    }
+    if (cmd == HAL_CTL_UNREGISTER_LOG_OUT_HANDLE) {
+        return DRV_ERROR_NONE;
+    }
+    return DRV_ERROR_NOT_SUPPORT;
+}
+
+void ResetDrvLevelCall(void) { (void)memset_s(&g_drvLevelCall, sizeof(g_drvLevelCall), 0, sizeof(g_drvLevelCall)); }
+
+const DrvLevelCallRecord* GetDrvLevelCall(void) { return &g_drvLevelCall; }
 
 static int32_t g_slogFuncCount[DLOG_FUNC_MAX];
 
