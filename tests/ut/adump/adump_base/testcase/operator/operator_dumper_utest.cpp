@@ -15,13 +15,24 @@
 #include "rts/rts_stream.h"
 #include "rts/rts_kernel.h"
 #include "dump_manager.h"
+#include "runtime_stub.h"
 
 using namespace Adx;
 
 class OperatorDumperUtest : public testing::Test {
 protected:
-    virtual void SetUp() {}
-    virtual void TearDown() { GlobalMockObject::verify(); }
+    virtual void SetUp()
+    {
+        // 默认构造普通单算子流场景：非capture、无PERSISTENT标志，保持同步行为
+        SetStubStreamState(RT_STREAM_CAPTURE_STATUS_NONE, 0U);
+    }
+
+    virtual void TearDown()
+    {
+        // 恢复桩默认值，兼容其他用例文件（如dump_manager_utest依赖capture默认ACTIVE）
+        SetStubStreamState(RT_STREAM_CAPTURE_STATUS_ACTIVE, 0U);
+        GlobalMockObject::verify();
+    }
 };
 
 class OperatorDumperBuilder {
@@ -273,4 +284,54 @@ TEST_F(OperatorDumperUtest, Test_DumpTensorWithCfg_InitDumpSwitch_rtMemcpy_Error
     dumpCfg.numAttrs = attrs.size();
     OperatorDumper opDumper = OperatorDumperBuilder().AddOutputTensor(AddressType::RAW).Build();
     EXPECT_EQ(opDumper.LaunchWithCfg(dumpCfg), ADUMP_FAILED);
+}
+
+TEST_F(OperatorDumperUtest, Test_DumpTensor_NormalStream_Sync)
+{
+    // 普通单算子流：保持原有同步行为（传非空stream句柄，避免deferred判定被跳过）
+    OperatorDumper opDumper =
+        OperatorDumperBuilder().AddInputTensor().AddOutputTensor().Stream(reinterpret_cast<rtStream_t>(0x1)).Build();
+    MOCKER(rtStreamSynchronize).expects(once()).will(returnValue(RT_ERROR_NONE));
+    EXPECT_EQ(opDumper.Launch(), ADUMP_SUCCESS);
+}
+
+TEST_F(OperatorDumperUtest, Test_DumpTensor_PersistentStream_DeferSync)
+{
+    // 下沉流（PERSISTENT flag，含GE下沉流与aclGraph capture流，后者创建时也带此flag）：
+    // 不执行流同步，proto device内存延迟释放
+    SetStubStreamState(RT_STREAM_CAPTURE_STATUS_NONE, RT_STREAM_PERSISTENT);
+    OperatorDumper opDumper =
+        OperatorDumperBuilder().AddInputTensor().AddOutputTensor().Stream(reinterpret_cast<rtStream_t>(0x1)).Build();
+    MOCKER(rtStreamSynchronize).expects(never());
+    EXPECT_EQ(opDumper.Launch(), ADUMP_SUCCESS);
+    OperatorDumper::FreeDevMemCache();
+}
+
+TEST_F(OperatorDumperUtest, Test_DumpTensor_GetFlagsError_KeepSync)
+{
+    // rtStreamGetFlags查询失败：保守回退，保持原有同步行为
+    MOCKER(rtStreamGetFlags).stubs().will(returnValue(-1));
+    OperatorDumper opDumper =
+        OperatorDumperBuilder().AddInputTensor().AddOutputTensor().Stream(reinterpret_cast<rtStream_t>(0x1)).Build();
+    MOCKER(rtStreamSynchronize).expects(once()).will(returnValue(RT_ERROR_NONE));
+    EXPECT_EQ(opDumper.Launch(), ADUMP_SUCCESS);
+}
+
+TEST_F(OperatorDumperUtest, Test_DumpTensorWithCfg_DynamicGraph_OnPersistentStream_DeferSync)
+{
+    // 动态图（STREAM_MODEL=1要求同步）叠加下沉流：下沉流守卫优先生效，不执行流同步
+    SetStubStreamState(RT_STREAM_CAPTURE_STATUS_NONE, RT_STREAM_PERSISTENT);
+    DumpCfg dumpCfg;
+    std::vector<DumpAttr> attrs;
+    attrs.push_back({DUMP_ATTR_STREAM_MODEL, {.streamModel = 1U}});
+    dumpCfg.attrs = attrs.data();
+    dumpCfg.numAttrs = attrs.size();
+    OperatorDumper opDumper = OperatorDumperBuilder()
+                                  .AddInputTensor()
+                                  .AddOutputTensor(AddressType::RAW)
+                                  .Stream(reinterpret_cast<rtStream_t>(0x1))
+                                  .Build();
+    MOCKER(rtStreamSynchronize).expects(never());
+    EXPECT_EQ(opDumper.LaunchWithCfg(dumpCfg), ADUMP_SUCCESS);
+    opDumper.FreeDevMemCache();
 }

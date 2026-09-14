@@ -42,6 +42,8 @@ private:
     int32_t SetDevMemDumpSwitch();
     uint64_t GetDevMemDumpSwitch();
     static void FreeDevMemProtoCache();
+    // 判断流上的dump任务是否在host侧返回后才在设备上执行（延迟执行）
+    bool IsDeferredExecutionStream() const;
     int32_t LaunchDumpKernel(bool synchronize = true) const;
     int32_t LaunchDumpKernel(
         const void* const protoMsgDevMem, const void* const protoMsgSizeDevMem, bool synchronize) const;

@@ -41,6 +41,20 @@ static constexpr rtError_t RT_ERROR_INVALID_VALUE = 1;
 static constexpr uint32_t LOCAL_DEV_NUM = 8;
 static std::vector<rtDeviceStateCallback> g_deviceCallBackList;
 std::vector<void*> g_exceptionRegInfoList;
+static rtStreamCaptureStatus g_stubCaptureStatus = RT_STREAM_CAPTURE_STATUS_ACTIVE;
+static uint32_t g_stubStreamFlags = 0U;
+
+void SetStubStreamState(rtStreamCaptureStatus captureStatus, uint32_t streamFlags)
+{
+    g_stubCaptureStatus = captureStatus;
+    g_stubStreamFlags = streamFlags;
+}
+
+void GetStubStreamState(rtStreamCaptureStatus& captureStatus, uint32_t& streamFlags)
+{
+    captureStatus = g_stubCaptureStatus;
+    streamFlags = g_stubStreamFlags;
+}
 
 rtError_t rtGetDevice(int32_t* devId)
 {
@@ -565,13 +579,25 @@ int32_t MsprofReportAdditionalInfo(uint32_t nonPersistantFlag, const VOID_PTR da
 // Stream capture info
 rtError_t rtStreamGetCaptureInfo(rtStream_t stream, rtStreamCaptureStatus* const status, rtModel_t* captureMdl)
 {
+    UNUSED(stream);
     if (status == nullptr) {
         return RT_ERROR_INVALID_VALUE;
     }
-    *status = RT_STREAM_CAPTURE_STATUS_ACTIVE;
+    *status = g_stubCaptureStatus;
     if (captureMdl != nullptr) {
         *captureMdl = nullptr;
     }
+    return RT_ERROR_NONE;
+}
+
+// Stream flags
+rtError_t rtStreamGetFlags(const rtStream_t stm, uint32_t* flags)
+{
+    UNUSED(stm);
+    if (flags == nullptr) {
+        return RT_ERROR_INVALID_VALUE;
+    }
+    *flags = g_stubStreamFlags;
     return RT_ERROR_NONE;
 }
 
