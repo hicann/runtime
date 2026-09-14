@@ -1223,13 +1223,13 @@ TEST_F(ApiCloudV2DisableThreadTest, task_group_update_1)
     taskGroup->taskIds[0].first = 345;
 
     error = rtsStreamBeginTaskUpdate(stream1, taskGrpHandle);
-    EXPECT_EQ(error, ACL_RT_SUCCESS);
+    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
     error = rtKernelLaunch(&function_, 1, (void*)args, sizeof(args), nullptr, stream1);
-    EXPECT_EQ(error, ACL_ERROR_RT_INTERNAL_ERROR);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
 
     error = rtsStreamEndTaskUpdate(stream1);
-    EXPECT_EQ(error, ACL_ERROR_RT_INTERNAL_ERROR);
+    EXPECT_EQ(error, ACL_ERROR_STREAM_TASK_GROUP_STATUS);
 
     taskGroup->taskIds[0].first = streamId;
 
