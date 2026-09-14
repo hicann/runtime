@@ -54,8 +54,9 @@ STATIC char* LogConfRealPath(const char* file, const char* homeDir, size_t dirLe
         return NULL;
     }
 
-    if (ToolRealPath((file != NULL) ? homeDir : SLOG_CONF_FILE_PATH, ppath, (INT32)dirLen + 1) != SYS_OK) {
-        SELF_LOG_ERROR("get realpath failed, file=%s, strerr=%s.", file, strerror(ToolGetErrorCode()));
+    const char* resolvePath = (file != NULL) ? homeDir : SLOG_CONF_FILE_PATH;
+    if (ToolRealPath(resolvePath, ppath, (INT32)dirLen + 1) != SYS_OK) {
+        SELF_LOG_ERROR("get realpath failed, file=%s, strerr=%s.", resolvePath, strerror(ToolGetErrorCode()));
         XFREE(ppath);
         return NULL;
     }
@@ -149,6 +150,7 @@ STATIC int32_t LogReplaceDefaultByDir(const char* path, char* homeDir, uint32_t 
  */
 LogRt LogConfOpenFile(FILE** fp, const char* file)
 {
+    const char* dispFile = (file != NULL) ? file : SLOG_CONF_FILE_PATH;
     char* homeDir = (char*)LogMalloc((size_t)TOOL_MAX_PATH + 1U);
     if (homeDir == NULL) {
         SELF_LOG_ERROR("malloc failed, strerr=%s.", strerror(ToolGetErrorCode()));
@@ -165,7 +167,7 @@ LogRt LogConfOpenFile(FILE** fp, const char* file)
     // if file is NULL, then use default config file path
     char* ppath = LogConfRealPath(file, homeDir, TOOL_MAX_PATH);
     if (ppath == NULL) {
-        SELF_LOG_ERROR("get realpath failed or filepath is invalid, file=%s.", file);
+        SELF_LOG_ERROR("get realpath failed or filepath is invalid, file=%s.", dispFile);
         XFREE(homeDir);
         return CFG_FILE_INVALID;
     }
@@ -182,7 +184,7 @@ LogRt LogConfOpenFile(FILE** fp, const char* file)
     int32_t ret = fseek(*fp, 0L, SEEK_SET);
     if (ret < 0) {
         SELF_LOG_ERROR(
-            "fseek config file failed, file=%s, result=%d, strerr=%s.", file, ret, strerror(ToolGetErrorCode()));
+            "fseek config file failed, file=%s, result=%d, strerr=%s.", dispFile, ret, strerror(ToolGetErrorCode()));
         LOG_CLOSE_FILE(*fp);
         return OPEN_FILE_FAILED;
     }

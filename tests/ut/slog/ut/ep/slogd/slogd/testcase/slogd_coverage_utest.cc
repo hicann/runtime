@@ -202,6 +202,17 @@ TEST_F(SLOGD_COVERAGE_UTEST, LogConfOpenFileCoverage)
     ResetErrLog();
 }
 
+TEST_F(SLOGD_COVERAGE_UTEST, LogConfOpenFileNullFileErrLogWithoutNull)
+{
+    system("rm -f " SLOG_CONF_FILE_PATH);
+    FILE* fp = NULL;
+    ResetErrLog();
+    EXPECT_NE(SUCCESS, LogConfOpenFile(&fp, NULL));
+    EXPECT_EQ(0, CheckErrLog("(null)"));
+    ResetErrLog();
+    system("cp " CONF_PATH " " SLOG_CONF_FILE_PATH);
+}
+
 TEST_F(SLOGD_COVERAGE_UTEST, LogConfParseLineCoverage)
 {
     char name[CONF_NAME_MAX_LEN + 1] = {0};

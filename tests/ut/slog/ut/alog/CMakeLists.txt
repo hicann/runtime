@@ -30,7 +30,6 @@ set(libLibalogSrc
     ${LOG_SOURCE_PATH}/utils/share_mem.c
     ${LOG_SOURCE_PATH}/utils/log_common.c
     ${LOG_SOURCE_PATH}/utils/log_time.c
-    ${LOG_SOURCE_PATH}/utils/library_load.c
     ${TOP_DIR}/tests/ut/slog/ut/slog/testcase/main.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/testcase/log-libalog-ut.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/testcase/api_c_ut.cc

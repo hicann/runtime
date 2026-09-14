@@ -20,42 +20,66 @@
 
 #define UNIFIED_TIMER_FUNCTION_NUM 3
 static ArgPtr g_timerLibHandle = NULL;
+static ToolMutex g_timerMutex = TOOL_MUTEX_INITIALIZER;
 static SymbolInfo g_timerFuncInfo[UNIFIED_TIMER_FUNCTION_NUM] = {
     {"AddUnifiedTimer", NULL},
     {"RemoveUnifiedTimer", NULL},
     {"CloseUnifiedTimer", NULL},
 };
 
+static void DlogResetTimerFuncInfo(void)
+{
+    for (uint32_t i = 0; i < UNIFIED_TIMER_FUNCTION_NUM; i++) {
+        g_timerFuncInfo[i].handle = NULL;
+    }
+}
+
 LogStatus DlogLoadTimerDll(void)
 {
-    if (g_timerLibHandle != NULL) {
-        return LOG_SUCCESS;
+    if (ToolMutexLock(&g_timerMutex) != SYS_OK) {
+        SELF_LOG_ERROR("lock unified_timer mutex failed.");
+        return LOG_FAILURE;
     }
-    g_timerLibHandle = LoadRuntimeDll(TIMER_LIBRARY_NAME);
+    LogStatus ret = LOG_SUCCESS;
     if (g_timerLibHandle == NULL) {
-        SELF_LOG_ERROR("load unified_timer library failed.");
-        return LOG_FAILURE;
+        g_timerLibHandle = LoadRuntimeDll(TIMER_LIBRARY_NAME);
+        if (g_timerLibHandle == NULL) {
+            SELF_LOG_ERROR("load unified_timer library failed.");
+            ret = LOG_FAILURE;
+        } else {
+            SELF_LOG_INFO("load unified_timer library succeed.");
+            if (LoadDllFunc(g_timerLibHandle, g_timerFuncInfo, UNIFIED_TIMER_FUNCTION_NUM) != 0) {
+                SELF_LOG_ERROR("load unified_timer library function failed.");
+                (void)UnloadRuntimeDll(g_timerLibHandle);
+                g_timerLibHandle = NULL;
+                DlogResetTimerFuncInfo();
+                ret = LOG_FAILURE;
+            } else {
+                SELF_LOG_INFO("load unified_timer library function succeed.");
+            }
+        }
     }
-    SELF_LOG_INFO("load unified_timer library succeed.");
-    int32_t ret = LoadDllFunc(g_timerLibHandle, g_timerFuncInfo, UNIFIED_TIMER_FUNCTION_NUM);
-    if (ret != 0) {
-        SELF_LOG_ERROR("load unified_timer library function failed.");
-        return LOG_FAILURE;
-    }
-    SELF_LOG_INFO("load unified_timer library function succeed.");
-    return LOG_SUCCESS;
+    (void)ToolMutexUnLock(&g_timerMutex);
+    return ret;
 }
 
 LogStatus DlogCloseTimerDll(void)
 {
-    ONE_ACT_NO_LOG(g_timerLibHandle == NULL, return LOG_SUCCESS);
-    int32_t ret = UnloadRuntimeDll(g_timerLibHandle);
-    if (ret != 0) {
-        SELF_LOG_ERROR("close unified_timer library handle failed.");
-    } else {
-        SELF_LOG_INFO("close unified_timer library handle succeed.");
+    if (ToolMutexLock(&g_timerMutex) != SYS_OK) {
+        SELF_LOG_ERROR("lock unified_timer mutex failed.");
+        return LOG_FAILURE;
     }
-    g_timerLibHandle = NULL;
+    int32_t ret = 0;
+    if (g_timerLibHandle != NULL) {
+        ret = UnloadRuntimeDll(g_timerLibHandle);
+        if (ret != 0) {
+            SELF_LOG_ERROR("close unified_timer library handle failed.");
+        } else {
+            SELF_LOG_INFO("close unified_timer library handle succeed.");
+        }
+        g_timerLibHandle = NULL;
+    }
+    (void)ToolMutexUnLock(&g_timerMutex);
     return ret;
 }
 
