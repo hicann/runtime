@@ -363,8 +363,45 @@ void OperatorDumper::DumpOutput(toolkitV2::aicpu::dump::Task& task)
     }
 }
 
+bool OperatorDumper::IsDeferredExecutionStream() const
+{
+    if (stream_ == nullptr) {
+        return false;
+    }
+
+    // 下沉流：任务在host侧返回后才在设备上执行
+    uint32_t streamFlags = 0U;
+    rtError_t rtRet = rtStreamGetFlags(stream_, &streamFlags);
+    if (rtRet != RT_ERROR_NONE) {
+        // 查询失败时保守处理：维持原有同步行为
+        IDE_LOGW(
+            "rtStreamGetFlags failed, ret: 0x%X, op %s[%s], keep synchronize behavior.", rtRet, opName_.c_str(),
+            opType_.c_str());
+        return false;
+    }
+
+    if ((streamFlags & RT_STREAM_PERSISTENT) != 0U) {
+        IDE_LOGI(
+            "Stream(flags: 0x%X) of op %s[%s] is a sink(persistent) stream, dump task may execute after host return.",
+            streamFlags, opName_.c_str(), opType_.c_str());
+        return true;
+    }
+    return false;
+}
+
 int32_t OperatorDumper::LaunchDumpKernel(bool synchronize) const
 {
+    // 下沉流任务在host返回后才在设备执行，同步后立即释放proto device内存
+    // 会导致AiCpu访问已释放的opMapping内存。此类流不执行流同步，
+    // proto device内存进入g_devMemProtoInfo缓存，由UnSetDumpConfig统一延迟释放。
+    if (synchronize && IsDeferredExecutionStream()) {
+        IDE_LOGI(
+            "Dump op %s[%s] runs on a deferred-execution stream, skip stream synchronize, "
+            "proto device memory will be freed in UnSetDumpConfig.",
+            opName_.c_str(), opType_.c_str());
+        synchronize = false;
+    }
+
     std::string protoMsg;
     const size_t protoSize = opMappingInfo_.ByteSizeLong();
     const bool bRet = opMappingInfo_.SerializeToString(&protoMsg);

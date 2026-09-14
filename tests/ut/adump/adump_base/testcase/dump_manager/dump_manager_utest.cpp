@@ -20,6 +20,8 @@
 #include "adx_dump_record.h"
 #include "dump_stream_info.h"
 #include "dump_exception_stub.h"
+#include "operator_dumper.h"
+#include "runtime_stub.h"
 
 using namespace Adx;
 
@@ -493,4 +495,33 @@ TEST_F(DumpManagerUtest, Test_UnregisterExceptionDumpCallback_NotFound)
 {
     int32_t ret = DumpManager::Instance().UnregisterExceptionDumpCallback(MockExceptionCallback);
     EXPECT_EQ(ret, ADUMP_SUCCESS);
+}
+
+// 桩内流状态控制接口（实现于 runtime_stub.cpp）
+
+TEST_F(DumpManagerUtest, Test_DumpOperatorV2_PersistentStream_DeferSync)
+{
+    std::string validConfigData = ReadFileToString(JSON_BASE "datadump/dump_data_tensor.json");
+    int32_t ret = DumpManager::Instance().SetDumpConfig(validConfigData.c_str(), validConfigData.size());
+    ASSERT_EQ(ret, ADUMP_SUCCESS);
+
+    // 入口capture分流按普通流处理，下沉流判定由OperatorDumper内部守卫生效
+    MOCKER(rtStreamGetCaptureInfo).stubs().will(returnValue(-1));
+    SetStubStreamState(RT_STREAM_CAPTURE_STATUS_NONE, RT_STREAM_PERSISTENT);
+
+    int64_t data[1024] = {0};
+    std::vector<TensorInfoV2> tensors;
+    TensorInfoV2 tensor;
+    tensor.tensorAddr = reinterpret_cast<int64_t*>(data);
+    tensor.tensorSize = sizeof(data);
+    tensor.placement = TensorPlacement::kOnDeviceHbm;
+    tensor.type = TensorType::INPUT;
+    tensors.push_back(tensor);
+
+    rtStream_t stream = reinterpret_cast<rtStream_t>(0x1);
+    MOCKER(rtStreamSynchronize).expects(never());
+    EXPECT_EQ(DumpManager::Instance().DumpOperatorV2("Add", "add_op", tensors, stream), ADUMP_SUCCESS);
+
+    OperatorDumper::FreeDevMemCache();
+    SetStubStreamState(RT_STREAM_CAPTURE_STATUS_ACTIVE, 0U);
 }
