@@ -107,7 +107,7 @@ typedef struct {
 typedef struct {
     void* dataBuffer;                  // current write addr
     uint32_t bufferLen;                // the space of dataBuffer left
-    rtCompilerPartinfo_t compilerInfo; // task info for complie
+    rtCompilerPartinfo_t compilerInfo; // task information for compilation
     uint64_t argOffset;                // args offset
 } rtTaskInput_t;
 
@@ -124,7 +124,7 @@ RTS_API rtError_t rtGetTaskBufferLen(const rtTaskBuffType_t type, uint32_t* cons
 /**
  * @ingroup rt_preload_task
  * @brief exeom task build
- * @param [in] taskInput        task info for complie
+ * @param [in] taskInput        task information for compilation
  * @param [out] taskLen         current tasklen
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input

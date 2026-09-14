@@ -49,7 +49,7 @@ extern "C" {
 #define ACL_ERROR_RT_EVENT_CAPTURED 107028              // event is captured
 #define ACL_ERROR_RT_STREAM_NOT_CAPTURED 107029         // stream is not in capture status
 #define ACL_ERROR_RT_CAPTURE_MODE_NOT_SUPPORT 107030    // stream is captured, not support current oper
-#define ACL_ERROR_RT_STREAM_CAPTURE_IMPLICIT 107031     // a disallowed implicit dependency from defalut stream
+#define ACL_ERROR_RT_STREAM_CAPTURE_IMPLICIT 107031     // a disallowed implicit dependency from the default stream
 #define ACL_ERROR_STREAM_CAPTURE_CONFLICT 107032        // interdependent stream cannot begin capture together
 #define ACL_ERROR_STREAM_TASK_GROUP_STATUS 107033       // task group status error
 #define ACL_ERROR_STREAM_TASK_GROUP_INTR 107034         // task group interrupted
@@ -64,7 +64,7 @@ extern "C" {
 #define ACL_ERROR_RT_SYMBOL_NOT_FOUND 107042                // symbol not found
 #define ACL_ERROR_RT_INVALID_SYMBOL 107043                  // invalid device symbol
 #define ACL_ERROR_RT_INVALID_DEVICE_FUNCTION 107044         // invalid device function
-#define ACL_ERROR_RT_SUB_ACLGRAPH_IS_CAPTURING 107045       // sub acl graph is caputring
+#define ACL_ERROR_RT_SUB_ACLGRAPH_IS_CAPTURING 107045       // sub acl graph is capturing
 
 #define ACL_ERROR_RT_FEATURE_NOT_SUPPORT 207000             // feature not support
 #define ACL_ERROR_RT_MEMORY_ALLOCATION 207001               // memory allocation error, only used by out of memory
@@ -90,7 +90,7 @@ extern "C" {
 #define ACL_ERROR_RT_LINK_TYPE_NOT_SUPPORTED 207021         // invalid link type
 
 #define ACL_ERROR_RT_INTERNAL_ERROR 507000                  // runtime internal error
-#define ACL_ERROR_RT_TS_ERROR 507001                        // ts internel error
+#define ACL_ERROR_RT_TS_ERROR 507001                        // ts internal error
 #define ACL_ERROR_RT_STREAM_TASK_FULL 507002                // task full in stream
 #define ACL_ERROR_RT_STREAM_TASK_EMPTY 507003               // task empty in stream
 #define ACL_ERROR_RT_STREAM_NOT_COMPLETE 507004             // stream not complete
