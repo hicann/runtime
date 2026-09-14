@@ -57,8 +57,7 @@
 | **ACL Graph** | 包括单流捕获、跨流捕获、任务更新等 | [model_update](../../example/2_advanced_features/model_ri/1_model_update/README.md) |
 | **多设备编程** | 包括跨 Device 数据交互、P2P 内存访问、多卡并行调度等 | [device_P2P](../../example/1_basic_features/device/2_device_P2P/README.md) |
 | **进程间通信** | 包括 IPC Event 同步、IPC 内存共享（指定 PID/不指定 PID）等 | [ipc_event](../../example/2_advanced_features/ipcevent/0_ipcevent/README.md) · [ipc_memory](../../example/1_basic_features/memory/11_ipc_memory_withoutpid/README.md) |
-| **性能调优** | 包括Profiling数据采集、模型算子性能数据获取、Profiling产物解析等 | [create_config](../../example/5_performance/profiling/0_create_config/README.md) |
-| **Dump数据采集与诊断** | 包括模型Dump、单算子Dump、异常Dump的产物定位、数据转换、精度分析和异常诊断等 | [adump](../../example/5_performance/adump/README.md) |
+| **性能调优** | 包括Profiling采集并落盘、获取网络模型中算子的性能数据、可视化展示原始性能数据解析结果等 | [create_config](../../example/5_performance/profiling/0_create_config/README.md) |
 
 ---
 
