@@ -37,6 +37,11 @@ public:
     int32_t WaitAllCallbackDone(uint32_t timeoutSec) const;
 
 private:
+    struct RawDataMetadata {
+        RawDataType type;
+        int32_t chunkModule;
+    };
+
     class SendBufferGuard {
     public:
         explicit SendBufferGuard(InjectionTransport& transport);
@@ -48,6 +53,7 @@ private:
 
     bool IsSupportedChannelFile(const std::string& fileName) const;
     RawDataType ConvertRawDataType(const std::string& fileName) const;
+    RawDataMetadata ConvertRawDataMetadata(const std::string& fileName, int32_t chunkModule) const;
     bool ParseDeviceId(const std::string& extraInfo, uint32_t& deviceId) const;
     MsprofRawDataCallback GetRawDataCallback() const;
     int32_t PushRawData(const MsprofRawData& rawData);

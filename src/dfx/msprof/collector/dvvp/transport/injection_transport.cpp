@@ -11,6 +11,7 @@
 #include "injection_transport.h"
 #include <algorithm>
 #include <chrono>
+#include "config/config.h"
 #include "errno/error_code.h"
 #include "msprof_dlog.h"
 #include "securec.h"
@@ -21,6 +22,61 @@ namespace dvvp {
 namespace transport {
 using namespace analysis::dvvp::common::error;
 using namespace analysis::dvvp::common::utils;
+
+namespace {
+constexpr char BIU_PERF_GROUP_PREFIX[] = "biu_perf_group";
+constexpr size_t BIU_PERF_GROUP_PREFIX_LENGTH = sizeof(BIU_PERF_GROUP_PREFIX) - 1U;
+constexpr char BIU_PERF_AIC_NAME[] = "aic";
+constexpr char BIU_PERF_AIV0_NAME[] = "aiv0";
+constexpr char BIU_PERF_AIV1_NAME[] = "aiv1";
+
+struct BiuPerfFileInfo {
+    uint32_t groupId;
+    RawDataType type;
+};
+
+bool ParseBiuPerfFileName(const std::string& fileName, BiuPerfFileInfo& fileInfo)
+{
+    const size_t groupPos = fileName.find(BIU_PERF_GROUP_PREFIX);
+    if (groupPos == std::string::npos) {
+        return false;
+    }
+
+    const size_t groupStart = groupPos + BIU_PERF_GROUP_PREFIX_LENGTH;
+    const size_t underlinePos = fileName.find('_', groupStart);
+    if (underlinePos == std::string::npos || underlinePos == groupStart) {
+        return false;
+    }
+
+    const std::string groupNumber = fileName.substr(groupStart, underlinePos - groupStart);
+    uint64_t groupId = 0;
+    if (!Utils::StrToUint64(groupId, groupNumber) ||
+        groupId >= static_cast<uint64_t>(analysis::dvvp::common::config::BIU_PERF_HIGHER_GROUP_NUM)) {
+        return false;
+    }
+    fileInfo.groupId = static_cast<uint32_t>(groupId);
+
+    const size_t coreNameStart = underlinePos + 1U;
+    const size_t dotPos = fileName.find('.', coreNameStart);
+    const size_t coreNameEnd = dotPos == std::string::npos ? fileName.size() : dotPos;
+    if (coreNameEnd == coreNameStart) {
+        return false;
+    }
+
+    const std::string coreName = fileName.substr(coreNameStart, coreNameEnd - coreNameStart);
+    if (coreName == BIU_PERF_AIC_NAME) {
+        fileInfo.type = BIU_PERF_DATA_TYPE;
+    } else if (coreName == BIU_PERF_AIV0_NAME) {
+        fileInfo.type = BIU_PERF_AIV0_DATA_TYPE;
+    } else if (coreName == BIU_PERF_AIV1_NAME) {
+        fileInfo.type = BIU_PERF_AIV1_DATA_TYPE;
+    } else {
+        return false;
+    }
+    return true;
+}
+
+} // namespace
 
 InjectionTransport::InjectionTransport(MsprofRawDataCallback callback)
     : callback_(callback), callbackFailedCount_(0), callbackFailedBytes_(0), pendingSendBuffers_(0)
@@ -57,6 +113,21 @@ RawDataType InjectionTransport::ConvertRawDataType(const std::string& fileName) 
         return PC_SAMPLING_DATA_TYPE;
     }
     return DEFAULT_DATA_TYPE;
+}
+
+InjectionTransport::RawDataMetadata InjectionTransport::ConvertRawDataMetadata(
+    const std::string& fileName, int32_t chunkModule) const
+{
+    BiuPerfFileInfo fileInfo = {};
+    if (ParseBiuPerfFileName(fileName, fileInfo)) {
+        return {fileInfo.type, static_cast<int32_t>(fileInfo.groupId)};
+    }
+
+    const RawDataType type = ConvertRawDataType(fileName);
+    if (type == BIU_PERF_DATA_TYPE) {
+        MSPROF_LOGW("Failed to parse BIU perf file metadata, file:%s.", fileName.c_str());
+    }
+    return {type, chunkModule};
 }
 
 bool InjectionTransport::IsSupportedChannelFile(const std::string& fileName) const
@@ -127,15 +198,16 @@ int32_t InjectionTransport::SendBuffer(SHARED_PTR_ALIA<analysis::dvvp::ProfileFi
     }
 
     const size_t rawSize = std::min(fileChunkReq->chunkSize, fileChunkReq->chunk.size());
+    const RawDataMetadata metadata = ConvertRawDataMetadata(fileChunkReq->fileName, fileChunkReq->chunkModule);
     size_t offset = 0;
     while (offset < rawSize) {
         MsprofRawData rawData = {};
         rawData.offset = offset;
-        rawData.chunkModule = fileChunkReq->chunkModule;
+        rawData.chunkModule = metadata.chunkModule;
         uint32_t deviceId = 0;
         (void)ParseDeviceId(fileChunkReq->extraInfo, deviceId);
         rawData.deviceId = static_cast<int32_t>(deviceId);
-        rawData.type = ConvertRawDataType(fileChunkReq->fileName);
+        rawData.type = metadata.type;
         rawData.chunkSize = std::min(static_cast<size_t>(RAW_DATA_MAXSIZE), rawSize - offset);
         rawData.isLastChunk = offset + rawData.chunkSize >= rawSize;
         errno_t err = memcpy_s(rawData.chunk, RAW_DATA_MAXSIZE, fileChunkReq->chunk.data() + offset, rawData.chunkSize);

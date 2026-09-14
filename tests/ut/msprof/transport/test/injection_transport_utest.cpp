@@ -111,6 +111,7 @@ TEST_F(INJECTION_TRANSPORT_UTEST, IsLastChunkMeansLastSliceOfSingleProfileFileCh
     EXPECT_FALSE(g_rawDataList[1].isLastChunk);
     EXPECT_TRUE(g_rawDataList[2].isLastChunk);
     EXPECT_EQ(LOG_DATA_TYPE, g_rawDataList[0].type);
+    EXPECT_EQ(1, g_rawDataList[0].chunkModule);
     EXPECT_EQ(3, g_rawDataList[0].deviceId);
     std::string rebuilt;
     for (const auto& rawData : g_rawDataList) {
@@ -145,6 +146,56 @@ TEST_F(INJECTION_TRANSPORT_UTEST, ConvertRawDataTypeByFileName)
     EXPECT_EQ(PMU_DATA_TYPE, g_rawDataList[1].type);
     EXPECT_EQ(BIU_PERF_DATA_TYPE, g_rawDataList[2].type);
     EXPECT_EQ(PC_SAMPLING_DATA_TYPE, g_rawDataList[3].type);
+}
+
+TEST_F(INJECTION_TRANSPORT_UTEST, BiuPerfRawDataContainsGroupAndCoreType)
+{
+    InjectionTransport transport(SaveRawData);
+    const auto aicChunk = MakeFileChunk("data/instr.biu_perf_group0_aic.null", 1);
+    EXPECT_EQ(PROFILING_SUCCESS, transport.SendBuffer(aicChunk));
+    ASSERT_EQ(1U, g_rawDataList.size());
+    EXPECT_EQ(BIU_PERF_DATA_TYPE, g_rawDataList[0].type);
+    EXPECT_EQ(0, g_rawDataList[0].chunkModule);
+
+    g_rawDataList.clear();
+    const auto aiv0Chunk = MakeFileChunk("data/instr.biu_perf_group3_aiv0.null", 1);
+    EXPECT_EQ(PROFILING_SUCCESS, transport.SendBuffer(aiv0Chunk));
+    ASSERT_EQ(1U, g_rawDataList.size());
+    EXPECT_EQ(BIU_PERF_AIV0_DATA_TYPE, g_rawDataList[0].type);
+    EXPECT_EQ(3, g_rawDataList[0].chunkModule);
+
+    g_rawDataList.clear();
+    const auto aiv1Chunk = MakeFileChunk("data/instr.biu_perf_group5_aiv1.null", 1);
+    EXPECT_EQ(PROFILING_SUCCESS, transport.SendBuffer(aiv1Chunk));
+    ASSERT_EQ(1U, g_rawDataList.size());
+    EXPECT_EQ(BIU_PERF_AIV1_DATA_TYPE, g_rawDataList[0].type);
+    EXPECT_EQ(5, g_rawDataList[0].chunkModule);
+}
+
+TEST_F(INJECTION_TRANSPORT_UTEST, BiuPerfRawDataKeepsMetadataForAllSlices)
+{
+    InjectionTransport transport(SaveRawData);
+    EXPECT_EQ(PROFILING_SUCCESS, transport.SendBuffer(MakeFileChunk("data/instr.biu_perf_group2_aiv0.null", 600)));
+    ASSERT_EQ(3U, g_rawDataList.size());
+    for (const auto& rawData : g_rawDataList) {
+        EXPECT_EQ(BIU_PERF_AIV0_DATA_TYPE, rawData.type);
+        EXPECT_EQ(2, rawData.chunkModule);
+    }
+}
+
+TEST_F(INJECTION_TRANSPORT_UTEST, InvalidBiuPerfMetadataFallsBackToOriginalModule)
+{
+    InjectionTransport transport(SaveRawData);
+    const std::vector<std::string> fileNames = {
+        "data/biu_perf_group6_aic.null", "data/biu_perf_group0_unknown.null", "data/biu_perf_group_aic.null",
+        "data/biu_perf_group4294967296_aic.null"};
+    for (const auto& fileName : fileNames) {
+        g_rawDataList.clear();
+        EXPECT_EQ(PROFILING_SUCCESS, transport.SendBuffer(MakeFileChunk(fileName, 1)));
+        ASSERT_EQ(1U, g_rawDataList.size());
+        EXPECT_EQ(BIU_PERF_DATA_TYPE, g_rawDataList[0].type);
+        EXPECT_EQ(1, g_rawDataList[0].chunkModule);
+    }
 }
 
 TEST_F(INJECTION_TRANSPORT_UTEST, UnsupportedFileNameSkipsCallback)
