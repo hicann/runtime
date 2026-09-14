@@ -147,7 +147,12 @@ CaptureModel::~CaptureModel() noexcept
 
 rtError_t CaptureModel::LoadCompleteByStreamPrep(Stream*& stream)
 {
-    UNUSED(stream);
+    Device* const dev = Context_()->Device_();
+    if (dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ)) {
+        stream = Context_()->GetCtrlSQStream();
+    } else {
+        stream = Context_()->DefaultStream_();
+    }
 
     const rtError_t error = UpdateLabelCountPtr();
     if (error != RT_ERROR_NONE) {
@@ -203,13 +208,11 @@ rtError_t CaptureModel::LoadCompleteByStream(void)
     Device* const dev = Context_()->Device_();
 
     if (dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ)) {
-        stream = Context_()->GetCtrlSQStream();
         error = dev->GetCtrlSQ().SendModelLoadCompleteMsg(this, GetFirstTaskId());
         ERROR_RETURN_MSG_INNER(error, "SendModelLoadCompleteMsg failed, retCode=%#x.", static_cast<uint32_t>(error));
     } else {
         TaskInfo submitTaskInfo = {};
         rtError_t errorReason;
-        stream = Context_()->DefaultStream_();
         maintainceTask = stream->AllocTask(&submitTaskInfo, TS_TASK_TYPE_MODEL_MAINTAINCE, errorReason);
         NULL_PTR_RETURN_MSG(maintainceTask, errorReason);
 
