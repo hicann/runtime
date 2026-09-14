@@ -4,15 +4,15 @@
 
 是否由用户显式指定numBlocks（用于指定算子的核函数将会在几个核上执行），调用运行时核资源控制的接口会有所不同，如下所示：
 
--   **无numBlocks场景**（例如调用aclnn算子接口）：Stream粒度的核资源限制需要调用aclrtUseStreamResInCurrentThread接口绑定到当前线程使用，并调用aclrtGetResInCurrentThread接口获取当前线程可使用的核资源。
+- **无numBlocks场景**（例如调用aclnn算子接口）：Stream粒度的核资源限制需要调用aclrtUseStreamResInCurrentThread接口绑定到当前线程使用，并调用aclrtGetResInCurrentThread接口获取当前线程可使用的核资源。
 
     通过aclrtGetResInCurrentThread接口获取核资源限制的优先级为：Stream粒度的核资源限制 \> Device粒度的核资源限制 \> AI处理器硬件的默认核资源限制。例如，Device总共包含32个Vector Core，Device粒度限制使用16个Vector Core，而Stream粒度的核资源限制可以为20个Vector Core，则aclnn算子执行时以20个Vector Core运行。
 
--   **需numBlocks场景**（例如LaunchKernel方式执行算子）：用户可调用aclrtGetDeviceResLimit接口、aclrtGetStreamResLimit接口获取不同粒度的核资源限制后再配置numBlocks。
+- **需numBlocks场景**（例如LaunchKernel方式执行算子）：用户可调用aclrtGetDeviceResLimit接口、aclrtGetStreamResLimit接口获取不同粒度的核资源限制后再配置numBlocks。
 
 ## Device粒度的核资源限制
 
-以下是关键步骤的代码示例，不可以直接拷贝编译运行，仅供参考。完整样例代码，请参见[Link](https://gitcode.com/cann/runtime/tree/master/example/2_advanced_features/kernel/1_launch_kernel_with_reslimit)。
+以下是关键步骤的代码示例，不可以直接拷贝编译运行，仅供参考。完整样例代码，请参见[Link](https://gitcode.com/cann/runtime/tree/9.2.0/example/2_advanced_features/kernel/1_launch_kernel_with_reslimit)。
 
 ```c
 ......
@@ -73,5 +73,3 @@ aclrtResetStreamResLimit(stream);
 aclrtDestroyStream(stream);
 aclrtResetDevice(deviceId);
 ```
-
-

@@ -33,9 +33,6 @@ aclError aclrtApiInjectionSetFunc(const char* name, aclrtApiFunc func)
 <!-- npu="910" id3555 -->
 - Atlas 训练系列产品：支持
 <!-- end id3555 -->
-<!-- npu="IPV350" id3556 -->
-- IPV350：不支持
-<!-- end id3556 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/27_api_hook_interfaces_res.md#id1 -->
 
 ### 功能说明
@@ -94,9 +91,6 @@ aclError aclrtApiInjectionGetFunc(const char* name, aclrtApiFunc* originFunc, ac
 <!-- npu="910" id3562 -->
 - Atlas 训练系列产品：支持
 <!-- end id3562 -->
-<!-- npu="IPV350" id3563 -->
-- IPV350：不支持
-<!-- end id3563 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/27_api_hook_interfaces_res.md#id2 -->
 
 ### 功能说明

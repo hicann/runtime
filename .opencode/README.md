@@ -1,5 +1,7 @@
 # Runtime 仓 Agent skills 规划
 
+简体中文 | [English](./README_en.md)
+
 ## Runtime 仓 skills 清单
 
 > **说明**：清单中 `[x]` 表示该 skill 已就绪（ready），`[ ]` 表示该 skill 尚在规划中，还未实现。

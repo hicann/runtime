@@ -33,7 +33,7 @@ printf("Runtime Version Num: %d\n", versionNum);
 
 **正式版本计算公式：**
 
-```
+```text
 versionNum = major × 10000000 + minor × 100000 + patch × 1000
 ```
 
@@ -119,6 +119,7 @@ if (isSupported) {
     useLegacyPath();
 }
 ```
+
 <br>
 <br>
 
@@ -148,7 +149,7 @@ ACL_FUNC_VISIBILITY aclError aclrtQueryEvent(aclrtEvent event, aclrtEventStatus 
 
 编译时将产生警告信息：
 
-```
+```text
 warning: 'aclrtQueryEvent' is deprecated: aclrtQueryEvent is deprecated, use aclrtQueryEventStatus instead [-Wdeprecated-declarations]
 ```
 

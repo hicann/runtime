@@ -41,9 +41,6 @@ aclError aclrtMallocHost(void **hostPtr, size_t size)
 <!-- npu="910" id1686 -->
 - Atlas 训练系列产品：支持
 <!-- end id1686 -->
-<!-- npu="IPV350" id1687 -->
-- IPV350：不支持
-<!-- end id1687 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-02_host_memory_management_res.md#id1 -->
 
 ### 功能说明
@@ -110,9 +107,6 @@ aclError aclrtMallocHostWithCfg(void **ptr, uint64_t size, aclrtMallocConfig *cf
 <!-- npu="910" id720 -->
 - Atlas 训练系列产品：支持
 <!-- end id720 -->
-<!-- npu="IPV350" id721 -->
-- IPV350：不支持
-<!-- end id721 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-02_host_memory_management_res.md#id2 -->
 
 ### 功能说明
@@ -169,9 +163,6 @@ aclError aclrtFreeHost(void *hostPtr)
 <!-- npu="910" id545 -->
 - Atlas 训练系列产品：支持
 <!-- end id545 -->
-<!-- npu="IPV350" id546 -->
-- IPV350：不支持
-<!-- end id546 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-02_host_memory_management_res.md#id3 -->
 
 ### 功能说明
@@ -222,9 +213,6 @@ aclError aclrtFreeHostWithDevSync(void *hostPtr)
 <!-- npu="910" id783 -->
 - Atlas 训练系列产品：支持
 <!-- end id783 -->
-<!-- npu="IPV350" id784 -->
-- IPV350：不支持
-<!-- end id784 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-02_host_memory_management_res.md#id4 -->
 
 ### 功能说明
@@ -275,9 +263,6 @@ aclError aclrtHostRegister(void *ptr, uint64_t size, aclrtHostRegisterType type,
 <!-- npu="910" id1581 -->
 - Atlas 训练系列产品：不支持
 <!-- end id1581 -->
-<!-- npu="IPV350" id1582 -->
-- IPV350：不支持
-<!-- end id1582 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-02_host_memory_management_res.md#id5 -->
 
 ### 功能说明
@@ -331,9 +316,6 @@ aclError aclrtHostRegisterV2(void *ptr, uint64_t size, uint32_t flag)
 <!-- npu="910" id1406 -->
 - Atlas 训练系列产品：不支持
 <!-- end id1406 -->
-<!-- npu="IPV350" id1407 -->
-- IPV350：不支持
-<!-- end id1407 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-02_host_memory_management_res.md#id6 -->
 
 ### 功能说明
@@ -386,9 +368,6 @@ aclError aclrtHostGetDevicePointer(void *pHost, void **pDevice, uint32_t flag)
 <!-- npu="910" id6 -->
 - Atlas 训练系列产品：不支持
 <!-- end id6 -->
-<!-- npu="IPV350" id7 -->
-- IPV350：不支持
-<!-- end id7 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-02_host_memory_management_res.md#id7 -->
 
 ### 功能说明
@@ -439,9 +418,6 @@ aclError aclrtHostMemMapCapabilities(uint32_t deviceId, aclrtHacType hacType, ac
 <!-- npu="910" id566 -->
 - Atlas 训练系列产品：支持
 <!-- end id566 -->
-<!-- npu="IPV350" id567 -->
-- IPV350：不支持
-<!-- end id567 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-02_host_memory_management_res.md#id8 -->
 
 ### 功能说明
@@ -492,9 +468,6 @@ aclError aclrtHostUnregister(void *ptr)
 <!-- npu="910" id1903 -->
 - Atlas 训练系列产品：不支持
 <!-- end id1903 -->
-<!-- npu="IPV350" id1904 -->
-- IPV350：不支持
-<!-- end id1904 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-02_host_memory_management_res.md#id9 -->
 
 ### 功能说明
@@ -546,9 +519,6 @@ aclError aclrtHostGetDevicePointerAddrRange(aclrtAddrRange *addrRange, uint32_t 
 <!-- npu="910" id979 -->
 - Atlas 训练系列产品：不支持
 <!-- end id979 -->
-<!-- npu="IPV350" id980 -->
-- IPV350：不支持
-<!-- end id980 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-02_host_memory_management_res.md#id10 -->
 
 ### 功能说明

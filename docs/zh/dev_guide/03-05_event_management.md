@@ -19,7 +19,7 @@ Event也支持**多个任务等待同一个事件（多等一）**，例如strea
 
 ## Event的创建与销毁
 
-以下是创建两个Event并销毁的代码示例，该示例仅用于说明Event使用方法，不可以直接拷贝编译运行。完整样例代码请参见[Link](https://gitcode.com/cann/runtime/blob/master/example/1_basic_features/event/1_event_timestamp)。
+以下是创建两个Event并销毁的代码示例，该示例仅用于说明Event使用方法，不可以直接拷贝编译运行。完整样例代码请参见[Link](https://gitcode.com/cann/runtime/blob/9.2.0/example/1_basic_features/event/1_event_timestamp)。
 
 ```c
 aclrtEvent startEvent;
@@ -88,7 +88,7 @@ aclrtDestroyEvent(event);
 
 ## 记录Event时间戳
 
-在[Event的创建与销毁](#event的创建与销毁)章节中创建的Event可用于统计Stream上计算任务的耗时，代码示例如下。该示例仅用于说明Event使用方法，不可以直接拷贝编译运行。完整样例代码请参见[Link](https://gitcode.com/cann/runtime/blob/master/example/1_basic_features/event/1_event_timestamp)。
+在[Event的创建与销毁](#event的创建与销毁)章节中创建的Event可用于统计Stream上计算任务的耗时，代码示例如下。该示例仅用于说明Event使用方法，不可以直接拷贝编译运行。完整样例代码请参见[Link](https://gitcode.com/cann/runtime/blob/9.2.0/example/1_basic_features/event/1_event_timestamp)。
 
 ```c
 uint64_t time = 0;
@@ -125,7 +125,7 @@ aclrtEventElapsedTime(&useTime, startEvent, endEvent);
 
 以下是通过Event实现多线程内存池复用管理机制的代码示例，不可以直接拷贝编译运行，仅供参考。
 
-1.  在A线程中创建内存池，算子所用的内存来源于内存池，在算子后面插入Event Record任务。
+1. 在A线程中创建内存池，算子所用的内存来源于内存池，在算子后面插入Event Record任务。
 
     ```c
     // 申请内存池
@@ -144,7 +144,7 @@ aclrtEventElapsedTime(&useTime, startEvent, endEvent);
     aclrtRecordEvent(event, stream);
     ```
 
-2.  在B线程中调用查询接口，如果查询的Event已经完成，则代表Event Record前面的算子内存都可以被安全的复用。
+2. 在B线程中调用查询接口，如果查询的Event已经完成，则代表Event Record前面的算子内存都可以被安全的复用。
 
     ```c
     aclrtEventRecordedStatus status;

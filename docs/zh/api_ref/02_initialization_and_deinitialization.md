@@ -38,9 +38,6 @@ aclError aclInit(const char *configPath)
 <!-- npu="910" id3240 -->
 - Atlas 训练系列产品：支持
 <!-- end id3240 -->
-<!-- npu="IPV350" id3241 -->
-- IPV350：支持
-<!-- end id3241 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/02_initialization_and_deinitialization_res.md#id1 -->
 
 ### 功能说明
@@ -87,40 +84,6 @@ aclError aclInit(const char *configPath)
 
             ![](figures/concurrent_invoking_diagram.png)
  <!-- end id1 -->
-
-<!-- npu="IPV350" id2 -->
-- 一个进程内支持多次调用aclInit接口初始化，但要求aclInit接口与[aclFinalize](#aclFinalize)去初始化接口数量匹配，支持以下场景：
-    - 成对调用aclInit、aclFinalize接口，分别实现初始化、去初始化，在每对aclInit和aclFinalize中正常处理业务，同时每次aclInit接口中的json配置都能生效：
-
-        ```text
-        aclInit-->业务处理-->aclFinalize-->aclInit-->业务处理-->aclFinalize
-        ```
-
-    - 连续调用N次aclInit接口初始化，这时也需连续调用N次aclFinalize接口才能真正去初始化，且只有第一次aclInit接口中的json配置生效：
-
-        ```text
-        aclInit-->aclInit-->业务处理-->aclFinalize-->aclFinalize
-        ```
-
-        该场景下，若在aclInit接口前调用1次或多次aclFinalize接口，此时不会触发去初始化流程；若调用N次aclInit接口后，调用aclFinalize接口的次数大于N，则多余的aclFinalize接口也不会触发去初始化流程。
-
-    - 多线程场景推荐如下使用方式，否则可能导致业务异常：
-        - 主线程调用aclInit和aclFinalize、子线程调模型推理等业务处理，主线程等待子线程的业务处理结束再调用aclFinalize：
-
-            ![](figures/main_thread_invoking_aclFinalize.png)
-
-        - 各子线程均成对调aclInit和aclFinalize：
-
-            ![](figures/paired_invoking_aclInit_aclFinalize.png)
-
-- 模型推理（同步）场景下，若开启Dump功能，只支持在一个进程中对一个或多个模型执行Dump操作，由于资源限制，其它进程中不建议启动推理程序，否则可能造成Dump异常。
-
-    若对多个模型执行Dump操作，多个模型必须串行；
-
-    建议单线程内对模型执行Dump操作，否则可能出现Dump数据文件路径中的序号（即data\_index）不准确，导致Dump数据存放的目录异常。
-
-- 模型推理（异步）场景下，若开启Dump功能，建议一次异步推理、一次流同步，否则可能出现Dump数据文件路径中的序号（即data\_index）不准确，导致Dump数据存放的目录异常。
-<!-- end id2 -->
 
 <!-- @ref: runtime/res/docs/zh/api_ref/02_initialization_and_deinitialization_res.md#id8 -->
 
@@ -169,16 +132,12 @@ aclError aclInit(const char *configPath)
 }
 ```
 
-<!-- npu="IPV350" id3 -->
-IPV350只支持模型Dump配置，不支持单算子Dump配置。若开启模型Dump配置、且在模型加载时加载exeom文件时，则dbg文件要存放在json配置文件中dump\_path参数指定的路径下，才可以生成dump数据文件，用于后续的精度问题定位及分析。exeom文件以及dbg文件是在模型转换时生成，请参见[《ATC离线模型编译工具》](https://hiascend.com/document/redirect/CannCommunityATC)中的“参数说明 \> 基础功能参数 \> 总体选项 \> --mode”。
-<!-- end id3 -->
-
 ### 异常算子Dump配置
 
 **异常算子Dump配置**，用于导出异常算子的输入输出数据、workspace信息、Tiling信息等。导出的数据用于分析AI Core Error问题，**默认不启用该Dump配置。**
 
 <!-- npu="950,A3,910b,910,310p,310b" id4 -->
-关于AI Core Error问题的信息收集及定义，详细说明请参见[《故障处理》](https://hiascend.com/document/redirect/CannCommunitytrouble)。
+关于AI Core Error问题的信息收集及定义，详细说明请参见[《故障处理》](https://gitcode.com/cann/docs/blob/9.2.0/docs/zh/troubleshooting/ai_core_error_description.md)。
 <!-- end id4 -->
 
 通过配置dump\_scene参数值开启异常算子Dump功能，配置文件中的示例内容如下，表示开启轻量化的exception dump：
@@ -219,10 +178,10 @@ IPV350只支持模型Dump配置，不支持单算子Dump配置。若开启模型
 
 - dump\_path是可选参数，表示导出dump文件的存储路径。
 
-    dump文件存储路径的优先级如下：NPU\_COLLECT\_PATH环境变量 \> ASCEND\_WORK\_PATH环境变量 \> 配置文件中的dump\_path \> 应用程序的当前执行目录，环境变量的详细描述请参见[《环境变量参考》](https://hiascend.com/document/redirect/CannCommunityEnvRef)。
+    dump文件存储路径的优先级如下：NPU\_COLLECT\_PATH环境变量 \> ASCEND\_WORK\_PATH环境变量 \> 配置文件中的dump\_path \> 应用程序的当前执行目录，环境变量的详细描述请参见[《环境变量参考》](https://gitcode.com/cann/docs/blob/9.2.0/docs/zh/env-vars/intro.md)。
 
 <!-- npu="950,A3,910b,910,310p,310b" id6 -->
-- 若需查看导出的dump文件内容，请参见[《故障处理》](https://hiascend.com/document/redirect/CannCommunitytrouble)中的“故障定位工具 \> msaicerr工具使用指导 \> 解析Dump文件”章节。
+- 若需查看导出的dump文件内容，请参见[《故障处理》](https://gitcode.com/cann/docs/blob/9.2.0/docs/zh/troubleshooting/troubleshooting_intro.md)中的“故障定位工具 \> msaicerr工具使用指导 \> 解析Dump文件”章节。
 
     <!-- npu="A3,910b" id7 -->
     若将dump\_scene参数设置为aic\_err\_detail\_dump时，需使用msDebug工具查看导出的dump文件内容，详细方法请参见[《算子开发工具用户指南》](https://hiascend.com/document/redirect/CannCommunityopdev)。
@@ -365,22 +324,18 @@ Atlas 推理系列产品
 
 - dump\_path：启用算子Kernel调测信息Dump功能时，dump\_path必须配置，表示导出Dump文件的存储路径，支持配置绝对路径或相对路径。
 
-    Dump文件存储路径的优先级如下：ASCEND\_DUMP\_PATH环境变量 \> ASCEND\_WORK\_PATH环境变量 \> 配置文件中的dump\_path，环境变量的详细描述请参见[《环境变量参考》](https://hiascend.com/document/redirect/CannCommunityEnvRef)。
+    Dump文件存储路径的优先级如下：ASCEND\_DUMP\_PATH环境变量 \> ASCEND\_WORK\_PATH环境变量 \> 配置文件中的dump\_path，环境变量的详细描述请参见[《环境变量参考》](https://gitcode.com/cann/docs/blob/9.2.0/docs/zh/env-vars/intro.md)。
 
-    导出的Dump文件无法通过文本工具直接查看其内容，若需查看，需使用show\_kernel\_debug\_data工具将调测信息解析为可读格式，工具使用指导请参见[《Ascend C算子开发指南》](https://hiascend.com/document/redirect/CannCommunityOpdevAscendC)。
+    导出的Dump文件无法通过文本工具直接查看其内容，若需查看，需使用show\_kernel\_debug\_data工具将调测信息解析为可读格式，工具使用指导请参见[《Ascend C算子开发指南》](https://gitcode.com/cann/asc-devkit/blob/9.2.0/docs/zh/guide/index.md)。
     <!-- end id8 -->
 
 ### Profiling采集信息配置
 
-**Profiling采集信息配置**，配置示例、说明及约束请参见[《性能调优工具用户指南》](https://hiascend.com/document/redirect/CannCommunityToolProfiling)。**默认不启用Profiling采集信息配置。**
+**Profiling采集信息配置**，配置示例、说明及约束请参见[《性能调优工具用户指南》](https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/9.2.0/devaids/Profiling/atlasprofiling_16_0001.html)。**默认不启用Profiling采集信息配置。**
 
 建议不要同时配置Dump信息和Profiling采集信息，否则Dump操作会影响系统性能，导致Profiling采集的性能数据指标不准确。
 
 ### 算子缓存信息老化配置
-
-<!-- npu="IPV350" id14 -->
-IPV350不支持算子缓存信息老化配置。
-<!-- end id14 -->
 
 **算子缓存信息老化配置**，通过单算子模型方式执行单个算子时（aclopUpdateParams接口执行单算子除外），为节约内存和平衡调用性能，可通过max\_opqueue\_num参数配置“算子类型-单算子模型”映射队列的最大长度，如果长度达到最大，则会先删除长期未使用的映射信息以及缓存中的单算子模型，再加载最新的映射信息以及对应的单算子模型。如果不配置映射队列的最大长度，则**默认最大长度为20000**。
 
@@ -585,9 +540,6 @@ aclError aclFinalize()
 <!-- npu="910" id671 -->
 - Atlas 训练系列产品：支持
 <!-- end id671 -->
-<!-- npu="IPV350" id672 -->
-- IPV350：支持
-<!-- end id672 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/02_initialization_and_deinitialization_res.md#id2 -->
 
 ### 功能说明
@@ -595,7 +547,7 @@ aclError aclFinalize()
 去初始化函数，用于释放进程内acl接口使用的相关资源。
 
 <!-- npu="950,A3,910b,910,310p,310b" id29 -->
-对于涉及Device业务日志回传到Host的场景，本接口默认增加2000ms延时（实际最大延时可达2000ms），以确保ERROR级别和EVENT级别日志完整回传，防止丢失。您可以将ASCEND\_LOG\_DEVICE\_FLUSH\_TIMEOUT环境变量设置为0（命令示例：export ASCEND\_LOG\_DEVICE\_FLUSH\_TIMEOUT=0），来取消该默认延时。关于ASCEND\_LOG\_DEVICE\_FLUSH\_TIMEOUT环境变量的详细描述请参见[《环境变量参考》](https://hiascend.com/document/redirect/CannCommunityEnvRef)中的“ASCEND\_LOG\_DEVICE\_FLUSH\_TIMEOUT”。
+对于涉及Device业务日志回传到Host的场景，本接口默认增加2000ms延时（实际最大延时可达2000ms），以确保ERROR级别和EVENT级别日志完整回传，防止丢失。您可以将ASCEND\_LOG\_DEVICE\_FLUSH\_TIMEOUT环境变量设置为0（命令示例：export ASCEND\_LOG\_DEVICE\_FLUSH\_TIMEOUT=0），来取消该默认延时。关于ASCEND\_LOG\_DEVICE\_FLUSH\_TIMEOUT环境变量的详细描述请参见[《环境变量参考》](../env_vars/ASCEND_LOG_DEVICE_FLUSH_TIMEOUT.md)中的“ASCEND\_LOG\_DEVICE\_FLUSH\_TIMEOUT”。
 <!-- end id29 -->
 
 ### 参数说明
@@ -644,9 +596,6 @@ aclError aclFinalizeReference(uint64_t *refCount)
 <!-- npu="910" id3212 -->
 - Atlas 训练系列产品：支持
 <!-- end id3212 -->
-<!-- npu="IPV350" id3213 -->
-- IPV350：不支持
-<!-- end id3213 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/02_initialization_and_deinitialization_res.md#id3 -->
 
 ### 功能说明
@@ -703,9 +652,6 @@ aclError aclInitCallbackRegister(aclRegisterCallbackType type, aclInitCallbackFu
 <!-- npu="910" id993 -->
 - Atlas 训练系列产品：支持
 <!-- end id993 -->
-<!-- npu="IPV350" id994 -->
-- IPV350：不支持
-<!-- end id994 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/02_initialization_and_deinitialization_res.md#id4 -->
 
 ### 功能说明
@@ -758,9 +704,6 @@ aclError aclInitCallbackUnRegister(aclRegisterCallbackType type, aclInitCallback
 <!-- npu="910" id2449 -->
 - Atlas 训练系列产品：支持
 <!-- end id2449 -->
-<!-- npu="IPV350" id2450 -->
-- IPV350：不支持
-<!-- end id2450 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/02_initialization_and_deinitialization_res.md#id5 -->
 
 ### 功能说明
@@ -810,9 +753,6 @@ aclError aclFinalizeCallbackRegister(aclRegisterCallbackType type, aclFinalizeCa
 <!-- npu="910" id2337 -->
 - Atlas 训练系列产品：支持
 <!-- end id2337 -->
-<!-- npu="IPV350" id2338 -->
-- IPV350：不支持
-<!-- end id2338 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/02_initialization_and_deinitialization_res.md#id6 -->
 
 ### 功能说明
@@ -865,9 +805,6 @@ aclError aclFinalizeCallbackUnRegister(aclRegisterCallbackType type, aclFinalize
 <!-- npu="910" id160 -->
 - Atlas 训练系列产品：支持
 <!-- end id160 -->
-<!-- npu="IPV350" id161 -->
-- IPV350：不支持
-<!-- end id161 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/02_initialization_and_deinitialization_res.md#id7 -->
 
 ### 功能说明

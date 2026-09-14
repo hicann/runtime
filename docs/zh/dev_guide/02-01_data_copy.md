@@ -52,10 +52,10 @@ aclrtSynchronizeStream(stream);
 
 通过malloc、mmap等传统接口申请的Host内存是非锁页内存。aclrtMemcpyAsync、aclrtMemcpy2dAsync、aclrtMemcpyBatchAsync等异步接口支持非锁页Host内存，但这类场景需要单独关注：
 
--   当参与复制的Host内存是锁页内存时，异步复制接口只下发复制任务并返回，Host线程可以继续执行其它工作，复制任务在Stream中按序完成。
--   当参与复制的Host内存是非锁页内存时，异步复制接口会在内存复制任务完成后才返回。此时接口名虽然带Async，但Host线程无法与本次复制并行执行，数据传输也难以与计算充分重叠。
--   若需要稳定获得复制与计算重叠效果，建议通过aclrtMallocHost申请锁页内存，或在支持的系统上使用aclrtHostRegisterV2将已有Host内存注册为锁页内存。
--   ACL Graph捕获异步内存复制任务时，若复制涉及Host内存，Host内存需要使用Runtime接口申请的锁页内存，否则捕获过程中会返回错误。
+- 当参与复制的Host内存是锁页内存时，异步复制接口只下发复制任务并返回，Host线程可以继续执行其它工作，复制任务在Stream中按序完成。
+- 当参与复制的Host内存是非锁页内存时，异步复制接口会在内存复制任务完成后才返回。此时接口名虽然带Async，但Host线程无法与本次复制并行执行，数据传输也难以与计算充分重叠。
+- 若需要稳定获得复制与计算重叠效果，建议通过aclrtMallocHost申请锁页内存，或在支持的系统上使用aclrtHostRegisterV2将已有Host内存注册为锁页内存。
+- ACL Graph捕获异步内存复制任务时，若复制涉及Host内存，Host内存需要使用Runtime接口申请的锁页内存，否则捕获过程中会返回错误。
 
 因此，非锁页Host内存更适合低频、临时、对并发性能不敏感的数据搬运；性能敏感的输入输出通路应使用锁页Host内存。
 
@@ -86,10 +86,10 @@ if (canAccess != 0) {
 
 批量复制接口aclrtMemcpyBatch、aclrtMemcpyBatchAsync及其V2版本适用于一次下发多段Host到Device或Device到Host复制。批量复制需要注意：
 
--   批次内的复制操作不保证按照数组顺序执行。
--   每个复制操作的目的地址数组、源地址数组和复制大小数组长度必须一致。
--   同一个批次中的复制方向仅支持Host到Device或Device到Host中的一种。
--   相关接口属于试验特性时，应以API参考中的产品说明和约束为准。
+- 批次内的复制操作不保证按照数组顺序执行。
+- 每个复制操作的目的地址数组、源地址数组和复制大小数组长度必须一致。
+- 同一个批次中的复制方向仅支持Host到Device或Device到Host中的一种。
+- 相关接口属于试验特性时，应以API参考中的产品说明和约束为准。
 
 ## 内存设置
 

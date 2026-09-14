@@ -37,9 +37,6 @@ aclError aclrtGetSymbolAddress(const void *symbol, void **devPtr)
 <!-- npu="910" id1623 -->
 - Atlas 训练系列产品：不支持
 <!-- end id1623 -->
-<!-- npu="IPV350" id1624 -->
-- IPV350：不支持
-<!-- end id1624 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-11_device_variable_memory_operation_res.md#id1 -->
 
 ### 功能说明
@@ -98,9 +95,6 @@ aclError aclrtGetSymbolSize(const void *symbol, size_t *size)
 <!-- npu="910" id223 -->
 - Atlas 训练系列产品：不支持
 <!-- end id223 -->
-<!-- npu="IPV350" id224 -->
-- IPV350：不支持
-<!-- end id224 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-11_device_variable_memory_operation_res.md#id2 -->
 
 ### 功能说明
@@ -155,9 +149,6 @@ aclError aclrtMemcpyFromSymbol(void *dst, size_t dstMax, const void *symbol,
 <!-- npu="910" id1252 -->
 - Atlas 训练系列产品：不支持
 <!-- end id1252 -->
-<!-- npu="IPV350" id1253 -->
-- IPV350：不支持
-<!-- end id1253 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-11_device_variable_memory_operation_res.md#id3 -->
 
 ### 功能说明
@@ -217,9 +208,6 @@ aclError aclrtMemcpyFromSymbolAsync(void *dst, size_t dstMax, const void *symbol
 <!-- npu="910" id2491 -->
 - Atlas 训练系列产品：不支持
 <!-- end id2491 -->
-<!-- npu="IPV350" id2492 -->
-- IPV350：不支持
-<!-- end id2492 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-11_device_variable_memory_operation_res.md#id4 -->
 
 ### 功能说明
@@ -282,9 +270,6 @@ aclError aclrtMemcpyToSymbol(const void *symbol, const void *src,
 <!-- npu="910" id3149 -->
 - Atlas 训练系列产品：不支持
 <!-- end id3149 -->
-<!-- npu="IPV350" id3150 -->
-- IPV350：不支持
-<!-- end id3150 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-11_device_variable_memory_operation_res.md#id5 -->
 
 ### 功能说明
@@ -343,9 +328,6 @@ aclError aclrtMemcpyToSymbolAsync(const void *symbol, const void *src,
 <!-- npu="910" id1518 -->
 - Atlas 训练系列产品：不支持
 <!-- end id1518 -->
-<!-- npu="IPV350" id1519 -->
-- IPV350：不支持
-<!-- end id1519 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-11_device_variable_memory_operation_res.md#id6 -->
 
 ### 功能说明

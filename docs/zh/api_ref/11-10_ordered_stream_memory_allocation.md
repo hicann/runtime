@@ -246,9 +246,6 @@ aclError aclrtMemPoolCreate(aclrtMemPool *memPool, const aclrtMemPoolProps *pool
 <!-- npu="910" id3044 -->
 - Atlas 训练系列产品：不支持
 <!-- end id3044 -->
-<!-- npu="IPV350" id3045 -->
-- IPV350：不支持
-<!-- end id3045 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-10_ordered_stream_memory_allocation_res.md#id1 -->
 
 ### 功能说明
@@ -300,9 +297,6 @@ aclError aclrtMemPoolDestroy(const aclrtMemPool memPool)
 <!-- npu="910" id1560 -->
 - Atlas 训练系列产品：不支持
 <!-- end id1560 -->
-<!-- npu="IPV350" id1561 -->
-- IPV350：不支持
-<!-- end id1561 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-10_ordered_stream_memory_allocation_res.md#id2 -->
 
 ### 功能说明
@@ -353,9 +347,6 @@ aclError aclrtMemPoolSetAttr(aclrtMemPool memPool, aclrtMemPoolAttr attr, void *
 <!-- npu="910" id1490 -->
 - Atlas 训练系列产品：不支持
 <!-- end id1490 -->
-<!-- npu="IPV350" id1491 -->
-- IPV350：不支持
-<!-- end id1491 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-10_ordered_stream_memory_allocation_res.md#id3 -->
 
 ### 功能说明
@@ -410,9 +401,6 @@ aclError aclrtMemPoolGetAttr(aclrtMemPool memPool, aclrtMemPoolAttr attr, void *
 <!-- npu="910" id1700 -->
 - Atlas 训练系列产品：不支持
 <!-- end id1700 -->
-<!-- npu="IPV350" id1701 -->
-- IPV350：不支持
-<!-- end id1701 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-10_ordered_stream_memory_allocation_res.md#id4 -->
 
 ### 功能说明
@@ -467,9 +455,6 @@ aclError aclrtMemPoolMallocAsync(void **ptr, size_t size, aclrtMemPool memPool, 
 <!-- npu="910" id1574 -->
 - Atlas 训练系列产品：不支持
 <!-- end id1574 -->
-<!-- npu="IPV350" id1575 -->
-- IPV350：不支持
-<!-- end id1575 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-10_ordered_stream_memory_allocation_res.md#id5 -->
 
 ### 功能说明
@@ -523,9 +508,6 @@ aclError aclrtMemPoolFreeAsync(void *ptr, aclrtStream stream)
 <!-- npu="910" id517 -->
 - Atlas 训练系列产品：不支持
 <!-- end id517 -->
-<!-- npu="IPV350" id518 -->
-- IPV350：不支持
-<!-- end id518 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-10_ordered_stream_memory_allocation_res.md#id6 -->
 
 ### 功能说明
@@ -577,9 +559,6 @@ aclError aclrtMemPoolTrimTo(aclrtMemPool memPool, size_t minBytesToKeep)
 <!-- npu="910" id1035 -->
 - Atlas 训练系列产品：不支持
 <!-- end id1035 -->
-<!-- npu="IPV350" id1036 -->
-- IPV350：不支持
-<!-- end id1036 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-10_ordered_stream_memory_allocation_res.md#id7 -->
 
 ### 功能说明

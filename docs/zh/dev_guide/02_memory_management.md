@@ -6,8 +6,8 @@
 
 内存管理中要做好的两件事是：
 
-1.  **可以访问内存：** Runtime提供了一套内存管理API，使开发者能够高效便捷地编写应用程序中的内存管理代码。由于Host和Device的内存相互独立，Runtime提供了专门的接口来分别申请和释放Host内存及Device内存。例如，申请和释放Host内存的接口为aclrtMallocHost和aclrtFreeHost，而申请和释放Device内存的接口为aclrtMalloc和aclrtFree。
-2.  **高效访问内存：** 为了实现最佳的内存访问性能，需要将数据存储在对应的内存中，例如算子在Device上执行过程中，访问Device上的数据性能要远高于访问Host侧的。Host与Device、Device与Device之间的数据搬运请参见[数据复制](02-01_data_copy.md)。
+1. **可以访问内存：** Runtime提供了一套内存管理API，使开发者能够高效便捷地编写应用程序中的内存管理代码。由于Host和Device的内存相互独立，Runtime提供了专门的接口来分别申请和释放Host内存及Device内存。例如，申请和释放Host内存的接口为aclrtMallocHost和aclrtFreeHost，而申请和释放Device内存的接口为aclrtMalloc和aclrtFree。
+2. **高效访问内存：** 为了实现最佳的内存访问性能，需要将数据存储在对应的内存中，例如算子在Device上执行过程中，访问Device上的数据性能要远高于访问Host侧的。Host与Device、Device与Device之间的数据搬运请参见[数据复制](02-01_data_copy.md)。
 
 ## Device内存使用
 
@@ -94,32 +94,32 @@ int main(void)
 
 aclrtMemMallocPolicy的设计理念是把“页大小”“兜底策略”和“访问拓扑”拆开表达：
 
--   **优先还是强制**：ACL_MEM_MALLOC_HUGE_FIRST表示大页优先，申请不到大页时可退回普通页；ACL_MEM_MALLOC_HUGE_ONLY表示只申请大页，申请不到则报错；ACL_MEM_MALLOC_NORMAL_ONLY表示只申请普通页。
--   **默认性能与容量平衡**：ACL_MEM_MALLOC_HUGE_FIRST适合多数大块Device内存。申请大小小于等于1M时，即使配置该策略，Runtime也会申请普通页；申请大小大于1M时，Runtime优先申请2MB大页，大页不足时退回普通页。这种设计避免小内存过度占用大页，同时尽量让大块数据获得更好的TLB命中表现。
--   **跨Device传输**：带P2P后缀的策略用于两个Device之间内存复制场景，例如ACL_MEM_MALLOC_HUGE_FIRST_P2P、ACL_MEM_MALLOC_HUGE_ONLY_P2P、ACL_MEM_MALLOC_NORMAL_ONLY_P2P。若内存主要用于Device间复制，应选择P2P策略，使内存属性与访问路径匹配。
--   **大页粒度选择**：ACL_MEM_MALLOC_HUGE_ONLY使用2MB大页；ACL_MEM_MALLOC_HUGE1G_ONLY使用1GB大页。1GB大页更关注大容量连续访问性能，2MB大页在性能和容量占用之间更均衡。
--   **带宽类型提示**：ACL_MEM_TYPE_LOW_BAND_WIDTH、ACL_MEM_TYPE_HIGH_BAND_WIDTH可与部分页策略按位或组合，但系统最终会根据硬件支持情况选择合适的物理内存类型。未明确需要时，一般无需单独配置。
+- **优先还是强制**：ACL_MEM_MALLOC_HUGE_FIRST表示大页优先，申请不到大页时可退回普通页；ACL_MEM_MALLOC_HUGE_ONLY表示只申请大页，申请不到则报错；ACL_MEM_MALLOC_NORMAL_ONLY表示只申请普通页。
+- **默认性能与容量平衡**：ACL_MEM_MALLOC_HUGE_FIRST适合多数大块Device内存。申请大小小于等于1M时，即使配置该策略，Runtime也会申请普通页；申请大小大于1M时，Runtime优先申请2MB大页，大页不足时退回普通页。这种设计避免小内存过度占用大页，同时尽量让大块数据获得更好的TLB命中表现。
+- **跨Device传输**：带P2P后缀的策略用于两个Device之间内存复制场景，例如ACL_MEM_MALLOC_HUGE_FIRST_P2P、ACL_MEM_MALLOC_HUGE_ONLY_P2P、ACL_MEM_MALLOC_NORMAL_ONLY_P2P。若内存主要用于Device间复制，应选择P2P策略，使内存属性与访问路径匹配。
+- **大页粒度选择**：ACL_MEM_MALLOC_HUGE_ONLY使用2MB大页；ACL_MEM_MALLOC_HUGE1G_ONLY使用1GB大页。1GB大页更关注大容量连续访问性能，2MB大页在性能和容量占用之间更均衡。
+- **带宽类型提示**：ACL_MEM_TYPE_LOW_BAND_WIDTH、ACL_MEM_TYPE_HIGH_BAND_WIDTH可与部分页策略按位或组合，但系统最终会根据硬件支持情况选择合适的物理内存类型。未明确需要时，一般无需单独配置。
 
 使用建议如下：
 
--   大多数普通计算输入、输出和workspace，优先使用ACL_MEM_MALLOC_HUGE_FIRST。
--   大量小块内存、临时内存或需要降低对齐浪费时，使用ACL_MEM_MALLOC_NORMAL_ONLY。
--   对大页性能有强依赖，且希望资源不足时尽早暴露问题时，使用ACL_MEM_MALLOC_HUGE_ONLY或ACL_MEM_MALLOC_HUGE1G_ONLY。
--   跨Device复制场景下，优先选用带P2P后缀的策略。
--   频繁调用aclrtMalloc/aclrtFree会影响性能。对于固定大小或可预估大小的内存，建议在初始化阶段预分配并在业务侧复用。
+- 大多数普通计算输入、输出和workspace，优先使用ACL_MEM_MALLOC_HUGE_FIRST。
+- 大量小块内存、临时内存或需要降低对齐浪费时，使用ACL_MEM_MALLOC_NORMAL_ONLY。
+- 对大页性能有强依赖，且希望资源不足时尽早暴露问题时，使用ACL_MEM_MALLOC_HUGE_ONLY或ACL_MEM_MALLOC_HUGE1G_ONLY。
+- 跨Device复制场景下，优先选用带P2P后缀的策略。
+- 频繁调用aclrtMalloc/aclrtFree会影响性能。对于固定大小或可预估大小的内存，建议在初始化阶段预分配并在业务侧复用。
 
 ## Host锁页内存使用
 
 在CANN编程框架中，Host内存可以是**Pageable内存**，也可以是**Page-Locked内存**（也称锁页内存或Pinned内存）：
 
--   **Pageable内存**，由操作系统统一管理。开发者可使用malloc、mmap等传统接口申请内存，使用free、munmap等接口释放内存。当内存压力较大时，Pageable内存会被换出到后备存储提供的交换空间中。当Pageable内存中的数据被传输到Device时，数据首先会被复制到缓冲区，然后通过DMA（Direct Memory Access）通道传输到Device。
--   **Page-Locked内存**，即锁页内存。开发者需要用Runtime提供的API进行锁页内存的申请和释放，例如aclrtMallocHost、aclrtFreeHost等接口。对于锁页内存，虚拟页与物理页的映射关系固定，在其生命周期内不会被换出至交换空间。当锁页内存中的数据被传输至Device时，直接通过DMA通道传输，无需经过缓冲区，传输性能更优。
+- **Pageable内存**，由操作系统统一管理。开发者可使用malloc、mmap等传统接口申请内存，使用free、munmap等接口释放内存。当内存压力较大时，Pageable内存会被换出到后备存储提供的交换空间中。当Pageable内存中的数据被传输到Device时，数据首先会被复制到缓冲区，然后通过DMA（Direct Memory Access）通道传输到Device。
+- **Page-Locked内存**，即锁页内存。开发者需要用Runtime提供的API进行锁页内存的申请和释放，例如aclrtMallocHost、aclrtFreeHost等接口。对于锁页内存，虚拟页与物理页的映射关系固定，在其生命周期内不会被换出至交换空间。当锁页内存中的数据被传输至Device时，直接通过DMA通道传输，无需经过缓冲区，传输性能更优。
 
     在Runtime中，**使用锁页内存的好处如下**：
 
-    -   设备可以直接通过DMA访问主机内存，无需经过缓冲区，可以提供更好的传输性能；
-    -   数据搬运过程无需CPU参与，可以实现数据的异步传输；
-    -   数据的异步传输，使传输过程和计算过程可以相互掩盖，减少传输+计算的整体时长。
+    - 设备可以直接通过DMA访问主机内存，无需经过缓冲区，可以提供更好的传输性能；
+    - 数据搬运过程无需CPU参与，可以实现数据的异步传输；
+    - 数据的异步传输，使传输过程和计算过程可以相互掩盖，减少传输+计算的整体时长。
 
 锁页内存可直接通过aclrtMallocHost接口申请，示例代码如下。如果需要在申请时指定内存的其他配置，例如自定义模块ID、配置VA（virtual address）一致性等，也可以使用aclrtMallocHostWithCfg接口申请。
 
@@ -173,9 +173,8 @@ free(hostPtr);
 
 若涉及Host内存的VA（virtual address）一致性：
 
--   Host内存可以通过aclrtHostRegister接口注册到Device，根据Host指针映射得到Device指针，供Device使用；默认情况下，对于同一块Host内存，Host和Device看到的虚拟地址是不同的；
--   如果需要Host和Device的虚拟地址保持一致，可以使用aclrtMallocHostWithCfg接口申请锁页内存，并在aclrtMallocConfig参数中指定ACL\_RT\_MEM\_ATTR\_VA\_FLAG属性，后续再注册获取到的Device虚拟地址即可与Host虚拟地址一致。
-
+- Host内存可以通过aclrtHostRegister接口注册到Device，根据Host指针映射得到Device指针，供Device使用；默认情况下，对于同一块Host内存，Host和Device看到的虚拟地址是不同的；
+- 如果需要Host和Device的虚拟地址保持一致，可以使用aclrtMallocHostWithCfg接口申请锁页内存，并在aclrtMallocConfig参数中指定ACL\_RT\_MEM\_ATTR\_VA\_FLAG属性，后续再注册获取到的Device虚拟地址即可与Host虚拟地址一致。
 
 ## 虚拟内存管理
 

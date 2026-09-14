@@ -37,9 +37,6 @@ aclError aclrtCreateLabel(aclrtLabel *label)
 <!-- npu="910" id489 -->
 - Atlas 训练系列产品：支持
 <!-- end id489 -->
-<!-- npu="IPV350" id490 -->
-- IPV350：不支持
-<!-- end id490 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/10_label_management_res.md#id1 -->
 
 ### 功能说明
@@ -90,9 +87,6 @@ aclError aclrtSetLabel(aclrtLabel label, aclrtStream stream)
 <!-- npu="910" id391 -->
 - Atlas 训练系列产品：支持
 <!-- end id391 -->
-<!-- npu="IPV350" id392 -->
-- IPV350：不支持
-<!-- end id392 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/10_label_management_res.md#id2 -->
 
 ### 功能说明
@@ -142,9 +136,6 @@ aclError aclrtDestroyLabel(aclrtLabel label)
 <!-- npu="910" id2190 -->
 - Atlas 训练系列产品：支持
 <!-- end id2190 -->
-<!-- npu="IPV350" id2191 -->
-- IPV350：不支持
-<!-- end id2191 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/10_label_management_res.md#id3 -->
 
 ### 功能说明
@@ -193,9 +184,6 @@ aclError aclrtCreateLabelList(aclrtLabel *labels, size_t num, aclrtLabelList *la
 <!-- npu="910" id1616 -->
 - Atlas 训练系列产品：支持
 <!-- end id1616 -->
-<!-- npu="IPV350" id1617 -->
-- IPV350：不支持
-<!-- end id1617 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/10_label_management_res.md#id4 -->
 
 ### 功能说明
@@ -246,9 +234,6 @@ aclError aclrtDestroyLabelList(aclrtLabelList labelList)
 <!-- npu="910" id1098 -->
 - Atlas 训练系列产品：支持
 <!-- end id1098 -->
-<!-- npu="IPV350" id1099 -->
-- IPV350：不支持
-<!-- end id1099 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/10_label_management_res.md#id5 -->
 
 ### 功能说明
@@ -297,9 +282,6 @@ aclError aclrtSwitchLabelByIndex(void *ptr, uint32_t maxValue, aclrtLabelList la
 <!-- npu="910" id1238 -->
 - Atlas 训练系列产品：支持
 <!-- end id1238 -->
-<!-- npu="IPV350" id1239 -->
-- IPV350：不支持
-<!-- end id1239 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/10_label_management_res.md#id6 -->
 
 ### 功能说明

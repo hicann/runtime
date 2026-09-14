@@ -41,9 +41,6 @@ aclError aclmdlInitDump()
 <!-- npu="910" id2113 -->
 - Atlas 训练系列产品：支持
 <!-- end id2113 -->
-<!-- npu="IPV350" id2114 -->
-- IPV350：不支持
-<!-- end id2114 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/18_dump_configuration_res.md#id1 -->
 
 ### 功能说明
@@ -120,9 +117,6 @@ aclError aclmdlSetDump(const char *dumpCfgPath)
 <!-- npu="910" id559 -->
 - Atlas 训练系列产品：支持
 <!-- end id559 -->
-<!-- npu="IPV350" id560 -->
-- IPV350：不支持
-<!-- end id560 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/18_dump_configuration_res.md#id2 -->
 
 ### 功能说明
@@ -250,10 +244,10 @@ aclError aclmdlSetDump(const char *dumpCfgPath)
 
     dump文件存储路径的优先级如下：NPU\_COLLECT\_PATH环境变量 \> ASCEND\_WORK\_PATH环境变量 \> 配置文件中的dump\_path \> 应用程序的当前执行目录
 
-    环境变量的详细描述请参见[《环境变量参考》](https://hiascend.com/document/redirect/CannCommunityEnvRef)。
+    环境变量的详细描述请参见[《环境变量参考》](https://gitcode.com/cann/docs/blob/9.2.0/docs/zh/env-vars/intro.md)。
 
 <!-- npu="950,A3,910b,910,310p,310b" id2 -->
-- 若需查看导出的dump文件内容，请参见[《故障处理》](https://hiascend.com/document/redirect/CannCommunitytrouble)中的“故障定位工具 \> msaicerr工具使用指导 \> 解析Dump文件”章节。
+- 若需查看导出的dump文件内容，请参见[《故障处理》](https://gitcode.com/cann/docs/blob/9.2.0/docs/zh/troubleshooting/troubleshooting_intro.md)中的“故障定位工具 \> msaicerr工具使用指导 \> 解析Dump文件”章节。
 
     <!-- npu="A3,910b" id3 -->
     若将dump\_scene参数设置为aic\_err\_detail\_dump时，需使用msDebug工具查看导出的dump文件内容，详细方法请参见[《算子开发工具用户指南》](https://hiascend.com/document/redirect/CannCommunityopdev)。
@@ -382,9 +376,9 @@ aclError aclmdlSetDump(const char *dumpCfgPath)
 
 - dump\_path：启用算子Kernel调测信息Dump功能时，dump\_path必须配置，表示导出Dump文件的存储路径，支持配置绝对路径或相对路径。
 
-    Dump文件存储路径的优先级如下：ASCEND\_DUMP\_PATH环境变量 \> ASCEND\_WORK\_PATH环境变量 \> 配置文件中的dump\_path，环境变量的详细描述请参见[《环境变量参考》](https://hiascend.com/document/redirect/CannCommunityEnvRef)。
+    Dump文件存储路径的优先级如下：ASCEND\_DUMP\_PATH环境变量 \> ASCEND\_WORK\_PATH环境变量 \> 配置文件中的dump\_path，环境变量的详细描述请参见[《环境变量参考》](https://gitcode.com/cann/docs/blob/9.2.0/docs/zh/env-vars/intro.md)。
 
-    导出的Dump文件无法通过文本工具直接查看其内容，若需查看，需使用show\_kernel\_debug\_data工具将调测信息解析为可读格式，工具使用指导请参见[《Ascend C算子开发指南》](https://hiascend.com/document/redirect/CannCommunityOpdevAscendC)。
+    导出的Dump文件无法通过文本工具直接查看其内容，若需查看，需使用show\_kernel\_debug\_data工具将调测信息解析为可读格式，工具使用指导请参见[《Ascend C算子开发指南》](https://gitcode.com/cann/asc-devkit/blob/9.2.0/docs/zh/guide/index.md)。
 <!-- end id4 -->
 
 ### 参考资源
@@ -423,9 +417,6 @@ aclError acldumpRegCallback(int32_t (* const messageCallback)(const acldumpChunk
 <!-- npu="910" id1546 -->
 - Atlas 训练系列产品：支持
 <!-- end id1546 -->
-<!-- npu="IPV350" id1547 -->
-- IPV350：不支持
-<!-- end id1547 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/18_dump_configuration_res.md#id3 -->
 
 ### 功能说明
@@ -511,9 +502,6 @@ void acldumpUnregCallback()
 <!-- npu="910" id440 -->
 - Atlas 训练系列产品：支持
 <!-- end id440 -->
-<!-- npu="IPV350" id441 -->
-- IPV350：不支持
-<!-- end id441 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/18_dump_configuration_res.md#id4 -->
 
 ### 功能说明
@@ -570,9 +558,6 @@ const char* acldumpGetPath(acldumpType dumpType)
 <!-- npu="910" id2855 -->
 - Atlas 训练系列产品：不支持
 <!-- end id2855 -->
-<!-- npu="IPV350" id2856 -->
-- IPV350：不支持
-<!-- end id2856 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/18_dump_configuration_res.md#id5 -->
 
 ### 功能说明
@@ -623,9 +608,6 @@ aclError aclmdlFinalizeDump()
 <!-- npu="910" id1861 -->
 - Atlas 训练系列产品：支持
 <!-- end id1861 -->
-<!-- npu="IPV350" id1862 -->
-- IPV350：不支持
-<!-- end id1862 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/18_dump_configuration_res.md#id6 -->
 
 ### 功能说明
@@ -697,9 +679,6 @@ aclError aclopStartDumpArgs(uint32_t dumpType, const char *path)
 <!-- npu="910" id3401 -->
 - Atlas 训练系列产品：支持
 <!-- end id3401 -->
-<!-- npu="IPV350" id3402 -->
-- IPV350：不支持
-<!-- end id3402 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/18_dump_configuration_res.md#id7 -->
 
 ### 功能说明
@@ -757,9 +736,6 @@ aclError aclopStopDumpArgs(uint32_t dumpType)
 <!-- npu="910" id1595 -->
 - Atlas 训练系列产品：支持
 <!-- end id1595 -->
-<!-- npu="IPV350" id1596 -->
-- IPV350：不支持
-<!-- end id1596 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/18_dump_configuration_res.md#id8 -->
 
 ### 功能说明
@@ -816,9 +792,6 @@ aclError acldumpGetExceptionInfoPath(char *path, size_t maxLen)
 <!-- npu="910" id9006 -->
 - Atlas 训练系列产品：支持
 <!-- end id9006 -->
-<!-- npu="IPV350" id9007 -->
-- IPV350：不支持
-<!-- end id9007 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/18_dump_configuration_res.md#id9 -->
 
 ### 功能说明
@@ -841,7 +814,7 @@ aclError acldumpGetExceptionInfoPath(char *path, size_t maxLen)
 
 ### 约束说明
 
-- 本接口需在开启异常算子Dump功能后调用，详细配置请参见[aclInit（异常算子Dump配置）](02_initialization_and_deinitialization.md#aclInit)或[aclmdlSetDump（异常算子Dump配置）](#exception_dump_config)或环境变量[ASCEND\_DUMP\_SCENE](https://hiascend.com/document/redirect/CannCommunityEnvRef)。
+- 本接口需在开启异常算子Dump功能后调用，详细配置请参见[aclInit（异常算子Dump配置）](02_initialization_and_deinitialization.md#aclInit)或[aclmdlSetDump（异常算子Dump配置）](#exception_dump_config)或环境变量[ASCEND\_DUMP\_SCENE](https://gitcode.com/cann/docs/blob/9.2.0/docs/zh/env-vars/ASCEND_DUMP_SCENE.md)。
 
 <br>
 <br>
@@ -875,9 +848,6 @@ aclError acldumpSaveExceptionInfo(const char *fileName, const char *userTag, con
 <!-- npu="910" id9013 -->
 - Atlas 训练系列产品：支持
 <!-- end id9013 -->
-<!-- npu="IPV350" id9014 -->
-- IPV350：不支持
-<!-- end id9014 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/18_dump_configuration_res.md#id10 -->
 
 ### 功能说明
@@ -906,4 +876,4 @@ aclError acldumpSaveExceptionInfo(const char *fileName, const char *userTag, con
 
 ### 约束说明
 
-- 本接口需在开启异常算子Dump功能后调用，详细配置请参见[aclInit（异常算子Dump配置）](02_initialization_and_deinitialization.md#aclInit)或[aclmdlSetDump（异常算子Dump配置）](#exception_dump_config)或环境变量[ASCEND\_DUMP\_SCENE](https://hiascend.com/document/redirect/CannCommunityEnvRef)。
+- 本接口需在开启异常算子Dump功能后调用，详细配置请参见[aclInit（异常算子Dump配置）](02_initialization_and_deinitialization.md#aclInit)或[aclmdlSetDump（异常算子Dump配置）](#exception_dump_config)或环境变量[ASCEND\_DUMP\_SCENE](https://gitcode.com/cann/docs/blob/9.2.0/docs/zh/env-vars/ASCEND_DUMP_SCENE.md)。

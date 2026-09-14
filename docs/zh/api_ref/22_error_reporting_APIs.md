@@ -53,9 +53,6 @@ int32_t ReportInnerErrMsg(const char_t *file_name, const char_t *func, uint32_t 
 <!-- npu="910" id6 -->
 - Atlas 训练系列产品：支持
 <!-- end id6 -->
-<!-- npu="IPV350" id7 -->
-- IPV350：不支持
-<!-- end id7 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/22_error_reporting_APIs_res.md#id1 -->
 
 ### 函数功能
@@ -127,9 +124,6 @@ int32_t ReportInnerErrMsg(const char_t *file_name, const char_t *func, uint32_t 
 <!-- npu="910" id13 -->
 - Atlas 训练系列产品：支持
 <!-- end id13 -->
-<!-- npu="IPV350" id14 -->
-- IPV350：不支持
-<!-- end id14 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/22_error_reporting_APIs_res.md#id2 -->
 
 ### 函数功能
@@ -152,7 +146,7 @@ int32_t ReportInnerErrMsg(const char_t *file_name, const char_t *func, uint32_t 
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| error_code | 输入 | 错误码以6位字符形式体现，例如E10001，其中，第1位表示级别，分为E、W、I，分别表示错误、告警、提示类；第2位表示模块；后4位表示错误码，0000~8999为用户类错误。<br>CANN预定义好的用户类错误可参见[《故障处理》](https://hiascend.com/document/redirect/CannCommunitytrouble)中的错误码参考。 |
+| error_code | 输入 | 错误码以6位字符形式体现，例如E10001，其中，第1位表示级别，分为E、W、I，分别表示错误、告警、提示类；第2位表示模块；后4位表示错误码，0000~8999为用户类错误。<br>CANN预定义好的用户类错误可参见[《故障处理》](https://gitcode.com/cann/docs/blob/9.2.0/docs/zh/troubleshooting/error_code_desc.md)中的错误码参考。 |
 | key | 输入 | 预定义的参数。<br>每个错误码支持的参数可查看error_code.json文件中的Arglist字段。 |
 | value | 输入 | 参数key中参数对应的实际值。<br>这些实际值会替换error_code.json文件中ErrMessage字段的占位符，得到最终的错误码信息。 |
 
@@ -193,9 +187,6 @@ int32_t ReportUserDefinedErrMsg(const char *error_code, const char *format, ...)
 <!-- npu="910" id20 -->
 - Atlas 训练系列产品：支持
 <!-- end id20 -->
-<!-- npu="IPV350" id21 -->
-- IPV350：不支持
-<!-- end id21 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/22_error_reporting_APIs_res.md#id3 -->
 
 ### 函数功能
@@ -251,9 +242,6 @@ int32_t RegisterFormatErrorMessage(const char *error_msg, size_t error_msg_len)
 <!-- npu="910" id27 -->
 - Atlas 训练系列产品：支持
 <!-- end id27 -->
-<!-- npu="IPV350" id28 -->
-- IPV350：不支持
-<!-- end id28 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/22_error_reporting_APIs_res.md#id4 -->
 
 ### 函数功能
@@ -293,7 +281,7 @@ error_msg错误码信息需按照json格式组织，error_info_list是一个包�
 
 - errClass：错误分类。
 - errTitle：错误标题。
-- ErrCode：错误码。注意不要与当前已有的错误码重复，已有的错误码请参见[《故障处理》](https://hiascend.com/document/redirect/CannCommunitytrouble)中的错误码参考。
+- ErrCode：错误码。注意不要与当前已有的错误码重复，已有的错误码请参见[《故障处理》](https://gitcode.com/cann/docs/blob/9.2.0/docs/zh/troubleshooting/error_code_desc.md)中的错误码参考。
 - ErrMessage：错误消息，可以包含格式化占位符(%s)。
 - Arglist：参数列表，用于说明ErrMessage中占位符对应的参数，参数列表长度与ErrMessage里格式化占位符个数必须相等。
 - suggestion：建议信息，包含：

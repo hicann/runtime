@@ -1,5 +1,7 @@
 # 样例使用指导
 
+简体中文 | [English](./README_en.md)
+
 example目录下提供了一系列Runtime接口样例，包括Device管理、Stream管理、Event管理、内存管理、Kernel执行等，供开发者参考，帮助开发者快速入门，进而掌握Runtime关键特性。
 
 

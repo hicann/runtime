@@ -10,14 +10,14 @@
 
 捕获任务到模型中、再执行模型的场景下，存在如下基本限制：
 
-1.  在进入捕获状态前，Stream上的任务依然是立即执行的。
-2.  在Stream上捕获任务时，只会将任务下沉到Device上，并不会立即执行，因此，对Stream或Event的查询或同步均为非法操作。同样，对Device或Context的查询或同步也是非法的，因为Device和Context中包含了Stream的同步信息。捕获过程中，对Stream、Event、Device、Context的同步或查询，在任何捕获模式下都是非法的。
-3.  在捕获过程中，在ACL\_MODEL\_RI\_CAPTURE\_MODE\_GLOBAL模式（全局禁止，所有线程都不可以调用非安全函数）下，调用内存同步操作类函数（例如aclrtMemset、aclrtMemcpy、aclrtMemcpy2d）是非法的，会校验报错导致捕获失败。若业务侧确定这些函数的执行不会影响任务捕获，此时，可以通过调用aclmdlRICaptureThreadExchangeMode接口切换当前线程的捕获模式为ACL\_MODEL\_RI\_CAPTURE\_MODE\_RELAXED，解除调用限制。
+1. 在进入捕获状态前，Stream上的任务依然是立即执行的。
+2. 在Stream上捕获任务时，只会将任务下沉到Device上，并不会立即执行，因此，对Stream或Event的查询或同步均为非法操作。同样，对Device或Context的查询或同步也是非法的，因为Device和Context中包含了Stream的同步信息。捕获过程中，对Stream、Event、Device、Context的同步或查询，在任何捕获模式下都是非法的。
+3. 在捕获过程中，在ACL\_MODEL\_RI\_CAPTURE\_MODE\_GLOBAL模式（全局禁止，所有线程都不可以调用非安全函数）下，调用内存同步操作类函数（例如aclrtMemset、aclrtMemcpy、aclrtMemcpy2d）是非法的，会校验报错导致捕获失败。若业务侧确定这些函数的执行不会影响任务捕获，此时，可以通过调用aclmdlRICaptureThreadExchangeMode接口切换当前线程的捕获模式为ACL\_MODEL\_RI\_CAPTURE\_MODE\_RELAXED，解除调用限制。
 
-4.  在捕获过程中，下发配置类的任务，例如Profiling配置、Dump配置、溢出检测配置等，可能会返回报错或者对捕获模型不生效。
-5.  若捕获的异步内存复制任务涉及Host内存，则只支持使用acl接口（例如aclrtMallocHost）申请Host锁页内存，否则在捕获过程中将返回报错。
-6.  另外，在捕获过程中，对默认Stream的操作是非法的。
-7.  最后还需要注意的是，任务被捕获后，需要使用者保证模型中任务使用资源的有效性，直至模型被销毁后才能销毁相关资源。
+4. 在捕获过程中，下发配置类的任务，例如Profiling配置、Dump配置、溢出检测配置等，可能会返回报错或者对捕获模型不生效。
+5. 若捕获的异步内存复制任务涉及Host内存，则只支持使用acl接口（例如aclrtMallocHost）申请Host锁页内存，否则在捕获过程中将返回报错。
+6. 另外，在捕获过程中，对默认Stream的操作是非法的。
+7. 最后还需要注意的是，任务被捕获后，需要使用者保证模型中任务使用资源的有效性，直至模型被销毁后才能销毁相关资源。
 
 以下是单流捕获add算子计算的示例代码。
 
@@ -80,7 +80,7 @@ int main()
     uint64_t workspaceSize = 0;
     aclOpExecutor *executor;
     auto size = GetShapeSize(shape);
-	
+    
     // 初始化
     aclInit(NULL);
     // 指定计算设备
@@ -98,7 +98,7 @@ int main()
     if (workspaceSize > 0) {
         aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
     }
-	
+    
     // 使用aclrtMallocHost申请锁页内存
     aclrtMallocHost((void **)&self_h, size * sizeof(float));
     aclrtMallocHost((void **)&other_h, size * sizeof(float));
@@ -128,7 +128,7 @@ int main()
     aclrtMemcpyAsync(self_h, size * sizeof(float), out_d, size * sizeof(float), ACL_MEMCPY_DEVICE_TO_HOST, stream);
     // ========结束捕获任务========
     aclmdlRICaptureEnd(stream, &modelRI);
-	
+    
     // 打印模型信息，维测场景下使用
     const char *jsonPath = "./modelRI.json";
     aclmdlRIDebugJsonPrint(modelRI, jsonPath, 0);
@@ -137,7 +137,7 @@ int main()
     for (int i = 0; i < 8; i++) {
         aclmdlRIExecuteAsync(modelRI, stream);
         aclrtSynchronizeStream(stream);
-	// 打印每一次的算子输出数据
+    // 打印每一次的算子输出数据
         ACL_LOG("%f %f %f %f %f %f %f %f\n",
             self_h[0],
             self_h[1],
@@ -161,11 +161,10 @@ int main()
     aclrtFree(out_d);
     if (workspaceAddr != nullptr) {
         aclrtFree(workspaceAddr);
-    }	
+    }    
     // 释放计算设备的资源
     aclrtResetDevice(devID);
     // 去初始化
     aclFinalize();
 }
 ```
-

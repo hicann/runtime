@@ -2,7 +2,7 @@
 
 当Stream上的任务已经被捕获，并暂存到模型中之后，若要更新任务（包含任务本身以及任务的参数信息），当前支持两种方式：
 
-1.  **方式一**：以需要更新的任务为分界点，在aclmdlRICaptureBegin和aclmdlRICaptureEnd接口之间分别捕获该任务前后的任务、并暂存到不同的模型中，分开执行。
+1. **方式一**：以需要更新的任务为分界点，在aclmdlRICaptureBegin和aclmdlRICaptureEnd接口之间分别捕获该任务前后的任务、并暂存到不同的模型中，分开执行。
 
     **该方式适用于大量任务需要更新的场景**（例如一个模型有两种不同Shape的input输入场景）**，接口调用逻辑比较简单，但导致暂存捕获任务的模型数量增多，若模型数量超出硬件资源限制，则会触发报错。**
 
@@ -10,15 +10,15 @@
 
     ![](figures/ACL_Graph任务更新流程1.png)
 
-2.  **方式二**：在aclmdlRICaptureBegin、aclmdlRICaptureEnd接口之间下发主流上需捕获的任务，通过aclmdlRICaptureTaskGrpBegin、aclmdlRICaptureTaskGrpEnd接口将待更新的任务标记为在一个任务组中，并返回任务组的handle，在aclmdlRICaptureTaskUpdateBegin、aclmdlRICaptureTaskUpdateEnd接口之间更新任务。
+2. **方式二**：在aclmdlRICaptureBegin、aclmdlRICaptureEnd接口之间下发主流上需捕获的任务，通过aclmdlRICaptureTaskGrpBegin、aclmdlRICaptureTaskGrpEnd接口将待更新的任务标记为在一个任务组中，并返回任务组的handle，在aclmdlRICaptureTaskUpdateBegin、aclmdlRICaptureTaskUpdateEnd接口之间更新任务。
 
     **该方式适用于少量单算子调用任务需要更新的场景，支持先更新任务再依次执行模型实例中的任务，也支持更新任务与模型实例中其他任务的并发执行。但更新任务比单独下发任务更耗时，另外，还存在一些使用限制**：aclmdlRICaptureTaskGrpBegin、aclmdlRICaptureTaskGrpEnd接口之间的任务数量、任务类型，要与aclmdlRICaptureTaskUpdateBegin、aclmdlRICaptureTaskUpdateEnd接口之间的任务数量、任务类型一致；跨Stream捕获任务的场景下，在aclmdlRICaptureTaskGrpBegin、aclmdlRICaptureTaskGrpEnd接口之间，其它捕获状态的Stream上不允许同时下发任务；任务组类似一个临界资源，不支持多线程多Stream并发更新，否则会导致更新结果非预期。
 
-    -   **对于“先更新任务，再依次执行aclmdlRI实例中的任务”的场景，使用流程如下图所示：**
+    - **对于“先更新任务，再依次执行aclmdlRI实例中的任务”的场景，使用流程如下图所示：**
 
         ![](figures/ACL_Graph任务更新流程2.png)
 
-    -   **对于“更新任务与其他任务的并发执行”的场景，使用流程如下图所示：**
+    - **对于“更新任务与其他任务的并发执行”的场景，使用流程如下图所示：**
 
         若模型的运行实例中存在大量任务，为了提升性能，可使用external类型的Event实现更新任务与其他任务的并发执行，并且需再单独创建一个用于更新任务的Stream（下文称之为UpdateStream）。这里的external类型的Event，是指调用aclrtCreateEventWithFlag接口并设置flag为ACL\_EVENT\_EXTERNAL的Event，该类型的Event规格有限，且无法实现跨Stream的任务捕获，需要考虑合理复用。创建external类型的Event之后，在UpdateStream上下发更新任务，接着调用aclrtRecordEvent接口下发一个Event Record任务。然后，在主流中，在待更新的任务之前，调用aclrtStreamWaitEvent接口下发一个Event Wait任务，用于等待UpdateStream中的任务更新完成。最后，在主流中，调用aclrtStreamWaitEvent接口之后，再调用aclrtResetEvent接口重置external类型的Event。
 
@@ -109,27 +109,27 @@
             CreateAclTensor(shape, &outtmp_d, aclDataType::ACL_FLOAT, &outtmp);
         
             // 调用aclnnAdd算子的第一段接口，获取算子计算所需的workspace大小以及包含了算子计算流程的执行器
-            // 后续涉及多次调用aclnnAdd算子，此处需调用多次第一段接口，获取不同的aclOpExecutor	
+            // 后续涉及多次调用aclnnAdd算子，此处需调用多次第一段接口，获取不同的aclOpExecutor    
             // outtmp = self + alpha * other
             // 更新前：out = outtmp + alpha * other  更新后：out = outtmp + updatealpha * other
             aclnnAddGetWorkspaceSize(self, other, alpha, outtmp, &workspaceSize, &executor);
-        	void *workspaceAddr = nullptr;
+            void *workspaceAddr = nullptr;
             if (workspaceSize > 0) {
                 aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
             }
             // 更新前：out = outtmp + alpha * other
             aclnnAddGetWorkspaceSize(outtmp, other, alpha, out, &workspaceSize1, &executor1);
-        	void *workspaceAddr1 = nullptr;
+            void *workspaceAddr1 = nullptr;
             if (workspaceSize1 > 0) {
                 aclrtMalloc(&workspaceAddr1, workspaceSize1, ACL_MEM_MALLOC_HUGE_FIRST);
             }
-            // 更新后：out = outtmp + updatealpha * other	
+            // 更新后：out = outtmp + updatealpha * other    
             aclnnAddGetWorkspaceSize(outtmp, other, updatealpha, out, &workspaceSize2, &executor2);
-        	void *workspaceAddr2 = nullptr;
+            void *workspaceAddr2 = nullptr;
             if (workspaceSize2 > 0) {
                 aclrtMalloc(&workspaceAddr2, workspaceSize2, ACL_MEM_MALLOC_HUGE_FIRST);
             }
-        	
+            
             // 使用aclrtMallocHost申请锁页内存
             aclrtMallocHost((void **)&self_h, size * sizeof(float));
             aclrtMallocHost((void **)&other_h, size * sizeof(float));
@@ -184,7 +184,7 @@
                 aclmdlRICaptureTaskUpdateEnd(updateStream);
                 // 更新任务之后，在updateStream上，下发Event Record任务，用于通知主流stream1继续执行Event Wait之后的任务
                 aclrtRecordEvent(event, updateStream);
-                aclrtSynchronizeStream(updateStream);		
+                aclrtSynchronizeStream(updateStream);        
                 aclrtSynchronizeStream(stream1);
                 ACL_LOG("%f %f %f %f %f %f %f %f\n",
                     out_h[0],
@@ -212,15 +212,15 @@
             aclrtDestroyStream(stream1);
             aclrtDestroyStream(updateStream);
             aclrtDestroyEvent(event);
-        	if (workspaceAddr != nullptr) {
+            if (workspaceAddr != nullptr) {
                 aclrtFree(workspaceAddr);
             }
-        	if (workspaceAddr1 != nullptr) {
+            if (workspaceAddr1 != nullptr) {
                 aclrtFree(workspaceAddr1);
             }
-        	if (workspaceAddr2 != nullptr) {
+            if (workspaceAddr2 != nullptr) {
                 aclrtFree(workspaceAddr2);
-            }	
+            }    
             // 释放计算设备的资源
             aclrtResetDevice(devID);
             // 去初始化
@@ -228,4 +228,3 @@
         }
         
         ```
-

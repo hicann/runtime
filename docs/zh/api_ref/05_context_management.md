@@ -40,9 +40,6 @@ aclError aclrtCreateContext(aclrtContext *context, int32_t deviceId)
 <!-- npu="910" id335 -->
 - Atlas 训练系列产品：支持
 <!-- end id335 -->
-<!-- npu="IPV350" id336 -->
-- IPV350：支持
-<!-- end id336 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/05_context_management_res.md#id1 -->
 
 ### 功能说明
@@ -72,15 +69,8 @@ aclError aclrtCreateContext(aclrtContext *context, int32_t deviceId)
     Atlas 推理系列产品的EP标准形态除外，其Context中包含两个Stream：一个默认Stream和一个执行内部同步的Stream。
     <!-- end id1 -->
 
-    <!-- npu="IPV350" id2 -->
-    IPV350上不支持默认Context和默认Stream。
-    <!-- end id2 -->
 - 如果在应用程序中没有调用[aclrtSetDevice](04_device_management.md#aclrtSetDevice)接口，那么在首次调用aclrtCreateContext接口时，系统内部会根据该接口传入的Device ID，为该Device绑定一个默认Stream（一个Device仅绑定一个默认Stream），因此在首次调用aclrtCreateContext接口时，占用的Stream数量 = Device上绑定的默认Stream + Context中包含的Stream。
     
-    <!-- npu="IPV350" id3 -->
-    IPV350上不支持默认Context和默认Stream。
-    <!-- end id3 -->
-
 <br>
 <br>
 <br>
@@ -113,9 +103,6 @@ aclError aclrtDestroyContext(aclrtContext context)
 <!-- npu="910" id1959 -->
 - Atlas 训练系列产品：支持
 <!-- end id1959 -->
-<!-- npu="IPV350" id1960 -->
-- IPV350：支持
-<!-- end id1960 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/05_context_management_res.md#id2 -->
 
 ### 功能说明
@@ -164,9 +151,6 @@ aclError aclrtSetCurrentContext(aclrtContext context)
 <!-- npu="910" id790 -->
 - Atlas 训练系列产品：支持
 <!-- end id790 -->
-<!-- npu="IPV350" id791 -->
-- IPV350：支持
-<!-- end id791 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/05_context_management_res.md#id3 -->
 
 ### 功能说明
@@ -226,9 +210,6 @@ aclError aclrtGetCurrentContext(aclrtContext *context)
 <!-- npu="910" id2834 -->
 - Atlas 训练系列产品：支持
 <!-- end id2834 -->
-<!-- npu="IPV350" id2835 -->
-- IPV350：支持
-<!-- end id2835 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/05_context_management_res.md#id4 -->
 
 ### 功能说明
@@ -279,9 +260,6 @@ aclError aclrtCtxSetSysParamOpt(aclSysParamOpt opt, int64_t value)
 <!-- npu="910" id3058 -->
 - Atlas 训练系列产品：支持
 <!-- end id3058 -->
-<!-- npu="IPV350" id3059 -->
-- IPV350：不支持
-<!-- end id3059 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/05_context_management_res.md#id5 -->
 
 ### 功能说明
@@ -333,9 +311,6 @@ aclError aclrtCtxGetSysParamOpt(aclSysParamOpt opt, int64_t *value)
 <!-- npu="910" id2120 -->
 - Atlas 训练系列产品：支持
 <!-- end id2120 -->
-<!-- npu="IPV350" id2121 -->
-- IPV350：不支持
-<!-- end id2121 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/05_context_management_res.md#id6 -->
 
 ### 功能说明
@@ -387,9 +362,6 @@ aclError aclrtCtxGetCurrentDefaultStream(aclrtStream *stream)
 <!-- npu="910" id1504 -->
 - Atlas 训练系列产品：支持
 <!-- end id1504 -->
-<!-- npu="IPV350" id1505 -->
-- IPV350：不支持
-<!-- end id1505 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/05_context_management_res.md#id7 -->
 
 ### 功能说明
@@ -438,9 +410,6 @@ aclError aclrtGetPrimaryCtxState(int32_t deviceId, uint32_t *flags, int32_t *act
 <!-- npu="910" id2792 -->
 - Atlas 训练系列产品：支持
 <!-- end id2792 -->
-<!-- npu="IPV350" id2793 -->
-- IPV350：不支持
-<!-- end id2793 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/05_context_management_res.md#id8 -->
 
 ### 功能说明
@@ -491,9 +460,6 @@ aclError aclrtCtxGetFloatOverflowAddr(void **overflowAddr)
 <!-- npu="910" id615 -->
 - Atlas 训练系列产品：支持
 <!-- end id615 -->
-<!-- npu="IPV350" id616 -->
-- IPV350：不支持
-<!-- end id616 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/05_context_management_res.md#id9 -->
 
 ### 功能说明

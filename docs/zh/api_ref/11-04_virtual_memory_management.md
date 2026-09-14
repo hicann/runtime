@@ -53,9 +53,6 @@ aclError aclrtMallocPhysical(aclrtDrvMemHandle *handle, size_t size, const aclrt
 <!-- npu="910" id1497 -->
 - Atlas 训练系列产品：支持
 <!-- end id1497 -->
-<!-- npu="IPV350" id1498 -->
-- IPV350：不支持
-<!-- end id1498 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-04_virtual_memory_management_res.md#id1 -->
 
 ### 功能说明
@@ -169,9 +166,6 @@ aclError aclrtFreePhysical(aclrtDrvMemHandle handle)
 <!-- npu="910" id1952 -->
 - Atlas 训练系列产品：支持
 <!-- end id1952 -->
-<!-- npu="IPV350" id1953 -->
-- IPV350：不支持
-<!-- end id1953 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-04_virtual_memory_management_res.md#id2 -->
 
 ### 功能说明
@@ -228,9 +222,6 @@ aclError aclrtReserveMemAddress(void **virPtr, size_t size, size_t alignment, vo
 <!-- npu="910" id1147 -->
 - Atlas 训练系列产品：支持
 <!-- end id1147 -->
-<!-- npu="IPV350" id1148 -->
-- IPV350：不支持
-<!-- end id1148 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-04_virtual_memory_management_res.md#id3 -->
 
 ### 功能说明
@@ -307,16 +298,13 @@ aclError aclrtReserveMemAddressNoUCMemory(void **virPtr, size_t size, size_t ali
 <!-- npu="910" id2197 -->
 - Atlas 训练系列产品：不支持
 <!-- end id2197 -->
-<!-- npu="IPV350" id2198 -->
-- IPV350：不支持
-<!-- end id2198 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-04_virtual_memory_management_res.md#id4 -->
 
 ### 功能说明
 
 预留虚拟内存。
 
-本接口与aclrtReserveMemAddress接口的使用方法相同，区别在于：根据环境变量AUTO\_USE\_UC\_MEMORY决定是否允许数据搬移不经过L2 Cache的算子，本接口预留的虚拟内存不能用作此类算子的输入或输出内存，否则可能会导致算子精度问题或异常。AUTO\_USE\_UC\_MEMORY环境变量的详细说明请参见[《环境变量参考》](https://hiascend.com/document/redirect/CannCommunityEnvRef)。
+本接口与aclrtReserveMemAddress接口的使用方法相同，区别在于：根据环境变量AUTO\_USE\_UC\_MEMORY决定是否允许数据搬移不经过L2 Cache的算子，本接口预留的虚拟内存不能用作此类算子的输入或输出内存，否则可能会导致算子精度问题或异常。AUTO\_USE\_UC\_MEMORY环境变量的详细说明请参见[《环境变量参考》](../env_vars/AUTO_USE_UC_MEMORY.md)。
 
 另外，本接口中的虚拟内存起始地址不支持由系统自动分配，只能由用户指定，且地址建议在40T-224T范围内。
 
@@ -366,9 +354,6 @@ aclError aclrtReleaseMemAddress(void *virPtr)
 <!-- npu="910" id867 -->
 - Atlas 训练系列产品：支持
 <!-- end id867 -->
-<!-- npu="IPV350" id868 -->
-- IPV350：不支持
-<!-- end id868 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-04_virtual_memory_management_res.md#id5 -->
 
 ### 功能说明
@@ -435,9 +420,6 @@ aclError aclrtMapMem(void *virPtr, size_t size, size_t offset, aclrtDrvMemHandle
 <!-- npu="910" id503 -->
 - Atlas 训练系列产品：支持
 <!-- end id503 -->
-<!-- npu="IPV350" id504 -->
-- IPV350：不支持
-<!-- end id504 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-04_virtual_memory_management_res.md#id6 -->
 
 ### 功能说明
@@ -506,9 +488,6 @@ aclError aclrtMemMapNoAccess(void *virPtr, size_t size, size_t offset, aclrtDrvM
 <!-- npu="910" id32 -->
 - Atlas 训练系列产品：支持
 <!-- end id32 -->
-<!-- npu="IPV350" id33 -->
-- IPV350：不支持
-<!-- end id33 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-04_virtual_memory_management_res.md#id21 -->
 
 ### 功能说明
@@ -585,9 +564,6 @@ aclError aclrtUnmapMem(void *virPtr)
 <!-- npu="910" id3359 -->
 - Atlas 训练系列产品：支持
 <!-- end id3359 -->
-<!-- npu="IPV350" id3360 -->
-- IPV350：不支持
-<!-- end id3360 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-04_virtual_memory_management_res.md#id7 -->
 
 ### 功能说明
@@ -642,9 +618,6 @@ aclError aclrtMemExportToShareableHandle(aclrtDrvMemHandle handle, aclrtMemHandl
 <!-- npu="910" id1945 -->
 - Atlas 训练系列产品：支持
 <!-- end id1945 -->
-<!-- npu="IPV350" id1946 -->
-- IPV350：不支持
-<!-- end id1946 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-04_virtual_memory_management_res.md#id8 -->
 
 ### 功能说明
@@ -741,9 +714,6 @@ aclError aclrtMemSetPidToShareableHandle(uint64_t shareableHandle, int32_t *pid,
 <!-- npu="910" id1350 -->
 - Atlas 训练系列产品：支持
 <!-- end id1350 -->
-<!-- npu="IPV350" id1351 -->
-- IPV350：不支持
-<!-- end id1351 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-04_virtual_memory_management_res.md#id9 -->
 
 ### 功能说明
@@ -796,9 +766,6 @@ aclError aclrtMemImportFromShareableHandle(uint64_t shareableHandle, int32_t dev
 <!-- npu="910" id1483 -->
 - Atlas 训练系列产品：支持
 <!-- end id1483 -->
-<!-- npu="IPV350" id1484 -->
-- IPV350：不支持
-<!-- end id1484 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-04_virtual_memory_management_res.md#id10 -->
 
 ### 功能说明
@@ -858,9 +825,6 @@ aclError aclrtMemExportToShareableHandleV2(aclrtDrvMemHandle handle, uint64_t fl
 <!-- npu="910" id1651 -->
 - Atlas 训练系列产品：支持
 <!-- end id1651 -->
-<!-- npu="IPV350" id1652 -->
-- IPV350：不支持
-<!-- end id1652 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-04_virtual_memory_management_res.md#id11 -->
 
 ### 功能说明
@@ -932,9 +896,6 @@ aclError aclrtMemSetPidToShareableHandleV2(void *shareableHandle, aclrtMemShared
 <!-- npu="910" id1371 -->
 - Atlas 训练系列产品：支持
 <!-- end id1371 -->
-<!-- npu="IPV350" id1372 -->
-- IPV350：不支持
-<!-- end id1372 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-04_virtual_memory_management_res.md#id12 -->
 
 ### 功能说明
@@ -990,9 +951,6 @@ aclError aclrtMemImportFromShareableHandleV2(void *shareableHandle, aclrtMemShar
 <!-- npu="910" id832 -->
 - Atlas 训练系列产品：支持
 <!-- end id832 -->
-<!-- npu="IPV350" id833 -->
-- IPV350：不支持
-<!-- end id833 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-04_virtual_memory_management_res.md#id13 -->
 
 ### 功能说明
@@ -1054,9 +1012,6 @@ aclError aclrtMemGetAllocationGranularity(aclrtPhysicalMemProp *prop, aclrtMemGr
 <!-- npu="910" id1000 -->
 - Atlas 训练系列产品：支持
 <!-- end id1000 -->
-<!-- npu="IPV350" id1001 -->
-- IPV350：不支持
-<!-- end id1001 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-04_virtual_memory_management_res.md#id14 -->
 
 ### 功能说明
@@ -1115,9 +1070,6 @@ aclError aclrtMemSetAccess(void* virPtr, size_t size, aclrtMemAccessDesc* desc, 
 <!-- npu="910" id2708 -->
 - Atlas 训练系列产品：支持
 <!-- end id2708 -->
-<!-- npu="IPV350" id2709 -->
-- IPV350：不支持
-<!-- end id2709 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-04_virtual_memory_management_res.md#id15 -->
 
 ### 功能说明
@@ -1169,9 +1121,6 @@ aclError aclrtMemGetAccess(void *virPtr, aclrtMemLocation *location, uint64_t *f
 <!-- npu="910" id2680 -->
 - Atlas 训练系列产品：支持
 <!-- end id2680 -->
-<!-- npu="IPV350" id2681 -->
-- IPV350：不支持
-<!-- end id2681 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-04_virtual_memory_management_res.md#id16 -->
 
 ### 功能说明
@@ -1222,9 +1171,6 @@ aclError aclrtMemRetainAllocationHandle(void* virPtr, aclrtDrvMemHandle *handle)
 <!-- npu="910" id2631 -->
 - Atlas 训练系列产品：支持
 <!-- end id2631 -->
-<!-- npu="IPV350" id2632 -->
-- IPV350：不支持
-<!-- end id2632 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-04_virtual_memory_management_res.md#id17 -->
 
 ### 功能说明
@@ -1284,9 +1230,6 @@ aclError aclrtMemGetAllocationPropertiesFromHandle(aclrtDrvMemHandle handle, acl
 <!-- npu="910" id2442 -->
 - Atlas 训练系列产品：支持
 <!-- end id2442 -->
-<!-- npu="IPV350" id2443 -->
-- IPV350：不支持
-<!-- end id2443 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-04_virtual_memory_management_res.md#id18 -->
 
 ### 功能说明
@@ -1342,9 +1285,6 @@ aclError aclrtMemGetAddressRange(void *ptr, void **pbase, size_t *psize)
 <!-- npu="910" id979 -->
 - Atlas 训练系列产品：支持
 <!-- end id979 -->
-<!-- npu="IPV350" id980 -->
-- IPV350：不支持
-<!-- end id980 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-04_virtual_memory_management_res.md#id19 -->
 
 ### 功能说明
@@ -1403,9 +1343,6 @@ aclError aclrtMemMapSelectedLink(void *virPtrDst, size_t size, void *virPtrSrc, 
 <!-- npu="910" id657 -->
 - Atlas 训练系列产品：不支持
 <!-- end id657 -->
-<!-- npu="IPV350" id658 -->
-- IPV350：不支持
-<!-- end id658 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-04_virtual_memory_management_res.md#id20 -->
 
 ### 功能说明
@@ -1461,9 +1398,6 @@ aclError aclrtMemMapSetLink(aclrtDrvMemHandle handle, aclrtMemLinkType adviceLin
 <!-- npu="910" id3366 -->
 - Atlas 训练系列产品：不支持
 <!-- end id3366 -->
-<!-- npu="IPV350" id3367 -->
-- IPV350：不支持
-<!-- end id3367 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-04_virtual_memory_management_res.md#id22 -->
 
 ### 功能说明

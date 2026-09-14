@@ -8,7 +8,7 @@
 
 内存语义同步相关接口的调用代码示例如下，不可以直接拷贝编译运行，仅供参考：
 
--   **Device示例代码**（算子核函数实现代码）
+- **Device示例代码**（算子核函数实现代码）
 
     ```c
     extern "C" __global__ __aicore__ void myKernel1(GM_ADDR syncMem)
@@ -37,7 +37,7 @@
     }
     ```
 
--   **Host示例代码**
+- **Host示例代码**
 
     ```c
     // 创建Stream

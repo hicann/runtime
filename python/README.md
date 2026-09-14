@@ -1,5 +1,7 @@
 # ACL
 
+简体中文 | [English](./README_en.md)
+
 ## 介绍
 
 The Python API for ACL(Ascend Computing Language).

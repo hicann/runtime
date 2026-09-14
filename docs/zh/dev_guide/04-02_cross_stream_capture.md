@@ -69,7 +69,7 @@ int main()
     uint64_t workspaceSize = 0;
     aclOpExecutor *executor;
     auto size = GetShapeSize(shape);
-	
+    
     // 初始化
     aclInit(NULL);
     // 指定计算设备
@@ -133,7 +133,7 @@ int main()
     for (int i = 0; i < 8; i++) {
         aclmdlRIExecuteAsync(modelRI, stream1);
         aclrtSynchronizeStream(stream1);
-	// 打印每一次的算子输出数据
+    // 打印每一次的算子输出数据
         ACL_LOG("%f %f %f %f %f %f %f %f\n",
             self_h[0],
             self_h[1],
@@ -157,7 +157,7 @@ int main()
     aclDestroyScalar(alpha);
     aclrtFree(self_d);
     aclrtFree(other_d);
-    aclrtFree(out_d);		
+    aclrtFree(out_d);        
     if (workspaceAddr != nullptr) {
         aclrtFree(workspaceAddr);
     }
@@ -167,4 +167,3 @@ int main()
     aclFinalize();
 }
 ```
-

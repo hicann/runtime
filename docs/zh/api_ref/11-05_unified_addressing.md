@@ -39,9 +39,6 @@ aclError aclrtMemAllocManaged(void **ptr, uint64_t size, uint32_t flag)
 <!-- npu="910" id3219 -->
 - Atlas 训练系列产品：不支持
 <!-- end id3219 -->
-<!-- npu="IPV350" id3220 -->
-- IPV350：不支持
-<!-- end id3220 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-05_unified_addressing_res.md#id1 -->
 
 ### 功能说明
@@ -98,9 +95,6 @@ aclError aclrtMemManagedAdvise(const void *const ptr, uint64_t size, aclrtMemMan
 <!-- npu="910" id2155 -->
 - Atlas 训练系列产品：不支持
 <!-- end id2155 -->
-<!-- npu="IPV350" id2156 -->
-- IPV350：不支持
-<!-- end id2156 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-05_unified_addressing_res.md#id2 -->
 
 ### 功能说明
@@ -154,9 +148,6 @@ aclError aclrtMemManagedGetAttr(aclrtMemManagedRangeAttribute attribute, const v
 <!-- npu="910" id1693 -->
 - Atlas 训练系列产品：不支持
 <!-- end id1693 -->
-<!-- npu="IPV350" id1694 -->
-- IPV350：不支持
-<!-- end id1694 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-05_unified_addressing_res.md#id3 -->
 
 ### 功能说明
@@ -213,9 +204,6 @@ aclError aclrtMemManagedGetAttrs(aclrtMemManagedRangeAttribute *attributes, size
 <!-- npu="910" id2078 -->
 - Atlas 训练系列产品：不支持
 <!-- end id2078 -->
-<!-- npu="IPV350" id2079 -->
-- IPV350：不支持
-<!-- end id2079 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-05_unified_addressing_res.md#id4 -->
 
 ### 功能说明
@@ -273,9 +261,6 @@ aclError aclrtMemManagedPrefetchAsync(const void* ptr, size_t size, aclrtMemMana
 <!-- npu="910" id2141 -->
 - Atlas 训练系列产品：不支持
 <!-- end id2141 -->
-<!-- npu="IPV350" id2142 -->
-- IPV350：不支持
-<!-- end id2142 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-05_unified_addressing_res.md#id5 -->
 
 ### 功能说明
@@ -330,9 +315,6 @@ aclError aclrtMemManagedPrefetchBatchAsync(const void** ptrs, size_t* sizes, siz
 <!-- npu="910" id2344 -->
 - Atlas 训练系列产品：不支持
 <!-- end id2344 -->
-<!-- npu="IPV350" id2345 -->
-- IPV350：不支持
-<!-- end id2345 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-05_unified_addressing_res.md#id6 -->
 
 ### 功能说明
@@ -395,9 +377,6 @@ aclError aclrtMemP2PMap(void *devPtr, size_t size, int32_t dstDevId, uint64_t fl
 <!-- npu="910" id2610 -->
 - Atlas 训练系列产品：支持
 <!-- end id2610 -->
-<!-- npu="IPV350" id2611 -->
-- IPV350：不支持
-<!-- end id2611 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-05_unified_addressing_res.md#id7 -->
 
 ### 功能说明
@@ -450,9 +429,6 @@ aclError aclrtPointerGetAttributes(const void *ptr, aclrtPtrAttributes *attribut
 <!-- npu="910" id1714 -->
 - Atlas 训练系列产品：支持
 <!-- end id1714 -->
-<!-- npu="IPV350" id1715 -->
-- IPV350：不支持
-<!-- end id1715 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-05_unified_addressing_res.md#id8 -->
 
 ### 功能说明

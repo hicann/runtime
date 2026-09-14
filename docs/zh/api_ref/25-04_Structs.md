@@ -562,9 +562,6 @@ typedef union aclrtLaunchKernelAttrValue {
     仅Ascend 950PR/Ascend 950DT支持该参数。
     <!-- end id1 -->
 
-    <!-- npu="IPV350" id2 -->
-    对于IPV350，当前不支持该参数，配置该参数不生效。
-    <!-- end id2 -->
     <!-- @ref: runtime/res/docs/zh/api_ref/25-05_Typedefs_res.md#id1 -->
 
 - engineType
@@ -575,9 +572,6 @@ typedef union aclrtLaunchKernelAttrValue {
     仅Atlas 推理系列产品支持该参数。
     <!-- end id3 -->
 
-    <!-- npu="IPV350" id4 -->
-    对于IPV350，当前不支持该参数，配置该参数不生效。
-    <!-- end id4 -->
     <!-- @ref: runtime/res/docs/zh/api_ref/25-05_Typedefs_res.md#id2 -->
 
 - blockDimOffset
@@ -595,9 +589,6 @@ typedef union aclrtLaunchKernelAttrValue {
             - numBlocks ≤ AI Core核数+Vector Core核数时，aicorenumBlocks = AI Core核数
             - 否则，aicorenumBlocks = 向上取整 \( numBlocks \* \( AI Core核数 \) / \( AI Core核数 + Vector Core核数 \)\)
 
-    <!-- npu="IPV350" id6 -->
-    对于IPV350，当前不支持该参数，配置该参数不生效。
-    <!-- end id6 -->
     <!-- @ref: runtime/res/docs/zh/api_ref/25-05_Typedefs_res.md#id3 -->
 
 - isBlockTaskPrefetch
@@ -1172,7 +1163,6 @@ typedef union {
 | --- | --- |
 | randomTaskAttr | 随机数生成任务。类型定义请参见[aclrtRandomTaskUpdateAttr](25-04_Structs.md#aclrtRandomTaskUpdateAttr)。<br>不同型号对该任务支持的情况不同：<br>Atlas A3 训练系列产品/Atlas A3 推理系列产品支持随机数生成任务<br>Atlas A2 训练系列产品/Atlas A2 推理系列产品支持随机数生成任务 |
 | aicAivTaskAttr | 在Cube\Vector计算单元上执行的计算任务。类型定义请参见[aclrtAicAivTaskUpdateAttr](25-04_Structs.md#aclrtAicAivTaskUpdateAttr)。 |
-
 
 <br>
 

@@ -172,10 +172,6 @@ typedef enum {
 对于Atlas 200I/500 A2 推理产品、Atlas 推理系列产品、Atlas 训练系列产品，不支持33\~41的枚举选项。
 <!-- end id3 -->
 
-<!-- npu="IPV350" id4 -->
-对于33\~41的枚举选项，当前不支持。
-<!-- end id4 -->
-
 <!-- @ref: runtime/res/docs/zh/api_ref/25-02_Enumerations_res.md#id1 -->
 
 <br>
@@ -556,9 +552,6 @@ typedef enum aclplatformNpuArch {
 <!-- npu="910" id11 -->
 - Atlas 训练系列产品：1001
 <!-- end id11 -->
-<!-- npu="IPV350" id12 -->
-- IPV350：3505
-<!-- end id12 -->
 <!-- npu="9030" id13 -->
 - Kirin 9030：3113
 <!-- end id13 -->
@@ -1212,9 +1205,6 @@ typedef enum {
     <!-- npu="910" id33 -->
     - Atlas 训练系列产品：1001
     <!-- end id33 -->
-    <!-- npu="IPV350" id34 -->
-    - IPV350：3505
-    <!-- end id34 -->
     <!-- npu="9030" id35 -->
     - Kirin 9030：3113
     <!-- end id35 -->
@@ -1453,9 +1443,6 @@ typedef enum {
     - Atlas 训练系列产品，不支持
     <!-- end id56 -->
 <!-- end id50 -->
-<!-- npu="IPV350" id57 -->
-- 对于IPV350，当前不支持设置ACL\_FUNC\_ATTR\_KERNEL\_RATIO属性。
-<!-- end id57 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/25-02_Enumerations_res.md#id5 -->
 - 当属性设置为ACL\_FUNC\_ATTR\_KERNEL\_SCHED\_MODE时，取值如下：
 
@@ -1680,10 +1667,6 @@ typedef enum aclrtMemAttr {
 仅Atlas A3 训练系列产品/Atlas A3 推理系列产品、Atlas A2 训练系列产品/Atlas A2 推理系列产品支持HUGE1G相关选项。
 <!-- end id59 -->
 
-<!-- npu="IPV350" id60 -->
-对于IPV350，当前不支持HUGE1G、P2P相关选项。
-<!-- end id60 -->
-
 <!-- @ref: runtime/res/docs/zh/api_ref/25-02_Enumerations_res.md#id6 -->
 
 <br>
@@ -1835,9 +1818,6 @@ typedef enum aclrtMemMallocPolicy {
     对于Atlas 推理系列产品，若涉及集合通信业务，通信域初始化需要在其他任何涉及Device内存申请的操作之前，否则可能因P2P内存不足导致初始化失败。
     <!-- end id63 -->
 
-    <!-- npu="IPV350" id64 -->
-    对于IPV350，当前版本不支持该选项。
-    <!-- end id64 -->
     <!-- @ref: runtime/res/docs/zh/api_ref/25-02_Enumerations_res.md#id7 -->
 
 - ACL\_MEM\_MALLOC\_HUGE\_ONLY\_P2P
@@ -1854,10 +1834,6 @@ typedef enum aclrtMemMallocPolicy {
     对于Atlas 推理系列产品，若涉及集合通信业务，通信域初始化需要在其他任何涉及Device内存申请的操作之前，否则可能因P2P内存不足导致初始化失败。
     <!-- end id66 -->
 
-    <!-- npu="IPV350" id67 -->
-    对于IPV350，当前版本不支持该选项。
-    <!-- end id67 -->
-
     <!-- @ref: runtime/res/docs/zh/api_ref/25-02_Enumerations_res.md#id8 -->
 
 - ACL\_MEM\_MALLOC\_NORMAL\_ONLY\_P2P
@@ -1872,9 +1848,6 @@ typedef enum aclrtMemMallocPolicy {
     对于Atlas 推理系列产品，若涉及集合通信业务，通信域初始化需要在其他任何涉及Device内存申请的操作之前，否则可能因P2P内存不足导致初始化失败。
     <!-- end id69 -->
 
-    <!-- npu="IPV350" id70 -->
-    对于IPV350，当前版本不支持该选项。
-    <!-- end id70 -->
     <!-- @ref: runtime/res/docs/zh/api_ref/25-02_Enumerations_res.md#id9 -->
 
 - ACL\_MEM\_MALLOC\_HUGE1G\_ONLY
@@ -1889,9 +1862,6 @@ typedef enum aclrtMemMallocPolicy {
     Atlas 200I/500 A2 推理产品、Atlas 推理系列产品、Atlas 训练系列产品，不支持该选项。
     <!-- end id71 -->
 
-    <!-- npu="IPV350" id72 -->
-    对于IPV350，当前版本不支持该选项。
-    <!-- end id72 -->
     <!-- @ref: runtime/res/docs/zh/api_ref/25-02_Enumerations_res.md#id10 -->
 
 - ACL\_MEM\_MALLOC\_HUGE1G\_ONLY\_P2P：
@@ -1906,9 +1876,6 @@ typedef enum aclrtMemMallocPolicy {
     Atlas 200I/500 A2 推理产品、Atlas 推理系列产品、Atlas 训练系列产品，不支持该选项。
     <!-- end id73 -->
 
-    <!-- npu="IPV350" id74 -->
-    对于IPV350，当前版本不支持该选项。
-    <!-- end id74 -->
     <!-- @ref: runtime/res/docs/zh/api_ref/25-02_Enumerations_res.md#id11 -->
 
 - ACL\_MEM\_TYPE\_LOW\_BAND\_WIDTH
@@ -1919,9 +1886,6 @@ typedef enum aclrtMemMallocPolicy {
     设置该选项无效，系统默认会根据硬件支持的内存类型选择。
     <!-- end id75 -->
 
-    <!-- npu="IPV350" id76 -->
-    对于IPV350，若配置ACL\_MEM\_TYPE\_LOW\_BAND\_WIDTH，则系统内部会默认采取ACL\_MEM\_MALLOC\_HUGE\_FIRST，优先申请大页。
-    <!-- end id76 -->
     <!-- @ref: runtime/res/docs/zh/api_ref/25-02_Enumerations_res.md#id12 -->
 
 - ACL\_MEM\_TYPE\_HIGH\_BAND\_WIDTH
@@ -1932,9 +1896,6 @@ typedef enum aclrtMemMallocPolicy {
     设置该选项无效，系统默认会根据硬件支持的内存类型选择。
     <!-- end id77 -->
 
-    <!-- npu="IPV350" id78 -->
-    对于IPV350，若配置ACL\_MEM\_TYPE\_HIGH\_BAND\_WIDTH，则系统内部会默认采取ACL\_MEM\_MALLOC\_HUGE\_FIRST，优先申请大页。
-    <!-- end id78 -->
     <!-- @ref: runtime/res/docs/zh/api_ref/25-02_Enumerations_res.md#id13 -->
 
 - ACL\_MEM\_ACCESS\_USER\_SPACE\_READONLY
@@ -2295,10 +2256,6 @@ typedef enum {
 对于Atlas 200I/500 A2 推理产品、Atlas 推理系列产品、Atlas 训练系列产品，不支持设置或获取`ACL_STREAM_LAUNCH_BLOCKING_MODE`属性。
 <!-- end id82 -->
 
-<!-- npu="IPV350" id83 -->
-当前不支持设置Stream优先级。
-当前不支持设置或获取`ACL_STREAM_LAUNCH_BLOCKING_MODE`属性。
-<!-- end id83 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/25-02_Enumerations_res.md#id15 -->
 
 <br>

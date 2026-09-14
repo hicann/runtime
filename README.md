@@ -1,5 +1,7 @@
 # runtime（运行时）
 
+简体中文 | [English](./README_en.md)
+
 ## 🔥Latest News
 
 - [2026/4] 支持Ascend 950PR/Ascend 950DT芯片。持续增强AclGraph功能，优化文档结构，提升开发者体验。

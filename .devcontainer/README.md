@@ -1,5 +1,7 @@
 # Dev Container 使用说明
 
+简体中文 | [English](./README_en.md)
+
 本目录包含 VS Code Dev Container 配置，用于在容器内编译 runtime 仓及执行 UT。
 
 ## 环境规格

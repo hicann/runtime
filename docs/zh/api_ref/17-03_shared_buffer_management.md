@@ -42,9 +42,6 @@ aclError acltdtAllocBuf(size_t size, uint32_t type, acltdtBuf *buf)
 <!-- npu="910" id2428 -->
 - Atlas 训练系列产品：不支持
 <!-- end id2428 -->
-<!-- npu="IPV350" id2429 -->
-- IPV350：不支持
-<!-- end id2429 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/17-03_shared_buffer_management_res.md#id1 -->
 
 ### 功能说明
@@ -105,9 +102,6 @@ aclError acltdtFreeBuf(acltdtBuf buf)
 <!-- npu="910" id3233 -->
 - Atlas 训练系列产品：不支持
 <!-- end id3233 -->
-<!-- npu="IPV350" id3234 -->
-- IPV350：不支持
-<!-- end id3234 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/17-03_shared_buffer_management_res.md#id2 -->
 
 ### 功能说明
@@ -156,9 +150,6 @@ aclError acltdtGetBufData(const acltdtBuf buf, void **dataPtr, size_t *size)
 <!-- npu="910" id1294 -->
 - Atlas 训练系列产品：不支持
 <!-- end id1294 -->
-<!-- npu="IPV350" id1295 -->
-- IPV350：不支持
-<!-- end id1295 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/17-03_shared_buffer_management_res.md#id3 -->
 
 ### 功能说明
@@ -211,9 +202,6 @@ aclError acltdtSetBufUserData(acltdtBuf buf, const void *dataPtr, size_t size, s
 <!-- npu="910" id643 -->
 - Atlas 训练系列产品：不支持
 <!-- end id643 -->
-<!-- npu="IPV350" id644 -->
-- IPV350：不支持
-<!-- end id644 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/17-03_shared_buffer_management_res.md#id4 -->
 
 ### 功能说明
@@ -265,9 +253,6 @@ aclError acltdtGetBufUserData(const acltdtBuf buf, void *dataPtr, size_t size, s
 <!-- npu="910" id83 -->
 - Atlas 训练系列产品：不支持
 <!-- end id83 -->
-<!-- npu="IPV350" id84 -->
-- IPV350：不支持
-<!-- end id84 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/17-03_shared_buffer_management_res.md#id5 -->
 
 ### 功能说明
@@ -319,9 +304,6 @@ aclError acltdtSetBufDataLen(acltdtBuf buf, size_t len)
 <!-- npu="910" id3380 -->
 - Atlas 训练系列产品：不支持
 <!-- end id3380 -->
-<!-- npu="IPV350" id3381 -->
-- IPV350：不支持
-<!-- end id3381 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/17-03_shared_buffer_management_res.md#id6 -->
 
 ### 功能说明
@@ -373,9 +355,6 @@ aclError acltdtGetBufDataLen(acltdtBuf buf, size_t *len)
 <!-- npu="910" id3478 -->
 - Atlas 训练系列产品：不支持
 <!-- end id3478 -->
-<!-- npu="IPV350" id3479 -->
-- IPV350：不支持
-<!-- end id3479 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/17-03_shared_buffer_management_res.md#id7 -->
 
 ### 功能说明
@@ -427,9 +406,6 @@ aclError acltdtCopyBufRef(const acltdtBuf buf, acltdtBuf *newBuf)
 <!-- npu="910" id181 -->
 - Atlas 训练系列产品：不支持
 <!-- end id181 -->
-<!-- npu="IPV350" id182 -->
-- IPV350：不支持
-<!-- end id182 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/17-03_shared_buffer_management_res.md#id8 -->
 
 ### 功能说明
@@ -485,9 +461,6 @@ aclError acltdtAppendBufChain(acltdtBuf headBuf, acltdtBuf buf)
 <!-- npu="910" id972 -->
 - Atlas 训练系列产品：不支持
 <!-- end id972 -->
-<!-- npu="IPV350" id973 -->
-- IPV350：不支持
-<!-- end id973 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/17-03_shared_buffer_management_res.md#id9 -->
 
 ### 功能说明
@@ -537,9 +510,6 @@ aclError acltdtGetBufChainNum(acltdtBuf headBuf, uint32_t *num)
 <!-- npu="910" id496 -->
 - Atlas 训练系列产品：不支持
 <!-- end id496 -->
-<!-- npu="IPV350" id497 -->
-- IPV350：不支持
-<!-- end id497 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/17-03_shared_buffer_management_res.md#id10 -->
 
 ### 功能说明
@@ -589,9 +559,6 @@ aclError acltdtGetBufFromChain(acltdtBuf headBuf, uint32_t index, acltdtBuf *buf
 <!-- npu="910" id2295 -->
 - Atlas 训练系列产品：不支持
 <!-- end id2295 -->
-<!-- npu="IPV350" id2296 -->
-- IPV350：不支持
-<!-- end id2296 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/17-03_shared_buffer_management_res.md#id11 -->
 
 ### 功能说明
