@@ -554,7 +554,7 @@ rtError_t CaptureModel::Execute(Stream* const stm, int32_t timeout)
     rtError_t error = ExecuteCommon(executeStream, timeout, RT_MODEL_CAPTURE_EXECUTE_DEFAULT);
     const bool isSyncExecuteStream = ((executeStream->Flags() & RT_STREAM_FORBIDDEN_DEFAULT) != 0U);
     if ((error == RT_ERROR_NONE) && !isSyncExecuteStream && StreamLaunchBlocking::ShouldLaunchBlock(executeStream)) {
-        executeStream->SetSyncMdlId(Id_());
+        executeStream->SetSyncMdlId(static_cast<int32_t>(Id_()));
         error = executeStream->Synchronize(false, timeout);
         executeStream->SetSyncMdlId(MODEL_ID_INVALID);
         ERROR_RETURN(

@@ -10,6 +10,7 @@
 
 #include "runtime.hpp"
 #include "device_enum_desc.hpp"
+#include <array>
 #include <fstream>
 #include <algorithm>
 #include <dlfcn.h>
@@ -69,7 +70,8 @@ namespace cce {
 namespace runtime {
 namespace {
 // Launch blocking is enabled only when the environment variable is exactly "1".
-constexpr char_t LAUNCH_BLOCKING_ENABLE_VALUE[] = "1";
+constexpr char_t LAUNCH_BLOCKING_ENABLE_VALUE = '1';
+constexpr size_t LAUNCH_BLOCKING_ENV_BUFFER_SIZE = 2U;
 constexpr uint32_t TSD_OK = 0U;
 constexpr int64_t RTS_INVALID_HARDWARE_VERSION = 0xFFFFFFFFFFFFFFFFLL;
 constexpr uint32_t TSD_SUBPROCESS_NUM_EXCEED_THE_LIMIT = 100U;
@@ -1338,10 +1340,12 @@ void Runtime::InitLaunchBlocking()
         return;
     }
 
-    char_t launchBlockingEnv[sizeof(LAUNCH_BLOCKING_ENABLE_VALUE)] = {};
+    std::array<char_t, LAUNCH_BLOCKING_ENV_BUFFER_SIZE> launchBlockingEnv{};
     launchBlockingEnvEnabled_ =
-        ((mmGetEnv("ASCEND_RT_LAUNCH_BLOCKING", launchBlockingEnv, sizeof(launchBlockingEnv)) == EN_OK) &&
-         (strcmp(launchBlockingEnv, LAUNCH_BLOCKING_ENABLE_VALUE) == 0));
+        ((mmGetEnv(
+              "ASCEND_RT_LAUNCH_BLOCKING", launchBlockingEnv.data(), static_cast<uint32_t>(launchBlockingEnv.size())) ==
+          EN_OK) &&
+         (launchBlockingEnv[0U] == LAUNCH_BLOCKING_ENABLE_VALUE) && (launchBlockingEnv[1U] == '\0'));
     if (launchBlockingEnvEnabled_) {
         RT_LOG(
             RT_LOG_EVENT,
