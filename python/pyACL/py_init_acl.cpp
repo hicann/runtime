@@ -597,7 +597,7 @@ PyObject* WrapAclsysGetVersionStr(PyObject* /* self */, PyObject* args)
     char versionStr[ACL_PKG_VERSION_MAX_SIZE] = {0};
     CHECK_NULL(PyArg_ParseTuple(args, "s", &pkgName), "acl.get_version_str args parse failed");
     aclError ret = aclsysGetVersionStr(pkgName, versionStr);
-    return Py_BuildValue("si", versionStr, ret);
+    return Py_BuildValue("s#i", versionStr, strnlen(versionStr, ACL_PKG_VERSION_MAX_SIZE), ret);
 }
 
 } // namespace
