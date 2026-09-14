@@ -144,17 +144,22 @@ int32_t FlashInitTransport(Transport* transport)
 
 int32_t FlashSendBuffer(ProfFileChunk* chunk, const char* dir)
 {
-    char absolutePath[MAX_OUTPUT_FILE_LEGTH] = {0};
-    int32_t ret = UpdateChunkName(chunk, absolutePath, MAX_OUTPUT_FILE_LEGTH, dir);
-    if (ret != PROFILING_SUCCESS) {
-        MSPROF_LOGE("Failed to SendDataBuffer, fileName: %s, baseDir: %s", chunk->fileName, dir);
+    char* absolutePath = OsalCalloc(MAX_OUTPUT_FILE_LEGTH);
+    if (absolutePath == NULL) {
+        MSPROF_LOGE("OsalMalloc absolutePath failed.");
         OSAL_MEM_FREE(chunk->chunk);
         OSAL_MEM_FREE(chunk);
         return PROFILING_FAILED;
     }
-    SaveChunkToFlash(chunk->chunkType, absolutePath, chunk->chunk, chunk->chunkSize);
-    MSPROF_LOGI("End to SendDataBuffer, fileName: %s, absolutePath: %s", chunk->fileName, absolutePath);
+    int32_t ret = UpdateChunkName(chunk, absolutePath, MAX_OUTPUT_FILE_LEGTH, dir);
+    if (ret != PROFILING_SUCCESS) {
+        MSPROF_LOGE("Failed to SendDataBuffer, fileName: %s, baseDir: %s", chunk->fileName, dir);
+    } else {
+        SaveChunkToFlash(chunk->chunkType, absolutePath, chunk->chunk, chunk->chunkSize);
+        MSPROF_LOGI("End to SendDataBuffer, fileName: %s, absolutePath: %s", chunk->fileName, absolutePath);
+    }
     OSAL_MEM_FREE(chunk->chunk);
     OSAL_MEM_FREE(chunk);
-    return PROFILING_SUCCESS;
+    OsalFree(absolutePath);
+    return ret;
 }
