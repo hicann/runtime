@@ -71,7 +71,7 @@ void Argparser::PrintHelp()
  * @brief Method. Add an option to argparser to compose a command app.
  * @param [in] lname: long name of option
  * @param [in] help: used to display help information for option
- * @param [in] defaultValue: set defalut value of option
+ * @param [in] defaultValue: set default value of option
  * @param [in] checkValidFunc: function use to check this option valid, will be called in CheckOptionValue
  * @param [in] valueRange: valid value range of this option, will be checked in CheckOptionValue
  * @return Argparser
@@ -95,7 +95,7 @@ Argparser& Argparser::AddOption(
  * @brief Method. Add an option to argparser to compose a command app, with checkValidFunc.
  * @param [in] lname: long name of option
  * @param [in] help: used to display help information for option
- * @param [in] defaultValue: set defalut value of option
+ * @param [in] defaultValue: set default value of option
  * @param [in] checkValidFunc: function use to check this option valid, will be called in CheckOptionValue
  * @return Argparser
  */
@@ -111,7 +111,7 @@ Argparser& Argparser::AddOption(
  * @brief Method. Add an option to argparser to compose a command app, with valueRange.
  * @param [in] lname: long name of option
  * @param [in] help: used to display help information for option
- * @param [in] defaultValue: set defalut value of option
+ * @param [in] defaultValue: set default value of option
  * @param [in] valueRange: valid value range of this option, will be checked in CheckOptionValue
  * @return Argparser
  */
@@ -127,7 +127,7 @@ Argparser& Argparser::AddOption(
  * @brief Method. Add an option to argparser to compose a command app, no need option check.
  * @param [in] lname: long name of option
  * @param [in] help: used to display help information for option
- * @param [in] defaultValue: set defalut value of option
+ * @param [in] defaultValue: set default value of option
  * @return Argparser
  */
 Argparser& Argparser::AddOption(std::string lname, std::string help, std::string defaultValue)

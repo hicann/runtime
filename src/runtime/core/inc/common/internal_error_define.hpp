@@ -35,7 +35,7 @@ static constexpr uint32_t INVALID_COPY_MODULEID = 0xFFFFFFFFU;
 
 /**
  * @ingroup dvrt_base
- * @brief runtime internel error numbers.
+ * @brief runtime internal error numbers.
  */
 constexpr int32_t RT_ERRORCODE_BASE = 0x07010000; // minimum inner errcode
 

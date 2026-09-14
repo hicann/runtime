@@ -90,7 +90,7 @@ public:
 
     /**
      * @ingroup AicpuDrvManager
-     * @brief it is used qurey buff group info including groupname and attribute.
+     * @brief Queries buffer group information, including the group name and attributes.
      * @param [in] procId : process id.
      * @param [in] buffGrpInfo : buff info include name and attribute.
      * @return AICPU_SCHEDULE_OK: success, other: error code

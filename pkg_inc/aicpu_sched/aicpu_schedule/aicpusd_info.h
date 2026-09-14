@@ -272,7 +272,7 @@ struct __attribute__((visibility("default"))) CheckKernelSupportedConfig {
 
 struct __attribute__((visibility("default"))) DataFlowExceptionNotify {
     uint64_t transId;
-    uint32_t type;         // 0:Exception occured, 1:Exception expired
+    uint32_t type;         // 0: Exception occurred, 1: Exception expired
     uint32_t modelIdNum;
     uint64_t modelIdsAddr; // ptr which point to modelIds(uint32_t)
     char rsv[40];
