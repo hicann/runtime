@@ -179,7 +179,7 @@ public:
         return;
     }
 
-    inline bool GetHeadNodeFlag() { return headNodeFlag_; }
+    inline bool GetHeadNodeFlag() const { return headNodeFlag_; }
 
     inline void SetHeadNodeFlag(const bool val) { headNodeFlag_ = val; }
 

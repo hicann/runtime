@@ -164,7 +164,7 @@ TEST_F(HostCpuSchedulerStubSt, HostCpuSchedulerAicpuSdCustDumpProcessStubStSucce
     char_t str[1];
     const uint32_t len = 1;
     struct event_proc_result rsp = {};
-    AicpuSchedule::AicpuSdCustDumpProcess::GetInstance().DoUdfDatadumpSubmitEventSync(str, len, rsp);
+    AicpuSchedule::AicpuSdCustDumpProcess::GetInstance().DoUdfDatadumpSubmitEventSync(str, len, &rsp);
     AicpuSchedule::AicpuSdCustDumpProcess::GetInstance().DoUdfDatadumpTask(drvEventInfo);
     AicpuSchedule::AicpuSdCustDumpProcess::GetInstance().DatadumpTaskProcess(drvEventInfo);
     AicpuSchedule::AicpuSdCustDumpProcess::GetInstance().InitCustDumpProcess(deviceId, runMode);

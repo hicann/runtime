@@ -58,7 +58,7 @@ public:
      */
     int32_t ExecuteTsKernelTask(
         aicpu::HwtsTsKernel& tsKernelInfo, const uint32_t threadIndex, const uint64_t drvSubmitTick,
-        const uint64_t drvSchedTick, const uint64_t streamId = 65535U, const uint64_t taskId = 65535U);
+        const uint64_t drvSchedTick, const uint64_t streamId = 65535U, const uint64_t taskId = 65535U) const;
 
     /**
      * @ingroup AicpuEventProcess

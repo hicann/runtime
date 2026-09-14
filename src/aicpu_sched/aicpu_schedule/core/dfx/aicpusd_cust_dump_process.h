@@ -75,7 +75,7 @@ private:
     int32_t DoCustDatadumpTask(const event_info& drvEventInfo) const;
     int32_t DoUdfDatadumpTask(const event_info& drvEventInfo) const;
     int32_t DoUdfDatadumpSubmitEventSync(
-        const char_t* const msg, const uint32_t len, struct event_proc_result& rsp) const;
+        const char_t* const msg, const uint32_t len, struct event_proc_result* rsp) const;
     int32_t DatadumpTaskProcess(const event_info& drvEventInfo) const;
     AicpuSdCustDumpProcess();
     ~AicpuSdCustDumpProcess();

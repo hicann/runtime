@@ -340,7 +340,8 @@ int32_t AicpuScheduleInterface::InitAICPUScheduler(
     return AICPU_SCHEDULE_OK;
 }
 
-int32_t AicpuScheduleInterface::BuildAndSetContext(const uint32_t deviceId, const pid_t hostPid, const uint32_t vfId)
+int32_t AicpuScheduleInterface::BuildAndSetContext(
+    const uint32_t deviceId, const pid_t hostPid, const uint32_t vfId) const
 {
     aicpu::aicpuContext_t context = {.deviceId = deviceId, .tsId = 0U, .hostPid = hostPid, .vfId = vfId};
     uint32_t uniqueVfId = context.vfId;
@@ -526,7 +527,7 @@ int32_t AicpuScheduleInterface::StopAICPUScheduler(const std::vector<uint32_t>& 
 }
 
 int32_t AicpuScheduleInterface::StopAICPUSchedulerWithFlag(
-    const std::vector<uint32_t>& deviceVec, const pid_t hostPid, const bool waitThreadStop)
+    const std::vector<uint32_t>& deviceVec, const pid_t hostPid, bool waitThreadStop)
 {
     if (deviceVec.empty()) {
         aicpusd_err("deviceVec is empty.");

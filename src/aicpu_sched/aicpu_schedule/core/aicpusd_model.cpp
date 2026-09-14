@@ -1184,7 +1184,7 @@ GatherResult AicpuModel::SelectGatheredMbuf(Mbuf*** const mbufPptr, const int32_
 }
 
 GatherResult AicpuModel::GatherDequedMbuf(
-    Mbuf*** const mbufPptr, std::pair<uint64_t, uint32_t>& mbufKey, const int32_t timeOutMs, const uint32_t cacheNum)
+    Mbuf*** mbufPptr, std::pair<uint64_t, uint32_t>& mbufKey, const int32_t timeOutMs, const uint32_t cacheNum)
 {
     const uint32_t timeOutNs = static_cast<uint32_t>(timeOutMs * TIMES_MS_TO_NS);
     AICPUSD_CHECK(

@@ -20,13 +20,13 @@ DV_ONLINE drvError_t __attribute__((weak)) halGetDeviceCountFromChip(int chipId,
 drvError_t __attribute__((weak)) halGetVdevNum(uint32_t* numDev);
 drvError_t __attribute__((weak)) halBindCgroup(BIND_CGROUP_TYPE bindType);
 DV_ONLINE int __attribute__((weak)) halGetDeviceVfMax(unsigned int devId, unsigned int* vfMaxNum);
-drvError_t __attribute__((weak))
-drvQueryProcessHostPid(int pid, unsigned int* chipId, unsigned int* vfid, unsigned int* hostPid, unsigned int* cpType);
+drvError_t __attribute__((weak)) drvQueryProcessHostPid(
+    int pid, unsigned int* chip_id, unsigned int* vfid, unsigned int* host_pid, unsigned int* cp_type);
 drvError_t __attribute__((weak)) halGrpCacheAlloc(const char* name, unsigned int devId, GrpCacheAllocPara* para);
 drvError_t __attribute__((weak)) halDrvEventThreadInit(unsigned int devId);
 drvError_t __attribute__((weak)) halDrvEventThreadUninit(unsigned int devId);
 drvError_t __attribute__((weak))
-halResAddrMap(unsigned int devId, struct res_addr_info* resInfo, unsigned long* va, unsigned int* len);
+halResAddrMap(unsigned int devId, struct res_addr_info* res_info, unsigned long* va, unsigned int* len);
 drvError_t __attribute__((weak)) halGetSocVersion(uint32_t devId, char* socVersion, uint32_t len);
 drvError_t __attribute__((weak)) halMemPoolMalloc(soma_mem_pool_t pool, uint64_t va, uint64_t size, int32_t policy);
 drvError_t __attribute__((weak)) halMemPoolFree(soma_mem_pool_t pool, uint64_t va, uint64_t size, int32_t policy);

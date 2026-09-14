@@ -267,10 +267,10 @@ int32_t AicpuSdCustDumpProcess::DoCustDatadumpTask(const event_info& drvEventInf
 }
 
 int32_t AicpuSdCustDumpProcess::DoUdfDatadumpSubmitEventSync(
-    const char_t* const msg, const uint32_t len, struct event_proc_result& rsp) const
+    const char_t* const msg, const uint32_t len, struct event_proc_result* rsp) const
 {
     uint32_t headLen = sizeof(struct event_sync_msg);
-    if (len < headLen) {
+    if ((msg == nullptr) || (rsp == nullptr) || (len < headLen)) {
         aicpusd_err("len[%u], headLen[%u].", len, headLen);
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
@@ -289,7 +289,7 @@ int32_t AicpuSdCustDumpProcess::DoUdfDatadumpSubmitEventSync(
     backEvent.event_id = static_cast<EVENT_ID>(msgHead.event_id);
     backEvent.subevent_id = msgHead.subevent_id;
     backEvent.msg_len = sizeof(struct event_proc_result);
-    backEvent.msg = PtrToPtr<struct event_proc_result, char_t>(&rsp);
+    backEvent.msg = PtrToPtr<struct event_proc_result, char_t>(rsp);
     const uint32_t deviceId = deviceId_;
     ret = halEschedSubmitEvent(deviceId, &backEvent);
     aicpusd_info(
@@ -347,7 +347,7 @@ int32_t AicpuSdCustDumpProcess::DoUdfDatadumpTask(const event_info& drvEventInfo
 
     struct event_proc_result rsp = {};
     rsp.ret = ret;
-    ret = DoUdfDatadumpSubmitEventSync(drvEventInfo.priv.msg, drvEventInfo.priv.msg_len, rsp);
+    ret = DoUdfDatadumpSubmitEventSync(drvEventInfo.priv.msg, drvEventInfo.priv.msg_len, &rsp);
     if (ret != 0) {
         aicpusd_err("DoUdfDatadumpSubmitEventSync failed, ret[%d], deviceId[%u]", ret, deviceId);
         return AICPU_SCHEDULE_ERROR_DUMP_FAILED;
@@ -392,7 +392,7 @@ int32_t AicpuSdCustDumpProcess::CreateUdfDatadumpThread(const char_t* msg, const
     }
     struct event_proc_result rsp = {};
     rsp.ret = ret;
-    ret = DoUdfDatadumpSubmitEventSync(msg, len, rsp);
+    ret = DoUdfDatadumpSubmitEventSync(msg, len, &rsp);
     if (ret != 0) {
         aicpusd_err("DoUdfDatadumpSubmitEventSync failed, ret[%d]", ret);
         return AICPU_SCHEDULE_ERROR_DUMP_FAILED;
