@@ -31,6 +31,7 @@ constexpr uint64_t OW_NOT_ENABLE_ERR_CODE = 0x6B6BULL;
 constexpr uint64_t INVALID_CONDITION_ERR_CODE = 0x7A7BULL;
 constexpr uint64_t AXI_USER_VA_CFG_MASK = 0x900000009ULL;
 constexpr uint64_t BATCH_DEQUE_DOT_DEFAULT_VAL = 0xFFULL;
+constexpr uint64_t DQS_ALLOC_ERROR_CODE_DEFAULT_VAL = 0xFFULL;
 
 constexpr rtStarsCondIsaRegister_t r0 = RT_STARS_COND_ISA_REGISTER_R0;
 constexpr rtStarsCondIsaRegister_t r1 = RT_STARS_COND_ISA_REGISTER_R1;
@@ -1467,6 +1468,14 @@ void ConstructConditionCopyFc(RtStarsDqsConditionCopyFc& fc, const RtStarsDqsCon
 static void ConstructInterChipPreProcAllocMbuf(
     RtStarsDqsInterChipPreProcFc& fc, const RtStarsDqsInterChipPreProcPara& funcCallPara)
 {
+    // r3: dstAllocErrorCodeAddr
+    ConstructLLWI(r3, funcCallPara.dstAllocErrorCodeAddr, fc.llwiDstAllocErrorCodeAddr);
+    ConstructLHWI(r3, funcCallPara.dstAllocErrorCodeAddr, fc.lhwiDstAllocErrorCodeAddr);
+    // r2: dstAllocErrorCode default value
+    ConstructLLWI(r2, DQS_ALLOC_ERROR_CODE_DEFAULT_VAL, fc.llwiDstAllocErrorCodeDefault);
+    ConstructLHWI(r2, DQS_ALLOC_ERROR_CODE_DEFAULT_VAL, fc.lhwiDstAllocErrorCodeDefault);
+    ConstructStore(r3, r2, 0U, RT_STARS_COND_ISA_STORE_FUNC3_SB, fc.sbInitDstAllocErrorCode);
+
     // read immd reg va cfg mask
     ConstructLLWI(r6, AXI_USER_VA_CFG_MASK, fc.llwi);
 
@@ -1486,6 +1495,7 @@ static void ConstructInterChipPreProcAllocMbuf(
     // r2: error_code = mbufHandle[31:29]
     ConstructOpImmSlli(r1, r2, 32U, RT_STARS_COND_ISA_OP_IMM_FUNC3_SLLI, RT_STARS_COND_ISA_OP_IMM_FUNC7_SLLI, fc.slli1);
     ConstructOpImmSlli(r2, r2, 61U, RT_STARS_COND_ISA_OP_IMM_FUNC3_SRLI, RT_STARS_COND_ISA_OP_IMM_FUNC7_SRLI, fc.srli1);
+    ConstructStore(r3, r2, 0U, RT_STARS_COND_ISA_STORE_FUNC3_SB, fc.sbDstAllocErrorCode);
 }
 
 static void ConstructInterChipPreProcErrBranch(RtStarsDqsInterChipPreProcFc& fc)

@@ -361,6 +361,12 @@ struct RtStarsDqsConditionCopyFc {
 };
 
 struct RtStarsDqsInterChipPreProcFc {
+    RtStarsCondOpLLWI llwiDstAllocErrorCodeAddr;
+    RtStarsCondOpLHWI lhwiDstAllocErrorCodeAddr;
+    RtStarsCondOpLLWI llwiDstAllocErrorCodeDefault;
+    RtStarsCondOpLHWI lhwiDstAllocErrorCodeDefault;
+    RtStarsCondOpStore sbInitDstAllocErrorCode;
+
     RtStarsCondOpLLWI llwi;
     RtStarsCondOpLLWI llwi1;
     RtStarsCondOpLHWI lhwi1;
@@ -372,6 +378,7 @@ struct RtStarsDqsInterChipPreProcFc {
 
     RtStarsCondOpImmSLLI slli1;
     RtStarsCondOpImmSLLI srli1;
+    RtStarsCondOpStore sbDstAllocErrorCode;
 
     RtStarsCondOpLLWI llwiErrCodeFour;
     RtStarsCondOpLHWI lhwiErrCodeFour;
