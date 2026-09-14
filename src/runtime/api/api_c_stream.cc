@@ -454,7 +454,8 @@ rtError_t rtsStreamSetAttribute(rtStream_t stm, rtStreamAttr stmAttrId, rtStream
                 static_cast<int32_t>(stmAttrId)),
             "stmAttrId",
             "[" + std::to_string(RT_STREAM_ATTR_FAILURE_MODE) + ", " + std::to_string(RT_STREAM_ATTR_MAX) + ")");
-        ERROR_RETURN_WITH_EXT_ERRCODE(RT_ERROR_INVALID_VALUE);
+        REPORT_FUNC_ERROR_REASON(RT_ERROR_INVALID_VALUE);
+        return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_INVALID_VALUE);
     }
     const rtError_t error = apiInstance->StreamSetAttribute(exeStream, stmAttrId, attrValue);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
@@ -480,7 +481,8 @@ rtError_t rtsStreamGetAttribute(rtStream_t stm, rtStreamAttr stmAttrId, rtStream
                 static_cast<int32_t>(stmAttrId)),
             "stmAttrId",
             "[" + std::to_string(RT_STREAM_ATTR_FAILURE_MODE) + ", " + std::to_string(RT_STREAM_ATTR_MAX) + ")");
-        ERROR_RETURN_WITH_EXT_ERRCODE(RT_ERROR_INVALID_VALUE);
+        REPORT_FUNC_ERROR_REASON(RT_ERROR_INVALID_VALUE);
+        return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_INVALID_VALUE);
     }
     const rtError_t error = apiInstance->StreamGetAttribute(exeStream, stmAttrId, attrValue);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
