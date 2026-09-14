@@ -23,7 +23,7 @@ class CondHandle;
 class Model;
 class Notify;
 class Stream;
-class TaskGroup;
+struct TaskGroup;
 struct tagTaskInfoStru;
 typedef tagTaskInfoStru TaskInfo;
 
