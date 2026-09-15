@@ -31,7 +31,6 @@ The key directory structure is as follows:
 ├── example                                        # Sample code based on acl interfaces
 ├── include                                        # Header files for the 3.1 package release
 |   ├── dfx                                        # dfx-related header files
-|   ├── driver                                     # Driver-related header files
 |   ├── external                                   # Header files provided by this repository
 |   ......
 ├── pkg_inc                                        # Repository management-related header files
@@ -151,8 +150,8 @@ After installing the CANN package, verify that the environment and driver are fu
 - **Check CANN version**
 
   ```bash
-    # View the version information from the version field of the CANN Toolkit development suite package (default path installation). <arch> indicates the CPU architecture (aarch64 or x86_64).
-    cat /usr/local/Ascend/cann/<arch>-linux/ascend_toolkit_install.info
+    # View the version information from the version field of the CANN Toolkit development suite package (default path installation). ${arch} indicates the CPU architecture (aarch64 or x86_64).
+    cat /usr/local/Ascend/cann/${arch}-linux/ascend_toolkit_install.info
     # View the CANN ops package version information (default path installation)
     cat /usr/local/Ascend/cann/${arch}-linux/ascend_ops_install.info
   ```
@@ -206,9 +205,9 @@ bash build.sh --cann_3rd_lib_path=third_party
 
 For more compilation parameters, run `bash build.sh -h` to view them.
 
-After compilation, the `cann-npu-runtime_<version>_linux-<arch>.run` software package will be generated in the `build_out` directory.
-\<version> indicates the version number.
-\<arch> indicates the operating system architecture, with values including x86_64 and aarch64.
+After compilation, the `cann-npu-runtime_${version}_linux-${arch}.run` software package will be generated in the `build_out` directory.
+`${version}` indicates the version number.
+`${arch}` indicates the operating system architecture, with values including x86_64 and aarch64.
 
 **Open-source Third-party Software Dependencies**
 
@@ -240,11 +239,11 @@ Run the following command to install the compiled runtime software package.
 
 ```bash
 cd build_out;
-./cann-npu-runtime_<version>_linux-<arch>.run --full --install-path=${install_path}
+./cann-npu-runtime_${version}_linux-${arch}.run --full --install-path=${install_path}
 ```
-- $\{version\}: Indicates the run package version number.
-- $\{arch\}: Indicates the CPU architecture, such as aarch64 or x86_64.
-- $\{install\_path\}: Indicates the specified installation path. This is optional. The default installation path is `/usr/local/Ascend`.
+- `${version}`: Indicates the run package version number.
+- `${arch}`: Indicates the CPU architecture, such as aarch64 or x86_64.
+- `${install_path}`: Indicates the specified installation path. This is optional. The default installation path is `/usr/local/Ascend`.
 
 After installation, the user-compiled Runtime software package will replace the Runtime-related software in the installed CANN development suite package.
 
@@ -257,9 +256,9 @@ Executing UT test cases requires the googletest unit testing framework. For deta
 Compile and execute `UT` test cases:
 
 ```bash
-bash tests/build_ut.sh --ut=acl --target=ascendcl_utest -c --cann_3rd_lib_path={your_3rd_party_path}
+bash tests/build_ut.sh --ut=acl --target=ascendcl_utest -c --cann_3rd_lib_path=${your_3rd_party_path}
 ```
-Where `{your_3rd_party_path}` must be an absolute path.
+Where `${your_3rd_party_path}` must be an absolute path.
 
 **Specify Test Module**
 

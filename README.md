@@ -29,7 +29,6 @@
   ├── example                                        # 基于acl接口开发的样例代码
   ├── include                                        # 3.1包整体对外发布的头文件
   |   ├── dfx                                        # dfx相关头文件  
-  |   ├── driver                                     # 驱动相关头文件
   |   ├── external                                   # 本仓对外提供的头文件
   |   ......
   ├── pkg_inc                                        # 仓间管控相关头文件 
@@ -149,8 +148,8 @@ sudo yum install python3 python3-pip python3-devel gcc gcc-c++ glibc-devel cmake
 - **检查CANN版本**
 
   ```bash
-    # 查看CANN Toolkit开发套件包的version字段提供的版本信息（默认路径安装），<arch>表示CPU架构（aarch64或x86_64）。
-    cat /usr/local/Ascend/cann/<arch>-linux/ascend_toolkit_install.info
+    # 查看CANN Toolkit开发套件包的version字段提供的版本信息（默认路径安装），${arch}表示CPU架构（aarch64或x86_64）。
+    cat /usr/local/Ascend/cann/${arch}-linux/ascend_toolkit_install.info
     # 查看CANN ops包版本信息（默认路径安装）
     cat /usr/local/Ascend/cann/${arch}-linux/ascend_ops_install.info
   ```
@@ -203,9 +202,9 @@ bash build.sh --cann_3rd_lib_path=third_party
 ```
 更多编译参数可以通过`bash build.sh -h`查看。
 
-编译完成之后会在`build_out`目录下生成`cann-npu-runtime_<version>_linux-<arch>.run`软件包。
-\<version>表示版本号。
-\<arch>表示操作系统架构，取值包括x86_64与aarch64。
+编译完成之后会在`build_out`目录下生成`cann-npu-runtime_${version}_linux-${arch}.run`软件包。
+`${version}`表示版本号。
+`${arch}`表示操作系统架构，取值包括x86_64与aarch64。
 
 
 **开源第三方软件依赖**
@@ -237,11 +236,11 @@ runtime在编译时，依赖的第三方开源软件列表如下：
 
 ```bash
 cd build_out;
-./cann-npu-runtime_<version>_linux-<arch>.run --full --install-path=${install_path}
+./cann-npu-runtime_${version}_linux-${arch}.run --full --install-path=${install_path}
 ```
-- \$\{version\}：表示run包版本号。
-- \$\{arch\}：表示CPU架构，如aarch64、x86_64。
-- \$\{install\_path\}：表示指定安装路径，可选，默认安装在`/usr/local/Ascend`目录。
+- `${version}`：表示run包版本号。
+- `${arch}`：表示CPU架构，如aarch64、x86_64。
+- `${install_path}`：表示指定安装路径，可选，默认安装在`/usr/local/Ascend`目录。
 
 安装完成之后，用户编译生成的Runtime软件包会替换已安装CANN开发套件包中的Runtime相关软件。
                                        
@@ -254,9 +253,9 @@ cd build_out;
 编译执行`UT`测试用例：
 
 ```bash
-bash tests/build_ut.sh --ut=acl --target=ascendcl_utest -c --cann_3rd_lib_path={your_3rd_party_path}
+bash tests/build_ut.sh --ut=acl --target=ascendcl_utest -c --cann_3rd_lib_path=${your_3rd_party_path}
 ```
-其中，`{your_3rd_party_path}`必须为绝对路径。
+其中，`${your_3rd_party_path}`必须为绝对路径。
 
 **指定测试模块**
 
@@ -283,7 +282,7 @@ bash tests/build_ut.sh --ut=acl --target=ascendcl_utest -c --cann_3rd_lib_path={
 更加详细的编译命令参数可以通过`bash tests/build_ut.sh -h`查看。
 
 
-UT测试用例编译的过程件以及产物位于`output`和`build`下，如果想清除历史编译记录，可以执行如下操作：
+UT测试用例编译的中间产物以及产物位于`output`和`build`下，如果想清除历史编译记录，可以执行如下操作：
 
 ```bash
 rm -rf output/ build/
