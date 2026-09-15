@@ -905,9 +905,9 @@ rtError_t Context::StreamBeginTaskUpdate(Stream* const stm, TaskGroup* handle) c
             (taskInfo == nullptr) || (taskInfo->updateFlag == static_cast<uint8_t>(TaskUpdateFlag::RT_TASK_DISABLE)),
             RT_ERROR_INVALID_VALUE, "handle",
             RtFmtMsg(
-                "The task group handle contains disabled or recycled tasks, stream_id=%u, task_id=%d",
-                "Such tasks do not support update", static_cast<uint32_t>(taskId.first),
-                static_cast<int32_t>(taskId.second)),
+                "The task group handle contains disabled or recycled tasks, stream_id=%u, task_id=%d. "
+                "Such tasks do not support update",
+                static_cast<uint32_t>(taskId.first), static_cast<int32_t>(taskId.second)),
             "Marking the start of the task to be updated");
     }
 
