@@ -13,6 +13,9 @@
 #include "securec.h"
 #include <pwd.h>
 #include <errno.h>
+#include <fcntl.h>
+#include <fstream>
+#include <string>
 #include <pthread.h>
 #include <signal.h>
 #include <sys/ptrace.h>
@@ -667,4 +670,35 @@ TEST_F(TraceStackcoreUtest, TestStackcoreLogSave_Failed)
     STACKTRACE_LOG_RUN("test log");
     StackcoreLogSave();
     StackcoreLogExit();
+}
+
+TEST_F(TraceStackcoreUtest, TestStackcoreLogSave_ExceedMaxNum)
+{
+    // Verify saving after more than STACKTRACE_LOG_MAX_NUM (200, private to the .c)
+    // log entries does not read out of bounds (issue #939, ASan heap overflow before fix).
+    TraceExit();
+    TraStatus ret = StacktraceLogInit("[test logcat]");
+    EXPECT_EQ(TRACE_SUCCESS, ret);
+    StacktraceLogSetPath(LLT_TEST_DIR, "test_log_exceed");
+
+    const int32_t exceedNum = 250;
+    for (int32_t i = 0; i < exceedNum; i++) {
+        STACKTRACE_LOG_RUN("exceed max log entry %d", i);
+    }
+    StackcoreLogSaveWithFlag((uint32_t)O_CREAT | (uint32_t)O_RDWR | (uint32_t)O_TRUNC);
+    StackcoreLogExit();
+
+    // The file must keep exactly the first 200 entries, so a broken truncation
+    // also fails loudly in non-ASan builds, not only under the sanitizer.
+    const int32_t maxNum = 200; // STACKTRACE_LOG_MAX_NUM, private to stacktrace_logger.c
+    std::ifstream logFile(std::string(LLT_TEST_DIR) + "/test_log_exceed.txt");
+    ASSERT_TRUE(logFile.is_open());
+    int32_t entryCount = 0;
+    std::string line;
+    while (std::getline(logFile, line)) {
+        if (line.find("exceed max log entry") != std::string::npos) {
+            entryCount++;
+        }
+    }
+    EXPECT_EQ(maxNum, entryCount);
 }
