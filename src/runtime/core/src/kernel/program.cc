@@ -31,7 +31,7 @@ namespace cce {
 namespace runtime {
 
 rtError_t AllocAndCopyHbmBuf(
-    Device* const dev, const void* const hostBuf, const size_t bufSize, void** const devBuf,
+    const Device* const dev, const void* const hostBuf, const size_t bufSize, void** const devBuf,
     std::vector<void*>& allocMem)
 {
     const uint32_t devId = dev->Id_();
