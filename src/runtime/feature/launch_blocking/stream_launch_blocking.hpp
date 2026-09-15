@@ -21,12 +21,12 @@ class Stream;
 
 class StreamLaunchBlocking {
 public:
-    static rtError_t SetLaunchBlockingMode(Stream* stm, uint32_t mode);
-    static rtError_t GetLaunchBlockingMode(const Stream* stm, uint32_t* mode);
-    static rtError_t NonBlockingLaunchBegin(Stream* stream);
-    static rtError_t NonBlockingLaunchEnd(Stream* stream);
-    static bool IsNonBlockingLaunchActive(const Stream* stm);
-    static bool ShouldLaunchBlock(const Stream* stm);
+    static rtError_t SetLaunchBlockingMode(Stream* const stm, const uint32_t mode);
+    static rtError_t GetLaunchBlockingMode(const Stream* const stm, uint32_t* const mode);
+    static rtError_t NonBlockingLaunchBegin(Stream* const stream);
+    static rtError_t NonBlockingLaunchEnd(Stream* const stream);
+    static bool IsNonBlockingLaunchActive(const Stream* const stm);
+    static bool ShouldLaunchBlock(const Stream* const stm);
 
 private:
     friend class Stream;
@@ -37,8 +37,8 @@ private:
     void Begin() { nonBlockingDepth_.Add(1U); }
     bool End(bool& isNonBlockingSectionClosed);
 
-    static rtError_t GetLaunchBlockingState(Stream* stm, StreamLaunchBlocking*& launchBlockingState);
-    static void ReleaseLaunchBlockingState(Stream* stm);
+    static rtError_t GetLaunchBlockingState(Stream* const stm, StreamLaunchBlocking*& launchBlockingState);
+    static void ReleaseLaunchBlockingState(Stream* const stm);
 
     Atomic<uint32_t> mode_;
     Atomic<uint32_t> nonBlockingDepth_;
