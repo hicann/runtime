@@ -2,6 +2,8 @@
 
 The `adump` directory focuses on Dump-related capabilities, currently organized progressively as "operator information statistics -> callback Dump -> configuration-based Dump -> Exception operator Dump":
 
+Run `bash run.sh` in a CANN environment to execute all Dump samples in sequence. The script reports the result of each sample and returns a non-zero status if any sample fails.
+
 ## File Analysis
 
 For Dump file paths, conversion commands, callback fields, Tensor fields, and analysis suggestions, see [Dump File Analysis](./dump_artifact_analysis_en.md).

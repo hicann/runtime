@@ -6,3 +6,4 @@
 
 - [profiling](./profiling/README.md)：性能数据采集、解析与展示。
 - [adump](./adump/README.md)：按参数Dump、回调Dump、配置式Dump递进组织的Dump示例集合。
+- [log](./log/README.md)：对外 ACL 日志接口样例。

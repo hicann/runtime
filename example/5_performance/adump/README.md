@@ -2,6 +2,8 @@
 
 `adump`目录聚焦Dump相关能力，当前按“算子信息统计 -> 回调Dump -> 配置式Dump -> 异常算子Dump”递进组织：
 
+在 CANN 环境中执行 `bash run.sh` 可依次运行全部 Dump 样例。脚本会输出每个样例的成功或失败结果，并在任一样例失败时返回非 0 退出码。
+
 ## 文件解读
 
 Dump文件路径、转换命令和字段含义请参见[Dump文件解读](./dump_artifact_analysis.md)。

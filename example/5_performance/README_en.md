@@ -6,3 +6,4 @@ This chapter focuses on performance analysis, Dump data collection and diagnosti
 
 - [profiling](./profiling/README_en.md): Performance data collection, parsing, and display.
 - [adump](./adump/README_en.md): A collection of Dump examples organized progressively from parameter-based Dump to callback Dump, configuration-based Dump, and Exception Dump.
+- [log](./log/README_en.md): Samples for the public ACL logging APIs.

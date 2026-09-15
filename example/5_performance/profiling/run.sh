@@ -1,3 +1,4 @@
+#!/bin/bash
 # -----------------------------------------------------------------------------------------------------------
 # Copyright (c) 2026 Huawei Technologies Co., Ltd.
 # This program is free software, you can redistribute it and/or modify it under the terms and conditions of
@@ -8,22 +9,27 @@
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
 
-cmake_minimum_required(VERSION 3.16.0)
+set -euo pipefail
 
-project(Runtime_Adump_Model_Config_Sample)
-set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "Build type Release/Debug (default Debug)" FORCE)
-set(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_LIST_DIR}/out" CACHE STRING "path for install()" FORCE)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/../../common/resolve_cann_env.sh"
+resolve_cann_env
 
-include_directories(${ASCEND_CANN_PACKAGE_PATH}/include
-                    ${ASCEND_CANN_PACKAGE_PATH}/aclnn
-                    ${CMAKE_CURRENT_SOURCE_DIR}/../../..)
+samples=("0_create_config" "1_msproftx" "2_subscribe_model" "3_mstx_with_domain")
+failed=0
+for sample in "${samples[@]}"; do
+    sample_dir="${SCRIPT_DIR}/${sample}"
+    echo "[INFO] Running profiling sample: ${sample}"
+    if (cd "${sample_dir}" && bash run.sh); then
+        echo "[SUCCESS] profiling sample ${sample} completed successfully."
+    else
+        echo "[FAILURE] profiling sample ${sample} failed."
+        failed=1
+    fi
+done
 
-link_directories(${ASCEND_CANN_PACKAGE_PATH}/lib64)
-
-add_executable(main main.cpp)
-
-target_link_libraries(main PRIVATE
-                    ${ASCEND_CANN_PACKAGE_PATH}/lib64/libascendcl.so
-                    ${ASCEND_CANN_PACKAGE_PATH}/lib64/libnnopbase.so
-                    ${ASCEND_CANN_PACKAGE_PATH}/lib64/libopapi.so
-                    ${ASCEND_CANN_PACKAGE_PATH}/lib64/libascend_dump.so)
+if [[ "${failed}" -ne 0 ]]; then
+    echo "[FAILURE] One or more profiling samples failed."
+    exit 1
+fi
+echo "[SUCCESS] All profiling samples completed successfully."

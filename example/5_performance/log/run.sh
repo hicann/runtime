@@ -1,3 +1,4 @@
+#!/bin/bash
 # -----------------------------------------------------------------------------------------------------------
 # Copyright (c) 2026 Huawei Technologies Co., Ltd.
 # This program is free software, you can redistribute it and/or modify it under the terms and conditions of
@@ -8,22 +9,26 @@
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
 
-cmake_minimum_required(VERSION 3.16.0)
+set -euo pipefail
 
-project(Runtime_Adump_Model_Config_Sample)
-set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "Build type Release/Debug (default Debug)" FORCE)
-set(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_LIST_DIR}/out" CACHE STRING "path for install()" FORCE)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/../../common/resolve_cann_env.sh"
+resolve_cann_env
 
-include_directories(${ASCEND_CANN_PACKAGE_PATH}/include
-                    ${ASCEND_CANN_PACKAGE_PATH}/aclnn
-                    ${CMAKE_CURRENT_SOURCE_DIR}/../../..)
+cd "${SCRIPT_DIR}"
+rm -rf build
+cmake -B build -DASCEND_CANN_PACKAGE_PATH="${ASCEND_INSTALL_PATH}"
+cmake --build build -j"$(nproc)"
 
-link_directories(${ASCEND_CANN_PACKAGE_PATH}/lib64)
-
-add_executable(main main.cpp)
-
-target_link_libraries(main PRIVATE
-                    ${ASCEND_CANN_PACKAGE_PATH}/lib64/libascendcl.so
-                    ${ASCEND_CANN_PACKAGE_PATH}/lib64/libnnopbase.so
-                    ${ASCEND_CANN_PACKAGE_PATH}/lib64/libopapi.so
-                    ${ASCEND_CANN_PACKAGE_PATH}/lib64/libascend_dump.so)
+output_file="output_msg.txt"
+if ./build/0_acl_log/acl_log_sample | tee "${output_file}"; then
+    if grep -q "\[SUCCESS\] ACL log sample completed successfully." "${output_file}"; then
+        echo "[SUCCESS] ACL log sample executed successfully."
+    else
+        echo "[FAILURE] ACL log sample did not print the expected success marker."
+        exit 1
+    fi
+else
+    echo "[FAILURE] ACL log sample failed."
+    exit 1
+fi

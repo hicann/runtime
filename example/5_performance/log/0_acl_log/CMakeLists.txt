@@ -8,22 +8,8 @@
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
 
-cmake_minimum_required(VERSION 3.16.0)
-
-project(Runtime_Adump_Model_Config_Sample)
-set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "Build type Release/Debug (default Debug)" FORCE)
-set(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_LIST_DIR}/out" CACHE STRING "path for install()" FORCE)
-
-include_directories(${ASCEND_CANN_PACKAGE_PATH}/include
-                    ${ASCEND_CANN_PACKAGE_PATH}/aclnn
-                    ${CMAKE_CURRENT_SOURCE_DIR}/../../..)
-
-link_directories(${ASCEND_CANN_PACKAGE_PATH}/lib64)
-
-add_executable(main main.cpp)
-
-target_link_libraries(main PRIVATE
-                    ${ASCEND_CANN_PACKAGE_PATH}/lib64/libascendcl.so
-                    ${ASCEND_CANN_PACKAGE_PATH}/lib64/libnnopbase.so
-                    ${ASCEND_CANN_PACKAGE_PATH}/lib64/libopapi.so
-                    ${ASCEND_CANN_PACKAGE_PATH}/lib64/libascend_dump.so)
+add_executable(acl_log_sample main.cpp)
+target_include_directories(acl_log_sample PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../../../include/dfx/base"
+    "${ASCEND_CANN_PACKAGE_PATH}/include/base")
+target_link_libraries(acl_log_sample PRIVATE "${ASCEND_CANN_PACKAGE_PATH}/lib64/libascendalog.so")

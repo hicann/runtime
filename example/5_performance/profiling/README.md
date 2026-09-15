@@ -2,6 +2,8 @@
 
 本目录聚焦Profiling的配置创建、msproftx标记以及模型订阅能力。
 
+在 CANN 环境中执行 `bash run.sh` 可依次运行全部 Profiling 样例。脚本会输出每个样例的成功或失败结果，并在任一样例失败时返回非 0 退出码。
+
 ## 产物解读
 
 Profiling产物路径、解析命令和字段含义请参见[Profiling产物解读](./profiling_artifact_analysis.md)。

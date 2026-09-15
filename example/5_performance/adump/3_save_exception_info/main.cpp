@@ -54,6 +54,14 @@ int main()
     // 1. AscendCL Init（加载开启 Exception Dump 的配置）
     CHECK_ERROR(adump::InitRuntime(deviceId, &stream, dumpCfgPath));
 
+    if (acldumpGetExceptionInfoPath == nullptr || acldumpSaveExceptionInfo == nullptr) {
+        WARN_LOG("Exception Dump APIs are unavailable in the installed CANN package; skip this sample.");
+        (void)aclrtDestroyStream(stream);
+        (void)aclrtResetDeviceForce(deviceId);
+        (void)aclFinalize();
+        return 0;
+    }
+
     // 2. 查询 Exception Dump 落盘根路径（带 deviceId，自定义数据将落到此目录下）
     char excDumpPath[ACL_DUMP_MAX_FILE_PATH_LENGTH] = {0};
     if (acldumpGetExceptionInfoPath(excDumpPath, sizeof(excDumpPath)) == ACL_SUCCESS) {

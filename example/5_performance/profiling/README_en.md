@@ -2,6 +2,8 @@
 
 This directory focuses on Profiling configuration creation, msproftx marking, and model subscription capabilities.
 
+Run `bash run.sh` in a CANN environment to execute all Profiling samples in sequence. The script reports the result of each sample and returns a non-zero status if any sample fails.
+
 ## Artifact Analysis
 
 For the complete Profiling artifact analysis, see [Profiling artifact analysis](./profiling_artifact_analysis_en.md).
