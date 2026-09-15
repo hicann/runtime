@@ -12,3 +12,4 @@ This directory focuses on Kernel loading, parameter organization, execution, and
 - [5_fdtd_stencil](./5_fdtd_stencil/README_en.md): Demonstrates a three-dimensional finite-difference stencil update configured through Kernel attributes and a Device variable.
 - [6_memory_loaded_vector_add](./6_memory_loaded_vector_add/README_en.md): Demonstrates loading a Kernel binary from Host memory and running vector addition.
 - [7_binary_introspection](./7_binary_introspection/README_en.md): Demonstrates querying Kernel binary, function parameter, code segment, and Device global variable metadata after loading.
+- [8_reusable_kernel_args](./8_reusable_kernel_args/README_en.md): Demonstrates user-managed argument memory and reuse of the same Kernel argument list through parameter updates.
