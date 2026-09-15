@@ -6,3 +6,4 @@
 
 - [0_event_status](./0_event_status/README.md)：演示 Event 状态查询与同步流程。
 - [1_event_timestamp](./1_event_timestamp/README.md)：演示 Event 时间戳采集与计时用法。
+- [2_event_wait_diagnostics](./2_event_wait_diagnostics/README.md)：演示多 Stream Event 等待状态与超时诊断流程。
