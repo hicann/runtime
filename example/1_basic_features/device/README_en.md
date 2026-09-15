@@ -7,3 +7,4 @@ This directory focuses on Device initialization, switching, multi-thread usage, 
 - [0_device_normal](./0_device_normal/README_en.md): Demonstrates basic initialization, execution, and release flow in single Device scenarios.
 - [1_device_multi_thread](./1_device_multi_thread/README_en.md): Demonstrates Device usage patterns in multi-thread scenarios.
 - [2_device_P2P](./2_device_P2P/README_en.md): Demonstrates inter-Device P2P data copy capability.
+- [3_device_identity_mapping](./3_device_identity_mapping/README_en.md): Enumerates user-visible Devices, queries PCI Bus IDs and UUIDs, and verifies bidirectional user, logical, and physical Device ID mappings.
