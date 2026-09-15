@@ -97,7 +97,7 @@ aclError aclrtApiInjectionSetFuncImpl(const char* name, aclrtApiFunc func)
         std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__);
         acl::AclErrorLogManager::ReportInputError(
             acl::INVALID_VALUE_MSG, {"func", "value", "param", "expect"},
-            {funcName.c_str(), name, "name", "The API name is prefixed with aclrt or aclmdlRI"});
+            {funcName.c_str(), name, "name", "A Runtime API name prefixed with aclrt or aclmdlRI"});
         return ACL_ERROR_INVALID_PARAM;
     }
     __atomic_store_n(&entry->currentFunc, func, __ATOMIC_RELEASE);
@@ -127,7 +127,7 @@ aclError aclrtApiInjectionGetFuncImpl(const char* name, aclrtApiFunc* originFunc
         std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__);
         acl::AclErrorLogManager::ReportInputError(
             acl::INVALID_VALUE_MSG, {"func", "value", "param", "expect"},
-            {funcName.c_str(), name, "name", "The API name is prefixed with aclrt or aclmdlRI"});
+            {funcName.c_str(), name, "name", "A Runtime API name prefixed with aclrt or aclmdlRI"});
         return ACL_ERROR_INVALID_PARAM;
     }
     if (originFunc != nullptr) {
