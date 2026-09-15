@@ -28,6 +28,12 @@ struct rtDeviceSqCqInfo_t {
     uint64_t sqRegVirtualAddr;
 };
 
+enum class FreePolicy : uint8_t {
+    DEFAULT,   // 默认模式，适用于模型销毁场景，由资源池自行决策释放策略
+    LAZY,      // 性能优先，释放到池子，适用于模型不销毁，暂时释放到资源池，做资源复用
+    IMMEDIATE, // 资源优先，释放到驱动
+};
+
 class DeviceSqCqPool : public NoCopy {
 public:
     explicit DeviceSqCqPool(Device* const dev);
@@ -37,14 +43,7 @@ public:
     void PreAllocSqCq(void);
     rtError_t AllocSqCq(const uint32_t allcocNum, rtDeviceSqCqInfo_t* const sqCqList);
     rtError_t AllocSqCqForAutoSplit(rtDeviceSqCqInfo_t* const sqCqInfo) const;
-
-    // Release sqcqs in bulk, only releasing them to the pool;
-    // actual resources are not released to the driver, making it convenient for future requests of sqcqs.
-    rtError_t FreeSqCqLazy(const rtDeviceSqCqInfo_t* const sqCqList, const uint32_t freeNum);
-
-    // Release sqcq in batches, release them from the pool, and simultaneously call the driver interface to release
-    // them.
-    rtError_t FreeSqCqImmediately(const rtDeviceSqCqInfo_t* const sqCqList, const uint32_t freeNum);
+    rtError_t FreeSqCq(const rtDeviceSqCqInfo_t* const sqCqInfo, const uint32_t freeNum, const FreePolicy policy);
 
     rtError_t AllocSqCqFromDrv(
         rtDeviceSqCqInfo_t* const sqCqInfo, const uint32_t drvFlag,
@@ -67,6 +66,18 @@ private:
     std::mutex deviceSqCqLock_;
     std::list<rtDeviceSqCqInfo_t> deviceSqCqFreeList_;
     std::list<rtDeviceSqCqInfo_t> deviceSqCqOccupyList_;
+    uint64_t preAllocCount_{0U};
+    uint64_t shrinkCount_{0U};
+
+    // Release sqcqs in bulk, only releasing them to the pool;
+    // actual resources are not released to the driver, making it convenient for future requests of sqcqs.
+    rtError_t FreeSqCqLazy(const rtDeviceSqCqInfo_t* const sqCqList, const uint32_t freeNum);
+
+    // Release sqcq in batches, release them from the pool, and simultaneously call the driver interface to release
+    // them.
+    rtError_t FreeSqCqImmediately(const rtDeviceSqCqInfo_t* const sqCqList, const uint32_t freeNum);
+
+    void TryTrimSqCqPool(const uint32_t freeNum);
 };
 
 } // namespace runtime

@@ -395,6 +395,9 @@ TEST_F(SnapshotTest, SnapShotProcessRestore2)
     EXPECT_NE(error, RT_ERROR_NONE);
     error = device->RestoreSqCqPool();
     EXPECT_EQ(error, RT_ERROR_NONE);
+
+    device->deviceSqCqPool_->deviceSqCqFreeList_.clear();
+    device->deviceSqCqPool_->deviceSqCqOccupyList_.clear();
 }
 
 TEST_F(SnapshotTest, SnapShotProcessRestore3)

@@ -283,7 +283,7 @@ public:
     // endGraph + alloc sq cq + Send sqe + bind sq cq + load complete + update task
     rtError_t BuildSqCq(Stream* const exeStream);
     void DeconstructSqCq(void);
-    rtError_t ReleaseSqCqAndNotifyId(uint32_t& releaseSqNum, uint32_t& releaseNtyNum);
+    rtError_t ReleaseSqCqAndNotifyId(uint32_t& releaseSqNum, uint32_t& releaseNtyNum, bool isDeconstruct = false);
     void CaptureModelExecuteFinish(const uint32_t errCode);
 
     // 子模型资源管理相关方法

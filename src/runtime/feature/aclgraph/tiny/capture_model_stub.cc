@@ -167,10 +167,11 @@ rtError_t CaptureModel::BuildSqCq(Stream* const exeStream)
 
 void CaptureModel::DeconstructSqCq(void) {}
 
-rtError_t CaptureModel::ReleaseSqCqAndNotifyId(uint32_t& releaseSqNum, uint32_t& releaseNtyNum)
+rtError_t CaptureModel::ReleaseSqCqAndNotifyId(uint32_t& releaseSqNum, uint32_t& releaseNtyNum, bool isDeconstruct)
 {
     UNUSED(releaseSqNum);
     UNUSED(releaseNtyNum);
+    UNUSED(isDeconstruct);
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
