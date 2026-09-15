@@ -20,6 +20,8 @@
 #define protected public
 #include "runtime.hpp"
 #include "context.hpp"
+#include "model_c.hpp"
+#include "task_launch_c.hpp"
 #include "capture_model.hpp"
 #include "runtime/feature/aclgraph/capture_session.hpp"
 #include "cond_c.hpp"
@@ -54,6 +56,7 @@
 #include "runtime_keeper.h"
 #include "memory_task.h"
 #include "maintenance_task.h"
+#include "rdma_task.h"
 #include "runtime_handle_guard.h"
 #include "rt_unwrap.h"
 #undef protected
@@ -250,7 +253,7 @@ TEST_F(ContextTest, launch_update_sqe_anormal_001)
     Engine* engine = new AsyncHwtsEngine(nullptr);
     MOCKER_CPP_VIRTUAL(engine, &Engine::SubmitTaskNormal).stubs().will(returnValue(RT_ERROR_NONE));
 
-    error = ctx->LaunchSqeUpdateTask(nullptr, 40U, 2U, 0, stm);
+    error = LaunchSqeUpdateTask(nullptr, 40U, 2U, 0, stm);
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
     stm->taskResMang_ = preTaskResMng;
     (void)((Runtime*)Runtime::Instance())->PrimaryContextRelease(devId);
@@ -297,7 +300,7 @@ TEST_F(ContextTest, launch_update_sqe_anormal_002)
     Engine *engine = new AsyncHwtsEngine(nullptr);
     MOCKER_CPP_VIRTUAL(engine, &Engine::SubmitTaskNormal).stubs().will(returnValue(RT_ERROR_NONE));
 
-    error = ctx->LaunchSqeUpdateTask(nullptr, 40U, 2U, 0, stm);
+    error = LaunchSqeUpdateTask(nullptr, 40U, 2U, 0, stm);
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
     stm->taskResMang_ = nullptr;
 
@@ -1326,7 +1329,7 @@ TEST_F(ContextTest, ModelAddEndGraph_Test)
     ctx->defaultStream_ = stmPtr;
     std::string socVersion = GlobalContainer::GetSocVersion();
     GlobalContainer::SetSocVersion("Ascend310P1");
-    error = ctx->ModelAddEndGraph(model, stmPtr, 0);
+    error = ModelAddEndGraph(model, stmPtr, 0);
     GlobalContainer::SetSocVersion(socVersion);
     ctx->defaultStream_ = defaultStream;
 
@@ -3497,7 +3500,7 @@ TEST_F(ContextTest, context_debugRegister)
     error = ctx->ModelCreate(&model);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = ctx->DebugRegister(model, flag, &addr, &streamId, &taskId);
+    error = ModelDebugRegister(model, flag, &addr, &streamId, &taskId, ctx->DefaultStream_());
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = ctx->ModelDestroy(model);
@@ -3523,7 +3526,7 @@ TEST_F(ContextTest, context_debugUnRegister_fail1)
     error = ctx->ModelCreate(&model);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = ctx->DebugUnRegister(model);
+    error = ModelDebugUnRegister(model, ctx->DefaultStream_());
     EXPECT_EQ(error, RT_ERROR_DEBUG_UNREGISTER_FAILED);
 
     error = ctx->ModelDestroy(model);
@@ -3553,12 +3556,12 @@ TEST_F(ContextTest, context_debugUnRegister_fail2)
     error = ctx->ModelCreate(&model);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = ctx->DebugRegister(model, flag, &addr, &streamId, &taskId);
+    error = ModelDebugRegister(model, flag, &addr, &streamId, &taskId, ctx->DefaultStream_());
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     MOCKER(DebugUnRegisterTaskInit).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
 
-    error = ctx->DebugUnRegister(model);
+    error = ModelDebugUnRegister(model, ctx->DefaultStream_());
     EXPECT_EQ(error, RT_ERROR_DEBUG_UNREGISTER_FAILED);
 
     error = ctx->ModelDestroy(model);
@@ -3588,10 +3591,10 @@ TEST_F(ContextTest, context_debugUnRegister_succ)
     error = ctx->ModelCreate(&model);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = ctx->DebugRegister(model, flag, &addr, &streamId, &taskId);
+    error = ModelDebugRegister(model, flag, &addr, &streamId, &taskId, ctx->DefaultStream_());
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = ctx->DebugUnRegister(model);
+    error = ModelDebugUnRegister(model, ctx->DefaultStream_());
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = ctx->ModelDestroy(model);
@@ -3693,7 +3696,7 @@ TEST_F(ContextTest, FftsPlusTaskLaunch_invalid_stream)
     MOCKER_CPP(&TaskFactory::Alloc).stubs().will(returnValue(&taskInfo));
     MOCKER_CPP(&TaskFactory::Recycle).stubs().will(returnValue(RT_ERROR_NONE));
 
-    error = ctx->FftsPlusTaskLaunch(&fftsPlusTaskInfo, stream, 0U);
+    error = FftsPlusTaskLaunch(&fftsPlusTaskInfo, stream, 0U, ctx->GetCaptureLock());
     EXPECT_EQ(error, RT_ERROR_STREAM_INVALID);
 
     (void)((Runtime*)Runtime::Instance())->PrimaryContextRelease(devId);
@@ -3736,15 +3739,15 @@ TEST_F(ContextTest, FftsPlusTaskLaunch_test)
     MOCKER_CPP(&TaskFactory::Alloc).stubs().will(returnValue((TaskInfo*)nullptr));
     MOCKER_CPP(&TaskFactory::Recycle).stubs().will(returnValue(RT_ERROR_NONE));
 
-    error = ctx->FftsPlusTaskLaunch(nullptr, stream, 0U);
+    error = FftsPlusTaskLaunch(nullptr, stream, 0U, ctx->GetCaptureLock());
     EXPECT_EQ(error, RT_ERROR_STREAM_INVALID);
 
     argHdl->freeArgs = 1;
-    error = ctx->FftsPlusTaskLaunch(nullptr, stream, 0U);
+    error = FftsPlusTaskLaunch(nullptr, stream, 0U, ctx->GetCaptureLock());
     EXPECT_EQ(error, RT_ERROR_STREAM_INVALID);
 
     MOCKER_CPP_VIRTUAL(ctx->device_, &Device::SubmitTask).stubs().will(returnValue(RT_ERROR_NONE));
-    error = ctx->FftsPlusTaskLaunch(nullptr, stream, 0U);
+    error = FftsPlusTaskLaunch(nullptr, stream, 0U, ctx->GetCaptureLock());
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     (void)((Runtime*)Runtime::Instance())->PrimaryContextRelease(devId);
@@ -3958,7 +3961,7 @@ TEST_F(ContextTest, SetUpdateAddrTask_test)
     int tempMemory = 0;
     auto preVal = stream->taskResMang_;
     stream->taskResMang_ = (TaskResManage*)&tempMemory;
-    ctx->SetUpdateAddrTask(0, 0, stream);
+    SetUpdateAddrTask(0, 0, stream);
     stream->taskResMang_ = preVal;
 
     rtTaskInput_t task = {};
@@ -4902,7 +4905,7 @@ TEST_F(ContextTest, SetStreamSqLockUnlock_test)
 
     MOCKER(SqLockUnlockTaskInit).stubs().will(returnValue(1));
     MOCKER_CPP(&TaskFactory::Recycle).stubs().will(returnValue(RT_ERROR_NONE));
-    error = ctx->SetStreamSqLockUnlock(stream, 0);
+    error = SetStreamSqLockUnlock(stream, false);
     EXPECT_EQ(error, 1);
 
     (void)((Runtime*)Runtime::Instance())->PrimaryContextRelease(devId);
@@ -4976,14 +4979,14 @@ TEST_F(ContextTest, RdmaDbSend_test)
     ctx = refObject->GetVal();
     EXPECT_NE(ctx, nullptr);
 
-    error = ctx->RDMASend(0, 0, stream);
+    error = RDMASend(0, 0, stream);
     EXPECT_NE(error, RT_ERROR_NONE);
 
     auto preType = Runtime::Instance()->chipType_;
     Runtime::Instance()->chipType_ = CHIP_910_B_93;
     GlobalContainer::SetRtChipType(CHIP_910_B_93);
     stream->bindFlag_.Set(true);
-    error = ctx->RdmaDbSend(0, 0, stream);
+    error = RdmaDbSend(0, 0, stream, ctx->GetCaptureLock());
     EXPECT_NE(error, RT_ERROR_NONE);
 
     Runtime::Instance()->chipType_ = preType;
@@ -5542,7 +5545,7 @@ TEST_F(ContextTest, LaunchRandomNumTask_TEST)
     TaskInfo stubTask = {};
     stubTask.stream = stream;
     MOCKER_CPP(&TaskFactory::Alloc).stubs().will(returnValue(&stubTask));
-    error = ctx->LaunchRandomNumTask(&taskInfo, stream, nullptr);
+    error = LaunchRandomNumTask(&taskInfo, stream, nullptr);
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
 
     taskInfo.randomNumFuncParaInfo.funcType = RT_RANDOM_NUM_FUNC_TYPE_UNIFORM_DIS;
@@ -5551,7 +5554,7 @@ TEST_F(ContextTest, LaunchRandomNumTask_TEST)
     taskInfo.randomNumFuncParaInfo.paramInfo.uniformDisInfo.max.size = sizeof(uint32_t);
     taskInfo.randomNumFuncParaInfo.paramInfo.uniformDisInfo.min.addr = &testData;
     taskInfo.randomNumFuncParaInfo.paramInfo.uniformDisInfo.max.size = sizeof(uint32_t);
-    error = ctx->LaunchRandomNumTask(&taskInfo, stream, nullptr);
+    error = LaunchRandomNumTask(&taskInfo, stream, nullptr);
     EXPECT_EQ(error, RT_ERROR_STREAM_INVALID);
 
     taskInfo.randomNumFuncParaInfo.funcType = RT_RANDOM_NUM_FUNC_TYPE_NORMAL_DIS;
@@ -5560,32 +5563,32 @@ TEST_F(ContextTest, LaunchRandomNumTask_TEST)
     taskInfo.randomNumFuncParaInfo.paramInfo.normalDisInfo.mean.size = sizeof(uint64_t);
     taskInfo.randomNumFuncParaInfo.paramInfo.normalDisInfo.stddev.addr = &testData;
     taskInfo.randomNumFuncParaInfo.paramInfo.normalDisInfo.stddev.size = sizeof(uint64_t);
-    error = ctx->LaunchRandomNumTask(&taskInfo, stream, nullptr);
+    error = LaunchRandomNumTask(&taskInfo, stream, nullptr);
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
     taskInfo.dataType = RT_RANDOM_NUM_DATATYPE_INT64;
-    error = ctx->LaunchRandomNumTask(&taskInfo, stream, nullptr);
+    error = LaunchRandomNumTask(&taskInfo, stream, nullptr);
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
 
     taskInfo.dataType = RT_RANDOM_NUM_DATATYPE_BF16;
     taskInfo.randomNumFuncParaInfo.paramInfo.normalDisInfo.mean.size = 1U;
     taskInfo.randomNumFuncParaInfo.paramInfo.normalDisInfo.stddev.size = 1U;
-    error = ctx->LaunchRandomNumTask(&taskInfo, stream, nullptr);
+    error = LaunchRandomNumTask(&taskInfo, stream, nullptr);
     EXPECT_EQ(error, RT_ERROR_STREAM_INVALID);
 
     taskInfo.dataType = RT_RANDOM_NUM_DATATYPE_FP16;
     taskInfo.randomNumFuncParaInfo.paramInfo.normalDisInfo.mean.size = 2U;
     taskInfo.randomNumFuncParaInfo.paramInfo.normalDisInfo.stddev.size = 2U;
-    error = ctx->LaunchRandomNumTask(&taskInfo, stream, nullptr);
+    error = LaunchRandomNumTask(&taskInfo, stream, nullptr);
     EXPECT_EQ(error, RT_ERROR_STREAM_INVALID);
 
     taskInfo.dataType = RT_RANDOM_NUM_DATATYPE_FP32;
     taskInfo.randomNumFuncParaInfo.paramInfo.normalDisInfo.mean.size = 4U;
     taskInfo.randomNumFuncParaInfo.paramInfo.normalDisInfo.stddev.size = 4U;
-    error = ctx->LaunchRandomNumTask(&taskInfo, stream, nullptr);
+    error = LaunchRandomNumTask(&taskInfo, stream, nullptr);
     EXPECT_EQ(error, RT_ERROR_STREAM_INVALID);
 
     taskInfo.dataType = RT_RANDOM_NUM_DATATYPE_MAX;
-    error = ctx->LaunchRandomNumTask(&taskInfo, stream, nullptr);
+    error = LaunchRandomNumTask(&taskInfo, stream, nullptr);
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
 
     (void)((Runtime *)Runtime::Instance())->PrimaryContextRelease(devId);
@@ -5638,29 +5641,29 @@ TEST_F(ContextTest, LaunchRandomNumTask_Test_abnormal)
     TaskInfo stubTask = {};
     stubTask.stream = stream;
     MOCKER_CPP(&TaskFactory::Alloc).stubs().will(returnValue(&stubTask));
-    error = ctx->LaunchRandomNumTask(&taskInfo, stream, nullptr);
+    error = LaunchRandomNumTask(&taskInfo, stream, nullptr);
     EXPECT_EQ(error, RT_ERROR_STREAM_INVALID);
     taskInfo.dataType = RT_RANDOM_NUM_DATATYPE_UINT32;
     taskInfo.randomParaAddr = &testData;
-    error = ctx->LaunchRandomNumTask(&taskInfo, stream, nullptr);
+    error = LaunchRandomNumTask(&taskInfo, stream, nullptr);
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
     taskInfo.randomSeed.addr = &testData;
     taskInfo.randomSeed.size = 10;
-    error = ctx->LaunchRandomNumTask(&taskInfo, stream, nullptr);
+    error = LaunchRandomNumTask(&taskInfo, stream, nullptr);
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
     taskInfo.randomSeed.addr = nullptr;
     taskInfo.randomSeed.size = sizeof(uint64_t);
-    error = ctx->LaunchRandomNumTask(&taskInfo, stream, nullptr);
+    error = LaunchRandomNumTask(&taskInfo, stream, nullptr);
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
 
     taskInfo.randomSeed.addr = &testData;
     taskInfo.randomSeed.size = sizeof(uint64_t);
     taskInfo.dataType = RT_RANDOM_NUM_DATATYPE_MAX;
-    error = ctx->LaunchRandomNumTask(&taskInfo, stream, nullptr);
+    error = LaunchRandomNumTask(&taskInfo, stream, nullptr);
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
     taskInfo.dataType = RT_RANDOM_NUM_DATATYPE_UINT32;
     taskInfo.randomNumFuncParaInfo.funcType = RT_RANDOM_NUM_FUNC_TYPE_MAX;
-    error = ctx->LaunchRandomNumTask(&taskInfo, stream, nullptr);
+    error = LaunchRandomNumTask(&taskInfo, stream, nullptr);
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
     (void)((Runtime *)Runtime::Instance())->PrimaryContextRelease(devId);
     stream->taskResMang_ = preVal;
@@ -6075,4 +6078,172 @@ TEST_F(ContextTest, StreamBeginTaskUpdateReportsStatusOnUpdateFailure)
 
     GlobalMockObject::verify();
     EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
+}
+
+TEST_F(ContextTest, UnifiedTaskLaunchCoverage)
+{
+    GlobalMockObject::verify();
+    RawDevice* const device = new RawDevice(0);
+    ASSERT_NE(device, nullptr);
+    ASSERT_EQ(device->Init(), RT_ERROR_NONE);
+    Stream* const stream = new Stream(device, 0);
+    ASSERT_NE(stream, nullptr);
+
+    TaskResManage taskResManage;
+    stream->taskResMang_ = &taskResManage;
+    TaskInfo taskInfo = {};
+    taskInfo.stream = stream;
+    MOCKER_CPP(&TaskFactory::Alloc).stubs().will(returnValue(&taskInfo));
+    MOCKER_CPP(&TaskFactory::Recycle).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(static_cast<Device*>(device), &Device::SubmitTask).stubs().will(returnValue(RT_ERROR_NONE));
+
+    MOCKER(MemcpyAsyncD2HTaskInit).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    EXPECT_EQ(LaunchSqeUpdateTask(nullptr, 40U, 2U, 0U, stream), RT_ERROR_INVALID_VALUE);
+
+    MOCKER(SqLockUnlockTaskInit).stubs().will(returnValue(RT_ERROR_NONE));
+    EXPECT_EQ(SetStreamSqLockUnlock(stream, false), RT_ERROR_NONE);
+
+    MOCKER(UpdateAddressTaskInit).stubs().will(returnValue(RT_ERROR_NONE));
+    EXPECT_EQ(SetUpdateAddrTask(0U, 0U, stream), RT_ERROR_NONE);
+
+    stream->taskResMang_ = nullptr;
+    delete stream;
+    delete device;
+    GlobalMockObject::verify();
+}
+
+TEST_F(ContextTest, UnifiedRdmaCoverage)
+{
+    GlobalMockObject::verify();
+    RawDevice* const device = new RawDevice(0);
+    ASSERT_NE(device, nullptr);
+    ASSERT_EQ(device->Init(), RT_ERROR_NONE);
+    Stream* const stream = new Stream(device, 0);
+    ASSERT_NE(stream, nullptr);
+
+    TaskResManage taskResManage;
+    stream->taskResMang_ = &taskResManage;
+    TaskInfo taskInfo = {};
+    taskInfo.stream = stream;
+    MOCKER_CPP(&TaskFactory::Alloc).stubs().will(returnValue(&taskInfo));
+    MOCKER_CPP(&TaskFactory::Recycle).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(static_cast<Device*>(device), &Device::SubmitTask).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(RdmaSendTaskInit).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(RdmaDbSendTaskInit).stubs().will(returnValue(RT_ERROR_NONE));
+
+    EXPECT_EQ(RDMASend(0U, 0U, stream), RT_ERROR_NONE);
+
+    Runtime* const runtime = static_cast<Runtime*>(Runtime::Instance());
+    const rtChipType_t chipType = runtime->chipType_;
+    const rtChipType_t globalChipType = GlobalContainer::GetRtChipType();
+    runtime->chipType_ = CHIP_MINI;
+    GlobalContainer::SetRtChipType(CHIP_MINI);
+    std::mutex captureLock;
+    EXPECT_EQ(RdmaDbSend(0U, 0U, stream, captureLock), RT_ERROR_NONE);
+
+    runtime->chipType_ = CHIP_910_B_93;
+    GlobalContainer::SetRtChipType(CHIP_910_B_93);
+    stream->SetCaptureStatus(RT_STREAM_CAPTURE_STATUS_ACTIVE);
+    EXPECT_EQ(RdmaDbSend(0U, 0U, stream, captureLock), RT_ERROR_NONE);
+
+    stream->SetCaptureStatus(RT_STREAM_CAPTURE_STATUS_NONE);
+    runtime->chipType_ = chipType;
+    GlobalContainer::SetRtChipType(globalChipType);
+    stream->taskResMang_ = nullptr;
+    delete stream;
+    delete device;
+    GlobalMockObject::verify();
+}
+
+static rtError_t FftsPlusTaskInitAndStartCapture(
+    TaskInfo* const taskInfo, const rtFftsPlusTaskInfo_t* const fftsPlusTaskInfo, const uint32_t flag)
+{
+    UNUSED(fftsPlusTaskInfo);
+    UNUSED(flag);
+    taskInfo->stream->UpdateCaptureStream(taskInfo->stream);
+    taskInfo->stream->SetCaptureStatus(RT_STREAM_CAPTURE_STATUS_ACTIVE);
+    return RT_ERROR_NONE;
+}
+
+TEST_F(ContextTest, UnifiedFftsPlusCaptureCoverage)
+{
+    GlobalMockObject::verify();
+    RawDevice* const device = new RawDevice(0);
+    ASSERT_NE(device, nullptr);
+    ASSERT_EQ(device->Init(), RT_ERROR_NONE);
+    Stream* const stream = new Stream(device, 0);
+    ASSERT_NE(stream, nullptr);
+
+    TaskResManage taskResManage;
+    stream->taskResMang_ = &taskResManage;
+    TaskInfo taskInfo = {};
+    taskInfo.stream = stream;
+    MOCKER_CPP(&TaskFactory::Alloc).stubs().will(returnValue(&taskInfo));
+    MOCKER_CPP(&TaskFactory::Recycle).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(static_cast<Device*>(device), &Device::SubmitTask).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(FftsPlusTaskInit).stubs().will(invoke(FftsPlusTaskInitAndStartCapture));
+    MOCKER(SubmitRdmaPiValueModifyTask).stubs().will(returnValue(RT_ERROR_NONE));
+
+    std::mutex captureLock;
+    EXPECT_EQ(FftsPlusTaskLaunch(nullptr, stream, 0U, captureLock), RT_ERROR_NONE);
+
+    stream->SetCaptureStatus(RT_STREAM_CAPTURE_STATUS_NONE);
+    stream->UpdateCaptureStream(nullptr);
+    stream->taskResMang_ = nullptr;
+    delete stream;
+    delete device;
+    GlobalMockObject::verify();
+}
+
+TEST_F(ContextTest, UnifiedModelStarsCoverage)
+{
+    GlobalMockObject::verify();
+    RawDevice* const device = new RawDevice(0);
+    ASSERT_NE(device, nullptr);
+    ASSERT_EQ(device->Init(), RT_ERROR_NONE);
+    Stream* const stream = new Stream(device, 0);
+    ASSERT_NE(stream, nullptr);
+
+    TaskResManage taskResManage;
+    stream->taskResMang_ = &taskResManage;
+    TaskInfo taskInfo = {};
+    taskInfo.stream = stream;
+    MOCKER_CPP(&TaskFactory::Alloc).stubs().will(returnValue(&taskInfo));
+    MOCKER_CPP(&TaskFactory::Recycle).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(static_cast<Device*>(device), &Device::SubmitTask)
+        .stubs()
+        .will(returnValue(RT_ERROR_INVALID_VALUE))
+        .then(returnValue(RT_ERROR_INVALID_VALUE))
+        .then(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(static_cast<Device*>(device), &Device::IsSupportFeature)
+        .stubs()
+        .will(returnValue(true))
+        .then(returnValue(false));
+
+    Model model;
+    EXPECT_EQ(ModelAddEndGraph(&model, stream, 0U), RT_ERROR_NONE);
+    EXPECT_EQ(ModelAddEndGraph(&model, stream, RT_KERNEL_DUMPFLAG), RT_ERROR_INVALID_VALUE);
+
+    uint32_t streamId = 0U;
+    uint32_t taskId = 0U;
+    MOCKER(DebugRegisterTaskInit).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    EXPECT_EQ(ModelDebugRegister(&model, 0U, nullptr, &streamId, &taskId, stream), RT_ERROR_DEBUG_REGISTER_FAILED);
+
+    EXPECT_EQ(ModelExit(&model, stream), RT_ERROR_MODEL_EXIT_STREAM_UNBIND);
+    Model otherModel;
+    otherModel.id_ = 0;
+    stream->SetModel(&otherModel);
+    EXPECT_EQ(ModelExit(&model, stream), RT_ERROR_MODEL_EXIT_ID);
+    otherModel.id_ = MODEL_ID_INVALID;
+
+    stream->SetModel(&model);
+    EXPECT_EQ(ModelExit(&model, stream), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(ModelExit(&model, stream), RT_ERROR_NONE);
+    EXPECT_EQ(ModelExit(&model, stream), RT_ERROR_MODEL_EXIT);
+
+    stream->SetModel(nullptr);
+    stream->taskResMang_ = nullptr;
+    delete stream;
+    delete device;
+    GlobalMockObject::verify();
 }

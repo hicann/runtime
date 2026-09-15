@@ -679,7 +679,7 @@ TEST_F(TaskTestDavid, TestMdlEndGraphForAicpuStream)
     mdl->executorFlag_ = EXECUTOR_AICPU;
     stm->flags_ = RT_STREAM_AICPU;
     MOCKER(ProcAicpuTask).stubs().will(returnValue(RT_ERROR_NONE));
-    ret = MdlAddEndGraph(mdl, stm, 0U);
+    ret = ModelAddEndGraph(mdl, stm, 0U);
     EXPECT_EQ(ret, RT_ERROR_NONE);
     stm->flags_ = RT_STREAM_DEFAULT;
     ret = rtModelDestroy(model);

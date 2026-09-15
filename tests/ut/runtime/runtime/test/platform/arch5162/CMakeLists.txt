@@ -293,6 +293,7 @@ set(runtimeut_src_list
     ${TOP_DIR}/src/runtime/core/src/launch/label_stars.cc
     ${TOP_DIR}/src/runtime/core/src/launch/memory_arch5162.cc
     ${TOP_DIR}/src/runtime/core/src/launch/memory_common.cc
+    ${TOP_DIR}/src/runtime/core/src/launch/task_launch_common.cc
     ${TOP_DIR}/src/runtime/core/src/launch/xpu_aicpu_c_stub.cc
     ${TOP_DIR}/src/runtime/core/src/memory/mem_type.cc
     ${TOP_DIR}/src/runtime/core/src/notify/notify.cc
@@ -308,6 +309,7 @@ set(runtimeut_src_list
     ${TOP_DIR}/src/runtime/driver/npu_driver_dcache_lock_common.cpp
     ${TOP_DIR}/src/runtime/driver/npu_driver_tiny.cpp
     ${TOP_DIR}/src/runtime/feature/model/model.cc
+    ${TOP_DIR}/src/runtime/feature/model/model_stars.cc
     ${TOP_DIR}/src/runtime/feature/model/model_rebuild.cc
     ${TOP_DIR}/src/runtime/feature/soma/soma.cc
     ${TOP_DIR}/src/runtime/feature/soma/stream_mem_pool.cc

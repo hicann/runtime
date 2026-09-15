@@ -23,6 +23,8 @@
 #include "stream_task_c.hpp"
 #include "profiler_c.hpp"
 #include "device_debug_c.hpp"
+#include "model_c.hpp"
+#include "task_launch_c.hpp"
 #include "maintenance_task.h"
 #include "stream_task.h"
 #include "api_impl.hpp"
@@ -3927,7 +3929,7 @@ rtError_t ApiImpl::ModelEndGraph(Model* const mdl, Stream* const stm, const uint
         ERROR_RETURN_MSG_INNER(
             Runtime::Instance()->StartAicpuSd(curCtx->Device_()), "Failed to start the AI CPU service.");
     }
-    return curCtx->ModelAddEndGraph(mdl, stm, flags);
+    return cce::runtime::ModelAddEndGraph(mdl, stm, flags);
 }
 
 rtError_t ApiImpl::ModelExecutorSet(Model* const mdl, const uint8_t flags)
@@ -3980,7 +3982,7 @@ rtError_t ApiImpl::ModelExit(Model* const mdl, Stream* const stm)
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(stm, curCtx, RT_ERROR_STREAM_CONTEXT, "Model exiting");
     COND_RETURN_AND_MSG_INVALID_CONTEXT_MODEL_WITH_FUNC_DESC(mdl, curCtx, RT_ERROR_MODEL_CONTEXT, "Model exiting");
 
-    return curCtx->ModelExit(mdl, stm);
+    return cce::runtime::ModelExit(mdl, stm);
 }
 
 rtError_t ApiImpl::ModelBindQueue(Model* const mdl, const uint32_t queueId, const rtModelQueueFlag_t flag)
@@ -4010,7 +4012,7 @@ rtError_t ApiImpl::DebugRegister(
     COND_RETURN_AND_MSG_INVALID_CONTEXT_MODEL_WITH_FUNC_DESC(
         mdl, curCtx, RT_ERROR_MODEL_CONTEXT, "Registering a debugging callback for a model");
 
-    return curCtx->DebugRegister(mdl, flag, addr, streamId, taskId);
+    return ModelDebugRegister(mdl, flag, addr, streamId, taskId, curCtx->DefaultStream_());
 }
 
 rtError_t ApiImpl::DebugUnRegister(Model* const mdl)
@@ -4021,7 +4023,7 @@ rtError_t ApiImpl::DebugUnRegister(Model* const mdl)
     COND_RETURN_AND_MSG_INVALID_CONTEXT_MODEL_WITH_FUNC_DESC(
         mdl, curCtx, RT_ERROR_MODEL_CONTEXT, "Registering a debugging callback for a model");
 
-    return curCtx->DebugUnRegister(mdl);
+    return ModelDebugUnRegister(mdl, curCtx->DefaultStream_());
 }
 
 rtError_t ApiImpl::DebugRegisterForStream(
@@ -6442,7 +6444,7 @@ rtError_t ApiImpl::SetStreamSqLockUnlock(Stream* const stm, const bool isLock)
 
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
         stm, curCtx, RT_ERROR_STREAM_CONTEXT, "Locking or unlocking the send queue of a stream");
-    return curCtx->SetStreamSqLockUnlock(stm, isLock);
+    return cce::runtime::SetStreamSqLockUnlock(stm, isLock);
 }
 
 rtError_t ApiImpl::ShmemSetPodPid(const char* name, uint32_t sdid, int32_t pid[], int32_t num)
@@ -6460,7 +6462,7 @@ rtError_t ApiImpl::DevVA2PA(uint64_t devAddr, uint64_t len, Stream* stm, bool is
         NULL_STREAM_PTR_RETURN_MSG(stm); // need stream
         COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
             stm, curCtx, RT_ERROR_STREAM_CONTEXT, "Updating the mapping between virtual and physical addresses");
-        return curCtx->SetUpdateAddrTask(devAddr, len, stm);
+        return cce::runtime::SetUpdateAddrTask(devAddr, len, stm);
     }
     return NpuDriver::UpdateAddrVA2PA(devAddr, len);
 }
@@ -7030,7 +7032,7 @@ rtError_t ApiImpl::LaunchRandomNumTask(const rtRandomNumTaskInfo_t* taskInfo, St
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
         curStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Starting the random number generation task");
 
-    const rtError_t error = curCtx->LaunchRandomNumTask(taskInfo, curStm, reserve);
+    const rtError_t error = cce::runtime::LaunchRandomNumTask(taskInfo, curStm, reserve);
     ERROR_RETURN(error, "Stars launch random num task failed.");
 
     return error;

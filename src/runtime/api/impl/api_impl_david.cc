@@ -1056,8 +1056,7 @@ rtError_t ApiImplDavid::ModelExit(Model* const mdl, Stream* const stm)
             "the input model (model_id=%u). "
             "The input model must be the same as the model bound to the input stream",
             stm->Id_(), stm->Model_()->Id_(), mdl->Id_()));
-    mdl->IncModelExitNum();
-    return RT_ERROR_NONE;
+    return cce::runtime::ModelExit(mdl, stm);
 }
 
 rtError_t ApiImplDavid::MemsetAsync(
@@ -1724,7 +1723,7 @@ rtError_t ApiImplDavid::ModelEndGraph(Model* const mdl, Stream* const stm, const
         ERROR_RETURN_MSG_INNER(
             Runtime::Instance()->StartAicpuSd(curCtx->Device_()), "Failed to start the AI CPU service.");
     }
-    return MdlAddEndGraph(mdl, stm, flags);
+    return cce::runtime::ModelAddEndGraph(mdl, stm, flags);
 }
 
 rtError_t ApiImplDavid::StreamSwitchEx(

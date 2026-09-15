@@ -7,39 +7,9 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
-#include <cinttypes>
-#include <queue>
+
 #include "context.hpp"
-#include "securec.h"
-#include "runtime.hpp"
-#include "coprocessor_stream.hpp"
-#include "event.hpp"
 #include "notify.hpp"
-#include "count_notify.hpp"
-#include "device.hpp"
-#include "program.hpp"
-#include "module.hpp"
-#include "uma_arg_loader.hpp"
-#include "npu_driver.hpp"
-#include "onlineprof.hpp"
-#include "task.hpp"
-#include "osal.hpp"
-#include "error_message_manage.hpp"
-#include "profiler.hpp"
-#include "thread_local_container.hpp"
-#include "inner_thread_local.hpp"
-#include "dvpp_grp.hpp"
-#include "task_info.hpp"
-#include "ffts_task.h"
-#include "rdma_task.h"
-#include "task_submit.hpp"
-#include "stream_state_callback_manager.hpp"
-#if (!defined(CFG_VECTOR_CAST))
-#include <algorithm>
-#endif
-#include "heterogenous.h"
-#include "common_task.h"
-#include "stream_factory.hpp"
 
 namespace cce {
 namespace runtime {
@@ -67,97 +37,12 @@ rtError_t Context::CreateNotify(Notify** notify, uint32_t flag)
     return RT_ERROR_NONE;
 }
 
-rtError_t Context::RDMASend(const uint32_t sqIndex, const uint32_t wqeIndex, Stream* const stm)
-{
-    rtError_t error;
-    const int32_t streamId = stm->Id_();
-    TaskInfo submitTask = {};
-    rtError_t errorReason;
-    TaskInfo* rtRdmaSendTask = stm->AllocTask(&submitTask, TS_TASK_TYPE_RDMA_SEND, errorReason);
-    NULL_PTR_RETURN_MSG(rtRdmaSendTask, errorReason);
-
-    error = RdmaSendTaskInit(rtRdmaSendTask, sqIndex, wqeIndex);
-    ERROR_GOTO_MSG_INNER(
-        error, ERROR_RECYCLE, "Failed to init RDMA send task, stream_id=%d, task_id=%hu, retCode=%#x.", streamId,
-        rtRdmaSendTask->id, static_cast<uint32_t>(error));
-
-    error = device_->SubmitTask(rtRdmaSendTask);
-    ERROR_GOTO_MSG_INNER(
-        error, ERROR_RECYCLE, "Failed to submit RDMA send task, retCode=%#x.", static_cast<uint32_t>(error));
-
-    GET_THREAD_TASKID_AND_STREAMID(rtRdmaSendTask, stm->AllocTaskStreamId());
-
-    return error;
-
-ERROR_RECYCLE:
-    (void)device_->GetTaskFactory()->Recycle(rtRdmaSendTask);
-    return error;
-}
-
-rtError_t Context::RdmaDbSendToDev(
-    const uint32_t dbIndex, const uint64_t dbInfo, Stream* const stm, const uint32_t taskSqe) const
-{
-    rtError_t error;
-    const int32_t streamId = stm->Id_();
-    TaskInfo submitTask = {};
-    rtError_t errorReason;
-    TaskInfo* rtRdmaDbSendTask = stm->AllocTask(&submitTask, TS_TASK_TYPE_RDMA_DB_SEND, errorReason);
-    NULL_PTR_RETURN_MSG(rtRdmaDbSendTask, errorReason);
-
-    error = RdmaDbSendTaskInit(rtRdmaDbSendTask, dbIndex, dbInfo, taskSqe);
-    ERROR_GOTO_MSG_INNER(
-        error, ERROR_RECYCLE, "Failed to init RDMA DB send task, stream_id=%d, task_id=%hu, retCode=%#x.", streamId,
-        rtRdmaDbSendTask->id, static_cast<uint32_t>(error));
-
-    error = device_->SubmitTask(rtRdmaDbSendTask);
-    ERROR_GOTO_MSG_INNER(
-        error, ERROR_RECYCLE, "Failed to submit RDMA DB send task, retCode=%#x.", static_cast<uint32_t>(error));
-
-    GET_THREAD_TASKID_AND_STREAMID(rtRdmaDbSendTask, streamId);
-
-    return error;
-
-ERROR_RECYCLE:
-    (void)device_->GetTaskFactory()->Recycle(rtRdmaDbSendTask);
-    return error;
-}
-
-rtError_t Context::RdmaDbSend(const uint32_t dbIndex, const uint64_t dbInfo, Stream* const stm)
-{
-    rtError_t error;
-    if ((Runtime::Instance()->ChipIsHaveStars()) && (stm->IsCapturing())) {
-        // lock the capture status of the stream.
-        std::lock_guard<std::mutex> lock(captureLock_);
-        if (stm->IsCapturing()) {
-            for (uint32_t taskSeq = 0U; taskSeq < RT_STARS_MODEL_RDMADB_TASK_NUM; taskSeq++) {
-                error = RdmaDbSendToDev(dbIndex, dbInfo, stm, (taskSeq + 1U));
-                ERROR_RETURN(
-                    error, "Failed to send RDMA DB capture model task, seq=%u, retCode=%#x.", taskSeq,
-                    static_cast<uint32_t>(error));
-            }
-            return RT_ERROR_NONE;
-        }
-    }
-    if ((Runtime::Instance()->ChipIsHaveStars()) && (stm->GetBindFlag())) {
-        for (uint32_t taskSeq = 0U; taskSeq < RT_STARS_MODEL_RDMADB_TASK_NUM; taskSeq++) {
-            error = RdmaDbSendToDev(dbIndex, dbInfo, stm, (taskSeq + 1U));
-            ERROR_RETURN(
-                error, "Failed to send RDMA DB model task, seq=%u, retCode=%#x.", taskSeq,
-                static_cast<uint32_t>(error));
-        }
-    } else {
-        error = RdmaDbSendToDev(dbIndex, dbInfo, stm);
-        ERROR_RETURN(error, "Failed to send RDMA DB task, retCode=%#x.", static_cast<uint32_t>(error));
-    }
-
-    return error;
-}
-
 rtError_t Context::GetNotifyAddress(Notify* const notify, uint64_t& addr, Stream* const stm)
 {
     const rtError_t error = notify->GetNotifyAddress(stm, addr);
     ERROR_RETURN_MSG_INNER(error, "Failed to get notify address, retCode=%#x.", error);
     return error;
 }
+
 } // namespace runtime
 } // namespace cce

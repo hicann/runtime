@@ -11,6 +11,8 @@
 #include <string>
 #include "api_impl.hpp"
 #include "device_enum_desc.hpp"
+#include "ffts_task.h"
+#include "task_launch_c.hpp"
 #include "runtime_handle_guard.h"
 #include "maintenance_task.h"
 #include "memory_task.h"
@@ -352,7 +354,7 @@ rtError_t ApiImpl::FftsPlusTaskLaunch(
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
         curStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Function Flow Task Scheduler (FFTS) Plus task delivery");
 
-    return curCtx->FftsPlusTaskLaunch(fftsPlusTaskInfo, curStm, flag);
+    return cce::runtime::FftsPlusTaskLaunch(fftsPlusTaskInfo, curStm, flag, curCtx->GetCaptureLock());
 }
 
 rtError_t ApiImpl::RDMASend(const uint32_t sqIndex, const uint32_t wqeIndex, Stream* const stm)
@@ -369,7 +371,7 @@ rtError_t ApiImpl::RDMASend(const uint32_t sqIndex, const uint32_t wqeIndex, Str
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
         curStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Delivering an RDMA Send task");
 
-    return curCtx->RDMASend(sqIndex, wqeIndex, curStm);
+    return cce::runtime::RDMASend(sqIndex, wqeIndex, curStm);
 }
 
 rtError_t ApiImpl::RdmaDbSend(const uint32_t dbIndex, const uint64_t dbInfo, Stream* const stm)
@@ -386,7 +388,7 @@ rtError_t ApiImpl::RdmaDbSend(const uint32_t dbIndex, const uint64_t dbInfo, Str
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
         curStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Delivering an RDMA Doorbell task");
 
-    return curCtx->RdmaDbSend(dbIndex, dbInfo, curStm);
+    return cce::runtime::RdmaDbSend(dbIndex, dbInfo, curStm, curCtx->GetCaptureLock());
 }
 
 // dqs
@@ -1160,7 +1162,7 @@ rtError_t ApiImpl::LaunchSqeUpdateTask(
                     std::to_string(currentSrcDevAddr) +
                     ". Ensure that the same device memory address is used for multiple task updates.");
         }
-        return curCtx->LaunchSqeUpdateTask(src, cnt, sqId, pos, curStm);
+        return cce::runtime::LaunchSqeUpdateTask(src, cnt, sqId, pos, curStm);
     } else {
         COND_RETURN_ERROR_MSG_INNER(
             task->u.starsCommTask.randomDevAddr == nullptr, RT_ERROR_INVALID_VALUE, "randomDevAddr is null.");
@@ -1261,7 +1263,7 @@ rtError_t ApiImpl::LaunchSqeUpdateTask(
         constexpr uint32_t dsaSqeUpdateOffset = 16U;
         constexpr uint32_t dsaSqeUpdateSize = 40U; // SqeUpdateTask only can copy 40 bytes;
         void* copySqeAddr = RtPtrToPtr<void*, uint8_t*>(static_cast<uint8_t*>(outputSqeAddr) + dsaSqeUpdateOffset);
-        return curCtx->LaunchSqeUpdateTask(copySqeAddr, dsaSqeUpdateSize, sqId, pos, curStm);
+        return cce::runtime::LaunchSqeUpdateTask(copySqeAddr, dsaSqeUpdateSize, sqId, pos, curStm);
     }
 }
 

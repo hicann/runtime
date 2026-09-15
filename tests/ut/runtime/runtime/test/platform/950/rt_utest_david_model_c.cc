@@ -413,7 +413,7 @@ TEST_F(TaskTestDavidModelC, TestMdlBindTaskSubmit_SendTaskFail)
     DestroyModel(model);
 }
 
-TEST_F(TaskTestDavidModelC, TestMdlAddEndGraph_EndGraphNumExceed)
+TEST_F(TaskTestDavidModelC, TestModelAddEndGraph_EndGraphNumExceed)
 {
     rtModel_t model = CreateModel();
     Model* mdl = rt_ut::UnwrapOrNull<Model>(model);
@@ -421,19 +421,19 @@ TEST_F(TaskTestDavidModelC, TestMdlAddEndGraph_EndGraphNumExceed)
 
     mdl->IncEndGraphNum();
 
-    rtError_t ret = MdlAddEndGraph(mdl, stream_, 0U);
+    rtError_t ret = ModelAddEndGraph(mdl, stream_, 0U);
     EXPECT_EQ(ret, RT_ERROR_MODEL_ENDGRAPH);
 
     DestroyModel(model);
 }
 
-TEST_F(TaskTestDavidModelC, TestMdlAddEndGraph_StreamNotBoundToModel)
+TEST_F(TaskTestDavidModelC, TestModelAddEndGraph_StreamNotBoundToModel)
 {
     rtModel_t model = CreateModel();
     Model* mdl = rt_ut::UnwrapOrNull<Model>(model);
     ASSERT_NE(mdl, nullptr);
 
-    rtError_t ret = MdlAddEndGraph(mdl, stream_, 0U);
+    rtError_t ret = ModelAddEndGraph(mdl, stream_, 0U);
     EXPECT_EQ(ret, RT_ERROR_STREAM_INVALID);
 
     DestroyModel(model);

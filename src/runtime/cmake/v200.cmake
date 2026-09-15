@@ -228,7 +228,7 @@ set(libruntime_v200_src_files_exclude_for_tiny
     ${RUNTIME_API_DIR}/impl/api_impl_uvm.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/v200/api_impl_david_capture_event.cc
     ${RUNTIME_CORE_DIR}/src/context/context_standard_soc.cc
-    ${RUNTIME_FEATURE_DIR}/ffts/context_ffts_standard_soc.cc
+    ${RUNTIME_CORE_DIR}/src/launch/rdma_common.cc
     ${RUNTIME_CORE_DIR}/src/dfx/fp16_t.cpp
     ${RUNTIME_CORE_DIR}/src/dfx/hifloat.cpp
     ${RUNTIME_CORE_DIR}/src/dfx/printf.cc
@@ -387,6 +387,7 @@ set(libruntime_v200_v201_common_src_files
     ${RUNTIME_FEATURE_DIR}/ccu/ccu_device_error_proc.cc
     ${RUNTIME_CORE_DIR}/src/event/event_c.cc
     ${RUNTIME_CORE_DIR}/src/launch/memory_common.cc
+    ${RUNTIME_CORE_DIR}/src/launch/task_launch_common.cc
     ${RUNTIME_CORE_DIR}/src/launch/memcpy_starsv2.cc
     ${RUNTIME_CORE_DIR}/src/launch/memory_starsv2.cc
     ${RUNTIME_FEATURE_DIR}/model/model_c.cc

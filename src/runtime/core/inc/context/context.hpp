@@ -48,7 +48,6 @@
         const bool flag = ContextManage::CheckContextIsValid((tmpCtx)); \
         COND_PROC_RETURN_WARN(!flag, (ERRCODE), PROC, "ctx is NULL!");  \
     }
-#define RT_STARS_MODEL_RDMADB_TASK_NUM (2U)
 namespace cce {
 namespace runtime {
 class Device;
@@ -115,17 +114,8 @@ public:
     // Wait event recorded to complete.
     rtError_t Synchronize(int32_t timeout);
 
-    rtError_t DebugRegister(
-        Model* const mdl, const uint32_t flag, const void* const addr, uint32_t* const streamId,
-        uint32_t* const taskId);
-
-    rtError_t DebugUnRegister(Model* const mdl);
-
     rtError_t GetDevArgsAddr(
         Stream* const stm, const rtArgsEx_t* const argsInfo, void** const devArgsAddr, void** const argsHandle) const;
-    rtError_t LaunchSqeUpdateTask(
-        const void* const src, const uint64_t cpySize, uint32_t sqId, uint32_t pos, Stream* const stm);
-
     virtual rtError_t StreamCreate(
         const uint32_t prio, const uint32_t flag, Stream** const result, DvppGrp* grp = nullptr,
         const bool isSoftWareSqEnable = false, const bool isAutoSplitEnable = false);
@@ -174,8 +164,6 @@ public:
 
     rtError_t ModelLoadComplete(Model* const mdl) const;
 
-    rtError_t ModelAddEndGraph(Model* const mdl, Stream* const stm, const uint32_t flags);
-
     rtError_t ModelExecutorSet(Model* const mdl, const uint8_t flags) const;
 
     rtError_t ModelNameSet(Model* const mdl, const char_t* const name) const;
@@ -186,22 +174,7 @@ public:
 
     rtError_t ModelAbortById(uint32_t modelId) const;
 
-    rtError_t ModelExit(Model* const mdl, Stream* const stm);
-
     rtError_t ModelBindQueue(Model* const mdl, const uint32_t queueId, const rtModelQueueFlag_t flag) const;
-
-    rtError_t CallbackLaunch(
-        const rtCallback_t callBackFunc, void* const fnData, Stream* const stm, const bool isBlock,
-        const int32_t evtId);
-
-    rtError_t RDMASend(const uint32_t sqIndex, const uint32_t wqeIndex, Stream* const stm);
-
-    rtError_t RdmaDbSendToDev(
-        const uint32_t dbIndex, const uint64_t dbInfo, Stream* const stm, const uint32_t taskSqe = 0U) const;
-
-    rtError_t RdmaDbSend(const uint32_t dbIndex, const uint64_t dbInfo, Stream* const stm);
-
-    rtError_t SetStreamSqLockUnlock(Stream* const stm, const bool isLock);
 
     rtError_t CopyTilingTabToDev(
         Program* const programHdl, const Device* const device, void** devCopyMem, uint32_t* TilingTabLen);
@@ -257,8 +230,6 @@ public:
 
     rtError_t LabelSwitchListCreate(Label** const labels, const size_t num, void** const labelList) const;
 
-    rtError_t FftsPlusTaskLaunch(
-        const rtFftsPlusTaskInfo_t* const fftsPlusTaskInfo, Stream* const stm, const uint32_t flag);
     rtError_t DvppGroupCreate(DvppGrp** grp, const uint32_t flags);
     rtError_t DvppGroupDestory(DvppGrp* grp);
     rtError_t DvppWaitGroupReport(DvppGrp* const grp, const rtDvppGrpCallback callBackFunc, const int32_t timeout);
@@ -267,10 +238,6 @@ public:
     rtError_t CtxSetSysParamOpt(const rtSysParamOpt configOpt, const int64_t configVal);
     rtError_t CtxGetSysParamOpt(const rtSysParamOpt configOpt, int64_t* const configVal);
     rtError_t GetSatStatusForStars(const uint64_t outputSize, Stream* const curStm);
-    rtError_t SetUpdateAddrTask(uint64_t devAddr, uint64_t len, Stream* stm);
-
-    rtError_t LaunchRandomNumTask(const rtRandomNumTaskInfo_t* taskInfo, Stream* const stm, const void* reserve) const;
-
     void ContextThreadBind() { (void)threadRefCount_.fetch_add(1U, std::memory_order_acq_rel); }
 
     uint64_t ContextThreadUnbind()

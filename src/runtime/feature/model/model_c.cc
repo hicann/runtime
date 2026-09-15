@@ -135,6 +135,13 @@ rtError_t ModelDebugUnRegister(Model* const mdl, Stream* const dftStm)
     return error;
 }
 
+rtError_t ModelExit(Model* const mdl, Stream* const stm)
+{
+    UNUSED(stm);
+    mdl->IncModelExitNum();
+    return RT_ERROR_NONE;
+}
+
 static uint32_t GetRealStreamId(const Stream* const desStm, uint32_t desTaskId)
 {
     uint32_t realStreamId = desStm->Id_();
@@ -602,7 +609,7 @@ static rtError_t MdlEndGraphForAicpuStream(
     return RT_ERROR_NONE;
 }
 
-static rtError_t MdlAddEndGraphForAicpuModel(
+static rtError_t ModelAddEndGraphForAicpuModel(
     Model* const mdl, Stream* const stm, const uint32_t flags, const uint32_t modelExecuteType)
 {
     if ((stm->Flags() & RT_STREAM_AICPU) != 0U) {
@@ -634,7 +641,7 @@ static rtError_t MdlAddEndGraphForAicpuModel(
     return RT_ERROR_NONE;
 }
 
-rtError_t MdlAddEndGraph(Model* const mdl, Stream* const stm, const uint32_t flags)
+rtError_t ModelAddEndGraph(Model* const mdl, Stream* const stm, const uint32_t flags)
 {
     rtError_t error = RT_ERROR_NONE;
     const uint32_t modelExecuteType = mdl->ModelExecuteType();
@@ -672,7 +679,7 @@ rtError_t MdlAddEndGraph(Model* const mdl, Stream* const stm, const uint32_t fla
         RT_LOG(RT_LOG_INFO, "notify record ok. stream_id=%d", stm->Id_());
         return RT_ERROR_NONE;
     }
-    error = MdlAddEndGraphForAicpuModel(mdl, stm, flags, modelExecuteType);
+    error = ModelAddEndGraphForAicpuModel(mdl, stm, flags, modelExecuteType);
     return error;
 }
 

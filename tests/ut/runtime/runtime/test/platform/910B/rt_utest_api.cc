@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "../../rt_utest_api.hpp"
+#include "model_c.hpp"
 #include "platform_manager_v2.h"
 #include "rt_unwrap.h"
 #include "../../data/elf.h"
@@ -3166,10 +3167,10 @@ TEST_F(CloudV2ApiTest, apiImpl_context_debugUnRegister_succ)
     error = ctx->ModelCreate(&model);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = ctx->DebugRegister(model, flag, &addr, &streamId, &taskId);
+    error = ModelDebugRegister(model, flag, &addr, &streamId, &taskId, ctx->DefaultStream_());
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = ctx->DebugUnRegister(model);
+    error = ModelDebugUnRegister(model, ctx->DefaultStream_());
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = ctx->ModelDestroy(model);

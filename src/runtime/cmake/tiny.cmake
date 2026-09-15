@@ -213,7 +213,6 @@ set(libruntime_src_files_include_for_tiny
     ${RUNTIME_API_DIR}/impl/api_impl_tiny.cc
     ${RUNTIME_API_DIR}/impl/v100/api_impl_v100.cc
     ${RUNTIME_CORE_DIR}/src/context/context_stub.cc
-    ${RUNTIME_FEATURE_DIR}/ffts/context_ffts_stub.cc
     ${RUNTIME_CORE_DIR}/src/dfx/printf_stub.cc
     ${RUNTIME_CORE_DIR}/src/event/ipc_event_stub.cc
     ${RUNTIME_CORE_DIR}/src/pool/event_pool_stub.cc
@@ -269,6 +268,7 @@ set(libruntime_common_src_files
     ${RUNTIME_CORE_DIR}/src/launch/label_stars.cc
     ${RUNTIME_CORE_DIR}/src/launch/cmo_barrier_common.cc
     ${RUNTIME_CORE_DIR}/src/launch/cmo_barrier_stars.cc
+    ${RUNTIME_CORE_DIR}/src/launch/task_launch_common.cc
     ${RUNTIME_CORE_DIR}/src/uvm/uvm_callback.cc
 
     # for V100
@@ -295,6 +295,7 @@ set(libruntime_common_src_files
     ${RUNTIME_CORE_DIR}/src/pool/memory_pool.cc
     ${RUNTIME_CORE_DIR}/src/pool/memory_pool_manager.cc
     ${RUNTIME_FEATURE_DIR}/model/model.cc
+    ${RUNTIME_FEATURE_DIR}/model/model_stars.cc
     ${RUNTIME_FEATURE_DIR}/model/model_rebuild.cc
     ${RUNTIME_CORE_DIR}/src/kernel/args/args_handle_allocator.cc
     ${RUNTIME_CORE_DIR}/src/kernel/args/para_convertor.cc
@@ -446,6 +447,7 @@ set(libruntime_v100_src_files
     ${RUNTIME_CORE_DIR}/src/pool/memory_pool.cc
     ${RUNTIME_CORE_DIR}/src/pool/memory_pool_manager.cc
     ${RUNTIME_FEATURE_DIR}/model/model.cc
+    ${RUNTIME_FEATURE_DIR}/model/model_stars.cc
     ${RUNTIME_FEATURE_DIR}/model/model_rebuild.cc
     ${RUNTIME_CORE_DIR}/src/kernel/args/args_handle_allocator.cc
     ${RUNTIME_CORE_DIR}/src/kernel/args/para_convertor.cc
@@ -457,6 +459,7 @@ set(libruntime_v100_src_files
     ${RUNTIME_CORE_DIR}/src/kernel/program_common.cc
     ${RUNTIME_CORE_DIR}/src/kernel/kernel_utils.cc
     ${RUNTIME_CORE_DIR}/src/launch/memory_common.cc
+    ${RUNTIME_CORE_DIR}/src/launch/task_launch_common.cc
     ${RUNTIME_CORE_DIR}/src/launch/memcpy_stars.cc
     ${RUNTIME_CORE_DIR}/src/kernel/v100/program_plat.cc
     ${RUNTIME_CORE_DIR}/src/launch/cmo_barrier_common.cc

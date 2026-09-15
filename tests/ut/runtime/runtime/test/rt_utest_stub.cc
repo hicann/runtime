@@ -530,16 +530,7 @@ TEST_F(TinyStubTest, context_stub)
     dev->Init();
     Context ctx(dev, 0);
     ctx.Init();
-    rtError_t ret = RT_ERROR_NONE;
     ctx.TryRecycleModelResource(1, 1, nullptr);
-    ret = ctx.FftsPlusTaskLaunch(nullptr, nullptr, 0);
-    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
-    ret = ctx.RDMASend(0, 0, nullptr);
-    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
-    ret = ctx.RdmaDbSendToDev(0, 0, nullptr, 0);
-    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
-    ret = ctx.RdmaDbSend(0, 0, nullptr);
-    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
     delete dev;
     dev = nullptr;
     ctx.device_ = nullptr;

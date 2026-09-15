@@ -297,6 +297,7 @@ set(libruntime_src_files
     ${RUNTIME_CORE_DIR}/src/launch/label_stars.cc
     ${RUNTIME_CORE_DIR}/src/launch/memory_arch5162.cc
     ${RUNTIME_CORE_DIR}/src/launch/memory_common.cc
+    ${RUNTIME_CORE_DIR}/src/launch/task_launch_common.cc
     ${RUNTIME_CORE_DIR}/src/launch/xpu_aicpu_c_stub.cc
     ${RUNTIME_CORE_DIR}/src/memory/mem_type.cc
     ${RUNTIME_CORE_DIR}/src/notify/notify.cc
@@ -311,6 +312,7 @@ set(libruntime_src_files
     ${RUNTIME_DIR}/src/runtime/driver/driver.cc
     ${RUNTIME_DIR}/src/runtime/driver/v100/npu_driver.cc
     ${RUNTIME_FEATURE_DIR}/model/model.cc
+    ${RUNTIME_FEATURE_DIR}/model/model_stars.cc
     ${RUNTIME_FEATURE_DIR}/model/model_rebuild.cc
     ${RUNTIME_FEATURE_DIR}/soma/soma.cc
     ${RUNTIME_FEATURE_DIR}/soma/stream_mem_pool.cc

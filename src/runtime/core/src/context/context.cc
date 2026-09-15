@@ -12,7 +12,6 @@
 #include "capture_ops.hpp"
 #include "davinci_kernel_task.h"
 #include "maintenance_task.h"
-#include "model_graph_task.h"
 #include "runtime_dump_task.h"
 #include <cinttypes>
 #include <exception>
@@ -53,8 +52,6 @@
 #include "capture_model.hpp"
 #include "capture_model_utils.hpp"
 #include "common_task.h"
-#include "random_num_task.h"
-#include "memory_task.h"
 #include "reduce_task.h"
 #include "stream_factory.hpp"
 #include "stub_task.hpp"
@@ -1242,90 +1239,6 @@ rtError_t Context::Synchronize(int32_t timeout)
     return SyncStreamsWithTimeout(syncStreams, timeout, startTime);
 }
 
-rtError_t Context::DebugRegister(
-    Model* const mdl, const uint32_t flag, const void* const addr, uint32_t* const streamId, uint32_t* const taskId)
-{
-    rtError_t error;
-    uint32_t flipTaskId = 0;
-    Stream* const dftStm = DefaultStream_();
-    NULL_PTR_RETURN_MSG(dftStm, RT_ERROR_STREAM_NULL);
-    *streamId = static_cast<uint32_t>(dftStm->Id_());
-    TaskInfo* rtDbgRegTask = nullptr;
-
-    COND_RETURN_WARN(mdl->IsDebugRegister(), RT_ERROR_DEBUG_REGISTER_FAILED, "model already debug registered!");
-    if (device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ)) {
-        RtDebugRegisterParam param = {addr, mdl->Id_(), flag};
-        error =
-            device_->GetCtrlSQ().SendDebugRegisterMsg(RtCtrlMsgType::RT_CTRL_MSG_DEBUG_REGISTER, param, &flipTaskId);
-        *taskId = flipTaskId;
-        *streamId = static_cast<uint32_t>(device_->GetCtrlSQ().GetStream()->Id_());
-        ERROR_RETURN(error, "Failed to send debug register message, retCode=%#x.", error);
-    } else {
-        TaskInfo submitTask = {};
-        rtError_t errorReason;
-        rtDbgRegTask = dftStm->AllocTask(&submitTask, TS_TASK_TYPE_DEBUG_REGISTER, errorReason);
-        NULL_PTR_RETURN_MSG(rtDbgRegTask, errorReason);
-
-        error = DebugRegisterTaskInit(rtDbgRegTask, mdl->Id_(), addr, flag);
-        ERROR_GOTO_MSG_INNER(
-            error, ERROR_RECYCLE, "Failed to init debug register task, stream_id=%d, task_id=%" PRIu16 ", retCode=%#x.",
-            *streamId, rtDbgRegTask->id, error);
-
-        error = device_->SubmitTask(rtDbgRegTask, &flipTaskId);
-        *taskId = flipTaskId;
-        ERROR_GOTO_MSG_INNER(error, ERROR_RECYCLE, "Failed to submit debug register task, retCode=%#x.", error);
-
-        error = dftStm->Synchronize();
-        ERROR_RETURN_MSG_INNER(error, "Failed to synchronize debug register task, retCode=%#x.", error);
-    }
-    mdl->SetDebugRegister(true);
-    return error;
-
-ERROR_RECYCLE:
-    (void)device_->GetTaskFactory()->Recycle(rtDbgRegTask);
-    return RT_ERROR_DEBUG_REGISTER_FAILED;
-}
-
-rtError_t Context::DebugUnRegister(Model* const mdl)
-{
-    rtError_t error;
-    Stream* const dftStm = DefaultStream_();
-    NULL_PTR_RETURN_MSG(dftStm, RT_ERROR_STREAM_NULL);
-    const int32_t streamId = dftStm->Id_();
-    TaskInfo* rtDbgUnregTask = nullptr;
-
-    COND_RETURN_WARN(!mdl->IsDebugRegister(), RT_ERROR_DEBUG_UNREGISTER_FAILED, "model is not debug registered!");
-
-    if (device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ)) {
-        RtDebugUnRegisterParam param = {mdl->Id_()};
-        error = device_->GetCtrlSQ().SendDebugUnRegisterMsg(RtCtrlMsgType::RT_CTRL_MSG_DEBUG_UNREGISTER, param);
-        ERROR_RETURN(error, "Failed to send debug unregister message, retCode=%#x.", error);
-    } else {
-        TaskInfo submitTask = {};
-        rtError_t errorReason;
-        rtDbgUnregTask = dftStm->AllocTask(&submitTask, TS_TASK_TYPE_DEBUG_UNREGISTER, errorReason);
-        NULL_PTR_RETURN_MSG(rtDbgUnregTask, errorReason);
-
-        error = DebugUnRegisterTaskInit(rtDbgUnregTask, mdl->Id_());
-        ERROR_GOTO_MSG_INNER(
-            error, ERROR_RECYCLE, "Failed to init DebugUnRegisterTask, stream_id=%d, task_id=%" PRIu16 ", retCode=%#x.",
-            streamId, rtDbgUnregTask->id, error);
-
-        error = device_->SubmitTask(rtDbgUnregTask);
-        ERROR_GOTO_MSG_INNER(error, ERROR_RECYCLE, "Failed to submit DebugUnRegisterTask, retCode=%#x.", error);
-
-        error = dftStm->Synchronize();
-        ERROR_RETURN_MSG_INNER(error, "Failed to synchronize DebugUnRegisterTask, retCode=%#x.", error);
-    }
-
-    mdl->SetDebugRegister(false);
-    return error;
-
-ERROR_RECYCLE:
-    (void)device_->GetTaskFactory()->Recycle(rtDbgUnregTask);
-    return RT_ERROR_DEBUG_UNREGISTER_FAILED;
-}
-
 rtError_t Context::GetDevArgsAddr(
     Stream* const stm, const rtArgsEx_t* const argsInfo, void** const devArgsAddr, void** const argsHandle) const
 {
@@ -1353,46 +1266,6 @@ rtError_t Context::GetDevArgsAddr(
     for (size_t i = 0UL; i < (argsInfo->argsSize) / sizeof(uint32_t); i++) {
         RT_LOG(RT_LOG_INFO, "args[%u]:%08x", i, cmd[i]);
     }
-    return error;
-}
-
-rtError_t Context::LaunchSqeUpdateTask(
-    const void* const src, const uint64_t cpySize, uint32_t sqId, uint32_t pos, Stream* const stm)
-{
-    TaskInfo submitTask = {};
-    rtError_t errorReason;
-
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        stm, RT_ERROR_INVALID_VALUE, "Delivering the Submission Queue Entry (SQE) update task");
-
-    TaskInfo* rtMemcpyAsyncTask = stm->AllocTask(&submitTask, TS_TASK_TYPE_MEMCPY, errorReason);
-    NULL_PTR_RETURN_MSG(rtMemcpyAsyncTask, errorReason);
-
-    rtError_t error = MemcpyAsyncD2HTaskInit(rtMemcpyAsyncTask, src, cpySize, sqId, pos);
-    if (error != RT_ERROR_NONE) {
-        RT_LOG(
-            RT_LOG_ERROR,
-            "MemcpyAsyncD2HTaskInit failed, device_id=%u, exe_stream_id=%d, dsa_sq_id=%u, dsa_pos=%u, "
-            "cpySize=%#" PRIx64 " bytes, retCode=%#x.",
-            device_->Id_(), stm->Id_(), sqId, pos, cpySize, static_cast<uint32_t>(error));
-        goto ERROR_RECYCLE;
-    }
-
-    error = device_->SubmitTask(rtMemcpyAsyncTask);
-    if (error != RT_ERROR_NONE) {
-        RT_LOG(
-            RT_LOG_ERROR,
-            "Submit memcpy async D2H task failed, device_id=%u, exe_stream_id=%d, dsa_sq_id=%u, dsa_pos=%u, "
-            "cpySize=%#" PRIx64 " bytes, retCode=%#x.",
-            device_->Id_(), stm->Id_(), sqId, pos, cpySize, static_cast<uint32_t>(error));
-        goto ERROR_RECYCLE;
-    }
-
-    GET_THREAD_TASKID_AND_STREAMID(rtMemcpyAsyncTask, stm->AllocTaskStreamId());
-    return RT_ERROR_NONE;
-
-ERROR_RECYCLE:
-    (void)device_->GetTaskFactory()->Recycle(rtMemcpyAsyncTask);
     return error;
 }
 
@@ -2032,77 +1905,6 @@ rtError_t Context::GetCaptureModelEndGraphNotify(Model* const mdl, Stream* const
     return error;
 }
 
-rtError_t Context::ModelAddEndGraph(Model* const mdl, Stream* const stm, const uint32_t flags)
-{
-    rtError_t error;
-    // rtSetSocVersion modify ThreadLocalContainer::socType_, not Runtime::socType_
-    const uint32_t modelExecuteType = mdl->ModelExecuteType();
-    if ((device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_MODEL_EXECUTOR_WITH_QUEUE)) &&
-        (!RtIsHeterogenous())) {
-        bool useAicpuExcutor = false;
-#if (!defined(CFG_VECTOR_CAST))
-        useAicpuExcutor = mdl->IsModelHeadStream(stm) && ((stm->Flags() & RT_STREAM_AICPU) != 0U);
-#endif
-        if (((flags & RT_KERNEL_DUMPFLAG) == 0U) && (modelExecuteType != EXECUTOR_AICPU) && !useAicpuExcutor) {
-            RT_LOG(RT_LOG_INFO, "not submit endGraph.");
-            return RT_ERROR_NONE;
-        }
-    }
-    const uint32_t endGraphNum = mdl->EndGraphNum_();
-    COND_RETURN_AND_MSG_OUTER(
-        endGraphNum >= 1U, RT_ERROR_MODEL_ENDGRAPH, ErrorCode::EE1011,
-        "Adding an EndGraph flag to the stream bound to the model", endGraphNum, "endGraphNum",
-        "The model must have only one end graph");
-
-    if (device_->IsStarsPlatform() && (modelExecuteType != EXECUTOR_AICPU)) {
-        const bool isBindThisModel = ((stm->Model_() != nullptr) && (stm->Model_()->Id_() == mdl->Id_()));
-        COND_RETURN_AND_MSG_OUTER(
-            !stm->IsModelStream() || (!isBindThisModel), RT_ERROR_STREAM_INVALID, ErrorCode::EE1017,
-            "Adding an EndGraph flag to the stream bound to the model", "stream",
-            "Stream " + std::to_string(stm->Id_()) + " must be bound to the model " + std::to_string(mdl->Id_()));
-
-        Notify* notify = nullptr;
-        error = GetCaptureModelEndGraphNotify(mdl, stm, notify);
-        COND_RETURN_ERROR(
-            error != RT_ERROR_NONE, error, "Failed to get capture model endgraph notify, model_id=%u, stream_id=%d",
-            mdl->Id_(), stm->Id_());
-        COND_RETURN_ERROR(
-            notify == nullptr, RT_ERROR_NOTIFY_NEW, "Endgraph notify id is null, model_id=%u, stream_id=%d", mdl->Id_(),
-            stm->Id_());
-
-        error = notify->Record(stm);
-        if (error != RT_ERROR_NONE) {
-            (void)ReleaseNotify(mdl, notify);
-            RT_LOG(RT_LOG_ERROR, "Notify record failed, retCode=%#x", error);
-            return error;
-        }
-
-        notify->SetEndGraphModel(mdl);
-        mdl->SetEndGraphNotify(notify);
-        RT_LOG(RT_LOG_INFO, "notify record ok. stream_id=%d", stm->Id_());
-        return RT_ERROR_NONE;
-    }
-
-    TaskInfo submitTask = {};
-    rtError_t errorReason;
-    TaskInfo* rtAddEndGraphTask = stm->AllocTask(&submitTask, TS_TASK_TYPE_MODEL_END_GRAPH, errorReason);
-    NULL_PTR_RETURN_MSG(rtAddEndGraphTask, errorReason);
-
-    (void)AddEndGraphTaskInit(
-        rtAddEndGraphTask, mdl->Id_(), modelExecuteType, RtPtrToValue<const void*>(mdl->GetDevModelID()),
-        RtPtrToValue<const void*>(mdl->GetDevString(RT_DEV_STRING_ENDGRAPH)), static_cast<uint8_t>(flags));
-
-    error = device_->SubmitTask(rtAddEndGraphTask);
-    ERROR_GOTO_MSG_INNER(error, ERROR_RECYCLE, "Failed to submit AddEndGraphTask, retCode=%#x.", error);
-
-    mdl->IncEndGraphNum();
-    GET_THREAD_TASKID_AND_STREAMID(rtAddEndGraphTask, stm->Id_());
-    return RT_ERROR_NONE;
-ERROR_RECYCLE:
-    (void)device_->GetTaskFactory()->Recycle(rtAddEndGraphTask);
-    return error;
-}
-
 rtError_t Context::ModelExecutorSet(Model* const mdl, const uint8_t flags) const
 {
     mdl->SetModelExecutorType(static_cast<uint32_t>(flags));
@@ -2178,38 +1980,6 @@ rtError_t Context::ModelAbortById(uint32_t modelId) const
     return error;
 }
 
-rtError_t Context::ModelExit(Model* const mdl, Stream* const stm)
-{
-    rtError_t error;
-    const uint32_t modelExitNum = mdl->ModelExitNum_();
-    COND_RETURN_AND_MSG_OUTER(
-        modelExitNum >= 1U, RT_ERROR_MODEL_EXIT, ErrorCode::EE1011, "Model exiting", modelExitNum, "modelExitNum",
-        "The model must exit only once");
-    COND_RETURN_AND_MSG_OUTER(
-        stm->Model_() == nullptr, RT_ERROR_MODEL_EXIT_STREAM_UNBIND, ErrorCode::EE1017, "Model exiting", "stream",
-        "Stream " + std::to_string(stm->Id_()) + " must be bound to a model");
-    COND_RETURN_AND_MSG_OUTER(
-        stm->Model_()->Id_() != mdl->Id_(), RT_ERROR_MODEL_EXIT_ID, ErrorCode::EE1017, "Model exiting", "stream",
-        "Stream " + std::to_string(stm->Id_()) + " must be bound to the model " + std::to_string(mdl->Id_()));
-
-    TaskInfo submitTask = {};
-    rtError_t errorReason;
-    TaskInfo* rtAddModelExitTask = stm->AllocTask(&submitTask, TS_TASK_TYPE_MODEL_EXIT_GRAPH, errorReason);
-    NULL_PTR_RETURN_MSG(rtAddModelExitTask, errorReason);
-
-    (void)AddModelExitTaskInit(rtAddModelExitTask, mdl->Id_());
-
-    error = device_->SubmitTask(rtAddModelExitTask);
-    ERROR_GOTO_MSG_INNER(error, ERROR_RECYCLE, "Failed to submit AddModelExitTask, retCode=%#x.", error);
-
-    mdl->IncModelExitNum();
-    return RT_ERROR_NONE;
-
-ERROR_RECYCLE:
-    (void)device_->GetTaskFactory()->Recycle(rtAddModelExitTask);
-    return error;
-}
-
 rtError_t Context::ModelBindQueue(Model* const mdl, const uint32_t queueId, const rtModelQueueFlag_t flag) const
 {
     rtError_t error;
@@ -2217,30 +1987,6 @@ rtError_t Context::ModelBindQueue(Model* const mdl, const uint32_t queueId, cons
     error = mdl->BindQueue(queueId, flag);
     ERROR_RETURN_MSG_INNER(error, "Failed to bind queue to model, retCode=%#x.", error);
 
-    return error;
-}
-
-rtError_t Context::CallbackLaunch(
-    const rtCallback_t callBackFunc, void* const fnData, Stream* const stm, const bool isBlock, const int32_t evtId)
-{
-    const int32_t streamId = stm->Id_();
-    rtError_t error;
-    TaskInfo taskSubmit = {};
-    rtError_t errorReason;
-    TaskInfo* rtCbLaunchTask = stm->AllocTask(&taskSubmit, TS_TASK_TYPE_HOSTFUNC_CALLBACK, errorReason);
-    NULL_PTR_RETURN_MSG(rtCbLaunchTask, errorReason);
-
-    (void)CallbackLaunchTaskInit(rtCbLaunchTask, callBackFunc, fnData, isBlock, evtId);
-
-    error = device_->SubmitTask(rtCbLaunchTask);
-    ERROR_GOTO_MSG_INNER(error, ERROR_RECYCLE, "Failed to submit host func callback task, retCode=%#x.", error);
-
-    GET_THREAD_TASKID_AND_STREAMID(rtCbLaunchTask, streamId);
-
-    return error;
-
-ERROR_RECYCLE:
-    (void)device_->GetTaskFactory()->Recycle(rtCbLaunchTask);
     return error;
 }
 
@@ -2300,68 +2046,6 @@ rtError_t Context::LabelSwitchListCreate(Label** const labels, const size_t num,
 
     *labelList = devMem;
     return RT_ERROR_NONE;
-}
-
-rtError_t Context::LaunchRandomNumTask(
-    const rtRandomNumTaskInfo_t* taskInfo, Stream* const stm, const void* reserve) const
-{
-    UNUSED(reserve);
-    rtError_t error = CheckRandomNumTaskInfo(taskInfo);
-    ERROR_RETURN(error, "Failed to check random number task info, retCode=%#x.", static_cast<uint32_t>(error));
-
-    const int32_t streamId = stm->Id_();
-    uint32_t taskId;
-    TaskInfo taskSubmit = {};
-    rtError_t errorReason;
-    TaskInfo* rtStarsCommonTask = stm->AllocTask(&taskSubmit, TS_TASK_TYPE_STARS_COMMON, errorReason);
-    NULL_PTR_RETURN_MSG(rtStarsCommonTask, errorReason);
-
-    rtStarsDsaSqe_t sqe = {};
-    error = GetDsaSqeByRandomNumTask(taskInfo, rtStarsCommonTask, sqe);
-    ERROR_RETURN_MSG_INNER(error, "Failed to get DSA SQE by random number task info, retCode=%#x.", error);
-
-    error = StarsCommonTaskInit(rtStarsCommonTask, sqe, RT_KERNEL_DEFAULT);
-    ERROR_GOTO_MSG_INNER(
-        error, ERROR_RECYCLE, "Failed to init stars common task, stream_id=%d, task_id=%hu, retCode=%#x.", streamId,
-        rtStarsCommonTask->id, error);
-
-    error = device_->SubmitTask(rtStarsCommonTask, &taskId);
-    ERROR_GOTO_MSG_INNER(
-        error, ERROR_RECYCLE, "Failed to submit stars common task, streamId=%d, taskId=%hu, retCode=%#x.", streamId,
-        rtStarsCommonTask->id, error);
-
-    if (rtStarsCommonTask->stream != nullptr) {
-        SET_THREAD_TASKID_AND_STREAMID(rtStarsCommonTask->stream->Id_(), taskId);
-    }
-
-    return RT_ERROR_NONE;
-ERROR_RECYCLE:
-    (void)device_->GetTaskFactory()->Recycle(rtStarsCommonTask);
-    return error;
-}
-
-rtError_t Context::SetStreamSqLockUnlock(Stream* const stm, const bool isLock)
-{
-    TaskInfo taskSubmit = {};
-    rtError_t errorReason;
-    TaskInfo* rtSetSqLockUnlockTask = stm->AllocTask(&taskSubmit, TS_TASK_TYPE_SET_SQ_LOCK_UNLOCK, errorReason);
-    NULL_PTR_RETURN(rtSetSqLockUnlockTask, errorReason);
-
-    rtError_t error = SqLockUnlockTaskInit(rtSetSqLockUnlockTask, isLock);
-    const int32_t streamId = stm->Id_();
-    ERROR_GOTO(
-        error, ERROR_RECYCLE, "Failed to init SQ lock/unlock task, stream_id=%d, task_id=%hu, retCode=%#x.", streamId,
-        rtSetSqLockUnlockTask->id, error);
-
-    error = device_->SubmitTask(rtSetSqLockUnlockTask);
-    ERROR_GOTO(error, ERROR_RECYCLE, "Failed to submit SQ lock/unlock task, retCode=%#x.", error);
-
-    GET_THREAD_TASKID_AND_STREAMID(rtSetSqLockUnlockTask, streamId);
-
-    return error;
-ERROR_RECYCLE:
-    (void)device_->GetTaskFactory()->Recycle(rtSetSqLockUnlockTask);
-    return error;
 }
 
 rtError_t Context::CopyTilingTabToDev(
@@ -2894,30 +2578,6 @@ rtError_t Context::GetSatStatusForStars(const uint64_t outputSize, Stream* const
 
     ERROR_RETURN(error, "NpuGetFloatStatus failed, retCode=%#x.", static_cast<uint32_t>(error));
 
-    return error;
-}
-
-rtError_t Context::SetUpdateAddrTask(uint64_t devAddr, uint64_t len, Stream* stm)
-{
-    TaskInfo taskSubmit = {};
-    rtError_t errorReason;
-    TaskInfo* rtUpdateAddressTask = stm->AllocTask(&taskSubmit, TS_TASK_TYPE_UPDATE_ADDRESS, errorReason);
-    NULL_PTR_RETURN(rtUpdateAddressTask, errorReason);
-
-    rtError_t error = UpdateAddressTaskInit(rtUpdateAddressTask, devAddr, len);
-    const int32_t streamId = stm->Id_();
-    ERROR_GOTO(
-        error, ERROR_RECYCLE, "Failed to init UpdateAddressTask, stream_id=%d, task_id=%hu, retCode=%#x.", streamId,
-        rtUpdateAddressTask->id, static_cast<uint32_t>(error));
-
-    error = device_->SubmitTask(rtUpdateAddressTask);
-    ERROR_GOTO(error, ERROR_RECYCLE, "Failed to submit UpdateAddressTask, retCode=%#x.", static_cast<uint32_t>(error));
-
-    GET_THREAD_TASKID_AND_STREAMID(rtUpdateAddressTask, streamId);
-
-    return error;
-ERROR_RECYCLE:
-    (void)device_->GetTaskFactory()->Recycle(rtUpdateAddressTask);
     return error;
 }
 

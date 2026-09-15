@@ -10,11 +10,18 @@
 #ifndef RUNTIME_FFTS_TASK_H
 #define RUNTIME_FFTS_TASK_H
 
+#include <mutex>
+
 #include "driver.hpp"
 #include "stars.hpp"
 
 namespace cce {
 namespace runtime {
+class Stream;
+
+rtError_t FftsPlusTaskLaunch(
+    const rtFftsPlusTaskInfo_t* const fftsPlusTaskInfo, Stream* const stm, const uint32_t flag,
+    std::mutex& contextCaptureLock);
 rtError_t FftsPlusTaskInit(TaskInfo* taskInfo, const rtFftsPlusTaskInfo_t* const fftsPlusTaskInfo, const uint32_t flag);
 rtError_t FillFftsPlusSqe(TaskInfo* taskInfo, const void* const devMem);
 void DoCompleteSuccForFftsPlusTask(TaskInfo* taskInfo, const uint32_t devId);

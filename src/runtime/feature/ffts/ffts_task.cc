@@ -30,9 +30,13 @@
 #include "error_code.h"
 #include "davinci_kernel_task.h"
 #include "ffts_task.h"
+#include "inner_thread_local.hpp"
+#include "rdma_task.h"
+#include "task.hpp"
 
 namespace cce {
 namespace runtime {
+TIMESTAMP_EXTERN(FftsPlusTaskInit);
 namespace {
 const std::set<int32_t> MEM_ERROR_CODE = {
     TS_ERROR_AICORE_MTE_ERROR, TS_ERROR_SDMA_LINK_ERROR, TS_ERROR_SDMA_POISON_ERROR};
@@ -1061,6 +1065,66 @@ void SetStarsResultForFftsPlusTask(TaskInfo* taskInfo, const rtCqReport_t& logic
 }
 
 #endif
+
+rtError_t FftsPlusTaskLaunch(
+    const rtFftsPlusTaskInfo_t* const fftsPlusTaskInfo, Stream* const stm, const uint32_t flag,
+    std::mutex& contextCaptureLock)
+{
+    const int32_t streamId = stm->Id_();
+    const uint32_t sqeNum = ((flag & RT_KERNEL_FFTSPLUS_DYNAMIC_SHAPE_DUMPFLAG) != 0U) ? 3U : 1U;
+
+    RT_LOG(RT_LOG_INFO, "Begin to Create Ffts Plus Task.");
+
+    TaskInfo taskSubmit = {};
+    rtError_t errorReason;
+    TaskInfo* rtFftsPlusTask = stm->AllocTask(&taskSubmit, TS_TASK_TYPE_FFTS_PLUS, errorReason, sqeNum);
+    NULL_PTR_RETURN(rtFftsPlusTask, errorReason);
+    Device* const device = stm->Device_();
+
+    TIMESTAMP_BEGIN(FftsPlusTaskInit);
+    rtError_t error = FftsPlusTaskInit(rtFftsPlusTask, fftsPlusTaskInfo, flag);
+    TIMESTAMP_END(FftsPlusTaskInit);
+    ERROR_GOTO(
+        error, ERROR_RECYCLE, "Ffts plus task init failed, stream_id=%d, task_id=%hu, retCode=%#x.", streamId,
+        rtFftsPlusTask->id, error);
+    // wait for copy finish
+    if (rtFftsPlusTask->u.fftsPlusTask.argsHandleInfoPtr != nullptr) {
+        for (auto iter : *(rtFftsPlusTask->u.fftsPlusTask.argsHandleInfoPtr)) {
+            Handle* argHdl = static_cast<Handle*>(iter);
+            if (!(argHdl->freeArgs)) {
+                continue;
+            }
+            RT_LOG(
+                RT_LOG_INFO,
+                "device_id=%u, stream_id=%d, task_id=%u, hand=%p, kerArgs=%p, "
+                "HandleInfoPtr=%p",
+                device->Id_(), streamId, rtFftsPlusTask->id, argHdl, argHdl->argsAlloc->GetDevAddr(argHdl->kerArgs),
+                rtFftsPlusTask->u.fftsPlusTask.argsHandleInfoPtr);
+
+            error = argHdl->argsAlloc->H2DMemCopyWaitFinish(argHdl->kerArgs);
+            ERROR_GOTO(error, ERROR_RECYCLE, "H2DMemCopyWaitFinish for args cpy result failed, retCode=%#x.", error);
+            stm->fftsMemFreeCnt++;
+        }
+    }
+
+    error = device->SubmitTask(rtFftsPlusTask);
+    ERROR_GOTO(error, ERROR_RECYCLE, "Ffts plus task submit failed, retCode=%#x", error);
+
+    GET_THREAD_TASKID_AND_STREAMID(rtFftsPlusTask, stm->AllocTaskStreamId());
+
+    if (stm->IsCapturing() && stm->GetCaptureStream() != nullptr) {
+        std::lock_guard<std::mutex> lock(contextCaptureLock); // 防止跟endCapture接口并发调用，概率较低
+        if (stm->IsCapturing() && stm->GetCaptureStream() != nullptr) {
+            FftsPlusTaskInfo& fftsPlusTask = rtFftsPlusTask->u.fftsPlusTask;
+            error = SubmitRdmaPiValueModifyTask(stm, fftsPlusTaskInfo, fftsPlusTask.descAlignBuf);
+        }
+    }
+
+    return error;
+ERROR_RECYCLE:
+    (void)device->GetTaskFactory()->Recycle(rtFftsPlusTask);
+    return error;
+}
 
 } // namespace runtime
 } // namespace cce

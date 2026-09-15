@@ -12,32 +12,6 @@
 namespace cce {
 namespace runtime {
 
-rtError_t Context::RDMASend(const uint32_t sqIndex, const uint32_t wqeIndex, Stream* const stm)
-{
-    UNUSED(sqIndex);
-    UNUSED(wqeIndex);
-    UNUSED(stm);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
-rtError_t Context::RdmaDbSendToDev(
-    const uint32_t dbIndex, const uint64_t dbInfo, Stream* const stm, const uint32_t taskSqe) const
-{
-    UNUSED(dbIndex);
-    UNUSED(dbInfo);
-    UNUSED(stm);
-    UNUSED(taskSqe);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
-rtError_t Context::RdmaDbSend(const uint32_t dbIndex, const uint64_t dbInfo, Stream* const stm)
-{
-    UNUSED(dbIndex);
-    UNUSED(dbInfo);
-    UNUSED(stm);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
 rtError_t Context::ModelGetNodes(const Model* const mdl, uint32_t* const num)
 {
     UNUSED(mdl);

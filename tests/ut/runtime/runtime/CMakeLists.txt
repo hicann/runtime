@@ -288,7 +288,6 @@ set(runtimeut_src_context_list
     ${TOP_DIR}/src/runtime/core/src/context/context.cc
     ${TOP_DIR}/src/runtime/core/src/context/context_dfx.cc
     ${TOP_DIR}/src/runtime/core/src/context/context_standard_soc.cc
-    ${TOP_DIR}/src/runtime/feature/ffts/context_ffts_standard_soc.cc
     ${TOP_DIR}/src/runtime/core/src/context/context_manage.cc
 )
 
@@ -409,6 +408,7 @@ set(runtimeut_src_tiny_exclude_list
     ${TOP_DIR}/src/runtime/api/impl/api_impl_uvm.cc
     ${TOP_DIR}/src/runtime/core/src/context/context_dfx.cc
     ${TOP_DIR}/src/runtime/core/src/context/context_standard_soc.cc
+    ${TOP_DIR}/src/runtime/core/src/launch/rdma_common.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/api_decorator_aclgraph.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/api_error_aclgraph.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/v100/api_impl_aclgraph.cc
@@ -434,7 +434,6 @@ set(runtimeut_src_tiny_exclude_list
     ${TOP_DIR}/src/runtime/feature/snapshot/snapshot_process_helper.cc
     ${TOP_DIR}/src/runtime/feature/snapshot/snapshot_callback_manager.cc
     ${TOP_DIR}/src/runtime/feature/snapshot/v100/device_snapshot_adapter.cc
-    ${TOP_DIR}/src/runtime/feature/ffts/context_ffts_standard_soc.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_standard_soc.cc
     ${TOP_DIR}/src/runtime/core/src/engine/hwts/direct_hwts_engine.cc
     ${TOP_DIR}/src/runtime/core/src/engine/hwts/hwts_engine.cc
@@ -503,7 +502,6 @@ set(runtimeut_src_tiny_include_list
     ${TOP_DIR}/src/runtime/feature/snapshot/tiny/device_snapshot_stub.cc
     ${TOP_DIR}/src/runtime/feature/snapshot/tiny/snapshot_process_helper_stub.cc
     ${TOP_DIR}/src/runtime/feature/snapshot/tiny/snapshot_callback_manager_stub.cc
-    ${TOP_DIR}/src/runtime/feature/ffts/context_ffts_stub.cc
     ${TOP_DIR}/src/runtime/core/src/dfx/printf_stub.cc
     ${TOP_DIR}/src/runtime/core/src/dfx/aicpu_dfx_stub.cc
     ${TOP_DIR}/src/runtime/core/src/dfx/kernel_dfx_info.cc
@@ -634,6 +632,7 @@ set(runtimeut_src_list
     ${TOP_DIR}/src/runtime/driver/driver.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_dcache_lock_common.cpp
     ${TOP_DIR}/src/runtime/feature/model/model.cc
+    ${TOP_DIR}/src/runtime/feature/model/model_stars.cc
     ${TOP_DIR}/src/runtime/feature/model/model_rebuild.cc
     ${TOP_DIR}/src/runtime/feature/model/v100/capture_adapt.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/v100/capture_adapt_v100.cc
@@ -663,6 +662,8 @@ set(runtimeut_src_list
     ${TOP_DIR}/src/runtime/core/src/launch/memory_common.cc
     ${TOP_DIR}/src/runtime/core/src/launch/memcpy_stars.cc
     ${TOP_DIR}/src/runtime/core/src/launch/memory_stars.cc
+    ${TOP_DIR}/src/runtime/core/src/launch/task_launch_common.cc
+    ${TOP_DIR}/src/runtime/core/src/launch/rdma_common.cc
     ${TOP_DIR}/src/runtime/core/src/launch/aix_stars.cc
     ${TOP_DIR}/src/runtime/core/src/launch/aicpu_stars.cc
     ${TOP_DIR}/src/runtime/core/src/launch/dvpp_stars.cc
@@ -799,6 +800,8 @@ set(runtimeut_david_src_list
     ${TOP_DIR}/src/runtime/core/src/kernel/symbol_table.cc
     ${TOP_DIR}/src/runtime/feature/soma/soma.cc
     ${TOP_DIR}/src/runtime/feature/soma/stream_mem_pool.cc
+    ${TOP_DIR}/src/runtime/core/src/launch/task_launch_common.cc
+    ${TOP_DIR}/src/runtime/core/src/launch/rdma_common.cc
     ${TOP_DIR}/src/runtime/core/src/launch/label.cc
     ${TOP_DIR}/src/runtime/core/src/device/aicpu_err_msg.cc
     ${TOP_DIR}/src/runtime/core/src/aicpu_timeout/aicpu_timeout_manager.cc
@@ -1726,6 +1729,8 @@ set(runtimeut_v201_src_list
     ${TOP_DIR}/src/runtime/feature/xpu/program_plat.cc
     ${TOP_DIR}/src/runtime/feature/soma/soma.cc
     ${TOP_DIR}/src/runtime/feature/soma/stream_mem_pool.cc
+    ${TOP_DIR}/src/runtime/core/src/launch/task_launch_common.cc
+    ${TOP_DIR}/src/runtime/core/src/launch/rdma_common.cc
     ${TOP_DIR}/src/runtime/core/src/launch/label.cc
     ${TOP_DIR}/src/runtime/core/src/device/aicpu_err_msg.cc
     ${TOP_DIR}/src/runtime/core/src/aicpu_timeout/aicpu_timeout_manager.cc

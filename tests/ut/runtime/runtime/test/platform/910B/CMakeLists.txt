@@ -118,7 +118,6 @@ set(runtimeut_src_context_list
     ${TOP_DIR}/src/runtime/core/src/context/context.cc
     ${TOP_DIR}/src/runtime/core/src/context/context_dfx.cc
     ${TOP_DIR}/src/runtime/core/src/context/context_standard_soc.cc
-    ${TOP_DIR}/src/runtime/feature/ffts/context_ffts_standard_soc.cc
     ${TOP_DIR}/src/runtime/core/src/context/context_manage.cc
 )
 
@@ -297,6 +296,7 @@ set(runtimeut_910b_src_list
     ${TOP_DIR}/src/runtime/driver/driver.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_dcache_lock_common.cpp
     ${TOP_DIR}/src/runtime/feature/model/model.cc
+    ${TOP_DIR}/src/runtime/feature/model/model_stars.cc
     ${TOP_DIR}/src/runtime/feature/model/model_rebuild.cc
     ${TOP_DIR}/src/runtime/feature/model/v100/capture_adapt.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/v100/capture_adapt_v100.cc
@@ -322,6 +322,8 @@ set(runtimeut_910b_src_list
     ${TOP_DIR}/src/runtime/core/src/launch/memory_common.cc
     ${TOP_DIR}/src/runtime/core/src/launch/memcpy_stars.cc
     ${TOP_DIR}/src/runtime/core/src/launch/memory_stars.cc
+    ${TOP_DIR}/src/runtime/core/src/launch/task_launch_common.cc
+    ${TOP_DIR}/src/runtime/core/src/launch/rdma_common.cc
     ${TOP_DIR}/src/runtime/core/src/launch/aix_stars.cc
     ${TOP_DIR}/src/runtime/core/src/launch/aicpu_stars.cc
     ${TOP_DIR}/src/runtime/core/src/launch/dvpp_stars.cc

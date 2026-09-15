@@ -20,6 +20,8 @@
 #define protected public
 #include "runtime.hpp"
 #include "context.hpp"
+#include "model_c.hpp"
+#include "task_launch_c.hpp"
 #include "profiling_task.h"
 #include "cond_op_stream_task.h"
 #include "reduce_task.h"
@@ -513,7 +515,7 @@ TEST_F(CloudV2ContextTest, ModelAddEndGraph_Test)
     ctx->defaultStream_ = stmPtr;
     std::string socVersion = GlobalContainer::GetSocVersion();
     GlobalContainer::SetSocVersion("Ascend310P1");
-    error = ctx->ModelAddEndGraph(model, stmPtr, 0);
+    error = ModelAddEndGraph(model, stmPtr, 0);
     GlobalContainer::SetSocVersion(socVersion);
     ctx->streams_.clear();
     ctx->defaultStream_ = defaultStream;
@@ -2106,7 +2108,7 @@ TEST_F(CloudV2ContextTest, context_debugRegister)
     error = ctx->ModelCreate(&model);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = ctx->DebugRegister(model, flag, &addr, &streamId, &taskId);
+    error = ModelDebugRegister(model, flag, &addr, &streamId, &taskId, ctx->DefaultStream_());
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = ctx->ModelDestroy(model);
@@ -2132,7 +2134,7 @@ TEST_F(CloudV2ContextTest, context_debugUnRegister_fail1)
     error = ctx->ModelCreate(&model);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = ctx->DebugUnRegister(model);
+    error = ModelDebugUnRegister(model, ctx->DefaultStream_());
     EXPECT_EQ(error, RT_ERROR_DEBUG_UNREGISTER_FAILED);
 
     error = ctx->ModelDestroy(model);
@@ -2162,12 +2164,12 @@ TEST_F(CloudV2ContextTest, context_debugUnRegister_fail2)
     error = ctx->ModelCreate(&model);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = ctx->DebugRegister(model, flag, &addr, &streamId, &taskId);
+    error = ModelDebugRegister(model, flag, &addr, &streamId, &taskId, ctx->DefaultStream_());
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     MOCKER(DebugUnRegisterTaskInit).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
 
-    error = ctx->DebugUnRegister(model);
+    error = ModelDebugUnRegister(model, ctx->DefaultStream_());
     EXPECT_NE(error, RT_ERROR_NONE);
 
     error = ctx->ModelDestroy(model);
@@ -2197,10 +2199,10 @@ TEST_F(CloudV2ContextTest, context_debugUnRegister_succ)
     error = ctx->ModelCreate(&model);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = ctx->DebugRegister(model, flag, &addr, &streamId, &taskId);
+    error = ModelDebugRegister(model, flag, &addr, &streamId, &taskId, ctx->DefaultStream_());
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = ctx->DebugUnRegister(model);
+    error = ModelDebugUnRegister(model, ctx->DefaultStream_());
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = ctx->ModelDestroy(model);
@@ -2302,7 +2304,7 @@ TEST_F(CloudV2ContextTest, FftsPlusTaskLaunch_invalid_stream)
     MOCKER_CPP(&TaskFactory::Alloc).stubs().will(returnValue(&taskInfo));
     MOCKER_CPP(&TaskFactory::Recycle).stubs().will(returnValue(RT_ERROR_NONE));
 
-    error = ctx->FftsPlusTaskLaunch(&fftsPlusTaskInfo, stream, 0U);
+    error = FftsPlusTaskLaunch(&fftsPlusTaskInfo, stream, 0U, ctx->GetCaptureLock());
     EXPECT_EQ(error, RT_ERROR_STREAM_INVALID);
 
     (void)((Runtime*)Runtime::Instance())->PrimaryContextRelease(devId);
@@ -2345,15 +2347,15 @@ TEST_F(CloudV2ContextTest, FftsPlusTaskLaunch_test)
     MOCKER_CPP(&TaskFactory::Alloc).stubs().will(returnValue((TaskInfo*)nullptr));
     MOCKER_CPP(&TaskFactory::Recycle).stubs().will(returnValue(RT_ERROR_NONE));
 
-    error = ctx->FftsPlusTaskLaunch(nullptr, stream, 0U);
+    error = FftsPlusTaskLaunch(nullptr, stream, 0U, ctx->GetCaptureLock());
     EXPECT_EQ(error, RT_ERROR_STREAM_INVALID);
 
     argHdl->freeArgs = 1;
-    error = ctx->FftsPlusTaskLaunch(nullptr, stream, 0U);
+    error = FftsPlusTaskLaunch(nullptr, stream, 0U, ctx->GetCaptureLock());
     EXPECT_EQ(error, RT_ERROR_STREAM_INVALID);
 
     MOCKER_CPP_VIRTUAL(ctx->device_, &Device::SubmitTask).stubs().will(returnValue(RT_ERROR_NONE));
-    error = ctx->FftsPlusTaskLaunch(nullptr, stream, 0U);
+    error = FftsPlusTaskLaunch(nullptr, stream, 0U, ctx->GetCaptureLock());
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     (void)((Runtime*)Runtime::Instance())->PrimaryContextRelease(devId);
@@ -2747,7 +2749,7 @@ TEST_F(CloudV2ContextTest, SetUpdateAddrTask_test)
     int tempMemory = 0;
     auto preVal = stream->taskResMang_;
     stream->taskResMang_ = (TaskResManage*)&tempMemory;
-    ctx->SetUpdateAddrTask(0, 0, stream);
+    SetUpdateAddrTask(0, 0, stream);
     stream->taskResMang_ = preVal;
 
     rtTaskInput_t task = {};
@@ -3167,7 +3169,7 @@ TEST_F(CloudV2ContextTest, ModelAddEndGraph_unbound_stars_stream)
     EXPECT_NE(model, nullptr);
     EXPECT_NE(stream, nullptr);
     model->SetModelExecutorType(EXECUTOR_TS);
-    EXPECT_EQ(ctx->ModelAddEndGraph(model, stream, RT_KERNEL_DUMPFLAG), RT_ERROR_STREAM_INVALID);
+    EXPECT_EQ(ModelAddEndGraph(model, stream, RT_KERNEL_DUMPFLAG), RT_ERROR_STREAM_INVALID);
 
     delete stream;
     delete model;
@@ -3480,7 +3482,7 @@ TEST_F(CloudV2ContextTest, SetStreamSqLockUnlock_test)
 
     MOCKER(SqLockUnlockTaskInit).stubs().will(returnValue(1));
     MOCKER_CPP(&TaskFactory::Recycle).stubs().will(returnValue(RT_ERROR_NONE));
-    error = ctx->SetStreamSqLockUnlock(stream, 0);
+    error = SetStreamSqLockUnlock(stream, false);
     EXPECT_EQ(error, 1);
 
     (void)((Runtime*)Runtime::Instance())->PrimaryContextRelease(devId);
@@ -3554,11 +3556,11 @@ TEST_F(CloudV2ContextTest, RdmaDbSend_test)
     ctx = refObject->GetVal();
     EXPECT_NE(ctx, nullptr);
 
-    error = ctx->RDMASend(0, 0, stream);
+    error = RDMASend(0, 0, stream);
     EXPECT_NE(error, RT_ERROR_NONE);
 
     stream->bindFlag_.Set(true);
-    error = ctx->RdmaDbSend(0, 0, stream);
+    error = RdmaDbSend(0, 0, stream, ctx->GetCaptureLock());
     EXPECT_NE(error, RT_ERROR_NONE);
 
     (void)((Runtime*)Runtime::Instance())->PrimaryContextRelease(devId);

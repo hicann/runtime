@@ -9,6 +9,7 @@
  */
 #include "rt_utest_api.hpp"
 #include "cmo_task.h"
+#include "ffts_task.h"
 #include "profiling_task.h"
 #include "rt_utest_config_define.hpp"
 #include "rt_unwrap.h"
@@ -5463,7 +5464,7 @@ TEST_F(ApiTest, FftsPlusTaskLaunchApi)
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    MOCKER_CPP(&Context::FftsPlusTaskLaunch).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(FftsPlusTaskLaunch).stubs().will(returnValue(RT_ERROR_NONE));
     impl.FftsPlusTaskLaunch(&fftsPlusTaskInfo, rt_ut::UnwrapOrNull<Stream>(stream), 0);
 
     error = rtStreamDestroy(stream);
