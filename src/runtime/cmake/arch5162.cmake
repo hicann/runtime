@@ -10,6 +10,7 @@
 include_guard(GLOBAL)
 include(${RUNTIME_DIR}/pkg_inc/runtime/runtime/runtime_headers.cmake)
 include(${RUNTIME_CMAKE_DIR}/runtime_api_stubs.cmake)
+include(${RUNTIME_CMAKE_DIR}/acl_api_stubs.cmake)
 
 # Keep the arch5162 source boundary explicit. The first group was already
 # compiled as real providers before this migration.
@@ -45,6 +46,35 @@ generate_runtime_api_stubs(
     arch5162
     ${RUNTIME_CMAKE_DIR}/arch5162_unsupported_runtime_api.def
     RUNTIME_GENERATED_API_STUB_SOURCE
+)
+
+generate_acl_api_stubs(
+    arch5162
+    ${RUNTIME_CMAKE_DIR}/arch5162_unsupported_acl_api.def
+    ACL_GENERATED_IMPL_STUB_SOURCE
+)
+
+set(ACL_IMPL_WEAK_REAL_SRC_FILES
+    ${RUNTIME_DIR}/src/acl/aclrt_impl/acl.cpp
+    ${RUNTIME_DIR}/src/acl/aclrt_impl/acl_rt_impl_base.cpp
+    ${RUNTIME_DIR}/src/acl/aclrt_impl/allocator.cpp
+    ${RUNTIME_DIR}/src/acl/aclrt_impl/callback.cpp
+    ${RUNTIME_DIR}/src/acl/aclrt_impl/callback_api.cpp
+    ${RUNTIME_DIR}/src/acl/aclrt_impl/context.cpp
+    ${RUNTIME_DIR}/src/acl/aclrt_impl/data_buffer.cpp
+    ${RUNTIME_DIR}/src/acl/aclrt_impl/device.cpp
+    ${RUNTIME_DIR}/src/acl/aclrt_impl/dfx.cpp
+    ${RUNTIME_DIR}/src/acl/aclrt_impl/event.cpp
+    ${RUNTIME_DIR}/src/acl/aclrt_impl/group.cpp
+    ${RUNTIME_DIR}/src/acl/aclrt_impl/kernel.cpp
+    ${RUNTIME_DIR}/src/acl/aclrt_impl/label.cpp
+    ${RUNTIME_DIR}/src/acl/aclrt_impl/memory.cpp
+    ${RUNTIME_DIR}/src/acl/aclrt_impl/model_ri.cpp
+    ${RUNTIME_DIR}/src/acl/aclrt_impl/notify.cpp
+    ${RUNTIME_DIR}/src/acl/aclrt_impl/snapshot.cpp
+    ${RUNTIME_DIR}/src/acl/aclrt_impl/stream.cpp
+    ${RUNTIME_DIR}/src/acl/aclrt_impl/toolchain/dump.cpp
+    ${RUNTIME_DIR}/src/acl/aclrt_impl/types/fp16.cpp
 )
 
 set(libruntime_v100_task_src_files
@@ -408,27 +438,10 @@ set(RUNTIME_INC_DIR_ARCH5162
 )
 
 set(libruntime_aclrt_impl_src_files
-    ${RUNTIME_DIR}/src/acl/aclrt_impl/acl.cpp
+    ${ACL_GENERATED_IMPL_STUB_SOURCE}
+    ${ACL_IMPL_WEAK_REAL_SRC_FILES}
     ${RUNTIME_DIR}/src/acl/aclrt_impl/log.cpp
-    ${RUNTIME_DIR}/src/acl/aclrt_impl/device.cpp
-    ${RUNTIME_DIR}/src/acl/aclrt_impl/dfx.cpp
-    ${RUNTIME_DIR}/src/acl/aclrt_impl/event.cpp
-    ${RUNTIME_DIR}/src/acl/aclrt_impl/stream.cpp
-    ${RUNTIME_DIR}/src/acl/aclrt_impl/memory.cpp
-    ${RUNTIME_DIR}/src/acl/aclrt_impl/context.cpp
-    ${RUNTIME_DIR}/src/acl/aclrt_impl/callback.cpp
-    ${RUNTIME_DIR}/src/acl/aclrt_impl/group.cpp
-    ${RUNTIME_DIR}/src/acl/aclrt_impl/kernel.cpp
-    ${RUNTIME_DIR}/src/acl/aclrt_impl/notify.cpp
-    ${RUNTIME_DIR}/src/acl/aclrt_impl/label.cpp
-    ${RUNTIME_DIR}/src/acl/aclrt_impl/acl_rt_impl_base.cpp
-    ${RUNTIME_DIR}/src/acl/aclrt_impl/model_ri.cpp
-    ${RUNTIME_DIR}/src/acl/aclrt_impl/data_buffer.cpp
-    ${RUNTIME_DIR}/src/acl/aclrt_impl/allocator.cpp
-    ${RUNTIME_DIR}/src/acl/aclrt_impl/callback_api.cpp
     ${RUNTIME_DIR}/src/acl/aclrt_impl/init_callback_manager.cpp
-    ${RUNTIME_DIR}/src/acl/aclrt_impl/snapshot.cpp
-    ${RUNTIME_DIR}/src/acl/aclrt_impl/types/fp16.cpp
     ${RUNTIME_DIR}/src/acl/aclrt_impl/types/fp16_impl.cpp
     ${RUNTIME_DIR}/src/acl/common/log_inner.cpp
     ${RUNTIME_DIR}/src/acl/common/prof_reporter.cpp
@@ -438,7 +451,6 @@ set(libruntime_aclrt_impl_src_files
     ${RUNTIME_DIR}/src/acl/utils/cann_info_utils.cpp
     ${RUNTIME_DIR}/src/acl/utils/hash_utils.cpp
     ${RUNTIME_DIR}/src/acl/utils/file_utils.cpp
-    ${RUNTIME_DIR}/src/acl/aclrt_impl/toolchain/dump.cpp
     ${RUNTIME_DIR}/src/acl/aclrt_impl/toolchain/profiling.cpp
     ${RUNTIME_DIR}/src/acl/aclrt_impl/toolchain/profiling_manager.cpp
     ${RUNTIME_DIR}/src/acl/aclrt_impl/toolchain/dump_shim.cpp
@@ -449,6 +461,7 @@ set_source_files_properties(${libruntime_aclrt_impl_src_files}
         COMPILE_OPTIONS "-Os;-ftrapv"
         COMPILE_DEFINITIONS "OS_TYPE=0;FUNC_VISIBILITY"
 )
+configure_acl_impl_weak_real_sources(arch5162 ${ACL_IMPL_WEAK_REAL_SRC_FILES})
 
 macro(add_runtime_library target_name)
     add_library(${target_name} SHARED
@@ -489,6 +502,7 @@ macro(add_runtime_library target_name)
     )
 
     enable_runtime_api_weak_override(${target_name})
+    enable_acl_impl_weak_override(${target_name})
 
     target_link_options(${target_name} PRIVATE
         -Wl,--no-undefined

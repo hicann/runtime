@@ -23,8 +23,14 @@
 #define ACL_RT_CPP_HOOKABLE(ret, name, sig, args) \
     ret name sig { return ((decltype(&name##Impl))(g_hook_##name.currentFunc))args; }
 
+#if defined(ACL_IMPL_WEAK_PROVIDER) && defined(__GNUC__)
+#define ACL_IMPL_PROVIDER_ATTRIBUTE __attribute__((weak, noinline))
+#else
+#define ACL_IMPL_PROVIDER_ATTRIBUTE
+#endif
+
 // used to generate impl header functions
-#define ACL_RT_IMPL_HEADER(ret, name, sig, args) ACL_FUNC_VISIBILITY ret name##Impl sig;
+#define ACL_RT_IMPL_HEADER(ret, name, sig, args) ACL_FUNC_VISIBILITY ACL_IMPL_PROVIDER_ATTRIBUTE ret name##Impl sig;
 
 // used to generate cpp forwarding functions
 #define ACL_RT_CPP(ret, name, sig, args) \

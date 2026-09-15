@@ -10,12 +10,19 @@
 set(BASE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 set(RUNTIME_API_DIR ${TOP_DIR}/src/runtime/api)
 include(${TOP_DIR}/src/runtime/cmake/runtime_api_stubs.cmake)
+include(${TOP_DIR}/src/runtime/cmake/acl_api_stubs.cmake)
 
 generate_runtime_api_stubs(
     arch5162
     ${TOP_DIR}/src/runtime/cmake/arch5162_unsupported_runtime_api.def
     RUNTIME_UT_ARCH5162_GENERATED_API_STUB_SOURCE
     RUNTIME_UT_ARCH5162_GENERATED_API_STUB_TEST_SOURCE
+)
+
+generate_acl_api_stubs(
+    arch5162
+    ${TOP_DIR}/src/runtime/cmake/arch5162_unsupported_acl_api.def
+    RUNTIME_UT_ARCH5162_GENERATED_ACL_STUB_SOURCE
 )
 
 set(runtimeut_src_task_list
@@ -97,6 +104,7 @@ set(runtimeut_src_api_list
     ${TOP_DIR}/src/runtime/api/api.cc
     ${RUNTIME_UT_ARCH5162_API_WEAK_REAL_SRC_FILES}
     ${RUNTIME_UT_ARCH5162_GENERATED_API_STUB_SOURCE}
+    ${RUNTIME_UT_ARCH5162_GENERATED_ACL_STUB_SOURCE}
     ${TOP_DIR}/src/runtime/api/api_c_arch5162.cc
     ${TOP_DIR}/src/runtime/api/api_global_err.cc
     ${TOP_DIR}/src/runtime/api/api_handle_guard.cc
@@ -324,6 +332,8 @@ target_link_libraries(runtimeut_src_static_lib_5162a PRIVATE $<BUILD_INTERFACE:r
 
 target_include_directories(
     runtimeut_src_static_lib_5162a PUBLIC
+    ${TOP_DIR}/include/external
+    ${TOP_DIR}/src/acl/aclrt_impl
     ${TOP_DIR}/src/runtime/core/src/aicpu_timeout
     ${TOP_DIR}/src/runtime/tprt/inc/external
     ${TOP_DIR}/src/runtime/tprt/feature/inc
@@ -370,6 +380,7 @@ add_executable(runtime_utest_arch5162
     rt_utest_mem_arch5162.cc
     rt_utest_api_stub_arch5162.cc
     ${RUNTIME_UT_ARCH5162_GENERATED_API_STUB_TEST_SOURCE}
+    rt_utest_acl_api_stub_arch5162.cc
     ../../rt_utest_mbuf_stub.cc
     rt_utest_api_arch5162.cc
     rt_utest_arg_loader_nocopy.cc
@@ -387,6 +398,8 @@ target_compile_definitions(runtime_utest_arch5162 PUBLIC
 target_include_directories(runtime_utest_arch5162 PRIVATE
     ${TOP_DIR}/include/external
     ${TOP_DIR}/src/acl
+    ${TOP_DIR}/src/acl/aclrt_impl
+    ${TOP_DIR}/src/runtime/cmake
 )
 
 target_link_libraries(runtime_utest_arch5162 PRIVATE
@@ -397,7 +410,7 @@ target_link_libraries(runtime_utest_arch5162 PRIVATE
     -Wl,--no-whole-archive
     ut_ascendcl_src
     json
-    ge_stub
+    -Wl,--no-as-needed
     slog_stub
     c_sec
     mmpa_stub
@@ -405,11 +418,17 @@ target_link_libraries(runtime_utest_arch5162 PRIVATE
     toolchain_stub
     profiling_stub
     runtime_stub
+    ge_stub
+    -Wl,--as-needed
     -lrt
     -ldl
     -lpthread
     -lgcov
 )
+
+if(NOT "${TARGET_SYSTEM_NAME}" STREQUAL "Windows")
+    target_link_options(runtime_utest_arch5162 PRIVATE -Wl,-z,muldefs)
+endif()
 
 ##################################################################################################
 add_library(runtime_utest_intf_pub_arch5162 INTERFACE)

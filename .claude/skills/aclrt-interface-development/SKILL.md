@@ -236,6 +236,9 @@ description: 用于 Runtime 场景下新增 aclrt 接口开发，覆盖需求澄
 - ACL impl 层仅做 profiling 包裹和透传调用。
 - 装饰器链遵循现有接口模式。
 - 若新增 profiling 枚举值，必须同步更新所有 profiling 注册点。
+- 向 `src/acl/aclrt_impl/acl_rt_wrapper.h` 的 X-Macro 增加 ACL 接口时，新接口对 arch5162 默认不支持：
+  必须同步加入 `src/runtime/cmake/arch5162_unsupported_acl_api.def` 并选择匹配返回类型的策略；只有产品明确
+  确认支持时，才能改动 `ACL_API_REAL_PROVIDER_COUNT` 并保留真实 provider。
 - 本阶段**只允许修改接口实现所需的生产代码和 `implementation_plan.md` 中列明的非测试文件**。
 - 本阶段严禁提前修改任何 UT/测试相关文件，包括但不限于 `tests/` 目录、mock/stub 文件、`docs/ut_design.md`、`docs/code_review.md`。
 
@@ -260,6 +263,7 @@ description: 用于 Runtime 场景下新增 aclrt 接口开发，覆盖需求澄
 | 15 | `src/runtime/core/src/profiler/api_profile_decorator.hpp` | ApiProfileDecorator 接口声明 |
 | 16 | `src/runtime/core/src/profiler/api_profile_decorator.cc` | ApiProfileDecorator 接口实现 |
 | 17 | `src/runtime/inc/common/profiler_struct.hpp` | Profiler 枚举常量定义 |
+| 18 | `src/runtime/cmake/arch5162_unsupported_acl_api.def` | arch5162 新增 ACL 接口默认不支持的产品清单 |
 
 ### 编码实现 → 单元测试：进入标准
 

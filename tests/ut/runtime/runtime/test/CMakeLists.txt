@@ -12,10 +12,14 @@ find_package(Python3 REQUIRED COMPONENTS Interpreter)
 set(RUNTIME_API_STUB_GENERATOR_TEST
     ${CMAKE_CURRENT_SOURCE_DIR}/cmake/test_generate_runtime_api_stubs.py
 )
+set(ACL_API_STUB_GENERATOR_TEST
+    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/test_generate_acl_api_stubs.py
+)
 add_custom_target(runtime_api_stub_generator_ut
     COMMAND ${Python3_EXECUTABLE} ${RUNTIME_API_STUB_GENERATOR_TEST}
+    COMMAND ${Python3_EXECUTABLE} ${ACL_API_STUB_GENERATOR_TEST}
     WORKING_DIRECTORY ${TOP_DIR}
-    COMMENT "Running Runtime API stub generator unit tests"
+    COMMENT "Running Runtime and ACL API stub generator unit tests"
     VERBATIM
 )
 
