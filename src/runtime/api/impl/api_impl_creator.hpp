@@ -18,6 +18,7 @@ class ApiMbuf;
 class ApiEvent;
 class ApiEsched;
 class ApiSnapshot;
+class ApiRtConfig;
 
 Api* CreateImplAndGet();
 bool IsImplMbufSupported();
@@ -31,6 +32,9 @@ void DestroyImplEsched(ApiEsched*& apiImplEsched);
 bool IsImplSnapshotSupported();
 ApiSnapshot* CreateImplSnapshotAndGet();
 void DestroyImplSnapshot(ApiSnapshot*& apiImplSnapshot);
+bool IsImplRtConfigSupported();
+ApiRtConfig* CreateImplRtConfigAndGet();
+void DestroyImplRtConfig(ApiRtConfig*& apiImplRtConfig);
 } // namespace runtime
 } // namespace cce
 

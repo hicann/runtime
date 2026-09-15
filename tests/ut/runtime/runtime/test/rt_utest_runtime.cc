@@ -18,6 +18,7 @@
 #include "runtime_keeper.h"
 #include "npu_driver.hpp"
 #include "api_esched.hpp"
+#include "api_rt_config.hpp"
 #include "api_event.hpp"
 #include "api_snapshot.hpp"
 #include "api_impl.hpp"
@@ -259,6 +260,14 @@ TEST_F(RuntimeTest, ApiSnapshotInstanceInitialized)
     EXPECT_EQ(ApiSnapshot::Instance(), runtime->ApiSnapshot_());
 }
 
+TEST_F(RuntimeTest, ApiRtConfigInstanceInitialized)
+{
+    const Runtime* const runtime = Runtime::Instance();
+    ASSERT_NE(runtime, nullptr);
+    ASSERT_NE(runtime->ApiRtConfig_(), nullptr);
+    EXPECT_EQ(ApiRtConfig::Instance(), runtime->ApiRtConfig_());
+}
+
 TEST_F(RuntimeTest, CreateImplMbufAndGetFailed)
 {
     MOCKER(static_cast<NothrowNewFunc>(&operator new)).expects(once()).will(invoke(NothrowNewFailStub));
@@ -278,6 +287,13 @@ TEST_F(RuntimeTest, CreateImplSnapshotAndGetFailed)
     MOCKER(static_cast<NothrowNewFunc>(&operator new)).expects(once()).will(invoke(NothrowNewFailStub));
 
     EXPECT_EQ(CreateImplSnapshotAndGet(), nullptr);
+}
+
+TEST_F(RuntimeTest, CreateImplRtConfigAndGetFailed)
+{
+    MOCKER(static_cast<NothrowNewFunc>(&operator new)).expects(once()).will(invoke(NothrowNewFailStub));
+
+    EXPECT_EQ(CreateImplRtConfigAndGet(), nullptr);
 }
 
 TEST_F(RuntimeTest, DestroyImplMbufSuccess)
@@ -322,6 +338,17 @@ TEST_F(RuntimeTest, ApiImplSnapshotRejectsInvalidProcessState)
     EXPECT_EQ(apiImplSnapshot.SnapShotProcessRestore(), RT_ERROR_SNAPSHOT_RESTORE_FAILED);
 
     stateManager.SetCurrentState(RT_PROCESS_STATE_RUNNING);
+}
+
+TEST_F(RuntimeTest, DestroyImplRtConfigSuccess)
+{
+    EXPECT_TRUE(IsImplRtConfigSupported());
+    ApiRtConfig* apiImplRtConfig = CreateImplRtConfigAndGet();
+    ASSERT_NE(apiImplRtConfig, nullptr);
+
+    DestroyImplRtConfig(apiImplRtConfig);
+
+    EXPECT_EQ(apiImplRtConfig, nullptr);
 }
 
 TEST_F(RuntimeTest, InitApiImpliesCreateMbufFailed)
@@ -530,22 +557,6 @@ TEST_F(RuntimeTest, ut_AllKernelRegister)
 
     error = rtInstance->AllKernelRegister(program);
     EXPECT_EQ(error, RT_ERROR_NONE);
-}
-
-TEST_F(RuntimeTest, ut_GetTilingKeyFromKernel)
-{
-    Runtime* rtInstance = (Runtime*)Runtime::Instance();
-    std::string kernelName = "abc_mix_aic";
-    uint8_t mixType = 0U;
-    std::string ret;
-    ret = rtInstance->GetTilingKeyFromKernel(kernelName, mixType);
-    EXPECT_EQ(ret, "abc");
-    std::string kernelName2 = "abc_mix_aiv";
-    ret = rtInstance->GetTilingKeyFromKernel(kernelName2, mixType);
-    EXPECT_EQ(ret, "abc");
-    std::string kernelName3 = "abc_mix_aic_mix_aiv";
-    ret = rtInstance->GetTilingKeyFromKernel(kernelName3, mixType);
-    EXPECT_EQ(ret, "abc");
 }
 
 TEST_F(RuntimeTest, ut_GetTilingValue)

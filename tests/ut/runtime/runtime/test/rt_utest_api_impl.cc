@@ -50,6 +50,8 @@
 #include "api_impl_david.hpp"
 #include "api_impl_event.hpp"
 #include "api_impl_esched.hpp"
+#include "api_impl_rt_config.hpp"
+#include "inner_thread_local.hpp"
 #include "thread_local_container.hpp"
 #include "maintenance_task.h"
 #include "stream_c.hpp"
@@ -296,6 +298,119 @@ drvError_t HalEschedQueryInfoHostCpuStub(
     return HostCpuDeviceResult(devId);
 }
 } // namespace
+
+TEST_F(ApiImplTest, ApiImplRtConfigInvalidParam)
+{
+    ApiImplRtConfig apiImpl;
+    uint32_t value = 0U;
+    int64_t configVal = 0;
+
+    EXPECT_EQ(apiImpl.CtxSetSysParamOpt(SYS_OPT_RESERVED, 0), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(apiImpl.CtxSetSysParamOpt(SYS_OPT_ENABLE_KERNEL_EARLY_START, 0), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(apiImpl.CtxSetSysParamOpt(SYS_OPT_DETERMINISTIC, 4), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(apiImpl.CtxGetSysParamOpt(SYS_OPT_RESERVED, &configVal), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(apiImpl.CtxGetSysParamOpt(SYS_OPT_ENABLE_KERNEL_EARLY_START, &configVal), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(apiImpl.CtxGetSysParamOpt(SYS_OPT_DETERMINISTIC, nullptr), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(apiImpl.SetDeviceResLimit(0U, RT_DEV_RES_TYPE_MAX, 0U), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(apiImpl.GetDeviceResLimit(0U, RT_DEV_RES_CUBE_CORE, nullptr), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(apiImpl.SetStreamResLimit(nullptr, RT_DEV_RES_TYPE_MAX, 0U), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(apiImpl.GetStreamResLimit(nullptr, RT_DEV_RES_TYPE_MAX, &value), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(apiImpl.GetStreamResLimit(nullptr, RT_DEV_RES_CUBE_CORE, nullptr), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(apiImpl.GetResInCurrentThread(RT_DEV_RES_TYPE_MAX, &value), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(apiImpl.GetResInCurrentThread(RT_DEV_RES_CUBE_CORE, nullptr), RT_ERROR_INVALID_VALUE);
+}
+
+TEST_F(ApiImplTest, ApiImplRtConfigCtxSysParamOptRoundTrip)
+{
+    ApiImplRtConfig apiImpl;
+    int64_t configVal = 0;
+
+    ASSERT_EQ(apiImpl.CtxSetSysParamOpt(SYS_OPT_DETERMINISTIC, 2), RT_ERROR_NONE);
+    ASSERT_EQ(apiImpl.CtxGetSysParamOpt(SYS_OPT_DETERMINISTIC, &configVal), RT_ERROR_NONE);
+    EXPECT_EQ(configVal, 2);
+}
+
+TEST_F(ApiImplTest, ApiImplRtConfigCurrentContextNull)
+{
+    ApiImplRtConfig apiImpl;
+    uint32_t value = 0U;
+    int64_t configVal = 0;
+
+    InnerThreadLocalContainer::SetCurrentResLimitStream(nullptr);
+    MOCKER(&InnerThreadLocalContainer::GetCurCtx).stubs().will(returnValue(static_cast<Context*>(nullptr)));
+    MOCKER(&InnerThreadLocalContainer::GetCurRef).stubs().will(returnValue(static_cast<RefObject<Context*>*>(nullptr)));
+    MOCKER(&InnerThreadLocalContainer::GetDevice).stubs().will(returnValue(static_cast<Device*>(nullptr)));
+
+    EXPECT_EQ(apiImpl.CtxSetSysParamOpt(SYS_OPT_DETERMINISTIC, 0), RT_ERROR_CONTEXT_NULL);
+    EXPECT_EQ(apiImpl.CtxGetSysParamOpt(SYS_OPT_DETERMINISTIC, &configVal), RT_ERROR_CONTEXT_NULL);
+    EXPECT_EQ(apiImpl.SetStreamResLimit(nullptr, RT_DEV_RES_CUBE_CORE, 0U), RT_ERROR_CONTEXT_NULL);
+    EXPECT_EQ(apiImpl.ResetStreamResLimit(nullptr), RT_ERROR_CONTEXT_NULL);
+    EXPECT_EQ(apiImpl.GetStreamResLimit(nullptr, RT_DEV_RES_CUBE_CORE, &value), RT_ERROR_CONTEXT_NULL);
+    EXPECT_EQ(apiImpl.UseStreamResInCurrentThread(nullptr), RT_ERROR_CONTEXT_NULL);
+    EXPECT_EQ(apiImpl.NotUseStreamResInCurrentThread(nullptr), RT_ERROR_CONTEXT_NULL);
+    EXPECT_EQ(apiImpl.GetResInCurrentThread(RT_DEV_RES_CUBE_CORE, &value), RT_ERROR_CONTEXT_NULL);
+
+    GlobalMockObject::verify();
+    GlobalMockObject::reset();
+}
+
+TEST_F(ApiImplTest, ApiImplRtConfigDeviceResLimitRoundTrip)
+{
+    ApiImplRtConfig apiImpl;
+    Context* const context = Runtime::Instance()->CurrentContext();
+    ASSERT_NE(context, nullptr);
+    Device* const device = context->Device_();
+    ASSERT_NE(device, nullptr);
+    const uint32_t initialValue = device->GetResInitValue(RT_DEV_RES_CUBE_CORE);
+    const uint32_t limitValue = (initialValue == 0U) ? 0U : initialValue - 1U;
+    uint32_t value = 0U;
+
+    ASSERT_EQ(apiImpl.SetDeviceResLimit(0U, RT_DEV_RES_CUBE_CORE, limitValue), RT_ERROR_NONE);
+    ASSERT_EQ(apiImpl.GetDeviceResLimit(0U, RT_DEV_RES_CUBE_CORE, &value), RT_ERROR_NONE);
+    EXPECT_EQ(value, limitValue);
+
+    ASSERT_EQ(apiImpl.ResetDeviceResLimit(0U), RT_ERROR_NONE);
+    ASSERT_EQ(apiImpl.GetDeviceResLimit(0U, RT_DEV_RES_CUBE_CORE, &value), RT_ERROR_NONE);
+    EXPECT_EQ(value, initialValue);
+}
+
+TEST_F(ApiImplTest, ApiImplRtConfigDeviceResLimitPlatformFailure)
+{
+    ApiImplRtConfig apiImpl;
+    MOCKER_CPP(&fe::PlatformInfoManager::GetRuntimePlatformInfosByDevice).expects(once()).will(returnValue(1U));
+
+    EXPECT_EQ(apiImpl.SetDeviceResLimit(0U, RT_DEV_RES_CUBE_CORE, 0U), RT_ERROR_INVALID_VALUE);
+}
+
+TEST_F(ApiImplTest, ApiImplRtConfigStreamResLimitRoundTrip)
+{
+    ApiImplRtConfig apiImpl;
+    Context* const context = Runtime::Instance()->CurrentContext();
+    ASSERT_NE(context, nullptr);
+    Stream* const defaultStream = context->DefaultStream_();
+    ASSERT_NE(defaultStream, nullptr);
+    Device* const device = context->Device_();
+    ASSERT_NE(device, nullptr);
+    const uint32_t initialValue = device->GetResInitValue(RT_DEV_RES_CUBE_CORE);
+    const uint32_t limitValue = (initialValue == 0U) ? 0U : initialValue - 1U;
+    uint32_t value = 0U;
+
+    InnerThreadLocalContainer::SetCurrentResLimitStream(nullptr);
+    EXPECT_EQ(apiImpl.SetStreamResLimit(nullptr, RT_DEV_RES_CUBE_CORE, limitValue), RT_ERROR_NONE);
+    EXPECT_EQ(apiImpl.GetStreamResLimit(nullptr, RT_DEV_RES_CUBE_CORE, &value), RT_ERROR_NONE);
+    EXPECT_EQ(value, limitValue);
+
+    EXPECT_EQ(apiImpl.UseStreamResInCurrentThread(nullptr), RT_ERROR_NONE);
+    EXPECT_EQ(InnerThreadLocalContainer::GetCurrentResLimitStream(), defaultStream);
+    EXPECT_EQ(apiImpl.GetResInCurrentThread(RT_DEV_RES_CUBE_CORE, &value), RT_ERROR_NONE);
+    EXPECT_EQ(value, limitValue);
+    EXPECT_EQ(apiImpl.NotUseStreamResInCurrentThread(nullptr), RT_ERROR_NONE);
+    EXPECT_EQ(InnerThreadLocalContainer::GetCurrentResLimitStream(), nullptr);
+
+    EXPECT_EQ(apiImpl.ResetStreamResLimit(nullptr), RT_ERROR_NONE);
+    EXPECT_EQ(apiImpl.GetStreamResLimit(nullptr, RT_DEV_RES_CUBE_CORE, &value), RT_ERROR_NONE);
+    EXPECT_EQ(value, device->GetResValue(RT_DEV_RES_CUBE_CORE));
+}
 
 TEST_F(ApiImplTest, RegisterHostCpuFunc)
 {

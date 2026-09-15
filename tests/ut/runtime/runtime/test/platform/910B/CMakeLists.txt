@@ -272,6 +272,7 @@ set(runtimeut_910b_src_list
     ${TOP_DIR}/src/runtime/api/impl/api_impl_event.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_event_common.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_esched.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_rt_config.cc
     ${TOP_DIR}/src/runtime/api/impl/api_error.cc
     ${TOP_DIR}/src/runtime/api/impl/api_error_standard_soc.cc
     ${TOP_DIR}/src/runtime/api/impl/api_error_uvm.cc

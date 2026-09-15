@@ -333,12 +333,14 @@ Runtime::Runtime() : RuntimeIntf()
     apiEvent_ = nullptr;
     apiEsched_ = nullptr;
     apiSnapshot_ = nullptr;
+    apiRtConfig_ = nullptr;
     apiImpl_ = nullptr;
     apiImplMbuf_ = nullptr;
     apiImplSoma_ = nullptr;
     apiImplEvent_ = nullptr;
     apiImplEsched_ = nullptr;
     apiImplSnapshot_ = nullptr;
+    apiImplRtConfig_ = nullptr;
     logger_ = nullptr;
     apiError_ = nullptr;
     profiler_ = nullptr;
@@ -1135,6 +1137,13 @@ rtError_t Runtime::InitApiImplies()
             return RT_ERROR_API_NEW;
         }
     }
+
+    if (IsImplRtConfigSupported()) {
+        apiImplRtConfig_ = CreateImplRtConfigAndGet();
+        if (apiImplRtConfig_ == nullptr) {
+            return RT_ERROR_API_NEW;
+        }
+    }
     return RT_ERROR_NONE;
 }
 
@@ -1599,6 +1608,7 @@ rtError_t Runtime::Init()
     apiEvent_ = apiImplEvent_;
     apiEsched_ = apiImplEsched_;
     apiSnapshot_ = apiImplSnapshot_;
+    apiRtConfig_ = apiImplRtConfig_;
 
     error = InitThreadGuard();
     COND_GOTO_ERROR_MSG_AND_ASSIGN_CALL(
@@ -1657,6 +1667,7 @@ INIT_FAIL:
     DELETE_O(apiImplEvent_);
     DestroyImplEsched(apiImplEsched_);
     DestroyImplSnapshot(apiImplSnapshot_);
+    DestroyImplRtConfig(apiImplRtConfig_);
     return error;
 }
 
@@ -1858,34 +1869,6 @@ void Runtime::PutProgram(const Program* const programPtr, bool isUnRegisterApi)
     prog = nullptr;
 }
 
-void Runtime::KernelSetDfx(Program* const prog, const void* const kernelInfoExt, Kernel* kernelPtr) const
-{
-    ElfProgram* const elfProg = dynamic_cast<ElfProgram*>(prog);
-    if (elfProg == nullptr) {
-        RT_LOG(RT_LOG_INFO, "can't dynamic_cast program.");
-        return;
-    }
-    const RtKernel* const kernels = elfProg->GetKernels();
-    const uint32_t kernelCount = elfProg->GetKernelsCount();
-    if (kernels == nullptr) {
-        RT_LOG(RT_LOG_INFO, "kernels is null, kernelCount=%u", kernelCount);
-        return;
-    }
-    for (uint32_t idx = 0U; idx < kernelCount; idx++) {
-        if (strncmp(
-                kernels[idx].name, RtPtrToPtr<const char_t*>(kernelInfoExt),
-                std::max(strlen(kernels[idx].name), strlen(RtPtrToPtr<const char_t*>(kernelInfoExt)))) == 0) {
-            kernelPtr->SetDfxSize(kernels[idx].metaInfo.dfxSize);
-            kernelPtr->SetDfxAddr(kernels[idx].metaInfo.dfxAddr);
-            kernelPtr->SetElfDataFlag(kernels[idx].metaInfo.elfDataFlag);
-            RT_LOG(
-                RT_LOG_INFO, "kernel_name=%s, dfxAddr=%#" PRIu64 ", dfxSize=%u, elfDataFlag=%d", kernels[idx].name,
-                RtPtrToValue<const void*>(kernels[idx].metaInfo.dfxAddr), kernels[idx].metaInfo.dfxSize,
-                kernels[idx].metaInfo.elfDataFlag);
-        }
-    }
-}
-
 rtError_t Runtime::RegisterKernelByStubFunc(
     ElfProgram* elfProg, const void* stubFunc, const char_t* stubName, const void* const kernelInfoExt,
     const uint32_t funcMode, const char_t* kernelName)
@@ -2068,35 +2051,6 @@ rtError_t Runtime::GetTilingValue(const std::string& kernelInfoExt, uint64_t& ti
         return RT_ERROR_INVALID_VALUE;
     }
     return RT_ERROR_NONE;
-}
-
-std::string Runtime::GetTilingKeyFromKernel(const std::string& kernelName, uint8_t& mixType) const
-{
-    std::string temp = kernelName;
-    const std::string mixAicName = "_mix_aic";
-    const std::string mixAivName = "_mix_aiv";
-    const auto aicPos = kernelName.rfind(mixAicName);
-    const auto aivPos = kernelName.rfind(mixAivName);
-
-    const bool isAic = (aicPos != std::string::npos);
-    const bool isAiv = (aivPos != std::string::npos);
-    if (isAic && isAiv) {
-        mixType = static_cast<uint8_t>(MIX_AIC_AIV_MAIN_AIC);
-        (void)temp.erase(aicPos, mixAicName.length());
-        (void)temp.erase(temp.rfind(mixAivName), mixAivName.length());
-    } else if (isAic) {
-        mixType = static_cast<uint8_t>(MIX_AIC);
-        (void)temp.erase(aicPos, mixAicName.length());
-    } else if (isAiv) {
-        mixType = static_cast<uint8_t>(MIX_AIV);
-        (void)temp.erase(aivPos, mixAivName.length());
-    } else {
-        RT_LOG(RT_LOG_DEBUG, "Not contain aic or aiv");
-    }
-
-    const auto pos = temp.rfind('_');
-    RT_LOG(RT_LOG_INFO, "kernelName substr=%s, pos=%zu", temp.substr(pos + 1U).c_str(), pos);
-    return temp.substr(pos + 1U);
 }
 
 const Kernel* Runtime::KernelLookup(const void* const stub) { return kernelTable_.Lookup(stub); }
@@ -5515,6 +5469,22 @@ Context* Runtime::CurrentContext(const bool isNeedSetDevice, int32_t deviceId) c
     }
     RT_LOG(RT_LOG_WARNING, "current ctx is nullptr!");
     return nullptr;
+}
+
+rtError_t Runtime::CheckDeviceIdIsValid(const int32_t devId)
+{
+    int32_t devCnt;
+    Driver* const npuDrv = driverFactory_.GetDriver(NPU_DRIVER);
+    NULL_PTR_RETURN_MSG(npuDrv, RT_ERROR_DRV_NULL);
+    const rtError_t error = npuDrv->GetDeviceCount(&devCnt);
+    COND_RETURN_ERROR_MSG_INNER(
+        error != RT_ERROR_NONE, error, "Get device cnt failed, retCode=%#x", static_cast<uint32_t>(error));
+    COND_RETURN_ERROR_MSG_INNER(
+        devCnt < 0, RT_ERROR_INVALID_VALUE, "The device count %d obtained from the driver is invalid.", devCnt);
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+        (devId < 0) || ((devId >= devCnt) && (devCnt != 0)), RT_ERROR_DEVICE_ID, "Verifying the device ID validity",
+        devId, "[0, " + std::to_string(devCnt) + ")");
+    return RT_ERROR_NONE;
 }
 
 rtError_t Runtime::InitAiCpuCnt()

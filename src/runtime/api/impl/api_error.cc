@@ -5862,19 +5862,7 @@ rtError_t ApiErrorDecorator::MemQueueGetQidByName(const int32_t devId, const cha
 
 rtError_t ApiErrorDecorator::CheckDeviceIdIsValid(const int32_t devId) const
 {
-    int32_t devCnt;
-    Runtime* const rt = Runtime::Instance();
-    Driver* const npuDrv = rt->driverFactory_.GetDriver(NPU_DRIVER);
-    NULL_PTR_RETURN_MSG(npuDrv, RT_ERROR_DRV_NULL);
-    const rtError_t error = npuDrv->GetDeviceCount(&devCnt);
-    COND_RETURN_ERROR_MSG_INNER(
-        error != RT_ERROR_NONE, error, "Get device cnt failed, retCode=%#x", static_cast<uint32_t>(error));
-    COND_RETURN_ERROR_MSG_INNER(
-        devCnt < 0, RT_ERROR_INVALID_VALUE, "The device count %d obtained from the driver is invalid.", devCnt);
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
-        (devId < 0) || ((devId >= devCnt) && (devCnt != 0)), RT_ERROR_DEVICE_ID, "Verifying the device ID validity",
-        devId, "[0, " + std::to_string(devCnt) + ")");
-    return RT_ERROR_NONE;
+    return Runtime::Instance()->CheckDeviceIdIsValid(devId);
 }
 
 rtError_t ApiErrorDecorator::CmoTaskLaunch(

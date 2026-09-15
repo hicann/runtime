@@ -488,6 +488,7 @@ set(runtimeut_src_tiny_include_list
     ${TOP_DIR}/src/runtime/api/impl/api_impl_event_stub.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_snapshot_stub.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_esched.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_rt_config.cc
     ${TOP_DIR}/src/runtime/api/impl/api_decorator_stub.cc
     ${TOP_DIR}/src/runtime/core/src/dfx/fast_recover.cc
     ${TOP_DIR}/src/runtime/api/impl/v100/api_impl_v100.cc
@@ -604,6 +605,7 @@ set(runtimeut_src_list
     ${TOP_DIR}/src/runtime/api/impl/api_impl_event.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_event_common.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_esched.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_rt_config.cc
     ${TOP_DIR}/src/runtime/feature/xpu/api_error_xpu.cc
     ${TOP_DIR}/src/runtime/api/impl/api_error.cc
     ${TOP_DIR}/src/runtime/api/impl/api_error_standard_soc.cc
@@ -744,6 +746,7 @@ set(runtimeut_david_src_list
     ${TOP_DIR}/src/runtime/api/impl/api_impl_event.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_event_common.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_esched.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_rt_config.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_david.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/v200/api_impl_david_capture_event.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_creator.cc
@@ -1665,6 +1668,7 @@ set(runtimeut_v201_src_list
     ${TOP_DIR}/src/runtime/api/impl/api_impl_event.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_event_common.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_esched.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_rt_config.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_david.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/v200/api_impl_david_capture_event.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_creator.cc

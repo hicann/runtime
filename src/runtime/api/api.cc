@@ -12,6 +12,7 @@
 #include "api_event.hpp"
 #include "api_mbuf.hpp"
 #include "api_snapshot.hpp"
+#include "api_rt_config.hpp"
 #include "api_soma.hpp"
 #include "thread_local_container.hpp"
 
@@ -76,6 +77,16 @@ ApiSnapshot* ApiSnapshot::Instance()
         return nullptr;
     }
     return rtInstance->ApiSnapshot_();
+}
+
+ApiRtConfig* ApiRtConfig::Instance()
+{
+    const Runtime* const rtInstance = Runtime::Instance();
+    if (unlikely(rtInstance == nullptr)) {
+        RT_LOG(RT_LOG_ERROR, "Runtime::Instance == nullptr");
+        return nullptr;
+    }
+    return rtInstance->ApiRtConfig_();
 }
 
 } // namespace runtime

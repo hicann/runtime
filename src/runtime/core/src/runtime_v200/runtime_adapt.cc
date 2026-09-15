@@ -81,6 +81,7 @@ Runtime::~Runtime()
     apiEvent_ = nullptr;
     apiEsched_ = nullptr;
     apiSnapshot_ = nullptr;
+    apiRtConfig_ = nullptr;
 
     DELETE_O(apiImpl_);
     DestroyImplMbuf(apiImplMbuf_);
@@ -88,6 +89,7 @@ Runtime::~Runtime()
     DELETE_O(apiImplEvent_);
     DestroyImplEsched(apiImplEsched_);
     DestroyImplSnapshot(apiImplSnapshot_);
+    DestroyImplRtConfig(apiImplRtConfig_);
     DELETE_O(apiError_);
     DELETE_O(logger_);
     DELETE_O(profiler_);

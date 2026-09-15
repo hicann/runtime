@@ -27,6 +27,7 @@
 #include "stars.hpp"
 #include "hwts.hpp"
 #include "api_impl.hpp"
+#include "api_impl_rt_config.hpp"
 #include "kernel.hpp"
 #include "program.hpp"
 #include "api_impl.hpp"
@@ -609,6 +610,30 @@ TEST_F(ProfilerTest, RuntimeCallApiBeginEndForwardAndIgnoreNullProfiler)
     rt->CallApiBegin(RT_PROF_API_DEV_FREE);
     rt->CallApiEnd(RT_ERROR_NONE, 0);
     rt->profiler_ = oldProfiler;
+}
+
+TEST_F(ProfilerTest, ApiImplRtConfigCtxSysParamOptKeepsErrorAndProfileOrder)
+{
+    Runtime* const rt = static_cast<Runtime*>(Runtime::Instance());
+    profiler = rt->profiler_;
+    ASSERT_NE(profiler, nullptr);
+    PrepareRuntimeProfCallApiTest(profiler);
+    MOCKER(MsprofReportApi).stubs().will(invoke(MsprofReportApiOrderStub));
+
+    ApiImplRtConfig apiImpl;
+    int64_t configVal = 0;
+    EXPECT_EQ(apiImpl.CtxSetSysParamOpt(SYS_OPT_RESERVED, 0), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(g_reportedApiTypeNum, 0U);
+    EXPECT_EQ(profiler->GetTopProfApiContext(), nullptr);
+
+    EXPECT_EQ(apiImpl.CtxSetSysParamOpt(SYS_OPT_DETERMINISTIC, 2), RT_ERROR_NONE);
+    EXPECT_EQ(apiImpl.CtxGetSysParamOpt(SYS_OPT_DETERMINISTIC, &configVal), RT_ERROR_NONE);
+
+    profiler->SetApiProfEnable(false);
+    ClearApiProfContextStack(profiler);
+    ASSERT_EQ(g_reportedApiTypeNum, 2U);
+    EXPECT_EQ(g_reportedApiTypes[0], RT_PROF_API_CtxSetSysParamOpt + RT_PROFILE_TYPE_API_BEGIN);
+    EXPECT_EQ(g_reportedApiTypes[1], RT_PROF_API_CtxGetSysParamOpt + RT_PROFILE_TYPE_API_BEGIN);
 }
 
 TEST_F(ProfilerTest, ApiProfileNestedContextLifo)

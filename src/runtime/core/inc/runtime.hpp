@@ -136,6 +136,7 @@ static inline bool IsAbortError(rtError_t error)
 class Api;
 class ApiEsched;
 class ApiSnapshot;
+class ApiRtConfig;
 class Context;
 class Device;
 class Kernel;
@@ -208,6 +209,7 @@ public:
     ApiEsched* ApiEsched_() const override { return apiEsched_; }
 
     ApiSnapshot* ApiSnapshot_() const override { return apiSnapshot_; }
+    ApiRtConfig* ApiRtConfig_() const override { return apiRtConfig_; }
 
     Api* ApiImpl_() const override { return apiImpl_; }
 
@@ -442,7 +444,6 @@ public:
     rtError_t ExeCallbackFillFunc(std::string symbol, void* cfgAddr, uint32_t size);
     rtError_t GetKernelBinByFileName(const char_t* const binFileName, char_t** const buffer, uint64_t* length) const;
     rtError_t GetTilingValue(const std::string& kernelInfoExt, uint64_t& tilingValue) const;
-    std::string GetTilingKeyFromKernel(const std::string& kernelName, uint8_t& mixType) const;
     void ReportSoftwareSqEnableToMsprof(void) const;
 
     void StreamSyncEschedLock(void);
@@ -498,6 +499,8 @@ public:
     Context* CurrentContext() const override;
     Context* CurrentContext(const bool isNeedSetDevice, int32_t deviceId) const;
     driverType_t GetDriverType() const;
+
+    rtError_t CheckDeviceIdIsValid(const int32_t devId);
 
     ThreadGuard* GetThreadGuard() const { return threadGuard_; }
 
@@ -698,7 +701,6 @@ private:
     void NotifyProcWhenReleaseDevice(const uint32_t devId) const;
     void MsProfNotifyWhenSetDevice(const uint32_t devId) const;
     void InitAtrace(Device* dev, TraHandle& curAtraceHandle) const;
-    void KernelSetDfx(Program* const prog, const void* const kernelInfoExt, Kernel* kernelPtr) const;
     void PrimaryContextCallBack(const Context* const ctx, const uint32_t devId);
     void PrimaryContextCallBackAfterTeardown(const uint32_t devId) const;
     bool HasRuntimeExitHostState() const;
@@ -797,11 +799,13 @@ private:
     ApiMbuf* apiMbuf_;
     ApiSoma* apiSoma_;
     ApiEsched* apiEsched_;
+    ApiRtConfig* apiRtConfig_;
 
     Api* apiImpl_;
     ApiMbuf* apiImplMbuf_;
     ApiSoma* apiImplSoma_;
     ApiEsched* apiImplEsched_;
+    ApiRtConfig* apiImplRtConfig_;
 
     RefObject<Context*> priCtxs_[RT_MAX_DEV_NUM][RT_MAX_TS_NUM];
     RefObject<Device*> devices_[RT_MAX_DEV_NUM + 1][RT_MAX_TS_NUM]; // Last one is stub device
