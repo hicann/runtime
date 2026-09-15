@@ -357,9 +357,9 @@ rtError_t CaptureSession::StreamBeginTaskUpdate(Stream* const stm, TaskGroup* ha
             (taskInfo == nullptr) || (taskInfo->updateFlag == static_cast<uint8_t>(TaskUpdateFlag::RT_TASK_DISABLE)),
             RT_ERROR_INVALID_VALUE, "handle",
             RtFmtMsg(
-                "The task group handle contains disabled or recycled tasks (stream_id=%u, task_id=%d)",
-                "Such tasks do not support update", static_cast<uint32_t>(streamTaskId.first),
-                static_cast<int32_t>(streamTaskId.second)),
+                "The task group handle contains disabled or recycled tasks (stream_id=%u, task_id=%d). "
+                "Such tasks do not support update",
+                static_cast<uint32_t>(streamTaskId.first), static_cast<int32_t>(streamTaskId.second)),
             "Marking the start of the task to be updated");
     }
 
