@@ -2206,15 +2206,21 @@ TEST_F(StreamTest, GetTaskEventIdOrNotifyId)
     delete device;
 }
 
-TEST_F(StreamTest, StreamFlagIsSupportCapture)
+TEST_F(StreamTest, GetUnsupportedCaptureStreamFlag)
 {
-    EXPECT_FALSE(StreamFlagIsSupportCapture(RT_STREAM_AICPU));
-    EXPECT_FALSE(StreamFlagIsSupportCapture(RT_STREAM_FORBIDDEN_DEFAULT));
-    EXPECT_FALSE(StreamFlagIsSupportCapture(RT_STREAM_CP_PROCESS_USE));
-    EXPECT_FALSE(StreamFlagIsSupportCapture(RT_STREAM_VECTOR_CORE_USE));
-    EXPECT_FALSE(StreamFlagIsSupportCapture(RT_STREAM_PERSISTENT));
-    EXPECT_FALSE(StreamFlagIsSupportCapture(RT_STREAM_ACSQ_LOCK));
-    EXPECT_TRUE(StreamFlagIsSupportCapture(RT_STREAM_DEFAULT));
+    EXPECT_STREQ("RT_STREAM_AICPU(0x08U)", GetUnsupportedCaptureStreamFlag(RT_STREAM_AICPU));
+    EXPECT_STREQ("RT_STREAM_FORBIDDEN_DEFAULT(0x10U)", GetUnsupportedCaptureStreamFlag(RT_STREAM_FORBIDDEN_DEFAULT));
+    EXPECT_STREQ("RT_STREAM_CP_PROCESS_USE(0x800U)", GetUnsupportedCaptureStreamFlag(RT_STREAM_CP_PROCESS_USE));
+    EXPECT_STREQ("RT_STREAM_VECTOR_CORE_USE(0x1000U)", GetUnsupportedCaptureStreamFlag(RT_STREAM_VECTOR_CORE_USE));
+    EXPECT_STREQ("RT_STREAM_PERSISTENT(0x01U)", GetUnsupportedCaptureStreamFlag(RT_STREAM_PERSISTENT));
+    EXPECT_STREQ("RT_STREAM_ACSQ_LOCK(0x2000U)", GetUnsupportedCaptureStreamFlag(RT_STREAM_ACSQ_LOCK));
+    EXPECT_STREQ("RT_STREAM_AICPU(0x08U)", GetUnsupportedCaptureStreamFlag(RT_STREAM_AICPU | RT_STREAM_PERSISTENT));
+    EXPECT_STREQ(
+        "RT_STREAM_CP_PROCESS_USE(0x800U)",
+        GetUnsupportedCaptureStreamFlag(RT_STREAM_CP_PROCESS_USE | RT_STREAM_VECTOR_CORE_USE));
+    EXPECT_EQ(nullptr, GetUnsupportedCaptureStreamFlag(RT_STREAM_DEFAULT));
+    EXPECT_EQ(nullptr, GetUnsupportedCaptureStreamFlag(RT_STREAM_FAST_LAUNCH));
+    EXPECT_EQ(nullptr, GetUnsupportedCaptureStreamFlag(0x80000000U));
 }
 
 TEST_F(StreamTest, stream_taskGrp_status)

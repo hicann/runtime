@@ -43,10 +43,11 @@ rtError_t ApiErrorDecorator::StreamBeginCapture(Stream* const stm, const rtStrea
         "Starting capturing tasks delivered to a stream", StreamCaptureModeToString(mode), "mode",
         "[" + std::to_string(RT_STREAM_CAPTURE_MODE_GLOBAL) + ", " + std::to_string(RT_STREAM_CAPTURE_MODE_MAX) + ")");
 
+    const char_t* const unsupportedFlag = GetUnsupportedCaptureStreamFlag(stm->Flags());
     COND_RETURN_AND_MSG_OUTER(
-        !StreamFlagIsSupportCapture(stm->Flags()), RT_ERROR_STREAM_INVALID, ErrorCode::EE1011, "Stream begin capture",
-        std::to_string(stm->Flags()), "stream flag",
-        RtFmtMsg("Stream (stream_id=%d) does not support the ACL Graph", stm->Id_()));
+        unsupportedFlag != nullptr, RT_ERROR_STREAM_INVALID, ErrorCode::EE1006, "Stream begin capture",
+        RtFmtMsg("Stream flag value %#x", stm->Flags()),
+        RtFmtMsg("Stream (stream_id=%d) with the flag %s cannot be used for ACL Graph", stm->Id_(), unsupportedFlag));
     COND_RETURN_AND_MSG_OUTER(
         StreamBeginCaptureMdlCheck(mdl) != RT_ERROR_NONE, RT_ERROR_INVALID_VALUE, ErrorCode::EE1017,
         "Stream begin capture", "modelRI", "The modelRI is not a sub ACL Graph");
@@ -57,10 +58,11 @@ rtError_t ApiErrorDecorator::StreamBeginCapture(Stream* const stm, const rtStrea
 rtError_t ApiErrorDecorator::StreamEndCapture(Stream* const stm, Model** const captureMdl)
 {
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(stm, RT_ERROR_INVALID_VALUE, "Ending the capture of a stream");
+    const char_t* const unsupportedFlag = GetUnsupportedCaptureStreamFlag(stm->Flags());
     COND_RETURN_AND_MSG_OUTER(
-        !StreamFlagIsSupportCapture(stm->Flags()), RT_ERROR_STREAM_INVALID, ErrorCode::EE1011, "Stream end capture",
-        std::to_string(stm->Flags()), "stream flag",
-        RtFmtMsg("Stream (stream_id=%d) does not support the ACL Graph", stm->Id_()));
+        unsupportedFlag != nullptr, RT_ERROR_STREAM_INVALID, ErrorCode::EE1006, "Stream end capture",
+        RtFmtMsg("Stream flag value %#x", stm->Flags()),
+        RtFmtMsg("Stream (stream_id=%d) with the flag %s cannot be used for ACL Graph", stm->Id_(), unsupportedFlag));
     return impl_->StreamEndCapture(stm, captureMdl);
 }
 
@@ -146,10 +148,11 @@ rtError_t ApiErrorDecorator::StreamAddToModel(Stream* const stm, Model* const ca
         captureMdl->GetModelType() != RT_MODEL_CAPTURE_MODEL, RT_ERROR_INVALID_VALUE, ErrorCode::EE1016,
         "rtStreamAddToModel", "Non ACL Graph mode is not supported");
 
+    const char_t* const unsupportedFlag = GetUnsupportedCaptureStreamFlag(stm->Flags());
     COND_RETURN_AND_MSG_OUTER(
-        !StreamFlagIsSupportCapture(stm->Flags()), RT_ERROR_STREAM_INVALID, ErrorCode::EE1011, "rtStreamAddToModel",
-        std::to_string(stm->Flags()), "stream flag",
-        "Stream " + std::to_string(stm->Id_()) + " does not support the ACL Graph");
+        unsupportedFlag != nullptr, RT_ERROR_STREAM_INVALID, ErrorCode::EE1006, "rtStreamAddToModel",
+        RtFmtMsg("Stream flag value %#x", stm->Flags()),
+        RtFmtMsg("Stream (stream_id=%d) with the flag %s cannot be used for ACL Graph", stm->Id_(), unsupportedFlag));
 
     COND_RETURN_WARN(
         (dynamic_cast<CaptureModel*>(captureMdl))->IsSubCaptureModel(), RT_ERROR_FEATURE_NOT_SUPPORT,

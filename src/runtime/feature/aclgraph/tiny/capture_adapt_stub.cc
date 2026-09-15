@@ -14,10 +14,10 @@
 namespace cce {
 namespace runtime {
 
-bool StreamFlagIsSupportCapture(uint32_t flag)
+const char_t* GetUnsupportedCaptureStreamFlag(const uint32_t flags)
 {
-    UNUSED(flag);
-    return true;
+    UNUSED(flags);
+    return nullptr;
 }
 
 uint32_t GetCaptureStreamFlag() { return RT_STREAM_DEFAULT; }

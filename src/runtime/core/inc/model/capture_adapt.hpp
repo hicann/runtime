@@ -20,7 +20,7 @@ struct CaptureCntNotify {
     uint32_t cntValue;
 };
 
-bool StreamFlagIsSupportCapture(uint32_t flag);
+const char_t* GetUnsupportedCaptureStreamFlag(uint32_t flags);
 uint32_t GetCaptureStreamFlag();
 rtError_t GetCaptureEventFromTask(
     const Device* const dev, uint32_t streamId, uint32_t pos, Event*& eventPtr, CaptureCntNotify& cntInfo);
