@@ -574,6 +574,7 @@ rtError_t StarsEngine::TaskReclaim(const uint32_t streamId, const bool limited, 
     std::vector<uint32_t> allStreams;
     const Device* const dev = GetDevice();
     dev->GetStreamSqCqManage()->GetAllStreamId(allStreams);
+    COND_PROC(allStreams.size() == 0, stmEmptyFlag_ = true);
     RT_LOG(RT_LOG_INFO, "Travel all streams, num=%zu.", allStreams.size());
     for (const uint32_t streamLoop : allStreams) {
         const rtError_t error = TaskReclaimByStreamId(streamLoop, limited, taskId);
