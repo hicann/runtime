@@ -319,6 +319,21 @@ int HdcReadLenFailStub(HDC_SESSION session, IdeRecvBuffT recvBuf, IdeI32Pt recvL
     return IDE_DAEMON_OK;
 }
 
+int HdcReadShortStub(HDC_SESSION session, IdeRecvBuffT recvBuf, IdeI32Pt recvLen)
+{
+    constexpr int32_t shortLength = 8;
+    *recvBuf = malloc(shortLength);
+    *recvLen = shortLength;
+    return IDE_DAEMON_OK;
+}
+
+uint32_t g_ideXfreeCount = 0;
+void IdeXfreeCountStub(const IdeMemHandle ptr)
+{
+    ++g_ideXfreeCount;
+    free(ptr);
+}
+
 int HdcReadFailStub(HDC_SESSION session, IdeRecvBuffT recvBuf, IdeI32Pt recvLen)
 {
     const char* srcFile = "adx_server_manager";
@@ -327,8 +342,6 @@ int HdcReadFailStub(HDC_SESSION session, IdeRecvBuffT recvBuf, IdeI32Pt recvLen)
     msg->totalLen = strlen(srcFile) + 1;
     std::cout << "HdcReadLenFailStub" << *recvLen << std::endl;
     *recvBuf = msg;
-    free(msg);
-    msg = nullptr;
     return IDE_DAEMON_ERROR;
 }
 
@@ -779,4 +792,46 @@ TEST_F(ADX_SERVER_MANAGER_UTEST, AdxServerManagerLinkNumFailed)
     g_ide_create_task_time = 0;
     g_mmCreateTaskWitchDeatchFlag = 0;
     EXPECT_EQ(0, g_AdxFileDumpProcessStubFlag);
+}
+TEST_F(ADX_SERVER_MANAGER_UTEST, ProcessRequestContinuesAfterNoDataRequest)
+{
+    AdxCommOptManager::Instance().commOptMap_.clear();
+    AdxServerManager server;
+    std::unique_ptr<AdxCommOpt> opt(new HdcCommOpt());
+    EXPECT_TRUE(server.RegisterCommOpt(opt, std::to_string(3)));
+
+    const auto deadline = AdxServerManager::RequestClock::now() + std::chrono::seconds(1);
+    AdxServerManager::PendingRequest first{1, deadline};
+    AdxServerManager::PendingRequest second{2, deadline};
+
+    MOCKER(HdcReadNb).expects(exactly(2)).will(returnValue(IDE_DAEMON_RECV_NODATA)).then(invoke(HdcReadStub));
+    MOCKER_CPP(&AdxServerManager::WaitRequest).expects(once()).will(returnValue(true));
+    MOCKER_CPP(&AdxServerManager::LaunchComponentProcess).expects(once()).will(returnValue(true));
+
+    server.ProcessRequest(first);
+    server.ProcessRequest(second);
+
+    AdxCommOptManager::Instance().commOptMap_.clear();
+}
+
+TEST_F(ADX_SERVER_MANAGER_UTEST, PrepareComponentProcessOwnsShortRequest)
+{
+    AdxCommOptManager::Instance().commOptMap_.clear();
+    AdxServerManager server;
+    std::unique_ptr<AdxCommOpt> opt(new HdcCommOpt());
+    EXPECT_TRUE(server.RegisterCommOpt(opt, std::to_string(3)));
+
+    MOCKER(HdcReadNb).expects(once()).will(invoke(HdcReadShortStub));
+    g_ideXfreeCount = 0;
+    MOCKER(IdeXfree).expects(once()).will(invoke(IdeXfreeCountStub));
+
+    CommHandle handle{OptType::COMM_HDC, 1, NR_COMPONENTS, -1, nullptr};
+    SharedPtr<MsgProto> msgPtr;
+    ComponentType comp = NR_COMPONENTS;
+    EXPECT_EQ(AdxServerManager::PrepareResult::FAILED, server.PrepareComponentProcess(handle, msgPtr, comp));
+    EXPECT_NE(nullptr, msgPtr);
+    msgPtr.reset();
+    EXPECT_EQ(1U, g_ideXfreeCount);
+
+    AdxCommOptManager::Instance().commOptMap_.clear();
 }

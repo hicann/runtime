@@ -125,3 +125,15 @@ TEST_F(ADX_HDC_COMMOPT_UTEST, Read)
     EXPECT_EQ(handle, IDE_DAEMON_ERROR);
 }
 */
+
+TEST_F(ADX_HDC_COMMOPT_UTEST, TryReadDoesNotRetryWhenNoData)
+{
+    std::shared_ptr<Adx::AdxCommOpt> opt = std::make_shared<Adx::HdcCommOpt>();
+    void* buffer = nullptr;
+    int32_t length = 0;
+    const OptHandle session = 0x12345678;
+    MOCKER(HdcReadNb).expects(once()).will(returnValue(IDE_DAEMON_RECV_NODATA));
+    MOCKER(mmSleep).expects(never());
+
+    EXPECT_EQ(IDE_DAEMON_RECV_NODATA, opt->TryRead(session, &buffer, length));
+}

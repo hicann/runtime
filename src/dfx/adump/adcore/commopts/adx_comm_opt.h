@@ -40,6 +40,7 @@ public:
     virtual int32_t Close(OptHandle& handle) const = 0;
     virtual int32_t Write(const OptHandle handle, IdeSendBuffT buffer, int32_t length, int32_t flag) = 0;
     virtual int32_t Read(const OptHandle handle, IdeRecvBuffT buffer, int32_t& length, int32_t flag) = 0;
+    virtual int32_t TryRead(const OptHandle handle, IdeRecvBuffT buffer, int32_t& length) = 0;
     virtual SharedPtr<AdxDevice> GetDevice() = 0;
     virtual void Timer(void) const = 0;
 

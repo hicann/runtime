@@ -24,6 +24,7 @@ public:
     OptHandle Connect(const OptHandle handle, const std::map<std::string, std::string>& info) override;
     int32_t Write(const OptHandle handle, IdeSendBuffT buffer, int32_t length, int32_t flag) override;
     int32_t Read(const OptHandle handle, IdeRecvBuffT buffer, int32_t& length, int32_t flag) override;
+    int32_t TryRead(const OptHandle handle, IdeRecvBuffT buffer, int32_t& length) override;
     OptHandle OpenClient(const std::map<std::string, std::string>& info) override;
     int32_t CloseClient(OptHandle& handle) const override;
     int32_t Close(OptHandle& handle) const override;

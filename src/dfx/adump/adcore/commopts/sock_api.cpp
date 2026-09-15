@@ -11,6 +11,8 @@
 #include "sock_api.h"
 #include <arpa/inet.h>
 #include <netinet/tcp.h>
+#include <sys/ioctl.h>
+#include <sys/socket.h>
 #include "log/adx_log.h"
 #include "adx_msg.h"
 #include "mmpa_api.h"
@@ -300,6 +302,44 @@ int32_t SockRead(int32_t fd, IdeRecvBuffT readBuf, IdeI32Pt recvLen, int32_t fla
         return IDE_DAEMON_ERROR;
     }
     return IDE_DAEMON_OK;
+}
+
+int32_t SockTryRead(int32_t fd, IdeRecvBuffT readBuf, IdeI32Pt recvLen)
+{
+    if (fd < 0 || readBuf == nullptr || recvLen == nullptr) {
+        return IDE_DAEMON_ERROR;
+    }
+
+    MsgProto proto = {};
+    int32_t peekLen;
+    do {
+        peekLen = mmSocketRecv(fd, &proto, sizeof(proto), MSG_PEEK | MSG_DONTWAIT);
+    } while (peekLen < 0 && mmGetErrorCode() == EINTR);
+    if (peekLen == 0) {
+        return IDE_DAEMON_SOCK_CLOSE;
+    }
+    if (peekLen < 0) {
+        const int32_t error = mmGetErrorCode();
+        return (error == EAGAIN || error == EWOULDBLOCK) ? IDE_DAEMON_RECV_NODATA : IDE_DAEMON_ERROR;
+    }
+    if (peekLen < static_cast<int32_t>(sizeof(proto))) {
+        return IDE_DAEMON_RECV_NODATA;
+    }
+    if (!CheckMsgValid(proto)) {
+        IDE_LOGE("check proto head error");
+        return IDE_DAEMON_ERROR;
+    }
+
+    int32_t availableLen = 0;
+    if (ioctl(fd, FIONREAD, &availableLen) < 0) {
+        IDE_LOGE("get socket readable length failed");
+        return IDE_DAEMON_ERROR;
+    }
+    const int32_t messageLen = static_cast<int32_t>(sizeof(proto)) + static_cast<int32_t>(proto.totalLen);
+    if (availableLen < messageLen) {
+        return IDE_DAEMON_RECV_NODATA;
+    }
+    return SockRead(fd, readBuf, recvLen, 0);
 }
 
 /**

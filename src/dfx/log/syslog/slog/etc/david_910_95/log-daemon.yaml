@@ -10,7 +10,9 @@
 log-daemon:
   bin_path: "/var/log-daemon"
   depends: ["slogdmgr"]
-  env: [ ]
+  env:
+    # Reduce allocator retention of freed memory to conserve limited node31 memory on 910_95.
+    MALLOC_MMAP_THRESHOLD_: "4194304"
   uid: 1000
   gid: 1000
   arguments: [-n]

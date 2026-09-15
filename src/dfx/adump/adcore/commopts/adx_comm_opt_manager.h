@@ -37,6 +37,7 @@ public:
     int32_t Close(CommHandle& handle) const;
     int32_t Write(const CommHandle& handle, IdeSendBuffT buffer, int32_t length, int32_t flag);
     int32_t Read(const CommHandle& handle, IdeRecvBuffT buffer, int32_t& length, int32_t flag);
+    int32_t TryRead(const CommHandle& handle, IdeRecvBuffT buffer, int32_t& length);
     SharedPtr<AdxDevice> GetDevice(OptType type);
     void Timer(OptType type) const;
 

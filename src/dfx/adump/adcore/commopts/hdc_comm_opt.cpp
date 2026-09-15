@@ -228,6 +228,13 @@ int32_t HdcCommOpt::Read(const OptHandle handle, IdeRecvBuffT buffer, int32_t& l
     return err;
 }
 
+int32_t HdcCommOpt::TryRead(const OptHandle handle, IdeRecvBuffT buffer, int32_t& length)
+{
+    IDE_CTRL_VALUE_FAILED(handle != ADX_OPT_INVALID_HANDLE, return IDE_DAEMON_ERROR, "hdc read input invalid");
+    IDE_CTRL_VALUE_FAILED(buffer != nullptr, return IDE_DAEMON_ERROR, "hdc read input invalid");
+    return HdcReadNb(reinterpret_cast<HDC_SESSION>(handle), buffer, &length);
+}
+
 SharedPtr<AdxDevice> HdcCommOpt::GetDevice()
 {
     if (device_ == nullptr) {

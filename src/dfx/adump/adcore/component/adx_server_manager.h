@@ -12,20 +12,18 @@
 #define ADX_COMPONENTS_MANAGER_H
 #include <map>
 #include <memory>
-#include <queue>
 #include <mutex>
 #include <atomic>
 #include <chrono>
 #include <condition_variable>
 #include "ascend_hal.h"
 #include "common/thread.h"
-#include "bound_queue.h"
 #include "adx_component.h"
 #include "epoll/adx_epoll.h"
 #include "adx_comm_opt_manager.h"
 #include "extra_config.h"
 namespace Adx {
-constexpr uint32_t DEFAULT_EPOLL_HANDLE_QUEUE_SIZE = 256;
+constexpr uint32_t MAX_WAITING_REQUESTS = 256;
 class AdxServerManager : public Runnable {
 public:
     AdxServerManager() noexcept;
@@ -38,22 +36,47 @@ public:
     bool ComponentInit() const;
     bool ComponentWaitEvent();
     void Run();
-    void ComponentProcess();
-    bool SubComponentProcess(CommHandle& handle, ComponentType& comp);
-    static IdeThreadArg ThreadProcess(IdeThreadArg arg);
     int32_t Exit();
     void SetMode(int32_t loadMode);
     void SetDeviceId(int32_t deviceId);
     bool WaitServerInitted() const;
 
 private:
+    using RequestClock = std::chrono::steady_clock;
+
+    enum class PrepareResult { SUCCESS, RETRY, FAILED };
+
+    struct PendingRequest {
+        EpollHandle handle;
+        RequestClock::time_point deadline;
+    };
+
+    struct ProcessTask {
+        AdxServerManager* manager;
+        AdxCommHandle handle;
+        SharedPtr<MsgProto> msgPtr;
+        ComponentType comp;
+        bool linkAcquired;
+    };
+
     void TimerProcess(void);
     bool ServerInit(const std::map<std::string, std::string>& info);
     bool ServerUnInit(OptHandle epHandle);
     ComponentType GetComponentTypeByReqType(CmdClassT cmdType) const;
     void HandleConnectEvent(CommHandle handle);
+    void HandleDataEvent(EpollHandle handle);
+    void HandleHangUpEvent(EpollHandle handle);
+    bool WaitRequest(const PendingRequest& request);
+    void ProcessRequest(const PendingRequest& request);
+    void CloseExpiredRequests();
+    void CloseWaitingRequests();
     bool IsLinkOverload(HDC_SESSION session) const;
-    bool DispatchComponent(CommHandle& handle, SharedPtr<MsgProto>& msgPtr, HDC_SESSION session, ComponentType& comp);
+    PrepareResult PrepareComponentProcess(CommHandle& handle, SharedPtr<MsgProto>& msgPtr, ComponentType& comp);
+    bool AcquireComponentLink(ComponentType comp, HDC_SESSION session);
+    void ReleaseComponentLink(ComponentType comp);
+    bool LaunchComponentProcess(CommHandle& handle, SharedPtr<MsgProto>& msgPtr, ComponentType comp);
+    void RunProcessTask(ProcessTask& task);
+    static IdeThreadArg ProcessTaskThread(IdeThreadArg arg);
     std::shared_ptr<AdxComponent> GetComponent(ComponentType type) const;
     void WaitProcessDrained();
 
@@ -70,7 +93,7 @@ private:
     std::map<std::string, EpollHandle> servers_;
     mutable std::mutex serverMtx_;
     std::map<std::string, uint32_t> faultyDevices_;
-    BoundQueue<EpollHandle> handleQue_;
+    std::map<EpollHandle, PendingRequest> waitingRequests_;
     int32_t linkNum_;
     std::mutex linkMtx_;
     std::atomic<bool> serverInittedFlag_{false};

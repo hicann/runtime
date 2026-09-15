@@ -184,6 +184,20 @@ int32_t AdxCommOptManager::Read(const CommHandle& handle, IdeRecvBuffT buffer, i
     return -1;
 }
 
+int32_t AdxCommOptManager::TryRead(const CommHandle& handle, IdeRecvBuffT buffer, int32_t& length)
+{
+    std::shared_ptr<AdxCommOpt> currCommOpt;
+    {
+        std::unique_lock<std::mutex> lock{commOptMapMtx_};
+        const auto it = commOptMap_.find(handle.type);
+        if (it == commOptMap_.end()) {
+            return IDE_DAEMON_ERROR;
+        }
+        currCommOpt = it->second;
+    }
+    return currCommOpt->TryRead(handle.session, buffer, length);
+}
+
 SharedPtr<AdxDevice> AdxCommOptManager::GetDevice(OptType type)
 {
     std::shared_ptr<AdxCommOpt> currCommOpt(nullptr);
