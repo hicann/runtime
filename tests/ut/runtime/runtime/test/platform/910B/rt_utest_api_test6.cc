@@ -5594,6 +5594,10 @@ TEST_F(CloudV2ApiTest6, POD_rtIpcMemImportPidInterServer)
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
     error = rtIpcMemImportPidInterServer(key, serverPids, len);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    serverPids[0].num = static_cast<size_t>(INT32_MAX) + 1U;
+    error = rtIpcMemImportPidInterServer(key, serverPids, len);
+    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+    serverPids[0].num = len;
     serverPids[0].pid = nullptr;
     error = rtIpcMemImportPidInterServer(key, serverPids, len);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);

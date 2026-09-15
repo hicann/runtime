@@ -1023,8 +1023,11 @@ rtError_t rtIpcMemImportPidInterServer(const char* key, const rtServerPid* serve
         COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER(
             (serverPids[i].pid == nullptr), RT_ERROR_INVALID_VALUE, ErrorCode::EE1004, __func__,
             "serverPids[" + std::to_string(i) + "].pid");
+        COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER(
+            (serverPids[i].num > static_cast<size_t>(INT32_MAX)), RT_ERROR_INVALID_VALUE, ErrorCode::EE1003, __func__,
+            serverPids[i].num, "serverPids[" + std::to_string(i) + "].num", "INT32_MAX");
         const rtError_t ret = rtSetIpcMemorySuperPodPid(
-            key, serverPids[i].sdid, serverPids[i].pid, static_cast<int32_t>(serverPids[i].num & INT32_MAX));
+            key, serverPids[i].sdid, serverPids[i].pid, static_cast<int32_t>(serverPids[i].num));
         if (ret != ACL_RT_SUCCESS) {
             return ret;
         }
