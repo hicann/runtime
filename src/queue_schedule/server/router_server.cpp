@@ -819,10 +819,10 @@ BqsStatus RouterServer::ParseRelationInfo(Mbuf** mbufPtr)
             return BQS_STATUS_PARAM_INVALID;
         }
         qsRouterQueryPtr_ =
-            reinterpret_cast<QueueRouteQuery*>(reinterpret_cast<uint8_t*>(qsRouterHeadPtr_) + sizeof(QsRouteHead));
+            PtrToPtr<uint8_t, QueueRouteQuery>(PtrToPtr<QsRouteHead, uint8_t>(qsRouterHeadPtr_) + sizeof(QsRouteHead));
         BQS_LOG_INFO("[RouterServer]Get query info success. queryType[%d]", qsRouterQueryPtr_->queryType);
-        qsRouteListPtr_ =
-            reinterpret_cast<QueueRoute*>(reinterpret_cast<uint8_t*>(qsRouterQueryPtr_) + sizeof(QueueRouteQuery));
+        qsRouteListPtr_ = PtrToPtr<uint8_t, QueueRoute>(
+            PtrToPtr<QueueRouteQuery, uint8_t>(qsRouterQueryPtr_) + sizeof(QueueRouteQuery));
     } else {
         if (((qsRouterHeadPtr_->routeNum * sizeof(QueueRoute)) + sizeof(QsRouteHead)) != qsRouterHeadPtr_->length) {
             BQS_LOG_ERROR(
@@ -832,7 +832,7 @@ BqsStatus RouterServer::ParseRelationInfo(Mbuf** mbufPtr)
         }
         qsRouterQueryPtr_ = nullptr;
         qsRouteListPtr_ =
-            reinterpret_cast<QueueRoute*>(reinterpret_cast<uint8_t*>(qsRouterHeadPtr_) + sizeof(QsRouteHead));
+            PtrToPtr<uint8_t, QueueRoute>(PtrToPtr<QsRouteHead, uint8_t>(qsRouterHeadPtr_) + sizeof(QsRouteHead));
     }
     BQS_LOG_INFO("[RouterServer]Get relation mbuff success, bind/unbind queue num[%d]", qsRouterHeadPtr_->routeNum);
     return BQS_STATUS_OK;
