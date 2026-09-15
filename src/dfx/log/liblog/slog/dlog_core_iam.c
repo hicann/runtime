@@ -9,6 +9,8 @@
  */
 
 #include <sys/ioctl.h>
+#include <pthread.h>
+#include <stdatomic.h>
 #include "securec.h"
 #include "log_platform.h"
 #include "log_common.h"
@@ -19,6 +21,7 @@
 #include "dlog_core.h"
 #include "log_time.h"
 #include "alog_to_slog.h"
+#include "dlog_drv.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -30,13 +33,41 @@ STATIC bool g_dlogIsInited = false;
  * @brief       : check dlog init or not
  * @return      : true inited; false not-inited
  */
-STATIC INLINE bool DlogIsInited(void) { return g_dlogIsInited; }
+bool DlogIsInited(void) { return g_dlogIsInited; }
 
 /**
  * @brief       : set dlog init flag
  * @param [in]  : initFlag      init flag setted
  */
 STATIC INLINE void DlogSetInited(bool initFlag) { g_dlogIsInited = initFlag; }
+
+#ifdef LOG_CPP
+/*
+ * Latch for the deferred transfer, mirroring dlog_core.c: attempted at most
+ * once per init cycle, mutex-based so a re-arm is well defined (a pthread_once
+ * control must not be reset while another thread may still be blocked on it). The
+ * unlocked fast-path read of g_dlogTransferDone is the per-entry cost: DONE is
+ * published with release semantics only after the result is stored.
+ */
+STATIC pthread_mutex_t g_dlogTransferMutex = PTHREAD_MUTEX_INITIALIZER;
+STATIC int32_t g_dlogTransferRet = LOG_FAILURE;
+STATIC _Atomic bool g_dlogTransferDone = false;
+
+/* Same-thread re-entrancy guard: the attempt dlopens the slog library, and a
+ * constructor of the loaded library may log through this library's entries
+ * while the attempt is still running; the re-entrant call reports the current
+ * state instead of self-deadlocking on the latch mutex. */
+STATIC LOG_THREAD_LOCAL bool g_dlogInTransfer = false;
+
+STATIC void DlogTransferToSlogLocked(void)
+{
+    g_dlogTransferRet = LOG_FAILURE;
+    if (AlogTryUseSlog() == LOG_SUCCESS) {
+        DlogSetInited(true);
+        g_dlogTransferRet = LOG_SUCCESS;
+    }
+}
+#endif
 
 /**
  * @brief DlogCheckLogLevel: check log allow output or not
@@ -249,19 +280,54 @@ void DlogInit(void)
 #endif
     (void)LogGetCpuFrequency();
     DlogSetInited(true);
+
+    /* Register the driver log callback after the init flag is set; the
+     * registering flag in dlog_drv.c keeps the driver's synchronous probe call
+     * from re-entering the write path. */
+    DlogInitDriverLog();
+}
+
+/*
+ * Deferred driver resolution, mirroring dlog_core.c: switch alog to slog at
+ * most once, from a normal API entry point (DlogSetAttr). The IAM constructor
+ * cannot dlopen the driver library while the library is still initialising.
+ * Returns LOG_SUCCESS when writes are being forwarded to slog.
+ */
+int32_t DlogTryTransferToSlog(void)
+{
+#ifdef LOG_CPP
+    if (g_dlogInTransfer) {
+        return g_dlogTransferRet;
+    }
+    if (atomic_load_explicit(&g_dlogTransferDone, memory_order_acquire)) {
+        return g_dlogTransferRet;
+    }
+    g_dlogInTransfer = true;
+    (void)pthread_mutex_lock(&g_dlogTransferMutex);
+    if (!atomic_load_explicit(&g_dlogTransferDone, memory_order_relaxed)) {
+        DlogTransferToSlogLocked();
+        atomic_store_explicit(&g_dlogTransferDone, true, memory_order_release);
+    }
+    /* Snapshot under the mutex: a concurrent reset (DlogExitForIam) between
+     * the unlock and the read would otherwise flip the result. */
+    const int32_t ret = g_dlogTransferRet;
+    (void)pthread_mutex_unlock(&g_dlogTransferMutex);
+    g_dlogInTransfer = false;
+    return ret;
+#else
+    return LOG_FAILURE;
+#endif
 }
 
 STATIC CONSTRUCTOR void DllMain(void)
 {
 #ifdef LOG_CPP
-    if (!DlogIsInited()) {
-        if (AlogTryUseSlog() == LOG_SUCCESS) {
-            DlogSetInited(true);
-            return;
-        }
+    if (DlogTryTransferToSlog() != LOG_SUCCESS) {
+        DlogInit();
     }
-#endif
+#else
     DlogInit();
+#endif
 }
 
 /**
@@ -270,10 +336,23 @@ STATIC CONSTRUCTOR void DllMain(void)
  */
 STATIC DESTRUCTOR void DlogExitForIam(void)
 {
+    /* Stop the driver callbacks first: the steps below release the async
+     * buffers and the slog handles, and a driver log firing in that window
+     * would write into freed resources. No-op unless this library registered
+     * the callback itself. */
+    DlogUnregisterDriverLog();
     // if call this in thread exit, it may not be called
     DlogAsyncExit();
     AlogCloseSlogLib();
     AlogCloseDrvLib();
+    DlogResetDriverLog();
+#ifdef LOG_CPP
+    /* Re-arm the transfer latch for the next init cycle. */
+    (void)pthread_mutex_lock(&g_dlogTransferMutex);
+    g_dlogTransferRet = LOG_FAILURE;
+    atomic_store_explicit(&g_dlogTransferDone, false, memory_order_release);
+    (void)pthread_mutex_unlock(&g_dlogTransferMutex);
+#endif
 }
 
 /**

@@ -11,6 +11,7 @@
 ############################# libslog.so #################################################################
 set (libslogSrcFiles
     ${CMAKE_CURRENT_SOURCE_DIR}/../alog_to_slog.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../dlog_drv.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../slog_api.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../dlog_core_iam.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../dlog_unified_timer_api.c

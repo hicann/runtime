@@ -12,6 +12,7 @@ set(libslogSrcFiles
     ${CMAKE_CURRENT_SOURCE_DIR}/../alog_to_slog.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../slog_api.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../dlog_core.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../dlog_drv.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../dlog_time.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../dlog_attr.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../dlog_console.c

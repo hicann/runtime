@@ -42,25 +42,26 @@ enum { DLOG_TYPE_DEBUG = 0, DLOG_TYPE_RUN = 1, DLOG_TYPE_MAX };
 
 // module id
 enum {
-    SLOG = 0,      /* Slog module */
-    IDEDD = 1,     /* IDE daemon device */
-    SCC = 2,       /* SCC */
-    HCCL = 3,      /* HCCL */
-    FMK = 4,       /* Adapter */
-    CCU = 5,       /* CCU */
-    DVPP = 6,      /* DVPP */
-    RUNTIME = 7,   /* Runtime */
-    CCE = 8,       /* CCE */
-    HDC = 9,       /* HDC */
-    DRV = 10,      /* Driver */
-    NET = 11,      /* Network */
-    HIXL = 12,     /* Hixl */
-    DQS = 13,      /* DQSFW */
-    DEVMM = 22,    /* Dlog memory managent */
-    KERNEL = 23,   /* Kernel */
-    LIBMEDIA = 24, /* Libmedia */
-    CCECPU = 25,   /* aicpu shedule */
-    ROS = 27,      /* ROS */
+    SLOG = 0,        /* Slog module */
+    IDEDD = 1,       /* IDE daemon device */
+    SCC = 2,         /* SCC */
+    HCCL = 3,        /* HCCL */
+    FMK = 4,         /* Adapter */
+    CCU = 5,         /* CCU */
+    DVPP = 6,        /* DVPP */
+    RUNTIME = 7,     /* Runtime */
+    CCE = 8,         /* CCE */
+    HDC = 9,         /* HDC */
+    DRV = 10,        /* Driver */
+    NET = 11,        /* Network */
+    HIXL = 12,       /* Hixl */
+    DQS = 13,        /* DQSFW */
+    UNIFIEDBUS = 15, /* UnifiedBus, full name avoids the UB enum conflict with acl_platform.h */
+    DEVMM = 22,      /* Dlog memory managent */
+    KERNEL = 23,     /* Kernel */
+    LIBMEDIA = 24,   /* Libmedia */
+    CCECPU = 25,     /* aicpu shedule */
+    ROS = 27,        /* ROS */
     HCCP = 28,
     ROCE = 29,
     TEFUSION = 30,

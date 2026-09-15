@@ -16,6 +16,7 @@
 #include "dlog_message.h"
 #include "library_load.h"
 #include "alog_to_slog.h"
+#include "dlog_drv.h"
 #include "alog_pub.h"
 
 #ifdef IAM
@@ -36,6 +37,23 @@ using DlogGetAttrFunc = decltype(DlogGetAttr)*;
 using DlogSetAttrFunc = decltype(DlogSetAttr)*;
 using DlogVaListFunc = decltype(DlogVaList)*;
 using DlogFlushFunc = decltype(DlogFlush)*;
+
+/*
+ * Deferred transfer, attempted at the first API entry. Every entry must try it
+ * BEFORE its forwarding check falls through to the local path: without this,
+ * the first write after load reaches DlogWriteInner while the slog handles are
+ * still unresolved, and in a process that delegated its write path (plog
+ * transferred, no local write callback) it is misrouted into the local
+ * socket/shm path. Latched inside DlogTryTransferToSlog: one attempt per init
+ * cycle, a cheap call afterwards. Compiled out for builds without LOG_CPP -
+ * they have no transfer path (DlogTryTransferToSlog is a failure stub there).
+ */
+static void AlogTransferOnEntry(void)
+{
+#ifdef LOG_CPP
+    (void)DlogTryTransferToSlog();
+#endif
+}
 }; // namespace
 
 #ifdef __cplusplus
@@ -61,6 +79,8 @@ int32_t AlogTransferToUnifiedlog(void)
 
 int32_t AlogCheckDebugLevel(uint32_t moduleId, int32_t level)
 {
+    AlogTransferOnEntry();
+
     if (g_slogFuncInfo[CHECK_LOG_LEVEL].handle != nullptr) {
         return reinterpret_cast<CheckLogLevelFunc>(g_slogFuncInfo[CHECK_LOG_LEVEL].handle)(moduleId, level);
     }
@@ -75,6 +95,7 @@ int32_t AlogCheckDebugLevel(uint32_t moduleId, int32_t level)
 
 int32_t AlogRecord(uint32_t moduleId, uint32_t logType, int32_t level, const char* fmt, ...)
 {
+    AlogTransferOnEntry();
     uint32_t type = DEBUG_LOG_MASK;
     if (logType == static_cast<uint32_t>(DLOG_TYPE_RUN)) {
         type = RUN_LOG_MASK;
@@ -126,7 +147,17 @@ int32_t AlogTransferToSlog(void)
     return LOG_SUCCESS;
 }
 #endif
-void AlogCloseSlogLib(void) { (void)UnloadRuntimeDll(g_sloglibHandle); }
+void AlogCloseSlogLib(void)
+{
+    (void)UnloadRuntimeDll(g_sloglibHandle);
+    /* Drop the resolved handles with the library: anything calling in after
+     * the free must not forward into an unloaded library. The next transfer
+     * attempt re-resolves them. */
+    g_sloglibHandle = nullptr;
+    for (auto& info : g_slogFuncInfo) {
+        info.handle = nullptr;
+    }
+}
 
 #ifdef __cplusplus
 }
@@ -147,6 +178,7 @@ extern "C" {
  */
 void DlogInner(int32_t moduleId, int32_t level, const char* fmt, ...)
 {
+    AlogTransferOnEntry();
     if (g_slogFuncInfo[DLOG_VA_LIST].handle != nullptr) {
         va_list list;
         va_start(list, fmt);
@@ -176,6 +208,7 @@ void DlogInner(int32_t moduleId, int32_t level, const char* fmt, ...)
 
 void DlogErrorInner(int32_t moduleId, const char* fmt, ...)
 {
+    AlogTransferOnEntry();
     if (g_slogFuncInfo[DLOG_VA_LIST].handle != nullptr) {
         va_list list;
         va_start(list, fmt);
@@ -205,6 +238,7 @@ void DlogErrorInner(int32_t moduleId, const char* fmt, ...)
 
 void DlogWarnInner(int32_t moduleId, const char* fmt, ...)
 {
+    AlogTransferOnEntry();
     if (g_slogFuncInfo[DLOG_VA_LIST].handle != nullptr) {
         va_list list;
         va_start(list, fmt);
@@ -234,6 +268,7 @@ void DlogWarnInner(int32_t moduleId, const char* fmt, ...)
 
 void DlogInfoInner(int32_t moduleId, const char* fmt, ...)
 {
+    AlogTransferOnEntry();
     if (g_slogFuncInfo[DLOG_VA_LIST].handle != nullptr) {
         va_list list;
         va_start(list, fmt);
@@ -263,6 +298,7 @@ void DlogInfoInner(int32_t moduleId, const char* fmt, ...)
 
 void DlogDebugInner(int32_t moduleId, const char* fmt, ...)
 {
+    AlogTransferOnEntry();
     if (g_slogFuncInfo[DLOG_VA_LIST].handle != nullptr) {
         va_list list;
         va_start(list, fmt);
@@ -292,6 +328,7 @@ void DlogDebugInner(int32_t moduleId, const char* fmt, ...)
 
 void DlogEventInner(int32_t moduleId, const char* fmt, ...)
 {
+    AlogTransferOnEntry();
     if (g_slogFuncInfo[DLOG_VA_LIST].handle != nullptr) {
         va_list list;
         va_start(list, fmt);
@@ -360,6 +397,7 @@ void DlogWithKVInner(int32_t moduleId, int32_t level, const KeyValue* pstKVArray
  */
 void DlogRecord(int32_t moduleId, int32_t level, const char* fmt, ...)
 {
+    AlogTransferOnEntry();
     if (g_slogFuncInfo[DLOG_VA_LIST].handle != nullptr) {
         va_list list;
         va_start(list, fmt);
@@ -394,6 +432,7 @@ void DlogRecord(int32_t moduleId, int32_t level, const char* fmt, ...)
  */
 int32_t DlogGetAttr(LogAttr* logAttrInfo)
 {
+    AlogTransferOnEntry();
     if (g_slogFuncInfo[DLOG_GET_ATTR].handle != nullptr) {
         return reinterpret_cast<DlogGetAttrFunc>(g_slogFuncInfo[DLOG_GET_ATTR].handle)(logAttrInfo);
     }
@@ -409,6 +448,21 @@ int32_t DlogGetAttr(LogAttr* logAttrInfo)
 int32_t DlogSetAttr(LogAttr logAttrInfo)
 {
     if (g_slogFuncInfo[DLOG_SET_ATTR].handle != nullptr) {
+        return reinterpret_cast<DlogSetAttrFunc>(g_slogFuncInfo[DLOG_SET_ATTR].handle)(logAttrInfo);
+    }
+
+    /*
+     * Deferred resolution point (the other one is the first log write): must run
+     * after the forwarding check above, because AlogTransferToSlog calls DlogSetAttr
+     * itself once the handles are loaded and that re-entrant call returns there.
+     * Only attempt while the slog library has not been resolved yet - a failed
+     * resolution is not retried on every call.
+     */
+    if (g_sloglibHandle == nullptr) {
+        DlogTryTransferToSlog();
+    }
+    if (g_slogFuncInfo[DLOG_SET_ATTR].handle != nullptr) {
+        /* Transfer succeeded, so the caller's attr belongs to slog, not to us. */
         return reinterpret_cast<DlogSetAttrFunc>(g_slogFuncInfo[DLOG_SET_ATTR].handle)(logAttrInfo);
     }
 
@@ -429,6 +483,7 @@ int32_t DlogSetAttr(LogAttr logAttrInfo)
 
 void DlogVaList(int32_t moduleId, int32_t level, const char* fmt, va_list list)
 {
+    AlogTransferOnEntry();
     if (g_slogFuncInfo[DLOG_VA_LIST].handle != nullptr) {
         reinterpret_cast<DlogVaListFunc>(g_slogFuncInfo[DLOG_VA_LIST].handle)(moduleId, level, fmt, list);
         return;
@@ -506,6 +561,11 @@ STATIC int32_t DlogSetModuleLevel(uint32_t moduleId, int32_t level)
         SELF_LOG_WARN("set loglevel input moduleId=%u is illegal.", moduleId);
         return SYS_ERROR;
     }
+
+    /* Forward the driver-owned module levels to the driver, which converts them
+     * and passes them to UNIFIEDBUS. The type mask is dropped on purpose: the driver
+     * keeps a single level per module. */
+    DlogSetDriverLogLevel(static_cast<int32_t>(realModuleId), level);
     return SYS_OK;
 }
 
@@ -543,6 +603,7 @@ STATIC int32_t DlogSetLogLevel(uint32_t moduleId, int32_t level, int32_t enableE
  */
 int32_t dlog_getlevel(int32_t moduleId, int32_t* enableEvent)
 {
+    AlogTransferOnEntry();
     if (g_slogFuncInfo[DLOG_GET_LEVEL].handle != nullptr) {
         return reinterpret_cast<DlogGetLogLevelFunc>(g_slogFuncInfo[DLOG_GET_LEVEL].handle)(moduleId, enableEvent);
     }
@@ -562,6 +623,7 @@ int32_t dlog_getlevel(int32_t moduleId, int32_t* enableEvent)
  */
 int32_t dlog_setlevel(int32_t moduleId, int32_t level, int32_t enableEvent)
 {
+    AlogTransferOnEntry();
     if (g_slogFuncInfo[DLOG_SET_LEVEL].handle != nullptr) {
         return reinterpret_cast<DlogSetLogLevelFunc>(g_slogFuncInfo[DLOG_SET_LEVEL].handle)(
             moduleId, level, enableEvent);
@@ -578,6 +640,7 @@ int32_t dlog_setlevel(int32_t moduleId, int32_t level, int32_t enableEvent)
 
 int32_t CheckLogLevel(int32_t moduleId, int32_t logLevel)
 {
+    AlogTransferOnEntry();
     if (g_slogFuncInfo[CHECK_LOG_LEVEL].handle != nullptr) {
         return reinterpret_cast<CheckLogLevelFunc>(g_slogFuncInfo[CHECK_LOG_LEVEL].handle)(moduleId, logLevel);
     }
@@ -641,6 +704,8 @@ extern "C" LOG_FUNC_VISIBILITY __attribute((weak)) int32_t acllogCheckDebugLevel
 extern "C" LOG_FUNC_VISIBILITY __attribute((weak)) void acllogVaList(
     int32_t moduleId, int32_t level, const char* fmt, va_list list)
 {
+    AlogTransferOnEntry();
+
     if (!IsAcllogValidModuleId(moduleId)) {
         SELF_LOG_WARN(
             "acllogRecord/acllogVaList input moduleId=%d is illegal, unmasked moduleId range is [0, 0x%x], masked user "
@@ -679,6 +744,8 @@ extern "C" LOG_FUNC_VISIBILITY __attribute((weak)) void acllogRecord(
 
 void DlogFlush(void)
 {
+    AlogTransferOnEntry();
+
     if (g_slogFuncInfo[DLOG_FLUSH].handle != nullptr) {
         reinterpret_cast<DlogFlushFunc>(g_slogFuncInfo[DLOG_FLUSH].handle)();
         return;
@@ -713,6 +780,8 @@ void DlogFlushForC(void) { return DlogFlush(); }
 
 void DlogInnerForC(int32_t moduleId, int32_t level, const char* fmt, ...)
 {
+    AlogTransferOnEntry();
+
     if (g_slogFuncInfo[DLOG_VA_LIST].handle != nullptr) {
         va_list list;
         va_start(list, fmt);
@@ -766,6 +835,8 @@ void DlogWithKVInnerForC(
 
 void DlogRecordForC(int32_t moduleId, int32_t level, const char* fmt, ...)
 {
+    AlogTransferOnEntry();
+
     if (g_slogFuncInfo[DLOG_VA_LIST].handle != nullptr) {
         va_list list;
         va_start(list, fmt);

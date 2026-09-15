@@ -12,6 +12,7 @@ set(UT_SOURCE_PATH ${TOP_DIR}/tests/ut/slog/ut)
 
 set(libAlogSrc
     ${LOG_SOURCE_PATH}/liblog/slog/alog_to_slog.c
+    ${LOG_SOURCE_PATH}/liblog/slog/dlog_drv.c
     ${LOG_SOURCE_PATH}/liblog/slog/dlog_core.c
     ${LOG_SOURCE_PATH}/liblog/slog/slog_api.cpp
     ${LOG_SOURCE_PATH}/liblog/slog/dlog_communication/dlog_socket.c

@@ -78,7 +78,12 @@ static SymbolInfo g_plogFuncMap[PLOG_FUNC_MAX] = {
 int32_t g_drvHandle = 0;
 int32_t g_dlogHandle = 1;
 int32_t g_slogHandle = 2;
-#define MAP_SIZE 17
+
+/* settable drv_log_set_module_log_level symbol for level-dispatch tests */
+static int32_t (*g_drvLevelSymbol)(int32_t, int32_t*, int32_t) = NULL;
+extern "C" void SetDrvLevelSymbol(int32_t (*sym)(int32_t, int32_t*, int32_t)) { g_drvLevelSymbol = sym; }
+
+#define MAP_SIZE 18
 static SymbolInfo g_drvMap[MAP_SIZE] = {
     {"drvHdcClientCreate", (void*)drvHdcClientCreate},
     {"drvHdcClientDestroy", (void*)drvHdcClientDestroy},
@@ -96,7 +101,8 @@ static SymbolInfo g_drvMap[MAP_SIZE] = {
     {"halHdcRecv", (void*)halHdcRecv},
     {"halCtl", (void*)halCtl},
     {"drvGetDevNum", (void*)drvGetDevNum},
-    {"halGetDeviceInfo", (void*)halGetDeviceInfo}};
+    {"halGetDeviceInfo", (void*)halGetDeviceInfo},
+    {"drv_log_set_module_log_level", NULL}};
 
 static int32_t g_slogFuncCount[DLOG_FUNC_MAX];
 
@@ -189,6 +195,9 @@ int logDlclose(void* handle)
 
 void* logDlsym(void* handle, const char* funcName)
 {
+    if ((strcmp(funcName, "drv_log_set_module_log_level") == 0)) {
+        return (void*)g_drvLevelSymbol; /* NULL when unset: exercises NOT_SUPPORT */
+    }
     for (int32_t i = 0; i < MAP_SIZE; i++) {
         if (strcmp(funcName, g_drvMap[i].symbol) == 0) {
             return g_drvMap[i].handle;

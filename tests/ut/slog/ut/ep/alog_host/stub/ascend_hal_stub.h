@@ -18,6 +18,8 @@ extern "C" {
 
 int readEndMsg(void* session, int devId, char** buf, unsigned int* bufLen, unsigned int timeout);
 void SetDrvCrlCmd(int cmd);
+/* Bind/unbind the drv_log_set_module_log_level symbol the stub dlsym returns. */
+void SetDrvLevelSymbol(int32_t (*sym)(int32_t, int32_t*, int32_t));
 int readDeviceMsg(void* session, int devId, char** buf, unsigned int* bufLen, unsigned int timeout);
 
 int DrvBufReadSessionClose(void* session, int devId, char** buf, unsigned int* bufLen, unsigned int timeout);

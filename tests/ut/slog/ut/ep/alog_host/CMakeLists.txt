@@ -13,6 +13,7 @@ set(UT_SOURCE_PATH ${TOP_DIR}/tests/ut/slog/ut)
 set(libAlogSrc
     ${LOG_SOURCE_PATH}/liblog/slog/alog_to_slog.c
     ${LOG_SOURCE_PATH}/liblog/slog/dlog_core.c
+    ${LOG_SOURCE_PATH}/liblog/slog/dlog_drv.c
     ${LOG_SOURCE_PATH}/liblog/slog/slog_api.cpp
     ${LOG_SOURCE_PATH}/liblog/slog/dlog_communication/dlog_socket.c
     ${LOG_SOURCE_PATH}/liblog/slog/dlog_communication/dlog_shm_control.c
@@ -31,7 +32,6 @@ set(libAlogSrc
     ${LOG_SOURCE_PATH}/liblog/slog/plog/plog_host_log.c
     ${LOG_SOURCE_PATH}/liblog/slog/plog/plog_thread.c
     ${LOG_SOURCE_PATH}/liblog/slog/plog/plog_file_mgr.c
-    ${LOG_SOURCE_PATH}/liblog/slog/plog/plog_driver_log.c
     ${LOG_SOURCE_PATH}/liblog/slog/plog/plog_drv.c
     ${LOG_SOURCE_PATH}/liblog/slog/plog/plog_driver_api.c
     ${LOG_SOURCE_PATH}/liblog/slog/plog/plog_buffer_mgr.c

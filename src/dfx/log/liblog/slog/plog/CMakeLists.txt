@@ -14,7 +14,6 @@ set(plogSrcFiles
     ${CMAKE_CURRENT_SOURCE_DIR}/plog_api.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/plog_callback.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/plog_host_log.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/plog_driver_log.c
     ${CMAKE_CURRENT_SOURCE_DIR}/plog_thread.c
     ${CMAKE_CURRENT_SOURCE_DIR}/plog_file_mgr.c
     ${CMAKE_CURRENT_SOURCE_DIR}/plog_driver_api.c
