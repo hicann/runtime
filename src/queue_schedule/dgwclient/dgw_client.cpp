@@ -922,8 +922,8 @@ static uint32_t HandleCommChannel(Endpoint& dstEndPoint, const Endpoint& srcEndP
 {
     const size_t channelAttrSize = sizeof(srcEndPoint.attr.channelAttr);
     const auto cpyRet = memcpy_s(
-        (void*)(&dstEndPoint.attr.channelAttr), channelAttrSize, (void*)(&srcEndPoint.attr.channelAttr),
-        channelAttrSize);
+        static_cast<void*>(&dstEndPoint.attr.channelAttr), channelAttrSize,
+        static_cast<const void*>(&srcEndPoint.attr.channelAttr), channelAttrSize);
     if (cpyRet != EOK) {
         BQS_LOG_ERROR("[HandleCommChannel] Memcpy failed, cpyLen[%zu], ret=[%d]", channelAttrSize, cpyRet);
         return static_cast<int32_t>(BQS_STATUS_INNER_ERROR);
