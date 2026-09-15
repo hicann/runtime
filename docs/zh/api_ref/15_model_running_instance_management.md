@@ -919,6 +919,10 @@ aclError aclmdlRIExecute(aclmdlRI modelRI, int32_t timeout)
 
 执行模型。
 
+### 约束说明
+
+不支持在模型捕获（即ACL Graph）场景下使用本接口。
+
 ### 参数说明
 
 | 参数名 | 输入/输出 | 说明 |
@@ -970,6 +974,11 @@ aclError aclmdlRIExecuteAsync(aclmdlRI modelRI, aclrtStream stream)
 ### 功能说明
 
 执行模型。异步接口。
+
+### 约束说明
+
+- 模型捕获（即ACL Graph）场景下，同一模型运行实例的多次执行会自动串行。如需并行执行，请分别进行模型捕获，生成多个模型运行实例。
+- 执行模型前，请确保设备资源充足。
 
 ### 参数说明
 

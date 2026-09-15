@@ -17,7 +17,6 @@
 #include "runtime.hpp"
 #include "model.hpp"
 #include "capture_model.hpp"
-#include "capture_adapt.hpp"
 #include "cond_handle/cond_handle.hpp"
 #include "rt_unwrap.h"
 #include "rt_capture_model_mock_helper.hpp"
