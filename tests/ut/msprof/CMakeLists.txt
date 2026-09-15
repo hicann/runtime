@@ -105,6 +105,7 @@ set(MSPROF_TARGET_PART1
     job_wrapper
     message_utest
     msprofiler_utest
+    aclprof_str2id_utest
     msprof_utest
     msprof_bin_utest
     prof_api_utest

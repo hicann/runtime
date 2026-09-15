@@ -319,7 +319,7 @@ uint32_t OpDescParser::GetOpFlag(CONST_VOID_PTR data, uint32_t len, uint32_t ind
         MSPROF_LOGE("Invalid param of GetOpFlag, data is null");
         return ACL_SUBSCRIBE_NONE;
     }
-    CHECK_INDEX_RET(index, len, return 0);
+    CHECK_INDEX_RET(index, len, return ACL_SUBSCRIBE_NONE);
     auto addr = static_cast<CONST_CHAR_PTR>(data);
     auto opDesc = reinterpret_cast<const ProfOpDesc*>(addr + index * GetOpDescSize());
     return opDesc->flag;

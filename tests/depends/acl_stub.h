@@ -241,6 +241,16 @@ public:
 
     virtual rtError_t rtMbufCopyBufRef(rtMbufPtr_t mbuf, rtMbufPtr_t* newMbuf);
 
+    virtual rtError_t rtMbufSetDataLen(rtMbufPtr_t mbuf, uint64_t len);
+
+    virtual rtError_t rtMbufGetDataLen(rtMbufPtr_t mbuf, uint64_t* len);
+
+    virtual rtError_t rtMbufChainAppend(rtMbufPtr_t mbufChainHead, rtMbufPtr_t memBuf);
+
+    virtual rtError_t rtMbufChainGetMbufNum(rtMbufPtr_t mbufChainHead, uint32_t* num);
+
+    virtual rtError_t rtMbufChainGetMbuf(rtMbufPtr_t mbufChainHead, uint32_t index, rtMbufPtr_t* memBuf);
+
     virtual rtError_t rtMemGrpCreate(const char* name, const rtMemGrpConfig_t* cfg);
 
     virtual rtError_t rtMemGrpAddProc(const char* name, int32_t pid, const rtMemGrpShareAttr_t* attr);
@@ -844,6 +854,11 @@ public:
     MOCK_METHOD2(rtMbufGetBuffSize, rtError_t(rtMbufPtr_t mbuf, uint64_t* size));
     MOCK_METHOD3(rtMbufGetPrivInfo, rtError_t(rtMbufPtr_t mbuf, void** priv, uint64_t* size));
     MOCK_METHOD2(rtMbufCopyBufRef, rtError_t(rtMbufPtr_t mbuf, rtMbufPtr_t* newMbuf));
+    MOCK_METHOD2(rtMbufSetDataLen, rtError_t(rtMbufPtr_t mbuf, uint64_t len));
+    MOCK_METHOD2(rtMbufGetDataLen, rtError_t(rtMbufPtr_t mbuf, uint64_t* len));
+    MOCK_METHOD2(rtMbufChainAppend, rtError_t(rtMbufPtr_t mbufChainHead, rtMbufPtr_t memBuf));
+    MOCK_METHOD2(rtMbufChainGetMbufNum, rtError_t(rtMbufPtr_t mbufChainHead, uint32_t* num));
+    MOCK_METHOD3(rtMbufChainGetMbuf, rtError_t(rtMbufPtr_t mbufChainHead, uint32_t index, rtMbufPtr_t* memBuf));
     MOCK_METHOD2(rtMemGrpCreate, rtError_t(const char* name, const rtMemGrpConfig_t* cfg));
     MOCK_METHOD3(rtMemGrpAddProc, rtError_t(const char* name, int32_t pid, const rtMemGrpShareAttr_t* attr));
     MOCK_METHOD2(rtMemGrpAttach, rtError_t(const char* name, int32_t timeout));

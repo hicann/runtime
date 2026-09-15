@@ -190,6 +190,7 @@ set(profilerSrcFile
     ../common/test/nano_json_test.cpp
     ../common/test/argparse_utest.cpp
     test/prof_acl_core_utest.cpp
+    test/acl_prof_unittest.cpp
     test/prof_ge_core_utest.cpp
     test/mstx_utest.cpp
     test/feature_manager_utest.cpp
@@ -624,3 +625,5 @@ set_target_properties(devprof_api_utest
     OUTPUT_NAME devprof_api_utest
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
+
+add_subdirectory(str2id)

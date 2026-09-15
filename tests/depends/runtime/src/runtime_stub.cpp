@@ -631,6 +631,19 @@ rtError_t aclStub::rtMbufGetPrivInfo(rtMbufPtr_t mbuf, void** priv, uint64_t* si
 
 rtError_t aclStub::rtMbufCopyBufRef(rtMbufPtr_t mbuf, rtMbufPtr_t* newMbuf) { return RT_ERROR_NONE; }
 
+rtError_t aclStub::rtMbufSetDataLen(rtMbufPtr_t mbuf, uint64_t len) { return RT_ERROR_NONE; }
+
+rtError_t aclStub::rtMbufGetDataLen(rtMbufPtr_t mbuf, uint64_t* len) { return RT_ERROR_NONE; }
+
+rtError_t aclStub::rtMbufChainAppend(rtMbufPtr_t mbufChainHead, rtMbufPtr_t memBuf) { return RT_ERROR_NONE; }
+
+rtError_t aclStub::rtMbufChainGetMbufNum(rtMbufPtr_t mbufChainHead, uint32_t* num) { return RT_ERROR_NONE; }
+
+rtError_t aclStub::rtMbufChainGetMbuf(rtMbufPtr_t mbufChainHead, uint32_t index, rtMbufPtr_t* memBuf)
+{
+    return RT_ERROR_NONE;
+}
+
 rtError_t aclStub::rtMemGrpCreate(const char* name, const rtMemGrpConfig_t* cfg) { return RT_ERROR_NONE; }
 
 rtError_t aclStub::rtMemGrpAddProc(const char* name, int32_t pid, const rtMemGrpShareAttr_t* attr)
@@ -3138,9 +3151,15 @@ rtError_t rtMbufFree(rtMbufPtr_t mbuf)
     return RT_ERROR_NONE;
 }
 
-RTS_API rtError_t rtMbufSetDataLen(rtMbufPtr_t mbuf, uint64_t len) { return RT_ERROR_NONE; }
+RTS_API rtError_t rtMbufSetDataLen(rtMbufPtr_t mbuf, uint64_t len)
+{
+    return MockFunctionTest::aclStubInstance().rtMbufSetDataLen(mbuf, len);
+}
 
-RTS_API rtError_t rtMbufGetDataLen(rtMbufPtr_t mbuf, uint64_t* len) { return RT_ERROR_NONE; }
+RTS_API rtError_t rtMbufGetDataLen(rtMbufPtr_t mbuf, uint64_t* len)
+{
+    return MockFunctionTest::aclStubInstance().rtMbufGetDataLen(mbuf, len);
+}
 
 rtError_t rtMbufGetBuffAddr(rtMbufPtr_t mbuf, void** databuf)
 {
@@ -3166,13 +3185,19 @@ rtError_t rtMbufCopyBufRef(rtMbufPtr_t mbuf, rtMbufPtr_t* newMbuf)
     return MockFunctionTest::aclStubInstance().rtMbufCopyBufRef(mbuf, newMbuf);
 }
 
-RTS_API rtError_t rtMbufChainAppend(rtMbufPtr_t mbufChainHead, rtMbufPtr_t memBuf) { return RT_ERROR_NONE; }
+RTS_API rtError_t rtMbufChainAppend(rtMbufPtr_t mbufChainHead, rtMbufPtr_t memBuf)
+{
+    return MockFunctionTest::aclStubInstance().rtMbufChainAppend(mbufChainHead, memBuf);
+}
 
-RTS_API rtError_t rtMbufChainGetMbufNum(rtMbufPtr_t mbufChainHead, uint32_t* num) { return RT_ERROR_NONE; }
+RTS_API rtError_t rtMbufChainGetMbufNum(rtMbufPtr_t mbufChainHead, uint32_t* num)
+{
+    return MockFunctionTest::aclStubInstance().rtMbufChainGetMbufNum(mbufChainHead, num);
+}
 
 RTS_API rtError_t rtMbufChainGetMbuf(rtMbufPtr_t mbufChainHead, uint32_t index, rtMbufPtr_t* memBuf)
 {
-    return RT_ERROR_NONE;
+    return MockFunctionTest::aclStubInstance().rtMbufChainGetMbuf(mbufChainHead, index, memBuf);
 }
 
 RTS_API rtError_t rtMemQueueQuery(
