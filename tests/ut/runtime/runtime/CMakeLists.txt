@@ -409,6 +409,7 @@ set(runtimeut_src_tiny_exclude_list
     ${TOP_DIR}/src/runtime/core/src/context/context_dfx.cc
     ${TOP_DIR}/src/runtime/core/src/context/context_standard_soc.cc
     ${TOP_DIR}/src/runtime/core/src/launch/rdma_common.cc
+    ${TOP_DIR}/src/runtime/core/src/device/device_sq_cq_pool.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/api_decorator_aclgraph.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/api_error_aclgraph.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/v100/api_impl_aclgraph.cc
@@ -492,6 +493,7 @@ set(runtimeut_src_tiny_include_list
     ${TOP_DIR}/src/runtime/core/src/dfx/fast_recover.cc
     ${TOP_DIR}/src/runtime/api/impl/v100/api_impl_v100.cc
     ${TOP_DIR}/src/runtime/core/src/context/context_stub.cc
+    ${TOP_DIR}/src/runtime/core/src/device/tiny/device_sq_cq_pool_tiny.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/tiny/capture_adapt_stub.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/tiny/capture_model_stub.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/tiny/capture_model_utils_stub.cc
@@ -879,7 +881,7 @@ list(REMOVE_ITEM runtimeut_david_src_list
 add_library(runtime_ut_david_static_lib STATIC ${runtimeut_david_src_list})
 
 target_include_directories(
-    runtime_ut_david_static_lib PUBLIC 
+    runtime_ut_david_static_lib PUBLIC
     ${RUNTIME_DIR}/src/inc/runtime
     ${TOP_DIR}/src/inc
     ${TOP_DIR}/src/tprt/inc/external
@@ -896,13 +898,13 @@ target_compile_definitions(runtime_ut_david_static_lib PUBLIC
 )
 target_link_libraries(runtime_ut_david_static_lib PRIVATE $<BUILD_INTERFACE:runtime_utest_intf_pub>)
 ###################################################################################################
-add_library(runtimeut_src_static_lib STATIC 
+add_library(runtimeut_src_static_lib STATIC
     ${runtimeut_src_list}
     ${TOP_DIR}/src/runtime/core/src/task/v200/task_david_stub.cc
 )
 
 target_include_directories(
-    runtimeut_src_static_lib PUBLIC 
+    runtimeut_src_static_lib PUBLIC
     ${TOP_DIR}/src/tprt/inc/external
     ${TOP_DIR}/src/tprt/feature/inc
     ${TOP_DIR}/abl/slog/inc
@@ -1812,7 +1814,7 @@ add_executable(runtime_utest_task_v201
 
 target_include_directories(
     runtime_utest_task_v201 PUBLIC
-    ${RUNTIME_DIR}/src/inc/runtime 
+    ${RUNTIME_DIR}/src/inc/runtime
     ${TOP_DIR}/src/tprt/inc/external
     ${TOP_DIR}/src/tprt/feature/inc
     ${TOP_DIR}/abl/slog/inc

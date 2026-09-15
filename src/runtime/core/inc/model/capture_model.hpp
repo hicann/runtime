@@ -286,7 +286,7 @@ public:
     void DeconstructSqCq(void);
     rtError_t TryRecycleResource(uint32_t& releaseSqNum, uint32_t& releaseNtyNum) override;
     rtError_t TryRecycleResource(const JettyType type, uint32_t& releaseNum) override;
-    rtError_t ReleaseSqCqAndNotifyId(uint32_t& releaseSqNum, uint32_t& releaseNtyNum);
+    rtError_t ReleaseSqCqAndNotifyId(uint32_t& releaseSqNum, uint32_t& releaseNtyNum, bool isDeconstruct = false);
     void CaptureModelExecuteFinish(const uint32_t errCode);
 
     // 子模型资源管理相关方法

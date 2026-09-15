@@ -69,6 +69,7 @@
 #include "program.hpp"
 #include "memory_task.h"
 #include "stream_c.hpp"
+#include "device_sq_cq_pool.hpp"
 #undef protected
 #undef private
 
@@ -1514,6 +1515,30 @@ TEST_F(TinyStubTest, stream_ub_db_stub)
 {
     rtError_t ret = StreamUbDbSend(nullptr, nullptr, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
+}
+
+TEST_F(TinyStubTest, device_sq_cq_pool_tiny_stub)
+{
+    DeviceSqCqPool pool(nullptr);
+    rtDeviceSqCqInfo_t sqCqInfo = {};
+    std::list<rtDeviceSqCqInfo_t> sqCqList;
+
+    EXPECT_EQ(pool.Init(), RT_ERROR_NONE);
+    pool.PreAllocSqCq();
+    EXPECT_EQ(pool.AllocSqCqFromDrv(&sqCqInfo, 0U), RT_ERROR_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(pool.SetSqRegVirtualAddrToDevice(0U, 0ULL), RT_ERROR_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(pool.AllocSqRegVirtualAddr(0U, sqCqInfo.sqRegVirtualAddr), RT_ERROR_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(pool.FreeSqCqToDrv(0U, 0U), RT_ERROR_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(pool.BatchAllocSqCq(1U), RT_ERROR_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(pool.AllocSqCqForAutoSplit(&sqCqInfo), RT_ERROR_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(pool.AllocSqCq(1U, &sqCqInfo), RT_ERROR_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(pool.FreeSqCq(&sqCqInfo, 1U, FreePolicy::DEFAULT), RT_ERROR_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(pool.GetSqCqPoolFreeResNum(), 0U);
+    EXPECT_EQ(pool.GetSqCqPoolTotalResNum(), 0U);
+    EXPECT_EQ(pool.TryFreeSqCqToDrv(), RT_ERROR_NONE);
+    pool.FreeOccupyList();
+    pool.FreeReallocatedSqCqToDrv(sqCqList.begin(), sqCqList.end());
+    EXPECT_EQ(pool.ReAllocSqCqForFreeList(), RT_ERROR_NONE);
 }
 
 TEST_F(TinyStubTest, ParsePrintfV2_ExpectFeatureNotSupport)

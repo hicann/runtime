@@ -141,8 +141,8 @@ rtError_t DeviceSqCqPool::BatchAllocSqCq(const uint32_t allcocNum, const int32_t
 void DeviceSqCqPool::PreAllocSqCq(void)
 {
     RT_LOG(RT_LOG_DEBUG, "PreAllocSqCq once");
-
     const std::lock_guard<std::mutex> deviceSqCqLock(deviceSqCqLock_);
+    preAllocCount_ += 1ULL;
     const rtError_t error = BatchAllocSqCq(1U, 0); // alloc sq cq only once
     COND_RETURN_VOID_WARN(error != RT_ERROR_NONE, "alloc sq cq from hal, retCode=%#x.", static_cast<uint32_t>(error));
 
@@ -251,6 +251,7 @@ rtError_t DeviceSqCqPool::FreeSqCqImmediately(const rtDeviceSqCqInfo_t* const sq
         return RT_ERROR_INVALID_VALUE;
     }
     const std::lock_guard<std::mutex> deviceSqCqLock(deviceSqCqLock_);
+    shrinkCount_ += freeNum;
     for (uint32_t listId = 0; listId < freeNum; listId++) {
         uint32_t sqId = sqCqList[listId].sqId;
         uint32_t cqId = sqCqList[listId].cqId;
@@ -275,6 +276,59 @@ rtError_t DeviceSqCqPool::FreeSqCqImmediately(const rtDeviceSqCqInfo_t* const sq
     }
 
     return RT_ERROR_NONE;
+}
+
+void DeviceSqCqPool::TryTrimSqCqPool(const uint32_t freeNum)
+{
+    const std::lock_guard<std::mutex> deviceSqCqLock(deviceSqCqLock_);
+    uint32_t releasedNum = 0U;
+    shrinkCount_ += freeNum;
+    uint32_t targetNum = preAllocCount_ > shrinkCount_ ? static_cast<uint32_t>(preAllocCount_ - shrinkCount_) : 0U;
+    uint32_t totalResNum = static_cast<uint32_t>(deviceSqCqFreeList_.size() + deviceSqCqOccupyList_.size());
+    uint32_t needReleaseNum = totalResNum > targetNum ? (totalResNum - targetNum) : 0U;
+
+    while ((!deviceSqCqFreeList_.empty()) && (releasedNum < needReleaseNum)) {
+        const rtDeviceSqCqInfo_t& sqCqInfo = deviceSqCqFreeList_.front();
+        const rtError_t error = FreeSqCqToDrv(sqCqInfo.sqId, sqCqInfo.cqId);
+        if (error != RT_ERROR_NONE) {
+            RT_LOG(
+                RT_LOG_WARNING,
+                "SQ/CQ release during pool trimming was unsuccessful and can be ignored, device_id=%u, "
+                "target_num=%u, free_res_num=%u, release_num=%u, retCode=%#x.",
+                device_->Id_(), targetNum, static_cast<uint32_t>(deviceSqCqFreeList_.size()), releasedNum,
+                static_cast<uint32_t>(error));
+            return;
+        }
+        deviceSqCqFreeList_.pop_front();
+        releasedNum++;
+    }
+
+    RT_LOG(
+        RT_LOG_DEBUG,
+        "try trim sqcq pool to target num finished, device_id=%u, target_num=%u, "
+        "pool_total_num=%u, release_num=%u.",
+        device_->Id_(), targetNum, static_cast<uint32_t>(deviceSqCqFreeList_.size() + deviceSqCqOccupyList_.size()),
+        releasedNum);
+}
+
+rtError_t DeviceSqCqPool::FreeSqCq(
+    const rtDeviceSqCqInfo_t* const sqCqInfo, const uint32_t freeNum, const FreePolicy policy)
+{
+    if (policy == FreePolicy::IMMEDIATE) {
+        return FreeSqCqImmediately(sqCqInfo, freeNum);
+    } else if (policy == FreePolicy::LAZY) {
+        return FreeSqCqLazy(sqCqInfo, freeNum);
+    } else {
+        rtError_t error = RT_ERROR_NONE;
+        if (sqCqInfo != nullptr) {
+            error = FreeSqCqLazy(sqCqInfo, freeNum);
+        }
+
+        if (error == RT_ERROR_NONE) {
+            TryTrimSqCqPool(freeNum);
+        }
+        return error;
+    }
 }
 
 uint32_t DeviceSqCqPool::GetSqCqPoolTotalResNum(void)

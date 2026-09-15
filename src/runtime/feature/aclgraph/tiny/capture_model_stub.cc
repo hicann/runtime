@@ -183,10 +183,11 @@ rtError_t CaptureModel::TryRecycleResource(const JettyType type, uint32_t& relea
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
-rtError_t CaptureModel::ReleaseSqCqAndNotifyId(uint32_t& releaseSqNum, uint32_t& releaseNtyNum)
+rtError_t CaptureModel::ReleaseSqCqAndNotifyId(uint32_t& releaseSqNum, uint32_t& releaseNtyNum, bool isDeconstruct)
 {
     UNUSED(releaseSqNum);
     UNUSED(releaseNtyNum);
+    UNUSED(isDeconstruct);
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 

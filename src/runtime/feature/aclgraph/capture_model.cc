@@ -1293,7 +1293,7 @@ void CaptureModel::DeconstructSqCq(void)
     uint32_t releaseNtyNum = 0U;
     const std::unique_lock<std::mutex> lk(sqBindMutex_);
 
-    (void)ReleaseSqCqAndNotifyId(releaseSqNum, releaseNtyNum);
+    (void)ReleaseSqCqAndNotifyId(releaseSqNum, releaseNtyNum, true);
     return;
 }
 
@@ -1336,14 +1336,23 @@ rtError_t CaptureModel::TryRecycleResource(const JettyType type, uint32_t& relea
     return RT_ERROR_NONE;
 }
 
-rtError_t CaptureModel::ReleaseSqCqAndNotifyId(uint32_t& releaseSqNum, uint32_t& releaseNtyNum)
+rtError_t CaptureModel::ReleaseSqCqAndNotifyId(uint32_t& releaseSqNum, uint32_t& releaseNtyNum, bool isDeconstruct)
 {
     releaseSqNum = 0U;
     releaseNtyNum = 0U;
-    if ((sqCqNum_ == 0U) || (refCount_ != 0U)) {
+    if (refCount_ != 0U) {
         RT_LOG(
             RT_LOG_DEBUG, "model cannot be released, model_id=%u, sqCqNum=%u, refCount=%u.", Id_(), sqCqNum_,
             refCount_);
+        return RT_ERROR_NONE;
+    }
+
+    if (sqCqNum_ == 0U) {
+        // 析构未绑定SQ/CQ的Software SQ模型时，回收对应Stream预申请的SQ/CQ
+        if (isDeconstruct && isSoftwareSqEnable_) {
+            (void)Context_()->Device_()->GetDeviceSqCqManage()->FreeSqCq(
+                nullptr, logicSqs_.size(), FreePolicy::DEFAULT);
+        }
         return RT_ERROR_NONE;
     }
 
@@ -1361,7 +1370,11 @@ rtError_t CaptureModel::ReleaseSqCqAndNotifyId(uint32_t& releaseSqNum, uint32_t&
         (error != RT_ERROR_NONE), error, "unbind sq cq failed, model_id=%u, retCode=%#x.", Id_(),
         static_cast<uint32_t>(error));
 
-    error = Context_()->Device_()->GetDeviceSqCqManage()->FreeSqCqLazy(sqCqArray_, sqCqNum_);
+    if (isDeconstruct) {
+        error = Context_()->Device_()->GetDeviceSqCqManage()->FreeSqCq(sqCqArray_, sqCqNum_, FreePolicy::DEFAULT);
+    } else {
+        error = Context_()->Device_()->GetDeviceSqCqManage()->FreeSqCq(sqCqArray_, sqCqNum_, FreePolicy::LAZY);
+    }
     COND_RETURN_ERROR(
         (error != RT_ERROR_NONE), error, "free sq cq failed, model_id=%u, retCode=%#x.", Id_(),
         static_cast<uint32_t>(error));
@@ -2098,7 +2111,7 @@ rtError_t CaptureModel::ReleaseSqCqInternal(uint32_t& releaseNum)
         return error;
     }
 
-    error = Context_()->Device_()->GetDeviceSqCqManage()->FreeSqCqLazy(sqCqArray_, sqCqNum_);
+    error = Context_()->Device_()->GetDeviceSqCqManage()->FreeSqCq(sqCqArray_, sqCqNum_, FreePolicy::LAZY);
     if (error != RT_ERROR_NONE) {
         RT_LOG(RT_LOG_ERROR, "free sq cq failed, model_id=%u, retCode=%#x.", Id_(), static_cast<uint32_t>(error));
         return error;
@@ -2291,6 +2304,7 @@ rtError_t CaptureModel::EndCaptureAdapterProc()
     COND_RETURN_ERROR(
         logicSqError != RT_ERROR_NONE, logicSqError, "Failed to build logic sqs, retCode=%#x.",
         static_cast<uint32_t>(logicSqError));
+
     return RT_ERROR_NONE;
 }
 

@@ -2160,19 +2160,19 @@ TEST_F(DeviceTest, InitDeviceSqCqpool)
     ret = deviceSqCqPool->AllocSqCq(allcocNum, &sqCqList2[0]);
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
-    ret = deviceSqCqPool->FreeSqCqLazy(&sqCqList2[0], 2);
+    ret = deviceSqCqPool->FreeSqCq(&sqCqList2[0], 2U, FreePolicy::LAZY);
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
     sqCqList2[0].sqId = 1U;
     sqCqList2[0].cqId = 2U;
     sqCqList2[1].sqId = 3U;
     sqCqList2[1].cqId = 4U;
-    ret = deviceSqCqPool->FreeSqCqLazy(&sqCqList2[0], 0U);
+    ret = deviceSqCqPool->FreeSqCq(&sqCqList2[0], 0U, FreePolicy::LAZY);
     EXPECT_NE(ret, RT_ERROR_NONE);
 
     ret = deviceSqCqPool->AllocSqCq(allcocNum, &sqCqList2[0]);
     EXPECT_EQ(ret, RT_ERROR_NONE);
-    ret = deviceSqCqPool->FreeSqCqImmediately(&sqCqList2[0], 2U);
+    ret = deviceSqCqPool->FreeSqCq(&sqCqList2[0], 2U, FreePolicy::IMMEDIATE);
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
     delete device;
@@ -2192,7 +2192,7 @@ TEST_F(DeviceTest, AllocSqCqMemcpyFail)
     rtError_t ret = deviceSqCqPool->AllocSqCq(1U, &sqCqList);
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
-    ret = deviceSqCqPool->FreeSqCqImmediately(&sqCqList, 1U);
+    ret = deviceSqCqPool->FreeSqCq(&sqCqList, 1U, FreePolicy::IMMEDIATE);
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
     MOCKER_CPP_VIRTUAL((NpuDriver*)(device->Driver_()), &NpuDriver::NormalSqCqAllocate).stubs().will(returnValue(1));
@@ -2362,7 +2362,7 @@ TEST_F(DeviceTest, FreeSqCqFail)
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
     MOCKER_CPP_VIRTUAL((NpuDriver*)(device->Driver_()), &NpuDriver::NormalSqCqFree).stubs().will(returnValue(1U));
-    ret = deviceSqCqPool->FreeSqCqLazy(&sqCqList, allcocNum);
+    ret = deviceSqCqPool->FreeSqCq(&sqCqList, allcocNum, FreePolicy::LAZY);
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
     ret = deviceSqCqPool->AllocSqCq(allcocNum, &sqCqList);

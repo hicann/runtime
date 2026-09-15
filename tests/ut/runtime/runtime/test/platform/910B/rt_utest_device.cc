@@ -2634,19 +2634,19 @@ TEST_F(CloudV2DeviceTest, InitDeviceSqCqpool)
     ret = deviceSqCqPool->AllocSqCq(allcocNum, &sqCqList2[0]);
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
-    ret = deviceSqCqPool->FreeSqCqLazy(&sqCqList2[0], 2);
+    ret = deviceSqCqPool->FreeSqCq(&sqCqList2[0], 2U, FreePolicy::LAZY);
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
     sqCqList2[0].sqId = 1U;
     sqCqList2[0].cqId = 2U;
     sqCqList2[1].sqId = 3U;
     sqCqList2[1].cqId = 4U;
-    ret = deviceSqCqPool->FreeSqCqLazy(&sqCqList2[0], 0U);
+    ret = deviceSqCqPool->FreeSqCq(&sqCqList2[0], 0U, FreePolicy::LAZY);
     EXPECT_NE(ret, RT_ERROR_NONE);
 
     ret = deviceSqCqPool->AllocSqCq(allcocNum, &sqCqList2[0]);
     EXPECT_EQ(ret, RT_ERROR_NONE);
-    ret = deviceSqCqPool->FreeSqCqImmediately(&sqCqList2[0], 2U);
+    ret = deviceSqCqPool->FreeSqCq(&sqCqList2[0], 2U, FreePolicy::IMMEDIATE);
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
     delete device;
@@ -2666,7 +2666,7 @@ TEST_F(CloudV2DeviceTest, AllocSqCqMemcpyFail)
     rtError_t ret = deviceSqCqPool->AllocSqCq(1U, &sqCqList);
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
-    ret = deviceSqCqPool->FreeSqCqImmediately(&sqCqList, 1U);
+    ret = deviceSqCqPool->FreeSqCq(&sqCqList, 1U, FreePolicy::IMMEDIATE);
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
     MOCKER_CPP_VIRTUAL((NpuDriver*)(device->Driver_()), &NpuDriver::NormalSqCqAllocate).stubs().will(returnValue(1));
@@ -2775,6 +2775,88 @@ TEST_F(CloudV2DeviceTest, TryFreeSqCqToDrv)
     delete device;
 }
 
+TEST_F(CloudV2DeviceTest, DefaultFreeUsesAccumulatedPreAllocAndShrinkCount)
+{
+    RawDevice* device = new RawDevice(0);
+    device->Init();
+    DeviceSqCqPool* const sqCqPool = device->GetDeviceSqCqManage();
+    sqCqPool->PreAllocSqCq();
+    sqCqPool->PreAllocSqCq();
+    sqCqPool->PreAllocSqCq();
+    rtDeviceSqCqInfo_t occupiedSqCq = {};
+    ASSERT_EQ(sqCqPool->AllocSqCq(1U, &occupiedSqCq), RT_ERROR_NONE);
+    ASSERT_EQ(sqCqPool->GetSqCqPoolFreeResNum(), 2U);
+
+    EXPECT_EQ(sqCqPool->FreeSqCq(nullptr, 0U, FreePolicy::DEFAULT), RT_ERROR_NONE);
+    EXPECT_EQ(sqCqPool->GetSqCqPoolFreeResNum(), 2U);
+    EXPECT_EQ(sqCqPool->GetSqCqPoolTotalResNum(), 3U);
+
+    EXPECT_EQ(sqCqPool->FreeSqCq(nullptr, 1U, FreePolicy::DEFAULT), RT_ERROR_NONE);
+    EXPECT_EQ(sqCqPool->GetSqCqPoolFreeResNum(), 1U);
+    EXPECT_EQ(sqCqPool->GetSqCqPoolTotalResNum(), 2U);
+
+    EXPECT_EQ(sqCqPool->FreeSqCq(nullptr, 1U, FreePolicy::DEFAULT), RT_ERROR_NONE);
+    EXPECT_EQ(sqCqPool->GetSqCqPoolFreeResNum(), 0U);
+    EXPECT_EQ(sqCqPool->GetSqCqPoolTotalResNum(), 1U);
+
+    EXPECT_EQ(sqCqPool->FreeSqCq(nullptr, 1U, FreePolicy::DEFAULT), RT_ERROR_NONE);
+    EXPECT_EQ(sqCqPool->GetSqCqPoolFreeResNum(), 0U);
+    EXPECT_EQ(sqCqPool->GetSqCqPoolTotalResNum(), 1U);
+
+    ASSERT_EQ(sqCqPool->FreeSqCq(&occupiedSqCq, 1U, FreePolicy::LAZY), RT_ERROR_NONE);
+    EXPECT_EQ(sqCqPool->FreeSqCq(nullptr, 0U, FreePolicy::DEFAULT), RT_ERROR_NONE);
+    EXPECT_EQ(sqCqPool->GetSqCqPoolFreeResNum(), 0U);
+    EXPECT_EQ(sqCqPool->GetSqCqPoolTotalResNum(), 0U);
+
+    delete device;
+}
+
+TEST_F(CloudV2DeviceTest, FreeSqCqDispatchesByPolicy)
+{
+    RawDevice* device = new RawDevice(0);
+    device->Init();
+    DeviceSqCqPool* const sqCqPool = device->GetDeviceSqCqManage();
+    sqCqPool->PreAllocSqCq();
+    sqCqPool->PreAllocSqCq();
+    rtDeviceSqCqInfo_t occupiedSqCq = {};
+    ASSERT_EQ(sqCqPool->AllocSqCq(1U, &occupiedSqCq), RT_ERROR_NONE);
+
+    EXPECT_EQ(sqCqPool->FreeSqCq(&occupiedSqCq, 1U, FreePolicy::LAZY), RT_ERROR_NONE);
+    EXPECT_EQ(sqCqPool->GetSqCqPoolFreeResNum(), 2U);
+    ASSERT_EQ(sqCqPool->AllocSqCq(1U, &occupiedSqCq), RT_ERROR_NONE);
+
+    EXPECT_EQ(sqCqPool->FreeSqCq(&occupiedSqCq, 1U, FreePolicy::IMMEDIATE), RT_ERROR_NONE);
+    EXPECT_EQ(sqCqPool->GetSqCqPoolFreeResNum(), 1U);
+    EXPECT_EQ(sqCqPool->GetSqCqPoolTotalResNum(), 1U);
+
+    EXPECT_EQ(sqCqPool->FreeSqCq(nullptr, 1U, FreePolicy::DEFAULT), RT_ERROR_NONE);
+    EXPECT_EQ(sqCqPool->GetSqCqPoolFreeResNum(), 0U);
+    EXPECT_EQ(sqCqPool->GetSqCqPoolTotalResNum(), 0U);
+    ASSERT_EQ(sqCqPool->AllocSqCq(1U, &occupiedSqCq), RT_ERROR_NONE);
+    EXPECT_EQ(sqCqPool->FreeSqCq(&occupiedSqCq, 1U, FreePolicy::DEFAULT), RT_ERROR_NONE);
+    EXPECT_EQ(sqCqPool->GetSqCqPoolFreeResNum(), 0U);
+    EXPECT_EQ(sqCqPool->GetSqCqPoolTotalResNum(), 0U);
+
+    delete device;
+}
+
+TEST_F(CloudV2DeviceTest, DefaultFreeReturnsSuccessAndKeepsResourceWhenDriverFreeFails)
+{
+    RawDevice* device = new RawDevice(0);
+    device->Init();
+    DeviceSqCqPool* const sqCqPool = device->GetDeviceSqCqManage();
+    sqCqPool->PreAllocSqCq();
+    MOCKER_CPP_VIRTUAL((NpuDriver*)(device->Driver_()), &NpuDriver::NormalSqCqFree)
+        .stubs()
+        .will(returnValue(static_cast<rtError_t>(1)));
+
+    EXPECT_EQ(sqCqPool->FreeSqCq(nullptr, 1U, FreePolicy::DEFAULT), RT_ERROR_NONE);
+    EXPECT_EQ(sqCqPool->GetSqCqPoolFreeResNum(), 1U);
+    EXPECT_EQ(sqCqPool->GetSqCqPoolTotalResNum(), 1U);
+
+    delete device;
+}
+
 TEST_F(CloudV2DeviceTest, StreamSetupTryAlloc)
 {
     RawDevice* device = new RawDevice(0);
@@ -2818,7 +2900,7 @@ TEST_F(CloudV2DeviceTest, FreeSqCqFail)
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
     MOCKER_CPP_VIRTUAL((NpuDriver*)(device->Driver_()), &NpuDriver::NormalSqCqFree).stubs().will(returnValue(1U));
-    ret = deviceSqCqPool->FreeSqCqLazy(&sqCqList, allcocNum);
+    ret = deviceSqCqPool->FreeSqCq(&sqCqList, allcocNum, FreePolicy::LAZY);
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
     ret = deviceSqCqPool->AllocSqCq(allcocNum, &sqCqList);

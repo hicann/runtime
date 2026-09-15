@@ -118,6 +118,106 @@ private:
     bool isCfgOpExcTaskTimeout{false};
 };
 
+TEST_F(CloudV2CaptureModelTest, SoftwareSqModelDeconstructTrimsPoolWithoutAllocatedSqCq)
+{
+    rtContext_t ctx = nullptr;
+    ASSERT_EQ(rtCtxGetCurrent(&ctx), RT_ERROR_NONE);
+    Context* const context = static_cast<Context*>(ctx);
+    DeviceSqCqPool* const sqCqPool = context->Device_()->GetDeviceSqCqManage();
+    const uint32_t totalResNumBefore = sqCqPool->GetSqCqPoolTotalResNum();
+    const uint32_t freeResNumBefore = sqCqPool->GetSqCqPoolFreeResNum();
+    sqCqPool->PreAllocSqCq();
+    ASSERT_EQ(sqCqPool->GetSqCqPoolTotalResNum(), totalResNumBefore + 1U);
+    ASSERT_EQ(sqCqPool->GetSqCqPoolFreeResNum(), freeResNumBefore + 1U);
+
+    CaptureModel* const captureModel = new CaptureModel();
+    captureModel->context_ = context;
+    captureModel->SetSoftwareSqEnable();
+    captureModel->logicSqs_.resize(1U, nullptr);
+    EXPECT_EQ(captureModel->sqCqNum_, 0U);
+
+    captureModel->DeconstructSqCq();
+    EXPECT_EQ(sqCqPool->GetSqCqPoolTotalResNum(), totalResNumBefore);
+    EXPECT_EQ(sqCqPool->GetSqCqPoolFreeResNum(), freeResNumBefore);
+
+    captureModel->logicSqs_.clear();
+    delete captureModel;
+}
+
+TEST_F(CloudV2CaptureModelTest, SoftwareSqModelReleaseKeepsPoolWithoutAllocatedSqCq)
+{
+    rtContext_t ctx = nullptr;
+    ASSERT_EQ(rtCtxGetCurrent(&ctx), RT_ERROR_NONE);
+    Context* const context = static_cast<Context*>(ctx);
+    DeviceSqCqPool* const sqCqPool = context->Device_()->GetDeviceSqCqManage();
+    sqCqPool->PreAllocSqCq();
+    const uint32_t totalResNumBefore = sqCqPool->GetSqCqPoolTotalResNum();
+    const uint32_t freeResNumBefore = sqCqPool->GetSqCqPoolFreeResNum();
+
+    CaptureModel* const captureModel = new CaptureModel();
+    captureModel->context_ = context;
+    captureModel->SetSoftwareSqEnable();
+    captureModel->logicSqs_.resize(1U, nullptr);
+    uint32_t releaseSqNum = 1U;
+    uint32_t releaseNtyNum = 1U;
+
+    EXPECT_EQ(captureModel->ReleaseSqCqAndNotifyId(releaseSqNum, releaseNtyNum), RT_ERROR_NONE);
+    EXPECT_EQ(releaseSqNum, 0U);
+    EXPECT_EQ(releaseNtyNum, 0U);
+    EXPECT_EQ(sqCqPool->GetSqCqPoolTotalResNum(), totalResNumBefore);
+    EXPECT_EQ(sqCqPool->GetSqCqPoolFreeResNum(), freeResNumBefore);
+
+    captureModel->logicSqs_.clear();
+    delete captureModel;
+}
+
+TEST_F(CloudV2CaptureModelTest, RunningSoftwareSqModelReleaseKeepsPool)
+{
+    rtContext_t ctx = nullptr;
+    ASSERT_EQ(rtCtxGetCurrent(&ctx), RT_ERROR_NONE);
+    Context* const context = static_cast<Context*>(ctx);
+    DeviceSqCqPool* const sqCqPool = context->Device_()->GetDeviceSqCqManage();
+    sqCqPool->PreAllocSqCq();
+    const uint32_t totalResNumBefore = sqCqPool->GetSqCqPoolTotalResNum();
+    const uint32_t freeResNumBefore = sqCqPool->GetSqCqPoolFreeResNum();
+
+    CaptureModel* const captureModel = new CaptureModel();
+    captureModel->context_ = context;
+    captureModel->SetSoftwareSqEnable();
+    captureModel->logicSqs_.resize(1U, nullptr);
+    captureModel->refCount_ = 1U;
+    uint32_t releaseSqNum = 1U;
+    uint32_t releaseNtyNum = 1U;
+
+    EXPECT_EQ(captureModel->ReleaseSqCqAndNotifyId(releaseSqNum, releaseNtyNum), RT_ERROR_NONE);
+    EXPECT_EQ(releaseSqNum, 0U);
+    EXPECT_EQ(releaseNtyNum, 0U);
+    EXPECT_EQ(sqCqPool->GetSqCqPoolTotalResNum(), totalResNumBefore);
+    EXPECT_EQ(sqCqPool->GetSqCqPoolFreeResNum(), freeResNumBefore);
+
+    captureModel->refCount_ = 0U;
+    captureModel->logicSqs_.clear();
+    delete captureModel;
+}
+
+TEST_F(CloudV2CaptureModelTest, NonSoftwareSqModelDestroyWithNoLogicSqKeepsSqCqPool)
+{
+    rtContext_t ctx = nullptr;
+    ASSERT_EQ(rtCtxGetCurrent(&ctx), RT_ERROR_NONE);
+    Context* const context = static_cast<Context*>(ctx);
+    DeviceSqCqPool* const sqCqPool = context->Device_()->GetDeviceSqCqManage();
+    sqCqPool->PreAllocSqCq();
+    const uint32_t totalSqCqNumBefore = sqCqPool->GetSqCqPoolTotalResNum();
+    const uint32_t freeSqCqNumBefore = sqCqPool->GetSqCqPoolFreeResNum();
+
+    CaptureModel* const captureModel = new CaptureModel();
+    captureModel->context_ = context;
+    delete captureModel;
+
+    EXPECT_EQ(sqCqPool->GetSqCqPoolTotalResNum(), totalSqCqNumBefore);
+    EXPECT_EQ(sqCqPool->GetSqCqPoolFreeResNum(), freeSqCqNumBefore);
+}
+
 TEST_F(CloudV2CaptureModelTest, CheckCaptureModelForUpdateRefreshesSupportResult)
 {
     rtStream_t stream = nullptr;
