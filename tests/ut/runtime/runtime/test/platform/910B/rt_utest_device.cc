@@ -283,9 +283,10 @@ static rtError_t StubStarsQueryPageFaultInfo(const uint32_t deviceId, struct svm
     return RT_ERROR_NONE;
 }
 
-static rtError_t StubStarsClearPageFaultInfo(const uint32_t deviceId)
+static rtError_t StubStarsClearPageFaultInfo(const uint32_t deviceId, const bool isLogError)
 {
     EXPECT_EQ(deviceId, 0U);
+    EXPECT_TRUE(isLogError);
     ++g_starsPageFaultClearCount;
     return RT_ERROR_NONE;
 }

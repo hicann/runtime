@@ -2373,6 +2373,7 @@ TEST_F(NewCloudV2ApiTest, rtDeviceStatusQuery_02)
 bool g_taskAbortCallBack = false;
 static bool g_abortTerminateConfirmed = false;
 static uint32_t g_abortPageFaultClearCount = 0U;
+static bool g_abortStreamSqCqUpdated = false;
 
 static int32_t StubTaskAbortCallBack(uint32_t devId, rtTaskAbortStage_t stage, uint32_t timeout, void* args)
 {
@@ -2390,10 +2391,20 @@ static rtError_t StubDeviceQueryForPageFaultClear(const int32_t devId, const uin
     return RT_ERROR_NONE;
 }
 
-static rtError_t StubAbortClearPageFaultInfo(const uint32_t deviceId)
+static rtError_t StubUpdateStreamSqCqForPageFaultClear(StreamSqCqManage* const streamSqCqManage, Stream* const stream)
+{
+    EXPECT_NE(streamSqCqManage, nullptr);
+    EXPECT_NE(stream, nullptr);
+    g_abortStreamSqCqUpdated = true;
+    return RT_ERROR_NONE;
+}
+
+static rtError_t StubAbortClearPageFaultInfo(const uint32_t deviceId, const bool isLogError)
 {
     EXPECT_EQ(deviceId, 0U);
+    EXPECT_FALSE(isLogError);
     EXPECT_TRUE(g_abortTerminateConfirmed);
+    EXPECT_TRUE(g_abortStreamSqCqUpdated);
     ++g_abortPageFaultClearCount;
     return RT_GET_DRV_ERRCODE(DRV_ERROR_NOT_SUPPORT);
 }
@@ -2417,14 +2428,16 @@ TEST_F(NewCloudV2ApiTest, rtDeviceTaskAbort_04)
     MOCKER(ContextManage::DeviceQuery).stubs().will(invoke(StubDeviceQueryForPageFaultClear));
     MOCKER(NpuDriver::ClearPageFaultInfo).stubs().will(invoke(StubAbortClearPageFaultInfo));
 
-    MOCKER_CPP(&StreamSqCqManage::UpdateStreamSqCq).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(&StreamSqCqManage::UpdateStreamSqCq).stubs().will(invoke(StubUpdateStreamSqCqForPageFaultClear));
     MOCKER(ContextManage::IsSupportDeviceAbort).stubs().will(returnValue(true));
     g_taskAbortCallBack = false;
     g_abortTerminateConfirmed = false;
     g_abortPageFaultClearCount = 0U;
+    g_abortStreamSqCqUpdated = false;
     error = rtDeviceTaskAbort(devId, 1000);
     EXPECT_EQ(error, DRV_ERROR_NONE);
     EXPECT_EQ(g_taskAbortCallBack, true);
+    EXPECT_TRUE(g_abortStreamSqCqUpdated);
     EXPECT_EQ(g_abortPageFaultClearCount, 1U);
 }
 

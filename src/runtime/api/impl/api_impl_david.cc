@@ -779,7 +779,7 @@ rtError_t ApiImplDavid::SetMemcpyDesc(
 }
 
 static rtError_t GetUbMemcpyFlag(
-    const void* const dst, const void* const src, const rtMemcpyKind_t kind, Stream* const stm, bool& isUbMemcpy)
+    const void* const dst, const void* const src, const rtMemcpyKind_t kind, const Stream* const stm, bool& isUbMemcpy)
 {
     if (kind != RT_MEMCPY_DEVICE_TO_DEVICE) {
         isUbMemcpy = Runtime::Instance()->GetConnectUbFlag();

@@ -2619,15 +2619,15 @@ rtError_t NpuDriver::QueryPageFaultInfo(const uint32_t deviceId, struct svmPagef
     return RT_GET_DRV_ERRCODE(drvRet);
 }
 
-rtError_t NpuDriver::ClearPageFaultInfo(const uint32_t deviceId)
+rtError_t NpuDriver::ClearPageFaultInfo(const uint32_t deviceId, const bool isLogError)
 {
     COND_RETURN_WARN(&halMemCtl == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT, "[drv api] halMemCtl does not exist");
     uint32_t clearDeviceId = deviceId;
     const drvError_t drvRet = halMemCtl(
         static_cast<int32_t>(CTRL_TYPE_PAGEFAULT_INFO_CLEAR), &clearDeviceId, sizeof(clearDeviceId), nullptr, nullptr);
     if ((drvRet != DRV_ERROR_NONE) && (drvRet != DRV_ERROR_NOT_SUPPORT)) {
-        RT_LOG(
-            RT_LOG_ERROR, "Call driver api halMemCtl failed, drvRetCode=%d, drvDevId=%u.", static_cast<int32_t>(drvRet),
+        RtLogErrorLevelControl(
+            isLogError, "Call driver api halMemCtl failed, drvRetCode=%d, drvDevId=%u.", static_cast<int32_t>(drvRet),
             deviceId);
     }
     return RT_GET_DRV_ERRCODE(drvRet);

@@ -2024,9 +2024,10 @@ rtError_t NpuDriver::QueryPageFaultInfo(const uint32_t deviceId, struct svmPagef
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
-rtError_t NpuDriver::ClearPageFaultInfo(const uint32_t deviceId)
+rtError_t NpuDriver::ClearPageFaultInfo(const uint32_t deviceId, const bool isLogError)
 {
     UNUSED(deviceId);
+    UNUSED(isLogError);
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 

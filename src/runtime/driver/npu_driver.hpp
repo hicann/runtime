@@ -729,7 +729,7 @@ public:
         uint32_t devId, uint32_t streamId, void* streamMem, void* taskInfo, uint32_t taskCnt) override;
     static rtError_t GetPageFaultCount(const uint32_t deviceId, uint32_t* const value);
     static rtError_t QueryPageFaultInfo(const uint32_t deviceId, struct svmPagefaultInfo& info);
-    static rtError_t ClearPageFaultInfo(const uint32_t deviceId);
+    static rtError_t ClearPageFaultInfo(const uint32_t deviceId, const bool isLogError = true);
 
     // dqs
     rtError_t GetDqsQueInfo(const uint32_t devId, const uint32_t qid, DqsQueueInfo* queInfo) override;

@@ -156,9 +156,10 @@ static rtError_t StubQueryPageFaultInfo(const uint32_t deviceId, struct svmPagef
 
 static uint32_t g_clearPageFaultInfoCount = 0U;
 static bool g_checkPageFaultLogAbsentWhenClear = false;
-static rtError_t StubClearPageFaultInfo(const uint32_t deviceId)
+static rtError_t StubClearPageFaultInfo(const uint32_t deviceId, const bool isLogError)
 {
     EXPECT_EQ(deviceId, 0U);
+    EXPECT_TRUE(isLogError);
     if (g_checkPageFaultLogAbsentWhenClear) {
         EXPECT_FALSE(DlogRecordContains("Page fault info"));
     }

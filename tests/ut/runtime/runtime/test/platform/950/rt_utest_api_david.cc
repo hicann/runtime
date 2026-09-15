@@ -6857,19 +6857,32 @@ TEST_F(ApiDavidTest, rtStreamTaskClean_03)
 }
 
 static uint32_t g_clearPageFaultInfoCount = 0U;
-static bool g_checkClearBeforeAbortPost = false;
+static bool g_abortPostCalled = false;
+static bool g_resumeSqSendCalled = false;
 
-static rtError_t StubClearPageFaultInfo(const uint32_t deviceId)
+static rtError_t StubResumeSqSend(Driver* const driver, const uint32_t deviceId, const uint32_t tsId)
+{
+    EXPECT_NE(driver, nullptr);
+    EXPECT_EQ(deviceId, 0U);
+    EXPECT_EQ(tsId, 0U);
+    g_resumeSqSendCalled = true;
+    return RT_ERROR_NONE;
+}
+
+static rtError_t StubClearPageFaultInfo(const uint32_t deviceId, const bool isLogError)
 {
     EXPECT_EQ(deviceId, 0U);
+    EXPECT_FALSE(isLogError);
+    EXPECT_TRUE(g_abortPostCalled);
+    EXPECT_TRUE(g_resumeSqSendCalled);
     ++g_clearPageFaultInfoCount;
     return RT_ERROR_DRV_ERR;
 }
 
 int32_t testrtSetTaskAbortCallBack(uint32_t devId, rtTaskAbortStage_t stage, uint32_t timeout, void* args)
 {
-    if (g_checkClearBeforeAbortPost && (stage == RT_DEVICE_ABORT_POST)) {
-        EXPECT_EQ(g_clearPageFaultInfoCount, 1U);
+    if (stage == RT_DEVICE_ABORT_POST) {
+        g_abortPostCalled = true;
     }
     printf("callback func for abort");
     return 0;
@@ -6891,15 +6904,19 @@ TEST_F(ApiDavidTest, DavidrtDeviceTaskAbort_01)
     error = rtCtxCreate(&ctx, 0, 0);
     MOCKER(halTsdrvCtl).stubs().will(returnValue(DRV_ERROR_NONE));
     MOCKER(DavidDeviceQuery).stubs().will(returnValue(RT_ERROR_NONE));
+    Driver* const driver = ((Runtime*)Runtime::Instance())->driverFactory_.GetDriver(NPU_DRIVER);
+    MOCKER_CPP_VIRTUAL(driver, &Driver::ResumeSqSend).stubs().will(invoke(StubResumeSqSend));
     MOCKER(NpuDriver::ClearPageFaultInfo).stubs().will(invoke(StubClearPageFaultInfo));
 
     g_clearPageFaultInfoCount = 0U;
-    g_checkClearBeforeAbortPost = true;
+    g_abortPostCalled = false;
+    g_resumeSqSendCalled = false;
     error = rtSetTaskAbortCallBack("test", testrtSetTaskAbortCallBack, NULL);
     error = rtDeviceTaskAbort(0, 0);
-    g_checkClearBeforeAbortPost = false;
 
     EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_TRUE(g_abortPostCalled);
+    EXPECT_TRUE(g_resumeSqSendCalled);
     EXPECT_EQ(g_clearPageFaultInfoCount, 1U);
     rtCtxDestroy(ctx);
 }
