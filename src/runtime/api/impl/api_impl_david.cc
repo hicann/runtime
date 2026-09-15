@@ -521,10 +521,12 @@ rtError_t ApiImplDavid::EventRecord(Event* const evt, Stream* const stm, const u
         COND_RETURN_WARN(
             !evt->IsNewMode(), RT_ERROR_FEATURE_NOT_SUPPORT,
             "Not support call rtEventCreate or rtEventCreateWithFlag without external flag, mode=%d", evt->IsNewMode());
+        const char_t* const unsupportedFlag = GetUnsupportedCaptureStreamFlag(curStm->Flags());
         COND_RETURN_AND_MSG_OUTER(
-            !StreamFlagIsSupportCapture(curStm->Flags()), RT_ERROR_STREAM_INVALID, ErrorCode::EE1011, "Event recording",
-            std::to_string(curStm->Flags()), "stream flag",
-            RtFmtMsg("Stream (stream_id=%d) does not support the ACL Graph", curStm->Id_()));
+            unsupportedFlag != nullptr, RT_ERROR_STREAM_INVALID, ErrorCode::EE1006, "Event recording",
+            RtFmtMsg("Stream flag value %#x", curStm->Flags()),
+            RtFmtMsg(
+                "Stream (stream_id=%d) with the flag %s cannot be used for ACL Graph", curStm->Id_(), unsupportedFlag));
         COND_RETURN_AND_MSG_OUTER(
             curStm == curCtx->DefaultStream_(), RT_ERROR_STREAM_CAPTURE_IMPLICIT, ErrorCode::EE1017, "Event recording",
             "stream", RtFmtMsg("The default stream (stream_id=%d) cannot be used in the ACL Graph", curStm->Id_()));
@@ -569,10 +571,12 @@ rtError_t ApiImplDavid::EventReset(Event* const evt, Stream* const stm)
     }
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(curStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Event reset");
     if (evt->IsCapturing()) {
+        const char_t* const unsupportedFlag = GetUnsupportedCaptureStreamFlag(curStm->Flags());
         COND_RETURN_AND_MSG_OUTER(
-            !StreamFlagIsSupportCapture(curStm->Flags()), RT_ERROR_STREAM_INVALID, ErrorCode::EE1011, "Event reset",
-            std::to_string(curStm->Flags()), "stream flag",
-            RtFmtMsg("Stream (stream_id=%d) does not support the ACL Graph", curStm->Id_()));
+            unsupportedFlag != nullptr, RT_ERROR_STREAM_INVALID, ErrorCode::EE1006, "Event reset",
+            RtFmtMsg("Stream flag value %#x", curStm->Flags()),
+            RtFmtMsg(
+                "Stream (stream_id=%d) with the flag %s cannot be used for ACL Graph", curStm->Id_(), unsupportedFlag));
         COND_RETURN_AND_MSG_OUTER(
             curStm == curCtx->DefaultStream_(), RT_ERROR_STREAM_CAPTURE_IMPLICIT, ErrorCode::EE1017, "Event reset",
             "stream", RtFmtMsg("The default stream (stream_id=%d) cannot be used in the ACL Graph", curStm->Id_()));
@@ -674,10 +678,12 @@ rtError_t ApiImplDavid::StreamWaitEvent(
         return Starsv2CaptureExternalEventWait(evt, curStm);
     }
     if (evt->IsCapturing()) {
+        const char_t* const unsupportedFlag = GetUnsupportedCaptureStreamFlag(curStm->Flags());
         COND_RETURN_AND_MSG_OUTER(
-            !StreamFlagIsSupportCapture(curStm->Flags()), RT_ERROR_STREAM_INVALID, ErrorCode::EE1011,
-            "Triggering event waiting", std::to_string(curStm->Flags()), "stream flag",
-            RtFmtMsg("Stream (stream_id=%d) does not support the ACL Graph", curStm->Id_()));
+            unsupportedFlag != nullptr, RT_ERROR_STREAM_INVALID, ErrorCode::EE1006, "Triggering event waiting",
+            RtFmtMsg("Stream flag value %#x", curStm->Flags()),
+            RtFmtMsg(
+                "Stream (stream_id=%d) with the flag %s cannot be used for ACL Graph", curStm->Id_(), unsupportedFlag));
         COND_RETURN_AND_MSG_OUTER(
             curStm == curCtx->DefaultStream_(), RT_ERROR_STREAM_CAPTURE_IMPLICIT, ErrorCode::EE1017,
             "Triggering event waiting", "stream",

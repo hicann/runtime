@@ -4151,8 +4151,10 @@ rtError_t ApiErrorDecorator::ModelExecute(Model* const mdl, Stream* const stm, c
             "The current stream is used to carry AI CPU scheduling tasks and does not support execution models");
         COND_RETURN_AND_MSG_OUTER(
             ((stm->Flags() & RT_STREAM_PERSISTENT) != 0), RT_ERROR_INVALID_VALUE, ErrorCode::EE1006,
-            "Executing the model running instance", "Stream flag value " + std::to_string(stm->Flags()),
-            "Sink streams do not support execution models");
+            "Executing the model running instance", RtFmtMsg("Stream flag value %#x", stm->Flags()),
+            RtFmtMsg(
+                "Stream (stream_id=%d) with the flag RT_STREAM_PERSISTENT(0x01U) cannot be used for model execution",
+                stm->Id_()));
         COND_RETURN_AND_MSG_OUTER(
             ((stm->Flags() & RT_STREAM_CP_PROCESS_USE) != 0), RT_ERROR_INVALID_VALUE, ErrorCode::EE1006,
             "Executing the model running instance", "Stream flag value " + std::to_string(stm->Flags()),

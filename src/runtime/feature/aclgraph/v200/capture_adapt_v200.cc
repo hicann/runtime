@@ -23,15 +23,28 @@
 namespace cce {
 namespace runtime {
 
-bool StreamFlagIsSupportCapture(uint32_t flag)
+const char_t* GetUnsupportedCaptureStreamFlag(const uint32_t flags)
 {
-    static constexpr uint32_t flags = RT_STREAM_AICPU | RT_STREAM_FORBIDDEN_DEFAULT | RT_STREAM_CP_PROCESS_USE |
-                                      RT_STREAM_VECTOR_CORE_USE | RT_STREAM_PERSISTENT | RT_STREAM_ACSQ_LOCK;
+    struct FlagDesc {
+        uint32_t value;
+        const char_t* desc;
+    };
 
-    if ((flag & flags) != 0U) {
-        return false;
+    static constexpr FlagDesc unsupportedFlags[] = {
+        {RT_STREAM_AICPU, "RT_STREAM_AICPU(0x08U)"},
+        {RT_STREAM_FORBIDDEN_DEFAULT, "RT_STREAM_FORBIDDEN_DEFAULT(0x10U)"},
+        {RT_STREAM_CP_PROCESS_USE, "RT_STREAM_CP_PROCESS_USE(0x800U)"},
+        {RT_STREAM_VECTOR_CORE_USE, "RT_STREAM_VECTOR_CORE_USE(0x1000U)"},
+        {RT_STREAM_PERSISTENT, "RT_STREAM_PERSISTENT(0x01U)"},
+        {RT_STREAM_ACSQ_LOCK, "RT_STREAM_ACSQ_LOCK(0x2000U)"}};
+
+    for (const auto& item : unsupportedFlags) {
+        if ((flags & item.value) == item.value) {
+            return item.desc;
+        }
     }
-    return true;
+
+    return nullptr;
 }
 
 rtError_t GetCaptureEventFromTask(

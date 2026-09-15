@@ -863,8 +863,8 @@ TEST_F(TinyStubTest, xpu_launch_kernel_stub)
 
 TEST_F(TinyStubTest, capture_adapt_stub)
 {
-    bool ret = StreamFlagIsSupportCapture(0);
-    EXPECT_EQ(ret, true);
+    const char_t* const unsupportedFlag = GetUnsupportedCaptureStreamFlag(RT_STREAM_AICPU);
+    EXPECT_EQ(unsupportedFlag, nullptr);
 
     Event* event = nullptr;
     CaptureCntNotify cntInfo;
@@ -877,7 +877,7 @@ TEST_F(TinyStubTest, capture_adapt_stub)
     err = SendNopTask(nullptr, nullptr);
     EXPECT_EQ(err, RT_ERROR_FEATURE_NOT_SUPPORT);
 
-    ret = TaskTypeIsSupportTaskGroup(nullptr);
+    const bool ret = TaskTypeIsSupportTaskGroup(nullptr);
     EXPECT_EQ(ret, false);
 
     TaskInfo* task = GetStreamTaskInfo(nullptr, 0, 0);
