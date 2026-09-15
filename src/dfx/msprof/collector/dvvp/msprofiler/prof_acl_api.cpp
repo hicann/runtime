@@ -109,8 +109,8 @@ bool IsValidDevId(const uint32_t* deviceIdList, uint32_t deviceNums)
             return false;
         }
         if (record.count(devId) > 0) {
-            MSPROF_LOGE("[IsValidProfConfig]Device id %u is duplicatedly set", devId);
-            std::string errorReason = "device id is duplicatedly set";
+            MSPROF_LOGE("[IsValidProfConfig]Device id %u is duplicated set", devId);
+            std::string errorReason = "device id is duplicated set";
             MSPROF_INPUT_ERROR(
                 "EK0001", std::vector<std::string>({"value", "param", "reason"}),
                 std::vector<std::string>({std::to_string(devId), "device id", errorReason}));

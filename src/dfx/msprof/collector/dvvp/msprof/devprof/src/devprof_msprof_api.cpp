@@ -22,7 +22,7 @@ MSVP_PROF_API int32_t MsprofInit(uint32_t dataType, void* data, uint32_t dataLen
     (void)dataType;
     FUNRET_CHECK_EXPR_ACTION(
         dataLen != sizeof(AicpuStartPara), return PROFILING_FAILED,
-        "Input size %u is different form AicpuStartPara size %lld", dataLen, sizeof(AicpuStartPara));
+        "Input size %u is different from AicpuStartPara size %zu", dataLen, sizeof(AicpuStartPara));
 
     const int32_t ret = DevprofDrvAicpu::instance()->AdprofInit(static_cast<const AicpuStartPara*>(data));
     if (ret == PROFILING_CONTINUE) {

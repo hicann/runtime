@@ -81,7 +81,7 @@ bool OpDataManager::CheckSummaryInfoData(uint32_t replayTime) const
     size_t summarySize = summaryInfo_.size();
     FUNRET_CHECK_EXPR_ACTION(
         static_cast<uint32_t>(summarySize) > replayTime, return false,
-        "Op data over flow, summary info collect data size: %zu, while acp replay time: %u. "
+        "Op data overflow, summary info collect data size: %zu, while acp replay time: %u. "
         "Please noted that acp tool applies only to single operator scene.",
         summarySize, replayTime);
 

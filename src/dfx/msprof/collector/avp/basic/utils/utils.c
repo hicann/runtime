@@ -415,7 +415,7 @@ char* TimestampToTime(uint64_t timestamp, uint32_t unit)
             OSAL_MEM_FREE(microTimeStr);
             return NULL;
         },
-        "Faild to strcat_s for TimestampToTime.");
+        "Failed to strcat_s for TimestampToTime.");
     ret = strcat_s(dateStr, DATESTR_MAXLEN, microTimeStr);
     PROF_CHK_EXPR_ACTION(
         ret != EOK,
@@ -424,7 +424,7 @@ char* TimestampToTime(uint64_t timestamp, uint32_t unit)
             OSAL_MEM_FREE(microTimeStr);
             return NULL;
         },
-        "Faild to strcat_s for TimestampToTime.");
+        "Failed to strcat_s for TimestampToTime.");
     OSAL_MEM_FREE(microTimeStr);
     return dateStr;
 }

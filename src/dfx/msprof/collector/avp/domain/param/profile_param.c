@@ -129,7 +129,7 @@ static bool CheckDataType(uint32_t dataType, JsonObj* jsonObj)
 {
     // 该部分需要替换各种启动类型
     if (jsonObj == NULL) {
-        MSPROF_LOGE("Init jsonObj is nullptr, pleace check.");
+        MSPROF_LOGE("Init jsonObj is nullptr, please check.");
         return false;
     }
     bool ret = false;

@@ -695,7 +695,7 @@ int32_t DevprofDrvAicpu::RegisterDrvChannel(uint32_t devId, uint32_t channelId)
     ProfSampleRegisterPara registerPara = {1, {ProfStartAicpu, ProfSampleAicpu, nullptr, ProfStopAicpu}};
     int32_t ret = MsprofDrvApi::instance()->halProfSampleRegister(devId, channelId, &registerPara);
     if (ret != DRV_ERROR_NONE) {
-        MSPROF_LOGE("Failed to regist aicpu sample ops, ret = %d.", ret);
+        MSPROF_LOGE("Failed to register aicpu sample ops, ret = %d.", ret);
         return PROFILING_FAILED;
     }
 

@@ -543,7 +543,7 @@ void AnalyzerGe::HandleModelInfo(CONST_CHAR_PTR data, bool ageFlag) const
             return;
         }
         if (iter->second.start >= mlData->timeStamp) { // start end error
-            MSPROF_LOGE("Model info: op start latter than op end.");
+            MSPROF_LOGE("Model info: op start later than op end.");
             return;
         }
         iter->second.end = mlData->timeStamp;

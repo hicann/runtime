@@ -26,7 +26,7 @@ int32_t CreateUploaderTransport(uint32_t deviceId, TransportType type, Transport
             ret = FlashInitTransport(transport);
             break;
         default:
-            MSPROF_LOGE("Failed to find tranport type.");
+            MSPROF_LOGE("Failed to find transport type.");
             ret = PROFILING_FAILED;
             break;
     }

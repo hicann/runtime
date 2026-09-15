@@ -737,7 +737,7 @@ bool ProfParamsAdapter::CheckSetDeviceEnableIsValid(const std::string& config)
 {
     if (config.compare(MSVP_PROF_ON) == 0) {
         aclApiSetDeviceEnable_ = true;
-        MSPROF_LOGI("Profiling enable device notify capabiligy on acl api mode.");
+        MSPROF_LOGI("Profiling enable device notify capability on acl api mode.");
         return true;
     } else if (config.compare(MSVP_PROF_OFF) == 0) {
         aclApiSetDeviceEnable_ = false;

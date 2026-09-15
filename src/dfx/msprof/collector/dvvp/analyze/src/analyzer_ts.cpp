@@ -150,7 +150,7 @@ void AnalyzerTs::ParseTsKeypointData(const T* tsData)
     if (tsData->tagId == TS_KEYPOINT_START_TASK_STATE) {
         if (iter != keypointOpInfo_.end()) {
             MSPROF_LOGE(
-                "Reapted start key point. modelId %" PRIu64 ", indexId %" PRIu64 ", taskId %u, streamId %u, "
+                "Repeated start key point. modelId %" PRIu64 ", indexId %" PRIu64 ", taskId %u, streamId %u, "
                 "previous taskId %u, previous streamId %u",
                 tsData->modelId, tsData->indexId, tsData->taskId, tsData->streamId, iter->second.taskId,
                 iter->second.streamId);

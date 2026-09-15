@@ -52,7 +52,7 @@ static UnionList* CreateUnionList(void)
 }
 
 /**
- * @brief      Destroy addtional unionList or compact unionList
+ * @brief      Destroy additional unionList or compact unionList
  * @param [in] unionList: unionList which should be destroy
  * @return     void
  */
@@ -72,7 +72,7 @@ static void UnionListDestroy(UnionList* unionList)
 }
 
 /**
- * @brief      Find addtional data wheter exisit in additional list, the new data will be saved in.
+ * @brief      Find additional data wheter exisit in additional list, the new data will be saved in.
  * @param [in] data: data of the MsprofAdditionalInfo type
  * @param [in] ageFlag: aging flag
  * @return     true: data has saved in
@@ -113,7 +113,7 @@ static bool FindCompactNode(struct MsprofCompactInfo* data, uint8_t ageFlag)
 }
 
 /**
- * @brief      add addtional node into additional list, the new data and node will be saved in.
+ * @brief      add additional node into additional list, the new data and node will be saved in.
  * @param [in] data: data of the MsprofAdditionalInfo type
  * @param [in] ageFlag: aging flag
  * @return     void
@@ -611,7 +611,7 @@ static void ApiPopRun(void)
 
 /**
  * @brief      reset union list quantity number to 0, thus the next data could be saved from 0.
- * @param [in] unionList: unionList for addtional or compact
+ * @param [in] unionList: unionList for additional or compact
  * @return     void
  */
 static void SetCountZero(UnionList* unionList)
@@ -750,7 +750,7 @@ void DumpAdditional(void)
         if (ret != EOK) {
             OSAL_MEM_FREE(chunk);
             additionalNode = additionalNode->next;
-            MSPROF_LOGE("strcpy_s addtional file name failed.");
+            MSPROF_LOGE("strcpy_s additional file name failed.");
             continue;
         }
         chunk->chunk = (uint8_t*)OsalCalloc(chunkSize + 1);
@@ -1036,5 +1036,5 @@ void ReportUninitialize(void)
     UnionListDestroy(g_additionalList);
     UnionListDestroy(g_compactList);
     ReportDestroy();
-    MSPROF_LOGI("report uninitialization successful");
+    MSPROF_LOGI("Report uninitialized successfully.");
 }

@@ -1047,12 +1047,12 @@ void ProfHostService::WakeupTimeoutEnd()
 
 void ProfHostService::WaitTimeoutEnd()
 {
-    MSPROF_LOGI("Wakeup Unint start");
+    MSPROF_LOGI("Wakeup Uninit start");
     std::unique_lock<std::mutex> lk(needUnintMtx_);
     static const int32_t CHECK_FILE_SIZE_INTERVAL_US = 500000; // 500000 means 500 ms
     const auto res = isJobUnint_.wait_for(lk, std::chrono::microseconds(CHECK_FILE_SIZE_INTERVAL_US));
     if (res == std::cv_status::timeout) {
-        MSPROF_LOGI("Wakeup Unint timeout");
+        MSPROF_LOGI("Wakeup Uninit timeout");
         return;
     }
 }

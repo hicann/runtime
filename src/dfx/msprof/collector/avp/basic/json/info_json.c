@@ -71,7 +71,7 @@ static void CreateCpuIdString(char* cpuStr, size_t cpuStrLen, int64_t begin, int
         char* str = TransferUint32ToString((uint32_t)id);
         ret = strcat_s(cpuStr, cpuStrLen, str);
         OSAL_MEM_FREE(str);
-        PROF_CHK_EXPR_ACTION(ret != EOK, return, "Faild to strcat_s for CreateCpuIdString.");
+        PROF_CHK_EXPR_ACTION(ret != EOK, return, "Failed to strcat_s for CreateCpuIdString.");
     }
 }
 
@@ -85,16 +85,16 @@ static void CreateFreqString(uint32_t deviceId)
     char* aicFreq = TransferUint32ToString(PlatformGetAicFreq());
     errno_t ret = strcat_s(g_infoJson->deviceInfos.aicFrequency, MAX_FREQ_LEN, aicFreq);
     OSAL_MEM_FREE(aicFreq);
-    PROF_CHK_EXPR_ACTION(ret != EOK, return, "Faild to strcat_s for aicFreq: %u.", PlatformGetAicFreq());
+    PROF_CHK_EXPR_ACTION(ret != EOK, return, "Failed to strcat_s for aicFreq: %u.", PlatformGetAicFreq());
     char* aivFreq = TransferUint32ToString(PlatformGetAivFreq());
     ret = strcat_s(g_infoJson->deviceInfos.aivFrequency, MAX_FREQ_LEN, aivFreq);
     OSAL_MEM_FREE(aivFreq);
-    PROF_CHK_EXPR_ACTION(ret != EOK, return, "Faild to strcat_s for aivFreq: %u.", PlatformGetAivFreq());
+    PROF_CHK_EXPR_ACTION(ret != EOK, return, "Failed to strcat_s for aivFreq: %u.", PlatformGetAivFreq());
     // hwts freq
     char* hwtsFreq = TransferFloatToString(PlatformGetDevFreq(deviceId));
     ret = strcat_s(g_infoJson->deviceInfos.hwtsFrequency, MAX_FREQ_LEN, hwtsFreq);
     OSAL_MEM_FREE(hwtsFreq);
-    PROF_CHK_EXPR_ACTION(ret != EOK, return, "Faild to strcat_s for hwtsFreq: %.4f.", PlatformGetDevFreq(deviceId));
+    PROF_CHK_EXPR_ACTION(ret != EOK, return, "Failed to strcat_s for hwtsFreq: %.4f.", PlatformGetDevFreq(deviceId));
 }
 
 /**
@@ -362,14 +362,15 @@ static int32_t AddDeviceInfo(uint32_t deviceId)
     DeviceInfo devInfo = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     // device info
     if (GetDevInfo(deviceId, &devInfo) != PROFILING_SUCCESS) {
-        MSPROF_LOGE("Faild to get device info.");
+        MSPROF_LOGE("Failed to get device info.");
         return PROFILING_FAILED;
     }
     // ctrl cpu id
     for (uint32_t j = 0; j < sizeof(CPU_TYPES) / sizeof(CPU_TYPES[0]); ++j) {
         if (devInfo.ctrlCpuId == CPU_TYPES[j].id) {
             ret = strcat_s(g_infoJson->deviceInfos.ctrlCpuId, CPU_TYPE_NAME_LEN, CPU_TYPES[j].name);
-            PROF_CHK_EXPR_ACTION(ret != EOK, return PROFILING_FAILED, "Faild to strcat_s for ctrlCpuId.");
+            PROF_CHK_EXPR_ACTION(ret != EOK, return PROFILING_FAILED, "Failed to strcat_s for ctrlCpuId.");
+            break;
         }
     }
     // ctrl cpu

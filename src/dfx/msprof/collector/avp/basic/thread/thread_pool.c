@@ -156,7 +156,7 @@ int32_t ProfThreadPoolDispatch(ThreadTask* task, uint32_t priority)
     }
     if (g_threadPool->size == g_threadPool->capacity && g_threadPool->destruct == 0) {
         // block producer thread
-        MSPROF_LOGW("The task queue is full, wait util notify from front point move.");
+        MSPROF_LOGW("The task queue is full, wait until notify from front point move.");
         OsalCondWait(&g_threadPool->notFull, &g_threadPool->poolMtx);
     }
     if (priority == 0) {
@@ -194,7 +194,7 @@ VOID ProfThreadPoolStop(void)
     OsalThread threadTid = pthread_self();
     for (uint32_t i = 0; i < g_threadPool->threadNum; ++i) {
         if (g_threadPool->threadId[i] == threadTid) {
-            MSPROF_LOGI("Called thead %d exit.", threadTid);
+            MSPROF_LOGI("Called thread %lu exit.", (unsigned long)threadTid);
             (void)OsalMutexLock(&g_threadPool->liveMtx);
             g_threadPool->liveNum--;
             if (g_threadPool->liveNum == 0) {

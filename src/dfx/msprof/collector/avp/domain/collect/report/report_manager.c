@@ -553,7 +553,7 @@ void SaveTypeInfoData(TypeInfoFlag* flag, bool isLastChunk)
 {
     (void)OsalMutexLock(&g_infoType.regMtx);
     if (!flag->infoInit || flag->infoStop) {
-        MSPROF_LOGW("Type info is not initialized or has been stoped.");
+        MSPROF_LOGW("Type info is not initialized or has been stopped.");
         (void)OsalMutexUnlock(&g_infoType.regMtx);
         return;
     }
@@ -609,7 +609,7 @@ void TypeInfoStop(void)
 {
     (void)OsalMutexLock(&g_infoType.typeInfoMtx);
     if (!g_infoType.infoInit && g_infoType.infoStop) {
-        MSPROF_LOGI("TypeInfo hash been stoped.");
+        MSPROF_LOGI("TypeInfo has been stopped.");
         (void)OsalMutexUnlock(&g_infoType.typeInfoMtx);
         return;
     }
@@ -629,7 +629,7 @@ void TypeInfoUninit(void)
 {
     (void)OsalMutexLock(&g_infoType.typeInfoMtx);
     if (!g_infoType.infoInit && g_infoType.infoStop) {
-        MSPROF_LOGI("TypeInfo hash been uninitialized.");
+        MSPROF_LOGI("TypeInfo has been uninitialized.");
         (void)OsalMutexUnlock(&g_infoType.typeInfoMtx);
         return;
     }

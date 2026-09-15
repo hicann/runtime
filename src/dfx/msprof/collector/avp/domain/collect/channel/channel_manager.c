@@ -96,7 +96,7 @@ OsalVoidPtr ChannelMgrThreadHandle(OsalVoidPtr args)
     (void)OsalCondSignal(&attr->pollCond);
     (void)OsalMutexUnlock(&attr->pollMtx);
     ChannelPollInfo channels[MAX_CHANNEL_NUM] = {{0}};
-    MSPROF_LOGI("Start run channl poll, enable: %d, quit: %d.", attr->enable, attr->quit);
+    MSPROF_LOGI("Start run channel poll, enable: %d, quit: %d.", attr->enable, attr->quit);
     while (!attr->quit) {
         // blocking interface prof_channel_poll
         int32_t ret = HalProfChannelPoll(channels, MAX_CHANNEL_NUM, DEFAULT_CHANNEL_POLL_TIMEOUT);

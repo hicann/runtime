@@ -113,7 +113,7 @@ int32_t EngineMgr::ProfConfig(const std::string& module, const SHARED_PTR_ALIA<P
         if (mJob != nullptr) {
             ret = mJob->ProfConfig(config); // start to config the module
         } else {
-            MSPROF_LOGE("job->sencod is nullptr");
+            MSPROF_LOGE("job->second is nullptr");
         }
     } else {
         MSPROF_LOGE("Cannot find the module:%s in jobs_", module.c_str());

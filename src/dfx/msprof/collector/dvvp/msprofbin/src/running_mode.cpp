@@ -217,7 +217,7 @@ void RunningMode::SetEnvList(std::vector<std::string>& envsV) const
 int32_t RunningMode::StartAnalyzeTask()
 {
     if (isQuit_) {
-        MSPROF_LOGE("Start analyze task error, msprofbin has quited.");
+        MSPROF_LOGE("Start analyze task error, msprofbin has quit.");
         return PROFILING_FAILED;
     }
 
@@ -271,7 +271,7 @@ int32_t RunningMode::StartAnalyzeTask()
 int32_t RunningMode::StartParseTask()
 {
     if (isQuit_) {
-        MSPROF_LOGE("Start parse task error, msprofbin has quited");
+        MSPROF_LOGE("Start parse task error, msprofbin has quit.");
         return PROFILING_FAILED;
     }
     if (taskPid_ != MSVP_PROCESS) {
@@ -313,7 +313,7 @@ int32_t RunningMode::StartParseTask()
 int32_t RunningMode::StartQueryTask()
 {
     if (isQuit_) {
-        MSPROF_LOGE("Start query task error, msprofbin has quited");
+        MSPROF_LOGE("Start query task error, msprofbin has quit.");
         return PROFILING_FAILED;
     }
     if (taskPid_ != MSVP_PROCESS) {
@@ -432,7 +432,7 @@ int32_t RunningMode::RunExportTimelineTask(
 int32_t RunningMode::StartExportTask()
 {
     if (isQuit_) {
-        MSPROF_LOGE("Start export task error, msprofbin has quited");
+        MSPROF_LOGE("Start export task error, msprofbin has quit.");
         return PROFILING_FAILED;
     }
     if (taskPid_ != MSVP_PROCESS) {
@@ -475,7 +475,7 @@ int32_t RunningMode::StartExportTask()
 
 void RunningMode::StopNoWait()
 {
-    CmdLog::CmdWarningLog("Receive stop singal.");
+    CmdLog::CmdWarningLog("Receive stop signal.");
     DynProfCliMgr::instance()->StopDynProfCli();
     StopRunningTasks();
     UpdateOutputDirInfo();
@@ -537,7 +537,7 @@ SHARED_PTR_ALIA<MsprofTask> RunningMode::GetRunningTask(const std::string& jobId
 int32_t RunningMode::CheckAnalysisEnv()
 {
     if (isQuit_) {
-        MSPROF_LOGE("Check Analysis env failed, msprofbin has quited");
+        MSPROF_LOGE("Check Analysis env failed, msprofbin has quit");
         return PROFILING_FAILED;
     }
     if (Platform::instance()->RunSocSide()) {
@@ -674,7 +674,7 @@ void AppMode::SetDefaultParams() const
 int32_t AppMode::StartAppTaskForDynProf()
 {
     if (isQuit_) {
-        MSPROF_LOGE("Failed to launch app, msprofbin has quited");
+        MSPROF_LOGE("Failed to launch app, msprofbin has quit");
         return PROFILING_FAILED;
     }
     if (DynProfCliMgr::instance()->IsAppMode()) {
@@ -714,7 +714,7 @@ int32_t AppMode::StartAppTaskForDynProf()
 int32_t AppMode::StartAppTask(bool needWait)
 {
     if (isQuit_) {
-        MSPROF_LOGE("Failed to launch app, msprofbin has quited");
+        MSPROF_LOGE("Failed to launch app, msprofbin has quit.");
         return PROFILING_FAILED;
     }
     int32_t ret = analysis::dvvp::app::Application::LaunchApp(params_, taskPid_);

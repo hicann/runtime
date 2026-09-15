@@ -66,7 +66,7 @@ int32_t CollectionRegisterMgr::CollectionJobRegisterAndRun(
     }
     std::lock_guard<std::mutex> lk(collectionJobsMutex_);
     if (InsertCollectionJob(devId, jobTag, job)) {
-        MSPROF_LOGD("Collection Job Registeter, devId:%d jobTag:%d", devId, jobTag);
+        MSPROF_LOGD("Collection Job Register, devId:%d jobTag:%d", devId, jobTag);
         return job->Process();
     }
 
@@ -82,7 +82,7 @@ int32_t CollectionRegisterMgr::CollectionJobRun(int32_t devId, const ProfCollect
     std::unique_lock<std::mutex> lk(collectionJobsMutex_);
     if (collectionJobs_.find(devId) == collectionJobs_.end() ||
         collectionJobs_[devId].find(jobTag) == collectionJobs_[devId].end()) {
-        MSPROF_LOGI("Collection job not registeter, devId:%d jobTag:%d", devId, jobTag);
+        MSPROF_LOGI("Collection job not register, devId:%d jobTag:%d", devId, jobTag);
         return PROFILING_FAILED;
     }
     return collectionJobs_[devId][jobTag]->Process();
@@ -105,7 +105,7 @@ int32_t CollectionRegisterMgr::CollectionJobUnregisterAndStop(int32_t devId, con
     const bool ret = GetAndDelCollectionJob(devId, jobTag, job);
     lk.unlock();
     if (ret) {
-        MSPROF_LOGD("Collection Job Unregisteter, devId:%d jobTag:%d", devId, jobTag);
+        MSPROF_LOGD("Collection Job Unregister, devId:%d jobTag:%d", devId, jobTag);
         if (job != nullptr) {
             return job->Uninit();
         }

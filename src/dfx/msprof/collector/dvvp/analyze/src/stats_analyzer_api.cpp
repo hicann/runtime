@@ -269,7 +269,7 @@ void StatsAnalyzerApi::HandleEventInfo(CONST_CHAR_PTR data)
             return;
         }
         if (iter->second.beginTime >= mlData->timeStamp) { // start end error
-            MSPROF_LOGE("Invalid event time: api start latter than api end.");
+            MSPROF_LOGE("Invalid event time: api start later than api end.");
             return;
         }
         iter->second.endTime = mlData->timeStamp;

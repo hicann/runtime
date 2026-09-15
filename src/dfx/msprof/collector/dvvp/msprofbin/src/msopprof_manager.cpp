@@ -64,7 +64,7 @@ bool MsopprofManager::CheckMsopprofIfExist(int argc, CONST_CHAR_PTR argv[], std:
     if (true) {
         if (msopprofPath_.empty()) {
             CmdLog::CmdErrorLog("Cannot find msopprof, "
-                                "Maybe you shoule source set_env.sh in advance.");
+                                "Maybe you should source set_env.sh in advance.");
         } else {
             for (int i = 2; i < argc; i++) {
                 opArgv.emplace_back(argv[i]);

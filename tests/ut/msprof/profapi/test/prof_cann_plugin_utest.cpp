@@ -28,6 +28,7 @@ int g_atlsHashIdCalled = 0;
 int g_atlsHostFreqCalled = 0;
 int g_atlsSetDeviceCalled = 0;
 uint32_t g_reportedApiType = 0;
+uint32_t g_stepInfoCallbackCount = 0;
 
 int32_t StubAtlsReportApi(uint32_t, const MsprofApi* api)
 {
@@ -71,6 +72,15 @@ int32_t StubAtlsSetDevice(VOID_PTR, uint32_t)
     return 0;
 }
 
+int32_t StubGeStepInfo(uint32_t type, void* data, uint32_t len)
+{
+    EXPECT_EQ(static_cast<uint32_t>(PROF_CTRL_STEPINFO), type);
+    EXPECT_EQ(sizeof(ProfStepInfoCmd_t), len);
+    EXPECT_NE(nullptr, data);
+    ++g_stepInfoCallbackCount;
+    return PROFILING_SUCCESS;
+}
+
 int32_t StubProfReportRegDataFormat(uint16_t, uint32_t, const std::string&) { return 7; }
 std::string StubProfReportGetHashInfo(uint64_t) { return "stub-hash-info"; }
 std::string StubProfGetPath() { return "/var/tmp/prof"; }
@@ -94,6 +104,7 @@ void ResetAtlsCounters()
     g_atlsHostFreqCalled = 0;
     g_atlsSetDeviceCalled = 0;
     g_reportedApiType = 0;
+    g_stepInfoCallbackCount = 0;
 }
 
 void ClearAtlsHooks()
@@ -125,6 +136,15 @@ void ClearProfHooks()
     plugin->profBatchAddBufIndexShift_ = nullptr;
 }
 
+class ProfPluginTestAccess : public ProfPlugin {
+public:
+    static void ClearCallbacks()
+    {
+        std::lock_guard<std::mutex> lock(callbackMutex_);
+        moduleCallbacks_.clear();
+    }
+};
+
 } // namespace
 
 class PROF_CANN_PLUGIN_UTEST : public testing::Test {
@@ -134,11 +154,13 @@ protected:
         ResetAtlsCounters();
         ClearAtlsHooks();
         ClearProfHooks();
+        ProfPluginTestAccess::ClearCallbacks();
     }
     virtual void TearDown()
     {
         ClearAtlsHooks();
         ClearProfHooks();
+        ProfPluginTestAccess::ClearCallbacks();
         GlobalMockObject::verify();
     }
 };
@@ -325,28 +347,44 @@ TEST_F(PROF_CANN_PLUGIN_UTEST, ProfNotifySetDevice_NotifyCallback)
     EXPECT_EQ(0, plugin->ProfNotifySetDevice(5, 6, false));
 }
 
+TEST_F(PROF_CANN_PLUGIN_UTEST, ProfSetStepInfo_GeCallbackNotRegistered)
+{
+    auto plugin = ProfCannPlugin::instance();
+    plugin->atlsReportApi_ = StubAtlsReportApi;
+    EXPECT_EQ(PROFILING_FAILED, plugin->ProfSetStepInfo(1, 2, nullptr));
+    EXPECT_EQ(0, g_atlsReportApi);
+}
+
+TEST_F(PROF_CANN_PLUGIN_UTEST, ProfSetStepInfo_RuntimeMarkFail)
+{
+    auto plugin = ProfCannPlugin::instance();
+    ASSERT_EQ(PROFILING_SUCCESS, plugin->ProfRegisterCallback(GE, StubGeStepInfo));
+    MOCKER_CPP(&ProfRuntimePlugin::RuntimeApiInit).stubs().will(returnValue((int32_t)PROFILING_SUCCESS));
+    MOCKER_CPP(&ProfRuntimePlugin::ProfMarkEx).stubs().will(returnValue((int32_t)PROFILING_FAILED));
+    EXPECT_EQ(PROFILING_FAILED, plugin->ProfSetStepInfo(1, 2, nullptr));
+    EXPECT_EQ(0U, g_stepInfoCallbackCount);
+}
+
 TEST_F(PROF_CANN_PLUGIN_UTEST, ProfSetStepInfo_RuntimeInitFail)
 {
     auto plugin = ProfCannPlugin::instance();
+    ASSERT_EQ(PROFILING_SUCCESS, plugin->ProfRegisterCallback(GE, StubGeStepInfo));
     MOCKER_CPP(&ProfRuntimePlugin::RuntimeApiInit).stubs().will(returnValue((int32_t)PROFILING_FAILED));
+    MOCKER_CPP(&ProfRuntimePlugin::ProfMarkEx).expects(never());
     EXPECT_EQ(PROFILING_FAILED, plugin->ProfSetStepInfo(1, 2, nullptr));
-}
-
-TEST_F(PROF_CANN_PLUGIN_UTEST, ProfSetStepInfo_MarkExFail)
-{
-    auto plugin = ProfCannPlugin::instance();
-    MOCKER_CPP(&ProfRuntimePlugin::RuntimeApiInit).stubs().will(returnValue((int32_t)PROFILING_SUCCESS));
-    MOCKER_CPP(&ProfRuntimePlugin::ProfMarkEx).stubs().will(returnValue((int32_t)1));
-    EXPECT_EQ(1, plugin->ProfSetStepInfo(1, 2, nullptr));
+    EXPECT_EQ(0U, g_stepInfoCallbackCount);
 }
 
 TEST_F(PROF_CANN_PLUGIN_UTEST, ProfSetStepInfo_Success)
 {
     auto plugin = ProfCannPlugin::instance();
+    ASSERT_EQ(PROFILING_SUCCESS, plugin->ProfRegisterCallback(GE, StubGeStepInfo));
     plugin->atlsReportApi_ = StubAtlsReportApi;
     MOCKER_CPP(&ProfRuntimePlugin::RuntimeApiInit).stubs().will(returnValue((int32_t)PROFILING_SUCCESS));
     MOCKER_CPP(&ProfRuntimePlugin::ProfMarkEx).stubs().will(returnValue((int32_t)RT_ERROR_NONE));
     EXPECT_EQ(PROFILING_SUCCESS, plugin->ProfSetStepInfo(1, 2, nullptr));
+    EXPECT_EQ(0U, g_stepInfoCallbackCount);
+    EXPECT_EQ(1, g_atlsReportApi);
     EXPECT_EQ(65542U, g_reportedApiType);
 }
 

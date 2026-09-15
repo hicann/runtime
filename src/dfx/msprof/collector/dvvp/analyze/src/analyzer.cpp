@@ -154,7 +154,7 @@ void Analyzer::UploadAppOpModeStaticShape(std::multimap<std::string, OpTime>& op
             }
         }
     } else {
-        MSPROF_LOGD("Try to custruct Op info, is not all static");
+        MSPROF_LOGD("Try to construct Op info, is not all static");
         for (auto iter = opTimes.begin(); iter != opTimes.end();) { // tmp solution, discard dynamic shape task
             int32_t streamType;
             if (!analyzerGe_->GetStreamType(iter->second.streamId, streamType)) {

@@ -204,14 +204,14 @@ static bool TryPushUploader(UploaderAttr* uploader, ProfFileChunk* chunk)
 
     (void)OsalMutexLock(&uploader->dataMtx);
     if (uploader->size == uploader->capacity) {
-        MSPROF_LOGW("The uploader queue is full, wait util notify from front point move.");
+        MSPROF_LOGW("The uploader queue is full, wait until notify from front point move.");
         OsalCondWait(&uploader->notFull, &uploader->dataMtx);
     }
 
     if (!uploader->enable || uploader->destruct) {
         (void)OsalMutexUnlock(&uploader->dataMtx);
         MSPROF_LOGE(
-            "Uploader is not enalble, device: %u, chunk size: %" PRIu64 ".", uploader->deviceId, chunk->chunkSize);
+            "Uploader is not enable, device: %u, chunk size: %" PRIu64 ".", uploader->deviceId, chunk->chunkSize);
         return false;
     }
     MSPROF_LOGD(

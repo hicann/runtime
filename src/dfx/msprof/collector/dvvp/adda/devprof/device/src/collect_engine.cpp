@@ -76,7 +76,7 @@ int32_t CollectEngine::Uinit()
                 return ret;
             }
         } catch (...) {
-            MSPROF_LOGD("[CollectEngine]Uinit failed.");
+            MSPROF_LOGD("[CollectEngine]Uninit failed.");
             return PROFILING_FAILED;
         }
     }

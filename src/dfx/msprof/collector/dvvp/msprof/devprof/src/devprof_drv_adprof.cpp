@@ -194,7 +194,7 @@ int32_t AdprofStartRegister(struct AdprofCallBack& adprofCallBack, uint32_t devI
     ProfSampleRegisterPara registerPara = {1, {ProfStartAdprof, ProfSampleAdprof, nullptr, ProfStopAdprof}};
     int32_t ret = MsprofDrvApi::instance()->halProfSampleRegister(devId, PROF_CHANNEL_ADPROF, &registerPara);
     if (ret != DRV_ERROR_NONE) {
-        MSPROF_LOGE("Failed to regist adprof sample ops, ret = %d.", ret);
+        MSPROF_LOGE("Failed to register adprof sample ops, ret = %d.", ret);
         return PROFILING_FAILED;
     }
 

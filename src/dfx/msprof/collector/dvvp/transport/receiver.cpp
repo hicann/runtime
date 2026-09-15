@@ -59,7 +59,7 @@ int32_t Receiver::Init(int32_t devId)
 
 int32_t Receiver::Uinit()
 {
-    MSPROF_LOGI("Receiver Unint");
+    MSPROF_LOGI("Receiver Uninit");
     if (transport_ != nullptr) {
         transport_->CloseSession();
         FUNRET_CHECK_EXPR_LOGW(Stop() != PROFILING_SUCCESS, "Unable to stop thread: %s", GetThreadName().c_str());

@@ -60,7 +60,7 @@ STATIC void IdeDestroyGlobalCtrlInfoDev()
         g_ideGlobalInfo.deviceNotifyCallbacks.upCallbacks.clear();
         IDE_CTRL_VALUE_FAILED(
             mmSemDestroy(&g_ideGlobalInfo.devNotifySem) == EN_OK, return, "device notify sem destroy error");
-        IDE_CTRL_VALUE_FAILED(mmMutexDestroy(&g_ideGlobalInfo.mtx) == EN_OK, return, "global info mutex dertroy error");
+        IDE_CTRL_VALUE_FAILED(mmMutexDestroy(&g_ideGlobalInfo.mtx) == EN_OK, return, "global info mutex destroy error");
         g_ideGlobalInfo.devMapInfoInitFlag = false;
     }
 }

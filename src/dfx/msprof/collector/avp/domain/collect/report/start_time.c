@@ -134,7 +134,7 @@ static void GenHostStartTime(uint32_t deviceId)
 static int32_t UploadTimeData(uint32_t deviceId, char* timeData, const char* fileName)
 {
     if (timeData == NULL || strlen(timeData) == 0 || deviceId > DEFAULT_HOST_ID) {
-        MSPROF_LOGE("Receive an unexpected value of timeData, pleace check the context log.");
+        MSPROF_LOGE("Receive an unexpected value of timeData, please check the context log.");
         return PROFILING_FAILED;
     }
     ProfFileChunk* chunk = (ProfFileChunk*)OsalMalloc(sizeof(ProfFileChunk));

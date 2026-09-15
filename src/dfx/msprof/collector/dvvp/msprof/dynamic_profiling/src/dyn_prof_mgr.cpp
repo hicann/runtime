@@ -80,7 +80,7 @@ void DynProfMgr::StopDynProf()
         dynProfThread_->Stop();
     }
     isStarted_ = false;
-    MSPROF_EVENT("Dynamic profiling task stoped");
+    MSPROF_EVENT("Dynamic profiling task stopped");
 }
 
 /**

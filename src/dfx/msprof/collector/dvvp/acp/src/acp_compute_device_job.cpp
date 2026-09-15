@@ -65,13 +65,13 @@ int32_t AcpComputeDeviceJob::StartProf(SHARED_PTR_ALIA<analysis::dvvp::message::
         MSPROF_LOGI("AcpComputeDeviceJob StartProf checking params");
         if (isStarted_ || params == nullptr || !(ParamValidation::instance()->CheckProfilingParams(params))) {
             MSPROF_LOGE("[AcpComputeDeviceJob::StartProf]Failed to check params");
-            status_.info = "Start flag is true or parmas is invalid";
+            status_.info = "Start flag is true or params is invalid";
             break;
         }
         int32_t ret = StartProfHandle(params);
         if (ret != PROFILING_SUCCESS) {
-            MSPROF_LOGE("[AcpComputeDeviceJob::StartProf]Failed to StartProfParmasAdapt, devIndexId: %d", devIndexId_);
-            status_.info = "Start profiling, parmas handle failed";
+            MSPROF_LOGE("[AcpComputeDeviceJob::StartProf]Failed to StartProfParamsAdapt, devIndexId: %d", devIndexId_);
+            status_.info = "Start profiling, params handle failed";
             break;
         }
         if (ProfChannelManager::instance()->Init() != PROFILING_SUCCESS) {

@@ -813,7 +813,7 @@ int32_t DrvStarsSocLogStart(
     MSPROF_LOGI(
         "DrvStarsSocLogStart profDeviceId=%u, profChannel=%d, acsq_task=%u, accPmu=%u, cdqm_reg=%u, "
         "dvpp_vpc_block=%u, dvpp_jpegd_block=%u, dvpp_jpede_block=%u, "
-        "ffts_context_task=%u, ffts_block=%u, sdma_dmu=%u, tag=%u, block shink=%u.",
+        "ffts_context_task=%u, ffts_block=%u, sdma_dmu=%u, tag=%u, block shrink=%u.",
         profDeviceId, static_cast<int32_t>(profChannel), configP.acsq_task, configP.accPmu, configP.cdqm_reg,
         configP.dvpp_vpc_block, configP.dvpp_jpegd_block, configP.dvpp_jpede_block, configP.ffts_context_task,
         configP.ffts_block, configP.sdma_dmu, configP.tag, configP.blockShinkFlag);

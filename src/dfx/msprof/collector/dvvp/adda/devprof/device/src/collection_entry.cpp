@@ -52,7 +52,7 @@ int32_t CollectionEntry::Init()
 
 int32_t CollectionEntry::Uinit()
 {
-    MSPROF_LOGI("uinit Collection Entry.");
+    MSPROF_LOGI("uninit Collection Entry.");
     if (isInited_) {
         for (auto iterJobId = receiverMap_.begin(); iterJobId != receiverMap_.end(); iterJobId++) {
             for (auto iterDevId = iterJobId->second.begin(); iterDevId != iterJobId->second.end(); iterDevId++) {

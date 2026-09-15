@@ -29,7 +29,7 @@ int32_t ServiceTaskInitialize(ProfileAttribute* attr)
     for (uint32_t i = 0; i < MAX_TASK_SLOT; i++) {
         ret = TaskManagerInitialize(i, &attr->taskSlotAttr[i]);
         if (ret != PROFILING_SUCCESS) {
-            MSPROF_LOGE("Initialize task manager for deivce %u failed, ret : %d", i, ret);
+            MSPROF_LOGE("Initialize task manager for device %u failed, ret : %d", i, ret);
             return ret;
         }
     }
@@ -108,7 +108,7 @@ int32_t ServiceTaskStop(uint32_t deviceId, ProfileAttribute* attr)
         if (ReportManagerCollectStop(
                 deviceList, sizeof(deviceList) / sizeof(deviceList[0]), &attr->reportAttr,
                 attr->params.dataTypeConfig) != PROFILING_SUCCESS) {
-            MSPROF_LOGE("Stop report manager collect for deivce %u failed", deviceId);
+            MSPROF_LOGE("Stop report manager collect for device %u failed", deviceId);
             ret = PROFILING_FAILED;
         }
     }

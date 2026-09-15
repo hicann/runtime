@@ -238,7 +238,7 @@ static aclError preCheckProfConfig(PROF_CONFIG_CONST_PTR profilerConfig)
         return ACL_ERROR_PROF_MODULES_UNSUPPORTED;
     }
     if (profilerConfig->devNums > MSVP_MAX_DEV_NUM + 1) {
-        MSPROF_LOGE("Param prolilerConfig is invalid");
+        MSPROF_LOGE("Param profilerConfig is invalid");
         std::string devNumsStr = std::to_string(profilerConfig->devNums);
         std::string errorReason = "The device number should be in range [1, " + std::to_string(MSVP_MAX_DEV_NUM) + "]";
         MSPROF_INPUT_ERROR(

@@ -117,10 +117,10 @@ int32_t JobManagerStart(JobManagerAttribute* attr)
         attr->isStart = true;
         return PROFILING_SUCCESS;
     }
-    MSPROF_LOGI("Devicd[%u] job start profiling begin.", attr->deviceId);
+    MSPROF_LOGI("Device[%u] job start profiling begin.", attr->deviceId);
     int32_t ret = DeviceJobInit(attr);
     if (ret != PROFILING_SUCCESS) {
-        MSPROF_LOGE("Devide job init failed.");
+        MSPROF_LOGE("Device job init failed.");
         return ret;
     }
     if (!attr->params->hostProfiling) {

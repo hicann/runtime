@@ -403,7 +403,7 @@ int32_t SenderPool::Init()
             break;
         }
 
-        MSPROF_LOGI("createing sender pool");
+        MSPROF_LOGI("creating sender pool");
         MSVP_MAKE_SHARED2_NODO(
             senderPool_, analysis::dvvp::common::thread::ThreadPool,
             analysis::dvvp::common::thread::LOAD_BALANCE_METHOD::ID_MOD, MSVP_CLN_SENDER_POOL_THREAD_NUM, break);

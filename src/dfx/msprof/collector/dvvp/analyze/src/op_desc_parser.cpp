@@ -341,13 +341,14 @@ const char* OpDescParser::GetOpAttriValue(
         case ACL_SUBSCRIBE_ATTRI_THREADID:
             if (opFlagAttriMap[attri] != opDesc->flag) {
                 MSPROF_LOGE(
-                    "Invalid param of GetOpAttriValue, curr op flag %u not support attri %u", opDesc->flag, attri);
+                    "Invalid param of GetOpAttriValue, current op flag %u not support attribute %u", opDesc->flag,
+                    attri);
                 return nullptr;
             }
             g_aclprofSubscribeOpAttriValue = std::to_string(opDesc->threadId);
             return g_aclprofSubscribeOpAttriValue.c_str();
         default:
-            MSPROF_LOGE("Invalid param of GetOpAttriValue, attri %u", attri);
+            MSPROF_LOGE("Invalid param of GetOpAttriValue, attribute %u", attri);
             return nullptr;
     }
 }

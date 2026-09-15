@@ -3393,7 +3393,7 @@ int32_t ProfAclMgr::PrepareStopAclSubscribe(const MsprofConfig* config) const
         ::Dvvp::Collect::Report::ProfReporterMgr::GetInstance().FlushAllReporter();
     }
     if (!ProfAclMgr::instance()->IsModelSubscribed(subscribePtr->key)) {
-        MSPROF_LOGE("%s is not subscribed when unsubcribed", subscribePtr->keyInfo.c_str());
+        MSPROF_LOGE("%s is not subscribed when unsubscribed", subscribePtr->keyInfo.c_str());
         if (subscribePtr->modelId != std::numeric_limits<uint32_t>::max()) {
             MSPROF_INPUT_ERROR(
                 "EK0002", std::vector<std::string>({"intf1", "intf2"}),

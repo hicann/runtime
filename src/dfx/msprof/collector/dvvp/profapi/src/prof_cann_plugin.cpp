@@ -798,6 +798,14 @@ int32_t ProfCannPlugin::ProfNotifySetDevice(uint32_t chipId, uint32_t deviceId, 
 
 int32_t ProfCannPlugin::ProfSetStepInfo(const uint64_t indexId, const uint16_t tagId, void* const stream)
 {
+    {
+        std::lock_guard<std::mutex> lock(ProfPlugin::callbackMutex_);
+        const auto it = ProfPlugin::moduleCallbacks_.find(GE);
+        if (it == ProfPlugin::moduleCallbacks_.cend() || it->second.empty()) {
+            return PROFILING_FAILED;
+        }
+    }
+
     if (ProfAPI::ProfRuntimePlugin::instance()->RuntimeApiInit() != PROFILING_SUCCESS) {
         MSPROF_LOGE("Failed to execute RuntimeApiInit.");
         return PROFILING_FAILED;

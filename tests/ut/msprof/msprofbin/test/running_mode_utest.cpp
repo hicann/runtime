@@ -343,7 +343,7 @@ TEST_F(RUNNING_MODE_UTEST, StopNoWait)
     std::streambuf* oldCoutBuffer = std::cout.rdbuf();
     std::cout.rdbuf(output.rdbuf());
     rMode->StopNoWait();
-    std::vector<std::string> expectedList = {"Receive stop singal."};
+    std::vector<std::string> expectedList = {"Receive stop signal."};
     std::cout.rdbuf(oldCoutBuffer);
     for (auto expectedPrint : expectedList) {
         EXPECT_NE(output.str().find(expectedPrint), std::string::npos) << "Screen print:" << std::endl
