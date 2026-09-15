@@ -8,7 +8,9 @@
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
 add_subdirectory(basic)
-add_subdirectory(dvvp)
 if ("${PRODUCT}" STREQUAL "ascend035")
     add_subdirectory(avp)
+    add_subdirectory(dvvp/profapi)
+else()
+    add_subdirectory(dvvp)
 endif()
