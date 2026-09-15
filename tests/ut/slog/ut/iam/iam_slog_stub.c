@@ -18,6 +18,7 @@
 
 #include <errno.h>
 #include <stdarg.h>
+#include <stdio.h>
 
 static bool g_servicePrepared = true;
 static int32_t g_registerRet = SYS_OK;
@@ -29,6 +30,10 @@ static int32_t g_eventLevel = EVENT_DISABLE_VALUE;
 static int32_t g_moduleLevel = DLOG_DEBUG;
 static void (*g_resourceCallback)(struct IAMVirtualResourceStatus*, const int32_t) = NULL;
 static void (*g_periodicTimerCallback)(void) = NULL;
+static int32_t g_timerLoadRet = LOG_SUCCESS;
+static uint32_t g_timerAddRet = 0;
+static uint32_t g_timerRemoveRet = 0;
+static char g_lastWarningLog[512] = {0};
 
 void IamSlogStubReset(void)
 {
@@ -42,6 +47,10 @@ void IamSlogStubReset(void)
     g_moduleLevel = DLOG_DEBUG;
     g_resourceCallback = NULL;
     g_periodicTimerCallback = NULL;
+    g_timerLoadRet = LOG_SUCCESS;
+    g_timerAddRet = 0;
+    g_timerRemoveRet = 0;
+    g_lastWarningLog[0] = '\0';
 }
 
 void IamSlogStubSetServicePreparation(bool ready) { g_servicePrepared = ready; }
@@ -79,10 +88,24 @@ void IamSlogStubFirePeriodicTimer(void)
     }
 }
 
+void IamSlogStubSetTimerLoadRet(int32_t ret) { g_timerLoadRet = ret; }
+
+void IamSlogStubSetTimerAddRet(uint32_t ret) { g_timerAddRet = ret; }
+
+void IamSlogStubSetTimerRemoveRet(uint32_t ret) { g_timerRemoveRet = ret; }
+
+const char* IamSlogStubGetLastWarningLog(void) { return g_lastWarningLog; }
+
 void LogPrintSys(int32_t priority, const char* format, ...)
 {
-    (void)priority;
-    (void)format;
+    va_list args;
+    va_start(args, format);
+    char logMessage[512] = {0};
+    (void)vsnprintf(logMessage, sizeof(logMessage), format, args);
+    va_end(args);
+    if (priority == LOG_WARNING) {
+        (void)strcpy_s(g_lastWarningLog, sizeof(g_lastWarningLog), logMessage);
+    }
 }
 
 void AlogCloseSlogLib(void) {}
@@ -133,7 +156,7 @@ int ioctl(int fd, unsigned long request, ...)
     return g_ioctlRet;
 }
 
-LogStatus DlogLoadTimerDll(void) { return LOG_SUCCESS; }
+LogStatus DlogLoadTimerDll(void) { return g_timerLoadRet; }
 
 LogStatus DlogCloseTimerDll(void) { return LOG_SUCCESS; }
 
@@ -144,11 +167,11 @@ uint32_t DlogAddUnifiedTimer(const char* timerName, void (*callback)(void), int6
     if (type == PERIODIC_TIMER) {
         g_periodicTimerCallback = callback;
     }
-    return 0;
+    return g_timerAddRet;
 }
 
 uint32_t DlogRemoveUnifiedTimer(const char* timerName)
 {
     (void)timerName;
-    return 0;
+    return g_timerRemoveRet;
 }

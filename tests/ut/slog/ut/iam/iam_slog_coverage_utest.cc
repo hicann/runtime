@@ -11,6 +11,7 @@
 #include "gtest/gtest.h"
 
 #include <cstdarg>
+#include <cstring>
 #include <cstdlib>
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -43,6 +44,11 @@ void IamSlogStubSetIoctlResult(int32_t ret, int32_t errorCode);
 void IamSlogStubSetIoctlLevels(int32_t globalLevel, int32_t eventLevel, int32_t moduleLevel);
 void IamSlogStubNotifyResource(enum IAMResourceStatus status);
 void IamSlogStubFirePeriodicTimer(void);
+void IamSlogStubSetTimerLoadRet(int32_t ret);
+void IamSlogStubSetTimerAddRet(uint32_t ret);
+void IamSlogStubSetTimerRemoveRet(uint32_t ret);
+const char* IamSlogStubGetLastWarningLog(void);
+LogStatus DlogStartSendTask(void);
 }
 
 namespace {
@@ -223,6 +229,31 @@ TEST_F(IamSlogCoverageUtest, InitializesAndReleasesIamLogging)
     EXPECT_FALSE(DlogIamServiceIsValid());
     EXPECT_EQ(SYS_ERROR, DlogIamIoctlGetLevel(nullptr));
     EXPECT_EQ(TRUE, DlogCheckLogLevel(DLOG_ERROR));
+}
+
+TEST_F(IamSlogCoverageUtest, RetryableFailuresUseWarningLogLevel)
+{
+    DlogInitGlobalAttr();
+    IamSlogStubSetTimerLoadRet(LOG_FAILURE);
+    EXPECT_EQ(LOG_FAILURE, DlogStartSendTask());
+    EXPECT_NE(nullptr, std::strstr(IamSlogStubGetLastWarningLog(), "can not load unified_timer library"));
+
+    IamSlogStubSetTimerLoadRet(LOG_SUCCESS);
+    IamSlogStubSetTimerAddRet(1U);
+    EXPECT_EQ(LOG_FAILURE, DlogStartSendTask());
+    EXPECT_NE(nullptr, std::strstr(IamSlogStubGetLastWarningLog(), "can not add unified timer"));
+
+    IamSlogStubSetTimerAddRet(0U);
+    CreateIamService();
+    ASSERT_EQ(SYS_OK, DlogAsyncInit());
+    IamSlogStubNotifyResource(IAM_RESOURCE_READY);
+    IamSlogStubSetIoctlResult(SYS_ERROR, EIO);
+    DlogFlushBuf();
+    EXPECT_NE(nullptr, std::strstr(IamSlogStubGetLastWarningLog(), "can not flush log"));
+
+    IamSlogStubSetTimerRemoveRet(1U);
+    DlogAsyncExit();
+    EXPECT_NE(nullptr, std::strstr(IamSlogStubGetLastWarningLog(), "can not remove unified timer"));
 }
 
 TEST_F(IamSlogCoverageUtest, InitializesWritesFlushesAndExits)

@@ -358,34 +358,32 @@ static void DlogAddSyncTask(void)
         return;
     }
     if (DlogLoadTimerDll() != LOG_SUCCESS) {
-        SELF_LOG_ERROR(
-            "dlog load unified_timer library failed, pid = %d, strerr = %s.", ToolGetPid(),
-            strerror(ToolGetErrorCode()));
+        SELF_LOG_WARN(
+            "can not load unified_timer library, pid = %d, strerr = %s.", ToolGetPid(), strerror(ToolGetErrorCode()));
         (void)__sync_lock_test_and_set(&g_dlogAsyncMgr.syncFlag, false);
         return;
     }
     uint32_t ret = DlogAddUnifiedTimer(DLOG_SYNC_TIMER_NAME, DlogSyncUnifiedTimerCb, LOG_SYNC_PERIOD, ONESHOT_TIMER);
     if ((ret != 0) && (ret != UNIFIED_TIMER_NAME_DUPLICATE)) {
-        SELF_LOG_ERROR(
-            "add unified timer failed, ret = %u, errno = %d, pid = %d, timerName = %s.", ret, ToolGetErrorCode(),
+        SELF_LOG_WARN(
+            "can not add unified timer, ret = %u, errno = %d, pid = %d, timerName = %s.", ret, ToolGetErrorCode(),
             ToolGetPid(), DLOG_SYNC_TIMER_NAME);
         (void)__sync_lock_test_and_set(&g_dlogAsyncMgr.syncFlag, false);
     }
     return;
 }
 
-static LogStatus DlogStartSendTask(void)
+STATIC LogStatus DlogStartSendTask(void)
 {
     if (DlogLoadTimerDll() != LOG_SUCCESS) {
-        SELF_LOG_ERROR(
-            "dlog load unified_timer library failed, pid = %d, strerr = %s.", ToolGetPid(),
-            strerror(ToolGetErrorCode()));
+        SELF_LOG_WARN(
+            "can not load unified_timer library, pid = %d, strerr = %s.", ToolGetPid(), strerror(ToolGetErrorCode()));
         return LOG_FAILURE;
     }
     uint32_t ret = DlogAddUnifiedTimer(DLOG_TIMER_NAME, DlogUnifiedTimerCb, LOG_TIMER_PERIOD, PERIODIC_TIMER);
     if (ret != 0) {
-        SELF_LOG_ERROR(
-            "add unified timer failed, ret = %u, errno = %d, pid = %d, timerName = %s.", ret, ToolGetErrorCode(),
+        SELF_LOG_WARN(
+            "can not add unified timer, ret = %u, errno = %d, pid = %d, timerName = %s.", ret, ToolGetErrorCode(),
             ToolGetPid(), DLOG_TIMER_NAME);
         return LOG_FAILURE;
     }
@@ -466,8 +464,8 @@ void DlogFlushBuf(void)
     arg.argData = (void*)&info;
     const int32_t ret = DlogIamIoctlFlushLog(&arg);
     if (ret != SYS_OK) {
-        SELF_LOG_ERROR(
-            "log flush failed, ret=%d, strerr=%s, pid=%d.", ret, strerror(ToolGetErrorCode()), DlogGetCurrPid());
+        SELF_LOG_WARN(
+            "can not flush log, ret=%d, strerr=%s, pid=%d.", ret, strerror(ToolGetErrorCode()), DlogGetCurrPid());
         return;
     }
 }
@@ -615,8 +613,8 @@ STATIC void DlogStopSendTask(void)
             DlogCloseTimerDll() != LOG_SUCCESS, "close unified_timer library failed, pid = %d, timer name = %s.",
             ToolGetPid(), DLOG_TIMER_NAME);
         if (ret != 0) {
-            SELF_LOG_ERROR(
-                "remove unified timer failed, ret = %u, errno = %d, pid = %d, timer name = %s.", ret,
+            SELF_LOG_WARN(
+                "can not remove unified timer, ret = %u, errno = %d, pid = %d, timer name = %s.", ret,
                 ToolGetErrorCode(), ToolGetPid(), DLOG_TIMER_NAME);
             return;
         }
