@@ -28,6 +28,12 @@ rtError_t ReportApiHandleValidationError(const rtError_t errCode, const char_t* 
     return GetRtExtErrCodeAndSetGlobalErr(errCode);
 }
 
+static bool HasExpectedMagic(const void* handle, const uint64_t expectedMagic)
+{
+    const auto* const innerObject = static_cast<const rtInnerObject*>(handle);
+    return innerObject->magic.load(std::memory_order_acquire) == expectedMagic;
+}
+
 } // namespace
 
 rtError_t ValidateModelHandleForApi(rtModel_t handle, Model*& outRealObj, const char_t* callerFuncName)
@@ -150,6 +156,29 @@ rtError_t ValidateArgsHandleForApi(rtArgsHandle handle, RtArgsHandle*& outRealOb
     }
 
     return ReportApiHandleValidationError(ret, callerFuncName);
+}
+
+rtError_t ValidateArgsHandleForUserMemApi(rtArgsHandle handle, RtArgsHandle*& outRealObj, const char_t* callerFuncName)
+{
+    if (handle == nullptr) {
+        outRealObj = nullptr;
+        return RT_ERROR_NONE;
+    }
+
+    if (HasExpectedMagic(handle, RT_ARGS_HANDLE_MAGIC)) {
+        return ValidateArgsHandleForApi(handle, outRealObj, callerFuncName);
+    }
+
+    RtArgsHandle* const legacyArgsHandle = RtPtrToPtr<RtArgsHandle*>(handle);
+    RtArgsHandle* realArgsHandle = nullptr;
+    const rtError_t ret = GetValidatedObject<RtArgsHandle>(
+        RtPtrToPtr<rtArgsHandle>(RtInnerHandleAccessor<RtArgsHandle>::Get(legacyArgsHandle)), realArgsHandle);
+    if ((ret == RT_ERROR_NONE) && (realArgsHandle == legacyArgsHandle)) {
+        outRealObj = legacyArgsHandle;
+        return RT_ERROR_NONE;
+    }
+
+    return ReportApiHandleValidationError(RT_ERROR_INVALID_HANDLE, callerFuncName);
 }
 
 rtError_t ValidateParamHandleForApi(rtParaHandle handle, ParaDetail*& outRealObj, const char_t* callerFuncName)

@@ -124,7 +124,8 @@ rtError_t rtsLaunchKernelWithConfig(
     RtArgsWithType argsWithType = {};
     argsWithType.type = RT_ARGS_HANDLE;
     RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(funcHandle, Kernel, realKernel, ValidateKernelHandleForApi);
-    RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(argsHandle, RtArgsHandle, realArgsHandle, ValidateArgsHandleForApi);
+    RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(
+        argsHandle, RtArgsHandle, realArgsHandle, ValidateArgsHandleForUserMemApi);
     argsWithType.args.argHandle = realArgsHandle;
     RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
     const rtError_t ret = apiInstance->LaunchKernelV2(realKernel, numBlocks, &argsWithType, exeStream, cfg);
@@ -261,7 +262,8 @@ rtError_t rtsKernelArgsAppend(rtArgsHandle argsHandle, void* para, size_t paraSi
 {
     Api* const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(argsHandle, RtArgsHandle, realArgsHandle, ValidateArgsHandleForApi);
+    RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(
+        argsHandle, RtArgsHandle, realArgsHandle, ValidateArgsHandleForUserMemApi);
     const rtError_t error =
         apiInstance->KernelArgsAppend(realArgsHandle, para, paraSize, RtPtrToPtr<ParaDetail**>(paraHandle));
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
@@ -275,7 +277,8 @@ rtError_t rtsKernelArgsAppendPlaceHolder(rtArgsHandle argsHandle, rtParaHandle* 
 {
     Api* const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(argsHandle, RtArgsHandle, realArgsHandle, ValidateArgsHandleForApi);
+    RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(
+        argsHandle, RtArgsHandle, realArgsHandle, ValidateArgsHandleForUserMemApi);
     const rtError_t error =
         apiInstance->KernelArgsAppendPlaceHolder(realArgsHandle, RtPtrToPtr<ParaDetail**>(paraHandle));
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
@@ -290,7 +293,8 @@ rtError_t rtsKernelArgsGetPlaceHolderBuffer(
 {
     Api* const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(argsHandle, RtArgsHandle, realArgsHandle, ValidateArgsHandleForApi);
+    RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(
+        argsHandle, RtArgsHandle, realArgsHandle, ValidateArgsHandleForUserMemApi);
     RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(paraHandle, ParaDetail, realParamHandle, ValidateParamHandleForApi);
     const rtError_t error =
         apiInstance->KernelArgsGetPlaceHolderBuffer(realArgsHandle, realParamHandle, dataSize, bufferAddr);
@@ -344,7 +348,7 @@ rtError_t rtsKernelArgsParaUpdate(rtArgsHandle argsHandle, rtParaHandle paraHand
     PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(paraHandle, RT_ERROR_INVALID_VALUE);
     PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(para, RT_ERROR_INVALID_VALUE);
 
-    RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(argsHandle, RtArgsHandle, handle, ValidateArgsHandleForApi);
+    RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(argsHandle, RtArgsHandle, handle, ValidateArgsHandleForUserMemApi);
     RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(paraHandle, ParaDetail, pHandle, ValidateParamHandleForApi);
     // 0 is Common param, 1 is place holder param
     COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER(
@@ -376,7 +380,8 @@ rtError_t rtsKernelArgsFinalize(rtArgsHandle argsHandle)
 {
     Api* const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(argsHandle, RtArgsHandle, realArgsHandle, ValidateArgsHandleForApi);
+    RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(
+        argsHandle, RtArgsHandle, realArgsHandle, ValidateArgsHandleForUserMemApi);
     const rtError_t error = apiInstance->KernelArgsFinalize(realArgsHandle);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
