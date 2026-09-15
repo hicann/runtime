@@ -41,7 +41,7 @@ struct BatchProcCpuOpFromBufArgs {
 class Device;
 
 rtError_t AllocAndCopyHbmBuf(
-    Device* const dev, const void* const hostBuf, const size_t bufSize, void** const devBuf,
+    const Device* const dev, const void* const hostBuf, const size_t bufSize, void** const devBuf,
     std::vector<void*>& allocMem);
 
 class Context;

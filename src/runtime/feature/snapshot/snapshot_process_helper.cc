@@ -201,7 +201,7 @@ void QueryCustomAicpuProcess(Device* const dev)
     info.cpType = RT_DEV_PROCESS_CP2;
     info.hostPid = mmGetPid();
     int32_t devPid = 0;
-    rtError_t ret = NpuDriver::QueryDevPid(&info, &devPid);
+    const rtError_t ret = NpuDriver::QueryDevPid(&info, &devPid);
     if (ret == RT_ERROR_NONE) {
         dev->SetHasCustomProcess(true);
         RT_LOG(RT_LOG_INFO, "Custom AICPU process detected, deviceId=%u, devPid=%d.", dev->Id_(), devPid);
@@ -245,7 +245,7 @@ bool IsCustomAicpuProgram(Program* const prog)
 }
 
 rtError_t BuildAicpuReloadSoBufs(
-    Device* const dev, Program* const* progs, const uint32_t batchNum, std::vector<CpuSoBuf>& soBufs,
+    const Device* const dev, Program* const* progs, const uint32_t batchNum, std::vector<CpuSoBuf>& soBufs,
     std::vector<void*>& allocMem)
 {
     for (uint32_t i = 0U; i < batchNum; i++) {
@@ -324,7 +324,7 @@ rtError_t BatchLoadCustomAicpuSo(Device* const dev)
         };
         ScopeGuard tempMemGuard(recycle);
 
-        ret = BuildAicpuReloadSoBufs(dev, aicpuPrograms.data() + idx, batchNum, soBufs, tempDevMems);
+        ret = BuildAicpuReloadSoBufs(dev, &aicpuPrograms[idx], batchNum, soBufs, tempDevMems);
         ERROR_RETURN(
             ret, "Build AICPU reload so buffers failed, deviceId=%u, batchNum=%u, ret=%#x.", devId, batchNum,
             static_cast<uint32_t>(ret));
