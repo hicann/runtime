@@ -14,7 +14,6 @@
 #include <memory>
 #include "runtime/kernel.h"
 #include "runtime/mem.h"
-#include "runtime/rt_inner_mem.h"
 #include "base.hpp"
 #include "osal.hpp"
 #include "reference.hpp"
