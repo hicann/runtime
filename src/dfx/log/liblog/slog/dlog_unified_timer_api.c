@@ -78,6 +78,7 @@ LogStatus DlogCloseTimerDll(void)
             SELF_LOG_INFO("close unified_timer library handle succeed.");
         }
         g_timerLibHandle = NULL;
+        DlogResetTimerFuncInfo();
     }
     (void)ToolMutexUnLock(&g_timerMutex);
     return ret;

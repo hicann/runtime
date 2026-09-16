@@ -24,13 +24,13 @@ ArgPtr LoadRuntimeDll(const char* dllName)
 
 int32_t UnloadRuntimeDll(ArgPtr handle)
 {
-    g_stubUnloadCallNum++;
+    __atomic_fetch_add(&g_stubUnloadCallNum, 1, __ATOMIC_SEQ_CST);
     return (handle == NULL) ? -1 : 0;
 }
 
 int32_t LoadDllFunc(ArgPtr handle, SymbolInfo* symbolInfos, uint32_t symbolNum)
 {
-    g_stubLoadDllFuncCallNum++;
+    __atomic_fetch_add(&g_stubLoadDllFuncCallNum, 1, __ATOMIC_SEQ_CST);
     if ((handle == NULL) || (symbolInfos == NULL) || (symbolNum == 0)) {
         return -1;
     }

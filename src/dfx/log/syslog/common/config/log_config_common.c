@@ -56,7 +56,7 @@ STATIC char* LogConfRealPath(const char* file, const char* homeDir, size_t dirLe
 
     const char* resolvePath = (file != NULL) ? homeDir : SLOG_CONF_FILE_PATH;
     if (ToolRealPath(resolvePath, ppath, (INT32)dirLen + 1) != SYS_OK) {
-        SELF_LOG_ERROR("get realpath failed, file=%s, strerr=%s.", resolvePath, strerror(ToolGetErrorCode()));
+        SELF_LOG_ERROR("get realpath failed, path=%s, strerr=%s.", resolvePath, strerror(ToolGetErrorCode()));
         XFREE(ppath);
         return NULL;
     }

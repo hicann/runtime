@@ -48,6 +48,11 @@ TEST_F(DLOG_UNIFIED_TIMER_API_UTEST, TimerOperationsReturnFailureWhenFunctionsAr
 
 TEST_F(DLOG_UNIFIED_TIMER_API_UTEST, ConcurrentLoadAndCloseTimerDllAreThreadSafe)
 {
+    g_stubLibLoadable = true;
+    g_stubLoadDllFuncRet = 0;
+    g_stubLoadDllFuncCallNum = 0;
+    g_stubUnloadCallNum = 0;
+
     std::vector<std::thread> threads;
     for (int i = 0; i < 4; ++i) {
         threads.emplace_back([]() {
@@ -60,8 +65,10 @@ TEST_F(DLOG_UNIFIED_TIMER_API_UTEST, ConcurrentLoadAndCloseTimerDllAreThreadSafe
     for (std::thread& thread : threads) {
         thread.join();
     }
-    EXPECT_EQ(LOG_FAILURE, DlogLoadTimerDll());
+    EXPECT_EQ(LOG_SUCCESS, DlogLoadTimerDll());
     EXPECT_EQ(LOG_SUCCESS, DlogCloseTimerDll());
+    g_stubLibLoadable = false;
+    g_stubLoadDllFuncRet = 0;
 }
 
 TEST_F(DLOG_UNIFIED_TIMER_API_UTEST, LoadTimerDllRetriesAfterLoadDllFuncFailure)
@@ -76,4 +83,18 @@ TEST_F(DLOG_UNIFIED_TIMER_API_UTEST, LoadTimerDllRetriesAfterLoadDllFuncFailure)
     EXPECT_EQ(LOG_FAILURE, DlogLoadTimerDll());
     EXPECT_EQ(2, g_stubLoadDllFuncCallNum);
     EXPECT_EQ(2, g_stubUnloadCallNum);
+}
+
+TEST_F(DLOG_UNIFIED_TIMER_API_UTEST, CloseClearsFunctionTable)
+{
+    g_stubLibLoadable = true;
+    g_stubLoadDllFuncRet = 0;
+    g_stubLoadDllFuncCallNum = 0;
+    g_stubUnloadCallNum = 0;
+    EXPECT_EQ(LOG_SUCCESS, DlogLoadTimerDll());
+    EXPECT_EQ(1, g_stubLoadDllFuncCallNum);
+    EXPECT_EQ(LOG_SUCCESS, DlogCloseTimerDll());
+    EXPECT_EQ(1, g_stubUnloadCallNum);
+    EXPECT_EQ(1U, DlogAddUnifiedTimer("slog_test_timer", nullptr, 1, ONESHOT_TIMER));
+    EXPECT_EQ(1U, DlogRemoveUnifiedTimer("slog_test_timer"));
 }
