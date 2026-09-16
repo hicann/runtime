@@ -334,6 +334,18 @@ static rtError_t FuncCallSvmMemCopy(const Device* const dev, const Model* const 
     return RT_ERROR_NONE;
 }
 
+static rtError_t ClearModelExecuteDfx(const Device* const dev, const Model* const model)
+{
+    void* const dfxPtr = model->GetDfxPtr();
+    if (dfxPtr == nullptr) {
+        return RT_ERROR_NONE;
+    }
+
+    const rtError_t ret = dev->Driver_()->MemSetSync(dfxPtr, TS_STARS_COND_DFX_SIZE, 0U, TS_STARS_COND_DFX_SIZE);
+    ERROR_RETURN(ret, "MemSetSync for model execute dfx failed, retCode=%#x.", ret);
+    return RT_ERROR_NONE;
+}
+
 static rtError_t PrepareModelExecuteFuncCallDefault(TaskInfo* const taskInfo)
 {
     rtError_t ret;
@@ -415,6 +427,9 @@ rtError_t PrepareSqeInfoForModelExecuteTask(TaskInfo* const taskInfo)
             model->GetBaseFuncCallSvmMem(), model->GetDfxPtr());
     }
 
+    if (ret == RT_ERROR_NONE) {
+        ret = ClearModelExecuteDfx(dev, model);
+    }
     return ret;
 }
 

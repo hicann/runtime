@@ -2318,7 +2318,7 @@ rtError_t Context::CheckStatus(const Stream* const stm, const bool isBlockDefaul
         if (GetFailureError() != RT_ERROR_NONE) {
             PopContextErrMsg();
         }
-        RT_LOG(RT_LOG_ERROR, "device_id=%u status=%d is abnormal.", device_->Id_(), status);
+        RT_LOG(RT_LOG_ERROR, "device_id=%u status=%#x is abnormal.", device_->Id_(), status);
         return status;
     }
     Stream* ctrlStream = device_->GetCtrlStream(nullptr);

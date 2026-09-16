@@ -540,6 +540,24 @@ static void SetDeviceFaultTypeByAixErrClass(
     }
 }
 
+static const char_t* AixErrClassToString(const AixErrClass aixErrClass)
+{
+    switch (aixErrClass) {
+        case AixErrClass::AIX_ERROR_NA:
+            return "AIX_ERROR_NA";
+        case AixErrClass::AIX_MTE_POISON_ERROR:
+            return "AIX_MTE_POISON_ERROR";
+        case AixErrClass::AIX_HW_L_ERROR:
+            return "AIX_HW_L_ERROR";
+        case AixErrClass::AIX_S_ERROR:
+            return "AIX_S_ERROR";
+        case AixErrClass::AIX_LINK_ERROR:
+            return "AIX_LINK_ERROR";
+        default:
+            return "AIX_ERROR_UNKNOWN";
+    }
+}
+
 void ProcessCoreErrorClass(const Device* const dev, const StarsDeviceErrorInfo* const info)
 {
     TaskInfo* errTaskPtr = GetTaskInfo(
@@ -551,7 +569,8 @@ void ProcessCoreErrorClass(const Device* const dev, const StarsDeviceErrorInfo* 
             return;
         }
     }
-    RT_LOG(RT_LOG_ERROR, "comm_flag=%hhu", info->u.coreErrorInfo.comm.flag);
+    const auto commFlag = info->u.coreErrorInfo.comm.flag;
+    RT_LOG(RT_LOG_ERROR, "comm_flag=%s(%hhu)", AixErrClassToString(static_cast<AixErrClass>(commFlag)), commFlag);
 
     SetDeviceFaultTypeByAixErrClass(dev, info, errTaskPtr);
 }
@@ -798,7 +817,8 @@ void CheckAixErrorClassInFusionKernel(
         return;
     }
 
-    RT_LOG(RT_LOG_ERROR, "comm_flag=%hhu", errInfo->u.coreErrorInfo.comm.flag);
+    const auto commFlag = errInfo->u.coreErrorInfo.comm.flag;
+    RT_LOG(RT_LOG_ERROR, "comm_flag=%s(%hhu)", AixErrClassToString(static_cast<AixErrClass>(commFlag)), commFlag);
 
     if ((info->u.fusionKernelErrorInfo.cqeStatus & FUSION_CQE_STATUS_ERROR_MASK) != FUSION_CQE_STATUS_ONLY_AIX_ERROR) {
         RT_LOG(
