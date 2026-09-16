@@ -654,6 +654,7 @@ TEST_F(PROF_TX_UTTEST, ReportCacheOpInfo2RT_Success)
     tensorInfo.opNameId = 1;
     tensorInfo.tensorNum = 1;
     tensorInfo.tensors = &tensor;
+    MOCKER(&Utils::ProfFree).expects(once()).will(ignoreReturnValue());
     MOCKER_CPP(&ProfRuntimePlugin::ProfRtCacheLastTaskOpInfo).stubs().will(returnValue((int32_t)RT_ERROR_NONE));
     EXPECT_EQ(PROFILING_SUCCESS, ProfTxPlugin::GetProftxInstance().ReportCacheOpInfo2RT(&tensorInfo));
 }

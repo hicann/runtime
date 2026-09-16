@@ -7,6 +7,8 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include <memory>
+
 #include "msprofiler_acl_api.h"
 #include "prof_acl_core.h"
 #include "acl/acl_base.h"
@@ -423,8 +425,14 @@ aclError ProfStop(ProfType type, PROF_CONFIG_CONST_PTR profilerConfig)
     }
 
     PROF_CONFIG_CONST_PTR config = profilerConfig;
+    std::unique_ptr<const ProfConfig> currentConfig;
     if (profilerConfig == nullptr) {
-        config = ProfGetCurrentConfig();
+        currentConfig.reset(ProfGetCurrentConfig());
+        config = currentConfig.get();
+        if (config == nullptr) {
+            MSPROF_LOGE("[aclprofStop]Fail to get current config.");
+            return ACL_ERROR_PROFILING_FAILURE;
+        }
         if (config->devNums == 0) {
             return ACL_SUCCESS;
         }
@@ -484,27 +492,32 @@ PROF_CONFIG_CONST_PTR ProfSetDefaultConfig()
 
 PROF_CONFIG_CONST_PTR ProfGetCurrentConfig()
 {
-    PROF_CONFIG_PTR profilerConfig = new (std::nothrow) ProfConfig();
+    std::unique_ptr<ProfConfig> profilerConfig(new (std::nothrow) ProfConfig());
+    if (profilerConfig == nullptr) {
+        MSPROF_LOGE("[aclprofStop]Fail to allocate current config.");
+        return nullptr;
+    }
     std::vector<uint32_t> devIds;
     Msprofiler::Api::ProfAclMgr::instance()->GetRunningDevices(devIds);
     if (devIds.size() == 0) {
         profilerConfig->devNums = 0;
         MSPROF_LOGW("[aclprofStop]No running devices left.");
-        return profilerConfig;
+        return profilerConfig.release();
     }
     uint64_t dataTypeConfig = 0;
-    ProfAicoreMetrics aicoreMetrics = Platform::instance()->GetDefaultAicoreMetrics();
     int32_t ret = ProfAclMgr::instance()->ProfAclGetDataTypeConfig(devIds[0], dataTypeConfig);
     if (ret != ACL_SUCCESS) {
+        MSPROF_LOGE("[aclprofStop]Fail to get data type config, ret: %d", ret);
         return nullptr;
     }
+    ProfAicoreMetrics aicoreMetrics = Platform::instance()->GetDefaultAicoreMetrics();
     profilerConfig->devNums = devIds.size();
     for (uint32_t i = 0; i < profilerConfig->devNums; ++i) {
         profilerConfig->devIdList[i] = devIds[i];
     }
     profilerConfig->aicoreMetrics = aicoreMetrics;
     profilerConfig->dataTypeConfig = dataTypeConfig;
-    return profilerConfig;
+    return profilerConfig.release();
 }
 
 aclError ProfSetConfig(aclprofConfigType configType, const char* config, size_t configLength)

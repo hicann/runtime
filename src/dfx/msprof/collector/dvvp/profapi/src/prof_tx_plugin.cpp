@@ -349,9 +349,9 @@ int32_t ProfTxPlugin::ReportCacheOpInfo2RT(const ProfTensorInfo* tensorInfo)
         return ret;
     }
     ret = ProfAPI::ProfRuntimePlugin::instance()->ProfRtCacheLastTaskOpInfo(infoPtr, infoSize);
+    void* freeInfoPtr = infoPtr;
+    Utils::ProfFree(freeInfoPtr);
     if (ret != RT_ERROR_NONE) {
-        void* freeInfoPtr = static_cast<void*>(infoPtr);
-        Utils::ProfFree(freeInfoPtr);
         MSPROF_LOGE("Failed to execute rtCacheLastTaskOpInfo, ret=%d", ret);
         return PROFILING_FAILED;
     }
