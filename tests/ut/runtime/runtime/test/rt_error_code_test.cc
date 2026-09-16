@@ -18,6 +18,7 @@
 #include "api_handle_guard.h"
 extern std::string g_lastDlogRecordLine;
 void ClearLastDlogRecordLine();
+bool DlogRecordContains(const std::string& keyword);
 using namespace testing;
 using namespace cce::runtime;
 class RtErrorCodeTest : public Test {
@@ -28,7 +29,7 @@ protected:
 
     virtual void SetUp() {}
 
-    virtual void TearDown() {}
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 TEST_F(RtErrorCodeTest, RtFmtMsgNullPtr) { EXPECT_EQ(RtFmtMsg(nullptr), ""); }
@@ -445,6 +446,51 @@ TEST_F(RtErrorCodeTest, ValidateArgsHandleForApiAcceptsLegacyObjectAddress)
     const rtError_t ret = ValidateArgsHandleForApi(RtPtrToPtr<rtArgsHandle>(&legacyArgsHandle), out, __func__);
     EXPECT_EQ(ret, RT_ERROR_NONE);
     EXPECT_EQ(out, &legacyArgsHandle);
+}
+
+TEST_F(RtErrorCodeTest, ValidateArgsHandleForUserMemApiAcceptsEmbeddedHandle)
+{
+    RtArgsHandle argsHandle = {};
+    InitEmbeddedInnerHandle<RtArgsHandle>(&argsHandle);
+    const rtArgsHandle embeddedHandle = ExportEmbeddedHandle<rtArgsHandle>(&argsHandle);
+
+    RtArgsHandle* out = nullptr;
+    const rtError_t ret = ValidateArgsHandleForUserMemApi(embeddedHandle, out, __func__);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_EQ(out, &argsHandle);
+}
+
+TEST_F(RtErrorCodeTest, ValidateArgsHandleForUserMemApiAcceptsNullHandleWithoutErrorLog)
+{
+    ClearLastDlogRecordLine();
+    RtArgsHandle* out = reinterpret_cast<RtArgsHandle*>(0x1U);
+    const rtError_t ret = ValidateArgsHandleForUserMemApi(nullptr, out, __func__);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_EQ(out, nullptr);
+    EXPECT_FALSE(DlogRecordContains("Validate argsHandle failed"));
+}
+
+TEST_F(RtErrorCodeTest, ValidateArgsHandleForUserMemApiAcceptsLegacyObjectAddressWithoutErrorLog)
+{
+    RtArgsHandle legacyArgsHandle = {};
+    InitEmbeddedInnerHandle<RtArgsHandle>(&legacyArgsHandle);
+
+    ClearLastDlogRecordLine();
+    RtArgsHandle* out = nullptr;
+    const rtError_t ret = ValidateArgsHandleForUserMemApi(RtPtrToPtr<rtArgsHandle>(&legacyArgsHandle), out, __func__);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_EQ(out, &legacyArgsHandle);
+    EXPECT_FALSE(DlogRecordContains("Validate argsHandle failed"));
+}
+
+TEST_F(RtErrorCodeTest, ValidateArgsHandleForUserMemApiRejectsInvalidEmbeddedHandle)
+{
+    RtArgsHandle argsHandle = {};
+
+    RtArgsHandle* out = nullptr;
+    const rtError_t ret = ValidateArgsHandleForUserMemApi(RtPtrToPtr<rtArgsHandle>(&argsHandle), out, __func__);
+    EXPECT_EQ(ret, ACL_ERROR_RT_INVALID_HANDLE);
+    EXPECT_EQ(out, nullptr);
 }
 
 TEST_F(RtErrorCodeTest, ValidateLaunchArgsHandleForApiAcceptsLegacyObjectAddress)

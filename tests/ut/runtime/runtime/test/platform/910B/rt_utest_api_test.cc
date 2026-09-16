@@ -12,6 +12,9 @@
 #include "../../data/elf.h"
 #include "npu_driver.hpp"
 
+void ClearLastDlogRecordLine();
+bool DlogRecordContains(const std::string& keyword);
+
 class NewCloudV2ApiTest : public testing::Test {
 public:
     static rtStream_t stream_;
@@ -2567,7 +2570,7 @@ TEST_F(NewCloudV2ApiTest, create_args_test_02)
     error = rtsKernelArgsInitByUserMem(funcHandle, argsHandleMem, userHostMem, actualArgsSize);
     EXPECT_EQ(error, RT_ERROR_NONE);
     RtArgsHandle* handle = reinterpret_cast<RtArgsHandle*>(argsHandleMem);
-    rtArgsHandle argsHandle = reinterpret_cast<rtArgsHandle>(&handle->handle_);
+    rtArgsHandle argsHandle = argsHandleMem;
     size = k1->isSupportOverFlow_ ? (k1->systemParaNum_ - 1) * sizeof(uint64_t) : k1->systemParaNum_ * sizeof(uint64_t);
     EXPECT_EQ(handle->argsSize, size);
     EXPECT_EQ(handle->bufferSize, actualArgsSize);
@@ -2576,8 +2579,10 @@ TEST_F(NewCloudV2ApiTest, create_args_test_02)
 
     uint32_t param1 = 1002;
     void* paramHandle = nullptr;
+    ClearLastDlogRecordLine();
     error = rtsKernelArgsAppend(argsHandle, &param1, sizeof(uint32_t), &paramHandle);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_FALSE(DlogRecordContains("Validate argsHandle failed"));
     EXPECT_EQ(handle->para[0].type, 0);
     EXPECT_EQ(handle->para[0].paraOffset, 8);
     EXPECT_EQ(handle->para[0].paraSize, sizeof(uint32_t));
@@ -2595,8 +2600,10 @@ TEST_F(NewCloudV2ApiTest, create_args_test_02)
     EXPECT_EQ(*addr1, param1);
 
     void* paraHandle;
+    ClearLastDlogRecordLine();
     error = rtsKernelArgsAppendPlaceHolder(argsHandle, &paraHandle);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_FALSE(DlogRecordContains("Validate argsHandle failed"));
     ParaDetail* tmpPhandle = &(handle->para[1]);
     EXPECT_EQ(handle->para[1].type, 1);
     EXPECT_EQ(handle->para[1].paraOffset, 16);
@@ -2624,8 +2631,10 @@ TEST_F(NewCloudV2ApiTest, create_args_test_02)
     EXPECT_EQ(handle->realUserParamNum, 3);
 
     void* bufferAddr = nullptr;
+    ClearLastDlogRecordLine();
     error = rtsKernelArgsGetPlaceHolderBuffer(argsHandle, paraHandle, 10U, &bufferAddr);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_FALSE(DlogRecordContains("Validate argsHandle failed"));
     EXPECT_EQ(paHandle->type, 1);
     EXPECT_EQ(paHandle->paraOffset, 16);
     EXPECT_EQ(paHandle->paraSize, sizeof(uint64_t));
@@ -2641,8 +2650,27 @@ TEST_F(NewCloudV2ApiTest, create_args_test_02)
     EXPECT_EQ(paHandle01->dataOffset, 50 + 6); // 6 is aglin padding
     EXPECT_EQ(handle->argsSize, 56 + 10);      // 6 is aglin padding
 
+    ClearLastDlogRecordLine();
     error = rtsKernelArgsFinalize(argsHandle);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_FALSE(DlogRecordContains("Validate argsHandle failed"));
+
+    uint32_t updatedParam = 2002U;
+    ClearLastDlogRecordLine();
+    error = rtsKernelArgsParaUpdate(argsHandle, paramHandle, &updatedParam, sizeof(updatedParam));
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(*addr1, updatedParam);
+    EXPECT_FALSE(DlogRecordContains("Validate argsHandle failed"));
+
+    ClearLastDlogRecordLine();
+    error = rtsKernelArgsFinalize(argsHandle);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_FALSE(DlogRecordContains("Validate argsHandle failed"));
+
+    ClearLastDlogRecordLine();
+    error = rtsLaunchKernelWithConfig(funcHandle, 0U, stream_, nullptr, argsHandle, nullptr);
+    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+    EXPECT_FALSE(DlogRecordContains("Validate argsHandle failed"));
     delete k1;
     delete[] argsHandleMem;
     delete[] userHostMem;

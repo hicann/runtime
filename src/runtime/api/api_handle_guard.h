@@ -33,6 +33,7 @@ rtError_t ValidateCondHandleHandleForApi(rtCondHandle_t handle, CondHandle*& out
 rtError_t ValidateProgramHandleForApi(rtBinHandle handle, Program*& outRealObj, const char_t* callerFuncName);
 rtError_t ValidateKernelHandleForApi(const void* handle, Kernel*& outRealObj, const char_t* callerFuncName);
 rtError_t ValidateArgsHandleForApi(rtArgsHandle handle, RtArgsHandle*& outRealObj, const char_t* callerFuncName);
+rtError_t ValidateArgsHandleForUserMemApi(rtArgsHandle handle, RtArgsHandle*& outRealObj, const char_t* callerFuncName);
 rtError_t ValidateParamHandleForApi(rtParaHandle handle, ParaDetail*& outRealObj, const char_t* callerFuncName);
 rtError_t ValidateLaunchArgsHandleForApi(
     rtLaunchArgsHandle handle, rtLaunchArgs_t*& outRealObj, const char_t* callerFuncName);
