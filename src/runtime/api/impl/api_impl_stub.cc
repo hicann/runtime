@@ -398,6 +398,21 @@ rtError_t ApiImplSoma::MemPoolFreeAsync(void* const ptr, Stream* const stm)
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
+rtError_t ApiImpl::ManagedMemAlloc(void** const ptr, const uint64_t size, const uint32_t flag, const uint16_t moduleId)
+{
+    UNUSED(ptr);
+    UNUSED(size);
+    UNUSED(flag);
+    UNUSED(moduleId);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t ApiImpl::ManagedMemFree(const void* const ptr)
+{
+    UNUSED(ptr);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
 rtError_t ApiImpl::MemManagedAdvise(
     const void* const ptr, uint64_t size, uint16_t advise, rtMemManagedLocation location)
 {

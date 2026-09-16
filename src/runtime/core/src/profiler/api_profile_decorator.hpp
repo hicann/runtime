@@ -305,9 +305,6 @@ private:
     RuntimeProfApiData* GetReportProfApiData() const;
     void FillMemcpyExtInfo(const uint64_t bytes, const uint16_t copyKind, const Stream* const stm) const;
     void FillMemsetExtInfo(const uint64_t bytes, const uint32_t value, const Stream* const stm) const;
-    void FillMemMngExtInfo(
-        const uint64_t address, const uint64_t size, const uint16_t memMngType, const uint32_t memoryType,
-        const Stream* const stm) const;
     void FillMemcpyBatchExtInfoByCopyKind(
         const size_t* const sizes, const size_t count, const rtMemcpyBatchAttr* const attrs,
         const size_t* const attrsIdxs, const size_t numAttrs, const Stream* const stm) const;

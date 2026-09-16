@@ -54,8 +54,6 @@ TIMESTAMP_EXTERN(rtDvppFree);
 TIMESTAMP_EXTERN(rtDvppMallocWithFlag);
 TIMESTAMP_EXTERN(rtMallocHostSharedMemory);
 TIMESTAMP_EXTERN(rtFreeHostSharedMemory);
-TIMESTAMP_EXTERN(rtMemAllocManaged);
-TIMESTAMP_EXTERN(rtMemFreeManaged);
 TIMESTAMP_EXTERN(rtMemset);
 TIMESTAMP_EXTERN(rtMemsetAsync);
 TIMESTAMP_EXTERN(rtMemGetInfo);
@@ -942,34 +940,6 @@ rtError_t rtFreeHostSharedMemory(rtFreeHostSharedMemoryIn* in)
     TIMESTAMP_BEGIN(rtFreeHostSharedMemory);
     const rtError_t error = apiInstance->FreeHostSharedMemory(in);
     TIMESTAMP_END(rtFreeHostSharedMemory);
-    ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtMemAllocManaged(void** ptr, uint64_t size, uint32_t flag, const uint16_t moduleId)
-{
-    GLOBAL_STATE_WAIT_IF_LOCKED();
-    Api* const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_BEGIN(rtMemAllocManaged);
-    const rtError_t error = apiInstance->ManagedMemAlloc(ptr, size, flag, moduleId);
-    TIMESTAMP_END(rtMemAllocManaged);
-    if (unlikely(error != RT_ERROR_NONE)) {
-        return GetRtExtErrCodeAndSetGlobalErr(error);
-    }
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtMemFreeManaged(void* ptr)
-{
-    GLOBAL_STATE_WAIT_IF_LOCKED();
-    Api* const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_BEGIN(rtMemFreeManaged);
-    const rtError_t error = apiInstance->ManagedMemFree(ptr);
-    TIMESTAMP_END(rtMemFreeManaged);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }

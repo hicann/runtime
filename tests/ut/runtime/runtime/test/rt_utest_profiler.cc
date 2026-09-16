@@ -216,6 +216,38 @@ void PrepareRuntimeProfDecoratorTest(Profiler* profiler)
     profiler->SetApiProfEnable(true);
 }
 
+class ScopedRuntimeProfiler {
+public:
+    explicit ScopedRuntimeProfiler(Profiler* const profiler) : runtime_(Runtime::Instance()), oldProfiler_(nullptr)
+    {
+        if (runtime_ != nullptr) {
+            oldProfiler_ = runtime_->profiler_;
+            runtime_->profiler_ = profiler;
+        }
+    }
+
+    ~ScopedRuntimeProfiler()
+    {
+        if (runtime_ != nullptr) {
+            runtime_->profiler_ = oldProfiler_;
+        }
+    }
+
+private:
+    Runtime* runtime_;
+    Profiler* oldProfiler_;
+};
+
+uint16_t GetExpectedRuntimeProfileDeviceId()
+{
+    int32_t curDeviceId = 0;
+    const rtError_t error = Runtime::Instance()->GetCurrentDeviceId(&curDeviceId);
+    if ((error == RT_ERROR_NONE) && (curDeviceId >= 0) && (curDeviceId <= static_cast<int32_t>(UINT16_MAX))) {
+        return static_cast<uint16_t>(curDeviceId);
+    }
+    return static_cast<uint16_t>(UINT16_MAX);
+}
+
 class RuntimeProfTestApiImpl : public ApiImpl {
 public:
     explicit RuntimeProfTestApiImpl(
@@ -695,6 +727,7 @@ TEST_F(ProfilerTest, ApiProfileDecoratorMemCopySyncExtInfo)
     RuntimeProfTestApiImpl impl;
     Profiler profiler(&impl);
     ApiProfileDecorator api(&impl, &profiler);
+    ScopedRuntimeProfiler scopedRuntimeProfiler(&profiler);
     PrepareRuntimeProfDecoratorTest(&profiler);
 
     api.CallApiBegin(RT_PROF_API_MEM_CPY, 1024U, RT_MEMCPY_HOST_TO_DEVICE);
@@ -717,6 +750,7 @@ TEST_F(ProfilerTest, ApiProfileDecoratorMemCopySyncFailedNoExtInfo)
     RuntimeProfTestApiImpl impl;
     Profiler profiler(&impl);
     ApiProfileDecorator api(&impl, &profiler);
+    ScopedRuntimeProfiler scopedRuntimeProfiler(&profiler);
     PrepareRuntimeProfDecoratorTest(&profiler);
 
     api.CallApiBegin(RT_PROF_API_MEM_CPY, 1024U, RT_MEMCPY_HOST_TO_DEVICE);
@@ -732,6 +766,7 @@ TEST_F(ProfilerTest, ApiProfileDecoratorUserDeviceIdGetDeviceFailed)
     RuntimeProfTestApiImpl impl(nullptr, RT_ERROR_INVALID_VALUE);
     Profiler profiler(&impl);
     ApiProfileDecorator api(&impl, &profiler);
+    ScopedRuntimeProfiler scopedRuntimeProfiler(&profiler);
     PrepareRuntimeProfDecoratorTest(&profiler);
 
     api.CallApiBegin(RT_PROF_API_MEM_CPY);
@@ -747,6 +782,7 @@ TEST_F(ProfilerTest, ApiProfileDecoratorUserDeviceIdFromGetDevice)
     RuntimeProfTestApiImpl impl(nullptr, RT_ERROR_NONE, 2);
     Profiler profiler(&impl);
     ApiProfileDecorator api(&impl, &profiler);
+    ScopedRuntimeProfiler scopedRuntimeProfiler(&profiler);
     PrepareRuntimeProfDecoratorTest(&profiler);
 
     api.CallApiBegin(RT_PROF_API_MEM_CPY);
@@ -757,11 +793,25 @@ TEST_F(ProfilerTest, ApiProfileDecoratorUserDeviceIdFromGetDevice)
     ClearApiProfContextStack(&profiler);
 }
 
+TEST_F(ProfilerTest, RuntimeGetCurrentDeviceIdMatchesRtGetDevice)
+{
+    int32_t apiDeviceId = 0;
+    int32_t runtimeDeviceId = 0;
+    const rtError_t apiError = rtGetDevice(&apiDeviceId);
+    const rtError_t runtimeError = Runtime::Instance()->GetCurrentDeviceId(&runtimeDeviceId);
+
+    EXPECT_EQ(runtimeError, apiError);
+    if (apiError == RT_ERROR_NONE) {
+        EXPECT_EQ(runtimeDeviceId, apiDeviceId);
+    }
+}
+
 TEST_F(ProfilerTest, ApiProfileDecoratorUserDeviceIdOverflow)
 {
     RuntimeProfTestApiImpl impl(nullptr, RT_ERROR_NONE, static_cast<int32_t>(UINT16_MAX) + 1);
     Profiler profiler(&impl);
     ApiProfileDecorator api(&impl, &profiler);
+    ScopedRuntimeProfiler scopedRuntimeProfiler(&profiler);
     PrepareRuntimeProfDecoratorTest(&profiler);
 
     api.CallApiBegin(RT_PROF_API_MEM_CPY);
@@ -777,6 +827,7 @@ TEST_F(ProfilerTest, ApiProfileDecoratorMemSetSyncExtInfo)
     RuntimeProfTestApiImpl impl;
     Profiler profiler(&impl);
     ApiProfileDecorator api(&impl, &profiler);
+    ScopedRuntimeProfiler scopedRuntimeProfiler(&profiler);
     PrepareRuntimeProfDecoratorTest(&profiler);
 
     api.CallApiBegin(RT_PROF_API_Memset);
@@ -800,6 +851,7 @@ TEST_F(ProfilerTest, ApiProfileDecoratorMemSetSyncFailedNoExtInfo)
     RuntimeProfTestApiImpl impl;
     Profiler profiler(&impl);
     ApiProfileDecorator api(&impl, &profiler);
+    ScopedRuntimeProfiler scopedRuntimeProfiler(&profiler);
     PrepareRuntimeProfDecoratorTest(&profiler);
 
     api.CallApiBegin(RT_PROF_API_Memset);
@@ -814,10 +866,12 @@ TEST_F(ProfilerTest, ApiProfileDecoratorDevMallocExtInfo)
     RuntimeProfTestApiImpl impl;
     Profiler profiler(&impl);
     ApiProfileDecorator api(&impl, &profiler);
+    ScopedRuntimeProfiler scopedRuntimeProfiler(&profiler);
     PrepareRuntimeProfDecoratorTest(&profiler);
 
     api.CallApiBegin(RT_PROF_API_DEV_MALLOC);
-    api.FillMemMngExtInfo(0x1234U, 4096U, RT_PROF_MEM_MNG_TYPE_MALLOC, MSPROF_MEMORY_TYPE_DEVICE, nullptr);
+    Runtime::Instance()->FillRuntimeMemMngExtInfo(
+        0x1234U, 4096U, RT_PROF_MEM_MNG_TYPE_MALLOC, MSPROF_MEMORY_TYPE_DEVICE, nullptr);
     RuntimeProfApiData& profData = profiler.GetProfApiData();
 
     ASSERT_EQ(profData.extInfoCount, 1U);
@@ -826,7 +880,7 @@ TEST_F(ProfilerTest, ApiProfileDecoratorDevMallocExtInfo)
     EXPECT_EQ(profData.extInfos[0].extInfo.memMngInfo.size, 4096U);
     EXPECT_EQ(profData.extInfos[0].extInfo.memMngInfo.memoryType, MSPROF_MEMORY_TYPE_DEVICE);
     EXPECT_EQ(profData.extInfos[0].extInfo.memMngInfo.memMngType, RT_PROF_MEM_MNG_TYPE_MALLOC);
-    EXPECT_EQ(profData.extInfos[0].extInfo.memMngInfo.deviceId, static_cast<uint16_t>(UINT16_MAX));
+    EXPECT_EQ(profData.extInfos[0].extInfo.memMngInfo.deviceId, GetExpectedRuntimeProfileDeviceId());
     EXPECT_EQ(profData.extInfos[0].extInfo.memMngInfo.streamId, UINT32_MAX);
     EXPECT_EQ(profData.extInfos[0].extInfo.memMngInfo.rsv, 0U);
     ClearApiProfContextStack(&profiler);
@@ -837,6 +891,7 @@ TEST_F(ProfilerTest, ApiProfileDecoratorDevMallocFailedNoExtInfo)
     RuntimeProfTestApiImpl impl;
     Profiler profiler(&impl);
     ApiProfileDecorator api(&impl, &profiler);
+    ScopedRuntimeProfiler scopedRuntimeProfiler(&profiler);
     PrepareRuntimeProfDecoratorTest(&profiler);
 
     api.CallApiBegin(RT_PROF_API_DEV_MALLOC);
@@ -851,10 +906,12 @@ TEST_F(ProfilerTest, ApiProfileDecoratorDevFreeExtInfo)
     RuntimeProfTestApiImpl impl;
     Profiler profiler(&impl);
     ApiProfileDecorator api(&impl, &profiler);
+    ScopedRuntimeProfiler scopedRuntimeProfiler(&profiler);
     PrepareRuntimeProfDecoratorTest(&profiler);
 
     api.CallApiBegin(RT_PROF_API_DEV_FREE);
-    api.FillMemMngExtInfo(0x5678U, 0U, RT_PROF_MEM_MNG_TYPE_FREE, MSPROF_MEMORY_TYPE_DEVICE, nullptr);
+    Runtime::Instance()->FillRuntimeMemMngExtInfo(
+        0x5678U, 0U, RT_PROF_MEM_MNG_TYPE_FREE, MSPROF_MEMORY_TYPE_DEVICE, nullptr);
     RuntimeProfApiData& profData = profiler.GetProfApiData();
 
     ASSERT_EQ(profData.extInfoCount, 1U);
@@ -871,10 +928,12 @@ TEST_F(ProfilerTest, ApiProfileDecoratorMemMngMemoryTypeExtInfo)
     RuntimeProfTestApiImpl impl;
     Profiler profiler(&impl);
     ApiProfileDecorator api(&impl, &profiler);
+    ScopedRuntimeProfiler scopedRuntimeProfiler(&profiler);
     PrepareRuntimeProfDecoratorTest(&profiler);
 
     api.CallApiBegin(RT_PROF_API_HOST_MALLOC);
-    api.FillMemMngExtInfo(0x1234U, 1024U, RT_PROF_MEM_MNG_TYPE_MALLOC, MSPROF_MEMORY_TYPE_HOST, nullptr);
+    Runtime::Instance()->FillRuntimeMemMngExtInfo(
+        0x1234U, 1024U, RT_PROF_MEM_MNG_TYPE_MALLOC, MSPROF_MEMORY_TYPE_HOST, nullptr);
     RuntimeProfApiData& hostProfData = profiler.GetProfApiData();
 
     ASSERT_EQ(hostProfData.extInfoCount, 1U);
@@ -884,7 +943,8 @@ TEST_F(ProfilerTest, ApiProfileDecoratorMemMngMemoryTypeExtInfo)
 
     PrepareRuntimeProfDecoratorTest(&profiler);
     api.CallApiBegin(RT_PROF_API_MANAGEDMEM_ALLOC);
-    api.FillMemMngExtInfo(0x5678U, 2048U, RT_PROF_MEM_MNG_TYPE_MALLOC, MSPROF_MEMORY_TYPE_MANAGED, nullptr);
+    Runtime::Instance()->FillRuntimeMemMngExtInfo(
+        0x5678U, 2048U, RT_PROF_MEM_MNG_TYPE_MALLOC, MSPROF_MEMORY_TYPE_MANAGED, nullptr);
     RuntimeProfApiData& managedProfData = profiler.GetProfApiData();
 
     ASSERT_EQ(managedProfData.extInfoCount, 1U);
@@ -898,6 +958,7 @@ TEST_F(ProfilerTest, ApiProfileDecoratorSetMemcpyDescExtInfo)
     RuntimeProfTestApiImpl impl;
     Profiler profiler(&impl);
     ApiProfileDecorator api(&impl, &profiler);
+    ScopedRuntimeProfiler scopedRuntimeProfiler(&profiler);
     PrepareRuntimeProfDecoratorTest(&profiler);
 
     api.CallApiBegin(RT_PROF_API_SET_MEMCPY_DESC);
@@ -918,6 +979,7 @@ TEST_F(ProfilerTest, ApiProfileDecoratorMemcpyBatchSingleKindExtInfo)
     RuntimeProfTestApiImpl impl;
     Profiler profiler(&impl);
     ApiProfileDecorator api(&impl, &profiler);
+    ScopedRuntimeProfiler scopedRuntimeProfiler(&profiler);
     PrepareRuntimeProfDecoratorTest(&profiler);
     size_t sizes[3] = {10U, 20U, 30U};
     rtMemcpyBatchAttr attrs[1] = {};
@@ -942,6 +1004,7 @@ TEST_F(ProfilerTest, ApiProfileDecoratorMemcpyBatchMultiKindExtInfo)
     RuntimeProfTestApiImpl impl;
     Profiler profiler(&impl);
     ApiProfileDecorator api(&impl, &profiler);
+    ScopedRuntimeProfiler scopedRuntimeProfiler(&profiler);
     PrepareRuntimeProfDecoratorTest(&profiler);
     size_t sizes[3] = {10U, 20U, 30U};
     rtMemcpyBatchAttr attrs[2] = {};
@@ -970,6 +1033,7 @@ TEST_F(ProfilerTest, ApiProfileDecoratorMemcpyBatchAsyncStreamId)
     RuntimeProfTestApiImpl impl;
     Profiler profiler(&impl);
     ApiProfileDecorator api(&impl, &profiler);
+    ScopedRuntimeProfiler scopedRuntimeProfiler(&profiler);
     PrepareRuntimeProfDecoratorTest(&profiler);
     size_t sizes[1] = {10U};
     rtMemcpyBatchAttr attrs[1] = {};
@@ -996,6 +1060,7 @@ TEST_F(ProfilerTest, ApiProfileDecoratorMemcpyBatchCopyKindBranches)
     RuntimeProfTestApiImpl impl;
     Profiler profiler(&impl);
     ApiProfileDecorator api(&impl, &profiler);
+    ScopedRuntimeProfiler scopedRuntimeProfiler(&profiler);
     PrepareRuntimeProfDecoratorTest(&profiler);
     size_t sizes[3] = {10U, 20U, 30U};
     rtMemcpyBatchAttr attrs[3] = {};
@@ -1026,6 +1091,7 @@ TEST_F(ProfilerTest, ApiProfileDecoratorMemoryWrappersFillExtInfo)
     RuntimeProfSuccessApiImpl impl;
     Profiler profiler(&impl);
     ApiProfileDecorator api(&impl, &profiler);
+    ScopedRuntimeProfiler scopedRuntimeProfiler(&profiler);
 
     void* ptr = nullptr;
     PrepareRuntimeProfDecoratorTest(&profiler);
@@ -1092,6 +1158,7 @@ TEST_F(ProfilerTest, ApiProfileDecoratorMemcpyAndMemsetWrappersFillExtInfo)
     RuntimeProfSuccessApiImpl impl;
     Profiler profiler(&impl);
     ApiProfileDecorator api(&impl, &profiler);
+    ScopedRuntimeProfiler scopedRuntimeProfiler(&profiler);
     void* dst = reinterpret_cast<void*>(0x2000U);
     void* src = reinterpret_cast<void*>(0x3000U);
     Stream stream(static_cast<Device*>(nullptr), 0U);
@@ -1137,6 +1204,7 @@ TEST_F(ProfilerTest, ApiProfileDecoratorMemcpyBatchWrappersFillExtInfo)
     RuntimeProfSuccessApiImpl impl;
     Profiler profiler(&impl);
     ApiProfileDecorator api(&impl, &profiler);
+    ScopedRuntimeProfiler scopedRuntimeProfiler(&profiler);
     void* dsts[3] = {};
     void* srcs[3] = {};
     size_t destMaxs[3] = {10U, 20U, 30U};

@@ -6106,6 +6106,120 @@ Stream* Runtime::GetCurStream(Stream* const stm) const
     return stm;
 }
 
+rtError_t Runtime::GetDeviceCount(int32_t* const cnt)
+{
+    if (!isSetVisibleDev) {
+        return facadeDriver_.GetDeviceCount(cnt);
+    }
+
+    rtError_t error = RT_ERROR_NONE;
+    switch (retType) {
+        case RT_ALL_DATA_OK:
+            *cnt = static_cast<int32_t>(userDeviceCnt);
+            break;
+        case RT_GET_DRIVER_ERROR:
+            DRV_ERROR_PROCESS(
+                DRV_ERROR_NO_DEVICE, "[drv api] drvGetDevNum failed: drvRetCode=%d!",
+                static_cast<int32_t>(DRV_ERROR_NO_DEVICE));
+            error = RT_GET_DRV_ERRCODE(DRV_ERROR_NO_DEVICE);
+            break;
+        case RT_ALL_DUPLICATED_ERROR:
+            RT_LOG_OUTER_MSG_IMPL(
+                ErrorCode::EE2002, inputDeviceStr, "ASCEND_RT_VISIBLE_DEVICES", "Cannot be duplicated");
+            error = RT_ERROR_DRV_NO_DEVICE;
+            break;
+        case RT_ALL_ORDER_ERROR:
+            RT_LOG_OUTER_MSG_IMPL(
+                ErrorCode::EE2002, inputDeviceStr, "ASCEND_RT_VISIBLE_DEVICES", "configured in ascending order");
+            error = RT_ERROR_DRV_NO_DEVICE;
+            break;
+        case RT_ALL_DATA_ERROR:
+            RT_LOG_OUTER_MSG_IMPL(
+                ErrorCode::EE2002, inputDeviceStr, "ASCEND_RT_VISIBLE_DEVICES",
+                "[0, " + std::to_string(deviceCnt) + ")");
+            error = RT_ERROR_DRV_NO_DEVICE;
+            break;
+        default:
+            break;
+    }
+    return error;
+}
+
+RuntimeProfApiData* Runtime::GetRuntimeReportProfApiData() const
+{
+    if ((profiler_ == nullptr) || (!profiler_->GetApiProfEnable())) {
+        return nullptr;
+    }
+    ProfApiContext* const profApiContext = profiler_->GetTopProfApiContext();
+    if ((profApiContext == nullptr) || (!profApiContext->needReport)) {
+        return nullptr;
+    }
+    return &(profApiContext->apiData);
+}
+
+namespace {
+uint16_t GetProfileDeviceId(const Runtime* const rtInstance)
+{
+    int32_t curDeviceId = 0;
+    const rtError_t error = rtInstance->GetCurrentDeviceId(&curDeviceId);
+    if ((error == RT_ERROR_NONE) && (curDeviceId >= 0) && (curDeviceId <= static_cast<int32_t>(UINT16_MAX))) {
+        return static_cast<uint16_t>(curDeviceId);
+    }
+    return static_cast<uint16_t>(UINT16_MAX);
+}
+} // namespace
+
+rtError_t Runtime::GetCurrentDeviceId(int32_t* const devId) const
+{
+    Context* const curCtx = CurrentContext();
+    const bool flag = ContextManage::CheckContextIsValid(curCtx);
+    if (!flag) {
+        if (GetSetDefaultDevIdFlag()) {
+            const uint32_t drvDeviceId = GetDefaultDeviceId();
+            uint32_t deviceId = 0U;
+            const rtError_t error = GetUserDevIdByDeviceId(drvDeviceId, &deviceId);
+            COND_RETURN_ERROR_MSG_INNER(
+                error != RT_ERROR_NONE, error,
+                "Failed to convert the driver device ID %u to user device ID, retCode=%#x", drvDeviceId,
+                static_cast<uint32_t>(error));
+            *devId = static_cast<int32_t>(deviceId);
+            return RT_ERROR_NONE;
+        }
+        return RT_ERROR_CONTEXT_NULL;
+    }
+    uint32_t deviceId = curCtx->UserDeviceId();
+    rtError_t error = RT_ERROR_NONE;
+    COND_PROC(deviceId == MAX_UINT32_NUM, error = GetUserDevIdByDeviceId(curCtx->Device_()->Id_(), &deviceId));
+    COND_RETURN_ERROR_MSG_INNER(
+        error != RT_ERROR_NONE, error, "Failed to convert the driver device ID %u to user device ID, retCode=%#x",
+        curCtx->Device_()->Id_(), static_cast<uint32_t>(error));
+
+    *devId = static_cast<int32_t>(deviceId);
+    return RT_ERROR_NONE;
+}
+
+void Runtime::FillRuntimeMemMngExtInfo(
+    const uint64_t address, const uint64_t size, const uint16_t memMngType, const uint32_t memoryType,
+    const Stream* const stm) const
+{
+    RuntimeProfApiData* const profApiData = GetRuntimeReportProfApiData();
+    if ((profApiData == nullptr) || (profApiData->extInfoCount >= RUNTIME_PROF_EXT_INFO_NUM)) {
+        return;
+    }
+
+    RuntimeProfExtInfoItem& extInfoItem = profApiData->extInfos[profApiData->extInfoCount];
+    extInfoItem.extInfoType = RT_PROFILE_TYPE_MEMMNG_INFO;
+    extInfoItem.extInfo.memMngInfo.address = address;
+    extInfoItem.extInfo.memMngInfo.size = size;
+    extInfoItem.extInfo.memMngInfo.memoryType = memoryType;
+    extInfoItem.extInfo.memMngInfo.memMngType = memMngType;
+    extInfoItem.extInfo.memMngInfo.deviceId = GetProfileDeviceId(this);
+    extInfoItem.extInfo.memMngInfo.streamId =
+        (stm == nullptr) ? static_cast<uint32_t>(UINT32_MAX) : static_cast<uint32_t>(stm->Id_());
+    extInfoItem.extInfo.memMngInfo.rsv = 0U;
+    ++profApiData->extInfoCount;
+}
+
 void Runtime::CallApiBegin(const uint16_t profileType, const uint64_t dataSize, const uint16_t cpyDirection) const
 {
     COND_RETURN_VOID(Profiler_() == nullptr, "profiler_ is nullptr");

@@ -2558,27 +2558,6 @@ rtError_t ApiImpl::FreeHostSharedMemory(rtFreeHostSharedMemoryIn* const in)
     return curCtx->Device_()->Driver_()->FreeHostSharedMemory(in, curCtx->Device_()->Id_());
 }
 
-rtError_t ApiImpl::ManagedMemFree(const void* const ptr)
-{
-    RT_LOG(RT_LOG_INFO, "managed memory free.");
-
-    Context* const curCtx = CurrentContext();
-    Driver* curDrv = nullptr;
-    if (!ContextManage::CheckContextIsValid(curCtx)) {
-        curDrv = Runtime::Instance()->driverFactory_.GetDriver(NPU_DRIVER);
-    } else {
-        curDrv = curCtx->Device_()->Driver_();
-    }
-    NULL_PTR_RETURN_MSG(curDrv, RT_ERROR_DRV_NULL);
-
-    if (ContextManage::CheckContextIsValid(curCtx)) {
-        if (curCtx->Device_()->IsSPM(ptr)) {
-            return curCtx->Device_()->FreeSPM(ptr);
-        }
-    }
-    return curDrv->ManagedMemFree(ptr);
-}
-
 rtError_t ApiImpl::MemAdvise(void* devPtr, uint64_t count, uint32_t advise)
 {
     RT_LOG(RT_LOG_DEBUG, "memory advise, count=%" PRIu64 ", advise=%u.", count, advise);
@@ -2895,47 +2874,7 @@ rtError_t ApiImpl::CloseNetService()
     return RT_ERROR_NONE;
 }
 
-rtError_t ApiImpl::GetDeviceCount(int32_t* const cnt)
-{
-    if (!Runtime::Instance()->isSetVisibleDev) {
-        FacadeDriver& curDrv = Runtime::Instance()->FacadeDriver_();
-        return curDrv.GetDeviceCount(cnt);
-    }
-
-    rtError_t error = RT_ERROR_NONE;
-    switch (Runtime::Instance()->retType) {
-        case RT_ALL_DATA_OK:
-            *cnt = static_cast<int32_t>(Runtime::Instance()->userDeviceCnt);
-            break;
-        case RT_GET_DRIVER_ERROR:
-            DRV_ERROR_PROCESS(
-                DRV_ERROR_NO_DEVICE, "[drv api] drvGetDevNum failed: drvRetCode=%d!",
-                static_cast<int32_t>(DRV_ERROR_NO_DEVICE));
-            error = RT_GET_DRV_ERRCODE(DRV_ERROR_NO_DEVICE);
-            break;
-        case RT_ALL_DUPLICATED_ERROR:
-            RT_LOG_OUTER_MSG_IMPL(
-                ErrorCode::EE2002, Runtime::Instance()->inputDeviceStr, "ASCEND_RT_VISIBLE_DEVICES",
-                "Cannot be duplicated");
-            error = RT_ERROR_DRV_NO_DEVICE;
-            break;
-        case RT_ALL_ORDER_ERROR:
-            RT_LOG_OUTER_MSG_IMPL(
-                ErrorCode::EE2002, Runtime::Instance()->inputDeviceStr, "ASCEND_RT_VISIBLE_DEVICES",
-                "configured in ascending order");
-            error = RT_ERROR_DRV_NO_DEVICE;
-            break;
-        case RT_ALL_DATA_ERROR:
-            RT_LOG_OUTER_MSG_IMPL(
-                ErrorCode::EE2002, Runtime::Instance()->inputDeviceStr, "ASCEND_RT_VISIBLE_DEVICES",
-                "[0, " + std::to_string(Runtime::Instance()->deviceCnt) + ")");
-            error = RT_ERROR_DRV_NO_DEVICE;
-            break;
-        default:
-            break;
-    }
-    return error;
-}
+rtError_t ApiImpl::GetDeviceCount(int32_t* const cnt) { return Runtime::Instance()->GetDeviceCount(cnt); }
 
 rtError_t ApiImpl::SetDevice(const int32_t devId)
 {
@@ -2965,37 +2904,7 @@ rtError_t ApiImpl::SetDevice(const int32_t devId)
     return RT_ERROR_NONE;
 }
 
-rtError_t ApiImpl::GetDevice(int32_t* const devId)
-{
-    Runtime* const rtInstance = Runtime::Instance();
-    Context* const curCtx = rtInstance->CurrentContext();
-    const bool flag = ContextManage::CheckContextIsValid(curCtx);
-    if (!flag) {
-        if (rtInstance->GetSetDefaultDevIdFlag()) {
-            const uint32_t drvDeviceId = rtInstance->GetDefaultDeviceId();
-            uint32_t deviceId = 0U;
-            const rtError_t error = rtInstance->GetUserDevIdByDeviceId(drvDeviceId, &deviceId);
-            COND_RETURN_ERROR_MSG_INNER(
-                error != RT_ERROR_NONE, error,
-                "Failed to convert the driver device ID %u to user device ID, retCode=%#x", drvDeviceId,
-                static_cast<uint32_t>(error));
-            *devId = static_cast<int32_t>(deviceId);
-            return RT_ERROR_NONE;
-        }
-        return RT_ERROR_CONTEXT_NULL;
-    }
-    uint32_t deviceId = curCtx->UserDeviceId();
-    rtError_t error = RT_ERROR_NONE;
-    COND_PROC(
-        deviceId == MAX_UINT32_NUM, error = rtInstance->GetUserDevIdByDeviceId(curCtx->Device_()->Id_(), &deviceId));
-    COND_RETURN_ERROR_MSG_INNER(
-        error != RT_ERROR_NONE, error, "Failed to convert the driver device ID %u to user device ID, retCode=%#x",
-        curCtx->Device_()->Id_(), static_cast<uint32_t>(error));
-
-    *devId = static_cast<int32_t>(deviceId);
-
-    return RT_ERROR_NONE;
-}
+rtError_t ApiImpl::GetDevice(int32_t* const devId) { return Runtime::Instance()->GetCurrentDeviceId(devId); }
 
 rtError_t ApiImpl::GetDevicePhyIdByIndex(const uint32_t devIndex, uint32_t* const phyId)
 {

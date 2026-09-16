@@ -73,15 +73,6 @@ rtError_t ApiImpl::HostMemMapCapabilities(uint32_t deviceId, rtHacType hacType, 
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
-rtError_t ApiImpl::ManagedMemAlloc(void** const ptr, const uint64_t size, const uint32_t flag, const uint16_t moduleId)
-{
-    UNUSED(ptr);
-    UNUSED(size);
-    UNUSED(flag);
-    UNUSED(moduleId);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
 rtError_t ApiImpl::MemCopySyncEx(
     void* const dst, const uint64_t destMax, const void* const src, const uint64_t cnt, const rtMemcpyKind_t kind)
 {

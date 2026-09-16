@@ -147,6 +147,7 @@ class LabelAllocator;
 class ApiErrorDecorator;
 class Logger;
 class Profiler;
+struct RuntimeProfApiData;
 class EngineObserver;
 class Runtime;
 class Debug;
@@ -666,6 +667,12 @@ public:
 
     void CallApiBegin(const uint16_t profileType, const uint64_t dataSize = 0, const uint16_t cpyDirection = 0) const;
     void CallApiEnd(const rtError_t retCode, const uint32_t devId = static_cast<uint32_t>(UINT16_MAX)) const;
+    rtError_t GetDeviceCount(int32_t* const cnt);
+    rtError_t GetCurrentDeviceId(int32_t* const devId) const;
+    RuntimeProfApiData* GetRuntimeReportProfApiData() const;
+    void FillRuntimeMemMngExtInfo(
+        const uint64_t address, const uint64_t size, const uint16_t memMngType, const uint32_t memoryType,
+        const Stream* const stm = nullptr) const;
 
 private:
     void UpdateDevPropertiesFromIniAttrs(const rtChipType_t chipTypeValue, const RtIniAttributes& iniAttrs);

@@ -12,6 +12,7 @@
 #include "api_c.h"
 #include "profiler.hpp"
 #include "api_profile_decorator.hpp"
+#include "runtime.hpp"
 #include "mem_type.hpp"
 #include "context.hpp"
 
@@ -83,34 +84,6 @@ void ApiProfileDecorator::FillMemsetExtInfo(const uint64_t bytes, const uint32_t
     extInfoItem.extInfo.memsetInfo.rsv[0] = 0U;
     extInfoItem.extInfo.memsetInfo.rsv[1] = 0U;
     extInfoItem.extInfo.memsetInfo.rsv[2] = 0U;
-    ++profApiData->extInfoCount;
-}
-
-void ApiProfileDecorator::FillMemMngExtInfo(
-    const uint64_t address, const uint64_t size, const uint16_t memMngType, const uint32_t memoryType,
-    const Stream* const stm) const
-{
-    RuntimeProfApiData* const profApiData = GetReportProfApiData();
-    if ((profApiData == nullptr) || (profApiData->extInfoCount >= RUNTIME_PROF_EXT_INFO_NUM)) {
-        return;
-    }
-    int32_t curDeviceId = 0;
-    const rtError_t error = impl_->GetDevice(&curDeviceId);
-    uint16_t deviceId = static_cast<uint16_t>(UINT16_MAX);
-    if ((error == RT_ERROR_NONE) && (curDeviceId >= 0) && (curDeviceId <= static_cast<int32_t>(UINT16_MAX))) {
-        deviceId = static_cast<uint16_t>(curDeviceId);
-    }
-
-    RuntimeProfExtInfoItem& extInfoItem = profApiData->extInfos[profApiData->extInfoCount];
-    extInfoItem.extInfoType = RT_PROFILE_TYPE_MEMMNG_INFO;
-    extInfoItem.extInfo.memMngInfo.address = address;
-    extInfoItem.extInfo.memMngInfo.size = size;
-    extInfoItem.extInfo.memMngInfo.memoryType = memoryType;
-    extInfoItem.extInfo.memMngInfo.memMngType = memMngType;
-    extInfoItem.extInfo.memMngInfo.deviceId = deviceId;
-    extInfoItem.extInfo.memMngInfo.streamId =
-        (stm == nullptr) ? static_cast<uint32_t>(UINT32_MAX) : static_cast<uint32_t>(stm->Id_());
-    extInfoItem.extInfo.memMngInfo.rsv = 0U;
     ++profApiData->extInfoCount;
 }
 
@@ -574,7 +547,8 @@ rtError_t ApiProfileDecorator::DevMalloc(
     const rtError_t error = impl_->DevMalloc(devPtr, size, type, moduleId);
     if (error == RT_ERROR_NONE) {
         const uint64_t addr = (devPtr == nullptr) ? 0U : RtPtrToValue(*devPtr);
-        FillMemMngExtInfo(addr, size, RT_PROF_MEM_MNG_TYPE_MALLOC, MSPROF_MEMORY_TYPE_DEVICE, nullptr);
+        Runtime::Instance()->FillRuntimeMemMngExtInfo(
+            addr, size, RT_PROF_MEM_MNG_TYPE_MALLOC, MSPROF_MEMORY_TYPE_DEVICE, nullptr);
     }
     CallApiEnd(error);
     return error;
@@ -585,7 +559,8 @@ rtError_t ApiProfileDecorator::DevFree(void* const devPtr)
     CallApiBegin(RT_PROF_API_DEV_FREE);
     const rtError_t error = impl_->DevFree(devPtr);
     if (error == RT_ERROR_NONE) {
-        FillMemMngExtInfo(RtPtrToValue(devPtr), 0U, RT_PROF_MEM_MNG_TYPE_FREE, MSPROF_MEMORY_TYPE_DEVICE, nullptr);
+        Runtime::Instance()->FillRuntimeMemMngExtInfo(
+            RtPtrToValue(devPtr), 0U, RT_PROF_MEM_MNG_TYPE_FREE, MSPROF_MEMORY_TYPE_DEVICE, nullptr);
     }
     CallApiEnd(error);
     return error;
@@ -598,7 +573,8 @@ rtError_t ApiProfileDecorator::DevMallocCached(
     const rtError_t error = impl_->DevMallocCached(devPtr, size, type, moduleId);
     if (error == RT_ERROR_NONE) {
         const uint64_t addr = (devPtr == nullptr) ? 0U : RtPtrToValue(*devPtr);
-        FillMemMngExtInfo(addr, size, RT_PROF_MEM_MNG_TYPE_MALLOC, MSPROF_MEMORY_TYPE_DEVICE, nullptr);
+        Runtime::Instance()->FillRuntimeMemMngExtInfo(
+            addr, size, RT_PROF_MEM_MNG_TYPE_MALLOC, MSPROF_MEMORY_TYPE_DEVICE, nullptr);
     }
     CallApiEnd(error);
     return error;
@@ -635,7 +611,8 @@ rtError_t ApiProfileDecorator::HostMalloc(void** const hostPtr, const uint64_t s
     const rtError_t error = impl_->HostMalloc(hostPtr, size, moduleId);
     if (error == RT_ERROR_NONE) {
         const uint64_t addr = (hostPtr == nullptr) ? 0U : RtPtrToValue(*hostPtr);
-        FillMemMngExtInfo(addr, size, RT_PROF_MEM_MNG_TYPE_MALLOC, MSPROF_MEMORY_TYPE_HOST, nullptr);
+        Runtime::Instance()->FillRuntimeMemMngExtInfo(
+            addr, size, RT_PROF_MEM_MNG_TYPE_MALLOC, MSPROF_MEMORY_TYPE_HOST, nullptr);
     }
     CallApiEnd(error);
     return error;
@@ -647,7 +624,8 @@ rtError_t ApiProfileDecorator::HostMallocWithCfg(void** const hostPtr, const uin
     const rtError_t error = impl_->HostMallocWithCfg(hostPtr, size, cfg);
     if (error == RT_ERROR_NONE) {
         const uint64_t addr = (hostPtr == nullptr) ? 0U : RtPtrToValue(*hostPtr);
-        FillMemMngExtInfo(addr, size, RT_PROF_MEM_MNG_TYPE_MALLOC, MSPROF_MEMORY_TYPE_HOST, nullptr);
+        Runtime::Instance()->FillRuntimeMemMngExtInfo(
+            addr, size, RT_PROF_MEM_MNG_TYPE_MALLOC, MSPROF_MEMORY_TYPE_HOST, nullptr);
     }
     CallApiEnd(error);
     return error;
@@ -658,7 +636,8 @@ rtError_t ApiProfileDecorator::HostFree(void* const hostPtr)
     CallApiBegin(RT_PROF_API_HOST_FREE);
     const rtError_t error = impl_->HostFree(hostPtr);
     if (error == RT_ERROR_NONE) {
-        FillMemMngExtInfo(RtPtrToValue(hostPtr), 0U, RT_PROF_MEM_MNG_TYPE_FREE, MSPROF_MEMORY_TYPE_HOST, nullptr);
+        Runtime::Instance()->FillRuntimeMemMngExtInfo(
+            RtPtrToValue(hostPtr), 0U, RT_PROF_MEM_MNG_TYPE_FREE, MSPROF_MEMORY_TYPE_HOST, nullptr);
     }
     CallApiEnd(error);
     return error;
@@ -671,7 +650,8 @@ rtError_t ApiProfileDecorator::ManagedMemAlloc(
     const rtError_t error = impl_->ManagedMemAlloc(ptr, size, flag, moduleId);
     if (error == RT_ERROR_NONE) {
         const uint64_t addr = (ptr == nullptr) ? 0U : RtPtrToValue(*ptr);
-        FillMemMngExtInfo(addr, size, RT_PROF_MEM_MNG_TYPE_MALLOC, MSPROF_MEMORY_TYPE_MANAGED, nullptr);
+        Runtime::Instance()->FillRuntimeMemMngExtInfo(
+            addr, size, RT_PROF_MEM_MNG_TYPE_MALLOC, MSPROF_MEMORY_TYPE_MANAGED, nullptr);
     }
     CallApiEnd(error);
     return error;
@@ -682,7 +662,8 @@ rtError_t ApiProfileDecorator::ManagedMemFree(const void* const ptr)
     CallApiBegin(RT_PROF_API_MANAGEDMEM_FREE);
     const rtError_t error = impl_->ManagedMemFree(ptr);
     if (error == RT_ERROR_NONE) {
-        FillMemMngExtInfo(RtPtrToValue(ptr), 0U, RT_PROF_MEM_MNG_TYPE_FREE, MSPROF_MEMORY_TYPE_MANAGED, nullptr);
+        Runtime::Instance()->FillRuntimeMemMngExtInfo(
+            RtPtrToValue(ptr), 0U, RT_PROF_MEM_MNG_TYPE_FREE, MSPROF_MEMORY_TYPE_MANAGED, nullptr);
     }
     CallApiEnd(error);
     return error;
@@ -886,7 +867,7 @@ rtError_t ApiProfileDecorator::ReserveMemAddress(
     const rtError_t error = impl_->ReserveMemAddress(devPtr, size, alignment, devAddr, flags);
     if (error == RT_ERROR_NONE) {
         const uint64_t addr = (devPtr == nullptr) ? 0U : RtPtrToValue(*devPtr);
-        FillMemMngExtInfo(
+        Runtime::Instance()->FillRuntimeMemMngExtInfo(
             addr, static_cast<uint64_t>(size), RT_PROF_MEM_MNG_TYPE_MALLOC, MSPROF_MEMORY_TYPE_DEVICE, nullptr);
     }
     CallApiEnd(error);
@@ -898,7 +879,8 @@ rtError_t ApiProfileDecorator::ReleaseMemAddress(void* devPtr)
     CallApiBegin(RT_PROF_API_DEV_FREE);
     const rtError_t error = impl_->ReleaseMemAddress(devPtr);
     if (error == RT_ERROR_NONE) {
-        FillMemMngExtInfo(RtPtrToValue(devPtr), 0U, RT_PROF_MEM_MNG_TYPE_FREE, MSPROF_MEMORY_TYPE_DEVICE, nullptr);
+        Runtime::Instance()->FillRuntimeMemMngExtInfo(
+            RtPtrToValue(devPtr), 0U, RT_PROF_MEM_MNG_TYPE_FREE, MSPROF_MEMORY_TYPE_DEVICE, nullptr);
     }
     CallApiEnd(error);
     return error;
@@ -910,7 +892,7 @@ rtError_t ApiProfileDecorator::MallocPhysical(rtDrvMemHandle* handle, size_t siz
     const rtError_t error = impl_->MallocPhysical(handle, size, prop, flags);
     if (error == RT_ERROR_NONE) {
         const uint64_t addr = (handle == nullptr) ? 0U : RtPtrToValue(*handle);
-        FillMemMngExtInfo(
+        Runtime::Instance()->FillRuntimeMemMngExtInfo(
             addr, static_cast<uint64_t>(size), RT_PROF_MEM_MNG_TYPE_MALLOC, MSPROF_MEMORY_TYPE_DEVICE, nullptr);
     }
     CallApiEnd(error);
@@ -922,7 +904,8 @@ rtError_t ApiProfileDecorator::FreePhysical(rtDrvMemHandle handle)
     CallApiBegin(RT_PROF_API_DEV_FREE);
     const rtError_t error = impl_->FreePhysical(handle);
     if (error == RT_ERROR_NONE) {
-        FillMemMngExtInfo(RtPtrToValue(handle), 0U, RT_PROF_MEM_MNG_TYPE_FREE, MSPROF_MEMORY_TYPE_DEVICE, nullptr);
+        Runtime::Instance()->FillRuntimeMemMngExtInfo(
+            RtPtrToValue(handle), 0U, RT_PROF_MEM_MNG_TYPE_FREE, MSPROF_MEMORY_TYPE_DEVICE, nullptr);
     }
     CallApiEnd(error);
     return error;
@@ -1350,7 +1333,8 @@ rtError_t ApiProfileDecorator::DevMalloc(
     const rtError_t error = impl_->DevMalloc(devPtr, size, policy, advise, cfg);
     if (error == RT_ERROR_NONE) {
         const uint64_t addr = (devPtr == nullptr) ? 0U : RtPtrToValue(*devPtr);
-        FillMemMngExtInfo(addr, size, RT_PROF_MEM_MNG_TYPE_MALLOC, MSPROF_MEMORY_TYPE_DEVICE, nullptr);
+        Runtime::Instance()->FillRuntimeMemMngExtInfo(
+            addr, size, RT_PROF_MEM_MNG_TYPE_MALLOC, MSPROF_MEMORY_TYPE_DEVICE, nullptr);
     }
     CallApiEnd(error);
     return error;
