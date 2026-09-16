@@ -7,10 +7,11 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
-#include "api.hpp"
+#include "api_snapshot.hpp"
 #include "api_c.h"
-#include "rts/rts.h"
 #include "global_state_manager.hpp"
+#include "rts/rts.h"
+#include "runtime.hpp"
 
 using namespace cce::runtime;
 
@@ -40,9 +41,9 @@ rtError_t rtSnapShotProcessLock()
         return error;
     }
 
-    Api* const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    error = apiInstance->SnapShotProcessLock();
+    ApiSnapshot* const apiSnapshotInstance = ApiSnapshot::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiSnapshotInstance);
+    error = apiSnapshotInstance->SnapShotProcessLock();
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }
@@ -55,9 +56,9 @@ rtError_t rtSnapShotProcessUnlock()
         return error;
     }
 
-    Api* const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    error = apiInstance->SnapShotProcessUnlock();
+    ApiSnapshot* const apiSnapshotInstance = ApiSnapshot::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiSnapshotInstance);
+    error = apiSnapshotInstance->SnapShotProcessUnlock();
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }
@@ -82,9 +83,9 @@ rtError_t rtSnapShotProcessBackup()
         return error;
     }
 
-    Api* const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    error = apiInstance->SnapShotProcessBackup();
+    ApiSnapshot* const apiSnapshotInstance = ApiSnapshot::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiSnapshotInstance);
+    error = apiSnapshotInstance->SnapShotProcessBackup();
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
@@ -98,9 +99,9 @@ rtError_t rtSnapShotProcessRestore()
         return error;
     }
 
-    Api* const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    error = apiInstance->SnapShotProcessRestore();
+    ApiSnapshot* const apiSnapshotInstance = ApiSnapshot::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiSnapshotInstance);
+    error = apiSnapshotInstance->SnapShotProcessRestore();
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
@@ -114,9 +115,9 @@ rtError_t rtSnapShotCallbackRegister(rtSnapShotStage stage, rtSnapShotCallBack c
         return error;
     }
 
-    Api* const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    error = apiInstance->SnapShotCallbackRegister(stage, callback, args);
+    ApiSnapshot* const apiSnapshotInstance = ApiSnapshot::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiSnapshotInstance);
+    error = apiSnapshotInstance->SnapShotCallbackRegister(stage, callback, args);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }
@@ -129,9 +130,9 @@ RTS_API rtError_t rtSnapShotCallbackUnregister(rtSnapShotStage stage, rtSnapShot
         return error;
     }
 
-    Api* const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    error = apiInstance->SnapShotCallbackUnregister(stage, callback);
+    ApiSnapshot* const apiSnapshotInstance = ApiSnapshot::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiSnapshotInstance);
+    error = apiSnapshotInstance->SnapShotCallbackUnregister(stage, callback);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }

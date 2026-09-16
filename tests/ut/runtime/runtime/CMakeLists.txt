@@ -1239,6 +1239,7 @@ add_executable(runtime_utest_api
     test/rt_utest_api_device.cc
     test/rt_utest_api_event_route.cc
     test/rt_utest_api_esched_route.cc
+    test/rt_utest_api_snapshot_route.cc
     test/rt_utest_api_kernel.cc
     test/rt_utest_api_impl.cc
     test/rt_api_test.cc
