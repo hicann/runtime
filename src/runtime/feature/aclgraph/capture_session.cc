@@ -998,7 +998,8 @@ rtError_t CreateSubCaptureModels(
     return captureSession->CreateSubCaptureModels(condHandle, params, stm);
 }
 
-const CaptureOps g_aclgraphCaptureOps = {CreateCaptureSession, FreeCascadeCaptureStream, CreateSubCaptureModels};
+const CaptureOps g_aclgraphCaptureOps = {
+    CreateCaptureSession, FreeCascadeCaptureStream, CreateSubCaptureModels, DetachCaptureEvent};
 
 class CaptureOpsRegistrar {
 public:

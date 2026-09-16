@@ -474,6 +474,7 @@ set(libruntime_cmodel_src_files
     ${RUNTIME_CORE_DIR}/src/launch/aicpu_stars.cc
     ${RUNTIME_CORE_DIR}/src/profiler/profiler_task_stars.cc
     ${RUNTIME_CORE_DIR}/src/event/event.cc
+    ${RUNTIME_CORE_DIR}/src/event/event_software.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/event_capture.cc
     ${RUNTIME_CORE_DIR}/src/notify/notify.cc
     ${RUNTIME_CORE_DIR}/src/engine/logger.cc
@@ -622,6 +623,7 @@ set(libruntime_cmodel_v200_src_files
     ${RUNTIME_FEATURE_DIR}/soma/stream_mem_pool.cc
     ${RUNTIME_CORE_DIR}/src/launch/label.cc
     ${RUNTIME_CORE_DIR}/src/event/event.cc
+    ${RUNTIME_CORE_DIR}/src/event/event_software.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/event_capture.cc
     ${RUNTIME_CORE_DIR}/src/event/ipc_event_starsV2.cc
     ${RUNTIME_CORE_DIR}/src/event/event_david.cc

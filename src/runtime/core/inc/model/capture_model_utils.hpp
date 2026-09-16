@@ -27,6 +27,7 @@ struct ExternalEventRefreshInfo;
 using ExternalPlaceholderSubmitter = rtError_t (*)(Device* dev, TaskInfo* task);
 
 bool IsEventCapturing(const Event* const evt, const Stream* const stm);
+void DetachCaptureEvent(Event* const evt);
 void TerminateCapture(const Event* const evt, const Stream* const stm);
 bool IsCrossCaptureModel(const Event* const evt, const Stream* const stm);
 bool IsCapturedTask(const Stream* const launchStm, const TaskInfo* submitTask);

@@ -25,7 +25,6 @@ class Stream;
 class Context;
 class Device;
 class Notifier;
-class CaptureModel;
 class Runtime;
 struct tagTaskInfoStru;
 typedef tagTaskInfoStru TaskInfo;
@@ -185,7 +184,6 @@ public:
         waitTskStreamList_.insert(stm);
     }
 
-    CaptureModel* GetCaptureModel(void) const;
     bool IsCapturing() const;
     bool IsRecordOrigCaptureStream(const Stream* const stm) const;
     bool ToBeCaptured(const Stream* const stm) const;

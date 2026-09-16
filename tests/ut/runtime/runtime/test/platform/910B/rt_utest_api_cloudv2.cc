@@ -153,6 +153,43 @@ char RtApiTest::function_ = 'a';
 uint32_t RtApiTest::binary_[32] = {};
 Driver* RtApiTest::driver_ = NULL;
 
+TEST_F(RtApiTest, event_is_capturing_keeps_external_event_excluded)
+{
+    Runtime* const runtime = Runtime::Instance();
+    Context* const ctx = runtime->CurrentContext();
+    ASSERT_NE(ctx, nullptr);
+    Device* const device = ctx->Device_();
+    ASSERT_NE(device, nullptr);
+
+    Event captureEvent(device, RT_EVENT_DEFAULT, ctx);
+    Event externalEvent(device, RT_EVENT_EXTERNAL, ctx);
+    externalEvent.SetCaptureEvent(&captureEvent);
+    EXPECT_FALSE(externalEvent.IsCapturing());
+
+    Event ordinaryEvent(device, RT_EVENT_DEFAULT, ctx);
+    ordinaryEvent.SetCaptureEvent(&captureEvent);
+    EXPECT_TRUE(ordinaryEvent.IsCapturing());
+}
+
+TEST_F(RtApiTest, event_to_be_captured_uses_stream_capture_status)
+{
+    Event ordinaryEvent(nullptr, RT_EVENT_DEFAULT, nullptr, false, false);
+    Event externalEvent(nullptr, RT_EVENT_EXTERNAL, nullptr, false, false);
+    Stream stream(static_cast<Device*>(nullptr), 0U);
+
+    EXPECT_FALSE(ordinaryEvent.ToBeCaptured(&stream));
+
+    stream.SetCaptureStatus(RT_STREAM_CAPTURE_STATUS_ACTIVE);
+    EXPECT_TRUE(ordinaryEvent.ToBeCaptured(&stream));
+    EXPECT_FALSE(externalEvent.ToBeCaptured(&stream));
+
+    stream.SetCaptureStatus(RT_STREAM_CAPTURE_STATUS_INVALIDATED);
+    EXPECT_TRUE(ordinaryEvent.ToBeCaptured(&stream));
+
+    stream.SetCaptureStatus(RT_STREAM_CAPTURE_STATUS_NONE);
+    EXPECT_FALSE(ordinaryEvent.ToBeCaptured(&stream));
+}
+
 TEST_F(RtApiTest, api_rtsSetCmoDesc)
 {
     rtError_t error;

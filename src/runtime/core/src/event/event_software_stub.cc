@@ -7,32 +7,34 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
-#ifndef CCE_RUNTIME_CAPTURE_OPS_HPP
-#define CCE_RUNTIME_CAPTURE_OPS_HPP
-
-#include "runtime/base.h"
-#include "runtime/rt_inner_model.h"
+#include "event.hpp"
 
 namespace cce {
 namespace runtime {
 
-class CondHandle;
-class Context;
-class ContextExtension;
-class Event;
-class Stream;
+rtError_t Event::RecordSoftwareEvent(Stream* const stm)
+{
+    UNUSED(stm);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
 
-struct CaptureOps {
-    ContextExtension* (*createContextExtension)(Context* ctx);
-    void (*freeCascadeCaptureStream)(Context* ctx, Stream* cascadeCaptureStream);
-    rtError_t (*createSubCaptureModels)(Context* ctx, CondHandle* condHandle, rtCondTaskParams params, Stream* stm);
-    void (*detachCaptureEvent)(Event* event);
-};
+rtError_t Event::CaptureWaitProcess(Stream* const stm)
+{
+    UNUSED(stm);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
 
-void RegisterCaptureOps(const CaptureOps* captureOps);
-const CaptureOps* GetCaptureOps();
+rtError_t Event::ExternalEventWaitProcess(Stream* const stm)
+{
+    UNUSED(stm);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t Event::ResetSoftwareEvent(Stream* const stm)
+{
+    UNUSED(stm);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
 
 } // namespace runtime
 } // namespace cce
-
-#endif // CCE_RUNTIME_CAPTURE_OPS_HPP

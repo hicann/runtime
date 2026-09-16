@@ -109,6 +109,11 @@ CaptureModel::~CaptureModel() noexcept
     // 清空capturestream和单算子流关系
     singleOperStmIdAndCaptureStmIdMap_.clear();
 
+    for (Event* const evt : singleOperEvents_) {
+        evt->SetCaptureEvent(nullptr);
+    }
+    singleOperEvents_.clear();
+
     for (Event* evt : captureEvents_) {
         evt->SetCaptureStream(nullptr);
         TryToFreeEventIdAndDestroyEvent(&evt, evt->EventId_(), true, true);

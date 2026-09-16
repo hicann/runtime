@@ -334,6 +334,7 @@ set(libruntime_v200_v201_common_src_files
     ${RUNTIME_FEATURE_DIR}/soma/stream_mem_pool.cc
     ${RUNTIME_CORE_DIR}/src/launch/label.cc
     ${RUNTIME_CORE_DIR}/src/event/event.cc
+    ${RUNTIME_CORE_DIR}/src/event/event_software.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/event_capture.cc
     ${RUNTIME_CORE_DIR}/src/event/event_david.cc
     ${RUNTIME_CORE_DIR}/src/notify/notify.cc

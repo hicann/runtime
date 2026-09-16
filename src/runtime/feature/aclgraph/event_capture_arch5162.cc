@@ -9,42 +9,15 @@
  */
 
 #include "event.hpp"
-#include "stream.hpp"
 
 namespace cce {
 namespace runtime {
-
-rtError_t Event::CaptureWaitProcess(Stream* const stm)
-{
-    UNUSED(stm);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
-rtError_t Event::ExternalEventWaitProcess(Stream* const stm)
-{
-    UNUSED(stm);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
-rtError_t Event::RecordSoftwareEvent(Stream* const stm)
-{
-    UNUSED(stm);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
-rtError_t Event::ResetSoftwareEvent(Stream* const stm)
-{
-    UNUSED(stm);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
 
 bool Event::IsRecordOrigCaptureStream(const Stream* const stm) const
 {
     UNUSED(stm);
     return false;
 }
-
-CaptureModel* Event::GetCaptureModel(void) const { return nullptr; }
 
 bool Event::IsCapturing() const { return false; }
 

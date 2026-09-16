@@ -304,6 +304,7 @@ set(runtimeut_src_aclgraph_list
     ${TOP_DIR}/src/runtime/feature/aclgraph/cond_handle.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/capture_model_utils.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/capture_session.cc
+    ${TOP_DIR}/src/runtime/core/src/event/event_software.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/event_capture.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/stream_capture.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/cond_op/aclgraph_cond_task.cc
@@ -421,6 +422,7 @@ set(runtimeut_src_tiny_exclude_list
     ${TOP_DIR}/src/runtime/feature/aclgraph/logic_sq_manage.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/capture_model_utils.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/capture_session.cc
+    ${TOP_DIR}/src/runtime/core/src/event/event_software.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/event_capture.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/stream_capture.cc
     ${TOP_DIR}/src/runtime/feature/jetty/jetty_manager.cc
@@ -497,6 +499,7 @@ set(runtimeut_src_tiny_include_list
     ${TOP_DIR}/src/runtime/feature/aclgraph/tiny/capture_adapt_stub.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/tiny/capture_model_stub.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/tiny/capture_model_utils_stub.cc
+    ${TOP_DIR}/src/runtime/core/src/event/event_software_stub.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/tiny/event_capture_stub.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/tiny/stream_capture_stub.cc
     ${TOP_DIR}/src/runtime/feature/model/tiny/model_aclgraph_stub.cc

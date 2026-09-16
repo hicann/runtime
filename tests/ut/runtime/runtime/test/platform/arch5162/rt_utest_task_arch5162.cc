@@ -918,9 +918,6 @@ TEST_F(Arch5162TaskTest, CaptureStubs)
     bool result = event.IsCapturing();
     EXPECT_EQ(result, false);
 
-    CaptureModel* mdl = event.GetCaptureModel();
-    EXPECT_EQ(mdl, nullptr);
-
     result = event.ToBeCaptured(stream);
     EXPECT_EQ(result, false);
 

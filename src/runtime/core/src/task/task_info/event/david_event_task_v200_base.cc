@@ -18,7 +18,7 @@
 #include "task_david.hpp"
 #include "device.hpp"
 #include "error_code.h"
-#include "capture_model.hpp"
+#include "capture_ops.hpp"
 
 namespace cce {
 namespace runtime {
@@ -360,9 +360,10 @@ void DavidUpdateAndTryToDestroyEvent(TaskInfo* taskInfo, Event** eventPtr, David
     }
     if (canEventbeDelete) {
         if ((*eventPtr)->IsCapturing()) {
-            CaptureModel* const mdl = (*eventPtr)->GetCaptureModel();
-            mdl->DeleteSingleOperEvent(*eventPtr);
-            (*eventPtr)->SetCaptureEvent(nullptr);
+            const CaptureOps* const captureOps = GetCaptureOps();
+            if ((captureOps != nullptr) && (captureOps->detachCaptureEvent != nullptr)) {
+                captureOps->detachCaptureEvent(*eventPtr);
+            }
         }
         if ((*eventPtr)->Device_() != nullptr) {
             (*eventPtr)->Device_()->RemoveEvent(*eventPtr);

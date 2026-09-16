@@ -123,6 +123,29 @@ bool IsCrossCaptureModel(const Event* const evt, const Stream* const stm)
     // stmMdl and evtMdl must not be nullptr at this time.
     return (stmMdl != evtMdl);
 }
+
+static CaptureModel* GetCaptureModelFromEvent(const Event* const evt)
+{
+    const Event* const captureEvt = evt->GetCaptureEvent();
+    if (captureEvt == nullptr) {
+        return nullptr;
+    }
+    const Stream* const captureStm = captureEvt->GetCaptureStream();
+    return (captureStm == nullptr) ? nullptr : dynamic_cast<CaptureModel*>(captureStm->Model_());
+}
+
+void DetachCaptureEvent(Event* const evt)
+{
+    if (evt == nullptr) {
+        return;
+    }
+    CaptureModel* const captureMdl = GetCaptureModelFromEvent(evt);
+    if (captureMdl != nullptr) {
+        captureMdl->DeleteSingleOperEvent(evt);
+    }
+    evt->SetCaptureEvent(nullptr);
+}
+
 void TerminateCapture(const Event* const evt, const Stream* const stm)
 {
     CaptureModel* stmMdl = nullptr;
@@ -130,7 +153,7 @@ void TerminateCapture(const Event* const evt, const Stream* const stm)
     if (captureStm != nullptr) {
         stmMdl = dynamic_cast<CaptureModel*>(captureStm->Model_());
     }
-    CaptureModel* evtMdl = evt->GetCaptureModel();
+    CaptureModel* evtMdl = GetCaptureModelFromEvent(evt);
     if (evtMdl != nullptr) {
         evtMdl->TerminateCapture();
     }

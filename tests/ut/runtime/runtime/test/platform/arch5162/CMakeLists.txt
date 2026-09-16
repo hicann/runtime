@@ -215,6 +215,7 @@ set(runtimeut_src_callback_list
 set(runtimeut_src_aclgraph_list
     ${TOP_DIR}/src/runtime/core/src/task/task_info/cond_op/cond_op_task_arch5162.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/cond_handle.cc
+    ${TOP_DIR}/src/runtime/core/src/event/event_software_stub.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/event_capture_arch5162.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/tiny/capture_adapt_stub.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/tiny/capture_model_stub.cc

@@ -215,6 +215,7 @@ set(libruntime_src_files_include_for_tiny
     ${RUNTIME_CORE_DIR}/src/context/context_stub.cc
     ${RUNTIME_CORE_DIR}/src/dfx/printf_stub.cc
     ${RUNTIME_CORE_DIR}/src/event/ipc_event_stub.cc
+    ${RUNTIME_CORE_DIR}/src/event/event_software_stub.cc
     ${RUNTIME_CORE_DIR}/src/pool/event_pool_stub.cc
     ${RUNTIME_CORE_DIR}/src/pool/event_expanding_stub.cc
     ${RUNTIME_DIR}/src/runtime/driver/npu_driver_stub.cc

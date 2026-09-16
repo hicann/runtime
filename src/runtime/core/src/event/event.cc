@@ -21,7 +21,6 @@
 #include "task_info.hpp"
 #include "task_submit.hpp"
 #include "stream_sqcq_manage.hpp"
-#include "capture_model.hpp"
 #include "stub_task.hpp"
 #include "memory_task.h"
 #include "event_task.h"

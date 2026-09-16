@@ -942,6 +942,7 @@ TEST_F(EventTestDavid, GetCaptureEvent1)
     rtStreamDestroy(captureStream);
     rtStreamDestroy(stream);
     delete captureModel;
+    EXPECT_EQ(evt->GetCaptureEvent(), nullptr);
     rtEventDestroy(event);
 }
 

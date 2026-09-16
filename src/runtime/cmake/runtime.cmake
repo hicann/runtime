@@ -382,6 +382,7 @@ set(libruntime_v100_src_files
     ${RUNTIME_CORE_DIR}/src/launch/aicpu_stars.cc
     ${RUNTIME_CORE_DIR}/src/launch/dvpp_stars.cc
     ${RUNTIME_CORE_DIR}/src/event/event.cc
+    ${RUNTIME_CORE_DIR}/src/event/event_software.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/event_capture.cc
     ${RUNTIME_CORE_DIR}/src/notify/notify.cc
     ${RUNTIME_CORE_DIR}/src/engine/logger.cc
