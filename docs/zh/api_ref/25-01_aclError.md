@@ -168,6 +168,7 @@ typedef int aclError;
 | #define  ACL_ERROR_RT_REPEATED_INIT  207015 | 队列重复初始化。 | 建议初始化一次队列即可，不要重复初始化。 |
 | #define  ACL_ERROR_RT_DEVICE_OOM  207018 | Device侧内存耗尽。 | 排查Device上的内存使用情况，并根据Device上的内存规格合理规划内存的使用。 |
 | #define  ACL_ERROR_RT_FEATURE_NOT_SUPPORT_UPDATE_OP  207019 | 当前驱动版本不支持更新该算子。 | 请检查驱动版本。<br>您可以单击[Link](https://www.hiascend.com/hardware/firmware-drivers/commercial)，在“固件与驱动”页面下载Ascend HDK 25.0.RC1或更高版本的驱动安装包，并参考相应版本的文档进行安装、升级。 |
+| #define  ACL_ERROR_RT_TIMEOUT  207020 | Driver执行超时。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
 | #define  ACL_ERROR_RT_LINK_TYPE_NOT_SUPPORTED  207021 | 指定的连接类型不支持。 | 排查使用的连接类型硬件是否支持。 |
 | #define  ACL_ERROR_RT_INTERNAL_ERROR  507000 | runtime模块内部错误。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
 | #define  ACL_ERROR_RT_TS_ERROR  507001 | Device上的task scheduler模块内部错误。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |

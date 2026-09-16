@@ -333,6 +333,7 @@ rtError_t ContextManage::DeviceClean(const int32_t devId)
         dev->SetMonitorExitFlag(false);
         dev->SetDevicePageFault(false);
         (void)Runtime::Instance()->SetWatchDogDevStatus(dev, RT_DEVICE_STATUS_NORMAL);
+        (void)NpuDriver::ClearPageFaultInfo(static_cast<uint32_t>(devId), false);
     }
 
     for (Context* const ctx : ContextDataManage::Instance().GetSetObj()) {
@@ -400,8 +401,6 @@ rtError_t ContextManage::DeviceTaskAbort(const int32_t devId, const uint32_t tim
     ERROR_GOTO_MSG_INNER(
         error, TIMEINFO, "Failed to query device terminate status, retCode=%#x.", static_cast<uint32_t>(error));
     mmGetTimeOfDay(&tv[++index], nullptr);
-
-    (void)NpuDriver::ClearPageFaultInfo(static_cast<uint32_t>(devId));
 
     error = DeviceClean(devId);
     mmGetTimeOfDay(&tv[++index], nullptr);
