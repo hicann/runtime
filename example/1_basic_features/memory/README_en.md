@@ -17,3 +17,4 @@ This directory focuses on Host/Device data transfer, shared memory, IPC, and mul
 - [10_ipc_memory_withpid](./10_ipc_memory_withpid/README_en.md): Demonstrates IPC memory sharing with specified PID.
 - [11_ipc_memory_withoutpid](./11_ipc_memory_withoutpid/README_en.md): Demonstrates IPC memory sharing without specified PID.
 - [12_cross_server_physical_memory_sharing_withoutpid](./12_cross_server_physical_memory_sharing_withoutpid/README_en.md): Demonstrates cross-server physical memory sharing.
+- [13_memcpy_descriptor](./13_memcpy_descriptor/README_en.md): Demonstrates descriptor-based asynchronous copying within one device and verifies the result.
