@@ -210,6 +210,7 @@ public:
 
     ApiSnapshot* ApiSnapshot_() const override { return apiSnapshot_; }
     ApiRtConfig* ApiRtConfig_() const override { return apiRtConfig_; }
+    ApiDeviceTopology* ApiDeviceTopology_() const override { return apiDeviceTopology_; }
 
     Api* ApiImpl_() const override { return apiImpl_; }
 
@@ -501,6 +502,7 @@ public:
     driverType_t GetDriverType() const;
 
     rtError_t CheckDeviceIdIsValid(const int32_t devId);
+    rtError_t CheckCurCtxValid(const int32_t devId);
 
     ThreadGuard* GetThreadGuard() const { return threadGuard_; }
 
@@ -800,12 +802,14 @@ private:
     ApiSoma* apiSoma_;
     ApiEsched* apiEsched_;
     ApiRtConfig* apiRtConfig_;
+    ApiDeviceTopology* apiDeviceTopology_;
 
     Api* apiImpl_;
     ApiMbuf* apiImplMbuf_;
     ApiSoma* apiImplSoma_;
     ApiEsched* apiImplEsched_;
     ApiRtConfig* apiImplRtConfig_;
+    ApiDeviceTopology* apiImplDeviceTopology_;
 
     RefObject<Context*> priCtxs_[RT_MAX_DEV_NUM][RT_MAX_TS_NUM];
     RefObject<Device*> devices_[RT_MAX_DEV_NUM + 1][RT_MAX_TS_NUM]; // Last one is stub device

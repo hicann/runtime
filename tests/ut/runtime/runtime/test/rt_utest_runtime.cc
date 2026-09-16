@@ -19,6 +19,7 @@
 #include "npu_driver.hpp"
 #include "api_esched.hpp"
 #include "api_rt_config.hpp"
+#include "api_device_topology.hpp"
 #include "api_event.hpp"
 #include "api_snapshot.hpp"
 #include "api_impl.hpp"
@@ -349,6 +350,16 @@ TEST_F(RuntimeTest, DestroyImplRtConfigSuccess)
     DestroyImplRtConfig(apiImplRtConfig);
 
     EXPECT_EQ(apiImplRtConfig, nullptr);
+}
+
+TEST_F(RuntimeTest, DestroyImplDeviceTopologySuccess)
+{
+    ApiDeviceTopology* apiImplDeviceTopology = CreateImplDeviceTopologyAndGet();
+    ASSERT_NE(apiImplDeviceTopology, nullptr);
+
+    DestroyImplDeviceTopology(apiImplDeviceTopology);
+
+    EXPECT_EQ(apiImplDeviceTopology, nullptr);
 }
 
 TEST_F(RuntimeTest, InitApiImpliesCreateMbufFailed)

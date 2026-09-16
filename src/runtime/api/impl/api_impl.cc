@@ -261,19 +261,7 @@ TIMESTAMP_EXTERN(rtHostGetDevicePointer);
 
 TIMESTAMP_EXTERN(TIMESTAMPs_DUMP);
 
-rtError_t ApiImpl::CheckCurCtxValid(const int32_t devId)
-{
-    if (Runtime::Instance()->GetSetDefaultDevIdFlag()) {
-        Context* const curCtx = CurrentContext(true, devId);
-        // 异构场景不校验context
-        if (RtIsHeterogenous()) {
-            RT_LOG(RT_LOG_DEBUG, "Heterogeneous mode does not check ctx.");
-            return RT_ERROR_NONE;
-        }
-        CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    }
-    return RT_ERROR_NONE;
-}
+rtError_t ApiImpl::CheckCurCtxValid(const int32_t devId) { return Runtime::Instance()->CheckCurCtxValid(devId); }
 
 Context* ApiImpl::CurrentContext(const bool isNeedSetDevice, int32_t deviceId)
 {

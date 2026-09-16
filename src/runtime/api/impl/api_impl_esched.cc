@@ -46,19 +46,6 @@ void DestroyImplEsched(ApiEsched*& apiImplEsched)
 }
 
 namespace {
-rtError_t CheckCurCtxValid(const int32_t devId)
-{
-    if (Runtime::Instance()->GetSetDefaultDevIdFlag()) {
-        Context* const curCtx = Runtime::Instance()->CurrentContext(true, devId);
-        if (RtIsHeterogenous()) {
-            RT_LOG(RT_LOG_DEBUG, "Heterogeneous does not check ctx.");
-            return RT_ERROR_NONE;
-        }
-        CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    }
-    return RT_ERROR_NONE;
-}
-
 /* HostCPU场景下, 底软三件套(Mbuff/队列调度/事件调度)接口无需对DeviceID做转换 */
 rtError_t ConvertUserDevIdToRealDevId(const int32_t devId, int32_t& realDeviceId)
 {
@@ -101,7 +88,7 @@ rtError_t ApiImplEsched::EschedSubmitEventSync(
     COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
 
     RT_LOG(RT_LOG_INFO, "Start to submit event on drv devId %d.", realDeviceId);
-    error = CheckCurCtxValid(realDeviceId);
+    error = Runtime::Instance()->CheckCurCtxValid(realDeviceId);
     COND_RETURN_ERROR(
         error != RT_ERROR_NONE, RT_ERROR_CONTEXT_NULL, "Current Context is null, drv devId[%d].", realDeviceId);
     return NpuDriver::EschedSubmitEventSync(realDeviceId, evt, ack);
@@ -113,7 +100,7 @@ rtError_t ApiImplEsched::EschedAttachDevice(const uint32_t devId)
     rtError_t error = ConvertUserDevIdToRealDevId(devId, realDeviceId);
     COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
 
-    error = CheckCurCtxValid(static_cast<int32_t>(realDeviceId));
+    error = Runtime::Instance()->CheckCurCtxValid(static_cast<int32_t>(realDeviceId));
     COND_RETURN_ERROR(
         error != RT_ERROR_NONE, RT_ERROR_CONTEXT_NULL, "Current Context is null, drv devId[%u].", realDeviceId);
     return NpuDriver::EschedAttachDevice(realDeviceId);
@@ -125,7 +112,7 @@ rtError_t ApiImplEsched::EschedDettachDevice(const uint32_t devId)
     rtError_t error = ConvertUserDevIdToRealDevId(devId, realDeviceId);
     COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
 
-    error = CheckCurCtxValid(static_cast<int32_t>(realDeviceId));
+    error = Runtime::Instance()->CheckCurCtxValid(static_cast<int32_t>(realDeviceId));
     COND_RETURN_ERROR(
         error != RT_ERROR_NONE, RT_ERROR_CONTEXT_NULL, "Current Context is null, drv devId[%u].", realDeviceId);
     return NpuDriver::EschedDettachDevice(realDeviceId);
@@ -141,7 +128,7 @@ rtError_t ApiImplEsched::EschedWaitEvent(
     rtError_t error = ConvertUserDevIdToRealDevId(devId, realDeviceId);
     COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
 
-    error = CheckCurCtxValid(realDeviceId);
+    error = Runtime::Instance()->CheckCurCtxValid(realDeviceId);
     COND_RETURN_ERROR(
         error != RT_ERROR_NONE, RT_ERROR_CONTEXT_NULL, "Current Context is null, drv devId[%d].", realDeviceId);
     return NpuDriver::EschedWaitEvent(realDeviceId, grpId, threadId, timeout, evt);
@@ -158,7 +145,7 @@ rtError_t ApiImplEsched::EschedCreateGrp(const int32_t devId, const uint32_t grp
     rtError_t error = ConvertUserDevIdToRealDevId(devId, realDeviceId);
     COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
 
-    error = CheckCurCtxValid(realDeviceId);
+    error = Runtime::Instance()->CheckCurCtxValid(realDeviceId);
     COND_RETURN_ERROR(
         error != RT_ERROR_NONE, RT_ERROR_CONTEXT_NULL, "Current Context is null, drv devId[%d].", realDeviceId);
     return NpuDriver::EschedCreateGrp(realDeviceId, grpId, type);
@@ -172,7 +159,7 @@ rtError_t ApiImplEsched::EschedSubmitEvent(const int32_t devId, rtEschedEventSum
     rtError_t error = ConvertUserDevIdToRealDevId(devId, realDeviceId);
     COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
 
-    error = CheckCurCtxValid(realDeviceId);
+    error = Runtime::Instance()->CheckCurCtxValid(realDeviceId);
     COND_RETURN_ERROR(
         error != RT_ERROR_NONE, RT_ERROR_CONTEXT_NULL, "Current Context is null, drv devId[%d].", realDeviceId);
     return NpuDriver::EschedSubmitEvent(realDeviceId, evt);
@@ -185,7 +172,7 @@ rtError_t ApiImplEsched::EschedSubscribeEvent(
     rtError_t error = ConvertUserDevIdToRealDevId(devId, realDeviceId);
     COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
 
-    error = CheckCurCtxValid(realDeviceId);
+    error = Runtime::Instance()->CheckCurCtxValid(realDeviceId);
     COND_RETURN_ERROR(
         error != RT_ERROR_NONE, RT_ERROR_CONTEXT_NULL, "Current Context is null, drv devId[%d].", realDeviceId);
     return NpuDriver::EschedSubscribeEvent(realDeviceId, grpId, threadId, eventBitmap);
@@ -200,7 +187,7 @@ rtError_t ApiImplEsched::EschedAckEvent(
     rtError_t error = ConvertUserDevIdToRealDevId(devId, realDeviceId);
     COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
 
-    error = CheckCurCtxValid(realDeviceId);
+    error = Runtime::Instance()->CheckCurCtxValid(realDeviceId);
     COND_RETURN_ERROR(
         error != RT_ERROR_NONE, RT_ERROR_CONTEXT_NULL, "Current Context is null, drv devId[%d].", realDeviceId);
     return NpuDriver::EschedAckEvent(realDeviceId, evtId, subeventId, msg, len);
@@ -218,7 +205,7 @@ rtError_t ApiImplEsched::EschedQueryInfo(
     COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
 
     RT_LOG(RT_LOG_INFO, "Start to Query Esched Info");
-    error = CheckCurCtxValid(static_cast<int32_t>(realDeviceId));
+    error = Runtime::Instance()->CheckCurCtxValid(static_cast<int32_t>(realDeviceId));
     COND_RETURN_ERROR(
         error != RT_ERROR_NONE, RT_ERROR_CONTEXT_NULL, "Current Context is null, drv devId[%u].", realDeviceId);
     return NpuDriver::EschedQueryInfo(realDeviceId, type, inPut, outPut);

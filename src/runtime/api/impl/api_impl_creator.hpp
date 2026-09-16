@@ -19,6 +19,7 @@ class ApiEvent;
 class ApiEsched;
 class ApiSnapshot;
 class ApiRtConfig;
+class ApiDeviceTopology;
 
 Api* CreateImplAndGet();
 bool IsImplMbufSupported();
@@ -35,6 +36,9 @@ void DestroyImplSnapshot(ApiSnapshot*& apiImplSnapshot);
 bool IsImplRtConfigSupported();
 ApiRtConfig* CreateImplRtConfigAndGet();
 void DestroyImplRtConfig(ApiRtConfig*& apiImplRtConfig);
+bool IsImplDeviceTopologySupported();
+ApiDeviceTopology* CreateImplDeviceTopologyAndGet();
+void DestroyImplDeviceTopology(ApiDeviceTopology*& apiImplDeviceTopology);
 } // namespace runtime
 } // namespace cce
 

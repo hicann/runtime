@@ -52,6 +52,7 @@
 #include "api_impl_esched.hpp"
 #include "api_impl_rt_config.hpp"
 #include "inner_thread_local.hpp"
+#include "api_impl_device_topology.hpp"
 #include "thread_local_container.hpp"
 #include "maintenance_task.h"
 #include "stream_c.hpp"
@@ -528,6 +529,87 @@ TEST_F(ApiImplTest, ApiImplEschedDefaultDeviceContextNull)
     MOCKER(&RtIsHeterogenous).expects(once()).will(returnValue(false));
 
     EXPECT_EQ(apiImpl.EschedAttachDevice(static_cast<uint32_t>(DEFAULT_HOSTCPU_USER_DEVICE_ID)), RT_ERROR_CONTEXT_NULL);
+}
+
+TEST_F(ApiImplTest, ApiImplDeviceTopologyInvalidParam)
+{
+    ApiImplDeviceTopology apiImpl;
+    int32_t canAccessPeer = 0;
+    uint32_t status = 0U;
+    int64_t pairInfo = 0;
+
+    EXPECT_EQ(apiImpl.EnableP2P(RT_MAX_DEV_NUM, 0U, 0U), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(apiImpl.DisableP2P(0U, RT_MAX_DEV_NUM), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(apiImpl.DeviceCanAccessPeer(nullptr, 0U, 1U), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(apiImpl.DeviceCanAccessPeer(&canAccessPeer, 0U, RT_MAX_DEV_NUM), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(apiImpl.GetP2PStatus(0U, 1U, nullptr), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(apiImpl.GetP2PStatus(0U, RT_MAX_DEV_NUM, &status), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(apiImpl.GetPairDevicesInfo(0U, 1U, DEVS_INFO_TYPE_TOPOLOGY, nullptr), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(apiImpl.GetPairPhyDevicesInfo(0U, 1U, DEVS_INFO_TYPE_TOPOLOGY, nullptr), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(pairInfo, 0);
+}
+
+TEST_F(ApiImplTest, ApiImplDeviceTopologyDeviceIdConvertFailed)
+{
+    ApiImplDeviceTopology apiImpl;
+    Runtime* const rtInstance = static_cast<Runtime*>(Runtime::Instance());
+    int32_t canAccessPeer = 0;
+    uint32_t status = 0U;
+    int64_t pairInfo = 0;
+
+    MOCKER_CPP_VIRTUAL(rtInstance, &Runtime::ChgUserDevIdToDeviceId).stubs().will(returnValue(RT_ERROR_DEVICE_ID));
+
+    EXPECT_EQ(apiImpl.EnableP2P(1U, 0U, 0U), RT_ERROR_DEVICE_ID);
+    EXPECT_EQ(apiImpl.DisableP2P(1U, 0U), RT_ERROR_DEVICE_ID);
+    EXPECT_EQ(apiImpl.DeviceCanAccessPeer(&canAccessPeer, 1U, 0U), RT_ERROR_DEVICE_ID);
+    EXPECT_EQ(apiImpl.GetP2PStatus(1U, 0U, &status), RT_ERROR_DEVICE_ID);
+    EXPECT_EQ(apiImpl.GetPairDevicesInfo(1U, 0U, DEVS_INFO_TYPE_TOPOLOGY, &pairInfo), RT_ERROR_DEVICE_ID);
+}
+
+TEST_F(ApiImplTest, ApiImplDeviceTopologyFeatureNotSupport)
+{
+    ApiImplDeviceTopology apiImpl;
+    Runtime* const rtInstance = static_cast<Runtime*>(Runtime::Instance());
+    const rtChipType_t oldChipType = rtInstance->GetChipType();
+    rtInstance->SetChipType(CHIP_MINI);
+    GlobalContainer::SetRtChipType(CHIP_MINI);
+    int32_t canAccessPeer = 0;
+    uint32_t status = 0U;
+
+    EXPECT_EQ(apiImpl.EnableP2P(0U, 1U, 0U), RT_ERROR_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(apiImpl.DisableP2P(0U, 1U), RT_ERROR_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(apiImpl.DeviceCanAccessPeer(&canAccessPeer, 0U, 1U), RT_ERROR_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(apiImpl.GetP2PStatus(0U, 1U, &status), RT_ERROR_FEATURE_NOT_SUPPORT);
+
+    rtInstance->SetChipType(oldChipType);
+    GlobalContainer::SetRtChipType(oldChipType);
+}
+
+TEST_F(ApiImplTest, ApiImplDeviceTopologySuccess)
+{
+    ApiImplDeviceTopology apiImpl;
+    Runtime* const rtInstance = static_cast<Runtime*>(Runtime::Instance());
+    const rtChipType_t oldChipType = rtInstance->GetChipType();
+    rtInstance->SetChipType(CHIP_CLOUD);
+    GlobalContainer::SetRtChipType(CHIP_CLOUD);
+    uint32_t runMode = static_cast<uint32_t>(RT_RUN_MODE_ONLINE);
+    MOCKER(drvGetPlatformInfo).stubs().with(outBoundP(&runMode, sizeof(runMode))).will(returnValue(DRV_ERROR_NONE));
+    int32_t canAccessPeer = 0;
+    uint32_t status = 0U;
+    int64_t pairInfo = TOPOLOGY_HCCS_SW;
+
+    EXPECT_EQ(apiImpl.EnableP2P(0U, 1U, 0U), RT_ERROR_NONE);
+    EXPECT_EQ(apiImpl.DisableP2P(0U, 1U), RT_ERROR_NONE);
+    EXPECT_EQ(apiImpl.DeviceCanAccessPeer(&canAccessPeer, 0U, 1U), RT_ERROR_NONE);
+    EXPECT_EQ(apiImpl.GetP2PStatus(0U, 1U, &status), RT_ERROR_NONE);
+    EXPECT_EQ(apiImpl.GetPairDevicesInfo(0U, 0U, DEVS_INFO_TYPE_TOPOLOGY, &pairInfo), RT_ERROR_NONE);
+    EXPECT_EQ(pairInfo, TOPOLOGY_HCCS);
+    pairInfo = TOPOLOGY_HCCS_SW;
+    EXPECT_EQ(apiImpl.GetPairPhyDevicesInfo(0U, 0U, DEVS_INFO_TYPE_TOPOLOGY, &pairInfo), RT_ERROR_NONE);
+    EXPECT_EQ(pairInfo, TOPOLOGY_HCCS);
+
+    rtInstance->SetChipType(oldChipType);
+    GlobalContainer::SetRtChipType(oldChipType);
 }
 
 TEST_F(ApiImplTest, LaunchHostFuncV2RegistersBeforeVirtualSubmit)

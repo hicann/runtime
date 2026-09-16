@@ -25,6 +25,7 @@ class ApiEvent;
 class ApiEsched;
 class ApiSnapshot;
 class ApiRtConfig;
+class ApiDeviceTopology;
 class Context;
 
 struct RtTimeoutConfig {
@@ -63,6 +64,8 @@ public:
     virtual ApiSnapshot* ApiSnapshot_() const = 0;
     // Get apiRtConfig implement.
     virtual ApiRtConfig* ApiRtConfig_() const = 0;
+    // Get apiDeviceTopology implement.
+    virtual ApiDeviceTopology* ApiDeviceTopology_() const = 0;
     virtual Api* ApiImpl_() const = 0;
     virtual rtError_t ProfilerStop(
         const uint64_t profConfig, const int32_t numsDev, uint32_t* const deviceList,

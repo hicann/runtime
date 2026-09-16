@@ -334,6 +334,7 @@ Runtime::Runtime() : RuntimeIntf()
     apiEsched_ = nullptr;
     apiSnapshot_ = nullptr;
     apiRtConfig_ = nullptr;
+    apiDeviceTopology_ = nullptr;
     apiImpl_ = nullptr;
     apiImplMbuf_ = nullptr;
     apiImplSoma_ = nullptr;
@@ -341,6 +342,7 @@ Runtime::Runtime() : RuntimeIntf()
     apiImplEsched_ = nullptr;
     apiImplSnapshot_ = nullptr;
     apiImplRtConfig_ = nullptr;
+    apiImplDeviceTopology_ = nullptr;
     logger_ = nullptr;
     apiError_ = nullptr;
     profiler_ = nullptr;
@@ -1144,6 +1146,13 @@ rtError_t Runtime::InitApiImplies()
             return RT_ERROR_API_NEW;
         }
     }
+
+    if (IsImplDeviceTopologySupported()) {
+        apiImplDeviceTopology_ = CreateImplDeviceTopologyAndGet();
+        if (apiImplDeviceTopology_ == nullptr) {
+            return RT_ERROR_API_NEW;
+        }
+    }
     return RT_ERROR_NONE;
 }
 
@@ -1609,6 +1618,7 @@ rtError_t Runtime::Init()
     apiEsched_ = apiImplEsched_;
     apiSnapshot_ = apiImplSnapshot_;
     apiRtConfig_ = apiImplRtConfig_;
+    apiDeviceTopology_ = apiImplDeviceTopology_;
 
     error = InitThreadGuard();
     COND_GOTO_ERROR_MSG_AND_ASSIGN_CALL(
@@ -1668,6 +1678,7 @@ INIT_FAIL:
     DestroyImplEsched(apiImplEsched_);
     DestroyImplSnapshot(apiImplSnapshot_);
     DestroyImplRtConfig(apiImplRtConfig_);
+    DestroyImplDeviceTopology(apiImplDeviceTopology_);
     return error;
 }
 
@@ -5484,6 +5495,20 @@ rtError_t Runtime::CheckDeviceIdIsValid(const int32_t devId)
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
         (devId < 0) || ((devId >= devCnt) && (devCnt != 0)), RT_ERROR_DEVICE_ID, "Verifying the device ID validity",
         devId, "[0, " + std::to_string(devCnt) + ")");
+    return RT_ERROR_NONE;
+}
+
+rtError_t Runtime::CheckCurCtxValid(const int32_t devId)
+{
+    if (Runtime::Instance()->GetSetDefaultDevIdFlag()) {
+        Context* const curCtx = CurrentContext(true, devId);
+        // 异构场景不校验context
+        if (RtIsHeterogenous()) {
+            RT_LOG(RT_LOG_DEBUG, "Heterogeneous mode does not check ctx.");
+            return RT_ERROR_NONE;
+        }
+        CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+    }
     return RT_ERROR_NONE;
 }
 

@@ -82,6 +82,7 @@ Runtime::~Runtime()
     apiEsched_ = nullptr;
     apiSnapshot_ = nullptr;
     apiRtConfig_ = nullptr;
+    apiDeviceTopology_ = nullptr;
 
     DELETE_O(apiImpl_);
     DestroyImplMbuf(apiImplMbuf_);
@@ -90,6 +91,7 @@ Runtime::~Runtime()
     DestroyImplEsched(apiImplEsched_);
     DestroyImplSnapshot(apiImplSnapshot_);
     DestroyImplRtConfig(apiImplRtConfig_);
+    DestroyImplDeviceTopology(apiImplDeviceTopology_);
     DELETE_O(apiError_);
     DELETE_O(logger_);
     DELETE_O(profiler_);

@@ -13,6 +13,7 @@
 #include "api_mbuf.hpp"
 #include "api_snapshot.hpp"
 #include "api_rt_config.hpp"
+#include "api_device_topology.hpp"
 #include "api_soma.hpp"
 #include "thread_local_container.hpp"
 
@@ -87,6 +88,16 @@ ApiRtConfig* ApiRtConfig::Instance()
         return nullptr;
     }
     return rtInstance->ApiRtConfig_();
+}
+
+ApiDeviceTopology* ApiDeviceTopology::Instance()
+{
+    const Runtime* const rtInstance = Runtime::Instance();
+    if (unlikely(rtInstance == nullptr)) {
+        RT_LOG(RT_LOG_ERROR, "Runtime::Instance == nullptr");
+        return nullptr;
+    }
+    return rtInstance->ApiDeviceTopology_();
 }
 
 } // namespace runtime
