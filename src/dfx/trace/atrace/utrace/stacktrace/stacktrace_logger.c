@@ -52,6 +52,9 @@ void StacktraceLogInner(const char* format, ...)
     if (g_stackLogMgr == NULL) {
         return;
     }
+    if (g_stackLogMgr->logIndex >= STACKTRACE_LOG_MAX_NUM) {
+        return;
+    }
     int32_t writeIdx = AO_F_ADD(&g_stackLogMgr->logIndex, 1);
     if (writeIdx >= STACKTRACE_LOG_MAX_NUM) {
         return;
@@ -77,6 +80,9 @@ void StackcoreLogSaveWithFlag(uint32_t flag)
 
     ScdUtilWriteTitle(fd, g_stackLogMgr->title);
     int32_t logNum = g_stackLogMgr->logIndex;
+    if (logNum > STACKTRACE_LOG_MAX_NUM) {
+        logNum = STACKTRACE_LOG_MAX_NUM;
+    }
     for (int32_t i = 0; i < logNum; i++) {
         (void)ScdUtilWrite(fd, g_stackLogMgr->logContent[i], strlen(g_stackLogMgr->logContent[i]));
     }
